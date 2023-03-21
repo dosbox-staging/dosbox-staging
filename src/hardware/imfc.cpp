@@ -302,7 +302,8 @@ public:
 
 		if (m_locked) {
 			IMF_LOG("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Already locked !!!!!!!!!!!!!!!!!!!!!!");
-			while (true);
+			while (true) {;
+}
 		}
 
 		m_locked = true;
@@ -310,7 +311,8 @@ public:
 	void unlock() {
 		if (!m_locked) {
 			IMF_LOG("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Not yet locked !!!!!!!!!!!!!!!!!!!!!!");
-			while (true);
+			while (true) {;
+}
 		}
 		m_locked = false;
 		SDL_UnlockMutex(m_mutex);
@@ -2440,10 +2442,11 @@ void ym2151_device::init_tables() {
 
 		int n = (int)m;     /* 16 bits here */
 		n >>= 4;        /* 12 bits here */
-		if (n & 1)        /* round to closest */
+		if (n & 1) {        /* round to closest */
 			n = (n >> 1) + 1;
-		else
+		} else {
 			n = n >> 1;
+}
 		/* 11 bits here (rounded) */
 		n <<= 2;        /* 13 bits here (as in real chip) */
 		tl_tab[x * 2 + 0] = n;
@@ -2467,10 +2470,11 @@ void ym2151_device::init_tables() {
 		o = o / (ENV_STEP / 4);
 
 		int n = (int)(2.0*o);
-		if (n & 1)                        /* round to closest */
+		if (n & 1) {                        /* round to closest */
 			n = (n >> 1) + 1;
-		else
+		} else {
 			n = n >> 1;
+}
 
 		sin_tab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
 	}
@@ -2574,11 +2578,13 @@ void ym2151_device::YM2151Operator::key_off(uint32_t key_set) {
 void ym2151_device::envelope_KONKOFF(YM2151Operator * op, int v) {
 	// m1, m2, c1, c2
 	static const uint8_t masks[4] = { 0x08, 0x20, 0x10, 0x40 };
-	for (int i = 0; i != 4; i++)
-		if (v & masks[i]) /* M1 */
+	for (int i = 0; i != 4; i++) {
+		if (v & masks[i]) { /* M1 */
 			op[i].key_on(1, eg_cnt);
-		else
+		} else {
 			op[i].key_off(1);
+}
+}
 }
 
 
@@ -2770,7 +2776,8 @@ void ym2151_device::write_reg(int r, int v) {
 		switch (r) {
 		case 0x09:  /* LFO reset(bit 1), Test Register (other bits) */
 			test = v;
-			if (v & 2) lfo_phase = 0;
+			if (v & 2) { lfo_phase = 0;
+}
 			break;
 
 		case 0x08:
@@ -2842,10 +2849,11 @@ void ym2151_device::write_reg(int r, int v) {
 		break;
 
 		case 0x19:  /* PMD (bit 7==1) or AMD (bit 7==0) */
-			if (v & 0x80)
+			if (v & 0x80) {
 				pmd = v & 0x7f;
-			else
+			} else {
 				amd = v & 0x7f;
+}
 			break;
 
 		case 0x1b:  /* CT2, CT1, LFO waveform */
@@ -2942,11 +2950,13 @@ void ym2151_device::write_reg(int r, int v) {
 		op->dt1_i = (v & 0x70) << 1;
 		op->mul = (v & 0x0f) ? (v & 0x0f) << 1 : 1;
 
-		if (olddt1_i != op->dt1_i)
+		if (olddt1_i != op->dt1_i) {
 			op->dt1 = dt1_freq[op->dt1_i + (op->kc >> 2)];
+}
 
-		if ((olddt1_i != op->dt1_i) || (oldmul != op->mul))
+		if ((olddt1_i != op->dt1_i) || (oldmul != op->mul)) {
 			op->freq = ((freq[op->kc_i + op->dt2] + op->dt1) * op->mul) >> 1;
+}
 	}
 	break;
 
@@ -2994,8 +3004,9 @@ void ym2151_device::write_reg(int r, int v) {
 	{
 		const uint32_t olddt2 = op->dt2;
 		op->dt2 = dt2_tab[v >> 6];
-		if (op->dt2 != olddt2)
+		if (op->dt2 != olddt2) {
 			op->freq = ((freq[op->kc_i + op->dt2] + op->dt1) * op->mul) >> 1;
+}
 	}
 	op->d2r = (v & 0x1f) ? 32 + ((v & 0x1f) << 1) : 0;
 	op->eg_sh_d2r = eg_rate_shift[op->d2r + (op->kc >> op->ks)];
@@ -3012,8 +3023,9 @@ void ym2151_device::write_reg(int r, int v) {
 }
 
 void ym2151_device::device_post_load() {
-	for (int j = 0; j < 8; j++)
+	for (int j = 0; j < 8; j++) {
 		set_connect(&oper[j * 4], j, connect[j]);
+}
 }
 
 void ym2151_device::device_start() {
@@ -3135,8 +3147,9 @@ int ym2151_device::op_calc(YM2151Operator * OP, unsigned int env, signed int pm)
 
 	p = (env << 3) + sin_tab[(((signed int)((OP->phase & ~FREQ_MASK) + (pm << 15))) >> FREQ_SH) & SIN_MASK];
 
-	if (p >= TL_TAB_LEN)
+	if (p >= TL_TAB_LEN) {
 		return 0;
+}
 
 	return tl_tab[p];
 }
@@ -3154,8 +3167,9 @@ int ym2151_device::op_calc1(YM2151Operator * OP, unsigned int env, signed int pm
 
 	/*logerror("(p&255=%i p>>8=%i) out= %i\n", p&255,p>>8, tl_tab[p&255]>>(p>>8) );*/
 
-	if (p >= TL_TAB_LEN)
+	if (p >= TL_TAB_LEN) {
 		return 0;
+}
 
 	return tl_tab[p];
 }
@@ -3173,39 +3187,45 @@ void ym2151_device::chan_calc(unsigned int chan) {
 
 	*op->mem_connect = op->mem_value;   /* restore delayed sample (MEM) value to m2 or c2 */
 
-	if (op->ams)
+	if (op->ams) {
 		AM = lfa << (op->ams - 1);
+}
 	env = volume_calc(op);
 	{
 		int32_t out = op->fb_out_prev + op->fb_out_curr;
 		op->fb_out_prev = op->fb_out_curr;
 
-		if (!op->connect)
+		if (!op->connect) {
 			/* algorithm 5 */
 			mem = c1 = c2 = op->fb_out_prev;
-		else
+		} else {
 			/* other algorithms */
 			*op->connect = op->fb_out_prev;
+}
 
 		op->fb_out_curr = 0;
 		if (env < ENV_QUIET) {
-			if (!op->fb_shift)
+			if (!op->fb_shift) {
 				out = 0;
+}
 			op->fb_out_curr = op_calc1(op, env, (out << op->fb_shift));
 		}
 	}
 
 	env = volume_calc(op + 1);    /* M2 */
-	if (env < ENV_QUIET)
+	if (env < ENV_QUIET) {
 		*(op + 1)->connect += op_calc(op + 1, env, m2);
+}
 
 	env = volume_calc(op + 2);    /* C1 */
-	if (env < ENV_QUIET)
+	if (env < ENV_QUIET) {
 		*(op + 2)->connect += op_calc(op + 2, env, c1);
+}
 
 	env = volume_calc(op + 3);    /* C2 */
-	if (env < ENV_QUIET)
+	if (env < ENV_QUIET) {
 		chanout[chan] += op_calc(op + 3, env, c2);
+}
 	//  if(chan==3) printf("%d\n", chanout[chan]);
 
 	/* M1 */
@@ -3222,47 +3242,54 @@ void ym2151_device::chan7_calc() {
 
 	*op->mem_connect = op->mem_value;   /* restore delayed sample (MEM) value to m2 or c2 */
 
-	if (op->ams)
+	if (op->ams) {
 		AM = lfa << (op->ams - 1);
+}
 	env = volume_calc(op);
 	{
 		int32_t out = op->fb_out_prev + op->fb_out_curr;
 		op->fb_out_prev = op->fb_out_curr;
 
-		if (!op->connect)
+		if (!op->connect) {
 			/* algorithm 5 */
 			mem = c1 = c2 = op->fb_out_prev;
-		else
+		} else {
 			/* other algorithms */
 			*op->connect = op->fb_out_prev;
+}
 
 		op->fb_out_curr = 0;
 		if (env < ENV_QUIET) {
-			if (!op->fb_shift)
+			if (!op->fb_shift) {
 				out = 0;
+}
 			op->fb_out_curr = op_calc1(op, env, (out << op->fb_shift));
 		}
 	}
 
 	env = volume_calc(op + 1);    /* M2 */
-	if (env < ENV_QUIET)
+	if (env < ENV_QUIET) {
 		*(op + 1)->connect += op_calc(op + 1, env, m2);
+}
 
 	env = volume_calc(op + 2);    /* C1 */
-	if (env < ENV_QUIET)
+	if (env < ENV_QUIET) {
 		*(op + 2)->connect += op_calc(op + 2, env, c1);
+}
 
 	env = volume_calc(op + 3);    /* C2 */
 	if (noise & 0x80) {
 		uint32_t noiseout = 0;
 
 		noiseout = 0;
-		if (env < 0x3ff)
+		if (env < 0x3ff) {
 			noiseout = (env ^ 0x3ff) * 2;   /* range of the YM2151 noise output is -2044 to 2040 */
+}
 		chanout[7] += ((noise_rng & 0x10000) ? noiseout : -noiseout); /* bit 16 -> output */
 	} else {
-		if (env < ENV_QUIET)
+		if (env < ENV_QUIET) {
 			chanout[7] += op_calc(op + 3, env, c2);
+}
 	}
 	/* M1 */
 	op->mem_value = mem;
@@ -3350,9 +3377,9 @@ void ym2151_device::advance() {
 	int a = 0, p = 0;
 
 	/* LFO */
-	if (test & 2)
+	if (test & 2) {
 		lfo_phase = 0;
-	else {
+	} else {
 		lfo_timer += lfo_timer_add;
 		if (lfo_timer >= lfo_overflow) {
 			lfo_timer -= lfo_overflow;
@@ -3371,10 +3398,11 @@ void ym2151_device::advance() {
 		/* AM: 255 down to 0 */
 		/* PM: 0 to 127, -127 to 0 (at PMD=127: LFP = 0 to 126, -126 to 0) */
 		a = 255 - i;
-		if (i < 128)
+		if (i < 128) {
 			p = i;
-		else
+		} else {
 			p = i - 255;
+}
 		break;
 	case 1:
 		/* square */
@@ -3392,19 +3420,21 @@ void ym2151_device::advance() {
 		/* triangle */
 		/* AM: 255 down to 1 step -2; 0 up to 254 step +2 */
 		/* PM: 0 to 126 step +2, 127 to 1 step -2, 0 to -126 step -2, -127 to -1 step +2*/
-		if (i < 128)
+		if (i < 128) {
 			a = 255 - (i * 2);
-		else
+		} else {
 			a = (i * 2) - 256;
+}
 
-		if (i < 64)                       /* i = 0..63 */
+		if (i < 64) {                       /* i = 0..63 */
 			p = i * 2;                    /* 0 to 126 step +2 */
-		else if (i < 128)                 /* i = 64..127 */
+		} else if (i < 128) {                 /* i = 64..127 */
 			p = 255 - i * 2;          /* 127 to 1 step -2 */
-		else if (i < 192)             /* i = 128..191 */
+		} else if (i < 192) {             /* i = 128..191 */
 			p = 256 - i * 2;      /* 0 to -126 step -2*/
-		else                    /* i = 192..255 */
+		} else {                    /* i = 192..255 */
 			p = i * 2 - 511;      /*-127 to -1 step +2*/
+}
 		break;
 	case 3:
 	default:    /*keep the compiler happy*/
@@ -3446,10 +3476,11 @@ void ym2151_device::advance() {
 		if (op->pms)    /* only when phase modulation from LFO is enabled for this channel */
 		{
 			int32_t mod_ind = lfp;       /* -128..+127 (8bits signed) */
-			if (op->pms < 6)
+			if (op->pms < 6) {
 				mod_ind >>= (6 - op->pms);
-			else
+			} else {
 				mod_ind <<= (op->pms - 5);
+}
 
 			if (mod_ind) {
 				const uint32_t kc_channel = op->kc_i + mod_ind;
@@ -3531,8 +3562,9 @@ u8 ym2151_device::read(offs_t offset) {
 	if (offset & 1) {
 		//m_stream->update();
 		return status;
-	} else
+	} else {
 		return 0xff;    /* confirmed on a real YM2151 */
+}
 }
 
 
@@ -3546,8 +3578,9 @@ void ym2151_device::write(offs_t offset, u8 data) {
 			//m_stream->update();
 			write_reg(m_lastreg, data);
 		}
-	} else
+	} else {
 		m_lastreg = data;
+}
 }
 
 
@@ -3673,11 +3706,13 @@ void ym2151_device::sound_stream_update(int samples) {
 	for (int i = 0; i < samples; i++) {
 		advance_eg();
 
-		for (int & ch : chanout)
+		for (int & ch : chanout) {
 			ch = 0;
+}
 
-		for (int ch = 0; ch < 7; ch++)
+		for (int ch = 0; ch < 7; ch++) {
 			chan_calc(ch);
+}
 		chan7_calc();
 
 		int outl = 0;
@@ -3687,14 +3722,16 @@ void ym2151_device::sound_stream_update(int samples) {
 			outr += chanout[ch] & pan[2 * ch + 1];
 		}
 
-		if (outl > 32767)
+		if (outl > 32767) {
 			outl = 32767;
-		else if (outl < -32768)
+		} else if (outl < -32768) {
 			outl = -32768;
-		if (outr > 32767)
+}
+		if (outr > 32767) {
 			outr = 32767;
-		else if (outr < -32768)
+		} else if (outr < -32768) {
 			outr = -32768;
+}
 		buf16[0] = outl;
 		buf16[1] = outr;
 		m_mixerChannel->AddSamples_s16(1, buf16);
@@ -3820,7 +3857,9 @@ public:
 			const bool notRTS_pin_control = value & 0x20;
 			const bool softwareReset = value & 0x40;
 			const bool enterHuntPhase = value & 0x80;
-			if (softwareReset) setState(WAITING_FOR_WRITE_MODE);
+			if (softwareReset) {
+				setState(WAITING_FOR_WRITE_MODE);
+			}
 			break;
 		}
 	}
@@ -4002,12 +4041,14 @@ private:
 	uint8_t getMidiChannel(InstrumentParameters* instr) {
 		uint8_t instrIdx = 0;
 		for (instrIdx = 0; instrIdx < 8; instrIdx++) {
-			if (&m_activeInstrumentParameters[instrIdx] == instr) break;
+			if (&m_activeInstrumentParameters[instrIdx] == instr) { break;
+}
 		}
 		if (instrIdx >= 8) { return 0xFF; }
 		for (uint8_t midiChannel = 0; midiChannel < 16; midiChannel++) {
 			for (uint8_t i = 0; i < 9; i++) {
-				if (m_midiChannelToAssignedInstruments[midiChannel][i] == instrIdx) return midiChannel;
+				if (m_midiChannelToAssignedInstruments[midiChannel][i] == instrIdx) { return midiChannel;
+}
 			}
 		}
 		return 0x80 + instrIdx;
@@ -5635,7 +5676,8 @@ private:
 	void wait(uint16_t delayCounter) {
 		do {
 			uint8_t i = 61;
-			while (i--);
+			while (i--) {;
+}
 		} while (--delayCounter);
 	}
 
@@ -9068,7 +9110,8 @@ private:
 			pData[0] = readResult.data;
 			pData++;
 			bufferSize--;
-			if (bufferSize == 0) break;
+			if (bufferSize == 0) { break;
+}
 			dataPacketSize--;
 		}
 
@@ -9388,7 +9431,8 @@ public:
 		m_interruptThread = SDL_CreateThread(&imfInterruptThreadStart, "imfc-interrupt", this);		
 
 		// wait until we're ready to receive data... it's a workaround for now, but well....
-		while (!m_finishedBootupSequence);
+		while (!m_finishedBootupSequence) {;
+}
 	}
 
 	static int SDLCALL imfMainThreadStart(void* data) {
