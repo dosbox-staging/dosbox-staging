@@ -1183,14 +1183,14 @@ public:
 		return value;
 	}
 	void writePort(uint8_t val) {
-		m_timerAClear.setValue((val & 0x01) != 0 ? true : false);
-		m_timerBClear.setValue((val & 0x02) != 0 ? true : false);
-		m_timerAEnable.setValue((val & 0x04) != 0 ? true : false);
-		m_timerBEnable.setValue((val & 0x08) != 0 ? true : false);
-		m_dataBit8FromSystem.setValue((val & 0x10) != 0 ? true : false);
+		m_timerAClear.setValue((val & 0x01) != 0);
+		m_timerBClear.setValue((val & 0x02) != 0);
+		m_timerAEnable.setValue((val & 0x04) != 0);
+		m_timerBEnable.setValue((val & 0x08) != 0);
+		m_dataBit8FromSystem.setValue((val & 0x10) != 0);
 		//IMF_LOG("TCR: new value for m_dataBit8FromSystem = %i", val & 0x10 ? 1 : 0);
-		m_totalIrqMask.setValue((val & 0x40) != 0 ? true : false);
-		m_irqBufferEnable.setValue((val & 0x80) != 0 ? true : false);
+		m_totalIrqMask.setValue((val & 0x40) != 0);
+		m_irqBufferEnable.setValue((val & 0x80) != 0);
 
 		// Based on the IMFC documentation, the timerAClear and timerBClear:
 		//  The power-on default value is 0. This bit clears interrupts from timer A/B. It is usually set to 1.
@@ -1891,7 +1891,7 @@ private:
 public:
 	IrqController(std::string name, std::function<void(void)> callbackOnLowToHigh, std::function<void(void)> callbackOnToHighToLow) : m_name(std::move(name)),  m_callbackOnLowToHigh(std::move(callbackOnLowToHigh)), m_callbackOnHighToLow(std::move(callbackOnToHighToLow)) {}
 	void enableInterrupts() {
-		if (m_enabled == true) { return; }
+		if (m_enabled) { return; }
 		if (m_debug) {
 			IMF_LOG("%s - interrupts enabled", m_name.c_str());
 		}
@@ -1899,7 +1899,7 @@ public:
 		triggerCallIfNeeded();
 	}
 	void disableInterrupts() {
-		if (m_enabled == false) { return; }
+		if (!m_enabled) { return; }
 		if (m_debug) {
 			IMF_LOG("%s - interrupts disabled", m_name.c_str());
 		}
@@ -5882,7 +5882,7 @@ private:
 		const uint16_t data16u = m_bufferToSystemState.popData();
 		log_debug("IMF->PC: Reading queue data [%X%02X] and sending to port", data16u >> 8, data16u & 0xFF);
 		SDL_LockMutex(m_hardwareMutex);
-		m_piuIMF.setPort2Bit(5, data16u >= 0x100 ? true : false); // set bit 5 to bufferA value
+		m_piuIMF.setPort2Bit(5, data16u >= 0x100); // set bit 5 to bufferA value
 		m_piuIMF.writePortPIU0(data16u & 0xFF);
 		SDL_UnlockMutex(m_hardwareMutex);
 		if (m_bufferToSystemState.getIndexForNextWriteByte() == m_bufferToSystemState.getLastReadByteIndex()) {
