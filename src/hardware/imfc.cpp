@@ -391,7 +391,7 @@ struct FractionalNote {
 	Fraction fraction;
 	Note note;
 
-	FractionalNote() : note(), fraction() {}
+	FractionalNote()  {}
 	FractionalNote(Note nn, Fraction nf) : note(nn), fraction(nf) {}
 	uint16_t getuint16_t() const { return note.value << 8 | fraction.value; }
 };
@@ -9264,63 +9264,71 @@ private:
 	}
 
 public:
-	MusicFeatureCard(Section* configuration, MixerChannel* mixerChannel) : Module_base(configuration),
-		m_ya2151(mixerChannel),
-		// initialize all the internal structures
-		m_bufferFromMidiInState("bufferFromMidiInState", 2048),
-		m_bufferToMidiOutState("bufferToMidiOutState", 256),
+	MusicFeatureCard(Section* configuration, MixerChannel* mixerChannel)
+	        : Module_base(configuration),
+	          m_ya2151(mixerChannel),
+	          // initialize all the internal structures
+	          keep_running(true),
+	          m_bufferFromMidiInState("bufferFromMidiInState", 2048),
+	          m_bufferToMidiOutState("bufferToMidiOutState", 256),
 
-		// FIXME: The original only has a buffer of 256, but since the "main"
-		// thread is a bit slow, we need to increase it a LOT
-		m_bufferFromSystemState("bufferFromSystemState", 0x2000), 
-		m_bufferToSystemState("bufferToSystemState", 256),
-		// create all the instances
-		m_tcr("TCR"),
-		m_piuPC("PIU_PC"),
-		m_piuPC_int0("PIU_PC.RxRDY(INT0)", false),
-		m_piuPC_int1("PIU_PC.TxRDY(INT1)", false),
-		m_piuIMF("PIU_IMF"),
-		m_piuIMF_int0("PIU_IMF.TxRDY(INT0)", false),
-		m_piuIMF_int1("PIU_IMF.RxRDY(INT1)", false),
-		m_piuPort0Data("PIU.port0", 0),
-		m_piuPort1Data("PIU.port1", 0),
-		m_piuEXR8("PIU.EXR8", false),
-		m_piuEXR9("PIU.EXR9", false),
-		m_piuGroup0DataAvailable("PIU.Group0DataAvailable", false),
-		m_piuGroup0DataAcknowledgement("PIU.Group0DataAcknowledgement", false),
-		m_piuGroup1DataAvailable("PIU.Group1DataAvailable", false),
-		m_piuGroup1DataAcknowledgement("PIU.Group1DataAcknowledgement", false),
-		m_timer("TIMER"),
-		m_invTimerAClear("TCR.timerAClear.inverted"),
-		m_df1("DF1"),
-		m_invTimerBClear("TCR.timerBClear.inverted"),
-		m_df2("DF2"),
-		m_totalCardStatus("TCS"),
-		m_irqMaskGate("IRQ Mask Gate"),
-		m_irqStatus("TriStateIrqBuffer"),
-		m_irqTriggerPc("TriggerPcIrq",
-			[]() {
-				IMF_LOG("ACTIVATING PC IRQ!!!");
-				PIC_ActivateIRQ(IMFC_IRQ);
-			} /*callbackOnLowToHigh*/,
-			nullptr /*callbackOnToHighToLow*/),
-		m_irqTriggerImf("TriggerImfIrq",
-			[this]() {
-				SDL_LockMutex(m_interruptHandlerRunningMutex);
-				//log("m_interruptHandlerRunning = true");
-				m_interruptHandlerRunning = true;
-				SDL_CondSignal(m_interruptHandlerRunningCond);
-				SDL_UnlockMutex(m_interruptHandlerRunningMutex);
-			} /*callbackOnLowToHigh*/,
-			[this]() {
-				SDL_LockMutex(m_interruptHandlerRunningMutex);
-				//log("m_interruptHandlerRunning = false");
-				m_interruptHandlerRunning = false;
-				SDL_CondSignal(m_interruptHandlerRunningCond);
-				SDL_UnlockMutex(m_interruptHandlerRunningMutex);
-			} /*callbackOnToHighToLow*/),
-		m_tsr("TSR") {
-		// now wire everything up (see Figure "2-1 Music Card Interrupt System" in the Techniucal Reference Manual)
+			  // FIXME: The original only has a buffer of 256, but since the
+			  // "main" thread is a bit slow, we need to increase it a LOT
+	          m_bufferFromSystemState("bufferFromSystemState", 0x2000),
+	          m_bufferToSystemState("bufferToSystemState", 256),
+	          // create all the instances
+	          m_tcr("TCR"),
+	          m_piuPC("PIU_PC"),
+	          m_piuPC_int0("PIU_PC.RxRDY(INT0)", false),
+	          m_piuPC_int1("PIU_PC.TxRDY(INT1)", false),
+	          m_piuIMF("PIU_IMF"),
+	          m_piuIMF_int0("PIU_IMF.TxRDY(INT0)", false),
+	          m_piuIMF_int1("PIU_IMF.RxRDY(INT1)", false),
+	          m_piuPort0Data("PIU.port0", 0),
+	          m_piuPort1Data("PIU.port1", 0),
+	          m_piuEXR8("PIU.EXR8", false),
+	          m_piuEXR9("PIU.EXR9", false),
+	          m_piuGroup0DataAvailable("PIU.Group0DataAvailable", false),
+	          m_piuGroup0DataAcknowledgement("PIU.Group0DataAcknowledgement",
+	                                         false),
+	          m_piuGroup1DataAvailable("PIU.Group1DataAvailable", false),
+	          m_piuGroup1DataAcknowledgement("PIU.Group1DataAcknowledgement",
+	                                         false),
+	          m_timer("TIMER"),
+	          m_invTimerAClear("TCR.timerAClear.inverted"),
+	          m_df1("DF1"),
+	          m_invTimerBClear("TCR.timerBClear.inverted"),
+	          m_df2("DF2"),
+	          m_totalCardStatus("TCS"),
+	          m_irqMaskGate("IRQ Mask Gate"),
+	          m_irqStatus("TriStateIrqBuffer"),
+	          m_irqTriggerPc(
+	                  "TriggerPcIrq",
+	                  []() {
+		                  IMF_LOG("ACTIVATING PC IRQ!!!");
+		                  PIC_ActivateIRQ(IMFC_IRQ);
+	                  } /*callbackOnLowToHigh*/,
+	                  nullptr /*callbackOnToHighToLow*/),
+	          m_irqTriggerImf(
+	                  "TriggerImfIrq",
+	                  [this]() {
+		                  SDL_LockMutex(m_interruptHandlerRunningMutex);
+		                  // log("m_interruptHandlerRunning = true");
+		                  m_interruptHandlerRunning = true;
+		                  SDL_CondSignal(m_interruptHandlerRunningCond);
+		                  SDL_UnlockMutex(m_interruptHandlerRunningMutex);
+	                  } /*callbackOnLowToHigh*/,
+	                  [this]() {
+		                  SDL_LockMutex(m_interruptHandlerRunningMutex);
+		                  // log("m_interruptHandlerRunning = false");
+		                  m_interruptHandlerRunning = false;
+		                  SDL_CondSignal(m_interruptHandlerRunningCond);
+		                  SDL_UnlockMutex(m_interruptHandlerRunningMutex);
+	                  } /*callbackOnToHighToLow*/),
+	          m_tsr("TSR")
+	{
+		// now wire everything up (see Figure "2-1 Music Card Interrupt
+		// System" in the Techniucal Reference Manual)
 
 		// the ports 0 and 1 of PIU_A and PIU_B are inter-connected
 		m_piuPC.connectPort0(&m_piuPort0Data);
@@ -9414,17 +9422,20 @@ public:
 		m_piuIMF.reset();
 
 		// now start the main program
-		keep_running = true; // both threads stop looping when false
-		m_hardwareMutex = SDL_CreateMutex();
-		m_interruptHandlerRunning = false;
+		m_hardwareMutex                = SDL_CreateMutex();
+		m_interruptHandlerRunning      = false;
 		m_interruptHandlerRunningMutex = SDL_CreateMutex();
-		m_interruptHandlerRunningCond = SDL_CreateCond();
-		m_mainThread = SDL_CreateThread(&imfMainThreadStart, "dosbox:imfc", this);
-		m_interruptThread = SDL_CreateThread(&imfInterruptThreadStart, "imfc-interrupt", this);		
+		m_interruptHandlerRunningCond  = SDL_CreateCond();
+		m_mainThread = SDL_CreateThread(&imfMainThreadStart, "imfc-main", this);
+		m_interruptThread = SDL_CreateThread(&imfInterruptThreadStart,
+		                                     "imfc-interrupt",
+		                                     this);
 
-		// wait until we're ready to receive data... it's a workaround for now, but well....
-		while (!m_finishedBootupSequence) {;
-}
+		// wait until we're ready to receive data... it's a workaround
+		// for now, but well....
+		while (!m_finishedBootupSequence) {
+			;
+		}
 	}
 
 	static int SDLCALL imfMainThreadStart(void* data) {
