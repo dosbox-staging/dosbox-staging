@@ -54,6 +54,7 @@
 #include <functional>
 #include <string>
 #include <cstring>
+#include <utility>
 #include <vector>
 
 #include "dma.h"
@@ -253,7 +254,7 @@ private:
 	inline void setDataCleared() { flags.setDataCleared(); }
 
 public:
-	CyclicBufferState(std::string name, unsigned int bufferSize) : m_name(name), m_mutex(SDL_CreateMutex()), m_locked(false), m_bufferSize(bufferSize), m_debug(false) {}
+	CyclicBufferState(std::string name, unsigned int bufferSize) : m_name(std::move(name)), m_mutex(SDL_CreateMutex()), m_locked(false), m_bufferSize(bufferSize), m_debug(false) {}
 
 	void setDebug(bool debug) {
 		m_debug = debug;
@@ -964,7 +965,7 @@ private:
 	std::string m_name;
 	DataType m_value;
 public:
-	DataContainer(std::string name, DataType inititalValue) : m_debug(false), m_name(name), m_value(inititalValue) {}
+	DataContainer(std::string name, DataType inititalValue) : m_debug(false), m_name(std::move(name)), m_value(inititalValue) {}
 	std::string getName() { return m_name; }
 	DataType getValue() override { return m_value; }
 	void setValue(DataType newValue) {
@@ -985,7 +986,7 @@ private:
 	std::string m_name = {};
 public:
 	InputPin() = default;
-	explicit InputPin(std::string name) : m_name(name) {}
+	explicit InputPin(std::string name) : m_name(std::move(name)) {}
 	std::string getName() { return m_name; }
 	virtual DataType getValue() = 0;
 };
@@ -1216,7 +1217,7 @@ struct CounterData {
 	uint8_t m_tmpWrite;
 	CounterReadSource m_nextReadSource;
 	CounterWriteTarget m_nextWriteTarget;
-	explicit CounterData(std::string name) : m_name(name), m_counterMode(COUNTERMODE_INVALID), m_counter(0), m_runningCounter(0), m_latchedCounter(0), m_tmpWrite(0), m_nextReadSource(COUNTERREADSOURCE_LIVE_1), m_nextWriteTarget(COUNTERWRITETARGET_BYTE1) {};
+	explicit CounterData(std::string name) : m_name(std::move(name)), m_counterMode(COUNTERMODE_INVALID), m_counter(0), m_runningCounter(0), m_latchedCounter(0), m_tmpWrite(0), m_nextReadSource(COUNTERREADSOURCE_LIVE_1), m_nextWriteTarget(COUNTERWRITETARGET_BYTE1) {};
 	void writeCounterByte(uint8_t val) {
 		switch (m_nextWriteTarget) {
 			case COUNTERWRITETARGET_BYTE1:
@@ -1264,7 +1265,7 @@ private:
 		PIC_AddEvent(Intel8253_TimerEvent, 0.002, 0); // FIXME
 	}
 public:
-	explicit Intel8253(std::string name) : m_name(name), m_debug(false), m_timerA("timerAOut", true), m_timerB("timerBOut", true), m_counter0("timer.counter0"), m_counter1("timer.counter1"), m_counter2("timer.counter2") {
+	explicit Intel8253(std::string name) : m_name(std::move(name)), m_debug(false), m_timerA("timerAOut", true), m_timerB("timerBOut", true), m_counter0("timer.counter0"), m_counter1("timer.counter1"), m_counter2("timer.counter2") {
 		registerNextEvent(); // FIXME
 	}
 	DataProvider<bool>* getTimerA() { return m_timerA.getDataProvider(); }
@@ -1889,7 +1890,7 @@ private:
 		}
 	}
 public:
-	IrqController(std::string name, std::function<void(void)> callbackOnLowToHigh, std::function<void(void)> callbackOnToHighToLow) : m_name(name), m_debug(false), m_enabled(false), m_interruptOutput(false), m_callbackOnLowToHigh(callbackOnLowToHigh), m_callbackOnHighToLow(callbackOnToHighToLow) {}
+	IrqController(std::string name, std::function<void(void)> callbackOnLowToHigh, std::function<void(void)> callbackOnToHighToLow) : m_name(std::move(name)), m_debug(false), m_enabled(false), m_interruptOutput(false), m_callbackOnLowToHigh(std::move(callbackOnLowToHigh)), m_callbackOnHighToLow(std::move(callbackOnToHighToLow)) {}
 	void enableInterrupts() {
 		if (m_enabled == true) { return; }
 		if (m_debug) {
