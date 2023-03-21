@@ -952,7 +952,7 @@ protected:
 		}
 	}
 public:
-	DataProvider() {}
+	DataProvider() = default;
 	virtual DataType getValue() = 0;
 	void notifyOnChange(DataChangedConsumer<DataType>* dataConsumer) {
 		m_consumers.push_back(dataConsumer);
@@ -3777,7 +3777,7 @@ private:
 	}
 
 public:
-	PD71051()  {}
+	PD71051()  = default;
 	// MIDI_PORT_1 = 0x10
 	void writePort1(uint8_t value) {
 		// This doesn't do anything for now
