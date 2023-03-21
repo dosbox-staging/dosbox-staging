@@ -995,7 +995,7 @@ template <typename DataType> class DataDrivenInputPin : public InputPin<DataType
 private:
 	DataProvider<DataType>* m_dataProvider;
 public:
-	explicit DataDrivenInputPin(std::string name) : InputPin<DataType>(name), m_dataProvider(NULL) {}
+	explicit DataDrivenInputPin(std::string name) : InputPin<DataType>(name), m_dataProvider(nullptr) {}
 	void connect(DataProvider<DataType>* source) { m_dataProvider = source; }
 	DataType getValue() override {
 		if (!m_dataProvider) {
@@ -1021,7 +1021,7 @@ template <typename DataType> class InputOutputPin : public InputPin<DataType> {
 private:
 	DataContainer<DataType>* m_dataContainer;
 public:
-	explicit InputOutputPin(std::string name) : InputPin<DataType>(name), m_dataContainer(NULL) {}
+	explicit InputOutputPin(std::string name) : InputPin<DataType>(name), m_dataContainer(nullptr) {}
 	void connect(DataContainer<DataType>* dataContainer) { m_dataContainer = dataContainer; }
 	DataType getValue() override {
 		if (!m_dataContainer) {
@@ -6205,7 +6205,7 @@ private:
 			InstrumentParameters* p = getActiveInstrumentParameters(i);
 			YmChannelData* s = getYmChannelData(i);
 			p->channelMask = 0;
-			s->instrumentParameters = NULL;
+			s->instrumentParameters = nullptr;
 		}
 		setNodeParameterMasterTune(m_masterTune);
 		sendToYM2151_no_interrupts_allowed(0x0F, 0); // setNoiseEnable
@@ -6410,7 +6410,7 @@ private:
 		const uint8_t channelMask = instr->channelMask;
 		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
-				m_ymChannelData[i].instrumentParameters = NULL;
+				m_ymChannelData[i].instrumentParameters = nullptr;
 			}
 		}
 		log_debug("deallocateAssignedChannels() - channelMask = 0");
@@ -9268,7 +9268,7 @@ public:
 				IMF_LOG("ACTIVATING PC IRQ!!!");
 				PIC_ActivateIRQ(IMFC_IRQ);
 			} /*callbackOnLowToHigh*/,
-			NULL /*callbackOnToHighToLow*/),
+			nullptr /*callbackOnToHighToLow*/),
 		m_irqTriggerImf("TriggerImfIrq",
 			[this]() {
 				SDL_LockMutex(m_interruptHandlerRunningMutex);
