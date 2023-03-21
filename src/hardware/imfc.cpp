@@ -194,25 +194,25 @@ enum MidiDataPacketState : uint8_t {
 
 struct BufferFlags {
 	// bit-7:true=no data / false=has data / bit6:read errors encounted / bit5: overflow error / bit4: offline error
-	volatile uint8_t __unused1 : 4;
-	volatile uint8_t __hasOfflineError : 1;
-	volatile uint8_t __hasOverflowError : 1;
-	volatile uint8_t __hasReadError : 1;
-	volatile uint8_t __isBufferEmpty : 1;
+	volatile uint8_t _unused1 : 4;
+	volatile uint8_t _hasOfflineError : 1;
+	volatile uint8_t _hasOverflowError : 1;
+	volatile uint8_t _hasReadError : 1;
+	volatile uint8_t _isBufferEmpty : 1;
 
-	inline void setDataAdded() { __isBufferEmpty = 0; }
-	inline void setDataCleared() { __isBufferEmpty = 1; }
-	inline void setReadErrorFlag() { __hasReadError = 1; }
-	inline void setOverflowErrorFlag() { __hasOverflowError = 1; }
-	inline void setOfflineErrorFlag() { __hasOfflineError = 1; }
-	inline bool isEmpty() { return __isBufferEmpty; }
+	inline void setDataAdded() { _isBufferEmpty = 0; }
+	inline void setDataCleared() { _isBufferEmpty = 1; }
+	inline void setReadErrorFlag() { _hasReadError = 1; }
+	inline void setOverflowErrorFlag() { _hasOverflowError = 1; }
+	inline void setOfflineErrorFlag() { _hasOfflineError = 1; }
+	inline bool isEmpty() { return _isBufferEmpty; }
 	inline bool hasData() { return !isEmpty(); }
-	inline bool hasError() { return __hasOfflineError || __hasOverflowError || __hasReadError; }
-	inline bool hasReadError() { return __hasReadError; }
-	inline bool hasOverflowError() { return __hasOverflowError; }
-	inline bool hasOfflineError() { return __hasOfflineError; }
+	inline bool hasError() { return _hasOfflineError || _hasOverflowError || _hasReadError; }
+	inline bool hasReadError() { return _hasReadError; }
+	inline bool hasOverflowError() { return _hasOverflowError; }
+	inline bool hasOfflineError() { return _hasOfflineError; }
 	inline uint8_t getByteValue() {
-		return (__unused1 << 0) | (__hasOfflineError << 4) | (__hasOverflowError << 5) | (__hasReadError << 6) | (__isBufferEmpty << 7);
+		return (_unused1 << 0) | (_hasOfflineError << 4) | (_hasOverflowError << 5) | (_hasReadError << 6) | (_isBufferEmpty << 7);
 	}
 };
 
@@ -314,8 +314,8 @@ public:
 		lock();
 		lastReadByteIndex = 0;
 		indexForNextWriteByte = 0;
-		flags.__unused1 = flags.__hasOfflineError = flags.__hasOverflowError = flags.__hasReadError = 0;
-		flags.__isBufferEmpty = 1;
+		flags._unused1 = flags._hasOfflineError = flags._hasOverflowError = flags._hasReadError = 0;
+		flags._isBufferEmpty = 1;
 		memset((void*)&m_buffer, 0xFF, sizeof(m_buffer));
 		unlock();
 	}
@@ -862,10 +862,10 @@ public:
 	FractionalNote detuneAsNoteFraction; // considers instrumentConfiguration.octaveTranspose and instrumentConfiguration.detune 
 	uint8_t volume;
 	// flags: <a*****ps> <a>: LFO sync mode 0,1 (Sync ON) / <p> portamento ON/OFF / <s> sustain ON/OFF
-	uint8_t __sustain : 1;
-	uint8_t __portamento : 1;
-	uint8_t __unused0 : 5;
-	uint8_t __lfoSyncMode : 1;
+	uint8_t _sustain : 1;
+	uint8_t _portamento : 1;
+	uint8_t _unused0 : 5;
+	uint8_t _lfoSyncMode : 1;
 	// next byte
 	uint8_t operator1TotalLevel; // 0(Max)~127
 	uint8_t operator2TotalLevel; // 0(Max)~127
@@ -876,12 +876,12 @@ public:
 	uint8_t lastUsedChannel;
 	//uint16_t __lastMidiOnOff_Duration_XXX : 15;
 	//uint16_t __lastMidiOnOff_Duration_IsEmpty_XXX : 1;
-	Duration __lastMidiOnOff_Duration_XX;
-	FractionalNote __lastMidiOnOff_FractionAndNoteNumber_XXX;
+	Duration _lastMidiOnOff_Duration_XX;
+	FractionalNote _lastMidiOnOff_FractionAndNoteNumber_XXX;
 	//uint16_t __lastMidiOnOff_Duration_YYY : 15;
 	//uint16_t __lastMidiOnOff_Duration_IsEmpty_YYY : 1;
-	Duration __lastMidiOnOff_Duration_YY;
-	FractionalNote __lastMidiOnOff_FractionAndNoteNumber_YYY;
+	Duration _lastMidiOnOff_Duration_YY;
+	FractionalNote _lastMidiOnOff_FractionAndNoteNumber_YYY;
 	YmChannelData* ymChannelData;
 	uint8_t overflowToMidiOut; // FIXME: This is a bit flag
 	uint8_t unused2[22];
@@ -903,11 +903,11 @@ public:
 	uint8_t channelNumber : 3;
 	uint8_t operatorsEnabled : 4;
 	uint8_t unused2 : 1;
-	uint8_t __unused3 : 4;
-	uint8_t __hasActiveSostenuto : 1;
-	uint8_t __hasActivePortamento : 1;
-	uint8_t __flag6 : 1;
-	uint8_t __hasActiveNoteON : 1; // this is probably an "is playing"-flag
+	uint8_t _unused3 : 4;
+	uint8_t _hasActiveSostenuto : 1;
+	uint8_t _hasActivePortamento : 1;
+	uint8_t _flag6 : 1;
+	uint8_t _hasActiveNoteON : 1; // this is probably an "is playing"-flag
 	Duration remainingDuration; // if set, the number of clock messages (midi code 0xF8) to play this not
 	FractionalNote portamentoAdjustment; // This might be a positive or negative fractionNote!
 	FractionalNote portamentoTarget; // target note/fraction for portamento
@@ -6571,7 +6571,7 @@ private:
 		log_debug("setInstrumentParameter_LFOSync()");
 		if (val >= 2) { return; }
 		instr->voiceDefinition.setLfoSyncMode(val);
-		instr->__lfoSyncMode = val;
+		instr->_lfoSyncMode = val;
 	}
 
 	// ROM Address: 0x171E
@@ -6694,7 +6694,7 @@ private:
 
 	// ROM Address: 0x17E2
 	void applyVoiceDefinition(InstrumentParameters* instr) {
-		instr->__lfoSyncMode = instr->voiceDefinition.getLfoSyncMode();
+		instr->_lfoSyncMode = instr->voiceDefinition.getLfoSyncMode();
 		setInstrumentParameter_LFOLoadEnable(instr, instr->voiceDefinition.getLfoLoadMode());
 		// loop unrolling here. Original was a loop
 		// Note to self: The "instr->voiceDefinition.operators[0].__totalLevel" in the original is getting the entire byte, not just 7bits. But since it is being cropped.. well...
@@ -6755,7 +6755,7 @@ private:
 	// ROM Address: 0x18DC
 	void ym_updateKeyCodeAndFractionOnAllChannels() {
 		for (uint8_t i = 0; i < 8; i++) {
-			if (m_ymChannelData[i].__flag6) {
+			if (m_ymChannelData[i]._flag6) {
 				ym_setKeyCodeAndFraction(&m_ymChannelData[i], m_ymChannelData[i].instrumentParameters);
 			}
 		}
@@ -6825,17 +6825,17 @@ private:
 	void setInstrumentParameter_PortamentoTime(InstrumentParameters* instr, uint8_t val) {
 		log_debug("setInstrumentParameter_PortamentoTime()");
 		instr->instrumentConfiguration.portamentoTime = val;
-		setInstrumentParameterPortamentoOnOff(instr, instr->__portamento);
+		setInstrumentParameterPortamentoOnOff(instr, instr->_portamento);
 	}
 
 	// ROM Address: 0x19D3
 	// val is either 0 (OFF) or 127 (ON)
 	void setInstrumentParameterPortamentoOnOff(InstrumentParameters* instr, uint8_t val) {
-		if (val == 0) { instr->__portamento = 0; }
-		else if (val == 0x7F) { instr->__portamento = 1; }
+		if (val == 0) { instr->_portamento = 0; }
+		else if (val == 0x7F) { instr->_portamento = 1; }
 		else { return; }
 
-		if (instr->__portamento && instr->instrumentConfiguration.portamentoTime) { return; }
+		if (instr->_portamento && instr->instrumentConfiguration.portamentoTime) { return; }
 		for (uint8_t i = 0; i < 8; i++) {
 			if (instr->channelMask & (1 << i)) {
 				ym_finishPortamento(&m_ymChannelData[i]);
@@ -6845,7 +6845,7 @@ private:
 
 	// ROM Address: 0x1A05
 	void ym_registerKey_setKeyCodeAndFraction_IncludingPortamento(InstrumentParameters* instr, YmChannelData* ymChannelData) {
-		if (instr->__portamento == 0) { return ym_registerKey_setKeyCodeAndFraction_Special(instr, ymChannelData); }
+		if (instr->_portamento == 0) { return ym_registerKey_setKeyCodeAndFraction_Special(instr, ymChannelData); }
 		if (instr->instrumentConfiguration.portamentoTime == 0) { return ym_registerKey_setKeyCodeAndFraction_Special(instr, ymChannelData); }
 		YmChannelData* tmpYmChannelData = instr->ymChannelData;
 		if (m_lastMidiOnOff_FractionAndNoteNumber == tmpYmChannelData->originalFractionAndNoteNumber) { return ym_registerKey_setKeyCodeAndFraction_Special(instr, ymChannelData); }
@@ -6854,7 +6854,7 @@ private:
 		FractionalNote hl = ymChannelData->portamentoTarget - tmpYmChannelData->currentlyPlaying;
 		if ((hl.note.value & 0x80) == 0) {
 			// hl is positive
-			ymChannelData->__hasActivePortamento = 1;
+			ymChannelData->_hasActivePortamento = 1;
 			uint16_t val = (hl.note.value >> 1) & 0x3F;
 			if (val == 0) { val = 1; }
 			val = val * ym_getPortamentoTimeFactor(instr);
@@ -6862,7 +6862,7 @@ private:
 			return ym_registerKey_setKeyCodeAndFraction(instr, ymChannelData);
 		} else {
 			// hl is negative
-			ymChannelData->__hasActivePortamento = 1;
+			ymChannelData->_hasActivePortamento = 1;
 			int16_t val = hl.getuint16_t();
 			val = val >> (8 + 1);
 			val = val * ym_getPortamentoTimeFactor(instr);
@@ -6879,7 +6879,7 @@ private:
 
 	// ROM Address: 0x1ABE
 	void ym_registerKey_setKeyCodeAndFraction_Special(InstrumentParameters* instr, YmChannelData* ymChannelData) {
-		ymChannelData->__hasActivePortamento = 0;
+		ymChannelData->_hasActivePortamento = 0;
 		ymChannelData->currentlyPlaying = ymChannelData->portamentoTarget;
 		ym_registerKey_setKeyCodeAndFraction(instr, ymChannelData);
 	}
@@ -6896,7 +6896,7 @@ private:
 	void ym_updateAllCurrentlyPlayingByPortamentoAdjustment() {
 		startMusicProcessing();
 		for (uint8_t i = 0; i < 8; i++) {
-			if (m_ymChannelData[i].__hasActivePortamento && m_ymChannelData[i].__flag6) {
+			if (m_ymChannelData[i]._hasActivePortamento && m_ymChannelData[i]._flag6) {
 				ym_updateCurrentlyPlayingByPortamentoAdjustment(&m_ymChannelData[i]);
 			}
 		}
@@ -6932,7 +6932,7 @@ private:
 
 	// ROM Address: 0x1B4C
 	void ym_finishPortamento(YmChannelData* ymChannelData) {
-		ymChannelData->__hasActivePortamento = 0; // reset bit5
+		ymChannelData->_hasActivePortamento = 0; // reset bit5
 		ymChannelData->currentlyPlaying = ymChannelData->portamentoTarget;
 	}
 
@@ -7285,8 +7285,8 @@ private:
 	// ROM Address: 0x225B
 	void applyInstrumentConfiguration(InstrumentParameters* instr) {
 		startMusicProcessing();
-		instr->__lastMidiOnOff_Duration_XX.setEmpty();
-		instr->__lastMidiOnOff_Duration_YY.setEmpty();
+		instr->_lastMidiOnOff_Duration_XX.setEmpty();
+		instr->_lastMidiOnOff_Duration_YY.setEmpty();
 		uint8_t channelMask = instr->channelMask;
 		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
@@ -7298,8 +7298,8 @@ private:
 
 	// ROM Address: 0x2284
 	void setInstrumentParameter_AllNotesOFF(InstrumentParameters* instr, uint8_t val) {
-		instr->__lastMidiOnOff_Duration_XX.setEmpty();
-		instr->__lastMidiOnOff_Duration_YY.setEmpty();
+		instr->_lastMidiOnOff_Duration_XX.setEmpty();
+		instr->_lastMidiOnOff_Duration_YY.setEmpty();
 		uint8_t channelMask = instr->channelMask;
 		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
@@ -7341,13 +7341,13 @@ private:
 
 	// ROM Address: 0x22F4
 	void realTimeMessage_FC_MonoMode(InstrumentParameters* instr) {
-		if (instr->__lastMidiOnOff_Duration_YY.isNotEmpty() && instr->__lastMidiOnOff_Duration_YY.value) {
-			instr->__lastMidiOnOff_Duration_YY.setEmpty();
+		if (instr->_lastMidiOnOff_Duration_YY.isNotEmpty() && instr->_lastMidiOnOff_Duration_YY.value) {
+			instr->_lastMidiOnOff_Duration_YY.setEmpty();
 		}
-		if (instr->__lastMidiOnOff_Duration_XX.isNotEmpty() && instr->__lastMidiOnOff_Duration_XX.value) {
-			instr->__lastMidiOnOff_Duration_XX = instr->__lastMidiOnOff_Duration_YY;
-			instr->__lastMidiOnOff_FractionAndNoteNumber_XXX = instr->__lastMidiOnOff_FractionAndNoteNumber_YYY;
-			instr->__lastMidiOnOff_Duration_YY.setEmpty();
+		if (instr->_lastMidiOnOff_Duration_XX.isNotEmpty() && instr->_lastMidiOnOff_Duration_XX.value) {
+			instr->_lastMidiOnOff_Duration_XX = instr->_lastMidiOnOff_Duration_YY;
+			instr->_lastMidiOnOff_FractionAndNoteNumber_XXX = instr->_lastMidiOnOff_FractionAndNoteNumber_YYY;
+			instr->_lastMidiOnOff_Duration_YY.setEmpty();
 		}
 	}
 
@@ -7376,18 +7376,18 @@ private:
 
 	// ROM Address: 0x2377
 	void sub_2377(InstrumentParameters* instr) {
-		if (instr->__lastMidiOnOff_Duration_YY.isNotEmpty() && instr->__lastMidiOnOff_Duration_YY.value) {
-			instr->__lastMidiOnOff_Duration_YY.value--;
-			if (instr->__lastMidiOnOff_Duration_YY.value == 0) {
-				instr->__lastMidiOnOff_Duration_YY.setEmpty();
+		if (instr->_lastMidiOnOff_Duration_YY.isNotEmpty() && instr->_lastMidiOnOff_Duration_YY.value) {
+			instr->_lastMidiOnOff_Duration_YY.value--;
+			if (instr->_lastMidiOnOff_Duration_YY.value == 0) {
+				instr->_lastMidiOnOff_Duration_YY.setEmpty();
 			}
 		}
-		if (instr->__lastMidiOnOff_Duration_XX.isNotEmpty() && instr->__lastMidiOnOff_Duration_XX.value) {
-			instr->__lastMidiOnOff_Duration_XX.value--;
-			if (instr->__lastMidiOnOff_Duration_XX.value == 0) {
-				instr->__lastMidiOnOff_Duration_XX = instr->__lastMidiOnOff_Duration_YY;
-				instr->__lastMidiOnOff_FractionAndNoteNumber_XXX = instr->__lastMidiOnOff_FractionAndNoteNumber_YYY;
-				instr->__lastMidiOnOff_Duration_YY.setEmpty();
+		if (instr->_lastMidiOnOff_Duration_XX.isNotEmpty() && instr->_lastMidiOnOff_Duration_XX.value) {
+			instr->_lastMidiOnOff_Duration_XX.value--;
+			if (instr->_lastMidiOnOff_Duration_XX.value == 0) {
+				instr->_lastMidiOnOff_Duration_XX = instr->_lastMidiOnOff_Duration_YY;
+				instr->_lastMidiOnOff_FractionAndNoteNumber_XXX = instr->_lastMidiOnOff_FractionAndNoteNumber_YYY;
+				instr->_lastMidiOnOff_Duration_YY.setEmpty();
 			}
 		}
 	}
@@ -7407,15 +7407,15 @@ private:
 	// ROM Address: 0x23E7
 	// val is either 0 (OFF) or 127 (ON)
 	void setInstrumentParameterSustainOnOff(InstrumentParameters* instr, uint8_t val) {
-		instr->__sustain = 1;
+		instr->_sustain = 1;
 		if (val & 0b01000000) { return; }
-		instr->__sustain = 0;
+		instr->_sustain = 0;
 		// since the sustain "pedal" was release, we might need to turn off a couple of notes that are still playing
 		uint8_t channelMask = instr->channelMask;
 		for (uint8_t i = 0; i < 8; i++) {
 			if (channelMask & (1 << i)) {
 				// turn off the note only if it's been "released" (note was turned off)
-				if (m_ymChannelData[i].__flag6 && !m_ymChannelData[i].__hasActiveNoteON) {
+				if (m_ymChannelData[i]._flag6 && !m_ymChannelData[i]._hasActiveNoteON) {
 					ym_noteOFF(instr, &m_ymChannelData[i]);
 				}
 			}
@@ -7430,8 +7430,8 @@ private:
 			uint8_t channelMask = instr->channelMask;
 			for (uint8_t i = 0; i < 8; i++) {
 				if (channelMask & (1 << i)) {
-					m_ymChannelData[i].__hasActiveSostenuto = 0;
-					if (m_ymChannelData[i].__flag6 && !m_ymChannelData[i].__hasActiveNoteON) {
+					m_ymChannelData[i]._hasActiveSostenuto = 0;
+					if (m_ymChannelData[i]._flag6 && !m_ymChannelData[i]._hasActiveNoteON) {
 						ym_noteOFF(instr, &m_ymChannelData[i]);
 					}
 				}
@@ -7441,8 +7441,8 @@ private:
 			uint8_t channelMask = instr->channelMask;
 			for (uint8_t i = 0; i < 8; i++) {
 				if (channelMask & (1 << i)) {
-					if (m_ymChannelData[i].__hasActiveNoteON) {
-						m_ymChannelData[i].__hasActiveSostenuto = 1;
+					if (m_ymChannelData[i]._hasActiveNoteON) {
+						m_ymChannelData[i]._hasActiveSostenuto = 1;
 					}
 				}
 			}
@@ -7539,7 +7539,7 @@ private:
 			// note OFF
 			// find the same note and turn it off
 			for (uint8_t i = 0; i < 8; i++) {
-				if (instr->channelMask & (1 << i) && m_ymChannelData[i].__hasActiveNoteON) {
+				if (instr->channelMask & (1 << i) && m_ymChannelData[i]._hasActiveNoteON) {
 					if (m_ymChannelData[i].originalFractionAndNoteNumber == FractionalNote(noteNumber, fraction)) {
 						return ym_noteOFF(instr, &m_ymChannelData[i]);
 					}
@@ -7554,7 +7554,7 @@ private:
 			lastUsedChannel = leftRotate8(lastUsedChannel);
 			if (instr->channelMask & lastUsedChannel) {
 				YmChannelData* ymChannelData = getYmChannelData_for_first_active_channel(instr->channelMask & lastUsedChannel);
-				if (ymChannelData->__flag6 == 0) {
+				if (ymChannelData->_flag6 == 0) {
 					instr->lastUsedChannel = lastUsedChannel;
 					log_error("executeMidiCommand_NoteONOFF_internal() - ym_fastNoteOFF_noteON");
 					return ym_fastNoteOFF_noteON(instr, ymChannelData);
@@ -7568,7 +7568,7 @@ private:
 			lastUsedChannel = leftRotate8(lastUsedChannel);
 			if (instr->channelMask & lastUsedChannel) {
 				YmChannelData* ymChannelData = getYmChannelData_for_first_active_channel(instr->channelMask & lastUsedChannel);
-				if (ymChannelData->__hasActiveNoteON == 0) {
+				if (ymChannelData->_hasActiveNoteON == 0) {
 					instr->lastUsedChannel = lastUsedChannel;
 					log_error("executeMidiCommand_NoteONOFF_internal() - ym_fastNoteOFF_delay_noteON");
 					return ym_fastNoteOFF_delay_noteON(instr, ymChannelData);
@@ -7606,11 +7606,11 @@ private:
 			return sub_264B(instr, &m_ymChannelData[channelNr]);
 		}
 		// key OFF
-		if (instr->__lastMidiOnOff_Duration_YY.isEmpty()) {
+		if (instr->_lastMidiOnOff_Duration_YY.isEmpty()) {
 			return sub_25D6(instr, &m_ymChannelData[channelNr], val);
 		}
-		if (instr->__lastMidiOnOff_FractionAndNoteNumber_YYY == val) {
-			instr->__lastMidiOnOff_Duration_YY.setEmpty();
+		if (instr->_lastMidiOnOff_FractionAndNoteNumber_YYY == val) {
+			instr->_lastMidiOnOff_Duration_YY.setEmpty();
 			return;
 		}
 		sub_25D6(instr, &m_ymChannelData[channelNr], val);
@@ -7618,13 +7618,13 @@ private:
 
 	// ROM Address: 0x25D6
 	void sub_25D6(InstrumentParameters* instr, YmChannelData* ymChannelData, FractionalNote val) {
-		if (instr->__lastMidiOnOff_Duration_XX.isNotEmpty() && instr->__lastMidiOnOff_FractionAndNoteNumber_XXX == val) {
-			instr->__lastMidiOnOff_Duration_XX = instr->__lastMidiOnOff_Duration_YY;
-			instr->__lastMidiOnOff_FractionAndNoteNumber_XXX = instr->__lastMidiOnOff_FractionAndNoteNumber_YYY;
-			instr->__lastMidiOnOff_Duration_YY.setEmpty();
+		if (instr->_lastMidiOnOff_Duration_XX.isNotEmpty() && instr->_lastMidiOnOff_FractionAndNoteNumber_XXX == val) {
+			instr->_lastMidiOnOff_Duration_XX = instr->_lastMidiOnOff_Duration_YY;
+			instr->_lastMidiOnOff_FractionAndNoteNumber_XXX = instr->_lastMidiOnOff_FractionAndNoteNumber_YYY;
+			instr->_lastMidiOnOff_Duration_YY.setEmpty();
 			return;
 		}
-		if (ymChannelData->__hasActiveNoteON == 0) { return; }
+		if (ymChannelData->_hasActiveNoteON == 0) { return; }
 		if (ymChannelData->currentlyPlaying != val) { return; }
 		sub_2613(instr, ymChannelData);
 
@@ -7632,22 +7632,22 @@ private:
 
 	// ROM Address: 0x2613
 	void sub_2613(InstrumentParameters* instr, YmChannelData* ymChannelData) {
-		if (instr->__lastMidiOnOff_Duration_XX.isEmpty()) { return ym_noteOFF(instr, ymChannelData); }
-		m_lastMidiOnOff_Duration = instr->__lastMidiOnOff_Duration_XX;
-		m_lastMidiOnOff_FractionAndNoteNumber = instr->__lastMidiOnOff_FractionAndNoteNumber_XXX;
-		instr->__lastMidiOnOff_Duration_XX = instr->__lastMidiOnOff_Duration_YY;
-		instr->__lastMidiOnOff_FractionAndNoteNumber_XXX = instr->__lastMidiOnOff_FractionAndNoteNumber_YYY;
-		instr->__lastMidiOnOff_Duration_YY.setEmpty();
+		if (instr->_lastMidiOnOff_Duration_XX.isEmpty()) { return ym_noteOFF(instr, ymChannelData); }
+		m_lastMidiOnOff_Duration = instr->_lastMidiOnOff_Duration_XX;
+		m_lastMidiOnOff_FractionAndNoteNumber = instr->_lastMidiOnOff_FractionAndNoteNumber_XXX;
+		instr->_lastMidiOnOff_Duration_XX = instr->_lastMidiOnOff_Duration_YY;
+		instr->_lastMidiOnOff_FractionAndNoteNumber_XXX = instr->_lastMidiOnOff_FractionAndNoteNumber_YYY;
+		instr->_lastMidiOnOff_Duration_YY.setEmpty();
 		sub_26DA(instr, ymChannelData);
 	}
 
 	// ROM Address: 0x264B
 	void sub_264B(InstrumentParameters* instr, YmChannelData* ymChannelData) {
-		if (ymChannelData->__hasActiveNoteON == 0) { return sub_26E0(instr, ymChannelData); }
-		instr->__lastMidiOnOff_FractionAndNoteNumber_YYY = instr->__lastMidiOnOff_FractionAndNoteNumber_XXX;
-		instr->__lastMidiOnOff_Duration_YY = instr->__lastMidiOnOff_Duration_XX;
-		instr->__lastMidiOnOff_FractionAndNoteNumber_XXX = ymChannelData->originalFractionAndNoteNumber;
-		instr->__lastMidiOnOff_Duration_XX = ymChannelData->remainingDuration;
+		if (ymChannelData->_hasActiveNoteON == 0) { return sub_26E0(instr, ymChannelData); }
+		instr->_lastMidiOnOff_FractionAndNoteNumber_YYY = instr->_lastMidiOnOff_FractionAndNoteNumber_XXX;
+		instr->_lastMidiOnOff_Duration_YY = instr->_lastMidiOnOff_Duration_XX;
+		instr->_lastMidiOnOff_FractionAndNoteNumber_XXX = ymChannelData->originalFractionAndNoteNumber;
+		instr->_lastMidiOnOff_Duration_XX = ymChannelData->remainingDuration;
 		sub_26DA(instr, ymChannelData);
 	}
 
@@ -7655,25 +7655,25 @@ private:
 	void ym_noteOFF_fastRelease(InstrumentParameters* instr, YmChannelData* ymChannelData) {
 		ym_setFirstDecayLevelAndReleaseRate(instr, ymChannelData, 0x0F);
 		ymChannelData->remainingDuration.value = 0;
-		ymChannelData->__hasActiveNoteON = 0;
-		ymChannelData->__flag6 = 0;
-		ymChannelData->__hasActivePortamento = 0;
-		ymChannelData->__hasActiveSostenuto = 0;
+		ymChannelData->_hasActiveNoteON = 0;
+		ymChannelData->_flag6 = 0;
+		ymChannelData->_hasActivePortamento = 0;
+		ymChannelData->_hasActiveSostenuto = 0;
 		sendToYM2151_no_interrupts_allowed(8, ymChannelData->channelNumber);
 	}
 
 	// ROM Address: 0x2689
 	void ym_noteOFF(InstrumentParameters* instr, YmChannelData* ymChannelData) {
 		log_debug("ym_noteOFF()");
-		ymChannelData->__hasActiveNoteON = 0;
-		if (instr->__sustain) { return; }
-		if (ymChannelData->__hasActiveSostenuto) { return; }
+		ymChannelData->_hasActiveNoteON = 0;
+		if (instr->_sustain) { return; }
+		if (ymChannelData->_hasActiveSostenuto) { return; }
 		ym_setFirstDecayLevelAndReleaseRate(instr, ymChannelData, 0);
 		ymChannelData->remainingDuration.value = 0;
-		ymChannelData->__hasActiveNoteON = 0;
-		ymChannelData->__flag6 = 0;
-		ymChannelData->__hasActivePortamento = 0;
-		ymChannelData->__hasActiveSostenuto = 0;
+		ymChannelData->_hasActiveNoteON = 0;
+		ymChannelData->_flag6 = 0;
+		ymChannelData->_hasActivePortamento = 0;
+		ymChannelData->_hasActiveSostenuto = 0;
 		sendToYM2151_no_interrupts_allowed(8, ymChannelData->channelNumber);
 	}
 
@@ -7729,7 +7729,7 @@ private:
 	void ym_noteON(InstrumentParameters* instr, YmChannelData* ymChannelData) {
 		ym_calculateAndUpdateOperatorVolumes(instr, ymChannelData);
 		ym_allOperators_sendKeyScaleAndAttackRate(instr, ymChannelData);
-		if (instr->__lfoSyncMode) {
+		if (instr->_lfoSyncMode) {
 			// LFO sync mode
 			sendToYM2151_with_disabled_interrupts(9, 2); // 9=Test register on the ym2164 - Reset LFO phase
 			delayNop();
@@ -7741,10 +7741,10 @@ private:
 
 	// ROM Address: 0x2724
 	void sub_2724(InstrumentParameters* instr, YmChannelData* ymChannelData) {
-		ymChannelData->__hasActiveNoteON = 1;
-		ymChannelData->__flag6 = 1;
-		ymChannelData->__hasActivePortamento = 0;
-		ymChannelData->__hasActiveSostenuto = 0;
+		ymChannelData->_hasActiveNoteON = 1;
+		ymChannelData->_flag6 = 1;
+		ymChannelData->_hasActivePortamento = 0;
+		ymChannelData->_hasActiveSostenuto = 0;
 
 		//if (instr->voiceDefinition.getTranspose() != 0) {
 		//	log_error("DEBUG: instr->voiceDefinition.getTranspose() is %i", instr->voiceDefinition.getTranspose());
