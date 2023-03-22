@@ -965,7 +965,7 @@ U kunt hier uw MOUNT-lijnen plaatsen.
 # Regels die beginnen met een '#'-teken zijn opmerkingen.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Mogelijke waarden
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR

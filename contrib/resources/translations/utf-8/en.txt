@@ -948,7 +948,7 @@ You can put your MOUNT lines here.
 # Lines starting with a '#' character are comments.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Possible values
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR

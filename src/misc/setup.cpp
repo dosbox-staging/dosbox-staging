@@ -263,7 +263,7 @@ string Value::ToString() const
 Property::Property(const std::string& name, Changeable::Value when)
         : propname(name),
           value(),
-          suggested_values{},
+          valid_values{},
           default_value(),
           change(when)
 {
@@ -271,13 +271,13 @@ Property::Property(const std::string& name, Changeable::Value when)
 	        "Only letters, digits, and underscores are allowed in property names");
 }
 
-bool Property::CheckValue(const Value& in)
+bool Property::IsValidValue(const Value& in)
 {
-	if (suggested_values.empty()) {
+	if (!IsRestrictedValue()) {
 		return true;
 	}
-	for (const_iter it = suggested_values.begin(); it != suggested_values.end();
-	     ++it) {
+
+	for (const_iter it = valid_values.begin(); it != valid_values.end(); ++it) {
 		if ((*it) == in) { // Match!
 			return true;
 		}
@@ -314,57 +314,57 @@ const char* Property::GetHelpUtf8() const
 
 bool Prop_int::SetVal(const Value& in)
 {
-	if (!suggested_values.empty()) {
-		if (CheckValue(in)) {
+	if (IsRestrictedValue()) {
+		if (IsValidValue(in)) {
 			value = in;
 			return true;
 		} else {
 			value = default_value;
 			return false;
 		}
-	} else {
-		// Handle ranges if specified
-		const int mi = min_value;
-		const int ma = max_value;
-		int va       = static_cast<int>(Value(in));
+	}
 
-		// No ranges
-		if (mi == -1 && ma == -1) {
-			value = in;
-			return true;
-		}
+	// Handle ranges if specified
+	const int mi = min_value;
+	const int ma = max_value;
+	int va       = static_cast<int>(Value(in));
 
-		// Inside range
-		if (va >= mi && va <= ma) {
-			value = in;
-			return true;
-		}
-
-		// Outside range, set it to the closest boundary
-		if (va > ma) {
-			va = ma;
-		} else {
-			va = mi;
-		}
-
-		LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', limiting it to %d",
-		            in.ToString().c_str(),
-		            min_value.ToString().c_str(),
-		            max_value.ToString().c_str(),
-		            propname.c_str(),
-		            va);
-
-		value = va;
+	// No ranges
+	if (mi == -1 && ma == -1) {
+		value = in;
 		return true;
 	}
-}
-bool Prop_int::CheckValue(const Value& in)
-{
-	//	if(!suggested_values.empty() && Property::CheckValue(in,warn))
-	// return true;
-	if (!suggested_values.empty()) {
-		return Property::CheckValue(in);
+
+	// Inside range
+	if (va >= mi && va <= ma) {
+		value = in;
+		return true;
 	}
+
+	// Outside range, set it to the closest boundary
+	if (va > ma) {
+		va = ma;
+	} else {
+		va = mi;
+	}
+
+	LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', limiting it to %d",
+	            in.ToString().c_str(),
+	            min_value.ToString().c_str(),
+	            max_value.ToString().c_str(),
+	            propname.c_str(),
+	            va);
+
+	value = va;
+	return true;
+}
+
+bool Prop_int::IsValidValue(const Value& in)
+{
+	if (IsRestrictedValue()) {
+		return Property::IsValidValue(in);
+	}
+
 	// LOG_MSG("still used ?");
 	// No >= and <= in Value type and == is ambigious
 	const int mi = min_value;
@@ -411,22 +411,25 @@ bool Prop_int::SetValue(const std::string& input)
 
 bool Prop_string::SetValue(const std::string& input)
 {
-	// Special version for lowcase stuff
 	std::string temp(input);
-	// suggested values always case insensitive.
-	// If there are none then it can be paths and such which are case sensitive
-	if (!suggested_values.empty()) {
+
+	// Valid values are always case insensitive.
+	// If the list of valid values is not specified, the string value could
+	// be a path or something similar, which are case sensitive.
+	if (IsRestrictedValue()) {
 		lowcase(temp);
 	}
 	Value val(temp, Value::V_STRING);
 	return SetVal(val);
 }
-bool Prop_string::CheckValue(const Value& in)
+
+bool Prop_string::IsValidValue(const Value& in)
 {
-	if (suggested_values.empty()) {
+	if (!IsRestrictedValue()) {
 		return true;
 	}
-	for (const auto& val : suggested_values) {
+
+	for (const auto& val : valid_values) {
 		if (val == in) { // Match!
 			return true;
 		}
@@ -512,7 +515,6 @@ void PropMultiVal::make_default_value()
 	SetVal(val);
 }
 
-// TODO checkvalue stuff
 bool PropMultiValRemain::SetValue(const std::string& input)
 {
 	Value val(input, Value::V_STRING);
@@ -552,7 +554,7 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 		}
 		// Test Value. If it fails set default
 		Value valtest(in, p->Get_type());
-		if (!p->CheckValue(valtest)) {
+		if (!p->IsValidValue(valtest)) {
 			make_default_value();
 			return false;
 		}
@@ -561,7 +563,6 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 	return retval;
 }
 
-// TODO checkvalue stuff
 bool PropMultiVal::SetValue(const std::string& input)
 {
 	Value val(input, Value::V_STRING);
@@ -595,10 +596,10 @@ bool PropMultiVal::SetValue(const std::string& input)
 		}
 
 		if (p->Get_type() == Value::V_STRING) {
-			// Strings are only checked against the suggested values
+			// Strings are only checked against the valid values
 			// list. Test Value. If it fails set default
 			Value valtest(in, p->Get_type());
-			if (!p->CheckValue(valtest)) {
+			if (!p->IsValidValue(valtest)) {
 				make_default_value();
 				return false;
 			}
@@ -629,7 +630,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 
 const std::vector<Value>& Property::GetValues() const
 {
-	return suggested_values;
+	return valid_values;
 }
 
 const std::vector<Value>& PropMultiVal::GetValues() const
@@ -637,7 +638,7 @@ const std::vector<Value>& PropMultiVal::GetValues() const
 	Property* p = section->Get_prop(0);
 	// No properties in this section. do nothing
 	if (!p) {
-		return suggested_values;
+		return valid_values;
 	}
 	int i = 0;
 	while ((p = section->Get_prop(i++))) {
@@ -646,7 +647,7 @@ const std::vector<Value>& PropMultiVal::GetValues() const
 			return p->GetValues();
 		}
 	}
-	return suggested_values;
+	return valid_values;
 }
 
 /*
@@ -663,7 +664,7 @@ void Property::Set_values(const char* const* in)
 
 	while (in[i]) {
 		Value val(in[i], type);
-		suggested_values.push_back(val);
+		valid_values.push_back(val);
 		i++;
 	}
 }
@@ -673,7 +674,7 @@ void Property::Set_values(const std::vector<std::string>& in)
 	Value::Etype type = default_value.type;
 	for (auto& str : in) {
 		Value val(str, type);
-		suggested_values.push_back(val);
+		valid_values.push_back(val);
 	}
 }
 
@@ -811,6 +812,7 @@ PropMultiValRemain* Section_prop::GetMultiValRemain(const std::string& _propname
 	}
 	return NULL;
 }
+
 Property* Section_prop::Get_prop(int index)
 {
 	for (it tel = properties.begin(); tel != properties.end(); ++tel) {
@@ -830,6 +832,7 @@ const char* Section_prop::Get_string(const std::string& _propname) const
 	}
 	return "";
 }
+
 Hex Section_prop::Get_hex(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
@@ -996,7 +999,7 @@ bool Config::PrintConfig(const std::string& filename) const
 					fprintf(outfile,
 					        "%s%s:",
 					        prefix,
-					        MSG_GetRaw("CONFIG_SUGGESTED_VALUES"));
+					        MSG_GetRaw("CONFIG_VALID_VALUES"));
 
 					std::vector<Value>::const_iterator it =
 					        values.begin();

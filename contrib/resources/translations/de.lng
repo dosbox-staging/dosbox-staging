@@ -1016,7 +1016,7 @@ Du kannst deine MOUNT-Zeilen hier einfügen.
 # Zeilen, die mit einem "#" Zeichen beginnen, sind Kommentare.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Mögliche Werte
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
