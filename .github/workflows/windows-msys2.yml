@@ -29,7 +29,7 @@ jobs:
             cc: gcc
             max_warnings: 0
             run_tests: true
-            build_flags: -Dbuildtype=debug
+            build_flags: -Dbuildtype=debug -Dfluidsynth:tests=false
 
           - name: GCC (UCRT) x86_64 +debugger
             toolchain: ucrt-
@@ -54,7 +54,7 @@ jobs:
             cc: clang
             max_warnings: 0
             run_tests: true
-            build_flags: -Dbuildtype=debug
+            build_flags: -Dbuildtype=debug -Dfluidsynth:tests=false
 
     defaults:
       run:
