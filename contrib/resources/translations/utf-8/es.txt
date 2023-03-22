@@ -913,7 +913,7 @@ Puedes colocar tus líneas MOUNT aquí.
 # Las líneas que comienzan con el caracter '#' son comentarios.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Valores posibles
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR

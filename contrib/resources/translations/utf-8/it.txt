@@ -1077,7 +1077,7 @@ Puoi inserire i tuoi comandi MOUNT qui.
 # Le righe che iniziano con il carattere '#' sono commenti.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Valori possibili
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR

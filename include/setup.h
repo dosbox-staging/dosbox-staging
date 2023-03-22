@@ -200,15 +200,19 @@ public:
 	{
 		return default_value;
 	}
-	// CheckValue returns true, if value is in suggested_values;
-	// Type specific properties are encouraged to override this and check
-	// for type specific features.
-	virtual bool CheckValue(const Value& in);
+
+	bool IsRestrictedValue() const
+	{
+		return !valid_values.empty();
+	}
+
+	virtual bool IsValidValue(const Value& in);
 
 	Changeable::Value GetChange() const
 	{
 		return change;
 	}
+
 	bool IsDeprecated() const
 	{
 		return (change == Changeable::Value::Deprecated);
@@ -221,11 +225,11 @@ public:
 	}
 
 protected:
-	// Set interval value to in or default if in is invalid. force always sets
-	// the value. Can be overridden to set a different value if invalid.
+	// Set interval value to in or default if in is invalid.
+	// Can be overridden to set a different value if invalid.
 	virtual bool SetVal(const Value& in)
 	{
-		if (CheckValue(in)) {
+		if (IsValidValue(in)) {
 			value = in;
 			return true;
 		} else {
@@ -235,7 +239,7 @@ protected:
 	}
 
 	Value value;
-	std::vector<Value> suggested_values;
+	std::vector<Value> valid_values;
 	Value default_value;
 	const Changeable::Value change;
 
@@ -272,11 +276,11 @@ public:
 
 	bool SetValue(const std::string& in) override;
 
-	bool CheckValue(const Value& in) override;
+	bool IsValidValue(const Value& in) override;
 
 protected:
 	// Override SetVal, so it takes min,max in account when there are no
-	// suggested values
+	// valid values
 	bool SetVal(const Value& in) override;
 
 private:
@@ -319,7 +323,7 @@ public:
 
 	bool SetValue(const std::string& in) override;
 
-	bool CheckValue(const Value& in) override;
+	bool IsValidValue(const Value& in) override;
 };
 
 class Prop_path final : public Prop_string {
