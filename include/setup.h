@@ -170,7 +170,7 @@ public:
 	// CheckValue returns true, if value is in suggested_values;
 	// Type specific properties are encouraged to override this and check
 	// for type specific features.
-	virtual bool CheckValue(const Value &in, bool warn);
+	virtual bool CheckValue(const Value &in);
 
 	Changeable::Value GetChange() const { return change; }
 	bool IsDeprecated() const { return (change == Changeable::Value::Deprecated); }
@@ -183,7 +183,7 @@ protected:
 	//Can be overridden to set a different value if invalid.
 	virtual bool SetVal(const Value &in)
 	{
-		if (CheckValue(in, true)) {
+		if (CheckValue(in)) {
 			value = in;
 			return true;
 		} else {
@@ -221,7 +221,7 @@ public:
 
 	bool SetValue(const std::string &in) override;
 
-	bool CheckValue(const Value &in, bool warn) override;
+	bool CheckValue(const Value &in) override;
 
 protected:
 	// Override SetVal, so it takes min,max in account when there are no
@@ -268,7 +268,7 @@ public:
 
 	bool SetValue(const std::string &in) override;
 
-	bool CheckValue(const Value &in, bool warn) override;
+	bool CheckValue(const Value &in) override;
 };
 
 class Prop_path final : public Prop_string {
