@@ -145,6 +145,7 @@ bool Value::operator==(const Value& other) const
 	}
 	return false;
 }
+
 bool Value::SetValue(const std::string& in, const Etype _type)
 {
 	assert(type == V_NONE || type == _type);
@@ -193,6 +194,7 @@ bool Value::SetInt(const std::string& in)
 	_int = result;
 	return true;
 }
+
 bool Value::SetDouble(const std::string& in)
 {
 	istringstream input(in);
@@ -569,12 +571,14 @@ bool PropMultiVal::SetValue(const std::string& input)
 	bool retval = SetVal(val);
 
 	std::string local(input);
-	int i       = 0;
+	int i = 0;
+
 	Property* p = section->Get_prop(0);
-	// No properties in this section. do nothing
 	if (!p) {
+		// No properties in this section; do nothing
 		return false;
 	}
+
 	Value::Etype prevtype = Value::V_NONE;
 	string prevargument   = "";
 
@@ -585,8 +589,11 @@ bool PropMultiVal::SetValue(const std::string& input)
 		if (loc != string::npos) {
 			local.erase(0, loc);
 		}
-		loc       = local.find_first_of(separator);
-		string in = "";            // default value
+
+		loc = local.find_first_of(separator);
+
+		string in = ""; // default value
+
 		if (loc != string::npos) { // separator found
 			in = local.substr(0, loc);
 			local.erase(0, loc + 1);
@@ -604,6 +611,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 				return false;
 			}
 			p->SetValue(in);
+
 		} else {
 			// Non-strings can have more things, conversion alone is
 			// not enough (as invalid values as converted to 0)
@@ -622,9 +630,11 @@ bool PropMultiVal::SetValue(const std::string& input)
 				}
 			}
 		}
+
 		prevtype     = p->Get_type();
 		prevargument = in;
 	}
+
 	return retval;
 }
 
@@ -649,12 +659,6 @@ const std::vector<Value>& PropMultiVal::GetValues() const
 	}
 	return valid_values;
 }
-
-/*
-void Section_prop::Add_double(const char * _propname, double _value) {
-        Property* test=new Prop_double(_propname,_value);
-        properties.push_back(test);
-}*/
 
 void Property::Set_values(const char* const* in)
 {
@@ -886,7 +890,7 @@ bool Section_prop::HandleInputline(const std::string& line)
 
 void Section_prop::PrintData(FILE* outfile) const
 {
-	/* Now print out the individual section entries */
+	// Now print out the individual section entries
 
 	// Determine maximum length of the props in this section
 	int len = 0;
@@ -947,12 +951,12 @@ bool Config::PrintConfig(const std::string& filename) const
 		return false;
 	}
 
-	/* Print start of configfile and add a return to improve readibility. */
+	// Print start of config file and add a return to improve readibility
 	fprintf(outfile, MSG_GetRaw("CONFIGFILE_INTRO"), VERSION);
 	fprintf(outfile, "\n");
 
 	for (auto tel = sectionlist.cbegin(); tel != sectionlist.cend(); ++tel) {
-		/* Print out the Section header */
+		// Print section header
 		safe_strcpy(temp, (*tel)->GetName());
 		lowcase(temp);
 		fprintf(outfile, "[%s]\n", temp);
@@ -1052,7 +1056,9 @@ bool Config::PrintConfig(const std::string& filename) const
 
 		fprintf(outfile, "\n");
 		(*tel)->PrintData(outfile);
-		fprintf(outfile, "\n"); /* Always an empty line between sections */
+
+		// Always add empty line between sections
+		fprintf(outfile, "\n");
 	}
 
 	fclose(outfile);
@@ -1086,7 +1092,7 @@ Section_prop::~Section_prop()
 	// destroyed properties
 	ExecuteDestroy(true);
 
-	/* Delete properties themself (properties stores the pointer of a prop */
+	// Delete properties themself (properties stores the pointer of a prop
 	for (it prop = properties.begin(); prop != properties.end(); ++prop) {
 		delete (*prop);
 	}
@@ -1193,9 +1199,8 @@ void Section::ExecuteDestroy(bool destroyall)
 	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end();) {
 		if (destroyall || (*tel).changeable_at_runtime) {
 			(*tel).function(this);
-			tel = destroyfunctions.erase(tel); // Remove
-			                                   // destroyfunction
-			                                   // once used
+			// Remove destroyfunctions once used
+			tel = destroyfunctions.erase(tel);
 		} else {
 			++tel;
 		}
@@ -1282,7 +1287,7 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 	Section* currentsection = nullptr;
 
 	while (getline(in, line)) {
-		/* strip leading/trailing whitespace */
+		// Strip leading/trailing whitespace
 		trim(line);
 		if (line.empty()) {
 			continue;
@@ -1587,11 +1592,10 @@ bool CommandLine::FindStringRemain(const char* name, std::string& value)
 	return true;
 }
 
-/* Only used for parsing command.com /C
- * Allowing /C dir and /Cdir
- * Restoring quotes back into the commands so command /C mount d "/tmp/a b"
- * works as intended
- */
+// Only used for parsing command.com /C
+// Allowing /C dir and /Cdir
+// Restoring quotes back into the commands so command /C mount d "/tmp/a b"
+// works as intended
 bool CommandLine::FindStringRemainBegin(const char* name, std::string& value)
 {
 	cmd_it it;
@@ -1759,7 +1763,7 @@ CommandLine::CommandLine(const char* name, const char* cmdline)
 		file_name = name;
 	}
 
-	/* Parse the cmds and put them in the list */
+	// Parse the commands and put them in the list
 	bool inword, inquote;
 	char c;
 	inword  = false;
@@ -1818,7 +1822,7 @@ const std::string& SETUP_GetLanguage()
 		return lang;
 	}
 
-	// Did the user provide a language on the command line?
+	// Has the user provided a language on the command line?
 	(void)control->cmdline->FindString("-lang", lang, true);
 
 	// Is a language provided in the conf file?
@@ -1849,7 +1853,7 @@ const std::string& SETUP_GetLanguage()
 		lang = lang.substr(0, 2);
 	}
 
-	// return it as lowercase
+	// Return it as lowercase
 	lowcase(lang);
 
 	lang_is_cached = true;
@@ -1956,7 +1960,6 @@ const char* SetProp(std::vector<std::string>& pvars)
 		Section* sec = control->GetSection(pvars[0].c_str());
 		if (!sec) {
 			// not a section: little duplicate from above
-			//
 			Section* sec = control->GetSectionFromProperty(
 			        pvars[0].c_str());
 
