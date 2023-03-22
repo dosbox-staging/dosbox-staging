@@ -51,13 +51,19 @@
 
 #include "dosbox.h"
 
+#include <array>
+#include <chrono>
+#include <cmath>
+#include <cstring>
 #include <functional>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
 #include "dma.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "mixer.h"
 #include "pic.h"
 #include "regs.h"
@@ -66,19 +72,8 @@
 
 #include "SDL_thread.h"
 
-constexpr uint16_t IMFC_RATE = 44100;
-
-constexpr io_port_t IMFC_PORT_BASE  = 0x2A20;
-constexpr io_port_t IMFC_PORT_PIU0  = 0x0;
-constexpr io_port_t IMFC_PORT_PIU1  = 0x1;
-constexpr io_port_t IMFC_PORT_PIU2  = 0x2;
-constexpr io_port_t IMFC_PORT_PCR   = 0x3;
-constexpr io_port_t IMFC_PORT_CNTR0 = 0x4;
-constexpr io_port_t IMFC_PORT_CNTR1 = 0x5;
-constexpr io_port_t IMFC_PORT_CNTR2 = 0x6;
-constexpr io_port_t IMFC_PORT_TCWR  = 0x7;
-constexpr io_port_t IMFC_PORT_TCR   = 0x8;
-constexpr io_port_t IMFC_PORT_TSR   = 0xC;
+// Enable to activate IMF_LOG calls
+#define IMFC_VERBOSE_LOGGING 0
 
 constexpr uint8_t AVAILABLE_CONFIGURATIONS            = 16;
 constexpr uint8_t AVAILABLE_MIDI_CHANNELS             = 16;
@@ -90,8 +85,8 @@ constexpr uint8_t AVAILABLE_INTERNAL_INSTRUMENT_BANKS = 5;
 // IRQ can be any number between 2 and 7
 constexpr uint8_t IMFC_IRQ = 3;
 
-SDL_mutex* m_loggerMutex;
-
+#if IMFC_VERBOSE_LOGGING
+SDL_mutex* m_loggerMutex = nullptr;
 template <typename... Args>
 void IMF_LOG(std::string format, Args const&... args)
 {
@@ -99,6 +94,9 @@ void IMF_LOG(std::string format, Args const&... args)
 	printf((format + "\n").c_str(), args...);
 	SDL_UnlockMutex(m_loggerMutex);
 }
+#else
+#	define IMF_LOG(...)
+#endif
 
 inline uint8_t leftRotate8(uint8_t n)
 {
@@ -107,7 +105,7 @@ inline uint8_t leftRotate8(uint8_t n)
 
 enum DataParty { DATAPARTY_SYSTEM, DATAPARTY_MIDI };
 
-static void Intel8253_TimerEvent(uint32_t val);
+static void Intel8253_TimerEvent(const uint32_t val);
 
 #pragma pack(push) /* push current alignment to stack */
 #pragma pack(1)    /* set alignment to 1 byte boundary */
@@ -265,18 +263,23 @@ struct BufferFlags {
 
 template <typename BufferDataType>
 struct CyclicBufferState {
+public:
+	CyclicBufferState<BufferDataType>(const CyclicBufferState<BufferDataType>&) = delete;
+	CyclicBufferState<BufferDataType>& operator=(
+	        const CyclicBufferState<BufferDataType>&) = delete;
+
 private:
-	const std::string m_name;
-	SDL_mutex* m_mutex;
-	volatile bool m_locked{false};
-	volatile unsigned int lastReadByteIndex{};
-	volatile unsigned int indexForNextWriteByte{};
-	BufferFlags flags{};
-	volatile unsigned int m_bufferSize;
-	volatile bool m_debug{false};
+	const std::string m_name                    = {};
+	SDL_mutex* m_mutex                          = nullptr;
+	volatile bool m_locked                      = false;
+	volatile unsigned int lastReadByteIndex     = 0;
+	volatile unsigned int indexForNextWriteByte = 0;
+	BufferFlags flags                           = {};
+	volatile unsigned int m_bufferSize          = 0;
+	volatile bool m_debug                       = false;
 	// volatile BufferDataType m_buffer[2048]; // maximum that is used in
 	// the IMF code
-	volatile BufferDataType m_buffer[0x2000]; // FIXME
+	volatile BufferDataType m_buffer[0x2000] = {}; // FIXME
 
 	void increaseLastReadByteIndex()
 	{
@@ -310,6 +313,12 @@ public:
 	          m_mutex(SDL_CreateMutex()),
 	          m_bufferSize(bufferSize)
 	{}
+
+	~CyclicBufferState()
+	{
+		assert(m_mutex);
+		SDL_DestroyMutex(m_mutex);
+	}
 
 	void setDebug(bool debug)
 	{
@@ -381,7 +390,7 @@ public:
 
 	void reset()
 	{
-		IMF_LOG("%s - reset()", m_name.c_str());
+		// IMF_LOG("%s - reset()", m_name.c_str());
 		lock();
 		lastReadByteIndex               = 0;
 		indexForNextWriteByte           = 0;
@@ -494,11 +503,11 @@ bool operator==(Fraction a, Fraction b)
 static Fraction ZERO_FRACTION(0);
 
 struct FractionalNote {
-	Fraction fraction;
-	Note note;
+	Fraction fraction = {};
+	Note note         = {};
 
 	FractionalNote() {}
-	FractionalNote(Note nn, Fraction nf) : note(nn), fraction(nf) {}
+	FractionalNote(Note nn, Fraction nf) : fraction(nf), note(nn) {}
 	uint16_t getuint16_t() const
 	{
 		return note.value << 8 | fraction.value;
@@ -554,7 +563,7 @@ static_assert(sizeof(Duration) == 2, "Duration2 needs to be 1 in size!");
 static Duration ZERO_DURATION(0);
 
 struct PitchbenderValueMSB {
-	uint8_t value;
+	uint8_t value = 0;
 
 	PitchbenderValueMSB() : value(0) {}
 	explicit PitchbenderValueMSB(uint8_t v) : value(v) {}
@@ -563,7 +572,7 @@ static_assert(sizeof(PitchbenderValueMSB) == 1,
               "PitchbenderValueMSB needs to be 1 in size!");
 
 struct PitchbenderValueLSB {
-	uint8_t value;
+	uint8_t value = 0;
 
 	PitchbenderValueLSB() : value(0) {}
 	explicit PitchbenderValueLSB(uint8_t v) : value(v) {}
@@ -660,9 +669,7 @@ private:
 	//uint8_t __sustainLevel : 4;
 	// clang-format on
 
-	OperatorDefinition& operator=(const OperatorDefinition& other)
-	{ /* don't use */
-	}
+	OperatorDefinition& operator=(const OperatorDefinition& other) = delete;
 
 public:
 	uint8_t getTotalLevel()
@@ -839,9 +846,7 @@ private:
 	                      // PMDController
 	uint8_t reserved3[4] = {};
 
-	VoiceDefinition& operator=(const VoiceDefinition& other)
-	{ /* don't use */
-	}
+	VoiceDefinition& operator=(const VoiceDefinition& other) = delete;
 
 public:
 	char getName(uint8_t i)
@@ -1041,9 +1046,7 @@ static_assert(sizeof(VoiceDefinition) == 0x40,
 
 struct VoiceDefinitionBank {
 private:
-	VoiceDefinitionBank& operator=(const VoiceDefinitionBank& other)
-	{ /* don't use */
-	}
+	VoiceDefinitionBank& operator=(const VoiceDefinitionBank& other) = delete;
 
 public:
 	char name[8];
@@ -1100,61 +1103,59 @@ static_assert(sizeof(VoiceDefinitionBank) == 0xC20,
 
 struct InstrumentConfiguration {
 private:
-	InstrumentConfiguration& operator=(const InstrumentConfiguration& other)
-	{ /* don't use */
-	}
+	InstrumentConfiguration& operator=(const InstrumentConfiguration& other) = delete;
 
 public:
-	uint8_t numberOfNotes{};
+	uint8_t numberOfNotes = 0;
 	// Number of notes                  / 0-8
 
-	uint8_t midiChannel{};
+	uint8_t midiChannel = 0;
 	// MIDI channel number              / 0-15
 
-	Note noteNumberLimitHigh;
+	Note noteNumberLimitHigh = {};
 	// Note number limit high           / 0-127
 
-	Note noteNumberLimitLow;
+	Note noteNumberLimitLow = {};
 	// Note number limit low            / 0-127
 
-	uint8_t voiceBankNumber{};
+	uint8_t voiceBankNumber = 0;
 	// Voice bank number                / 0-6
 
-	uint8_t voiceNumber{};
+	uint8_t voiceNumber = 0;
 	// Voice number                     / 0-47
 
-	uint8_t detune{};
+	uint8_t detune = 0;
 	// Detune                           / -64-63 (2's complement)
 
-	uint8_t octaveTranspose{};
+	uint8_t octaveTranspose = 0;
 	// Octave transpose                 / 0-4 (2=Center)
 private:
-	uint8_t outputLevel{};
+	uint8_t outputLevel = 0;
 	// Output level                     / 0(mute)-127(max)
 
 public:
-	uint8_t pan{};
+	uint8_t pan = 0;
 	// Pan                              / 0=L, 64=L+R, 127=R
 
-	uint8_t lfoEnable{};
+	uint8_t lfoEnable = 0;
 	// LFO enable                       / 0,1(OFF)
 
-	uint8_t portamentoTime{};
+	uint8_t portamentoTime = 0;
 	// Portamento time (pitch slide)       / 0=OFF, 1(fast)-127(slow)
 
-	uint8_t pitchbenderRange{};
+	uint8_t pitchbenderRange = 0;
 	// Pitchbender range                / 0-12 number of half-steps (0=no
 	// pitch fluctuation)
 
-	uint8_t polyMonoMode{};
+	uint8_t polyMonoMode = 0;
 	// POLY/MONO mode                   / 0(POLY), 1(MONO) FIXME: Based in
 	// the code, this is a single bit
 
-	uint8_t pmdController{};
+	uint8_t pmdController = 0;
 	// PMD controller                   / 0=OFF, 1=Touch, 2=Wheel, 3=Breath,
 	// 4=Foot
 
-	uint8_t reserved1{};
+	uint8_t reserved1 = 0;
 
 	void clear()
 	{
@@ -1224,19 +1225,17 @@ static_assert(sizeof(InstrumentConfiguration) == 0x10,
 
 struct ConfigurationData {
 private:
-	ConfigurationData& operator=(const ConfigurationData& other)
-	{ /* don't use */
-	}
+	ConfigurationData& operator=(const ConfigurationData& other) = delete;
 
 public:
-	char name[8]{};
-	uint8_t combineMode{};
-	uint8_t lfoSpeed{};
-	uint8_t amplitudeModulationDepth{};
-	uint8_t pitchModulationDepth{};
-	uint8_t lfoWaveForm{};
-	uint8_t noteNumberReceptionMode{}; // FIXME: This should be an enum
-	uint8_t reserved[18]{};
+	char name[8]                     = {};
+	uint8_t combineMode              = 0;
+	uint8_t lfoSpeed                 = 0;
+	uint8_t amplitudeModulationDepth = 0;
+	uint8_t pitchModulationDepth     = 0;
+	uint8_t lfoWaveForm              = 0;
+	uint8_t noteNumberReceptionMode  = 0; // FIXME: This should be an enum
+	uint8_t reserved[18]             = {};
 	InstrumentConfiguration instrumentConfigurations[8];
 
 	void shallowClear()
@@ -1288,25 +1287,23 @@ struct YmChannelData; // forward declaration
 
 struct InstrumentParameters {
 private:
-	InstrumentParameters& operator=(const InstrumentParameters& other)
-	{ /* don't use */
-	}
+	InstrumentParameters& operator=(const InstrumentParameters& other) = delete;
 
 public:
-	InstrumentConfiguration instrumentConfiguration;
-	VoiceDefinition voiceDefinition{};
-	PitchbenderValueMSB pitchbenderValueMSB;
-	PitchbenderValueLSB pitchbenderValueLSB;
+	InstrumentConfiguration instrumentConfiguration = {};
+	VoiceDefinition voiceDefinition                 = {};
+	PitchbenderValueMSB pitchbenderValueMSB         = {};
+	PitchbenderValueLSB pitchbenderValueLSB         = {};
 
-	FractionalNote detuneAndPitchbendAsNoteFraction;
+	FractionalNote detuneAndPitchbendAsNoteFraction = {};
 	// considers detuneAsNoteFraction and
 	// instrumentConfiguration.pitchbenderRange * pitchbenderValue
 
-	FractionalNote detuneAsNoteFraction;
+	FractionalNote detuneAsNoteFraction = {};
 	// considers instrumentConfiguration.octaveTranspose and
 	// instrumentConfiguration.detune
 
-	uint8_t volume{};
+	uint8_t volume = 0;
 	// flags: <a*****ps> <a>: LFO sync mode 0,1 (Sync ON) / <p> portamento
 	// ON/OFF / <s> sustain ON/OFF
 	uint8_t _sustain : 1;
@@ -1314,24 +1311,24 @@ public:
 	uint8_t _unused0 : 5;
 	uint8_t _lfoSyncMode : 1;
 	// next byte
-	uint8_t operator1TotalLevel{}; // 0(Max)~127
-	uint8_t operator2TotalLevel{}; // 0(Max)~127
-	uint8_t operator3TotalLevel{}; // 0(Max)~127
-	uint8_t operator4TotalLevel{}; // 0(Max)~127
-	uint8_t unused1{};
-	uint8_t channelMask{};
-	uint8_t lastUsedChannel{};
+	uint8_t operator1TotalLevel = 0; // 0(Max)~127
+	uint8_t operator2TotalLevel = 0; // 0(Max)~127
+	uint8_t operator3TotalLevel = 0; // 0(Max)~127
+	uint8_t operator4TotalLevel = 0; // 0(Max)~127
+	uint8_t unused1             = 0;
+	uint8_t channelMask         = 0;
+	uint8_t lastUsedChannel     = 0;
 	// uint16_t __lastMidiOnOff_Duration_XXX : 15;
 	// uint16_t __lastMidiOnOff_Duration_IsEmpty_XXX : 1;
-	Duration _lastMidiOnOff_Duration_XX;
-	FractionalNote _lastMidiOnOff_FractionAndNoteNumber_XXX;
+	Duration _lastMidiOnOff_Duration_XX                     = {};
+	FractionalNote _lastMidiOnOff_FractionAndNoteNumber_XXX = {};
 	// uint16_t __lastMidiOnOff_Duration_YYY : 15;
 	// uint16_t __lastMidiOnOff_Duration_IsEmpty_YYY : 1;
-	Duration _lastMidiOnOff_Duration_YY;
-	FractionalNote _lastMidiOnOff_FractionAndNoteNumber_YYY;
-	YmChannelData* ymChannelData{};
-	uint8_t overflowToMidiOut{}; // FIXME: This is a bit flag
-	uint8_t unused2[22]{};
+	Duration _lastMidiOnOff_Duration_YY                     = {};
+	FractionalNote _lastMidiOnOff_FractionAndNoteNumber_YYY = {};
+	YmChannelData* ymChannelData                            = nullptr;
+	uint8_t overflowToMidiOut = 0; // FIXME: This is a bit flag
+	uint8_t unused2[22]       = {};
 
 	inline void clear()
 	{
@@ -1345,9 +1342,7 @@ public:
 
 struct YmChannelData {
 private:
-	YmChannelData& operator=(const YmChannelData& other)
-	{ /* don't use */
-	}
+	YmChannelData& operator=(const YmChannelData& other) = delete;
 
 public:
 	FractionalNote originalFractionAndNoteNumber;
@@ -1359,7 +1354,7 @@ public:
 	FractionalNote currentlyPlaying;
 	// this is the note/fraction that is being play right now
 
-	uint8_t operatorVolumes[4]{};
+	uint8_t operatorVolumes[4] = {};
 	// ym_channel
 	uint8_t channelNumber : 3;
 	uint8_t operatorsEnabled : 4;
@@ -1372,13 +1367,13 @@ public:
 	uint8_t _hasActiveNoteON : 1;
 	// this is probably an "is playing"-flag
 
-	Duration remainingDuration;
+	Duration remainingDuration = {};
 	// if set, the number of clock messages (midi code 0xF8) to play this not
 
-	FractionalNote portamentoAdjustment;
+	FractionalNote portamentoAdjustment = {};
 	// This might be a positive or negative fractionNote!
 
-	FractionalNote portamentoTarget;
+	FractionalNote portamentoTarget = {};
 	// target note/fraction for portamento
 
 	inline uint8_t getChannelNumberAndOperatorEnabled() const
@@ -1408,7 +1403,7 @@ public:
 template <typename DataType>
 class DataProvider {
 private:
-	std::vector<DataChangedConsumer<DataType>*> m_consumers;
+	std::vector<DataChangedConsumer<DataType>*> m_consumers = {};
 
 protected:
 	void notifyConsumers(DataType oldValue, DataType newValue)
@@ -1430,9 +1425,9 @@ public:
 template <typename DataType>
 class DataContainer : public DataProvider<DataType> {
 private:
-	bool m_debug{false};
-	std::string m_name;
-	DataType m_value;
+	bool m_debug                  = false;
+	std::string m_name            = {};
+	std::atomic<DataType> m_value = {};
 
 public:
 	DataContainer(std::string name, DataType inititalValue)
@@ -1445,7 +1440,7 @@ public:
 	}
 	DataType getValue() override
 	{
-		return m_value;
+		return m_value.load();
 	}
 	void setValue(DataType newValue)
 	{
@@ -1485,9 +1480,12 @@ public:
 template <typename DataType>
 class DataDrivenInputPin : public InputPin<DataType> {
 private:
-	DataProvider<DataType>* m_dataProvider;
+	DataProvider<DataType>* m_dataProvider = nullptr;
 
 public:
+	DataDrivenInputPin<DataType>(const DataDrivenInputPin<DataType>&) = delete;
+	DataDrivenInputPin<DataType>& operator=(const DataDrivenInputPin<DataType>&) = delete;
+
 	explicit DataDrivenInputPin(std::string name)
 	        : InputPin<DataType>(name),
 	          m_dataProvider(nullptr)
@@ -1541,6 +1539,9 @@ private:
 	DataContainer<DataType>* m_dataContainer;
 
 public:
+	InputOutputPin<DataType>(const InputOutputPin<DataType>&) = delete;
+	InputOutputPin<DataType>& operator=(const InputOutputPin<DataType>&) = delete;
+
 	explicit InputOutputPin(std::string name)
 	        : InputPin<DataType>(name),
 	          m_dataContainer(nullptr)
@@ -1941,7 +1942,7 @@ public:
 	          m_counter1("timer.counter1"),
 	          m_counter2("timer.counter2")
 	{
-		registerNextEvent(); // FIXME
+		Intel8253::registerNextEvent(); // FIXME
 	}
 	DataProvider<bool>* getTimerA()
 	{
@@ -1998,7 +1999,7 @@ public:
 
 	static uint8_t readPortTCWR()
 	{
-		IMF_LOG("readPortTCWR -> 0x00");
+		IMF_LOG("readPortTCWR -> 0x%X", 0);
 		// I don't think we should be able to read this port
 		return 0;
 	}
@@ -2020,19 +2021,19 @@ public:
 			// counter 0x34 = 00(Set mode of counter 0) 11(low-order
 			// to high-order bits) 010(Mode2) 0(binary)
 			m_counter0.m_counterMode = COUNTERMODE_MODE2;
-			IMF_LOG("counter0 is now set to MODE2");
+			IMF_LOG("counter0 is now set to MODE2", "");
 		} else if (val == 0x74) {
 			// Sets counter 1 for mode 2 and the 16-bit binary
 			// counter 0x74 = 01(Set mode of counter 1) 11(low-order
 			// to high-order bits) 010(Mode2) 0(binary)
 			m_counter1.m_counterMode = COUNTERMODE_MODE2;
-			IMF_LOG("counter1 is now set to MODE2");
+			IMF_LOG("counter1 is now set to MODE2", "");
 		} else if (val == 0xB6) {
 			// Sets counter 2 for mode 3 and the 16-bit binary
 			// counter 0xB6 = 10(Set mode of counter 2) 11(low-order
 			// to high-order bits) 011(Mode3) 0(binary)
 			m_counter2.m_counterMode = COUNTERMODE_MODE3;
-			IMF_LOG("counter2 is now set to MODE3");
+			IMF_LOG("counter2 is now set to MODE3", "");
 		} else if (val == 0x00) {
 			// Latches the contents of counter 0 to the register
 			m_counter0.m_latchedCounter = m_counter0.m_counter; // FIXME
@@ -2050,7 +2051,7 @@ public:
 		}
 	}
 
-	void timerEvent(Bitu /*val*/)
+	void timerEvent(uint32_t /*val*/)
 	{
 		if (m_counter0.m_counter != 0U) {
 			// counter was initialized with a value
@@ -2085,7 +2086,7 @@ public:
 			}
 		}
 		// TODO: the other timers
-		registerNextEvent(); // FIXME
+		Intel8253::registerNextEvent(); // FIXME
 	}
 };
 
@@ -2118,7 +2119,9 @@ public:
 		dataProvider->notifyOnChange(this);
 	}
 
-	void valueChanged(bool oldValue, bool newValue) override {}
+	void valueChanged([[maybe_unused]] bool oldValue,
+	                  [[maybe_unused]] bool newValue) override
+	{}
 
 	uint8_t readPort()
 	{
@@ -2128,7 +2131,7 @@ public:
 		// IMF_LOG("IMFC.TSR:readPort -> 0x%X", value);
 		return value;
 	}
-	void writePort(uint8_t val)
+	void writePort([[maybe_unused]] uint8_t val)
 	{
 		// IMF_LOG("IMFC.TSR:writePort / value=0x%X", val);
 		/// I really don't think that we are allowed to write to this
@@ -2143,15 +2146,15 @@ public:
 	enum GroupMode { MODE0, MODE1, MODE2 };
 
 private:
-	std::string m_name;
+	std::string m_name = {};
 	// group 0 control
-	GroupMode m_group0_mode;
-	PortInOut m_group0_port0InOut;
-	PortInOut m_group0_port2UpperInOut;
+	GroupMode m_group0_mode            = {};
+	PortInOut m_group0_port0InOut      = {};
+	PortInOut m_group0_port2UpperInOut = {};
 	// group 1 control
-	GroupMode m_group1_mode;
-	PortInOut m_group1_port1InOut;
-	PortInOut m_group1_port2LowerInOut;
+	GroupMode m_group1_mode            = {};
+	PortInOut m_group1_port1InOut      = {};
+	PortInOut m_group1_port2LowerInOut = {};
 	// data ports
 	InputOutputPin<uint8_t> m_port0;
 	InputOutputPin<uint8_t> m_port1;
@@ -2236,11 +2239,13 @@ private:
 	void setGroup0DataAvailability(bool available)
 	{
 		if (m_group0_mode != MODE1) {
-			IMF_LOG("ERROR: You can only use setGroup0DataAvailability() in MODE1");
+			IMF_LOG("ERROR: You can only use setGroup0DataAvailability() in MODE1",
+			        "");
 			return;
 		}
 		if (m_group0_port0InOut == INPUT) {
-			IMF_LOG("ERROR: Cannot call setGroup0DataAvailability() in INPUT mode");
+			IMF_LOG("ERROR: Cannot call setGroup0DataAvailability() in INPUT mode",
+			        "");
 			return;
 		}
 		// IMF_LOG("%s: setGroup0DataAvailability(%s)", m_name.c_str(),
@@ -2250,7 +2255,8 @@ private:
 	bool getGroup0DataAvailability()
 	{
 		if (m_group0_mode != MODE1) {
-			IMF_LOG("ERROR: You can only use getGroup0DataAvailability() in MODE1");
+			IMF_LOG("ERROR: You can only use getGroup0DataAvailability() in MODE1",
+			        "");
 			return false;
 		}
 		return m_port2[m_group0_port0InOut == OUTPUT ? 7 : 5].getValue();
@@ -2258,11 +2264,13 @@ private:
 	void setGroup0DataAcknowledgement(bool acknowledge)
 	{
 		if (m_group0_mode != MODE1) {
-			IMF_LOG("ERROR: You can only use setGroup0DataAcknowledgement() in MODE1");
+			IMF_LOG("ERROR: You can only use setGroup0DataAcknowledgement() in MODE1",
+			        "");
 			return;
 		}
 		if (m_group0_port0InOut == OUTPUT) {
-			IMF_LOG("ERROR: Cannot call setGroup0DataAcknowledgement() in OUTPUT mode");
+			IMF_LOG("ERROR: Cannot call setGroup0DataAcknowledgement() in OUTPUT mode",
+			        "");
 			return;
 		}
 		// IMF_LOG("%s: setGroup0DataAcknowledgement(%s)",
@@ -2272,7 +2280,8 @@ private:
 	bool getGroup0DataAcknowledgement()
 	{
 		if (m_group0_mode != MODE1) {
-			IMF_LOG("ERROR: You can only use getGroup0DataAcknowledgement() in MODE1");
+			IMF_LOG("ERROR: You can only use getGroup0DataAcknowledgement() in MODE1",
+			        "");
 			return false;
 		}
 		return m_port2[m_group0_port0InOut == INPUT ? 4 : 6].getValue();
@@ -2280,11 +2289,13 @@ private:
 	void setGroup1DataAvailability(bool available)
 	{
 		if (m_group1_mode != MODE1) {
-			IMF_LOG("ERROR: You can only use setGroup1DataAvailability() in MODE1");
+			IMF_LOG("ERROR: You can only use setGroup1DataAvailability() in MODE1",
+			        "");
 			return;
 		}
 		if (m_group1_port1InOut == INPUT) {
-			IMF_LOG("ERROR: Cannot call setGroup1DataAvailability() in INPUT mode");
+			IMF_LOG("ERROR: Cannot call setGroup1DataAvailability() in INPUT mode",
+			        "");
 			return;
 		}
 		// IMF_LOG("%s: setGroup1DataAvailability(%s)", m_name.c_str(),
@@ -2294,7 +2305,8 @@ private:
 	bool getGroup1DataAvailability()
 	{
 		if (m_group1_mode != MODE1) {
-			IMF_LOG("ERROR: You can only use getGroup1DataAvailability() in MODE1");
+			IMF_LOG("ERROR: You can only use getGroup1DataAvailability() in MODE1",
+			        "");
 			return false;
 		}
 		return m_port2[m_group1_port1InOut == OUTPUT ? 2 : 2].getValue();
@@ -2302,11 +2314,13 @@ private:
 	void setGroup1DataAcknowledgement(bool acknowledge)
 	{
 		if (m_group1_mode != MODE1) {
-			IMF_LOG("ERROR: You can only use setGroup1DataAcknowledgement() in MODE1");
+			IMF_LOG("ERROR: You can only use setGroup1DataAcknowledgement() in MODE1",
+			        "");
 			return;
 		}
 		if (m_group1_port1InOut == OUTPUT) {
-			IMF_LOG("ERROR: Cannot call setGroup1DataAcknowledgement() in OUTPUT mode");
+			IMF_LOG("ERROR: Cannot call setGroup1DataAcknowledgement() in OUTPUT mode",
+			        "");
 			return;
 		}
 		// IMF_LOG("%s: setGroup1DataAcknowledgement(%s)",
@@ -2316,7 +2330,8 @@ private:
 	bool getGroup1DataAcknowledgement()
 	{
 		if (m_group1_mode != MODE1) {
-			IMF_LOG("ERROR: You can only use getGroup1DataAcknowledgement() in MODE1");
+			IMF_LOG("ERROR: You can only use getGroup1DataAcknowledgement() in MODE1",
+			        "");
 			return false;
 		}
 		return m_port2[m_group1_port1InOut == INPUT ? 1 : 1].getValue();
@@ -2603,7 +2618,7 @@ public:
 					// m_group1_writeInterruptEnable now set
 					// to %s", m_name.c_str(), bitValue ?
 					// "TRUE" : "FALSE");
-					m_group1_readInterruptEnable = false;
+					m_group1_readInterruptEnable  = false;
 					m_group1_writeInterruptEnable = bitValue;
 				}
 				updateInterruptLines();
@@ -2701,13 +2716,13 @@ public:
 
 class IrqController : public DataChangedConsumer<bool> {
 private:
-	std::string m_name;
-	bool m_enabled{false};
+	std::string m_name = {};
+	std::atomic<bool> m_enabled{false};
 	bool m_debug{false};
-	bool m_interruptOutput{false};
-	std::vector<DataProvider<bool>*> m_interruptLines;
-	std::function<void(void)> m_callbackOnLowToHigh;
-	std::function<void(void)> m_callbackOnHighToLow;
+	std::atomic<bool> m_interruptOutput{false};
+	std::vector<DataProvider<bool>*> m_interruptLines = {};
+	std::function<void(void)> m_callbackOnLowToHigh   = {};
+	std::function<void(void)> m_callbackOnHighToLow   = {};
 
 	bool atLeastOneInterruptLineIsHigh()
 	{
@@ -2815,34 +2830,33 @@ Based on the output generated, the following frequencies are captured
 
 #define u8     uint8_t
 #define offs_t uint8_t
-#define M_PI   3.14159265358979323846264338327950288
 
-enum {
-	FREQ_SH  = 16, /* 16.16 fixed point (frequency calculations) */
-	EG_SH    = 16, /* 16.16 fixed point (envelope generator timing) */
-	LFO_SH   = 10, /* 22.10 fixed point (LFO calculations)       */
-	TIMER_SH = 16  /* 16.16 fixed point (timers calculations)    */
-};
+#define FREQ_SH  16 /* 16.16 fixed point (frequency calculations) */
+#define EG_SH    16 /* 16.16 fixed point (envelope generator timing) */
+#define LFO_SH   10 /* 22.10 fixed point (LFO calculations)       */
+#define TIMER_SH 16 /* 16.16 fixed point (timers calculations)    */
 
 #define FREQ_MASK ((1 << FREQ_SH) - 1)
 
-enum { ENV_BITS = 10 };
+#define ENV_BITS 10
 #define ENV_LEN  (1 << ENV_BITS)
 #define ENV_STEP (128.0 / ENV_LEN)
 
 #define MAX_ATT_INDEX (ENV_LEN - 1) /* 1023 */
-enum {
-	MIN_ATT_INDEX = (0) /* 0 */
-};
+#define MIN_ATT_INDEX (0)           /* 0 */
 
-enum { EG_ATT = 4, EG_DEC = 3, EG_SUS = 2, EG_REL = 1, EG_OFF = 0 };
+#define EG_ATT 4
+#define EG_DEC 3
+#define EG_SUS 2
+#define EG_REL 1
+#define EG_OFF 0
 
 #define ENV_QUIET (TL_TAB_LEN >> 3)
 
 class ym2151_device {
 public:
 	// construction/destruction
-	explicit ym2151_device(MixerChannel* mixerChannel);
+	explicit ym2151_device(mixer_channel_t&& channel);
 
 	// configuration helpers
 	// auto irq_handler() { return m_irqhandler.bind(); }
@@ -2888,7 +2902,7 @@ private:
 		SIN_MASK = SIN_LEN - 1
 	};
 
-	MixerChannel* m_mixerChannel;
+	mixer_channel_t audio_channel = nullptr;
 
 	int tl_tab[TL_TAB_LEN]{};
 	unsigned int sin_tab[SIN_LEN]{};
@@ -4105,7 +4119,8 @@ int ym2151_device::op_calc(YM2151Operator* OP, unsigned int env, signed int pm)
 	uint32_t p = 0;
 
 	p = (env << 3) +
-	    sin_tab[(((signed int)((OP->phase & ~FREQ_MASK) + (pm << 15))) >> FREQ_SH) & SIN_MASK];
+	    sin_tab[(((signed int)((OP->phase & ~FREQ_MASK) + left_shift_signed(pm, 15))) >> FREQ_SH) &
+	            SIN_MASK];
 
 	if (p >= TL_TAB_LEN) {
 		return 0;
@@ -4172,7 +4187,8 @@ void ym2151_device::chan_calc(unsigned int chan)
 			if (op->fb_shift == 0U) {
 				out = 0;
 			}
-			op->fb_out_curr = op_calc1(op, env, (out << op->fb_shift));
+			op->fb_out_curr = op_calc1(
+			        op, env, left_shift_signed(out, op->fb_shift));
 		}
 	}
 
@@ -4229,7 +4245,8 @@ void ym2151_device::chan7_calc()
 			if (op->fb_shift == 0U) {
 				out = 0;
 			}
-			op->fb_out_curr = op_calc1(op, env, (out << op->fb_shift));
+			op->fb_out_curr = op_calc1(
+			        op, env, left_shift_signed(out, op->fb_shift));
 		}
 	}
 
@@ -4540,10 +4557,11 @@ void ym2151_device::advance()
 //  ym2151_device - constructor
 //-------------------------------------------------
 
-ym2151_device::ym2151_device(MixerChannel* mixerChannel)
-        : m_mixerChannel(mixerChannel)
+ym2151_device::ym2151_device(mixer_channel_t&& channel)
+        : audio_channel(std::move(channel))
 {
-	m_mixerChannel->Enable(true);
+	assert(audio_channel);
+	audio_channel->Enable(true);
 	device_start();
 	device_post_load();
 	device_reset();
@@ -4568,6 +4586,7 @@ u8 ym2151_device::read(offs_t offset) const
 
 void ym2151_device::write(offs_t offset, u8 data)
 {
+	audio_channel->WakeUp();
 	if ((offset & 1) != 0) {
 		if (!m_reset_active) {
 			// m_stream->update();
@@ -4665,7 +4684,7 @@ void ym2151_device::device_reset()
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
-void ym2151_device::sound_stream_update(int samples)
+void ym2151_device::sound_stream_update(const int samples)
 {
 	/*
 	// clang-format off
@@ -4691,8 +4710,8 @@ void ym2151_device::sound_stream_update(int samples)
 	// clang-format on
 
 	if (m_reset_active) {
-		IMF_LOG("ym2151_device - sending silence");
-		m_mixerChannel->AddSilence();
+		IMF_LOG("ym2151_device - sending silence", "");
+		audio_channel->AddSilence();
 		// std::fill(&outputs[0][0], &outputs[0][samples], 0);
 		// std::fill(&outputs[1][0], &outputs[1][samples], 0);
 		return;
@@ -4734,7 +4753,7 @@ void ym2151_device::sound_stream_update(int samples)
 		}
 		buf16[0] = outl;
 		buf16[1] = outr;
-		m_mixerChannel->AddSamples_s16(1, buf16);
+		audio_channel->AddSamples_s16(1, buf16);
 
 		advance();
 	}
@@ -4823,7 +4842,7 @@ private:
 public:
 	PD71051() = default;
 	// MIDI_PORT_1 = 0x10
-	void writePort1(uint8_t value)
+	void writePort1([[maybe_unused]] uint8_t value)
 	{
 		// This doesn't do anything for now
 	}
@@ -4858,6 +4877,7 @@ public:
 		case WAITING_FOR_SYNC_CHAR2: setState(NORMAL_OPERATION); break;
 		case NORMAL_OPERATION:
 			// command mode
+			/* -- unused ---
 			const bool transmitEnable     = (value & 0x01) != 0;
 			const bool notDTR_pin_control = (value & 0x02) != 0;
 			const bool receiveEnable      = (value & 0x04) != 0;
@@ -4866,6 +4886,9 @@ public:
 			const bool notRTS_pin_control = (value & 0x20) != 0;
 			const bool softwareReset      = (value & 0x40) != 0;
 			const bool enterHuntPhase     = (value & 0x80) != 0;
+			------- */
+
+			const bool softwareReset = (value & 0x40) != 0;
 			if (softwareReset) {
 				setState(WAITING_FOR_WRITE_MODE);
 			}
@@ -4895,6 +4918,8 @@ public:
 };
 
 #include "imfc_rom.c"
+
+std::atomic_bool keep_running = {};
 
 class MusicFeatureCard : public Module_base {
 private:
@@ -4950,13 +4975,12 @@ private:
 	IrqController m_irqTriggerImf;
 	TotalStatusRegister m_tsr;
 
-	volatile bool m_finishedBootupSequence    = {};
+	std::atomic<bool> m_finishedBootupSequence = {};
 	SDL_Thread* m_mainThread                  = nullptr;
 	SDL_Thread* m_interruptThread             = nullptr;
 	bool m_interruptHandlerRunning            = {};
 	SDL_mutex* m_interruptHandlerRunningMutex = nullptr;
-	SDL_cond* m_interruptHandlerRunningCond   = nullptr;
-	std::atomic_bool keep_running             = {};
+	SDL_cond* m_interruptHandlerRunningCond    = nullptr;
 
 	// memory allocation on the IMF
 	// ROM
@@ -5060,25 +5084,30 @@ private:
 	}
 
 	template <typename... Args>
-	void log_debug(std::string format, Args const&... args)
+	void log_debug([[maybe_unused]] std::string format,
+	               [[maybe_unused]] Args const&... args)
 	{
 		// IMF_LOG(("[%s] [DEBUG] " + format).c_str(),
 		// getCurrentThreadName().c_str(), args...);
 	}
 
 	template <typename... Args>
-	void log_info(std::string format, Args const&... args)
+	void log_info([[maybe_unused]] std::string format,
+	              [[maybe_unused]] Args const&... args)
 	{
 		// IMF_LOG(("[%s] [INFO] " + format).c_str(),
 		// getCurrentThreadName().c_str(), args...);
 	}
 
 	template <typename... Args>
-	void log_error(std::string format, Args const&... args)
+	void log_error([[maybe_unused]] const char* format,
+	               [[maybe_unused]] Args const&... args)
 	{
-		IMF_LOG("[%s] [ERROR] " + format,
-		        getCurrentThreadName().c_str(),
-		        args...);
+#if IMFC_VERBOSE_LOGGING
+		static std::string message = {};
+		message                    = std::string("IMFC: ") + format;
+		LOG_ERR(static_cast<const char*>(message.c_str()), args...);
+#endif
 	}
 
 	void disableInterrupts()
@@ -5427,6 +5456,8 @@ private:
 			// reenable
 			MUSIC_MODE_LOOP_read_System_And_Dispatch();
 			logSuccess();
+			using namespace std::chrono_literals;
+			std::this_thread::sleep_for(1ms);
 		}
 	}
 
@@ -5444,7 +5475,7 @@ private:
 		m_outgoingMusicCardMessageData[0] = 0xE0;
 		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
-		while (true) {
+		while (keep_running.load()) {
 			ReadResult readResult = midiIn_readMidiDataByte();
 			if (readResult.status == READ_ERROR) {
 				disableInterrupts();
@@ -5504,10 +5535,11 @@ private:
 		if (memcmp(&m_copyOfCardName, &m_cardName, 12) == 0) {
 			return;
 		}
-		// clear memory from 0xC0C0 to 0xE7FF (voiceDefinitionBankCustom1,
-		// voiceDefinitionBankCustom2, configurationRAM, copyOfCardName,
-		// activeConfiguration, nodeNumber, activeConfigurationNr,
-		// chainMode, activeInstrumentParameters)
+		// clear memory from 0xC0C0 to 0xE7FF
+		// (voiceDefinitionBankCustom1, voiceDefinitionBankCustom2,
+		// configurationRAM, copyOfCardName, activeConfiguration,
+		// nodeNumber, activeConfigurationNr, chainMode,
+		// activeInstrumentParameters)
 		m_voiceDefinitionBankCustom[0].deepClear();
 		m_voiceDefinitionBankCustom[1].deepClear();
 		for (auto& i : m_configurationRAM) {
@@ -5577,7 +5609,7 @@ private:
 		m_readMidiDataTimeoutCountdown = 0xFF;
 		if ((m_midi_ReceiveSource_SendTarget & 2) == 0) {
 			// read midi data from midi in
-			while (true) {
+			while (keep_running.load()) {
 				const ReadResult readResult = midiIn_readMidiDataByte();
 				switch (readResult.status) {
 				case READ_ERROR:
@@ -5626,7 +5658,7 @@ private:
 			}
 		} else {
 			// read midi data from system
-			while (true) {
+			while (keep_running.load()) {
 				// log_debug("readMidiDataWithTimeout() - system
 				// while loop");
 				switch (system_isMidiDataAvailable()) {
@@ -5645,8 +5677,9 @@ private:
 						        &m_midiDataPacketFromSystem);
 					}
 					// log_debug("readMidiDataWithTimeout()
-					// - MidiDataPacket is in state 01_36_37_38
-					// and timeout not expired");
+					// - MidiDataPacket is in state
+					// 01_36_37_38 and timeout not
+					// expired");
 					break;
 				case SYSTEM_DATA_AVAILABLE:
 					// log_debug("readMidiDataWithTimeout()
@@ -6960,7 +6993,7 @@ private:
 	// ROM Address: 0x0CB7
 	void finalizeMusicProcessing()
 	{
-		while (true) {
+		while (keep_running.load()) {
 			disableInterrupts();
 			if (m_ya2151_timerA_counter != 0U) {
 				m_ya2151_timerA_counter--;
@@ -7405,8 +7438,9 @@ private:
 		if ((irqStatus & 0x08) != 0) { // Test for interrupt request on
 			                       // group 0 (INT0)
 			sendNextValueToSystemDuringInterruptHandler();
-		} else if ((irqStatus & 0x01) != 0) { // Test for interrupt request
-			                              // on group 1 (INT1)
+		} else if ((irqStatus & 0x01) != 0) { // Test for interrupt
+			                              // request on group 1
+			                              // (INT1)
 			// receiveNextValueFromSystemDuringInterruptHandler();
 			// // off-loaded to portWrite, since it is too unreliable
 		}
@@ -7855,7 +7889,7 @@ private:
 	}
 
 	// ROM Address: 0x1268
-	void logError(char* errorMsg)
+	void logError([[maybe_unused]] char* errorMsg)
 	{
 		// this really does nothing except clearing the a-register
 	}
@@ -8766,9 +8800,8 @@ private:
 	void setInstrumentParameter_VoiceDefinition(InstrumentParameters* instr,
 	                                            uint8_t param, uint8_t val)
 	{
-		((uint8_t*)&(instr->voiceDefinition))[param] = val; // ugly, but
-		                                                    // that's how
-		                                                    // they did it
+		// ugly, but that's how they did it
+		((uint8_t*)&(instr->voiceDefinition))[param] = val;
 		applyVoiceDefinition(instr);
 	}
 
@@ -9280,7 +9313,6 @@ private:
 	{
 		log_debug("setNodeParameterMasterTune()");
 		m_masterTune             = val;
-		int8_t const tmpVal      = val;
 		int16_t const masterTune = ((int8_t)(val << 1)) - 0x1EC;
 		m_masterTuneAsNoteFraction = FractionalNote(Note(masterTune >> 8),
 		                                            Fraction(masterTune &
@@ -9312,21 +9344,18 @@ private:
 	// ROM Address: 0x1B7F
 	void setInstrumentParameter_06_07_common(InstrumentParameters* instr)
 	{
-		static int16_t const octaveTransposeTable[5] = {-24 * 256,
-		                                                -12 * 256,
-		                                                0 * 256,
-		                                                12 * 256,
-		                                                24 * 256}; // In
-		                                                           // the
-		                                                           // original:
-		                                                           // actually
-		                                                           // a
-		                                                           // int8_t
+		static constexpr int16_t octaveTransposeTable[5] = {
+		        -24 * 256, -12 * 256, 0 * 256, 12 * 256, 24 * 256}; // In
+		                                                            // the
+		                                                            // original:
+		                                                            // actually
+		                                                            // a
+		                                                            // int8_t
 
 		// if (instr->instrumentConfiguration.octaveTranspose != 2) {
 		//	log_error("DEBUG:
-		//instr->instrumentConfiguration.octaveTranspose is %i",
-		//instr->instrumentConfiguration.octaveTranspose);
+		// instr->instrumentConfiguration.octaveTranspose is %i",
+		// instr->instrumentConfiguration.octaveTranspose);
 		// }
 
 		int16_t const detuneAsNoteFraction =
@@ -9712,7 +9741,7 @@ private:
 	void ym_singleOperator_sendKeyScaleAndAttackRate(OperatorDefinition* operatorDefinition,
 	                                                 uint8_t ymRegister)
 	{
-		static int8_t const byte_2194[4][16] = {
+		static constexpr int8_t byte_2194[4][16] = {
 		        // clang-format off
 			{ 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0  },
 			{-4,  -3,  -3,  -2,  -2,  -1,  -1,   0,   0,   1,   1,   2,   2,   3,   3,   4  },
@@ -9746,8 +9775,9 @@ private:
 		for (uint8_t i = 0; i < 0x20; i++) {
 			sendToYM2151_no_interrupts_allowed(0xE0 + i,
 			                                   0x0F); // D1L (First
-			                                          // Decay Level)
-			                                          // / RR (Release
+			                                          // Decay
+			                                          // Level) / RR
+			                                          // (Release
 			                                          // Rate)
 		}
 		// KEY OFF on all channels
@@ -10439,7 +10469,7 @@ private:
 
 		// if (instr->voiceDefinition.getTranspose() != 0) {
 		//	log_error("DEBUG: instr->voiceDefinition.getTranspose()
-		//is %i", instr->voiceDefinition.getTranspose());
+		// is %i", instr->voiceDefinition.getTranspose());
 		// }
 
 		ymChannelData->portamentoTarget = cropToPlayableRange(
@@ -10691,7 +10721,7 @@ private:
 			}
 			uint8_t* templateValuePtr = m_soundProcessorSysExCurrentMatchPtr;
 			uint8_t expectedMidiData = templateValuePtr[0];
-			while (true) {
+			while (keep_running.load()) {
 				uint8_t actualMidiData = midiData;
 				if (expectedMidiData >= 0x80) {
 					processSysExTemplateCommand(&expectedMidiData,
@@ -10825,7 +10855,7 @@ private:
 			// Template byte is of type InstrumentNumber
 			m_sysEx_InstrumentNumber = *actualMidiData & 0x07;
 			*expectedMidiData = ((*expectedMidiData << 4) & 0xF0) | 0x08;
-			*actualMidiData = *actualMidiData & 0xF8; // clear the
+			*actualMidiData   = *actualMidiData & 0xF8; // clear the
 			                                          // instrument
 			                                          // number from
 			                                          // the midi
@@ -11799,15 +11829,18 @@ private:
 			        0x04 /*SP_MidiInterpreterSysExState_0x04*/;
 			return;
 
-		default: // 0x04/*SP_MidiInterpreterSysExState_0x04*/:
-			if (midiData >= 16) {
-				return SoundProcessor_processMidiCommandByte(midiData);
+		default: // Cases 0x02 and others land here ...
+			// SP_MidiInterpreterSysExState_0x04
+			if (m_soundProcessorMidiInterpreterSysExState != 0x02) {
+				if (midiData >= 16) {
+					return SoundProcessor_processMidiCommandByte(
+					        midiData);
+				}
+				midiData = midiData << 4 |
+				           m_sp_MidiDataOfMidiCommandInProgress[2];
+				// no break! Continue like if it was case 2
 			}
-			midiData = midiData << 4 |
-			           m_sp_MidiDataOfMidiCommandInProgress[2];
-			// no break! Continue like if it was case 2
-
-		case 0x02 /*SP_MidiInterpreterSysExState_0x02*/:
+			// case 0x02 /*SP_MidiInterpreterSysExState_0x02*/:
 			if ((m_sp_MidiDataOfMidiCommandInProgress[0] & 0x0F) ==
 			    m_nodeNumber) {
 				InstrumentParameters* inst = getActiveInstrumentParameters(
@@ -11825,7 +11858,6 @@ private:
 			}
 			m_soundProcessorMidiInterpreterSysExState =
 			        0x00 /*SP_MidiInterpreterSysExState_InitialState*/;
-			return;
 		}
 	}
 
@@ -12096,7 +12128,7 @@ private:
 		// log_debug("receiveDataPacketTypeA_internal - new
 		// dataPacketSize(1) 0x%04x", dataPacketSize);
 
-		while (true) {
+		while (keep_running.load()) {
 			// did we reach the end of the packet size?
 			if (dataPacketSize == 0) {
 				// we're expecting a checksum byte
@@ -12223,7 +12255,7 @@ private:
 		}
 		dataPacketSize = byteCountHigh * 0x80 + readResult.data;
 
-		while (true) {
+		while (keep_running.load()) {
 			// read the data
 			if (dataPacketSize == 0) {
 				// read the checksum
@@ -12465,11 +12497,13 @@ private:
 	}
 
 public:
-	MusicFeatureCard(Section* configuration, MixerChannel* mixerChannel)
+	MusicFeatureCard(const MusicFeatureCard&)            = delete;
+	MusicFeatureCard& operator=(const MusicFeatureCard&) = delete;
+
+	MusicFeatureCard(Section* configuration, mixer_channel_t&& audio_channel)
 	        : Module_base(configuration),
-	          m_ya2151(mixerChannel),
+	          m_ya2151(std::move(audio_channel)),
 	          // initialize all the internal structures
-	          keep_running(true),
 	          m_bufferFromMidiInState("bufferFromMidiInState", 2048),
 	          m_bufferToMidiOutState("bufferToMidiOutState", 256),
 
@@ -12506,7 +12540,7 @@ public:
 	          m_irqTriggerPc(
 	                  "TriggerPcIrq",
 	                  []() {
-		                  IMF_LOG("ACTIVATING PC IRQ!!!");
+		                  IMF_LOG("ACTIVATING PC IRQ!!!", "");
 		                  PIC_ActivateIRQ(IMFC_IRQ);
 	                  } /*callbackOnLowToHigh*/,
 	                  nullptr /*callbackOnToHighToLow*/),
@@ -12624,6 +12658,7 @@ public:
 		m_piuIMF.reset();
 
 		// now start the main program
+		keep_running                   = true;
 		m_hardwareMutex                = SDL_CreateMutex();
 		m_interruptHandlerRunning      = false;
 		m_interruptHandlerRunningMutex = SDL_CreateMutex();
@@ -12636,7 +12671,8 @@ public:
 		// wait until we're ready to receive data... it's a workaround
 		// for now, but well....
 		while (!m_finishedBootupSequence) {
-			;
+			using namespace std::chrono_literals;
+			std::this_thread::sleep_for(1ms);
 		}
 	}
 
@@ -12672,27 +12708,27 @@ public:
 		return 0;
 	}
 
-	Bitu readPortPIU0()
+	uint8_t readPortPIU0()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_piuPC.readPortPIU0();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortPIU0(Bitu val)
+	void writePortPIU0(const uint8_t val)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		m_piuPC.writePortPIU0(val);
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	Bitu readPortPIU1()
+	uint8_t readPortPIU1()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_piuPC.readPortPIU1();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortPIU1(Bitu val)
+	void writePortPIU1(const uint8_t val)
 	{
 		// IMF_LOG("PC->IMF: write to PIU1 = %02X", val);
 		SDL_LockMutex(m_hardwareMutex);
@@ -12701,106 +12737,106 @@ public:
 		receiveNextValueFromSystemDuringInterruptHandler(); // moved from
 		                                                    // sendOrReceiveNextValueToFromSystemDuringInterruptHandler
 	}
-	Bitu readPortPIU2()
+	uint8_t readPortPIU2()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_piuPC.readPortPIU2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortPIU2(Bitu val)
+	void writePortPIU2(const uint8_t val)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		m_piuPC.writePortPIU2(val);
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	Bitu readPortPCR()
+	uint8_t readPortPCR()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = PD71055::readPortPCR();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortPCR(Bitu val)
+	void writePortPCR(const uint8_t val)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		m_piuPC.writePortPCR(val);
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	Bitu readPortCNTR0()
+	uint8_t readPortCNTR0()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_timer.readPortCNTR0();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortCNTR0(Bitu val)
+	void writePortCNTR0(const uint8_t val)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		m_timer.writePortCNTR0(val);
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	Bitu readPortCNTR1()
+	uint8_t readPortCNTR1()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_timer.readPortCNTR1();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortCNTR1(Bitu val)
+	void writePortCNTR1(const uint8_t val)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		m_timer.writePortCNTR1(val);
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	Bitu readPortCNTR2()
+	uint8_t readPortCNTR2()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_timer.readPortCNTR2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortCNTR2(Bitu val)
+	void writePortCNTR2(const uint8_t val)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		m_timer.writePortCNTR2(val);
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	Bitu readPortTCWR()
+	uint8_t readPortTCWR()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = Intel8253::readPortTCWR();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortTCWR(Bitu val)
+	void writePortTCWR(const uint8_t val)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		m_timer.writePortTCWR(val);
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	Bitu readPortTCR()
+	uint8_t readPortTCR()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_tcr.readPort();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortTCR(Bitu val)
+	void writePortTCR(const uint8_t val)
 	{
 		// log("DEBUG DEBUG: write to TotalControlRegister = %02X", val);
 		SDL_LockMutex(m_hardwareMutex);
 		m_tcr.writePort(val);
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	Bitu readPortTSR()
+	uint8_t readPortTSR()
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_tsr.readPort();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortTSR(Bitu val)
+	void writePortTSR(const uint8_t val)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		m_tsr.writePort(val);
@@ -12814,7 +12850,7 @@ public:
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
 
-	void onTimerEvent(Bitu val)
+	void onTimerEvent(const uint32_t val)
 	{
 		// IMF_LOG("->Intel8253_TimerEvent");
 		m_timer.timerEvent(val);
@@ -12822,9 +12858,8 @@ public:
 
 	~MusicFeatureCard() override
 	{
-		keep_running = false;
-		SDL_WaitThread(m_mainThread, nullptr);
-		SDL_WaitThread(m_interruptThread, nullptr);
+		SDL_WaitThread(m_mainThread, 0);
+		SDL_DestroyMutex(m_hardwareMutex);
 	}
 };
 
@@ -12832,179 +12867,200 @@ public:
 /// DOSBOX stuff
 ///////////////////////////////////////////////////////////
 
-static MusicFeatureCard* imfcSingleton;
-static IO_ReadHandleObject readHandler[16];
-static IO_WriteHandleObject writeHandler[16];
-// static MixerObject MixerChan;
+static MusicFeatureCard* imfcSingleton = nullptr;
 
-static void Intel8253_TimerEvent(Bitu val)
+constexpr auto NUM_IO_HANDLERS                                          = 16;
+static std::array<IO_ReadHandleObject, NUM_IO_HANDLERS> read_handlers   = {};
+static std::array<IO_WriteHandleObject, NUM_IO_HANDLERS> write_handlers = {};
+
+static void Intel8253_TimerEvent(const uint32_t val)
 {
 	imfcSingleton->onTimerEvent(val);
 }
 
-static void check8bit(Bitu iolen)
+static uint8_t readPortPIU0(const io_port_t, const io_width_t)
 {
-	assert(iolen == 1);
-}
-
-static Bitu readPortPIU0(Bitu iolen)
-{
-	check8bit(iolen);
 	return imfcSingleton->readPortPIU0();
 }
-static void writePortPIU0(Bitu val, Bitu iolen)
+static void writePortPIU0(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortPIU0(val);
+	imfcSingleton->writePortPIU0(check_cast<uint8_t>(value));
 }
-static Bitu readPortPIU1(Bitu iolen)
+static uint8_t readPortPIU1(const io_port_t, const io_width_t)
 {
-	check8bit(iolen);
 	return imfcSingleton->readPortPIU1();
 }
-static void writePortPIU1(Bitu val, Bitu iolen)
+static void writePortPIU1(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortPIU1(val);
+	imfcSingleton->writePortPIU1(check_cast<uint8_t>(value));
 }
-static Bitu readPortPIU2(Bitu iolen)
+static uint8_t readPortPIU2(const io_port_t, const io_width_t)
 {
-	check8bit(iolen);
 	return imfcSingleton->readPortPIU2();
 }
-static void writePortPIU2(Bitu val, Bitu iolen)
+static void writePortPIU2(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortPIU2(val);
+	imfcSingleton->writePortPIU2(check_cast<uint8_t>(value));
 }
-static Bitu readPortPCR(Bitu iolen)
+static uint8_t readPortPCR(const io_port_t, const io_width_t)
 {
-	check8bit(iolen);
 	return imfcSingleton->readPortPCR();
 }
-static void writePortPCR(Bitu val, Bitu iolen)
+static void writePortPCR(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortPCR(val);
+	imfcSingleton->writePortPCR(check_cast<uint8_t>(value));
 }
-static Bitu readPortCNTR0(Bitu iolen)
+static uint8_t readPortCNTR0(const io_port_t, const io_width_t)
 {
-	check8bit(iolen);
 	return imfcSingleton->readPortCNTR0();
 }
-static void writePortCNTR0(Bitu val, Bitu iolen)
+static void writePortCNTR0(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortCNTR0(val);
+	imfcSingleton->writePortCNTR0(check_cast<uint8_t>(value));
 }
-static Bitu readPortCNTR1(Bitu iolen)
+static uint8_t readPortCNTR1(const io_port_t, const io_width_t)
 {
-	check8bit(iolen);
 	return imfcSingleton->readPortCNTR1();
 }
-static void writePortCNTR1(Bitu val, Bitu iolen)
+static void writePortCNTR1(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortCNTR1(val);
+	imfcSingleton->writePortCNTR1(check_cast<uint8_t>(value));
 }
-static Bitu readPortCNTR2(Bitu iolen)
+static uint8_t readPortCNTR2(const io_port_t, const io_width_t)
 {
-	check8bit(iolen);
 	return imfcSingleton->readPortCNTR2();
 }
-static void writePortCNTR2(Bitu val, Bitu iolen)
+static void writePortCNTR2(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortCNTR2(val);
+	imfcSingleton->writePortCNTR2(check_cast<uint8_t>(value));
 }
-static Bitu readPortTCWR(Bitu iolen)
+static uint8_t readPortTCWR(const io_port_t, const io_width_t)
 {
-	check8bit(iolen);
 	return imfcSingleton->readPortTCWR();
 }
-static void writePortTCWR(Bitu val, Bitu iolen)
+static void writePortTCWR(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortTCWR(val);
+	imfcSingleton->writePortTCWR(check_cast<uint8_t>(value));
 }
-static Bitu readPortTCR(Bitu iolen)
+static uint8_t readPortTCR(const io_port_t, const io_width_t)
 {
-	check8bit(iolen);
 	return imfcSingleton->readPortTCR();
 }
-static void writePortTCR(Bitu val, Bitu iolen)
+static void writePortTCR(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortTCR(val);
+	imfcSingleton->writePortTCR(check_cast<uint8_t>(value));
 }
-static Bitu readPortTSR(Bitu iolen)
+static uint8_t readPortTSR(const io_port_t, const io_width_t)
 {
-	check8bit(iolen);
 	return imfcSingleton->readPortTSR();
 }
-static void writePortTSR(Bitu val, Bitu iolen)
+static void writePortTSR(const io_port_t, const io_val_t value, const io_width_t)
 {
-	check8bit(iolen);
-	imfcSingleton->writePortTSR(val);
+	imfcSingleton->writePortTSR(check_cast<uint8_t>(value));
 }
 
-static void IMFC_Mixer_Callback(Bitu len)
+static void IMFC_Mixer_Callback(const uint16_t requested_frames)
 {
-	imfcSingleton->mixerCallback(len);
+	imfcSingleton->mixerCallback(requested_frames);
 }
 
 void IMFC_ShutDown(Section* /*sec*/)
 {
+	keep_running = false;
+	// using namespace std::chrono_literals;
+	// std::this_thread::sleep_for(20ms);
+
 	delete imfcSingleton;
+
+#if IMFC_VERBOSE_LOGGING
+	assert(m_loggerMutex);
+	SDL_DestroyMutex(m_loggerMutex);
+	m_loggerMutex = nullptr;
+#endif
 }
 
 void IMFC_Init(Section* sec)
 {
-	/*	IMF_LOG("IMFC_Init");
+#if IMFC_VERBOSE_LOGGING
+	m_loggerMutex = SDL_CreateMutex();
+#endif
 
-	        m_loggerMutex = SDL_CreateMutex();
+	// Register the Audio channel
+	auto audio_channel = MIXER_AddChannel(IMFC_Mixer_Callback,
+	                                      use_mixer_rate,
+	                                      "IMFC",
+	                                      {ChannelFeature::Sleep,
+	                                       ChannelFeature::Stereo,
+	                                       ChannelFeature::ReverbSend,
+	                                       ChannelFeature::ChorusSend,
+	                                       ChannelFeature::Synthesizer});
 
-	        // Register the mixer callback
-	        MixerChannel* mixerChannel =
-	   MixerChan.Install(IMFC_Mixer_Callback, IMFC_RATE, "IMFC");
+	imfcSingleton = new MusicFeatureCard(sec, std::move(audio_channel));
 
-	        imfcSingleton = new MusicFeatureCard(sec, mixerChannel);
-	        readHandler[0x0].Install(IMFC_PORT_BASE + IMFC_PORT_PIU0,
-	   readPortPIU0, IO_MB); writeHandler[0x0].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_PIU0, writePortPIU0, IO_MB);
-	        readHandler[0x1].Install(IMFC_PORT_BASE + IMFC_PORT_PIU1,
-	   readPortPIU1, IO_MB); writeHandler[0x1].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_PIU1, writePortPIU1, IO_MB);
-	        readHandler[0x2].Install(IMFC_PORT_BASE + IMFC_PORT_PIU2,
-	   readPortPIU2, IO_MB); writeHandler[0x2].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_PIU2, writePortPIU2, IO_MB);
-	        readHandler[0x3].Install(IMFC_PORT_BASE + IMFC_PORT_PCR,
-	   readPortPCR, IO_MB); writeHandler[0x3].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_PCR, writePortPCR, IO_MB);
-	        readHandler[0x4].Install(IMFC_PORT_BASE + IMFC_PORT_CNTR0,
-	   readPortCNTR0, IO_MB); writeHandler[0x4].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_CNTR0, writePortCNTR0, IO_MB);
-	        readHandler[0x5].Install(IMFC_PORT_BASE + IMFC_PORT_CNTR1,
-	   readPortCNTR1, IO_MB); writeHandler[0x5].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_CNTR1, writePortCNTR1, IO_MB);
-	        readHandler[0x6].Install(IMFC_PORT_BASE + IMFC_PORT_CNTR2,
-	   readPortCNTR2, IO_MB); writeHandler[0x6].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_CNTR2, writePortCNTR2, IO_MB);
-	        readHandler[0x7].Install(IMFC_PORT_BASE + IMFC_PORT_TCWR,
-	   readPortTCWR, IO_MB); writeHandler[0x7].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_TCWR, writePortTCWR, IO_MB);
-	        // ports [+8],[+9],[+A],[+B] all map to the TCR
-	        for (unsigned int i = 0; i < 4; i++) {
-	                readHandler[0x8 + i].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_TCR + i, readPortTCR, IO_MB); writeHandler[0x8 +
-	   i].Install(IMFC_PORT_BASE + IMFC_PORT_TCR + i, writePortTCR, IO_MB);
-	        }
-	        // ports [+C],[+D],[+E],[+F] all map to the TSR
-	        for (unsigned int i = 0; i < 4; i++) {
-	                readHandler[0xC + i].Install(IMFC_PORT_BASE +
-	   IMFC_PORT_TSR + i, readPortTSR, IO_MB); writeHandler[0xC +
-	   i].Install(IMFC_PORT_BASE + IMFC_PORT_TSR + i, writePortTSR, IO_MB);
-	        }
-	        sec->AddDestroyFunction(&IMFC_ShutDown, true);
-	*/
+	// Define the IO port addresses
+	constexpr io_port_t PORT_BASE  = 0x2A20;
+	constexpr io_port_t PORT_PIU0  = PORT_BASE + 0x0;
+	constexpr io_port_t PORT_PIU1  = PORT_BASE + 0x1;
+	constexpr io_port_t PORT_PIU2  = PORT_BASE + 0x2;
+	constexpr io_port_t PORT_PCR   = PORT_BASE + 0x3;
+	constexpr io_port_t PORT_CNTR0 = PORT_BASE + 0x4;
+	constexpr io_port_t PORT_CNTR1 = PORT_BASE + 0x5;
+	constexpr io_port_t PORT_CNTR2 = PORT_BASE + 0x6;
+	constexpr io_port_t PORT_TCWR  = PORT_BASE + 0x7;
+	constexpr io_port_t PORT_TCR   = PORT_BASE + 0x8;
+	constexpr io_port_t PORT_TSR   = PORT_BASE + 0xC;
+
+	// Consistency check
+	[[maybe_unused]] constexpr uint8_t EXPECTED_IO_HANDLERS = 16;
+	assert(read_handlers.size() == EXPECTED_IO_HANDLERS);
+	assert(write_handlers.size() == EXPECTED_IO_HANDLERS);
+
+	read_handlers.at(0).Install(PORT_PIU0, readPortPIU0, io_width_t::byte);
+	write_handlers.at(0).Install(PORT_PIU0, writePortPIU0, io_width_t::byte);
+
+	read_handlers.at(1).Install(PORT_PIU1, readPortPIU1, io_width_t::byte);
+	write_handlers.at(1).Install(PORT_PIU1, writePortPIU1, io_width_t::byte);
+
+	read_handlers.at(2).Install(PORT_PIU2, readPortPIU2, io_width_t::byte);
+	write_handlers.at(2).Install(PORT_PIU2, writePortPIU2, io_width_t::byte);
+
+	read_handlers.at(3).Install(PORT_PCR, readPortPCR, io_width_t::byte);
+	write_handlers.at(3).Install(PORT_PCR, writePortPCR, io_width_t::byte);
+
+	read_handlers.at(4).Install(PORT_CNTR0, readPortCNTR0, io_width_t::byte);
+	write_handlers.at(4).Install(PORT_CNTR0, writePortCNTR0, io_width_t::byte);
+
+	read_handlers.at(5).Install(PORT_CNTR1, readPortCNTR1, io_width_t::byte);
+	write_handlers.at(5).Install(PORT_CNTR1, writePortCNTR1, io_width_t::byte);
+
+	read_handlers.at(6).Install(PORT_CNTR2, readPortCNTR2, io_width_t::byte);
+	write_handlers.at(6).Install(PORT_CNTR2, writePortCNTR2, io_width_t::byte);
+
+	read_handlers.at(7).Install(PORT_TCWR, readPortTCWR, io_width_t::byte);
+	write_handlers.at(7).Install(PORT_TCWR, writePortTCWR, io_width_t::byte);
+
+	// ports [+C],[+D],[+E],[+F] all map to the TSR
+	for (unsigned int i = 0; i < 4; i++) {
+		read_handlers.at(8 + i).Install(PORT_TCR + i,
+		                                readPortTCR,
+		                                io_width_t::byte);
+		write_handlers.at(8 + i).Install(PORT_TCR + i,
+		                                 writePortTCR,
+		                                 io_width_t::byte);
+	}
+
+	// ports [+8],[+9],[+A],[+B] all map to the TCR
+	for (unsigned int i = 0; i < 4; i++) {
+		read_handlers.at(12 + i).Install(PORT_TSR + i,
+		                                 readPortTSR,
+		                                 io_width_t::byte);
+		write_handlers.at(12 + i).Install(PORT_TSR + i,
+		                                  writePortTSR,
+		                                  io_width_t::byte);
+	}
+	sec->AddDestroyFunction(&IMFC_ShutDown, true);
+
+	LOG_MSG("IMFC: IBM Music Feature Card running on port %xh and IRQ %d",
+	        PORT_BASE,
+	        IMFC_IRQ);
 }

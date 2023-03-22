@@ -33,6 +33,7 @@ libhardware_sources = files(
     'hardware.cpp',
     'ide.cpp',
     'innovation.cpp',
+    'imfc.cpp',
     'iohandler.cpp',
     'iohandler_containers.cpp',
     'ipx.cpp',
