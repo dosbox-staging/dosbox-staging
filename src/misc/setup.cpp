@@ -180,20 +180,27 @@ bool Value::set_double(const std::string &in)
 	return true;
 }
 
-bool Value::set_bool(const std::string &in)
+bool Value::set_bool(const std::string& in)
 {
 	istringstream input(in);
 	string result;
 	input >> result;
 	lowcase(result);
 	_bool = true; // TODO
-	if(!result.size()) return false;
 
-	if(result=="0" || result=="disabled" || result=="false" || result=="off") {
+	if (!result.size()) {
+		return false;
+	}
+
+	if (result == "0" || result == "disabled" || result == "false" ||
+	    result == "off") {
 		_bool = false;
-	} else if(result=="1" || result=="enabled" || result=="true" || result=="on") {
+	} else if (result == "1" || result == "enabled" || result == "true" ||
+	           result == "on") {
 		_bool = true;
-	} else return false;
+	} else {
+		return false;
+	}
 
 	return true;
 }
