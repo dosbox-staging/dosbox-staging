@@ -1131,7 +1131,7 @@ Abschnitt "%s" existiert nicht.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" ist kein gültiger Wert für die Eigenschaft %s.
+"%s" ist kein gültiger Wert für die Eigenschaft "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
