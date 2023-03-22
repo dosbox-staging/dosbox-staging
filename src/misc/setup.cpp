@@ -252,7 +252,7 @@ Property::Property(const std::string &name, Changeable::Value when)
 	        "Only letters, digits, and underscores are allowed in property names");
 }
 
-bool Property::CheckValue(const Value &in, bool warn)
+bool Property::CheckValue(const Value &in)
 {
 	if (suggested_values.empty())
 		return true;
@@ -262,12 +262,12 @@ bool Property::CheckValue(const Value &in, bool warn)
 			return true;
 		}
 	}
-	if (warn) {
-		LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
-		            in.ToString().c_str(),
-		            propname.c_str(),
-		            default_value.ToString().c_str());
-	}
+
+	LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
+				in.ToString().c_str(),
+				propname.c_str(),
+				default_value.ToString().c_str());
+
 	return false;
 }
 
@@ -295,7 +295,7 @@ const char * Property::GetHelpUtf8() const
 bool Prop_int::SetVal(const Value &in)
 {
 	if (!suggested_values.empty()) {
-		if (CheckValue(in, true) ) {
+		if (CheckValue(in) ) {
 			value = in;
 			return true;
 		} else {
@@ -328,12 +328,12 @@ bool Prop_int::SetVal(const Value &in)
 		return true;
 	}
 }
-bool Prop_int::CheckValue(const Value &in, bool warn)
+bool Prop_int::CheckValue(const Value &in)
 {
 	//	if(!suggested_values.empty() && Property::CheckValue(in,warn))
 	// return true;
 	if (!suggested_values.empty())
-		return Property::CheckValue(in, warn);
+		return Property::CheckValue(in);
 	// LOG_MSG("still used ?");
 	// No >= and <= in Value type and == is ambigious
 	const int mi = min_value;
@@ -342,14 +342,13 @@ bool Prop_int::CheckValue(const Value &in, bool warn)
 	if (mi == -1 && ma == -1) return true;
 	if (va >= mi && va <= ma) return true;
 
-	if (warn) {
-		LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', using the default value %s",
-		            in.ToString().c_str(),
-		            min_value.ToString().c_str(),
-		            max_value.ToString().c_str(),
-		            propname.c_str(),
-		            default_value.ToString().c_str());
-	}
+	LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', using the default value %s",
+				in.ToString().c_str(),
+				min_value.ToString().c_str(),
+				max_value.ToString().c_str(),
+				propname.c_str(),
+				default_value.ToString().c_str());
+
 	return false;
 }
 
@@ -381,7 +380,7 @@ bool Prop_string::SetValue(const std::string &input)
 	Value val(temp,Value::V_STRING);
 	return SetVal(val);
 }
-bool Prop_string::CheckValue(const Value &in, bool warn)
+bool Prop_string::CheckValue(const Value &in)
 {
 	if (suggested_values.empty())
 		return true;
@@ -396,12 +395,12 @@ bool Prop_string::CheckValue(const Value &in, bool warn)
 			}
 		}
 	}
-	if (warn) {
-		LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
-		            in.ToString().c_str(),
-		            propname.c_str(),
-		            default_value.ToString().c_str());
-	}
+
+	LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
+				in.ToString().c_str(),
+				propname.c_str(),
+				default_value.ToString().c_str());
+
 	return false;
 }
 
@@ -487,7 +486,7 @@ bool PropMultiValRemain::SetValue(const std::string &input)
 		}
 		//Test Value. If it fails set default
 		Value valtest (in,p->Get_type());
-		if (!p->CheckValue(valtest,true)) {
+		if (!p->CheckValue(valtest)) {
 			make_default_value();
 			return false;
 		}
@@ -529,7 +528,7 @@ bool PropMultiVal::SetValue(const std::string &input)
 			//Strings are only checked against the suggested values list.
 			//Test Value. If it fails set default
 			Value valtest (in,p->Get_type());
-			if (!p->CheckValue(valtest,true)) {
+			if (!p->CheckValue(valtest)) {
 				make_default_value();
 				return false;
 			}
