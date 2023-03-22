@@ -226,9 +226,7 @@ public:
 	}
 
 protected:
-	// Set interval value to in or default if in is invalid.
-	// Can be overridden to set a different value if invalid.
-	virtual bool SetVal(const Value& in)
+	virtual bool ValidateValue(const Value& in)
 	{
 		if (IsValidValue(in)) {
 			value = in;
@@ -276,13 +274,10 @@ public:
 	}
 
 	bool SetValue(const std::string& in) override;
-
 	bool IsValidValue(const Value& in) override;
 
 protected:
-	// Override SetVal, so it takes min,max in account when there are no
-	// valid values
-	bool SetVal(const Value& in) override;
+	bool ValidateValue(const Value& in) override;
 
 private:
 	Value min_value;
@@ -323,7 +318,6 @@ public:
 	~Prop_string() override = default;
 
 	bool SetValue(const std::string& in) override;
-
 	bool IsValidValue(const Value& in) override;
 };
 

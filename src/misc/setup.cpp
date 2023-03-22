@@ -151,23 +151,23 @@ bool Value::SetValue(const std::string& in, const Etype _type)
 	assert(type == V_NONE || type == _type);
 	type = _type;
 
-	bool retval = true;
+	bool is_valid = true;
 	switch (type) {
-	case V_HEX: retval = SetHex(in); break;
-	case V_INT: retval = SetInt(in); break;
-	case V_BOOL: retval = SetBool(in); break;
+	case V_HEX: is_valid = SetHex(in); break;
+	case V_INT: is_valid = SetInt(in); break;
+	case V_BOOL: is_valid = SetBool(in); break;
 	case V_STRING: SetString(in); break;
-	case V_DOUBLE: retval = SetDouble(in); break;
+	case V_DOUBLE: is_valid = SetDouble(in); break;
 
 	case V_NONE:
 	case V_CURRENT:
 	default:
 		LOG_ERR("SETUP: Unhandled type when setting value: '%s'",
 		        in.c_str());
-		retval = false;
+		is_valid = false;
 		break;
 	}
-	return retval;
+	return is_valid;
 }
 
 bool Value::SetHex(const std::string& in)
@@ -314,7 +314,7 @@ const char* Property::GetHelpUtf8() const
 	return MSG_GetRaw(result.c_str());
 }
 
-bool Prop_int::SetVal(const Value& in)
+bool Prop_int::ValidateValue(const Value& in)
 {
 	if (IsRestrictedValue()) {
 		if (IsValidValue(in)) {
@@ -395,7 +395,7 @@ bool Prop_double::SetValue(const std::string& input)
 	if (!val.SetValue(input, Value::V_DOUBLE)) {
 		return false;
 	}
-	return SetVal(val);
+	return ValidateValue(val);
 }
 
 // void Property::SetValue(char* input){
@@ -407,8 +407,8 @@ bool Prop_int::SetValue(const std::string& input)
 	if (!val.SetValue(input, Value::V_INT)) {
 		return false;
 	}
-	bool retval = SetVal(val);
-	return retval;
+	bool is_valid = ValidateValue(val);
+	return is_valid;
 }
 
 bool Prop_string::SetValue(const std::string& input)
@@ -422,7 +422,7 @@ bool Prop_string::SetValue(const std::string& input)
 		lowcase(temp);
 	}
 	Value val(temp, Value::V_STRING);
-	return SetVal(val);
+	return ValidateValue(val);
 }
 
 bool Prop_string::IsValidValue(const Value& in)
@@ -456,7 +456,7 @@ bool Prop_path::SetValue(const std::string& input)
 	// Special version to merge realpath with it
 
 	Value val(input, Value::V_STRING);
-	bool retval = SetVal(val);
+	bool is_valid = ValidateValue(val);
 
 	if (input.empty()) {
 		realpath.clear();
@@ -478,7 +478,7 @@ bool Prop_path::SetValue(const std::string& input)
 		realpath = workcopy;
 	}
 
-	return retval;
+	return is_valid;
 }
 
 bool Prop_bool::SetValue(const std::string& input)
@@ -490,7 +490,7 @@ bool Prop_hex::SetValue(const std::string& input)
 {
 	Value val;
 	val.SetValue(input, Value::V_HEX);
-	return SetVal(val);
+	return ValidateValue(val);
 }
 
 void PropMultiVal::MakeDefaultValue()
@@ -514,13 +514,13 @@ void PropMultiVal::MakeDefaultValue()
 	}
 
 	Value val(result, Value::V_STRING);
-	SetVal(val);
+	ValidateValue(val);
 }
 
 bool PropMultiValRemain::SetValue(const std::string& input)
 {
 	Value val(input, Value::V_STRING);
-	bool retval = SetVal(val);
+	bool is_valid = ValidateValue(val);
 
 	std::string local(input);
 	int i = 0, number_of_properties = 0;
@@ -562,13 +562,13 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 		}
 		p->SetValue(in);
 	}
-	return retval;
+	return is_valid;
 }
 
 bool PropMultiVal::SetValue(const std::string& input)
 {
 	Value val(input, Value::V_STRING);
-	bool retval = SetVal(val);
+	bool is_valid = ValidateValue(val);
 
 	std::string local(input);
 	int i = 0;
@@ -635,7 +635,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 		prevargument = in;
 	}
 
-	return retval;
+	return is_valid;
 }
 
 const std::vector<Value>& Property::GetValues() const
