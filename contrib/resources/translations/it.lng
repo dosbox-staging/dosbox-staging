@@ -1180,7 +1180,7 @@ La sezione "%s" non esiste.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" non è un valore valido per la proprietà %s.
+"%s" non è un valore valido per la proprietà "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX

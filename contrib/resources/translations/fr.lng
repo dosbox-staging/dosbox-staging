@@ -927,7 +927,7 @@ La section "%s" n'existe pas.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" n'est pas une valeur correcte pour la propriété %s.
+"%s" n'est pas une valeur correcte pour la propriété "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
