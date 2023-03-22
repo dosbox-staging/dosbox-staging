@@ -739,29 +739,34 @@ Hex Section_prop::Get_hex(const std::string &_propname) const
 	return 0;
 }
 
-bool Section_prop::HandleInputline(const std::string &gegevens)
+bool Section_prop::HandleInputline(const std::string& gegevens)
 {
 	string str1           = gegevens;
 	string::size_type loc = str1.find('=');
-	if (loc == string::npos) return false;
-	string name = str1.substr(0,loc);
-	string val = str1.substr(loc + 1);
+
+	if (loc == string::npos) {
+		return false;
+	}
+
+	string name = str1.substr(0, loc);
+	string val  = str1.substr(loc + 1);
 
 	/* Remove quotes around value */
 	trim(val);
 	string::size_type length = val.length();
-	if (length > 1 &&
-	     ((val[0] == '\"'  && val[length - 1] == '\"' ) ||
-	      (val[0] == '\'' && val[length - 1] == '\''))
-	   ) val = val.substr(1,length - 2);
+	if (length > 1 && ((val[0] == '\"' && val[length - 1] == '\"') ||
+	                   (val[0] == '\'' && val[length - 1] == '\''))) {
+		val = val.substr(1, length - 2);
+	}
 
 	/* trim the results incase there were spaces somewhere */
 	trim(name);
 	trim(val);
-	for (auto &p : properties) {
 
-		if (strcasecmp(p->propname.c_str(), name.c_str()) != 0)
+	for (auto& p : properties) {
+		if (strcasecmp(p->propname.c_str(), name.c_str()) != 0) {
 			continue;
+		}
 
 		if (p->IsDeprecated()) {
 			LOG_WARNING("CONFIG: Deprecated option '%s'", name.c_str());
@@ -771,6 +776,7 @@ bool Section_prop::HandleInputline(const std::string &gegevens)
 
 		return p->SetValue(val);
 	}
+
 	LOG_WARNING("CONFIG: Unknown option '%s'", name.c_str());
 	return false;
 }
@@ -1079,23 +1085,28 @@ const Section_line &Config::GetOverwrittenAutoexecSection() const
 	return overwritten_autoexec_section;
 }
 
-bool Config::ParseConfigFile(const std::string &type, const std::string &configfilename)
+bool Config::ParseConfigFile(const std::string& type, const std::string& configfilename)
 {
 	std::error_code ec;
 	const std_fs::path cfg_path = configfilename;
-	const auto canonical_path = std_fs::canonical(cfg_path, ec);
-	if (ec)
+	const auto canonical_path   = std_fs::canonical(cfg_path, ec);
+
+	if (ec) {
 		return false;
+	}
 
 	if (contains(configFilesCanonical, canonical_path)) {
 		LOG_INFO("CONFIG: Skipping duplicate config file '%s'",
-			configfilename.c_str());
+		         configfilename.c_str());
 		return true;
 	}
+
 	// static bool first_configfile = true;
 	ifstream in(canonical_path);
-	if (!in)
+	if (!in) {
 		return false;
+	}
+
 	configfiles.push_back(configfilename);
 	configFilesCanonical.push_back(canonical_path);
 
@@ -1103,13 +1114,14 @@ bool Config::ParseConfigFile(const std::string &type, const std::string &configf
 	current_config_dir = canonical_path.parent_path().string();
 
 	string gegevens;
-	Section *currentsection = nullptr;
+	Section* currentsection = nullptr;
 
 	while (getline(in, gegevens)) {
 		/* strip leading/trailing whitespace */
 		trim(gegevens);
-		if (gegevens.empty())
+		if (gegevens.empty()) {
 			continue;
+		}
 
 		switch (gegevens[0]) {
 		case '%':
@@ -1119,32 +1131,39 @@ bool Config::ParseConfigFile(const std::string &type, const std::string &configf
 		case '\n': continue; break;
 		case '[': {
 			const auto bracket_pos = gegevens.find(']');
-			if (bracket_pos == string::npos)
+			if (bracket_pos == string::npos) {
 				continue;
+			}
 			gegevens.erase(bracket_pos);
 			const auto section_name = gegevens.substr(1);
-			if (const auto sec = GetSection(section_name); sec)
+			if (const auto sec = GetSection(section_name); sec) {
 				currentsection = sec;
+			}
 		} break;
 		default:
 			if (currentsection) {
 				currentsection->HandleInputline(gegevens);
 
-				// If this is an autoexec section, the above takes care of the joining
-				// while this handles the overwrriten mode.
-				// We need to be prepared for either scenario to play out because we
-				// won't know the users final preferance until the very last configuration
-				// file is processed.
-				if (std::string_view(currentsection->GetName()) == "autoexec") {
+				// If this is an autoexec section, the above
+				// takes care of the joining while this handles
+				// the overwrriten mode. We need to be prepared
+				// for either scenario to play out because we won't
+				// know the users final preferance until the
+				// very last configuration file is processed.
+				if (std::string_view(currentsection->GetName()) ==
+				    "autoexec") {
 					OverwriteAutoexec(configfilename, gegevens);
 				}
 			}
 			break;
 		}
 	}
-	current_config_dir.clear();//So internal changes don't use the path information
+	current_config_dir.clear(); // So internal changes don't use the path
+	                            // information
 
-	LOG_INFO("CONFIG: Loaded '%s' config file '%s'", type.c_str(), configfilename.c_str());
+	LOG_INFO("CONFIG: Loaded '%s' config file '%s'",
+	         type.c_str(),
+	         configfilename.c_str());
 
 	return true;
 }
