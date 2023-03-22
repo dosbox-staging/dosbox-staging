@@ -226,16 +226,7 @@ public:
 	}
 
 protected:
-	virtual bool ValidateValue(const Value& in)
-	{
-		if (IsValidValue(in)) {
-			value = in;
-			return true;
-		} else {
-			value = default_value;
-			return false;
-		}
-	}
+	virtual bool ValidateValue(const Value& in);
 
 	Value value;
 	std::vector<Value> valid_values;
