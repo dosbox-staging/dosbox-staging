@@ -1214,7 +1214,7 @@ void DOSBOX_Init()
 	MSG_Add("CONFIGFILE_INTRO",
 	        "# This is the configuration file for " CANONICAL_PROJECT_NAME " (%s).\n"
 	        "# Lines starting with a '#' character are comments.\n");
-	MSG_Add("CONFIG_SUGGESTED_VALUES", "Possible values");
+	MSG_Add("CONFIG_VALID_VALUES", "Possible values");
 
 	// Initialize the uptime counter when launching the first shell. This
 	// ensures that slow-performing configurable tasks (like loading MIDI

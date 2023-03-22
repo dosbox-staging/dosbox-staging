@@ -964,7 +964,7 @@ Jest to dobre miejsce na umieszczenie poleceń MOUNT.
 # Linie zaczynające się od # są komentarzami.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Możliwe wartości
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
