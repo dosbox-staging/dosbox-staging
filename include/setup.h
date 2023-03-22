@@ -181,9 +181,9 @@ public:
 protected:
 	//Set interval value to in or default if in is invalid. force always sets the value.
 	//Can be overridden to set a different value if invalid.
-	virtual bool SetVal(const Value &in, bool forced, bool warn = true)
+	virtual bool SetVal(const Value &in)
 	{
-		if (forced || CheckValue(in, warn)) {
+		if (CheckValue(in, true)) {
 			value = in;
 			return true;
 		} else {
@@ -226,7 +226,7 @@ public:
 protected:
 	// Override SetVal, so it takes min,max in account when there are no
 	// suggested values
-	bool SetVal(const Value &in, bool forced, bool warn = true) override;
+	bool SetVal(const Value &in) override;
 
 private:
 	Value min_value;

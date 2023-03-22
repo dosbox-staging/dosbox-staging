@@ -186,17 +186,17 @@ bool Value::set_bool(const std::string& in)
 	string result;
 	input >> result;
 	lowcase(result);
-	_bool = true; // TODO
+	_bool = false;
 
 	if (!result.size()) {
 		return false;
 	}
 
 	if (result == "0" || result == "disabled" || result == "false" ||
-	    result == "off") {
+	    result == "off" || result == "no") {
 		_bool = false;
 	} else if (result == "1" || result == "enabled" || result == "true" ||
-	           result == "on") {
+	           result == "on" || result == "yes") {
 		_bool = true;
 	} else {
 		return false;
@@ -292,13 +292,10 @@ const char * Property::GetHelpUtf8() const
 	return MSG_GetRaw(result.c_str());
 }
 
-bool Prop_int::SetVal(const Value &in, bool forced, bool warn)
+bool Prop_int::SetVal(const Value &in)
 {
-	if (forced) {
-		value = in;
-		return true;
-	} else if (!suggested_values.empty()) {
-		if ( CheckValue(in,warn) ) {
+	if (!suggested_values.empty()) {
+		if (CheckValue(in, true) ) {
 			value = in;
 			return true;
 		} else {
@@ -320,14 +317,12 @@ bool Prop_int::SetVal(const Value &in, bool forced, bool warn)
 		//Outside range, set it to the closest boundary
 		if (va > ma ) va = ma; else va = mi;
 
-		if (warn) {
-			LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', limiting it to %d",
-			            in.ToString().c_str(),
-			            min_value.ToString().c_str(),
-			            max_value.ToString().c_str(),
-			            propname.c_str(),
-			            va);
-		}
+		LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', limiting it to %d",
+					in.ToString().c_str(),
+					min_value.ToString().c_str(),
+					max_value.ToString().c_str(),
+					propname.c_str(),
+					va);
 
 		value = va;
 		return true;
@@ -362,7 +357,7 @@ bool Prop_double::SetValue(const std::string &input)
 {
 	Value val;
 	if(!val.SetValue(input,Value::V_DOUBLE)) return false;
-	return SetVal(val,false,true);
+	return SetVal(val);
 }
 
 //void Property::SetValue(char* input){
@@ -372,7 +367,7 @@ bool Prop_int::SetValue(const std::string &input)
 {
 	Value val;
 	if (!val.SetValue(input,Value::V_INT)) return false;
-	bool retval = SetVal(val,false,true);
+	bool retval = SetVal(val);
 	return retval;
 }
 
@@ -384,7 +379,7 @@ bool Prop_string::SetValue(const std::string &input)
 	//If there are none then it can be paths and such which are case sensitive
 	if (!suggested_values.empty()) lowcase(temp);
 	Value val(temp,Value::V_STRING);
-	return SetVal(val,false,true);
+	return SetVal(val);
 }
 bool Prop_string::CheckValue(const Value &in, bool warn)
 {
@@ -415,7 +410,7 @@ bool Prop_path::SetValue(const std::string &input)
 	// Special version to merge realpath with it
 
 	Value val(input,Value::V_STRING);
-	bool retval = SetVal(val,false,true);
+	bool retval = SetVal(val);
 
 	if (input.empty()) {
 		realpath.clear();
@@ -440,7 +435,7 @@ bool Prop_hex::SetValue(const std::string &input)
 {
 	Value val;
 	val.SetValue(input,Value::V_HEX);
-	return SetVal(val,false,true);
+	return SetVal(val);
 }
 
 void PropMultiVal::make_default_value()
@@ -456,14 +451,14 @@ void PropMultiVal::make_default_value()
 		result += separator; result += props;
 	}
 	Value val(result,Value::V_STRING);
-	SetVal(val,false,true);
+	SetVal(val);
 }
 
 //TODO checkvalue stuff
 bool PropMultiValRemain::SetValue(const std::string &input)
 {
 	Value val(input, Value::V_STRING);
-	bool retval = SetVal(val, false, true);
+	bool retval = SetVal(val);
 
 	std::string local(input);
 	int i = 0,number_of_properties = 0;
@@ -505,7 +500,7 @@ bool PropMultiValRemain::SetValue(const std::string &input)
 bool PropMultiVal::SetValue(const std::string &input)
 {
 	Value val(input, Value::V_STRING);
-	bool retval = SetVal(val, false, true);
+	bool retval = SetVal(val);
 
 	std::string local(input);
 	int i = 0;
