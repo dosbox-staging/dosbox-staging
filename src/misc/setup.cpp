@@ -739,19 +739,18 @@ Hex Section_prop::Get_hex(const std::string &_propname) const
 	return 0;
 }
 
-bool Section_prop::HandleInputline(const std::string& gegevens)
+bool Section_prop::HandleInputline(const std::string& line)
 {
-	string str1           = gegevens;
-	string::size_type loc = str1.find('=');
+	string::size_type loc = line.find('=');
 
 	if (loc == string::npos) {
 		return false;
 	}
 
-	string name = str1.substr(0, loc);
-	string val  = str1.substr(loc + 1);
+	string name = line.substr(0, loc);
+	string val  = line.substr(loc + 1);
 
-	/* Remove quotes around value */
+	// Strip quotes around the value
 	trim(val);
 	string::size_type length = val.length();
 	if (length > 1 && ((val[0] == '\"' && val[length - 1] == '\"') ||
@@ -759,7 +758,7 @@ bool Section_prop::HandleInputline(const std::string& gegevens)
 		val = val.substr(1, length - 2);
 	}
 
-	/* trim the results incase there were spaces somewhere */
+	// Trim the result in case there were spaces somewhere
 	trim(name);
 	trim(val);
 
@@ -1113,36 +1112,36 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 	// Get directory from configfilename, used with relative paths.
 	current_config_dir = canonical_path.parent_path().string();
 
-	string gegevens;
+	string line;
 	Section* currentsection = nullptr;
 
-	while (getline(in, gegevens)) {
+	while (getline(in, line)) {
 		/* strip leading/trailing whitespace */
-		trim(gegevens);
-		if (gegevens.empty()) {
+		trim(line);
+		if (line.empty()) {
 			continue;
 		}
 
-		switch (gegevens[0]) {
+		switch (line[0]) {
 		case '%':
 		case '\0':
 		case '#':
 		case ' ':
 		case '\n': continue; break;
 		case '[': {
-			const auto bracket_pos = gegevens.find(']');
+			const auto bracket_pos = line.find(']');
 			if (bracket_pos == string::npos) {
 				continue;
 			}
-			gegevens.erase(bracket_pos);
-			const auto section_name = gegevens.substr(1);
+			line.erase(bracket_pos);
+			const auto section_name = line.substr(1);
 			if (const auto sec = GetSection(section_name); sec) {
 				currentsection = sec;
 			}
 		} break;
 		default:
 			if (currentsection) {
-				currentsection->HandleInputline(gegevens);
+				currentsection->HandleInputline(line);
 
 				// If this is an autoexec section, the above
 				// takes care of the joining while this handles
@@ -1152,7 +1151,7 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 				// very last configuration file is processed.
 				if (std::string_view(currentsection->GetName()) ==
 				    "autoexec") {
-					OverwriteAutoexec(configfilename, gegevens);
+					OverwriteAutoexec(configfilename, line);
 				}
 			}
 			break;
