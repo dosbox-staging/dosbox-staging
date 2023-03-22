@@ -165,11 +165,12 @@ private:
 	void destroy();
 	Value& copy(const Value& in);
 	void plaincopy(const Value& in);
+
 	bool SetHex(const std::string& in);
-	bool set_int(const std::string& in);
-	bool set_bool(const std::string& in);
-	void set_string(const std::string& in);
-	bool set_double(const std::string& in);
+	bool SetInt(const std::string& in);
+	bool SetBool(const std::string& in);
+	void SetString(const std::string& in);
+	bool SetDouble(const std::string& in);
 };
 
 class Property {
@@ -387,7 +388,9 @@ public:
 
 	void AddEarlyInitFunction(SectionFunction func,
 	                          bool changeable_at_runtime = false);
+
 	void AddInitFunction(SectionFunction func, bool changeable_at_runtime = false);
+
 	void AddDestroyFunction(SectionFunction func,
 	                        bool changeable_at_runtime = false);
 
@@ -474,7 +477,8 @@ class PropMultiVal : public Property {
 protected:
 	std::unique_ptr<Section_prop> section;
 	std::string separator;
-	void make_default_value();
+
+	void MakeDefaultValue();
 
 public:
 	PropMultiVal(const std::string& name, Changeable::Value when,

@@ -153,10 +153,10 @@ bool Value::SetValue(const std::string& in, const Etype _type)
 	bool retval = true;
 	switch (type) {
 	case V_HEX: retval = SetHex(in); break;
-	case V_INT: retval = set_int(in); break;
-	case V_BOOL: retval = set_bool(in); break;
-	case V_STRING: set_string(in); break;
-	case V_DOUBLE: retval = set_double(in); break;
+	case V_INT: retval = SetInt(in); break;
+	case V_BOOL: retval = SetBool(in); break;
+	case V_STRING: SetString(in); break;
+	case V_DOUBLE: retval = SetDouble(in); break;
 
 	case V_NONE:
 	case V_CURRENT:
@@ -182,7 +182,7 @@ bool Value::SetHex(const std::string& in)
 	return true;
 }
 
-bool Value::set_int(const std::string& in)
+bool Value::SetInt(const std::string& in)
 {
 	istringstream input(in);
 	int result = INT_MIN;
@@ -193,7 +193,7 @@ bool Value::set_int(const std::string& in)
 	_int = result;
 	return true;
 }
-bool Value::set_double(const std::string& in)
+bool Value::SetDouble(const std::string& in)
 {
 	istringstream input(in);
 	double result = std::numeric_limits<double>::infinity();
@@ -205,7 +205,7 @@ bool Value::set_double(const std::string& in)
 	return true;
 }
 
-bool Value::set_bool(const std::string& in)
+bool Value::SetBool(const std::string& in)
 {
 	istringstream input(in);
 	string result;
@@ -230,7 +230,7 @@ bool Value::set_bool(const std::string& in)
 	return true;
 }
 
-void Value::set_string(const std::string& in)
+void Value::SetString(const std::string& in)
 {
 	if (!_string) {
 		_string = new string();
@@ -491,7 +491,7 @@ bool Prop_hex::SetValue(const std::string& input)
 	return SetVal(val);
 }
 
-void PropMultiVal::make_default_value()
+void PropMultiVal::MakeDefaultValue()
 {
 	Property* p = section->Get_prop(0);
 	if (!p) {
@@ -555,7 +555,7 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 		// Test Value. If it fails set default
 		Value valtest(in, p->Get_type());
 		if (!p->IsValidValue(valtest)) {
-			make_default_value();
+			MakeDefaultValue();
 			return false;
 		}
 		p->SetValue(in);
@@ -600,7 +600,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 			// list. Test Value. If it fails set default
 			Value valtest(in, p->Get_type());
 			if (!p->IsValidValue(valtest)) {
-				make_default_value();
+				MakeDefaultValue();
 				return false;
 			}
 			p->SetValue(in);
@@ -618,7 +618,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 					// Something was there to be parsed or
 					// not the same type. Invalidate entire
 					// property.
-					make_default_value();
+					MakeDefaultValue();
 				}
 			}
 		}
