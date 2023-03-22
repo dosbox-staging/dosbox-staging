@@ -157,6 +157,9 @@
     <ClCompile Include="..\src\hardware\hardware.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\imfc.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\innovation.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>

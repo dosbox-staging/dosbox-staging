@@ -89,6 +89,7 @@ void HARDWARE_Init(Section*);
 void PCI_Init(Section*);
 #endif
 
+void IMFC_Init(Section*);
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
 void SBLASTER_Init(Section*);
@@ -1201,6 +1202,8 @@ void DOSBOX_Init()
 	Pstring->Set_help("Forward one or more UDP ports from the host into the DOS guest\n"
 	                  "(unset by default). The format is the same as for TCP port forwards.");
 #endif
+
+	secprop = control->AddSection_prop("imfc", &IMFC_Init, changeable_at_runtime);
 
 	//	secprop->AddInitFunction(&CREDITS_Init);
 
