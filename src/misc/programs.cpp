@@ -957,9 +957,12 @@ void CONFIG::Run(void)
 				tsec->ExecuteDestroy(false);
 				bool change_success = tsec->HandleInputline(
 				        inputline.c_str());
+
 				if (!change_success) {
+					auto val = value;
+					trim(val);
 					WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
-					         value.c_str(),
+					         val.c_str(),
 					         pvars[1].c_str());
 				}
 				tsec->ExecuteInit(false);
