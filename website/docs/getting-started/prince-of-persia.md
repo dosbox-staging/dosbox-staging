@@ -99,14 +99,14 @@ Okay, with our C drive set up and ready to go, the next step is to start
 DOSBox from our `DOS Games/Prince of Persia` folder. This is accomplished
 slightly differently on each platform:
 
-**Windows**
+<h3>Windows</h3>
 
 If you have used the installer with the default options to set up DOSBox (and
 it's highly recommended to do so while you're still learning the ropes),
 simply right-click on the `Prince of Persia` folder in Windows Explorer and
 select the *Start DOSBox from this folder* in the context menu.
 
-**macOS**
+<h3>macOS</h3>
 
 1. Mount the DOSBox installer `.dmg` image file.
 1. Copy the *Start DOSBox Staging* icon from the appearing window into the `Prince of Persia` folder.
@@ -126,9 +126,10 @@ any other regular icon.
     game, copy an icon on which you have performed this initial procedure
     already, rather than keep copying the original one from the `.dmg` file.
 
-**Linux**
+<h3>Linux</h3>
 
-`cd` into the `Prince of Persia` folder and run the `dosbox` command.
+Open your favourite terminal, `cd` into the `Prince of Persia` folder, then
+run the `dosbox` command.
 
 
 ## Installing the game
@@ -368,7 +369,6 @@ should have at this point:
 Starting up DOSBox from the `Prince of Persia` folder should now launch the
 game right away without any manual intervention!
 
-
-## When things go wrong
-
+So far so good---now let's see how we can use the advanced features offered by
+DOSBox Staging to our advantage!
 

@@ -455,5 +455,83 @@ prince
 exit
 ```
 
-Well, we've pretty much maxed out Prince of Persia for demonstration purposes.
+## Inspecting the logs
+
+What if you used a wrong value in your config, made a typo, or something else
+went wrong when running DOSBox? How would you know about it?
+
+<h3>Windows</h3>
+
+The log window is opened by default when you start DOSBox. You can hide the
+log window by passing the `-noconsole` argument to the DOSBox executable.
+
+<h3>macOS</h3>
+
+DOSBox does not open the log window by default when started via its
+application icon, or with the *Start DOSBox Staging* icon you copied from the
+`.dmg` installer archive earlier.
+
+To make the log window appear, you need to use another shortcut icon called
+*Start DOSBox Staging (logging)*, which you can copy into your game folder
+from the `.dmg` archive.
+
+<h3>Linux</h3>
+
+Start DOSBox from the terminal, and the logs will be output there.
+
+---
+
+Under normal circumstances, the log contains lots of interesting technical
+detail about what DOSBox is currently doing, what exact settings it uses, and
+so on. For example, this is the start of the log when running the game on
+macOS:
+
+![](images/pop-logs1.png){ loading=lazy }
+
+That's all good and well, but what's even better, if there's something wrong
+with the config or during running the game and DOSBox can detect it, it will
+report it to use via the logs!
+
+Let's now try to intentionally screw a few things up in the config, just to
+trigger some errors. Change `machine` to `mcp`, and put the letter `x` in
+front of the shader's name:
+
+```ini
+[dosbox]
+machine = mcp
+
+[render]
+glshader = xcrt/aperture
+```
+
+We'll see some warnings and errors in the logs after restarting DOSBox:
+
+![](images/pop-logs2.png){ loading=lazy }
+
+Warnings are yellow, and errors are red. Errors are generally reserved for
+more severe problems. In this example, we have the following:
+
+- The first warning complains about an invalid `machine` value being used
+  (sorry to disappoint, but DOSBox can't emulate the Master
+  Control Program from Tron yet!)
+
+- Then we have an error because we're trying to use a non-existing shader.
+
+- This is followed by yet another rather large warning block that very
+  helpfully lists the names of all available shaders on our system. That's
+  pretty handy!
+
+This is a common theme with the logs. When DOSBox display some warnings or
+errors, these messages often include helpful suggestions and tips to help you
+resolve the issues. Note that these can appear not only at startup, but also
+during running a game, depending on what DOSBox is currently doing.
+
+While you might prefer to hide the log window for aesthetic reasons, it's
+actually wiser to just let it be displayed so you can take a peek at it if
+something goes sideways. Without access to the logs, your chances of fixing
+the problem is significantly reduced as basically you're just stumbling in the
+dark. You've been warned!
+
+Okay, we've pretty much maxed out Prince of Persia for demonstration purposes.
 Time to move on to another game!
+
