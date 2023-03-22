@@ -1080,7 +1080,7 @@ Sectie "%s" bestaat niet.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" is geen geldige waarde voor eigenschap %s.
+"%s" is geen geldige waarde voor eigenschap "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
