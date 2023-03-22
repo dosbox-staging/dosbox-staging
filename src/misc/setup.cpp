@@ -293,6 +293,18 @@ bool Property::IsValidValue(const Value& in)
 	return false;
 }
 
+
+bool Property::ValidateValue(const Value& in)
+{
+	if (IsValidValue(in)) {
+		value = in;
+		return true;
+	} else {
+		value = default_value;
+		return false;
+	}
+}
+
 void Property::Set_help(const std::string& in)
 {
 	string result = string("CONFIG_") + propname;
@@ -483,7 +495,16 @@ bool Prop_path::SetValue(const std::string& input)
 
 bool Prop_bool::SetValue(const std::string& input)
 {
-	return value.SetValue(input, Value::V_BOOL);
+	auto is_valid = value.SetValue(input, Value::V_BOOL);
+	if (!is_valid) {
+		SetValue(default_value.ToString());
+
+		LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
+		            input.c_str(),
+		            propname.c_str(),
+		            default_value.ToString().c_str());
+	}
+	return is_valid;
 }
 
 bool Prop_hex::SetValue(const std::string& input)
