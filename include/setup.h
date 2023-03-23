@@ -411,11 +411,11 @@ public:
 
 	Prop_string* Add_string(const std::string& _propname,
 	                        Property::Changeable::Value when,
-	                        const char* _value = NULL);
+	                        const char* _value = nullptr);
 
 	Prop_path* Add_path(const std::string& _propname,
 	                    Property::Changeable::Value when,
-	                    const char* _value = NULL);
+	                    const char* _value = nullptr);
 
 	Prop_bool* Add_bool(const std::string& _propname,
 	                    Property::Changeable::Value when, bool _value = false);
