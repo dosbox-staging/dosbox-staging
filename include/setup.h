@@ -43,23 +43,18 @@ private:
 public:
 	Hex() : value(0) {}
 	Hex(int in) : value(in) {}
+
 	bool operator==(const Hex& other) const
 	{
 		return value == other.value;
 	}
+
 	operator int() const
 	{
 		return value;
 	}
 };
 
-/*
- * Multitype storage container that is aware of the currently stored type in it.
- * Value st = "hello";
- * Value in = 1;
- * st = 12 //Exception
- * in = 12 //works
- */
 class Value {
 private:
 	Hex _hex            = 0;
@@ -69,8 +64,6 @@ private:
 	double _double      = 0;
 
 public:
-	class WrongType {}; // Conversion error class
-
 	enum Etype {
 		V_NONE,
 		V_HEX,
@@ -81,16 +74,12 @@ public:
 		V_CURRENT
 	} type = V_NONE;
 
-	/* Constructors */
-
+	// Constructors
 	Value() = default;
 
 	Value(const Hex& in) : _hex(in), type(V_HEX) {}
-
 	Value(int in) : _int(in), type(V_INT) {}
-
 	Value(bool in) : _bool(in), type(V_BOOL) {}
-
 	Value(double in) : _double(in), type(V_DOUBLE) {}
 
 	Value(const std::string& in, Etype t)
@@ -98,50 +87,9 @@ public:
 		SetValue(in, t);
 	}
 
-	Value(const std::string& in)
-	        : _string(in),
-	          type(V_STRING)
-	{}
+	Value(const std::string& in) : _string(in), type(V_STRING) {}
 
-	Value(const char* const in)
-	        : _string(in),
-	          type(V_STRING)
-	{}
-
-	Value(const Value& in)
-	{
-		plaincopy(in);
-	}
-
-	/* Assignment operators */
-	Value& operator=(Hex in)
-	{
-		return copy(Value(in));
-	}
-	Value& operator=(int in)
-	{
-		return copy(Value(in));
-	}
-	Value& operator=(bool in)
-	{
-		return copy(Value(in));
-	}
-	Value& operator=(double in)
-	{
-		return copy(Value(in));
-	}
-	Value& operator=(const std::string& in)
-	{
-		return copy(Value(in));
-	}
-	Value& operator=(const char* const in)
-	{
-		return copy(Value(in));
-	}
-	Value& operator=(const Value& in)
-	{
-		return copy(Value(in));
-	}
+	Value(const char* const in) : _string(in), type(V_STRING) {}
 
 	bool operator==(const Value& other) const;
 
@@ -156,9 +104,6 @@ public:
 	std::string ToString() const;
 
 private:
-	Value& copy(const Value& in);
-	void plaincopy(const Value& in);
-
 	bool SetHex(const std::string& in);
 	bool SetInt(const std::string& in);
 	bool SetBool(const std::string& in);
@@ -186,6 +131,7 @@ public:
 	const char* GetHelpUtf8() const;
 
 	virtual bool SetValue(const std::string& str) = 0;
+
 	const Value& GetValue() const
 	{
 		return value;
@@ -213,6 +159,7 @@ public:
 	}
 
 	virtual const std::vector<Value>& GetValues() const;
+
 	Value::Etype Get_type()
 	{
 		return default_value.type;
@@ -336,9 +283,9 @@ typedef void (*SectionFunction)(Section*);
 
 class Section {
 private:
-	/* Wrapper class around startup and shutdown functions. the variable
-	 * changeable_at_runtime indicates it can be called on configuration
-	 * changes */
+	// Wrapper class around startup and shutdown functions. the variable
+	// changeable_at_runtime indicates it can be called on configuration
+	// changes
 	struct Function_wrapper {
 		SectionFunction function;
 		bool changeable_at_runtime;
@@ -362,7 +309,8 @@ public:
 	Section(Section&& other)            = default;
 	Section& operator=(Section&& other) = default;
 
-	virtual ~Section() = default; // Children must call executedestroy!
+	// Children must call executedestroy!
+	virtual ~Section() = default;
 
 	void AddEarlyInitFunction(SectionFunction func,
 	                          bool changeable_at_runtime = false);
@@ -375,14 +323,17 @@ public:
 	void ExecuteEarlyInit(bool initall = true);
 	void ExecuteInit(bool initall = true);
 	void ExecuteDestroy(bool destroyall = true);
+
 	const char* GetName() const
 	{
 		return sectionname.c_str();
 	}
 
 	virtual std::string GetPropValue(const std::string& property) const = 0;
-	virtual bool HandleInputline(const std::string& line)               = 0;
-	virtual void PrintData(FILE* outfile) const                         = 0;
+
+	virtual bool HandleInputline(const std::string& line) = 0;
+
+	virtual void PrintData(FILE* outfile) const = 0;
 };
 
 class PropMultiVal;
