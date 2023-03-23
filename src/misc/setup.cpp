@@ -800,11 +800,11 @@ Prop_path* Section_prop::Get_path(const std::string& _propname) const
 			if (val) {
 				return val;
 			} else {
-				return NULL;
+				return nullptr;
 			}
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 PropMultiVal* Section_prop::GetMultiVal(const std::string& _propname) const
@@ -815,11 +815,11 @@ PropMultiVal* Section_prop::GetMultiVal(const std::string& _propname) const
 			if (val) {
 				return val;
 			} else {
-				return NULL;
+				return nullptr;
 			}
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 PropMultiValRemain* Section_prop::GetMultiValRemain(const std::string& _propname) const
@@ -831,11 +831,11 @@ PropMultiValRemain* Section_prop::GetMultiValRemain(const std::string& _propname
 			if (val) {
 				return val;
 			} else {
-				return NULL;
+				return nullptr;
 			}
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 Property* Section_prop::Get_prop(int index)
@@ -845,7 +845,7 @@ Property* Section_prop::Get_prop(int index)
 			return (*tel);
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 const char* Section_prop::Get_string(const std::string& _propname) const
@@ -968,7 +968,7 @@ bool Config::PrintConfig(const std::string& filename) const
 	char helpline[256];
 
 	FILE* outfile = fopen(filename.c_str(), "w+t");
-	if (outfile == NULL) {
+	if (outfile == nullptr) {
 		return false;
 	}
 
