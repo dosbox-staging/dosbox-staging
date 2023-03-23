@@ -46,19 +46,11 @@ std::unique_ptr<Config> control = {};
 
 // Set by parseconfigfile so Prop_path can use it to construct the realpath
 static std::string current_config_dir;
-void Value::destroy()
-{
-	if (type == V_STRING) {
-		delete _string;
-		_string = nullptr;
-	}
-}
 
 Value& Value::copy(const Value& in)
 {
 	assert(this != &in);
 	assert(type == V_NONE || type == in.type);
-	destroy();
 	plaincopy(in);
 	return *this;
 }
@@ -71,7 +63,7 @@ void Value::plaincopy(const Value& in)
 	_bool   = in._bool;
 	_hex    = in._hex;
 	if (type == V_STRING) {
-		_string = new string(*in._string);
+		_string = in._string;
 	}
 }
 
@@ -102,7 +94,7 @@ Value::operator double() const
 Value::operator const char*() const
 {
 	assert(type == V_STRING);
-	return _string->c_str();
+	return _string.c_str();
 }
 
 bool Value::operator==(const Value& other) const
@@ -118,7 +110,7 @@ bool Value::operator==(const Value& other) const
 	case V_INT: return _int == other._int;
 	case V_HEX: return _hex == other._hex;
 	case V_DOUBLE: return _double == other._double;
-	case V_STRING: return *_string == *other._string;
+	case V_STRING: return _string == other._string;
 	default:
 		LOG_ERR("SETUP: Comparing stuff that doesn't make sense");
 		break;
@@ -214,10 +206,7 @@ bool Value::SetBool(const std::string& in)
 
 void Value::SetString(const std::string& in)
 {
-	if (!_string) {
-		_string = new string();
-	}
-	_string->assign(in);
+	_string = in;
 }
 
 string Value::ToString() const
@@ -230,7 +219,7 @@ string Value::ToString() const
 		break;
 	case V_INT: oss << _int; break;
 	case V_BOOL: oss << boolalpha << _bool; break;
-	case V_STRING: oss << *_string; break;
+	case V_STRING: oss << _string; break;
 	case V_DOUBLE:
 		oss.precision(2);
 		oss << fixed << _double;

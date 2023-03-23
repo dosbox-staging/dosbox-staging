@@ -62,11 +62,11 @@ public:
  */
 class Value {
 private:
-	Hex _hex             = 0;
-	bool _bool           = false;
-	int _int             = 0;
-	std::string* _string = nullptr;
-	double _double       = 0;
+	Hex _hex            = 0;
+	bool _bool          = false;
+	int _int            = 0;
+	std::string _string = {};
+	double _double      = 0;
 
 public:
 	class WrongType {}; // Conversion error class
@@ -99,24 +99,18 @@ public:
 	}
 
 	Value(const std::string& in)
-	        : _string(new std::string(in)),
+	        : _string(in),
 	          type(V_STRING)
 	{}
 
 	Value(const char* const in)
-	        : _string(new std::string(in)),
+	        : _string(in),
 	          type(V_STRING)
 	{}
 
 	Value(const Value& in)
 	{
 		plaincopy(in);
-	}
-
-	/* Destructor */
-	virtual ~Value()
-	{
-		destroy();
 	}
 
 	/* Assignment operators */
@@ -162,7 +156,6 @@ public:
 	std::string ToString() const;
 
 private:
-	void destroy();
 	Value& copy(const Value& in);
 	void plaincopy(const Value& in);
 
