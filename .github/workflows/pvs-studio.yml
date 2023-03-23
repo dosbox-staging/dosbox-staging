@@ -79,6 +79,7 @@ jobs:
           mkdir -p "${reportdir}"
 
           pvs-studio-analyzer analyze \
+            --disableLicenseExpirationCheck \
             -a 63 \
             -e subprojects \
             -s .pvs-suppress \
