@@ -473,10 +473,10 @@ static const std::string m_noteToString[12] =
         {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
 struct Note {
-	uint8_t value;
+	uint8_t value = 0;
 
-	Note() : value(0) {}
-	explicit Note(uint8_t v) : value(v) {}
+	constexpr Note() = default;
+	constexpr Note(const uint8_t v) : value(v) {}
 
 	std::string toString() const
 	{
@@ -484,19 +484,21 @@ struct Note {
 	}
 };
 static_assert(sizeof(Note) == 1, "Note needs to be 1 in size!");
-bool operator==(Note a, Note b)
+
+constexpr bool operator==(const Note a, const Note b)
 {
 	return a.value == b.value;
 }
 
 struct Fraction {
-	uint8_t value;
+	uint8_t value = 0;
 
-	Fraction() : value(0) {}
-	explicit Fraction(uint8_t v) : value(v) {}
+	constexpr Fraction() = default;
+	constexpr Fraction(const uint8_t v) : value(v) {}
 };
+
 static_assert(sizeof(Fraction) == 1, "Fraction needs to be 1 in size!");
-bool operator==(Fraction a, Fraction b)
+constexpr bool operator==(const Fraction a, const Fraction b)
 {
 	return a.value == b.value;
 }
@@ -506,31 +508,51 @@ struct FractionalNote {
 	Fraction fraction = {};
 	Note note         = {};
 
-	FractionalNote() {}
-	FractionalNote(Note nn, Fraction nf) : fraction(nf), note(nn) {}
-	uint16_t getuint16_t() const
+	constexpr FractionalNote() = default;
+	constexpr FractionalNote(const Note nn, const Fraction nf)
+	        : fraction(nf),
+	          note(nn)
+	{}
+	constexpr uint16_t getuint16_t() const noexcept
 	{
 		return note.value << 8 | fraction.value;
 	}
 };
+
+constexpr std::pair<uint8_t, uint8_t> split_uint16_t(const uint16_t value) noexcept
+{
+	const auto upper = static_cast<uint8_t>((value >> 8) & 0xFF);
+	const auto lower = static_cast<uint8_t>(value & 0xFF);
+	return {upper, lower};
+}
+
+static constexpr FractionalNote to_fractional_note(const uint16_t value) noexcept
+{
+	const auto [note, fraction] = split_uint16_t(value);
+	return {Note(note), Fraction(fraction)};
+}
+
 static_assert(sizeof(FractionalNote) == 2, "FractionalNote needs to be 1 in size!");
-bool operator==(FractionalNote a, FractionalNote b)
+
+constexpr bool operator==(const FractionalNote a, const FractionalNote b) noexcept
 {
 	return a.note == b.note && a.fraction == b.fraction;
 }
-bool operator!=(FractionalNote a, FractionalNote b)
+constexpr bool operator!=(const FractionalNote a, const FractionalNote b) noexcept
 {
 	return !(a == b);
 }
-FractionalNote operator-(FractionalNote a, FractionalNote b)
+constexpr FractionalNote operator-(const FractionalNote a, const FractionalNote b) noexcept
 {
-	const uint16_t val = a.getuint16_t() - b.getuint16_t();
-	return {Note(val >> 8), Fraction(val & 0xFF)};
+	const auto val = check_cast<uint16_t>(a.getuint16_t() - b.getuint16_t());
+	return to_fractional_note(val);
 }
-FractionalNote operator+(FractionalNote a, FractionalNote b)
+
+constexpr FractionalNote operator+(const FractionalNote a, const FractionalNote b) noexcept
 {
-	const uint16_t val = a.getuint16_t() + b.getuint16_t();
-	return {Note(val >> 8), Fraction(val & 0xFF)};
+	// 16-bit wrap-around is expected and normal
+	const auto val = static_cast<uint16_t>(a.getuint16_t() + b.getuint16_t());
+	return to_fractional_note(val);
 }
 
 struct KeyVelocity {
@@ -1345,13 +1367,13 @@ private:
 	YmChannelData& operator=(const YmChannelData& other) = delete;
 
 public:
-	FractionalNote originalFractionAndNoteNumber;
+	FractionalNote originalFractionAndNoteNumber = {};
 	// this is the original note that triggered the note ON.
 
 	// uint16_t unused1;
-	InstrumentParameters* instrumentParameters{};
+	InstrumentParameters* instrumentParameters = nullptr;
 
-	FractionalNote currentlyPlaying;
+	FractionalNote currentlyPlaying = {};
 	// this is the note/fraction that is being play right now
 
 	uint8_t operatorVolumes[4] = {};
@@ -7507,9 +7529,9 @@ private:
 			return NO_DATA_AVAILABLE;
 		}
 		// disableInterrupts();
-		const uint16_t data16u = m_bufferFromSystemState.peekData();
-		const uint8_t dataA    = data16u >> 8;
-		const uint8_t dataB    = data16u & 0xFF;
+		const auto [dataA, dataB] = split_uint16_t(
+		        m_bufferFromSystemState.peekData());
+
 		if ((dataA & 1) == 0) {
 			// if
 			// ((m_bufferAFromSystem[m_bufferFromSystemState.getLastReadByteIndex()]
@@ -7550,9 +7572,7 @@ private:
 			return {NO_DATA_AVAILABLE, 0};
 		}
 		// disableInterrupts();
-		const uint16_t data16u = m_bufferFromSystemState.popData();
-		const uint8_t a        = data16u >> 8;
-		const uint8_t b        = data16u & 0xFF;
+		const auto [a, b] = split_uint16_t(m_bufferFromSystemState.popData());
 
 		// clang-format off
 		//log("DEBUG2(1/2): m_bufferFromSystemState: lastReadByteIndex=%02X indexForNextWriteByte=%02X", m_bufferFromSystemState.getLastReadByteIndex(), m_bufferFromSystemState.getIndexForNextWriteByte());
@@ -7599,14 +7619,16 @@ private:
 	void sendNextValueToSystemDuringInterruptHandler()
 	{
 		m_bufferToSystemState.lock();
-		const uint16_t data16u = m_bufferToSystemState.popData();
+		const auto data16u = m_bufferToSystemState.popData();
+		const auto [upper_byte, lower_byte] = split_uint16_t(data16u);
+
 		log_debug("IMF->PC: Reading queue data [%X%02X] and sending to port",
-		          data16u >> 8,
-		          data16u & 0xFF);
+		          upper_byte,
+		          lower_byte);
 		SDL_LockMutex(m_hardwareMutex);
 		m_piuIMF.setPort2Bit(5, data16u >= 0x100); // set bit 5 to
 		                                           // bufferA value
-		m_piuIMF.writePortPIU0(data16u & 0xFF);
+		m_piuIMF.writePortPIU0(lower_byte);
 		SDL_UnlockMutex(m_hardwareMutex);
 		if (m_bufferToSystemState.getIndexForNextWriteByte() ==
 		    m_bufferToSystemState.getLastReadByteIndex()) {
@@ -9119,27 +9141,23 @@ private:
 	}
 
 	// ROM Address: 0x19B4
-	static FractionalNote cropToPlayableRange(FractionalNote root /*hl*/,
-	                                          FractionalNote adjustment /*de*/)
+	static FractionalNote cropToPlayableRange(const FractionalNote root /*hl*/,
+	                                          const FractionalNote adjustment /*de*/)
 	{
+		auto result = (root + adjustment).getuint16_t();
+
 		if ((adjustment.note.value & 0x80) != 0) {
 			// adjustment is negative
-			uint16_t result = ((root.note.value << 8) |
-			                   root.fraction.value) +
-			                  ((adjustment.note.value << 8) |
-			                   adjustment.fraction.value);
 			while (result >= 0x8000) {
 				result += 12 << 8; // up an octave
 			}
-			return {Note(result >> 8), Fraction(result & 0xFF)};
-		} // adjustment is positive
-		uint16_t result = ((root.note.value << 8) | root.fraction.value) +
-		                  ((adjustment.note.value << 8) |
-		                   adjustment.fraction.value);
-		while (result >= 0x8000) {
-			result -= 12 << 8; // drop an octave
+		} else {
+			// adjustment is positive
+			while (result >= 0x8000) {
+				result -= 12 << 8; // drop an octave
+			}
 		}
-		return {Note(result >> 8), Fraction(result & 0xFF)};
+		return to_fractional_note(result);
 	}
 
 	// ROM Address: 0x19CE
@@ -9209,8 +9227,7 @@ private:
 				val = 1;
 			}
 			val = val * ym_getPortamentoTimeFactor(instr);
-			ymChannelData->portamentoAdjustment = FractionalNote(
-			        Note(val >> 8), Fraction(val & 0xFF));
+			ymChannelData->portamentoAdjustment = to_fractional_note(val);
 			return ym_registerKey_setKeyCodeAndFraction(instr,
 			                                            ymChannelData);
 		} // hl is negative
@@ -9218,8 +9235,7 @@ private:
 		int16_t val                         = hl.getuint16_t();
 		val                                 = val >> (8 + 1);
 		val = val * ym_getPortamentoTimeFactor(instr);
-		ymChannelData->portamentoAdjustment =
-		        FractionalNote(Note(val >> 8), Fraction(val & 0xFF));
+		ymChannelData->portamentoAdjustment = to_fractional_note(val);
 		return ym_registerKey_setKeyCodeAndFraction(instr, ymChannelData);
 	}
 
@@ -9313,10 +9329,8 @@ private:
 	{
 		log_debug("setNodeParameterMasterTune()");
 		m_masterTune             = val;
-		int16_t const masterTune = ((int8_t)(val << 1)) - 0x1EC;
-		m_masterTuneAsNoteFraction = FractionalNote(Note(masterTune >> 8),
-		                                            Fraction(masterTune &
-		                                                     0xFF));
+		const int16_t masterTune   = ((int8_t)(val << 1)) - 0x1EC;
+		m_masterTuneAsNoteFraction = to_fractional_note(masterTune);
 	}
 
 	// ROM Address: 0x1B73
@@ -9358,13 +9372,13 @@ private:
 		// instr->instrumentConfiguration.octaveTranspose);
 		// }
 
-		int16_t const detuneAsNoteFraction =
+		const int16_t detuneAsNoteFraction =
 		        octaveTransposeTable[instr->instrumentConfiguration.octaveTranspose] +
 		        ((int16_t)((int8_t)(instr->instrumentConfiguration.detune
 		                            << 1)));
-		instr->detuneAsNoteFraction =
-		        FractionalNote(Note(detuneAsNoteFraction >> 8),
-		                       Fraction(detuneAsNoteFraction & 0xFF));
+
+		instr->detuneAsNoteFraction = to_fractional_note(detuneAsNoteFraction);
+
 		executeMidiCommand_PitchBender(instr,
 		                               instr->pitchbenderValueLSB,
 		                               instr->pitchbenderValueMSB);
@@ -9407,11 +9421,10 @@ private:
 		// not the exact code, but should do the same thing
 		pitchbenderValue = instr->instrumentConfiguration.pitchbenderRange *
 		                   pitchbenderValue / 0x2000;
-		pitchbenderValue += (instr->detuneAsNoteFraction.note.value << 8) +
-		                    instr->detuneAsNoteFraction.fraction.value;
-		instr->detuneAndPitchbendAsNoteFraction =
-		        FractionalNote(Note(pitchbenderValue >> 8),
-		                       Fraction(pitchbenderValue & 0xFF));
+		pitchbenderValue += instr->detuneAsNoteFraction.getuint16_t();
+
+		instr->detuneAndPitchbendAsNoteFraction = to_fractional_note(
+		        pitchbenderValue);
 	}
 
 	inline uint8_t getOutputLevel(InstrumentParameters* instr) const
