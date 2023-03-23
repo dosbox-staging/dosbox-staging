@@ -47,26 +47,6 @@ std::unique_ptr<Config> control = {};
 // Set by parseconfigfile so Prop_path can use it to construct the realpath
 static std::string current_config_dir;
 
-Value& Value::copy(const Value& in)
-{
-	assert(this != &in);
-	assert(type == V_NONE || type == in.type);
-	plaincopy(in);
-	return *this;
-}
-
-void Value::plaincopy(const Value& in)
-{
-	type    = in.type;
-	_int    = in._int;
-	_double = in._double;
-	_bool   = in._bool;
-	_hex    = in._hex;
-	if (type == V_STRING) {
-		_string = in._string;
-	}
-}
-
 Value::operator bool() const
 {
 	assert(type == V_BOOL);
