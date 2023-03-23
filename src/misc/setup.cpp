@@ -114,31 +114,11 @@ bool Value::operator==(const Value& other) const
 		return false;
 	}
 	switch (type) {
-	case V_BOOL:
-		if (_bool == other._bool) {
-			return true;
-		}
-		break;
-	case V_INT:
-		if (_int == other._int) {
-			return true;
-		}
-		break;
-	case V_HEX:
-		if (_hex == other._hex) {
-			return true;
-		}
-		break;
-	case V_DOUBLE:
-		if (_double == other._double) {
-			return true;
-		}
-		break;
-	case V_STRING:
-		if ((*_string) == (*other._string)) {
-			return true;
-		}
-		break;
+	case V_BOOL: return _bool == other._bool;
+	case V_INT: return _int == other._int;
+	case V_HEX: return _hex == other._hex;
+	case V_DOUBLE: return _double == other._double;
+	case V_STRING: return *_string == *other._string;
 	default:
 		LOG_ERR("SETUP: Comparing stuff that doesn't make sense");
 		break;
@@ -280,7 +260,7 @@ bool Property::IsValidValue(const Value& in)
 	}
 
 	for (const_iter it = valid_values.begin(); it != valid_values.end(); ++it) {
-		if ((*it) == in) { // Match!
+		if ((*it) == in) {
 			return true;
 		}
 	}
@@ -292,7 +272,6 @@ bool Property::IsValidValue(const Value& in)
 
 	return false;
 }
-
 
 bool Property::ValidateValue(const Value& in)
 {
@@ -410,9 +389,6 @@ bool Prop_double::SetValue(const std::string& input)
 	return ValidateValue(val);
 }
 
-// void Property::SetValue(char* input){
-//	value.SetValue(input, Value::V_CURRENT);
-// }
 bool Prop_int::SetValue(const std::string& input)
 {
 	Value val;
@@ -476,8 +452,8 @@ bool Prop_path::SetValue(const std::string& input)
 	}
 
 	std::string workcopy(input);
-	Cross::ResolveHomedir(workcopy); // Parse ~ and friends
-	                                 //
+	Cross::ResolveHomedir(workcopy);
+
 	// Prepend config directory in it exists. Check for absolute paths later
 	if (current_config_dir.empty()) {
 		realpath = workcopy;
@@ -564,14 +540,16 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 			local.erase(0, loc);
 		}
 		loc       = local.find_first_of(separator);
-		string in = ""; // default value
-		/* when i == number_of_properties add the total line. (makes more
-		 * then one string argument possible for parameters of cpu) */
-		if (loc != string::npos && i < number_of_properties) { // separator
-			                                               // found
+		string in = "";
+
+		// When i == number_of_properties add the total line. (makes
+		// more then one string argument possible for parameters of cpu)
+		if (loc != string::npos && i < number_of_properties) {
+			// Separator found
 			in = local.substr(0, loc);
 			local.erase(0, loc + 1);
-		} else if (local.size()) { // last argument or last property
+		} else if (local.size()) {
+			// Last argument or last property
 			in = local;
 			local.clear();
 		}
@@ -605,7 +583,7 @@ bool PropMultiVal::SetValue(const std::string& input)
 
 	string::size_type loc = string::npos;
 	while ((p = section->Get_prop(i++))) {
-		// trim leading separators
+		// Trim leading separators
 		loc = local.find_first_not_of(separator);
 		if (loc != string::npos) {
 			local.erase(0, loc);
@@ -613,12 +591,14 @@ bool PropMultiVal::SetValue(const std::string& input)
 
 		loc = local.find_first_of(separator);
 
-		string in = ""; // default value
+		string in = "";
 
-		if (loc != string::npos) { // separator found
+		if (loc != string::npos) {
+			// Separator found
 			in = local.substr(0, loc);
 			local.erase(0, loc + 1);
-		} else if (local.size()) { // last argument
+		} else if (local.size()) {
+			// Last argument
 			in = local;
 			local.clear();
 		}
@@ -667,6 +647,7 @@ const std::vector<Value>& Property::GetValues() const
 const std::vector<Value>& PropMultiVal::GetValues() const
 {
 	Property* p = section->Get_prop(0);
+
 	// No properties in this section. do nothing
 	if (!p) {
 		return valid_values;
@@ -946,7 +927,8 @@ string Section_prop::GetPropValue(const std::string& _property) const
 bool Section_line::HandleInputline(const std::string& line)
 {
 	if (!data.empty()) {
-		data += "\n"; // Add return to previous line in buffer
+		// Add return to previous line in buffer
+		data += "\n";
 	}
 	data += line;
 	return true;
@@ -968,7 +950,7 @@ bool Config::PrintConfig(const std::string& filename) const
 	char helpline[256];
 
 	FILE* outfile = fopen(filename.c_str(), "w+t");
-	if (outfile == nullptr) {
+	if (!outfile) {
 		return false;
 	}
 
@@ -1030,12 +1012,11 @@ bool Config::PrintConfig(const std::string& filename) const
 					        values.begin();
 
 					while (it != values.end()) {
-						if ((*it).ToString() !=
-						    "%u") { // Hack hack hack.
-							    // else we need to
-							    // modify GetValues,
-							    // but that one is
-							    // const...
+						if ((*it).ToString() != "%u") {
+							// Hack hack hack. else
+							// we need to modify
+							// GetValues, but that
+							// one is const...
 							if (it != values.begin()) {
 								fputs(",", outfile);
 							}
@@ -1220,6 +1201,7 @@ void Section::ExecuteDestroy(bool destroyall)
 	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end();) {
 		if (destroyall || (*tel).changeable_at_runtime) {
 			(*tel).function(this);
+
 			// Remove destroyfunctions once used
 			tel = destroyfunctions.erase(tel);
 		} else {
@@ -1292,7 +1274,6 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 		return true;
 	}
 
-	// static bool first_configfile = true;
 	ifstream in(canonical_path);
 	if (!in) {
 		return false;
@@ -1350,8 +1331,9 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 			break;
 		}
 	}
-	current_config_dir.clear(); // So internal changes don't use the path
-	                            // information
+
+	// So internal changes don't use the path information
+	current_config_dir.clear();
 
 	LOG_INFO("CONFIG: Loaded '%s' config file '%s'",
 	         type.c_str(),
@@ -1486,8 +1468,8 @@ bool CommandLine::ExistsPriorTo(const std::list<std::string_view>& pre_args,
 	};
 
 	for (const auto& cli_arg : cmds) {
-		// if any of the pre-args are insensitive-equal-to the CLI
-		// argument ...
+		// If any of the pre-args are insensitive-equal-to the CLI
+		// argument
 		if (any_of_iequals(pre_args, cli_arg)) {
 			return true;
 		}
@@ -1685,7 +1667,7 @@ void CommandLine::FillVector(std::vector<std::string>& vector)
 		vector.push_back((*it));
 	}
 #ifdef WIN32
-	// add back the \" if the parameter contained a space
+	// Add back the \" if the parameter contained a space
 	for (Bitu i = 0; i < vector.size(); i++) {
 		if (vector[i].find(' ') != std::string::npos) {
 			vector[i] = "\"" + vector[i] + "\"";
@@ -1697,7 +1679,7 @@ void CommandLine::FillVector(std::vector<std::string>& vector)
 int CommandLine::GetParameterFromList(const char* const params[],
                                       std::vector<std::string>& output)
 {
-	// return values: 0 = P_NOMATCH, 1 = P_NOPARAMS
+	// Return values: 0 = P_NOMATCH, 1 = P_NOPARAMS
 	// TODO return nomoreparams
 	int retval = 1;
 	output.clear();
@@ -1711,7 +1693,7 @@ int CommandLine::GetParameterFromList(const char* const params[],
 
 		for (int i = 0; *params[i] != 0; ++i) {
 			if (!strcasecmp((*it).c_str(), params[i])) {
-				// found a parameter
+				// Found a parameter
 				found = true;
 				switch (parsestate) {
 				case P_START:
@@ -1727,7 +1709,8 @@ int CommandLine::GetParameterFromList(const char* const params[],
 		if (!found) {
 			switch (parsestate) {
 			case P_START:
-				retval     = 0; // no match
+				// No match
+				retval     = 0;
 				parsestate = P_FIRSTNOMATCH;
 				output.push_back(*it);
 				break;
@@ -1907,7 +1890,7 @@ void SETUP_ParseConfigFiles(const std::string& config_path)
 	// Finally: layer on custom -conf <files>
 	while (control->cmdline->FindString("-conf", config_file, true)) {
 		if (!control->ParseConfigFile("custom", config_file)) {
-			// try to load it from the user directory
+			// Try to load it from the user directory
 			if (!control->ParseConfigFile("custom",
 			                              config_path + config_file)) {
 				LOG_WARNING("CONFIG: Can't open custom config file '%s'",
@@ -1948,7 +1931,8 @@ static char return_msg[200];
 const char* SetProp(std::vector<std::string>& pvars)
 {
 	*return_msg = 0;
-	// attempt to split off the first word
+
+	// Attempt to split off the first word
 	std::string::size_type spcpos = pvars[0].find_first_of(' ');
 	std::string::size_type equpos = pvars[0].find_first_of('=');
 
@@ -1969,7 +1953,7 @@ const char* SetProp(std::vector<std::string>& pvars)
 			             pvars[0].c_str());
 			return return_msg;
 		}
-		// order in the vector should be ok now
+		// Order in the vector should be ok now
 	} else {
 		if ((spcpos != std::string::npos) &&
 		    ((equpos == std::string::npos) || (spcpos < equpos))) {
@@ -1977,10 +1961,12 @@ const char* SetProp(std::vector<std::string>& pvars)
 			pvars.insert(pvars.begin() + 1, pvars[0].substr(spcpos + 1));
 			pvars[0].erase(spcpos);
 		}
-		// check if the first parameter is a section or property
+
+		// Check if the first parameter is a section or property
 		Section* sec = control->GetSection(pvars[0].c_str());
+
 		if (!sec) {
-			// not a section: little duplicate from above
+			// Not a section: little duplicate from above
 			Section* sec = control->GetSectionFromProperty(
 			        pvars[0].c_str());
 
@@ -1994,7 +1980,7 @@ const char* SetProp(std::vector<std::string>& pvars)
 				return return_msg;
 			}
 		} else {
-			// first of pvars is most likely a section, but could
+			// First of pvars is most likely a section, but could
 			// still be gus have a look at the second parameter
 			if (pvars.size() < 2) {
 				safe_strcpy(return_msg,
@@ -2007,31 +1993,33 @@ const char* SetProp(std::vector<std::string>& pvars)
 
 			if ((equpos2 != std::string::npos) &&
 			    ((spcpos2 == std::string::npos) || (equpos2 < spcpos2))) {
-				// split on the =
+				// Split on the =
 				pvars.insert(pvars.begin() + 2,
 				             pvars[1].substr(equpos2 + 1));
 				pvars[1].erase(equpos2);
+
 			} else if ((spcpos2 != std::string::npos) &&
 			           ((equpos2 == std::string::npos) ||
 			            (spcpos2 < equpos2))) {
-				// split on the ' '
+				// Split on the ' '
 				pvars.insert(pvars.begin() + 2,
 				             pvars[1].substr(spcpos2 + 1));
 				pvars[1].erase(spcpos2);
 			}
 
-			// is this a property?
+			// Is this a property?
 			Section* sec2 = control->GetSectionFromProperty(
 			        pvars[1].c_str());
 
 			if (!sec2) {
-				// not a property,
+				// Not a property
 				Section* sec3 = control->GetSectionFromProperty(
 				        pvars[0].c_str());
 				if (sec3) {
-					// section and property name are identical
+					// Section and property name are identical
 					pvars.insert(pvars.begin(), pvars[0]);
-				} // else has been checked above already
+				}
+				// else has been checked above already
 			}
 		}
 	}
@@ -2041,7 +2029,7 @@ const char* SetProp(std::vector<std::string>& pvars)
 		return return_msg;
 	}
 
-	// check if the property actually exists in the section
+	// Check if the property actually exists in the section
 	Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
 	if (!sec2) {
 		safe_sprintf(return_msg,
