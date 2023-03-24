@@ -1925,11 +1925,16 @@ struct CounterData {
 
 class Intel8253 {
 private:
-	std::string m_name;
-	bool m_debug{false};
-	DataPin<bool> m_timerA;
-	DataPin<bool> m_timerB;
-	CounterData m_counter0, m_counter1, m_counter2;
+	std::string m_name = {};
+
+	bool m_debug = false;
+
+	DataPin<bool> m_timerA{"timerAOut", true};
+	DataPin<bool> m_timerB{"timerBOut", true};
+
+	CounterData m_counter0{"timer.counter0"};
+	CounterData m_counter1{"timer.counter1"};
+	CounterData m_counter2{"timer.counter2"};
 
 	static void registerNextEvent()
 	{
@@ -1939,13 +1944,7 @@ private:
 	}
 
 public:
-	explicit Intel8253(std::string name)
-	        : m_name(std::move(name)),
-	          m_timerA("timerAOut", true),
-	          m_timerB("timerBOut", true),
-	          m_counter0("timer.counter0"),
-	          m_counter1("timer.counter1"),
-	          m_counter2("timer.counter2")
+	explicit Intel8253(std::string name) : m_name(std::move(name))
 	{
 		Intel8253::registerNextEvent(); // FIXME
 	}
@@ -2837,25 +2836,31 @@ Based on the output generated, the following frequencies are captured
 #define u8     uint8_t
 #define offs_t uint8_t
 
-#define FREQ_SH  16 /* 16.16 fixed point (frequency calculations) */
-#define EG_SH    16 /* 16.16 fixed point (envelope generator timing) */
-#define LFO_SH   10 /* 22.10 fixed point (LFO calculations)       */
-#define TIMER_SH 16 /* 16.16 fixed point (timers calculations)    */
+// 16.16 fixed point (frequency calculations)
+constexpr int8_t FREQ_SH = 16;
+constexpr auto FREQ_MASK = (1 << FREQ_SH) - 1;
 
-#define FREQ_MASK ((1 << FREQ_SH) - 1)
+// 16.16 fixed point (envelope generator timing)
+constexpr int8_t EG_SH = 16;
 
-#define ENV_BITS 10
-#define ENV_LEN  (1 << ENV_BITS)
-#define ENV_STEP (128.0 / ENV_LEN)
+// 22.10 fixed point (LFO calculations)
+constexpr int8_t LFO_SH = 10;
 
-#define MAX_ATT_INDEX (ENV_LEN - 1) /* 1023 */
-#define MIN_ATT_INDEX (0)           /* 0 */
+// 16.16 fixed point (timers calculations)
+constexpr int8_t TIMER_SH = 16;
 
-#define EG_ATT 4
-#define EG_DEC 3
-#define EG_SUS 2
-#define EG_REL 1
-#define EG_OFF 0
+constexpr int8_t ENV_BITS = 10;
+constexpr auto ENV_LEN    = (1 << ENV_BITS);
+constexpr auto ENV_STEP   = (128.0 / ENV_LEN);
+
+constexpr auto MAX_ATT_INDEX = (ENV_LEN - 1); /* 1023 */
+constexpr auto MIN_ATT_INDEX = (0);           /* 0 */
+
+constexpr auto EG_ATT = 4;
+constexpr auto EG_DEC = 3;
+constexpr auto EG_SUS = 2;
+constexpr auto EG_REL = 1;
+constexpr auto EG_OFF = 0;
 
 #define ENV_QUIET (TL_TAB_LEN >> 3)
 
@@ -3081,7 +3086,7 @@ private:
 	static void refresh_EG(YM2151Operator* op);
 };
 
-const uint8_t ym2151_device::eg_inc[19 * RATE_STEPS] = {
+constexpr uint8_t ym2151_device::eg_inc[19 * RATE_STEPS] = {
         // clang-format off
 	/*cycle:0 1  2 3  4 5  6 7*/
 
@@ -3114,7 +3119,7 @@ const uint8_t ym2151_device::eg_inc[19 * RATE_STEPS] = {
 #define O(a) ((a)*RATE_STEPS)
 
 /*note that there is no O(17) in this table - it's directly in the code */
-const uint8_t ym2151_device::eg_rate_select[32 + 64 + 32] = {
+constexpr uint8_t ym2151_device::eg_rate_select[32 + 64 + 32] = {
         // clang-format off
 /* Envelope Generator rates (32 + 64 rates + 32 RKS) */
 	/* 32 dummy (infinite time) rates */
@@ -3165,7 +3170,7 @@ const uint8_t ym2151_device::eg_rate_select[32 + 64 + 32] = {
 // clang-format on
 
 #define O(a) ((a)*1)
-const uint8_t ym2151_device::eg_rate_shift[32 + 64 + 32] = {
+constexpr uint8_t ym2151_device::eg_rate_shift[32 + 64 + 32] = {
         // clang-format off
    /* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
 	/* 32 infinite time rates */
@@ -3221,7 +3226,7 @@ const uint8_t ym2151_device::eg_rate_shift[32 + 64 + 32] = {
 *   0     600   781   950
 */
 // clang-format on
-const uint32_t ym2151_device::dt2_tab[4] = {0, 384, 500, 608};
+constexpr uint32_t ym2151_device::dt2_tab[4] = {0, 384, 500, 608};
 
 /*  DT1 defines offset in Hertz from base note
  *   This table is converted while initialization...
@@ -3229,7 +3234,7 @@ const uint32_t ym2151_device::dt2_tab[4] = {0, 384, 500, 608};
  * chip)
  */
 
-const uint8_t ym2151_device::dt1_tab[4 * 32] = {
+constexpr uint8_t ym2151_device::dt1_tab[4 * 32] = {
         /* 4*32 DT1 values */
         // clang-format off
 /* DT1=0 */
@@ -3250,7 +3255,7 @@ const uint8_t ym2151_device::dt1_tab[4 * 32] = {
         // clang-format on
 };
 
-const uint16_t ym2151_device::phaseinc_rom[768] = {
+constexpr uint16_t ym2151_device::phaseinc_rom[768] = {
         // clang-format off
 	1299,1300,1301,1302,1303,1304,1305,1306,1308,1309,1310,1311,1313,1314,1315,1316,
 	1318,1319,1320,1321,1322,1323,1324,1325,1327,1328,1329,1330,1332,1333,1334,1335,
@@ -3321,7 +3326,7 @@ const uint16_t ym2151_device::phaseinc_rom[768] = {
                 some 0x80 could be 0x81 as well as some 0x00 could be 0x01.
 */
 
-const uint8_t ym2151_device::lfo_noise_waveform[256] = {
+constexpr uint8_t ym2151_device::lfo_noise_waveform[256] = {
         // clang-format off
 	0xFF,0xEE,0xD3,0x80,0x58,0xDA,0x7F,0x94,0x9E,0xE3,0xFA,0x00,0x4D,0xFA,0xFF,0x6A,
 	0x7A,0xDE,0x49,0xF6,0x00,0x33,0xBB,0x63,0x91,0x60,0x51,0xFF,0x00,0xD8,0x7F,0xDE,
@@ -3520,7 +3525,7 @@ void ym2151_device::YM2151Operator::key_off(uint32_t key_set)
 void ym2151_device::envelope_KONKOFF(YM2151Operator* op, int v) const
 {
 	// m1, m2, c1, c2
-	static const uint8_t masks[4] = {0x08, 0x20, 0x10, 0x40};
+	static constexpr uint8_t masks[4] = {0x08, 0x20, 0x10, 0x40};
 	for (int i = 0; i != 4; i++) {
 		if ((v & masks[i]) != 0) { /* M1 */
 			op[i].key_on(1, eg_cnt);
@@ -4993,8 +4998,7 @@ private:
 
 	// memory allocation on the IMF
 	// ROM
-	const char m_cardName[16] =
-	        {'Y', 'A', 'M', 'A', 'H', 'A', ' ', 'I', 'B', 'M', ' ', 'M', 'U', 'S', 'I', 'C'};
+	static constexpr char m_cardName[] = "YAMAHA IBM MUSIC";
 	// ConfigurationData m_presetConfigurations[4];
 	// VoiceDefinitionBank m_voiceDefinitionBankRom[5];
 
@@ -5540,10 +5544,8 @@ private:
 	// ROM Address: 0x0334
 	void initConfigurationMemory()
 	{
-		static const char defaultConfigurationSlotNameSuffix[32] = {
-		        ' ', '1', ' ', '2', ' ', '3', ' ', '4', ' ', '5', ' ',
-		        '6', ' ', '7', ' ', '8', ' ', '9', '1', '0', '1', '1',
-		        '1', '2', '1', '3', '1', '4', '1', '5', '1', '6'};
+		static constexpr char defaultConfigurationSlotNameSuffix[] =
+		        " 1 2 3 4 5 6 7 8 910111213141516";
 		if (memcmp(&m_copyOfCardName, &m_cardName, 12) == 0) {
 			return;
 		}
@@ -5859,8 +5861,7 @@ private:
 	// ROM Address: 0x0584
 	void MUSIC_MODE_LOOP_read_MidiIn_And_Dispatch()
 	{
-		static char midi_error_message_2[16] = {
-		        'M', 'I', 'D', 'I', '/', 'e', 'r', 'r', 'o', 'r', ' ', ' ', ' ', '!', '!', '!'};
+		static constexpr char midi_error_message_2[] = "MIDI/error   !!!";
 
 		m_midi_ReceiveSource_SendTarget = 0; // read data from MIDI IN /
 		                                     // send data to MIDI OUT
@@ -6168,7 +6169,7 @@ private:
 	// Note: midiCommandByte will always be >= 0x80 !
 	static uint8_t convert_midi_command_byte_to_initial_state(uint8_t midiCommandByte)
 	{
-		static const uint8_t initialMidiStateTable[16] = {
+		static constexpr uint8_t initialMidiStateTable[16] = {
 		        0x15 /* 0xF0 */,
 		        0x12 /* 0xF1 */,
 		        0x0F /* 0xF2 */,
@@ -6332,7 +6333,7 @@ private:
 	static uint8_t processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
 	        MidiDataPacket* /*packet*/, uint8_t midiData)
 	{
-		static const uint8_t transition[8] = {
+		static constexpr uint8_t transition[8] = {
 		        0x19, 0x1C, 0x20, 0x26, 0x29, 0x2B, 0x2D, 0x30};
 		return transition[(midiData >> 4) & 7];
 	}
@@ -6525,7 +6526,7 @@ private:
 		uint8_t flowMask;
 		uint8_t totalBytes;
 	};
-	StateTermination stateTerminationTable[0x41] = {
+	static constexpr StateTermination stateTerminationTable[0x41] = {
 	        // clang-format off
 		{0,0},{8,1},{0,0},{0,0},{1,3},{0,0},{0,0},{2,3},
 		{0,0},{2,2},{0,0},{0,0},{4,3},{0,0},{4,2},{0,0},
@@ -6734,11 +6735,13 @@ private:
 	// ROM Address: 0x09E5
 	void setIncomingMusicCardMessageBufferExpected(uint8_t messageByte)
 	{
-		static const uint8_t expectedSizes[0x20] = {1, 1, 1, 1, 0, 0, 0,
-		                                            0, 0, 0, 0, 0, 0, 0,
-		                                            0, 0, 2, 2, 6, 9, 1,
-		                                            1, 1, 0, 0, 0, 0, 0,
-		                                            0, 0, 0, 0};
+		// clang-format off
+		static constexpr uint8_t expectedSizes[0x20] = {1, 1, 1, 1, 0, 0, 0,
+		                                                0, 0, 0, 0, 0, 0, 0,
+		                                                0, 0, 2, 2, 6, 9, 1,
+		                                                1, 1, 0, 0, 0, 0, 0,
+		                                                0, 0, 0, 0};
+		// clang-format on
 
 		clearIncomingMusicCardMessageBuffer();
 		if (messageByte >= 0xF0) {
@@ -7908,7 +7911,7 @@ private:
 	}
 
 	// ROM Address: 0x1268
-	void logError([[maybe_unused]] char* errorMsg)
+	void logError([[maybe_unused]] const char* errorMsg)
 	{
 		// this really does nothing except clearing the a-register
 	}
@@ -8974,25 +8977,26 @@ private:
 		}
 	}
 
-#define YM_KEY_C_SHARP          0
-#define YM_KEY_D                1
-#define YM_KEY_D_SHARP          2
-#define YM_KEY_E                4
-#define YM_KEY_F                5
-#define YM_KEY_F_SHARP          6
-#define YM_KEY_G                8
-#define YM_KEY_G_SHARP          9
-#define YM_KEY_A                10
-#define YM_KEY_A_SHARP          12
-#define YM_KEY_B                13
-#define YM_KEY_C                14
+	static constexpr uint8_t YM_KEY_C_SHARP = 0;
+	static constexpr uint8_t YM_KEY_D       = 1;
+	static constexpr uint8_t YM_KEY_D_SHARP = 2;
+	static constexpr uint8_t YM_KEY_E       = 4;
+	static constexpr uint8_t YM_KEY_F       = 5;
+	static constexpr uint8_t YM_KEY_F_SHARP = 6;
+	static constexpr uint8_t YM_KEY_G       = 8;
+	static constexpr uint8_t YM_KEY_G_SHARP = 9;
+	static constexpr uint8_t YM_KEY_A       = 10;
+	static constexpr uint8_t YM_KEY_A_SHARP = 12;
+	static constexpr uint8_t YM_KEY_B       = 13;
+	static constexpr uint8_t YM_KEY_C       = 14;
+
 #define YM_KEYCODE(octave, key) (((octave) << 4) | (key))
 
 	// ROM Address: 0x18FC
 	void ym_setKeyCodeAndFraction(YmChannelData* ymChannelData,
 	                              InstrumentParameters* instr)
 	{
-		static const uint8_t ym2151KeyCodeTable[128] = {
+		static constexpr uint8_t ym2151KeyCodeTable[128] = {
 		        YM_KEYCODE(0, YM_KEY_C),
 		        YM_KEYCODE(0, YM_KEY_C_SHARP),
 		        YM_KEYCODE(0, YM_KEY_D),
@@ -9239,7 +9243,7 @@ private:
 	// ROM Address: 0x1A8C
 	static uint8_t ym_getPortamentoTimeFactor(InstrumentParameters* instr)
 	{
-		static const uint8_t byte_1A9E[32] = {
+		static constexpr uint8_t byte_1A9E[32] = {
 		        0xFF, 0x80, 0x56, 0x40, 0x34, 0x2B, 0x25, 0x20,
 		        0x1D, 0x1A, 0x18, 0x16, 0x14, 0x13, 0x12, 0x11,
 		        0x10, 0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09,
@@ -9622,7 +9626,7 @@ private:
 	static uint8_t carrierOrModulatorTableLookup(OperatorDefinition* operatorDefinition,
 	                                             uint8_t l, uint8_t c)
 	{
-		static const uint8_t carrierTable[8][32] = {
+		static constexpr uint8_t carrierTable[8][32] = {
 		        // clang-format off
 			{ 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18 },
 			{ 0x1B, 0x1B, 0x1B, 0x1B, 0x1A, 0x1A, 0x1A, 0x1A, 0x19, 0x19, 0x19, 0x19, 0x19, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x17, 0x17, 0x17, 0x17, 0x17, 0x16, 0x16, 0x16, 0x16, 0x15, 0x15, 0x15, 0x15 },
@@ -9634,7 +9638,7 @@ private:
 			{ 0x2D, 0x2B, 0x2A, 0x28, 0x27, 0x25, 0x24, 0x22, 0x21, 0x1F, 0x1E, 0x1C, 0x1B, 0x1A, 0x19, 0x18, 0x18, 0x17, 0x15, 0x14, 0x13, 0x11, 0x10, 0x0E, 0x0D, 0x0B, 0x0A, 0x08, 0x06, 0x04, 0x02, 0x00 }
 		        // clang-format on
 		};
-		static const uint8_t modulatorTable[8][32] = {
+		static constexpr uint8_t modulatorTable[8][32] = {
 		        // clang-format off
 			{  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8 },
 			{  9,  9,  9,  9,  9,  9,  9,  9,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  7,  7,  7,  7,  7,  7,  7,  7 },
@@ -9659,7 +9663,7 @@ private:
 	static uint8_t getKeyboardLevelScaling(OperatorDefinition* operatorDefinition,
 	                                       uint8_t h)
 	{
-		static const uint8_t scale[4][64] = {
+		static constexpr uint8_t scale[4][64] = {
 		        // clang-format off
 			{
 				// Linear attenuation with increasing KC#; maximum of -24 dB per 8 octaves.
@@ -9720,7 +9724,7 @@ private:
 	// ROM Address: 0x20DA
 	void setInstrumentParameterVolume(InstrumentParameters* instr, uint8_t val)
 	{
-		static const uint8_t volume_table[64] = {
+		static constexpr uint8_t volume_table[64] = {
 		        // clang-format off
 			0x3F, 0x3D, 0x3B, 0x39, 0x37, 0x35, 0x33, 0x31, 0x2F, 0x2D, 0x2B, 0x29, 0x27, 0x25, 0x23, 0x21,
 			0x20, 0x1F, 0x1E, 0x1D, 0x1C, 0x1B, 0x1A, 0x19, 0x18, 0x17, 0x16, 0x15, 0x14, 0x13, 0x12, 0x11,
@@ -10536,9 +10540,8 @@ private:
 	// ROM Address: 0x2782
 	void logMidiError()
 	{
-		static char midiError[16] = {
-		        ' ', ' ', 'M', 'I', 'D', 'I', ' ', 'e', 'r', 'r', 'o', 'r', ' ', '!', '!', '!'};
-		logError((char*)&midiError);
+		static constexpr char midiError[] = "  MIDI error !!!";
+		logError(midiError);
 	}
 
 	// ROM Address: 0x2798
@@ -11425,8 +11428,7 @@ private:
 	void processSysExCmd_NodeDumpRequestMessage_MusicCardID(uint8_t midiData)
 	{
 		log_debug("processSysExCmd_NodeDumpRequestMessage_MusicCardID()");
-		static char CARD_NAME[16] = {
-		        'Y', 'A', 'M', 'A', 'H', 'A', ' ', 'I', 'B', 'M', ' ', 'M', 'U', 'S', 'I', 'C'};
+		static constexpr char CARD_NAME[] = "YAMAHA IBM MUSIC";
 		if (m_soundProcessorMidiInterpreterSysExState == 0) {
 			m_soundProcessorMidiInterpreterSysExState = 1;
 			return;
@@ -11448,8 +11450,7 @@ private:
 	void processSysExCmd_NodeDumpRequestMessage_MusicCardRevision(uint8_t midiData)
 	{
 		log_debug("processSysExCmd_NodeDumpRequestMessage_MusicCardRevision()");
-		static char CARD_REV[16] = {
-		        'r', 'e', 'l', '.', ' ', 'M', '1', '0', '2', '.', '0', '0', '.', '0', '1', '0'};
+		static constexpr char CARD_REV[] = "rel. M102.00.010";
 		if (m_soundProcessorMidiInterpreterSysExState == 0) {
 			m_soundProcessorMidiInterpreterSysExState = 1;
 			return;
@@ -12339,17 +12340,14 @@ private:
 	}
 
 	// ROM Address: 0x3600
-	void logDumpError(uint8_t messageNr)
+	void logDumpError(const uint8_t messageNr)
 	{
-		static char logDumpMessages[3][16] = {
-		        // clang-format off
-				{'d','u','m','p','/','r','e','c','e','i','v','e','d',' ','!','!'},
-				{'d','u','m','p','/','e','r','r','o','r',' ',' ',' ','!','!','!'},
-				{'d','u','m','p','/','p','r','o','t','e','c','t','e','d',' ','!'}
-		        // clang-format on
-		};
-		if (messageNr > 0) {
-			logError((char*)&logDumpMessages[messageNr - 1]);
+		switch (messageNr) {
+		case 0: return;
+		case 1: logError("dump/received !!"); break;
+		case 2: logError("dump/error   !!!"); break;
+		case 3: logError("dump/protected !"); break;
+		default: logError("dump/unknown !!"); break;
 		}
 	}
 
@@ -12448,7 +12446,7 @@ private:
 		*/
 		// clang-format on
 
-		static const uint8_t SP_SysExStateMatchTableTemplate[] = {
+		static constexpr uint8_t SP_SysExStateMatchTableTemplate[] = {
 		        // clang-format off
 			0x43,0x80,0x0C,0xFF,0x31,0x00,0x00,
 			0x43,0x80,0xF0,0x00,0x00,0x00,0x00,
