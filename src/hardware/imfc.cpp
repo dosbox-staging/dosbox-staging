@@ -691,8 +691,6 @@ private:
 	//uint8_t __sustainLevel : 4;
 	// clang-format on
 
-	OperatorDefinition& operator=(const OperatorDefinition& other) = delete;
-
 public:
 	uint8_t getTotalLevel()
 	{
@@ -867,8 +865,6 @@ private:
 	uint8_t field_3B = 0; // <*aaabbbb> : <b> PitchbenderRange <a>
 	                      // PMDController
 	uint8_t reserved3[4] = {};
-
-	VoiceDefinition& operator=(const VoiceDefinition& other) = delete;
 
 public:
 	char getName(uint8_t i)
@@ -1124,10 +1120,6 @@ static_assert(sizeof(VoiceDefinitionBank) == 0xC20,
               "VoiceDefinitionBank needs to be 0xC20 in size!");
 
 struct InstrumentConfiguration {
-private:
-	InstrumentConfiguration& operator=(const InstrumentConfiguration& other) = delete;
-
-public:
 	uint8_t numberOfNotes = 0;
 	// Number of notes                  / 0-8
 
@@ -1308,10 +1300,6 @@ static_assert(sizeof(ConfigurationData) == 0xA0,
 struct YmChannelData; // forward declaration
 
 struct InstrumentParameters {
-private:
-	InstrumentParameters& operator=(const InstrumentParameters& other) = delete;
-
-public:
 	InstrumentConfiguration instrumentConfiguration = {};
 	VoiceDefinition voiceDefinition                 = {};
 	PitchbenderValueMSB pitchbenderValueMSB         = {};
@@ -1351,15 +1339,6 @@ public:
 	YmChannelData* ymChannelData                            = nullptr;
 	uint8_t overflowToMidiOut = 0; // FIXME: This is a bit flag
 	uint8_t unused2[22]       = {};
-
-	inline void clear()
-	{
-		memset(this, 0, sizeof(InstrumentParameters));
-	}
-	inline void copyFrom(InstrumentParameters* other)
-	{
-		memcpy(this, other, sizeof(InstrumentParameters));
-	}
 };
 
 struct YmChannelData {
@@ -1902,7 +1881,7 @@ struct CounterData {
 	uint8_t m_tmpWrite{0};
 	CounterReadSource m_nextReadSource{COUNTERREADSOURCE_LIVE_1};
 	CounterWriteTarget m_nextWriteTarget{COUNTERWRITETARGET_BYTE1};
-	explicit CounterData(std::string name) : m_name(std::move(name)){};
+	explicit CounterData(std::string name) : m_name(std::move(name)) {}
 	void writeCounterByte(uint8_t val)
 	{
 		switch (m_nextWriteTarget) {
@@ -5574,7 +5553,7 @@ private:
 		m_chainMode             = CHAIN_MODE_DISABLED;
 		log_debug("initConfigurationMemory - start copy");
 		for (auto& m_activeInstrumentParameter : m_activeInstrumentParameters) {
-			m_activeInstrumentParameter.clear();
+			m_activeInstrumentParameter = {};
 		}
 		log_debug("initConfigurationMemory - end copy");
 		for (uint8_t i = 0; i < 16; i++) {
