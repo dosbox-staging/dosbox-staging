@@ -2314,7 +2314,7 @@ private:
 			        "");
 			return false;
 		}
-		return m_port2[m_group1_port1InOut == OUTPUT ? 2 : 2].getValue();
+		return m_port2[2].getValue();
 	}
 	void setGroup1DataAcknowledgement(bool acknowledge)
 	{
@@ -2339,7 +2339,7 @@ private:
 			        "");
 			return false;
 		}
-		return m_port2[m_group1_port1InOut == INPUT ? 1 : 1].getValue();
+		return m_port2[1].getValue();
 	}
 
 public:
