@@ -102,7 +102,7 @@ Microsoft's [EV certification](https://docs.microsoft.com/en-gb/archive/blogs/ie
 Store.
 
 As DOSBox Staging is a volunteer effort, we are not in a position to make such
-payments. We therefore ask users to manually unblock DOSBox Staging and be
+payments. We, therefore, ask users to manually unblock DOSBox Staging and be
 patient while Microsoft's Application Reputation Scheme eventually whitelists
 DOSBox Staging.
 
@@ -270,7 +270,7 @@ command-line install parameters, please see [Inno's documentation page](https://
 
 ## Building from source
 
-Of course you can always [build DOSBox Staging straight from the source][4].
+Of course, you can always [build DOSBox Staging straight from the source][4].
 
 Send us patches if you improve something! :smile:
 
