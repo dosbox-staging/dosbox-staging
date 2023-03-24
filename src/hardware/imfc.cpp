@@ -4829,6 +4829,8 @@ private:
 	void setState(State newState)
 	{
 		m_state = newState;
+
+		/* Switch is only used for state debugging
 		switch (m_state) {
 		case WAITING_FOR_WRITE_MODE:
 			// IMF_LOG("Midi State now WAITING_FOR_WRITE_MODE");
@@ -4843,6 +4845,7 @@ private:
 			// IMF_LOG("Midi State now NORMAL_OPERATION");
 			break;
 		}
+		*/
 	}
 
 public:
@@ -5351,7 +5354,6 @@ private:
 		case 0x0E:
 			setInstrumentParameter_PMDController(instr, value);
 			break;
-		case 0x0F: break;
 		case 0x10: setInstrumentParameter_LFOSpeed(instr, value); break;
 		case 0x11:
 			setInstrumentParameter_AmplitudeModulationDepth(instr, value);
@@ -5374,6 +5376,9 @@ private:
 			setInstrumentParameter_PitchModulationSensitivity(instr,
 			                                                  value);
 			break;
+
+		/* Inactive cases
+		case 0x0F: break;
 		case 0x18: break;
 		case 0x19: break;
 		case 0x1A: break;
@@ -5387,6 +5392,7 @@ private:
 		case 0x21: break;
 		case 0x22: break;
 		case 0x23: break;
+		*/
 		}
 		stopMusicProcessing();
 	}
@@ -5811,13 +5817,16 @@ private:
 		startMusicProcessing();
 		switch (midiCode - 0xF8) {
 		case 0: processSystemRealTimeMessage_F8(); break;
-		case 1: break;
 		case 2: processSystemRealTimeMessage_FA_and_FB(); break;
 		case 3: processSystemRealTimeMessage_FA_and_FB(); break;
 		case 4: processSystemRealTimeMessage_FC(); break;
+
+		/* Inactive cases
+		case 1: break;
 		case 5: break;
 		case 6: break;
 		case 7: break;
+		*/
 		}
 		stopMusicProcessing();
 	}
@@ -6684,6 +6693,7 @@ private:
 		case 0x01: processMusicCardMessageErrorReportStatus(); break;
 		case 0x02: processMusicCardMessagePathParameterStatus(); break;
 		case 0x03: processMusicCardMessageNodeParameterStatus(); break;
+		/* Inactive cases
 		case 0x04: break;
 		case 0x05: break;
 		case 0x06: break;
@@ -6696,6 +6706,7 @@ private:
 		case 0x0D: break;
 		case 0x0E: break;
 		case 0x0F: break;
+		*/
 		case 0x10: processMusicCardMessageSelectCardMode(); break;
 		case 0x11:
 			processMusicCardMessageSelectErrorReportMode();
@@ -6705,6 +6716,7 @@ private:
 		case 0x14: processMusicCardMessage1E4(); break;
 		case 0x15: processMusicCardMessageReboot(); break;
 		case 0x16: processMusicCardMessageDebugWriteToMemory(); break;
+		/* Inactive cases
 		case 0x17: break;
 		case 0x18: break;
 		case 0x19: break;
@@ -6714,6 +6726,7 @@ private:
 		case 0x1D: break;
 		case 0x1E: break;
 		case 0x1F: break;
+		*/
 		}
 		stopMusicProcessing();
 	}
