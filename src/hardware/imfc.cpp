@@ -1398,6 +1398,7 @@ static_assert(sizeof(ChannelMaskInfo) == 2, "ChannelMaskInfo needs to be 2 in si
 template <typename DataType>
 class DataChangedConsumer {
 public:
+	virtual ~DataChangedConsumer() = default;
 	virtual void valueChanged(DataType oldValue, DataType newValue) = 0;
 };
 
@@ -1416,6 +1417,8 @@ protected:
 
 public:
 	DataProvider()              = default;
+	virtual ~DataProvider()     = default;
+
 	virtual DataType getValue() = 0;
 	void notifyOnChange(DataChangedConsumer<DataType>* dataConsumer)
 	{
@@ -1469,6 +1472,7 @@ private:
 	std::string m_name = {};
 
 public:
+	virtual ~InputPin() = default;
 	InputPin() = default;
 	explicit InputPin(std::string name) : m_name(std::move(name)) {}
 	std::string getName()
@@ -2339,6 +2343,7 @@ private:
 	}
 
 public:
+	virtual ~PD71055() = default;
 	explicit PD71055(const std::string& name)
 	        : m_name(name),
 	          m_port0(name + ".p0"),
