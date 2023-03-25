@@ -446,8 +446,8 @@ enum ReadStatus { READ_SUCCESS, NO_DATA, READ_ERROR };
 enum WriteStatus { WRITE_SUCCESS, WRITE_ERROR };
 
 struct ReadResult {
-	ReadStatus status;
-	uint8_t data;
+	ReadStatus status = {};
+	uint8_t data      = 0;
 };
 
 enum SystemDataAvailability {
@@ -457,14 +457,14 @@ enum SystemDataAvailability {
 };
 
 struct SystemReadResult {
-	SystemDataAvailability status;
-	uint8_t data;
+	SystemDataAvailability status = {};
+	uint8_t data                  = 0;
 };
 
 struct MidiDataPacket {
-	uint8_t data[16];
-	uint8_t /*MidiDataPacketState*/ state;
-	uint8_t reserved[15];
+	uint8_t data[16]                      = {};
+	uint8_t /*MidiDataPacketState*/ state = 0;
+	uint8_t reserved[15]                  = {};
 };
 static_assert(sizeof(MidiDataPacket) == 0x20,
               "MidiDataPacket needs to be 0x20 in size!");
@@ -556,7 +556,7 @@ constexpr FractionalNote operator+(const FractionalNote a, const FractionalNote 
 }
 
 struct KeyVelocity {
-	uint8_t value;
+	uint8_t value = 0;
 
 	KeyVelocity() : value(0) {}
 	explicit KeyVelocity(uint8_t v) : value(v) {}
@@ -564,7 +564,7 @@ struct KeyVelocity {
 static_assert(sizeof(KeyVelocity) == 1, "KeyVelocity needs to be 1 in size!");
 
 struct Duration {
-	uint16_t value;
+	uint16_t value = 0;
 
 	Duration() : value(0) {}
 	explicit Duration(uint16_t v) : value(v) {}
@@ -821,7 +821,7 @@ struct VoiceDefinition {
 private:
 	// clang-format off
 	// +00~+06: Name of instrument
-	char name[7];
+	char name[7] = {};
 	// +07: <********> Reserved
 	uint8_t reserved1 = 0;
 	// +08: <********> LFO Speed
@@ -1067,9 +1067,9 @@ private:
 	VoiceDefinitionBank& operator=(const VoiceDefinitionBank& other) = delete;
 
 public:
-	char name[8];
-	uint8_t reserved[24];
-	VoiceDefinition instrumentDefinitions[48];
+	char name[8]                              = {};
+	uint8_t reserved[24]                      = {};
+	VoiceDefinition instrumentDefinitions[48] = {};
 
 	void shallowClear()
 	{
@@ -1384,8 +1384,8 @@ public:
 };
 
 struct ChannelMaskInfo {
-	uint8_t mask;
-	uint8_t nrOfChannels;
+	uint8_t mask         = 0;
+	uint8_t nrOfChannels = 0;
 };
 static_assert(sizeof(ChannelMaskInfo) == 2, "ChannelMaskInfo needs to be 2 in size!");
 
@@ -1877,14 +1877,14 @@ enum CounterReadSource {
 enum CounterWriteTarget { COUNTERWRITETARGET_BYTE1, COUNTERWRITETARGET_BYTE2 };
 
 struct CounterData {
-	std::string m_name;
+	std::string m_name = {};
 	CounterMode m_counterMode{COUNTERMODE_INVALID};
-	unsigned int m_counter{0};
-	unsigned int m_runningCounter{0};
-	unsigned int m_latchedCounter{0};
-	uint8_t m_tmpWrite{0};
-	CounterReadSource m_nextReadSource{COUNTERREADSOURCE_LIVE_1};
-	CounterWriteTarget m_nextWriteTarget{COUNTERWRITETARGET_BYTE1};
+	unsigned int m_counter               = 0;
+	unsigned int m_runningCounter        = 0;
+	unsigned int m_latchedCounter        = 0;
+	uint8_t m_tmpWrite                   = 0;
+	CounterReadSource m_nextReadSource   = COUNTERREADSOURCE_LIVE_1;
+	CounterWriteTarget m_nextWriteTarget = COUNTERWRITETARGET_BYTE1;
 	explicit CounterData(std::string name) : m_name(std::move(name)) {}
 	void writeCounterByte(uint8_t val)
 	{
@@ -2982,60 +2982,69 @@ private:
 		void key_on(uint32_t key_set, uint32_t eg_cnt);
 		void key_off(uint32_t key_set);
 	};
-	// clang-format off
+
 	signed int chanout[8] = {};
-	signed int m2 = 0;
-	signed int c1 = 0;
-	signed int c2 = 0;      /* Phase Modulation input for operators 2,3,4 */
-	signed int mem = 0;     /* one sample delay memory */
+	signed int m2         = 0;
+	signed int c1         = 0;
+	signed int c2         = 0; // Phase Modulation input for operators 2,3,4
+	signed int mem        = 0; // one sample delay memory
 
-	YM2151Operator  oper[32] = {};           /* the 32 operators */
+	YM2151Operator oper[32] = {}; // the 32 operators
 
-	uint32_t      pan[16] = {};                /* channels output masks (0xffffffff = enable) */
+	uint32_t pan[16] = {}; // channels output masks (0xffffffff = enable)
 
-	uint32_t      eg_cnt = 0;                 /* global envelope generator counter */
-	uint32_t      eg_timer = 0;               /* global envelope generator counter works at frequency = chipclock/64/3 */
-	uint32_t      eg_timer_add = 0;           /* step of eg_timer */
-	uint32_t      eg_timer_overflow = 0;      /* envelope generator timer overflows every 3 samples (on real chip) */
+	uint32_t eg_cnt   = 0; // global envelope generator counter
+	uint32_t eg_timer = 0; // global envelope generator counter works at
+	                       // frequency = chipclock/64/3
+	uint32_t eg_timer_add      = 0; // step of eg_timer
+	uint32_t eg_timer_overflow = 0; // envelope generator timer overflows
+	                                // every 3 samples (on real chip)
 
-	uint32_t      lfo_phase = 0;              /* accumulated LFO phase (0 to 255) */
-	uint32_t      lfo_timer = 0;              /* LFO timer                        */
-	uint32_t      lfo_timer_add = 0;          /* step of lfo_timer                */
-	uint32_t      lfo_overflow = 0;           /* LFO generates new output when lfo_timer reaches this value */
-	uint32_t      lfo_counter = 0;            /* LFO phase increment counter      */
-	uint32_t      lfo_counter_add = 0;        /* step of lfo_counter              */
-	uint8_t       lfo_wsel = 0;               /* LFO waveform (0-saw, 1-square, 2-triangle, 3-random noise) */
-	uint8_t       amd = 0;                    /* LFO Amplitude Modulation Depth   */
-	int8_t        pmd = 0;                    /* LFO Phase Modulation Depth       */
-	uint32_t      lfa = 0;                    /* LFO current AM output            */
-	int32_t       lfp = 0;                    /* LFO current PM output            */
+	uint32_t lfo_phase     = 0;   // accumulated LFO phase (0 to 255)
+	uint32_t lfo_timer     = 0;   // LFO timer
+	uint32_t lfo_timer_add = 0;   // step of lfo_timer
+	uint32_t lfo_overflow  = 0;   // LFO generates new output when lfo_timer
+	                              // reaches this value
+	uint32_t lfo_counter     = 0; // LFO phase increment counter
+	uint32_t lfo_counter_add = 0; // step of lfo_counter
 
-	uint8_t       test = 0;                   /* TEST register */
-	uint8_t       ct = 0;                     /* output control pins (bit1-CT2, bit0-CT1) */
+	uint8_t lfo_wsel = 0; // LFO waveform (0-saw, 1-square, 2-triangle,
+	                      // 3-random noise)
+	uint8_t amd  = 0;     // LFO Amplitude Modulation Depth
+	int8_t pmd   = 0;     // LFO Phase Modulation Depth
+	uint32_t lfa = 0;     // LFO current AM output
+	int32_t lfp  = 0;     // LFO current PM output
 
-	uint32_t      noise = 0;                  /* noise enable/period register (bit 7 - noise enable, bits 4-0 - noise period */
-	uint32_t      noise_rng = 0;              /* 17 bit noise shift register */
-	uint32_t      noise_p = 0;                /* current noise 'phase'*/
-	uint32_t      noise_f = 0;                /* current noise period */
+	uint8_t test = 0; // TEST register
+	uint8_t ct   = 0; // output control pins (bit1-CT2, bit0-CT1)
 
-	uint32_t      csm_req = 0;                /* CSM  KEY ON / KEY OFF sequence request */
+	uint32_t noise = 0; // noise enable/period register (bit 7 - noise
+	                    // enable, bits 4-0 - noise period
 
-	uint32_t      irq_enable = 0;             /* IRQ enable for timer B (bit 3) and timer A (bit 2); bit 7 - CSM mode (keyon to all slots, everytime timer A overflows) */
-	uint32_t      status = 0;                 /* chip status (BUSY, IRQ Flags) */
-	uint8_t       connect[8] = {};             /* channels connections */
-	// clang-format on
+	uint32_t noise_rng = 0; // 17 bit noise shift register
+	uint32_t noise_p   = 0; // current noise 'phase'*/
+	uint32_t noise_f   = 0; // current noise period
+
+	uint32_t csm_req = 0; // CSM  KEY ON / KEY OFF sequence request
+
+	uint32_t irq_enable = 0; // IRQ enable for timer B (bit 3) and timer A
+	                         // (bit 2); bit 7 - CSM mode (keyon to all
+	                         // slots, everytime timer A overflows)
+
+	uint8_t status     = 0;  // chip status (BUSY, IRQ Flags)
+	uint8_t connect[8] = {}; // channels connections
 
 	// emu_timer   *timer_A, *timer_A_irq_off;
 	// emu_timer   *timer_B, *timer_B_irq_off;
 
-	// attotime    timer_A_time[1024];     /* timer A times for MAME */
-	// attotime    timer_B_time[256];      /* timer B times for MAME */
+	// attotime    timer_A_time[1024];     // timer A times for MAME
+	// attotime    timer_B_time[256];      // timer B times for MAME
 	int irqlinestate = 0;
 
-	uint32_t timer_A_index     = 0; /* timer A index */
-	uint32_t timer_B_index     = 0; /* timer B index */
-	uint32_t timer_A_index_old = 0; /* timer A previous index */
-	uint32_t timer_B_index_old = 0; /* timer B previous index */
+	uint32_t timer_A_index     = 0; // timer A index
+	uint32_t timer_B_index     = 0; // timer B index
+	uint32_t timer_A_index_old = 0; // timer A previous index
+	uint32_t timer_B_index_old = 0; // timer B previous index
 
 	// clang-format off
 	/*  Frequency-deltas to get the closest frequency possible.
@@ -6524,8 +6533,8 @@ private:
 	}
 
 	struct StateTermination {
-		uint8_t flowMask;
-		uint8_t totalBytes;
+		uint8_t flowMask   = 0;
+		uint8_t totalBytes = 0;
 	};
 	static constexpr StateTermination stateTerminationTable[0x41] = {
 	        // clang-format off
