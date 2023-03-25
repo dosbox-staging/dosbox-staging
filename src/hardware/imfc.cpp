@@ -4746,34 +4746,22 @@ void ym2151_device::sound_stream_update(const uint16_t requested_frames)
 	for (int i = 0; i < requested_frames; i++) {
 		advance_eg();
 
-		for (int& ch : chanout) {
-			ch = 0;
-		}
+		// Reset the channels before calculating
+		std::fill(std::begin(chanout), std::end(chanout), 0);
 
-		for (int ch = 0; ch < 7; ch++) {
+		for (uint8_t ch = 0; ch < 7; ch++) {
 			chan_calc(ch);
 		}
 		chan7_calc();
 
 		int outl = 0;
 		int outr = 0;
-		for (int ch = 0; ch < 8; ch++) {
+		for (uint8_t ch = 0; ch < 8; ch++) {
 			outl += chanout[ch] & pan[2 * ch];
 			outr += chanout[ch] & pan[2 * ch + 1];
 		}
-
-		if (outl > 32767) {
-			outl = 32767;
-		} else if (outl < -32768) {
-			outl = -32768;
-		}
-		if (outr > 32767) {
-			outr = 32767;
-		} else if (outr < -32768) {
-			outr = -32768;
-		}
-		buf16[0] = outl;
-		buf16[1] = outr;
+		buf16[0] = clamp_to_int16(outl);
+		buf16[1] = clamp_to_int16(outr);
 		audio_channel->AddSamples_s16(1, buf16);
 
 		advance();
