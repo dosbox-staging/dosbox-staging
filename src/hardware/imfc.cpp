@@ -3356,18 +3356,18 @@ void ym2151_device::init_tables()
 		const double m = floor(1 << 16) /
 		                 pow(2, (x + 1) * (ENV_STEP / 4.0) / 8.0);
 
-		/* we never reach (1<<16) here due to the (x+1) */
-		/* result fits within 16 bits at maximum */
+		// we never reach (1<<16) here due to the (x+1) result fits
+		// within 16 bits at maximum
 
-		int n = (int)m;     /* 16 bits here */
-		n >>= 4;            /* 12 bits here */
-		if ((n & 1) != 0) { /* round to closest */
+		int n = (int)m;     // 16 bits here
+		n >>= 4;            // 12 bits here
+		if ((n & 1) != 0) { // round to closest
 			n = (n >> 1) + 1;
 		} else {
 			n = n >> 1;
 		}
-		/* 11 bits here (rounded) */
-		n <<= 2; /* 13 bits here (as in real chip) */
+		// 11 bits here (rounded)
+		n <<= 2; // 13 bits here (as in real chip)
 		tl_tab[x * 2 + 0] = n;
 		tl_tab[x * 2 + 1] = -tl_tab[x * 2 + 0];
 
@@ -3378,22 +3378,20 @@ void ym2151_device::init_tables()
 		}
 	}
 
+	// non-standard sinus
 	for (int i = 0; i < SIN_LEN; i++) {
-		/* non-standard sinus */
-		const double m = sin(((i * 2) + 1) * M_PI / SIN_LEN); /* verified
-		                                                         on the
-		                                                         real
-		                                                         chip */
+		// verified on the real chip
+		const double m = sin(((i * 2) + 1) * M_PI / SIN_LEN);
 
-		/* we never reach zero here due to ((i*2)+1) */
+		// we never reach zero here due to ((i*2)+1)
 
-		/* convert to 'decibels' */
+		// convert to 'decibels'
 		double o = 8 * log(1.0 / fabs(m)) / log(2.0);
 
 		o = o / (ENV_STEP / 4);
 
 		int n = (int)(2.0 * o);
-		if ((n & 1) != 0) { /* round to closest */
+		if ((n & 1) != 0) { // round to closest
 			n = (n >> 1) + 1;
 		} else {
 			n = n >> 1;
@@ -3402,51 +3400,51 @@ void ym2151_device::init_tables()
 		sin_tab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
 	}
 
-	/* calculate d1l_tab table */
+	// calculate d1l_tab table
 	for (int i = 0; i < 16; i++) {
-		d1l_tab[i] = (i != 15 ? i : i + 16) *
-		             (4.0 / ENV_STEP); /* every 3 'dB' except for all
-		                                  bits = 1 = 45+48 'dB' */
+		// every 3 'dB' except for all bits = 1 =  45+48 'dB'
+		d1l_tab[i] = clamp_to_uint32((i != 15 ? i : i + 16) *
+		                             (4.0 / ENV_STEP));
 	}
 
-	/* this loop calculates Hertz values for notes from c-0 to b-7 */
-	/* including 64 'cents' (100/64 that is 1.5625 of real cent) per note */
-	/* i*100/64/1200 is equal to i/768 */
+	// this loop calculates Hertz values for notes from c-0 to b-7 including
+	// 64 'cents' (100/64 that is 1.5625 of real cent) per note
+	// i*100/64/1200 is equal to i/768
 
-	/* real chip works with 10 bits fixed point values (10.10) */
+	// real chip works with 10 bits fixed point values (10.10)
 
-	for (int i = 0; i < 768; i++) { // 768 = 12 notes and for each note 64
-		                        // semitones
-		/* octave 2 - reference octave */
+	// 768 = 12 notes and for each note 64 semitones
+	for (int i = 0; i < 768; i++) {
+		// octave 2 - reference octave
 
-		/* adjust to X.10 fixed point */
+		// adjust to X.10 fixed point
 		freq[768 + 2 * 768 + i] = (phaseinc_rom[i] << (FREQ_SH - 10)) &
 		                          0xffffffc0;
 
 		// Loris: Fix for different clock frequency
-		freq[768 + 2 * 768 + i] = 3.4375 *
-		                          pow(2, 15.0 + (i + 1 * 64) / 768.0);
+		freq[768 + 2 * 768 + i] = clamp_to_uint32(
+		        3.4375 * pow(2, 15.0 + (i + 1 * 64) / 768.0));
 
-		/* octave 0 and octave 1 */
+		// octave 0 and octave 1
 		for (int j = 0; j < 2; j++) {
 			/* adjust to X.10 fixed point */
 			freq[768 + j * 768 + i] = (freq[768 + 2 * 768 + i] >>
 			                           (2 - j)) &
 			                          0xffffffc0;
 		}
-		/* octave 3 to 7 */
+		// octave 3 to 7
 		for (int j = 3; j < 8; j++) {
 			freq[768 + j * 768 + i] = freq[768 + 2 * 768 + i]
 			                       << (j - 2);
 		}
 	}
 
-	/* octave -1 (all equal to: oct 0, _KC_00_, _KF_00_) */
+	// octave -1 (all equal to: oct 0, _KC_00_, _KF_00_)
 	for (int i = 0; i < 768; i++) {
 		freq[0 * 768 + i] = freq[1 * 768 + 0];
 	}
 
-	/* octave 8 and 9 (all equal to: oct 7, _KC_14_, _KF_63_) */
+	// octave 8 and 9 (all equal to: oct 7, _KC_14_, _KF_63_)
 	for (int j = 8; j < 10; j++) {
 		for (int i = 0; i < 768; i++) {
 			freq[768 + j * 768 + i] = freq[768 + 8 * 768 - 1];
@@ -3455,22 +3453,24 @@ void ym2151_device::init_tables()
 
 	for (int j = 0; j < 4; j++) {
 		for (int i = 0; i < 32; i++) {
-			/*calculate phase increment, positive and negative values*/
+			// calculate phase increment, positive and negative values
 			dt1_freq[(j + 0) * 32 + i] = (dt1_tab[j * 32 + i] * SIN_LEN) >>
 			                             (20 - FREQ_SH);
 			dt1_freq[(j + 4) * 32 + i] = -dt1_freq[(j + 0) * 32 + i];
 		}
 	}
 
-	/* calculate noise periods table */
-	for (int i = 0; i < 32; i++) {
-		int j = (i != 31 ? i : 30); /* rate 30 and 31 are the same */
-		j     = 32 - j;
-		j = (65536.0 / (double)(j * 32.0)); /* number of samples per one
-		                                       shift of the shift
-		                                       register */
-		noise_tab[i] = j * 64; /* number of chip clock cycles per one
-		                          shift */
+	// calculate noise periods table
+	for (uint16_t i = 0; i < 32; i++) {
+		 // rate 30 and 31 are the same
+		uint16_t j = (i != 31 ? i : 30);
+		j = 32 - j;
+
+		// number of samples per one shift of the shift register
+		j = check_cast<uint16_t>(65536 / (j * 32));
+
+		// number of chip clock cycles per one shift
+		noise_tab[i] = j * 64;
 	}
 }
 
@@ -3725,7 +3725,7 @@ void ym2151_device::write_reg(int r, int v)
 	case 0x00:
 		switch (r) {
 		case 0x09: /* LFO reset(bit 1), Test Register (other bits) */
-			test = v;
+			test = static_cast<uint8_t>(v);
 			if ((v & 2) != 0) {
 				lfo_phase = 0;
 			}
@@ -3806,7 +3806,7 @@ void ym2151_device::write_reg(int r, int v)
 			break;
 
 		case 0x1b: /* CT2, CT1, LFO waveform */
-			ct       = v >> 6;
+			ct       = static_cast<uint8_t>(v >> 6);
 			lfo_wsel = v & 3;
 			// m_portwritehandler(0, ct, 0xff);
 			break;
@@ -3832,7 +3832,7 @@ void ym2151_device::write_reg(int r, int v)
 
 		case 0x08: /* Key Code */
 			v &= 0x7f;
-			if (v != op->kc) {
+			if (check_cast<uint8_t>(v) != op->kc) {
 				uint32_t kc         = 0;
 				uint32_t kc_channel = 0;
 
@@ -3881,7 +3881,7 @@ void ym2151_device::write_reg(int r, int v)
 
 		case 0x10: /* Key Fraction */
 			v >>= 2;
-			if (v != (op->kc_i & 63)) {
+			if (static_cast<uint8_t>(v) != (op->kc_i & 63)) {
 				uint32_t kc_channel = 0;
 
 				kc_channel = v;
@@ -4331,7 +4331,8 @@ void ym2151_device::advance_eg()
 					op->volume += eg_inc[op->eg_sel_d1r +
 					                     ((eg_cnt >> op->eg_sh_d1r) & 7)];
 
-					if (op->volume >= op->d1l) {
+					if (check_cast<uint32_t>(op->volume) >=
+					    op->d1l) {
 						op->state = EG_SUS;
 						// IMF_LOG("ym2151_device -
 						// operator %i now in state
