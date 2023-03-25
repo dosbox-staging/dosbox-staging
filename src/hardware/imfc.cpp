@@ -2222,7 +2222,7 @@ private:
 	uint8_t readPort2()
 	{
 		uint8_t val = 0;
-		for (int i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			if (m_port2[i].getValue()) {
 				val |= 1 << i;
 			}
@@ -2231,7 +2231,7 @@ private:
 	}
 	void writePort2(uint8_t val)
 	{
-		for (int i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			m_port2[i].setValue((val & (1 << i)) != 0);
 		}
 	}
@@ -3403,7 +3403,7 @@ void ym2151_device::init_tables()
 		tl_tab[x * 2 + 0] = n;
 		tl_tab[x * 2 + 1] = -tl_tab[x * 2 + 0];
 
-		for (int i = 1; i < 13; i++) {
+		for (uint8_t i = 1; i < 13; i++) {
 			tl_tab[x * 2 + 0 + i * 2 * TL_RES_LEN] = tl_tab[x * 2 + 0] >> i;
 			tl_tab[x * 2 + 1 + i * 2 * TL_RES_LEN] =
 			        -tl_tab[x * 2 + 0 + i * 2 * TL_RES_LEN];
@@ -3411,7 +3411,7 @@ void ym2151_device::init_tables()
 	}
 
 	// non-standard sinus
-	for (int i = 0; i < SIN_LEN; i++) {
+	for (uint16_t i = 0; i < SIN_LEN; i++) {
 		// verified on the real chip
 		const double m = sin(((i * 2) + 1) * M_PI / SIN_LEN);
 
@@ -3433,7 +3433,7 @@ void ym2151_device::init_tables()
 	}
 
 	// calculate d1l_tab table
-	for (int i = 0; i < 16; i++) {
+	for (uint8_t i = 0; i < 16; i++) {
 		// every 3 'dB' except for all bits = 1 =  45+48 'dB'
 		d1l_tab[i] = clamp_to_uint32((i != 15 ? i : i + 16) *
 		                             (4.0 / ENV_STEP));
@@ -3446,7 +3446,7 @@ void ym2151_device::init_tables()
 	// real chip works with 10 bits fixed point values (10.10)
 
 	// 768 = 12 notes and for each note 64 semitones
-	for (int i = 0; i < 768; i++) {
+	for (uint16_t i = 0; i < 768; i++) {
 		// octave 2 - reference octave
 
 		// adjust to X.10 fixed point
@@ -3458,33 +3458,33 @@ void ym2151_device::init_tables()
 		        3.4375 * pow(2, 15.0 + (i + 1 * 64) / 768.0));
 
 		// octave 0 and octave 1
-		for (int j = 0; j < 2; j++) {
+		for (uint8_t j = 0; j < 2; j++) {
 			/* adjust to X.10 fixed point */
 			freq[768 + j * 768 + i] = (freq[768 + 2 * 768 + i] >>
 			                           (2 - j)) &
 			                          0xffffffc0;
 		}
 		// octave 3 to 7
-		for (int j = 3; j < 8; j++) {
+		for (uint8_t j = 3; j < 8; j++) {
 			freq[768 + j * 768 + i] = freq[768 + 2 * 768 + i]
 			                       << (j - 2);
 		}
 	}
 
 	// octave -1 (all equal to: oct 0, _KC_00_, _KF_00_)
-	for (int i = 0; i < 768; i++) {
+	for (uint16_t i = 0; i < 768; i++) {
 		freq[0 * 768 + i] = freq[1 * 768 + 0];
 	}
 
 	// octave 8 and 9 (all equal to: oct 7, _KC_14_, _KF_63_)
-	for (int j = 8; j < 10; j++) {
-		for (int i = 0; i < 768; i++) {
+	for (uint8_t j = 8; j < 10; j++) {
+		for (uint16_t i = 0; i < 768; i++) {
 			freq[768 + j * 768 + i] = freq[768 + 8 * 768 - 1];
 		}
 	}
 
-	for (int j = 0; j < 4; j++) {
-		for (int i = 0; i < 32; i++) {
+	for (uint8_t j = 0; j < 4; j++) {
+		for (uint16_t i = 0; i < 32; i++) {
 			// calculate phase increment, positive and negative values
 			dt1_freq[(j + 0) * 32 + i] = (dt1_tab[j * 32 + i] * SIN_LEN) >>
 			                             (20 - FREQ_SH);
@@ -3509,11 +3509,11 @@ void ym2151_device::init_tables()
 // clang-format off
 //void ym2151_device::calculate_timers() {
 //	/* calculate timers' deltas */
-//	for (int i = 0; i < 1024; i++) {
+//	for (uint16_t i = 0; i < 1024; i++) {
 //		/* ASG 980324: changed to compute both tim_A_tab and timer_A_time */
 //		timer_A_time[i] = clocks_to_attotime(64 * (1024 - i));
 //	}
-//	for (int i = 0; i < 256; i++) {
+//	for (uint16_t i = 0; i < 256; i++) {
 //		/* ASG 980324: changed to compute both tim_B_tab and timer_B_time */
 //		timer_B_time[i] = clocks_to_attotime(1024 * (256 - i));
 //	}
@@ -3558,7 +3558,7 @@ void ym2151_device::envelope_KONKOFF(YM2151Operator* op, int v) const
 {
 	// m1, m2, c1, c2
 	static constexpr uint8_t masks[4] = {0x08, 0x20, 0x10, 0x40};
-	for (int i = 0; i != 4; i++) {
+	for (uint8_t i = 0; i != 4; i++) {
 		if ((v & masks[i]) != 0) { /* M1 */
 			op[i].key_on(1, eg_cnt);
 		} else {
@@ -4033,7 +4033,7 @@ void ym2151_device::write_reg(int r, int v)
 
 void ym2151_device::device_post_load()
 {
-	for (int j = 0; j < 8; j++) {
+	for (uint8_t j = 0; j < 8; j++) {
 		set_connect(&oper[j * 4], j, connect[j]);
 	}
 }
@@ -4061,7 +4061,7 @@ void ym2151_device::device_start()
 
 	// clang-format off
 	/* save all 32 operators */
-	//for (int j = 0; j < 32; j++) {
+	//for (uint8_t j = 0; j < 32; j++) {
 	//	YM2151Operator &op = oper[(j & 7) * 4 + (j >> 3)];
 
 	//	save_item(NAME(op.phase), j);
@@ -5462,7 +5462,7 @@ private:
 		initInterruptHandler();
 		startMusicProcessing();
 		// log_debug("softReboot - copy start");
-		for (int i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			m_activeConfiguration.instrumentConfigurations[i].copyFrom(
 			        &(getActiveInstrumentParameters(i)->instrumentConfiguration));
 		}
@@ -5544,10 +5544,10 @@ private:
 		// voiceDefinitionBankCustom2, configurationRAM, copyOfCardName,
 		// activeConfiguration, nodeNumber, activeConfigurationNr,
 		// chainMode, activeInstrumentParameters
-		for (int i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			getActiveInstrumentParameters(i)->voiceDefinition.veryShallowClear();
 		}
-		for (int i = 0; i < 8; i++) {
+		for (uint8_t i = 0; i < 8; i++) {
 			getYmChannelData(i)->channelNumber    = i;
 			getYmChannelData(i)->operatorsEnabled = 0;
 			getYmChannelData(i)->unused2          = 0;
