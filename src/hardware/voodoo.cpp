@@ -16,9 +16,11 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
 #include <stdlib.h>
 #include <string.h>
+#include <cstdint>
+#include <memory>
+#include <string>
 
 #include "dosbox.h"
 #include "config.h"
@@ -35,154 +37,151 @@
 
 
 class VOODOO;
-static VOODOO* voodoo_dev;
+static std::unique_ptr<VOODOO> voodoo_dev;
 
-static uint32_t voodoo_current_lfb=(VOODOO_INITIAL_LFB&0xffff0000);
+static uint32_t voodoo_current_lfb = (VOODOO_INITIAL_LFB & 0xffff0000);
 
-
-class VOODOO:public Module_base{
-private:
-	Bits emulation_type;
-public:
-	VOODOO(Section* configuration):Module_base(configuration){
-		emulation_type=-1;
-
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		std::string voodoo_type_str(section->Get_string("voodoo_card"));
-		if (voodoo_type_str=="false") {
-			emulation_type=0;
-		} else if (voodoo_type_str=="software" || (voodoo_type_str=="auto" && !OpenGL_using())) {
-			emulation_type=1;
-#if C_OPENGL
-		} else if (voodoo_type_str=="opengl" || voodoo_type_str=="auto") {
-			emulation_type=2;
-#else
-		} else if (voodoo_type_str=="auto") {
-			emulation_type=1;
-#endif
-		} else {
-			emulation_type=0;
-		}
-
-		if (emulation_type<=0) return;
-
-
-		Bits card_type = 1;
-		bool max_voodoomem;
-		std::string voodoo_mem_str(section->Get_string("voodoo_mem"));
-		if (voodoo_mem_str=="max") {
-			max_voodoomem = true;
-		} else {
-			max_voodoomem = false;
-		}
-
-		bool needs_pci_device = false;
-
-		switch (emulation_type) {
-			case 1:
-			case 2:
-				Voodoo_Initialize(emulation_type, card_type, max_voodoomem);
-				needs_pci_device = true;
-				break;
-			default:
-				break;
-		}
-
-		if (needs_pci_device) PCI_AddSST_Device(card_type);
-	}
-
-	~VOODOO(){
-		PCI_RemoveSST_Device();
-
-		if (emulation_type<=0) return;
-
-		switch (emulation_type) {
-			case 1:
-			case 2:
-				Voodoo_Shut_Down();
-				break;
-			default:
-				break;
-		}
-
-		emulation_type=-1;
-	}
-
-	void PCI_InitEnable(Bitu val) {
-		switch (emulation_type) {
-			case 1:
-			case 2:
-				Voodoo_PCI_InitEnable(val);
-				break;
-			default:
-				break;
-		}
-	}
-
-	void PCI_Enable(bool enable) {
-		switch (emulation_type) {
-			case 1:
-			case 2:
-				Voodoo_PCI_Enable(enable);
-				break;
-			default:
-				break;
-		}
-	}
-
-	PageHandler* GetPageHandler() {
-		switch (emulation_type) {
-			case 1:
-			case 2:
-				return Voodoo_GetPageHandler();
-			default:
-				break;
-		}
-		return NULL;
-	}
-
+enum class EmulationType {
+    None,
+    Software,
+    OpenGL
 };
 
+class VOODOO : public Module_base {
+private:
+    EmulationType emulation_type;
+
+public:
+    VOODOO(Section* configuration) : Module_base(configuration), emulation_type(EmulationType::None) {
+        UpdateConfiguration(configuration);
+    }
+
+    void UpdateConfiguration(Section* configuration) {
+        Section_prop* section = static_cast<Section_prop*>(configuration);
+        std::string voodoo_type_str(section->Get_string("voodoo_card"));
+
+        if (voodoo_type_str == "false") {
+            emulation_type = EmulationType::None;
+        } else if ((voodoo_type_str == "software") || !OpenGL_using()) {
+            emulation_type = EmulationType::Software;
+#if C_OPENGL
+        } else if ((voodoo_type_str == "opengl") || (voodoo_type_str == "auto")) {
+            emulation_type = EmulationType::OpenGL;
+#else
+        } else if (voodoo_type_str == "auto") {
+            emulation_type = EmulationType::Software;
+#endif
+        } else {
+            emulation_type = EmulationType::None;
+        }
+
+        if (emulation_type == EmulationType::None) return;
+
+        Bits card_type = 1;
+        bool max_voodoomem;
+        std::string voodoo_mem_str(section->Get_string("voodoo_mem"));
+        max_voodoomem = (voodoo_mem_str == "max");
+
+        bool needs_pci_device = false;
+
+        switch (emulation_type) {
+            case EmulationType::Software:
+            case EmulationType::OpenGL:
+                Voodoo_Initialize(static_cast<Bits>(emulation_type), card_type, max_voodoomem);
+                needs_pci_device = true;
+                break;
+            default:
+                break;
+        }
+
+        if (needs_pci_device) PCI_AddSST_Device(card_type);
+    }
+
+    ~VOODOO() {
+        PCI_RemoveSST_Device();
+
+        if (emulation_type == EmulationType::None) return;
+
+        switch (emulation_type) {
+            case EmulationType::Software:
+            case EmulationType::OpenGL:
+                Voodoo_Shut_Down();
+                break;
+            default:
+                break;
+        }
+    }
+
+    void PCI_InitEnable(Bitu val) {
+        switch (emulation_type) {
+            case EmulationType::Software:
+            case EmulationType::OpenGL:
+                Voodoo_PCI_InitEnable(val);
+                break;
+            default:
+                break;
+        }
+    }
+
+    void PCI_Enable(bool enable) {
+        switch (emulation_type) {
+            case EmulationType::Software:
+            case EmulationType::OpenGL:
+                Voodoo_PCI_Enable(enable);
+                break;
+            default:
+                break;
+        }
+    }
+
+    PageHandler* GetPageHandler() {
+        switch (emulation_type) {
+            case EmulationType::Software:
+            case EmulationType::OpenGL:
+                return Voodoo_GetPageHandler();
+            default:
+                break;
+        }
+        return NULL;
+    }
+};
 
 void VOODOO_PCI_InitEnable(Bitu val) {
-	if (voodoo_dev!=NULL) {
-		voodoo_dev->PCI_InitEnable(val);
-	}
+    if (voodoo_dev != nullptr) {
+        voodoo_dev->PCI_InitEnable(val);
+    }
 }
 
 void VOODOO_PCI_Enable(bool enable) {
-	if (voodoo_dev!=NULL) {
-		voodoo_dev->PCI_Enable(enable);
-	}
+    if (voodoo_dev != nullptr) {
+        voodoo_dev->PCI_Enable(enable);
+    }
 }
 
-
 void VOODOO_PCI_SetLFB(uint32_t lfbaddr) {
-	voodoo_current_lfb=(lfbaddr&0xffff0000);
+    voodoo_current_lfb = (lfbaddr & 0xffff0000);
 }
 
 bool VOODOO_PCI_CheckLFBPage(Bitu page) {
-	if ((page>=(voodoo_current_lfb>>12)) &&
-		(page<(voodoo_current_lfb>>12)+VOODOO_PAGES))
-		return true;
-	return false;
+    if ((page >= (voodoo_current_lfb >> 12)) &&
+        (page < ((voodoo_current_lfb >> 12) + VOODOO_PAGES)))
+        return true;
+    return false;
 }
 
 PageHandler* VOODOO_GetPageHandler() {
-	if (voodoo_dev!=NULL) {
-		return voodoo_dev->GetPageHandler();
-	}
-	return NULL;
+    if (voodoo_dev != nullptr) {
+        return voodoo_dev->GetPageHandler();
+    }
+    return nullptr;
 }
 
-
-void VOODOO_Destroy(Section* /*sec*/) {
-	delete voodoo_dev;
-	voodoo_dev=NULL;
+void VOODOO_Destroy(Section* sec) {
+    voodoo_dev.reset();
 }
 
 void VOODOO_Init(Section* sec) {
-	voodoo_current_lfb=(VOODOO_INITIAL_LFB&0xffff0000);
-	voodoo_dev = new VOODOO(sec);
-	sec->AddDestroyFunction(&VOODOO_Destroy,true);
+    voodoo_current_lfb = (VOODOO_INITIAL_LFB & 0xffff0000);
+    voodoo_dev = std::make_unique<VOODOO>(sec);
+    sec->AddDestroyFunction(&VOODOO_Destroy, true);
 }
