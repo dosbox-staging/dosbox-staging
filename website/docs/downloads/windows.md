@@ -22,7 +22,7 @@ sha256: 3680cbdf7a91467877b51c95e468ef45<wbr>b186b42518c3163fab85c727923ee659
 [Download DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
 <br>
 <small>
-sha256: cd73b86699e9732bcee9fe33d4bc05e19262d0b1cc64478b18be9853fe28f083
+sha256: cd73b86699e9732bcee9fe33d4bc05e1<wbr>9262d0b1cc64478b18be9853fe28f083
 </small>
 
 Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
