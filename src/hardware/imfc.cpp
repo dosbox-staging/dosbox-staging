@@ -2892,7 +2892,7 @@ public:
 	void device_clock_changed();
 
 	// sound stream update overrides
-	void sound_stream_update(int samples);
+	void sound_stream_update(const uint16_t requested_frames);
 
 private:
 	enum { TIMER_IRQ_A_OFF, TIMER_IRQ_B_OFF, TIMER_A, TIMER_B };
@@ -4705,7 +4705,7 @@ void ym2151_device::device_reset()
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
-void ym2151_device::sound_stream_update(const int samples)
+void ym2151_device::sound_stream_update(const uint16_t requested_frames)
 {
 	/*
 	// clang-format off
@@ -4733,17 +4733,17 @@ void ym2151_device::sound_stream_update(const int samples)
 	if (m_reset_active) {
 		IMF_LOG("ym2151_device - sending silence", "");
 		audio_channel->AddSilence();
-		// std::fill(&outputs[0][0], &outputs[0][samples], 0);
-		// std::fill(&outputs[1][0], &outputs[1][samples], 0);
+		// std::fill(&outputs[0][0], &outputs[0][requested_frames], 0);
+		// std::fill(&outputs[1][0], &outputs[1][requested_frames], 0);
 		return;
 	}
 
-	// IMF_LOG("ym2151_device - sending samples");
-	// memset(&MixTemp, 0, samples * 8);
+	// IMF_LOG("ym2151_device - sending requested_frames");
+	// memset(&MixTemp, 0, requested_frames * 8);
 	// int16_t * buf16 = (int16_t *)MixTemp;
 	int16_t buf16[2];
 
-	for (int i = 0; i < samples; i++) {
+	for (int i = 0; i < requested_frames; i++) {
 		advance_eg();
 
 		for (int& ch : chanout) {
@@ -12861,10 +12861,10 @@ public:
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
 
-	void mixerCallback(Bitu len)
+	void mixerCallback(const uint16_t requested_frames)
 	{
 		SDL_LockMutex(m_hardwareMutex);
-		m_ya2151.sound_stream_update(len);
+		m_ya2151.sound_stream_update(requested_frames);
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
 
