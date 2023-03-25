@@ -13058,7 +13058,7 @@ void IMFC_Init(Section* sec)
 	write_handlers.at(7).Install(PORT_TCWR, writePortTCWR, io_width_t::byte);
 
 	// ports [+C],[+D],[+E],[+F] all map to the TSR
-	for (unsigned int i = 0; i < 4; i++) {
+	for (io_port_t i = 0; i < 4; i++) {
 		read_handlers.at(8 + i).Install(PORT_TCR + i,
 		                                readPortTCR,
 		                                io_width_t::byte);
@@ -13068,7 +13068,7 @@ void IMFC_Init(Section* sec)
 	}
 
 	// ports [+8],[+9],[+A],[+B] all map to the TCR
-	for (unsigned int i = 0; i < 4; i++) {
+	for (io_port_t i = 0; i < 4; i++) {
 		read_handlers.at(12 + i).Install(PORT_TSR + i,
 		                                 readPortTSR,
 		                                 io_width_t::byte);
