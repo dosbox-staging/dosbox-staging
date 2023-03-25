@@ -2874,12 +2874,12 @@ public:
 	// auto port_write_handler() { return m_portwritehandler.bind(); }
 
 	// read/write
-	u8 read(offs_t offset) const;
-	void write(offs_t offset, u8 data);
+	uint8_t read(const offs_t offset) const;
+	void write(const offs_t offset, const uint8_t data);
 
-	u8 status_r();
-	void register_w(u8 data);
-	void data_w(u8 data);
+	uint8_t status_r() const;
+	void register_w(const uint8_t data);
+	void data_w(const uint8_t data);
 
 	// DECLARE_WRITE_LINE_MEMBER(reset_w);
 
@@ -3087,8 +3087,8 @@ private:
 	void set_connect(YM2151Operator* om1, int cha, int v);
 	void advance();
 	void advance_eg();
-	void write_reg(int r, int v);
-	void chan_calc(unsigned int chan);
+	void write_reg(const int reg, const int val);
+	void chan_calc(const uint8_t chan);
 	void chan7_calc();
 	int op_calc(YM2151Operator* OP, unsigned int env, signed int pm);
 	int op_calc1(YM2151Operator* OP, unsigned int env, signed int pm);
@@ -4174,7 +4174,7 @@ int ym2151_device::op_calc1(YM2151Operator* OP, unsigned int env, signed int pm)
 #define volume_calc(OP) \
 	((OP)->tl + ((uint32_t)(OP)->volume) + (AM & (OP)->AMmask))
 
-void ym2151_device::chan_calc(unsigned int chan)
+void ym2151_device::chan_calc(const uint8_t chan)
 {
 	YM2151Operator* op = nullptr;
 	unsigned int env   = 0;
@@ -4592,7 +4592,7 @@ ym2151_device::ym2151_device(mixer_channel_t&& channel)
 //  read - read from the device
 //-------------------------------------------------
 
-u8 ym2151_device::read(offs_t offset) const
+uint8_t ym2151_device::read(const offs_t offset) const
 {
 	if ((offset & 1) != 0) {
 		// m_stream->update();
@@ -4605,7 +4605,7 @@ u8 ym2151_device::read(offs_t offset) const
 //  write - write from the device
 //-------------------------------------------------
 
-void ym2151_device::write(offs_t offset, u8 data)
+void ym2151_device::write(const offs_t offset, const uint8_t data)
 {
 	audio_channel->WakeUp();
 	if ((offset & 1) != 0) {
@@ -4618,17 +4618,17 @@ void ym2151_device::write(offs_t offset, u8 data)
 	}
 }
 
-u8 ym2151_device::status_r()
+uint8_t ym2151_device::status_r() const
 {
 	return read(1);
 }
 
-void ym2151_device::register_w(u8 data)
+void ym2151_device::register_w(const uint8_t data)
 {
 	write(0, data);
 }
 
-void ym2151_device::data_w(u8 data)
+void ym2151_device::data_w(const uint8_t data)
 {
 	write(1, data);
 }
