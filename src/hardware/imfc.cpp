@@ -2948,7 +2948,7 @@ private:
 		int32_t       fb_out_curr = 0;            /* operator feedback value (used only by operators 0) */
 		int32_t       fb_out_prev = 0;            /* previous feedback value (used only by operators 0) */
 		uint32_t      kc = 0;                     /* channel KC (copied to all operators) */
-		uint32_t      kc_i = 0;                   /* just for speedup */
+		uint32_t      kc_i = 768;                 /* just for speedup */
 		uint32_t      pms = 0;                    /* channel PMS */
 		uint32_t      ams = 0;                    /* channel AMS */
 		/* end of channel specific data */
@@ -2958,7 +2958,7 @@ private:
 		uint8_t       eg_sh_ar = 0;               /*  (attack state) */
 		uint8_t       eg_sel_ar = 0;              /*  (attack state) */
 		uint32_t      tl = 0;                     /* Total attenuation Level */
-		int32_t       volume = 0;                 /* current envelope attenuation level */
+		int32_t       volume = MAX_ATT_INDEX;     /* current envelope attenuation level */
 		uint8_t       eg_sh_d1r = 0;              /*  (decay state) */
 		uint8_t       eg_sel_d1r = 0;             /*  (decay state) */
 		uint32_t      d1l = 0;                    /* envelope switches to sustain state after reaching this level */
@@ -2989,7 +2989,7 @@ private:
 	signed int c2         = 0; // Phase Modulation input for operators 2,3,4
 	signed int mem        = 0; // one sample delay memory
 
-	YM2151Operator oper[32] = {}; // the 32 operators
+	std::array<YM2151Operator, 32> oper = {}; // the 32 operators
 
 	uint32_t pan[16] = {}; // channels output masks (0xffffffff = enable)
 
@@ -4641,10 +4641,10 @@ void ym2151_device::device_reset()
 {
 	int i = 0;
 	/* initialize hardware registers */
-	for (i = 0; i < 32; i++) {
-		memset(&oper[i], '\0', sizeof(YM2151Operator));
-		oper[i].volume = MAX_ATT_INDEX;
-		oper[i].kc_i   = 768; /* min kc_i value */
+	for (auto& op : oper) {
+		op = {};
+		assert(op.volume == MAX_ATT_INDEX);
+		assert(op.kc_i == 768); // min kc_i value
 	}
 
 	eg_timer = 0;
