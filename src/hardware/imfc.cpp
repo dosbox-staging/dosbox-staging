@@ -1293,7 +1293,30 @@ public:
 			        &other->instrumentConfigurations[i]);
 		}
 	}
+
+	// Set just the configuration section without touching
+	// instrumentConfigurations.
+	void SetConfigurationFromStream(const uint8_t* data)
+	{
+		auto data_ptr      = data;
+		auto get_next_byte = [&data_ptr]() { return *data_ptr++; };
+
+		for (auto& c : name) {
+			c = get_next_byte();
+		}
+		combineMode              = get_next_byte();
+		lfoSpeed                 = get_next_byte();
+		amplitudeModulationDepth = get_next_byte();
+		pitchModulationDepth     = get_next_byte();
+		lfoWaveForm              = get_next_byte();
+		noteNumberReceptionMode  = get_next_byte();
+
+		for (auto& r : reserved) {
+			r = get_next_byte();
+		}
+	}
 };
+
 static_assert(sizeof(ConfigurationData) == 0xA0,
               "ConfigurationData needs to be 0xA0 in size!");
 
@@ -11106,16 +11129,9 @@ private:
 		        m_activeConfiguration.amplitudeModulationDepth;
 		const uint8_t pitchModulationDepth = m_activeConfiguration.pitchModulationDepth;
 		const uint8_t lfoWaveForm = m_activeConfiguration.lfoWaveForm;
-		memcpy(&m_activeConfiguration,
-		       &m_sp_MidiDataOfMidiCommandInProgress,
-		       sizeof(ConfigurationData) -
-		               8 * sizeof(InstrumentConfiguration)); // just copy
-		                                                     // the pure
-		                                                     // configuration
-		                                                     // data
-		                                                     // without
-		                                                     // the
-		                                                     // instrumentConfigurations
+
+		m_activeConfiguration.SetConfigurationFromStream(
+		        m_sp_MidiDataOfMidiCommandInProgress);
 		m_activeConfiguration.lfoWaveForm = lfoWaveForm;
 		m_activeConfiguration.pitchModulationDepth = pitchModulationDepth;
 		m_activeConfiguration.amplitudeModulationDepth = amplitudeModulationDepth;
