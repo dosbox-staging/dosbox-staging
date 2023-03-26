@@ -106,9 +106,6 @@ enum DataParty { DATAPARTY_SYSTEM, DATAPARTY_MIDI };
 
 static void Intel8253_TimerEvent(const uint32_t val);
 
-#pragma pack(push) /* push current alignment to stack */
-#pragma pack(1)    /* set alignment to 1 byte boundary */
-
 enum CARD_MODE : uint8_t { MUSIC_MODE = 0, THRU_MODE = 1 };
 enum CHAIN_MODE : uint8_t { CHAIN_MODE_DISABLED = 0, CHAIN_MODE_ENABLED = 1 };
 enum MEMORY_PROTECTION : uint8_t { MEMORY_WRITABLE = 0, MEMORY_READONLY = 1 };
@@ -467,17 +464,20 @@ struct SystemReadResult {
 	uint8_t data                  = 0;
 };
 
+#pragma pack(push, 1)
 struct MidiDataPacket {
 	uint8_t data[16]                      = {};
 	uint8_t /*MidiDataPacketState*/ state = 0;
 	uint8_t reserved[15]                  = {};
 };
+#pragma pack(pop)
 static_assert(sizeof(MidiDataPacket) == 0x20,
               "MidiDataPacket needs to be 0x20 in size!");
 
 static const std::string m_noteToString[12] =
         {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
 
+#pragma pack(push, 1)
 struct Note {
 	uint8_t value = 0;
 
@@ -489,6 +489,7 @@ struct Note {
 		return m_noteToString[value % 12] + "-" + std::to_string(value / 12);
 	}
 };
+#pragma pack(pop)
 static_assert(sizeof(Note) == 1, "Note needs to be 1 in size!");
 
 constexpr bool operator==(const Note& a, const Note& b)
@@ -496,20 +497,23 @@ constexpr bool operator==(const Note& a, const Note& b)
 	return a.value == b.value;
 }
 
+#pragma pack(push, 1)
 struct Fraction {
 	uint8_t value = 0;
 
 	constexpr Fraction() = default;
 	constexpr Fraction(const uint8_t v) : value(v) {}
 };
-
+#pragma pack(pop)
 static_assert(sizeof(Fraction) == 1, "Fraction needs to be 1 in size!");
+
 constexpr bool operator==(const Fraction& a, const Fraction& b)
 {
 	return a.value == b.value;
 }
 static Fraction ZERO_FRACTION(0);
 
+#pragma pack(push, 1)
 struct FractionalNote {
 	Fraction fraction = {};
 	Note note         = {};
@@ -524,6 +528,8 @@ struct FractionalNote {
 		return note.value << 8 | fraction.value;
 	}
 };
+#pragma pack(pop)
+static_assert(sizeof(FractionalNote) == 2, "FractionalNote needs to be  in size!");
 
 constexpr std::pair<uint8_t, uint8_t> split_uint16_t(const uint16_t value) noexcept
 {
@@ -538,7 +544,7 @@ static constexpr FractionalNote to_fractional_note(const uint16_t value) noexcep
 	return {Note(note), Fraction(fraction)};
 }
 
-static_assert(sizeof(FractionalNote) == 2, "FractionalNote needs to be 1 in size!");
+
 
 constexpr bool operator==(const FractionalNote& a, const FractionalNote& b) noexcept
 {
@@ -563,14 +569,17 @@ constexpr FractionalNote operator+(const FractionalNote& a,
 	return to_fractional_note(val);
 }
 
+#pragma pack(push, 1)
 struct KeyVelocity {
 	uint8_t value = 0;
 
 	KeyVelocity() : value(0) {}
 	explicit KeyVelocity(uint8_t v) : value(v) {}
 };
+#pragma pack(pop)
 static_assert(sizeof(KeyVelocity) == 1, "KeyVelocity needs to be 1 in size!");
 
+#pragma pack(push, 1)
 struct Duration {
 	uint16_t value = 0;
 
@@ -589,24 +598,30 @@ struct Duration {
 		value |= 0x8000;
 	}
 };
+#pragma pack(pop)
 static_assert(sizeof(Duration) == 2, "Duration2 needs to be 1 in size!");
+
 static Duration ZERO_DURATION(0);
 
+#pragma pack(push, 1)
 struct PitchbenderValueMSB {
 	uint8_t value = 0;
 
 	PitchbenderValueMSB() : value(0) {}
 	explicit PitchbenderValueMSB(uint8_t v) : value(v) {}
 };
+#pragma pack(pop)
 static_assert(sizeof(PitchbenderValueMSB) == 1,
               "PitchbenderValueMSB needs to be 1 in size!");
 
+#pragma pack(push, 1)
 struct PitchbenderValueLSB {
 	uint8_t value = 0;
 
 	PitchbenderValueLSB() : value(0) {}
 	explicit PitchbenderValueLSB(uint8_t v) : value(v) {}
 };
+#pragma pack(pop)
 static_assert(sizeof(PitchbenderValueLSB) == 1,
               "PitchbenderValueLSB needs to be 1 in size!");
 
@@ -629,27 +644,28 @@ static_assert(sizeof(PitchbenderValueLSB) == 1,
 */
 // clang-format on
 
+#pragma pack(push, 1)
 struct MidiFlowPath {
 	// This is the path from MIDI IN to the system. This path is enabled
 	// when the data received at MIDI IN is to be processed by the system.
-	uint8_t MidiIn_To_System;
+	uint8_t MidiIn_To_System = 0;
 	// This is the patch from the system to MIDI OUT. This path is used when
 	// sending a message from the system to an external MIDI device. If this
 	// path is enabled, it is automatically closed when CHAIN mode is set.
 	// When CHAIN mode is cancelled, the path returns to its previous state.
 	// Even if this path has been closed by entry into CHAIN mode, status
 	// reports from the music card will reflect its programmed state.
-	uint8_t System_To_MidiOut;
+	uint8_t System_To_MidiOut = 0;
 	// This is the path from MIDI IN to the sound processor. This path is set
 	// so that the music card can be controlled by an external MIDI devince.
-	uint8_t MidiIn_To_SP;
+	uint8_t MidiIn_To_SP = 0;
 	// This is the route from the system to the sound processor. This path
 	// is set so that the music card can be controlled by the processor. Note:
 	// If you try to set both the "MIDI IN -> Sound Processor" and "System
 	// -> Sound Processor" paths to pass system real-time messages,
 	//       only the "MIDI IN -> Sound Processor" path is set. The other
 	//       path is ignored with no error report message.
-	uint8_t System_To_SP;
+	uint8_t System_To_SP = 0;
 	// This is the path from MIDI IN to MIDI OUT. When this path is set, the
 	// MIDI OUT terminal functions in essentially the same manner as the MIDI
 	// THRU terminal. When the "System -> MIDI OUT" path is concurrently set,
@@ -660,10 +676,12 @@ struct MidiFlowPath {
 	// When CHAIN mode is cancelled, this path returns  to its previous state.
 	// Even if this path has been closed by entry into CHAIN mode, status
 	// reports from the music card reflect its programmed state.
-	uint8_t MidiIn_To_MidiOut;
+	uint8_t MidiIn_To_MidiOut = 0;
 };
+#pragma pack(pop)
 static_assert(sizeof(MidiFlowPath) == 5, "MidiFlowPath needs to be 1 in size!");
 
+#pragma pack(push, 1)
 struct OperatorDefinition {
 private:
 	uint8_t bytes[8] = {};
@@ -822,9 +840,11 @@ public:
 		return bytes[7];
 	}
 };
+#pragma pack(pop)
 static_assert(sizeof(OperatorDefinition) == 8,
               "OperatorDefinition needs to be 8 in size!");
 
+#pragma pack(push, 1)
 struct VoiceDefinition {
 private:
 	// clang-format off
@@ -1067,9 +1087,11 @@ public:
 		// clang-format on
 	}
 };
+#pragma pack(pop)
 static_assert(sizeof(VoiceDefinition) == 0x40,
               "VoiceDefinition needs to be 0x40 in size!");
 
+#pragma pack(push, 1)
 struct VoiceDefinitionBank {
 private:
 	VoiceDefinitionBank& operator=(const VoiceDefinitionBank& other) = delete;
@@ -1124,9 +1146,11 @@ public:
 		// clang-format on
 	}
 };
+#pragma pack(pop)
 static_assert(sizeof(VoiceDefinitionBank) == 0xC20,
               "VoiceDefinitionBank needs to be 0xC20 in size!");
 
+#pragma pack(push, 1)
 struct InstrumentConfiguration {
 	uint8_t numberOfNotes = 0;
 	// Number of notes                  / 0-8
@@ -1242,9 +1266,11 @@ public:
 		// voiceBankNumber, voiceNumber, outputLevel);
 	}
 };
+#pragma pack(pop)
 static_assert(sizeof(InstrumentConfiguration) == 0x10,
               "InstrumentConfiguration needs to be 0x10 in size!");
 
+#pragma pack(push, 1)
 struct ConfigurationData {
 private:
 	ConfigurationData& operator=(const ConfigurationData& other) = delete;
@@ -1324,7 +1350,7 @@ public:
 		}
 	}
 };
-
+#pragma pack(pop)
 static_assert(sizeof(ConfigurationData) == 0xA0,
               "ConfigurationData needs to be 0xA0 in size!");
 
@@ -1420,13 +1446,13 @@ public:
 	}
 };
 
+#pragma pack(push, 1)
 struct ChannelMaskInfo {
 	uint8_t mask         = 0;
 	uint8_t nrOfChannels = 0;
 };
+#pragma pack(pop)
 static_assert(sizeof(ChannelMaskInfo) == 2, "ChannelMaskInfo needs to be 2 in size!");
-
-#pragma pack(pop) /* restore original alignment from stack */
 
 // masks for bit-field members
 enum FieldMask : uint8_t {
