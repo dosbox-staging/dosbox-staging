@@ -304,8 +304,8 @@ private:
 	}
 
 public:
-	CyclicBufferState(std::string name, unsigned int bufferSize)
-	        : m_name(std::move(name)),
+	CyclicBufferState(const std::string& name, unsigned int bufferSize)
+	        : m_name(name),
 	          m_mutex(SDL_CreateMutex()),
 	          m_bufferSize(bufferSize)
 	{}
@@ -1500,12 +1500,12 @@ template <typename DataType>
 class DataContainer : public DataProvider<DataType> {
 private:
 	bool m_debug                  = false;
-	std::string m_name            = {};
+	const std::string m_name            = {};
 	std::atomic<DataType> m_value = {};
 
 public:
-	DataContainer(std::string name, DataType inititalValue)
-	        : m_name(std::move(name)),
+	DataContainer(const std::string& name, DataType inititalValue)
+	        : m_name(name),
 	          m_value(inititalValue)
 	{}
 	std::string getName()
@@ -1539,12 +1539,12 @@ public:
 template <typename DataType>
 class InputPin {
 private:
-	std::string m_name = {};
+	const std::string m_name = {};
 
 public:
 	virtual ~InputPin() = default;
 	InputPin() = default;
-	explicit InputPin(std::string name) : m_name(std::move(name)) {}
+	explicit InputPin(const std::string& name) : m_name(name) {}
 	std::string getName()
 	{
 		return m_name;
@@ -1561,7 +1561,7 @@ public:
 	DataDrivenInputPin<DataType>(const DataDrivenInputPin<DataType>&) = delete;
 	DataDrivenInputPin<DataType>& operator=(const DataDrivenInputPin<DataType>&) = delete;
 
-	explicit DataDrivenInputPin(std::string name)
+	explicit DataDrivenInputPin(const std::string& name)
 	        : InputPin<DataType>(name),
 	          m_dataProvider(nullptr)
 	{}
@@ -1586,7 +1586,7 @@ private:
 	DataContainer<DataType> m_dataContainer;
 
 public:
-	DataPin(std::string name, DataType initialValue)
+	DataPin(const std::string& name, DataType initialValue)
 	        : InputPin<DataType>(name),
 	          m_dataContainer(name, initialValue)
 	{}
@@ -1617,7 +1617,7 @@ public:
 	InputOutputPin<DataType>(const InputOutputPin<DataType>&) = delete;
 	InputOutputPin<DataType>& operator=(const InputOutputPin<DataType>&) = delete;
 
-	explicit InputOutputPin(std::string name)
+	explicit InputOutputPin(const std::string& name)
 	        : InputPin<DataType>(name),
 	          m_dataContainer(nullptr)
 	{}
@@ -1947,7 +1947,7 @@ enum CounterReadSource {
 enum CounterWriteTarget { COUNTERWRITETARGET_BYTE1, COUNTERWRITETARGET_BYTE2 };
 
 struct CounterData {
-	std::string m_name = {};
+	const std::string m_name = {};
 	CounterMode m_counterMode{COUNTERMODE_INVALID};
 	unsigned int m_counter               = 0;
 	unsigned int m_runningCounter        = 0;
@@ -1955,7 +1955,7 @@ struct CounterData {
 	uint8_t m_tmpWrite                   = 0;
 	CounterReadSource m_nextReadSource   = COUNTERREADSOURCE_LIVE_1;
 	CounterWriteTarget m_nextWriteTarget = COUNTERWRITETARGET_BYTE1;
-	explicit CounterData(std::string name) : m_name(std::move(name)) {}
+	explicit CounterData(const std::string& name) : m_name(name) {}
 	void writeCounterByte(uint8_t val)
 	{
 		switch (m_nextWriteTarget) {
@@ -1995,7 +1995,7 @@ struct CounterData {
 
 class Intel8253 {
 private:
-	std::string m_name = {};
+	const std::string m_name = {};
 
 	bool m_debug = false;
 
@@ -2014,7 +2014,7 @@ private:
 	}
 
 public:
-	explicit Intel8253(std::string name) : m_name(std::move(name))
+	explicit Intel8253(const std::string& name) : m_name(name)
 	{
 		Intel8253::registerNextEvent(); // FIXME
 	}
@@ -2220,7 +2220,7 @@ public:
 	enum GroupMode { MODE0, MODE1, MODE2 };
 
 private:
-	std::string m_name = {};
+	const std::string m_name = {};
 	// group 0 control
 	GroupMode m_group0_mode            = {};
 	PortInOut m_group0_port0InOut      = {};
@@ -2792,7 +2792,7 @@ public:
 
 class IrqController : public DataChangedConsumer<bool> {
 private:
-	std::string m_name = {};
+	const std::string m_name = {};
 	std::atomic<bool> m_enabled{false};
 	bool m_debug{false};
 	std::atomic<bool> m_interruptOutput{false};
@@ -2845,9 +2845,9 @@ private:
 	}
 
 public:
-	IrqController(std::string name, std::function<void(void)> callbackOnLowToHigh,
+	IrqController(const std::string& name, std::function<void(void)> callbackOnLowToHigh,
 	              std::function<void(void)> callbackOnToHighToLow)
-	        : m_name(std::move(name)),
+	        : m_name(name),
 	          m_callbackOnLowToHigh(std::move(callbackOnLowToHigh)),
 	          m_callbackOnHighToLow(std::move(callbackOnToHighToLow))
 	{}
@@ -5166,7 +5166,7 @@ private:
 		return SDL_ThreadID() == SDL_GetThreadID(m_interruptThread);
 	}
 
-	std::string getCurrentThreadName()
+	const char* getCurrentThreadName()
 	{
 		if (currentThreadIsMainThread()) {
 			return "MAIN";
