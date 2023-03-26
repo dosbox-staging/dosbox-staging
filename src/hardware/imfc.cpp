@@ -11235,7 +11235,7 @@ private:
 		if (receiveDataPacketTypeB(readResult.data,
 		                           (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress,
 		                           sizeof(InstrumentConfiguration)) !=
-		    static_cast<ReadStatus>(WriteStatus::Success)) {
+		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1() - copy start");
@@ -11270,8 +11270,7 @@ private:
 		}
 		if (receiveDataPacketTypeB(readResult.data,
 		                           (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress,
-		                           0x0B) !=
-		    static_cast<ReadStatus>(WriteStatus::Success)) {
+		                           0x0B) != ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		// this copy is kind of strange. It's not copying all the bytes.
