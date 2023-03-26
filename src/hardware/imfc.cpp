@@ -9472,7 +9472,8 @@ private:
 		// (instr->instrumentConfiguration.getOutputLevel() ^ 0xFF) &
 		// 0x7F, instr->volume, m_masterOutputLevel);
 
-		return outputLevel >= 0x80 ? 0x7F : outputLevel;
+		constexpr uint16_t max_level = 0x7F;
+		return check_cast<uint8_t>(std::min(max_level, outputLevel));
 
 		// clang-format off
 		// FIXME: Not sure about the signing!! Might be wrong!
@@ -9786,23 +9787,27 @@ private:
 	void ym_singleOperator_sendKeyScaleAndAttackRate(OperatorDefinition* operatorDefinition,
 	                                                 uint8_t ymRegister)
 	{
+		// clang-format off
 		static constexpr int8_t byte_2194[4][16] = {
-		        // clang-format off
 			{ 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0  },
 			{-4,  -3,  -3,  -2,  -2,  -1,  -1,   0,   0,   1,   1,   2,   2,   3,   3,   4  },
 			{-8,  -6,  -5,  -4,  -3,  -2,  -1,   0,   0,   1,   2,   3,   4,   5,   6,   8  },
 			{-12, -10, -8,  -6,  -4,  -2,  -1,   0,   0,   1,   2,   4,   6,   8,   10,  12 }
-		        // clang-format on
 		};
+		// clang-format on
+
 		if (operatorDefinition->getVelocitySensitivityToAttackRate() != 0U) {
-			int8_t a = operatorDefinition->getAttackRate() +
-			           byte_2194[operatorDefinition->getVelocitySensitivityToAttackRate()]
-			                    [(m_lastMidiOnOff_KeyVelocity.value >> 3) & 0x0F];
-			if (a < 0 || a < 2) {
-				a = 2;
-			} else if (a >= 0x20) {
-				a = 0x1F;
-			}
+			auto a_sum =
+			        operatorDefinition->getAttackRate() +
+			        byte_2194[operatorDefinition->getVelocitySensitivityToAttackRate()]
+			                 [(m_lastMidiOnOff_KeyVelocity.value >> 3) & 0x0F];
+
+			constexpr auto a_lower = 2;
+			constexpr auto a_upper = 0x1F;
+
+			const auto a = check_cast<uint8_t>(
+			        std::clamp(a_sum, a_lower, a_upper));
+
 			sendToYM2151_no_interrupts_allowed(
 			        ymRegister,
 			        (operatorDefinition->getKeyboardRateScalingDepth()
