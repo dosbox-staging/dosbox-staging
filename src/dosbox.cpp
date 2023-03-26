@@ -846,6 +846,9 @@ void DOSBOX_Init()
 	// Configure Gravis UltraSound emulation
 	GUS_AddConfigSection(control);
 
+	// Configure the IBM Music Feature emulation
+	(void)control->AddSection_prop("imfc", &IMFC_Init, changeable_at_runtime);
+
 	// Configure Innovation SSI-2001 emulation
 	INNOVATION_AddConfigSection(control);
 
@@ -1202,8 +1205,6 @@ void DOSBOX_Init()
 	Pstring->Set_help("Forward one or more UDP ports from the host into the DOS guest\n"
 	                  "(unset by default). The format is the same as for TCP port forwards.");
 #endif
-
-	secprop = control->AddSection_prop("imfc", &IMFC_Init, changeable_at_runtime);
 
 	//	secprop->AddInitFunction(&CREDITS_Init);
 
