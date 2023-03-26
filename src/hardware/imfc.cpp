@@ -58,11 +58,11 @@
 #include <chrono>
 #include <cmath>
 #include <cstring>
+#include <deque>
 #include <functional>
 #include <string>
 #include <thread>
 #include <utility>
-#include <vector>
 
 #include "dma.h"
 #include "inout.h"
@@ -1475,13 +1475,13 @@ public:
 template <typename DataType>
 class DataProvider {
 private:
-	std::vector<DataChangedConsumer<DataType>*> m_consumers = {};
+	std::deque<DataChangedConsumer<DataType>*> m_consumers = {};
 
 protected:
 	void notifyConsumers(DataType oldValue, DataType newValue)
 	{
-		for (unsigned int i = 0; i < m_consumers.size(); i++) {
-			m_consumers[i]->valueChanged(oldValue, newValue);
+		for (auto& consumer : m_consumers) {
+			consumer->valueChanged(oldValue, newValue);
 		}
 	}
 
@@ -1500,7 +1500,7 @@ template <typename DataType>
 class DataContainer : public DataProvider<DataType> {
 private:
 	bool m_debug                  = false;
-	const std::string m_name            = {};
+	const std::string m_name      = {};
 	std::atomic<DataType> m_value = {};
 
 public:
@@ -1611,13 +1611,13 @@ public:
 template <typename DataType>
 class InputOutputPin : public InputPin<DataType> {
 private:
-	DataContainer<DataType>* m_dataContainer;
+	DataContainer<DataType>* m_dataContainer = nullptr;
 
 public:
 	InputOutputPin<DataType>(const InputOutputPin<DataType>&) = delete;
 	InputOutputPin<DataType>& operator=(const InputOutputPin<DataType>&) = delete;
 
-	explicit InputOutputPin(const std::string& name)
+	explicit InputOutputPin<DataType>(const std::string& name)
 	        : InputPin<DataType>(name),
 	          m_dataContainer(nullptr)
 	{}
@@ -2232,7 +2232,7 @@ private:
 	// data ports
 	InputOutputPin<uint8_t> m_port0;
 	InputOutputPin<uint8_t> m_port1;
-	InputOutputPin<bool> m_port2[8];
+	std::deque<InputOutputPin<bool>> m_port2 = {};
 	// internal signals
 	bool m_group0_readInterruptEnable{false};
 	// This signal is internal to the PD71055. They are not output to port 2
@@ -2416,16 +2416,18 @@ public:
 	explicit PD71055(const std::string& name)
 	        : m_name(name),
 	          m_port0(name + ".p0"),
-	          m_port1(name + ".p1"),
-	          m_port2{InputOutputPin<bool>(name + ".P2-0"),
-	                  InputOutputPin<bool>(name + ".P2-1"),
-	                  InputOutputPin<bool>(name + ".P2-2"),
-	                  InputOutputPin<bool>(name + ".P2-3"),
-	                  InputOutputPin<bool>(name + ".P2-4"),
-	                  InputOutputPin<bool>(name + ".P2-5"),
-	                  InputOutputPin<bool>(name + ".P2-6"),
-	                  InputOutputPin<bool>(name + ".P2-7")}
-	{}
+	          m_port1(name + ".p1")
+	{
+		assert(m_port2.empty());
+		m_port2.emplace_back(name + ".P2-0");
+		m_port2.emplace_back(name + ".P2-1");
+		m_port2.emplace_back(name + ".P2-2");
+		m_port2.emplace_back(name + ".P2-3");
+		m_port2.emplace_back(name + ".P2-4");
+		m_port2.emplace_back(name + ".P2-5");
+		m_port2.emplace_back(name + ".P2-6");
+		m_port2.emplace_back(name + ".P2-7");
+	}
 	void connectPort0(DataContainer<uint8_t>* dataContainer)
 	{
 		m_port0.connect(dataContainer);
@@ -2796,7 +2798,7 @@ private:
 	std::atomic<bool> m_enabled{false};
 	bool m_debug{false};
 	std::atomic<bool> m_interruptOutput{false};
-	std::vector<DataProvider<bool>*> m_interruptLines = {};
+	std::deque<DataProvider<bool>*> m_interruptLines  = {};
 	std::function<void(void)> m_callbackOnLowToHigh   = {};
 	std::function<void(void)> m_callbackOnHighToLow   = {};
 
@@ -2845,7 +2847,8 @@ private:
 	}
 
 public:
-	IrqController(const std::string& name, std::function<void(void)> callbackOnLowToHigh,
+	IrqController(const std::string& name,
+	              std::function<void(void)> callbackOnLowToHigh,
 	              std::function<void(void)> callbackOnToHighToLow)
 	        : m_name(name),
 	          m_callbackOnLowToHigh(std::move(callbackOnLowToHigh)),
