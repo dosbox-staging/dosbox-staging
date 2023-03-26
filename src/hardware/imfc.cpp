@@ -1414,6 +1414,13 @@ static_assert(sizeof(ChannelMaskInfo) == 2, "ChannelMaskInfo needs to be 2 in si
 
 #pragma pack(pop) /* restore original alignment from stack */
 
+// masks for bit-field members
+enum FieldMask : uint8_t {
+	LfoSyncMode      = 0b1,
+	ChannelNumber    = 0b111,
+	OperatorsEnabled = 0b1111,
+};
+
 ////////////////////////////////////////////////////////
 /// Classes
 ////////////////////////////////////////////////////////
@@ -5548,7 +5555,7 @@ private:
 			getActiveInstrumentParameters(i)->voiceDefinition.veryShallowClear();
 		}
 		for (uint8_t i = 0; i < 8; i++) {
-			getYmChannelData(i)->channelNumber    = i;
+			getYmChannelData(i)->channelNumber = i & FieldMask::ChannelNumber;
 			getYmChannelData(i)->operatorsEnabled = 0;
 			getYmChannelData(i)->unused2          = 0;
 		}
@@ -8682,7 +8689,7 @@ private:
 			return;
 		}
 		instr->voiceDefinition.setLfoSyncMode(val);
-		instr->_lfoSyncMode = val;
+		instr->_lfoSyncMode = val & FieldMask::LfoSyncMode;
 	}
 
 	// ROM Address: 0x171E
@@ -8860,14 +8867,16 @@ private:
 	static inline uint8_t addWithUpperBoundary(uint8_t a, uint8_t b,
 	                                           uint8_t upperBoundary)
 	{
-		const uint16_t s = a + b;
-		return s > upperBoundary ? upperBoundary : s;
+		const auto bounded_sum = std::min(a + b,
+		                                  static_cast<int>(upperBoundary));
+		return check_cast<uint8_t>(bounded_sum);
 	}
 
 	// ROM Address: 0x17E2
 	void applyVoiceDefinition(InstrumentParameters* instr)
 	{
-		instr->_lfoSyncMode = instr->voiceDefinition.getLfoSyncMode();
+		instr->_lfoSyncMode = instr->voiceDefinition.getLfoSyncMode() &
+		                      FieldMask::LfoSyncMode;
 		setInstrumentParameter_LFOLoadEnable(
 		        instr, instr->voiceDefinition.getLfoLoadMode());
 		// loop unrolling here. Original was a loop
@@ -8914,8 +8923,9 @@ private:
 		const uint8_t mask = instr->channelMask;
 		for (uint8_t i = 0; i < 8; i++) {
 			if ((mask & (1 << i)) != 0) {
-				m_ymChannelData[i].channelNumber = i;
-				m_ymChannelData[i].operatorsEnabled = operatorsEnabled;
+				m_ymChannelData[i].channelNumber = i & FieldMask::ChannelNumber;
+				m_ymChannelData[i].operatorsEnabled =
+				        operatorsEnabled & FieldMask::OperatorsEnabled;
 			}
 		}
 		// send DT1 (Detune1) & MUL (Phase Multiply)
