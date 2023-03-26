@@ -788,7 +788,7 @@ public:
 		bytes[0] = bytes[1] = bytes[2] = bytes[3] = bytes[4] =
 		        bytes[5] = bytes[6] = bytes[7] = 0;
 	}
-	void copyFrom(OperatorDefinition* other)
+	void copyFrom(const OperatorDefinition* other)
 	{
 		bytes[0] = other->bytes[0];
 		bytes[1] = other->bytes[1];
@@ -1009,7 +1009,7 @@ public:
 		operators[2].clear();
 		operators[3].clear();
 	}
-	void shallowCopyFrom(VoiceDefinition* other)
+	void shallowCopyFrom(const VoiceDefinition* other)
 	{
 		name[0]      = other->name[0];
 		name[1]      = other->name[1];
@@ -1044,7 +1044,7 @@ public:
 		reserved3[2] = other->reserved3[2];
 		reserved3[3] = other->reserved3[3];
 	}
-	void deepCopyFrom(VoiceDefinition* other)
+	void deepCopyFrom(const VoiceDefinition* other)
 	{
 		shallowCopyFrom(other);
 		operators[0].copyFrom(&other->operators[0]);
@@ -1093,7 +1093,7 @@ public:
 			instrumentDefinition.deepClear();
 		}
 	}
-	void shallowCopyFrom(VoiceDefinitionBank* other)
+	void shallowCopyFrom(const VoiceDefinitionBank* other)
 	{
 		for (uint8_t i = 0; i < 8; i++) {
 			name[i] = other->name[i];
@@ -1102,7 +1102,7 @@ public:
 			reserved[i] = other->reserved[i];
 		}
 	}
-	void deepCopyFrom(VoiceDefinitionBank* other)
+	void deepCopyFrom(const VoiceDefinitionBank* other)
 	{
 		shallowCopyFrom(other);
 		for (uint8_t i = 0; i < 48; i++) {
@@ -1188,7 +1188,7 @@ public:
 		        pan = lfoEnable = portamentoTime = pitchbenderRange =
 		                polyMonoMode = pmdController = reserved1 = 0;
 	}
-	void copyFrom(InstrumentConfiguration* other)
+	void copyFrom(const InstrumentConfiguration* other)
 	{
 		numberOfNotes       = other->numberOfNotes;
 		midiChannel         = other->midiChannel;
@@ -1210,7 +1210,7 @@ public:
 		// voiceBankNumber=%i, voiceNumber=%i, outputLevel=0x%02X",
 		// voiceBankNumber, voiceNumber, outputLevel);
 	}
-	void copySpecialFrom(InstrumentConfiguration* other)
+	void copySpecialFrom(const InstrumentConfiguration* other)
 	{
 		numberOfNotes       = other->numberOfNotes;
 		midiChannel         = other->midiChannel;
@@ -1276,7 +1276,7 @@ public:
 			instrumentConfiguration.clear();
 		}
 	}
-	void shallowCopyFrom(ConfigurationData* other)
+	void shallowCopyFrom(const ConfigurationData* other)
 	{
 		for (uint8_t i = 0; i < 8; i++) {
 			name[i] = other->name[i];
@@ -1291,7 +1291,7 @@ public:
 			reserved[i] = other->reserved[i];
 		}
 	}
-	void deepCopyFrom(ConfigurationData* other)
+	void deepCopyFrom(const ConfigurationData* other)
 	{
 		shallowCopyFrom(other);
 		for (uint8_t i = 0; i < 8; i++) {
@@ -5292,7 +5292,7 @@ private:
 	}
 
 	// ROM Address: 0x0101
-	ConfigurationData* getConfigurationData(uint8_t configNr)
+	const ConfigurationData* getReadOnlyConfigurationData(uint8_t configNr)
 	{
 		// WARNING: the original code has a buffer overflow here. If the
 		// configNr>20 then random memory will be read!
@@ -5300,16 +5300,33 @@ private:
 			return &m_configurationRAM[configNr];
 		}
 		if (configNr == 16) {
-			return (ConfigurationData*)&m_romPresetConfiguration16Binary;
+			return reinterpret_cast<const ConfigurationData*>(
+			        &m_romPresetConfiguration16Binary);
 		}
 		if (configNr == 17) {
-			return (ConfigurationData*)&m_romPresetConfiguration17Binary;
+			return reinterpret_cast<const ConfigurationData*>(
+			        &m_romPresetConfiguration17Binary);
 		}
 		if (configNr == 18) {
-			return (ConfigurationData*)&m_romPresetConfiguration18Binary;
+			return reinterpret_cast<const ConfigurationData*>(
+			        &m_romPresetConfiguration18Binary);
 		}
 		if (configNr == 19) {
-			return (ConfigurationData*)&m_romPresetConfiguration19Binary;
+			return reinterpret_cast<const ConfigurationData*>(
+			        &m_romPresetConfiguration19Binary);
+		}
+		// This is not in the original
+		return &m_configurationRAM[0];
+	}
+	// This provides a writable block of config data
+	ConfigurationData* getWritableConfigurationData(const uint8_t configNr)
+	{
+		// Writable config RAM only available in config records 15 and
+		// under
+		assert(configNr <= 15);
+
+		if (configNr <= 15) {
+			return &m_configurationRAM[configNr];
 		}
 		// This is not in the original
 		return &m_configurationRAM[0];
@@ -5630,12 +5647,14 @@ private:
 		initCustomInstrumentData(&m_voiceDefinitionBankCustom[1], "user 2  ");
 		memcpy(&m_copyOfCardName, &m_cardName, sizeof(m_copyOfCardName));
 		m_activeConfiguration.shallowCopyFrom(
-		        (ConfigurationData*)&m_romPresetConfiguration16Binary); // ROMPresetConfiguration16
+		        reinterpret_cast<const ConfigurationData*>(
+		                &m_romPresetConfiguration16Binary)); // ROMPresetConfiguration16
 		log_debug("initConfigurationMemory - copy start");
 		for (uint8_t i = 0; i < 8; i++) {
 			getActiveInstrumentParameters(i)
 			        ->instrumentConfiguration.copyFrom(
-			                &((ConfigurationData*)&m_romPresetConfiguration16Binary)
+			                &(reinterpret_cast<const ConfigurationData*>(
+			                          &m_romPresetConfiguration16Binary))
 			                         ->instrumentConfigurations[i]);
 		}
 		log_debug("initConfigurationMemory - copy end");
@@ -5647,8 +5666,9 @@ private:
 	// ROM Address: 0x03AD
 	static void initConfigurationRAMSlot(ConfigurationData* config, const char* c)
 	{
-		config->deepCopyFrom(
-		        (ConfigurationData*)&m_romPresetConfiguration16Binary); // this would be after the name copy in the original code
+		// this would be after the name copy in the original code
+		config->deepCopyFrom(reinterpret_cast<const ConfigurationData*>(
+		        &m_romPresetConfiguration16Binary));
 		memcpy(&config->name, " user ", 6);
 		config->name[6] = c[0];
 		config->name[7] = c[1];
@@ -8007,7 +8027,7 @@ private:
 			        &(m_activeInstrumentParameters[i].instrumentConfiguration));
 		}
 		log_debug("storeActiveConfigurationToCustomConfiguration - copy end");
-		getConfigurationData(targetConfigNr)->deepCopyFrom(&m_activeConfiguration);
+		getWritableConfigurationData(targetConfigNr)->deepCopyFrom(&m_activeConfiguration);
 	}
 
 	// ROM Address: 0x127C
@@ -8154,7 +8174,7 @@ private:
 			return;
 		}
 		m_activeConfigurationNr = val;
-		m_activeConfiguration.deepCopyFrom(getConfigurationData(val));
+		m_activeConfiguration.deepCopyFrom(getReadOnlyConfigurationData(val));
 		proc_1393_called_for_Reboot();
 	}
 
@@ -11082,7 +11102,8 @@ private:
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		m_activeConfiguration.deepCopyFrom(
-		        (ConfigurationData*)&m_sp_MidiDataOfMidiCommandInProgress);
+		        reinterpret_cast<ConfigurationData*>(
+		                &m_sp_MidiDataOfMidiCommandInProgress));
 		proc_1393_called_for_Reboot();
 		initMidiChannelToAssignedInstruments();
 		logSuccess();
@@ -11101,7 +11122,7 @@ private:
 		if (midiData >= 0x10) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
-		ConfigurationData* config = getConfigurationData(midiData);
+		auto config = getWritableConfigurationData(midiData);
 		do {
 			readResult = readMidiData();
 			if (readResult.status == ReadStatus::Error) {
@@ -11118,8 +11139,8 @@ private:
 		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
-		config->deepCopyFrom(
-		        (ConfigurationData*)&m_sp_MidiDataOfMidiCommandInProgress);
+		config->deepCopyFrom(reinterpret_cast<const ConfigurationData*>(
+		        &m_sp_MidiDataOfMidiCommandInProgress));
 		sendResponse(0x00, ACK_MESSAGE);
 	}
 
@@ -11469,7 +11490,7 @@ private:
 		    send_midi_byte(m_sp_MidiDataOfMidiCommandInProgress[0]) ==
 		            WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks(
-			        (uint8_t*)getConfigurationData(
+			        (uint8_t*)getReadOnlyConfigurationData(
 			                m_sp_MidiDataOfMidiCommandInProgress[0]),
 			        0xA0);
 		}
