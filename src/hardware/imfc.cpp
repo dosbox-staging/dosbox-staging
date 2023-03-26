@@ -6046,32 +6046,40 @@ private:
 			case 0x03:
 				state = processMidiState_03(packet, midiData);
 				break;
+
 			case 0x02: // dupelicate action as 0x04
 			case 0x04:
 				state = processMidiState_02_04(packet, midiData);
 				break;
+
 			case 0x06:
 				state = processMidiState_06(packet, midiData);
 				break;
+
 			case 0x05: // dupelicate action as 0x07
 			case 0x07:
 				state = processMidiState_05_07(packet, midiData);
 				break;
+
 			case 0x08: // dupelicate action as 0x09
 			case 0x09:
 				state = processMidiState_08_09(packet, midiData);
 				break;
+
 			case 0x0B:
 				state = processMidiState_0B(packet, midiData);
 				break;
+
 			case 0x0A: // dupelicate action as 0x0C
 			case 0x0C:
 				state = processMidiState_0A_0C(packet, midiData);
 				break;
+
 			case 0x0D: // dupelicate action as 0x0E
 			case 0x0E:
 				state = processMidiState_0D_0E(packet, midiData);
 				break;
+
 			case 0x0F:
 				state = processMidiState_0F(packet, midiData);
 				break;
@@ -6201,6 +6209,7 @@ private:
 			case 0x3F:
 				state = processMidiState_39_3C_3F(packet, midiData);
 				break;
+
 			case 0x40:
 				state = processMidiState_40(packet, midiData);
 				break;
@@ -6974,8 +6983,10 @@ private:
 		           ((midiStatus & 1) == 0)) {
 			writeMidiOutPortDuringInterruptHandler();
 		} else {
-			SDL_LockMutex(m_hardwareMutex);
-			// FIXME
+			// clang-format off
+
+			/* FIXME -- YM-2151 interrupt handling currently missing
+ 			SDL_LockMutex(m_hardwareMutex);
 			// m_ya2151.register_w(0x14); // select clock
 			// manipulation/status register uint8_t yaStatus =
 			// m_ya2151.status_r();
@@ -6985,9 +6996,10 @@ private:
 			if ((yaStatus & 3) != 0) {
 				process_ya2151_interrupts_callInInterruptHandler(
 				        yaStatus & 3);
-			} else {
+			} else { */
 				sendOrReceiveNextValueToFromSystemDuringInterruptHandler();
-			}
+			// }
+			// clang-format on
 		}
 		enableInterrupts();
 		// log("IMF - interruptHandler() - end");
@@ -7034,7 +7046,7 @@ private:
 	}
 
 	// ROM Address: 0x0C89
-	void process_ya2151_interrupts_callInInterruptHandler(uint8_t irqMask)
+	[[maybe_unused]] void process_ya2151_interrupts_callInInterruptHandler(uint8_t irqMask)
 	{
 		if ((irqMask & 1) != 0) {
 			// TimerA triggered an IRQ
