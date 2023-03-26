@@ -1329,6 +1329,12 @@ static_assert(sizeof(ConfigurationData) == 0xA0,
 struct YmChannelData; // forward declaration
 
 struct InstrumentParameters {
+	InstrumentParameters()
+	        : _sustain(0),
+	          _portamento(0),
+	          _unused0(0),
+	          _lfoSyncMode(0)
+	{}
 	InstrumentConfiguration instrumentConfiguration = {};
 	VoiceDefinition voiceDefinition                 = {};
 	PitchbenderValueMSB pitchbenderValueMSB         = {};
