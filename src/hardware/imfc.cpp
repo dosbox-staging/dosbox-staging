@@ -6043,45 +6043,32 @@ private:
 			case 0x00:
 				state = processMidiState_00(packet, midiData);
 				break;
-			case 0x01:
-				state = processMidiState_01_36_37_38(packet, midiData);
-				break;
-			case 0x02:
-				state = processMidiState_02_04(packet, midiData);
-				break;
 			case 0x03:
 				state = processMidiState_03(packet, midiData);
 				break;
+			case 0x02: // dupelicate action as 0x04
 			case 0x04:
 				state = processMidiState_02_04(packet, midiData);
-				break;
-			case 0x05:
-				state = processMidiState_05_07(packet, midiData);
 				break;
 			case 0x06:
 				state = processMidiState_06(packet, midiData);
 				break;
+			case 0x05: // dupelicate action as 0x07
 			case 0x07:
 				state = processMidiState_05_07(packet, midiData);
 				break;
-			case 0x08:
-				state = processMidiState_08_09(packet, midiData);
-				break;
+			case 0x08: // dupelicate action as 0x09
 			case 0x09:
 				state = processMidiState_08_09(packet, midiData);
-				break;
-			case 0x0A:
-				state = processMidiState_0A_0C(packet, midiData);
 				break;
 			case 0x0B:
 				state = processMidiState_0B(packet, midiData);
 				break;
+			case 0x0A: // dupelicate action as 0x0C
 			case 0x0C:
 				state = processMidiState_0A_0C(packet, midiData);
 				break;
-			case 0x0D:
-				state = processMidiState_0D_0E(packet, midiData);
-				break;
+			case 0x0D: // dupelicate action as 0x0E
 			case 0x0E:
 				state = processMidiState_0D_0E(packet, midiData);
 				break;
@@ -6112,19 +6099,11 @@ private:
 			case 0x17:
 				state = processMidiState_17(packet, midiData);
 				break;
-			case 0x18:
-				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
-				        packet, midiData);
-				break;
 			case 0x19:
 				state = processMidiState_19(packet, midiData);
 				break;
 			case 0x1A:
 				state = processMidiState_1A(packet, midiData);
-				break;
-			case 0x1B:
-				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
-				        packet, midiData);
 				break;
 			case 0x1C:
 				state = processMidiState_1C(packet, midiData);
@@ -6134,10 +6113,6 @@ private:
 				break;
 			case 0x1E:
 				state = processMidiState_1E(packet, midiData);
-				break;
-			case 0x1F:
-				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
-				        packet, midiData);
 				break;
 			case 0x20:
 				state = processMidiState_20(packet, midiData);
@@ -6154,33 +6129,17 @@ private:
 			case 0x24:
 				state = processMidiState_24(packet, midiData);
 				break;
-			case 0x25:
-				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
-				        packet, midiData);
-				break;
 			case 0x26:
 				state = processMidiState_26(packet, midiData);
 				break;
 			case 0x27:
 				state = processMidiState_27(packet, midiData);
 				break;
-			case 0x28:
-				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
-				        packet, midiData);
-				break;
 			case 0x29:
 				state = processMidiState_29(packet, midiData);
 				break;
-			case 0x2A:
-				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
-				        packet, midiData);
-				break;
 			case 0x2B:
 				state = processMidiState_2B(packet, midiData);
-				break;
-			case 0x2C:
-				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
-				        packet, midiData);
 				break;
 			case 0x2D:
 				state = processMidiState_2D(packet, midiData);
@@ -6188,19 +6147,11 @@ private:
 			case 0x2E:
 				state = processMidiState_2E(packet, midiData);
 				break;
-			case 0x2F:
-				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
-				        packet, midiData);
-				break;
 			case 0x30:
 				state = processMidiState_30(packet, midiData);
 				break;
 			case 0x31:
 				state = processMidiState_31(packet, midiData);
-				break;
-			case 0x32:
-				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
-				        packet, midiData);
 				break;
 			case 0x33:
 				state = processMidiState_33(packet, midiData);
@@ -6208,21 +6159,28 @@ private:
 			case 0x34:
 				state = processMidiState_34(packet, midiData);
 				break;
+
+			// duplicate actions
+			case 0x18:
+			case 0x1B:
+			case 0x1F:
+			case 0x25:
+			case 0x28:
+			case 0x2A:
+			case 0x2C:
+			case 0x2F:
+			case 0x32:
 			case 0x35:
 				state = processMidiState_18_1B_1F_25_28_2A_2C_2F_32_35(
 				        packet, midiData);
 				break;
+
+			// duplicate actions
+			case 0x01:
 			case 0x36:
-				state = processMidiState_01_36_37_38(packet, midiData);
-				break;
 			case 0x37:
-				state = processMidiState_01_36_37_38(packet, midiData);
-				break;
 			case 0x38:
 				state = processMidiState_01_36_37_38(packet, midiData);
-				break;
-			case 0x39:
-				state = processMidiState_39_3C_3F(packet, midiData);
 				break;
 			case 0x3A:
 				state = processMidiState_3A(packet, midiData);
@@ -6230,15 +6188,16 @@ private:
 			case 0x3B:
 				state = processMidiState_3B(packet, midiData);
 				break;
-			case 0x3C:
-				state = processMidiState_39_3C_3F(packet, midiData);
-				break;
 			case 0x3D:
 				state = processMidiState_3D(packet, midiData);
 				break;
 			case 0x3E:
 				state = processMidiState_3E(packet, midiData);
 				break;
+
+			// duplicate actions
+			case 0x39:
+			case 0x3C:
 			case 0x3F:
 				state = processMidiState_39_3C_3F(packet, midiData);
 				break;
