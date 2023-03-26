@@ -2904,6 +2904,7 @@ class ym2151_device {
 public:
 	// construction/destruction
 	explicit ym2151_device(mixer_channel_t&& channel);
+	~ym2151_device();
 
 	// configuration helpers
 	// auto irq_handler() { return m_irqhandler.bind(); }
@@ -4622,6 +4623,17 @@ ym2151_device::ym2151_device(mixer_channel_t&& channel)
 	device_start();
 	device_post_load();
 	device_reset();
+}
+
+//-------------------------------------------------
+//  ym2151_device - destructor
+//-------------------------------------------------
+
+ym2151_device::~ym2151_device()
+{
+	// Deregister the mixer channel, after which it's cleaned up
+	assert(audio_channel);
+	MIXER_DeregisterChannel(audio_channel);
 }
 
 //-------------------------------------------------
