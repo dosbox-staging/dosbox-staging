@@ -11386,9 +11386,13 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
+
+		constexpr uint8_t first_midi_msg_byte = 0x00;
+		constexpr uint8_t last_midi_msg_byte  = 0x00;
+
 		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(first_midi_msg_byte) == WriteStatus::Success &&
+		    send_midi_byte(last_midi_msg_byte) == WriteStatus::Success &&
 		    send_midi_byte(m_sp_MidiDataOfMidiCommandInProgress[0]) ==
 		            WriteStatus::Success) {
 			log_debug("processSysExCmd_NodeDumpRequestMessage_VoiceMemoryBank() - sending voice definition bank %i",
@@ -11423,10 +11427,14 @@ private:
 			        &(m_activeInstrumentParameters[i].instrumentConfiguration));
 		}
 		log_debug("processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer1() - copy end");
+
+		constexpr uint8_t first_midi_msg_byte = 0x00;
+		constexpr uint8_t last_midi_msg_byte  = 0x00;
+
 		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(first_midi_msg_byte) == WriteStatus::Success &&
 		    send_midi_byte(0x01) == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success) {
+		    send_midi_byte(last_midi_msg_byte) == WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks(
 			        (uint8_t*)m_activeConfiguration.instrumentConfigurations,
 			        0xA0);
@@ -11473,10 +11481,14 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
+
+		constexpr uint8_t first_midi_msg_byte = 0x00;
+		constexpr uint8_t last_midi_msg_byte  = 0x00;
+
 		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(first_midi_msg_byte) == WriteStatus::Success &&
 		    send_midi_byte(0x03) == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success) {
+		    send_midi_byte(last_midi_msg_byte) == WriteStatus::Success) {
 			sendAllConfigurations();
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
@@ -11494,10 +11506,14 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
+
+		constexpr uint8_t first_midi_msg_byte = 0x00;
+		constexpr uint8_t last_midi_msg_byte  = 0x00;
+
 		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(first_midi_msg_byte) == WriteStatus::Success &&
 		    send_midi_byte(0x04) == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success) {
+		    send_midi_byte(last_midi_msg_byte) == WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)&CARD_NAME,
 			                                            16);
 		}
@@ -11516,10 +11532,14 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
+
+		constexpr uint8_t first_midi_msg_byte = 0x00;
+		constexpr uint8_t last_midi_msg_byte  = 0x00;
+
 		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(first_midi_msg_byte) == WriteStatus::Success &&
 		    send_midi_byte(0x05) == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success) {
+		    send_midi_byte(last_midi_msg_byte) == WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)&CARD_REV,
 			                                            16);
 		}
@@ -11543,11 +11563,15 @@ private:
 		if (readResult.data >= 0x80) {
 			return sendResponse(0, CANCEL_MESSAGE);
 		}
+
+		constexpr uint8_t first_midi_msg_byte = 0x00;
+		constexpr uint8_t last_midi_msg_byte  = 0x00;
+
 		// Note: There was a loop here that does absolutely nothing ?!
 		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(first_midi_msg_byte) == WriteStatus::Success &&
 		    send_midi_byte(0x06) == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success) {
+		    send_midi_byte(last_midi_msg_byte) == WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks(
 			        (uint8_t*)&m_activeConfiguration, 0xA0);
 		}
@@ -11596,11 +11620,14 @@ private:
 			return sendResponse(0, CANCEL_MESSAGE);
 		}
 
+		constexpr uint8_t first_midi_msg_byte = 0x00;
+		constexpr uint8_t last_midi_msg_byte  = 0x00;
+
 		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
 		    send_midi_byte(m_sysEx_InstrumentNumber | 0x08) ==
 		            WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success &&
-		    send_midi_byte(0x00) == WriteStatus::Success) {
+		    send_midi_byte(first_midi_msg_byte) == WriteStatus::Success &&
+		    send_midi_byte(last_midi_msg_byte) == WriteStatus::Success) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(
 			        m_sysEx_InstrumentNumber);
 			sendDataPacketTypeAInChunksOf2048ByteBlocks(
