@@ -442,8 +442,15 @@ public:
 	}
 };
 
-enum ReadStatus { READ_SUCCESS, NO_DATA, READ_ERROR };
-enum WriteStatus { WRITE_SUCCESS, WRITE_ERROR };
+enum class ReadStatus : uint8_t {
+	Success,
+	NoData,
+	Error,
+};
+enum class WriteStatus : uint8_t {
+	Success,
+	Error,
+};
 
 struct ReadResult {
 	ReadStatus status = {};
@@ -5521,13 +5528,13 @@ private:
 		                          1);
 		while (keep_running.load()) {
 			ReadResult readResult = midiIn_readMidiDataByte();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				disableInterrupts();
 				resetMidiInBuffersAndPorts();
 				enableInterrupts();
 				break;
 			}
-			if (readResult.status == READ_SUCCESS) {
+			if (readResult.status == ReadStatus::Success) {
 				send_midi_byte_to_System_in_THRU_mode(readResult.data);
 			}
 			SystemReadResult const systemReadResult =
@@ -5654,13 +5661,13 @@ private:
 			while (keep_running.load()) {
 				const ReadResult readResult = midiIn_readMidiDataByte();
 				switch (readResult.status) {
-				case READ_ERROR:
+				case ReadStatus::Error:
 					return midiInReadError(
 					        &m_midiDataPacketFromMidiIn);
-				case NO_DATA:
+				case ReadStatus::NoData:
 					if (!isMidiDataPacket_in_state_01_36_37_38(
 					            &m_midiDataPacketFromMidiIn)) {
-						return {NO_DATA, 0};
+						return {ReadStatus::NoData, 0};
 					}
 					if (hasReadMidiDataTimeoutExpired()) {
 						reportErrorIfNeeded(
@@ -5669,9 +5676,9 @@ private:
 						        &m_midiDataPacketFromMidiIn);
 					}
 					break;
-				case READ_SUCCESS:
+				case ReadStatus::Success:
 					if (readResult.data < 0xF8) {
-						return {READ_SUCCESS,
+						return {ReadStatus::Success,
 						        midiIn_MidiDataDispatcher_00_to_F7(
 						                &m_midiDataPacketFromMidiIn,
 						                readResult.data)};
@@ -5709,7 +5716,7 @@ private:
 					// - case NO_DATA_AVAILABLE");
 					if (!isMidiDataPacket_in_state_01_36_37_38(
 					            &m_midiDataPacketFromSystem)) {
-						return {NO_DATA, 0};
+						return {ReadStatus::NoData, 0};
 					}
 					// log_debug("readMidiDataWithTimeout()
 					// - MidiDataPacket is in state
@@ -5739,7 +5746,7 @@ private:
 					conditional_send_midi_byte_to_MidiOut(
 					        &m_midiDataPacketFromSystem,
 					        m_actualMidiFlowPath.System_To_MidiOut);
-					return {READ_ERROR, 0xF7};
+					return {ReadStatus::Error, 0xF7};
 				case MIDI_DATA_AVAILABLE:
 					SystemReadResult const systemReadResult =
 					        system_read9BitMidiDataByte();
@@ -5747,7 +5754,7 @@ private:
 					// - case MIDI_DATA_AVAILABLE (0x%02X)",
 					// systemReadResult.data);
 					if (systemReadResult.data < 0xF8) {
-						return {READ_SUCCESS,
+						return {ReadStatus::Success,
 						        system_MidiDataDispatcher_00_to_F7(
 						                &m_midiDataPacketFromSystem,
 						                systemReadResult.data)};
@@ -5769,7 +5776,7 @@ private:
 				}
 			}
 		}
-		return {NO_DATA, 0};
+		return {ReadStatus::NoData, 0};
 	}
 
 	uint8_t midiIn_MidiDataDispatcher_00_to_F7(MidiDataPacket* packet,
@@ -5798,7 +5805,8 @@ private:
 			processSystemRealTimeMessage_FC();
 		}
 		set_MidiIn_To_SP_InitialState();
-		return {READ_ERROR, midiIn_MidiDataDispatcher_00_to_F7(packet, 0xF7)};
+		return {ReadStatus::Error,
+		        midiIn_MidiDataDispatcher_00_to_F7(packet, 0xF7)};
 	}
 
 	uint8_t system_MidiDataDispatcher_00_to_F7(MidiDataPacket* packet,
@@ -5824,7 +5832,8 @@ private:
 			processSystemRealTimeMessage_FC();
 		}
 		set_System_To_SP_InitialState();
-		return {READ_ERROR, system_MidiDataDispatcher_00_to_F7(packet, 0xF7)};
+		return {ReadStatus::Error,
+		        system_MidiDataDispatcher_00_to_F7(packet, 0xF7)};
 	}
 
 	// ROM Address: 0x052E
@@ -5878,12 +5887,12 @@ private:
 			if ((m_actualMidiFlowPath.System_To_SP & 0x20) != 0) {
 				return send_midi_byte_to_System(data);
 			}
-			return WRITE_SUCCESS;
+			return WriteStatus::Success;
 		} // send to midi out
 		if ((m_actualMidiFlowPath.MidiIn_To_SP & 0x20) != 0) {
 			send_midi_byte_to_MidiOut(data);
 		}
-		return WRITE_SUCCESS;
+		return WriteStatus::Success;
 	}
 
 	// ROM Address: 0x0584
@@ -5895,13 +5904,13 @@ private:
 		                                     // send data to MIDI OUT
 		do {
 			const ReadResult readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				if ((readResult.data & 0x60) == 0) {
 					return;
 				}
 				return logError(midi_error_message_2);
 			}
-			if (readResult.status == READ_SUCCESS) {
+			if (readResult.status == ReadStatus::Success) {
 				conditional_send_midi_byte_to_SP(
 				        &m_midiDataPacketFromMidiIn,
 				        m_actualMidiFlowPath.MidiIn_To_SP,
@@ -5920,7 +5929,7 @@ private:
 			// log("MUSIC_MODE_LOOP_read_System_And_Dispatch -
 			// readMidiData()");
 			const ReadResult readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				log_debug("MUSIC_MODE_LOOP_read_System_And_Dispatch - system_read9BitMidiDataByte()");
 				SystemReadResult const systemReadResult =
 				        system_read9BitMidiDataByte();
@@ -5935,7 +5944,7 @@ private:
 				}
 				return;
 			}
-			if (readResult.status == READ_SUCCESS) {
+			if (readResult.status == ReadStatus::Success) {
 				log_debug("PC->IMF: Found midi data [%02X] in queue",
 				          readResult.data);
 				conditional_send_midi_byte_to_SP(
@@ -7174,12 +7183,12 @@ private:
 			                ? FIFO_OVERFLOW_ERROR_MIDI_TO_MUSICCARD
 			                : MIDI_OFFLINE_ERROR);
 			enableInterrupts();
-			return {READ_ERROR,
+			return {ReadStatus::Error,
 			        m_bufferFromMidiInState.getFlagsByteValue()};
 		}
 		if (m_bufferFromMidiInState.isEmpty()) {
 			enableInterrupts();
-			return {NO_DATA,
+			return {ReadStatus::NoData,
 			        m_bufferFromMidiInState.getFlagsByteValue()};
 		}
 		const uint8_t midiData = m_bufferFromMidiInState.popData();
@@ -7191,7 +7200,7 @@ private:
 		//	m_bufferFromMidiInState.setDataCleared();
 		// }
 		enableInterrupts();
-		return {READ_SUCCESS, midiData};
+		return {ReadStatus::Success, midiData};
 	}
 
 	// ROM Address: 0x0DF4
@@ -7746,7 +7755,7 @@ private:
 				// enableInterrupts();
 				reportErrorIfNeeded(
 				        FIFO_OVERFLOW_ERROR_MUSICCARD_TO_SYSTEM);
-				return WRITE_ERROR;
+				return WriteStatus::Error;
 			}
 			m_bufferToSystemState.lock();
 		}
@@ -7761,7 +7770,7 @@ private:
 		//		initializePIUOutput();
 		//		//enableInterrupts();
 		//		reportErrorIfNeeded(FIFO_OVERFLOW_ERROR_MUSICCARD_TO_SYSTEM);
-		//		return WRITE_ERROR;
+		//		return WriteStatus::Error;
 		//	}
 		//	m_bufferToSystemState.lock();//disableInterrupts();
 		//	m_bufferAToSystem[m_bufferToSystemState.getIndexForNextWriteByte()] = dataMSB;
@@ -7777,7 +7786,7 @@ private:
 		                               // interrupt enable = true
 		SDL_UnlockMutex(m_hardwareMutex);
 		// enableInterrupts();
-		return WRITE_SUCCESS;
+		return WriteStatus::Success;
 	}
 
 	// ROM Address: 0x1133
@@ -7785,40 +7794,41 @@ private:
 	{
 		if (*pData < 0xF7) {
 			if (*pData < 0x80) {
-				return WRITE_SUCCESS;
+				return WriteStatus::Success;
 			}
-			if (send_F7_to_System_if_needed_0() != WRITE_SUCCESS) {
-				return WRITE_ERROR;
+			if (send_F7_to_System_if_needed_0() != WriteStatus::Success) {
+				return WriteStatus::Error;
 			}
 			if (m_system_CommandInProgress != *pData) {
-				if (send_midi_byte_to_System(*pData) != WRITE_SUCCESS) {
-					return WRITE_ERROR;
+				if (send_midi_byte_to_System(*pData) !=
+				    WriteStatus::Success) {
+					return WriteStatus::Error;
 				}
 			}
 		} else if (*pData == 0xF7) {
 			return send_F7_to_System_if_needed_0();
 		} else if (*pData == 0xFF) {
-			if (send_F0_43_75_70_to_System() != WRITE_SUCCESS) {
-				return WRITE_ERROR;
+			if (send_F0_43_75_70_to_System() != WriteStatus::Success) {
+				return WriteStatus::Error;
 			}
 		} else if (*pData == 0xFE) {
-			if (send_F0_43_75_71_to_System() != WRITE_SUCCESS) {
-				return WRITE_ERROR;
+			if (send_F0_43_75_71_to_System() != WriteStatus::Success) {
+				return WriteStatus::Error;
 			}
 		} else {
-			return WRITE_SUCCESS;
+			return WriteStatus::Success;
 		}
 		pData++;
 		size--;
 		while (size != 0U) {
-			if (send_midi_byte_to_System(*pData) != WRITE_SUCCESS) {
-				return WRITE_ERROR;
+			if (send_midi_byte_to_System(*pData) != WriteStatus::Success) {
+				return WriteStatus::Error;
 			}
 			pData++;
 			size--;
 		}
 		m_runningCommandOnSystemInTimerCountdown = 0x0A;
-		return WRITE_SUCCESS;
+		return WriteStatus::Success;
 	}
 
 	// ROM Address: 0x1176
@@ -7826,7 +7836,7 @@ private:
 	{
 		if (m_system_CommandInProgress != 0xF0 &&
 		    m_system_CommandInProgress < 0xFE) {
-			return WRITE_SUCCESS;
+			return WriteStatus::Success;
 		}
 		return send_midi_byte_to_System(0xF7);
 	}
@@ -7835,73 +7845,73 @@ private:
 	WriteStatus send_F0_43_75_70_to_System()
 	{
 		if (m_system_CommandInProgress == 0xFF) {
-			return WRITE_SUCCESS;
+			return WriteStatus::Success;
 		}
-		if (send_F7_to_System_if_needed_0() != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_F7_to_System_if_needed_0() != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
-		if (send_midi_byte_to_System(0xF0) != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_midi_byte_to_System(0xF0) != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
-		if (send_midi_byte_to_System(0x43) != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_midi_byte_to_System(0x43) != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
-		if (send_midi_byte_to_System(0x75) != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_midi_byte_to_System(0x75) != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
-		if (send_midi_byte_to_System(0x70) != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_midi_byte_to_System(0x70) != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
 		m_system_CommandInProgress = 0xFF;
-		return WRITE_SUCCESS;
+		return WriteStatus::Success;
 	}
 
 	// ROM Address: 0x11AE
 	WriteStatus send_F0_43_75_71_to_System()
 	{
 		if (m_system_CommandInProgress == 0xFE) {
-			return WRITE_SUCCESS;
+			return WriteStatus::Success;
 		}
-		if (send_F7_to_System_if_needed_0() != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_F7_to_System_if_needed_0() != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
-		if (send_midi_byte_to_System(0xF0) != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_midi_byte_to_System(0xF0) != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
-		if (send_midi_byte_to_System(0x43) != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_midi_byte_to_System(0x43) != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
-		if (send_midi_byte_to_System(0x75) != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_midi_byte_to_System(0x75) != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
-		if (send_midi_byte_to_System(0x71) != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_midi_byte_to_System(0x71) != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
 		m_system_CommandInProgress = 0xFE;
-		return WRITE_SUCCESS;
+		return WriteStatus::Success;
 	}
 
 	// ROM Address: 0x11D6
 	WriteStatus send_card_bytes_to_System(uint8_t* pData, uint8_t size)
 	{
 		if (*pData < 0x80) {
-			return WRITE_SUCCESS;
+			return WriteStatus::Success;
 		}
 		if (*pData >= 0xF0) {
-			return WRITE_SUCCESS;
+			return WriteStatus::Success;
 		}
-		if (send_F7_to_System_if_needed() != WRITE_SUCCESS) {
-			return WRITE_ERROR;
+		if (send_F7_to_System_if_needed() != WriteStatus::Success) {
+			return WriteStatus::Error;
 		}
 		do {
-			if (send_card_byte_to_System(*pData) != WRITE_SUCCESS) {
-				return WRITE_ERROR;
+			if (send_card_byte_to_System(*pData) != WriteStatus::Success) {
+				return WriteStatus::Error;
 			}
 			pData++;
 			size--;
 		} while (size != 0U);
 		m_runningCommandOnSystemInTimerCountdown = 0x0A;
-		return WRITE_SUCCESS;
+		return WriteStatus::Success;
 	}
 
 	// ROM Address: 0x11F2
@@ -7909,7 +7919,7 @@ private:
 	{
 		if (m_system_CommandInProgress != 0xF0 &&
 		    m_system_CommandInProgress < 0xFE) {
-			return WRITE_SUCCESS;
+			return WriteStatus::Success;
 		}
 		return send_midi_byte_to_System(0xF7);
 	}
@@ -10930,7 +10940,7 @@ private:
 		if (receiveDataPacketTypeA(midiData,
 		                           (uint8_t*)&m_voiceDefinitionBankCustom[0],
 		                           sizeof(VoiceDefinitionBank)) !=
-		    READ_SUCCESS) {
+		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		sendResponse(0x01, ACK_MESSAGE);
@@ -10982,10 +10992,10 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
-		if (send_midi_byte(0xF0) == WRITE_SUCCESS &&
-		    send_midi_byte(0x43) == WRITE_SUCCESS &&
-		    send_midi_byte(m_nodeNumber) == WRITE_SUCCESS &&
-		    send_midi_byte(0x0C) == WRITE_SUCCESS) {
+		if (send_midi_byte(0xF0) == WriteStatus::Success &&
+		    send_midi_byte(0x43) == WriteStatus::Success &&
+		    send_midi_byte(m_nodeNumber) == WriteStatus::Success &&
+		    send_midi_byte(0x0C) == WriteStatus::Success) {
 			sendVoiceDefinitionBank(0);
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
@@ -11010,11 +11020,11 @@ private:
 		// read the high size byte
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0x00, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
@@ -11023,7 +11033,7 @@ private:
 		if (receiveDataPacketTypeA(readResult.data,
 		                           (uint8_t*)bank,
 		                           sizeof(VoiceDefinitionBank)) !=
-		    READ_SUCCESS) {
+		    ReadStatus::Success) {
 			log_debug("processSysExCmd_NodeMessage_SetVoiceBankData() - receiveDataPacketTypeA returned ERROR");
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
@@ -11040,17 +11050,18 @@ private:
 
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0x00, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		if (receiveDataPacketTypeB(readResult.data,
 		                           (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress,
-		                           sizeof(ConfigurationData)) != READ_SUCCESS) {
+		                           sizeof(ConfigurationData)) !=
+		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		m_activeConfiguration.deepCopyFrom(
@@ -11076,17 +11087,18 @@ private:
 		ConfigurationData* config = getConfigurationData(midiData);
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0x00, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		if (receiveDataPacketTypeB(readResult.data,
 		                           (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress,
-		                           sizeof(ConfigurationData)) != READ_SUCCESS) {
+		                           sizeof(ConfigurationData)) !=
+		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		config->deepCopyFrom(
@@ -11105,18 +11117,18 @@ private:
 		}
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0x00, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		if (receiveDataPacketTypeB(readResult.data,
 		                           (uint8_t*)&m_configurationRAM,
 		                           sizeof(m_configurationRAM)) !=
-		    READ_SUCCESS) {
+		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		sendResponse(0x01, ACK_MESSAGE);
@@ -11130,17 +11142,18 @@ private:
 
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0x00, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		if (receiveDataPacketTypeB(readResult.data,
 		                           (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress,
-		                           sizeof(ConfigurationData)) != READ_SUCCESS) {
+		                           sizeof(ConfigurationData)) !=
+		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		const uint8_t lfoSpeed = m_activeConfiguration.lfoSpeed;
@@ -11179,18 +11192,19 @@ private:
 		// read the high size byte
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0x00, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 
 		if (receiveDataPacketTypeA(readResult.data,
 		                           (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress,
-		                           sizeof(VoiceDefinition)) != READ_SUCCESS) {
+		                           sizeof(VoiceDefinition)) !=
+		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		InstrumentParameters* instr = getActiveInstrumentParameters(
@@ -11210,18 +11224,18 @@ private:
 
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0x00, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		if (receiveDataPacketTypeB(readResult.data,
 		                           (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress,
 		                           sizeof(InstrumentConfiguration)) !=
-		    WRITE_SUCCESS) {
+		    static_cast<ReadStatus>(WriteStatus::Success)) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1() - copy start");
@@ -11246,17 +11260,18 @@ private:
 
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0x00, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		if (receiveDataPacketTypeB(readResult.data,
 		                           (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress,
-		                           0x0B) != WRITE_SUCCESS) {
+		                           0x0B) !=
+		    static_cast<ReadStatus>(WriteStatus::Success)) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
 		// this copy is kind of strange. It's not copying all the bytes.
@@ -11361,11 +11376,11 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS &&
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success &&
 		    send_midi_byte(m_sp_MidiDataOfMidiCommandInProgress[0]) ==
-		            WRITE_SUCCESS) {
+		            WriteStatus::Success) {
 			log_debug("processSysExCmd_NodeDumpRequestMessage_VoiceMemoryBank() - sending voice definition bank %i",
 			          m_sp_MidiDataOfMidiCommandInProgress[0]);
 			sendVoiceDefinitionBank(
@@ -11384,11 +11399,11 @@ private:
 		// read the "source ID" byte (Technical Reference Manual 6-24)
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0x00, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
@@ -11398,10 +11413,10 @@ private:
 			        &(m_activeInstrumentParameters[i].instrumentConfiguration));
 		}
 		log_debug("processSysExCmd_NodeDumpRequestMessage_ConfigurationBuffer1() - copy end");
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS &&
-		    send_midi_byte(0x01) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS) {
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(0x01) == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks(
 			        (uint8_t*)m_activeConfiguration.instrumentConfigurations,
 			        0xA0);
@@ -11424,11 +11439,11 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS &&
-		    send_midi_byte(0x02) == WRITE_SUCCESS &&
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(0x02) == WriteStatus::Success &&
 		    send_midi_byte(m_sp_MidiDataOfMidiCommandInProgress[0]) ==
-		            WRITE_SUCCESS) {
+		            WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks(
 			        (uint8_t*)getConfigurationData(
 			                m_sp_MidiDataOfMidiCommandInProgress[0]),
@@ -11448,10 +11463,10 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS &&
-		    send_midi_byte(0x03) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS) {
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(0x03) == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success) {
 			sendAllConfigurations();
 		}
 		SoundProcessor_processMidiCommandByte(midiData);
@@ -11469,10 +11484,10 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS &&
-		    send_midi_byte(0x04) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS) {
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(0x04) == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)&CARD_NAME,
 			                                            16);
 		}
@@ -11491,10 +11506,10 @@ private:
 		if (midiData < 0x80) {
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS &&
-		    send_midi_byte(0x05) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS) {
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(0x05) == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)&CARD_REV,
 			                                            16);
 		}
@@ -11510,19 +11525,19 @@ private:
 		// read the "source ID" byte (Technical Reference Manual 6-24)
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0, CANCEL_MESSAGE);
 		}
 		// Note: There was a loop here that does absolutely nothing ?!
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS &&
-		    send_midi_byte(0x06) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS) {
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(0x06) == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks(
 			        (uint8_t*)&m_activeConfiguration, 0xA0);
 		}
@@ -11562,19 +11577,20 @@ private:
 
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0, CANCEL_MESSAGE);
 		}
 
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(m_sysEx_InstrumentNumber | 0x08) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS) {
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(m_sysEx_InstrumentNumber | 0x08) ==
+		            WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(
 			        m_sysEx_InstrumentNumber);
 			sendDataPacketTypeAInChunksOf2048ByteBlocks(
@@ -11591,19 +11607,20 @@ private:
 
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0, CANCEL_MESSAGE);
 		}
 
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(m_sysEx_InstrumentNumber | 0x08) == WRITE_SUCCESS &&
-		    send_midi_byte(0x01) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS) {
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(m_sysEx_InstrumentNumber | 0x08) ==
+		            WriteStatus::Success &&
+		    send_midi_byte(0x01) == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(
 			        m_sysEx_InstrumentNumber);
 			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)instr,
@@ -11621,19 +11638,20 @@ private:
 
 		do {
 			readResult = readMidiData();
-			if (readResult.status == READ_ERROR) {
+			if (readResult.status == ReadStatus::Error) {
 				logMidiError();
 				return sendResponse(0, NAK_MESSAGE);
 			}
-		} while (readResult.status == NO_DATA);
+		} while (readResult.status == ReadStatus::NoData);
 		if (readResult.data >= 0x80) {
 			return sendResponse(0, CANCEL_MESSAGE);
 		}
 
-		if (send_F0_43_75_NodeNumber() == WRITE_SUCCESS &&
-		    send_midi_byte(m_sysEx_InstrumentNumber | 0x08) == WRITE_SUCCESS &&
-		    send_midi_byte(0x01) == WRITE_SUCCESS &&
-		    send_midi_byte(0x00) == WRITE_SUCCESS) {
+		if (send_F0_43_75_NodeNumber() == WriteStatus::Success &&
+		    send_midi_byte(m_sysEx_InstrumentNumber | 0x08) ==
+		            WriteStatus::Success &&
+		    send_midi_byte(0x01) == WriteStatus::Success &&
+		    send_midi_byte(0x00) == WriteStatus::Success) {
 			InstrumentParameters* instr = getActiveInstrumentParameters(
 			        m_sysEx_InstrumentNumber);
 			sendDataPacketTypeBInChunksOf2048ByteBlocks((uint8_t*)instr,
@@ -11922,13 +11940,13 @@ private:
 		WriteStatus writeStatus;
 		if (dataSize <= 0x0800) {
 			writeStatus = sendDataPacketTypeA(pData, dataSize);
-			if (writeStatus != WRITE_SUCCESS) {
+			if (writeStatus != WriteStatus::Success) {
 				return writeStatus;
 			}
 			return send_midi_byte(0xF7);
 		}
 		writeStatus = sendDataPacketTypeA(pData, 0x0800);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		waitForDataToBeSent();
@@ -11943,13 +11961,13 @@ private:
 		WriteStatus writeStatus;
 		if (dataSize <= 0x0800) {
 			writeStatus = sendDataPacketTypeB(pData, dataSize);
-			if (writeStatus != WRITE_SUCCESS) {
+			if (writeStatus != WriteStatus::Success) {
 				return writeStatus;
 			}
 			return send_midi_byte(0xF7);
 		}
 		writeStatus = sendDataPacketTypeB(pData, 0x0800);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		waitForDataToBeSent();
@@ -11974,7 +11992,7 @@ private:
 		// send bank header (i.e. name and reserved field)
 		log_debug("sendVoiceDefinitionBank() - sendDataPacketTypeA() - header");
 		writeStatus = sendDataPacketTypeA((uint8_t*)bank, 0x20);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		// send all the voice data
@@ -11984,7 +12002,7 @@ private:
 			log_debug("sendVoiceDefinitionBank() - sendDataPacketTypeA() - data");
 			writeStatus = sendDataPacketTypeA((uint8_t*)&instrumentDefinition,
 			                                  sizeof(VoiceDefinition));
-			if (writeStatus != WRITE_SUCCESS) {
+			if (writeStatus != WriteStatus::Success) {
 				return writeStatus;
 			}
 		}
@@ -11999,7 +12017,7 @@ private:
 		for (auto& i : m_configurationRAM) {
 			writeStatus = sendDataPacketTypeB(
 			        (uint8_t*)&i, 0xA0 /*sizeof(ConfigurationType)*/);
-			if (writeStatus != WRITE_SUCCESS) {
+			if (writeStatus != WriteStatus::Success) {
 				return writeStatus;
 			}
 			waitForDataToBeSent();
@@ -12052,7 +12070,7 @@ private:
 
 #define send_midi_byte_with_error_handling(data) \
 	writeStatus = send_midi_byte(data); \
-	if (writeStatus != WRITE_SUCCESS) { \
+	if (writeStatus != WriteStatus::Success) { \
 		return writeStatus; \
 	}
 
@@ -12113,11 +12131,11 @@ private:
 #define readMidiDataWithErrorHandling(target) \
 	do { \
 		(target) = readMidiData(); \
-		if ((target).status == READ_ERROR) { \
+		if ((target).status == ReadStatus::Error) { \
 			logMidiError(); \
-			return READ_ERROR; \
+			return ReadStatus::Error; \
 		} \
-	} while ((target).status == NO_DATA);
+	} while ((target).status == ReadStatus::NoData);
 
 	// ROM Address: 0x33BE
 	ReadStatus receiveDataPacketTypeA(uint8_t byteCountHigh, uint8_t* pData,
@@ -12148,7 +12166,7 @@ private:
 		readMidiDataWithErrorHandling(readResult);
 		if (readResult.data >= 0x80) {
 			log_debug("receiveDataPacketTypeA_internal - midi command not allowed (0)");
-			return READ_ERROR;
+			return ReadStatus::Error;
 		}
 
 		if (readResult.data == 0x20 && byteCountHigh == 0 &&
@@ -12156,16 +12174,17 @@ private:
 			m_receiveDataPacketTypeAState = 1;
 		} else if (m_receiveDataPacketTypeAState != 0) {
 			// in m_receiveDataPacketTypeAState=1, the
-			// dataPacketSize must be 0x840, otherwise -> READ_ERROR
+			// dataPacketSize must be 0x840, otherwise ->
+			// ReadStatus::Error
 			if (readResult.data != 0x10) {
 				log_debug("receiveDataPacketTypeA_internal - size error(1) %i != 0x10",
 				          readResult.data);
-				return READ_ERROR;
+				return ReadStatus::Error;
 			}
 			if (byteCountHigh != 0x40) {
 				log_debug("receiveDataPacketTypeA_internal - size error(1) %i != 0x40",
 				          byteCountHigh);
-				return READ_ERROR;
+				return ReadStatus::Error;
 			}
 		}
 		dataPacketSize = check_cast<uint16_t>(byteCountHigh * 128 +
@@ -12180,11 +12199,11 @@ private:
 				readMidiDataWithErrorHandling(readResult);
 				if (readResult.data >= 0x80) {
 					log_debug("receiveDataPacketTypeA_internal - midi command not allowed (1)");
-					return READ_ERROR;
+					return ReadStatus::Error;
 				}
 				if (((checksum + readResult.data) & 0x7F) != 0) {
 					log_debug("receiveDataPacketTypeA_internal - checksum error(1)");
-					return READ_ERROR;
+					return ReadStatus::Error;
 				}
 
 				// read the high byte of the size
@@ -12198,7 +12217,7 @@ private:
 			readMidiDataWithErrorHandling(readResult);
 			if (readResult.data >= 0x40) {
 				log_debug("receiveDataPacketTypeA_internal - ERROR");
-				return READ_ERROR;
+				return ReadStatus::Error;
 			}
 			// "remember" the low-nibble in
 			// m_soundProcessorMidiInterpreterState
@@ -12217,23 +12236,23 @@ private:
 				readMidiDataWithErrorHandling(readResult);
 				if (readResult.data >= 0x80) {
 					log_debug("receiveDataPacketTypeA_internal - midi command not allowed (2)");
-					return READ_ERROR;
+					return ReadStatus::Error;
 				}
 				if (((checksum + readResult.data) & 0x7F) != 0) {
 					log_debug("receiveDataPacketTypeA_internal - checksum error(2)");
-					return READ_ERROR;
+					return ReadStatus::Error;
 				}
 				checksum = 0;
 				// read the high byte of the size
 				readMidiDataWithErrorHandling(readResult);
 				if (readResult.data >= 0x21) {
-					return READ_ERROR;
+					return ReadStatus::Error;
 				}
 				byteCountHigh = readResult.data;
 				// read the low byte of the size
 				readMidiDataWithErrorHandling(readResult);
 				if (readResult.data >= 0x80) {
-					return READ_ERROR;
+					return ReadStatus::Error;
 				}
 				dataPacketSize = check_cast<uint16_t>(
 				        byteCountHigh * 128 + readResult.data);
@@ -12244,7 +12263,7 @@ private:
 			// read the data byte (high half)
 			readMidiDataWithErrorHandling(readResult);
 			if (readResult.data >= 0x40) {
-				return READ_ERROR;
+				return ReadStatus::Error;
 			}
 			checksum += readResult.data;
 			pData[0] = (readResult.data << 4) |
@@ -12265,7 +12284,7 @@ private:
 		while (--dataPacketSize != 0U) {
 			readMidiDataWithErrorHandling(readResult);
 			if (readResult.data >= 0x80) {
-				return READ_ERROR;
+				return ReadStatus::Error;
 			}
 			checksum += readResult.data;
 		}
@@ -12274,14 +12293,14 @@ private:
 		readMidiDataWithErrorHandling(readResult);
 		if (readResult.data >= 0x80) {
 			log_debug("receiveDataPacketTypeA_internal - midi command not allowed (3)");
-			return READ_ERROR;
+			return ReadStatus::Error;
 		}
 		if (((checksum + readResult.data) & 0x7F) != 0) {
 			log_debug("receiveDataPacketTypeA_internal - checksum error(3)");
-			return READ_ERROR;
+			return ReadStatus::Error;
 		}
 		log_debug("receiveDataPacketTypeA_internal - end");
-		return READ_SUCCESS;
+		return ReadStatus::Success;
 	}
 
 	// ROM Address: 0x351C
@@ -12296,7 +12315,7 @@ private:
 		// read the second byte of the size
 		readMidiDataWithErrorHandling(readResult);
 		if (readResult.data >= 0x80) {
-			return READ_ERROR;
+			return ReadStatus::Error;
 		}
 		dataPacketSize = check_cast<uint16_t>(byteCountHigh * 0x80 +
 		                                      readResult.data);
@@ -12307,10 +12326,10 @@ private:
 				// read the checksum
 				readMidiDataWithErrorHandling(readResult);
 				if (readResult.data >= 0x80) {
-					return READ_ERROR;
+					return ReadStatus::Error;
 				}
 				if (((checksum + readResult.data) & 0x7F) != 0) {
-					return READ_ERROR;
+					return ReadStatus::Error;
 				}
 
 				// we need a new packet: read the first byte of
@@ -12323,7 +12342,7 @@ private:
 			// read data byte
 			readMidiDataWithErrorHandling(readResult);
 			if (readResult.data >= 0x80) {
-				return READ_ERROR;
+				return ReadStatus::Error;
 			}
 			checksum += readResult.data;
 			pData[0] = readResult.data;
@@ -12339,7 +12358,7 @@ private:
 		while (--dataPacketSize != 0U) {
 			readMidiDataWithErrorHandling(readResult);
 			if (readResult.data >= 0x80) {
-				return READ_ERROR;
+				return ReadStatus::Error;
 			}
 			checksum += readResult.data;
 		}
@@ -12347,12 +12366,12 @@ private:
 		// read the checksum
 		readMidiDataWithErrorHandling(readResult);
 		if (readResult.data >= 0x80) {
-			return READ_ERROR;
+			return ReadStatus::Error;
 		}
 		if (((checksum + readResult.data) & 0x7F) != 0) {
-			return READ_ERROR;
+			return ReadStatus::Error;
 		}
-		return READ_SUCCESS;
+		return ReadStatus::Success;
 	}
 
 	// ROM Address: 0x35C9
@@ -12360,15 +12379,15 @@ private:
 	{
 		WriteStatus writeStatus;
 		writeStatus = send_midi_byte(0xf0);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		writeStatus = send_midi_byte(0x43);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		writeStatus = send_midi_byte(0x75);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		return send_midi_byte(m_nodeNumber);
@@ -12391,19 +12410,19 @@ private:
 	{
 		WriteStatus writeStatus;
 		writeStatus = send_midi_byte(0xf0);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		writeStatus = send_midi_byte(0x43);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		writeStatus = send_midi_byte(m_nodeNumber | 0x60);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		writeStatus = send_midi_byte(handshakingMessageNumber);
-		if (writeStatus != WRITE_SUCCESS) {
+		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		return send_midi_byte(0xf7);
