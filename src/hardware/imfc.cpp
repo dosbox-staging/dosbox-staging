@@ -7288,7 +7288,9 @@ private:
 				m_midiOut_CommandInProgress = 0;
 			}
 		}
-		return; // FIXME: remove when midi out and timeouts are done
+
+		/* FIXME: remove when midi out and timeouts are done
+
 		m_bufferToMidiOutState.lock();
 		while (m_bufferToMidiOutState.isBufferFull()) {
 			m_bufferToMidiOutState.unlock();
@@ -7300,6 +7302,10 @@ private:
 		m_midi.writePort2(m_midiTransmitReceiveFlag);
 		SDL_UnlockMutex(m_hardwareMutex);
 		m_bufferToMidiOutState.unlock();
+	
+		end of FIXME
+		*/ 
+
 		// do {
 		//	enableInterrupts();
 		//	delayNop();
