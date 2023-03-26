@@ -5152,7 +5152,7 @@ private:
 	{
 #if IMFC_VERBOSE_LOGGING
 		static std::string message = {};
-		message                    = std::string("IMFC: ") + format;
+		message                    = std::string("IMF: ") + format;
 		LOG_ERR(static_cast<const char*>(message.c_str()), args...);
 #endif
 	}
@@ -12918,6 +12918,7 @@ public:
 
 	~MusicFeatureCard() override
 	{
+		LOG_MSG("IMF: Shutting down");
 		SDL_WaitThread(m_mainThread, 0);
 		SDL_DestroyMutex(m_hardwareMutex);
 	}
@@ -13120,7 +13121,7 @@ void IMFC_Init(Section* sec)
 	}
 	sec->AddDestroyFunction(&IMFC_ShutDown, true);
 
-	LOG_MSG("IMFC: IBM Music Feature Card running on port %xh and IRQ %d",
+	LOG_MSG("IMF: IBM Music Feature running on port %xh and IRQ %d",
 	        PORT_BASE,
 	        IMFC_IRQ);
 }
