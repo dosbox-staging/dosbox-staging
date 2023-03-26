@@ -491,7 +491,7 @@ struct Note {
 };
 static_assert(sizeof(Note) == 1, "Note needs to be 1 in size!");
 
-constexpr bool operator==(const Note a, const Note b)
+constexpr bool operator==(const Note& a, const Note& b)
 {
 	return a.value == b.value;
 }
@@ -504,7 +504,7 @@ struct Fraction {
 };
 
 static_assert(sizeof(Fraction) == 1, "Fraction needs to be 1 in size!");
-constexpr bool operator==(const Fraction a, const Fraction b)
+constexpr bool operator==(const Fraction& a, const Fraction& b)
 {
 	return a.value == b.value;
 }
@@ -515,7 +515,7 @@ struct FractionalNote {
 	Note note         = {};
 
 	constexpr FractionalNote() = default;
-	constexpr FractionalNote(const Note nn, const Fraction nf)
+	constexpr FractionalNote(const Note& nn, const Fraction& nf)
 	        : fraction(nf),
 	          note(nn)
 	{}
@@ -540,21 +540,23 @@ static constexpr FractionalNote to_fractional_note(const uint16_t value) noexcep
 
 static_assert(sizeof(FractionalNote) == 2, "FractionalNote needs to be 1 in size!");
 
-constexpr bool operator==(const FractionalNote a, const FractionalNote b) noexcept
+constexpr bool operator==(const FractionalNote& a, const FractionalNote& b) noexcept
 {
 	return a.note == b.note && a.fraction == b.fraction;
 }
-constexpr bool operator!=(const FractionalNote a, const FractionalNote b) noexcept
+constexpr bool operator!=(const FractionalNote& a, const FractionalNote& b) noexcept
 {
 	return !(a == b);
 }
-constexpr FractionalNote operator-(const FractionalNote a, const FractionalNote b) noexcept
+constexpr FractionalNote operator-(const FractionalNote& a,
+                                   const FractionalNote& b) noexcept
 {
 	const auto val = check_cast<uint16_t>(a.getuint16_t() - b.getuint16_t());
 	return to_fractional_note(val);
 }
 
-constexpr FractionalNote operator+(const FractionalNote a, const FractionalNote b) noexcept
+constexpr FractionalNote operator+(const FractionalNote& a,
+                                   const FractionalNote& b) noexcept
 {
 	// 16-bit wrap-around is expected and normal
 	const auto val = static_cast<uint16_t>(a.getuint16_t() + b.getuint16_t());
@@ -9222,8 +9224,8 @@ private:
 	}
 
 	// ROM Address: 0x19B4
-	static FractionalNote cropToPlayableRange(const FractionalNote root /*hl*/,
-	                                          const FractionalNote adjustment /*de*/)
+	static FractionalNote cropToPlayableRange(const FractionalNote& root /*hl*/,
+	                                          const FractionalNote& adjustment /*de*/)
 	{
 		auto result = (root + adjustment).getuint16_t();
 
