@@ -5618,9 +5618,17 @@ private:
 	{
 		static constexpr char defaultConfigurationSlotNameSuffix[] =
 		        " 1 2 3 4 5 6 7 8 910111213141516";
-		if (memcmp(&m_copyOfCardName, &m_cardName, 12) == 0) {
+
+		// Compare only the first 12 bytes (not the full name)
+		const auto name_copy_start = std::begin(m_copyOfCardName);
+		const auto name_copy_end_after_12_bytes = name_copy_start + 12;
+
+		if (std::equal(name_copy_start,
+		               name_copy_end_after_12_bytes,
+		               std::begin(m_cardName))) {
 			return;
 		}
+
 		// clear memory from 0xC0C0 to 0xE7FF
 		// (voiceDefinitionBankCustom1, voiceDefinitionBankCustom2,
 		// configurationRAM, copyOfCardName, activeConfiguration,
