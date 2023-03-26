@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 !!! warning
 
-    These are unstable development snapshots intended for testing and showcasing new features; if you want to download a stable build, head on to [Linux](linux.md), [Windows](windows.md), or [macOS](macos.md) download pages.
+    These are unstable development snapshots intended for testing and showcasing new features; if you want to download a stable build, head on to the [Linux](linux.md), [Windows](windows.md), or [macOS](macos.md) download pages.
 
     Build artifacts are hosted on GitHub; you need to be logged in to download them.
 
@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 ## Installation notes
 
-Testing new features might require manual reset of the configuration
+Testing new features might require a manual reset of the configuration
 file.  DOSBox Staging builds use a configuration file named
 `dosbox-staging.conf` located in:
 
@@ -201,7 +201,7 @@ dependencies installed via your package manager.
 
 ### Windows
 
-Windows executables in a snapshot packages are not signed, therefore Windows 10
+Windows executables in snapshot packages are not signed, therefore Windows 10
 might prevent the program from starting.
 
 See [this guide](../windows/#microsoft-defender-smartscreen) to learn how to deal with this.

@@ -230,7 +230,7 @@ public:
 //Create leading directories of a file being overlayed if they exist in the original (localDrive).
 //This function is used to create copies of existing files, so all leading directories exist in the original.
 
-FILE *Overlay_Drive::create_file_in_overlay(const char *dos_filename, char const *mode)
+FILE* Overlay_Drive::create_file_in_overlay(const char* dos_filename, const char* mode)
 {
 	if (logoverlay) LOG_MSG("create_file_in_overlay called %s %s",dos_filename,mode);
 	char newname[CROSS_LEN];
@@ -298,7 +298,7 @@ bool OverlayFile::create_copy() {
 	FILE* newhandle = NULL;
 	uint8_t drive_set = GetDrive();
 	if (drive_set != 0xff && drive_set < DOS_DRIVES && Drives[drive_set]){
-		Overlay_Drive* od = dynamic_cast<Overlay_Drive*>(Drives[drive_set]);
+		const auto od = dynamic_cast<Overlay_Drive*>(Drives[drive_set]);
 		if (od) {
 			newhandle = od->create_file_in_overlay(GetName(),"wb+"); //todo check wb+
 		}
@@ -685,15 +685,24 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 #endif
 
 			std::string backupi(*i);
+
+			auto maybe_add_path = [&]() {
+				if ((safe_strlen(dir_name) > prefix_lengh + 5) &&
+				    strncmp(dir_name,
+				            special_prefix.c_str(),
+				            prefix_lengh) == 0) {
+					specials.emplace_back(string(dirpush) + dir_name);
+				} else if (is_directory) {
+					dirnames.emplace_back(string(dirpush) + dir_name);
+				} else {
+					filenames.emplace_back(string(dirpush) + dir_name);
+				}
+			};
 			// Read complete directory
 			if (read_directory_first(dirp, dir_name, is_directory)) {
-				if ((safe_strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
-				else if (is_directory) dirnames.push_back(string(dirpush)+dir_name);
-				else filenames.push_back(string(dirpush)+dir_name);
+				maybe_add_path();
 				while (read_directory_next(dirp, dir_name, is_directory)) {
-					if ((safe_strlen(dir_name) > prefix_lengh+5) && strncmp(dir_name,special_prefix.c_str(),prefix_lengh) == 0) specials.push_back(string(dirpush)+dir_name);
-					else if (is_directory) dirnames.push_back(string(dirpush)+dir_name);
-					else filenames.push_back(string(dirpush)+dir_name);
+					maybe_add_path();
 				}
 			}
 			close_directory(dirp);
@@ -1287,10 +1296,11 @@ bool Overlay_Drive::FileStat(const char* name, FileStat_Block * const stat_block
 	return true;
 }
 
-Bits Overlay_Drive::UnMount(void) { 
-	delete this;
-	return 0; 
+Bits Overlay_Drive::UnMount()
+{
+	return 0;
 }
+
 void Overlay_Drive::EmptyCache(void){
 	localDrive::EmptyCache();
 	update_cache(true);//lets rebuild it.

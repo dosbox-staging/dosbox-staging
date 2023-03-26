@@ -183,7 +183,7 @@ void MidiHandler_alsa::PlayMsg(const MidiMessage& msg)
 void MidiHandler_alsa::Close()
 {
 	if (seq_handle) {
-		HaltSequence();
+		Reset();
 		snd_seq_close(seq_handle);
 	}
 	seq = {-1, -1};

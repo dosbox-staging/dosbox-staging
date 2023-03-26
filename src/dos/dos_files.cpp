@@ -18,6 +18,7 @@
 
 #include "dos_inc.h"
 
+#include <array>
 #include <climits>
 #include <ctype.h>
 #include <stdlib.h>
@@ -42,9 +43,11 @@
 #define FCB_ERR_EOF     3
 #define FCB_ERR_WRITE   1
 
+DOS_File* Files[DOS_FILES] = {};
 
-DOS_File * Files[DOS_FILES];
-DOS_Drive * Drives[DOS_DRIVES];
+// Merely pointers. The actual filesystem and raw image objects are managed by
+// the drive manager class.
+std::array<DOS_Drive*, DOS_DRIVES> Drives = {};
 
 uint8_t DOS_GetDefaultDrive(void) {
 //	return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
@@ -58,7 +61,8 @@ void DOS_SetDefaultDrive(uint8_t drive) {
 	if (drive<DOS_DRIVES && ((drive<2) || Drives[drive])) {dos.current_drive = drive; DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDrive(drive);}
 }
 
-bool DOS_MakeName(char const * const name,char * const fullname,uint8_t * drive) {
+bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
+{
 	if(!name || *name == 0 || *name == ' ') {
 		/* Both \0 and space are seperators and
 		 * empty filenames report file not found */
@@ -163,7 +167,8 @@ bool DOS_MakeName(char const * const name,char * const fullname,uint8_t * drive)
 				if((strlen(tempdir) - strlen(ext)) > 8) memmove(tempdir + 8, ext, 5);
 			} else tempdir[8]=0;
 
-			for (size_t i = 0; i < strlen(tempdir); ++i) {
+			const auto tempdir_len = strlen(tempdir);
+			for (size_t i = 0; i < tempdir_len; ++i) {
 				c = tempdir[i];
 				if ((c >= 'A') && (c <= 'Z')) {
 					continue;
@@ -199,7 +204,7 @@ bool DOS_MakeName(char const * const name,char * const fullname,uint8_t * drive)
 		}
 		tempdir[w++]=upname[r++];
 	}
-	return true;	
+	return true;
 }
 
 bool DOS_GetCurrentDir(uint8_t drive,char * const buffer) {
@@ -214,18 +219,21 @@ bool DOS_GetCurrentDir(uint8_t drive,char * const buffer) {
 }
 static bool PathExists(const char *name);
 
-bool DOS_ChangeDir(char const * const dir) {
+bool DOS_ChangeDir(const char* const dir)
+{
 	uint8_t drive;
 	char fulldir[DOS_PATHLENGTH];
 	const auto exists_and_set = DOS_MakeName(dir, fulldir, &drive) &&
-	                            Drives[drive]->TestDir(fulldir) &&
-	                            safe_strcpy(Drives[drive]->curdir, fulldir);
-	if (!exists_and_set)
+	                            Drives.at(drive)->TestDir(fulldir) &&
+	                            safe_strcpy(Drives.at(drive)->curdir, fulldir);
+	if (!exists_and_set) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
+	}
 	return exists_and_set;
 }
 
-bool DOS_MakeDir(char const * const dir) {
+bool DOS_MakeDir(const char* const dir)
+{
 	uint8_t drive;char fulldir[DOS_PATHLENGTH];
 	size_t len = strlen(dir);
 	if(!len || dir[len-1] == '\\') {
@@ -233,25 +241,28 @@ bool DOS_MakeDir(char const * const dir) {
 		return false;
 	}
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
-	if(Drives[drive]->MakeDir(fulldir)) return true;
+	if (Drives.at(drive)->MakeDir(fulldir)) {
+		return true;
+	}
 
 	/* Determine reason for failing */
-	if(Drives[drive]->TestDir(fulldir)) 
+	if (Drives.at(drive)->TestDir(fulldir)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
-	else
+	} else
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 	return false;
 }
 
-bool DOS_RemoveDir(char const * const dir) {
-/* We need to do the test before the removal as can not rely on
- * the host to forbid removal of the current directory.
- * We never change directory. Everything happens in the drives.
- */
+bool DOS_RemoveDir(const char* const dir)
+{
+	/* We need to do the test before the removal as can not rely on
+	 * the host to forbid removal of the current directory.
+	 * We never change directory. Everything happens in the drives.
+	 */
 	uint8_t drive;char fulldir[DOS_PATHLENGTH];
 	if (!DOS_MakeName(dir,fulldir,&drive)) return false;
 	/* Check if exists */
-	if(!Drives[drive]->TestDir(fulldir)) {
+	if (!Drives.at(drive)->TestDir(fulldir)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		return false;
 	}
@@ -263,7 +274,9 @@ bool DOS_RemoveDir(char const * const dir) {
 		return false;
 	}
 
-	if(Drives[drive]->RemoveDir(fulldir)) return true;
+	if (Drives.at(drive)->RemoveDir(fulldir)) {
+		return true;
+	}
 
 	/* Failed. We know it exists and it's not the current dir */
 	/* Assume non empty */
@@ -271,7 +284,8 @@ bool DOS_RemoveDir(char const * const dir) {
 	return false;
 }
 
-static bool PathExists(char const * const name) {
+static bool PathExists(const char* const name)
+{
 	const char* leading = strrchr(name,'\\');
 	if(!leading) return true;
 	char temp[CROSS_LEN];
@@ -281,11 +295,14 @@ static bool PathExists(char const * const name) {
 	*lead = 0;
 	uint8_t drive;char fulldir[DOS_PATHLENGTH];
 	if (!DOS_MakeName(temp,fulldir,&drive)) return false;
-	if(!Drives[drive]->TestDir(fulldir)) return false;
+	if (!Drives.at(drive)->TestDir(fulldir)) {
+		return false;
+	}
 	return true;
 }
 
-bool DOS_Rename(char const * const oldname,char const * const newname) {
+bool DOS_Rename(const char* const oldname, const char* const newname)
+{
 	uint8_t driveold;char fullold[DOS_PATHLENGTH];
 	uint8_t drivenew;char fullnew[DOS_PATHLENGTH];
 	if (!DOS_MakeName(oldname,fullold,&driveold)) return false;
@@ -303,18 +320,20 @@ bool DOS_Rename(char const * const oldname,char const * const newname) {
 	}
 	/*Test if target exists => no access */
 	uint16_t attr;
-	if(Drives[drivenew]->GetFileAttr(fullnew,&attr)) {
+	if (Drives.at(drivenew)->GetFileAttr(fullnew, &attr)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 	/* Source must exist */
-	if (!Drives[driveold]->GetFileAttr( fullold, &attr ) ) {
+	if (!Drives.at(driveold)->GetFileAttr(fullold, &attr)) {
 		if (!PathExists(oldname)) DOS_SetError(DOSERR_PATH_NOT_FOUND);
 		else DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
 
-	if (Drives[drivenew]->Rename(fullold,fullnew)) return true;
+	if (Drives.at(drivenew)->Rename(fullold, fullnew)) {
+		return true;
+	}
 	/* Rename failed despite checks => no access */
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
@@ -363,9 +382,11 @@ bool DOS_FindFirst(const char *search, uint16_t attr, bool fcb_findfirst)
 		LOG(LOG_DOSMISC,LOG_WARN)("finding device %s",pattern);
 		return true;
 	}
-   
-	if (Drives[drive]->FindFirst(dir,dta,fcb_findfirst)) return true;
-	
+
+	if (Drives.at(drive)->FindFirst(dir, dta, fcb_findfirst)) {
+		return true;
+	}
+
 	return false;
 }
 
@@ -481,7 +502,8 @@ bool DOS_FlushFile(uint16_t entry) {
 	return true;
 }
 
-bool DOS_CreateFile(char const * name,uint16_t attributes,uint16_t * entry,bool fcb) {
+bool DOS_CreateFile(const char* name, uint16_t attributes, uint16_t* entry, bool fcb)
+{
 	// Creation of a device is the same as opening it
 	// Tc201 installer
 	if (DOS_FindDevice(name) != DOS_DEVICES)
@@ -520,7 +542,7 @@ bool DOS_CreateFile(char const * name,uint16_t attributes,uint16_t * entry,bool 
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
-	bool foundit=Drives[drive]->FileCreate(&Files[handle],fullname,attributes);
+	bool foundit = Drives.at(drive)->FileCreate(&Files[handle], fullname, attributes);
 	if (foundit) { 
 		Files[handle]->SetDrive(drive);
 		Files[handle]->AddRef();
@@ -533,7 +555,8 @@ bool DOS_CreateFile(char const * name,uint16_t attributes,uint16_t * entry,bool 
 	}
 }
 
-bool DOS_OpenFile(char const * name,uint8_t flags,uint16_t * entry,bool fcb) {
+bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
+{
 	/* First check for devices */
 	if (flags>2) LOG(LOG_FILES,LOG_ERROR)("Special file open command %X file %s",flags,name);
 	else LOG(LOG_FILES,LOG_NORMAL)("file open command %X file %s",flags,name);
@@ -582,7 +605,7 @@ bool DOS_OpenFile(char const * name,uint8_t flags,uint16_t * entry,bool fcb) {
 	} else {
 		const auto old_errorcode = dos.errorcode;
 		dos.errorcode = 0;
-		exists = Drives[drive]->FileOpen(&Files[handle], fullname, flags);
+		exists = Drives.at(drive)->FileOpen(&Files[handle], fullname, flags);
 		if (exists)
 			Files[handle]->SetDrive(drive);
 		if (dos.errorcode == DOSERR_ACCESS_CODE_INVALID)
@@ -595,9 +618,10 @@ bool DOS_OpenFile(char const * name,uint8_t flags,uint16_t * entry,bool fcb) {
 		return true;
 	} else {
 		//Test if file exists, but opened in read-write mode (and writeprotected)
-		if(((flags&3) != OPEN_READ) && Drives[drive]->FileExists(fullname))
+		if (((flags & 3) != OPEN_READ) &&
+		    Drives.at(drive)->FileExists(fullname)) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
-		else {
+		} else {
 			if(!PathExists(name)) DOS_SetError(DOSERR_PATH_NOT_FOUND); 
 			else DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		}
@@ -605,8 +629,10 @@ bool DOS_OpenFile(char const * name,uint8_t flags,uint16_t * entry,bool fcb) {
 	}
 }
 
-bool DOS_OpenFileExtended(char const * name, uint16_t flags, uint16_t createAttr, uint16_t action, uint16_t *entry, uint16_t* status) {
-// FIXME: Not yet supported : Bit 13 of flags (int 0x24 on critical error)
+bool DOS_OpenFileExtended(const char* name, uint16_t flags, uint16_t createAttr,
+                          uint16_t action, uint16_t* entry, uint16_t* status)
+{
+	// FIXME: Not yet supported : Bit 13 of flags (int 0x24 on critical error)
 	uint16_t result = 0;
 	if (action==0) {
 		// always fail setting
@@ -656,7 +682,8 @@ bool DOS_OpenFileExtended(char const * name, uint16_t flags, uint16_t createAttr
 	return true;
 }
 
-bool DOS_UnlinkFile(char const * const name) {
+bool DOS_UnlinkFile(const char* const name)
+{
 	char fullname[DOS_PATHLENGTH];
 	uint8_t drive;
 
@@ -672,16 +699,16 @@ bool DOS_UnlinkFile(char const * const name) {
 		return false;
 	}
 
-	return Drives[drive]->FileUnlink(fullname);
+	return Drives.at(drive)->FileUnlink(fullname);
 }
 
-bool DOS_GetFileAttr(char const *const name, uint16_t *attr)
+bool DOS_GetFileAttr(const char* const name, uint16_t* attr)
 {
 	char fullname[DOS_PATHLENGTH];
 	uint8_t drive;
 	if (!DOS_MakeName(name, fullname, &drive))
 		return false;
-	if (Drives[drive]->GetFileAttr(fullname, attr)) {
+	if (Drives.at(drive)->GetFileAttr(fullname, attr)) {
 		return true;
 	} else {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
@@ -689,7 +716,7 @@ bool DOS_GetFileAttr(char const *const name, uint16_t *attr)
 	}
 }
 
-bool DOS_SetFileAttr(char const *const name, uint16_t attr)
+bool DOS_SetFileAttr(const char* const name, uint16_t attr)
 {
 	char fullname[DOS_PATHLENGTH];
 	uint8_t drive;
@@ -702,7 +729,7 @@ bool DOS_SetFileAttr(char const *const name, uint16_t attr)
 	}
 
 	uint16_t old_attr;
-	if (!Drives[drive]->GetFileAttr(fullname, &old_attr)) {
+	if (!Drives.at(drive)->GetFileAttr(fullname, &old_attr)) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
@@ -718,11 +745,13 @@ bool DOS_SetFileAttr(char const *const name, uint16_t attr)
 	/* define what cannot be changed */
 	const uint16_t attr_mask = (DOS_ATTR_VOLUME | DOS_ATTR_DIRECTORY);
 	attr = (attr & ~attr_mask) | (old_attr & attr_mask);
-	return Drives[drive]->SetFileAttr(fullname, attr);
+	return Drives.at(drive)->SetFileAttr(fullname, attr);
 }
 
-bool DOS_Canonicalize(char const * const name,char * const big) {
-//TODO Add Better support for devices and shit but will it be needed i doubt it :) 
+bool DOS_Canonicalize(const char* const name, char* const big)
+{
+	// TODO Add Better support for devices and shit but will it be needed i
+	// doubt it :) 
 	uint8_t drive;
 	char fullname[DOS_PATHLENGTH];
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
@@ -1363,11 +1392,11 @@ void DOS_FCBSetRandomRecord(uint16_t seg, uint16_t offset) {
 	fcb.SetRandom(block*128+rec);
 }
 
-
-bool DOS_FileExists(char const * const name) {
+bool DOS_FileExists(const char* const name)
+{
 	char fullname[DOS_PATHLENGTH];uint8_t drive;
 	if (!DOS_MakeName(name,fullname,&drive)) return false;
-	return Drives[drive]->FileExists(fullname);
+	return Drives.at(drive)->FileExists(fullname);
 }
 
 bool DOS_GetAllocationInfo(uint8_t drive,uint16_t * _bytes_sector,uint8_t * _sectors_cluster,uint16_t * _total_clusters) {
@@ -1385,7 +1414,7 @@ bool DOS_GetAllocationInfo(uint8_t drive,uint16_t * _bytes_sector,uint8_t * _sec
 }
 
 bool DOS_SetDrive(uint8_t drive) {
-	if (Drives[drive]) {
+	if (Drives.at(drive)) {
 		DOS_SetDefaultDrive(drive);
 		return true;
 	} else {
@@ -1437,5 +1466,9 @@ void DOS_SetupFiles()
 	/* Setup the Virtual Disk System */
 	for (uint8_t i = 0; i < DOS_DRIVES; ++i)
 		Drives[i] = nullptr;
-	Drives[drive_index('Z')] = new Virtual_Drive();
+
+	const auto z_drive_index = drive_index('Z');
+
+	Drives.at(z_drive_index) = DriveManager::RegisterFilesystemImage(
+	        z_drive_index, std::make_unique<Virtual_Drive>());
 }

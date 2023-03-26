@@ -125,6 +125,7 @@ static bool add_wildcard_paths(const std::string& path_arg,
 	return true;
 }
 
+// This function desparately needs to be refactored into type-specific mounters
 void IMGMOUNT::Run(void)
 {
 	// Hack To allow long commandlines
@@ -184,9 +185,9 @@ void IMGMOUNT::Run(void)
 
 	uint16_t sizes[4]  = {0};
 	bool imgsizedetect = false;
+	const uint8_t mediaid = (type == "floppy") ? 0xF0 : 0xF8; // all others
 
 	std::string str_size = "";
-	uint8_t mediaid      = 0xF8;
 
 	// Possibly used to hold the IDE channel and drive slot for CDROM types
 	std::string ide_value     = {};
@@ -195,14 +196,10 @@ void IMGMOUNT::Run(void)
 	const bool wants_ide      = cmd->FindString("-ide", ide_value, true) ||
 	                       cmd->FindExist("-ide", true);
 
-	if (type == "floppy") {
-		mediaid = 0xF0;
-	} else if (type == "iso") {
+	if (type == "iso") {
 		// str_size="2048,1,65535,0";	// ignored, see drive_iso.cpp
 		// (AllocationInfo)
-		mediaid = 0xF8;
-		fstype  = "iso";
-
+		fstype = "iso";
 		if (wants_ide) {
 			IDE_Get_Next_Cable_Slot(ide_index, is_second_cable_slot);
 		}
@@ -313,15 +310,16 @@ void IMGMOUNT::Run(void)
 					        "PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
 					return;
 				}
-				if (Drives[dummy]->GetType() != DosDriveType::Local) {
+				if (Drives.at(dummy)->GetType() !=
+				    DosDriveType::Local) {
 					WriteOut(MSG_Get(
 					        "PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE"));
 					return;
 				}
 
-				localDrive* ldp = dynamic_cast<localDrive*>(
-				        Drives[dummy]);
-				if (ldp == NULL) {
+				const auto ldp = dynamic_cast<localDrive*>(
+				        Drives.at(dummy));
+				if (ldp == nullptr) {
 					WriteOut(MSG_Get(
 					        "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
 					return;
@@ -423,42 +421,36 @@ void IMGMOUNT::Run(void)
 			        sizes[3]);
 		}
 
-		if (Drives[drive_index(drive)]) {
+		if (Drives.at(drive_index(drive))) {
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 			return;
 		}
 
-		std::vector<DOS_Drive*> imgDisks;
-		std::vector<std::string>::size_type i;
-		std::vector<DOS_Drive*>::size_type ct;
+		DriveManager::filesystem_images_t fat_images = {};
 
-		for (i = 0; i < paths.size(); i++) {
-			std::unique_ptr<fatDrive> newDrive(
-			        new fatDrive(paths[i].c_str(),
-			                     sizes[0],
-			                     sizes[1],
-			                     sizes[2],
-			                     sizes[3],
-			                     0,
-			                     roflag));
-
-			if (newDrive->created_successfully) {
-				imgDisks.push_back(static_cast<DOS_Drive*>(
-				        newDrive.release()));
+		for (const auto& fat_path : paths) {
+			auto fat_image = std::make_unique<fatDrive>(fat_path.c_str(),
+			                                            sizes[0],
+			                                            sizes[1],
+			                                            sizes[2],
+			                                            sizes[3],
+			                                            0,
+			                                            roflag);
+			if (fat_image->created_successfully) {
+				fat_images.emplace_back(std::move(fat_image));
 			} else {
-				// Tear-down all prior drives when we hit a problem
 				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
-				for (auto pImgDisk : imgDisks) {
-					delete pImgDisk;
-				}
 				return;
 			}
 		}
+		if (fat_images.empty()) {
+			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
+			return;
+		}
 
 		// Update DriveManager
-		for (ct = 0; ct < imgDisks.size(); ct++) {
-			DriveManager::AppendDisk(drive_index(drive), imgDisks[ct]);
-		}
+		const auto fat_pointers = DriveManager::AppendFilesystemImages(
+		        drive_index(drive), fat_images);
 		DriveManager::InitializeDrive(drive_index(drive));
 
 		// Set the correct media byte in the table
@@ -469,9 +461,9 @@ void IMGMOUNT::Run(void)
 		RealPt save_dta = dos.dta();
 		dos.dta(dos.tables.tempdta);
 
-		for (ct = 0; ct < imgDisks.size(); ct++) {
-			const bool notify = (ct == (imgDisks.size() - 1));
-			DriveManager::CycleDisks(drive_index(drive), notify);
+		for (auto it = fat_pointers.begin(); it != fat_pointers.end(); ++it) {
+			const bool should_notify = std::next(it) == fat_pointers.end();
+			DriveManager::CycleDisks(drive_index(drive), should_notify);
 			char root[7] = {drive, ':', '\\', '*', '.', '*', 0};
 			DOS_FindFirst(root, DOS_ATTR_VOLUME); // force obtaining
 			                                      // the label and
@@ -481,33 +473,35 @@ void IMGMOUNT::Run(void)
 		dos.dta(save_dta);
 
 		write_out_mount_status(MSG_Get("MOUNT_TYPE_FAT"), paths, drive);
-		auto newdrive = static_cast<fatDrive*>(imgDisks[0]);
-		assert(newdrive);
-		if (('A' <= drive && drive <= 'B' &&
-		     !(newdrive->loadedDisk->hardDrive)) ||
-		    ('C' <= drive && drive <= 'D' && newdrive->loadedDisk->hardDrive)) {
-			const size_t idx   = drive_index(drive);
-			imageDiskList[idx] = newdrive->loadedDisk;
+
+		const auto fat_image = dynamic_cast<fatDrive*>(fat_pointers.front());
+		assert(fat_image);
+		const auto has_hdd = fat_image->loadedDisk &&
+		                     fat_image->loadedDisk->hardDrive;
+
+		const auto is_floppy = (drive == 'A' || drive == 'B') && !has_hdd;
+		const auto is_hdd = (drive == 'C' || drive == 'D') && has_hdd;
+		if (is_floppy || is_hdd) {
+			imageDiskList.at(
+			        drive_index(drive)) = fat_image->loadedDisk.get();
 			updateDPT();
 		}
 	} else if (fstype == "iso") {
-		if (Drives[drive_index(drive)]) {
+		if (Drives.at(drive_index(drive))) {
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_ALREADY_MOUNTED"));
 			return;
 		}
 
 		MSCDEX_SetCDInterface(CDROM_USE_SDL, -1);
 		// create new drives for all images
-		std::vector<DOS_Drive*> isoDisks;
-		std::vector<std::string>::size_type i;
-		std::vector<DOS_Drive*>::size_type ct;
-		for (i = 0; i < paths.size(); i++) {
-			int error           = -1;
-			DOS_Drive* newDrive = new isoDrive(drive,
-			                                   paths[i].c_str(),
-			                                   mediaid,
-			                                   error);
-			isoDisks.push_back(newDrive);
+		DriveManager::filesystem_images_t iso_images = {};
+		for (const auto& iso_path : paths) {
+			int error = -1;
+
+			auto iso_image = std::make_unique<isoDrive>(
+			        drive, iso_path.c_str(), mediaid, error);
+
+			iso_images.emplace_back(std::move(iso_image));
 			switch (error) {
 			case 0: break;
 			case 1:
@@ -532,16 +526,13 @@ void IMGMOUNT::Run(void)
 			}
 			// error: clean up and leave
 			if (error) {
-				for (ct = 0; ct < isoDisks.size(); ct++) {
-					delete isoDisks[ct];
-				}
+				WriteOut(MSG_Get("PROGRAM_IMGMOUNT_CANT_CREATE"));
 				return;
 			}
 		}
 		// Update DriveManager
-		for (ct = 0; ct < isoDisks.size(); ct++) {
-			DriveManager::AppendDisk(drive_index(drive), isoDisks[ct]);
-		}
+		(void)DriveManager::AppendFilesystemImages(drive_index(drive),
+		                                           iso_images);
 		DriveManager::InitializeDrive(drive_index(drive));
 
 		// Set the correct media byte in the table
@@ -566,43 +557,43 @@ void IMGMOUNT::Run(void)
 		write_out_mount_status(MSG_Get("MOUNT_TYPE_ISO"), paths, drive);
 
 	} else if (fstype == "none") {
-		FILE* newDisk = fopen_wrap_ro_fallback(temp_line, roflag);
-		if (!newDisk) {
+		FILE* new_disk = fopen_wrap_ro_fallback(temp_line, roflag);
+		if (!new_disk) {
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 			return;
 		}
-		const auto sz = stdio_size_kb(newDisk);
+		const auto sz = stdio_size_kb(new_disk);
 		if (sz < 0) {
-			fclose(newDisk);
+			fclose(new_disk);
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_INVALID_IMAGE"));
 			return;
 		}
 		uint32_t imagesize = check_cast<uint32_t>(sz);
-		const bool hdd     = (imagesize > 2880);
+		const bool is_hdd  = (imagesize > 2880);
 		// Seems to make sense to require a valid geometry..
-		if (hdd && sizes[0] == 0 && sizes[1] == 0 && sizes[2] == 0 &&
+		if (is_hdd && sizes[0] == 0 && sizes[1] == 0 && sizes[2] == 0 &&
 		    sizes[3] == 0) {
-			fclose(newDisk);
+			fclose(new_disk);
 			WriteOut(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"));
 			return;
 		}
 
-		imageDisk* newImage = new imageDisk(newDisk,
-		                                    temp_line.c_str(),
-		                                    imagesize,
-		                                    hdd);
+		const auto drive_index = drive - '0';
 
-		if (hdd) {
-			newImage->Set_Geometry(sizes[2], sizes[3], sizes[1], sizes[0]);
+		imageDiskList.at(drive_index) = DriveManager::RegisterNumberedImage(
+		        new_disk, temp_line, imagesize, is_hdd);
+
+		if (is_hdd) {
+			imageDiskList.at(drive_index)
+			        ->Set_Geometry(sizes[2], sizes[3], sizes[1], sizes[0]);
 		}
-		imageDiskList[drive - '0'].reset(newImage);
 
-		if ((drive == '2' || drive == '3') && hdd) {
+		if ((drive == '2' || drive == '3') && is_hdd) {
 			updateDPT();
 		}
 
 		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),
-		         drive - '0',
+		         drive_index,
 		         temp_line.c_str());
 	}
 

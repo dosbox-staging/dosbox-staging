@@ -25,6 +25,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <type_traits>
 
@@ -98,7 +99,7 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 /* internal Dos Tables */
 
 extern DOS_File * Files[DOS_FILES];
-extern DOS_Drive * Drives[DOS_DRIVES];
+extern std::array<DOS_Drive*, DOS_DRIVES> Drives;
 extern DOS_Device * Devices[DOS_DEVICES];
 
 extern uint8_t dos_copybuf[0x10000];

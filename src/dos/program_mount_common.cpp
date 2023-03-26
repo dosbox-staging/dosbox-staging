@@ -39,18 +39,20 @@ const char *UnmountHelper(char umount)
 	                                           : drive_index(drive_id);
 	assert(i_drive < DOS_DRIVES);
 
-	if (i_drive < MAX_DISK_IMAGES && Drives[i_drive] == NULL && !imageDiskList[i_drive])
+	if (i_drive < MAX_DISK_IMAGES && !Drives[i_drive] && !imageDiskList[i_drive]) {
 		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+	}
 
-	if (i_drive >= MAX_DISK_IMAGES && Drives[i_drive] == NULL)
+	if (i_drive >= MAX_DISK_IMAGES && !Drives[i_drive]) {
 		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+	}
 
 	if (Drives[i_drive]) {
 		switch (DriveManager::UnmountDrive(i_drive)) {
 			case 1: return MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL");
 			case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS");
 		}
-		Drives[i_drive] = 0;
+		Drives[i_drive] = nullptr;
 		mem_writeb(Real2Phys(dos.tables.mediaid)+i_drive*9,0);
 		if (i_drive == DOS_GetDefaultDrive()) {
 			DOS_SetDrive(ZDRIVE_NUM);
@@ -59,7 +61,8 @@ const char *UnmountHelper(char umount)
 	}
 
 	if (i_drive < MAX_DISK_IMAGES && imageDiskList[i_drive]) {
-		imageDiskList[i_drive].reset();
+		imageDiskList[i_drive] = nullptr;
+		DriveManager::CloseNumberedImage(imageDiskList[i_drive]);
 	}
 
 	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");

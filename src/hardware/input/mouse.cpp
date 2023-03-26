@@ -89,11 +89,11 @@ static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y
 
 		if (absolute < 0 || static_cast<uint32_t>(absolute) < clipping) {
 			// cursor is over the top or left black bar
-			state.cursor_is_outside = !state.is_fullscreen;
+			state.cursor_is_outside = !state.is_captured;
 			return 0;
 		} else if (static_cast<uint32_t>(absolute) >= resolution + clipping) {
 			// cursor is over the bottom or right black bar
-			state.cursor_is_outside = !state.is_fullscreen;
+			state.cursor_is_outside = !state.is_captured;
 			return check_cast<uint32_t>(resolution - 1);
 		}
 
@@ -643,16 +643,20 @@ static std::vector<MouseInterface *> get_relevant_interfaces(
 {
 	std::vector<MouseInterface *> list_tmp = {};
 
-	if (list_ids.empty())
+	if (list_ids.empty()) {
 		// If command does not specify interfaces,
 		// assume we are interested in all of them
-		list_tmp = mouse_interfaces;
-	else
-		for (const auto &interface_id : list_ids) {
-			auto interface = MouseInterface::Get(interface_id);
-			if (interface)
-				list_tmp.push_back(interface);
+		for (const auto& interface : mouse_interfaces) {
+			list_tmp.push_back(interface.get());
 		}
+	} else {
+		for (const auto& id : list_ids) {
+			if (const auto interface = MouseInterface::Get(id);
+			    interface) {
+				list_tmp.push_back(interface);
+			}
+		}
+	}
 
 	// Filter out not emulated ones
 	std::vector<MouseInterface *> list_out = {};

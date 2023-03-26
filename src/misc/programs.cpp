@@ -957,9 +957,12 @@ void CONFIG::Run(void)
 				tsec->ExecuteDestroy(false);
 				bool change_success = tsec->HandleInputline(
 				        inputline.c_str());
+
 				if (!change_success) {
+					auto val = value;
+					trim(val);
 					WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
-					         value.c_str(),
+					         val.c_str(),
 					         pvars[1].c_str());
 				}
 				tsec->ExecuteInit(false);
@@ -1071,7 +1074,7 @@ void PROGRAMS_Init(Section* sec)
 	        "This operation is not permitted in secure mode.\n");
 	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section \"%s\" doesn't exist.\n");
 	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
-	        "\"%s\" is not a valid value for property %s.\n");
+	        "\"%s\" is not a valid value for property \"%s\".\n");
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
 	        "Correct syntax: config -get \"section property\".\n");
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP",

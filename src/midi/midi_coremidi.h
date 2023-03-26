@@ -49,7 +49,15 @@ public:
 	          m_pCurPacket(nullptr)
 	{}
 
-	const char *GetName() const override { return "coremidi"; }
+	const char* GetName() const override
+	{
+		return "coremidi";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::External;
+	}
 
 	bool Open(const char *conf) override
 	{
@@ -110,8 +118,9 @@ public:
 
 	void Close() override
 	{
-		if (m_port && m_client)
-			HaltSequence();
+		if (m_port && m_client) {
+			Reset();
+		}
 
 		// Dispose the port
 		MIDIPortDispose(m_port);
@@ -121,7 +130,7 @@ public:
 
 		// Dispose the endpoint
 		// Not, as it is for Endpoints created by us
-//		MIDIEndpointDispose(m_endpoint);
+		//		MIDIEndpointDispose(m_endpoint);
 	}
 
 	void PlayMsg(const MidiMessage& msg) override

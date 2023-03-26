@@ -48,7 +48,12 @@
 /* Define to 1 to use x86 dynamic cpu core */
 #define C_DYNAMIC_X86 1
 
-/* Define to 1 to use recompiling cpu core. Can not be used together with the dynamic-x86 core */
+/* Define to 1 if the target platform needs per-page dynamic core write or
+ * execute (W^X) tagging */
+#define C_PER_PAGE_W_OR_X 1
+
+/* Define to 1 to use recompiling cpu core. Can not be used together with the
+ * dynamic-x86 core */
 #define C_DYNREC 0
 
 /* Enable memory function inlining in */

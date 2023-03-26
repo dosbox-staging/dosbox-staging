@@ -6,13 +6,14 @@ hide:
 # macOS builds
 
 
-**[Download DOSBox Staging 0.80.1 Universal binary (dmg)][0_80_1]**
+**[Download DOSBox Staging 0.80.1 Universal Binary (dmg)][0_80_1]**
 <br>
 <small>
 sha256: 46a256645255e8345981ea357f1416b8<wbr>ce4bc60a2aba9a86b5122d5075aa7fa
 </small>
 
-This package is compatible with macOS 10.15 (Catalina) or newer.
+This package is compatible with macOS 10.15 (Catalina) or newer and supports both
+Intel and M1 Macs.
 
 Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
 the changes and improvements introduced by this release.
@@ -28,7 +29,7 @@ the changes and improvements introduced by this release.
 ## Homebrew
 
 The [Homebrew package](https://formulae.brew.sh/formula/dosbox-staging) is
-compatible with macOS 10.14 (Mojave) or newer. Learn how to setup Homebrew
+compatible with macOS 10.14 (Mojave) or newer. Learn how to set up Homebrew
 [here](https://mac.install.guide/homebrew/).
 
     brew update
@@ -39,7 +40,7 @@ compatible with macOS 10.14 (Mojave) or newer. Learn how to setup Homebrew
 
 The [MacPorts package](https://ports.macports.org/port/dosbox-staging/)
 should build on systems as old as macOS 10.6 (Snow Leopard, circa 2009) or newer.
-Learn how to setup MacPorts [here](https://guide.macports.org/).
+Learn how to set up MacPorts [here](https://guide.macports.org/).
 
     sudo port selfupdate
     sudo port install dosbox-staging
@@ -52,7 +53,7 @@ to reproduce some issues).
 ## Hardware requirements
 
 For x86 CPUs the SSE 4.2 instruction set is required. For Intel Mac models
-that don't support it you can try using the parital SSE4.2 emulator
+that don't support it, you can try using the partial SSE4.2 emulator
 [MouSSE](https://forums.macrumors.com/threads/mp3-1-others-sse-4-2-emulation-to-enable-amd-metal-driver.2206682/).
 
 
@@ -201,7 +202,7 @@ payments and therefore ask users to bypass Apple's Gatekeeper manually.
 
 ## Building from source
 
-Of course you can always [build DOSBox Staging straight from the source][1].
+Of course, you can always [build DOSBox Staging straight from the source][1].
 
 Send us patches if you improve something! :smile:
 

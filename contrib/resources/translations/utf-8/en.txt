@@ -948,7 +948,7 @@ You can put your MOUNT lines here.
 # Lines starting with a '#' character are comments.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Possible values
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
@@ -1063,7 +1063,7 @@ Section "%s" doesn't exist.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" is not a valid value for property %s.
+"%s" is not a valid value for property "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -2452,7 +2452,7 @@ Displays a list of files and subdirectories in a directory.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Usage:
-  [color=green]dir[reset] [color=cyan][PATTERN][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]
+  [color=green]dir[reset] [color=cyan][PATTERN][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]
 
 Where:
   [color=cyan]PATTERN[reset] is either an exact filename or an inexact filename with wildcards,

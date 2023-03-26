@@ -150,16 +150,20 @@ pkg_macos()
 
     sed -i -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
 
-	# Install "Start DOSBox Staging" command
+	# Install start commands
 	start_command="Start DOSBox Staging.command"
-	install -m 755 "contrib/macos/${start_command}" "${macos_dist_dir}/${start_command}"
+	start_logging_command="Start DOSBox Staging (logging).command"
+	install -m 755 "contrib/macos/${start_command}"         "${macos_dist_dir}/${start_command}"
+	install -m 755 "contrib/macos/${start_logging_command}" "${macos_dist_dir}/${start_logging_command}"
 
-	# Hide extension in Finder
-	xattr -x -w com.apple.FinderInfo "00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00" "${macos_dist_dir}/${start_command}"
+	# Hide command extensions in Finder
+	file_attr="00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+	xattr -x -w com.apple.FinderInfo "$file_attr" "${macos_dist_dir}/${start_command}"
+	xattr -x -w com.apple.FinderInfo "$file_attr" "${macos_dist_dir}/${start_logging_command}"
 
 	# Set up visual appearance of the root folder of the DMG image
 	install_file contrib/macos/background/background.tiff "${macos_dist_dir}/.hidden/background.tiff"
-	install_file contrib/macos/DS_Store            "${macos_dist_dir}/.DS_Store"
+	install_file contrib/macos/DS_Store "${macos_dist_dir}/.DS_Store"
 }
 
 pkg_msys2()

@@ -744,6 +744,7 @@ static inline void cache_addq(uint64_t val)
 #if (C_DYNAMIC_X86)
 static void gen_return(BlockReturn retcode);
 #elif (C_DYNREC)
+BlockReturn generate_run_code(const uint8_t* code);
 static void dyn_return(BlockReturn retcode, bool ret_exception);
 static void dyn_run_code();
 static void cache_block_before_close();
@@ -796,34 +797,46 @@ static inline void dyn_mem_set_access([[maybe_unused]] void *ptr,
 
 static inline void dyn_mem_execute(void *ptr, size_t size)
 {
+#if defined(C_PER_PAGE_W_OR_X)
 	dyn_mem_set_access(ptr, size, true);
+#else
+	// Skip per-page execute-flagging
+#endif
 }
 
 static inline void dyn_mem_write(void *ptr, size_t size)
 {
+#if defined(C_PER_PAGE_W_OR_X)
 	dyn_mem_set_access(ptr, size, false);
+#else
+	// Skip per-page write-flagging
+#endif
 }
 
 static inline void dyn_cache_invalidate([[maybe_unused]] void *ptr,
                                         [[maybe_unused]] size_t size)
 {
-#if defined(HAVE_BUILTIN_CLEAR_CACHE)
-	const auto start = static_cast<char *>(ptr);
+#if defined(C_PER_PAGE_W_OR_X)
+#	if defined(HAVE_BUILTIN_CLEAR_CACHE)
+	const auto start     = static_cast<char*>(ptr);
 	const auto start_val = reinterpret_cast<uintptr_t>(start);
 	const auto end_val = start_val + size;
 	const auto end = reinterpret_cast<char *>(end_val);
 	__builtin___clear_cache(start, end);
 #elif defined(HAVE_SYS_ICACHE_INVALIDATE)
 #if defined(HAVE_BUILTIN_AVAILABLE)
-	if (__builtin_available(macOS 11.0, *))
+	        if (__builtin_available(macOS 11.0, *))
 #endif
 		sys_icache_invalidate(ptr, size);
 #elif defined(WIN32)
-	if (CPU_UseRwxMemProtect)
+	        if (CPU_UseRwxMemProtect)
 		return;
 	FlushInstructionCache(GetCurrentProcess(), ptr, size);
 #else
 #error "Don't know how to clear the cache on this platform: please report this"
+#endif
+#else
+	// Skip per-page invalidation
 #endif
 }
 
@@ -866,12 +879,12 @@ static void cache_init(bool enable) {
 #endif
 			cache_code_start_ptr=static_cast<uint8_t *>(mmap(nullptr, cache_code_size, prot_flags, map_flags, -1, 0));
 			if (cache_code_start_ptr == MAP_FAILED) {
-				E_Exit("Allocating dynamic core cache memory failed with errno %d", errno);
+				E_Exit("DYNCACHE: Failed memory-mapping cache memory because: %s", strerror(errno));
 			}
 #else
 			cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
 			if (!cache_code_start_ptr) {
-				E_Exit("Allocating dynamic core cache memory failed");
+				E_Exit("DYNCACHE: Failed allocating cache memory because: %s", strerror(errno));
 			}
 #endif
 			// align the cache at a page boundary
@@ -888,27 +901,46 @@ static void cache_init(bool enable) {
 			block->cache.size=CACHE_TOTAL;
 			block->cache.next = nullptr; // last block in the list
 		}
-		// setup the default blocks for block linkage returns
-		cache.pos=&cache_code_link_blocks[0];
-		link_blocks[0].cache.start=cache.pos;
 
 		auto cache_addr = static_cast<void *>(cache_code);
 		constexpr size_t cache_bytes = CACHE_MAXSIZE;
 
 		dyn_mem_write(cache_addr, cache_bytes);
-		// link code that returns with a special return code
-		dyn_return(BR_Link1,false);
-		cache.pos=&cache_code_link_blocks[32];
-		link_blocks[1].cache.start=cache.pos;
-		// link code that returns with a special return code
-		dyn_return(BR_Link2,false);
 
-#if (C_DYNREC)
-		cache.pos=&cache_code_link_blocks[64];
-		core_dynrec.runcode=(BlockReturn (*)(const uint8_t*))cache.pos;
-//		link_blocks[1].cache.start=cache.pos;
-		dyn_run_code();
+		auto close_link_block_num_at_code_pos = [&](const uint8_t block_num,
+		                                            const uint16_t code_pos) {
+			// setup the default blocks for block linkage returns
+			cache.pos = &cache_code_link_blocks[code_pos];
+			link_blocks[block_num].cache.start = cache.pos;
+			// link code that returns with a special return code
+			// must be less than 32 bytes
+			dyn_return(block_num == 0 ? BR_Link1 : BR_Link2, false);
+#if C_DYNREC
+			cache_block_before_close();
+			cache_block_closing(link_blocks[block_num].cache.start,
+			                    cache.pos -
+			                            link_blocks[block_num].cache.start);
 #endif
+		};
+
+#if C_DYNAMIC_X86
+		close_link_block_num_at_code_pos(0, 0);
+		close_link_block_num_at_code_pos(1, 32);
+
+#elif C_DYNREC
+		cache.pos = &cache_code_link_blocks[0];
+		using generate_run_code_f = decltype(&generate_run_code);
+		core_dynrec.runcode = (generate_run_code_f)cache.pos;
+		dyn_run_code(); // writes up to host_pagesize - 64 bytes
+
+		cache_block_before_close();
+		cache_block_closing(cache_code_link_blocks,
+		                    cache.pos - cache_code_link_blocks);
+
+		close_link_block_num_at_code_pos(0, host_pagesize - 64);
+		close_link_block_num_at_code_pos(1, host_pagesize - 32);
+#endif
+
 		dyn_mem_execute(cache_addr, cache_bytes);
 		dyn_cache_invalidate(cache_addr, cache_bytes);
 

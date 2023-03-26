@@ -22,7 +22,7 @@ sha256: 3680cbdf7a91467877b51c95e468ef45<wbr>b186b42518c3163fab85c727923ee659
 [Download DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
 <br>
 <small>
-sha256: cd73b86699e9732bcee9fe33d4bc05e19262d0b1cc64478b18be9853fe28f083
+sha256: cd73b86699e9732bcee9fe33d4bc05e1<wbr>9262d0b1cc64478b18be9853fe28f083
 </small>
 
 Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
@@ -102,7 +102,7 @@ Microsoft's [EV certification](https://docs.microsoft.com/en-gb/archive/blogs/ie
 Store.
 
 As DOSBox Staging is a volunteer effort, we are not in a position to make such
-payments. We therefore ask users to manually unblock DOSBox Staging and be
+payments. We, therefore, ask users to manually unblock DOSBox Staging and be
 patient while Microsoft's Application Reputation Scheme eventually whitelists
 DOSBox Staging.
 
@@ -270,7 +270,7 @@ command-line install parameters, please see [Inno's documentation page](https://
 
 ## Building from source
 
-Of course you can always [build DOSBox Staging straight from the source][4].
+Of course, you can always [build DOSBox Staging straight from the source][4].
 
 Send us patches if you improve something! :smile:
 

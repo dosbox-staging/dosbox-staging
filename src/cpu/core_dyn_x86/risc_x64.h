@@ -1072,7 +1072,7 @@ static void gen_call_function(void * func,const char* ops,...) {
 	Bitu paramcount=0;
 	va_list params;
 	DynReg *dynret=NULL;
-	char rettype;
+	char rettype='\0';
 
 	/* Save the flags */
 	if (GCC_LIKELY(!skip_flags)) gen_protectflags();

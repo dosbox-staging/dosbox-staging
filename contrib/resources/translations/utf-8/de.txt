@@ -1016,7 +1016,7 @@ Du kannst deine MOUNT-Zeilen hier einfügen.
 # Zeilen, die mit einem "#" Zeichen beginnen, sind Kommentare.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Mögliche Werte
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
@@ -1131,7 +1131,7 @@ Abschnitt "%s" existiert nicht.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" ist kein gültiger Wert für die Eigenschaft %s.
+"%s" ist kein gültiger Wert für die Eigenschaft "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -1967,6 +1967,38 @@ Der Typ muss einer der folgenden sein:
 Unerlaubter Pfad.
 
 .
+:SHELL_ILLEGAL_SWITCH
+Unerlaubter Schalter: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Erforderlicher Parameter fehlt.
+
+.
+:SHELL_SYNTAX_ERROR
+Die Syntax des Befehls ist falsch.
+
+.
+:SHELL_ACCESS_DENIED
+Zugriff verweigert - '%s'
+
+.
+:SHELL_FILE_CREATE_ERROR
+Fehler beim Erstellen der Datei - '%s'
+
+.
+:SHELL_FILE_OPEN_ERROR
+Fehler beim Öffnen der Datei - '%s'
+
+.
+:SHELL_FILE_NOT_FOUND
+Datei '%s' nicht gefunden.
+
+.
+:SHELL_FILE_EXISTS
+Die Datei '%s' existiert bereits.
+
+.
 :SHELL_CMD_HELP
 Für eine Liste aller unterstützten Befehle, tippe [33;1mhelp /all[0m.
 Eine kurze Liste der am häufigsten verwendeten Befehle:
@@ -2001,14 +2033,6 @@ ECHO ist eingeschaltet.
 .
 :SHELL_CMD_ECHO_OFF
 ECHO ist ausgeschaltet.
-
-.
-:SHELL_ILLEGAL_SWITCH
-Unerlaubter Schalter: %s.
-
-.
-:SHELL_MISSING_PARAMETER
-Erforderlicher Parameter fehlt.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -2115,10 +2139,6 @@ Kann nicht entfernt werden: %s.
 Konnte nicht gelöscht werden: %s.
 
 .
-:SHELL_SYNTAXERROR
-Die Syntax des Befehls ist falsch.
-
-.
 :SHELL_CMD_SET_NOT_SET
 Umgebungsvariable %s nicht definiert.
 
@@ -2147,10 +2167,6 @@ Kein Label für den GOTO-Befehl angegeben.
 GOTO: Label %s nicht gefunden.
 
 .
-:SHELL_CMD_FILE_ACCESS_DENIED
-Zugriff verweigert - %s
-
-.
 :SHELL_CMD_DUPLICATE_REDIRECTION
 Doppelte Weiterleitung - %s
 
@@ -2159,22 +2175,6 @@ Doppelte Weiterleitung - %s
 
 Eine temporäre Datei für Piping konnte nicht erstellt/geöffnet werden.
 Überprüfe die Variable %%TEMP%%.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-Fehler beim Erstellen der Datei - %s
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-Fehler beim Öffnen der Datei - %s
-
-.
-:SHELL_CMD_FILE_NOT_FOUND
-Datei %s nicht gefunden.
-
-.
-:SHELL_CMD_FILE_EXISTS
-Die Datei %s existiert bereits.
 
 .
 :SHELL_CMD_DIR_VOLUME
@@ -2336,7 +2336,7 @@ Zeigt eine Liste der Dateien und Unterverzeichnisse an.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Verwendung:
-  [color=green]dir[reset] [color=cyan][SUCHMUSTER][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]REIHENFOLGE[reset]]
+  [color=green]dir[reset] [color=cyan][SUCHMUSTER][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]REIHENFOLGE[reset]]
 
 Wobei:
   [color=cyan]SUCHMUSTER[reset] ist entweder ein exakter Dateiname oder ein ungenauer Dateiname
@@ -3058,36 +3058,42 @@ Anmerkungen:
 Beispiele:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map   Auswahl der Mäuse für Spiel mit 2 Spielern
 .
-:PROGRAM_MOUSECTL_SYNTAX
-Falsche Befehlssyntax.
-.
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Falsche Syntax, nur ASCII-Zeichen erlaubt.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
 Falsche Syntax, die Empfindlichkeit muss im Bereich von -999 bis +999 liegen.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
 Falsche Syntax, doppelte Maus-Schnittstellen.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Wfalsche Syntax, die Abtastrate muss eine der folgenden sein:
 %s
+
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Im Modus ohne Maus ist die Zuordnung nicht möglich.
+
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
 Keine Maus-Schnittstellen verfügbar.
+
 .
 :PROGRAM_MOUSECTL_MISSING_INTERFACES
 Die Maus-Schnittstelle ist nicht verfügbar.
+
 .
 :PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 Es wurden keine realen Mäuse erkannt.
+
 .
 :PROGRAM_MOUSECTL_NO_MATCH
 Es wurde keine Maus gefunden, die dem Suchkriterium entspricht.
+
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Schnittstelle  Empfindlichkeit  Rate (Hz)     Status[reset]

@@ -289,7 +289,7 @@ macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
   agi-amigaish:  Mix di colori EGA e Amiga usati dall'interprete AGI Sarien.
   scumm-amiga:   Tavolozza utilizzata dai port Amiga dei giochi EGA LucasArts.
   colodore:      Colori ispirati al Commodore 64 basati su tavolozza Colodore.
-  colodore-sat:  Tavolozza Colodore con il 20% di saturazione in più.
+  colodore-sat:  Tavolozza Colodore con saturazione aumentata del 20%.
   dga16:         Versione moderna della tavolozza CGA, con contrasto ridotto.
 È possibile impostare colori personalizzati specificando 16 valori separati
 da spazi o virgole, come codici esadecimali a 3 o 6 cifre (es. #f00 o
@@ -423,7 +423,7 @@ sovraccarico dell'interrupt. Potrebbe causare problemi di compatibilità.
 Elenco di giochi incompatibili noti:
   - Ultima Underworld: The Stygian Abyss
   - Ultima Underworld II: Labyrinth of Worlds
-Segnalalo se trovi un altro gioco incompatibile in modo che possiamo aggiornare
+Se trovi un altro gioco incompatibile, segnalalo in modo da poter aggiornare
 questo elenco.
 .
 :CONFIG_PS2_MOUSE_MODEL
@@ -479,7 +479,7 @@ il ritaglio (clipping) dell'uscita audio:
 Imposta l'alimentazione incrociata a livello globale su tutti i canali stereo
 per l'ascolto in cuffia:
   off:          Alimentazione incrociata disabilitata (predefinito).
-  on:           Abilita alimentazione incrociata (intensità 40).
+  on:           Abilita l'alimentazione incrociata (intensità 40).
   <intensità>:  Imposta l'intensità dell'alimentazione incrociata da 0 a 100,
                 dove 0 significa spento (off) e 100 trasforma di fatto
                 il contenuto stereo in mono.
@@ -491,7 +491,7 @@ Abilita l'effetto riverbero a livello globale per aggiungere un senso di
 spazializzazione del suono:
   off:     Nessun riverbero (predefinito).
   on:      Abilita riverbero (preset medio).
-  tiny:    Simula il suono di un piccolo altoparlante integrato in una stanza;
+  tiny:    Simula il suono di un piccolo altoparlante integrato;
            specificamente progettato per sistemi audio di piccole dimensioni
            (PC Speaker, Tandy, PS/1 Audio, e dispositivi DAC LPT).
   small:   Aggiunge un sottile senso di spazializzazione; ottimo per i giochi
@@ -500,8 +500,8 @@ spazializzazione del suono:
   medium:  Preset stanza media che funziona bene con un'ampia varietà di giochi
   large:   Preset salone consigliato per giochi che utilizzano canali separati
            per musica e audio digitale.
-  huge:    Variante del preset salone con maggiore intensità; funziona davvero
-           bene nei giochi con colonne sonore più suggestive
+  huge:    Variante del preset salone con intensità maggiore; funziona davvero
+           bene nei giochi con colonne sonore più suggestive.
 Note: È possibile regolare con precisione i livelli di riverbero per ogni
       canale tramite i comandi del mixer.
 .
@@ -550,6 +550,19 @@ Note: - Questa opzione non ha effetto quando si utilizzano i sintetizzatori
 .
 :CONFIG_MPU401
 Modalità MPU-401 da emulare (predefinito 'intelligent').
+.
+:CONFIG_RAW_MIDI_OUTPUT
+Abilita l'uscita MIDI senza alcuna elaborazione (predefinito disabilitato).
+I driver MIDI di molti giochi non sono completamente conformi allo standard
+MIDI, il che rende la modifica delle registrazioni MIDI di questi giochi
+altamente soggetta ad errori e problematica nei sequenziatori MIDI, spesso
+causando note sospese o mancanti. DOSBox corregge l'output MIDI di tali giochi
+per impostazione predefinita. Ciò non comporta alcuna differenza udibile;
+influisce solo sulla rappresentazione dei dati MIDI.
+Dovresti abilitare 'raw_midi_output' solo se hai davvero bisogno di catturare
+una sequenza MIDI (inalterata) da un programma, ad esempio quando si lavora con
+applicazioni musicali o quando si esegue il debug per problemi riguardanti
+la riproduzione MIDI.
 .
 :CONFIG_SOUNDFONT
 Percorso di un file SoundFont in formato .sf2 (predefinito 'default.sf2').
@@ -1047,7 +1060,7 @@ Le mappature e gli intervalli possono essere combinati:
 Note: Se gli intervalli mappati differiscono, l'intervallo più corto viene
       esteso per adattarsi.
       Se vengono fornite porte host in conflitto, viene impostata solo la prima
-      Se vengono fornite porte guest in conflitto, quest'ultima regola ha la
+      Se vengono fornite porte guest in conflitto, l'ultima regola ha la
       precedenza.
 .
 :CONFIG_UDP_PORT_FORWARDS
@@ -1064,7 +1077,7 @@ Puoi inserire i tuoi comandi MOUNT qui.
 # Le righe che iniziano con il carattere '#' sono commenti.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Valori possibili
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
@@ -1180,7 +1193,7 @@ La sezione "%s" non esiste.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" non è un valore valido per la proprietà %s.
+"%s" non è un valore valido per la proprietà "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -2069,36 +2082,42 @@ Note:
 Esempi:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; chiede all'utente di selezionare i mouse da usare
 .
-:PROGRAM_MOUSECTL_SYNTAX
-Sintassi del comando errata.
-.
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Sintassi errata, sono ammessi solo caratteri ASCII.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
 Sintassi errata, la sensibilità deve essere compresa tra -999 e +999.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
 Sintassi errata, interfacce del mouse duplicate.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Sintassi errata, la frequenza di polling deve essere una dei seguenti:
 %s
+
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mappatura non disponibile in modalità senza mouse.
+
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
 Nessuna interfaccia del mouse disponibile.
+
 .
 :PROGRAM_MOUSECTL_MISSING_INTERFACES
 Interfaccia mouse non disponibile.
+
 .
 :PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 Nessun mouse fisico rilevato.
+
 .
 :PROGRAM_MOUSECTL_NO_MATCH
 Nessun mouse corrispondente trovato.
+
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Interfaccia    Sensibilità    Frequenza (Hz)    Stato[reset]
@@ -2186,7 +2205,7 @@ Dove:
     Volume:    da [color=white]0[reset] a [color=white]100[reset], o valore in decibel con prefisso [color=white]d[reset] (es. [color=white]d-7.5[reset])
                utilizza [color=white]L:R[reset] per impostare il lato sinistro e destro (es. [color=white]10:20[reset])
     Uscita:    [color=white]stereo[reset], [color=white]reverse[reset] (solo per canali stereo)
-    A. Incrociata: da [color=white]x0[reset] a [color=white]x100[reset]   Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]   Coro: da [color=white]c0[reset] a [color=white]c100[reset]
+    A.Incrociata: da [color=white]x0[reset] a [color=white]x100[reset]   Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]   Coro: da [color=white]c0[reset] a [color=white]c100[reset]
 Note:
   L'esecuzione di [color=green]mixer[reset] senza un argomento mostra le impostazioni attuali.
   È possibile modificare le impostazioni di più canali con un unico comando.
@@ -2203,7 +2222,7 @@ Esempi:
 %-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-10s %10s %9s %9s
 .
 :SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Canale       Volume    Volume (dB)   Modalità  A. Incrociata  Riverbero  Coro[reset]
+[color=white]Canale       Volume    Volume (dB)   Modalità  A.Incrociata  Riverbero  Coro[reset]
 .
 :SHELL_CMD_MIXER_CHANNEL_OFF
 spento
@@ -2264,6 +2283,38 @@ Il tipo deve essere uno dei seguenti:
 Percorso non valido.
 
 .
+:SHELL_ILLEGAL_SWITCH
+Opzione non valida: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Parametro richiesto mancante.
+
+.
+:SHELL_SYNTAX_ERROR
+La sintassi del comando non è corretta.
+
+.
+:SHELL_ACCESS_DENIED
+Accesso negato - '%s'
+
+.
+:SHELL_FILE_CREATE_ERROR
+Errore nella creazione del file - '%s'
+
+.
+:SHELL_FILE_OPEN_ERROR
+Errore di apertura del file - '%s'
+
+.
+:SHELL_FILE_NOT_FOUND
+File non trovato - '%s'
+
+.
+:SHELL_FILE_EXISTS
+Il file '%s' esiste già.
+
+.
 :SHELL_CMD_HELP
 Per una lista di tutti i comandi supportati, digita [color=yellow]help /all[reset].
 Segue una breve lista dei comandi più comuni:
@@ -2300,14 +2351,6 @@ ECHO attivato.
 .
 :SHELL_CMD_ECHO_OFF
 ECHO disattivato.
-
-.
-:SHELL_ILLEGAL_SWITCH
-Opzione non valida: %s.
-
-.
-:SHELL_MISSING_PARAMETER
-Parametro richiesto mancante.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -2414,10 +2457,6 @@ Impossibile rimuovere: %s.
 Impossibile eliminare: %s.
 
 .
-:SHELL_SYNTAXERROR
-La sintassi del comando non è corretta.
-
-.
 :SHELL_CMD_SET_NOT_SET
 Variabile di ambiente %s non definita.
 
@@ -2446,10 +2485,6 @@ Nessuna etichetta fornita al comando GOTO.
 GOTO: Etichetta %s non trovata.
 
 .
-:SHELL_CMD_FILE_ACCESS_DENIED
-Accesso negato - %s
-
-.
 :SHELL_CMD_DUPLICATE_REDIRECTION
 Reindirizzamento duplicato - %s
 
@@ -2458,22 +2493,6 @@ Reindirizzamento duplicato - %s
 
 Impossibile creare/aprire un file temporaneo per il piping.
 Controllare la variabile %%TEMP%%.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-Errore nella creazione del file - %s
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-Errore di apertura del file - %s
-
-.
-:SHELL_CMD_FILE_NOT_FOUND
-File non trovato: %s 
-
-.
-:SHELL_CMD_FILE_EXISTS
-Il file %s esiste già.
 
 .
 :SHELL_CMD_DIR_VOLUME
@@ -2635,7 +2654,7 @@ Visualizza un elenco di file e sottodirectory in una directory.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Utilizzo:
-  [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]ORDINAM[reset]]
+  [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDINAM[reset]]
 
 Dove:
   [color=cyan]MODELLO[reset] è un nome file specifico o con caratteri jolly, cioè asterisco (*)

@@ -965,7 +965,7 @@ U kunt hier uw MOUNT-lijnen plaatsen.
 # Regels die beginnen met een '#'-teken zijn opmerkingen.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Mogelijke waarden
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
@@ -1080,7 +1080,7 @@ Sectie "%s" bestaat niet.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" is geen geldige waarde voor eigenschap %s.
+"%s" is geen geldige waarde voor eigenschap "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -1950,36 +1950,42 @@ Opmerkingen:
 Voorbeelden:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; selecteer muizen voor een twee speler spel
 .
-:PROGRAM_MOUSECTL_SYNTAX
-Verkeerde opdrachtsyntaxis.
-.
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Verkeerde syntaxis, alleen ASCII-tekens toegestaan in patroon.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
 Verkeerde syntaxis, gevoeligheid moet tussen -999 en +999 liggen.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
 Verkeerde syntaxis, gedupliceerde muisinterfaces.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Verkeerde syntaxis, bemonsteringsfrequentie moet een van zijn:
 %s
+
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mapping niet beschikbaar in NoMouse-modus.
+
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
 Geen muisinterfaces beschikbaar.
+
 .
 :PROGRAM_MOUSECTL_MISSING_INTERFACES
 Muisinterface niet beschikbaar.
+
 .
 :PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 Geen fysieke muizen gedetecteerd.
+
 .
 :PROGRAM_MOUSECTL_NO_MATCH
 Geen beschikbare muis die overeenkomt met het patroon gevonden.
+
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Interface      Gevoeligheid     Rate (Hz)     Status[reset]
@@ -2143,6 +2149,38 @@ Type moet een van de volgende zijn:
 Illegaal pad.
 
 .
+:SHELL_ILLEGAL_SWITCH
+Illegale optie: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Vereiste parameter ontbreekt.
+
+.
+:SHELL_SYNTAX_ERROR
+De syntaxis van de opdracht is onjuist.
+
+.
+:SHELL_ACCESS_DENIED
+Toegang geweigerd - '%s'
+
+.
+:SHELL_FILE_CREATE_ERROR
+Fout bij aanmaken bestand - '%s'
+
+.
+:SHELL_FILE_OPEN_ERROR
+Fout bij openen bestand - '%s'
+
+.
+:SHELL_FILE_NOT_FOUND
+Bestand niet gevonden - '%s'
+
+.
+:SHELL_FILE_EXISTS
+Bestand '%s' bestaat al.
+
+.
 :SHELL_CMD_HELP
 Voor een lijst met alle ondersteunde commando's, typ [color=yellow]help /all[reset].
 Een korte lijst van de meest gebruikte commando's:
@@ -2176,14 +2214,6 @@ ECHO is aan.
 .
 :SHELL_CMD_ECHO_OFF
 ECHO is uit.
-
-.
-:SHELL_ILLEGAL_SWITCH
-Illegale optie: %s.
-
-.
-:SHELL_MISSING_PARAMETER
-Vereiste parameter ontbreekt.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -2288,10 +2318,6 @@ Kan niet verwijderen: %s.
 Kan niet wissen: %s.
 
 .
-:SHELL_SYNTAXERROR
-De syntaxis van de opdracht is onjuist.
-
-.
 :SHELL_CMD_SET_NOT_SET
 Omgevingsvariabele %s niet gedefinieerd.
 
@@ -2320,10 +2346,6 @@ Geen label geleverd aan het GOTO-commando.
 GOTO: Label %s niet gevonden.
 
 .
-:SHELL_CMD_FILE_ACCESS_DENIED
-Toegang geweigerd - %s
-
-.
 :SHELL_CMD_DUPLICATE_REDIRECTION
 Dubbele omleiding - %s
 
@@ -2332,22 +2354,6 @@ Dubbele omleiding - %s
 
 Het maken/openen van een tijdelijk bestand voor piping is mislukt.
 Controleer de %%TEMP%% variabele.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-Fout bij aanmaken bestand - %s
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-Fout bij openen bestand - %s
-
-.
-:SHELL_CMD_FILE_NOT_FOUND
-Bestand niet gevonden: %s
-
-.
-:SHELL_CMD_FILE_EXISTS
-Bestand %s bestaat al.
 
 .
 :SHELL_CMD_DIR_VOLUME
@@ -2506,7 +2512,7 @@ Toont een lijst met bestanden en submappen in een map.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Gebruik:
-  [color=green]dir[reset] [color=cyan][PATROON][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]VOLGORDE[reset]]
+  [color=green]dir[reset] [color=cyan][PATROON][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]VOLGORDE[reset]]
 
 Waar:
   [color=cyan]PATROON[reset]    is ofwel een exacte bestandsnaam of een onnauwkeurige

@@ -971,7 +971,7 @@ MAC-адрес карты NE2000.
 # Строки, начинающиеся со знака '#' - это комментарии.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Возможные значения
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
@@ -1562,6 +1562,38 @@ PCjr картридж найден, но машина не PCjr.
 Недопустимый путь.
 
 .
+:SHELL_ILLEGAL_SWITCH
+Недопустимый переключатель: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Отсутствует обязательный параметр.
+
+.
+:SHELL_SYNTAX_ERROR
+Синтаксис команды неверный.
+
+.
+:SHELL_ACCESS_DENIED
+Отказ в доступе - '%s'
+
+.
+:SHELL_FILE_CREATE_ERROR
+Ошибка создания файла - '%s'
+
+.
+:SHELL_FILE_OPEN_ERROR
+Ошибка открытия файла - '%s'
+
+.
+:SHELL_FILE_NOT_FOUND
+Файл '%s' не найден.
+
+.
+:SHELL_FILE_EXISTS
+Файл '%s' уже существует.
+
+.
 :SHELL_CMD_HELP
 Для показа списка всех доступных команд, введите [color=yellow]help /all[reset].
 Краткий список часто используемых команд:
@@ -1573,14 +1605,6 @@ PCjr картридж найден, но машина не PCjr.
 .
 :SHELL_CMD_ECHO_OFF
 Вывод команд выключен.
-
-.
-:SHELL_ILLEGAL_SWITCH
-Недопустимый переключатель: %s.
-
-.
-:SHELL_MISSING_PARAMETER
-Отсутствует обязательный параметр.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -1677,10 +1701,6 @@ PCjr картридж найден, но машина не PCjr.
 Невозможно удалить: %s.
 
 .
-:SHELL_SYNTAXERROR
-Синтаксис команды неверный.
-
-.
 :SHELL_CMD_SET_NOT_SET
 Переменная окружения %s не определена.
 
@@ -1707,14 +1727,6 @@ IF ERRORLEVEL: Неверное число.
 .
 :SHELL_CMD_GOTO_LABEL_NOT_FOUND
 GOTO: Метка %s не найдена.
-
-.
-:SHELL_CMD_FILE_NOT_FOUND
-Файл %s не найден.
-
-.
-:SHELL_CMD_FILE_EXISTS
-Файл %s уже существует.
 
 .
 :SHELL_CMD_DIR_VOLUME
@@ -1841,7 +1853,7 @@ GOTO: Метка %s не найдена.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Использование:
-  [color=green]dir[reset] [color=cyan][ШАБЛОН][reset] [/w] [/b] [/p] [/ad] [/a-d] [/o[color=white]ПОРЯДОК[reset]]
+  [color=green]dir[reset] [color=cyan][ШАБЛОН][reset] [/w] \[/b] [/p] [/ad] [/a-d] [/o[color=white]ПОРЯДОК[reset]]
 
 Где:
   [color=cyan]ШАБЛОН[reset]    - точное имя файла либо имя файла с символами подстановки:
@@ -2770,10 +2782,6 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Моно
 .
-:SHELL_CMD_FILE_ACCESS_DENIED
-Отказ в доступе - %s
-
-.
 :SHELL_CMD_DUPLICATE_REDIRECTION
 Дублированное перенаправление - %s
 
@@ -2782,14 +2790,6 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 
 Не удалось создать/открыть временный файл для конвейера.
 Проверьте переменную %%TEMP%%.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-Ошибка создания файла - %s
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-Ошибка открытия файла - %s
 
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
@@ -2963,36 +2963,42 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 Примеры:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; просит пользователя выбрать мышь для игры вдвоём
 .
-:PROGRAM_MOUSECTL_SYNTAX
-Неверный синтаксис команды.
-.
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Неверный синтаксис, в шаблоне допускаются только символы ASCII.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
 Неверный синтаксис, чувствительность должна быть в пределах от -999 до +999.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
 Неверный синтаксис, дублированные интерфейсы мыши.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Неверный синтаксис, частота опроса должна быть одной из:
 %s
+
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Сопоставление недоступно в режиме без мыши.
+
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
 Нет доступных интерфейсов мыши.
+
 .
 :PROGRAM_MOUSECTL_MISSING_INTERFACES
 Интерфейс мыши недоступен.
+
 .
 :PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 Не обнаружены физические мыши.
+
 .
 :PROGRAM_MOUSECTL_NO_MATCH
 Не найдены соответствующие шаблону доступные мыши.
+
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Интерфейс  Чувствительность  Частота (Гц)  Состояние[reset]

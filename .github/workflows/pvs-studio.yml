@@ -28,7 +28,7 @@ jobs:
           ./scripts/log-env.sh
           mkdir -p pvs-package
 
-      - uses: actions/cache@v3.2.6
+      - uses: actions/cache@v3.3.1
         id: cache-pvs
         with:
           path: pvs-package
@@ -48,7 +48,7 @@ jobs:
 
       - name: Cache subprojects
         id:   cache-subprojects
-        uses: actions/cache@v3.2.6
+        uses: actions/cache@v3.3.1
         with:
           path: subprojects.tar
           key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
@@ -111,7 +111,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 350
+          MAX_BUGS: 341
         run: |
           echo "Full report is included in build Artifacts"
           echo

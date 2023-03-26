@@ -76,7 +76,15 @@ public:
 	          soundfont(nullptr)
 	{}
 
-	const char *GetName() const override { return "coreaudio"; }
+	const char* GetName() const override
+	{
+		return "coreaudio";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::External;
+	}
 
 	bool Open(const char *conf) override
 	{
@@ -194,7 +202,7 @@ public:
 	void Close() override
 	{
 		if (m_auGraph) {
-			HaltSequence();
+			Reset();
 			AUGraphStop(m_auGraph);
 			DisposeAUGraph(m_auGraph);
 			m_auGraph = 0;

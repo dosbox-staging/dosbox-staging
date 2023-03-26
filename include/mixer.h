@@ -56,9 +56,8 @@ using MIXER_Handler = std::function<void(uint16_t frames)>;
 enum class MixerState {
 	Uninitialized,
 	NoSound,
-	Off,
 	On,
-	Mute,
+	Muted
 };
 
 #define MIXER_BUFSIZE (16 * 1024)
@@ -401,7 +400,12 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel);
 void MIXER_AddConfigSection(const config_ptr_t &conf);
 int MIXER_GetSampleRate();
 uint16_t MIXER_GetPreBufferMs();
+
+void MIXER_Mute();
+void MIXER_Unmute();
+
+// Return true if the mixer was explicitly muted by the user (as opposed to
+// auto-muted when `mute_when_inactive` is enabled)
 bool MIXER_IsManuallyMuted();
-void MIXER_SetState(const MixerState requested);
 
 #endif

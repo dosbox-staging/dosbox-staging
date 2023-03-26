@@ -803,7 +803,7 @@ Puedes colocar tus líneas MOUNT aquí.
 # Las líneas que comienzan con el caracter '#' son comentarios.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Valores posibles
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
@@ -918,7 +918,7 @@ La sección "%s" no existe.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" no es un valor válido para la propiedad %s.
+"%s" no es un valor válido para la propiedad "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -1659,6 +1659,38 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 Ruta no válida.
 
 .
+:SHELL_ILLEGAL_SWITCH
+Interruptor no válido: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Requerido parámetro faltante.
+
+.
+:SHELL_SYNTAX_ERROR
+La sintaxis del comando es incorrecta.
+
+.
+:SHELL_ACCESS_DENIED
+Access denied - '%s'
+
+.
+:SHELL_FILE_CREATE_ERROR
+File creation error - '%s'
+
+.
+:SHELL_FILE_OPEN_ERROR
+File open error - '%s'
+
+.
+:SHELL_FILE_NOT_FOUND
+Archivo '%s' no encontrado.
+
+.
+:SHELL_FILE_EXISTS
+Archivo '%s' ya existe.
+
+.
 :SHELL_CMD_HELP
 Si buscas una lista de todos los comandos soportados escribe [33;1mhelp /all[0m .
 Una breve lista de los comandos mas utilizados:
@@ -1692,14 +1724,6 @@ ECHO está encendido.
 .
 :SHELL_CMD_ECHO_OFF
 ECHO está apagado.
-
-.
-:SHELL_ILLEGAL_SWITCH
-Interruptor no válido: %s.
-
-.
-:SHELL_MISSING_PARAMETER
-Requerido parámetro faltante.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -1804,10 +1828,6 @@ No se puede eliminar: %s.
 No se puede borrar: %s.
 
 .
-:SHELL_SYNTAXERROR
-La sintaxis del comando es incorrecta.
-
-.
 :SHELL_CMD_SET_NOT_SET
 La variable de entorno %s no está definida.
 
@@ -1834,14 +1854,6 @@ No hay etiqueta suministrada al comando GOTO.
 .
 :SHELL_CMD_GOTO_LABEL_NOT_FOUND
 GOTO: Etiqueta %s no encontrada.
-
-.
-:SHELL_CMD_FILE_NOT_FOUND
-Archivo %s no encontrado.
-
-.
-:SHELL_CMD_FILE_EXISTS
-Archivo %s ya existe.
 
 .
 :SHELL_CMD_DIR_VOLUME
@@ -1994,7 +2006,7 @@ Muestra una lista de archivos y subdirectorios de un directorio.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Uso:
-  [32;1mdir[0m [36;1m[PATRÓN][0m [/w] [/b] [/p] [ad] [a-d] [/o[37;1mORDEN[0m]
+  [32;1mdir[0m [36;1m[PATRÓN][0m [/w] \[/b] [/p] [ad] [a-d] [/o[37;1mORDEN[0m]
 
 Dónde:
   [36;1mPATRÓN[0m es un nombre de archivo exacto o un nombre de archivo inexacto con comodines,
@@ -2448,7 +2460,7 @@ Espera a que se presione una tecla y establece un valor ERRORLEVEL.
 :SHELL_CMD_CHOICE_HELP_LONG
 Uso:
   [32;1mchoice[0m [36;1m[TEXTO][0m
-  [32;1mchoice[0m /c[:][37;1mOPCIONES[0m [/n] [/s] [36;1m[TEXTO][0m
+  [32;1mchoice[0m /c[:][37;1mOPCIONES[0m [/n] \[/s] [36;1m[TEXTO][0m
 
 Dónde:
   [36;1mTEXTO[0m         es el texto a mostrar como un aviso, o vacío.
@@ -2560,10 +2572,6 @@ Mono
 Type must be one of the following:
 
 .
-:SHELL_CMD_FILE_ACCESS_DENIED
-Access denied - %s
-
-.
 :SHELL_CMD_DUPLICATE_REDIRECTION
 Duplicate redirection - %s
 
@@ -2571,14 +2579,6 @@ Duplicate redirection - %s
 :SHELL_CMD_FAILED_PIPE
 
 Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-File creation error - %s
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-File open error - %s
 
 .
 :SHELL_CMD_ATTRIB_HELP

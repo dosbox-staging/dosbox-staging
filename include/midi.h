@@ -48,6 +48,7 @@ constexpr uint8_t NumMidiNotes  = 128;
 constexpr uint8_t FirstMidiNote = 0;
 constexpr uint8_t LastMidiNote  = NumMidiNotes - 1;
 
+
 enum class MessageType : uint8_t { Channel, SysEx };
 
 struct MidiMessage {
@@ -199,13 +200,14 @@ uint8_t get_midi_status(const uint8_t status_byte);
 uint8_t get_midi_channel(const uint8_t channel_status);
 
 bool MIDI_Available();
-void MIDI_Disengage();
-void MIDI_Engage();
-void MIDI_HaltSequence();
+void MIDI_Reset();
 void MIDI_Init(Section* sec);
+void MIDI_Reset();
 void MIDI_ListAll(Program* output_handler);
 void MIDI_RawOutByte(uint8_t data);
-void MIDI_ResumeSequence();
+
+void MIDI_Mute();
+void MIDI_Unmute();
 
 struct MidiWork {
 	std::vector<uint8_t> message      = {};

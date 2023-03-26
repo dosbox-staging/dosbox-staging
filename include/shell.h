@@ -51,7 +51,7 @@ public:
 	BatchFile& operator=(const BatchFile&) = delete; // prevent assignment
 	virtual ~BatchFile();
 	virtual bool ReadLine(char * line);
-	bool Goto(char * where);
+	bool Goto(std::string_view label);
 	void Shift();
 	uint16_t file_handle = 0;
 	uint32_t location = 0;
@@ -60,6 +60,10 @@ public:
 	std::shared_ptr<BatchFile> prev = {}; // shared with Shell.bf
 	std::unique_ptr<CommandLine> cmd = {};
 	std::string filename{};
+
+private:
+	[[nodiscard]] std::string ExpandedBatchLine(std::string_view line) const;
+	[[nodiscard]] std::string GetLine();
 };
 
 class AutoexecEditor;

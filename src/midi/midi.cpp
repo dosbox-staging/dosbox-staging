@@ -129,14 +129,18 @@ struct Midi {
 		int64_t start_ms = 0;
 	} sysex = {};
 
-	bool available       = false;
+	bool is_available    = false;
+	bool is_muted        = false;
 	MidiHandler* handler = nullptr;
 };
 
 static Midi midi                    = {};
-static Midi disengaged_midi         = {};
 static bool raw_midi_output_enabled = {};
 
+constexpr auto max_channel_volume = 127;
+
+// Keep track of the state of the MIDI device (e.g. channel volumes and which
+// notes are currently active on each channel).
 class MidiState {
 public:
 	MidiState()
@@ -147,6 +151,28 @@ public:
 	void Reset()
 	{
 		note_on_tracker.fill(false);
+		channel_volume_tracker.fill(max_channel_volume);
+	}
+
+	void UpdateState(const MidiMessage& msg)
+	{
+		const auto status  = get_midi_status(msg.status());
+		const auto channel = get_midi_channel(msg.status());
+
+		if (status == MidiStatus::NoteOn) {
+			const auto note = msg.data1();
+			SetNoteActive(channel, note, true);
+
+		} else if (status == MidiStatus::NoteOff) {
+			const auto note = msg.data1();
+			SetNoteActive(channel, note, false);
+
+		} else if (status == MidiStatus::ControlChange) {
+			if (msg.data1() == MidiController::Volume) {
+				const auto volume = msg.data2();
+				SetChannelVolume(channel, volume);
+			}
+		}
 	}
 
 	inline void SetNoteActive(const uint8_t channel, const uint8_t note,
@@ -160,6 +186,21 @@ public:
 		return note_on_tracker[NoteAddr(channel, note)];
 	}
 
+	inline void SetChannelVolume(const uint8_t channel, const uint8_t volume)
+	{
+		assert(channel <= NumMidiChannels);
+		assert(volume <= max_channel_volume);
+
+		channel_volume_tracker[channel] = volume;
+	}
+
+	inline uint8_t GetChannelVolume(const uint8_t channel)
+	{
+		assert(channel <= NumMidiChannels);
+
+		return channel_volume_tracker[channel];
+	}
+
 	~MidiState() = default;
 
 	// prevent copying
@@ -169,6 +210,7 @@ public:
 
 private:
 	std::array<bool, NumMidiNotes* NumMidiChannels> note_on_tracker = {};
+	std::array<uint8_t, NumMidiChannels> channel_volume_tracker     = {};
 
 	inline size_t NoteAddr(const uint8_t channel, const uint8_t note)
 	{
@@ -224,6 +266,11 @@ MessageType get_midi_message_type(const uint8_t status_byte)
 uint8_t get_midi_channel(const uint8_t channel_status)
 {
 	return channel_status & 0x0f;
+}
+
+static bool is_external_midi_device()
+{
+	return midi.handler->GetDeviceType() == MidiDeviceType::External;
 }
 
 static void output_note_off_for_active_notes(const uint8_t channel)
@@ -283,15 +330,7 @@ static void sanitise_midi_stream(const MidiMessage& msg)
 	const auto status  = get_midi_status(msg.status());
 	const auto channel = get_midi_channel(msg.status());
 
-	if (status == MidiStatus::NoteOn) {
-		const auto note = msg.data1();
-		midi_state.SetNoteActive(channel, note, true);
-
-	} else if (status == MidiStatus::NoteOff) {
-		const auto note = msg.data1();
-		midi_state.SetNoteActive(channel, note, false);
-
-	} else if (status == MidiStatus::ControlChange) {
+	if (status == MidiStatus::ControlChange) {
 		const auto mode = msg.data1();
 		if (mode == MidiChannelMode::AllSoundOff ||
 		    mode >= MidiChannelMode::AllNotesOff) {
@@ -309,7 +348,7 @@ static void sanitise_midi_stream(const MidiMessage& msg)
 
 void MIDI_RawOutByte(uint8_t data)
 {
-	if (!midi.available) {
+	if (!midi.is_available) {
 		return;
 	}
 
@@ -402,23 +441,62 @@ void MIDI_RawOutByte(uint8_t data)
 		midi.message.msg[midi.message.pos++] = data;
 
 		if (midi.message.pos >= midi.message.len) {
+			// 1. Update the MIDI state based on the last non-SysEx
+			// message.
+			midi_state.UpdateState(midi.message.msg);
+
+			// 2. Sanitise the MIDI stream unless raw output is
+			// enabled. Currently, this can result in the emission of extra
+			// MIDI Note Off events only, and updating the MIDI state.
+			//
+			// `sanitise_midi_stream` also captures these extra
+			// events if MIDI capture is enabled and sends them to
+			// the MIDI device. This is a bit hacky and rather
+			// limited design, but it does the job for now... A
+			// better solution would be a message queue or stream
+			// that we could also alter and filter, plus a
+			// centralised capture and send function.
 			if (!raw_midi_output_enabled) {
 				sanitise_midi_stream(midi.message.msg);
 			}
+
+			// 3. Determine whether the message should be sent to
+			// the device based on the mute state.
+			auto play_msg = true;
+
+			if (midi.is_muted && is_external_midi_device()) {
+				const auto& msg = midi.message.msg;
+				const auto status = get_midi_status(msg.status());
+
+				// Track Channel Volume change messages in
+				// MidiState, but don't send them to external
+				// devices when muted.
+				if (status == MidiStatus::ControlChange &&
+				    msg.data1() == MidiController::Volume) {
+					play_msg = false;
+				}
+			}
+
+			// 4. Always capture the original message if MIDI
+			// capture is enabled, regardless of the mute state.
 			if (CaptureState & CAPTURE_MIDI) {
 				constexpr auto is_sysex = false;
 				CAPTURE_AddMidi(is_sysex,
 				                midi.message.len,
 				                midi.message.msg.data.data());
 			}
-			midi.handler->PlayMsg(midi.message.msg);
+
+			// 5. Send the MIDI message to the device for playback
+			if (play_msg) {
+				midi.handler->PlayMsg(midi.message.msg);
+			}
 
 			midi.message.pos = 1; // Use Running Status
 		}
 	}
 }
 
-void MidiHandler::HaltSequence()
+void MidiHandler::Reset()
 {
 	MidiMessage msg = {};
 
@@ -433,58 +511,55 @@ void MidiHandler::HaltSequence()
 	}
 }
 
-void MidiHandler::ResumeSequence()
+void MIDI_Reset()
 {
-	MidiMessage msg = {};
-	msg[1]          = MidiChannelMode::OmniOn;
-
-	for (auto channel = FirstMidiChannel; channel <= LastMidiChannel; ++channel) {
-		msg[0] = MidiStatus::ControlChange | channel;
-		PlayMsg(msg);
+	if (midi.is_available) {
+		midi.handler->Reset();
 	}
 }
 
-void MIDI_HaltSequence()
+void MIDI_Mute()
 {
-	if (midi.handler) {
-		midi.handler->HaltSequence();
-	}
-}
-
-void MIDI_ResumeSequence()
-{
-	if (midi.handler) {
-		midi.handler->ResumeSequence();
-	}
-}
-
-void MIDI_Disengage()
-{
-	// nothing to disengage, so do nothing
-	if (!midi.handler) {
+	if (!midi.is_available || midi.is_muted) {
 		return;
 	}
 
-	MIDI_HaltSequence();
-	std::swap(midi, disengaged_midi);
-	assert(midi.handler == nullptr);
+	if (is_external_midi_device()) {
+		MidiMessage msg = {0, MidiController::Volume, 0};
+
+		for (auto channel = FirstMidiChannel; channel <= LastMidiChannel;
+		     ++channel) {
+			msg[0] = MidiStatus::ControlChange | channel;
+			midi.handler->PlayMsg(msg);
+		}
+	}
+
+	midi.is_muted = true;
 }
 
-void MIDI_Engage()
+void MIDI_Unmute()
 {
-	// nothing to re-engage, so do nothing
-	if (!disengaged_midi.handler) {
+	if (!midi.is_available || !midi.is_muted) {
 		return;
 	}
 
-	std::swap(disengaged_midi, midi);
-	assert(midi.handler);
-	MIDI_ResumeSequence();
+	if (is_external_midi_device()) {
+		MidiMessage msg = {0, MidiController::Volume, 0};
+
+		for (auto channel = FirstMidiChannel; channel <= LastMidiChannel;
+		     ++channel) {
+			msg[0] = MidiStatus::ControlChange | channel;
+			msg[2] = midi_state.GetChannelVolume(channel);
+			midi.handler->PlayMsg(msg);
+		}
+	}
+
+	midi.is_muted = false;
 }
 
 bool MIDI_Available()
 {
-	return midi.available;
+	return midi.is_available;
 }
 
 // We'll adapt the RtMidi library, eventually, so hold off any substantial
@@ -530,8 +605,8 @@ public:
 					            midiconfig);
 					goto getdefault;
 				}
-				midi.handler   = handler;
-				midi.available = true;
+				midi.handler      = handler;
+				midi.is_available = true;
 
 				LOG_MSG("MIDI: Opened device: %s",
 				        handler->GetName());
@@ -559,8 +634,8 @@ public:
 				continue;
 			}
 			if (handler->Open(midiconfig)) {
-				midi.available = true;
-				midi.handler   = handler;
+				midi.is_available = true;
+				midi.handler      = handler;
 				LOG_MSG("MIDI: Opened device: %s", name.c_str());
 				return;
 			}
@@ -569,15 +644,15 @@ public:
 
 	~MIDI()
 	{
-		if (!midi.available) {
+		if (!midi.is_available) {
 			assert(!midi.handler);
 			return;
 		}
 
 		assert(midi.handler);
 		midi.handler->Close();
-		midi.handler   = {};
-		midi.available = false;
+		midi.handler      = {};
+		midi.is_available = false;
 	}
 };
 

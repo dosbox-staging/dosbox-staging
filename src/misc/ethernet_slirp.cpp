@@ -26,6 +26,10 @@
 #include <map>
 #include <stdexcept>
 
+#if defined(BSD)
+#include <sys/socket.h> // AF_INET
+#endif
+
 #include "dosbox.h"
 #include "ethernet_slirp.h"
 #include "setup.h"

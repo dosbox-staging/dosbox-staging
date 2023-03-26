@@ -48,7 +48,16 @@ public:
 	MidiHandler_alsa(const MidiHandler_alsa &) = delete; // prevent copying
 	MidiHandler_alsa &operator=(const MidiHandler_alsa &) = delete; // prevent assignment
 
-	const char *GetName() const override { return "alsa"; }
+	const char* GetName() const override
+	{
+		return "alsa";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::External;
+	}
+
 	bool Open(const char *conf) override;
 	void Close() override;
 	void PlayMsg(const MidiMessage& msg) override;

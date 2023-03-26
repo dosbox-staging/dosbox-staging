@@ -379,8 +379,8 @@ void DOS_Shell::ParseLine(char *line)
 			open_stdin_as(in_file.c_str()); // Open new stdin
 		} else {
 			WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
-			                         ? "SHELL_CMD_FILE_ACCESS_DENIED"
-			                         : "SHELL_CMD_FILE_OPEN_ERROR"),
+			                         ? "SHELL_ACCESS_DENIED"
+			                         : "SHELL_FILE_OPEN_ERROR"),
 			         in_file.c_str());
 			return;
 		}
@@ -425,8 +425,8 @@ void DOS_Shell::ParseLine(char *line)
 			open_console_device();
 			if (!pipe_file.length()) {
 				WriteOut(MSG_Get(dos.errorcode == DOSERR_ACCESS_DENIED
-				                         ? "SHELL_CMD_FILE_ACCESS_DENIED"
-				                         : "SHELL_CMD_FILE_CREATE_ERROR"),
+				                         ? "SHELL_ACCESS_DENIED"
+				                         : "SHELL_FILE_CREATE_ERROR"),
 				         out_file.length() ? out_file.c_str()
 				                           : "(unnamed)");
 				close_stdout();
@@ -565,7 +565,7 @@ void DOS_Shell::Run()
 
 void DOS_Shell::SyntaxError()
 {
-	WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
+	WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 }
 
 extern int64_t ticks_at_program_launch;
@@ -944,8 +944,18 @@ static char const * const full_name="Z:\\COMMAND.COM";
 static char const * const init_line="/INIT AUTOEXEC.BAT";
 
 void SHELL_Init() {
-	/* Add messages */
-	MSG_Add("SHELL_ILLEGAL_PATH","Illegal Path.\n");
+	// Generic messages, to be used by any command or DOS program
+	MSG_Add("SHELL_ILLEGAL_PATH", "Illegal path.\n");
+	MSG_Add("SHELL_ILLEGAL_SWITCH", "Illegal switch: %s.\n");
+	MSG_Add("SHELL_MISSING_PARAMETER", "Required parameter missing.\n");
+	MSG_Add("SHELL_SYNTAX_ERROR", "Incorrect command syntax.\n");
+	MSG_Add("SHELL_ACCESS_DENIED", "Access denied - '%s'\n");
+	MSG_Add("SHELL_FILE_CREATE_ERROR", "File creation error - '%s'\n");
+	MSG_Add("SHELL_FILE_OPEN_ERROR", "File open error - '%s'\n");
+	MSG_Add("SHELL_FILE_NOT_FOUND", "File not found - '%s'\n");
+	MSG_Add("SHELL_FILE_EXISTS", "File '%s' already exists.\n");
+
+	// Command specific messages
 	MSG_Add("SHELL_CMD_HELP","If you want a list of all supported commands type [color=yellow]help /all[reset] .\nA short list of the most often used commands:\n");
 	MSG_Add("SHELL_CMD_COMMAND_HELP_LONG",
 	        "Starts the DOSBox Staging command shell.\n"
@@ -969,8 +979,6 @@ void SHELL_Init() {
 	        "  [color=green]command[reset] /init [color=cyan]dir[reset]\n");
 	MSG_Add("SHELL_CMD_ECHO_ON","ECHO is on.\n");
 	MSG_Add("SHELL_CMD_ECHO_OFF", "ECHO is off.\n");
-	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
-	MSG_Add("SHELL_MISSING_PARAMETER","Required parameter missing.\n");
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT","Hint: To change to different drive type [color=light-red]%c:[reset]\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname is longer than 8 characters and/or contains spaces.\nTry [color=light-red]cd %s[reset]\n");
@@ -1023,7 +1031,6 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_MKDIR_ERROR","Unable to make: %s.\n");
 	MSG_Add("SHELL_CMD_RMDIR_ERROR","Unable to remove: %s.\n");
 	MSG_Add("SHELL_CMD_DEL_ERROR","Unable to delete: %s.\n");
-	MSG_Add("SHELL_SYNTAXERROR","The syntax of the command is incorrect.\n");
 	MSG_Add("SHELL_CMD_SET_NOT_SET","Environment variable %s not defined.\n");
 	MSG_Add("SHELL_CMD_SET_OUT_OF_SPACE","Not enough environment space left.\n");
 	MSG_Add("SHELL_CMD_IF_EXIST_MISSING_FILENAME","IF EXIST: Missing filename.\n");
@@ -1031,13 +1038,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER","IF ERRORLEVEL: Invalid number.\n");
 	MSG_Add("SHELL_CMD_GOTO_MISSING_LABEL","No label supplied to GOTO command.\n");
 	MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND","GOTO: Label %s not found.\n");
-	MSG_Add("SHELL_CMD_FILE_ACCESS_DENIED", "Access denied - %s\n");
 	MSG_Add("SHELL_CMD_DUPLICATE_REDIRECTION", "Duplicate redirection - %s\n");
 	MSG_Add("SHELL_CMD_FAILED_PIPE", "\nFailed to create/open a temporary file for piping. Check the %%TEMP%% variable.\n");
-	MSG_Add("SHELL_CMD_FILE_CREATE_ERROR", "File creation error - %s\n");
-	MSG_Add("SHELL_CMD_FILE_OPEN_ERROR", "File open error - %s\n");
-	MSG_Add("SHELL_CMD_FILE_NOT_FOUND", "File not found: %s\n");
-	MSG_Add("SHELL_CMD_FILE_EXISTS","File %s already exists.\n");
 	MSG_Add("SHELL_CMD_DIR_VOLUME"," Volume in drive %c is %s\n");
 	MSG_Add("SHELL_CMD_DIR_INTRO"," Directory of %s\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED","%17d file(s) %21s bytes\n");
@@ -1130,7 +1132,7 @@ void SHELL_Init() {
 	        "Displays a list of files and subdirectories in a directory.\n");
 	MSG_Add("SHELL_CMD_DIR_HELP_LONG",
 	        "Usage:\n"
-	        "  [color=green]dir[reset] [color=cyan][PATTERN][reset] [/w] [/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]\n"
+	        "  [color=green]dir[reset] [color=cyan][PATTERN][reset] [/w] \\[/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]\n"
 	        "\n"
 	        "Where:\n"
 	        "  [color=cyan]PATTERN[reset] is either an exact filename or an inexact filename with wildcards,\n"

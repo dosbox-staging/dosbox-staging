@@ -46,12 +46,11 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 	FILE *tmpfile;
 	char fullname[DOS_PATHLENGTH];
 
-	localDrive *ldp = 0;
 	if (!DOS_MakeName(const_cast<char *>(filename), fullname, &drive))
 		return NULL;
 
 	try {
-		ldp = dynamic_cast<localDrive *>(Drives[drive]);
+		const auto ldp = dynamic_cast<localDrive*>(Drives.at(drive));
 		if (!ldp)
 			return NULL;
 
@@ -241,9 +240,8 @@ void BOOT::Run(void)
 			FILE *usefile = getFSFile(temp_line.c_str(),
 			                          &floppysize, &rombytesize);
 			if (usefile != NULL) {
-				diskSwap[i].reset(
-				        new imageDisk(usefile, temp_line.c_str(),
-				                      floppysize, false));
+				diskSwap[i] = DriveManager::RegisterRawFloppyImage(
+				        usefile, temp_line, floppysize);
 				if (usefile_1 == NULL) {
 					usefile_1 = usefile;
 					rombytesize_1 = rombytesize;
@@ -262,14 +260,14 @@ void BOOT::Run(void)
 
 	swapInDisks(0);
 
-	if (!imageDiskList[drive_index(drive)]) {
+	if (!imageDiskList.at(drive_index(drive))) {
 		WriteOut(MSG_Get("PROGRAM_BOOT_UNABLE"), drive);
 		return;
 	}
 
 	bootSector bootarea;
-	imageDiskList[drive_index(drive)]->Read_Sector(
-	        0, 0, 1, reinterpret_cast<uint8_t *>(&bootarea));
+	imageDiskList.at(drive_index(drive))
+	        ->Read_Sector(0, 0, 1, reinterpret_cast<uint8_t*>(&bootarea));
 	if ((bootarea.rawdata[0] == 0x50) && (bootarea.rawdata[1] == 0x43) &&
 	    (bootarea.rawdata[2] == 0x6a) && (bootarea.rawdata[3] == 0x72)) {
 		if (machine != MCH_PCJR) {
@@ -330,10 +328,9 @@ void BOOT::Run(void)
 						WriteOut(MSG_Get(
 						        "PROGRAM_BOOT_CART_NO_CMDS"));
 					}
-					for (auto &disk : diskSwap)
-						disk.reset();
-					// fclose(usefile_1); //delete diskSwap
-					// closes the file
+					diskSwap.fill(nullptr);
+					DriveManager::CloseRawFddImages();
+
 					return;
 				} else {
 					while (clen != 0) {
@@ -364,10 +361,8 @@ void BOOT::Run(void)
 							WriteOut(MSG_Get(
 							        "PROGRAM_BOOT_CART_NO_CMDS"));
 						}
-						for (auto &disk : diskSwap)
-							disk.reset();
-						// fclose(usefile_1); //Delete
-						// diskSwap closes the file
+						diskSwap.fill(nullptr);
+						DriveManager::CloseRawFddImages();
 						return;
 					}
 				}
@@ -444,8 +439,8 @@ void BOOT::Run(void)
 				phys_writeb((romseg << 4) + i, rombuf[i]);
 
 			// Close cardridges
-			for (auto &disk : diskSwap)
-				disk.reset();
+			diskSwap.fill(nullptr);
+			DriveManager::CloseRawFddImages();
 
 			MOUSE_NotifyBooting();
 

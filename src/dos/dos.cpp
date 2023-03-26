@@ -365,13 +365,7 @@ static Bitu DOS_21Handler(void) {
 			break;
 		};
 		break;
-	case 0x07:		/* Character Input, without echo */
-		{
-				uint8_t c;uint16_t n=1;
-				DOS_ReadFile (STDIN,&c,&n);
-				reg_al=c;
-				break;
-		};
+	case 0x07:              /* Character Input, without echo */
 	case 0x08:		/* Direct Character Input, without echo (checks for breaks officially :)*/
 		{
 				uint8_t c;uint16_t n=1;
@@ -1020,9 +1014,7 @@ static Bitu DOS_21Handler(void) {
 	case 0x50:					/* Set current PSP */
 		dos.psp(reg_bx);
 		break;
-	case 0x51:					/* Get current PSP */
-		reg_bx=dos.psp();
-		break;
+	// case 0x51: Get current PSP, co-located with case 0x62
 	case 0x52: {				/* Get list of lists */
 		uint8_t count=2; // floppy drives always counted
 		while (count<DOS_DRIVES && Drives[count] && !Drives[count]->isRemovable()) count++;
@@ -1195,7 +1187,9 @@ static Bitu DOS_21Handler(void) {
 			CALLBACK_SCF(true);
 		}
 		break;
-	case 0x62:					/* Get Current PSP Address */
+
+	case 0x51: /* Get Current PSP */
+	case 0x62: /* Get Current PSP Address */
 		reg_bx=dos.psp();
 		break;
 	case 0x63:					/* DOUBLE BYTE CHARACTER SET */
@@ -1385,7 +1379,9 @@ static Bitu DOS_27Handler(void) {
 
 static uint16_t DOS_SectorAccess(const bool read)
 {
-	auto drive = static_cast<fatDrive *>(Drives[reg_al]);
+	const auto drive = dynamic_cast<fatDrive*>(Drives.at(reg_al));
+	assert(drive);
+
 	auto bufferSeg = SegValue(ds);
 	auto bufferOff = reg_bx;
 	auto sectorCnt = reg_cx;
@@ -1587,7 +1583,10 @@ public:
 		}
 	}
 	~DOS(){
-		for (uint16_t i = 0; i < DOS_DRIVES; i++)	delete Drives[i];
+		// Clear the driver pointers. The actual objects are managed by
+		// the drive manager class.
+		Drives.fill(nullptr);
+
 		// de-init devices, this allows DOSBox to cleanly re-initialize
 		// without throwing an inevitable `DOS: Too many devices added`
 		// exception

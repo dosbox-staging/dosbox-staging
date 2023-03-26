@@ -76,7 +76,7 @@ Ubuntu 18.04 or newer, and Debian 9 or newer is required.
 ## Steam
 
 You can easily configure your DOS games on Steam to use DOSBox Staging via
-[Boxtron](https://github.com/dreamer/boxtron) (community-developed
+[Boxtron](https://github.com/dreamer/boxtron) (a community-developed
 Steam Play compatibility tool for DOS games).
 
 Boxtron will automatically use `dosbox` if found in your path, or can be
@@ -196,7 +196,7 @@ are designed with developers and testers in mind.
 
 ## Building from source
 
-Of course you can always [build DOSBox Staging straight from the source][1].
+Of course, you can always [build DOSBox Staging straight from the source][1].
 
 Send us patches if you improve something! :smile:
 

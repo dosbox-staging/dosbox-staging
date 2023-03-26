@@ -46,7 +46,15 @@ public:
 	MidiHandler_win32(const MidiHandler_win32&) = delete;
 	MidiHandler_win32& operator=(const MidiHandler_win32&) = delete;
 
-	const char *GetName() const override { return "win32"; }
+	const char* GetName() const override
+	{
+		return "win32";
+	}
+
+	MidiDeviceType GetDeviceType() const override
+	{
+		return MidiDeviceType::External;
+	}
 
 	bool Open(const char *conf) override
 	{
@@ -89,13 +97,15 @@ public:
 
 	void Close() override
 	{
-		if (!isOpen) return;
+		if (!isOpen) {
+			return;
+		}
 
-		HaltSequence();
+		Reset();
 
 		isOpen = false;
 		midiOutClose(m_out);
-		CloseHandle (m_event);
+		CloseHandle(m_event);
 	}
 
 	void PlayMsg(const MidiMessage& data) override

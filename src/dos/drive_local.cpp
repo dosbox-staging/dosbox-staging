@@ -282,10 +282,13 @@ bool localDrive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	if (allocation.mediaid==0xF0) {
 		EmptyCache(); //rescan floppie-content on each findfirst
 	}
-    
-	char end[2]={CROSS_FILESPLIT,0};
-	if (tempDir[strlen(tempDir) - 1] != CROSS_FILESPLIT)
+
+	// End the temp directory with a slash
+	const auto temp_dir_len = strlen(tempDir);
+	if (temp_dir_len < 1 || tempDir[temp_dir_len - 1] != CROSS_FILESPLIT) {
+		constexpr char end[] = {CROSS_FILESPLIT, '\0'};
 		safe_strcat(tempDir, end);
+	}
 
 	uint16_t id;
 	if (!dirCache.FindFirst(tempDir,id)) {
@@ -594,9 +597,9 @@ bool localDrive::isRemovable(void) {
 	return false;
 }
 
-Bits localDrive::UnMount(void) { 
-	delete this;
-	return 0; 
+Bits localDrive::UnMount()
+{
+	return 0;
 }
 
 localDrive::localDrive(const char* startdir, uint16_t _bytes_sector,
@@ -986,7 +989,6 @@ bool cdromDrive::isRemovable(void) {
 
 Bits cdromDrive::UnMount(void) {
 	if (MSCDEX_RemoveDrive(driveLetter)) {
-		delete this;
 		return 0;
 	}
 	return 2;

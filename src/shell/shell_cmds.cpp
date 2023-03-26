@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -244,7 +244,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 //TODO Maybe support confirmation for *.* like dos does.
 	bool res=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!res) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"), args);
+		WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"), args);
 		dos.dta(save_dta);
 		return;
 	}
@@ -256,7 +256,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 		dta.GetResult(name,size,date,time,attr);
 		strcpy(end, name);
 		if (attr & DOS_ATTR_READ_ONLY) {
-			WriteOut(MSG_Get("SHELL_CMD_FILE_ACCESS_DENIED"), full);
+			WriteOut(MSG_Get("SHELL_ACCESS_DENIED"), full);
 		} else if (!(attr & DOS_ATTR_DIRECTORY)) {
 			if (!DOS_UnlinkFile(full)) WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),full);
 		}
@@ -825,12 +825,12 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 	const char drive_letter = path[0];
 	const auto drive_idx = drive_index(drive_letter);
-	const bool print_label = (drive_letter >= 'A') && Drives[drive_idx];
+	const bool print_label  = (drive_letter >= 'A') && Drives.at(drive_idx);
 	unsigned p_count = 0; // line counter for 'pause' command
 
 	if (!optB) {
 		if (print_label) {
-			const auto label = To_Label(Drives[drive_idx]->GetLabel());
+			const auto label = To_Label(Drives.at(drive_idx)->GetLabel());
 			WriteOut(MSG_Get("SHELL_CMD_DIR_VOLUME"), drive_letter,
 			         label.c_str());
 			p_count += 1;
@@ -863,7 +863,7 @@ void DOS_Shell::CMD_DIR(char * args) {
 	bool ret = DOS_FindFirst(pattern.c_str(), 0xffff & ~DOS_ATTR_VOLUME);
 	if (!ret) {
 		if (!optB)
-			WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),
+			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),
 			         pattern.c_str());
 		dos.dta(save_dta);
 		return;
@@ -1002,15 +1002,15 @@ void DOS_Shell::CMD_DIR(char * args) {
 
 		uint8_t drive = dta.GetSearchDrive();
 		size_t free_space = 1024 * 1024 * 100;
-		if (Drives[drive]) {
+		if (Drives.at(drive)) {
 			uint16_t bytes_sector;
 			uint8_t sectors_cluster;
 			uint16_t total_clusters;
 			uint16_t free_clusters;
-			Drives[drive]->AllocationInfo(&bytes_sector,
-			                              &sectors_cluster,
-			                              &total_clusters,
-			                              &free_clusters);
+			Drives.at(drive)->AllocationInfo(&bytes_sector,
+			                                 &sectors_cluster,
+			                                 &total_clusters,
+			                                 &free_clusters);
 			free_space = bytes_sector;
 			free_space *= sectors_cluster;
 			free_space *= free_clusters;
@@ -1220,8 +1220,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 		// add '\\' if target is a directory
 		bool target_is_file = true;
 		const auto target_path_length = strlen(pathTarget);
-		assert(target_path_length > 0);
-		if (pathTarget[target_path_length - 1] != '\\') {
+		if (target_path_length > 0 && pathTarget[target_path_length - 1] != '\\') {
 			if (DOS_FindFirst(pathTarget, 0xffff & ~DOS_ATTR_VOLUME)) {
 				dta.GetResult(name, size, date, time, attr);
 				if (attr & DOS_ATTR_DIRECTORY) {
@@ -1235,12 +1234,13 @@ void DOS_Shell::CMD_COPY(char * args) {
 		//Find first sourcefile
 		bool ret = DOS_FindFirst(const_cast<char*>(source.filename.c_str()),0xffff & ~DOS_ATTR_VOLUME);
 		if (!ret) {
-			WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),const_cast<char*>(source.filename.c_str()));
+			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),const_cast<char*>(source.filename.c_str()));
 			dos.dta(save_dta);
 			return;
 		}
 
-		uint16_t sourceHandle,targetHandle;
+		uint16_t sourceHandle = 0;
+		uint16_t targetHandle = 0;
 		char nameTarget[DOS_PATHLENGTH];
 		char nameSource[DOS_PATHLENGTH];
 
@@ -1256,8 +1256,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 					// Create Target or open it if in concat mode
 					safe_strcpy(nameTarget, pathTarget);
 					const auto name_length = strlen(nameTarget);
-					assert(name_length > 0);
-					if (nameTarget[name_length - 1] == '\\')
+					if (name_length > 0 && nameTarget[name_length - 1] == '\\')
 						strcat(nameTarget, name);
 
 					//Special variable to ensure that copy * a_file, where a_file is not a directory concats.
@@ -1495,7 +1494,7 @@ void DOS_Shell::CMD_ATTRIB(char *args)
 		all_dirs.erase(all_dirs.begin());
 	}
 	if (!found)
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"), args);
+		WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"), args);
 	dos.dta(save_dta);
 }
 
@@ -1677,7 +1676,7 @@ void DOS_Shell::CMD_TYPE(char * args) {
 	HELP("TYPE");
 	StripSpaces(args);
 	if (!*args) {
-		WriteOut(MSG_Get("SHELL_SYNTAXERROR"));
+		WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 		return;
 	}
 	uint16_t handle;
@@ -1685,7 +1684,7 @@ void DOS_Shell::CMD_TYPE(char * args) {
 nextfile:
 	word=strip_word(args);
 	if (!DOS_OpenFile(word,0,&handle)) {
-		WriteOut(MSG_Get("SHELL_CMD_FILE_NOT_FOUND"),word);
+		WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),word);
 		return;
 	}
 	uint16_t n;uint8_t c;
@@ -1924,22 +1923,27 @@ void DOS_Shell::CMD_SUBST (char * args) {
 
 		const auto drive_idx = drive_index(temp_str[0]);
 		if ((arg == "/D") || (arg == "/d")) {
-			if (!Drives[drive_idx])
+			if (!Drives.at(drive_idx)) {
 				throw 1; // targetdrive not in use
+			}
 			strcat(mountstring, "-u ");
 			strcat(mountstring, temp_str);
 			this->ParseLine(mountstring);
 			return;
 		}
-		if (Drives[drive_idx])
+		if (Drives.at(drive_idx)) {
 			throw 0; // targetdrive in use
+		}
 		strcat(mountstring, temp_str);
 		strcat(mountstring, " ");
 
    		uint8_t drive;char fulldir[DOS_PATHLENGTH];
 		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) throw 0;
 
-		if ( ( ldp=dynamic_cast<localDrive*>(Drives[drive])) == 0 ) throw 0;
+		ldp = dynamic_cast<localDrive*>(Drives.at(drive));
+		if (!ldp) {
+			throw 0;
+		}
 		char newname[CROSS_LEN];
 		safe_strcpy(newname, ldp->GetBasedir());
 		strcat(newname,fulldir);

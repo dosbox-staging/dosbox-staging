@@ -44,7 +44,7 @@ support today's systems.
 [4]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 [5]: https://github.com/emilk/loguru
 [6]:tests/README.md
-[Development builds]:https://dosbox-staging.github.io/downloads/devel/
+[Development builds]:https://dosbox-staging.github.io/downloads/development-builds/
 
 ### For users
 
@@ -85,7 +85,7 @@ support today's systems.
 [Wayland]: https://en.wikipedia.org/wiki/Wayland_(display_server_protocol)
 [GUS]:   https://en.wikipedia.org/wiki/Gravis_Ultrasound
 [MT-32]: https://en.wikipedia.org/wiki/Roland_MT-32
-[FS]:    http://www.fluidsynth.org/
+[FS]:    https://www.fluidsynth.org/
 [ENet]:  https://github.com/zpl-c/enet
 [8]:     https://www.vogons.org/viewtopic.php?f=9&t=37782
 [9]:     https://github.com/dosbox-staging/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
@@ -108,7 +108,7 @@ support today's systems.
 
 ## Test builds / development snapshots
 
-[Links to the newest builds](https://dosbox-staging.github.io/downloads/devel/)
+[Development builds].
 
 ## Get the source
 
@@ -189,6 +189,18 @@ sudo xbps-install -S SDL2-devel SDL2_image-devel SDL2_net-devel alsa-lib-devel \
 ```
 
 ``` shell
+# NixOS 
+# With Home Manager on home.nix (Recommended Permanent Installation)
+home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_image SDL2_net \ 
+                  fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg \ 
+                  libpng libpulseaudio libslirp libsndfile meson ninja opusfile \
+                  libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 ]
+
+# Note: the same package list will work with environment.systemPackages 
+# on configuration.nix
+```
+
+``` shell
 # macOS
 xcode-select --install
 brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
@@ -253,16 +265,17 @@ a significant length of time.
 
 [vcpkg]: https://github.com/microsoft/vcpkg
 
-### Windows (MSYS2), macOS (MacPorts), Haiku, others
+### Windows (MSYS2), macOS (MacPorts), Haiku, Nix0S, others
 
 Instructions for other build systems and operating systems are documented
 in [BUILD.md]. Links to OS-specific instructions: [MSYS2], [MacPorts],
-[Haiku].
+[Haiku], [NixOS].
 
 [BUILD.md]: BUILD.md
 [MSYS2]:    docs/build-windows.md
 [MacPorts]: docs/build-macos.md
 [Haiku]:    docs/build-haiku.md
+[NixOS]:    docs/build-nix.md
 
 ## Imported branches, community patches, old forks
 

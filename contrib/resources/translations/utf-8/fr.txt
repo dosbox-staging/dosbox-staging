@@ -922,7 +922,7 @@ Vous pouvez mettre vos commandes MOUNT ici.
 # Les lignes commençant avec un '#' sont des commentaires.
 
 .
-:CONFIG_SUGGESTED_VALUES
+:CONFIG_VALID_VALUES
 Valeurs possibles
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
@@ -1037,7 +1037,7 @@ La section "%s" n'existe pas.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" n'est pas une valeur correcte pour la propriété %s.
+"%s" n'est pas une valeur correcte pour la propriété "%s".
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
@@ -1513,6 +1513,38 @@ Aucun fichier ou fichier de page de code non valide pour la disposition %s
 Chemin incorrect.
 
 .
+:SHELL_ILLEGAL_SWITCH
+Paramètre incorrect : %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Paramètre requis manquant.
+
+.
+:SHELL_SYNTAX_ERROR
+La syntaxe de la commande est incorrecte.
+
+.
+:SHELL_ACCESS_DENIED
+Access denied - '%s'
+
+.
+:SHELL_FILE_CREATE_ERROR
+File creation error - '%s'
+
+.
+:SHELL_FILE_OPEN_ERROR
+File open error - '%s'
+
+.
+:SHELL_FILE_NOT_FOUND
+Fichier '%s' non trouvé.
+
+.
+:SHELL_FILE_EXISTS
+Fichier '%s' déjà existant.
+
+.
 :SHELL_CMD_HELP
 Pour avoir une liste de toutes les commandes supportées, tapez [33;1mhelp /all[0m .
 Liste rapide des commandes les plus utilisées :
@@ -1524,14 +1556,6 @@ ECHO est activé.
 .
 :SHELL_CMD_ECHO_OFF
 ECHO est désactivé.
-
-.
-:SHELL_ILLEGAL_SWITCH
-Paramètre incorrect : %s.
-
-.
-:SHELL_MISSING_PARAMETER
-Paramètre requis manquant.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -1603,10 +1627,6 @@ Impossible de supprimer : %s.
 Impossible d'effacer : %s.
 
 .
-:SHELL_SYNTAXERROR
-La syntaxe de la commande est incorrecte.
-
-.
 :SHELL_CMD_SET_NOT_SET
 La variable d'environnement %s n'est pas définie.
 
@@ -1633,14 +1653,6 @@ Aucune étiquette indiquée pour la commande GOTO.
 .
 :SHELL_CMD_GOTO_LABEL_NOT_FOUND
 GOTO : Étiquette %s non trouvée.
-
-.
-:SHELL_CMD_FILE_NOT_FOUND
-Fichier %s non trouvé.
-
-.
-:SHELL_CMD_FILE_EXISTS
-Fichier %s déjà existant.
 
 .
 :SHELL_CMD_DIR_VOLUME
@@ -2285,10 +2297,6 @@ The specified time is not correct.
 Type 'time %s' to change.
 
 .
-:SHELL_CMD_FILE_ACCESS_DENIED
-Access denied - %s
-
-.
 :SHELL_CMD_DUPLICATE_REDIRECTION
 Duplicate redirection - %s
 
@@ -2296,14 +2304,6 @@ Duplicate redirection - %s
 :SHELL_CMD_FAILED_PIPE
 
 Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-File creation error - %s
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-File open error - %s
 
 .
 :SHELL_CMD_PAUSE_HELP_LONG
@@ -2786,36 +2786,42 @@ Notes:
 Examples:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game
 .
-:PROGRAM_MOUSECTL_SYNTAX
-Wrong command syntax.
-.
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Wrong syntax, only ASCII characters allowed in pattern.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
 Wrong syntax, sensitivity needs to be in -999 to +999 range.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
 Wrong syntax, duplicated mouse interfaces.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
 Wrong syntax, sampling rate has to be one of:
 %s
+
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mapping not available in no-mouse mode.
+
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
 No mouse interfaces available.
+
 .
 :PROGRAM_MOUSECTL_MISSING_INTERFACES
 Mouse interface not available.
+
 .
 :PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 No physical mice detected.
+
 .
 :PROGRAM_MOUSECTL_NO_MATCH
 No available mouse matching the pattern found.
+
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]
