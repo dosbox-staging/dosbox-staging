@@ -39,13 +39,19 @@
 class VOODOO;
 static std::unique_ptr<VOODOO> voodoo_dev;
 
-static uint32_t voodoo_current_lfb = (VOODOO_INITIAL_LFB & 0xffff0000);
+constexpr uint32_t voodoo_lfb_mask = 0xffff0000;
+static uint32_t voodoo_current_lfb = (VOODOO_INITIAL_LFB & voodoo_lfb_mask);
 
 enum class EmulationType {
     None,
     Software,
     OpenGL
 };
+
+enum class CardType : int {
+    Type1 = 1
+};
+
 
 class VOODOO : public Module_base {
 private:
@@ -55,47 +61,48 @@ public:
     VOODOO(Section* configuration) : Module_base(configuration), emulation_type(EmulationType::None) {
         UpdateConfiguration(configuration);
     }
-
-    void UpdateConfiguration(Section* configuration) {
-        Section_prop* section = static_cast<Section_prop*>(configuration);
-        std::string voodoo_type_str(section->Get_string("voodoo_card"));
-
+	
+    EmulationType GetEmulationTypeFromString(const std::string& voodoo_type_str) {
         if (voodoo_type_str == "false") {
-            emulation_type = EmulationType::None;
+            return EmulationType::None;
         } else if ((voodoo_type_str == "software") || !OpenGL_using()) {
-            emulation_type = EmulationType::Software;
-#if C_OPENGL
+            return EmulationType::Software;
+    #if C_OPENGL
         } else if ((voodoo_type_str == "opengl") || (voodoo_type_str == "auto")) {
-            emulation_type = EmulationType::OpenGL;
-#else
+            return EmulationType::OpenGL;
+    #else
         } else if (voodoo_type_str == "auto") {
-            emulation_type = EmulationType::Software;
-#endif
+            return EmulationType::Software;
+    #endif
         } else {
-            emulation_type = EmulationType::None;
+            return EmulationType::None;
         }
-
-        if (emulation_type == EmulationType::None) return;
-
-        Bits card_type = 1;
-        bool max_voodoomem;
-        std::string voodoo_mem_str(section->Get_string("voodoo_mem"));
-        max_voodoomem = (voodoo_mem_str == "max");
-
-        bool needs_pci_device = false;
-
-        switch (emulation_type) {
-            case EmulationType::Software:
-            case EmulationType::OpenGL:
-                Voodoo_Initialize(static_cast<Bits>(emulation_type), card_type, max_voodoomem);
-                needs_pci_device = true;
-                break;
-            default:
-                break;
-        }
-
-        if (needs_pci_device) PCI_AddSST_Device(card_type);
     }
+	
+	void UpdateConfiguration(Section* configuration) {
+		Section_prop* section = static_cast<Section_prop*>(configuration);
+		std::string voodoo_type_str(section->Get_string("voodoo_card"));
+		emulation_type = GetEmulationTypeFromString(voodoo_type_str);
+
+		CardType card_type = CardType::Type1;
+		bool max_voodoomem;
+		std::string voodoo_mem_str(section->Get_string("voodoo_mem"));
+		max_voodoomem = (voodoo_mem_str == "max");
+
+		bool needs_pci_device = false;
+
+		switch (emulation_type) {
+			case EmulationType::Software:
+			case EmulationType::OpenGL:
+				Voodoo_Initialize(static_cast<Bits>(emulation_type), static_cast<int>(card_type), max_voodoomem);
+				needs_pci_device = true;
+				break;
+			default:
+				break;
+		}
+
+		if (needs_pci_device) PCI_AddSST_Device(static_cast<int>(card_type));
+	}
 
     ~VOODOO() {
         PCI_RemoveSST_Device();
@@ -142,7 +149,7 @@ public:
             default:
                 break;
         }
-        return NULL;
+        return nullptr;
     }
 };
 
@@ -163,11 +170,9 @@ void VOODOO_PCI_SetLFB(uint32_t lfbaddr) {
 }
 
 bool VOODOO_PCI_CheckLFBPage(Bitu page) {
-    if ((page >= (voodoo_current_lfb >> 12)) &&
-        (page < ((voodoo_current_lfb >> 12) + VOODOO_PAGES)))
-        return true;
-    return false;
+    return (page >= (voodoo_current_lfb >> 12)) && (page < ((voodoo_current_lfb >> 12) + VOODOO_PAGES));
 }
+
 
 PageHandler* VOODOO_GetPageHandler() {
     if (voodoo_dev != nullptr) {
@@ -177,11 +182,17 @@ PageHandler* VOODOO_GetPageHandler() {
 }
 
 void VOODOO_Destroy(Section* sec) {
-    voodoo_dev.reset();
+    if (voodoo_dev) {
+        voodoo_dev.reset();
+    }
 }
 
 void VOODOO_Init(Section* sec) {
-    voodoo_current_lfb = (VOODOO_INITIAL_LFB & 0xffff0000);
-    voodoo_dev = std::make_unique<VOODOO>(sec);
-    sec->AddDestroyFunction(&VOODOO_Destroy, true);
+    if (!voodoo_dev) {
+        voodoo_current_lfb = (VOODOO_INITIAL_LFB & 0xffff0000);
+        voodoo_dev = std::make_unique<VOODOO>(sec);
+        sec->AddDestroyFunction(&VOODOO_Destroy, true);
+    } else {
+        voodoo_dev->UpdateConfiguration(sec);
+    }
 }
