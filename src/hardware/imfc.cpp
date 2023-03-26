@@ -78,12 +78,8 @@
 // Enable to activate IMF_LOG calls
 #define IMFC_VERBOSE_LOGGING 0
 
-constexpr uint8_t AVAILABLE_CONFIGURATIONS            = 16;
-constexpr uint8_t AVAILABLE_MIDI_CHANNELS             = 16;
-constexpr uint8_t AVAILABLE_INSTRUMENTS               = 8;
-constexpr uint8_t VOICE_DATA_PER_INSTRUMENT_BANKS     = 48;
-constexpr uint8_t AVAILABLE_CUSTOM_INSTRUMENT_BANKS   = 2;
-constexpr uint8_t AVAILABLE_INTERNAL_INSTRUMENT_BANKS = 5;
+constexpr uint8_t AVAILABLE_MIDI_CHANNELS = 16;
+constexpr uint8_t AVAILABLE_INSTRUMENTS   = 8;
 
 // IRQ can be any number between 2 and 7
 constexpr uint8_t IMFC_IRQ = 3;
@@ -2887,7 +2883,7 @@ constexpr int8_t EG_SH = 16;
 constexpr int8_t LFO_SH = 10;
 
 // 16.16 fixed point (timers calculations)
-constexpr int8_t TIMER_SH = 16;
+[[maybe_unused]] constexpr int8_t TIMER_SH = 16;
 
 constexpr int8_t ENV_BITS = 10;
 constexpr auto ENV_LEN    = (1 << ENV_BITS);
@@ -5466,7 +5462,7 @@ private:
 		softReboot(0xE0); // 0xE0 = Music Mode Selection
 	}
 
-	int debug_count = 0;
+	// int debug_count = 0;
 
 	// ROM Address: 0x0225
 	// Note: the input value used are 0xE0 (select music card mode command)
