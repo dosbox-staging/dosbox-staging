@@ -10704,10 +10704,10 @@ private:
 		    m_chainMode == CHAIN_MODE_ENABLED &&
 		    m_sp_MidiDataOfMidiCommandInProgress[0] < 0xA0) {
 			if (m_sp_MidiDataOfMidiCommandInProgress[0] == 0x90) {
-				m_sp_MidiDataOfMidiCommandInProgress[0] =
-				        (m_sp_MidiDataOfMidiCommandInProgress[0] &
-				         0x0F) |
-				        0x90;
+				// confirm we've already got the value as expected
+				assert(m_sp_MidiDataOfMidiCommandInProgress[0] ==
+				       ((m_sp_MidiDataOfMidiCommandInProgress[0] & 0x0F) |
+				        0x90));
 				m_sp_MidiDataOfMidiCommandInProgress[2] = 0;
 			}
 			return sendMidiResponse_to_MidiOut(
