@@ -3,6 +3,9 @@
  *
  * In reverse chronological order:
  *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *    - Applied C++ modernization adjustments
+ *
  *  Copyright (C) 2017-2020  Loris Chiocca
  *    - Authored the IBM Music Feature card (IMFC) emulator, as follows:
  *    - Reverse-engineered the IMF's Z80 ROM and tested against hardware.
@@ -12550,7 +12553,7 @@ private:
 				}
 			} else {
 				// for all the 0x8X values -> Xn
-				b = (b << 4) & 0xF0 | m_nodeNumber;
+				b = ((b << 4) & 0xF0) | m_nodeNumber;
 			}
 			m_sp_SysExStateMatchTable[i] = b;
 		}
@@ -12564,14 +12567,6 @@ public:
 	MusicFeatureCard(Section* configuration, mixer_channel_t&& audio_channel)
 	        : Module_base(configuration),
 	          m_ya2151(std::move(audio_channel)),
-	          // initialize all the internal structures
-	          m_bufferFromMidiInState("bufferFromMidiInState", 2048),
-	          m_bufferToMidiOutState("bufferToMidiOutState", 256),
-
-			  // FIXME: The original only has a buffer of 256, but since the
-			  // "main" thread is a bit slow, we need to increase it a LOT
-	          m_bufferFromSystemState("bufferFromSystemState", 0x2000),
-	          m_bufferToSystemState("bufferToSystemState", 256),
 	          // create all the instances
 	          m_tcr("TCR"),
 	          m_piuPC("PIU_PC"),
@@ -12621,7 +12616,15 @@ public:
 		                  SDL_CondSignal(m_interruptHandlerRunningCond);
 		                  SDL_UnlockMutex(m_interruptHandlerRunningMutex);
 	                  } /*callbackOnToHighToLow*/),
-	          m_tsr("TSR")
+	          m_tsr("TSR"),
+	          // initialize all the internal structures
+	          m_bufferFromMidiInState("bufferFromMidiInState", 2048),
+	          m_bufferToMidiOutState("bufferToMidiOutState", 256),
+
+			  // FIXME: The original only has a buffer of 256, but since the
+			  // "main" thread is a bit slow, we need to increase it a LOT
+	          m_bufferFromSystemState("bufferFromSystemState", 0x2000),
+	          m_bufferToSystemState("bufferToSystemState", 256)
 	{
 		// now wire everything up (see Figure "2-1 Music Card Interrupt
 		// System" in the Techniucal Reference Manual)
