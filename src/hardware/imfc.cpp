@@ -7293,8 +7293,8 @@ private:
 
 		m_bufferToMidiOutState.lock();
 		while (m_bufferToMidiOutState.isBufferFull()) {
-			m_bufferToMidiOutState.unlock();
-			m_bufferToMidiOutState.lock();
+		        m_bufferToMidiOutState.unlock();
+		        m_bufferToMidiOutState.lock();
 		}
 		m_bufferToMidiOutState.pushData(midiData);
 		m_midiTransmitReceiveFlag |= 1; // Transmit Enable
@@ -7302,9 +7302,9 @@ private:
 		m_midi.writePort2(m_midiTransmitReceiveFlag);
 		SDL_UnlockMutex(m_hardwareMutex);
 		m_bufferToMidiOutState.unlock();
-	
+
 		end of FIXME
-		*/ 
+		*/
 
 		// do {
 		//	enableInterrupts();
@@ -8964,56 +8964,62 @@ private:
 				        operatorsEnabled & FieldMask::OperatorsEnabled;
 			}
 		}
+		// quick reference pointers
+		const auto voice_operator_0 = instr->voiceDefinition.getOperator(0);
+		const auto voice_operator_1 = instr->voiceDefinition.getOperator(1);
+		const auto voice_operator_2 = instr->voiceDefinition.getOperator(2);
+		const auto voice_operator_3 = instr->voiceDefinition.getOperator(3);
+
 		// send DT1 (Detune1) & MUL (Phase Multiply)
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0x40, instr->voiceDefinition.getOperator(0)->getByte3());
+		        instr, 0x40, voice_operator_0->getByte3());
 		// send for register 40h to 47h
 
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0x48, instr->voiceDefinition.getOperator(2)->getByte3());
+		        instr, 0x48, voice_operator_2->getByte3());
 		// send for register 48h to 4Fh
 
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0x50, instr->voiceDefinition.getOperator(1)->getByte3());
+		        instr, 0x50, voice_operator_1->getByte3());
 		// send for register 50h to 57h
 
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0x58, instr->voiceDefinition.getOperator(3)->getByte3());
+		        instr, 0x58, voice_operator_3->getByte3());
 		// send for register 58h to 5Fh
 
 		// send AMS-EN (Amplitude Modulation Sensitivity Enable) & D1R
 		// (First Decay Rate)
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0xA0, instr->voiceDefinition.getOperator(0)->getByte5());
+		        instr, 0xA0, voice_operator_0->getByte5());
 		// send for register A0h to A7h
 
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0xA8, instr->voiceDefinition.getOperator(2)->getByte5());
+		        instr, 0xA8, voice_operator_2->getByte5());
 		// send for register A8h to AFh
 
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0xB0, instr->voiceDefinition.getOperator(1)->getByte5());
+		        instr, 0xB0, voice_operator_1->getByte5());
 		// send for register B0h to B7h
 
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0xB8, instr->voiceDefinition.getOperator(3)->getByte5());
+		        instr, 0xB8, voice_operator_3->getByte5());
 		// send for register B8h to BFh
 
 		// send DT2 (Detune2) & D2R (Second Decay Rate)
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0xC0, instr->voiceDefinition.getOperator(0)->getByte6());
+		        instr, 0xC0, voice_operator_0->getByte6());
 		// send for register C0h to C7h
 
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0xC8, instr->voiceDefinition.getOperator(2)->getByte6());
+		        instr, 0xC8, voice_operator_2->getByte6());
 		// send for register C8h to CFh
 
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0xD0, instr->voiceDefinition.getOperator(1)->getByte6());
+		        instr, 0xD0, voice_operator_1->getByte6());
 		// send for register D0h to D7h
 
 		sendToYM2151_no_interrupts_allowed_ForAllAssignedChannels(
-		        instr, 0xD8, instr->voiceDefinition.getOperator(3)->getByte6());
+		        instr, 0xD8, voice_operator_3->getByte6());
 		// send for register D8h to DFh
 
 		setInstrumentParameter_LFOEnable(instr,
