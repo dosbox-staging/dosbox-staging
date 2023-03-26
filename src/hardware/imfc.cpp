@@ -13040,8 +13040,15 @@ static void IMFC_Mixer_Callback(const uint16_t requested_frames)
 void IMFC_ShutDown(Section* /*sec*/)
 {
 	keep_running = false;
-	// using namespace std::chrono_literals;
-	// std::this_thread::sleep_for(20ms);
+
+	// Remove access to the IO ports
+	for (auto& rh : read_handlers)
+		rh.Uninstall();
+	for (auto& wh : write_handlers)
+		wh.Uninstall();
+
+	using namespace std::chrono_literals;
+	std::this_thread::sleep_for(20ms);
 
 	delete imfcSingleton;
 
