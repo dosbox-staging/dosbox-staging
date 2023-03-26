@@ -3533,7 +3533,7 @@ void ym2151_device::init_tables()
 //}
 // clang-format on
 
-void ym2151_device::YM2151Operator::key_on(uint32_t key_set, uint32_t eg_cnt)
+void ym2151_device::YM2151Operator::key_on(uint32_t key_set, uint32_t eg_count)
 {
 	// IMF_LOG("ym2151_device::YM2151Operator::key_on");
 	if (key == 0U) {
@@ -3541,7 +3541,7 @@ void ym2151_device::YM2151Operator::key_on(uint32_t key_set, uint32_t eg_cnt)
 		state = EG_ATT; /* KEY ON = attack */
 		// IMF_LOG("ym2151_device - operator now in state EG_ATT");
 		volume += (~volume *
-		           (eg_inc[eg_sel_ar + ((eg_cnt >> eg_sh_ar) & 7)])) >>
+		           (eg_inc[eg_sel_ar + ((eg_count >> eg_sh_ar) & 7)])) >>
 		          4;
 		if (volume <= MIN_ATT_INDEX) {
 			volume = MIN_ATT_INDEX;
