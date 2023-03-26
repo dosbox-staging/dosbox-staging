@@ -2685,8 +2685,8 @@ public:
 				// "TRUE" : "FALSE");
 				m_group0_writeInterruptEnable = bitValue;
 				updateInterruptLines();
-			} else if (m_group1_mode == MODE0 && bitNr >= 0 &&
-			           bitNr <= 2) {
+			} else if (m_group1_mode == MODE0 && bitNr <= 2) {
+				assert(bitNr >= 0);
 				if (m_group1_port2LowerInOut == OUTPUT) {
 					m_port2[bitNr].setValue(bitValue);
 				} else {
@@ -2709,8 +2709,8 @@ public:
 					IMF_LOG("%s: WARNING: trying to set a bit for an INPUT configuration",
 					        m_name.c_str());
 				}
-			} else if (m_group0_mode == MODE0 && bitNr >= 4 &&
-			           bitNr <= 7) {
+			} else if (m_group0_mode == MODE0 && bitNr >= 4) {
+				assert(bitNr <= 7);
 				if (m_group0_port2UpperInOut == OUTPUT) {
 					m_port2[bitNr].setValue(bitValue);
 				} else {
@@ -2718,7 +2718,8 @@ public:
 					        m_name.c_str());
 				}
 			} else if (m_group0_mode == MODE1 && bitNr >= 6 &&
-			           bitNr <= 7 && m_group0_port2UpperInOut == INPUT) {
+			           m_group0_port2UpperInOut == INPUT) {
+				assert(bitNr <= 7);
 				IMF_LOG("%s: WARNING: trying to set a bit for an INPUT configuration",
 				        m_name.c_str());
 			} else if (m_group0_mode == MODE1 && bitNr >= 4 &&
