@@ -3420,7 +3420,7 @@ void ym2151_device::init_tables()
 	// non-standard sinus
 	for (uint16_t i = 0; i < SIN_LEN; i++) {
 		// verified on the real chip
-		const double m = sin(((i * 2) + 1) * M_PI / SIN_LEN);
+		const double m = sin(((i * 2) + 1) * M_PI / static_cast<int>(SIN_LEN));
 
 		// we never reach zero here due to ((i*2)+1)
 
@@ -8800,7 +8800,8 @@ private:
 		        : (val & 0x60) == 0x60
 		                ? 0b10000000 /*Right channel enabled*/
 		                : 0b11000000 /*Left+Right channel enabled*/;
-		regValue |= instr->voiceDefinition.getFeedbackLevel() << 3;
+		regValue |= check_cast<uint8_t>(
+		        instr->voiceDefinition.getFeedbackLevel() << 3u);
 		regValue |= instr->voiceDefinition.getAlgorithm();
 		sub_1792(instr, 0x20, regValue);
 	}
@@ -9451,9 +9452,10 @@ private:
 		        0x2000; // convert for 2x7bit->14bit and then offset it
 		                // from 0x2000
 		// not the exact code, but should do the same thing
-		pitchbenderValue = instr->instrumentConfiguration.pitchbenderRange *
-		                   pitchbenderValue / 0x2000;
-		pitchbenderValue += instr->detuneAsNoteFraction.getuint16_t();
+		pitchbenderValue = check_cast<int16_t>(
+		        instr->detuneAsNoteFraction.getuint16_t() +
+		        instr->instrumentConfiguration.pitchbenderRange *
+		                pitchbenderValue / 0x2000);
 
 		instr->detuneAndPitchbendAsNoteFraction = to_fractional_note(
 		        pitchbenderValue);
@@ -9731,7 +9733,7 @@ private:
 		        operatorDefinition->getKeyboardLevelScalingDepth() *
 		        scale[(operatorDefinition->getKeyboardLevelScaling() << 1) |
 		              operatorDefinition->getKeyboardLevelScalingType()][h];
-		return val >> 8;
+		return check_cast<uint8_t>(val >> 8);
 	}
 
 	// ROM Address: 0x20BA
@@ -10095,7 +10097,8 @@ private:
 			return;
 		}
 
-		const uint8_t durationMSB = m_lastMidiOnOff_Duration.value >> 7;
+		const auto durationMSB = check_cast<uint8_t>(
+		        m_lastMidiOnOff_Duration.value >> 7);
 		const uint8_t durationLSB = m_lastMidiOnOff_Duration.value & 0x7F;
 		const uint8_t noteNumber =
 		        m_lastMidiOnOff_FractionAndNoteNumber.note.value;
@@ -10726,8 +10729,9 @@ private:
 			        Note(m_sp_MidiDataOfMidiCommandInProgress[1]) /* note number */,
 			        Fraction(m_sp_MidiDataOfMidiCommandInProgress[2]) /* fraction */,
 			        KeyVelocity(m_sp_MidiDataOfMidiCommandInProgress[3]) /* velocity */,
-			        Duration(m_sp_MidiDataOfMidiCommandInProgress[5] * 128 +
-			                 m_sp_MidiDataOfMidiCommandInProgress[4]) /* duration */
+			        Duration(check_cast<uint16_t>(
+			                m_sp_MidiDataOfMidiCommandInProgress[5] * 128 +
+			                m_sp_MidiDataOfMidiCommandInProgress[4])) /* duration */
 			);
 			i++;
 		}
@@ -12164,7 +12168,8 @@ private:
 				return READ_ERROR;
 			}
 		}
-		dataPacketSize = byteCountHigh * 128 + readResult.data;
+		dataPacketSize = check_cast<uint16_t>(byteCountHigh * 128 +
+		                                      readResult.data);
 		// log_debug("receiveDataPacketTypeA_internal - new
 		// dataPacketSize(1) 0x%04x", dataPacketSize);
 
@@ -12230,8 +12235,8 @@ private:
 				if (readResult.data >= 0x80) {
 					return READ_ERROR;
 				}
-				dataPacketSize = byteCountHigh * 128 +
-				                 readResult.data;
+				dataPacketSize = check_cast<uint16_t>(
+				        byteCountHigh * 128 + readResult.data);
 				log_debug("receiveDataPacketTypeA_internal - new dataPacketSize(2) 0x%04x",
 				          dataPacketSize);
 			}
@@ -12293,7 +12298,8 @@ private:
 		if (readResult.data >= 0x80) {
 			return READ_ERROR;
 		}
-		dataPacketSize = byteCountHigh * 0x80 + readResult.data;
+		dataPacketSize = check_cast<uint16_t>(byteCountHigh * 0x80 +
+		                                      readResult.data);
 
 		while (keep_running.load()) {
 			// read the data
