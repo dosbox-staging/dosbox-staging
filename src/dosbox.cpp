@@ -89,7 +89,6 @@ void HARDWARE_Init(Section*);
 void PCI_Init(Section*);
 #endif
 
-void IMFC_Init(Section*);
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
 void SBLASTER_Init(Section*);
@@ -847,7 +846,7 @@ void DOSBOX_Init()
 	GUS_AddConfigSection(control);
 
 	// Configure the IBM Music Feature emulation
-	(void)control->AddSection_prop("imfc", &IMFC_Init, changeable_at_runtime);
+	IMFC_AddConfigSection(control);
 
 	// Configure Innovation SSI-2001 emulation
 	INNOVATION_AddConfigSection(control);

@@ -70,6 +70,9 @@ void CAPTURE_VideoStop();
 // Gravis UltraSound configuration and initialization
 void GUS_AddConfigSection(const config_ptr_t &conf);
 
+// IBM Music Feature Card configuration and initialization
+void IMFC_AddConfigSection(const config_ptr_t& conf);
+
 // Innovation SSI-2001 configuration and initialization
 void INNOVATION_AddConfigSection(const config_ptr_t &conf);
 

@@ -4,7 +4,7 @@
  * In reverse chronological order:
  *
  *  Copyright (C) 2023-2023  The DOSBox Staging Team
- *    - Applied C++ modernization adjustments
+ *    - Applied C++ modernization adjustments.
  *
  *  Copyright (C) 2017-2020  Loris Chiocca
  *    - Authored the IBM Music Feature card (IMFC) emulator, as follows:
@@ -65,6 +65,7 @@
 #include <thread>
 #include <utility>
 
+#include "control.h"
 #include "dma.h"
 #include "inout.h"
 #include "math_utils.h"
@@ -82,8 +83,8 @@
 constexpr uint8_t AVAILABLE_MIDI_CHANNELS = 16;
 constexpr uint8_t AVAILABLE_INSTRUMENTS   = 8;
 
-// IRQ can be any number between 2 and 7
-constexpr uint8_t IMFC_IRQ = 3;
+constexpr uint8_t MIN_IRQ_ADDRESS = 2;
+constexpr uint8_t MAX_IRQ_ADDRESS = 7;
 
 #if IMFC_VERBOSE_LOGGING
 SDL_mutex* m_loggerMutex = nullptr;
@@ -4971,7 +4972,7 @@ AudioFrame ym2151_device::RenderFrame()
 		outr += chanout[ch] & pan[2 * ch + 1];
 	}
 	advance();
-	return {clamp_to_int16(outl), clamp_to_int16(outr)};
+	return {4.0f * static_cast<float>(outl), 4.0f * static_cast<float>(outr)};
 }
 
 void ym2151_device::RenderUpToNow()
@@ -5371,7 +5372,7 @@ private:
 	{
 #if IMFC_VERBOSE_LOGGING
 		static std::string message = {};
-		message                    = std::string("IMF: ") + format;
+		message                    = std::string("IMFC: ") + format;
 		LOG_ERR(static_cast<const char*>(message.c_str()), args...);
 #endif
 	}
@@ -6179,7 +6180,7 @@ private:
 				SystemReadResult const systemReadResult =
 				        system_read9BitMidiDataByte();
 				if (systemReadResult.status == SYSTEM_DATA_AVAILABLE) {
-					log_debug("PC->IMF: Found system data [1%02X] in queue",
+					log_debug("PC->IMFC: Found system data [1%02X] in queue",
 					          systemReadResult.data);
 					// log("MUSIC_MODE_LOOP_read_System_And_Dispatch
 					// - calling
@@ -6190,7 +6191,7 @@ private:
 				return;
 			}
 			if (readResult.status == ReadStatus::Success) {
-				log_debug("PC->IMF: Found midi data [%02X] in queue",
+				log_debug("PC->IMFC: Found midi data [%02X] in queue",
 				          readResult.data);
 				conditional_send_midi_byte_to_SP(
 				        &m_midiDataPacketFromSystem,
@@ -7066,10 +7067,10 @@ private:
 		m_cardMode = m_incomingMusicCardMessageData[1] == 0 ? MUSIC_MODE
 		                                                    : THRU_MODE;
 		if (m_cardMode == MUSIC_MODE) {
-			log_info("IMF: Restarting in music mode");
+			log_info("IMFC: Restarting in music mode");
 			restartInMusicMode();
 		} else {
-			log_info("IMF: Restarting in THRU mode");
+			log_info("IMFC: Restarting in THRU mode");
 			restartInThruMode();
 		}
 	}
@@ -7751,7 +7752,7 @@ private:
 		        (static_cast<int>(m_tcr.getDataBit8FromSystem()->getValue())
 		         << 8) |
 		        m_piuIMF.readPortPIU1(); // FIXME: use the midi port
-		// log_debug("PC->IMF: Reading port data [%03X] and adding to
+		// log_debug("PC->IMFC: Reading port data [%03X] and adding to
 		// queue", data);
 		m_bufferFromSystemState.pushData(data);
 		SDL_UnlockMutex(m_hardwareMutex);
@@ -12815,7 +12816,8 @@ public:
 	MusicFeatureCard(const MusicFeatureCard&)            = delete;
 	MusicFeatureCard& operator=(const MusicFeatureCard&) = delete;
 
-	MusicFeatureCard(Section* configuration, mixer_channel_t&& audio_channel)
+	MusicFeatureCard(Section* configuration,
+	                 mixer_channel_t&& audio_channel, const uint8_t irq)
 	        : Module_base(configuration),
 	          m_ya2151(std::move(audio_channel)),
 	          // create all the instances
@@ -12846,9 +12848,9 @@ public:
 	          m_irqStatus("TriStateIrqBuffer"),
 	          m_irqTriggerPc(
 	                  "TriggerPcIrq",
-	                  []() {
+	                  [irq]() {
 		                  IMF_LOG("ACTIVATING PC IRQ!!!", "");
-		                  PIC_ActivateIRQ(IMFC_IRQ);
+		                  PIC_ActivateIRQ(irq);
 	                  } /*callbackOnLowToHigh*/,
 	                  nullptr /*callbackOnToHighToLow*/),
 	          m_irqTriggerImf(
@@ -12872,8 +12874,8 @@ public:
 	          m_bufferFromMidiInState("bufferFromMidiInState", 2048),
 	          m_bufferToMidiOutState("bufferToMidiOutState", 256),
 
-			  // FIXME: The original only has a buffer of 256, but since the
-			  // "main" thread is a bit slow, we need to increase it a LOT
+	          // FIXME: The original only has a buffer of 256, but since the
+	          // "main" thread is a bit slow, we need to increase it a LOT
 	          m_bufferFromSystemState("bufferFromSystemState", 0x2000),
 	          m_bufferToSystemState("bufferToSystemState", 256)
 	{
@@ -13045,7 +13047,7 @@ public:
 	}
 	void writePortPIU1(const uint8_t val)
 	{
-		// IMF_LOG("PC->IMF: write to PIU1 = %02X", val);
+		// IMF_LOG("PC->IMFC: write to PIU1 = %02X", val);
 		SDL_LockMutex(m_hardwareMutex);
 		m_piuPC.writePortPIU1(val);
 		SDL_UnlockMutex(m_hardwareMutex);
@@ -13173,7 +13175,7 @@ public:
 
 	~MusicFeatureCard() override
 	{
-		LOG_MSG("IMF: Shutting down");
+		LOG_MSG("IMFC: Shutting down");
 		SDL_WaitThread(m_mainThread, 0);
 		SDL_DestroyMutex(m_hardwareMutex);
 	}
@@ -13183,7 +13185,7 @@ public:
 /// DOSBOX stuff
 ///////////////////////////////////////////////////////////
 
-static MusicFeatureCard* imfcSingleton = nullptr;
+static std::unique_ptr<MusicFeatureCard> imfc = {};
 
 constexpr auto NUM_IO_HANDLERS                                          = 16;
 static std::array<IO_ReadHandleObject, NUM_IO_HANDLERS> read_handlers   = {};
@@ -13191,96 +13193,96 @@ static std::array<IO_WriteHandleObject, NUM_IO_HANDLERS> write_handlers = {};
 
 static void Intel8253_TimerEvent(const uint32_t val)
 {
-	imfcSingleton->onTimerEvent(val);
+	imfc->onTimerEvent(val);
 }
 
 static uint8_t readPortPIU0(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortPIU0();
+	return imfc->readPortPIU0();
 }
 static void writePortPIU0(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortPIU0(check_cast<uint8_t>(value));
+	imfc->writePortPIU0(check_cast<uint8_t>(value));
 }
 static uint8_t readPortPIU1(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortPIU1();
+	return imfc->readPortPIU1();
 }
 static void writePortPIU1(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortPIU1(check_cast<uint8_t>(value));
+	imfc->writePortPIU1(check_cast<uint8_t>(value));
 }
 static uint8_t readPortPIU2(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortPIU2();
+	return imfc->readPortPIU2();
 }
 static void writePortPIU2(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortPIU2(check_cast<uint8_t>(value));
+	imfc->writePortPIU2(check_cast<uint8_t>(value));
 }
 static uint8_t readPortPCR(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortPCR();
+	return imfc->readPortPCR();
 }
 static void writePortPCR(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortPCR(check_cast<uint8_t>(value));
+	imfc->writePortPCR(check_cast<uint8_t>(value));
 }
 static uint8_t readPortCNTR0(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortCNTR0();
+	return imfc->readPortCNTR0();
 }
 static void writePortCNTR0(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortCNTR0(check_cast<uint8_t>(value));
+	imfc->writePortCNTR0(check_cast<uint8_t>(value));
 }
 static uint8_t readPortCNTR1(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortCNTR1();
+	return imfc->readPortCNTR1();
 }
 static void writePortCNTR1(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortCNTR1(check_cast<uint8_t>(value));
+	imfc->writePortCNTR1(check_cast<uint8_t>(value));
 }
 static uint8_t readPortCNTR2(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortCNTR2();
+	return imfc->readPortCNTR2();
 }
 static void writePortCNTR2(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortCNTR2(check_cast<uint8_t>(value));
+	imfc->writePortCNTR2(check_cast<uint8_t>(value));
 }
 static uint8_t readPortTCWR(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortTCWR();
+	return imfc->readPortTCWR();
 }
 static void writePortTCWR(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortTCWR(check_cast<uint8_t>(value));
+	imfc->writePortTCWR(check_cast<uint8_t>(value));
 }
 static uint8_t readPortTCR(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortTCR();
+	return imfc->readPortTCR();
 }
 static void writePortTCR(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortTCR(check_cast<uint8_t>(value));
+	imfc->writePortTCR(check_cast<uint8_t>(value));
 }
 static uint8_t readPortTSR(const io_port_t, const io_width_t)
 {
-	return imfcSingleton->readPortTSR();
+	return imfc->readPortTSR();
 }
 static void writePortTSR(const io_port_t, const io_val_t value, const io_width_t)
 {
-	imfcSingleton->writePortTSR(check_cast<uint8_t>(value));
+	imfc->writePortTSR(check_cast<uint8_t>(value));
 }
 
 static void IMFC_Mixer_Callback(const uint16_t requested_frames)
 {
-	imfcSingleton->mixerCallback(requested_frames);
+	imfc->mixerCallback(requested_frames);
 }
 
-void IMFC_ShutDown(Section* /*sec*/)
+void imfc_destroy(Section* /*sec*/)
 {
 	keep_running = false;
 
@@ -13293,7 +13295,7 @@ void IMFC_ShutDown(Section* /*sec*/)
 	using namespace std::chrono_literals;
 	std::this_thread::sleep_for(20ms);
 
-	delete imfcSingleton;
+	imfc = {};
 
 #if IMFC_VERBOSE_LOGGING
 	assert(m_loggerMutex);
@@ -13302,88 +13304,161 @@ void IMFC_ShutDown(Section* /*sec*/)
 #endif
 }
 
-void IMFC_Init(Section* sec)
+static void imfc_init(Section* sec)
 {
+	assert(sec);
+	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
+	if (!conf || !conf->Get_bool("imfc")) {
+		return;
+	}
+
 #if IMFC_VERBOSE_LOGGING
 	m_loggerMutex = SDL_CreateMutex();
 #endif
 
 	// Register the Audio channel
-	auto audio_channel = MIXER_AddChannel(IMFC_Mixer_Callback,
-	                                      use_mixer_rate,
-	                                      "IMFC",
-	                                      {ChannelFeature::Sleep,
-	                                       ChannelFeature::Stereo,
-	                                       ChannelFeature::ReverbSend,
-	                                       ChannelFeature::ChorusSend,
-	                                       ChannelFeature::Synthesizer});
+	auto channel = MIXER_AddChannel(IMFC_Mixer_Callback,
+	                                use_mixer_rate,
+	                                "IMFC",
+	                                {ChannelFeature::Sleep,
+	                                 ChannelFeature::Stereo,
+	                                 ChannelFeature::ReverbSend,
+	                                 ChannelFeature::ChorusSend,
+	                                 ChannelFeature::Synthesizer});
 
-	imfcSingleton = new MusicFeatureCard(sec, std::move(audio_channel));
+	// The filter parameters have been tweaked by analysing real hardware
+	// recordings. The results are virtually indistinguishable from the
+	// real thing by ear only.
+	const std::string filter_choice = conf->Get_string("imfc_filter");
+	if (filter_choice == "on") {
+		constexpr auto order       = 1;
+		constexpr auto cutoff_freq = 8000;
+		channel->ConfigureLowPassFilter(order, cutoff_freq);
+		channel->SetLowPassFilter(FilterState::On);
+
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+		if (filter_choice != "off")
+			LOG_WARNING("IMFC: Invalid 'imfc_filter' value: '%s', using 'off'",
+			            filter_choice.c_str());
+
+		channel->SetLowPassFilter(FilterState::Off);
+	}
+
+	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("imfc_irq")),
+	                       MIN_IRQ_ADDRESS,
+	                       MAX_IRQ_ADDRESS);
+
+	imfc = std::make_unique<MusicFeatureCard>(sec, std::move(channel), irq);
 
 	// Define the IO port addresses
-	constexpr io_port_t PORT_BASE  = 0x2A20;
-	constexpr io_port_t PORT_PIU0  = PORT_BASE + 0x0;
-	constexpr io_port_t PORT_PIU1  = PORT_BASE + 0x1;
-	constexpr io_port_t PORT_PIU2  = PORT_BASE + 0x2;
-	constexpr io_port_t PORT_PCR   = PORT_BASE + 0x3;
-	constexpr io_port_t PORT_CNTR0 = PORT_BASE + 0x4;
-	constexpr io_port_t PORT_CNTR1 = PORT_BASE + 0x5;
-	constexpr io_port_t PORT_CNTR2 = PORT_BASE + 0x6;
-	constexpr io_port_t PORT_TCWR  = PORT_BASE + 0x7;
-	constexpr io_port_t PORT_TCR   = PORT_BASE + 0x8;
-	constexpr io_port_t PORT_TSR   = PORT_BASE + 0xC;
+	const auto port = static_cast<io_port_t>(conf->Get_hex("imfc_base"));
+	const io_port_t port_piu0  = port + 0x0;
+	const io_port_t port_piu1  = port + 0x1;
+	const io_port_t port_piu2  = port + 0x2;
+	const io_port_t port_pcr   = port + 0x3;
+	const io_port_t port_cntr0 = port + 0x4;
+	const io_port_t port_cntr1 = port + 0x5;
+	const io_port_t port_cntr2 = port + 0x6;
+	const io_port_t port_tcwr  = port + 0x7;
+	const io_port_t port_tcr   = port + 0x8;
+	const io_port_t port_tsr   = port + 0xC;
 
 	// Consistency check
 	[[maybe_unused]] constexpr uint8_t EXPECTED_IO_HANDLERS = 16;
 	assert(read_handlers.size() == EXPECTED_IO_HANDLERS);
 	assert(write_handlers.size() == EXPECTED_IO_HANDLERS);
 
-	read_handlers.at(0).Install(PORT_PIU0, readPortPIU0, io_width_t::byte);
-	write_handlers.at(0).Install(PORT_PIU0, writePortPIU0, io_width_t::byte);
+	read_handlers.at(0).Install(port_piu0, readPortPIU0, io_width_t::byte);
+	write_handlers.at(0).Install(port_piu0, writePortPIU0, io_width_t::byte);
 
-	read_handlers.at(1).Install(PORT_PIU1, readPortPIU1, io_width_t::byte);
-	write_handlers.at(1).Install(PORT_PIU1, writePortPIU1, io_width_t::byte);
+	read_handlers.at(1).Install(port_piu1, readPortPIU1, io_width_t::byte);
+	write_handlers.at(1).Install(port_piu1, writePortPIU1, io_width_t::byte);
 
-	read_handlers.at(2).Install(PORT_PIU2, readPortPIU2, io_width_t::byte);
-	write_handlers.at(2).Install(PORT_PIU2, writePortPIU2, io_width_t::byte);
+	read_handlers.at(2).Install(port_piu2, readPortPIU2, io_width_t::byte);
+	write_handlers.at(2).Install(port_piu2, writePortPIU2, io_width_t::byte);
 
-	read_handlers.at(3).Install(PORT_PCR, readPortPCR, io_width_t::byte);
-	write_handlers.at(3).Install(PORT_PCR, writePortPCR, io_width_t::byte);
+	read_handlers.at(3).Install(port_pcr, readPortPCR, io_width_t::byte);
+	write_handlers.at(3).Install(port_pcr, writePortPCR, io_width_t::byte);
 
-	read_handlers.at(4).Install(PORT_CNTR0, readPortCNTR0, io_width_t::byte);
-	write_handlers.at(4).Install(PORT_CNTR0, writePortCNTR0, io_width_t::byte);
+	read_handlers.at(4).Install(port_cntr0, readPortCNTR0, io_width_t::byte);
+	write_handlers.at(4).Install(port_cntr0, writePortCNTR0, io_width_t::byte);
 
-	read_handlers.at(5).Install(PORT_CNTR1, readPortCNTR1, io_width_t::byte);
-	write_handlers.at(5).Install(PORT_CNTR1, writePortCNTR1, io_width_t::byte);
+	read_handlers.at(5).Install(port_cntr1, readPortCNTR1, io_width_t::byte);
+	write_handlers.at(5).Install(port_cntr1, writePortCNTR1, io_width_t::byte);
 
-	read_handlers.at(6).Install(PORT_CNTR2, readPortCNTR2, io_width_t::byte);
-	write_handlers.at(6).Install(PORT_CNTR2, writePortCNTR2, io_width_t::byte);
+	read_handlers.at(6).Install(port_cntr2, readPortCNTR2, io_width_t::byte);
+	write_handlers.at(6).Install(port_cntr2, writePortCNTR2, io_width_t::byte);
 
-	read_handlers.at(7).Install(PORT_TCWR, readPortTCWR, io_width_t::byte);
-	write_handlers.at(7).Install(PORT_TCWR, writePortTCWR, io_width_t::byte);
+	read_handlers.at(7).Install(port_tcwr, readPortTCWR, io_width_t::byte);
+	write_handlers.at(7).Install(port_tcwr, writePortTCWR, io_width_t::byte);
 
 	// ports [+C],[+D],[+E],[+F] all map to the TSR
 	for (io_port_t i = 0; i < 4; i++) {
-		read_handlers.at(8 + i).Install(PORT_TCR + i,
+		read_handlers.at(8 + i).Install(port_tcr + i,
 		                                readPortTCR,
 		                                io_width_t::byte);
-		write_handlers.at(8 + i).Install(PORT_TCR + i,
+		write_handlers.at(8 + i).Install(port_tcr + i,
 		                                 writePortTCR,
 		                                 io_width_t::byte);
 	}
 
 	// ports [+8],[+9],[+A],[+B] all map to the TCR
 	for (io_port_t i = 0; i < 4; i++) {
-		read_handlers.at(12 + i).Install(PORT_TSR + i,
+		read_handlers.at(12 + i).Install(port_tsr + i,
 		                                 readPortTSR,
 		                                 io_width_t::byte);
-		write_handlers.at(12 + i).Install(PORT_TSR + i,
+		write_handlers.at(12 + i).Install(port_tsr + i,
 		                                  writePortTSR,
 		                                  io_width_t::byte);
 	}
-	sec->AddDestroyFunction(&IMFC_ShutDown, true);
 
-	LOG_MSG("IMF: IBM Music Feature running on port %xh and IRQ %d",
-	        PORT_BASE,
-	        IMFC_IRQ);
+	LOG_MSG("IMFC: IBM Music Feature Card running on port %xh and IRQ %d",
+	        port,
+	        irq);
+	constexpr auto changeable_at_runtime = true;
+	sec->AddDestroyFunction(&imfc_destroy, changeable_at_runtime);
+}
+
+void init_imfc_dosbox_settings(Section_prop& secprop)
+{
+	constexpr auto when_idle = Property::Changeable::WhenIdle;
+
+	const auto bool_prop = secprop.Add_bool("imfc", when_idle, false);
+	assert(bool_prop);
+	bool_prop->Set_help("Enable the IBM Music Feature Card (disabled by default).");
+
+	const auto hex_prop = secprop.Add_hex("imfc_base", when_idle, 0x2A20);
+	assert(hex_prop);
+	const char* const bases[] = {"2A20", "2A30", nullptr};
+	hex_prop->Set_values(bases);
+	hex_prop->Set_help(
+	        "The IO base address of the IBM Music Feature Card (2A20 by default).");
+
+	const auto int_prop = secprop.Add_int("imfc_irq", when_idle, 3);
+	assert(int_prop);
+	const char* const irqs[] = {"2", "3", "4", "5", "6", "7", nullptr};
+	int_prop->Set_values(irqs);
+	int_prop->Set_help(
+	        "The IRQ number of the IBM Music Feature Card (3 by default).");
+
+	const auto str_prop = secprop.Add_string("imfc_filter", when_idle, "on");
+	assert(str_prop);
+	str_prop->Set_help(
+	        "Filter for the IBM Music Feature Card output:\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
+	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
+}
+
+void IMFC_AddConfigSection(const config_ptr_t& conf)
+{
+	assert(conf);
+
+	constexpr auto changeable_at_runtime = true;
+
+	Section_prop* sec = conf->AddSection_prop("imfc",
+	                                          &imfc_init,
+	                                          changeable_at_runtime);
+	assert(sec);
+	init_imfc_dosbox_settings(*sec);
 }
