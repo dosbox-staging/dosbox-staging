@@ -4357,15 +4357,18 @@ void ym2151_device::chan7_calc()
 
 	env = volume_calc(op + 3); /* C2 */
 	if ((noise & 0x80) != 0U) {
-		uint32_t noiseout = 0;
-
-		noiseout = 0;
 		if (env < 0x3ff) {
-			noiseout = (env ^ 0x3ff) * 2; /* range of the YM2151
-			                                 noise output is -2044
-			                                 to 2040 */
+			const auto noise_amplitude = static_cast<int16_t>(2 * (0x3ff - env));
+			const int8_t noise_direction = (noise_rng & 0x10000) ? 1 : -1;
+
+			// Calculate the value of the noise signal
+			const int16_t noise_val = noise_amplitude * noise_direction;
+
+			// The range of the YM2151 noise output is -2044 to 2040
+			constexpr int16_t noise_min = -2044;
+			constexpr int16_t noise_max = 2040;
+			chanout[7] += std::clamp(noise_val, noise_min, noise_max);
 		}
-		chanout[7] += ((noise_rng & 0x10000) != 0U ? noiseout : -noiseout); /* bit 16 -> output */
 	} else {
 		if (env < ENV_QUIET) {
 			chanout[7] += op_calc(op + 3, env, c2);
