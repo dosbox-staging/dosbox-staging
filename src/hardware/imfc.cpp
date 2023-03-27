@@ -11240,9 +11240,8 @@ private:
 		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
-		m_activeConfiguration.deepCopyFrom(
-		        reinterpret_cast<ConfigurationData*>(
-		                &m_sp_MidiDataOfMidiCommandInProgress));
+		m_activeConfiguration.SetFromStream(
+		        m_sp_MidiDataOfMidiCommandInProgress);
 		proc_1393_called_for_Reboot();
 		initMidiChannelToAssignedInstruments();
 		logSuccess();
