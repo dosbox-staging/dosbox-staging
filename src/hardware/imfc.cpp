@@ -5834,8 +5834,8 @@ private:
 	static void initCustomInstrumentData(VoiceDefinitionBank* customBank,
 	                                     const char* name)
 	{
-		customBank->deepCopyFrom(
-		        (VoiceDefinitionBank*)&m_voiceDefinitionBankRom1Binary); // this would be after the name copy in the original code
+		// this would be after the name copy in the original code
+		customBank->SetFromStream(m_voiceDefinitionBankRom1Binary);
 		memcpy(&customBank->name, name, 8);
 	}
 
