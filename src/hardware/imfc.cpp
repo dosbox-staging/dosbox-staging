@@ -11416,7 +11416,7 @@ private:
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1() - copy start");
 		m_activeConfiguration
 		        .instrumentConfigurations[m_sysEx_InstrumentNumber]
-		        .copyFrom((InstrumentConfiguration*)&m_sp_MidiDataOfMidiCommandInProgress);
+		        .SetFromStream(m_sp_MidiDataOfMidiCommandInProgress);
 		log_debug("processSysExCmd_InstrumentMessage_SetInstrumentConfiguration1() - copy end");
 		InstrumentParameters* instr = getActiveInstrumentParameters(
 		        m_sysEx_InstrumentNumber);
