@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -160,24 +160,24 @@ void MouseSpeedCalculator::Update(const float delta)
 
 MouseButtons12 &MouseButtons12::operator=(const MouseButtons12 &other)
 {
-	data = other.data;
+	_data = other._data;
 	return *this;
 }
 
 MouseButtons345 &MouseButtons345::operator=(const MouseButtons345 &other)
 {
-	data = other.data;
+	_data = other._data;
 	return *this;
 }
 
 MouseButtonsAll &MouseButtonsAll::operator=(const MouseButtonsAll &other)
 {
-	data = other.data;
+	_data = other._data;
 	return *this;
 }
 
 MouseButtons12S &MouseButtons12S::operator=(const MouseButtons12S &other)
 {
-	data = other.data;
+	_data = other._data;
 	return *this;
 }

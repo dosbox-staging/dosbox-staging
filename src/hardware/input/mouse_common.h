@@ -99,34 +99,34 @@ private:
 
 union MouseButtons12 {
 	// For storing left and right buttons only
-	uint8_t data = 0;
+	uint8_t _data = 0;
 
 	bit_view<0, 1> left;
 	bit_view<1, 1> right;
 
-	MouseButtons12() : data(0) {}
-	MouseButtons12(const uint8_t data) : data(data) {}
-	MouseButtons12(const MouseButtons12 &other) : data(other.data) {}
+	MouseButtons12() : _data(0) {}
+	MouseButtons12(const uint8_t data) : _data(data) {}
+	MouseButtons12(const MouseButtons12 &other) : _data(other._data) {}
 	MouseButtons12 &operator=(const MouseButtons12 &other);
 };
 
 union MouseButtons345 {
 	// For storing middle and extra buttons
-	uint8_t data = 0;
+	uint8_t _data = 0;
 
 	bit_view<2, 1> middle;
 	bit_view<3, 1> extra_1;
 	bit_view<4, 1> extra_2;
 
-	MouseButtons345() : data(0) {}
-	MouseButtons345(const uint8_t data) : data(data) {}
-	MouseButtons345(const MouseButtons345 &other) : data(other.data) {}
+	MouseButtons345() : _data(0) {}
+	MouseButtons345(const uint8_t data) : _data(data) {}
+	MouseButtons345(const MouseButtons345 &other) : _data(other._data) {}
 	MouseButtons345 &operator=(const MouseButtons345 &other);
 };
 
 union MouseButtonsAll {
 	// For storing all 5 mouse buttons
-	uint8_t data = 0;
+	uint8_t _data = 0;
 
 	bit_view<0, 1> left;
 	bit_view<1, 1> right;
@@ -134,24 +134,24 @@ union MouseButtonsAll {
 	bit_view<3, 1> extra_1;
 	bit_view<4, 1> extra_2;
 
-	MouseButtonsAll() : data(0) {}
-	MouseButtonsAll(const uint8_t data) : data(data) {}
-	MouseButtonsAll(const MouseButtonsAll &other) : data(other.data) {}
+	MouseButtonsAll() : _data(0) {}
+	MouseButtonsAll(const uint8_t data) : _data(data) {}
+	MouseButtonsAll(const MouseButtonsAll &other) : _data(other._data) {}
 	MouseButtonsAll &operator=(const MouseButtonsAll &other);
 };
 
 union MouseButtons12S {
 	// To be used where buttons 3/4/5 are squished
 	// into a virtual middle button
-	uint8_t data = 0;
+	uint8_t _data = 0;
 
 	bit_view<0, 1> left;
 	bit_view<1, 1> right;
 	bit_view<2, 1> middle;
 
-	MouseButtons12S() : data(0) {}
-	MouseButtons12S(const uint8_t data) : data(data) {}
-	MouseButtons12S(const MouseButtons12S &other) : data(other.data) {}
+	MouseButtons12S() : _data(0) {}
+	MouseButtons12S(const uint8_t data) : _data(data) {}
+	MouseButtons12S(const MouseButtons12S &other) : _data(other._data) {}
 	MouseButtons12S &operator=(const MouseButtons12S &other);
 };
 

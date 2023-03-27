@@ -53,7 +53,7 @@ enum FatAttributeFlagsValues : uint8_t { // 7-bit
 };
 
 union FatAttributeFlags {
-	uint8_t data = 0;
+	uint8_t _data = 0;
 
 	bit_view<0, 1> read_only;
 	bit_view<1, 1> hidden;
@@ -64,12 +64,12 @@ union FatAttributeFlags {
 	bit_view<6, 1> device;
 	bit_view<7, 1> unused;
 
-	FatAttributeFlags() : data(0) {}
-	FatAttributeFlags(const uint8_t data) : data(data) {}
-	FatAttributeFlags(const FatAttributeFlags& other) : data(other.data) {}
+	FatAttributeFlags() : _data(0) {}
+	FatAttributeFlags(const uint8_t data) : _data(data) {}
+	FatAttributeFlags(const FatAttributeFlags& other) : _data(other._data) {}
 	FatAttributeFlags& operator=(const FatAttributeFlags& other)
 	{
-		data = other.data;
+		_data = other._data;
 		return *this;
 	}
 };
