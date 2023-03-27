@@ -597,24 +597,24 @@ void MouseInterface::ResetButtons()
 
 bool MouseInterface::ChangedButtonsJoined() const
 {
-	return (old_buttons_12.data != buttons_12.data) ||
-	       (old_buttons_345.data != buttons_345.data);
+	return (old_buttons_12._data != buttons_12._data) ||
+	       (old_buttons_345._data != buttons_345._data);
 }
 
 bool MouseInterface::ChangedButtonsSquished() const
 {
-	if (GCC_LIKELY(old_buttons_12.data != buttons_12.data)) {
+	if (GCC_LIKELY(old_buttons_12._data != buttons_12._data)) {
 		return true;
 	}
 
-	return (old_buttons_345.data == 0 && buttons_345.data != 0) ||
-	       (old_buttons_345.data != 0 && buttons_345.data == 0);
+	return (old_buttons_345._data == 0 && buttons_345._data != 0) ||
+	       (old_buttons_345._data != 0 && buttons_345._data == 0);
 }
 
 MouseButtonsAll MouseInterface::GetButtonsJoined() const
 {
 	MouseButtonsAll buttons_all;
-	buttons_all.data = buttons_12.data | buttons_345.data;
+	buttons_all._data = buttons_12._data | buttons_345._data;
 
 	return buttons_all;
 }
@@ -624,8 +624,8 @@ MouseButtons12S MouseInterface::GetButtonsSquished() const
 	MouseButtons12S buttons_12S;
 
 	// Squish buttons 3/4/5 into single virtual middle button
-	buttons_12S.data = buttons_12.data;
-	if (buttons_345.data) {
+	buttons_12S._data = buttons_12._data;
+	if (buttons_345._data) {
 		buttons_12S.middle = 1;
 	}
 
@@ -796,7 +796,7 @@ void InterfaceCOM::NotifyButton(const uint8_t idx, const bool pressed)
 		return;
 	}
 
-	listener->NotifyButton(GetButtonsSquished().data, idx);
+	listener->NotifyButton(GetButtonsSquished()._data, idx);
 }
 
 void InterfaceCOM::NotifyWheel(const int16_t w_rel)

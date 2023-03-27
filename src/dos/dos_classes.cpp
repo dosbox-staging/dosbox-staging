@@ -383,7 +383,7 @@ void DOS_DTA::GetResult(char *found_name,
 void DOS_DTA::GetResult(Result& result) const
 {
 	char name[DOS_NAMELENGTH_ASCII];
-	GetResult(name, result.size, result.date, result.time, result.attr.data);
+	GetResult(name, result.size, result.date, result.time, result.attr._data);
 	result.name = name;
 }
 

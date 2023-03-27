@@ -56,7 +56,7 @@ enum class VMwareAbsPointer : uint32_t {
 };
 
 union VMwareButtons {
-	uint8_t data = 0;
+	uint8_t _data = 0;
 	bit_view<5, 1> left;
 	bit_view<4, 1> right;
 	bit_view<3, 1> middle;
@@ -104,8 +104,8 @@ static void MOUSEVMM_Activate()
 			MOUSEPS2_NotifyMovedDummy();
 		}
 	}
-	buttons.data = 0;
-	counter_w    = 0;
+	buttons._data = 0;
+	counter_w     = 0;
 }
 
 void MOUSEVMM_Deactivate()
@@ -116,8 +116,8 @@ void MOUSEVMM_Deactivate()
 		MOUSEPS2_UpdateButtonSquish();
 		MOUSE_UpdateGFX();
 	}
-	buttons.data = 0;
-	counter_w    = 0;
+	buttons._data = 0;
+	counter_w     = 0;
 }
 
 void MOUSEVMM_NotifyInputType(const bool new_use_relative,
@@ -135,7 +135,7 @@ static void cmd_get_version()
 
 static void cmd_abs_pointer_data()
 {
-	reg_eax = buttons.data;
+	reg_eax = buttons._data;
 	reg_ebx = scaled_x;
 	reg_ecx = scaled_y;
 	reg_edx = static_cast<uint32_t>((counter_w >= 0) ? counter_w
@@ -246,14 +246,14 @@ void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S)
 	}
 
 	const auto old_buttons = buttons;
-	buttons.data           = 0;
+	buttons._data          = 0;
 
-	// Direct assignment of .data is not possible, as bit layout is different
+	// Direct assignment of ._data is not possible, as bit layout is different
 	buttons.left   = static_cast<bool>(buttons_12S.left);
 	buttons.right  = static_cast<bool>(buttons_12S.right);
 	buttons.middle = static_cast<bool>(buttons_12S.middle);
 
-	if (GCC_UNLIKELY(old_buttons.data == buttons.data)) {
+	if (GCC_UNLIKELY(old_buttons._data == buttons._data)) {
 		return;
 	}
 

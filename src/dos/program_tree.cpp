@@ -292,7 +292,7 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 	flags.system        = true;
 	flags.hidden        = true;
 	flags.directory     = true;
-	bool has_next_entry = DOS_FindFirst(pattern.c_str(), flags.data);
+	bool has_next_entry = DOS_FindFirst(pattern.c_str(), flags._data);
 	size_t space_needed = 7; // length of indentation + ellipsis
 
 	while (!shutdown_requested && has_next_entry) {
