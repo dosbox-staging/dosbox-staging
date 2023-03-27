@@ -11277,8 +11277,7 @@ private:
 		    ReadStatus::Success) {
 			return sendResponse(0x02, NAK_MESSAGE);
 		}
-		config->deepCopyFrom(reinterpret_cast<const ConfigurationData*>(
-		        &m_sp_MidiDataOfMidiCommandInProgress));
+		config->SetFromStream(m_sp_MidiDataOfMidiCommandInProgress);
 		sendResponse(0x00, ACK_MESSAGE);
 	}
 
