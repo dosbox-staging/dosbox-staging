@@ -60,6 +60,7 @@
 #include <cstring>
 #include <deque>
 #include <functional>
+#include <queue>
 #include <string>
 #include <thread>
 #include <utility>
@@ -3084,6 +3085,9 @@ public:
 	void sound_stream_update(const uint16_t requested_frames);
 
 private:
+	AudioFrame RenderFrame();
+	void RenderUpToNow();
+
 	enum { TIMER_IRQ_A_OFF, TIMER_IRQ_B_OFF, TIMER_A, TIMER_B };
 
 	enum {
@@ -3102,7 +3106,12 @@ private:
 		SIN_MASK = SIN_LEN - 1
 	};
 
+	// Playback related
 	mixer_channel_t audio_channel = nullptr;
+	std::queue<AudioFrame> fifo   = {};
+	double last_rendered_ms       = 0.0;
+	double ms_per_render          = 0.0;
+	int frame_rate_hz             = 0;
 
 	int tl_tab[TL_TAB_LEN]{};
 	unsigned int sin_tab[SIN_LEN]{};
@@ -4773,11 +4782,13 @@ void ym2151_device::advance()
 ym2151_device::ym2151_device(mixer_channel_t&& channel)
         : audio_channel(std::move(channel))
 {
-	assert(audio_channel);
-	audio_channel->Enable(true);
 	device_start();
 	device_post_load();
 	device_reset();
+
+	assert(audio_channel);
+	ms_per_render = millis_in_second / audio_channel->GetSampleRate();
+	audio_channel->Enable(true);
 }
 
 //-------------------------------------------------
@@ -4810,7 +4821,7 @@ uint8_t ym2151_device::read(const offs_t offset) const
 
 void ym2151_device::write(const offs_t offset, const uint8_t data)
 {
-	audio_channel->WakeUp();
+	RenderUpToNow();
 	if ((offset & 1) != 0) {
 		if (!m_reset_active) {
 			// m_stream->update();
@@ -4904,71 +4915,75 @@ void ym2151_device::device_reset()
 //}
 // clang-format on
 
+AudioFrame ym2151_device::RenderFrame()
+{
+	advance_eg();
+
+	// Reset the channels before calculating
+	std::fill(std::begin(chanout), std::end(chanout), 0);
+
+	for (uint8_t ch = 0; ch < 7; ch++) {
+		chan_calc(ch);
+	}
+	chan7_calc();
+
+	int outl = 0;
+	int outr = 0;
+	for (uint8_t ch = 0; ch < 8; ch++) {
+		outl += chanout[ch] & pan[2 * ch];
+		outr += chanout[ch] & pan[2 * ch + 1];
+	}
+	advance();
+	return {clamp_to_int16(outl), clamp_to_int16(outr)};
+}
+
+void ym2151_device::RenderUpToNow()
+{
+	const auto now = PIC_FullIndex();
+
+	// Wake up the channel and update the last rendered time datum.
+	assert(audio_channel);
+	if (audio_channel->WakeUp()) {
+		last_rendered_ms = now;
+		return;
+	}
+	// Keep rendering until we're current
+	while (last_rendered_ms < now) {
+		last_rendered_ms += ms_per_render;
+		fifo.emplace(RenderFrame());
+	}
+}
 //-------------------------------------------------
 //  sound_stream_update - handle a stream update
 //-------------------------------------------------
 
 void ym2151_device::sound_stream_update(const uint16_t requested_frames)
 {
-	/*
-	// clang-format off
-	        memset(&MixTemp,0,len*8);
-	        Bitu i;
-	        int16_t * buf16 = (int16_t *)MixTemp;
-	        int32_t * buf32 = (int32_t *)MixTemp;
-	        for(i=0;i<myGUS.ActiveChannels;i++)
-	                guschan[i]->generateSamples(buf32,len);
-	        for(i=0;i<len*2;i++) {
-	                int32_t sample=((buf32[i] >> 13)*AutoAmp)>>9;
-	                if (sample>32767) {
-	                        sample=32767;
-	                        AutoAmp--;
-	                } else if (sample<-32768) {
-	                        sample=-32768;
-	                        AutoAmp--;
-	                }
-	                buf16[i] = (int16_t)(sample);
-	        }
-	        gus_chan->AddSamples_s16(len,buf16);
-	        CheckVoiceIrq(); */
-	// clang-format on
+	assert(audio_channel);
 
 	if (m_reset_active) {
 		IMF_LOG("ym2151_device - sending silence", "");
 		audio_channel->AddSilence();
-		// std::fill(&outputs[0][0], &outputs[0][requested_frames], 0);
-		// std::fill(&outputs[1][0], &outputs[1][requested_frames], 0);
 		return;
 	}
+	// if (fifo.size())
+	//	LOG_MSG("IMFC: Queued %2lu cycle-accurate frames", fifo.size());
 
-	// IMF_LOG("ym2151_device - sending requested_frames");
-	// memset(&MixTemp, 0, requested_frames * 8);
-	// int16_t * buf16 = (int16_t *)MixTemp;
-	int16_t buf16[2];
+	auto frames_remaining = requested_frames;
 
-	for (int i = 0; i < requested_frames; i++) {
-		advance_eg();
-
-		// Reset the channels before calculating
-		std::fill(std::begin(chanout), std::end(chanout), 0);
-
-		for (uint8_t ch = 0; ch < 7; ch++) {
-			chan_calc(ch);
-		}
-		chan7_calc();
-
-		int outl = 0;
-		int outr = 0;
-		for (uint8_t ch = 0; ch < 8; ch++) {
-			outl += chanout[ch] & pan[2 * ch];
-			outr += chanout[ch] & pan[2 * ch + 1];
-		}
-		buf16[0] = clamp_to_int16(outl);
-		buf16[1] = clamp_to_int16(outr);
-		audio_channel->AddSamples_s16(1, buf16);
-
-		advance();
+	// First, send any frames we've queued since the last callback
+	while (frames_remaining && fifo.size()) {
+		audio_channel->AddSamples_sfloat(1, &fifo.front()[0]);
+		fifo.pop();
+		--frames_remaining;
 	}
+	// If the queue's run dry, render the remainder and sync-up our time datum
+	while (frames_remaining) {
+		const auto frame = RenderFrame();
+		audio_channel->AddSamples_sfloat(1, &frame[0]);
+		--frames_remaining;
+	}
+	last_rendered_ms = PIC_FullIndex();
 }
 
 // clang-format off
