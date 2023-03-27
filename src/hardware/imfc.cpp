@@ -11384,8 +11384,8 @@ private:
 		}
 		InstrumentParameters* instr = getActiveInstrumentParameters(
 		        m_sysEx_InstrumentNumber);
-		instr->voiceDefinition.deepCopyFrom(
-		        (VoiceDefinition*)&m_sp_MidiDataOfMidiCommandInProgress);
+		instr->voiceDefinition.SetFromStream(
+		        m_sp_MidiDataOfMidiCommandInProgress);
 		applyInstrumentParameter(instr);
 		logSuccess();
 		sendResponse(0x00, ACK_MESSAGE);
