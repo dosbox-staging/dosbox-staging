@@ -41,7 +41,7 @@ private:
 	bool ParseCommandLine(MoreOutputFiles &output);
 	bool FindInputFiles(MoreOutputFiles& output);
 
-	void AddMessages();
+	static void AddMessages();
 };
 
 #endif
