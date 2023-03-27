@@ -5824,8 +5824,7 @@ private:
 	static void initConfigurationRAMSlot(ConfigurationData* config, const char* c)
 	{
 		// this would be after the name copy in the original code
-		config->deepCopyFrom(reinterpret_cast<const ConfigurationData*>(
-		        &m_romPresetConfiguration16Binary));
+		config->SetFromStream(m_romPresetConfiguration16Binary);
 		memcpy(&config->name, " user ", 6);
 		config->name[6] = c[0];
 		config->name[7] = c[1];
