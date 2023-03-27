@@ -41,7 +41,7 @@
  */
 
 // Comments from Loris:
-//  - Some IMF applications don't work because they use the portamento feature,
+//  - Some IMFC applications don't work because they use the portamento feature,
 //    which in turn relies on YM timer and interrupt handling, which isn't
 //    currently implemented.
 //
@@ -49,7 +49,7 @@
 //    from their perspective it's functionally complete.
 //
 //  - The reverse-engineered assembly (see contrib/ibm_music_feature_asm/) shows
-//    there is a way to upload Z80 programs to the IMF card and execute it! Who
+//    there is a way to upload Z80 programs to the IMFC card and execute it! Who
 //    knew that IBM added this back-door :)
 
 #include "dosbox.h"
@@ -83,8 +83,8 @@
 constexpr uint8_t AVAILABLE_MIDI_CHANNELS = 16;
 constexpr uint8_t AVAILABLE_INSTRUMENTS   = 8;
 
-constexpr uint8_t MIN_IRQ_ADDRESS = 2;
-constexpr uint8_t MAX_IRQ_ADDRESS = 7;
+constexpr uint8_t MinIrqAddress = 2;
+constexpr uint8_t MaxIrqAddress = 7;
 
 #if IMFC_VERBOSE_LOGGING
 SDL_mutex* m_loggerMutex = nullptr;
@@ -4972,7 +4972,7 @@ AudioFrame ym2151_device::RenderFrame()
 		outr += chanout[ch] & pan[2 * ch + 1];
 	}
 	advance();
-	return {4.0f * static_cast<float>(outl), 4.0f * static_cast<float>(outr)};
+	return {static_cast<float>(outl), static_cast<float>(outr)};
 }
 
 void ym2151_device::RenderUpToNow()
@@ -5189,7 +5189,7 @@ public:
 
 std::atomic_bool keep_running = {};
 
-class MusicFeatureCard : public Module_base {
+class MusicFeatureCard {
 private:
 	ym2151_device m_ya2151;
 	PD71051 m_midi = {};
@@ -5249,6 +5249,10 @@ private:
 	bool m_interruptHandlerRunning            = {};
 	SDL_mutex* m_interruptHandlerRunningMutex = nullptr;
 	SDL_cond* m_interruptHandlerRunningCond    = nullptr;
+
+	static constexpr auto NumIoHandlers                           = 16;
+	std::array<IO_ReadHandleObject, NumIoHandlers> readHandlers   = {};
+	std::array<IO_WriteHandleObject, NumIoHandlers> writeHandlers = {};
 
 	// memory allocation on the IMF
 	// ROM
@@ -5328,6 +5332,8 @@ private:
 	                                                      // MidiChannelToAssignedInstruments[2*9]
 	                                                      // = 0,1,2,0xFF
 	uint8_t m_receiveDataPacketTypeAState = 0;
+
+	void RegisterIoHandlers(const io_port_t port);
 
 	bool currentThreadIsMainThread()
 	{
@@ -6923,11 +6929,11 @@ private:
 	// ROM Address: 0x09BC
 	void processIncomingMusicCardMessageByte(uint8_t messageByte)
 	{
-		log_debug("IMF - processIncomingMusicCardMessageByte(0x%02X)",
+		log_debug("IMFC: processIncomingMusicCardMessageByte(0x%02X)",
 		          messageByte);
 		if (messageByte >= 0x80) {
 			setIncomingMusicCardMessageBufferExpected(messageByte);
-			log_debug("IMF - expecting total bytes of %i",
+			log_debug("IMFC: expecting total bytes of %i",
 			          m_incomingMusicCardMessage_Expected);
 		}
 		if (m_incomingMusicCardMessage_Expected == 0) {
@@ -6938,7 +6944,7 @@ private:
 		if (--m_incomingMusicCardMessage_Expected != 0U) {
 			return;
 		};
-		log_debug("IMF - reached expected message size... dispatching");
+		log_debug("IMFC: reached expected message size... dispatching");
 		startMusicProcessing();
 		switch (m_incomingMusicCardMessageData[0] - 0xD0) {
 		case 0x00: processMusicCardMessageCardModeStatus(); break;
@@ -7060,7 +7066,7 @@ private:
 	// ROM Address: 0x0AC9
 	void processMusicCardMessageSelectCardMode()
 	{
-		log_debug("IMF - processMusicCardMessageSelectCardMode() - start");
+		log_debug("IMFC: processMusicCardMessageSelectCardMode() - start");
 		if (m_incomingMusicCardMessageData[1] >= 2) {
 			return;
 		}
@@ -7078,7 +7084,7 @@ private:
 	// ROM Address: 0x0AD9
 	void processMusicCardMessageSelectErrorReportMode()
 	{
-		log_debug("IMF - processMusicCardMessageSelectErrorReportMode() - start");
+		log_debug("IMFC: processMusicCardMessageSelectErrorReportMode() - start");
 		if (m_incomingMusicCardMessageData[1] >= 2) {
 			return;
 		}
@@ -7088,13 +7094,13 @@ private:
 		m_outgoingMusicCardMessageData[0] = 0xE1;
 		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
-		log_debug("IMF - processMusicCardMessageSelectErrorReportMode() - end");
+		log_debug("IMFC: processMusicCardMessageSelectErrorReportMode() - end");
 	}
 
 	// ROM Address: 0x0AEC
 	void processMusicCardMessageSetPaths()
 	{
-		log_debug("IMF - processMusicCardMessageSetPaths() - start");
+		log_debug("IMFC: processMusicCardMessageSetPaths() - start");
 		m_configuredMidiFlowPath.MidiIn_To_System =
 		        m_incomingMusicCardMessageData[1] & 0x1F;
 		m_configuredMidiFlowPath.System_To_MidiOut =
@@ -7107,13 +7113,13 @@ private:
 		                                                             : 0x1F);
 		m_configuredMidiFlowPath.MidiIn_To_MidiOut =
 		        m_incomingMusicCardMessageData[5] & 0x1F;
-		log_debug("IMF - processMusicCardMessageSetPaths() - setNodeParameter - start");
+		log_debug("IMFC: processMusicCardMessageSetPaths() - setNodeParameter - start");
 		setNodeParameter(0x25, m_chainMode);
-		log_debug("IMF - processMusicCardMessageSetPaths() - setNodeParameter - end");
+		log_debug("IMFC: processMusicCardMessageSetPaths() - setNodeParameter - end");
 		m_outgoingMusicCardMessageData[0] = 0xE2;
 		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
-		log_debug("IMF - processMusicCardMessageSetPaths() - end");
+		log_debug("IMFC: processMusicCardMessageSetPaths() - end");
 	}
 
 	// ROM Address: 0x0B2E
@@ -7171,7 +7177,7 @@ private:
 	// ROM Address: 0x0C09
 	void interruptHandler()
 	{
-		// log("IMF - interruptHandler() - start");
+		// log("IMFC: interruptHandler() - start");
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t midiStatus = m_midi.readPort2();
 		SDL_UnlockMutex(m_hardwareMutex);
@@ -7200,7 +7206,7 @@ private:
 			// clang-format on
 		}
 		enableInterrupts();
-		// log("IMF - interruptHandler() - end");
+		// log("IMFC: interruptHandler() - end");
 	}
 
 	// ROM Address: 0x0C3F
@@ -7732,7 +7738,7 @@ private:
 	void initializePIUInput()
 	{
 		m_bufferFromSystemState.reset();
-		log_debug("IMF PIU read interrupt = enabled");
+		log_debug("IMFC: PIU read interrupt = enabled");
 		SDL_LockMutex(m_hardwareMutex);
 		m_piuIMF.setPort2Bit(2, true); // Group 1 (INPUT) - Read
 		                               // interrupt enable = true
@@ -7843,7 +7849,7 @@ private:
 		//if (m_bufferFromSystemState.getIndexForNextWriteByte() == m_bufferFromSystemState.getLastReadByteIndex()) {
 		//	m_bufferFromSystemState.setDataCleared();
 		//}
-		//log("IMF PIU read interrupt = enabled");
+		//log("IMFC: PIU read interrupt = enabled");
 		// clang-format on
 
 		SDL_LockMutex(m_hardwareMutex);
@@ -12816,10 +12822,9 @@ public:
 	MusicFeatureCard(const MusicFeatureCard&)            = delete;
 	MusicFeatureCard& operator=(const MusicFeatureCard&) = delete;
 
-	MusicFeatureCard(Section* configuration,
-	                 mixer_channel_t&& audio_channel, const uint8_t irq)
-	        : Module_base(configuration),
-	          m_ya2151(std::move(audio_channel)),
+	MusicFeatureCard(mixer_channel_t&& audio_channel, const io_port_t port,
+	                 const uint8_t irq)
+	        : m_ya2151(std::move(audio_channel)),
 	          // create all the instances
 	          m_tcr("TCR"),
 	          m_piuPC("PIU_PC"),
@@ -12991,6 +12996,13 @@ public:
 			using namespace std::chrono_literals;
 			std::this_thread::sleep_for(1ms);
 		}
+
+		// We're read to receive data, so register the IO handlers
+		RegisterIoHandlers(port);
+
+		LOG_MSG("IMFC: IBM Music Feature Card running on port %xh and IRQ %d",
+		        port,
+		        irq);
 	}
 
 	static int SDLCALL imfMainThreadStart(void* data)
@@ -13005,14 +13017,14 @@ public:
 
 	int threadMainStart()
 	{
-		log_debug("IMF processor main thread started");
+		log_debug("IMFC: processor main thread started");
 		coldStart();
 		return 0;
 	}
 
 	int threadInterruptStart()
 	{
-		log_debug("IMF processor interrupt thread started");
+		log_debug("IMFC: processor interrupt thread started");
 		while (keep_running.load()) {
 			SDL_LockMutex(m_interruptHandlerRunningMutex);
 			while (!m_interruptHandlerRunning) {
@@ -13025,138 +13037,138 @@ public:
 		return 0;
 	}
 
-	uint8_t readPortPIU0()
+	uint8_t readPortPIU0(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_piuPC.readPortPIU0();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortPIU0(const uint8_t val)
+	void writePortPIU0(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
-		m_piuPC.writePortPIU0(val);
+		m_piuPC.writePortPIU0(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	uint8_t readPortPIU1()
+	uint8_t readPortPIU1(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_piuPC.readPortPIU1();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortPIU1(const uint8_t val)
+	void writePortPIU1(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		// IMF_LOG("PC->IMFC: write to PIU1 = %02X", val);
 		SDL_LockMutex(m_hardwareMutex);
-		m_piuPC.writePortPIU1(val);
+		m_piuPC.writePortPIU1(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 		receiveNextValueFromSystemDuringInterruptHandler(); // moved from
 		                                                    // sendOrReceiveNextValueToFromSystemDuringInterruptHandler
 	}
-	uint8_t readPortPIU2()
+	uint8_t readPortPIU2(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_piuPC.readPortPIU2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortPIU2(const uint8_t val)
+	void writePortPIU2(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
-		m_piuPC.writePortPIU2(val);
+		m_piuPC.writePortPIU2(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	uint8_t readPortPCR()
+	uint8_t readPortPCR(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = PD71055::readPortPCR();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortPCR(const uint8_t val)
+	void writePortPCR(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
-		m_piuPC.writePortPCR(val);
+		m_piuPC.writePortPCR(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	uint8_t readPortCNTR0()
+	uint8_t readPortCNTR0(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_timer.readPortCNTR0();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortCNTR0(const uint8_t val)
+	void writePortCNTR0(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
-		m_timer.writePortCNTR0(val);
+		m_timer.writePortCNTR0(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	uint8_t readPortCNTR1()
+	uint8_t readPortCNTR1(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_timer.readPortCNTR1();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortCNTR1(const uint8_t val)
+	void writePortCNTR1(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
-		m_timer.writePortCNTR1(val);
+		m_timer.writePortCNTR1(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	uint8_t readPortCNTR2()
+	uint8_t readPortCNTR2(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_timer.readPortCNTR2();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortCNTR2(const uint8_t val)
+	void writePortCNTR2(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
-		m_timer.writePortCNTR2(val);
+		m_timer.writePortCNTR2(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	uint8_t readPortTCWR()
+	uint8_t readPortTCWR(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = Intel8253::readPortTCWR();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortTCWR(const uint8_t val)
+	void writePortTCWR(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
-		m_timer.writePortTCWR(val);
+		m_timer.writePortTCWR(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	uint8_t readPortTCR()
+	uint8_t readPortTCR(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_tcr.readPort();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortTCR(const uint8_t val)
+	void writePortTCR(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		// log("DEBUG DEBUG: write to TotalControlRegister = %02X", val);
 		SDL_LockMutex(m_hardwareMutex);
-		m_tcr.writePort(val);
+		m_tcr.writePort(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
-	uint8_t readPortTSR()
+	uint8_t readPortTSR(const io_port_t, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
 		const uint8_t val = m_tsr.readPort();
 		SDL_UnlockMutex(m_hardwareMutex);
 		return val;
 	}
-	void writePortTSR(const uint8_t val)
+	void writePortTSR(const io_port_t, const io_val_t value, const io_width_t)
 	{
 		SDL_LockMutex(m_hardwareMutex);
-		m_tsr.writePort(val);
+		m_tsr.writePort(check_cast<uint8_t>(value));
 		SDL_UnlockMutex(m_hardwareMutex);
 	}
 
@@ -13173,13 +13185,115 @@ public:
 		m_timer.timerEvent(val);
 	}
 
-	~MusicFeatureCard() override
+	~MusicFeatureCard()
 	{
 		LOG_MSG("IMFC: Shutting down");
+
+		keep_running = false;
+
+		// Remove access to the IO ports
+		for (auto& rh : readHandlers)
+			rh.Uninstall();
+		for (auto& wh : writeHandlers)
+			wh.Uninstall();
+
+		// Give the threads a small bit of time to gracefully complete
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(20ms);
+
 		SDL_WaitThread(m_mainThread, 0);
 		SDL_DestroyMutex(m_hardwareMutex);
 	}
 };
+
+void MusicFeatureCard::RegisterIoHandlers(const io_port_t port)
+{
+	const io_port_t port_piu0  = port + 0x0;
+	const io_port_t port_piu1  = port + 0x1;
+	const io_port_t port_piu2  = port + 0x2;
+	const io_port_t port_pcr   = port + 0x3;
+	const io_port_t port_cntr0 = port + 0x4;
+	const io_port_t port_cntr1 = port + 0x5;
+	const io_port_t port_cntr2 = port + 0x6;
+	const io_port_t port_tcwr  = port + 0x7;
+	const io_port_t port_tcr   = port + 0x8;
+	const io_port_t port_tsr   = port + 0xC;
+
+	// Consistency check
+	assert(readHandlers.size() == NumIoHandlers);
+	assert(writeHandlers.size() == NumIoHandlers);
+	using namespace std::placeholders;
+
+	auto read_piu0 = std::bind(&MusicFeatureCard::readPortPIU0, this, _1, _2);
+	readHandlers.at(0).Install(port_piu0, read_piu0, io_width_t::byte);
+
+	auto write_piu0 = std::bind(&MusicFeatureCard::writePortPIU0, this, _1, _2, _3);
+	writeHandlers.at(0).Install(port_piu0, write_piu0, io_width_t::byte);
+
+	auto read_piu1 = std::bind(&MusicFeatureCard::readPortPIU1, this, _1, _2);
+	readHandlers.at(1).Install(port_piu1, read_piu1, io_width_t::byte);
+
+	auto write_piu1 = std::bind(&MusicFeatureCard::writePortPIU1, this, _1, _2, _3);
+	writeHandlers.at(1).Install(port_piu1, write_piu1, io_width_t::byte);
+
+	auto read_piu2 = std::bind(&MusicFeatureCard::readPortPIU2, this, _1, _2);
+	readHandlers.at(2).Install(port_piu2, read_piu2, io_width_t::byte);
+
+	auto write_piu2 = std::bind(&MusicFeatureCard::writePortPIU2, this, _1, _2, _3);
+	writeHandlers.at(2).Install(port_piu2, write_piu2, io_width_t::byte);
+
+	auto read_pcr = std::bind(&MusicFeatureCard::readPortPCR, this, _1, _2);
+	readHandlers.at(3).Install(port_pcr, read_pcr, io_width_t::byte);
+
+	auto write_pcr = std::bind(&MusicFeatureCard::writePortPCR, this, _1, _2, _3);
+	writeHandlers.at(3).Install(port_pcr, write_pcr, io_width_t::byte);
+
+	auto read_cntr0 = std::bind(&MusicFeatureCard::readPortCNTR0, this, _1, _2);
+	readHandlers.at(4).Install(port_cntr0, read_cntr0, io_width_t::byte);
+
+	auto write_cntr0 = std::bind(&MusicFeatureCard::writePortCNTR0, this, _1, _2, _3);
+	writeHandlers.at(4).Install(port_cntr0, write_cntr0, io_width_t::byte);
+
+	auto read_cntr1 = std::bind(&MusicFeatureCard::readPortCNTR1, this, _1, _2);
+	readHandlers.at(5).Install(port_cntr1, read_cntr1, io_width_t::byte);
+
+	auto write_cntr1 = std::bind(&MusicFeatureCard::writePortCNTR1, this, _1, _2, _3);
+	writeHandlers.at(5).Install(port_cntr1, write_cntr1, io_width_t::byte);
+
+	auto read_cntr2 = std::bind(&MusicFeatureCard::readPortCNTR2, this, _1, _2);
+	readHandlers.at(6).Install(port_cntr2, read_cntr2, io_width_t::byte);
+
+	auto write_cntr2 = std::bind(&MusicFeatureCard::writePortCNTR2, this, _1, _2, _3);
+	writeHandlers.at(6).Install(port_cntr2, write_cntr2, io_width_t::byte);
+
+	auto read_tcwr = std::bind(&MusicFeatureCard::readPortTCWR, this, _1, _2);
+	readHandlers.at(7).Install(port_tcwr, read_tcwr, io_width_t::byte);
+
+	auto write_tcwr = std::bind(&MusicFeatureCard::writePortTCWR, this, _1, _2, _3);
+	writeHandlers.at(7).Install(port_tcwr, write_tcwr, io_width_t::byte);
+
+	// ports [+C],[+D],[+E],[+F] all map to the TSR
+	auto read_tcr = std::bind(&MusicFeatureCard::readPortTCR, this, _1, _2);
+	auto write_tcr = std::bind(&MusicFeatureCard::writePortTCR, this, _1, _2, _3);
+	for (io_port_t i = 0; i < 4; i++) {
+		readHandlers.at(8 + i).Install(port_tcr + i, read_tcr, io_width_t::byte);
+		writeHandlers.at(8 + i).Install(port_tcr + i,
+		                                write_tcr,
+		                                io_width_t::byte);
+	}
+
+	// ports [+8],[+9],[+A],[+B] all map to the TCR
+	auto read_tsr = std::bind(&MusicFeatureCard::readPortTSR, this, _1, _2);
+	auto write_tsr = std::bind(&MusicFeatureCard::writePortTSR, this, _1, _2, _3);
+	for (io_port_t i = 0; i < 4; i++) {
+		readHandlers.at(12 + i).Install(port_tsr + i,
+		                                read_tsr,
+		                                io_width_t::byte);
+		writeHandlers.at(12 + i).Install(port_tsr + i,
+		                                 write_tsr,
+		                                 io_width_t::byte);
+	}
+}
 
 ///////////////////////////////////////////////////////////
 /// DOSBOX stuff
@@ -13187,94 +13301,9 @@ public:
 
 static std::unique_ptr<MusicFeatureCard> imfc = {};
 
-constexpr auto NUM_IO_HANDLERS                                          = 16;
-static std::array<IO_ReadHandleObject, NUM_IO_HANDLERS> read_handlers   = {};
-static std::array<IO_WriteHandleObject, NUM_IO_HANDLERS> write_handlers = {};
-
 static void Intel8253_TimerEvent(const uint32_t val)
 {
 	imfc->onTimerEvent(val);
-}
-
-static uint8_t readPortPIU0(const io_port_t, const io_width_t)
-{
-	return imfc->readPortPIU0();
-}
-static void writePortPIU0(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortPIU0(check_cast<uint8_t>(value));
-}
-static uint8_t readPortPIU1(const io_port_t, const io_width_t)
-{
-	return imfc->readPortPIU1();
-}
-static void writePortPIU1(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortPIU1(check_cast<uint8_t>(value));
-}
-static uint8_t readPortPIU2(const io_port_t, const io_width_t)
-{
-	return imfc->readPortPIU2();
-}
-static void writePortPIU2(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortPIU2(check_cast<uint8_t>(value));
-}
-static uint8_t readPortPCR(const io_port_t, const io_width_t)
-{
-	return imfc->readPortPCR();
-}
-static void writePortPCR(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortPCR(check_cast<uint8_t>(value));
-}
-static uint8_t readPortCNTR0(const io_port_t, const io_width_t)
-{
-	return imfc->readPortCNTR0();
-}
-static void writePortCNTR0(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortCNTR0(check_cast<uint8_t>(value));
-}
-static uint8_t readPortCNTR1(const io_port_t, const io_width_t)
-{
-	return imfc->readPortCNTR1();
-}
-static void writePortCNTR1(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortCNTR1(check_cast<uint8_t>(value));
-}
-static uint8_t readPortCNTR2(const io_port_t, const io_width_t)
-{
-	return imfc->readPortCNTR2();
-}
-static void writePortCNTR2(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortCNTR2(check_cast<uint8_t>(value));
-}
-static uint8_t readPortTCWR(const io_port_t, const io_width_t)
-{
-	return imfc->readPortTCWR();
-}
-static void writePortTCWR(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortTCWR(check_cast<uint8_t>(value));
-}
-static uint8_t readPortTCR(const io_port_t, const io_width_t)
-{
-	return imfc->readPortTCR();
-}
-static void writePortTCR(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortTCR(check_cast<uint8_t>(value));
-}
-static uint8_t readPortTSR(const io_port_t, const io_width_t)
-{
-	return imfc->readPortTSR();
-}
-static void writePortTSR(const io_port_t, const io_val_t value, const io_width_t)
-{
-	imfc->writePortTSR(check_cast<uint8_t>(value));
 }
 
 static void IMFC_Mixer_Callback(const uint16_t requested_frames)
@@ -13284,17 +13313,6 @@ static void IMFC_Mixer_Callback(const uint16_t requested_frames)
 
 void imfc_destroy(Section* /*sec*/)
 {
-	keep_running = false;
-
-	// Remove access to the IO ports
-	for (auto& rh : read_handlers)
-		rh.Uninstall();
-	for (auto& wh : write_handlers)
-		wh.Uninstall();
-
-	using namespace std::chrono_literals;
-	std::this_thread::sleep_for(20ms);
-
 	imfc = {};
 
 #if IMFC_VERBOSE_LOGGING
@@ -13326,6 +13344,10 @@ static void imfc_init(Section* sec)
 	                                 ChannelFeature::ChorusSend,
 	                                 ChannelFeature::Synthesizer});
 
+	// Bring up the volume to get it on-par with line recordings
+	constexpr auto volume_scalar = 4.0f;
+	channel->Set0dbScalar(volume_scalar);
+
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the
 	// real thing by ear only.
@@ -13344,77 +13366,14 @@ static void imfc_init(Section* sec)
 		channel->SetLowPassFilter(FilterState::Off);
 	}
 
-	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("imfc_irq")),
-	                       MIN_IRQ_ADDRESS,
-	                       MAX_IRQ_ADDRESS);
-
-	imfc = std::make_unique<MusicFeatureCard>(sec, std::move(channel), irq);
-
-	// Define the IO port addresses
 	const auto port = static_cast<io_port_t>(conf->Get_hex("imfc_base"));
-	const io_port_t port_piu0  = port + 0x0;
-	const io_port_t port_piu1  = port + 0x1;
-	const io_port_t port_piu2  = port + 0x2;
-	const io_port_t port_pcr   = port + 0x3;
-	const io_port_t port_cntr0 = port + 0x4;
-	const io_port_t port_cntr1 = port + 0x5;
-	const io_port_t port_cntr2 = port + 0x6;
-	const io_port_t port_tcwr  = port + 0x7;
-	const io_port_t port_tcr   = port + 0x8;
-	const io_port_t port_tsr   = port + 0xC;
 
-	// Consistency check
-	[[maybe_unused]] constexpr uint8_t EXPECTED_IO_HANDLERS = 16;
-	assert(read_handlers.size() == EXPECTED_IO_HANDLERS);
-	assert(write_handlers.size() == EXPECTED_IO_HANDLERS);
+	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("imfc_irq")),
+	                       MinIrqAddress,
+	                       MaxIrqAddress);
 
-	read_handlers.at(0).Install(port_piu0, readPortPIU0, io_width_t::byte);
-	write_handlers.at(0).Install(port_piu0, writePortPIU0, io_width_t::byte);
+	imfc = std::make_unique<MusicFeatureCard>(std::move(channel), port, irq);
 
-	read_handlers.at(1).Install(port_piu1, readPortPIU1, io_width_t::byte);
-	write_handlers.at(1).Install(port_piu1, writePortPIU1, io_width_t::byte);
-
-	read_handlers.at(2).Install(port_piu2, readPortPIU2, io_width_t::byte);
-	write_handlers.at(2).Install(port_piu2, writePortPIU2, io_width_t::byte);
-
-	read_handlers.at(3).Install(port_pcr, readPortPCR, io_width_t::byte);
-	write_handlers.at(3).Install(port_pcr, writePortPCR, io_width_t::byte);
-
-	read_handlers.at(4).Install(port_cntr0, readPortCNTR0, io_width_t::byte);
-	write_handlers.at(4).Install(port_cntr0, writePortCNTR0, io_width_t::byte);
-
-	read_handlers.at(5).Install(port_cntr1, readPortCNTR1, io_width_t::byte);
-	write_handlers.at(5).Install(port_cntr1, writePortCNTR1, io_width_t::byte);
-
-	read_handlers.at(6).Install(port_cntr2, readPortCNTR2, io_width_t::byte);
-	write_handlers.at(6).Install(port_cntr2, writePortCNTR2, io_width_t::byte);
-
-	read_handlers.at(7).Install(port_tcwr, readPortTCWR, io_width_t::byte);
-	write_handlers.at(7).Install(port_tcwr, writePortTCWR, io_width_t::byte);
-
-	// ports [+C],[+D],[+E],[+F] all map to the TSR
-	for (io_port_t i = 0; i < 4; i++) {
-		read_handlers.at(8 + i).Install(port_tcr + i,
-		                                readPortTCR,
-		                                io_width_t::byte);
-		write_handlers.at(8 + i).Install(port_tcr + i,
-		                                 writePortTCR,
-		                                 io_width_t::byte);
-	}
-
-	// ports [+8],[+9],[+A],[+B] all map to the TCR
-	for (io_port_t i = 0; i < 4; i++) {
-		read_handlers.at(12 + i).Install(port_tsr + i,
-		                                 readPortTSR,
-		                                 io_width_t::byte);
-		write_handlers.at(12 + i).Install(port_tsr + i,
-		                                  writePortTSR,
-		                                  io_width_t::byte);
-	}
-
-	LOG_MSG("IMFC: IBM Music Feature Card running on port %xh and IRQ %d",
-	        port,
-	        irq);
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&imfc_destroy, changeable_at_runtime);
 }
