@@ -819,6 +819,18 @@ public:
 		bytes[6] = other->bytes[6];
 		bytes[7] = other->bytes[7];
 	}
+
+	const uint8_t* SetFromStream(const uint8_t* data)
+	{
+		auto data_ptr      = data;
+		auto get_next_byte = [&data_ptr]() { return *data_ptr++; };
+
+		for (auto& b : bytes) {
+			b = get_next_byte();
+		}
+		return data_ptr;
+	}
+
 	inline uint8_t getByte3()
 	{
 		return bytes[3];
@@ -1074,6 +1086,43 @@ public:
 		operators[2].copyFrom(&other->operators[2]);
 		operators[3].copyFrom(&other->operators[3]);
 	}
+
+	const uint8_t* SetFromStream(const uint8_t* data)
+	{
+		auto data_ptr      = data;
+		auto get_next_byte = [&data_ptr]() { return *data_ptr++; };
+
+		for (auto& c : name) {
+			c = get_next_byte();
+		}
+		reserved1 = get_next_byte();
+
+		lfoSpeed  = get_next_byte();
+		byte9     = get_next_byte();
+		byteA     = get_next_byte();
+		byteB     = get_next_byte();
+		byteC     = get_next_byte();
+		byteD     = get_next_byte();
+		byteE     = get_next_byte();
+		transpose = get_next_byte();
+
+		for (auto& op : operators) {
+			data_ptr = op.SetFromStream(data_ptr);
+		}
+
+		for (auto& r : reserved2) {
+			r = get_next_byte();
+		}
+
+		field_3A = get_next_byte();
+		field_3B = get_next_byte();
+
+		for (auto& r : reserved3) {
+			r = get_next_byte();
+		}
+		return data_ptr;
+	}
+
 	inline uint8_t getModulationSensitivity() const
 	{
 		return byteD;
@@ -1134,6 +1183,23 @@ public:
 			        &other->instrumentDefinitions[i]);
 		}
 	}
+	const uint8_t* SetFromStream(const uint8_t* data)
+	{
+		auto data_ptr      = data;
+		auto get_next_byte = [&data_ptr]() { return *data_ptr++; };
+
+		for (auto& c : name) {
+			c = get_next_byte();
+		}
+		for (auto& r : reserved) {
+			r = get_next_byte();
+		}
+		for (auto& id : instrumentDefinitions) {
+			data_ptr = id.SetFromStream(data_ptr);
+		}
+		return data_ptr;
+	}
+
 	void dumpToLog()
 	{
 		// clang-format off
@@ -1236,6 +1302,42 @@ public:
 		// voiceBankNumber=%i, voiceNumber=%i, outputLevel=0x%02X",
 		// voiceBankNumber, voiceNumber, outputLevel);
 	}
+
+	const uint8_t* SetFromStream(const uint8_t* data)
+	{
+		auto data_ptr            = data;
+		auto get_and_check_range =
+		        [&data_ptr]([[maybe_unused]] const uint8_t val_min,
+		                    [[maybe_unused]] const uint8_t val_max) {
+			        const auto val = *data_ptr++;
+			        assert(val >= val_min && val <= val_max);
+			        return val;
+		        };
+		//                                            min, max
+		numberOfNotes             = get_and_check_range(0, 8);
+		midiChannel               = get_and_check_range(0, 15);
+		noteNumberLimitHigh.value = get_and_check_range(0, 127);
+		noteNumberLimitLow.value  = get_and_check_range(0, 127);
+		voiceBankNumber           = get_and_check_range(0, 6);
+		voiceNumber               = get_and_check_range(0, 47);
+		detune                    = get_and_check_range(0, UINT8_MAX);
+		octaveTranspose           = get_and_check_range(0, 4);
+		outputLevel               = get_and_check_range(0, 127);
+		pan                       = get_and_check_range(0, 127);
+		lfoEnable                 = get_and_check_range(0, 1);
+		portamentoTime            = get_and_check_range(0, 127);
+		pitchbenderRange          = get_and_check_range(0, 12);
+		polyMonoMode              = get_and_check_range(0, 1);
+		pmdController             = get_and_check_range(0, 4);
+		reserved1                 = get_and_check_range(0, UINT8_MAX);
+
+		// One off check for detune's signed range
+		assert(static_cast<int8_t>(detune) >= -64 &&
+		       static_cast<int8_t>(detune) < 63);
+
+		return data_ptr;
+	}
+
 	void copySpecialFrom(const InstrumentConfiguration* other)
 	{
 		numberOfNotes       = other->numberOfNotes;
@@ -1330,7 +1432,7 @@ public:
 
 	// Set just the configuration section without touching
 	// instrumentConfigurations.
-	void SetConfigurationFromStream(const uint8_t* data)
+	const uint8_t* SetConfigurationFromStream(const uint8_t* data)
 	{
 		auto data_ptr      = data;
 		auto get_next_byte = [&data_ptr]() { return *data_ptr++; };
@@ -1348,6 +1450,18 @@ public:
 		for (auto& r : reserved) {
 			r = get_next_byte();
 		}
+		return data_ptr;
+	}
+
+	// Set configuration and instrumentConfigurations
+	const uint8_t* SetFromStream(const uint8_t* data)
+	{
+		auto data_ptr = SetConfigurationFromStream(data);
+
+		for (auto& ic : instrumentConfigurations) {
+			data_ptr = ic.SetFromStream(data_ptr);
+		}
+		return data_ptr;
 	}
 };
 #pragma pack(pop)
