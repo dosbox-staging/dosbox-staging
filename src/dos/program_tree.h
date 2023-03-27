@@ -68,7 +68,7 @@ private:
 	std::string str_last   = {}; // last child node
 	std::string str_indent = {}; // indentation only, no child node
 
-	void AddMessages();
+	static void AddMessages();
 };
 
 #endif

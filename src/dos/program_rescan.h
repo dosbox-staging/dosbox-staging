@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -35,7 +36,7 @@ public:
 	}
 	void Run(void);
 private:
-	void AddMessages();
+	static void AddMessages();
 };
 
 #endif // DOSBOX_PROGRAM_RESCAN_H

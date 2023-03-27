@@ -35,7 +35,7 @@ public:
 	}
 	void Run();
 private:
-	void AddMessages();
+	static void AddMessages();
 };
 
 #endif

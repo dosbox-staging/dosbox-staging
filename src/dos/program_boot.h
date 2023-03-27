@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -37,7 +38,7 @@ class BOOT final : public Program {
 	    void Run(void);
 
     private:
-        void AddMessages();
+        static void AddMessages();
         FILE* getFSFile_mounted(char const* filename, uint32_t *ksize, uint32_t *bsize, uint8_t *error);
         FILE* getFSFile(char const * filename, uint32_t *ksize, uint32_t *bsize,bool tryload=false);
         void printError(void);
