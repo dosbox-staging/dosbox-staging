@@ -103,21 +103,36 @@ inline uint8_t leftRotate8(uint8_t n)
 	return (n << 1) | (n >> (8 - 1));
 }
 
-enum DataParty { DATAPARTY_SYSTEM, DATAPARTY_MIDI };
+enum DataParty : uint8_t {
+	DATAPARTY_SYSTEM,
+	DATAPARTY_MIDI,
+};
 
 static void Intel8253_TimerEvent(const uint32_t val);
 
-enum CARD_MODE : uint8_t { MUSIC_MODE = 0, THRU_MODE = 1 };
-enum CHAIN_MODE : uint8_t { CHAIN_MODE_DISABLED = 0, CHAIN_MODE_ENABLED = 1 };
-enum MEMORY_PROTECTION : uint8_t { MEMORY_WRITABLE = 0, MEMORY_READONLY = 1 };
+enum CARD_MODE : uint8_t {
+	MUSIC_MODE = 0,
+	THRU_MODE  = 1,
+};
+
+enum CHAIN_MODE : uint8_t {
+	CHAIN_MODE_DISABLED = 0,
+	CHAIN_MODE_ENABLED  = 1,
+};
+
+enum MEMORY_PROTECTION : uint8_t {
+	MEMORY_WRITABLE = 0,
+	MEMORY_READONLY = 1,
+};
+
 enum ERROR_REPORTING : uint8_t {
 	ERROR_REPORTING_DISABLED = 0,
-	ERROR_REPORTING_ENABLED  = 1
+	ERROR_REPORTING_ENABLED  = 1,
 };
 enum HANDSHAKE_MESSAGE : uint8_t {
 	ACK_MESSAGE    = 2,
 	NAK_MESSAGE    = 3,
-	CANCEL_MESSAGE = 4
+	CANCEL_MESSAGE = 4,
 };
 
 enum MUSICCARD_ERROR_CODE : uint8_t {
@@ -126,7 +141,7 @@ enum MUSICCARD_ERROR_CODE : uint8_t {
 	MIDI_RECEPTION_ERROR                    = 0xF2,
 	MIDI_OFFLINE_ERROR                      = 0xF3,
 	TIMEOUT_ERROR_MIDI_TO_MUSICCARD         = 0xF4,
-	TIMEOUT_ERROR_SYSTEM_TO_MUSICCARD       = 0xF5
+	TIMEOUT_ERROR_SYSTEM_TO_MUSICCARD       = 0xF5,
 };
 
 enum MidiDataPacketState : uint8_t {
@@ -194,7 +209,7 @@ enum MidiDataPacketState : uint8_t {
 	PACKET_STATE_3D = 0x3D,
 	PACKET_STATE_3E = 0x3E,
 	PACKET_STATE_3F = 0x3F,
-	PACKET_STATE_40 = 0x40
+	PACKET_STATE_40 = 0x40,
 };
 
 struct BufferFlags {
@@ -457,7 +472,7 @@ struct ReadResult {
 enum SystemDataAvailability {
 	NO_DATA_AVAILABLE,
 	MIDI_DATA_AVAILABLE,
-	SYSTEM_DATA_AVAILABLE
+	SYSTEM_DATA_AVAILABLE,
 };
 
 struct SystemReadResult {
@@ -2052,14 +2067,23 @@ public:
 	}
 };
 
-enum CounterMode { COUNTERMODE_INVALID, COUNTERMODE_MODE2, COUNTERMODE_MODE3 };
-enum CounterReadSource {
+enum CounterMode : uint8_t {
+	COUNTERMODE_INVALID,
+	COUNTERMODE_MODE2,
+	COUNTERMODE_MODE3,
+};
+
+enum CounterReadSource : uint8_t {
 	COUNTERREADSOURCE_LIVE_1,
 	COUNTERREADSOURCE_LIVE_2,
 	COUNTERREADSOURCE_LATCH_1,
-	COUNTERREADSOURCE_LATCH_2
+	COUNTERREADSOURCE_LATCH_2,
 };
-enum CounterWriteTarget { COUNTERWRITETARGET_BYTE1, COUNTERWRITETARGET_BYTE2 };
+
+enum CounterWriteTarget : uint8_t {
+	COUNTERWRITETARGET_BYTE1,
+	COUNTERWRITETARGET_BYTE2,
+};
 
 struct CounterData {
 	const std::string m_name = {};
@@ -2331,8 +2355,16 @@ public:
 // This is a Parallel Interface Unit (PIU)
 class PD71055 : public DataChangedConsumer<bool> {
 public:
-	enum PortInOut { OUTPUT, INPUT };
-	enum GroupMode { MODE0, MODE1, MODE2 };
+	enum PortInOut : uint8_t {
+		OUTPUT,
+		INPUT,
+	};
+
+	enum GroupMode : uint8_t {
+		MODE0,
+		MODE1,
+		MODE2,
+	};
 
 private:
 	const std::string m_name = {};
@@ -3088,9 +3120,14 @@ private:
 	AudioFrame RenderFrame();
 	void RenderUpToNow();
 
-	enum { TIMER_IRQ_A_OFF, TIMER_IRQ_B_OFF, TIMER_A, TIMER_B };
+	enum : uint8_t {
+		TIMER_IRQ_A_OFF,
+		TIMER_IRQ_B_OFF,
+		TIMER_A,
+		TIMER_B,
+	};
 
-	enum {
+	enum : uint16_t {
 		RATE_STEPS = 8,
 		TL_RES_LEN = 256, /* 8 bits addressing (real chip) */
 
@@ -3103,7 +3140,7 @@ private:
 
 		SIN_BITS = 10,
 		SIN_LEN  = 1 << SIN_BITS,
-		SIN_MASK = SIN_LEN - 1
+		SIN_MASK = SIN_LEN - 1,
 	};
 
 	// Playback related
@@ -5038,11 +5075,11 @@ void ym2151_device::sound_stream_update(const uint16_t requested_frames)
 
 class PD71051 {
 private:
-	enum State {
+	enum State : uint8_t {
 		WAITING_FOR_WRITE_MODE,
 		WAITING_FOR_SYNC_CHAR1,
 		WAITING_FOR_SYNC_CHAR2,
-		NORMAL_OPERATION
+		NORMAL_OPERATION,
 	};
 	State m_state{WAITING_FOR_WRITE_MODE};
 	uint8_t m_mode = 0;
