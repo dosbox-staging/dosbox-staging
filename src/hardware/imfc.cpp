@@ -644,20 +644,20 @@ static_assert(sizeof(PitchbenderValueLSB) == 1,
 
 // clang-format off
 /*
-	Format: <00fedcba>
-	Bit Affected Message                    Status Byte                         Status Byte (Event List)
-	--- ----------------------------------- ----------------------------------- --------------------------
-	a   Note ON/OFF                         [80]~[9F]                           [00]~[2F]
-	b   After Touch and Pitchbend           [A0]~[AF], [D0]~[DF], [E0]~[EF]     [50]~[5F], [60]~[6F]
-	c   Control Change                      [B0]~[BF]                           [30]~[3F]
-		Program Change                      [C0]~[CD]                           [40]~[4F]
-	d   System Exclusive                    [F0], [F7]
-		System Common                       [F1], [F2], [F3], [F6]              [70]~[7F]
-	e   System Real-Time                    [F8], [FA]~[FC]
-	f   ??? only to SP                      N/A                                 N/A
+Format: <00fedcba>
+Bit Affected Message                    Status Byte                         Status Byte (Event List)
+--- ----------------------------------- ----------------------------------- --------------------------
+a   Note ON/OFF                         [80]~[9F]                           [00]~[2F]
+b   After Touch and Pitchbend           [A0]~[AF], [D0]~[DF], [E0]~[EF]     [50]~[5F], [60]~[6F]
+c   Control Change                      [B0]~[BF]                           [30]~[3F]
+    Program Change                      [C0]~[CD]                           [40]~[4F]
+d   System Exclusive                    [F0], [F7]
+    System Common                       [F1], [F2], [F3], [F6]              [70]~[7F]
+e   System Real-Time                    [F8], [FA]~[FC]
+f   ??? only to SP                      N/A                                 N/A
 
-	Note: Undefined MIDI status bytes ([F4], [F5], [F9], [FD], [FF]) and the active sensing code ([FE]) not listed
-	      in the preceding table are blocked. Succeeding data bytes are also blocked.
+Note: Undefined MIDI status bytes ([F4], [F5], [F9], [FD], [FF]) and the active sensing code ([FE]) not listed
+      in the preceding table are blocked. Succeeding data bytes are also blocked.
 */
 // clang-format on
 
