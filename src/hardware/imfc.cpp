@@ -9442,8 +9442,21 @@ private:
 
 		if ((adjustment.note.value & 0x80) != 0) {
 			// adjustment is negative
-			while (result >= 0x8000) {
-				result += 12 << 8; // up an octave
+
+			if (result >= 0x8000) {
+				// The resulting note is outside the positive
+				// 15-bit range (it's now a negative int16_t
+				// value), and needs to be incremented in
+				// one-octive steps until it's no longer negative.
+
+				auto signed_result = static_cast<int16_t>(result);
+				assert(signed_result < 0);
+
+				while (signed_result < 0) {
+					signed_result += (12 << 8); // up an octave
+				}
+				result = check_cast<uint16_t>(signed_result);
+				assert(result < 0x8000);
 			}
 		} else {
 			// adjustment is positive
