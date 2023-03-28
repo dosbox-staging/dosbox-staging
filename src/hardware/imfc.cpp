@@ -540,7 +540,7 @@ struct FractionalNote {
 	        : fraction(nf),
 	          note(nn)
 	{}
-	constexpr uint16_t getuint16_t() const noexcept
+	constexpr uint16_t GetUint16() const noexcept
 	{
 		return note.value << 8 | fraction.value;
 	}
@@ -574,7 +574,7 @@ constexpr bool operator!=(const FractionalNote& a, const FractionalNote& b) noex
 constexpr FractionalNote operator-(const FractionalNote& a,
                                    const FractionalNote& b) noexcept
 {
-	const auto val = check_cast<uint16_t>(a.getuint16_t() - b.getuint16_t());
+	const auto val = check_cast<uint16_t>(a.GetUint16() - b.GetUint16());
 	return to_fractional_note(val);
 }
 
@@ -582,7 +582,7 @@ constexpr FractionalNote operator+(const FractionalNote& a,
                                    const FractionalNote& b) noexcept
 {
 	// 16-bit wrap-around is expected and normal
-	const auto val = static_cast<uint16_t>(a.getuint16_t() + b.getuint16_t());
+	const auto val = static_cast<uint16_t>(a.GetUint16() + b.GetUint16());
 	return to_fractional_note(val);
 }
 
@@ -9422,7 +9422,7 @@ private:
 	static FractionalNote cropToPlayableRange(const FractionalNote& root /*hl*/,
 	                                          const FractionalNote& adjustment /*de*/)
 	{
-		auto result = (root + adjustment).getuint16_t();
+		auto result = (root + adjustment).GetUint16();
 
 		if ((adjustment.note.value & 0x80) != 0) {
 			// adjustment is negative
@@ -9510,7 +9510,7 @@ private:
 			                                            ymChannelData);
 		} // hl is negative
 		ymChannelData->_hasActivePortamento = 1;
-		int16_t val                         = hl.getuint16_t();
+		int16_t val                         = hl.GetUint16();
 		val                                 = val >> (8 + 1);
 		val = val * ym_getPortamentoTimeFactor(instr);
 		ymChannelData->portamentoAdjustment = to_fractional_note(val);
@@ -9568,13 +9568,13 @@ private:
 			        ymChannelData->currentlyPlaying +
 			        ymChannelData->portamentoAdjustment;
 			// did it overflow?
-			if (newCurrentlyPlaying.getuint16_t() >
-			    ymChannelData->currentlyPlaying.getuint16_t()) {
+			if (newCurrentlyPlaying.GetUint16() >
+			    ymChannelData->currentlyPlaying.GetUint16()) {
 				return ym_finishPortamento(ymChannelData);
 			}
 			ymChannelData->currentlyPlaying = newCurrentlyPlaying;
-			if (ymChannelData->currentlyPlaying.getuint16_t() <=
-			    ymChannelData->portamentoTarget.getuint16_t()) {
+			if (ymChannelData->currentlyPlaying.GetUint16() <=
+			    ymChannelData->portamentoTarget.GetUint16()) {
 				return ym_finishPortamento(ymChannelData);
 			}
 		} else {
@@ -9583,13 +9583,13 @@ private:
 			        ymChannelData->currentlyPlaying +
 			        ymChannelData->portamentoAdjustment;
 			// did it overflow?
-			if (newCurrentlyPlaying.getuint16_t() <
-			    ymChannelData->currentlyPlaying.getuint16_t()) {
+			if (newCurrentlyPlaying.GetUint16() <
+			    ymChannelData->currentlyPlaying.GetUint16()) {
 				return ym_finishPortamento(ymChannelData);
 			}
 			ymChannelData->currentlyPlaying = newCurrentlyPlaying;
-			if (ymChannelData->currentlyPlaying.getuint16_t() >=
-			    ymChannelData->portamentoTarget.getuint16_t()) {
+			if (ymChannelData->currentlyPlaying.GetUint16() >=
+			    ymChannelData->portamentoTarget.GetUint16()) {
 				return ym_finishPortamento(ymChannelData);
 			}
 		}
@@ -9698,7 +9698,7 @@ private:
 		                // from 0x2000
 		// not the exact code, but should do the same thing
 		pitchbenderValue = check_cast<int16_t>(
-		        instr->detuneAsNoteFraction.getuint16_t() +
+		        instr->detuneAsNoteFraction.GetUint16() +
 		        instr->instrumentConfiguration.pitchbenderRange *
 		                pitchbenderValue / 0x2000);
 
