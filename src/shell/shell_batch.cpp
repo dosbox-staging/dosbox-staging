@@ -153,11 +153,15 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 			if (closing_percent == std::string::npos) {
 				break;
 			}
-			std::string result;
-			std::string envvar(line.substr(0, closing_percent));
-			shell->GetEnvStr(envvar.c_str(), result);
-			result.erase(0, envvar.size() + sizeof('='));
-			expanded += result;
+			std::string env_key(line.substr(0, closing_percent));
+
+			// Get the key's corresponding value from the environment
+			if (std::string env_val = {};
+			    shell->GetEnvStr(env_key.c_str(), env_val)) {
+				// append just the trailing value portion
+				expanded += env_val.substr(env_key.length() +
+				                           sizeof('='));
+			}
 			line = line.substr(closing_percent);
 		}
 		line          = line.substr(1);
