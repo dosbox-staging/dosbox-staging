@@ -5736,7 +5736,7 @@ private:
 		set_System_To_SP_InitialState();
 		initialize_ym2151_timers();
 		m_outgoingMusicCardMessageData[0] = commandThatRequestedTheSoftReboot;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
 
 		log_debug("softReboot - starting infinite loop");
@@ -5765,7 +5765,7 @@ private:
 		clearIncomingMusicCardMessageBuffer();
 		initialize_ym2151_timers();
 		m_outgoingMusicCardMessageData[0] = 0xE0;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
 		while (keepRunning.load()) {
 			ReadResult readResult = midiIn_readMidiDataByte();
@@ -6839,7 +6839,7 @@ private:
 			      flow) != 0) &&
 			    stateTerminationTable[packet->state].totalBytes != 0) {
 				sendMidiResponse_to_MidiOut(
-				        (uint8_t*)&(packet->data),
+				        (const uint8_t*)&(packet->data),
 				        stateTerminationTable[packet->state].totalBytes);
 			}
 		}
@@ -6857,7 +6857,7 @@ private:
 			      flow) != 0) &&
 			    stateTerminationTable[packet->state].totalBytes != 0) {
 				sendMidiResponse_to_System(
-				        (uint8_t*)&(packet->data),
+				        (const uint8_t*)&(packet->data),
 				        stateTerminationTable[packet->state].totalBytes);
 			}
 		}
@@ -7016,7 +7016,7 @@ private:
 		log_debug("processMusicCardMessageCardModeStatus()");
 		m_outgoingMusicCardMessageData[0] = 0xD0;
 		m_outgoingMusicCardMessageData[1] = m_cardMode;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          2);
 	}
 
@@ -7026,7 +7026,7 @@ private:
 		log_debug("processMusicCardMessageErrorReportStatus()");
 		m_outgoingMusicCardMessageData[0] = 0xD1;
 		m_outgoingMusicCardMessageData[1] = m_errorReport;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          2);
 	}
 
@@ -7040,7 +7040,7 @@ private:
 		m_outgoingMusicCardMessageData[3] = m_configuredMidiFlowPath.MidiIn_To_SP;
 		m_outgoingMusicCardMessageData[4] = m_configuredMidiFlowPath.System_To_SP;
 		m_outgoingMusicCardMessageData[5] = m_configuredMidiFlowPath.MidiIn_To_MidiOut;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          6);
 	}
 
@@ -7058,7 +7058,7 @@ private:
 		m_outgoingMusicCardMessageData[6] = m_chainMode;
 		m_outgoingMusicCardMessageData[7] = 0;
 		m_outgoingMusicCardMessageData[8] = 0;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          9);
 	}
 
@@ -7091,7 +7091,7 @@ private:
 		                      ? ERROR_REPORTING_DISABLED
 		                      : ERROR_REPORTING_ENABLED;
 		m_outgoingMusicCardMessageData[0] = 0xE1;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
 		log_debug("IMFC: processMusicCardMessageSelectErrorReportMode() - end");
 	}
@@ -7116,7 +7116,7 @@ private:
 		setNodeParameter(0x25, m_chainMode);
 		log_debug("IMFC: processMusicCardMessageSetPaths() - setNodeParameter - end");
 		m_outgoingMusicCardMessageData[0] = 0xE2;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
 		log_debug("IMFC: processMusicCardMessageSetPaths() - end");
 	}
@@ -7133,7 +7133,7 @@ private:
 		setNodeParameter(0x25, m_incomingMusicCardMessageData[6]);
 		SoundProcessor_SetToInitialState();
 		m_outgoingMusicCardMessageData[0] = 0xE3;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
 	}
 
@@ -7145,7 +7145,7 @@ private:
 			sendActiveSenseCodeSafe();
 		}
 		m_outgoingMusicCardMessageData[0] = 0xE4;
-		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
+		send_card_bytes_to_System((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
 	}
 
@@ -7525,16 +7525,17 @@ private:
 	}
 
 	// ROM Address: 0x0E9B
-	void sendMidiResponse_to_MidiOut(uint8_t* pData, uint8_t size)
+	void sendMidiResponse_to_MidiOut(const uint8_t* data, uint8_t size)
 	{
-		const uint8_t midiCommandByte = *pData;
+		auto data_ptr                 = data;
+		const uint8_t midiCommandByte = *data_ptr;
 		if (midiCommandByte < 0xF7) {
 			if (midiCommandByte < 0x80) {
 				return;
 			} // first byte must be a midi command
 			send_F7_to_MidiOut_if_needed();
-			if (*pData != m_midiOut_CommandInProgress) {
-				send_midi_byte_to_MidiOut(*pData);
+			if (*data_ptr != m_midiOut_CommandInProgress) {
+				send_midi_byte_to_MidiOut(*data_ptr);
 			}
 		} else if (midiCommandByte == 0xF7) {
 			return send_F7_to_MidiOut_if_needed();
@@ -7545,11 +7546,11 @@ private:
 		} else {
 			return;
 		}
-		pData++;
+		data_ptr++;
 		size--;
 		while (size != 0U) {
-			send_midi_byte_to_MidiOut(*pData);
-			pData++;
+			send_midi_byte_to_MidiOut(*data_ptr);
+			data_ptr++;
 			size--;
 		}
 		m_runningCommandOnMidiInTimerCountdown = 0x0A;
@@ -8018,41 +8019,43 @@ private:
 	}
 
 	// ROM Address: 0x1133
-	WriteStatus sendMidiResponse_to_System(uint8_t* pData, uint8_t size)
+	WriteStatus sendMidiResponse_to_System(const uint8_t* data, uint8_t size)
 	{
-		if (*pData < 0xF7) {
-			if (*pData < 0x80) {
+		auto data_ptr = data;
+		if (*data_ptr < 0xF7) {
+			if (*data_ptr < 0x80) {
 				return WriteStatus::Success;
 			}
 			if (send_F7_to_System_if_needed_0() != WriteStatus::Success) {
 				return WriteStatus::Error;
 			}
-			if (m_system_CommandInProgress != *pData) {
-				if (send_midi_byte_to_System(*pData) !=
+			if (m_system_CommandInProgress != *data_ptr) {
+				if (send_midi_byte_to_System(*data_ptr) !=
 				    WriteStatus::Success) {
 					return WriteStatus::Error;
 				}
 			}
-		} else if (*pData == 0xF7) {
+		} else if (*data_ptr == 0xF7) {
 			return send_F7_to_System_if_needed_0();
-		} else if (*pData == 0xFF) {
+		} else if (*data_ptr == 0xFF) {
 			if (send_F0_43_75_70_to_System() != WriteStatus::Success) {
 				return WriteStatus::Error;
 			}
-		} else if (*pData == 0xFE) {
+		} else if (*data_ptr == 0xFE) {
 			if (send_F0_43_75_71_to_System() != WriteStatus::Success) {
 				return WriteStatus::Error;
 			}
 		} else {
 			return WriteStatus::Success;
 		}
-		pData++;
+		data_ptr++;
 		size--;
 		while (size != 0U) {
-			if (send_midi_byte_to_System(*pData) != WriteStatus::Success) {
+			if (send_midi_byte_to_System(*data_ptr) !=
+			    WriteStatus::Success) {
 				return WriteStatus::Error;
 			}
-			pData++;
+			data_ptr++;
 			size--;
 		}
 		m_runningCommandOnSystemInTimerCountdown = 0x0A;
@@ -8120,22 +8123,25 @@ private:
 	}
 
 	// ROM Address: 0x11D6
-	WriteStatus send_card_bytes_to_System(uint8_t* pData, uint8_t size)
+	WriteStatus send_card_bytes_to_System(const uint8_t* data, uint8_t size)
 	{
-		if (*pData < 0x80) {
+		auto data_ptr = data;
+
+		if (*data_ptr < 0x80) {
 			return WriteStatus::Success;
 		}
-		if (*pData >= 0xF0) {
+		if (*data_ptr >= 0xF0) {
 			return WriteStatus::Success;
 		}
 		if (send_F7_to_System_if_needed() != WriteStatus::Success) {
 			return WriteStatus::Error;
 		}
 		do {
-			if (send_card_byte_to_System(*pData) != WriteStatus::Success) {
+			if (send_card_byte_to_System(*data_ptr) !=
+			    WriteStatus::Success) {
 				return WriteStatus::Error;
 			}
-			pData++;
+			data_ptr++;
 			size--;
 		} while (size != 0U);
 		m_runningCommandOnSystemInTimerCountdown = 0x0A;
@@ -10400,7 +10406,7 @@ private:
 	// ROM Address: 0x24D2
 	void forwardToMidiOut(uint8_t nrOfBytes)
 	{
-		sendMidiResponse_to_MidiOut((uint8_t*)&m_outgoingMusicCardMessageData,
+		sendMidiResponse_to_MidiOut((const uint8_t*)&m_outgoingMusicCardMessageData,
 		                            nrOfBytes);
 	}
 
@@ -10908,7 +10914,8 @@ private:
 				m_sp_MidiDataOfMidiCommandInProgress[2] = 0;
 			}
 			return sendMidiResponse_to_MidiOut(
-			        (uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress, 3);
+			        (const uint8_t*)&m_sp_MidiDataOfMidiCommandInProgress,
+			        3);
 		}
 		uint8_t i       = 0;
 		uint8_t instrNr = 0;
@@ -10956,7 +10963,7 @@ private:
 			m_outgoingMusicCardMessageData[5] =
 			        m_sp_MidiDataOfMidiCommandInProgress[4];
 			return sendMidiResponse_to_MidiOut(
-			        (uint8_t*)&m_outgoingMusicCardMessageData,
+			        (const uint8_t*)&m_outgoingMusicCardMessageData,
 			        m_outgoingMusicCardMessageData[4] == 0 &&
 			                        m_outgoingMusicCardMessageData[5] == 0
 			                ? 3
@@ -11685,7 +11692,7 @@ private:
 		    send_midi_byte(m_sp_MidiDataOfMidiCommandInProgress[0]) ==
 		            WriteStatus::Success) {
 			sendDataPacketTypeBInChunksOf2048ByteBlocks(
-			        (uint8_t*)getReadOnlyConfigurationData(
+			        (const uint8_t*)getReadOnlyConfigurationData(
 			                m_sp_MidiDataOfMidiCommandInProgress[0]),
 			        0xA0);
 		}
@@ -12193,44 +12200,44 @@ private:
 	}
 
 	// ROM Address: 0x328A
-	WriteStatus sendDataPacketTypeAInChunksOf2048ByteBlocks(uint8_t* pData,
+	WriteStatus sendDataPacketTypeAInChunksOf2048ByteBlocks(const uint8_t* data,
 	                                                        uint16_t dataSize)
 	{
 		WriteStatus writeStatus;
 		if (dataSize <= 0x0800) {
-			writeStatus = sendDataPacketTypeA(pData, dataSize);
+			writeStatus = sendDataPacketTypeA(data, dataSize);
 			if (writeStatus != WriteStatus::Success) {
 				return writeStatus;
 			}
 			return send_midi_byte(0xF7);
 		}
-		writeStatus = sendDataPacketTypeA(pData, 0x0800);
+		writeStatus = sendDataPacketTypeA(data, 0x0800);
 		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		waitForDataToBeSent();
-		return sendDataPacketTypeAInChunksOf2048ByteBlocks(pData + 0x0800,
+		return sendDataPacketTypeAInChunksOf2048ByteBlocks(data + 0x0800,
 		                                                   dataSize - 0x0800);
 	}
 
 	// ROM Address: 0x32B7
-	WriteStatus sendDataPacketTypeBInChunksOf2048ByteBlocks(uint8_t* pData,
+	WriteStatus sendDataPacketTypeBInChunksOf2048ByteBlocks(const uint8_t* data,
 	                                                        uint16_t dataSize)
 	{
 		WriteStatus writeStatus;
 		if (dataSize <= 0x0800) {
-			writeStatus = sendDataPacketTypeB(pData, dataSize);
+			writeStatus = sendDataPacketTypeB(data, dataSize);
 			if (writeStatus != WriteStatus::Success) {
 				return writeStatus;
 			}
 			return send_midi_byte(0xF7);
 		}
-		writeStatus = sendDataPacketTypeB(pData, 0x0800);
+		writeStatus = sendDataPacketTypeB(data, 0x0800);
 		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
 		waitForDataToBeSent();
-		return sendDataPacketTypeBInChunksOf2048ByteBlocks(pData + 0x0800,
+		return sendDataPacketTypeBInChunksOf2048ByteBlocks(data + 0x0800,
 		                                                   dataSize - 0x0800);
 	}
 
@@ -12251,7 +12258,7 @@ private:
 		          bank->name[5]);
 		// send bank header (i.e. name and reserved field)
 		log_debug("sendVoiceDefinitionBank() - sendDataPacketTypeA() - header");
-		writeStatus = sendDataPacketTypeA((uint8_t*)bank, 0x20);
+		writeStatus = sendDataPacketTypeA((const uint8_t*)bank, 0x20);
 		if (writeStatus != WriteStatus::Success) {
 			return writeStatus;
 		}
@@ -12260,7 +12267,7 @@ private:
 			log_debug("sendVoiceDefinitionBank() - waitForDataToBeSent()");
 			waitForDataToBeSent();
 			log_debug("sendVoiceDefinitionBank() - sendDataPacketTypeA() - data");
-			writeStatus = sendDataPacketTypeA((uint8_t*)&instrumentDefinition,
+			writeStatus = sendDataPacketTypeA((const uint8_t*)&instrumentDefinition,
 			                                  sizeof(VoiceDefinition));
 			if (writeStatus != WriteStatus::Success) {
 				return writeStatus;
@@ -12275,8 +12282,8 @@ private:
 	{
 		WriteStatus writeStatus;
 		for (auto& i : m_configurationRAM) {
-			writeStatus = sendDataPacketTypeB(
-			        (uint8_t*)&i, 0xA0 /*sizeof(ConfigurationType)*/);
+			writeStatus = sendDataPacketTypeB((const uint8_t*)&i,
+			                                  0xA0 /*sizeof(ConfigurationType)*/);
 			if (writeStatus != WriteStatus::Success) {
 				return writeStatus;
 			}
@@ -12335,7 +12342,7 @@ private:
 	}
 
 	// ROM Address: 0x3343
-	WriteStatus sendDataPacketTypeA(uint8_t* pData, uint16_t dataSize)
+	WriteStatus sendDataPacketTypeA(const uint8_t* data, uint16_t dataSize)
 	{
 		WriteStatus writeStatus;
 		uint8_t checksum = 0;
@@ -12350,13 +12357,14 @@ private:
 
 		// send data
 		checksum = 0;
+		auto data_ptr = data;
 		do {
-			const uint8_t dataByte = *pData;
+			const uint8_t dataByte = *data_ptr;
 			send_midi_byte_with_error_handling(dataByte & 0x0F);
 			checksum += dataByte & 0x0F;
 			send_midi_byte_with_error_handling((dataByte >> 4) & 0x0F);
 			checksum += (dataByte >> 4) & 0x0F;
-			pData++;
+			data_ptr++;
 			dataSize--;
 		} while (dataSize != 0U);
 
@@ -12365,7 +12373,7 @@ private:
 	}
 
 	// ROM Address: 0x338D
-	WriteStatus sendDataPacketTypeB(uint8_t* pData, uint16_t dataSize)
+	WriteStatus sendDataPacketTypeB(const uint8_t* data, uint16_t dataSize)
 	{
 		WriteStatus writeStatus;
 		uint8_t checksum = 0;
@@ -12375,12 +12383,13 @@ private:
 		send_midi_byte_with_error_handling(dataSize & 0x7F);
 
 		// send data
+		auto data_ptr = data;
 		checksum = 0;
 		do {
-			const uint8_t dataByte = *pData;
+			const uint8_t dataByte = *data_ptr;
 			send_midi_byte_with_error_handling(dataByte);
 			checksum += dataByte;
-			pData++;
+			data_ptr++;
 			dataSize--;
 		} while (dataSize != 0U);
 
@@ -12398,16 +12407,17 @@ private:
 	} while ((target).status == ReadStatus::NoData);
 
 	// ROM Address: 0x33BE
-	ReadStatus receiveDataPacketTypeA(uint8_t byteCountHigh, uint8_t* pData,
-	                                  uint16_t bufferSize)
+	ReadStatus receiveDataPacketTypeA(uint8_t byteCountHigh,
+	                                  uint8_t* data_rw, uint16_t bufferSize)
 	{
 		m_receiveDataPacketTypeAState = 0;
-		return receiveDataPacketTypeA_internal(byteCountHigh, pData, bufferSize);
+		return receiveDataPacketTypeA_internal(byteCountHigh, data_rw, bufferSize);
 	}
 
 	// ROM Address: 0x33D7
 	ReadStatus receiveDataPacketTypeA_internal(uint8_t byteCountHigh,
-	                                           uint8_t* pData, uint16_t bufferSize)
+	                                           uint8_t* data_rw,
+	                                           uint16_t bufferSize)
 	{
 		ReadResult readResult   = {};
 		uint8_t checksum        = 0;
@@ -12470,7 +12480,7 @@ private:
 				readMidiDataWithErrorHandling(readResult);
 				log_debug("receiveDataPacketTypeA_internal - recursive call");
 				return receiveDataPacketTypeA_internal(
-				        readResult.data, pData, bufferSize);
+				        readResult.data, data_rw, bufferSize);
 			}
 
 			// read the data byte (low half)
@@ -12526,11 +12536,11 @@ private:
 				return ReadStatus::Error;
 			}
 			checksum += readResult.data;
-			pData[0] = (readResult.data << 4) |
-			           m_soundProcessorMidiInterpreterState;
+			data_rw[0] = (readResult.data << 4) |
+			             m_soundProcessorMidiInterpreterState;
 			// log_debug("receiveDataPacketTypeA_internal - writing
-			// 0x%02X - bufferSize=%i", pData[0], bufferSize-1);
-			pData++;
+			// 0x%02X - bufferSize=%i", data_rw[0], bufferSize-1);
+			data_rw++;
 			bufferSize--;
 			if (bufferSize == 0) {
 				log_debug("receiveDataPacketTypeA_internal - reached the end of the target buffer. There are still %i bytes left to read",
@@ -12564,8 +12574,8 @@ private:
 	}
 
 	// ROM Address: 0x351C
-	ReadStatus receiveDataPacketTypeB(uint8_t byteCountHigh, uint8_t* pData,
-	                                  uint16_t bufferSize)
+	ReadStatus receiveDataPacketTypeB(uint8_t byteCountHigh,
+	                                  uint8_t* data_rw, uint16_t bufferSize)
 	{
 		ReadResult readResult   = {};
 		uint8_t checksum        = 0;
@@ -12596,7 +12606,7 @@ private:
 				// the size and recurse
 				readMidiDataWithErrorHandling(readResult);
 				return receiveDataPacketTypeB(readResult.data,
-				                              pData,
+				                              data_rw,
 				                              bufferSize);
 			}
 			// read data byte
@@ -12605,8 +12615,8 @@ private:
 				return ReadStatus::Error;
 			}
 			checksum += readResult.data;
-			pData[0] = readResult.data;
-			pData++;
+			data_rw[0] = readResult.data;
+			data_rw++;
 			bufferSize--;
 			if (bufferSize == 0) {
 				break;
