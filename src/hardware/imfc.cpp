@@ -471,9 +471,9 @@ struct ReadResult {
 };
 
 enum SystemDataAvailability {
-	NO_DATA_AVAILABLE,
-	MIDI_DATA_AVAILABLE,
-	SYSTEM_DATA_AVAILABLE,
+	NoDataAvailable,
+	MidiDataAvailable,
+	SystemDataAvailable,
 };
 
 struct SystemReadResult {
@@ -5781,10 +5781,10 @@ private:
 			}
 			SystemReadResult const systemReadResult =
 			        system_read9BitMidiDataByte();
-			if (systemReadResult.status == SYSTEM_DATA_AVAILABLE) {
+			if (systemReadResult.status == SystemDataAvailable) {
 				processIncomingMusicCardMessageByte(
 				        systemReadResult.data);
-			} else if (systemReadResult.status == MIDI_DATA_AVAILABLE) {
+			} else if (systemReadResult.status == MidiDataAvailable) {
 				send_midi_byte_to_MidiOut(systemReadResult.data);
 				clearIncomingMusicCardMessageBuffer();
 			}
@@ -5963,9 +5963,9 @@ private:
 				// log_debug("readMidiDataWithTimeout() - system
 				// while loop");
 				switch (system_isMidiDataAvailable()) {
-				case NO_DATA_AVAILABLE:
+				case NoDataAvailable:
 					// log_debug("readMidiDataWithTimeout()
-					// - case NO_DATA_AVAILABLE");
+					// - case NoDataAvailable");
 					if (!isMidiDataPacket_in_state_01_36_37_38(
 					            &m_midiDataPacketFromSystem)) {
 						return {ReadStatus::NoData, 0};
@@ -5982,9 +5982,9 @@ private:
 					// 01_36_37_38 and timeout not
 					// expired");
 					break;
-				case SYSTEM_DATA_AVAILABLE:
+				case SystemDataAvailable:
 					// log_debug("readMidiDataWithTimeout()
-					// - case SYSTEM_DATA_AVAILABLE");
+					// - case SystemDataAvailable");
 					set_System_To_SP_InitialState();
 					// log_debug("readMidiDataWithTimeout()
 					// - calling
@@ -5999,11 +5999,11 @@ private:
 					        &m_midiDataPacketFromSystem,
 					        m_actualMidiFlowPath.System_To_MidiOut);
 					return {ReadStatus::Error, 0xF7};
-				case MIDI_DATA_AVAILABLE:
+				case MidiDataAvailable:
 					SystemReadResult const systemReadResult =
 					        system_read9BitMidiDataByte();
 					// log_debug("readMidiDataWithTimeout()
-					// - case MIDI_DATA_AVAILABLE (0x%02X)",
+					// - case MidiDataAvailable (0x%02X)",
 					// systemReadResult.data);
 					if (systemReadResult.data < 0xF8) {
 						return {ReadStatus::Success,
@@ -6185,7 +6185,7 @@ private:
 				log_debug("MUSIC_MODE_LOOP_read_System_And_Dispatch - system_read9BitMidiDataByte()");
 				SystemReadResult const systemReadResult =
 				        system_read9BitMidiDataByte();
-				if (systemReadResult.status == SYSTEM_DATA_AVAILABLE) {
+				if (systemReadResult.status == SystemDataAvailable) {
 					log_debug("PC->IMFC: Found system data [1%02X] in queue",
 					          systemReadResult.data);
 					// log("MUSIC_MODE_LOOP_read_System_And_Dispatch
@@ -7792,7 +7792,7 @@ private:
 		m_bufferFromSystemState.lock();
 		if (m_bufferFromSystemState.isEmpty()) {
 			m_bufferFromSystemState.unlock();
-			return NO_DATA_AVAILABLE;
+			return NoDataAvailable;
 		}
 		// disableInterrupts();
 		const auto [dataA, dataB] = split_uint16_t(
@@ -7804,13 +7804,13 @@ private:
 			// & 1) == 0) {
 			//  current data is not system data
 			m_bufferFromSystemState.unlock(); // enableInterrupts();
-			return MIDI_DATA_AVAILABLE;
+			return MidiDataAvailable;
 		}
 		// uint8_t dataB =
 		// m_bufferBFromSystem[m_bufferFromSystemState.getLastReadByteIndex()];
 		if (dataB < 0xF0) {
 			m_bufferFromSystemState.unlock(); // enableInterrupts();
-			return SYSTEM_DATA_AVAILABLE;
+			return SystemDataAvailable;
 		}
 		log_error("WOW: found some strange data in the system buffer (%02X). Discarding :(",
 		          dataB);
@@ -7835,7 +7835,7 @@ private:
 		m_bufferFromSystemState.lock();
 		if (!m_bufferFromSystemState.hasData()) {
 			m_bufferFromSystemState.unlock();
-			return {NO_DATA_AVAILABLE, 0};
+			return {NoDataAvailable, 0};
 		}
 		// disableInterrupts();
 		const auto [a, b] = split_uint16_t(m_bufferFromSystemState.popData());
@@ -7858,10 +7858,10 @@ private:
 		SDL_UnlockMutex(m_hardwareMutex);
 		m_bufferFromSystemState.unlock(); // enableInterrupts();
 		if ((a & 1) == 0) {
-			return {MIDI_DATA_AVAILABLE, b};
+			return {MidiDataAvailable, b};
 		}
 		if (b < 0xF0) {
-			return {SYSTEM_DATA_AVAILABLE, b};
+			return {SystemDataAvailable, b};
 		}
 		return system_read9BitMidiDataByte();
 	}
