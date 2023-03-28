@@ -246,7 +246,7 @@ struct BufferFlags {
 	{
 		return _isBufferEmpty;
 	}
-	inline bool hasData()
+	inline bool hasData() const
 	{
 		return !isEmpty();
 	}
@@ -338,17 +338,17 @@ public:
 		m_debug = debug;
 	}
 
-	unsigned int getLastReadByteIndex()
+	unsigned int getLastReadByteIndex() const
 	{
 		return lastReadByteIndex;
 	}
 
-	unsigned int getIndexForNextWriteByte()
+	unsigned int getIndexForNextWriteByte() const
 	{
 		return indexForNextWriteByte;
 	}
 
-	bool isBufferFull()
+	bool isBufferFull() const
 	{
 		return lastReadByteIndex ==
 		       ((indexForNextWriteByte + 1) % m_bufferSize);
@@ -383,7 +383,7 @@ public:
 		return data;
 	}
 
-	BufferDataType peekData()
+	BufferDataType peekData() const
 	{
 		return m_buffer[lastReadByteIndex];
 	}
@@ -425,31 +425,31 @@ public:
 	{
 		flags.setOfflineErrorFlag();
 	}
-	inline bool isEmpty()
+	inline bool isEmpty() const
 	{
 		return flags.isEmpty();
 	}
-	inline bool hasData()
+	inline bool hasData() const
 	{
 		return flags.hasData();
 	}
-	inline bool hasError()
+	inline bool hasError() const
 	{
 		return flags.hasError();
 	}
-	inline bool hasReadError()
+	inline bool hasReadError() const
 	{
 		return flags.hasReadError();
 	}
-	inline bool hasOverflowError()
+	inline bool hasOverflowError() const
 	{
 		return flags.hasOverflowError();
 	}
-	inline bool hasOfflineError()
+	inline bool hasOfflineError() const
 	{
 		return flags.hasOfflineError();
 	}
-	inline uint8_t getFlagsByteValue()
+	inline uint8_t getFlagsByteValue() const
 	{
 		return flags.getByteValue();
 	}
@@ -606,7 +606,7 @@ struct Duration {
 	{
 		return (value & 0x8000) != 0;
 	}
-	inline bool isNotEmpty()
+	inline bool isNotEmpty() const
 	{
 		return !isEmpty();
 	}
@@ -735,87 +735,87 @@ private:
 	// clang-format on
 
 public:
-	uint8_t getTotalLevel()
+	uint8_t getTotalLevel() const
 	{
 		return (bytes[0] & 0x7F) >> 0;
 	}
-	uint8_t getUnused1()
+	uint8_t getUnused1() const
 	{
 		return (bytes[0] >> 7) & 0x01;
 	}
-	uint8_t getUnused2()
+	uint8_t getUnused2() const
 	{
 		return (bytes[1] >> 0) & 0x0F;
 	}
-	uint8_t getVelocitySensitivityToTotalLevel()
+	uint8_t getVelocitySensitivityToTotalLevel() const
 	{
 		return (bytes[1] >> 4) & 0x07;
 	}
-	uint8_t getKeyboardLevelScalingType()
+	uint8_t getKeyboardLevelScalingType() const
 	{
 		return (bytes[1] >> 7) & 0x01;
 	}
-	uint8_t getAdditionToTotalLevel()
+	uint8_t getAdditionToTotalLevel() const
 	{
 		return (bytes[2] >> 0) & 0x0F;
 	}
-	uint8_t getKeyboardLevelScalingDepth()
+	uint8_t getKeyboardLevelScalingDepth() const
 	{
 		return (bytes[2] >> 4) & 0x0F;
 	}
-	uint8_t getMultiple()
+	uint8_t getMultiple() const
 	{
 		return (bytes[3] >> 0) & 0x0F;
 	}
-	uint8_t getDetune()
+	uint8_t getDetune() const
 	{
 		return (bytes[3] >> 4) & 0x07;
 	}
-	uint8_t getKeyboardLevelScaling()
+	uint8_t getKeyboardLevelScaling() const
 	{
 		return (bytes[3] >> 7) & 0x01;
 	}
-	uint8_t getAttackRate()
+	uint8_t getAttackRate() const
 	{
 		return (bytes[4] >> 0) & 0x1F;
 	}
-	uint8_t getUnused3()
+	uint8_t getUnused3() const
 	{
 		return (bytes[4] >> 5) & 0x01;
 	}
-	uint8_t getKeyboardRateScalingDepth()
+	uint8_t getKeyboardRateScalingDepth() const
 	{
 		return (bytes[4] >> 6) & 0x03;
 	}
-	uint8_t getDecay1Rate()
+	uint8_t getDecay1Rate() const
 	{
 		return (bytes[5] >> 0) & 0x1F;
 	}
-	uint8_t getVelocitySensitivityToAttackRate()
+	uint8_t getVelocitySensitivityToAttackRate() const
 	{
 		return (bytes[5] >> 5) & 0x03;
 	}
-	uint8_t getModulatorCarrierSelect()
+	uint8_t getModulatorCarrierSelect() const
 	{
 		return (bytes[5] >> 7) & 0x01;
 	}
-	uint8_t getDecay2Rate()
+	uint8_t getDecay2Rate() const
 	{
 		return (bytes[6] >> 0) & 0x1F;
 	}
-	uint8_t getUnused4()
+	uint8_t getUnused4() const
 	{
 		return (bytes[6] >> 5) & 0x01;
 	}
-	uint8_t getInharmonic()
+	uint8_t getInharmonic() const
 	{
 		return (bytes[6] >> 6) & 0x03;
 	}
-	uint8_t getReleaseRate()
+	uint8_t getReleaseRate() const
 	{
 		return (bytes[7] >> 0) & 0x0F;
 	}
-	uint8_t getSustainLevel()
+	uint8_t getSustainLevel() const
 	{
 		return (bytes[7] >> 4) & 0x0F;
 	}
@@ -848,23 +848,23 @@ public:
 		return data_ptr;
 	}
 
-	inline uint8_t getByte3()
+	inline uint8_t getByte3() const
 	{
 		return bytes[3];
 	}
-	inline uint8_t getByte4()
+	inline uint8_t getByte4() const
 	{
 		return bytes[4];
 	}
-	inline uint8_t getByte5()
+	inline uint8_t getByte5() const
 	{
 		return bytes[5];
 	}
-	inline uint8_t getByte6()
+	inline uint8_t getByte6() const
 	{
 		return bytes[6];
 	}
-	inline uint8_t getReleaseRateSustainLevel()
+	inline uint8_t getReleaseRateSustainLevel() const
 	{
 		return bytes[7];
 	}
@@ -924,7 +924,7 @@ private:
 	uint8_t reserved3[4] = {};
 
 public:
-	char getName(uint8_t i)
+	char getName(uint8_t i) const
 	{
 		return name[i];
 	}
@@ -1012,7 +1012,7 @@ public:
 	{
 		return transpose;
 	}
-	OperatorDefinition* getOperator(uint8_t i)
+	const OperatorDefinition* getOperator(uint8_t i) const
 	{
 		return &operators[i];
 		// static uint8_t mapping[4] = {0, 2, 1, 3};  // Test if oper 1
@@ -1217,7 +1217,7 @@ public:
 		return data_ptr;
 	}
 
-	void dumpToLog()
+	void dumpToLog() const
 	{
 		// clang-format off
 		//IMF_LOG("Dump of VoiceDefinitionBank:");
@@ -1620,7 +1620,7 @@ public:
 	DataProvider()              = default;
 	virtual ~DataProvider()     = default;
 
-	virtual DataType getValue() = 0;
+	virtual DataType getValue() const = 0;
 	void notifyOnChange(DataChangedConsumer<DataType>* dataConsumer)
 	{
 		m_consumers.push_back(dataConsumer);
@@ -1639,11 +1639,11 @@ public:
 	        : m_name(name),
 	          m_value(inititalValue)
 	{}
-	std::string getName()
+	std::string getName() const
 	{
 		return m_name;
 	}
-	DataType getValue() override
+	DataType getValue() const override
 	{
 		return m_value.load();
 	}
@@ -1676,17 +1676,17 @@ public:
 	virtual ~InputPin() = default;
 	InputPin() = default;
 	explicit InputPin(const std::string& name) : m_name(name) {}
-	std::string getName()
+	std::string getName() const
 	{
 		return m_name;
 	}
-	virtual DataType getValue() = 0;
+	virtual DataType getValue() const = 0;
 };
 
 template <typename DataType>
 class DataDrivenInputPin : public InputPin<DataType> {
 private:
-	DataProvider<DataType>* m_dataProvider = nullptr;
+	const DataProvider<DataType>* m_dataProvider = nullptr;
 
 public:
 	DataDrivenInputPin<DataType>(const DataDrivenInputPin<DataType>&) = delete;
@@ -1696,11 +1696,11 @@ public:
 	        : InputPin<DataType>(name),
 	          m_dataProvider(nullptr)
 	{}
-	void connect(DataProvider<DataType>* source)
+	void connect(const DataProvider<DataType>* source)
 	{
 		m_dataProvider = source;
 	}
-	DataType getValue() override
+	DataType getValue() const override
 	{
 		if (!m_dataProvider) {
 			IMF_LOG("Pin %s is not connected (DataDrivenInputPin.getValue)",
@@ -1721,11 +1721,11 @@ public:
 	        : InputPin<DataType>(name),
 	          m_dataContainer(name, initialValue)
 	{}
-	DataProvider<DataType>* getDataProvider()
+	DataProvider<DataType>* getDataProvider() const
 	{
-		return &m_dataContainer;
+		return const_cast<DataContainer<DataType>*>(&m_dataContainer);
 	}
-	DataType getValue() override
+	DataType getValue() const override
 	{
 		return m_dataContainer.getValue();
 	}
@@ -1756,7 +1756,7 @@ public:
 	{
 		m_dataContainer = dataContainer;
 	}
-	DataType getValue() override
+	DataType getValue() const override
 	{
 		if (!m_dataContainer) {
 			IMF_LOG("Pin %s is not connected (InputOutputPin.getValue)",
@@ -1797,7 +1797,7 @@ public:
 		m_input.connect(dataProvider);
 		dataProvider->notifyOnChange(this);
 	}
-	DataProvider<bool>* getOutput()
+	DataProvider<bool>* getOutput() const
 	{
 		return m_output.getDataProvider();
 	}
@@ -1834,7 +1834,7 @@ public:
 		m_enableInput.connect(dataProvider);
 		dataProvider->notifyOnChange(this);
 	}
-	DataProvider<bool>* getOutput()
+	DataProvider<bool>* getOutput() const
 	{
 		return m_output.getDataProvider();
 	}
@@ -1869,7 +1869,7 @@ public:
 		m_input2.connect(dataProvider);
 		dataProvider->notifyOnChange(this);
 	}
-	DataProvider<bool>* getOutput()
+	DataProvider<bool>* getOutput() const
 	{
 		return m_output.getDataProvider();
 	}
@@ -1920,7 +1920,7 @@ public:
 		m_input4.connect(dataProvider);
 		dataProvider->notifyOnChange(this);
 	}
-	DataProvider<bool>* getOutput()
+	DataProvider<bool>* getOutput() const
 	{
 		return m_output.getDataProvider();
 	}
@@ -1973,7 +1973,7 @@ public:
 		m_clearInput.connect(dataProvider);
 		dataProvider->notifyOnChange(this);
 	}
-	DataProvider<bool>* getOutput()
+	DataProvider<bool>* getOutput() const
 	{
 		return m_output.getDataProvider();
 	}
@@ -1999,31 +1999,31 @@ public:
 	          m_totalIrqMask(name + ".totalIrqMask", false),
 	          m_irqBufferEnable(name + ".irqBufferEnable", false)
 	{}
-	DataProvider<bool>* getTimerAClear()
+	DataProvider<bool>* getTimerAClear() const
 	{
 		return m_timerAClear.getDataProvider();
 	}
-	DataProvider<bool>* getTimerBClear()
+	DataProvider<bool>* getTimerBClear() const
 	{
 		return m_timerBClear.getDataProvider();
 	}
-	DataProvider<bool>* getTimerAEnable()
+	DataProvider<bool>* getTimerAEnable() const
 	{
 		return m_timerAEnable.getDataProvider();
 	}
-	DataProvider<bool>* getTimerBEnable()
+	DataProvider<bool>* getTimerBEnable() const
 	{
 		return m_timerBEnable.getDataProvider();
 	}
-	DataProvider<bool>* getDataBit8FromSystem()
+	DataProvider<bool>* getDataBit8FromSystem() const
 	{
 		return m_dataBit8FromSystem.getDataProvider();
 	}
-	DataProvider<bool>* getTotalIrqMask()
+	DataProvider<bool>* getTotalIrqMask() const
 	{
 		return m_totalIrqMask.getDataProvider();
 	}
-	DataProvider<bool>* getIrqBufferEnable()
+	DataProvider<bool>* getIrqBufferEnable() const
 	{
 		return m_irqBufferEnable.getDataProvider();
 	}
@@ -2158,11 +2158,11 @@ public:
 	{
 		Intel8253::registerNextEvent(); // FIXME
 	}
-	DataProvider<bool>* getTimerA()
+	DataProvider<bool>* getTimerA() const
 	{
 		return m_timerA.getDataProvider();
 	}
-	DataProvider<bool>* getTimerB()
+	DataProvider<bool>* getTimerB() const
 	{
 		return m_timerB.getDataProvider();
 	}
@@ -2398,7 +2398,7 @@ private:
 	// This signal is internal to the PD71055. They are not output to port 2
 	// pins and they cannot be read by the host.
 
-	uint8_t readPort0()
+	uint8_t readPort0() const
 	{
 		return m_port0.getValue();
 	}
@@ -2406,7 +2406,7 @@ private:
 	{
 		m_port0.setValue(val);
 	}
-	uint8_t readPort1()
+	uint8_t readPort1() const
 	{
 		return m_port1.getValue();
 	}
@@ -5335,12 +5335,12 @@ private:
 
 	void RegisterIoHandlers(const io_port_t port);
 
-	bool currentThreadIsMainThread()
+	bool currentThreadIsMainThread() const
 	{
 		return SDL_ThreadID() == SDL_GetThreadID(m_mainThread);
 	}
 
-	bool currentThreadIsInterruptThread()
+	bool currentThreadIsInterruptThread() const
 	{
 		return SDL_ThreadID() == SDL_GetThreadID(m_interruptThread);
 	}
@@ -5459,8 +5459,8 @@ private:
 	}
 
 	// ROM Address: 0x00B7
-	VoiceDefinition* getVoiceDefinitionOfSameBank(InstrumentParameters* instr,
-	                                              uint8_t instrNr)
+	const VoiceDefinition* getVoiceDefinitionOfSameBank(InstrumentParameters* instr,
+	                                                    uint8_t instrNr) const
 	{
 		return &(getVoiceDefinitionBank(instr->instrumentConfiguration.voiceBankNumber)
 		                 ->instrumentDefinitions[instrNr]);
@@ -5479,7 +5479,7 @@ private:
 	}
 
 	// ROM Address: 0x00E7
-	VoiceDefinitionBank* getVoiceDefinitionBank(uint8_t bankNr)
+	const VoiceDefinitionBank* getVoiceDefinitionBank(uint8_t bankNr) const
 	{
 		// safe-guard that is NOT in the original implementation
 		switch (bankNr % 7) {
@@ -5500,7 +5500,7 @@ private:
 	}
 
 	// ROM Address: 0x0101
-	const ConfigurationData* getReadOnlyConfigurationData(uint8_t configNr)
+	const ConfigurationData* getReadOnlyConfigurationData(uint8_t configNr) const
 	{
 		// WARNING: the original code has a buffer overflow here. If the
 		// configNr>20 then random memory will be read!
@@ -9902,7 +9902,7 @@ private:
 	}
 
 	// ROM Address: 0x1D6D
-	static uint8_t carrierOrModulatorTableLookup(OperatorDefinition* operatorDefinition,
+	static uint8_t carrierOrModulatorTableLookup(const OperatorDefinition* operatorDefinition,
 	                                             uint8_t l, uint8_t c)
 	{
 		static constexpr uint8_t carrierTable[8][32] = {
@@ -9939,7 +9939,7 @@ private:
 	}
 
 	// ROM Address: 0x1D84
-	static uint8_t getKeyboardLevelScaling(OperatorDefinition* operatorDefinition,
+	static uint8_t getKeyboardLevelScaling(const OperatorDefinition* operatorDefinition,
 	                                       uint8_t h)
 	{
 		static constexpr uint8_t scale[4][64] = {
@@ -10031,8 +10031,8 @@ private:
 	}
 
 	// ROM Address: 0x2155
-	void ym_singleOperator_sendKeyScaleAndAttackRate(OperatorDefinition* operatorDefinition,
-	                                                 uint8_t ymRegister)
+	void ym_singleOperator_sendKeyScaleAndAttackRate(
+	        const OperatorDefinition* operatorDefinition, uint8_t ymRegister)
 	{
 		// clang-format off
 		static constexpr int8_t byte_2194[4][16] = {
@@ -11251,7 +11251,7 @@ private:
 			log_debug("processSysExCmd_NodeMessage_SetVoiceBankData() - error - invalid memory bank");
 			return sendResponse(0x00, CANCEL_MESSAGE);
 		}
-		VoiceDefinitionBank* bank = getVoiceDefinitionBank(midiData);
+		const VoiceDefinitionBank* bank = getVoiceDefinitionBank(midiData);
 		// read the high size byte
 		do {
 			readResult = readMidiData();
@@ -12241,7 +12241,8 @@ private:
 		log_debug("sendVoiceDefinitionBank() - start");
 		WriteStatus writeStatus;
 
-		VoiceDefinitionBank* bank = getVoiceDefinitionBank(instrumentBankNumber);
+		const VoiceDefinitionBank* bank = getVoiceDefinitionBank(
+		        instrumentBankNumber);
 		log_debug("sendVoiceDefinitionBank() - bank.name %c%c%c%c%c%c",
 		          bank->name[0],
 		          bank->name[1],
