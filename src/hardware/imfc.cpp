@@ -665,34 +665,45 @@ Note: Undefined MIDI status bytes ([F4], [F5], [F9], [FD], [FF]) and the active 
 struct MidiFlowPath {
 	// This is the path from MIDI IN to the system. This path is enabled
 	// when the data received at MIDI IN is to be processed by the system.
+	//
 	uint8_t MidiIn_To_System = 0;
+
 	// This is the patch from the system to MIDI OUT. This path is used when
 	// sending a message from the system to an external MIDI device. If this
 	// path is enabled, it is automatically closed when CHAIN mode is set.
 	// When CHAIN mode is cancelled, the path returns to its previous state.
 	// Even if this path has been closed by entry into CHAIN mode, status
 	// reports from the music card will reflect its programmed state.
+	//
 	uint8_t System_To_MidiOut = 0;
+
 	// This is the path from MIDI IN to the sound processor. This path is set
 	// so that the music card can be controlled by an external MIDI devince.
+	//
 	uint8_t MidiIn_To_SP = 0;
+
 	// This is the route from the system to the sound processor. This path
-	// is set so that the music card can be controlled by the processor. Note:
-	// If you try to set both the "MIDI IN -> Sound Processor" and "System
+	// is set so that the music card can be controlled by the processor.
+	// Note: If you try to set both the "MIDI IN -> Sound Processor" and
+	// "System
 	// -> Sound Processor" paths to pass system real-time messages,
 	//       only the "MIDI IN -> Sound Processor" path is set. The other
 	//       path is ignored with no error report message.
+	//
 	uint8_t System_To_SP = 0;
+
 	// This is the path from MIDI IN to MIDI OUT. When this path is set, the
-	// MIDI OUT terminal functions in essentially the same manner as the MIDI
-	// THRU terminal. When the "System -> MIDI OUT" path is concurrently set,
-	// the data from the system and the data input to MIDI IN can be merged
-	// in MIDI OUT. When this path is set, the program request from a MIDI
-	// line is not valid, and a MIDI handshaking message cannot be output to
-	// a MIDI line. This path automatically closes when CHAIN mode is set.
-	// When CHAIN mode is cancelled, this path returns  to its previous state.
-	// Even if this path has been closed by entry into CHAIN mode, status
-	// reports from the music card reflect its programmed state.
+	// MIDI OUT terminal functions in essentially the same manner as the
+	// MIDI THRU terminal. When the "System -> MIDI OUT" path is
+	// concurrently set, the data from the system and the data input to MIDI
+	// IN can be merged in MIDI OUT. When this path is set, the program
+	// request from a MIDI line is not valid, and a MIDI handshaking message
+	// cannot be output to a MIDI line. This path automatically closes when
+	// CHAIN mode is set. When CHAIN mode is cancelled, this path returns to
+	// its previous state. Even if this path has been closed by entry into
+	// CHAIN mode, status reports from the music card reflect its programmed
+	// state.
+	//
 	uint8_t MidiIn_To_MidiOut = 0;
 };
 #pragma pack(pop)
