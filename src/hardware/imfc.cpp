@@ -5187,8 +5187,6 @@ public:
 
 #include "imfc_rom.c"
 
-std::atomic_bool keep_running = {};
-
 class MusicFeatureCard {
 private:
 	ym2151_device m_ya2151;
@@ -5243,6 +5241,7 @@ private:
 	IrqController m_irqTriggerImf;
 	TotalStatusRegister m_tsr;
 
+	std::atomic_bool keepRunning               = {};
 	std::atomic<bool> m_finishedBootupSequence = {};
 	SDL_Thread* m_mainThread                  = nullptr;
 	SDL_Thread* m_interruptThread             = nullptr;
@@ -5742,7 +5741,7 @@ private:
 
 		log_debug("softReboot - starting infinite loop");
 		m_finishedBootupSequence = true;
-		while (keep_running.load()) {
+		while (keepRunning.load()) {
 			// log_debug("DEBUG: heartbeat in MUSIC_MODE_LOOP %i",
 			// debug_count++);
 			// MUSIC_MODE_LOOP_read_MidiIn_And_Dispatch(); //FIXME:
@@ -5768,7 +5767,7 @@ private:
 		m_outgoingMusicCardMessageData[0] = 0xE0;
 		send_card_bytes_to_System((uint8_t*)&m_outgoingMusicCardMessageData,
 		                          1);
-		while (keep_running.load()) {
+		while (keepRunning.load()) {
 			ReadResult readResult = midiIn_readMidiDataByte();
 			if (readResult.status == ReadStatus::Error) {
 				disableInterrupts();
@@ -5910,7 +5909,7 @@ private:
 		m_readMidiDataTimeoutCountdown = 0xFF;
 		if ((m_midi_ReceiveSource_SendTarget & 2) == 0) {
 			// read midi data from midi in
-			while (keep_running.load()) {
+			while (keepRunning.load()) {
 				const ReadResult readResult = midiIn_readMidiDataByte();
 				switch (readResult.status) {
 				case ReadStatus::Error:
@@ -5959,7 +5958,7 @@ private:
 			}
 		} else {
 			// read midi data from system
-			while (keep_running.load()) {
+			while (keepRunning.load()) {
 				// log_debug("readMidiDataWithTimeout() - system
 				// while loop");
 				switch (system_isMidiDataAvailable()) {
@@ -7275,7 +7274,7 @@ private:
 	// ROM Address: 0x0CB7
 	void finalizeMusicProcessing()
 	{
-		while (keep_running.load()) {
+		while (keepRunning.load()) {
 			disableInterrupts();
 			if (m_ya2151_timerA_counter != 0U) {
 				m_ya2151_timerA_counter--;
@@ -11019,7 +11018,7 @@ private:
 			}
 			uint8_t* templateValuePtr = m_soundProcessorSysExCurrentMatchPtr;
 			uint8_t expectedMidiData = templateValuePtr[0];
-			while (keep_running.load()) {
+			while (keepRunning.load()) {
 				uint8_t actualMidiData = midiData;
 				if (expectedMidiData >= 0x80) {
 					processSysExTemplateCommand(&expectedMidiData,
@@ -12453,7 +12452,7 @@ private:
 		// log_debug("receiveDataPacketTypeA_internal - new
 		// dataPacketSize(1) 0x%04x", dataPacketSize);
 
-		while (keep_running.load()) {
+		while (keepRunning.load()) {
 			// did we reach the end of the packet size?
 			if (dataPacketSize == 0) {
 				// we're expecting a checksum byte
@@ -12581,7 +12580,7 @@ private:
 		dataPacketSize = check_cast<uint16_t>(byteCountHigh * 0x80 +
 		                                      readResult.data);
 
-		while (keep_running.load()) {
+		while (keepRunning.load()) {
 			// read the data
 			if (dataPacketSize == 0) {
 				// read the checksum
@@ -12981,7 +12980,7 @@ public:
 		m_piuIMF.reset();
 
 		// now start the main program
-		keep_running                   = true;
+		keepRunning                    = true;
 		m_hardwareMutex                = SDL_CreateMutex();
 		m_interruptHandlerRunning      = false;
 		m_interruptHandlerRunningMutex = SDL_CreateMutex();
@@ -13026,7 +13025,7 @@ public:
 	int threadInterruptStart()
 	{
 		log_debug("IMFC: processor interrupt thread started");
-		while (keep_running.load()) {
+		while (keepRunning.load()) {
 			SDL_LockMutex(m_interruptHandlerRunningMutex);
 			while (!m_interruptHandlerRunning) {
 				SDL_CondWait(m_interruptHandlerRunningCond,
@@ -13190,7 +13189,7 @@ public:
 	{
 		LOG_MSG("IMFC: Shutting down");
 
-		keep_running = false;
+		keepRunning = false;
 
 		// Remove access to the IO ports
 		for (auto& rh : readHandlers)
