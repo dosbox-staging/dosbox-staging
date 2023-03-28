@@ -12841,6 +12841,14 @@ private:
 				if (b == 0xFF) {
 					m_sp_SysExStateMatchTable[i] = b;
 					i++;
+
+					// Although incrementing 'i' can technically exceed the for
+					// loop's bounds, we know the prior "b == 0xFF" condition
+					// per the read-only table value means that 'i' will never
+					// be close to the loop end; so simply assert it:
+					//
+					assert(i < sizeof(SP_SysExStateMatchTableTemplate));
+
 					b = SP_SysExStateMatchTableTemplate[i];
 				}
 			} else {
