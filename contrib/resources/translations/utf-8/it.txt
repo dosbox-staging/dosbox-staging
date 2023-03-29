@@ -756,6 +756,21 @@ Filtro per l'uscita audio della scheda Gravis UltraSound:
   <custom>:  Definizione di filtri personalizzati; 
              fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
+:CONFIG_IMFC
+Enable the IBM Music Feature Card (disabled by default).
+.
+:CONFIG_IMFC_BASE
+The IO base address of the IBM Music Feature Card (2A20 by default).
+.
+:CONFIG_IMFC_IRQ
+The IRQ number of the IBM Music Feature Card (3 by default).
+.
+:CONFIG_IMFC_FILTER
+Filter for the IBM Music Feature Card output:
+  on:        Filter the output.
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
 :CONFIG_SIDMODEL
 Modello di chip da emulare nella scheda Innovation SSI-2001:
   auto:  Utilizza il chip 6581.
@@ -3232,4 +3247,58 @@ Comandi Vari
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Comando Sconosciuto
+.
+:PROGRAM_TREE_HELP_LONG
+Displays directory tree in a graphical form.
+
+Usage:
+  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]
+
+Where:
+  [color=cyan]DIRECTORY[reset] is the name of the directory to display.
+  [color=white]ORDER[reset]     is a listing order, one of:
+                [color=white]n[reset] (by name, alphabetic),
+                [color=white]s[reset] (by size, smallest first),
+                [color=white]e[reset] (by extension, alphabetic),
+                [color=white]d[reset] (by date/time, oldest first),
+            with an optional [color=white]-[reset] prefix to reverse order.
+  /a        uses only 7-bit ASCII characters.
+  /b        brief display, omits header and footer information.
+  /f        also display files.
+  /p        display one page a time, shorten output to fit width width.
+  /da       display attributes.
+  /df       display size for files.
+  /dh       also display hidden and system files/directories.
+  /o[color=white]ORDER[reset]   orders the list (see above)
+
+Notes:
+  If [color=cyan]DIRECTORY[reset] is omitted, the current directory is used.
+
+Examples:
+  [color=green]tree[reset]          ; displays directory tree starting from current directory
+  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; displays C: drive content recursively, with files
+
+.
+:PROGRAM_TREE_DIRECTORY
+ Directory tree for volume %s
+.
+:PROGRAM_TREE_NO_SUBDIRS
+No subdirectories to display.
+
+.
+:PROGRAM_TREE_NO_FILES_SUBDIRS
+No files or subdirectories to display.
+
+.
+:PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
+Too many files or subdirectories.
+
+.
+:SHELL_TOO_MANY_PARAMETERS
+Too many parameters.
+
+.
+:SHELL_DIRECTORY_NOT_FOUND
+Directory not found - '%s'
+
 .
