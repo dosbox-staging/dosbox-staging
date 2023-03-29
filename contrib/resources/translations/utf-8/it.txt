@@ -756,6 +756,22 @@ Filtro per l'uscita audio della scheda Gravis UltraSound:
   <custom>:  Definizione di filtri personalizzati; 
              fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
+:CONFIG_IMFC
+Abilita la scheda IBM Music Feature (predefinito disabilitato).
+.
+:CONFIG_IMFC_BASE
+Indirizzo porta IO della scheda IBM Music Feature (predefinito 2A20).
+.
+:CONFIG_IMFC_IRQ
+Numero IRQ della scheda IBM Music Feature (predefinito 3).
+.
+:CONFIG_IMFC_FILTER
+Filtro per l'uscita audio della scheda IBM Music Feature:
+  on:        Filtra l'uscita audio (predefinito).
+  off:       Non filtra l'uscita audio.
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
+.
 :CONFIG_SIDMODEL
 Modello di chip da emulare nella scheda Innovation SSI-2001:
   auto:  Utilizza il chip 6581.
@@ -2279,6 +2295,51 @@ Il tipo deve essere uno dei seguenti:
   %s
 
 .
+:PROGRAM_TREE_HELP_LONG
+Visualizza graficamente la struttura delle directory.
+
+Utilizzo:
+  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDINAMENTO[reset]]
+
+Dove:
+  [color=cyan]DIRECTORY[reset]     è il nome della directory da visualizzare.
+  [color=white]ORDINAMENTO[reset]   è il tipo di ordinamento scelto, cioè:
+                    [color=white]n[reset] (per nome, alfabetico),
+                    [color=white]s[reset] (per dimensione, dal minore),
+                    [color=white]e[reset] (per estensione, alfabetico),
+                    [color=white]d[reset] (per data/ora dal più vecchio),
+                con un prefisso facoltativo [color=white]-[reset] per invertire l'ordine.
+  /a            utilizza solo caratteri ASCII a 7 bit.
+  /b            visualizzazione ridotta, omette intestazione e piè di pagina.
+  /f            visualizza anche i file.
+  /p            visualizza una pagina alla volta, addatta l'output allo schermo
+  /da           visualizza gli attributi.
+  /df           visualizza la dimensione dei file.
+  /dh           visualizza anche file/directory nascosti e di sistema.
+  /o[color=white]ORDINAMENTO[reset] ordina l'elenco (vedi sopra).
+
+Note:
+  Se [color=cyan]DIRECTORY[reset] viene omesso, verrà utilizzata la directory corrente.
+
+Esempi:
+  [color=green]tree[reset]        ; visualizza struttura directory a partire da quella corrente
+  [color=green]tree[reset] [color=cyan]C:[reset] /f  ; visualizza contenuto unità C: in modo ricorsivo, file inclusi
+.
+:PROGRAM_TREE_DIRECTORY
+ Struttura delle directory per il volume %s
+.
+:PROGRAM_TREE_NO_SUBDIRS
+Nessuna sottodirectory da visualizzare.
+
+.
+:PROGRAM_TREE_NO_FILES_SUBDIRS
+Nessun file o sottodirectory da visualizzare.
+
+.
+:PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
+Troppi file o sottodirectory.
+
+.
 :SHELL_ILLEGAL_PATH
 Percorso non valido.
 
@@ -2654,18 +2715,24 @@ Visualizza un elenco di file e sottodirectory in una directory.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Utilizzo:
-  [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDINAM[reset]]
+  [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDINAMENTO[reset]]
 
 Dove:
-  [color=cyan]MODELLO[reset] è un nome file specifico o con caratteri jolly, cioè asterisco (*)
-          e punto di domanda (?). È possibile specificare il percorso di
-          una directory per elencarne il contenuto.
-  [color=white]ORDINAM[reset] è il tipo di ordinamento scelto, cioè: [color=white]n[reset] (per nome, alfabetico),
-          [color=white]s[reset] (per dimensione, dal minore), [color=white]e[reset] (per estensione, alfabetico),
-          [color=white]d[reset] (per data/ora dal più vecchio), con prefisso [color=white]-[reset] per invertire ordine
-  /w  elenca 5 file/directory in una riga; /b   elenca solo i nomi.
-  /o  ordina la lista (vedi sopra);        /p   mostra una schermata per volta.
-  /ad elenca tutte le directory;           /a-d elenca tutti i file.
+  [color=cyan]MODELLO[reset]       è un nome file specifico o con caratteri jolly, cioè asterisco
+                (*) e punto di domanda (?). È possibile specificare il percorso
+                di una directory per elencarne il contenuto.
+  [color=white]ORDINAMENTO[reset]   è il tipo di ordinamento scelto, cioè:
+                    [color=white]n[reset] (per nome, alfabetico),
+                    [color=white]s[reset] (per dimensione, dal minore),
+                    [color=white]e[reset] (per estensione, alfabetico),
+                    [color=white]d[reset] (per data/ora dal più vecchio),
+                con un prefisso facoltativo [color=white]-[reset] per invertire l'ordine.
+  /w            elenca 5 file/directory in una riga.
+  /b            elenca solo i nomi.
+  /p            mostra elenco una schermata per volta.
+  /ad           elenca tutte le directory.
+  /a-d          elenca tutti i file.
+  /o[color=white]ORDINAMENTO[reset] ordina l'elenco (vedi sopra).
 
 Note:
   L'esecuzione di [color=green]dir[reset] senza un argomento elenca tutti i file e le sotto-
@@ -3076,10 +3143,10 @@ Utilizzo:
 Dove:
   [color=cyan]MODELLO[reset]  è un nome file specifico o con caratteri jolly, cioè asterisco (*)
            e punto di domanda (?).
-  [color=cyan]PERCORSO[reset] è un percorso di un'unità DOS montata da cui elencare il contenuto.
+  [color=cyan]PERCORSO[reset] è il percorso di un'unità DOS montata di cui elencare il contenuto.
 
 Note:
-  Il comando elencherà le directory in [color=blue]blu[reset], programmi eseguibili DOS
+  Il comando elencherà le directory in [color=blue]blu[reset], i programmi eseguibili DOS
   (*.com, *.exe, *.bat) in [color=green]verde[reset], e altri file nel colore normale.
 
 Esempi:
