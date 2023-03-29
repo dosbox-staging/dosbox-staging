@@ -220,6 +220,13 @@ low         |     No     |        Sí
 quiet       |     No     |        No
 auto        | 'low' si exec o dir es pasado, de lo contrario 'high'
 .
+:CONFIG_ALLOW_WRITE_PROTECTED_FILES
+Many games open all their files with writable permissions; even files that they
+never modify. This setting lets you write-protect those files while still
+allowing the game to read them. A second use-case: if you're using a copy-on-write
+or network-based filesystem, this setting avoids triggering write-operations for
+these write-protected files.
+.
 :CONFIG_FRAMESKIP
 Consider capping frame-rates using the '[sdl] host_rate' setting.
 .
@@ -321,66 +328,71 @@ Ejecute INTRO y consulte Teclas Especiales para lista de teclas de acceso rápid
 Establecerlo por debajo de 100 será un porcentaje.
 .
 :CONFIG_MOUSE_CAPTURE
-Choose a mouse control method:
-  onclick:   Capture the mouse when clicking any button in the window.
-  onstart:   Capture the mouse immediately on start.
-  seamless:  Let the mouse move seamlessly; captures only with middle-click or
-             hotkey.
-  nomouse:   Hide the mouse and don't send input to the game.
+Set the mouse capture behaviour:
+  onclick:   Capture the mouse when clicking any mouse button in the window 
+             (default).
+  onstart:   Capture the mouse immediately on start. Might not work correctly
+             on some host operating systems.
+  seamless:  Let the mouse move seamlessly between the DOSBox window and the
+             rest of the desktop; captures only with middle-click or hotkey.
+             Seamless mouse does not work correctly with all the games.
+             Windows 3.1x can be made compatible with a custom mouse driver.
+  nomouse:   Hide the mouse and don't send mouse input to the game.
+For touch-screen control, use 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
-If true, middle-click will release the captured mouse, and also
-capture when seamless.
+If enabled, middle-click will release the captured mouse, and also capture
+when seamless (enabled by default).
 .
 :CONFIG_MOUSE_SENSITIVITY
-Default mouse sensitivity. 100 is a base value, 150 is 150% sensitivity, etc.
-Negative values reverse mouse direction, 0 disables the movement completely.
-The optional second parameter specifies vertical sensitivity (e.g. 100,200).
-Setting can be adjusted in runtime (also per mouse interface) using internal
-MOUSECTL.COM tool, available on drive Z:.
+Mouse sensitivity for the horizontal and vertical axes, as a percentage
+(100,100 by default). Negative values invert the axis, zero disables it.
+Providing only one value sets sensitivity for both axes.
+The setting can be adjusted in runtime (also per mouse interface) using
+internal MOUSECTL.COM tool, available on drive Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Enable to bypass your operating system's mouse acceleration and sensitivity
-settings. Works in fullscreen or when the mouse is captured in window mode.
+settings (enabled by default). Works in fullscreen or when the mouse is
+captured in window mode.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Enable built-in DOS mouse driver.
-Notes:
-   Disable if you intend to use original MOUSE.COM driver in emulated DOS.
-   When guest OS is booted, built-in driver gets disabled automatically.
+Enable built-in DOS mouse driver (enabled by default).
+Notes: Disable if you intend to use original MOUSE.COM driver in emulated DOS.
+       When guest OS is booted, built-in driver gets disabled automatically.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
-Updates mouse movement counters immediately, without waiting for interrupt.
-May improve gameplay, especially in fast paced games (arcade, FPS, etc.) - as
-for some games it effectively boosts the mouse sampling rate to 1000 Hz, without
-increasing interrupt overhead.
+Update mouse movement counters immediately, without waiting for interrupt
+(disabled by default). May improve gameplay, especially in fast-paced games
+(arcade, FPS, etc.), as for some games it effectively boosts the mouse
+sampling rate to 1000 Hz, without increasing interrupt overhead.
 Might cause compatibility issues. List of known incompatible games:
-   - Ultima Underworld: The Stygian Abyss
-   - Ultima Underworld II: Labyrinth of Worlds
-Please file a bug with the project if you find another game that fails when
-this is enabled, we will update this list.
+  - Ultima Underworld: The Stygian Abyss
+  - Ultima Underworld II: Labyrinth of Worlds
+Please report it if you find another incompatible game so we can update this
+list.
 .
 :CONFIG_PS2_MOUSE_MODEL
 PS/2 AUX port mouse model:
-   standard:       3 buttons, standard PS/2 mouse.
-   intellimouse:   3 buttons + wheel, Microsoft IntelliMouse.
-Default: intellimouse
+  standard:      3 buttons, standard PS/2 mouse.
+  intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.
+  explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer.
+  none:          no PS/2 mouse emulated.
+Default: explorer
 .
 :CONFIG_COM_MOUSE_MODEL
 COM (serial) port default mouse model:
-   2button:        2 buttons, Microsoft mouse.
-   3button:        3 buttons, Logitech mouse,
-                   mostly compatible with Microsoft mouse.
-   wheel:          3 buttons + wheel,
-                   mostly compatible with Microsoft mouse.
-   msm:            3 buttons, Mouse Systems mouse,
-                   NOT COMPATIBLE with Microsoft mouse.
-   2button+msm:    Automatic choice between 2button and msm.
-   3button+msm:    Automatic choice between 3button and msm.
-   wheel+msm:      Automatic choice between wheel and msm.
-Default: wheel+msm
-Notes:
-   Go to [serial] section to enable/disable COM port mice.
+  2button:      2 buttons, Microsoft mouse.
+  3button:      3 buttons, Logitech mouse;
+                mostly compatible with Microsoft mouse.
+  wheel:        3 buttons + wheel;
+                mostly compatible with Microsoft mouse.
+  msm:          3 buttons, Mouse Systems mouse;
+                NOT compatible with Microsoft mouse.
+  2button+msm:  Automatic choice between '2button' and 'msm'.
+  3button+msm:  Automatic choice between '3button' and 'msm'.
+  wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).
+Notes: Enable COM port mice in the [serial] section.
 .
 :CONFIG_NOSOUND
 Activa modo silencio, aunque el sonido sigue siendo emulado.
@@ -465,6 +477,17 @@ Consulte el README/Manual para más detalles.
 .
 :CONFIG_MPU401
 Tipo de MPU-401 a emular.
+.
+:CONFIG_RAW_MIDI_OUTPUT
+Enable raw, unaltered MIDI output (disabled by default).
+The MIDI drivers of many games don't fully conform to the MIDI standard,
+which makes editing the MIDI recordings of these games very error-prone and
+cumbersome in MIDI sequencers, often resulting in hanging or missing notes.
+DOSBox corrects the MIDI output of such games by default. This results in no
+audible difference whatsoever; it only affects the representation of the MIDI
+data. You should only enable 'raw_midi_output' if you really need to capture
+the raw, unaltered MIDI output of a program, e.g. when working with music
+applications, or when debugging MIDI issues.
 .
 :CONFIG_SOUNDFONT
 Path to a SoundFont file in .sf2 format. You can use an
@@ -636,6 +659,21 @@ Filter for the Gravis UltraSound audio output:
   off:       Don't filter the output (default).
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
+:CONFIG_IMFC
+Enable the IBM Music Feature Card (disabled by default).
+.
+:CONFIG_IMFC_BASE
+The IO base address of the IBM Music Feature Card (2A20 by default).
+.
+:CONFIG_IMFC_IRQ
+The IRQ number of the IBM Music Feature Card (3 by default).
+.
+:CONFIG_IMFC_FILTER
+Filter for the IBM Music Feature Card output:
+  on:        Filter the output.
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
 :CONFIG_SIDMODEL
 Modelo de chip a emular en la tarjeta Innovation SSI-2001:
  - auto:  Selecciona el chip 6581.
@@ -727,23 +765,23 @@ Filter for the PS/1 Audio DAC output:
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_REELMAGIC
-ReelMagic (aka REALmagic) MPEG playback support.
-  off:      Disable support (default).
-  cardonly: Initialize the card without loading the FMPDRV.EXE driver.
-  on:       Initialize the card and load the FMPDRV.EXE on start-up.
+ReelMagic (aka REALmagic) MPEG playback support:
+  off:       Disable support (default).
+  cardonly:  Initialize the card without loading the FMPDRV.EXE driver.
+  on:        Initialize the card and load the FMPDRV.EXE on start-up.
 .
 :CONFIG_REELMAGIC_KEY
-Set the 32-bit magic key used to decode the game's videos.
-  auto:     Use the built-in routines to determine the key (default).
-  common:   Use the most commonly found key, which is 0x40044041.
-  thehorde: Use The Horde's key, which is 0xC39D7088.
-  <custom>: Set a custom key in hex format (e.g., 0x12345678).
+Set the 32-bit magic key used to decode the game's videos:
+  auto:      Use the built-in routines to determine the key (default).
+  common:    Use the most commonly found key, which is 0x40044041.
+  thehorde:  Use The Horde's key, which is 0xC39D7088.
+  <custom>:  Set a custom key in hex format (e.g., 0x12345678).
 .
 :CONFIG_REELMAGIC_FCODE
-Override the frame rate code used during video playback.
-  0:        No override: attempt automatic rate discovery (default).
-  1 to 7:   Override the frame rate to one the following (use 1 through 7):
-            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.
+Override the frame rate code used during video playback:
+  0:       No override: attempt automatic rate discovery (default).
+  1 to 7:  Override the frame rate to one the following (use 1 through 7):
+           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.
 .
 :CONFIG_JOYSTICKTYPE
 Tipo de joystick a emular: auto (por defecto),
@@ -2766,6 +2804,9 @@ Internal virtual drive
 :MOUNT_TYPE_UNKNOWN
 unknown drive
 .
+:CONJUNCTION_AND
+y
+.
 :PROGRAM_FMPDRV_HELP_LONG
 Load or unload the built-in ReelMagic Full Motion Player driver.
 
@@ -2810,19 +2851,36 @@ ReelMagic Full Motion Player Driver (built-in) %hhu.%hhu
 Display command output or text file one screen at a time.
 
 Usage:
-  [color=cyan]COMMAND[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
-  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]FILE[reset]
-  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]PATTERN[reset] [[color=cyan]PATTERN[reset] ...]
+  [color=cyan]COMMAND[reset] | [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=cyan]FILE[reset]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=cyan]PATTERN[reset] [[color=cyan]PATTERN[reset] ...]
 
 Where:
   [color=cyan]COMMAND[reset] is the command to display the output of.
   [color=cyan]FILE[reset]    is an exact name of the file to display, optionally with a path.
   [color=cyan]PATTERN[reset] is either a path to a single file or a path with wildcards,
           which are the asterisk (*) and the question mark (?).
-  [color=white]n[reset]       is the tab size, 1-9, default is 8.
+  /c      clears the screen before each file.
+  /e      extended mode, with more hotkeys available.
+  /p      expands the new page / form feed character.
+  /s      squishes multiple empty lines into one.
+  /t[color=white]n[reset]     specifies the tab size, 1-9, default is 8.
+  +[color=white]nnn[reset]    skips first [color=white]nnn[reset] lines of the first file.
 
 Notes:
   This command is only for viewing text files, not binary files.
+  The following hotkeys are available:
+  [color=yellow]Space[reset]          to show the next screen.
+  [color=yellow]Enter[reset]          to show the next line.
+  [color=yellow]N[reset] or [color=yellow]F[reset]         to skip to the next file.
+  [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] to terminate the command.
+  Also, the [color=yellow]Ctrl+C[reset] can be used to terminate the command reading data from the
+  keyboard input, like when [color=green]more[reset] is executed without any arguments.
+  The following extra hotkeys are available in extended mode only:
+  [color=yellow]P[reset] [color=white]nnn[reset]          to display the next [color=white]nnn[reset] lines and prompt again.
+  [color=yellow]S[reset] [color=white]nnn[reset]          to skip the next [color=white]nnn[reset] lines.
+  [color=yellow]=[reset]              to display the current line number.
+  Option /p disables certain incompatible hotkeys.
 
 Examples:
   [color=cyan]dir /on[reset] | [color=green]more[reset]             ; displays sorted directory one screen at a time
@@ -2842,10 +2900,16 @@ No input file found.
 [reset][color=light-yellow]--- device %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- press SPACE for more ---[reset]
+[reset][color=light-yellow]--- press SPACE or ENTER for more ---[reset]
+.
+:PROGRAM_MORE_PROMPT_PERCENT
+[reset][color=light-yellow]--- (%d%%) press SPACE or ENTER for more ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- press SPACE for more, N for next file ---[reset]
+[reset][color=light-yellow]--- press SPACE or ENTER for more, N for next file ---[reset]
+.
+:PROGRAM_MORE_PROMPT_LINE
+[reset][color=light-yellow]--- line %u ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
 [reset][color=red]--- could not open %s ---[reset]
@@ -2855,6 +2919,12 @@ No input file found.
 .
 :PROGRAM_MORE_NEXT_FILE
 [reset][color=light-yellow](next file)[reset]
+.
+:PROGRAM_MORE_SKIPPED
+[reset][color=light-yellow](skipped content)[reset]
+.
+:PROGRAM_MORE_HOW_MANY_LINES
+[reset][color=light-yellow]how many lines?[reset]
 .
 :PROGRAM_MOUSECTL_HELP_LONG
 Manages physical and logical mice.
@@ -2883,19 +2953,19 @@ Examples:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game
 .
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
-Wrong syntax, only ASCII characters allowed in pattern.
+Incorrect syntax, only ASCII characters allowed in pattern.
 
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
-Wrong syntax, sensitivity needs to be in -999 to +999 range.
+Incorrect syntax, sensitivity needs to be in -999 to +999 range.
 
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
-Wrong syntax, duplicated mouse interfaces.
+Incorrect syntax, duplicated mouse interfaces.
 
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
-Wrong syntax, sampling rate has to be one of:
+Incorrect syntax, sampling rate has to be one of:
 %s
 
 .
@@ -2916,7 +2986,7 @@ No physical mice detected.
 
 .
 :PROGRAM_MOUSECTL_NO_MATCH
-No available mouse matching the pattern found.
+No available mouse found matching the pattern.
 
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
@@ -2967,6 +3037,57 @@ and mapped mice always receive raw input events.
 :SHELL_CMD_MIXER_CHANNEL_REVERSE
 Reverse
 .
-:CONJUNCTION_AND
-y
+:PROGRAM_TREE_HELP_LONG
+Displays directory tree in a graphical form.
+
+Usage:
+  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]
+
+Where:
+  [color=cyan]DIRECTORY[reset] is the name of the directory to display.
+  [color=white]ORDER[reset]     is a listing order, one of:
+                [color=white]n[reset] (by name, alphabetic),
+                [color=white]s[reset] (by size, smallest first),
+                [color=white]e[reset] (by extension, alphabetic),
+                [color=white]d[reset] (by date/time, oldest first),
+            with an optional [color=white]-[reset] prefix to reverse order.
+  /a        uses only 7-bit ASCII characters.
+  /b        brief display, omits header and footer information.
+  /f        also display files.
+  /p        display one page a time, shorten output to fit width width.
+  /da       display attributes.
+  /df       display size for files.
+  /dh       also display hidden and system files/directories.
+  /o[color=white]ORDER[reset]   orders the list (see above)
+
+Notes:
+  If [color=cyan]DIRECTORY[reset] is omitted, the current directory is used.
+
+Examples:
+  [color=green]tree[reset]          ; displays directory tree starting from current directory
+  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; displays C: drive content recursively, with files
+
+.
+:PROGRAM_TREE_DIRECTORY
+ Directory tree for volume %s
+.
+:PROGRAM_TREE_NO_SUBDIRS
+No subdirectories to display.
+
+.
+:PROGRAM_TREE_NO_FILES_SUBDIRS
+No files or subdirectories to display.
+
+.
+:PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
+Too many files or subdirectories.
+
+.
+:SHELL_TOO_MANY_PARAMETERS
+Too many parameters.
+
+.
+:SHELL_DIRECTORY_NOT_FOUND
+Directory not found - '%s'
+
 .
