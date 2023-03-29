@@ -38,6 +38,8 @@
 #define FAT16		   1
 #define FAT32		   2
 
+static constexpr uint16_t BytePerSector = 512;
+
 class fatFile final : public DOS_File {
 public:
 	fatFile(const char* name, uint32_t startCluster, uint32_t fileLen, fatDrive *useDrive);
@@ -55,7 +57,7 @@ public:
 	uint32_t filelength;
 	uint32_t currentSector;
 	uint32_t curSectOff;
-	uint8_t sectorBuffer[512];
+	uint8_t sectorBuffer[BytePerSector];
 	/* Record of where in the directory structure this file is located */
 	uint32_t dirCluster;
 	uint32_t dirIndex;
@@ -344,7 +346,7 @@ uint32_t fatDrive::getClusterValue(uint32_t clustNum) {
 		/* Load two sectors at once for FAT12 */
 		readSector(fatsectnum, &fatSectBuffer[0]);
 		if (fattype==FAT12)
-			readSector(fatsectnum+1, &fatSectBuffer[512]);
+			readSector(fatsectnum + 1, &fatSectBuffer[BytePerSector]);
 		curFatSect = fatsectnum;
 	}
 
@@ -391,7 +393,8 @@ void fatDrive::setClusterValue(uint32_t clustNum, uint32_t clustValue) {
 		/* Load two sectors at once for FAT12 */
 		readSector(fatsectnum, &fatSectBuffer[0]);
 		if (fattype==FAT12)
-			readSector(fatsectnum+1, &fatSectBuffer[512]);
+			        readSector(fatsectnum + 1,
+			                   &fatSectBuffer[BytePerSector]);
 		curFatSect = fatsectnum;
 	}
 
@@ -423,7 +426,9 @@ void fatDrive::setClusterValue(uint32_t clustNum, uint32_t clustValue) {
 		writeSector(fatsectnum + (fc * bootbuffer.sectorsperfat), &fatSectBuffer[0]);
 		if (fattype==FAT12) {
 			if (fatentoff>=511)
-				writeSector(fatsectnum+1+(fc * bootbuffer.sectorsperfat), &fatSectBuffer[512]);
+				writeSector(fatsectnum + 1 +
+				                    (fc * bootbuffer.sectorsperfat),
+				            &fatSectBuffer[BytePerSector]);
 		}
 	}
 }
@@ -820,7 +825,7 @@ fatDrive::fatDrive(const char *sysFilename,
 		partSectOff = 0;
 	}
 
-	if (bytesector != 512) {
+	if (bytesector != BytePerSector) {
 		/* Non-standard sector sizes not implemented */
 		created_successfully = false;
 		return;
@@ -852,13 +857,13 @@ fatDrive::fatDrive(const char *sysFilename,
 			}
 		} else {
 			/* Read media descriptor in FAT */
-			uint8_t sectorBuffer[512];
+			uint8_t sectorBuffer[BytePerSector];
 			loadedDisk->Read_AbsoluteSector(1,&sectorBuffer);
 			uint8_t mdesc = sectorBuffer[0];
 
 			if (mdesc >= 0xf8) {
 				/* DOS 1.x format, create BPB for 160kB floppy */
-				bootbuffer.bytespersector = 512;
+				bootbuffer.bytespersector    = BytePerSector;
 				bootbuffer.sectorspercluster = 1;
 				bootbuffer.reservedsectors = 1;
 				bootbuffer.fatcopies = 2;
@@ -897,15 +902,17 @@ fatDrive::fatDrive(const char *sysFilename,
 	}
 
 	/* Sanity checks */
+
+	// Note: non-standard sector sizes notimplemented
 	if ((bootbuffer.sectorsperfat == 0) || // FAT32 not implemented yet
-		(bootbuffer.bytespersector != 512) || // non-standard sector sizes not implemented
-		(bootbuffer.sectorspercluster == 0) ||
-		(bootbuffer.rootdirentries == 0) ||
-		(bootbuffer.fatcopies == 0) ||
-		(bootbuffer.headcount == 0) ||
-		(bootbuffer.headcount > headscyl) ||
-		(bootbuffer.sectorspertrack == 0) ||
-		(bootbuffer.sectorspertrack > cylsector)) {
+	    (bootbuffer.bytespersector != BytePerSector) ||
+	    (bootbuffer.sectorspercluster == 0) ||
+	    (bootbuffer.rootdirentries == 0) ||
+	    (bootbuffer.fatcopies == 0) ||
+	    (bootbuffer.headcount == 0) ||
+	    (bootbuffer.headcount > headscyl) ||
+	    (bootbuffer.sectorspertrack == 0) ||
+	    (bootbuffer.sectorspertrack > cylsector)) {
 		created_successfully = false;
 		return;
 	}
@@ -1469,9 +1476,9 @@ bool fatDrive::addDirectoryEntry(uint32_t dirClustNumber, direntry useEntry) {
 }
 
 void fatDrive::zeroOutCluster(uint32_t clustNumber) {
-	uint8_t secBuffer[512];
+	uint8_t secBuffer[BytePerSector];
 
-	memset(&secBuffer[0], 0, 512);
+	memset(&secBuffer[0], 0, BytePerSector);
 
 	int i;
 	for(i=0;i<bootbuffer.sectorspercluster;i++) {
