@@ -4989,13 +4989,6 @@ AudioFrame ym2151_device::RenderFrame()
 void ym2151_device::RenderUpToNow()
 {
 	const auto now = PIC_FullIndex();
-
-	// Wake up the channel and update the last rendered time datum.
-	assert(audio_channel);
-	if (audio_channel->WakeUp()) {
-		last_rendered_ms = now;
-		return;
-	}
 	// Keep rendering until we're current
 	while (last_rendered_ms < now) {
 		last_rendered_ms += ms_per_render;
@@ -13380,8 +13373,7 @@ static void imfc_init(Section* sec)
 	auto channel = MIXER_AddChannel(IMFC_Mixer_Callback,
 	                                use_mixer_rate,
 	                                "IMFC",
-	                                {ChannelFeature::Sleep,
-	                                 ChannelFeature::Stereo,
+	                                {ChannelFeature::Stereo,
 	                                 ChannelFeature::ReverbSend,
 	                                 ChannelFeature::ChorusSend,
 	                                 ChannelFeature::Synthesizer});
