@@ -2165,6 +2165,11 @@ private:
 	}
 
 public:
+	~Intel8253()
+	{
+		PIC_RemoveEvents(Intel8253_TimerEvent);
+	}
+
 	explicit Intel8253(const std::string& name) : m_name(name)
 	{
 		Intel8253::registerNextEvent(); // FIXME
