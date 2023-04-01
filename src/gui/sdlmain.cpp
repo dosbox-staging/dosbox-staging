@@ -4378,10 +4378,9 @@ void config_add_sdl() {
 	        "  <custom>:  Specify a custom rate as a whole or decimal value greater than\n"
 	        "             23.000.");
 
-	Pbool = sdl_sec->Add_bool("vsync", on_start, false);
-	Pbool->Set_help(
-	        "Synchronize with display refresh rate if supported.\n"
-	        "This can reduce flickering and tearing, but may also impact performance.");
+	Pbool = sdl_sec->Add_bool("vsync", on_start, true);
+	Pbool->Set_help("Synchronize with display refresh rate if supported to eliminate flickering\n"
+	                "and tearing (enabled by default).\n");
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
