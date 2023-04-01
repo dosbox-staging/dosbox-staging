@@ -4320,16 +4320,16 @@ void config_add_sdl() {
 	constexpr auto on_start = Property::Changeable::OnlyAtStart;
 
 	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
-	Pbool->Set_help("Start directly in fullscreen.\n"
+	Pbool->Set_help("Start directly in fullscreen (disabled by default).\n"
 	                "Run INTRO and see Special Keys for window control hotkeys.");
 
 	pint = sdl_sec->Add_int("display", on_start, 0);
 	pint->Set_help("Number of display to use; values depend on OS and user "
-	               "settings.");
+	               "settings (0 by default).");
 
 	Pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
 	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
-	                  "or a fixed size (e.g. 1024x768).");
+	                  "or a fixed size, e.g. 1024x768 ('desktop' by default).");
 
 	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
 	pstring->Set_help(
@@ -4352,15 +4352,15 @@ void config_add_sdl() {
 	pstring = sdl_sec->Add_string("window_position", always, "auto");
 	pstring->Set_help(
 	        "Set initial window position when running in windowed mode:\n"
-	        "  auto:      Let the window manager decide the position.\n"
+	        "  auto:      Let the window manager decide the position (default).\n"
 	        "  <custom>:  Set window position in X,Y format. For example: 250,100\n"
 	        "             0,0 is the top-left corner of the screen.");
 
 	Pbool = sdl_sec->Add_bool("window_decorations", always, true);
-	Pbool->Set_help("Enable window decorations in windowed mode.");
+	Pbool->Set_help("Enable window decorations in windowed mode (enabled by default).");
 
 	Pint = sdl_sec->Add_int("transparency", always, 0);
-	Pint->Set_help("Set the transparency of the DOSBox Staging screen.\n"
+	Pint->Set_help("Set the transparency of the DOSBox Staging screen (0 by default).\n"
 	               "From 0 (no transparency) to 90 (high transparency).");
 
 	pstring = sdl_sec->Add_path("max_resolution", deprecated, "");
@@ -4370,7 +4370,7 @@ void config_add_sdl() {
 	pstring->Set_help(
 	        "Set the host's refresh rate:\n"
 	        "  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh\n"
-	        "             display.\n"
+	        "             display (default).\n"
 	        "  sdi:       Use serial device interface (SDI) rates, without further\n"
 	        "             adjustment.\n"
 	        "  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR\n"
@@ -4384,15 +4384,15 @@ void config_add_sdl() {
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
-	               "next frame. 0 disables this and will always render.");
+	               "next frame (7000 by default). 0 disables this and will always render.");
 	pint->SetMinMax(0, 14000);
 
 	const char *presentation_modes[] = {"auto", "cfr", "vfr", 0};
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
 	pstring->Set_help(
 	        "Select the frame presentation mode:\n"
-	        "  auto:  Intelligently time and drop frames to prevent\n"
-	        "         emulation stalls, based on host and DOS frame rates.\n"
+	        "  auto:  Intelligently time and drop frames to prevent emulation\n"
+	        "         stalls, based on host and DOS frame rates (default).\n"
 	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
 	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
 	pstring->Set_values(presentation_modes);
@@ -4411,26 +4411,29 @@ void config_add_sdl() {
 
 #if C_OPENGL
 	Pstring = sdl_sec->Add_string("output", always, "opengl");
+	Pstring->Set_help("Video system to use for output ('opengl' by default).");
 #else
 	Pstring = sdl_sec->Add_string("output", always, "texture");
+	Pstring->Set_help("Video system to use for output ('texture' by default).");
 #endif
-	Pstring->Set_help("Video system to use for output.");
 	Pstring->Set_values(outputs);
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
-	pstring->Set_help("Render driver to use in 'texture' output mode.\n"
+	pstring->Set_help("Render driver to use in 'texture' output mode ('auto' by default).\n"
 	                  "Use 'texture_renderer = auto' for an automatic choice.");
 	pstring->Set_values(Get_SDL_TextureRenderers());
 
 	Pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
 	Pmulti->Set_help("Moved to [mouse] section.");
+
 	Pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
 	Pmulti->Set_help("Moved to [mouse] section.");
+
 	pbool = sdl_sec->Add_bool("raw_mouse_input", deprecated, false);
 	pbool->Set_help("Moved to [mouse] section.");
 
 	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
-	Pbool->Set_help("Keep the console open if an error has occurred.");
+	Pbool->Set_help("Keep the console open if an error has occurred (enabled by default).");
 
 	Pmulti = sdl_sec->AddMultiVal("priority", always, " ");
 	Pmulti->SetValue("auto auto");
@@ -4454,10 +4457,10 @@ void config_add_sdl() {
 	        ->Set_values(priority_level_choices);
 
 	pbool = sdl_sec->Add_bool("mute_when_inactive", on_start, false);
-	pbool->Set_help("Mute the sound when the window is inactive.");
+	pbool->Set_help("Mute the sound when the window is inactive (disabled by default).");
 
 	pbool = sdl_sec->Add_bool("pause_when_inactive", on_start, false);
-	pbool->Set_help("Pause emulation when the window is inactive.");
+	pbool->Set_help("Pause emulation when the window is inactive (disabled by default).");
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
 	pstring->Set_help(
@@ -4469,8 +4472,8 @@ void config_add_sdl() {
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
 	pstring->Set_help(
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
-	        "variable (which usually blocks the OS screensaver while the emulator is\n"
-	        "running).");
+	        "variable which usually blocks the OS screensaver while the emulator is\n"
+	        "running ('auto' by default).");
 	const char *ssopts[] = {"auto", "allow", "block", 0};
 	pstring->Set_values(ssopts);
 }
