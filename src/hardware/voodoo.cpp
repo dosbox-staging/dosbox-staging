@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include "dosbox.h"
 #include "config.h"
@@ -36,11 +37,14 @@
 #include "voodoo_interface.h"
 
 
-class VOODOO;
-static std::unique_ptr<VOODOO> voodoo_dev;
+class Voodoo;
+static std::unique_ptr<Voodoo> voodoo_dev;
 
 constexpr uint32_t voodoo_lfb_mask = 0xffff0000;
 static uint32_t voodoo_current_lfb = (VOODOO_INITIAL_LFB & voodoo_lfb_mask);
+
+static_assert((VOODOO_INITIAL_LFB & 0xffff0000) == VOODOO_INITIAL_LFB,
+              "VOODOO_INITIAL_LFB must have its lower 16 bits set to zero");
 
 enum class EmulationType {
     None,
@@ -52,32 +56,37 @@ enum class CardType : int {
     Type1 = 1
 };
 
+constexpr std::string_view NoneStr = "false";
+constexpr std::string_view SoftwareStr = "software";
+constexpr std::string_view OpenGLStr = "opengl";
+constexpr std::string_view AutoStr = "auto";
 
-class VOODOO : public Module_base {
+class Voodoo {
 private:
+    Section* m_configuration;
     EmulationType emulation_type;
 
 public:
-    VOODOO(Section* configuration) : Module_base(configuration), emulation_type(EmulationType::None) {
+    Voodoo(const Voodoo&) = delete;
+    Voodoo& operator=(const Voodoo&) = delete;
+	
+    Voodoo(Section* configuration) : m_configuration(configuration), emulation_type(EmulationType::None) {
         UpdateConfiguration(configuration);
     }
 	
-    EmulationType GetEmulationTypeFromString(const std::string& voodoo_type_str) {
-        if (voodoo_type_str == "false") {
-            return EmulationType::None;
-        } else if ((voodoo_type_str == "software") || !OpenGL_using()) {
-            return EmulationType::Software;
-    #if C_OPENGL
-        } else if ((voodoo_type_str == "opengl") || (voodoo_type_str == "auto")) {
-            return EmulationType::OpenGL;
-    #else
-        } else if (voodoo_type_str == "auto") {
-            return EmulationType::Software;
-    #endif
-        } else {
-            return EmulationType::None;
-        }
-    }
+	EmulationType GetEmulationTypeFromString(std::string_view voodoo_type_str) {
+		if (voodoo_type_str == NoneStr) {
+			return EmulationType::None;
+		} else if (voodoo_type_str == SoftwareStr) {
+			return EmulationType::Software;
+		} else if (voodoo_type_str == OpenGLStr) {
+			return C_OPENGL ? EmulationType::OpenGL : EmulationType::None;
+		} else if (voodoo_type_str == AutoStr) {
+			return C_OPENGL ? EmulationType::OpenGL : EmulationType::Software;
+		} else {
+			return !OpenGL_using() ? EmulationType::Software : EmulationType::None;
+		}
+	}
 	
 	void UpdateConfiguration(Section* configuration) {
 		Section_prop* section = static_cast<Section_prop*>(configuration);
@@ -104,7 +113,7 @@ public:
 		if (needs_pci_device) PCI_AddSST_Device(static_cast<int>(card_type));
 	}
 
-    ~VOODOO() {
+    ~Voodoo() {
         PCI_RemoveSST_Device();
 
         if (emulation_type == EmulationType::None) return;
@@ -129,7 +138,7 @@ public:
                 break;
         }
     }
-
+	
     void PCI_Enable(bool enable) {
         switch (emulation_type) {
             case EmulationType::Software:
@@ -140,7 +149,7 @@ public:
                 break;
         }
     }
-
+	
     PageHandler* GetPageHandler() {
         switch (emulation_type) {
             case EmulationType::Software:
@@ -181,7 +190,7 @@ PageHandler* VOODOO_GetPageHandler() {
     return nullptr;
 }
 
-void VOODOO_Destroy(Section* sec) {
+void VOODOO_Destroy([[maybe_unused]] Section* sec) {
     if (voodoo_dev) {
         voodoo_dev.reset();
     }
@@ -189,8 +198,8 @@ void VOODOO_Destroy(Section* sec) {
 
 void VOODOO_Init(Section* sec) {
     if (!voodoo_dev) {
-        voodoo_current_lfb = (VOODOO_INITIAL_LFB & 0xffff0000);
-        voodoo_dev = std::make_unique<VOODOO>(sec);
+        voodoo_current_lfb = VOODOO_INITIAL_LFB & voodoo_lfb_mask;
+        voodoo_dev = std::make_unique<Voodoo>(sec);
         sec->AddDestroyFunction(&VOODOO_Destroy, true);
     } else {
         voodoo_dev->UpdateConfiguration(sec);
