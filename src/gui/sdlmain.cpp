@@ -1882,8 +1882,7 @@ dosurface:
 		const bool desired_size_is_valid = (desired_w > 0 && desired_h > 0);
 
 		// Adjust the window size if needed and permitted
-		if (sdl.scaling_mode != SCALING_MODE::PERFECT &&
-		    window_doesnt_match_desired && desired_size_is_valid &&
+		if (window_doesnt_match_desired && desired_size_is_valid &&
 		    !sdl.desktop.window.adjusted_initial_size) {
 			sdl.desktop.window.adjusted_initial_size = true;
 			safe_set_window_size(desired_w, desired_h);
@@ -2071,8 +2070,7 @@ dosurface:
 		const bool desired_size_is_valid = (desired_w > 0 && desired_h > 0);
 
 		// Adjust the window size if needed and permitted
-		if (sdl.scaling_mode != SCALING_MODE::PERFECT &&
-		    window_doesnt_match_desired && desired_size_is_valid &&
+		if (window_doesnt_match_desired && desired_size_is_valid &&
 		    !sdl.desktop.window.adjusted_initial_size) {
 			sdl.desktop.window.adjusted_initial_size = true;
 			safe_set_window_size(desired_w, desired_h);
