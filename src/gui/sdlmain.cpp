@@ -1201,26 +1201,36 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 static void NewMouseScreenParams()
 {
 	if (sdl.clip.w <= 0 || sdl.clip.h <= 0 ||
-	    sdl.clip.x < 0 || sdl.clip.y < 0) {
+	    sdl.clip.x < 0  || sdl.clip.y < 0) {
 		// Filter out unusual parameters, which can be the result
 		// of window minimized due to ALT+TAB, for example
 		return;
 	}
 
+	MouseScreenParams params = {};
+
+	// When DPI scaling is enabled, mouse coordinates are reported on
+	// "client points" grid, not physical pixels.
+	auto adapt = [](const int value) {
+		return lround(value / sdl.desktop.dpi_scale);
+	};
+
+	params.clip_x = check_cast<uint32_t>(adapt(sdl.clip.x));
+	params.clip_y = check_cast<uint32_t>(adapt(sdl.clip.y));
+	params.res_x  = check_cast<uint32_t>(adapt(sdl.clip.w));
+	params.res_y  = check_cast<uint32_t>(adapt(sdl.clip.h));
+
 	int abs_x = 0;
 	int abs_y = 0;
 	SDL_GetMouseState(&abs_x, &abs_y);
 
-	// When DPI scaling is enabled, mouse coordinates are reported on
-	// "client points" grid, not physical pixels.
-	MOUSE_NewScreenParams(
-	        check_cast<uint32_t>(lround(sdl.clip.x / sdl.desktop.dpi_scale)),
-	        check_cast<uint32_t>(lround(sdl.clip.y / sdl.desktop.dpi_scale)),
-	        check_cast<uint32_t>(lround(sdl.clip.w / sdl.desktop.dpi_scale)),
-	        check_cast<uint32_t>(lround(sdl.clip.h / sdl.desktop.dpi_scale)),
-	        check_cast<int32_t>(abs_x),
-	        check_cast<int32_t>(abs_y),
-	        sdl.desktop.fullscreen);
+	params.x_abs = check_cast<int32_t>(abs_x);
+	params.y_abs = check_cast<int32_t>(abs_y);
+
+	params.is_fullscreen    = sdl.desktop.fullscreen;
+	params.is_multi_display = (SDL_GetNumVideoDisplays() > 1);
+
+	MOUSE_NewScreenParams(params);
 }
 
 static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
@@ -3963,6 +3973,19 @@ bool GFX_Events()
 		}
 #endif
 		switch (event.type) {
+		case SDL_DISPLAYEVENT:
+			switch (event.display.event) {
+#if (SDL_MAJOR_VERSION > 2 || SDL_MINOR_VERSION > 0 || SDL_PATCHLEVEL >= 14)
+			// Events added in SDL 2.0.14
+			case SDL_DISPLAYEVENT_CONNECTED: 
+			case SDL_DISPLAYEVENT_DISCONNECTED:
+				NewMouseScreenParams();
+				break;
+#endif
+			default:
+				break;
+			};
+			break;
 		case SDL_WINDOWEVENT:
 			switch (event.window.event) {
 			case SDL_WINDOWEVENT_RESTORED:

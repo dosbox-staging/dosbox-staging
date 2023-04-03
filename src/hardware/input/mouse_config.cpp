@@ -189,6 +189,9 @@ static void config_read(Section *section)
 	std::string prop_str = conf->Get_string("mouse_capture");
 	MouseConfig::ParseCaptureType(prop_str, mouse_config.capture);
 
+	mouse_config.multi_display_aware =
+		conf->Get_bool("mouse_multi_display_aware");
+
 	mouse_config.middle_release = conf->Get_bool("mouse_middle_release");
 	mouse_config.raw_input      = conf->Get_bool("mouse_raw_input");
 	mouse_config.dos_immediate  = conf->Get_bool("dos_mouse_immediate");
@@ -269,6 +272,14 @@ static void config_init(Section_prop &secprop)
 	prop_bool = secprop.Add_bool("mouse_middle_release", always, true);
 	prop_bool->Set_help("If enabled, middle-click will release the captured mouse, and also capture\n"
 	                    "when seamless (enabled by default).");
+
+	prop_bool = secprop.Add_bool("mouse_multi_display_aware", always, true);
+	prop_bool->Set_help("Allows mouse seamless behavior and mouse pointer release to work in fullscreen\n"
+	                    "mode for systems with more than one display. (enabled by default).\n"
+	                    "Notes: You should set this to false if it incorrectly detects multiple displays\n"
+	                    "       when only one should actually be used. This might happen if you are\n"
+	                    "       using mirrored display mode or using an AV receiver's HDMI input for\n"
+	                    "       audio-only listening.");
 
 	prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
 	prop_multi->Set_help(
