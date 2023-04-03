@@ -4000,8 +4000,15 @@ bool GFX_Events()
 				// DEBUG_LOG_MSG("SDL: Window has been resized to %dx%d",
 				//               event.window.data1,
 				//               event.window.data2);
-				HandleVideoResize(event.window.data1,
-				                  event.window.data2);
+
+				// When going from an initial fullscreen to
+				// windowed state, this event will be called
+				// moments before SDL's windowed mode is
+				// engaged, so simply ensure the window size has
+				// already been established:
+				assert(sdl.desktop.window.width > 0 &&
+				       sdl.desktop.window.height > 0);
+
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
