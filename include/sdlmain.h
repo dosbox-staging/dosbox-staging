@@ -160,7 +160,6 @@ struct SDL_Block {
 		HOST_RATE_MODE host_rate_mode = HOST_RATE_MODE::AUTO;
 		double preferred_host_rate = 0.0;
 		bool want_resizable_window = false;
-		SDL_WindowEventID last_size_event = {};
 		SCREEN_TYPES type = SCREEN_SURFACE;
 		SCREEN_TYPES want_type = SCREEN_SURFACE;
 	} desktop = {};
