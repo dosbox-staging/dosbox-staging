@@ -3856,8 +3856,6 @@ static void HandleVideoResize(int width, int height)
 #endif // C_OPENGL
 
 		if (!sdl.desktop.fullscreen) {
-			save_window_size(width, height);
-
 			// If the window was resized, it might have been triggered
 			// by the OS setting DPI scale, so recalculate that.
 			sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / width;
