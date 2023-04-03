@@ -1338,25 +1338,9 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		                        sdl.desktop.full.display_res
 		                                ? SDL_WINDOW_FULLSCREEN_DESKTOP
 		                                : SDL_WINDOW_FULLSCREEN);
-	} else { // Windowd mode
-
-		// Does our window still need sizing?
-		int current_w, current_h;
-		SDL_GetWindowSize(sdl.window, &current_w, &current_h);
-
-		const bool window_is_too_small = (current_w < width ||
-		                                  current_h < height);
-
-		const bool window_dimensions_not_exact = (current_w != width ||
-		                                          current_h != height);
-
-		// Adjust the window dimensions if our window isn't sized yet or
-		// we're in PP mode
-		if (window_is_too_small || (sdl.scaling_mode == SCALING_MODE::PERFECT &&
-		                            window_dimensions_not_exact)) {
-			safe_set_window_size(width, height);
-		}
-		// If we're switching down from fullscreen, then it will use the set window size
+	} else {
+		// we're switching down from fullscreen, so let SDL use the
+		// previously-set window size
 		if (sdl.desktop.switching_fullscreen) {
 			SDL_SetWindowFullscreen(sdl.window, 0);
 		}
