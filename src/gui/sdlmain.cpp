@@ -4004,7 +4004,6 @@ bool GFX_Events()
 				//               event.window.data2);
 				HandleVideoResize(event.window.data1,
 				                  event.window.data2);
-				sdl.desktop.last_size_event = SDL_WINDOWEVENT_RESIZED;
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
@@ -4116,9 +4115,6 @@ bool GFX_Events()
 
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
 				// DEBUG_LOG_MSG("SDL: The window size has changed");
-
-				// differentiate this size change versus resizing.
-				sdl.desktop.last_size_event = SDL_WINDOWEVENT_SIZE_CHANGED;
 
 				// The window size has changed either as a
 				// result of an API call or through the system
