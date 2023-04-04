@@ -3982,6 +3982,16 @@ bool GFX_Events()
 				 * Update surface while using X11.
 				 */
 				GFX_ResetScreen();
+#if C_OPENGL && defined(MACOSX)
+				// DEBUG_LOG_MSG("SDL: Reset macOS's GL viewport
+				// after window-restore");
+				if (sdl.desktop.type == SCREEN_OPENGL) {
+					glViewport(sdl.clip.x,
+					           sdl.clip.y,
+					           sdl.clip.w,
+					           sdl.clip.h);
+				}
+#endif
 				FocusInput();
 				continue;
 
