@@ -697,7 +697,7 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
-static SDL_Point refine_window_size(const SDL_Point &size,
+static SDL_Point refine_window_size(const SDL_Point size,
                                     const SCALING_MODE scaling_mode,
                                     const bool should_stretch_pixels);
 
@@ -1670,14 +1670,14 @@ static PPScale calc_pp_scale(const int avw, const int avh)
 	               is_draw_size_doubled(), avw, avh);
 }
 
-bool operator!=(const SDL_Point& lhs, const SDL_Point& rhs)
+bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
 {
 	return lhs.x != rhs.x || lhs.y != rhs.y;
 }
 
 static void initialize_sdl_window_size(SDL_Window* sdl_window,
-                                       const SDL_Point& requested_min_size,
-                                       const SDL_Point& requested_size)
+                                       const SDL_Point requested_min_size,
+                                       const SDL_Point requested_size)
 {
 	assert(sdl_window);
 
@@ -2792,12 +2792,12 @@ static bool wants_stretched_pixels()
 	return render_section->Get_bool("aspect");
 }
 
-static SDL_Point remove_stretched_aspect(const SDL_Point &size)
+static SDL_Point remove_stretched_aspect(const SDL_Point size)
 {
 	return {size.x, ceil_sdivide(size.y * 5, 6)};
 }
 
-static SDL_Point refine_window_size(const SDL_Point &size,
+static SDL_Point refine_window_size(const SDL_Point size,
                                     const SCALING_MODE scaling_mode,
                                     const bool should_stretch_pixels)
 {
@@ -2942,8 +2942,8 @@ static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 	return FALLBACK_WINDOW_DIMENSIONS;
 }
 
-static SDL_Point window_bounds_from_label(const std::string &pref,
-                                          const SDL_Rect &desktop)
+static SDL_Point window_bounds_from_label(const std::string& pref,
+                                          const SDL_Rect desktop)
 {
 	int percent = DEFAULT_WINDOW_PERCENT;
 	if (starts_with("s", pref))
