@@ -1223,8 +1223,9 @@ static void NewMouseScreenParams()
 	        sdl.desktop.fullscreen);
 }
 
-static double qeury_dpi_scale(SDL_Window* sdl_window, const SCREEN_TYPES screen_type,
-                              int width_in_logical_units = 0)
+static void check_and_handle_dpi_change(SDL_Window* sdl_window,
+                                        const SCREEN_TYPES screen_type,
+                                        int width_in_logical_units = 0)
 {
 	if (width_in_logical_units <= 0) {
 		SDL_GetWindowSize(sdl_window, &width_in_logical_units, nullptr);
@@ -1234,8 +1235,20 @@ static double qeury_dpi_scale(SDL_Window* sdl_window, const SCREEN_TYPES screen_
 	const auto width_in_physical_pixels = static_cast<double>(canvas.w);
 
 	assert(width_in_logical_units > 0);
-	return width_in_physical_pixels / width_in_logical_units;
+	const auto new_dpi_scale = width_in_physical_pixels / width_in_logical_units;
+
+	if (std::abs(new_dpi_scale - sdl.desktop.dpi_scale) < DBL_EPSILON) {
+		// LOG_MSG("SDL: DPI scale hasn't changed (still %f)",
+		//         sdl.desktop.dpi_scale);
+		return;
+	}
+	sdl.desktop.dpi_scale = new_dpi_scale;
+	// LOG_MSG("SDL: DPI scale updated from %f to %f",
+	//         sdl.desktop.dpi_scale,
+	//         new_dpi_scale);
 }
+
+
 
 static SDL_Window* SetWindowMode(SCREEN_TYPES screen_type, int width,
                                  int height, bool fullscreen, bool resizable)
@@ -1319,7 +1332,7 @@ static SDL_Window* SetWindowMode(SCREEN_TYPES screen_type, int width,
 		}
 		sdl.desktop.window.resizable = resizable;
 
-		sdl.desktop.dpi_scale = qeury_dpi_scale(sdl.window, screen_type);
+		check_and_handle_dpi_change(sdl.window, screen_type);
 
 		GFX_RefreshTitle();
 
@@ -3861,9 +3874,7 @@ static void HandleVideoResize(int width, int height)
 			// If the window was resized, it might have been
 			// triggered by the OS setting DPI scale, so recalculate
 			// that based on the incoming logical width.
-			sdl.desktop.dpi_scale = qeury_dpi_scale(sdl.window,
-			                                        sdl.desktop.type,
-			                                        width);
+			check_and_handle_dpi_change(sdl.window, sdl.desktop.type, width);
 		}
 
 		// Ensure mouse emulation knows the current parameters
@@ -4076,8 +4087,8 @@ bool GFX_Events()
 				// New display might have a different resolution
 				// and DPI scaling set, so recalculate that and
 				// set viewport
-				sdl.desktop.dpi_scale = qeury_dpi_scale(
-				        sdl.window, sdl.desktop.type);
+				check_and_handle_dpi_change(sdl.window,
+				                            sdl.desktop.type);
 
 				SDL_Rect display_bounds = {};
 				SDL_GetDisplayBounds(event.window.data1,
