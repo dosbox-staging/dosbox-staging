@@ -1233,6 +1233,40 @@ static void NewMouseScreenParams()
 	MOUSE_NewScreenParams(params);
 }
 
+static bool wants_stretched_pixels()
+{
+	const auto render_section = static_cast<Section_prop*>(
+	        control->GetSection("render"));
+	assert(render_section);
+
+	return render_section->Get_bool("aspect");
+}
+
+static void update_fallback_dimensions(const double dpi_scale)
+{
+	const auto should_stretch_pixels = wants_stretched_pixels();
+	const auto fallback_height = (should_stretch_pixels ? 480 : 400) / dpi_scale;
+
+	assert(dpi_scale > 0);
+	const auto fallback_width = 640 / dpi_scale;
+
+	FALLBACK_WINDOW_DIMENSIONS = {iround(fallback_width),
+	                              iround(fallback_height)};
+
+	// LOG_INFO("SDL: Updated fallback dimensions to %dx%d",
+	//          FALLBACK_WINDOW_DIMENSIONS.x,
+	//          FALLBACK_WINDOW_DIMENSIONS.y);
+}
+
+// This is a collection point for things affected by DPI changes, instead of
+// duplicating these calls at every point in the code where we save a new DPI
+static void apply_new_dpi_scale(const double dpi_scale)
+{
+	update_fallback_dimensions(dpi_scale);
+
+	// add more functions here
+}
+
 static void check_and_handle_dpi_change(SDL_Window* sdl_window,
                                         const SCREEN_TYPES screen_type,
                                         int width_in_logical_units = 0)
@@ -1256,9 +1290,9 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	// LOG_MSG("SDL: DPI scale updated from %f to %f",
 	//         sdl.desktop.dpi_scale,
 	//         new_dpi_scale);
+
+	apply_new_dpi_scale(new_dpi_scale);
 }
-
-
 
 static SDL_Window* SetWindowMode(SCREEN_TYPES screen_type, int width,
                                  int height, bool fullscreen, bool resizable)
@@ -2813,15 +2847,6 @@ static bool detect_resizable_window()
 	return true;
 }
 
-static bool wants_stretched_pixels()
-{
-	const auto render_section = static_cast<Section_prop *>(
-	        control->GetSection("render"));
-	assert(render_section);
-
-	return render_section->Get_bool("aspect");
-}
-
 static SDL_Point remove_stretched_aspect(const SDL_Point size)
 {
 	return {size.x, ceil_sdivide(size.y * 5, 6)};
@@ -3667,11 +3692,6 @@ static void GUI_StartUp(Section *sec)
 	sdl.mute_when_inactive = section->Get_bool("mute_when_inactive") ||
 	                         sdl.pause_when_inactive;
 
-	// Adjust the fallback resolution based on the user's aspect-correction
-	const auto should_stretch_pixels = wants_stretched_pixels();
-	FALLBACK_WINDOW_DIMENSIONS = should_stretch_pixels ? SDL_Point{640, 480}
-	                                                   : SDL_Point{640, 400};
-
 	ApplyActiveSettings(); // Assume focus on startup
 	sdl.desktop.full.fixed=false;
 	const char* fullresolution=section->Get_string("fullresolution");
@@ -3754,7 +3774,7 @@ static void GUI_StartUp(Section *sec)
 		GFX_ObtainDisplayDimensions();
 	}
 
-	set_output(section, should_stretch_pixels);
+	set_output(section, wants_stretched_pixels());
 
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
