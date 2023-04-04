@@ -26,9 +26,7 @@
 #  include "config.h"
 #endif
 
-#ifdef HAVE_CXX11
-#  include <atomic>
-#endif
+#include <atomic>
 
 /**
  * Counter.
@@ -36,11 +34,7 @@
 class counter
 {
 private:
-#ifndef HAVE_CXX11
-    volatile unsigned int c;
-#else
     std::atomic<unsigned int> c;
-#endif
 
 public:
     counter() : c(1) {}
