@@ -2198,6 +2198,13 @@ dosurface:
 #endif // C_OPENGL
 	}
 
+	// Always re-apply the minimum size to the updated window instead of
+	// checking GetWindowMinumSize, as SDL invalidates the prior set
+	// minimums when switching from fullscreen back to windowed.
+	SDL_SetWindowMinimumSize(sdl.window,
+	                         FALLBACK_WINDOW_DIMENSIONS.x,
+	                         FALLBACK_WINDOW_DIMENSIONS.y);
+
 	// Ensure mouse emulation knows the current parameters
 	NewMouseScreenParams();
 	update_vsync_state();
