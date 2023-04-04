@@ -216,11 +216,11 @@ enum MidiDataPacketState : uint8_t {
 struct BufferFlags {
 	// bit-7:true=no data / false=has data / bit6:read errors encounted /
 	// bit5: overflow error / bit4: offline error
-	volatile uint8_t _unused1 : 4;
-	volatile uint8_t _hasOfflineError : 1;
-	volatile uint8_t _hasOverflowError : 1;
-	volatile uint8_t _hasReadError : 1;
-	volatile uint8_t _isBufferEmpty : 1;
+	uint8_t _unused1 : 4;
+	uint8_t _hasOfflineError : 1;
+	uint8_t _hasOverflowError : 1;
+	uint8_t _hasReadError : 1;
+	uint8_t _isBufferEmpty : 1;
 
 	inline void setDataAdded()
 	{
@@ -276,23 +276,19 @@ struct BufferFlags {
 
 template <typename BufferDataType>
 struct CyclicBufferState {
-public:
-	CyclicBufferState<BufferDataType>(const CyclicBufferState<BufferDataType>&) = delete;
-	CyclicBufferState<BufferDataType>& operator=(
-	        const CyclicBufferState<BufferDataType>&) = delete;
-
 private:
-	const std::string m_name                    = {};
-	SDL_mutex* m_mutex                          = nullptr;
-	volatile bool m_locked                      = false;
-	volatile unsigned int lastReadByteIndex     = 0;
-	volatile unsigned int indexForNextWriteByte = 0;
-	BufferFlags flags                           = {};
-	volatile unsigned int m_bufferSize          = 0;
-	volatile bool m_debug                       = false;
-	// volatile BufferDataType m_buffer[2048]; // maximum that is used in
+	const std::string m_name           = {};
+	SDL_mutex* m_mutex                 = nullptr;
+	bool m_locked                      = false;
+	unsigned int lastReadByteIndex     = 0;
+	unsigned int indexForNextWriteByte = 0;
+	BufferFlags flags                  = {};
+	unsigned int m_bufferSize          = 0;
+	bool m_debug                       = false;
+
+	// BufferDataType m_buffer[2048]; // maximum that is used in
 	// the IMF code
-	volatile BufferDataType m_buffer[0x2000] = {}; // FIXME
+	BufferDataType m_buffer[0x2000] = {}; // FIXME
 
 	void increaseLastReadByteIndex()
 	{
@@ -321,6 +317,9 @@ private:
 	}
 
 public:
+	CyclicBufferState(const CyclicBufferState& other)            = delete;
+	CyclicBufferState& operator=(const CyclicBufferState& other) = delete;
+
 	CyclicBufferState(const std::string& name, unsigned int bufferSize)
 	        : m_name(name),
 	          m_mutex(SDL_CreateMutex()),
@@ -407,9 +406,11 @@ public:
 		lock();
 		lastReadByteIndex               = 0;
 		indexForNextWriteByte           = 0;
-		flags._unused1                  = flags._hasOfflineError =
-		        flags._hasOverflowError = flags._hasReadError = 0;
-		flags._isBufferEmpty                                  = 1;
+		flags._unused1                  = 0;
+		flags._hasOfflineError          = 0;
+		flags._hasOverflowError         = 0;
+		flags._hasReadError             = 0;
+		flags._isBufferEmpty            = 1;
 		memset((void*)&m_buffer, 0xFF, sizeof(m_buffer));
 		unlock();
 	}
@@ -1700,8 +1701,8 @@ private:
 	const DataProvider<DataType>* m_dataProvider = nullptr;
 
 public:
-	DataDrivenInputPin<DataType>(const DataDrivenInputPin<DataType>&) = delete;
-	DataDrivenInputPin<DataType>& operator=(const DataDrivenInputPin<DataType>&) = delete;
+	DataDrivenInputPin(const DataDrivenInputPin& other)            = delete;
+	DataDrivenInputPin& operator=(const DataDrivenInputPin& other) = delete;
 
 	explicit DataDrivenInputPin(const std::string& name)
 	        : InputPin<DataType>(name),
@@ -1756,8 +1757,8 @@ private:
 	DataContainer<DataType>* m_dataContainer = nullptr;
 
 public:
-	InputOutputPin<DataType>(const InputOutputPin<DataType>&) = delete;
-	InputOutputPin<DataType>& operator=(const InputOutputPin<DataType>&) = delete;
+	InputOutputPin(const InputOutputPin& other)            = delete;
+	InputOutputPin& operator=(const InputOutputPin& other) = delete;
 
 	explicit InputOutputPin<DataType>(const std::string& name)
 	        : InputPin<DataType>(name),
