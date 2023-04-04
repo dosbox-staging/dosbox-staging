@@ -823,6 +823,26 @@ static const VsyncPreference &get_vsync_preference()
 	                              : sdl.vsync.when_windowed;
 }
 
+static void set_vfr_dupe_countdown_from_rate(const double dos_rate_hz)
+{
+	constexpr auto min_dos_rate_hz = 24.0;
+	constexpr auto max_dos_rate_hz = 1000.0;
+
+	constexpr auto min_countdown = 4.0;
+	constexpr auto max_countdown = 18.0;
+
+	const auto countdown = remap(min_dos_rate_hz,
+	                             max_dos_rate_hz,
+	                             min_countdown,
+	                             max_countdown,
+	                             dos_rate_hz);
+
+	// LOG_MSG("SDL: Setting VFR duplicate countdown to %.0f "
+	//         "from a DOS rate of %.1f Hz ", countdown, dos_rate_hz);
+
+	sdl.frame.vfr_dupe_countdown = check_cast<int8_t>(iround(countdown));
+}
+
 static void save_rate_to_frame_period(const double rate_hz)
 {
 	assert(rate_hz > 0);
@@ -1063,27 +1083,24 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 	last_sync_time = should_present ? GetTicksUs() : now;
 }
 
-// Present new frames, but if not new, re-present the last frame up to 10 times
-// (as back-to-back duplicates) to ensure the host shows it as opposed to
-// showing a prior frame in the event the host dropped the original when we
-// first presented it.
 static void present_new_or_maybe_dupe(const bool frame_is_new)
 {
-	constexpr auto max_dupes = 10;
-	static auto remaining_dupes = 0;
+	// After the last new frame, present a duplicate frame every N calls of
+	// this function.
+	static auto dupe_countdown = sdl.frame.vfr_dupe_countdown;
 
 	if (frame_is_new) {
 		sdl.frame.present();
-		remaining_dupes = max_dupes;
-	}
-	// We're now presenting duplicate frames - but be less agressive with
-	// them by using the sync'd presenter to run the dupes at the host's
-	// rate to avoid causing further blocking / stuttering / dropped frames
-	// on the host-side.
-	else if (remaining_dupes > 0) {
+		dupe_countdown = sdl.frame.vfr_dupe_countdown;
+	} else if (--dupe_countdown <= 0) {
+		// This is an insurance policy to ensure the last frame is shown
+		// even if the host previously dropped it. This is a temporary
+		// hack; it should be removed in the future when everyone's PC
+		// display technology can support the > 70 Hz refresh rates
+		// available in 1990s PC CRT monitors.
 		constexpr auto always_try = true;
 		maybe_present_synced(always_try);
-		--remaining_dupes;
+		dupe_countdown = sdl.frame.vfr_dupe_countdown;
 	}
 }
 
@@ -1134,6 +1151,7 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	};
 
 	auto configure_vfr_mode = [&]() {
+		set_vfr_dupe_countdown_from_rate(dos_rate);
 		const auto bench_rate = get_vsync_preference().benchmarked_rate;
 		const auto lesser_rate = std::min(host_rate, dos_rate);
 		save_rate_to_frame_period(lesser_rate);
