@@ -1223,11 +1223,22 @@ static void NewMouseScreenParams()
 	        sdl.desktop.fullscreen);
 }
 
-static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
-                                 int width,
-                                 int height,
-                                 bool fullscreen,
-                                 bool resizable)
+static double qeury_dpi_scale(SDL_Window* sdl_window, const SCREEN_TYPES screen_type,
+                              int width_in_logical_units = 0)
+{
+	if (width_in_logical_units <= 0) {
+		SDL_GetWindowSize(sdl_window, &width_in_logical_units, nullptr);
+	}
+
+	const auto canvas = get_canvas_size(screen_type);
+	const auto width_in_physical_pixels = static_cast<double>(canvas.w);
+
+	assert(width_in_logical_units > 0);
+	return width_in_physical_pixels / width_in_logical_units;
+}
+
+static SDL_Window* SetWindowMode(SCREEN_TYPES screen_type, int width,
+                                 int height, bool fullscreen, bool resizable)
 {
 	CleanupSDLResources();
 
@@ -1308,11 +1319,7 @@ static SDL_Window *SetWindowMode(SCREEN_TYPES screen_type,
 		}
 		sdl.desktop.window.resizable = resizable;
 
-		int window_width = 0;
-		SDL_GetWindowSize(sdl.window, &window_width, nullptr);
-		const auto canvas = get_canvas_size(screen_type);
-
-		sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / window_width;
+		sdl.desktop.dpi_scale = qeury_dpi_scale(sdl.window, screen_type);
 
 		GFX_RefreshTitle();
 
@@ -3851,9 +3858,12 @@ static void HandleVideoResize(int width, int height)
 #endif // C_OPENGL
 
 		if (!sdl.desktop.fullscreen) {
-			// If the window was resized, it might have been triggered
-			// by the OS setting DPI scale, so recalculate that.
-			sdl.desktop.dpi_scale = static_cast<double>(canvas.w) / width;
+			// If the window was resized, it might have been
+			// triggered by the OS setting DPI scale, so recalculate
+			// that based on the incoming logical width.
+			sdl.desktop.dpi_scale = qeury_dpi_scale(sdl.window,
+			                                        sdl.desktop.type,
+			                                        width);
 		}
 
 		// Ensure mouse emulation knows the current parameters
@@ -4066,13 +4076,8 @@ bool GFX_Events()
 				// New display might have a different resolution
 				// and DPI scaling set, so recalculate that and
 				// set viewport
-				int win_w = 0;
-				SDL_GetWindowSize(sdl.window, &win_w, nullptr);
-				const auto canvas = get_canvas_size(sdl.desktop.type);
-				assert(win_w > 0 && canvas.w > 0 && canvas.h > 0);
-
-				sdl.desktop.dpi_scale = static_cast<double>(canvas.w) /
-				                        win_w;
+				sdl.desktop.dpi_scale = qeury_dpi_scale(
+				        sdl.window, sdl.desktop.type);
 
 				SDL_Rect display_bounds = {};
 				SDL_GetDisplayBounds(event.window.data1,
@@ -4082,6 +4087,7 @@ bool GFX_Events()
 
 				sdl.display_number = event.window.data1;
 
+				const auto canvas = get_canvas_size(sdl.desktop.type);
 				sdl.clip = calc_viewport(canvas.w, canvas.h);
 				if (sdl.desktop.type == SCREEN_TEXTURE) {
 					SDL_RenderSetViewport(sdl.renderer,
