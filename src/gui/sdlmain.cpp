@@ -1246,6 +1246,19 @@ static void update_fallback_dimensions(const double dpi_scale)
 	// LOG_INFO("SDL: Updated fallback dimensions to %dx%d",
 	//          FALLBACK_WINDOW_DIMENSIONS.x,
 	//          FALLBACK_WINDOW_DIMENSIONS.y);
+
+	// Keep the SDL minimum allowed window size in lock-step with the
+	// fallback dimensions. If these aren't linked, the window can obscure
+	// the content (or vice-versa).
+	if (!sdl.window) {
+		return;
+		// LOG_WARNING("SDL: Tried setting window minimum size,"
+		//             " but the SDL window is not available yet");
+	}
+	SDL_SetWindowMinimumSize(sdl.window,
+	                         FALLBACK_WINDOW_DIMENSIONS.x,
+	                         FALLBACK_WINDOW_DIMENSIONS.y);
+	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
 }
 
 // This is a collection point for things affected by DPI changes, instead of
