@@ -1125,9 +1125,11 @@ void DOSBOX_Init()
 	               "formats. If set to 0, the country code corresponding to the selected keyboard\n"
 	               "layout will be used.");
 
-	Pbool = secprop->Add_bool("expand_shell_variable", when_idle, false);
-	Pbool->Set_help("Enable expanding environment variables such as %PATH% in the DOS command shell\n"
-	                "(disabled by default).\n"
+	Pstring = secprop->Add_string("expand_shell_variable", when_idle, "auto");
+	const char *expand_shell_variable_choices[] = {"auto", "true", "false", 0};
+	Pstring->Set_values(expand_shell_variable_choices);
+	Pstring->Set_help("Enable expanding environment variables such as %PATH% in the DOS command shell\n"
+	                "(auto by default, enabled if DOS version >= 7.0).\n"
 	                "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
 
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, changeable_at_runtime);
