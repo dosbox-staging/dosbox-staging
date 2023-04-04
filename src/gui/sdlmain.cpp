@@ -1670,6 +1670,30 @@ static PPScale calc_pp_scale(const int avw, const int avh)
 	               is_draw_size_doubled(), avw, avh);
 }
 
+bool operator!=(const SDL_Point& lhs, const SDL_Point& rhs)
+{
+	return lhs.x != rhs.x || lhs.y != rhs.y;
+}
+
+static void initialize_sdl_window_size(SDL_Window* sdl_window,
+                                       const SDL_Point& requested_min_size,
+                                       const SDL_Point& requested_size)
+{
+	assert(sdl_window);
+
+	// Set the (bounded) window size, if not already matching
+	SDL_Point current_size = {};
+	SDL_GetWindowSize(sdl_window, &current_size.x, &current_size.y);
+	SDL_Point bounded_size = {std::max(requested_size.x, requested_min_size.x),
+	                          std::max(requested_size.y, requested_min_size.y)};
+	if (current_size != bounded_size) {
+		safe_set_window_size(bounded_size.x, bounded_size.y);
+		// LOG_MSG("SDL: Initialized the window size to %dx%d",
+		//         bounded_size.x,
+		//         bounded_size.y);
+	}
+}
+
 Bitu GFX_SetSize(int width,
                  int height,
                  const Bitu flags,
@@ -1854,24 +1878,14 @@ dosurface:
 			retFlags |= GFX_CAN_RANDOM;
 		}
 
-		// Copied from the OpenGL path below; used to center texturepp output
-		int window_width  = 0;
-		int window_height = 0;
-		SDL_GetWindowSize(sdl.window, &window_width, &window_height);
-
-		const auto &desired_w = sdl.desktop.window.width;
-		const auto &desired_h = sdl.desktop.window.height;
-		const bool window_doesnt_match_desired = (desired_w != window_width ||
-		                                          desired_h != window_height);
-		const bool desired_size_is_valid = (desired_w > 0 && desired_h > 0);
-
-		// Adjust the window size if needed and permitted
-		if (window_doesnt_match_desired && desired_size_is_valid &&
-		    !sdl.desktop.window.adjusted_initial_size) {
+		// One-time intialize the window size
+		if (!sdl.desktop.window.adjusted_initial_size) {
+			initialize_sdl_window_size(sdl.window,
+			                           FALLBACK_WINDOW_DIMENSIONS,
+			                           {sdl.desktop.window.width,
+			                            sdl.desktop.window.height});
 			sdl.desktop.window.adjusted_initial_size = true;
-			safe_set_window_size(desired_w, desired_h);
 		}
-
 		const auto canvas = get_canvas_size(sdl.desktop.want_type);
 		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
 		//         (canvas.w - sdl.clip.w) / 2,
@@ -2043,21 +2057,13 @@ dosurface:
 		}
 		sdl.opengl.pitch=width*4;
 
-		int window_width  = 0;
-		int window_height = 0;
-		SDL_GetWindowSize(sdl.window, &window_width, &window_height);
-
-		const auto &desired_w = sdl.desktop.window.width;
-		const auto &desired_h = sdl.desktop.window.height;
-		const bool window_doesnt_match_desired = (desired_w != window_width ||
-		                                          desired_h != window_height);
-		const bool desired_size_is_valid = (desired_w > 0 && desired_h > 0);
-
-		// Adjust the window size if needed and permitted
-		if (window_doesnt_match_desired && desired_size_is_valid &&
-		    !sdl.desktop.window.adjusted_initial_size) {
+		// One-time intialize the window size
+		if (!sdl.desktop.window.adjusted_initial_size) {
+			initialize_sdl_window_size(sdl.window,
+			                           FALLBACK_WINDOW_DIMENSIONS,
+			                           {sdl.desktop.window.width,
+			                            sdl.desktop.window.height});
 			sdl.desktop.window.adjusted_initial_size = true;
-			safe_set_window_size(desired_w, desired_h);
 		}
 
 		const auto canvas = get_canvas_size(sdl.desktop.want_type);
