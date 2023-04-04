@@ -229,6 +229,7 @@ struct SDL_Block {
 		int period_us = 0;      // same but in us, for use with chrono
 		int period_us_early = 0;
 		int period_us_late = 0;
+		int8_t vfr_dupe_countdown = 0;
 	} frame = {};
 	PPScale pp_scale = {};
 	SDL_Rect updateRects[1024] = {};
