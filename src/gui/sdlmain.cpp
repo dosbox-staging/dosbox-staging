@@ -1955,6 +1955,13 @@ dosurface:
 			retFlags |= GFX_CAN_RANDOM;
 		}
 
+		// Re-apply the minimum bounds prior to clipping the
+		// texture-based window because SDL invalidates the prior bounds
+		// in the above changes.
+		SDL_SetWindowMinimumSize(sdl.window,
+		                         FALLBACK_WINDOW_DIMENSIONS.x,
+		                         FALLBACK_WINDOW_DIMENSIONS.y);
+
 		// One-time intialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
 			initialize_sdl_window_size(sdl.window,
@@ -2023,6 +2030,13 @@ dosurface:
 			LOG_ERR("SDL:OPENGL: Failed requesting an sRGB framebuffer: %s",
 			        SDL_GetError());
 		}
+
+		// Re-apply the minimum bounds prior to clipping the OpenGL
+		// window because SDL invalidates the prior bounds in the above
+		// window changes.
+		SDL_SetWindowMinimumSize(sdl.window,
+		                         FALLBACK_WINDOW_DIMENSIONS.x,
+		                         FALLBACK_WINDOW_DIMENSIONS.y);
 
 		SetupWindowScaled(SCREEN_OPENGL, sdl.desktop.want_resizable_window);
 
@@ -2270,14 +2284,6 @@ dosurface:
 	}
 #endif // C_OPENGL
 	}
-
-	// Always re-apply the minimum size to the updated window instead of
-	// checking GetWindowMinumSize, as SDL invalidates the prior set
-	// minimums when switching from fullscreen back to windowed.
-	SDL_SetWindowMinimumSize(sdl.window,
-	                         FALLBACK_WINDOW_DIMENSIONS.x,
-	                         FALLBACK_WINDOW_DIMENSIONS.y);
-
 	// Ensure mouse emulation knows the current parameters
 	NewMouseScreenParams();
 	update_vsync_state();
