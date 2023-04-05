@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -68,15 +69,16 @@ void MEM::Run(void) {
     }
 
     /* Test for and show free XMS */
-    reg_ax=0x4300;CALLBACK_RunRealInt(0x2f);
-    if (reg_al==0x80) {
-        reg_ax=0x4310;CALLBACK_RunRealInt(0x2f);
-        uint16_t xms_seg=SegValue(es);uint16_t xms_off=reg_bx;
-        reg_ah=8;
-        CALLBACK_RunRealFar(xms_seg,xms_off);
-        if (!reg_bl) {
-            WriteOut(MSG_Get("PROGRAM_MEM_EXTEND"),reg_dx);
-        }
+    reg_ax = 0x4300;
+    CALLBACK_RunRealInt(0x2f);
+    if (reg_al == 0x80) {
+	reg_ax = 0x4310;
+	CALLBACK_RunRealInt(0x2f);
+	const uint16_t xms_seg = SegValue(es);
+	const uint16_t xms_off = reg_bx;
+	reg_ah                 = 0x88;
+	CALLBACK_RunRealFar(xms_seg, xms_off);
+	WriteOut(MSG_Get("PROGRAM_MEM_EXTEND"), reg_edx);
     }
     /* Test for and show free EMS */
     uint16_t handle;
