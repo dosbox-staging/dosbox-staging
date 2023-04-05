@@ -28,6 +28,8 @@
 #include "mem_unaligned.h"
 #include "types.h"
 
+constexpr uint16_t MemPageSize = 4096;
+
 typedef uint32_t PhysPt;
 typedef uint8_t *HostPt;
 typedef uint32_t RealPt;
@@ -44,9 +46,9 @@ void MEM_A20_Enable(bool enable);
 
 /* Memory management / EMS mapping */
 HostPt MEM_GetBlockPage();
-Bitu MEM_FreeTotal();                          // free 4 KiB pages
-Bitu MEM_FreeLargest();                        // largest free 4 KiB pages block
-uint32_t MEM_TotalPages();                     // total amount of 4 KiB pages
+uint32_t MEM_FreeTotal();                      // free 4 KB pages
+uint32_t MEM_FreeLargest();                    // largest free 4 KB pages block
+uint32_t MEM_TotalPages();                     // total amount of 4 KB pages
 uint32_t MEM_AllocatedPages(MemHandle handle); // amount of allocated pages of handle
 MemHandle MEM_AllocatePages(Bitu pages, bool sequence);
 MemHandle MEM_GetNextFreePage();

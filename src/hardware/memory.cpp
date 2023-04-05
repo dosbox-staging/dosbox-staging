@@ -234,28 +234,33 @@ uint32_t MEM_TotalPages(void)
 	return check_cast<uint32_t>(memory.pages.size());
 }
 
-Bitu MEM_FreeLargest(void) {
-	Bitu size=0;Bitu largest=0;
-	Bitu index=XMS_START;
+uint32_t MEM_FreeLargest()
+{
+	uint32_t size    = 0;
+	uint32_t largest = 0;
+	size_t   index   = XMS_START;
 	while (index < memory.pages.size()) {
 		if (!memory.mhandles[index]) {
-			size++;
+			++size;
 		} else {
-			if (size>largest) largest=size;
-			size=0;
+			largest = std::max(size, largest);
+			size = 0;
 		}
-		index++;
+		++index;
 	}
-	if (size>largest) largest=size;
+	largest = std::max(size, largest);
 	return largest;
 }
 
-Bitu MEM_FreeTotal(void) {
-	Bitu free=0;
-	Bitu index=XMS_START;
+uint32_t MEM_FreeTotal()
+{
+	uint32_t free  = 0;
+	size_t   index = XMS_START;
 	while (index < memory.pages.size()) {
-		if (!memory.mhandles[index]) free++;
-		index++;
+		if (!memory.mhandles[index]) {
+			++free;
+		}
+		++index;
 	}
 	return free;
 }
