@@ -194,7 +194,7 @@ static std::deque<std_fs::path> get_data_dirs()
 
 static std::string find_sf_file(const std::string &name)
 {
-	const std::string sf_path = CROSS_ResolveHome(name);
+	const std_fs::path sf_path = CROSS_ResolveHome(name);
 	if (path_exists(sf_path))
 		return sf_path.string();
 	for (const auto &dir : get_data_dirs()) {
@@ -767,9 +767,10 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 
 	// If selected soundfont exists in the current working directory,
 	// then print it.
-	const std::string sf_path = CROSS_ResolveHome(sf_name);
+	const std_fs::path sf_path = CROSS_ResolveHome(sf_name);
 	if (path_exists(sf_path)) {
-		write_line((sf_path == selected_font), sf_name);
+		write_line((sf_path == selected_font),
+		           format_sf2_line(term_width - 2, sf_name));
 	}
 
 	// Go through all soundfont directories and list all .sf2 files.
