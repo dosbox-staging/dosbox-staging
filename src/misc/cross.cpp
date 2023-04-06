@@ -175,7 +175,7 @@ static void W32_ConfDir(std::string& in,bool create) {
 }
 #endif
 
-std::string CROSS_GetPlatformConfigDir()
+static std::string get_platform_config_dir()
 {
 	// Cache the result, as this doesn't change
 	static std::string conf_dir = {};
@@ -207,6 +207,13 @@ std::string CROSS_GetPlatformConfigDir()
 		conf_dir += CROSS_FILESPLIT;
 #endif
 	return conf_dir;
+}
+
+std::string CROSS_GetPlatformConfigDir()
+{
+	const auto dir = get_platform_config_dir();
+	assert(dir.back() == CROSS_FILESPLIT);
+	return dir;
 }
 
 void Cross::GetPlatformConfigDir(std::string &in)
