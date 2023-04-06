@@ -175,45 +175,41 @@ static void W32_ConfDir(std::string& in,bool create) {
 }
 #endif
 
-static std::string get_platform_config_dir()
+std_fs::path get_platform_config_dir()
 {
 	// Cache the result, as this doesn't change
-	static std::string conf_dir = {};
-	if (conf_dir.length())
+	static std_fs::path conf_dir = {};
+	if (!conf_dir.empty())
 		return conf_dir;
 
 	// Check if a portable layout exists
-	std::string config_file;
-	Cross::GetPlatformConfigName(config_file);
-	const auto portable_conf_path = GetExecutablePath() / config_file;
+	const auto portable_conf_path = GetExecutablePath() / GetConfigName();
 
 	std::error_code ec = {};
 	if (std_fs::is_regular_file(portable_conf_path, ec)) {
-		conf_dir = portable_conf_path.parent_path().string();
+		conf_dir = portable_conf_path.parent_path();
 		LOG_MSG("CONFIG: Using portable configuration layout in %s",
 		        conf_dir.c_str());
-		conf_dir += CROSS_FILESPLIT;
 		return conf_dir;
 	}
 
 	// Otherwise get the OS-specific configuration directory
 #ifdef WIN32
-	W32_ConfDir(conf_dir, false);
-	conf_dir += "\\DOSBox\\";
+	std::string win_conf_dir;
+	W32_ConfDir(win_conf_dir, false);
+	conf_dir = std_fs::path(win_conf_dir) / "DOSBox";
 #else
 	assert(!cached_conf_path.empty());
 	conf_dir = cached_conf_path;
-	if (conf_dir.back() != CROSS_FILESPLIT)
-		conf_dir += CROSS_FILESPLIT;
 #endif
 	return conf_dir;
 }
 
 std::string CROSS_GetPlatformConfigDir()
 {
-	const auto dir = get_platform_config_dir();
-	assert(dir.back() == CROSS_FILESPLIT);
-	return dir;
+	const auto dir = get_platform_config_dir().string();
+	assert(dir.back() != CROSS_FILESPLIT);
+	return dir + CROSS_FILESPLIT;
 }
 
 void Cross::GetPlatformConfigDir(std::string &in)
