@@ -4702,10 +4702,10 @@ static void ListGlShaders()
 
 static int PrintConfigLocation()
 {
-	std::string path, file;
-	Cross::CreatePlatformConfigDir(path);
+	std_fs::path path = get_platform_config_dir();
+	std::string file;
 	Cross::GetPlatformConfigName(file);
-	path += file;
+	path.append(file);
 
 	FILE *f = fopen(path.c_str(), "r");
 	if (!f && !control->PrintConfig(path)) {
@@ -4724,10 +4724,10 @@ static void eraseconfigfile() {
 		fclose(f);
 		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
 	}
-	std::string path,file;
-	Cross::GetPlatformConfigDir(path);
+	auto path = get_platform_config_dir();
+	std::string file;
 	Cross::GetPlatformConfigName(file);
-	path += file;
+	path.append(file);
 	f = fopen(path.c_str(),"r");
 	if(!f) exit(0);
 	fclose(f);
@@ -4743,9 +4743,7 @@ static void erasemapperfile() {
 		             "Please reset configuration as well and delete the dosbox.conf.\n");
 	}
 
-	std::string path,file=MAPPERFILE;
-	Cross::GetPlatformConfigDir(path);
-	path += file;
+	const auto path = get_platform_config_dir() / MAPPERFILE;
 	FILE* f = fopen(path.c_str(),"r");
 	if(!f) exit(0);
 	fclose(f);
@@ -4902,7 +4900,7 @@ int sdl_main(int argc, char *argv[])
 		SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL,
 		SDL_GetCurrentVideoDriver(), SDL_GetCurrentAudioDriver());
 
-	const auto config_path = CROSS_GetPlatformConfigDir();
+	const auto config_path = get_platform_config_dir().string();
 	SETUP_ParseConfigFiles(config_path);
 
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
