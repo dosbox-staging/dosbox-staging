@@ -137,7 +137,7 @@ std::tuple<std::string, int> parse_sf_pref(const std::string &line,
 static std::deque<std_fs::path> get_data_dirs()
 {
 	return {
-	        std_fs::path(CROSS_GetPlatformConfigDir()) / "soundfonts",
+	        get_platform_config_dir() / "soundfonts",
 	        "C:\\soundfonts\\",
 	};
 }
@@ -147,7 +147,7 @@ static std::deque<std_fs::path> get_data_dirs()
 static std::deque<std_fs::path> get_data_dirs()
 {
 	return {
-	        std_fs::path(CROSS_GetPlatformConfigDir()) / "soundfonts",
+	        get_platform_config_dir() / "soundfonts",
 	        std_fs::path(CROSS_ResolveHome("~/Library/Audio/Sounds/Banks")),
 	        // TODO: check /usr/local/share/soundfonts
 	        // TODO: check /usr/share/soundfonts
@@ -185,7 +185,7 @@ static std::deque<std_fs::path> get_data_dirs()
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(std_fs::path(CROSS_GetPlatformConfigDir()) / "soundfonts");
+	dirs.emplace_back(get_platform_config_dir() / "soundfonts");
 
 	return dirs;
 }

@@ -217,20 +217,20 @@ static void register_mt32_text_messages()
 
 #	if defined(WIN32)
 
-static std::deque<std::string> get_rom_dirs()
+static std::deque<std_fs::path> get_rom_dirs()
 {
 	return {
-	        CROSS_GetPlatformConfigDir() + "mt32-roms\\",
+	        get_platform_config_dir() / "mt32-roms",
 	        "C:\\mt32-rom-data\\",
 	};
 }
 
 #elif defined(MACOSX)
 
-static std::deque<std::string> get_rom_dirs()
+static std::deque<std_fs::path> get_rom_dirs()
 {
 	return {
-	        CROSS_GetPlatformConfigDir() + "mt32-roms/",
+	        get_platform_config_dir() / "mt32-roms",
 	        CROSS_ResolveHome("~/Library/Audio/Sounds/MT32-Roms/"),
 	        "/usr/local/share/mt32-rom-data/",
 	        "/usr/share/mt32-rom-data/",
@@ -239,16 +239,16 @@ static std::deque<std::string> get_rom_dirs()
 
 #else
 
-static std::deque<std::string> get_rom_dirs()
+static std::deque<std_fs::path> get_rom_dirs()
 {
 	// First priority is $XDG_DATA_HOME
 	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
-	const auto xdg_data_home = CROSS_ResolveHome(
-	        xdg_data_home_env ? xdg_data_home_env : "~/.local/share");
+	const auto xdg_data_home      = std_fs::path(CROSS_ResolveHome(
+                xdg_data_home_env ? xdg_data_home_env : "~/.local/share"));
 
-	std::deque<std::string> dirs = {
-	        xdg_data_home + "/dosbox/mt32-roms/",
-	        xdg_data_home + "/mt32-rom-data/",
+	std::deque<std_fs::path> dirs = {
+	        xdg_data_home / "dosbox/mt32-roms",
+	        xdg_data_home / "mt32-rom-data",
 	};
 
 	// Second priority are the $XDG_DATA_DIRS
@@ -261,19 +261,20 @@ static std::deque<std::string> get_rom_dirs()
 		if (xdg_data_dir.empty()) {
 			continue;
 		}
-		const auto resolved_dir = CROSS_ResolveHome(xdg_data_dir);
-		dirs.emplace_back(resolved_dir + "/mt32-rom-data/");
+		const auto resolved_dir = std_fs::path(
+		        CROSS_ResolveHome(xdg_data_dir));
+		dirs.emplace_back(resolved_dir / "mt32-rom-data");
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(CROSS_GetPlatformConfigDir() + "mt32-roms/");
+	dirs.emplace_back(get_platform_config_dir() / "mt32-roms");
 
 	return dirs;
 }
 
 #endif
 
-static std::deque<std::string> get_selected_dirs()
+static std::deque<std_fs::path> get_selected_dirs()
 {
 	const auto section = static_cast<Section_prop *>(
 	        control->GetSection("mt32"));
@@ -312,14 +313,14 @@ static std::set<const LASynthModel *> has_models(const MidiHandler_mt32::service
 }
 
 static std::optional<model_and_dir_t> load_model(
-        const MidiHandler_mt32::service_t &service,
-        const std::string &selected_model, const std::deque<std::string> &rom_dirs)
+        const MidiHandler_mt32::service_t& service,
+        const std::string& selected_model, const std::deque<std_fs::path>& rom_dirs)
 {
 	const bool is_auto = (selected_model == "auto");
 	for (const auto &model : all_models)
 		if (is_auto || model->Matches(selected_model))
 			for (const auto &dir : rom_dirs)
-				if (model->Load(service, dir))
+				if (model->Load(service, dir.string()))
 					return {{model, simplify_path(dir).string()}};
 	return {};
 }
@@ -419,7 +420,8 @@ static std::set<const LASynthModel *> populate_available_models(
         std::map<std::string, std::set<const LASynthModel *>> &dirs_with_models)
 {
 	std::set<const LASynthModel *> available_models;
-	for (const std::string &dir : get_selected_dirs()) {
+	for (const auto& dir_path : get_selected_dirs()) {
+		const auto dir    = dir_path.string();
 		const auto models = has_models(service, dir);
 		if (!models.empty()) {
 			dirs_with_models[dir] = models;
