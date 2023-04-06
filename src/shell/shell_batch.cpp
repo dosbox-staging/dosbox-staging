@@ -175,6 +175,7 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 bool BatchFile::Goto(const std::string_view label)
 {
 	std::string line = " ";
+	this->location = 0;
 
 	while (!line.empty()) {
 		line = GetLine();
