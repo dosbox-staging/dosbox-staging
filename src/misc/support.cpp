@@ -342,7 +342,7 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	add_if_exists(GetExecutablePath() / "../share" / CANONICAL_PROJECT_NAME);
 
 	// Last priority is the user's configuration directory
-	add_if_exists(std_fs::path(CROSS_GetPlatformConfigDir()));
+	add_if_exists(get_platform_config_dir());
 
 	return paths;
 }

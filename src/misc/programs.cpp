@@ -435,9 +435,8 @@ private:
 	{
 		if (configdir) {
 			// write file to the default config directory
-			std::string config_path;
-			Cross::GetPlatformConfigDir(config_path);
-			name = config_path + name;
+			const auto config_path = get_platform_config_dir() / name;
+			name = config_path.string();
 		}
 		WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_WHICH"), name.c_str());
 		if (!control->PrintConfig(name)) {
@@ -524,8 +523,7 @@ void CONFIG::Run(void)
 
 		case P_LISTCONF: {
 			Bitu size = control->configfiles.size();
-			std::string config_path;
-			Cross::GetPlatformConfigDir(config_path);
+			const std_fs::path config_path = get_platform_config_dir();
 			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"),
 			         VERSION,
 			         config_path.c_str());
