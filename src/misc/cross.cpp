@@ -188,8 +188,9 @@ std_fs::path get_platform_config_dir()
 	std::error_code ec = {};
 	if (std_fs::is_regular_file(portable_conf_path, ec)) {
 		conf_dir = portable_conf_path.parent_path();
+		const auto conf_str = conf_dir.string();
 		LOG_MSG("CONFIG: Using portable configuration layout in %s",
-		        conf_dir.c_str());
+		        conf_str.c_str());
 		return conf_dir;
 	}
 
