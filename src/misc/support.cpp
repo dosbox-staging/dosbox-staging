@@ -296,29 +296,8 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	add_if_exists(get_xdg_data_home() / CANONICAL_PROJECT_NAME);
 
 	// Fifth priority is the system's XDG data specification
-	//
-	//  $XDG_DATA_DIRS defines the preference-ordered set of base
-	//  directories to search for data files in addition to the
-	//  $XDG_DATA_HOME base directory. The directories in $XDG_DATA_DIRS
-	//  should be seperated with a colon ':'.
-	//
-	// If $XDG_DATA_DIRS is either not set or empty, a value equal to
-	// /usr/local/share/:/usr/share/ should be used.
-	// Ref:https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-	//
-	const char *xdg_data_dirs_env = getenv("XDG_DATA_DIRS");
-
-	// If XDG_DATA_DIRS is undefined, use the default:
-	if (!xdg_data_dirs_env)
-		xdg_data_dirs_env = "/usr/local/share:/usr/share";
-
-	for (auto& xdg_data_dir : split(xdg_data_dirs_env, ':')) {
-		trim(xdg_data_dir);
-		if (!xdg_data_dir.empty()) {
-			const std_fs::path resolved_dir = CROSS_ResolveHome(
-			        xdg_data_dir);
-			add_if_exists(resolved_dir / CANONICAL_PROJECT_NAME);
-		}
+	for (const auto& data_dir : get_xdg_data_dirs()) {
+		add_if_exists(data_dir / CANONICAL_PROJECT_NAME);
 	}
 
 	// Sixth priority is a best-effort fallback for --prefix installations
