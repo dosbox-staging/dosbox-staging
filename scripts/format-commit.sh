@@ -7,7 +7,7 @@ set -eu
 # Copyright (C) 2020-2023  Patryk Obara <patryk.obara@gmail.com>
 
 SCRIPT=$(basename "$0")
-VERSION="1.0.1"
+VERSION="1.0.2"
 readonly SCRIPT VERSION
 
 print_usage () {
@@ -71,10 +71,10 @@ assign_gnu_sed () {
 	# No, so help the user install it and then quit.
 	else
 		echo "'sed' is not GNU and 'gsed' is not available."
-		if [[ "${OSTYPE:-}" == "darwin"* ]]; then
+		if [[ "$(uname)" == "Darwin"* ]]; then
 			echo "Install GNU sed with: brew install gnu-sed"
 		else
-			echo "Install GNU sed with your $OSTYPE package manager."
+			echo "Install GNU sed with your package manager."
 		fi
 		exit 1
 	fi
