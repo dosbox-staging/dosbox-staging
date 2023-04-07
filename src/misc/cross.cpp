@@ -77,11 +77,10 @@ static std::string DetermineConfigPath()
 
 static std::string DetermineConfigPath()
 {
-	const char *xdg_conf_home = getenv("XDG_CONFIG_HOME");
-	const std::string conf_home = xdg_conf_home ? xdg_conf_home : "~/.config";
-	const std::string conf_path = CROSS_ResolveHome(conf_home + "/dosbox");
+	const auto conf_path = get_xdg_config_home() / "dosbox";
+	std::error_code ec = {};
 
-	if (path_exists(conf_path + "/" + GetConfigName())) {
+	if (std_fs::exists(conf_path / GetConfigName())) {
 		return conf_path;
 	}
 
@@ -93,8 +92,6 @@ static std::string DetermineConfigPath()
 		}
 		return old_conf_path;
 	};
-
-	std::error_code ec = {};
 
 	if (!std_fs::exists(conf_path, ec)) {
 		if (std_fs::create_directories(conf_path, ec)) {

@@ -94,6 +94,16 @@ std::time_t to_time_t(const std_fs::file_time_type &fs_time);
 
 #if !defined(WIN32)
 
+/* Get directory for storing user configuration files.
+ *
+ * User can change this directory by overriding XDG_CONFIG_HOME, otherwise it
+ * defaults to "$HOME/.config/".
+ *
+ * https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+ */
+
+std_fs::path get_xdg_config_home() noexcept;
+
 /* Get directory for storing user-specific data files.
  *
  * User can change this directory by overriding XDG_DATA_HOME, otherwise it
