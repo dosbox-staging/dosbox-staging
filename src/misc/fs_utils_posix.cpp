@@ -120,6 +120,21 @@ std_fs::path get_xdg_data_home() noexcept
 	return std_fs::path(CROSS_ResolveHome(data_home));
 }
 
+std::deque<std_fs::path> get_xdg_data_dirs() noexcept
+{
+	const char* var       = getenv("XDG_DATA_DIRS");
+	const char* data_dirs = ((var && var[0]) ? var : "/usr/local/share:/usr/share");
+
+	std::deque<std_fs::path> paths{};
+	for (auto& dir : split(data_dirs, ':')) {
+		trim(dir);
+		if (!dir.empty()) {
+			paths.emplace_back(CROSS_ResolveHome(dir));
+		}
+	}
+	return paths;
+}
+
 #endif
 
 #endif

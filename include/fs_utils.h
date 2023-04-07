@@ -25,6 +25,7 @@
 
 #include <cinttypes>
 #include <ctime>
+#include <deque>
 #include <optional>
 #include <string>
 #include <vector>
@@ -102,6 +103,19 @@ std::time_t to_time_t(const std_fs::file_time_type &fs_time);
  */
 
 std_fs::path get_xdg_data_home() noexcept;
+
+/* Get directories for searching for data files in addition to the XDG_DATA_HOME
+ * directory.
+ *
+ * The directories are ordered according to user preference.
+ *
+ * User can change this list by overriding XDG_DATA_DIRS, otherwise it defaults
+ * to "/usr/local/share/:/usr/share/".
+ *
+ * https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
+ */
+
+std::deque<std_fs::path> get_xdg_data_dirs() noexcept;
 
 #endif
 

@@ -250,18 +250,8 @@ static std::deque<std_fs::path> get_rom_dirs()
 	};
 
 	// Second priority are the $XDG_DATA_DIRS
-	const char *xdg_data_dirs_env = getenv("XDG_DATA_DIRS");
-	if (!xdg_data_dirs_env)
-		xdg_data_dirs_env = "/usr/local/share:/usr/share";
-
-	for (auto xdg_data_dir : split(xdg_data_dirs_env, ':')) {
-		trim(xdg_data_dir);
-		if (xdg_data_dir.empty()) {
-			continue;
-		}
-		const auto resolved_dir = std_fs::path(
-		        CROSS_ResolveHome(xdg_data_dir));
-		dirs.emplace_back(resolved_dir / "mt32-rom-data");
+	for (const auto& data_dir : get_xdg_data_dirs()) {
+		dirs.emplace_back(data_dir / "mt32-rom-data");
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience

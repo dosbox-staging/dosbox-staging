@@ -169,18 +169,9 @@ static std::deque<std_fs::path> get_data_dirs()
 	};
 
 	// Second priority are the $XDG_DATA_DIRS
-	const char *xdg_data_dirs_env = getenv("XDG_DATA_DIRS");
-	if (!xdg_data_dirs_env)
-		xdg_data_dirs_env = "/usr/local/share:/usr/share";
-
-	for (auto xdg_data_dir : split(xdg_data_dirs_env, ':')) {
-		trim(xdg_data_dir);
-		if (xdg_data_dir.empty()) {
-			continue;
-		}
-		const std_fs::path resolved_dir = CROSS_ResolveHome(xdg_data_dir);
-		dirs.emplace_back(resolved_dir / "soundfonts");
-		dirs.emplace_back(resolved_dir / "sounds/sf2");
+	for (const auto& data_dir : get_xdg_data_dirs()) {
+		dirs.emplace_back(data_dir / "soundfonts");
+		dirs.emplace_back(data_dir / "sounds/sf2");
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
