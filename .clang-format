@@ -1,10 +1,10 @@
 # This file uses configuration options available in clang-format 15.0.
 #
 # More detailed description of all options:
-# https://releases.llvm.org/12.0.0/tools/clang/docs/ClangFormatStyleOptions.html
+# https://releases.llvm.org/15.0.0/tools/clang/docs/ClangFormatStyleOptions.html
 #
 # Note that version of clang-format provided by your distribution might be
-# newer and provide additional options, that won't work in 8.x.
+# newer and provide additional options, that won't work in 15.x.
 #
 # This style definition should only be understood as a hint
 # for writing new code. The rules are still work-in-progress and do
@@ -25,8 +25,6 @@ ColumnLimit: 80
 # C/C++ Language specifics
 #
 Language: Cpp
-# in clang-format 9.x "Cpp11" covers formatting for C++11 and C++14
-# in clang-format 10.x: switch to "c++14"
 Standard: c++17
 
 # Align qualifiers with the type instead of the variable name
@@ -111,7 +109,7 @@ AlignOperands:  AlignAfterOperator
 #   #endif
 #   #endif
 #
-IndentPPDirectives: AfterHash
+IndentPPDirectives: None
 
 # Always place function bodies on their own lines because
 # it makes a mess when some are on the same line and others are
