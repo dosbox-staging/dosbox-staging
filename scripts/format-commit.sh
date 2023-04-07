@@ -7,7 +7,7 @@ set -eu
 # Copyright (C) 2020-2023  Patryk Obara <patryk.obara@gmail.com>
 
 SCRIPT=$(basename "$0")
-VERSION="1.0.0"
+VERSION="1.0.1"
 readonly SCRIPT VERSION
 
 print_usage () {
@@ -105,7 +105,7 @@ format () {
 	local -r since_ref=${1:-HEAD~1}
 	pushd "$(git rev-parse --show-toplevel)" > /dev/null
 	echo "Using paths relative to: $(pwd)"
-	find_cpp_files "$since_ref" | run_clang_format
+	find_cpp_files "$since_ref" | run_clang_format "$since_ref"
 	popd > /dev/null
 }
 
@@ -156,11 +156,12 @@ list_changed_files () {
 }
 
 run_clang_format () {
+	local -r since_ref=$1
 	while read -r src_file ; do
 		local ranges=()
 		while IFS=$'\n' read -r range ; do
 			ranges+=("$range")
-		done < <(git_diff_to_clang_line_range "$src_file")
+		done < <(git_diff_to_clang_line_range "$src_file" "$since_ref")
 
 		if (( "${#ranges[@]}" )); then
 			echo "clang-format -i ${ranges[*]} \"$src_file\""
@@ -171,7 +172,8 @@ run_clang_format () {
 
 git_diff_to_clang_line_range () {
 	local -r file=$1
-	git_diff --ignore-space-at-eol -U0 HEAD~1 "$file" \
+	local -r since_ref=$2
+	git_diff --ignore-space-at-eol -U0 "$since_ref" "$file" \
 		| grep -E "^@@" \
 		| filter_line_range \
 		| to_clang_line_range
