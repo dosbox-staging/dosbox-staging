@@ -138,6 +138,9 @@ static std::deque<std_fs::path> get_data_dirs()
 {
 	return {
 	        get_platform_config_dir() / "soundfonts",
+
+	        // C:\soundfonts is the default place where FluidSynth places default.sf2
+	        // https://www.fluidsynth.org/api/fluidsettings.xml#synth.default-soundfont
 	        "C:\\soundfonts\\",
 	};
 }
@@ -149,8 +152,6 @@ static std::deque<std_fs::path> get_data_dirs()
 	return {
 	        get_platform_config_dir() / "soundfonts",
 	        std_fs::path(CROSS_ResolveHome("~/Library/Audio/Sounds/Banks")),
-	        // TODO: check /usr/local/share/soundfonts
-	        // TODO: check /usr/share/soundfonts
 	};
 }
 
