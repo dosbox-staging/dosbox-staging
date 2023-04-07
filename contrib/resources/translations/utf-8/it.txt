@@ -29,17 +29,17 @@ mouse senza soluzione di continuità, %s+F10 per catturarlo
 mouse senza soluzione di continuità, %s+F10 o pulsante centrale del mouse per catturarlo
 .
 :CONFIG_FULLSCREEN
-Avvia direttamente a schermo intero.
+Avvia direttamente a schermo intero (predefinito disabilitato).
 Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
 scelta rapida per il controllo della finestra.
 .
 :CONFIG_DISPLAY
 Numero dello schermo da utilizzare; Il valore dipende dal sistema operativo
-e dalle impostazioni dell'utente.
+e dalle impostazioni dell'utente (predefinito 0).
 .
 :CONFIG_FULLRESOLUTION
-Risoluzione da usare a schermo intero: 'original', 'desktop' o
-dimensione fissa (es. 1024x768).
+Risoluzione da utilizzare in modalità schermo intero: 'original', 'desktop' o
+dimensione fissa, es. 1024x768 (predefinito 'desktop').
 .
 :CONFIG_WINDOWRESOLUTION
 Imposta le dimensioni della finestra da utilizzare durante l'esecuzione
@@ -64,16 +64,18 @@ finestra/schermo:
 :CONFIG_WINDOW_POSITION
 Imposta la posizione iniziale della finestra durante l'esecuzione in modalità
 finestra:
-  auto:      Lascia che sia il gestore delle finestre a decidere la posizione.
+  auto:      Lascia che sia il gestore delle finestre a decidere la posizione
+             (predefinito).
   <custom>:  Imposta la posizione della finestra nel formato X,Y.
              Per esempio: 250,100
              0,0 è l'angolo in alto a sinistra dello schermo.
 .
 :CONFIG_WINDOW_DECORATIONS
-Abilita le decorazioni delle finestre in modalità finestra.
+Abilita le decorazioni delle finestre in modalità finestra
+(predefinito abilitato).
 .
 :CONFIG_TRANSPARENCY
-Imposta la trasparenza della schermata di DOSBox Staging.
+Imposta la trasparenza della finestra di DOSBox Staging (predefinito 0).
 Da 0 (nessuna trasparenza) a 90 (alta trasparenza).
 .
 :CONFIG_MAX_RESOLUTION
@@ -82,35 +84,36 @@ Questa impostazione è stata rinominata in viewport_resolution.
 :CONFIG_HOST_RATE
 Imposta la frequenza di aggiornamento dell'host:
   auto:      Utilizza le frequenze SDI, o VRR quando in modalità schermo intero
-             su uno schermo ad alta frequenza di aggiornamento.
+             su uno schermo ad alta frequenza di aggiornamento (predefinito).
   sdi:       Utilizza le frequenze dell'interfaccia del dispositivo seriale
              (SDI), senza ulteriori regolazioni.
   vrr:       Sottrae 3 Hz dalla frequenza riportata (necessario su schermi VRR)
   <custom>:  Specifica una frequenza personalizzata come valore intero o
-             decimale maggiore di 23.000.
+             decimale maggiore di 23.000 (23 Hz).
 .
 :CONFIG_VSYNC
-Sincronizza con la frequenza di aggiornamento dello schermo, se supportato.
-Questo può ridurre il tremolio e lo strappo, ma può anche influire sulle
-prestazioni.
+Sincronizza con la frequenza di aggiornamento dello schermo, se supportato,
+per ridurre il tremolio e lo strappo (predefinito abilitato).
 .
 :CONFIG_VSYNC_SKIP
 Numero di microsecondi per consentire il blocco del rendering prima di saltare
-al fotogramma successivo. Impostando 0, disabiliterà questa funzione.
+al fotogramma successivo (predefinito 7000). Un valore di 0 disabilita
+questa funzione.
 .
 :CONFIG_PRESENTATION_MODE
 Seleziona la modalità di presentazione dei fotogrammi:
   auto:  Determina la durata e taglia i fotogrammi in modo intelligente per
          prevenire lo stallo dell'emulazione, in base alla frequenza dei
-         fotogrammi host e DOS.
+         fotogrammi host e DOS (predefinito).
   cfr:   Presenta sempre i fotogrammi DOS ad una frequenza costante.
   vfr:   Presenta sempre i fotogrammi DOS modificati ad una frequenza variabile
 .
 :CONFIG_OUTPUT
-Sistema video da utilizzare per l'output.
+Sistema video da utilizzare per l'output (predefinito 'opengl').
 .
 :CONFIG_TEXTURE_RENDERER
-Driver di rendering da utilizzare nella modalità di uscita 'texture'.
+Driver di rendering da utilizzare nella modalità di uscita 'texture'
+(predefinito 'auto').
 Usa 'texture_renderer = auto' per una scelta automatica.
 .
 :CONFIG_CAPTURE_MOUSE
@@ -123,7 +126,7 @@ Spostato nella sezione [mouse].
 Spostato nella sezione [mouse].
 .
 :CONFIG_WAITONERROR
-Mantiene la console aperta se si verifica un errore.
+Mantiene la console aperta se si verifica un errore (predefinito abilitato).
 .
 :CONFIG_PRIORITY
 Livelli di priorità da applicare rispettivamente quando la finestra è
@@ -131,10 +134,11 @@ in primo piano o inattiva (predefinito 'auto auto').
 'auto' lascia che sia il sistema operativo host a gestire la priorità.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Disattiva il suono quando la finestra è inattiva.
+Disattiva il suono quando la finestra è inattiva (predefinito disabilitato).
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
-Mette in pausa l'emulazione quando la finestra è inattiva.
+Mette in pausa l'emulazione quando la finestra è inattiva
+(predefinito disabilitato).
 .
 :CONFIG_MAPPERFILE
 File utilizzato per caricare/salvare le corrispondenze tasto/evento.
@@ -146,8 +150,8 @@ Note: il flag della riga di comando -resetmapper elimina solo il file di
 .
 :CONFIG_SCREENSAVER
 Usa 'allow' (consenti) o 'block' (blocca) per sovrascrivere la variabile
-d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER (che di solito blocca il salva schermo
-del sistema operativo mentre l'emulatore è in esecuzione).
+d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER, che di solito blocca il salvaschermo
+del sistema operativo mentre l'emulatore è in esecuzione (predefinito 'auto').
 .
 :CONFIG_LANGUAGE
 Seleziona la lingua da utilizzare: de, en, es, fr, it, nl, pl e ru
@@ -190,8 +194,8 @@ Personalizza la frequenza dei fotogrammi della modalità video emulata, in Hz:
              (consigliato; predefinito).
   host:      Abbina la frequenza DOS alla frequenza host (vedi impostazione
              'host_rate').
-  <valore>:  Imposta la frequenza su un valore esatto, compreso tra 24.000 e
-             1000.000 (Hz).
+  <valore>:  Imposta la frequenza su un valore esatto, compreso tra 
+             24.000 (24 Hz) e 1000.000 (1000 Hz).
 Si consiglia la frequenza dei fotogrammi predefinita ('default'), altrimenti
 provare ed impostare in base al gioco.
 .
@@ -208,10 +212,10 @@ Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
                memoria di sistema (mem = ).
 .
 :CONFIG_SPEED_MODS
-Consenti modifiche note per migliorare le prestazioni (predefinito abilitato).
+Consente modifiche note per migliorare le prestazioni (predefinito abilitato).
 Attualmente, nessun gioco è noto per esserne influenzato negativamente.
-Se trovi un gioco che fallisce quando questa impostazione è abilitata, segnala
-il bug nel repository del progetto, in modo tale da poterlo elencare qui.
+Se trovi un gioco che ha problemi quando questa impostazione è abilitata,
+segnala il bug sul sito del progetto, in modo tale da poterlo elencare qui.
 .
 :CONFIG_AUTOEXEC_SECTION
 Indica come vengono gestite le sezioni autoexec da più file di configurazione.
@@ -312,6 +316,7 @@ hardware:
    delle opzioni "glshader".
 .
 :CONFIG_GLSHADER
+Imposta lo shader GLSL da utilizzare nella modalità di uscita OpenGL.
 Le opzioni incluse sono 'default', 'none', uno shader elencato utilizzando
 l'argomento della riga di comando --list-glshaders o un percorso relativo o
 assoluto che fa riferimento ad un file. 
@@ -386,12 +391,22 @@ Imposta la modalità di cattura dell mouse:
                  driver del mouse personalizzato
    nomouse:      Nasconde il mouse e impedisce che venga inviato l'input del
                  mouse al gioco.
-Per gli schermi tattili, utilizzare la modalità 'seamless'.
+Per gli schermi tattili, utilizzare la modalità di controllo senza soluzione
+di continuità 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
 Se abilitato, il pulsante centrale rilascerà il mouse. Se è stata impostata
-la modalità 'seamless', esso si occuperà anche di catturarlo 
-(predefinito abilitato).
+la modalità di controllo senza soluzione di continuità 'seamless', esso si
+occuperà anche di catturarlo (predefinito abilitato).
+.
+:CONFIG_MOUSE_MULTI_DISPLAY_AWARE
+Consente il funzionamento della modalità mouse senza soluzione di continuità
+e il rilascio del puntatore del mouse in modalità schermo intero nei sistemi
+multischermo (predefinito abilitato).
+Note: Dovresti impostarlo su 'false' nel caso in cui vengano rilevati
+      erroneamente schermi multipli, quando in realtà ne è presente solo uno.
+      Ciò potrebbe accadere se si utilizza la modalità di visualizzazione
+      speculare o l'ingresso HDMI di un ricevitore AV per l'ascolto dell'audio.
 .
 :CONFIG_MOUSE_SENSITIVITY
 Sensibilità del mouse per gli assi orizzontale e verticale, in percentuale
@@ -418,8 +433,9 @@ Note: Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
 Aggiorna immediatamente i contatori di movimento del mouse, senza attendere
 l'interrupt (predefinito disabilitato). Può migliorare la giocabilità,
 specialmente nei giochi dal ritmo veloce (arcade, FPS, ecc.), poichè per alcuni
-incrementa efficacemente la frequenza di polling a 1000 Hz, senza aumentare il
-sovraccarico dell'interrupt. Potrebbe causare problemi di compatibilità.
+incrementa efficacemente la frequenza di campionamento del mouse a 1000 Hz,
+senza aumentare il sovraccarico dell'interrupt. Potrebbe causare problemi di
+compatibilità.
 Elenco di giochi incompatibili noti:
   - Ultima Underworld: The Stygian Abyss
   - Ultima Underworld II: Labyrinth of Worlds
@@ -671,13 +687,13 @@ Canale DMA della scheda Sound Blaster (predefinito 1).
 Canale High DMA della scheda Sound Blaster (predefinito 5).
 .
 :CONFIG_SBMIXER
-Permetti al mixer della scheda Sound Blaster di modificare il mixer di DOSBox
-(predefinito abilitato).
+Permette al mixer della scheda Sound Blaster di modificare il mixer
+di DOSBox (predefinito abilitato).
 .
 :CONFIG_SBWARMUP
 Silenzia il contenuto DMA iniziale dopo l'accensione della scheda,
 in millisecondi (predefinito 100). Questo attenua gli artefatti audio che si
-sentono quando si avviano molti giochi compatibili con Sound Blaster.
+sentono quando si avviano molti dei giochi compatibili con Sound Blaster.
 Riduci questo valore se noti che nella riproduzione iniziale manca l'audio.
 .
 :CONFIG_OPLRATE
@@ -929,8 +945,8 @@ Scambia il 3° e il 4° asse (predefinito disabilitato).
 Può essere utile per alcuni joystick.
 .
 :CONFIG_BUTTONWRAP
-Abilita il wrapping dei pulsanti al numero di pulsanti emulati
-(predefinito disabilitato).
+Permette di associare i pulsanti del joystick emulato ai pulsanti ridondanti
+del joystick reale o ai tasti della tastiera (predefinito disabilitato).
 .
 :CONFIG_CIRCULARINPUT
 Abilita la traduzione dell'input circolare in output quadrato
@@ -1024,17 +1040,17 @@ di tastiera selezionato.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Abilita l'espansione delle variabili di ambiente come %PATH% nella shell
-dei comandi DOS (predefinito disabilitato).
+dei comandi DOS (predefinito 'auto', viene abilitato se la versione DOS >= 7.0)
 COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
 .
 :CONFIG_KEYBOARDLAYOUT
-Codice linguaggio del layout della tastiera, o 'auto' (predefinito 'auto').
+Codice lingua del layout della tastiera, o 'auto' (predefinito 'auto').
 .
 :CONFIG_IPX
 Abilita IPX attraverso l'emulazione UDP/IP (predefinito abilitato).
 .
 :CONFIG_NE2000
-Abilita l'emulazione di una scheda di rete Novell NE2000 su una rete basata su
+Abilita l'emulazione della scheda di rete Novell NE2000 su una rete basata su
 software (usando libslirp) con le seguenti proprietà (predefinito abilitato):
   - 255.255.255.0:  Maschera di sottorete della LAN virtuale 10.0.2.0.
   - 10.0.2.2:       IP del gateway e del servizio DHCP.
@@ -1052,7 +1068,7 @@ Note: Gli indirizzi 220 e 240 potrebbero non essere disponibili poiché sono
       predefinita.
 .
 :CONFIG_NICIRQ
-Interrupt utilizzato dalla scheda NE2000 (predefinito 3).
+Numero IRQ della scheda NE2000 (predefinito 3).
 Note: Gli IRQ 3 e 5 potrebbero non essere disponibili poiché sono assegnati a
       'serial2' e Gravis UltraSound per impostazione predefinita.
 .
@@ -1383,7 +1399,7 @@ Note:
 
 .
 :PROGRAM_FMPDRV_TITLE
-Driver Lettore ReelMagic Full Motion (integrato) %hhu.%hhu
+Driver lettore ReelMagic Full Motion (integrato) %hhu.%hhu
 
 .
 :PROGRAM_FMPDRV_LOADED
@@ -2088,7 +2104,7 @@ Dove:
   [color=white]INTERFACCIA[reset] è uno dei seguenti: [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset].
   -map -unmap mappa/disattiva mouse fisico, accetta caratteri jolly DOS in [color=cyan]NOME[reset]
   -s -sx -sy  imposta la sensibilità per l'asse x / asse y, da -999 a +999.
-  -r          imposta la frequenza di polling minima del mouse.
+  -r          imposta la frequenza di campionamento minima del mouse.
   -on -off    abilita o disabilita il mouse sull'interfaccia specificata.
   -reset      ripristina tutte le impostazioni dal file di configurazione.
 
@@ -2111,7 +2127,7 @@ Sintassi errata, interfacce del mouse duplicate.
 
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
-Sintassi errata, la frequenza di polling deve essere una dei seguenti:
+Sintassi errata, la frequenza di campionamento deve essere una delle seguenti:
 %s
 
 .
@@ -2163,10 +2179,11 @@ mouse fisico mappato
 disabilitato
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
-Le frequenze di polling per i mouse sulle interfacce [color=cyan]COM[reset] sono solo stime.
+Le frequenze di campionamento per i mouse sulle interfacce [color=cyan]COM[reset] sono solo stime.
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
-Le frequenze di polling con valore minimo impostato sono contrassegnate con '*'
+Le frequenze di campionamento con valore minimo impostato sono contrassegnate
+con '*'.
 .
 :PROGRAM_MOUSECTL_MAP_ADVICE
 Fare clic sul pulsante [color=white]sinistro[reset] del mouse per mappare il mouse fisico
@@ -3299,58 +3316,4 @@ Comandi Vari
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Comando Sconosciuto
-.
-:PROGRAM_TREE_HELP_LONG
-Displays directory tree in a graphical form.
-
-Usage:
-  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]
-
-Where:
-  [color=cyan]DIRECTORY[reset] is the name of the directory to display.
-  [color=white]ORDER[reset]     is a listing order, one of:
-                [color=white]n[reset] (by name, alphabetic),
-                [color=white]s[reset] (by size, smallest first),
-                [color=white]e[reset] (by extension, alphabetic),
-                [color=white]d[reset] (by date/time, oldest first),
-            with an optional [color=white]-[reset] prefix to reverse order.
-  /a        uses only 7-bit ASCII characters.
-  /b        brief display, omits header and footer information.
-  /f        also display files.
-  /p        display one page a time, shorten output to fit width width.
-  /da       display attributes.
-  /df       display size for files.
-  /dh       also display hidden and system files/directories.
-  /o[color=white]ORDER[reset]   orders the list (see above)
-
-Notes:
-  If [color=cyan]DIRECTORY[reset] is omitted, the current directory is used.
-
-Examples:
-  [color=green]tree[reset]          ; displays directory tree starting from current directory
-  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; displays C: drive content recursively, with files
-
-.
-:PROGRAM_TREE_DIRECTORY
- Directory tree for volume %s
-.
-:PROGRAM_TREE_NO_SUBDIRS
-No subdirectories to display.
-
-.
-:PROGRAM_TREE_NO_FILES_SUBDIRS
-No files or subdirectories to display.
-
-.
-:PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
-Too many files or subdirectories.
-
-.
-:SHELL_TOO_MANY_PARAMETERS
-Too many parameters.
-
-.
-:SHELL_DIRECTORY_NOT_FOUND
-Directory not found - '%s'
-
 .
