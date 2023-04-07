@@ -4677,7 +4677,7 @@ static void launchcaptures(const std::string& edit)
 	Cross::CreatePlatformConfigDir(path);
 	path += file;
 
-	if (create_dir(path.c_str(), 0700, OK_IF_EXISTS) != 0) {
+	if (create_dir(path, 0700, OK_IF_EXISTS) != 0) {
 		fprintf(stderr, "Can't access capture dir '%s': %s\n",
 		        path.c_str(), safe_strerror(errno).c_str());
 		exit(1);
@@ -4936,22 +4936,25 @@ int sdl_main(int argc, char *argv[])
 	}
 
 #if C_OPENGL
-	const auto glshaders_dir = (config_path / "glshaders").string();
-	if (create_dir(glshaders_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
+	const auto glshaders_dir = config_path / "glshaders";
+	if (create_dir(glshaders_dir, 0700, OK_IF_EXISTS) != 0)
 		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
-			    glshaders_dir.c_str(), safe_strerror(errno).c_str());
+			    glshaders_dir.string().c_str(),
+			    safe_strerror(errno).c_str());
 #endif // C_OPENGL
 #if C_FLUIDSYNTH
-	const auto soundfonts_dir = (config_path / "soundfonts").string();
-	if (create_dir(soundfonts_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
+	const auto soundfonts_dir = config_path / "soundfonts";
+	if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0)
 		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
-			    soundfonts_dir.c_str(), safe_strerror(errno).c_str());
+			    soundfonts_dir.string().c_str(),
+			    safe_strerror(errno).c_str());
 #endif // C_FLUIDSYNTH
 #if C_MT32EMU
-	const auto mt32_rom_dir = (config_path / "mt32-roms").string();
-	if (create_dir(mt32_rom_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
+	const auto mt32_rom_dir = config_path / "mt32-roms";
+	if (create_dir(mt32_rom_dir, 0700, OK_IF_EXISTS) != 0)
 		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
-			    mt32_rom_dir.c_str(), safe_strerror(errno).c_str());
+			    mt32_rom_dir.string().c_str(),
+			    safe_strerror(errno).c_str());
 #endif // C_MT32EMU
 
 		control->ParseEnv();

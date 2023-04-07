@@ -228,7 +228,7 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 	if (in.back() != CROSS_FILESPLIT)
 		in += CROSS_FILESPLIT;
 
-	if (create_dir(in.c_str(), 0700, OK_IF_EXISTS) != 0) {
+	if (create_dir(in, 0700, OK_IF_EXISTS) != 0) {
 		LOG_MSG("ERROR: Creation of config directory '%s' failed: %s",
 		        in.c_str(), safe_strerror(errno).c_str());
 	}
