@@ -32,6 +32,8 @@
 #include <tuple>
 #include <vector>
 
+#include "std_filesystem.h"
+
 using parse_environ_result_t = std::list<std::tuple<std::string, std::string>>;
 
 parse_environ_result_t parse_environ(const char* const* envp) noexcept;
@@ -486,7 +488,7 @@ public:
 	}
 };
 
-void SETUP_ParseConfigFiles(const std::string& config_path);
+void SETUP_ParseConfigFiles(const std_fs::path& config_path);
 
 const std::string& SETUP_GetLanguage();
 

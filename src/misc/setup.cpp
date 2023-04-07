@@ -1836,7 +1836,7 @@ const std::string& SETUP_GetLanguage()
 // Parse the user's configuration files starting with the primary, then custom
 // -conf's, and finally the local dosbox.conf
 void MSG_Init(Section_prop*);
-void SETUP_ParseConfigFiles(const std::string& config_path)
+void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 {
 	std::string config_file;
 
@@ -1845,8 +1845,8 @@ void SETUP_ParseConfigFiles(const std::string& config_path)
 	                                                             true);
 	if (wants_primary_conf) {
 		Cross::GetPlatformConfigName(config_file);
-		const std::string config_combined = config_path + config_file;
-		control->ParseConfigFile("primary", config_combined);
+		const auto cfg = config_dir / config_file;
+		control->ParseConfigFile("primary", cfg.string());
 	}
 
 	// Second: parse the local 'dosbox.conf', if present
@@ -1860,8 +1860,8 @@ void SETUP_ParseConfigFiles(const std::string& config_path)
 	while (control->cmdline->FindString("-conf", config_file, true)) {
 		if (!control->ParseConfigFile("custom", config_file)) {
 			// Try to load it from the user directory
-			if (!control->ParseConfigFile("custom",
-			                              config_path + config_file)) {
+			const auto cfg = config_dir / config_file;
+			if (!control->ParseConfigFile("custom", cfg.string())) {
 				LOG_WARNING("CONFIG: Can't open custom config file '%s'",
 				            config_file.c_str());
 			}
@@ -1878,7 +1878,7 @@ void SETUP_ParseConfigFiles(const std::string& config_path)
 
 	// Create a new primary if permitted and no other conf was loaded
 	if (wants_primary_conf && !control->configfiles.size()) {
-		std::string new_config_path = config_path;
+		std::string new_config_path = config_dir.string();
 
 		Cross::CreatePlatformConfigDir(new_config_path);
 		Cross::GetPlatformConfigName(config_file);
