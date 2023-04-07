@@ -28,10 +28,10 @@
 #include <memory>
 #include <string>
 
-#	include "std_filesystem.h"
+#include "std_filesystem.h"
 
-#	define MT32EMU_API_TYPE 3
-#	include <mt32emu/mt32emu.h>
+#define MT32EMU_API_TYPE 3
+#include <mt32emu/mt32emu.h>
 
 // An LA Synth Model consists of PCM and Control ROMs either in full or partial
 // form.
