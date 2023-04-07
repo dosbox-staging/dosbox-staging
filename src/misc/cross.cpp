@@ -233,6 +233,11 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 
 std::string CROSS_ResolveHome(const std::string &str)
 {
+	return resolve_home(str).string();
+}
+
+std_fs::path resolve_home(const std::string &str) noexcept
+{
 	if (!str.size() || str[0] != '~') // No ~
 		return str;
 
