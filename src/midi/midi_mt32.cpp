@@ -302,8 +302,8 @@ static const char *get_selected_model()
 	return section->Get_string("model");
 }
 
-static std::set<const LASynthModel *> has_models(const MidiHandler_mt32::service_t &service,
-                                                 const std::string &dir)
+static std::set<const LASynthModel*> has_models(const MidiHandler_mt32::service_t& service,
+                                                const std_fs::path& dir)
 {
 	std::set<const LASynthModel *> models = {};
 	for (const auto &model : all_models)
@@ -320,8 +320,8 @@ static std::optional<model_and_dir_t> load_model(
 	for (const auto &model : all_models)
 		if (is_auto || model->Matches(selected_model))
 			for (const auto &dir : rom_dirs)
-				if (model->Load(service, dir.string()))
-					return {{model, simplify_path(dir).string()}};
+				if (model->Load(service, dir))
+					return {{model, simplify_path(dir)}};
 	return {};
 }
 
@@ -415,13 +415,14 @@ static size_t get_max_dir_width(const LASynthModel *(&models_without_aliases)[10
 
 // Returns the set of models supported by all of the directories, and also
 // populates the provide map of the modules supported by each directory.
-static std::set<const LASynthModel *> populate_available_models(
-        const MidiHandler_mt32::service_t &service,
-        std::map<std::string, std::set<const LASynthModel *>> &dirs_with_models)
+
+using dirs_with_models_t = std::map<std_fs::path, std::set<const LASynthModel*>>;
+
+static std::set<const LASynthModel*> populate_available_models(
+        const MidiHandler_mt32::service_t& service, dirs_with_models_t& dirs_with_models)
 {
 	std::set<const LASynthModel *> available_models;
-	for (const auto& dir_path : get_selected_dirs()) {
-		const auto dir    = dir_path.string();
+	for (const auto& dir : get_selected_dirs()) {
 		const auto models = has_models(service, dir);
 		if (!models.empty()) {
 			dirs_with_models[dir] = models;
@@ -455,7 +456,7 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	assert(truncated_dir_width < max_dir_width);
 
 	// Get the set of directories and the models they support
-	std::map<std::string, std::set<const LASynthModel *>> dirs_with_models;
+	dirs_with_models_t dirs_with_models;
 	const auto available_models = populate_available_models(GetService(),
 	                                                        dirs_with_models);
 	if (available_models.empty()) {
@@ -490,9 +491,9 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 
 	// Iterate over the found directories and models
 	for (const auto &dir_and_models : dirs_with_models) {
-		const auto simplified_dir = simplify_path(dir_and_models.first);
-		const std::string &dir = simplified_dir.string();
-		const auto &dir_models = dir_and_models.second;
+		const auto dir = simplify_path(dir_and_models.first).string();
+
+		const auto& dir_models = dir_and_models.second;
 
 		// Print the directory, and truncate it if it's too long
 		if (dir.size() > max_dir_width) {
@@ -552,7 +553,8 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 		                            (dir_label.length() +
 		                             std::string_view(indent).length());
 
-		const auto truncated_dir = model_and_dir->second.substr(0, dir_max_length);
+		const auto truncated_dir =
+		        model_and_dir->second.string().substr(0, dir_max_length);
 		caller->WriteOut("%s%s%s\n",
 		                 indent,
 		                 dir_label.data(),
@@ -576,10 +578,9 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	if (!loaded_model_and_dir) {
 		LOG_WARNING("MT32: Failed to find ROMs for model %s in:",
 		        selected_model.c_str());
-		for (const auto &dir_path : rom_dirs) {
-			const auto dir = dir_path.string();
+		for (const auto& dir : rom_dirs) {
 			const char div = (dir != rom_dirs.back() ? '|' : '`');
-			LOG_MSG("MT32:  %c- %s", div, dir.c_str());
+			LOG_MSG("MT32:  %c- %s", div, dir.string().c_str());
 		}
 		return false;
 	}
@@ -589,7 +590,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	assert(loaded_model_and_dir.has_value());
 	LOG_MSG("MT32: Initialized %s from %s",
 	        rom_info.control_rom_description,
-	        loaded_model_and_dir->second.c_str());
+	        loaded_model_and_dir->second.string().c_str());
 
 	const auto audio_frame_rate_hz = MIXER_GetSampleRate();
 	ms_per_audio_frame             = millis_in_second / audio_frame_rate_hz;
