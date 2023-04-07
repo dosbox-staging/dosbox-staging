@@ -1,4 +1,7 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -107,13 +110,19 @@ void CROSS_DetermineConfigPaths();
 
 std_fs::path get_platform_config_dir();
 
+std_fs::path resolve_home(const std::string &str) noexcept;
+
+[[deprecated]]
 std::string CROSS_ResolveHome(const std::string &str);
 
 class Cross {
 public:
 	static void GetPlatformConfigName(std::string& in);
 	static void CreatePlatformConfigDir(std::string& in);
+
+	[[deprecated]]
 	static void ResolveHomedir(std::string & temp_line);
+
 	static bool IsPathAbsolute(std::string const& in);
 };
 
