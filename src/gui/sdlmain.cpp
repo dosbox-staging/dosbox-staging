@@ -4702,10 +4702,9 @@ static void ListGlShaders()
 
 static int PrintConfigLocation()
 {
-	std_fs::path path = get_platform_config_dir();
 	std::string file;
 	Cross::GetPlatformConfigName(file);
-	path.append(file);
+	const auto path = (get_platform_config_dir() / file).string();
 
 	FILE *f = fopen(path.c_str(), "r");
 	if (!f && !control->PrintConfig(path)) {
@@ -4724,10 +4723,9 @@ static void eraseconfigfile() {
 		fclose(f);
 		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
 	}
-	auto path = get_platform_config_dir();
 	std::string file;
 	Cross::GetPlatformConfigName(file);
-	path.append(file);
+	const auto path = (get_platform_config_dir() / file).string();
 	f = fopen(path.c_str(),"r");
 	if(!f) exit(0);
 	fclose(f);
@@ -4743,7 +4741,7 @@ static void erasemapperfile() {
 		             "Please reset configuration as well and delete the dosbox.conf.\n");
 	}
 
-	const auto path = get_platform_config_dir() / MAPPERFILE;
+	const auto path = (get_platform_config_dir() / MAPPERFILE).string();
 	FILE* f = fopen(path.c_str(),"r");
 	if(!f) exit(0);
 	fclose(f);
@@ -4938,19 +4936,19 @@ int sdl_main(int argc, char *argv[])
 	}
 
 #if C_OPENGL
-	const auto glshaders_dir = config_path / "glshaders";
+	const auto glshaders_dir = (config_path / "glshaders").string();
 	if (create_dir(glshaders_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
 		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
 			    glshaders_dir.c_str(), safe_strerror(errno).c_str());
 #endif // C_OPENGL
 #if C_FLUIDSYNTH
-	const auto soundfonts_dir = config_path / "soundfonts";
+	const auto soundfonts_dir = (config_path / "soundfonts").string();
 	if (create_dir(soundfonts_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
 		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
 			    soundfonts_dir.c_str(), safe_strerror(errno).c_str());
 #endif // C_FLUIDSYNTH
 #if C_MT32EMU
-	const auto mt32_rom_dir = config_path / "mt32-roms";
+	const auto mt32_rom_dir = (config_path / "mt32-roms").string();
 	if (create_dir(mt32_rom_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
 		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
 			    mt32_rom_dir.c_str(), safe_strerror(errno).c_str());

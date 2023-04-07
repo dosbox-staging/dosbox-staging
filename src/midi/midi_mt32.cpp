@@ -576,7 +576,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	if (!loaded_model_and_dir) {
 		LOG_WARNING("MT32: Failed to find ROMs for model %s in:",
 		        selected_model.c_str());
-		for (const auto &dir : rom_dirs) {
+		for (const auto &dir_path : rom_dirs) {
+			const auto dir = dir_path.string();
 			const char div = (dir != rom_dirs.back() ? '|' : '`');
 			LOG_MSG("MT32:  %c- %s", div, dir.c_str());
 		}
