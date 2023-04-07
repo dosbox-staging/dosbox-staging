@@ -4,10 +4,11 @@ set -eu
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2020-2021  Patryk Obara <patryk.obara@gmail.com>
+# Copyright (C) 2020-2023  Patryk Obara <patryk.obara@gmail.com>
 
 SCRIPT=$(basename "$0")
-readonly SCRIPT
+VERSION="1.0.0"
+readonly SCRIPT VERSION
 
 print_usage () {
 	echo "usage: $SCRIPT [-V|--verify|-d|--diff|-a|--amend] [<commit>]"
@@ -45,6 +46,7 @@ print_usage () {
 main () {
 	case ${1:-} in
 		-h|-help|--help) print_usage ;;
+		-v|--version)    echo "$SCRIPT version $VERSION" ;;
 		-d|--diff)       handle_dependencies ; shift ; format "$@" ; assert_empty_diff ;;
 		-V|--verify)     handle_dependencies ; shift ; format "$@" ; assert_empty_diff ;;
 		-a|--amend)      handle_dependencies ; shift ; format "$@" ; amend ;;
