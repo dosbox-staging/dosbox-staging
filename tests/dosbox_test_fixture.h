@@ -27,7 +27,7 @@ public:
 		// pre-requisite that's asserted during the Init process.
 		//
 		CROSS_DetermineConfigPaths();
-		const auto config_path = CROSS_GetPlatformConfigDir();
+		const auto config_path = get_platform_config_dir();
 		SETUP_ParseConfigFiles(config_path);
 
 		Section *_sec;

@@ -4900,7 +4900,7 @@ int sdl_main(int argc, char *argv[])
 		SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL,
 		SDL_GetCurrentVideoDriver(), SDL_GetCurrentAudioDriver());
 
-	const auto config_path = get_platform_config_dir().string();
+	const auto config_path = get_platform_config_dir();
 	SETUP_ParseConfigFiles(config_path);
 
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
@@ -4938,19 +4938,19 @@ int sdl_main(int argc, char *argv[])
 	}
 
 #if C_OPENGL
-	const std::string glshaders_dir = config_path + "glshaders";
+	const auto glshaders_dir = config_path / "glshaders";
 	if (create_dir(glshaders_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
 		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
 			    glshaders_dir.c_str(), safe_strerror(errno).c_str());
 #endif // C_OPENGL
 #if C_FLUIDSYNTH
-	const std::string soundfonts_dir = config_path + "soundfonts";
+	const auto soundfonts_dir = config_path / "soundfonts";
 	if (create_dir(soundfonts_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
 		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
 			    soundfonts_dir.c_str(), safe_strerror(errno).c_str());
 #endif // C_FLUIDSYNTH
 #if C_MT32EMU
-	const std::string mt32_rom_dir = config_path + "mt32-roms";
+	const auto mt32_rom_dir = config_path / "mt32-roms";
 	if (create_dir(mt32_rom_dir.c_str(), 0700, OK_IF_EXISTS) != 0)
 		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
 			    mt32_rom_dir.c_str(), safe_strerror(errno).c_str());
