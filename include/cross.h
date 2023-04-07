@@ -107,16 +107,10 @@ void CROSS_DetermineConfigPaths();
 
 std_fs::path get_platform_config_dir();
 
-[[deprecated("Use get_platform_config_dir() instead.")]]
-std::string CROSS_GetPlatformConfigDir();
-
 std::string CROSS_ResolveHome(const std::string &str);
 
 class Cross {
 public:
-	[[deprecated("Use get_platform_config_dir() instead.")]]
-	static void GetPlatformConfigDir(std::string& in);
-
 	static void GetPlatformConfigName(std::string& in);
 	static void CreatePlatformConfigDir(std::string& in);
 	static void ResolveHomedir(std::string & temp_line);

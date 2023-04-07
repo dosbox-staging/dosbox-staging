@@ -205,18 +205,6 @@ std_fs::path get_platform_config_dir()
 	return conf_dir;
 }
 
-std::string CROSS_GetPlatformConfigDir()
-{
-	const auto dir = get_platform_config_dir().string();
-	assert(dir.back() != CROSS_FILESPLIT);
-	return dir + CROSS_FILESPLIT;
-}
-
-void Cross::GetPlatformConfigDir(std::string &in)
-{
-	in = CROSS_GetPlatformConfigDir();
-}
-
 void Cross::GetPlatformConfigName(std::string &in)
 {
 	in = GetConfigName();
