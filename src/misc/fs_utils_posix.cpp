@@ -113,6 +113,13 @@ int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags) noexcept
 
 #if !defined(MACOSX)
 
+std_fs::path get_xdg_config_home() noexcept
+{
+	const char* var       = getenv("XDG_CONFIG_HOME");
+	const char* conf_home = ((var && var[0]) ? var : "~/.config");
+	return std_fs::path(CROSS_ResolveHome(conf_home));
+}
+
 std_fs::path get_xdg_data_home() noexcept
 {
 	const char* var       = getenv("XDG_DATA_HOME");
