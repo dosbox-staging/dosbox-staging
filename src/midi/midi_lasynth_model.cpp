@@ -50,7 +50,7 @@ LASynthModel::LASynthModel(const std::string &rom_name,
 }
 
 // Checks if its ROMs can be positively found in the provided directory
-bool LASynthModel::InDir(const service_t &service, const std::string &dir) const
+bool LASynthModel::InDir(const service_t& service, const std_fs::path& dir) const
 {
 	assert(service);
 
@@ -58,12 +58,13 @@ bool LASynthModel::InDir(const service_t &service, const std::string &dir) const
 		if (!rom)
 			return false;
 
-		const std::string rom_path = dir + rom->filename;
-		if (!path_exists(rom_path))
+		const auto rom_path = dir / rom->filename;
+		if (!std_fs::exists(rom_path))
 			return false;
 
 		mt32emu_rom_info info;
-		if (service->identifyROMFile(&info, rom_path.c_str(), nullptr) != MT32EMU_RC_OK)
+		if (service->identifyROMFile(&info, rom_path.string().c_str(), nullptr) !=
+		    MT32EMU_RC_OK)
 			return false;
 
 		if (rom->type == ROM_TYPE::UNVERSIONED)
@@ -84,7 +85,7 @@ bool LASynthModel::InDir(const service_t &service, const std::string &dir) const
 }
 
 // If present, loads either the full or partial ROMs from the provided directory
-bool LASynthModel::Load(const service_t &service, const std::string &dir) const
+bool LASynthModel::Load(const service_t& service, const std_fs::path& dir) const
 {
 	if (!service || !InDir(service, dir))
 		return false;
@@ -93,8 +94,8 @@ bool LASynthModel::Load(const service_t &service, const std::string &dir) const
 	                                 mt32emu_return_code expected_code) -> bool {
 		if (!rom_full)
 			return false;
-		const std::string rom_path = dir + rom_full->filename;
-		const auto rcode = service->addROMFile(rom_path.c_str());
+		const auto rom_path = dir / rom_full->filename;
+		const auto rcode = service->addROMFile(rom_path.string().c_str());
 		return rcode == expected_code;
 	};
 
@@ -102,10 +103,11 @@ bool LASynthModel::Load(const service_t &service, const std::string &dir) const
 	                                  mt32emu_return_code expected_code) -> bool {
 		if (!rom_1 || !rom_2)
 			return false;
-		const std::string rom_1_path = dir + rom_1->filename;
-		const std::string rom_2_path = dir + rom_2->filename;
-		const auto rcode = service->mergeAndAddROMFiles(rom_1_path.c_str(),
-		                                                rom_2_path.c_str());
+		const auto rom_1_path = dir / rom_1->filename;
+		const auto rom_2_path = dir / rom_2->filename;
+
+		const auto rcode = service->mergeAndAddROMFiles(
+		        rom_1_path.string().c_str(), rom_2_path.string().c_str());
 		return rcode == expected_code;
 	};
 

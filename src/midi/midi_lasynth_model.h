@@ -28,8 +28,10 @@
 #include <memory>
 #include <string>
 
-#define MT32EMU_API_TYPE 3
-#include <mt32emu/mt32emu.h>
+#	include "std_filesystem.h"
+
+#	define MT32EMU_API_TYPE 3
+#	include <mt32emu/mt32emu.h>
 
 // An LA Synth Model consists of PCM and Control ROMs either in full or partial
 // form.
@@ -68,8 +70,8 @@ public:
 	bool Matches(const std::string &model_name) const;
 
 	using service_t = std::unique_ptr<MT32Emu::Service>;
-	bool InDir(const service_t &service, const std::string &dir) const;
-	bool Load(const service_t &service, const std::string &dir) const;
+	bool InDir(const service_t& service, const std_fs::path& dir) const;
+	bool Load(const service_t& service, const std_fs::path& dir) const;
 
 private:
 	size_t SetVersion();
