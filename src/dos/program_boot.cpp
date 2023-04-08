@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -456,8 +457,8 @@ void BOOT::Run(void)
 				uint32_t new_int18 = mem_readd(0x60);
 				if (old_int18 != new_int18) {
 					/* boot cartridge (int18) */
-					SegSet16(cs, RealSeg(new_int18));
-					reg_ip = RealOff(new_int18);
+					SegSet16(cs, RealSegment(new_int18));
+					reg_ip = RealOffset(new_int18);
 				}
 			} else {
 				if (cfound_at > 0) {

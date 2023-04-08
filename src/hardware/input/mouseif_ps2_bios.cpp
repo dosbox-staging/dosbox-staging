@@ -857,8 +857,8 @@ void MOUSEBIOS_DoCallback()
 
 	bios_clear_oldest_frame();
 
-	CPU_Push16(RealSeg(ps2_callback));
-	CPU_Push16(RealOff(ps2_callback));
+	CPU_Push16(RealSegment(ps2_callback));
+	CPU_Push16(RealOffset(ps2_callback));
 	SegSet16(cs, callback_seg);
 	reg_ip = callback_ofs;
 }

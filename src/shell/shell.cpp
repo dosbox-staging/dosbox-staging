@@ -912,12 +912,12 @@ static Bitu INT2E_Handler()
 	dos.psp(DOS_FIRST_SHELL);
 	DOS_PSP psp(DOS_FIRST_SHELL);
 	psp.SetCommandTail(RealMakeSeg(ds,reg_si));
-	SegSet16(ss,RealSeg(psp.GetStack()));
+	SegSet16(ss,RealSegment(psp.GetStack()));
 	reg_sp=2046;
 
 	/* Read and fix up command string */
 	CommandTail tail;
-	MEM_BlockRead(PhysMake(dos.psp(),128),&tail,128);
+	MEM_BlockRead(PhysicalMake(dos.psp(),128),&tail,128);
 	if (tail.count<127) tail.buffer[tail.count]=0;
 	else tail.buffer[126]=0;
 	char* crlf=strpbrk(tail.buffer,"\r\n");
@@ -932,8 +932,8 @@ static Bitu INT2E_Handler()
 
 	/* Restore process and "return" to caller */
 	dos.psp(save_psp);
-	SegSet16(cs,RealSeg(save_ret));
-	reg_ip=RealOff(save_ret);
+	SegSet16(cs,RealSegment(save_ret));
+	reg_ip=RealOffset(save_ret);
 	reg_ax=0;
 	return CBRET_NONE;
 }
@@ -1559,8 +1559,8 @@ void SHELL_Init() {
 	call_shellstop=CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */
 	RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
-	SegSet16(cs,RealSeg(newcsip));
-	reg_ip=RealOff(newcsip);
+	SegSet16(cs,RealSegment(newcsip));
+	reg_ip=RealOffset(newcsip);
 
 	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET,"shell stop");
 	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramCreate);
@@ -1583,7 +1583,7 @@ void SHELL_Init() {
 	/* Set up int 2e handler */
 	Bitu call_int2e=CALLBACK_Allocate();
 	RealPt addr_int2e=RealMake(psp_seg+16+1,8);
-	CALLBACK_Setup(call_int2e,&INT2E_Handler,CB_IRET_STI,Real2Phys(addr_int2e),"Shell Int 2e");
+	CALLBACK_Setup(call_int2e,&INT2E_Handler,CB_IRET_STI,RealToPhysical(addr_int2e),"Shell Int 2e");
 	RealSetVec(0x2e,addr_int2e);
 
 	/* Setup MCBs */
@@ -1597,7 +1597,7 @@ void SHELL_Init() {
 	envmcb.SetType(0x4d);
 
 	/* Setup environment */
-	PhysPt env_write=PhysMake(env_seg,0);
+	PhysPt env_write=PhysicalMake(env_seg,0);
 	MEM_BlockWrite(env_write,path_string,(Bitu)(strlen(path_string)+1));
 	env_write += (PhysPt)(strlen(path_string)+1);
 	MEM_BlockWrite(env_write,comspec_string,(Bitu)(strlen(comspec_string)+1));
@@ -1638,7 +1638,7 @@ void SHELL_Init() {
 	tail.count=(uint8_t)strlen(init_line);
 	memset(&tail.buffer,0,127);
 	safe_strcpy(tail.buffer, init_line);
-	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);
+	MEM_BlockWrite(PhysicalMake(psp_seg,128),&tail,128);
 
 	/* Setup internal DOS Variables */
 	dos.dta(RealMake(psp_seg,0x80));

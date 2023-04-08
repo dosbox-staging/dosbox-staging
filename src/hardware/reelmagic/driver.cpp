@@ -188,7 +188,7 @@ class ReelMagic_MediaPlayerDOSFile : public ReelMagic_MediaPlayerFile {
 
 	static std::string strcpyFromDos(const uint16_t seg, const uint16_t ptr, const bool firstByteIsLen)
 	{
-		PhysPt dosptr = PhysMake(seg, ptr);
+		PhysPt dosptr = PhysicalMake(seg, ptr);
 		std::string rv;
 		rv.resize(firstByteIsLen ? ((size_t)mem_readb(dosptr++)) : 256);
 		for (char* rv_ptr = &rv[0]; rv_ptr <= &rv[rv.size() - 1]; ++rv_ptr) {
@@ -513,10 +513,10 @@ static void EnqueueTopUserCallbackOnCPUResume()
 
 	case 0x2000:                                   // RTZ-style; shit is passed on the stack...
 		reg_ax = reg_bx = reg_cx = reg_dx = 0; // clear the GP regs for good measure...
-		mem_writew(PhysMake(SegValue(ss), reg_sp -= 2), ucc.param2);
-		mem_writew(PhysMake(SegValue(ss), reg_sp -= 2), ucc.param1);
-		mem_writew(PhysMake(SegValue(ss), reg_sp -= 2), ucc.handle);
-		mem_writew(PhysMake(SegValue(ss), reg_sp -= 2), ucc.command);
+		mem_writew(PhysicalMake(SegValue(ss), reg_sp -= 2), ucc.param2);
+		mem_writew(PhysicalMake(SegValue(ss), reg_sp -= 2), ucc.param1);
+		mem_writew(PhysicalMake(SegValue(ss), reg_sp -= 2), ucc.handle);
+		mem_writew(PhysicalMake(SegValue(ss), reg_sp -= 2), ucc.command);
 		break;
 
 	default:
@@ -536,14 +536,14 @@ static void EnqueueTopUserCallbackOnCPUResume()
 	// push the far-call return address...
 
 	// return address to invoke CleanupFromUserCallback()
-	mem_writew(PhysMake(SegValue(ss), reg_sp -= 2), RealSeg(_userCallbackReturnIp));
+	mem_writew(PhysicalMake(SegValue(ss), reg_sp -= 2), RealSegment(_userCallbackReturnIp));
 
 	// return address to invoke CleanupFromUserCallback()
-	mem_writew(PhysMake(SegValue(ss), reg_sp -= 2), RealOff(_userCallbackReturnIp));
+	mem_writew(PhysicalMake(SegValue(ss), reg_sp -= 2), RealOffset(_userCallbackReturnIp));
 
 	// then we blast off into the wild blue...
-	SegSet16(cs, RealSeg(_userCallbackFarPtr));
-	reg_ip = RealOff(_userCallbackFarPtr);
+	SegSet16(cs, RealSegment(_userCallbackFarPtr));
+	reg_ip = RealOffset(_userCallbackFarPtr);
 
 	APILOG(LOG_REELMAGIC, LOG_NORMAL)
 	("Post-Invoking registered user-callback on CPU resume. cmd=%04Xh handle=%04Xh p1=%04Xh p2=%04Xh",
@@ -1297,7 +1297,7 @@ static bool RMDEV_SYS_int2fHandler()
 		//       before the "INT 2fh" call... therfore, I am assuming the segment to
 		//       output the string to is indeed DX and not DS...
 		reg_ax = 0;
-		MEM_BlockWrite(PhysMake(reg_dx, reg_bx),
+		MEM_BlockWrite(PhysicalMake(reg_dx, reg_bx),
 		               REELMAGIC_FMPDRV_EXE_LOCATION,
 		               sizeof(REELMAGIC_FMPDRV_EXE_LOCATION));
 		return true;

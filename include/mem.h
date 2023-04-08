@@ -177,23 +177,23 @@ static inline void real_writed(uint16_t seg, uint16_t off, uint32_t val)
 	mem_writed(base + off, val);
 }
 
-static inline uint16_t RealSeg(RealPt pt)
+static inline uint16_t RealSegment(RealPt pt)
 {
 	return static_cast<uint16_t>(pt >> 16);
 }
 
-static inline uint16_t RealOff(RealPt pt)
+static inline uint16_t RealOffset(RealPt pt)
 {
 	return static_cast<uint16_t>(pt & 0xffff);
 }
 
-static inline PhysPt Real2Phys(RealPt pt)
+static inline PhysPt RealToPhysical(RealPt pt)
 {
-	const auto base = static_cast<uint32_t>(RealSeg(pt) << 4);
-	return base + RealOff(pt);
+	const auto base = static_cast<uint32_t>(RealSegment(pt) << 4);
+	return base + RealOffset(pt);
 }
 
-static inline PhysPt PhysMake(uint16_t seg, uint16_t off)
+static inline PhysPt PhysicalMake(uint16_t seg, uint16_t off)
 {
 	const auto base = static_cast<uint32_t>(seg << 4);
 	return base + off;

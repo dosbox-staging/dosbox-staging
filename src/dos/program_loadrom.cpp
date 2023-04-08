@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -79,11 +80,11 @@ void LOADROM::Run(void)
 				WriteOut(MSG_Get("PROGRAM_LOADROM_INCOMPATIBLE"));
 				return;
 			}
-			rom_base = PhysMake(0xc000, 0); // video BIOS
+			rom_base = PhysicalMake(0xc000, 0); // video BIOS
 		} else if (data_read == 0x8000 && rom_buffer[0] == 0xe9 &&
 		           rom_buffer[1] == 0x8f && rom_buffer[2] == 0x7e &&
 		           strncmp((char*)(&rom_buffer[0x4cd4]), "IBM", 3) == 0) {
-			rom_base = PhysMake(0xf600, 0); // BASIC
+			rom_base = PhysicalMake(0xf600, 0); // BASIC
 		}
 
 		if (rom_base) {
@@ -94,7 +95,7 @@ void LOADROM::Run(void)
 
 			if (rom_base == 0xc0000) {
 				/* initialize video BIOS */
-				phys_writeb(PhysMake(0xf000, 0xf065), 0xcf);
+				phys_writeb(PhysicalMake(0xf000, 0xf065), 0xcf);
 				reg_flags &= ~FLAG_IF;
 				CALLBACK_RunRealFar(0xc000, 0x0003);
 				LOG_MSG("Video BIOS ROM loaded and initialized.");

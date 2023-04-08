@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -645,8 +646,8 @@ static Bitu DOS_21Handler(void) {
 		dos.verify=(reg_al==1);
 		break;
 	case 0x2f:		/* Get Disk Transfer Area */
-		SegSet16(es,RealSeg(dos.dta()));
-		reg_bx=RealOff(dos.dta());
+		SegSet16(es,RealSegment(dos.dta()));
+		reg_bx=RealOffset(dos.dta());
 		break;
 	case 0x30:		/* Get DOS Version */
 		if (reg_al==0) reg_bh=0xFF;		/* Fake Microsoft DOS */
@@ -1020,8 +1021,8 @@ static Bitu DOS_21Handler(void) {
 		while (count<DOS_DRIVES && Drives[count] && !Drives[count]->isRemovable()) count++;
 		dos_infoblock.SetBlockDevices(count);
 		RealPt addr=dos_infoblock.GetPointer();
-		SegSet16(es,RealSeg(addr));
-		reg_bx=RealOff(addr);
+		SegSet16(es,RealSegment(addr));
+		reg_bx=RealOffset(addr);
 		LOG(LOG_DOSMISC,LOG_NORMAL)("Call is made for list of lists - let's hope for the best");
 		break; }
 //TODO Think hard how shit this is gonna be
@@ -1194,8 +1195,8 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x63:					/* DOUBLE BYTE CHARACTER SET */
 		if(reg_al == 0) {
-			SegSet16(ds,RealSeg(dos.tables.dbcs));
-			reg_si=RealOff(dos.tables.dbcs);		
+			SegSet16(ds,RealSegment(dos.tables.dbcs));
+			reg_si=RealOffset(dos.tables.dbcs);		
 			reg_al = 0;
 			CALLBACK_SCF(false); //undocumented
 		} else reg_al = 0xff; //Doesn't officially touch carry flag

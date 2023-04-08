@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -74,16 +75,16 @@ void INT10_DisplayCombinationCode(uint16_t * dcc,bool set) {
 	uint16_t dccentry=0xffff;
 	// walk the tables...
 	RealPt vsavept=real_readd(BIOSMEM_SEG,BIOSMEM_VS_POINTER);
-	RealPt svstable=real_readd(RealSeg(vsavept),RealOff(vsavept)+0x10);
+	RealPt svstable=real_readd(RealSegment(vsavept),RealOffset(vsavept)+0x10);
 	if (svstable) {
-		RealPt dcctable=real_readd(RealSeg(svstable),RealOff(svstable)+0x02);
-		uint8_t entries=real_readb(RealSeg(dcctable),RealOff(dcctable)+0x00);
+		RealPt dcctable=real_readd(RealSegment(svstable),RealOffset(svstable)+0x02);
+		uint8_t entries=real_readb(RealSegment(dcctable),RealOffset(dcctable)+0x00);
 		if (set) {
 			if (entries) {
 				uint16_t swap=(*dcc<<8)|(*dcc>>8);
 				// search for the index in the dcc table
 				for (uint8_t entry=0; entry<entries; entry++) {
-					dccentry=real_readw(RealSeg(dcctable),RealOff(dcctable)+0x04+entry*2);
+					dccentry=real_readw(RealSegment(dcctable),RealOffset(dcctable)+0x04+entry*2);
 					if ((dccentry==*dcc) || (dccentry==swap)) {
 						index=entry;
 						break;
@@ -94,7 +95,7 @@ void INT10_DisplayCombinationCode(uint16_t * dcc,bool set) {
 			index=real_readb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX);
 			// check if index within range
 			if (index<entries) {
-				dccentry=real_readw(RealSeg(dcctable),RealOff(dcctable)+0x04+index*2);
+				dccentry=real_readw(RealSegment(dcctable),RealOffset(dcctable)+0x04+index*2);
 				if ((dccentry&0xff)==0) dccentry>>=8;
 				else if (dccentry>>8) {
 					uint16_t cfg_mono=((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)==0x30)?1:0;

@@ -940,7 +940,7 @@ uint8_t FCB_Parsename(uint16_t seg,uint16_t offset,uint8_t parser ,char *string,
 	uint8_t ret=0;
 	if (!(parser & PARSE_DFLT_DRIVE)) {
 		// default drive forced, this intentionally invalidates an extended FCB
-		mem_writeb(PhysMake(seg,offset),0);
+		mem_writeb(PhysicalMake(seg,offset),0);
 	}
 	DOS_FCB fcb(seg,offset,false);	// always a non-extended FCB
 	bool hasdrive = false;
@@ -1110,7 +1110,7 @@ static void SaveFindResult(DOS_FCB & find_fcb) {
 	find_fcb.GetAttr(find_attr); /* Gets search attributes if extended */
 	/* Create a correct file and extention */
 	const auto [file_name, ext] = DTAExtendName(name);
-	DOS_FCB fcb(RealSeg(dos.dta()),RealOff(dos.dta()));//TODO
+	DOS_FCB fcb(RealSegment(dos.dta()),RealOffset(dos.dta()));//TODO
 	fcb.Create(find_fcb.Extended());
 	fcb.SetName(drive, file_name.c_str(), ext.c_str());
 	fcb.SetAttr(find_attr);      /* Only adds attribute if fcb is extended */
@@ -1139,7 +1139,7 @@ bool DOS_FCBOpen(uint16_t seg,uint16_t offset) {
 		LOG(LOG_FCB,LOG_WARN)("Wildcards in filename");
 		if (!DOS_FCBFindFirst(seg,offset)) return false;
 		DOS_DTA find_dta(dos.tables.tempdta);
-		DOS_FCB find_fcb(RealSeg(dos.tables.tempdta),RealOff(dos.tables.tempdta));
+		DOS_FCB find_fcb(RealSegment(dos.tables.tempdta),RealOffset(dos.tables.tempdta));
 
 		uint32_t size = 0;
 		uint16_t date = 0;
@@ -1228,7 +1228,7 @@ uint8_t DOS_FCBRead(uint16_t seg,uint16_t offset,uint16_t recno) {
 		Bitu i = toread;
 		while(i < rec_size) dos_copybuf[i++] = 0;
 	}
-	MEM_BlockWrite(Real2Phys(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
+	MEM_BlockWrite(RealToPhysical(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
 	if (++cur_rec>127) { cur_block++;cur_rec=0; }
 	fcb.SetRecord(cur_block,cur_rec);
 	if (toread==rec_size) return FCB_SUCCESS;
@@ -1251,7 +1251,7 @@ uint8_t DOS_FCBWrite(uint16_t seg,uint16_t offset,uint16_t recno) {
 	fcb.GetRecord(cur_block,cur_rec);
 	uint32_t pos=((cur_block*128)+cur_rec)*rec_size;
 	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_ERR_WRITE; 
-	MEM_BlockRead(Real2Phys(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
+	MEM_BlockRead(RealToPhysical(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
 	uint16_t towrite=rec_size;
 	if (!DOS_WriteFile(fhandle,dos_copybuf,&towrite,true)) return FCB_ERR_WRITE;
 	uint32_t size;uint16_t date,time;
@@ -1388,7 +1388,7 @@ bool DOS_FCBDeleteFile(uint16_t seg,uint16_t offset){
 	bool nextfile = false;
 	bool return_value = false;
 	nextfile = DOS_FCBFindFirst(seg,offset);
-	DOS_FCB fcb(RealSeg(new_dta),RealOff(new_dta));
+	DOS_FCB fcb(RealSegment(new_dta),RealOffset(new_dta));
 	while(nextfile) {
 		char shortname[DOS_FCBNAME] = { 0 };
 		fcb.GetName(shortname);
@@ -1454,8 +1454,8 @@ bool DOS_GetAllocationInfo(uint8_t drive,uint16_t * _bytes_sector,uint8_t * _sec
 	}
 	uint16_t _free_clusters;
 	Drives[drive]->AllocationInfo(_bytes_sector,_sectors_cluster,_total_clusters,&_free_clusters);
-	SegSet16(ds,RealSeg(dos.tables.mediaid));
-	reg_bx=RealOff(dos.tables.mediaid+drive*9);
+	SegSet16(ds,RealSegment(dos.tables.mediaid));
+	reg_bx=RealOffset(dos.tables.mediaid+drive*9);
 	return true;
 }
 

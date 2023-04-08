@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -94,8 +95,8 @@ static Bitu stop_handler(void) {
 
 void CALLBACK_RunRealFar(uint16_t seg,uint16_t off) {
 	reg_sp-=4;
-	real_writew(SegValue(ss),reg_sp+0,RealOff(CALLBACK_RealPointer(call_stop)));
-	real_writew(SegValue(ss),reg_sp+2,RealSeg(CALLBACK_RealPointer(call_stop)));
+	real_writew(SegValue(ss),reg_sp+0,RealOffset(CALLBACK_RealPointer(call_stop)));
+	real_writew(SegValue(ss),reg_sp+2,RealSegment(CALLBACK_RealPointer(call_stop)));
 	auto oldeip=reg_eip;
 	auto oldcs=SegValue(cs);
 	reg_eip=off;

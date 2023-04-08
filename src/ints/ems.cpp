@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -137,7 +138,7 @@ bool device_EMM::ReadFromControlChannel(PhysPt bufptr,uint16_t size,uint16_t * r
 			if (!is_emm386) return false;
 			if (size!=6) return false;
 			if (GEMMIS_seg==0) GEMMIS_seg=DOS_GetMemory(0x20);
-			PhysPt GEMMIS_addr=PhysMake(GEMMIS_seg,0);
+			PhysPt GEMMIS_addr=PhysicalMake(GEMMIS_seg,0);
 
 			mem_writew(GEMMIS_addr+0x00,0x0004);			// flags
 			mem_writew(GEMMIS_addr+0x02,0x019d);			// size of this structure
@@ -1408,11 +1409,11 @@ public:
 
 		/* Add a little hack so it appears that there is an actual ems device installed */
 		const char* emsname = "EMMXXXX0";
-		MEM_BlockWrite(PhysMake(ems_baseseg, 0xa), emsname,
+		MEM_BlockWrite(PhysicalMake(ems_baseseg, 0xa), emsname,
 		               strlen(emsname) + 1);
 
 		call_int67=CALLBACK_Allocate();
-		CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET,PhysMake(ems_baseseg,4),"Int 67 ems");
+		CALLBACK_Setup(call_int67,&INT67_Handler,CB_IRET,PhysicalMake(ems_baseseg,4),"Int 67 ems");
 		RealSetVec(0x67,RealMake(ems_baseseg,4),old67_pointer);
 
 		/* Register the ems device */
@@ -1506,7 +1507,7 @@ public:
 
 		/* Remove the emsname and callback hack */
 		char buf[32]= { 0 };
-		MEM_BlockWrite(PhysMake(ems_baseseg,0),buf,32);
+		MEM_BlockWrite(PhysicalMake(ems_baseseg,0),buf,32);
 		RealSetVec(0x67,old67_pointer);
 
 		/* Release memory allocated to system handle */

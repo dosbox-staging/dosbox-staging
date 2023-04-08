@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -137,8 +138,8 @@ static Bitu PROGRAMS_Handler(void)
 	static_assert(exec_block_size < UINT16_MAX, "Should only be 19 bytes");
 
 	/* Read the index from program code in memory */
-	PhysPt reader = PhysMake(dos.psp(),
-	                         256 + static_cast<uint16_t>(exec_block_size));
+	PhysPt reader = PhysicalMake(dos.psp(),
+		256 + static_cast<uint16_t>(exec_block_size));
 	HostPt writer = (HostPt)&index;
 	for (; size > 0; size--) {
 		*writer++ = mem_readb(reader++);
@@ -156,13 +157,13 @@ Program::Program()
 	/* Find the command line and setup the PSP */
 	psp = new DOS_PSP(dos.psp());
 	/* Scan environment for filename */
-	PhysPt envscan = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt envscan = PhysicalMake(psp->GetEnvironment(), 0);
 	while (mem_readb(envscan)) {
 		envscan += mem_strlen(envscan) + 1;
 	}
 	envscan += 3;
 	CommandTail tail;
-	MEM_BlockRead(PhysMake(dos.psp(), 128), &tail, 128);
+	MEM_BlockRead(PhysicalMake(dos.psp(), 128), &tail, 128);
 	if (tail.count < 127) {
 		tail.buffer[tail.count] = 0;
 	} else {
@@ -280,7 +281,7 @@ void Program::InjectMissingNewline()
 bool Program::GetEnvStr(const char* entry, std::string& result) const
 {
 	/* Walk through the internal environment and see for a match */
-	PhysPt env_read = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 
 	char env_string[1024 + 1];
 	result.erase();
@@ -316,7 +317,7 @@ bool Program::GetEnvStr(const char* entry, std::string& result) const
 bool Program::GetEnvNum(Bitu num, std::string& result) const
 {
 	char env_string[1024 + 1];
-	PhysPt env_read = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 	do {
 		MEM_StrCopy(env_read, env_string, 1024);
 		if (!env_string[0]) {
@@ -334,7 +335,7 @@ bool Program::GetEnvNum(Bitu num, std::string& result) const
 
 Bitu Program::GetEnvCount() const
 {
-	PhysPt env_read = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 	Bitu num        = 0;
 	while (mem_readb(env_read) != 0) {
 		for (; mem_readb(env_read); env_read++) {
@@ -347,7 +348,7 @@ Bitu Program::GetEnvCount() const
 
 bool Program::SetEnv(const char* entry, const char* new_string)
 {
-	PhysPt env_read = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 
 	// Get size of environment.
 	DOS_MCB mcb(psp->GetEnvironment() - 1);
