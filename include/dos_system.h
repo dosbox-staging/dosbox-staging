@@ -391,14 +391,12 @@ enum SeekType : uint8_t {
 	DOS_SEEK_END = 2,
 };
 
-/*
- A multiplex handler should read the registers to check what function is being called
- If the handler returns false dos will stop checking other handlers
-*/
+// A multiplex handler should read the registers to check what function is being
+// called. If the handler returns false DOS will stop checking other handlers.
 
 typedef bool (MultiplexHandler)(void);
-void DOS_AddMultiplexHandler(MultiplexHandler * handler);
-void DOS_DelMultiplexHandler(MultiplexHandler * handler);
+void DOS_AddMultiplexHandler(MultiplexHandler* handler);
+void DOS_DeleteMultiplexHandler(MultiplexHandler* handler);
 
 /* AddDevice stores the pointer to a created device */
 void DOS_AddDevice(DOS_Device * adddev);

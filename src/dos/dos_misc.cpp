@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,7 +35,8 @@ void DOS_AddMultiplexHandler(MultiplexHandler * handler) {
 	Multiplex.push_front(handler);
 }
 
-void DOS_DelMultiplexHandler(MultiplexHandler * handler) {
+void DOS_DeleteMultiplexHandler(MultiplexHandler* handler)
+{
 	for(Multiplex_it it =Multiplex.begin();it != Multiplex.end();it++) {
 		if(*it == handler) {
 			Multiplex.erase(it);

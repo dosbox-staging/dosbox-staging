@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1178,7 +1179,7 @@ public:
 		}
 		DisconnectFromServer(false);
 
-		DOS_DelMultiplexHandler(IPX_Multiplex);
+		DOS_DeleteMultiplexHandler(IPX_Multiplex);
 		RealSetVec(0x73,old_73_vector);
 		IO_WriteB(0xa1,IO_ReadB(0xa1)|8);	// disable IRQ11
 
