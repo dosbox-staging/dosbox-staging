@@ -293,19 +293,7 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	add_if_exists(std_fs::path(CUSTOM_DATADIR) / CANONICAL_PROJECT_NAME);
 
 	// Fourth priority is the user's XDG data specification
-	//
-	// $XDG_DATA_HOME defines the base directory relative to which
-	// user-specific data files should be stored. If $XDG_DATA_HOME is
-	// either not set or empty, a default equal to $HOME/.local/share should
-	// be used.
-	// Ref:https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-	//
-	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
-	if (!xdg_data_home_env)
-		xdg_data_home_env = "~/.local/share";
-
-	const std_fs::path xdg_data_home = CROSS_ResolveHome(xdg_data_home_env);
-	add_if_exists(xdg_data_home / CANONICAL_PROJECT_NAME);
+	add_if_exists(get_xdg_data_home() / CANONICAL_PROJECT_NAME);
 
 	// Fifth priority is the system's XDG data specification
 	//

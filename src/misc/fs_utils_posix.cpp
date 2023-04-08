@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "cross.h"
 #include "logging.h"
 #include "string_utils.h"
 
@@ -109,5 +110,16 @@ int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags) noexcept
 	}
 	return err;
 }
+
+#if !defined(MACOSX)
+
+std_fs::path get_xdg_data_home() noexcept
+{
+	const char* var       = getenv("XDG_DATA_HOME");
+	const char* data_home = ((var && var[0]) ? var : "~/.local/share");
+	return std_fs::path(CROSS_ResolveHome(data_home));
+}
+
+#endif
 
 #endif

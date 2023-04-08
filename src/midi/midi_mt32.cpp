@@ -241,10 +241,8 @@ static std::deque<std_fs::path> get_rom_dirs()
 
 static std::deque<std_fs::path> get_rom_dirs()
 {
-	// First priority is $XDG_DATA_HOME
-	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
-	const auto xdg_data_home      = std_fs::path(CROSS_ResolveHome(
-                xdg_data_home_env ? xdg_data_home_env : "~/.local/share"));
+	// First priority is user-specific data location
+	const auto xdg_data_home = get_xdg_data_home();
 
 	std::deque<std_fs::path> dirs = {
 	        xdg_data_home / "dosbox/mt32-roms",
