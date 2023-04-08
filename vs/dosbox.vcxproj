@@ -712,6 +712,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\misc\string_utils.cpp" />
     <ClCompile Include="..\src\misc\support.cpp" />
     <ClCompile Include="..\src\misc\unicode.cpp" />
+    <ClCompile Include="..\src\shell\autoexec.cpp" />
     <ClCompile Include="..\src\shell\shell.cpp" />
     <ClCompile Include="..\src\shell\shell_batch.cpp" />
     <ClCompile Include="..\src\shell\shell_cmds.cpp" />
@@ -732,6 +733,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
   <ItemGroup>
     <ClInclude Include="..\include\ansi_code_markup.h" />
     <ClInclude Include="..\include\audio_frame.h" />
+    <ClInclude Include="..\include\autoexec.h" />
     <ClInclude Include="..\include\bios.h" />
     <ClInclude Include="..\include\bios_disk.h" />
     <ClInclude Include="..\include\bitops.h" />

@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -32,8 +33,6 @@
 
 #define WIKI_URL                   "https://github.com/dosbox-staging/dosbox-staging/wiki"
 #define WIKI_ADD_UTILITIES_ARTICLE WIKI_URL "/Add-Utilities"
-
-constexpr int autoexec_maxsize = 4096;
 
 class CommandLine {
 public:

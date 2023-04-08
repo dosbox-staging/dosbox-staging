@@ -21,6 +21,7 @@
 
 #include "programs.h"
 
+#include "autoexec.h"
 #include "program_attrib.h"
 #include "program_autotype.h"
 #include "program_boot.h"
@@ -47,7 +48,6 @@
 
 extern uint32_t floppytype;
 
-extern char autoexec_data[autoexec_maxsize];
 std::unique_ptr<Program> CONFIG_ProgramCreate();
 std::unique_ptr<Program> MIXER_ProgramCreate();
 std::unique_ptr<Program> SHELL_ProgramCreate();
@@ -91,8 +91,10 @@ void Add_VFiles(const bool add_autoexec)
 	PROGRAMS_MakeFile("SERIAL.COM", ProgramCreate<SERIAL>);
 	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
-	if (add_autoexec)
-		VFILE_Register("AUTOEXEC.BAT", (uint8_t *)autoexec_data, (uint32_t)strlen(autoexec_data));
+
+	if (add_autoexec) {
+		AUTOEXEC_RegisterFile();
+	}
 }
 
 void DOS_SetupPrograms(void)
