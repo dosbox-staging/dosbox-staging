@@ -26,6 +26,7 @@
 #include "cpu.h"
 #include "dos_inc.h"
 #include "inout.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "regs.h"
 #include "setup.h"
@@ -117,10 +118,10 @@ struct XMS_MemMove {
 static struct {
 	bool enable_global = false;
 
-	uint32_t enable_local_count = 0;
+	uint32_t num_times_enabled = 0;
 } a20;
 
-constexpr uint32_t A20MaxLocalCount = UINT32_MAX;
+constexpr uint32_t A20MaxTimesEnabled = UINT32_MAX;
 
 static struct {
 	// TODO: HMA support for applications is not yet available in the core
@@ -186,12 +187,7 @@ static void warn_umb_realloc()
 static void a20_enable(const bool enable)
 {
 	uint8_t val = IO_Read(port_num_fast_a20);
-	if (enable) {
-		bit::set(val, bit::literals::b1);
-	} else {
-		bit::clear(val, bit::literals::b1);
-	}
-
+	bit::set_to(val, bit::literals::b1, enable);
 	IO_Write(port_num_fast_a20, val);
 }
 
@@ -205,7 +201,7 @@ static Result a20_local_enable()
 	// Microsoft HIMEM.SYS appears to set A20 only if the local count is 0
 	// at entering this call
 
-	if (a20.enable_local_count == A20MaxLocalCount) {
+	if (a20.num_times_enabled == A20MaxTimesEnabled) {
 		// Counter overflow protection
 
 		static bool first_time = true;
@@ -217,7 +213,7 @@ static Result a20_local_enable()
 		return Result::A20LineError;
 	}
 
-	if (a20.enable_local_count++ == 0) {
+	if (a20.num_times_enabled++ == 0) {
 		a20_enable(true);
 	}
 
@@ -229,11 +225,11 @@ static Result a20_local_disable()
 	// Microsoft HIMEM.SYS appears to disable A20 only if the local count is
 	// 1 at entering this call
 
-	if (!a20.enable_local_count) {
+	if (a20.num_times_enabled == 0) {
 		return Result::A20LineError; // HIMEM.SYS behavior
 	}
 
-	if (--a20.enable_local_count != 0) {
+	if (--a20.num_times_enabled != 0) {
 		return Result::A20StillEnabled;
 	}
 
@@ -396,12 +392,12 @@ static Result xms_move_memory(const PhysPt bpt)
 	if (length != 0) {
 		bool a20_was_enabled = a20_is_enabled();
 
-		++a20.enable_local_count;
+		++a20.num_times_enabled;
 		a20_enable(true);
 
 		mem_memcpy(destpt, srcpt, length);
 
-		--a20.enable_local_count;
+		--a20.num_times_enabled;
 		if (!a20_was_enabled) {
 			a20_enable(false);
 		}
@@ -598,8 +594,8 @@ static Bitu XMS_Handler()
 		result = xms_query_free_memory(reg_eax, reg_edx);
 		reg_bl = static_cast<uint8_t>(result);
 		// Cap sizes for older programs; newer ones use function 0x88
-		reg_eax = std::min(reg_eax, static_cast<uint32_t>(UINT16_MAX));
-		reg_edx = std::min(reg_edx, static_cast<uint32_t>(UINT16_MAX));
+		reg_eax = clamp_to_uint16(reg_eax);
+		reg_edx = clamp_to_uint16(reg_edx);
 		break;
 	case 0x09: // Allocate Extended Memory Block
 	{
@@ -746,9 +742,8 @@ XMS::XMS(Section* configuration) : Module_base(configuration), callbackhandler{}
 {
 	Section_prop* section = static_cast<Section_prop*>(configuration);
 
-	umb.is_available       = false;
-	a20.enable_global      = false;
-	a20.enable_local_count = 0;
+	umb = {};
+	a20 = {};
 
 	if (!section->Get_bool("xms")) {
 		return;
@@ -841,12 +836,11 @@ XMS::~XMS()
 // Lifecycle
 // ***************************************************************************
 
-static XMS* instance = nullptr;
+static std::unique_ptr<XMS> instance = {};
 
 static void XMS_ShutDown(Section* /* sec */)
 {
-	delete instance;
-	instance = nullptr;
+	instance = {};
 }
 
 void XMS_Init(Section* sec)
@@ -854,7 +848,7 @@ void XMS_Init(Section* sec)
 	assert(sec);
 
 	if (!instance) {
-		instance = new XMS(sec);
+		instance = std::make_unique<XMS>(sec);
 	}
 
 	constexpr auto changeable_at_runtime = true;
