@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -39,15 +40,17 @@
 
 #define CPU_CYCLES_LOWER_LIMIT		200
 
-#define CPU_ARCHTYPE_MIXED       0xff
-#define CPU_ARCHTYPE_086         0x05
-#define CPU_ARCHTYPE_186         0x15
-#define CPU_ARCHTYPE_286         0x25
-#define CPU_ARCHTYPE_386SLOW     0x30
-#define CPU_ARCHTYPE_386FAST     0x35
-#define CPU_ARCHTYPE_486OLDSLOW  0x40
-#define CPU_ARCHTYPE_486NEWSLOW  0x45
-#define CPU_ARCHTYPE_PENTIUMSLOW 0x50
+enum class ArchitectureType {
+	Intel86         = 0x05,
+	Intel186        = 0x15,
+	Intel286        = 0x25,
+	Intel386Slow    = 0x30,
+	Intel386Fast    = 0x35,
+	Intel486OldSlow = 0x40,
+	Intel486NewSlow = 0x45,
+	PentiumSlow     = 0x50,
+	Mixed           = 0xff,
+};
 
 /* CPU Cycle Timing */
 extern int32_t CPU_Cycles;
@@ -61,7 +64,7 @@ extern bool CPU_CycleAutoAdjust;
 extern bool CPU_SkipCycleAutoAdjust;
 extern Bitu CPU_AutoDetermineMode;
 
-extern Bitu CPU_ArchitectureType;
+extern ArchitectureType CPU_ArchitectureType;
 
 extern Bitu CPU_PrefetchQueueSize;
 

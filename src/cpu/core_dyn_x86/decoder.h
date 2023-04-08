@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022       The DOSBox Staging Team
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -2310,7 +2310,7 @@ restart_prefix:
 			case 0xaf:dyn_imul_gvev(0);break;
 			/* CMPXCHG */
 			case 0xb1:
-				if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegalopcode;
+				if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegalopcode;
 				dyn_cmpxchg_evgv();break;
 			/* LFS,LGS */
 			case 0xb4:

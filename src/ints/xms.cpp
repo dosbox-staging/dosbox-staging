@@ -768,7 +768,7 @@ XMS::XMS(Section* configuration) : Module_base(configuration), callbackhandler{}
 	// Not emulating XMS for 8086/80186 emulation prevents the software
 	// from crashing.
 
-	if (CPU_ArchitectureType < CPU_ARCHTYPE_286) {
+	if (CPU_ArchitectureType < ArchitectureType::Intel286) {
 		LOG_WARNING("XMS: CPU 80186 or lower lacks address lines needed for XMS, disabling");
 		return;
 	}
