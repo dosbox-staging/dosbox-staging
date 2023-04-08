@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <queue>
 
+#include "autoexec.h"
 #include "control.h"
 #include "dma.h"
 #include "hardware.h"
@@ -114,7 +115,6 @@ struct VoiceCtrl {
 
 // Collection types involving constant quantities
 using address_array_t     = std::array<uint8_t, DMA_IRQ_ADDRESSES>;
-using autoexec_array_t    = std::array<std::unique_ptr<AutoexecObject>, 2>;
 using pan_scalars_array_t = std::array<AudioFrame, PAN_POSITIONS>;
 using ram_array_t         = std::vector<uint8_t>;
 using read_io_array_t     = std::array<IO_ReadHandleObject, READ_HANDLERS>;
@@ -271,7 +271,6 @@ private:
 	read_io_array_t read_handlers   = {};
 	write_io_array_t write_handlers = {};
 	voice_array_t voices            = {{nullptr}};
-	autoexec_array_t autoexec_lines = {};
 
 	const address_array_t dma_addresses = {
 	        {MIN_DMA_ADDRESS, 1, 3, 5, 6, MAX_IRQ_ADDRESS, 0, 0}};
@@ -937,34 +936,19 @@ void Gus::SetupEnvironment(uint16_t port, const char* ultradir_env_val)
 	assert(dma1 < 10 && dma2 < 10);
 	assert(irq1 <= 12 && irq2 <= 12);
 
-	const std::string at_set = "@SET";
-
 	// ULTRASND variable
 	char ultrasnd_env_val[] = "HHH,D,D,II,II";
 	safe_sprintf(ultrasnd_env_val, "%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
-	const auto ultrasnd_line = at_set + " " + ultrasnd_env_name + "=" +
-	                           ultrasnd_env_val;
-	autoexec_lines.at(0) = std::make_unique<AutoexecObject>(ultrasnd_line);
+	AUTOEXEC_SetVariable(ultrasnd_env_name, ultrasnd_env_val);
 
 	// ULTRADIR variable
-	const auto ultradir_line = at_set + " " + ultradir_env_name + "=" +
-	                           ultradir_env_val;
-	autoexec_lines.at(1) = std::make_unique<AutoexecObject>(ultradir_line);
-
-	if (first_shell) {
-		first_shell->SetEnv(ultrasnd_env_name, ultrasnd_env_val);
-		first_shell->SetEnv(ultradir_env_name, ultradir_env_val);
-	}
+	AUTOEXEC_SetVariable(ultradir_env_name, ultradir_env_val);
 }
 
 void Gus::ClearEnvironment()
 {
-	autoexec_lines = {};
-
-	if (first_shell) {
-		first_shell->SetEnv(ultrasnd_env_name, "");
-		first_shell->SetEnv(ultradir_env_name, "");
-	}
+	AUTOEXEC_SetVariable(ultrasnd_env_name, "");
+	AUTOEXEC_SetVariable(ultradir_env_name, "");
 }
 
 // Generate logarithmic to linear volume conversion tables

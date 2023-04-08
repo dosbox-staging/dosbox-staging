@@ -1088,7 +1088,6 @@ Bitu IPX_ESRHandler(void) {
 	return CBRET_NONE;
 }
 
-void VFILE_Remove(const char *name, const char *dir = "");
 bool NetWrapper_InitializeSDLNet(); // from misc_util.cpp
 
 class IPX final : public Module_base {

@@ -25,6 +25,7 @@
 using sv = std::string_view;
 
 #include "../ints/int10.h"
+#include "autoexec.h"
 #include "bios.h"
 #include "bios_disk.h"
 #include "callback.h"
@@ -1065,6 +1066,9 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_file
 			}
 			INT10_SetupRomMemoryChecksum();
 
+			// convert UTF-8 [autoexec] section to new code page
+			AUTOEXEC_NotifyNewCodePage();
+
 			return KEYB_NOERROR;
 		}
 
@@ -1697,6 +1701,9 @@ public:
 				LOG_MSG("LAYOUT: DOS keyboard layout loaded with main language code %s for layout %s",lcode,layoutname);
 			}
 		}
+
+		// Convert UTF-8 [autoexec] section to new code page
+		AUTOEXEC_NotifyNewCodePage();
 	}
 
 	~DOS_KeyboardLayout(){
