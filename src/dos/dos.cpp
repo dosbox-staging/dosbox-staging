@@ -394,6 +394,10 @@ static Bitu DOS_21Handler(void) {
 			free--;
 			for(;;) {
 				DOS_ReadFile(STDIN,&c,&n);
+				// gracefully exit potentially endless loop
+				if (shutdown_requested) {
+					break;
+				}
 				if (n == 0)				// End of file
 					E_Exit("DOS:0x0a:Redirected input reached EOF");
 				if (c == 10)			// Line feed
@@ -436,7 +440,13 @@ static Bitu DOS_21Handler(void) {
 			if (handle!=0xFF && Files[handle] && Files[handle]->IsName("CON")) {
 				uint8_t c;uint16_t n;
 				while (DOS_GetSTDINStatus()) {
-					n=1;	DOS_ReadFile(STDIN,&c,&n);
+					n=1;
+					DOS_ReadFile(STDIN,&c,&n);
+
+					// gracefully exit potentially endless loop
+					if (shutdown_requested) {
+						break;
+					}
 				}
 			}
 			switch (reg_al) {
