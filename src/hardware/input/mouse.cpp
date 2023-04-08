@@ -382,8 +382,8 @@ bool MOUSE_IsProbeForMappingAllowed()
 static Bitu int74_exit()
 {
 	const auto real_pt = CALLBACK_RealPointer(int74_ret_callback);
-	SegSet16(cs, RealSeg(real_pt));
-	reg_ip = RealOff(real_pt);
+	SegSet16(cs, RealSegment(real_pt));
+	reg_ip = RealOffset(real_pt);
 
 	return CBRET_NONE;
 }
@@ -392,8 +392,8 @@ static Bitu int74_handler()
 {
 	// Try BIOS events (from Intel 8042 controller)
 	if (MOUSEBIOS_CheckCallback()) {
-		CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
-		CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
+		CPU_Push16(RealSegment(CALLBACK_RealPointer(int74_ret_callback)));
+		CPU_Push16(RealOffset(CALLBACK_RealPointer(int74_ret_callback)));
 		MOUSEBIOS_DoCallback();		
 		// TODO: Handle both BIOS and DOS callback within
 		// in a single interrupt
@@ -405,8 +405,8 @@ static Bitu int74_handler()
 		const auto mask = MOUSEDOS_DoInterrupt();
 		if (mask) {
 			const auto real_pt = CALLBACK_RealPointer(int74_ret_callback);
-			CPU_Push16(RealSeg(real_pt));
-			CPU_Push16(RealOff(static_cast<RealPt>(real_pt) + 7));
+			CPU_Push16(RealSegment(real_pt));
+			CPU_Push16(RealOffset(static_cast<RealPt>(real_pt) + 7));
 
 			MOUSEDOS_DoCallback(mask);
 			return CBRET_NONE;

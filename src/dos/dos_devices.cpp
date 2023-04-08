@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -223,7 +224,7 @@ RealPt DOS_CheckExtDevice(const std::string_view name, const bool skip_existing_
 			}
 			const auto ext_dev = dynamic_cast<DOS_ExtDevice*>(dev);
 			if (ext_dev &&
-			    ext_dev->CheckSameDevice(RealSeg(rp),
+			    ext_dev->CheckSameDevice(RealSegment(rp),
 			                             DOS_GetDeviceStrategy(rp),
 			                             DOS_GetDeviceInterrupt(rp))) {
 				return true;
@@ -460,14 +461,14 @@ constexpr size_t name_length = 8;
 bool DOS_IsLastDevice(const RealPt rp)
 {
 	constexpr uint16_t last_offset_marker = 0xffff;
-	return RealOff(rp) == last_offset_marker;
+	return RealOffset(rp) == last_offset_marker;
 }
 
 // From the given real pointer, get the next device driver's real pointer
 RealPt DOS_GetNextDevice(const RealPt rp)
 {
-	return real_readd(RealSeg(rp),
-	                  RealOff(rp) + DeviceDriverInfo::next_rpt_offset);
+	return real_readd(RealSegment(rp),
+	                  RealOffset(rp) + DeviceDriverInfo::next_rpt_offset);
 }
 
 // Get the tail real pointer from the DOS device driver linked list
@@ -486,33 +487,33 @@ void DOS_AppendDevice(const uint16_t segment, const uint16_t offset)
 {
 	const auto new_rp  = RealMake(segment, offset);
 	const auto tail_rp = DOS_GetLastDevice();
-	real_writed(RealSeg(tail_rp), RealOff(tail_rp), new_rp);
+	real_writed(RealSegment(tail_rp), RealOffset(tail_rp), new_rp);
 }
 
 bool DOS_DeviceHasAttributes(const RealPt rp, const uint16_t req_attributes)
 {
 	const auto attributes = real_readw(
-	        RealSeg(rp), RealOff(rp) + DeviceDriverInfo::attributes_offset);
+	        RealSegment(rp), RealOffset(rp) + DeviceDriverInfo::attributes_offset);
 
 	return (attributes & req_attributes) == req_attributes;
 }
 
 uint16_t DOS_GetDeviceStrategy(const RealPt rp)
 {
-	return real_readw(RealSeg(rp),
-	                  RealOff(rp) + DeviceDriverInfo::strategy_offset);
+	return real_readw(RealSegment(rp),
+	                  RealOffset(rp) + DeviceDriverInfo::strategy_offset);
 }
 
 uint16_t DOS_GetDeviceInterrupt(const RealPt rp)
 {
-	return real_readw(RealSeg(rp),
-	                  RealOff(rp) + DeviceDriverInfo::interrupt_offset);
+	return real_readw(RealSegment(rp),
+	                  RealOffset(rp) + DeviceDriverInfo::interrupt_offset);
 }
 
 bool DOS_DeviceHasName(const RealPt rp, const std::string_view req_name)
 {
-	const auto segment    = RealSeg(rp);
-	const auto offset     = RealOff(rp) + DeviceDriverInfo::name_offset;
+	const auto segment    = RealSegment(rp);
+	const auto offset     = RealOffset(rp) + DeviceDriverInfo::name_offset;
 
 	const auto search_len = std::min(req_name.length(),
 	                                 DeviceDriverInfo::name_length);

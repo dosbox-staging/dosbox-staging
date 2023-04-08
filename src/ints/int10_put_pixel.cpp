@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -185,7 +186,7 @@ void INT10_PutPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t color) {
 	}
 
 	case M_VGA:
-		mem_writeb(PhysMake(0xa000,y*320+x),color);
+		mem_writeb(PhysicalMake(0xa000,y*320+x),color);
 		break;
 	case M_LIN8: {
 			if (CurMode->swidth!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)
@@ -264,7 +265,7 @@ void INT10_GetPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t * color) {
 			break;
 		}
 	case M_VGA:
-		*color=mem_readb(PhysMake(0xa000,320*y+x));
+		*color=mem_readb(PhysicalMake(0xa000,320*y+x));
 		break;
 	case M_LIN8: {
 			if (CurMode->swidth!=(Bitu)real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS)*8)

@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,8 +67,8 @@ void BIOSTEST::Run(void) {
 
 		fclose(tmpfile);
 
-		const auto rom_base = PhysMake(0xf000, 0); // override regular
-		                                           // dosbox bios
+		// Override regular DOSBox BIOS
+		const auto rom_base = PhysicalMake(0xf000, 0);
 
 		// write buffer into ROM
 		for (PhysPt i = 0; i < check_cast<PhysPt>(bytes_read); ++i)

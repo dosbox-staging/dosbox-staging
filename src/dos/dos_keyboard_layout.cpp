@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2022  The DOSBox Staging Team
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2015  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1022,29 +1022,29 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_file
 				font_data_start += 6;
 				if (font_height == 0x10) {
 					// 16x8 font
-					const auto font16pt = Real2Phys(int10.rom.font_16);
+					const auto font16pt = RealToPhysical(int10.rom.font_16);
 					for (uint16_t i = 0; i < 256 * 16; ++i) {
 						phys_writeb(font16pt + i, cpi_buf.at(font_data_start + i));
 					}
 					// terminate alternate list to prevent loading
-					phys_writeb(Real2Phys(int10.rom.font_16_alternate),0);
+					phys_writeb(RealToPhysical(int10.rom.font_16_alternate),0);
 					font_changed=true;
 				} else if (font_height == 0x0e) {
 					// 14x8 font
-					const auto font14pt = Real2Phys(int10.rom.font_14);
+					const auto font14pt = RealToPhysical(int10.rom.font_14);
 					for (uint16_t i = 0; i < 256 * 14; ++i) {
 						phys_writeb(font14pt + i, cpi_buf.at(font_data_start + i));
 					}
 					// terminate alternate list to prevent loading
-					phys_writeb(Real2Phys(int10.rom.font_14_alternate),0);
+					phys_writeb(RealToPhysical(int10.rom.font_14_alternate),0);
 					font_changed=true;
 				} else if (font_height == 0x08) {
 					// 8x8 fonts
-					auto font8pt = Real2Phys(int10.rom.font_8_first);
+					auto font8pt = RealToPhysical(int10.rom.font_8_first);
 					for (uint16_t i = 0; i < 128 * 8; ++i) {
 						phys_writeb(font8pt + i, cpi_buf.at(font_data_start + i));
 					}
-					font8pt=Real2Phys(int10.rom.font_8_second);
+					font8pt=RealToPhysical(int10.rom.font_8_second);
 					for (uint16_t i = 0; i < 128 * 8; ++i) {
 						phys_writeb(font8pt + i,
 						            cpi_buf.at(font_data_start + i + 128 * 8));

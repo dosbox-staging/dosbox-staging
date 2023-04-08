@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -53,7 +54,7 @@ const char *UnmountHelper(char umount)
 			case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS");
 		}
 		Drives[i_drive] = nullptr;
-		mem_writeb(Real2Phys(dos.tables.mediaid)+i_drive*9,0);
+		mem_writeb(RealToPhysical(dos.tables.mediaid)+i_drive*9,0);
 		if (i_drive == DOS_GetDefaultDrive()) {
 			DOS_SetDrive(ZDRIVE_NUM);
 		}

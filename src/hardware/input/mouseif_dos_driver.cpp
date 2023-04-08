@@ -1775,8 +1775,8 @@ void MOUSEDOS_DoCallback(const uint8_t mask)
 	reg_si = mickey_counter_to_reg16(state.mickey_counter_x);
 	reg_di = mickey_counter_to_reg16(state.mickey_counter_y);
 
-	CPU_Push16(RealSeg(user_callback));
-	CPU_Push16(RealOff(user_callback));
+	CPU_Push16(RealSegment(user_callback));
+	CPU_Push16(RealOffset(user_callback));
 	CPU_Push16(state.user_callback_segment);
 	CPU_Push16(state.user_callback_offset);
 }
@@ -1813,17 +1813,17 @@ void MOUSEDOS_Init()
 	CALLBACK_Setup(call_int33,
 	               &int33_handler,
 	               CB_MOUSE,
-	               Real2Phys(int33_location),
+	               RealToPhysical(int33_location),
 	               "Mouse");
 	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
 	real_writed(0, 0x33 << 2, int33_location);
 
 	const auto call_mouse_bd = CALLBACK_Allocate();
-	const auto tmp_offs = static_cast<uint16_t>(RealOff(int33_location) + 2);
+	const auto tmp_offs = static_cast<uint16_t>(RealOffset(int33_location) + 2);
 	CALLBACK_Setup(call_mouse_bd,
 	               &mouse_bd_handler,
 	               CB_RETF8,
-	               PhysMake(RealSeg(int33_location), tmp_offs),
+	               PhysicalMake(RealSegment(int33_location), tmp_offs),
 	               "MouseBD");
 	// pseudocode for CB_MOUSE (including the special backdoor entry point):
 	//    jump near i33hd

@@ -346,10 +346,10 @@ constexpr PhysPt assert_macro_args_ok()
 class MemStruct {
 public:
 	MemStruct() = default;
-	MemStruct(uint16_t seg, uint16_t off) : pt(PhysMake(seg, off)) {}
-	MemStruct(RealPt addr) : pt(Real2Phys(addr)) {}
+	MemStruct(uint16_t seg, uint16_t off) : pt(PhysicalMake(seg, off)) {}
+	MemStruct(RealPt addr) : pt(RealToPhysical(addr)) {}
 
-	void SetPt(uint16_t seg) { pt = PhysMake(seg, 0); }
+	void SetPt(uint16_t seg) { pt = PhysicalMake(seg, 0); }
 
 protected:
 	PhysPt pt = 0;

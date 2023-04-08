@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -285,13 +286,13 @@ int CMscdex::RemoveDrive(uint16_t _drive)
 	numDrives--;
 
 	if (GetNumDrives() == 0) {
-		DOS_DeviceHeader devHeader(PhysMake(rootDriverHeaderSeg,0));
+		DOS_DeviceHeader devHeader(PhysicalMake(rootDriverHeaderSeg,0));
 		uint16_t off = sizeof(DOS_DeviceHeader::sDeviceHeader);
 		devHeader.SetStrategy(off+4);		// point to the RETF (To deactivate MSCDEX)
 		devHeader.SetInterrupt(off+4);		// point to the RETF (To deactivate MSCDEX)
 		devHeader.SetDriveLetter(0);
 	} else if (idx==0) {
-		DOS_DeviceHeader devHeader(PhysMake(rootDriverHeaderSeg,0));
+		DOS_DeviceHeader devHeader(PhysicalMake(rootDriverHeaderSeg,0));
 		devHeader.SetDriveLetter(GetFirstDrive()+1);
 	}
 	return 1;
@@ -343,7 +344,7 @@ int CMscdex::AddDrive(uint16_t _drive, char* physicalPath, uint8_t& subUnit)
 		// Create Device Header
 		static_assert((driverSize % 16) == 0, "should always be zero");
 		uint16_t seg = DOS_GetMemory(driverSize / 16);
-		DOS_DeviceHeader devHeader(PhysMake(seg,0));
+		DOS_DeviceHeader devHeader(PhysicalMake(seg,0));
 		devHeader.SetNextDeviceHeader	(0xFFFFFFFF);
 		devHeader.SetAttribute(0xc800);
 		devHeader.SetDriveLetter		(_drive+1);
@@ -376,7 +377,7 @@ int CMscdex::AddDrive(uint16_t _drive, char* physicalPath, uint8_t& subUnit)
 		rootDriverHeaderSeg = seg;
 	
 	} else if (GetNumDrives() == 0) {
-		DOS_DeviceHeader devHeader(PhysMake(rootDriverHeaderSeg,0));
+		DOS_DeviceHeader devHeader(PhysicalMake(rootDriverHeaderSeg,0));
 		uint16_t off = sizeof(DOS_DeviceHeader::sDeviceHeader);
 		devHeader.SetDriveLetter(_drive+1);
 		devHeader.SetStrategy(off);
@@ -384,7 +385,7 @@ int CMscdex::AddDrive(uint16_t _drive, char* physicalPath, uint8_t& subUnit)
 	}
 
 	// Set drive
-	DOS_DeviceHeader devHeader(PhysMake(rootDriverHeaderSeg,0));
+	DOS_DeviceHeader devHeader(PhysicalMake(rootDriverHeaderSeg,0));
 	devHeader.SetNumSubUnits(devHeader.GetNumSubUnits()+1);
 
 	if (dinfo[0].drive-1==_drive) {
@@ -433,7 +434,7 @@ PhysPt CMscdex::GetDefaultBuffer(void) {
 		uint16_t size = (2352*2+15)/16;
 		defaultBufSeg = DOS_GetMemory(size);
 	};
-	return PhysMake(defaultBufSeg,2352);
+	return PhysicalMake(defaultBufSeg,2352);
 }
 
 PhysPt CMscdex::GetTempBuffer(void) {
@@ -441,7 +442,7 @@ PhysPt CMscdex::GetTempBuffer(void) {
 		uint16_t size = (2352*2+15)/16;
 		defaultBufSeg = DOS_GetMemory(size);
 	};
-	return PhysMake(defaultBufSeg,0);
+	return PhysicalMake(defaultBufSeg,0);
 }
 
 void CMscdex::GetDriverInfo	(PhysPt data) {
@@ -1131,7 +1132,7 @@ static MountType MSCDEX_GetMountType(const char *path)
 }
 
 static Bitu MSCDEX_Strategy_Handler(void) {
-	curReqheaderPtr = PhysMake(SegValue(es),reg_bx);
+	curReqheaderPtr = PhysicalMake(SegValue(es),reg_bx);
 //	MSCDEX_LOG("MSCDEX: Device Strategy Routine called, request header at %x",curReqheaderPtr);
 	return CBRET_NONE;
 }
@@ -1149,7 +1150,7 @@ static Bitu MSCDEX_Interrupt_Handler(void) {
 	MSCDEX_LOG("MSCDEX: Driver Function %02X",funcNr);
 
 	if ((funcNr==0x03) || (funcNr==0x0c) || (funcNr==0x80) || (funcNr==0x82)) {
-		buffer = PhysMake(mem_readw(curReqheaderPtr+0x10),mem_readw(curReqheaderPtr+0x0E));
+		buffer = PhysicalMake(mem_readw(curReqheaderPtr+0x10),mem_readw(curReqheaderPtr+0x0E));
 	}
 
  	switch (funcNr) {
@@ -1222,7 +1223,7 @@ static bool MSCDEX_Handler(void) {
 	if (reg_ah!=0x15) return false;		// not handled here, continue chain
 	if (mscdex->rootDriverHeaderSeg==0) return false;	// not handled if MSCDEX not installed
 
-	PhysPt data = PhysMake(SegValue(es),reg_bx);
+	PhysPt data = PhysicalMake(SegValue(es),reg_bx);
 	MSCDEX_LOG("MSCDEX: INT 2F %04X BX= %04X CX=%04X",reg_ax,reg_bx,reg_cx);
 	CALLBACK_SCF(false); // carry flag cleared for all functions (undocumented); only set on error
 	switch (reg_ax) {
@@ -1302,7 +1303,7 @@ static bool MSCDEX_Handler(void) {
 						break;
 		case 0x150F: {	// Get directory entry
 						uint16_t error;
-						bool success = mscdex->GetDirectoryEntry(reg_cl,reg_ch&1,data,PhysMake(reg_si,reg_di),error);
+						bool success = mscdex->GetDirectoryEntry(reg_cl,reg_ch&1,data,PhysicalMake(reg_si,reg_di),error);
 						reg_ax = error;
 						if (!success) CALLBACK_SCF(true);
 					 }

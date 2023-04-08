@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -83,7 +84,7 @@ bool DOS_IOCTL(void) {
 	case 0x02:		/* Read from Device Control Channel */
 		if (Files[handle]->GetInformation() & 0xc000) {
 			/* is character device with IOCTL support */
-			PhysPt bufptr=PhysMake(SegValue(ds),reg_dx);
+			PhysPt bufptr=PhysicalMake(SegValue(ds),reg_dx);
 			uint16_t retcode=0;
 			if (((DOS_Device*)(Files[handle]))->ReadFromControlChannel(bufptr,reg_cx,&retcode)) {
 				reg_ax=retcode;
@@ -95,7 +96,7 @@ bool DOS_IOCTL(void) {
 	case 0x03:		/* Write to Device Control Channel */
 		if (Files[handle]->GetInformation() & 0xc000) {
 			/* is character device with IOCTL support */
-			PhysPt bufptr=PhysMake(SegValue(ds),reg_dx);
+			PhysPt bufptr=PhysicalMake(SegValue(ds),reg_dx);
 			uint16_t retcode=0;
 			if (((DOS_Device*)(Files[handle]))->WriteToControlChannel(bufptr,reg_cx,&retcode)) {
 				reg_ax=retcode;

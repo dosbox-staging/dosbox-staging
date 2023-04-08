@@ -355,7 +355,7 @@ static Result xms_move_memory(const PhysPt bpt)
 		srcpt = (static_cast<uint32_t>(xms.handles[src_handle].mem_handle) * MemPageSize) +
 		        src.offset;
 	} else {
-		srcpt = Real2Phys(src.realpt);
+		srcpt = RealToPhysical(src.realpt);
 
 		// Microsoft TEST.C considers it an error to allow real mode
 		// pointers + length to extend past the end of the
@@ -378,7 +378,7 @@ static Result xms_move_memory(const PhysPt bpt)
 		destpt = (static_cast<uint32_t>(xms.handles[dest_handle].mem_handle) * MemPageSize) +
 		        dest.offset;
 	} else {
-		destpt = Real2Phys(dest.realpt);
+		destpt = RealToPhysical(dest.realpt);
 
 		// Microsoft TEST.C considers it an error to allow real mode
 		// pointers + length to extend past the end of the
@@ -492,8 +492,8 @@ static bool xms_multiplex()
 		reg_al = 0x80;
 		return true;
 	case 0x4310: // XMS handler seg:offset
-		SegSet16(es, RealSeg(xms.callback));
-		reg_bx = RealOff(xms.callback);
+		SegSet16(es, RealSegment(xms.callback));
+		reg_bx = RealOffset(xms.callback);
 		return true;
 	}
 
@@ -621,8 +621,8 @@ static Bitu XMS_Handler()
 		set_return_value(result);
 		if (result == Result::OK) {
 			// success
-			reg_bx = RealOff(address);
-			reg_dx = RealSeg(address);
+			reg_bx = RealOffset(address);
+			reg_dx = RealSegment(address);
 		}
 	} break;
 	case 0x0d: // Unlock Extended Memory Block
@@ -784,7 +784,7 @@ XMS::XMS(Section* configuration) : Module_base(configuration), callbackhandler{}
 	                        0x10);
 	callbackhandler.Install(&XMS_Handler,
 	                        CB_HOOKABLE,
-	                        Real2Phys(xms.callback),
+	                        RealToPhysical(xms.callback),
 	                        "XMS Handler");
 	// pseudocode for CB_HOOKABLE:
 	//	jump near skip

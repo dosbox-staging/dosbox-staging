@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -963,8 +964,8 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 
 		// init CRTC registers
 		for (uint16_t i = 0; i < 16; i++)
-			IO_WriteW(crtc_base, i | (real_readb(RealSeg(vparams),
-				RealOff(vparams) + i + crtc_block_index*16) << 8));
+			IO_WriteW(crtc_base, i | (real_readb(RealSegment(vparams),
+				RealOffset(vparams) + i + crtc_block_index*16) << 8));
 	}
 	FinishSetMode(clearmem);
 	return true;
@@ -1708,12 +1709,12 @@ dac_text16:
 	}
 	//  Write palette register data to dynamic save area if pointer is non-zero
 	RealPt vsavept=real_readd(BIOSMEM_SEG,BIOSMEM_VS_POINTER);
-	RealPt dsapt=real_readd(RealSeg(vsavept),RealOff(vsavept)+4);
+	RealPt dsapt=real_readd(RealSegment(vsavept),RealOffset(vsavept)+4);
 	if (dsapt) {
 		for (uint8_t ct=0;ct<0x10;ct++) {
-			real_writeb(RealSeg(dsapt),RealOff(dsapt)+ct,att_data[ct]);
+			real_writeb(RealSegment(dsapt),RealOffset(dsapt)+ct,att_data[ct]);
 		}
-		real_writeb(RealSeg(dsapt),RealOff(dsapt)+0x10,0); // overscan
+		real_writeb(RealSegment(dsapt),RealOffset(dsapt)+0x10,0); // overscan
 	}
 	//  Setup some special stuff for different modes
 	switch (CurMode->type) {
