@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2022 Jon Dennis
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1367,7 +1368,7 @@ static void reelmagic_destroy([[maybe_unused]] Section* sec)
 	FMPDRV_UninstallINTHandler();
 
 	// un-register the interrupt handlers
-	DOS_DelMultiplexHandler(&RMDEV_SYS_int2fHandler);
+	DOS_DeleteMultiplexHandler(&RMDEV_SYS_int2fHandler);
 
 	// stop mixing VGA and MPEG signals; use pass-through mode
 	ReelMagic_SetVideoMixerEnabled(false);

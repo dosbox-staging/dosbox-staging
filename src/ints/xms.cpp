@@ -824,7 +824,7 @@ XMS::~XMS()
 	BIOS_ZeroExtendedSize(false);
 
 	// Remove Multiplex
-	DOS_DelMultiplexHandler(xms_multiplex);
+	DOS_DeleteMultiplexHandler(xms_multiplex);
 
 	// Free used memory while skipping the 0 handle
 	for (uint16_t index = 1; index < NumXmsHandles; ++index) {
