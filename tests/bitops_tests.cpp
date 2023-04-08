@@ -122,6 +122,20 @@ TEST(bitops, nominal_byte)
 	EXPECT_FALSE(bit::is(reg, even_bits | odd_bits));
 	EXPECT_FALSE(bit::any(reg, even_bits | odd_bits));
 	EXPECT_TRUE(bit::cleared(reg, odd_bits | even_bits));
+
+	// set bits to specific bool state
+	reg = {};
+	bit::set_to(reg, b7 | b0, true);
+	EXPECT_EQ(reg, 0b1000'0001);
+
+	bit::set_to(reg, b3, true);
+	EXPECT_EQ(reg, 0b1000'1001);
+
+	bit::set_to(reg, b3, false);
+	EXPECT_EQ(reg, 0b1000'0001);
+
+	bit::set_to(reg, b7 | b0, false);
+	EXPECT_EQ(reg, 0b0000'0000);
 }
 
 TEST(bitops, nominal_word)
