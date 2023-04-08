@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -234,14 +235,14 @@ static inline bool InitPageCheckPresence_CheckOnly(PhysPt lin_addr,bool writing,
 // check if a user-level memory access would trigger a privilege page fault
 static inline bool InitPage_CheckUseraccess(uint32_t u1,uint32_t u2) {
 	switch (CPU_ArchitectureType) {
-	case CPU_ARCHTYPE_MIXED:
-	case CPU_ARCHTYPE_386SLOW:
-	case CPU_ARCHTYPE_386FAST:
+	case ArchitectureType::Mixed:
+	case ArchitectureType::Intel386Slow:
+	case ArchitectureType::Intel386Fast:
 	default:
 		return ((u1)==0) && ((u2)==0);
-	case CPU_ARCHTYPE_486OLDSLOW:
-	case CPU_ARCHTYPE_486NEWSLOW:
-	case CPU_ARCHTYPE_PENTIUMSLOW:
+	case ArchitectureType::Intel486OldSlow:
+	case ArchitectureType::Intel486NewSlow:
+	case ArchitectureType::PentiumSlow:
 		return ((u1)==0) || ((u2)==0);
 	}
 }
@@ -350,15 +351,15 @@ public:
 				if (USERWRITE_PROHIBITED) priv_check=3;
 				else {
 					switch (CPU_ArchitectureType) {
-					case CPU_ARCHTYPE_MIXED:
-					case CPU_ARCHTYPE_386FAST:
+					case ArchitectureType::Mixed:
+					case ArchitectureType::Intel386Fast:
 					default:
 //						priv_check=0;	// default
 						break;
-					case CPU_ARCHTYPE_386SLOW:
-					case CPU_ARCHTYPE_486OLDSLOW:
-					case CPU_ARCHTYPE_486NEWSLOW:
-					case CPU_ARCHTYPE_PENTIUMSLOW:
+					case ArchitectureType::Intel386Slow:
+					case ArchitectureType::Intel486OldSlow:
+					case ArchitectureType::Intel486NewSlow:
+					case ArchitectureType::PentiumSlow:
 						priv_check=1;
 						break;
 					}
@@ -368,15 +369,15 @@ public:
 				// page is write-protected for user mode
 				if (priv_check==0) {
 					switch (CPU_ArchitectureType) {
-					case CPU_ARCHTYPE_MIXED:
-					case CPU_ARCHTYPE_386FAST:
+					case ArchitectureType::Mixed:
+					case ArchitectureType::Intel386Fast:
 					default:
 //						priv_check=0;	// default
 						break;
-					case CPU_ARCHTYPE_386SLOW:
-					case CPU_ARCHTYPE_486OLDSLOW:
-					case CPU_ARCHTYPE_486NEWSLOW:
-					case CPU_ARCHTYPE_PENTIUMSLOW:
+					case ArchitectureType::Intel386Slow:
+					case ArchitectureType::Intel486OldSlow:
+					case ArchitectureType::Intel486NewSlow:
+					case ArchitectureType::PentiumSlow:
 						priv_check=2;
 						break;
 					}

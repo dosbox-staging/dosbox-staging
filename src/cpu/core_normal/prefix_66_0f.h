@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -237,7 +238,7 @@
 		}
 	CASE_0F_D(0xb1)												/* CMPXCHG Ed,Gd */
 		{	
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486NEWSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<ArchitectureType::Intel486NewSlow) goto illegal_opcode;
 			FillFlags();
 			GetRMrd;
 			if (rm >= 0xc0) {
@@ -435,33 +436,33 @@
 		}
 	CASE_0F_D(0xc1)												/* XADD Gd,Ed */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 			GetRMrd;uint32_t oldrmrd=*rmrd;
 			if (rm >= 0xc0 ) {GetEArd;*rmrd=*eard;*eard+=oldrmrd;}
 			else {GetEAa;*rmrd=LoadMd(eaa);SaveMd(eaa,LoadMd(eaa)+oldrmrd);}
 			break;
 		}
 	CASE_0F_D(0xc8)												/* BSWAP EAX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPD(reg_eax);break;
 	CASE_0F_D(0xc9)												/* BSWAP ECX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPD(reg_ecx);break;
 	CASE_0F_D(0xca)												/* BSWAP EDX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPD(reg_edx);break;
 	CASE_0F_D(0xcb)												/* BSWAP EBX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPD(reg_ebx);break;
 	CASE_0F_D(0xcc)												/* BSWAP ESP */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPD(reg_esp);break;
 	CASE_0F_D(0xcd)												/* BSWAP EBP */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPD(reg_ebp);break;
 	CASE_0F_D(0xce)												/* BSWAP ESI */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPD(reg_esi);break;
 	CASE_0F_D(0xcf)												/* BSWAP EDI */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPD(reg_edi);break;
