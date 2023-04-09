@@ -17,10 +17,10 @@ def process_line(line: str, max_line_length: int, input_line_num: int, output_li
     line_length = len(line_without_brackets)
 
     if line_length > max_line_length:
-        sys.stderr.write(f"Character limit exceeded at input line {input_line_num}: {line}\n")
-        wrapped_lines = re.sub(r'((?:\[(?:[^\]])*\]|[^[\r\n])(?:(?:[ \t]*?=[ \t]*?([a-z\-]+))?){' + str(max_line_length) + '})', r'\1\n', line)
+        sys.stderr.write(f"Character limit exceeded at input line {input_line_num} \n") # add line to show line
+        wrapped_lines = re.sub(r'((?:\[(?:[^\]])*\]|[^[\r\n]){' + str(max_line_length) + '})', r'\1', line)
         num_wrapped_lines = wrapped_lines.count('\n')
-        sys.stderr.write(f"Created a line break at output lines: {output_line_num}-{output_line_num + num_wrapped_lines - 1}\n")
+        # sys.stderr.write(f"Created a line break at output lines: {output_line_num}-{output_line_num + num_wrapped_lines - 1}\n")
         output_line_num += num_wrapped_lines
         return wrapped_lines, output_line_num
     else:
