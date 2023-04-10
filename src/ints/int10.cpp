@@ -337,11 +337,9 @@ graphics_chars:
 			{   
 				if (!IS_VGA_ARCH) break;
 				LOG(LOG_INT10,LOG_WARN)("Function 12:Call %2X (select vertical resolution)",reg_bl);
-				if (svgaCard != SVGA_None) {
-					if (reg_al > 2) {
-						reg_al=0;		// invalid subfunction
-						break;
-					}
+				if (reg_al > 2) {
+					reg_al = 0;	// invalid VGA subfunction
+					break;
 				}
 				uint8_t modeset_ctl = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL);
 				uint8_t video_switches = real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES)&0xf0;
