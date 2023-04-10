@@ -111,13 +111,17 @@ void INT10_ReloadFont(void) {
 		INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),false,256,0,map,8);
 		break;
 	case 14:
-		if (IS_VGA_ARCH && svgaCard==SVGA_None && CurMode->mode==7) map=0x80;
-		INT10_LoadFont(RealToPhysical(int10.rom.font_14),false,256,0,map,14);
+		if (IS_VGA_ARCH && CurMode->mode == 7) {
+			map = 0x80;
+		}
+		INT10_LoadFont(RealToPhysical(int10.rom.font_14), false, 256, 0, map, 14);
 		break;
 	case 16:
 	default:
-		if (IS_VGA_ARCH && svgaCard==SVGA_None) map=0x80;
-		INT10_LoadFont(RealToPhysical(int10.rom.font_16),false,256,0,map,16);
+		if (IS_VGA_ARCH) {
+			map = 0x80;
+		}
+		INT10_LoadFont(RealToPhysical(int10.rom.font_16), false, 256, 0, map, 16);
 		break;
 	}
 }
@@ -177,6 +181,7 @@ void INT10_SetupRomMemory(void) {
 				phys_writeb(rom_base+0x0080,'=');
 				break;
 			case SVGA_None:
+				LOG_ERR("INT10: Invalid VGA card with the VGA machine type");
 				break;
 			}
 		}
