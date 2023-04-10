@@ -51,13 +51,11 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 	PTYPE * line0=(PTYPE *)(render.scale.outWrite);
 #if (SBPP == 9)
 	for (Bits x=render.src.width;x>0;) {
-		if (*(uint32_t const*)src == *(uint32_t*)cache && !(
-			render.pal.modified[src[0]] | 
-			render.pal.modified[src[1]] | 
-			render.pal.modified[src[2]] | 
-			render.pal.modified[src[3]] )) {
-			x-=4;
-			src+=4;
+		if (std::memcmp(src, cache, sizeof(uint32_t)) == 0 &&
+		    (render.pal.modified[src[0]] | render.pal.modified[src[1]] |
+		     render.pal.modified[src[2]] | render.pal.modified[src[3]]) == 0) {
+			x -= 4;
+			src += 4;
 			cache+=4;
 			line0+=4*SCALERWIDTH;
 #else
