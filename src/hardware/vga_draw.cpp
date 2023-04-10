@@ -1224,18 +1224,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case MCH_CGA:
 	case MCH_PCJR:
 	case MCH_TANDY:
+	case MCH_VGA:
 		vga.draw.mode = DRAWLINE;
 		break;
 	case MCH_EGA:
 		// Note: The Paradise SVGA uses the same panning mechanism as EGA
 		vga.draw.mode = EGALINE;
 		break;
-	case MCH_VGA:
-		if (svgaCard==SVGA_None) {
-			vga.draw.mode = DRAWLINE;
-			break;
-		}
-		// fall-through
 	default:
 		vga.draw.mode = PART;
 		break;
