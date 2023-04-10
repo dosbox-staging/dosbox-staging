@@ -209,15 +209,8 @@ static uint8_t read_p3c9(io_port_t, io_width_t)
 void VGA_DAC_CombineColor(uint8_t attr,uint8_t pal) {
 	/* Check if this is a new color */
 	vga.dac.combine[attr]=pal;
-	switch (vga.mode) {
-	case M_LIN8:
-		break;
-	case M_VGA:
+	if (vga.mode != M_LIN8) {
 		// used by copper demo; almost no video card seems to suport it
-		if (!IS_VGA_ARCH || (svgaCard != SVGA_None))
-			break;
-		[[fallthrough]];
-	default:
 		VGA_DAC_SendColor( attr, pal );
 	}
 }
