@@ -68,8 +68,8 @@ List of common options:
   -machine <type>      Emulate a specific type of machine. The machine type has
                        influence on both the emulated video and sound cards.
                        Valid choices are: hercules, cga, cga_mono, tandy,
-                       pcjr, ega, vgaonly, svga_s3 (default), svga_et3000,
-                       svga_et4000, svga_paradise, vesa_nolfb, vesa_oldvbe.
+                       pcjr, ega, svga_s3 (default), svga_et3000, svga_et4000,
+                       svga_paradise, vesa_nolfb, vesa_oldvbe.
 
   -exit                Exit after the DOS program specified by FILE has ended.
 

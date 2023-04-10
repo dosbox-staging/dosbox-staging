@@ -377,9 +377,16 @@ static void DOSBOX_RealInit(Section * sec) {
 	} else if (mtype == "svga_paradise") {
 		svgaCard = SVGA_ParadisePVGA1A;
 	} else if (mtype == "vgaonly") {
-		svgaCard = SVGA_None;
-	} else
+		svgaCard = SVGA_ParadisePVGA1A;
+		LOG_WARNING("CONFIG: 'machine = vgaonly' is deprecated. Consider using "
+		            "defaults or 'machine = svga_paradise' if basic (S)VGA is critical.");
+	} else {
 		E_Exit("DOSBOX:Unknown machine type %s", mtype.c_str());
+	}
+
+	// VGA-type machine needs an valid SVGA card and vice-versa
+	assert((machine == MCH_VGA && svgaCard != SVGA_None) ||
+	       (machine != MCH_VGA && svgaCard == SVGA_None));
 
 	// Set the user's prefered MCB fault handling strategy
 	DOS_SetMcbFaultStrategy(section->Get_string("mcb_fault_strategy"));
@@ -434,13 +441,19 @@ void DOSBOX_Init()
 	constexpr auto changeable_at_runtime = true;
 
 	/* Setup all the different modules making up DOSBox */
-	const char *machines[] = {"hercules",      "cga",
-	                          "cga_mono",      "tandy",
-	                          "pcjr",          "ega",
-	                          "vgaonly",       "svga_s3",
-	                          "svga_et3000",   "svga_et4000",
-	                          "svga_paradise", "vesa_nolfb",
-	                          "vesa_oldvbe",   0};
+	const char* machines[] = {"hercules",
+	                          "cga",
+	                          "cga_mono",
+	                          "tandy",
+	                          "pcjr",
+	                          "ega",
+	                          "svga_s3",
+	                          "svga_et3000",
+	                          "svga_et4000",
+	                          "svga_paradise",
+	                          "vesa_nolfb",
+	                          "vesa_oldvbe",
+	                          0};
 
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
 	pstring = secprop->Add_string("language", always, "");
