@@ -25,6 +25,7 @@
 
 #include "../gui/render_scalers.h"
 #include "../ints/int10.h"
+#include "bitops.h"
 #include "math_utils.h"
 #include "mem_unaligned.h"
 #include "pic.h"
@@ -1327,17 +1328,46 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			htotal *= 2;
 		}
 		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
-		if (IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA)) {
-			// vgaonly; can't use with CGA because these use address_line for their
-			// own purposes.
-			// Set the low resolution modes to have as many lines as are scanned - 
-			// Quite a few demos change the max_scanline register at display time
-			// to get SFX: Majic12 show, Magic circle, Copper, GBU, Party91
-			if ( vga.crtc.maximum_scan_line&0x80) vga.draw.address_line_total*=2;
-			vga.draw.double_scan=false;
+		if (IS_VGA_ARCH) {
+			// CRTC Maximum Scan Line Register - Scan Doubling
+			//
+			// When bit 7 is set to 1, 200-scan-line video data is
+			// converted to 400-scan-line output. To do this, the
+			// clock in the row scan counter is divided by 2, which
+			// allows the 200-line modes to be displayed as 400
+			// lines on the display (this is called double scanning;
+			// each line is displayed twice). When this bit is set
+			// to 0, the clock to the row scan counter is equal to
+			// the horizontal scan rate.
+			//
+			// Ref: http://www.osdever.net/FreeVGA/vga/crtcreg.htm#09
+
+			const auto is_scan_doubled = bit::is(vga.crtc.maximum_scan_line,
+			                                     bit::literals::b7);
+
+			if (vga.mode == M_EGA || vga.mode == M_VGA) {
+				// Set the low resolution modes to have as many
+				// lines as are scanned - Quite a few demos
+				// change the max_scanline register at display
+				// time to get SFX: Majic12 show, Magic circle,
+				// Copper, GBU, Party91.
+				//
+				// Note: can't use with CGA because these use
+				// address_line for their own purposes.
+				if (is_scan_doubled) {
+					vga.draw.address_line_total *= 2;
+				}
+				// No-need to artificially perform scan-doubling
+				vga.draw.double_scan = false;
+			}
+			// VGA machine not in EGA or VGA modes
+			else {
+				vga.draw.double_scan = is_scan_doubled;
+			}
+		} else { // non-VGA machine
+			constexpr uint16_t num_cga_lines_per_frame = 262;
+			vga.draw.double_scan = (vtotal == num_cga_lines_per_frame);
 		}
-		else if (IS_VGA_ARCH) vga.draw.double_scan=(vga.crtc.maximum_scan_line&0x80)>0;
-		else vga.draw.double_scan=(vtotal==262);
 	} else {
 		htotal = vga.other.htotal + 1;
 		hdend = vga.other.hdend;
