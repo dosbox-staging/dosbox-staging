@@ -79,6 +79,10 @@
 //Define to report opengl errors
 //#define DB_OPENGL_ERROR
 
+#if C_VOODOO
+#error "Voodoo support is not implemented yet"
+#endif
+
 #ifndef APIENTRY
 #define APIENTRY
 #endif

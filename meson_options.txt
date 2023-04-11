@@ -194,3 +194,10 @@ option(
     value: false,
     description: 'Save intermediate assembly output',
 )
+
+option(
+    'experimental_voodoo_support',
+    type: 'boolean',
+    value: false,
+    description: ''
+)
