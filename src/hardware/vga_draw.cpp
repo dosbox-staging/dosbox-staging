@@ -743,6 +743,23 @@ static void VGA_ProcessSplit() {
 	vga.draw.address_line=0;
 }
 
+bool operator==(const RGBEntry& lhs, const RGBEntry& rhs)
+{
+	return (lhs.red == rhs.red) && (lhs.green == rhs.green) &&
+	       (lhs.blue == rhs.blue);
+}
+
+bool operator!=(const RGBEntry& lhs, const RGBEntry& rhs)
+{
+	return !(lhs == rhs); // reuse the == operator
+}
+
+static uint16_t from_rgb_666_to_565(const RGBEntry& rgb)
+{
+	return check_cast<uint16_t>((rgb.red >> 1) << 11 | rgb.green << 5 |
+	                            (rgb.blue >> 1));
+}
+
 static uint8_t bg_color_index = 0; // screen-off black index
 static void VGA_DrawSingleLine(uint32_t /*blah*/)
 {
@@ -775,15 +792,16 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			// the DAC table may not match the bits of the overscan register
 			// so use black for this case too...
 			//if (vga.attr.disabled& 2) {
-			if (vga.dac.xlat16[bg_color_index] != 0) {
-
-				// check some assumptions about the translation table
-				constexpr auto xlat16_len = ARRAY_LEN(vga.dac.xlat16);
-				static_assert(xlat16_len == 256,
+			if (constexpr RGBEntry black_rgb = {0, 0, 0};
+			    vga.dac.palette_map[bg_color_index] != black_rgb) {
+				// check some assumptions about the palette map
+				constexpr auto palette_map_len = ARRAY_LEN(
+				        vga.dac.palette_map);
+				static_assert(palette_map_len == 256,
 				              "The code below assumes the table is 256 elements long");
 
-				for (uint16_t i = 0; i < xlat16_len; ++i)
-					if (vga.dac.xlat16[i] == 0) {
+				for (uint16_t i = 0; i < palette_map_len; ++i)
+					if (vga.dac.palette_map[i] == black_rgb) {
 						bg_color_index = static_cast<uint8_t>(i);
 						break;
 					}
@@ -800,11 +818,13 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			          templine_buffer.end(),
 			          bg_color_index);
 		} else if (vga.draw.bpp == 16) {
-			uint16_t value = vga.dac.xlat16[bg_color_index];
+			const auto background_color = from_rgb_666_to_565(
+			        vga.dac.palette_map[bg_color_index]);
 			for (size_t i = 0; i < templine_buffer.size() / 2; ++i) {
-				write_unaligned_uint16_at(TempLine, i, value);
+				write_unaligned_uint16_at(TempLine, i, background_color);
 			}
 		}
+		// 24 bit and 32 bit don't use background filling.
 		RENDER_DrawLine(TempLine);
 	} else {
 		uint8_t * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	

@@ -33,7 +33,7 @@ std::optional<RGBEntry> parse_color_token(const std::string &token,
 
 std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs);
 
-bool operator==(const RGBEntry &a, const RGBEntry &b)
+bool operator==(const RGBEntry& a, const RGBEntry& b)
 {
 	return a.red == b.red && a.green == b.green && a.blue == b.blue;
 }

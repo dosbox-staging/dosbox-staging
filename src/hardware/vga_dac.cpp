@@ -57,16 +57,11 @@ enum {DAC_READ,DAC_WRITE};
 
 static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 {
-	// 6-bit DAC color values (0 to 63)
-	const auto red = vga.dac.rgb[src].red;
-	const auto green = vga.dac.rgb[src].green;
-	const auto blue = vga.dac.rgb[src].blue;
+	// short-hand lookup for the source RGB color
+	const auto& rgb_source = vga.dac.rgb[src];
 
-	// Scale the DAC's combined 18-bit color into 16-bit color
-	const auto rgb565 = ((red >> 1) << 11 | green << 5 | (blue >> 1));
-
-	// Set it in the (little endian) 16bit output lookup table
-	var_write(&vga.dac.xlat16[index], check_cast<uint16_t>(rgb565));
+	// Map the source color into palette's requested index
+	vga.dac.palette_map[index] = rgb_source;
 
 	// Scale the DAC's 6-bit colors to 8-bit to set the VGA palette
 	auto scale_6_to_8 = [](const uint8_t color_6) -> uint8_t {
@@ -74,9 +69,9 @@ static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 		return check_cast<uint8_t>(color_8);
 	};
 	RENDER_SetPal(index,
-	              scale_6_to_8(red),
-	              scale_6_to_8(green),
-	              scale_6_to_8(blue));
+	              scale_6_to_8(rgb_source.red),
+	              scale_6_to_8(rgb_source.green),
+	              scale_6_to_8(rgb_source.blue));
 }
 
 static void VGA_DAC_UpdateColor(uint16_t index)
@@ -225,8 +220,8 @@ void VGA_DAC_SetEntry(Bitu entry,uint8_t red,uint8_t green,uint8_t blue) {
 			VGA_DAC_SendColor( i, i );
 }
 
-void VGA_SetupDAC(void) {
-	vga.dac.first_changed=256;
+void VGA_SetupDAC(void)
+{
 	vga.dac.bits=6;
 	vga.dac.pel_mask=0xff;
 	vga.dac.pel_index=0;
