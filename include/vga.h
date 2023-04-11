@@ -388,7 +388,7 @@ typedef std::array<RGBEntry, num_cga_colors> cga_colors_t;
 
 struct VGA_Dac {
 	RGBEntry rgb[0x100]       = {};
-	RGBEntry palette_map[256] = {};
+	uint32_t palette_map[256] = {};
 
 	uint8_t combine[16] = {};
 

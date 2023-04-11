@@ -347,11 +347,11 @@ static uint8_t * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	return ret;
 }
 
-static uint8_t *VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu /*line*/)
+static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu /*line*/)
 {
 	const auto offset = vidstart & vga.draw.linear_mask;
 	const uint8_t *ret = &vga.draw.linear_base[offset];
-	const uint16_t *xlat16 = vga.dac.xlat16;
+	const auto palette_map = vga.dac.palette_map;
 
 	// see VGA_Draw_Linear_Line
 	if (GCC_UNLIKELY((vga.draw.line_length + offset)& ~vga.draw.linear_mask)) {
@@ -364,16 +364,17 @@ static uint8_t *VGA_Draw_Xlat16_Linear_Line(Bitu vidstart, Bitu /*line*/)
 
 		// unwrapped chunk: to top of memory block
 		for (uintptr_t i = 0; i < unwrapped_len; ++i)
-			write_unaligned_uint16_at(TempLine, i, xlat16[ret[i]]);
+			write_unaligned_uint32_at(TempLine, i, palette_map[ret[i]]);
 
 		// wrapped chunk: from base of memory block
 		for (uintptr_t i = 0; i < wrapped_len; ++i)
-			write_unaligned_uint16_at(TempLine, i + unwrapped_len,
-			                          xlat16[vga.draw.linear_base[i]]);
+			write_unaligned_uint32_at(TempLine,
+			                          i + unwrapped_len,
+			                          palette_map[vga.draw.linear_base[i]]);
 
 	} else {
 		for (uintptr_t i = 0; i < vga.draw.line_length; ++i) {
-			write_unaligned_uint16_at(TempLine, i, xlat16[ret[i]]);
+			write_unaligned_uint32_at(TempLine, i, palette_map[ret[i]]);
 		}
 	}
 	return TempLine;
@@ -645,48 +646,70 @@ static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 	}
 	return TempLine;
 }
-// combined 8/9-dot wide text mode 16bpp line drawing function
-static uint8_t *VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line)
+// combined 8/9-dot wide text mode line drawing function
+static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 {
-	// keep it aligned:
-	uint16_t idx = 16 - vga.draw.panning;
-	const uint8_t* vidmem = VGA_Text_Memwrap(vidstart); // pointer to chars+attribs
-	Bitu blocks = vga.draw.blocks;
-	if (vga.draw.panning)
+
+	// pointer to chars+attribs
+	const uint8_t* vidmem  = VGA_Text_Memwrap(vidstart);
+	const auto palette_map = vga.dac.palette_map;
+
+	auto blocks = vga.draw.blocks;
+	if (vga.draw.panning) {
 		++blocks; // if the text is panned part of an
 		          // additional character becomes visible
+	}
+
+	// The first write-index into the draw buffer. Increasing this shifts the
+	// console text right (and vice-versa)
+	const uint16_t draw_idx_start = 8 + vga.draw.panning;
+
+	// This holds the to-be-written pixel offset, and is incremented per pixel
+	// and also per character block.
+	auto draw_idx = draw_idx_start;
+
 	while (blocks--) { // for each character in the line
-		Bitu chr = *vidmem++;
-		Bitu attr = *vidmem++;
+		const auto chr  = *vidmem++;
+		const auto attr = *vidmem++;
 		// the font pattern
-		Bitu font = vga.draw.font_tables[(attr >> 3)&1][(chr<<5)+line];
-		
-		Bitu background = attr >> 4;
+		uint16_t font = vga.draw.font_tables[(attr >> 3) & 1][(chr << 5) + line];
+
+		uint8_t bg_palette_idx = attr >> 4;
 		// if blinking is enabled bit7 is not mapped to attributes
-		if (vga.draw.blinking) background &= ~0x8;
-		// choose foreground color if blinking not set for this cell or blink on
-		Bitu foreground = (vga.draw.blink || (!(attr&0x80)))?
-			(attr&0xf):background;
+		if (vga.draw.blinking) {
+			bg_palette_idx &= ~0x8;
+		}
+		// choose foreground color if blinking not set for this cell or
+		// blink on
+		const uint8_t fg_palette_idx = (vga.draw.blink || (attr & 0x80) == 0)
+		                                     ? (attr & 0xf)
+		                                     : bg_palette_idx;
+
 		// underline: all foreground [freevga: 0x77, previous 0x7]
 		if (GCC_UNLIKELY(((attr&0x77) == 0x01) &&
 			(vga.crtc.underline_location&0x1f)==line))
-				background = foreground;
+			bg_palette_idx = fg_palette_idx;
+
+		// The font's bits will indicate which color is used per pixel
+		const auto fg_colour = palette_map[fg_palette_idx];
+		const auto bg_colour = palette_map[bg_palette_idx];
+
 		if (vga.draw.char9dot) {
 			font <<=1; // 9 pixels
 			// extend to the 9th pixel if needed
 			if ((font&0x2) && (vga.attr.mode_control&0x04) &&
 				(chr>=0xc0) && (chr<=0xdf)) font |= 1;
-			for (int n = 0; n < 9; ++n) {
-				write_unaligned_uint16_at(
-				        TempLine, idx++,
-				        vga.dac.xlat16[(font & 0x100) ? foreground : background]);
+			for (auto n = 0; n < 9; ++n) {
+				const auto color = (font & 0x100) ? fg_colour
+				                                  : bg_colour;
+				write_unaligned_uint32_at(TempLine, draw_idx++, color);
 				font <<= 1;
 			}
 		} else {
-			for (int n = 0; n < 8; ++n) {
-				write_unaligned_uint16_at(
-				        TempLine, idx++,
-				        vga.dac.xlat16[(font & 0x80) ? foreground : background]);
+			for (auto n = 0; n < 8; ++n) {
+				const auto color = (font & 0x80) ? fg_colour
+				                                 : bg_colour;
+				write_unaligned_uint32_at(TempLine, draw_idx++, color);
 				font <<= 1;
 			}
 		}
@@ -694,15 +717,26 @@ static uint8_t *VGA_TEXT_Xlat16_Draw_Line(Bitu vidstart, Bitu line)
 	// draw the text mode cursor if needed
 	if (!SkipCursor(vidstart, line)) {
 		// the adress of the attribute that makes up the cell the cursor is in
-		const Bitu attr_addr = (vga.draw.cursor.address - vidstart) >> 1;
+		const auto attr_addr = check_cast<uint16_t>(
+		        (vga.draw.cursor.address - vidstart) >> 1);
 		if (attr_addr < vga.draw.blocks) {
-			Bitu index = attr_addr * (vga.draw.char9dot? 18:16);
-			uint16_t *draw = (uint16_t *)(&TempLine[index]) + 16 -
-			               vga.draw.panning;
+			const auto fg_palette_idx =
+			        vga.tandy.draw_base[vga.draw.cursor.address + 1] & 0xf;
+			const auto fg_colour = palette_map[fg_palette_idx];
 
-			Bitu foreground = vga.tandy.draw_base[vga.draw.cursor.address+1] & 0xf;
-			for (int i = 0; i < 8; ++i) {
-				*draw++ = vga.dac.xlat16[foreground];
+			// cursor block's byte-offset scalar as a ratio of the rendered
+			// pixel size versus 16-bit size
+			constexpr auto offset_scaler = sizeof(fg_colour) / sizeof(uint16_t);
+
+			// The cursor block's byte-offset into the rendering buffer.
+			const auto cursor_draw_offset = check_cast<uint16_t>(
+			        offset_scaler * attr_addr * (vga.draw.char9dot ? 18 : 16));
+
+			auto draw_addr = &TempLine[cursor_draw_offset];
+
+			draw_idx = draw_idx_start;
+			for (uint8_t n = 0; n < 8; ++n) {
+				write_unaligned_uint32_at(draw_addr, draw_idx++, fg_colour);
 			}
 		}
 	}
@@ -743,21 +777,20 @@ static void VGA_ProcessSplit() {
 	vga.draw.address_line=0;
 }
 
-bool operator==(const RGBEntry& lhs, const RGBEntry& rhs)
+static uint16_t from_rgb32_to_565(const uint32_t rgb32)
 {
-	return (lhs.red == rhs.red) && (lhs.green == rhs.green) &&
-	       (lhs.blue == rhs.blue);
-}
+	// Extract the red, green, and blue components from the RGB32 value
+	const auto r8 = static_cast<uint8_t>((rgb32 >> 16) & 0xFF);
+	const auto g8 = static_cast<uint8_t>((rgb32 >> 8) & 0xFF);
+	const auto b8 = static_cast<uint8_t>(rgb32 & 0xFF);
 
-bool operator!=(const RGBEntry& lhs, const RGBEntry& rhs)
-{
-	return !(lhs == rhs); // reuse the == operator
-}
+	// Scale the 8-bit components down to RGB565
+	const auto r5 = static_cast<uint16_t>((r8 * 0x1F) / 0xFF);
+	const auto g6 = static_cast<uint16_t>((g8 * 0x3F) / 0xFF);
+	const auto b5 = static_cast<uint16_t>((b8 * 0x1F) / 0xFF);
 
-static uint16_t from_rgb_666_to_565(const RGBEntry& rgb)
-{
-	return check_cast<uint16_t>((rgb.red >> 1) << 11 | rgb.green << 5 |
-	                            (rgb.blue >> 1));
+	// Combine the components into a 16-bit RGB565 value
+	return static_cast<uint16_t>((r5 << 11) | (g6 << 5) | b5);
 }
 
 static uint8_t bg_color_index = 0; // screen-off black index
@@ -792,8 +825,8 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			// the DAC table may not match the bits of the overscan register
 			// so use black for this case too...
 			//if (vga.attr.disabled& 2) {
-			if (constexpr RGBEntry black_rgb = {0, 0, 0};
-			    vga.dac.palette_map[bg_color_index] != black_rgb) {
+			if (constexpr uint32_t black_rgb32 = 0;
+			    vga.dac.palette_map[bg_color_index] != black_rgb32) {
 				// check some assumptions about the palette map
 				constexpr auto palette_map_len = ARRAY_LEN(
 				        vga.dac.palette_map);
@@ -801,7 +834,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 				              "The code below assumes the table is 256 elements long");
 
 				for (uint16_t i = 0; i < palette_map_len; ++i)
-					if (vga.dac.palette_map[i] == black_rgb) {
+					if (vga.dac.palette_map[i] == black_rgb32) {
 						bg_color_index = static_cast<uint8_t>(i);
 						break;
 					}
@@ -818,13 +851,21 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			          templine_buffer.end(),
 			          bg_color_index);
 		} else if (vga.draw.bpp == 16) {
-			const auto background_color = from_rgb_666_to_565(
+			const auto background_color = from_rgb32_to_565(
 			        vga.dac.palette_map[bg_color_index]);
-			for (size_t i = 0; i < templine_buffer.size() / 2; ++i) {
-				write_unaligned_uint16_at(TempLine, i, background_color);
+			const auto line_length = templine_buffer.size() / sizeof(uint16_t);
+			size_t i = 0;
+			while (i < line_length) {
+				write_unaligned_uint16_at(TempLine, i++, background_color);
+			}
+		} else if (vga.draw.bpp == 32) {
+			const auto background_color = vga.dac.palette_map[bg_color_index];
+			const auto line_length = templine_buffer.size() / sizeof(uint32_t);
+			size_t i = 0;
+			while (i < line_length) {
+				write_unaligned_uint32_at(TempLine, i++, background_color);
 			}
 		}
-		// 24 bit and 32 bit don't use background filling.
 		RENDER_DrawLine(TempLine);
 	} else {
 		uint8_t * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
@@ -1598,9 +1639,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		doublewidth=true;
 		width<<=2;
 		if (IS_VGA_ARCH && !ReelMagic_IsVideoMixerEnabled() &&
-		    (CurMode->type == M_VGA || svgaCard == SVGA_None)) {
-			bpp = 16;
-			VGA_DrawLine = VGA_Draw_Xlat16_Linear_Line;
+		    CurMode->type == M_VGA) {
+			bpp = 32;
+			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
 			VGA_DrawLine = VGA_Draw_Linear_Line;
 		}
@@ -1702,7 +1743,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_TEXT:
 		vga.draw.blocks=width;
 		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
-		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
+		if (IS_VGA_ARCH) {
 			// vgaonly: allow 9-pixel wide fonts
 			if (vga.seq.clocking_mode&0x01) {
 				vga.draw.char9dot = false;
@@ -1712,8 +1753,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 				width*=9;
 				aspect_ratio *= 1.125;
 			}
-			VGA_DrawLine=VGA_TEXT_Xlat16_Draw_Line;
-			bpp = 16;
+			bpp = 32;
+			VGA_DrawLine = draw_text_line_from_dac_palette;
 		} else {
 			// not vgaonly: force 8-pixel wide fonts
 			width*=8; // 8 bit wide text font
