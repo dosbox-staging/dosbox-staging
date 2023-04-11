@@ -1965,7 +1965,9 @@ dosurface:
 		// Log changes to the rendering driver
 		static std::string render_driver = {};
 		if (render_driver != rinfo.name) {
-			LOG_MSG("SDL: Using driver \"%s\" for texture renderer", rinfo.name);
+			LOG_MSG("SDL: Using '%s' driver for %d-bit texture rendering",
+			        rinfo.name,
+			        SDL_BITSPERPIXEL(pixel_format));
 			render_driver = rinfo.name;
 		}
 

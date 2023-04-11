@@ -387,16 +387,18 @@ constexpr auto num_cga_colors = 16;
 typedef std::array<RGBEntry, num_cga_colors> cga_colors_t;
 
 struct VGA_Dac {
-	uint8_t bits = 0; /* DAC bits, usually 6 or 8 */
-	uint8_t pel_mask = 0;
-	uint8_t pel_index = 0;
-	uint8_t state = 0;
-	uint8_t write_index = 0;
-	uint8_t read_index = 0;
-	Bitu first_changed = 0;
+	RGBEntry rgb[0x100]       = {};
+	RGBEntry palette_map[256] = {};
+
 	uint8_t combine[16] = {};
-	RGBEntry rgb[0x100] = {};
-	uint16_t xlat16[256] = {};
+
+	// DAC 8-bit registers
+	uint8_t bits        = 0; /* DAC bits, usually 6 or 8 */
+	uint8_t pel_mask    = 0;
+	uint8_t pel_index   = 0;
+	uint8_t state       = 0;
+	uint8_t write_index = 0;
+	uint8_t read_index  = 0;
 };
 
 struct VGA_SVGA {
