@@ -1824,14 +1824,16 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		doubleheight=true;
 	}
 	vga.draw.vblank_skip = vblank_skip;
-		
-	if (!(IS_VGA_ARCH && (svgaCard==SVGA_None) && (vga.mode==M_EGA || vga.mode==M_VGA))) {
-		//Only check for extra double height in vga modes
-		//(line multiplying by address_line_total)
-		if (!doubleheight && (vga.mode<M_TEXT) && !(vga.draw.address_line_total & 1)) {
-			vga.draw.address_line_total/=2;
-			doubleheight=true;
-			height/=2;
+
+	if (!(IS_VGA_ARCH && (vga.mode == M_EGA || vga.mode == M_VGA))) {
+		// Only check for extra double height in vga modes (line
+		// multiplying by address_line_total)
+
+		const auto has_even_number_of_lines = !(vga.draw.address_line_total & 1);
+		if (!doubleheight && (vga.mode < M_TEXT) && has_even_number_of_lines) {
+			vga.draw.address_line_total /= 2;
+			doubleheight = true;
+			height /= 2;
 		}
 	}
 	vga.draw.lines_total=height;
