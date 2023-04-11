@@ -57,21 +57,25 @@ enum {DAC_READ,DAC_WRITE};
 
 static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 {
-	// short-hand lookup for the source RGB color
-	const auto& rgb_source = vga.dac.rgb[src];
-
-	// Map the source color into palette's requested index
-	vga.dac.palette_map[index] = rgb_source;
+	const auto& src_rgb18 = vga.dac.rgb[src];
 
 	// Scale the DAC's 6-bit colors to 8-bit to set the VGA palette
 	auto scale_6_to_8 = [](const uint8_t color_6) -> uint8_t {
 		const auto color_8 = (color_6 * 255 + 31) / 63;
 		return check_cast<uint8_t>(color_8);
 	};
-	RENDER_SetPal(index,
-	              scale_6_to_8(rgb_source.red),
-	              scale_6_to_8(rgb_source.green),
-	              scale_6_to_8(rgb_source.blue));
+	const RGBEntry src_rgb24 = {scale_6_to_8(src_rgb18.red),
+	                            scale_6_to_8(src_rgb18.green),
+	                            scale_6_to_8(src_rgb18.blue)};
+
+	// Map the source color into palette's requested index
+	auto rgb888_to_uint32 = [](const RGBEntry rgb888) -> uint32_t {
+		return static_cast<uint32_t>((rgb888.red << 16) |
+		                             (rgb888.green << 8) | rgb888.blue);
+	};
+	vga.dac.palette_map[index] = rgb888_to_uint32(src_rgb24);
+
+	RENDER_SetPal(index, src_rgb24.red, src_rgb24.green, src_rgb24.blue);
 }
 
 static void VGA_DAC_UpdateColor(uint16_t index)
