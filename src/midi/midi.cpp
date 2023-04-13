@@ -93,8 +93,8 @@ MidiHandler::MidiHandler() : next(handler_list)
 #include "midi_mt32.h"
 
 #if defined(MACOSX)
-#	include "midi_coreaudio.h"
 #	include "midi_coremidi.h"
+#	include "midi_coreaudio.h"
 
 #elif defined(WIN32)
 #	include "midi_win32.h"
