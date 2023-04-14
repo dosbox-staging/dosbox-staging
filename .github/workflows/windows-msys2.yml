@@ -56,6 +56,14 @@ jobs:
             run_tests: true
             build_flags: -Dbuildtype=debug -Dfluidsynth:tests=false
 
+          - name: GCC, +voodoo
+            toolchain: ucrt-
+            arch: x86_64
+            sys: UCRT64
+            cc: gcc
+            max_warnings: 84
+            build_flags: -Dexperimental_voodoo_support=true
+
     defaults:
       run:
         shell: msys2 {0}

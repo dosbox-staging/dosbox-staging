@@ -162,6 +162,20 @@ jobs:
             max_warnings: 0
             needs_all_deps: true
 
+          - name: GCC, +voodoo
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true
+            max_warnings: 74
+            needs_all_deps: true
+            run_tests: true
+
+          - name: Clang, +voodoo
+            os: ubuntu-20.04
+            packages: clang-12
+            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true --native-file=.github/meson/native-clang-12.ini
+            max_warnings: 41
+            needs_all_deps: true
+
           - name: GCC, minimum build
             os: ubuntu-20.04
             build_flags: >-
