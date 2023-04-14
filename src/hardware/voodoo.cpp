@@ -57,25 +57,25 @@
   Code cleanups and multi-threaded triangle rendering by Bernhard Schelling
 */
 
+#include "dosbox.h"
+
+#include <assert.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <assert.h>
-#include "SDL.h"
 
-#include "config.h"
+#include <SDL.h>
+
 #if C_VOODOO
-#include "dosbox.h"
-#include "setup.h"
-#include "cross.h"
-#include "paging.h"
-#include "mem.h"
-#include "vga.h"
-#include "pic.h"
-#include "paging.h"
-#include "render.h"
-#include "pci_bus.h"
 #include "control.h"
+#include "cross.h"
+#include "mem.h"
+#include "paging.h"
+#include "pci_bus.h"
+#include "pic.h"
+#include "render.h"
+#include "setup.h"
+#include "vga.h"
 
 #ifndef DOSBOX_VOODOO_TYPES_H
 #define DOSBOX_VOODOO_TYPES_H
@@ -84,22 +84,24 @@
     TYPE DEFINITIONS
 ***************************************************************************/
 
+// FIXME Get rid of these typedefs
+//
 /* 8-bit values */
-typedef Bit8u						UINT8;
-typedef Bit8s 						INT8;
+typedef uint8_t UINT8;
+typedef int8_t INT8;
 
 /* 16-bit values */
-typedef Bit16u						UINT16;
-typedef Bit16s						INT16;
+typedef uint16_t UINT16;
+typedef int16_t INT16;
 
 #ifndef _WINDOWS_
 /* 32-bit values */
-typedef Bit32u						UINT32;
-typedef Bit32s						INT32;
+typedef uint32_t UINT32;
+typedef int32_t INT32;
 
 /* 64-bit values */
-typedef Bit64u						UINT64;
-typedef Bit64s						INT64;
+typedef uint64_t UINT64;
+typedef int64_t INT64;
 #endif
 
 typedef INT64 attoseconds_t;
@@ -141,13 +143,13 @@ typedef UINT16 rgb15_t;
 #define RGB_WHITE			(MAKE_ARGB(255,255,255,255))
 
 /***************************************************************************
-    INLINE FUNCTIONS
+    inline FUNCTIONS
 ***************************************************************************/
 
 /*-------------------------------------------------
     pal5bit - convert a 5-bit value to 8 bits
 -------------------------------------------------*/
-INLINE UINT8 pal5bit(UINT8 bits)
+inline UINT8 pal5bit(UINT8 bits)
 {
 	bits &= 0x1f;
 	return (bits << 3) | (bits >> 2);
@@ -208,7 +210,7 @@ struct rectangle
 /* Highly useful macro for compile-time knowledge of an array size */
 #define ARRAY_LENGTH(x)		(sizeof(x) / sizeof(x[0]))
 
-INLINE INT32 mul_32x32_shift(INT32 a, INT32 b, INT8 shift)
+inline INT32 mul_32x32_shift(INT32 a, INT32 b, INT8 shift)
 {
 	return (INT32)(((INT64)a * (INT64)b) >> shift);
 }
@@ -221,7 +223,8 @@ INLINE INT32 mul_32x32_shift(INT32 a, INT32 b, INT8 shift)
 static INT16 sse2_scale_table[256][8];
 #endif
 
-INLINE rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10, rgb_t rgb11, UINT8 u, UINT8 v)
+inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
+                                  rgb_t rgb11, UINT8 u, UINT8 v)
 {
 #if defined(__SSE2__) && __SSE2__
 	__m128i  scale_u = *(__m128i *)sse2_scale_table[u], scale_v = *(__m128i *)sse2_scale_table[v];
@@ -1026,7 +1029,7 @@ struct poly_extra_data
  *
  *************************************/
 
-INLINE INT32 fifo_space(fifo_state *f)
+inline INT32 fifo_space(fifo_state* f)
 {
 	INT32 items = 0;
 	if (items < 0)
@@ -1034,8 +1037,7 @@ INLINE INT32 fifo_space(fifo_state *f)
 	return f->size - 1 - items;
 }
 
-
-INLINE UINT8 count_leading_zeros(UINT32 value)
+inline UINT8 count_leading_zeros(UINT32 value)
 {
 #ifdef _MSC_VER
 	DWORD idx = 0;
@@ -1084,7 +1086,7 @@ INLINE UINT8 count_leading_zeros(UINT32 value)
  *
  *************************************/
 
-INLINE INT64 fast_reciplog(INT64 value, INT32 *log2)
+inline INT64 fast_reciplog(INT64 value, INT32* log2)
 {
 	UINT32 temp, rlog;
 	UINT32 interp;
@@ -1162,7 +1164,7 @@ INLINE INT64 fast_reciplog(INT64 value, INT32 *log2)
  *
  *************************************/
 
-INLINE INT32 float_to_int32(UINT32 data, int fixedbits)
+inline INT32 float_to_int32(UINT32 data, int fixedbits)
 {
 	int exponent = ((data >> 23) & 0xff) - 127 - 23 + fixedbits;
 	INT32 result = (data & 0x7fffff) | 0x800000;
@@ -1185,8 +1187,7 @@ INLINE INT32 float_to_int32(UINT32 data, int fixedbits)
 	return result;
 }
 
-
-INLINE INT64 float_to_int64(UINT32 data, int fixedbits)
+inline INT64 float_to_int64(UINT32 data, int fixedbits)
 {
 	int exponent = ((data >> 23) & 0xff) - 127 - 23 + fixedbits;
 	INT64 result = (data & 0x7fffff) | 0x800000;
@@ -1218,7 +1219,7 @@ INLINE INT64 float_to_int64(UINT32 data, int fixedbits)
  *
  *************************************/
 
-INLINE UINT32 normalize_color_path(UINT32 eff_color_path)
+inline UINT32 normalize_color_path(UINT32 eff_color_path)
 {
 	/* ignore the subpixel adjust and texture enable flags */
 	eff_color_path &= ~((1 << 26) | (1 << 27));
@@ -1226,7 +1227,7 @@ INLINE UINT32 normalize_color_path(UINT32 eff_color_path)
 	return eff_color_path;
 }
 
-INLINE UINT32 normalize_alpha_mode(UINT32 eff_alpha_mode)
+inline UINT32 normalize_alpha_mode(UINT32 eff_alpha_mode)
 {
 	/* always ignore alpha ref value */
 	eff_alpha_mode &= ~(0xff << 24);
@@ -1242,7 +1243,7 @@ INLINE UINT32 normalize_alpha_mode(UINT32 eff_alpha_mode)
 	return eff_alpha_mode;
 }
 
-INLINE UINT32 normalize_fog_mode(UINT32 eff_fog_mode)
+inline UINT32 normalize_fog_mode(UINT32 eff_fog_mode)
 {
 	/* if not doing fogging, ignore all the other fog bits */
 	if (!FOGMODE_ENABLE_FOG(eff_fog_mode))
@@ -1251,7 +1252,7 @@ INLINE UINT32 normalize_fog_mode(UINT32 eff_fog_mode)
 	return eff_fog_mode;
 }
 
-INLINE UINT32 normalize_fbz_mode(UINT32 eff_fbz_mode)
+inline UINT32 normalize_fbz_mode(UINT32 eff_fbz_mode)
 {
 	/* ignore the draw buffer */
 	eff_fbz_mode &= ~(3 << 14);
@@ -1259,7 +1260,7 @@ INLINE UINT32 normalize_fbz_mode(UINT32 eff_fbz_mode)
 	return eff_fbz_mode;
 }
 
-INLINE UINT32 normalize_tex_mode(UINT32 eff_tex_mode)
+inline UINT32 normalize_tex_mode(UINT32 eff_tex_mode)
 {
 	/* ignore the NCC table and seq_8_downld flags */
 	eff_tex_mode &= ~((1 << 5) | (1 << 31));
@@ -1275,7 +1276,7 @@ INLINE UINT32 normalize_tex_mode(UINT32 eff_tex_mode)
 	return eff_tex_mode;
 }
 
-INLINE UINT32 compute_raster_hash(const raster_info *info)
+inline UINT32 compute_raster_hash(const raster_info* info)
 {
 	UINT32 hash;
 
@@ -3043,7 +3044,9 @@ static double Voodoo_GetHRetracePosition();
     RASTERIZER MANAGEMENT
 ***************************************************************************/
 
-static INLINE void raster_generic(const voodoo_state *v, UINT32 TMUS, UINT32 TEXMODE0, UINT32 TEXMODE1, void *destbase, INT32 y, const poly_extent *extent, stats_block& stats)
+static inline void raster_generic(const voodoo_state* v, UINT32 TMUS, UINT32 TEXMODE0,
+                                  UINT32 TEXMODE1, void* destbase, INT32 y,
+                                  const poly_extent* extent, stats_block& stats)
 {
 	DECLARE_DITHER_POINTERS;
 
@@ -4136,7 +4139,7 @@ static void prepare_tmu(tmu_state *t)
 	t->lodbasetemp = (-lodbase + (12 << 8)) / 2;
 }
 
-static INLINE INT32 round_coordinate(float value)
+static inline INT32 round_coordinate(float value)
 {
 	return (value > 0 ? (INT32)(value + .4999999f) : (INT32)(value - .5f));
 	//INT32 result = (INT32)floor(value);
@@ -4320,7 +4323,10 @@ static void triangle_worker_run(triangle_worker& tworker)
 	{
 		tworker.threads_active = true;
 		for (size_t i = 0; i != TRIANGLE_THREADS; i++) tworker.sembegin[i] = SDL_CreateSemaphore(0);
-		for (size_t i = 0; i != TRIANGLE_THREADS; i++) SDL_CreateThread(triangle_worker_thread_func, (void*)i);
+		for (size_t i = 0; i != TRIANGLE_THREADS; i++)
+			SDL_CreateThread(triangle_worker_thread_func,
+			                 "voodoo",
+			                 (void*)i);
 	}
 
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) tworker.done[i] = false;
@@ -4347,9 +4353,9 @@ static void triangle(voodoo_state *v)
 
 	/* perform subpixel adjustments */
 	if (
-		#ifdef C_ENABLE_VOODOO_OPENGL
+#ifdef C_ENABLE_VOODOO_OPENGL
 		!v->ogl &&
-		#endif
+#endif
 		FBZCP_CCA_SUBPIXEL_ADJUST(v->reg[fbzColorPath].u))
 	{
 		INT32 dx = 8 - (v->fbi.ax & 15);
@@ -4389,7 +4395,7 @@ static void triangle(voodoo_state *v)
 	vert[2].x = (float)v->fbi.cx * (1.0f / 16.0f);
 	vert[2].y = (float)v->fbi.cy * (1.0f / 16.0f);
 
-	#ifdef C_ENABLE_VOODOO_OPENGL
+#ifdef C_ENABLE_VOODOO_OPENGL
 	/* find a rasterizer that matches our current state */
 	//    setup and create the work item
 	poly_extra_data extra;
@@ -4459,9 +4465,9 @@ static void triangle(voodoo_state *v)
 	extra.r_textureMode0 = v->tmu[0].reg[textureMode].u;
 	if (v->tmu[1].ram != NULL) extra.r_textureMode1 = v->tmu[1].reg[textureMode].u;
 
-	#ifdef C_ENABLE_VOODOO_DEBUG
+#ifdef C_ENABLE_VOODOO_DEBUG
 	info->polys++;
-	#endif
+#endif
 
 	if (v->ogl_palette_changed && v->ogl && v->active) {
 		voodoo_ogl_invalidate_paltex();
@@ -4473,7 +4479,7 @@ static void triangle(voodoo_state *v)
 			voodoo_ogl_draw_triangle(&extra);
 		return;
 	}
-	#endif
+#endif
 
 	/* first sort by Y */
 	const poly_vertex *v1 = &vert[0], *v2 = &vert[1], *v3 = &vert[2];
@@ -6318,10 +6324,13 @@ static UINT32 register_r(UINT32 offset)
 			/* start with a blank slate */
 			result = 0;
 
-			result |= ((Bit32u)(Voodoo_GetVRetracePosition() * 0x1fff)) & 0x1fff;
-			result |= (((Bit32u)(Voodoo_GetHRetracePosition() * 0x7ff)) & 0x7ff) << 16;
+		        result |= ((uint32_t)(Voodoo_GetVRetracePosition() * 0x1fff)) &
+		                  0x1fff;
+		        result |= (((uint32_t)(Voodoo_GetHRetracePosition() * 0x7ff)) &
+		                   0x7ff)
+		               << 16;
 
-			break;
+		        break;
 
 		/* bit 2 of the initEnable register maps this to dacRead */
 		case fbiInit2:
@@ -6465,9 +6474,9 @@ static UINT32 voodoo_r(UINT32 offset) {
 static void voodoo_init() {
 	assert(!v);
 	v = new voodoo_state;
-	#ifdef C_ENABLE_VOODOO_OPENGL
+#ifdef C_ENABLE_VOODOO_OPENGL
 	v->ogl = (emulation_type == VOODOO_EMU_TYPE_ACCELERATED);
-	#endif
+#endif
 
 	v->active = false;
 
@@ -6706,7 +6715,8 @@ static void voodoo_update_dimensions(void) {
 }
 #endif
 
-static void Voodoo_VerticalTimer(Bitu /*val*/) {
+static void Voodoo_VerticalTimer(uint32_t /*val*/)
+{
 	v->draw.frame_start = PIC_FullIndex();
 	PIC_AddEvent( Voodoo_VerticalTimer, v->draw.vfreq );
 
@@ -6733,9 +6743,10 @@ static void Voodoo_VerticalTimer(Bitu /*val*/) {
 #endif
 
 		// draw all lines at once
-		Bit16u *viewbuf = (Bit16u *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
+		uint16_t* viewbuf = (uint16_t*)(v->fbi.ram +
+		                                v->fbi.rgboffs[v->fbi.frontbuf]);
 		for(Bitu i = 0; i < v->fbi.height; i++) {
-			RENDER_DrawLine((Bit8u*) viewbuf);
+			RENDER_DrawLine((uint8_t*)viewbuf);
 			viewbuf += v->fbi.rowpixels;
 		}
 		RENDER_EndUpdate(false);
@@ -6838,7 +6849,8 @@ static void Voodoo_UpdateScreen(void) {
 	v->draw.screen_update_requested = false;
 }
 
-static void Voodoo_CheckScreenUpdate(Bitu /*val*/) {
+static void Voodoo_CheckScreenUpdate(uint32_t /*val*/)
+{
 	v->draw.screen_update_pending = false;
 	if (v->draw.screen_update_requested) {
 		v->draw.screen_update_pending = true;
@@ -6860,18 +6872,19 @@ static void Voodoo_Startup();
 static struct Voodoo_Real_PageHandler : public PageHandler {
 	Voodoo_Real_PageHandler() { flags = PFLAG_NOCODE; }
 
-	uint8_t readb(PhysPt addr)
+	uint8_t readb([[maybe_unused]] PhysPt addr)
 	{
-		//LOG_MSG("VOODOO: readb at %x", addr);
+		// LOG_MSG("VOODOO: readb at %x", addr);
 		return 0xff;
 	}
 
-	void writeb(PhysPt addr, uint8_t val)
+	void writeb([[maybe_unused]] PhysPt addr, [[maybe_unused]] uint8_t val)
 	{
-		//LOG_MSG("VOODOO: writeb at %x", addr);
+		// LOG_MSG("VOODOO: writeb at %x", addr);
 	}
 
-	Bitu readw(PhysPt addr) {
+	uint16_t readw(PhysPt addr)
+	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		Bitu retval=voodoo_r((addr>>2)&0x3FFFFF);
 		if (!(addr & 3))
@@ -6883,7 +6896,8 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 		return retval;
 	}
 
-	void writew(PhysPt addr,Bitu val) {
+	void writew(PhysPt addr, uint16_t val)
+	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr & 3))
 			voodoo_w((addr>>2)&0x3FFFFF,(UINT32)val,0x0000ffff);
@@ -6893,7 +6907,8 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 			E_Exit("voodoo writew unaligned");
 	}
 
-	Bitu readd(PhysPt addr) {
+	uint32_t readd(PhysPt addr)
+	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr&3)) {
 			return voodoo_r((addr>>2)&0x3FFFFF);
@@ -6907,7 +6922,8 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 		}
 	}
 
-	void writed(PhysPt addr,Bitu val) {
+	void writed(PhysPt addr, uint32_t val)
+	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr&3)) {
 			voodoo_w((addr>>2)&0x3FFFFF,(UINT32)val,0xffffffff);
@@ -6915,12 +6931,12 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 			voodoo_w((addr>>2)&0x3FFFFF,(UINT32)(val<<16),0xffff0000);
 			voodoo_w(((addr>>2)+1)&0x3FFFFF,(UINT32)val,0x0000ffff);
 		} else {
-			Bit32u val1 = voodoo_r((addr>>2)&0x3FFFFF);
-			Bit32u val2 = voodoo_r(((addr>>2)+1)&0x3FFFFF);
-			if ((addr&3)==1) {
+			uint32_t val1 = voodoo_r((addr >> 2) & 0x3FFFFF);
+			uint32_t val2 = voodoo_r(((addr >> 2) + 1) & 0x3FFFFF);
+			if ((addr & 3) == 1) {
 				val1 = (val1&0xffffff) | ((val&0xff)<<24);
 				val2 = (val2&0xff000000) | ((UINT32)val>>8);
-			} else if ((addr&3)==3) {
+			} else if ((addr & 3) == 3) {
 				val1 = (val1&0xff) | ((val&0xffffff)<<8);
 				val2 = (val2&0xffffff00) | ((UINT32)val>>24);
 			}
@@ -6932,12 +6948,31 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 
 static struct Voodoo_Init_PageHandler : public PageHandler {
 	Voodoo_Init_PageHandler() { flags = PFLAG_NOCODE; }
-	Bitu readb(PhysPt addr)           { return (Bitu)-1; }
-	Bitu readw(PhysPt addr)           { Voodoo_Startup(); return voodoo_real_pagehandler.readw(addr); }
-	Bitu readd(PhysPt addr)           { Voodoo_Startup(); return voodoo_real_pagehandler.readd(addr); }
-	void writeb(PhysPt addr,Bitu val) { }
-	void writew(PhysPt addr,Bitu val) { Voodoo_Startup(); voodoo_real_pagehandler.writew(addr, val); }
-	void writed(PhysPt addr,Bitu val) { Voodoo_Startup(); voodoo_real_pagehandler.writed(addr, val); }
+	uint8_t readb(PhysPt addr)
+	{
+		return 0xff;
+	}
+	uint16_t readw(PhysPt addr)
+	{
+		Voodoo_Startup();
+		return voodoo_real_pagehandler.readw(addr);
+	}
+	uint32_t readd(PhysPt addr)
+	{
+		Voodoo_Startup();
+		return voodoo_real_pagehandler.readd(addr);
+	}
+	void writeb(PhysPt addr, uint8_t val) {}
+	void writew(PhysPt addr, uint16_t val)
+	{
+		Voodoo_Startup();
+		voodoo_real_pagehandler.writew(addr, val);
+	}
+	void writed(PhysPt addr, uint32_t val)
+	{
+		Voodoo_Startup();
+		voodoo_real_pagehandler.writed(addr, val);
+	}
 } voodoo_init_pagehandler;
 
 #define VOODOO_INITIAL_LFB	0xd0000000
@@ -6952,20 +6987,22 @@ static struct Voodoo_Init_PageHandler : public PageHandler {
 #define VOODOO_EMU_TYPE_ACCELERATED	2
 #endif
 
-static Bit32u voodoo_current_lfb;
+static uint32_t voodoo_current_lfb;
 static PageHandler* voodoo_pagehandler;
 
 struct PCI_SSTDevice : public PCI_Device {
 	enum { vendor = 0x121a, device_voodoo_1 = 0x0001, device_voodoo_2 = 0x0002 }; // 0x121a = 3dfx
-	Bit16u oscillator_ctr, pci_ctr;
+	uint16_t oscillator_ctr, pci_ctr;
 
 	PCI_SSTDevice() : PCI_Device(vendor,device_voodoo_1), oscillator_ctr(0), pci_ctr(0) { }
 
-	void SetDeviceId(Bit16u _device_id) {
+	void SetDeviceId(uint16_t _device_id)
+	{
 		device_id = _device_id;
 	}
 
-	Bits ParseReadRegister(Bit8u regnum) {
+	Bits ParseReadRegister(uint8_t regnum)
+	{
 		//LOG_MSG("SST ParseReadRegister %x",regnum);
 		switch (regnum) {
 			case 0x4c:case 0x4d:case 0x4e:case 0x4f:
@@ -6978,7 +7015,8 @@ struct PCI_SSTDevice : public PCI_Device {
 		return regnum;
 	}
 
-	bool OverrideReadRegister(Bit8u regnum, Bit8u* rval, Bit8u* rval_mask) {
+	bool OverrideReadRegister(uint8_t regnum, uint8_t* rval, uint8_t* rval_mask)
+	{
 		if (vtype != VOODOO_2) return false;
 		switch (regnum) {
 			case 0x54:
@@ -7003,14 +7041,17 @@ struct PCI_SSTDevice : public PCI_Device {
 		return false;
 	}
 
-	Bits ParseWriteRegister(Bit8u regnum,Bit8u value) {
+	Bits ParseWriteRegister(uint8_t regnum, uint8_t value)
+	{
 		//LOG_MSG("SST ParseWriteRegister %x:=%x",regnum,value);
 		if ((regnum>=0x14) && (regnum<0x28)) return -1;	// base addresses are read-only
 		if ((regnum>=0x30) && (regnum<0x34)) return -1;	// expansion rom addresses are read-only
 		switch (regnum) {
 			case 0x10:
-				Bit8u PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, Bit8u regnum);
-				return (PCI_GetCFGData(this->PCIId(), this->PCISubfunction(), 0x10) & 0x0f);
+			        uint8_t PCI_GetCFGData(Bits pci_id,
+			                               Bits pci_subfunction,
+			                               uint8_t regnum);
+			        return (PCI_GetCFGData(this->PCIId(), this->PCISubfunction(), 0x10) & 0x0f);
 			case 0x11:
 				return 0x00;
 			case 0x12:
@@ -7042,7 +7083,8 @@ struct PCI_SSTDevice : public PCI_Device {
 		return value;
 	}
 
-	bool InitializeRegisters(Bit8u registers[256]) {
+	bool InitializeRegisters(uint8_t registers[256])
+	{
 		// init (3dfx voodoo)
 		registers[0x08] = 0x02;	// revision
 		registers[0x09] = 0x00;	// interface
@@ -7061,11 +7103,14 @@ struct PCI_SSTDevice : public PCI_Device {
 		registers[0x3c] = 0xff;	// no irq
 
 		// memBaseAddr: size is 16MB
-		Bit32u address_space=(((Bit32u)VOODOO_INITIAL_LFB)&0xfffffff0) | 0x08;	// memory space, within first 4GB, prefetchable
-		registers[0x10] = (Bit8u)(address_space&0xff);		// base addres 0
-		registers[0x11] = (Bit8u)((address_space>>8)&0xff);
-		registers[0x12] = (Bit8u)((address_space>>16)&0xff);
-		registers[0x13] = (Bit8u)((address_space>>24)&0xff);
+		uint32_t address_space = (((uint32_t)VOODOO_INITIAL_LFB) & 0xfffffff0) |
+		                         0x08; // memory space, within first
+		                               // 4GB, prefetchable
+		registers[0x10] = (uint8_t)(address_space & 0xff); // base
+		                                                   // addres 0
+		registers[0x11] = (uint8_t)((address_space >> 8) & 0xff);
+		registers[0x12] = (uint8_t)((address_space >> 16) & 0xff);
+		registers[0x13] = (uint8_t)((address_space >> 24) & 0xff);
 
 		if (vtype == VOODOO_2) {
 			registers[0x40] = 0x00;

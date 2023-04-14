@@ -19,15 +19,18 @@
 #ifndef DOSBOX_PCI_H
 #define DOSBOX_PCI_H
 
+#include "dosbox.h"
+
+#include "mem.h"
+
 #if C_VOODOO
 #define PCI_FUNCTIONALITY_ENABLED 1
 #endif
 
 #if defined PCI_FUNCTIONALITY_ENABLED
 
-#define PCI_MAX_PCIDEVICES		10
-#define PCI_MAX_PCIFUNCTIONS	8
-
+#define PCI_MAX_PCIDEVICES   10
+#define PCI_MAX_PCIFUNCTIONS 8
 
 class PCI_Device {
 protected:
@@ -85,7 +88,7 @@ RealPt PCI_GetPModeInterface(void);
 
 void PCI_AddDevice(PCI_Device* dev);
 
-Bit8u PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, Bit8u regnum);
+uint8_t PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, uint8_t regnum);
 
 #endif
 

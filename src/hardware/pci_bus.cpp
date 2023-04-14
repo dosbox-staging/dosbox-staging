@@ -16,16 +16,16 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "pci_bus.h"
 
+#include "callback.h"
+#include "debug.h"
 #include "dosbox.h"
 #include "inout.h"
 #include "mem.h"
-#include "pci_bus.h"
-#include "setup.h"
-#include "debug.h"
-#include "callback.h"
 #include "regs.h"
-
+#include "setup.h"
+#include "support.h"
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 
@@ -117,7 +117,7 @@ static void write_pci(io_port_t port, io_val_t value, io_width_t width)
 	}
 }
 
-static uint32_t read_pci_addr(io_port_t port, io_width_t))
+static uint32_t read_pci_addr(io_port_t port, io_width_t)
 {
 	LOG(LOG_PCI, LOG_NORMAL)("Read PCI address -> %x", pci_caddress);
 	return pci_caddress;
@@ -283,7 +283,7 @@ protected:
 public:
 
 	PhysPt GetPModeCallbackPointer(void) {
-		return Real2Phys(callback_pci.Get_RealPointer());
+		return RealToPhysical(callback_pci.Get_RealPointer());
 	}
 
 	bool IsInitialized(void) {
@@ -472,7 +472,8 @@ void PCI_AddDevice(PCI_Device* dev) {
 	}
 }
 
-Bit8u PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, Bit8u regnum) {
+uint8_t PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, uint8_t regnum)
+{
 	return pci_cfg_data[pci_id][pci_subfunction][regnum];
 }
 
