@@ -296,10 +296,6 @@ Additionally, we attach some optional metadata to the commits in the form of
 git fetch origin "refs/notes/*:refs/notes/*"
 ```
 
-For some historical context of why this repo exists you can read
-[Vogons thread](https://www.vogons.org/viewtopic.php?p=790065#p790065),
-([1](https://imgur.com/a/bnJEZcx), [2](https://imgur.com/a/HnG1Ls4))
-
 [`svn/*`]:     https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
 [`svn/trunk`]: https://github.com/dosbox-staging/dosbox-staging/tree/svn/trunk
 [`vogons/*`]:  https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=vogons%2F
