@@ -226,6 +226,7 @@ struct VGA_Draw {
 	} cursor = {};
 	Drawmode mode = {};
 	bool vret_triggered = false;
+	bool vga_override = false;
 };
 
 struct VGA_HWCURSOR {
@@ -595,6 +596,7 @@ void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3);
 void VGA_ActivateHardwareCursor(void);
 void VGA_KillDrawing(void);
 
+void VGA_SetOverride(bool vga_override);
 void VGA_LogInitialization(const char *adapter_name,
                            const char *ram_type,
                            const size_t num_modes);

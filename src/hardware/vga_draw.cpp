@@ -1049,9 +1049,10 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		break;
 	}
 
-	// Check if we can actually render
-	++vga.draw.cursor.count;
-	if (!RENDER_StartUpdate()) {
+	//Check if we can actually render, else skip the rest (frameskip)
+	++vga.draw.cursor.count; // Do this here, else the cursor speed depends
+	                         // on the frameskip
+	if (vga.draw.vga_override || !RENDER_StartUpdate()) {
 		return;
 	}
 
@@ -1983,8 +1984,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		                         doublewidth ? "double" : "normal",
 		                         doubleheight ? "double" : "normal", aspect_ratio);
 #endif
-		RENDER_SetSize(width, height, bpp, fps, aspect_ratio,
-		               doublewidth, doubleheight);
+		if (!vga.draw.vga_override)
+			RENDER_SetSize(width, height, bpp, fps, aspect_ratio,
+			               doublewidth, doubleheight);
 	}
 }
 
@@ -1994,5 +1996,19 @@ void VGA_KillDrawing(void) {
 	PIC_RemoveEvents(VGA_DrawEGASingleLine);
 	vga.draw.parts_left = 0;
 	vga.draw.lines_done = ~0;
-	RENDER_EndUpdate(true);
+	if (!vga.draw.vga_override) RENDER_EndUpdate(true);
+}
+
+void VGA_SetOverride(bool vga_override) {
+	if (vga.draw.vga_override!=vga_override) {
+		
+		if (vga_override) {
+			VGA_KillDrawing();
+			vga.draw.vga_override=true;
+		} else {
+			vga.draw.vga_override=false;
+			vga.draw.width=0; // change it so the output window gets updated
+			VGA_SetupDrawing(0);
+		}
+	}
 }
