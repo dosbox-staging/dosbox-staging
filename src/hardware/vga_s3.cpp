@@ -844,11 +844,18 @@ struct PCI_VGADevice : public PCI_Device {
 
 	PCI_VGADevice():PCI_Device(vendor,device) { }
 
-	Bits ParseReadRegister(Bit8u regnum) { return regnum; }
+	Bits ParseReadRegister(uint8_t regnum)
+	{
+		return regnum;
+	}
 
-	bool OverrideReadRegister(Bit8u regnum, Bit8u* rval, Bit8u* rval_mask) { return false; }
+	bool OverrideReadRegister(uint8_t regnum, uint8_t* rval, uint8_t* rval_mask)
+	{
+		return false;
+	}
 
-	Bits ParseWriteRegister(Bit8u regnum,Bit8u value) {
+	Bits ParseWriteRegister(uint8_t regnum, uint8_t value)
+	{
 		if ((regnum>=0x18) && (regnum<0x28)) return -1;	// base addresses are read-only
 		if ((regnum>=0x30) && (regnum<0x34)) return -1;	// expansion rom addresses are read-only
 		switch (regnum) {
@@ -875,7 +882,8 @@ struct PCI_VGADevice : public PCI_Device {
 		return value;
 	}
 
-	bool InitializeRegisters(Bit8u registers[256]) {
+	bool InitializeRegisters(uint8_t registers[256])
+	{
 		// init (S3 graphics card)
 		//registers[0x08] = 0x44;	// revision ID (s3 trio64v+)
 		registers[0x08] = 0x00;	// revision ID
@@ -896,18 +904,24 @@ struct PCI_VGADevice : public PCI_Device {
 		//registers[0x3c] = 0x0b;	// irq line
 		//registers[0x3d] = 0x01;	// irq pin
 
-		//Bit32u gfx_address_space=(((Bit32u)S3_LFB_BASE)&0xfffffff0) | 0x08;	// memory space, within first 4GB, prefetchable
-		Bit32u gfx_address_space=(((Bit32u)S3_LFB_BASE)&0xfffffff0);	// memory space, within first 4GB
-		registers[0x10] = (Bit8u)(gfx_address_space&0xff);		// base addres 0
-		registers[0x11] = (Bit8u)((gfx_address_space>>8)&0xff);
-		registers[0x12] = (Bit8u)((gfx_address_space>>16)&0xff);
-		registers[0x13] = (Bit8u)((gfx_address_space>>24)&0xff);
+		// uint32_t gfx_address_space=(((uint32_t)S3_LFB_BASE)&0xfffffff0)
+		// | 0x08;	// memory space, within first 4GB, prefetchable
+		uint32_t gfx_address_space = (((uint32_t)S3_LFB_BASE) &
+		                              0xfffffff0); // memory space,
+		                                           // within first 4GB
+		registers[0x10] = (uint8_t)(gfx_address_space & 0xff); // base
+		                                                       // addres 0
+		registers[0x11] = (uint8_t)((gfx_address_space >> 8) & 0xff);
+		registers[0x12] = (uint8_t)((gfx_address_space >> 16) & 0xff);
+		registers[0x13] = (uint8_t)((gfx_address_space >> 24) & 0xff);
 
-		Bit32u gfx_address_space_mmio=(((Bit32u)S3_LFB_BASE+0x1000000)&0xfffffff0);	// memory space, within first 4GB
-		registers[0x14] = (Bit8u)(gfx_address_space_mmio&0xff);		// base addres 0
-		registers[0x15] = (Bit8u)((gfx_address_space_mmio>>8)&0xff);
-		registers[0x16] = (Bit8u)((gfx_address_space_mmio>>16)&0xff);
-		registers[0x17] = (Bit8u)((gfx_address_space_mmio>>24)&0xff);
+		uint32_t gfx_address_space_mmio = (((uint32_t)S3_LFB_BASE + 0x1000000) &
+		                                   0xfffffff0); // memory space,
+		                                                // within first 4GB
+		registers[0x14] = (uint8_t)(gfx_address_space_mmio & 0xff); // base addres 0
+		registers[0x15] = (uint8_t)((gfx_address_space_mmio >> 8) & 0xff);
+		registers[0x16] = (uint8_t)((gfx_address_space_mmio >> 16) & 0xff);
+		registers[0x17] = (uint8_t)((gfx_address_space_mmio >> 24) & 0xff);
 
 		return true;
 	}
