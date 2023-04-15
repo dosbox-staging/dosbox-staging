@@ -1345,20 +1345,22 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			const auto is_scan_doubled = bit::is(vga.crtc.maximum_scan_line,
 			                                     bit::literals::b7);
 
-			if (vga.mode == M_VGA || vga.mode == M_EGA ||
-		                    vga.mode == M_CGA4 || vga.mode == M_CGA2) {
+			if (vga.mode == M_EGA || vga.mode == M_VGA) {
 				// Set the low resolution modes to have as many
 				// lines as are scanned - Quite a few demos
 				// change the max_scanline register at display
 				// time to get SFX: Majic12 show, Magic circle,
 				// Copper, GBU, Party91.
+				//
+				// Note: can't use with CGA because these use
+				// address_line for their own purposes.
 				if (is_scan_doubled) {
 					vga.draw.address_line_total *= 2;
 				}
 				// No-need to artificially perform scan-doubling
 				vga.draw.double_scan = false;
 			}
-			// VGA machine not in an 200-line mode
+			// VGA machine not in EGA or VGA modes
 			else {
 				vga.draw.double_scan = is_scan_doubled;
 			}
@@ -1823,8 +1825,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 	vga.draw.vblank_skip = vblank_skip;
 
-	if (!(IS_VGA_ARCH && (vga.mode == M_VGA || vga.mode == M_EGA ||
-		                    vga.mode == M_CGA4 || vga.mode == M_CGA2))) {
+	if (!(IS_VGA_ARCH && (vga.mode == M_EGA || vga.mode == M_VGA))) {
 		// Only check for extra double height in vga modes (line
 		// multiplying by address_line_total)
 
