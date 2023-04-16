@@ -359,21 +359,24 @@ static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu /*line*/)
 		                 vga.draw.linear_mask;
 
 		// assuming lines not longer than 4096 pixels
-		const auto wrapped_len = end & 0xFFF;
-		const auto unwrapped_len = vga.draw.line_length - wrapped_len;
+		const auto wrapped_len   = static_cast<uint16_t>(end & 0xFFF);
+		const auto unwrapped_len = check_cast<uint16_t>(
+		        vga.draw.line_length - wrapped_len);
 
 		// unwrapped chunk: to top of memory block
-		for (uintptr_t i = 0; i < unwrapped_len; ++i)
+		for (uint16_t i = 0; i < unwrapped_len; ++i) {
 			write_unaligned_uint32_at(TempLine, i, palette_map[ret[i]]);
+		}
 
 		// wrapped chunk: from base of memory block
-		for (uintptr_t i = 0; i < wrapped_len; ++i)
+		for (uint16_t i = 0; i < wrapped_len; ++i) {
 			write_unaligned_uint32_at(TempLine,
 			                          i + unwrapped_len,
 			                          palette_map[vga.draw.linear_base[i]]);
+		}
 
 	} else {
-		for (uintptr_t i = 0; i < vga.draw.line_length; ++i) {
+		for (uint16_t i = 0; i < vga.draw.line_length; ++i) {
 			write_unaligned_uint32_at(TempLine, i, palette_map[ret[i]]);
 		}
 	}
