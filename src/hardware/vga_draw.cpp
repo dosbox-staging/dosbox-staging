@@ -44,7 +44,10 @@ typedef uint8_t * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
 
-static std::vector<uint8_t> templine_buffer(SCALER_MAXWIDTH * 4);
+constexpr auto max_pixel_bytes = sizeof(uint32_t);
+constexpr auto max_line_bytes = SCALER_MAXWIDTH * SCALER_MAX_MUL_WIDTH * max_pixel_bytes;
+
+static std::vector<uint8_t> templine_buffer(max_line_bytes);
 static auto TempLine = templine_buffer.data();
 
 static uint8_t * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
