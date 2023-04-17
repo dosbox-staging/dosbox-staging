@@ -118,9 +118,6 @@
     <ClCompile Include="..\src\gui\sdlmain.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\gui\sdl_gui.cpp">
-      <Filter>src\gui</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\gui\sdl_mapper.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
@@ -387,9 +384,6 @@
     </ClCompile>
     <ClCompile Include="..\src\ints\xms.cpp">
       <Filter>src\ints</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\gui_tk\gui_tk.cpp">
-      <Filter>src\libs\gui_tk</Filter>
     </ClCompile>
     <ClCompile Include="..\src\libs\decoders\flac.c">
       <Filter>src\libs\decoders</Filter>
@@ -1389,9 +1383,6 @@
     </Filter>
     <Filter Include="src\libs\fontstash">
       <UniqueIdentifier>{5f937800-dd4d-4ab6-8874-a12f1286102a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\libs\gui_tk">
-      <UniqueIdentifier>{c1d4aca1-2ddd-4dc2-ba93-8b2279ef4d30}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\mverb">
       <UniqueIdentifier>{8804de8e-c30a-4d93-b2b4-1c1634fd97b7}</UniqueIdentifier>

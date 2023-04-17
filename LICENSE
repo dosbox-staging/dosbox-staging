@@ -32,7 +32,6 @@ GPL-2.0-or-later terms, however there are some exceptions:
    - enet: MIT
    - fontstash: Zlib
    - ghc: MIT
-   - gui_tk: GPL-3.0-or-later
    - iir1: MIT
    - loguru: Public Domain
    - ManyMouse: Zlib
