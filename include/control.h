@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -95,8 +96,8 @@ public:
 	void ShutDown();
 	void StartUp();
 	bool PrintConfig(const std::string &filename) const;
-	bool ParseConfigFile(const std::string &type,
-	                     const std::string &configfilename);
+	bool ParseConfigFile(const std::string& type,
+	                     const std::string& config_file_name);
 	void ParseEnv();
 	bool SecureMode() const { return secure_mode; }
 	void SwitchToSecureMode() { secure_mode = true; }//can't be undone

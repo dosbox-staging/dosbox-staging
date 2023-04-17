@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2023  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1227,10 +1228,11 @@ const Section_line& Config::GetOverwrittenAutoexecSection() const
 	return overwritten_autoexec_section;
 }
 
-bool Config::ParseConfigFile(const std::string& type, const std::string& configfilename)
+bool Config::ParseConfigFile(const std::string& type,
+                             const std::string& config_file_name)
 {
 	std::error_code ec;
-	const std_fs::path cfg_path = configfilename;
+	const std_fs::path cfg_path = config_file_name;
 	const auto canonical_path   = std_fs::canonical(cfg_path, ec);
 
 	if (ec) {
@@ -1239,7 +1241,7 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 
 	if (contains(configFilesCanonical, canonical_path)) {
 		LOG_INFO("CONFIG: Skipping duplicate config file '%s'",
-		         configfilename.c_str());
+		         config_file_name.c_str());
 		return true;
 	}
 
@@ -1248,29 +1250,73 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 		return false;
 	}
 
-	configfiles.push_back(configfilename);
+	configfiles.push_back(config_file_name);
 	configFilesCanonical.push_back(canonical_path);
 
-	// Get directory from configfilename, used with relative paths.
+	// Get directory from config_file_name, used with relative paths.
 	current_config_dir = canonical_path.parent_path().string();
 
-	string line;
-	Section* currentsection = nullptr;
+	// If this is an autoexec section, the above takes care of the joining
+	// while this handles the overwrriten mode. We need to be prepared for
+	// either scenario to play out because we won't know the users final
+	// preference until the very last configuration file is processed.
+
+	std::string line = {};
+
+	Section* current_section = nullptr;
+	bool is_autoexec_section = false;
+	bool is_autoexec_started = false;
+
+	auto is_empty_line = [](const std::string& line) {
+		return line.empty() || line[0] == '\0' || line[0] == '\n' ||
+		       line[0] == '\r';
+	};
+
+	auto is_comment = [](const std::string& line) {
+		return !line.empty() && (line[0] == '%' || line[0] == '#');
+	};
+
+	auto is_section_start = [](const std::string& line) {
+		return !line.empty() && line[0] == '[';
+	};
+
+	auto handle_autoexec_line = [&]() {
+		// Ignore all the empty lines until the meaningful [autoexec]
+		// content starts
+		if (!is_autoexec_started) {
+			if (is_empty_line(line) || is_comment(line)) {
+				return;
+			}
+			is_autoexec_started = true;
+		}
+
+		if (!is_comment(line)) {
+			current_section->HandleInputline(line);
+			OverwriteAutoexec(config_file_name, line);
+		}
+	};
 
 	while (getline(in, line)) {
-		// Strip leading/trailing whitespace
 		trim(line);
-		if (line.empty()) {
+
+		if (is_section_start(line)) {
+			is_autoexec_section = false;
+			is_autoexec_started = false;
+		}
+
+		// Special handling of [autoexec] section
+		if (is_autoexec_section) {
+			handle_autoexec_line();
 			continue;
 		}
 
-		switch (line[0]) {
-		case '%':
-		case '\0':
-		case '#':
-		case ' ':
-		case '\n': continue; break;
-		case '[': {
+		// Strip leading/trailing whitespace, skip unnecessary lines
+		if (is_empty_line(line) || is_comment(line)) {
+			continue;
+		}
+
+		if (is_section_start(line)) {
+			// New section
 			const auto bracket_pos = line.find(']');
 			if (bracket_pos == string::npos) {
 				continue;
@@ -1278,26 +1324,11 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 			line.erase(bracket_pos);
 			const auto section_name = line.substr(1);
 			if (const auto sec = GetSection(section_name); sec) {
-				currentsection = sec;
+				current_section = sec;
+				is_autoexec_section = (section_name == "autoexec");
 			}
-		} break;
-		default:
-			if (currentsection) {
-				currentsection->HandleInputline(line);
-
-				// If this is an autoexec section, the above
-				// takes care of the joining while this handles
-				// the overwrriten mode. We need to be prepared
-				// for either scenario to play out because we
-				// won't know the users final preferance until
-				// the very last configuration file is
-				// processed.
-				if (std::string_view(currentsection->GetName()) ==
-				    "autoexec") {
-					OverwriteAutoexec(configfilename, line);
-				}
-			}
-			break;
+		} else if (current_section) {
+			current_section->HandleInputline(line);
 		}
 	}
 
@@ -1306,7 +1337,7 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 
 	LOG_INFO("CONFIG: Loaded '%s' config file '%s'",
 	         type.c_str(),
-	         configfilename.c_str());
+	         config_file_name.c_str());
 
 	return true;
 }
