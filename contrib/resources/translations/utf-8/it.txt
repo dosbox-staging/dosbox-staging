@@ -536,17 +536,19 @@ Note: È possibile regolare con precisione i livelli di coro per ogni canale
 Imposta dove vengono inviati i dati MIDI dall'interfaccia MPU-401 emulata
 (predefinito 'auto'):
   win32:       Utilizza l'interfaccia di riproduzione MIDI Win32.
-  fluidsynth:  Sintetizzatore MIDI FluidSynth integrato (lettore SoundFont).
+  oss:         Utilizza l'interfaccia di riproduzione MIDI OSS di Linux.
+  alsa:        Utilizza l'interfaccia di riproduzione MIDI ALSA di Linux.
+  fluidsynth:  Utilizza il sintetizzatore MIDI FluidSynth incluso in DOSBox.
                Fare riferimento alla sezione [fluidsynth] per una
                configurazione dettagliata.
-  mt32:        Sintetizzatore Roland MT-32 integrato.
+  mt32:        Utilizza il sintetizzatore Roland MT-32 incluso in DOSBox.
                Fare riferimento alla sezione [mt32] per una configurazione
                dettagliata.
-  auto:        Utilizza uno dei sintetizzatori MIDI incorporati
+  auto:        Utilizza uno dei sintetizzatori MIDI inclusi in DOSBox
                (se `midiconfig` è impostato su 'fluidsynth' o 'mt32'), o un
                dispositivo MIDI esterno a DOSBox (qualsiasi altro valore in
-               'midiconfig'). Questo potrebbe essere un sintetizzatore software
-               o un dispositivo fisico. Questo è il comportamento predefinito.
+               'midiconfig'). Quest'ultimo potrebbe essere un sintetizzatore
+               software o un dispositivo fisico. (predefinito)
   none:        Disabilita l'uscita MIDI.
 .
 :CONFIG_MIDICONFIG
@@ -653,7 +655,7 @@ Filtro per l'uscita audio Roland MT-32/CM-32L:
              fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :MT32_NO_SUPPORTED_MODELS
-Nessun modello supportato presente.
+Nessun modello supportato disponibile.
 .
 :MT32_ROM_NOT_LOADED
 Nessuna ROM è attualmente caricata.
@@ -1334,11 +1336,11 @@ Esempi:
 
 .
 :PROGRAM_BOOT_NOT_EXIST
-Il file del disco di avvio non esiste.  Fallimento.
+Il file immagine di avvio non esiste.  Fallimento.
 
 .
 :PROGRAM_BOOT_NOT_OPEN
-Impossibile aprire il file del disco di avvio.  Fallimento.
+Impossibile aprire il file immagine di avvio.  Fallimento.
 
 .
 :PROGRAM_BOOT_WRITE_PROTECTED
@@ -1348,15 +1350,15 @@ Il file immagine è di sola lettura! Potrebbe creare dei problemi.
 :PROGRAM_BOOT_PRINT_ERROR
 Questo comando avvia DOSBox Staging da un'immagine floppy o disco rigido.
 
-Per questo comando, si può specificare una successione di floppy disk
-selezionabili premendo %s+F4, e -l specifica l'unità montata da cui eseguire
-l'avvio. Se non viene specificata alcuna lettera di unità, l'impostazione
-predefinita prevede l'avvio dall'unità A. 
-Le uniche lettere di unità avviabili sono A, C, e D. Per l'avvio da un disco
-rigido (C o D), l'immagine dovrebbe essere già stata montata utilizzando il
+Con questo comando, è possibile specificare una successione di immagini floppy
+selezionabili premendo %s+F4. È possibile specificare con il parametro -l
+l'unità montata da cui eseguire l'avvio. Se non viene specificata alcuna
+lettera di unità, l'impostazione predefinita prevede l'avvio dall'unità A.
+Le uniche lettere di unità avviabili sono A, C, e D. Per l'avvio da un'immagine
+disco rigido (C o D), questa dovrebbe essere già stata montata utilizzando il
 comando [color=blue]IMGMOUNT[reset].
 
-Digita [color=blue]BOOT /?[reset] per avere informazioni sulla sintassi di questo comando.
+Digita [color=blue]BOOT /?[reset] per ulteriori informazioni sulla sintassi di questo comando.
 
 .
 :PROGRAM_BOOT_UNABLE
@@ -2925,7 +2927,7 @@ Esempi:
 
 .
 :SHELL_CMD_GOTO_HELP
-Salta a una riga etichettata in un programma batch.
+Dirige ad una riga etichettata in un programma batch.
 
 .
 :SHELL_CMD_GOTO_HELP_LONG
