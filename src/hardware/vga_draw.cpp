@@ -652,7 +652,6 @@ static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 // combined 8/9-dot wide text mode line drawing function
 static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 {
-
 	// pointer to chars+attribs
 	const uint8_t* vidmem  = VGA_Text_Memwrap(vidstart);
 	const auto palette_map = vga.dac.palette_map;
@@ -663,12 +662,12 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 		          // additional character becomes visible
 	}
 
-	// The first write-index into the draw buffer. Increasing this shifts the
-	// console text right (and vice-versa)
+	// The first write-index into the draw buffer. Increasing this shifts
+	// the console text right (and vice-versa)
 	const uint16_t draw_idx_start = 8 + vga.draw.panning;
 
-	// This holds the to-be-written pixel offset, and is incremented per pixel
-	// and also per character block.
+	// This holds the to-be-written pixel offset, and is incremented per
+	// pixel and also per character block.
 	auto draw_idx = draw_idx_start;
 
 	while (blocks--) { // for each character in the line
@@ -697,21 +696,21 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 		const auto fg_colour = palette_map[fg_palette_idx];
 		const auto bg_colour = palette_map[bg_palette_idx];
 
-		if (vga.draw.char9dot) {
-			font <<=1; // 9 pixels
+		if (vga.seq.clocking_mode.is_eight_dot_mode) {
+			for (auto n = 0; n < 8; ++n) {
+				const auto color = (font & 0x80) ? fg_colour
+				                                 : bg_colour;
+				write_unaligned_uint32_at(TempLine, draw_idx++, color);
+				font <<= 1;
+			}
+		} else {
+			font <<= 1; // 9 pixels
 			// extend to the 9th pixel if needed
 			if ((font&0x2) && (vga.attr.mode_control&0x04) &&
 				(chr>=0xc0) && (chr<=0xdf)) font |= 1;
 			for (auto n = 0; n < 9; ++n) {
 				const auto color = (font & 0x100) ? fg_colour
 				                                  : bg_colour;
-				write_unaligned_uint32_at(TempLine, draw_idx++, color);
-				font <<= 1;
-			}
-		} else {
-			for (auto n = 0; n < 8; ++n) {
-				const auto color = (font & 0x80) ? fg_colour
-				                                 : bg_colour;
 				write_unaligned_uint32_at(TempLine, draw_idx++, color);
 				font <<= 1;
 			}
@@ -727,13 +726,11 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 			        vga.tandy.draw_base[vga.draw.cursor.address + 1] & 0xf;
 			const auto fg_colour = palette_map[fg_palette_idx];
 
-			// cursor block's byte-offset scalar as a ratio of the rendered
-			// pixel size versus 16-bit size
-			constexpr auto offset_scaler = sizeof(fg_colour) / sizeof(uint16_t);
+			constexpr auto bytes_per_pixel = sizeof(fg_colour);
 
 			// The cursor block's byte-offset into the rendering buffer.
 			const auto cursor_draw_offset = check_cast<uint16_t>(
-			        offset_scaler * attr_addr * (vga.draw.char9dot ? 18 : 16));
+			        attr_addr * vga.draw.pixels_per_character * bytes_per_pixel);
 
 			auto draw_addr = &TempLine[cursor_draw_offset];
 
@@ -1380,10 +1377,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		// Adjust the VGA clock frequency based on the Clocking Mode Register's
 		// 9/8 Dot Mode. See Timing Model: https://wiki.osdev.org/VGA_Hardware
-		clock /= (vga.seq.clocking_mode & 1) ? 8 : 9;
+		clock /= vga.seq.clocking_mode.is_eight_dot_mode
+		               ? PixelsPerChar::Eight
+		               : PixelsPerChar::Nine;
 
 		// Adjust the horizontal frequency if in pixel-doubling mode (clock/2)
-		if (vga.seq.clocking_mode & 0x8) {
+		if (vga.seq.clocking_mode.is_pixel_doubling) {
 			htotal *= 2;
 		}
 		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
@@ -1682,7 +1681,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_ActivateHardwareCursor();
 		break;
 	case M_LIN4:
-		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
+		doublewidth = vga.seq.clocking_mode.is_pixel_doubling;
 		vga.draw.blocks = width;
 		width<<=3;
 		VGA_DrawLine=VGA_Draw_Linear_Line;
@@ -1690,14 +1689,16 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
 		break;
 	case M_EGA:
-		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
+		doublewidth = vga.seq.clocking_mode.is_pixel_doubling;
 		vga.draw.blocks = width;
 		width<<=3;
-		if ((IS_VGA_ARCH) && (svgaCard==SVGA_None)) {
-			// This would also be required for EGA in Spacepigs Megademo
-			bpp = 16;
-			VGA_DrawLine = VGA_Draw_Xlat16_Linear_Line;
-		} else VGA_DrawLine=VGA_Draw_Linear_Line;
+		if (IS_VGA_ARCH) {
+			// Per-line palette changes (Spacepigs Megademo, Copper)
+			VGA_DrawLine = draw_linear_line_from_dac_palette;
+			bpp = 32;
+		} else {
+			VGA_DrawLine = VGA_Draw_Linear_Line;
+		}
 
 		vga.draw.linear_base = vga.fastmem;
 		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
@@ -1736,26 +1737,21 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
 		break;
 	case M_TEXT:
-		vga.draw.blocks=width;
-		doublewidth=(vga.seq.clocking_mode & 0x8) > 0;
 		if (IS_VGA_ARCH) {
-			// vgaonly: allow 9-pixel wide fonts
-			if (vga.seq.clocking_mode&0x01) {
-				vga.draw.char9dot = false;
-				width*=8;
-			} else {
-				vga.draw.char9dot = true;
-				width*=9;
-				aspect_ratio *= 1.125;
-			}
 			bpp = 32;
 			VGA_DrawLine = draw_text_line_from_dac_palette;
+			vga.draw.pixels_per_character = vga.seq.clocking_mode.is_eight_dot_mode
+			                                      ? PixelsPerChar::Eight
+			                                      : PixelsPerChar::Nine;
 		} else {
-			// not vgaonly: force 8-pixel wide fonts
-			width*=8; // 8 bit wide text font
-			vga.draw.char9dot = false;
-			VGA_DrawLine=VGA_TEXT_Draw_Line;
+			vga.draw.pixels_per_character = PixelsPerChar::Eight;
+			VGA_DrawLine = VGA_TEXT_Draw_Line;
 		}
+		vga.draw.blocks = width;
+		doublewidth = vga.seq.clocking_mode.is_pixel_doubling;
+		width *= vga.draw.pixels_per_character;
+		aspect_ratio *= vga.draw.pixels_per_character /
+		                static_cast<double>(PixelsPerChar::Eight);
 		break;
 	case M_HERC_GFX:
 		vga.draw.blocks=width*2;
