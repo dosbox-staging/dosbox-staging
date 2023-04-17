@@ -120,8 +120,13 @@
 0x013c  0x006c 0x0327         #LATIN SMALL LETTER L WITH CEDILLA
 0x013d  0x004c 0x030c         #LATIN CAPITAL LETTER L WITH CARON
 0x013e  0x006c 0x030c         #LATIN SMALL LETTER L WITH CARON
-0x013f  0x004c 0x00b7         #LATIN CAPITAL LETTER L WITH MIDDLE DOT
-0x0140  0x006c 0x00b7         #LATIN SMALL LETTER L WITH MIDDLE DOT
+# Although 'l with middle dot' can be decomposed according to Unicode standard,
+# one has to use a modifier symbol which is not a combining mark. There is no
+# way for us to handle this correctly, without creating ambiguity - as a middle
+# dot is also present in many code pages. Fortunately, this limitation only
+# affects code page 30007.
+# 0x013f  0x004c 0x00b7         #LATIN CAPITAL LETTER L WITH MIDDLE DOT
+# 0x0140  0x006c 0x00b7         #LATIN SMALL LETTER L WITH MIDDLE DOT
 0x0143  0x004e 0x0301         #LATIN CAPITAL LETTER N WITH ACUTE
 0x0144  0x006e 0x0301         #LATIN SMALL LETTER N WITH ACUTE
 0x0145  0x004e 0x0327         #LATIN CAPITAL LETTER N WITH CEDILLA

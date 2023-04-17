@@ -37,30 +37,38 @@ public:
 	Grapheme() = default;
 	Grapheme(const uint16_t code_point);
 
-	bool IsEmpty() const;
-	bool IsValid() const;
-	bool HasMark() const;
-	uint16_t GetCodePoint() const;
+	[[nodiscard]] bool IsEmpty() const;
+	[[nodiscard]] bool IsValid() const;
+	[[nodiscard]] bool HasMark() const;
+	[[nodiscard]] uint16_t GetCodePoint() const;
+	void PushInto(std::vector<uint16_t>& str_out) const;
 
 	void Invalidate();
 	void AddMark(const uint16_t code_point);
 	void StripMarks();
+	void Decompose();
 
+	bool operator==(const Grapheme& other) const;
 	bool operator<(const Grapheme& other) const;
 
 private:
 	// Unicode code point
 	uint16_t code_point = static_cast<uint16_t>(' ');
-	// Combining marks, 0 = none, 1 = U+0300, 2 = U+0301, etc.
-	uint16_t mark_1st = 0;
-	uint16_t mark_2nd = 0;
+	// Combining marks
+	std::vector<uint16_t> marks        = {};
+	std::vector<uint16_t> marks_sorted = {};
 
 	bool is_empty = true;
 	bool is_valid = true;
 };
 
-using code_page_mapping_t = std::map<Grapheme, uint8_t>; // UTF-8 -> code page
+// Unicode to DOS code page mapping
+using code_page_mapping_t = std::map<Grapheme, uint8_t>;
+// DOS code page to Unicode mapping
 using code_page_mapping_reverse_t = std::map<uint8_t, Grapheme>;
+
+// ` add description
+using decomposition_rules_t = std::map<uint16_t, Grapheme>;
 
 using config_duplicates_t = std::map<uint16_t, uint16_t>;
 using config_aliases_t    = std::vector<std::pair<uint16_t, uint16_t>>;
@@ -75,40 +83,50 @@ struct ConfigMappingEntry {
 
 using config_mappings_t = std::map<uint16_t, ConfigMappingEntry>;
 
-static const std::string file_name_main   = "MAIN.TXT";
-static const std::string file_name_ascii  = "ASCII.TXT";
-static const std::string dir_name_mapping = "mapping";
+static const std::string file_name_main          = "MAIN.TXT";
+static const std::string file_name_ascii         = "ASCII.TXT";
+static const std::string file_name_decomposition = "DECOMPOSITION.TXT";
+static const std::string dir_name_mapping        = "mapping";
 
-// Thresholds to tell how the code point is encoded
-constexpr uint8_t threshold_non_ascii = 0b1'000'0000;
-constexpr uint8_t threshold_encoded   = 0b1'100'0000;
-constexpr uint8_t threshold_bytes_3   = 0b1'110'0000;
-constexpr uint8_t threshold_bytes_4   = 0b1'111'0000;
-constexpr uint8_t threshold_bytes_5   = 0b1'111'1000;
-constexpr uint8_t threshold_bytes_6   = 0b1'111'1100;
+// Thresholds for UTF-8 decoding/encoding
+constexpr uint8_t decode_threshold_non_ascii = 0b1'000'0000;
+constexpr uint8_t decode_threshold_2_bytes   = 0b1'100'0000;
+constexpr uint8_t decode_threshold_3_bytes   = 0b1'110'0000;
+constexpr uint8_t decode_threshold_4_bytes   = 0b1'111'0000;
+constexpr uint8_t decode_threshold_5_bytes   = 0b1'111'1000;
+constexpr uint8_t decode_threshold_6_bytes   = 0b1'111'1100;
+constexpr uint16_t encode_threshold_2_bytes  = 0x0080;
+constexpr uint16_t encode_threshold_3_bytes  = 0x0800;
 
-// Use the character below if there is absolutely no sane way to handle UTF-8 glyph
+// Use the character below if there is no sane way to handle the Unicode glyph
 constexpr uint8_t unknown_character = 0x3f; // '?'
 
 // End of file marking, use in some files from unicode.org
 constexpr uint8_t end_of_file_marking = 0x1a;
 
-// Main information about how to create UTF-8 mappings for given DOS code page
+// Main information about how to create Unicode mappings for given DOS code page
 static config_mappings_t config_mappings = {};
-// UTF-8 -> UTF-8 fallback mapping (alias), use before fallback to 7-bit ASCII
+
+// Unicode -> Unicode fallback mapping (alias),
+// use before fallback to 7-bit ASCII
 static config_aliases_t config_aliases = {};
 // Information about code pages which are exact duplicates
 static config_duplicates_t config_duplicates = {};
 
-// UTF-8 -> 7-bit ASCII mapping, use as a last resort mapping
+// Unicode -> 7-bit ASCII mapping, use as a last resort mapping
 static code_page_mapping_t mapping_ascii = {};
 
-// Concrete UTF-8 -> codepage mappings
-static std::map<uint16_t, code_page_mapping_t> mappings_by_codepage = {};
-// Additional UTF-8 -> codepage mappings, to avoid unknown characters
-static std::map<uint16_t, code_page_mapping_t> aliases_by_codepage = {};
-// Reverse mappings, codepage -> UTF-8
-static std::map<uint16_t, code_page_mapping_reverse_t> reverse_by_codepage = {};
+// Unicode 'KD' decomposition rules
+static decomposition_rules_t decomposition_rules = {};
+
+// Concrete Unicode -> codepage mappings
+static std::map<uint16_t, code_page_mapping_t> mappings_normalized_by_codepage = {};
+static std::map<uint16_t, code_page_mapping_t> mappings_decomposed_by_codepage = {};
+// Additional Unicode -> codepage mappings, to avoid unknown characters
+static std::map<uint16_t, code_page_mapping_t> aliases_normalized_by_codepage = {};
+static std::map<uint16_t, code_page_mapping_t> aliases_decomposed_by_codepage = {};
+// Reverse mappings, codepage -> Unicode
+static std::map<uint16_t, code_page_mapping_reverse_t> mappings_reverse_by_codepage = {};
 
 // ***************************************************************************
 // Grapheme type implementation
@@ -116,21 +134,19 @@ static std::map<uint16_t, code_page_mapping_reverse_t> reverse_by_codepage = {};
 
 static bool is_combining_mark(const uint32_t code_point)
 {
-	static const std::vector<std::pair<uint16_t, uint16_t>> ranges = {
+	static constexpr std::pair<uint16_t, uint16_t> ranges[] = {
 	        {0x0300, 0x036f}, // Combining Diacritical Marks
+	        {0x064b, 0x065f}, // Arabic Combining Marks
 	        {0x1ab0, 0x1aff}, // Combining Diacritical Marks Extended
 	        {0x1dc0, 0x1dff}, // Combining Diacritical Marks Supplement
 	        {0x20d0, 0x20ff}, // Combining Diacritical Marks for Symbols
 	        {0xfe20, 0xfe2f}, // Combining Half Marks
 	};
 
-	for (const auto& range : ranges) {
-		if (code_point >= range.first && code_point <= range.second) {
-			return true;
-		}
-	}
-
-	return false;
+	auto in_range = [code_point](const auto& range) {
+		return code_point >= range.first && code_point <= range.second;
+	};
+	return std::any_of(std::begin(ranges), std::end(ranges), in_range);
 }
 
 Grapheme::Grapheme(const uint16_t code_point)
@@ -157,12 +173,24 @@ bool Grapheme::IsValid() const
 
 bool Grapheme::HasMark() const
 {
-	return mark_1st;
+	return !marks.empty();
 }
 
 uint16_t Grapheme::GetCodePoint() const
 {
 	return code_point;
+}
+
+void Grapheme::PushInto(std::vector<uint16_t>& str_out) const
+{
+	if (is_empty || !is_valid) {
+		return;
+	}
+
+	str_out.push_back(code_point);
+	for (const auto mark : marks) {
+		str_out.push_back(mark);
+	}
 }
 
 void Grapheme::Invalidate()
@@ -171,78 +199,93 @@ void Grapheme::Invalidate()
 	is_valid = false;
 
 	code_point = unknown_character;
-	mark_1st   = 0;
-	mark_2nd   = 0;
+	marks.clear();
+	marks_sorted.clear();
 }
 
-void Grapheme::AddMark(const uint16_t code_point)
+void Grapheme::AddMark(const uint16_t in_code_point)
 {
-	if (!is_valid)
-		return; // can't add combining mark to invalid grapheme
-
-	if (!is_combining_mark(code_point) || is_empty) {
-		Invalidate(); // not a combining mark or empty grapheme
+	if (!is_valid) {
+		// Can't add combining mark to invalid grapheme
 		return;
 	}
 
-	if (mark_1st && mark_2nd) {
-		return; // up to 2 combining marks supported, ignore the rest
+	if (!is_combining_mark(in_code_point) || is_empty) {
+		// Not a combining mark or empty grapheme
+		Invalidate();
+		return;
 	}
 
-	if (mark_1st) {
-		mark_2nd = code_point;
-	} else {
-		mark_1st = code_point;
+	if (std::find(marks.cbegin(), marks.cend(), in_code_point) != marks.cend()) {
+		// Combining mark already present
+		return;
 	}
+
+	marks.push_back(in_code_point);
+	marks_sorted.push_back(in_code_point);
+	std::sort(marks_sorted.begin(), marks_sorted.end());
 }
 
 void Grapheme::StripMarks()
 {
-	mark_1st = 0;
-	mark_2nd = 0;
+	marks.clear();
+	marks_sorted.clear();
+}
+
+void Grapheme::Decompose()
+{
+	if (!is_valid || is_empty) {
+		// Can't decompose invalid or empty grapheme
+		return;
+	}
+
+	while (decomposition_rules.count(code_point) != 0) {
+		const auto& rule = decomposition_rules.at(code_point);
+		code_point       = rule.code_point;
+		for (const auto mark : rule.marks) {
+			AddMark(mark);
+		}
+	}
+}
+
+bool Grapheme::operator==(const Grapheme& other) const
+{
+	return (is_empty == other.is_empty) && (is_valid == other.is_valid) &&
+	       (code_point == other.code_point) &&
+	       (marks_sorted == other.marks_sorted);
 }
 
 bool Grapheme::operator<(const Grapheme& other) const
 {
-	// TODO: after migrating to C++20 try to use a templated lambda here
-
 	if (code_point < other.code_point) {
 		return true;
-	} else if (code_point > other.code_point) {
+	}
+	if (code_point > other.code_point) {
 		return false;
 	}
 
-	if (mark_1st < other.mark_1st) {
+	if (marks_sorted.empty() && other.marks_sorted.empty()) {
+		return false;
+	}
+
+	if (marks_sorted.size() < other.marks_sorted.size()) {
 		return true;
-	} else if (mark_1st > other.mark_1st) {
+	}
+	if (marks_sorted.size() > other.marks_sorted.size()) {
 		return false;
 	}
 
-	if (mark_2nd < other.mark_2nd) {
-		return true;
-	} else if (mark_2nd > other.mark_2nd) {
-		return false;
+	for (size_t idx = 0; idx < marks_sorted.size(); ++idx) {
+		if (marks_sorted[idx] < other.marks_sorted[idx]) {
+			return true;
+		}
+		if (marks_sorted[idx] > other.marks_sorted[idx]) {
+			return false;
+		}
 	}
 
-	if (!is_empty && other.is_empty) {
-		return true;
-	} else if (is_empty && !other.is_empty) {
-		return false;
-	}
-
-	if (!is_valid && other.is_valid) {
-		return true;
-	} else if (is_valid && !other.is_valid) {
-		return false;
-	}
-
-	// '*this == other' condition is, unfortunately, not recognized by older
-	// compilers
-	assert(code_point == other.code_point &&
-	       mark_1st == other.mark_1st &&
-	       mark_2nd == other.mark_2nd &&
-	       is_empty == other.is_empty &&
-	       is_valid == other.is_valid);
+	assert(is_empty == other.is_empty);
+	assert(is_valid == other.is_valid);
 
 	return false;
 }
@@ -263,6 +306,8 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 	bool status = true;
 
 	str_out.clear();
+	str_out.reserve(str_in.size());
+
 	for (size_t i = 0; i < str_in.size(); ++i) {
 		const size_t remaining = str_in.size() - i - 1;
 		const uint8_t byte_1   = static_cast<uint8_t>(str_in[i]);
@@ -275,8 +320,8 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 			auto counter = std::min(remaining, bytes);
 			while (counter--) {
 				const auto byte_next = static_cast<uint8_t>(str_in[i + 1]);
-				if (byte_next < threshold_non_ascii ||
-				    byte_next >= threshold_encoded) {
+				if (byte_next < decode_threshold_non_ascii ||
+				    byte_next >= decode_threshold_2_bytes) {
 					break;
 				}
 				++i;
@@ -293,48 +338,56 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 		// symbols, etc. More bytes are needed mainly for historic
 		// scripts, emoji, etc.
 
-		if (GCC_UNLIKELY(byte_1 >= threshold_bytes_6)) {
+		if (GCC_UNLIKELY(byte_1 >= decode_threshold_6_bytes)) {
 			// 6-byte code point (>= 31 bits), no support
 			advance(5);
-		} else if (GCC_UNLIKELY(byte_1 >= threshold_bytes_5)) {
+		} else if (GCC_UNLIKELY(byte_1 >= decode_threshold_5_bytes)) {
 			// 5-byte code point (>= 26 bits), no support
 			advance(4);
-		} else if (GCC_UNLIKELY(byte_1 >= threshold_bytes_4)) {
+		} else if (GCC_UNLIKELY(byte_1 >= decode_threshold_4_bytes)) {
 			// 4-byte code point (>= 21 bits), no support
 			advance(3);
-		} else if (GCC_UNLIKELY(byte_1 >= threshold_bytes_3)) {
+		} else if (GCC_UNLIKELY(byte_1 >= decode_threshold_3_bytes)) {
 			// 3-byte code point - decode 1st byte
-			code_point = static_cast<uint8_t>(byte_1 - threshold_bytes_3);
+			code_point = static_cast<uint8_t>(
+			        byte_1 - decode_threshold_3_bytes);
 			// Decode 2nd byte
 			code_point = code_point << 6;
-			if (byte_2 >= threshold_non_ascii &&
-			    byte_2 < threshold_encoded) {
+			if (byte_2 >= decode_threshold_non_ascii &&
+			    byte_2 < decode_threshold_2_bytes) {
 				++i;
-				code_point = code_point + byte_2 - threshold_non_ascii;
+				code_point = code_point + byte_2 -
+				             decode_threshold_non_ascii;
 			} else {
 				status = false; // code point encoding too short
 			}
 			// Decode 3rd byte
 			code_point = code_point << 6;
-			if (byte_2 >= threshold_non_ascii && byte_2 < threshold_encoded &&
-			    byte_3 >= threshold_non_ascii && byte_3 < threshold_encoded) {
+			if (byte_2 >= decode_threshold_non_ascii &&
+			    byte_2 < decode_threshold_2_bytes &&
+			    byte_3 >= decode_threshold_non_ascii &&
+			    byte_3 < decode_threshold_2_bytes) {
 				++i;
-				code_point = code_point + byte_3 - threshold_non_ascii;
+				code_point = code_point + byte_3 -
+				             decode_threshold_non_ascii;
 			} else {
 				status = false; // code point encoding too short
 			}
-		} else if (GCC_UNLIKELY(byte_1 >= threshold_encoded)) {
+		} else if (GCC_UNLIKELY(byte_1 >= decode_threshold_2_bytes)) {
 			// 2-byte code point - decode 1st byte
-			code_point = static_cast<uint8_t>(byte_1 - threshold_encoded);
+			code_point = static_cast<uint8_t>(
+			        byte_1 - decode_threshold_2_bytes);
 			// Decode 2nd byte
 			code_point = code_point << 6;
-			if (byte_2 >= threshold_non_ascii && byte_2 < threshold_encoded) {
+			if (byte_2 >= decode_threshold_non_ascii &&
+			    byte_2 < decode_threshold_2_bytes) {
 				++i;
-				code_point = code_point + byte_2 - threshold_non_ascii;
+				code_point = code_point + byte_2 -
+				             decode_threshold_non_ascii;
 			} else {
 				status = false; // code point encoding too short
 			}
-		} else if (byte_1 < threshold_non_ascii) {
+		} else if (byte_1 < decode_threshold_non_ascii) {
 			// 1-byte code point, ASCII compatible
 			code_point = byte_1;
 		} else {
@@ -347,6 +400,40 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 	return status;
 }
 
+static void wide_to_utf8(const std::vector<uint16_t>& str_in, std::string& str_out)
+{
+	str_out.clear();
+	str_out.reserve(str_in.size() * 2);
+
+	auto push = [&](const int value) {
+		const auto byte = static_cast<uint8_t>(value);
+		str_out.push_back(static_cast<char>(byte));
+	};
+
+	for (const auto code_point : str_in) {
+		if (code_point < encode_threshold_2_bytes) {
+			// Encode using 1 byte
+			push(code_point);
+		} else if (code_point < encode_threshold_3_bytes) {
+			// Encode using 2 bytes
+			const auto to_byte_1 = code_point >> 6;
+			const auto to_byte_2 = 0b0'011'1111 & code_point;
+			push(to_byte_1 | 0b1'100'0000);
+			push(to_byte_2 | 0b1'000'0000);
+		} else {
+			// Encode using 3 bytes
+			const auto to_byte_1 = code_point >> 12;
+			const auto to_byte_2 = 0b0'011'1111 & (code_point >> 6);
+			const auto to_byte_3 = 0b0'011'1111 & code_point;
+			push(to_byte_1 | 0b1'110'0000);
+			push(to_byte_2 | 0b1'000'0000);
+			push(to_byte_3 | 0b1'000'0000);
+		}
+	}
+
+	str_out.shrink_to_fit();
+}
+
 static void warn_code_point(const uint16_t code_point)
 {
 	static std::set<uint16_t> already_warned;
@@ -354,7 +441,7 @@ static void warn_code_point(const uint16_t code_point)
 		return;
 	}
 	already_warned.insert(code_point);
-	LOG_WARNING("UTF8: No fallback mapping for code point 0x%04x", code_point);
+	LOG_WARNING("UNICODE: No fallback mapping for code point 0x%04x", code_point);
 }
 
 static void warn_code_page(const uint16_t code_page)
@@ -364,30 +451,53 @@ static void warn_code_page(const uint16_t code_page)
 		return;
 	}
 	already_warned.insert(code_page);
-	LOG_WARNING("UTF8: Requested unknown code page %d", code_page);
+	LOG_WARNING("UNICODE: Requested unknown code page %d", code_page);
 }
 
-static bool wide_to_code_page(const std::vector<uint16_t>& str_in,
-                              std::string& str_out, const uint16_t code_page)
+static void warn_default_code_page()
+{
+	static bool already_warned = false;
+	if (already_warned) {
+		return;
+	}
+	already_warned = true;
+	LOG_WARNING("UNICODE: Unable to prepare default code page");
+}
+
+static bool wide_to_dos(const std::vector<uint16_t>& str_in,
+                        std::string& str_out, const uint16_t code_page)
 {
 	bool status = true;
 	str_out.clear();
+	str_out.reserve(str_in.size());
 
-	code_page_mapping_t* mapping = nullptr;
-	code_page_mapping_t* aliases = nullptr;
+	code_page_mapping_t* mapping_normalized = nullptr;
+	code_page_mapping_t* mapping_decomposed = nullptr;
+	code_page_mapping_t* aliases_normalized = nullptr;
+	code_page_mapping_t* aliases_decomposed = nullptr;
 
 	// Try to find UTF8 -> code page mapping
 	if (code_page != 0) {
-		const auto it = mappings_by_codepage.find(code_page);
-		if (it != mappings_by_codepage.end()) {
-			mapping = &it->second;
+		const auto it_normalized = mappings_normalized_by_codepage.find(code_page);
+		if (it_normalized != mappings_normalized_by_codepage.end()) {
+			mapping_normalized = &it_normalized->second;
 		} else {
 			warn_code_page(code_page);
 		}
 
-		const auto it_alias = aliases_by_codepage.find(code_page);
-		if (it_alias != aliases_by_codepage.end()) {
-			aliases = &it_alias->second;
+		const auto it_decomposed = mappings_decomposed_by_codepage.find(code_page);
+		if (it_decomposed != mappings_decomposed_by_codepage.end()) {
+			mapping_decomposed = &it_decomposed->second;
+		}
+
+		const auto it_alias_normalized = aliases_normalized_by_codepage.find(code_page);
+		if (it_alias_normalized != aliases_normalized_by_codepage.end()) {
+			aliases_normalized = &it_alias_normalized->second;
+		}
+
+		const auto it_alias_decomposed = aliases_decomposed_by_codepage.find(code_page);
+		if (it_alias_decomposed != aliases_decomposed_by_codepage.end()) {
+			aliases_decomposed = &it_alias_decomposed->second;
 		}
 	}
 
@@ -398,7 +508,7 @@ static bool wide_to_code_page(const std::vector<uint16_t>& str_in,
 		}
 
 		const auto code_point = grapheme.GetCodePoint();
-		if (code_point >= threshold_non_ascii) {
+		if (code_point >= decode_threshold_non_ascii) {
 			return false; // not a 7-bit ASCII character
 		}
 
@@ -422,7 +532,7 @@ static bool wide_to_code_page(const std::vector<uint16_t>& str_in,
 	};
 
 	// Handle code points which can only be mapped to ASCII
-	// using a fallback UTF8 mapping table
+	// using a fallback Unicode mapping table
 	auto push_fallback = [&str_out](const Grapheme& grapheme) {
 		if (grapheme.HasMark()) {
 			return false;
@@ -444,6 +554,23 @@ static bool wide_to_code_page(const std::vector<uint16_t>& str_in,
 		status = false;
 	};
 
+	// Helper for handling normalized graphemes
+	auto push_normalized = [&](const Grapheme& grapheme) {
+		return push_7bit(grapheme) ||
+		       push_code_page(mapping_normalized, grapheme) ||
+		       push_code_page(aliases_normalized, grapheme) ||
+		       push_fallback(grapheme);
+	};
+
+	// Helper for handling non-normalized graphemes
+	auto push_decomposed = [&](const Grapheme& grapheme) {
+		Grapheme decomposed = grapheme;
+		decomposed.Decompose();
+
+		return push_code_page(mapping_decomposed, decomposed) ||
+		       push_code_page(aliases_decomposed, decomposed);
+	};
+
 	for (size_t i = 0; i < str_in.size(); ++i) {
 		Grapheme grapheme(str_in[i]);
 		while (i + 1 < str_in.size() && is_combining_mark(str_in[i + 1])) {
@@ -451,29 +578,72 @@ static bool wide_to_code_page(const std::vector<uint16_t>& str_in,
 			grapheme.AddMark(str_in[i]);
 		}
 
-		auto push = [&](const Grapheme& grapheme) {
-			return push_7bit(grapheme) ||
-			       push_code_page(mapping, grapheme) ||
-			       push_code_page(aliases, grapheme) ||
-			       push_fallback(grapheme);
-		};
-
-		if (push(grapheme)) {
+		// Try to push matching character
+		if (push_normalized(grapheme) || push_decomposed(grapheme)) {
 			continue;
 		}
 
+		// Last, desperate attempt: decompose and strip marks
+		const auto original_code_point = grapheme.GetCodePoint();
+		grapheme.Decompose();
 		if (grapheme.HasMark()) {
 			grapheme.StripMarks();
-			if (push(grapheme)) {
+			if (push_normalized(grapheme)) {
 				continue;
 			}
 		}
 
-		push_unknown(grapheme.GetCodePoint());
+		// We are unable to match this grapheme at all
+		push_unknown(original_code_point);
 	}
 
 	str_out.shrink_to_fit();
 	return status;
+}
+
+static void dos_to_wide(const std::string& str_in,
+                        std::vector<uint16_t>& str_out, const uint16_t code_page)
+{
+	// Unicode code points for screen codes from 0x00 to 0x1f
+	// see: https://en.wikipedia.org/wiki/Code_page_437
+	constexpr uint16_t codes[0x20] = {
+	        0x0020, 0x263a, 0x263b, 0x2665, // 00-03
+	        0x2666, 0x2663, 0x2660, 0x2022, // 04-07
+	        0x25d8, 0x25cb, 0x25d9, 0x2642, // 08-0b
+	        0x2640, 0x266a, 0x266b, 0x263c, // 0c-0f
+	        0x25ba, 0x25c4, 0x2195, 0x203c, // 10-13
+	        0x00b6, 0x00a7, 0x25ac, 0x21a8, // 14-17
+	        0x2191, 0x2193, 0x2192, 0x2190, // 18-1b
+	        0x221f, 0x2194, 0x25b2, 0x25bc, // 1c-1f
+	};
+
+	constexpr uint16_t codepoint_7f = 0x2302;
+
+	str_out.clear();
+	str_out.reserve(str_in.size());
+
+	for (const auto character : str_in) {
+		const auto byte = static_cast<uint8_t>(character);
+		if (GCC_UNLIKELY(byte >= decode_threshold_non_ascii)) {
+			// Character above 0x07f - take from code page mapping
+
+			if (!mappings_reverse_by_codepage.count(code_page) ||
+			    !mappings_reverse_by_codepage[code_page].count(byte)) {
+				str_out.push_back(unknown_character);
+			} else {
+				(mappings_reverse_by_codepage[code_page])[byte].PushInto(str_out);
+			}
+
+		} else {
+			if (GCC_UNLIKELY(byte == 0x7f)) {
+				str_out.push_back(codepoint_7f);
+			} else if (byte >= 0x20) {
+				str_out.push_back(byte);
+			} else {
+				str_out.push_back(codes[byte]);
+			}
+		}
+	}
 }
 
 // ***************************************************************************
@@ -485,8 +655,8 @@ static bool prepare_code_page(const uint16_t code_page);
 template <typename T1, typename T2>
 bool add_if_not_mapped(std::map<T1, T2>& mapping, T1 first, T2 second)
 {
-	[[maybe_unused]] const auto& [item,
-	                              was_added] = mapping.try_emplace(first, second);
+	[[maybe_unused]] const auto& [item, was_added] =
+		mapping.try_emplace(first, second);
 
 	return was_added;
 }
@@ -497,7 +667,8 @@ static std::ifstream open_mapping_file(const std_fs::path& path_root,
 	const std_fs::path file_path = path_root / file_name;
 	std::ifstream in_file(file_path.string());
 	if (!in_file) {
-		LOG_ERR("UTF8: Could not open mapping file %s", file_name.c_str());
+		LOG_ERR("UNICODE: Could not open mapping file %s",
+		        file_name.c_str());
 	}
 
 	return in_file;
@@ -605,8 +776,8 @@ static bool get_code_page(const std::string& token, uint16_t& code_page)
 		return false;
 	}
 
-	for (size_t i = 0; i < token.size(); ++i) {
-		if (GCC_UNLIKELY(token[i] < '0' || token[i] > '9')) {
+	for (const auto character : token) {
+		if (GCC_UNLIKELY(character < '0' || character > '9')) {
 			return false;
 		}
 	}
@@ -651,15 +822,24 @@ static void error_parsing(const std::string& file_name, const size_t line_num,
                           const std::string& details = "")
 {
 	if (details.empty()) {
-		LOG_ERR("UTF8: Error parsing mapping file %s, line %d",
+		LOG_ERR("UNICODE: Error parsing mapping file %s, line %d",
 		        file_name.c_str(),
 		        static_cast<int>(line_num));
 	} else {
-		LOG_ERR("UTF8: Error parsing mapping file %s, line %d: %s",
+		LOG_ERR("UNICODE: Error parsing mapping file %s, line %d: %s",
 		        file_name.c_str(),
 		        static_cast<int>(line_num),
 		        details.c_str());
 	}
+}
+
+static void error_not_combining_mark(const size_t position,
+                                     const std::string& file_name,
+                                     const size_t line_num)
+{
+	const auto details = std::string("token #") + std::to_string(position) +
+	                     " is not a supported combining mark";
+	error_parsing(file_name, line_num, details);
 }
 
 static void error_code_page_invalid(const std::string& file_name, const size_t line_num)
@@ -681,12 +861,13 @@ static bool check_import_status(const std::ifstream& in_file,
                                 const std::string& file_name, const bool empty)
 {
 	if (in_file.fail() && !in_file.eof()) {
-		LOG_ERR("UTF8: Error reading mapping file %s", file_name.c_str());
+		LOG_ERR("UNICODE: Error reading mapping file %s", file_name.c_str());
 		return false;
 	}
 
 	if (empty) {
-		LOG_ERR("UTF8: Mapping file %s has no entries", file_name.c_str());
+		LOG_ERR("UNICODE: Mapping file %s has no entries",
+		        file_name.c_str());
 		return false;
 	}
 
@@ -700,7 +881,7 @@ static bool check_grapheme_valid(const Grapheme& grapheme,
 		return true;
 	}
 
-	LOG_ERR("UTF8: Error, invalid grapheme defined in file %s, line %d",
+	LOG_ERR("UNICODE: Error, invalid grapheme defined in file %s, line %d",
 	        file_name.c_str(),
 	        static_cast<int>(line_num));
 	return false;
@@ -715,7 +896,7 @@ static bool import_mapping_code_page(const std_fs::path& path_root,
 	// Open the file
 	auto in_file = open_mapping_file(path_root, file_name);
 	if (!in_file) {
-		LOG_ERR("UTF8: Error opening mapping file %s", file_name.c_str());
+		LOG_ERR("UNICODE: Error opening mapping file %s", file_name.c_str());
 		return false;
 	}
 
@@ -740,14 +921,14 @@ static bool import_mapping_code_page(const std_fs::path& path_root,
 		if (GCC_UNLIKELY(tokens.size() == 1)) {
 			// Handle undefined character entry, ignore 7-bit ASCII
 			// codes
-			if (character_code >= threshold_non_ascii) {
+			if (character_code >= decode_threshold_non_ascii) {
 				Grapheme grapheme;
 				add_if_not_mapped(new_mapping, character_code, grapheme);
 			}
 
 		} else if (tokens.size() <= 4) {
 			// Handle mapping entry, ignore 7-bit ASCII codes
-			if (character_code >= threshold_non_ascii) {
+			if (character_code >= decode_threshold_non_ascii) {
 				Grapheme grapheme;
 				if (!get_grapheme(tokens, grapheme)) {
 					error_parsing(file_name, line_num);
@@ -837,13 +1018,9 @@ static void import_config_main(const std_fs::path& path_root)
 
 		} else if (GCC_UNLIKELY(tokens[0] == "CODEPAGE")) {
 			auto check_no_code_page = [&](const uint16_t code_page) {
-				if ((new_config_mappings.find(code_page) !=
-				             new_config_mappings.end() &&
-				     new_config_mappings[code_page].valid) ||
-				    new_config_duplicates.find(code_page) !=
-				            new_config_duplicates.end()) {
-					error_code_page_defined(file_name_main,
-					                        line_num);
+				if ((new_config_mappings.find(code_page) != new_config_mappings.end() && new_config_mappings[code_page].valid) ||
+				    new_config_duplicates.find(code_page) != new_config_duplicates.end()) {
+					error_code_page_defined(file_name_main, line_num);
 					return false;
 				}
 				return true;
@@ -925,9 +1102,9 @@ static void import_config_main(const std_fs::path& path_root)
 
 			if (tokens.size() == 1) {
 				// Handle undefined character entry
-				if (character_code >= threshold_non_ascii) {
+				if (character_code >= decode_threshold_non_ascii) {
 					// ignore 7-bit ASCII codes
-					Grapheme grapheme;
+					Grapheme grapheme; // placeholder
 					add_if_not_mapped(new_mapping,
 					                  character_code,
 					                  grapheme);
@@ -937,9 +1114,9 @@ static void import_config_main(const std_fs::path& path_root)
 
 			} else if (tokens.size() <= 4) {
 				// Handle mapping entry
-				if (character_code >= threshold_non_ascii) {
+				if (character_code >= decode_threshold_non_ascii) {
 					// ignore 7-bit ASCII codes
-					Grapheme grapheme;
+					Grapheme grapheme; // placeholder
 					if (!get_grapheme(tokens, grapheme)) {
 						error_parsing(file_name_main,
 						              line_num);
@@ -979,9 +1156,65 @@ static void import_config_main(const std_fs::path& path_root)
 	config_aliases    = new_config_aliases;
 }
 
+static void import_decomposition(const std_fs::path& path_root)
+{
+	// Import Unicode decomposition rules; will be used to handle
+	// non-normalized Unicode input
+
+	// Open the file
+	auto in_file = open_mapping_file(path_root, file_name_decomposition);
+	if (!in_file) {
+		return;
+	}
+
+	// Read and parse
+	std::string line_str = "";
+	size_t line_num      = 0;
+
+	decomposition_rules_t new_rules;
+
+	while (get_line(in_file, line_str, line_num)) {
+		std::vector<std::string> tokens;
+		if (!get_tokens(line_str, tokens)) {
+			continue; // empty line
+		}
+
+		uint16_t code_point_1 = 0;
+		uint16_t code_point_2 = 0;
+
+		if (tokens.size() < 3 || !get_hex_16bit(tokens[0], code_point_1) ||
+		    !get_hex_16bit(tokens[1], code_point_2)) {
+			error_parsing(file_name_decomposition, line_num);
+			return;
+		}
+
+		new_rules[code_point_1] = code_point_2;
+		for (size_t idx = 2; idx < tokens.size(); ++idx) {
+			if (!get_hex_16bit(tokens[idx], code_point_2)) {
+				error_parsing(file_name_decomposition, line_num);
+				return;
+			}
+			if (!is_combining_mark(code_point_2)) {
+				error_not_combining_mark(idx + 1,
+				                         file_name_decomposition,
+				                         line_num);
+				return;
+			}
+			new_rules[code_point_1].AddMark(code_point_2);
+		}
+	}
+
+	if (!check_import_status(in_file, file_name_decomposition, new_rules.empty())) {
+		return;
+	}
+
+	// Reading/parsing succeeded - use the rules
+	decomposition_rules = new_rules;
+}
+
 static void import_mapping_ascii(const std_fs::path& path_root)
 {
-	// Import fallback mapping, from UTH-8 to 7-bit ASCII;
+	// Import fallback mapping, from Unicode to 7-bit ASCII;
 	// this mapping will only be used if everything else fails
 
 	// Open the file
@@ -1028,8 +1261,23 @@ static uint16_t deduplicate_code_page(const uint16_t code_page)
 
 	if (it == config_duplicates.end()) {
 		return code_page;
-	} else {
-		return it->second;
+	}
+
+	return it->second;
+}
+
+static void construct_decomposed(const code_page_mapping_t& normalized,
+                                 code_page_mapping_t& decomposed)
+{
+	decomposed.clear();
+	for (const auto& [grapheme, character_code] : normalized) {
+		auto tmp = grapheme;
+		tmp.Decompose();
+		if (grapheme == tmp) {
+			continue;
+		}
+
+		decomposed[tmp] = character_code;
 	}
 }
 
@@ -1045,9 +1293,9 @@ static bool construct_mapping(const uint16_t code_page)
 	already_tried.insert(code_page);
 
 	assert(config_mappings.count(code_page));
-	assert(!mappings_by_codepage.count(code_page));
-	assert(!reverse_by_codepage.count(code_page));
-	assert(!mappings_by_codepage.count(code_page));
+	assert(!mappings_normalized_by_codepage.count(code_page));
+	assert(!mappings_decomposed_by_codepage.count(code_page));
+	assert(!mappings_reverse_by_codepage.count(code_page));
 
 	// First apply mapping found in main config file
 
@@ -1056,7 +1304,7 @@ static bool construct_mapping(const uint16_t code_page)
 	code_page_mapping_reverse_t new_mapping_reverse = {};
 
 	auto add_to_mappings = [&](const uint8_t first, const Grapheme& second) {
-		if (first < threshold_non_ascii) {
+		if (first < decode_threshold_non_ascii) {
 			return;
 		}
 		if (!add_if_not_mapped(new_mapping_reverse, first, second)) {
@@ -1069,7 +1317,7 @@ static bool construct_mapping(const uint16_t code_page)
 			return;
 		}
 
-		LOG_WARNING("UTF8: mapping for code page %d uses a code point twice; character 0x%02x",
+		LOG_WARNING("UNICODE: Mapping for code page %d uses a code point twice; character 0x%02x",
 		            code_page,
 		            first);
 	};
@@ -1083,13 +1331,13 @@ static bool construct_mapping(const uint16_t code_page)
 	if (config_mapping.extends_code_page) {
 		const uint16_t dependency = deduplicate_code_page(config_mapping.extends_code_page);
 		if (!prepare_code_page(dependency)) {
-			LOG_ERR("UTF8: Code page %d mapping requires code page %d mapping",
+			LOG_ERR("UNICODE: Code page %d mapping requires code page %d mapping",
 			        code_page,
 			        dependency);
 			return false;
 		}
 
-		for (const auto& entry : mappings_by_codepage[dependency]) {
+		for (const auto& entry : mappings_normalized_by_codepage[dependency]) {
 			add_to_mappings(entry.second, entry.first);
 		}
 	}
@@ -1110,37 +1358,49 @@ static bool construct_mapping(const uint16_t code_page)
 		}
 	}
 
-	mappings_by_codepage[code_page] = new_mapping;
-	reverse_by_codepage[code_page]  = new_mapping_reverse;
+	mappings_normalized_by_codepage[code_page] = new_mapping;
+	mappings_reverse_by_codepage[code_page]    = new_mapping_reverse;
+
+	// Construct decomposed mapping
+	construct_decomposed(mappings_normalized_by_codepage[code_page],
+	                     mappings_decomposed_by_codepage[code_page]);
+
 	return true;
 }
 
 static void construct_aliases(const uint16_t code_page)
 {
-	assert(!aliases_by_codepage.count(code_page));
-	assert(mappings_by_codepage.count(code_page));
+	assert(!aliases_normalized_by_codepage.count(code_page));
+	assert(!aliases_decomposed_by_codepage.count(code_page));
+	assert(mappings_normalized_by_codepage.count(code_page));
 
-	const auto& mapping = mappings_by_codepage[code_page];
-	auto& aliases       = aliases_by_codepage[code_page];
+	const auto& mapping      = mappings_normalized_by_codepage[code_page];
+	auto& aliases_normalized = aliases_normalized_by_codepage[code_page];
 
 	for (const auto& alias : config_aliases) {
-		if (!mapping.count(alias.first) &&
-		    mapping.count(alias.second) && !aliases.count(alias.first)) {
-			aliases[alias.first] = mapping.find(alias.second)->second;
+		if (!mapping.count(alias.first) && mapping.count(alias.second) &&
+		    !aliases_normalized.count(alias.first)) {
+			aliases_normalized[alias.first] =
+			        mapping.find(alias.second)->second;
 		}
 	}
+
+	// Construct decomposed aliases
+	construct_decomposed(aliases_normalized_by_codepage[code_page],
+	                     aliases_decomposed_by_codepage[code_page]);
 }
 
 static bool prepare_code_page(const uint16_t code_page)
 {
-	if (mappings_by_codepage.count(code_page)) {
+	if (mappings_normalized_by_codepage.count(code_page)) {
 		return true; // code page already prepared
 	}
 
 	if (!config_mappings.count(code_page) || !construct_mapping(code_page)) {
 		// Unsupported code page or error
-		mappings_by_codepage.erase(code_page);
-		reverse_by_codepage.erase(code_page);
+		mappings_normalized_by_codepage.erase(code_page);
+		mappings_decomposed_by_codepage.erase(code_page);
+		mappings_reverse_by_codepage.erase(code_page);
 		return false;
 	}
 
@@ -1156,108 +1416,111 @@ static void load_config_if_needed()
 	static bool config_loaded = false;
 	if (!config_loaded) {
 		const auto path_root = GetResourcePath(dir_name_mapping);
+		import_decomposition(path_root);
 		import_mapping_ascii(path_root);
 		import_config_main(path_root);
 		config_loaded = true;
 	}
 }
 
+static uint16_t get_default_code_page()
+{
+	constexpr uint16_t default_code_page = 437; // United States
+
+	if (!prepare_code_page(default_code_page)) {
+		warn_default_code_page();
+		return 0;
+	}
+
+	return default_code_page;
+}
+
+static uint16_t get_custom_code_page(const uint16_t custom_code_page)
+{
+	if (custom_code_page == 0) {
+		return 0;
+	}
+
+	const uint16_t code_page = deduplicate_code_page(custom_code_page);
+	if (!prepare_code_page(code_page)) {
+		return get_default_code_page();
+	}
+
+	return code_page;
+}
+
 // ***************************************************************************
 // External interface
 // ***************************************************************************
 
-uint16_t UTF8_GetCodePage()
+uint16_t get_utf8_code_page()
 {
-	const uint16_t cp_default = 437; // United States
 	if (!IS_EGAVGA_ARCH) {
-		// Below EGA it wasn't possible to change character set
-		return cp_default;
+		// Below EGA it wasn't possible to change the character set
+		return get_default_code_page();
 	}
 
 	load_config_if_needed();
-	const uint16_t cp = deduplicate_code_page(dos.loaded_codepage);
+	const uint16_t code_page = deduplicate_code_page(dos.loaded_codepage);
 
-	// For unsupported code pages, revert to default one
-	if (prepare_code_page(cp)) {
-		return cp;
-	} else {
-		return cp_default;
+	// For unsupported code pages revert to default one
+	if (prepare_code_page(code_page)) {
+		return code_page;
 	}
+
+	return get_default_code_page();
 }
 
-bool UTF8_RenderForDos(const std::string& str_in, std::string& str_out,
-                       const uint16_t code_page)
+bool utf8_to_dos(const std::string& str_in, std::string& str_out)
 {
 	load_config_if_needed();
-	const uint16_t cp = deduplicate_code_page(code_page);
-	prepare_code_page(cp);
 
-	std::vector<uint16_t> str_wide;
+	const uint16_t cp = get_utf8_code_page();
+
+	std::vector<uint16_t> str_wide = {};
+
 	const bool status1 = utf8_to_wide(str_in, str_wide);
-	const bool status2 = wide_to_code_page(str_wide, str_out, cp);
+	const bool status2 = wide_to_dos(str_wide, str_out, cp);
 
 	return status1 && status2;
 }
 
-// If you need a routine to convert a screen code to UTF-8,
-// here is how it should look like:
-
-#if 0
-
-// Note: this returns unencoded sequence of code points
-
-void Grapheme::PushInto(std::vector<uint16_t> &str_out)
+bool utf8_to_dos(const std::string& str_in, std::string& str_out,
+                 const uint16_t code_page)
 {
-    str_out.push_back(code_point);
+	load_config_if_needed();
 
-    if (!mark_1st)
-        return;
-    str_out.push_back(mark_1st);
+	const uint16_t cp = get_custom_code_page(code_page);
 
-    if (!mark_2nd)
-        return;
-    str_out.push_back(mark_2nd);
+	std::vector<uint16_t> str_wide = {};
+
+	const bool status1 = utf8_to_wide(str_in, str_wide);
+	const bool status2 = wide_to_dos(str_wide, str_out, cp);
+
+	return status1 && status2;
 }
 
-void UTF8_FromScreenCode(const uint8_t character_in, std::vector<uint16_t> &str_out,
-                         const uint16_t code_page)
+void dos_to_utf8(const std::string& str_in, std::string& str_out)
 {
-    str_out.clear();
+	load_config_if_needed();
 
-    if (GCC_UNLIKELY(character_in >= threshold_non_ascii)) {
+	const uint16_t cp = get_utf8_code_page();
 
-        // Character above 0x07f - take from code page mapping
+	std::vector<uint16_t> str_wide = {};
 
-        load_config_if_needed();
-        const uint16_t cp = deduplicate_code_page(code_page);
-        prepare_code_page(cp);
-
-        if (!reverse_by_codepage.count(cp) ||
-            !reverse_by_codepage[cp].count(character_in))
-            str_out.push_back(' ');
-        else
-            (reverse_by_codepage[cp])[character_in].PushInto(str_out);
-
-    } else {
-
-        // Unicode code points for screen codes from 0x00 to 0x1f
-        // see: https://en.wikipedia.org/wiki/Code_page_437
-        constexpr uint16_t codes[0x20] = {
-            0x0020, 0x263a, 0x263b, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022, // 00-07
-            0x25d8, 0x25cb, 0x25d9, 0x2642, 0x2640, 0x266a, 0x266b, 0x263c, // 08-0f
-            0x25ba, 0x25c4, 0x2195, 0x203c, 0x00b6, 0x00a7, 0x25ac, 0x21a8, // 10-17
-            0x2191, 0x2193, 0x2192, 0x2190, 0x221f, 0x2194, 0x25b2, 0x25bc, // 18-1f
-        };
-
-        if (GCC_UNLIKELY(character_in == 0x7f))
-            str_out.push_back(0x2302);
-        else if (character_in >= 0x20)
-            str_out.push_back(character_in);
-        else
-            str_out.push_back(codes[character_in]);
-    }
-
-   str_out.shrink_to_fit();
+	dos_to_wide(str_in, str_wide, cp);
+	wide_to_utf8(str_wide, str_out);
 }
 
-#endif
+void dos_to_utf8(const std::string& str_in, std::string& str_out,
+                 const uint16_t code_page)
+{
+	load_config_if_needed();
+
+	const uint16_t cp = get_custom_code_page(code_page);
+
+	std::vector<uint16_t> str_wide = {};
+
+	dos_to_wide(str_in, str_wide, cp);
+	wide_to_utf8(str_wide, str_out);
+}

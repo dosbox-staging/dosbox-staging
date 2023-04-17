@@ -792,8 +792,10 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
 				return;
 			}
-			for (Bitu i = 0; i < pvars.size(); i++) {
-				sec->HandleInputline(pvars[i]);
+			for (const auto& pvar : pvars) {
+				std::string line_utf8 = {};
+				dos_to_utf8(pvar, line_utf8);
+				sec->HandleInputline(line_utf8);
 			}
 			break;
 		}
@@ -804,7 +806,9 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
 				return;
 			}
-			WriteOut("\n%s", sec->data.c_str());
+			std::string line_dos = {};
+			utf8_to_dos(sec->data, line_dos);
+			WriteOut("\n%s", line_dos.c_str());
 			break;
 		}
 		case P_REC_AVI_START: CAPTURE_VideoStart(); break;

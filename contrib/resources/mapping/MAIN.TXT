@@ -57,7 +57,7 @@
 # 30004 - Greenlandic, with EUR
 # 30005 - Nigerian, with EUR
 # 30006 - Vietnamese Latin
-# 30007 - Latin, with EUR
+# 30007 - Latin, with EUR (**)
 # 30008 - Abkhaz and Ossetian, Cyrillic, with EUR
 # 30009 - Romani, with EUR
 # 30010 - Gagauz and Moldovan, Cyrillic, with EUR
@@ -102,6 +102,8 @@
 # - 991, 58335 : PLN SYMBOL (currency)
 # - 30019      : CYRILLIC LIGATURE UO (both SMALL and CAPITAL)
 #
+# (**) The code page contains LATIN SMALL/CAPITAL LETTER L WITH MIDDLE DOT character, which
+# cannot be decomposed without creating ambiguity, see DECOMPOSITION.TXT
 #
 # Code pages mostly supported (3 code pages), but with unidentified characters still left (TODO):
 #

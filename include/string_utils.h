@@ -293,23 +293,23 @@ std::string join_with_commas(const std::vector<std::string>& items,
 // Clear the language if it's set to the POSIX default
 void clear_language_if_default(std::string &language);
 
-
-// UTF-8 support
-
 // Get recommended DOS code page to render the UTF-8 strings to. This
 // might not be the code page set using KEYB command, for example due
 // to emulated hardware limitations, or duplicated code page numbers
-uint16_t UTF8_GetCodePage();
+uint16_t get_utf8_code_page();
 
-// Convert the UTF-8 string (NFC normalized, otherwise some national
-// characters might remain unrecognized) to a format intended for
-// display inside emulated environment.
-// Code page '0' means a pure 7-bit ASCII.
-// Return value 'false' means there were problems with string
-// decoding/rendering, but the overall output should be still sane
-bool UTF8_RenderForDos(const std::string &str_in,
-                       std::string &str_out,
-                       const uint16_t code_page = 0);
+// Convert the UTF-8 string to the format intended for display inside emulated
+// environment. Code page '0' means a pure 7-bit ASCII. Function without
+// code_page parameter uses current DOS code page.
+// Return value 'false' means there were problems with string decoding or
+// rendering, but the overall output should still be sane.
+bool utf8_to_dos(const std::string& str_in, std::string& str_out);
+bool utf8_to_dos(const std::string& str_in, std::string& str_out,
+                 const uint16_t code_page);
+// Similarly, convert the opposite way
+void dos_to_utf8(const std::string& str_in, std::string& str_out);
+void dos_to_utf8(const std::string& str_in, std::string& str_out,
+                 const uint16_t code_page);
 
 // Parse a value from the string, clamp the result within the given min and max
 // values, and return it as a float. This API should give us enough numerical
