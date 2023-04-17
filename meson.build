@@ -38,7 +38,16 @@ licenses_dir = data_dir / 'licenses' / meson.project_name()
 doc_dir = data_dir / 'doc' / meson.project_name()
 
 install_man('docs/dosbox.1')
-install_data('COPYING', install_dir: licenses_dir)
+# Bundle licenses, but skip the ones that are not relevant for
+# binary distribution or allow us to not distribute the license text.
+install_data('LICENSE',
+             'licenses/BSD-2-Clause.txt',
+             'licenses/BSD-3-Clause.txt',
+             'licenses/GPL-2.0.txt',
+             'licenses/LGPL-2.1.txt',
+             'licenses/MIT.txt',
+             'licenses/Zlib.txt',
+             install_dir: licenses_dir)
 install_data('AUTHORS', 'README', 'THANKS', install_dir: doc_dir)
 
 subdir('contrib/linux')
