@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -175,7 +175,9 @@ void ManyMouseGlue::Rescan()
 	for (uint8_t idx = 0; idx < num_mice; idx++) {
 		const auto name_utf8 = ManyMouse_DeviceName(idx);
 		std::string name;
-		UTF8_RenderForDos(name_utf8, name);
+		// We want the mouse name to be the same regardless of the code
+		// page set - so use 7-bit ASCII characters only
+		utf8_to_dos(name_utf8, name, 0);
 
 		// Replace non-breaking space with a regular space
 		const char character_nbsp  = 0x7f;
