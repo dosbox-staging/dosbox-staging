@@ -23,8 +23,9 @@
 
 #include <utility>
 
-#include "inout.h"
+#include "bit_view.h"
 #include "control.h"
+#include "inout.h"
 
 //Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED
@@ -151,6 +152,11 @@ enum Drawmode { PART, DRAWLINE, EGALINE };
 
 enum class VGA_RATE_MODE { DEFAULT, HOST, CUSTOM };
 
+enum PixelsPerChar : int8_t {
+	Eight = 8,
+	Nine  = 9,
+};
+
 struct VGA_Draw {
 	bool resizing = false;
 	Bitu width = 0;
@@ -197,7 +203,7 @@ struct VGA_Draw {
 	uint8_t *font_tables[2] = {nullptr, nullptr};
 	Bitu blinking = 0;
 	bool blink = false;
-	bool char9dot = false;
+	PixelsPerChar pixels_per_character = PixelsPerChar::Eight;
 	struct {
 		Bitu address = 0;
 		uint8_t sline = 0;
@@ -307,10 +313,47 @@ struct VGA_TANDY {
 	Bitu addr_mask = 0;
 };
 
+// VGA sequence - 8-bit clocking mode register (Index 01h)
+// Ref: http://www.osdever.net/FreeVGA/vga/seqreg.htm
+union ClockingModeRegister {
+	uint8_t data = 0;
+	// Characters are drawn 8 pixels wide (or 9 if cleared)
+	bit_view<0, 1> is_eight_dot_mode;
+
+	// When this bit and bit 4 are set to 0, the video serializers are
+	// loaded every character clock. When this bit is set to 1, the video
+	// serializers are loaded every other character clock, which is useful
+	// when 16 bits are fetched per cycle and chained together in the shift
+	// registers. The Type 2 video behaves as if this bit is set to 0;
+	// therefore, programs should set it to 0.
+	bit_view<2, 1> is_loading_alternating_characters;
+
+	// When set to 0, this bit selects the normal dot clocks derived from
+	// the sequencer master clock input. When this bit is set to 1, the
+	// master clock will be divided by 2 to generate the dot clock. All
+	// other timings are affected because they are derived from the dot
+	// clock. The dot clock divided by 2 is used for 320 and 360 horizontal
+	// PEL modes.
+	bit_view<3, 1> is_pixel_doubling;
+
+	//	When the Shift 4 field and the Shift Load Field are set to 0,
+	//the video serializers are loaded every character clock. When the Shift
+	//4 field is set to 1, the video serializers are loaded every forth
+	//character clock, which is useful when 32 bits are fetched per cycle
+	//and chained together in the shift registers
+	bit_view<4, 1> is_shift_4_enabled;
+
+	// When set to 1, this bit turns off the display and assigns maximum
+	// memory bandwidth to the system. Although the display is blanked, the
+	// synchronization pulses are maintained. This bit can be used for rapid
+	// full-screen updates.
+	bit_view<5, 1> is_screen_disabled;
+};
+
 struct VGA_Seq {
 	uint8_t index = 0;
 	uint8_t reset = 0;
-	uint8_t clocking_mode = 0;
+	ClockingModeRegister clocking_mode = {};
 	uint8_t map_mask = 0;
 	uint8_t character_map_select = 0;
 	uint8_t memory_mode = 0;

@@ -41,13 +41,13 @@ void write_p3c5(io_port_t, io_val_t value, io_width_t)
 	switch (seq(index)) {
 	case 0: /* Reset */ seq(reset) = val; break;
 	case 1: /* Clocking Mode */
-		if (val != seq(clocking_mode)) {
+		if (val != seq(clocking_mode.data)) {
 			// don't resize if only the screen off bit was changed
-			if ((val&(~0x20))!=(seq(clocking_mode)&(~0x20))) {
-				seq(clocking_mode)=val;
+			if ((val & (~0x20)) != (seq(clocking_mode.data) & (~0x20))) {
+				seq(clocking_mode.data) = val;
 				VGA_StartResize();
 			} else {
-				seq(clocking_mode)=val;
+				seq(clocking_mode.data) = val;
 			}
 			if (val & 0x20) vga.attr.disabled |= 0x2;
 			else vga.attr.disabled &= ~0x2;
@@ -129,7 +129,7 @@ uint8_t read_p3c5(io_port_t, io_width_t)
 	//	LOG_MSG("VGA:SEQ:Read from index %2X",seq(index));
 	switch (seq(index)) {
 	case 0: /* Reset */ return seq(reset); break;
-	case 1: /* Clocking Mode */ return seq(clocking_mode); break;
+	case 1: /* Clocking Mode */ return seq(clocking_mode.data); break;
 	case 2: /* Map Mask */ return seq(map_mask); break;
 	case 3: /* Character Map Select */ return seq(character_map_select); break;
 	case 4: /* Memory Mode */ return seq(memory_mode); break;
