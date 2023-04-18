@@ -55,27 +55,34 @@ Note:  Each read or write of this register will cycle through first the
 
 enum {DAC_READ,DAC_WRITE};
 
+// Generate a 6-to-8 bit lookup table
+constexpr auto max_6bit_values = 64; // 2^6
+using scale_6_to_8_lut_t = std::array<uint8_t, max_6bit_values>;
+static constexpr scale_6_to_8_lut_t generate_6_to_8_lut()
+{
+	scale_6_to_8_lut_t lut = {};
+	for (uint8_t color_6 = 0; color_6 < lut.size(); ++color_6) {
+		const auto color_8 = (color_6 * 255 + 31) / 63;
+		lut[color_6] = check_cast<uint8_t>(color_8);
+	}
+	return lut;
+}
+
 static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 {
+	static constexpr auto scale_6_to_8_lut = generate_6_to_8_lut();
+
 	const auto& src_rgb18 = vga.dac.rgb[src];
 
-	// Scale the DAC's 6-bit colors to 8-bit to set the VGA palette
-	auto scale_6_to_8 = [](const uint8_t color_6) -> uint8_t {
-		const auto color_8 = (color_6 * 255 + 31) / 63;
-		return check_cast<uint8_t>(color_8);
-	};
-	const RGBEntry src_rgb24 = {scale_6_to_8(src_rgb18.red),
-	                            scale_6_to_8(src_rgb18.green),
-	                            scale_6_to_8(src_rgb18.blue)};
+	const auto r8 = scale_6_to_8_lut[src_rgb18.red];
+	const auto g8 = scale_6_to_8_lut[src_rgb18.green];
+	const auto b8 = scale_6_to_8_lut[src_rgb18.blue];
 
 	// Map the source color into palette's requested index
-	auto rgb888_to_uint32 = [](const RGBEntry rgb888) -> uint32_t {
-		return static_cast<uint32_t>((rgb888.red << 16) |
-		                             (rgb888.green << 8) | rgb888.blue);
-	};
-	vga.dac.palette_map[index] = rgb888_to_uint32(src_rgb24);
+	vga.dac.palette_map[index] = static_cast<uint32_t>((r8 << 16) |
+	                                                   (g8 << 8) | b8);
 
-	RENDER_SetPal(index, src_rgb24.red, src_rgb24.green, src_rgb24.blue);
+	RENDER_SetPal(index, r8, g8, b8);
 }
 
 static void VGA_DAC_UpdateColor(uint16_t index)
