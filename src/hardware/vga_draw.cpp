@@ -817,8 +817,8 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			// the DAC table may not match the bits of the overscan register
 			// so use black for this case too...
 			//if (vga.attr.disabled& 2) {
-			if (constexpr uint32_t black_rgb32 = 0;
-			    vga.dac.palette_map[bg_color_index] != black_rgb32) {
+			if (constexpr uint32_t black_rgb888 = 0;
+			    vga.dac.palette_map[bg_color_index] != black_rgb888) {
 				// check some assumptions about the palette map
 				constexpr auto palette_map_len = ARRAY_LEN(
 				        vga.dac.palette_map);
@@ -826,7 +826,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 				              "The code below assumes the table is 256 elements long");
 
 				for (uint16_t i = 0; i < palette_map_len; ++i)
-					if (vga.dac.palette_map[i] == black_rgb32) {
+					if (vga.dac.palette_map[i] == black_rgb888) {
 						bg_color_index = static_cast<uint8_t>(i);
 						break;
 					}
