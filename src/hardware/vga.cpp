@@ -316,6 +316,11 @@ void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3) {
 	}	
 }
 
+void VGA_SetVga200LineHandling(const Vga200LineHandling vga_200_line_handling)
+{
+	vga.draw.vga_200_line_handling = vga_200_line_handling;
+}
+
 void VGA_Init(Section* sec) {
 //	Section_prop * section=static_cast<Section_prop *>(sec);
 	vga.draw.resizing=false;
