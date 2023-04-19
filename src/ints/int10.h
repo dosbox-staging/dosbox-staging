@@ -142,7 +142,9 @@ struct VideoModeBlock {
 extern std::vector<VideoModeBlock> ModeList_VGA;
 extern std::vector<VideoModeBlock> ModeList_VGA_Paradise;
 extern std::vector<VideoModeBlock> ModeList_VGA_Tseng;
-extern std::vector<VideoModeBlock>::const_iterator CurMode;
+
+using video_mode_block_iterator_t = std::vector<VideoModeBlock>::const_iterator;
+extern video_mode_block_iterator_t CurMode;
 
 enum class VesaModePref {
 	Compatible,  // Prunes the available S3 modes to maximize DOS game compatibility
