@@ -1,4 +1,10 @@
 /*
+ *  SPDX-License-Identifier: BSD-3-Clause AND GPL-2.0-or-later
+ *
+ *  copyright-holders: Aaron Giles, kekko, Bernhard Schelling
+ */
+
+/*
  *  Copyright (C) 2002-2011  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
