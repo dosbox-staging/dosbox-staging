@@ -872,7 +872,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 	++vga.draw.lines_done;
 	if (vga.draw.split_line==vga.draw.lines_done) VGA_ProcessSplit();
 	if (vga.draw.lines_done < vga.draw.lines_total) {
-		PIC_AddEvent(VGA_DrawSingleLine, vga.draw.delay.htotal);
+		PIC_AddEvent(VGA_DrawSingleLine, vga.draw.delay.per_line_ms);
 	} else RENDER_EndUpdate(false);
 }
 
@@ -896,7 +896,7 @@ static void VGA_DrawEGASingleLine(uint32_t /*blah*/)
 	++vga.draw.lines_done;
 	if (vga.draw.split_line==vga.draw.lines_done) VGA_ProcessSplit();
 	if (vga.draw.lines_done < vga.draw.lines_total) {
-		PIC_AddEvent(VGA_DrawEGASingleLine, vga.draw.delay.htotal);
+		PIC_AddEvent(VGA_DrawEGASingleLine, vga.draw.delay.per_line_ms);
 	} else RENDER_EndUpdate(false);
 }
 
@@ -1172,10 +1172,10 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		vga.draw.lines_done = 0;
 		if (vga.draw.mode==EGALINE)
 			PIC_AddEvent(VGA_DrawEGASingleLine,
-			             vga.draw.delay.htotal / 4.0 + draw_skip);
+			             vga.draw.delay.per_line_ms + draw_skip);
 		else
 			PIC_AddEvent(VGA_DrawSingleLine,
-			             vga.draw.delay.htotal / 4.0 + draw_skip);
+			             vga.draw.delay.per_line_ms + draw_skip);
 		break;
 	}
 }
@@ -1266,6 +1266,19 @@ static void maybe_aspect_correct_tall_modes(double &current_ratio)
 	LOG_INFO("VGA: Tall resolution (%ux%u) will not be wide-stretched, per 'aspect = true'",
 	         CurMode->swidth, CurMode->sheight);
 	current_ratio *= 2;
+}
+
+// A single point to set total draw lines and update affected parameters
+static void set_total_lines_to_draw(const uint32_t total_lines)
+{
+	assert(total_lines > 0 && total_lines <= SCALER_MAXHEIGHT);
+	vga.draw.lines_total = total_lines;
+
+	assert(vga.draw.parts_total > 0);
+	vga.draw.parts_lines = total_lines / vga.draw.parts_total;
+
+	assert(vga.draw.delay.vdend > 0.0);
+	vga.draw.delay.per_line_ms = vga.draw.delay.vdend / total_lines;
 }
 
 void VGA_SetupDrawing(uint32_t /*val*/)
@@ -1893,8 +1906,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			height /= 2;
 		}
 	}
-	vga.draw.lines_total=height;
-	vga.draw.parts_lines=vga.draw.lines_total/vga.draw.parts_total;
+	set_total_lines_to_draw(height);
 	vga.draw.line_length = width * ((bpp + 1) / 8);
 #ifdef VGA_KEEP_CHANGES
 	vga.changes.active = false;
