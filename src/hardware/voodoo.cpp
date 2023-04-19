@@ -235,7 +235,7 @@ inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
 #if defined(__SSE2__) && __SSE2__
 	__m128i  scale_u = *(__m128i *)sse2_scale_table[u], scale_v = *(__m128i *)sse2_scale_table[v];
 	return _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packs_epi32(_mm_srli_epi32(_mm_madd_epi16(_mm_max_epi16(
-		_mm_slli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb01), _mm_cvtsi32_si128(rgb00)), _mm_setzero_si128()), scale_u), 15), 
+		_mm_slli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb01), _mm_cvtsi32_si128(rgb00)), _mm_setzero_si128()), scale_u), 15),
 		_mm_srli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb11), _mm_cvtsi32_si128(rgb10)), _mm_setzero_si128()), scale_u), 1)),
 		scale_v), 15), _mm_setzero_si128()), _mm_setzero_si128()));
 #else
@@ -1092,7 +1092,7 @@ inline UINT8 count_leading_zeros(UINT32 value)
  *
  *************************************/
 
-inline INT64 fast_reciplog(INT64 value, INT32* log2)
+inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 {
 	UINT32 temp, rlog;
 	UINT32 interp;
@@ -1120,7 +1120,7 @@ inline INT64 fast_reciplog(INT64 value, INT32* log2)
 	/* if the resulting value is 0, the reciprocal is infinite */
 	if (GCC_UNLIKELY(temp == 0))
 	{
-		*log2 = 1000 << LOG_OUTPUT_PREC;
+		*log_2 = 1000 << LOG_OUTPUT_PREC;
 		return neg ? 0x80000000 : 0x7fffffff;
 	}
 
@@ -1147,7 +1147,7 @@ inline INT64 fast_reciplog(INT64 value, INT32* log2)
 
 	/* the exponent is the non-fractional part of the log; normally, we would subtract it from rlog */
 	/* but since we want the log(1/value) = -log(value), we subtract rlog from the exponent */
-	*log2 = ((exp - (31 - RECIPLOG_INPUT_PREC)) << LOG_OUTPUT_PREC) - rlog;
+	*log_2 = ((exp - (31 - RECIPLOG_INPUT_PREC)) << LOG_OUTPUT_PREC) - rlog;
 
 	/* adjust the exponent to account for all the reciprocal-related parameters to arrive at a final shift amount */
 	exp += (RECIP_OUTPUT_PREC - RECIPLOG_LOOKUP_PREC) - (31 - RECIPLOG_INPUT_PREC);
