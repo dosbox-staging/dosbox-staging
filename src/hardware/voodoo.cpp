@@ -3598,7 +3598,7 @@ static void raster_fastfill(void *destbase, INT32 y, const poly_extent *extent, 
  *
  *************************************/
 
-static void init_fbi(voodoo_state *v, fbi_state *f, int fbmem)
+static void init_fbi([[maybe_unused]] voodoo_state* v, fbi_state* f, int fbmem)
 {
 	/* allocate frame buffer RAM and set pointers */
 	assert(fbmem >= 1); //VOODOO: invalid frame buffer memory size requested
@@ -6956,31 +6956,39 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 
 static struct Voodoo_Init_PageHandler : public PageHandler {
 	Voodoo_Init_PageHandler() { flags = PFLAG_NOCODE; }
-	uint8_t readb(PhysPt addr)
+
+	uint8_t readb([[maybe_unused]] PhysPt addr)
 	{
 		return 0xff;
 	}
+
 	uint16_t readw(PhysPt addr)
 	{
 		Voodoo_Startup();
 		return voodoo_real_pagehandler.readw(addr);
 	}
+
 	uint32_t readd(PhysPt addr)
 	{
 		Voodoo_Startup();
 		return voodoo_real_pagehandler.readd(addr);
 	}
-	void writeb(PhysPt addr, uint8_t val) {}
+
+	void writeb([[maybe_unused]] PhysPt addr, [[maybe_unused]] uint8_t val)
+	{}
+
 	void writew(PhysPt addr, uint16_t val)
 	{
 		Voodoo_Startup();
 		voodoo_real_pagehandler.writew(addr, val);
 	}
+
 	void writed(PhysPt addr, uint32_t val)
 	{
 		Voodoo_Startup();
 		voodoo_real_pagehandler.writed(addr, val);
 	}
+
 } voodoo_init_pagehandler;
 
 #define VOODOO_INITIAL_LFB	0xd0000000
