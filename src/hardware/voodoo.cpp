@@ -1099,7 +1099,8 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	UINT32 *table;
 	UINT64 recip;
 	bool neg = false;
-	int lz, exp = 0;
+	int lz       = 0;
+	int exponent = 0;
 
 	/* always work with unsigned numbers */
 	if (value < 0)
@@ -1112,7 +1113,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	if (value & LONGTYPE(0xffff00000000))
 	{
 		temp = (UINT32)(value >> 16);
-		exp -= 16;
+		exponent -= 16;
 	}
 	else
 		temp = (UINT32)value;
@@ -1127,7 +1128,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	/* determine how many leading zeros in the value and shift it up high */
 	lz = count_leading_zeros(temp);
 	temp <<= lz;
-	exp += lz;
+	exponent += lz;
 
 	/* compute a pointer to the table entries we want */
 	/* math is a bit funny here because we shift one less than we need to in order */
@@ -1147,16 +1148,17 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 
 	/* the exponent is the non-fractional part of the log; normally, we would subtract it from rlog */
 	/* but since we want the log(1/value) = -log(value), we subtract rlog from the exponent */
-	*log_2 = ((exp - (31 - RECIPLOG_INPUT_PREC)) << LOG_OUTPUT_PREC) - rlog;
+	*log_2 = ((exponent - (31 - RECIPLOG_INPUT_PREC)) << LOG_OUTPUT_PREC) - rlog;
 
 	/* adjust the exponent to account for all the reciprocal-related parameters to arrive at a final shift amount */
-	exp += (RECIP_OUTPUT_PREC - RECIPLOG_LOOKUP_PREC) - (31 - RECIPLOG_INPUT_PREC);
+	exponent += (RECIP_OUTPUT_PREC - RECIPLOG_LOOKUP_PREC) -
+	            (31 - RECIPLOG_INPUT_PREC);
 
 	/* shift by the exponent */
-	if (exp < 0)
-		recip >>= -exp;
+	if (exponent < 0)
+		recip >>= -exponent;
 	else
-		recip <<= exp;
+		recip <<= exponent;
 
 	/* on the way out, apply the original sign to the reciprocal */
 	return neg ? -(INT64)recip : (INT64)recip;
