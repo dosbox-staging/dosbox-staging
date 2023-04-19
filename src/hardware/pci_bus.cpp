@@ -23,6 +23,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "mem.h"
+#include "pci_devices.h"
 #include "regs.h"
 #include "setup.h"
 #include "support.h"
@@ -44,7 +45,7 @@ static PCI_Device* pci_devices[PCI_MAX_PCIDEVICES];		// registered PCI devices
 // 10- 8 - subfunction number	(0x00000700)
 //  7- 2 - config register #	(0x000000fc)
 
-static void write_pci_addr(io_port_t port, io_val_t val, io_width_t)
+static void write_pci_addr([[maybe_unused]] io_port_t port, io_val_t val, io_width_t)
 {
 	LOG(LOG_PCI, LOG_NORMAL)("Write PCI address :=%x", val);
 	pci_caddress = val;
@@ -117,7 +118,7 @@ static void write_pci(io_port_t port, io_val_t value, io_width_t width)
 	}
 }
 
-static uint32_t read_pci_addr(io_port_t port, io_width_t)
+static uint32_t read_pci_addr([[maybe_unused]] io_port_t port, io_width_t)
 {
 	LOG(LOG_PCI, LOG_NORMAL)("Read PCI address -> %x", pci_caddress);
 	return pci_caddress;
@@ -168,15 +169,19 @@ static uint8_t read_pci(io_port_t port, io_width_t width)
 		uint8_t devnum = (uint8_t)((pci_caddress >> 11) & 0x1f);
 		uint8_t fctnum = (uint8_t)((pci_caddress >> 8) & 0x7);
 		uint8_t regnum = (uint8_t)((pci_caddress & 0xfc) + (port & 0x03));
-		if (devnum>=pci_devices_installed) return 0xffffffff;
+
+		if (devnum >= pci_devices_installed)
+			return 0xff;
+
 		LOG(LOG_PCI,LOG_NORMAL)("  Read from device %x register %x (function %x); addr %x",
 			devnum,regnum,fctnum,pci_caddress);
 
 		PCI_Device *selected_device = pci_devices[devnum];
+
 		if (selected_device == nullptr)
-			return 0xffffffff;
+			return 0xff;
 		if (fctnum > selected_device->NumSubdevices())
-			return 0xffffffff;
+			return 0xff;
 
 		PCI_Device *dev = selected_device->GetSubdevice(fctnum);
 
@@ -203,7 +208,7 @@ static uint8_t read_pci(io_port_t port, io_width_t width)
 			}
 		}
 	}
-	return 0xffffffff;
+	return 0xff;
 }
 
 static Bitu PCI_PM_Handler() {
@@ -221,11 +226,12 @@ PCI_Device::PCI_Device(uint16_t vendor, uint16_t device) {
 	for (Bitu dct=0;dct<PCI_MAX_PCIFUNCTIONS-1;dct++) subdevices[dct]=0;
 }
 
-void PCI_Device::SetPCIId(Bitu number, Bits subfct) {
-	if ((number>=0) && (number<PCI_MAX_PCIDEVICES)) {
-		pci_id=number;
-		if ((subfct>=0) && (subfct<PCI_MAX_PCIFUNCTIONS-1))
-			pci_subfunction=subfct;
+void PCI_Device::SetPCIId(const Bits number, const Bits sub_fct)
+{
+	if ((number >= 0) && (number < PCI_MAX_PCIDEVICES)) {
+		pci_id = number;
+		if ((sub_fct >= 0) && (sub_fct < PCI_MAX_PCIFUNCTIONS - 1))
+			pci_subfunction = sub_fct;
 		else
 			pci_subfunction=-1;
 	}
@@ -251,28 +257,28 @@ void PCI_Device::RemoveSubdevice(Bits subfct) {
 	}
 }
 
-PCI_Device* PCI_Device::GetSubdevice(Bits subfct) {
-	if (subfct>=PCI_MAX_PCIFUNCTIONS) return NULL;
-	if (subfct>0) {
-		if (subfct<=this->NumSubdevices()) return subdevices[subfct-1];
-	} else if (subfct==0) {
-		return this;
-	}
-	return NULL;
-}
+PCI_Device* PCI_Device::GetSubdevice(const Bits sub_fct)
+{
+	if (sub_fct >= PCI_MAX_PCIFUNCTIONS)
+		return nullptr;
 
+	if (sub_fct == 0)
+		return this;
+
+	if (sub_fct > 0 && sub_fct <= this->NumSubdevices())
+		return subdevices[sub_fct - 1];
+
+	return nullptr;
+}
 
 // queued devices (PCI device registering requested before the PCI framework was initialized)
 static const Bitu max_rqueued_devices=16;
 static Bitu num_rqueued_devices=0;
 static PCI_Device* rqueued_devices[max_rqueued_devices];
 
-
-#include "pci_devices.h"
-
-class PCI final : public Module_base{
+class PCI final : public Module_base {
 private:
-	bool initialized;
+	bool initialized = false;
 
 protected:
 	IO_WriteHandleObject PCI_WriteHandler[5];
@@ -410,9 +416,9 @@ public:
 			pci_devices_installed=last_active_device+1;
 	}
 
-	PCI(Section* configuration):Module_base(configuration) {
-		initialized=false;
-		pci_devices_installed=0;
+	PCI(Section* configuration) : Module_base(configuration), callback_pci{}
+	{
+		pci_devices_installed = 0;
 
 		for (Bitu devct=0;devct<PCI_MAX_PCIDEVICES;devct++)
 			pci_devices[devct]=NULL;
@@ -431,7 +437,6 @@ public:
 		pci_devices_installed=0;
 		num_rqueued_devices=0;
 	}
-
 };
 
 static PCI* pci_interface=NULL;
@@ -449,10 +454,10 @@ bool PCI_IsInitialized() {
 	return false;
 }
 
-
-void PCI_ShutDown(Section* sec){
+void PCI_ShutDown([[maybe_unused]] Section* sec)
+{
 	delete pci_interface;
-	pci_interface=NULL;
+	pci_interface = nullptr;
 }
 
 void PCI_Init(Section* sec)
