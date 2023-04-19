@@ -1908,6 +1908,12 @@ dosurface:
 		sdl.frame.update = update_frame_surface;
 		sdl.frame.present = present_frame_noop; // surface presents during the update
 
+		// There's nothing fancy applied to the pixels in surface mode,
+		// so let the VGA drawing code duplicate low-resolution 200
+		// lines (plus, if someone actually needs surface thent their
+		// system needs as much performance as they can get).
+		VGA_SetVga200LineHandling(Vga200LineHandling::Duplicate);
+
 		sdl.desktop.type = SCREEN_SURFACE;
 		break; // SCREEN_SURFACE
 
@@ -2002,6 +2008,10 @@ dosurface:
 
 		sdl.frame.update = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
+
+		// Texture-mode only linearly scales, so let the VGA
+		// side duplicate low-resolution 200 lines.
+		VGA_SetVga200LineHandling(Vga200LineHandling::Duplicate);
 
 		sdl.desktop.type = SCREEN_TEXTURE;
 		break; // SCREEN_TEXTURE
@@ -2298,6 +2308,19 @@ dosurface:
 		}
 		// Both update mechanisms use the same presentation call
 		sdl.frame.present = present_frame_gl;
+
+		// If we're using a simple scaler, let the VGA side duplicate
+		// low-resolution 200 lines because there's nothing uniquely
+		// applied per-line.
+		if (is_shader_flexible()) {
+			VGA_SetVga200LineHandling(Vga200LineHandling::Duplicate);
+		}
+		// If we're using any other shaders, then we want to uniquely
+		// shade each double-scanned VGA line, so ask the VGA side to
+		// draw them.
+		else {
+			VGA_SetVga200LineHandling(Vga200LineHandling::Draw);
+		}
 
 		sdl.desktop.type = SCREEN_OPENGL;
 		break; // SCREEN_OPENGL
