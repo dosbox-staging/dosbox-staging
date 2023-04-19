@@ -579,7 +579,7 @@ static void init_all_palettes(const cga_colors_t &cga_colors)
 	// clang-format on
 }
 
-std::vector<VideoModeBlock>::const_iterator CurMode = std::prev(ModeList_VGA.end());
+video_mode_block_iterator_t CurMode = std::prev(ModeList_VGA.end());
 
 static bool SetCurMode(const std::vector<VideoModeBlock> &modeblock, uint16_t mode)
 {
