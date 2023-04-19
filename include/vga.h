@@ -594,6 +594,7 @@ void VGA_LogInitialization(const char *adapter_name,
                            const size_t num_modes);
 
 void VGA_SetVga200LineHandling(const Vga200LineHandling vga_200_line_handling);
+bool VGA_IsDrawingDoubleScanLinesIn200LineMode();
 
 extern VGA_Type vga;
 
