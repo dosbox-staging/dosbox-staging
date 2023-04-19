@@ -1248,6 +1248,17 @@ void VGA_ActivateHardwareCursor(void) {
 	}
 }
 
+// Simple helper to check for SVGA+ resolutions
+static bool is_high_resolution(const uint32_t width, const uint32_t height)
+{
+	return width >= 640 && height >= 480;
+}
+
+static bool is_high_resolution(const video_mode_block_iterator_t mode_block)
+{
+	return is_high_resolution(mode_block->swidth, mode_block->sheight);
+}
+
 static void maybe_aspect_correct_tall_modes(double &current_ratio)
 {
 	// If we're in a mode that's wider than it is tall, then do nothing
@@ -1294,12 +1305,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case MCH_CGA:
 	case MCH_PCJR:
 	case MCH_TANDY:
-	case MCH_VGA:
 		vga.draw.mode = DRAWLINE;
 		break;
 	case MCH_EGA:
 		// Note: The Paradise SVGA uses the same panning mechanism as EGA
 		vga.draw.mode = EGALINE;
+		break;
+	case MCH_VGA:
+		vga.draw.mode = is_high_resolution(CurMode) ? PART : DRAWLINE;
 		break;
 	default:
 		vga.draw.mode = PART;
@@ -1913,10 +1926,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	vga.changes.frame = 0;
 	vga.changes.writeMask = 1;
 #endif
-	/*
-	   Cheap hack to just make all > 640x480 modes have square pixels
-	*/
-	if ( width >= 640 && height >= 480 ) {
+	// Cheap hack to make all > 640x480 modes have square pixels
+	if (is_high_resolution(width, height)) {
 		aspect_ratio = 1.0;
 	}
 //	LOG_MSG("ht %d vt %d ratio %f", htotal, vtotal, aspect_ratio );
