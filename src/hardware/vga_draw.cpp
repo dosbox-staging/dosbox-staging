@@ -38,8 +38,6 @@
 //#define C_DEBUG 1
 //#define LOG(X,Y) LOG_MSG
 
-#define VGA_PARTS 4
-
 typedef uint8_t * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
@@ -1572,7 +1570,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 	}
 
-	vga.draw.parts_total=VGA_PARTS;
 	/*
       6  Horizontal Sync Polarity. Negative if set
       7  Vertical Sync Polarity. Negative if set
