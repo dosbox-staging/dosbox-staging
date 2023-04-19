@@ -191,6 +191,7 @@ struct VGA_Draw {
 		double vdend = 0, vtotal = 0;
 		double hdend = 0, htotal = 0;
 		double parts = 0;
+		double per_line_ms = 0;
 	} delay = {};
 	Bitu bpp = 0;
 	double host_refresh_hz = REFRESH_RATE_HOST_DEFAULT;
