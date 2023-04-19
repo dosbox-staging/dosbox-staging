@@ -777,20 +777,12 @@ static void VGA_ProcessSplit() {
 	vga.draw.address_line=0;
 }
 
-static uint16_t from_rgb32_to_565(const uint32_t rgb32)
+static uint16_t from_rgb_888_to_565(const uint32_t rgb888)
 {
-	// Extract the red, green, and blue components from the RGB32 value
-	const auto r8 = static_cast<uint8_t>((rgb32 >> 16) & 0xFF);
-	const auto g8 = static_cast<uint8_t>((rgb32 >> 8) & 0xFF);
-	const auto b8 = static_cast<uint8_t>(rgb32 & 0xFF);
+	const auto rgb565 = ((rgb888 & 0xf80000) >> 8) +
+	                    ((rgb888 & 0xfc00) >> 5) + ((rgb888 & 0xf8) >> 3);
 
-	// Scale the 8-bit components down to RGB565
-	const auto r5 = static_cast<uint16_t>((r8 * 0x1F) / 0xFF);
-	const auto g6 = static_cast<uint16_t>((g8 * 0x3F) / 0xFF);
-	const auto b5 = static_cast<uint16_t>((b8 * 0x1F) / 0xFF);
-
-	// Combine the components into a 16-bit RGB565 value
-	return static_cast<uint16_t>((r5 << 11) | (g6 << 5) | b5);
+	return check_cast<uint16_t>(rgb565);
 }
 
 static uint8_t bg_color_index = 0; // screen-off black index
@@ -851,7 +843,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			          templine_buffer.end(),
 			          bg_color_index);
 		} else if (vga.draw.bpp == 16) {
-			const auto background_color = from_rgb32_to_565(
+			const auto background_color = from_rgb_888_to_565(
 			        vga.dac.palette_map[bg_color_index]);
 			const auto line_length = templine_buffer.size() / sizeof(uint16_t);
 			size_t i = 0;
