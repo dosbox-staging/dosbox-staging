@@ -170,11 +170,10 @@ public:
 protected:
 	virtual bool ValidateValue(const Value& in);
 
-	Value value;
-	std::vector<Value> valid_values;
-	Value default_value;
-	const Changeable::Value change;
-
+	Value value                                            = {};
+	std::vector<Value> valid_values                        = {};
+	Value default_value                                    = {};
+	const Changeable::Value change                         = {};
 	typedef std::vector<Value>::const_iterator const_iter;
 };
 
