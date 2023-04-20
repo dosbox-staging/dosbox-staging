@@ -953,7 +953,7 @@ CODEPAGE 1118 # Lithuanian, LST 1283 encoding
 0xf4 0x201e        #DOUBLE LOW-9 QUOTATION MARK
 0xf5 0x201c        #LEFT DOUBLE QUOTATION MARK
 0xfa 0x02d9        #DOT ABOVE
-EXTENDS CODEPAGE 8437
+EXTENDS CODEPAGE 437
 
 CODEPAGE 1119 # Lithuanian and Russian, Cyrillic, LST 1284 encoding
 # reference: https://en.wikipedia.org/wiki/Code_page_866
