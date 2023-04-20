@@ -374,8 +374,14 @@ static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu /*line*/)
 		}
 
 	} else {
-		for (uint16_t i = 0; i < vga.draw.line_length; ++i) {
-			write_unaligned_uint32_at(TempLine, i, palette_map[ret[i]]);
+		constexpr uint8_t bytes_per_pixel = sizeof(palette_map[0]);
+
+		const uint32_t pixels_per_line = vga.draw.line_length / bytes_per_pixel;
+
+		auto line_addr = TempLine;
+		for (uint32_t i = 0; i < pixels_per_line; ++i) {
+			memcpy(line_addr, palette_map + ret[i], bytes_per_pixel);
+			line_addr += bytes_per_pixel;
 		}
 	}
 	return TempLine;
