@@ -4508,7 +4508,7 @@ void config_add_sdl() {
 
 	Pbool = sdl_sec->Add_bool("vsync", on_start, true);
 	Pbool->Set_help("Synchronize with display refresh rate if supported to eliminate flickering\n"
-	                "and tearing (enabled by default).\n");
+	                "and tearing (enabled by default).");
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 7000);
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
