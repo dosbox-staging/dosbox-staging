@@ -1741,6 +1741,33 @@ static void check_kmsdrm_setting()
 	exit(1);
 }
 
+// Inform the VGA side if it should draw every double-scanned line or if we can
+// duplicate them downstream. We /always/ draw the lines when they make a visual
+// difference (such as in blurry modes or when using non-sharp shaders).
+//
+// However, if drawing the lines makes zero visual difference then we might as
+// well avoid the four-fold processing hit to provide systems like the Raspberry
+// Pi 4 a big performance boost. In the future this won't be a big deal and we
+// can always draw the lines (and simplify the code).
+//
+static void update_vga_200_line_handling(const SCREEN_TYPES screen_type,
+                                         const SCALING_MODE scaling_mode)
+{
+	auto line_handling_type = Vga200LineHandling::Duplicate;
+#if C_OPENGL
+	if (screen_type == SCREEN_OPENGL &&
+	    get_glshader_value() != "interpolation/sharp" &&
+	    get_glshader_value() != "default") {
+		line_handling_type = Vga200LineHandling::Draw;
+	} else
+#endif
+	if (screen_type == SCREEN_TEXTURE &&
+	    scaling_mode == SCALING_MODE::NONE) {
+		line_handling_type = Vga200LineHandling::Draw;
+	}
+	VGA_SetVga200LineHandling(line_handling_type);
+}
+
 // Some video modes are effectively doubled in resolution but only have half the
 // unique pixel resolution.
 static bool is_draw_size_doubled()
@@ -1908,12 +1935,6 @@ dosurface:
 		sdl.frame.update = update_frame_surface;
 		sdl.frame.present = present_frame_noop; // surface presents during the update
 
-		// There's nothing fancy applied to the pixels in surface mode,
-		// so let the VGA drawing code duplicate low-resolution 200
-		// lines (plus, if someone actually needs surface thent their
-		// system needs as much performance as they can get).
-		VGA_SetVga200LineHandling(Vga200LineHandling::Duplicate);
-
 		sdl.desktop.type = SCREEN_SURFACE;
 		break; // SCREEN_SURFACE
 
@@ -2008,10 +2029,6 @@ dosurface:
 
 		sdl.frame.update = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
-
-		// Texture-mode only linearly scales, so let the VGA
-		// side duplicate low-resolution 200 lines.
-		VGA_SetVga200LineHandling(Vga200LineHandling::Duplicate);
 
 		sdl.desktop.type = SCREEN_TEXTURE;
 		break; // SCREEN_TEXTURE
@@ -2308,20 +2325,6 @@ dosurface:
 		}
 		// Both update mechanisms use the same presentation call
 		sdl.frame.present = present_frame_gl;
-
-		// If we're using a simple scaler, let the VGA side duplicate
-		// low-resolution 200 lines because there's nothing uniquely
-		// applied per-line.
-		if (is_shader_flexible()) {
-			VGA_SetVga200LineHandling(Vga200LineHandling::Duplicate);
-		}
-		// If we're using any other shaders, then we want to uniquely
-		// shade each double-scanned VGA line, so ask the VGA side to
-		// draw them.
-		else {
-			VGA_SetVga200LineHandling(Vga200LineHandling::Draw);
-		}
-
 		sdl.desktop.type = SCREEN_OPENGL;
 		break; // SCREEN_OPENGL
 	}
@@ -2330,6 +2333,7 @@ dosurface:
 	// Ensure mouse emulation knows the current parameters
 	NewMouseScreenParams();
 	update_vsync_state();
+	update_vga_200_line_handling(sdl.desktop.type, sdl.scaling_mode);
 
 	if (sdl.draw.has_changed)
 		log_display_properties(sdl.draw.width,
