@@ -157,7 +157,7 @@ enum PixelsPerChar : int8_t {
 	Nine  = 9,
 };
 
-enum class Vga200LineHandling : int8_t { Duplicate, Draw };
+enum class Vga200LineHandling : int8_t { SingleScan, DoubleScan };
 
 struct VGA_Draw {
 	bool resizing = false;
@@ -598,7 +598,7 @@ void VGA_LogInitialization(const char *adapter_name,
                            const size_t num_modes);
 
 void VGA_SetVga200LineHandling(const Vga200LineHandling vga_200_line_handling);
-bool VGA_IsDrawingDoubleScanLinesIn200LineMode();
+bool VGA_IsDoubleScanning200LineModes();
 
 extern VGA_Type vga;
 
