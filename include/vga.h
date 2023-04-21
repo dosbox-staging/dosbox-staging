@@ -363,7 +363,11 @@ union ClockingModeRegister {
 struct VGA_Seq {
 	uint8_t index = 0;
 	uint8_t reset = 0;
+
 	ClockingModeRegister clocking_mode = {};
+	// Let the user force the clocking mode's 8/9-dot-mode bit high
+	bool wants_vga_8dot_font = false;
+
 	uint8_t map_mask = 0;
 	uint8_t character_map_select = 0;
 	uint8_t memory_mode = 0;

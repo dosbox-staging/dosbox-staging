@@ -111,14 +111,15 @@ void INT10_ReloadFont(void) {
 		INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),false,256,0,map,8);
 		break;
 	case 14:
-		if (IS_VGA_ARCH && CurMode->mode == 7) {
+		if (IS_VGA_ARCH && CurMode->mode == 7 &&
+		    !vga.seq.clocking_mode.is_eight_dot_mode) {
 			map = 0x80;
 		}
 		INT10_LoadFont(RealToPhysical(int10.rom.font_14), false, 256, 0, map, 14);
 		break;
 	case 16:
 	default:
-		if (IS_VGA_ARCH) {
+		if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
 			map = 0x80;
 		}
 		INT10_LoadFont(RealToPhysical(int10.rom.font_16), false, 256, 0, map, 16);
