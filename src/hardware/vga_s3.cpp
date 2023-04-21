@@ -844,17 +844,19 @@ struct PCI_VGADevice : public PCI_Device {
 
 	PCI_VGADevice():PCI_Device(vendor,device) { }
 
-	Bits ParseReadRegister(uint8_t regnum)
+	Bits ParseReadRegister(uint8_t regnum) override
 	{
 		return regnum;
 	}
 
-	bool OverrideReadRegister(uint8_t regnum, uint8_t* rval, uint8_t* rval_mask)
+	bool OverrideReadRegister([[maybe_unused]] uint8_t regnum,
+	                          [[maybe_unused]] uint8_t* rval,
+	                          [[maybe_unused]] uint8_t* rval_mask) override
 	{
 		return false;
 	}
 
-	Bits ParseWriteRegister(uint8_t regnum, uint8_t value)
+	Bits ParseWriteRegister(uint8_t regnum, uint8_t value) override
 	{
 		if ((regnum>=0x18) && (regnum<0x28)) return -1;	// base addresses are read-only
 		if ((regnum>=0x30) && (regnum<0x34)) return -1;	// expansion rom addresses are read-only
@@ -882,7 +884,7 @@ struct PCI_VGADevice : public PCI_Device {
 		return value;
 	}
 
-	bool InitializeRegisters(uint8_t registers[256])
+	bool InitializeRegisters(uint8_t registers[256]) override
 	{
 		// init (S3 graphics card)
 		//registers[0x08] = 0x44;	// revision ID (s3 trio64v+)
