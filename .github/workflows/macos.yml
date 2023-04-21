@@ -48,7 +48,7 @@ jobs:
             needs_deps: true
             build_flags: -Dexperimental_voodoo_support=true
             brew_path: /usr/local/homebrew
-            max_warnings: 45
+            max_warnings: 20
 
           - name: GCC, +voodoo
             host: macos-11
@@ -57,7 +57,7 @@ jobs:
             packages: gcc@12
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Dexperimental_voodoo_support=true --native-file=.github/meson/native-gcc-12.ini
             brew_path: /usr/local/homebrew
-            max_warnings: 74
+            max_warnings: 10
 
     steps:
       - name: Checkout repository
