@@ -27,6 +27,7 @@
 #include <cstdio>
 #include <deque>
 #include <list>
+#include <map>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -94,6 +95,7 @@ public:
 	Value(const char* const in) : _string(in), type(V_STRING) {}
 
 	bool operator==(const Value& other) const;
+	bool operator<(const Value& other) const;
 
 	operator bool() const;
 	operator Hex() const;
@@ -127,6 +129,9 @@ public:
 
 	void Set_values(const char* const* in);
 	void Set_values(const std::vector<std::string>& in);
+	void SetDeprecatedWithAlternateValue(const char* deprecated_value,
+	                                     const char* alternate_value);
+
 	void Set_help(const std::string& str);
 
 	const char* GetHelp() const;
@@ -149,6 +154,7 @@ public:
 	}
 
 	virtual bool IsValidValue(const Value& in);
+	virtual bool IsValueDeprecated(const Value& value) const;
 
 	Changeable::Value GetChange() const
 	{
@@ -161,6 +167,8 @@ public:
 	}
 
 	virtual const std::vector<Value>& GetValues() const;
+	std::vector<Value> GetDeprecatedValues() const;
+	const Value& GetAlternateForDeprecatedValue(const Value& value) const;
 
 	Value::Etype Get_type()
 	{
@@ -172,6 +180,7 @@ protected:
 
 	Value value                                            = {};
 	std::vector<Value> valid_values                        = {};
+	std::map<Value, Value> deprecated_and_alternate_values = {};
 	Value default_value                                    = {};
 	const Changeable::Value change                         = {};
 	typedef std::vector<Value>::const_iterator const_iter;

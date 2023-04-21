@@ -99,6 +99,12 @@ bool Value::operator==(const Value& other) const
 	return false;
 }
 
+bool Value::operator<(const Value& other) const
+{
+	return std::tie(_hex, _bool, _int, _string, _double) <
+	       std::tie(other._hex, other._bool, other._int, other._string, other._double);
+}
+
 bool Value::SetValue(const std::string& in, const Etype _type)
 {
 	assert(type == V_NONE || type == _type);
@@ -243,9 +249,26 @@ bool Property::IsValidValue(const Value& in)
 	return false;
 }
 
+bool Property::IsValueDeprecated(const Value& val) const
+{
+	const auto is_deprecated = contains(deprecated_and_alternate_values, val);
+	if (is_deprecated) {
+		LOG_WARNING("CONFIG: '%s = %s' is deprecated, "
+		            "falling back to the alternate: '%s = %s'",
+		            propname.c_str(),
+		            val.ToString().c_str(),
+		            propname.c_str(),
+		            GetAlternateForDeprecatedValue(val).ToString().c_str());
+	}
+	return is_deprecated;
+}
+
 bool Property::ValidateValue(const Value& in)
 {
-	if (IsValidValue(in)) {
+	if (IsValueDeprecated(in)) {
+		value = GetAlternateForDeprecatedValue(in);
+		return true;
+	} else if (IsValidValue(in)) {
 		value = in;
 		return true;
 	} else {
@@ -278,7 +301,10 @@ const char* Property::GetHelpUtf8() const
 bool Prop_int::ValidateValue(const Value& in)
 {
 	if (IsRestrictedValue()) {
-		if (IsValidValue(in)) {
+		if (IsValueDeprecated(in)) {
+			value = GetAlternateForDeprecatedValue(in);
+			return true;
+		} else if (IsValidValue(in)) {
 			value = in;
 			return true;
 		} else {
@@ -614,6 +640,23 @@ const std::vector<Value>& Property::GetValues() const
 	return valid_values;
 }
 
+std::vector<Value> Property::GetDeprecatedValues() const
+{
+	std::vector<Value> values = {};
+	std::transform(deprecated_and_alternate_values.begin(),
+	               deprecated_and_alternate_values.end(),
+	               std::back_inserter(values),
+	               [](const auto& kv) { return kv.first; });
+	return values;
+}
+
+const Value& Property::GetAlternateForDeprecatedValue(const Value& val) const
+{
+	const auto it = deprecated_and_alternate_values.find(val);
+	return (it != deprecated_and_alternate_values.end()) ? it->second
+	                                                     : default_value;
+}
+
 const std::vector<Value>& PropMultiVal::GetValues() const
 {
 	Property* p = section->Get_prop(0);
@@ -643,6 +686,14 @@ void Property::Set_values(const char* const* in)
 		valid_values.push_back(val);
 		i++;
 	}
+}
+
+void Property::SetDeprecatedWithAlternateValue(const char* deprecated_value,
+                                               const char* alternate_value)
+{
+	assert(deprecated_value);
+	assert(alternate_value);
+	deprecated_and_alternate_values[deprecated_value] = alternate_value;
 }
 
 void Property::Set_values(const std::vector<std::string>& in)
@@ -970,13 +1021,15 @@ bool Config::PrintConfig(const std::string& filename) const
 				        p->propname.c_str(),
 				        help.c_str());
 
-				std::vector<Value> values = p->GetValues();
-
-				if (!values.empty()) {
+				auto print_values = [&](const char* values_msg_key,
+				                        const std::vector<Value>& values) {
+					if (values.empty()) {
+						return;
+					}
 					fprintf(outfile,
 					        "%s%s:",
 					        prefix,
-					        MSG_GetRaw("CONFIG_VALID_VALUES"));
+					        MSG_GetRaw(values_msg_key));
 
 					std::vector<Value>::const_iterator it =
 					        values.begin();
@@ -998,7 +1051,9 @@ bool Config::PrintConfig(const std::string& filename) const
 						++it;
 					}
 					fprintf(outfile, ".");
-				}
+				};
+				print_values("CONFIG_VALID_VALUES", p->GetValues());
+				print_values("CONFIG_DEPRECATED_VALUES", p->GetDeprecatedValues());
 				fprintf(outfile, "\n");
 			}
 		} else {
