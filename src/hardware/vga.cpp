@@ -230,10 +230,10 @@ double VGA_GetPreferredRate()
 // Are we using a VGA card, in a 200-line mode, and asked to draw the
 // double-scanned lines? (This is a helper function to avoid repeating this
 // logic in the VGA drawing and CRTC areas).
-bool VGA_IsDrawingDoubleScanLinesIn200LineMode()
+bool VGA_IsDoubleScanning200LineModes()
 {
 	return IS_VGA_ARCH &&
-	       vga.draw.vga_200_line_handling == Vga200LineHandling::Draw &&
+	       vga.draw.vga_200_line_handling == Vga200LineHandling::DoubleScan &&
 	       (vga.mode == M_EGA || vga.mode == M_VGA);
 
 	// TODO: Non-composite CGA modes should be included here too, as VGA

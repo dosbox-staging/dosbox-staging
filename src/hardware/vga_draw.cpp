@@ -1433,7 +1433,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			const auto is_scan_doubled = bit::is(vga.crtc.maximum_scan_line,
 			                                     bit::literals::b7);
 
-			if (VGA_IsDrawingDoubleScanLinesIn200LineMode()) {
+			if (VGA_IsDoubleScanning200LineModes()) {
 				// Set the low resolution modes to have as many
 				// lines as are scanned - Quite a few demos
 				// change the max_scanline register at display
@@ -1909,7 +1909,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 	vga.draw.vblank_skip = vblank_skip;
 
-	if (!VGA_IsDrawingDoubleScanLinesIn200LineMode()) {
+	if (!VGA_IsDoubleScanning200LineModes()) {
 		// Only check for extra double height in vga modes (line
 		// multiplying by address_line_total)
 

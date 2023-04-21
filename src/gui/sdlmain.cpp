@@ -1741,29 +1741,30 @@ static void check_kmsdrm_setting()
 	exit(1);
 }
 
-// Inform the VGA side if it should draw every double-scanned line or if we can
-// duplicate them downstream. We /always/ draw the lines when they make a visual
-// difference (such as in blurry modes or when using non-sharp shaders).
+// Inform the VGA side if it should draw double-scanned lines or not (ie:
+// single-scan) at rendering time. We only allow single-scanning for output
+// modes that treat pixels as sharp little rectangles because they produce
+// identical visual results in both scenarios.
 //
-// However, if drawing the lines makes zero visual difference then we might as
-// well avoid the four-fold processing hit to provide systems like the Raspberry
-// Pi 4 a big performance boost. In the future this won't be a big deal and we
-// can always draw the lines (and simplify the code).
+// If the visual results are the same, can we simplify this by double-scanning
+// all the time? In the future, yes! -- but for now, single scanning consumes
+// 1/4th the bandwidth, which retains meaningful performance on
+// bandwidth-limited single board computers (SBCs) like the Raspberry Pi 4.
 //
 static void update_vga_200_line_handling(const SCREEN_TYPES screen_type,
                                          const SCALING_MODE scaling_mode)
 {
-	auto line_handling_type = Vga200LineHandling::Duplicate;
+	auto line_handling_type = Vga200LineHandling::SingleScan;
 #if C_OPENGL
 	if (screen_type == SCREEN_OPENGL &&
 	    get_glshader_value() != "interpolation/sharp" &&
 	    get_glshader_value() != "default") {
-		line_handling_type = Vga200LineHandling::Draw;
+		line_handling_type = Vga200LineHandling::DoubleScan;
 	} else
 #endif
 	if (screen_type == SCREEN_TEXTURE &&
 	    scaling_mode == SCALING_MODE::NONE) {
-		line_handling_type = Vga200LineHandling::Draw;
+		line_handling_type = Vga200LineHandling::DoubleScan;
 	}
 	VGA_SetVga200LineHandling(line_handling_type);
 }
