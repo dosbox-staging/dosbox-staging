@@ -376,10 +376,6 @@ static void DOSBOX_RealInit(Section * sec) {
 		svgaCard = SVGA_TsengET3K;
 	} else if (mtype == "svga_paradise") {
 		svgaCard = SVGA_ParadisePVGA1A;
-	} else if (mtype == "vgaonly") {
-		svgaCard = SVGA_ParadisePVGA1A;
-		LOG_WARNING("CONFIG: 'machine = vgaonly' is deprecated. Consider using "
-		            "defaults or 'machine = svga_paradise' if basic (S)VGA is critical.");
 	} else {
 		E_Exit("DOSBOX:Unknown machine type %s", mtype.c_str());
 	}
@@ -465,6 +461,7 @@ void DOSBOX_Init()
 	        "       feature.");
 	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
 	pstring->Set_values(machines);
+	pstring->SetDeprecatedWithAlternateValue("vgaonly", "svga_paradise");
 	pstring->Set_help(
 	        "The type of machine DOSBox tries to emulate ('svga_s3' by default).");
 
@@ -1232,6 +1229,7 @@ void DOSBOX_Init()
 	        "# This is the configuration file for " CANONICAL_PROJECT_NAME " (%s).\n"
 	        "# Lines starting with a '#' character are comments.\n");
 	MSG_Add("CONFIG_VALID_VALUES", "Possible values");
+	MSG_Add("CONFIG_DEPRECATED_VALUES", "Deprecated values");
 
 	// Initialize the uptime counter when launching the first shell. This
 	// ensures that slow-performing configurable tasks (like loading MIDI
