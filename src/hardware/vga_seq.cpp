@@ -36,11 +36,19 @@ void write_p3c4(io_port_t, io_val_t value, io_width_t)
 
 void write_p3c5(io_port_t, io_val_t value, io_width_t)
 {
-	const auto val = check_cast<uint8_t>(value);
+	auto val = check_cast<uint8_t>(value);
 	//	LOG_MSG("SEQ WRITE reg %X val %X",seq(index),val);
 	switch (seq(index)) {
 	case 0: /* Reset */ seq(reset) = val; break;
 	case 1: /* Clocking Mode */
+
+		// If the user is forcing the clocking mode's 8/9-dot-mode bit high,
+		// then adjust the incoming value before processing it.
+		if (vga.seq.wants_vga_8dot_font && IS_VGA_ARCH) {
+			auto reg = ClockingModeRegister{val};
+			reg.is_eight_dot_mode = true;
+			val = reg.data;
+		}
 		if (val != seq(clocking_mode.data)) {
 			// don't resize if only the screen off bit was changed
 			if ((val & (~0x20)) != (seq(clocking_mode.data) & (~0x20))) {
@@ -146,6 +154,13 @@ void VGA_SetupSEQ(void) {
 		IO_RegisterWriteHandler(0x3c4, write_p3c4, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3c5, write_p3c5, io_width_t::byte);
 		if (IS_VGA_ARCH) {
+
+			// Let the user force the clocking mode's 8/9-dot-mode bit high
+			const auto conf    = control->GetSection("dosbox");
+			const auto section = static_cast<Section_prop*>(conf);
+			assert(section);
+			vga.seq.wants_vga_8dot_font = section->Get_bool("vga_8dot_font");
+
 			IO_RegisterReadHandler(0x3c4, read_p3c4, io_width_t::byte);
 			IO_RegisterReadHandler(0x3c5, read_p3c5, io_width_t::byte);
 		}

@@ -540,6 +540,9 @@ void DOSBOX_Init()
 	        "               some games may not use them properly (flickering) or may need\n"
 	        "               more system memory to use them.");
 
+	Pbool = secprop->Add_bool("vga_8dot_font", only_at_start, false);
+	Pbool->Set_help("Use 8-pixel-wide fonts for VGA machine types");
+
 	Pbool = secprop->Add_bool("speed_mods", only_at_start, true);
 	Pbool->Set_help(
 	        "Permit changes known to improve performance (enabled by default).\n"
