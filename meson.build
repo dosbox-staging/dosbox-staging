@@ -535,7 +535,7 @@ if get_option('use_sdl2_image')
     sdl2_image_dep = dependency(
         'SDL2_image',
         version: ['>= 2.0.0', '< 3'],
-        default_options: default_wrap_options,
+        default_options: default_wrap_options + ['test=false'],
         static: ('sdl2_image' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_sdl2_image'),
     )
