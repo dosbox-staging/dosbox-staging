@@ -1741,32 +1741,29 @@ static void check_kmsdrm_setting()
 	exit(1);
 }
 
-// Inform the VGA side if it should draw double-scanned lines or not (ie:
-// single-scan) at rendering time. We only allow single-scanning for output
-// modes that treat pixels as sharp little rectangles because they produce
-// identical visual results in both scenarios.
+// Double-scanning criteria:
 //
-// If the visual results are the same, can we simplify this by double-scanning
-// all the time? In the future, yes! -- but for now, single scanning consumes
-// 1/4th the bandwidth, which retains meaningful performance on
-// bandwidth-limited single board computers (SBCs) like the Raspberry Pi 4.
+//  - If OpenGL is using any shader (regardless of mode)
+//  - If the output mode is bilinear scaled
 //
-static void update_vga_200_line_handling(const SCREEN_TYPES screen_type,
-                                         const SCALING_MODE scaling_mode)
+// Single-scanning is only requested when scaling pixels as flat adjacent
+// rectangles because this not only produces identical output (versus
+// double-scanning) but provides finer integer multiplication steps (for sub-4k
+// screens) and also reduces load on slow systems like the Raspberry Pi.
+//
+static void update_vga_sub_350_line_handling([[maybe_unused]] const SCREEN_TYPES screen_type,
+                                             const SCALING_MODE scaling_mode)
 {
-	auto line_handling_type = Vga200LineHandling::SingleScan;
+	auto line_handling = VgaSub350LineHandling::SingleScan;
 #if C_OPENGL
-	if (screen_type == SCREEN_OPENGL &&
-	    get_glshader_value() != "interpolation/sharp" &&
-	    get_glshader_value() != "default") {
-		line_handling_type = Vga200LineHandling::DoubleScan;
-	} else
-#endif
-	if (screen_type == SCREEN_TEXTURE &&
-	    scaling_mode == SCALING_MODE::NONE) {
-		line_handling_type = Vga200LineHandling::DoubleScan;
+	if (screen_type == SCREEN_OPENGL && get_glshader_value() != "none") {
+		line_handling = VgaSub350LineHandling::DoubleScan;
 	}
-	VGA_SetVga200LineHandling(line_handling_type);
+#endif
+	if (scaling_mode == SCALING_MODE::NONE) {
+		line_handling = VgaSub350LineHandling::DoubleScan;
+	}
+	VGA_SetVgaSub350LineHandling(line_handling);
 }
 
 // Some video modes are effectively doubled in resolution but only have half the
@@ -2334,7 +2331,7 @@ dosurface:
 	// Ensure mouse emulation knows the current parameters
 	NewMouseScreenParams();
 	update_vsync_state();
-	update_vga_200_line_handling(sdl.desktop.type, sdl.scaling_mode);
+	update_vga_sub_350_line_handling(sdl.desktop.type, sdl.scaling_mode);
 
 	if (sdl.draw.has_changed)
 		log_display_properties(sdl.draw.width,

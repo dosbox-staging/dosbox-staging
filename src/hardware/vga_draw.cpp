@@ -1422,7 +1422,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			// When bit 7 is set to 1, 200-scan-line video data is
 			// converted to 400-scan-line output. To do this, the
 			// clock in the row scan counter is divided by 2, which
-			// allows the 200-line modes to be displayed as 400
+			// allows the sub-350 line modes to be displayed as 400
 			// lines on the display (this is called double scanning;
 			// each line is displayed twice). When this bit is set
 			// to 0, the clock to the row scan counter is equal to
@@ -1433,7 +1433,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			const auto is_scan_doubled = bit::is(vga.crtc.maximum_scan_line,
 			                                     bit::literals::b7);
 
-			if (VGA_IsDoubleScanning200LineModes()) {
+			if (VGA_IsDoubleScanningSub350LineModes()) {
 				// Set the low resolution modes to have as many
 				// lines as are scanned - Quite a few demos
 				// change the max_scanline register at display
@@ -1909,7 +1909,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 	vga.draw.vblank_skip = vblank_skip;
 
-	if (!VGA_IsDoubleScanning200LineModes()) {
+	if (!VGA_IsDoubleScanningSub350LineModes()) {
 		// Only check for extra double height in vga modes (line
 		// multiplying by address_line_total)
 

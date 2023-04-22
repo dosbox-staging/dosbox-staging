@@ -516,6 +516,9 @@ void DOSBOX_Init()
 	pstring->Set_help("Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default per\n"
 	                  "video adapter ('auto' by default).");
 
+	pbool = secprop->Add_bool("force_vga_single_scan", when_idle, false);
+	pbool->Set_help("Always single-scan sub-350 line modes for VGA machine types");
+
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
 	pstring->Set_help(
 	        "Customize the emulated video mode's frame rate, in Hz:\n"
