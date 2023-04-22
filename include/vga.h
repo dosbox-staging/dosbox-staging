@@ -157,7 +157,11 @@ enum PixelsPerChar : int8_t {
 	Nine  = 9,
 };
 
-enum class Vga200LineHandling : int8_t { SingleScan, DoubleScan };
+enum class VgaSub350LineHandling : int8_t {
+	DoubleScan,
+	SingleScan,
+	ForceSingleScan,
+};
 
 struct VGA_Draw {
 	bool resizing = false;
@@ -208,7 +212,7 @@ struct VGA_Draw {
 	bool double_scan = false;
 	bool doublewidth = false;
 	bool doubleheight = false;
-	Vga200LineHandling vga_200_line_handling = {};
+	VgaSub350LineHandling vga_sub_350_line_handling = {};
 	uint8_t font[64 * 1024] = {};
 	uint8_t *font_tables[2] = {nullptr, nullptr};
 	Bitu blinking = 0;
@@ -597,8 +601,8 @@ void VGA_LogInitialization(const char *adapter_name,
                            const char *ram_type,
                            const size_t num_modes);
 
-void VGA_SetVga200LineHandling(const Vga200LineHandling vga_200_line_handling);
-bool VGA_IsDoubleScanning200LineModes();
+void VGA_SetVgaSub350LineHandling(const VgaSub350LineHandling vga_sub_350_line_handling);
+bool VGA_IsDoubleScanningSub350LineModes();
 
 extern VGA_Type vga;
 
