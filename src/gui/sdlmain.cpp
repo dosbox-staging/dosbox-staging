@@ -760,27 +760,31 @@ static void log_display_properties(int source_w, int source_h,
 	case FRAME_MODE::UNSET: frame_mode = "Unset frame_mode"; break;
 	}
 
-	// Some DOS FPS rates are double-scanned in hardware, so multiply them
-	// up to avoid confusion (ie: 30 Hz should actually be shown at 60Hz)
 	auto refresh_rate = VGA_GetPreferredRate();
-	const auto double_scanned_str = (refresh_rate <= REFRESH_RATE_DOS_DOUBLED_MAX)
-	                                      ? "double-scanned "
-	                                      : "";
+
+	// In EGA's high-resolution modes such as 640x200, the video card's
+	// effective V.SYNC rate is low (sub-35 Hz), however the monitor itself
+	// ran at 60 Hz V.SYNC draw these pixels twice as tall. We detect this
+	// condition here a log it how the user would have experienced it.
+	//
+	// Ref: https://minuszerodegrees.net/mda_cga_ega/mda_cga_ega.htm#ega12
+	constexpr auto ega_mode_1_and_2_detection_rate_hz = 35;
+	if (refresh_rate < ega_mode_1_and_2_detection_rate_hz) {
+		refresh_rate = 60;
+	}
 
 	// Double check all the char* string variables
 	assert(mode_desc);
 	assert(colours_desc);
-	assert(double_scanned_str);
 	assert(frame_mode);
 
-	LOG_MSG("DISPLAY: %s %dx%d %s (mode %02Xh) at %s%2.5g Hz %s, scaled"
+	LOG_MSG("DISPLAY: %s %dx%d %s (mode %02Xh) at %2.5g Hz %s, scaled"
 	        " to %dx%d with %.4g pixel aspect ratio",
 	        mode_desc,
 	        source_w,
 	        source_h,
 	        colours_desc,
 	        mode_id,
-	        double_scanned_str,
 	        refresh_rate,
 	        frame_mode,
 	        target_w,

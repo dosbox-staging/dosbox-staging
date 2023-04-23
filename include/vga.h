@@ -70,9 +70,7 @@ constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
 
 // Refresh rate constants
 constexpr auto REFRESH_RATE_MIN = 23;
-constexpr auto REFRESH_RATE_DOS_DOUBLED_MAX = 35;
 constexpr auto REFRESH_RATE_HOST_VRR_LFC = 48;
-constexpr auto REFRESH_RATE_HOST_TV_MAX = 50;
 constexpr auto REFRESH_RATE_HOST_DEFAULT = 60;
 constexpr auto REFRESH_RATE_DOS_DEFAULT = 70;
 constexpr auto REFRESH_RATE_HOST_VRR_MIN = 75;
