@@ -19,9 +19,9 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstring>
-#include <vector>
 
 #include "../gui/render_scalers.h"
 #include "../ints/int10.h"
@@ -42,10 +42,16 @@ typedef uint8_t * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
 
-constexpr auto max_pixel_bytes = sizeof(uint32_t);
-constexpr auto max_line_bytes = SCALER_MAXWIDTH * SCALER_MAX_MUL_WIDTH * max_pixel_bytes;
+// Confirm the maximum dimensions accomodate VGA's sub-350 line scan doubling
+constexpr auto max_scan_doubled_width  = 400;
+constexpr auto max_scan_doubled_height = 350 - 1;
+static_assert(SCALER_MAXHEIGHT >= SCALER_MAX_MUL_HEIGHT * max_scan_doubled_height);
+static_assert(SCALER_MAXWIDTH >= SCALER_MAX_MUL_WIDTH * max_scan_doubled_width);
 
-static std::vector<uint8_t> templine_buffer(max_line_bytes);
+constexpr auto max_pixel_bytes = sizeof(uint32_t);
+constexpr auto max_line_bytes  = SCALER_MAXWIDTH * max_pixel_bytes;
+
+static std::array<uint8_t, max_line_bytes> templine_buffer;
 static auto TempLine = templine_buffer.data();
 
 static uint8_t * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {

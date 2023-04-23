@@ -358,7 +358,7 @@ void VGA_Init(Section* sec)
 	set_vga_single_scanning_pref();
 
 	vga.draw.resizing = false;
-	vga.mode=M_ERROR;			//For first init
+	vga.mode          = M_ERROR; // For first init
 	SVGA_Setup_Driver();
 	VGA_SetupMemory(sec);
 	VGA_SetupMisc();
