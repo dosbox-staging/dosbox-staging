@@ -34,7 +34,7 @@ jobs:
         run: |
           cd dosbox-staging
           export DOCS_REV=`git rev-parse --short HEAD`
-          echo $DOCS_REV >DOCS_REV
+          echo $DOCS_REV >../DOCS_REV
 
       - name: Delete existing documentation
         run: |
@@ -56,6 +56,6 @@ jobs:
         run: |
           cd dosbox-staging.github.io
           git add .
-          git commit -m "Deployed $(cat DOCS_REV)"
+          git commit -m "Deployed $(cat ../DOCS_REV)"
           git push
 
