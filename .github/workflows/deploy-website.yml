@@ -8,6 +8,7 @@ on:
         required: true
         default: 'main'
         type: string
+
       destination_prefix:
         description: 'Deploy to this path prefix (leave empty for the current version)'
         type: string
@@ -42,11 +43,7 @@ jobs:
 
       - name: Install mkdocs
         run: |
-          pip install mkdocs-material==9.1.6 \
-                      mkdocs-minify-plugin==0.6.4 \
-                      mkdocs-redirects==1.2.0 \
-                      mkdocs-glightbox==0.3.2 \
-                      mdx-gh-links==0.3
+          pip install -r contrib/documentation/mkdocs-package-requirements.txt
 
       - name: Get current documentation Git hash
         run: |
