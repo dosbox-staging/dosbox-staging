@@ -30,10 +30,10 @@ jobs:
                       mkdocs-glightbox==0.3.1 \
                       mdx-gh-links==0.3
                       
-      - name: Get current doco Git hash
+      - name: Get current documentation Git hash
         run: |
-          cd dosbox-staging
-          export DOCS_REV=`git rev-parse --short HEAD`
+          cd ../dosbox-staging
+          export DOCS_REV=$(git rev-parse --short HEAD)
 
       - name: Delete existing documentation
         run: |
@@ -41,15 +41,15 @@ jobs:
           git rm -rf *
 
       - name: Build documentation
+        run: mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir `pwd`
+
+      - name: Set up Git config
         run: |
-          cd dosbox-staging.github.io
-          mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir `pwd`
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
 
       - name: Commit & publish new release
         run: |
-          cd dosbox-staging.github.io
           git add .
           git commit -m "Deployed $DOCS_REV"
           git push
-
-          
