@@ -43,10 +43,11 @@ jobs:
       - name: Build documentation
         run: |
           cd dosbox-staging.github.io
-          mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir $(pwd)
+          mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir `pwd`
 
       - name: Setup Git config
         run: |
+          cd dosbox-staging.github.io
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
 
@@ -56,3 +57,4 @@ jobs:
           git add .
           git commit -m "Deployed $DOCS_REV"
           git push
+
