@@ -32,7 +32,7 @@ jobs:
                       
       - name: Get current doco Git hash
         run: |
-          cd ../dosbox-staging
+          cd dosbox-staging
           export DOCS_REV=`git rev-parse --short HEAD`
 
       - name: Delete existing documentation
@@ -41,10 +41,13 @@ jobs:
           git rm -rf *
 
       - name: Build documentation
-        run: mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir `pwd`
+        run: |
+          cd dosbox-staging.github.io
+          mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir `pwd`
 
       - name: Commit & publish new release
         run: |
+          cd dosbox-staging.github.io
           git add .
           git commit -m "Deployed $DOCS_REV"
           git push
