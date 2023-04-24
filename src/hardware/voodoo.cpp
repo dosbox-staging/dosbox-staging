@@ -68,10 +68,11 @@
 
 #if C_VOODOO
 
-#include <assert.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 
 #include <SDL.h>
 
@@ -173,14 +174,6 @@ struct rectangle
 	int				min_y;			/* minimum Y, or top coordinate */
 	int				max_y;			/* maximum Y, or bottom coordinate (inclusive) */
 };
-#endif
-
-/* Standard MIN/MAX macros */
-#ifndef MIN
-#define MIN(x,y)			((x) < (y) ? (x) : (y))
-#endif
-#ifndef MAX
-#define MAX(x,y)			((x) > (y) ? (x) : (y))
 #endif
 
 /* Macros for normalizing data into big or little endian formats */
@@ -4805,7 +4798,7 @@ static void fastfill(voodoo_state *v)
 	/* iterate over blocks of extents */
 	for (y = sy; y < ey; y += ARRAY_LEN(extents))
 	{
-		int count = MIN(ey - y, ARRAY_LEN(extents));
+		int count = std::min<int>(ey - y, ARRAY_LEN(extents));
 		void *dest = drawbuf;
 		int startscanline = y;
 		int numscanlines = count;
@@ -5311,8 +5304,8 @@ static void register_w(uint32_t offset, uint32_t data)
 					visarea.max_y = vbp + vvis - 1;
 
 					/* keep within bounds */
-					visarea.max_x = MIN(visarea.max_x, htotal - 1);
-					visarea.max_y = MIN(visarea.max_y, vtotal - 1);
+					visarea.max_x = std::min(visarea.max_x, htotal - 1);
+					visarea.max_y = std::min(visarea.max_y, vtotal - 1);
 					LOG(LOG_VOODOO,LOG_WARN)("Horiz: %d-%d (%d total)  Vert: %d-%d (%d total) -- ", visarea.min_x, visarea.max_x, htotal, visarea.min_y, visarea.max_y, vtotal);
 #endif
 
