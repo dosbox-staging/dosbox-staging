@@ -1317,11 +1317,6 @@ inline UINT32 compute_raster_hash(const raster_info* info)
 #define DITHER_RB(val,dith)	((((val) << 1) - ((val) >> 4) + ((val) >> 7) + (dith)) >> 1)
 #define DITHER_G(val,dith)	((((val) << 2) - ((val) >> 4) + ((val) >> 6) + (dith)) >> 2)
 
-#define DECLARE_DITHER_POINTERS 												\
-	const UINT8 *dither_lookup = NULL;											\
-	const UINT8 *dither4 = NULL;												\
-	const UINT8 *dither = NULL													\
-
 #define COMPUTE_DITHER_POINTERS(FBZMODE, YY)									\
 do																				\
 {																				\
@@ -3056,7 +3051,9 @@ static inline void raster_generic(const voodoo_state* v, UINT32 TMUS, UINT32 TEX
                                   UINT32 TEXMODE1, void* destbase, INT32 y,
                                   const poly_extent* extent, stats_block& stats)
 {
-	DECLARE_DITHER_POINTERS;
+	const uint8_t* dither_lookup = nullptr;
+	const uint8_t* dither4       = nullptr;
+	const uint8_t* dither        = nullptr;
 
 	INT32 scry = y;
 	INT32 startx = extent->startx;
@@ -4774,7 +4771,11 @@ static void fastfill(voodoo_state *v)
 		/* determine the dither pattern */
 		for (y = 0; y < 4; y++)
 		{
-			DECLARE_DITHER_POINTERS;
+			const uint8_t* dither_lookup = nullptr;
+			const uint8_t* dither4       = nullptr;
+
+			[[maybe_unused]] const uint8_t* dither = nullptr;
+
 			COMPUTE_DITHER_POINTERS(v->reg[fbzMode].u, y);
 			for (x = 0; x < 4; x++)
 			{
@@ -5778,7 +5779,11 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 	/* simple case: no pipeline */
 	if (!LFBMODE_ENABLE_PIXEL_PIPELINE(v->reg[lfbMode].u))
 	{
-		DECLARE_DITHER_POINTERS;
+		const uint8_t* dither_lookup = nullptr;
+		const uint8_t* dither4       = nullptr;
+
+		[[maybe_unused]] const uint8_t* dither = nullptr;
+
 		UINT32 bufoffs;
 
 		if (LOG_LFB) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:write raw mode %X (%d,%d) = %08X & %08X\n", LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask);
@@ -5851,7 +5856,9 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 	/* tricky case: run the full pixel pipeline on the pixel */
 	else
 	{
-		DECLARE_DITHER_POINTERS;
+		const uint8_t* dither_lookup = nullptr;
+		const uint8_t* dither4       = nullptr;
+		const uint8_t* dither        = nullptr;
 
 		if (LOG_LFB) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:write pipelined mode %X (%d,%d) = %08X & %08X\n", LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask);
 
