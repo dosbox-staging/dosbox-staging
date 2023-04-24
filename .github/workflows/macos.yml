@@ -57,7 +57,7 @@ jobs:
             packages: gcc@12
             build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Dexperimental_voodoo_support=true --native-file=.github/meson/native-gcc-12.ini
             brew_path: /usr/local/homebrew
-            max_warnings: 10
+            max_warnings: 8
 
     steps:
       - name: Checkout repository
