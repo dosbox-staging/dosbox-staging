@@ -65,6 +65,8 @@
 
 #include "dosbox.h"
 
+#if C_VOODOO
+
 #include <assert.h>
 #include <math.h>
 #include <stdlib.h>
@@ -72,7 +74,6 @@
 
 #include <SDL.h>
 
-#if C_VOODOO
 #include "control.h"
 #include "cross.h"
 #include "mem.h"
@@ -81,6 +82,7 @@
 #include "pic.h"
 #include "render.h"
 #include "setup.h"
+#include "support.h"
 #include "vga.h"
 
 #ifndef DOSBOX_VOODOO_TYPES_H
@@ -212,9 +214,6 @@ struct rectangle
 
 #define profiler_mark_start(x)	do { } while (0)
 #define profiler_mark_end()		do { } while (0)
-
-/* Highly useful macro for compile-time knowledge of an array size */
-#define ARRAY_LENGTH(x)		(sizeof(x) / sizeof(x[0]))
 
 inline INT32 mul_32x32_shift(INT32 a, INT32 b, INT8 shift)
 {
@@ -4746,7 +4745,7 @@ static void fastfill(voodoo_state *v)
 	poly_extent extents[64];
 	UINT16 dithermatrix[16];
 	UINT16 *drawbuf = NULL;
-	int extnum, x, y;
+	int x, y;
 
 	/* if we're not clearing either, take no time */
 	if (!FBZMODE_RGB_BUFFER_MASK(v->reg[fbzMode].u) && !FBZMODE_AUX_BUFFER_MASK(v->reg[fbzMode].u))
@@ -4791,7 +4790,7 @@ static void fastfill(voodoo_state *v)
 	/* fill in a block of extents */
 	extents[0].startx = sx;
 	extents[0].stopx = ex;
-	for (extnum = 1; extnum < ARRAY_LENGTH(extents); extnum++)
+	for (auto extnum = 1u; extnum < ARRAY_LEN(extents); ++extnum)
 		extents[extnum] = extents[0];
 
 #ifdef C_ENABLE_VOODOO_OPENGL
@@ -4802,9 +4801,9 @@ static void fastfill(voodoo_state *v)
 #endif
 
 	/* iterate over blocks of extents */
-	for (y = sy; y < ey; y += ARRAY_LENGTH(extents))
+	for (y = sy; y < ey; y += ARRAY_LEN(extents))
 	{
-		int count = MIN(ey - y, ARRAY_LENGTH(extents));
+		int count = MIN(ey - y, ARRAY_LEN(extents));
 		void *dest = drawbuf;
 		int startscanline = y;
 		int numscanlines = count;
