@@ -5868,6 +5868,11 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 		/* compute dithering */
 		COMPUTE_DITHER_POINTERS(v->reg[fbzMode].u, y);
 
+		int32_t blendr = 0;
+		int32_t blendg = 0;
+		int32_t blendb = 0;
+		int32_t blenda = 0;
+
 		/* loop over up to two pixels */
 		stats_block stats = {};
 		for (pix = 0; mask; pix++)
@@ -5921,7 +5926,6 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 				}
 				*/
 
-				INT32 blendr, blendg, blendb, blenda;
 				rgb_union c_local;
 
 				/* compute c_local */
