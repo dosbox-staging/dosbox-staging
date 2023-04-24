@@ -4876,11 +4876,10 @@ static void soft_reset(voodoo_state *v)
  *  Voodoo register writes
  *
  *************************************/
-static void register_w(UINT32 offset, UINT32 data) {
-	voodoo_reg reg;
+static void register_w(uint32_t offset, uint32_t data)
+{
 	UINT32 regnum  = (offset) & 0xff;
 	UINT32 chips   = (offset>>8) & 0xf;
-	reg.u = data;
 
 	INT64 data64;
 
@@ -5538,7 +5537,6 @@ default_case:
 			if (chips & 8) v->reg[0x300 + regnum].u = data;
 			break;
 	}
-
 }
 
 /*************************************
