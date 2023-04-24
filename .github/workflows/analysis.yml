@@ -108,6 +108,7 @@ jobs:
           -Duse_sdl2_net=false \
           -Duse_slirp=false \
           -Dunit_tests=disabled \
+          -Dexperimental_voodoo_support=true \
           build
 
       - name: Build and run scan-build
