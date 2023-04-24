@@ -3433,7 +3433,6 @@ static inline void raster_generic(const voodoo_state* v, UINT32 TMUS, UINT32 TEX
 	}
 }
 
-
 #ifdef C_ENABLE_VOODOO_OPENGL
 /*-------------------------------------------------
     add_rasterizer - add a rasterizer to our
@@ -3807,8 +3806,9 @@ static void recompute_video_memory(voodoo_state *v)
 	/* remaining buffers are based on the config */
 	switch (memory_config)
 	{
-	case 3:	/* reserved */
-		LOG(LOG_VOODOO,LOG_WARN)("VOODOO.ERROR:Unexpected memory configuration in recompute_video_memory!\n");
+	case 3: /* reserved */
+		LOG(LOG_VOODOO,LOG_WARN)("VOODOO.ERROR:Unexpected memory configuration in recompute_video_memory!");
+		[[fallthrough]];
 
 	case 0:	/* 2 color buffers, 1 aux buffer */
 		v->fbi.rgboffs[2] = (UINT32)(~0);
@@ -6403,6 +6403,7 @@ static UINT32 register_r(UINT32 offset)
 		case fbiAfuncFail:
 		case fbiPixelsOut:
 			update_statistics(v, true);
+			[[fallthrough]];
 		case fbiTrianglesOut:
 			result = v->reg[regnum].u & 0xffffff;
 			break;
