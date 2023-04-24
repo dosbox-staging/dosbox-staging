@@ -732,17 +732,17 @@ union voodoo_reg
 typedef voodoo_reg rgb_union;
 
 /* note that this structure is an even 64 bytes long */
-struct stats_block
-{
-	INT32				pixels_in;				/* pixels in statistic */
-	INT32				pixels_out;				/* pixels out statistic */
-	INT32				chroma_fail;			/* chroma test fail statistic */
-	INT32				zfunc_fail;				/* z function test fail statistic */
-	INT32				afunc_fail;				/* alpha function test fail statistic */
-	//INT32				clip_fail;				/* clipping fail statistic */
-	//INT32				stipple_count;			/* stipple statistic */
-	INT32				filler[64/4 - 5];		/* pad this structure to 64 bytes */
+struct stats_block {
+	int32_t pixels_in;          // pixels in statistic
+	int32_t pixels_out;         // pixels out statistic
+	int32_t chroma_fail;        // chroma test fail statistic
+	int32_t zfunc_fail;         // z function test fail statistic
+	int32_t afunc_fail;         // alpha function test fail statistic
+	// int32_t clip_fail;       // clipping fail statistic
+	// int32_t stipple_count;   // stipple statistic
+	int32_t filler[64 / 4 - 5]; // pad this structure to 64 bytes
 };
+static_assert(sizeof(stats_block) == 64);
 
 struct fifo_state
 {
@@ -3543,7 +3543,7 @@ static raster_info *find_rasterizer(voodoo_state *v, int texcount)
 -------------------------------------------------*/
 static void raster_fastfill(void *destbase, INT32 y, const poly_extent *extent, const UINT16* extra_dither)
 {
-	stats_block stats = { 0 };
+	stats_block stats = {};
 	INT32 startx = extent->startx;
 	INT32 stopx = extent->stopx;
 	int scry, x;
@@ -4225,7 +4225,7 @@ static void triangle_worker_work(triangle_worker& tworker, INT32 worktstart, INT
 	float dxdy_v1v3 = (v3.y == v1.y) ? 0.0f : (v3.x - v1.x) / (v3.y - v1.y);
 	float dxdy_v2v3 = (v3.y == v2.y) ? 0.0f : (v3.x - v2.x) / (v3.y - v2.y);
 
-	stats_block my_stats;
+	stats_block my_stats = {};
 	INT32 from = tworker.totalpix * worktstart / TRIANGLE_WORKERS;
 	INT32 to   = tworker.totalpix * worktend   / TRIANGLE_WORKERS;
 	for (INT32 curscan = tworker.v1y, scanend = tworker.v3y, sumpix = 0, lastsum = 0; curscan != scanend && lastsum < to; lastsum = sumpix, curscan++)
@@ -5843,7 +5843,7 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 		COMPUTE_DITHER_POINTERS(v->reg[fbzMode].u, y);
 
 		/* loop over up to two pixels */
-		stats_block stats = { 0 };
+		stats_block stats = {};
 		for (pix = 0; mask; pix++)
 		{
 			/* make sure we care about this pixel */
