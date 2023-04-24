@@ -6206,7 +6206,7 @@ static INT32 texture_w(UINT32 offset, UINT32 data) {
 		dest = t->ram;
 		tbaseaddr &= t->mask;
 
-		bool changed = false;
+		[[maybe_unused]] bool changed = false;
 		if (dest[BYTE4_XOR_LE(tbaseaddr + 0)] != ((data >> 0) & 0xff)) {
 			dest[BYTE4_XOR_LE(tbaseaddr + 0)] = (data >> 0) & 0xff;
 			changed = true;
@@ -6260,7 +6260,7 @@ static INT32 texture_w(UINT32 offset, UINT32 data) {
 		tbaseaddr &= t->mask;
 		tbaseaddr >>= 1;
 
-		bool changed = false;
+		[[maybe_unused]] bool changed = false;
 		if (dest[BYTE_XOR_LE(tbaseaddr + 0)] != ((data >> 0) & 0xffff)) {
 			dest[BYTE_XOR_LE(tbaseaddr + 0)] = (data >> 0) & 0xffff;
 			changed = true;

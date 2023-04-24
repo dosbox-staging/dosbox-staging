@@ -165,7 +165,7 @@ jobs:
           - name: GCC, +voodoo
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true
-            max_warnings: 10
+            max_warnings: 8
             needs_all_deps: true
             run_tests: true
 
