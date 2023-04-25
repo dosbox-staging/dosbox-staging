@@ -10,8 +10,6 @@ on:
         type: string
       destination_prefix:
         description: 'Deploy to this path prefix (leave empty for the current version)'
-        required: true
-        default: ''
         type: string
 
 jobs:
