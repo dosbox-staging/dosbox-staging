@@ -75,6 +75,11 @@
 #include <cstring>
 
 #include <SDL.h>
+#include <SDL_cpuinfo.h> // for proper SSE defines for MSVC
+
+#if defined(__SSE2__)
+#include <emmintrin.h>
+#endif
 
 #include "control.h"
 #include "cross.h"
@@ -214,18 +219,14 @@ inline INT32 mul_32x32_shift(INT32 a, INT32 b, INT8 shift)
 	return (INT32)(((INT64)a * (INT64)b) >> shift);
 }
 
-#if !defined(__SSE2__) && (_M_IX86_FP == 2 || (defined(_M_AMD64) || defined(_M_X64)))
-#define __SSE2__ 1
-#endif
-#if defined(__SSE2__) && __SSE2__
-#include <emmintrin.h>
-static INT16 sse2_scale_table[256][8];
+#if defined(__SSE2__)
+static int16_t sse2_scale_table[256][8];
 #endif
 
 inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
                                   rgb_t rgb11, UINT8 u, UINT8 v)
 {
-#if defined(__SSE2__) && __SSE2__
+#if defined(__SSE2__)
 	__m128i  scale_u = *(__m128i *)sse2_scale_table[u], scale_v = *(__m128i *)sse2_scale_table[v];
 	return _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packs_epi32(_mm_srli_epi32(_mm_madd_epi16(_mm_max_epi16(
 		_mm_slli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb01), _mm_cvtsi32_si128(rgb00)), _mm_setzero_si128()), scale_u), 15),
@@ -6579,14 +6580,13 @@ static void voodoo_init() {
 			}
 		}
 
-		#if defined(__SSE2__) && __SSE2__
+#if defined(__SSE2__)
 		/* create sse2 scale table for rgba_bilinear_filter */
-		for (INT16 i = 0; i != 256; i++)
-		{
+		for (int16_t i = 0; i != 256; i++) {
 			sse2_scale_table[i][0] = sse2_scale_table[i][2] = sse2_scale_table[i][4] = sse2_scale_table[i][6] = i;
 			sse2_scale_table[i][1] = sse2_scale_table[i][3] = sse2_scale_table[i][5] = sse2_scale_table[i][7] = 256-i;
 		}
-		#endif
+#endif
 	}
 
 	v->tmu_config = 0x11;	// revision 1
