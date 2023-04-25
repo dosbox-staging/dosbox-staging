@@ -2799,7 +2799,8 @@ static const UINT8 voodoo_register_access[0x100] =
 	REG_WF
 };
 
-
+// TODO bring this back when enabling voodoo2 code
+#if 0 
 static const UINT8 voodoo2_register_access[0x100] =
 {
 	/* 0x000 */
@@ -2889,6 +2890,7 @@ static const UINT8 voodoo2_register_access[0x100] =
 	/* 0x380 */
 	REG_WF
 };
+#endif
 
 #ifdef C_ENABLE_VOODOO_DEBUG
 /*************************************
