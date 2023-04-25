@@ -1,6 +1,18 @@
 name: Deploy website
 
-on: workflow_dispatch
+on:
+  workflow_dispatch
+    inputs:
+      source_branch:
+        description: 'Branch to deploy the website from'
+        required: true
+        default: 'master'
+        type: string
+      destination_prefix:
+        description: 'Deploy to this path prefix (leave empty for the current version)'
+        required: true
+        default: ''
+        type: string
 
 jobs:
   build_and_deploy_website:
@@ -9,7 +21,7 @@ jobs:
       - name: Check out MkDocs sources
         uses: actions/checkout@v3
         with:
-          ref: main
+          ref: ${{ inputs.source_branch }}
           submodules: false
           path: dosbox-staging
 
@@ -22,6 +34,13 @@ jobs:
           submodules: false
           path: dosbox-staging.github.io
 
+      - name: Set up variables
+          if [[ -z ${{ inputs.destination_prefix }} ]]; then
+            echo "dest_path_prefix=." >> "$GITHUB_ENV"
+          else
+            echo "dest_path_prefix=preview/${{ inputs.destination_prefix }}" >> "$GITHUB_ENV"
+          fi
+
       - name: Install mkdocs
         run: |
           pip install mkdocs-material==9.0.2 \
@@ -29,22 +48,27 @@ jobs:
                       mkdocs-redirects==1.2.0 --use-pep517 \
                       mkdocs-glightbox==0.3.1 \
                       mdx-gh-links==0.3
-                      
+
       - name: Get current documentation Git hash
         run: |
           cd dosbox-staging
-          export DOCS_REV=`git rev-parse --short HEAD`
-          echo $DOCS_REV >../DOCS_REV
+          REV=$(git rev-parse --short HEAD)
+          echo "source_git_hash=$REV" >> "$GITHUB_ENV"
 
       - name: Delete existing documentation
         run: |
           cd dosbox-staging.github.io
-          git rm -rf *
+          git rm -rf ${{ env.dest_path_prefix }}
+          # Do not delete preview builds under $BASE_URL/preview/...
+          if [[ ${{ env.dest_path_prefix }} == "." ]]; then
+            git checkout HEAD -- preview
+          fi
 
       - name: Build documentation
         run: |
           cd dosbox-staging.github.io
-          mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir `pwd`
+          DEST_PATH=$(pwd)/${{ env.dest_path_prefix }}
+          mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir $DEST_PATH
 
       - name: Setup Git config
         run: |
@@ -56,6 +80,6 @@ jobs:
         run: |
           cd dosbox-staging.github.io
           git add .
-          git commit -m "Deployed current website ($(cat ../DOCS_REV))"
+          git commit -m "Deployed current website (${{ env.source_git_hash }})"
           git push
-
+          
