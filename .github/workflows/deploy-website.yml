@@ -60,7 +60,7 @@ jobs:
           git rm -rf ${{ env.dest_path_prefix }}
           # Do not delete preview builds under $BASE_URL/preview/...
           if [[ "${{ env.dest_path_prefix }}" == "." ]]; then
-            git checkout HEAD -- preview
+            git checkout HEAD -- preview || true
           fi
 
       - name: Build documentation
