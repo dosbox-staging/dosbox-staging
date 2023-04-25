@@ -6,7 +6,7 @@ on:
       source_branch:
         description: 'Branch to deploy the website from'
         required: true
-        default: 'master'
+        default: 'main'
         type: string
       destination_prefix:
         description: 'Deploy to this path prefix (leave empty for the current version)'
