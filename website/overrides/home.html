@@ -1,0 +1,167 @@
+{% extends "main.html" %}
+
+{% block tabs %}
+{{ super() }}
+
+<div class="front-page">
+  <div class="front-page-inner">
+
+    <div class="header">
+      <div class="logo">
+        <a href="https://dosbox-staging.github.io/"><img alt="DOSBox Staging" src="assets/images/dosbox-staging.svg"></a>
+      </div>
+
+      <div class="content">
+        <p class="blurb"><em>DOSBox Staging</em> is a modern continuation of DOSBox with advanced features and current development practices.</p>
+
+        <div class="download">
+          <p class="get-it">Get it now!</p>
+
+          <div class="platforms">
+            <a href="downloads/windows/" class="platform">
+              <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M0 3.449 9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"></path></svg>
+              <p>Windows</p>
+            </a>
+
+            <a href="downloads/macos/" class="platform">
+              <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"></path></svg>
+              <p>macOS</p>
+            </a>
+
+            <a href="downloads/linux/" class="platform">
+              <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 0 0-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.132 1.884 1.071.771-.06 1.592-.536 2.257-1.306.631-.765 1.683-1.084 2.378-1.503.348-.199.629-.469.649-.853.023-.4-.2-.811-.714-1.376v-.097l-.003-.003c-.17-.2-.25-.535-.338-.926-.085-.401-.182-.786-.492-1.046h-.003c-.059-.054-.123-.067-.188-.135a.357.357 0 0 0-.19-.064c.431-1.278.264-2.55-.173-3.694-.533-1.41-1.465-2.638-2.175-3.483-.796-1.005-1.576-1.957-1.56-3.368.026-2.152.236-6.133-3.544-6.139zm.529 3.405h.013c.213 0 .396.062.584.198.19.135.33.332.438.533.105.259.158.459.166.724 0-.02.006-.04.006-.06v.105a.086.086 0 0 1-.004-.021l-.004-.024a1.807 1.807 0 0 1-.15.706.953.953 0 0 1-.213.335.71.71 0 0 0-.088-.042c-.104-.045-.198-.064-.284-.133a1.312 1.312 0 0 0-.22-.066c.05-.06.146-.133.183-.198.053-.128.082-.264.088-.402v-.02a1.21 1.21 0 0 0-.061-.4c-.045-.134-.101-.2-.183-.333-.084-.066-.167-.132-.267-.132h-.016c-.093 0-.176.03-.262.132a.8.8 0 0 0-.205.334 1.18 1.18 0 0 0-.09.4v.019c.002.089.008.179.02.267-.193-.067-.438-.135-.607-.202a1.635 1.635 0 0 1-.018-.2v-.02a1.772 1.772 0 0 1 .15-.768 1.08 1.08 0 0 1 .43-.533.985.985 0 0 1 .594-.2zm-2.962.059h.036c.142 0 .27.048.399.135.146.129.264.288.344.465.09.199.14.4.153.667v.004c.007.134.006.2-.002.266v.08c-.03.007-.056.018-.083.024-.152.055-.274.135-.393.2.012-.09.013-.18.003-.267v-.015c-.012-.133-.04-.2-.082-.333a.613.613 0 0 0-.166-.267.248.248 0 0 0-.183-.064h-.021c-.071.006-.13.04-.186.132a.552.552 0 0 0-.12.27.944.944 0 0 0-.023.33v.015c.012.135.037.2.08.334.046.134.098.2.166.268.01.009.02.018.034.024-.07.057-.117.07-.176.136a.304.304 0 0 1-.131.068 2.62 2.62 0 0 1-.275-.402 1.772 1.772 0 0 1-.155-.667 1.759 1.759 0 0 1 .08-.668 1.43 1.43 0 0 1 .283-.535c.128-.133.26-.2.418-.2zm1.37 1.706c.332 0 .733.065 1.216.399.293.2.523.269 1.052.468h.003c.255.136.405.266.478.399v-.131a.571.571 0 0 1 .016.47c-.123.31-.516.643-1.063.842v.002c-.268.135-.501.333-.775.465-.276.135-.588.292-1.012.267a1.139 1.139 0 0 1-.448-.067 3.566 3.566 0 0 1-.322-.198c-.195-.135-.363-.332-.612-.465v-.005h-.005c-.4-.246-.616-.512-.686-.71-.07-.268-.005-.47.193-.6.224-.135.38-.271.483-.336.104-.074.143-.102.176-.131h.002v-.003c.169-.202.436-.47.839-.601.139-.036.294-.065.466-.065zm2.8 2.142c.358 1.417 1.196 3.475 1.735 4.473.286.534.855 1.659 1.102 3.024.156-.005.33.018.513.064.646-1.671-.546-3.467-1.089-3.966-.22-.2-.232-.335-.123-.335.59.534 1.365 1.572 1.646 2.757.13.535.16 1.104.021 1.67.067.028.135.06.205.067 1.032.534 1.413.938 1.23 1.537v-.043c-.06-.003-.12 0-.18 0h-.016c.151-.467-.182-.825-1.065-1.224-.915-.4-1.646-.336-1.77.465-.008.043-.013.066-.018.135-.068.023-.139.053-.209.064-.43.268-.662.669-.793 1.187-.13.533-.17 1.156-.205 1.869v.003c-.02.334-.17.838-.319 1.35-1.5 1.072-3.58 1.538-5.348.334a2.645 2.645 0 0 0-.402-.533 1.45 1.45 0 0 0-.275-.333c.182 0 .338-.03.465-.067a.615.615 0 0 0 .314-.334c.108-.267 0-.697-.345-1.163-.345-.467-.931-.995-1.788-1.521-.63-.4-.986-.87-1.15-1.396-.165-.534-.143-1.085-.015-1.645.245-1.07.873-2.11 1.274-2.763.107-.065.037.135-.408.974-.396.751-1.14 2.497-.122 3.854a8.123 8.123 0 0 1 .647-2.876c.564-1.278 1.743-3.504 1.836-5.268.048.036.217.135.289.202.218.133.38.333.59.465.21.201.477.335.876.335.039.003.075.006.11.006.412 0 .73-.134.997-.268.29-.134.52-.334.74-.4h.005c.467-.135.835-.402 1.044-.7zm2.185 8.958c.037.6.343 1.245.882 1.377.588.134 1.434-.333 1.791-.765l.211-.01c.315-.007.577.01.847.268l.003.003c.208.199.305.53.391.876.085.4.154.78.409 1.066.486.527.645.906.636 1.14l.003-.007v.018l-.003-.012c-.015.262-.185.396-.498.595-.63.401-1.746.712-2.457 1.57-.618.737-1.37 1.14-2.036 1.191-.664.053-1.237-.2-1.574-.898l-.005-.003c-.21-.4-.12-1.025.056-1.69.176-.668.428-1.344.463-1.897.037-.714.076-1.335.195-1.814.12-.465.308-.797.641-.984l.045-.022zm-10.814.049h.01c.053 0 .105.005.157.014.376.055.706.333 1.023.752l.91 1.664.003.003c.243.533.754 1.064 1.189 1.637.434.598.77 1.131.729 1.57v.006c-.057.744-.48 1.148-1.125 1.294-.645.135-1.52.002-2.395-.464-.968-.536-2.118-.469-2.857-.602-.369-.066-.61-.2-.723-.4-.11-.2-.113-.602.123-1.23v-.004l.002-.003c.117-.334.03-.752-.027-1.118-.055-.401-.083-.71.043-.94.16-.334.396-.4.69-.533.294-.135.64-.202.915-.47h.002v-.002c.256-.268.445-.601.668-.838.19-.201.38-.336.663-.336zm7.159-9.074c-.435.201-.945.535-1.488.535-.542 0-.97-.267-1.28-.466-.154-.134-.28-.268-.373-.335-.164-.134-.144-.333-.074-.333.109.016.129.134.199.2.096.066.215.2.36.333.292.2.68.467 1.167.467.485 0 1.053-.267 1.398-.466.195-.135.445-.334.648-.467.156-.136.149-.267.279-.267.128.016.034.134-.147.332a8.097 8.097 0 0 1-.69.468zm-1.082-1.583V5.64c-.006-.02.013-.042.029-.05.074-.043.18-.027.26.004.063 0 .16.067.15.135-.006.049-.085.066-.135.066-.055 0-.092-.043-.141-.068-.052-.018-.146-.008-.163-.065zm-.551 0c-.02.058-.113.049-.166.066-.047.025-.086.068-.14.068-.05 0-.13-.02-.136-.068-.01-.066.088-.133.15-.133.08-.031.184-.047.259-.005.019.009.036.03.03.05v.02h.003z"></path></svg>
+              <p>Linux</p>
+            </a>
+
+          </div>
+        </div>
+
+        <p class="current-version">
+          <a href="downloads/release-notes/0.80.1/">Latest version &mdash; 0.80.1</a>
+        </p>
+      </div>
+    </div>
+
+    <div class="feature-highlights">
+      <h1>Feature highlights</h1>
+
+      <p>
+        To give you a taste of the advanced features DOSBox Staging offers<br>
+        (click on the items for further info)
+      </p>
+
+      <div class="features-grid">
+        <div class="features">
+          <h2>
+            <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="m8.5 13.5 2.5 3 3.5-4.5 4.5 6H5m16 1V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2Z"></path></svg>
+
+            Graphics</h2>
+          <ul>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.0/#changed-rendering-defaults">Sharp, aspect-ratio correct output by default</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.0/?h=glsl#glsl-shader-support-svn">OpenGL GLSL shader support</a> &amp; <a href="https://dosbox-staging.github.io/downloads/release-notes/0.80.0/#more-bundled-opengl-shaders">a nice collection of bundled shaders</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.76.0/#integer-scaling-pixel-perfect-option-for-opengl-output">Pixel-perfect mode (intelligent integer scaling)</a></li>
+            <li><a href="https://github.com/dosbox-staging/dosbox-staging/pull/1272">Viewport resolution customisation</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.80.0/#reelmagic-support">ReelMagic support</a></li>
+            <li><a href="https://github.com/dosbox-staging/dosbox-staging/pull/1244">Expanded S3 video card emulation (4 or 8 MB of RAM)</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.0/#cga-improvements">Monochrome &amp; composite CGA modes</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#cga-palette-override">Custom CGA palette overrides</a></li>
+          </ul>
+        </div>
+
+        <div class="features">
+          <h2>
+            <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 3v12.5a3.5 3.5 0 0 1-3.5 3.5 3.5 3.5 0 0 1-3.5-3.5 3.5 3.5 0 0 1 3.5-3.5c.54 0 1.05.12 1.5.34V6.47L9 8.6v8.9A3.5 3.5 0 0 1 5.5 21 3.5 3.5 0 0 1 2 17.5 3.5 3.5 0 0 1 5.5 14c.54 0 1.05.12 1.5.34V6l14-3Z"></path></svg>
+            Sound devices</h2>
+          <ul>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.77.0/#finished-mt-32-integration">Integrated Roland MT-32 emulation (ROMs not included)</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.76.0/#built-in-midi-support-via-fluidsynth">Built-in MIDI support via FluidSynth</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#one-opl-mode-to-rule-them-all">Bit-perfect OPL output via NukedOPL</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.76.0/#gravis-ultrasound-emulation-improvements">Enhanced Gravis UltraSound support</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#ripas-pc-speaker-patch">Improved PC speaker emulation</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#parallel-port-dac-models-disney-covox-and-stereo-on-1">Covox Speech Thing, Disney Sound Source, Stereo-on-1 DAC</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.77.0/#ibm-ps1-audio-device-support">IBM PS/1 Audio</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.77.0/#innovation-ssi-2001-audio-device-support">Innovation SSI-2001</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#adlib-gold-surround-module-emulation">AdLib Gold 1000 + surround module</a></li>
+          </ul>
+        </div>
+
+        <div class="features">
+          <h2>
+            <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 1c-5 0-9 4-9 9v7a3 3 0 0 0 3 3h3v-8H5v-2a7 7 0 0 1 7-7 7 7 0 0 1 7 7v2h-4v8h3a3 3 0 0 0 3-3v-7c0-5-4.03-9-9-9Z"></path></svg>
+            Advanced audio features
+          </h2>
+          <ul>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#sound-card-output-filter-emulation">Authentic early DAC artifact and output filter emulations</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#reverb-and-chorus">Per-channel chorus and reverb</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#crossfeed">Crossfeed for headphone listening</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#small-speaker-systems">Room-acoustics simulation for small-speaker audio systems</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#general-mixer-improvements">High-quality resampling via SpeexDSP</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#master-compressor">Master compressor to avoid clipping</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.76.0/#audio-pop-and-click-prevention">Pop and click prevention</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.0/#support-flac-opus-and-mp3-cd-da-tracks">Support for Opus, OGG/Vorbis, MP3, and FLAC audio CD tracks</a></li>
+          </ul>
+        </div>
+
+        <div class="features">
+          <h2>
+            <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M7.97 16 5 19c-.33.3-.77.5-1.25.5A1.75 1.75 0 0 1 2 17.75v-.25l1-7.38A4.524 4.524 0 0 1 7.5 6h9c2.36 0 4.29 1.81 4.5 4.12l1 7.38v.25a1.75 1.75 0 0 1-1.75 1.75c-.48 0-.92-.2-1.25-.5l-2.97-3H7.97M7 8v2H5v1h2v2h1v-2h2v-1H8V8H7m9.5 0a.75.75 0 0 0-.75.75.75.75 0 0 0 .75.75.75.75 0 0 0 .75-.75.75.75 0 0 0-.75-.75m-1.75 1.75a.75.75 0 0 0-.75.75.75.75 0 0 0 .75.75.75.75 0 0 0 .75-.75.75.75 0 0 0-.75-.75m3.5 0a.75.75 0 0 0-.75.75.75.75 0 0 0 .75.75.75.75 0 0 0 .75-.75.75.75 0 0 0-.75-.75M16.5 11.5a.75.75 0 0 0-.75.75.75.75 0 0 0 .75.75.75.75 0 0 0 .75-.75.75.75 0 0 0-.75-.75Z"></path></svg>
+            Input
+          </h2>
+          <ul>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.2/#raw-mouse-input">Raw mouse input</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#mouse-wheel-emulation">Mouse-wheel support</a></li>
+            <li>Immediate mouse mode for fast-paced games</li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#serial-mice-emulation">Extensive serial mice emulation options</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.80.0/#dual-mouse-gaming">Dual-mouse gaming in supported games</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.80.0/#improved-support-for-third-party-int33-windows-mouse-drivers">Support for third-party INT33 Windows mouse drivers</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.1/#add-support-for-binding-more-controller-axes">Modern 10-axis controller support</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#joystick-calibration-hotkeys">Real-time joystick calibration</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.76.0/#revise-default-keyboard-shortcuts">Revised default keyboard shortcuts</a></li>
+          </ul>
+        </div>
+        <div class="features">
+          <h2>
+            <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 16H3V4h18m0-2H3c-1.11 0-2 .89-2 2v12a2 2 0 0 0 2 2h7v2H8v2h8v-2h-2v-2h7a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z"></path></svg>
+            Host integration
+          </h2>
+          <ul>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#high-dpi-on-macos">High DPI support on Windows and macOS</a></li>
+            <li>Vertical sync (vsync) support</li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#frame-presentation-modes">Advanced frame pacing options for high and variable refresh rate (VRR) monitors</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.0/#resizable-window">Resizable window support</a></li>
+            <li><a href="https://github.com/dosbox-staging/dosbox-staging/pull/1272">Options for customising window size, position, and window decorations</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#window-transparency-support">Window transparency support</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#windows-31-seamless-mouse-integration">Windows 3.1 seamless mouse integration</a></li>
+          </ul>
+        </div>
+
+        <div class="features">
+          <h2>
+            <svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 3v18h18V3H3m9 7a2 2 0 0 1 2 2 2 2 0 0 1-2 2 2 2 0 0 1-2-2 2 2 0 0 1 2-2m0 5a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1 1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1Z"></path></svg>
+            General
+          </h2>
+          <ul>
+            <li><a href="https://dosbox-staging.github.io/about/?h=sensible">Sensible defaults &mdash; minimal manual configuration is needed</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/linux/?h=retropie#retropie">RetroPie &amp; Raspberry Pi support</a></li>
+            <li><a href="https://github.com/dosbox-staging/dosbox-staging/blob/656e98edaf0fd2269c3d74792a568f277180e6d0/README#L422-L466">Portable &amp; layered configurations</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.0/#64-bit-dynamic-recompilation-svn">64-bit dynamic recompilation for improved performance</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#physical-cd-rom-mount-support">Physical CD-ROM mount support</a></li>
+            <li><a href="https://github.com/dosbox-staging/dosbox-staging/pull/1451">IDE support for CD-ROMs</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.0/#mount-overlay-support">Mount overlay support</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.79.0/#automount-of-resource-drives">Automounting of resource drives</a></li>
+            <li><a href="https://dosbox-staging.github.io/downloads/release-notes/0.75.0/#autotype-command">Autotype commands at startup</a></li>
+            <li><a href="https://github.com/dosbox-staging/dosbox-staging/pull/1398">ENet modem transport</a></li>
+            <li><a href="https://github.com/dosbox-staging/dosbox-staging/pull/1419">Ethernet support via slirp</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block content %}{% endblock %}
+{% block container %}{% endblock %}
+

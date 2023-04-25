@@ -1,0 +1,97 @@
+# Project information
+site_name: DOSBox Staging
+site_url: https://https://dosbox-staging.github.io/
+site_author: DOSBox Staging Authors
+site_description: >-
+  DOSBox Staging is a modern continuation of DOSBox with advanced features and current development practices.
+
+# Theme configuration
+theme:
+  name: material
+  custom_dir: overrides
+  features:
+    - navigation.indexes
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+  font:
+    text: Open Sans
+    code: Roboto Mono
+  logo: assets/images/dosbox-staging-nobg.svg
+  favicon: assets/images/favicon.ico
+
+# CSS overrides
+extra_css:
+  - stylesheets/extra.css
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - pymdownx.betterem
+  - pymdownx.details
+  - mdx_gh_links:
+      user: dosbox-staging
+      repo: dosbox-staging
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji 
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.keys
+  - pymdownx.smartsymbols
+  - pymdownx.saneheaders
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - sane_lists
+  - smarty
+  - toc:
+      permalink: true
+
+# Plugins
+plugins:
+  - search
+  - glightbox:
+      slide_effect: 'none'
+
+# Page tree
+nav:
+  - Downloads:
+    - Windows: downloads/windows.md
+    - macOS: downloads/macos.md
+    - Linux: downloads/linux.md
+    - downloads/development-builds.md
+
+    - Release notes:
+      - 0.80.1: downloads/release-notes/0.80.1.md
+      - 0.80.0: downloads/release-notes/0.80.0.md
+      - 0.79.1: downloads/release-notes/0.79.1.md
+      - 0.79.0: downloads/release-notes/0.79.0.md
+      - 0.78.1: downloads/release-notes/0.78.1.md
+      - 0.78.0: downloads/release-notes/0.78.0.md
+      - 0.77.1: downloads/release-notes/0.77.1.md
+      - 0.77.0: downloads/release-notes/0.77.0.md
+      - 0.76.0: downloads/release-notes/0.76.0.md
+      - 0.75.2: downloads/release-notes/0.75.2.md
+      - 0.75.1: downloads/release-notes/0.75.1.md
+      - 0.75.0: downloads/release-notes/0.75.0.md
+      - 0.75.0-RC1: downloads/release-notes/0.75.0-rc1.md
+
+  - Get involved:
+      - get-involved/index.md
+      - get-involved/code-of-conduct.md
+
+  - About:
+      - about/index.md
+
+  - Wiki: https://github.com/dosbox-staging/dosbox-staging/wiki
+

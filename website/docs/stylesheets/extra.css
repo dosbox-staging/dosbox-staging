@@ -1,0 +1,515 @@
+/* Custom font for headings */
+@import url("https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700");
+
+/* General */
+body {
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+}
+
+.md-content {
+  padding-bottom: 1.5rem;
+}
+@media screen and (min-width: 60em){
+  .md-content {
+    padding-bottom: 3rem;
+  }
+}
+
+.md-content a {
+  font-weight: 600;
+}
+.md-content a:hover {
+  text-decoration: underline;
+}
+
+.md-content ul {
+  list-style: square;
+}
+.md-content .compact ul li {
+  margin-bottom: 0.1rem;
+}
+
+/* Header */
+@media screen and (min-width: 76.25em){
+  .md-header__title {
+    padding-left: 4.2rem;
+  }
+  .md-tabs__list {
+    padding-left: 4.6rem;
+  }
+}
+.md-header__button.md-logo {
+  position: absolute;
+  top: 0.1rem;
+}
+.md-header__button.md-logo :-webkit-any(img,svg) {
+  height: 3.4rem;
+}
+.md-header__button.md-logo :-moz-any(img,svg) {
+  height: 3.4rem;
+}
+.md-header__button.md-logo :is(img,svg) {
+  height: 3.4rem;
+}
+
+/* Headings */
+.md-typeset h1 {
+  font: 1.84rem/1.2 Titillium Web;
+  letter-spacing: 0;
+}
+.md-typeset h2 {
+  font: 700 1.30rem/1.4 Titillium Web;
+  letter-spacing: 0;
+  clear: both;
+  margin: 2rem 0 1.0rem;
+}
+.md-typeset h3 {
+  font: 600 1.10rem/1.3 Titillium Web;
+  letter-spacing: 0;
+  clear: both;
+}
+.md-typeset h4 {
+  font: 600 0.86rem/1.4 Titillium Web;
+  margin-top: 1.2rem;
+  letter-spacing: 0;
+  clear: both;
+}
+.md-typeset h5 {
+  font: 600 0.86rem/1.4 Titillium Web;
+  margin-bottom: 0.64rem;
+  letter-spacing: 0;
+  clear: both;
+  text-transform: none;
+  color: var(--md-default-fg-color);
+}
+.md-typeset code {
+  font-size: 0.704rem;
+  letter-spacing: 0;
+  clear: both;
+}
+
+/* Navigation */
+.md-nav {
+  font-size: 0.72rem;
+}
+.md-header__title {
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+.md-tabs__item {
+  display: inline-block;
+  height: 2.25rem;
+}
+.md-tabs__link {
+  font-size: .76rem;
+  margin-top: .63rem;
+}
+
+/* Search */
+@media screen and (min-width: 60em){
+  .md-search__form{
+    background-color: #ffffff20;
+  }
+  .md-search__form:hover{
+    background-color: #ffffff38;
+  }
+}
+
+/* Admonitions */
+.md-typeset .admonition,
+.md-typeset details {
+  font-size: 90%;
+  border: none;
+  box-shadow: none;
+}
+
+.md-typeset .admonition.note,
+.md-typeset details.note {
+  background: #448aff1a;
+}
+.md-typeset .admonition.note .admonition-title,
+.md-typeset details.note summary {
+  background: #448aff30 !important;
+}
+
+.md-typeset .admonition.important,
+.md-typeset details.important,
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  background: #00bfa51a;
+}
+.md-typeset .admonition.important .admonition-title,
+.md-typeset details.important summary,
+.md-typeset .admonition.tip .admonition-title,
+.md-typeset details.tip summary {
+  background: #00bfa530 !important;
+}
+
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  background: #ff91001a;
+}
+.md-typeset .admonition.warning .admonition-title,
+.md-typeset details.warning summary {
+  background: #ff910030 !important;
+}
+
+.md-typeset .admonition.question,
+.md-typeset details.question {
+  background: #00b07022;
+}
+.md-typeset .admonition.question .admonition-title,
+.md-typeset details.question summary {
+  background: #00b07042 !important;
+}
+.md-typeset :-webkit-any(.question,.help,.faq)>:-webkit-any(.admonition-title,summary):before{
+  background-color:#00b070;
+}
+.md-typeset :-moz-any(.question,.help,.faq)>:-moz-any(.admonition-title,summary):before{
+  background-color:#00b070;
+}
+.md-typeset :is(.question,.help,.faq)>:is(.admonition-title, summary):before{
+  background-color:#00b070;
+}
+
+.md-typeset .admonition.quote,
+.md-typeset details.quote {
+  background: #9e9e9e20;
+}
+.md-typeset .admonition.quote .admonition-title,
+.md-typeset details.quote summary {
+  background: #9e9e9e40 !important;
+}
+
+.md-typeset .admonition.example,
+.md-typeset details.example {
+  background: #3c10f01a;
+}
+.md-typeset .admonition.example .admonition-title,
+.md-typeset details.example summary {
+  background: #3c10f030 !important;
+}
+
+.md-typeset .admonition.danger,
+.md-typeset details.danger {
+  background: #f0173422;
+}
+.md-typeset .admonition.danger .admonition-title,
+.md-typeset details.danger summary {
+  background: #f0173434 !important;
+}
+
+/* Tables */
+.md-typeset table:not([class]) {
+  font-size: 0.78rem;
+  border: none;
+}
+.md-typeset table:not([class]) th:first-child,
+.md-typeset table:not([class]) td:first-child {
+  padding-left: 0;
+}
+.md-typeset table:not([class]) th:last-child,
+.md-typeset table:not([class]) td:last-child {
+  padding-right: 0;
+}
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td {
+  padding: 0.6rem;
+}
+
+.md-typeset .compact table:not([class]) th,
+.md-typeset .compact table:not([class]) td {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+}
+
+/* Keycaps */
+.md-typeset kbd {
+  display: inline-block;
+  padding: 0 6px;
+  margin: 0 2px;
+  border-radius: 2px;
+  box-shadow:
+    0  0px   0 1px var(--md-typeset-kbd-border-color),
+    0  3px   0 1px var(--md-typeset-kbd-border-color),
+    0 -2px 4px     var(--md-typeset-kbd-accent-color) inset;
+}
+
+/* Images */
+.md-typeset figure {
+  max-width: 756px;
+}
+.md-typeset figcaption {
+  font-size: 95%;
+  max-width: 28rem
+}
+
+.md-typeset h2 .twemoji {
+  height: 2.1rem;
+  margin-right: 0.4rem;
+}
+img.linux-badge {
+  max-width: 260px !important;
+}
+
+@media screen and (min-width: 30em){
+  .md-typeset .image-grid {
+    display: flex;
+    gap: 0.7rem;
+    margin: 0;
+    padding: 0;
+  }
+  .md-typeset .image-grid figure {
+    margin: 0;
+  }
+}
+
+/* Footer */
+.md-footer-meta {
+  font-size: .76rem;
+}
+.md-footer-meta .links ul {
+  list-style: none;
+  margin: 0.7rem 0 0 0.7rem;
+}
+.md-footer-meta .links ul li {
+  display: inline;
+  padding: 0;
+  margin: 0 1.1rem 0 0;
+}
+.md-footer-meta .credits {
+  color: #666;
+  font-size: .68rem;
+  margin: 0.78rem 0.72rem;
+}
+
+/*--------------------------------------------------------------------------*/
+/* Colours                                                                  */
+/*--------------------------------------------------------------------------*/
+/* Instead of setting the 'pink' palette, we'll keep the default palette
+ * and apply customisation based on the 'pink' palette on top of that to keep
+ * things simple. */
+:root {
+  --md-primary-fg-color: #e92063;
+  --md-primary-fg-color--light: #ec417a;
+  --md-primary-fg-color--dark: #c3185d;
+  --md-primary-bg-color: #fff;
+  --md-primary-bg-color--light: #ffffffb3;
+  --md-accent-fg-color: #f50056;
+  --md-accent-fg-color--transparent: #f500561a;
+  --md-accent-bg-color: #fff;
+  --md-accent-bg-color--light: #ffffffb3;
+}
+:root, [data-md-color-scheme=default] {
+  --md-default-fg-color: #333;
+}
+
+/* Additional colour definitions */
+:root {
+  --header-bg-color: #242424;
+}
+
+.md-header {
+  background-color: var(--header-bg-color);
+}
+@media screen and (max-width: 76.1875em) {
+  .md-nav--primary .md-nav__title[for=__drawer] {
+    background-color: var(--header-bg-color);
+  }
+}
+.md-tabs {
+  background-color: #666;
+}
+
+figcaption {
+  color: #777;
+}
+
+/*--------------------------------------------------------------------------*/
+/* Front page                                                               */
+/*--------------------------------------------------------------------------*/
+.front-page {
+  background: linear-gradient(#d2d2d2, #fff);
+}
+.front-page-inner {
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: 0 1.2rem;
+  font-size: .76rem;
+}
+
+.front-page .header {
+  margin-top: 1rem;
+}
+.front-page .header .logo {
+  text-align: center;
+}
+.front-page .header .logo img {
+  width: 50%;
+  max-width: 16rem;
+}
+.front-page .header .blurb {
+  width: 100%;
+  max-width: 28rem;
+  margin: 0.9rem auto;
+  font-size: 1.10rem;
+  font-weight: 400;
+  text-align: center;
+  color: #333;
+}
+.front-page .header .blurb em {
+  font-style: normal;
+  font-weight: bold;
+}
+
+.front-page .header .download {
+  max-width: 20rem;
+  margin-top: 2.0rem;
+  margin: 2.0rem auto 0 auto;
+  background: #eee;
+  border-radius: 0.3rem;
+}
+.front-page .header .get-it {
+  margin: 0 0 1.0rem 0;
+  padding: 0.1rem 0;
+  border-radius: 0.3rem 0.3rem 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13rem;
+  background: #e92063;
+  color: #eee;
+}
+.front-page .header .platforms {
+  display: flex;
+  padding: 0 0.7rem;
+}
+.front-page .header a.platform {
+  width: 100%;
+  text-align: center;
+  color: #333;
+}
+.front-page .header a.platform svg {
+  fill: currentcolor;
+  height: 2.7rem;
+}
+.front-page .header a.platform p {
+  margin: 0.17rem 0;
+  padding: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.front-page .header a.platform:hover {
+  color: #666;
+}
+.front-page .header .current-version {
+  margin: 0.75rem 0 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  color: #555;
+}
+.front-page .header .current-version a:hover {
+  color: #808080;
+}
+
+.front-page .feature-highlights {
+  margin-top: 4.0rem;
+}
+.front-page .feature-highlights > h1 {
+  margin-bottom: 1.4rem;
+  font: 400 1.75rem/1.0 Titillium Web;
+  text-align: center;
+  color: #333;
+}
+.front-page .feature-highlights > p {
+  margin-bottom: 1.4rem;
+  text-align: center;
+  font-size: 0.95rem;
+  line-height: 1.55rem;
+  color: #333;
+}
+
+.front-page .features-grid {
+  width: 100%;
+}
+
+.front-page .features {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 0.7rem;
+  border-radius: 0.3rem;
+  background: linear-gradient(#ffffffff, #ffffffff 80%, #ffffff00);
+  color: #333;
+}
+
+.front-page .features h2 {
+  font: 700 1.2rem/1.2 Titillium Web;
+  padding: 0.1rem 0.26rem 0.26rem 2.1rem;
+  text-indent: -1.9rem;
+  margin: 0;
+  border-bottom: 0.12rem solid #e0e0e0;
+  color: #444;
+}
+
+.front-page .features h2 svg {
+  height: 1.4rem;
+  margin: 0 0.3rem -0.30rem 0;
+  fill: #444;
+  color: #f66;
+}
+.front-page .features ul {
+  padding: 0.75rem 0.8rem 0.5rem 2.18rem;
+  margin: 0;
+  list-style: square;
+  color: #eee;
+
+}
+.front-page .features li {
+  padding-bottom: 0.50rem;
+  padding-left: 0.1rem;
+  color: #333;
+}
+.front-page .features li a {
+  color: #333;
+}
+.front-page .features li a:hover {
+  color: #888;
+}
+.front-page .features li::marker {
+  color: #bbb;
+}
+
+@media screen and (min-width: 45em) {
+  @media screen and (min-width: 25em) {
+    .front-page .header a.platform svg {
+      height: 3.6rem;
+    }
+  }
+  .front-page .features-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+  }
+  .front-page .features {
+    flex-basis: calc((100% - (1.2rem * 1)) / 2);
+    margin-bottom: 0;
+  }
+}
+
+@media screen and (min-width: 60em) {
+  .front-page .header {
+    display: flex;
+    margin-top: 1rem;
+    gap: 0.8rem;
+  }
+  .front-page .header .logo img {
+    width: 17rem;
+    max-width: none;
+  }
+  .front-page .features {
+    flex-basis: calc((100% - (1.2rem * 2)) / 3);
+  }
+}
+
