@@ -61,7 +61,7 @@ jobs:
             arch: x86_64
             sys: UCRT64
             cc: gcc
-            max_warnings: 13
+            max_warnings: 1
             build_flags: -Dexperimental_voodoo_support=true
 
     defaults:
