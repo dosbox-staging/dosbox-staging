@@ -57,7 +57,7 @@ jobs:
       - name: Delete existing documentation
         run: |
           cd dosbox-staging.github.io
-          git rm -rf ${{ env.dest_path_prefix }}
+          git rm -rf ${{ env.dest_path_prefix }} || true
           # Do not delete preview builds under $BASE_URL/preview/...
           if [[ "${{ env.dest_path_prefix }}" == "." ]]; then
             git checkout HEAD -- preview || true
