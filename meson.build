@@ -620,7 +620,7 @@ tracy_dep = optional_dep
 if get_option('tracy')
     tracy_dep = dependency(
         'tracy',
-        version: ['>= 0.9', '< 1'],
+        # version: ['>= 0.9', '< 1'],
         default_options: default_wrap_options,
         static: ('tracy' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('tracy'),
