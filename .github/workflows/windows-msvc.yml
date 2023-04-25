@@ -21,9 +21,16 @@ jobs:
           - name: MSVC 32-bit
             arch: x86
             max_warnings: 20
+            reconfigure_build: false
           - name: MSVC 64-bit
             arch: x64
             max_warnings: 904
+            reconfigure_build: false
+          - name: MSVC, +voodoo
+            arch: x64
+            max_warnings: 904
+            reconfigure_build: true
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -63,6 +70,11 @@ jobs:
       - name:  Log environment
         shell: pwsh
         run:   .\scripts\log-env.ps1
+
+      - name:  Configure build
+        if:    matrix.conf.reconfigure_build
+        shell: bash
+        run:   sed -i 's/C_VOODOO 0/C_VOODOO 1/' src/platform/visualc/config.h
 
       - name:  Run tests
         shell: pwsh
