@@ -35,6 +35,7 @@ jobs:
           path: dosbox-staging.github.io
 
       - name: Set up variables
+        run: |
           if [[ -z ${{ inputs.destination_prefix }} ]]; then
             echo "dest_path_prefix=." >> "$GITHUB_ENV"
           else
