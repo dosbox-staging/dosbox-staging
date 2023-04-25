@@ -34,7 +34,7 @@ jobs:
 
       - name: Set up variables
         run: |
-          if [[ -z ${{ inputs.destination_prefix }} ]]; then
+          if [[ -z "${{ inputs.destination_prefix }}" ]]; then
             echo "dest_path_prefix=." >> "$GITHUB_ENV"
           else
             echo "dest_path_prefix=preview/${{ inputs.destination_prefix }}" >> "$GITHUB_ENV"
@@ -59,7 +59,7 @@ jobs:
           cd dosbox-staging.github.io
           git rm -rf ${{ env.dest_path_prefix }}
           # Do not delete preview builds under $BASE_URL/preview/...
-          if [[ ${{ env.dest_path_prefix }} == "." ]]; then
+          if [[ "${{ env.dest_path_prefix }}" == "." ]]; then
             git checkout HEAD -- preview
           fi
 
