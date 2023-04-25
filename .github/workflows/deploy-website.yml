@@ -1,7 +1,7 @@
 name: Deploy website
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
     inputs:
       source_branch:
         description: 'Branch to deploy the website from'
@@ -82,4 +82,4 @@ jobs:
           git add .
           git commit -m "Deployed current website (${{ env.source_git_hash }})"
           git push
-          
+
