@@ -4,10 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       source_branch:
-        description: 'Branch to deploy the website from'
+        description: 'Branch to deploy the website from (last release/* branch for current version)'
         required: true
-        default: 'main'
+        default: 'release/0.80.x'
         type: string
+
       destination_prefix:
         description: 'Deploy to this path prefix (leave empty for the current version)'
         type: string
@@ -42,11 +43,8 @@ jobs:
 
       - name: Install mkdocs
         run: |
-          pip install mkdocs-material==9.0.2 \
-                      mkdocs-minify-plugin==0.6.2 --use-pep517 \
-                      mkdocs-redirects==1.2.0 --use-pep517 \
-                      mkdocs-glightbox==0.3.1 \
-                      mdx-gh-links==0.3
+          cd dosbox-staging
+          pip install -r contrib/documentation/mkdocs-package-requirements.txt
 
       - name: Get current documentation Git hash
         run: |
@@ -57,17 +55,24 @@ jobs:
       - name: Delete existing documentation
         run: |
           cd dosbox-staging.github.io
-          git rm -rf ${{ env.dest_path_prefix }} || true
-          # Do not delete preview builds under $BASE_URL/preview/...
-          if [[ "${{ env.dest_path_prefix }}" == "." ]]; then
-            git checkout HEAD -- preview || true
+          if [[ -d ${{ env.dest_path_prefix }} ]]; then
+              cd ${{ env.dest_path_prefix }}
+              FILES=$(find . \
+                  -not -path '*/\.*'        `# ignore hidden files` \
+                  -not -path "."            `# ignore current dir` \
+                  -not -path "./preview"    `# ignore 'preview' dir` \
+                  -not -path "./preview/*"  `# ignore 'preview' dir contents` \
+                  -not -name "index.md"     `# ignore 'index.md' files` \
+                  -not -name "CNAME"        `# ignore CNAME`
+              )
+              echo $FILES | xargs git rm -rf --
           fi
 
       - name: Build documentation
         run: |
           cd dosbox-staging.github.io
           DEST_PATH=$(pwd)/${{ env.dest_path_prefix }}
-          mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir $DEST_PATH
+          mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir $DEST_PATH --dirty
 
       - name: Setup Git config
         run: |
