@@ -43,6 +43,7 @@ jobs:
 
       - name: Install mkdocs
         run: |
+          cd dosbox-staging
           pip install -r contrib/documentation/mkdocs-package-requirements.txt
 
       - name: Get current documentation Git hash
