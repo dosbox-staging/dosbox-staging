@@ -7,9 +7,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CCACHE_DIR:      "/c/ccache"
-  CCACHE_MAXSIZE:  "64M"
-  CCACHE_COMPRESS: "true"
+  CCACHE_DIR:        "/c/ccache"
+  CCACHE_MAXSIZE:    "128M"
+  CCACHE_COMPRESS:   "true"
+  CCACHE_SLOPPINESS: "pch_defines,time_macros"
+
   BUILD_RELEASE_DIR: build/release
   BUILD_DEBUGGER_DIR: build/debugger
 

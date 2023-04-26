@@ -171,8 +171,9 @@ jobs:
         run: |
           set -eu
           echo 'CCACHE_DIR="${{ github.workspace }}/.ccache"' >> $GITHUB_ENV
-          echo 'CCACHE_MAXSIZE="64M"' >> $GITHUB_ENV
+          echo 'CCACHE_MAXSIZE="128M"' >> $GITHUB_ENV
           echo 'CCACHE_COMPRESS="true"' >> $GITHUB_ENV
+          echo 'CCACHE_SLOPPINESS="pch_defines,time_macros"' >> $GITHUB_ENV
 
       - name:  Prepare brew and compiler caches
         if:    matrix.runner.needs_deps

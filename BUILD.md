@@ -22,6 +22,15 @@ You can maintain several Meson build configurations using subdirectories, for
 example, the **debug** and **release** configurations can reside in
 `build/debug` and `build/release`, respectively.
 
+We recommend setting the following Ccache environment variables to maximize
+the use of storage and benefit from precompiled headers:
+
+```shell
+CCACHE_COMPRESS=true
+CCACHE_COMPRESSLEVEL=6
+CCACHE_SLOPPINESS="pch_defines,time_macros"
+```
+
 ## OS-specific instructions
 
 Instructions in this article assume you're using Linux or BSD but will work

@@ -80,7 +80,11 @@ summary('Build type', get_option('buildtype'), section: 'Build Summary')
 summary('Install prefix', get_option('prefix'), section: 'Build Summary')
 
 # extra build flags
-extra_flags = ['-Wno-unknown-pragmas']
+extra_flags = [
+    '-Wno-unknown-pragmas',
+    '-fpch-preprocess',
+]
+
 # generate linker map file
 extra_link_flags = [
     '-Wl,-map,dosbox.map',
