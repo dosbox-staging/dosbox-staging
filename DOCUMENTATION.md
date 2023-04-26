@@ -60,7 +60,7 @@ warnings.
 Once the linter is happy, it's time to raise your PR. Separate commits may
 help in some cases, but don't go overboard with them (we're not going to
 "bisect" the documentation, after all). Prefix your documentation related
-commits with `docs: `, e.g.:
+commits with `docs:` , e.g.:
 
 ```
 docs: Update feature highlights on front page
