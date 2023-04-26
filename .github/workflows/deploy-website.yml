@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       source_branch:
-        description: 'Branch to deploy the website from'
+        description: 'Branch to deploy the website from (last release/* branch for current version)'
         required: true
-        default: 'main'
+        default: 'release/0.80.x'
         type: string
 
       destination_prefix:
