@@ -4140,11 +4140,16 @@ static void prepare_tmu(tmu_state *t)
 	t->lodbasetemp = (-lodbase + (12 << 8)) / 2;
 }
 
-static inline INT32 round_coordinate(float value)
+static inline int32_t round_coordinate(float value)
 {
-	return (value > 0 ? (INT32)(value + .4999999f) : (INT32)(value - .5f));
-	//INT32 result = (INT32)floor(value);
-	//return result + (value - (float)result > 0.5f);
+	// This is not proper rounding algorithm akin to std::lround (it works
+	// incorrectly for values < 0.0); be extremely careful while adjusting
+	// it.  Make sure that changes do not result in regression in
+	// Build Engine games (Blood, Shadow Warrior).
+
+	const auto rounded = static_cast<int32_t>(value); // round towards 0
+	const auto rem     = static_cast<int32_t>((value - rounded) > 0.5f);
+	return rounded + rem;
 }
 
 /*************************************
