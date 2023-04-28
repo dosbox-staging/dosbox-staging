@@ -74,6 +74,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <thread>
 
 #include <SDL.h>
 #include <SDL_cpuinfo.h> // for proper SSE defines for MSVC
@@ -4285,6 +4286,7 @@ static void triangle_worker_shutdown(triangle_worker& tworker)
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) tworker.done[i] = false;
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) SDL_SemPost(tworker.sembegin[i]);
 	recheckdone:
+	std::this_thread::yield();
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) if (!tworker.done[i]) goto recheckdone;
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) SDL_DestroySemaphore(tworker.sembegin[i]);
 }
@@ -4343,6 +4345,7 @@ static void triangle_worker_run(triangle_worker& tworker)
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) SDL_SemPost(tworker.sembegin[i]);
 	triangle_worker_work(tworker, TRIANGLE_THREADS, TRIANGLE_WORKERS);
 	recheckdone:
+	std::this_thread::yield();
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) if (!tworker.done[i]) goto recheckdone;
 }
 
