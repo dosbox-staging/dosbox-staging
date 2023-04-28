@@ -69,6 +69,7 @@
 #if C_VOODOO
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -934,7 +935,7 @@ struct triangle_worker
 	poly_vertex v1, v2, v3;
 	INT32 v1y, v3y, totalpix;
 	SDL_sem* sembegin[TRIANGLE_THREADS];
-	volatile bool done[TRIANGLE_THREADS];
+	std::atomic_bool done[TRIANGLE_THREADS];
 };
 
 struct voodoo_state
