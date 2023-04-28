@@ -69,6 +69,7 @@
 #if C_VOODOO
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
@@ -929,12 +930,13 @@ struct draw_state
 
 struct triangle_worker
 {
-	bool threads_active, use_threads, disable_bilinear_filter;
+	std::atomic_bool threads_active;
+	bool use_threads, disable_bilinear_filter;
 	UINT16 *drawbuf;
 	poly_vertex v1, v2, v3;
 	INT32 v1y, v3y, totalpix;
 	SDL_sem* sembegin[TRIANGLE_THREADS];
-	volatile bool done[TRIANGLE_THREADS];
+	std::atomic_bool done[TRIANGLE_THREADS];
 };
 
 struct voodoo_state
