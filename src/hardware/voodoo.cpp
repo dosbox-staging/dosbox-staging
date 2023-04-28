@@ -941,43 +941,43 @@ struct triangle_worker
 
 struct voodoo_state
 {
-	UINT8				chipmask;				/* mask for which chips are available */
+	UINT8				chipmask = {};				/* mask for which chips are available */
 
-	voodoo_reg			reg[0x400];				/* raw registers */
-	const UINT8 *		regaccess;				/* register access array */
-	bool				alt_regmap;				/* enable alternate register map? */
+	voodoo_reg			reg[0x400] = {};				/* raw registers */
+	const UINT8 *		regaccess = {};				/* register access array */
+	bool				alt_regmap = {};				/* enable alternate register map? */
 
-	pci_state			pci;					/* PCI state */
-	dac_state			dac;					/* DAC state */
+	pci_state			pci = {};					/* PCI state */
+	dac_state			dac = {};					/* DAC state */
 
-	fbi_state			fbi;					/* FBI states */
-	tmu_state			tmu[MAX_TMU];			/* TMU states */
-	tmu_shared_state	tmushare;				/* TMU shared state */
-	UINT32				tmu_config;
+	fbi_state			fbi = {};					/* FBI states */
+	tmu_state			tmu[MAX_TMU] = {};			/* TMU states */
+	tmu_shared_state	tmushare = {};				/* TMU shared state */
+	UINT32				tmu_config = {};
 
 #ifdef C_ENABLE_VOODOO_OPENGL
-	UINT16				next_rasterizer;		/* next rasterizer index */
-	raster_info			rasterizer[MAX_RASTERIZERS];	/* array of rasterizers */
-	raster_info *		raster_hash[RASTER_HASH_SIZE];	/* hash table of rasterizers */
+	UINT16				next_rasterizer = {};		/* next rasterizer index */
+	raster_info			rasterizer[MAX_RASTERIZERS] = {};	/* array of rasterizers */
+	raster_info *		raster_hash[RASTER_HASH_SIZE] = {};	/* hash table of rasterizers */
 #endif
 
-	stats_block			thread_stats[TRIANGLE_WORKERS];	/* per-thread statistics */
+	stats_block			thread_stats[TRIANGLE_WORKERS] = {};	/* per-thread statistics */
 
-	bool				send_config;
-	bool				clock_enabled;
-	bool				output_on;
-	bool				active;
+	bool				send_config = {};
+	bool				clock_enabled = {};
+	bool				output_on = {};
+	bool				active = {};
 #ifdef C_ENABLE_VOODOO_OPENGL
-	bool				ogl;
-	bool				ogl_dimchange;
-	bool				ogl_palette_changed;
+	bool				ogl = {};
+	bool				ogl_dimchange = {};
+	bool				ogl_palette_changed = {};
 #endif
 #ifdef C_ENABLE_VOODOO_DEBUG
 	const char *const *	regnames;				/* register names array */
 #endif
 
-	draw_state			draw;
-	triangle_worker		tworker;
+	draw_state			draw = {};
+	triangle_worker		tworker = {};
 };
 
 #ifdef C_ENABLE_VOODOO_OPENGL
@@ -3015,7 +3015,7 @@ iterated W    = 18.32 [48 bits]
 
 **************************************************************************/
 
-static voodoo_state *v;
+static voodoo_state *v = {};
 static UINT8 vtype = VOODOO_1, vperf;
 
 /* fast dither lookup */
@@ -7185,7 +7185,6 @@ static void Voodoo_Startup() {
 	memset(&v->draw, 0, sizeof(v->draw));
 	v->draw.vfreq = 1000.0f/60.0f;
 
-	memset(&v->tworker, 0, sizeof(v->tworker));
 	v->tworker.use_threads = !!(vperf & 1);
 	v->tworker.disable_bilinear_filter = !!(vperf & 2);
 
