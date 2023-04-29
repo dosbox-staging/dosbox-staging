@@ -753,7 +753,7 @@ void DOSBOX_Init()
 	pstring->Set_values(voodootypes);
 	pstring->Set_help("RAM amount of emulated Vodooo 3dfx card.");
 
-	pint = secprop->Add_int("voodoo_perf", only_at_start, 1);
+	pint = secprop->Add_int("voodoo_perf", only_at_start, 0);
 	pint->SetMinMax(0, 4);
 	pint->Set_help("Toggle performance optimizations for Vodooo 3dfx emulation (0 = none, 1 = use multi-threading, 2 = disable bilinear filter, 3 = both).");
 #endif
