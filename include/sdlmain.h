@@ -176,13 +176,11 @@ struct SDL_Block {
 	struct {
 		SDL_GLContext context;
 		int pitch = 0;
-		void *framebuf = nullptr;
-		GLuint buffer;
+		void* framebuf = nullptr;
 		GLuint texture;
 		GLuint displaylist;
 		GLint max_texsize;
 		bool bilinear;
-		bool pixel_buffer_object = false;
 		bool npot_textures_supported = false;
 		bool use_shader;
 		bool framebuffer_is_srgb_encoded;

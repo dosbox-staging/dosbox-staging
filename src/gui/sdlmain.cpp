@@ -84,31 +84,6 @@
 #define APIENTRYP APIENTRY *
 #endif
 
-#ifndef GL_ARB_pixel_buffer_object
-#define GL_ARB_pixel_buffer_object 1
-#define GL_PIXEL_PACK_BUFFER_ARB           0x88EB
-#define GL_PIXEL_UNPACK_BUFFER_ARB         0x88EC
-#define GL_PIXEL_PACK_BUFFER_BINDING_ARB   0x88ED
-#define GL_PIXEL_UNPACK_BUFFER_BINDING_ARB 0x88EF
-#endif
-
-#ifndef GL_ARB_vertex_buffer_object
-#define GL_ARB_vertex_buffer_object 1
-typedef void (APIENTRYP PFNGLGENBUFFERSARBPROC) (GLsizei n, GLuint *buffers);
-typedef void (APIENTRYP PFNGLBINDBUFFERARBPROC) (GLenum target, GLuint buffer);
-typedef void (APIENTRYP PFNGLDELETEBUFFERSARBPROC) (GLsizei n, const GLuint *buffers);
-typedef void (APIENTRYP PFNGLBUFFERDATAARBPROC) (GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
-typedef GLvoid* (APIENTRYP PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum access);
-typedef GLboolean (APIENTRYP PFNGLUNMAPBUFFERARBPROC) (GLenum target);
-#endif
-
-PFNGLGENBUFFERSARBPROC glGenBuffersARB = nullptr;
-PFNGLBINDBUFFERARBPROC glBindBufferARB = nullptr;
-PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = nullptr;
-PFNGLBUFFERDATAARBPROC glBufferDataARB = nullptr;
-PFNGLMAPBUFFERARBPROC glMapBufferARB = nullptr;
-PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = nullptr;
-
 /* Don't guard these with GL_VERSION_2_0 - Apple defines it but not these typedefs.
  * If they're already defined they should match these definitions, so no conflicts.
  */
@@ -227,8 +202,7 @@ static void HandleVideoResize(int width, int height);
 static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines);
 static bool present_frame_texture();
 #if C_OPENGL
-static void update_frame_gl_pbo([[maybe_unused]] const uint16_t *changedLines);
-static void update_frame_gl_fb(const uint16_t *changedLines);
+static void update_frame_gl(const uint16_t *changedLines);
 static bool present_frame_gl();
 #endif
 
@@ -1740,12 +1714,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 	}
 #if C_OPENGL
 	case SCREEN_OPENGL: {
-		if (sdl.opengl.pixel_buffer_object) {
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-			if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
-		} else {
-			free(sdl.opengl.framebuf);
-		}
+		free(sdl.opengl.framebuf);
 		sdl.opengl.framebuf=nullptr;
 		if (!(flags & GFX_CAN_32))
 			goto fallback_texture;
@@ -1901,17 +1870,10 @@ uint8_t GFX_SetSize(const int width, const int height,
 		/* Create the texture and display list */
 		const auto framebuffer_bytes = static_cast<size_t>(width) *
 		                               height * MAX_BYTES_PER_PIXEL;
-		if (sdl.opengl.pixel_buffer_object) {
-			glGenBuffersARB(1, &sdl.opengl.buffer);
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, framebuffer_bytes, nullptr, GL_STREAM_DRAW_ARB);
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-		} else {
-			sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
-		}
+		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
 		sdl.opengl.pitch = width * 4;
 
-		// One-time intialize the window size
+		// One-time initialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
 			initialize_sdl_window_size(sdl.window,
 			                           FALLBACK_WINDOW_DIMENSIONS,
@@ -2054,14 +2016,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 
 		OPENGL_ERROR("End of setsize");
 
-		retFlags = GFX_CAN_32;
-		if (sdl.opengl.pixel_buffer_object) {
-			sdl.frame.update = update_frame_gl_pbo;
-		} else {
-			sdl.frame.update = update_frame_gl_fb;
-			retFlags |= GFX_CAN_RANDOM;
-		}
-		// Both update mechanisms use the same presentation call
+		retFlags          = GFX_CAN_32 | GFX_CAN_RANDOM;
+		sdl.frame.update  = update_frame_gl;
 		sdl.frame.present = present_frame_gl;
 		break; // SCREEN_OPENGL
 	}
@@ -2289,8 +2245,7 @@ static void SwitchFullScreen(bool pressed)
 // This function returns write'able buffer for user to draw upon. Successful
 // return depends on properly initialized SDL_Block structure (which generally
 // can be achieved via GFX_SetSize call), and specifically - properly
-// initialized output-specific bits (sdl.texture, sdl.opengl.framebuf, or
-// sdl.openg.pixel_buffer_object fields).
+// initialized output-specific bits (sdl.texture or sdl.opengl.framebuf fields).
 //
 // If everything is prepared correctly, this function returns true, assigns
 // 'pixels' output parameter to to a buffer (with format specified via earlier
@@ -2311,12 +2266,7 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 		return true;
 #if C_OPENGL
 	case SCREEN_OPENGL:
-		if (sdl.opengl.pixel_buffer_object) {
-			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-			pixels = static_cast<uint8_t *>(glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY));
-		} else {
-			pixels = static_cast<uint8_t *>(sdl.opengl.framebuf);
-		}
+		pixels = static_cast<uint8_t*>(sdl.opengl.framebuf);
 		OPENGL_ERROR("end of start update");
 		if (pixels == nullptr)
 			return false;
@@ -2489,23 +2439,10 @@ static bool present_frame_texture()
 	return is_presenting;
 }
 
-// OpenGL PBO-based update, frame-based update, and presentation
+// OpenGL frame-based update and presentation
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #if C_OPENGL
-static void update_frame_gl_pbo([[maybe_unused]] const uint16_t *changedLines)
-{
-	if (sdl.updating) {
-		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sdl.draw.width,
-		                sdl.draw.height, GL_BGRA_EXT,
-		                GL_UNSIGNED_INT_8_8_8_8_REV, nullptr);
-		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
-	} else {
-		sdl.opengl.actual_frame_count++;
-	}
-}
-
-static void update_frame_gl_fb(const uint16_t *changedLines)
+static void update_frame_gl(const uint16_t* changedLines)
 {
 	if (changedLines) {
 		const auto framebuf = static_cast<uint8_t *>(sdl.opengl.framebuf);
@@ -3303,38 +3240,14 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			         glUniform2f && glUniform1i && glUseProgram &&
 			         glVertexAttribPointer);
 
-			sdl.opengl.buffer = 0;
 			sdl.opengl.framebuf = nullptr;
 			sdl.opengl.texture = 0;
 			sdl.opengl.displaylist = 0;
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
 
-			glGenBuffersARB = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress(
-			        "glGenBuffersARB");
-			glBindBufferARB = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress(
-			        "glBindBufferARB");
-			glDeleteBuffersARB = (PFNGLDELETEBUFFERSARBPROC)
-			        SDL_GL_GetProcAddress("glDeleteBuffersARB");
-			glBufferDataARB = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress(
-			        "glBufferDataARB");
-			glMapBufferARB = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress(
-			        "glMapBufferARB");
-			glUnmapBufferARB = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress(
-			        "glUnmapBufferARB");
-			const bool have_arb_buffers = glGenBuffersARB &&
-			                              glBindBufferARB &&
-			                              glDeleteBuffersARB &&
-			                              glBufferDataARB &&
-			                              glMapBufferARB &&
-			                              glUnmapBufferARB;
-
 			const auto gl_version_string = safe_gl_get_string(GL_VERSION,
 			                                                  "0.0.0");
 			const int gl_version_major = gl_version_string[0] - '0';
-
-			sdl.opengl.pixel_buffer_object =
-			        have_arb_buffers &&
-			        SDL_GL_ExtensionSupported("GL_ARB_pixel_buffer_object");
 
 			sdl.opengl.npot_textures_supported =
 			        gl_version_major >= 2 ||
@@ -3354,9 +3267,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
 			                            "unknown"));
 
-			LOG_INFO("OPENGL: Pixel buffer object %s",
-			         sdl.opengl.pixel_buffer_object ? "available"
-			                                        : "missing");
 			LOG_INFO("OPENGL: NPOT textures %s",
 			         npot_support_msg.c_str());
 		}
