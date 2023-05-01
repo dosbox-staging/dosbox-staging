@@ -1676,10 +1676,17 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	vga.draw.linear_mask = vga.vmemwrap - 1;
 	switch (vga.mode) {
 	case M_VGA:
-		doublewidth=true;
 		width<<=2;
-		if (IS_VGA_ARCH && !ReelMagic_IsVideoMixerEnabled() &&
-		    CurMode->type == M_VGA) {
+		if (CurMode->sheight < 350) {
+			if (vga.draw.vga_sub_350_line_handling ==
+			    VgaSub350LineHandling::DoubleScan) {
+				aspect_ratio /= 2;
+			} else {
+				height /= 2;
+				vga.draw.address_line_total /= 2;
+				doubleheight = true;
+				doublewidth  = true;
+			}
 			bpp = 32;
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
