@@ -1472,9 +1472,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			else {
 				vga.draw.double_scan = is_scan_doubled;
 			}
-		} else { // non-VGA machine
-			constexpr uint16_t num_cga_lines_per_frame = 262;
-			vga.draw.double_scan = (vtotal == num_cga_lines_per_frame);
 		}
 	} else {
 		htotal = vga.other.htotal + 1;
@@ -1780,7 +1777,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_DrawLine=VGA_Draw_2BPP_Line;
 		break;
 	case M_CGA2:
-		doubleheight=true;
+		if (IS_VGA_ARCH && vga.draw.vga_sub_350_line_handling !=
+		                           VgaSub350LineHandling::DoubleScan) {
+			doubleheight = true;
+			doublewidth  = true;
+			aspect_ratio *= 2.0;
+		}
 		vga.draw.blocks=2*width;
 		width<<=3;
 		VGA_DrawLine=VGA_Draw_1BPP_Line;
@@ -1928,18 +1930,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		doubleheight=true;
 	}
 	vga.draw.vblank_skip = vblank_skip;
-
-	if (!VGA_IsDoubleScanningSub350LineModes()) {
-		// Only check for extra double height in vga modes (line
-		// multiplying by address_line_total)
-
-		const auto has_even_number_of_lines = !(vga.draw.address_line_total & 1);
-		if (!doubleheight && (vga.mode < M_TEXT) && has_even_number_of_lines) {
-			vga.draw.address_line_total /= 2;
-			doubleheight = true;
-			height /= 2;
-		}
-	}
 	set_total_lines_to_draw(height);
 	vga.draw.line_length = width * ((bpp + 1) / 8);
 #ifdef VGA_KEEP_CHANGES
