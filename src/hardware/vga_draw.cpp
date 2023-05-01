@@ -1788,7 +1788,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_DrawLine = VGA_Draw_CGA4_Composite_Line;
 		break;
 	case M_CGA4:
-		doublewidth=true;
+		if (IS_VGA_ARCH) {
+			if (vga.draw.vga_sub_350_line_handling ==
+			    VgaSub350LineHandling::DoubleScan) {
+				aspect_ratio /= 2;
+			} else {
+				doublewidth = true;
+			}
+		}
 		vga.draw.blocks=width*2;
 		width<<=3;
 		VGA_DrawLine=VGA_Draw_2BPP_Line;
