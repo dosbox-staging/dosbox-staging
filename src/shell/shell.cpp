@@ -107,11 +107,17 @@ void DOS_Shell::GetRedirection(char *line,
 			found = redir.find_first_of(find_chars);
 			// Get the length of the substring before the
 			// characters, or the entire string if not found
-			if (found == std::string::npos)
+			if (found == std::string::npos) {
 				temp_len = redir.size();
-			else
-				temp_len = found - // Ignore ':' character
-				           (redir[found - 1] == ':' ? 1 : 0);
+			} else {
+				temp_len = found;
+			}
+
+			// Ignore trailing ':' character
+			if (temp_len > 0 && redir[temp_len - 1] == ':') {
+				--temp_len;
+			}
+
 			// Assign substring content of length to output parameters
 			output = (character == '>'
 			                  ? &out_file
