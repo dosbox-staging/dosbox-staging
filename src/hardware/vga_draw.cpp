@@ -1735,10 +1735,20 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
 		break;
 	case M_EGA:
-		doublewidth = vga.seq.clocking_mode.is_pixel_doubling;
 		vga.draw.blocks = width;
 		width<<=3;
 		if (IS_VGA_ARCH) {
+			if (CurMode->sheight < 350) {
+				const auto is_640_wide = CurMode->swidth == 640;
+				if (vga.draw.vga_sub_350_line_handling ==
+				    VgaSub350LineHandling::DoubleScan) {
+					aspect_ratio /= !is_640_wide ? 2 : 1;
+				} else {
+					aspect_ratio *= is_640_wide ? 2 : 1;
+					doubleheight = true;
+					doublewidth  = true;
+				}
+			}
 			// Per-line palette changes (Spacepigs Megademo, Copper)
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 			bpp = 32;
