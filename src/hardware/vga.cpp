@@ -49,42 +49,60 @@ std::pair<VGAModes, uint16_t> VGA_GetCurrentMode()
 	return {vga.mode, CurMode->mode};
 }
 
-// Describes the given video mode's type and ID, ie: "VGA, "256 color"
+// Describes the given video mode's type and ID, ie: "VGA, "256 colour"
 std::pair<const char*, const char*> VGA_DescribeMode(const VGAModes video_mode_type,
-                                                     const uint16_t video_mode_id)
+                                                     const uint16_t video_mode_id,
+                                                     const uint16_t width,
+                                                     const uint16_t height)
 {
 	auto maybe_cga_on_tandy = [=]() {
 		constexpr uint16_t cga_max_mode = 0x006;
 		return video_mode_id <= cga_max_mode ? "CGA" : "Tandy";
 	};
+
+	auto maybe_mcga_if_320x200 = [=]() {
+		constexpr uint16_t mcga_width  = 320;
+		constexpr uint16_t mcga_height = 200;
+
+		const auto is_single_scan_mcga = (width == mcga_width &&
+		                                  height == mcga_height);
+		const auto is_double_scan_mcga = (width == (mcga_width * 2) &&
+		                                  height == (mcga_height * 2));
+
+		if (is_single_scan_mcga || is_double_scan_mcga) {
+			return "MCGA";
+		}
+		return "VGA";
+	};
+
 	// clang-format off
 	switch (video_mode_type) {
 	case M_HERC_TEXT:          return {"Text",     "monochrome"};
 	case M_HERC_GFX:           return {"Hercules", "monochrome"};
 	case M_TEXT:
 	case M_TANDY_TEXT:
-	case M_CGA_TEXT_COMPOSITE: return {"Text",  "16 color"};
+	case M_CGA_TEXT_COMPOSITE: return {"Text",  "16-colour"};
 	case M_CGA2_COMPOSITE:
 	case M_CGA4_COMPOSITE:     return {"CGA",   "composite"};
-	case M_CGA2:               return {"CGA",   "2 color"};
-	case M_CGA4:               return {"CGA",   "4 color"};
-	case M_CGA16:              return {"CGA",   "16 color"};
-	case M_TANDY2:             return {maybe_cga_on_tandy(), "2 color"};
-	case M_TANDY4:             return {maybe_cga_on_tandy(), "4 color"};
-	case M_TANDY16:            return {maybe_cga_on_tandy(), "16 color"};
+	case M_CGA2:               return {"CGA",   "2-colour"};
+	case M_CGA4:               return {"CGA",   "4-colour"};
+	case M_CGA16:              return {"CGA",   "16-colour"};
+	case M_TANDY2:             return {maybe_cga_on_tandy(), "2-colour"};
+	case M_TANDY4:             return {maybe_cga_on_tandy(), "4-colour"};
+	case M_TANDY16:            return {maybe_cga_on_tandy(), "16-colour"};
 	case M_EGA: // see comment below
 	    switch (video_mode_id) {
-	    case 0x011:            return {"VGA",   "monochrome"};
-	    case 0x012:            return {"VGA",   "16 color"};
-	    default:               return {"EGA",   "16 color"};
+	    case 0x011:            return {"MCGA",  "2-colour"};
+	    case 0x012:            return {"VGA",   "16-colour"};
+	    default:               return {"EGA",   "16-colour"};
 	    }
-	case M_VGA:                return {"VGA",   "8-bit"};
-	case M_LIN4:               return {"VESA",  "16 color"};
-	case M_LIN8:               return {"VESA",  "8-bit"};
+	case M_VGA:                return {maybe_mcga_if_320x200(), "256-colour"};
+	case M_LIN4:               return {"VESA",  "16-colour"};
+	case M_LIN8:               return {"VESA",  "256-colour"};
 	case M_LIN15:              return {"VESA",  "15-bit"};
 	case M_LIN16:              return {"VESA",  "16-bit"};
-	case M_LIN24:              return {"VESA",  "24-bit"};
-	case M_LIN32:              return {"VESA",  "32-bit"};
+	case M_LIN24:
+	case M_LIN32:              return {"VESA",  "24-bit"};
 
 	case M_ERROR:
 	default:
@@ -92,12 +110,12 @@ std::pair<const char*, const char*> VGA_DescribeMode(const VGAModes video_mode_t
 		LOG_ERR("VIDEO: Unknown mode: %u with ID: %u",
 		        static_cast<uint32_t>(video_mode_type),
 		        video_mode_id);
-		return {"Unknown mode", "Unknown color-depth"};
+		return {"Unknown mode", "Unknown colour-depth"};
 	}
 	// clang-format on
 
 	// Modes 11h and 12h were supported by high-end EGA cards and because of
-	// that operate internally more like EGA modes (so DOBBox uses the EGA
+	// that operate internally more like EGA modes (so DOSBox uses the EGA
 	// type for them), however they were classified as VGA from a standards
 	// perspective, so we report them as such.
 	// References:
@@ -137,7 +155,7 @@ void VGA_DetermineMode(void) {
 		svga.determine_mode();
 		return;
 	}
-	/* Test for VGA output active or direct color modes */
+	/* Test for VGA output active or direct colour modes */
 	switch (vga.s3.misc_control_2 >> 4) {
 	case 0:
 		if (vga.attr.mode_control & 1) { // graphics mode

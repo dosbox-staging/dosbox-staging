@@ -279,7 +279,7 @@ SDL_Window *GFX_GetSDLWindow(void)
 
 #if C_OPENGL
 
-// SDL allows pixels sizes (color-depth) from 1 to 4 bytes
+// SDL allows pixels sizes (colour-depth) from 1 to 4 bytes
 constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
 
 
@@ -749,7 +749,8 @@ static void log_display_properties(int source_w, int source_h,
 	const auto out_par = scale_y / scale_x;
 
 	const auto [mode_type, mode_id] = VGA_GetCurrentMode();
-	const auto [mode_desc, colours_desc] = VGA_DescribeMode(mode_type, mode_id);
+	const auto [mode_desc, colours_desc] =
+	        VGA_DescribeMode(mode_type, mode_id, source_w, source_h);
 
 	const char *frame_mode = nullptr;
 	switch (sdl.frame.mode) {
@@ -2182,7 +2183,7 @@ dosurface:
 			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, framebuffer_bytes, NULL, GL_STREAM_DRAW_ARB);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 		} else {
-			sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit color
+			sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
 		}
 		sdl.opengl.pitch=width*4;
 
@@ -3617,7 +3618,7 @@ static std::optional<SDL_Surface *> get_rendered_surface()
 		}
 		const auto pixel_format = rinfo.texture_formats[0];
 
-		// Create a 32-bit surface with color format matching the renderer
+		// Create a 32-bit surface with colour format matching the renderer
 		const auto surface = SDL_CreateRGBSurfaceWithFormat(
 		        SDL_SWSURFACE, canvas.w, canvas.h, 32, pixel_format);
 		if (!surface || !renderer) {

@@ -578,7 +578,9 @@ std::pair<VGAModes, uint16_t> VGA_GetCurrentMode();
 
 // Describes the given video mode's type and ID, ie: "VGA, "256 color"
 std::pair<const char*, const char*> VGA_DescribeMode(const VGAModes video_mode_type,
-                                                     const uint16_t video_mode_id);
+                                                     const uint16_t video_mode_id,
+                                                     const uint16_t width,
+                                                     const uint16_t height);
 
 void VGA_SetClock(Bitu which, uint32_t target);
 
