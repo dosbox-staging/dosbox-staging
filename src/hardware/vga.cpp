@@ -53,6 +53,10 @@ std::pair<VGAModes, uint16_t> VGA_GetCurrentMode()
 std::pair<const char*, const char*> VGA_DescribeMode(const VGAModes video_mode_type,
                                                      const uint16_t video_mode_id)
 {
+	auto maybe_cga_on_tandy = [=]() {
+		constexpr uint16_t cga_max_mode = 0x006;
+		return video_mode_id <= cga_max_mode ? "CGA" : "Tandy";
+	};
 	// clang-format off
 	switch (video_mode_type) {
 	case M_HERC_TEXT:          return {"Text",     "monochrome"};
@@ -65,9 +69,9 @@ std::pair<const char*, const char*> VGA_DescribeMode(const VGAModes video_mode_t
 	case M_CGA2:               return {"CGA",   "2 color"};
 	case M_CGA4:               return {"CGA",   "4 color"};
 	case M_CGA16:              return {"CGA",   "16 color"};
-	case M_TANDY2:             return {"Tandy", "2 color"};
-	case M_TANDY4:             return {"Tandy", "4 color"};
-	case M_TANDY16:            return {"Tandy", "16 color"};
+	case M_TANDY2:             return {maybe_cga_on_tandy(), "2 color"};
+	case M_TANDY4:             return {maybe_cga_on_tandy(), "4 color"};
+	case M_TANDY16:            return {maybe_cga_on_tandy(), "16 color"};
 	case M_EGA: // see comment below
 	    switch (video_mode_id) {
 	    case 0x011:            return {"VGA",   "monochrome"};
