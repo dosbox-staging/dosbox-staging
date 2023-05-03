@@ -1731,7 +1731,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 				const auto is_640_wide = CurMode->swidth == 640;
 				if (vga.draw.vga_sub_350_line_handling ==
 				    VgaSub350LineHandling::DoubleScan) {
-					aspect_ratio /= !is_640_wide ? 2 : 1;
+					doublewidth = !is_640_wide;
 				} else {
 					aspect_ratio *= is_640_wide ? 2 : 1;
 					doubleheight = true;
