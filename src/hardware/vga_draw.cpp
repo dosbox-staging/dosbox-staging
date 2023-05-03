@@ -1662,15 +1662,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_VGA:
 		width<<=2;
 		if (CurMode->sheight < 350) {
-			if (vga.draw.vga_sub_350_line_handling ==
+			if (vga.draw.vga_sub_350_line_handling !=
 			    VgaSub350LineHandling::DoubleScan) {
-				aspect_ratio /= 2;
-			} else {
 				height /= 2;
 				vga.draw.address_line_total /= 2;
 				doubleheight = true;
-				doublewidth  = true;
 			}
+			doublewidth  = true;
 			bpp = 32;
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
