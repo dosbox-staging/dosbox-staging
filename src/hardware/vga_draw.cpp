@@ -1776,6 +1776,15 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			if (vga.draw.vga_sub_350_line_handling ==
 			    VgaSub350LineHandling::DoubleScan) {
 				aspect_ratio /= 2;
+				// TODO (CGA4_DOUBLE_SCAN_WORKAROUND):
+				//   Despite correctly line-doubling CGA
+				//   sub-350 line modes when VGA machines are
+				//   double-scanning, we are currently unable to
+				//   width-double them up to 640 columns at the
+				//   VGA-draw level, so this aspect change is
+				//   simply a work around. When this is
+				//   fixed, please adjust the corresponding log
+				//   work-around in sdlmain.cpp.
 			} else {
 				doublewidth = true;
 			}

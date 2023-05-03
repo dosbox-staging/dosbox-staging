@@ -746,7 +746,7 @@ static void log_display_properties(int source_w, int source_h,
 
 	const auto scale_x = static_cast<double>(target_w) / source_w;
 	const auto scale_y = static_cast<double>(target_h) / source_h;
-	const auto out_par = scale_y / scale_x;
+	auto out_par       = scale_y / scale_x;
 
 	const auto [mode_type, mode_id] = VGA_GetCurrentMode();
 	const auto [mode_desc, colours_desc] =
@@ -762,6 +762,18 @@ static void log_display_properties(int source_w, int source_h,
 	}
 
 	auto refresh_rate = VGA_GetPreferredRate();
+
+	// TODO (CGA4_DOUBLE_SCAN_WORKAROUND):
+	//   Despite being able to line-double CGA 200-line modes when VGA
+	//   machines are double-scanning, we are currently unable to
+	//   width-double them up to 640 columns at the VGA-draw level. Until
+	//   this is fixed, the following is a work-around to simply log this
+	//   correctly for users:
+	const auto in_cga_mode_4h_or_5h = (mode_id == 0x4 || mode_id == 0x5);
+	if (in_cga_mode_4h_or_5h && IS_VGA_ARCH && source_h > 200) {
+		source_w *= 2;
+		out_par *= 2;
+	}
 
 	// Double check all the char* string variables
 	assert(mode_desc);
