@@ -345,6 +345,147 @@ void CAPTURE_VideoStop() {
 #endif
 }
 
+void try_capture_video([[maybe_unused]] int width,
+                       [[maybe_unused]] int height,
+                       [[maybe_unused]] int bpp,
+                       [[maybe_unused]] int pitch,
+                       [[maybe_unused]] uint8_t flags,
+                       [[maybe_unused]] float fps,
+                       [[maybe_unused]] uint8_t *data,
+                       [[maybe_unused]] uint8_t *pal)
+{
+#if (C_SSHOT)
+	uint8_t doubleRow[SCALER_MAXWIDTH * 4];
+	auto countWidth = width;
+
+	if (CaptureState & CAPTURE_VIDEO) {
+		ZMBV_FORMAT format;
+		/* Disable capturing if any of the test fails */
+		if (capture.video.handle && (
+			capture.video.width != width ||
+			capture.video.height != height ||
+			capture.video.bpp != bpp ||
+			capture.video.fps != fps)) 
+		{
+			CAPTURE_VideoEvent(true);
+		}
+		CaptureState &= ~CAPTURE_VIDEO;
+		switch (bpp) {
+		case 8: format = ZMBV_FORMAT::BPP_8; break;
+		case 15: format = ZMBV_FORMAT::BPP_15; break;
+		case 16: format = ZMBV_FORMAT::BPP_16; break;
+
+		// ZMBV is "the DOSBox capture format" supported by external
+		// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
+		// didn't have 24-bit color, the format itself doesn't support
+		// it. I this case we tell ZMBV the data is 32-bit and let the
+		// rgb24's int() cast operator up-convert.
+		case 24: format = ZMBV_FORMAT::BPP_32; break;
+		case 32: format = ZMBV_FORMAT::BPP_32; break;
+		default: goto skip_video;
+		}
+		if (!capture.video.handle) {
+			capture.video.handle = CAPTURE_OpenFile("Video",".avi");
+			if (!capture.video.handle)
+				goto skip_video;
+			capture.video.codec = new VideoCodec();
+			if (!capture.video.codec)
+				goto skip_video;
+			if (!capture.video.codec->SetupCompress( width, height)) 
+				goto skip_video;
+			capture.video.bufSize = capture.video.codec->NeededSize(width, height, format);
+			capture.video.buf.resize(capture.video.bufSize);
+			capture.video.index.resize(16 * 4096);
+			capture.video.indexused = 8;
+
+			capture.video.width = width;
+			capture.video.height = height;
+			capture.video.bpp = bpp;
+			capture.video.fps = fps;
+			for (auto i = 0; i < AVI_HEADER_SIZE; ++i)
+				fputc(0,capture.video.handle);
+			capture.video.frames = 0;
+			capture.video.written = 0;
+			capture.video.audioused = 0;
+			capture.video.audiowritten = 0;
+		}
+		int codecFlags;
+		if (capture.video.frames % 300 == 0)
+			codecFlags = 1;
+		else codecFlags = 0;
+		if (!capture.video.codec->PrepareCompressFrame(codecFlags, format, pal,
+		                                               capture.video.buf.data(),
+		                                               capture.video.bufSize))
+			goto skip_video;
+
+		const bool is_double_width = flags & CAPTURE_FLAG_DBLW;
+		const auto height_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
+
+		for (auto i = 0; i < height; ++i) {
+			auto rowPointer = doubleRow;
+			const auto srcLine = data + (i >> height_divisor) * pitch;
+
+			if (is_double_width) {
+				countWidth = width >> 1;
+				switch ( bpp) {
+				case 8:
+					for (auto x = 0; x < countWidth; ++x)
+						doubleRow[x * 2 + 0] = doubleRow[x * 2 + 1] = srcLine[x];
+					break;
+				case 15:
+				case 16:
+					for (auto x = 0; x < countWidth; ++x)
+						((uint16_t *)doubleRow)[x*2+0] =
+						((uint16_t *)doubleRow)[x*2+1] = ((uint16_t *)srcLine)[x];
+					break;
+				case 24:
+					for (auto x = 0; x < countWidth; ++x) {
+						const auto pixel = reinterpret_cast<rgb24 *>(srcLine)[x];
+						reinterpret_cast<uint32_t *>(doubleRow)[x * 2 + 0] = pixel;
+						reinterpret_cast<uint32_t *>(doubleRow)[x * 2 + 1] = pixel;
+					}
+					break;
+				case 32:
+					for (auto x = 0; x < countWidth; ++x)
+						((uint32_t *)doubleRow)[x*2+0] =
+						((uint32_t *)doubleRow)[x*2+1] = ((uint32_t *)srcLine)[x];
+					break;
+				}
+                rowPointer=doubleRow;
+			} else {
+				if (bpp == 24) {
+					for (auto x = 0; x < width; ++x) {
+						const auto pixel = reinterpret_cast<rgb24 *>(srcLine)[x];
+						reinterpret_cast<uint32_t *>(doubleRow)[x] = pixel;
+					}
+					// Using doubleRow for this conversion when it is not actually double row!
+					rowPointer = doubleRow;
+				} else {
+					rowPointer = srcLine;
+				}
+			}
+			capture.video.codec->CompressLines( 1, &rowPointer);
+		}
+		int written = capture.video.codec->FinishCompressFrame();
+		if (written < 0)
+			goto skip_video;
+		CAPTURE_AddAviChunk("00dc", written, capture.video.buf.data(), codecFlags & 1 ? 0x10 : 0x0);
+		capture.video.frames++;
+//		LOG_MSG("Frame %d video %d audio %d",capture.video.frames, written, capture.video.audioused *4 );
+		if ( capture.video.audioused ) {
+			CAPTURE_AddAviChunk( "01wb", capture.video.audioused * 4, capture.video.audiobuf, 0);
+			capture.video.audiowritten = capture.video.audioused*4;
+			capture.video.audioused = 0;
+		}
+
+		/* Everything went okay, set flag again for next frame */
+		CaptureState |= CAPTURE_VIDEO;
+	}
+skip_video:
+#endif
+	return;
+}
+
 void CAPTURE_AddImage([[maybe_unused]] int width,
                       [[maybe_unused]] int height,
                       [[maybe_unused]] int bpp,
@@ -376,19 +517,23 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 		CaptureState &= ~CAPTURE_IMAGE;
 		/* Open the actual file */
 		FILE *fp = CAPTURE_OpenFile("Screenshot", ".png");
-		if (!fp)
-			goto skip_shot;
+		if (!fp) {
+			try_capture_video(width, height, bpp, pitch, flags, fps, data, pal);
+			return;
+		}
 		/* First try to allocate the png structures */
 		png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL,NULL, NULL);
 		if (!png_ptr) {
 			fclose(fp);
-			goto skip_shot;
+			try_capture_video(width, height, bpp, pitch, flags, fps, data, pal);
+			return;
 		}
 		info_ptr = png_create_info_struct(png_ptr);
 		if (!info_ptr) {
 			png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
 			fclose(fp);
-			goto skip_shot;
+			try_capture_video(width, height, bpp, pitch, flags, fps, data, pal);
+			return;
 		}
 	
 		/* Finalize the initing of png library */
@@ -522,133 +667,8 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 		/*close file*/
 		fclose(fp);
 	}
-skip_shot:
-	if (CaptureState & CAPTURE_VIDEO) {
-		ZMBV_FORMAT format;
-		/* Disable capturing if any of the test fails */
-		if (capture.video.handle && (
-			capture.video.width != width ||
-			capture.video.height != height ||
-			capture.video.bpp != bpp ||
-			capture.video.fps != fps)) 
-		{
-			CAPTURE_VideoEvent(true);
-		}
-		CaptureState &= ~CAPTURE_VIDEO;
-		switch (bpp) {
-		case 8: format = ZMBV_FORMAT::BPP_8; break;
-		case 15: format = ZMBV_FORMAT::BPP_15; break;
-		case 16: format = ZMBV_FORMAT::BPP_16; break;
-
-		// ZMBV is "the DOSBox capture format" supported by external
-		// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
-		// didn't have 24-bit color, the format itself doesn't support
-		// it. I this case we tell ZMBV the data is 32-bit and let the
-		// rgb24's int() cast operator up-convert.
-		case 24: format = ZMBV_FORMAT::BPP_32; break;
-		case 32: format = ZMBV_FORMAT::BPP_32; break;
-		default: goto skip_video;
-		}
-		if (!capture.video.handle) {
-			capture.video.handle = CAPTURE_OpenFile("Video",".avi");
-			if (!capture.video.handle)
-				goto skip_video;
-			capture.video.codec = new VideoCodec();
-			if (!capture.video.codec)
-				goto skip_video;
-			if (!capture.video.codec->SetupCompress( width, height)) 
-				goto skip_video;
-			capture.video.bufSize = capture.video.codec->NeededSize(width, height, format);
-			capture.video.buf.resize(capture.video.bufSize);
-			capture.video.index.resize(16 * 4096);
-			capture.video.indexused = 8;
-
-			capture.video.width = width;
-			capture.video.height = height;
-			capture.video.bpp = bpp;
-			capture.video.fps = fps;
-			for (auto i = 0; i < AVI_HEADER_SIZE; ++i)
-				fputc(0,capture.video.handle);
-			capture.video.frames = 0;
-			capture.video.written = 0;
-			capture.video.audioused = 0;
-			capture.video.audiowritten = 0;
-		}
-		int codecFlags;
-		if (capture.video.frames % 300 == 0)
-			codecFlags = 1;
-		else codecFlags = 0;
-		if (!capture.video.codec->PrepareCompressFrame(codecFlags, format, pal,
-		                                               capture.video.buf.data(),
-		                                               capture.video.bufSize))
-			goto skip_video;
-
-		const bool is_double_width = flags & CAPTURE_FLAG_DBLW;
-		const auto height_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
-
-		for (auto i = 0; i < height; ++i) {
-			auto rowPointer = doubleRow;
-			const auto srcLine = data + (i >> height_divisor) * pitch;
-
-			if (is_double_width) {
-				countWidth = width >> 1;
-				switch ( bpp) {
-				case 8:
-					for (auto x = 0; x < countWidth; ++x)
-						doubleRow[x * 2 + 0] = doubleRow[x * 2 + 1] = srcLine[x];
-					break;
-				case 15:
-				case 16:
-					for (auto x = 0; x < countWidth; ++x)
-						((uint16_t *)doubleRow)[x*2+0] =
-						((uint16_t *)doubleRow)[x*2+1] = ((uint16_t *)srcLine)[x];
-					break;
-				case 24:
-					for (auto x = 0; x < countWidth; ++x) {
-						const auto pixel = reinterpret_cast<rgb24 *>(srcLine)[x];
-						reinterpret_cast<uint32_t *>(doubleRow)[x * 2 + 0] = pixel;
-						reinterpret_cast<uint32_t *>(doubleRow)[x * 2 + 1] = pixel;
-					}
-					break;
-				case 32:
-					for (auto x = 0; x < countWidth; ++x)
-						((uint32_t *)doubleRow)[x*2+0] =
-						((uint32_t *)doubleRow)[x*2+1] = ((uint32_t *)srcLine)[x];
-					break;
-				}
-                rowPointer=doubleRow;
-			} else {
-				if (bpp == 24) {
-					for (auto x = 0; x < width; ++x) {
-						const auto pixel = reinterpret_cast<rgb24 *>(srcLine)[x];
-						reinterpret_cast<uint32_t *>(doubleRow)[x] = pixel;
-					}
-					// Using doubleRow for this conversion when it is not actually double row!
-					rowPointer = doubleRow;
-				} else {
-					rowPointer = srcLine;
-				}
-			}
-			capture.video.codec->CompressLines( 1, &rowPointer);
-		}
-		int written = capture.video.codec->FinishCompressFrame();
-		if (written < 0)
-			goto skip_video;
-		CAPTURE_AddAviChunk("00dc", written, capture.video.buf.data(), codecFlags & 1 ? 0x10 : 0x0);
-		capture.video.frames++;
-//		LOG_MSG("Frame %d video %d audio %d",capture.video.frames, written, capture.video.audioused *4 );
-		if ( capture.video.audioused ) {
-			CAPTURE_AddAviChunk( "01wb", capture.video.audioused * 4, capture.video.audiobuf, 0);
-			capture.video.audiowritten = capture.video.audioused*4;
-			capture.video.audioused = 0;
-		}
-
-		/* Everything went okay, set flag again for next frame */
-		CaptureState |= CAPTURE_VIDEO;
-	}
-skip_video:
 #endif
-	return;
+	try_capture_video(width, height, bpp, pitch, flags, fps, data, pal);
 }
 
 #if (C_SSHOT)
