@@ -382,17 +382,20 @@ void try_capture_video([[maybe_unused]] int width,
 		// rgb24's int() cast operator up-convert.
 		case 24: format = ZMBV_FORMAT::BPP_32; break;
 		case 32: format = ZMBV_FORMAT::BPP_32; break;
-		default: goto skip_video;
+		default: return;
 		}
 		if (!capture.video.handle) {
 			capture.video.handle = CAPTURE_OpenFile("Video",".avi");
-			if (!capture.video.handle)
-				goto skip_video;
+			if (!capture.video.handle) {
+				return;
+			}
 			capture.video.codec = new VideoCodec();
-			if (!capture.video.codec)
-				goto skip_video;
-			if (!capture.video.codec->SetupCompress( width, height)) 
-				goto skip_video;
+			if (!capture.video.codec) {
+				return;
+			}
+			if (!capture.video.codec->SetupCompress( width, height))  {
+				return;
+			}
 			capture.video.bufSize = capture.video.codec->NeededSize(width, height, format);
 			capture.video.buf.resize(capture.video.bufSize);
 			capture.video.index.resize(16 * 4096);
@@ -415,8 +418,9 @@ void try_capture_video([[maybe_unused]] int width,
 		else codecFlags = 0;
 		if (!capture.video.codec->PrepareCompressFrame(codecFlags, format, pal,
 		                                               capture.video.buf.data(),
-		                                               capture.video.bufSize))
-			goto skip_video;
+		                                               capture.video.bufSize)) {
+			return;
+		}
 
 		const bool is_double_width = flags & CAPTURE_FLAG_DBLW;
 		const auto height_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
@@ -467,8 +471,9 @@ void try_capture_video([[maybe_unused]] int width,
 			capture.video.codec->CompressLines( 1, &rowPointer);
 		}
 		int written = capture.video.codec->FinishCompressFrame();
-		if (written < 0)
-			goto skip_video;
+		if (written < 0) {
+			return;
+		}
 		CAPTURE_AddAviChunk("00dc", written, capture.video.buf.data(), codecFlags & 1 ? 0x10 : 0x0);
 		capture.video.frames++;
 //		LOG_MSG("Frame %d video %d audio %d",capture.video.frames, written, capture.video.audioused *4 );
@@ -481,9 +486,7 @@ void try_capture_video([[maybe_unused]] int width,
 		/* Everything went okay, set flag again for next frame */
 		CaptureState |= CAPTURE_VIDEO;
 	}
-skip_video:
 #endif
-	return;
 }
 
 void CAPTURE_AddImage([[maybe_unused]] int width,
