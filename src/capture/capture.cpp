@@ -355,9 +355,6 @@ void try_capture_video([[maybe_unused]] int width,
                        [[maybe_unused]] uint8_t *pal)
 {
 #if (C_SSHOT)
-	uint8_t doubleRow[SCALER_MAXWIDTH * 4];
-	auto countWidth = width;
-
 	if (CaptureState & CAPTURE_VIDEO) {
 		ZMBV_FORMAT format;
 		/* Disable capturing if any of the test fails */
@@ -425,12 +422,14 @@ void try_capture_video([[maybe_unused]] int width,
 		const bool is_double_width = flags & CAPTURE_FLAG_DBLW;
 		const auto height_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
 
+		uint8_t doubleRow[SCALER_MAXWIDTH * 4];
+
 		for (auto i = 0; i < height; ++i) {
 			auto rowPointer = doubleRow;
 			const auto srcLine = data + (i >> height_divisor) * pitch;
 
 			if (is_double_width) {
-				countWidth = width >> 1;
+				const auto countWidth = width >> 1;
 				switch ( bpp) {
 				case 8:
 					for (auto x = 0; x < countWidth; ++x)
@@ -499,9 +498,6 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
                       [[maybe_unused]] uint8_t *pal)
 {
 #if (C_SSHOT)
-	uint8_t doubleRow[SCALER_MAXWIDTH * 4];
-	auto countWidth = width;
-
 	if (flags & CAPTURE_FLAG_DBLH)
 		height *= 2;
 	if (flags & CAPTURE_FLAG_DBLW)
@@ -583,27 +579,29 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 		const bool is_double_width = (flags & CAPTURE_FLAG_DBLW);
 		const auto row_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
 
+		uint8_t doubleRow[SCALER_MAXWIDTH * 4];
+
 		for (auto i = 0; i < height; ++i) {
 			auto srcLine = data + (i >> row_divisor) * pitch;
 			auto rowPointer = srcLine;
 			switch (bpp) {
 			case 8:
 				if (is_double_width) {
-					for (auto x = 0; x < countWidth; ++x)
+					for (auto x = 0; x < width; ++x)
 						doubleRow[x * 2 + 0] = doubleRow[x * 2 + 1] = srcLine[x];
 					rowPointer = doubleRow;
 				}
 				break;
 			case 15:
 				if (is_double_width) {
-					for (auto x = 0; x < countWidth; ++x) {
+					for (auto x = 0; x < width; ++x) {
 						const auto pixel = host_to_le(reinterpret_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x * 6 + 0] = doubleRow[x * 6 + 3] = ((pixel & 0x001f) * 0x21) >> 2;
 						doubleRow[x * 6 + 1] = doubleRow[x * 6 + 4] = ((pixel & 0x03e0) * 0x21) >> 7;
 						doubleRow[x * 6 + 2] = doubleRow[x * 6 + 5] = ((pixel & 0x7c00) * 0x21) >> 12;
 					}
 				} else {
-					for (auto x = 0; x < countWidth; ++x) {
+					for (auto x = 0; x < width; ++x) {
 						const auto pixel = host_to_le(reinterpret_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x * 3 + 0] = ((pixel & 0x001f) * 0x21) >> 2;
 						doubleRow[x * 3 + 1] = ((pixel & 0x03e0) * 0x21) >> 7;
@@ -614,14 +612,14 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 				break;
 			case 16:
 				if (is_double_width) {
-					for (auto x = 0; x < countWidth; ++x) {
+					for (auto x = 0; x < width; ++x) {
 						const auto pixel = host_to_le(reinterpret_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x * 6 + 0] = doubleRow[x * 6 + 3] = ((pixel & 0x001f) * 0x21) >> 2;
 						doubleRow[x * 6 + 1] = doubleRow[x * 6 + 4] = ((pixel & 0x07e0) * 0x41) >> 9;
 						doubleRow[x * 6 + 2] = doubleRow[x * 6 + 5] = ((pixel & 0xf800) * 0x21) >> 13;
 					}
 				} else {
-					for (auto x = 0; x < countWidth; ++x) {
+					for (auto x = 0; x < width; ++x) {
 						const auto pixel = host_to_le(reinterpret_cast<uint16_t *>(srcLine)[x]);
 						doubleRow[x * 3 + 0] = ((pixel & 0x001f) * 0x21) >> 2;
 						doubleRow[x * 3 + 1] = ((pixel & 0x07e0) * 0x41) >> 9;
@@ -632,7 +630,7 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 				break;
 			case 24:
 				if (is_double_width) {
-					for (auto x = 0; x < countWidth; ++x) {
+					for (auto x = 0; x < width; ++x) {
 						const auto pixel = host_to_le(reinterpret_cast<rgb24 *>(srcLine)[x]);
 						reinterpret_cast<rgb24 *>(doubleRow)[x * 2 + 0] = pixel;
 						reinterpret_cast<rgb24 *>(doubleRow)[x * 2 + 1] = pixel;
@@ -646,13 +644,13 @@ void CAPTURE_AddImage([[maybe_unused]] int width,
 				break;
 			case 32:
 				if (is_double_width) {
-					for (auto x = 0; x < countWidth; ++x) {
+					for (auto x = 0; x < width; ++x) {
 						doubleRow[x * 6 + 0] = doubleRow[x * 6 + 3] = srcLine[x * 4 + 0];
 						doubleRow[x * 6 + 1] = doubleRow[x * 6 + 4] = srcLine[x * 4 + 1];
 						doubleRow[x * 6 + 2] = doubleRow[x * 6 + 5] = srcLine[x * 4 + 2];
 					}
 				} else {
-					for (auto x = 0; x < countWidth; ++x) {
+					for (auto x = 0; x < width; ++x) {
 						doubleRow[x * 3 + 0] = srcLine[x * 4 + 0];
 						doubleRow[x * 3 + 1] = srcLine[x * 4 + 1];
 						doubleRow[x * 3 + 2] = srcLine[x * 4 + 2];
