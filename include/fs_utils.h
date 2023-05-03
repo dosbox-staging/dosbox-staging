@@ -92,7 +92,7 @@ int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags = 0x0) no
 // Convert a filesystem time to a raw time_t value
 std::time_t to_time_t(const std_fs::file_time_type &fs_time);
 
-#if !defined(WIN32)
+#if !defined(WIN32) && !defined(MACOSX)
 
 /* Get directory for storing user configuration files.
  *

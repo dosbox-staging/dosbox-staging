@@ -292,15 +292,16 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	// compile time.
 	add_if_exists(std_fs::path(CUSTOM_DATADIR) / CANONICAL_PROJECT_NAME);
 
-	// Fourth priority is the user's XDG data specification
+	// Fourth priority is the user and system XDG data specification
+#if !defined(WIN32) && !defined(MACOSX)
 	add_if_exists(get_xdg_data_home() / CANONICAL_PROJECT_NAME);
 
-	// Fifth priority is the system's XDG data specification
 	for (const auto& data_dir : get_xdg_data_dirs()) {
 		add_if_exists(data_dir / CANONICAL_PROJECT_NAME);
 	}
+#endif
 
-	// Sixth priority is a best-effort fallback for --prefix installations
+	// Fifth priority is a best-effort fallback for --prefix installations
 	// into paths not pointed to by the system's XDG_DATA_ variables. Note
 	// that This lookup is deliberately relative to the executable to permit
 	// portability of the install tree (do not replace this with --prefix,
