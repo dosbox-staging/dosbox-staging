@@ -47,7 +47,7 @@ static struct {
 	uint32_t indexused            = 0;
 } video = {};
 
-static void add_avi_chunk(const char * tag, uint32_t size, void * data, uint32_t flags) {
+static void add_avi_chunk(const char * tag, const uint32_t size, const void * data, const uint32_t flags) {
 	uint8_t chunk[8];uint8_t *index;uint32_t pos, writesize;
 
 	chunk[0] = tag[0];chunk[1] = tag[1];chunk[2] = tag[2];chunk[3] = tag[3];
@@ -72,7 +72,7 @@ static void add_avi_chunk(const char * tag, uint32_t size, void * data, uint32_t
 	host_writed(index+12, size);
 }
 
-void handle_video_event(bool pressed) {
+void handle_video_event(const bool pressed) {
 	if (!pressed)
 		return;
 
@@ -84,8 +84,8 @@ void handle_video_event(bool pressed) {
 		LOG_MSG("Stopped capturing video.");
 
 		uint8_t avi_header[AVI_HEADER_SIZE];
-		Bitu main_list;
-		Bitu header_pos=0;
+		uint32_t main_list;
+		uint32_t header_pos=0;
 #define AVIOUT4(_S_) memcpy(&avi_header[header_pos],_S_,4);header_pos+=4;
 #define AVIOUTw(_S_) host_writew(&avi_header[header_pos], _S_);header_pos+=2;
 #define AVIOUTd(_S_) host_writed(&avi_header[header_pos], _S_);header_pos+=4;
@@ -213,7 +213,7 @@ void handle_video_event(bool pressed) {
 void capture_video_add_wave(const uint32_t freq, const uint32_t len,
                             const int16_t* data)
 {
-	Bitu left = WAVE_BUF - video.audioused;
+	uint32_t left = WAVE_BUF - video.audioused;
 	if (left > len) {
 		left = len;
 	}

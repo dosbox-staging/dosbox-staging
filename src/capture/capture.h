@@ -29,22 +29,22 @@ class Section;
 #define CAPTURE_IMAGE 0x08
 #define CAPTURE_VIDEO 0x10
 
-extern Bitu CaptureState;
+extern uint8_t CaptureState;
 
 std::string CAPTURE_GenerateFilename(const char* type, const char* ext);
 FILE* CAPTURE_CreateFile(const char* type, const char* ext);
 
-void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t* data);
+void CAPTURE_AddWave(const uint32_t freq, const uint32_t len, const int16_t* data);
 
 #define CAPTURE_FLAG_DBLW 0x1
 #define CAPTURE_FLAG_DBLH 0x2
 
 void CAPTURE_AddImage(const uint16_t width, const uint16_t height,
                       const uint8_t bits_per_pixel, const uint16_t pitch,
-                      uint8_t capture_flags, float frames_per_second,
-                      uint8_t* image_data, uint8_t* palette_data);
+                      const uint8_t capture_flags, const float frames_per_second,
+                      const uint8_t* image_data, const uint8_t* palette_data);
 
-void CAPTURE_AddMidi(bool sysex, Bitu len, uint8_t* data);
+void CAPTURE_AddMidi(const bool sysex, const size_t len, const uint8_t* data);
 void CAPTURE_VideoStart();
 void CAPTURE_VideoStop();
 

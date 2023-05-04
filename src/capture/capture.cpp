@@ -38,7 +38,7 @@
 
 static std::string capturedir;
 extern const char* RunningProgram;
-Bitu CaptureState;
+uint8_t CaptureState;
 
 std::string CAPTURE_GenerateFilename(const char *type, const char *ext)
 {
@@ -130,36 +130,38 @@ void CAPTURE_VideoStop() {
 #endif
 }
 
-void CAPTURE_AddImage([[maybe_unused]] uint16_t width,
-                      [[maybe_unused]] uint16_t height,
-                      [[maybe_unused]] uint8_t bits_per_pixel,
-                      [[maybe_unused]] uint16_t pitch,
-                      [[maybe_unused]] uint8_t capture_flags,
-                      [[maybe_unused]] float frames_per_second,
-                      [[maybe_unused]] uint8_t* image_data,
-                      [[maybe_unused]] uint8_t* palette_data)
+void CAPTURE_AddImage([[maybe_unused]] const uint16_t width,
+                      [[maybe_unused]] const uint16_t height,
+                      [[maybe_unused]] const uint8_t bits_per_pixel,
+                      [[maybe_unused]] const uint16_t pitch,
+                      [[maybe_unused]] const uint8_t capture_flags,
+                      [[maybe_unused]] const float frames_per_second,
+                      [[maybe_unused]] const uint8_t* image_data,
+                      [[maybe_unused]] const uint8_t* palette_data)
 {
 #if (C_SSHOT)
+	auto image_height = height;
 	if (capture_flags & CAPTURE_FLAG_DBLH) {
-		height *= 2;
+		image_height *= 2;
 	}
+	auto image_width = width;
 	if (capture_flags & CAPTURE_FLAG_DBLW) {
-		width *= 2;
+		image_width *= 2;
 	}
-	if (height > SCALER_MAXHEIGHT) {
+	if (image_height > SCALER_MAXHEIGHT) {
 		return;
 	}
-	if (width > SCALER_MAXWIDTH) {
+	if (image_width > SCALER_MAXWIDTH) {
 		return;
 	}
 
 	if (CaptureState & CAPTURE_IMAGE) {
-		capture_image(width, height, bits_per_pixel, pitch, capture_flags, image_data, palette_data);
+		capture_image(image_width, image_height, bits_per_pixel, pitch, capture_flags, image_data, palette_data);
 		CaptureState &= ~CAPTURE_IMAGE;
 	}
 	if (CaptureState & CAPTURE_VIDEO) {
-		capture_video(width,
-		              height,
+		capture_video(image_width,
+		              image_height,
 		              bits_per_pixel,
 		              pitch,
 		              capture_flags,
@@ -172,7 +174,7 @@ void CAPTURE_AddImage([[maybe_unused]] uint16_t width,
 }
 
 #if (C_SSHOT)
-static void handle_screenshot_event(bool pressed) {
+static void handle_screenshot_event(const bool pressed) {
 	if (!pressed) {
 		return;
 	}
@@ -181,7 +183,7 @@ static void handle_screenshot_event(bool pressed) {
 #endif
 
 
-void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t * data) {
+void CAPTURE_AddWave(const uint32_t freq, const uint32_t len, const int16_t * data) {
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
 		capture_video_add_wave(freq, len, data);
@@ -192,7 +194,7 @@ void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t * data) {
 	}
 }
 
-void CAPTURE_AddMidi(bool sysex, Bitu len, uint8_t * data) {
+void CAPTURE_AddMidi(const bool sysex, const size_t len, const uint8_t * data) {
 	capture_add_midi(sysex, len, data);
 }
 

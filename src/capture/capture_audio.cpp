@@ -43,7 +43,7 @@ static uint8_t wavheader[]={
 	0x0,0x0,0x0,0x0,							/* uint32_t data size */
 };
 
-void handle_wave_event(bool pressed) {
+void handle_wave_event(const bool pressed) {
 	if (!pressed)
 		return;
 	/* Check for previously opened wave file */
@@ -67,7 +67,7 @@ void handle_wave_event(bool pressed) {
 	CaptureState ^= CAPTURE_WAVE;
 }
 
-void capture_audio_add_wave(uint32_t freq, uint32_t len, int16_t * data) {
+void capture_audio_add_wave(const uint32_t freq, const uint32_t len, const int16_t * data) {
 	if (!wave.handle) {
 		wave.handle=CAPTURE_CreateFile("Wave Output",".wav");
 		if (!wave.handle) {
@@ -79,21 +79,22 @@ void capture_audio_add_wave(uint32_t freq, uint32_t len, int16_t * data) {
 		wave.freq = freq;
 		fwrite(wavheader,1,sizeof(wavheader),wave.handle);
 	}
-	int16_t * read = data;
-	while (len > 0 ) {
-		Bitu left = WAVE_BUF - wave.used;
+	const int16_t * read = data;
+	auto remaining = len;
+	while (remaining > 0 ) {
+		uint32_t left = WAVE_BUF - wave.used;
 		if (!left) {
 			fwrite(wave.buf,1,4*WAVE_BUF,wave.handle);
 			wave.length += 4*WAVE_BUF;
 			wave.used = 0;
 			left = WAVE_BUF;
 		}
-		if (left > len)
-			left = len;
+		if (left > remaining)
+			left = remaining;
 		memcpy( &wave.buf[wave.used], read, left*4);
 		wave.used += left;
 		read += left*2;
-		len -= left;
+		remaining -= left;
 	}
 }
 

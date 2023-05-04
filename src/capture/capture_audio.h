@@ -19,8 +19,8 @@
 #ifndef DOSBOX_CAPTURE_AUDIO_H
 #define DOSBOX_CAPTURE_AUDIO_H
 
-void capture_audio_add_wave(uint32_t freq, uint32_t len, int16_t * data);
+void capture_audio_add_wave(const uint32_t freq, const uint32_t len, const int16_t * data);
 
-void handle_wave_event(bool pressed);
+void handle_wave_event(const bool pressed);
 
 #endif

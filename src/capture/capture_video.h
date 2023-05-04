@@ -19,8 +19,6 @@
 #ifndef DOSBOX_CAPTURE_VIDEO_H
 #define DOSBOX_CAPTURE_VIDEO_H
 
-void handle_video_event(bool pressed);
-
 void capture_video(const uint16_t width, const uint16_t height,
                    const uint8_t bits_per_pixel, const uint16_t pitch,
                    const uint8_t capture_flags, const float frames_per_second,
@@ -28,5 +26,7 @@ void capture_video(const uint16_t width, const uint16_t height,
 
 void capture_video_add_wave(const uint32_t freq, const uint32_t len,
                             const int16_t* data);
+
+void handle_video_event(const bool pressed);
 
 #endif

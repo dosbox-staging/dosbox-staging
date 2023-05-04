@@ -21,6 +21,6 @@
 
 void capture_add_midi(const bool sysex, const size_t len, const uint8_t* data);
 
-void handle_midi_event(bool pressed);
+void handle_midi_event(const bool pressed);
 
 #endif

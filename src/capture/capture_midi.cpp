@@ -27,7 +27,7 @@
 
 #define MIDI_BUF 4*1024
 
-struct {
+static struct {
 	FILE *handle = nullptr;
 	uint8_t buffer[MIDI_BUF] = {0};
 	uint32_t used = 0;
@@ -46,7 +46,7 @@ static uint8_t midi_header[]={
 	//Track data
 };
 
-static void raw_midi_add(uint8_t data) {
+static void raw_midi_add(const uint8_t data) {
 	midi.buffer[midi.used++]=data;
 	if (midi.used >= MIDI_BUF ) {
 		midi.done += midi.used;
@@ -55,7 +55,7 @@ static void raw_midi_add(uint8_t data) {
 	}
 }
 
-static void raw_midi_add_number(uint32_t val) {
+static void raw_midi_add_number(const uint32_t val) {
 	if (val & 0xfe00000) raw_midi_add((uint8_t)(0x80|((val >> 21) & 0x7f)));
 	if (val & 0xfffc000) raw_midi_add((uint8_t)(0x80|((val >> 14) & 0x7f)));
 	if (val & 0xfffff80) raw_midi_add((uint8_t)(0x80|((val >> 7) & 0x7f)));
@@ -79,11 +79,11 @@ void capture_add_midi(const bool sysex, const size_t len, const uint8_t* data)
 		raw_midi_add( 0xf0 );
 		raw_midi_add_number(static_cast<uint32_t>(len));
 	}
-	for (Bitu i=0;i<len;i++)
+	for (size_t i=0;i<len;i++)
 		raw_midi_add(data[i]);
 }
 
-void handle_midi_event(bool pressed) {
+void handle_midi_event(const bool pressed) {
 	if (!midi.handle) {
 		return;
 	}
