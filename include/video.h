@@ -55,10 +55,8 @@ Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(uint8_t red,uint8_t green,uint8_t blue);
 void GFX_LogDisplayProperties();
 void GFX_SetShader(const std::string &source);
-Bitu GFX_SetSize(int width, int height, Bitu flags,
-                 double scalex, double scaley,
-                 GFX_CallBack_t callback,
-                 double pixel_aspect);
+Bitu GFX_SetSize(int width, int height, Bitu flags, double scalex,
+                 double scaley, GFX_CallBack_t callback);
 
 void GFX_ResetScreen(void);
 void GFX_RequestExit(const bool requested);

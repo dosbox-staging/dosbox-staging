@@ -17,7 +17,6 @@ libgui = static_library(
         libiir_dep,
         libloguru_dep,
         tracy_dep,
-        libppscale_dep,
     ],
 )
 

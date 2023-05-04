@@ -1669,8 +1669,8 @@ Graphics performance (speed up)
      only make one conf change at a time between runs.
 
      1) Compare OpenGL versus Texture rendering modes:
-        - output = opengl (or openglnb, openglpp), versus
-        - output = texture (or texturenb, texturepp)
+        - output = opengl (or openglnb), versus
+        - output = texture (or texturenb)
 
      2) Compare your windowing environment's compositing ability:
         - windowresolution = 640x480, vesus
