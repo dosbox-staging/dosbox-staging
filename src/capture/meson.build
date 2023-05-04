@@ -1,5 +1,6 @@
 libcapture_sources = files(
     'capture.cpp',
+    'capture_image.cpp',
 )
 
 libcapture = static_library(

@@ -4,6 +4,9 @@
     <ClCompile Include="..\src\capture\capture.cpp">
       <Filter>src\capture</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\capture\capture_image.cpp">
+      <Filter>src\capture</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\cpu\callback.cpp">
       <Filter>src\cpu</Filter>
     </ClCompile>
@@ -952,6 +955,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\src\capture\capture.h">
+      <Filter>src\capture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\capture\capture_image.h">
       <Filter>src\capture</Filter>
     </ClInclude>
     <ClInclude Include="..\src\cpu\core_dynrec\decoder.h">
