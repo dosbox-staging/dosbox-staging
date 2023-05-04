@@ -24,7 +24,6 @@
 #if (C_SSHOT)
 #include <png.h>
 #include <zlib.h>
-#endif
 
 void capture_image(const uint16_t width, const uint16_t height,
                    const uint8_t bits_per_pixel, const uint16_t pitch,
@@ -255,3 +254,4 @@ void capture_image(const uint16_t width, const uint16_t height,
 	fclose(fp);
 }
 
+#endif
