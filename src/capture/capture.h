@@ -35,7 +35,7 @@ class Section;
 extern Bitu CaptureState;
 
 std::string CAPTURE_GenerateFilename(const char* type, const char* ext);
-FILE* CAPTURE_OpenFile(const char* type, const char* ext);
+FILE* CAPTURE_CreateFile(const char* type, const char* ext);
 
 void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t* data);
 
