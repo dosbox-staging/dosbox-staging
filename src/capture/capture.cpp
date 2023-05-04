@@ -323,7 +323,8 @@ void CAPTURE_VideoStart() {
 	if (CaptureState & CAPTURE_VIDEO) {
 		LOG_MSG("Already capturing video.");
 	} else {
-		handle_video_event(true);
+		const auto pressed = true;
+		handle_video_event(pressed);
 	}
 #else
 	LOG_MSG("Avi capturing has not been compiled in");
@@ -333,7 +334,8 @@ void CAPTURE_VideoStart() {
 void CAPTURE_VideoStop() {
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
-		handle_video_event(true);
+		const auto pressed = true;
+		handle_video_event(pressed);
 	} else {
 		LOG_MSG("Not capturing video.");
 	}
@@ -353,7 +355,8 @@ void capture_video(const uint16_t width, const uint16_t height,
 	    (capture.video.width != width || capture.video.height != height ||
 	     capture.video.bits_per_pixel != bits_per_pixel ||
 	     capture.video.frames_per_second != frames_per_second)) {
-		handle_video_event(true);
+		const auto pressed = true;
+		handle_video_event(pressed);
 	}
 	switch (bits_per_pixel) {
 	case 8: format = ZMBV_FORMAT::BPP_8; break;
@@ -714,11 +717,18 @@ static void handle_midi_event(bool pressed) {
 
 void CAPTURE_Destroy([[maybe_unused]] Section *sec)
 {
+	const auto pressed = true;
 #if (C_SSHOT)
-	if (capture.video.handle) handle_video_event(true);
+	if (capture.video.handle) {
+		handle_video_event(pressed);
+	}
 #endif
-	if (capture.wave.handle) handle_wave_event(true);
-	if (capture.midi.handle) handle_midi_event(true);
+	if (capture.wave.handle) {
+		handle_wave_event(pressed);
+	}
+	if (capture.midi.handle) {
+		handle_midi_event(pressed);
+	}
 }
 
 void CAPTURE_Init(Section* sec)
