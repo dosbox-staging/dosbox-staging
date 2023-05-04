@@ -1,5 +1,6 @@
 libcapture_sources = files(
     'capture.cpp',
+    'capture_audio.cpp',
     'capture_image.cpp',
     'capture_midi.cpp',
     'capture_video.cpp',

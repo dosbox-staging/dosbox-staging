@@ -21,9 +21,6 @@
 
 #include "dosbox.h"
 
-#include <stdio.h>
-#include <string>
-
 class Section;
 
 #define CAPTURE_WAVE  0x01
