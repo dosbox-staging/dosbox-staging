@@ -275,7 +275,7 @@ bool VideoCodec::SetupDecompress(const int _width, const int _height)
 	return true;
 }
 
-bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, uint8_t *pal, uint8_t *writeBuf,
+bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, const uint8_t *pal, uint8_t *writeBuf,
                                       const uint32_t writeSize)
 {
 	if (_format != format) {
@@ -345,7 +345,7 @@ bool VideoCodec::PrepareCompressFrame(int flags, const ZMBV_FORMAT _format, uint
 	return true;
 }
 
-void VideoCodec::CompressLines(const int lineCount, uint8_t *lineData[])
+void VideoCodec::CompressLines(const int lineCount, const uint8_t *lineData[])
 {
 	const auto linePitch = pitch * pixelsize;
 	const auto lineWidth = width * pixelsize;
