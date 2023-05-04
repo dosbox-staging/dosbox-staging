@@ -382,14 +382,14 @@ void capture_image(const uint16_t width, const uint16_t height,
 
 	if (bpp == 8) {
 		png_set_IHDR(png_ptr,
-					 info_ptr,
-					 width,
-					 height,
-					 8,
-					 PNG_COLOR_TYPE_PALETTE,
-					 PNG_INTERLACE_NONE,
-					 PNG_COMPRESSION_TYPE_DEFAULT,
-					 PNG_FILTER_TYPE_DEFAULT);
+		             info_ptr,
+		             width,
+		             height,
+		             8,
+		             PNG_COLOR_TYPE_PALETTE,
+		             PNG_INTERLACE_NONE,
+		             PNG_COMPRESSION_TYPE_DEFAULT,
+		             PNG_FILTER_TYPE_DEFAULT);
 
 		for (auto i = 0; i < 256; ++i) {
 			palette[i].red   = pal[i * 4 + 0];
@@ -401,14 +401,14 @@ void capture_image(const uint16_t width, const uint16_t height,
 	} else {
 		png_set_bgr(png_ptr);
 		png_set_IHDR(png_ptr,
-					 info_ptr,
-					 width,
-					 height,
-					 8,
-					 PNG_COLOR_TYPE_RGB,
-					 PNG_INTERLACE_NONE,
-					 PNG_COMPRESSION_TYPE_DEFAULT,
-					 PNG_FILTER_TYPE_DEFAULT);
+		             info_ptr,
+		             width,
+		             height,
+		             8,
+		             PNG_COLOR_TYPE_RGB,
+		             PNG_INTERLACE_NONE,
+		             PNG_COMPRESSION_TYPE_DEFAULT,
+		             PNG_FILTER_TYPE_DEFAULT);
 	}
 
 #ifdef PNG_TEXT_SUPPORTED
@@ -430,7 +430,7 @@ void capture_image(const uint16_t width, const uint16_t height,
 	png_write_info(png_ptr, info_ptr);
 
 	const bool is_double_width = (flags & CAPTURE_FLAG_DBLW);
-	const auto row_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
+	const auto row_divisor     = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
 
 	uint8_t row_buffer[SCALER_MAXWIDTH * 4];
 
@@ -443,8 +443,7 @@ void capture_image(const uint16_t width, const uint16_t height,
 			if (is_double_width) {
 				for (auto x = 0; x < width; ++x) {
 					row_buffer[x * 2 + 0] =
-							row_buffer[x * 2 + 1] =
-									src_row[x];
+					        row_buffer[x * 2 + 1] = src_row[x];
 				}
 				row_pointer = row_buffer;
 			}
@@ -454,37 +453,31 @@ void capture_image(const uint16_t width, const uint16_t height,
 			if (is_double_width) {
 				for (auto x = 0; x < width; ++x) {
 					const auto pixel = host_to_le(
-							reinterpret_cast<const uint16_t*>(
-									src_row)[x]);
+					        reinterpret_cast<const uint16_t*>(
+					                src_row)[x]);
 
-					row_buffer[x * 6 + 0] =
-							row_buffer[x * 6 + 3] =
-									((pixel & 0x001f) *
-									 0x21) >>
-									2;
-					row_buffer[x * 6 + 1] =
-							row_buffer[x * 6 + 4] =
-									((pixel & 0x03e0) *
-									 0x21) >>
-									7;
-					row_buffer[x * 6 + 2] =
-							row_buffer[x * 6 + 5] =
-									((pixel & 0x7c00) *
-									 0x21) >>
-									12;
+					row_buffer[x * 6 + 0] = row_buffer[x * 6 + 3] =
+					        ((pixel & 0x001f) * 0x21) >> 2;
+					row_buffer[x * 6 + 1] = row_buffer[x * 6 + 4] =
+					        ((pixel & 0x03e0) * 0x21) >> 7;
+					row_buffer[x * 6 + 2] = row_buffer[x * 6 + 5] =
+					        ((pixel & 0x7c00) * 0x21) >> 12;
 				}
 			} else {
 				for (auto x = 0; x < width; ++x) {
 					const auto pixel = host_to_le(
-							reinterpret_cast<const uint16_t*>(
-									src_row)[x]);
+					        reinterpret_cast<const uint16_t*>(
+					                src_row)[x]);
 
-					row_buffer[x * 3 + 0] =
-							((pixel & 0x001f) * 0x21) >> 2;
-					row_buffer[x * 3 + 1] =
-							((pixel & 0x03e0) * 0x21) >> 7;
-					row_buffer[x * 3 + 2] =
-							((pixel & 0x7c00) * 0x21) >> 12;
+					row_buffer[x * 3 + 0] = ((pixel & 0x001f) *
+					                         0x21) >>
+					                        2;
+					row_buffer[x * 3 + 1] = ((pixel & 0x03e0) *
+					                         0x21) >>
+					                        7;
+					row_buffer[x * 3 + 2] = ((pixel & 0x7c00) *
+					                         0x21) >>
+					                        12;
 				}
 			}
 			row_pointer = row_buffer;
@@ -494,35 +487,29 @@ void capture_image(const uint16_t width, const uint16_t height,
 			if (is_double_width) {
 				for (auto x = 0; x < width; ++x) {
 					const auto pixel = host_to_le(
-							reinterpret_cast<const uint16_t*>(
-									src_row)[x]);
-					row_buffer[x * 6 + 0] =
-							row_buffer[x * 6 + 3] =
-									((pixel & 0x001f) *
-									 0x21) >>
-									2;
-					row_buffer[x * 6 + 1] =
-							row_buffer[x * 6 + 4] =
-									((pixel & 0x07e0) *
-									 0x41) >>
-									9;
-					row_buffer[x * 6 + 2] =
-							row_buffer[x * 6 + 5] =
-									((pixel & 0xf800) *
-									 0x21) >>
-									13;
+					        reinterpret_cast<const uint16_t*>(
+					                src_row)[x]);
+					row_buffer[x * 6 + 0] = row_buffer[x * 6 + 3] =
+					        ((pixel & 0x001f) * 0x21) >> 2;
+					row_buffer[x * 6 + 1] = row_buffer[x * 6 + 4] =
+					        ((pixel & 0x07e0) * 0x41) >> 9;
+					row_buffer[x * 6 + 2] = row_buffer[x * 6 + 5] =
+					        ((pixel & 0xf800) * 0x21) >> 13;
 				}
 			} else {
 				for (auto x = 0; x < width; ++x) {
 					const auto pixel = host_to_le(
-							reinterpret_cast<const uint16_t*>(
-									src_row)[x]);
-					row_buffer[x * 3 + 0] =
-							((pixel & 0x001f) * 0x21) >> 2;
-					row_buffer[x * 3 + 1] =
-							((pixel & 0x07e0) * 0x41) >> 9;
-					row_buffer[x * 3 + 2] =
-							((pixel & 0xf800) * 0x21) >> 13;
+					        reinterpret_cast<const uint16_t*>(
+					                src_row)[x]);
+					row_buffer[x * 3 + 0] = ((pixel & 0x001f) *
+					                         0x21) >>
+					                        2;
+					row_buffer[x * 3 + 1] = ((pixel & 0x07e0) *
+					                         0x41) >>
+					                        9;
+					row_buffer[x * 3 + 2] = ((pixel & 0xf800) *
+					                         0x21) >>
+					                        13;
 				}
 			}
 			row_pointer = row_buffer;
@@ -532,13 +519,13 @@ void capture_image(const uint16_t width, const uint16_t height,
 			if (is_double_width) {
 				for (auto x = 0; x < width; ++x) {
 					const auto pixel = host_to_le(
-							reinterpret_cast<const rgb24*>(
-									src_row)[x]);
+					        reinterpret_cast<const rgb24*>(
+					                src_row)[x]);
 
 					reinterpret_cast<rgb24*>(
-							row_buffer)[x * 2 + 0] = pixel;
+					        row_buffer)[x * 2 + 0] = pixel;
 					reinterpret_cast<rgb24*>(
-							row_buffer)[x * 2 + 1] = pixel;
+					        row_buffer)[x * 2 + 1] = pixel;
 
 					row_pointer = row_buffer;
 				}
@@ -551,24 +538,18 @@ void capture_image(const uint16_t width, const uint16_t height,
 		case 32:
 			if (is_double_width) {
 				for (auto x = 0; x < width; ++x) {
-					row_buffer[x * 6 + 0] =
-							row_buffer[x * 6 + 3] =
-									src_row[x * 4 + 0];
-					row_buffer[x * 6 + 1] =
-							row_buffer[x * 6 + 4] =
-									src_row[x * 4 + 1];
-					row_buffer[x * 6 + 2] =
-							row_buffer[x * 6 + 5] =
-									src_row[x * 4 + 2];
+					row_buffer[x * 6 + 0] = row_buffer[x * 6 + 3] =
+					        src_row[x * 4 + 0];
+					row_buffer[x * 6 + 1] = row_buffer[x * 6 + 4] =
+					        src_row[x * 4 + 1];
+					row_buffer[x * 6 + 2] = row_buffer[x * 6 + 5] =
+					        src_row[x * 4 + 2];
 				}
 			} else {
 				for (auto x = 0; x < width; ++x) {
-					row_buffer[x * 3 + 0] =
-							src_row[x * 4 + 0];
-					row_buffer[x * 3 + 1] =
-							src_row[x * 4 + 1];
-					row_buffer[x * 3 + 2] =
-							src_row[x * 4 + 2];
+					row_buffer[x * 3 + 0] = src_row[x * 4 + 0];
+					row_buffer[x * 3 + 1] = src_row[x * 4 + 1];
+					row_buffer[x * 3 + 2] = src_row[x * 4 + 2];
 				}
 			}
 			row_pointer = row_buffer;
@@ -583,23 +564,15 @@ void capture_image(const uint16_t width, const uint16_t height,
 	fclose(fp);
 }
 
-void capture_video(const uint16_t width,
-                   const uint16_t height,
-                   const uint8_t bpp,
-                   const uint16_t pitch,
-                   const uint8_t flags,
-                   const float fps,
-                   const uint8_t *data,
-                   const uint8_t *pal)
+void capture_video(const uint16_t width, const uint16_t height,
+                   const uint8_t bpp, const uint16_t pitch, const uint8_t flags,
+                   const float fps, const uint8_t* data, const uint8_t* pal)
 {
 	ZMBV_FORMAT format;
 	/* Disable capturing if any of the test fails */
-	if (capture.video.handle && (
-		capture.video.width != width ||
-		capture.video.height != height ||
-		capture.video.bpp != bpp ||
-		capture.video.fps != fps)) 
-	{
+	if (capture.video.handle &&
+	    (capture.video.width != width || capture.video.height != height ||
+	     capture.video.bpp != bpp || capture.video.fps != fps)) {
 		CAPTURE_VideoEvent(true);
 	}
 	switch (bpp) {
@@ -617,7 +590,7 @@ void capture_video(const uint16_t width,
 	default: return;
 	}
 	if (!capture.video.handle) {
-		capture.video.handle = CAPTURE_OpenFile("Video",".avi");
+		capture.video.handle = CAPTURE_OpenFile("Video", ".avi");
 		if (!capture.video.handle) {
 			return;
 		}
@@ -625,85 +598,91 @@ void capture_video(const uint16_t width,
 		if (!capture.video.codec) {
 			return;
 		}
-		if (!capture.video.codec->SetupCompress( width, height))  {
+		if (!capture.video.codec->SetupCompress(width, height)) {
 			return;
 		}
-		capture.video.bufSize = capture.video.codec->NeededSize(width, height, format);
+		capture.video.bufSize = capture.video.codec->NeededSize(width,
+		                                                        height,
+		                                                        format);
 		capture.video.buf.resize(capture.video.bufSize);
 		capture.video.index.resize(16 * 4096);
 		capture.video.indexused = 8;
 
-		capture.video.width = width;
+		capture.video.width  = width;
 		capture.video.height = height;
-		capture.video.bpp = bpp;
-		capture.video.fps = fps;
+		capture.video.bpp    = bpp;
+		capture.video.fps    = fps;
 		for (auto i = 0; i < AVI_HEADER_SIZE; ++i)
-			fputc(0,capture.video.handle);
-		capture.video.frames = 0;
-		capture.video.written = 0;
-		capture.video.audioused = 0;
+			fputc(0, capture.video.handle);
+		capture.video.frames       = 0;
+		capture.video.written      = 0;
+		capture.video.audioused    = 0;
 		capture.video.audiowritten = 0;
 	}
 	int codecFlags;
 	if (capture.video.frames % 300 == 0)
 		codecFlags = 1;
-	else codecFlags = 0;
-	if (!capture.video.codec->PrepareCompressFrame(codecFlags, format, pal,
-												   capture.video.buf.data(),
-												   capture.video.bufSize)) {
+	else
+		codecFlags = 0;
+	if (!capture.video.codec->PrepareCompressFrame(codecFlags,
+	                                               format,
+	                                               pal,
+	                                               capture.video.buf.data(),
+	                                               capture.video.bufSize)) {
 		return;
 	}
 
 	const bool is_double_width = flags & CAPTURE_FLAG_DBLW;
-	const auto height_divisor = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
+	const auto height_divisor  = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
 
 	uint8_t doubleRow[SCALER_MAXWIDTH * 4];
 
 	for (auto i = 0; i < height; ++i) {
-		const uint8_t *rowPointer = doubleRow;
+		const uint8_t* rowPointer = doubleRow;
 		const auto srcLine = data + (i >> height_divisor) * pitch;
 
 		if (is_double_width) {
 			const auto countWidth = width >> 1;
-			switch ( bpp) {
+			switch (bpp) {
 			case 8:
 				for (auto x = 0; x < countWidth; ++x)
 					doubleRow[x * 2 + 0] =
-							doubleRow[x * 2 + 1] = srcLine[x];
+					        doubleRow[x * 2 + 1] = srcLine[x];
 				break;
 			case 15:
 			case 16:
 				for (auto x = 0; x < countWidth; ++x)
 					((uint16_t*)doubleRow)[x * 2 + 0] = ((
-							uint16_t*)doubleRow)[x * 2 + 1] =
-							((uint16_t*)srcLine)[x];
+					        uint16_t*)doubleRow)[x * 2 + 1] =
+					        ((uint16_t*)srcLine)[x];
 				break;
 			case 24:
 				for (auto x = 0; x < countWidth; ++x) {
-					const auto pixel =
-							reinterpret_cast<const rgb24*>(
-									srcLine)[x];
+					const auto pixel = reinterpret_cast<const rgb24*>(
+					        srcLine)[x];
 					reinterpret_cast<uint32_t*>(
-							doubleRow)[x * 2 + 0] = pixel;
+					        doubleRow)[x * 2 + 0] = pixel;
 					reinterpret_cast<uint32_t*>(
-							doubleRow)[x * 2 + 1] = pixel;
+					        doubleRow)[x * 2 + 1] = pixel;
 				}
 				break;
 			case 32:
 				for (auto x = 0; x < countWidth; ++x)
 					((uint32_t*)doubleRow)[x * 2 + 0] = ((
-							uint32_t*)doubleRow)[x * 2 + 1] =
-							((uint32_t*)srcLine)[x];
+					        uint32_t*)doubleRow)[x * 2 + 1] =
+					        ((uint32_t*)srcLine)[x];
 				break;
 			}
 			rowPointer = doubleRow;
 		} else {
 			if (bpp == 24) {
 				for (auto x = 0; x < width; ++x) {
-					const auto pixel = reinterpret_cast<const rgb24 *>(srcLine)[x];
-					reinterpret_cast<uint32_t *>(doubleRow)[x] = pixel;
+					const auto pixel = reinterpret_cast<const rgb24*>(
+					        srcLine)[x];
+					reinterpret_cast<uint32_t*>(doubleRow)[x] = pixel;
 				}
-				// Using doubleRow for this conversion when it is not actually double row!
+				// Using doubleRow for this conversion when it
+				// is not actually double row!
 				rowPointer = doubleRow;
 			} else {
 				rowPointer = srcLine;
@@ -715,13 +694,20 @@ void capture_video(const uint16_t width,
 	if (written < 0) {
 		return;
 	}
-	CAPTURE_AddAviChunk("00dc", written, capture.video.buf.data(), codecFlags & 1 ? 0x10 : 0x0);
+	CAPTURE_AddAviChunk("00dc",
+	                    written,
+	                    capture.video.buf.data(),
+	                    codecFlags & 1 ? 0x10 : 0x0);
 	capture.video.frames++;
-//		LOG_MSG("Frame %d video %d audio %d",capture.video.frames, written, capture.video.audioused *4 );
-	if ( capture.video.audioused ) {
-		CAPTURE_AddAviChunk( "01wb", capture.video.audioused * 4, capture.video.audiobuf, 0);
-		capture.video.audiowritten = capture.video.audioused*4;
-		capture.video.audioused = 0;
+	//		LOG_MSG("Frame %d video %d audio %d",capture.video.frames,
+	//written, capture.video.audioused *4 );
+	if (capture.video.audioused) {
+		CAPTURE_AddAviChunk("01wb",
+		                    capture.video.audioused * 4,
+		                    capture.video.audiobuf,
+		                    0);
+		capture.video.audiowritten = capture.video.audioused * 4;
+		capture.video.audioused    = 0;
 	}
 
 	/* Everything went okay, set flag again for next frame */
@@ -730,12 +716,9 @@ void capture_video(const uint16_t width,
 
 void CAPTURE_AddImage([[maybe_unused]] uint16_t width,
                       [[maybe_unused]] uint16_t height,
-                      [[maybe_unused]] uint8_t bpp,
-                      [[maybe_unused]] uint16_t pitch,
-                      [[maybe_unused]] uint8_t flags,
-                      [[maybe_unused]] float fps,
-                      [[maybe_unused]] uint8_t *data,
-                      [[maybe_unused]] uint8_t *pal)
+                      [[maybe_unused]] uint8_t bpp, [[maybe_unused]] uint16_t pitch,
+                      [[maybe_unused]] uint8_t flags, [[maybe_unused]] float fps,
+                      [[maybe_unused]] uint8_t* data, [[maybe_unused]] uint8_t* pal)
 {
 #if (C_SSHOT)
 	if (flags & CAPTURE_FLAG_DBLH) {
@@ -750,7 +733,7 @@ void CAPTURE_AddImage([[maybe_unused]] uint16_t width,
 	if (width > SCALER_MAXWIDTH) {
 		return;
 	}
-	
+
 	if (CaptureState & CAPTURE_IMAGE) {
 		capture_image(width, height, bpp, pitch, flags, data, pal);
 		CaptureState &= ~CAPTURE_IMAGE;
