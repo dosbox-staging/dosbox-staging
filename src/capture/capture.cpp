@@ -92,7 +92,7 @@ static struct {
 
 } capture = {};
 
-std::string CAPTURE_GetScreenshotFilename(const char *type, const char *ext)
+std::string CAPTURE_GenerateFilename(const char *type, const char *ext)
 {
 	if (capturedir.empty()) {
 		LOG_MSG("Please specify a capture directory");
@@ -145,8 +145,9 @@ std::string CAPTURE_GetScreenshotFilename(const char *type, const char *ext)
 
 FILE *CAPTURE_OpenFile(const char *type, const char *ext)
 {
-	const auto file_name = CAPTURE_GetScreenshotFilename(type, ext);
-	FILE *handle         = fopen(file_name.c_str(), "wb");
+	const auto file_name = CAPTURE_GenerateFilename(type, ext);
+
+	FILE *handle = fopen(file_name.c_str(), "wb");
 	if (handle) {
 		LOG_MSG("Capturing %s to %s", type, file_name.c_str());
 	} else {

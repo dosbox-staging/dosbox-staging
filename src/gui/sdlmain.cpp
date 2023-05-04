@@ -3674,10 +3674,10 @@ static void screenshot_rendered_surface(bool pressed)
 		return;
 
 #if C_SDL_IMAGE
-	const auto filename = CAPTURE_GetScreenshotFilename("Screenshot", ".png");
+	const auto filename = CAPTURE_GenerateFilename("Screenshot", ".png");
 	const auto is_saved = IMG_SavePNG(*surface, filename.c_str()) == 0;
 #else
-	const auto filename = CAPTURE_GetScreenshotFilename("Screenshot", ".bmp");
+	const auto filename = CAPTURE_GenerateFilename("Screenshot", ".bmp");
 	const auto is_saved = SDL_SaveBMP(*surface, filename.c_str()) == 0;
 #endif
 	SDL_FreeSurface(*surface);
