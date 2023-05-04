@@ -46,9 +46,6 @@
 #if C_OPENGL
 #include <SDL_opengl.h>
 #endif
-#if C_SDL_IMAGE
-#	include <SDL_image.h>
-#endif
 
 #include "../ints/int10.h"
 #include "control.h"
@@ -237,6 +234,15 @@ static SDL_Rect calc_viewport_fit(const int width, const int height);
 
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
+
+static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines);
+static void update_frame_surface(const uint16_t *changedLines);
+static bool present_frame_texture();
+#if C_OPENGL
+static void update_frame_gl_pbo([[maybe_unused]] const uint16_t *changedLines);
+static void update_frame_gl_fb(const uint16_t *changedLines);
+static bool present_frame_gl();
+#endif
 
 static const char *vsync_state_as_string(const VSYNC_STATE state)
 {
@@ -3561,7 +3567,7 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 	SDL_SetWindowOpacity(sdl.window, alpha);
 }
 
-static std::optional<SDL_Surface *> get_rendered_surface()
+std::optional<SDL_Surface *> SDLMAIN_GetRenderedSurface()
 {
 	// Variables common to all screen-modes
 	const auto renderer = SDL_GetRenderer(sdl.window);
@@ -3662,32 +3668,6 @@ static std::optional<SDL_Surface *> get_rendered_surface()
 
 	LOG_WARNING("SDL: unhandled screen-type (bug)");
 	return {};
-}
-
-static void screenshot_rendered_surface(bool pressed)
-{
-	if (!pressed)
-		return;
-
-	const auto surface = get_rendered_surface();
-	if (!surface)
-		return;
-
-#if C_SDL_IMAGE
-	const auto filename = CAPTURE_GenerateFilename("Screenshot", ".png");
-	const auto is_saved = IMG_SavePNG(*surface, filename.c_str()) == 0;
-#else
-	const auto filename = CAPTURE_GenerateFilename("Screenshot", ".bmp");
-	const auto is_saved = SDL_SaveBMP(*surface, filename.c_str()) == 0;
-#endif
-	SDL_FreeSurface(*surface);
-
-	if (is_saved)
-		LOG_MSG("SDL: Captured rendered output to %s", filename.c_str());
-	else
-		LOG_MSG("SDL: Failed capturing rendered output to %s because %s",
-		        filename.c_str(),
-		        SDL_GetError());
 }
 
 // extern void UI_Run(bool);
@@ -3850,11 +3830,7 @@ static void GUI_StartUp(Section *sec)
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
 	                  "shutdown", "Shutdown");
-	MAPPER_AddHandler(screenshot_rendered_surface,
-	                  SDL_SCANCODE_F5,
-	                  MMOD2,
-	                  "rendshot",
-	                  "Rend Screenshot");
+
 	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
 	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2, "restart", "Restart");
 	MAPPER_AddHandler(MOUSE_ToggleUserCapture,

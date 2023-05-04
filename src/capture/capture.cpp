@@ -19,9 +19,9 @@
 #include "capture.h"
 
 #include <cerrno>
-#include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "cross.h"
 #include "fs_utils.h"
@@ -40,7 +40,7 @@ static std::string capturedir;
 extern const char* RunningProgram;
 uint8_t CaptureState;
 
-std::string CAPTURE_GenerateFilename(const char *type, const char *ext)
+std::string capture_generate_filename(const char* type, const char* ext)
 {
 	if (capturedir.empty()) {
 		LOG_MSG("Please specify a capture directory");
@@ -48,7 +48,7 @@ std::string CAPTURE_GenerateFilename(const char *type, const char *ext)
 	}
 
 	char file_start[16];
-	dir_information *dir;
+	dir_information* dir;
 	/* Find a filename to open */
 	dir = open_directory(capturedir.c_str());
 	if (!dir) {
@@ -69,33 +69,40 @@ std::string CAPTURE_GenerateFilename(const char *type, const char *ext)
 	}
 	safe_strcpy(file_start, RunningProgram);
 	lowcase(file_start);
-	strcat(file_start,"_");
+	strcat(file_start, "_");
 	bool is_directory;
 	char tempname[CROSS_LEN];
-	bool testRead = read_directory_first(dir, tempname, is_directory );
-	int last = 0;
-	for ( ; testRead; testRead = read_directory_next(dir, tempname, is_directory) ) {
-		char * test=strstr(tempname,ext);
-		if (!test || strlen(test)!=strlen(ext))
+	bool testRead = read_directory_first(dir, tempname, is_directory);
+	int last      = 0;
+	for (; testRead;
+	     testRead = read_directory_next(dir, tempname, is_directory)) {
+		char* test = strstr(tempname, ext);
+		if (!test || strlen(test) != strlen(ext))
 			continue;
-		*test=0;
-		if (strncasecmp(tempname,file_start,strlen(file_start))!=0) continue;
+		*test = 0;
+		if (strncasecmp(tempname, file_start, strlen(file_start)) != 0)
+			continue;
 		const int num = atoi(&tempname[strlen(file_start)]);
 		if (num >= last)
 			last = num + 1;
 	}
-	close_directory( dir );
+	close_directory(dir);
 	char file_name[CROSS_LEN];
-	sprintf(file_name, "%s%c%s%03d%s",
-	        capturedir.c_str(), CROSS_FILESPLIT, file_start, last, ext);
+	sprintf(file_name,
+	        "%s%c%s%03d%s",
+	        capturedir.c_str(),
+	        CROSS_FILESPLIT,
+	        file_start,
+	        last,
+	        ext);
 	return file_name;
 }
 
-FILE *CAPTURE_CreateFile(const char *type, const char *ext)
+FILE* CAPTURE_CreateFile(const char* type, const char* ext)
 {
-	const auto file_name = CAPTURE_GenerateFilename(type, ext);
+	const auto file_name = capture_generate_filename(type, ext);
 
-	FILE *handle = fopen(file_name.c_str(), "wb");
+	FILE* handle = fopen(file_name.c_str(), "wb");
 	if (handle) {
 		LOG_MSG("Capturing %s to %s", type, file_name.c_str());
 	} else {
@@ -104,7 +111,8 @@ FILE *CAPTURE_CreateFile(const char *type, const char *ext)
 	return handle;
 }
 
-void CAPTURE_VideoStart() {
+void CAPTURE_VideoStart()
+{
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
 		LOG_MSG("Already capturing video.");
@@ -117,7 +125,8 @@ void CAPTURE_VideoStart() {
 #endif
 }
 
-void CAPTURE_VideoStop() {
+void CAPTURE_VideoStop()
+{
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
 		const auto pressed = true;
@@ -156,7 +165,13 @@ void CAPTURE_AddImage([[maybe_unused]] const uint16_t width,
 	}
 
 	if (CaptureState & CAPTURE_IMAGE) {
-		capture_image(image_width, image_height, bits_per_pixel, pitch, capture_flags, image_data, palette_data);
+		capture_image(image_width,
+		              image_height,
+		              bits_per_pixel,
+		              pitch,
+		              capture_flags,
+		              image_data,
+		              palette_data);
 		CaptureState &= ~CAPTURE_IMAGE;
 	}
 	if (CaptureState & CAPTURE_VIDEO) {
@@ -174,7 +189,8 @@ void CAPTURE_AddImage([[maybe_unused]] const uint16_t width,
 }
 
 #if (C_SSHOT)
-static void handle_screenshot_event(const bool pressed) {
+static void handle_screenshot_event(const bool pressed)
+{
 	if (!pressed) {
 		return;
 	}
@@ -182,8 +198,8 @@ static void handle_screenshot_event(const bool pressed) {
 }
 #endif
 
-
-void CAPTURE_AddWave(const uint32_t freq, const uint32_t len, const int16_t * data) {
+void CAPTURE_AddWave(const uint32_t freq, const uint32_t len, const int16_t* data)
+{
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
 		capture_video_add_wave(freq, len, data);
@@ -194,11 +210,12 @@ void CAPTURE_AddWave(const uint32_t freq, const uint32_t len, const int16_t * da
 	}
 }
 
-void CAPTURE_AddMidi(const bool sysex, const size_t len, const uint8_t * data) {
+void CAPTURE_AddMidi(const bool sysex, const size_t len, const uint8_t* data)
+{
 	capture_add_midi(sysex, len, data);
 }
 
-void CAPTURE_Destroy([[maybe_unused]] Section *sec)
+void CAPTURE_Destroy([[maybe_unused]] Section* sec)
 {
 	const auto pressed = true;
 #if (C_SSHOT)
@@ -225,6 +242,12 @@ void CAPTURE_Init(Section* sec)
 	                  "Rec. Audio");
 
 	MAPPER_AddHandler(handle_midi_event, SDL_SCANCODE_UNKNOWN, 0, "caprawmidi", "Rec. MIDI");
+
+	MAPPER_AddHandler(handle_screenshot_rendered_surface,
+	                  SDL_SCANCODE_F5,
+	                  MMOD2,
+	                  "rendshot",
+	                  "Rend Screenshot");
 #if (C_SSHOT)
 	MAPPER_AddHandler(handle_screenshot_event,
 	                  SDL_SCANCODE_F5,

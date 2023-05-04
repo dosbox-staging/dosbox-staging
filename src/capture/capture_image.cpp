@@ -18,12 +18,22 @@
 
 #include "capture.h"
 
+#include <optional>
 #include "render.h"
 #include "rgb24.h"
+#include "sdlmain.h"
 
 #if (C_SSHOT)
 #include <png.h>
 #include <zlib.h>
+
+#include <SDL.h>
+#if C_OPENGL
+#include <SDL2/SDL_opengl.h>
+#endif
+#if C_SDL_IMAGE
+#	include <SDL2/SDL_image.h>
+#endif
 
 void capture_image(const uint16_t width, const uint16_t height,
                    const uint8_t bits_per_pixel, const uint16_t pitch,
@@ -255,3 +265,33 @@ void capture_image(const uint16_t width, const uint16_t height,
 }
 
 #endif
+
+void handle_screenshot_rendered_surface(const bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
+
+	const auto surface = SDLMAIN_GetRenderedSurface();
+	if (!surface) {
+		return;
+	}
+
+#if C_SDL_IMAGE
+	const auto filename = capture_generate_filename("Screenshot", ".png");
+	const auto is_saved = IMG_SavePNG(*surface, filename.c_str()) == 0;
+#else
+	const auto filename = capture_generate_filename("Screenshot", ".bmp");
+	const auto is_saved = SDL_SaveBMP(*surface, filename.c_str()) == 0;
+#endif
+	SDL_FreeSurface(*surface);
+
+	if (is_saved) {
+		LOG_MSG("CAPTURE: Captured rendered output to %s", filename.c_str());
+	} else {
+		LOG_MSG("CAPTURE: Failed capturing rendered output to %s because %s",
+		        filename.c_str(),
+		        SDL_GetError());
+	}
+}
+

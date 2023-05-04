@@ -19,71 +19,77 @@
 #include "capture.h"
 
 #include <cerrno>
-#include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "pic.h"
 
-#define MIDI_BUF 4*1024
+#define MIDI_BUF 4 * 1024
 
 static struct {
-	FILE *handle = nullptr;
+	FILE* handle             = nullptr;
 	uint8_t buffer[MIDI_BUF] = {0};
-	uint32_t used = 0;
-	uint32_t done = 0;
-	uint32_t last = 0;
+	uint32_t used            = 0;
+	uint32_t done            = 0;
+	uint32_t last            = 0;
 } midi = {};
 
-static uint8_t midi_header[]={
-	'M','T','h','d',			/* uint32_t, Header Chunk */
-	0x0,0x0,0x0,0x6,			/* uint32_t, Chunk Length */
-	0x0,0x0,					/* uint16_t, Format, 0=single track */
-	0x0,0x1,					/* uint16_t, Track Count, 1 track */
-	0x01,0xf4,					/* uint16_t, Timing, 2 beats/second with 500 frames */
-	'M','T','r','k',			/* uint32_t, Track Chunk */
-	0x0,0x0,0x0,0x0,			/* uint32_t, Chunk Length */
-	//Track data
+static uint8_t midi_header[] = {
+        'M',  'T',  'h', 'd', /* uint32_t, Header Chunk */
+        0x0,  0x0,  0x0, 0x6, /* uint32_t, Chunk Length */
+        0x0,  0x0,            /* uint16_t, Format, 0=single track */
+        0x0,  0x1,            /* uint16_t, Track Count, 1 track */
+        0x01, 0xf4, /* uint16_t, Timing, 2 beats/second with 500 frames */
+        'M',  'T',  'r', 'k', /* uint32_t, Track Chunk */
+        0x0,  0x0,  0x0, 0x0, /* uint32_t, Chunk Length */
+                              // Track data
 };
 
-static void raw_midi_add(const uint8_t data) {
-	midi.buffer[midi.used++]=data;
-	if (midi.used >= MIDI_BUF ) {
+static void raw_midi_add(const uint8_t data)
+{
+	midi.buffer[midi.used++] = data;
+	if (midi.used >= MIDI_BUF) {
 		midi.done += midi.used;
-		fwrite(midi.buffer,1,MIDI_BUF,midi.handle);
+		fwrite(midi.buffer, 1, MIDI_BUF, midi.handle);
 		midi.used = 0;
 	}
 }
 
-static void raw_midi_add_number(const uint32_t val) {
-	if (val & 0xfe00000) raw_midi_add((uint8_t)(0x80|((val >> 21) & 0x7f)));
-	if (val & 0xfffc000) raw_midi_add((uint8_t)(0x80|((val >> 14) & 0x7f)));
-	if (val & 0xfffff80) raw_midi_add((uint8_t)(0x80|((val >> 7) & 0x7f)));
+static void raw_midi_add_number(const uint32_t val)
+{
+	if (val & 0xfe00000)
+		raw_midi_add((uint8_t)(0x80 | ((val >> 21) & 0x7f)));
+	if (val & 0xfffc000)
+		raw_midi_add((uint8_t)(0x80 | ((val >> 14) & 0x7f)));
+	if (val & 0xfffff80)
+		raw_midi_add((uint8_t)(0x80 | ((val >> 7) & 0x7f)));
 	raw_midi_add((uint8_t)(val & 0x7f));
 }
 
 void capture_add_midi(const bool sysex, const size_t len, const uint8_t* data)
 {
 	if (!midi.handle) {
-		midi.handle=CAPTURE_CreateFile("Raw Midi",".mid");
+		midi.handle = CAPTURE_CreateFile("Raw Midi", ".mid");
 		if (!midi.handle) {
 			return;
 		}
-		fwrite(midi_header,1,sizeof(midi_header),midi.handle);
-		midi.last=PIC_Ticks;
+		fwrite(midi_header, 1, sizeof(midi_header), midi.handle);
+		midi.last = PIC_Ticks;
 	}
-	uint32_t delta=PIC_Ticks-midi.last;
-	midi.last=PIC_Ticks;
+	uint32_t delta = PIC_Ticks - midi.last;
+	midi.last      = PIC_Ticks;
 	raw_midi_add_number(delta);
 	if (sysex) {
-		raw_midi_add( 0xf0 );
+		raw_midi_add(0xf0);
 		raw_midi_add_number(static_cast<uint32_t>(len));
 	}
-	for (size_t i=0;i<len;i++)
+	for (size_t i = 0; i < len; i++)
 		raw_midi_add(data[i]);
 }
 
-void handle_midi_event(const bool pressed) {
+void handle_midi_event(const bool pressed)
+{
 	if (!midi.handle) {
 		return;
 	}
@@ -92,15 +98,15 @@ void handle_midi_event(const bool pressed) {
 	/* Check for previously opened wave file */
 	if (midi.handle) {
 		LOG_MSG("Stopping raw midi saving and finalizing file.");
-		//Delta time
+		// Delta time
 		raw_midi_add(0x00);
-		//End of track event
+		// End of track event
 		raw_midi_add(0xff);
 		raw_midi_add(0x2F);
 		raw_midi_add(0x00);
 		/* clear out the final data in the buffer if any */
-		fwrite(midi.buffer,1,midi.used,midi.handle);
-		midi.done+=midi.used;
+		fwrite(midi.buffer, 1, midi.used, midi.handle);
+		midi.done += midi.used;
 		if (fseek(midi.handle, 18, SEEK_SET) != 0) {
 			LOG_WARNING("CAPTURE: Failed seeking in MIDI capture file: %s",
 			            strerror(errno));
@@ -108,22 +114,22 @@ void handle_midi_event(const bool pressed) {
 			return;
 		}
 		uint8_t size[4];
-		size[0]=(uint8_t)(midi.done >> 24);
-		size[1]=(uint8_t)(midi.done >> 16);
-		size[2]=(uint8_t)(midi.done >> 8);
-		size[3]=(uint8_t)(midi.done >> 0);
-		fwrite(&size,1,4,midi.handle);
+		size[0] = (uint8_t)(midi.done >> 24);
+		size[1] = (uint8_t)(midi.done >> 16);
+		size[2] = (uint8_t)(midi.done >> 8);
+		size[3] = (uint8_t)(midi.done >> 0);
+		fwrite(&size, 1, 4, midi.handle);
 		fclose(midi.handle);
-		midi.handle=0;
+		midi.handle = 0;
 		CaptureState &= ~CAPTURE_MIDI;
 		return;
 	}
 	CaptureState ^= CAPTURE_MIDI;
 	if (CaptureState & CAPTURE_MIDI) {
 		LOG_MSG("Preparing for raw midi capture, will start with first data.");
-		midi.used=0;
-		midi.done=0;
-		midi.handle=0;
+		midi.used   = 0;
+		midi.done   = 0;
+		midi.handle = 0;
 	} else {
 		LOG_MSG("Stopped capturing raw midi before any data arrived.");
 	}

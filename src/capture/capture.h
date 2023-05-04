@@ -21,23 +21,22 @@
 
 #include "dosbox.h"
 
-class Section;
-
-#define CAPTURE_WAVE  0x01
-#define CAPTURE_OPL   0x02
-#define CAPTURE_MIDI  0x04
-#define CAPTURE_IMAGE 0x08
-#define CAPTURE_VIDEO 0x10
+constexpr auto CAPTURE_WAVE  = 0x01;
+constexpr auto CAPTURE_OPL   = 0x02;
+constexpr auto CAPTURE_MIDI  = 0x04;
+constexpr auto CAPTURE_IMAGE = 0x08;
+constexpr auto CAPTURE_VIDEO = 0x10;
 
 extern uint8_t CaptureState;
 
-std::string CAPTURE_GenerateFilename(const char* type, const char* ext);
+std::string capture_generate_filename(const char* type, const char* ext);
+
 FILE* CAPTURE_CreateFile(const char* type, const char* ext);
 
 void CAPTURE_AddWave(const uint32_t freq, const uint32_t len, const int16_t* data);
 
-#define CAPTURE_FLAG_DBLW 0x1
-#define CAPTURE_FLAG_DBLH 0x2
+constexpr auto CAPTURE_FLAG_DBLW = 0x1;
+constexpr auto CAPTURE_FLAG_DBLH = 0x2;
 
 void CAPTURE_AddImage(const uint16_t width, const uint16_t height,
                       const uint8_t bits_per_pixel, const uint16_t pitch,

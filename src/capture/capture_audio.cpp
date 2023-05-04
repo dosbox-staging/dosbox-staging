@@ -18,20 +18,20 @@
 
 #include "capture.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "mem.h"
 #include "setup.h"
 
-#define WAVE_BUF 16*1024
+#define WAVE_BUF 16 * 1024
 
 static struct {
-	FILE *handle = nullptr;
+	FILE* handle              = nullptr;
 	uint16_t buf[WAVE_BUF][2] = {};
-	uint32_t used = 0;
-	uint32_t length = 0;
-	uint32_t freq = 0;
+	uint32_t used             = 0;
+	uint32_t length           = 0;
+	uint32_t freq             = 0;
 } wave = {};
 
 static uint8_t wavheader[]={
@@ -43,57 +43,60 @@ static uint8_t wavheader[]={
 	0x0,0x0,0x0,0x0,							/* uint32_t data size */
 };
 
-void handle_wave_event(const bool pressed) {
+void handle_wave_event(bool pressed)
+{
 	if (!pressed)
 		return;
 	/* Check for previously opened wave file */
 	if (wave.handle) {
 		LOG_MSG("Stopped capturing wave output.");
 		/* Write last piece of audio in buffer */
-		fwrite(wave.buf,1,wave.used*4,wave.handle);
-		wave.length+=wave.used*4;
+		fwrite(wave.buf, 1, wave.used * 4, wave.handle);
+		wave.length += wave.used * 4;
 		/* Fill in the header with useful information */
-		host_writed(&wavheader[0x04],wave.length+sizeof(wavheader)-8);
-		host_writed(&wavheader[0x18],wave.freq);
-		host_writed(&wavheader[0x1C],wave.freq*4);
-		host_writed(&wavheader[0x28],wave.length);
+		host_writed(&wavheader[0x04], wave.length + sizeof(wavheader) - 8);
+		host_writed(&wavheader[0x18], wave.freq);
+		host_writed(&wavheader[0x1C], wave.freq * 4);
+		host_writed(&wavheader[0x28], wave.length);
 
-		fseek(wave.handle,0,0);
-		fwrite(wavheader,1,sizeof(wavheader),wave.handle);
+		fseek(wave.handle, 0, 0);
+		fwrite(wavheader, 1, sizeof(wavheader), wave.handle);
 		fclose(wave.handle);
-		wave.handle=0;
+		wave.handle = 0;
 		CaptureState |= CAPTURE_WAVE;
 	}
 	CaptureState ^= CAPTURE_WAVE;
 }
 
-void capture_audio_add_wave(const uint32_t freq, const uint32_t len, const int16_t * data) {
+void capture_audio_add_wave(const uint32_t freq, const uint32_t len,
+                            const int16_t* data)
+{
 	if (!wave.handle) {
-		wave.handle=CAPTURE_CreateFile("Wave Output",".wav");
+		wave.handle = CAPTURE_CreateFile("Wave Output", ".wav");
 		if (!wave.handle) {
 			CaptureState &= ~CAPTURE_WAVE;
 			return;
 		}
 		wave.length = 0;
-		wave.used = 0;
-		wave.freq = freq;
-		fwrite(wavheader,1,sizeof(wavheader),wave.handle);
+		wave.used   = 0;
+		wave.freq   = freq;
+		fwrite(wavheader, 1, sizeof(wavheader), wave.handle);
 	}
-	const int16_t * read = data;
-	auto remaining = len;
-	while (remaining > 0 ) {
+	const int16_t* read = data;
+	auto remaining      = len;
+	while (remaining > 0) {
 		uint32_t left = WAVE_BUF - wave.used;
 		if (!left) {
-			fwrite(wave.buf,1,4*WAVE_BUF,wave.handle);
-			wave.length += 4*WAVE_BUF;
+			fwrite(wave.buf, 1, 4 * WAVE_BUF, wave.handle);
+			wave.length += 4 * WAVE_BUF;
 			wave.used = 0;
-			left = WAVE_BUF;
+			left      = WAVE_BUF;
 		}
 		if (left > remaining)
 			left = remaining;
-		memcpy( &wave.buf[wave.used], read, left*4);
+		memcpy(&wave.buf[wave.used], read, left * 4);
 		wave.used += left;
-		read += left*2;
+		read += left * 2;
 		remaining -= left;
 	}
 }

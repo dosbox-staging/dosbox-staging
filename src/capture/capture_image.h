@@ -24,4 +24,6 @@ void capture_image(const uint16_t width, const uint16_t height,
                    const uint8_t capture_flags, const uint8_t* image_data,
                    const uint8_t* palette_data);
 
+void handle_screenshot_rendered_surface(const bool pressed);
+
 #endif
