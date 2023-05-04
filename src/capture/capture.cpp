@@ -65,28 +65,24 @@ static struct {
 		uint32_t last = 0;
 	} midi = {};
 
-	struct {
-		uint32_t rowlen = 0;
-	} image = {};
-
 #if (C_SSHOT)
 	struct {
-		FILE *handle = nullptr;
-		uint32_t frames = 0;
+		FILE* handle                  = nullptr;
+		uint32_t frames               = 0;
 		int16_t audiobuf[WAVE_BUF][2] = {};
-		uint32_t audioused = 0;
-		uint32_t audiorate = 0;
-		uint32_t audiowritten = 0;
-		VideoCodec *codec = nullptr;
-		int width = 0;
-		int height = 0;
-		int bpp = 0;
-		uint32_t written = 0;
-		float fps = 0.0f;
-		uint32_t bufSize = 0;
-		std::vector<uint8_t> buf = {};
-		std::vector<uint8_t> index = {};
-		uint32_t indexused = 0;
+		uint32_t audioused            = 0;
+		uint32_t audiorate            = 0;
+		uint32_t audiowritten         = 0;
+		VideoCodec* codec             = nullptr;
+		int width                     = 0;
+		int height                    = 0;
+		int bits_per_pixel            = 0;
+		uint32_t written              = 0;
+		float frames_per_second       = 0.0f;
+		uint32_t bufSize              = 0;
+		std::vector<uint8_t> buf      = {};
+		std::vector<uint8_t> index    = {};
+		uint32_t indexused            = 0;
 	} video = {};
 #endif
 
@@ -211,7 +207,7 @@ static void CAPTURE_VideoEvent(bool pressed) {
 
 		AVIOUT4("avih");
 		AVIOUTd(56);                         /* # of bytes to follow */
-		AVIOUTd((uint32_t)(1000000 / capture.video.fps));       /* Microseconds per frame */
+		AVIOUTd((uint32_t)(1000000 / capture.video.frames_per_second)); /* Microseconds per frame */
 		AVIOUTd(0);
 		AVIOUTd(0);                         /* PaddingGranularity (whatever that might be) */
 		AVIOUTd(0x110);                     /* Flags,0x10 has index, 0x100 interleaved */
@@ -239,7 +235,7 @@ static void CAPTURE_VideoEvent(bool pressed) {
 		AVIOUTd(0);                         /* Reserved, MS says: wPriority, wLanguage */
 		AVIOUTd(0);                         /* InitialFrames */
 		AVIOUTd(1000000);                   /* Scale */
-		AVIOUTd((uint32_t)(1000000 * capture.video.fps));              /* Rate: Rate/Scale == samples/second */
+		AVIOUTd((uint32_t)(1000000 * capture.video.frames_per_second)); /* Rate: Rate/Scale == samples/second */
 		AVIOUTd(0);                         /* Start */
 		AVIOUTd(capture.video.frames);      /* Length */
 		AVIOUTd(0);                  /* SuggestedBufferSize */
@@ -347,9 +343,19 @@ void CAPTURE_VideoStop() {
 }
 
 void capture_image(const uint16_t width, const uint16_t height,
-                   const uint8_t bpp, const uint16_t pitch, const uint8_t flags,
-                   const uint8_t* data, const uint8_t* pal)
+                   const uint8_t bits_per_pixel, const uint16_t pitch,
+                   const uint8_t capture_flags, const uint8_t* image_data,
+                   const uint8_t* palette_data)
 {
+	LOG_MSG("CAPTURE: Capturing image, width: %d, height: %d, "
+	        "bitsPerPixel: %d, pitch: %d, doubleWidth: %d, doubleHeight: %d",
+	        width,
+	        height,
+	        bits_per_pixel,
+	        pitch,
+	        (capture_flags & CAPTURE_FLAG_DBLW),
+	        (capture_flags & CAPTURE_FLAG_DBLH));
+
 	png_structp png_ptr;
 	png_infop info_ptr;
 	png_color palette[256];
@@ -381,7 +387,7 @@ void capture_image(const uint16_t width, const uint16_t height,
 	png_set_compression_method(png_ptr, 8);
 	png_set_compression_buffer_size(png_ptr, 8192);
 
-	if (bpp == 8) {
+	if (bits_per_pixel == 8) {
 		png_set_IHDR(png_ptr,
 		             info_ptr,
 		             width,
@@ -393,9 +399,9 @@ void capture_image(const uint16_t width, const uint16_t height,
 		             PNG_FILTER_TYPE_DEFAULT);
 
 		for (auto i = 0; i < 256; ++i) {
-			palette[i].red   = pal[i * 4 + 0];
-			palette[i].green = pal[i * 4 + 1];
-			palette[i].blue  = pal[i * 4 + 2];
+			palette[i].red   = palette_data[i * 4 + 0];
+			palette[i].green = palette_data[i * 4 + 1];
+			palette[i].blue  = palette_data[i * 4 + 2];
 		}
 		png_set_PLTE(png_ptr, info_ptr, palette, 256);
 
@@ -430,16 +436,16 @@ void capture_image(const uint16_t width, const uint16_t height,
 #endif
 	png_write_info(png_ptr, info_ptr);
 
-	const bool is_double_width = (flags & CAPTURE_FLAG_DBLW);
-	const auto row_divisor     = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
+	const bool is_double_width = (capture_flags & CAPTURE_FLAG_DBLW);
+	const auto row_divisor = (capture_flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
 
 	uint8_t row_buffer[SCALER_MAXWIDTH * 4];
 
 	for (auto i = 0; i < height; ++i) {
-		auto src_row     = data + (i >> row_divisor) * pitch;
+		auto src_row     = image_data + (i >> row_divisor) * pitch;
 		auto row_pointer = src_row;
 
-		switch (bpp) {
+		switch (bits_per_pixel) {
 		case 8:
 			if (is_double_width) {
 				for (auto x = 0; x < width; ++x) {
@@ -566,17 +572,19 @@ void capture_image(const uint16_t width, const uint16_t height,
 }
 
 void capture_video(const uint16_t width, const uint16_t height,
-                   const uint8_t bpp, const uint16_t pitch, const uint8_t flags,
-                   const float fps, const uint8_t* data, const uint8_t* pal)
+                   const uint8_t bits_per_pixel, const uint16_t pitch,
+                   const uint8_t capture_flags, const float frames_per_second,
+                   const uint8_t* image_data, const uint8_t* palette_data)
 {
 	ZMBV_FORMAT format;
 	/* Disable capturing if any of the test fails */
 	if (capture.video.handle &&
 	    (capture.video.width != width || capture.video.height != height ||
-	     capture.video.bpp != bpp || capture.video.fps != fps)) {
+	     capture.video.bits_per_pixel != bits_per_pixel ||
+	     capture.video.frames_per_second != frames_per_second)) {
 		CAPTURE_VideoEvent(true);
 	}
-	switch (bpp) {
+	switch (bits_per_pixel) {
 	case 8: format = ZMBV_FORMAT::BPP_8; break;
 	case 15: format = ZMBV_FORMAT::BPP_15; break;
 	case 16: format = ZMBV_FORMAT::BPP_16; break;
@@ -609,10 +617,10 @@ void capture_video(const uint16_t width, const uint16_t height,
 		capture.video.index.resize(16 * 4096);
 		capture.video.indexused = 8;
 
-		capture.video.width  = width;
-		capture.video.height = height;
-		capture.video.bpp    = bpp;
-		capture.video.fps    = fps;
+		capture.video.width             = width;
+		capture.video.height            = height;
+		capture.video.bits_per_pixel    = bits_per_pixel;
+		capture.video.frames_per_second = frames_per_second;
 		for (auto i = 0; i < AVI_HEADER_SIZE; ++i)
 			fputc(0, capture.video.handle);
 		capture.video.frames       = 0;
@@ -627,24 +635,24 @@ void capture_video(const uint16_t width, const uint16_t height,
 		codecFlags = 0;
 	if (!capture.video.codec->PrepareCompressFrame(codecFlags,
 	                                               format,
-	                                               pal,
+	                                               palette_data,
 	                                               capture.video.buf.data(),
 	                                               capture.video.bufSize)) {
 		return;
 	}
 
-	const bool is_double_width = flags & CAPTURE_FLAG_DBLW;
-	const auto height_divisor  = (flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
+	const bool is_double_width = capture_flags & CAPTURE_FLAG_DBLW;
+	const auto height_divisor = (capture_flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
 
 	uint8_t doubleRow[SCALER_MAXWIDTH * 4];
 
 	for (auto i = 0; i < height; ++i) {
 		const uint8_t* rowPointer = doubleRow;
-		const auto srcLine = data + (i >> height_divisor) * pitch;
+		const auto srcLine = image_data + (i >> height_divisor) * pitch;
 
 		if (is_double_width) {
 			const auto countWidth = width >> 1;
-			switch (bpp) {
+			switch (bits_per_pixel) {
 			case 8:
 				for (auto x = 0; x < countWidth; ++x)
 					doubleRow[x * 2 + 0] =
@@ -676,7 +684,7 @@ void capture_video(const uint16_t width, const uint16_t height,
 			}
 			rowPointer = doubleRow;
 		} else {
-			if (bpp == 24) {
+			if (bits_per_pixel == 24) {
 				for (auto x = 0; x < width; ++x) {
 					const auto pixel = reinterpret_cast<const rgb24*>(
 					        srcLine)[x];
@@ -700,8 +708,8 @@ void capture_video(const uint16_t width, const uint16_t height,
 	                    capture.video.buf.data(),
 	                    codecFlags & 1 ? 0x10 : 0x0);
 	capture.video.frames++;
-	//		LOG_MSG("Frame %d video %d audio %d",capture.video.frames,
-	//written, capture.video.audioused *4 );
+	//		LOG_MSG("Frame %d video %d audio
+	//%d",capture.video.frames, written, capture.video.audioused *4 );
 	if (capture.video.audioused) {
 		CAPTURE_AddAviChunk("01wb",
 		                    capture.video.audioused * 4,
@@ -717,15 +725,18 @@ void capture_video(const uint16_t width, const uint16_t height,
 
 void CAPTURE_AddImage([[maybe_unused]] uint16_t width,
                       [[maybe_unused]] uint16_t height,
-                      [[maybe_unused]] uint8_t bpp, [[maybe_unused]] uint16_t pitch,
-                      [[maybe_unused]] uint8_t flags, [[maybe_unused]] float fps,
-                      [[maybe_unused]] uint8_t* data, [[maybe_unused]] uint8_t* pal)
+                      [[maybe_unused]] uint8_t bits_per_pixel,
+                      [[maybe_unused]] uint16_t pitch,
+                      [[maybe_unused]] uint8_t capture_flags,
+                      [[maybe_unused]] float frames_per_second,
+                      [[maybe_unused]] uint8_t* image_data,
+                      [[maybe_unused]] uint8_t* palette_data)
 {
 #if (C_SSHOT)
-	if (flags & CAPTURE_FLAG_DBLH) {
+	if (capture_flags & CAPTURE_FLAG_DBLH) {
 		height *= 2;
 	}
-	if (flags & CAPTURE_FLAG_DBLW) {
+	if (capture_flags & CAPTURE_FLAG_DBLW) {
 		width *= 2;
 	}
 	if (height > SCALER_MAXHEIGHT) {
@@ -736,11 +747,24 @@ void CAPTURE_AddImage([[maybe_unused]] uint16_t width,
 	}
 
 	if (CaptureState & CAPTURE_IMAGE) {
-		capture_image(width, height, bpp, pitch, flags, data, pal);
+		capture_image(width,
+		              height,
+		              bits_per_pixel,
+		              pitch,
+		              capture_flags,
+		              image_data,
+		              palette_data);
 		CaptureState &= ~CAPTURE_IMAGE;
 	}
 	if (CaptureState & CAPTURE_VIDEO) {
-		capture_video(width, height, bpp, pitch, flags, fps, data, pal);
+		capture_video(width,
+		              height,
+		              bits_per_pixel,
+		              pitch,
+		              capture_flags,
+		              frames_per_second,
+		              image_data,
+		              palette_data);
 		CaptureState &= ~CAPTURE_VIDEO;
 	}
 #endif

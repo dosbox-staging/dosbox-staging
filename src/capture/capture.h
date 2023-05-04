@@ -43,8 +43,9 @@ void CAPTURE_AddWave(uint32_t freq, uint32_t len, int16_t* data);
 #define CAPTURE_FLAG_DBLH 0x2
 
 void CAPTURE_AddImage(const uint16_t width, const uint16_t height,
-                      const uint8_t bpp, const uint16_t pitch, uint8_t flags,
-                      float fps, uint8_t* data, uint8_t* pal);
+                      const uint8_t bits_per_pixel, const uint16_t pitch,
+                      uint8_t capture_flags, float frames_per_second,
+                      uint8_t* image_data, uint8_t* palette_data);
 
 void CAPTURE_AddMidi(bool sysex, Bitu len, uint8_t* data);
 void CAPTURE_VideoStart();
