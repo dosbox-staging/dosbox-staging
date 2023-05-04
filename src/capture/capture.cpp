@@ -746,7 +746,7 @@ void CAPTURE_AddImage([[maybe_unused]] uint16_t width,
 }
 
 #if (C_SSHOT)
-static void CAPTURE_ScreenShotEvent(bool pressed) {
+static void CAPTURE_ScreenshotEvent(bool pressed) {
 	if (!pressed)
 		return;
 	CaptureState |= CAPTURE_IMAGE;
@@ -949,7 +949,7 @@ void CAPTURE_Init(Section* sec)
 
 	MAPPER_AddHandler(CAPTURE_MidiEvent, SDL_SCANCODE_UNKNOWN, 0, "caprawmidi", "Rec. MIDI");
 #if (C_SSHOT)
-	MAPPER_AddHandler(CAPTURE_ScreenShotEvent,
+	MAPPER_AddHandler(CAPTURE_ScreenshotEvent,
 	                  SDL_SCANCODE_F5,
 	                  PRIMARY_MOD,
 	                  "scrshot",
