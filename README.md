@@ -51,7 +51,6 @@ support today's systems.
 | **Feature**                 | **Status**
 |-                            |-
 | **CD-DA file codecs**       | Yes: Opus, OGG/Vorbus, MP3, FLAC, and WAV
-| **Pixel-perfect mode**      | Yes: `output=openglpp` or `output=texturepp`
 | **Resizable window**        | Yes, for all hardware-accelerated modes
 | **Relative window size**    | `windowresolution=small`, `medium`, or `large`
 | **Window placement**        | `windowposition = 0,0`, and more<sup>[16]</sup>

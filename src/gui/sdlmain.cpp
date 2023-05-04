@@ -228,9 +228,7 @@ constexpr bool FIXED_SIZE = false;
 static bool first_window = true;
 
 static SDL_Point restrict_to_viewport_resolution(int width, int height);
-static PPScale calc_pp_scale(int width, int heigth);
-static SDL_Rect calc_viewport(int width, int height);
-static SDL_Rect calc_viewport_fit(const int width, const int height);
+static SDL_Rect calc_viewport(const int width, const int height);
 
 static void CleanupSDLResources();
 static void HandleVideoResize(int width, int height);
@@ -709,38 +707,23 @@ static SDL_Point refine_window_size(const SDL_Point size,
 
 static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 
-static SDL_Rect calc_viewport_pp(int win_width, int win_height);
-
 // Logs the source and target resolution including describing scaling method
 // and pixel-aspect ratios. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
 static void log_display_properties(int source_w, int source_h,
-                                   const std::optional<SDL_Rect> &target_size_override,
-                                   const SCALING_MODE scaling_mode,
-                                   const SCREEN_TYPES screen_type,
-                                   const PPScale &pp_scale)
+                                   const std::optional<SDL_Rect>& target_size_override,
+                                   const SCREEN_TYPES screen_type)
 {
-	// The pixel perfect object holds its effective source dimensions
-	if (scaling_mode == SCALING_MODE::PERFECT) {
-		source_w = pp_scale.effective_source_w;
-		source_h = pp_scale.effective_source_h;
-	}
 	// Get the target dimentions, with consideration for possible override
-	// values and pixel-perfect handling
+	// values
 	auto get_target_dims = [&]() -> std::pair<int, int> {
 		if (target_size_override) {
-			auto calc_vp  = (scaling_mode == SCALING_MODE::PERFECT)
-			                      ? calc_viewport_pp
-			                      : calc_viewport_fit;
-			const auto vp = calc_vp(target_size_override->w,
-			                        target_size_override->h);
+			const auto vp = calc_viewport(target_size_override->w,
+			                              target_size_override->h);
 			return {vp.w, vp.h};
 		}
-		if (scaling_mode == SCALING_MODE::PERFECT) {
-			return {pp_scale.output_w, pp_scale.output_h};
-		}
 		const auto canvas   = get_canvas_size(screen_type);
-		const auto viewport = calc_viewport_fit(canvas.w, canvas.h);
+		const auto viewport = calc_viewport(canvas.w, canvas.h);
 		return {viewport.w, viewport.h};
 	};
 
@@ -803,12 +786,7 @@ static void log_display_properties(int source_w, int source_h,
 // A public wrapper to log the current display (both DOS and host) properties
 void GFX_LogDisplayProperties()
 {
-	log_display_properties(sdl.draw.width,
-	                       sdl.draw.height,
-	                       {},
-	                       sdl.scaling_mode,
-	                       sdl.desktop.type,
-	                       sdl.pp_scale);
+	log_display_properties(sdl.draw.width, sdl.draw.height, {}, sdl.desktop.type);
 }
 
 static SDL_Point get_initial_window_position_or_default(int default_val)
@@ -1529,48 +1507,6 @@ static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type)
 	return canvas;
 }
 
-static SDL_Window *setup_window_pp(SCREEN_TYPES screen_type, bool resizable)
-{
-	assert(sdl.window);
-
-	int window_width  = 0;
-	int window_height = 0;
-	SDL_GetWindowSize(sdl.window, &window_width, &window_height);
-	assert(window_width > 0 && window_height > 0);
-
-	if (!sdl.desktop.fullscreen) {
-		window_width  = sdl.desktop.requested_window_bounds.width;
-		window_height = sdl.desktop.requested_window_bounds.height;
-	}
-
-	const auto render_resolution = restrict_to_viewport_resolution(
-	        iround(window_width * sdl.desktop.dpi_scale),
-	        iround(window_height * sdl.desktop.dpi_scale));
-
-	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
-
-	const int img_width = sdl.pp_scale.output_w;
-	const int img_height = sdl.pp_scale.output_h;
-
-	int win_width;
-	int win_height;
-	if (sdl.use_exact_window_resolution && sdl.use_viewport_limits) {
-		win_width  = window_width;
-		win_height = window_height;
-	} else {
-		win_width  = (sdl.desktop.fullscreen
-		                      ? window_width
-		                      : iround(img_width / sdl.desktop.dpi_scale));
-		win_height = (sdl.desktop.fullscreen
-		                      ? window_height
-		                      : iround(img_height / sdl.desktop.dpi_scale));
-	}
-
-	sdl.window = SetWindowMode(screen_type, win_width, win_height,
-	                           sdl.desktop.fullscreen, resizable);
-	return sdl.window;
-}
-
 static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 {
 	return sdl.use_viewport_limits
@@ -1583,13 +1519,8 @@ static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 	             : SDL_Point{w, h};
 }
 
-static SDL_Rect calc_viewport_fit(int win_width, int win_height);
-
 static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 {
-	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
-		return setup_window_pp(screen_type, resizable);
-
 	int window_width;
 	int window_height;
 	if (sdl.desktop.fullscreen) {
@@ -1789,30 +1720,6 @@ static void update_vga_sub_350_line_handling([[maybe_unused]] const SCREEN_TYPES
 	VGA_SetVgaSub350LineHandling(line_handling);
 }
 
-// Some video modes are effectively doubled in resolution but only have half the
-// unique pixel resolution.
-static bool is_draw_size_doubled()
-{
-	// Has either dimension been doubled?
-	const bool is_doubled = (sdl.draw.width_was_doubled ||
-	                         sdl.draw.height_was_doubled);
-
-	// Are the dimensions divisible by 2?
-	const bool is_divisible = (sdl.draw.width % 2 == 0 &&
-	                           sdl.draw.height % 2 == 0);
-
-	// Are the dimensions beyond low-res?
-	const bool is_large = (sdl.draw.width > 500 && sdl.draw.height > 350);
-
-	return is_doubled && is_divisible && is_large;
-}
-
-static PPScale calc_pp_scale(const int avw, const int avh)
-{
-	return PPScale(sdl.draw.width, sdl.draw.height, sdl.draw.pixel_aspect,
-	               is_draw_size_doubled(), avw, avh);
-}
-
 bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
 {
 	return lhs.x != rhs.x || lhs.y != rhs.y;
@@ -1837,13 +1744,8 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	}
 }
 
-Bitu GFX_SetSize(int width,
-                 int height,
-                 const Bitu flags,
-                 double scalex,
-                 double scaley,
-                 GFX_CallBack_t callback,
-                 double pixel_aspect)
+Bitu GFX_SetSize(int width, int height, const Bitu flags, double scalex,
+                 double scaley, GFX_CallBack_t callback)
 {
 	Bitu retFlags = 0;
 	if (sdl.updating)
@@ -1861,7 +1763,6 @@ Bitu GFX_SetSize(int width,
 	                        sdl.draw.height_was_doubled != double_height ||
 	                        sdl.draw.scalex != scalex ||
 	                        sdl.draw.scaley != scaley ||
-	                        sdl.draw.pixel_aspect != pixel_aspect ||
 	                        sdl.draw.previous_mode != CurMode->type);
 
 	sdl.draw.width = width;
@@ -1870,7 +1771,6 @@ Bitu GFX_SetSize(int width,
 	sdl.draw.height_was_doubled = double_height;
 	sdl.draw.scalex = scalex;
 	sdl.draw.scaley = scaley;
-	sdl.draw.pixel_aspect = pixel_aspect;
 	sdl.draw.callback = callback;
 	sdl.draw.previous_mode = CurMode->type;
 
@@ -2246,10 +2146,9 @@ dosurface:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
 
-		const bool use_nearest_neighbour =
-		        (sdl.scaling_mode == SCALING_MODE::NEAREST ||
-		         sdl.scaling_mode == SCALING_MODE::PERFECT);
-		const GLint filter = (use_nearest_neighbour ? GL_NEAREST : GL_LINEAR);
+		const GLint filter = (sdl.scaling_mode == SCALING_MODE::NEAREST
+		                              ? GL_NEAREST
+		                              : GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
 
@@ -2360,9 +2259,7 @@ dosurface:
 		log_display_properties(sdl.draw.width,
 		                       sdl.draw.height,
 		                       {},
-		                       sdl.scaling_mode,
-		                       sdl.desktop.type,
-		                       sdl.pp_scale);
+		                       sdl.desktop.type);
 
 	if (retFlags)
 		GFX_Start();
@@ -2548,9 +2445,7 @@ void GFX_SwitchFullScreen()
 	log_display_properties(sdl.draw.width,
 	                       sdl.draw.height,
 	                       canvas_size,
-	                       sdl.scaling_mode,
-	                       sdl.desktop.type,
-	                       sdl.pp_scale);
+	                       sdl.desktop.type);
 
 	sdl.desktop.switching_fullscreen = false;
 }
@@ -2997,21 +2892,6 @@ static SDL_Point refine_window_size(const SDL_Point size,
 				                : remove_stretched_aspect(candidate));
 		break;
 	}
-	case (SCALING_MODE::PERFECT): {
-		constexpr double aspect_weight = 1.14;
-		constexpr SDL_Point pre_draw_size = {320, 200};
-		const double pixel_aspect_ratio = should_stretch_pixels ? 1.2 : 1;
-
-		int scale_x = 0;
-		int scale_y = 0;
-		const int err = pp_getscale(pre_draw_size.x, pre_draw_size.y,
-		                            pixel_aspect_ratio, size.x, size.y,
-		                            aspect_weight, &scale_x, &scale_y);
-		if (err == 0)
-			return {pre_draw_size.x * scale_x, pre_draw_size.y * scale_y};
-		// else use the fallback below
-		break;
-	}
 	}; // end-switch
 
 	return FALLBACK_WINDOW_DIMENSIONS;
@@ -3224,7 +3104,7 @@ static void save_window_size(const int w, const int h)
 // Takes in:
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
-//  - The previously configured scaling mode: NONE, NEAREST, or PERFECT.
+//  - The previously configured scaling mode: NONE or NEAREST.
 //  - If aspect correction (stretched pixels) is requested.
 
 // Except for SURFACE rendering, this function returns a refined size and
@@ -3236,13 +3116,11 @@ static void save_window_size(const int w, const int h)
 
 // Refined sizes:
 //  - If the user requested an exact resolution or 'desktop' size, then the
-//    requested resolution is only trimed for aspect (4:3 or 8:5), unless
-//    pixel-perfect is requested, in which case the resolution is adjusted down
-//    toward to nearest exact integer multiple.
+//    requested resolution is only trimmed for aspect (4:3 or 8:5).
 
-//  - If the user requested a relative size: small, medium, or large, then either
-//    the closest fixed resolution is picked from a list or a pixel-perfect
-//    resolution is calculated. In both cases, aspect correction is factored in.
+//  - If the user requested a relative size: small, medium, or large, then
+//    the closest fixed resolution is picked from a list, with aspect correction
+//    factored in.
 
 static void setup_window_sizes_from_conf(const char *windowresolution_val,
                                          const SCALING_MODE scaling_mode,
@@ -3303,7 +3181,6 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 		switch (scaling_mode) {
 		case SCALING_MODE::NONE: return "Bilinear";
 		case SCALING_MODE::NEAREST: return "Nearest-neighbour";
-		case SCALING_MODE::PERFECT: return "Pixel-perfect";
 		}
 		return "Unknown mode!";
 	};
@@ -3314,7 +3191,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	        sdl.display_number);
 }
 
-static SDL_Rect calc_viewport_fit(const int win_w, const int win_h)
+static SDL_Rect calc_viewport(const int win_w, const int win_h)
 {
 	assert(sdl.draw.width > 0);
 	assert(sdl.draw.height > 0);
@@ -3349,27 +3226,6 @@ static SDL_Rect calc_viewport_fit(const int win_w, const int win_h)
 	return {view_x, view_y, view_w, view_h};
 }
 
-static SDL_Rect calc_viewport_pp(int win_width, int win_height)
-{
-	const auto render_resolution = restrict_to_viewport_resolution(win_width, win_height);
-	sdl.pp_scale = calc_pp_scale(render_resolution.x, render_resolution.y);
-
-	const int w = sdl.pp_scale.output_w;
-	const int h = sdl.pp_scale.output_h;
-	const int x = (win_width - w) / 2;
-	const int y = (win_height - h) / 2;
-
-	return {x, y, w, h};
-}
-
-[[maybe_unused]] static SDL_Rect calc_viewport(int width, int height)
-{
-	if (sdl.scaling_mode == SCALING_MODE::PERFECT)
-		return calc_viewport_pp(width, height);
-	else
-		return calc_viewport_fit(width, height);
-}
-
 static void set_output(Section *sec, bool should_stretch_pixels)
 {
 	// Apply the user's mouse settings
@@ -3390,10 +3246,6 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 		sdl.scaling_mode = SCALING_MODE::NEAREST;
 		// Currently the default, but... oh well
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
-	} else if (output == "texturepp") {
-		sdl.desktop.want_type = SCREEN_TEXTURE;
-		sdl.scaling_mode = SCALING_MODE::PERFECT;
-		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 #if C_OPENGL
 	} else if (starts_with("opengl", output)) {
 		RENDER_InitShaderSource(sec);
@@ -3404,10 +3256,6 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 		} else if (output == "openglnb") {
 			sdl.desktop.want_type = SCREEN_OPENGL;
 			sdl.scaling_mode      = SCALING_MODE::NEAREST;
-			sdl.opengl.bilinear   = false;
-		} else if (output == "openglpp") {
-			sdl.desktop.want_type = SCREEN_OPENGL;
-			sdl.scaling_mode      = SCALING_MODE::PERFECT;
 			sdl.opengl.bilinear   = false;
 		}
 #endif
@@ -4520,25 +4368,25 @@ void config_add_sdl() {
 	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
 	pstring->Set_values(presentation_modes);
 
-	const char *outputs[] =
+	const char* outputs[] =
 	{ "surface",
 	  "texture",
 	  "texturenb",
-	  "texturepp",
 #if C_OPENGL
 	  "opengl",
 	  "openglnb",
-	  "openglpp",
 #endif
 	  0 };
 
 #if C_OPENGL
 	Pstring = sdl_sec->Add_string("output", always, "opengl");
 	Pstring->Set_help("Video system to use for output ('opengl' by default).");
+	Pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
 #else
 	Pstring = sdl_sec->Add_string("output", always, "texture");
 	Pstring->Set_help("Video system to use for output ('texture' by default).");
 #endif
+	Pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
 	Pstring->Set_values(outputs);
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");

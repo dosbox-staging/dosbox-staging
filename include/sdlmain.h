@@ -30,8 +30,6 @@
 #endif
 #include "video.h"
 
-#include "../libs/ppscale/ppscale.h"
-
 #define SDL_NOFRAME 0x00000020
 
 // Texture buffer and presentation functions and type-defines
@@ -63,7 +61,7 @@ enum class HOST_RATE_MODE {
 	CUSTOM,
 };
 
-enum class SCALING_MODE { NONE, NEAREST, PERFECT };
+enum class SCALING_MODE { NONE, NEAREST };
 
 enum class VSYNC_STATE {
 	UNSET = -2,
@@ -105,7 +103,6 @@ struct SDL_Block {
 		int height = 0;
 		double scalex = 1.0;
 		double scaley = 1.0;
-		double pixel_aspect = 1.0;
 		uint16_t previous_mode = 0;
 		bool has_changed = false;
 		GFX_CallBack_t callback = nullptr;
@@ -223,7 +220,6 @@ struct SDL_Block {
 		int period_us_late = 0;
 		int8_t vfr_dupe_countdown = 0;
 	} frame = {};
-	PPScale pp_scale = {};
 	SDL_Rect updateRects[1024] = {};
 	bool use_exact_window_resolution = false;
 	bool use_viewport_limits = false;
