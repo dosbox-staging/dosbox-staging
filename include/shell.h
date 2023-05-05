@@ -83,6 +83,7 @@ private:
 	void AddShellCmdsToHelpList();
 	bool WriteHelp(const std::string &command, char* args);
 	[[nodiscard]] std::string ReadCommand();
+	[[nodiscard]] std::string SubstituteEnvironmentVariables(std::string_view command);
 
 	friend class AutoexecEditor;
 	std::vector<std::string> history{};
@@ -102,7 +103,6 @@ public:
 	void ParseLine(char * line);
 	void GetRedirection(char *s, std::string &ifn, std::string &ofn, std::string &pipe, bool * append);
 	void InputCommand(char * line);
-	void ProcessCmdLineEnvVarStitution(char *line);
 	void ShowPrompt();
 	void DoCommand(char * cmd);
 	bool Execute(char * name,char * args);
