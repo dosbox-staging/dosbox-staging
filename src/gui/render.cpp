@@ -768,6 +768,7 @@ void RENDER_Init(Section *sec)
 
 	auto prev_aspect       = render.aspect;
 	auto prev_scale_size   = render.scale.size;
+	const auto prev_integer_scaling_mode = GFX_GetIntegerScalingMode();
 
 	render.pal.first = 256;
 	render.pal.last  = 0;
@@ -778,6 +779,8 @@ void RENDER_Init(Section *sec)
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;
 
+	GFX_SetIntegerScalingMode(section->Get_string("integer_scaling"));
+
 #if C_OPENGL
 	const auto previous_shader_filename = render.shader.filename;
 	RENDER_InitShaderSource(section);
@@ -787,7 +790,8 @@ void RENDER_Init(Section *sec)
 	//  Only ReInit when there is a src.bpp (fixes crashes on startup and
 	//  directly changing the scaler without a screen specified yet)
 	if (running && render.src.bpp &&
-	    ((render.aspect != prev_aspect) || (render.scale.size != prev_scale_size)
+	    ((render.aspect != prev_aspect) || (render.scale.size != prev_scale_size) ||
+	     (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode)
 #if C_OPENGL
 	     || (previous_shader_filename != render.shader.filename)
 #endif

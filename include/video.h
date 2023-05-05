@@ -32,7 +32,13 @@ typedef enum {
 	GFX_CallBackRedraw
 } GFX_CallBackFunctions_t;
 
-typedef void (*GFX_CallBack_t)( GFX_CallBackFunctions_t function );
+enum class IntegerScalingMode {
+	Off,
+	Horizontal,
+	Vertical,
+};
+
+typedef void (*GFX_CallBack_t)(GFX_CallBackFunctions_t function);
 
 constexpr uint8_t GFX_CAN_8      = 1 << 0;
 constexpr uint8_t GFX_CAN_15     = 1 << 1;
@@ -55,6 +61,8 @@ Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(uint8_t red,uint8_t green,uint8_t blue);
 void GFX_LogDisplayProperties();
 void GFX_SetShader(const std::string &source);
+void GFX_SetIntegerScalingMode(const std::string& new_mode);
+IntegerScalingMode GFX_GetIntegerScalingMode();
 Bitu GFX_SetSize(int width, int height, Bitu flags, double scalex,
                  double scaley, GFX_CallBack_t callback);
 

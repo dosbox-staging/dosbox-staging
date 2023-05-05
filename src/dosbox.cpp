@@ -623,6 +623,18 @@ void DOSBOX_Init()
 	        "320x200 or 640x400; whereas square-pixel modes, such as 640x480\n"
 	        "and 800x600, are displayed as-is.");
 
+	pstring = secprop->Add_string("integer_scaling", always, "off");
+	pstring->Set_help(
+	        "Constrain the horizontal or vertical scaling factor to integer values. The\n"
+	        "correct aspect ratio is always maintained, which may result in a non-integer\n"
+	        "scaling factor to be applied in the other dimension.\n"
+	        "  off:         No integer scaling constraint; the aspect ratio correct image\n"
+	        "               fills the viewport (default).\n"
+	        "  horizontal:  Constrain the horizontal scaling factor to integer values\n"
+	        "               within the viewport.\n"
+	        "  vertical:    Constrain the vertical scaling factor to integer values\n"
+	        "               within the viewport.");
+
 	pstring = secprop->Add_string("monochrome_palette", always, "white");
 	pstring->Set_help(
 	        "Select default palette for monochrome display ('white' by default).\n"
