@@ -105,14 +105,17 @@
 # (**) The code page contains LATIN SMALL/CAPITAL LETTER L WITH MIDDLE DOT character, which
 # cannot be decomposed without creating ambiguity, see DECOMPOSITION.TXT
 #
-# Code pages mostly supported (3 code pages), but with unidentified characters still left (TODO):
+# Code pages mostly supported (2 code pages), but with unidentified characters still left (TODO):
 #
 # 864   - Arabic
-#       - 5 characters (FreeDOS specific extension) still unidentified
+#       - 1 character still unidentified (FreeDOS specific code page extension)
 # 59829 - Georgian
 #       - 1 character still unidentified
+#
+# Code pages with limited support (1 code page):
+#
 # 60258 - Russian Cyrillic and Latin Azeri
-#       - dotted capital I not handled due to UTF-8 code limitation
+#       - dotted capital I not handled due to engine limitation
 
 # ****************************************************************************
 # Mapping aliases to accomodate characters missing in code pages
@@ -796,31 +799,36 @@ CODEPAGE 851 # Greek, old encoding
 EXTENDS FILE mapping-wikipedia.org CP_851.TXT
 
 CODEPAGE 852 # Latin-2 (Central European), with EUR
-0xaa 0x20ac        #EURO SIGN - FreeDOS specific
+# FreeDOS specific code page extensions
+0xaa 0x20ac        #EURO SIGN
 EXTENDS FILE mapping-unicode.org CP_852.TXT
 
 CODEPAGE 853 # Latin-3 (Turkish, Maltese, and Esperanto)
-0xaa 0x20ac        #EURO SIGN       - FreeDOS specific
-0xd0 0x00a2        #CENT SIGN       - FreeDOS specific
-0xd1 0x00a5        #YEN SIGN        - FreeDOS specific
-0xf1 0x00b1        #PLUS-MINUS SIGN - FreeDOS specific
-0xdd 0x20a4        #LIRA SIGN       - FreeDOS specific
-0xfb 0x20b7        #SPESMILO SIGN   - FreeDOS specific
+# FreeDOS specific code page extensions
+0xaa 0x20ac        #EURO SIGN
+0xd0 0x00a2        #CENT SIGN
+0xd1 0x00a5        #YEN SIGN
+0xf1 0x00b1        #PLUS-MINUS SIGN
+0xdd 0x20a4        #LIRA SIGN
+0xfb 0x20b7        #SPESMILO SIGN
 EXTENDS FILE mapping-wikipedia.org CP_853.TXT
 
 CODEPAGE 855 # South Slavic, Cyrillic
 EXTENDS FILE mapping-unicode.org CP_855.TXT
 
 CODEPAGE 856 # Hebrew-2, with EUR
-0xad 0x20ac        #EURO SIGN - FreeDOS specific
+# FreeDOS specific code page extensions
+0xad 0x20ac        #EURO SIGN
 EXTENDS FILE mapping-unicode.org CP_856.TXT
 
 CODEPAGE 857 # Latin-5, with EUR
-0xd5 0x20ac        #EURO SIGN - FreeDOS specific
+# FreeDOS specific code page extensions
+0xd5 0x20ac        #EURO SIGN
 EXTENDS FILE mapping-unicode.org CP_857.TXT
 
 CODEPAGE 858 # Latin-1 (Western European), with EUR
-0xd5 0x20ac        #EURO SIGN - FreeDOS specific
+# FreeDOS specific code page extensions
+0xd5 0x20ac        #EURO SIGN
 EXTENDS CODEPAGE 850
 
 CODEPAGE 859 # Latin-9 (Western European), with EUR
@@ -848,11 +856,12 @@ CODEPAGE 863 # Canadian French
 EXTENDS FILE mapping-unicode.org CP_863.TXT
 
 CODEPAGE 864 # Arabic
-# 0x9b TODO: unidentified character - FreeDOS specific
-# 0x9c TODO: unidentified character - FreeDOS specific
+# FreeDOS specific specific code page extensions
+0x9b 0xfef9        #ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW ISOLATED FORM
+0x9c 0xfefa        #ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW FINAL FORM
 # 0x9f TODO: unidentified character - FreeDOS specific
-# 0xa6 TODO: unidentified character - FreeDOS specific
-# 0xa7 TODO: unidentified character - FreeDOS specific
+0xa6 0xfe87        #ARABIC LETTER ALEF WITH HAMZA BELOW ISOLATED FORM
+0xa7 0xfe88        #ARABIC LETTER ALEF WITH HAMZA BELOW FINAL FORM
 EXTENDS FILE mapping-unicode.org CP_864.TXT
 
 CODEPAGE 865 # Nordic
@@ -900,15 +909,18 @@ CODEPAGE 867 # Czech and Slovak, Kamenicky encoding
 EXTENDS CODEPAGE 437
 
 CODEPAGE 869 # Greek, with EUR
-0x87 0x20ac        #EURO SIGN - FreeDOS specific
+# FreeDOS specific code page extensions
+0x87 0x20ac        #EURO SIGN
 EXTENDS FILE mapping-unicode.org CP_869.TXT
 
 CODEPAGE 872 # South Slavic, Cyrillic, with EUR
-0xcf 0x20ac        #EURO SIGN - FreeDOS specific
+# FreeDOS specific code page extensions
+0xcf 0x20ac        #EURO SIGN
 EXTENDS CODEPAGE 855
 
 CODEPAGE 899 # Armenian, ArmSCII-8A encoding
-0xff 0x055b        #ARMENIAN EMPHASIS MARK - FreeDOS specific
+# FreeDOS specific code page extensions
+0xff 0x055b        #ARMENIAN EMPHASIS MARK
 EXTENDS FILE mapping-wikipedia.org CP_899.TXT
 
 CODEPAGE 874 # Thai, with EUR
