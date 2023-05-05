@@ -3201,19 +3201,63 @@ static SDL_Rect calc_viewport(const int win_w, const int win_h)
 	assert(std::isfinite(sdl.draw.scaley));
 
 	// limit the window to the user's desired viewport, if configured
-	const auto [lwin_w, lwin_h] = restrict_to_viewport_resolution(win_w, win_h);
+	const auto [bounds_w,
+	            bounds_h] = restrict_to_viewport_resolution(win_w, win_h);
 
-	// calculate the aspect ratios of the draw buffer and the limited window
-	const auto draw_aspect = (sdl.draw.width * sdl.draw.scalex) /
-	                         (sdl.draw.height * sdl.draw.scaley);
-	const auto lwin_aspect = static_cast<double>(lwin_w) / lwin_h;
+	// Calculate the aspect ratio of the emulated display mode.
+	const auto output_aspect = (sdl.draw.width * sdl.draw.scalex) /
+	                           (sdl.draw.height * sdl.draw.scaley);
 
-	// calculate the viewport contingent on the aspect ratio of the limited
-	// window versus draw buffer
-	const auto lwin_is_wider = lwin_aspect > draw_aspect;
-	const auto view_w = lwin_is_wider ? iround(lwin_h * draw_aspect) : lwin_w;
-	const auto view_h = lwin_is_wider ? lwin_h : iround(lwin_w / draw_aspect);
+	int view_w = 0;
+	int view_h = 0;
+	switch (sdl.integer_scaling_mode) {
+	case IntegerScalingMode::Off: {
+		// Calculate the viewport contingent on the aspect ratio of the
+		// viewport bounds versus display mode.
+		const auto bounds_aspect = static_cast<double>(bounds_w) / bounds_h;
+		if (bounds_aspect > output_aspect) {
+			view_w = iround(bounds_h * output_aspect);
+			view_h = bounds_h;
+		} else {
+			view_w = bounds_w;
+			view_h = iround(bounds_w / output_aspect);
+		}
+		break;
+	}
+	case IntegerScalingMode::Horizontal: {
+		// Calculate scaling multiplier that will allow to fit the whole
+		// image into the window or viewport bounds.
+		const auto pixel_aspect = round(sdl.draw.height * sdl.draw.scaley) /
+		                          sdl.draw.height;
+		auto integer_scale_factor = std::min(
+		        bounds_w / sdl.draw.width,
+		        static_cast<int>(bounds_h / (sdl.draw.height * pixel_aspect)));
+		// Safeguard to not let the image implode into a black hole.
+		if (integer_scale_factor < 1) {
+			integer_scale_factor = 1;
+		}
 
+		// Calculate the final viewport.
+		view_w = sdl.draw.width * integer_scale_factor;
+		view_h = iround(sdl.draw.height * integer_scale_factor * pixel_aspect);
+		break;
+	}
+	case IntegerScalingMode::Vertical: {
+		auto integer_scale_factor =
+		        std::min(bounds_h / sdl.draw.height,
+		                 static_cast<int>(bounds_w / (sdl.draw.height *
+		                                              output_aspect)));
+		if (integer_scale_factor < 1) {
+			integer_scale_factor = 1;
+		}
+
+		view_w = iround(sdl.draw.height * integer_scale_factor * output_aspect);
+		view_h = sdl.draw.height * integer_scale_factor;
+		break;
+	}
+	}
+
+	// Calculate centered viewport position.
 	const int view_x = (win_w - view_w) / 2;
 	const int view_y = (win_h - view_h) / 2;
 
@@ -3226,7 +3270,27 @@ static SDL_Rect calc_viewport(const int win_w, const int win_h)
 	return {view_x, view_y, view_w, view_h};
 }
 
-static void set_output(Section *sec, bool should_stretch_pixels)
+void GFX_SetIntegerScalingMode(const std::string& new_mode)
+{
+	if (new_mode == "off") {
+		sdl.integer_scaling_mode = IntegerScalingMode::Off;
+	} else if (new_mode == "horizontal") {
+		sdl.integer_scaling_mode = IntegerScalingMode::Horizontal;
+	} else if (new_mode == "vertical") {
+		sdl.integer_scaling_mode = IntegerScalingMode::Vertical;
+	} else {
+		LOG_WARNING("RENDER: Unknown integer scaling mode '%s', defaulting to 'off'",
+		            new_mode.c_str());
+		sdl.integer_scaling_mode = IntegerScalingMode::Off;
+	}
+}
+
+IntegerScalingMode GFX_GetIntegerScalingMode()
+{
+	return sdl.integer_scaling_mode;
+}
+
+static void set_output(Section* sec, bool should_stretch_pixels)
 {
 	// Apply the user's mouse settings
 	const auto section = static_cast<const Section_prop *>(sec);

@@ -98,6 +98,7 @@ struct SDL_Block {
 	bool resizing_window = false;
 	bool wait_on_error = false;
 	SCALING_MODE scaling_mode = SCALING_MODE::NONE;
+	IntegerScalingMode integer_scaling_mode = IntegerScalingMode::Off;
 	struct {
 		int width = 0;
 		int height = 0;

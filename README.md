@@ -51,6 +51,7 @@ support today's systems.
 | **Feature**                 | **Status**
 |-                            |-
 | **CD-DA file codecs**       | Yes: Opus, OGG/Vorbus, MP3, FLAC, and WAV
+| **Integer scaling**         | `vertical` or `horizontal`; replaced pixel-perfect mode<sup>[7]</sup>
 | **Resizable window**        | Yes, for all hardware-accelerated modes
 | **Relative window size**    | `windowresolution=small`, `medium`, or `large`
 | **Window placement**        | `windowposition = 0,0`, and more<sup>[16]</sup>
@@ -86,6 +87,7 @@ support today's systems.
 [MT-32]: https://en.wikipedia.org/wiki/Roland_MT-32
 [FS]:    https://www.fluidsynth.org/
 [ENet]:  https://github.com/zpl-c/enet
+[7]:     https://github.com/dosbox-staging/dosbox-staging/issues/2448
 [8]:     https://www.vogons.org/viewtopic.php?f=9&t=37782
 [9]:     https://github.com/dosbox-staging/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
 [10]:    https://github.com/dosbox-staging/dosbox-staging/commit/239396fec83dbba6a1eb1a0f4461f4a427d2be38
