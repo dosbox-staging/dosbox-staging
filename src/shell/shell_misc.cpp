@@ -25,7 +25,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <iterator>
-#include <regex>
 
 #include "regs.h"
 #include "callback.h"
@@ -79,9 +78,6 @@ void DOS_Shell::InputCommand(char* line)
 	std::string command = ReadCommand();
 	history.emplace_back(command);
 
-	std::strncpy(line, command.c_str(), CMD_MAXLINE);
-	line[CMD_MAXLINE - 1] = '\0';
-
 	const auto* const dos_section = dynamic_cast<Section_prop*>(
 	        control->GetSection("dos"));
 	assert(dos_section != nullptr);
@@ -89,8 +85,11 @@ void DOS_Shell::InputCommand(char* line)
 	        "expand_shell_variable");
 	if ((expand_shell_variable_pref == "auto" && dos.version.major >= 7) ||
 	    expand_shell_variable_pref == "true") {
-		ProcessCmdLineEnvVarStitution(line);
+		command = SubstituteEnvironmentVariables(command);
 	}
+
+	std::strncpy(line, command.c_str(), CMD_MAXLINE);
+	line[CMD_MAXLINE - 1] = '\0';
 }
 
 std::string DOS_Shell::ReadCommand()
@@ -329,42 +328,36 @@ static std::vector<std::string> get_completions(const std::string_view command)
 	return files;
 }
 
-/* Note: Buffer pointed to by "line" must be at least CMD_MAXLINE+1 bytes long! */
-void DOS_Shell::ProcessCmdLineEnvVarStitution(char* line) {
-	constexpr char surrogate_percent = 8;
-	const static std::regex re("\\%([^%0-9][^%]*)?%");
-	std::string text = line;
-	std::smatch match;
-	/* Iterate over potential %var1%, %var2%, etc matches found in the text string */
-	while (std::regex_search(text, match, re)) {
-		// Get the first matching %'s position and length
-		const auto percent_pos = static_cast<size_t>(match.position(0));
-		const auto percent_len = static_cast<size_t>(match.length(0));
+std::string DOS_Shell::SubstituteEnvironmentVariables(std::string_view command)
+{
+	std::string expanded = {};
 
-		std::string variable_name = match[1].str();
-		if (variable_name.empty()) {
-			/* Replace %% with the character "surrogate_percent", then (eventually) % */
-			text.replace(percent_pos, percent_len,
-			             std::string(1, surrogate_percent));
-			continue;
+	auto percent_index = command.find_first_of('%');
+	while (percent_index != std::string::npos) {
+		expanded += command.substr(0, percent_index);
+		command              = command.substr(percent_index);
+		auto closing_percent = command.substr(1).find_first_of('%');
+
+		if (closing_percent == std::string::npos) {
+			break;
 		}
-		/* Trim preceding spaces from the variable name */
-		variable_name.erase(0, variable_name.find_first_not_of(' '));
-		std::string variable_value;
-		if (variable_name.size() && GetEnvStr(variable_name.c_str(), variable_value)) {
-			const size_t equal_pos = variable_value.find_first_of('=');
-			/* Replace the original %var% with its corresponding value from the environment */
-			const std::string replacement = equal_pos != std::string::npos
-			                ? variable_value.substr(equal_pos + 1) : "";
-			text.replace(percent_pos, percent_len, replacement);
+		closing_percent += 1;
+
+		const std::string env_key(command.substr(1, closing_percent - 1));
+		if (std::string env_val = {}; GetEnvStr(env_key.c_str(), env_val)) {
+			expanded += env_val.substr(env_key.length() + sizeof('='));
+
+			command = command.substr(closing_percent + 1);
+		} else {
+			expanded += command.substr(0, closing_percent);
+			command = command.substr(closing_percent);
 		}
-		else {
-			text.replace(percent_pos, percent_len, "");
-		}
+
+		percent_index = command.find_first_of('%');
 	}
-	std::replace(text.begin(), text.end(), surrogate_percent, '%');
-	assert(text.size() <= CMD_MAXLINE);
-	safe_strncpy(line, text.c_str(), CMD_MAXLINE);
+
+	expanded += command;
+	return expanded;
 }
 
 CommandPrompt::CommandPrompt()
