@@ -135,12 +135,15 @@ static std::map<uint16_t, code_page_mapping_reverse_t> mappings_reverse_by_codep
 static bool is_combining_mark(const uint32_t code_point)
 {
 	static constexpr std::pair<uint16_t, uint16_t> ranges[] = {
-	        {0x0300, 0x036f}, // Combining Diacritical Marks
-	        {0x064b, 0x065f}, // Arabic Combining Marks
-	        {0x1ab0, 0x1aff}, // Combining Diacritical Marks Extended
-	        {0x1dc0, 0x1dff}, // Combining Diacritical Marks Supplement
-	        {0x20d0, 0x20ff}, // Combining Diacritical Marks for Symbols
-	        {0xfe20, 0xfe2f}, // Combining Half Marks
+		{0x0300, 0x036f}, // Combining Diacritical Marks
+		{0x0653, 0x065f}, // Arabic Combining Marks
+		// Note: Arabic Combining Marks start from 0x064b, but some are
+		// present as standalone characters in arabic code pages. To
+		// allow this, we do not recognize them as combining marks!
+		{0x1ab0, 0x1aff}, // Combining Diacritical Marks Extended
+		{0x1dc0, 0x1dff}, // Combining Diacritical Marks Supplement
+		{0x20d0, 0x20ff}, // Combining Diacritical Marks for Symbols
+		{0xfe20, 0xfe2f}, // Combining Half Marks
 	};
 
 	auto in_range = [code_point](const auto& range) {
