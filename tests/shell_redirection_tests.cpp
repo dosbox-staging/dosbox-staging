@@ -106,6 +106,24 @@ TEST_F(DOS_Shell_REDIRTest, CMD_Redirection)
 	EXPECT_EQ(append, false);
 
 	in = out = pipe = "";
+	strcpy(line, "less<in.txt>NUL");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "less");
+	EXPECT_EQ(in, "in.txt");
+	EXPECT_EQ(out, "NUL");
+	EXPECT_EQ(pipe, "");
+	EXPECT_EQ(append, false);
+
+	in = out = pipe = "";
+	strcpy(line, "less<in.txt>NUL:");
+	shell.GetRedirection(line, in, out, pipe, &append);
+	EXPECT_STREQ(line, "less:");
+	EXPECT_EQ(in, "in.txt");
+	EXPECT_EQ(out, "NUL");
+	EXPECT_EQ(pipe, "");
+	EXPECT_EQ(append, false);
+
+	in = out = pipe = "";
 	strcpy(line, "more<file.txt|sort");
 	shell.GetRedirection(line, in, out, pipe, &append);
 	EXPECT_STREQ(line, "more");

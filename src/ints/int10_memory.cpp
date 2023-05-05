@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -44,7 +45,7 @@ static uint16_t map_offset[8]={
 };
 
 void INT10_LoadFont(PhysPt font,bool reload,Bitu count,Bitu offset,Bitu map,Bitu height) {
-	PhysPt ftwhere=PhysMake(0xa000,map_offset[map & 0x7]+(uint16_t)(offset*32));
+	PhysPt ftwhere=PhysicalMake(0xa000,map_offset[map & 0x7]+(uint16_t)(offset*32));
 	uint16_t base=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 	bool mono=(base==VGAREG_MDA_CRTC_ADDRESS);
 
@@ -107,16 +108,21 @@ void INT10_ReloadFont(void) {
 	Bitu map=0;
 	switch(CurMode->cheight) {
 	case 8:
-		INT10_LoadFont(Real2Phys(int10.rom.font_8_first),false,256,0,map,8);
+		INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),false,256,0,map,8);
 		break;
 	case 14:
-		if (IS_VGA_ARCH && svgaCard==SVGA_None && CurMode->mode==7) map=0x80;
-		INT10_LoadFont(Real2Phys(int10.rom.font_14),false,256,0,map,14);
+		if (IS_VGA_ARCH && CurMode->mode == 7 &&
+		    !vga.seq.clocking_mode.is_eight_dot_mode) {
+			map = 0x80;
+		}
+		INT10_LoadFont(RealToPhysical(int10.rom.font_14), false, 256, 0, map, 14);
 		break;
 	case 16:
 	default:
-		if (IS_VGA_ARCH && svgaCard==SVGA_None) map=0x80;
-		INT10_LoadFont(Real2Phys(int10.rom.font_16),false,256,0,map,16);
+		if (IS_VGA_ARCH && !vga.seq.clocking_mode.is_eight_dot_mode) {
+			map = 0x80;
+		}
+		INT10_LoadFont(RealToPhysical(int10.rom.font_16), false, 256, 0, map, 16);
 		break;
 	}
 }
@@ -124,7 +130,7 @@ void INT10_ReloadFont(void) {
 
 void INT10_SetupRomMemory(void) {
 /* This should fill up certain structures inside the Video Bios Rom Area */
-	PhysPt rom_base=PhysMake(0xc000,0);
+	PhysPt rom_base=PhysicalMake(0xc000,0);
 	Bitu i;
 	int10.rom.used=3;
 	if (IS_EGAVGA_ARCH) {
@@ -176,6 +182,7 @@ void INT10_SetupRomMemory(void) {
 				phys_writeb(rom_base+0x0080,'=');
 				break;
 			case SVGA_None:
+				LOG_ERR("INT10: Invalid VGA card with the VGA machine type");
 				break;
 			}
 		}
@@ -213,7 +220,7 @@ void INT10_SetupRomMemory(void) {
 		phys_writeb(rom_base+int10.rom.used++,static_functionality[i]);
 	}
 	for (i=0;i<128*8;i++) {
-		phys_writeb(PhysMake(0xf000,0xfa6e)+i,int10_font_08[i]);
+		phys_writeb(PhysicalMake(0xf000,0xfa6e)+i,int10_font_08[i]);
 	}
 	RealSetVec(0x1F,int10.rom.font_8_second);
 
@@ -288,23 +295,23 @@ void INT10_SetupRomMemory(void) {
 
 void INT10_ReloadRomFonts(void) {
 	// 16x8 font
-	PhysPt font16pt=Real2Phys(int10.rom.font_16);
+	PhysPt font16pt=RealToPhysical(int10.rom.font_16);
 	for (Bitu i=0;i<256*16;i++) {
 		phys_writeb(font16pt+i,int10_font_16[i]);
 	}
-	phys_writeb(Real2Phys(int10.rom.font_16_alternate),0x1d);
+	phys_writeb(RealToPhysical(int10.rom.font_16_alternate),0x1d);
 	// 14x8 font
-	PhysPt font14pt=Real2Phys(int10.rom.font_14);
+	PhysPt font14pt=RealToPhysical(int10.rom.font_14);
 	for (Bitu i=0;i<256*14;i++) {
 		phys_writeb(font14pt+i,int10_font_14[i]);
 	}
-	phys_writeb(Real2Phys(int10.rom.font_14_alternate),0x1d);
+	phys_writeb(RealToPhysical(int10.rom.font_14_alternate),0x1d);
 	// 8x8 fonts
-	PhysPt font8pt=Real2Phys(int10.rom.font_8_first);
+	PhysPt font8pt=RealToPhysical(int10.rom.font_8_first);
 	for (Bitu i=0;i<128*8;i++) {
 		phys_writeb(font8pt+i,int10_font_08[i]);
 	}
-	font8pt=Real2Phys(int10.rom.font_8_second);
+	font8pt=RealToPhysical(int10.rom.font_8_second);
 	for (Bitu i=0;i<128*8;i++) {
 		phys_writeb(font8pt+i,int10_font_08[i+128*8]);
 	}
@@ -315,7 +322,7 @@ void INT10_SetupRomMemoryChecksum(void) {
 	if (IS_EGAVGA_ARCH) { //EGA/VGA. Just to be safe
 		/* Sum of all bytes in rom module 256 should be 0 */
 		uint8_t sum = 0;
-		PhysPt rom_base = PhysMake(0xc000,0);
+		PhysPt rom_base = PhysicalMake(0xc000,0);
 		Bitu last_rombyte = 32*1024 - 1;		//32 KB romsize
 		for (Bitu i = 0;i < last_rombyte;i++)
 			sum += phys_readb(rom_base + i);	//OVERFLOW IS OKAY

@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -94,7 +95,7 @@ struct MODE_INFO{
 
 uint8_t VESA_GetSVGAInformation(uint16_t seg,uint16_t off) {
 	/* Fill 256 byte buffer with VESA information */
-	PhysPt buffer=PhysMake(seg,off);
+	PhysPt buffer=PhysicalMake(seg,off);
 	Bitu i;
 	bool vbe2=false;uint16_t vbe2_pos=256+off;
 	Bitu id=mem_readd(buffer);
@@ -151,7 +152,7 @@ static bool can_triple_buffer_8bit(const VideoModeBlock &m)
 uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 	MODE_INFO minfo;
 	memset(&minfo,0,sizeof(minfo));
-	PhysPt buf=PhysMake(seg,off);
+	PhysPt buf=PhysicalMake(seg,off);
 	int modePageSize = 0;
 	uint8_t modeAttributes;
 
@@ -372,7 +373,7 @@ uint8_t VESA_SetPalette(PhysPt data,Bitu index,Bitu count,bool wait) {
 	if (index+count>256) return VESA_FAIL;
 
 	// Wait for retrace if requested
-	if (wait) CALLBACK_RunRealFar(RealSeg(int10.rom.wait_retrace),RealOff(int10.rom.wait_retrace));
+	if (wait) CALLBACK_RunRealFar(RealSegment(int10.rom.wait_retrace),RealOffset(int10.rom.wait_retrace));
 
 	IO_Write(0x3c8,(uint8_t)index);
 	while (count) {
@@ -564,7 +565,7 @@ uint8_t VESA_SetDisplayStart(uint16_t x,uint16_t y,bool wait) {
 	IO_Write(0x3c0, static_cast<uint8_t>(new_panning * panning_factor));
 
 	// Wait for retrace if requested
-	if (wait) CALLBACK_RunRealFar(RealSeg(int10.rom.wait_retrace),RealOff(int10.rom.wait_retrace));
+	if (wait) CALLBACK_RunRealFar(RealSegment(int10.rom.wait_retrace),RealOffset(int10.rom.wait_retrace));
 
 	return VESA_SUCCESS;
 }
@@ -654,13 +655,13 @@ void INT10_SetupVESA(void) {
 		}
 		if (ModeList_VGA[i].mode>=0x100 && canuse_mode) {
 			if (!int10.vesa_oldvbe || ModeList_VGA[i].mode < 0x120) {
-				phys_writew(PhysMake(0xc000, int10.rom.used), ModeList_VGA[i].mode);
+				phys_writew(PhysicalMake(0xc000, int10.rom.used), ModeList_VGA[i].mode);
 				int10.rom.used += 2;
 			}
 		}
 		i++;
 	}
-	phys_writew(PhysMake(0xc000,int10.rom.used),0xffff);
+	phys_writew(PhysicalMake(0xc000,int10.rom.used),0xffff);
 	int10.rom.used+=2;
 	int10.rom.oemstring=RealMake(0xc000,int10.rom.used);
 	const auto len = safe_strlen(string_oem) + 1;
@@ -669,33 +670,33 @@ void INT10_SetupVESA(void) {
 	}
 	/* Prepare the real mode interface */
 	int10.rom.wait_retrace=RealMake(0xc000,int10.rom.used);
-	int10.rom.used += (uint16_t)CALLBACK_Setup(0, NULL, CB_VESA_WAIT, PhysMake(0xc000,int10.rom.used), "");
+	int10.rom.used += (uint16_t)CALLBACK_Setup(0, NULL, CB_VESA_WAIT, PhysicalMake(0xc000,int10.rom.used), "");
 	callback.rmWindow=CALLBACK_Allocate();
 	int10.rom.set_window=RealMake(0xc000,int10.rom.used);
-	int10.rom.used += (uint16_t)CALLBACK_Setup(callback.rmWindow, VESA_SetWindow, CB_RETF, PhysMake(0xc000,int10.rom.used), "VESA Real Set Window");
+	int10.rom.used += (uint16_t)CALLBACK_Setup(callback.rmWindow, VESA_SetWindow, CB_RETF, PhysicalMake(0xc000,int10.rom.used), "VESA Real Set Window");
 	/* Prepare the pmode interface */
 	int10.rom.pmode_interface=RealMake(0xc000,int10.rom.used);
 	int10.rom.used += 8;		//Skip the byte later used for offsets
 	/* PM Set Window call */
-	int10.rom.pmode_interface_window = int10.rom.used - RealOff( int10.rom.pmode_interface );
-	phys_writew( Real2Phys(int10.rom.pmode_interface) + 0, int10.rom.pmode_interface_window );
+	int10.rom.pmode_interface_window = int10.rom.used - RealOffset( int10.rom.pmode_interface );
+	phys_writew( RealToPhysical(int10.rom.pmode_interface) + 0, int10.rom.pmode_interface_window );
 	callback.pmWindow=CALLBACK_Allocate();
-	int10.rom.used += (uint16_t)CALLBACK_Setup(callback.pmWindow, VESA_PMSetWindow, CB_RETN, PhysMake(0xc000,int10.rom.used), "VESA PM Set Window");
+	int10.rom.used += (uint16_t)CALLBACK_Setup(callback.pmWindow, VESA_PMSetWindow, CB_RETN, PhysicalMake(0xc000,int10.rom.used), "VESA PM Set Window");
 	/* PM Set start call */
-	int10.rom.pmode_interface_start = int10.rom.used - RealOff( int10.rom.pmode_interface );
-	phys_writew( Real2Phys(int10.rom.pmode_interface) + 2, int10.rom.pmode_interface_start);
+	int10.rom.pmode_interface_start = int10.rom.used - RealOffset( int10.rom.pmode_interface );
+	phys_writew( RealToPhysical(int10.rom.pmode_interface) + 2, int10.rom.pmode_interface_start);
 	callback.pmStart=CALLBACK_Allocate();
 	int10.rom.used += (uint16_t)CALLBACK_Setup(callback.pmStart,
 	                                         VESA_PMSetStart, CB_VESA_PM,
-	                                         PhysMake(0xc000, int10.rom.used),
+	                                         PhysicalMake(0xc000, int10.rom.used),
 	                                         "VESA PM Set Start");
 	/* PM Set Palette call */
-	int10.rom.pmode_interface_palette = int10.rom.used - RealOff( int10.rom.pmode_interface );
-	phys_writew( Real2Phys(int10.rom.pmode_interface) + 4, int10.rom.pmode_interface_palette);
+	int10.rom.pmode_interface_palette = int10.rom.used - RealOffset( int10.rom.pmode_interface );
+	phys_writew( RealToPhysical(int10.rom.pmode_interface) + 4, int10.rom.pmode_interface_palette);
 	callback.pmPalette=CALLBACK_Allocate();
-	int10.rom.used += (uint16_t)CALLBACK_Setup(0, NULL, CB_VESA_PM, PhysMake(0xc000,int10.rom.used), "");
-	int10.rom.used += (uint16_t)CALLBACK_Setup(callback.pmPalette, VESA_PMSetPalette, CB_RETN, PhysMake(0xc000,int10.rom.used), "VESA PM Set Palette");
+	int10.rom.used += (uint16_t)CALLBACK_Setup(0, NULL, CB_VESA_PM, PhysicalMake(0xc000,int10.rom.used), "");
+	int10.rom.used += (uint16_t)CALLBACK_Setup(callback.pmPalette, VESA_PMSetPalette, CB_RETN, PhysicalMake(0xc000,int10.rom.used), "VESA PM Set Palette");
 	/* Finalize the size and clear the required ports pointer */
-	phys_writew( Real2Phys(int10.rom.pmode_interface) + 6, 0);
-	int10.rom.pmode_interface_size=int10.rom.used - RealOff( int10.rom.pmode_interface );
+	phys_writew( RealToPhysical(int10.rom.pmode_interface) + 6, 0);
+	int10.rom.pmode_interface_size=int10.rom.used - RealOffset( int10.rom.pmode_interface );
 }

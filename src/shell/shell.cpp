@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "../dos/program_more_output.h"
+#include "autoexec.h"
 #include "callback.h"
 #include "control.h"
 #include "fs_utils.h"
@@ -47,126 +48,6 @@ static Bitu shellstop_handler()
 
 std::unique_ptr<Program> SHELL_ProgramCreate() {
 	return ProgramCreate<DOS_Shell>();
-}
-
-char autoexec_data[autoexec_maxsize] = { 0 };
-static std::list<std::string> autoexec_strings;
-typedef std::list<std::string>::iterator auto_it;
-
-void VFILE_Remove(const char *name, const char *dir = "");
-
-AutoexecObject::AutoexecObject(const std::string& line)
-{
-	Install(line);
-}
-
-void AutoexecObject::Install(const std::string &in) {
-	if (GCC_UNLIKELY(installed))
-		E_Exit("autoexec: already created %s", buf.c_str());
-	installed = true;
-	buf = in;
-	autoexec_strings.push_back(buf);
-	this->CreateAutoexec();
-
-	//autoexec.bat is normally created AUTOEXEC_Init.
-	//But if we are already running (first_shell)
-	//we have to update the envirionment to display changes
-
-	if(first_shell)	{
-		//create a copy as the string will be modified
-		std::string::size_type n = buf.size();
-		char* buf2 = new char[n + 1];
-		safe_strncpy(buf2, buf.c_str(), n + 1);
-		if((strncasecmp(buf2,"set ",4) == 0) && (strlen(buf2) > 4)){
-			char* after_set = buf2 + 4;//move to variable that is being set
-			char* test = strpbrk(after_set,"=");
-			if(!test) {first_shell->SetEnv(after_set,"");return;}
-			*test++ = 0;
-			//If the shell is running/exists update the environment
-			first_shell->SetEnv(after_set,test);
-		}
-		delete [] buf2;
-	}
-}
-
-void AutoexecObject::InstallBefore(const std::string &in) {
-	if(GCC_UNLIKELY(installed)) E_Exit("autoexec: already created %s",buf.c_str());
-	installed = true;
-	buf = in;
-	autoexec_strings.push_front(buf);
-	this->CreateAutoexec();
-}
-
-void AutoexecObject::CreateAutoexec()
-{
-	/* Remove old autoexec.bat if the shell exists */
-	if(first_shell)	VFILE_Remove("AUTOEXEC.BAT");
-
-	//Create a new autoexec.bat
-	autoexec_data[0] = 0;
-	size_t auto_len;
-	for (std::string linecopy : autoexec_strings) {
-		std::string::size_type offset = 0;
-		// Lets have \r\n as line ends in autoexec.bat.
-		while(offset < linecopy.length()) {
-			const auto n = linecopy.find('\n', offset);
-			if (n == std::string::npos)
-				break;
-			const auto rn = linecopy.find("\r\n", offset);
-			if (rn != std::string::npos && rn + 1 == n) {
-				offset = n + 1;
-				continue;
-			}
-			// \n found without matching \r
-			linecopy.replace(n,1,"\r\n");
-			offset = n + 2;
-		}
-
-		auto_len = safe_strlen(autoexec_data);
-		if ((auto_len+linecopy.length() + 3) > autoexec_maxsize) {
-			E_Exit("SYSTEM:Autoexec.bat file overflow");
-		}
-		sprintf((autoexec_data + auto_len),"%s\r\n",linecopy.c_str());
-	}
-	if (first_shell) VFILE_Register("AUTOEXEC.BAT",(uint8_t *)autoexec_data,(uint32_t)strlen(autoexec_data));
-}
-
-AutoexecObject::~AutoexecObject(){
-	if(!installed) return;
-
-	// Remove the line from the autoexecbuffer and update environment
-	for(auto_it it = autoexec_strings.begin(); it != autoexec_strings.end(); ) {
-		if ((*it) == buf) {
-			std::string::size_type n = buf.size();
-			char* buf2 = new char[n + 1];
-			safe_strncpy(buf2, buf.c_str(), n + 1);
-			bool stringset = false;
-			// If it's a environment variable remove it from there as well
-			if ((strncasecmp(buf2,"set ",4) == 0) && (strlen(buf2) > 4)){
-				char* after_set = buf2 + 4;//move to variable that is being set
-				char* test = strpbrk(after_set,"=");
-				if (!test) {
-					delete [] buf2;
-					continue;
-				}
-				*test = 0;
-				stringset = true;
-				//If the shell is running/exists update the environment
-				if (first_shell) first_shell->SetEnv(after_set,"");
-			}
-			delete [] buf2;
-			if (stringset && first_shell && first_shell->bf && first_shell->bf->filename.find("AUTOEXEC.BAT") != std::string::npos) {
-				//Replace entry with spaces if it is a set and from autoexec.bat, as else the location counter will be off.
-				*it = buf.assign(buf.size(),' ');
-				++it;
-			} else {
-				it = autoexec_strings.erase(it);
-			}
-		} else {
-			++it;
-		}
-	}
-	this->CreateAutoexec();
 }
 
 DOS_Shell::DOS_Shell()
@@ -226,11 +107,17 @@ void DOS_Shell::GetRedirection(char *line,
 			found = redir.find_first_of(find_chars);
 			// Get the length of the substring before the
 			// characters, or the entire string if not found
-			if (found == std::string::npos)
+			if (found == std::string::npos) {
 				temp_len = redir.size();
-			else
-				temp_len = found - // Ignore ':' character
-				           (redir[found - 1] == ':' ? 1 : 0);
+			} else {
+				temp_len = found;
+			}
+
+			// Ignore trailing ':' character
+			if (temp_len > 0 && redir[temp_len - 1] == ':') {
+				--temp_len;
+			}
+
 			// Assign substring content of length to output parameters
 			output = (character == '>'
 			                  ? &out_file
@@ -570,200 +457,6 @@ void DOS_Shell::SyntaxError()
 
 extern int64_t ticks_at_program_launch;
 
-class AUTOEXEC final : public Module_base {
-private:
-	std::list<AutoexecObject> autoexec_lines = {};
-
-	void AutomountDrive(const std::string &dir_letter);
-
-	void ProcessConfigFileAutoexec(const Section_line &section,
-	                               const std::string &source_name);
-
-	void InstallLine(const std::string &line)
-	{
-		autoexec_lines.emplace_back().Install(line);
-	}
-
-public:
-	AUTOEXEC(Section *configuration) : Module_base(configuration)
-	{
-		// Get the [dosbox] conf section
-		const auto ds = static_cast<Section_prop *>(
-		        control->GetSection("dosbox"));
-		assert(ds);
-
-		// Auto-mount drives (except for DOSBox's Z:) prior to [autoexec]
-		if (ds->Get_bool("automount")) {
-			constexpr std::string_view drives = "abcdefghijklmnopqrstuvwxy";
-			for (const auto letter : drives) {
-				AutomountDrive({letter});
-			}
-		}
-
-		// Initialize configurable states that control autoexec-related
-		// behavior
-
-		/* Check -securemode switch to disable mount/imgmount/boot after
-		 * running autoexec.bat */
-		const auto cmdline = control->cmdline; // short-lived copy
-		const bool secure = cmdline->FindExist("-securemode", true);
-
-		// Are autoexec sections permitted?
-		const bool autoexec_is_allowed = !secure &&
-		                                 !cmdline->FindExist("-noautoexec",
-		                                                     true);
-
-		// Should autoexec sections be joined or overwritten?
-		const std::string_view section_pref = ds->Get_string("autoexec_section");
-		const bool should_join_autoexecs = (section_pref == "join");
-
-		/* Check to see for extra command line options to be added
-		 * (before the command specified on commandline) */
-		std::string line = {};
-
-		bool exit_call_exists = false;
-		while (cmdline->FindString("-c", line, true)) {
-#if defined(WIN32)
-			// replace single with double quotes so that mount
-			// commands can contain spaces
-			for (Bitu temp = 0; temp < line.size(); ++temp)
-				if (line[temp] == '\'')
-					line[temp] = '\"';
-#endif // Linux users can simply use \" in their shell
-
-			// If the user's added an exit call, simply store that
-			// fact but don't insert it because otherwise it can
-			// precede follow on [autoexec] calls.
-			if (line == "exit" || line == "\"exit\"") {
-				exit_call_exists = true;
-				continue;
-			}
-			InstallLine(line);
-		}
-
-		// Check for the -exit switch, which indicates they want to quit
-		const bool exit_arg_exists = cmdline->FindExist("-exit");
-
-		// Check if instant-launch is active
-		const bool using_instant_launch_with_executable =
-		        control->GetStartupVerbosity() == Verbosity::InstantLaunch &&
-		        cmdline->HasExecutableName();
-
-		// Should we add an 'exit' call to the end of autoexec.bat?
-		const bool addexit = exit_call_exists ||
-		                     exit_arg_exists ||
-		                     using_instant_launch_with_executable;
-
-		/* Check for first command being a directory or file */
-		char buffer[CROSS_LEN + 1];
-		char orig[CROSS_LEN + 1];
-		char cross_filesplit[2] = {CROSS_FILESPLIT, 0};
-
-		unsigned int command_index = 1;
-		bool found_dir_or_command = false;
-		while (cmdline->FindCommand(command_index++, line) &&
-		       !found_dir_or_command) {
-			struct stat test;
-			if (line.length() > CROSS_LEN)
-				continue;
-			safe_strcpy(buffer, line.c_str());
-			if (stat(buffer, &test)) {
-				if (getcwd(buffer, CROSS_LEN) == NULL)
-					continue;
-				if (safe_strlen(buffer) + line.length() + 1 > CROSS_LEN)
-					continue;
-				safe_strcat(buffer, cross_filesplit);
-				safe_strcat(buffer, line.c_str());
-				if (stat(buffer, &test))
-					continue;
-			}
-			if (test.st_mode & S_IFDIR) {
-				InstallLine(std::string("MOUNT C \"") + buffer + "\"");
-				InstallLine("C:");
-				if (secure)
-					InstallLine("z:\\config.com -securemode");
-			} else {
-				char *name = strrchr(buffer, CROSS_FILESPLIT);
-				if (!name) { // Only a filename
-					line = buffer;
-					if (getcwd(buffer, CROSS_LEN) == NULL)
-						continue;
-					if (safe_strlen(buffer) + line.length() + 1 > CROSS_LEN)
-						continue;
-					safe_strcat(buffer, cross_filesplit);
-					safe_strcat(buffer, line.c_str());
-					if (stat(buffer, &test))
-						continue;
-					name = strrchr(buffer, CROSS_FILESPLIT);
-					if (!name)
-						continue;
-				}
-				*name++ = 0;
-				if (!path_exists(buffer))
-					continue;
-				InstallLine(std::string("MOUNT C \"") + buffer + "\"");
-				InstallLine("C:");
-				/* Save the non-modified filename (so boot and
-				 * imgmount can use it (long filenames, case
-				 * sensivitive)) */
-				safe_strcpy(orig, name);
-				upcase(name);
-				if (strstr(name, ".BAT") != 0) {
-					if (secure)
-						InstallLine("z:\\config.com -securemode");
-					/* BATch files are called else exit will not work */
-					InstallLine(std::string("CALL ") + name);
-				} else if ((strstr(name, ".IMG") != 0) || (strstr(name, ".IMA") != 0)) {
-					// No secure mode here as boot is destructive and enabling securemode disables boot
-					/* Boot image files */
-					InstallLine(std::string("BOOT ") + orig);
-				} else if ((strstr(name, ".ISO") != 0) || (strstr(name, ".CUE") != 0)) {
-					/* imgmount CD image files */
-					/* securemode gets a different number from the previous branches! */
-					InstallLine(std::string("IMGMOUNT D \"") +
-					            orig + std::string("\" -t iso"));
-					// autoexec[16].Install("D:");
-					if (secure)
-						InstallLine("z:\\config.com -securemode");
-					/* Makes no sense to exit here */
-				} else {
-					if (secure)
-						InstallLine("z:\\config.com -securemode");
-					InstallLine(name);
-				}
-			}
-			found_dir_or_command = true;
-		}
-		if (autoexec_is_allowed) {
-			if (should_join_autoexecs) {
-				ProcessConfigFileAutoexec(*static_cast<const Section_line *>(configuration),
-				                          "one or more joined sections");
-			} else if (found_dir_or_command) {
-				LOG_MSG("AUTOEXEC: Using commands provided on the command line");
-			} else {
-				ProcessConfigFileAutoexec(
-				        control->GetOverwrittenAutoexecSection(),
-				        control->GetOverwrittenAutoexecConf());
-			}
-		}
-		if (secure && !found_dir_or_command) {
-			// If we're in secure mode without command line
-			// executables, then seal off the configuration
-			InstallLine("z:\\config.com -securemode");
-		}
-		// The last slot is always reserved for the exit call,
-		// regardless if we're in secure-mode or not.
-		if (addexit)
-			InstallLine("exit");
-
-		// Print the entire autoexec content, if needed:
-		// for (const auto &autoexec_line : autoexec)
-		// 	LOG_INFO("AUTOEXEC-LINE: %s", autoexec_line.GetLine().c_str());
-
-		VFILE_Register("AUTOEXEC.BAT",(uint8_t *)autoexec_data,(uint32_t)strlen(autoexec_data));
-	}
-};
-
 // Specify a 'Drive' config object with allowed key and value types
 static std::unique_ptr<Config> specify_drive_config()
 {
@@ -786,8 +479,8 @@ static std::unique_ptr<Config> specify_drive_config()
 }
 
 // Parse a 'Drive' config file and return object with allowed key and value types
-static std::tuple<std::string, std::string, std::string> parse_drive_conf(
-        std::string drive_letter, const std_fs::path &conf_path)
+std::tuple<std::string, std::string, std::string> parse_drive_conf(
+        std::string drive_letter, const std_fs::path& conf_path)
 {
 	// Default return values
 	constexpr auto default_args = "";
@@ -831,77 +524,6 @@ static std::tuple<std::string, std::string, std::string> parse_drive_conf(
 	return {drive_letter, mount_args, path_val};
 }
 
-// Takes in a drive letter (eg: 'c') and attempts to mount the 'drives/c'
-// resource using an autoexec 'mount' command.
-void AUTOEXEC::AutomountDrive(const std::string &dir_letter)
-{
-	// Does drives/[x] exist?
-	const auto drive_path = GetResourcePath("drives", dir_letter);
-	if (!path_exists(drive_path))
-		return;
-
-	// Try parsing the [x].conf file
-	const auto conf_path  = drive_path.string() + ".conf";
-	const auto [drive_letter,
-	            mount_args,
-	            path_val] = parse_drive_conf(dir_letter, conf_path);
-
-	// Wrap the drive path inside quotes, plus a prefix space.
-	const auto quoted_path = " \"" + simplify_path(drive_path).string() + "\"";
-
-	// Install mount as an autoexec command
-	InstallLine(std::string("@mount ") + drive_letter + quoted_path + mount_args);
-
-	// Install path as an autoexec command
-	if (path_val.length())
-		InstallLine(std::string("@set PATH=") + path_val);
-}
-
-void AUTOEXEC::ProcessConfigFileAutoexec(const Section_line &section,
-                                         const std::string &source_name)
-{
-	if (section.data.empty())
-		return;
-
-	auto extra = &section.data[0];
-
-	/* detect if "echo off" is the first line */
-	size_t firstline_length = strcspn(extra, "\r\n");
-	bool echo_off = !strncasecmp(extra, "echo off", 8);
-	if (echo_off && firstline_length == 8)
-		extra += 8;
-	else {
-		echo_off = !strncasecmp(extra, "@echo off", 9);
-		if (echo_off && firstline_length == 9)
-			extra += 9;
-		else
-			echo_off = false;
-	}
-
-	/* if "echo off" move it to the front of autoexec.bat */
-	if (echo_off) {
-		autoexec_lines.emplace_back().InstallBefore("@echo off");
-		if (*extra == '\r')
-			extra++; // It can point to \0
-		if (*extra == '\n')
-			extra++; // same
-	}
-
-	/* Install the stuff from the configfile if anything
-	 * left after moving echo off */
-	if (*extra) {
-		InstallLine(extra);
-		LOG_MSG("AUTOEXEC: Using autoexec from %s", source_name.c_str());
-	}
-}
-
-static std::unique_ptr<AUTOEXEC> autoexec_module{};
-
-void AUTOEXEC_Init(Section *sec)
-{
-	autoexec_module = std::make_unique<AUTOEXEC>(sec);
-}
-
 static Bitu INT2E_Handler()
 {
 	/* Save return address and current process */
@@ -912,12 +534,12 @@ static Bitu INT2E_Handler()
 	dos.psp(DOS_FIRST_SHELL);
 	DOS_PSP psp(DOS_FIRST_SHELL);
 	psp.SetCommandTail(RealMakeSeg(ds,reg_si));
-	SegSet16(ss,RealSeg(psp.GetStack()));
+	SegSet16(ss,RealSegment(psp.GetStack()));
 	reg_sp=2046;
 
 	/* Read and fix up command string */
 	CommandTail tail;
-	MEM_BlockRead(PhysMake(dos.psp(),128),&tail,128);
+	MEM_BlockRead(PhysicalMake(dos.psp(),128),&tail,128);
 	if (tail.count<127) tail.buffer[tail.count]=0;
 	else tail.buffer[126]=0;
 	char* crlf=strpbrk(tail.buffer,"\r\n");
@@ -932,8 +554,8 @@ static Bitu INT2E_Handler()
 
 	/* Restore process and "return" to caller */
 	dos.psp(save_psp);
-	SegSet16(cs,RealSeg(save_ret));
-	reg_ip=RealOff(save_ret);
+	SegSet16(cs,RealSegment(save_ret));
+	reg_ip=RealOffset(save_ret);
 	reg_ax=0;
 	return CBRET_NONE;
 }
@@ -948,12 +570,14 @@ void SHELL_Init() {
 	MSG_Add("SHELL_ILLEGAL_PATH", "Illegal path.\n");
 	MSG_Add("SHELL_ILLEGAL_SWITCH", "Illegal switch: %s.\n");
 	MSG_Add("SHELL_MISSING_PARAMETER", "Required parameter missing.\n");
+	MSG_Add("SHELL_TOO_MANY_PARAMETERS", "Too many parameters.\n");
 	MSG_Add("SHELL_SYNTAX_ERROR", "Incorrect command syntax.\n");
 	MSG_Add("SHELL_ACCESS_DENIED", "Access denied - '%s'\n");
 	MSG_Add("SHELL_FILE_CREATE_ERROR", "File creation error - '%s'\n");
 	MSG_Add("SHELL_FILE_OPEN_ERROR", "File open error - '%s'\n");
 	MSG_Add("SHELL_FILE_NOT_FOUND", "File not found - '%s'\n");
 	MSG_Add("SHELL_FILE_EXISTS", "File '%s' already exists.\n");
+	MSG_Add("SHELL_DIRECTORY_NOT_FOUND", "Directory not found - '%s'\n");
 
 	// Command specific messages
 	MSG_Add("SHELL_CMD_HELP","If you want a list of all supported commands type [color=yellow]help /all[reset] .\nA short list of the most often used commands:\n");
@@ -1557,8 +1181,8 @@ void SHELL_Init() {
 	call_shellstop=CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */
 	RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
-	SegSet16(cs,RealSeg(newcsip));
-	reg_ip=RealOff(newcsip);
+	SegSet16(cs,RealSegment(newcsip));
+	reg_ip=RealOffset(newcsip);
 
 	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET,"shell stop");
 	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramCreate);
@@ -1581,7 +1205,7 @@ void SHELL_Init() {
 	/* Set up int 2e handler */
 	Bitu call_int2e=CALLBACK_Allocate();
 	RealPt addr_int2e=RealMake(psp_seg+16+1,8);
-	CALLBACK_Setup(call_int2e,&INT2E_Handler,CB_IRET_STI,Real2Phys(addr_int2e),"Shell Int 2e");
+	CALLBACK_Setup(call_int2e,&INT2E_Handler,CB_IRET_STI,RealToPhysical(addr_int2e),"Shell Int 2e");
 	RealSetVec(0x2e,addr_int2e);
 
 	/* Setup MCBs */
@@ -1595,7 +1219,7 @@ void SHELL_Init() {
 	envmcb.SetType(0x4d);
 
 	/* Setup environment */
-	PhysPt env_write=PhysMake(env_seg,0);
+	PhysPt env_write=PhysicalMake(env_seg,0);
 	MEM_BlockWrite(env_write,path_string,(Bitu)(strlen(path_string)+1));
 	env_write += (PhysPt)(strlen(path_string)+1);
 	MEM_BlockWrite(env_write,comspec_string,(Bitu)(strlen(comspec_string)+1));
@@ -1636,7 +1260,7 @@ void SHELL_Init() {
 	tail.count=(uint8_t)strlen(init_line);
 	memset(&tail.buffer,0,127);
 	safe_strcpy(tail.buffer, init_line);
-	MEM_BlockWrite(PhysMake(psp_seg,128),&tail,128);
+	MEM_BlockWrite(PhysicalMake(psp_seg,128),&tail,128);
 
 	/* Setup internal DOS Variables */
 	dos.dta(RealMake(psp_seg,0x80));

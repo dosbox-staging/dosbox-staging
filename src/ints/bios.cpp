@@ -65,7 +65,7 @@ static Bitu INT70_Handler(void) {
 			mem_writed(BIOS_WAIT_FLAG_COUNT,count-997);
 		} else {
 			mem_writed(BIOS_WAIT_FLAG_COUNT,0);
-			PhysPt where=Real2Phys(mem_readd(BIOS_WAIT_FLAG_POINTER));
+			PhysPt where=RealToPhysical(mem_readd(BIOS_WAIT_FLAG_POINTER));
 			mem_writeb(where,mem_readb(where)|0x80);
 			mem_writeb(BIOS_WAIT_FLAG_ACTIVE,0);
 			mem_writed(BIOS_WAIT_FLAG_POINTER,RealMake(0,BIOS_WAIT_FLAG_TEMP));
@@ -272,8 +272,8 @@ static Bitu IRQ_TandyDAC(void) {
 		}
 
 		/* issue BIOS tandy sound device busy callout */
-		SegSet16(cs, RealSeg(tandy_DAC_callback[1]->Get_RealPointer()));
-		reg_ip = RealOff(tandy_DAC_callback[1]->Get_RealPointer());
+		SegSet16(cs, RealSegment(tandy_DAC_callback[1]->Get_RealPointer()));
+		reg_ip = RealOffset(tandy_DAC_callback[1]->Get_RealPointer());
 	}
 	return CBRET_NONE;
 }
@@ -301,7 +301,7 @@ static void TandyDAC_Handler(uint8_t tfunction) {
 		real_writew(0x40,0xd0,reg_cx);
 		/* store delay and volume */
 		real_writew(0x40,0xd2,(reg_dx&0xfff)|((reg_al&7)<<13));
-		Tandy_SetupTransfer(PhysMake(SegValue(es),reg_bx),reg_ah==0x83);
+		Tandy_SetupTransfer(PhysicalMake(SegValue(es),reg_bx),reg_ah==0x83);
 		reg_ah=0x00;
 		CALLBACK_SCF(false);
 		break;
@@ -311,7 +311,7 @@ static void TandyDAC_Handler(uint8_t tfunction) {
 		/* setup for a small buffer with silence */
 		real_writew(0x40,0xd0,0x0a);
 		real_writew(0x40,0xd2,0x1c);
-		Tandy_SetupTransfer(PhysMake(0xf000,0xa084),true);
+		Tandy_SetupTransfer(PhysicalMake(0xf000,0xa084),true);
 		CALLBACK_SCF(false);
 		break;
 	case 0x85:	/* Tandy sound system reset */
@@ -768,7 +768,7 @@ static Bitu INT15_Handler(void) {
 		if (biosConfigSeg == 0)
 			biosConfigSeg = DOS_GetMemory(1); // We have 16 bytes
 
-		PhysPt data = PhysMake(biosConfigSeg, 0);
+		PhysPt data = PhysicalMake(biosConfigSeg, 0);
 		mem_writew(data, 8); // 8 Bytes following
 
 		// Tandy and IBM PCjr
@@ -1167,7 +1167,7 @@ public:
 
 		/* INT 8 Clock IRQ Handler */
 		auto call_irq0 = CALLBACK_Allocate();
-		CALLBACK_Setup(call_irq0,INT8_Handler,CB_IRQ0,Real2Phys(BIOS_DEFAULT_IRQ0_LOCATION),"IRQ 0 Clock");
+		CALLBACK_Setup(call_irq0,INT8_Handler,CB_IRQ0,RealToPhysical(BIOS_DEFAULT_IRQ0_LOCATION),"IRQ 0 Clock");
 		RealSetVec(0x08,BIOS_DEFAULT_IRQ0_LOCATION);
 		// pseudocode for CB_IRQ0:
 		//	sti
@@ -1248,17 +1248,17 @@ public:
 
 		// The farjump at the processor reset entry point (jumps to POST routine)
 		phys_writeb(0xFFFF0,0xEA);		// FARJMP
-		phys_writew(0xFFFF1,RealOff(BIOS_DEFAULT_RESET_LOCATION));	// offset
-		phys_writew(0xFFFF3,RealSeg(BIOS_DEFAULT_RESET_LOCATION));	// segment
+		phys_writew(0xFFFF1,RealOffset(BIOS_DEFAULT_RESET_LOCATION));	// offset
+		phys_writew(0xFFFF3,RealSegment(BIOS_DEFAULT_RESET_LOCATION));	// segment
 
 		// Compatible POST routine location: jump to the callback
-		phys_writeb(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+0,0xEA);				// FARJMP
-		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+1,RealOff(rptr));	// offset
-		phys_writew(Real2Phys(BIOS_DEFAULT_RESET_LOCATION)+3,RealSeg(rptr));	// segment
+		phys_writeb(RealToPhysical(BIOS_DEFAULT_RESET_LOCATION)+0,0xEA);				// FARJMP
+		phys_writew(RealToPhysical(BIOS_DEFAULT_RESET_LOCATION)+1,RealOffset(rptr));	// offset
+		phys_writew(RealToPhysical(BIOS_DEFAULT_RESET_LOCATION)+3,RealSegment(rptr)); // segment
 
 		/* Irq 2 */
 		auto call_irq2 = CALLBACK_Allocate();
-		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,Real2Phys(BIOS_DEFAULT_IRQ2_LOCATION),"irq 2 bios");
+		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,RealToPhysical(BIOS_DEFAULT_IRQ2_LOCATION),"irq 2 bios");
 		RealSetVec(0x0a,BIOS_DEFAULT_IRQ2_LOCATION);
 
 		/* Default IRQ handler */
@@ -1273,12 +1273,12 @@ public:
 
 		// INT 05h: Print Screen
 		// IRQ1 handler calls it when PrtSc key is pressed; does nothing unless hooked
-		phys_writeb(Real2Phys(BIOS_DEFAULT_INT5_LOCATION),0xcf);
+		phys_writeb(RealToPhysical(BIOS_DEFAULT_INT5_LOCATION),0xcf);
 		RealSetVec(0x05,BIOS_DEFAULT_INT5_LOCATION);
 
 		/* Some hardcoded vectors */
-		phys_writeb(Real2Phys(BIOS_DEFAULT_HANDLER_LOCATION),0xcf);	/* bios default interrupt vector location -> IRET */
-		phys_writew(Real2Phys(RealGetVec(0x12))+0x12,0x20); //Hack for Jurresic
+		phys_writeb(RealToPhysical(BIOS_DEFAULT_HANDLER_LOCATION),0xcf);	/* bios default interrupt vector location -> IRET */
+		phys_writew(RealToPhysical(RealGetVec(0x12))+0x12,0x20); //Hack for Jurresic
 
 		if (machine==MCH_TANDY) phys_writeb(0xffffe,0xff)	;	/* Tandy model */
 		else if (machine==MCH_PCJR) phys_writeb(0xffffe,0xfd);	/* PCJr model */
@@ -1344,7 +1344,7 @@ public:
 				RealPt current_irq=RealGetVec(tandy_irq_vector);
 				real_writed(0x40,0xd6,current_irq);
 				for (i = 0; i < 0x10; i++)
-					phys_writeb(PhysMake(0xf000, 0xa084 + i),
+					phys_writeb(PhysicalMake(0xf000, 0xa084 + i),
 					            0x80);
 			} else real_writeb(0x40,0xd4,0x00);
 		}

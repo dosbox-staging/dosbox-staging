@@ -38,6 +38,8 @@
 #define LONGTYPE(a) a##LL
 #endif
 
+#include "std_filesystem.h"
+
 #define CROSS_LEN 512						/* Maximum filename size */
 
 
@@ -102,12 +104,13 @@ constexpr auto localtime_r = ::localtime_r;
 } // namespace cross
 
 void CROSS_DetermineConfigPaths();
-std::string CROSS_GetPlatformConfigDir();
+
+std_fs::path get_platform_config_dir();
+
 std::string CROSS_ResolveHome(const std::string &str);
 
 class Cross {
 public:
-	static void GetPlatformConfigDir(std::string& in);
 	static void GetPlatformConfigName(std::string& in);
 	static void CreatePlatformConfigDir(std::string& in);
 	static void ResolveHomedir(std::string & temp_line);

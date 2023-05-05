@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -78,9 +78,10 @@ struct MouseConfig {
 	MouseCapture capture = MouseCapture::OnStart;
 	bool middle_release  = true;
 
-	int16_t sensitivity_x = 50; // default sensitivity values
-	int16_t sensitivity_y = 50;
-	bool raw_input        = false; // true = relative input is raw data
+	int16_t sensitivity_x    = 50; // default sensitivity values
+	int16_t sensitivity_y    = 50;
+	bool raw_input           = false; // true = relative input is raw data
+	bool multi_display_aware = false;
 
 	bool dos_driver    = false; // whether DOS virtual mouse driver should be enabled
 	bool dos_immediate = false;

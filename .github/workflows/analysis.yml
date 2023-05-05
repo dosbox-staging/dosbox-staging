@@ -7,9 +7,10 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CCACHE_DIR:      "/dev/shm/.ccache"
-  CCACHE_MAXSIZE:  "64M"
-  CCACHE_COMPRESS: "true"
+  CCACHE_DIR:        "/dev/shm/.ccache"
+  CCACHE_MAXSIZE:    "128M"
+  CCACHE_COMPRESS:   "true"
+  CCACHE_SLOPPINESS: "pch_defines,time_macros"
 
 jobs:
   run_linters:
@@ -107,6 +108,7 @@ jobs:
           -Duse_sdl2_net=false \
           -Duse_slirp=false \
           -Dunit_tests=disabled \
+          -Dexperimental_voodoo_support=true \
           build
 
       - name: Build and run scan-build
@@ -123,7 +125,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 3
+          MAX_BUGS: 12
         run: |
           # summary
           echo "Full report is included in build Artifacts"

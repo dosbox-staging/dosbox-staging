@@ -3,7 +3,7 @@ project(
     'c',
     'cpp',
     version: '0.81.0-alpha',
-    license: 'GPL-3.0-or-later',
+    license: 'GPL-2.0-or-later',
     meson_version: '>= 0.57.0',
     default_options: [
         'cpp_std=c++17',
@@ -38,7 +38,16 @@ licenses_dir = data_dir / 'licenses' / meson.project_name()
 doc_dir = data_dir / 'doc' / meson.project_name()
 
 install_man('docs/dosbox.1')
-install_data('COPYING', install_dir: licenses_dir)
+# Bundle licenses, but skip the ones that are not relevant for
+# binary distribution or allow us to not distribute the license text.
+install_data('LICENSE',
+             'licenses/BSD-2-Clause.txt',
+             'licenses/BSD-3-Clause.txt',
+             'licenses/GPL-2.0.txt',
+             'licenses/LGPL-2.1.txt',
+             'licenses/MIT.txt',
+             'licenses/Zlib.txt',
+             install_dir: licenses_dir)
 install_data('AUTHORS', 'README', 'THANKS', install_dir: doc_dir)
 
 subdir('contrib/linux')
@@ -71,7 +80,11 @@ summary('Build type', get_option('buildtype'), section: 'Build Summary')
 summary('Install prefix', get_option('prefix'), section: 'Build Summary')
 
 # extra build flags
-extra_flags = ['-Wno-unknown-pragmas']
+extra_flags = [
+    '-Wno-unknown-pragmas',
+    '-fpch-preprocess',
+]
+
 # generate linker map file
 extra_link_flags = [
     '-Wl,-map,dosbox.map',
@@ -205,6 +218,7 @@ conf_data.set10('C_SDL_IMAGE', get_option('use_sdl2_image'))
 conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
+conf_data.set10('C_VOODOO', get_option('experimental_voodoo_support'))
 
 if get_option('enable_debugger') != 'none'
     conf_data.set10('C_DEBUG', true)
@@ -526,7 +540,7 @@ if get_option('use_sdl2_image')
     sdl2_image_dep = dependency(
         'SDL2_image',
         version: ['>= 2.0.0', '< 3'],
-        default_options: default_wrap_options,
+        default_options: default_wrap_options + ['test=false'],
         static: ('sdl2_image' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('use_sdl2_image'),
     )
@@ -611,7 +625,7 @@ tracy_dep = optional_dep
 if get_option('tracy')
     tracy_dep = dependency(
         'tracy',
-        version: ['>= 0.9', '< 1'],
+        # version: ['>= 0.9', '< 1'],
         default_options: default_wrap_options,
         static: ('tracy' in static_libs_list or prefers_static_libs),
         not_found_message: msg.format('tracy'),

@@ -160,7 +160,7 @@ void MOUSEPS2_UpdateButtonSquish()
 
 	const bool squish = mouse_shared.active_vmm ||
 	                    (protocol != MouseModelPS2::Explorer);
-	buttons.data = squish ? buttons_12S.data : buttons_all.data;
+	buttons._data = squish ? buttons_12S._data : buttons_all._data;
 }
 
 static void terminate_unlock_sequence()
@@ -260,7 +260,7 @@ static void reset_counters()
 static void build_protocol_frame(const bool is_polling = false)
 {
 	union {
-		uint8_t data = 0x08;
+		uint8_t _data = 0x08;
 
 		bit_view<0, 1> left;
 		bit_view<1, 1> right;
@@ -315,7 +315,7 @@ static void build_protocol_frame(const bool is_polling = false)
 	}
 
 	frame.resize(3);
-	frame[0] = mdat.data;
+	frame[0] = mdat._data;
 	frame[1] = static_cast<uint8_t>(dx);
 	frame[2] = static_cast<uint8_t>(dy);
 
@@ -386,7 +386,7 @@ static void maybe_transfer_frame()
 static uint8_t get_status_byte()
 {
 	union {
-		uint8_t data = 0;
+		uint8_t _data = 0;
 
 		bit_view<0, 1> right;
 		bit_view<1, 1> middle;
@@ -405,7 +405,7 @@ static uint8_t get_status_byte()
 	ret.scaling_21 = scaling_21;
 	ret.reporting  = is_reporting;
 
-	return ret.data;
+	return ret._data;
 }
 
 static void cmd_get_status()
@@ -696,7 +696,7 @@ void MOUSEPS2_NotifyButton(const MouseButtons12S new_buttons_12S,
 	buttons_all = new_buttons_all;
 	MOUSEPS2_UpdateButtonSquish();
 
-	has_data_for_frame |= (buttons_old.data != buttons.data);
+	has_data_for_frame |= (buttons_old._data != buttons._data);
 	maybe_transfer_frame();
 }
 
@@ -857,8 +857,8 @@ void MOUSEBIOS_DoCallback()
 
 	bios_clear_oldest_frame();
 
-	CPU_Push16(RealSeg(ps2_callback));
-	CPU_Push16(RealOff(ps2_callback));
+	CPU_Push16(RealSegment(ps2_callback));
+	CPU_Push16(RealOffset(ps2_callback));
 	SegSet16(cs, callback_seg);
 	reg_ip = callback_ofs;
 }

@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -464,8 +465,8 @@ void ReadCharAttr(uint16_t col,uint16_t row,uint8_t page,uint16_t * result) {
 		auto ty = static_cast<uint16_t>(y);
 		for (uint8_t h=0;h<cheight;h++) {
 			uint8_t bitsel=128;
-			uint8_t bitline=mem_readb(Real2Phys(fontdata));
-			fontdata=RealMake(RealSeg(fontdata),RealOff(fontdata)+1);
+			uint8_t bitline=mem_readb(RealToPhysical(fontdata));
+			fontdata=RealMake(RealSegment(fontdata),RealOffset(fontdata)+1);
 			uint8_t res=0;
 			uint8_t vidline=0;
 			auto tx = static_cast<uint16_t>(x);
@@ -479,7 +480,7 @@ void ReadCharAttr(uint16_t col,uint16_t row,uint8_t page,uint16_t * result) {
 			ty++;
 			if(bitline != vidline){
 				/* It's not character 'chr', move on to the next */
-				fontdata=RealMake(RealSeg(fontdata),RealOff(fontdata)+cheight-h-1);
+				fontdata=RealMake(RealSegment(fontdata),RealOffset(fontdata)+cheight-h-1);
 				error = true;
 				break;
 			}
@@ -543,7 +544,7 @@ void WriteChar(uint16_t col,uint16_t row,uint8_t page,uint8_t chr,uint8_t attr,b
 		fontdata=RealGetVec(0x43);
 		break;
 	}
-	fontdata=RealMake(RealSeg(fontdata),RealOff(fontdata)+chr*cheight);
+	fontdata=RealMake(RealSegment(fontdata),RealOffset(fontdata)+chr*cheight);
 
 	if(GCC_UNLIKELY(!useattr)) { //Set attribute(color) to a sensible value
 		static bool warned_use = false;
@@ -597,8 +598,8 @@ void WriteChar(uint16_t col,uint16_t row,uint8_t page,uint8_t chr,uint8_t attr,b
 	auto ty = static_cast<uint16_t>(y);
 	for (uint8_t h = 0; h < cheight; h++) {
 		uint8_t bitsel=128;
-		uint8_t bitline=mem_readb(Real2Phys(fontdata));
-		fontdata=RealMake(RealSeg(fontdata),RealOff(fontdata)+1);
+		uint8_t bitline=mem_readb(RealToPhysical(fontdata));
+		fontdata=RealMake(RealSegment(fontdata),RealOffset(fontdata)+1);
 		auto tx = static_cast<uint16_t>(x);
 		while (bitsel) {
 			INT10_PutPixel(tx,ty,page,(bitline&bitsel)?attr:back);

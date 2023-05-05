@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -649,7 +650,7 @@ void BIOS_SetupKeyboard(void) {
 	RealSetVec(0x16,CALLBACK_RealPointer(call_int16));
 
 	call_irq1=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRQ1,Real2Phys(BIOS_DEFAULT_IRQ1_LOCATION),"IRQ 1 Keyboard");
+	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRQ1,RealToPhysical(BIOS_DEFAULT_IRQ1_LOCATION),"IRQ 1 Keyboard");
 	RealSetVec(0x09,BIOS_DEFAULT_IRQ1_LOCATION);
 	// pseudocode for CB_IRQ1:
 	//	push ax

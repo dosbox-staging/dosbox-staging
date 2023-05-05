@@ -164,6 +164,13 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	if (phys_page >= last_page_in_first_16mb &&
 	    phys_page < sixteen_pages_beyond_first_16mb) {
 		return memory.lfb.mmiohandler;
+#if C_VOODOO
+	} else {
+		PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu);
+		if (PageHandler* vph = VOODOO_PCI_GetLFBPageHandler(phys_page)) {
+			return vph;
+		}
+#endif
 	}
 	return &illegal_page_handler;
 }
@@ -234,28 +241,33 @@ uint32_t MEM_TotalPages(void)
 	return check_cast<uint32_t>(memory.pages.size());
 }
 
-Bitu MEM_FreeLargest(void) {
-	Bitu size=0;Bitu largest=0;
-	Bitu index=XMS_START;
+uint32_t MEM_FreeLargest()
+{
+	uint32_t size    = 0;
+	uint32_t largest = 0;
+	size_t   index   = XMS_START;
 	while (index < memory.pages.size()) {
 		if (!memory.mhandles[index]) {
-			size++;
+			++size;
 		} else {
-			if (size>largest) largest=size;
-			size=0;
+			largest = std::max(size, largest);
+			size = 0;
 		}
-		index++;
+		++index;
 	}
-	if (size>largest) largest=size;
+	largest = std::max(size, largest);
 	return largest;
 }
 
-Bitu MEM_FreeTotal(void) {
-	Bitu free=0;
-	Bitu index=XMS_START;
+uint32_t MEM_FreeTotal()
+{
+	uint32_t free  = 0;
+	size_t   index = XMS_START;
 	while (index < memory.pages.size()) {
-		if (!memory.mhandles[index]) free++;
-		index++;
+		if (!memory.mhandles[index]) {
+			++free;
+		}
+		++index;
 	}
 	return free;
 }

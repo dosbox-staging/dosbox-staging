@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1957,7 +1958,7 @@ static void LogMCBChain(uint16_t mcb_segment) {
 	char filename[9]; // 8 characters plus a terminating NUL
 	const char *psp_seg_note;
 	uint16_t DOS_dataOfs = static_cast<uint16_t>(dataOfs); //Realmode addressing only
-	PhysPt dataAddr = PhysMake(dataSeg,DOS_dataOfs);// location being viewed in the "Data Overview"
+	PhysPt dataAddr = PhysicalMake(dataSeg,DOS_dataOfs);// location being viewed in the "Data Overview"
 
 	// loop forever, breaking out of the loop once we've processed the last MCB
 	while (true) {
@@ -1984,8 +1985,8 @@ static void LogMCBChain(uint16_t mcb_segment) {
 		LOG(LOG_MISC,LOG_ERROR)("   %04X  %12u     %04X %-7s  %s",mcb_segment,mcb.GetSize() << 4,mcb.GetPSPSeg(), psp_seg_note, filename);
 
 		// print a message if dataAddr is within this MCB's memory range
-		PhysPt mcbStartAddr = PhysMake(mcb_segment+1,0);
-		PhysPt mcbEndAddr = PhysMake(mcb_segment+1+mcb.GetSize(),0);
+		PhysPt mcbStartAddr = PhysicalMake(mcb_segment+1,0);
+		PhysPt mcbEndAddr = PhysicalMake(mcb_segment+1+mcb.GetSize(),0);
 		if (dataAddr >= mcbStartAddr && dataAddr < mcbEndAddr) {
 			LOG(LOG_MISC,LOG_ERROR)("   (data addr %04hX:%04X is %u bytes past this MCB)",dataSeg,DOS_dataOfs,dataAddr - mcbStartAddr);
 		}

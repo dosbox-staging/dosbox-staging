@@ -62,6 +62,8 @@ plugins:
   - search
   - glightbox:
       slide_effect: 'none'
+      skip_classes:
+        - skip-lightbox
 
 # Page tree
 nav:
@@ -85,6 +87,15 @@ nav:
       - 0.75.1: downloads/release-notes/0.75.1.md
       - 0.75.0: downloads/release-notes/0.75.0.md
       - 0.75.0-RC1: downloads/release-notes/0.75.0-rc1.md
+
+  - Getting started:
+      - getting-started/introduction.md
+      - getting-started/prince-of-persia.md
+      - getting-started/enhancing-prince-of-persia.md
+      - getting-started/passport-to-adventure.md
+      - getting-started/beneath-a-steel-sky.md
+      - getting-started/dark-forces.md
+      - getting-started/next-steps.md
 
   - Get involved:
       - get-involved/index.md

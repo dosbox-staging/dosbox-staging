@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -180,8 +180,8 @@ void IO_WriteB(io_port_t port, uint8_t val)
 		reg_al = val;
 		reg_dx = port;
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
-		SegSet16(cs,RealSeg(icb));
-		reg_eip = RealOff(icb)+0x08;
+		SegSet16(cs,RealSegment(icb));
+		reg_eip = RealOffset(icb)+0x08;
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -215,8 +215,8 @@ void IO_WriteW(io_port_t port, uint16_t val)
 		reg_ax = val;
 		reg_dx = port;
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
-		SegSet16(cs,RealSeg(icb));
-		reg_eip = RealOff(icb)+0x0a;
+		SegSet16(cs,RealSegment(icb));
+		reg_eip = RealOffset(icb)+0x0a;
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -250,8 +250,8 @@ void IO_WriteD(io_port_t port, uint32_t val)
 		reg_eax = val;
 		reg_dx = port;
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
-		SegSet16(cs,RealSeg(icb));
-		reg_eip = RealOff(icb)+0x0c;
+		SegSet16(cs,RealSegment(icb));
+		reg_eip = RealOffset(icb)+0x0c;
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -282,8 +282,8 @@ uint8_t IO_ReadB(io_port_t port)
 		uint16_t old_dx = reg_dx;
 		reg_dx = port;
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
-		SegSet16(cs,RealSeg(icb));
-		reg_eip = RealOff(icb)+0x00;
+		SegSet16(cs,RealSegment(icb));
+		reg_eip = RealOffset(icb)+0x00;
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -320,8 +320,8 @@ uint16_t IO_ReadW(io_port_t port)
 		uint16_t old_dx = reg_dx;
 		reg_dx = port;
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
-		SegSet16(cs,RealSeg(icb));
-		reg_eip = RealOff(icb)+0x02;
+		SegSet16(cs,RealSegment(icb));
+		reg_eip = RealOffset(icb)+0x02;
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();
@@ -357,8 +357,8 @@ uint32_t IO_ReadD(io_port_t port)
 		uint16_t old_dx = reg_dx;
 		reg_dx = port;
 		RealPt icb = CALLBACK_RealPointer(call_priv_io);
-		SegSet16(cs,RealSeg(icb));
-		reg_eip = RealOff(icb)+0x04;
+		SegSet16(cs,RealSegment(icb));
+		reg_eip = RealOffset(icb)+0x04;
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 
 		DOSBOX_RunMachine();

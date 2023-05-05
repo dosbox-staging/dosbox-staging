@@ -4,10 +4,11 @@ set -eu
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2020-2021  Patryk Obara <patryk.obara@gmail.com>
+# Copyright (C) 2020-2023  Patryk Obara <patryk.obara@gmail.com>
 
 SCRIPT=$(basename "$0")
-readonly SCRIPT
+VERSION="1.0.2"
+readonly SCRIPT VERSION
 
 print_usage () {
 	echo "usage: $SCRIPT [-V|--verify|-d|--diff|-a|--amend] [<commit>]"
@@ -45,6 +46,7 @@ print_usage () {
 main () {
 	case ${1:-} in
 		-h|-help|--help) print_usage ;;
+		-v|--version)    echo "$SCRIPT version $VERSION" ;;
 		-d|--diff)       handle_dependencies ; shift ; format "$@" ; assert_empty_diff ;;
 		-V|--verify)     handle_dependencies ; shift ; format "$@" ; assert_empty_diff ;;
 		-a|--amend)      handle_dependencies ; shift ; format "$@" ; amend ;;
@@ -69,10 +71,10 @@ assign_gnu_sed () {
 	# No, so help the user install it and then quit.
 	else
 		echo "'sed' is not GNU and 'gsed' is not available."
-		if [[ "${OSTYPE:-}" == "darwin"* ]]; then
+		if [[ "$(uname)" == "Darwin"* ]]; then
 			echo "Install GNU sed with: brew install gnu-sed"
 		else
-			echo "Install GNU sed with your $OSTYPE package manager."
+			echo "Install GNU sed with your package manager."
 		fi
 		exit 1
 	fi
@@ -103,7 +105,7 @@ format () {
 	local -r since_ref=${1:-HEAD~1}
 	pushd "$(git rev-parse --show-toplevel)" > /dev/null
 	echo "Using paths relative to: $(pwd)"
-	find_cpp_files "$since_ref" | run_clang_format
+	find_cpp_files "$since_ref" | run_clang_format "$since_ref"
 	popd > /dev/null
 }
 
@@ -154,11 +156,12 @@ list_changed_files () {
 }
 
 run_clang_format () {
+	local -r since_ref=$1
 	while read -r src_file ; do
 		local ranges=()
 		while IFS=$'\n' read -r range ; do
 			ranges+=("$range")
-		done < <(git_diff_to_clang_line_range "$src_file")
+		done < <(git_diff_to_clang_line_range "$src_file" "$since_ref")
 
 		if (( "${#ranges[@]}" )); then
 			echo "clang-format -i ${ranges[*]} \"$src_file\""
@@ -169,7 +172,8 @@ run_clang_format () {
 
 git_diff_to_clang_line_range () {
 	local -r file=$1
-	git_diff --ignore-space-at-eol -U0 HEAD~1 "$file" \
+	local -r since_ref=$2
+	git_diff --ignore-space-at-eol -U0 "$since_ref" "$file" \
 		| grep -E "^@@" \
 		| filter_line_range \
 		| to_clang_line_range

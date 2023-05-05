@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <string>
 #include <type_traits>
 
 #include "dos_system.h"
@@ -345,10 +346,10 @@ constexpr PhysPt assert_macro_args_ok()
 class MemStruct {
 public:
 	MemStruct() = default;
-	MemStruct(uint16_t seg, uint16_t off) : pt(PhysMake(seg, off)) {}
-	MemStruct(RealPt addr) : pt(Real2Phys(addr)) {}
+	MemStruct(uint16_t seg, uint16_t off) : pt(PhysicalMake(seg, off)) {}
+	MemStruct(RealPt addr) : pt(RealToPhysical(addr)) {}
 
-	void SetPt(uint16_t seg) { pt = PhysMake(seg, 0); }
+	void SetPt(uint16_t seg) { pt = PhysicalMake(seg, 0); }
 
 protected:
 	PhysPt pt = 0;
@@ -573,16 +574,40 @@ public:
 	uint8_t GetSearchDrive() const { return SGET_BYTE(sDTA, sdrive); }
 	void GetSearchParams(uint8_t &attr, char *pattern) const;
 
-	void SetResult(const char *name,
-	               uint32_t size,
-	               uint16_t date,
-	               uint16_t time,
-	               uint8_t attr);
-	void GetResult(char *name,
-	               uint32_t &size,
-	               uint16_t &date,
-	               uint16_t &time,
-	               uint8_t &attr) const;
+	struct Result {
+		std::string name = {};
+
+		uint32_t size = 0;
+		uint16_t date = 0;
+		uint16_t time = 0;
+
+		FatAttributeFlags attr = {};
+
+		std::string GetExtension() const;
+		std::string GetBareName() const; // name without extension
+
+		bool IsFile() const
+		{
+			return !attr.directory && !attr.volume && !attr.device;
+		}
+
+		bool IsDirectory() const
+		{
+			return attr.directory;
+		}
+
+		bool IsDummyDirectory() const
+		{
+			return attr.directory && (name == "." || name == "..");
+		}
+	};
+
+	void SetResult(const char* name, uint32_t size, uint16_t date,
+	               uint16_t time, uint8_t attr);
+	void GetResult(Result& result) const;
+	// obsolete - TODO: remove
+	void GetResult(char* name, uint32_t& size, uint16_t& date,
+	               uint16_t& time, uint8_t& attr) const;
 
 	void SetDirID(uint16_t id) { SSET_WORD(sDTA, dirID, id); }
 	uint16_t GetDirID() const { return SGET_WORD(sDTA, dirID); }
@@ -612,6 +637,24 @@ private:
 	#pragma pack()
 	#endif
 };
+
+enum class ResultGrouping {
+	None,
+	FilesFirst,
+	NonFilesFirst,
+};
+
+enum class ResultSorting {
+	None,
+	ByName,
+	ByExtension,
+	BySize,
+	ByDateTime,
+};
+
+void DOS_Sort(std::vector<DOS_DTA::Result>& list, const ResultSorting sorting,
+              const bool reverse_order      = false,
+              const ResultGrouping grouping = ResultGrouping::None);
 
 /* File Control Block */
 

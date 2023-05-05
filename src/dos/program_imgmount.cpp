@@ -1,6 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -454,7 +455,7 @@ void IMGMOUNT::Run(void)
 		DriveManager::InitializeDrive(drive_index(drive));
 
 		// Set the correct media byte in the table
-		mem_writeb(Real2Phys(dos.tables.mediaid) + drive_index(drive) * 9,
+		mem_writeb(RealToPhysical(dos.tables.mediaid) + drive_index(drive) * 9,
 		           mediaid);
 
 		/* Command uses dta so set it to our internal dta */
@@ -536,7 +537,7 @@ void IMGMOUNT::Run(void)
 		DriveManager::InitializeDrive(drive_index(drive));
 
 		// Set the correct media byte in the table
-		mem_writeb(Real2Phys(dos.tables.mediaid) + drive_index(drive) * 9,
+		mem_writeb(RealToPhysical(dos.tables.mediaid) + drive_index(drive) * 9,
 		           mediaid);
 
 		// If instructed, attach to IDE controller as ATAPI CD-ROM device

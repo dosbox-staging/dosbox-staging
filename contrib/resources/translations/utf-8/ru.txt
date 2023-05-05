@@ -219,6 +219,13 @@ low         |     нет     |      да
 quiet       |     нет     |      нет
 auto        | 'low', если передан исполняемый файл или каталог, иначе 'high'
 .
+:CONFIG_ALLOW_WRITE_PROTECTED_FILES
+Many games open all their files with writable permissions; even files that they
+never modify. This setting lets you write-protect those files while still
+allowing the game to read them. A second use-case: if you're using a copy-on-write
+or network-based filesystem, this setting avoids triggering write-operations for
+these write-protected files.
+.
 :CONFIG_FRAMESKIP
 Рассмотрите возможность ограничения кадровой частоты с помощью настройки
 '[sdl] host_rate'.
@@ -494,6 +501,17 @@ auto        | 'low', если передан исполняемый файл и�
 :CONFIG_MPU401
 Тип MPU-401 для эмуляции.
 .
+:CONFIG_RAW_MIDI_OUTPUT
+Enable raw, unaltered MIDI output (disabled by default).
+The MIDI drivers of many games don't fully conform to the MIDI standard,
+which makes editing the MIDI recordings of these games very error-prone and
+cumbersome in MIDI sequencers, often resulting in hanging or missing notes.
+DOSBox corrects the MIDI output of such games by default. This results in no
+audible difference whatsoever; it only affects the representation of the MIDI
+data. You should only enable 'raw_midi_output' if you really need to capture
+the raw, unaltered MIDI output of a program, e.g. when working with music
+applications, or when debugging MIDI issues.
+.
 :CONFIG_SOUNDFONT
 Путь к файлу SoundFont в формате .sf2. Можно использовать
 абсолютный или относительный путь, или имя .sf2 внутри
@@ -672,6 +690,21 @@ auto        | 'low', если передан исполняемый файл и�
 Фильтр для вывода звука Gravis UltraSound:
   off:       Не фильтровать вывод (по умолчанию).
   <своё>:    Собственное определение фильтра; подробности см. в 'sb_filter'.
+.
+:CONFIG_IMFC
+Enable the IBM Music Feature Card (disabled by default).
+.
+:CONFIG_IMFC_BASE
+The IO base address of the IBM Music Feature Card (2A20 by default).
+.
+:CONFIG_IMFC_IRQ
+The IRQ number of the IBM Music Feature Card (3 by default).
+.
+:CONFIG_IMFC_FILTER
+Filter for the IBM Music Feature Card output:
+  on:        Filter the output.
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_SIDMODEL
 Модель чипа для эмуляции в карте Innovation SSI-2001:
@@ -3050,4 +3083,70 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 .
 :CONJUNCTION_AND
 и
+.
+:PROGRAM_MORE_PROMPT_PERCENT
+[reset][color=light-yellow]--- (%d%%) press SPACE or ENTER for more ---[reset]
+.
+:PROGRAM_MORE_PROMPT_LINE
+[reset][color=light-yellow]--- line %u ---[reset]
+.
+:PROGRAM_MORE_SKIPPED
+[reset][color=light-yellow](skipped content)[reset]
+.
+:PROGRAM_MORE_HOW_MANY_LINES
+[reset][color=light-yellow]how many lines?[reset]
+.
+:PROGRAM_TREE_HELP_LONG
+Displays directory tree in a graphical form.
+
+Usage:
+  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]
+
+Where:
+  [color=cyan]DIRECTORY[reset] is the name of the directory to display.
+  [color=white]ORDER[reset]     is a listing order, one of:
+                [color=white]n[reset] (by name, alphabetic),
+                [color=white]s[reset] (by size, smallest first),
+                [color=white]e[reset] (by extension, alphabetic),
+                [color=white]d[reset] (by date/time, oldest first),
+            with an optional [color=white]-[reset] prefix to reverse order.
+  /a        uses only 7-bit ASCII characters.
+  /b        brief display, omits header and footer information.
+  /f        also display files.
+  /p        display one page a time, shorten output to fit width width.
+  /da       display attributes.
+  /df       display size for files.
+  /dh       also display hidden and system files/directories.
+  /o[color=white]ORDER[reset]   orders the list (see above)
+
+Notes:
+  If [color=cyan]DIRECTORY[reset] is omitted, the current directory is used.
+
+Examples:
+  [color=green]tree[reset]          ; displays directory tree starting from current directory
+  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; displays C: drive content recursively, with files
+
+.
+:PROGRAM_TREE_DIRECTORY
+ Directory tree for volume %s
+.
+:PROGRAM_TREE_NO_SUBDIRS
+No subdirectories to display.
+
+.
+:PROGRAM_TREE_NO_FILES_SUBDIRS
+No files or subdirectories to display.
+
+.
+:PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
+Too many files or subdirectories.
+
+.
+:SHELL_TOO_MANY_PARAMETERS
+Too many parameters.
+
+.
+:SHELL_DIRECTORY_NOT_FOUND
+Directory not found - '%s'
+
 .

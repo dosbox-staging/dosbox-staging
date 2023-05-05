@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -420,10 +421,15 @@ void DOS_Shell::InputCommand(char * line) {
 	if (l_completion.size()) l_completion.clear();
 
 	/* DOS %variable% substitution */
-	const auto dos = static_cast<Section_prop *>(control->GetSection("dos"));
-	assert(dos);
-	if (dos->Get_bool("expand_shell_variable"))
+	const auto dos_section = static_cast<Section_prop *>(control->GetSection("dos"));
+	assert(dos_section);
+	std::string_view expand_shell_variable_pref =
+					dos_section->Get_string("expand_shell_variable");
+	if (expand_shell_variable_pref == "true") {
 		ProcessCmdLineEnvVarStitution(line);
+	} else if (expand_shell_variable_pref == "auto" && dos.version.major >= 7) {
+		ProcessCmdLineEnvVarStitution(line);
+	}
 }
 
 /* Note: Buffer pointed to by "line" must be at least CMD_MAXLINE+1 bytes long! */
@@ -552,7 +558,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		block.Clear();
 		//Add a filename
 		RealPt file_name=RealMakeSeg(ss,reg_sp+0x20);
-		MEM_BlockWrite(Real2Phys(file_name), fullname,
+		MEM_BlockWrite(RealToPhysical(file_name), fullname,
 		               (Bitu)(safe_strlen(fullname) + 1));
 
 		/* HACK: Store full commandline for mount and imgmount */
@@ -628,13 +634,13 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		uint16_t oldcs=SegValue(cs);
 		RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
 		SegSet16(cs,RealSeg(newcsip));
-		reg_ip=RealOff(newcsip);
+		reg_ip=RealOffset(newcsip);
 #endif
 		/* Start up a dos execute interrupt */
 		reg_ax=0x4b00;
 		//Filename pointer
 		SegSet16(ds,SegValue(ss));
-		reg_dx=RealOff(file_name);
+		reg_dx=RealOffset(file_name);
 		//Paramblock
 		SegSet16(es,SegValue(ss));
 		reg_bx=reg_sp;

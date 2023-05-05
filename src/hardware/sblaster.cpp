@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -25,6 +26,7 @@
 #include <string>
 #include <tuple>
 
+#include "autoexec.h"
 #include "control.h"
 #include "dma.h"
 #include "hardware.h"
@@ -2111,9 +2113,6 @@ private:
 	IO_WriteHandleObject write_handlers[0x10] = {};
 
 	static constexpr auto blaster_env_name = "BLASTER";
-
-	std::unique_ptr<AutoexecObject> autoexec_line = {};
-
 	OplMode oplmode = OplMode::None;
 
 	void SetupEnvironment()
@@ -2124,8 +2123,6 @@ private:
 		assert(sb.hw.base < 0xfff);
 		assert(sb.hw.irq <= 12);
 		assert(sb.hw.dma8 < 10);
-
-		const std::string at_set = "@SET";
 
 		char blaster_env_val[] = "AHHH II DD HH TT";
 
@@ -2147,22 +2144,14 @@ private:
 			             static_cast<int>(sb.type));
 		}
 
+		// Update AUTOEXEC.BAT line
 		LOG_MSG("%s: %s=%s", CardType(), blaster_env_name, blaster_env_val);
-		autoexec_line = std::make_unique<AutoexecObject>(
-		        at_set + " " + blaster_env_name + "=" + blaster_env_val);
-
-		if (first_shell) {
-			first_shell->SetEnv(blaster_env_name, blaster_env_val);
-		}
+		AUTOEXEC_SetVariable(blaster_env_name, blaster_env_val);
 	}
 
 	void ClearEnvironment()
 	{
-		autoexec_line = {};
-
-		if (first_shell) {
-			first_shell->SetEnv(blaster_env_name, "");
-		}
+		AUTOEXEC_SetVariable(blaster_env_name, "");
 	}
 
 public:

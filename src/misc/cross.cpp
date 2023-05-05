@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2022  The DOSBox Staging Team
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -175,43 +175,35 @@ static void W32_ConfDir(std::string& in,bool create) {
 }
 #endif
 
-std::string CROSS_GetPlatformConfigDir()
+std_fs::path get_platform_config_dir()
 {
 	// Cache the result, as this doesn't change
-	static std::string conf_dir = {};
-	if (conf_dir.length())
+	static std_fs::path conf_dir = {};
+	if (!conf_dir.empty())
 		return conf_dir;
 
 	// Check if a portable layout exists
-	std::string config_file;
-	Cross::GetPlatformConfigName(config_file);
-	const auto portable_conf_path = GetExecutablePath() / config_file;
+	const auto portable_conf_path = GetExecutablePath() / GetConfigName();
 
 	std::error_code ec = {};
 	if (std_fs::is_regular_file(portable_conf_path, ec)) {
-		conf_dir = portable_conf_path.parent_path().string();
+		conf_dir = portable_conf_path.parent_path();
+		const auto conf_str = conf_dir.string();
 		LOG_MSG("CONFIG: Using portable configuration layout in %s",
-		        conf_dir.c_str());
-		conf_dir += CROSS_FILESPLIT;
+		        conf_str.c_str());
 		return conf_dir;
 	}
 
 	// Otherwise get the OS-specific configuration directory
 #ifdef WIN32
-	W32_ConfDir(conf_dir, false);
-	conf_dir += "\\DOSBox\\";
+	std::string win_conf_dir;
+	W32_ConfDir(win_conf_dir, false);
+	conf_dir = std_fs::path(win_conf_dir) / "DOSBox";
 #else
 	assert(!cached_conf_path.empty());
 	conf_dir = cached_conf_path;
-	if (conf_dir.back() != CROSS_FILESPLIT)
-		conf_dir += CROSS_FILESPLIT;
 #endif
 	return conf_dir;
-}
-
-void Cross::GetPlatformConfigDir(std::string &in)
-{
-	in = CROSS_GetPlatformConfigDir();
 }
 
 void Cross::GetPlatformConfigName(std::string &in)
@@ -236,7 +228,7 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 	if (in.back() != CROSS_FILESPLIT)
 		in += CROSS_FILESPLIT;
 
-	if (create_dir(in.c_str(), 0700, OK_IF_EXISTS) != 0) {
+	if (create_dir(in, 0700, OK_IF_EXISTS) != 0) {
 		LOG_MSG("ERROR: Creation of config directory '%s' failed: %s",
 		        in.c_str(), safe_strerror(errno).c_str());
 	}

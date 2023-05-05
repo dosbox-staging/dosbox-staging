@@ -217,20 +217,20 @@ static void register_mt32_text_messages()
 
 #	if defined(WIN32)
 
-static std::deque<std::string> get_rom_dirs()
+static std::deque<std_fs::path> get_rom_dirs()
 {
 	return {
-	        CROSS_GetPlatformConfigDir() + "mt32-roms\\",
+	        get_platform_config_dir() / "mt32-roms",
 	        "C:\\mt32-rom-data\\",
 	};
 }
 
 #elif defined(MACOSX)
 
-static std::deque<std::string> get_rom_dirs()
+static std::deque<std_fs::path> get_rom_dirs()
 {
 	return {
-	        CROSS_GetPlatformConfigDir() + "mt32-roms/",
+	        get_platform_config_dir() / "mt32-roms",
 	        CROSS_ResolveHome("~/Library/Audio/Sounds/MT32-Roms/"),
 	        "/usr/local/share/mt32-rom-data/",
 	        "/usr/share/mt32-rom-data/",
@@ -239,16 +239,16 @@ static std::deque<std::string> get_rom_dirs()
 
 #else
 
-static std::deque<std::string> get_rom_dirs()
+static std::deque<std_fs::path> get_rom_dirs()
 {
 	// First priority is $XDG_DATA_HOME
 	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
-	const auto xdg_data_home = CROSS_ResolveHome(
-	        xdg_data_home_env ? xdg_data_home_env : "~/.local/share");
+	const auto xdg_data_home      = std_fs::path(CROSS_ResolveHome(
+                xdg_data_home_env ? xdg_data_home_env : "~/.local/share"));
 
-	std::deque<std::string> dirs = {
-	        xdg_data_home + "/dosbox/mt32-roms/",
-	        xdg_data_home + "/mt32-rom-data/",
+	std::deque<std_fs::path> dirs = {
+	        xdg_data_home / "dosbox/mt32-roms",
+	        xdg_data_home / "mt32-rom-data",
 	};
 
 	// Second priority are the $XDG_DATA_DIRS
@@ -261,19 +261,20 @@ static std::deque<std::string> get_rom_dirs()
 		if (xdg_data_dir.empty()) {
 			continue;
 		}
-		const auto resolved_dir = CROSS_ResolveHome(xdg_data_dir);
-		dirs.emplace_back(resolved_dir + "/mt32-rom-data/");
+		const auto resolved_dir = std_fs::path(
+		        CROSS_ResolveHome(xdg_data_dir));
+		dirs.emplace_back(resolved_dir / "mt32-rom-data");
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(CROSS_GetPlatformConfigDir() + "mt32-roms/");
+	dirs.emplace_back(get_platform_config_dir() / "mt32-roms");
 
 	return dirs;
 }
 
 #endif
 
-static std::deque<std::string> get_selected_dirs()
+static std::deque<std_fs::path> get_selected_dirs()
 {
 	const auto section = static_cast<Section_prop *>(
 	        control->GetSection("mt32"));
@@ -301,8 +302,8 @@ static const char *get_selected_model()
 	return section->Get_string("model");
 }
 
-static std::set<const LASynthModel *> has_models(const MidiHandler_mt32::service_t &service,
-                                                 const std::string &dir)
+static std::set<const LASynthModel*> has_models(const MidiHandler_mt32::service_t& service,
+                                                const std_fs::path& dir)
 {
 	std::set<const LASynthModel *> models = {};
 	for (const auto &model : all_models)
@@ -312,15 +313,15 @@ static std::set<const LASynthModel *> has_models(const MidiHandler_mt32::service
 }
 
 static std::optional<model_and_dir_t> load_model(
-        const MidiHandler_mt32::service_t &service,
-        const std::string &selected_model, const std::deque<std::string> &rom_dirs)
+        const MidiHandler_mt32::service_t& service,
+        const std::string& selected_model, const std::deque<std_fs::path>& rom_dirs)
 {
 	const bool is_auto = (selected_model == "auto");
 	for (const auto &model : all_models)
 		if (is_auto || model->Matches(selected_model))
 			for (const auto &dir : rom_dirs)
 				if (model->Load(service, dir))
-					return {{model, simplify_path(dir).string()}};
+					return {{model, simplify_path(dir)}};
 	return {};
 }
 
@@ -414,12 +415,14 @@ static size_t get_max_dir_width(const LASynthModel *(&models_without_aliases)[10
 
 // Returns the set of models supported by all of the directories, and also
 // populates the provide map of the modules supported by each directory.
-static std::set<const LASynthModel *> populate_available_models(
-        const MidiHandler_mt32::service_t &service,
-        std::map<std::string, std::set<const LASynthModel *>> &dirs_with_models)
+
+using dirs_with_models_t = std::map<std_fs::path, std::set<const LASynthModel*>>;
+
+static std::set<const LASynthModel*> populate_available_models(
+        const MidiHandler_mt32::service_t& service, dirs_with_models_t& dirs_with_models)
 {
 	std::set<const LASynthModel *> available_models;
-	for (const std::string &dir : get_selected_dirs()) {
+	for (const auto& dir : get_selected_dirs()) {
 		const auto models = has_models(service, dir);
 		if (!models.empty()) {
 			dirs_with_models[dir] = models;
@@ -453,7 +456,7 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	assert(truncated_dir_width < max_dir_width);
 
 	// Get the set of directories and the models they support
-	std::map<std::string, std::set<const LASynthModel *>> dirs_with_models;
+	dirs_with_models_t dirs_with_models;
 	const auto available_models = populate_available_models(GetService(),
 	                                                        dirs_with_models);
 	if (available_models.empty()) {
@@ -488,9 +491,9 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 
 	// Iterate over the found directories and models
 	for (const auto &dir_and_models : dirs_with_models) {
-		const auto simplified_dir = simplify_path(dir_and_models.first);
-		const std::string &dir = simplified_dir.string();
-		const auto &dir_models = dir_and_models.second;
+		const auto dir = simplify_path(dir_and_models.first).string();
+
+		const auto& dir_models = dir_and_models.second;
 
 		// Print the directory, and truncate it if it's too long
 		if (dir.size() > max_dir_width) {
@@ -550,7 +553,8 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 		                            (dir_label.length() +
 		                             std::string_view(indent).length());
 
-		const auto truncated_dir = model_and_dir->second.substr(0, dir_max_length);
+		const auto truncated_dir =
+		        model_and_dir->second.string().substr(0, dir_max_length);
 		caller->WriteOut("%s%s%s\n",
 		                 indent,
 		                 dir_label.data(),
@@ -574,9 +578,9 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	if (!loaded_model_and_dir) {
 		LOG_WARNING("MT32: Failed to find ROMs for model %s in:",
 		        selected_model.c_str());
-		for (const auto &dir : rom_dirs) {
+		for (const auto& dir : rom_dirs) {
 			const char div = (dir != rom_dirs.back() ? '|' : '`');
-			LOG_MSG("MT32:  %c- %s", div, dir.c_str());
+			LOG_MSG("MT32:  %c- %s", div, dir.string().c_str());
 		}
 		return false;
 	}
@@ -586,7 +590,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	assert(loaded_model_and_dir.has_value());
 	LOG_MSG("MT32: Initialized %s from %s",
 	        rom_info.control_rom_description,
-	        loaded_model_and_dir->second.c_str());
+	        loaded_model_and_dir->second.string().c_str());
 
 	const auto audio_frame_rate_hz = MIXER_GetSampleRate();
 	ms_per_audio_frame             = millis_in_second / audio_frame_rate_hz;

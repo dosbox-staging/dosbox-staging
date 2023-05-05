@@ -93,15 +93,24 @@ void MOUSE_NotifyWindowActive(const bool is_active);
 // visible while a GUI is running)
 void MOUSE_NotifyTakeOver(const bool gui_has_taken_over);
 
+struct MouseScreenParams {
+	// size of the black bars around screen area
+	uint32_t clip_x = 0;
+	uint32_t clip_y = 0;
+	// size of drawing area (in hot OS pixels)
+	uint32_t res_x = 0;
+	uint32_t res_y = 0;
+	// new absolute mouse cursor position
+	int32_t x_abs = 0;
+	int32_t y_abs = 0;
+	// whether the new mode is fullscreen or windowed
+	bool is_fullscreen = false;
+	// whether more than one display was detected
+	bool is_multi_display = false;
+};
+
 // To be called when screen mode changes, emulator window gets resized, etc.
-// clip_x / clip_y - size of the black bars around screen area
-// res_x / res_y   - size of drawing area (in hot OS pixels)
-// x_abs / y_abs   - new absolute mouse cursor position
-// is_fullscreen   - whether the new mode is fullscreen or windowed
-void MOUSE_NewScreenParams(const uint32_t clip_x, const uint32_t clip_y,
-                           const uint32_t res_x, const uint32_t res_y,
-                           const int32_t x_abs, const int32_t y_abs,
-                           const bool is_fullscreen);
+void MOUSE_NewScreenParams(const MouseScreenParams &params);
 
 // Notification that user pressed/released the hotkey combination
 // to capture/release the mouse

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -342,7 +342,7 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	add_if_exists(GetExecutablePath() / "../share" / CANONICAL_PROJECT_NAME);
 
 	// Last priority is the user's configuration directory
-	add_if_exists(std_fs::path(CROSS_GetPlatformConfigDir()));
+	add_if_exists(get_platform_config_dir());
 
 	return paths;
 }

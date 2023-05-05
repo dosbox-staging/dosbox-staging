@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,11 +41,11 @@ bool INT10_VideoState_Save(Bitu state,RealPt buffer) {
 	Bitu ct;
 	if ((state&7)==0) return false;
 
-	Bitu base_seg=RealSeg(buffer);
-	Bitu base_dest=RealOff(buffer)+0x20;
+	Bitu base_seg=RealSegment(buffer);
+	Bitu base_dest=RealOffset(buffer)+0x20;
 
 	if (state&1)  {
-		real_writew(base_seg,RealOff(buffer),base_dest);
+		real_writew(base_seg,RealOffset(buffer),base_dest);
 
 		uint16_t crt_reg=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 		real_writew(base_seg,base_dest+0x40,crt_reg);
@@ -125,7 +126,7 @@ bool INT10_VideoState_Save(Bitu state,RealPt buffer) {
 	}
 
 	if (state&2)  {
-		real_writew(base_seg,RealOff(buffer)+2,base_dest);
+		real_writew(base_seg,RealOffset(buffer)+2,base_dest);
 
 		real_writeb(base_seg,base_dest+0x00,mem_readb(0x410)&0x30);
 		for (ct=0; ct<0x1e; ct++) {
@@ -144,7 +145,7 @@ bool INT10_VideoState_Save(Bitu state,RealPt buffer) {
 	}
 
 	if (state&4)  {
-		real_writew(base_seg,RealOff(buffer)+4,base_dest);
+		real_writew(base_seg,RealOffset(buffer)+4,base_dest);
 
 		uint16_t crt_reg=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 
@@ -173,7 +174,7 @@ bool INT10_VideoState_Save(Bitu state,RealPt buffer) {
 	}
 
 	if ((svgaCard==SVGA_S3Trio) && (state&8))  {
-		real_writew(base_seg,RealOff(buffer)+6,base_dest);
+		real_writew(base_seg,RealOffset(buffer)+6,base_dest);
 
 		uint16_t crt_reg=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 
@@ -216,11 +217,11 @@ bool INT10_VideoState_Restore(Bitu state,RealPt buffer) {
 	Bitu ct;
 	if ((state&7)==0) return false;
 
-	uint16_t base_seg=RealSeg(buffer);
+	uint16_t base_seg=RealSegment(buffer);
 	uint16_t base_dest;
 
 	if (state&1)  {
-		base_dest=real_readw(base_seg,RealOff(buffer));
+		base_dest=real_readw(base_seg,RealOffset(buffer));
 		uint16_t crt_reg=real_readw(base_seg,base_dest+0x40);
 
 		// reprogram for full access to plane latches
@@ -284,7 +285,7 @@ bool INT10_VideoState_Restore(Bitu state,RealPt buffer) {
 	}
 
 	if (state&2)  {
-		base_dest=real_readw(base_seg,RealOff(buffer)+2);
+		base_dest=real_readw(base_seg,RealOffset(buffer)+2);
 
 		mem_writeb(0x410,(mem_readb(0x410)&0xcf) | real_readb(base_seg,base_dest+0x00));
 		for (ct=0; ct<0x1e; ct++) {
@@ -301,7 +302,7 @@ bool INT10_VideoState_Restore(Bitu state,RealPt buffer) {
 	}
 
 	if (state&4)  {
-		base_dest=real_readw(base_seg,RealOff(buffer)+4);
+		base_dest=real_readw(base_seg,RealOffset(buffer)+4);
 
 		uint16_t crt_reg=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 
@@ -327,7 +328,7 @@ bool INT10_VideoState_Restore(Bitu state,RealPt buffer) {
 	}
 
 	if ((svgaCard==SVGA_S3Trio) && (state&8))  {
-		base_dest=real_readw(base_seg,RealOff(buffer)+6);
+		base_dest=real_readw(base_seg,RealOffset(buffer)+6);
 
 		uint16_t crt_reg=real_readw(BIOSMEM_SEG,BIOSMEM_CRTC_ADDRESS);
 

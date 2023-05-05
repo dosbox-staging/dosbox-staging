@@ -105,7 +105,7 @@ std::string CAPTURE_GetScreenshotFilename(const char *type, const char *ext)
 	dir = open_directory(capturedir.c_str());
 	if (!dir) {
 		// Try creating it first
-		if (create_dir(capturedir.c_str(), 0700, OK_IF_EXISTS) != 0) {
+		if (create_dir(capturedir, 0700, OK_IF_EXISTS) != 0) {
 			LOG_WARNING("Can't create dir '%s' for capturing: %s",
 			            capturedir.c_str(),
 			            safe_strerror(errno).c_str());

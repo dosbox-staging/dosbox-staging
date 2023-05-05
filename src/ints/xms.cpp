@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -16,82 +17,90 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <stdlib.h>
-#include <string.h>
-#include <stddef.h>
 #include "dosbox.h"
+
+#include "bios.h"
+#include "bitops.h"
 #include "callback.h"
+#include "checks.h"
+#include "cpu.h"
+#include "dos_inc.h"
+#include "inout.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "regs.h"
-#include "dos_inc.h"
 #include "setup.h"
-#include "inout.h"
-#include "xms.h"
-#include "bios.h"
+#include "support.h"
 
-#define XMS_HANDLES							50		/* 50 XMS Memory Blocks */ 
-#define XMS_VERSION    						0x0300	/* version 3.00 */
-#define XMS_DRIVER_VERSION					0x0301	/* my driver version 3.01 */
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
 
-#define	XMS_GET_VERSION						0x00
-#define	XMS_ALLOCATE_HIGH_MEMORY			0x01
-#define	XMS_FREE_HIGH_MEMORY				0x02
-#define	XMS_GLOBAL_ENABLE_A20				0x03
-#define	XMS_GLOBAL_DISABLE_A20				0x04
-#define	XMS_LOCAL_ENABLE_A20				0x05
-#define	XMS_LOCAL_DISABLE_A20				0x06
-#define	XMS_QUERY_A20						0x07
-#define	XMS_QUERY_FREE_EXTENDED_MEMORY		0x08
-#define	XMS_ALLOCATE_EXTENDED_MEMORY		0x09
-#define	XMS_FREE_EXTENDED_MEMORY			0x0a
-#define	XMS_MOVE_EXTENDED_MEMORY_BLOCK		0x0b
-#define	XMS_LOCK_EXTENDED_MEMORY_BLOCK		0x0c
-#define	XMS_UNLOCK_EXTENDED_MEMORY_BLOCK	0x0d
-#define	XMS_GET_EMB_HANDLE_INFORMATION		0x0e
-#define	XMS_RESIZE_EXTENDED_MEMORY_BLOCK	0x0f
-#define	XMS_ALLOCATE_UMB					0x10
-#define	XMS_DEALLOCATE_UMB					0x11
-#define XMS_QUERY_ANY_FREE_MEMORY			0x88
-#define XMS_ALLOCATE_ANY_MEMORY				0x89
-#define	XMS_GET_EMB_HANDLE_INFORMATION_EXT	0x8e
-#define XMS_RESIZE_ANY_EXTENDED_MEMORY_BLOCK 0x8f
+CHECK_NARROWING();
 
-#define	XMS_FUNCTION_NOT_IMPLEMENTED		0x80
-#define	HIGH_MEMORY_NOT_EXIST				0x90
-#define	HIGH_MEMORY_IN_USE					0x91
-#define	HIGH_MEMORY_NOT_ALLOCATED			0x93
-#define XMS_OUT_OF_SPACE					0xa0
-#define XMS_OUT_OF_HANDLES					0xa1
-#define XMS_INVALID_HANDLE					0xa2
-#define XMS_INVALID_SOURCE_HANDLE			0xa3
-#define XMS_INVALID_SOURCE_OFFSET			0xa4
-#define XMS_INVALID_DEST_HANDLE				0xa5
-#define XMS_INVALID_DEST_OFFSET				0xa6
-#define XMS_INVALID_LENGTH					0xa7
-#define XMS_BLOCK_NOT_LOCKED				0xaa
-#define XMS_BLOCK_LOCKED					0xab
-#define	UMB_ONLY_SMALLER_BLOCK				0xb0
-#define	UMB_NO_BLOCKS_AVAILABLE				0xb1
+// ***************************************************************************
+// Constants and type definitions
+// ***************************************************************************
+
+constexpr uint16_t XmsVersion       = 0x0300; // version 3.00
+constexpr uint16_t XmsDriverVersion = 0x0301; // driver version 3.01
+
+// MS-DOS 6.22 defaults to 32 XMS handles, we can provide more without any
+// significant cost.
+constexpr uint8_t NumXmsHandles = 128;
+
+constexpr auto KilobytesPerPage = MemPageSize / 1024;
+
+enum class Result : uint8_t {
+	OK                   = 0x00,
+	NotImplemented       = 0x80,
+	VDiskDetected        = 0x81, // not needed in DOSBox
+	A20LineError         = 0x82,
+	GeneralDriverError   = 0x8e, // not needed in DOSBox
+	HMA_NOT_EXIST        = 0x90,
+	HmaInUse             = 0x91,
+	HmaNotBigEnough      = 0x92,
+	HmaNotAllocated      = 0x93,
+	A20StillEnabled      = 0x94,
+	XmsOutOfSpace        = 0xa0,
+	XmsOutOfHandles      = 0xa1,
+	XmsInvalidHandle     = 0xa2,
+	XmsInvalidSrcHandle  = 0xa3,
+	XmsInvalidSrcOffset  = 0xa4,
+	XmsInvalidDestHandle = 0xa5,
+	XmsInvalidDestOffset = 0xa6,
+	XmsInvalidLength     = 0xa7,
+	XmsInvalidOverlap    = 0xa8, // TODO: add support for this error
+	XmsParityError       = 0xa9,
+	XmsBlockNotLocked    = 0xaa,
+	XmsBlockLocked       = 0xab,
+	XmsLockCountOverflow = 0xac,
+	XmsLockFailed        = 0xad, // TODO: when should this be reported?
+	UmbOnlySmallerBlock  = 0xb0,
+	UmbNoBlocksAvailable = 0xb1,
+	UmbInvalidSegment    = 0xb2, // TODO: when should this be reported?
+};
 
 struct XMS_Block {
-	Bitu	size;
-	MemHandle mem;
-	uint8_t	locked;
-	bool	free;
+	uint32_t size_kb     = 0;
+	MemHandle mem_handle = -1;
+	// locked blocks should not be quietly moved by the XMS driver
+	uint8_t lock_count = 0;
+	bool is_free       = true;
 };
 
 #ifdef _MSC_VER
 #pragma pack (1)
 #endif
-struct XMS_MemMove{
-	uint32_t length;
-	uint16_t src_handle;
+struct XMS_MemMove {
+	uint32_t length = 0;
+
+	uint16_t src_handle = 0;
 	union {
 		RealPt realpt;
 		uint32_t offset;
 	} src;
-	uint16_t dest_handle;
+	uint16_t dest_handle = 0;
 	union {
 		RealPt realpt;
 		uint32_t offset;
@@ -102,392 +111,745 @@ struct XMS_MemMove{
 #pragma pack ()
 #endif
 
+// ***************************************************************************
+// Variables
+// ***************************************************************************
 
-Bitu XMS_EnableA20(bool enable) {
-	uint8_t val = IO_Read	(0x92);
-	if (enable) IO_Write(0x92,val | 2);
-	else		IO_Write(0x92,val & ~2);
-	return 0;
+static struct {
+	bool enable_global = false;
+
+	uint32_t num_times_enabled = 0;
+} a20;
+
+constexpr uint32_t A20MaxTimesEnabled = UINT32_MAX;
+
+static struct {
+	// TODO: HMA support for applications is not yet available in the core
+
+	bool is_available = false;
+
+	bool dos_has_control = true;
+	bool app_has_control = false;
+
+	uint16_t min_alloc_size = 0;
+} hma;
+
+static struct {
+	bool is_available = false;
+} umb;
+
+static struct {
+	bool is_available = false;
+
+	RealPt callback = 0;
+
+	XMS_Block handles[NumXmsHandles] = {};
+} xms;
+
+// ***************************************************************************
+// Generic helper routines
+// ***************************************************************************
+
+static uint32_t get_num_pages(const uint32_t size_kb)
+{
+	// Number of pages needed for the given memory size in KB
+	return size_kb / 4 + ((size_kb & 3) ? 1 : 0);
 }
 
-Bitu XMS_GetEnabledA20(void) {
-	return (IO_Read(0x92)&2)>0;
+static uint32_t get_mem_free_total_kb()
+{
+	return static_cast<uint32_t>(MEM_FreeTotal() * KilobytesPerPage);
 }
 
-static RealPt xms_callback;
-static bool umb_available;
-
-static XMS_Block xms_handles[XMS_HANDLES];
-
-static inline bool InvalidHandle(Bitu handle) {
-	return (!handle || (handle>=XMS_HANDLES) || xms_handles[handle].free);
+static uint32_t get_mem_free_largest_kb()
+{
+	return static_cast<uint32_t>(MEM_FreeLargest() * KilobytesPerPage);
 }
 
-Bitu XMS_QueryFreeMemory(uint16_t& largestFree, uint16_t& totalFree) {
-	/* Scan the tree for free memory and find largest free block */
-	totalFree=(uint16_t)(MEM_FreeTotal()*4);
-	largestFree=(uint16_t)(MEM_FreeLargest()*4);
-	if (!totalFree) return XMS_OUT_OF_SPACE;
-	return 0;
+static uint32_t get_mem_highest_address()
+{
+	return static_cast<uint32_t>((MEM_TotalPages() * MemPageSize) - 1);
 }
 
-Bitu XMS_AllocateMemory(Bitu size, uint16_t& handle) {	// size = kb
-	/* Find free handle */
-	uint16_t index=1;
-	while (!xms_handles[index].free) {
-		if (++index>=XMS_HANDLES) return XMS_OUT_OF_HANDLES;
+static void warn_umb_realloc()
+{
+	static bool first_time = true;
+	if (first_time) {
+		first_time = false;
+		LOG_WARNING("XMS: UMB realloc not implemented");
 	}
-	MemHandle mem;
-	if (size!=0) {
-		Bitu pages=(size/4) + ((size & 3) ? 1 : 0);
-		mem=MEM_AllocatePages(pages,true);
-		if (!mem) return XMS_OUT_OF_SPACE;
+}
+
+// ***************************************************************************
+// Gate A20 support
+// ***************************************************************************
+
+static void a20_enable(const bool enable)
+{
+	uint8_t val = IO_Read(port_num_fast_a20);
+	bit::set_to(val, bit::literals::b1, enable);
+	IO_Write(port_num_fast_a20, val);
+}
+
+static bool a20_is_enabled()
+{
+	return bit::is(IO_Read(port_num_fast_a20), bit::literals::b1);
+}
+
+static Result a20_local_enable()
+{
+	// Microsoft HIMEM.SYS appears to set A20 only if the local count is 0
+	// at entering this call
+
+	if (a20.num_times_enabled == A20MaxTimesEnabled) {
+		// Counter overflow protection
+
+		static bool first_time = true;
+		if (first_time) {
+			LOG_WARNING("XMS: A20 local count already at maximum");
+			first_time = false;
+		}
+
+		return Result::A20LineError;
+	}
+
+	if (a20.num_times_enabled++ == 0) {
+		a20_enable(true);
+	}
+
+	return Result::OK;
+}
+
+static Result a20_local_disable()
+{
+	// Microsoft HIMEM.SYS appears to disable A20 only if the local count is
+	// 1 at entering this call
+
+	if (a20.num_times_enabled == 0) {
+		return Result::A20LineError; // HIMEM.SYS behavior
+	}
+
+	if (--a20.num_times_enabled != 0) {
+		return Result::A20StillEnabled;
+	}
+
+	a20_enable(false);
+	return Result::OK;
+}
+
+// ***************************************************************************
+// XMS support
+// ***************************************************************************
+
+static bool xms_is_handle_valid(const uint16_t handle)
+{
+	return handle && (handle < NumXmsHandles) && !xms.handles[handle].is_free;
+}
+
+static Result xms_query_free_memory(uint32_t& largest_kb, uint32_t& total_kb)
+{
+	// Scan the tree for free memory and find largest free block
+
+	total_kb   = get_mem_free_total_kb();
+	largest_kb = get_mem_free_largest_kb();
+
+	return total_kb ? Result::OK : Result::XmsOutOfSpace;
+}
+
+static Result xms_allocate_memory(const uint32_t size_kb, uint16_t& handle)
+{
+	// Find free handle
+
+	uint16_t index = 1;
+	while (!xms.handles[index].is_free) {
+		if (++index >= NumXmsHandles) {
+			return Result::XmsOutOfHandles;
+		}
+	}
+
+	// Allocate (size is in kb)
+
+	MemHandle mem_handle = -1;
+	if (size_kb) {
+		constexpr bool sequence = true;
+		mem_handle = MEM_AllocatePages(get_num_pages(size_kb), sequence);
+		if (!mem_handle) {
+			return Result::XmsOutOfSpace;
+		}
 	} else {
-		mem=MEM_GetNextFreePage();
-		if (mem==0) LOG(LOG_MISC,LOG_ERROR)("XMS:Allocate zero pages with no memory left");
+		mem_handle = MEM_GetNextFreePage();
+		if (!mem_handle) {
+			// Windows 3.1 does this really often
+			// LOG_MSG("XMS: Allocate zero pages with no memory left");
+		}
 	}
-	xms_handles[index].free=false;
-	xms_handles[index].mem=mem;
-	xms_handles[index].locked=0;
-	xms_handles[index].size=size;
-	handle=index;
-	return 0;
+
+	xms.handles[index].is_free    = false;
+	xms.handles[index].mem_handle = mem_handle;
+	xms.handles[index].lock_count = 0;
+	xms.handles[index].size_kb    = size_kb;
+
+	handle = index;
+	return Result::OK;
 }
 
-Bitu XMS_FreeMemory(Bitu handle) {
-	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
-	MEM_ReleasePages(xms_handles[handle].mem);
-	xms_handles[handle].mem=-1;
-	xms_handles[handle].size=0;
-	xms_handles[handle].free=true;
-	return 0;
+static Result xms_free_memory(const uint16_t handle)
+{
+	if (!xms_is_handle_valid(handle)) {
+		return Result::XmsInvalidHandle;
+	}
+	if (xms.handles[handle].lock_count != 0) {
+		return Result::XmsBlockLocked;
+	}
+
+	MEM_ReleasePages(xms.handles[handle].mem_handle);
+
+	xms.handles[handle] = XMS_Block();
+	return Result::OK;
 }
 
-Bitu XMS_MoveMemory(PhysPt bpt) {
-	/* Read the block with mem_read's */
-	Bitu length=mem_readd(bpt+offsetof(XMS_MemMove,length));
-	Bitu src_handle=mem_readw(bpt+offsetof(XMS_MemMove,src_handle));
+static Result xms_move_memory(const PhysPt bpt)
+{
+	// TODO: Detect invalid overlaps, report XmsInvalidOverlap
+
+	// Read the block with mem_read's
+	const auto length = mem_readd(bpt + offsetof(XMS_MemMove, length));
+
+	// "Length must be even" --Microsoft XMS Spec 3.0
+	if (length % 2) {
+		return Result::XmsParityError;
+	}
+
 	union {
 		RealPt realpt;
 		uint32_t offset;
-	} src,dest;
-	src.offset=mem_readd(bpt+offsetof(XMS_MemMove,src.offset));
-	Bitu dest_handle=mem_readw(bpt+offsetof(XMS_MemMove,dest_handle));
-	dest.offset=mem_readd(bpt+offsetof(XMS_MemMove,dest.offset));
-	PhysPt srcpt,destpt;
+	} src, dest;
+
+	const auto src_handle = mem_readw(
+		static_cast<PhysPt>(bpt + offsetof(XMS_MemMove, src_handle)));
+	src.offset = mem_readd(
+		static_cast<PhysPt>(bpt + offsetof(XMS_MemMove, src.offset)));
+
+	const auto dest_handle = mem_readw(
+		static_cast<PhysPt>(bpt + offsetof(XMS_MemMove, dest_handle)));
+	dest.offset = mem_readd(
+		static_cast<PhysPt>(bpt + offsetof(XMS_MemMove, dest.offset)));
+
+	PhysPt srcpt = 0;
+	PhysPt destpt = 0;
+
 	if (src_handle) {
-		if (InvalidHandle(src_handle)) {
-			return XMS_INVALID_SOURCE_HANDLE;
+		if (!xms_is_handle_valid(src_handle)) {
+			return Result::XmsInvalidSrcHandle;
 		}
-		if (src.offset>=(xms_handles[src_handle].size*1024U)) {
-			return XMS_INVALID_SOURCE_OFFSET;
+		if (src.offset >= (xms.handles[src_handle].size_kb * 1024U)) {
+			return Result::XmsInvalidSrcOffset;
 		}
-		if (length>xms_handles[src_handle].size*1024U-src.offset) {
-			return XMS_INVALID_LENGTH;
+		if (length > xms.handles[src_handle].size_kb * 1024U - src.offset) {
+			return Result::XmsInvalidLength;
 		}
-		srcpt=(xms_handles[src_handle].mem*4096)+src.offset;
+		srcpt = (static_cast<uint32_t>(xms.handles[src_handle].mem_handle) * MemPageSize) +
+		        src.offset;
 	} else {
-		srcpt=Real2Phys(src.realpt);
+		srcpt = RealToPhysical(src.realpt);
+
+		// Microsoft TEST.C considers it an error to allow real mode
+		// pointers + length to extend past the end of the
+		// 8086-accessible conventional memory area.
+		if ((srcpt + length) > 0x10FFF0u) {
+			return Result::XmsInvalidLength;
+		}
 	}
+
 	if (dest_handle) {
-		if (InvalidHandle(dest_handle)) {
-			return XMS_INVALID_DEST_HANDLE;
+		if (!xms_is_handle_valid(dest_handle)) {
+			return Result::XmsInvalidDestHandle;
 		}
-		if (dest.offset>=(xms_handles[dest_handle].size*1024U)) {
-			return XMS_INVALID_DEST_OFFSET;
+		if (dest.offset >= (xms.handles[dest_handle].size_kb * 1024U)) {
+			return Result::XmsInvalidDestOffset;
 		}
-		if (length>xms_handles[dest_handle].size*1024U-dest.offset) {
-			return XMS_INVALID_LENGTH;
+		if (length > xms.handles[dest_handle].size_kb * 1024U - dest.offset) {
+			return Result::XmsInvalidLength;
 		}
-		destpt=(xms_handles[dest_handle].mem*4096)+dest.offset;
+		destpt = (static_cast<uint32_t>(xms.handles[dest_handle].mem_handle) * MemPageSize) +
+		        dest.offset;
 	} else {
-		destpt=Real2Phys(dest.realpt);
+		destpt = RealToPhysical(dest.realpt);
+
+		// Microsoft TEST.C considers it an error to allow real mode
+		// pointers + length to extend past the end of the
+		// 8086-accessible conventional memory area.
+		if ((destpt + length) > 0x10FFF0u) {
+			return Result::XmsInvalidLength;
+		}
 	}
-//	LOG_MSG("XMS move src %X dest %X length %X",srcpt,destpt,length);
-	mem_memcpy(destpt,srcpt,length);
-	return 0;
-}
 
-Bitu XMS_LockMemory(Bitu handle, uint32_t& address) {
-	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
-	if (xms_handles[handle].locked<255) xms_handles[handle].locked++;
-	address = xms_handles[handle].mem*4096;
-	return 0;
-}
+	// LOG_MSG("XMS: move src %X dest %X length %X",srcpt,destpt,length);
 
-Bitu XMS_UnlockMemory(Bitu handle) {
- 	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
-	if (xms_handles[handle].locked) {
-		xms_handles[handle].locked--;
-		return 0;
+	// We must enable the A20 gate during this copy; masked A20 would cause
+	// memory corruption
+
+	if (length != 0) {
+		bool a20_was_enabled = a20_is_enabled();
+
+		++a20.num_times_enabled;
+		a20_enable(true);
+
+		mem_memcpy(destpt, srcpt, length);
+
+		--a20.num_times_enabled;
+		if (!a20_was_enabled) {
+			a20_enable(false);
+		}
 	}
-	return XMS_BLOCK_NOT_LOCKED;
+
+	return Result::OK;
 }
 
-Bitu XMS_GetHandleInformation(Bitu handle, uint8_t& lockCount, uint8_t& numFree, uint16_t& size) {
-	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;
-	lockCount = xms_handles[handle].locked;
-	/* Find available blocks */
-	numFree=0;
-	for (Bitu i=1;i<XMS_HANDLES;i++) {
-		if (xms_handles[i].free) numFree++;
+static Result xms_lock_memory(const uint16_t handle, uint32_t& address)
+{
+	if (!xms_is_handle_valid(handle)) {
+		return Result::XmsInvalidHandle;
 	}
-	size=(uint16_t)(xms_handles[handle].size);
-	return 0;
+
+	if (xms.handles[handle].lock_count >= UINT8_MAX) {
+		return Result::XmsLockCountOverflow;
+	}
+
+	xms.handles[handle].lock_count++;
+	address = static_cast<uint32_t>(xms.handles[handle].mem_handle * MemPageSize);
+	return Result::OK;
 }
 
-Bitu XMS_ResizeMemory(Bitu handle, Bitu newSize) {
-	if (InvalidHandle(handle)) return XMS_INVALID_HANDLE;	
+static Result xms_unlock_memory(const uint16_t handle)
+{
+	if (!xms_is_handle_valid(handle)) {
+		return Result::XmsInvalidHandle;
+	}
+
+	if (xms.handles[handle].lock_count) {
+		xms.handles[handle].lock_count--;
+		return Result::OK;
+	}
+
+	return Result::XmsBlockNotLocked;
+}
+
+static Result xms_get_handle_information(const uint16_t handle, uint8_t& lock_count,
+                                         uint8_t& num_free, uint32_t& size_kb)
+{
+	if (!xms_is_handle_valid(handle)) {
+		return Result::XmsInvalidHandle;
+	}
+
+	lock_count = xms.handles[handle].lock_count;
+
+	// Find available blocks
+
+	num_free = 0;
+
+	for (uint16_t index = 1; index < NumXmsHandles; ++index) {
+		if (xms.handles[index].is_free) {
+			++num_free;
+		}
+	}
+
+	size_kb = xms.handles[handle].size_kb;
+	return Result::OK;
+}
+
+static Result xms_resize_memory(const uint16_t handle, const uint32_t new_size_kb)
+{
+	if (!xms_is_handle_valid(handle)) {
+		return Result::XmsInvalidHandle;
+	}
+
 	// Block has to be unlocked
-	if (xms_handles[handle].locked>0) return XMS_BLOCK_LOCKED;
-	Bitu pages=newSize/4 + ((newSize & 3) ? 1 : 0);
-	if (MEM_ReAllocatePages(xms_handles[handle].mem,pages,true)) {
-		xms_handles[handle].size = newSize;
-		return 0;
-	} else return XMS_OUT_OF_SPACE;
-}
 
-static bool multiplex_xms(void) {
-	switch (reg_ax) {
-	case 0x4300:					/* XMS installed check */
-			reg_al=0x80;
-			return true;
-	case 0x4310:					/* XMS handler seg:offset */
-			SegSet16(es,RealSeg(xms_callback));
-			reg_bx=RealOff(xms_callback);
-			return true;			
+	if (xms.handles[handle].lock_count > 0) {
+		return Result::XmsBlockLocked;
 	}
+
+	constexpr bool sequence = true;
+	if (MEM_ReAllocatePages(xms.handles[handle].mem_handle,
+	                        get_num_pages(new_size_kb),
+	                        sequence)) {
+		xms.handles[handle].size_kb = new_size_kb;
+		return Result::OK;
+	}
+
+	return Result::XmsOutOfSpace;
+}
+
+static bool xms_multiplex()
+{
+	switch (reg_ax) {
+	case 0x4300: // XMS installed check
+		reg_al = 0x80;
+		return true;
+	case 0x4310: // XMS handler seg:offset
+		SegSet16(es, RealSegment(xms.callback));
+		reg_bx = RealOffset(xms.callback);
+		return true;
+	}
+
 	return false;
-
 }
 
-inline void SET_RESULT(Bitu res,bool touch_bl_on_succes=true) {
-	if(touch_bl_on_succes || res) reg_bl = (uint8_t)res;
-	reg_ax = (res==0);
-}
+// ***************************************************************************
+// Main XMS API handler
+// ***************************************************************************
 
-Bitu XMS_Handler(void) {
-//	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL %02X",reg_ah);
+static Bitu XMS_Handler()
+{
+	assert(xms.is_available);
+
+	Result result = Result::OK;
+
+	auto set_return_value = [](const Result result) {
+		reg_bl = static_cast<uint8_t>(result);
+		reg_ax = (result == Result::OK) ? 1 : 0;
+	};
+
+	auto set_return_value_bl_only_fail = [](const Result result) {
+		if (result != Result::OK) {
+			reg_bl = static_cast<uint8_t>(result);
+		}
+		reg_ax = (result == Result::OK) ? 1 : 0;
+	};
+
 	switch (reg_ah) {
-	case XMS_GET_VERSION:										/* 00 */
-		reg_ax=XMS_VERSION;
-		reg_bx=XMS_DRIVER_VERSION;
-		reg_dx=0;	/* No we don't have HMA */
+	case 0x00: // Get XMS Version Number
+		reg_ax = XmsVersion;
+		reg_bx = XmsDriverVersion;
+		reg_dx = hma.is_available ? 1 : 0;
 		break;
-	case XMS_ALLOCATE_HIGH_MEMORY:								/* 01 */
-		reg_ax=0;
-		reg_bl=HIGH_MEMORY_NOT_EXIST;
+	case 0x01: // Request High Memory Area
+		if (!hma.is_available) {
+			set_return_value(Result::HMA_NOT_EXIST);
+			break;
+		}
+		if (hma.app_has_control || hma.dos_has_control) {
+			// HMA already controlled by application or DOS
+			set_return_value(Result::HmaInUse);
+		} else if (reg_dx < hma.min_alloc_size) {
+			// Request for a block not big enough
+			set_return_value(Result::HmaNotBigEnough);
+		} else {
+			reg_ax = 1; // HMA allocated succesfully
+			LOG_MSG("XMS: HMA allocated by application/TSR");
+			hma.app_has_control = true;
+		}
 		break;
-	case XMS_FREE_HIGH_MEMORY:									/* 02 */
-		reg_ax=0;
-		reg_bl=HIGH_MEMORY_NOT_EXIST;
+	case 0x02: // Release High Memory Area
+		if (!hma.is_available) {
+			LOG_WARNING("XMS: Application attempted to free HMA while it does not exist!");
+			set_return_value(Result::HMA_NOT_EXIST);
+			break;
+		}
+		if (hma.dos_has_control) {
+			LOG_WARNING("XMS: Application attempted to free HMA while DOS kernel occupies it!");
+		}
+
+		if (hma.app_has_control) {
+			reg_ax = 1; // HMA released succesfully
+			LOG_MSG("XMS: HMA freed by application/TSR");
+			hma.app_has_control = false;
+		} else {
+			LOG_WARNING("XMS: Application attempted to free HMA while it is not allocated!");
+			set_return_value(Result::HmaNotAllocated);
+		}
 		break;
-		
-	case XMS_GLOBAL_ENABLE_A20:									/* 03 */
-	case XMS_LOCAL_ENABLE_A20:									/* 05 */
-		SET_RESULT(XMS_EnableA20(true));
+	case 0x03: // Global Enable A20
+		// This appears to be how Microsoft HIMEM.SYS implements this
+		if (!a20.enable_global) {
+			result = a20_local_enable();
+			if (result == Result::OK) {
+				a20.enable_global = true;
+			}
+		}
+		set_return_value(result);
 		break;
-	case XMS_GLOBAL_DISABLE_A20:								/* 04 */
-	case XMS_LOCAL_DISABLE_A20:									/* 06 */
-		SET_RESULT(XMS_EnableA20(false));
-		break;	
-	case XMS_QUERY_A20:											/* 07 */
-		reg_ax = XMS_GetEnabledA20();
+	case 0x04: // Global Disable A20
+		// This appears to be how Microsoft HIMEM.SYS implements this
+		if (a20.enable_global) {
+			result = a20_local_disable();
+			if (result == Result::OK) {
+				a20.enable_global = false;
+			}
+		}
+		set_return_value(result);
+		break;
+	case 0x05: // Local Enable A20
+		set_return_value(a20_local_enable());
+		break;
+	case 0x06: // Local Disable A20
+		set_return_value(a20_local_disable());
+		break;
+	case 0x07: // Query A20
+		reg_ax = a20_is_enabled() ? 1 : 0;
 		reg_bl = 0;
 		break;
-	case XMS_QUERY_FREE_EXTENDED_MEMORY:						/* 08 */
-		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
+	case 0x08: // Query Free Extended Memory
+		result = xms_query_free_memory(reg_eax, reg_edx);
+		reg_bl = static_cast<uint8_t>(result);
+		// Cap sizes for older programs; newer ones use function 0x88
+		reg_eax = clamp_to_uint16(reg_eax);
+		reg_edx = clamp_to_uint16(reg_edx);
 		break;
-	case XMS_ALLOCATE_ANY_MEMORY:								/* 89 */
-		reg_edx &= 0xffff;
-		[[fallthrough]];
-	case XMS_ALLOCATE_EXTENDED_MEMORY:							/* 09 */
-		{
+	case 0x09: // Allocate Extended Memory Block
+	{
 		uint16_t handle = 0;
-		SET_RESULT(XMS_AllocateMemory(reg_dx,handle));
+		set_return_value(xms_allocate_memory(reg_dx, handle));
 		reg_dx = handle;
-		}; break;
-	case XMS_FREE_EXTENDED_MEMORY:								/* 0a */
-		SET_RESULT(XMS_FreeMemory(reg_dx));
+	} break;
+	case 0x0a: // Free Extended Memory Block
+		set_return_value(xms_free_memory(reg_dx));
 		break;
-	case XMS_MOVE_EXTENDED_MEMORY_BLOCK:						/* 0b */
-		SET_RESULT(XMS_MoveMemory(SegPhys(ds)+reg_si),false);
+	case 0x0b: // Move Extended Memory Block
+		result = xms_move_memory(SegPhys(ds) + reg_si);
+		set_return_value_bl_only_fail(result);
 		break;
-	case XMS_LOCK_EXTENDED_MEMORY_BLOCK: {						/* 0c */
-		uint32_t address;
-		Bitu res = XMS_LockMemory(reg_dx, address);
-		if(res) reg_bl = (uint8_t)res;
-		reg_ax = (res==0);
-		if (res==0) { // success
-			reg_bx=(uint16_t)(address & 0xFFFF);
-			reg_dx=(uint16_t)(address >> 16);
-		};
-		}; break;
-	case XMS_UNLOCK_EXTENDED_MEMORY_BLOCK:						/* 0d */
-		SET_RESULT(XMS_UnlockMemory(reg_dx));
-		break;
-	case XMS_GET_EMB_HANDLE_INFORMATION:  						/* 0e */
-		SET_RESULT(XMS_GetHandleInformation(reg_dx,reg_bh,reg_bl,reg_dx),false);
-		break;
-	case XMS_RESIZE_ANY_EXTENDED_MEMORY_BLOCK:					/* 0x8f */
-		if(reg_ebx > reg_bx) LOG_MSG("64 MB memory limit!");
-		[[fallthrough]];
-	case XMS_RESIZE_EXTENDED_MEMORY_BLOCK:						/* 0f */
-		SET_RESULT(XMS_ResizeMemory(reg_dx, reg_bx));
-		break;
-	case XMS_ALLOCATE_UMB: {									/* 10 */
-		if (!umb_available) {
-			reg_ax=0;
-			reg_bl=XMS_FUNCTION_NOT_IMPLEMENTED;
-			break;
+	case 0x0c: // Lock Extended Memory Block
+	{
+		uint32_t address = 0;
+		result           = xms_lock_memory(reg_dx, address);
+		set_return_value(result);
+		if (result == Result::OK) {
+			// success
+			reg_bx = RealOffset(address);
+			reg_dx = RealSegment(address);
 		}
-		uint16_t umb_start=dos_infoblock.GetStartOfUMBChain();
-		if (umb_start==0xffff) {
-			reg_ax=0;
-			reg_bl=UMB_NO_BLOCKS_AVAILABLE;
-			reg_dx=0;	// no upper memory available
+	} break;
+	case 0x0d: // Unlock Extended Memory Block
+		set_return_value(xms_unlock_memory(reg_dx));
+		break;
+	case 0x0e: // Get Handle Information
+		result = xms_get_handle_information(reg_dx, reg_bh, reg_bl, reg_edx);
+		set_return_value_bl_only_fail(result);
+		reg_edx &= 0xffff;
+		break;
+	case 0x0f: // Reallocate Extended Memory Block
+		set_return_value(xms_resize_memory(reg_dx, reg_bx));
+		break;
+	case 0x10: // Request Upper Memory Block
+		if (!umb.is_available) {
+			set_return_value(Result::NotImplemented);
 			break;
-		}
-		/* Save status and linkage of upper UMB chain and link upper
-		   memory to the regular MCB chain */
-		uint8_t umb_flag=dos_infoblock.GetUMBChainState();
-		if ((umb_flag&1)==0) DOS_LinkUMBsToMemChain(1);
-		uint8_t old_memstrat=DOS_GetMemAllocStrategy()&0xff;
-		DOS_SetMemAllocStrategy(0x40);	// search in UMBs only
-
-		uint16_t size=reg_dx;uint16_t seg;
-		if (DOS_AllocateMemory(&seg,&size)) {
-			reg_ax=1;
-			reg_bx=seg;
 		} else {
-			reg_ax=0;
-			if (size==0) reg_bl=UMB_NO_BLOCKS_AVAILABLE;
-			else reg_bl=UMB_ONLY_SMALLER_BLOCK;
-			reg_dx=size;	// size of largest available UMB
-		}
+			const uint16_t umb_start = dos_infoblock.GetStartOfUMBChain();
+			if (umb_start == 0xffff) {
+				set_return_value(Result::UmbNoBlocksAvailable);
+				reg_dx = 0; // no upper memory available
+				break;
+			}
+			// Save status and linkage of upper UMB chain and link
+			// upper memory to the regular MCB chain
+			uint8_t umb_flag = dos_infoblock.GetUMBChainState();
+			if ((umb_flag & 1) == 0) {
+				DOS_LinkUMBsToMemChain(1);
+			}
+			uint8_t old_memstrat = static_cast<uint8_t>(
+			        DOS_GetMemAllocStrategy() & 0xff);
+			DOS_SetMemAllocStrategy(0x40); // search in UMBs only
 
-		/* Restore status and linkage of upper UMB chain */
-		uint8_t current_umb_flag=dos_infoblock.GetUMBChainState();
-		if ((current_umb_flag&1)!=(umb_flag&1)) DOS_LinkUMBsToMemChain(umb_flag);
-		DOS_SetMemAllocStrategy(old_memstrat);
+			uint16_t size = reg_dx;
+			uint16_t seg  = 0;
+			if (DOS_AllocateMemory(&seg, &size)) {
+				reg_ax = 1;
+				reg_bx = seg;
+			} else {
+				set_return_value(
+				        size == 0 ? Result::UmbNoBlocksAvailable
+				                  : Result::UmbOnlySmallerBlock);
+				reg_dx = size; // size of largest available UMB
+			}
+
+			// Restore status and linkage of upper UMB chain
+			uint8_t current_umb_flag = dos_infoblock.GetUMBChainState();
+			if ((current_umb_flag & 1) != (umb_flag & 1)) {
+				DOS_LinkUMBsToMemChain(umb_flag);
+			}
+			DOS_SetMemAllocStrategy(old_memstrat);
 		}
 		break;
-	case XMS_DEALLOCATE_UMB:									/* 11 */
-		if (!umb_available) {
-			reg_ax=0;
-			reg_bl=XMS_FUNCTION_NOT_IMPLEMENTED;
+	case 0x11: // Release Upper Memory Block
+		if (!umb.is_available) {
+			set_return_value(Result::NotImplemented);
 			break;
 		}
-		if (dos_infoblock.GetStartOfUMBChain()!=0xffff) {
+		if (dos_infoblock.GetStartOfUMBChain() != 0xffff) {
 			if (DOS_FreeMemory(reg_dx)) {
-				reg_ax=0x0001;
+				reg_ax = 1;
 				break;
 			}
 		}
-		reg_ax=0x0000;
-		reg_bl=UMB_NO_BLOCKS_AVAILABLE;
+		set_return_value(Result::UmbNoBlocksAvailable);
 		break;
-	case XMS_QUERY_ANY_FREE_MEMORY:								/* 88 */
-		reg_bl = XMS_QueryFreeMemory(reg_ax,reg_dx);
-		reg_eax &= 0xffff;
-		reg_edx &= 0xffff;
-		reg_ecx = (MEM_TotalPages()*dos_pagesize)-1;			// highest known physical memory address
+	case 0x12: // Realloc Upper Memory Block
+		// TODO: implement this!
+		warn_umb_realloc();
+		set_return_value(Result::NotImplemented);
 		break;
-	case XMS_GET_EMB_HANDLE_INFORMATION_EXT: {					/* 8e */
-		uint8_t free_handles;
-		Bitu result = XMS_GetHandleInformation(reg_dx,reg_bh,free_handles,reg_dx);
-		if (result != 0) reg_bl = result;
-		else {
-			reg_edx &= 0xffff;
+	case 0x88: // Query any Free Extended Memory
+		result = xms_query_free_memory(reg_eax, reg_edx);
+		reg_bl = static_cast<uint8_t>(result);
+		// highest known physical memory address
+		reg_ecx = get_mem_highest_address();
+		break;
+	case 0x89: // Allocate any Extended Memory Block
+	{
+		uint16_t handle = 0;
+		set_return_value(xms_allocate_memory(reg_edx, handle));
+		reg_dx = handle;
+	} break;
+	case 0x8e: // Get Extended EMB Handle
+	{
+		uint8_t free_handles = 0;
+		result = xms_get_handle_information(reg_dx, reg_bh, free_handles, reg_edx);
+		set_return_value_bl_only_fail(result);
+		if (result == Result::OK) {
 			reg_cx = free_handles;
 		}
-		reg_ax = (result==0);
-		} break;
+	} break;
+	case 0x8f: // Realloc any Extended Memory
+		set_return_value(xms_resize_memory(reg_dx, reg_ebx));
+		break;
 	default:
-		LOG(LOG_MISC,LOG_ERROR)("XMS: unknown function %02X",reg_ah);
-		reg_ax=0;
-		reg_bl=XMS_FUNCTION_NOT_IMPLEMENTED;
+		LOG_ERR("XMS: unknown function %02X", reg_ah);
+		set_return_value(Result::NotImplemented);
 	}
-//	LOG(LOG_MISC,LOG_ERROR)("XMS: CALL Result: %02X",reg_bl);
+
 	return CBRET_NONE;
 }
 
-Bitu GetEMSType(Section_prop * section);
+// ***************************************************************************
+// Module object
+// ***************************************************************************
+
+Bitu GetEMSType(Section_prop* section);
 
 class XMS final : public Module_base {
 private:
 	CALLBACK_HandlerObject callbackhandler;
 
 public:
-	XMS(Section *configuration)
-	        : Module_base(configuration),
-	          callbackhandler{}
-	{
-		Section_prop * section=static_cast<Section_prop *>(configuration);
-		umb_available=false;
-		if (!section->Get_bool("xms")) return;
-		Bitu i;
-		BIOS_ZeroExtendedSize(true);
-		DOS_AddMultiplexHandler(multiplex_xms);
-
-		/* place hookable callback in writable memory area */
-		xms_callback=RealMake(DOS_GetMemory(0x1)-1,0x10);
-		callbackhandler.Install(&XMS_Handler,CB_HOOKABLE,Real2Phys(xms_callback),"XMS Handler");
-		// pseudocode for CB_HOOKABLE:
-		//	jump near skip
-		//	nop,nop,nop
-		//	label skip:
-		//	callback XMS_Handler
-		//	retf
-
-		for (i=0;i<XMS_HANDLES;i++) {
-			xms_handles[i].free=true;
-			xms_handles[i].mem=-1;
-			xms_handles[i].size=0;
-			xms_handles[i].locked=0;
-		}
-		/* Disable the 0 handle */
-		xms_handles[0].free	= false;
-
-		/* Set up UMB chain */
-		umb_available=section->Get_bool("umb");
-		bool ems_available = GetEMSType(section)>0;
-		DOS_BuildUMBChain(section->Get_bool("umb"),ems_available);
-	}
-
-	~XMS(){
-		Section_prop * section = static_cast<Section_prop *>(m_configuration);
-		/* Remove upper memory information */
-		dos_infoblock.SetStartOfUMBChain(0xffff);
-		if (umb_available) {
-			dos_infoblock.SetUMBChainState(0);
-			umb_available=false;
-		}
-
-		if (!section->Get_bool("xms")) return;
-		/* Undo biosclearing */
-		BIOS_ZeroExtendedSize(false);
-
-		/* Remove Multiplex */
-		DOS_DelMultiplexHandler(multiplex_xms);
-
-		/* Free used memory while skipping the 0 handle */
-		for (Bitu i = 1;i<XMS_HANDLES;i++) 
-			if(!xms_handles[i].free) XMS_FreeMemory(i);
-	}
-
+	XMS(Section* configuration);
+	~XMS() override;
 };
-static XMS* test;
 
-void XMS_ShutDown(Section* /*sec*/) {
-	delete test;	
+XMS::XMS(Section* configuration) : Module_base(configuration), callbackhandler{}
+{
+	Section_prop* section = static_cast<Section_prop*>(configuration);
+
+	umb = {};
+	a20 = {};
+
+	if (!section->Get_bool("xms")) {
+		return;
+	}
+
+	// NTS: Disable XMS emulation if CPU type is less than a 286, because
+	// extended memory did not exist until the CPU had enough address lines
+	// to read past the 1MB mark.
+	//
+	// The other reason we do this is that there is plenty of software that
+	// assumes 286+ instructions if they detect XMS services, including but
+	// not limited to:
+	//
+	//      MSD.EXE Microsoft Diagnostics
+	//      Microsoft Windows 3.0
+	//
+	// Not emulating XMS for 8086/80186 emulation prevents the software
+	// from crashing.
+
+	if (CPU_ArchitectureType < ArchitectureType::Intel286) {
+		LOG_WARNING("XMS: CPU 80186 or lower lacks address lines needed for XMS, disabling");
+		return;
+	}
+
+	xms.is_available = true;
+	// TODO: read HMA configuration
+
+	BIOS_ZeroExtendedSize(true);
+	DOS_AddMultiplexHandler(xms_multiplex);
+
+	// Place hookable callback in writable memory area
+	xms.callback = RealMake(static_cast<uint16_t>(DOS_GetMemory(0x1) - 1),
+	                        0x10);
+	callbackhandler.Install(&XMS_Handler,
+	                        CB_HOOKABLE,
+	                        RealToPhysical(xms.callback),
+	                        "XMS Handler");
+	// pseudocode for CB_HOOKABLE:
+	//	jump near skip
+	//	nop,nop,nop
+	//	label skip:
+	//	callback XMS_Handler
+	//	retf
+
+	for (uint16_t index = 0; index < NumXmsHandles; ++index) {
+		xms.handles[index] = XMS_Block();
+	}
+	xms.handles[0].is_free = false;
+
+	// Set up UMB chain
+	umb.is_available = section->Get_bool("umb");
+	const bool ems_available = GetEMSType(section) > 0;
+	DOS_BuildUMBChain(section->Get_bool("umb"), ems_available);
+
+	// TODO: If implementing CP/M compatibility, mirror the JMP
+	//       instruction in HMA
+}
+
+XMS::~XMS()
+{
+	// Remove upper memory information
+	dos_infoblock.SetStartOfUMBChain(0xffff);
+	if (umb.is_available) {
+		dos_infoblock.SetUMBChainState(0);
+		umb.is_available = false;
+	}
+
+	if (!xms.is_available) {
+		return;
+	}
+
+	// Undo biosclearing
+	BIOS_ZeroExtendedSize(false);
+
+	// Remove Multiplex
+	DOS_DeleteMultiplexHandler(xms_multiplex);
+
+	// Free used memory while skipping the 0 handle
+	for (uint16_t index = 1; index < NumXmsHandles; ++index) {
+		xms.handles[index].lock_count = 0;
+		if (!xms.handles[index].is_free) {
+			xms_free_memory(index);
+		}
+	}
+
+	xms.is_available = false;
+}
+
+// ***************************************************************************
+// Lifecycle
+// ***************************************************************************
+
+static std::unique_ptr<XMS> instance = {};
+
+static void XMS_ShutDown(Section* /* sec */)
+{
+	instance = {};
 }
 
 void XMS_Init(Section* sec)
 {
 	assert(sec);
 
-	test = new XMS(sec);
+	if (!instance) {
+		instance = std::make_unique<XMS>(sec);
+	}
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&XMS_ShutDown, changeable_at_runtime);

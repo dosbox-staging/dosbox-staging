@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ public:
 	{
 		AddMessages();
 		help_detail = {HELP_Filter::All,
-		               HELP_Category::Dosbox,
+		               HELP_Category::File,
 		               HELP_CmdType::Program,
 		               "MORE"};
 	}
@@ -41,7 +41,7 @@ private:
 	bool ParseCommandLine(MoreOutputFiles &output);
 	bool FindInputFiles(MoreOutputFiles& output);
 
-	void AddMessages();
+	static void AddMessages();
 };
 
 #endif

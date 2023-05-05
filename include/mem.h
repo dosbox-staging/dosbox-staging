@@ -28,6 +28,8 @@
 #include "mem_unaligned.h"
 #include "types.h"
 
+constexpr uint16_t MemPageSize = 4096;
+
 typedef uint32_t PhysPt;
 typedef uint8_t *HostPt;
 typedef uint32_t RealPt;
@@ -44,9 +46,9 @@ void MEM_A20_Enable(bool enable);
 
 /* Memory management / EMS mapping */
 HostPt MEM_GetBlockPage();
-Bitu MEM_FreeTotal();                          // free 4 KiB pages
-Bitu MEM_FreeLargest();                        // largest free 4 KiB pages block
-uint32_t MEM_TotalPages();                     // total amount of 4 KiB pages
+uint32_t MEM_FreeTotal();                      // free 4 KB pages
+uint32_t MEM_FreeLargest();                    // largest free 4 KB pages block
+uint32_t MEM_TotalPages();                     // total amount of 4 KB pages
 uint32_t MEM_AllocatedPages(MemHandle handle); // amount of allocated pages of handle
 MemHandle MEM_AllocatePages(Bitu pages, bool sequence);
 MemHandle MEM_GetNextFreePage();
@@ -175,23 +177,23 @@ static inline void real_writed(uint16_t seg, uint16_t off, uint32_t val)
 	mem_writed(base + off, val);
 }
 
-static inline uint16_t RealSeg(RealPt pt)
+static inline uint16_t RealSegment(RealPt pt)
 {
 	return static_cast<uint16_t>(pt >> 16);
 }
 
-static inline uint16_t RealOff(RealPt pt)
+static inline uint16_t RealOffset(RealPt pt)
 {
 	return static_cast<uint16_t>(pt & 0xffff);
 }
 
-static inline PhysPt Real2Phys(RealPt pt)
+static inline PhysPt RealToPhysical(RealPt pt)
 {
-	const auto base = static_cast<uint32_t>(RealSeg(pt) << 4);
-	return base + RealOff(pt);
+	const auto base = static_cast<uint32_t>(RealSegment(pt) << 4);
+	return base + RealOffset(pt);
 }
 
-static inline PhysPt PhysMake(uint16_t seg, uint16_t off)
+static inline PhysPt PhysicalMake(uint16_t seg, uint16_t off)
 {
 	const auto base = static_cast<uint32_t>(seg << 4);
 	return base + off;

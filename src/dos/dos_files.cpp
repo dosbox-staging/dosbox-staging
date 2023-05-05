@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -207,7 +208,52 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 	return true;
 }
 
-bool DOS_GetCurrentDir(uint8_t drive,char * const buffer) {
+void DOS_Sort(std::vector<DOS_DTA::Result>& list, const ResultSorting sorting,
+              const bool reverse_order, const ResultGrouping grouping)
+{
+	auto compare = [&](const DOS_DTA::Result& result1,
+	                   const DOS_DTA::Result& result2) {
+		if (grouping == ResultGrouping::FilesFirst ||
+		    grouping == ResultGrouping::NonFilesFirst) {
+			if (!result1.IsFile() && result2.IsFile()) {
+				return (grouping == ResultGrouping::NonFilesFirst);
+			}
+			if (result1.IsFile() && !result2.IsFile()) {
+				return (grouping == ResultGrouping::FilesFirst);
+			}
+		}
+
+		auto& r1 = reverse_order ? result2 : result1;
+		auto& r2 = reverse_order ? result1 : result2;
+
+		switch (sorting) {
+		case ResultSorting::ByName:
+			return r1.name.compare(r2.name) < 0;
+		case ResultSorting::ByExtension:
+			return r1.GetExtension().compare(r2.GetExtension()) < 0;
+		case ResultSorting::BySize:
+			// Do not compare sizes of objects which are not files!
+			if (!r1.IsFile()) {
+				return true;
+			} else if (!r2.IsFile()) {
+				return false;
+			}
+			// Both are files - we can compare sizes
+			return r1.size < r2.size;
+		case ResultSorting::ByDateTime:
+			return r1.date < r2.date ||
+			       (r1.date == r2.date && r1.time < r2.time);
+		case ResultSorting::None:
+		default:
+			return false;
+		}
+	};
+
+	std::stable_sort(list.begin(), list.end(), compare);
+}
+
+bool DOS_GetCurrentDir(uint8_t drive, char* const buffer)
+{
 	if (drive==0) drive=DOS_GetDefaultDrive();
 	else drive--;
 	if ((drive>=DOS_DRIVES) || (!Drives[drive])) {
@@ -894,7 +940,7 @@ uint8_t FCB_Parsename(uint16_t seg,uint16_t offset,uint8_t parser ,char *string,
 	uint8_t ret=0;
 	if (!(parser & PARSE_DFLT_DRIVE)) {
 		// default drive forced, this intentionally invalidates an extended FCB
-		mem_writeb(PhysMake(seg,offset),0);
+		mem_writeb(PhysicalMake(seg,offset),0);
 	}
 	DOS_FCB fcb(seg,offset,false);	// always a non-extended FCB
 	bool hasdrive = false;
@@ -1064,7 +1110,7 @@ static void SaveFindResult(DOS_FCB & find_fcb) {
 	find_fcb.GetAttr(find_attr); /* Gets search attributes if extended */
 	/* Create a correct file and extention */
 	const auto [file_name, ext] = DTAExtendName(name);
-	DOS_FCB fcb(RealSeg(dos.dta()),RealOff(dos.dta()));//TODO
+	DOS_FCB fcb(RealSegment(dos.dta()),RealOffset(dos.dta()));//TODO
 	fcb.Create(find_fcb.Extended());
 	fcb.SetName(drive, file_name.c_str(), ext.c_str());
 	fcb.SetAttr(find_attr);      /* Only adds attribute if fcb is extended */
@@ -1093,7 +1139,7 @@ bool DOS_FCBOpen(uint16_t seg,uint16_t offset) {
 		LOG(LOG_FCB,LOG_WARN)("Wildcards in filename");
 		if (!DOS_FCBFindFirst(seg,offset)) return false;
 		DOS_DTA find_dta(dos.tables.tempdta);
-		DOS_FCB find_fcb(RealSeg(dos.tables.tempdta),RealOff(dos.tables.tempdta));
+		DOS_FCB find_fcb(RealSegment(dos.tables.tempdta),RealOffset(dos.tables.tempdta));
 
 		uint32_t size = 0;
 		uint16_t date = 0;
@@ -1182,7 +1228,7 @@ uint8_t DOS_FCBRead(uint16_t seg,uint16_t offset,uint16_t recno) {
 		Bitu i = toread;
 		while(i < rec_size) dos_copybuf[i++] = 0;
 	}
-	MEM_BlockWrite(Real2Phys(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
+	MEM_BlockWrite(RealToPhysical(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
 	if (++cur_rec>127) { cur_block++;cur_rec=0; }
 	fcb.SetRecord(cur_block,cur_rec);
 	if (toread==rec_size) return FCB_SUCCESS;
@@ -1205,7 +1251,7 @@ uint8_t DOS_FCBWrite(uint16_t seg,uint16_t offset,uint16_t recno) {
 	fcb.GetRecord(cur_block,cur_rec);
 	uint32_t pos=((cur_block*128)+cur_rec)*rec_size;
 	if (!DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET,true)) return FCB_ERR_WRITE; 
-	MEM_BlockRead(Real2Phys(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
+	MEM_BlockRead(RealToPhysical(dos.dta())+recno*rec_size,dos_copybuf,rec_size);
 	uint16_t towrite=rec_size;
 	if (!DOS_WriteFile(fhandle,dos_copybuf,&towrite,true)) return FCB_ERR_WRITE;
 	uint32_t size;uint16_t date,time;
@@ -1342,7 +1388,7 @@ bool DOS_FCBDeleteFile(uint16_t seg,uint16_t offset){
 	bool nextfile = false;
 	bool return_value = false;
 	nextfile = DOS_FCBFindFirst(seg,offset);
-	DOS_FCB fcb(RealSeg(new_dta),RealOff(new_dta));
+	DOS_FCB fcb(RealSegment(new_dta),RealOffset(new_dta));
 	while(nextfile) {
 		char shortname[DOS_FCBNAME] = { 0 };
 		fcb.GetName(shortname);
@@ -1408,8 +1454,8 @@ bool DOS_GetAllocationInfo(uint8_t drive,uint16_t * _bytes_sector,uint8_t * _sec
 	}
 	uint16_t _free_clusters;
 	Drives[drive]->AllocationInfo(_bytes_sector,_sectors_cluster,_total_clusters,&_free_clusters);
-	SegSet16(ds,RealSeg(dos.tables.mediaid));
-	reg_bx=RealOff(dos.tables.mediaid+drive*9);
+	SegSet16(ds,RealSegment(dos.tables.mediaid));
+	reg_bx=RealOffset(dos.tables.mediaid+drive*9);
 	return true;
 }
 

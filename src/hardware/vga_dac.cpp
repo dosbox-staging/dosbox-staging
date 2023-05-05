@@ -55,28 +55,34 @@ Note:  Each read or write of this register will cycle through first the
 
 enum {DAC_READ,DAC_WRITE};
 
+// Generate a 6-to-8 bit lookup table
+constexpr auto max_6bit_values = 64; // 2^6
+using scale_6_to_8_lut_t = std::array<uint8_t, max_6bit_values>;
+static constexpr scale_6_to_8_lut_t generate_6_to_8_lut()
+{
+	scale_6_to_8_lut_t lut = {};
+	for (uint8_t color_6 = 0; color_6 < lut.size(); ++color_6) {
+		const auto color_8 = (color_6 * 255 + 31) / 63;
+		lut[color_6] = check_cast<uint8_t>(color_8);
+	}
+	return lut;
+}
+
 static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 {
-	// 6-bit DAC color values (0 to 63)
-	const auto red = vga.dac.rgb[src].red;
-	const auto green = vga.dac.rgb[src].green;
-	const auto blue = vga.dac.rgb[src].blue;
+	static constexpr auto scale_6_to_8_lut = generate_6_to_8_lut();
 
-	// Scale the DAC's combined 18-bit color into 16-bit color
-	const auto rgb565 = ((red >> 1) << 11 | green << 5 | (blue >> 1));
+	const auto& src_rgb18 = vga.dac.rgb[src];
 
-	// Set it in the (little endian) 16bit output lookup table
-	var_write(&vga.dac.xlat16[index], check_cast<uint16_t>(rgb565));
+	const auto r8 = scale_6_to_8_lut[src_rgb18.red];
+	const auto g8 = scale_6_to_8_lut[src_rgb18.green];
+	const auto b8 = scale_6_to_8_lut[src_rgb18.blue];
 
-	// Scale the DAC's 6-bit colors to 8-bit to set the VGA palette
-	auto scale_6_to_8 = [](const uint8_t color_6) -> uint8_t {
-		const auto color_8 = (color_6 * 255 + 31) / 63;
-		return check_cast<uint8_t>(color_8);
-	};
-	RENDER_SetPal(index,
-	              scale_6_to_8(red),
-	              scale_6_to_8(green),
-	              scale_6_to_8(blue));
+	// Map the source color into palette's requested index
+	vga.dac.palette_map[index] = static_cast<uint32_t>((r8 << 16) |
+	                                                   (g8 << 8) | b8);
+
+	RENDER_SetPal(index, r8, g8, b8);
 }
 
 static void VGA_DAC_UpdateColor(uint16_t index)
@@ -209,15 +215,8 @@ static uint8_t read_p3c9(io_port_t, io_width_t)
 void VGA_DAC_CombineColor(uint8_t attr,uint8_t pal) {
 	/* Check if this is a new color */
 	vga.dac.combine[attr]=pal;
-	switch (vga.mode) {
-	case M_LIN8:
-		break;
-	case M_VGA:
+	if (vga.mode != M_LIN8) {
 		// used by copper demo; almost no video card seems to suport it
-		if (!IS_VGA_ARCH || (svgaCard != SVGA_None))
-			break;
-		[[fallthrough]];
-	default:
 		VGA_DAC_SendColor( attr, pal );
 	}
 }
@@ -232,8 +231,8 @@ void VGA_DAC_SetEntry(Bitu entry,uint8_t red,uint8_t green,uint8_t blue) {
 			VGA_DAC_SendColor( i, i );
 }
 
-void VGA_SetupDAC(void) {
-	vga.dac.first_changed=256;
+void VGA_SetupDAC(void)
+{
 	vga.dac.bits=6;
 	vga.dac.pel_mask=0xff;
 	vga.dac.pel_index=0;

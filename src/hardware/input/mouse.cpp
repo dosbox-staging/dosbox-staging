@@ -45,9 +45,11 @@ static ManyMouseGlue &manymouse = ManyMouseGlue::GetInstance();
 // ***************************************************************************
 
 static struct {
-	bool is_fullscreen = false; // if full screen mode is active
-	uint32_t clip_x    = 0;     // clipping = size of black border (one side)
-	uint32_t clip_y    = 0;
+	bool is_fullscreen    = false; // if full screen mode is active
+	bool is_multi_display = false; // if host system has more than 1 display
+
+	uint32_t clip_x = 0; // clipping = size of black border (one side)
+	uint32_t clip_y = 0;
 
 	uint32_t cursor_x_abs  = 0;     // absolute position from start of drawing area
 	uint32_t cursor_y_abs  = 0;
@@ -141,8 +143,9 @@ static void update_cursor_visibility()
 	}
 
 	// Apply calculated settings if changed or if this is the first run
-	if (first_time || old_is_visible != state.is_visible)
+	if (first_time || old_is_visible != state.is_visible) {
 		GFX_SetMouseVisibility(state.is_visible);
+	}
 
 	// And take a note that this is no longer the first run
 	first_time = false;
@@ -151,28 +154,34 @@ static void update_cursor_visibility()
 static void update_state() // updates whole 'state' structure, except cursor visibility
 {
 	// If mouse subsystem not started yet, do nothing
-	if (!mouse_shared.started)
+	if (!mouse_shared.started) {
 		return;
+	}
 
 	const bool is_config_on_start = (mouse_config.capture == MouseCapture::OnStart);
 	const bool is_config_on_click = (mouse_config.capture == MouseCapture::OnClick);
 	const bool is_config_no_mouse = (mouse_config.capture == MouseCapture::NoMouse);
 
+	// Only consider multi-display mode if enabled in the configuration!
+	const bool is_window_or_multi_display = !state.is_fullscreen ||
+		(state.is_multi_display && mouse_config.multi_display_aware);
+
 	// If running for the first time, capture the mouse if this was configured
 	static bool first_time = true;
-	if (first_time && is_config_on_start)
+	if (first_time && is_config_on_start) {
 		state.capture_was_requested = true;
+	}
 
 	// We are running in seamless mode:
 	// - we have a desktop environment, and
-	// - we are not in windowed mode, and
+	// - we are in windowed or multi-display mode, and
 	// - NoMouse is not configured, and
 	// - seamless driver is running or Seamless capture is configured
 	const bool is_seamless_config = (mouse_config.capture == MouseCapture::Seamless);
 	const bool is_seamless_driver = mouse_shared.active_vmm;
 
 	state.is_seamless = state.have_desktop_environment &&
-	                    !state.is_fullscreen &&
+	                    is_window_or_multi_display &&
 	                    !is_config_no_mouse &&
 	                    (is_seamless_driver || is_seamless_config);
 
@@ -208,18 +217,17 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 
 		// Capture mouse cursor if any of:
 		// - we lack a desktop environment,
-		// - we are in fullscreen mode
+		// - we are in fullscreen mode and not in multi-display mode
 		// - user asked to capture the mouse
 		state.is_captured = !state.have_desktop_environment ||
-		                    state.is_fullscreen ||
+		                    !is_window_or_multi_display ||
 		                    state.capture_was_requested;
 	}
 
 	// Drop mouse events (except for button release) if any of:
 	// - GUI has taken over the mouse
 	// - capture type is NoMouse
-	state.should_drop_events = state.gui_has_taken_over ||
-                               is_config_no_mouse;
+	state.should_drop_events = state.gui_has_taken_over || is_config_no_mouse;
 	if (!state.is_seamless) {
 
 		// If not Seamless mode, also drop events if any of:
@@ -232,22 +240,22 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 
 	// Use a hotkey to toggle mouse capture if:
 	// - we have a desktop environment, and
-	// - are in windowed mode, and
+	// - we are in windowed or multi-display mode, and
 	// - capture type is different than NoMouse
 	state.should_toggle_on_hotkey = state.have_desktop_environment &&
-	                                !state.is_fullscreen &&
+	                                is_window_or_multi_display &&
 	                                !is_config_no_mouse;
 
 	// Use any mouse click to capture the mouse if:
 	// - we have a desktop environment, and
-	// - windowed mode, and
+	// - we are in windowed or multi-display mode, and
 	// - mouse is not captured, and
 	// - we are not in seamless mode, and
 	// - no GUI has taken over the mouse, and
 	// - capture type is different than NoMouse, and
 	// - capture on start/click was configured or mapping is in effect
 	state.should_capture_on_click = state.have_desktop_environment &&
-	                                !state.is_fullscreen &&
+	                                is_window_or_multi_display &&
 	                                !state.is_captured &&
 	                                !state.is_seamless &&
 	                                !state.gui_has_taken_over &&
@@ -256,14 +264,14 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 
 	// Use a middle click to capture the mouse if:
 	// - we have a desktop environment, and
-	// - windowed mode, and
+	// - we are in windowed or multi-display mode, and
 	// - mouse is not captured, and
 	// - no GUI has taken over the mouse, and
 	// - capture type is different than NoMouse, and
 	// - seamless mode is in effect, and
 	// - middle release was configured
 	state.should_capture_on_middle = state.have_desktop_environment &&
-	                                 !state.is_fullscreen &&
+	                                 is_window_or_multi_display &&
 	                                 !state.is_captured &&
 	                                 !state.gui_has_taken_over &&
 	                                 !is_config_no_mouse &&
@@ -272,11 +280,11 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 
 	// Use a middle click to release the mouse if:
 	// - we have a desktop environment, and
-	// - windowed mode, and
+	// - we are in windowed or multi-display mode, and
 	// - mouse is captured, and
 	// - release by middle button was configured
 	state.should_release_on_middle = state.have_desktop_environment &&
-	                                 !state.is_fullscreen &&
+	                                 is_window_or_multi_display &&
 	                                 state.is_captured &&
 	                                 mouse_config.middle_release;
 
@@ -287,7 +295,7 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 	// TODO: if SDL gets expanded to include ManyMouse, change the behavior!
 
 	// Select hint to be displayed on a title bar
-	if (!state.have_desktop_environment || state.is_fullscreen ||
+	if (!state.have_desktop_environment || !is_window_or_multi_display ||
 	    state.gui_has_taken_over || !state.is_window_active) {
 		state.hint_id = MouseHint::None;
 	} else if (is_config_no_mouse) {
@@ -374,8 +382,8 @@ bool MOUSE_IsProbeForMappingAllowed()
 static Bitu int74_exit()
 {
 	const auto real_pt = CALLBACK_RealPointer(int74_ret_callback);
-	SegSet16(cs, RealSeg(real_pt));
-	reg_ip = RealOff(real_pt);
+	SegSet16(cs, RealSegment(real_pt));
+	reg_ip = RealOffset(real_pt);
 
 	return CBRET_NONE;
 }
@@ -384,8 +392,8 @@ static Bitu int74_handler()
 {
 	// Try BIOS events (from Intel 8042 controller)
 	if (MOUSEBIOS_CheckCallback()) {
-		CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
-		CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
+		CPU_Push16(RealSegment(CALLBACK_RealPointer(int74_ret_callback)));
+		CPU_Push16(RealOffset(CALLBACK_RealPointer(int74_ret_callback)));
 		MOUSEBIOS_DoCallback();		
 		// TODO: Handle both BIOS and DOS callback within
 		// in a single interrupt
@@ -397,8 +405,8 @@ static Bitu int74_handler()
 		const auto mask = MOUSEDOS_DoInterrupt();
 		if (mask) {
 			const auto real_pt = CALLBACK_RealPointer(int74_ret_callback);
-			CPU_Push16(RealSeg(real_pt));
-			CPU_Push16(RealOff(static_cast<RealPt>(real_pt) + 7));
+			CPU_Push16(RealSegment(real_pt));
+			CPU_Push16(RealOffset(static_cast<RealPt>(real_pt) + 7));
 
 			MOUSEDOS_DoCallback(mask);
 			return CBRET_NONE;
@@ -419,37 +427,36 @@ Bitu int74_ret_handler()
 // External notifications
 // ***************************************************************************
 
-void MOUSE_NewScreenParams(const uint32_t clip_x, const uint32_t clip_y,
-                           const uint32_t res_x, const uint32_t res_y,
-                           const int32_t x_abs, const int32_t y_abs,
-                           const bool is_fullscreen)
+void MOUSE_NewScreenParams(const MouseScreenParams &params)
 {
 	// clip_x, clip_y = black border (one side), in pixels
 	// res_x, res_y   = used display area, in pixels
 	// res_x + 2 * clip_x, res_y + 2 * clip_y = screen resolution or window size
 
-	assert(clip_x <= INT32_MAX);
-	assert(clip_y <= INT32_MAX);
-	assert(res_x <= INT32_MAX);
-	assert(res_y <= INT32_MAX);
+	assert(params.clip_x <= INT32_MAX);
+	assert(params.clip_y <= INT32_MAX);
+	assert(params.res_x <= INT32_MAX);
+	assert(params.res_y <= INT32_MAX);
 
-	state.clip_x = clip_x;
-	state.clip_y = clip_y;
+	state.clip_x = params.clip_x;
+	state.clip_y = params.clip_y;
 
 	// Protection against strange window sizes,
 	// to prevent division by 0 in some places
 	constexpr uint32_t min = 2;
-	mouse_shared.resolution_x = std::max(res_x, min);
-	mouse_shared.resolution_y = std::max(res_y, min);
+	mouse_shared.resolution_x = std::max(params.res_x, min);
+	mouse_shared.resolution_y = std::max(params.res_y, min);
 
 	// If we are switching back from fullscreen,
 	// clear the user capture request
-	if (state.is_fullscreen && !is_fullscreen)
+	if (state.is_fullscreen && !params.is_fullscreen) {
 		state.capture_was_requested = false;
+	}
 
-	state.is_fullscreen = is_fullscreen;
+	state.is_fullscreen    = params.is_fullscreen;
+	state.is_multi_display = params.is_multi_display;
 
-	update_cursor_absolute_position(x_abs, y_abs);
+	update_cursor_absolute_position(params.x_abs, params.y_abs);
 
 	MOUSE_UpdateGFX();
 	MOUSEVMM_NewScreenParams(state.cursor_x_abs, state.cursor_y_abs);

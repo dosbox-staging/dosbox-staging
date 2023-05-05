@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,7 +35,8 @@ void DOS_AddMultiplexHandler(MultiplexHandler * handler) {
 	Multiplex.push_front(handler);
 }
 
-void DOS_DelMultiplexHandler(MultiplexHandler * handler) {
+void DOS_DeleteMultiplexHandler(MultiplexHandler* handler)
+{
 	for(Multiplex_it it =Multiplex.begin();it != Multiplex.end();it++) {
 		if(*it == handler) {
 			Multiplex.erase(it);
@@ -65,8 +67,8 @@ static bool DOS_MultiplexFunctions(void) {
 		if(reg_bx <= DOS_FILES) CALLBACK_SCF(false);
 		else CALLBACK_SCF(true);
 		if (reg_bx<16) {
-			RealPt sftrealpt=mem_readd(Real2Phys(dos_infoblock.GetPointer())+4);
-			PhysPt sftptr=Real2Phys(sftrealpt);
+			RealPt sftrealpt=mem_readd(RealToPhysical(dos_infoblock.GetPointer())+4);
+			PhysPt sftptr=RealToPhysical(sftrealpt);
 			Bitu sftofs=0x06+reg_bx*0x3b;
 
 			if (Files[reg_bx]) mem_writeb(sftptr+sftofs,Files[reg_bx]->refCtr);
@@ -140,8 +142,8 @@ static bool DOS_MultiplexFunctions(void) {
 					mem_writeb((PhysPt)(sftptr+sftofs+0x20+i),' ');
 			}
 
-			SegSet16(es,RealSeg(sftrealpt));
-			reg_di=RealOff(sftrealpt+sftofs);
+			SegSet16(es,RealSegment(sftrealpt));
+			reg_di=RealOffset(sftrealpt+sftofs);
 			reg_ax=0xc000;
 
 		}

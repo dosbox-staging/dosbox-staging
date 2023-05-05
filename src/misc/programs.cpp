@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -137,8 +138,8 @@ static Bitu PROGRAMS_Handler(void)
 	static_assert(exec_block_size < UINT16_MAX, "Should only be 19 bytes");
 
 	/* Read the index from program code in memory */
-	PhysPt reader = PhysMake(dos.psp(),
-	                         256 + static_cast<uint16_t>(exec_block_size));
+	PhysPt reader = PhysicalMake(dos.psp(),
+		256 + static_cast<uint16_t>(exec_block_size));
 	HostPt writer = (HostPt)&index;
 	for (; size > 0; size--) {
 		*writer++ = mem_readb(reader++);
@@ -156,13 +157,13 @@ Program::Program()
 	/* Find the command line and setup the PSP */
 	psp = new DOS_PSP(dos.psp());
 	/* Scan environment for filename */
-	PhysPt envscan = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt envscan = PhysicalMake(psp->GetEnvironment(), 0);
 	while (mem_readb(envscan)) {
 		envscan += mem_strlen(envscan) + 1;
 	}
 	envscan += 3;
 	CommandTail tail;
-	MEM_BlockRead(PhysMake(dos.psp(), 128), &tail, 128);
+	MEM_BlockRead(PhysicalMake(dos.psp(), 128), &tail, 128);
 	if (tail.count < 127) {
 		tail.buffer[tail.count] = 0;
 	} else {
@@ -280,7 +281,7 @@ void Program::InjectMissingNewline()
 bool Program::GetEnvStr(const char* entry, std::string& result) const
 {
 	/* Walk through the internal environment and see for a match */
-	PhysPt env_read = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 
 	char env_string[1024 + 1];
 	result.erase();
@@ -316,7 +317,7 @@ bool Program::GetEnvStr(const char* entry, std::string& result) const
 bool Program::GetEnvNum(Bitu num, std::string& result) const
 {
 	char env_string[1024 + 1];
-	PhysPt env_read = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 	do {
 		MEM_StrCopy(env_read, env_string, 1024);
 		if (!env_string[0]) {
@@ -334,7 +335,7 @@ bool Program::GetEnvNum(Bitu num, std::string& result) const
 
 Bitu Program::GetEnvCount() const
 {
-	PhysPt env_read = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 	Bitu num        = 0;
 	while (mem_readb(env_read) != 0) {
 		for (; mem_readb(env_read); env_read++) {
@@ -347,7 +348,7 @@ Bitu Program::GetEnvCount() const
 
 bool Program::SetEnv(const char* entry, const char* new_string)
 {
-	PhysPt env_read = PhysMake(psp->GetEnvironment(), 0);
+	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 
 	// Get size of environment.
 	DOS_MCB mcb(psp->GetEnvironment() - 1);
@@ -435,9 +436,8 @@ private:
 	{
 		if (configdir) {
 			// write file to the default config directory
-			std::string config_path;
-			Cross::GetPlatformConfigDir(config_path);
-			name = config_path + name;
+			const auto config_path = get_platform_config_dir() / name;
+			name = config_path.string();
 		}
 		WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_WHICH"), name.c_str());
 		if (!control->PrintConfig(name)) {
@@ -524,8 +524,7 @@ void CONFIG::Run(void)
 
 		case P_LISTCONF: {
 			Bitu size = control->configfiles.size();
-			std::string config_path;
-			Cross::GetPlatformConfigDir(config_path);
+			const std_fs::path config_path = get_platform_config_dir();
 			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"),
 			         VERSION,
 			         config_path.c_str());
@@ -793,8 +792,10 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
 				return;
 			}
-			for (Bitu i = 0; i < pvars.size(); i++) {
-				sec->HandleInputline(pvars[i]);
+			for (const auto& pvar : pvars) {
+				std::string line_utf8 = {};
+				dos_to_utf8(pvar, line_utf8);
+				sec->HandleInputline(line_utf8);
 			}
 			break;
 		}
@@ -805,7 +806,9 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SECTION_ERROR"));
 				return;
 			}
-			WriteOut("\n%s", sec->data.c_str());
+			std::string line_dos = {};
+			utf8_to_dos(sec->data, line_dos);
+			WriteOut("\n%s", line_dos.c_str());
 			break;
 		}
 		case P_REC_AVI_START: CAPTURE_VideoStart(); break;

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,7 +66,7 @@ void DOS_ParamBlock::SaveData()
 void DOS_InfoBlock::SetLocation(uint16_t segment)
 {
 	seg = segment;
-	pt = PhysMake(seg, 0);
+	pt = PhysicalMake(seg, 0);
 
 	/* Clear the initial Block */
 	dos_memset(pt, 0xff, sizeof(sDIB));
@@ -183,14 +183,14 @@ uint8_t DOS_PSP::GetFileHandle(uint16_t index) const
 {
 	if (index >= SGET_WORD(sPSP, max_files))
 		return 0xff;
-	const PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+	const PhysPt files = RealToPhysical(SGET_DWORD(sPSP, file_table));
 	return mem_readb(files + index);
 }
 
 void DOS_PSP::SetFileHandle(uint16_t index, uint8_t handle)
 {
 	if (index < SGET_WORD(sPSP, max_files)) {
-		const PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+		const PhysPt files = RealToPhysical(SGET_DWORD(sPSP, file_table));
 		mem_writeb(files + index, handle);
 	} else {
 		DEBUG_LOG_MSG("DOS: Prevented buffer overflow on write to PSP file_table[%u]",
@@ -200,7 +200,7 @@ void DOS_PSP::SetFileHandle(uint16_t index, uint8_t handle)
 
 uint16_t DOS_PSP::FindFreeFileEntry() const
 {
-	PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+	PhysPt files = RealToPhysical(SGET_DWORD(sPSP, file_table));
 	const auto max_files = SGET_WORD(sPSP, max_files);
 	for (uint16_t i = 0; i < max_files; ++i) {
 		if (mem_readb(files + i) == 0xff)
@@ -211,7 +211,7 @@ uint16_t DOS_PSP::FindFreeFileEntry() const
 
 uint16_t DOS_PSP::FindEntryByHandle(uint8_t handle) const
 {
-	const PhysPt files = Real2Phys(SGET_DWORD(sPSP, file_table));
+	const PhysPt files = RealToPhysical(SGET_DWORD(sPSP, file_table));
 	const auto max_files = SGET_WORD(sPSP, max_files);
 	for (uint16_t i = 0; i < max_files; ++i) {
 		if (mem_readb(files + i) == handle)
@@ -271,7 +271,7 @@ void DOS_PSP::RestoreVectors()
 void DOS_PSP::SetCommandTail(RealPt src)
 {
 	if (src) { // valid source
-		MEM_BlockCopy(pt+offsetof(sPSP,cmdtail),Real2Phys(src),128);
+		MEM_BlockCopy(pt+offsetof(sPSP,cmdtail),RealToPhysical(src),128);
 	} else { // empty
 		SSET_BYTE(sPSP, cmdtail.count, uint8_t(0));
 		mem_writeb(pt+offsetof(sPSP,cmdtail.buffer),0x0d);
@@ -279,11 +279,11 @@ void DOS_PSP::SetCommandTail(RealPt src)
 }
 
 void DOS_PSP::SetFCB1(RealPt src) {
-	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb1)),Real2Phys(src),16);
+	if (src) MEM_BlockCopy(PhysicalMake(seg,offsetof(sPSP,fcb1)),RealToPhysical(src),16);
 }
 
 void DOS_PSP::SetFCB2(RealPt src) {
-	if (src) MEM_BlockCopy(PhysMake(seg,offsetof(sPSP,fcb2)),Real2Phys(src),16);
+	if (src) MEM_BlockCopy(PhysicalMake(seg,offsetof(sPSP,fcb2)),RealToPhysical(src),16);
 }
 
 bool DOS_PSP::SetNumFiles(uint16_t file_num)
@@ -299,7 +299,7 @@ bool DOS_PSP::SetNumFiles(uint16_t file_num)
 		const RealPt data = RealMake(DOS_GetMemory(para), 0);
 		for (uint16_t i = 0; i < file_num; i++) {
 			const uint8_t handle = (i < 20 ? GetFileHandle(i) : 0xFF);
-			mem_writeb(Real2Phys(data) + i, handle);
+			mem_writeb(RealToPhysical(data) + i, handle);
 		}
 		SSET_DWORD(sPSP, file_table, data);
 	}
@@ -307,7 +307,33 @@ bool DOS_PSP::SetNumFiles(uint16_t file_num)
 	return true;
 }
 
-void DOS_DTA::SetupSearch(uint8_t drive, uint8_t attr, char *pattern)
+std::string DOS_DTA::Result::GetExtension() const
+{
+	const auto pos = name.rfind('.');
+	if (pos == std::string::npos) {
+		return std::string();
+	}
+
+	return name.substr(pos + 1);
+}
+
+std::string DOS_DTA::Result::GetBareName() const
+{
+	if (name == "." || name == "..") {
+		return name;
+	}
+
+	const auto pos = name.rfind('.');
+	if (pos == std::string::npos) {
+		return name;
+	} else if (pos < 1) {
+		return std::string();
+	}
+
+	return name.substr(0, pos);
+}
+
+void DOS_DTA::SetupSearch(uint8_t drive, uint8_t attr, char* pattern)
 {
 	SSET_BYTE(sDTA, sdrive, drive);
 	SSET_BYTE(sDTA, sattr, attr);
@@ -354,7 +380,14 @@ void DOS_DTA::GetResult(char *found_name,
 	found_attr = SGET_BYTE(sDTA, attr);
 }
 
-void DOS_DTA::GetSearchParams(uint8_t &attr, char *pattern) const
+void DOS_DTA::GetResult(Result& result) const
+{
+	char name[DOS_NAMELENGTH_ASCII];
+	GetResult(name, result.size, result.date, result.time, result.attr._data);
+	result.name = name;
+}
+
+void DOS_DTA::GetSearchParams(uint8_t& attr, char* pattern) const
 {
 	attr = SGET_BYTE(sDTA, sattr);
 	char temp[11];

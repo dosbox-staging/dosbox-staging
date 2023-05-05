@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -98,13 +98,13 @@ std::string to_native_path(const std::string &path) noexcept
 	return ret;
 }
 
-int create_dir(const char *path, uint32_t mode, uint32_t flags) noexcept
+int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags) noexcept
 {
 	static_assert(sizeof(uint32_t) >= sizeof(mode_t), "");
-	const int err = mkdir(path, mode);
+	const int err = mkdir(path.c_str(), mode);
 	if ((errno == EEXIST) && (flags & OK_IF_EXISTS)) {
 		struct stat pstat;
-		if ((stat(path, &pstat) == 0) && S_ISDIR(pstat.st_mode))
+		if ((stat(path.c_str(), &pstat) == 0) && S_ISDIR(pstat.st_mode))
 			return 0;
 	}
 	return err;

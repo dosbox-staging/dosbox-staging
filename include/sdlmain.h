@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -160,7 +160,6 @@ struct SDL_Block {
 		HOST_RATE_MODE host_rate_mode = HOST_RATE_MODE::AUTO;
 		double preferred_host_rate = 0.0;
 		bool want_resizable_window = false;
-		SDL_WindowEventID last_size_event = {};
 		SCREEN_TYPES type = SCREEN_SURFACE;
 		SCREEN_TYPES want_type = SCREEN_SURFACE;
 	} desktop = {};
@@ -230,6 +229,7 @@ struct SDL_Block {
 		int period_us = 0;      // same but in us, for use with chrono
 		int period_us_early = 0;
 		int period_us_late = 0;
+		int8_t vfr_dupe_countdown = 0;
 	} frame = {};
 	PPScale pp_scale = {};
 	SDL_Rect updateRects[1024] = {};

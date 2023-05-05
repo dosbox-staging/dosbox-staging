@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2023  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -96,6 +97,12 @@ bool Value::operator==(const Value& other) const
 		break;
 	}
 	return false;
+}
+
+bool Value::operator<(const Value& other) const
+{
+	return std::tie(_hex, _bool, _int, _string, _double) <
+	       std::tie(other._hex, other._bool, other._int, other._string, other._double);
 }
 
 bool Value::SetValue(const std::string& in, const Etype _type)
@@ -242,9 +249,26 @@ bool Property::IsValidValue(const Value& in)
 	return false;
 }
 
+bool Property::IsValueDeprecated(const Value& val) const
+{
+	const auto is_deprecated = contains(deprecated_and_alternate_values, val);
+	if (is_deprecated) {
+		LOG_WARNING("CONFIG: '%s = %s' is deprecated, "
+		            "falling back to the alternate: '%s = %s'",
+		            propname.c_str(),
+		            val.ToString().c_str(),
+		            propname.c_str(),
+		            GetAlternateForDeprecatedValue(val).ToString().c_str());
+	}
+	return is_deprecated;
+}
+
 bool Property::ValidateValue(const Value& in)
 {
-	if (IsValidValue(in)) {
+	if (IsValueDeprecated(in)) {
+		value = GetAlternateForDeprecatedValue(in);
+		return true;
+	} else if (IsValidValue(in)) {
 		value = in;
 		return true;
 	} else {
@@ -277,7 +301,10 @@ const char* Property::GetHelpUtf8() const
 bool Prop_int::ValidateValue(const Value& in)
 {
 	if (IsRestrictedValue()) {
-		if (IsValidValue(in)) {
+		if (IsValueDeprecated(in)) {
+			value = GetAlternateForDeprecatedValue(in);
+			return true;
+		} else if (IsValidValue(in)) {
 			value = in;
 			return true;
 		} else {
@@ -613,6 +640,23 @@ const std::vector<Value>& Property::GetValues() const
 	return valid_values;
 }
 
+std::vector<Value> Property::GetDeprecatedValues() const
+{
+	std::vector<Value> values = {};
+	std::transform(deprecated_and_alternate_values.begin(),
+	               deprecated_and_alternate_values.end(),
+	               std::back_inserter(values),
+	               [](const auto& kv) { return kv.first; });
+	return values;
+}
+
+const Value& Property::GetAlternateForDeprecatedValue(const Value& val) const
+{
+	const auto it = deprecated_and_alternate_values.find(val);
+	return (it != deprecated_and_alternate_values.end()) ? it->second
+	                                                     : default_value;
+}
+
 const std::vector<Value>& PropMultiVal::GetValues() const
 {
 	Property* p = section->Get_prop(0);
@@ -642,6 +686,14 @@ void Property::Set_values(const char* const* in)
 		valid_values.push_back(val);
 		i++;
 	}
+}
+
+void Property::SetDeprecatedWithAlternateValue(const char* deprecated_value,
+                                               const char* alternate_value)
+{
+	assert(deprecated_value);
+	assert(alternate_value);
+	deprecated_and_alternate_values[deprecated_value] = alternate_value;
 }
 
 void Property::Set_values(const std::vector<std::string>& in)
@@ -969,13 +1021,15 @@ bool Config::PrintConfig(const std::string& filename) const
 				        p->propname.c_str(),
 				        help.c_str());
 
-				std::vector<Value> values = p->GetValues();
-
-				if (!values.empty()) {
+				auto print_values = [&](const char* values_msg_key,
+				                        const std::vector<Value>& values) {
+					if (values.empty()) {
+						return;
+					}
 					fprintf(outfile,
 					        "%s%s:",
 					        prefix,
-					        MSG_GetRaw("CONFIG_VALID_VALUES"));
+					        MSG_GetRaw(values_msg_key));
 
 					std::vector<Value>::const_iterator it =
 					        values.begin();
@@ -997,7 +1051,9 @@ bool Config::PrintConfig(const std::string& filename) const
 						++it;
 					}
 					fprintf(outfile, ".");
-				}
+				};
+				print_values("CONFIG_VALID_VALUES", p->GetValues());
+				print_values("CONFIG_DEPRECATED_VALUES", p->GetDeprecatedValues());
 				fprintf(outfile, "\n");
 			}
 		} else {
@@ -1227,10 +1283,11 @@ const Section_line& Config::GetOverwrittenAutoexecSection() const
 	return overwritten_autoexec_section;
 }
 
-bool Config::ParseConfigFile(const std::string& type, const std::string& configfilename)
+bool Config::ParseConfigFile(const std::string& type,
+                             const std::string& config_file_name)
 {
 	std::error_code ec;
-	const std_fs::path cfg_path = configfilename;
+	const std_fs::path cfg_path = config_file_name;
 	const auto canonical_path   = std_fs::canonical(cfg_path, ec);
 
 	if (ec) {
@@ -1239,7 +1296,7 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 
 	if (contains(configFilesCanonical, canonical_path)) {
 		LOG_INFO("CONFIG: Skipping duplicate config file '%s'",
-		         configfilename.c_str());
+		         config_file_name.c_str());
 		return true;
 	}
 
@@ -1248,29 +1305,73 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 		return false;
 	}
 
-	configfiles.push_back(configfilename);
+	configfiles.push_back(config_file_name);
 	configFilesCanonical.push_back(canonical_path);
 
-	// Get directory from configfilename, used with relative paths.
+	// Get directory from config_file_name, used with relative paths.
 	current_config_dir = canonical_path.parent_path().string();
 
-	string line;
-	Section* currentsection = nullptr;
+	// If this is an autoexec section, the above takes care of the joining
+	// while this handles the overwrriten mode. We need to be prepared for
+	// either scenario to play out because we won't know the users final
+	// preference until the very last configuration file is processed.
+
+	std::string line = {};
+
+	Section* current_section = nullptr;
+	bool is_autoexec_section = false;
+	bool is_autoexec_started = false;
+
+	auto is_empty_line = [](const std::string& line) {
+		return line.empty() || line[0] == '\0' || line[0] == '\n' ||
+		       line[0] == '\r';
+	};
+
+	auto is_comment = [](const std::string& line) {
+		return !line.empty() && (line[0] == '%' || line[0] == '#');
+	};
+
+	auto is_section_start = [](const std::string& line) {
+		return !line.empty() && line[0] == '[';
+	};
+
+	auto handle_autoexec_line = [&]() {
+		// Ignore all the empty lines until the meaningful [autoexec]
+		// content starts
+		if (!is_autoexec_started) {
+			if (is_empty_line(line) || is_comment(line)) {
+				return;
+			}
+			is_autoexec_started = true;
+		}
+
+		if (!is_comment(line)) {
+			current_section->HandleInputline(line);
+			OverwriteAutoexec(config_file_name, line);
+		}
+	};
 
 	while (getline(in, line)) {
-		// Strip leading/trailing whitespace
 		trim(line);
-		if (line.empty()) {
+
+		if (is_section_start(line)) {
+			is_autoexec_section = false;
+			is_autoexec_started = false;
+		}
+
+		// Special handling of [autoexec] section
+		if (is_autoexec_section) {
+			handle_autoexec_line();
 			continue;
 		}
 
-		switch (line[0]) {
-		case '%':
-		case '\0':
-		case '#':
-		case ' ':
-		case '\n': continue; break;
-		case '[': {
+		// Strip leading/trailing whitespace, skip unnecessary lines
+		if (is_empty_line(line) || is_comment(line)) {
+			continue;
+		}
+
+		if (is_section_start(line)) {
+			// New section
 			const auto bracket_pos = line.find(']');
 			if (bracket_pos == string::npos) {
 				continue;
@@ -1278,26 +1379,11 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 			line.erase(bracket_pos);
 			const auto section_name = line.substr(1);
 			if (const auto sec = GetSection(section_name); sec) {
-				currentsection = sec;
+				current_section = sec;
+				is_autoexec_section = (section_name == "autoexec");
 			}
-		} break;
-		default:
-			if (currentsection) {
-				currentsection->HandleInputline(line);
-
-				// If this is an autoexec section, the above
-				// takes care of the joining while this handles
-				// the overwrriten mode. We need to be prepared
-				// for either scenario to play out because we
-				// won't know the users final preferance until
-				// the very last configuration file is
-				// processed.
-				if (std::string_view(currentsection->GetName()) ==
-				    "autoexec") {
-					OverwriteAutoexec(configfilename, line);
-				}
-			}
-			break;
+		} else if (current_section) {
+			current_section->HandleInputline(line);
 		}
 	}
 
@@ -1306,7 +1392,7 @@ bool Config::ParseConfigFile(const std::string& type, const std::string& configf
 
 	LOG_INFO("CONFIG: Loaded '%s' config file '%s'",
 	         type.c_str(),
-	         configfilename.c_str());
+	         config_file_name.c_str());
 
 	return true;
 }
@@ -1836,7 +1922,7 @@ const std::string& SETUP_GetLanguage()
 // Parse the user's configuration files starting with the primary, then custom
 // -conf's, and finally the local dosbox.conf
 void MSG_Init(Section_prop*);
-void SETUP_ParseConfigFiles(const std::string& config_path)
+void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 {
 	std::string config_file;
 
@@ -1845,8 +1931,8 @@ void SETUP_ParseConfigFiles(const std::string& config_path)
 	                                                             true);
 	if (wants_primary_conf) {
 		Cross::GetPlatformConfigName(config_file);
-		const std::string config_combined = config_path + config_file;
-		control->ParseConfigFile("primary", config_combined);
+		const auto cfg = config_dir / config_file;
+		control->ParseConfigFile("primary", cfg.string());
 	}
 
 	// Second: parse the local 'dosbox.conf', if present
@@ -1860,8 +1946,8 @@ void SETUP_ParseConfigFiles(const std::string& config_path)
 	while (control->cmdline->FindString("-conf", config_file, true)) {
 		if (!control->ParseConfigFile("custom", config_file)) {
 			// Try to load it from the user directory
-			if (!control->ParseConfigFile("custom",
-			                              config_path + config_file)) {
+			const auto cfg = config_dir / config_file;
+			if (!control->ParseConfigFile("custom", cfg.string())) {
 				LOG_WARNING("CONFIG: Can't open custom config file '%s'",
 				            config_file.c_str());
 			}
@@ -1878,7 +1964,7 @@ void SETUP_ParseConfigFiles(const std::string& config_path)
 
 	// Create a new primary if permitted and no other conf was loaded
 	if (wants_primary_conf && !control->configfiles.size()) {
-		std::string new_config_path = config_path;
+		std::string new_config_path = config_dir.string();
 
 		Cross::CreatePlatformConfigDir(new_config_path);
 		Cross::GetPlatformConfigName(config_file);

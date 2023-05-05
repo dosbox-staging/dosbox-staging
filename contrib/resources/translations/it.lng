@@ -29,17 +29,17 @@ mouse senza soluzione di continuità, %s+F10 per catturarlo
 mouse senza soluzione di continuità, %s+F10 o pulsante centrale del mouse per catturarlo
 .
 :CONFIG_FULLSCREEN
-Avvia direttamente a schermo intero.
+Avvia direttamente a schermo intero (predefinito disabilitato).
 Digita INTRO e osserva la sezione Tasti Speciali per la lista dei tasti di
 scelta rapida per il controllo della finestra.
 .
 :CONFIG_DISPLAY
 Numero dello schermo da utilizzare; Il valore dipende dal sistema operativo
-e dalle impostazioni dell'utente.
+e dalle impostazioni dell'utente (predefinito 0).
 .
 :CONFIG_FULLRESOLUTION
-Risoluzione da usare a schermo intero: 'original', 'desktop' o
-dimensione fissa (es. 1024x768).
+Risoluzione da utilizzare in modalità schermo intero: 'original', 'desktop' o
+dimensione fissa, es. 1024x768 (predefinito 'desktop').
 .
 :CONFIG_WINDOWRESOLUTION
 Imposta le dimensioni della finestra da utilizzare durante l'esecuzione
@@ -64,16 +64,18 @@ finestra/schermo:
 :CONFIG_WINDOW_POSITION
 Imposta la posizione iniziale della finestra durante l'esecuzione in modalità
 finestra:
-  auto:      Lascia che sia il gestore delle finestre a decidere la posizione.
+  auto:      Lascia che sia il gestore delle finestre a decidere la posizione
+             (predefinito).
   <custom>:  Imposta la posizione della finestra nel formato X,Y.
              Per esempio: 250,100
              0,0 è l'angolo in alto a sinistra dello schermo.
 .
 :CONFIG_WINDOW_DECORATIONS
-Abilita le decorazioni delle finestre in modalità finestra.
+Abilita le decorazioni delle finestre in modalità finestra
+(predefinito abilitato).
 .
 :CONFIG_TRANSPARENCY
-Imposta la trasparenza della schermata di DOSBox Staging.
+Imposta la trasparenza della finestra di DOSBox Staging (predefinito 0).
 Da 0 (nessuna trasparenza) a 90 (alta trasparenza).
 .
 :CONFIG_MAX_RESOLUTION
@@ -82,35 +84,36 @@ Questa impostazione è stata rinominata in viewport_resolution.
 :CONFIG_HOST_RATE
 Imposta la frequenza di aggiornamento dell'host:
   auto:      Utilizza le frequenze SDI, o VRR quando in modalità schermo intero
-             su uno schermo ad alta frequenza di aggiornamento.
+             su uno schermo ad alta frequenza di aggiornamento (predefinito).
   sdi:       Utilizza le frequenze dell'interfaccia del dispositivo seriale
              (SDI), senza ulteriori regolazioni.
   vrr:       Sottrae 3 Hz dalla frequenza riportata (necessario su schermi VRR)
   <custom>:  Specifica una frequenza personalizzata come valore intero o
-             decimale maggiore di 23.000.
+             decimale maggiore di 23.000 (23 Hz).
 .
 :CONFIG_VSYNC
-Sincronizza con la frequenza di aggiornamento dello schermo, se supportato.
-Questo può ridurre il tremolio e lo strappo, ma può anche influire sulle
-prestazioni.
+Sincronizza con la frequenza di aggiornamento dello schermo, se supportato,
+per ridurre il tremolio e lo strappo (predefinito abilitato).
 .
 :CONFIG_VSYNC_SKIP
 Numero di microsecondi per consentire il blocco del rendering prima di saltare
-al fotogramma successivo. Impostando 0, disabiliterà questa funzione.
+al fotogramma successivo (predefinito 7000). Un valore di 0 disabilita
+questa funzione.
 .
 :CONFIG_PRESENTATION_MODE
 Seleziona la modalità di presentazione dei fotogrammi:
   auto:  Determina la durata e taglia i fotogrammi in modo intelligente per
          prevenire lo stallo dell'emulazione, in base alla frequenza dei
-         fotogrammi host e DOS.
+         fotogrammi host e DOS (predefinito).
   cfr:   Presenta sempre i fotogrammi DOS ad una frequenza costante.
   vfr:   Presenta sempre i fotogrammi DOS modificati ad una frequenza variabile
 .
 :CONFIG_OUTPUT
-Sistema video da utilizzare per l'output.
+Sistema video da utilizzare per l'output (predefinito 'opengl').
 .
 :CONFIG_TEXTURE_RENDERER
-Driver di rendering da utilizzare nella modalità di uscita 'texture'.
+Driver di rendering da utilizzare nella modalità di uscita 'texture'
+(predefinito 'auto').
 Usa 'texture_renderer = auto' per una scelta automatica.
 .
 :CONFIG_CAPTURE_MOUSE
@@ -123,7 +126,7 @@ Spostato nella sezione [mouse].
 Spostato nella sezione [mouse].
 .
 :CONFIG_WAITONERROR
-Mantiene la console aperta se si verifica un errore.
+Mantiene la console aperta se si verifica un errore (predefinito abilitato).
 .
 :CONFIG_PRIORITY
 Livelli di priorità da applicare rispettivamente quando la finestra è
@@ -131,10 +134,11 @@ in primo piano o inattiva (predefinito 'auto auto').
 'auto' lascia che sia il sistema operativo host a gestire la priorità.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Disattiva il suono quando la finestra è inattiva.
+Disattiva il suono quando la finestra è inattiva (predefinito disabilitato).
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
-Mette in pausa l'emulazione quando la finestra è inattiva.
+Mette in pausa l'emulazione quando la finestra è inattiva
+(predefinito disabilitato).
 .
 :CONFIG_MAPPERFILE
 File utilizzato per caricare/salvare le corrispondenze tasto/evento.
@@ -146,8 +150,8 @@ Note: il flag della riga di comando -resetmapper elimina solo il file di
 .
 :CONFIG_SCREENSAVER
 Usa 'allow' (consenti) o 'block' (blocca) per sovrascrivere la variabile
-d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER (che di solito blocca il salva schermo
-del sistema operativo mentre l'emulatore è in esecuzione).
+d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER, che di solito blocca il salvaschermo
+del sistema operativo mentre l'emulatore è in esecuzione (predefinito 'auto').
 .
 :CONFIG_LANGUAGE
 Seleziona la lingua da utilizzare: de, en, es, fr, it, nl, pl e ru
@@ -190,8 +194,8 @@ Personalizza la frequenza dei fotogrammi della modalità video emulata, in Hz:
              (consigliato; predefinito).
   host:      Abbina la frequenza DOS alla frequenza host (vedi impostazione
              'host_rate').
-  <valore>:  Imposta la frequenza su un valore esatto, compreso tra 24.000 e
-             1000.000 (Hz).
+  <valore>:  Imposta la frequenza su un valore esatto, compreso tra 
+             24.000 (24 Hz) e 1000.000 (1000 Hz).
 Si consiglia la frequenza dei fotogrammi predefinita ('default'), altrimenti
 provare ed impostare in base al gioco.
 .
@@ -208,10 +212,10 @@ Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
                memoria di sistema (mem = ).
 .
 :CONFIG_SPEED_MODS
-Consenti modifiche note per migliorare le prestazioni (predefinito abilitato).
+Consente modifiche note per migliorare le prestazioni (predefinito abilitato).
 Attualmente, nessun gioco è noto per esserne influenzato negativamente.
-Se trovi un gioco che fallisce quando questa impostazione è abilitata, segnala
-il bug nel repository del progetto, in modo tale da poterlo elencare qui.
+Se trovi un gioco che ha problemi quando questa impostazione è abilitata,
+segnala il bug sul sito del progetto, in modo tale da poterlo elencare qui.
 .
 :CONFIG_AUTOEXEC_SECTION
 Indica come vengono gestite le sezioni autoexec da più file di configurazione.
@@ -312,6 +316,7 @@ hardware:
    delle opzioni "glshader".
 .
 :CONFIG_GLSHADER
+Imposta lo shader GLSL da utilizzare nella modalità di uscita OpenGL.
 Le opzioni incluse sono 'default', 'none', uno shader elencato utilizzando
 l'argomento della riga di comando --list-glshaders o un percorso relativo o
 assoluto che fa riferimento ad un file. 
@@ -386,12 +391,22 @@ Imposta la modalità di cattura dell mouse:
                  driver del mouse personalizzato
    nomouse:      Nasconde il mouse e impedisce che venga inviato l'input del
                  mouse al gioco.
-Per gli schermi tattili, utilizzare la modalità 'seamless'.
+Per gli schermi tattili, utilizzare la modalità di controllo senza soluzione
+di continuità 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
 Se abilitato, il pulsante centrale rilascerà il mouse. Se è stata impostata
-la modalità 'seamless', esso si occuperà anche di catturarlo 
-(predefinito abilitato).
+la modalità di controllo senza soluzione di continuità 'seamless', esso si
+occuperà anche di catturarlo (predefinito abilitato).
+.
+:CONFIG_MOUSE_MULTI_DISPLAY_AWARE
+Consente il funzionamento della modalità mouse senza soluzione di continuità
+e il rilascio del puntatore del mouse in modalità schermo intero nei sistemi
+multischermo (predefinito abilitato).
+Note: Dovresti impostarlo su 'false' nel caso in cui vengano rilevati
+      erroneamente schermi multipli, quando in realtà ne è presente solo uno.
+      Ciò potrebbe accadere se si utilizza la modalità di visualizzazione
+      speculare o l'ingresso HDMI di un ricevitore AV per l'ascolto dell'audio.
 .
 :CONFIG_MOUSE_SENSITIVITY
 Sensibilità del mouse per gli assi orizzontale e verticale, in percentuale
@@ -418,8 +433,9 @@ Note: Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
 Aggiorna immediatamente i contatori di movimento del mouse, senza attendere
 l'interrupt (predefinito disabilitato). Può migliorare la giocabilità,
 specialmente nei giochi dal ritmo veloce (arcade, FPS, ecc.), poichè per alcuni
-incrementa efficacemente la frequenza di polling a 1000 Hz, senza aumentare il
-sovraccarico dell'interrupt. Potrebbe causare problemi di compatibilità.
+incrementa efficacemente la frequenza di campionamento del mouse a 1000 Hz,
+senza aumentare il sovraccarico dell'interrupt. Potrebbe causare problemi di
+compatibilità.
 Elenco di giochi incompatibili noti:
   - Ultima Underworld: The Stygian Abyss
   - Ultima Underworld II: Labyrinth of Worlds
@@ -520,17 +536,19 @@ Note: È possibile regolare con precisione i livelli di coro per ogni canale
 Imposta dove vengono inviati i dati MIDI dall'interfaccia MPU-401 emulata
 (predefinito 'auto'):
   win32:       Utilizza l'interfaccia di riproduzione MIDI Win32.
-  fluidsynth:  Sintetizzatore MIDI FluidSynth integrato (lettore SoundFont).
+  oss:         Utilizza l'interfaccia di riproduzione MIDI OSS di Linux.
+  alsa:        Utilizza l'interfaccia di riproduzione MIDI ALSA di Linux.
+  fluidsynth:  Utilizza il sintetizzatore MIDI FluidSynth incluso in DOSBox.
                Fare riferimento alla sezione [fluidsynth] per una
                configurazione dettagliata.
-  mt32:        Sintetizzatore Roland MT-32 integrato.
+  mt32:        Utilizza il sintetizzatore Roland MT-32 incluso in DOSBox.
                Fare riferimento alla sezione [mt32] per una configurazione
                dettagliata.
-  auto:        Utilizza uno dei sintetizzatori MIDI incorporati
+  auto:        Utilizza uno dei sintetizzatori MIDI inclusi in DOSBox
                (se `midiconfig` è impostato su 'fluidsynth' o 'mt32'), o un
                dispositivo MIDI esterno a DOSBox (qualsiasi altro valore in
-               'midiconfig'). Questo potrebbe essere un sintetizzatore software
-               o un dispositivo fisico. Questo è il comportamento predefinito.
+               'midiconfig'). Quest'ultimo potrebbe essere un sintetizzatore
+               software o un dispositivo fisico. (predefinito)
   none:        Disabilita l'uscita MIDI.
 .
 :CONFIG_MIDICONFIG
@@ -637,7 +655,7 @@ Filtro per l'uscita audio Roland MT-32/CM-32L:
              fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :MT32_NO_SUPPORTED_MODELS
-Nessun modello supportato presente.
+Nessun modello supportato disponibile.
 .
 :MT32_ROM_NOT_LOADED
 Nessuna ROM è attualmente caricata.
@@ -671,13 +689,13 @@ Canale DMA della scheda Sound Blaster (predefinito 1).
 Canale High DMA della scheda Sound Blaster (predefinito 5).
 .
 :CONFIG_SBMIXER
-Permetti al mixer della scheda Sound Blaster di modificare il mixer di DOSBox
-(predefinito abilitato).
+Permette al mixer della scheda Sound Blaster di modificare il mixer
+di DOSBox (predefinito abilitato).
 .
 :CONFIG_SBWARMUP
 Silenzia il contenuto DMA iniziale dopo l'accensione della scheda,
 in millisecondi (predefinito 100). Questo attenua gli artefatti audio che si
-sentono quando si avviano molti giochi compatibili con Sound Blaster.
+sentono quando si avviano molti dei giochi compatibili con Sound Blaster.
 Riduci questo valore se noti che nella riproduzione iniziale manca l'audio.
 .
 :CONFIG_OPLRATE
@@ -752,6 +770,22 @@ I set di patch utilizzati con Timidity dovrebbero funzionare.
 .
 :CONFIG_GUS_FILTER
 Filtro per l'uscita audio della scheda Gravis UltraSound:
+  off:       Non filtra l'uscita audio (predefinito).
+  <custom>:  Definizione di filtri personalizzati; 
+             fare riferimento a 'sb_filter' per ulteriori dettagli.
+.
+:CONFIG_IMFC
+Abilita la scheda IBM Music Feature (predefinito disabilitato).
+.
+:CONFIG_IMFC_BASE
+Indirizzo porta IO della scheda IBM Music Feature (predefinito 2A20).
+.
+:CONFIG_IMFC_IRQ
+Numero IRQ della scheda IBM Music Feature (predefinito 3).
+.
+:CONFIG_IMFC_FILTER
+Filtro per l'uscita audio della scheda IBM Music Feature:
+  on:        Filtra l'uscita audio.
   off:       Non filtra l'uscita audio (predefinito).
   <custom>:  Definizione di filtri personalizzati; 
              fare riferimento a 'sb_filter' per ulteriori dettagli.
@@ -913,8 +947,8 @@ Scambia il 3° e il 4° asse (predefinito disabilitato).
 Può essere utile per alcuni joystick.
 .
 :CONFIG_BUTTONWRAP
-Abilita il wrapping dei pulsanti al numero di pulsanti emulati
-(predefinito disabilitato).
+Permette di associare i pulsanti del joystick emulato ai pulsanti ridondanti
+del joystick reale o ai tasti della tastiera (predefinito disabilitato).
 .
 :CONFIG_CIRCULARINPUT
 Abilita la traduzione dell'input circolare in output quadrato
@@ -1008,17 +1042,17 @@ di tastiera selezionato.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Abilita l'espansione delle variabili di ambiente come %PATH% nella shell
-dei comandi DOS (predefinito disabilitato).
+dei comandi DOS (predefinito 'auto', viene abilitato se la versione DOS >= 7.0)
 COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
 .
 :CONFIG_KEYBOARDLAYOUT
-Codice linguaggio del layout della tastiera, o 'auto' (predefinito 'auto').
+Codice lingua del layout della tastiera, o 'auto' (predefinito 'auto').
 .
 :CONFIG_IPX
 Abilita IPX attraverso l'emulazione UDP/IP (predefinito abilitato).
 .
 :CONFIG_NE2000
-Abilita l'emulazione di una scheda di rete Novell NE2000 su una rete basata su
+Abilita l'emulazione della scheda di rete Novell NE2000 su una rete basata su
 software (usando libslirp) con le seguenti proprietà (predefinito abilitato):
   - 255.255.255.0:  Maschera di sottorete della LAN virtuale 10.0.2.0.
   - 10.0.2.2:       IP del gateway e del servizio DHCP.
@@ -1036,7 +1070,7 @@ Note: Gli indirizzi 220 e 240 potrebbero non essere disponibili poiché sono
       predefinita.
 .
 :CONFIG_NICIRQ
-Interrupt utilizzato dalla scheda NE2000 (predefinito 3).
+Numero IRQ della scheda NE2000 (predefinito 3).
 Note: Gli IRQ 3 e 5 potrebbero non essere disponibili poiché sono assegnati a
       'serial2' e Gravis UltraSound per impostazione predefinita.
 .
@@ -1302,11 +1336,11 @@ Esempi:
 
 .
 :PROGRAM_BOOT_NOT_EXIST
-Il file del disco di avvio non esiste.  Fallimento.
+Il file immagine di avvio non esiste.  Fallimento.
 
 .
 :PROGRAM_BOOT_NOT_OPEN
-Impossibile aprire il file del disco di avvio.  Fallimento.
+Impossibile aprire il file immagine di avvio.  Fallimento.
 
 .
 :PROGRAM_BOOT_WRITE_PROTECTED
@@ -1316,15 +1350,15 @@ Il file immagine è di sola lettura! Potrebbe creare dei problemi.
 :PROGRAM_BOOT_PRINT_ERROR
 Questo comando avvia DOSBox Staging da un'immagine floppy o disco rigido.
 
-Per questo comando, si può specificare una successione di floppy disk
-selezionabili premendo %s+F4, e -l specifica l'unità montata da cui eseguire
-l'avvio. Se non viene specificata alcuna lettera di unità, l'impostazione
-predefinita prevede l'avvio dall'unità A. 
-Le uniche lettere di unità avviabili sono A, C, e D. Per l'avvio da un disco
-rigido (C o D), l'immagine dovrebbe essere già stata montata utilizzando il
+Con questo comando, è possibile specificare una successione di immagini floppy
+selezionabili premendo %s+F4. È possibile specificare con il parametro -l
+l'unità montata da cui eseguire l'avvio. Se non viene specificata alcuna
+lettera di unità, l'impostazione predefinita prevede l'avvio dall'unità A.
+Le uniche lettere di unità avviabili sono A, C, e D. Per l'avvio da un'immagine
+disco rigido (C o D), questa dovrebbe essere già stata montata utilizzando il
 comando [color=blue]IMGMOUNT[reset].
 
-Digita [color=blue]BOOT /?[reset] per avere informazioni sulla sintassi di questo comando.
+Digita [color=blue]BOOT /?[reset] per ulteriori informazioni sulla sintassi di questo comando.
 
 .
 :PROGRAM_BOOT_UNABLE
@@ -1367,7 +1401,7 @@ Note:
 
 .
 :PROGRAM_FMPDRV_TITLE
-Driver Lettore ReelMagic Full Motion (integrato) %hhu.%hhu
+Driver lettore ReelMagic Full Motion (integrato) %hhu.%hhu
 
 .
 :PROGRAM_FMPDRV_LOADED
@@ -2072,7 +2106,7 @@ Dove:
   [color=white]INTERFACCIA[reset] è uno dei seguenti: [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset].
   -map -unmap mappa/disattiva mouse fisico, accetta caratteri jolly DOS in [color=cyan]NOME[reset]
   -s -sx -sy  imposta la sensibilità per l'asse x / asse y, da -999 a +999.
-  -r          imposta la frequenza di polling minima del mouse.
+  -r          imposta la frequenza di campionamento minima del mouse.
   -on -off    abilita o disabilita il mouse sull'interfaccia specificata.
   -reset      ripristina tutte le impostazioni dal file di configurazione.
 
@@ -2095,7 +2129,7 @@ Sintassi errata, interfacce del mouse duplicate.
 
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
-Sintassi errata, la frequenza di polling deve essere una dei seguenti:
+Sintassi errata, la frequenza di campionamento deve essere una delle seguenti:
 %s
 
 .
@@ -2147,10 +2181,11 @@ mouse fisico mappato
 disabilitato
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
-Le frequenze di polling per i mouse sulle interfacce [color=cyan]COM[reset] sono solo stime.
+Le frequenze di campionamento per i mouse sulle interfacce [color=cyan]COM[reset] sono solo stime.
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
-Le frequenze di polling con valore minimo impostato sono contrassegnate con '*'
+Le frequenze di campionamento con valore minimo impostato sono contrassegnate
+con '*'.
 .
 :PROGRAM_MOUSECTL_MAP_ADVICE
 Fare clic sul pulsante [color=white]sinistro[reset] del mouse per mappare il mouse fisico
@@ -2277,6 +2312,51 @@ Il tipo deve essere uno dei seguenti:
 .
 :PROGRAM_SERIAL_INDENTED_LIST
   %s
+
+.
+:PROGRAM_TREE_HELP_LONG
+Visualizza graficamente la struttura delle directory.
+
+Utilizzo:
+  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDINAMENTO[reset]]
+
+Dove:
+  [color=cyan]DIRECTORY[reset]     è il nome della directory da visualizzare.
+  [color=white]ORDINAMENTO[reset]   è il tipo di ordinamento scelto, cioè:
+                    [color=white]n[reset] (per nome, alfabetico),
+                    [color=white]s[reset] (per dimensione, dal minore),
+                    [color=white]e[reset] (per estensione, alfabetico),
+                    [color=white]d[reset] (per data/ora dal più vecchio),
+                con un prefisso facoltativo [color=white]-[reset] per invertire l'ordine.
+  /a            utilizza solo caratteri ASCII a 7 bit.
+  /b            visualizzazione ridotta, omette intestazione e piè di pagina.
+  /f            visualizza anche i file.
+  /p            visualizza una pagina alla volta, addatta l'output allo schermo
+  /da           visualizza gli attributi.
+  /df           visualizza la dimensione dei file.
+  /dh           visualizza anche file/directory nascosti e di sistema.
+  /o[color=white]ORDINAMENTO[reset] ordina l'elenco (vedi sopra).
+
+Note:
+  Se [color=cyan]DIRECTORY[reset] viene omesso, verrà utilizzata la directory corrente.
+
+Esempi:
+  [color=green]tree[reset]        ; visualizza struttura directory a partire da quella corrente
+  [color=green]tree[reset] [color=cyan]C:[reset] /f  ; visualizza contenuto unità C: in modo ricorsivo, file inclusi
+.
+:PROGRAM_TREE_DIRECTORY
+ Struttura delle directory per il volume %s
+.
+:PROGRAM_TREE_NO_SUBDIRS
+Nessuna sottodirectory da visualizzare.
+
+.
+:PROGRAM_TREE_NO_FILES_SUBDIRS
+Nessun file o sottodirectory da visualizzare.
+
+.
+:PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
+Troppi file o sottodirectory.
 
 .
 :SHELL_ILLEGAL_PATH
@@ -2654,18 +2734,24 @@ Visualizza un elenco di file e sottodirectory in una directory.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Utilizzo:
-  [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDINAM[reset]]
+  [color=green]dir[reset] [color=cyan][MODELLO][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDINAMENTO[reset]]
 
 Dove:
-  [color=cyan]MODELLO[reset] è un nome file specifico o con caratteri jolly, cioè asterisco (*)
-          e punto di domanda (?). È possibile specificare il percorso di
-          una directory per elencarne il contenuto.
-  [color=white]ORDINAM[reset] è il tipo di ordinamento scelto, cioè: [color=white]n[reset] (per nome, alfabetico),
-          [color=white]s[reset] (per dimensione, dal minore), [color=white]e[reset] (per estensione, alfabetico),
-          [color=white]d[reset] (per data/ora dal più vecchio), con prefisso [color=white]-[reset] per invertire ordine
-  /w  elenca 5 file/directory in una riga; /b   elenca solo i nomi.
-  /o  ordina la lista (vedi sopra);        /p   mostra una schermata per volta.
-  /ad elenca tutte le directory;           /a-d elenca tutti i file.
+  [color=cyan]MODELLO[reset]       è un nome file specifico o con caratteri jolly, cioè asterisco
+                (*) e punto di domanda (?). È possibile specificare il percorso
+                di una directory per elencarne il contenuto.
+  [color=white]ORDINAMENTO[reset]   è il tipo di ordinamento scelto, cioè:
+                    [color=white]n[reset] (per nome, alfabetico),
+                    [color=white]s[reset] (per dimensione, dal minore),
+                    [color=white]e[reset] (per estensione, alfabetico),
+                    [color=white]d[reset] (per data/ora dal più vecchio),
+                con un prefisso facoltativo [color=white]-[reset] per invertire l'ordine.
+  /w            elenca 5 file/directory in una riga.
+  /b            elenca solo i nomi.
+  /p            mostra elenco una schermata per volta.
+  /ad           elenca tutte le directory.
+  /a-d          elenca tutti i file.
+  /o[color=white]ORDINAMENTO[reset] ordina l'elenco (vedi sopra).
 
 Note:
   L'esecuzione di [color=green]dir[reset] senza un argomento elenca tutti i file e le sotto-
@@ -2841,7 +2927,7 @@ Esempi:
 
 .
 :SHELL_CMD_GOTO_HELP
-Salta a una riga etichettata in un programma batch.
+Dirige ad una riga etichettata in un programma batch.
 
 .
 :SHELL_CMD_GOTO_HELP_LONG
@@ -3076,10 +3162,10 @@ Utilizzo:
 Dove:
   [color=cyan]MODELLO[reset]  è un nome file specifico o con caratteri jolly, cioè asterisco (*)
            e punto di domanda (?).
-  [color=cyan]PERCORSO[reset] è un percorso di un'unità DOS montata da cui elencare il contenuto.
+  [color=cyan]PERCORSO[reset] è il percorso di un'unità DOS montata di cui elencare il contenuto.
 
 Note:
-  Il comando elencherà le directory in [color=blue]blu[reset], programmi eseguibili DOS
+  Il comando elencherà le directory in [color=blue]blu[reset], i programmi eseguibili DOS
   (*.com, *.exe, *.bat) in [color=green]verde[reset], e altri file nel colore normale.
 
 Esempi:

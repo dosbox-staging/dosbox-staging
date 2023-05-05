@@ -7,9 +7,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CCACHE_DIR:      "/c/ccache"
-  CCACHE_MAXSIZE:  "64M"
-  CCACHE_COMPRESS: "true"
+  CCACHE_DIR:        "/c/ccache"
+  CCACHE_MAXSIZE:    "128M"
+  CCACHE_COMPRESS:   "true"
+  CCACHE_SLOPPINESS: "pch_defines,time_macros"
+
   BUILD_RELEASE_DIR: build/release
   BUILD_DEBUGGER_DIR: build/debugger
 
@@ -55,6 +57,14 @@ jobs:
             max_warnings: 0
             run_tests: true
             build_flags: -Dbuildtype=debug -Dfluidsynth:tests=false
+
+          - name: GCC, +voodoo
+            toolchain: ucrt-
+            arch: x86_64
+            sys: UCRT64
+            cc: gcc
+            max_warnings: 1
+            build_flags: -Dexperimental_voodoo_support=true
 
     defaults:
       run:

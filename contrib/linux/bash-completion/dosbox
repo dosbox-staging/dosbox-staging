@@ -48,7 +48,7 @@ _dosbox()
   # shellcheck disable=SC2034
   local -a \
     _machine=(
-               hercules cga cga_mono tandy pcjr ega vgaonly svga_s3
+               hercules cga cga_mono tandy pcjr ega svga_s3
                svga_et3000 svga_et4000 svga_paradise vesa_nolfb
                vesa_oldvbe
              )\

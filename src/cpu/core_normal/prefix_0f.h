@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -142,7 +143,7 @@
 		break;
 	CASE_0F_B(0x08)												/* INVD */
 	CASE_0F_B(0x09)												/* WBINVD */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		if (cpu.pmode && cpu.cpl) EXCEPTION(EXCEPTION_GP);
 		break;
 	CASE_0F_B(0x20)												/* MOV Rd.CRx */
@@ -225,7 +226,7 @@
 		break;
 	CASE_0F_B(0x31)												/* RDTSC */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW)
+			if (CPU_ArchitectureType<ArchitectureType::PentiumSlow)
 				goto illegal_opcode;
 			/* Use a fixed number when in auto cycles mode as else the reported value changes constantly */
 	                int64_t tsc = (int64_t)(PIC_FullIndex() *
@@ -364,7 +365,7 @@
 		break;
 	CASE_0F_B(0xb0) 										/* cmpxchg Eb,Gb */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 			FillFlags();
 			GetRMrb;
 			if (rm >= 0xc0 ) {
@@ -392,7 +393,7 @@
 		}
 	CASE_0F_W(0xb1) 									/* cmpxchg Ew,Gw */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 			FillFlags();
 			GetRMrw;
 			if (rm >= 0xc0 ) {
@@ -582,7 +583,7 @@
 		}
 	CASE_0F_B(0xc0)												/* XADD Gb,Eb */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 			GetRMrb;uint8_t oldrmrb=*rmrb;
 			if (rm >= 0xc0 ) {GetEArb;*rmrb=*earb;*earb+=oldrmrb;}
 			else {GetEAa;*rmrb=LoadMb(eaa);SaveMb(eaa,LoadMb(eaa)+oldrmrb);}
@@ -590,34 +591,34 @@
 		}
 	CASE_0F_W(0xc1)												/* XADD Gw,Ew */
 		{
-			if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+			if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 			GetRMrw;uint16_t oldrmrw=*rmrw;
 			if (rm >= 0xc0 ) {GetEArw;*rmrw=*earw;*earw+=oldrmrw;}
 			else {GetEAa;*rmrw=LoadMw(eaa);SaveMw(eaa,LoadMw(eaa)+oldrmrw);}
 			break;
 		}
 	CASE_0F_W(0xc8)												/* BSWAP AX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_ax);break;
 	CASE_0F_W(0xc9)												/* BSWAP CX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_cx);break;
 	CASE_0F_W(0xca)												/* BSWAP DX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_dx);break;
 	CASE_0F_W(0xcb)												/* BSWAP BX */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_bx);break;
 	CASE_0F_W(0xcc)												/* BSWAP SP */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_sp);break;
 	CASE_0F_W(0xcd)												/* BSWAP BP */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_bp);break;
 	CASE_0F_W(0xce)												/* BSWAP SI */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_si);break;
 	CASE_0F_W(0xcf)												/* BSWAP DI */
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegal_opcode;
+		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_di);break;
 		

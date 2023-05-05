@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -58,10 +58,12 @@ private:
 	                               std::map<uint16_t, std::string> &output_msg_by_codepage)
 	{
 		assert(msg.length());
-		const uint16_t cp = UTF8_GetCodePage();
+		const uint16_t cp = get_utf8_code_page();
 		if (output_msg_by_codepage[cp].empty()) {
-			if (!UTF8_RenderForDos(msg, output_msg_by_codepage[cp], cp))
-				LOG_WARNING("LANG: Problem rendering string");
+			if (!utf8_to_dos(msg, output_msg_by_codepage[cp], cp)) {
+				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
+				            msg.c_str());
+			}
 			assert(output_msg_by_codepage[cp].length());
 		}
 
@@ -88,12 +90,12 @@ public:
 			rendered_msg = convert_ansi_markup(markup_msg.c_str());
 
 		assert(rendered_msg.length());
-		const uint16_t cp = UTF8_GetCodePage();
+		const uint16_t cp = get_utf8_code_page();
 		if (rendered_msg_by_codepage[cp].empty()) {
-			if (!UTF8_RenderForDos(rendered_msg,
-			                       rendered_msg_by_codepage[cp],
-			                       cp))
-				LOG_WARNING("LANG: Problem rendering string");
+			if (!utf8_to_dos(rendered_msg, rendered_msg_by_codepage[cp], cp)) {
+				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
+				            rendered_msg.c_str());
+			}
 			assert(rendered_msg_by_codepage[cp].length());
 		}
 

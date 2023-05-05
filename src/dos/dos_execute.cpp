@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -100,8 +101,8 @@ void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode) {
 	DOS_PSP parentpsp(curpsp.GetParent());
 
 	/* Restore the SS:SP to the previous one */
-	SegSet16(ss,RealSeg(parentpsp.GetStack()));
-	reg_sp = RealOff(parentpsp.GetStack());		
+	SegSet16(ss,RealSegment(parentpsp.GetStack()));
+	reg_sp = RealOffset(parentpsp.GetStack());		
 	/* Restore registers */
 	reg_ax = real_readw(SegValue(ss),reg_sp+ 0);
 	reg_bx = real_readw(SegValue(ss),reg_sp+ 2);
@@ -114,8 +115,8 @@ void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode) {
 	SegSet16(es,real_readw(SegValue(ss),reg_sp+16));
 	reg_sp+=18;
 	/* Set the CS:IP stored in int 0x22 back on the stack */
-	real_writew(SegValue(ss),reg_sp+0,RealOff(old22));
-	real_writew(SegValue(ss),reg_sp+2,RealSeg(old22));
+	real_writew(SegValue(ss),reg_sp+0,RealOffset(old22));
+	real_writew(SegValue(ss),reg_sp+2,RealSegment(old22));
 	/* set IOPL=3 (Strike Commander), nested task set,
 	   interrupts enabled, test flags cleared */
 	real_writew(SegValue(ss),reg_sp+4,0x7202);
@@ -155,10 +156,10 @@ static bool MakeEnv(char * name,uint16_t * segment) {
 
 	if (*segment==0) {
 		if (!psp.GetEnvironment()) parentenv=false;				//environment seg=0
-		envread=PhysMake(psp.GetEnvironment(),0);
+		envread=PhysicalMake(psp.GetEnvironment(),0);
 	} else {
 		if (!*segment) parentenv=false;						//environment seg=0
-		envread=PhysMake(*segment,0);
+		envread=PhysicalMake(*segment,0);
 	}
 
 	if (parentenv) {
@@ -173,7 +174,7 @@ static bool MakeEnv(char * name,uint16_t * segment) {
 	}
 	uint16_t size=long2para(envsize+ENV_KEEPFREE);
 	if (!DOS_AllocateMemory(segment,&size)) return false;
-	envwrite=PhysMake(*segment,0);
+	envwrite=PhysicalMake(*segment,0);
 	if (parentenv) {
 		MEM_BlockCopy(envwrite,envread,envsize);
 //		mem_memcpy(envwrite,envread,envsize);
@@ -352,7 +353,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		}
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
-	loadaddress=PhysMake(loadseg,0);
+	loadaddress=PhysicalMake(loadseg,0);
 
 	if (iscom) {	/* COM Load 64k - 256 bytes max */
 		pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
@@ -380,7 +381,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		for (i=0;i<head.relocations;i++) {
 			readsize=4;DOS_ReadFile(fhandle,(uint8_t *)&relocpt,&readsize);
 			relocpt=host_readd((HostPt)&relocpt);		//Endianize
-			PhysPt address=PhysMake(RealSeg(relocpt)+loadseg,RealOff(relocpt));
+			PhysPt address=PhysicalMake(RealSegment(relocpt)+loadseg,RealOffset(relocpt));
 			mem_writew(address,mem_readw(address)+relocate);
 		}
 	}
@@ -407,12 +408,12 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 			LOG(LOG_EXEC,LOG_WARN)("COM format with only %X paragraphs available",memsize);
 			sssp=RealMake(pspseg,(memsize<<4)-2);
 		} else sssp=RealMake(pspseg,0xfffe);
-		mem_writew(Real2Phys(sssp),0);
+		mem_writew(RealToPhysical(sssp),0);
 	} else {
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
 		if (head.initSP<4) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
-		if ((pspseg+memsize)<(RealSeg(sssp)+(RealOff(sssp)>>4)))
+		if ((pspseg+memsize)<(RealSegment(sssp)+(RealOffset(sssp)>>4)))
 			LOG(LOG_EXEC,LOG_ERROR)("stack outside memory block at EXEC");
 
 		Program::ResetLastWrittenChar('\0'); // triggers newline injection after DOS programs
@@ -438,8 +439,8 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		newpsp.SetStack(RealMakeSeg(ss,reg_sp));
 
 		/* Setup bx, contains a 0xff in bl and bh if the drive in the fcb is not valid */
-		DOS_FCB fcb1(RealSeg(block.exec.fcb1),RealOff(block.exec.fcb1));
-		DOS_FCB fcb2(RealSeg(block.exec.fcb2),RealOff(block.exec.fcb2));
+		DOS_FCB fcb1(RealSegment(block.exec.fcb1),RealOffset(block.exec.fcb1));
+		DOS_FCB fcb2(RealSegment(block.exec.fcb2),RealOffset(block.exec.fcb2));
 		uint8_t d1 = fcb1.GetDrive(); //depends on 0 giving the dos.default drive
 		if ( (d1>=DOS_DRIVES) || !Drives[d1] ) reg_bl = 0xFF; else reg_bl = 0;
 		uint8_t d2 = fcb2.GetDrive();
@@ -467,14 +468,14 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 
 	if (flags==LOAD) {
 		/* First word on the stack is the value ax should contain on startup */
-		real_writew(RealSeg(sssp-2),RealOff(sssp-2),reg_bx);
+		real_writew(RealSegment(sssp-2),RealOffset(sssp-2),reg_bx);
 		/* Write initial CS:IP and SS:SP in param block */
 		block.exec.initsssp = sssp-2;
 		block.exec.initcsip = csip;
 		block.SaveData();
 		/* Changed registers */
 		reg_sp+=18;
-		reg_ax=RealOff(csip);
+		reg_ax=RealOffset(csip);
 		reg_bx=memsize;
 		reg_dx=0;
 		return true;
@@ -483,10 +484,10 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 	if (flags==LOADNGO) {
 		if ((reg_sp>0xfffe) || (reg_sp<18)) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
 		/* Set the stack for new program */
-		SegSet16(ss,RealSeg(sssp));reg_sp=RealOff(sssp);
+		SegSet16(ss,RealSegment(sssp));reg_sp=RealOffset(sssp);
 		/* Add some flags and CS:IP on the stack for the IRET */
-		CPU_Push16(RealSeg(csip));
-		CPU_Push16(RealOff(csip));
+		CPU_Push16(RealSegment(csip));
+		CPU_Push16(RealOffset(csip));
 		/* DOS starts programs with a RETF, so critical flags
 		 * should not be modified (IOPL in v86 mode);
 		 * interrupt flag is set explicitly, test flags cleared */
@@ -497,13 +498,13 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		reg_ax=reg_bx;
 		reg_cx=0xff;
 		reg_dx=pspseg;
-		reg_si=RealOff(csip);
-		reg_di=RealOff(sssp);
+		reg_si=RealOffset(csip);
+		reg_di=RealOffset(sssp);
 		reg_bp=0x91c;	/* DOS internal stack begin relict */
 		SegSet16(ds,pspseg);SegSet16(es,pspseg);
 #if C_DEBUG
 		/* Started from debug.com, then set breakpoint at start */
-		DEBUG_CheckExecuteBreakpoint(RealSeg(csip),RealOff(csip));
+		DEBUG_CheckExecuteBreakpoint(RealSegment(csip),RealOffset(csip));
 #endif
 		return true;
 	}

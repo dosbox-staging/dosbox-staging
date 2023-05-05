@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,67 +20,100 @@
 #ifndef DOSBOX_PCI_H
 #define DOSBOX_PCI_H
 
-//#define PCI_FUNCTIONALITY_ENABLED 0
+#include "dosbox.h"
+
+#include "mem.h"
+
+#if C_VOODOO
+#define PCI_FUNCTIONALITY_ENABLED 1
+#endif
 
 #if defined PCI_FUNCTIONALITY_ENABLED
 
-#define PCI_MAX_PCIDEVICES		10
-#define PCI_MAX_PCIFUNCTIONS	8
-
+#define PCI_MAX_PCIDEVICES   10
+#define PCI_MAX_PCIFUNCTIONS 8
 
 class PCI_Device {
-private:
-	Bits pci_id, pci_subfunction;
-	uint16_t vendor_id, device_id;
+protected:
+	PCI_Device(const PCI_Device&)            = delete;
+	PCI_Device& operator=(const PCI_Device&) = delete;
+
+	uint16_t device_id   = 0;
+	uint16_t vendor_id   = 0;
+	Bits pci_id          = 0;
+	Bits pci_subfunction = 0;
 
 	// subdevices declarations, they will respond to pci functions 1 to 7
 	// (main device is attached to function 0)
-	Bitu num_subdevices;
-	PCI_Device* subdevices[PCI_MAX_PCIFUNCTIONS-1];
+	Bitu num_subdevices = 0;
+	PCI_Device* subdevices[PCI_MAX_PCIFUNCTIONS - 1];
 
 public:
 	PCI_Device(uint16_t vendor, uint16_t device);
 
-	Bits PCIId(void) {
+	virtual ~PCI_Device() = default;
+
+	Bits PCIId() const
+	{
 		return pci_id;
 	}
-	Bits PCISubfunction(void) {
+
+	Bits PCISubfunction() const
+	{
 		return pci_subfunction;
 	}
-	uint16_t VendorID(void) {
+
+	uint16_t VendorID() const
+	{
 		return vendor_id;
 	}
-	uint16_t DeviceID(void) {
+
+	uint16_t DeviceID() const
+	{
 		return device_id;
 	}
 
-	void SetPCIId(Bitu number, Bits subfct);
+	void SetPCIId(Bits number, Bits subfct);
 
 	bool AddSubdevice(PCI_Device* dev);
-	void RemoveSubdevice(Bits subfct);
 
-	PCI_Device* GetSubdevice(Bits subfct);
+	void RemoveSubdevice(Bits sub_fct);
 
-	uint16_t NumSubdevices(void) {
-		if (num_subdevices>PCI_MAX_PCIFUNCTIONS-1) return (uint16_t)(PCI_MAX_PCIFUNCTIONS-1);
-		return (uint16_t)num_subdevices;
+	PCI_Device* GetSubdevice(Bits sub_fct);
+
+	uint16_t NumSubdevices() const
+	{
+		if (num_subdevices > PCI_MAX_PCIFUNCTIONS - 1) {
+			return static_cast<uint16_t>(PCI_MAX_PCIFUNCTIONS - 1);
+		}
+		return static_cast<uint16_t>(num_subdevices);
 	}
 
-	Bits GetNextSubdeviceNumber(void) {
-		if (num_subdevices>=PCI_MAX_PCIFUNCTIONS-1) return -1;
-		return (Bits)num_subdevices+1;
+	Bits GetNextSubdeviceNumber() const
+	{
+		if (num_subdevices >= PCI_MAX_PCIFUNCTIONS - 1) {
+			return -1;
+		}
+		return static_cast<Bits>(num_subdevices + 1);
 	}
 
-	virtual Bits ParseReadRegister(uint8_t regnum)=0;
-	virtual bool OverrideReadRegister(uint8_t regnum, uint8_t* rval, uint8_t* rval_mask)=0;
-	virtual Bits ParseWriteRegister(uint8_t regnum,uint8_t value)=0;
-	virtual bool InitializeRegisters(uint8_t registers[256])=0;
+	virtual bool InitializeRegisters(uint8_t registers[256]) = 0;
 
+	virtual Bits ParseReadRegister(uint8_t regnum) = 0;
+
+	virtual bool OverrideReadRegister(uint8_t regnum, uint8_t* rval,
+	                                  uint8_t* rval_mask) = 0;
+
+	virtual Bits ParseWriteRegister(uint8_t regnum, uint8_t value) = 0;
 };
 
 bool PCI_IsInitialized();
 
-RealPt PCI_GetPModeInterface(void);
+RealPt PCI_GetPModeInterface();
+
+void PCI_AddDevice(PCI_Device* dev);
+
+uint8_t PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, uint8_t regnum);
 
 #endif
 

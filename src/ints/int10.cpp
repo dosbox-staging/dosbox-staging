@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -217,11 +218,11 @@ static Bitu INT10_Handler(void) {
 			break;
 		case 0x01:			/* Load 8x14 font */
 		case 0x11:
-			INT10_LoadFont(Real2Phys(int10.rom.font_14),reg_al==0x11,256,0,reg_bl&0x7f,14);
+			INT10_LoadFont(RealToPhysical(int10.rom.font_14),reg_al==0x11,256,0,reg_bl&0x7f,14);
 			break;
 		case 0x02:			/* Load 8x8 font */
 		case 0x12:
-			INT10_LoadFont(Real2Phys(int10.rom.font_8_first),reg_al==0x12,256,0,reg_bl&0x7f,8);
+			INT10_LoadFont(RealToPhysical(int10.rom.font_8_first),reg_al==0x12,256,0,reg_bl&0x7f,8);
 			break;
 		case 0x03:			/* Set Block Specifier */
 			IO_Write(0x3c4,0x3);IO_Write(0x3c5,reg_bl);
@@ -229,7 +230,7 @@ static Bitu INT10_Handler(void) {
 		case 0x04:			/* Load 8x16 font */
 		case 0x14:
 			if (!IS_VGA_ARCH) break;
-			INT10_LoadFont(Real2Phys(int10.rom.font_16),reg_al==0x14,256,0,reg_bl&0x7f,16);
+			INT10_LoadFont(RealToPhysical(int10.rom.font_16),reg_al==0x14,256,0,reg_bl&0x7f,16);
 			break;
 /* Graphics mode calls */
 		case 0x20:			/* Set User 8x8 Graphics characters */
@@ -267,42 +268,42 @@ graphics_chars:
 			case 0x00:	/* interupt 0x1f vector */
 				{
 					RealPt int_1f=RealGetVec(0x1f);
-					SegSet16(es,RealSeg(int_1f));
-					reg_bp=RealOff(int_1f);
+					SegSet16(es,RealSegment(int_1f));
+					reg_bp=RealOffset(int_1f);
 				}
 				break;
 			case 0x01:	/* interupt 0x43 vector */
 				{
 					RealPt int_43=RealGetVec(0x43);
-					SegSet16(es,RealSeg(int_43));
-					reg_bp=RealOff(int_43);
+					SegSet16(es,RealSegment(int_43));
+					reg_bp=RealOffset(int_43);
 				}
 				break;
 			case 0x02:	/* font 8x14 */
-				SegSet16(es,RealSeg(int10.rom.font_14));
-				reg_bp=RealOff(int10.rom.font_14);
+				SegSet16(es,RealSegment(int10.rom.font_14));
+				reg_bp=RealOffset(int10.rom.font_14);
 				break;
 			case 0x03:	/* font 8x8 first 128 */
-				SegSet16(es,RealSeg(int10.rom.font_8_first));
-				reg_bp=RealOff(int10.rom.font_8_first);
+				SegSet16(es,RealSegment(int10.rom.font_8_first));
+				reg_bp=RealOffset(int10.rom.font_8_first);
 				break;
 			case 0x04:	/* font 8x8 second 128 */
-				SegSet16(es,RealSeg(int10.rom.font_8_second));
-				reg_bp=RealOff(int10.rom.font_8_second);
+				SegSet16(es,RealSegment(int10.rom.font_8_second));
+				reg_bp=RealOffset(int10.rom.font_8_second);
 				break;
 			case 0x05:	/* alpha alternate 9x14 */
-				SegSet16(es,RealSeg(int10.rom.font_14_alternate));
-				reg_bp=RealOff(int10.rom.font_14_alternate);
+				SegSet16(es,RealSegment(int10.rom.font_14_alternate));
+				reg_bp=RealOffset(int10.rom.font_14_alternate);
 				break;
 			case 0x06:	/* font 8x16 */
 				if (!IS_VGA_ARCH) break;
-				SegSet16(es,RealSeg(int10.rom.font_16));
-				reg_bp=RealOff(int10.rom.font_16);
+				SegSet16(es,RealSegment(int10.rom.font_16));
+				reg_bp=RealOffset(int10.rom.font_16);
 				break;
 			case 0x07:	/* alpha alternate 9x16 */
 				if (!IS_VGA_ARCH) break;
-				SegSet16(es,RealSeg(int10.rom.font_16_alternate));
-				reg_bp=RealOff(int10.rom.font_16_alternate);
+				SegSet16(es,RealSegment(int10.rom.font_16_alternate));
+				reg_bp=RealOffset(int10.rom.font_16_alternate);
 				break;
 			default:
 				LOG(LOG_INT10,LOG_ERROR)("Function 11:30 Request for font %2X",reg_bh);	
@@ -336,11 +337,9 @@ graphics_chars:
 			{   
 				if (!IS_VGA_ARCH) break;
 				LOG(LOG_INT10,LOG_WARN)("Function 12:Call %2X (select vertical resolution)",reg_bl);
-				if (svgaCard != SVGA_None) {
-					if (reg_al > 2) {
-						reg_al=0;		// invalid subfunction
-						break;
-					}
+				if (reg_al > 2) {
+					reg_al = 0;	// invalid VGA subfunction
+					break;
 				}
 				uint8_t modeset_ctl = real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL);
 				uint8_t video_switches = real_readb(BIOSMEM_SEG,BIOSMEM_SWITCHES)&0xf0;
@@ -598,26 +597,26 @@ graphics_chars:
 			}
 			switch (reg_bl) {
 			case 0x00:
-				SegSet16(es,RealSeg(int10.rom.pmode_interface));
-				reg_di=RealOff(int10.rom.pmode_interface);
+				SegSet16(es,RealSegment(int10.rom.pmode_interface));
+				reg_di=RealOffset(int10.rom.pmode_interface);
 				reg_cx=int10.rom.pmode_interface_size;
 				reg_ax=0x004f;
 				break;
 			case 0x01:						/* Get code for "set window" */
-				SegSet16(es,RealSeg(int10.rom.pmode_interface));
-				reg_di=RealOff(int10.rom.pmode_interface)+int10.rom.pmode_interface_window;
+				SegSet16(es,RealSegment(int10.rom.pmode_interface));
+				reg_di=RealOffset(int10.rom.pmode_interface)+int10.rom.pmode_interface_window;
 				reg_cx=int10.rom.pmode_interface_start-int10.rom.pmode_interface_window;
 				reg_ax=0x004f;
 				break;
 			case 0x02:						/* Get code for "set display start" */
-				SegSet16(es,RealSeg(int10.rom.pmode_interface));
-				reg_di=RealOff(int10.rom.pmode_interface)+int10.rom.pmode_interface_start;
+				SegSet16(es,RealSegment(int10.rom.pmode_interface));
+				reg_di=RealOffset(int10.rom.pmode_interface)+int10.rom.pmode_interface_start;
 				reg_cx=int10.rom.pmode_interface_palette-int10.rom.pmode_interface_start;
 				reg_ax=0x004f;
 				break;
 			case 0x03:						/* Get code for "set palette" */
-				SegSet16(es,RealSeg(int10.rom.pmode_interface));
-				reg_di=RealOff(int10.rom.pmode_interface)+int10.rom.pmode_interface_palette;
+				SegSet16(es,RealSegment(int10.rom.pmode_interface));
+				reg_di=RealOffset(int10.rom.pmode_interface)+int10.rom.pmode_interface_palette;
 				reg_cx=int10.rom.pmode_interface_size-int10.rom.pmode_interface_palette;
 				reg_ax=0x004f;
 				break;
@@ -653,8 +652,8 @@ graphics_chars:
 		break;
 	case 0xfa: {
 		RealPt pt=INT10_EGA_RIL_GetVersionPt();
-		SegSet16(es,RealSeg(pt));
-		reg_bx=RealOff(pt);
+		SegSet16(es,RealSegment(pt));
+		reg_bx=RealOffset(pt);
 		}
 		break;
 	case 0xff:

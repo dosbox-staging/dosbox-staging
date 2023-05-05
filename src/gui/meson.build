@@ -1,7 +1,6 @@
 libgui_sources = files(
     'render.cpp',
     'render_scalers.cpp',
-    'sdl_gui.cpp',
     'sdl_mapper.cpp',
     'sdlmain.cpp',
 )

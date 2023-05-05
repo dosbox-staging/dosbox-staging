@@ -1,12 +1,13 @@
 [wrap-file]
-directory = SDL2_image-2.6.2
-source_url = https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.6.2.tar.gz
-source_filename = SDL2_image-2.6.2.tar.gz
-source_hash = 48355fb4d8d00bac639cd1c4f4a7661c4afef2c212af60b340e06b7059814777
-patch_filename = sdl2_image_2.6.2-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/sdl2_image_2.6.2-1/get_patch
-patch_hash = 07592dc80753ba0d0855753a7fa09f76718cb6b744305d85fb8e3738ac77b285
-wrapdb_version = 2.6.2-1
+directory = SDL2_image-2.6.3
+source_url = https://www.libsdl.org/projects/SDL_image/release/SDL2_image-2.6.3.tar.gz
+source_filename = SDL2_image-2.6.3.tar.gz
+source_hash = 931c9be5bf1d7c8fae9b7dc157828b7eee874e23c7f24b44ba7eff6b4836312c
+patch_filename = sdl2_image_2.6.3-2_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/sdl2_image_2.6.3-2/get_patch
+patch_hash = 1741274f30b5b88299b2588a498a54a4203861ec1fa64c3bf99b359a6b618354
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/sdl2_image_2.6.3-2/SDL2_image-2.6.3.tar.gz
+wrapdb_version = 2.6.3-2
 
 [provide]
 sdl2_image = sdl2_image_dep

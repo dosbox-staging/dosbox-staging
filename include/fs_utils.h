@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2022  The DOSBox Staging Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ std_fs::path simplify_path(const std_fs::path &path) noexcept;
 
 constexpr uint32_t OK_IF_EXISTS = 0x1;
 
-int create_dir(const char *path, uint32_t mode, uint32_t flags = 0x0) noexcept;
+int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags = 0x0) noexcept;
 
 // Convert a filesystem time to a raw time_t value
 std::time_t to_time_t(const std_fs::file_time_type &fs_time);

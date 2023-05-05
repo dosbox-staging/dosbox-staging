@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -40,6 +40,7 @@ public:
 	void SetOptionSquish(const bool enabled);
 	void SetOptionStartLine(const uint32_t line_num);
 	void SetOptionTabSize(const uint8_t tab_size);
+	void SetOptionNoPaging(const bool enabled);
 
 	virtual void Display() = 0;
 
@@ -90,6 +91,7 @@ protected:
 	uint32_t stream_line_counter = 0;
 
 	bool is_output_redirected = false;
+	bool is_continuation      = false;
 	bool has_multiple_files   = false; // if more than 1 file has to be displayed
 	bool should_end_on_ctrl_c = false; // reaction on CTRL+C in the input
 	bool should_print_ctrl_c  = false; // if Ctrl+C on input should print '^C'
@@ -129,7 +131,8 @@ private:
 	bool has_option_squish = false; // true = squish multiple empty lines into one
 	bool has_option_extended_mode    = false;
 	bool has_option_expand_form_feed = false;
-	uint8_t option_tab_size = 8; // how many spaces to print for a TAB
+	bool has_option_no_paging        = false;
+	uint8_t  option_tab_size = 8; // how many spaces to print for a TAB
 	uint32_t option_start_line_num = 0;
 
 	// Line number to start displaying from
@@ -190,11 +193,28 @@ public:
 	void AddString(const char *format, ...);
 	void Display() override;
 
+	// To be used when input comes from a potentially slow I/O, each next
+	// call continues the previous display. To switch back to normal mode,
+	// just call 'Display()'.
+	// Returns false if output is terminated and there is no need to read
+	// further data from I/O.
+	// Current limitations:
+	// - it is not allowed to split a single line or an ANSI sequence
+	//   by a 'DisplayPartial()' call
+	// - 'SetOptionExtendedMode()' and 'SetOptionSquish()' were not tested
+	//   together with 'DisplayPartial()', code might need adaptations
+	bool DisplayPartial();
+
 private:
+	bool CommonPrepare();
 	bool GetCharacterRaw(char& code, bool& is_last_character) override;
+
+	void ProcessEndOfLines();
+	void CountLines();
 
 	std::string input_strings = {};
 	size_t input_position     = 0;
+	bool is_output_terminated = false;
 };
 
 #endif

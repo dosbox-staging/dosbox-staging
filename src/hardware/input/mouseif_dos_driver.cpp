@@ -271,7 +271,7 @@ static void clear_pending_events()
 	}
 
 	pending_moved  = false;
-	pending_button = pending_button_state.data;
+	pending_button = pending_button_state._data;
 	pending_wheel  = false;
 	maybe_start_delay_timer(delay_ms);
 }
@@ -1081,7 +1081,7 @@ static uint8_t update_moved()
 
 static uint8_t update_buttons(const MouseButtons12S new_buttons_12S)
 {
-	if (buttons.data == new_buttons_12S.data)
+	if (buttons._data == new_buttons_12S._data)
 		return 0;
 
 	auto mark_pressed = [](const uint8_t idx) {
@@ -1249,7 +1249,7 @@ static Bitu int33_handler()
 		break;
 	case 0x03: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get position and button
 	           // status
-		reg_bl = buttons.data;
+		reg_bl = buttons._data;
 		reg_bh = get_reset_wheel_8bit(); // CuteMouse clears wheel
 		                                 // counter too
 		reg_cx = get_pos_x();
@@ -1278,14 +1278,14 @@ static Bitu int33_handler()
 			reg_cx = state.last_wheel_moved_x;
 			reg_dx = state.last_wheel_moved_y;
 		} else if (idx < num_buttons) {
-			reg_ax                   = buttons.data;
+			reg_ax                   = buttons._data;
 			reg_bx                   = state.times_pressed[idx];
 			reg_cx                   = state.last_pressed_x[idx];
 			reg_dx                   = state.last_pressed_y[idx];
 			state.times_pressed[idx] = 0;
 		} else {
 			// unsupported - try to do something same
-			reg_ax = buttons.data;
+			reg_ax = buttons._data;
 			reg_bx = 0;
 			reg_cx = 0;
 			reg_dx = 0;
@@ -1302,7 +1302,7 @@ static Bitu int33_handler()
 			reg_cx = state.last_wheel_moved_x;
 			reg_dx = state.last_wheel_moved_y;
 		} else if (idx < num_buttons) {
-			reg_ax = buttons.data;
+			reg_ax = buttons._data;
 			reg_bx = state.times_released[idx];
 			reg_cx = state.last_released_x[idx];
 			reg_dx = state.last_released_y[idx];
@@ -1310,7 +1310,7 @@ static Bitu int33_handler()
 			state.times_released[idx] = 0;
 		} else {
 			// unsupported - try to do something same
-			reg_ax = buttons.data;
+			reg_ax = buttons._data;
 			reg_bx = 0;
 			reg_cx = 0;
 			reg_dx = 0;
@@ -1768,15 +1768,15 @@ void MOUSEDOS_DoCallback(const uint8_t mask)
 	reg_ah = (!use_relative && mouse_moved) ? 1 : 0;
 
 	reg_al = mask;
-	reg_bl = buttons.data;
+	reg_bl = buttons._data;
 	reg_bh = wheel_moved ? get_reset_wheel_8bit() : 0;
 	reg_cx = get_pos_x();
 	reg_dx = get_pos_y();
 	reg_si = mickey_counter_to_reg16(state.mickey_counter_x);
 	reg_di = mickey_counter_to_reg16(state.mickey_counter_y);
 
-	CPU_Push16(RealSeg(user_callback));
-	CPU_Push16(RealOff(user_callback));
+	CPU_Push16(RealSegment(user_callback));
+	CPU_Push16(RealOffset(user_callback));
 	CPU_Push16(state.user_callback_segment);
 	CPU_Push16(state.user_callback_offset);
 }
@@ -1813,17 +1813,17 @@ void MOUSEDOS_Init()
 	CALLBACK_Setup(call_int33,
 	               &int33_handler,
 	               CB_MOUSE,
-	               Real2Phys(int33_location),
+	               RealToPhysical(int33_location),
 	               "Mouse");
 	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
 	real_writed(0, 0x33 << 2, int33_location);
 
 	const auto call_mouse_bd = CALLBACK_Allocate();
-	const auto tmp_offs = static_cast<uint16_t>(RealOff(int33_location) + 2);
+	const auto tmp_offs = static_cast<uint16_t>(RealOffset(int33_location) + 2);
 	CALLBACK_Setup(call_mouse_bd,
 	               &mouse_bd_handler,
 	               CB_RETF8,
-	               PhysMake(RealSeg(int33_location), tmp_offs),
+	               PhysicalMake(RealSegment(int33_location), tmp_offs),
 	               "MouseBD");
 	// pseudocode for CB_MOUSE (including the special backdoor entry point):
 	//    jump near i33hd

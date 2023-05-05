@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2021  The DOSBox Staging Team
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -27,6 +27,8 @@
 
 #include <memory>
 #include <string>
+
+#include "std_filesystem.h"
 
 #define MT32EMU_API_TYPE 3
 #include <mt32emu/mt32emu.h>
@@ -68,8 +70,8 @@ public:
 	bool Matches(const std::string &model_name) const;
 
 	using service_t = std::unique_ptr<MT32Emu::Service>;
-	bool InDir(const service_t &service, const std::string &dir) const;
-	bool Load(const service_t &service, const std::string &dir) const;
+	bool InDir(const service_t& service, const std_fs::path& dir) const;
+	bool Load(const service_t& service, const std_fs::path& dir) const;
 
 private:
 	size_t SetVersion();

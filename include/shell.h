@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -153,24 +154,16 @@ public:
 	bool call = false;
 };
 
-/* Object to manage lines in the autoexec.bat The lines get removed from
- * the file if the object gets destroyed. The environment is updated
- * as well if the line set a a variable */
-class AutoexecObject{
-private:
-	bool installed = false;
-	std::string buf = {};
+std::tuple<std::string, std::string, std::string> parse_drive_conf(
+        std::string drive_letter, const std_fs::path& conf_path);
 
-public:
-	AutoexecObject() = default;
-	AutoexecObject(const std::string& line);
-	~AutoexecObject();
+// Localized output
 
-	void Install(const std::string& in);
-	void InstallBefore(const std::string& in);
+char* format_date(const uint16_t year, const uint8_t month, const uint8_t day);
+char* format_time(const uint8_t hour, const uint8_t min, const uint8_t sec,
+                  const uint8_t msec, const bool full = false);
+std::string format_number(const size_t num);
 
-private:
-	void CreateAutoexec();
-};
+std::string shorten_path(const std::string& path, const size_t max_len);
 
 #endif

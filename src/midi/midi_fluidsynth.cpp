@@ -134,39 +134,40 @@ std::tuple<std::string, int> parse_sf_pref(const std::string &line,
 
 #if defined(WIN32)
 
-static std::deque<std::string> get_data_dirs()
+static std::deque<std_fs::path> get_data_dirs()
 {
 	return {
-	        CROSS_GetPlatformConfigDir() + "soundfonts\\",
+	        get_platform_config_dir() / "soundfonts",
+
+	        // C:\soundfonts is the default place where FluidSynth places default.sf2
+	        // https://www.fluidsynth.org/api/fluidsettings.xml#synth.default-soundfont
 	        "C:\\soundfonts\\",
 	};
 }
 
 #elif defined(MACOSX)
 
-static std::deque<std::string> get_data_dirs()
+static std::deque<std_fs::path> get_data_dirs()
 {
 	return {
-	        CROSS_GetPlatformConfigDir() + "soundfonts/",
-	        CROSS_ResolveHome("~/Library/Audio/Sounds/Banks/"),
-	        // TODO: check /usr/local/share/soundfonts
-	        // TODO: check /usr/share/soundfonts
+	        get_platform_config_dir() / "soundfonts",
+	        std_fs::path(CROSS_ResolveHome("~/Library/Audio/Sounds/Banks")),
 	};
 }
 
 #else
 
-static std::deque<std::string> get_data_dirs()
+static std::deque<std_fs::path> get_data_dirs()
 {
 	// First priority is $XDG_DATA_HOME
 	const char *xdg_data_home_env = getenv("XDG_DATA_HOME");
-	const auto xdg_data_home = CROSS_ResolveHome(
+	const std_fs::path xdg_data_home = CROSS_ResolveHome(
 	        xdg_data_home_env ? xdg_data_home_env : "~/.local/share");
 
-	std::deque<std::string> dirs = {
-	        xdg_data_home + "/dosbox/soundfonts/",
-	        xdg_data_home + "/soundfonts/",
-	        xdg_data_home + "/sounds/sf2/",
+	std::deque<std_fs::path> dirs = {
+	        xdg_data_home / "dosbox/soundfonts",
+	        xdg_data_home / "soundfonts",
+	        xdg_data_home / "sounds/sf2",
 	};
 
 	// Second priority are the $XDG_DATA_DIRS
@@ -179,13 +180,13 @@ static std::deque<std::string> get_data_dirs()
 		if (xdg_data_dir.empty()) {
 			continue;
 		}
-		const auto resolved_dir = CROSS_ResolveHome(xdg_data_dir);
-		dirs.emplace_back(resolved_dir + "/soundfonts/");
-		dirs.emplace_back(resolved_dir + "/sounds/sf2/");
+		const std_fs::path resolved_dir = CROSS_ResolveHome(xdg_data_dir);
+		dirs.emplace_back(resolved_dir / "soundfonts");
+		dirs.emplace_back(resolved_dir / "sounds/sf2");
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(CROSS_GetPlatformConfigDir() + "soundfonts/");
+	dirs.emplace_back(get_platform_config_dir() / "soundfonts");
 
 	return dirs;
 }
@@ -194,14 +195,14 @@ static std::deque<std::string> get_data_dirs()
 
 static std::string find_sf_file(const std::string &name)
 {
-	const std::string sf_path = CROSS_ResolveHome(name);
+	const std_fs::path sf_path = CROSS_ResolveHome(name);
 	if (path_exists(sf_path))
-		return sf_path;
+		return sf_path.string();
 	for (const auto &dir : get_data_dirs()) {
-		for (const auto &sf : {dir + name, dir + name + ".sf2"}) {
+		for (const auto& sf : {dir / name, dir / (name + ".sf2")}) {
 			// DEBUG_LOG_MSG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
 			if (path_exists(sf))
-				return sf;
+				return sf.string();
 		}
 	}
 	return "";
@@ -767,9 +768,10 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program *caller)
 
 	// If selected soundfont exists in the current working directory,
 	// then print it.
-	const std::string sf_path = CROSS_ResolveHome(sf_name);
+	const std_fs::path sf_path = CROSS_ResolveHome(sf_name);
 	if (path_exists(sf_path)) {
-		write_line((sf_path == selected_font), sf_name);
+		write_line((sf_path == selected_font),
+		           format_sf2_line(term_width - 2, sf_name));
 	}
 
 	// Go through all soundfont directories and list all .sf2 files.

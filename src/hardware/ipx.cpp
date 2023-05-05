@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -105,10 +106,10 @@ ECBClass::ECBClass(uint16_t segment, uint16_t offset)
 
 	LOG_IPX("ECB: SN%7d created.   Number of ECBs: %3d, ESR %4x:%4x, ECB %4x:%4x",
 		SerialNumber,ECBAmount,
-		real_readw(RealSeg(ECBAddr),
-		RealOff(ECBAddr)+6),
-		real_readw(RealSeg(ECBAddr),
-		RealOff(ECBAddr)+4),segment,offset);
+		real_readw(RealSegment(ECBAddr),
+		RealOffset(ECBAddr)+6),
+		real_readw(RealSegment(ECBAddr),
+		RealOffset(ECBAddr)+4),segment,offset);
 #endif
 
 	if (ECBList == NULL)
@@ -162,44 +163,44 @@ bool ECBClass::writeData() {
 }
 
 uint16_t ECBClass::getSocket(void) {
-	return swapByte(real_readw(RealSeg(ECBAddr), RealOff(ECBAddr) + 0xa));
+	return swapByte(real_readw(RealSegment(ECBAddr), RealOffset(ECBAddr) + 0xa));
 }
 
 uint8_t ECBClass::getInUseFlag(void) {
-	return real_readb(RealSeg(ECBAddr), RealOff(ECBAddr) + 0x8);
+	return real_readb(RealSegment(ECBAddr), RealOffset(ECBAddr) + 0x8);
 }
 
 void ECBClass::setInUseFlag(uint8_t flagval) {
 	iuflag = flagval;
-	real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr) + 0x8, flagval);
+	real_writeb(RealSegment(ECBAddr), RealOffset(ECBAddr) + 0x8, flagval);
 }
 
 void ECBClass::setCompletionFlag(uint8_t flagval) {
-	real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr) + 0x9, flagval);
+	real_writeb(RealSegment(ECBAddr), RealOffset(ECBAddr) + 0x9, flagval);
 }
 
 uint16_t ECBClass::getFragCount(void) {
-	return real_readw(RealSeg(ECBAddr), RealOff(ECBAddr) + 34);
+	return real_readw(RealSegment(ECBAddr), RealOffset(ECBAddr) + 34);
 }
 
 void ECBClass::getFragDesc(uint16_t descNum, fragmentDescriptor *fragDesc) {
-	uint16_t memoff = RealOff(ECBAddr) + 30 + ((descNum+1) * 6);
-	fragDesc->offset = real_readw(RealSeg(ECBAddr), memoff);
+	uint16_t memoff = RealOffset(ECBAddr) + 30 + ((descNum+1) * 6);
+	fragDesc->offset = real_readw(RealSegment(ECBAddr), memoff);
 	memoff += 2;
-	fragDesc->segment = real_readw(RealSeg(ECBAddr), memoff);
+	fragDesc->segment = real_readw(RealSegment(ECBAddr), memoff);
 	memoff += 2;
-	fragDesc->size = real_readw(RealSeg(ECBAddr), memoff);
+	fragDesc->size = real_readw(RealSegment(ECBAddr), memoff);
 }
 
 RealPt ECBClass::getESRAddr(void) {
-	return RealMake(real_readw(RealSeg(ECBAddr),
-		RealOff(ECBAddr)+6),
-		real_readw(RealSeg(ECBAddr),
-		RealOff(ECBAddr)+4));
+	return RealMake(real_readw(RealSegment(ECBAddr),
+		RealOffset(ECBAddr)+6),
+		real_readw(RealSegment(ECBAddr),
+		RealOffset(ECBAddr)+4));
 }
 
 void ECBClass::NotifyESR(void) {
-	uint32_t ESRval = real_readd(RealSeg(ECBAddr), RealOff(ECBAddr)+4);
+	uint32_t ESRval = real_readd(RealSegment(ECBAddr), RealOffset(ECBAddr)+4);
 	if(ESRval || databuffer) { // databuffer: write data at realmode/v86 time
 		// LOG_IPX("ECB: SN%7d to be notified.", SerialNumber);
 		// take the ECB out of the current list
@@ -234,12 +235,12 @@ void ECBClass::NotifyESR(void) {
 
 void ECBClass::setImmAddress(uint8_t *immAddr) {
 	for(Bitu i=0;i<6;i++)
-		real_writeb(RealSeg(ECBAddr), RealOff(ECBAddr)+28+i, immAddr[i]);
+		real_writeb(RealSegment(ECBAddr), RealOffset(ECBAddr)+28+i, immAddr[i]);
 }
 
 void ECBClass::getImmAddress(uint8_t* immAddr) {
 	for(Bitu i=0;i<6;i++)
-		immAddr[i] = real_readb(RealSeg(ECBAddr), RealOff(ECBAddr)+28+i);
+		immAddr[i] = real_readb(RealSegment(ECBAddr), RealOffset(ECBAddr)+28+i);
 }
 
 ECBClass::~ECBClass() {
@@ -339,11 +340,11 @@ static void CloseSocket(void) {
 static bool IPX_Multiplex(void) {
 	if(reg_ax != 0x7a00) return false;
 	reg_al = 0xff;
-	SegSet16(es,RealSeg(ipx_callback));
-	reg_di = RealOff(ipx_callback);
+	SegSet16(es,RealSegment(ipx_callback));
+	reg_di = RealOffset(ipx_callback);
 
-	//reg_bx = RealOff(IPXVERpointer);
-	//reg_cx = RealSeg(ipx_callback);
+	//reg_bx = RealOffset(IPXVERpointer);
+	//reg_cx = RealSegment(ipx_callback);
 	return true;
 }
 
@@ -420,8 +421,8 @@ static void handleIpxRequest(void) {
 			tmpECB->setInUseFlag(USEFLAG_LISTENING);
 			/*LOG_IPX("IPX: Listen for packet on 0x%4x - ESR address
 			   %4x:%4x", tmpECB->getSocket(),
-			        RealSeg(tmpECB->getESRAddr()),
-			        RealOff(tmpECB->getESRAddr()));*/
+			        RealSegment(tmpECB->getESRAddr()),
+			        RealOffset(tmpECB->getESRAddr()));*/
 		}
 		break;
 
@@ -1072,11 +1073,11 @@ Bitu IPX_ESRHandler(void) {
 		if(ESRList->databuffer) ESRList->writeData();
 		if(ESRList->getESRAddr()) {
 			// setup registers
-			SegSet16(es, RealSeg(ESRList->ECBAddr));
-			reg_si = RealOff(ESRList->ECBAddr);
+			SegSet16(es, RealSegment(ESRList->ECBAddr));
+			reg_si = RealOffset(ESRList->ECBAddr);
 			reg_al = 0xff;
-			CALLBACK_RunRealFar(RealSeg(ESRList->getESRAddr()),
-								RealOff(ESRList->getESRAddr()));
+			CALLBACK_RunRealFar(RealSegment(ESRList->getESRAddr()),
+								RealOffset(ESRList->getESRAddr()));
 		}
 		delete ESRList; //Destructor updates this pointer to the next value or NULL
 	}	// while
@@ -1087,7 +1088,6 @@ Bitu IPX_ESRHandler(void) {
 	return CBRET_NONE;
 }
 
-void VFILE_Remove(const char *name, const char *dir = "");
 bool NetWrapper_InitializeSDLNet(); // from misc_util.cpp
 
 class IPX final : public Module_base {
@@ -1128,7 +1128,7 @@ public:
 
 		if(!dospage) dospage = DOS_GetMemory(2); // can not be freed yet
 
-		PhysPt phyDospage = PhysMake(dospage,0);
+		PhysPt phyDospage = PhysicalMake(dospage,0);
 
 		LOG_IPX("ESR callback address: %x, HandlerID %d", phyDospage,call_ipxesr1);
 
@@ -1178,11 +1178,11 @@ public:
 		}
 		DisconnectFromServer(false);
 
-		DOS_DelMultiplexHandler(IPX_Multiplex);
+		DOS_DeleteMultiplexHandler(IPX_Multiplex);
 		RealSetVec(0x73,old_73_vector);
 		IO_WriteB(0xa1,IO_ReadB(0xa1)|8);	// disable IRQ11
 
-		PhysPt phyDospage = PhysMake(dospage,0);
+		PhysPt phyDospage = PhysicalMake(dospage,0);
 		for(Bitu i = 0;i < 32;i++)
 			phys_writeb(phyDospage+i,(uint8_t)0x00);
 

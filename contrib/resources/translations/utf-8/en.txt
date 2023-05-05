@@ -41,12 +41,12 @@ or a fixed size (e.g. 1024x768).
 .
 :CONFIG_WINDOWRESOLUTION
 Set window size when running in windowed mode:
-  default:   Select the best option based on your
-             environment and other settings.
-  small, medium, or large (or s, m, l):
+  default:   Select the best option based on your environment and
+             other settings.
+  small, medium, large (s, m, l):
              Size the window relative to the desktop.
-  <custom>:  Scale the window to the given dimensions in
-             WxH format. For example: 1024x768.
+  <custom>:  Scale the window to the given dimensions in WxH format.
+             For example: 1024x768.
              Scaling is not performed for output=surface.
 .
 :CONFIG_VIEWPORT_RESOLUTION
@@ -62,7 +62,7 @@ Set initial window position when running in windowed mode:
              0,0 is the top-left corner of the screen.
 .
 :CONFIG_WINDOW_DECORATIONS
-Controls whether to display window decorations in windowed mode.
+Enable window decorations in windowed mode.
 .
 :CONFIG_TRANSPARENCY
 Set the transparency of the DOSBox Staging screen.
@@ -83,26 +83,26 @@ Set the host's refresh rate:
              23.000.
 .
 :CONFIG_VSYNC
-Synchronize with display refresh rate if supported. This can
-reduce flickering and tearing, but may also impact performance.
+Synchronize with display refresh rate if supported.
+This can reduce flickering and tearing, but may also impact performance.
 .
 :CONFIG_VSYNC_SKIP
-Number of microseconds to allow rendering to block before skipping the next
-frame. 0 disables this and will always render.
+Number of microseconds to allow rendering to block before skipping the
+next frame. 0 disables this and will always render.
 .
 :CONFIG_PRESENTATION_MODE
-Optionally select the frame presentation mode:
+Select the frame presentation mode:
   auto:  Intelligently time and drop frames to prevent
          emulation stalls, based on host and DOS frame rates.
   cfr:   Always present DOS frames at a constant frame rate.
   vfr:   Always present changed DOS frames at a variable frame rate.
 .
 :CONFIG_OUTPUT
-What video system to use for output.
+Video system to use for output.
 .
 :CONFIG_TEXTURE_RENDERER
-Choose a renderer driver when using a texture output mode.
-Use texture_renderer=auto for an automatic choice.
+Render driver to use in 'texture' output mode.
+Use 'texture_renderer = auto' for an automatic choice.
 .
 :CONFIG_CAPTURE_MOUSE
 Moved to [mouse] section.
@@ -117,9 +117,9 @@ Moved to [mouse] section.
 Keep the console open if an error has occurred.
 .
 :CONFIG_PRIORITY
-Priority levels to apply when active and inactive, respectively. 
-   auto:  Let the host operating system manage the priority (valid for both).
-Default is: 'auto auto'
+Priority levels to apply when active and inactive, respectively.
+('auto auto' by default)
+'auto' lets the host operating system manage the priority.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
 Mute the sound when the window is inactive.
@@ -131,30 +131,31 @@ Pause emulation when the window is inactive.
 File used to load/save the key/event mappings.
 Pre-configured maps are bundled in the 'resources/mapperfiles' directory.
 They can be loaded by name, for example: mapperfile = xbox/xenon2.map
-Note: the -resetmapper commandline flag only deletes the default mapperfile.
+Notes: The -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
-Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER
-environment variable (which usually blocks the OS screensaver
-while the emulator is running).
+Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment
+variable (which usually blocks the OS screensaver while the emulator is
+running).
 .
 :CONFIG_LANGUAGE
-Select a language to use: de, en, es, fr, it, nl, pl, and ru
+Select a language to use: de, en, es, fr, it, nl, pl, and ru (unset by default)
 Notes: This setting will override the 'LANG' environment, if set.
        The 'resources/translations' directory bundled with the executable holds
        these files. Please keep it along-side the executable to support this
        feature.
 .
 :CONFIG_MACHINE
-The type of machine DOSBox tries to emulate.
+The type of machine DOSBox tries to emulate ('svga_s3' by default).
 .
 :CONFIG_CAPTURES
-Directory where things like wave, midi, screenshot get captured.
+Directory where audio, video, MIDI, and screenshot captures get saved
+('capture' by default).
 .
 :CONFIG_MEMSIZE
-Amount of memory DOSBox has in megabytes.
-This value is best left at its default to avoid problems with some games,
-though few games might require a higher value.
+Amount of memory of the emulated machine has in MB (16 by default).
+Best leave at the default setting to avoid problems with some games,
+though a few games might require a higher value.
 There is generally no speed advantage when raising this value.
 .
 :CONFIG_MCB_FAULT_STRATEGY
@@ -163,46 +164,48 @@ How software-corrupted memory chain blocks should be handled:
   repair:  Repair (and report) faults using adjacent chain blocks.
   report:  Report faults but otherwise proceed as-is.
   allow:   Allow faults to go unreported (hardware behavior).
-The default (deny) is recommended unless a game is failing with MCB corruption
-errors.
+The default ('deny') is recommended unless a game is failing with MCB
+corruption errors.
 .
 :CONFIG_VMEMSIZE
-Video memory in MiB (1-8) or KiB (256 to 8192). 'auto' uses the default per
-video adapter.
+Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default per
+video adapter ('auto' by default).
 .
 :CONFIG_DOS_RATE
 Customize the emulated video mode's frame rate, in Hz:
-default:  The DOS video mode determines the rate (recommended).
-host:     Match the DOS rate to the host rate (see 'host_rate' setting).
-<value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
+  default:  The DOS video mode determines the rate (recommended; default).
+  host:     Match the DOS rate to the host rate (see 'host_rate' setting).
+  <value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
 We recommend the 'default' rate; otherwise test and set on a per-game basis.
 .
 :CONFIG_VESA_MODES
 Controls the selection of VESA 1.2 and 2.0 modes offered:
-  compatible   A tailored selection that maximizes game compatibility.
-               This is recommended along with 4 or 8 MB of video memory.
-  halfline     Supports the low-resolution halfline VESA 2.0 mode used by
+  compatible:  A tailored selection that maximizes game compatibility.
+               This is recommended along with 4 or 8 MB of video memory
+               (default).
+  halfline:    Supports the low-resolution halfline VESA 2.0 mode used by
                Extreme Assault. Use only if needed, as it's not S3 compatible.
-  all          Offers all modes for a given video memory size, however
+  all:         Offers all modes for a given video memory size, however
                some games may not use them properly (flickering) or may need
-               more system memory (mem = ) to use them.
+               more system memory to use them.
 .
 :CONFIG_SPEED_MODS
-Permit changes known to improve performance. Currently no games are known
-to be affected by this. Please file a bug with the project if you find a
-game that fails when this is set to true so we will list them here.
+Permit changes known to improve performance (enabled by default).
+Currently, no games are known to be negatively affected by this.
+Please file a bug with the project if you find a game that fails
+when this is enabled so we will list them here.
 .
 :CONFIG_AUTOEXEC_SECTION
-How autoexec sections are handled from multiple config files.
-join      : combines them into one big section (legacy behavior).
-overwrite : use the last one encountered, like other conf settings.
+How autoexec sections are handled from multiple config files:
+  join:       Combine them into one big section (legacy behavior; default).
+  overwrite:  Use the last one encountered, like other config settings.
 .
 :CONFIG_AUTOMOUNT
-Mounts 'drives/[c]' directories as drives on startup, where [c] is
-a lower-case drive letter from a to y.  The 'drives' folder can be
+Mount 'drives/[c]' directories as drives on startup, where [c] is a lower-case
+drive letter from 'a' to 'y' (enabled by default). The 'drives' folder can be
 provided relative to the current directory or via built-in resources.
-Mount settings can be optionally provided using a [c].conf file along-
--side the drive's directory, with content as follows:
+Mount settings can be optionally provided using a [c].conf file along-side
+the drive's directory, with content as follows:
   [drive]
   type    = dir, overlay, floppy, or cdrom
   label   = custom_label
@@ -211,89 +214,96 @@ Mount settings can be optionally provided using a [c].conf file along-
   verbose = true or false
 .
 :CONFIG_STARTUP_VERBOSITY
-Controls verbosity prior to displaying the program:
-Verbosity   | Welcome | Early stdout
-high        |   yes   |    yes
-low         |   no    |    yes
-quiet       |   no    |    no
-auto        | 'low' if exec or dir is passed, otherwise 'high'
+Controls verbosity prior to displaying the program ('auto' by default):
+  Verbosity   | Welcome | Early stdout
+  high        |   yes   |    yes
+  low         |   no    |    yes
+  quiet       |   no    |    no
+  auto        | 'low' if exec or dir is passed, otherwise 'high'
+.
+:CONFIG_ALLOW_WRITE_PROTECTED_FILES
+Many games open all their files with writable permissions; even files that they
+never modify. This setting lets you write-protect those files while still
+allowing the game to read them. A second use-case: if you're using a copy-on-write
+or network-based filesystem, this setting avoids triggering write-operations for
+these write-protected files.
 .
 :CONFIG_FRAMESKIP
 Consider capping frame-rates using the '[sdl] host_rate' setting.
 .
 :CONFIG_ASPECT
-Scales the vertical resolution to produce a 4:3 display aspect
-ratio, matching that of the original standard-definition monitors
-for which the majority of DOS games were designed. This setting
-only affects video modes that use non-square pixels, such as
-320x200 or 640x400; where as square-pixel modes, such as 640x480
-and 800x600, will be displayed as-is.
+Scale the vertical resolution to produce a 4:3 display aspect ratio, matching
+that of the original monitors the majority of DOS games were designed for
+(enabled by default).
+This setting only affects video modes that use non-square pixels, such as
+320x200 or 640x400; whereas square-pixel modes, such as 640x480
+and 800x600, are displayed as-is.
 .
 :CONFIG_MONOCHROME_PALETTE
-Select default palette for monochrome display.
-Works only when emulating hercules or cga_mono.
+Select default palette for monochrome display ('white' by default).
+Works only when emulating 'hercules' or 'cga_mono'.
 You can also cycle through available colours using F11.
 .
 :CONFIG_CGA_COLORS
-Sets the interpretation of CGA RGBI colors. Affects all machine types capable
+Set the interpretation of CGA RGBI colours. Affects all machine types capable
 of displaying CGA or better graphics. Built-in presets:
   default:       The canonical CGA palette, as emulated by VGA adapters
                  (default).
-  tandy [BL]:    Emulation of an idealised Tandy monitor with adjustable
-                 brown level. The brown level can be provided as an optional
-                 second parameter (0 - red, 50 - brown, 100 - dark yellow;
+  tandy <bl>:    Emulation of an idealised Tandy monitor with adjustable brown
+                 level. The brown level can be provided as an optional second
+                 parameter (0 - red, 50 - brown, 100 - dark yellow;
                  defaults to 50). E.g. tandy 100
-  tandy-warm:    Emulation of the actual color output of an unknown Tandy
+  tandy-warm:    Emulation of the actual colour output of an unknown Tandy
                  monitor.
-  ibm5153 [C]:   Emulation of the actual color output of an IBM 5153 monitor
-                 with a unique contrast control that dims non-bright colors
+  ibm5153 <c>:   Emulation of the actual colour output of an IBM 5153 monitor
+                 with a unique contrast control that dims non-bright colours
                  only. The contrast can be optionally provided as a second
                  parameter (0 to 100; defaults to 100), e.g. ibm5153 60
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
-                 Palettes used by the Amiga ports of Sierra AGI games
-                 (see the manual for further details).
-  agi-amigaish:  A mix of EGA and Amiga colors used by the Sarien
+                 Palettes used by the Amiga ports of Sierra AGI games.
+  agi-amigaish:  A mix of EGA and Amiga colours used by the Sarien
                  AGI-interpreter.
   scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.
-  colodore:      Commodore 64 inspired colors based on the Colodore palette.
+  colodore:      Commodore 64 inspired colours based on the Colodore palette.
   colodore-sat:  Colodore palette with 20% more saturation.
   dga16:         A modern take on the canonical CGA palette with dialed back
                  contrast.
-You can also set custom colors by specifying 16 space or comma separated color
-values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red),
-or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colors are
+You can also set custom colours by specifying 16 space or comma separated
+colour values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red),
+or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colours are
 ordered as follows:
-black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,
-light-blue, light-green, light-cyan, light-red, light-magenta, yellow,
-and white.
+  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,
+  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.
 Their default values, shown here in 6-digit hex code format, are:
-#000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa #555555
-#5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 and #ffffff, respectively.
+  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
+  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff
 .
 :CONFIG_SCALER
 Software scalers are deprecated in favour of hardware-accelerated options:
- - If you used the normal2x/3x scalers, set a desired 'windowresolution' instead.
- - If you used an advanced scaler, consider one of the 'glshader' options instead.
+  - If you used the normal2x/3x scalers, set a desired 'windowresolution'
+    instead.
+  - If you used an advanced scaler, consider one of the 'glshader'
+    options instead.
 .
 :CONFIG_GLSHADER
-Either 'none' or a GLSL shader name. Works only with
-OpenGL output.  Can be either an absolute path, a file
-in the 'glshaders' subdirectory of the DOSBox
-configuration directory, one of the bundled shaders:
-advinterp2x, advinterp3x, advmame2x, advmame3x,
-crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
-scan2x, scan3x, tv2x, tv3x, sharp (default).
+Set the GLSL shader to use in OpenGL output modes.
+Options include 'default', 'none', a shader listed using the --list-glshaders
+command-line argument, or an absolute or relative path to a file.
+'default' sets the `interpolation/sharp.glsl` shader.
+In all cases, you may omit the shader's '.glsl' file extension.
 .
 :CONFIG_COMPOSITE
-Enable composite mode on start. 'auto' lets the program decide.
-Note: Fine-tune the settings below (ie: hue) using the composite hotkeys.
-      Then read the new settings from your console and enter them here.
+Enable composite mode on start ('auto' by default).
+'auto' lets the program decide.
+Notes: Fine-tune the settings below (i.e., hue) using the composite hotkeys,
+       then read the new settings from your console and enter them here.
 .
 :CONFIG_ERA
-Era of composite technology. When 'auto', PCjr uses new and CGA/Tandy use old.
+Era of composite technology ('auto' by default).
+When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.
 .
 :CONFIG_HUE
-Appearance of RGB palette. For example, adjust until sky is blue.
+Appearance of RGB palette. For example, adjust until the sky is blue.
 .
 :CONFIG_SATURATION
 Intensity of colors, from washed out to vivid.
@@ -308,97 +318,103 @@ Luminosity of the image, from dark to light.
 Convergence of subpixel elements, from blurry to sharp (CGA and Tandy-only).
 .
 :CONFIG_CORE
-CPU Core used in emulation. auto will switch to dynamic if available and
-appropriate.
+CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic
+if available and appropriate.
 .
 :CONFIG_CPUTYPE
-CPU Type used in emulation. auto is the fastest choice.
+CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.
 .
 :CONFIG_CYCLES
-Number of instructions DOSBox tries to emulate each millisecond.
-Setting this value too high results in sound dropouts and lags.
-Cycles can be set in 3 ways:
-  'auto'          tries to guess what a game needs.
-                  It usually works, but can fail for certain games.
-  'fixed #number' will set a fixed number of cycles. This is what you usually
-                  need if 'auto' fails (Example: fixed 4000).
-  'max'           will allocate as much cycles as your computer is able to
-                  handle.
+Number of instructions DOSBox tries to emulate per millisecond
+('auto' by default). Setting this value too high may result in sound drop-outs
+and lags.
+Possible settings:
+  auto:            Try to guess what a game needs. It usually works, but can
+                   fail with certain games.
+  fixed <number>:  Set a fixed number of cycles. This is what you usually
+                   need if 'auto' fails (e.g. 'fixed 4000').
+  max:             Allocate as much cycles as your computer is able to handle.
 .
 :CONFIG_CYCLEUP
-Number of cycles added or subtracted with speed control hotkeys.
-Run INTRO and see Special Keys for list of hotkeys.
+Number of cycles added or subtracted with speed control hotkeys
+(10 by default).
 .
 :CONFIG_CYCLEDOWN
-Setting it lower than 100 will be a percentage.
+Setting it lower than 100 will be a percentage (20 by default).
 .
 :CONFIG_MOUSE_CAPTURE
-Choose a mouse control method:
-  onclick:   Capture the mouse when clicking any button in the window.
-  onstart:   Capture the mouse immediately on start.
-  seamless:  Let the mouse move seamlessly; captures only with middle-click or
-             hotkey.
-  nomouse:   Hide the mouse and don't send input to the game.
+Set the mouse capture behaviour:
+  onclick:   Capture the mouse when clicking any mouse button in the window 
+             (default).
+  onstart:   Capture the mouse immediately on start. Might not work correctly
+             on some host operating systems.
+  seamless:  Let the mouse move seamlessly between the DOSBox window and the
+             rest of the desktop; captures only with middle-click or hotkey.
+             Seamless mouse does not work correctly with all the games.
+             Windows 3.1x can be made compatible with a custom mouse driver.
+  nomouse:   Hide the mouse and don't send mouse input to the game.
+For touch-screen control, use 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
-If true, middle-click will release the captured mouse, and also
-capture when seamless.
+If enabled, middle-click will release the captured mouse, and also capture
+when seamless (enabled by default).
 .
 :CONFIG_MOUSE_SENSITIVITY
-Default mouse sensitivity. 100 is a base value, 150 is 150% sensitivity, etc.
-Negative values reverse mouse direction, 0 disables the movement completely.
-The optional second parameter specifies vertical sensitivity (e.g. 100,200).
-Setting can be adjusted in runtime (also per mouse interface) using internal
-MOUSECTL.COM tool, available on drive Z:.
+Mouse sensitivity for the horizontal and vertical axes, as a percentage
+(100,100 by default). Negative values invert the axis, zero disables it.
+Providing only one value sets sensitivity for both axes.
+The setting can be adjusted in runtime (also per mouse interface) using
+internal MOUSECTL.COM tool, available on drive Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Enable to bypass your operating system's mouse acceleration and sensitivity
-settings. Works in fullscreen or when the mouse is captured in window mode.
+settings (enabled by default). Works in fullscreen or when the mouse is
+captured in window mode.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Enable built-in DOS mouse driver.
-Notes:
-   Disable if you intend to use original MOUSE.COM driver in emulated DOS.
-   When guest OS is booted, built-in driver gets disabled automatically.
+Enable built-in DOS mouse driver (enabled by default).
+Notes: Disable if you intend to use original MOUSE.COM driver in emulated DOS.
+       When guest OS is booted, built-in driver gets disabled automatically.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
-Updates mouse movement counters immediately, without waiting for interrupt.
-May improve gameplay, especially in fast paced games (arcade, FPS, etc.) - as
-for some games it effectively boosts the mouse sampling rate to 1000 Hz, without
-increasing interrupt overhead.
+Update mouse movement counters immediately, without waiting for interrupt
+(disabled by default). May improve gameplay, especially in fast-paced games
+(arcade, FPS, etc.), as for some games it effectively boosts the mouse
+sampling rate to 1000 Hz, without increasing interrupt overhead.
 Might cause compatibility issues. List of known incompatible games:
-   - Ultima Underworld: The Stygian Abyss
-   - Ultima Underworld II: Labyrinth of Worlds
-Please file a bug with the project if you find another game that fails when
-this is enabled, we will update this list.
+  - Ultima Underworld: The Stygian Abyss
+  - Ultima Underworld II: Labyrinth of Worlds
+Please report it if you find another incompatible game so we can update this
+list.
 .
 :CONFIG_PS2_MOUSE_MODEL
 PS/2 AUX port mouse model:
-   standard:       3 buttons, standard PS/2 mouse.
-   intellimouse:   3 buttons + wheel, Microsoft IntelliMouse.
-Default: intellimouse
+  standard:      3 buttons, standard PS/2 mouse.
+  intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.
+  explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer.
+  none:          no PS/2 mouse emulated.
+Default: explorer
 .
 :CONFIG_COM_MOUSE_MODEL
 COM (serial) port default mouse model:
-   2button:        2 buttons, Microsoft mouse.
-   3button:        3 buttons, Logitech mouse,
-                   mostly compatible with Microsoft mouse.
-   wheel:          3 buttons + wheel,
-                   mostly compatible with Microsoft mouse.
-   msm:            3 buttons, Mouse Systems mouse,
-                   NOT COMPATIBLE with Microsoft mouse.
-   2button+msm:    Automatic choice between 2button and msm.
-   3button+msm:    Automatic choice between 3button and msm.
-   wheel+msm:      Automatic choice between wheel and msm.
-Default: wheel+msm
-Notes:
-   Go to [serial] section to enable/disable COM port mice.
+  2button:      2 buttons, Microsoft mouse.
+  3button:      3 buttons, Logitech mouse;
+                mostly compatible with Microsoft mouse.
+  wheel:        3 buttons + wheel;
+                mostly compatible with Microsoft mouse.
+  msm:          3 buttons, Mouse Systems mouse;
+                NOT compatible with Microsoft mouse.
+  2button+msm:  Automatic choice between '2button' and 'msm'.
+  3button+msm:  Automatic choice between '3button' and 'msm'.
+  wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).
+Notes: Enable COM port mice in the [serial] section.
 .
 :CONFIG_NOSOUND
-Enable silent mode, sound is still emulated though.
+Enable silent mode (disabled by default).
+Sound is still fully emulated in silent mode, but DOSBox outputs silence.
 .
 :CONFIG_RATE
-Mixer sample rate.
+Mixer sample rate (48000 by default).
 .
 :CONFIG_BLOCKSIZE
 Mixer block size; larger values might help with sound stuttering but sound will
@@ -425,7 +441,7 @@ Set crossfeed globally on all stereo channels for headphone listening:
   <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed
                (off) and 100 full crossfeed (effectively turning stereo content
                into mono).
-Note: You can set per-channel crossfeed via mixer commands.
+Notes: You can set per-channel crossfeed via mixer commands.
 .
 :CONFIG_REVERB
 Enable reverb globally to add a sense of space to the sound:
@@ -441,88 +457,99 @@ Enable reverb globally to add a sense of space to the sound:
            channels for music and digital audio.
   huge:    A stronger variant of the large hall preset; works really well
            in some games with more atmospheric soundtracks.
-Note: You can fine-tune per-channel reverb levels via mixer commands.
+Notes: You can fine-tune per-channel reverb levels via mixer commands.
 .
 :CONFIG_CHORUS
 Enable chorus globally to add a sense of stereo movement to the sound:
   off:     No chorus (default).
   on:      Enable chorus (normal preset).
-  light:   A light chorus effect (especially suited for
-           synth music that features lots of white noise.)
+  light:   A light chorus effect (especially suited for synth music that
+           features lots of white noise.)
   normal:  Normal chorus that works well with a wide variety of games.
   strong:  An obvious and upfront chorus effect.
-Note: You can fine-tune per-channel chorus levels via mixer commands.
+Notes: You can fine-tune per-channel chorus levels via mixer commands.
 .
 :CONFIG_MIDIDEVICE
-Device that will receive the MIDI data (from the emulated MIDI
-interface - MPU-401). Choose one of the following:
-'fluidsynth', to use the built-in MIDI synthesizer. See the
-       [fluidsynth] section for detailed configuration.
-'mt32', to use the built-in Roland MT-32 synthesizer.
-       See the [mt32] section for detailed configuration.
-'auto', to use the first working external MIDI player. This
-       might be a software synthesizer or physical device.
+Set where MIDI data from the emulated MPU-401 MIDI interface is sent
+('auto' by default):
+  oss:         Use the Linux OSS MIDI playback interface.
+  alsa:        Use the Linux ALSA MIDI playback interface.
+  fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).
+               See the [fluidsynth] section for detailed configuration.
+  mt32:        The built-in Roland MT-32 synthesizer.
+               See the [mt32] section for detailed configuration.
+  auto:        Either one of the built-in MIDI synthesisers (if `midiconfig` is
+               set to 'fluidsynth' or 'mt32'), or a MIDI device external to
+               DOSBox (any other 'midiconfig' value). This might be a software
+               synthesizer or physical device. This is the default behaviour.
+  none:        Disable MIDI output.
 .
 :CONFIG_MIDICONFIG
-Configuration options for the selected MIDI interface.
-This is usually the id or name of the MIDI synthesizer you want
-to use (find the id/name with DOS command 'mixer /listmidi').
-- This option has no effect when using the built-in synthesizers
-  (mididevice = fluidsynth or mt32).
-- When using ALSA, use Linux command 'aconnect -l' to list open
-  MIDI ports, and select one (for example 'midiconfig=14:0'
-  for sequencer client 14, port 0).
-- If you're using a physical Roland MT-32 with revision 0 PCB,
-  the hardware may require a delay in order to prevent its
-  buffer from overflowing. In that case, add 'delaysysex',
-  for example: 'midiconfig=2 delaysysex'.
-See the README/Manual for more details.
+Configuration options for the selected MIDI interface (unset by default).
+This is usually the ID or name of the MIDI synthesizer you want
+to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').
+Notes: - This option has no effect when using the built-in synthesizers
+         ('mididevice = fluidsynth' or 'mididevice = mt32').
+       - When using ALSA, use the Linux command 'aconnect -l' to list all open
+         MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer
+         client 14, port 0).
+       - If you're using a physical Roland MT-32 with revision 0 PCB, the
+         hardware may require a delay in order to prevent its buffer from
+         overflowing. In that case, add 'delaysysex', e.g:
+         'midiconfig = 2 delaysysex'.
 .
 :CONFIG_MPU401
-Type of MPU-401 to emulate.
+MPU-401 mode to emulate ('intelligent' by default).
+.
+:CONFIG_RAW_MIDI_OUTPUT
+Enable raw, unaltered MIDI output (disabled by default).
+The MIDI drivers of many games don't fully conform to the MIDI standard,
+which makes editing the MIDI recordings of these games very error-prone and
+cumbersome in MIDI sequencers, often resulting in hanging or missing notes.
+DOSBox corrects the MIDI output of such games by default. This results in no
+audible difference whatsoever; it only affects the representation of the MIDI
+data. You should only enable 'raw_midi_output' if you really need to capture
+the raw, unaltered MIDI output of a program, e.g. when working with music
+applications, or when debugging MIDI issues.
 .
 :CONFIG_SOUNDFONT
-Path to a SoundFont file in .sf2 format. You can use an
-absolute or relative path, or the name of an .sf2 inside
-the 'soundfonts' directory within your DOSBox configuration
-directory.
-Note: The optional volume scaling percentage after the filename
-has been deprecated. Please use a mixer command instead to
-change the FluidSynth audio channel's volume, e.g.:
-  MIXER FSYNTH 200
+Path to a SoundFont file in .sf2 format ('default.sf2' by default).
+You can use an absolute or relative path, or the name of an .sf2 inside the
+'soundfonts' directory within your DOSBox configuration directory.
+Notes: The optional volume scaling percentage after the filename has been
+       deprecated. Please use a mixer command instead to change the FluidSynth
+       audio channel's volume, e.g. 'MIXER FSYNTH 200'
 .
 :CONFIG_FSYNTH_CHORUS
-Chorus effect: 'auto', 'on', 'off', or custom values.
+Chorus effect: 'auto' (default), 'on', 'off', or custom values.
 When using custom values:
   All five must be provided in-order and space-separated.
   They are: voice-count level speed depth modulation-wave, where:
-  - voice-count is an integer from 0 to 99.
-  - level is a decimal from 0.0 to 10.0
-  - speed is a decimal, measured in Hz, from 0.1 to 5.0
-  - depth is a decimal from 0.0 to 21.0
-  - modulation-wave is either 'sine' or 'triangle'
+    - voice-count is an integer from 0 to 99.
+    - level is a decimal from 0.0 to 10.0
+    - speed is a decimal, measured in Hz, from 0.1 to 5.0
+    - depth is a decimal from 0.0 to 21.0
+    - modulation-wave is either 'sine' or 'triangle'
   For example: chorus = 3 1.2 0.3 8.0 sine
-Note: You can disable the FluidSynth chorus and enable the
-mixer-level chorus on the FluidSynth channel instead, or
-enable both chorus effects at the same time. Whether this
-sounds good depends on the SoundFont and the chorus settings
-being used.
+Notes: You can disable the FluidSynth chorus and enable the mixer-level chorus
+       on the FluidSynth channel instead, or enable both chorus effects at the
+       same time. Whether this sounds good depends on the SoundFont and the
+       chorus settings being used.
 .
 :CONFIG_FSYNTH_REVERB
-Reverb effect: 'auto', 'on', 'off', or custom values.
+Reverb effect: 'auto' (default), 'on', 'off', or custom values.
 When using custom values:
   All four must be provided in-order and space-separated.
   They are: room-size damping width level, where:
-  - room-size is a decimal from 0.0 to 1.0
-  - damping is a decimal from 0.0 to 1.0
-  - width is a decimal from 0.0 to 100.0
-  - level is a decimal from 0.0 to 1.0
+    - room-size is a decimal from 0.0 to 1.0
+    - damping is a decimal from 0.0 to 1.0
+    - width is a decimal from 0.0 to 100.0
+    - level is a decimal from 0.0 to 1.0
   For example: reverb = 0.61 0.23 0.76 0.56
-Note: You can disable the FluidSynth reverb and enable the
-mixer-level reverb on the FluidSynth channel instead, or
-enable both reverb effects at the same time. Whether this
-sounds good depends on the SoundFont and the reverb settings
-being used.
+Notes: You can disable the FluidSynth reverb and enable the mixer-level reverb
+       on the FluidSynth channel instead, or enable both reverb effects at the
+       same time. Whether this sounds good depends on the SoundFont and the
+       reverb settings being used.
 .
 :CONFIG_FSYNTH_FILTER
 Filter for the FluidSynth audio output:
@@ -530,10 +557,12 @@ Filter for the FluidSynth audio output:
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_MODEL
-Model of synthesizer to use.
-'auto' picks the first model with available ROMs, in order as listed.
-'cm32l' and 'mt32' pick the first model of their type, in the order listed.
-'mt32_old' and 'mt32_new' are aliases for 1.07 and 2.04, respectively.
+MT-32 model to use:
+  auto:      Pick the first available model, in order as listed.
+  mt32:      Pick the first available MT-32 model, in order as listed.
+  cm32l:     Pick the first available CM-32L model, in order as listed.
+  mt32_old:  Alias for MT-32 v1.07.
+  mt32_new:  Alias for MT-32 v2.04.
 .
 :CONFIG_ROMDIR
 The directory containing ROMs for one or more models.
@@ -569,33 +598,36 @@ Active ROM  :
 Loaded From : 
 .
 :CONFIG_SBTYPE
-Type of Sound Blaster to emulate. 'gb' is Game Blaster.
+Type of Sound Blaster to emulate ('sb16' by default).
+'gb' is Game Blaster.
 .
 :CONFIG_SBBASE
-The IO address of the Sound Blaster.
+The IO address of the Sound Blaster (220 by default).
 .
 :CONFIG_IRQ
-The IRQ number of the Sound Blaster.
+The IRQ number of the Sound Blaster (7 by default).
 .
 :CONFIG_DMA
-The DMA number of the Sound Blaster.
+The DMA number of the Sound Blaster (1 by default).
 .
 :CONFIG_HDMA
-The High DMA number of the Sound Blaster.
+The High DMA number of the Sound Blaster (5 by default).
 .
 :CONFIG_SBMIXER
-Allow the Sound Blaster mixer to modify the DOSBox mixer.
+Allow the Sound Blaster mixer to modify the DOSBox mixer (enabled by default).
 .
 :CONFIG_SBWARMUP
-Silence initial DMA audio after card power-on, in milliseconds.
-This mitigates pops heard when starting many SB-based games.
+Silence initial DMA audio after card power-on, in milliseconds
+(100 by default). This mitigates pops heard when starting many SB-based games.
 Reduce this if you notice intial playback is missing audio.
 .
 :CONFIG_OPLRATE
-The OPL waveform is now sampled at the mixer's playback rate to avoid resampling.
+The OPL waveform is now sampled at the mixer's playback rate to avoid
+resampling.
 .
 :CONFIG_OPLMODE
-Type of OPL emulation. On 'auto' the mode is determined by 'sbtype'.
+Type of OPL emulation ('auto' by default).
+On 'auto' the mode is determined by 'sbtype'.
 All OPL modes are AdLib-compatible, except for 'cms'.
 .
 :CONFIG_OPLEMU
@@ -620,7 +652,7 @@ Type of filter to emulate for the Sound Blaster digital sound output:
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
 Force the Sound Blaster filter to be always on
-(disallow programs from turning the filter off).
+(disallow programs from turning the filter off; disabled by default).
 .
 :CONFIG_OPL_FILTER
 Type of filter to emulate for the Sound Blaster OPL output:
@@ -637,53 +669,69 @@ Filter for the Sound Blaster CMS output:
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_GUS
-Enable Gravis UltraSound emulation.
+Enable Gravis UltraSound emulation (disabled by default).
 .
 :CONFIG_GUSBASE
-The IO base address of the Gravis UltraSound.
+The IO base address of the Gravis UltraSound (240 by default).
 .
 :CONFIG_GUSIRQ
-The IRQ number of the Gravis UltraSound.
+The IRQ number of the Gravis UltraSound (5 by default).
 .
 :CONFIG_GUSDMA
-The DMA channel of the Gravis UltraSound.
+The DMA channel of the Gravis UltraSound (3 by default).
 .
 :CONFIG_ULTRADIR
-Path to UltraSound directory. In this directory
-there should be a MIDI directory that contains
-the patch files for GUS playback. Patch sets used
-with Timidity should work fine.
+Path to UltraSound directory ('C:\ULTRASND' by default).
+In this directory there should be a MIDI directory that contains the patch
+files for GUS playback. Patch sets used with Timidity should work fine.
 .
 :CONFIG_GUS_FILTER
 Filter for the Gravis UltraSound audio output:
   off:       Don't filter the output (default).
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
+:CONFIG_IMFC
+Enable the IBM Music Feature Card (disabled by default).
+.
+:CONFIG_IMFC_BASE
+The IO base address of the IBM Music Feature Card (2A20 by default).
+.
+:CONFIG_IMFC_IRQ
+The IRQ number of the IBM Music Feature Card (3 by default).
+.
+:CONFIG_IMFC_FILTER
+Filter for the IBM Music Feature Card output:
+  on:        Filter the output.
+  off:       Don't filter the output (default).
+  <custom>:  Custom filter definition; see 'sb_filter' for details.
+.
 :CONFIG_SIDMODEL
 Model of chip to emulate in the Innovation SSI-2001 card:
- - auto:  Selects the 6581 chip.
- - 6581:  The original chip, known for its bassy and rich character.
- - 8580:  A later revision that more closely matched the SID specification.
-          It fixed the 6581's DC bias and is less prone to distortion.
-          The 8580 is an option on reproduction cards, like the DuoSID.
- - none:  Disables the card.
+  auto:  Use the 6581 chip.
+  6581:  The original chip, known for its bassy and rich character.
+  8580:  A later revision that more closely matched the SID specification.
+         It fixed the 6581's DC bias and is less prone to distortion.
+         The 8580 is an option on reproduction cards, like the DuoSID.
+  none:  Disable the card (default).
 .
 :CONFIG_SIDCLOCK
 The SID chip's clock frequency, which is jumperable on reproduction cards.
- - default: uses 0.895 MHz, per the original SSI-2001 card.
- - c64ntsc: uses 1.023 MHz, per NTSC Commodore PCs and the DuoSID.
- - c64pal:  uses 0.985 MHz, per PAL Commodore PCs and the DuoSID.
- - hardsid: uses 1.000 MHz, available on the DuoSID.
+  default:  0.895 MHz, per the original SSI-2001 card (default).
+  c64ntsc:  1.023 MHz, per NTSC Commodore PCs and the DuoSID.
+  c64pal:   0.985 MHz, per PAL Commodore PCs and the DuoSID.
+  hardsid:  1.000 MHz, available on the DuoSID.
 .
 :CONFIG_SIDPORT
-The IO port address of the Innovation SSI-2001.
+The IO port address of the Innovation SSI-2001 (280 by default).
 .
 :CONFIG_6581FILTER
-The SID's analog filtering meant that each chip was physically unique.
-Adjusts the 6581's filtering strength as a percent from 0 to 100.
+Adjusts the 6581's filtering strength as a percent from 0 to 100
+(50 by default). The SID's analog filtering meant that each chip was
+physically unique.
 .
 :CONFIG_8580FILTER
-Adjusts the 8580's filtering strength as a percent from 0 to 100.
+Adjusts the 8580's filtering strength as a percent from 0 to 100
+(50 by default).
 .
 :CONFIG_INNOVATION_FILTER
 Filter for the Innovation audio output:
@@ -692,12 +740,12 @@ Filter for the Innovation audio output:
 .
 :CONFIG_PCSPEAKER
 PC speaker emulation model:
-  discrete: Waveform is created using discrete steps (default).
-            Works well for games that use RealSound-type effects.
-  impulse:  Waveform is created using sinc impulses.
-            Recommended for square-wave games, like Commander Keen.
-            While improving accuracy, it is more CPU intensive.
-  none/off: Don't use the PC Speaker.
+  discrete:  Waveform is created using discrete steps (default).
+             Works well for games that use RealSound-type effects.
+  impulse:   Waveform is created using sinc impulses.
+             Recommended for square-wave games, like Commander Keen.
+             While improving accuracy, it is more CPU intensive.
+  none/off:  Don't use the PC Speaker.
 .
 :CONFIG_PCSPEAKER_FILTER
 Filter for the PC Speaker output:
@@ -709,7 +757,7 @@ Filter for the PC Speaker output:
 DC-offset is now eliminated globally from the master mixer output.
 .
 :CONFIG_TANDY
-Enable Tandy Sound System emulation.
+Enable Tandy Sound System emulation ('auto' by default).
 For 'auto', emulation is present only if machine is set to 'tandy'.
 .
 :CONFIG_TANDY_FILTER
@@ -741,7 +789,7 @@ Filter for the LPT DAC audio device(s):
 Use 'lpt_dac=disney' to enable the Disney Sound Source.
 .
 :CONFIG_PS1AUDIO
-Enable IBM PS/1 Audio emulation.
+Enable IBM PS/1 Audio emulation (disabled by default).
 .
 :CONFIG_PS1AUDIO_FILTER
 Filter for the PS/1 Audio synth output:
@@ -756,167 +804,172 @@ Filter for the PS/1 Audio DAC output:
   <custom>:  Custom filter definition; see 'sb_filter' for details.
 .
 :CONFIG_REELMAGIC
-ReelMagic (aka REALmagic) MPEG playback support.
-  off:      Disable support (default).
-  cardonly: Initialize the card without loading the FMPDRV.EXE driver.
-  on:       Initialize the card and load the FMPDRV.EXE on start-up.
+ReelMagic (aka REALmagic) MPEG playback support:
+  off:       Disable support (default).
+  cardonly:  Initialize the card without loading the FMPDRV.EXE driver.
+  on:        Initialize the card and load the FMPDRV.EXE on start-up.
 .
 :CONFIG_REELMAGIC_KEY
-Set the 32-bit magic key used to decode the game's videos.
-  auto:     Use the built-in routines to determine the key (default).
-  common:   Use the most commonly found key, which is 0x40044041.
-  thehorde: Use The Horde's key, which is 0xC39D7088.
-  <custom>: Set a custom key in hex format (e.g., 0x12345678).
+Set the 32-bit magic key used to decode the game's videos:
+  auto:      Use the built-in routines to determine the key (default).
+  common:    Use the most commonly found key, which is 0x40044041.
+  thehorde:  Use The Horde's key, which is 0xC39D7088.
+  <custom>:  Set a custom key in hex format (e.g., 0x12345678).
 .
 :CONFIG_REELMAGIC_FCODE
-Override the frame rate code used during video playback.
-  0:        No override: attempt automatic rate discovery (default).
-  1 to 7:   Override the frame rate to one the following (use 1 through 7):
-            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.
+Override the frame rate code used during video playback:
+  0:       No override: attempt automatic rate discovery (default).
+  1 to 7:  Override the frame rate to one the following (use 1 through 7):
+           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.
 .
 :CONFIG_JOYSTICKTYPE
-Type of joystick to emulate: auto (default),
-auto     : Detect and use any joystick(s), if possible.,
-2axis    : Support up to two joysticks, each with 2 axis
-4axis    : Support the first joystick only, as a 4-axis type.
-4axis_2  : Support the second joystick only, as a 4-axis type.
-fcs      : Emulate joystick as an original Thrustmaster FCS.
-ch       : Emulate joystick as an original CH Flightstick.
-hidden   : Prevent DOS from seeing the joystick(s), but enable them for
-           mapping.
-disabled : Fully disable joysticks: won't be polled, mapped, or visible in DOS.
-(Remember to reset DOSBox's mapperfile if you saved it earlier)
+Type of joystick to emulate:
+  auto:      Detect and use any joystick(s), if possible (default).
+  2axis:     Support up to two joysticks, each with 2 axis
+  4axis:     Support the first joystick only, as a 4-axis type.
+  4axis_2:   Support the second joystick only, as a 4-axis type.
+  fcs:       Emulate joystick as an original Thrustmaster FCS.
+  ch:        Emulate joystick as an original CH Flightstick.
+  hidden:    Prevent DOS from seeing the joystick(s), but enable them
+             for mapping.
+  disabled:  Fully disable joysticks: won't be polled, mapped,
+             or visible in DOS.
+Remember to reset DOSBox's mapperfile if you saved it earlier.
 .
 :CONFIG_TIMED
-enable timed intervals for axis. Experiment with this option, if your
-joystick drifts (away).
+Enable timed intervals for axis (disabled by default).
+Experiment with this option, if your joystick drifts away.
 .
 :CONFIG_AUTOFIRE
-continuously fires as long as you keep the button pressed.
+Fire continuously as long as the button is pressed
+(disabled by default).
 .
 :CONFIG_SWAP34
-swap the 3rd and the 4th axis. Can be useful for certain joysticks.
+Swap the 3rd and the 4th axis (disabled by default).
+Can be useful for certain joysticks.
 .
 :CONFIG_BUTTONWRAP
-enable button wrapping at the number of emulated buttons.
+Enable button wrapping at the number of emulated buttons (disabled by default).
 .
 :CONFIG_CIRCULARINPUT
-enable translation of circular input to square output.
+Enable translation of circular input to square output (disabled by default).
 Try enabling this if your left analog stick can only move in a circle.
 .
 :CONFIG_DEADZONE
-the percentage of motion to ignore. 100 turns the stick into a digital one.
+Percentage of motion to ignore (10 by default).
+100 turns the stick into a digital one.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
-Activates hotkeys to allow realtime calibration of the joystick's x and y axis.
-Only consider this if in-game calibration fails and other settings have been
-tried.
- - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:
-     - left and right diminish or magnify the x-axis scalar, respectively.
-     - down and up diminish or magnify the y-axis scalar, respectively.
- - Alt+Arrow-keys adjusts the axis' offset position:
-     - left and right shift x-axis offset in the given direction.
-     - down and up shift the y-axis offset in the given direction.
- - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home, respectively.
+Enable hotkeys to allow realtime calibration of the joystick's x and y axis
+(disabled by default). Only consider this if in-game calibration fails and
+other settings have been tried.
+  - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:
+      - left and right diminish or magnify the x-axis scalar, respectively.
+      - down and up diminish or magnify the y-axis scalar, respectively.
+  - Alt+Arrow-keys adjusts the axis' offset position:
+      - left and right shift x-axis offset in the given direction.
+      - down and up shift the y-axis offset in the given direction.
+  - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home,
+    respectively.
 Each tap will report X or Y calibration values you can set below. When you find
 parameters that work, quit the game, switch this setting back to false, and
 populate the reported calibration parameters.
 .
 :CONFIG_JOY_X_CALIBRATION
-Apply x-axis calibration parameters from the hotkeys. Default is 'auto'.
+Apply x-axis calibration parameters from the hotkeys ('auto' by default).
 .
 :CONFIG_JOY_Y_CALIBRATION
-Apply Y-axis calibration parameters from the hotkeys. Default is 'auto'.
+Apply Y-axis calibration parameters from the hotkeys ('auto' by default).
 .
 :CONFIG_SERIAL1
-set type of device connected to com port.
-Can be disabled, dummy, mouse, modem, nullmodem, direct.
+Set type of device connected to COM port.
+Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).
 Additional parameters must be on the same line in the form of
 parameter:value. Parameter for all types is irq (optional).
-for mouse:
-   model, overrides setting from [mouse] section
-for direct: realport (required), rxdelay (optional).
-   (realport:COM1 realport:ttyS0).
-for modem: listenport, sock, baudrate (all optional).
-for nullmodem: server, rxdelay, txdelay, telnet, usedtr,
-   transparent, port, inhsocket, sock (all optional).
+  - for 'mouse':      model, overrides setting from [mouse] section
+  - for 'direct':     realport (required), rxdelay (optional).
+                      (realport:COM1 realport:ttyS0).
+  - for 'modem':      listenport, sock, baudrate (all optional).
+  - for 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,
+                      transparent, port, inhsocket, sock (all optional).
 SOCK parameter specifies the protocol to be used by both sides
 of the conection. 0 for TCP and 1 for ENet reliable UDP.
 Example: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-see serial1
+See 'serial1'
 .
 :CONFIG_SERIAL3
-see serial1
+See 'serial1'
 .
 :CONFIG_SERIAL4
-see serial1
+See 'serial1'
 .
 :CONFIG_PHONEBOOKFILE
-File used to map fake phone numbers to addresses.
+File used to map fake phone numbers to addresses
+('phonebook.txt' by default).
 .
 :CONFIG_XMS
-Enable XMS support.
+Enable XMS support (enabled by default).
 .
 :CONFIG_EMS
-Enable EMS support. The default (=true) provides the best
-compatibility but certain applications may run better with
-other choices, or require EMS support to be disabled (=false)
-to work at all.
+Enable EMS support (enabled by default). Enabled provides the best
+compatibility but certain applications may run better with other choices,
+or require EMS support to be disabled to work at all.
 .
 :CONFIG_UMB
-Enable UMB support.
+Enable UMB support (enabled by default).
 .
 :CONFIG_VER
-Set DOS version (5.0 by default). Specify as major.minor format.
+Set DOS version (5.0 by default). Specify in major.minor format.
 A single number is treated as the major version.
 Common settings are 3.3, 5.0, 6.22, and 7.1.
 .
 :CONFIG_COUNTRY
-Set DOS country code which will affect country-specific
-information such as date, time, and decimal formats.
-If set to 0, the country code corresponding to the
-selected keyboard layout will be used.
+Set DOS country code (0 by default).
+This affects country-specific information such as date, time, and decimal
+formats. If set to 0, the country code corresponding to the selected keyboard
+layout will be used.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Enable expanding environment variables such as %PATH%
-while in the DOS command shell. FreeDOS and MS-DOS 7/8
-COMMAND.COM supports this behavior.
+Enable expanding environment variables such as %PATH% in the DOS command shell
+(disabled by default).
+FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.
 .
 :CONFIG_KEYBOARDLAYOUT
-Language code of the keyboard layout (or none).
+Language code of the keyboard layout, or 'auto' ('auto' by default).
 .
 :CONFIG_IPX
-Enable ipx over UDP/IP emulation.
+Enable IPX over UDP/IP emulation (enabled by default).
 .
 :CONFIG_NE2000
 Enable emulation of a Novell NE2000 network card on a software-based
-network (using libslirp) with properties as follows:
- - 255.255.255.0 : Subnet mask of the 10.0.2.0 virtual LAN.
- - 10.0.2.2      : IP of the gateway and DHCP service.
- - 10.0.2.3      : IP of the virtual DNS server.
- - 10.0.2.15     : First IP provided by DHCP, your IP!
-Note: Inside DOS, setting this up requires an NE2000 packet driver,
-      DHCP client, and TCP/IP stack. You might need port-forwarding
-      from the host into the DOS guest, and from your router to your
-      host when acting as the server for multiplayer games.
+network (using libslirp) with properties as follows (enabled by default):
+  - 255.255.255.0:  Subnet mask of the 10.0.2.0 virtual LAN.
+  - 10.0.2.2:       IP of the gateway and DHCP service.
+  - 10.0.2.3:       IP of the virtual DNS server.
+  - 10.0.2.15:      First IP provided by DHCP, your IP!
+Notes: Inside DOS, setting this up requires an NE2000 packet driver, DHCP
+       client, and TCP/IP stack. You might need port-forwarding from the host
+       into the DOS guest, and from your router to your host when acting as the
+       server for multiplayer games.
 .
 :CONFIG_NICBASE
-The base address of the NE2000 card.
-Note: Addresses 220 and 240 might not be available as they're assigned
-      to the Sound Blaster and Gravis UltraSound by default.
+Base address of the NE2000 card (300 by default).
+Notes: Addresses 220 and 240 might not be available as they're assigned to the
+       Sound Blaster and Gravis UltraSound by default.
 .
 :CONFIG_NICIRQ
-The interrupt used by the NE2000 card.
-Note: IRQs 3 and 5 might not be available as they're assigned
-      to 'serial2' and the Gravis UltraSound by default.
+The interrupt used by the NE2000 card (3 by default).
+Notes: IRQs 3 and 5 might not be available as they're assigned to
+       'serial2' and the Gravis UltraSound by default.
 .
 :CONFIG_MACADDR
-The MAC address of the NE2000 card.
+The MAC address of the NE2000 card ('AC:DE:48:88:99:AA' by default).
 .
 :CONFIG_TCP_PORT_FORWARDS
-Forwards one or more TCP ports from the host into the DOS guest.
+Forward one or more TCP ports from the host into the DOS guest
+(unset by default).
 The format is:
   port1  port2  port3 ... (e.g., 21 80 443)
   This will forward FTP, HTTP, and HTTPS into the DOS guest.
@@ -929,14 +982,13 @@ A range of adjacent ports can be abbreviated with a dash:
 Mappings and ranges can be combined, too:
   hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
   This forwards ports 8040 to 8080 into 20 to 60 in the guest
-Notes:
-  - If mapped ranges differ, the shorter range is extended to fit.
-  - If conflicting host ports are given, only the first one is setup.
-  - If conflicting guest ports are given, the latter rule takes precedent.
+Notes: If mapped ranges differ, the shorter range is extended to fit.
+       If conflicting host ports are given, only the first one is setup.
+       If conflicting guest ports are given, the latter rule takes precedent.
 .
 :CONFIG_UDP_PORT_FORWARDS
-Forwards one or more UDP ports from the host into the DOS guest.
-The format is the same as for TCP port forwards.
+Forward one or more UDP ports from the host into the DOS guest
+(unset by default). The format is the same as for TCP port forwards.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Lines in this section will be run at startup.
@@ -1087,6 +1139,9 @@ The path "%s" exceeds the DOS maximum length of %d characters
 :PROGRAM_EXECUTABLE_MISSING
 Executable file not found: %s
 
+.
+:CONJUNCTION_AND
+and
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
 listing not supported
@@ -1542,7 +1597,7 @@ They can be changed in the [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F1[reset]   %s Start the [color=light-yellow]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Swap mounted disk image, scan for changes on all drives.
 [color=yellow]%s+F5[reset]     Save a screenshot of the rendered image.
-[color=yellow]%s+F5[reset]   %s Save a screenshot of the pre-rendered image.
+[color=yellow]%s+F5[reset]   %s Save a screenshot of the DOS pre-rendered image.
 [color=yellow]%s+F6[reset]   %s Start/Stop recording sound output to a wave file.
 [color=yellow]%s+F7[reset]   %s Start/Stop recording video output to a zmbv file.
 [color=yellow]%s+F8[reset]   %s Mute/Unmute the audio.
@@ -1724,19 +1779,36 @@ Examples:
 Display command output or text file one screen at a time.
 
 Usage:
-  [color=cyan]COMMAND[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
-  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]FILE[reset]
-  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]PATTERN[reset] [[color=cyan]PATTERN[reset] ...]
+  [color=cyan]COMMAND[reset] | [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=cyan]FILE[reset]
+  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=cyan]PATTERN[reset] [[color=cyan]PATTERN[reset] ...]
 
 Where:
   [color=cyan]COMMAND[reset] is the command to display the output of.
   [color=cyan]FILE[reset]    is an exact name of the file to display, optionally with a path.
   [color=cyan]PATTERN[reset] is either a path to a single file or a path with wildcards,
           which are the asterisk (*) and the question mark (?).
-  [color=white]n[reset]       is the tab size, 1-9, default is 8.
+  /c      clears the screen before each file.
+  /e      extended mode, with more hotkeys available.
+  /p      expands the new page / form feed character.
+  /s      squishes multiple empty lines into one.
+  /t[color=white]n[reset]     specifies the tab size, 1-9, default is 8.
+  +[color=white]nnn[reset]    skips first [color=white]nnn[reset] lines of the first file.
 
 Notes:
   This command is only for viewing text files, not binary files.
+  The following hotkeys are available:
+  [color=yellow]Space[reset]          to show the next screen.
+  [color=yellow]Enter[reset]          to show the next line.
+  [color=yellow]N[reset] or [color=yellow]F[reset]         to skip to the next file.
+  [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] to terminate the command.
+  Also, the [color=yellow]Ctrl+C[reset] can be used to terminate the command reading data from the
+  keyboard input, like when [color=green]more[reset] is executed without any arguments.
+  The following extra hotkeys are available in extended mode only:
+  [color=yellow]P[reset] [color=white]nnn[reset]          to display the next [color=white]nnn[reset] lines and prompt again.
+  [color=yellow]S[reset] [color=white]nnn[reset]          to skip the next [color=white]nnn[reset] lines.
+  [color=yellow]=[reset]              to display the current line number.
+  Option /p disables certain incompatible hotkeys.
 
 Examples:
   [color=cyan]dir /on[reset] | [color=green]more[reset]             ; displays sorted directory one screen at a time
@@ -1756,10 +1828,16 @@ No input file found.
 [reset][color=light-yellow]--- device %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- press SPACE for more ---[reset]
+[reset][color=light-yellow]--- press SPACE or ENTER for more ---[reset]
+.
+:PROGRAM_MORE_PROMPT_PERCENT
+[reset][color=light-yellow]--- (%d%%) press SPACE or ENTER for more ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- press SPACE for more, N for next file ---[reset]
+[reset][color=light-yellow]--- press SPACE or ENTER for more, N for next file ---[reset]
+.
+:PROGRAM_MORE_PROMPT_LINE
+[reset][color=light-yellow]--- line %u ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
 [reset][color=red]--- could not open %s ---[reset]
@@ -1769,6 +1847,12 @@ No input file found.
 .
 :PROGRAM_MORE_NEXT_FILE
 [reset][color=light-yellow](next file)[reset]
+.
+:PROGRAM_MORE_SKIPPED
+[reset][color=light-yellow](skipped content)[reset]
+.
+:PROGRAM_MORE_HOW_MANY_LINES
+[reset][color=light-yellow]how many lines?[reset]
 .
 :PROGRAM_MOUNT_HELP
 Maps physical folders or drives to a virtual drive letter.
@@ -1786,7 +1870,7 @@ Where:
   [color=white]DRIVE[reset]     the drive letter where the directory will be mounted: A, C, D, ...
   [color=cyan]DIRECTORY[reset] is the directory on the host OS to be mounted
   TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay
-  SIZE      free space for the virtual drive (KiB for floppies, MiB otherwise)
+  SIZE      free space for the virtual drive (KB for floppies, MB otherwise)
   LABEL     drive label name to be used
 
 Notes:
@@ -1900,36 +1984,42 @@ Notes:
 Examples:
   [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game
 .
-:PROGRAM_MOUSECTL_SYNTAX
-Wrong command syntax.
-.
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
-Wrong syntax, only ASCII characters allowed in pattern.
+Incorrect syntax, only ASCII characters allowed in pattern.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY
-Wrong syntax, sensitivity needs to be in -999 to +999 range.
+Incorrect syntax, sensitivity needs to be in -999 to +999 range.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_DUPLICATED
-Wrong syntax, duplicated mouse interfaces.
+Incorrect syntax, duplicated mouse interfaces.
+
 .
 :PROGRAM_MOUSECTL_SYNTAX_MIN_RATE
-Wrong syntax, sampling rate has to be one of:
+Incorrect syntax, sampling rate has to be one of:
 %s
+
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mapping not available in no-mouse mode.
+
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
 No mouse interfaces available.
+
 .
 :PROGRAM_MOUSECTL_MISSING_INTERFACES
 Mouse interface not available.
+
 .
 :PROGRAM_MOUSECTL_NO_PHYSICAL_MICE
 No physical mice detected.
+
 .
 :PROGRAM_MOUSECTL_NO_MATCH
-No available mouse matching the pattern found.
+No available mouse found matching the pattern.
+
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
 [color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]
@@ -2014,7 +2104,6 @@ Where:
                use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])
     Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)
     Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]
-
 Notes:
   Running [color=green]mixer[reset] without an argument shows the current mixer settings.
   You may change the settings of more than one channel in a single command.
@@ -2024,7 +2113,7 @@ Notes:
 
 Examples:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]opl[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
 %-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
@@ -2087,8 +2176,94 @@ Type must be one of the following:
   %s
 
 .
+:PROGRAM_TREE_HELP_LONG
+Displays directory tree in a graphical form.
+
+Usage:
+  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]
+
+Where:
+  [color=cyan]DIRECTORY[reset] is the name of the directory to display.
+  [color=white]ORDER[reset]     is a listing order, one of:
+                [color=white]n[reset] (by name, alphabetic),
+                [color=white]s[reset] (by size, smallest first),
+                [color=white]e[reset] (by extension, alphabetic),
+                [color=white]d[reset] (by date/time, oldest first),
+            with an optional [color=white]-[reset] prefix to reverse order.
+  /a        uses only 7-bit ASCII characters.
+  /b        brief display, omits header and footer information.
+  /f        also display files.
+  /p        display one page a time, shorten output to fit width width.
+  /da       display attributes.
+  /df       display size for files.
+  /dh       also display hidden and system files/directories.
+  /o[color=white]ORDER[reset]   orders the list (see above)
+
+Notes:
+  If [color=cyan]DIRECTORY[reset] is omitted, the current directory is used.
+
+Examples:
+  [color=green]tree[reset]          ; displays directory tree starting from current directory
+  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; displays C: drive content recursively, with files
+
+.
+:PROGRAM_TREE_DIRECTORY
+ Directory tree for volume %s
+.
+:PROGRAM_TREE_NO_SUBDIRS
+No subdirectories to display.
+
+.
+:PROGRAM_TREE_NO_FILES_SUBDIRS
+No files or subdirectories to display.
+
+.
+:PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
+Too many files or subdirectories.
+
+.
 :SHELL_ILLEGAL_PATH
-Illegal Path.
+Illegal path.
+
+.
+:SHELL_ILLEGAL_SWITCH
+Illegal switch: %s.
+
+.
+:SHELL_MISSING_PARAMETER
+Required parameter missing.
+
+.
+:SHELL_TOO_MANY_PARAMETERS
+Too many parameters.
+
+.
+:SHELL_SYNTAX_ERROR
+Incorrect command syntax.
+
+.
+:SHELL_ACCESS_DENIED
+Access denied - '%s'
+
+.
+:SHELL_FILE_CREATE_ERROR
+File creation error - '%s'
+
+.
+:SHELL_FILE_OPEN_ERROR
+File open error - '%s'
+
+.
+:SHELL_FILE_NOT_FOUND
+File not found - '%s'
+
+.
+:SHELL_FILE_EXISTS
+File '%s' already exists.
+
+.
+:SHELL_DIRECTORY_NOT_FOUND
+Directory not found - '%s'
 
 .
 :SHELL_CMD_HELP
@@ -2124,14 +2299,6 @@ ECHO is on.
 .
 :SHELL_CMD_ECHO_OFF
 ECHO is off.
-
-.
-:SHELL_ILLEGAL_SWITCH
-Illegal switch: %s.
-
-.
-:SHELL_MISSING_PARAMETER
-Required parameter missing.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -2236,10 +2403,6 @@ Unable to remove: %s.
 Unable to delete: %s.
 
 .
-:SHELL_SYNTAXERROR
-The syntax of the command is incorrect.
-
-.
 :SHELL_CMD_SET_NOT_SET
 Environment variable %s not defined.
 
@@ -2268,10 +2431,6 @@ No label supplied to GOTO command.
 GOTO: Label %s not found.
 
 .
-:SHELL_CMD_FILE_ACCESS_DENIED
-Access denied - %s
-
-.
 :SHELL_CMD_DUPLICATE_REDIRECTION
 Duplicate redirection - %s
 
@@ -2279,22 +2438,6 @@ Duplicate redirection - %s
 :SHELL_CMD_FAILED_PIPE
 
 Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
-
-.
-:SHELL_CMD_FILE_CREATE_ERROR
-File creation error - %s
-
-.
-:SHELL_CMD_FILE_OPEN_ERROR
-File open error - %s
-
-.
-:SHELL_CMD_FILE_NOT_FOUND
-File not found: %s
-
-.
-:SHELL_CMD_FILE_EXISTS
-File %s already exists.
 
 .
 :SHELL_CMD_DIR_VOLUME
@@ -2382,12 +2525,12 @@ It's only possible to use SUBST on Local drives
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Use [color=red]F11[reset] to cycle through green, amber, white and paper-white mode, ║
-║ and [color=red]%s+F11[reset] to change contrast/brightness settings.                ║
+║ Use [color=red]F11[color=white] to cycle through green, amber, white and paper-white mode, ║
+║ and [color=red]%s+F11[color=white] to change contrast/brightness settings.                ║
 
 .
 :SHELL_STARTUP_HERC
-║ Use [color=red]F11[reset]to cycle through white, amber, and green monochrome color. ║
+║ Use [color=red]F11[color=white] to cycle through white, amber, and green monochrome color. ║
 ║                                                                    ║
 
 .
@@ -3014,7 +3157,4 @@ Miscellaneous Commands
 .
 :HELP_UTIL_CATEGORY_UNKNOWN
 Unknown Command
-.
-:CONJUNCTION_AND
-and
 .
