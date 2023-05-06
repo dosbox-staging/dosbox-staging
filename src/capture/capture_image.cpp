@@ -16,9 +16,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "capture.h"
+#include "dosbox.h"
 
+#include <cassert>
 #include <optional>
+
+#include "capture.h"
 #include "render.h"
 #include "rgb24.h"
 #include "sdlmain.h"
@@ -29,10 +32,10 @@
 
 #include <SDL.h>
 #if C_OPENGL
-#include <SDL2/SDL_opengl.h>
+#include <SDL_opengl.h>
 #endif
 #if C_SDL_IMAGE
-#	include <SDL2/SDL_image.h>
+#	include <SDL_image.h>
 #endif
 
 void capture_image(const uint16_t width, const uint16_t height,

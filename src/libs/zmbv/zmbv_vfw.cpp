@@ -331,9 +331,9 @@ DWORD CodecInst::Compress(ICCOMPRESS* icinfo, DWORD dwSize) {
 	}
 
 	codec->PrepareCompressFrame( flags, format, pal, reinterpret_cast<uint8_t*>(icinfo->lpOutput), 99999999);
-	char *readPt = (char *)icinfo->lpInput + pitch*(lpbiIn->biHeight - 1);
+	const char *readPt = (char *)icinfo->lpInput + pitch*(lpbiIn->biHeight - 1);
 	for(i = 0;i<lpbiIn->biHeight;i++) {
-		codec->CompressLines(1, reinterpret_cast<uint8_t **>(&readPt));
+		codec->CompressLines(1, reinterpret_cast<const uint8_t **>(&readPt));
 		readPt -= pitch;
 	}
 	lpbiOut->biSizeImage = codec->FinishCompressFrame();

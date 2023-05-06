@@ -21,6 +21,8 @@
 
 #include "dosbox.h"
 
+#include <string>
+
 constexpr auto CAPTURE_WAVE  = 0x01;
 constexpr auto CAPTURE_OPL   = 0x02;
 constexpr auto CAPTURE_MIDI  = 0x04;
