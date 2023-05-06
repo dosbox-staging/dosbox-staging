@@ -121,19 +121,16 @@
     <ClCompile Include="..\src\gui\sdl_mapper.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\ide.cpp">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\hardware\adlib_gold.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\cmos.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\covox.cpp">
+    <ClCompile Include="..\src\hardware\compressor.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\compressor.cpp">
+    <ClCompile Include="..\src\hardware\covox.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\disney.cpp">
@@ -152,6 +149,9 @@
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\hardware.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\ide.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\imfc.cpp">
@@ -239,13 +239,13 @@
       <Filter>src\hardware</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\reelmagic\driver.cpp">
-      <Filter>src\hardware</Filter>
+      <Filter>src\hardware\reelmagic</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\reelmagic\player.cpp">
-      <Filter>src\hardware</Filter>
+      <Filter>src\hardware\reelmagic</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\reelmagic\video_mixer.cpp">
-      <Filter>src\hardware</Filter>
+      <Filter>src\hardware\reelmagic</Filter>
     </ClCompile>
     <ClCompile Include="..\src\hardware\pcspeaker.cpp">
       <Filter>src\hardware</Filter>
@@ -1071,12 +1071,45 @@
     <ClInclude Include="..\src\gui\render_templates.h">
       <Filter>src\gui</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\hardware\font-switch.h">
+    <ClInclude Include="..\src\hardware\adlib_gold.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
+    <ClCompile Include="..\src\hardware\compressor.h">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\covox.h">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\disney.h">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClInclude Include="..\src\hardware\gameblaster.h">
-      <Filter>src\hardware\mame</Filter>
+      <Filter>src\hardware</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\hardware\innovation.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClCompile Include="..\src\hardware\lpt_dac.h">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClInclude Include="..\src\hardware\opl.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\pci_devices.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClCompile Include="..\src\hardware\pcspeaker.h">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\pcspeaker_discrete.h">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\pcspeaker_impulse.h">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\ston1_dac.h">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClInclude Include="..\src\hardware\input\intel8042.h">
       <Filter>src\hardware\input</Filter>
     </ClInclude>
@@ -1103,6 +1136,12 @@
     </ClInclude>
     <ClInclude Include="..\src\hardware\mame\sn76496.h">
       <Filter>src\hardware\mame</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\reelmagic\mpeg_decoder.h">
+      <Filter>src\hardware\reelmagic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\reelmagic\vga_passthrough.h">
+      <Filter>src\hardware\reelmagic</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\serialport\directserial.h">
       <Filter>src\hardware\serialport</Filter>
@@ -1375,8 +1414,14 @@
     <Filter Include="src\hardware">
       <UniqueIdentifier>{075d87f5-0708-414a-a8c0-4284e1744cb0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\hardware\input">
+      <UniqueIdentifier>{67b90d76-c04c-4bda-8f55-1cd7dacc830c}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\hardware\mame">
       <UniqueIdentifier>{375a1299-bfa1-4e28-ae0f-7769b8b1653b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hardware\reelmagic">
+      <UniqueIdentifier>{5757f3b1-8b61-43d2-a47b-60bb1080c682}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\hardware\serialport">
       <UniqueIdentifier>{5130c0ee-83d9-4e35-b61e-fb189d1e1b31}</UniqueIdentifier>
@@ -1443,9 +1488,6 @@
     </Filter>
     <Filter Include="src\libs\pdcurses">
       <UniqueIdentifier>{40435b8c-40e5-4751-ad49-5c4492538be5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\hardware\mouse">
-      <UniqueIdentifier>{411a6bc1-3131-4a5e-a132-538b5864f2f7}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\manymouse">
       <UniqueIdentifier>{367194fd-13af-44ca-8bd9-b3f1190f786c}</UniqueIdentifier>
