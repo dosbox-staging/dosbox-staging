@@ -87,14 +87,17 @@ std::string capture_generate_filename(const char* type, const char* ext)
 			last = num + 1;
 	}
 	close_directory(dir);
+
 	char file_name[CROSS_LEN];
-	sprintf(file_name,
-	        "%s%c%s%03d%s",
-	        capturedir.c_str(),
-	        CROSS_FILESPLIT,
-	        file_start,
-	        last,
-	        ext);
+	snprintf(file_name,
+	         CROSS_LEN,
+	         "%s%c%s%03d%s",
+	         capturedir.c_str(),
+	         CROSS_FILESPLIT,
+	         file_start,
+	         last,
+	         ext);
+
 	return file_name;
 }
 
