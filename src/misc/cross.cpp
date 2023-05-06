@@ -208,11 +208,6 @@ void Cross::GetPlatformConfigName(std::string &in)
 	in = GetConfigName();
 }
 
-void Cross::ResolveHomedir(std::string &in)
-{
-	in = CROSS_ResolveHome(in);
-}
-
 void Cross::CreatePlatformConfigDir(std::string &in)
 {
 #ifdef WIN32
@@ -229,11 +224,6 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 		LOG_MSG("ERROR: Creation of config directory '%s' failed: %s",
 		        in.c_str(), safe_strerror(errno).c_str());
 	}
-}
-
-std::string CROSS_ResolveHome(const std::string &str)
-{
-	return resolve_home(str).string();
 }
 
 std_fs::path resolve_home(const std::string &str) noexcept
