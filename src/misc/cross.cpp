@@ -68,9 +68,9 @@ std::string cached_conf_path;
 
 static std::string DetermineConfigPath()
 {
-	const std::string conf_path = CROSS_ResolveHome("~/Library/Preferences/DOSBox");
-	mkdir(conf_path.c_str(), 0700);
-	return conf_path;
+	const auto conf_path = resolve_home("~/Library/Preferences/DOSBox");
+	create_dir(conf_path, 0700);
+	return conf_path.string();
 }
 
 #else
@@ -85,7 +85,7 @@ static std::string DetermineConfigPath()
 	}
 
 	auto fallback_to_deprecated = []() {
-		const std::string old_conf_path = CROSS_ResolveHome("~/.dosbox");
+		const std::string old_conf_path = resolve_home("~/.dosbox").string();
 		if (path_exists(old_conf_path + "/" + GetConfigName())) {
 			LOG_WARNING("CONFIG: Falling back to deprecated path (~/.dosbox) due to errors");
 			LOG_WARNING("CONFIG: Please investigate the problems and try again");
