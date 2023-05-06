@@ -290,8 +290,7 @@ void MOUNT::Run(void) {
 		if (real_path.empty()) {
 			LOG_MSG("MOUNT: Path '%s' not found", temp_line.c_str());
 		} else {
-			std::string home_resolve = temp_line;
-			Cross::ResolveHomedir(home_resolve);
+			const auto home_resolve = resolve_home(temp_line).string();
 			if (home_resolve == real_path) {
 				LOG_MSG("MOUNT: Path '%s' found",
 						temp_line.c_str());

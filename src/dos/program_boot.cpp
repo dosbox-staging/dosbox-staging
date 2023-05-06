@@ -95,8 +95,7 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 	if (tmpfile)
 		return tmpfile;
 	// File not found on mounted filesystem. Try regular filesystem
-	std::string filename_s(filename);
-	Cross::ResolveHomedir(filename_s);
+	const auto filename_s = resolve_home(filename).string();
 	tmpfile = fopen_wrap(filename_s.c_str(), "rb+");
 	if (!tmpfile) {
 		if ((tmpfile = fopen_wrap(filename_s.c_str(), "rb"))) {
