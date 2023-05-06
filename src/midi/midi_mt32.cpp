@@ -231,7 +231,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 {
 	return {
 	        get_platform_config_dir() / "mt32-roms",
-	        CROSS_ResolveHome("~/Library/Audio/Sounds/MT32-Roms/"),
+	        resolve_home("~/Library/Audio/Sounds/MT32-Roms/"),
 	        "/usr/local/share/mt32-rom-data/",
 	        "/usr/share/mt32-rom-data/",
 	};
@@ -279,7 +279,7 @@ static std::deque<std_fs::path> get_selected_dirs()
 		selected_romdir += CROSS_FILESPLIT;
 
 	// Make sure we search the user's configured directory first
-	rom_dirs.emplace_front(CROSS_ResolveHome((selected_romdir)));
+	rom_dirs.emplace_front(resolve_home(selected_romdir));
 	return rom_dirs;
 }
 
