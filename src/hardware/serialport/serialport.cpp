@@ -25,6 +25,7 @@
 #include <string.h>
 #include <tuple>
 
+#include "../../capture/capture.h"
 #include "inout.h"
 #include "pic.h"
 #include "setup.h"
