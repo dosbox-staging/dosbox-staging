@@ -447,8 +447,7 @@ bool Prop_path::SetValue(const std::string& input)
 		return false;
 	}
 
-	std::string workcopy(input);
-	Cross::ResolveHomedir(workcopy);
+	const std::string workcopy = resolve_home(input).string();
 
 	// Prepend config directory in it exists. Check for absolute paths later
 	if (current_config_dir.empty()) {
