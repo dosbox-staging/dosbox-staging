@@ -112,17 +112,10 @@ std_fs::path get_platform_config_dir();
 
 std_fs::path resolve_home(const std::string &str) noexcept;
 
-[[deprecated]]
-std::string CROSS_ResolveHome(const std::string &str);
-
 class Cross {
 public:
 	static void GetPlatformConfigName(std::string& in);
 	static void CreatePlatformConfigDir(std::string& in);
-
-	[[deprecated]]
-	static void ResolveHomedir(std::string & temp_line);
-
 	static bool IsPathAbsolute(std::string const& in);
 };
 
