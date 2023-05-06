@@ -278,8 +278,7 @@ void IMGMOUNT::Run(void)
 				        temp_line.c_str());
 			}
 		} else {
-			std::string home_resolve = temp_line;
-			Cross::ResolveHomedir(home_resolve);
+			const auto home_resolve = resolve_home(temp_line).string();
 			if (home_resolve == real_path) {
 				LOG_MSG("IMGMOUNT: Path '%s' found",
 				        temp_line.c_str());
@@ -295,8 +294,7 @@ void IMGMOUNT::Run(void)
 		struct stat test;
 		if (stat(temp_line.c_str(), &test)) {
 			// See if it works if the ~ are written out
-			std::string homedir(temp_line);
-			Cross::ResolveHomedir(homedir);
+			const auto homedir = resolve_home(temp_line).string();
 			if (!stat(homedir.c_str(), &test)) {
 				temp_line = std::move(homedir);
 			} else {
