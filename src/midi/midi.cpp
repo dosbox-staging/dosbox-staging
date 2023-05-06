@@ -30,9 +30,9 @@
 #include <SDL.h>
 
 #include "ansi_code_markup.h"
+#include "../capture/capture.h"
 #include "control.h"
 #include "cross.h"
-#include "hardware.h"
 #include "mapper.h"
 #include "midi_handler.h"
 #include "pic.h"

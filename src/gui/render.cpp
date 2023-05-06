@@ -32,9 +32,9 @@
 
 #include <sys/types.h>
 
+#include "../capture/capture.h"
 #include "control.h"
 #include "cross.h"
-#include "hardware.h"
 #include "mapper.h"
 #include "render.h"
 #include "setup.h"

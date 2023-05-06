@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2021  The DOSBox Team
+ *  Copyright (C) 2002-2023  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "hardware.h"
+#include "capture.h"
 
 #include <cerrno>
 #include <string.h>
@@ -828,46 +828,46 @@ static void CAPTURE_MidiEvent(bool pressed) {
 	}
 }
 
-class HARDWARE final : public Module_base{
-public:
-	HARDWARE(Section* configuration):Module_base(configuration){
-		Section_prop * section = static_cast<Section_prop *>(configuration);
-		Prop_path* proppath= section->Get_path("captures");
-		capturedir = proppath->realpath;
-		CaptureState = 0;
-		MAPPER_AddHandler(CAPTURE_WaveEvent, SDL_SCANCODE_F6,
-		                  PRIMARY_MOD, "recwave", "Rec. Audio");
-		MAPPER_AddHandler(CAPTURE_MidiEvent, SDL_SCANCODE_UNKNOWN, 0,
-		                  "caprawmidi", "Rec. MIDI");
-#if (C_SSHOT)
-		MAPPER_AddHandler(CAPTURE_ScreenShotEvent, SDL_SCANCODE_F5,
-		                  PRIMARY_MOD, "scrshot", "Screenshot");
-		MAPPER_AddHandler(CAPTURE_VideoEvent, SDL_SCANCODE_F7,
-		                  PRIMARY_MOD, "video", "Rec. Video");
-#endif
-	}
-	~HARDWARE(){
-#if (C_SSHOT)
-		if (capture.video.handle) CAPTURE_VideoEvent(true);
-#endif
-		if (capture.wave.handle) CAPTURE_WaveEvent(true);
-		if (capture.midi.handle) CAPTURE_MidiEvent(true);
-	}
-};
-
-static HARDWARE *hardware_module;
-
-void HARDWARE_Destroy([[maybe_unused]] Section *sec)
+void CAPTURE_Destroy([[maybe_unused]] Section *sec)
 {
-	delete hardware_module;
+#if (C_SSHOT)
+	if (capture.video.handle) CAPTURE_VideoEvent(true);
+#endif
+	if (capture.wave.handle) CAPTURE_WaveEvent(true);
+	if (capture.midi.handle) CAPTURE_MidiEvent(true);
 }
 
-void HARDWARE_Init(Section* sec)
+void CAPTURE_Init(Section* sec)
 {
 	assert(sec);
 
-	hardware_module = new HARDWARE(sec);
+	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
+
+	Prop_path* proppath = conf->Get_path("captures");
+	capturedir          = proppath->realpath;
+	CaptureState        = 0;
+
+	MAPPER_AddHandler(CAPTURE_WaveEvent,
+	                  SDL_SCANCODE_F6,
+	                  PRIMARY_MOD,
+	                  "recwave",
+	                  "Rec. Audio");
+
+	MAPPER_AddHandler(CAPTURE_MidiEvent, SDL_SCANCODE_UNKNOWN, 0, "caprawmidi", "Rec. MIDI");
+#if (C_SSHOT)
+	MAPPER_AddHandler(CAPTURE_ScreenShotEvent,
+	                  SDL_SCANCODE_F5,
+	                  PRIMARY_MOD,
+	                  "scrshot",
+	                  "Screenshot");
+
+	MAPPER_AddHandler(CAPTURE_VideoEvent,
+	                  SDL_SCANCODE_F7,
+	                  PRIMARY_MOD,
+	                  "video",
+	                  "Rec. Video");
+#endif
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&HARDWARE_Destroy, changeable_at_runtime);
+	sec->AddDestroyFunction(&CAPTURE_Destroy, changeable_at_runtime);
 }

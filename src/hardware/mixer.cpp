@@ -46,6 +46,7 @@
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
+#include "../capture/capture.h"
 #include "ansi_code_markup.h"
 #include "control.h"
 #include "cross.h"

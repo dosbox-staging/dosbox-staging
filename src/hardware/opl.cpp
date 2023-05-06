@@ -24,6 +24,7 @@
 #include <memory>
 #include <sys/types.h>
 
+#include "../capture/capture.h"
 #include "cpu.h"
 #include "mapper.h"
 #include "mem.h"

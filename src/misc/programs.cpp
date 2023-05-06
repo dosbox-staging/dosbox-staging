@@ -31,10 +31,10 @@
 #include <vector>
 
 #include "../dos/program_more_output.h"
+#include "../capture/capture.h"
 #include "callback.h"
 #include "control.h"
 #include "cross.h"
-#include "hardware.h"
 #include "mapper.h"
 #include "regs.h"
 #include "shell.h"

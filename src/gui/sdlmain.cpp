@@ -57,7 +57,7 @@
 #include "debug.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
-#include "hardware.h"
+#include "../capture/capture.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
