@@ -1320,7 +1320,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.mode = EGALINE;
 		break;
 	case MCH_VGA:
-		vga.draw.mode = is_high_resolution(CurMode) ? PART : DRAWLINE;
+		// Use efficient by-parts drawing for VGA high-res modes because
+		// there are no known games (or demos) that update the palette
+		// mid-frame.
+		if (CurMode->type >= M_VGA && is_high_resolution(CurMode)) {
+			vga.draw.mode = PART;
+		} else {
+			vga.draw.mode = DRAWLINE;
+		}
 		break;
 	default:
 		vga.draw.mode = PART;
