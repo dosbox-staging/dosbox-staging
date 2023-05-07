@@ -29,51 +29,57 @@
 #define AVI_HEADER_SIZE 500
 
 static struct {
-	FILE* handle                  = nullptr;
-	uint32_t frames               = 0;
-	int16_t audiobuf[WAVE_BUF][2] = {};
-	uint32_t audioused            = 0;
-	uint32_t audiorate            = 0;
-	uint32_t audiowritten         = 0;
-	VideoCodec* codec             = nullptr;
-	int width                     = 0;
-	int height                    = 0;
-	int bits_per_pixel            = 0;
-	uint32_t written              = 0;
-	float frames_per_second       = 0.0f;
-	uint32_t bufSize              = 0;
-	std::vector<uint8_t> buf      = {};
-	std::vector<uint8_t> index    = {};
-	uint32_t indexused            = 0;
+	FILE* handle                   = nullptr;
+	uint32_t frames                = 0;
+	int16_t audio_buf[WAVE_BUF][2] = {};
+	uint32_t audio_used            = 0;
+	uint32_t audio_rate            = 0;
+	uint32_t audio_written         = 0;
+	VideoCodec* codec              = nullptr;
+	int width                      = 0;
+	int height                     = 0;
+	int bits_per_pixel             = 0;
+	uint32_t written               = 0;
+	float frames_per_second        = 0.0f;
+	uint32_t buf_size              = 0;
+	std::vector<uint8_t> buf       = {};
+	std::vector<uint8_t> index     = {};
+	uint32_t index_used            = 0;
 } video = {};
 
 static void add_avi_chunk(const char* tag, const uint32_t size,
                           const void* data, const uint32_t flags)
 {
-	uint8_t chunk[8];
-	uint8_t* index;
-	uint32_t pos, writesize;
+	uint8_t chunk[8] = {};
 
 	chunk[0] = tag[0];
 	chunk[1] = tag[1];
 	chunk[2] = tag[2];
 	chunk[3] = tag[3];
-	host_writed(&chunk[4], size);
-	/* Write the actual data */
-	fwrite(chunk, 1, 8, video.handle);
-	writesize = (size + 1) & ~1;
-	fwrite(data, 1, writesize, video.handle);
-	pos = video.written + 4;
-	video.written += writesize + 8;
-	if (video.indexused + 16 >= video.index.size())
-		video.index.resize(video.index.size() + 16 * 4096);
 
-	index = video.index.data() + video.indexused;
-	video.indexused += 16;
+	host_writed(&chunk[4], size);
+
+	// Write the actual data
+	fwrite(chunk, 1, 8, video.handle);
+
+	auto writesize = (size + 1) & ~1;
+	fwrite(data, 1, writesize, video.handle);
+
+	auto pos = video.written + 4;
+	video.written += writesize + 8;
+
+	if (video.index_used + 16 >= video.index.size()) {
+		video.index.resize(video.index.size() + 16 * 4096);
+	}
+
+	auto index = video.index.data() + video.index_used;
+	video.index_used += 16;
+
 	index[0] = tag[0];
 	index[1] = tag[1];
 	index[2] = tag[2];
 	index[3] = tag[3];
+
 	host_writed(index + 4, flags);
 	host_writed(index + 8, pos);
 	host_writed(index + 12, size);
@@ -81,19 +87,22 @@ static void add_avi_chunk(const char* tag, const uint32_t size,
 
 void handle_video_event(const bool pressed)
 {
-	if (!pressed)
+	if (!pressed) {
 		return;
+	}
 
 	if (CaptureState & CAPTURE_VIDEO) {
-		/* Close the video */
-		if (video.codec)
+		// Close the video
+		if (video.codec) {
 			video.codec->FinishVideo();
+		}
+
 		CaptureState &= ~CAPTURE_VIDEO;
 		LOG_MSG("CAPTURE: Stopped capturing video output");
 
 		uint8_t avi_header[AVI_HEADER_SIZE];
-		uint32_t main_list;
 		uint32_t header_pos = 0;
+
 #define AVIOUT4(_S_) \
 	memcpy(&avi_header[header_pos], _S_, 4); \
 	header_pos += 4;
@@ -103,17 +112,21 @@ void handle_video_event(const bool pressed)
 #define AVIOUTd(_S_) \
 	host_writed(&avi_header[header_pos], _S_); \
 	header_pos += 4;
-		/* Try and write an avi header */
+
+		// Try and write an avi header
 		AVIOUT4("RIFF"); // Riff header
-		AVIOUTd(AVI_HEADER_SIZE + video.written - 8 + video.indexused);
+		AVIOUTd(AVI_HEADER_SIZE + video.written - 8 + video.index_used);
 		AVIOUT4("AVI ");
-		AVIOUT4("LIST"); // List header
-		main_list = header_pos;
-		AVIOUTd(0); // TODO size of list
+		AVIOUT4("LIST");
+
+		const auto main_list = header_pos;
+		// TODO size of list
+		AVIOUTd(0);
 		AVIOUT4("hdrl");
 
 		AVIOUT4("avih");
-		AVIOUTd(56); /* # of bytes to follow */
+		// # of bytes to follow
+		AVIOUTd(56);
 		AVIOUTd((uint32_t)(1000000 / video.frames_per_second)); /* Microseconds
 		                                                           per
 		                                                           frame */
@@ -131,11 +144,12 @@ void handle_video_event(const bool pressed)
 		AVIOUTd(0); /* StartTime:  Starting time of AVI data */
 		AVIOUTd(0); /* DataLength: Size of AVI data chunk    */
 
-		/* Video stream list */
+		// Video stream list
 		AVIOUT4("LIST");
 		AVIOUTd(4 + 8 + 56 + 8 + 40); /* Size of the list */
 		AVIOUT4("strl");
-		/* video stream header */
+
+		// Video stream header
 		AVIOUT4("strh");
 		AVIOUTd(56);        /* # of bytes to follow */
 		AVIOUT4("vids");    /* Type */
@@ -156,7 +170,8 @@ void handle_video_event(const bool pressed)
 		AVIOUTd(0);            /* SampleSize */
 		AVIOUTd(0);            /* Frame */
 		AVIOUTd(0);            /* Frame */
-		/* The video stream format */
+
+		// The video stream format
 		AVIOUT4("strf");
 		AVIOUTd(40); /* # of bytes to follow */
 		AVIOUTd(40); /* Size */
@@ -172,11 +187,12 @@ void handle_video_event(const bool pressed)
 		AVIOUTd(0); /* ClrUsed: Number of colors used */
 		AVIOUTd(0); /* ClrImportant: Number of colors important */
 
-		/* Audio stream list */
+		// Audio stream list
 		AVIOUT4("LIST");
 		AVIOUTd(4 + 8 + 56 + 8 + 16); /* Length of list in bytes */
 		AVIOUT4("strl");
-		/* The audio stream header */
+
+		// The audio stream header
 		AVIOUT4("strh");
 		AVIOUTd(56); /* # of bytes to follow */
 		AVIOUT4("auds");
@@ -185,48 +201,61 @@ void handle_video_event(const bool pressed)
 		AVIOUTd(0); /* Reserved, MS says: wPriority, wLanguage */
 		AVIOUTd(0); /* InitialFrames */
 		AVIOUTd(4); /* Scale */
-		AVIOUTd(video.audiorate * 4); /* Rate, actual rate is scale/rate */
-		AVIOUTd(0);                   /* Start */
-		if (!video.audiorate)
-			video.audiorate = 1;
-		AVIOUTd(video.audiowritten / 4); /* Length */
-		AVIOUTd(0);                      /* SuggestedBufferSize */
-		AVIOUTd(~0);                     /* Quality */
-		AVIOUTd(4);                      /* SampleSize */
-		AVIOUTd(0);                      /* Frame */
-		AVIOUTd(0);                      /* Frame */
-		/* The audio stream format */
-		AVIOUT4("strf");
-		AVIOUTd(16);                  /* # of bytes to follow */
-		AVIOUTw(1);                   /* Format, WAVE_ZMBV_FORMAT_PCM */
-		AVIOUTw(2);                   /* Number of channels */
-		AVIOUTd(video.audiorate);     /* SamplesPerSec */
-		AVIOUTd(video.audiorate * 4); /* AvgBytesPerSec*/
-		AVIOUTw(4);                   /* BlockAlign */
-		AVIOUTw(16);                  /* BitsPerSample */
-		int nmain = header_pos - main_list - 4;
-		/* Finish stream list, i.e. put number of bytes in the list to
-		 * proper pos */
+		AVIOUTd(video.audio_rate * 4); /* Rate, actual rate is
+		                                  scale/rate */
+		AVIOUTd(0);                    /* Start */
 
+		if (!video.audio_rate) {
+			video.audio_rate = 1;
+		}
+
+		AVIOUTd(video.audio_written / 4); /* Length */
+		AVIOUTd(0);                       /* SuggestedBufferSize */
+		AVIOUTd(~0);                      /* Quality */
+		AVIOUTd(4);                       /* SampleSize */
+		AVIOUTd(0);                       /* Frame */
+		AVIOUTd(0);                       /* Frame */
+
+		// The audio stream format
+		AVIOUT4("strf");
+		AVIOUTd(16);               /* # of bytes to follow */
+		AVIOUTw(1);                /* Format, WAVE_ZMBV_FORMAT_PCM */
+		AVIOUTw(2);                /* Number of channels */
+		AVIOUTd(video.audio_rate); /* SamplesPerSec */
+		AVIOUTd(video.audio_rate * 4); /* AvgBytesPerSec*/
+		AVIOUTw(4);                    /* BlockAlign */
+		AVIOUTw(16);                   /* BitsPerSample */
+
+		int nmain = header_pos - main_list - 4;
+
+		// Finish stream list, i.e. put number of bytes in the list to
+		// proper pos
 		int njunk = AVI_HEADER_SIZE - 8 - 12 - header_pos;
 		AVIOUT4("JUNK");
 		AVIOUTd(njunk);
-		/* Fix the size of the main list */
+
+		// Fix the size of the main list
 		header_pos = main_list;
 		AVIOUTd(nmain);
 		header_pos = AVI_HEADER_SIZE - 12;
 		AVIOUT4("LIST");
-		AVIOUTd(video.written + 4); /* Length of list in bytes */
+
+		// Length of list in bytes
+		AVIOUTd(video.written + 4);
 		AVIOUT4("movi");
-		/* First add the index table to the end */
+
+		// First add the index table to the end
 		memcpy(video.index.data(), "idx1", 4);
-		host_writed(video.index.data() + 4, video.indexused - 8);
-		fwrite(video.index.data(), 1, video.indexused, video.handle);
+		host_writed(video.index.data() + 4, video.index_used - 8);
+		fwrite(video.index.data(), 1, video.index_used, video.handle);
+
 		fseek(video.handle, 0, SEEK_SET);
 		fwrite(&avi_header, 1, AVI_HEADER_SIZE, video.handle);
+
 		fclose(video.handle);
 		delete video.codec;
 		video.handle = nullptr;
+
 	} else {
 		CaptureState |= CAPTURE_VIDEO;
 	}
@@ -235,13 +264,15 @@ void handle_video_event(const bool pressed)
 void capture_video_add_wave(const uint32_t freq, const uint32_t len,
                             const int16_t* data)
 {
-	uint32_t left = WAVE_BUF - video.audioused;
+	auto left = WAVE_BUF - video.audio_used;
 	if (left > len) {
 		left = len;
 	}
-	memcpy(&video.audiobuf[video.audioused], data, left * 4);
-	video.audioused += left;
-	video.audiorate = freq;
+
+	memcpy(&video.audio_buf[video.audio_used], data, left * 4);
+
+	video.audio_used += left;
+	video.audio_rate = freq;
 }
 
 void capture_video(const uint16_t width, const uint16_t height,
@@ -250,13 +281,15 @@ void capture_video(const uint16_t width, const uint16_t height,
                    const uint8_t* image_data, const uint8_t* palette_data)
 {
 	ZMBV_FORMAT format;
-	/* Disable capturing if any of the test fails */
+
+	// Disable capturing if any of the test fails
 	if (video.handle && (video.width != width || video.height != height ||
 	                     video.bits_per_pixel != bits_per_pixel ||
 	                     video.frames_per_second != frames_per_second)) {
 		const auto pressed = true;
 		handle_video_event(pressed);
 	}
+
 	switch (bits_per_pixel) {
 	case 8: format = ZMBV_FORMAT::BPP_8; break;
 	case 15: format = ZMBV_FORMAT::BPP_15; break;
@@ -271,6 +304,7 @@ void capture_video(const uint16_t width, const uint16_t height,
 	case 32: format = ZMBV_FORMAT::BPP_32; break;
 	default: return;
 	}
+
 	if (!video.handle) {
 		video.handle = CAPTURE_CreateFile("video output", ".avi");
 		if (!video.handle) {
@@ -283,105 +317,119 @@ void capture_video(const uint16_t width, const uint16_t height,
 		if (!video.codec->SetupCompress(width, height)) {
 			return;
 		}
-		video.bufSize = video.codec->NeededSize(width, height, format);
-		video.buf.resize(video.bufSize);
+
+		video.buf_size = video.codec->NeededSize(width, height, format);
+		video.buf.resize(video.buf_size);
+
 		video.index.resize(16 * 4096);
-		video.indexused = 8;
+		video.index_used = 8;
 
 		video.width             = width;
 		video.height            = height;
 		video.bits_per_pixel    = bits_per_pixel;
 		video.frames_per_second = frames_per_second;
-		for (auto i = 0; i < AVI_HEADER_SIZE; ++i)
+
+		for (auto i = 0; i < AVI_HEADER_SIZE; ++i) {
 			fputc(0, video.handle);
-		video.frames       = 0;
-		video.written      = 0;
-		video.audioused    = 0;
-		video.audiowritten = 0;
+		}
+
+		video.frames        = 0;
+		video.written       = 0;
+		video.audio_used    = 0;
+		video.audio_written = 0;
 	}
-	int codecFlags;
-	if (video.frames % 300 == 0)
-		codecFlags = 1;
-	else
-		codecFlags = 0;
-	if (!video.codec->PrepareCompressFrame(
-	            codecFlags, format, palette_data, video.buf.data(), video.bufSize)) {
+
+	const auto codec_flags = (video.frames % 300 == 0) ? 1 : 0;
+
+	if (!video.codec->PrepareCompressFrame(codec_flags,
+	                                       format,
+	                                       palette_data,
+	                                       video.buf.data(),
+	                                       video.buf_size)) {
 		return;
 	}
 
 	const bool is_double_width = capture_flags & CAPTURE_FLAG_DBLW;
 	const auto height_divisor = (capture_flags & CAPTURE_FLAG_DBLH) ? 1 : 0;
 
-	uint8_t doubleRow[SCALER_MAXWIDTH * 4];
+	uint8_t double_row[SCALER_MAXWIDTH * 4];
 
 	for (auto i = 0; i < height; ++i) {
-		const uint8_t* rowPointer = doubleRow;
+		const uint8_t* row_ptr = double_row;
 		const auto srcLine = image_data + (i >> height_divisor) * pitch;
 
 		if (is_double_width) {
-			const auto countWidth = width >> 1;
+			const auto count_width = width >> 1;
 			switch (bits_per_pixel) {
 			case 8:
-				for (auto x = 0; x < countWidth; ++x)
-					doubleRow[x * 2 + 0] =
-					        doubleRow[x * 2 + 1] = srcLine[x];
+				for (auto x = 0; x < count_width; ++x)
+					double_row[x * 2 + 0] =
+					        double_row[x * 2 + 1] = srcLine[x];
 				break;
+
 			case 15:
 			case 16:
-				for (auto x = 0; x < countWidth; ++x)
-					((uint16_t*)doubleRow)[x * 2 + 0] = ((
-					        uint16_t*)doubleRow)[x * 2 + 1] =
+				for (auto x = 0; x < count_width; ++x)
+					((uint16_t*)double_row)[x * 2 + 0] = ((
+					        uint16_t*)double_row)[x * 2 + 1] =
 					        ((uint16_t*)srcLine)[x];
 				break;
+
 			case 24:
-				for (auto x = 0; x < countWidth; ++x) {
+				for (auto x = 0; x < count_width; ++x) {
 					const auto pixel = reinterpret_cast<const rgb24*>(
 					        srcLine)[x];
 					reinterpret_cast<uint32_t*>(
-					        doubleRow)[x * 2 + 0] = pixel;
+					        double_row)[x * 2 + 0] = pixel;
 					reinterpret_cast<uint32_t*>(
-					        doubleRow)[x * 2 + 1] = pixel;
+					        double_row)[x * 2 + 1] = pixel;
 				}
 				break;
+
 			case 32:
-				for (auto x = 0; x < countWidth; ++x)
-					((uint32_t*)doubleRow)[x * 2 + 0] = ((
-					        uint32_t*)doubleRow)[x * 2 + 1] =
+				for (auto x = 0; x < count_width; ++x)
+					((uint32_t*)double_row)[x * 2 + 0] = ((
+					        uint32_t*)double_row)[x * 2 + 1] =
 					        ((uint32_t*)srcLine)[x];
 				break;
 			}
-			rowPointer = doubleRow;
+			row_ptr = double_row;
+
 		} else {
 			if (bits_per_pixel == 24) {
 				for (auto x = 0; x < width; ++x) {
 					const auto pixel = reinterpret_cast<const rgb24*>(
 					        srcLine)[x];
-					reinterpret_cast<uint32_t*>(doubleRow)[x] = pixel;
+					reinterpret_cast<uint32_t*>(
+					        double_row)[x] = pixel;
 				}
-				// Using doubleRow for this conversion when it
+				// Using double_row for this conversion when it
 				// is not actually double row!
-				rowPointer = doubleRow;
+				row_ptr = double_row;
 			} else {
-				rowPointer = srcLine;
+				row_ptr = srcLine;
 			}
 		}
-		video.codec->CompressLines(1, &rowPointer);
+		video.codec->CompressLines(1, &row_ptr);
 	}
-	int written = video.codec->FinishCompressFrame();
+
+	const auto written = video.codec->FinishCompressFrame();
 	if (written < 0) {
 		return;
 	}
-	add_avi_chunk("00dc", written, video.buf.data(), codecFlags & 1 ? 0x10 : 0x0);
+
+	add_avi_chunk("00dc", written, video.buf.data(), codec_flags & 1 ? 0x10 : 0x0);
 	video.frames++;
+
 	//		LOG_MSG("CAPTURE: Frame %d video %d audio
-	//%d",video.frames, written, video.audioused *4 );
-	if (video.audioused) {
-		add_avi_chunk("01wb", video.audioused * 4, video.audiobuf, 0);
-		video.audiowritten = video.audioused * 4;
-		video.audioused    = 0;
+	//%d",video.frames, written, video.audio_used *4 );
+	if (video.audio_used) {
+		add_avi_chunk("01wb", video.audio_used * 4, video.audio_buf, 0);
+		video.audio_written = video.audio_used * 4;
+		video.audio_used    = 0;
 	}
 
-	/* Everything went okay, set flag again for next frame */
+	// Everything went okay, set flag again for next frame
 	CaptureState |= CAPTURE_VIDEO;
 }
 
