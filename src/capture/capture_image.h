@@ -1,5 +1,8 @@
 /*
- *  Copyright (C) 2023  The DOSBox Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +26,5 @@ void capture_image(const uint16_t width, const uint16_t height,
                    const uint8_t bits_per_pixel, const uint16_t pitch,
                    const uint8_t capture_flags, const uint8_t* image_data,
                    const uint8_t* palette_data);
-
-void handle_screenshot_rendered_surface(const bool pressed);
 
 #endif

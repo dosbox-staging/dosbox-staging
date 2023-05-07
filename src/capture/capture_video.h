@@ -1,5 +1,8 @@
 /*
- *  Copyright (C) 2023  The DOSBox Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,14 +22,16 @@
 #ifndef DOSBOX_CAPTURE_VIDEO_H
 #define DOSBOX_CAPTURE_VIDEO_H
 
-void capture_video(const uint16_t width, const uint16_t height,
-                   const uint8_t bits_per_pixel, const uint16_t pitch,
-                   const uint8_t capture_flags, const float frames_per_second,
-                   const uint8_t* image_data, const uint8_t* palette_data);
+void capture_video_add_frame(const uint16_t width, const uint16_t height,
+                             const uint8_t bits_per_pixel, const uint16_t pitch,
+                             const uint8_t capture_flags,
+                             const float frames_per_second, const uint8_t* image_data,
+                             const uint8_t* palette_data);
 
-void capture_video_add_wave(const uint32_t freq, const uint32_t len,
-                            const int16_t* data);
+void capture_video_add_audio_data(const uint32_t sample_rate,
+                                  const uint32_t num_sample_frames,
+                                  const int16_t* sample_frames);
 
-void handle_video_event(const bool pressed);
+void capture_video_finalise();
 
 #endif

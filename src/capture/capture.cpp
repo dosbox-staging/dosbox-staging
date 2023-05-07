@@ -1,5 +1,8 @@
 /*
- *  Copyright (C) 2002-2023  The DOSBox Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,6 +21,7 @@
 
 #include "capture.h"
 
+#include <cassert>
 #include <cerrno>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +31,7 @@
 #include "fs_utils.h"
 #include "mapper.h"
 #include "render.h"
+#include "sdlmain.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
@@ -36,13 +41,52 @@
 #include "capture_midi.h"
 #include "capture_video.h"
 
-static std::string capturedir;
+#include <SDL.h>
+#if C_OPENGL
+#include <SDL_opengl.h>
+#endif
+#if C_SDL_IMAGE
+#include <SDL_image.h>
+#endif
+
 extern const char* RunningProgram;
-uint8_t CaptureState;
+
+static std::string capture_dir;
+
+static bool capturing_audio = false;
+static bool capturing_image = false;
+static bool capturing_midi  = false;
+static bool capturing_opl   = false;
+static bool capturing_video = false;
+
+bool CAPTURE_IsCapturingAudio()
+{
+	return capturing_audio;
+}
+
+bool CAPTURE_IsCapturingImage()
+{
+	return capturing_image;
+}
+
+bool CAPTURE_IsCapturingMidi()
+{
+	return capturing_midi;
+}
+
+bool CAPTURE_IsCapturingOpl()
+{
+	return capturing_opl;
+}
+
+bool CAPTURE_IsCapturingVideo()
+{
+	return capturing_video;
+}
 
 std::string capture_generate_filename(const char* type, const char* ext)
 {
-	if (capturedir.empty()) {
+	if (capture_dir.empty()) {
 		LOG_WARNING("CAPTURE: Please specify a capture directory");
 		return 0;
 	}
@@ -50,20 +94,20 @@ std::string capture_generate_filename(const char* type, const char* ext)
 	char file_start[16];
 	dir_information* dir;
 	/* Find a filename to open */
-	dir = open_directory(capturedir.c_str());
+	dir = open_directory(capture_dir.c_str());
 	if (!dir) {
 		// Try creating it first
-		if (create_dir(capturedir, 0700, OK_IF_EXISTS) != 0) {
+		if (create_dir(capture_dir, 0700, OK_IF_EXISTS) != 0) {
 			LOG_WARNING("CAPTURE: Can't create directory '%s' for capturing %s, reason: %s",
-			            capturedir.c_str(),
+			            capture_dir.c_str(),
 			            type,
 			            safe_strerror(errno).c_str());
 			return 0;
 		}
-		dir = open_directory(capturedir.c_str());
+		dir = open_directory(capture_dir.c_str());
 		if (!dir) {
 			LOG_WARNING("CAPTURE: Can't open directory '%s' for capturing %s",
-			            capturedir.c_str(),
+			            capture_dir.c_str(),
 			            type);
 			return 0;
 		}
@@ -93,7 +137,7 @@ std::string capture_generate_filename(const char* type, const char* ext)
 	snprintf(file_name,
 	         CROSS_LEN,
 	         "%s%c%s%03d%s",
-	         capturedir.c_str(),
+	         capture_dir.c_str(),
 	         CROSS_FILESPLIT,
 	         file_start,
 	         last,
@@ -102,6 +146,7 @@ std::string capture_generate_filename(const char* type, const char* ext)
 	return file_name;
 }
 
+// TODO should be internal
 FILE* CAPTURE_CreateFile(const char* type, const char* ext)
 {
 	const auto file_name = capture_generate_filename(type, ext);
@@ -122,26 +167,28 @@ constexpr auto NoAviSupportMessage =
         "CAPTURE: Can't capture video output: AVI support has not been compiled in";
 #endif
 
-void CAPTURE_VideoStart()
+void CAPTURE_StartVideoCapture()
 {
 #if (C_SSHOT)
-	if (CaptureState & CAPTURE_VIDEO) {
+	if (capturing_video) {
 		LOG_WARNING("CAPTURE: Already capturing video output");
 	} else {
-		const auto pressed = true;
-		handle_video_event(pressed);
+		// Capturing the videooutput will start in the next few
+		// milliseconds when CAPTURE_AddImage is called
+		capturing_video = true;
 	}
 #else
 	LOG_WARNING(NoAviSupportMessage);
 #endif
 }
 
-void CAPTURE_VideoStop()
+void CAPTURE_StopVideoCapture()
 {
 #if (C_SSHOT)
-	if (CaptureState & CAPTURE_VIDEO) {
-		const auto pressed = true;
-		handle_video_event(pressed);
+	if (capturing_video) {
+		capture_video_finalise();
+		capturing_video = false;
+		LOG_MSG("CAPTURE: Stopped capturing video output");
 	} else {
 		LOG_WARNING("CAPTURE: Not capturing video output");
 	}
@@ -150,7 +197,7 @@ void CAPTURE_VideoStop()
 #endif
 }
 
-void CAPTURE_AddImage([[maybe_unused]] const uint16_t width,
+void CAPTURE_AddFrame([[maybe_unused]] const uint16_t width,
                       [[maybe_unused]] const uint16_t height,
                       [[maybe_unused]] const uint8_t bits_per_pixel,
                       [[maybe_unused]] const uint16_t pitch,
@@ -161,11 +208,11 @@ void CAPTURE_AddImage([[maybe_unused]] const uint16_t width,
 {
 #if (C_SSHOT)
 	auto image_height = height;
-	if (capture_flags & CAPTURE_FLAG_DBLH) {
+	if (capture_flags & CaptureFlagDoubleHeight) {
 		image_height *= 2;
 	}
 	auto image_width = width;
-	if (capture_flags & CAPTURE_FLAG_DBLW) {
+	if (capture_flags & CaptureFlagDoubleWidth) {
 		image_width *= 2;
 	}
 	if (image_height > SCALER_MAXHEIGHT) {
@@ -175,7 +222,7 @@ void CAPTURE_AddImage([[maybe_unused]] const uint16_t width,
 		return;
 	}
 
-	if (CaptureState & CAPTURE_IMAGE) {
+	if (capturing_image) {
 		capture_image(image_width,
 		              image_height,
 		              bits_per_pixel,
@@ -183,90 +230,195 @@ void CAPTURE_AddImage([[maybe_unused]] const uint16_t width,
 		              capture_flags,
 		              image_data,
 		              palette_data);
-		CaptureState &= ~CAPTURE_IMAGE;
+
+		capturing_image = false;
 	}
-	if (CaptureState & CAPTURE_VIDEO) {
-		capture_video(image_width,
-		              image_height,
-		              bits_per_pixel,
-		              pitch,
-		              capture_flags,
-		              frames_per_second,
-		              image_data,
-		              palette_data);
-		CaptureState &= ~CAPTURE_VIDEO;
+
+	if (capturing_video) {
+		capture_video_add_frame(image_width,
+		                        image_height,
+		                        bits_per_pixel,
+		                        pitch,
+		                        capture_flags,
+		                        frames_per_second,
+		                        image_data,
+		                        palette_data);
 	}
 #endif
 }
 
-#if (C_SSHOT)
-static void handle_screenshot_event(const bool pressed)
+void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_frames,
+                          const int16_t* sample_frames)
 {
+#if (C_SSHOT)
+	if (capturing_video) {
+		capture_video_add_audio_data(sample_rate,
+		                             num_sample_frames,
+		                             sample_frames);
+	}
+#endif
+	if (capturing_audio) {
+		capture_audio_add_data(sample_rate, num_sample_frames, sample_frames);
+	}
+}
+
+void CAPTURE_AddMidiData(const bool sysex, const size_t len, const uint8_t* data)
+{
+	capture_midi_add_data(sysex, len, data);
+}
+
+static void handle_capture_audio_event(bool pressed)
+{
+	// Ignore key-release events
 	if (!pressed) {
 		return;
 	}
-	CaptureState |= CAPTURE_IMAGE;
-}
-#endif
-
-void CAPTURE_AddWave(const uint32_t freq, const uint32_t len, const int16_t* data)
-{
-#if (C_SSHOT)
-	if (CaptureState & CAPTURE_VIDEO) {
-		capture_video_add_wave(freq, len, data);
-	}
-#endif
-	if (CaptureState & CAPTURE_WAVE) {
-		capture_audio_add_wave(freq, len, data);
+	if (capturing_audio) {
+		capture_audio_finalise();
+		capturing_audio = false;
+		LOG_MSG("CAPTURE: Stopped capturing audio output");
+	} else {
+		// Capturing the audio output will start in the next few
+		// milliseconds when CAPTURE_AddAudioData is called
+		capturing_audio = true;
 	}
 }
 
-void CAPTURE_AddMidi(const bool sysex, const size_t len, const uint8_t* data)
+static void handle_capture_midi_event(bool pressed)
 {
-	capture_add_midi(sysex, len, data);
+	// Ignore key-release events
+	if (!pressed) {
+		return;
+	}
+	if (capturing_midi) {
+		capture_midi_finalise();
+		capturing_midi = false;
+		LOG_MSG("CAPTURE: Stopped capturing MIDI output");
+	} else {
+		capturing_midi = true;
+		// We need to log this because the actual sending of MIDI data
+		// might happen much later
+		LOG_MSG("CAPTURE: Preparing to capture MIDI output; "
+		        "capturing will start on the first MIDI message");
+	}
 }
 
-void CAPTURE_Destroy([[maybe_unused]] Section* sec)
+static void handle_capture_rendered_screenshot_event(const bool pressed)
 {
-	const auto pressed = true;
-#if (C_SSHOT)
-	handle_video_event(pressed);
+	// Ignore key-release events
+	if (!pressed) {
+		return;
+	}
+
+	const auto surface = SDLMAIN_GetRenderedSurface();
+	if (!surface) {
+		return;
+	}
+
+#if C_SDL_IMAGE
+	const auto filename = capture_generate_filename("Screenshot", ".png");
+	const auto is_saved = IMG_SavePNG(*surface, filename.c_str()) == 0;
+#else
+	const auto filename = capture_generate_filename("Screenshot", ".bmp");
+	const auto is_saved = SDL_SaveBMP(*surface, filename.c_str()) == 0;
 #endif
-	handle_wave_event(pressed);
-	handle_midi_event(pressed);
+	SDL_FreeSurface(*surface);
+
+	if (is_saved) {
+		LOG_MSG("CAPTURE: Capturing rendered image output to '%s'",
+		        filename.c_str());
+	} else {
+		LOG_MSG("CAPTURE: Failed capturing rendered image to '%s', reason: %s",
+		        filename.c_str(),
+		        SDL_GetError());
+	}
 }
+
+#if (C_SSHOT)
+static void handle_capture_raw_screenshot_event(const bool pressed)
+{
+	// Ignore key-release events
+	if (!pressed) {
+		return;
+	}
+	capturing_image = true;
+}
+#endif
+
+void handle_capture_video_event(bool pressed)
+{
+	// Ignore key-release events
+	if (!pressed) {
+		return;
+	}
+
+	if (capturing_video) {
+		CAPTURE_StopVideoCapture();
+	} else {
+		CAPTURE_StartVideoCapture();
+	}
+}
+
+void capture_destroy([[maybe_unused]] Section* sec)
+{
+	if (capturing_audio) {
+		capture_audio_finalise();
+	}
+	if (capturing_midi) {
+		capture_midi_finalise();
+	}
+#if (C_SSHOT)
+	if (capturing_video) {
+		capture_video_finalise();
+	}
+#endif
+}
+
+// TODO move raw OPL capture and serial log capture here too
 
 void CAPTURE_Init(Section* sec)
 {
 	assert(sec);
 
 	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
+	assert(conf);
 
 	Prop_path* proppath = conf->Get_path("captures");
-	capturedir          = proppath->realpath;
-	CaptureState        = 0;
+	assert(proppath);
 
-	MAPPER_AddHandler(handle_wave_event,
+	capture_dir = proppath->realpath;
+
+	capturing_audio = false;
+	capturing_image = false;
+	capturing_midi  = false;
+	capturing_opl   = false;
+	capturing_video = false;
+
+	MAPPER_AddHandler(handle_capture_audio_event,
 	                  SDL_SCANCODE_F6,
 	                  PRIMARY_MOD,
 	                  "recwave",
 	                  "Rec. Audio");
 
-	MAPPER_AddHandler(handle_midi_event, SDL_SCANCODE_UNKNOWN, 0, "caprawmidi", "Rec. MIDI");
+	MAPPER_AddHandler(handle_capture_midi_event,
+	                  SDL_SCANCODE_UNKNOWN,
+	                  0,
+	                  "caprawmidi",
+	                  "Rec. MIDI");
 
-	MAPPER_AddHandler(handle_screenshot_rendered_surface,
+	MAPPER_AddHandler(handle_capture_rendered_screenshot_event,
 	                  SDL_SCANCODE_F5,
 	                  MMOD2,
 	                  "rendshot",
 	                  "Rend Screenshot");
 #if (C_SSHOT)
-	MAPPER_AddHandler(handle_screenshot_event,
+	MAPPER_AddHandler(handle_capture_raw_screenshot_event,
 	                  SDL_SCANCODE_F5,
 	                  PRIMARY_MOD,
 	                  "scrshot",
 	                  "Screenshot");
 
-	MAPPER_AddHandler(handle_video_event,
+	MAPPER_AddHandler(handle_capture_video_event,
 	                  SDL_SCANCODE_F7,
 	                  PRIMARY_MOD,
 	                  "video",
@@ -274,6 +426,6 @@ void CAPTURE_Init(Section* sec)
 #endif
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&CAPTURE_Destroy, changeable_at_runtime);
+	sec->AddDestroyFunction(&capture_destroy, changeable_at_runtime);
 }
 

@@ -1,5 +1,8 @@
 /*
- *  Copyright (C) 2023  The DOSBox Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,8 +22,8 @@
 #ifndef DOSBOX_CAPTURE_MIDI_H
 #define DOSBOX_CAPTURE_MIDI_H
 
-void capture_add_midi(const bool sysex, const size_t len, const uint8_t* data);
+void capture_midi_add_data(const bool sysex, const size_t len, const uint8_t* data);
 
-void handle_midi_event(const bool pressed);
+void capture_midi_finalise();
 
 #endif

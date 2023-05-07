@@ -209,11 +209,12 @@ bool RENDER_StartUpdate(void)
 			render.fullFrame = true;
 		} else {
 			RENDER_DrawLine = RENDER_StartLineHandler;
-			if (GCC_UNLIKELY(CaptureState &
-			                 (CAPTURE_IMAGE | CAPTURE_VIDEO)))
+			if (GCC_UNLIKELY(CAPTURE_IsCapturingImage() ||
+			                 CAPTURE_IsCapturingVideo())) {
 				render.fullFrame = true;
-			else
+			} else {
 				render.fullFrame = false;
+			}
 		}
 	}
 	render.updating = true;
@@ -231,30 +232,35 @@ static void RENDER_Halt(void)
 extern uint32_t PIC_Ticks;
 void RENDER_EndUpdate(bool abort)
 {
-	if (GCC_UNLIKELY(!render.updating))
+	if (GCC_UNLIKELY(!render.updating)) {
 		return;
-	RENDER_DrawLine = RENDER_EmptyLineHandler;
-	if (GCC_UNLIKELY(CaptureState & (CAPTURE_IMAGE | CAPTURE_VIDEO))) {
-		Bitu pitch, flags;
-		flags = 0;
-		if (render.src.dblw != render.src.dblh) {
-			if (render.src.dblw)
-				flags |= CAPTURE_FLAG_DBLW;
-			if (render.src.dblh)
-				flags |= CAPTURE_FLAG_DBLH;
-		}
-		auto fps = render.src.fps;
-		pitch    = render.scale.cachePitch;
+	}
 
-		CAPTURE_AddImage(render.src.width,
+	RENDER_DrawLine = RENDER_EmptyLineHandler;
+
+	if (GCC_UNLIKELY((CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()))) {
+		uint8_t flags = 0;
+		if (render.src.dblw != render.src.dblh) {
+			if (render.src.dblw) {
+				flags |= CaptureFlagDoubleWidth;
+			}
+			if (render.src.dblh) {
+				flags |= CaptureFlagDoubleHeight;
+			}
+		}
+		auto fps         = render.src.fps;
+		const auto pitch = render.scale.cachePitch;
+
+		CAPTURE_AddFrame(render.src.width,
 		                 render.src.height,
 		                 render.src.bpp,
 		                 pitch,
 		                 flags,
 		                 static_cast<float>(fps),
-		                 (uint8_t *)&scalerSourceCache,
-		                 (uint8_t *)&render.pal.rgb);
+		                 (uint8_t*)&scalerSourceCache,
+		                 (uint8_t*)&render.pal.rgb);
 	}
+
 	if (render.scale.outWrite) {
 		GFX_EndUpdate(abort ? NULL : Scaler_ChangedLines);
 	} else {

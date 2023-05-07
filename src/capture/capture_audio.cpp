@@ -1,5 +1,8 @@
 /*
- *  Copyright (C) 2002-2023  The DOSBox Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,87 +21,132 @@
 
 #include "capture.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
 
 #include "mem.h"
 #include "setup.h"
 
-#define WAVE_BUF 16 * 1024
+static constexpr auto SampleFrameSize   = 4;
+static constexpr auto NumFramesInBuffer = 16 * 1024;
+static constexpr auto NumChannels       = 2;
 
 static struct {
-	FILE* handle              = nullptr;
-	uint16_t buf[WAVE_BUF][2] = {};
-	uint32_t used             = 0;
-	uint32_t length           = 0;
-	uint32_t freq             = 0;
+	FILE* handle = nullptr;
+
+	uint16_t buf[NumFramesInBuffer][NumChannels] = {};
+
+	uint32_t sample_rate        = 0;
+	uint32_t buf_frames_used    = 0;
+	uint32_t data_bytes_written = 0;
 } wave = {};
 
-static uint8_t wavheader[]={
-	'R','I','F','F',	0x0,0x0,0x0,0x0,		/* uint32_t Riff Chunk ID /  uint32_t riff size */
-	'W','A','V','E',	'f','m','t',' ',		/* uint32_t Riff Format  / uint32_t fmt chunk id */
-	0x10,0x0,0x0,0x0,	0x1,0x0,0x2,0x0,		/* uint32_t fmt size / uint16_t encoding/ uint16_t channels */
-	0x0,0x0,0x0,0x0,	0x0,0x0,0x0,0x0,		/* uint32_t freq / uint32_t byterate */
-	0x4,0x0,0x10,0x0,	'd','a','t','a',		/* uint16_t byte-block / uint16_t bits / uint16_t data chunk id */
-	0x0,0x0,0x0,0x0,							/* uint32_t data size */
+// clang-format off
+static uint8_t wav_header[] = {
+	'R',  'I',  'F',  'F',   // uint32 - RIFF chunk ID
+	0x00, 0x00, 0x00, 0x00,	 // uint32 - RIFF chunk size
+	'W',  'A',  'V',  'E',   // uint32 - RIFF format
+	'f',  'm',  't',  ' ',	 // uint32 - fmt chunk ID
+	0x10, 0x00, 0x00, 0x00,  // uint32 - fmt chunksize
+	0x01, 0x00,              // uint16 - Audio format, 1 = PCM
+	0x02, 0x00,              // uint16 - Num channels, 2 = stereo
+	0x00, 0x00, 0x00, 0x00,  // uint32 - Sample rate
+	0x00, 0x00, 0x00, 0x00,	 // uint32 - Byte rate
+	0x04, 0x00,              // uint16 - Block align
+	0x10, 0x00,              // uint16 - Bits per sample, 16-bit
+	'd',  'a',  't',  'a',	 // uint32 - Data chunk ID
+	0x00, 0x00, 0x00, 0x00,	 // uint32 - Data chunk size
 };
+// clang-format on
 
-void handle_wave_event(bool pressed)
+static void create_wave_file(const uint32_t sample_rate)
 {
-	if (!pressed)
+	wave.handle = CAPTURE_CreateFile("audio output", ".wav");
+	if (!wave.handle) {
 		return;
-	/* Check for previously opened wave file */
-	if (wave.handle) {
-		LOG_MSG("CAPTURE: Stopped capturing audio output");
-
-		/* Write last piece of audio in buffer */
-		fwrite(wave.buf, 1, wave.used * 4, wave.handle);
-		wave.length += wave.used * 4;
-		/* Fill in the header with useful information */
-		host_writed(&wavheader[0x04], wave.length + sizeof(wavheader) - 8);
-		host_writed(&wavheader[0x18], wave.freq);
-		host_writed(&wavheader[0x1C], wave.freq * 4);
-		host_writed(&wavheader[0x28], wave.length);
-
-		fseek(wave.handle, 0, 0);
-		fwrite(wavheader, 1, sizeof(wavheader), wave.handle);
-		fclose(wave.handle);
-		wave.handle = 0;
-		CaptureState |= CAPTURE_WAVE;
 	}
-	CaptureState ^= CAPTURE_WAVE;
+
+	wave.sample_rate        = sample_rate;
+	wave.buf_frames_used    = 0;
+	wave.data_bytes_written = 0;
+
+	fwrite(wav_header, 1, sizeof(wav_header), wave.handle);
 }
 
-void capture_audio_add_wave(const uint32_t freq, const uint32_t len,
-                            const int16_t* data)
+void capture_audio_add_data(const uint32_t sample_rate,
+                            const uint32_t num_sample_frames,
+                            const int16_t* sample_frames)
 {
 	if (!wave.handle) {
-		wave.handle = CAPTURE_CreateFile("audio output", ".wav");
-		if (!wave.handle) {
-			CaptureState &= ~CAPTURE_WAVE;
-			return;
-		}
-		wave.length = 0;
-		wave.used   = 0;
-		wave.freq   = freq;
-		fwrite(wavheader, 1, sizeof(wavheader), wave.handle);
+		create_wave_file(sample_rate);
 	}
-	const int16_t* read = data;
-	auto remaining      = len;
-	while (remaining > 0) {
-		uint32_t left = WAVE_BUF - wave.used;
-		if (!left) {
-			fwrite(wave.buf, 1, 4 * WAVE_BUF, wave.handle);
-			wave.length += 4 * WAVE_BUF;
-			wave.used = 0;
-			left      = WAVE_BUF;
-		}
-		if (left > remaining)
-			left = remaining;
-		memcpy(&wave.buf[wave.used], read, left * 4);
-		wave.used += left;
-		read += left * 2;
-		remaining -= left;
+	if (!wave.handle) {
+		return;
 	}
+
+	const int16_t* data   = sample_frames;
+	auto remaining_frames = num_sample_frames;
+
+	while (remaining_frames > 0) {
+		uint32_t frames_left = NumFramesInBuffer - wave.buf_frames_used;
+		if (!frames_left) {
+			const auto bytes_to_write = NumFramesInBuffer * SampleFrameSize;
+			fwrite(wave.buf, 1, bytes_to_write, wave.handle);
+
+			wave.data_bytes_written += bytes_to_write;
+			wave.buf_frames_used = 0;
+
+			frames_left = NumFramesInBuffer;
+		}
+
+		if (frames_left > remaining_frames) {
+			frames_left = remaining_frames;
+		}
+
+		memcpy(&wave.buf[wave.buf_frames_used],
+		       data,
+		       frames_left * SampleFrameSize);
+
+		wave.buf_frames_used += frames_left;
+		data += frames_left * NumChannels;
+		remaining_frames -= frames_left;
+	}
+}
+
+void capture_audio_finalise()
+{
+	if (!wave.handle) {
+		return;
+	}
+
+	// Flush audio buffer
+	const auto bytes_to_write = wave.buf_frames_used * SampleFrameSize;
+	fwrite(wave.buf, 1, bytes_to_write, wave.handle);
+	wave.data_bytes_written += bytes_to_write;
+
+	// Update headers
+	constexpr auto chunk_header_size = 8;
+
+	const auto riff_chunk_size = wave.data_bytes_written +
+	                             sizeof(wav_header) - chunk_header_size;
+
+	constexpr auto riff_chunk_size_offset = 0x04;
+	host_writed(&wav_header[riff_chunk_size_offset], riff_chunk_size);
+
+	constexpr auto sample_rate_offset = 0x18;
+	host_writed(&wav_header[sample_rate_offset], wave.sample_rate);
+
+	constexpr auto byte_rate_offset = 0x1c;
+	host_writed(&wav_header[byte_rate_offset], wave.sample_rate * SampleFrameSize);
+
+	constexpr auto data_chunk_size_offset = 0x28;
+	host_writed(&wav_header[data_chunk_size_offset], wave.data_bytes_written);
+
+	fseek(wave.handle, 0, 0);
+	fwrite(wav_header, 1, sizeof(wav_header), wave.handle);
+	fclose(wave.handle);
+
+	wave = {};
 }
 

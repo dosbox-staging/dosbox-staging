@@ -1,5 +1,8 @@
 /*
- *  Copyright (C) 2023  The DOSBox Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,30 +26,30 @@
 
 #include <string>
 
-constexpr auto CAPTURE_WAVE  = 0x01;
-constexpr auto CAPTURE_OPL   = 0x02;
-constexpr auto CAPTURE_MIDI  = 0x04;
-constexpr auto CAPTURE_IMAGE = 0x08;
-constexpr auto CAPTURE_VIDEO = 0x10;
-
-extern uint8_t CaptureState;
+constexpr auto CaptureFlagDoubleWidth  = 0x1;
+constexpr auto CaptureFlagDoubleHeight = 0x2;
 
 std::string capture_generate_filename(const char* type, const char* ext);
 
 FILE* CAPTURE_CreateFile(const char* type, const char* ext);
 
-void CAPTURE_AddWave(const uint32_t freq, const uint32_t len, const int16_t* data);
+void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_frames,
+                          const int16_t* sample_frames);
 
-constexpr auto CAPTURE_FLAG_DBLW = 0x1;
-constexpr auto CAPTURE_FLAG_DBLH = 0x2;
-
-void CAPTURE_AddImage(const uint16_t width, const uint16_t height,
+void CAPTURE_AddFrame(const uint16_t width, const uint16_t height,
                       const uint8_t bits_per_pixel, const uint16_t pitch,
                       const uint8_t capture_flags, const float frames_per_second,
                       const uint8_t* image_data, const uint8_t* palette_data);
 
-void CAPTURE_AddMidi(const bool sysex, const size_t len, const uint8_t* data);
-void CAPTURE_VideoStart();
-void CAPTURE_VideoStop();
+void CAPTURE_AddMidiData(const bool sysex, const size_t len, const uint8_t* data);
+
+void CAPTURE_StartVideoCapture();
+void CAPTURE_StopVideoCapture();
+
+bool CAPTURE_IsCapturingAudio();
+bool CAPTURE_IsCapturingImage();
+bool CAPTURE_IsCapturingMidi();
+bool CAPTURE_IsCapturingOpl();
+bool CAPTURE_IsCapturingVideo();
 
 #endif

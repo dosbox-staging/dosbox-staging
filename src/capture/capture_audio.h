@@ -1,5 +1,8 @@
 /*
- *  Copyright (C) 2023  The DOSBox Team
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,9 +22,10 @@
 #ifndef DOSBOX_CAPTURE_AUDIO_H
 #define DOSBOX_CAPTURE_AUDIO_H
 
-void capture_audio_add_wave(const uint32_t freq, const uint32_t len,
-                            const int16_t* data);
+void capture_audio_add_data(const uint32_t sample_rate,
+                            const uint32_t num_sample_frames,
+                            const int16_t* sample_frames);
 
-void handle_wave_event(const bool pressed);
+void capture_audio_finalise();
 
 #endif

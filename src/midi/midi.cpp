@@ -288,11 +288,11 @@ static void output_note_off_for_active_notes(const uint8_t channel)
 		if (midi_state.IsNoteActive(channel, note)) {
 			msg[1] = note;
 
-			if (CaptureState & CAPTURE_MIDI) {
+			if (CAPTURE_IsCapturingMidi()) {
 				constexpr auto is_sysex = false;
-				CAPTURE_AddMidi(is_sysex,
-				                note_off_msg_len,
-				                msg.data.data());
+				CAPTURE_AddMidiData(is_sysex,
+				                    note_off_msg_len,
+				                    msg.data.data());
 			}
 			midi.handler->PlayMsg(msg);
 		}
@@ -414,11 +414,11 @@ void MIDI_RawOutByte(uint8_t data)
 			LOG(LOG_ALL, LOG_NORMAL)
 			("Sysex message size %d", static_cast<int>(midi.sysex.pos));
 
-			if (CaptureState & CAPTURE_MIDI) {
+			if (CAPTURE_IsCapturingMidi()) {
 				constexpr auto is_sysex = true;
-				CAPTURE_AddMidi(is_sysex,
-				                midi.sysex.pos - 1,
-				                &midi.sysex.buf[1]);
+				CAPTURE_AddMidiData(is_sysex,
+				                    midi.sysex.pos - 1,
+				                    &midi.sysex.buf[1]);
 			}
 		}
 	}
@@ -479,11 +479,11 @@ void MIDI_RawOutByte(uint8_t data)
 
 			// 4. Always capture the original message if MIDI
 			// capture is enabled, regardless of the mute state.
-			if (CaptureState & CAPTURE_MIDI) {
+			if (CAPTURE_IsCapturingMidi()) {
 				constexpr auto is_sysex = false;
-				CAPTURE_AddMidi(is_sysex,
-				                midi.message.len,
-				                midi.message.msg.data.data());
+				CAPTURE_AddMidiData(is_sysex,
+				                    midi.message.len,
+				                    midi.message.msg.data.data());
 			}
 
 			// 5. Send the MIDI message to the device for playback
