@@ -49,7 +49,8 @@ void handle_wave_event(bool pressed)
 		return;
 	/* Check for previously opened wave file */
 	if (wave.handle) {
-		LOG_MSG("Stopped capturing wave output.");
+		LOG_MSG("CAPTURE: Stopped capturing audio output");
+
 		/* Write last piece of audio in buffer */
 		fwrite(wave.buf, 1, wave.used * 4, wave.handle);
 		wave.length += wave.used * 4;
@@ -72,7 +73,7 @@ void capture_audio_add_wave(const uint32_t freq, const uint32_t len,
                             const int16_t* data)
 {
 	if (!wave.handle) {
-		wave.handle = CAPTURE_CreateFile("Wave Output", ".wav");
+		wave.handle = CAPTURE_CreateFile("audio output", ".wav");
 		if (!wave.handle) {
 			CaptureState &= ~CAPTURE_WAVE;
 			return;

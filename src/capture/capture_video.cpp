@@ -89,7 +89,7 @@ void handle_video_event(const bool pressed)
 		if (video.codec)
 			video.codec->FinishVideo();
 		CaptureState &= ~CAPTURE_VIDEO;
-		LOG_MSG("Stopped capturing video.");
+		LOG_MSG("CAPTURE: Stopped capturing video output");
 
 		uint8_t avi_header[AVI_HEADER_SIZE];
 		uint32_t main_list;
@@ -272,7 +272,7 @@ void capture_video(const uint16_t width, const uint16_t height,
 	default: return;
 	}
 	if (!video.handle) {
-		video.handle = CAPTURE_CreateFile("Video", ".avi");
+		video.handle = CAPTURE_CreateFile("video output", ".avi");
 		if (!video.handle) {
 			return;
 		}
@@ -373,7 +373,7 @@ void capture_video(const uint16_t width, const uint16_t height,
 	}
 	add_avi_chunk("00dc", written, video.buf.data(), codecFlags & 1 ? 0x10 : 0x0);
 	video.frames++;
-	//		LOG_MSG("Frame %d video %d audio
+	//		LOG_MSG("CAPTURE: Frame %d video %d audio
 	//%d",video.frames, written, video.audioused *4 );
 	if (video.audioused) {
 		add_avi_chunk("01wb", video.audioused * 4, video.audiobuf, 0);

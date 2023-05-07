@@ -70,7 +70,7 @@ static void raw_midi_add_number(const uint32_t val)
 void capture_add_midi(const bool sysex, const size_t len, const uint8_t* data)
 {
 	if (!midi.handle) {
-		midi.handle = CAPTURE_CreateFile("Raw Midi", ".mid");
+		midi.handle = CAPTURE_CreateFile("MIDI output", ".mid");
 		if (!midi.handle) {
 			return;
 		}
@@ -97,7 +97,7 @@ void handle_midi_event(const bool pressed)
 		return;
 	/* Check for previously opened wave file */
 	if (midi.handle) {
-		LOG_MSG("Stopping raw midi saving and finalizing file.");
+		LOG_MSG("CAPTURE: Stopping capturing MIDI output");
 		// Delta time
 		raw_midi_add(0x00);
 		// End of track event
@@ -108,7 +108,7 @@ void handle_midi_event(const bool pressed)
 		fwrite(midi.buffer, 1, midi.used, midi.handle);
 		midi.done += midi.used;
 		if (fseek(midi.handle, 18, SEEK_SET) != 0) {
-			LOG_WARNING("CAPTURE: Failed seeking in MIDI capture file: %s",
+			LOG_WARNING("CAPTURE: Failed to seek in captured MIDI file '%s'",
 			            strerror(errno));
 			CaptureState ^= CAPTURE_MIDI;
 			return;
@@ -126,12 +126,12 @@ void handle_midi_event(const bool pressed)
 	}
 	CaptureState ^= CAPTURE_MIDI;
 	if (CaptureState & CAPTURE_MIDI) {
-		LOG_MSG("Preparing for raw midi capture, will start with first data.");
+		LOG_MSG("CAPTURE: Preparing to capture MIDI output; capturing will start on the first MIDI message");
 		midi.used   = 0;
 		midi.done   = 0;
 		midi.handle = 0;
 	} else {
-		LOG_MSG("Stopped capturing raw midi before any data arrived.");
+		LOG_MSG("CAPTURE: Stopped capturing MIDI output before any MIDI message was output (no capture file was created)");
 	}
 }
 

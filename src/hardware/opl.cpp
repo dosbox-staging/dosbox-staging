@@ -196,7 +196,7 @@ public:
 		if (!(note_on || percussion_on))
 			return true;
 
-		handle = CAPTURE_CreateFile("Raw Opl", ".dro");
+		handle = CAPTURE_CreateFile("raw OPL output", ".dro");
 		if (!handle)
 			return false;
 
@@ -219,14 +219,14 @@ public:
 
 	Capture(RegisterCache *_cache) : header(), cache(_cache)
 	{
-		LOG_MSG("OPL: Preparing to capture Raw OPL, will start with first note played.");
+		LOG_MSG("CAPTURE: Preparing to capture raw OPL output; capturing will start when OPL output starts");
 		MakeTables();
 	}
 
 	virtual ~Capture()
 	{
 		CloseFile();
-		LOG_MSG("OPL: Stopped Raw OPL capturing.");
+		LOG_MSG("CAPTURE: Stopped capturing raw OPL output");
 	}
 
 	// prevent copy

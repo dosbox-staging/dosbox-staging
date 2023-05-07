@@ -43,7 +43,7 @@ uint8_t CaptureState;
 std::string capture_generate_filename(const char* type, const char* ext)
 {
 	if (capturedir.empty()) {
-		LOG_MSG("Please specify a capture directory");
+		LOG_WARNING("CAPTURE: Please specify a capture directory");
 		return 0;
 	}
 
@@ -54,16 +54,17 @@ std::string capture_generate_filename(const char* type, const char* ext)
 	if (!dir) {
 		// Try creating it first
 		if (create_dir(capturedir, 0700, OK_IF_EXISTS) != 0) {
-			LOG_WARNING("Can't create dir '%s' for capturing: %s",
+			LOG_WARNING("CAPTURE: Can't create directory '%s' for capturing %s, reason: %s",
 			            capturedir.c_str(),
+			            type,
 			            safe_strerror(errno).c_str());
 			return 0;
 		}
 		dir = open_directory(capturedir.c_str());
 		if (!dir) {
-			LOG_MSG("Can't open dir %s for capturing %s",
-			        capturedir.c_str(),
-			        type);
+			LOG_WARNING("CAPTURE: Can't open directory '%s' for capturing %s",
+			            capturedir.c_str(),
+			            type);
 			return 0;
 		}
 	}
@@ -107,24 +108,31 @@ FILE* CAPTURE_CreateFile(const char* type, const char* ext)
 
 	FILE* handle = fopen(file_name.c_str(), "wb");
 	if (handle) {
-		LOG_MSG("Capturing %s to %s", type, file_name.c_str());
+		LOG_MSG("CAPTURE: Capturing %s to '%s'", type, file_name.c_str());
 	} else {
-		LOG_MSG("Failed to open %s for capturing %s", file_name.c_str(), type);
+		LOG_WARNING("CAPTURE: Failed to open '%s' for capturing %s",
+		            file_name.c_str(),
+		            type);
 	}
 	return handle;
 }
+
+#if (!C_SSHOT)
+constexpr auto NoAviSupportMessage =
+        "CAPTURE: Can't capture video output: AVI support has not been compiled in";
+#endif
 
 void CAPTURE_VideoStart()
 {
 #if (C_SSHOT)
 	if (CaptureState & CAPTURE_VIDEO) {
-		LOG_MSG("Already capturing video.");
+		LOG_WARNING("CAPTURE: Already capturing video output");
 	} else {
 		const auto pressed = true;
 		handle_video_event(pressed);
 	}
 #else
-	LOG_MSG("Avi capturing has not been compiled in");
+	LOG_WARNING(NoAviSupportMessage);
 #endif
 }
 
@@ -135,10 +143,10 @@ void CAPTURE_VideoStop()
 		const auto pressed = true;
 		handle_video_event(pressed);
 	} else {
-		LOG_MSG("Not capturing video.");
+		LOG_WARNING("CAPTURE: Not capturing video output");
 	}
 #else
-	LOG_MSG("Avi capturing has not been compiled in");
+	LOG_WARNING(NoAviSupportMessage);
 #endif
 }
 
