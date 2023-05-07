@@ -1662,13 +1662,34 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_VGA:
 		width<<=2;
 		if (CurMode->sheight < 350) {
-			if (vga.draw.vga_sub_350_line_handling !=
-			    VgaSub350LineHandling::DoubleScan) {
+			// Always round up odd number of lines
+			const auto height_is_odd = (height % 2 != 0);
+			if (height_is_odd) {
+				height += 1;
+			}
+
+			const auto is_single_scan_permitted =
+			        (vga.draw.vga_sub_350_line_handling !=
+			         VgaSub350LineHandling::DoubleScan);
+
+			const auto is_line_freq_double_scanned =
+			        (vga.draw.address_line_total == 2);
+
+			// If requested, convert the double-scanned line to
+			// single-scan
+			if (is_single_scan_permitted && is_line_freq_double_scanned) {
 				height /= 2;
 				vga.draw.address_line_total /= 2;
 				doubleheight = true;
 			}
-			doublewidth  = true;
+			// Width is always doubled for sub-350 line modes,
+			// however if the user doesn't want aspect correction
+			// (ie: "stretched to CRT dimensions") then let them see
+			// art at 1:1 for the single-scanned frequencies (Eg:
+			// 360x480 in Scorched Earth, and others).
+			doublewidth  = render.aspect ? true
+			                             : is_line_freq_double_scanned;
+
 			bpp = 32;
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
