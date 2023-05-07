@@ -1724,29 +1724,57 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
 		break;
 	case M_EGA:
+		// Common settings for EGA and (S)VGA machine types
 		vga.draw.blocks = width;
 		width<<=3;
-		if (IS_VGA_ARCH) {
-			if (CurMode->sheight < 350) {
-				const auto is_640_wide = CurMode->swidth == 640;
-				if (vga.draw.vga_sub_350_line_handling ==
-				    VgaSub350LineHandling::DoubleScan) {
-					doublewidth = !is_640_wide;
-				} else {
-					aspect_ratio *= is_640_wide ? 2 : 1;
-					doubleheight = true;
-					doublewidth  = true;
-				}
-			}
-			// Per-line palette changes (Spacepigs Megademo, Copper)
-			VGA_DrawLine = draw_linear_line_from_dac_palette;
-			bpp = 32;
-		} else {
-			VGA_DrawLine = VGA_Draw_Linear_Line;
-		}
-
 		vga.draw.linear_base = vga.fastmem;
 		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
+
+		if (!IS_VGA_ARCH) {
+			VGA_DrawLine = VGA_Draw_Linear_Line;
+			break;
+		}
+		assert(IS_VGA_ARCH);
+		VGA_DrawLine = draw_linear_line_from_dac_palette;
+		bpp = 32;
+
+		// Only EGA modes that are line-doubled need additional handling
+		if (bit::is(CurMode->special, EGA_LINE_DOUBLE)) {
+
+			const auto wants_single_scanning =
+			        (vga.draw.vga_sub_350_line_handling !=
+			         VgaSub350LineHandling::DoubleScan);
+
+			constexpr uint16_t ega_320x200 = 0xD;
+			constexpr uint16_t ega_640x200 = 0xE;
+			switch (CurMode->mode) {
+			case ega_320x200:
+				// Are we dealing with standard (matching) dimensions?
+				if (width == CurMode->swidth && height == CurMode->sheight * 2) {
+					doublewidth  = true;
+					doubleheight = wants_single_scanning;
+				} else {
+					// We're dealing with non-standard dimensions
+					doublewidth  = !wants_single_scanning;
+
+					// Adjust the aspect based on the custom dimensions
+					const auto scan_line_divisor = wants_single_scanning ? 2: 1;
+					const auto rendered_mode_height = render.aspect ? 480 : (CurMode->sheight * 2);
+					const auto w_scaler = static_cast<double>( width) / CurMode->swidth;
+					const auto h_scaler = rendered_mode_height / static_cast<double>(height);
+					aspect_ratio *= w_scaler * h_scaler / scan_line_divisor;
+				}
+				break;
+
+			case ega_640x200:
+				doublewidth  = wants_single_scanning;
+				doubleheight = wants_single_scanning;
+				aspect_ratio *= wants_single_scanning ? 2 : 1;
+				break;
+
+			default: break;
+			}
+		}
 		break;
 	case M_CGA16:
 		aspect_ratio = 1.2;
