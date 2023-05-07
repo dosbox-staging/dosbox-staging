@@ -781,7 +781,7 @@ static void log_display_properties(int source_w, int source_h,
 	assert(frame_mode);
 
 	LOG_MSG("DISPLAY: %s %dx%d %s (mode %02Xh) at %2.5g Hz %s, scaled"
-	        " to %dx%d with %.4g pixel aspect ratio",
+	        " to %dx%d with 1:%1.3g pixel aspect ratio",
 	        mode_desc,
 	        source_w,
 	        source_h,
