@@ -794,6 +794,17 @@ static void log_display_properties(int source_w, int source_h,
 	        out_par);
 }
 
+// A public wrapper to log the current display (both DOS and host) properties
+void GFX_LogDisplayProperties()
+{
+	log_display_properties(sdl.draw.width,
+	                       sdl.draw.height,
+	                       {},
+	                       sdl.scaling_mode,
+	                       sdl.desktop.type,
+	                       sdl.pp_scale);
+}
+
 static SDL_Point get_initial_window_position_or_default(int default_val)
 {
 	int x, y;
