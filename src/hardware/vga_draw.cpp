@@ -2060,6 +2060,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		if (!vga.draw.vga_override)
 			RENDER_SetSize(width, height, bpp, fps, aspect_ratio,
 			               doublewidth, doubleheight);
+	} else {
+		// Always log mode changes at a minimum
+		static auto previous_mode = CurMode->mode;
+		if (CurMode->mode != previous_mode) {
+			GFX_LogDisplayProperties();
+			previous_mode = CurMode->mode;
+		}
 	}
 }
 
