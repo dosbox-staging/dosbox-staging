@@ -6,6 +6,7 @@ resource_files = [
     'CP_853.TXT',
     'CP_899.TXT',
     'CP_1117.TXT',
+    'CP_1270.TXT',
     'CP_3021.TXT',
     'CP_3848.TXT',
 ]
