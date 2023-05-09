@@ -31,6 +31,7 @@
 #include <unistd.h>
 
 #include "callback.h"
+#include "capture/capture.h"
 #include "control.h"
 #include "cpu.h"
 #include "cross.h"
@@ -83,7 +84,7 @@ void FPU_Init(Section*);
 
 void DMA_Init(Section*);
 
-void HARDWARE_Init(Section*);
+void CAPTURE_Init(Section*);
 
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 void PCI_Init(Section*);
@@ -477,7 +478,7 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
-	secprop->AddInitFunction(&HARDWARE_Init);
+	secprop->AddInitFunction(&CAPTURE_Init);
 	pint = secprop->Add_int("memsize", when_idle, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
 	pint->Set_help(

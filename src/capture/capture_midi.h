@@ -19,36 +19,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_HARDWARE_H
-#define DOSBOX_HARDWARE_H
+#ifndef DOSBOX_CAPTURE_MIDI_H
+#define DOSBOX_CAPTURE_MIDI_H
 
-#include "dosbox.h"
+void capture_midi_add_data(const bool sysex, const size_t len, const uint8_t* data);
 
-#include <stdio.h>
-#include <string>
-
-class Section;
-
-enum class OplMode { None, Cms, Opl2, DualOpl2, Opl3, Opl3Gold };
-
-void OPL_Init(Section *sec, OplMode mode);
-void CMS_Init(Section *sec);
-void OPL_ShutDown(Section* sec = nullptr);
-void CMS_ShutDown(Section* sec = nullptr);
-
-bool PS1AUDIO_IsEnabled();
-bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
-bool TS_Get_Address(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
-
-extern uint8_t adlib_commandreg;
-
-// Gravis UltraSound configuration and initialization
-void GUS_AddConfigSection(const config_ptr_t &conf);
-
-// IBM Music Feature Card configuration and initialization
-void IMFC_AddConfigSection(const config_ptr_t& conf);
-
-// Innovation SSI-2001 configuration and initialization
-void INNOVATION_AddConfigSection(const config_ptr_t &conf);
+void capture_midi_finalise();
 
 #endif

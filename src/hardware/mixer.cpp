@@ -46,6 +46,7 @@
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
+#include "../capture/capture.h"
 #include "ansi_code_markup.h"
 #include "control.h"
 #include "cross.h"
@@ -1846,7 +1847,8 @@ static inline bool Mixer_irq_important()
 {
 	/* In some states correct timing of the irqs is more important than
 	 * non stuttering audo */
-	return (ticksLocked || (CaptureState & (CAPTURE_WAVE|CAPTURE_VIDEO)));
+	return (ticksLocked ||
+	        CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo());
 }
 
 static constexpr int calc_tickadd(const int freq)
@@ -1954,7 +1956,7 @@ static void MIXER_MixData(const int frames_requested)
 	}
 
 	// Capture audio output if requested
-	if (CaptureState & (CAPTURE_WAVE | CAPTURE_VIDEO)) {
+	if (CAPTURE_IsCapturingAudio() || CAPTURE_IsCapturingVideo()) {
 		int16_t out[capture_buf_frames][2];
 		auto pos = start_pos;
 
@@ -1971,9 +1973,9 @@ static void MIXER_MixData(const int frames_requested)
 			pos = (pos + 1) & MIXER_BUFMASK;
 		}
 
-		CAPTURE_AddWave(mixer.sample_rate,
-		                frames_added,
-		                reinterpret_cast<int16_t *>(out));
+		CAPTURE_AddAudioData(mixer.sample_rate,
+		                     frames_added,
+		                     reinterpret_cast<int16_t*>(out));
 	}
 
 	// Reset the the tick_add for constant speed

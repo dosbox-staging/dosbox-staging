@@ -128,8 +128,8 @@ public:
 	ZMBV_FORMAT BPPFormat(int bpp);
 	int NeededSize(int _width, int _height, ZMBV_FORMAT _format);
 
-	void CompressLines(int lineCount, uint8_t *lineData[]);
-	bool PrepareCompressFrame(int flags, ZMBV_FORMAT _format, uint8_t *pal, uint8_t *writeBuf, uint32_t writeSize);
+	void CompressLines(const int lineCount, const uint8_t *lineData[]);
+	bool PrepareCompressFrame(int flags, ZMBV_FORMAT _format, const uint8_t *pal, uint8_t *writeBuf, uint32_t writeSize);
 	int FinishCompressFrame();
 	void FinishVideo();
 	bool DecompressFrame(uint8_t *framedata, int size);

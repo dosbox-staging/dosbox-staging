@@ -31,10 +31,10 @@
 #include <vector>
 
 #include "../dos/program_more_output.h"
+#include "../capture/capture.h"
 #include "callback.h"
 #include "control.h"
 #include "cross.h"
-#include "hardware.h"
 #include "mapper.h"
 #include "regs.h"
 #include "shell.h"
@@ -811,8 +811,8 @@ void CONFIG::Run(void)
 			WriteOut("\n%s", line_dos.c_str());
 			break;
 		}
-		case P_REC_AVI_START: CAPTURE_VideoStart(); break;
-		case P_REC_AVI_STOP: CAPTURE_VideoStop(); break;
+		case P_REC_AVI_START: CAPTURE_StartVideoCapture(); break;
+		case P_REC_AVI_STOP: CAPTURE_StopVideoCapture(); break;
 		case P_START_MAPPER:
 			if (securemode_check()) {
 				return;

@@ -30,7 +30,6 @@ libhardware_sources = files(
     'envelope.cpp',
     'gameblaster.cpp',
     'gus.cpp',
-    'hardware.cpp',
     'ide.cpp',
     'innovation.cpp',
     'imfc.cpp',

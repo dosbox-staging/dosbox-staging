@@ -1,0 +1,152 @@
+/*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2002-2021  The DOSBox Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
+#include "capture.h"
+
+#include <cassert>
+#include <cstdio>
+#include <cstdlib>
+
+#include "mem.h"
+#include "setup.h"
+
+static constexpr auto SampleFrameSize   = 4;
+static constexpr auto NumFramesInBuffer = 16 * 1024;
+static constexpr auto NumChannels       = 2;
+
+static struct {
+	FILE* handle = nullptr;
+
+	uint16_t buf[NumFramesInBuffer][NumChannels] = {};
+
+	uint32_t sample_rate        = 0;
+	uint32_t buf_frames_used    = 0;
+	uint32_t data_bytes_written = 0;
+} wave = {};
+
+// clang-format off
+static uint8_t wav_header[] = {
+	'R',  'I',  'F',  'F',   // uint32 - RIFF chunk ID
+	0x00, 0x00, 0x00, 0x00,	 // uint32 - RIFF chunk size
+	'W',  'A',  'V',  'E',   // uint32 - RIFF format
+	'f',  'm',  't',  ' ',	 // uint32 - fmt chunk ID
+	0x10, 0x00, 0x00, 0x00,  // uint32 - fmt chunksize
+	0x01, 0x00,              // uint16 - Audio format, 1 = PCM
+	0x02, 0x00,              // uint16 - Num channels, 2 = stereo
+	0x00, 0x00, 0x00, 0x00,  // uint32 - Sample rate
+	0x00, 0x00, 0x00, 0x00,	 // uint32 - Byte rate
+	0x04, 0x00,              // uint16 - Block align
+	0x10, 0x00,              // uint16 - Bits per sample, 16-bit
+	'd',  'a',  't',  'a',	 // uint32 - Data chunk ID
+	0x00, 0x00, 0x00, 0x00,	 // uint32 - Data chunk size
+};
+// clang-format on
+
+static void create_wave_file(const uint32_t sample_rate)
+{
+	wave.handle = CAPTURE_CreateFile("audio output", ".wav");
+	if (!wave.handle) {
+		return;
+	}
+
+	wave.sample_rate        = sample_rate;
+	wave.buf_frames_used    = 0;
+	wave.data_bytes_written = 0;
+
+	fwrite(wav_header, 1, sizeof(wav_header), wave.handle);
+}
+
+void capture_audio_add_data(const uint32_t sample_rate,
+                            const uint32_t num_sample_frames,
+                            const int16_t* sample_frames)
+{
+	if (!wave.handle) {
+		create_wave_file(sample_rate);
+	}
+	if (!wave.handle) {
+		return;
+	}
+
+	const int16_t* data   = sample_frames;
+	auto remaining_frames = num_sample_frames;
+
+	while (remaining_frames > 0) {
+		uint32_t frames_left = NumFramesInBuffer - wave.buf_frames_used;
+		if (!frames_left) {
+			const auto bytes_to_write = NumFramesInBuffer * SampleFrameSize;
+			fwrite(wave.buf, 1, bytes_to_write, wave.handle);
+
+			wave.data_bytes_written += bytes_to_write;
+			wave.buf_frames_used = 0;
+
+			frames_left = NumFramesInBuffer;
+		}
+
+		if (frames_left > remaining_frames) {
+			frames_left = remaining_frames;
+		}
+
+		memcpy(&wave.buf[wave.buf_frames_used],
+		       data,
+		       frames_left * SampleFrameSize);
+
+		wave.buf_frames_used += frames_left;
+		data += frames_left * NumChannels;
+		remaining_frames -= frames_left;
+	}
+}
+
+void capture_audio_finalise()
+{
+	if (!wave.handle) {
+		return;
+	}
+
+	// Flush audio buffer
+	const auto bytes_to_write = wave.buf_frames_used * SampleFrameSize;
+	fwrite(wave.buf, 1, bytes_to_write, wave.handle);
+	wave.data_bytes_written += bytes_to_write;
+
+	// Update headers
+	constexpr auto chunk_header_size = 8;
+
+	const auto riff_chunk_size = wave.data_bytes_written +
+	                             sizeof(wav_header) - chunk_header_size;
+
+	constexpr auto riff_chunk_size_offset = 0x04;
+	host_writed(&wav_header[riff_chunk_size_offset], riff_chunk_size);
+
+	constexpr auto sample_rate_offset = 0x18;
+	host_writed(&wav_header[sample_rate_offset], wave.sample_rate);
+
+	constexpr auto byte_rate_offset = 0x1c;
+	host_writed(&wav_header[byte_rate_offset], wave.sample_rate * SampleFrameSize);
+
+	constexpr auto data_chunk_size_offset = 0x28;
+	host_writed(&wav_header[data_chunk_size_offset], wave.data_bytes_written);
+
+	fseek(wave.handle, 0, 0);
+	fwrite(wav_header, 1, sizeof(wav_header), wave.handle);
+	fclose(wave.handle);
+
+	wave = {};
+}
+

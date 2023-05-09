@@ -25,6 +25,7 @@
 #include <string.h>
 #include <tuple>
 
+#include "../../capture/capture.h"
 #include "inout.h"
 #include "pic.h"
 #include "setup.h"
@@ -1145,7 +1146,7 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 
 
 	if(dbg_serialtraffic|dbg_modemcontrol|dbg_register|dbg_interrupt|dbg_aux)
-		debugfp=CAPTURE_OpenFile("serlog",".serlog.txt");
+		debugfp=CAPTURE_CreateFile("serial log",".serlog.txt");
 	else debugfp=0;
 
 	if(debugfp == 0) {

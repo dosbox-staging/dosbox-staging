@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClCompile Include="..\src\capture\capture.cpp">
+      <Filter>src\capture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\capture\capture_audio.cpp">
+      <Filter>src\capture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\capture\capture_image.cpp">
+      <Filter>src\capture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\capture\capture_midi.cpp">
+      <Filter>src\capture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\capture\capture_video.cpp">
+      <Filter>src\capture</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\cpu\callback.cpp">
       <Filter>src\cpu</Filter>
     </ClCompile>
@@ -950,6 +965,21 @@
     </ClInclude>
     <ClInclude Include="..\include\video.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\capture\capture.h">
+      <Filter>src\capture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\capture\capture_audio.h">
+      <Filter>src\capture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\capture\capture_image.h">
+      <Filter>src\capture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\capture\capture_midi.h">
+      <Filter>src\capture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\capture\capture_video.h">
+      <Filter>src\capture</Filter>
     </ClInclude>
     <ClInclude Include="..\src\cpu\core_dynrec\decoder.h">
       <Filter>src\cpu\core_dynrec</Filter>

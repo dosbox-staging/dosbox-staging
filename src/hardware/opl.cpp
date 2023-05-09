@@ -24,6 +24,7 @@
 #include <memory>
 #include <sys/types.h>
 
+#include "../capture/capture.h"
 #include "cpu.h"
 #include "mapper.h"
 #include "mem.h"
@@ -195,7 +196,7 @@ public:
 		if (!(note_on || percussion_on))
 			return true;
 
-		handle = CAPTURE_OpenFile("Raw Opl", ".dro");
+		handle = CAPTURE_CreateFile("raw OPL output", ".dro");
 		if (!handle)
 			return false;
 
@@ -218,14 +219,14 @@ public:
 
 	Capture(RegisterCache *_cache) : header(), cache(_cache)
 	{
-		LOG_MSG("OPL: Preparing to capture Raw OPL, will start with first note played.");
+		LOG_MSG("CAPTURE: Preparing to capture raw OPL output; capturing will start when OPL output starts");
 		MakeTables();
 	}
 
 	virtual ~Capture()
 	{
 		CloseFile();
-		LOG_MSG("OPL: Stopped Raw OPL capturing.");
+		LOG_MSG("CAPTURE: Stopped capturing raw OPL output");
 	}
 
 	// prevent copy
@@ -795,7 +796,7 @@ static void SaveRad()
 	char b[16 * 1024];
 	int w = 0;
 
-	FILE *handle = CAPTURE_OpenFile("RAD Capture", ".rad");
+	FILE *handle = CAPTURE_CreateFile("RAD Capture", ".rad");
 	if (!handle)
 		return;
 
