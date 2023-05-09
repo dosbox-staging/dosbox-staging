@@ -750,7 +750,7 @@ static Bitu DOS_21Handler(void) {
 				reg_cx = bytes;
 				reg_dx = clusters;
 			} else {
-				uint8_t drive = reg_dl;
+				[[maybe_unused]] uint8_t drive = reg_dl;
 				if (drive == 0) {
 					drive = DOS_GetDefaultDrive();
 				} else {
