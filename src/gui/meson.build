@@ -1,4 +1,5 @@
 libgui_sources = files(
+    'clipboard.cpp',
     'render.cpp',
     'render_scalers.cpp',
     'sdl_mapper.cpp',

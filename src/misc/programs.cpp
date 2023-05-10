@@ -666,7 +666,8 @@ void CONFIG::Run(void)
 			}
 			for (const auto& pvar : pvars) {
 				std::string line_utf8 = {};
-				dos_to_utf8(pvar, line_utf8);
+				dos_to_utf8(pvar, line_utf8,
+				            DosStringType::WithControlCodes);
 				sec->HandleInputline(line_utf8);
 			}
 			break;

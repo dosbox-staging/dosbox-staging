@@ -32,6 +32,8 @@ class Rgb666;
 #define BIOSMEM_SEG 0x40
 
 #define BIOSMEM_INITIAL_MODE  0x10
+#define BIOSMEM_KBD_FLAGS1    0x17
+#define BIOSMEM_KBD_FLAGS2    0x18
 #define BIOSMEM_CURRENT_MODE  0x49
 #define BIOSMEM_NB_COLS       0x4A
 #define BIOSMEM_PAGE_SIZE     0x4C
@@ -49,6 +51,7 @@ class Rgb666;
 #define BIOSMEM_MODESET_CTL   0x89
 #define BIOSMEM_DCC_INDEX     0x8A
 #define BIOSMEM_CRTCPU_PAGE   0x8A
+#define BIOSMEM_KBD_FLAGS3    0x96
 #define BIOSMEM_VS_POINTER    0xA8
 
 constexpr uint16_t MinVesaBiosModeNumber = 0x100;

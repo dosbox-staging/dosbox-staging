@@ -844,7 +844,9 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 }
 
 static void dos_to_wide(const std::string& str_in,
-                        std::vector<uint16_t>& str_out, const uint16_t code_page)
+                        std::vector<uint16_t>& str_out,
+                        const DosStringType string_type,
+                        const uint16_t code_page)
 {
 	// Unicode code points for screen codes from 0x00 to 0x1f
 	// see: https://en.wikipedia.org/wiki/Code_page_437
@@ -858,6 +860,10 @@ static void dos_to_wide(const std::string& str_in,
 	        0x2191, 0x2193, 0x2192, 0x2190, // 18-1b
 	        0x221f, 0x2194, 0x25b2, 0x25bc, // 1c-1f
 	};
+
+	// Control codes which might be present in the input, same encoding for
+	// code page 437 and Unicode
+	const std::set<uint8_t> control_codes = { '\t', '\n', '\r' };
 
 	constexpr uint16_t codepoint_7f = 0x2302;
 
@@ -883,7 +889,12 @@ static void dos_to_wide(const std::string& str_in,
 			} else if (byte >= 0x20) {
 				str_out.push_back(byte);
 			} else {
-				str_out.push_back(codes[byte]);
+				if (string_type == DosStringType::WithControlCodes &&
+				    control_codes.find(byte) != control_codes.end()) { // TODO[C++20]: use 'contains' here
+					str_out.push_back(byte);
+				} else {
+					str_out.push_back(codes[byte]);
+				}
 			}
 		}
 	}
@@ -2004,6 +2015,15 @@ uint16_t get_utf8_code_page()
 	return 0;
 }
 
+bool is_utf8_code_page_duplicate(const uint16_t code_page1,
+                                 const uint16_t code_page2)
+{
+	load_config_if_needed();
+
+	return deduplicate_code_page(code_page1) ==
+	       deduplicate_code_page(code_page2);
+}
+
 static bool utf8_to_dos_common(const std::string& in_str, std::string& out_str,
                                const UnicodeFallback fallback,
                                const uint16_t code_page)
@@ -2033,25 +2053,28 @@ bool utf8_to_dos(const std::string& in_str, std::string& out_str,
 }
 
 static void dos_to_utf8_common(const std::string& in_str, std::string& out_str,
+	                       const DosStringType string_type,
                                const uint16_t code_page)
 {
 	load_config_if_needed();
 
 	std::vector<uint16_t> tmp = {};
 
-	dos_to_wide(in_str, tmp, code_page);
+	dos_to_wide(in_str, tmp, string_type, code_page);
 	wide_to_utf8(tmp, out_str);
 }
 
-void dos_to_utf8(const std::string& in_str, std::string& out_str)
+void dos_to_utf8(const std::string& in_str, std::string& out_str,
+                 const DosStringType string_type)
 {
-	dos_to_utf8_common(in_str, out_str, get_utf8_code_page());
+	dos_to_utf8_common(in_str, out_str, string_type, get_utf8_code_page());
 }
 
 void dos_to_utf8(const std::string& in_str, std::string& out_str,
-                 const uint16_t code_page)
+                 const DosStringType string_type, const uint16_t code_page)
 {
-	dos_to_utf8_common(in_str, out_str, get_custom_code_page(code_page));
+	dos_to_utf8_common(in_str, out_str, string_type,
+	                   get_custom_code_page(code_page));
 }
 
 static void lowercase_dos_common(std::string& in_str, const uint16_t code_page)
