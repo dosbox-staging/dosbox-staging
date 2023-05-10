@@ -111,26 +111,26 @@ std::vector<VideoModeBlock> ModeList_VGA = {
  // Custom modes
         { 0x150,  M_LIN8,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x151,  M_LIN8,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
-        { 0x152,  M_LIN8,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x153,  M_LIN8,  320,  480,  40, 60, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                   VGA_PIXEL_DOUBLE},
+        { 0x152,  M_LIN8,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x153,  M_LIN8,  320,  480,  40, 60, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE                  },
 
         { 0x155, M_LIN15,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x156, M_LIN16,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x157, M_LIN24,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  40,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x158, M_LIN32,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  40,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
-        { 0x159,  M_LIN4,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  40,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x15A,  M_LIN8,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x15B, M_LIN15,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x15C, M_LIN16,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x15D, M_LIN24,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  40,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x15E, M_LIN32,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  40,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x15F,  M_LIN4,  320,  480,  40, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  40,  480,                   VGA_PIXEL_DOUBLE},
+        { 0x159,  M_LIN4,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  40,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x15A,  M_LIN8,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x15B, M_LIN15,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x15C, M_LIN16,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x15D, M_LIN24,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  40,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x15E, M_LIN32,  320,  400,  40, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  40,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x15F,  M_LIN4,  320,  480,  40, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  40,  480, VGA_PIXEL_DOUBLE                  },
 
         { 0x160, M_LIN15,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
-        { 0x161, M_LIN15,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x162, M_LIN15,  320,  480,  40, 60, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                   VGA_PIXEL_DOUBLE},
-        { 0x163, M_LIN24,  320,  480,  40, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  40,  480,                   VGA_PIXEL_DOUBLE},
-        { 0x164, M_LIN32,  320,  480,  40, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  40,  480,                   VGA_PIXEL_DOUBLE},
+        { 0x161, M_LIN15,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x162, M_LIN15,  320,  480,  40, 60, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE                  },
+        { 0x163, M_LIN24,  320,  480,  40, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  40,  480, VGA_PIXEL_DOUBLE                  },
+        { 0x164, M_LIN32,  320,  480,  40, 30, 8, 16, 1, 0xA0000, 0x10000, 100,  525,  40,  480, VGA_PIXEL_DOUBLE                  },
         { 0x165, M_LIN15,  640,  400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 200,  449, 160,  400,                                  0},
         { 0x166,  M_LIN8,  400,  300,  50, 37, 8,  8, 1, 0xA0000, 0x10000, 132,  628, 100,  600, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
         { 0x167, M_LIN15,  400,  300,  50, 37, 8,  8, 1, 0xA0000, 0x10000, 132,  628, 100,  600, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
@@ -144,8 +144,8 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x16F, M_LIN15,  640,  350,  80, 25, 8, 14, 1, 0xA0000, 0x10000, 100,  449, 160,  350,                                  0},
 
         { 0x170, M_LIN16,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
-        { 0x171, M_LIN16,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x172, M_LIN16,  320,  480,  40, 60, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480,                   VGA_PIXEL_DOUBLE},
+        { 0x171, M_LIN16,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x172, M_LIN16,  320,  480,  40, 60, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE                  },
         { 0x173,  M_LIN4,  640,  400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449,  80,  400,                                  0},
         { 0x174, M_LIN15,  640,  400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 100,  449, 160,  400,                                  0},
         { 0x175, M_LIN16,  640,  400,  80, 25, 8, 16, 1, 0xA0000, 0x10000, 200,  449, 160,  400,                                  0},
@@ -168,8 +168,8 @@ std::vector<VideoModeBlock> ModeList_VGA = {
         { 0x185, M_LIN32, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 200, 1200,                                  0},
 
         { 0x190, M_LIN32,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000,  50,  525,  40,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
-        { 0x191, M_LIN32,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000,  50,  449,  40,  400,                   VGA_PIXEL_DOUBLE},
-        { 0x192, M_LIN32,  320,  480,  40, 60, 8,  8, 1, 0xA0000, 0x10000,  50,  525,  40,  480,                   VGA_PIXEL_DOUBLE},
+        { 0x191, M_LIN32,  320,  400,  40, 50, 8,  8, 1, 0xA0000, 0x10000,  50,  449,  40,  400, VGA_PIXEL_DOUBLE                  },
+        { 0x192, M_LIN32,  320,  480,  40, 60, 8,  8, 1, 0xA0000, 0x10000,  50,  525,  40,  480, VGA_PIXEL_DOUBLE                  },
 
  // Remaining S3 specific modes
         { 0x207,  M_LIN8, 1152,  864, 144, 54, 8, 16, 1, 0xA0000, 0x10000, 182,  895, 144,  864,                                  0},
@@ -201,7 +201,7 @@ std::vector<VideoModeBlock> ModeList_VGA_Text_200lines = {
 };
 
 std::vector<VideoModeBlock> ModeList_VGA_Text_350lines = {
-  //     mode     type  sw   sh   tw th   cw ch  pt pstart   plength htot vtot hde vde    special flags
+  //     mode     type  sw   sh   tw th   cw ch  pt pstart   plength htot vtot hde vde  special flags
         {0x000, M_TEXT, 320, 350, 40, 25, 8, 14, 8, 0xB8000, 0x0800,  50, 449, 40, 350, EGA_HALF_CLOCK},
         {0x001, M_TEXT, 320, 350, 40, 25, 8, 14, 8, 0xB8000, 0x0800,  50, 449, 40, 350, EGA_HALF_CLOCK},
         {0x002, M_TEXT, 640, 350, 80, 25, 8, 14, 8, 0xB8000, 0x1000, 100, 449, 80, 350,              0},
