@@ -1339,6 +1339,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	uint32_t htotal, hdend, hbstart, hbend, hrstart, hrend;
 	uint32_t vtotal, vdend, vbstart, vbend, vrstart, vrend;
 	uint32_t vblank_skip;
+
+	auto fake_double_scan = false;
+
 	if (IS_EGAVGA_ARCH) {
 		htotal = vga.crtc.horizontal_total;
 		hdend = vga.crtc.horizontal_display_end;
@@ -1456,12 +1459,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 				if (is_scan_doubled) {
 					vga.draw.address_line_total *= 2;
 				}
-				// No-need to artificially perform scan-doubling
-				vga.draw.double_scan = false;
-			}
-			// VGA machine not in EGA or VGA modes
-			else {
-				vga.draw.double_scan = is_scan_doubled;
+			} else {
+				// VGA machine not in EGA or VGA modes
+				fake_double_scan = is_scan_doubled;
 			}
 		}
 	} else {
@@ -1479,7 +1479,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vrend = vrstart + 16; // vsync width is fixed to 16 lines on the MC6845 TODO Tandy
 		vbstart = vdend;
 		vbend = vtotal;
-		vga.draw.double_scan=false;
 		switch (machine) {
 		case MCH_CGA:
 		case TANDY_ARCH_CASE:
@@ -1992,13 +1991,15 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		break;
 	}
 	VGA_CheckScanLength();
-	if (vga.draw.double_scan) {
+
+	if (fake_double_scan) {
 		if (IS_VGA_ARCH) {
 			vblank_skip /= 2;
-			height/=2;
+			height /= 2;
 		}
-		doubleheight=true;
+		doubleheight = true;
 	}
+
 	vga.draw.vblank_skip = vblank_skip;
 	set_total_lines_to_draw(height);
 	vga.draw.line_length = width * ((bpp + 1) / 8);
@@ -2053,10 +2054,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 #if C_DEBUG
 		LOG(LOG_VGA, LOG_NORMAL)("VGA: Width %u, Height %u, fps %.3f", width, height, fps);
-		LOG(LOG_VGA, LOG_NORMAL)("VGA: %s width, %s height aspect %.3f",
-		                         doublewidth ? "double" : "normal",
-		                         doubleheight ? "double" : "normal", aspect_ratio);
+		LOG(LOG_VGA, LOG_NORMAL)("VGA: %s width, %s height aspect %.3f, fake_double_scan: %s",
+		        doublewidth ? "double" : "normal",
+		        doubleheight ? "double" : "normal",
+		        aspect_ratio,
+		        fake_double_scan ? "yes" : "no");
 #endif
+
 		if (!vga.draw.vga_override)
 			RENDER_SetSize(width, height, bpp, fps, aspect_ratio,
 			               doublewidth, doubleheight);
