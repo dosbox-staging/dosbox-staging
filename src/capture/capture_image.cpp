@@ -103,144 +103,67 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 
 static void write_png_image_data(const png_structp png_ptr, const uint16_t width,
                                  const uint16_t height, const uint8_t bits_per_pixel,
-                                 const uint16_t pitch, const bool is_double_width,
-                                 const bool is_double_height,
-                                 const uint8_t* image_data)
+                                 const uint16_t pitch, const uint8_t* image_data)
 {
-	assert(image_width > SCALER_MAXWIDTH);
+	assert(width <= SCALER_MAXWIDTH);
 
 	// TODO seems risky; perhaps use vector instead
 	uint8_t row_buffer[SCALER_MAXWIDTH * 4];
 
 	auto src_row = image_data;
 
-	for (auto i = 0; i < height; ++i) {
-		auto row_pointer = src_row;
+	for (auto y = 0; y < height; ++y) {
+		for (auto x = 0; x < width; ++x) {
+			switch (bits_per_pixel) {
+			// Indexed8
+			case 8: {
+				const auto pixel = src_row[x];
+				row_buffer[x] = pixel;
+			} break;
 
-		switch (bits_per_pixel) {
-		case 8:
-			if (is_double_width) {
-				for (auto x = 0; x < width; ++x) {
-					row_buffer[x * 2 + 0] =
-					        row_buffer[x * 2 + 1] = src_row[x];
-				}
-				row_pointer = row_buffer;
+			// RGB555
+			case 15: {
+				const auto pixel = host_to_le(
+				        reinterpret_cast<const uint16_t*>(src_row)[x]);
+
+				row_buffer[x * 3 + 0] = ((pixel & 0x001f) * 0x21) >> 2;
+				row_buffer[x * 3 + 1] = ((pixel & 0x03e0) * 0x21) >> 7;
+				row_buffer[x * 3 + 2] = ((pixel & 0x7c00) * 0x21) >> 12;
+			} break;
+
+			// RGB565
+			case 16: {
+				const auto pixel = host_to_le(
+				        reinterpret_cast<const uint16_t*>(src_row)[x]);
+
+				row_buffer[x * 3 + 0] = ((pixel & 0x001f) * 0x21) >> 2;
+				row_buffer[x * 3 + 1] = ((pixel & 0x07e0) * 0x41) >> 9;
+				row_buffer[x * 3 + 2] = ((pixel & 0xf800) * 0x21) >> 13;
+			} break;
+
+			// RGB888
+			case 24: {
+				const auto pixel = host_to_le(
+				        reinterpret_cast<const rgb24*>(src_row)[x]);
+
+				reinterpret_cast<rgb24*>(row_buffer)[x * 2 + 0] = pixel;
+				reinterpret_cast<rgb24*>(row_buffer)[x * 2 + 1] = pixel;
+			} break;
+
+			// XRGB8888
+			case 32: {
+				const auto b = src_row[x * 4 + 0];
+				const auto g = src_row[x * 4 + 1];
+				const auto r = src_row[x * 4 + 2];
+
+				row_buffer[x * 3 + 0] = b;
+				row_buffer[x * 3 + 1] = g;
+				row_buffer[x * 3 + 2] = r;
+			} break;
 			}
-			break;
-
-		case 15:
-			if (is_double_width) {
-				for (auto x = 0; x < width; ++x) {
-					const auto pixel = host_to_le(
-					        reinterpret_cast<const uint16_t*>(
-					                src_row)[x]);
-
-					row_buffer[x * 6 + 0] = row_buffer[x * 6 + 3] =
-					        ((pixel & 0x001f) * 0x21) >> 2;
-					row_buffer[x * 6 + 1] = row_buffer[x * 6 + 4] =
-					        ((pixel & 0x03e0) * 0x21) >> 7;
-					row_buffer[x * 6 + 2] = row_buffer[x * 6 + 5] =
-					        ((pixel & 0x7c00) * 0x21) >> 12;
-				}
-			} else {
-				for (auto x = 0; x < width; ++x) {
-					const auto pixel = host_to_le(
-					        reinterpret_cast<const uint16_t*>(
-					                src_row)[x]);
-
-					row_buffer[x * 3 + 0] = ((pixel & 0x001f) *
-					                         0x21) >>
-					                        2;
-					row_buffer[x * 3 + 1] = ((pixel & 0x03e0) *
-					                         0x21) >>
-					                        7;
-					row_buffer[x * 3 + 2] = ((pixel & 0x7c00) *
-					                         0x21) >>
-					                        12;
-				}
-			}
-			row_pointer = row_buffer;
-			break;
-
-		case 16:
-			if (is_double_width) {
-				for (auto x = 0; x < width; ++x) {
-					const auto pixel = host_to_le(
-					        reinterpret_cast<const uint16_t*>(
-					                src_row)[x]);
-					row_buffer[x * 6 + 0] = row_buffer[x * 6 + 3] =
-					        ((pixel & 0x001f) * 0x21) >> 2;
-					row_buffer[x * 6 + 1] = row_buffer[x * 6 + 4] =
-					        ((pixel & 0x07e0) * 0x41) >> 9;
-					row_buffer[x * 6 + 2] = row_buffer[x * 6 + 5] =
-					        ((pixel & 0xf800) * 0x21) >> 13;
-				}
-			} else {
-				for (auto x = 0; x < width; ++x) {
-					const auto pixel = host_to_le(
-					        reinterpret_cast<const uint16_t*>(
-					                src_row)[x]);
-					row_buffer[x * 3 + 0] = ((pixel & 0x001f) *
-					                         0x21) >>
-					                        2;
-					row_buffer[x * 3 + 1] = ((pixel & 0x07e0) *
-					                         0x41) >>
-					                        9;
-					row_buffer[x * 3 + 2] = ((pixel & 0xf800) *
-					                         0x21) >>
-					                        13;
-				}
-			}
-			row_pointer = row_buffer;
-			break;
-
-		case 24:
-			if (is_double_width) {
-				for (auto x = 0; x < width; ++x) {
-					const auto pixel = host_to_le(
-					        reinterpret_cast<const rgb24*>(
-					                src_row)[x]);
-
-					reinterpret_cast<rgb24*>(
-					        row_buffer)[x * 2 + 0] = pixel;
-					reinterpret_cast<rgb24*>(
-					        row_buffer)[x * 2 + 1] = pixel;
-
-					row_pointer = row_buffer;
-				}
-			}
-			// There is no else statement here because
-			// row_pointer is already defined as src_row
-			// above which is already 24-bit single row
-			break;
-
-		case 32:
-			if (is_double_width) {
-				for (auto x = 0; x < width; ++x) {
-					row_buffer[x * 6 + 0] = row_buffer[x * 6 + 3] =
-					        src_row[x * 4 + 0];
-					row_buffer[x * 6 + 1] = row_buffer[x * 6 + 4] =
-					        src_row[x * 4 + 1];
-					row_buffer[x * 6 + 2] = row_buffer[x * 6 + 5] =
-					        src_row[x * 4 + 2];
-				}
-			} else {
-				for (auto x = 0; x < width; ++x) {
-					row_buffer[x * 3 + 0] = src_row[x * 4 + 0];
-					row_buffer[x * 3 + 1] = src_row[x * 4 + 1];
-					row_buffer[x * 3 + 2] = src_row[x * 4 + 2];
-				}
-			}
-			row_pointer = row_buffer;
-			break;
 		}
 
-		png_write_row(png_ptr, row_pointer);
-
-		if (is_double_height) {
-			png_write_row(png_ptr, row_pointer);
-		}
-
+		png_write_row(png_ptr, row_buffer);
 		src_row += pitch;
 	}
 }
@@ -252,9 +175,6 @@ void capture_image(const uint16_t width, const uint16_t height,
 {
 	const bool is_double_width  = (capture_flags & CaptureFlagDoubleWidth);
 	const bool is_double_height = (capture_flags & CaptureFlagDoubleHeight);
-
-	const auto image_width  = is_double_width ? width * 2 : width;
-	const auto image_height = is_double_height ? height * 2 : height;
 
 	LOG_MSG("CAPTURE: Capturing image, width: %d, height: %d, "
 	        "bits_per_pixel: %d, pitch: %d, is_double_width: %s, is_double_height: %s",
@@ -288,16 +208,9 @@ void capture_image(const uint16_t width, const uint16_t height,
 
 	png_init_io(png_ptr, fp);
 
-	write_png_info(png_ptr, info_ptr, image_width, image_height, bits_per_pixel, palette_data);
+	write_png_info(png_ptr, info_ptr, width, height, bits_per_pixel, palette_data);
 
-	write_png_image_data(png_ptr,
-	                     width,
-	                     height,
-	                     bits_per_pixel,
-	                     pitch,
-	                     is_double_width,
-	                     is_double_height,
-	                     image_data);
+	write_png_image_data(png_ptr, width, height, bits_per_pixel, pitch, image_data);
 
 	png_write_end(png_ptr, nullptr);
 	png_destroy_write_struct(&png_ptr, &info_ptr);
