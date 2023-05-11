@@ -51,6 +51,7 @@ using namespace std;
 #include "../cpu/lazyflags.h"
 #include "keyboard.h"
 #include "setup.h"
+#include "std_filesystem.h"
 
 SDL_Window *GFX_GetSDLWindow(void);
 
@@ -1226,11 +1227,14 @@ bool ParseCommand(char* str) {
 
 	if (command == "logcode") { //Shared code between all logs
 		DEBUG_ShowMsg("DEBUG: Starting log\n");
-		cpuLogFile.open("LOGCPU.TXT");
+		const std_fs::path log_cpu_txt = "LOGCPU.TXT";
+		cpuLogFile.open(log_cpu_txt.string());
 		if (!cpuLogFile.is_open()) {
 			DEBUG_ShowMsg("DEBUG: Logfile couldn't be created.\n");
 			return false;
 		}
+		DEBUG_ShowMsg("DEBUG: Logfile '%s' created.\n",
+		              std_fs::absolute(log_cpu_txt).string().c_str());
 		//Initialize log object
 		cpuLogFile << hex << noshowbase << setfill('0') << uppercase;
 		cpuLog = true;
@@ -2306,9 +2310,15 @@ CDebugVar *CDebugVar::FindVar(PhysPt pt)
 bool CDebugVar::SaveVars(char *name)
 {
 	if (varList.size() > 65535) return false;
+	const std_fs::path vars_file = name;
+	FILE* f = fopen(vars_file.string().c_str(), "wb+");
+	if (!f) {
+		DEBUG_ShowMsg("DEBUG: Output of vars failed.\n");
+		return false;
+	}
+	DEBUG_ShowMsg("DEBUG: vars file '%s' created.\n",
+	              std_fs::absolute(vars_file).string().c_str());
 
-	FILE* f = fopen(name,"wb+");
-	if (!f) return false;
 
 	// write number of vars
 	uint16_t num = (uint16_t)varList.size();
@@ -2330,9 +2340,15 @@ bool CDebugVar::SaveVars(char *name)
 
 bool CDebugVar::LoadVars(char *name)
 {
-	FILE* f = fopen(name,"rb");
-	if (!f) return false;
-
+	const std_fs::path vars_file = name;
+	FILE* f = fopen(vars_file.string().c_str(), "rb");
+	if (!f) {
+		DEBUG_ShowMsg("DEBUG: Load of vars from %s failed.\n",
+		              name);
+		return false;
+	}
+	DEBUG_ShowMsg("DEBUG: vars file '%s' loaded.\n",
+	              std_fs::absolute(vars_file).string().c_str());
 	// read number of vars
 	uint16_t num;
 	if (fread(&num,sizeof(num),1,f) != 1) {
@@ -2354,11 +2370,14 @@ bool CDebugVar::LoadVars(char *name)
 }
 
 static void SaveMemory(uint16_t seg, uint32_t ofs1, uint32_t num) {
-	FILE* f = fopen("MEMDUMP.TXT","wt");
+	const std_fs::path memdump_txt = "MEMDUMP.TXT";
+	FILE* f = fopen(memdump_txt.string().c_str(),"wt");
 	if (!f) {
 		DEBUG_ShowMsg("DEBUG: Memory dump failed.\n");
 		return;
 	}
+	DEBUG_ShowMsg("DEBUG: Memory dump file '%s' created.\n",
+	              std_fs::absolute(memdump_txt).string().c_str());
 
 	char buffer[128];
 	char temp[16];
@@ -2391,11 +2410,14 @@ static void SaveMemory(uint16_t seg, uint32_t ofs1, uint32_t num) {
 }
 
 static void SaveMemoryBin(uint16_t seg, uint32_t ofs1, uint32_t num) {
-	FILE* f = fopen("MEMDUMP.BIN","wb");
+	const std_fs::path memdump_bin = "MEMDUMP.BIN";
+	FILE* f = fopen(memdump_bin.string().c_str(), "wb");
 	if (!f) {
 		DEBUG_ShowMsg("DEBUG: Memory binary dump failed.\n");
 		return;
 	}
+	DEBUG_ShowMsg("DEBUG: Memory binary dump file '%s' created.\n",
+	              std_fs::absolute(memdump_bin).string().c_str());
 
 	for (Bitu x = 0; x < num;x++) {
 		uint8_t val;
@@ -2408,18 +2430,22 @@ static void SaveMemoryBin(uint16_t seg, uint32_t ofs1, uint32_t num) {
 }
 
 static void OutputVecTable(char* filename) {
-	FILE* f = fopen(filename, "wt");
+	const std_fs::path vec_table_file = filename;
+	FILE* f = fopen(vec_table_file.string().c_str(), "wt");
 	if (!f)
 	{
 		DEBUG_ShowMsg("DEBUG: Output of interrupt vector table failed.\n");
 		return;
 	}
-
+	DEBUG_ShowMsg("DEBUG: Interrupt vector table file '%s' created.\n",
+	              std_fs::absolute(vec_table_file).string().c_str());
+	
 	for (int i=0; i<256; i++)
 		fprintf(f,"INT %02X:  %04X:%04X\n", i, mem_readw(i*4+2), mem_readw(i*4));
 
 	fclose(f);
-	DEBUG_ShowMsg("DEBUG: Interrupt vector table written to %s.\n", filename);
+	DEBUG_ShowMsg("DEBUG: Interrupt vector table written to %s.\n",
+	              vec_table_file.string().c_str());
 }
 
 #define DEBUG_VAR_BUF_LEN 16
