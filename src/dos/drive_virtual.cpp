@@ -346,15 +346,16 @@ Virtual_File::Virtual_File(const vfile_data_t& in_data)
 	open = true;
 }
 
-bool Virtual_File::Read(uint8_t * data,uint16_t * size) {
-	uint32_t left = file_data->size() - file_pos;
-	if (left <= *size) {
-		memcpy(data, &((*file_data)[file_pos]), left);
-		*size = (uint16_t)left;
-	} else {
-		memcpy(data, &((*file_data)[file_pos]), *size);
-	}
-	file_pos += *size;
+bool Virtual_File::Read(uint8_t* data, uint16_t* bytes_requested)
+{
+	assert(file_pos <= file_data->size());
+	size_t bytes_to_read = *bytes_requested;
+	const size_t bytes_left = file_data->size() - file_pos;
+	const uint8_t* src = file_data->data() + file_pos;
+	bytes_to_read = std::min(bytes_left, bytes_to_read);
+	memcpy(data, src, bytes_to_read);
+	file_pos += bytes_to_read;
+	*bytes_requested = static_cast<uint16_t>(bytes_to_read);
 	return true;
 }
 
