@@ -129,8 +129,9 @@ custom clang-format ruleset to make it crystal clear, skip to
    Using `snake_case` names for such functions is recommended.
 5. Do NOT use that convention for static functions (single file scope), class
    names, methods, enums, or other constructs.
-6. Class names and method names can use `CamelCase` or `snake_case`.
-   Be consistent, DON'T mix styles like this: `get_DefaultValue_Str` (bleh).
+6. Class names, method names, enum names and enum values may use `CamelCase` 
+   or `snake_case`. Be consistent, DON'T mix styles like this:
+   `get_DefaultValue_Str` (bleh).
 7. Using `snake_case` for variable names, parameter names, struct fields, and
    class fields is recommended.
 8. Use header guards in format: `DOSBOX_HEADERNAME_H` or
@@ -144,6 +145,11 @@ via email is also possible - contact maintainer about the details.
 
 Code submitted as raw source files (not patches), files attached to issue
 comments, forum posts, diffs in non-git format, etc will be promptly ignored.
+
+Any changes to README.md have to consider the project's latest stable release, 
+not the latest commit from the alpha version. New feature additions and removals
+related to changes from the alpha are added to the README.md as part of one of 
+the release steps, when we review all the documentation for release.
 
 #### Commit messages
 
