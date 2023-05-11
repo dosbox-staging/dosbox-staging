@@ -92,7 +92,7 @@ body:
         3.
     validations:
       required: false
-  - type: textarea
+  - type: input
     id: package_url
     attributes:
       label: Download URL of affected game or software
