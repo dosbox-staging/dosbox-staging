@@ -207,24 +207,9 @@ void CAPTURE_AddFrame([[maybe_unused]] const uint16_t width,
                       [[maybe_unused]] const uint8_t* palette_data)
 {
 #if (C_SSHOT)
-	auto image_height = height;
-	if (capture_flags & CaptureFlagDoubleHeight) {
-		image_height *= 2;
-	}
-	auto image_width = width;
-	if (capture_flags & CaptureFlagDoubleWidth) {
-		image_width *= 2;
-	}
-	if (image_height > SCALER_MAXHEIGHT) {
-		return;
-	}
-	if (image_width > SCALER_MAXWIDTH) {
-		return;
-	}
-
 	if (capturing_image) {
-		capture_image(image_width,
-		              image_height,
+		capture_image(width,
+		              height,
 		              bits_per_pixel,
 		              pitch,
 		              capture_flags,
@@ -235,8 +220,8 @@ void CAPTURE_AddFrame([[maybe_unused]] const uint16_t width,
 	}
 
 	if (capturing_video) {
-		capture_video_add_frame(image_width,
-		                        image_height,
+		capture_video_add_frame(width,
+		                        height,
 		                        bits_per_pixel,
 		                        pitch,
 		                        capture_flags,

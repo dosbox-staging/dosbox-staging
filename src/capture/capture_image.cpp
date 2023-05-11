@@ -103,17 +103,18 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 
 static void write_png_image_data(const png_structp png_ptr, const uint16_t width,
                                  const uint16_t height, const uint8_t bits_per_pixel,
-                                 const uint16_t pitch, const uint8_t capture_flags,
+                                 const uint16_t pitch, const bool is_double_width,
+                                 const bool is_double_height,
                                  const uint8_t* image_data)
 {
-	const bool is_double_width = (capture_flags & CaptureFlagDoubleWidth);
-	const auto row_divisor = (capture_flags & CaptureFlagDoubleHeight) ? 1 : 0;
+	assert(image_width > SCALER_MAXWIDTH);
 
 	// TODO seems risky; perhaps use vector instead
 	uint8_t row_buffer[SCALER_MAXWIDTH * 4];
 
+	auto src_row = image_data;
+
 	for (auto i = 0; i < height; ++i) {
-		auto src_row     = image_data + (i >> row_divisor) * pitch;
 		auto row_pointer = src_row;
 
 		switch (bits_per_pixel) {
@@ -235,6 +236,12 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 		}
 
 		png_write_row(png_ptr, row_pointer);
+
+		if (is_double_height) {
+			png_write_row(png_ptr, row_pointer);
+		}
+
+		src_row += pitch;
 	}
 }
 
@@ -243,14 +250,20 @@ void capture_image(const uint16_t width, const uint16_t height,
                    const uint8_t capture_flags, const uint8_t* image_data,
                    const uint8_t* palette_data)
 {
+	const bool is_double_width  = (capture_flags & CaptureFlagDoubleWidth);
+	const bool is_double_height = (capture_flags & CaptureFlagDoubleHeight);
+
+	const auto image_width  = is_double_width ? width * 2 : width;
+	const auto image_height = is_double_height ? height * 2 : height;
+
 	LOG_MSG("CAPTURE: Capturing image, width: %d, height: %d, "
-	        "bitsPerPixel: %d, pitch: %d, doubleWidth: %d, doubleHeight: %d",
+	        "bits_per_pixel: %d, pitch: %d, is_double_width: %s, is_double_height: %s",
 	        width,
 	        height,
 	        bits_per_pixel,
 	        pitch,
-	        (capture_flags & CaptureFlagDoubleWidth),
-	        (capture_flags & CaptureFlagDoubleHeight));
+	        is_double_width ? "yes" : "no",
+	        is_double_height ? "yes" : "no");
 
 	FILE* fp = CAPTURE_CreateFile("raw image", ".png");
 	if (!fp) {
@@ -275,10 +288,16 @@ void capture_image(const uint16_t width, const uint16_t height,
 
 	png_init_io(png_ptr, fp);
 
-	write_png_info(png_ptr, info_ptr, width, height, bits_per_pixel, palette_data);
+	write_png_info(png_ptr, info_ptr, image_width, image_height, bits_per_pixel, palette_data);
 
-	write_png_image_data(
-	        png_ptr, width, height, bits_per_pixel, pitch, capture_flags, image_data);
+	write_png_image_data(png_ptr,
+	                     width,
+	                     height,
+	                     bits_per_pixel,
+	                     pitch,
+	                     is_double_width,
+	                     is_double_height,
+	                     image_data);
 
 	png_write_end(png_ptr, nullptr);
 	png_destroy_write_struct(&png_ptr, &info_ptr);
