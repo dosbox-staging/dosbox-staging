@@ -93,6 +93,16 @@ body:
     validations:
       required: false
   - type: textarea
+    id: package_url
+    attributes:
+      label: Download URL of affected game or software
+      description: |
+        If a single game or program is affected, provide a download link to ensure we're using binary-exact files and version(s).
+        This is required unless the issue broadly applies.
+      placeholder: "example: https://archive.org/details/StarWarsX-wingDemo"
+    validations:
+      required: false
+  - type: textarea
     id: config_file
     attributes:
       label: Your configuration
