@@ -397,7 +397,7 @@ to the OPL synth.
 
 Of course, you can always try other GM or GS compatible SoundFonts
 too---that's the beauty of General MIDI!
-[FluidR3_GS](https://musical-artifacts.com/artifacts/749) and
+[FluidR3_GM_GS](https://archive.org/details/fluidr3-gm-gs) and
 [Creative Labs 4M GM_4gmgsmt](https://archive.org/download/free-soundfonts-sf2-2019-04/Creative%20Labs%204M%20GM_4gmgsmt.sf2)
 are good candidates as they sound fairly close to the SC-55 sound set. The
 [list of recommended SoundFonts](https://github.com/dosbox-staging/dosbox-staging/wiki/MIDI#soundfonts)
@@ -421,7 +421,7 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 | **Roland SC-55 v1.21 (hardware)** | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-sc-55-v1.21.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | GeneralUser GS    | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-generaluser-gs.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | Creative 4GMGSMT  | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-creative-4gmgsmt.mp3"> Your browser does not support the <code>audio</code> element.</audio>
-| FluidR3           | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-fluidr3-gm.mp3"> Your browser does not support the <code>audio</code> element.</audio>
+| FluidR3_GM_GS     | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-fluidr3-gm.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | FatBoy            | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-fatboy.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 | Arachno           | <audio controls src="https://archive.org/download/FluidSynth-MIDI-Comparison/dark-forces-intro-arachno.mp3"> Your browser does not support the <code>audio</code> element.</audio>
 
