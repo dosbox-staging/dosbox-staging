@@ -22,6 +22,7 @@
 #include <cassert>
 #include <optional>
 
+#include "byteorder.h"
 #include "capture.h"
 #include "render.h"
 #include "rgb888.h"

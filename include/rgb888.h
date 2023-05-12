@@ -40,26 +40,10 @@ public:
 	          blue(b)
 	{}
 
-	constexpr Rgb888(const uint16_t val)
-	        : red(Rgb565::Red5To8(val)),
-	          green(Rgb565::Green6To8(val)),
-	          blue(Rgb565::Blue5To8(val))
-	{}
-
 	constexpr operator int() const
 	{
 		return (blue << 16) | (green << 8) | (red << 0);
 	}
-
-	constexpr static Rgb888 byteswap(const Rgb888& in)
-	{
-		return Rgb888(in.blue, in.green, in.red);
-	}
 };
-
-constexpr Rgb888 host_to_le(const Rgb888& in) noexcept
-{
-	return Rgb888::byteswap(in);
-}
 
 #endif
