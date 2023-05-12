@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2022-2022  The DOSBox Staging Team
+ *  Copyright (C) 2022-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,24 +18,24 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_RGB16_H
-#define DOSBOX_RGB16_H
+#ifndef DOSBOX_RGB565_H
+#define DOSBOX_RGB565_H
 
 #include <cstdint>
 
-class Rgb16 {
+class Rgb565 {
 public:
 	// Default constructor
-	constexpr Rgb16() = default;
+	constexpr Rgb565() = default;
 
 	// Construct from separate RGB 8-bit values
-	constexpr Rgb16(const uint8_t r8, const uint8_t g8, const uint8_t b8)
+	constexpr Rgb565(const uint8_t r8, const uint8_t g8, const uint8_t b8)
 	{
 		FromRgb888(r8, g8, b8);
 	}
 
 	// Equality comparison
-	constexpr bool operator==(const Rgb16& rhs) const
+	constexpr bool operator==(const Rgb565& rhs) const
 	{
 		return pixel == rhs.pixel;
 	}

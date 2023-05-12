@@ -23,7 +23,7 @@
 
 #include <cstdint>
 
-#include "rgb16.h"
+#include "rgb565.h"
 
 class Rgb888 {
 public:
@@ -41,9 +41,9 @@ public:
 	{}
 
 	constexpr Rgb888(const uint16_t val)
-	        : red(Rgb16::Red5To8(val)),
-	          green(Rgb16::Green6To8(val)),
-	          blue(Rgb16::Blue5To8(val))
+	        : red(Rgb565::Red5To8(val)),
+	          green(Rgb565::Green6To8(val)),
+	          blue(Rgb565::Blue5To8(val))
 	{}
 
 	constexpr operator int() const

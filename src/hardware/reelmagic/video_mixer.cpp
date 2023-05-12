@@ -1,5 +1,8 @@
 /*
- *  Copyright (C) 2022 Jon Dennis
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022  Jon Dennis
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +14,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 //
@@ -31,7 +34,7 @@
 
 #include "../../gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
 #include "render.h"
-#include "rgb16.h"
+#include "rgb565.h"
 #include "setup.h"
 
 namespace {
@@ -70,7 +73,7 @@ struct RenderOutputPixel {
 };
 
 struct VGA16bppPixel {
-	Rgb16 pixel = {};
+	Rgb565 pixel = {};
 	template <typename T>
 	constexpr void CopyRGBTo(T& out) const
 	{
