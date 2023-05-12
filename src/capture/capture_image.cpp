@@ -26,7 +26,7 @@
 
 #include "capture.h"
 #include "render.h"
-#include "rgb24.h"
+#include "rgb888.h"
 #include "sdlmain.h"
 
 #if (C_SSHOT)
@@ -144,10 +144,10 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 			// BGR888
 			case 24: {
 				const auto pixel = host_to_le(
-				        reinterpret_cast<const rgb24*>(src_row)[x]);
+				        reinterpret_cast<const Rgb888*>(src_row)[x]);
 
-				reinterpret_cast<rgb24*>(row_buffer)[x * 2 + 0] = pixel;
-				reinterpret_cast<rgb24*>(row_buffer)[x * 2 + 1] = pixel;
+				reinterpret_cast<Rgb888*>(row_buffer)[x * 2 + 0] = pixel;
+				reinterpret_cast<Rgb888*>(row_buffer)[x * 2 + 1] = pixel;
 			} break;
 
 			// BGRX8888
