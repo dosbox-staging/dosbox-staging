@@ -200,7 +200,32 @@ struct VGA_Draw {
 		double parts = 0;
 		double per_line_ms = 0;
 	} delay = {};
+
+	// clang-format off
+	//
+	// Non-paletted RGB image data is stored as a continuous stream of BGR
+	// pixel values in memory.
+	//
+	// Valid values are the following:
+	//
+	//  8 - Indexed8   up to 256-colour, paletted;
+	//                 stored as packed uint8 data
+	//
+	// 15 - BGR555     32k hi-colour, 5 bits per red/blue/green component;
+	//                 stored as packed uint16 data with highest bit unused
+	//
+	// 16 - BGR565     64k hi-colour, 5 bits for red/blue, 6 bit for green;
+	//                 stored as packed uint16 data
+	//
+	// 24 - BGR888     16M (24-bit) true-colour, 8 bits per red/blue/green component;
+	//                 stored as packed 24-bit data
+	//
+	// 32 - BGRX8888   24-bit true-colour; 8 bits per red/blue/green component;
+	//                 stored as packed uint32 data with highest 8 bits unused
+	//
+	// clang-format on
 	Bitu bpp = 0;
+
 	double host_refresh_hz = REFRESH_RATE_HOST_DEFAULT;
 	double dos_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
 	double custom_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
