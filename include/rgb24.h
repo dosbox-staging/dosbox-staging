@@ -27,9 +27,11 @@
 
 class rgb24 {
 public:
+#pragma pack(push, 1)
 	uint8_t red   = 0;
 	uint8_t green = 0;
 	uint8_t blue  = 0;
+#pragma pack(pop)
 
 	constexpr rgb24() = default;
 	constexpr rgb24(const uint8_t r, const uint8_t g, const uint8_t b)
