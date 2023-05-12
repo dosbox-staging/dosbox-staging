@@ -44,7 +44,7 @@
 #include "math_utils.h"
 #include "mouse.h"
 #include "pic.h"
-#include "rgb24.h"
+#include "rgb888.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "timer.h"
@@ -56,9 +56,9 @@
 //  (https://www.nfpa.org/assets/files/AboutTheCodes/79/79-A2002-rop.pdf
 //  pp.1588-1593)
 //
-constexpr rgb24 marginal_color(255, 103, 0); // Amber for marginal conditions
-constexpr rgb24 on_color(0, 1, 0);           // Green for on/ready/in-use
-constexpr rgb24 off_color(0, 0, 0);          // Black for off/stopped/not-in-use
+constexpr Rgb888 marginal_color(255, 103, 0); // Amber for marginal conditions
+constexpr Rgb888 on_color(0, 1, 0);           // Green for on/ready/in-use
+constexpr Rgb888 off_color(0, 0, 0);          // Black for off/stopped/not-in-use
 
 enum {
 	CLR_BLACK=0,
@@ -584,7 +584,7 @@ protected:
 bool autofire = false;
 
 static void set_joystick_led([[maybe_unused]] SDL_Joystick *joystick,
-                             [[maybe_unused]] const rgb24 &color)
+                             [[maybe_unused]] const Rgb888 &color)
 {
 	// Basic joystick LED support was added in SDL 2.0.14
 #if SDL_VERSION_ATLEAST(2, 0, 14)

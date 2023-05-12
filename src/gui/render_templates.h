@@ -167,8 +167,8 @@
 #	elif DBPP == 32
 #		define PMAKE(_VAL) (_VAL)
 #	endif
-#	include "rgb24.h"
-#	define SRCTYPE rgb24
+#	include "rgb888.h"
+#	define SRCTYPE Rgb888
 #endif
 
 #if SBPP == 32
