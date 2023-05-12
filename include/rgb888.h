@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2022  The DOSBox Staging Team
+ *  Copyright (C) 2021-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_RGB24_H
-#define DOSBOX_RGB24_H
+#ifndef DOSBOX_RGB888_H
+#define DOSBOX_RGB888_H
 
 #include <cstdint>
 
 #include "rgb16.h"
 
-class rgb24 {
+class Rgb888 {
 public:
 #pragma pack(push, 1)
 	uint8_t red   = 0;
@@ -33,14 +33,14 @@ public:
 	uint8_t blue  = 0;
 #pragma pack(pop)
 
-	constexpr rgb24() = default;
-	constexpr rgb24(const uint8_t r, const uint8_t g, const uint8_t b)
+	constexpr Rgb888() = default;
+	constexpr Rgb888(const uint8_t r, const uint8_t g, const uint8_t b)
 	        : red(r),
 	          green(g),
 	          blue(b)
 	{}
 
-	constexpr rgb24(const uint16_t val)
+	constexpr Rgb888(const uint16_t val)
 	        : red(Rgb16::Red5To8(val)),
 	          green(Rgb16::Green6To8(val)),
 	          blue(Rgb16::Blue5To8(val))
@@ -51,15 +51,15 @@ public:
 		return (blue << 16) | (green << 8) | (red << 0);
 	}
 
-	constexpr static rgb24 byteswap(const rgb24& in)
+	constexpr static Rgb888 byteswap(const Rgb888& in)
 	{
-		return rgb24(in.blue, in.green, in.red);
+		return Rgb888(in.blue, in.green, in.red);
 	}
 };
 
-constexpr rgb24 host_to_le(const rgb24& in) noexcept
+constexpr Rgb888 host_to_le(const Rgb888& in) noexcept
 {
-	return rgb24::byteswap(in);
+	return Rgb888::byteswap(in);
 }
 
 #endif

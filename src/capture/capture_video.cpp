@@ -25,7 +25,7 @@
 
 #include "mem.h"
 #include "render.h"
-#include "rgb24.h"
+#include "rgb888.h"
 
 #if (C_SSHOT)
 #include "../libs/zmbv/zmbv.h"
@@ -413,7 +413,7 @@ void capture_video_add_frame(const uint16_t width, const uint16_t height,
 			// BGR888
 			case 24:
 				for (auto x = 0; x < width; ++x) {
-					const auto pixel = reinterpret_cast<const rgb24*>(
+					const auto pixel = reinterpret_cast<const Rgb888*>(
 					        src_row)[x];
 
 					reinterpret_cast<uint32_t*>(
@@ -438,7 +438,7 @@ void capture_video_add_frame(const uint16_t width, const uint16_t height,
 		} else {
 			if (bits_per_pixel == 24) {
 				for (auto x = 0; x < width; ++x) {
-					const auto pixel = reinterpret_cast<const rgb24*>(
+					const auto pixel = reinterpret_cast<const Rgb888*>(
 					        src_row)[x];
 
 					reinterpret_cast<uint32_t*>(
