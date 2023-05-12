@@ -143,11 +143,13 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 
 			// BGR888
 			case 24: {
-				const auto pixel = host_to_le(
-				        reinterpret_cast<const Rgb888*>(src_row)[x]);
+				const auto b = src_row[x * 3 + 0];
+				const auto g = src_row[x * 3 + 1];
+				const auto r = src_row[x * 3 + 2];
 
-				reinterpret_cast<Rgb888*>(row_buffer)[x * 2 + 0] = pixel;
-				reinterpret_cast<Rgb888*>(row_buffer)[x * 2 + 1] = pixel;
+				row_buffer[x * 3 + 0] = b;
+				row_buffer[x * 3 + 1] = g;
+				row_buffer[x * 3 + 2] = r;
 			} break;
 
 			// BGRX8888
