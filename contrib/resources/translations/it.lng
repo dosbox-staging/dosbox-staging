@@ -188,6 +188,10 @@ Memoria video in MB (1-8) o KB (da 256 a 8192).
 'auto' usa il valore predefinito in base all'adattatore video scelto
 (predefinito 'auto').
 .
+:CONFIG_FORCE_VGA_SINGLE_SCAN
+Forza la scansione singola nelle modalità inferiori a 350 linee per le macchine
+di tipo VGA (predefinito disabilitato).
+.
 :CONFIG_DOS_RATE
 Personalizza la frequenza dei fotogrammi della modalità video emulata, in Hz:
   default:   La frequenza è determinata dalla modalità video DOS
@@ -210,6 +214,10 @@ Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
                video, tuttavia alcuni giochi potrebbero non utilizzarle
                correttamente (sfarfallio) o potrebbe essere necessaria più
                memoria di sistema (mem = ).
+.
+:CONFIG_VGA_8DOT_FONT
+Utilizza caratteri larghi 8 pixel per le macchine di tipo VGA
+(predefinito disabilitato).
 .
 :CONFIG_SPEED_MODS
 Consente modifiche note per migliorare le prestazioni (predefinito abilitato).
@@ -378,7 +386,7 @@ Numero di cicli di cui diminuire utilizzando i tasti di scelta rapida
 Un valore più basso di 100 indica una percentuale.
 .
 :CONFIG_MOUSE_CAPTURE
-Imposta la modalità di cattura dell mouse:
+Imposta la modalità di cattura del mouse:
    onclick:      Cattura il mouse quando fai clic con qualsiasi pulsante
                  del mouse all'interno della finestra (predefinito).
    onstart:      Cattura il mouse immediatamente all'avvio. Potrebbe non
@@ -387,8 +395,8 @@ Imposta la modalità di cattura dell mouse:
                  di DOSBox e il resto del desktop; è possibile catturarlo con
                  il pulsante centrale del mouse o l'apposito tasto di scelta
                  rapida. Questa modalità non funziona correttamente con tutti
-                 i giochi. Windows 3.1x può essere reso compatibile con un
-                 driver del mouse personalizzato
+                 i giochi. In Windows 3.1x è necessario l'utilizzo di un
+                 driver del mouse personalizzato.
    nomouse:      Nasconde il mouse e impedisce che venga inviato l'input del
                  mouse al gioco.
 Per gli schermi tattili, utilizzare la modalità di controllo senza soluzione
@@ -919,7 +927,7 @@ Modifica la frequenza dei fotogrammi utilizzata durante la riproduzione video.
   0:      Nessuna modifica: tenta il rilevamento automatico della frequenza
           (predefinito).
   1 - 7:  Modifica la frequenza dei fotogrammi con una delle seguenti:
-          1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, o 7=59.94 FPS.
+          1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50 o 7=59.94 FPS.
 .
 :CONFIG_JOYSTICKTYPE
 Tipo di joystick da emulare:
@@ -1018,15 +1026,15 @@ File utilizzato per mappare numeri di telefono falsi su indirizzi
 (predefinito 'phonebook.txt'). 
 .
 :CONFIG_XMS
-Abilita supporto XMS (predefinito abilitato).
+Abilita supporto alla memoria estesa XMS (predefinito abilitato).
 .
 :CONFIG_EMS
-Abilita supporto EMS (predefinito abilitato). L'abilitazione fornisce la
-migliore compatibilità ma alcune applicazioni potrebbero funzionare meglio
-con altre scelte, o richiedere la disabilitazione del supporto EMS.
+Abilita supporto alla memoria espansa EMS (predefinito abilitato).
+L'abilitazione fornisce la migliore compatibilità ma alcune applicazioni
+potrebbero funzionare meglio con altre scelte, o richiederne la disabilitazione
 .
 :CONFIG_UMB
-Abilita supporto UMB (predefinito abilitato).
+Abilita supporto alla memoria superiore UMB (predefinito abilitato).
 .
 :CONFIG_VER
 Imposta la versione DOS (predefinito 5.0).
@@ -1047,6 +1055,11 @@ COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
 .
 :CONFIG_KEYBOARDLAYOUT
 Codice lingua del layout della tastiera, o 'auto' (predefinito 'auto').
+.
+:CONFIG_SETVER_TABLE_FILE
+File contenente l'elenco dei programmi e le versioni DOS loro assegnate,
+separati tramite tabulazione, utilizzato da SETVER.EXE come memoria persistente
+(predefinito non impostato).
 .
 :CONFIG_IPX
 Abilita IPX attraverso l'emulazione UDP/IP (predefinito abilitato).
@@ -1113,6 +1126,9 @@ Puoi inserire i tuoi comandi MOUNT qui.
 .
 :CONFIG_VALID_VALUES
 Valori possibili
+.
+:CONFIG_DEPRECATED_VALUES
+Valori deprecati
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Sezione o proprietà non trovata: %s
@@ -2314,6 +2330,74 @@ Il tipo deve essere uno dei seguenti:
   %s
 
 .
+:PROGRAM_SETVER_HELP_LONG
+Visualizza o imposta la versione che DOS comunica ad un programma.
+
+Utilizzo:
+  [color=green]setver[reset] \[/b] [/p]
+  [color=green]setver[reset] [color=cyan]FILE[reset] [color=cyan]VERSIONE[reset] [/q]
+  [color=green]setver[reset] [color=cyan]FILE[reset] /d [/q]
+  [color=green]setver[reset] [color=cyan]VERSIONE[reset] /g [/q]
+  [color=green]setver[reset] /d /g [/q]
+  [color=green]setver[reset] /d /all [/q]
+
+Dove:
+  [color=cyan]FILE[reset]     è il nome file di un programma a cui applicare le impostazioni.
+  [color=cyan]VERSIONE[reset] è una versione DOS, nel formato [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] o [color=white]n[reset].
+  /g       impostazione globale, viene applicata a tutti gli eseguibili.
+  /d o /delete     elimina il programma specificato dalla tabella di versione.
+  /all     insieme a /d cancella il contenuto dell'intera tabella di versione.
+  /b       visualizza l'elenco in un formato file batch.
+  /p       visualizza una pagina alla volta.
+  /q o /quiet      modalità silenziosa, salta i messaggi di conferma.
+
+Note:
+  Per fare in modo che la tabella di versione rimanga persistente, specificare
+  il percorso del file da utilizzare come memoria persistente utilizzando
+  l'impostazione 'setver_table_file = [color=cyan]MEMORIA[reset]', nella sezione [dos] del file
+  di configurazione.
+
+Esempi:
+  [color=green]setver[reset] /b              ; visualizza le impostazioni come un file batch
+  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; comunica la versione DOS 6.22 ad ogni file RETRO.COM
+  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] /d    ; smette di sovrascrivere la versione DOS riportata
+.
+:PROGRAM_SETVER_WRONG_TABLE
+È supportata solo la tabella di versione nella directory Z:\.
+.
+:PROGRAM_SETVER_INVALID_VERSION
+Versione DOS non valida.
+.
+:PROGRAM_SETVER_TABLE_UPDATED
+Tabella di versione aggiornata.
+.
+:PROGRAM_SETVER_TABLE_CLEARED
+Contenuto della tabella di versione cancellato.
+.
+:PROGRAM_SETVER_TABLE_ALREADY_EMPTY
+Tabella di versione già vuota.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_REMOVED
+Voce rimossa dalla tabella di versione.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_NOT_FOUND
+Voce non trovata nella tabella di versione.
+.
+:PROGRAM_SETVER_TABLE_EMPTY
+Tabella di versione vuota.
+.
+:PROGRAM_SETVER_GLOBAL
+Versione riportata per impostazione globale
+.
+:PROGRAM_SETVER_BATCH_GLOBAL
+regola per ogni eseguibile
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_NAME
+regole per corrispondenza solo per nome file
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_PATH
+regole per corrispondenza per nome file con percorso
+.
 :PROGRAM_TREE_HELP_LONG
 Visualizza graficamente la struttura delle directory.
 
@@ -2359,20 +2443,42 @@ Nessun file o sottodirectory da visualizzare.
 Troppi file o sottodirectory.
 
 .
+:AUTOEXEC_BAT_AUTOGENERATED
+autogenerato
+.
+:AUTOEXEC_BAT_CONFIG_SECTION
+dalla sezione [autoexec]
+.
 :SHELL_ILLEGAL_PATH
 Percorso non valido.
+
+.
+:SHELL_ILLEGAL_FILE_NAME
+Nome file non valido.
 
 .
 :SHELL_ILLEGAL_SWITCH
 Opzione non valida: %s.
 
 .
+:SHELL_ILLEGAL_SWITCH_COMBO
+Combinazione di parametri non valida.
+
+.
 :SHELL_MISSING_PARAMETER
 Parametro richiesto mancante.
 
 .
+:SHELL_TOO_MANY_PARAMETERS
+Troppi parametri.
+
+.
+:SHELL_EXPECTED_FILE_NOT_DIR
+Previsto un file, non una directory.
+
+.
 :SHELL_SYNTAX_ERROR
-La sintassi del comando non è corretta.
+Sintassi del comando errata.
 
 .
 :SHELL_ACCESS_DENIED
@@ -2393,6 +2499,10 @@ File non trovato - '%s'
 .
 :SHELL_FILE_EXISTS
 Il file '%s' esiste già.
+
+.
+:SHELL_DIRECTORY_NOT_FOUND
+Directory non trovata - '%s'
 
 .
 :SHELL_CMD_HELP
@@ -3273,27 +3383,22 @@ Esempi:
 
 .
 :SHELL_CMD_VER_HELP
-Visualizza o imposta la versione DOS riportata.
+Visualizza la versione DOS.
 
 .
 :SHELL_CMD_VER_HELP_LONG
 Utilizzo:
   [color=green]ver[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSIONE[reset]
 
-Dove:
-  [color=cyan]VERSIONE[reset] può essere un numero intero, ad esempio [color=cyan]5[reset], o includere un valore
-           decimale a due cifre, ad esempio: [color=cyan]6.22[reset], [color=cyan]7.01[reset], o [color=cyan]7.10[reset].
-           In alternativa, il valore decimale può essere separato da spazi,
-           ad esempio: [color=cyan]6 22[reset], [color=cyan]7 01[reset], o [color=cyan]7 10[reset].
 Note:
-  La versione DOS può anche essere impostata nel file di configurazione nella 
-  sezione [dos] usando l'impostazione "ver = [color=cyan]VERSIONE[reset]".
+  È possibile modificare la versione DOS utilizzando l'impostazione
+  'ver = [color=cyan]VERSIONE[reset]', nella sezione [dos] del file di configurazione.
+  La versione DOS comunicata ai programmi può essere cambiata utilizzando il
+  comando [color=green]setver[reset]. La vecchia sintassi '[color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSIONE[reset]' per cambiare la
+  versione DOS è stata deprecata.
 
 Esempi:
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]
-
+  [color=green]ver[reset]
 .
 :SHELL_CMD_VER_VER
 DOSBox Staging versione %s
