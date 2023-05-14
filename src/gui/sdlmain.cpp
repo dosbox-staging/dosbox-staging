@@ -201,15 +201,15 @@ SDL_Block sdl;
 
 // Masks to be passed when creating SDL_Surface.
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-constexpr uint32_t RMASK = 0xff000000;
-constexpr uint32_t GMASK = 0x00ff0000;
-constexpr uint32_t BMASK = 0x0000ff00;
-constexpr uint32_t AMASK = 0x000000ff;
+[[maybe_unused]] constexpr uint32_t RMASK = 0xff000000;
+[[maybe_unused]] constexpr uint32_t GMASK = 0x00ff0000;
+[[maybe_unused]] constexpr uint32_t BMASK = 0x0000ff00;
+[[maybe_unused]] constexpr uint32_t AMASK = 0x000000ff;
 #else
-constexpr uint32_t RMASK = 0x000000ff;
-constexpr uint32_t GMASK = 0x0000ff00;
-constexpr uint32_t BMASK = 0x00ff0000;
-constexpr uint32_t AMASK = 0xff000000;
+[[maybe_unused]] constexpr uint32_t RMASK = 0x000000ff;
+[[maybe_unused]] constexpr uint32_t GMASK = 0x0000ff00;
+[[maybe_unused]] constexpr uint32_t BMASK = 0x00ff0000;
+[[maybe_unused]] constexpr uint32_t AMASK = 0xff000000;
 #endif
 
 // Size and ratio constants

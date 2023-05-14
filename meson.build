@@ -549,29 +549,10 @@ summary('SDL_image 2.0 support', sdl2_image_dep.found())
 
 # OpenGL
 opengl_dep = optional_dep
-opengl_summary_msg = 'Disabled'
-if get_option('use_opengl') != 'false'
+if get_option('use_opengl')
     opengl_dep = dependency('gl', not_found_message: msg.format('use_opengl'))
 endif
-if (
-    opengl_dep.found()
-    and host_machine.system() == 'linux'
-    and get_option('use_opengl') == 'auto'
-    and get_option('enable_debugger') != 'none'
-)
-
-    warning(
-        '''OpenGL is disabled because it's not compatible with the debugger.
-            To use OpenGL with the debugger, force it with "-Duse_opengl=true"''',
-    )
-
-    conf_data.set10('C_OPENGL', false)
-    opengl_summary_msg = 'Found, but disabled due to conflict with debugger'
-else
-    conf_data.set10('C_OPENGL', opengl_dep.found())
-    opengl_summary_msg = opengl_dep.found()
-endif
-summary('OpenGL support', opengl_summary_msg)
+conf_data.set10('C_OPENGL', opengl_dep.found())
 
 # FluidSynth (depends on glib)
 fluid_dep = optional_dep
