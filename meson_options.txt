@@ -14,9 +14,8 @@ option(
 
 option(
     'use_opengl',
-    type: 'combo',
-    choices: ['auto', 'true', 'false'],
-    value: 'auto',
+    type: 'boolean',
+    value: true,
     description: 'Enable OpenGL support',
 )
 
