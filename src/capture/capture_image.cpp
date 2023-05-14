@@ -20,11 +20,10 @@
  */
 
 #include <cassert>
-#include <optional>
+#include <vector>
 
 #include "byteorder.h"
 #include "capture.h"
-#include "render.h"
 #include "rgb888.h"
 
 #if (C_SSHOT)
@@ -103,10 +102,10 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
                                  const uint16_t height, const uint8_t bits_per_pixel,
                                  const uint16_t pitch, const uint8_t* image_data)
 {
-	assert(width <= SCALER_MAXWIDTH);
+	static std::vector<uint8_t> row_buffer = {};
 
-	// TODO seems risky; perhaps use vector instead
-	uint8_t row_buffer[SCALER_MAXWIDTH * 4];
+	constexpr auto MaxBytesPerPixel = 4;
+	row_buffer.resize(width * MaxBytesPerPixel);
 
 	auto src_row = image_data;
 
@@ -116,7 +115,7 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 			// Indexed8
 			case 8: {
 				const auto pixel = src_row[x];
-				row_buffer[x] = pixel;
+				row_buffer[x]    = pixel;
 			} break;
 
 			// BGR555
@@ -163,7 +162,7 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 			}
 		}
 
-		png_write_row(png_ptr, row_buffer);
+		png_write_row(png_ptr, row_buffer.data());
 		src_row += pitch;
 	}
 }
@@ -218,4 +217,3 @@ void capture_image(const uint16_t width, const uint16_t height,
 }
 
 #endif
-
