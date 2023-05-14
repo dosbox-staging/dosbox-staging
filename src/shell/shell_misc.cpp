@@ -20,16 +20,12 @@
 #include "shell.h"
 
 #include <algorithm>
-#include <cstddef>
-#include <cstdio>
-#include <cstdlib>
 #include <cstring>
-#include <iterator>
 
-#include "regs.h"
-#include "callback.h"
-#include "string_utils.h"
 #include "../ints/int10.h"
+#include "callback.h"
+#include "regs.h"
+#include "string_utils.h"
 
 [[nodiscard]] static std::vector<std::string> get_completions(std::string_view command);
 static void run_binary_executable(std::string_view fullname, std::string_view args);
@@ -59,19 +55,25 @@ private:
 };
 } // namespace
 
-DOS_Shell::~DOS_Shell() {
+DOS_Shell::~DOS_Shell()
+{
 	bf.reset();
 }
 
-void DOS_Shell::ShowPrompt(void) {
-	uint8_t drive=DOS_GetDefaultDrive()+'A';
+void DOS_Shell::ShowPrompt()
+{
+	const uint8_t drive = DOS_GetDefaultDrive() + 'A';
 	char dir[DOS_PATHLENGTH];
-	reset_str(dir); // DOS_GetCurrentDir doesn't always return
-	                // something. (if drive is messed up)
+	reset_str(dir);
+
+	// DOS_GetCurrentDir doesn't always return something.
+	// (if drive is messed up)
 	DOS_GetCurrentDir(0, dir);
 	InjectMissingNewline();
 	WriteOut("%c:\\%s>", drive, dir);
-	ResetLastWrittenChar('\n'); // prevents excessive newline if cmd prints nothing
+
+	// prevents excessive newline if cmd prints nothing
+	ResetLastWrittenChar('\n');
 }
 
 void DOS_Shell::InputCommand(char* line)
