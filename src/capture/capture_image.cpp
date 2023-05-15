@@ -175,8 +175,8 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 
 void capture_image(const uint16_t width, const uint16_t height,
                    const uint8_t bits_per_pixel, const uint16_t pitch,
-                   const uint8_t capture_flags, const uint8_t* image_data,
-                   const uint8_t* palette_data)
+                   const uint8_t capture_flags, const float one_per_pixel_aspect_ratio,
+                   const uint8_t* image_data, const uint8_t* palette_data)
 {
 	const bool is_double_width  = (capture_flags & CaptureFlagDoubleWidth);
 	const bool is_double_height = (capture_flags & CaptureFlagDoubleHeight);
@@ -223,3 +223,4 @@ void capture_image(const uint16_t width, const uint16_t height,
 }
 
 #endif
+

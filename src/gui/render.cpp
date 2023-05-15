@@ -257,6 +257,7 @@ void RENDER_EndUpdate(bool abort)
 		                 pitch,
 		                 flags,
 		                 static_cast<float>(fps),
+		                 render.src.ratio,
 		                 (uint8_t*)&scalerSourceCache,
 		                 (uint8_t*)&render.pal.rgb);
 	}
