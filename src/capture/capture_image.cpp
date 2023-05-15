@@ -24,6 +24,8 @@
 
 #include "byteorder.h"
 #include "capture.h"
+#include "rgb555.h"
+#include "rgb565.h"
 #include "rgb888.h"
 
 #if (C_SSHOT)
@@ -67,7 +69,6 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 		png_set_PLTE(png_ptr, info_ptr, palette, NumPaletteEntries);
 
 	} else {
-		png_set_bgr(png_ptr);
 		png_set_IHDR(png_ptr,
 		             info_ptr,
 		             width,
@@ -115,27 +116,32 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 			// Indexed8
 			case 8: {
 				const auto pixel = src_row[x];
-				row_buffer[x]    = pixel;
+
+				row_buffer[x] = pixel;
 			} break;
 
 			// BGR555
 			case 15: {
-				const auto pixel = host_to_le(
+				const auto p = host_to_le(
 				        reinterpret_cast<const uint16_t*>(src_row)[x]);
 
-				row_buffer[x * 3 + 0] = ((pixel & 0x001f) * 0x21) >> 2;
-				row_buffer[x * 3 + 1] = ((pixel & 0x03e0) * 0x21) >> 7;
-				row_buffer[x * 3 + 2] = ((pixel & 0x7c00) * 0x21) >> 12;
+				const auto pixel = Rgb555(p).ToRgb888();
+
+				row_buffer[x * 3 + 0] = pixel.red;
+				row_buffer[x * 3 + 1] = pixel.green;
+				row_buffer[x * 3 + 2] = pixel.blue;
 			} break;
 
 			// BGR565
 			case 16: {
-				const auto pixel = host_to_le(
+				const auto p = host_to_le(
 				        reinterpret_cast<const uint16_t*>(src_row)[x]);
 
-				row_buffer[x * 3 + 0] = ((pixel & 0x001f) * 0x21) >> 2;
-				row_buffer[x * 3 + 1] = ((pixel & 0x07e0) * 0x41) >> 9;
-				row_buffer[x * 3 + 2] = ((pixel & 0xf800) * 0x21) >> 13;
+				const auto pixel = Rgb565(p).ToRgb888();
+
+				row_buffer[x * 3 + 0] = pixel.red;
+				row_buffer[x * 3 + 1] = pixel.green;
+				row_buffer[x * 3 + 2] = pixel.blue;
 			} break;
 
 			// BGR888
@@ -144,9 +150,9 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 				const auto g = src_row[x * 3 + 1];
 				const auto r = src_row[x * 3 + 2];
 
-				row_buffer[x * 3 + 0] = b;
+				row_buffer[x * 3 + 0] = r;
 				row_buffer[x * 3 + 1] = g;
-				row_buffer[x * 3 + 2] = r;
+				row_buffer[x * 3 + 2] = b;
 			} break;
 
 			// BGRX8888
@@ -155,9 +161,9 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 				const auto g = src_row[x * 4 + 1];
 				const auto r = src_row[x * 4 + 2];
 
-				row_buffer[x * 3 + 0] = b;
+				row_buffer[x * 3 + 0] = r;
 				row_buffer[x * 3 + 1] = g;
-				row_buffer[x * 3 + 2] = r;
+				row_buffer[x * 3 + 2] = b;
 			} break;
 			}
 		}
