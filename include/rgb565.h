@@ -23,6 +23,8 @@
 
 #include <cstdint>
 
+#include "rgb.h"
+
 class Rgb565 {
 public:
 	// Default constructor
@@ -51,7 +53,7 @@ public:
 	}
 
 	// Write to separate RGB 8-bit values
-	constexpr void ToRgb888(uint8_t& r8, uint8_t& g8, uint8_t& b8) const
+	void ToRgb888(uint8_t& r8, uint8_t& g8, uint8_t& b8) const
 	{
 		r8 = Red5To8(pixel);
 		g8 = Green6To8(pixel);
@@ -59,27 +61,24 @@ public:
 	}
 
 	// Scoped conversion helper: RGB Red 5-bit to 8-bit
-	static constexpr uint8_t Red5To8(const uint16_t val)
+	static uint8_t Red5To8(const uint16_t val)
 	{
 		const auto red5 = (val & r5_mask) >> r5_offset;
-		const auto red8 = (red5 * 255 + 15) / 31;
-		return static_cast<uint8_t>(red8);
+		return rgb5_to_8_lut(static_cast<uint8_t>(red5));
 	}
 
 	// Scoped conversion helper: RGB Green 6-bit to 8-bit
-	static constexpr uint8_t Green6To8(const uint16_t val)
+	static uint8_t Green6To8(const uint16_t val)
 	{
-		const auto green5 = (val & g6_mask) >> g6_offset;
-		const auto green8 = (green5 * 255 + 31) / 63;
-		return static_cast<uint8_t>(green8);
+		const auto green6 = (val & g6_mask) >> g6_offset;
+		return rgb6_to_8_lut(static_cast<uint8_t>(green6));
 	}
 
 	// Scoped conversion helper: RGB Blue 5-bit to 8-bit
-	static constexpr uint8_t Blue5To8(const uint16_t val)
+	static uint8_t Blue5To8(const uint16_t val)
 	{
 		const auto blue5 = (val & b5_mask) >> b5_offset;
-		const auto blue8 = (blue5 * 255 + 15) / 31;
-		return static_cast<uint8_t>(blue8);
+		return rgb5_to_8_lut(static_cast<uint8_t>(blue5));
 	}
 
 	// Allow read-write to the underlying data because the class holds no
