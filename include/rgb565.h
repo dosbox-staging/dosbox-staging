@@ -24,11 +24,17 @@
 #include <cstdint>
 
 #include "rgb.h"
+#include "rgb888.h"
 
 class Rgb565 {
 public:
 	// Default constructor
 	constexpr Rgb565() = default;
+
+	constexpr Rgb565(const uint16_t _pixel)
+	{
+		pixel = _pixel;
+	}
 
 	// Construct from separate RGB 8-bit values
 	constexpr Rgb565(const uint8_t r8, const uint8_t g8, const uint8_t b8)
@@ -50,6 +56,14 @@ public:
 		const auto b5 = ((b8 >> 3) << b5_offset) & b5_mask;
 
 		pixel = static_cast<uint16_t>(r5 | g6 | b5);
+	}
+
+	Rgb888 ToRgb888() const
+	{
+		const auto r8 = Red5To8(pixel);
+		const auto g8 = Green6To8(pixel);
+		const auto b8 = Blue5To8(pixel);
+		return Rgb888(r8, g8, b8);
 	}
 
 	// Write to separate RGB 8-bit values
