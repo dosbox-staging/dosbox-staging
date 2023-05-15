@@ -24,6 +24,7 @@
 #include "mem.h"
 #include "reelmagic/vga_passthrough.h"
 #include "render.h"
+#include "rgb.h"
 #include "vga.h"
 
 /*
@@ -55,28 +56,13 @@ Note:  Each read or write of this register will cycle through first the
 
 enum {DAC_READ,DAC_WRITE};
 
-// Generate a 6-to-8 bit lookup table
-constexpr auto max_6bit_values = 64; // 2^6
-using scale_6_to_8_lut_t = std::array<uint8_t, max_6bit_values>;
-static constexpr scale_6_to_8_lut_t generate_6_to_8_lut()
-{
-	scale_6_to_8_lut_t lut = {};
-	for (uint8_t color_6 = 0; color_6 < lut.size(); ++color_6) {
-		const auto color_8 = (color_6 * 255 + 31) / 63;
-		lut[color_6] = check_cast<uint8_t>(color_8);
-	}
-	return lut;
-}
-
 static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 {
-	static constexpr auto scale_6_to_8_lut = generate_6_to_8_lut();
-
 	const auto& src_rgb18 = vga.dac.rgb[src];
 
-	const auto r8 = scale_6_to_8_lut[src_rgb18.red];
-	const auto g8 = scale_6_to_8_lut[src_rgb18.green];
-	const auto b8 = scale_6_to_8_lut[src_rgb18.blue];
+	const auto r8 = rgb6_to_8_lut(src_rgb18.red);
+	const auto g8 = rgb6_to_8_lut(src_rgb18.green);
+	const auto b8 = rgb6_to_8_lut(src_rgb18.blue);
 
 	// Map the source color into palette's requested index
 	vga.dac.palette_map[index] = static_cast<uint32_t>((r8 << 16) |
