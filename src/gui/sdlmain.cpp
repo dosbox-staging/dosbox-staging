@@ -4559,8 +4559,10 @@ void restart_program(std::vector<std::string> & parameters) {
 	// parameter 0 is the executable path
 	// contents of the vector follow
 	// last one is NULL
-	for(Bitu i = 0; i < parameters.size(); i++) newargs[i] = (char*)parameters[i].c_str();
-	newargs[parameters.size()] = NULL;
+	for (size_t i = 0; i < parameters.size(); i++) {
+		newargs[i] = parameters[i].data();
+	}
+	newargs[parameters.size()] = nullptr;
 	MIXER_CloseAudioDevice();
 	Delay(50);
 	QuitSDL();
