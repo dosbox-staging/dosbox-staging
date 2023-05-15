@@ -58,11 +58,11 @@ enum {DAC_READ,DAC_WRITE};
 
 static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 {
-	const auto& src_rgb18 = vga.dac.rgb[src];
+	const auto& src_rgb666 = vga.dac.rgb[src];
 
-	const auto r8 = rgb6_to_8_lut(src_rgb18.red);
-	const auto g8 = rgb6_to_8_lut(src_rgb18.green);
-	const auto b8 = rgb6_to_8_lut(src_rgb18.blue);
+	const auto r8 = rgb6_to_8_lut(src_rgb666.red);
+	const auto g8 = rgb6_to_8_lut(src_rgb666.green);
+	const auto b8 = rgb6_to_8_lut(src_rgb666.blue);
 
 	// Map the source color into palette's requested index
 	vga.dac.palette_map[index] = static_cast<uint32_t>((r8 << 16) |
