@@ -31,9 +31,25 @@ constexpr uint8_t rgb6_to_8(const uint8_t c)
 	return (c * 255 + 31) / 63;
 }
 
+constexpr uint8_t rgb5_to_8(const uint8_t c)
+{
+	return (c * 255 + 15) / 31;
+}
+
+constexpr auto num_5bit_values = 32; // 2^5
 constexpr auto num_6bit_values = 64; // 2^6
 
+using rgb5_to_8_lut_t = std::array<uint8_t, num_5bit_values>;
 using rgb6_to_8_lut_t = std::array<uint8_t, num_6bit_values>;
+
+static constexpr rgb5_to_8_lut_t generate_rgb5_to_8_lut()
+{
+	rgb5_to_8_lut_t lut = {};
+	for (uint8_t c = 0; c < lut.size(); ++c) {
+		lut[c] = check_cast<uint8_t>(rgb5_to_8(c));
+	}
+	return lut;
+}
 
 static constexpr rgb6_to_8_lut_t generate_rgb6_to_8_lut()
 {
@@ -42,6 +58,13 @@ static constexpr rgb6_to_8_lut_t generate_rgb6_to_8_lut()
 		lut[c] = check_cast<uint8_t>(rgb6_to_8(c));
 	}
 	return lut;
+}
+
+inline uint8_t rgb5_to_8_lut(const uint8_t c)
+{
+	assert(c < num_5bit_values);
+	static constexpr auto lut = generate_rgb5_to_8_lut();
+	return lut[c];
 }
 
 inline uint8_t rgb6_to_8_lut(const uint8_t c)
