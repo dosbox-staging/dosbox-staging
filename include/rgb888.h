@@ -23,8 +23,6 @@
 
 #include <cstdint>
 
-#include "rgb565.h"
-
 class Rgb888 {
 public:
 #pragma pack(push, 1)
