@@ -3578,7 +3578,6 @@ std::optional<SDL_Surface *> SDLMAIN_GetRenderedSurface()
 {
 	// Variables common to all screen-modes
 	const auto renderer = SDL_GetRenderer(sdl.window);
-	const auto canvas   = get_canvas_size(sdl.desktop.type);
 
 #if C_OPENGL
 	// Get the OpenGL-renderer surface
@@ -3667,16 +3666,12 @@ std::optional<SDL_Surface *> SDLMAIN_GetRenderedSurface()
 
 	// We're already in surface-mode, how convenient ;)
 	// -----------------------------------------------
-	else if (sdl.desktop.type == SCREEN_SURFACE) {
-		assert(sdl.surface);
-		// Simply return a copy
-		return SDL_ConvertSurfaceFormat(sdl.surface,
-		                                sdl.surface->format->format,
-		                                0);
-	}
-
-	LOG_WARNING("SDL: unhandled screen-type (bug)");
-	return {};
+	assert(sdl.desktop.type == SCREEN_SURFACE);
+	assert(sdl.surface);
+	// Simply return a copy
+	return SDL_ConvertSurfaceFormat(sdl.surface,
+	                                sdl.surface->format->format,
+	                                0);
 }
 
 // extern void UI_Run(bool);
