@@ -968,23 +968,18 @@ static void set_vsync(const VSYNC_STATE state)
 		return;
 	}
 #endif
-	if (sdl.desktop.type == SCREEN_TEXTURE || sdl.desktop.type == SCREEN_SURFACE) {
-		// https://wiki.libsdl.org/SDL_HINT_RENDER_VSYNC - can only be
-		// set to "1", "0", adapative is currently not supported, so we
-		// also treat it as "1"
-		const auto hint_str = (state == VSYNC_STATE::ON ||
-		                       state == VSYNC_STATE::ADAPTIVE)
-		                              ? "1"
-		                              : "0";
-		if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_TRUE)
-			return;
-		LOG_WARNING("SDL: Failed setting SDL's vsync state to to %s (%s): %s",
-		            vsync_state_as_string(state), hint_str, SDL_GetError());
+	assert (sdl.desktop.type == SCREEN_TEXTURE || sdl.desktop.type == SCREEN_SURFACE);
+	// https://wiki.libsdl.org/SDL_HINT_RENDER_VSYNC - can only be
+	// set to "1", "0", adapative is currently not supported, so we
+	// also treat it as "1"
+	const auto hint_str = (state == VSYNC_STATE::ON ||
+							state == VSYNC_STATE::ADAPTIVE)
+									? "1"
+									: "0";
+	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_TRUE)
 		return;
-	}
-	// Unhandled screen type
-	LOG_WARNING("SDL: Failed setting the vsync state to %s: unsupported screen type",
-	            vsync_state_as_string(state));
+	LOG_WARNING("SDL: Failed setting SDL's vsync state to to %s (%s): %s",
+				vsync_state_as_string(state), hint_str, SDL_GetError());
 }
 
 static void update_vsync_state()
