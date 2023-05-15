@@ -923,21 +923,20 @@ static VSYNC_STATE get_reported_vsync()
 			            retval);
 			break;
 		}
+		return state;
 	}
 #endif
-	if (sdl.desktop.type == SCREEN_TEXTURE || sdl.desktop.type == SCREEN_SURFACE) {
-		const std::string_view retstr = SDL_GetHint(SDL_HINT_RENDER_VSYNC);
-		if (retstr == "1")
-			state = VSYNC_STATE::ON;
-		else if (retstr == "0")
-			state = VSYNC_STATE::OFF;
-		else if (retstr == "-1")
-			state = VSYNC_STATE::ADAPTIVE;
-		else
-			LOG_WARNING("SDL: Reported an unknown vsync state: %s",
-			            retstr.data());
-	}
-	assert(state != VSYNC_STATE::UNSET);
+	assert (sdl.desktop.type == SCREEN_TEXTURE || sdl.desktop.type == SCREEN_SURFACE);
+	const std::string_view retstr = SDL_GetHint(SDL_HINT_RENDER_VSYNC);
+	if (retstr == "1")
+		state = VSYNC_STATE::ON;
+	else if (retstr == "0")
+		state = VSYNC_STATE::OFF;
+	else if (retstr == "-1")
+		state = VSYNC_STATE::ADAPTIVE;
+	else
+		LOG_WARNING("SDL: Reported an unknown vsync state: %s",
+					retstr.data());
 	return state;
 }
 
