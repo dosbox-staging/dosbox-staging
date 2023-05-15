@@ -3589,6 +3589,7 @@ std::optional<SDL_Surface *> SDLMAIN_GetRenderedSurface()
 		constexpr int gl_bits_per_pixel = gl_channels * 8; // 8-bpp
 
 		// Allocate a 24-bit surface to be populated
+		const auto canvas = get_canvas_size(sdl.desktop.type);
 		const auto surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
 		                                          canvas.w,
 		                                          canvas.h,
@@ -3642,6 +3643,7 @@ std::optional<SDL_Surface *> SDLMAIN_GetRenderedSurface()
 		const auto pixel_format = rinfo.texture_formats[0];
 
 		// Create a 32-bit surface with colour format matching the renderer
+		const auto canvas = get_canvas_size(sdl.desktop.type);
 		const auto surface = SDL_CreateRGBSurfaceWithFormat(
 		        SDL_SWSURFACE, canvas.w, canvas.h, 32, pixel_format);
 		if (!surface || !renderer) {
