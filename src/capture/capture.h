@@ -39,6 +39,7 @@ void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_
 void CAPTURE_AddFrame(const uint16_t width, const uint16_t height,
                       const uint8_t bits_per_pixel, const uint16_t pitch,
                       const uint8_t capture_flags, const float frames_per_second,
+                      const float one_per_pixel_aspect_ratio,
                       const uint8_t* image_data, const uint8_t* palette_data);
 
 void CAPTURE_AddMidiData(const bool sysex, const size_t len, const uint8_t* data);
