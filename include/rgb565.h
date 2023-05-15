@@ -23,6 +23,8 @@
 
 #include <cstdint>
 
+#include "rgb.h"
+
 class Rgb565 {
 public:
 	// Default constructor
@@ -62,24 +64,21 @@ public:
 	static constexpr uint8_t Red5To8(const uint16_t val)
 	{
 		const auto red5 = (val & r5_mask) >> r5_offset;
-		const auto red8 = (red5 * 255 + 15) / 31;
-		return static_cast<uint8_t>(red8);
+		return static_cast<uint8_t>(rgb5_to_8_lut(red5));
 	}
 
 	// Scoped conversion helper: RGB Green 6-bit to 8-bit
 	static constexpr uint8_t Green6To8(const uint16_t val)
 	{
-		const auto green5 = (val & g6_mask) >> g6_offset;
-		const auto green8 = (green5 * 255 + 31) / 63;
-		return static_cast<uint8_t>(green8);
+		const auto green6 = (val & g6_mask) >> g6_offset;
+		return static_cast<uint8_t>(rgb6_to_8_lut(green6));
 	}
 
 	// Scoped conversion helper: RGB Blue 5-bit to 8-bit
 	static constexpr uint8_t Blue5To8(const uint16_t val)
 	{
 		const auto blue5 = (val & b5_mask) >> b5_offset;
-		const auto blue8 = (blue5 * 255 + 15) / 31;
-		return static_cast<uint8_t>(blue8);
+		return static_cast<uint8_t>(rgb5_to_8_lut(blue5));
 	}
 
 	// Allow read-write to the underlying data because the class holds no
