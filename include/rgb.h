@@ -28,12 +28,16 @@
 
 constexpr uint8_t rgb6_to_8(const uint8_t c)
 {
-	return (c * 255 + 31) / 63;
+	// Yields identical values to `(c * 255 + 31) / 63` over the whole input
+	// range
+	return (c * 259 + 33) >> 6;
 }
 
 constexpr uint8_t rgb5_to_8(const uint8_t c)
 {
-	return (c * 255 + 15) / 31;
+	// Yields identical values to `(c * 255 + 15) / 31` over the whole input
+	// range
+	return (c * 527 + 23) >> 6;
 }
 
 constexpr auto num_5bit_values = 32; // 2^5
