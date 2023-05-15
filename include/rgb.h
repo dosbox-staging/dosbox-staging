@@ -26,6 +26,10 @@
 
 #include "support.h"
 
+//***************************************************************************
+// Conversion between 8-bit and 5/6-bit RGB values
+//***************************************************************************
+
 constexpr uint8_t rgb6_to_8(const uint8_t c)
 {
 	// Yields identical values to `(c * 255 + 31) / 63` over the whole input
@@ -50,8 +54,8 @@ constexpr uint8_t rgb8_to_5(const uint8_t c)
 	return (c * 249 + 1014) >> 11;
 }
 
-constexpr auto num_5bit_values = 32; // 2^5
-constexpr auto num_6bit_values = 64; // 2^6
+static constexpr auto num_5bit_values = 32; // 2^5
+static constexpr auto num_6bit_values = 64; // 2^6
 
 using rgb5_to_8_lut_t = std::array<uint8_t, num_5bit_values>;
 using rgb6_to_8_lut_t = std::array<uint8_t, num_6bit_values>;
@@ -88,4 +92,78 @@ inline uint8_t rgb6_to_8_lut(const uint8_t c)
 	return lut[c];
 }
 
+//***************************************************************************
+// 8-bit sRGB to float linear RGB conversion
+//***************************************************************************
+
+inline float srgb_to_linear(const uint8_t c)
+{
+	return (c <= 0.04045f) ? (c / 12.92f) : powf((c + 0.055f) / 1.055f, 2.4f);
+}
+
+inline float linear_to_srgb(float c)
+{
+	return (c <= 0.0031308f) ? (c * 12.92f)
+	                         : (1.055f * powf(c, 1.0f / 2.4f) - 0.055f);
+}
+
+constexpr auto num_8bit_values = 256; // 2^8
+
+using srgb8_to_lin_lut_t = std::array<float, num_8bit_values>;
+
+static constexpr srgb8_to_lin_lut_t generate_srgb8_to_lin_lut()
+{
+	srgb8_to_lin_lut_t lut = {};
+
+	for (uint16_t i = 0; i < lut.size(); ++i) {
+		const auto srgb = static_cast<float>(i) / (lut.size() - 1);
+
+		lut[i] = srgb_to_linear(srgb);
+	}
+	return lut;
+}
+
+inline uint8_t srgb8_to_linear_lut(const uint8_t c)
+{
+	static const auto lut = generate_srgb8_to_lin_lut();
+	return lut[c];
+}
+
+//***************************************************************************
+// Float linear RGB to 8-bit sRGB conversion
+//***************************************************************************
+
+static constexpr auto max_8bit_value        = 255;
+static constexpr auto lin_to_srgb8_lut_size = 16384;
+
+using lin_to_srgb8_lut_t = std::array<uint8_t, lin_to_srgb8_lut_size>;
+
+static constexpr uint16_t lin_to_srgb8_lut_key(float c)
+{
+	return static_cast<uint16_t>(round(c * (lin_to_srgb8_lut_size - 1)));
+}
+
+static constexpr lin_to_srgb8_lut_t generate_lin_to_srgb8_lut()
+{
+	lin_to_srgb8_lut_t lut = {};
+
+	for (auto i = 0; i < lin_to_srgb8_lut_size; ++i) {
+		const auto lin  = (1.0f / (lin_to_srgb8_lut_size - 1)) * i;
+		const auto key  = lin_to_srgb8_lut_key(lin);
+		const auto srgb = linear_to_srgb(lin) * max_8bit_value;
+
+		lut[key] = static_cast<uint8_t>(round(srgb));
+	}
+	return lut;
+}
+
+inline uint8_t linear_to_srgb8_lut(const float c)
+{
+	static const auto lut = generate_lin_to_srgb8_lut();
+
+	const auto key = lin_to_srgb8_lut_key(c);
+	return lut[key];
+}
+
 #endif
+
