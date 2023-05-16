@@ -32,6 +32,8 @@
 #include "string_utils.h"
 #include "../ints/int10.h"
 
+[[nodiscard]] static std::vector<std::string> get_completions(std::string_view command);
+
 namespace {
 class CommandPrompt {
 public:
@@ -72,330 +74,259 @@ void DOS_Shell::ShowPrompt(void) {
 	ResetLastWrittenChar('\n'); // prevents excessive newline if cmd prints nothing
 }
 
-void DOS_Shell::InputCommand(char * line) {
-	Bitu size=CMD_MAXLINE-2; //lastcharacter+0
-	uint8_t c;uint16_t n=1;
-	size_t str_len = 0;
-	size_t str_index = 0;
-	uint16_t len=0;
-	bool current_hist=false; // current command stored in history?
+void DOS_Shell::InputCommand(char* line)
+{
+	std::string command = ReadCommand();
+	history.emplace_back(command);
 
-	reset_str(line);
+	std::strncpy(line, command.c_str(), CMD_MAXLINE);
+	line[CMD_MAXLINE - 1] = '\0';
 
-	std::list<std::string>::iterator it_history = l_history.begin(), it_completion = l_completion.begin();
+	const auto* const dos_section = dynamic_cast<Section_prop*>(
+	        control->GetSection("dos"));
+	assert(dos_section != nullptr);
+	const std::string_view expand_shell_variable_pref = dos_section->Get_string(
+	        "expand_shell_variable");
+	if ((expand_shell_variable_pref == "auto" && dos.version.major >= 7) ||
+	    expand_shell_variable_pref == "true") {
+		ProcessCmdLineEnvVarStitution(line);
+	}
+}
+
+std::string DOS_Shell::ReadCommand()
+{
+	std::vector<std::string> history_clone = history;
+	history_clone.emplace_back("");
+	auto history_index = history_clone.size() - 1;
+
+	std::vector<std::string> completion = {};
+
+	auto completion_index = completion.size();
+
+	std::string command   = {};
+	auto cursor_position  = command.size();
+	auto completion_start = command.size();
+
+	uint8_t data        = 0;
+	uint16_t byte_count = 1;
 
 	CommandPrompt prompt;
 
-	while (size && !shutdown_requested) {
+	while (!shutdown_requested) {
+		assert(history_index < history_clone.size());
+		assert(completion.empty() || completion_index < completion.size());
+		assert(command.empty() || cursor_position <= command.size());
+		assert(command.empty() || completion_start <= command.size());
+
 		bool viewing_tab_completions = false;
-		dos.echo=false;
-		while(!DOS_ReadFile(input_handle,&c,&n)) {
-			uint16_t dummy;
+
+		while (!DOS_ReadFile(input_handle, &data, &byte_count)) {
+			uint16_t dummy = 1;
 			DOS_CloseFile(input_handle);
-			DOS_OpenFile("con",2,&dummy);
-			LOG(LOG_MISC,LOG_ERROR)("Reopening the input handle. This is a bug!");
+			DOS_OpenFile("con", 2, &dummy);
+			LOG(LOG_MISC, LOG_ERROR)
+			("Reopening the input handle. This is a bug!");
 		}
-		if (!n) {
-			size=0;			//Kill the while loop
-			continue;
+
+		if (byte_count == 0) {
+			break;
 		}
-		switch (c) {
-		case 0x00: /* Extended Keys */
-			{
-				DOS_ReadFile(input_handle,&c,&n);
-				switch (c) {
 
-				case 0x3d: /* F3 */
-					if (!l_history.size()) break;
-					it_history = l_history.begin();
-					if (it_history != l_history.end() && it_history->length() > str_len) {
-						const char *reader = &(it_history->c_str())[str_len];
-						while ((c = *reader++)) {
-							line[str_index ++] = c;
-						}
-						str_len = str_index = it_history->length();
-						size = CMD_MAXLINE - str_index - 2;
-						terminate_str_at(line, str_len);
-					}
+		constexpr decltype(data) ExtendedKey = 0x00;
+		constexpr decltype(data) Escape      = 0x1B;
+		switch (data) {
+		case ExtendedKey: {
+			DOS_ReadFile(input_handle, &data, &byte_count);
+
+			constexpr uint8_t ShiftPlusTab = 0x0F;
+			constexpr uint8_t F3           = 0x3D;
+			constexpr uint8_t Home         = 0x47;
+			constexpr uint8_t Up           = 0x48;
+			constexpr uint8_t Left         = 0x4B;
+			constexpr uint8_t Right        = 0x4D;
+			constexpr uint8_t End          = 0x4F;
+			constexpr uint8_t Down         = 0x50;
+			constexpr uint8_t Delete       = 0x53;
+			switch (data) {
+			case F3: {
+				if (history.empty()) {
 					break;
-
-				case 0x4B: /* Left */
-					if (str_index) {
-						str_index --;
-					}
-					break;
-
-				case 0x4D: /* Right */
-					if (str_index < str_len) {
-						str_index++;
-					}
-					break;
-
-				case 0x47: /* Home */
-					while (str_index) {
-						str_index--;
-					}
-					break;
-
-				case 0x4F: /* End */
-					while (str_index < str_len) {
-						str_index++;
-					}
-					break;
-
-				case 0x48: /* Up */
-					if (l_history.empty() || it_history == l_history.end()) break;
-
-					// store current command in history if we are at beginning
-					if (it_history == l_history.begin() && !current_hist) {
-						current_hist=true;
-						l_history.push_front(line);
-					}
-
-					strcpy(line, it_history->c_str());
-					len = (uint16_t)it_history->length();
-					str_len = str_index = len;
-					size = CMD_MAXLINE - str_index - 2;
-					++it_history;
-					break;
-
-				case 0x50: /* Down */
-					if (l_history.empty() || it_history == l_history.begin()) break;
-
-					// not very nice but works ..
-					--it_history;
-					if (it_history == l_history.begin()) {
-						// no previous commands in history
-						++it_history;
-
-						// remove current command from history
-						if (current_hist) {
-							current_hist = false;
-							l_history.pop_front();
-						}
-						break;
-					} else {
-						--it_history;
-					}
-
-					strcpy(line, it_history->c_str());
-					len = (uint16_t)it_history->length();
-					str_len = str_index = len;
-					size = CMD_MAXLINE - str_index - 2;
-					++it_history;
-
-					break;
-				case 0x53: /* Delete */
-					{
-						if(str_index>=str_len) break;
-						for (auto i = str_index; i < str_len-1; i++) {
-							line[i]=line[i+1];
-						}
-						terminate_str_at(line, --str_len);
-						size++;
-					}
-					break;
-				case 15: /* Shift+Tab */
-					viewing_tab_completions = true;
-					if (l_completion.size()) {
-						if (it_completion == l_completion.begin()) {
-							it_completion = l_completion.end ();
-						}
-						--it_completion;
-		
-						if (it_completion->length()) {
-							strcpy(&line[completion_index], it_completion->c_str());
-							len = (uint16_t)it_completion->length();
-							str_len = str_index = completion_index + len;
-							size = CMD_MAXLINE - str_index - 2;
-						}
-					}
-				default: break;
-				}
-			};
-			break;
-		case 0x08: /* Backspace */
-			if (str_index) {
-				size_t str_remain = str_len - str_index;
-				size++;
-				if (str_remain) {
-					memmove(&line[str_index-1],&line[str_index],str_remain);
-					terminate_str_at(line, --str_len);
-					str_index --;
-				} else {
-					terminate_str_at(line, --str_index);
-					str_len--;
-				}
-			}
-			break;
-		case 0x0a: /* New Line not handled */
-			/* Don't care */
-			break;
-		case 0x0d: /* Return */
-			prompt.Newline();
-			size=0;			//Kill the while loop
-			break;
-		case'\t':
-			{
-				viewing_tab_completions = true;
-				if (l_completion.size()) {
-					++it_completion;
-					if (it_completion == l_completion.end())
-						it_completion = l_completion.begin();
-				} else {
-					// build new completion list
-					// Lines starting with CD will only get
-					// directories in the list
-					bool dir_only = (strncasecmp(line,"CD ",3)==0);
-
-					// get completion mask
-					char *p_completion_start = strrchr(line, ' ');
-
-					if (p_completion_start) {
-						p_completion_start ++;
-						completion_index = (uint16_t)(str_len - strlen(p_completion_start));
-					} else {
-						p_completion_start = line;
-						completion_index = 0;
-					}
-
-					char *path;
-					if ((path = strrchr(line+completion_index,'\\'))) completion_index = (uint16_t)(path-line+1);
-					if ((path = strrchr(line+completion_index,'/'))) completion_index = (uint16_t)(path-line+1);
-
-					// build the completion list
-					char mask[DOS_PATHLENGTH] = {0};
-					if (p_completion_start) {
-						if (strlen(p_completion_start) + 3 >= DOS_PATHLENGTH) {
-							//Beep;
-							break;
-						}
-						safe_strcpy(mask, p_completion_start);
-						char* dot_pos=strrchr(mask,'.');
-						char* bs_pos=strrchr(mask,'\\');
-						char* fs_pos=strrchr(mask,'/');
-						char* cl_pos=strrchr(mask,':');
-						// not perfect when line already contains wildcards, but works
-						if ((dot_pos-bs_pos>0) && (dot_pos-fs_pos>0) && (dot_pos-cl_pos>0))
-							strncat(mask, "*",DOS_PATHLENGTH - 1);
-						else strncat(mask, "*.*",DOS_PATHLENGTH - 1);
-					} else {
-					        safe_strcpy(mask, "*.*");
-				        }
-
-					RealPt save_dta=dos.dta();
-					dos.dta(dos.tables.tempdta);
-
-					bool res = DOS_FindFirst(mask, 0xffff & ~DOS_ATTR_VOLUME);
-					if (!res) {
-						dos.dta(save_dta);
-						break;	// TODO: beep
-					}
-
-					DOS_DTA dta(dos.dta());
-					char name[DOS_NAMELENGTH_ASCII];uint32_t sz;uint16_t date;uint16_t time;uint8_t att;
-
-					std::list<std::string> executable;
-					while (res) {
-						dta.GetResult(name,sz,date,time,att);
-						// add result to completion list
-
-						if (strcmp(name, ".") && strcmp(name, "..")) {
-							if (dir_only) { //Handle the dir only case different (line starts with cd)
-								if(att & DOS_ATTR_DIRECTORY) l_completion.push_back(name);
-							} else {
-							        if (is_executable_filename(name))
-								        // Prepend executables to a separate list
-								        // and place that list ahead of normal files.
-									executable.push_front(name);
-								else
-									l_completion.push_back(name);
-							}
-						}
-						res=DOS_FindNext();
-					}
-					/* Add executable list to front of completion list. */
-					std::copy(executable.begin(),executable.end(),std::front_inserter(l_completion));
-					it_completion = l_completion.begin();
-					dos.dta(save_dta);
 				}
 
-				if (l_completion.size() && it_completion->length()) {
-					strcpy(&line[completion_index], it_completion->c_str());
-					len = (uint16_t)it_completion->length();
-					str_len = str_index = completion_index + len;
-					size = CMD_MAXLINE - str_index - 2;
+				std::string_view last_command = history.back();
+				if (last_command.size() <= command.size()) {
+					break;
 				}
-			}
-			break;
-		case 0x1b: /* Esc */
-			//write a backslash and return to the next line
-			line[str_index++]='\\';
-			prompt.Update(line, str_index);
-			prompt.Newline();
-			reset_str(line);
-			this->InputCommand(line);	//Get the NEW line.
-			size = 0;       // stop the next loop
-			str_len = 0;    // prevent multiple adds of the same line
-			break;
-		default:
-			if (CommandPrompt::MaxCommandSize() < str_index) {
+
+				last_command = last_command.substr(command.size());
+				command += last_command;
+				cursor_position = command.size();
 				break;
 			}
-			if(str_index < str_len && true) { //mem_readb(BIOS_KEYBOARD_FLAGS1)&0x80) dev_con.h ?
-				for (auto i = str_len; i > str_index; i--) {
-					line[i]=line[i-1]; //move internal buffer
-				}
-				// new end (as the internal buffer moved one
-				// place to the right
-				terminate_str_at(line, ++str_len);
-				size--;
-			};
 
-			line[str_index]=c;
-			str_index ++;
-			if (str_index > str_len){ 
-				terminate_str_at(line, str_index);
-				str_len++;
-				size--;
+			case Left:
+				if (cursor_position > 0) {
+					--cursor_position;
+				}
+				break;
+
+			case Right:
+				if (cursor_position < command.size()) {
+					++cursor_position;
+				}
+				break;
+
+			case Up:
+				if (history_index > 0) {
+					history_clone[history_index] = command;
+					--history_index;
+					command = history_clone[history_index];
+					cursor_position = command.size();
+				}
+				break;
+
+			case Down:
+				if (history_index + 1 < history_clone.size()) {
+					history_clone[history_index] = command;
+					++history_index;
+					command = history_clone[history_index];
+					cursor_position = command.size();
+				}
+				break;
+
+			case Home: cursor_position = 0; break;
+
+			case End: cursor_position = command.size(); break;
+
+			case Delete: command.erase(cursor_position, 1); break;
+
+			case ShiftPlusTab:
+				if (completion.empty()) {
+					break;
+				}
+				if (completion_index == 0) {
+					completion_index = completion.size();
+				}
+				--completion_index;
+				command.erase(completion_start);
+				command += completion[completion_index];
+				cursor_position         = command.size();
+				viewing_tab_completions = true;
+				break;
+
+			default: break;
 			}
 			break;
 		}
 
-		if (size == 0) {
+		case '\t': {
+			if (!completion.empty()) {
+				++completion_index;
+				if (completion_index == completion.size()) {
+					completion_index = 0;
+				}
+			} else {
+				completion = get_completions(command);
+				if (completion.empty()) {
+					break;
+				}
+				completion_index = 0;
+
+				const auto delimiter = command.find_last_of(" \\");
+				if (delimiter == std::string::npos) {
+					completion_start = 0;
+				} else {
+					completion_start = delimiter + 1;
+				}
+			}
+
+			command.erase(completion_start);
+			command += completion[completion_index];
+			cursor_position         = command.size();
+			viewing_tab_completions = true;
 			break;
 		}
 
-		prompt.Update(line, str_index);
-		
+		case '\b':
+			if (cursor_position > 0) {
+				command.erase(cursor_position - 1, 1);
+				--cursor_position;
+			}
+			break;
+
+		case '\n': break;
+		case '\r': prompt.Newline(); return command;
+
+		case Escape:
+			command += "\\";
+			prompt.Update(command, cursor_position);
+			prompt.Newline();
+			command.clear();
+			cursor_position = 0;
+			break;
+
+		default:
+			if (CommandPrompt::MaxCommandSize() < command.size()) {
+				break;
+			}
+			command.insert(cursor_position, 1, static_cast<char>(data));
+			++cursor_position;
+			break;
+		}
+
+		prompt.Update(command, cursor_position);
+
 		if (!viewing_tab_completions) {
-			l_completion.clear();
+			completion.clear();
 		}
 	}
 
-	if (!str_len) return;
-	str_len++;
+	return "";
+}
 
-	// remove current command from history if it's there
-	if (current_hist) {
-		// current_hist=false;
-		l_history.pop_front();
+static std::vector<std::string> get_completions(const std::string_view command)
+{
+	const std::vector<std::string> args = split(command);
+
+	const bool dir_only = (!args.empty() && iequals(args[0], "CD") &&
+	                       (args.size() > 1 || command.back() == ' '));
+
+	std::string search = {};
+	if (!args.empty() && command.back() != ' ') {
+		search += args.back();
+	}
+	search += "*.*";
+
+	const auto save_dta = dos.dta();
+	dos.dta(dos.tables.tempdta);
+	const auto dta = DOS_DTA(dos.dta());
+
+	bool res = DOS_FindFirst(search.c_str(), ~DOS_ATTR_VOLUME);
+
+	std::vector<std::string> files           = {};
+	std::vector<std::string> non_executables = {};
+	while (res) {
+		DOS_DTA::Result result = {};
+		dta.GetResult(result);
+
+		if (!result.IsDummyDirectory() &&
+		    (!dir_only || result.IsDirectory())) {
+			if (is_executable_filename(result.name)) {
+				files.emplace_back(std::move(result.name));
+			} else {
+				non_executables.emplace_back(std::move(result.name));
+			}
+		}
+
+		res = DOS_FindNext();
 	}
 
-	// add command line to history
-	l_history.push_front(line); it_history = l_history.begin();
-	if (l_completion.size()) l_completion.clear();
+	dos.dta(save_dta);
 
-	/* DOS %variable% substitution */
-	const auto dos_section = static_cast<Section_prop *>(control->GetSection("dos"));
-	assert(dos_section);
-	std::string_view expand_shell_variable_pref =
-					dos_section->Get_string("expand_shell_variable");
-	if (expand_shell_variable_pref == "true") {
-		ProcessCmdLineEnvVarStitution(line);
-	} else if (expand_shell_variable_pref == "auto" && dos.version.major >= 7) {
-		ProcessCmdLineEnvVarStitution(line);
-	}
+	files.insert(files.end(),
+	             std::make_move_iterator(non_executables.begin()),
+	             std::make_move_iterator(non_executables.end()));
+	return files;
 }
 
 /* Note: Buffer pointed to by "line" must be at least CMD_MAXLINE+1 bytes long! */

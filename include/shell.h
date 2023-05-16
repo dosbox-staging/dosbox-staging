@@ -82,13 +82,11 @@ private:
 	void PrintHelpForCommands(MoreOutputStrings &output, HELP_Filter req_filter);
 	void AddShellCmdsToHelpList();
 	bool WriteHelp(const std::string &command, char* args);
+	[[nodiscard]] std::string ReadCommand();
 
 	friend class AutoexecEditor;
-	std::list<std::string> l_history{};
-	std::list<std::string> l_completion{};
+	std::vector<std::string> history{};
 
-	char *completion_start = nullptr;
-	uint16_t completion_index = 0;
 	bool exit_cmd_called = false;
 	static inline bool help_list_populated = false;
 
