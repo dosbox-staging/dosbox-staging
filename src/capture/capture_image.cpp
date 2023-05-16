@@ -33,6 +33,11 @@
 #include <png.h>
 #include <zlib.h>
 
+static inline bool is_paletted(const uint8_t bits_per_pixel)
+{
+	return (bits_per_pixel == 8);
+}
+
 static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
                            const uint16_t width, const uint16_t height,
                            const uint8_t bits_per_pixel, const uint8_t* palette_data)
@@ -46,16 +51,14 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 	png_set_compression_method(png_ptr, 8);
 	png_set_compression_buffer_size(png_ptr, 8192);
 
-	constexpr auto PngBitDepth = 8;
+	constexpr auto png_bit_depth = 8;
 
-	const auto is_paletted = (bits_per_pixel == 8);
-
-	if (is_paletted) {
+	if (is_paletted(bits_per_pixel)) {
 		png_set_IHDR(png_ptr,
 		             info_ptr,
 		             width,
 		             height,
-		             PngBitDepth,
+		             png_bit_depth,
 		             PNG_COLOR_TYPE_PALETTE,
 		             PNG_INTERLACE_NONE,
 		             PNG_COMPRESSION_TYPE_DEFAULT,
@@ -76,7 +79,7 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 		             info_ptr,
 		             width,
 		             height,
-		             PngBitDepth,
+		             png_bit_depth,
 		             PNG_COLOR_TYPE_RGB,
 		             PNG_INTERLACE_NONE,
 		             PNG_COMPRESSION_TYPE_DEFAULT,
@@ -102,64 +105,81 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 	png_write_info(png_ptr, info_ptr);
 }
 
+static inline Rgb888 decode_rgb_pixel(const uint8_t bits_per_pixel, const uint8_t* data)
+{
+	Rgb888 pixel = {};
+
+	switch (bits_per_pixel) {
+	case 15: { // RGB555
+		const auto p = host_to_le(*reinterpret_cast<const uint16_t*>(data));
+		pixel = Rgb555(p).ToRgb888();
+	} break;
+
+	case 16: { // RGB565
+		const auto p = host_to_le(*reinterpret_cast<const uint16_t*>(data));
+		pixel = Rgb565(p).ToRgb888();
+	} break;
+
+	case 24:   // RGB888
+	case 32: { // XRGB8888
+		const auto b = *data;
+		const auto g = *(data + 1);
+		const auto r = *(data + 2);
+
+		pixel = {r, g, b};
+	} break;
+	}
+	return pixel;
+}
+
+inline static const uint8_t* next_pixel(const uint8_t bits_per_pixel,
+                                        const uint8_t* curr)
+{
+	auto next = curr;
+	switch (bits_per_pixel) {
+	case 8: // Indexed8
+		++next;
+	case 15: // RGB555
+	case 16: // RGB565
+		next += 2;
+		break;
+	case 24: // RGB888
+		next += 3;
+		break;
+	case 32: // XRGB8888
+		next += 4;
+		break;
+	}
+	return next;
+}
+
 static void decode_row_to_linear_rgb(const uint16_t width,
                                      const uint8_t bits_per_pixel,
                                      const uint8_t* image_data,
-                                     const uint8_t* palette_data, float* out)
+                                     const uint8_t* palette_data,
+                                     std::vector<float>::iterator out)
 {
-	for (auto x = 0; x < width; ++x) {
-		Rgb888 pixel = {};
+	const uint8_t* in = image_data;
+	Rgb888 pixel      = {};
 
-		switch (bits_per_pixel) {
-		// Indexed8
-		case 8: {
-			const auto pal_index = image_data[x];
+	for (auto x = 0; x < width; ++x) {
+		if (is_paletted(bits_per_pixel)) {
+			const auto pal_index = *in;
 
 			const auto r = palette_data[pal_index * 4 + 0];
 			const auto g = palette_data[pal_index * 4 + 1];
 			const auto b = palette_data[pal_index * 4 + 2];
 
 			pixel = {r, g, b};
-		} break;
-
-		// RGB555
-		case 15: {
-			const auto p = host_to_le(
-			        reinterpret_cast<const uint16_t*>(image_data)[x]);
-
-			pixel = Rgb555(p).ToRgb888();
-		} break;
-
-		// RGB565
-		case 16: {
-			const auto p = host_to_le(
-			        reinterpret_cast<const uint16_t*>(image_data)[x]);
-
-			pixel = Rgb565(p).ToRgb888();
-		} break;
-
-		// RGB888
-		case 24: {
-			const auto b = image_data[x * 3 + 0];
-			const auto g = image_data[x * 3 + 1];
-			const auto r = image_data[x * 3 + 2];
-
-			pixel = {r, g, b};
-		} break;
-
-		// XRGB8888
-		case 32: {
-			const auto b = image_data[x * 4 + 0];
-			const auto g = image_data[x * 4 + 1];
-			const auto r = image_data[x * 4 + 2];
-
-			pixel = {r, g, b};
-		} break;
+		} else {
+			pixel = decode_rgb_pixel(bits_per_pixel, in);
 		}
 
 		*out++ = srgb8_to_linear_lut(pixel.red);
 		*out++ = srgb8_to_linear_lut(pixel.green);
 		*out++ = srgb8_to_linear_lut(pixel.blue);
+
+		in = next_pixel(bits_per_pixel, in);
 	}
 }
 
@@ -169,9 +189,7 @@ static void write_png_image_data_paletted(const png_structp png_ptr,
                                           const uint8_t* image_data)
 {
 	static std::vector<uint8_t> row_buffer = {};
-
-	constexpr auto MaxBytesPerPixel = 4;
-	row_buffer.resize(width * MaxBytesPerPixel);
+	row_buffer.resize(width);
 
 	auto src_row = image_data;
 
@@ -198,56 +216,23 @@ static void write_png_image_data_rgb888(const png_structp png_ptr,
 	assert(bits_per_pixel != 8);
 
 	static std::vector<uint8_t> row_buffer = {};
-
-	constexpr auto ComponentsPerPixel = 3;
+	constexpr auto ComponentsPerPixel      = 3;
 	row_buffer.resize(width * ComponentsPerPixel);
 
 	auto src_row = image_data;
-	Rgb888 pixel = {};
 
 	for (auto y = 0; y < height; ++y) {
 		auto out = row_buffer.begin();
+		auto in  = src_row;
 
 		for (auto x = 0; x < width; ++x) {
-			switch (bits_per_pixel) {
-			// RGB555
-			case 15: {
-				const auto p = host_to_le(
-				        reinterpret_cast<const uint16_t*>(src_row)[x]);
-
-				pixel = Rgb555(p).ToRgb888();
-			} break;
-
-			// RGB565
-			case 16: {
-				const auto p = host_to_le(
-				        reinterpret_cast<const uint16_t*>(src_row)[x]);
-
-				pixel = Rgb565(p).ToRgb888();
-			} break;
-
-			// RGB888
-			case 24: {
-				const auto b = src_row[x * 3 + 0];
-				const auto g = src_row[x * 3 + 1];
-				const auto r = src_row[x * 3 + 2];
-
-				pixel = {r, g, b};
-			} break;
-
-			// XRGB8888
-			case 32: {
-				const auto b = src_row[x * 4 + 0];
-				const auto g = src_row[x * 4 + 1];
-				const auto r = src_row[x * 4 + 2];
-
-				pixel = {r, g, b};
-			} break;
-			}
+			const auto pixel = decode_rgb_pixel(bits_per_pixel, in);
 
 			*out++ = pixel.red;
 			*out++ = pixel.green;
 			*out++ = pixel.blue;
+
+			in = next_pixel(bits_per_pixel, in);
 		}
 
 		png_write_row(png_ptr, row_buffer.data());
@@ -331,8 +316,7 @@ void capture_image(const uint16_t width, const uint16_t height,
 
 	write_png_info(png_ptr, info_ptr, width, height, bits_per_pixel, palette_data);
 
-	const auto is_paletted = (bits_per_pixel == 8);
-	if (is_paletted) {
+	if (is_paletted(bits_per_pixel)) {
 		write_png_image_data_paletted(png_ptr, width, height, pitch, image_data);
 	} else {
 		write_png_image_data_rgb888(
