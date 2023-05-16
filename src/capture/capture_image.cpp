@@ -48,7 +48,9 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 
 	constexpr auto PngBitDepth = 8;
 
-	if (bits_per_pixel == 8) {
+	const auto is_paletted = (bits_per_pixel == 8);
+
+	if (is_paletted) {
 		png_set_IHDR(png_ptr,
 		             info_ptr,
 		             width,
@@ -161,9 +163,10 @@ static void decode_row_to_linear_rgb(const uint16_t width,
 	}
 }
 
-static void write_png_image_data(const png_structp png_ptr, const uint16_t width,
-                                 const uint16_t height, const uint8_t bits_per_pixel,
-                                 const uint16_t pitch, const uint8_t* image_data)
+static void write_png_image_data_paletted(const png_structp png_ptr,
+                                          const uint16_t width,
+                                          const uint16_t height, const uint16_t pitch,
+                                          const uint8_t* image_data)
 {
 	static std::vector<uint8_t> row_buffer = {};
 
@@ -176,24 +179,43 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 		auto out = row_buffer.begin();
 
 		for (auto x = 0; x < width; ++x) {
+			const auto pixel = src_row[x];
+
+			*out++ = pixel;
+		}
+
+		png_write_row(png_ptr, row_buffer.data());
+		src_row += pitch;
+	}
+}
+
+static void write_png_image_data_rgb888(const png_structp png_ptr,
+                                        const uint16_t width, const uint16_t height,
+                                        const uint8_t bits_per_pixel,
+                                        const uint16_t pitch,
+                                        const uint8_t* image_data)
+{
+	assert(bits_per_pixel != 8);
+
+	static std::vector<uint8_t> row_buffer = {};
+
+	constexpr auto ComponentsPerPixel = 3;
+	row_buffer.resize(width * ComponentsPerPixel);
+
+	auto src_row = image_data;
+	Rgb888 pixel = {};
+
+	for (auto y = 0; y < height; ++y) {
+		auto out = row_buffer.begin();
+
+		for (auto x = 0; x < width; ++x) {
 			switch (bits_per_pixel) {
-			// Indexed8
-			case 8: {
-				const auto pixel = src_row[x];
-
-				*out++ = pixel;
-			} break;
-
 			// RGB555
 			case 15: {
 				const auto p = host_to_le(
 				        reinterpret_cast<const uint16_t*>(src_row)[x]);
 
-				const auto pixel = Rgb555(p).ToRgb888();
-
-				*out++ = pixel.red;
-				*out++ = pixel.green;
-				*out++ = pixel.blue;
+				pixel = Rgb555(p).ToRgb888();
 			} break;
 
 			// RGB565
@@ -201,11 +223,7 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 				const auto p = host_to_le(
 				        reinterpret_cast<const uint16_t*>(src_row)[x]);
 
-				const auto pixel = Rgb565(p).ToRgb888();
-
-				*out++ = pixel.red;
-				*out++ = pixel.green;
-				*out++ = pixel.blue;
+				pixel = Rgb565(p).ToRgb888();
 			} break;
 
 			// RGB888
@@ -214,9 +232,7 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 				const auto g = src_row[x * 3 + 1];
 				const auto r = src_row[x * 3 + 2];
 
-				*out++ = r;
-				*out++ = g;
-				*out++ = b;
+				pixel = {r, g, b};
 			} break;
 
 			// XRGB8888
@@ -225,11 +241,13 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 				const auto g = src_row[x * 4 + 1];
 				const auto r = src_row[x * 4 + 2];
 
-				*out++ = r;
-				*out++ = g;
-				*out++ = b;
+				pixel = {r, g, b};
 			} break;
 			}
+
+			*out++ = pixel.red;
+			*out++ = pixel.green;
+			*out++ = pixel.blue;
 		}
 
 		png_write_row(png_ptr, row_buffer.data());
@@ -313,7 +331,13 @@ void capture_image(const uint16_t width, const uint16_t height,
 
 	write_png_info(png_ptr, info_ptr, width, height, bits_per_pixel, palette_data);
 
-	write_png_image_data(png_ptr, width, height, bits_per_pixel, pitch, image_data);
+	const auto is_paletted = (bits_per_pixel == 8);
+	if (is_paletted) {
+		write_png_image_data_paletted(png_ptr, width, height, pitch, image_data);
+	} else {
+		write_png_image_data_rgb888(
+		        png_ptr, width, height, bits_per_pixel, pitch, image_data);
+	}
 
 	png_write_end(png_ptr, nullptr);
 	png_destroy_write_struct(&png_ptr, &info_ptr);
