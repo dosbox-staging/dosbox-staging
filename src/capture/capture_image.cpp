@@ -183,13 +183,13 @@ static void decode_row_to_linear_rgb(const uint16_t width,
 	}
 }
 
-static void write_png_image_data_paletted(const png_structp png_ptr,
-                                          const uint16_t width,
-                                          const uint16_t height, const uint16_t pitch,
-                                          const uint8_t* image_data)
+static void write_png_image_data_paletted(
+        const png_structp png_ptr, const uint16_t width, const uint16_t height,
+        const uint16_t pitch, const uint8_t* image_data,
+        const uint8_t horiz_scale, const uint8_t vert_scale)
 {
 	static std::vector<uint8_t> row_buffer = {};
-	row_buffer.resize(width);
+	row_buffer.resize(width * horiz_scale);
 
 	auto src_row = image_data;
 
@@ -199,10 +199,14 @@ static void write_png_image_data_paletted(const png_structp png_ptr,
 		for (auto x = 0; x < width; ++x) {
 			const auto pixel = src_row[x];
 
-			*out++ = pixel;
+			for (auto i = 0; i < horiz_scale; ++i) {
+				*out++ = pixel;
+			}
 		}
 
-		png_write_row(png_ptr, row_buffer.data());
+		for (auto i = 0; i < vert_scale; ++i) {
+			png_write_row(png_ptr, row_buffer.data());
+		}
 		src_row += pitch;
 	}
 }
@@ -211,13 +215,15 @@ static void write_png_image_data_rgb888(const png_structp png_ptr,
                                         const uint16_t width, const uint16_t height,
                                         const uint8_t bits_per_pixel,
                                         const uint16_t pitch,
-                                        const uint8_t* image_data)
+                                        const uint8_t* image_data,
+                                        const uint8_t horiz_scale,
+                                        const uint8_t vert_scale)
 {
 	assert(bits_per_pixel != 8);
 
 	static std::vector<uint8_t> row_buffer = {};
 	constexpr auto ComponentsPerPixel      = 3;
-	row_buffer.resize(width * ComponentsPerPixel);
+	row_buffer.resize(width * ComponentsPerPixel * horiz_scale);
 
 	auto src_row = image_data;
 
@@ -228,14 +234,18 @@ static void write_png_image_data_rgb888(const png_structp png_ptr,
 		for (auto x = 0; x < width; ++x) {
 			const auto pixel = decode_rgb_pixel(bits_per_pixel, in);
 
-			*out++ = pixel.red;
-			*out++ = pixel.green;
-			*out++ = pixel.blue;
+			for (auto i = 0; i < horiz_scale; ++i) {
+				*out++ = pixel.red;
+				*out++ = pixel.green;
+				*out++ = pixel.blue;
+			}
 
 			in = next_pixel(bits_per_pixel, in);
 		}
 
-		png_write_row(png_ptr, row_buffer.data());
+		for (auto i = 0; i < vert_scale; ++i) {
+			png_write_row(png_ptr, row_buffer.data());
+		}
 		src_row += pitch;
 	}
 }
@@ -257,14 +267,14 @@ void capture_image(const uint16_t width, const uint16_t height,
 	const bool is_double_width  = (capture_flags & CaptureFlagDoubleWidth);
 	const bool is_double_height = (capture_flags & CaptureFlagDoubleHeight);
 
-	const auto vert_scale  = calc_vertical_scale_factor(height);
-	const auto horiz_scale = vert_scale / one_per_pixel_aspect_ratio;
+	const auto _vert_scale  = calc_vertical_scale_factor(height);
+	const auto _horiz_scale = _vert_scale / one_per_pixel_aspect_ratio;
 
-	const auto scaled_height = vert_scale *
+	const auto scaled_height = _vert_scale *
 	                           (is_double_height ? height * 2 : height);
 
 	const auto scaled_width = static_cast<uint16_t>(
-	        (is_double_width ? width * 2 : width) * horiz_scale);
+	        (is_double_width ? width * 2 : width) * _horiz_scale);
 
 	LOG_MSG("CAPTURE: Capturing image\n"
 	        "    width:         %8d\n"
@@ -288,8 +298,8 @@ void capture_image(const uint16_t width, const uint16_t height,
 	        one_per_pixel_aspect_ratio,
 	        scaled_width,
 	        scaled_height,
-	        horiz_scale,
-	        vert_scale);
+	        _horiz_scale,
+	        _vert_scale);
 
 	FILE* fp = CAPTURE_CreateFile("raw image", ".png");
 	if (!fp) {
@@ -314,13 +324,31 @@ void capture_image(const uint16_t width, const uint16_t height,
 
 	png_init_io(png_ptr, fp);
 
-	write_png_info(png_ptr, info_ptr, width, height, bits_per_pixel, palette_data);
+	const auto horiz_scale = is_double_width ? 2 : 1;
+	const auto vert_scale  = is_double_height ? 2 : 1;
+
+	const auto out_image_width  = width * horiz_scale;
+	const auto out_image_height = height * vert_scale;
+
+	write_png_info(png_ptr,
+	               info_ptr,
+	               out_image_width,
+	               out_image_height,
+	               bits_per_pixel,
+	               palette_data);
 
 	if (is_paletted(bits_per_pixel)) {
-		write_png_image_data_paletted(png_ptr, width, height, pitch, image_data);
+		write_png_image_data_paletted(
+		        png_ptr, width, height, pitch, image_data, horiz_scale, vert_scale);
 	} else {
-		write_png_image_data_rgb888(
-		        png_ptr, width, height, bits_per_pixel, pitch, image_data);
+		write_png_image_data_rgb888(png_ptr,
+		                            width,
+		                            height,
+		                            bits_per_pixel,
+		                            pitch,
+		                            image_data,
+		                            horiz_scale,
+		                            vert_scale);
 	}
 
 	png_write_end(png_ptr, nullptr);
