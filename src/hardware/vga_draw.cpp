@@ -1624,11 +1624,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		break;
 	}
 
-	double aspect_ratio;
-	if (machine == MCH_EGA)
-		aspect_ratio = (CurMode->swidth * 3.0) / (CurMode->sheight * 4.0);
-	else
-		aspect_ratio = pheight / pwidth;
+	double one_per_pixel_aspect;
+	if (machine == MCH_EGA) {
+		one_per_pixel_aspect = (CurMode->swidth * 3.0) /
+		                       (CurMode->sheight * 4.0);
+	} else {
+		one_per_pixel_aspect = pheight / pwidth;
+	}
 
 	vga.draw.delay.parts = vga.draw.delay.vdend / static_cast<double>(vga.draw.parts_total);
 	vga.draw.resizing = false;
@@ -1712,17 +1714,17 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// fall-through
 	case M_LIN24:
 	case M_LIN32:
-		width<<=3;
+		width <<= 3;
 		if (vga.crtc.mode_control & 0x8) {
- 			doublewidth = true;
-			maybe_aspect_correct_tall_modes(aspect_ratio);
+			doublewidth = true;
+			maybe_aspect_correct_tall_modes(one_per_pixel_aspect);
 			if (vga.mode == M_LIN32) {
 				// Modes 10f/190/191/192
 				switch (CurMode->mode) {
-				case 0x10f: aspect_ratio *= 2.0; break;
-				case 0x190: aspect_ratio *= 2.0; break;
-				case 0x191: aspect_ratio *= 2.0; break;
-				case 0x192: aspect_ratio *= 2.0; break;
+				case 0x10f: one_per_pixel_aspect *= 2.0; break;
+				case 0x190: one_per_pixel_aspect *= 2.0; break;
+				case 0x191: one_per_pixel_aspect *= 2.0; break;
+				case 0x192: one_per_pixel_aspect *= 2.0; break;
 				};
 			}
 		}
@@ -1734,11 +1736,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// 15/16 bpp modes double the horizontal values
 		width<<=2;
 		// tall VESA modes
-		maybe_aspect_correct_tall_modes(aspect_ratio);
-		if ((vga.crtc.mode_control & 0x8))
+		maybe_aspect_correct_tall_modes(one_per_pixel_aspect);
+		if ((vga.crtc.mode_control & 0x8)) {
 			doublewidth = true;
-		else
-			aspect_ratio /= 2.0;
+		} else {
+			one_per_pixel_aspect /= 2.0;
+		}
 		/* Use HW mouse cursor drawer if enabled */
 		VGA_ActivateHardwareCursor();
 		break;
@@ -1789,14 +1792,15 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 					const auto rendered_mode_height = render.aspect ? 480 : (CurMode->sheight * 2);
 					const auto w_scaler = static_cast<double>( width) / CurMode->swidth;
 					const auto h_scaler = rendered_mode_height / static_cast<double>(height);
-					aspect_ratio *= w_scaler * h_scaler / scan_line_divisor;
+					one_per_pixel_aspect *= w_scaler * h_scaler /
+					                        scan_line_divisor;
 				}
 				break;
 
 			case ega_640x200:
 				doublewidth  = wants_single_scanning;
 				doubleheight = wants_single_scanning;
-				aspect_ratio *= wants_single_scanning ? 2 : 1;
+				one_per_pixel_aspect *= wants_single_scanning ? 2 : 1;
 				break;
 
 			default: break;
@@ -1804,23 +1808,23 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 		break;
 	case M_CGA16:
-		aspect_ratio = 1.2;
-		doubleheight = true;
-		vga.draw.blocks = width * 2;
+		one_per_pixel_aspect = 1.2;
+		doubleheight         = true;
+		vga.draw.blocks      = width * 2;
 		width <<= 4;
 		VGA_DrawLine = VGA_Draw_CGA16_Line;
 		break;
 	case M_CGA2_COMPOSITE:
-		aspect_ratio = 1.2;
-		doubleheight=true;
-		vga.draw.blocks=width*2;
-		width<<=4;
+		one_per_pixel_aspect = 1.2;
+		doubleheight         = true;
+		vga.draw.blocks      = width * 2;
+		width <<= 4;
 		VGA_DrawLine = VGA_Draw_CGA2_Composite_Line;
 		break;
 	case M_CGA4_COMPOSITE:
-		aspect_ratio = 1.2;
-		doubleheight = true;
-		vga.draw.blocks = width * 2;
+		one_per_pixel_aspect = 1.2;
+		doubleheight         = true;
+		vga.draw.blocks      = width * 2;
 		width <<= 4;
 		VGA_DrawLine = VGA_Draw_CGA4_Composite_Line;
 		break;
@@ -1828,7 +1832,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		if (IS_VGA_ARCH) {
 			if (vga.draw.vga_sub_350_line_handling ==
 			    VgaSub350LineHandling::DoubleScan) {
-				aspect_ratio /= 2;
+				one_per_pixel_aspect /= 2;
 				// TODO (CGA4_DOUBLE_SCAN_WORKAROUND):
 				//   Despite correctly line-doubling CGA
 				//   sub-350 line modes when VGA machines are
@@ -1848,14 +1852,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		break;
 	case M_CGA2:
 		if (IS_VGA_ARCH && vga.draw.vga_sub_350_line_handling !=
-		                           VgaSub350LineHandling::DoubleScan) {
+			                   VgaSub350LineHandling::DoubleScan) {
 			doubleheight = true;
 			doublewidth  = true;
-			aspect_ratio *= 2.0;
+			one_per_pixel_aspect *= 2.0;
 		}
-		vga.draw.blocks=2*width;
-		width<<=3;
-		VGA_DrawLine=VGA_Draw_1BPP_Line;
+		vga.draw.blocks = 2 * width;
+		width <<= 3;
+		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
 	case M_TEXT:
 		if (IS_VGA_ARCH) {
@@ -1869,19 +1873,19 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			VGA_DrawLine = VGA_TEXT_Draw_Line;
 		}
 		vga.draw.blocks = width;
-		doublewidth = vga.seq.clocking_mode.is_pixel_doubling;
+		doublewidth     = vga.seq.clocking_mode.is_pixel_doubling;
 		width *= vga.draw.pixels_per_character;
-		aspect_ratio *= vga.draw.pixels_per_character /
-		                static_cast<double>(PixelsPerChar::Eight);
+		one_per_pixel_aspect *= vga.draw.pixels_per_character /
+		                        static_cast<double>(PixelsPerChar::Eight);
 		break;
 	case M_HERC_GFX:
-		vga.draw.blocks=width*2;
-		width*=16;
+		vga.draw.blocks = width * 2;
+		width *= 16;
 		assert(width > 0);
 		assert(height > 0);
-		aspect_ratio = (static_cast<double>(width) /
-		                static_cast<double>(height)) *
-		               (3.0 / 4.0);
+		one_per_pixel_aspect = (static_cast<double>(width) /
+		                        static_cast<double>(height)) *
+		                       (3.0 / 4.0);
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
 
@@ -1915,7 +1919,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		*/
 
 	case M_TANDY2:
-		aspect_ratio = 2.4;
+		one_per_pixel_aspect = 2.4;
+
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 
 		if (machine == MCH_PCJR) {
@@ -1929,7 +1934,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 		break;
 	case M_TANDY4:
-		aspect_ratio = 1.2;
+		one_per_pixel_aspect = 1.2;
+
 		doubleheight = true;
 		if (machine == MCH_TANDY)
 			doublewidth = (vga.tandy.mode_control & 0b10000) == 0b00000;
@@ -1945,7 +1951,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			VGA_DrawLine = VGA_Draw_2BPP_Line;
 		break;
 	case M_TANDY16:
-		aspect_ratio = 1.2;
+		one_per_pixel_aspect = 1.2;
 		doubleheight=true;
 		vga.draw.blocks=width*2;
 		if (vga.tandy.mode_control & 0x1) {
@@ -1966,25 +1972,25 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 		break;
 	case M_TANDY_TEXT:
-		doublewidth=(vga.tandy.mode_control & 0x1)==0;
-		aspect_ratio = 1.2;
-		doubleheight=true;
-		vga.draw.blocks=width;
-		width<<=3;
-		VGA_DrawLine=VGA_TEXT_Draw_Line;
+		doublewidth          = (vga.tandy.mode_control & 0x1) == 0;
+		one_per_pixel_aspect = 1.2;
+		doubleheight         = true;
+		vga.draw.blocks      = width;
+		width <<= 3;
+		VGA_DrawLine = VGA_TEXT_Draw_Line;
 		break;
 	case M_CGA_TEXT_COMPOSITE:
-		aspect_ratio = 1.2;
-		doubleheight = true;
-		vga.draw.blocks = width;
+		one_per_pixel_aspect = 1.2;
+		doubleheight         = true;
+		vga.draw.blocks      = width;
 		width <<= (((vga.tandy.mode_control & 0x1) != 0) ? 3 : 4);
 		VGA_DrawLine = VGA_CGA_TEXT_Composite_Draw_Line;
 		break;
 	case M_HERC_TEXT:
-		aspect_ratio = 480.0 / 350.0;
-		vga.draw.blocks=width;
-		width<<=3;
-		VGA_DrawLine=VGA_TEXT_Herc_Draw_Line;
+		one_per_pixel_aspect = 480.0 / 350.0;
+		vga.draw.blocks      = width;
+		width <<= 3;
+		VGA_DrawLine = VGA_TEXT_Herc_Draw_Line;
 		break;
 	default:
 		LOG(LOG_VGA,LOG_ERROR)("Unhandled VGA mode %d while checking for resolution",vga.mode);
@@ -2010,9 +2016,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 #endif
 	// Cheap hack to make all > 640x480 modes have square pixels
 	if (is_high_resolution(width, height)) {
-		aspect_ratio = 1.0;
+		one_per_pixel_aspect = 1.0;
 	}
-//	LOG_MSG("ht %d vt %d ratio %f", htotal, vtotal, aspect_ratio );
+//	LOG_MSG("ht %d vt %d ratio %f", htotal, vtotal, one_per_pixel_aspect );
 
 	bool fps_changed = false;
 	// need to change the vertical timing?
@@ -2038,32 +2044,44 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	// need to resize the output window?
 	if ((width != vga.draw.width) || (height != vga.draw.height) ||
-	    (vga.draw.doublewidth != doublewidth) || (vga.draw.doubleheight != doubleheight) ||
-	    (fabs(aspect_ratio - vga.draw.aspect_ratio) > 0.0001) ||
+	    (vga.draw.doublewidth != doublewidth) ||
+	    (vga.draw.doubleheight != doubleheight) ||
+	    (fabs(one_per_pixel_aspect - vga.draw.one_per_pixel_aspect) > 0.0001) ||
 	    (vga.draw.bpp != bpp) || fps_changed) {
 		VGA_KillDrawing();
 
-		vga.draw.width = width;
-		vga.draw.height = height;
-		vga.draw.doublewidth = doublewidth;
-		vga.draw.doubleheight = doubleheight;
-		vga.draw.aspect_ratio = aspect_ratio;
-		vga.draw.bpp = bpp;
-		if (doubleheight) vga.draw.lines_scaled=2;
-		else vga.draw.lines_scaled=1;
+		vga.draw.width                = width;
+		vga.draw.height               = height;
+		vga.draw.doublewidth          = doublewidth;
+		vga.draw.doubleheight         = doubleheight;
+		vga.draw.one_per_pixel_aspect = one_per_pixel_aspect;
+		vga.draw.bpp                  = bpp;
+
+		if (doubleheight) {
+			vga.draw.lines_scaled = 2;
+		}
+		else {
+			vga.draw.lines_scaled=1;
+		}
 
 #if C_DEBUG
 		LOG(LOG_VGA, LOG_NORMAL)("VGA: Width %u, Height %u, fps %.3f", width, height, fps);
 		LOG(LOG_VGA, LOG_NORMAL)("VGA: %s width, %s height aspect %.3f, fake_double_scan: %s",
 		        doublewidth ? "double" : "normal",
 		        doubleheight ? "double" : "normal",
-		        aspect_ratio,
+		        one_per_pixel_aspect,
 		        fake_double_scan ? "yes" : "no");
 #endif
 
-		if (!vga.draw.vga_override)
-			RENDER_SetSize(width, height, bpp, fps, aspect_ratio,
-			               doublewidth, doubleheight);
+		if (!vga.draw.vga_override) {
+			RENDER_SetSize(width,
+			               height,
+			               bpp,
+			               fps,
+			               one_per_pixel_aspect,
+			               doublewidth,
+			               doubleheight);
+		}
 	} else {
 		// Always log mode changes at a minimum
 		static auto previous_mode = CurMode->mode;

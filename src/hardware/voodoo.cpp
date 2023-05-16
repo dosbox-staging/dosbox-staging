@@ -6884,7 +6884,19 @@ static void Voodoo_UpdateScreen(void) {
 		} else
 #endif
 		{
-			RENDER_SetSize(v->fbi.width, v->fbi.height, 16, 1000.0f / v->draw.vfreq, 1.0, false, false);
+			constexpr auto bits_per_pixel = 16;
+			const auto frames_per_second  = 1000.0f / v->draw.vfreq;
+			constexpr auto one_per_pixel_aspect = 1.0;
+			constexpr auto double_width         = false;
+			constexpr auto double_height        = false;
+
+			RENDER_SetSize(v->fbi.width,
+			               v->fbi.height,
+			               bits_per_pixel,
+			               frames_per_second,
+			               one_per_pixel_aspect,
+			               double_width,
+			               double_height);
 		}
 
 		Voodoo_VerticalTimer(0);

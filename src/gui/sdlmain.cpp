@@ -712,7 +712,7 @@ static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 static SDL_Rect calc_viewport_pp(int win_width, int win_height);
 
 // Logs the source and target resolution including describing scaling method
-// and pixel-aspect ratios. Note that this function deliberately doesn't use
+// and pixel aspect ratio. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
 static void log_display_properties(int source_w, int source_h,
                                    const std::optional<SDL_Rect> &target_size_override,
@@ -750,9 +750,9 @@ static void log_display_properties(int source_w, int source_h,
 	assert(source_w > 0 && source_h > 0);
 	assert(target_w > 0 && target_h > 0);
 
-	const auto scale_x = static_cast<double>(target_w) / source_w;
-	const auto scale_y = static_cast<double>(target_h) / source_h;
-	auto out_par       = scale_y / scale_x;
+	const auto scale_x        = static_cast<double>(target_w) / source_w;
+	const auto scale_y        = static_cast<double>(target_h) / source_h;
+	auto one_per_pixel_aspect = scale_y / scale_x;
 
 	const auto [mode_type, mode_id] = VGA_GetCurrentMode();
 	const auto [mode_desc, colours_desc] =
@@ -778,7 +778,7 @@ static void log_display_properties(int source_w, int source_h,
 	const auto in_cga_mode_4h_or_5h = (mode_id == 0x4 || mode_id == 0x5);
 	if (in_cga_mode_4h_or_5h && IS_VGA_ARCH && source_h > 200) {
 		source_w *= 2;
-		out_par *= 2;
+		one_per_pixel_aspect *= 2;
 	}
 
 	// Double check all the char* string variables
@@ -797,7 +797,7 @@ static void log_display_properties(int source_w, int source_h,
 	        frame_mode,
 	        target_w,
 	        target_h,
-	        out_par);
+	        one_per_pixel_aspect);
 }
 
 // A public wrapper to log the current display (both DOS and host) properties

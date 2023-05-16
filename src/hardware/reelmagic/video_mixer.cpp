@@ -198,10 +198,10 @@ static uint32_t _vgaHeight = 0;
 // != 0 on this variable means we have collected the first call
 static uint32_t _vgaBitsPerPixel = 0;
 
-static double _vgaFramesPerSecond = 0.0;
-static double _vgaRatio           = 0.0;
-static bool _vgaDoubleWidth       = false;
-static bool _vgaDoubleHeight      = false;
+static double _vgaFramesPerSecond   = 0.0;
+static double _vgaOnePerPixelAspect = 0.0;
+static bool _vgaDoubleWidth         = false;
+static bool _vgaDoubleHeight        = false;
 
 // state captured from current/active MPEG player
 static PlayerPicturePixel _mpegPictureBuffer[SCALER_MAXWIDTH * SCALER_MAXHEIGHT];
@@ -538,7 +538,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _vgaHeight,
 		               _vgaBitsPerPixel,
 		               _vgaFramesPerSecond,
-		               _vgaRatio,
+		               _vgaOnePerPixelAspect,
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight);
 		LOG(LOG_REELMAGIC, LOG_NORMAL)
@@ -579,7 +579,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _renderHeight,
 		               VIDEOMIXER_BITSPERPIXEL,
 		               _vgaFramesPerSecond,
-		               _vgaRatio,
+		               _vgaOnePerPixelAspect,
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight);
 		return;
@@ -591,7 +591,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _renderHeight,
 		               VIDEOMIXER_BITSPERPIXEL,
 		               _vgaFramesPerSecond,
-		               _vgaRatio,
+		               _vgaOnePerPixelAspect,
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight);
 
@@ -699,15 +699,15 @@ void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t 
 }
 
 void ReelMagic_RENDER_SetSize(uint32_t width, uint32_t height, uint32_t bpp, double fps,
-                              double ratio, bool dblw, bool dblh)
+                              double one_per_pixel_aspect, bool dblw, bool dblh)
 {
-	_vgaWidth           = width;
-	_vgaHeight          = height;
-	_vgaBitsPerPixel    = bpp;
-	_vgaFramesPerSecond = fps;
-	_vgaRatio           = ratio;
-	_vgaDoubleWidth     = dblw;
-	_vgaDoubleHeight    = dblh;
+	_vgaWidth             = width;
+	_vgaHeight            = height;
+	_vgaBitsPerPixel      = bpp;
+	_vgaFramesPerSecond   = fps;
+	_vgaOnePerPixelAspect = one_per_pixel_aspect;
+	_vgaDoubleWidth       = dblw;
+	_vgaDoubleHeight      = dblh;
 
 	SetupVideoMixer(!_mpegDictatesOutputSize);
 }
