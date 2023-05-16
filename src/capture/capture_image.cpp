@@ -173,13 +173,15 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 	auto src_row = image_data;
 
 	for (auto y = 0; y < height; ++y) {
+		auto out = row_buffer.begin();
+
 		for (auto x = 0; x < width; ++x) {
 			switch (bits_per_pixel) {
 			// Indexed8
 			case 8: {
 				const auto pixel = src_row[x];
 
-				row_buffer[x] = pixel;
+				*out++ = pixel;
 			} break;
 
 			// RGB555
@@ -189,9 +191,9 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 
 				const auto pixel = Rgb555(p).ToRgb888();
 
-				row_buffer[x * 3 + 0] = pixel.red;
-				row_buffer[x * 3 + 1] = pixel.green;
-				row_buffer[x * 3 + 2] = pixel.blue;
+				*out++ = pixel.red;
+				*out++ = pixel.green;
+				*out++ = pixel.blue;
 			} break;
 
 			// RGB565
@@ -201,9 +203,9 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 
 				const auto pixel = Rgb565(p).ToRgb888();
 
-				row_buffer[x * 3 + 0] = pixel.red;
-				row_buffer[x * 3 + 1] = pixel.green;
-				row_buffer[x * 3 + 2] = pixel.blue;
+				*out++ = pixel.red;
+				*out++ = pixel.green;
+				*out++ = pixel.blue;
 			} break;
 
 			// RGB888
@@ -212,9 +214,9 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 				const auto g = src_row[x * 3 + 1];
 				const auto r = src_row[x * 3 + 2];
 
-				row_buffer[x * 3 + 0] = r;
-				row_buffer[x * 3 + 1] = g;
-				row_buffer[x * 3 + 2] = b;
+				*out++ = r;
+				*out++ = g;
+				*out++ = b;
 			} break;
 
 			// XRGB8888
@@ -223,9 +225,9 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 				const auto g = src_row[x * 4 + 1];
 				const auto r = src_row[x * 4 + 2];
 
-				row_buffer[x * 3 + 0] = r;
-				row_buffer[x * 3 + 1] = g;
-				row_buffer[x * 3 + 2] = b;
+				*out++ = r;
+				*out++ = g;
+				*out++ = b;
 			} break;
 			}
 		}
