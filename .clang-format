@@ -32,11 +32,8 @@ Standard: c++17
 # int& var; // 'var' is a reference-to-int
 # const int& var; // 'var' is a constant-reference-to-int
 PointerAlignment: Left
-# Commenting out for now as VisualStudio 2019 doesn't recognise it
-#ReferenceAlignment: Left
-
-# Commenting out for now as VisualStudio 2019 doesn't recognise it
-#QualifierAlignment: Left
+ReferenceAlignment: Left
+QualifierAlignment: Left
 
 # The extra indent or outdent of class access modifiers, e.g. public:
 #
@@ -190,8 +187,7 @@ AlwaysBreakTemplateDeclarations: Yes
 #      --i;                                      --i;
 #    while (i);
 #
-# Commenting out for now as VisualStudio 2019 doesn't recognise it
-#InsertBraces: true
+InsertBraces: true
 
 # Attach braces to surrounding context except break before braces on function
 # definitions (also known as K&R indentation style). This is C-derived style,
