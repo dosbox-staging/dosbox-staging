@@ -32,6 +32,31 @@
 #include "string_utils.h"
 #include "../ints/int10.h"
 
+namespace {
+class CommandPrompt {
+public:
+	CommandPrompt();
+	void Update(std::string_view command, std::string::size_type cursor);
+	void Newline();
+
+	[[nodiscard]] static uint32_t MaxCommandSize();
+
+private:
+	struct CursorPosition {
+		uint8_t page   = 0;
+		uint8_t row    = 0;
+		uint8_t column = 0;
+	};
+	CursorPosition position_zero = {};
+
+	std::string::size_type previous_size = 0;
+
+	static void outc(uint8_t c);
+	void SetCurrentPositionToZero();
+	void SetCursor(std::string::size_type index);
+};
+} // namespace
+
 DOS_Shell::~DOS_Shell() {
 	bf.reset();
 }
@@ -47,21 +72,6 @@ void DOS_Shell::ShowPrompt(void) {
 	ResetLastWrittenChar('\n'); // prevents excessive newline if cmd prints nothing
 }
 
-static void outc(uint8_t c) {
-	uint16_t n=1;
-	DOS_WriteFile(STDOUT,&c,&n);
-}
-
-static void move_cursor_back_one() {
-	const uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
-	if (CURSOR_POS_COL(page) > 0) {
-		outc(8);
-	} else if (const auto row = CURSOR_POS_ROW(page); row > 0) {
-		BIOS_NCOLS;
-		INT10_SetCursorPos(row - 1, ncols - 1, page);
-	}
-}
-
 void DOS_Shell::InputCommand(char * line) {
 	Bitu size=CMD_MAXLINE-2; //lastcharacter+0
 	uint8_t c;uint16_t n=1;
@@ -73,6 +83,8 @@ void DOS_Shell::InputCommand(char * line) {
 	reset_str(line);
 
 	std::list<std::string>::iterator it_history = l_history.begin(), it_completion = l_completion.begin();
+
+	CommandPrompt prompt;
 
 	while (size && !shutdown_requested) {
 		dos.echo=false;
@@ -99,7 +111,6 @@ void DOS_Shell::InputCommand(char * line) {
 						const char *reader = &(it_history->c_str())[str_len];
 						while ((c = *reader++)) {
 							line[str_index ++] = c;
-							DOS_WriteFile(STDOUT,&c,&n);
 						}
 						str_len = str_index = it_history->length();
 						size = CMD_MAXLINE - str_index - 2;
@@ -109,27 +120,25 @@ void DOS_Shell::InputCommand(char * line) {
 
 				case 0x4B: /* Left */
 					if (str_index) {
-						move_cursor_back_one();
 						str_index --;
 					}
 					break;
 
 				case 0x4D: /* Right */
 					if (str_index < str_len) {
-						outc(line[str_index++]);
+						str_index++;
 					}
 					break;
 
 				case 0x47: /* Home */
 					while (str_index) {
-						move_cursor_back_one();
 						str_index--;
 					}
 					break;
 
 				case 0x4F: /* End */
 					while (str_index < str_len) {
-						outc(line[str_index++]);
+						str_index++;
 					}
 					break;
 
@@ -142,17 +151,10 @@ void DOS_Shell::InputCommand(char * line) {
 						l_history.push_front(line);
 					}
 
-					for (;str_index>0; str_index--) {
-						// removes all characters
-						move_cursor_back_one();
-						outc(' ');
-						move_cursor_back_one();
-					}
 					strcpy(line, it_history->c_str());
 					len = (uint16_t)it_history->length();
 					str_len = str_index = len;
 					size = CMD_MAXLINE - str_index - 2;
-					DOS_WriteFile(STDOUT, (uint8_t *)line, &len);
 					++it_history;
 					break;
 
@@ -175,31 +177,18 @@ void DOS_Shell::InputCommand(char * line) {
 						--it_history;
 					}
 
-					for (; str_index > 0; str_index--) {
-						// removes all characters
-						move_cursor_back_one();
-						outc(' ');
-						move_cursor_back_one();
-					}
 					strcpy(line, it_history->c_str());
 					len = (uint16_t)it_history->length();
 					str_len = str_index = len;
 					size = CMD_MAXLINE - str_index - 2;
-					DOS_WriteFile(STDOUT, (uint8_t *)line, &len);
 					++it_history;
 
 					break;
 				case 0x53: /* Delete */
 					{
 						if(str_index>=str_len) break;
-						auto text_len = static_cast<uint16_t>(str_len - str_index - 1);
-						uint8_t* text=reinterpret_cast<uint8_t*>(&line[str_index+1]);
-						DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
-						outc(' ');
-						move_cursor_back_one();
 						for (auto i = str_index; i < str_len-1; i++) {
 							line[i]=line[i+1];
-							move_cursor_back_one();
 						}
 						terminate_str_at(line, --str_len);
 						size++;
@@ -213,18 +202,10 @@ void DOS_Shell::InputCommand(char * line) {
 						--it_completion;
 		
 						if (it_completion->length()) {
-							for (;str_index > completion_index; str_index--) {
-								// removes all characters
-								move_cursor_back_one();
-								outc(' ');
-								move_cursor_back_one();
-							}
-
 							strcpy(&line[completion_index], it_completion->c_str());
 							len = (uint16_t)it_completion->length();
 							str_len = str_index = completion_index + len;
 							size = CMD_MAXLINE - str_index - 2;
-							DOS_WriteFile(STDOUT, (uint8_t *)it_completion->c_str(), &len);
 						}
 					}
 				default: break;
@@ -233,25 +214,16 @@ void DOS_Shell::InputCommand(char * line) {
 			break;
 		case 0x08: /* Backspace */
 			if (str_index) {
-				move_cursor_back_one();
 				size_t str_remain = str_len - str_index;
 				size++;
 				if (str_remain) {
 					memmove(&line[str_index-1],&line[str_index],str_remain);
 					terminate_str_at(line, --str_len);
 					str_index --;
-					/* Go back to redraw */
-					for (size_t i = str_index; i < str_len; i++)
-						outc(line[i]);
 				} else {
 					terminate_str_at(line, --str_index);
 					str_len--;
 				}
-				outc(' ');
-				move_cursor_back_one();
-				// moves the cursor left
-				while (str_remain--)
-					move_cursor_back_one();
 			}
 			if (l_completion.size()) l_completion.clear();
 			break;
@@ -259,8 +231,7 @@ void DOS_Shell::InputCommand(char * line) {
 			/* Don't care */
 			break;
 		case 0x0d: /* Return */
-			outc('\r');
-			outc('\n');
+			prompt.Newline();
 			size=0;			//Kill the while loop
 			break;
 		case'\t':
@@ -348,29 +319,18 @@ void DOS_Shell::InputCommand(char * line) {
 				}
 
 				if (l_completion.size() && it_completion->length()) {
-					for (;str_index > completion_index; str_index--) {
-						// removes all characters
-						move_cursor_back_one();
-						outc(' ');
-						move_cursor_back_one();
-					}
-
 					strcpy(&line[completion_index], it_completion->c_str());
 					len = (uint16_t)it_completion->length();
 					str_len = str_index = completion_index + len;
 					size = CMD_MAXLINE - str_index - 2;
-					DOS_WriteFile(STDOUT, (uint8_t *)it_completion->c_str(), &len);
 				}
 			}
 			break;
 		case 0x1b: /* Esc */
-			while (str_index < str_len) {
-				outc(line[str_index++]);
-			}
 			//write a backslash and return to the next line
-			outc('\\');
-			outc('\r');
-			outc('\n');
+			line[str_index++]='\\';
+			prompt.Update(line, str_index);
+			prompt.Newline();
 			reset_str(line);
 			if (l_completion.size()) l_completion.clear(); //reset the completion list.
 			this->InputCommand(line);	//Get the NEW line.
@@ -379,15 +339,12 @@ void DOS_Shell::InputCommand(char * line) {
 			break;
 		default:
 			if (l_completion.size()) l_completion.clear();
+			if (CommandPrompt::MaxCommandSize() < str_index) {
+				break;
+			}
 			if(str_index < str_len && true) { //mem_readb(BIOS_KEYBOARD_FLAGS1)&0x80) dev_con.h ?
-				outc(' ');//move cursor one to the right.
-				auto text_len = static_cast<uint16_t>(str_len - str_index);
-				uint8_t* text=reinterpret_cast<uint8_t*>(&line[str_index]);
-				DOS_WriteFile(STDOUT, text, &text_len); // write buffer to screen
-				move_cursor_back_one(); //undo the cursor the right.
 				for (auto i = str_len; i > str_index; i--) {
 					line[i]=line[i-1]; //move internal buffer
-					move_cursor_back_one(); //move cursor back (from write buffer to screen)
 				}
 				// new end (as the internal buffer moved one
 				// place to the right
@@ -402,9 +359,14 @@ void DOS_Shell::InputCommand(char * line) {
 				str_len++;
 				size--;
 			}
-			DOS_WriteFile(STDOUT,&c,&n);
 			break;
 		}
+
+		if (size == 0) {
+			break;
+		}
+
+		prompt.Update(line, str_index);
 	}
 
 	if (!str_len) return;
@@ -468,6 +430,79 @@ void DOS_Shell::ProcessCmdLineEnvVarStitution(char* line) {
 	std::replace(text.begin(), text.end(), surrogate_percent, '%');
 	assert(text.size() <= CMD_MAXLINE);
 	safe_strncpy(line, text.c_str(), CMD_MAXLINE);
+}
+
+CommandPrompt::CommandPrompt()
+{
+	SetCurrentPositionToZero();
+}
+
+uint32_t CommandPrompt::MaxCommandSize()
+{
+	// This size is somewhat arbitrary. It is the number of characters
+	// needed to fill a whole screen minus two rows. This extra space is
+	// to allow the prompt to also fit when deep in the filesystem.
+	// A larger maximum command size would require complex
+	// scrolling behaviour to work as intended. This is likely
+	// uneeded as a user will not likely write commands that large.
+
+	return INT10_GetTextColumns() * (INT10_GetTextRows() - 2);
+}
+
+void CommandPrompt::Update(const std::string_view command,
+                           const std::string::size_type cursor)
+{
+	uint16_t byte_count = 1;
+	SetCursor(0);
+	for (uint8_t c : command) {
+		DOS_WriteFile(STDOUT, &c, &byte_count);
+	}
+
+	if (previous_size > command.size()) {
+		auto space_count = previous_size - command.size();
+		for (decltype(space_count) i = 0; i < space_count; ++i) {
+			outc(' ');
+		}
+	}
+
+	SetCursor(cursor);
+	previous_size = command.size();
+}
+
+void CommandPrompt::Newline()
+{
+	outc('\r');
+	outc('\n');
+	SetCurrentPositionToZero();
+}
+
+void CommandPrompt::outc(uint8_t c)
+{
+	uint16_t n = 1;
+	DOS_WriteFile(STDOUT, &c, &n);
+}
+
+void CommandPrompt::SetCurrentPositionToZero()
+{
+	position_zero.page   = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
+	position_zero.row    = CURSOR_POS_ROW(position_zero.page);
+	position_zero.column = CURSOR_POS_COL(position_zero.page);
+}
+
+void CommandPrompt::SetCursor(const std::string::size_type index)
+{
+	auto ncols  = INT10_GetTextColumns();
+	auto nrows  = INT10_GetTextRows();
+	auto column = position_zero.column + index;
+	auto row    = position_zero.row + column / ncols;
+	column %= ncols;
+	if (row >= nrows) {
+		position_zero.row -= static_cast<uint8_t>(row - nrows + 1);
+		row = nrows - 1;
+	}
+	INT10_SetCursorPos(static_cast<uint8_t>(row),
+	                   static_cast<uint8_t>(column),
+	                   position_zero.page);
 }
 
 std::string full_arguments = "";
