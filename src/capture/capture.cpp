@@ -297,7 +297,7 @@ static void handle_capture_rendered_screenshot_event(const bool pressed)
 		return;
 	}
 
-	const auto surface = SDLMAIN_GetRenderedSurface();
+	const auto surface = GFX_GetRenderedSurface();
 	if (!surface) {
 		return;
 	}
