@@ -24,6 +24,7 @@
 
 #include "byteorder.h"
 #include "capture.h"
+#include "rgb.h"
 #include "rgb555.h"
 #include "rgb565.h"
 #include "rgb888.h"
@@ -97,6 +98,67 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 	png_set_text(png_ptr, info_ptr, texts, num_text);
 #endif
 	png_write_info(png_ptr, info_ptr);
+}
+
+static void decode_row_to_linear_rgb(const uint16_t width,
+                                     const uint8_t bits_per_pixel,
+                                     const uint8_t* image_data,
+                                     const uint8_t* palette_data, float* out)
+{
+	for (auto x = 0; x < width; ++x) {
+		Rgb888 pixel = {};
+
+		switch (bits_per_pixel) {
+		// Indexed8
+		case 8: {
+			const auto pal_index = image_data[x];
+
+			const auto r = palette_data[pal_index * 4 + 0];
+			const auto g = palette_data[pal_index * 4 + 1];
+			const auto b = palette_data[pal_index * 4 + 2];
+
+			pixel = {r, g, b};
+		} break;
+
+		// RGB555
+		case 15: {
+			const auto p = host_to_le(
+			        reinterpret_cast<const uint16_t*>(image_data)[x]);
+
+			pixel = Rgb555(p).ToRgb888();
+		} break;
+
+		// RGB565
+		case 16: {
+			const auto p = host_to_le(
+			        reinterpret_cast<const uint16_t*>(image_data)[x]);
+
+			pixel = Rgb565(p).ToRgb888();
+		} break;
+
+		// RGB888
+		case 24: {
+			const auto b = image_data[x * 3 + 0];
+			const auto g = image_data[x * 3 + 1];
+			const auto r = image_data[x * 3 + 2];
+
+			pixel = {r, g, b};
+		} break;
+
+		// XRGB8888
+		case 32: {
+			const auto b = image_data[x * 4 + 0];
+			const auto g = image_data[x * 4 + 1];
+			const auto r = image_data[x * 4 + 2];
+
+			pixel = {r, g, b};
+		} break;
+		}
+
+		*out++ = srgb8_to_linear_lut(pixel.red);
+		*out++ = srgb8_to_linear_lut(pixel.green);
+		*out++ = srgb8_to_linear_lut(pixel.blue);
+	}
 }
 
 static void write_png_image_data(const png_structp png_ptr, const uint16_t width,
