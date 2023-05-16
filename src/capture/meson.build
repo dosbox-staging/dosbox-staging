@@ -4,6 +4,7 @@ libcapture_sources = files(
     'capture_image.cpp',
     'capture_midi.cpp',
     'capture_video.cpp',
+    'image_scaler.cpp',
 )
 
 libcapture = static_library(

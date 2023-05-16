@@ -22,19 +22,18 @@
 #include <cassert>
 #include <vector>
 
-#include "byteorder.h"
 #include "capture.h"
-#include "rgb555.h"
-#include "rgb565.h"
-#include "rgb888.h"
+#include "image_scaler.h"
 
 #if (C_SSHOT)
 #include <png.h>
 #include <zlib.h>
 
+ImageScaler image_scaler = {};
+
 static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
                            const uint16_t width, const uint16_t height,
-                           const uint8_t bits_per_pixel, const uint8_t* palette_data)
+                           const bool is_paletted, const uint8_t* palette_data)
 {
 	png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
 
@@ -45,19 +44,22 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 	png_set_compression_method(png_ptr, 8);
 	png_set_compression_buffer_size(png_ptr, 8192);
 
-	constexpr auto PngBitDepth = 8;
+	constexpr auto png_bit_depth = 8;
 
-	if (bits_per_pixel == 8) {
-		png_set_IHDR(png_ptr,
-		             info_ptr,
-		             width,
-		             height,
-		             PngBitDepth,
-		             PNG_COLOR_TYPE_PALETTE,
-		             PNG_INTERLACE_NONE,
-		             PNG_COMPRESSION_TYPE_DEFAULT,
-		             PNG_FILTER_TYPE_DEFAULT);
+	const auto png_color_type = is_paletted ? PNG_COLOR_TYPE_PALETTE
+	                                        : PNG_COLOR_TYPE_RGB;
 
+	png_set_IHDR(png_ptr,
+	             info_ptr,
+	             width,
+	             height,
+	             png_bit_depth,
+	             png_color_type,
+	             PNG_INTERLACE_NONE,
+	             PNG_COMPRESSION_TYPE_DEFAULT,
+	             PNG_FILTER_TYPE_DEFAULT);
+
+	if (is_paletted) {
 		constexpr auto NumPaletteEntries     = 256;
 		png_color palette[NumPaletteEntries] = {};
 
@@ -67,24 +69,14 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 			palette[i].blue  = palette_data[i * 4 + 2];
 		}
 		png_set_PLTE(png_ptr, info_ptr, palette, NumPaletteEntries);
-
-	} else {
-		png_set_IHDR(png_ptr,
-		             info_ptr,
-		             width,
-		             height,
-		             PngBitDepth,
-		             PNG_COLOR_TYPE_RGB,
-		             PNG_INTERLACE_NONE,
-		             PNG_COMPRESSION_TYPE_DEFAULT,
-		             PNG_FILTER_TYPE_DEFAULT);
 	}
 
 #ifdef PNG_TEXT_SUPPORTED
 	char keyword[] = "Software";
 	static_assert(sizeof(keyword) < 80, "libpng limit");
 
-	char value[]           = CANONICAL_PROJECT_NAME " " VERSION;
+	char value[] = CANONICAL_PROJECT_NAME " " VERSION;
+
 	constexpr int num_text = 1;
 
 	png_text texts[num_text] = {};
@@ -96,81 +88,8 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 
 	png_set_text(png_ptr, info_ptr, texts, num_text);
 #endif
+
 	png_write_info(png_ptr, info_ptr);
-}
-
-static void write_png_image_data(const png_structp png_ptr, const uint16_t width,
-                                 const uint16_t height, const uint8_t bits_per_pixel,
-                                 const uint16_t pitch, const uint8_t* image_data)
-{
-	static std::vector<uint8_t> row_buffer = {};
-
-	constexpr auto MaxBytesPerPixel = 4;
-	row_buffer.resize(width * MaxBytesPerPixel);
-
-	auto src_row = image_data;
-
-	for (auto y = 0; y < height; ++y) {
-		for (auto x = 0; x < width; ++x) {
-			switch (bits_per_pixel) {
-			// Indexed8
-			case 8: {
-				const auto pixel = src_row[x];
-
-				row_buffer[x] = pixel;
-			} break;
-
-			// BGR555
-			case 15: {
-				const auto p = host_to_le(
-				        reinterpret_cast<const uint16_t*>(src_row)[x]);
-
-				const auto pixel = Rgb555(p).ToRgb888();
-
-				row_buffer[x * 3 + 0] = pixel.red;
-				row_buffer[x * 3 + 1] = pixel.green;
-				row_buffer[x * 3 + 2] = pixel.blue;
-			} break;
-
-			// BGR565
-			case 16: {
-				const auto p = host_to_le(
-				        reinterpret_cast<const uint16_t*>(src_row)[x]);
-
-				const auto pixel = Rgb565(p).ToRgb888();
-
-				row_buffer[x * 3 + 0] = pixel.red;
-				row_buffer[x * 3 + 1] = pixel.green;
-				row_buffer[x * 3 + 2] = pixel.blue;
-			} break;
-
-			// BGR888
-			case 24: {
-				const auto b = src_row[x * 3 + 0];
-				const auto g = src_row[x * 3 + 1];
-				const auto r = src_row[x * 3 + 2];
-
-				row_buffer[x * 3 + 0] = r;
-				row_buffer[x * 3 + 1] = g;
-				row_buffer[x * 3 + 2] = b;
-			} break;
-
-			// BGRX8888
-			case 32: {
-				const auto b = src_row[x * 4 + 0];
-				const auto g = src_row[x * 4 + 1];
-				const auto r = src_row[x * 4 + 2];
-
-				row_buffer[x * 3 + 0] = r;
-				row_buffer[x * 3 + 1] = g;
-				row_buffer[x * 3 + 2] = b;
-			} break;
-			}
-		}
-
-		png_write_row(png_ptr, row_buffer.data());
-		src_row += pitch;
-	}
 }
 
 void capture_image(const uint16_t width, const uint16_t height,
@@ -181,14 +100,18 @@ void capture_image(const uint16_t width, const uint16_t height,
 	const bool is_double_width  = (capture_flags & CaptureFlagDoubleWidth);
 	const bool is_double_height = (capture_flags & CaptureFlagDoubleHeight);
 
-	LOG_MSG("CAPTURE: Capturing image, width: %d, height: %d, "
-	        "bits_per_pixel: %d, pitch: %d, is_double_width: %s, is_double_height: %s",
-	        width,
-	        height,
-	        bits_per_pixel,
-	        pitch,
-	        is_double_width ? "yes" : "no",
-	        is_double_height ? "yes" : "no");
+	image_scaler_params_t params      = {};
+	params.width                      = width;
+	params.height                     = height;
+	params.bits_per_pixel             = bits_per_pixel;
+	params.pitch                      = pitch;
+	params.double_width               = is_double_width;
+	params.double_height              = is_double_height;
+	params.one_per_pixel_aspect_ratio = one_per_pixel_aspect_ratio;
+	params.image_data                 = image_data;
+	params.palette_data               = palette_data;
+
+	image_scaler.Init(params);
 
 	FILE* fp = CAPTURE_CreateFile("raw image", ".png");
 	if (!fp) {
@@ -213,12 +136,25 @@ void capture_image(const uint16_t width, const uint16_t height,
 
 	png_init_io(png_ptr, fp);
 
-	write_png_info(png_ptr, info_ptr, width, height, bits_per_pixel, palette_data);
+	bool out_is_paletted = (image_scaler.GetOutputPixelFormat() ==
+	                        PixelFormat::Indexed8);
 
-	write_png_image_data(png_ptr, width, height, bits_per_pixel, pitch, image_data);
+	write_png_info(png_ptr,
+	               info_ptr,
+	               image_scaler.GetOutputWidth(),
+	               image_scaler.GetOutputHeight(),
+	               out_is_paletted,
+	               palette_data);
+
+	auto rows_to_write = image_scaler.GetOutputHeight();
+	while (rows_to_write--) {
+		auto row = image_scaler.GetNextOutputRow();
+		png_write_row(png_ptr, &*row);
+	}
 
 	png_write_end(png_ptr, nullptr);
 	png_destroy_write_struct(&png_ptr, &info_ptr);
+
 	fclose(fp);
 }
 
