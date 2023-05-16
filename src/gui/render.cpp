@@ -473,13 +473,6 @@ void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
 		return;
 	}
-	if (ratio > 1) {
-		double target = height * ratio + 0.025;
-		ratio         = target / height;
-	} else {
-		// This would alter the width of the screen, we don't care about
-		// rounding errors here
-	}
 	render.src.width  = width;
 	render.src.height = height;
 	render.src.bpp    = bpp;
