@@ -173,6 +173,15 @@ static void write_png_image_data(const png_structp png_ptr, const uint16_t width
 	}
 }
 
+uint16_t calc_vertical_scale_factor(const uint16_t height)
+{
+	constexpr auto target_height = 1200.0f;
+	// Slight fudge factor to push 350-line modes into 4x vertical scaling
+	constexpr auto fudge_offset = 0.1;
+
+	return round(target_height / height + fudge_offset);
+}
+
 void capture_image(const uint16_t width, const uint16_t height,
                    const uint8_t bits_per_pixel, const uint16_t pitch,
                    const uint8_t capture_flags, const float one_per_pixel_aspect_ratio,
@@ -181,14 +190,39 @@ void capture_image(const uint16_t width, const uint16_t height,
 	const bool is_double_width  = (capture_flags & CaptureFlagDoubleWidth);
 	const bool is_double_height = (capture_flags & CaptureFlagDoubleHeight);
 
-	LOG_MSG("CAPTURE: Capturing image, width: %d, height: %d, "
-	        "bits_per_pixel: %d, pitch: %d, is_double_width: %s, is_double_height: %s",
+	const auto vert_scale  = calc_vertical_scale_factor(height);
+	const auto horiz_scale = vert_scale / one_per_pixel_aspect_ratio;
+
+	const auto scaled_height = vert_scale *
+	                           (is_double_height ? height * 2 : height);
+
+	const auto scaled_width = static_cast<uint16_t>(
+	        (is_double_width ? width * 2 : width) * horiz_scale);
+
+	LOG_MSG("CAPTURE: Capturing image\n"
+	        "    width:         %8d\n"
+	        "    height:        %8d\n"
+	        "    bits_per_pixel:%8d\n"
+	        "    pitch:         %8d\n"
+	        "    double_width:  %8s\n"
+	        "    double_height: %8s\n"
+	        "    1/PAR:         %8f\n"
+	        "    -----------------------\n"
+	        "    scaled_width:  %8d\n"
+	        "    scaled_height: %8d\n"
+	        "    horiz_scale:   %8f\n"
+	        "    vert_scale:    %8d",
 	        width,
 	        height,
 	        bits_per_pixel,
 	        pitch,
 	        is_double_width ? "yes" : "no",
-	        is_double_height ? "yes" : "no");
+	        is_double_height ? "yes" : "no",
+	        one_per_pixel_aspect_ratio,
+	        scaled_width,
+	        scaled_height,
+	        horiz_scale,
+	        vert_scale);
 
 	FILE* fp = CAPTURE_CreateFile("raw image", ".png");
 	if (!fp) {
