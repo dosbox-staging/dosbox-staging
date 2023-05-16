@@ -53,10 +53,6 @@ std::unique_ptr<Program> SHELL_ProgramCreate() {
 
 DOS_Shell::DOS_Shell()
         : Program(),
-          l_history{},
-          l_completion{},
-          completion_start(nullptr),
-          completion_index(0),
           input_handle(STDIN),
           bf(nullptr),
           echo(true),
