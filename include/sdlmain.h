@@ -239,6 +239,6 @@ struct SDL_Block {
 
 extern SDL_Block sdl;
 
-std::optional<SDL_Surface *> SDLMAIN_GetRenderedSurface();
+std::optional<SDL_Surface *> GFX_GetRenderedSurface();
 
 #endif

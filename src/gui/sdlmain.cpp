@@ -3580,7 +3580,7 @@ static void set_output(Section *sec, bool should_stretch_pixels)
 	SDL_SetWindowOpacity(sdl.window, alpha);
 }
 
-std::optional<SDL_Surface *> SDLMAIN_GetRenderedSurface()
+std::optional<SDL_Surface *> GFX_GetRenderedSurface()
 {
 	// Variables common to all screen-modes
 	const auto renderer = SDL_GetRenderer(sdl.window);
