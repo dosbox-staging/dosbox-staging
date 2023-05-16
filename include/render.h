@@ -45,14 +45,14 @@ struct RenderPal_t {
 
 struct Render_t {
 	struct {
-		uint32_t width  = 0;
-		uint32_t start  = 0;
-		uint32_t height = 0;
-		unsigned bpp    = 0;
-		bool dblw       = false;
-		bool dblh       = false;
-		double ratio    = 0;
-		double fps      = 0;
+		uint32_t width              = 0;
+		uint32_t start              = 0;
+		uint32_t height             = 0;
+		unsigned bpp                = 0;
+		bool dblw                   = false;
+		bool dblh                   = false;
+		double one_per_pixel_aspect = 0;
+		double fps                  = 0;
 	} src = {};
 
 	struct {
@@ -100,7 +100,7 @@ extern ScalerLineHandler_t RENDER_DrawLine;
 std::deque<std::string> RENDER_InventoryShaders();
 
 void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
-                    double ratio, bool dblw, bool dblh);
+                    double one_per_pixel_aspect, bool dblw, bool dblh);
 
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);

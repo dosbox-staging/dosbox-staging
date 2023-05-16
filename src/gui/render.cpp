@@ -248,7 +248,8 @@ void RENDER_EndUpdate(bool abort)
 				flags |= CaptureFlagDoubleHeight;
 			}
 		}
-		auto fps         = render.src.fps;
+		auto fps = render.src.fps;
+
 		const auto pitch = render.scale.cachePitch;
 
 		CAPTURE_AddFrame(render.src.width,
@@ -257,7 +258,7 @@ void RENDER_EndUpdate(bool abort)
 		                 pitch,
 		                 flags,
 		                 static_cast<float>(fps),
-		                 render.src.ratio,
+		                 render.src.one_per_pixel_aspect,
 		                 (uint8_t*)&scalerSourceCache,
 		                 (uint8_t*)&render.pal.rgb);
 	}
@@ -309,11 +310,11 @@ static void RENDER_Reset(void)
 	Bitu gfx_flags, xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
 	if (render.aspect) {
-		if (render.src.ratio > 1.0) {
+		if (render.src.one_per_pixel_aspect > 1.0) {
 			gfx_scalew = 1;
-			gfx_scaleh = render.src.ratio;
+			gfx_scaleh = render.src.one_per_pixel_aspect;
 		} else {
-			gfx_scalew = (1 / render.src.ratio);
+			gfx_scalew = (1 / render.src.one_per_pixel_aspect);
 			gfx_scaleh = 1;
 		}
 	} else {
@@ -467,7 +468,7 @@ static void RENDER_CallBack(GFX_CallBackFunctions_t function)
 }
 
 void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
-                    double ratio, bool dblw, bool dblh)
+                    double one_per_pixel_aspect, bool dblw, bool dblh)
 {
 	RENDER_Halt();
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
@@ -479,7 +480,8 @@ void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
 	render.src.dblw   = dblw;
 	render.src.dblh   = dblh;
 	render.src.fps    = fps;
-	render.src.ratio  = ratio;
+
+	render.src.one_per_pixel_aspect = one_per_pixel_aspect;
 	RENDER_Reset();
 }
 

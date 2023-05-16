@@ -230,7 +230,7 @@ struct VGA_Draw {
 	double dos_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
 	double custom_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
 	VGA_RATE_MODE dos_rate_mode = VGA_RATE_MODE::DEFAULT;
-	double aspect_ratio = 0;
+	double one_per_pixel_aspect = 0;
 	bool double_scan = false;
 	bool doublewidth = false;
 	bool doubleheight = false;
