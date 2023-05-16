@@ -351,42 +351,45 @@ static uint8_t * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	return ret;
 }
 
-static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu)
+static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu /*line*/)
 {
-	// Quick referencess
-	constexpr auto& max_pos        = vga.draw.linear_mask;
-	constexpr auto& line_bytes     = vga.draw.line_length;
-	constexpr auto palette_map     = vga.dac.palette_map;
-	constexpr auto bytes_per_pixel = sizeof(palette_map[0]);
-	assert(vga.draw.bpp / 8 == bytes_per_pixel);
+	const auto offset = vidstart & vga.draw.linear_mask;
+	const uint8_t *ret = &vga.draw.linear_base[offset];
+	const auto palette_map = vga.dac.palette_map;
 
-	// The running write position for the palettized VGA pixels
-	auto target_addr = TempLine;
-	const auto target_end = target_addr + line_bytes;
+	// see VGA_Draw_Linear_Line
+	if (GCC_UNLIKELY((vga.draw.line_length + offset)& ~vga.draw.linear_mask)) {
+		const auto end = (offset + vga.draw.line_length) &
+		                 vga.draw.linear_mask;
 
-	// Ensure the size of the palettized VGA line will fit
-	assert(templine_buffer.size() >= line_bytes);
+		// assuming lines not longer than 4096 pixels
+		const auto wrapped_len   = static_cast<uint16_t>(end & 0xFFF);
+		const auto unwrapped_len = check_cast<uint16_t>(
+		        vga.draw.line_length - wrapped_len);
 
-	const auto copy_palette = [&](auto pos, auto len) {
-		auto line_addr      = vga.draw.linear_base + pos;
-		const auto line_end = line_addr + len;
-		while (target_addr < target_end && line_addr < line_end) {
-			memcpy(target_addr, palette_map + *line_addr++, bytes_per_pixel);
-			target_addr += bytes_per_pixel;
+		// unwrapped chunk: to top of memory block
+		for (uint16_t i = 0; i < unwrapped_len; ++i) {
+			write_unaligned_uint32_at(TempLine, i, palette_map[ret[i]]);
 		}
-	};
 
-	const auto start_pos = vidstart & max_pos;
-	const auto end_pos   = start_pos + line_bytes;
+		// wrapped chunk: from base of memory block
+		for (uint16_t i = 0; i < wrapped_len; ++i) {
+			write_unaligned_uint32_at(TempLine,
+			                          i + unwrapped_len,
+			                          palette_map[vga.draw.linear_base[i]]);
+		}
 
-	const auto wrapped_len   = end_pos > max_pos ? end_pos % max_pos : 0;
-	const auto unwrapped_len = line_bytes - wrapped_len;
-	// Both portions should add up to a full line
-	assert(wrapped_len + unwrapped_len == line_bytes);
+	} else {
+		constexpr uint8_t bytes_per_pixel = sizeof(palette_map[0]);
 
-	copy_palette(start_pos, unwrapped_len);
-	copy_palette(0, wrapped_len); // wrapped portion starts at 0
+		const uint32_t pixels_per_line = vga.draw.line_length / bytes_per_pixel;
 
+		auto line_addr = TempLine;
+		for (uint32_t i = 0; i < pixels_per_line; ++i) {
+			memcpy(line_addr, palette_map + ret[i], bytes_per_pixel);
+			line_addr += bytes_per_pixel;
+		}
+	}
 	return TempLine;
 }
 
