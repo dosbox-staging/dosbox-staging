@@ -348,8 +348,15 @@ Virtual_File::Virtual_File(const vfile_data_t& in_data)
 
 bool Virtual_File::Read(uint8_t* data, uint16_t* bytes_requested)
 {
-	const auto bytes_remaining = check_cast<size_t>(file_data->size() - file_pos);
-	const auto bytes_to_read = std::min(bytes_remaining,
+	if (file_pos > file_data->size()) {
+		// File has been read beyond the end and is in an invalid state,
+		// so inform the caller with a negative rvalue.
+		*bytes_requested = 0;
+		return false;
+	}
+
+	const auto bytes_remaining = file_data->size() - file_pos;
+	const auto bytes_to_read = std::min(static_cast<size_t>(bytes_remaining),
 	                                    static_cast<size_t>(*bytes_requested));
 
 	const uint8_t* src = file_data->data() + file_pos;
