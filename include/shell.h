@@ -84,6 +84,7 @@ private:
 	bool WriteHelp(const std::string &command, char* args);
 	[[nodiscard]] std::string ReadCommand();
 	[[nodiscard]] std::string SubstituteEnvironmentVariables(std::string_view command);
+	[[nodiscard]] std::string Which(std::string_view name) const;
 
 	friend class AutoexecEditor;
 	std::vector<std::string> history{};
@@ -110,9 +111,6 @@ public:
 	bool CheckConfig(char* cmd_in,char*line);
 	/* Internal utilities for testing */
 	virtual bool execute_shell_cmd(char *name, char *arguments);
-
-	/* Some internal used functions */
-	const char *Which(const char *name) const;
 
 	/* Commands */
 	void CMD_HELP(char * args);

@@ -465,8 +465,9 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	}
 
 	/* Check for a full name */
-	const char *p_fullname = Which(name);
-	if (!p_fullname)
+	const auto p_fullname_s = Which(name);
+	const char *p_fullname = p_fullname_s.c_str();
+	if (!*p_fullname)
 		return false;
 	safe_strcpy(fullname, p_fullname);
 
@@ -486,8 +487,9 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		char temp_name[DOS_PATHLENGTH + 4];
 		for (const char *ext : {".COM", ".EXE", ".BAT"}) {
 			safe_sprintf(temp_name, "%s%s", fullname, ext);
-			const char *temp_fullname = Which(temp_name);
-			if (temp_fullname) {
+			const auto temp_fullname_s = Which(temp_name);
+			const char *temp_fullname = temp_fullname_s.c_str();
+			if (*temp_fullname) {
 				extension = ext;
 				safe_strcpy(fullname, temp_fullname);
 				break;
@@ -518,81 +520,34 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	return true; //Executable started
 }
 
-static char which_ret[DOS_PATHLENGTH+4];
-
-const char *DOS_Shell::Which(const char *name) const
+std::string DOS_Shell::Which(const std::string_view name) const
 {
-	const size_t name_len = strlen(name);
-	if (name_len >= DOS_PATHLENGTH)
-		return 0;
+	static constexpr auto extensions = {"", ".COM", ".EXE", ".BAT"};
 
-	/* Parse through the Path to find the correct entry */
-	/* Check if name is already ok but just misses an extension */
+	std::vector<std::string> prefixes = {""};
+	std::string path_environment;
+	GetEnvStr("PATH", path_environment);
+	const auto path_equals = path_environment.find_first_of('=');
 
-	if (DOS_FileExists(name))
-		return name;
+	if (path_equals != std::string::npos) {
+		path_environment = path_environment.substr(path_equals + 1);
+		auto path_directories = split(path_environment, ';');
 
-	/* try to find .com .exe .bat */
-	for (const char *ext_fmt : {"%s.COM", "%s.EXE", "%s.BAT"}) {
-		safe_sprintf(which_ret, ext_fmt, name);
-		if (DOS_FileExists(which_ret))
-			return which_ret;
+		prefixes.insert(prefixes.end(),
+		                std::make_move_iterator(path_directories.begin()),
+		                std::make_move_iterator(path_directories.end()));
 	}
 
-	/* No Path in filename look through path environment string */
-	char path[DOS_PATHLENGTH];std::string temp;
-	if (!GetEnvStr("PATH",temp)) return 0;
-	const char * pathenv=temp.c_str();
-
-	assert(pathenv);
-	pathenv = strchr(pathenv,'=');
-	if (!pathenv) return 0;
-	pathenv++;
-	Bitu i_path = 0;
-	while (*pathenv) {
-		/* remove ; and ;; at the beginning. (and from the second entry etc) */
-		while(*pathenv == ';')
-			pathenv++;
-
-		/* get next entry */
-		i_path = 0; /* reset writer */
-		while(*pathenv && (*pathenv !=';') && (i_path < DOS_PATHLENGTH) )
-			path[i_path++] = *pathenv++;
-
-		if(i_path == DOS_PATHLENGTH) {
-			/* If max size. move till next ; and terminate path */
-			while(*pathenv && (*pathenv != ';')) 
-				pathenv++;
-			terminate_str_at(path, DOS_PATHLENGTH - 1);
-		} else {
-			terminate_str_at(path, i_path);
-		}
-
-		/* check entry */
-		if (size_t len = safe_strlen(path)) {
-			if(len >= (DOS_PATHLENGTH - 2)) continue;
-
-			if(path[len - 1] != '\\') {
-				safe_strcat(path, "\\");
-				len++;
-			}
-
-			//If name too long =>next
-			if((name_len + len + 1) >= DOS_PATHLENGTH) continue;
-
-			safe_strcat(path, name);
-			safe_strcpy(which_ret, path);
-			if (DOS_FileExists(which_ret))
-				return which_ret;
-
-			for (const char *ext_fmt : {"%s.COM", "%s.EXE", "%s.BAT"}) {
-				safe_sprintf(which_ret, ext_fmt, path);
-				if (DOS_FileExists(which_ret))
-					return which_ret;
+	for (const auto& prefix : prefixes) {
+		for (const auto& extension : extensions) {
+			std::string file = prefix + std::string(name) + extension;
+			if (DOS_FileExists(file.c_str())) {
+				return file;
 			}
 		}
 	}
-	return 0;
+
+	return "";
 }
 
 std::string full_arguments = "";
