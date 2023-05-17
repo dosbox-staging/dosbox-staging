@@ -268,7 +268,7 @@ void strip_punctuation(std::string &str);
 //   split(":def", ':') returns {"", "def"}
 //   split(":", ':') returns {"", ""}
 //   split("::", ':') returns {"", "", ""}
-std::vector<std::string> split(const std::string &seq, const char delim);
+std::vector<std::string> split(std::string_view seq, char delim);
 
 // Split a string on whitespace, where whitespace can be any of the following:
 // ' '    (0x20)  space (SPC)
@@ -284,7 +284,7 @@ std::vector<std::string> split(const std::string &seq, const char delim);
 //   split("a\tb\nc\vd e\rf") returns {"a", "b", "c", "d", "e", "f"}
 //   split("  ") returns {}
 //   split(" ") returns {}
-std::vector<std::string> split(const std::string &seq);
+std::vector<std::string> split(std::string_view seq);
 
 std::string join_with_commas(const std::vector<std::string>& items,
                              const std::string_view and_conjunction = "and",
