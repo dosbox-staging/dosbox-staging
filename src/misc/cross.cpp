@@ -490,10 +490,35 @@ bool wild_match(const char *haystack, const char *needle)
 	return *haystack == '\0';
 }
 
-bool WildFileCmp(const char *file, const char *wild, bool long_compare)
+static bool wildcard_matches_hidden_file(const std::string_view filename,
+                                         const std::string_view wildcard)
+{
+	const auto is_wildcard_first = wildcard.find_first_of("?*") !=
+	                               std::string_view::npos;
+
+	// DOS files can be named ".EXT", so at a minimum we only consider files
+	// long than this pattern (that also begin with a dot).
+	constexpr size_t min_length = 5;
+
+	const auto is_hidden_file = filename.size() >= min_length &&
+	                            filename[0] == '.' &&
+	                            !(filename == "." || filename == "..");
+
+	return is_wildcard_first && is_hidden_file;
+}
+
+bool WildFileCmp(const char* file, const char* wild, bool long_compare)
 {
 	if (!file || !wild || (*file && !*wild) || strlen(wild) > LFN_NAMELENGTH)
 		return false;
+
+	// Shell commands (like cp, rm, find) ignore dot files in wildcard
+	// patterns on MSYS2, MacOS, Linux, and BSD, so we mirror that behaviour.
+	if (wildcard_matches_hidden_file(file, wild)) {
+		LOG_WARNING("FS: Skipping hidden file '%s' for pattern '%s'", file, wild);
+		return false;
+	}
+
 	char file_name[LFN_NAMELENGTH + 1];
 	char file_ext[LFN_NAMELENGTH + 1];
 	char wild_name[LFN_NAMELENGTH + 1];
