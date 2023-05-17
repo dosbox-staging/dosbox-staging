@@ -121,7 +121,7 @@ void trim(std::string &str, const char trim_chars[])
 	str.erase(0, empty_pfx);
 }
 
-std::vector<std::string> split(const std::string &seq, const char delim)
+std::vector<std::string> split(const std::string_view seq, const char delim)
 {
 	std::vector<std::string> words;
 	if (seq.empty())
@@ -148,7 +148,7 @@ std::vector<std::string> split(const std::string &seq, const char delim)
 	return words;
 }
 
-std::vector<std::string> split(const std::string &seq)
+std::vector<std::string> split(const std::string_view seq)
 {
 	std::vector<std::string> words;
 	if (seq.empty())
