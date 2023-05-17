@@ -1303,26 +1303,49 @@ void VGA_CheckScanLength(void) {
 	}
 }
 
-void VGA_ActivateHardwareCursor(void) {
-	bool hwcursor_active=false;
-	if (svga.hardware_cursor_active) {
-		if (svga.hardware_cursor_active()) hwcursor_active=true;
+// If the hardware mouse cursor is activated, this function changes the VGA line
+// drawing function-pointers to call the more complicated hardware cusror
+// routines (for the given color depth).
+
+// If the hardware cursor isn't activated, the simply fallback to the normal
+// line-drawing routines for a given bit-depth.
+
+// Finally, return the current mode's bits per line buffer value.
+uint8_t VGA_ActivateHardwareCursor()
+{
+	uint8_t bit_per_line_pixel = 8;
+
+	auto should_draw_with_hw_mouse = [&]() {
+		return svga.hardware_cursor_active && svga.hardware_cursor_active();
+	};
+
+	switch (vga.mode) {
+	case M_LIN32: // True-colour VESA
+		VGA_DrawLine = should_draw_with_hw_mouse()
+		                     ? VGA_Draw_LIN32_Line_HWMouse
+		                     : VGA_Draw_Linear_Line;
+		//
+		// Use the "VGA_Draw_Linear_Line" routine that skips the DAC
+		// 8-bit palette LUT and prepares the true-colour pixels for
+		// rendering.
+		break;
+	case M_LIN16:
+	case M_LIN15: // High-colour VESA
+		VGA_DrawLine = should_draw_with_hw_mouse()
+		                     ? VGA_Draw_LIN16_Line_HWMouse
+		                     : VGA_Draw_Linear_Line;
+		//
+		// Use the "VGA_Draw_Linear_Line" routine that skips the DAC
+		// 8-bit palette LUT and prepares the high-colour pixels for
+		// rendering.
+		break;
+	default:
+		VGA_DrawLine = should_draw_with_hw_mouse()
+		                     ? VGA_Draw_VGA_Line_HWMouse
+		                     : VGA_Draw_Linear_Line;
+		break;
 	}
-	if (hwcursor_active) {
-		switch(vga.mode) {
-		case M_LIN32:
-			VGA_DrawLine=VGA_Draw_LIN32_Line_HWMouse;
-			break;
-		case M_LIN15:
-		case M_LIN16:
-			VGA_DrawLine=VGA_Draw_LIN16_Line_HWMouse;
-			break;
-		default:
-			VGA_DrawLine=VGA_Draw_VGA_Line_HWMouse;
-		}
-	} else {
-		VGA_DrawLine=VGA_Draw_Linear_Line;
-	}
+	return bit_per_line_pixel;
 }
 
 // Simple helper to check for SVGA+ resolutions
@@ -1797,7 +1820,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			}
 		}
 		/* Use HW mouse cursor drawer if enabled */
-		VGA_ActivateHardwareCursor();
+		bpp = VGA_ActivateHardwareCursor();
 		break;
 	case M_LIN15:
  	case M_LIN16:
@@ -1810,7 +1833,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		else
 			aspect_ratio /= 2.0;
 		/* Use HW mouse cursor drawer if enabled */
-		VGA_ActivateHardwareCursor();
+		bpp = VGA_ActivateHardwareCursor();
 		break;
 	case M_LIN4:
 		doublewidth = vga.seq.clocking_mode.is_pixel_doubling;

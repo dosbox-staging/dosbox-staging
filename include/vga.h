@@ -595,7 +595,7 @@ void VGA_StartUpdateLFB(void);
 void VGA_SetBlinking(uint8_t enabled);
 void VGA_SetCGA2Table(uint8_t val0,uint8_t val1);
 void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3);
-void VGA_ActivateHardwareCursor(void);
+uint8_t VGA_ActivateHardwareCursor();
 void VGA_KillDrawing(void);
 
 void VGA_SetOverride(bool vga_override);
