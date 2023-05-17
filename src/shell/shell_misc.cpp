@@ -87,6 +87,7 @@ void DOS_Shell::InputCommand(char * line) {
 	CommandPrompt prompt;
 
 	while (size && !shutdown_requested) {
+		bool viewing_tab_completions = false;
 		dos.echo=false;
 		while(!DOS_ReadFile(input_handle,&c,&n)) {
 			uint16_t dummy;
@@ -195,6 +196,7 @@ void DOS_Shell::InputCommand(char * line) {
 					}
 					break;
 				case 15: /* Shift+Tab */
+					viewing_tab_completions = true;
 					if (l_completion.size()) {
 						if (it_completion == l_completion.begin()) {
 							it_completion = l_completion.end ();
@@ -225,7 +227,6 @@ void DOS_Shell::InputCommand(char * line) {
 					str_len--;
 				}
 			}
-			if (l_completion.size()) l_completion.clear();
 			break;
 		case 0x0a: /* New Line not handled */
 			/* Don't care */
@@ -236,6 +237,7 @@ void DOS_Shell::InputCommand(char * line) {
 			break;
 		case'\t':
 			{
+				viewing_tab_completions = true;
 				if (l_completion.size()) {
 					++it_completion;
 					if (it_completion == l_completion.end())
@@ -332,13 +334,11 @@ void DOS_Shell::InputCommand(char * line) {
 			prompt.Update(line, str_index);
 			prompt.Newline();
 			reset_str(line);
-			if (l_completion.size()) l_completion.clear(); //reset the completion list.
 			this->InputCommand(line);	//Get the NEW line.
 			size = 0;       // stop the next loop
 			str_len = 0;    // prevent multiple adds of the same line
 			break;
 		default:
-			if (l_completion.size()) l_completion.clear();
 			if (CommandPrompt::MaxCommandSize() < str_index) {
 				break;
 			}
@@ -367,6 +367,10 @@ void DOS_Shell::InputCommand(char * line) {
 		}
 
 		prompt.Update(line, str_index);
+		
+		if (!viewing_tab_completions) {
+			l_completion.clear();
+		}
 	}
 
 	if (!str_len) return;
