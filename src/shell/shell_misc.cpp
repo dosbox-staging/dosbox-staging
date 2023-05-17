@@ -32,6 +32,7 @@
 #include "../ints/int10.h"
 
 [[nodiscard]] static std::vector<std::string> get_completions(std::string_view command);
+static void run_binary_executable(std::string_view fullname, std::string_view args);
 
 namespace {
 class CommandPrompt {
@@ -433,7 +434,6 @@ void CommandPrompt::SetCursor(const std::string::size_type index)
 	                   position_zero.page);
 }
 
-std::string full_arguments = "";
 bool DOS_Shell::Execute(char * name,char * args) {
 /* return true  => don't check for hardware changes in do_command 
  * return false =>       check for hardware changes in do_command */
@@ -513,108 +513,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		{
 			if(strcasecmp(extension, ".exe") !=0) return false;
 		}
-		/* Run the .exe or .com file from the shell */
-		/* Allocate some stack space for tables in physical memory */
-		reg_sp-=0x200;
-		//Add Parameter block
-		DOS_ParamBlock block(SegPhys(ss)+reg_sp);
-		block.Clear();
-		//Add a filename
-		RealPt file_name=RealMakeSeg(ss,reg_sp+0x20);
-		MEM_BlockWrite(RealToPhysical(file_name), fullname,
-		               (Bitu)(safe_strlen(fullname) + 1));
-
-		/* HACK: Store full commandline for mount and imgmount */
-		full_arguments.assign(line);
-
-		/* Fill the command line */
-		CommandTail cmdtail = {};
-
-		// copy at-most 126 chracters plus the terminating zero
-		safe_strcpy(cmdtail.buffer, line);
-
-		cmdtail.count = check_cast<uint8_t>(safe_strlen(cmdtail.buffer));
-		terminate_str_at(line, cmdtail.count);
-
-		assert(cmdtail.count < sizeof(cmdtail.buffer));
-		cmdtail.buffer[cmdtail.count] = 0xd;
-
-		/* Copy command line in stack block too */
-		MEM_BlockWrite(SegPhys(ss)+reg_sp+0x100,&cmdtail,128);
-
-		
-		/* Split input line up into parameters, using a few special rules, most notable the one for /AAA => A\0AA
-		 * Qbix: It is extremly messy, but this was the only way I could get things like /:aa and :/aa to work correctly */
-		
-		//Prepare string first
-		char parseline[258] = { 0 };
-		for(char *pl = line,*q = parseline; *pl ;pl++,q++) {
-			if (*pl == '=' || *pl == ';' || *pl ==',' || *pl == '\t' || *pl == ' ') 
-				reset_str(q);
-			else
-				*q = *pl; //Replace command seperators with 0.
-		} //No end of string \0 needed as parseline is larger than line
-
-		for(char* p = parseline; (p-parseline) < 250 ;p++) { //Stay relaxed within boundaries as we have plenty of room
-			if (*p == '/') { //Transform /Hello into H\0ello
-				reset_str(p);
-				p++;
-				while ( *p == 0 && (p-parseline) < 250) p++; //Skip empty fields
-				if ((p-parseline) < 250) { //Found something. Lets get the first letter and break it up
-					p++;
-					memmove(static_cast<void*>(p + 1),static_cast<void*>(p),(250-(p-parseline)));
-					if ((p - parseline) < 250)
-						reset_str(p);
-				}
-			}
-		}
-		// Just to be safe
-		terminate_str_at(parseline, 255);
-		terminate_str_at(parseline, 256);
-		terminate_str_at(parseline, 257);
-
-		/* Parse FCB (first two parameters) and put them into the current DOS_PSP */
-		uint8_t add;
-		uint16_t skip = 0;
-		//find first argument, we end up at parseline[256] if there is only one argument (similar for the second), which exists and is 0.
-		while(skip < 256 && parseline[skip] == 0) skip++;
-		FCB_Parsename(dos.psp(),0x5C,0x01,parseline + skip,&add);
-		skip += add;
-		
-		//Move to next argument if it exists
-		while(parseline[skip] != 0) skip++;  //This is safe as there is always a 0 in parseline at the end.
-		while(skip < 256 && parseline[skip] == 0) skip++; //Which is higher than 256
-		FCB_Parsename(dos.psp(),0x6C,0x01,parseline + skip,&add); 
-
-		block.exec.fcb1=RealMake(dos.psp(),0x5C);
-		block.exec.fcb2=RealMake(dos.psp(),0x6C);
-		/* Set the command line in the block and save it */
-		block.exec.cmdtail=RealMakeSeg(ss,reg_sp+0x100);
-		block.SaveData();
-#if 0
-		/* Save CS:IP to some point where i can return them from */
-		uint32_t oldeip=reg_eip;
-		uint16_t oldcs=SegValue(cs);
-		RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
-		SegSet16(cs,RealSeg(newcsip));
-		reg_ip=RealOffset(newcsip);
-#endif
-		/* Start up a dos execute interrupt */
-		reg_ax=0x4b00;
-		//Filename pointer
-		SegSet16(ds,SegValue(ss));
-		reg_dx=RealOffset(file_name);
-		//Paramblock
-		SegSet16(es,SegValue(ss));
-		reg_bx=reg_sp;
-		SETFLAGBIT(IF,false);
-		CALLBACK_RunRealInt(0x21);
-		/* Restore CS:IP and the stack */
-		reg_sp+=0x200;
-#if 0
-		reg_eip=oldeip;
-		SegSet16(cs,oldcs);
-#endif
+		run_binary_executable(p_fullname, args);
 	}
 	return true; //Executable started
 }
@@ -694,4 +593,95 @@ const char *DOS_Shell::Which(const char *name) const
 		}
 	}
 	return 0;
+}
+
+std::string full_arguments = "";
+// TODO De-mystify magic numbers and verify logical correctness
+static void run_binary_executable(const std::string_view fullname,
+                                  std::string_view args)
+{
+	/* Run the .exe or .com file from the shell */
+	/* Allocate some stack space for tables in physical memory */
+	reg_sp -= 0x200;
+	// Add Parameter block
+	DOS_ParamBlock block(SegPhys(ss) + reg_sp);
+	block.Clear();
+
+	// Add a filename
+	const RealPt file_name = RealMakeSeg(ss, reg_sp + 0x20);
+	MEM_BlockWrite(RealToPhysical(file_name),
+	               std::string(fullname).c_str(),
+	               fullname.size() + 1);
+
+	/* HACK: Store full commandline for mount and imgmount */
+	full_arguments.assign(args);
+
+	/* Fill the command line */
+	CommandTail cmdtail                    = {};
+	constexpr auto max_cmdtail_buffer_size = 126;
+	std::copy_n(args.begin(), max_cmdtail_buffer_size, cmdtail.buffer);
+
+	cmdtail.count = args.size() > max_cmdtail_buffer_size
+	                      ? max_cmdtail_buffer_size
+	                      : static_cast<uint8_t>(args.size());
+
+	cmdtail.buffer[cmdtail.count] = '\r';
+
+	/* Copy command line in stack block too */
+	MEM_BlockWrite(SegPhys(ss) + reg_sp + 0x100, &cmdtail, 128);
+
+	/* Split input line up into parameters, using a few special rules, most
+	 * notable the one for /AAA => A\0AA Qbix: It is extremly messy, but
+	 * this was the only way I could get things like /:aa and :/aa to work
+	 * correctly */
+	std::array<std::string, 2> fcb_args;
+	decltype(fcb_args.size()) fcb_index = 0;
+
+	constexpr auto separators = "=;,\t /";
+	auto arg_index            = args.find_first_not_of(separators);
+	while (arg_index != std::string::npos && fcb_index < fcb_args.size()) {
+		args = args.substr(arg_index);
+
+		if (args.size() > 1 && args[0] == '/') {
+			fcb_args[fcb_index] = args[1];
+			++fcb_index;
+			args = args.substr(2);
+		}
+
+		else {
+			auto next_separator = args.find_first_not_of(separators);
+			fcb_args[fcb_index] = args.substr(0, next_separator);
+			++fcb_index;
+			args = args.substr(next_separator + 1);
+		}
+	}
+
+	/* Parse FCB (first two parameters) and put them into the current
+	 * DOS_PSP */
+	uint8_t add = 0;
+	FCB_Parsename(dos.psp(), 0x5C, 0x01, fcb_args[0].c_str(), &add);
+	FCB_Parsename(dos.psp(), 0x6C, 0x01, fcb_args[1].c_str(), &add);
+
+	block.exec.fcb1 = RealMake(dos.psp(), 0x5C);
+	block.exec.fcb2 = RealMake(dos.psp(), 0x6C);
+
+	/* Set the command line in the block and save it */
+	block.exec.cmdtail = RealMakeSeg(ss, reg_sp + 0x100);
+	block.SaveData();
+
+	/* Start up a dos execute interrupt */
+	reg_ax = 0x4b00;
+
+	// Filename pointer
+	SegSet16(ds, SegValue(ss));
+	reg_dx = RealOffset(file_name);
+
+	// Paramblock
+	SegSet16(es, SegValue(ss));
+	reg_bx = reg_sp;
+	SETFLAGBIT(IF, false);
+	CALLBACK_RunRealInt(0x21);
+
+	/* Restore CS:IP and the stack */
+	reg_sp += 0x200;
 }
