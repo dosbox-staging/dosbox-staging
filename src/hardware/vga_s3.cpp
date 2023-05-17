@@ -117,7 +117,7 @@ void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 	case 0x45:  /* Hardware cursor mode */
 		vga.s3.hgc.curmode = val;
 		// Activate hardware cursor code if needed
-		VGA_ActivateHardwareCursor();
+		(void)VGA_ActivateHardwareCursor();
 		break;
 	case 0x46:
 		vga.s3.hgc.originx = (vga.s3.hgc.originx & 0x00ff) | (val << 8);
