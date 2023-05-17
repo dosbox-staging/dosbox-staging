@@ -241,7 +241,8 @@ bool DOS_FCBGetFileSize(uint16_t seg,uint16_t offset);
 bool DOS_FCBDeleteFile(uint16_t seg,uint16_t offset);
 bool DOS_FCBRenameFile(uint16_t seg, uint16_t offset);
 void DOS_FCBSetRandomRecord(uint16_t seg, uint16_t offset);
-uint8_t FCB_Parsename(uint16_t seg,uint16_t offset,uint8_t parser ,char *string, uint8_t *change);
+uint8_t FCB_Parsename(uint16_t seg, uint16_t offset, uint8_t parser,
+                      const char* string, uint8_t* change);
 bool DOS_GetAllocationInfo(uint8_t drive,uint16_t * _bytes_sector,uint8_t * _sectors_cluster,uint16_t * _total_clusters);
 
 /* Extra DOS Interrupts */
