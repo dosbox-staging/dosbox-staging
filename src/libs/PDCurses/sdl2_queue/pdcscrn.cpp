@@ -277,9 +277,11 @@ int PDC_scr_open(void)
         env = getenv("PDC_COLS");
         pdc_swidth = (env ? atoi(env) : 80) * pdc_fwidth;
 
-        /* Workaround to not disrupt OpenGL context state in other windows. */
+        /* Workaround to not disrupt OpenGL context state in other windows. 
+           Disabled for macOS, as it causes a segfault, and isn't needed. */
+#ifndef __MACOSX__
         SDL_SetHint(SDL_HINT_FRAMEBUFFER_ACCELERATION, "0");
-
+#endif
         constexpr uint32_t flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
 
         pdc_window = SDL_CreateWindow("PDCurses",
