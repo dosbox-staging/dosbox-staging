@@ -51,7 +51,8 @@ static_assert(SCALER_MAXWIDTH >= SCALER_MAX_MUL_WIDTH * max_scan_doubled_width);
 constexpr auto max_pixel_bytes = sizeof(uint32_t);
 constexpr auto max_line_bytes  = SCALER_MAXWIDTH * max_pixel_bytes;
 
-static std::array<uint8_t, max_line_bytes> templine_buffer;
+// The line buffer can be written in units up to RGB888 pixels (32-bit) size
+alignas(uint32_t) static std::array<uint8_t, max_line_bytes> templine_buffer;
 static auto TempLine = templine_buffer.data();
 
 static uint8_t * VGA_Draw_1BPP_Line(Bitu vidstart, Bitu line) {
