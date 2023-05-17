@@ -171,6 +171,9 @@ uszkodzonym MCB.
 Rozmiar pamięci graficznej w megabajtach (1-8) lub kilobajtach (256-8192).
 Ustawienie 'auto' (domyślne) wybiera typową dla danej karty graficznej.
 .
+:CONFIG_FORCE_VGA_SINGLE_SCAN
+Używa pojedynczych linii dla obrazu VGA o rozdzielczości pionowej poniżej 350.
+.
 :CONFIG_DOS_RATE
 Częstotliwość odświeżania emulowanego obrazu:
   default:  Określone przez tryb graficzny (zalecane, domyślne).
@@ -188,6 +191,9 @@ Dostępne tryby graficzne VESA 1.2 oraz 2.0:
               Niektóre gry mogą jednak niewłaściwie je obsługiwać (migotanie),
               albo mogą wymagać do ich obsługi więcej pamięci.
 Domyślnie 'compatible'.
+.
+:CONFIG_VGA_8DOT_FONT
+Zawsze używa czcionki o szerokości 8 pikseli dla obrazu VGA.
 .
 :CONFIG_SPEED_MODS
 Zezwala na zachowania emulatora, które poprawiają wydajność (domyślnie
@@ -238,6 +244,14 @@ monitorach, dla której napisano znaczącą większość gier DOSowych.
 Dotyczy tylko trybów graficznych z prostokątnymi pikselami (np. 320x200,
 640x400); nie ma wpływu na tryby graficzne z kwadratowymi pikselami
 (np. 640x480, 800x600). Domyślnie włączone.
+.
+:CONFIG_INTEGER_SCALING
+Ogranicza współczynnik poziomego lub pionowego skalowania obrazu do wartości
+całkowitych. Zawsze zachowuje właściwe proporcje obrazu, co może wymusić
+niecałkowity współczynnik skalowania w drugim wymiarze.
+  off:         Brak ograniczeń we współczynniku skalowania obrazu (domyślne).
+  horizontal:  Całkowite skalowanie obrazu w poziomie.
+  vertical:    Całkowite skalowanie obrazu w pionie.
 .
 :CONFIG_MONOCHROME_PALETTE
 Barwa obrazu monochromatycznego (domyślnie 'white'). Działa tylko z systemami
@@ -379,7 +393,7 @@ przyspieszenia myszy (domyślnie włączone). Działa albo na pełnym ekranie, a
 kiedy kursor myszy jest przejęty w trybie okienkowym.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Włącza wbudowany sterownik myszy dla aplikacji DOS (domyślnie włączone).
+Włącza wbudowany sterownik myszy dla programów DOS (domyślnie włączone).
 Uwagi: Wyłącz, jeśli zamierzasz używać oryginalnego sterownika MOUSE.COM.
        Podczas bootowania systemu operacyjnego z obrazu dysku wbudowany
        sterownik jest automatycznie wyłączany.
@@ -511,7 +525,7 @@ zawieszających się lub brakujących dźwięków.
 DOSBox domyślnie koryguje wyjście MIDI takich gier. Nie zmienia to dźwięku
 w słyszalny sposób, wpływa jedynie na reprezentację danych MIDI.
 Włącz jedynie, jeśli potrzebujesz surowych, nieprzetworzonych danych MIDI, np.
-do pracy z aplikacjami muzycznymi, lub aby debugować problemy związane z MIDI.
+do pracy z programami muzycznymi, lub aby debugować problemy związane z MIDI.
 .
 :CONFIG_SOUNDFONT
 Ścieżka do pliku SoundFont w formacie SF2. Może być względna lub bezwzględna,
@@ -911,7 +925,7 @@ Włącza emulację pamięci rozszerzonej, XMS (domyślnie włączone).
 .
 :CONFIG_EMS
 Włącza emulacją pamięci stronicowanej, EMS. Domyślne ustawienie (włączone)
-oferuje największą kompatybilność, ale niektóre aplikacje mogą działać lepiej
+oferuje największą kompatybilność, ale niektóre programy mogą działać lepiej
 z innymi wartościami lub wymagać wyłączenia pamięci EMS żeby w ogóle działać.
 .
 :CONFIG_UMB
@@ -936,6 +950,11 @@ Obsługiwane przez COMMAND.COM z systemów MS-DOS 7/8 oraz FreeDOS.
 :CONFIG_KEYBOARDLAYOUT
 Kod języka klawiatury (domyślnie 'auto') - np. 'pl' (polski układ
 programisty), 'pl214' (polski układ maszynistki).
+.
+:CONFIG_SETVER_TABLE_FILE
+Plik z tabelą programów i przypisanych do nich wersji systemu DOS, w formacie
+wartości rozdzielonych tabulatorami, używany przez polecenie SETVER.EXE do
+trwałego zapamiętania ustawień (domyślnie wartość pusta).
 .
 :CONFIG_IPX
 Włącza emulację protokołu IPX po UDP/IP (domyślnie włączone).
@@ -1000,6 +1019,9 @@ Jest to dobre miejsce na umieszczenie poleceń MOUNT.
 .
 :CONFIG_VALID_VALUES
 Możliwe wartości
+.
+:CONFIG_DEPRECATED_VALUES
+Przestarzałe wartości
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Brak sekcji lub parametru: '%s'
@@ -1146,7 +1168,7 @@ enumeracja nieobsługiwana
 urządzenie nie zostało skonfigurowane
 .
 :PROGRAM_FMPDRV_HELP_LONG
-Ładuje lub usuwa wbudowany sterownik karty ReelMagic Full Motion Player.
+Ładuje lub usuwa wbudowany sterownik karty ReelMagic.
 
 Składnia:
   [color=green]fmpdrv[reset]    (ładuje sterownik)
@@ -2170,6 +2192,76 @@ Typ musi być jednym z:
   %s
 
 .
+:PROGRAM_SETVER_HELP_LONG
+Wyświetla lub ustawia wersję DOS raportowaną programom.
+
+Składnia:
+  [color=green]setver[reset] \[/b] [/p]
+  [color=green]setver[reset] [color=cyan]PLIK[reset] [color=cyan]WERSJA[reset] [/q]
+  [color=green]setver[reset] [color=cyan]PLIK[reset] /d [/q]
+  [color=green]setver[reset] [color=cyan]WERSJA[reset] /g [/q]
+  [color=green]setver[reset] /d /g [/q]
+  [color=green]setver[reset] /d /all [/q]
+
+Gdzie:
+  [color=cyan]PLIK[reset]     nazwa pliku programu (opcjonalnie ze ścieżką), do którego
+           odnosi się ustawienie.
+  [color=cyan]WERSJA[reset]   wersja systemu DOS w formacie [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] lub [color=white]n[reset]
+  /g       ustawienie globalne, odnoszące się do wszystkich programów.
+  /d       usuwa wpis z tabeli wersji.
+  /all     razem z /d czyści całą tabelę wersji.
+  /b       wyświetla tabelę wersji w formie pliku wsadowego.
+  /p       wyświetla tabelę wersji po jednej stronie.
+  /q       nie wyświetla potwierdzenia.
+  /delete oraz /quiet oznaczają to samo, co /d oraz /q, odpowiednio.
+
+Uwagi:
+  Aby zapamiętać ustawienia na stałe, podaj nazwę pliku do przechowywania
+  tabeli wersji w sekcji [dos] pliku konfiguracyjnego - dodaj wpis
+  'setver_table_file = [color=cyan]PLIK_Z_TABELĄ_WERSJI[reset]'.
+
+Przykłady:
+  [color=green]setver[reset] /b              ; wyświetla ustawienia w formie pliku wsadowego
+  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; raportuje wersję 6.22 dla każdego pliku RETRO.COM
+  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] /d    ; zaprzestaje raportowania w/w wersji DOS
+
+.
+:PROGRAM_SETVER_WRONG_TABLE
+Jedynie tabela wersji na dysku Z:\ jest obsługiwana.
+.
+:PROGRAM_SETVER_INVALID_VERSION
+Nieprawidłowa wersja systemu DOS.
+.
+:PROGRAM_SETVER_TABLE_UPDATED
+Tabela wersji zaktualizowana.
+.
+:PROGRAM_SETVER_TABLE_CLEARED
+Tabela wersji wyczyszczona.
+.
+:PROGRAM_SETVER_TABLE_ALREADY_EMPTY
+Tabela wersji już jest pusta.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_REMOVED
+Wpis usunięty z tabeli wersji.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_NOT_FOUND
+Wpis w tabeli wersji nieznaleziony.
+.
+:PROGRAM_SETVER_TABLE_EMPTY
+Tabela wersji jest pusta.
+.
+:PROGRAM_SETVER_GLOBAL
+Wersja raportowana globalnie
+.
+:PROGRAM_SETVER_BATCH_GLOBAL
+reguła dla wszystkich programów
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_NAME
+reguły dla pasujących nazw plików
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_PATH
+reguły dla pasujących nazw plików ze ścieżkami
+.
 :PROGRAM_TREE_HELP_LONG
 Wyświetla drzewo katalogów w formie graficznej.
 
@@ -2216,12 +2308,26 @@ Brak plików lub podkatalogów do wyświetlenia.
 Zbyt wiele plików lub podkatalogów.
 
 .
+:AUTOEXEC_BAT_AUTOGENERATED
+wygenerowane automatycznie
+.
+:AUTOEXEC_BAT_CONFIG_SECTION
+z sekcji [autoexec]
+.
 :SHELL_ILLEGAL_PATH
 Nieprawidłowa ścieżka.
 
 .
+:SHELL_ILLEGAL_FILE_NAME
+Nieprawidłowa nazwa pliku.
+
+.
 :SHELL_ILLEGAL_SWITCH
 Nieprawidłowy przełącznik: %s.
+
+.
+:SHELL_ILLEGAL_SWITCH_COMBO
+Nieprawidłowa kombinacja przełączników.
 
 .
 :SHELL_MISSING_PARAMETER
@@ -2230,6 +2336,10 @@ Brak wymaganego parametru.
 .
 :SHELL_TOO_MANY_PARAMETERS
 Zbyt wiele parametrów.
+
+.
+:SHELL_EXPECTED_FILE_NOT_DIR
+Wymagany plik, nie katalog.
 
 .
 :SHELL_SYNTAX_ERROR
@@ -3091,26 +3201,21 @@ Przykłady:
   [color=green]path[reset] [color=cyan]Z:\;C:\DOS[reset]
 .
 :SHELL_CMD_VER_HELP
-Wyświetla lub zmienia raportowaną wersję systemu DOS.
+Wyświetla wersję systemu DOS.
 
 .
 :SHELL_CMD_VER_HELP_LONG
 Składnia:
   [color=green]ver[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]WERSJA[reset]
-
-Gdzie:
-  [color=cyan]WERSJA[reset]  może być numerem, np. [color=cyan]5[reset] lub liczbą z dwoma cyframi po kropce,
-          np. [color=cyan]6.22[reset], [color=cyan]7.01[reset] lub [color=cyan]7.10[reset]. Alternatywnie można oddzielić
-          część ułamkową za pomocą spacji: [color=cyan]6 22[reset], [color=cyan]7 01[reset] lub [color=cyan]7 10[reset].
 
 Uwagi:
   Raportowaną wersję DOSu można ustawić w pliku konfiguracyjnym, w sekcji
   [dos], wpisując 'ver = [color=cyan]WERSJA[reset]'.
+  Wersję systemu DOS raportowaną programom można zmienić poleceniem [color=green]setver[reset].
+  Składnia '[color=green]ver[reset] [color=white]set[reset] [color=cyan]WERSJA[reset]' jest przestarzała.
 
 Przykłady:
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]
+  [color=green]ver[reset]
 .
 :SHELL_CMD_VER_VER
 DOSBox Staging, wersja %s
