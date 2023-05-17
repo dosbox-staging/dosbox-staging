@@ -106,7 +106,7 @@ public:
 	void InputCommand(char * line);
 	void ShowPrompt();
 	void DoCommand(char * cmd);
-	bool Execute(char * name,char * args);
+	bool Execute(std::string_view name, std::string_view args);
 	/* Checks if it matches a hardware-property */
 	bool CheckConfig(char* cmd_in,char*line);
 	/* Internal utilities for testing */

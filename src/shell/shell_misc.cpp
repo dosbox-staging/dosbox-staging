@@ -434,28 +434,10 @@ void CommandPrompt::SetCursor(const std::string::size_type index)
 	                   position_zero.page);
 }
 
-bool DOS_Shell::Execute(char * name,char * args) {
-/* return true  => don't check for hardware changes in do_command 
- * return false =>       check for hardware changes in do_command */
-	char fullname[DOS_PATHLENGTH+4]; //stores results from Which
-	char line[CMD_MAXLINE];
-	const bool have_args = args && args[0] != '\0';
-	if (have_args) {
-		if (*args != ' ') { // put a space in front
-			line[0] = ' ';
-			terminate_str_at(line, 1);
-			strncat(line, args, CMD_MAXLINE - 2);
-			terminate_str_at(line, CMD_MAXLINE - 1);
-		} else {
-			safe_strcpy(line, args);
-		}
-	} else {
-		reset_str(line);
-	}
-
-	/* check for a drive change */
-	if (((strcmp(name + 1, ":") == 0) || (strcmp(name + 1, ":\\") == 0)) && isalpha(*name))
-	{
+bool DOS_Shell::Execute(std::string_view name, std::string_view args)
+{
+	if (name.size() > 1 && (std::isalpha(name[0]) != 0) &&
+	    (name.substr(1) == ":" || name.substr(1) == ":\\")) {
 		const auto drive_idx = drive_index(name[0]);
 		if (!DOS_SetDrive(drive_idx)) {
 			WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),
@@ -464,60 +446,36 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		return true;
 	}
 
-	/* Check for a full name */
-	const auto p_fullname_s = Which(name);
-	const char *p_fullname = p_fullname_s.c_str();
-	if (!*p_fullname)
+	const auto fullname                                = Which(name);
+	constexpr decltype(fullname.size()) extension_size = 4;
+
+	if (fullname.empty() || fullname.size() <= extension_size) {
 		return false;
-	safe_strcpy(fullname, p_fullname);
-
-	// Always disallow files without extension from being executed.
-	// Only internal commands can be run this way and they never get in
-	// this handler.
-	const char *extension = strrchr(fullname, '.');
-	if (!extension) {
-		// Check if the result will fit in the parameters.
-		if (safe_strlen(fullname) > (DOS_PATHLENGTH - 1)) {
-			WriteOut(MSG_Get("PROGRAM_PATH_TOO_LONG"), fullname,
-			         DOS_PATHLENGTH);
-			return false;
-		}
-
-		// Try to add .COM, .EXE and .BAT extensions to the filename
-		char temp_name[DOS_PATHLENGTH + 4];
-		for (const char *ext : {".COM", ".EXE", ".BAT"}) {
-			safe_sprintf(temp_name, "%s%s", fullname, ext);
-			const auto temp_fullname_s = Which(temp_name);
-			const char *temp_fullname = temp_fullname_s.c_str();
-			if (*temp_fullname) {
-				extension = ext;
-				safe_strcpy(fullname, temp_fullname);
-				break;
-			}
-		}
-
-		if (!extension)
-			return false;
 	}
 
-	if (strcasecmp(extension, ".bat") == 0) 
-	{	/* Run the .bat file */
+	auto extension = fullname.substr(fullname.size() - extension_size);
+
+	if (iequals(extension, ".BAT")) {
 		/* delete old batch file if call is not active*/
-		bool temp_echo=echo; /*keep the current echostate (as delete bf might change it )*/
-		if (bf && !call)
+		/*keep the current echostate (as delete bf might change it )*/
+		const bool temp_echo = echo;
+		if (bf && !call) {
 			bf.reset();
-		bf = std::make_shared<BatchFile>(this, fullname, name, line);
-		echo = temp_echo; // restore it.
-	} 
-	else 
-	{	/* only .bat .exe .com extensions maybe be executed by the shell */
-		if(strcasecmp(extension, ".com") !=0) 
-		{
-			if(strcasecmp(extension, ".exe") !=0) return false;
 		}
-		run_binary_executable(p_fullname, args);
+		bf   = std::make_shared<BatchFile>(this,
+                                                 fullname.c_str(),
+                                                 std::string(name).c_str(),
+                                                 std::string(args).c_str());
+		echo = temp_echo;
+		return true;
 	}
-	return true; //Executable started
+
+	if (iequals(extension, ".COM") || iequals(extension, ".EXE")) {
+		run_binary_executable(fullname, args);
+		return true;
+	}
+
+	return false;
 }
 
 std::string DOS_Shell::Which(const std::string_view name) const
