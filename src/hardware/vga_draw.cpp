@@ -352,6 +352,47 @@ static uint8_t * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	return ret;
 }
 
+static uint8_t* draw_unwrapped_line_from_dac_palette(Bitu vidstart, Bitu)
+{
+	// Quick references
+	static constexpr auto palette_map        = vga.dac.palette_map;
+	static constexpr uint8_t bytes_per_pixel = sizeof(palette_map[0]);
+	const auto linear_mask                   = vga.draw.linear_mask;
+	const auto linear_addr                   = vga.draw.linear_base;
+
+	// Video mode-specific line variables
+	const auto pixels_in_line = static_cast<uint16_t>(vga.draw.line_length /
+	                                                  bytes_per_pixel);
+	const auto video_end = vidstart + pixels_in_line;
+
+	// The line address is where the RGB888 palettized pixel is written.
+	// It's incremented forward per pixel.
+	auto line_addr = reinterpret_cast<uint32_t*>(TempLine);
+
+	auto linear_pos = vidstart;
+
+	// This function typically runs on 640+-wide lines and is a rendering
+	// bottleneck. Draw in batches of four to let the host pipeline deeper.
+	while (linear_pos < video_end) {
+		const auto masked_pos_0 = linear_pos++ & linear_mask;
+		const auto masked_pos_1 = linear_pos++ & linear_mask;
+		const auto masked_pos_2 = linear_pos++ & linear_mask;
+		const auto masked_pos_3 = linear_pos++ & linear_mask;
+
+		const auto palette_index_0 = *(linear_addr + masked_pos_0);
+		const auto palette_index_1 = *(linear_addr + masked_pos_1);
+		const auto palette_index_2 = *(linear_addr + masked_pos_2);
+		const auto palette_index_3 = *(linear_addr + masked_pos_3);
+
+		*line_addr++ = *(palette_map + palette_index_0);
+		*line_addr++ = *(palette_map + palette_index_1);
+		*line_addr++ = *(palette_map + palette_index_2);
+		*line_addr++ = *(palette_map + palette_index_3);
+	}
+
+	return TempLine;
+}
+
 static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu /*line*/)
 {
 	const auto offset                 = vidstart & vga.draw.linear_mask;
