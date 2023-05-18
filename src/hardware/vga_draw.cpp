@@ -371,23 +371,19 @@ static uint8_t* draw_unwrapped_line_from_dac_palette(Bitu vidstart, Bitu)
 
 	auto linear_pos = vidstart;
 
+	// Draw in batches of four to let the host pipeline deeper.
+	constexpr auto num_repeats = 4;
+	assert(pixels_in_line % num_repeats == 0);
+
 	// This function typically runs on 640+-wide lines and is a rendering
-	// bottleneck. Draw in batches of four to let the host pipeline deeper.
+	// bottleneck.
 	while (linear_pos < video_end) {
-		const auto masked_pos_0 = linear_pos++ & linear_mask;
-		const auto masked_pos_1 = linear_pos++ & linear_mask;
-		const auto masked_pos_2 = linear_pos++ & linear_mask;
-		const auto masked_pos_3 = linear_pos++ & linear_mask;
-
-		const auto palette_index_0 = *(linear_addr + masked_pos_0);
-		const auto palette_index_1 = *(linear_addr + masked_pos_1);
-		const auto palette_index_2 = *(linear_addr + masked_pos_2);
-		const auto palette_index_3 = *(linear_addr + masked_pos_3);
-
-		*line_addr++ = *(palette_map + palette_index_0);
-		*line_addr++ = *(palette_map + palette_index_1);
-		*line_addr++ = *(palette_map + palette_index_2);
-		*line_addr++ = *(palette_map + palette_index_3);
+		auto repeats = num_repeats;
+		while (repeats--) {
+			const auto masked_pos    = linear_pos++ & linear_mask;
+			const auto palette_index = *(linear_addr + masked_pos);
+			*line_addr++ = *(palette_map + palette_index);
+		}
 	}
 
 	return TempLine;
