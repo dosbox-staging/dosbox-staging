@@ -1438,13 +1438,13 @@ static uint16_t get_default_code_page()
 	return default_code_page;
 }
 
-static uint16_t get_custom_code_page(const uint16_t custom_code_page)
+static uint16_t get_custom_code_page(const uint16_t in_code_page)
 {
-	if (custom_code_page == 0) {
+	if (in_code_page == 0) {
 		return 0;
 	}
 
-	const uint16_t code_page = deduplicate_code_page(custom_code_page);
+	const uint16_t code_page = deduplicate_code_page(in_code_page);
 	if (!prepare_code_page(code_page)) {
 		return get_default_code_page();
 	}
@@ -1474,56 +1474,48 @@ uint16_t get_utf8_code_page()
 	return get_default_code_page();
 }
 
-bool utf8_to_dos(const std::string& str_in, std::string& str_out)
+static bool utf8_to_dos_common(const std::string& in_str, std::string& out_str,
+                               const uint16_t code_page)
 {
-	load_config_if_needed();
+	std::vector<uint16_t> tmp = {};
 
-	const uint16_t cp = get_utf8_code_page();
-
-	std::vector<uint16_t> str_wide = {};
-
-	const bool status1 = utf8_to_wide(str_in, str_wide);
-	const bool status2 = wide_to_dos(str_wide, str_out, cp);
+	const bool status1 = utf8_to_wide(in_str, tmp);
+	const bool status2 = wide_to_dos(tmp, out_str, code_page);
 
 	return status1 && status2;
 }
 
-bool utf8_to_dos(const std::string& str_in, std::string& str_out,
+bool utf8_to_dos(const std::string& in_str, std::string& out_str)
+{
+	load_config_if_needed();
+	return utf8_to_dos_common(in_str, out_str, get_utf8_code_page());
+}
+
+bool utf8_to_dos(const std::string& in_str, std::string& out_str,
                  const uint16_t code_page)
 {
 	load_config_if_needed();
-
-	const uint16_t cp = get_custom_code_page(code_page);
-
-	std::vector<uint16_t> str_wide = {};
-
-	const bool status1 = utf8_to_wide(str_in, str_wide);
-	const bool status2 = wide_to_dos(str_wide, str_out, cp);
-
-	return status1 && status2;
+	return utf8_to_dos_common(in_str, out_str, get_custom_code_page(code_page));
 }
 
-void dos_to_utf8(const std::string& str_in, std::string& str_out)
+static void dos_to_utf8_common(const std::string& in_str, std::string& out_str,
+                               const uint16_t code_page)
+{
+	std::vector<uint16_t> tmp = {};
+
+	dos_to_wide(in_str, tmp, code_page);
+	wide_to_utf8(tmp, out_str);
+}
+
+void dos_to_utf8(const std::string& in_str, std::string& out_str)
 {
 	load_config_if_needed();
-
-	const uint16_t cp = get_utf8_code_page();
-
-	std::vector<uint16_t> str_wide = {};
-
-	dos_to_wide(str_in, str_wide, cp);
-	wide_to_utf8(str_wide, str_out);
+	dos_to_utf8_common(in_str, out_str, get_utf8_code_page());
 }
 
-void dos_to_utf8(const std::string& str_in, std::string& str_out,
+void dos_to_utf8(const std::string& in_str, std::string& out_str,
                  const uint16_t code_page)
 {
 	load_config_if_needed();
-
-	const uint16_t cp = get_custom_code_page(code_page);
-
-	std::vector<uint16_t> str_wide = {};
-
-	dos_to_wide(str_in, str_wide, cp);
-	wide_to_utf8(str_wide, str_out);
+	dos_to_utf8_common(in_str, out_str, get_custom_code_page(code_page));
 }
