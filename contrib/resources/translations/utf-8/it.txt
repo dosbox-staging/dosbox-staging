@@ -275,11 +275,23 @@ Questa impostazione ha effetto solo sulle modalità video che utilizzano pixel
 non quadrati, come 320x200 o 640x400; Le modalità video a pixel quadrati,
 come 640x480 e 800x600, verranno visualizzate così come sono.
 .
+:CONFIG_INTEGER_SCALING
+Vincola il fattore di scala orizzontale o verticale a valori interi.
+Saranno mantenute sempre le proporzioni corrette, il che può comportare
+l'applicazione di un fattore di scala non intero nell'altra dimensione.
+  off:         Nessun ridimensionamento dei numeri interi; l'immagine con
+               proporzioni corrette riempie l'area di visualizzazione
+               (predefinito).
+  horizontal:  Vincola il fattore di scala orizzontale a valori interi
+               all'interno dell'area di visualizzazione.
+  vertical:    Vincola il fattore di scala verticale a valori interi
+               all'interno dell'area di visualizzazione.
+.
 :CONFIG_MONOCHROME_PALETTE
 Seleziona la tavolozza predefinita per la visualizzazione monocromatica
 (predefinito 'white').
 Funziona solo quando si emula 'hercules' o 'cga_mono'.
-È possibile scorrere i colori disponibili usando il tasto F11.
+È possibile scorrere i colori disponibili utilizzando il tasto F11.
 .
 :CONFIG_CGA_COLORS
 Imposta l'interpretazione dei colori CGA RGBI. Interessa tutti i tipi di
@@ -974,13 +986,14 @@ degli assi X e Y del joystick (predefinito disabilitato). Consideralo solo se
 la calibrazione all'interno del gioco fallisce e sono state provate altre
 impostazioni.
   - Ctrl/Cmd+TastiFreccia regola il valore scalare dell'asse:
-      - Sinistra e Destra diminuiscono o ingrandiscono rispettivamente lo
+      - Destra e Sinistra ingrandiscono o diminuiscono rispettivamente lo
         scalare dell'asse X.
-      - In basso ed In alto diminuiscono o ingrandiscono rispettivamente lo
-        scalare dell'asse Y.
-  - Alt+TastiFreccia regola la posizione di offset dell'asse:
-      - Sinistra e Destra sposta l'offset dell'asse X nella direzione data.
-      - In basso ed In alto sposta l'offset dell'asse Y nella direzione data.
+      - Su ed Giù ingrandiscono o diminuiscono rispettivamente lo scalare
+        dell'asse Y.
+  - Alt+TastiFreccia regola la posizione di compensazione dell'asse:
+      - Destra e Sinistra spostano la compensazione dell'asse X nella direzione
+        data.
+      - Su ed Giù spostano la compensazione dell'asse Y nella direzione data.
   - Reimpostare la calibrazione X e Y utilizzando rispettivamente Ctrl+Canc e
     Ctrl+Home.
 Ad ogni pressione dei tasti precedentemente indicati, saranno riportati i
@@ -989,11 +1002,11 @@ i parametri che funzionano, esci dal gioco, ripristina questa impostazione su
 'false' e inserisci i parametri di calibrazione segnalati.
 .
 :CONFIG_JOY_X_CALIBRATION
-Applica i parametri di calibrazione dell'asse X dai tasti di scelta rapida
+Applica i parametri di calibrazione dell'asse X precedentemente acquisiti
 (predefinito 'auto').
 .
 :CONFIG_JOY_Y_CALIBRATION
-Applica i parametri di calibrazione dell'asse Y dai tasti di scelta rapida
+Applica i parametri di calibrazione dell'asse Y precedentemente acquisiti
 (predefinito 'auto').
 .
 :CONFIG_SERIAL1
@@ -1026,15 +1039,15 @@ File utilizzato per mappare numeri di telefono falsi su indirizzi
 (predefinito 'phonebook.txt'). 
 .
 :CONFIG_XMS
-Abilita supporto alla memoria estesa XMS (predefinito abilitato).
+Abilita il supporto alla memoria estesa XMS (predefinito abilitato).
 .
 :CONFIG_EMS
-Abilita supporto alla memoria espansa EMS (predefinito abilitato).
+Abilita il supporto alla memoria espansa EMS (predefinito abilitato).
 L'abilitazione fornisce la migliore compatibilità ma alcune applicazioni
 potrebbero funzionare meglio con altre scelte, o richiederne la disabilitazione
 .
 :CONFIG_UMB
-Abilita supporto alla memoria superiore UMB (predefinito abilitato).
+Abilita il supporto alla memoria superiore UMB (predefinito abilitato).
 .
 :CONFIG_VER
 Imposta la versione DOS (predefinito 5.0).
@@ -2462,7 +2475,7 @@ Opzione non valida: %s.
 
 .
 :SHELL_ILLEGAL_SWITCH_COMBO
-Combinazione di parametri non valida.
+Combinazione di opzioni non valide.
 
 .
 :SHELL_MISSING_PARAMETER
