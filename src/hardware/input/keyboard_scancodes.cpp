@@ -236,13 +236,14 @@ std::vector<uint8_t> KEYBOARD_GetScanCode1(const KBD_KEYS key_type,
 	case KBD_pause:
 		if (is_pressed) {
 			// Pause key gets released as soon as it is pressed
-			scan_code.resize(6);
-			scan_code[0] = 0xe1;
-			scan_code[1] = 0x1d;
-			scan_code[2] = 0x45;
-			scan_code[0] = 0xe1;
-			scan_code[1] = 0x1d | 0x80;
-			scan_code[2] = 0x45 | 0x80;
+			scan_code = {
+			        0xe1,
+			        0x1d,
+			        0x45,
+			        0xe1,
+			        0x1d | 0x80,
+			        0x45 | 0x80,
+			};
 		}
 		return scan_code;
 
