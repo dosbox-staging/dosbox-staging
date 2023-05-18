@@ -988,12 +988,12 @@ impostazioni.
   - Ctrl/Cmd+TastiFreccia regola il valore scalare dell'asse:
       - Destra e Sinistra ingrandiscono o diminuiscono rispettivamente lo
         scalare dell'asse X.
-      - Su ed Giù ingrandiscono o diminuiscono rispettivamente lo scalare
+      - Su e Giù ingrandiscono o diminuiscono rispettivamente lo scalare
         dell'asse Y.
   - Alt+TastiFreccia regola la posizione di compensazione dell'asse:
       - Destra e Sinistra spostano la compensazione dell'asse X nella direzione
         data.
-      - Su ed Giù spostano la compensazione dell'asse Y nella direzione data.
+      - Su e Giù spostano la compensazione dell'asse Y nella direzione data.
   - Reimpostare la calibrazione X e Y utilizzando rispettivamente Ctrl+Canc e
     Ctrl+Home.
 Ad ogni pressione dei tasti precedentemente indicati, saranno riportati i
