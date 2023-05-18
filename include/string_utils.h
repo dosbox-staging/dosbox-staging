@@ -293,12 +293,12 @@ uint16_t get_utf8_code_page();
 // code_page parameter uses current DOS code page.
 // Return value 'false' means there were problems with string decoding or
 // rendering, but the overall output should still be sane.
-bool utf8_to_dos(const std::string& str_in, std::string& str_out);
-bool utf8_to_dos(const std::string& str_in, std::string& str_out,
+bool utf8_to_dos(const std::string& in_str, std::string& out_str);
+bool utf8_to_dos(const std::string& in_str, std::string& out_str,
                  const uint16_t code_page);
 // Similarly, convert the opposite way
-void dos_to_utf8(const std::string& str_in, std::string& str_out);
-void dos_to_utf8(const std::string& str_in, std::string& str_out,
+void dos_to_utf8(const std::string& in_str, std::string& out_str);
+void dos_to_utf8(const std::string& in_str, std::string& out_str,
                  const uint16_t code_page);
 
 // Parse a value from the string, clamp the result within the given min and max
