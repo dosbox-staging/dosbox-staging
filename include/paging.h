@@ -162,8 +162,8 @@ struct PagingBlock {
 	} base = {};
 #if defined(USE_FULL_TLB)
 	struct {
-		HostPt read[TLB_SIZE]  = {};
-		HostPt write[TLB_SIZE] = {};
+		std::vector<HostPt> read = std::vector<HostPt>(TLB_SIZE);
+		std::vector<HostPt> write = std::vector<HostPt>(TLB_SIZE);
 
 		std::vector<PageHandler*> readhandler  = std::vector<PageHandler*>(TLB_SIZE);
 		std::vector<PageHandler*> writehandler = std::vector<PageHandler*>(TLB_SIZE);
