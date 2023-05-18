@@ -549,7 +549,7 @@ static void dyn_read_byte(DynReg * addr,DynReg * dst,bool high,bool release=fals
 	cache_addb(0x0c);
 	cache_addw(0x048b);		// mov eax,paging.tlb.read[eax*TYPE uint32_t]
 	cache_addb(0x85);
-	cache_addd((uint32_t)(&paging.tlb.read[0]));
+	cache_addd((uint32_t)PAGING_GetReadBaseAddress());
 	cache_addw(0xc085);		// test eax,eax
 	const uint8_t* je_loc=gen_create_branch(BR_Z);
 
@@ -626,7 +626,7 @@ static void dyn_read_word(DynReg * addr,DynReg * dst,bool dword,bool release=fal
 	cache_addd(0x000fffff);
 	cache_addw(0x048b);		// mov eax,paging.tlb.read[eax*TYPE uint32_t]
 	cache_addb(0x85);
-	cache_addd((uint32_t)(&paging.tlb.read[0]));
+	cache_addd((uint32_t)PAGING_GetReadBaseAddress());
 	cache_addw(0xc085);		// test eax,eax
 	const uint8_t* je_loc=gen_create_branch(BR_Z);
 
@@ -697,7 +697,7 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	cache_addb(0x0c);
 	cache_addw(0x0c8b);		// mov ecx,paging.tlb.write[ecx*TYPE uint32_t]
 	cache_addb(0x8d);
-	cache_addd((uint32_t)(&paging.tlb.write[0]));
+	cache_addd((uint32_t)PAGING_GetWriteBaseAddress());
 	cache_addw(0xc985);		// test ecx,ecx
 	const uint8_t* je_loc=gen_create_branch(BR_Z);
 
@@ -741,7 +741,7 @@ static void dyn_write_word(DynReg * addr,DynReg * val,bool dword,bool release=fa
 	cache_addd(0x000fffff);
 	cache_addw(0x0c8b);		// mov ecx,paging.tlb.write[ecx*TYPE uint32_t]
 	cache_addb(0x8d);
-	cache_addd((uint32_t)(&paging.tlb.write[0]));
+	cache_addd((uint32_t)PAGING_GetWriteBaseAddress());
 	cache_addw(0xc985);		// test ecx,ecx
 	const uint8_t* je_loc=gen_create_branch(BR_Z);
 

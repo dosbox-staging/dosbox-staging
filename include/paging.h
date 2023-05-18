@@ -205,12 +205,12 @@ bool mem_unalignedwrited_checked(PhysPt address,uint32_t val);
 
 inline HostPt* PAGING_GetReadBaseAddress()
 {
-	return &(paging.tlb.read[0]);
+	return paging.tlb.read.data();
 }
 
 inline HostPt* PAGING_GetWriteBaseAddress()
 {
-	return &(paging.tlb.write[0]);
+	return paging.tlb.write.data();
 }
 
 static inline HostPt get_tlb_read(PhysPt address)
