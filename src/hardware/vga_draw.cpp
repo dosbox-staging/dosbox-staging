@@ -1339,6 +1339,20 @@ uint8_t VGA_ActivateHardwareCursor()
 		// 8-bit palette LUT and prepares the high-colour pixels for
 		// rendering.
 		break;
+	case M_LIN8: // 8-bit VESA
+		if (should_draw_with_hw_mouse()) {
+			VGA_DrawLine = VGA_Draw_VGA_Line_HWMouse;
+		} else {
+			bit_per_line_pixel = 32;
+			VGA_DrawLine = draw_unwrapped_line_from_dac_palette;
+			//
+			// Use a routine that treats the 8-bit pixel values as
+			// indexes into the DAC's palette LUT. The palette LUT
+			// is populated with 32-bit RGB's (XRGB888) pre-scaled
+			// from 18-bit RGB666 values that have been written by
+			// the user-space software via DAC IO write registers.
+		}
+		break;
 	default:
 		VGA_DrawLine = should_draw_with_hw_mouse()
 		                     ? VGA_Draw_VGA_Line_HWMouse
