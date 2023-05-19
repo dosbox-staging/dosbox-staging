@@ -240,11 +240,11 @@ void RENDER_EndUpdate(bool abort)
 
 	if (GCC_UNLIKELY((CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()))) {
 		uint8_t flags = 0;
-		if (render.src.dblw != render.src.dblh) {
-			if (render.src.dblw) {
+		if (render.src.double_width != render.src.double_height) {
+			if (render.src.double_width) {
 				flags |= CaptureFlagDoubleWidth;
 			}
-			if (render.src.dblh) {
+			if (render.src.double_height) {
 				flags |= CaptureFlagDoubleHeight;
 			}
 		}
@@ -301,8 +301,8 @@ static void RENDER_Reset(void)
 	std::lock_guard<std::mutex> guard(render_reset_mutex);
 
 	Bitu width  = render.src.width;
-	bool dblw   = render.src.dblw;
-	bool dblh   = render.src.dblh;
+	bool double_width  = render.src.double_width;
+	bool double_height = render.src.double_height;
 
 	double gfx_scalew;
 	double gfx_scaleh;
@@ -327,10 +327,10 @@ static void RENDER_Reset(void)
 	if (render.scale.size > maxsize_current_input)
 		render.scale.size = maxsize_current_input;
 
-	if (dblh && dblw) {
+	if (double_height && double_width) {
 		/* Initialize always working defaults */
 		simpleBlock = &ScaleNormal1x;
-	} else if (dblw) {
+	} else if (double_width) {
 		simpleBlock = &ScaleNormalDw;
 		if (width * simpleBlock->xscale > SCALER_MAXWIDTH) {
 			// This should only happen if you pick really bad
@@ -338,7 +338,7 @@ static void RENDER_Reset(void)
 			// scaler that fits
 			simpleBlock = &ScaleNormal1x;
 		}
-	} else if (dblh) {
+	} else if (double_height) {
 		simpleBlock = &ScaleNormalDh;
 	} else {
 		simpleBlock  = &ScaleNormal1x;
@@ -377,10 +377,12 @@ static void RENDER_Reset(void)
 	const auto height = MakeAspectTable(render.src.height, yscale, yscale);
 
 	// Setup the scaler variables
-	if (dblh)
+	if (double_height) {
 		gfx_flags |= GFX_DBL_H;
-	if (dblw)
+	}
+	if (double_width) {
 		gfx_flags |= GFX_DBL_W;
+	}
 
 #if C_OPENGL
 	GFX_SetShader(render.shader.source);
@@ -468,18 +470,18 @@ static void RENDER_CallBack(GFX_CallBackFunctions_t function)
 }
 
 void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
-                    double one_per_pixel_aspect, bool dblw, bool dblh)
+                    double one_per_pixel_aspect, bool double_width, bool double_height)
 {
 	RENDER_Halt();
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
 		return;
 	}
-	render.src.width  = width;
-	render.src.height = height;
-	render.src.bpp    = bpp;
-	render.src.dblw   = dblw;
-	render.src.dblh   = dblh;
-	render.src.fps    = fps;
+	render.src.width         = width;
+	render.src.height        = height;
+	render.src.bpp           = bpp;
+	render.src.double_width  = double_width;
+	render.src.double_height = double_height;
+	render.src.fps           = fps;
 
 	render.src.one_per_pixel_aspect = one_per_pixel_aspect;
 	RENDER_Reset();

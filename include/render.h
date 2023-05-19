@@ -49,8 +49,8 @@ struct Render_t {
 		uint32_t start              = 0;
 		uint32_t height             = 0;
 		unsigned bpp                = 0;
-		bool dblw                   = false;
-		bool dblh                   = false;
+		bool double_width           = false;
+		bool double_height          = false;
 		double one_per_pixel_aspect = 0;
 		double fps                  = 0;
 	} src = {};
@@ -69,9 +69,9 @@ struct Render_t {
 		uint32_t blocks     = 0;
 		uint32_t lastBlock  = 0;
 		int outPitch        = 0;
-		uint8_t *outWrite   = nullptr;
+		uint8_t* outWrite   = nullptr;
 		uint32_t cachePitch = 0;
-		uint8_t *cacheRead  = nullptr;
+		uint8_t* cacheRead  = nullptr;
 		uint32_t inHeight   = 0;
 		uint32_t inLine     = 0;
 		uint32_t outLine    = 0;
@@ -100,11 +100,12 @@ extern ScalerLineHandler_t RENDER_DrawLine;
 std::deque<std::string> RENDER_InventoryShaders();
 
 void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
-                    double one_per_pixel_aspect, bool dblw, bool dblh);
+                    double one_per_pixel_aspect, bool double_width,
+                    bool double_height);
 
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
-void RENDER_InitShaderSource([[maybe_unused]] Section *sec);
+void RENDER_InitShaderSource([[maybe_unused]] Section* sec);
 void RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t blue);
 
 #if C_OPENGL
