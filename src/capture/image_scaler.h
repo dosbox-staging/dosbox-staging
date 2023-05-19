@@ -28,10 +28,10 @@
 struct image_scaler_params_t {
 	uint16_t width         = 0;
 	uint16_t height        = 0;
-	uint8_t bits_per_pixel = 0;
-	uint16_t pitch         = 0;
 	bool double_width      = false;
 	bool double_height     = false;
+	uint8_t bits_per_pixel = 0;
+	uint16_t pitch         = 0;
 
 	double one_per_pixel_aspect_ratio = 0.0;
 

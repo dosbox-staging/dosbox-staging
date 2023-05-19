@@ -125,10 +125,10 @@ void ImageScaler::UpdateOutputParams()
 	LOG_MSG("ImageScaler: params:\n"
 	        "    input.width:         %8d\n"
 	        "    input.height:        %8d\n"
-	        "    input.bits_per_pixel:%8d\n"
-	        "    input.pitch:         %8d\n"
 	        "    input.double_width:  %8s\n"
 	        "    input.double_height: %8s\n"
+	        "    input.bits_per_pixel:%8d\n"
+	        "    input.pitch:         %8d\n"
 	        "    input.one_per_par:   %8f\n"
 	        "    ---------------------------\n"
 	        "    output.width:            %8d\n"
@@ -140,10 +140,10 @@ void ImageScaler::UpdateOutputParams()
 	        "    output.pixel_format:     %8d\n",
 	        input.width,
 	        input.height,
-	        input.bits_per_pixel,
-	        input.pitch,
 	        input.double_width ? "yes" : "no",
 	        input.double_height ? "yes" : "no",
+	        input.bits_per_pixel,
+	        input.pitch,
 	        input.one_per_pixel_aspect_ratio,
 	        output.width,
 	        output.height,

@@ -26,9 +26,6 @@
 
 #include <string>
 
-constexpr auto CaptureFlagDoubleWidth  = 0x1;
-constexpr auto CaptureFlagDoubleHeight = 0x2;
-
 std::string capture_generate_filename(const char* type, const char* ext);
 
 FILE* CAPTURE_CreateFile(const char* type, const char* ext);
@@ -37,8 +34,9 @@ void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_
                           const int16_t* sample_frames);
 
 void CAPTURE_AddFrame(const uint16_t width, const uint16_t height,
+                      const bool double_width, const bool double_height,
                       const uint8_t bits_per_pixel, const uint16_t pitch,
-                      const uint8_t capture_flags, const float frames_per_second,
+                      const float frames_per_second,
                       const float one_per_pixel_aspect_ratio,
                       const uint8_t* image_data, const uint8_t* palette_data);
 

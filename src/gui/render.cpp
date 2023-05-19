@@ -239,13 +239,14 @@ void RENDER_EndUpdate(bool abort)
 	RENDER_DrawLine = RENDER_EmptyLineHandler;
 
 	if (GCC_UNLIKELY((CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()))) {
-		uint8_t flags = 0;
+		bool double_width  = false;
+		bool double_height = false;
 		if (render.src.double_width != render.src.double_height) {
 			if (render.src.double_width) {
-				flags |= CaptureFlagDoubleWidth;
+				double_width = true;
 			}
 			if (render.src.double_height) {
-				flags |= CaptureFlagDoubleHeight;
+				double_height = true;
 			}
 		}
 		auto fps = render.src.fps;
@@ -254,9 +255,10 @@ void RENDER_EndUpdate(bool abort)
 
 		CAPTURE_AddFrame(render.src.width,
 		                 render.src.height,
+		                 double_width,
+		                 double_height,
 		                 render.src.bpp,
 		                 pitch,
-		                 flags,
 		                 static_cast<float>(fps),
 		                 render.src.one_per_pixel_aspect,
 		                 (uint8_t*)&scalerSourceCache,
