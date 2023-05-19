@@ -23,22 +23,8 @@
 
 #include <vector>
 
+#include "render.h"
 #include "rgb888.h"
-
-struct image_scaler_params_t {
-	uint16_t width     = 0;
-	uint16_t height    = 0;
-	bool double_width  = false;
-	bool double_height = false;
-
-	double one_per_pixel_aspect_ratio = 0.0;
-
-	uint8_t bits_per_pixel = 0;
-	uint16_t pitch         = 0;
-
-	const uint8_t* image_data   = nullptr;
-	const uint8_t* palette_data = nullptr;
-};
 
 enum class ScaleMode { Integer, Fractional };
 
@@ -46,7 +32,7 @@ enum class PixelFormat { Indexed8, Rgb888 };
 
 class ImageScaler {
 public:
-	void Init(const image_scaler_params_t params);
+	void Init(const RenderedImage_t params);
 
 	std::vector<uint8_t>::const_iterator GetNextOutputRow();
 
@@ -70,7 +56,7 @@ private:
 	void GenerateNextIntegerUpscaledOutputRow();
 	void GenerateNextSharpUpscaledOutputRow();
 
-	image_scaler_params_t input = {};
+	RenderedImage_t input = {};
 
 	const uint8_t* input_curr_row_start = nullptr;
 	const uint8_t* input_pos            = nullptr;

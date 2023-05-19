@@ -27,22 +27,21 @@
 #include "rgb.h"
 #include "rgb555.h"
 #include "rgb565.h"
-#include "rgb888.h"
 
-void ImageScaler::Init(const image_scaler_params_t params)
+void ImageScaler::Init(const RenderedImage_t image)
 {
-	assert(params.width > 0);
-	assert(params.height > 0);
+	assert(image.width > 0);
+	assert(image.height > 0);
 
-	assert(params.bits_per_pixel == 8 || params.bits_per_pixel == 15 ||
-	       params.bits_per_pixel == 16 || params.bits_per_pixel == 24 ||
-	       params.bits_per_pixel == 32);
+	assert(image.bits_per_pixel == 8 || image.bits_per_pixel == 15 ||
+	       image.bits_per_pixel == 16 || image.bits_per_pixel == 24 ||
+	       image.bits_per_pixel == 32);
 
-	assert(params.pitch >= params.width);
-	assert(params.one_per_pixel_aspect_ratio >= 0.0);
-	assert(params.image_data);
+	assert(image.pitch >= image.width);
+	assert(image.one_per_pixel_aspect_ratio >= 0.0);
+	assert(image.image_data);
 
-	input = params;
+	input = image;
 
 	if (IsInputPaletted()) {
 		assert(input.palette_data);

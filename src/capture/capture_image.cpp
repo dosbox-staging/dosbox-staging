@@ -92,24 +92,9 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 	png_write_info(png_ptr, info_ptr);
 }
 
-void capture_image(const uint16_t width, const uint16_t height,
-                   const bool double_width, const bool double_height,
-                   const double one_per_pixel_aspect_ratio,
-                   const uint8_t bits_per_pixel, const uint16_t pitch,
-                   const uint8_t* image_data, const uint8_t* palette_data)
+void capture_image(const RenderedImage_t image)
 {
-	image_scaler_params_t params      = {};
-	params.width                      = width;
-	params.height                     = height;
-	params.double_width               = double_width;
-	params.double_height              = double_height;
-	params.one_per_pixel_aspect_ratio = one_per_pixel_aspect_ratio;
-	params.bits_per_pixel             = bits_per_pixel;
-	params.pitch                      = pitch;
-	params.image_data                 = image_data;
-	params.palette_data               = palette_data;
-
-	image_scaler.Init(params);
+	image_scaler.Init(image);
 
 	FILE* fp = CAPTURE_CreateFile("raw image", ".png");
 	if (!fp) {
@@ -142,7 +127,7 @@ void capture_image(const uint16_t width, const uint16_t height,
 	               image_scaler.GetOutputWidth(),
 	               image_scaler.GetOutputHeight(),
 	               out_is_paletted,
-	               palette_data);
+	               image.palette_data);
 
 	auto rows_to_write = image_scaler.GetOutputHeight();
 	while (rows_to_write--) {
