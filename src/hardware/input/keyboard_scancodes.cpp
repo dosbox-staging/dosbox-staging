@@ -51,8 +51,6 @@ CHECK_NARROWING();
 std::vector<uint8_t> KEYBOARD_GetScanCode1(const KBD_KEYS key_type,
                                            const bool is_pressed)
 {
-	std::vector<uint8_t> scan_code = {};
-
 	uint8_t code = 0x00;
 	bool extend  = false;
 
@@ -236,7 +234,7 @@ std::vector<uint8_t> KEYBOARD_GetScanCode1(const KBD_KEYS key_type,
 	case KBD_pause:
 		if (is_pressed) {
 			// Pause key gets released as soon as it is pressed
-			scan_code = {
+			return {
 			        0xe1,
 			        0x1d,
 			        0x45,
@@ -245,40 +243,35 @@ std::vector<uint8_t> KEYBOARD_GetScanCode1(const KBD_KEYS key_type,
 			        0x45 | 0x80,
 			};
 		}
-		return scan_code;
+		return {};
 
 	case KBD_printscreen:
-		scan_code = {
+		return {
 		        0xe0,
 		        static_cast<uint8_t>(0x2a | (is_pressed ? 0 : 0x80)),
 		        0xe0,
 		        static_cast<uint8_t>(0x37 | (is_pressed ? 0 : 0x80)),
 		};
-		return scan_code;
 
-	default: E_Exit("Missing key in codeset 1"); return scan_code;
+	default: E_Exit("Missing key in codeset 1"); return {};
 	}
 
 	if (extend) {
-		scan_code = {
+		return {
 		        0xe0,
-		        static_cast<uint8_t>(code | (is_pressed ? 0 : 0x80)),
-		};
-	} else {
-		scan_code = {
 		        static_cast<uint8_t>(code | (is_pressed ? 0 : 0x80)),
 		};
 	}
 
-	return scan_code;
+	return {
+	        static_cast<uint8_t>(code | (is_pressed ? 0 : 0x80)),
+	};
 }
 
 #ifdef ENABLE_SCANCODE_SET_2
 std::vector<uint8_t> KEYBOARD_GetScanCode2(const KBD_KEYS key_type,
                                            const bool is_pressed)
 {
-	std::vector<uint8_t> scan_code = {};
-
 	uint8_t code = 0x00;
 	bool extend  = false;
 
@@ -448,7 +441,7 @@ std::vector<uint8_t> KEYBOARD_GetScanCode2(const KBD_KEYS key_type,
 	case KBD_printscreen:
 		if (!is_pressed) {
 			// Print Screen gets reported only when released
-			scan_code = {
+			return {
 			        0xe0,
 			        0xf0,
 			        0x7c,
@@ -462,7 +455,7 @@ std::vector<uint8_t> KEYBOARD_GetScanCode2(const KBD_KEYS key_type,
 	case KBD_pause:
 		if (is_pressed) {
 			// Pause key gets released as soon as it is pressed
-			scan_code = {
+			return {
 			        0xe1,
 			        0x14,
 			        0x77,
@@ -482,32 +475,32 @@ std::vector<uint8_t> KEYBOARD_GetScanCode2(const KBD_KEYS key_type,
 		}
 	} break;
 
-	default: E_Exit("Missing key in codeset 2"); return scan_code;
+	default: E_Exit("Missing key in codeset 2"); return {};
 	}
 
 	if (is_pressed && !extend) {
-		scan_code = {
+		return {
 		        code,
 		};
 	} else if (is_pressed && extend) {
-		scan_code = {
+		return {
 		        0xe0,
 		        code,
 		};
 	} else if (!is_pressed && !extend) {
-		scan_code = {
+		return {
 		        0xf0,
 		        code,
 		};
 	} else if (!is_pressed && extend) {
-		scan_code = {
+		return {
 		        0xe0,
 		        0xf0,
 		        code,
 		};
 	}
 
-	return scan_code;
+	return {};
 }
 #endif // ENABLE_SCANCODE_SET_2
 
@@ -515,8 +508,6 @@ std::vector<uint8_t> KEYBOARD_GetScanCode2(const KBD_KEYS key_type,
 std::vector<uint8_t> KEYBOARD_GetScanCode3(const KBD_KEYS key_type,
                                            const bool is_pressed)
 {
-	std::vector<uint8_t> scan_code = {};
-
 	uint8_t code = 0x00;
 
 	switch (key_type) {
@@ -685,22 +676,22 @@ std::vector<uint8_t> KEYBOARD_GetScanCode3(const KBD_KEYS key_type,
 	case KBD_www_forward:
 	case KBD_www_back:
 		// TODO: do scan codes exist at all for these keys in set 3?
-		return scan_code;
+		return {};
 
-	default: E_Exit("Missing key in codeset 3"); return scan_code;
+	default: E_Exit("Missing key in codeset 3"); return {};
 	}
 
 	if (is_pressed) {
-		scan_code = {
+		return {
 		        code,
 		};
 	} else {
-		scan_code = {
+		return {
 		        0xf0,
 		        code,
 		};
 	}
 
-	return scan_code;
+	return {};
 }
 #endif // ENABLE_SCANCODE_SET_3
