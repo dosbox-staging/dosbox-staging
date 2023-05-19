@@ -127,9 +127,9 @@ void ImageScaler::UpdateOutputParams()
 	        "    input.height:        %8d\n"
 	        "    input.double_width:  %8s\n"
 	        "    input.double_height: %8s\n"
+	        "    input.one_per_par:   %8f\n"
 	        "    input.bits_per_pixel:%8d\n"
 	        "    input.pitch:         %8d\n"
-	        "    input.one_per_par:   %8f\n"
 	        "    ---------------------------\n"
 	        "    output.width:            %8d\n"
 	        "    output.height:           %8d\n"
@@ -142,9 +142,9 @@ void ImageScaler::UpdateOutputParams()
 	        input.height,
 	        input.double_width ? "yes" : "no",
 	        input.double_height ? "yes" : "no",
+	        input.one_per_pixel_aspect_ratio,
 	        input.bits_per_pixel,
 	        input.pitch,
-	        input.one_per_pixel_aspect_ratio,
 	        output.width,
 	        output.height,
 	        output.vert_scale,

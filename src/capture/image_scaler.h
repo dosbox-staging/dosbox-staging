@@ -26,14 +26,15 @@
 #include "rgb888.h"
 
 struct image_scaler_params_t {
-	uint16_t width         = 0;
-	uint16_t height        = 0;
-	bool double_width      = false;
-	bool double_height     = false;
-	uint8_t bits_per_pixel = 0;
-	uint16_t pitch         = 0;
+	uint16_t width     = 0;
+	uint16_t height    = 0;
+	bool double_width  = false;
+	bool double_height = false;
 
 	double one_per_pixel_aspect_ratio = 0.0;
+
+	uint8_t bits_per_pixel = 0;
+	uint16_t pitch         = 0;
 
 	const uint8_t* image_data   = nullptr;
 	const uint8_t* palette_data = nullptr;
@@ -77,14 +78,16 @@ private:
 	std::vector<float> linear_row_buf = {};
 
 	struct {
-		uint16_t width             = 0;
-		uint16_t height            = 0;
+		uint16_t width  = 0;
+		uint16_t height = 0;
+
 		float horiz_scale          = 0;
 		float one_per_horiz_scale  = 0;
 		uint8_t vert_scale         = 0.0f;
 		ScaleMode horiz_scale_mode = {};
 		ScaleMode vert_scale_mode  = {};
-		PixelFormat pixel_format   = {};
+
+		PixelFormat pixel_format = {};
 
 		uint16_t curr_row  = 0;
 		uint8_t row_repeat = 0;
