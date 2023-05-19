@@ -5,7 +5,51 @@ hide:
 
 # Linux builds
 
-## Packages
+## Project-released tarball
+
+[Download DOSBox Staging 0.80.1 (tar.xz)][0_80_1]
+<br>
+<small>
+sha256: 12582a6496b1a276cd239e6b3d21ddfc<wbr>d51fd8f9e40a1ebbc0a3800e0636190a
+</small>
+
+Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn
+about the changes and improvements introduced by this release.
+
+Our pre-compiled builds run on most Linux distributions (x86\_64 only
+for now). They depend on the following packages:
+
+### Install dependencies on Fedora
+
+    sudo dnf install SDL2 SDL2_image SDL2_net opusfile
+
+### Install dependencies on Ubuntu and Debian
+
+Ubuntu 18.04 or newer, and Debian 9 or newer is required.
+
+    sudo apt install libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-net-2.0-0 libopusfile0
+
+### Install dependencies on Arch and Manjaro
+
+    sudo pacman -S sdl2 sdl2_image sdl2_net opusfile
+
+
+## External repository packages
+
+DOSBox Staging is also packaged by external teams, as listed below.
+These packages may have variations in configuration file locations,
+filesystem or network restrictions, feature exclusions, and other
+differences compared to the project-released tarball.
+
+To understand these potential differences, we recommend referring to the
+repository's documentation and, if uncertain, comparing against the
+project-released tarball.
+
+The DOSBox Staging team does not track or document these differences.
+For issues specific to these packages, please contact the respective
+repository owners.
+
+### Containerised packages
 
 [![Download from Flathub](https://flathub.org/assets/badges/flathub-badge-en.png){ class=linux-badge width=35% align=left }][flathub]
 
@@ -15,15 +59,15 @@ hide:
 [snapstore]:https://snapcraft.io/dosbox-staging
 
 
-### Fedora
+### Fedora repository package
 
     sudo dnf install dosbox-staging
 
-### Gentoo
+### Gentoo repository package
 
     emerge games-emulation/dosbox-staging
 
-### Ubuntu, Mint
+### Ubuntu and Mint repository package
 
 Available via [Personal Package Archive](https://launchpad.net/~feignint/+archive/ubuntu/dosbox-staging):
 
@@ -31,47 +75,15 @@ Available via [Personal Package Archive](https://launchpad.net/~feignint/+archiv
     sudo apt-get update
     sudo apt install dosbox-staging
 
-### Arch, Manjaro
+### Arch and Manjaro repository package
 
 Available via [Arch User Repository](https://aur.archlinux.org/packages/dosbox-staging).
 
-*Vote for inclusion in the community repo!*
-
-### Other repositories
+### Other repository packages
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/dosbox-staging.svg){ width=230 }][other-repos]
 
 [other-repos]:https://repology.org/project/dosbox-staging/versions
-
-
-## Tarball download
-
-[Download DOSBox Staging 0.80.1 (tar.xz)][0_80_1]
-<br>
-<small>
-sha256: 12582a6496b1a276cd239e6b3d21ddfc<wbr>d51fd8f9e40a1ebbc0a3800e0636190a
-</small>
-
-Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
-the changes and improvements introduced by this release.
-
-Our pre-compiled builds run on most Linux distributions (x86\_64 only for now).
-They depend on the following packages:
-
-### Fedora
-
-    sudo dnf install SDL2 SDL2_image SDL2_net opusfile
-
-### Ubuntu, Debian 
-
-Ubuntu 18.04 or newer, and Debian 9 or newer is required.
-
-    sudo apt install libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-net-2.0-0 libopusfile0
-
-### Arch, Manjaro
-
-    sudo pacman -S sdl2 sdl2_image sdl2_net opusfile
-
 
 ## Steam
 
@@ -87,7 +99,7 @@ configured to use a specific binary by editing the file
 
 [boxtron-conf]:https://github.com/dreamer/boxtron/wiki/Configuration#dosboxcmd
 
-## RetroPie
+## RetroPie package
 
 You can easily configure your DOS games on
 [Retropie](https://retropie.org.uk/) to use DOSBox Staging via
