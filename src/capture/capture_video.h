@@ -23,8 +23,8 @@
 #define DOSBOX_CAPTURE_VIDEO_H
 
 void capture_video_add_frame(const uint16_t width, const uint16_t height,
+                             const bool double_width, const bool double_height,
                              const uint8_t bits_per_pixel, const uint16_t pitch,
-                             const uint8_t capture_flags,
                              const float frames_per_second, const uint8_t* image_data,
                              const uint8_t* palette_data);
 

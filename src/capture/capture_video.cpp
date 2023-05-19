@@ -320,18 +320,15 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 }
 
 void capture_video_add_frame(const uint16_t width, const uint16_t height,
+                             const bool double_width, const bool double_height,
                              const uint8_t bits_per_pixel, const uint16_t pitch,
-                             const uint8_t capture_flags,
                              const float frames_per_second,
                              const uint8_t* image_data, const uint8_t* palette_data)
 {
 	assert(width <= SCALER_MAXWIDTH);
 
-	const bool is_double_width  = (capture_flags & CaptureFlagDoubleWidth);
-	const bool is_double_height = (capture_flags & CaptureFlagDoubleHeight);
-
-	const auto video_width  = is_double_width ? width * 2 : width;
-	const auto video_height = is_double_height ? height * 2 : height;
+	const auto video_width  = double_width ? width * 2 : width;
+	const auto video_height = double_height ? height * 2 : height;
 
 	// Disable capturing if any of the test fails
 	if (video.handle && (video.width != video_width || video.height != video_height ||
@@ -387,7 +384,7 @@ void capture_video_add_frame(const uint16_t width, const uint16_t height,
 
 		// TODO This all assumes little-endian byte order; should be made
 		// endianness-aware like capture_image.cpp
-		if (is_double_width) {
+		if (double_width) {
 			switch (bits_per_pixel) {
 			// Indexed8
 			case 8:
@@ -450,7 +447,7 @@ void capture_video_add_frame(const uint16_t width, const uint16_t height,
 			}
 		}
 
-		auto lines_to_write = is_double_height ? 2 : 1;
+		auto lines_to_write = double_height ? 2 : 1;
 		while (lines_to_write--) {
 			video.codec->CompressLines(1, &row_pointer);
 		}
