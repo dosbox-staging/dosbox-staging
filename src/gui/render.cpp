@@ -249,20 +249,21 @@ void RENDER_EndUpdate(bool abort)
 				double_height = true;
 			}
 		}
-		auto fps = render.src.fps;
 
-		const auto pitch = render.scale.cachePitch;
+		RenderedImage_t image = {};
+		image.width           = render.src.width;
+		image.height          = render.src.height;
+		image.double_width    = double_width;
+		image.double_height   = double_height;
+		image.one_per_pixel_aspect_ratio = render.src.one_per_pixel_aspect;
+		image.bits_per_pixel = render.src.bpp;
+		image.pitch          = render.scale.cachePitch;
+		image.image_data     = (uint8_t*)&scalerSourceCache;
+		image.palette_data   = (uint8_t*)&render.pal.rgb;
 
-		CAPTURE_AddFrame(render.src.width,
-		                 render.src.height,
-		                 double_width,
-		                 double_height,
-		                 render.src.one_per_pixel_aspect,
-		                 render.src.bpp,
-		                 pitch,
-		                 static_cast<float>(fps),
-		                 (uint8_t*)&scalerSourceCache,
-		                 (uint8_t*)&render.pal.rgb);
+		const auto frames_per_second = static_cast<float>(render.src.fps);
+
+		CAPTURE_AddFrame(image, frames_per_second);
 	}
 
 	if (render.scale.outWrite) {

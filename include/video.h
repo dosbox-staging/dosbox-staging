@@ -22,6 +22,7 @@
 
 #include <string>
 
+#include "setup.h"
 #include "types.h"
 
 #define REDUCE_JOYSTICK_POLLING

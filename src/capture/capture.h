@@ -22,7 +22,7 @@
 #ifndef DOSBOX_CAPTURE_H
 #define DOSBOX_CAPTURE_H
 
-#include "dosbox.h"
+#include "render.h"
 
 #include <string>
 
@@ -33,12 +33,7 @@ FILE* CAPTURE_CreateFile(const char* type, const char* ext);
 void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_frames,
                           const int16_t* sample_frames);
 
-void CAPTURE_AddFrame(const uint16_t width, const uint16_t height,
-                      const bool double_width, const bool double_height,
-                      const double one_per_pixel_aspect_ratio,
-                      const uint8_t bits_per_pixel, const uint16_t pitch,
-                      const float frames_per_second, const uint8_t* image_data,
-                      const uint8_t* palette_data);
+void CAPTURE_AddFrame(const RenderedImage_t image, const float frames_per_second);
 
 void CAPTURE_AddMidiData(const bool sysex, const size_t len, const uint8_t* data);
 

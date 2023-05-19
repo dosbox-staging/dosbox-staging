@@ -94,6 +94,18 @@ struct Render_t {
 	bool fullFrame = true;
 };
 
+struct RenderedImage_t {
+	uint16_t width                    = 0;
+	uint16_t height                   = 0;
+	bool double_width                 = false;
+	bool double_height                = false;
+	double one_per_pixel_aspect_ratio = 0.0;
+	uint8_t bits_per_pixel            = 0;
+	uint16_t pitch                    = 0;
+	const uint8_t* image_data         = nullptr;
+	const uint8_t* palette_data       = nullptr;
+};
+
 extern Render_t render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 

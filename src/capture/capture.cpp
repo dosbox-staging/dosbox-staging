@@ -197,42 +197,17 @@ void CAPTURE_StopVideoCapture()
 #endif
 }
 
-void CAPTURE_AddFrame([[maybe_unused]] const uint16_t width,
-                      [[maybe_unused]] const uint16_t height,
-                      [[maybe_unused]] const bool double_width,
-                      [[maybe_unused]] const bool double_height,
-                      [[maybe_unused]] const double one_per_pixel_aspect_ratio,
-                      [[maybe_unused]] const uint8_t bits_per_pixel,
-                      [[maybe_unused]] const uint16_t pitch,
-                      [[maybe_unused]] const float frames_per_second,
-                      [[maybe_unused]] const uint8_t* image_data,
-                      [[maybe_unused]] const uint8_t* palette_data)
+void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage_t image,
+                      [[maybe_unused]] const float frames_per_second)
 {
 #if (C_SSHOT)
 	if (capturing_image) {
-		capture_image(width,
-		              height,
-		              double_width,
-		              double_height,
-		              bits_per_pixel,
-		              pitch,
-		              one_per_pixel_aspect_ratio,
-		              image_data,
-		              palette_data);
-
+		capture_image(image);
 		capturing_image = false;
 	}
 
 	if (capturing_video) {
-		capture_video_add_frame(width,
-		                        height,
-		                        double_width,
-		                        double_height,
-		                        bits_per_pixel,
-		                        pitch,
-		                        frames_per_second,
-		                        image_data,
-		                        palette_data);
+		capture_video_add_frame(image, frames_per_second);
 	}
 #endif
 }
