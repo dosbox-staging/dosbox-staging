@@ -807,7 +807,7 @@ void CONFIG::Run(void)
 				return;
 			}
 			std::string line_dos = {};
-			utf8_to_dos(sec->data, line_dos);
+			utf8_to_dos(sec->data, line_dos, UnicodeFallback::Box);
 			WriteOut("\n%s", line_dos.c_str());
 			break;
 		}

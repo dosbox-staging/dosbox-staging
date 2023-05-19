@@ -163,7 +163,7 @@ void TREE::Run()
 	// Display the tree
 	PreRender();
 	MaybeDisplayInfoSpace(output);
-	const auto len_limit = max_columns - GetInfoSpaceSize(); // XXX
+	const auto len_limit = max_columns - GetInfoSpaceSize();
 	tmp_str              = has_option_paging
 	                             ? shorten_path(path, static_cast<uint16_t>(len_limit))
 	                             : path;
@@ -186,8 +186,8 @@ void TREE::PreRender()
 		// draw the tree, use standard 7-bit ASCII characters
 
 		std::string tmp_str;
-		utf8_to_dos("─├│└", tmp_str);
-		if (tmp_str != "\xC4\xC3\xB3\xC0") {
+		utf8_to_dos("─├│└", tmp_str, UnicodeFallback::Null);
+		if (tmp_str.find('\0') != std::string::npos) {
 			use_ascii_fallback = true;
 		}
 	}
@@ -197,9 +197,9 @@ void TREE::PreRender()
 		str_last   = "\\---";
 		str_indent = "|   ";
 	} else {
-		utf8_to_dos("├───", str_child);
-		utf8_to_dos("└───", str_last);
-		utf8_to_dos("│   ", str_indent);
+		utf8_to_dos("├───", str_child, UnicodeFallback::Null);
+		utf8_to_dos("└───", str_last, UnicodeFallback::Null);
+		utf8_to_dos("│   ", str_indent, UnicodeFallback::Null);
 	}
 }
 

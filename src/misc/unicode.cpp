@@ -23,6 +23,7 @@
 #include <fstream>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -32,6 +33,168 @@
 
 CHECK_NARROWING();
 
+// ***************************************************************************
+// Hardcoded data
+// ***************************************************************************
+
+// Note: Most of the Unicode engine data is stored in external files, loaded and
+// parsed during runtime
+
+// List of box drawing characters, ordered as in code page 437
+static const std::vector<uint16_t> box_drawing_set_regular = {
+        0x2502, // 0xb3 - '│', BOX DRAWINGS LIGHT VERTICAL
+        0x2524, // 0xb4 - '┤', BOX DRAWINGS LIGHT VERTICAL AND LEFT
+        0x2561, // 0xb5 - '╡', BOX DRAWINGS VERTICAL SINGLE AND LEFT DOUBLE
+        0x2562, // 0xb6 - '╢', BOX DRAWINGS VERTICAL DOUBLE AND LEFT SINGLE
+        0x2556, // 0xb7 - '╖', BOX DRAWINGS DOWN DOUBLE AND LEFT SINGLE
+        0x2555, // 0xb8 - '╕', BOX DRAWINGS DOWN SINGLE AND LEFT DOUBLE
+        0x2563, // 0xb9 - '╣', BOX DRAWINGS DOUBLE VERTICAL AND LEFT
+        0x2551, // 0xba - '║', BOX DRAWINGS DOUBLE VERTICAL
+        0x2557, // 0xbb - '╗', BOX DRAWINGS DOUBLE DOWN AND LEFT
+        0x255d, // 0xbc - '╝', BOX DRAWINGS DOUBLE UP AND LEFT
+        0x255c, // 0xbd - '╜', BOX DRAWINGS UP DOUBLE AND LEFT SINGLE
+        0x255b, // 0xbe - '╛', BOX DRAWINGS UP SINGLE AND LEFT DOUBLE
+        0x2510, // 0xbf - '┐', BOX DRAWINGS LIGHT DOWN AND LEFT
+        0x2514, // 0xc0 - '└', BOX DRAWINGS LIGHT UP AND RIGHT
+        0x2534, // 0xc1 - '┴', BOX DRAWINGS LIGHT UP AND HORIZONTAL
+        0x252c, // 0xc2 - '┬', BOX DRAWINGS LIGHT DOWN AND HORIZONTAL
+        0x251c, // 0xc3 - '├', BOX DRAWINGS LIGHT VERTICAL AND RIGHT
+        0x2500, // 0xc4 - '─', BOX DRAWINGS LIGHT HORIZONTAL
+        0x253c, // 0xc5 - '┼', BOX DRAWINGS LIGHT VERTICAL AND HORIZONTAL
+        0x255e, // 0xc6 - '╞', BOX DRAWINGS VERTICAL SINGLE AND RIGHT DOUBLE
+        0x255f, // 0xc7 - '╟', BOX DRAWINGS VERTICAL DOUBLE AND RIGHT SINGLE
+        0x255a, // 0xc8 - '╚', BOX DRAWINGS DOUBLE UP AND RIGHT
+        0x2554, // 0xc9 - '╔', BOX DRAWINGS DOUBLE DOWN AND RIGHT
+        0x2569, // 0xca - '╩', BOX DRAWINGS DOUBLE UP AND HORIZONTAL
+        0x2566, // 0xcb - '╦', BOX DRAWINGS DOUBLE DOWN AND HORIZONTAL
+        0x2560, // 0xcc - '╠', BOX DRAWINGS DOUBLE VERTICAL AND RIGHT
+        0x2550, // 0xcd - '═', BOX DRAWINGS DOUBLE HORIZONTAL
+        0x256c, // 0xce - '╬', BOX DRAWINGS DOUBLE VERTICAL AND HORIZONTAL
+        0x2567, // 0xcf - '╧', BOX DRAWINGS UP SINGLE AND HORIZONTAL DOUBLE
+        0x2568, // 0xd0 - '╨', BOX DRAWINGS UP DOUBLE AND HORIZONTAL SINGLE
+        0x2564, // 0xd1 - '╤', BOX DRAWINGS DOWN SINGLE AND HORIZONTAL DOUBLE
+        0x2565, // 0xd2 - '╥', BOX DRAWINGS DOWN DOUBLE AND HORIZONTAL SINGLE
+        0x2559, // 0xd3 - '╙', BOX DRAWINGS UP DOUBLE AND RIGHT SINGLE
+        0x2558, // 0xd4 - '╘', BOX DRAWINGS UP SINGLE AND RIGHT DOUBLE
+        0x2552, // 0xd5 - '╒', BOX DRAWINGS DOWN SINGLE AND RIGHT DOUBLE
+        0x2553, // 0xd6 - '╓', BOX DRAWINGS DOWN DOUBLE AND RIGHT SINGLE
+        0x256b, // 0xd7 - '╫', BOX DRAWINGS VERTICAL DOUBLE AND HORIZONTAL SINGLE
+        0x256a, // 0xd8 - '╪', BOX DRAWINGS VERTICAL SINGLE AND HORIZONTAL DOUBLE
+        0x2518, // 0xd9 - '┘', BOX DRAWINGS LIGHT UP AND LEFT
+        0x250c, // 0xda - '┌', BOX DRAWINGS LIGHT DOWN AND RIGHT
+};
+
+// Fallback list of box drawing characters, ordered as above;
+// effectively turns all double lines into light lines
+static const std::vector<uint16_t> box_drawing_set_light = {
+        0x2502, // 0xb3 - '│'
+        0x2524, // 0xb4 - '┤'
+        0x2524, // 0xb5 - '┤' (instead of '╡')
+        0x2524, // 0xb6 - '┤' (instead of '╢')
+        0x2510, // 0xb7 - '┐' (instead of '╖')
+        0x2510, // 0xb8 - '┐' (instead of '╕')
+        0x2524, // 0xb9 - '┤' (instead of '╣')
+        0x2502, // 0xba - '│' (instead of '║')
+        0x2510, // 0xbb - '┐' (instead of '╗')
+        0x2518, // 0xbc - '┘' (instead of '╝')
+        0x2518, // 0xbd - '┘' (instead of '╜')
+        0x2518, // 0xbe - '┘' (instead of '╛')
+        0x2510, // 0xbf - '┐'
+        0x2514, // 0xc0 - '└'
+        0x2534, // 0xc1 - '┴'
+        0x252c, // 0xc2 - '┬'
+        0x251c, // 0xc3 - '├'
+        0x2500, // 0xc4 - '─'
+        0x253c, // 0xc5 - '┼'
+        0x251c, // 0xc6 - '├' (instead of '╞')
+        0x251c, // 0xc7 - '├' (instead of '╟')
+        0x2514, // 0xc8 - '└' (instead of '╚')
+        0x250c, // 0xc9 - '┌' (instead of '╔')
+        0x2534, // 0xca - '┴' (instead of '╩')
+        0x252c, // 0xcb - '┬' (instead of '╦')
+        0x251c, // 0xcc - '├' (instead of '╠')
+        0x2500, // 0xcd - '─' (instead of '═')
+        0x253c, // 0xce - '┼' (instead of '╬')
+        0x2534, // 0xcf - '┴' (instead of '╧')
+        0x2534, // 0xd0 - '┴' (instead of '╨')
+        0x252c, // 0xd1 - '┬' (instead of '╤')
+        0x252c, // 0xd2 - '┬' (instead of '╥')
+        0x2514, // 0xd3 - '└' (instead of '╙')
+        0x2514, // 0xd4 - '└' (instead of '╘')
+        0x250c, // 0xd5 - '┌' (instead of '╒')
+        0x250c, // 0xd6 - '┌' (instead of '╓')
+        0x253c, // 0xd7 - '┼' (instead of '╫')
+        0x253c, // 0xd8 - '┼' (instead of '╪')
+        0x2518, // 0xd9 - '┘'
+        0x250c, // 0xda - '┌'
+};
+
+// Additional box drawing fallback data - each group of aliases is applied as
+// a whole, even if the code page actually have some characters
+
+using alias_t                         = std::pair<uint16_t, uint16_t>;
+using alias_groups_t                  = std::vector<std::vector<alias_t>>;
+const alias_groups_t box_alias_groups = {
+	// Note: If you compare horizontal and vertical, the groups might seem
+	// 'asymetric' to you - this is not a mistake! This is due to the fact
+	// that characters are not square, and some replacements are more
+	// visible than others.
+        {
+		{0x252c, 0x2500}, // change '┬' to '─'
+		{0x2534, 0x2500}, // change '┴' to '─'
+		{0x2564, 0x2550}, // change '╤' to '═'
+		{0x256a, 0x2550}, // change '╪' to '═'
+		{0x2567, 0x2550}, // change '╧' to '═'
+	},
+	{
+		{0x2565, 0x2500}, // change '╥' to '─'
+		{0x256b, 0x2551}, // change '╫' to '║'
+		{0x2568, 0x2500}, // change '╨' to '─'
+	},
+	{
+		{0x2566, 0x2550}, // change '╦' to '═'
+		{0x2569, 0x2550}, // change '╩' to '═'
+	},
+	{
+		{0x2524, 0x2502}, // change '┤' to '│'
+		{0x251c, 0x2502}, // change '├' to '│'
+	},
+	{
+		{0x2561, 0x2502}, // change '╡' to '│'
+		{0x255e, 0x2502}, // change '╞' to '│'
+	},
+	{
+		{0x2562, 0x2551}, // change '╢' to '║'
+		{0x255f, 0x2551}, // change '╟' to '║'
+	},
+	{
+		{0x2563, 0x2551}, // change '╣' to '║'
+		{0x2560, 0x2551}, // change '╠' to '║'
+	},
+	{
+		{0x2556, 0x2557}, // change '╖' to '╗'
+		{0x2555, 0x2557}, // change '╕' to '╗'
+		{0x255c, 0x255d}, // change '╜' to '╝'
+		{0x255b, 0x255d}, // change '╛' to '╝'
+		{0x2559, 0x255a}, // change '╙' to '╚'
+		{0x2558, 0x255a}, // change '╘' to '╚'
+		{0x2552, 0x2554}, // change '╒' to '╔'
+		{0x2553, 0x2554}, // change '╓' to '╔'
+	},
+	{
+		{0x253c, 0x2502}, // change '┼' to '│'
+	},
+	{
+		{0x256c, 0x2551}, // change '╬' to '║'
+	},
+};
+
+// ***************************************************************************
+// Unicode engine
+// ***************************************************************************
+
+// Class representing a grapheme - one main code point + optionally a number
+// os code points represening combining marks
 class Grapheme final {
 public:
 	Grapheme() = default;
@@ -45,6 +208,7 @@ public:
 
 	void Invalidate();
 	void AddMark(const uint16_t code_point);
+	void CopyMarksFrom(const Grapheme& other);
 	void StripMarks();
 	void Decompose();
 
@@ -63,28 +227,37 @@ private:
 };
 
 // Unicode to DOS code page mapping
-using code_page_mapping_t = std::map<Grapheme, uint8_t>;
+using map_grapheme_to_dos_t = std::map<Grapheme, uint8_t>;
 // DOS code page to Unicode mapping
-using code_page_mapping_reverse_t = std::map<uint8_t, Grapheme>;
+using map_dos_to_grapheme_t = std::map<uint8_t, Grapheme>;
 
-// ` add description
+// Mapping between Unicode box character code point and fallback code point
+// supported by given code page
+using map_box_code_points_t = std::map<uint16_t, uint16_t>;
+
+// Mapping between lowercase and uppercase code points
+using map_code_point_case_t    = std::map<uint16_t, uint16_t>;
+using map_dos_character_case_t = std::vector<uint8_t>;
+
+// Rules how to decompose code points to split-out all the combining marks
 using decomposition_rules_t = std::map<uint16_t, Grapheme>;
 
 using config_duplicates_t = std::map<uint16_t, uint16_t>;
-using config_aliases_t    = std::vector<std::pair<uint16_t, uint16_t>>;
+using config_aliases_t    = std::vector<alias_t>;
 
-struct ConfigMappingEntry {
-	bool valid                          = false;
-	code_page_mapping_reverse_t mapping = {};
-	uint16_t extends_code_page          = 0;
-	std::string extends_dir             = "";
-	std::string extends_file            = "";
+struct config_mapping_entry_t {
+	bool valid                    = false;
+	map_dos_to_grapheme_t mapping = {};
+	uint16_t extends_code_page    = 0;
+	std::string extends_dir       = "";
+	std::string extends_file      = "";
 };
 
-using config_mappings_t = std::map<uint16_t, ConfigMappingEntry>;
+using config_mappings_t = std::map<uint16_t, config_mapping_entry_t>;
 
 static const std::string file_name_main          = "MAIN.TXT";
 static const std::string file_name_ascii         = "ASCII.TXT";
+static const std::string file_name_case          = "CAPITAL_SMALL.TXT";
 static const std::string file_name_decomposition = "DECOMPOSITION.TXT";
 static const std::string dir_name_mapping        = "mapping";
 
@@ -114,19 +287,35 @@ static config_aliases_t config_aliases = {};
 static config_duplicates_t config_duplicates = {};
 
 // Unicode -> 7-bit ASCII mapping, use as a last resort mapping
-static code_page_mapping_t mapping_ascii = {};
+static map_grapheme_to_dos_t mapping_ascii = {};
+
+// Mappings between lowercase and uppercase characters
+static map_code_point_case_t uppercase = {};
+static map_code_point_case_t lowercase = {};
 
 // Unicode 'KD' decomposition rules
 static decomposition_rules_t decomposition_rules = {};
 
-// Concrete Unicode -> codepage mappings
-static std::map<uint16_t, code_page_mapping_t> mappings_normalized_by_codepage = {};
-static std::map<uint16_t, code_page_mapping_t> mappings_decomposed_by_codepage = {};
-// Additional Unicode -> codepage mappings, to avoid unknown characters
-static std::map<uint16_t, code_page_mapping_t> aliases_normalized_by_codepage = {};
-static std::map<uint16_t, code_page_mapping_t> aliases_decomposed_by_codepage = {};
-// Reverse mappings, codepage -> Unicode
-static std::map<uint16_t, code_page_mapping_reverse_t> mappings_reverse_by_codepage = {};
+// Set of per code page mappings
+
+struct code_page_maps_t {
+	// DOS character to Unicode grapheme (normalized/decomposed) maps
+	map_grapheme_to_dos_t dos_to_grapheme_normalized = {};
+	map_grapheme_to_dos_t dos_to_grapheme_decomposed = {};
+	// Additional fallback mappings, for handling certain graphemes
+	// not existing in current code page
+	map_grapheme_to_dos_t aliases_normalized = {};
+	map_grapheme_to_dos_t aliases_decomposed = {};
+	// Reverse mapping, Unicode grapheme to DOS character
+	map_dos_to_grapheme_t grapheme_to_dos = {};
+	// Mapping for box-optimized fallback mode
+	map_box_code_points_t box_code_points = {};
+	// Mapping to change DOS character casing
+	map_dos_character_case_t uppercase = {};
+	map_dos_character_case_t lowercase = {};
+};
+
+static std::map<uint16_t, code_page_maps_t> per_code_page_mappings = {};
 
 // ***************************************************************************
 // Grapheme type implementation
@@ -227,6 +416,17 @@ void Grapheme::AddMark(const uint16_t in_code_point)
 	marks.push_back(in_code_point);
 	marks_sorted.push_back(in_code_point);
 	std::sort(marks_sorted.begin(), marks_sorted.end());
+}
+
+void Grapheme::CopyMarksFrom(const Grapheme& other)
+{
+	if (!is_valid || !other.is_valid) {
+		// Can't add combining mark to/from invalid grapheme
+		return;
+	}
+
+	marks        = other.marks;
+	marks_sorted = other.marks_sorted;
 }
 
 void Grapheme::StripMarks()
@@ -467,40 +667,33 @@ static void warn_default_code_page()
 	LOG_WARNING("UNICODE: Unable to prepare default code page");
 }
 
-static bool wide_to_dos(const std::vector<uint16_t>& str_in,
-                        std::string& str_out, const uint16_t code_page)
+static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_out,
+                        const UnicodeFallback fallback, const uint16_t code_page)
 {
 	bool status = true;
 	str_out.clear();
 	str_out.reserve(str_in.size());
 
-	code_page_mapping_t* mapping_normalized = nullptr;
-	code_page_mapping_t* mapping_decomposed = nullptr;
-	code_page_mapping_t* aliases_normalized = nullptr;
-	code_page_mapping_t* aliases_decomposed = nullptr;
+	const map_grapheme_to_dos_t* mapping_normalized = nullptr;
+	const map_grapheme_to_dos_t* mapping_decomposed = nullptr;
+	const map_grapheme_to_dos_t* aliases_normalized = nullptr;
+	const map_grapheme_to_dos_t* aliases_decomposed = nullptr;
+
+	const map_box_code_points_t* box_code_points = nullptr;
 
 	// Try to find UTF8 -> code page mapping
 	if (code_page != 0) {
-		const auto it_normalized = mappings_normalized_by_codepage.find(code_page);
-		if (it_normalized != mappings_normalized_by_codepage.end()) {
-			mapping_normalized = &it_normalized->second;
+		const auto it = per_code_page_mappings.find(code_page);
+
+		if (it != per_code_page_mappings.end()) {
+			const auto& mappings = it->second;
+			mapping_normalized = &mappings.dos_to_grapheme_normalized;
+			mapping_decomposed = &mappings.dos_to_grapheme_decomposed;
+			aliases_normalized = &mappings.aliases_normalized;
+			aliases_decomposed = &mappings.aliases_decomposed;
+			box_code_points    = &mappings.box_code_points;
 		} else {
 			warn_code_page(code_page);
-		}
-
-		const auto it_decomposed = mappings_decomposed_by_codepage.find(code_page);
-		if (it_decomposed != mappings_decomposed_by_codepage.end()) {
-			mapping_decomposed = &it_decomposed->second;
-		}
-
-		const auto it_alias_normalized = aliases_normalized_by_codepage.find(code_page);
-		if (it_alias_normalized != aliases_normalized_by_codepage.end()) {
-			aliases_normalized = &it_alias_normalized->second;
-		}
-
-		const auto it_alias_decomposed = aliases_decomposed_by_codepage.find(code_page);
-		if (it_alias_decomposed != aliases_decomposed_by_codepage.end()) {
-			aliases_decomposed = &it_alias_decomposed->second;
 		}
 	}
 
@@ -519,8 +712,35 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in,
 		return true;
 	};
 
+	// Handle box drawing characters, if needed use specialized fallback
+	// strategy to guarantee table consistency
+	auto push_box_drawing = [&str_out](const map_grapheme_to_dos_t* mapping,
+	                                   const map_box_code_points_t* mapping_box,
+	                                   const Grapheme& grapheme) {
+		if (!mapping || !mapping_box) {
+			return false;
+		}
+
+		if (grapheme.HasMark()) {
+			return false; // not a box drawing character
+		}
+
+		const auto code_point = grapheme.GetCodePoint();
+		if (!mapping_box->count(code_point)) {
+			return false; // not a box drawing character
+		}
+
+		const auto alias_code_point = mapping_box->at(code_point);
+		if (alias_code_point >= decode_threshold_non_ascii) {
+			str_out.push_back(static_cast<char>(mapping->at(alias_code_point)));
+		} else {
+			str_out.push_back(static_cast<char>(alias_code_point));
+		}
+		return true;
+	};
+
 	// Handle code points belonging to selected code page
-	auto push_code_page = [&str_out](const code_page_mapping_t* mapping,
+	auto push_code_page = [&str_out](const map_grapheme_to_dos_t* mapping,
 	                                 const Grapheme& grapheme) {
 		if (!mapping) {
 			return false;
@@ -551,18 +771,37 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in,
 	};
 
 	// Handle unknown code points
-	auto push_unknown = [&str_out, &status](const uint16_t code_point) {
-		str_out.push_back(static_cast<char>(unknown_character));
-		warn_code_point(code_point);
+	auto push_unknown = [&](const uint16_t code_point) {
+		if (fallback == UnicodeFallback::Null) {
+			str_out.push_back(0);
+		} else {
+			str_out.push_back(static_cast<char>(unknown_character));
+			warn_code_point(code_point);
+		}
 		status = false;
 	};
 
 	// Helper for handling normalized graphemes
 	auto push_normalized = [&](const Grapheme& grapheme) {
-		return push_7bit(grapheme) ||
-		       push_code_page(mapping_normalized, grapheme) ||
-		       push_code_page(aliases_normalized, grapheme) ||
-		       push_fallback(grapheme);
+		switch (fallback) {
+		case UnicodeFallback::Null:
+			return push_7bit(grapheme) ||
+			       push_code_page(mapping_normalized, grapheme);
+		case UnicodeFallback::Simple:
+			return push_7bit(grapheme) ||
+			       push_code_page(mapping_normalized, grapheme) ||
+			       push_code_page(aliases_normalized, grapheme) ||
+			       push_fallback(grapheme);
+		case UnicodeFallback::Box:
+			return push_7bit(grapheme) ||
+			       push_box_drawing(mapping_normalized,
+			                        box_code_points,
+			                        grapheme) ||
+			       push_code_page(mapping_normalized, grapheme) ||
+			       push_code_page(aliases_normalized, grapheme) ||
+			       push_fallback(grapheme);
+		default: assert(false); return false;
+		}
 	};
 
 	// Helper for handling non-normalized graphemes
@@ -570,8 +809,15 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in,
 		Grapheme decomposed = grapheme;
 		decomposed.Decompose();
 
-		return push_code_page(mapping_decomposed, decomposed) ||
-		       push_code_page(aliases_decomposed, decomposed);
+		switch (fallback) {
+		case UnicodeFallback::Null:
+			return push_code_page(mapping_decomposed, decomposed);
+		case UnicodeFallback::Simple:
+		case UnicodeFallback::Box:
+			return push_code_page(mapping_decomposed, decomposed) ||
+			       push_code_page(aliases_decomposed, decomposed);
+		default: assert(false); return false;
+		}
 	};
 
 	for (size_t i = 0; i < str_in.size(); ++i) {
@@ -629,12 +875,13 @@ static void dos_to_wide(const std::string& str_in,
 		const auto byte = static_cast<uint8_t>(character);
 		if (GCC_UNLIKELY(byte >= decode_threshold_non_ascii)) {
 			// Character above 0x07f - take from code page mapping
+			auto& mappings = per_code_page_mappings[code_page];
 
-			if (!mappings_reverse_by_codepage.count(code_page) ||
-			    !mappings_reverse_by_codepage[code_page].count(byte)) {
+			if (!per_code_page_mappings.count(code_page) ||
+			    !mappings.grapheme_to_dos.count(byte)) {
 				str_out.push_back(unknown_character);
 			} else {
-				(mappings_reverse_by_codepage[code_page])[byte].PushInto(str_out);
+				mappings.grapheme_to_dos[byte].PushInto(str_out);
 			}
 
 		} else {
@@ -836,6 +1083,17 @@ static void error_parsing(const std::string& file_name, const size_t line_num,
 	}
 }
 
+static void error_code_point_found_twice(const uint16_t code_point,
+                                         const std::string& file_name,
+                                         const size_t line_num)
+{
+	std::stringstream details;
+	details << std::string("code point U+") << std::hex << code_point
+	        << " found twice";
+
+	error_parsing(file_name, line_num, details.str());
+}
+
 static void error_not_combining_mark(const size_t position,
                                      const std::string& file_name,
                                      const size_t line_num)
@@ -892,9 +1150,11 @@ static bool check_grapheme_valid(const Grapheme& grapheme,
 
 static bool import_mapping_code_page(const std_fs::path& path_root,
                                      const std::string& file_name,
-                                     code_page_mapping_reverse_t& mapping)
+                                     map_dos_to_grapheme_t& mapping)
 {
 	// Import code page character -> UTF-8 mapping from external file
+
+	assert(mapping.empty());
 
 	// Open the file
 	auto in_file = open_mapping_file(path_root, file_name);
@@ -907,7 +1167,7 @@ static bool import_mapping_code_page(const std_fs::path& path_root,
 	std::string line_str = " ";
 	size_t line_num      = 0;
 
-	code_page_mapping_reverse_t new_mapping;
+	map_dos_to_grapheme_t new_mapping = {};
 
 	while (get_line(in_file, line_str, line_num)) {
 		std::vector<std::string> tokens;
@@ -968,15 +1228,22 @@ static bool import_mapping_code_page(const std_fs::path& path_root,
 	return true;
 }
 
+
 static void import_config_main(const std_fs::path& path_root)
 {
 	// Import main configuration file, telling how to construct UTF-8
 	// mappings for each and every supported code page
 
+	assert(config_mappings.empty());
+	assert(config_duplicates.empty());
+	assert(config_aliases.empty());
+
 	// Open the file
-	auto in_file = open_mapping_file(path_root, file_name_main);
-	if (!in_file)
+	const auto &file_name = file_name_main;
+	auto in_file = open_mapping_file(path_root, file_name);
+	if (!in_file) {
 		return;
+	}
 
 	// Read and parse
 	bool file_empty      = true;
@@ -985,9 +1252,9 @@ static void import_config_main(const std_fs::path& path_root)
 
 	uint16_t curent_code_page = 0;
 
-	config_mappings_t new_config_mappings;
-	config_duplicates_t new_config_duplicates;
-	config_aliases_t new_config_aliases;
+	config_mappings_t   new_config_mappings   = {};
+	config_duplicates_t new_config_duplicates = {};
+	config_aliases_t    new_config_aliases    = {};
 
 	while (get_line(in_file, line_str, line_num)) {
 		std::vector<std::string> tokens;
@@ -998,7 +1265,7 @@ static void import_config_main(const std_fs::path& path_root)
 		if (GCC_UNLIKELY(tokens[0] == "ALIAS")) {
 			if ((tokens.size() != 3 && tokens.size() != 4) ||
 			    (tokens.size() == 4 && tokens[3] != "BIDIRECTIONAL")) {
-				error_parsing(file_name_main, line_num);
+				error_parsing(file_name, line_num);
 				return;
 			}
 
@@ -1006,7 +1273,7 @@ static void import_config_main(const std_fs::path& path_root)
 			uint16_t code_point_2 = 0;
 			if (!get_hex_16bit(tokens[1], code_point_1) ||
 			    !get_hex_16bit(tokens[2], code_point_2)) {
-				error_parsing(file_name_main, line_num);
+				error_parsing(file_name, line_num);
 				return;
 			}
 
@@ -1023,7 +1290,7 @@ static void import_config_main(const std_fs::path& path_root)
 			auto check_no_code_page = [&](const uint16_t code_page) {
 				if ((new_config_mappings.find(code_page) != new_config_mappings.end() && new_config_mappings[code_page].valid) ||
 				    new_config_duplicates.find(code_page) != new_config_duplicates.end()) {
-					error_code_page_defined(file_name_main, line_num);
+					error_code_page_defined(file_name, line_num);
 					return false;
 				}
 				return true;
@@ -1034,8 +1301,7 @@ static void import_config_main(const std_fs::path& path_root)
 				uint16_t code_page_2 = 0;
 				if (!get_code_page(tokens[1], code_page_1) ||
 				    !get_code_page(tokens[3], code_page_2)) {
-					error_code_page_invalid(file_name_main,
-					                        line_num);
+					error_code_page_invalid(file_name, line_num);
 					return;
 				}
 
@@ -1051,8 +1317,7 @@ static void import_config_main(const std_fs::path& path_root)
 				uint16_t code_page = 0;
 				if (tokens.size() != 2 ||
 				    !get_code_page(tokens[1], code_page)) {
-					error_code_page_invalid(file_name_main,
-					                        line_num);
+					error_code_page_invalid(file_name, line_num);
 					return;
 				}
 
@@ -1067,15 +1332,14 @@ static void import_config_main(const std_fs::path& path_root)
 
 		} else if (GCC_UNLIKELY(tokens[0] == "EXTENDS")) {
 			if (!curent_code_page) {
-				error_code_page_none(file_name_main, line_num);
+				error_code_page_none(file_name, line_num);
 				return;
 			}
 
 			if (tokens.size() == 3 && tokens[1] == "CODEPAGE") {
 				uint16_t code_page = 0;
 				if (!get_code_page(tokens[2], code_page)) {
-					error_code_page_invalid(file_name_main,
-					                        line_num);
+					error_code_page_invalid(file_name, line_num);
 					return;
 				}
 
@@ -1088,7 +1352,7 @@ static void import_config_main(const std_fs::path& path_root)
 				// some meaningful mapping provided
 				file_empty = false;
 			} else {
-				error_parsing(file_name_main, line_num);
+				error_parsing(file_name, line_num);
 				return;
 			}
 
@@ -1096,7 +1360,7 @@ static void import_config_main(const std_fs::path& path_root)
 
 		} else if (get_hex_8bit(tokens[0], character_code)) {
 			if (!curent_code_page) {
-				error_code_page_none(file_name_main, line_num);
+				error_code_page_none(file_name, line_num);
 				return;
 			}
 
@@ -1121,13 +1385,12 @@ static void import_config_main(const std_fs::path& path_root)
 					// ignore 7-bit ASCII codes
 					Grapheme grapheme; // placeholder
 					if (!get_grapheme(tokens, grapheme)) {
-						error_parsing(file_name_main,
-						              line_num);
+						error_parsing(file_name, line_num);
 						return;
 					}
 
 					if (!check_grapheme_valid(grapheme,
-					                          file_name_main,
+					                          file_name,
 					                          line_num))
 						return;
 
@@ -1139,17 +1402,17 @@ static void import_config_main(const std_fs::path& path_root)
 				}
 
 			} else {
-				error_parsing(file_name_main, line_num);
+				error_parsing(file_name, line_num);
 				return;
 			}
 
 		} else {
-			error_parsing(file_name_main, line_num);
+			error_parsing(file_name, line_num);
 			return;
 		}
 	}
 
-	if (!check_import_status(in_file, file_name_main, file_empty)) {
+	if (!check_import_status(in_file, file_name, file_empty)) {
 		return;
 	}
 
@@ -1164,8 +1427,11 @@ static void import_decomposition(const std_fs::path& path_root)
 	// Import Unicode decomposition rules; will be used to handle
 	// non-normalized Unicode input
 
+	assert(decomposition_rules.empty());
+
 	// Open the file
-	auto in_file = open_mapping_file(path_root, file_name_decomposition);
+	const auto& file_name = file_name_decomposition;
+	auto in_file = open_mapping_file(path_root, file_name);
 	if (!in_file) {
 		return;
 	}
@@ -1174,7 +1440,7 @@ static void import_decomposition(const std_fs::path& path_root)
 	std::string line_str = "";
 	size_t line_num      = 0;
 
-	decomposition_rules_t new_rules;
+	decomposition_rules_t new_rules = {};
 
 	while (get_line(in_file, line_str, line_num)) {
 		std::vector<std::string> tokens;
@@ -1187,27 +1453,27 @@ static void import_decomposition(const std_fs::path& path_root)
 
 		if (tokens.size() < 3 || !get_hex_16bit(tokens[0], code_point_1) ||
 		    !get_hex_16bit(tokens[1], code_point_2)) {
-			error_parsing(file_name_decomposition, line_num);
+			error_parsing(file_name, line_num);
 			return;
 		}
 
 		new_rules[code_point_1] = code_point_2;
 		for (size_t idx = 2; idx < tokens.size(); ++idx) {
 			if (!get_hex_16bit(tokens[idx], code_point_2)) {
-				error_parsing(file_name_decomposition, line_num);
-				return;
+					error_parsing(file_name, line_num);
+					return;
 			}
 			if (!is_combining_mark(code_point_2)) {
-				error_not_combining_mark(idx + 1,
-				                         file_name_decomposition,
-				                         line_num);
-				return;
+					error_not_combining_mark(idx + 1,
+						                 file_name,
+						                 line_num);
+					return;
 			}
 			new_rules[code_point_1].AddMark(code_point_2);
 		}
 	}
 
-	if (!check_import_status(in_file, file_name_decomposition, new_rules.empty())) {
+	if (!check_import_status(in_file, file_name, new_rules.empty())) {
 		return;
 	}
 
@@ -1220,8 +1486,11 @@ static void import_mapping_ascii(const std_fs::path& path_root)
 	// Import fallback mapping, from Unicode to 7-bit ASCII;
 	// this mapping will only be used if everything else fails
 
+	assert(mapping_ascii.empty());
+
 	// Open the file
-	auto in_file = open_mapping_file(path_root, file_name_ascii);
+	const auto& file_name = file_name_ascii;
+	auto in_file = open_mapping_file(path_root, file_name);
 	if (!in_file) {
 		return;
 	}
@@ -1230,7 +1499,7 @@ static void import_mapping_ascii(const std_fs::path& path_root)
 	std::string line_str = "";
 	size_t line_num      = 0;
 
-	code_page_mapping_t new_mapping_ascii;
+	map_grapheme_to_dos_t new_mapping_ascii = {};
 
 	while (get_line(in_file, line_str, line_num)) {
 		std::vector<std::string> tokens;
@@ -1243,19 +1512,145 @@ static void import_mapping_ascii(const std_fs::path& path_root)
 
 		if (tokens.size() != 2 || !get_hex_16bit(tokens[0], code_point) ||
 		    !get_ascii(tokens[1], character)) {
-			error_parsing(file_name_ascii, line_num);
+			error_parsing(file_name, line_num);
 			return;
 		}
 
 		new_mapping_ascii[code_point] = character;
 	}
 
-	if (!check_import_status(in_file, file_name_ascii, new_mapping_ascii.empty())) {
+	if (!check_import_status(in_file, file_name, new_mapping_ascii.empty())) {
 		return;
 	}
 
 	// Reading/parsing succeeded - use the mapping
 	mapping_ascii = new_mapping_ascii;
+}
+
+static void import_mapping_case(const std_fs::path& path_root)
+{
+	// Import lowercase <-> uppercase mapping data
+
+	assert(uppercase.empty());
+	assert(lowercase.empty());
+
+	// Open the file
+	const auto& file_name = file_name_case;
+	auto in_file = open_mapping_file(path_root, file_name);
+	if (!in_file) {
+		return;
+	}
+
+	// Read and parse
+	std::string line_str = "";
+	size_t line_num      = 0;
+
+	// All the encountered uppercase/lowercase code points
+	std::set<uint16_t> all_uppercase = {};
+	std::set<uint16_t> all_lowercase = {};
+
+	map_code_point_case_t new_uppercase = {};
+	map_code_point_case_t new_lowercase = {};
+
+	while (get_line(in_file, line_str, line_num)) {
+		std::vector<std::string> tokens;
+		if (!get_tokens(line_str, tokens)) {
+			continue; // empty line
+		}
+
+		if (tokens.size() != 2) {
+			error_parsing(file_name, line_num);
+			return;
+		}
+
+		uint16_t code_point_upper = 0;
+		uint16_t code_point_lower = 0;
+
+		// Skip code points which do not have corresponding upper/lower
+		// case characters - they would be needed if we were providing
+		// functions like is_upper_case(...)
+
+		if (tokens[0] == "NNN") {
+			// Retrieve code point
+			if (!get_hex_16bit(tokens[1], code_point_lower)) {
+					error_parsing(file_name, line_num);
+					return;
+			}
+
+			// Make sure there are no repetitions
+			if (all_lowercase.count(code_point_lower) ||
+			    all_uppercase.count(code_point_lower)) {
+					error_code_point_found_twice(code_point_lower,
+					                             file_name,
+					                             line_num);
+					return;
+			}
+
+			// Store the code point for further repetition checks
+			all_lowercase.insert(code_point_lower);
+			continue;
+		}
+
+		if (tokens[1] == "NNN") {
+			// Retrieve code point
+			if (!get_hex_16bit(tokens[0], code_point_upper)) {
+					error_parsing(file_name, line_num);
+					return;
+			}
+
+			// Make sure there are no repetitions
+			if (all_lowercase.count(code_point_upper) ||
+			    all_uppercase.count(code_point_upper)) {
+					error_code_point_found_twice(code_point_upper,
+					                             file_name,
+					                             line_num);
+					return;
+			}
+
+			// Store the code point for further repetition checks
+			all_uppercase.insert(code_point_upper);
+			continue;
+		}
+
+		// Retrieve code points
+		if (!get_hex_16bit(tokens[0], code_point_upper) ||
+		    !get_hex_16bit(tokens[1], code_point_lower)) {
+			error_parsing(file_name, line_num);
+			return;
+		}
+
+		// Make sure there are no repetitions
+		if (all_lowercase.count(code_point_lower) ||
+		    all_uppercase.count(code_point_lower)) {
+			error_code_point_found_twice(code_point_lower,
+			                             file_name,
+			                             line_num);
+			return;
+		}
+		if (all_lowercase.count(code_point_upper) ||
+		    all_uppercase.count(code_point_upper)) {
+			error_code_point_found_twice(code_point_upper,
+			                             file_name,
+			                             line_num);
+			return;
+		}
+
+		// Store the code points for further repetition checks
+		all_lowercase.insert(code_point_lower);
+		all_uppercase.insert(code_point_upper);
+
+		// Add code points to case maps
+		new_uppercase[code_point_lower] = code_point_upper;
+		new_lowercase[code_point_upper] = code_point_lower;
+	}
+
+	if (!check_import_status(in_file, file_name, new_uppercase.empty())) {
+		return;
+	}
+
+	// Reading/parsing succeeded - use the mapping
+	uppercase = new_uppercase;
+	lowercase = new_lowercase;
 }
 
 static uint16_t deduplicate_code_page(const uint16_t code_page)
@@ -1269,8 +1664,8 @@ static uint16_t deduplicate_code_page(const uint16_t code_page)
 	return it->second;
 }
 
-static void construct_decomposed(const code_page_mapping_t& normalized,
-                                 code_page_mapping_t& decomposed)
+static void construct_decomposed(const map_grapheme_to_dos_t& normalized,
+                                 map_grapheme_to_dos_t& decomposed)
 {
 	decomposed.clear();
 	for (const auto& [grapheme, character_code] : normalized) {
@@ -1281,6 +1676,137 @@ static void construct_decomposed(const code_page_mapping_t& normalized,
 		}
 
 		decomposed[tmp] = character_code;
+	}
+}
+
+static void construct_box_fallback(const map_grapheme_to_dos_t& code_page_mapping,
+                                   map_box_code_points_t& out_box_code_points)
+{
+	auto is_adaptation_needed = [&]() {
+		// Check if current list of box drawing characters needs
+		// to be adapted due to missing characters in the given
+		// code page
+		for (const auto& [from, target] : out_box_code_points) {
+			if (!code_page_mapping.count(target)) {
+				return true;
+			}
+		}
+		return false;
+	};
+
+	auto is_alias_group_suitable = [&](const std::vector<alias_t>& alias_group) {
+		// Check if the given alias group is:
+		// - applicable = the code page contains all the characters
+		//   corresponding to target code points
+		// - profitable = applying the alias will reduce the number
+		//   of code points without matching characters in the given
+		//   code page
+
+		bool is_group_profitable = false;
+		for (const auto& [from, target] : out_box_code_points) {
+			for (const auto& alias : alias_group) {
+				if (from != alias.first) {
+					continue;
+				}
+
+				if (!code_page_mapping.count(alias.second)) {
+					// We cannot apply this alias group
+					return false;
+				}
+
+				if (!code_page_mapping.count(target)) {
+					is_group_profitable = true;
+				}
+			}
+		}
+
+		return is_group_profitable;
+	};
+
+	auto try_set = [&](const std::vector<uint16_t>& drawing_set) {
+		assert(box_drawing_set_regular.size() == drawing_set.size());
+
+		// Create initial mapping
+		out_box_code_points.clear();
+		for (size_t idx = 0; idx < drawing_set.size(); ++idx) {
+			const auto code_point_1 = box_drawing_set_regular[idx];
+			const auto code_point_2 = drawing_set[idx];
+			out_box_code_points[code_point_1] = code_point_2;
+		}
+
+		// If necessary, adapt mapping using alias groups
+		for (const auto& alias_group : box_alias_groups) {
+			if (!is_adaptation_needed()) {
+				// No adaptation needed - our job is done here
+				return true;
+			}
+
+			if (!is_alias_group_suitable(alias_group)) {
+				continue;
+			}
+
+			// Apply the aliases from the current group
+			for (const auto& [from, target] : out_box_code_points) {
+				for (const auto& alias : alias_group) {
+					if (from != alias.first) {
+						continue;
+					}
+
+					out_box_code_points[from] = alias.second;
+				}
+			}
+		}
+
+		return !is_adaptation_needed();
+	};
+
+	// Try to adjust regular (full) drawing character set for the code page,
+	// if failed try the reduced set without double lines
+	if (try_set(box_drawing_set_regular) || try_set(box_drawing_set_light)) {
+		return;
+	}
+
+	// Last resort fallback - use 7-bit ASCII fallback for everything
+	out_box_code_points.clear();
+	for (const auto& code_point : box_drawing_set_regular) {
+		if (mapping_ascii.count(code_point)) {
+			out_box_code_points[code_point] = mapping_ascii.at(code_point);
+		} else {
+			out_box_code_points[code_point] = unknown_character;
+		}
+	}
+}
+
+static void construct_case_mapping(const map_code_point_case_t& map_case_global,
+		                   const map_grapheme_to_dos_t& code_page_mapping,
+		                   map_dos_character_case_t& out_map_case)
+{
+	out_map_case.resize(UINT8_MAX);
+	for (uint16_t idx = 0; idx < UINT8_MAX; ++idx) {
+		if (idx < decode_threshold_non_ascii && map_case_global.count(idx)) {
+			out_map_case[idx] = static_cast<uint8_t>(
+				map_case_global.at(idx));
+		} else {
+			out_map_case[idx] = static_cast<uint8_t>(idx);
+		}
+	}
+
+	for (const auto& [grapheme, character_code] : code_page_mapping) {
+		if (!map_case_global.count(grapheme.GetCodePoint())) {
+			// No information how to switch case for this code point
+			continue;
+		}
+
+		Grapheme grapheme_switched = map_case_global.at(
+			grapheme.GetCodePoint());
+		grapheme_switched.CopyMarksFrom(grapheme);
+
+		if (!code_page_mapping.count(grapheme_switched)) {
+			// Code page does not contain switched case character
+			continue;
+		}
+
+		out_map_case[character_code] = code_page_mapping.at(grapheme_switched);
 	}
 }
 
@@ -1295,16 +1821,13 @@ static bool construct_mapping(const uint16_t code_page)
 	}
 	already_tried.insert(code_page);
 
-	assert(config_mappings.count(code_page));
-	assert(!mappings_normalized_by_codepage.count(code_page));
-	assert(!mappings_decomposed_by_codepage.count(code_page));
-	assert(!mappings_reverse_by_codepage.count(code_page));
+	assert(!per_code_page_mappings.count(code_page));
 
 	// First apply mapping found in main config file
 
 	const auto& config_mapping      = config_mappings[code_page];
-	code_page_mapping_t new_mapping = {};
-	code_page_mapping_reverse_t new_mapping_reverse = {};
+	map_grapheme_to_dos_t new_mapping         = {};
+	map_dos_to_grapheme_t new_mapping_reverse = {};
 
 	auto add_to_mappings = [&](const uint8_t first, const Grapheme& second) {
 		if (first < decode_threshold_non_ascii) {
@@ -1340,7 +1863,8 @@ static bool construct_mapping(const uint16_t code_page)
 			return false;
 		}
 
-		for (const auto& entry : mappings_normalized_by_codepage[dependency]) {
+		for (const auto& entry :
+		     per_code_page_mappings[dependency].dos_to_grapheme_normalized) {
 			add_to_mappings(entry.second, entry.first);
 		}
 	}
@@ -1348,7 +1872,7 @@ static bool construct_mapping(const uint16_t code_page)
 	// If code page uses external mapping file, load appropriate entries
 
 	if (!config_mapping.extends_file.empty()) {
-		code_page_mapping_reverse_t mapping_file;
+		map_dos_to_grapheme_t mapping_file;
 
 		if (!import_mapping_code_page(GetResourcePath(config_mapping.extends_dir),
 		                              config_mapping.extends_file,
@@ -1361,49 +1885,73 @@ static bool construct_mapping(const uint16_t code_page)
 		}
 	}
 
-	mappings_normalized_by_codepage[code_page] = new_mapping;
-	mappings_reverse_by_codepage[code_page]    = new_mapping_reverse;
+	auto& mappings = per_code_page_mappings[code_page];
+
+	mappings.dos_to_grapheme_normalized = new_mapping;
+	mappings.grapheme_to_dos = new_mapping_reverse;
 
 	// Construct decomposed mapping
-	construct_decomposed(mappings_normalized_by_codepage[code_page],
-	                     mappings_decomposed_by_codepage[code_page]);
+	construct_decomposed(mappings.dos_to_grapheme_normalized,
+	                     mappings.dos_to_grapheme_decomposed);
+
+	// Construct mapping for box-optimized fallback mode
+	construct_box_fallback(mappings.dos_to_grapheme_normalized,
+	                       mappings.box_code_points);
+
+	// Construct upper/lower case mappings
+	construct_case_mapping(uppercase, mappings.dos_to_grapheme_normalized,
+	                       mappings.uppercase);
+	construct_case_mapping(lowercase, mappings.dos_to_grapheme_normalized,
+	                       mappings.lowercase);
 
 	return true;
 }
 
 static void construct_aliases(const uint16_t code_page)
 {
-	assert(!aliases_normalized_by_codepage.count(code_page));
-	assert(!aliases_decomposed_by_codepage.count(code_page));
-	assert(mappings_normalized_by_codepage.count(code_page));
+	auto& mappings = per_code_page_mappings[code_page];
 
-	const auto& mapping      = mappings_normalized_by_codepage[code_page];
-	auto& aliases_normalized = aliases_normalized_by_codepage[code_page];
+	assert(mappings.aliases_normalized.empty());
+	assert(mappings.aliases_decomposed.empty());
 
-	for (const auto& alias : config_aliases) {
-		if (!mapping.count(alias.first) && mapping.count(alias.second) &&
+	const auto& mapping_normalized = mappings.dos_to_grapheme_normalized;
+	auto& aliases_normalized = mappings.aliases_normalized;
+
+	auto add_alias = [&](const alias_t& alias) {
+		if (!mapping_normalized.count(alias.first) &&
+		    mapping_normalized.count(alias.second) &&
 		    !aliases_normalized.count(alias.first)) {
 			aliases_normalized[alias.first] =
-			        mapping.find(alias.second)->second;
+			        mapping_normalized.find(alias.second)->second;
+		}
+	};
+
+	// Construct aliases based on the configuration
+	for (const auto& alias : config_aliases) {
+		add_alias(alias);
+	}
+
+	// Add box drawing aliases
+	for (const auto& alias_group : box_alias_groups) {
+		for (const auto& alias : alias_group) {
+			add_alias(alias);
 		}
 	}
 
 	// Construct decomposed aliases
-	construct_decomposed(aliases_normalized_by_codepage[code_page],
-	                     aliases_decomposed_by_codepage[code_page]);
+	construct_decomposed(mappings.aliases_normalized,
+	                     mappings.aliases_decomposed);
 }
 
 static bool prepare_code_page(const uint16_t code_page)
 {
-	if (mappings_normalized_by_codepage.count(code_page)) {
+	if (per_code_page_mappings.count(code_page)) {
 		return true; // code page already prepared
 	}
 
 	if (!config_mappings.count(code_page) || !construct_mapping(code_page)) {
 		// Unsupported code page or error
-		mappings_normalized_by_codepage.erase(code_page);
-		mappings_decomposed_by_codepage.erase(code_page);
-		mappings_reverse_by_codepage.erase(code_page);
+		per_code_page_mappings.erase(code_page);
 		return false;
 	}
 
@@ -1421,6 +1969,7 @@ static void load_config_if_needed()
 		const auto path_root = GetResourcePath(dir_name_mapping);
 		import_decomposition(path_root);
 		import_mapping_ascii(path_root);
+		import_mapping_case(path_root);
 		import_config_main(path_root);
 		config_loaded = true;
 	}
@@ -1475,27 +2024,31 @@ uint16_t get_utf8_code_page()
 }
 
 static bool utf8_to_dos_common(const std::string& in_str, std::string& out_str,
+                               const UnicodeFallback fallback,
                                const uint16_t code_page)
 {
 	std::vector<uint16_t> tmp = {};
 
 	const bool status1 = utf8_to_wide(in_str, tmp);
-	const bool status2 = wide_to_dos(tmp, out_str, code_page);
+	const bool status2 = wide_to_dos(tmp, out_str, fallback, code_page);
 
 	return status1 && status2;
 }
 
-bool utf8_to_dos(const std::string& in_str, std::string& out_str)
+bool utf8_to_dos(const std::string& in_str, std::string& out_str,
+                 const UnicodeFallback fallback)
 {
 	load_config_if_needed();
-	return utf8_to_dos_common(in_str, out_str, get_utf8_code_page());
+	return utf8_to_dos_common(in_str, out_str, fallback, get_utf8_code_page());
 }
 
 bool utf8_to_dos(const std::string& in_str, std::string& out_str,
+                 const UnicodeFallback fallback,
                  const uint16_t code_page)
 {
 	load_config_if_needed();
-	return utf8_to_dos_common(in_str, out_str, get_custom_code_page(code_page));
+	return utf8_to_dos_common(in_str, out_str, fallback,
+			          get_custom_code_page(code_page));
 }
 
 static void dos_to_utf8_common(const std::string& in_str, std::string& out_str,
@@ -1518,4 +2071,52 @@ void dos_to_utf8(const std::string& in_str, std::string& out_str,
 {
 	load_config_if_needed();
 	dos_to_utf8_common(in_str, out_str, get_custom_code_page(code_page));
+}
+
+static void lowercase_dos_common(std::string & in_str, const uint16_t code_page)
+{
+	assert(per_code_page_mappings.count(code_page));
+	const auto& mapping = per_code_page_mappings[code_page].lowercase;
+
+	assert(mapping.size() == UINT8_MAX);
+	for (auto& entry : in_str) {
+		const auto idx = static_cast<uint8_t>(entry);
+		entry = static_cast<char>(mapping[idx]);
+	}
+}
+
+void lowercase_dos(std::string & in_str)
+{
+	load_config_if_needed();
+	lowercase_dos_common(in_str, get_utf8_code_page());
+}
+
+void lowercase_dos(std::string & in_str, const uint16_t code_page)
+{
+	load_config_if_needed();
+	lowercase_dos_common(in_str, get_custom_code_page(code_page));
+}
+
+static void uppercase_dos_common(std::string & in_str, const uint16_t code_page)
+{
+	assert(per_code_page_mappings.count(code_page));
+	const auto& mapping = per_code_page_mappings[code_page].uppercase;
+
+	assert(mapping.size() == UINT8_MAX);
+	for (auto& entry : in_str) {
+		const auto idx = static_cast<uint8_t>(entry);
+		entry          = static_cast<char>(mapping[idx]);
+	}
+}
+
+void uppercase_dos(std::string & in_str)
+{
+	load_config_if_needed();
+	uppercase_dos_common(in_str, get_utf8_code_page());
+}
+
+void uppercase_dos(std::string & in_str, const uint16_t code_page)
+{
+	load_config_if_needed();
+	uppercase_dos_common(in_str, get_custom_code_page(code_page));
 }
