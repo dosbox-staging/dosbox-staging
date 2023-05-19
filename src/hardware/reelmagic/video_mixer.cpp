@@ -698,16 +698,17 @@ void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t 
 	RENDER_SetPal(entry, red, green, blue);
 }
 
-void ReelMagic_RENDER_SetSize(uint32_t width, uint32_t height, uint32_t bpp, double fps,
-                              double one_per_pixel_aspect, bool dblw, bool dblh)
+void ReelMagic_RENDER_SetSize(uint32_t width, uint32_t height, uint32_t bpp,
+                              double fps, double one_per_pixel_aspect,
+                              bool double_width, bool double_height)
 {
 	_vgaWidth             = width;
 	_vgaHeight            = height;
 	_vgaBitsPerPixel      = bpp;
 	_vgaFramesPerSecond   = fps;
 	_vgaOnePerPixelAspect = one_per_pixel_aspect;
-	_vgaDoubleWidth       = dblw;
-	_vgaDoubleHeight      = dblh;
+	_vgaDoubleWidth       = double_width;
+	_vgaDoubleHeight      = double_height;
 
 	SetupVideoMixer(!_mpegDictatesOutputSize);
 }

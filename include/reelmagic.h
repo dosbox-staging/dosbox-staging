@@ -35,9 +35,11 @@ struct ReelMagic_VideoMixerMPEGProvider {
 };
 
 void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t blue);
+
 void ReelMagic_RENDER_SetSize(uint32_t width, uint32_t height, uint32_t bpp,
                               double fps, double one_per_pixel_aspect,
-                              bool dblw, bool dblh);
+                              bool double_width, bool double_height);
+
 bool ReelMagic_RENDER_StartUpdate(void);
 // void ReelMagic_RENDER_EndUpdate(bool abort);
 // void ReelMagic_RENDER_DrawLine(const void *src);
