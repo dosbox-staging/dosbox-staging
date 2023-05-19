@@ -24,8 +24,8 @@
 
 void capture_image(const uint16_t width, const uint16_t height,
                    const bool double_width, const bool double_height,
+                   const double one_per_pixel_aspect_ratio,
                    const uint8_t bits_per_pixel, const uint16_t pitch,
-                   const float one_per_pixel_aspect_ratio,
                    const uint8_t* image_data, const uint8_t* palette_data);
 
 #endif

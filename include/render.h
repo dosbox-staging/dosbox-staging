@@ -48,10 +48,10 @@ struct Render_t {
 		uint32_t width              = 0;
 		uint32_t start              = 0;
 		uint32_t height             = 0;
-		unsigned bpp                = 0;
 		bool double_width           = false;
 		bool double_height          = false;
 		double one_per_pixel_aspect = 0;
+		unsigned bpp                = 0;
 		double fps                  = 0;
 	} src = {};
 
@@ -99,9 +99,9 @@ extern ScalerLineHandler_t RENDER_DrawLine;
 
 std::deque<std::string> RENDER_InventoryShaders();
 
-void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
-                    double one_per_pixel_aspect, bool double_width,
-                    bool double_height);
+void RENDER_SetSize(uint32_t width, uint32_t height, bool double_width,
+                    bool double_height, double one_per_pixel_aspect,
+                    unsigned bits_per_pixel, double frames_per_second);
 
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);

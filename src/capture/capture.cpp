@@ -201,10 +201,10 @@ void CAPTURE_AddFrame([[maybe_unused]] const uint16_t width,
                       [[maybe_unused]] const uint16_t height,
                       [[maybe_unused]] const bool double_width,
                       [[maybe_unused]] const bool double_height,
+                      [[maybe_unused]] const double one_per_pixel_aspect_ratio,
                       [[maybe_unused]] const uint8_t bits_per_pixel,
                       [[maybe_unused]] const uint16_t pitch,
                       [[maybe_unused]] const float frames_per_second,
-                      [[maybe_unused]] const float one_per_pixel_aspect_ratio,
                       [[maybe_unused]] const uint8_t* image_data,
                       [[maybe_unused]] const uint8_t* palette_data)
 {

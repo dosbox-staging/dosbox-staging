@@ -2210,11 +2210,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		if (!vga.draw.vga_override) {
 			RENDER_SetSize(width,
 			               height,
-			               bpp,
-			               fps,
-			               one_per_pixel_aspect,
 			               doublewidth,
-			               doubleheight);
+			               doubleheight,
+			               one_per_pixel_aspect,
+			               bpp,
+			               fps);
 		}
 	} else {
 		// Always log mode changes at a minimum

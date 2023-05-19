@@ -195,13 +195,14 @@ uint8_t VGAOverPalettePixel::_alphaChannelIndex      = 0;
 static uint32_t _vgaWidth  = 0;
 static uint32_t _vgaHeight = 0;
 
+static bool _vgaDoubleWidth  = false;
+static bool _vgaDoubleHeight = false;
+
 // != 0 on this variable means we have collected the first call
 static uint32_t _vgaBitsPerPixel = 0;
 
 static double _vgaFramesPerSecond   = 0.0;
 static double _vgaOnePerPixelAspect = 0.0;
-static bool _vgaDoubleWidth         = false;
-static bool _vgaDoubleHeight        = false;
 
 // state captured from current/active MPEG player
 static PlayerPicturePixel _mpegPictureBuffer[SCALER_MAXWIDTH * SCALER_MAXHEIGHT];
@@ -534,13 +535,15 @@ static void SetupVideoMixer(const bool updateRenderMode)
 	if (!_videoMixerEnabled) {
 		// video mixer is disabled... VGA mode dictates RENDER mode just like "normal dosbox"
 		ReelMagic_RENDER_DrawLine = &RMR_DrawLine_Passthrough;
+
 		RENDER_SetSize(_vgaWidth,
 		               _vgaHeight,
-		               _vgaBitsPerPixel,
-		               _vgaFramesPerSecond,
-		               _vgaOnePerPixelAspect,
 		               _vgaDoubleWidth,
-		               _vgaDoubleHeight);
+		               _vgaDoubleHeight,
+		               _vgaOnePerPixelAspect,
+		               _vgaBitsPerPixel,
+		               _vgaFramesPerSecond);
+
 		LOG(LOG_REELMAGIC, LOG_NORMAL)
 		("Video Mixer is Disabled. Passed through VGA RENDER_SetSize()");
 		return;
@@ -577,11 +580,11 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		_renderHeight             = 240;
 		RENDER_SetSize(_renderWidth,
 		               _renderHeight,
-		               VIDEOMIXER_BITSPERPIXEL,
-		               _vgaFramesPerSecond,
-		               _vgaOnePerPixelAspect,
 		               _vgaDoubleWidth,
-		               _vgaDoubleHeight);
+		               _vgaDoubleHeight,
+		               _vgaOnePerPixelAspect,
+		               VIDEOMIXER_BITSPERPIXEL,
+		               _vgaFramesPerSecond);
 		return;
 	}
 
@@ -589,11 +592,11 @@ static void SetupVideoMixer(const bool updateRenderMode)
 	if (updateRenderMode)
 		RENDER_SetSize(_renderWidth,
 		               _renderHeight,
-		               VIDEOMIXER_BITSPERPIXEL,
-		               _vgaFramesPerSecond,
-		               _vgaOnePerPixelAspect,
 		               _vgaDoubleWidth,
-		               _vgaDoubleHeight);
+		               _vgaDoubleHeight,
+		               _vgaOnePerPixelAspect,
+		               VIDEOMIXER_BITSPERPIXEL,
+		               _vgaFramesPerSecond);
 
 	// if no active player, set the VGA only function... the difference between this and
 	// "passthrough mode" is that this keeps the video mixer enabled with a RENDER output
@@ -698,17 +701,19 @@ void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t 
 	RENDER_SetPal(entry, red, green, blue);
 }
 
-void ReelMagic_RENDER_SetSize(uint32_t width, uint32_t height, uint32_t bpp,
-                              double fps, double one_per_pixel_aspect,
-                              bool double_width, bool double_height)
+void ReelMagic_RENDER_SetSize(const uint32_t width, const uint32_t height,
+                              const bool double_width, const bool double_height,
+                              const double one_per_pixel_aspect,
+                              const uint32_t bits_per_pixel,
+                              const double frames_per_second)
 {
 	_vgaWidth             = width;
 	_vgaHeight            = height;
-	_vgaBitsPerPixel      = bpp;
-	_vgaFramesPerSecond   = fps;
-	_vgaOnePerPixelAspect = one_per_pixel_aspect;
 	_vgaDoubleWidth       = double_width;
 	_vgaDoubleHeight      = double_height;
+	_vgaOnePerPixelAspect = one_per_pixel_aspect;
+	_vgaBitsPerPixel      = bits_per_pixel;
+	_vgaFramesPerSecond   = frames_per_second;
 
 	SetupVideoMixer(!_mpegDictatesOutputSize);
 }

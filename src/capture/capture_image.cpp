@@ -94,8 +94,8 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
 
 void capture_image(const uint16_t width, const uint16_t height,
                    const bool double_width, const bool double_height,
+                   const double one_per_pixel_aspect_ratio,
                    const uint8_t bits_per_pixel, const uint16_t pitch,
-                   const float one_per_pixel_aspect_ratio,
                    const uint8_t* image_data, const uint8_t* palette_data)
 {
 	image_scaler_params_t params      = {};
@@ -103,9 +103,9 @@ void capture_image(const uint16_t width, const uint16_t height,
 	params.height                     = height;
 	params.double_width               = double_width;
 	params.double_height              = double_height;
+	params.one_per_pixel_aspect_ratio = one_per_pixel_aspect_ratio;
 	params.bits_per_pixel             = bits_per_pixel;
 	params.pitch                      = pitch;
-	params.one_per_pixel_aspect_ratio = one_per_pixel_aspect_ratio;
 	params.image_data                 = image_data;
 	params.palette_data               = palette_data;
 

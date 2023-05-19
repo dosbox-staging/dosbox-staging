@@ -257,10 +257,10 @@ void RENDER_EndUpdate(bool abort)
 		                 render.src.height,
 		                 double_width,
 		                 double_height,
+		                 render.src.one_per_pixel_aspect,
 		                 render.src.bpp,
 		                 pitch,
 		                 static_cast<float>(fps),
-		                 render.src.one_per_pixel_aspect,
 		                 (uint8_t*)&scalerSourceCache,
 		                 (uint8_t*)&render.pal.rgb);
 	}
@@ -471,8 +471,10 @@ static void RENDER_CallBack(GFX_CallBackFunctions_t function)
 	}
 }
 
-void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
-                    double one_per_pixel_aspect, bool double_width, bool double_height)
+void RENDER_SetSize(const uint32_t width, const uint32_t height,
+                    const bool double_width, const bool double_height,
+                    const double one_per_pixel_aspect,
+                    const unsigned bits_per_pixel, const double frames_per_second)
 {
 	RENDER_Halt();
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
@@ -480,12 +482,13 @@ void RENDER_SetSize(uint32_t width, uint32_t height, unsigned bpp, double fps,
 	}
 	render.src.width         = width;
 	render.src.height        = height;
-	render.src.bpp           = bpp;
 	render.src.double_width  = double_width;
 	render.src.double_height = double_height;
-	render.src.fps           = fps;
+	render.src.bpp           = bits_per_pixel;
+	render.src.fps           = frames_per_second;
 
 	render.src.one_per_pixel_aspect = one_per_pixel_aspect;
+
 	RENDER_Reset();
 }
 
