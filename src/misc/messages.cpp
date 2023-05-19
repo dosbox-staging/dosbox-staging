@@ -60,7 +60,10 @@ private:
 		assert(msg.length());
 		const uint16_t cp = get_utf8_code_page();
 		if (output_msg_by_codepage[cp].empty()) {
-			if (!utf8_to_dos(msg, output_msg_by_codepage[cp], cp)) {
+			if (!utf8_to_dos(msg,
+			                 output_msg_by_codepage[cp],
+			                 UnicodeFallback::Box,
+			                 cp)) {
 				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
 				            msg.c_str());
 			}
@@ -92,7 +95,10 @@ public:
 		assert(rendered_msg.length());
 		const uint16_t cp = get_utf8_code_page();
 		if (rendered_msg_by_codepage[cp].empty()) {
-			if (!utf8_to_dos(rendered_msg, rendered_msg_by_codepage[cp], cp)) {
+			if (!utf8_to_dos(rendered_msg,
+			                 rendered_msg_by_codepage[cp],
+			                 UnicodeFallback::Box,
+			                 cp)) {
 				LOG_WARNING("LANG: Problem converting UTF8 string '%s' to DOS code page",
 				            rendered_msg.c_str());
 			}

@@ -182,7 +182,7 @@ static void create_autoexec_bat_dos(const std::string& input_utf8,
 {
 	// Convert UTF-8 AUTOEXEC.BAT to DOS code page
 	std::string autoexec_bat_dos = {};
-	utf8_to_dos(input_utf8, autoexec_bat_dos, code_page);
+	utf8_to_dos(input_utf8, autoexec_bat_dos, UnicodeFallback::Box, code_page);
 
 	// Convert the result to a binary format
 	auto autoexec_bat_bin = std::vector<uint8_t>(autoexec_bat_dos.begin(),

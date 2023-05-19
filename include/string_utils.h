@@ -288,18 +288,44 @@ void clear_language_if_default(std::string &language);
 // to emulated hardware limitations, or duplicated code page numbers
 uint16_t get_utf8_code_page();
 
+// Specifies what to do if the DOS code page does not contain character
+// representing given Unicode grapheme
+enum class UnicodeFallback {
+	// Convert all unknown graphemes to 0 - to be used in code like TREE
+	// command implementation, which has it's own specialized ASCII fallback
+	// drawing code
+	Null,
+	// Try to provide reasonable fallback using all the characters available
+	// in target DOS code page; use for features like clipboard content
+	// exchange with host system
+	Simple,
+	// Do not use certain DOS code page characters in order to draw boxes
+	// (tables) which are consistent; for example, if code page contains
+	// character '╠', but not '╣', both will be replaced with a fallback
+	// character ('║' for example)
+	Box
+};
+
 // Convert the UTF-8 string to the format intended for display inside emulated
-// environment. Code page '0' means a pure 7-bit ASCII. Function without
-// code_page parameter uses current DOS code page.
+// environment, or vice-versa. Code page '0' means a pure 7-bit ASCII. Functions
+// without 'code_page' parameters uses current DOS code page.
 // Return value 'false' means there were problems with string decoding or
 // rendering, but the overall output should still be sane.
-bool utf8_to_dos(const std::string& in_str, std::string& out_str);
 bool utf8_to_dos(const std::string& in_str, std::string& out_str,
-                 const uint16_t code_page);
-// Similarly, convert the opposite way
+                 const UnicodeFallback fallback);
+bool utf8_to_dos(const std::string& in_str, std::string& out_str,
+                 const UnicodeFallback fallback, const uint16_t code_page);
 void dos_to_utf8(const std::string& in_str, std::string& out_str);
 void dos_to_utf8(const std::string& in_str, std::string& out_str,
                  const uint16_t code_page);
+
+// Convert DOS code page string to lower/upper case; converters are aware of all
+// the national characters. Functions without 'code_page' parameter use current
+// DOS code page.
+void lowercase_dos(std::string& in_str);
+void lowercase_dos(std::string& in_str, const uint16_t code_page);
+void uppercase_dos(std::string& in_str);
+void uppercase_dos(std::string& in_str, const uint16_t code_page);
 
 // Parse a value from the string, clamp the result within the given min and max
 // values, and return it as a float. This API should give us enough numerical

@@ -177,7 +177,7 @@ void ManyMouseGlue::Rescan()
 		std::string name;
 		// We want the mouse name to be the same regardless of the code
 		// page set - so use 7-bit ASCII characters only
-		utf8_to_dos(name_utf8, name, 0);
+		utf8_to_dos(name_utf8, name, UnicodeFallback::Simple, 0);
 
 		// Replace non-breaking space with a regular space
 		const char character_nbsp  = 0x7f;
