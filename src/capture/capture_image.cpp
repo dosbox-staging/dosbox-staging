@@ -31,19 +31,42 @@
 
 ImageScaler image_scaler = {};
 
+static void set_png_compressions_params(const png_structp png_ptr)
+{
+	// Default compression (equal to level 6) is the sweet spot between
+	// speed and compression. Z_BEST_COMPRESSION (level 9) rarely results in
+	// smaller file sizes, but makes the compression significantly slower
+	// (by several folds).
+	png_set_compression_level(png_ptr, Z_DEFAULT_COMPRESSION);
+
+	// Larger buffer sizes (e.g. 64K or 128K) could significantly speed up
+	// decompression, but not compression.
+	constexpr auto default_buffer_size = 8192;
+	png_set_compression_buffer_size(png_ptr, default_buffer_size);
+
+	// TODO compare with PNG_NO_FILTERS, PNG_FILTER_PAETH, and
+	// PNG_ALL_FILTERS
+	// TODO turn off filtering for paletted data?
+	constexpr auto default_filter_method = 0;
+	png_set_filter(png_ptr, default_filter_method, PNG_FAST_FILTERS);
+
+	// Do not change the below settings; they are parameters for the zlib
+	// compression library and changing them might result in invalid PNG
+	// files.
+	constexpr auto default_mem_level = 8;
+	png_set_compression_mem_level(png_ptr, default_mem_level);
+
+	constexpr auto default_window_bits = 15;
+	png_set_compression_window_bits(png_ptr, default_window_bits);
+
+	png_set_compression_strategy(png_ptr, Z_DEFAULT_STRATEGY);
+	png_set_compression_method(png_ptr, Z_DEFLATED);
+}
+
 static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
                            const uint16_t width, const uint16_t height,
                            const bool is_paletted, const uint8_t* palette_data)
 {
-	png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
-
-	// TODO document magic values
-	png_set_compression_mem_level(png_ptr, 8);
-	png_set_compression_strategy(png_ptr, Z_DEFAULT_STRATEGY);
-	png_set_compression_window_bits(png_ptr, 15);
-	png_set_compression_method(png_ptr, 8);
-	png_set_compression_buffer_size(png_ptr, 8192);
-
 	constexpr auto png_bit_depth = 8;
 
 	const auto png_color_type = is_paletted ? PNG_COLOR_TYPE_PALETTE
@@ -109,6 +132,8 @@ void capture_image(const RenderedImage_t image)
 		fclose(fp);
 		return;
 	}
+
+	set_png_compressions_params(png_ptr);
 
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr) {
