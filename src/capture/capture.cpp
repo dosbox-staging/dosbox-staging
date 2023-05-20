@@ -37,9 +37,9 @@
 #include "support.h"
 
 #include "capture_audio.h"
-#include "capture_image.h"
 #include "capture_midi.h"
 #include "capture_video.h"
+#include "image_capturer.h"
 
 #include <SDL.h>
 #if C_OPENGL

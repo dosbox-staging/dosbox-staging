@@ -19,8 +19,8 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#ifndef DOSBOX_CAPTURE_IMAGE_H
-#define DOSBOX_CAPTURE_IMAGE_H
+#ifndef DOSBOX_IMAGE_CAPTURER_H
+#define DOSBOX_IMAGE_CAPTURER_H
 
 #include <atomic>
 #include <thread>
@@ -32,8 +32,6 @@
 #if (C_SSHOT)
 #include <png.h>
 #include <zlib.h>
-
-void capture_image(const RenderedImage_t image);
 
 class ImageCapturer {
 public:
