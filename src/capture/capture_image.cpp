@@ -131,6 +131,7 @@ void capture_image(const RenderedImage_t image)
 	                                              error_fn,
 	                                              warn_fn);
 	if (!png_ptr) {
+		LOG_ERR("CAPTURE: Error initialising PNG library for image capture");
 		fclose(fp);
 		return;
 	}
@@ -142,6 +143,7 @@ void capture_image(const RenderedImage_t image)
 	// Write headers and extra metadata
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr) {
+		LOG_ERR("CAPTURE: Error initialising PNG library for image capture");
 		png_destroy_write_struct(&png_ptr, (png_infopp) nullptr);
 		fclose(fp);
 		return;
