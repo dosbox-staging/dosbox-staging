@@ -246,3 +246,6 @@ template class RWQueue<AudioFrame>;
 
 #include "midi.h"
 template class RWQueue<MidiWork>;
+
+#include "render.h"
+template class RWQueue<RenderedImage_t>;

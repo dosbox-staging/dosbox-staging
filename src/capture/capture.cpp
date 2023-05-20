@@ -49,7 +49,12 @@
 #include <SDL_image.h>
 #endif
 
+
 extern const char* RunningProgram;
+
+#if (C_SSHOT)
+static ImageCapturer image_capturer = {};
+#endif
 
 static std::string capture_dir;
 
@@ -202,7 +207,7 @@ void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage_t image,
 {
 #if (C_SSHOT)
 	if (capturing_image) {
-		capture_image(image);
+		image_capturer.CaptureImage(image);
 		capturing_image = false;
 	}
 
@@ -333,6 +338,8 @@ void capture_destroy([[maybe_unused]] Section* sec)
 		capture_midi_finalise();
 	}
 #if (C_SSHOT)
+	image_capturer.Close();
+
 	if (capturing_video) {
 		capture_video_finalise();
 	}
@@ -358,6 +365,10 @@ void CAPTURE_Init(Section* sec)
 	capturing_midi  = false;
 	capturing_opl   = false;
 	capturing_video = false;
+
+#if (C_SSHOT)
+	image_capturer.Open();
+#endif
 
 	MAPPER_AddHandler(handle_capture_audio_event,
 	                  SDL_SCANCODE_F6,
