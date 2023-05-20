@@ -68,10 +68,8 @@ static void write_png_info(const png_structp png_ptr, const png_infop info_ptr,
                            const bool is_paletted, const uint8_t* palette_data)
 {
 	constexpr auto png_bit_depth = 8;
-
-	const auto png_color_type = is_paletted ? PNG_COLOR_TYPE_PALETTE
-	                                        : PNG_COLOR_TYPE_RGB;
-
+	const auto png_color_type    = is_paletted ? PNG_COLOR_TYPE_PALETTE
+	                                           : PNG_COLOR_TYPE_RGB;
 	png_set_IHDR(png_ptr,
 	             info_ptr,
 	             width,
@@ -124,10 +122,14 @@ void capture_image(const RenderedImage_t image)
 		return;
 	}
 
+	// Initialise PNG writer
+	const png_voidp error_ptr    = nullptr;
+	const png_error_ptr error_fn = nullptr;
+	const png_error_ptr warn_fn  = nullptr;
 	png_structp png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-	                                              nullptr,
-	                                              nullptr,
-	                                              nullptr);
+	                                              error_ptr,
+	                                              error_fn,
+	                                              warn_fn);
 	if (!png_ptr) {
 		fclose(fp);
 		return;
@@ -135,14 +137,15 @@ void capture_image(const RenderedImage_t image)
 
 	set_png_compressions_params(png_ptr);
 
+	png_init_io(png_ptr, fp);
+
+	// Write headers and extra metadata
 	png_infop info_ptr = png_create_info_struct(png_ptr);
 	if (!info_ptr) {
 		png_destroy_write_struct(&png_ptr, (png_infopp) nullptr);
 		fclose(fp);
 		return;
 	}
-
-	png_init_io(png_ptr, fp);
 
 	bool out_is_paletted = (image_scaler.GetOutputPixelFormat() ==
 	                        PixelFormat::Indexed8);
@@ -154,13 +157,17 @@ void capture_image(const RenderedImage_t image)
 	               out_is_paletted,
 	               image.palette_data);
 
+	// Write image data
 	auto rows_to_write = image_scaler.GetOutputHeight();
 	while (rows_to_write--) {
 		auto row = image_scaler.GetNextOutputRow();
 		png_write_row(png_ptr, &*row);
 	}
 
-	png_write_end(png_ptr, nullptr);
+	// We've already written the metadata information to the start of the file
+	const png_infop end_info_ptr = nullptr;
+	png_write_end(png_ptr, end_info_ptr);
+
 	png_destroy_write_struct(&png_ptr, &info_ptr);
 
 	fclose(fp);
