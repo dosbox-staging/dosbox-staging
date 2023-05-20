@@ -23,7 +23,7 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "capture_image.h"
+#include "image_capturer.h"
 
 #include "capture.h"
 #include "support.h"
