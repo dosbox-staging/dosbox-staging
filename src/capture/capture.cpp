@@ -155,7 +155,7 @@ FILE* CAPTURE_CreateFile(const char* type, const char* ext)
 	if (handle) {
 		LOG_MSG("CAPTURE: Capturing %s to '%s'", type, file_name.c_str());
 	} else {
-		LOG_WARNING("CAPTURE: Failed to open '%s' for capturing %s",
+		LOG_WARNING("CAPTURE: Failed to create file '%s' for capturing %s",
 		            file_name.c_str(),
 		            type);
 	}
