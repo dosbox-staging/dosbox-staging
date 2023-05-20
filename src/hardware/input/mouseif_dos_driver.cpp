@@ -48,6 +48,7 @@ CHECK_NARROWING();
 // - WHEELAPI.TXT, INT10.LST, and INT33.LST from CuteMouse driver
 // - https://www.stanislavs.org/helppc/int_33.html
 // - http://www2.ift.ulaval.ca/~marchand/ift17583/dosints.pdf
+// - https://github.com/FDOS/mouse/blob/master/int33.lst
 
 static constexpr uint8_t  cursor_size_x  = 16;
 static constexpr uint8_t  cursor_size_y  = 16;
@@ -378,7 +379,8 @@ static void draw_cursor_text()
 	// use current page (CV program)
 	const uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
 
-	if (state.cursor_type == MouseCursor::Software) {
+	if (state.cursor_type == MouseCursor::Software ||
+	    state.cursor_type == MouseCursor::Text) { // needed by MS Word 5.5
 		uint16_t result = 0;
 		ReadCharAttr(state.background.pos_x,
 		             state.background.pos_y,
@@ -764,10 +766,10 @@ static void set_interrupt_rate(const uint16_t rate_id)
 	uint16_t val_hz;
 
 	switch (rate_id) {
-	case 0: val_hz = 0; break; // no events, TODO: this should be simulated
-	case 1: val_hz = 30; break;
-	case 2: val_hz = 50; break;
-	case 3: val_hz = 100; break;
+	case 0:  val_hz = 0;   break; // no events, TODO: this should be simulated
+	case 1:  val_hz = 30;  break;
+	case 2:  val_hz = 50;  break;
+	case 3:  val_hz = 100; break;
 	default: val_hz = 200; break; // above 4 is not suported, set max
 	}
 
@@ -776,6 +778,30 @@ static void set_interrupt_rate(const uint16_t rate_id)
 		rate_hz     = val_hz;
 		notify_interface_rate();
 	}
+}
+
+static uint8_t get_interrupt_rate()
+{
+	uint16_t rate_to_report = 0;
+	if (rate_is_set) {
+		// Rate was set by the application - report what was requested
+		rate_to_report = rate_hz;
+	} else {
+		// Raate wasn't set - report the value closest to the real rate
+		rate_to_report = MouseInterface::GetDOS()->GetRate();
+	}
+
+	if (rate_to_report == 0) {
+		return 0;
+	} else if (rate_to_report < (30 + 50) / 2) {
+		return 1; // report 30 Hz
+	} else if (rate_to_report < (50 + 100) / 2) {
+		return 2; // report 50 Hz
+	} else if (rate_to_report < (100 + 200) / 2) {
+		return 3; // report 100 Hz
+	}
+
+	return 4; // report 200 Hz
 }
 
 static void reset_hardware()
@@ -1531,21 +1557,26 @@ static Bitu int33_handler()
 		reg_cl = 0; // PS/2 mouse; for others it would be an IRQ number
 		break;
 	case 0x25: // MS MOUSE v6.26+ - get general driver information
-		// TODO: According to PC sourcebook reference
-		//       Returns:
-		//       AH = status
-		//         bit 7 driver type: 1=sys 0=com
-		//         bit 6: 0=non-integrated 1=integrated mouse driver
-		//         bits 4-5: cursor type  00=software text cursor
-		//         01=hardware text cursor 1X=graphics cursor bits 0-3:
-		//         Function 28 mouse interrupt rate
-		//       AL = Number of MDDS (?)
-		//       BX = fCursor lock
-		//       CX = FinMouse code
-		//       DX = fMouse busy
-		LOG(LOG_MOUSE, LOG_ERROR)
-		("General driver information not implemented");
+	{
+		// See https://github.com/FDOS/mouse/blob/master/int33.lst
+		// AL = count of currently-active Mouse Display Drivers (MDDs)
+		reg_al = 1;
+		// AH - bits 0-3: interrupt rate
+		//    - bits 4-5: current cursor type
+		//    - bit 6: 1 = driver is newer integrated type
+		//    - bit 7: 1 = loaded as device driver rather than TSR
+		constexpr auto integrated_driver = (1 << 6);
+		const auto cursor_type = static_cast<uint8_t>(state.cursor_type) << 4;
+		reg_ah = static_cast<uint8_t>(integrated_driver | cursor_type |
+		                              get_interrupt_rate());
+		// BX - cursor lock flag for OS/2 to prevent reentrancy problems
+		// CX - mouse code active flag (for OS/2)
+		// DX - mouse driver busy flag (for OS/2)
+		reg_bx = 0;
+		reg_cx = 0;
+		reg_dx = 0;
 		break;
+	}
 	case 0x26: // MS MOUSE v6.26+ - get maximum virtual coordinates
 		reg_bx = (state.enabled ? 0x0000 : 0xffff);
 		reg_cx = signed_to_reg16(state.maxpos_x);
