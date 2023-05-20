@@ -22,8 +22,49 @@
 #ifndef DOSBOX_CAPTURE_IMAGE_H
 #define DOSBOX_CAPTURE_IMAGE_H
 
+#include <atomic>
+#include <thread>
+
+#include "image_scaler.h"
 #include "render.h"
+#include "rwqueue.h"
+
+#if (C_SSHOT)
+#include <png.h>
+#include <zlib.h>
 
 void capture_image(const RenderedImage_t image);
+
+class ImageCapturer {
+public:
+	ImageCapturer() = default;
+	~ImageCapturer();
+
+	void Open();
+	void Close();
+
+	void CaptureImage(const RenderedImage_t image);
+
+private:
+	static constexpr auto MaxQueuedImages = 5;
+
+	void SaveQueuedImages();
+	void SavePng(const RenderedImage_t image);
+	void SetPngCompressionsParams();
+	void WritePngInfo(const uint16_t width, const uint16_t height,
+	                  const bool is_paletted, const uint8_t* palette_data);
+
+	ImageScaler image_scaler = {};
+
+	RWQueue<RenderedImage_t> image_fifo{MaxQueuedImages};
+	std::thread renderer = {};
+
+	bool is_open = false;
+
+	png_structp png_ptr    = nullptr;
+	png_infop png_info_ptr = nullptr;
+};
+
+#endif
 
 #endif
