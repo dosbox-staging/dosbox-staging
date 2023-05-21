@@ -25,6 +25,7 @@
 
 #include "bit_view.h"
 #include "control.h"
+#include "fraction.h"
 #include "inout.h"
 
 //Don't enable keeping changes and mapping lfb probably...
@@ -230,7 +231,7 @@ struct VGA_Draw {
 	double dos_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
 	double custom_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
 	VGA_RATE_MODE dos_rate_mode = VGA_RATE_MODE::DEFAULT;
-	double one_per_pixel_aspect = 0;
+	Fraction pixel_aspect_ratio = {};
 	bool double_scan = false;
 	bool doublewidth = false;
 	bool doubleheight = false;
