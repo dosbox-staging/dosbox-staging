@@ -24,6 +24,7 @@
 
 #include "../ints/int10.h"
 #include "callback.h"
+#include "keyboard.h"
 #include "regs.h"
 #include "string_utils.h"
 
@@ -139,18 +140,8 @@ std::string DOS_Shell::ReadCommand()
 		switch (data) {
 		case ExtendedKey: {
 			DOS_ReadFile(input_handle, &data, &byte_count);
-
-			constexpr uint8_t ShiftPlusTab = 0x0F;
-			constexpr uint8_t F3           = 0x3D;
-			constexpr uint8_t Home         = 0x47;
-			constexpr uint8_t Up           = 0x48;
-			constexpr uint8_t Left         = 0x4B;
-			constexpr uint8_t Right        = 0x4D;
-			constexpr uint8_t End          = 0x4F;
-			constexpr uint8_t Down         = 0x50;
-			constexpr uint8_t Delete       = 0x53;
-			switch (data) {
-			case F3: {
+			switch (static_cast<ScanCode>(data)) {
+			case ScanCode::F3: {
 				if (history.empty()) {
 					break;
 				}
@@ -166,19 +157,19 @@ std::string DOS_Shell::ReadCommand()
 				break;
 			}
 
-			case Left:
+			case ScanCode::Left:
 				if (cursor_position > 0) {
 					--cursor_position;
 				}
 				break;
 
-			case Right:
+			case ScanCode::Right:
 				if (cursor_position < command.size()) {
 					++cursor_position;
 				}
 				break;
 
-			case Up:
+			case ScanCode::Up:
 				if (history_index > 0) {
 					history_clone[history_index] = command;
 					--history_index;
@@ -187,7 +178,7 @@ std::string DOS_Shell::ReadCommand()
 				}
 				break;
 
-			case Down:
+			case ScanCode::Down:
 				if (history_index + 1 < history_clone.size()) {
 					history_clone[history_index] = command;
 					++history_index;
@@ -196,13 +187,17 @@ std::string DOS_Shell::ReadCommand()
 				}
 				break;
 
-			case Home: cursor_position = 0; break;
+			case ScanCode::Home: cursor_position = 0; break;
 
-			case End: cursor_position = command.size(); break;
+			case ScanCode::End:
+				cursor_position = command.size();
+				break;
 
-			case Delete: command.erase(cursor_position, 1); break;
+			case ScanCode::Delete:
+				command.erase(cursor_position, 1);
+				break;
 
-			case ShiftPlusTab:
+			case ScanCode::ShiftTab:
 				if (completion.empty()) {
 					break;
 				}
