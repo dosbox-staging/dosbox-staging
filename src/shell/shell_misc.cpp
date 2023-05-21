@@ -481,10 +481,10 @@ std::string DOS_Shell::Which(const std::string_view name) const
 
 	std::vector<std::string> prefixes = {""};
 	std::string path_environment;
-	GetEnvStr("PATH", path_environment);
+	const auto have_path_env = GetEnvStr("PATH", path_environment);
 	const auto path_equals = path_environment.find_first_of('=');
 
-	if (path_equals != std::string::npos) {
+	if (have_path_env && path_equals != std::string::npos) {
 		path_environment = path_environment.substr(path_equals + 1);
 		auto path_directories = split(path_environment, ';');
 
