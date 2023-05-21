@@ -1313,34 +1313,44 @@ void VGA_CheckScanLength(void) {
 // Finally, return the current mode's bits per line buffer value.
 uint8_t VGA_ActivateHardwareCursor()
 {
-	uint8_t bit_per_line_pixel = 8;
+	uint8_t bit_per_line_pixel = 0;
 
 	auto should_draw_with_hw_mouse = [&]() {
 		return svga.hardware_cursor_active && svga.hardware_cursor_active();
 	};
 
 	switch (vga.mode) {
-	case M_LIN32: // True-colour VESA
-		VGA_DrawLine = should_draw_with_hw_mouse()
-		                     ? VGA_Draw_LIN32_Line_HWMouse
-		                     : VGA_Draw_Linear_Line;
+	case M_LIN32: // 32-bit true-colour VESA
+		bit_per_line_pixel = 32;
+		VGA_DrawLine       = should_draw_with_hw_mouse()
+		                           ? VGA_Draw_LIN32_Line_HWMouse
+		                           : VGA_Draw_Linear_Line;
 		//
 		// Use the "VGA_Draw_Linear_Line" routine that skips the DAC
 		// 8-bit palette LUT and prepares the true-colour pixels for
 		// rendering.
 		break;
-	case M_LIN16:
-	case M_LIN15: // High-colour VESA
-		VGA_DrawLine = should_draw_with_hw_mouse()
-		                     ? VGA_Draw_LIN16_Line_HWMouse
-		                     : VGA_Draw_Linear_Line;
-		//
-		// Use the "VGA_Draw_Linear_Line" routine that skips the DAC
-		// 8-bit palette LUT and prepares the high-colour pixels for
-		// rendering.
+	case M_LIN24: // 24-bit true-colour VESA
+		bit_per_line_pixel = 24;
+		VGA_DrawLine       = should_draw_with_hw_mouse()
+		                           ? VGA_Draw_LIN32_Line_HWMouse
+		                           : VGA_Draw_Linear_Line;
+		break;
+	case M_LIN16: // 16-bit high-colour VESA
+		bit_per_line_pixel = 16;
+		VGA_DrawLine       = should_draw_with_hw_mouse()
+		                           ? VGA_Draw_LIN16_Line_HWMouse
+		                           : VGA_Draw_Linear_Line;
+		break;
+	case M_LIN15: // 15-bit high-colour VESA
+		bit_per_line_pixel = 15;
+		VGA_DrawLine       = should_draw_with_hw_mouse()
+		                           ? VGA_Draw_LIN16_Line_HWMouse
+		                           : VGA_Draw_Linear_Line;
 		break;
 	case M_LIN8: // 8-bit VESA
 		if (should_draw_with_hw_mouse()) {
+			bit_per_line_pixel = 8;
 			VGA_DrawLine = VGA_Draw_VGA_Line_HWMouse;
 		} else {
 			bit_per_line_pixel = 32;
@@ -1354,11 +1364,13 @@ uint8_t VGA_ActivateHardwareCursor()
 		}
 		break;
 	default:
+		bit_per_line_pixel = 8;
 		VGA_DrawLine = should_draw_with_hw_mouse()
 		                     ? VGA_Draw_VGA_Line_HWMouse
 		                     : VGA_Draw_Linear_Line;
 		break;
 	}
+	assert(bit_per_line_pixel != 0);
 	return bit_per_line_pixel;
 }
 
