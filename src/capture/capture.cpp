@@ -86,7 +86,8 @@ bool CAPTURE_IsCapturingVideo()
 	return capturing_video;
 }
 
-std::string capture_generate_filename(const char* type, const char* ext)
+std::string capture_generate_filename(const std::string& capture_type,
+                                      const std::string& ext)
 {
 	if (capture_dir.empty()) {
 		LOG_WARNING("CAPTURE: Please specify a capture directory");
@@ -100,9 +101,9 @@ std::string capture_generate_filename(const char* type, const char* ext)
 	if (!dir) {
 		// Try creating it first
 		if (create_dir(capture_dir, 0700, OK_IF_EXISTS) != 0) {
-			LOG_WARNING("CAPTURE: Can't create directory '%s' for capturing %s, reason: %s",
+			LOG_WARNING("CAPTURE: Can't create directory '%s' for capturing %s: %s",
 			            capture_dir.c_str(),
-			            type,
+			            capture_type.c_str(),
 			            safe_strerror(errno).c_str());
 			return 0;
 		}
@@ -110,7 +111,7 @@ std::string capture_generate_filename(const char* type, const char* ext)
 		if (!dir) {
 			LOG_WARNING("CAPTURE: Can't open directory '%s' for capturing %s",
 			            capture_dir.c_str(),
-			            type);
+			            capture_type.c_str());
 			return 0;
 		}
 	}
@@ -123,8 +124,8 @@ std::string capture_generate_filename(const char* type, const char* ext)
 	int last      = 0;
 	for (; testRead;
 	     testRead = read_directory_next(dir, tempname, is_directory)) {
-		char* test = strstr(tempname, ext);
-		if (!test || strlen(test) != strlen(ext))
+		char* test = strstr(tempname, ext.c_str());
+		if (!test || strlen(test) != strlen(ext.c_str()))
 			continue;
 		*test = 0;
 		if (strncasecmp(tempname, file_start, strlen(file_start)) != 0)
@@ -143,23 +144,25 @@ std::string capture_generate_filename(const char* type, const char* ext)
 	         CROSS_FILESPLIT,
 	         file_start,
 	         last,
-	         ext);
+	         ext.c_str());
 
 	return file_name;
 }
 
-// TODO should be internal
-FILE* CAPTURE_CreateFile(const char* type, const char* ext)
+// TODO should be internal to the src/capture module
+FILE* CAPTURE_CreateFile(const std::string& capture_type, const std::string& ext)
 {
-	const auto file_name = capture_generate_filename(type, ext);
+	const auto file_name = capture_generate_filename(capture_type, ext);
 
 	FILE* handle = fopen(file_name.c_str(), "wb");
 	if (handle) {
-		LOG_MSG("CAPTURE: Capturing %s to '%s'", type, file_name.c_str());
+		LOG_MSG("CAPTURE: Capturing %s to '%s'",
+		        capture_type.c_str(),
+		        file_name.c_str());
 	} else {
 		LOG_WARNING("CAPTURE: Failed to create file '%s' for capturing %s",
 		            file_name.c_str(),
-		            type);
+		            capture_type.c_str());
 	}
 	return handle;
 }

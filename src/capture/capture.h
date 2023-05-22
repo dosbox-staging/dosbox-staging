@@ -26,9 +26,7 @@
 
 #include <string>
 
-std::string capture_generate_filename(const char* type, const char* ext);
-
-FILE* CAPTURE_CreateFile(const char* type, const char* ext);
+FILE* CAPTURE_CreateFile(const std::string& type, const std::string& ext);
 
 // Used to add the last rendered frame to be captured either as a screenshot
 // or as a video recording (or both).
