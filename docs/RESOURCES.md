@@ -19,23 +19,23 @@ If you plan to install or move DOSBox Staging from its build area, then the
 The `"resources"` can be provided in two ways:
 
 1. Along-side the executable, as a portable package:
-    
+
     Meson and Visual Studio both populate the build area with the compiled
     `"dosbox"` executable (plus DLLs on Windows) and the `"resources"`
     directory relative to it, which together form a stand-alone and portable
     application.
-    
+
     This group can be zipped or moved together, and is how we ship the Linux,
     Windows, and macOS packages built by the CI systems.
 
 2. Pointed to by the `XDG_DATA_HOME` or `XDG_DATA_DIRS` paths.
-    
+
     If you want to install the software using `meson install` into a `--prefix`
     and/or `--datadir` location(s), then the `XDG_DATA_DIRS` or `XDG_DATA_HOME`
     need to point to the corresponding installation areas.
-    
+
     Specifically:
-    
+
     - if meson is setup **without** `--prefix` and **without** -`-datadir` then
       the path: `"/usr/local/share"` needs to exist in either `XDG_DATA_DIRS` or
       `XDG_DATA_HOME`.
@@ -66,25 +66,25 @@ At runtime, the executable will check the following paths for the resources, in
 the following priority order:
 
 1. Beside the executable:
-    
+
     `dosbox` (executable) `"resources"subdirs/...` (on
     macOS:`../Resources/subdirs/...`)
-    
+
     This first instance should also be the prefered packaging layout for wrapped
     formats like FlatPak, Snap, AppImage, etc.
 
 2. Up one directory from the executable (which allows unit tests to access
    resources):
-    
+
     `dosbox` `../`"resources"`subdirs/...` (on macOS:
     `../../Resources/subdirs/...`)
 
 3. In `XDG_DATA_HOME` followed by the `XDG_DATA_DIRS` paths, where:
-    
+
     `${XDG_DATA}/dosbox-staging/subdirs/...`
 
 4. In the user's configuration path:
-    
+
     `home/<user>/.config/dosbox/subdirs/...` (or the Windows configuration path)
 
 ## FAQ

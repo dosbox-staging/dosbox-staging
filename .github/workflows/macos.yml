@@ -201,7 +201,7 @@ jobs:
         if:   matrix.runner.needs_deps
         run: >-
           arch -arch=${{ matrix.runner.arch }} brew install librsvg tree
-          ccache libpng meson opusfile sdl2 sdl2_image sdl2_net speexdsp
+          ccache libpng meson opusfile sdl2 sdl2_net speexdsp
 
       - uses:  actions/cache@v3.3.1
         if:    matrix.runner.needs_deps
@@ -239,7 +239,7 @@ jobs:
         run: |
           set -x
           eval "$(${{ matrix.runner.brew_path }}/bin/brew shellenv)"
-          meson setup ${{ matrix.runner.build_flags }} -Ddefault_library=static -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_image,sdl2_net build
+          meson setup ${{ matrix.runner.build_flags }} -Ddefault_library=static -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
           meson compile -C build
 
       - name: Upload binary

@@ -100,7 +100,6 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-opusfile
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libslirp
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_image
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-speexdsp
@@ -226,7 +225,6 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-opusfile
             mingw-w64-clang-${{matrix.conf.arch}}-libslirp
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2
-            mingw-w64-clang-${{matrix.conf.arch}}-SDL2_image
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
             mingw-w64-clang-${{matrix.conf.arch}}-zlib
             mingw-w64-clang-${{matrix.conf.arch}}-speexdsp
