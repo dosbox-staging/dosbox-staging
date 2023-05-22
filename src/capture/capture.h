@@ -33,7 +33,7 @@ FILE* CAPTURE_CreateFile(const char* type, const char* ext);
 void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_frames,
                           const int16_t* sample_frames);
 
-void CAPTURE_AddFrame(const RenderedImage_t image, const float frames_per_second);
+void CAPTURE_AddFrame(const RenderedImage image, const float frames_per_second);
 
 void CAPTURE_AddMidiData(const bool sysex, const size_t len, const uint8_t* data);
 

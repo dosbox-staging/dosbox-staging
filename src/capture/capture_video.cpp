@@ -319,7 +319,7 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 	video.audio.bytes_written   = 0;
 }
 
-void capture_video_add_frame(const RenderedImage_t image, const float frames_per_second)
+void capture_video_add_frame(const RenderedImage image, const float frames_per_second)
 {
 	assert(image.width <= SCALER_MAXWIDTH);
 

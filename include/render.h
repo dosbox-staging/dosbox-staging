@@ -94,7 +94,7 @@ struct Render_t {
 	bool fullFrame = true;
 };
 
-struct RenderedImage_t {
+struct RenderedImage {
 	uint16_t width                    = 0;
 	uint16_t height                   = 0;
 	bool double_width                 = false;

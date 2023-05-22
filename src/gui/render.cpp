@@ -250,7 +250,7 @@ void RENDER_EndUpdate(bool abort)
 			}
 		}
 
-		RenderedImage_t image = {};
+		RenderedImage image = {};
 		image.width           = render.src.width;
 		image.height          = render.src.height;
 		image.double_width    = double_width;
