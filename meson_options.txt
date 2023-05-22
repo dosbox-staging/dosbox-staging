@@ -6,13 +6,6 @@ option(
 )
 
 option(
-    'use_sdl2_image',
-    type: 'boolean',
-    value: true,
-    description: 'Enable screenshots of rendered output',
-)
-
-option(
     'use_opengl',
     type: 'boolean',
     value: true,
@@ -155,7 +148,6 @@ option(
         'opusfile',
         'png',
         'sdl2',
-        'sdl2_image',
         'sdl2_net',
         'slirp',
         'speexdsp',

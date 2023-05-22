@@ -16,7 +16,6 @@ libcapture = static_library(
         libzmbv_dep,
         png_dep,
         sdl2_dep,
-        sdl2_image_dep,
     ],
 )
 

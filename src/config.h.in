@@ -115,9 +115,6 @@
 // Define to 1 to enable Novell NE 2000 NIC emulation
 #mesondefine C_NE2000
 
-// Define to 1 to enable rendered screenshots in .png format (using SDL2_image)
-#mesondefine C_SDL_IMAGE
-
 // Define to 1 to enable surface screenshots in .png format
 #mesondefine C_SSHOT
 
