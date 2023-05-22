@@ -44,6 +44,7 @@ private:
 	static constexpr auto ComponentsPerRgbPixel = 3;
 
 	void UpdateOutputParams();
+	void LogImageScalerParams();
 	void AllocateBuffers();
 
 	bool IsInputPaletted() const;

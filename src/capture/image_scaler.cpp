@@ -38,7 +38,7 @@ void ImageScaler::Init(const RenderedImage image)
 	       image.bits_per_pixel == 32);
 
 	assert(image.pitch >= image.width);
-	assert(image.one_per_pixel_aspect_ratio >= 0.0);
+	assert(image.pixel_aspect_ratio.ToDouble() >= 0.0);
 	assert(image.image_data);
 
 	input = image;
@@ -58,6 +58,7 @@ static bool is_integer(float f)
 	return fabs(f - round(f)) < 0.0001;
 }
 
+
 void ImageScaler::UpdateOutputParams()
 {
 	constexpr auto target_output_height = 1200;
@@ -75,10 +76,9 @@ void ImageScaler::UpdateOutputParams()
 	output.vert_scale_mode = ScaleMode::Integer;
 
 	// Determine horizontal scaling factor & scaling mode
-	output.horiz_scale = output.vert_scale / input.one_per_pixel_aspect_ratio;
-
-	output.one_per_horiz_scale = input.one_per_pixel_aspect_ratio /
-	                             output.vert_scale;
+	const auto horiz_scale_fract = input.pixel_aspect_ratio * output.vert_scale;
+	output.horiz_scale         = horiz_scale_fract.ToDouble();
+	output.one_per_horiz_scale = horiz_scale_fract.Inverse().ToDouble();
 
 	if (input.double_width) {
 		output.horiz_scale *= 2;
@@ -121,36 +121,57 @@ void ImageScaler::UpdateOutputParams()
 	output.curr_row   = 0;
 	output.row_repeat = 0;
 
-	LOG_MSG("ImageScaler: params:\n"
-	        "    input.width:         %8d\n"
-	        "    input.height:        %8d\n"
-	        "    input.double_width:  %8s\n"
-	        "    input.double_height: %8s\n"
-	        "    input.one_per_par:   %8f\n"
-	        "    input.bits_per_pixel:%8d\n"
-	        "    input.pitch:         %8d\n"
-	        "    ---------------------------\n"
-	        "    output.width:            %8d\n"
-	        "    output.height:           %8d\n"
-	        "    output.vert_scale:       %8d\n"
-	        "    output.horiz_scale:      %8f\n"
-	        "    output.horiz_scale_mode: %8d\n"
-	        "    output.vert_scale_mode:  %8d\n"
-	        "    output.pixel_format:     %8d\n",
+//	LogImageScalerParams();
+}
+
+void ImageScaler::LogImageScalerParams()
+{
+	auto pixel_format_to_string = [](const PixelFormat pf) -> std::string {
+		switch (pf) {
+		case PixelFormat::Indexed8: return "Indexed8";
+		case PixelFormat::Rgb888: return "RGB888";
+		}
+	};
+
+	auto scale_mode_to_string = [](const ScaleMode sm) -> std::string {
+		switch (sm) {
+		case ScaleMode::Integer: return "Integer";
+		case ScaleMode::Fractional: return "Fractional";
+		}
+	};
+
+	LOG_MSG("ImageScaler params:\n"
+	        "    input.width:                %8d\n"
+	        "    input.height:               %8d\n"
+	        "    input.double_width:         %8s\n"
+	        "    input.double_height:        %8s\n"
+	        "    input.pixel_aspect_ratio: 1:%8f (%lld:%lld)\n"
+	        "    input.bits_per_pixel:       %8d\n"
+	        "    input.pitch:                %8d\n"
+	        "    ------------------------------------\n"
+	        "    output.width:               %8d\n"
+	        "    output.height:              %8d\n"
+	        "    output.vert_scale:          %8d\n"
+	        "    output.horiz_scale:         %8f\n"
+	        "    output.horiz_scale_mode:  %10s\n"
+	        "    output.vert_scale_mode:   %10s\n"
+	        "    output.pixel_format:      %10s\n",
 	        input.width,
 	        input.height,
 	        input.double_width ? "yes" : "no",
 	        input.double_height ? "yes" : "no",
-	        input.one_per_pixel_aspect_ratio,
+	        input.pixel_aspect_ratio.Inverse().ToDouble(),
+	        input.pixel_aspect_ratio.Num(),
+	        input.pixel_aspect_ratio.Denom(),
 	        input.bits_per_pixel,
 	        input.pitch,
 	        output.width,
 	        output.height,
 	        output.vert_scale,
 	        output.horiz_scale,
-	        static_cast<uint8_t>(output.horiz_scale_mode),
-	        static_cast<uint8_t>(output.vert_scale_mode),
-	        static_cast<uint8_t>(output.pixel_format));
+	        scale_mode_to_string(output.horiz_scale_mode).c_str(),
+	        scale_mode_to_string(output.vert_scale_mode).c_str(),
+	        pixel_format_to_string(output.pixel_format).c_str());
 }
 
 void ImageScaler::AllocateBuffers()

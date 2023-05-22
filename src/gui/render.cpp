@@ -252,18 +252,16 @@ void RENDER_EndUpdate(bool abort)
 		}
 
 		RenderedImage image = {};
-		image.width           = render.src.width;
-		image.height          = render.src.height;
-		image.double_width    = double_width;
-		image.double_height   = double_height;
 
-		image.one_per_pixel_aspect_ratio =
-		        render.src.pixel_aspect_ratio.Inverse().ToDouble();
-
-		image.bits_per_pixel = render.src.bpp;
-		image.pitch          = render.scale.cachePitch;
-		image.image_data     = (uint8_t*)&scalerSourceCache;
-		image.palette_data   = (uint8_t*)&render.pal.rgb;
+		image.width              = render.src.width;
+		image.height             = render.src.height;
+		image.double_width       = double_width;
+		image.double_height      = double_height;
+		image.pixel_aspect_ratio = render.src.pixel_aspect_ratio;
+		image.bits_per_pixel     = render.src.bpp;
+		image.pitch              = render.scale.cachePitch;
+		image.image_data         = (uint8_t*)&scalerSourceCache;
+		image.palette_data       = (uint8_t*)&render.pal.rgb;
 
 		const auto frames_per_second = static_cast<float>(render.src.fps);
 
