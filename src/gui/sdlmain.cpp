@@ -3513,61 +3513,54 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 	SDL_SetWindowOpacity(sdl.window, alpha);
 }
 
-std::optional<SDL_Surface *> GFX_GetRenderedSurface()
+std::optional<RenderedImage> GFX_GetRenderedOutput()
 {
 	// Variables common to all screen-modes
-	const auto renderer = SDL_GetRenderer(sdl.window);
+//	const auto renderer = SDL_GetRenderer(sdl.window);
 
 #if C_OPENGL
 	// Get the OpenGL-renderer surface
 	// -------------------------------
 	if (sdl.desktop.type == SCREEN_OPENGL) {
-		// Setup our OpenGL image properties
-		constexpr int gl_channels       = 4;               // RGBA
-		constexpr int gl_bits_per_pixel = gl_channels * 8; // 8-bpp
-
-		// Allocate a 24-bit surface to be populated
 		const auto canvas = get_canvas_size(sdl.desktop.type);
-		const auto surface = SDL_CreateRGBSurface(SDL_SWSURFACE,
-		                                          canvas.w,
-		                                          canvas.h,
-		                                          gl_bits_per_pixel,
-		                                          RMASK,
-		                                          GMASK,
-		                                          BMASK,
-		                                          AMASK);
-		if (!surface) {
-			LOG_WARNING("SDL: Failed creating a surface for OpenGL because %s",
-			            SDL_GetError());
-			return {};
-		}
 
-		// The row ordering between OpenGL and SDL is inverted, so we
-		// start at the last OpenGL row, decrementing as we go, while
-		// writing into the incrementing surface row buffer.
-		constexpr auto gl_col_offset = 0;
-		auto gl_row_offset           = canvas.h;
-		const auto cols_per_read     = canvas.w;
-		constexpr auto rows_per_read = 1;
+		RenderedImage image      = {};
+		image.width              = canvas.w;
+		image.height             = canvas.h;
+		image.double_width       = false;
+		image.double_height      = false;
+		image.flip_vertical      = true;
+		image.pixel_aspect_ratio = {1};
+		image.bits_per_pixel     = 24;
+		image.pitch        = canvas.w * (image.bits_per_pixel / 8);
+		image.palette_data = nullptr;
 
-		auto sdl_row_buffer = static_cast<uint8_t*>(surface->pixels);
+		auto image_data = static_cast<uint8_t*>(
+		        std::malloc(image.height * image.pitch));
+		image.image_data = image_data;
 
-		while (gl_row_offset--) {
-			glReadPixels(gl_col_offset,
-			             gl_row_offset,
-			             cols_per_read,
-			             rows_per_read,
-			             GL_RGBA,
-			             GL_UNSIGNED_BYTE,
-			             sdl_row_buffer);
+		// Alignment is 4 by default wich works fine when using the
+		// GL_BGRA pixel format with glReadPixels(). We need to set it 1
+		// to be able to use the GL_BGR format in order to conserve
+		// memory. This should not cause any slowdowns whatsoever.
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-			sdl_row_buffer += surface->pitch;
-		}
+		constexpr auto first_pixel_x = 0;
+		constexpr auto first_pixel_y = 0;
 
-		return surface;
+		glReadPixels(first_pixel_x,
+		             first_pixel_y,
+		             canvas.w,
+		             canvas.h,
+		             GL_BGR,
+		             GL_UNSIGNED_BYTE,
+		             image_data);
+
+		return image;
 	}
 #endif
 
+	/*
 	// Get the SDL texture-renderer surface
 	// ------------------------------------
 	if (sdl.desktop.type == SCREEN_TEXTURE) {
@@ -3611,6 +3604,7 @@ std::optional<SDL_Surface *> GFX_GetRenderedSurface()
 	return SDL_ConvertSurfaceFormat(sdl.surface,
 	                                sdl.surface->format->format,
 	                                0);
+									*/
 }
 
 // extern void UI_Run(bool);
