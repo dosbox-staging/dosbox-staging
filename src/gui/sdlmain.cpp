@@ -3949,14 +3949,12 @@ bool GFX_Events()
 
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
-	if (MAPPER_IsUsingJoysticks()) {
-		static auto last_check_joystick = GetTicks();
-		auto current_check_joystick = GetTicks();
-		if (GetTicksDiff(current_check_joystick, last_check_joystick) > 20) {
-			last_check_joystick = current_check_joystick;
-			SDL_JoystickUpdate();
-			MAPPER_UpdateJoysticks();
-		}
+	static auto last_check_joystick = GetTicks();
+	auto current_check_joystick = GetTicks();
+	if (GetTicksDiff(current_check_joystick, last_check_joystick) > 20) {
+		last_check_joystick = current_check_joystick;
+		if (MAPPER_IsUsingJoysticks()) SDL_JoystickUpdate();
+		MAPPER_UpdateJoysticks();
 	}
 #endif
 	while (SDL_PollEvent(&event)) {

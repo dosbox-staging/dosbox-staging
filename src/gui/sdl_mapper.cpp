@@ -627,6 +627,7 @@ public:
 		set_joystick_led(sdl_joystick, on_color);
 		if (sdl_joystick==NULL) {
 			button_wrap=emulated_buttons;
+			axes=MAXAXIS;
 			return;
 		}
 
@@ -2821,7 +2822,6 @@ static void QueryJoysticks()
 	if (num_joysticks < 0) {
 		LOG_WARNING("MAPPER: SDL_NumJoysticks() failed: %s", SDL_GetError());
 		LOG_WARNING("MAPPER: Skipping further joystick checks");
-		joytype = JOY_NONE_FOUND;
 		return;
 	}
 
@@ -2830,7 +2830,6 @@ static void QueryJoysticks()
 	mapper.sticks.num = static_cast<unsigned int>(num_joysticks);
 	if (num_joysticks == 0) {
 		LOG_MSG("MAPPER: no joysticks found");
-		joytype = JOY_NONE_FOUND;
 		return;
 	}
 
