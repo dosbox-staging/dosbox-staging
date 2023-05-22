@@ -1707,53 +1707,43 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	//Base pixel width around 100 clocks horizontal
 	//For 9 pixel text modes this should be changed, but we don't support that anyway :)
 	//Seems regular vga only listens to the 9 char pixel mode with character mode enabled
-	const auto pwidth = 100.0 / static_cast<double>(htotal);
-	const Fraction pwidth_fract = {100, htotal};
-	assert(fabs(pwidth - pwidth_fract.ToDouble()) < 0.0001);
+	const Fraction pwidth = {100, htotal};
+
 	// Base pixel height around vertical totals of modes that have 100
 	// clocks horizontal Different sync values gives different scaling of
 	// the whole vertical range VGA monitor just seems to thighten or widen
 	// the whole vertical range
-	double pheight;
-	Fraction pheight_fract = {};
-	double target_total = 449.0;
-	uint16_t target_total_int = 449;
+	Fraction pheight = {};
+	uint16_t target_total = 449;
 	Bitu sync = vga.misc_output >> 6;
-	const auto f_vtotal = static_cast<double>(vtotal);
 	switch ( sync ) {
 	case 0:		// This is not defined in vga specs,
 				// Kiet, seems to be slightly less than 350 on my monitor
 		//340 line mode, filled with 449 total
-		pheight = (480.0 / 340.0) * (target_total / f_vtotal);
-		pheight_fract = Fraction(480, 340) * Fraction(target_total_int, vtotal);
+		pheight = Fraction(480, 340) * Fraction(target_total, vtotal);
 		break;
 	case 1:		//400 line mode, filled with 449 total
-		pheight = (480.0 / 400.0) * (target_total / f_vtotal);
-		pheight_fract = Fraction(480, 400) * Fraction(target_total_int, vtotal);
+		pheight = Fraction(480, 400) * Fraction(target_total, vtotal);
 		break;
 	case 2:		//350 line mode, filled with 449 total
 		//This mode seems to get regular 640x400 timing and goes for a loong retrace
 		//Depends on the monitor to stretch the screen
-		pheight = (480.0 / 350.0) * (target_total / f_vtotal);
-		pheight_fract = Fraction(480, 350) * Fraction(target_total_int, vtotal);
+		pheight = Fraction(480, 350) * Fraction(target_total, vtotal);
 		break;
 	case 3:		//480 line mode, filled with 525 total
 	default:
 		//Allow 527 total ModeX to have exact 1:1 aspect
-		target_total = (vga.mode == M_VGA && f_vtotal == 527) ? 527.0 : 525.0;
-		target_total_int = (vga.mode == M_VGA && vtotal == 527) ? 527 : 525;
-		pheight = (480.0 / 480.0) * (target_total / f_vtotal);
-		pheight_fract = Fraction(480, 480) * Fraction(target_total_int, vtotal);
+		target_total = (vga.mode == M_VGA && vtotal == 527) ? 527 : 525;
+		pheight = Fraction(480, 480) * Fraction(target_total, vtotal);
 		break;
 	}
-	assert(fabs(pheight - pheight_fract.ToDouble()) < 0.0001);
 
 	Fraction pixel_aspect_ratio = {1};
 
 	if (machine == MCH_EGA) {
 		pixel_aspect_ratio = {CurMode->sheight * 4, CurMode->swidth * 3};
 	} else {
-		pixel_aspect_ratio = pwidth_fract / pheight_fract;
+		pixel_aspect_ratio = pwidth / pheight;
 	}
 
 	vga.draw.resizing = false;
@@ -2154,13 +2144,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		pixel_aspect_ratio = Fraction(4, 3) * Fraction(1024, 1280);
 	}
 
+	/*
 	LOG_MSG("VGA: htotal: %d, vtotal: %d, pixel_aspect_ratio: %lld:%lld (1:%g)",
 	        htotal,
 	        vtotal,
 	        pixel_aspect_ratio.Num(),
 	        pixel_aspect_ratio.Denom(),
 	        pixel_aspect_ratio.Inverse().ToDouble());
-
+*/
 	bool fps_changed = false;
 	// need to change the vertical timing?
 	if (fabs(vga.draw.delay.vtotal - 1000.0 / fps) > 0.0001) {
