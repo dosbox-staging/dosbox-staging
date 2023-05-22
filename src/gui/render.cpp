@@ -35,6 +35,7 @@
 #include "../capture/capture.h"
 #include "control.h"
 #include "cross.h"
+#include "fraction.h"
 #include "mapper.h"
 #include "render.h"
 #include "setup.h"
@@ -255,7 +256,10 @@ void RENDER_EndUpdate(bool abort)
 		image.height          = render.src.height;
 		image.double_width    = double_width;
 		image.double_height   = double_height;
-		image.one_per_pixel_aspect_ratio = render.src.one_per_pixel_aspect;
+
+		image.one_per_pixel_aspect_ratio =
+		        render.src.pixel_aspect_ratio.Inverse().ToDouble();
+
 		image.bits_per_pixel = render.src.bpp;
 		image.pitch          = render.scale.cachePitch;
 		image.image_data     = (uint8_t*)&scalerSourceCache;
@@ -313,11 +317,14 @@ static void RENDER_Reset(void)
 	Bitu gfx_flags, xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
 	if (render.aspect) {
-		if (render.src.one_per_pixel_aspect > 1.0) {
+		const auto one_per_pixel_aspect =
+		        render.src.pixel_aspect_ratio.Inverse().ToDouble();
+
+		if (one_per_pixel_aspect > 1.0) {
 			gfx_scalew = 1;
-			gfx_scaleh = render.src.one_per_pixel_aspect;
+			gfx_scaleh = one_per_pixel_aspect;
 		} else {
-			gfx_scalew = (1 / render.src.one_per_pixel_aspect);
+			gfx_scalew = render.src.pixel_aspect_ratio.ToDouble();
 			gfx_scaleh = 1;
 		}
 	} else {
@@ -474,21 +481,20 @@ static void RENDER_CallBack(GFX_CallBackFunctions_t function)
 
 void RENDER_SetSize(const uint32_t width, const uint32_t height,
                     const bool double_width, const bool double_height,
-                    const double one_per_pixel_aspect,
+                    const Fraction pixel_aspect_ratio,
                     const unsigned bits_per_pixel, const double frames_per_second)
 {
 	RENDER_Halt();
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
 		return;
 	}
-	render.src.width         = width;
-	render.src.height        = height;
-	render.src.double_width  = double_width;
-	render.src.double_height = double_height;
-	render.src.bpp           = bits_per_pixel;
-	render.src.fps           = frames_per_second;
-
-	render.src.one_per_pixel_aspect = one_per_pixel_aspect;
+	render.src.width              = width;
+	render.src.height             = height;
+	render.src.double_width       = double_width;
+	render.src.double_height      = double_height;
+	render.src.pixel_aspect_ratio = pixel_aspect_ratio;
+	render.src.bpp                = bits_per_pixel;
+	render.src.fps                = frames_per_second;
 
 	RENDER_Reset();
 }

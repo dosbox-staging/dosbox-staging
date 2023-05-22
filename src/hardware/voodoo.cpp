@@ -87,6 +87,7 @@
 
 #include "control.h"
 #include "cross.h"
+#include "fraction.h"
 #include "mem.h"
 #include "paging.h"
 #include "pci_bus.h"
@@ -6875,17 +6876,17 @@ static void Voodoo_UpdateScreen(void) {
 		} else
 #endif
 		{
-			constexpr auto double_width         = false;
-			constexpr auto double_height        = false;
-			constexpr auto one_per_pixel_aspect = 1.0;
-			constexpr auto bits_per_pixel       = 16;
+			constexpr auto double_width           = false;
+			constexpr auto double_height          = false;
+			constexpr Fraction pixel_aspect_ratio = {1};
+			constexpr auto bits_per_pixel         = 16;
 			const auto frames_per_second = 1000.0f / v->draw.vfreq;
 
 			RENDER_SetSize(v->fbi.width,
 			               v->fbi.height,
 			               double_width,
 			               double_height,
-			               one_per_pixel_aspect,
+			               pixel_aspect_ratio,
 			               bits_per_pixel,
 			               frames_per_second);
 		}

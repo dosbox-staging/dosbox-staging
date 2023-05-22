@@ -2240,7 +2240,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			               height,
 			               doublewidth,
 			               doubleheight,
-			               pixel_aspect_ratio.Inverse().ToDouble(),
+			               pixel_aspect_ratio,
 			               bpp,
 			               fps);
 		}

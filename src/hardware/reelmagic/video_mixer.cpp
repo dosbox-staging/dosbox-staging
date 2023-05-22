@@ -33,6 +33,7 @@
 #include <string>
 
 #include "../../gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
+#include "fraction.h"
 #include "render.h"
 #include "rgb565.h"
 #include "setup.h"
@@ -201,8 +202,8 @@ static bool _vgaDoubleHeight = false;
 // != 0 on this variable means we have collected the first call
 static uint32_t _vgaBitsPerPixel = 0;
 
-static double _vgaFramesPerSecond   = 0.0;
-static double _vgaOnePerPixelAspect = 0.0;
+static double _vgaFramesPerSecond    = 0.0;
+static Fraction _vgaPixelAspectRatio = {};
 
 // state captured from current/active MPEG player
 static PlayerPicturePixel _mpegPictureBuffer[SCALER_MAXWIDTH * SCALER_MAXHEIGHT];
@@ -540,7 +541,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _vgaHeight,
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight,
-		               _vgaOnePerPixelAspect,
+		               _vgaPixelAspectRatio,
 		               _vgaBitsPerPixel,
 		               _vgaFramesPerSecond);
 
@@ -582,7 +583,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _renderHeight,
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight,
-		               _vgaOnePerPixelAspect,
+		               _vgaPixelAspectRatio,
 		               VIDEOMIXER_BITSPERPIXEL,
 		               _vgaFramesPerSecond);
 		return;
@@ -594,7 +595,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _renderHeight,
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight,
-		               _vgaOnePerPixelAspect,
+		               _vgaPixelAspectRatio,
 		               VIDEOMIXER_BITSPERPIXEL,
 		               _vgaFramesPerSecond);
 
@@ -703,7 +704,7 @@ void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t 
 
 void ReelMagic_RENDER_SetSize(const uint32_t width, const uint32_t height,
                               const bool double_width, const bool double_height,
-                              const double one_per_pixel_aspect,
+                              const Fraction pixel_aspect_ratio,
                               const uint32_t bits_per_pixel,
                               const double frames_per_second)
 {
@@ -711,7 +712,7 @@ void ReelMagic_RENDER_SetSize(const uint32_t width, const uint32_t height,
 	_vgaHeight            = height;
 	_vgaDoubleWidth       = double_width;
 	_vgaDoubleHeight      = double_height;
-	_vgaOnePerPixelAspect = one_per_pixel_aspect;
+	_vgaPixelAspectRatio  = pixel_aspect_ratio;
 	_vgaBitsPerPixel      = bits_per_pixel;
 	_vgaFramesPerSecond   = frames_per_second;
 
