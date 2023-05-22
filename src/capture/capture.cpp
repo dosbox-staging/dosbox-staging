@@ -202,7 +202,7 @@ void CAPTURE_StopVideoCapture()
 #endif
 }
 
-void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage image,
+void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage& image,
                       [[maybe_unused]] const float frames_per_second)
 {
 #if (C_SSHOT)

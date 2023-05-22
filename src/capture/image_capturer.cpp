@@ -70,7 +70,7 @@ void ImageCapturer::Close()
 	is_open = false;
 }
 
-void ImageCapturer::CaptureImage(const RenderedImage image)
+void ImageCapturer::CaptureImage(const RenderedImage& image)
 {
 	if (!image_fifo.IsRunning()) {
 		LOG_WARNING("CAPTURE: Cannot create screenshots while image capturer is shutting down");
@@ -125,7 +125,7 @@ void ImageCapturer::SaveQueuedImages()
 	}
 }
 
-void ImageCapturer::SavePng(const RenderedImage image)
+void ImageCapturer::SavePng(const RenderedImage& image)
 {
 	image_scaler.Init(image);
 

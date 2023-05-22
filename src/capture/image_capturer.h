@@ -41,13 +41,13 @@ public:
 	void Open();
 	void Close();
 
-	void CaptureImage(const RenderedImage image);
+	void CaptureImage(const RenderedImage& image);
 
 private:
 	static constexpr auto MaxQueuedImages = 5;
 
 	void SaveQueuedImages();
-	void SavePng(const RenderedImage image);
+	void SavePng(const RenderedImage& image);
 	void SetPngCompressionsParams();
 	void WritePngInfo(const uint16_t width, const uint16_t height,
 	                  const bool is_paletted, const uint8_t* palette_data);
