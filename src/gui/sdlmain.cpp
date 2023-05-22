@@ -2395,7 +2395,7 @@ static void FocusInput()
 	// Ensure we have input focus when in fullscreen
 	if (!sdl.desktop.fullscreen)
 		return;
-	
+
 	// Do we already have focus?
 	if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_INPUT_FOCUS)
 		return;
@@ -3080,7 +3080,7 @@ static void setup_initial_window_position_from_conf(const std::string &window_po
 		return;
 	}
 
-	const auto desktop = get_desktop_resolution();	
+	const auto desktop = get_desktop_resolution();
 	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
@@ -3515,28 +3515,33 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 
 std::optional<RenderedImage> GFX_GetRenderedOutput()
 {
-#if C_OPENGL
-	// Get the OpenGL-renderer surface
-	// -------------------------------
-	if (sdl.desktop.type == SCREEN_OPENGL) {
-		const auto canvas = get_canvas_size(sdl.desktop.type);
+	RenderedImage image = {};
+	uint8_t* image_data = nullptr;
 
-		RenderedImage image      = {};
+	auto setup_image = [&](const auto bits_per_pixel) {
 		image.width              = sdl.clip.w;
 		image.height             = sdl.clip.h;
 		image.double_width       = false;
 		image.double_height      = false;
 		image.flip_vertical      = true;
 		image.pixel_aspect_ratio = {1};
-		image.bits_per_pixel     = 24;
+		image.bits_per_pixel     = bits_per_pixel;
 		image.pitch        = image.width * (image.bits_per_pixel / 8);
 		image.palette_data = nullptr;
 
-		auto image_data = static_cast<uint8_t*>(
+		image_data = static_cast<uint8_t*>(
 		        std::malloc(image.height * image.pitch));
 		image.image_data = image_data;
+	};
 
-		// Alignment is 4 by default wich works fine when using the
+#if C_OPENGL
+	// Get the OpenGL-renderer surface
+	// -------------------------------
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		constexpr auto bits_per_pixel = 24;
+		setup_image(bits_per_pixel);
+
+		// Alignment is 4 by default which works fine when using the
 		// GL_BGRA pixel format with glReadPixels(). We need to set it 1
 		// to be able to use the GL_BGR format in order to conserve
 		// memory. This should not cause any slowdowns whatsoever.
@@ -3550,55 +3555,54 @@ std::optional<RenderedImage> GFX_GetRenderedOutput()
 		             GL_UNSIGNED_BYTE,
 		             image_data);
 
+		image.flip_vertical = true;
 		return image;
 	}
 #endif
 
-	/*
 	// Get the SDL texture-renderer surface
 	// ------------------------------------
 	if (sdl.desktop.type == SCREEN_TEXTURE) {
-		// Get the renderer's pixel format
-		SDL_RendererInfo rinfo;
-		if (SDL_GetRendererInfo(renderer, &rinfo) != 0) {
-			LOG_MSG("SDL: Failed to get a rendering info because %s",
-			        SDL_GetError());
+		const auto renderer = SDL_GetRenderer(sdl.window);
+		if (!renderer) {
+			LOG_WARNING("SDL: Failed retrieving texture renderer surface: %s",
+			            SDL_GetError());
+			std::free(image_data);
 			return {};
 		}
-		const auto pixel_format = rinfo.texture_formats[0];
 
-		// Create a 32-bit surface with colour format matching the renderer
-		const auto canvas = get_canvas_size(sdl.desktop.type);
-		const auto surface = SDL_CreateRGBSurfaceWithFormat(
-		        SDL_SWSURFACE, canvas.w, canvas.h, 32, pixel_format);
-		if (!surface || !renderer) {
-			LOG_WARNING("SDL: Failed creating a surface because %s",
-			            SDL_GetError());
-			return {};
-		}
-		// Copy the pixels from the renderer into our new surface
+		// SDL_PIXELFORMAT_RGB888 should give use packed 24-bit RGB
+		// data... except it doesn't as the resulting pixels get padded
+		// to 4 bytes. So it appears we must use
+		// SDL_PIXELFORMAT_XRGB8888 to get the correct results.
+		constexpr auto bits_per_pixel = 32;
+		setup_image(bits_per_pixel);
+
+		// From the SDL doco:
+		//   WARNING: This is a very slow operation, and should not be used
+		//   frequently. If you're using this on the main rendering target, it
+		//   should be called after rendering and before SDL_RenderPresent().
+		//
+		// Indeed, it is much slower than the OpenGL capture path. It could be
+		// probably sped up by doing this somehow reading the pixels before
+		// SDL_RenderPresent(), but that would complicate things a lot. The
+		// texture backend is a fallback option anyway; people should really
+		// use OpenGL...
+		constexpr auto rect = nullptr; // copy entire render target
 		if (SDL_RenderReadPixels(renderer,
-		                         nullptr,
-		                         surface->format->format,
-		                         surface->pixels,
-		                         surface->pitch) != 0) {
-			LOG_WARNING("SDL: Failed rendering to the surface because %s",
+		                         rect,
+		                         SDL_PIXELFORMAT_XRGB8888,
+		                         image_data,
+		                         image.pitch) != 0) {
+			LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
 			            SDL_GetError());
-			SDL_FreeSurface(surface);
+			std::free(image_data);
 			return {};
 		}
-		return surface;
+		return image;
 	}
 
-	// We're already in surface-mode, how convenient ;)
-	// -----------------------------------------------
-	assert(sdl.desktop.type == SCREEN_SURFACE);
-	assert(sdl.surface);
-	// Simply return a copy
-	return SDL_ConvertSurfaceFormat(sdl.surface,
-	                                sdl.surface->format->format,
-	                                0);
-									*/
+	return {};
 }
 
 // extern void UI_Run(bool);
@@ -3733,7 +3737,7 @@ static void GUI_StartUp(Section *sec)
 		LOG_WARNING("SDL: Display number out of bounds, using display 0");
 		sdl.display_number = 0;
 	}
-	
+
 	const std::string presentation_mode_pref = section->Get_string(
 	        "presentation_mode");
 	if (presentation_mode_pref == "auto")
@@ -3984,7 +3988,7 @@ bool GFX_Events()
 			switch (event.display.event) {
 #if (SDL_MAJOR_VERSION > 2 || SDL_MINOR_VERSION > 0 || SDL_PATCHLEVEL >= 14)
 			// Events added in SDL 2.0.14
-			case SDL_DISPLAYEVENT_CONNECTED: 
+			case SDL_DISPLAYEVENT_CONNECTED:
 			case SDL_DISPLAYEVENT_DISCONNECTED:
 				NewMouseScreenParams();
 				break;
@@ -4729,7 +4733,7 @@ int sdl_main(int argc, char *argv[])
 	loguru::g_preamble_thread  = false; // The logging thread
 	loguru::g_preamble_file    = false; // The file from which the log originates from
 	loguru::g_preamble_verbose = false; // The verbosity field
-	loguru::g_preamble_pipe    = true; // The pipe symbol right before the message	
+	loguru::g_preamble_pipe    = true; // The pipe symbol right before the message
 
 	loguru::init(argc, argv);
 

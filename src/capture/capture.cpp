@@ -364,12 +364,13 @@ void CAPTURE_Init(Section* sec)
 	                  "caprawmidi",
 	                  "Rec. MIDI");
 
+#if (C_SSHOT)
 	MAPPER_AddHandler(handle_capture_rendered_screenshot_event,
 	                  SDL_SCANCODE_F5,
 	                  MMOD2,
 	                  "rendshot",
 	                  "Rend Screenshot");
-#if (C_SSHOT)
+
 	MAPPER_AddHandler(handle_capture_raw_screenshot_event,
 	                  SDL_SCANCODE_F5,
 	                  PRIMARY_MOD,
