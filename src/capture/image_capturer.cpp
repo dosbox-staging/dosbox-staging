@@ -70,7 +70,8 @@ void ImageCapturer::Close()
 	is_open = false;
 }
 
-void ImageCapturer::CaptureImage(const RenderedImage& image)
+void ImageCapturer::CaptureImage(const RenderedImage& image,
+                                 const CapturedImageType type)
 {
 	if (!image_fifo.IsRunning()) {
 		LOG_WARNING("CAPTURE: Cannot create screenshots while image capturer is shutting down");
