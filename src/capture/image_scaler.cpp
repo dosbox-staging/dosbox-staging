@@ -28,7 +28,7 @@
 #include "rgb555.h"
 #include "rgb565.h"
 
-void ImageScaler::Init(const RenderedImage image)
+void ImageScaler::Init(const RenderedImage& image)
 {
 	assert(image.width > 0);
 	assert(image.height > 0);

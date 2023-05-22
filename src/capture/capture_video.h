@@ -24,7 +24,7 @@
 
 #include "render.h"
 
-void capture_video_add_frame(const RenderedImage image,
+void capture_video_add_frame(const RenderedImage& image,
                              const float frames_per_second);
 
 void capture_video_add_audio_data(const uint32_t sample_rate,

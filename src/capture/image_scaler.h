@@ -32,7 +32,7 @@ enum class PixelFormat { Indexed8, Rgb888 };
 
 class ImageScaler {
 public:
-	void Init(const RenderedImage params);
+	void Init(const RenderedImage& image);
 
 	std::vector<uint8_t>::const_iterator GetNextOutputRow();
 
