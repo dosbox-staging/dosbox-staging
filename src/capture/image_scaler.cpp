@@ -125,7 +125,7 @@ void ImageScaler::UpdateOutputParams()
 	output.curr_row   = 0;
 	output.row_repeat = 0;
 
-	//LogImageScalerParams();
+	// LogImageScalerParams();
 }
 
 void ImageScaler::LogImageScalerParams()

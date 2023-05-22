@@ -33,6 +33,8 @@
 #include <png.h>
 #include <zlib.h>
 
+enum class CapturedImageType { Raw, Upscaled, Rendered };
+
 class ImageCapturer {
 public:
 	ImageCapturer() = default;
@@ -41,7 +43,7 @@ public:
 	void Open();
 	void Close();
 
-	void CaptureImage(const RenderedImage& image);
+	void CaptureImage(const RenderedImage& image, const CapturedImageType type);
 
 private:
 	static constexpr auto MaxQueuedImages = 5;

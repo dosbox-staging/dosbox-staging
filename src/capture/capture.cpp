@@ -207,7 +207,7 @@ void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage& image,
 {
 #if (C_SSHOT)
 	if (capturing_image) {
-		image_capturer.CaptureImage(image);
+		image_capturer.CaptureImage(image, CapturedImageType::Upscaled);
 		capturing_image = false;
 	}
 
@@ -285,7 +285,7 @@ static void handle_capture_rendered_screenshot_event(const bool pressed)
 	if (!image) {
 		return;
 	}
-	image_capturer.CaptureImage(*image);
+	image_capturer.CaptureImage(*image, CapturedImageType::Rendered);
 #endif
 }
 
