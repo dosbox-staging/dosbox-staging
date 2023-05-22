@@ -70,14 +70,14 @@ void ImageCapturer::Close()
 	is_open = false;
 }
 
-void ImageCapturer::CaptureImage(const RenderedImage_t image)
+void ImageCapturer::CaptureImage(const RenderedImage image)
 {
 	if (!image_fifo.IsRunning()) {
 		LOG_WARNING("CAPTURE: Cannot create screenshots while image capturer is shutting down");
 		return;
 	}
 
-	RenderedImage_t copied_image = image;
+	RenderedImage copied_image = image;
 
 	// Deep-copy image and palette data
 	// TODO it's bad that we need to calculate the image data size
@@ -125,7 +125,7 @@ void ImageCapturer::SaveQueuedImages()
 	}
 }
 
-void ImageCapturer::SavePng(const RenderedImage_t image)
+void ImageCapturer::SavePng(const RenderedImage image)
 {
 	image_scaler.Init(image);
 

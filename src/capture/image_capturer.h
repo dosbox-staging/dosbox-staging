@@ -41,20 +41,20 @@ public:
 	void Open();
 	void Close();
 
-	void CaptureImage(const RenderedImage_t image);
+	void CaptureImage(const RenderedImage image);
 
 private:
 	static constexpr auto MaxQueuedImages = 5;
 
 	void SaveQueuedImages();
-	void SavePng(const RenderedImage_t image);
+	void SavePng(const RenderedImage image);
 	void SetPngCompressionsParams();
 	void WritePngInfo(const uint16_t width, const uint16_t height,
 	                  const bool is_paletted, const uint8_t* palette_data);
 
 	ImageScaler image_scaler = {};
 
-	RWQueue<RenderedImage_t> image_fifo{MaxQueuedImages};
+	RWQueue<RenderedImage> image_fifo{MaxQueuedImages};
 	std::thread renderer = {};
 
 	bool is_open = false;

@@ -248,4 +248,4 @@ template class RWQueue<AudioFrame>;
 template class RWQueue<MidiWork>;
 
 #include "render.h"
-template class RWQueue<RenderedImage_t>;
+template class RWQueue<RenderedImage>;
