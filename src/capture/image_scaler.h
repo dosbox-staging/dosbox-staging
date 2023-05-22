@@ -56,6 +56,7 @@ private:
 	void SetRowRepeat();
 	void GenerateNextIntegerUpscaledOutputRow();
 	void GenerateNextSharpUpscaledOutputRow();
+	void AdvanceInputRow();
 
 	RenderedImage input = {};
 

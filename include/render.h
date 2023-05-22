@@ -100,6 +100,7 @@ struct RenderedImage {
 	uint16_t height             = 0;
 	bool double_width           = false;
 	bool double_height          = false;
+	bool flip_vertical          = false;
 	Fraction pixel_aspect_ratio = 0.0;
 	uint8_t bits_per_pixel      = 0;
 	uint16_t pitch              = 0;

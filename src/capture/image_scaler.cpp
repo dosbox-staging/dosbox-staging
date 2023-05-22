@@ -50,14 +50,18 @@ void ImageScaler::Init(const RenderedImage& image)
 	UpdateOutputParams();
 	AllocateBuffers();
 
-	input_curr_row_start = input.image_data;
+	if (input.flip_vertical) {
+		input_curr_row_start = input.image_data +
+		                       (input.height - 1) * input.pitch;
+	} else {
+		input_curr_row_start = input.image_data;
+	}
 }
 
 static bool is_integer(float f)
 {
 	return fabs(f - round(f)) < 0.0001;
 }
-
 
 void ImageScaler::UpdateOutputParams()
 {
@@ -121,7 +125,7 @@ void ImageScaler::UpdateOutputParams()
 	output.curr_row   = 0;
 	output.row_repeat = 0;
 
-//	LogImageScalerParams();
+	//LogImageScalerParams();
 }
 
 void ImageScaler::LogImageScalerParams()
@@ -275,7 +279,16 @@ void ImageScaler::DecodeNextRowToLinearRgb()
 		*out++ = srgb8_to_linear_lut(pixel.blue);
 	}
 
-	input_curr_row_start += input.pitch;
+	AdvanceInputRow();
+}
+
+void ImageScaler::AdvanceInputRow()
+{
+	if (input.flip_vertical) {
+		input_curr_row_start -= input.pitch;
+	} else {
+		input_curr_row_start += input.pitch;
+	}
 }
 
 void ImageScaler::SetRowRepeat()
@@ -312,8 +325,7 @@ void ImageScaler::GenerateNextIntegerUpscaledOutputRow()
 		}
 	}
 
-	input_curr_row_start += input.pitch;
-
+	AdvanceInputRow();
 	SetRowRepeat();
 }
 
