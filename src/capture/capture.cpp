@@ -45,9 +45,6 @@
 #if C_OPENGL
 #include <SDL_opengl.h>
 #endif
-#if C_SDL_IMAGE
-#include <SDL_image.h>
-#endif
 
 
 extern const char* RunningProgram;
@@ -280,28 +277,13 @@ static void handle_capture_rendered_screenshot_event(const bool pressed)
 		return;
 	}
 
-	const auto surface = GFX_GetRenderedSurface();
-	if (!surface) {
+#if (C_SSHOT)
+	const auto image = GFX_GetRenderedOutput();
+	if (!image) {
 		return;
 	}
-
-#if C_SDL_IMAGE
-	const auto filename = capture_generate_filename("Screenshot", ".png");
-	const auto is_saved = IMG_SavePNG(*surface, filename.c_str()) == 0;
-#else
-	const auto filename = capture_generate_filename("Screenshot", ".bmp");
-	const auto is_saved = SDL_SaveBMP(*surface, filename.c_str()) == 0;
+	image_capturer.CaptureImage(*image);
 #endif
-	SDL_FreeSurface(*surface);
-
-	if (is_saved) {
-		LOG_MSG("CAPTURE: Capturing rendered image output to '%s'",
-		        filename.c_str());
-	} else {
-		LOG_MSG("CAPTURE: Failed capturing rendered image to '%s', reason: %s",
-		        filename.c_str(),
-		        SDL_GetError());
-	}
 }
 
 #if (C_SSHOT)

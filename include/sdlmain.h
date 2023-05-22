@@ -28,6 +28,7 @@
 #if C_OPENGL
 #include <SDL_opengl.h>
 #endif
+#include "render.h"
 #include "video.h"
 
 #define SDL_NOFRAME 0x00000020
@@ -236,6 +237,6 @@ struct SDL_Block {
 
 extern SDL_Block sdl;
 
-std::optional<SDL_Surface *> GFX_GetRenderedSurface();
+std::optional<RenderedImage> GFX_GetRenderedOutput();
 
 #endif
