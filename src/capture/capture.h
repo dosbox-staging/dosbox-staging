@@ -30,10 +30,14 @@ std::string capture_generate_filename(const char* type, const char* ext);
 
 FILE* CAPTURE_CreateFile(const char* type, const char* ext);
 
+// Used to add the last rendered frame to be captured either as a screenshot
+// or as a video recording (or both).
+void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second);
+
+// Used to add the last rendered chunk of audio output to be captured either
+// as an audio recording or the audio stream of a video recording (or both).
 void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_frames,
                           const int16_t* sample_frames);
-
-void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second);
 
 void CAPTURE_AddMidiData(const bool sysex, const size_t len, const uint8_t* data);
 
