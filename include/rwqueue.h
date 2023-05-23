@@ -40,6 +40,7 @@
 #include <condition_variable>
 #include <deque>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 template <typename T>
@@ -96,8 +97,9 @@ public:
 	// in the queue to dequeue.
 
 	// If queuing has stopped, this will continue to return item(s) until
-	// none remain in the queue, at which point it immediately returns T{}.
-	T Dequeue();
+	// none remain in the queue, at which point it returns empty results
+	// as indicated by the <optional> wrapper evaluating as "false".
+	std::optional<T> Dequeue();
 
 	// Bulk operations move multiple items from/to the given vector, which
 	// signficantly reduces the number of mutex lock state changes. It also

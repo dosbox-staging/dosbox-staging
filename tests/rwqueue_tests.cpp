@@ -51,14 +51,13 @@ TEST(RWQueue, TrivialSerial)
 		EXPECT_FALSE(q.IsEmpty());
 
 		// Basic dequeue
-		int item;
-		item = q.Dequeue();
-		EXPECT_EQ(item, 0);
+		auto item = q.Dequeue();
+		EXPECT_EQ(*item, 0);
 		for (int i = 1; i != 65; ++i) {
 			item = q.Dequeue();
-			EXPECT_EQ(item, i);
+			EXPECT_EQ(*item, i);
 		}
-		EXPECT_EQ(item, 64);
+		EXPECT_EQ(*item, 64);
 		EXPECT_TRUE(q.IsEmpty());
 	}
 }
@@ -71,11 +70,10 @@ TEST(RWQueue, TrivialZeroCapacity)
 
 void rw_consume_trivial(RWQueue<int> *q, const size_t *max_depth)
 {
-	int item;
 	for (int i = 0; i != iterations; ++i) {
 		EXPECT_TRUE(q->Size() <= *max_depth);
-		item = q->Dequeue();
-		EXPECT_EQ(item, i);
+		const auto item = q->Dequeue();
+		EXPECT_EQ(*item, i);
 	}
 }
 
@@ -351,12 +349,12 @@ TEST(RWQueue,ContainerSerial)
 		EXPECT_FALSE(q.IsEmpty());
 
 		// Basic dequeue
-		v = q.Dequeue();
+		v = q.Dequeue().value();
 		EXPECT_EQ(v[0], 0);
 		EXPECT_EQ(v.size(), iteration + 1);
 
 		for (int i = 1; i != 65; ++i) {
-			v = q.Dequeue();
+			v = q.Dequeue().value();
 			EXPECT_EQ(v[i], i);
 			EXPECT_EQ(v.size(), i + 1);
 		}
@@ -377,7 +375,7 @@ void rw_consume_container(RWQueue<container_t> *q, const size_t *max_depth)
 	container_t v;
 	for (int i = 0; i != iterations; ++i) {
 		EXPECT_TRUE(q->Size() <= *max_depth);
-		v = q->Dequeue();
+		v = q->Dequeue().value();
 		EXPECT_EQ(v[i], i);
 		EXPECT_EQ(v.size(), i + 1);
 	}
@@ -449,7 +447,7 @@ TEST(RWQueue, StopImmediately)
 	EXPECT_FALSE(q.Enqueue(1));      // shouldn't block
 	EXPECT_TRUE(q.IsEmpty());
 	const auto value = q.Dequeue();  // shouldn't block
-	EXPECT_EQ(value, 0);            // once stopped, dequeues defaults}
+	EXPECT_FALSE(value.has_value()); // once stopped, no long has a value
 }
 
 TEST(RWQueue, StopMidway)
@@ -470,11 +468,11 @@ TEST(RWQueue, StopMidway)
 
 	// We still have one item in the queue, so we're not stopped yet
 	auto value = q.Dequeue();
-	EXPECT_EQ(value, 1);
+	EXPECT_EQ(*value, 1);
 
 	// once stopped and out of items, dequeuing has stopped
 	value = q.Dequeue();
-	EXPECT_EQ(value, 0);
+	EXPECT_FALSE(value.has_value());
 }
 
 TEST(RWQueue, StopBulkImmediately)
@@ -533,7 +531,7 @@ TEST(RWQueue, StopBulkMidway)
 	// Dequeue the middle value
 	auto value = q.Dequeue();
 	EXPECT_EQ(q.Size(), 2);
-	EXPECT_EQ(value, 3);
+	EXPECT_EQ(*value, 3);
 
 	// Bulk dequeue the last couple, but over-request
 	num_items = 3u;
@@ -554,7 +552,7 @@ TEST(RWQueue, StopBulkMidway)
 	// At this point, we should be out of items, but let's try single
 	// dequeuing anyway
 	value = q.Dequeue();
-	EXPECT_EQ(value, {});
+	EXPECT_FALSE(value.has_value());
 	EXPECT_TRUE(items.empty());
 }
 

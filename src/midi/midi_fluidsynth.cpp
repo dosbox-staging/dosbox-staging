@@ -215,8 +215,6 @@ static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
 	            hex_values.c_str());
 }
 
-MidiHandlerFluidsynth::MidiHandlerFluidsynth() : keep_rendering(false) {}
-
 bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 {
 	Close();
@@ -510,7 +508,6 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char *conf)
 	selected_font = soundfont;
 
 	// Start rendering audio
-	keep_rendering = true;
 	const auto render = std::bind(&MidiHandlerFluidsynth::Render, this);
 	renderer = std::thread(render);
 	set_thread_name(renderer, "dosbox:fsynth");
@@ -542,8 +539,7 @@ void MidiHandlerFluidsynth::Close()
 	if (channel)
 		channel->Enable(false);
 
-	// Stop rendering and drain the fifo
-	keep_rendering = false;
+	// Stop queueing new MIDI work and audio frames
 	work_fifo.Stop();
 	audio_frame_fifo.Stop();
 
@@ -652,9 +648,12 @@ void MidiHandlerFluidsynth::MixerCallBack(const uint16_t requested_audio_frames)
 	}
 
 	static std::vector<AudioFrame> audio_frames = {};
-	audio_frame_fifo.BulkDequeue(audio_frames, requested_audio_frames);
-	channel->AddSamples_sfloat(requested_audio_frames, &audio_frames[0][0]);
 
+	[[maybe_unused]] const auto has_dequeued =
+	        audio_frame_fifo.BulkDequeue(audio_frames, requested_audio_frames);
+	assert(has_dequeued && audio_frames.size() == requested_audio_frames);
+
+	channel->AddSamples_sfloat(requested_audio_frames, &audio_frames[0][0]);
 	last_rendered_ms = PIC_FullIndex();
 }
 
@@ -681,7 +680,7 @@ void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const uint16_t num_audio_fra
 void MidiHandlerFluidsynth::ProcessWorkFromFifo()
 {
 	const auto work = work_fifo.Dequeue();
-	if (!work_fifo.IsRunning()) {
+	if (!work) {
 		return;
 	}
 
@@ -694,15 +693,15 @@ void MidiHandlerFluidsynth::ProcessWorkFromFifo()
 	                "sysex", work_fifo.Size(), audio_frame_fifo.Size());
 	}*/
 
-	if (work.num_pending_audio_frames > 0) {
-		RenderAudioFramesToFifo(work.num_pending_audio_frames);
+	if (work->num_pending_audio_frames > 0) {
+		RenderAudioFramesToFifo(work->num_pending_audio_frames);
 	}
 
-	if (work.message_type == MessageType::Channel) {
-		ApplyChannelMessage(work.message);
+	if (work->message_type == MessageType::Channel) {
+		ApplyChannelMessage(work->message);
 	} else {
-		assert(work.message_type == MessageType::SysEx);
-		ApplySysexMessage(work.message);
+		assert(work->message_type == MessageType::SysEx);
+		ApplySysexMessage(work->message);
 	}
 }
 
