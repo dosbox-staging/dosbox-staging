@@ -559,7 +559,7 @@ static void run_binary_executable(const std::string_view fullname,
 		}
 
 		else {
-			auto next_separator = args.find_first_not_of(separators);
+			auto next_separator = args.find_first_of(separators);
 			fcb_args[fcb_index] = args.substr(0, next_separator);
 			++fcb_index;
 			args = args.substr(next_separator + 1);
