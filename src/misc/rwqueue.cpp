@@ -161,24 +161,24 @@ bool RWQueue<T>::BulkEnqueue(std::vector<T>& from_source, const size_t num_reque
 }
 
 template <typename T>
-T RWQueue<T>::Dequeue()
+std::optional<T> RWQueue<T>::Dequeue()
 {
 	// wait until we're stopped or the queue has an item
 	std::unique_lock<std::mutex> lock(mutex);
 	has_items.wait(lock, [this] { return !is_running || !queue.empty(); });
 
-	T item = {};
+	std::optional<T> optional_item = std::nullopt;
 	// Even if the queue has stopped, we need to drain the (previously)
 	// queued items before we're done.
 	if (is_running || !queue.empty()) {
-		item = std::move(queue.front());
+		optional_item = std::move(queue.front());
 		queue.pop_front();
 	}
 	lock.unlock();
 
 	// notify the first waiting thread that the queue has room
 	has_room.notify_one();
-	return item;
+	return optional_item;
 }
 
 template <typename T>

@@ -370,9 +370,6 @@ static mt32emu_report_handler_i get_report_handler_interface()
 	return REPORT_HANDLER_I;
 }
 
-MidiHandler_mt32::MidiHandler_mt32() : keep_rendering(false)
-{}
-
 MidiHandler_mt32::service_t MidiHandler_mt32::GetService()
 {
 	const std::lock_guard<std::mutex> lock(service_mutex);
@@ -661,7 +658,6 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	model_and_dir = std::move(loaded_model_and_dir);
 
 	// Start rendering audio
-	keep_rendering = true;
 	const auto render = std::bind(&MidiHandler_mt32::Render, this);
 	renderer = std::thread(render);
 	set_thread_name(renderer, "dosbox:mt32");
@@ -692,8 +688,7 @@ void MidiHandler_mt32::Close()
 	if (channel)
 		channel->Enable(false);
 
-	// Stop rendering and drain the fifo
-	keep_rendering = false;
+	// Stop queueing new MIDI work and audio frames
 	work_fifo.Stop();
 	audio_frame_fifo.Stop();
 
@@ -780,9 +775,12 @@ void MidiHandler_mt32::MixerCallBack(const uint16_t requested_audio_frames)
 	}
 
 	static std::vector<AudioFrame> audio_frames = {};
-	audio_frame_fifo.BulkDequeue(audio_frames, requested_audio_frames);
-	channel->AddSamples_sfloat(requested_audio_frames, &audio_frames[0][0]);
 
+	[[maybe_unused]] const auto has_dequeued =
+	        audio_frame_fifo.BulkDequeue(audio_frames, requested_audio_frames);
+	assert(has_dequeued && audio_frames.size() == requested_audio_frames);
+
+	channel->AddSamples_sfloat(requested_audio_frames, &audio_frames[0][0]);
 	last_rendered_ms = PIC_FullIndex();
 }
 
@@ -806,7 +804,7 @@ void MidiHandler_mt32::RenderAudioFramesToFifo(const uint16_t num_frames)
 void MidiHandler_mt32::ProcessWorkFromFifo()
 {
 	const auto work = work_fifo.Dequeue();
-	if (!work_fifo.IsRunning()) {
+	if (!work) {
 		return;
 	}
 
@@ -819,21 +817,22 @@ void MidiHandler_mt32::ProcessWorkFromFifo()
 	                "sysex", work_fifo.Size(), audio_frame_fifo.Size());
 	}*/
 
-	if (work.num_pending_audio_frames > 0) {
-		RenderAudioFramesToFifo(work.num_pending_audio_frames);
+	if (work->num_pending_audio_frames > 0) {
+		RenderAudioFramesToFifo(work->num_pending_audio_frames);
 	}
 
 	// Request exclusive access prior to applying messages
 	const std::lock_guard<std::mutex> lock(service_mutex);
 
-	if (work.message_type == MessageType::Channel) {
-		assert(work.message.size() >= MaxMidiMessageLen);
-		const auto &data = work.message.data();
+	if (work->message_type == MessageType::Channel) {
+		assert(work->message.size() >= MaxMidiMessageLen);
+		const auto& data   = work->message.data();
 		const uint32_t msg = data[0] + (data[1] << 8) + (data[2] << 16);
 		service->playMsg(msg);
 	} else {
-		assert(work.message_type == MessageType::SysEx);
-		service->playSysex(work.message.data(), static_cast<uint32_t>(work.message.size()));
+		assert(work->message_type == MessageType::SysEx);
+		service->playSysex(work->message.data(),
+		                   static_cast<uint32_t>(work->message.size()));
 	}
 }
 
