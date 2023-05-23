@@ -28,6 +28,7 @@
 #include "byteorder.h"
 #include "callback.h"
 #include "checks.h"
+#include "config.h"
 #include "cpu.h"
 #include "dos_inc.h"
 #include "math_utils.h"
@@ -49,6 +50,11 @@ CHECK_NARROWING();
 // - https://www.stanislavs.org/helppc/int_33.html
 // - http://www2.ift.ulaval.ca/~marchand/ift17583/dosints.pdf
 // - https://github.com/FDOS/mouse/blob/master/int33.lst
+// - https://www.fysnet.net/faq.htm
+
+// Versions are stored in BCD code - 0x09 = version 9, 0x10 = version 10, etc.
+static constexpr uint8_t driver_version_major = 0x08;
+static constexpr uint8_t driver_version_minor = 0x05;
 
 static constexpr uint8_t  cursor_size_x  = 16;
 static constexpr uint8_t  cursor_size_y  = 16;
@@ -217,6 +223,12 @@ static struct { // DOS driver state
 	uint16_t user_callback_offset  = 0;
 
 } state;
+
+// Guest-side pointers to various driver information
+static uint16_t info_segment          = 0;
+static uint16_t info_offset_ini_file  = 0;
+static uint16_t info_offset_version   = 0;
+static uint16_t info_offset_copyright = 0;
 
 static RealPt user_callback;
 
@@ -824,8 +836,9 @@ void MOUSEDOS_NotifyMinRate(const uint16_t value_hz)
 	min_rate_hz = value_hz;
 
 	// If rate was set by a DOS application, don't change it
-	if (rate_is_set)
+	if (rate_is_set) {
 		return;
+	}
 
 	notify_interface_rate();
 }
@@ -1548,8 +1561,10 @@ static Bitu int33_handler()
 		break;
 	case 0x24: // MS MOUSE v6.26+ - get Software version, mouse type, and
 	           // IRQ number
-		reg_bx = 0x805; // version 8.05 woohoo
-		reg_ch = 0x04;  // PS/2 type
+		reg_bh = driver_version_major;
+		reg_bl = driver_version_minor;
+		// 1 = bus, 2 = serial, 3 = inport, 4 = PS/2, 5 = HP
+		reg_ch = 0x04; // PS/2
 		reg_cl = 0; // PS/2 mouse; for others it would be an IRQ number
 		break;
 	case 0x25: // MS MOUSE v6.26+ - get general driver information
@@ -1611,6 +1626,24 @@ static Bitu int33_handler()
 	case 0x2d: // MS MOUSE v7.0+ - select acceleration profile
 	case 0x2e: // MS MOUSE v8.10+ - set acceleration profile names
 	case 0x33: // MS MOUSE v7.05+ - get/switch accelleration profile
+		// Input: CX = buffer length, ES:DX = buffer address
+		// Output: CX = bytes in buffer; buffer content:
+		//     offset 0x00 - mouse type and port
+		//     offset 0x01 - language
+		//     offset 0x02 - horizontal sensitivity
+		//     offset 0x03 - vertical sensitivity
+		//     offset 0x04 - double speed threshold
+		//     offset 0x05 - ballistic curve
+		//     offset 0x06 - interrupt rate
+		//     offset 0x07 - cursor mask
+		//     offset 0x08 - laptop adjustment
+		//     offset 0x09 - memory type
+		//     offset 0x0a - super VGA flag
+		//     offset 0x0b - rotation angle (2 bytes)
+		//     offset 0x0d - primary button
+		//     offset 0x0e - secondary button
+		//     offset 0x0f - click lock enabled
+		//     offset 0x10 - acceleration curves tables (324 bytes)
 		LOG(LOG_MOUSE, LOG_ERROR)("Custom acceleration profiles not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
@@ -1633,7 +1666,9 @@ static Bitu int33_handler()
 		reg_bx = 0; // unused
 		reg_cx = 0; // unused
 		reg_dx = 0; // unused
-		// AL bit 0 - false, function 0x34 not supported
+		// AL bit 0 - false; although function 0x34 is implemented, the
+		//            actual MOUSE.INI file does not exists; so we
+		//            should discourage calling it by the guest software
 		// AL bit 1 - false, function 0x33 not supported
 		bit::set(reg_al, b2); // function 0x32 supported (this one!)
 		bit::set(reg_al, b3); // function 0x31 supported
@@ -1651,17 +1686,19 @@ static Bitu int33_handler()
 		bit::set(reg_ah, b7); // function 0x25 supported
 		break;
 	case 0x34: // MS MOUSE v8.0+ - get initialization file
-		LOG(LOG_MOUSE, LOG_ERROR)("Get initialization file not implemented");
-		// TODO: once implemented, update function 0x32
+		SegSet16(es, info_segment);
+		reg_dx = info_offset_ini_file;
 		break;
 	case 0x35: // MS MOUSE v8.10+ - LCD screen large pointer support
 		LOG(LOG_MOUSE, LOG_ERROR)("LCD screen large pointer support not implemented");
 		break;
 	case 0x4d: // MS MOUSE - return pointer to copyright string
-		LOG(LOG_MOUSE, LOG_ERROR)("Return pointer to copyright string not implemented");
+		SegSet16(es, info_segment);
+		reg_di = info_offset_copyright;
 		break;
 	case 0x6d: // MS MOUSE - get version string
-		LOG(LOG_MOUSE, LOG_ERROR)("Get version string not implemented");
+		SegSet16(es, info_segment);
+		reg_di = info_offset_version;
 		break;
 	case 0x70: // Mouse Systems - installation check
 	case 0x72: // Mouse Systems 7.01+, Genius Mouse 9.06+ - unknown
@@ -1740,6 +1777,67 @@ static Bitu user_callback_handler()
 {
 	mouse_shared.dos_cb_running = false;
 	return CBRET_NONE;
+}
+
+static void prepare_driver_info()
+{
+	// Prepare information to be returned by DOS mouse driver functions
+	// 0x34, 0x4d, and 0x6f
+
+	if (info_segment) {
+		assert(false);
+		return;
+	}
+
+	const std::string str_copyright = DOSBOX_COPYRIGHT;
+
+	auto read_low_nibble_str = [&](const uint8_t byte) {
+		return std::to_string(static_cast<int>(read_low_nibble(byte)));
+	};
+	auto read_high_nibble_str = [&](const uint8_t byte) {
+		return std::to_string(static_cast<int>(read_high_nibble(byte)));
+	};
+
+	static_assert(read_low_nibble(driver_version_minor) <= 9);
+	static_assert(read_low_nibble(driver_version_major) <= 9);
+	static_assert(read_high_nibble(driver_version_minor) <= 9);
+	static_assert(read_high_nibble(driver_version_major) <= 9);
+
+	std::string str_version = "version ";
+	if (read_high_nibble(driver_version_major) > 0) {
+		str_version = str_version + read_high_nibble_str(driver_version_major);
+	}
+
+	str_version = str_version +
+	              read_low_nibble_str(driver_version_major) + std::string(".") +
+	              read_high_nibble_str(driver_version_minor) +
+	              read_low_nibble_str(driver_version_minor);
+
+	const size_t length_bytes = (str_version.length() + 1) +
+	                            (str_copyright.length() + 1);
+	assert(length_bytes <= UINT8_MAX);
+
+	constexpr uint8_t bytes_per_block = 0x10;
+	auto length_blocks = static_cast<uint16_t>(length_bytes / bytes_per_block);
+	if (length_bytes % bytes_per_block) {
+		length_blocks = static_cast<uint16_t>(length_blocks + 1);
+	}
+
+	info_segment = DOS_GetMemory(length_blocks);
+
+	// TODO: if 'MOUSE.INI' file gets implemented, INT 33 function 0x32
+	// should be updated to indicate function 0x34 is supported
+	std::string str_combined = str_version + '\0' + str_copyright + '\0';
+	const size_t size = static_cast<size_t>(length_blocks) * bytes_per_block;
+	str_combined.resize(size, '\0');
+
+	info_offset_ini_file  = check_cast<uint16_t>(str_version.length());
+	info_offset_version   = 0;
+	info_offset_copyright = check_cast<uint16_t>(str_version.length() + 1);
+
+	MEM_BlockWrite(PhysicalMake(info_segment, 0),
+	               str_combined.c_str(),
+	               str_combined.size());
 }
 
 uint8_t MOUSEDOS_DoInterrupt()
@@ -1847,6 +1945,8 @@ void MOUSEDOS_SetDelay(const uint8_t new_delay_ms)
 
 void MOUSEDOS_Init()
 {
+	prepare_driver_info();
+
 	// Callback for mouse interrupt 0x33
 	const auto call_int33 = CALLBACK_Allocate();
 	const auto tmp_pt = static_cast<uint16_t>(DOS_GetMemory(0x1) - 1);
