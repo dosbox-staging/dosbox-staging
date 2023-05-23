@@ -439,4 +439,123 @@ TEST(RWQueue,ContainerMoveAsync)
 	EXPECT_EQ(q.Size(), 0);
 }
 
+TEST(RWQueue, StopImmediately)
+{
+	RWQueue<int> q(65);
+
+	q.Stop();
+	EXPECT_FALSE(q.IsRunning());
+
+	EXPECT_FALSE(q.Enqueue(1));      // shouldn't block
+	EXPECT_TRUE(q.IsEmpty());
+	const auto value = q.Dequeue();  // shouldn't block
+	EXPECT_EQ(value, 0);            // once stopped, dequeues defaults}
+}
+
+TEST(RWQueue, StopMidway)
+{
+	RWQueue<int> q(2);
+
+	q.Enqueue(1);
+	EXPECT_EQ(q.Size(), 1);
+	EXPECT_FALSE(q.IsEmpty());
+	EXPECT_TRUE(q.IsRunning());
+
+	q.Stop();
+
+	// Enqueuing fails after being stopped
+	EXPECT_FALSE(q.IsRunning());
+	const auto enqueue_result = q.Enqueue(2);
+	EXPECT_FALSE(enqueue_result);
+
+	// We still have one item in the queue, so we're not stopped yet
+	auto value = q.Dequeue();
+	EXPECT_EQ(value, 1);
+
+	// once stopped and out of items, dequeuing has stopped
+	value = q.Dequeue();
+	EXPECT_EQ(value, 0);
+}
+
+TEST(RWQueue, StopBulkImmediately)
+{
+	RWQueue<int> q(3);
+
+	q.Stop();
+
+	EXPECT_FALSE(q.IsRunning());
+
+	std::vector<int> items = {1, 2, 3};
+	const auto num_items = items.size();
+
+	// Bulk enqueuing fails after being stopped
+	const auto bulk_enqueue_result = q.BulkEnqueue(items, num_items);
+	EXPECT_FALSE(bulk_enqueue_result);
+	EXPECT_TRUE(q.IsEmpty());
+
+	// Bulk dequeing fails after being stopped and without any items to deqeue
+	const auto bulk_dequeue_result = q.BulkDequeue(items, num_items);
+	EXPECT_FALSE(bulk_dequeue_result);
+	EXPECT_TRUE(items.empty());
+}
+
+TEST(RWQueue, StopBulkMidway)
+{
+	RWQueue<int> q(8);
+
+	// Bulk enque a couple before stopping
+	std::vector<int> items = {1, 2, 3, 4, 5};
+
+	auto bulk_enqueue_result = q.BulkEnqueue(items, items.size());
+	EXPECT_TRUE(bulk_enqueue_result);
+	EXPECT_TRUE(q.IsRunning());
+	EXPECT_EQ(q.Size(), 5);
+
+	q.Stop();
+
+	// Bulking enqueuing fails after being stopped
+	items = {6, 7};
+	bulk_enqueue_result = q.BulkEnqueue(items, items.size());
+	EXPECT_FALSE(bulk_enqueue_result);
+	EXPECT_FALSE(q.IsRunning());
+	EXPECT_EQ(q.Size(), 5);
+
+	// But we still have a handful of items queued
+
+	// Bulk dequeue the first couple
+	auto num_items = 2u;
+	auto bulk_dequeue_result = q.BulkDequeue(items, num_items);
+	EXPECT_TRUE(bulk_dequeue_result);
+	EXPECT_EQ(q.Size(), 3);
+	std::vector<int> expected_items = {1, 2};
+	EXPECT_EQ(items, expected_items);
+
+	// Dequeue the middle value
+	auto value = q.Dequeue();
+	EXPECT_EQ(q.Size(), 2);
+	EXPECT_EQ(value, 3);
+
+	// Bulk dequeue the last couple, but over-request
+	num_items = 3u;
+	bulk_dequeue_result = q.BulkDequeue(items, num_items);
+	EXPECT_TRUE(bulk_dequeue_result);
+	EXPECT_TRUE(q.IsEmpty());
+	EXPECT_EQ(q.Size(), 0);
+	expected_items = {4, 5};
+	EXPECT_EQ(items, expected_items);
+
+	// At this point, we should be out of items, but let's try bulk
+	// dequeuing anyway
+	num_items = 10u;
+	bulk_dequeue_result = q.BulkDequeue(items, num_items);
+	EXPECT_FALSE(bulk_dequeue_result);
+	EXPECT_TRUE(items.empty());
+
+	// At this point, we should be out of items, but let's try single
+	// dequeuing anyway
+	value = q.Dequeue();
+	EXPECT_EQ(value, {});
+	EXPECT_TRUE(items.empty());
+}
+
 } // namespace
