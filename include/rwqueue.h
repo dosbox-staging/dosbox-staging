@@ -25,20 +25,18 @@
 
 /*  RW (Read/Write) Queue
  *  ---------------------
- *  A fixed-size thread-safe queue that blocks both the
- *  producer until space is available and the consumer until
- *  items are available.
+ *  A fixed-size thread-safe queue that blocks both the producer until space is
+ *  available, and the consumer until items are available.
  *
- *  For some background, this class was authored to replace
- *  the one that resulted from this discussion:
- *  https://github.com/cameron314/readerwriterqueue/issues/112
- *  because the MoodyCamel implementation:
- *   - Is roughly 5-fold larger (and more latent)
- *   - Consumes more CPU by spinning (instead of locking)
- *   - Lacks bulk queue/dequeue methods (request was rejected
- *     https://github.com/cameron314/readerwriterqueue/issues/130)
+ *  For optimal performance inside the rwqueue, blocking is accomplished by
+ *  putting the thread into the waiting state, then waking it up via notify when
+ *  the required conditions are met.
+ *
+ *  Producer and consumer thread(s) are expected to simply call the enqueue and
+ *  dequeue methods directly without any thread state management.
  */
 
+#include <atomic>
 #include <condition_variable>
 #include <deque>
 #include <mutex>
@@ -52,6 +50,7 @@ private:
 	std::condition_variable has_room  = {};
 	std::condition_variable has_items = {};
 	size_t capacity                   = 0;
+	std::atomic<bool> is_running      = true;
 	using difference_t = typename std::vector<T>::difference_type;
 
 public:
@@ -63,8 +62,20 @@ public:
 	void Resize(size_t queue_capacity);
 
 	bool IsEmpty();
+
+	// non-blocking call
+	bool IsRunning() const;
+
+	// non-blocking call
 	size_t Size();
+
+	// non-blocking calls
+	void Stop();
+
+	// non-blocking call
 	size_t MaxCapacity() const;
+
+	// non-blocking call
 	float GetPercentFull();
 
 	// Discourage copying into the queue. Instead, use std::move into the
@@ -73,9 +84,19 @@ public:
 	//
 	// void Enqueue(const T& item);
 
-	// items will be empty (moved-out) after call
-	void Enqueue(T&& item);
+	// Items will be empty (moved-out) after call.
+	// The method potentially blocks until the queue has enough capacity to
+	// queue a single item.
 
+	// If queuing has stopped prior to enqueing, then this will immediately
+	//  return false and the item will not be queued.
+	bool Enqueue(T&& item);
+
+	// The method potentially blocks until there is at least a single item
+	// in the queue to dequeue.
+
+	// If queuing has stopped, this will continue to return item(s) until
+	// none remain in the queue, at which point it immediately returns T{}.
 	T Dequeue();
 
 	// Bulk operations move multiple items from/to the given vector, which
@@ -90,11 +111,28 @@ public:
 
 	// Items are std::move'd out of the source vector into the queue. This
 	// function clear()s the vector such that it's in a defined state on
-	// return (and can be reused).
-	void BulkEnqueue(std::vector<T>& from_source, const size_t num_requested);
+	// return (and can be reused). The method potentially blocks until there
+	// is enough capacity in the queue for the new items.
 
-	// The target vector will be resized to accomodate, if needed.
-	void BulkDequeue(std::vector<T>& into_target, const size_t num_requested);
+	// If queuing has stopped prior to bulk enqueing, then this will
+	// immediately return false and no items will be queued.
+
+	// If queuing stops in the middle of enqueing prior to completion, then
+	// this will immediately return false. The items queued /before/
+	// stopping will be available in the queue however the items that came
+	// after stopping will not be queued.
+	bool BulkEnqueue(std::vector<T>& from_source, const size_t num_requested);
+
+	// The target vector will be resized to accomodate, if needed. The
+	// method potentially blocks until the requested number of items have
+	// been dequeued.
+
+	// If queuing has stopped:
+	//  - Returns true when  one or more item(s) have been dequeued.
+	//  - Returns false when no items can be dequeued.
+	//
+	// The vector is always sized to match the number of items returned.
+	bool BulkDequeue(std::vector<T>& into_target, const size_t num_requested);
 };
 
 #endif

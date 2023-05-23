@@ -544,9 +544,8 @@ void MidiHandlerFluidsynth::Close()
 
 	// Stop rendering and drain the fifo
 	keep_rendering = false;
-	while (audio_frame_fifo.Size()) {
-		(void)audio_frame_fifo.Dequeue();
-	}
+	work_fifo.Stop();
+	audio_frame_fifo.Stop();
 
 	// Wait for the rendering thread to finish
 	if (renderer.joinable())
@@ -682,15 +681,17 @@ void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const uint16_t num_audio_fra
 void MidiHandlerFluidsynth::ProcessWorkFromFifo()
 {
 	const auto work = work_fifo.Dequeue();
+	if (!work_fifo.IsRunning()) {
+		return;
+	}
 
 	/* // Comment-in to log inter-cycle rendering
 	if ( work.num_pending_audio_frames > 0) {
-	        LOG_MSG("FSYNTH: %2u audio frames prior to %s message, followed
-	by "
+	        LOG_MSG("FSYNTH: %2u audio frames prior to %s message, followed by "
 	                "%2lu more messages. Have %4lu audio frames queued",
 	                work.num_pending_audio_frames,
 	                work.message_type == MessageType::Channel ? "channel" :
-	"sysex", work_fifo.Size(), audio_frame_fifo.Size());
+	                "sysex", work_fifo.Size(), audio_frame_fifo.Size());
 	}*/
 
 	if (work.num_pending_audio_frames > 0) {
@@ -708,7 +709,7 @@ void MidiHandlerFluidsynth::ProcessWorkFromFifo()
 // Keep the fifo populated with freshly rendered buffers
 void MidiHandlerFluidsynth::Render()
 {
-	while (keep_rendering.load()) {
+	while (work_fifo.IsRunning()) {
 		work_fifo.IsEmpty() ? RenderAudioFramesToFifo()
 		                    : ProcessWorkFromFifo();
 	}
