@@ -23,12 +23,20 @@
 
 #include <cassert>
 #include <cerrno>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <optional>
+#include <string>
 
+#include "std_filesystem.h"
+
+#include "capture_audio.h"
+#include "capture_midi.h"
+#include "capture_video.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "image_capturer.h"
 #include "mapper.h"
 #include "render.h"
 #include "sdlmain.h"
@@ -36,16 +44,10 @@
 #include "string_utils.h"
 #include "support.h"
 
-#include "capture_audio.h"
-#include "capture_midi.h"
-#include "capture_video.h"
-#include "image_capturer.h"
-
 #include <SDL.h>
 #if C_OPENGL
 #include <SDL_opengl.h>
 #endif
-
 
 extern const char* RunningProgram;
 
@@ -53,7 +55,7 @@ extern const char* RunningProgram;
 static ImageCapturer image_capturer = {};
 #endif
 
-static std::string capture_dir;
+static std_fs::path capture_path;
 
 static bool capturing_audio = false;
 static bool capturing_image = false;
@@ -86,82 +88,78 @@ bool CAPTURE_IsCapturingVideo()
 	return capturing_video;
 }
 
-std::string capture_generate_filename(const std::string& capture_type,
-                                      const std::string& ext)
+std::optional<std_fs::path> generate_capture_filename(const std::string& capture_type,
+                                                      const std::string& ext)
 {
-	if (capture_dir.empty()) {
-		LOG_WARNING("CAPTURE: Please specify a capture directory");
-		return 0;
-	}
+	std::error_code ec = {};
 
-	char file_start[16];
-	dir_information* dir;
-	/* Find a filename to open */
-	dir = open_directory(capture_dir.c_str());
-	if (!dir) {
-		// Try creating it first
-		if (create_dir(capture_dir, 0700, OK_IF_EXISTS) != 0) {
+	// Create capture directory if it does not exist
+	if (!std_fs::exists(capture_path, ec)) {
+		if (!std_fs::create_directory(capture_path, ec)) {
 			LOG_WARNING("CAPTURE: Can't create directory '%s' for capturing %s: %s",
-			            capture_dir.c_str(),
+			            capture_path.c_str(),
 			            capture_type.c_str(),
-			            safe_strerror(errno).c_str());
-			return 0;
+			            ec.message().c_str());
+			return {};
 		}
-		dir = open_directory(capture_dir.c_str());
-		if (!dir) {
-			LOG_WARNING("CAPTURE: Can't open directory '%s' for capturing %s",
-			            capture_dir.c_str(),
-			            capture_type.c_str());
-			return 0;
+		std_fs::permissions(capture_path, std_fs::perms::owner_all, ec);
+	}
+
+	// Find existing capture file with the highest index
+	std::string filename_start = RunningProgram;
+	lowcase(filename_start);
+	filename_start += "_";
+
+	int highest_index = 0;
+
+	for (const auto& entry : std_fs::directory_iterator(capture_path, ec)) {
+		if (ec) {
+			LOG_WARNING("CAPTURE: Cannot open directory '%s' for capturing %s: %s",
+			            capture_path.c_str(),
+			            capture_type.c_str(),
+			            ec.message().c_str());
+			return {};
+		}
+		if (!entry.is_regular_file(ec)) {
+			continue;
+		}
+		if (entry.path().extension() != ext) {
+			continue;
+		}
+		auto stem = entry.path().stem().string();
+		lowcase(stem);
+		if (starts_with(stem, filename_start)) {
+			const auto index_and_maybe_postfix = strip_prefix(stem, filename_start);
+			const auto index = to_int(index_and_maybe_postfix);
+			highest_index    = std::max(highest_index, *index);
 		}
 	}
-	safe_strcpy(file_start, RunningProgram);
-	lowcase(file_start);
-	strcat(file_start, "_");
-	bool is_directory;
-	char tempname[CROSS_LEN];
-	bool testRead = read_directory_first(dir, tempname, is_directory);
-	int last      = 0;
-	for (; testRead;
-	     testRead = read_directory_next(dir, tempname, is_directory)) {
-		char* test = strstr(tempname, ext.c_str());
-		if (!test || strlen(test) != strlen(ext.c_str()))
-			continue;
-		*test = 0;
-		if (strncasecmp(tempname, file_start, strlen(file_start)) != 0)
-			continue;
-		const int num = atoi(&tempname[strlen(file_start)]);
-		if (num >= last)
-			last = num + 1;
-	}
-	close_directory(dir);
 
-	char file_name[CROSS_LEN];
-	snprintf(file_name,
-	         CROSS_LEN,
-	         "%s%c%s%03d%s",
-	         capture_dir.c_str(),
-	         CROSS_FILESPLIT,
-	         file_start,
-	         last,
-	         ext.c_str());
-
-	return file_name;
+	const auto filename = format_string("%s%03d%s",
+	                                    filename_start.c_str(),
+	                                    highest_index + 1,
+	                                    ext.c_str());
+	return {capture_path / filename};
 }
 
 // TODO should be internal to the src/capture module
 FILE* CAPTURE_CreateFile(const std::string& capture_type, const std::string& ext)
 {
-	const auto file_name = capture_generate_filename(capture_type, ext);
+	const auto path = generate_capture_filename(capture_type, ext);
+	if (!path) {
+		return nullptr;
+	}
 
-	FILE* handle = fopen(file_name.c_str(), "wb");
+	const auto filename = path->string();
+
+	FILE* handle = fopen(filename.c_str(), "wb");
 	if (handle) {
 		LOG_MSG("CAPTURE: Capturing %s to '%s'",
 		        capture_type.c_str(),
-		        file_name.c_str());
+		        filename.c_str());
 	} else {
 		LOG_WARNING("CAPTURE: Failed to create file '%s' for capturing %s",
-		            file_name.c_str(),
+		            filename.c_str(),
 		            capture_type.c_str());
 	}
 	return handle;
@@ -343,7 +341,11 @@ void CAPTURE_Init(Section* sec)
 	Prop_path* proppath = conf->Get_path("captures");
 	assert(proppath);
 
-	capture_dir = proppath->realpath;
+	capture_path = std_fs::path(proppath->realpath);
+	if (capture_path.empty()) {
+		LOG_MSG("CAPTURE: Capture path not specified; defaulting to 'capture'");
+		capture_path = "capture";
+	}
 
 	capturing_audio = false;
 	capturing_image = false;
