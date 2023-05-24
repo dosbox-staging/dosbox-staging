@@ -5,6 +5,8 @@
  * Please see the file LICENSE.txt in the source's root directory.
  *
  *  This file written by Ryan C. Gordon.
+ *  Altered to:
+ *   - prefer modern evdev API over xinput on Linux, by Roman Standzikowski.
  */
 
 #include <stdlib.h>
@@ -31,8 +33,8 @@ extern const ManyMouseDriver *ManyMouseDriver_xinput2;
  */
 static const ManyMouseDriver **mice_drivers[] =
 {
-    &ManyMouseDriver_xinput2,
     &ManyMouseDriver_evdev,
+    &ManyMouseDriver_xinput2,
     &ManyMouseDriver_windows,
     &ManyMouseDriver_hidmanager,
     &ManyMouseDriver_hidutilities,
