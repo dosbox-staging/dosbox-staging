@@ -394,4 +394,36 @@ std::optional<float> parse_prefixed_percentage(const char prefix, const std::str
 // returns value only if succeeded
 std::optional<int> to_int(const std::string& value);
 
+template <typename... Args>
+std::string format_string(const std::string format, Args&&... args) noexcept
+{
+	// Perform a non-writing format to determine the size
+	const auto required_size = std::snprintf(nullptr,
+	                                         0,
+	                                         format.c_str(),
+	                                         std::forward<Args>(args)...);
+	if (required_size <= 0) {
+		return {};
+	}
+
+	// snprintf's length parameter specifies the maximum number of
+	// characters to be written without the trailing null. However, it still
+	// writes the trailing null into the buffer, so we need to include that
+	// in our allocation.
+	std::string result(static_cast<size_t>(required_size + 1), '\0');
+
+	std::snprintf(result.data(),
+	              result.size(),
+	              format.c_str(),
+	              std::forward<Args>(args)...);
+
+	// The buffer should now have the determined output length plus the
+	// terminating zero
+	assert(required_size + 1 == result.size());
+
+	// Chop off the terminating zero of the C string in the buffer
+	result.pop_back();
+	return result;
+}
+
 #endif

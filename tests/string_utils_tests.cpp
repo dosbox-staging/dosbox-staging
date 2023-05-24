@@ -437,4 +437,13 @@ TEST(ParsePrefixedBoth, Invalid)
 	EXPECT_EQ(parse_prefixed_percentage(' ', ""), empty);
 }
 
+TEST(FormatString, Valid)
+{
+	EXPECT_EQ(format_string(""), "");
+ 	EXPECT_EQ(format_string("abcd"), "abcd");
+	EXPECT_EQ(format_string("%d", 42), "42");
+	EXPECT_EQ(format_string("%d\0", 42), "42\0");
+	EXPECT_EQ(format_string("%s%d%s", "abcd", 42, "xyz"), "abcd42xyz");
+}
+
 } // namespace
