@@ -139,7 +139,7 @@ void VGA_SetModeNow(VGAModes mode) {
 	if (vga.mode == mode) return;
 	vga.mode=mode;
 	VGA_SetupHandlers();
-	VGA_StartResize(0);
+	VGA_StartResizeAfter(0);
 }
 
 
@@ -183,14 +183,39 @@ void VGA_DetermineMode(void) {
 	}
 }
 
-void VGA_StartResize(Bitu delay /*=50*/) {
-	if (!vga.draw.resizing) {
-		vga.draw.resizing=true;
-		if (vga.mode==M_ERROR) delay = 5;
-		/* Start a resize after delay (default 50 ms) */
-		if (delay==0) VGA_SetupDrawing(0);
-		else
-			PIC_AddEvent(VGA_SetupDrawing, (double)delay);
+void VGA_StartResize()
+{
+	// Once requested, start the VGA resize within half the current VGA mode's
+	// frame time, typically between 4ms and 8ms. The goal is to mimick the time
+	// taken for video card to process and establish its new state based on the
+	// CRTC registers.
+	//
+	// If this duration is too long, games like Earthworm Jim and Prehistorik 2
+	// might have subtle visible glitches. If this gets too short, emulation
+	// might lockup because the VGA state needs to change across some finite
+	// duration.
+	//
+	constexpr auto max_frame_period_ms = 1000.0 /*ms*/ / 50 /*Hz*/;
+	constexpr auto min_frame_period_ms = 1000.0 /*ms*/ / 120 /*Hz*/;
+
+	const auto half_frame_period_ms = clamp(vga.draw.delay.vtotal,
+	                                        min_frame_period_ms,
+	                                        max_frame_period_ms) / 2;
+
+	VGA_StartResizeAfter(static_cast<int16_t>(half_frame_period_ms));
+}
+
+void VGA_StartResizeAfter(const uint16_t delay_ms)
+{
+	if (vga.draw.resizing) {
+		return;
+	}
+
+	vga.draw.resizing = true;
+	if (delay_ms == 0) {
+		VGA_SetupDrawing(0);
+	} else {
+		PIC_AddEvent(VGA_SetupDrawing, delay_ms);
 	}
 }
 
