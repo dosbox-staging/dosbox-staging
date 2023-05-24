@@ -289,7 +289,7 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
                             const uint8_t bits_per_pixel,
                             const float frames_per_second, ZMBV_FORMAT format)
 {
-	video.handle = CAPTURE_CreateFile("video output", ".avi");
+	video.handle = CAPTURE_CreateFile(CaptureType::Video);
 	if (!video.handle) {
 		return;
 	}

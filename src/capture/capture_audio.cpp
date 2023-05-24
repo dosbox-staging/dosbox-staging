@@ -62,7 +62,7 @@ static uint8_t wav_header[] = {
 
 static void create_wave_file(const uint32_t sample_rate)
 {
-	wave.handle = CAPTURE_CreateFile("audio output", ".wav");
+	wave.handle = CAPTURE_CreateFile(CaptureType::Audio);
 	if (!wave.handle) {
 		return;
 	}

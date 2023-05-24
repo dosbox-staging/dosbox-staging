@@ -88,9 +88,47 @@ bool CAPTURE_IsCapturingVideo()
 	return capturing_video;
 }
 
-std::optional<std_fs::path> generate_capture_filename(const std::string& capture_type,
-                                                      const std::string& ext)
+static std::string capture_type_to_string(const CaptureType type)
 {
+	switch (type) {
+	case CaptureType::Audio: return "audio output";
+	case CaptureType::Midi: return "MIDI output";
+	case CaptureType::RawOplStream: return "rawl OPL output";
+	case CaptureType::RadOplInstruments: return "RAD capture";
+
+	case CaptureType::Video: return "video output";
+
+	case CaptureType::RawImage: return "raw image";
+	case CaptureType::UpscaledImage: return "upscaled image";
+	case CaptureType::RenderedImage: return "rendered image";
+
+	case CaptureType::SerialLog: return "serial log";
+	}
+}
+
+static std::string capture_type_to_extension(const CaptureType type)
+{
+	switch (type) {
+	case CaptureType::Audio: return ".wav";
+	case CaptureType::Midi: return ".mid";
+	case CaptureType::RawOplStream: return ".dro";
+	case CaptureType::RadOplInstruments: return ".rad";
+
+	case CaptureType::Video: return ".avi";
+
+	case CaptureType::RawImage:
+	case CaptureType::UpscaledImage:
+	case CaptureType::RenderedImage: return ".png";
+
+	case CaptureType::SerialLog: return ".serlog";
+	}
+}
+
+std::optional<std_fs::path> generate_capture_filename(const CaptureType type)
+{
+	const auto capture_type = capture_type_to_string(type);
+	const auto ext = capture_type_to_extension(type);
+
 	std::error_code ec = {};
 
 	// Create capture directory if it does not exist
@@ -143,9 +181,9 @@ std::optional<std_fs::path> generate_capture_filename(const std::string& capture
 }
 
 // TODO should be internal to the src/capture module
-FILE* CAPTURE_CreateFile(const std::string& capture_type, const std::string& ext)
+FILE* CAPTURE_CreateFile(const CaptureType type)
 {
-	const auto path = generate_capture_filename(capture_type, ext);
+	const auto path = generate_capture_filename(type);
 	if (!path) {
 		return nullptr;
 	}
@@ -155,12 +193,12 @@ FILE* CAPTURE_CreateFile(const std::string& capture_type, const std::string& ext
 	FILE* handle = fopen(filename.c_str(), "wb");
 	if (handle) {
 		LOG_MSG("CAPTURE: Capturing %s to '%s'",
-		        capture_type.c_str(),
+		        capture_type_to_string(type).c_str(),
 		        filename.c_str());
 	} else {
 		LOG_WARNING("CAPTURE: Failed to create file '%s' for capturing %s",
 		            filename.c_str(),
-		            capture_type.c_str());
+					capture_type_to_string(type).c_str());
 	}
 	return handle;
 }
