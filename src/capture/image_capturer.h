@@ -35,6 +35,11 @@
 
 enum class CapturedImageType { Raw, Upscaled, Rendered };
 
+struct CaptureImageTask {
+	CapturedImageType image_type;
+	RenderedImage image;
+};
+
 class ImageCapturer {
 public:
 	ImageCapturer() = default;
@@ -49,14 +54,14 @@ private:
 	static constexpr auto MaxQueuedImages = 5;
 
 	void SaveQueuedImages();
-	void SavePng(const RenderedImage& image);
+	void SaveImage(const CaptureImageTask& task);
 	void SetPngCompressionsParams();
 	void WritePngInfo(const uint16_t width, const uint16_t height,
 	                  const bool is_paletted, const uint8_t* palette_data);
 
 	ImageScaler image_scaler = {};
 
-	RWQueue<RenderedImage> image_fifo{MaxQueuedImages};
+	RWQueue<CaptureImageTask> image_fifo{MaxQueuedImages};
 	std::thread renderer = {};
 
 	bool is_open = false;

@@ -1146,7 +1146,7 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 
 
 	if(dbg_serialtraffic|dbg_modemcontrol|dbg_register|dbg_interrupt|dbg_aux)
-		debugfp=CAPTURE_CreateFile("serial log",".serlog.txt");
+		debugfp=CAPTURE_CreateFile(CaptureType::SerialLog);
 	else debugfp=0;
 
 	if(debugfp == 0) {

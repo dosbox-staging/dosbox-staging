@@ -26,7 +26,20 @@
 
 #include <string>
 
-FILE* CAPTURE_CreateFile(const std::string& type, const std::string& ext);
+enum class CaptureType
+{
+	Audio,
+	Midi,
+	RawOplStream,
+	RadOplInstruments,
+	Video,
+	RawImage,
+	UpscaledImage,
+	RenderedImage,
+	SerialLog
+};
+
+FILE* CAPTURE_CreateFile(const CaptureType type);
 
 // Used to add the last rendered frame to be captured either as a screenshot
 // or as a video recording (or both).

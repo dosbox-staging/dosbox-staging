@@ -196,7 +196,7 @@ public:
 		if (!(note_on || percussion_on))
 			return true;
 
-		handle = CAPTURE_CreateFile("raw OPL output", ".dro");
+		handle = CAPTURE_CreateFile(CaptureType::RawOplStream);
 		if (!handle)
 			return false;
 
@@ -796,7 +796,7 @@ static void SaveRad()
 	char b[16 * 1024];
 	int w = 0;
 
-	FILE *handle = CAPTURE_CreateFile("RAD Capture", ".rad");
+	FILE *handle = CAPTURE_CreateFile(CaptureType::RadOplInstruments);
 	if (!handle)
 		return;
 

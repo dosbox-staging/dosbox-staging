@@ -108,29 +108,43 @@ void ImageCapturer::CaptureImage(const RenderedImage& image,
 		            PaletteNumBytes);
 	}
 
-	image_fifo.Enqueue(std::move(copied_image));
+	CaptureImageTask task = {type, copied_image};
+	image_fifo.Enqueue(std::move(task));
 }
 
 void ImageCapturer::SaveQueuedImages()
 {
-	while (auto image_opt = image_fifo.Dequeue()) {
-		auto image = *image_opt;
-		SavePng(image);
+	while (auto task_opt = image_fifo.Dequeue()) {
+		auto task = *task_opt;
+		SaveImage(task);
 
-		if (image.image_data) {
-			std::free(const_cast<uint8_t*>(image.image_data));
+		if (task.image.image_data) {
+			std::free(const_cast<uint8_t*>(task.image.image_data));
 		}
-		if (image.palette_data) {
-			std::free(const_cast<uint8_t*>(image.palette_data));
+		if (task.image.palette_data) {
+			std::free(const_cast<uint8_t*>(task.image.palette_data));
 		}
 	}
 }
 
-void ImageCapturer::SavePng(const RenderedImage& image)
+void ImageCapturer::SaveImage(const CaptureImageTask& task)
 {
-	image_scaler.Init(image);
+	image_scaler.Init(task.image);
 
-	FILE* fp = CAPTURE_CreateFile("raw image", ".png");
+	CaptureType capture_type = {};
+	switch (task.image_type) {
+	case CapturedImageType::Raw:
+		capture_type = CaptureType::RawImage;
+		break;
+	case CapturedImageType::Upscaled:
+		capture_type = CaptureType::UpscaledImage;
+		break;
+	case CapturedImageType::Rendered:
+		capture_type = CaptureType::RenderedImage;
+		break;
+	}
+
+	FILE* fp = CAPTURE_CreateFile(capture_type);
 	if (!fp) {
 		return;
 	}
@@ -168,7 +182,7 @@ void ImageCapturer::SavePng(const RenderedImage& image)
 	WritePngInfo(image_scaler.GetOutputWidth(),
 	             image_scaler.GetOutputHeight(),
 	             out_is_paletted,
-	             image.palette_data);
+	             task.image.palette_data);
 
 	// Write image data
 	auto rows_to_write = image_scaler.GetOutputHeight();

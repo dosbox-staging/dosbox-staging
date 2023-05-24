@@ -79,7 +79,7 @@ static void raw_midi_add_number(const uint32_t val)
 
 static void create_midi_file()
 {
-	midi.handle = CAPTURE_CreateFile("MIDI output", ".mid");
+	midi.handle = CAPTURE_CreateFile(CaptureType::Midi);
 	if (!midi.handle) {
 		return;
 	}

@@ -20,6 +20,8 @@
 
 #include "rwqueue.h"
 
+#include "../capture/image_capturer.h"
+
 #include <cassert>
 
 template <typename T>
@@ -248,4 +250,4 @@ template class RWQueue<AudioFrame>;
 template class RWQueue<MidiWork>;
 
 #include "render.h"
-template class RWQueue<RenderedImage>;
+template class RWQueue<CaptureImageTask>;
