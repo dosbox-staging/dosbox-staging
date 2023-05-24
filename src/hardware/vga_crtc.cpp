@@ -252,7 +252,7 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 				PIC_RemoveEvents(VGA_SetupDrawing);
 				vga.draw.resizing=false;
 				crtc(vertical_display_end)=val;
-				VGA_StartResize(150);
+				VGA_StartResizeAfter(150);
 			} else {
 				crtc(vertical_display_end)=val;
 				VGA_StartResize();
