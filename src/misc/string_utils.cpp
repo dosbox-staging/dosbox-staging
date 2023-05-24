@@ -286,6 +286,22 @@ bool ends_with(const std::string_view str, const std::string_view suffix) noexce
 	return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
 }
 
+std::string strip_prefix(const std::string& str, const std::string& prefix) noexcept
+{
+	if (starts_with(str, prefix)) {
+		return str.substr(prefix.size());
+	}
+	return str;
+}
+
+std::string strip_suffix(const std::string& str, const std::string& suffix) noexcept
+{
+	if (ends_with(str, suffix)) {
+		return str.substr(0, str.size() - suffix.size());
+	}
+	return str;
+}
+
 void clear_language_if_default(std::string &l)
 {
 	lowcase(l);

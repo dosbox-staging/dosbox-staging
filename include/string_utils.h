@@ -95,6 +95,9 @@ bool starts_with(const std::string_view str, const std::string_view prefix) noex
 
 bool ends_with(const std::string_view str, const std::string_view suffix) noexcept;
 
+std::string strip_prefix(const std::string& str, const std::string& prefix) noexcept;
+std::string strip_suffix(const std::string& str, const std::string& suffix) noexcept;
+
 bool find_in_case_insensitive(const std::string &needle, const std::string &haystack);
 
 // Safely terminate a C string at the given offset
