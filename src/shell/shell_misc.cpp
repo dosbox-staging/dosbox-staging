@@ -551,24 +551,25 @@ static void run_binary_executable(const std::string_view fullname,
 	 * this was the only way I could get things like /:aa and :/aa to work
 	 * correctly */
 	std::array<std::string, 2> fcb_args;
-	decltype(fcb_args.size()) fcb_index = 0;
 
 	constexpr auto separators = "=;,\t /";
-	auto arg_index            = args.find_first_not_of(separators);
-	while (arg_index != std::string::npos && fcb_index < fcb_args.size()) {
-		args = args.substr(arg_index);
+	for (auto& fcb : fcb_args) {
+		const auto arg_index = std::min(args.find_first_not_of(separators),
+		                                args.find_first_of('/'));
+		if (arg_index == std::string::npos) {
+			break;
+		}
 
+		args = args.substr(arg_index);
 		if (args.size() > 1 && args[0] == '/') {
-			fcb_args[fcb_index] = args[1];
-			++fcb_index;
+			fcb  = args[1];
 			args = args.substr(2);
 		}
 
 		else {
-			auto next_separator = args.find_first_of(separators);
-			fcb_args[fcb_index] = args.substr(0, next_separator);
-			++fcb_index;
-			args = args.substr(next_separator + 1);
+			const auto next_separator = args.find_first_of(separators);
+			fcb  = args.substr(0, next_separator);
+			args = args.substr(fcb.size());
 		}
 	}
 
