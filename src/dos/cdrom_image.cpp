@@ -58,6 +58,9 @@ using track_iter       = vector<CDROM_Interface_Image::Track>::iterator;
 using track_const_iter = vector<CDROM_Interface_Image::Track>::const_iterator;
 using tracks_size_t    = vector<CDROM_Interface_Image::Track>::size_type;
 
+// Ensure the maximum allowed redbook bytes stays within the API type sizes
+static_assert(MAX_REDBOOK_BYTES <= UINT32_MAX);
+
 // Report bad seeks that would go beyond the end of the track
 bool CDROM_Interface_Image::TrackFile::offsetInsideTrack(const uint32_t offset)
 {

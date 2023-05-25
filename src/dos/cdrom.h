@@ -52,8 +52,8 @@
 #define REDBOOK_FRAME_PADDING           150u // The relationship between High Sierra sectors and Redbook
                                              // frames is described by the equation:
                                              // Sector = Minute * 60 * 75 + Second * 75 + Frame - 150
-#define MAX_REDBOOK_FRAMES           400000u // frames are Redbook's data unit
-#define MAX_REDBOOK_SECTOR           399999u // a sector is the index to a frame
+#define MAX_REDBOOK_FRAMES          1826091u // frames are Redbook's data unit
+#define MAX_REDBOOK_SECTOR          1826090u // a sector is the index to a frame
 #define MAX_REDBOOK_TRACKS               99u // a CD can contain 99 playable tracks plus the remaining leadout
 #define MIN_REDBOOK_TRACKS                2u // One track plus the lead-out track
 #define REDBOOK_PCM_BYTES_PER_MS      176.4f // 44.1 frames/ms * 4 bytes/frame
