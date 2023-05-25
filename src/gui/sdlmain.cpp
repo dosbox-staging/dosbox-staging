@@ -1170,6 +1170,7 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	if (in_text_mode) {
 		mode = FRAME_MODE::VFR;
 		save_rate_to_frame_period(dos_rate);
+		set_vfr_dupe_countdown_from_rate(dos_rate);
 	}
 
 	// Manual full CFR
