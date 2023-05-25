@@ -119,7 +119,7 @@ std::string DOS_Shell::ReadCommand()
 		assert(history_index < history_clone.size());
 		assert(completion.empty() || completion_index < completion.size());
 		assert(command.empty() || cursor_position <= command.size());
-		assert(command.empty() || completion_start <= command.size());
+		assert(completion.empty() || completion_start <= command.size());
 
 		bool viewing_tab_completions = false;
 
