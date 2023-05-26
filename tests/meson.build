@@ -71,6 +71,7 @@ unit_tests = [
     {'name': 'bitops', 'deps': []},
     {'name': 'dos_files', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'drives', 'deps': [dosbox_dep], 'extra_cpp': []},
+    {'name': 'fraction', 'deps': []},
     {'name': 'int10_modes', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'iohandler_containers', 'deps': [libmisc_stubs_dep]},
     {'name': 'math_utils', 'deps': [libmisc_stubs_dep]},
