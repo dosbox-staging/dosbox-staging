@@ -142,9 +142,10 @@ void DOS_FreeProcessMemory(uint16_t pspseg) {
 			if (umb_mcb.GetPSPSeg() == pspseg) {
 				umb_mcb.SetPSPSeg(MCB_FREE);
 			}
-			if (mcb.GetType() == ending_mcb_type)
+			if (umb_mcb.GetType() == ending_mcb_type) {
 				break;
-			faults += triage_block(mcb, middle_mcb_type);
+			}
+			faults += triage_block(umb_mcb, middle_mcb_type);
 			umb_start += umb_mcb.GetSize() + 1;
 			umb_mcb.SetPt(umb_start);
 		}
