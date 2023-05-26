@@ -23,39 +23,32 @@
 #include <cmath>
 
 #include "byteorder.h"
+#include "checks.h"
 #include "math_utils.h"
 #include "rgb.h"
-#include "rgb555.h"
-#include "rgb565.h"
+#include "support.h"
 
-void ImageScaler::Init(const RenderedImage& image)
+CHECK_NARROWING();
+
+void ImageScaler::Init(const RenderedImage& image, const ScalingMode mode)
 {
-	assert(image.width > 0);
-	assert(image.height > 0);
-
-	assert(image.bits_per_pixel == 8 || image.bits_per_pixel == 15 ||
-	       image.bits_per_pixel == 16 || image.bits_per_pixel == 24 ||
-	       image.bits_per_pixel == 32);
-
-	assert(image.pitch >= image.width);
-	assert(image.pixel_aspect_ratio.ToDouble() >= 0.0);
-	assert(image.image_data);
-
 	input = image;
+	input_decoder.Init(image);
 
-	if (IsInputPaletted()) {
-		assert(input.palette_data);
+	switch (mode) {
+	case ScalingMode::DoublingOnly: UpdateOutputParamsDoublingOnly(); break;
+	case ScalingMode::AspectRatioPreservingUpscale:
+		UpdateOutputParamsUpscale();
+		break;
 	}
+	assert(output.width >= input.width);
+	assert(output.height >= input.height);
+	assertm(output.horiz_scale >= 1.0f, "ImageScaler can currently only upscale");
+	assertm(output.vert_scale >= 1, "ImageScaler can currently only upscale");
 
-	UpdateOutputParams();
+	// LogParams();
+
 	AllocateBuffers();
-
-	if (input.flip_vertical) {
-		input_curr_row_start = input.image_data +
-		                       (input.height - 1) * input.pitch;
-	} else {
-		input_curr_row_start = input.image_data;
-	}
 }
 
 static bool is_integer(float f)
@@ -63,7 +56,30 @@ static bool is_integer(float f)
 	return fabs(f - round(f)) < 0.0001;
 }
 
-void ImageScaler::UpdateOutputParams()
+void ImageScaler::UpdateOutputParamsDoublingOnly()
+{
+	output.horiz_scaling_mode = PerAxisScaling::Integer;
+	output.vert_scaling_mode  = PerAxisScaling::Integer;
+
+	output.horiz_scale = input.double_width ? 2.0f : 1.0f;
+	output.vert_scale  = input.double_height ? 2 : 1;
+
+	output.one_per_horiz_scale = 1.0f / output.horiz_scale;
+
+	output.width  = static_cast<uint16_t>(input.width * output.horiz_scale);
+	output.height = static_cast<uint16_t>(input.height * output.vert_scale);
+
+	if (input.is_paletted()) {
+		output.pixel_format = PixelFormat::Indexed8;
+	} else {
+		output.pixel_format = PixelFormat::Rgb888;
+	}
+
+	output.curr_row   = 0;
+	output.row_repeat = 0;
+}
+
+void ImageScaler::UpdateOutputParamsUpscale()
 {
 	constexpr auto target_output_height = 1200;
 
@@ -77,46 +93,40 @@ void ImageScaler::UpdateOutputParams()
 	        round(static_cast<float>(target_output_height) / input.height +
 	              fudge_offset));
 
-	output.vert_scale_mode = ScaleMode::Integer;
+	output.vert_scaling_mode = PerAxisScaling::Integer;
 
 	// Determine horizontal scaling factor & scaling mode
-	const auto horiz_scale_fract = input.pixel_aspect_ratio * output.vert_scale;
-	output.horiz_scale         = horiz_scale_fract.ToDouble();
-	output.one_per_horiz_scale = horiz_scale_fract.Inverse().ToDouble();
-
-	if (input.double_width) {
-		output.horiz_scale *= 2;
-	}
 	if (input.double_height) {
 		output.vert_scale *= 2;
 	}
 
-	assert(output.vert_scale >= 1.0);
-	assert(output.horiz_scale >= 1.0);
+	const auto horiz_scale_fract = input.pixel_aspect_ratio * output.vert_scale *
+	                               (input.double_width ? 2 : 1);
+
+	output.horiz_scale         = horiz_scale_fract.ToFloat();
+	output.one_per_horiz_scale = horiz_scale_fract.Inverse().ToFloat();
 
 	if (is_integer(output.horiz_scale)) {
 		output.horiz_scale = static_cast<float>(
 		        static_cast<uint16_t>(output.horiz_scale));
 
-		output.horiz_scale_mode = ScaleMode::Integer;
+		output.horiz_scaling_mode = PerAxisScaling::Integer;
 	} else {
-		output.horiz_scale_mode = ScaleMode::Fractional;
+		output.horiz_scaling_mode = PerAxisScaling::Fractional;
 	}
 
 	// Determine scaled output dimensions, taking the double
 	// width/height input flags into account
-	output.width  = input.width * output.horiz_scale;
-	output.height = input.height * output.vert_scale;
-
-	assert(output.width >= input.width);
-	assert(output.height >= input.height);
+	output.width  = static_cast<uint16_t>(input.width * output.horiz_scale);
+	output.height = static_cast<uint16_t>(input.height * output.vert_scale);
 
 	// Determine pixel format
-	const auto only_integer_scaling = output.horiz_scale_mode ==
-	                                          ScaleMode::Integer &&
-	                                  output.vert_scale_mode == ScaleMode::Integer;
+	const auto only_integer_scaling = (output.horiz_scaling_mode ==
+	                                           PerAxisScaling::Integer &&
+	                                   output.vert_scaling_mode ==
+	                                           PerAxisScaling::Integer);
 
-	if (only_integer_scaling && IsInputPaletted()) {
+	if (only_integer_scaling && input.is_paletted()) {
 		output.pixel_format = PixelFormat::Indexed8;
 	} else {
 		output.pixel_format = PixelFormat::Rgb888;
@@ -124,11 +134,9 @@ void ImageScaler::UpdateOutputParams()
 
 	output.curr_row   = 0;
 	output.row_repeat = 0;
-
-	// LogImageScalerParams();
 }
 
-void ImageScaler::LogImageScalerParams()
+void ImageScaler::LogParams()
 {
 	auto pixel_format_to_string = [](const PixelFormat pf) -> std::string {
 		switch (pf) {
@@ -137,29 +145,29 @@ void ImageScaler::LogImageScalerParams()
 		}
 	};
 
-	auto scale_mode_to_string = [](const ScaleMode sm) -> std::string {
+	auto scale_mode_to_string = [](const PerAxisScaling sm) -> std::string {
 		switch (sm) {
-		case ScaleMode::Integer: return "Integer";
-		case ScaleMode::Fractional: return "Fractional";
+		case PerAxisScaling::Integer: return "Integer";
+		case PerAxisScaling::Fractional: return "Fractional";
 		}
 	};
 
 	LOG_MSG("ImageScaler params:\n"
-	        "    input.width:                %8d\n"
-	        "    input.height:               %8d\n"
-	        "    input.double_width:         %8s\n"
-	        "    input.double_height:        %8s\n"
-	        "    input.pixel_aspect_ratio: 1:%8f (%lld:%lld)\n"
-	        "    input.bits_per_pixel:       %8d\n"
-	        "    input.pitch:                %8d\n"
-	        "    ------------------------------------\n"
-	        "    output.width:               %8d\n"
-	        "    output.height:              %8d\n"
-	        "    output.vert_scale:          %8d\n"
-	        "    output.horiz_scale:         %8f\n"
-	        "    output.horiz_scale_mode:  %10s\n"
-	        "    output.vert_scale_mode:   %10s\n"
-	        "    output.pixel_format:      %10s\n",
+	        "    input.width:                %10d\n"
+	        "    input.height:               %10d\n"
+	        "    input.double_width:         %10s\n"
+	        "    input.double_height:        %10s\n"
+	        "    input.pixel_aspect_ratio:   1:%1.6f (%lld:%lld)\n"
+	        "    input.bits_per_pixel:       %10d\n"
+	        "    input.pitch:                %10d\n"
+	        "    --------------------------------------\n"
+	        "    output.width:               %10d\n"
+	        "    output.height:              %10d\n"
+	        "    output.horiz_scale:         %10f\n"
+	        "    output.vert_scale:          %10d\n"
+	        "    output.horiz_scaling_mode:  %10s\n"
+	        "    output.vert_scaling_mode:   %10s\n"
+	        "    output.pixel_format:        %10s\n",
 	        input.width,
 	        input.height,
 	        input.double_width ? "yes" : "no",
@@ -171,10 +179,10 @@ void ImageScaler::LogImageScalerParams()
 	        input.pitch,
 	        output.width,
 	        output.height,
-	        output.vert_scale,
 	        output.horiz_scale,
-	        scale_mode_to_string(output.horiz_scale_mode).c_str(),
-	        scale_mode_to_string(output.vert_scale_mode).c_str(),
+	        output.vert_scale,
+	        scale_mode_to_string(output.horiz_scaling_mode).c_str(),
+	        scale_mode_to_string(output.vert_scaling_mode).c_str(),
 	        pixel_format_to_string(output.pixel_format).c_str());
 }
 
@@ -194,11 +202,6 @@ void ImageScaler::AllocateBuffers()
 	linear_row_buf.resize((input.width + 1) * ComponentsPerRgbPixel);
 }
 
-inline bool ImageScaler::IsInputPaletted() const
-{
-	return (input.bits_per_pixel == 8);
-}
-
 uint16_t ImageScaler::GetOutputWidth() const
 {
 	return output.width;
@@ -214,88 +217,26 @@ PixelFormat ImageScaler::GetOutputPixelFormat() const
 	return output.pixel_format;
 }
 
-inline Rgb888 ImageScaler::DecodeNextPalettedInputPixel()
-{
-	assert(IsInputPaletted());
-
-	const auto pal_index = *input_pos++;
-
-	const auto r = input.palette_data[pal_index * 4 + 0];
-	const auto g = input.palette_data[pal_index * 4 + 1];
-	const auto b = input.palette_data[pal_index * 4 + 2];
-
-	return {r, g, b};
-}
-
-inline Rgb888 ImageScaler::DecodeNextRgbInputPixel()
-{
-	Rgb888 pixel = {};
-
-	switch (input.bits_per_pixel) {
-	case 15: { // BGR555
-		const auto p = host_to_le(
-		        *reinterpret_cast<const uint16_t*>(input_pos));
-		pixel = Rgb555(p).ToRgb888();
-		input_pos += 2;
-	} break;
-
-	case 16: { // BGR565
-		const auto p = host_to_le(
-		        *reinterpret_cast<const uint16_t*>(input_pos));
-		pixel = Rgb565(p).ToRgb888();
-		input_pos += 2;
-	} break;
-
-	case 24:   // BGR888
-	case 32: { // XBGR8888
-		const auto b = *(input_pos++);
-		const auto g = *(input_pos++);
-		const auto r = *(input_pos++);
-
-		pixel = {r, g, b};
-	} break;
-	}
-
-	if (input.bits_per_pixel == 32) {
-		// skip padding byte
-		++input_pos;
-	}
-
-	return pixel;
-}
-
 void ImageScaler::DecodeNextRowToLinearRgb()
 {
-	input_pos = input_curr_row_start;
-	auto out  = linear_row_buf.begin();
+	auto out = linear_row_buf.begin();
 
 	for (auto x = 0; x < input.width; ++x) {
-		const auto pixel = IsInputPaletted()
-		                         ? DecodeNextPalettedInputPixel()
-		                         : DecodeNextRgbInputPixel();
+		const auto pixel = input_decoder.GetNextRgb888Pixel();
 
 		*out++ = srgb8_to_linear_lut(pixel.red);
 		*out++ = srgb8_to_linear_lut(pixel.green);
 		*out++ = srgb8_to_linear_lut(pixel.blue);
 	}
 
-	AdvanceInputRow();
-}
-
-void ImageScaler::AdvanceInputRow()
-{
-	if (input.flip_vertical) {
-		input_curr_row_start -= input.pitch;
-	} else {
-		input_curr_row_start += input.pitch;
-	}
+	input_decoder.AdvanceRow();
 }
 
 void ImageScaler::SetRowRepeat()
 {
 	// Optimisation: output row "vertical integer scale factor" number
 	// of times instead of repeatedly processing it.
-	if (output.vert_scale_mode == ScaleMode::Integer) {
+	if (output.vert_scaling_mode == PerAxisScaling::Integer) {
 		output.row_repeat = output.vert_scale - 1;
 	} else {
 		output.row_repeat = 1;
@@ -304,19 +245,18 @@ void ImageScaler::SetRowRepeat()
 
 void ImageScaler::GenerateNextIntegerUpscaledOutputRow()
 {
-	input_pos = input_curr_row_start;
-	auto out  = output.row_buf.begin();
+	auto out = output.row_buf.begin();
 
 	for (auto x = 0; x < input.width; ++x) {
-		auto pixels_to_write = output.horiz_scale;
+		auto pixels_to_write = static_cast<uint32_t>(output.horiz_scale);
 
-		if (IsInputPaletted()) {
-			const auto pixel = *input_pos++;
+		if (input.is_paletted()) {
+			const auto pixel = input_decoder.GetNextIndexed8Pixel();
 			while (pixels_to_write--) {
 				*out++ = pixel;
 			}
 		} else {
-			const auto pixel = DecodeNextRgbInputPixel();
+			const auto pixel = input_decoder.GetNextRgb888Pixel();
 			while (pixels_to_write--) {
 				*out++ = pixel.red;
 				*out++ = pixel.green;
@@ -325,7 +265,7 @@ void ImageScaler::GenerateNextIntegerUpscaledOutputRow()
 		}
 	}
 
-	AdvanceInputRow();
+	input_decoder.AdvanceRow();
 	SetRowRepeat();
 }
 
@@ -335,7 +275,7 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 	auto out       = output.row_buf.begin();
 
 	for (auto x = 0; x < output.width; ++x) {
-		const auto x0       = x * output.one_per_horiz_scale;
+		const auto x0 = static_cast<float>(x) * output.one_per_horiz_scale;
 		const auto floor_x0 = static_cast<uint16_t>(x0);
 		assert(floor_x0 < input.width);
 
@@ -353,8 +293,8 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 		const auto b1 = *pixel_addr++;
 
 		// Calculate linear interpolation factor `t` between the current
-		// and the next pixel so that the interpolation "band" is one pixel
-		// wide at the edges of the pixel.
+		// and the next pixel so that the interpolation "band" is one
+		// pixel wide at most at the edges of the pixel.
 		const auto x1 = x0 + output.one_per_horiz_scale;
 		const auto t = std::max(x1 - (floor_x0 + 1), 0.0f) * output.horiz_scale;
 
@@ -377,8 +317,8 @@ std::vector<uint8_t>::const_iterator ImageScaler::GetNextOutputRow()
 	}
 
 	if (output.row_repeat == 0) {
-		if (output.horiz_scale_mode == ScaleMode::Integer &&
-		    output.vert_scale_mode == ScaleMode::Integer) {
+		if (output.horiz_scaling_mode == PerAxisScaling::Integer &&
+		    output.vert_scaling_mode == PerAxisScaling::Integer) {
 			GenerateNextIntegerUpscaledOutputRow();
 		} else {
 			DecodeNextRowToLinearRgb();
@@ -392,4 +332,3 @@ std::vector<uint8_t>::const_iterator ImageScaler::GetNextOutputRow()
 
 	return output.row_buf.begin();
 }
-

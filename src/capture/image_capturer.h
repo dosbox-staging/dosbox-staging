@@ -2,7 +2,6 @@
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
  *  Copyright (C) 2023-2023  The DOSBox Staging Team
- *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,23 +22,63 @@
 #define DOSBOX_IMAGE_CAPTURER_H
 
 #include <atomic>
+#include <optional>
 #include <thread>
+#include <vector>
 
+#include "std_filesystem.h"
+
+#include "image_decoder.h"
 #include "image_scaler.h"
 #include "render.h"
 #include "rwqueue.h"
 
-#if (C_SSHOT)
-#include <png.h>
-#include <zlib.h>
-
 enum class CapturedImageType { Raw, Upscaled, Rendered };
 
-struct CaptureImageTask {
-	CapturedImageType image_type;
-	RenderedImage image;
+struct ImageInfo {
+	uint16_t width              = 0;
+	uint16_t height             = 0;
+	Fraction pixel_aspect_ratio = {};
 };
 
+struct CaptureImageTask {
+	RenderedImage image              = {};
+	CapturedImageType image_type     = {};
+	std::optional<std_fs::path> path = {};
+	// Only for the Rendered image type
+	std::optional<ImageInfo> source_image_info_override = {};
+};
+
+// Threaded image capturer; capture requests are placed in a FIFO queue then
+// are processed in order.
+//
+// The image capturer _frees_ the passed in RenderedImage after the image was
+// saved. Therefore, you might need to pass in deep-copied RenderedImage
+// instances (with the pixel and palette data deep-copied) to avoid freeing
+// the internal render buffers.
+//
+// We could make the image capturer 100% safe by always making a deep-copy of
+// the passed in RenderedImage before storing it in the work queue. But this
+// would not allow for an important optimisation step: post-render/post-shader
+// images (which can get very large at 4K resolutions; ~24 MB for a fullscreen
+// 4K capture) would always need to be copied as well.
+//
+// For post-render/post-shader images, a copy is actually not needed, and for
+// the rest of the cases the copy is generally cheap because we're only copying
+// the contents of the interal render buffer (64K for 320x200/256, 300K for
+// 640x480/256, and ~1.2MB for 640x480 true-colour).
+//
+// All downstream processing is row-based, meaning the image scaler and the
+// image writer are operating in row-sized chunks. This is crucial to keep the
+// memory usage low and to avoid cache thrashing: the memory requirements to
+// upscale a single 720x400 image to 1600x1200 would be ~10MB if all buffers
+// stored full images (the intermediary 32-bit float linear RGB buffer, plus
+// the final RBG888 output buffer). With the row-based approach, the memory
+// requirement is only 13K (!) and we get much better cache utilisation.
+//
+// Also, we're running multiple image capture worker threads in parallel, so
+// that would add a multiplier to the memory usage.
+//
 class ImageCapturer {
 public:
 	ImageCapturer() = default;
@@ -48,28 +87,39 @@ public:
 	void Open();
 	void Close();
 
-	void CaptureImage(const RenderedImage& image, const CapturedImageType type);
+	// IMPORTANT: The capturer _frees_ the passed in RenderedImage after the
+	// image was saved. Consider the implications carefully; you might need
+	// to pass in a deep-copied copy of the RenderedImage instance, because
+	// you cannot know when exactly in the future will it be freed.
+	void CaptureImage(const RenderedImage& image, const CapturedImageType type,
+	                  const std::optional<std_fs::path> path,
+	                  const std::optional<ImageInfo> source_image_info_override = {});
 
 private:
-	static constexpr auto MaxQueuedImages = 5;
+	static constexpr auto MaxQueuedImages = 10;
 
 	void SaveQueuedImages();
 	void SaveImage(const CaptureImageTask& task);
-	void SetPngCompressionsParams();
-	void WritePngInfo(const uint16_t width, const uint16_t height,
-	                  const bool is_paletted, const uint8_t* palette_data);
 
-	ImageScaler image_scaler = {};
+	void SaveRawImage(const RenderedImage& image);
+
+	void SaveUpscaledImage(const RenderedImage& image);
+
+	void SaveRenderedImage(const RenderedImage& image,
+	                       const ImageInfo& source_image_info);
+
+	void CloseOutFile();
 
 	RWQueue<CaptureImageTask> image_fifo{MaxQueuedImages};
 	std::thread renderer = {};
+	bool is_open         = false;
 
-	bool is_open = false;
+	ImageScaler image_scaler = {};
 
-	png_structp png_ptr    = nullptr;
-	png_infop png_info_ptr = nullptr;
+	ImageDecoder image_decoder   = {};
+	std::vector<uint8_t> row_buf = {};
+
+	FILE* outfile = nullptr;
 };
-
-#endif
 
 #endif

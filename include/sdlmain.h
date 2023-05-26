@@ -237,6 +237,4 @@ struct SDL_Block {
 
 extern SDL_Block sdl;
 
-std::optional<RenderedImage> GFX_GetRenderedOutput();
-
 #endif
