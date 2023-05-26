@@ -15,6 +15,7 @@
     <ClCompile Include="..\ansi_code_markup_tests.cpp" />
     <ClCompile Include="..\bit_view_tests.cpp" />
     <ClCompile Include="..\bitops_tests.cpp" />
+    <ClCompile Include="..\fraction_tests.cpp" />
     <ClCompile Include="..\fs_utils_tests.cpp" />
     <ClCompile Include="..\iohandler_containers_tests.cpp" />
     <ClCompile Include="..\math_utils_tests.cpp" />
