@@ -1706,7 +1706,7 @@ static uint32_t DRC_CALL_CONV dynrec_movsw_dword(uint32_t count,int32_t add_inde
 		count=CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=1;
+	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
 		mem_writew(di_base+reg_edi,mem_readw(si_base+reg_esi));
 		reg_esi+=add_index;
@@ -1725,7 +1725,7 @@ static uint16_t DRC_CALL_CONV dynrec_movsd_word(uint16_t count,int16_t add_index
 		count=(uint16_t)CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=2;
+	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
 		mem_writed(di_base+reg_di,mem_readd(si_base+reg_si));
 		reg_si+=add_index;
@@ -1744,7 +1744,7 @@ static uint32_t DRC_CALL_CONV dynrec_movsd_dword(uint32_t count,int32_t add_inde
 		count=CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=2;
+	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
 		mem_writed(di_base+reg_edi,mem_readd(si_base+reg_esi));
 		reg_esi+=add_index;
@@ -1798,7 +1798,7 @@ static uint16_t DRC_CALL_CONV dynrec_lodsw_word(uint16_t count,int16_t add_index
 		count=(uint16_t)CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=1;
+	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
 		reg_ax=mem_readw(si_base+reg_si);
 		reg_si+=add_index;
@@ -1816,7 +1816,7 @@ static uint32_t DRC_CALL_CONV dynrec_lodsw_dword(uint32_t count,int32_t add_inde
 		count=CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=1;
+	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
 		reg_ax=mem_readw(si_base+reg_esi);
 		reg_esi+=add_index;
@@ -1834,7 +1834,7 @@ static uint16_t DRC_CALL_CONV dynrec_lodsd_word(uint16_t count,int16_t add_index
 		count=(uint16_t)CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=2;
+	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
 		reg_eax=mem_readd(si_base+reg_si);
 		reg_si+=add_index;
@@ -1852,7 +1852,7 @@ static uint32_t DRC_CALL_CONV dynrec_lodsd_dword(uint32_t count,int32_t add_inde
 		count=CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=2;
+	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
 		reg_eax=mem_readd(si_base+reg_esi);
 		reg_esi+=add_index;
@@ -1905,7 +1905,7 @@ static uint16_t DRC_CALL_CONV dynrec_stosw_word(uint16_t count,int16_t add_index
 		count=(uint16_t)CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=1;
+	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
 		mem_writew(di_base+reg_di,reg_ax);
 		reg_di+=add_index;
@@ -1923,7 +1923,7 @@ static uint32_t DRC_CALL_CONV dynrec_stosw_dword(uint32_t count,int32_t add_inde
 		count=CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=1;
+	add_index = left_shift_signed(add_index, 1);
 	for (;count>0;count--) {
 		mem_writew(di_base+reg_edi,reg_ax);
 		reg_edi+=add_index;
@@ -1941,7 +1941,7 @@ static uint16_t DRC_CALL_CONV dynrec_stosd_word(uint16_t count,int16_t add_index
 		count=(uint16_t)CPU_Cycles;
 		CPU_Cycles=0;
 	}
-	add_index<<=2;
+	add_index = left_shift_signed(add_index, 2);
 	for (;count>0;count--) {
 		mem_writed(di_base+reg_di,reg_eax);
 		reg_di+=add_index;
