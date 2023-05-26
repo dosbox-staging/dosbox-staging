@@ -113,8 +113,6 @@ void capture_midi_add_data(const bool sysex, const size_t len, const uint8_t* da
 void capture_midi_finalise()
 {
 	if (!midi.handle) {
-		LOG_MSG("CAPTURE: Stopped capturing MIDI output before any "
-		        "MIDI message was output (no MIDI file has been created)");
 		return;
 	}
 	// Delta time

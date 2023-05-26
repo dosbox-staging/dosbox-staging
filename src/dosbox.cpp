@@ -84,8 +84,6 @@ void FPU_Init(Section*);
 
 void DMA_Init(Section*);
 
-void CAPTURE_Init(Section*);
-
 #if defined(PCI_FUNCTIONALITY_ENABLED)
 void PCI_Init(Section*);
 #if C_VOODOO
@@ -492,9 +490,8 @@ void DOSBOX_Init()
             "  vesa_nolfb:     Same as 'svga_s3' (VESA VBE 2.0), plus the \"no linear\n"
             "                  framebuffer\" hack (needed only by a few games).");
 
-	pstring = secprop->Add_path("captures", always, "capture");
-	pstring->Set_help("Directory where audio, video, MIDI, and screenshot captures get saved\n"
-	                  "('capture' by default).");
+	pstring = secprop->Add_path("captures", deprecated, "capture");
+	pstring->Set_help("Moved to [capture] section and renamed to 'capture_dir'.");
 
 #if C_DEBUG
 	LOG_StartUp();
@@ -503,7 +500,6 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
-	secprop->AddInitFunction(&CAPTURE_Init);
 	pint = secprop->Add_int("memsize", when_idle, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
 	pint->Set_help(
@@ -797,6 +793,9 @@ void DOSBOX_Init()
 	pint->Set_help("Toggle performance optimizations for Vodooo 3dfx emulation (0 = none, 1 = use multi-threading, 2 = disable bilinear filter, 3 = both).");
 #endif
 #endif
+
+	// Configure capture
+	CAPTURE_AddConfigSection(control);
 
 	// Configure mouse
 	MOUSE_AddConfigSection(control);

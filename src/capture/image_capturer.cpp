@@ -2,7 +2,6 @@
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
  *  Copyright (C) 2023-2023  The DOSBox Staging Team
- *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,15 +21,16 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 
 #include "image_capturer.h"
 
 #include "capture.h"
+#include "checks.h"
+#include "png_writer.h"
 #include "support.h"
 
-#if (C_SSHOT)
-#include <png.h>
-#include <zlib.h>
+CHECK_NARROWING();
 
 ImageCapturer::~ImageCapturer()
 {
@@ -47,8 +47,6 @@ void ImageCapturer::Open()
 	renderer = std::thread(worker_function);
 	set_thread_name(renderer, "dosbox:imgcap");
 
-	LOG_MSG("CAPTURE: Image capturer started");
-
 	is_open = true;
 }
 
@@ -58,11 +56,10 @@ void ImageCapturer::Close()
 		return;
 	}
 
-	LOG_MSG("CAPTURE: Image capturer shutting down");
-
+	// Stop queuing new images
 	image_fifo.Stop();
 
-	// Wait for the worker thread to finish
+	// Let the renderer finish saving pending images
 	if (renderer.joinable()) {
 		renderer.join();
 	}
@@ -71,222 +68,171 @@ void ImageCapturer::Close()
 }
 
 void ImageCapturer::CaptureImage(const RenderedImage& image,
-                                 const CapturedImageType type)
+                                 const CapturedImageType type,
+                                 const std::optional<std_fs::path> path,
+                                 const std::optional<ImageInfo> source_image_info_override)
 {
 	if (!image_fifo.IsRunning()) {
-		LOG_WARNING("CAPTURE: Cannot create screenshots while image capturer is shutting down");
+		LOG_WARNING("CAPTURE: Cannot create screenshots while image capturer"
+		            "is shutting down");
 		return;
 	}
 
-	RenderedImage copied_image = image;
-
-	// Deep-copy image and palette data
-	// TODO it's bad that we need to calculate the image data size
-	// downstream...
-	const auto image_data_num_bytes = image.height * image.pitch;
-
-	copied_image.image_data = static_cast<uint8_t*>(
-	        std::malloc(image_data_num_bytes));
-	assert(copied_image.image_data);
-
-	assert(image.image_data);
-	std::memcpy(const_cast<uint8_t*>(copied_image.image_data),
-	            image.image_data,
-	            image_data_num_bytes);
-
-	// TODO it's bad that we need to make this assumption downstream on
-	// the size and alignment of the palette...
-	if (image.palette_data) {
-		constexpr auto PaletteNumBytes = 256 * 4;
-
-		copied_image.palette_data = static_cast<uint8_t*>(
-		        std::malloc(PaletteNumBytes));
-		assert(copied_image.palette_data);
-
-		std::memcpy(const_cast<uint8_t*>(copied_image.palette_data),
-		            image.palette_data,
-		            PaletteNumBytes);
-	}
-
-	CaptureImageTask task = {type, copied_image};
+	CaptureImageTask task = {image, type, path, source_image_info_override};
 	image_fifo.Enqueue(std::move(task));
 }
 
 void ImageCapturer::SaveQueuedImages()
 {
-	while (auto task_opt = image_fifo.Dequeue()) {
-		auto task = *task_opt;
-		SaveImage(task);
-
-		if (task.image.image_data) {
-			std::free(const_cast<uint8_t*>(task.image.image_data));
-		}
-		if (task.image.palette_data) {
-			std::free(const_cast<uint8_t*>(task.image.palette_data));
-		}
+	while (auto task = image_fifo.Dequeue()) {
+		SaveImage(*task);
+		task->image.free();
 	}
 }
+
+// Stop Visual Studio 2019 complaining about "not all control paths return a value"
+#pragma warning( push )
+#pragma warning( disable : 4715)
+static CaptureType to_capture_type(const CapturedImageType type)
+{
+	switch (type) {
+	case CapturedImageType::Raw: return CaptureType::RawImage;
+	case CapturedImageType::Upscaled: return CaptureType::UpscaledImage;
+	case CapturedImageType::Rendered: return CaptureType::RenderedImage;
+	}
+}
+#pragma warning( pop )
 
 void ImageCapturer::SaveImage(const CaptureImageTask& task)
 {
-	image_scaler.Init(task.image);
+#if (C_SSHOT)
+	CaptureType capture_type = to_capture_type(task.image_type);
 
-	CaptureType capture_type = {};
+	outfile = CAPTURE_CreateFile(capture_type, task.path);
+	if (!outfile) {
+		return;
+	}
+
 	switch (task.image_type) {
-	case CapturedImageType::Raw:
-		capture_type = CaptureType::RawImage;
-		break;
-	case CapturedImageType::Upscaled:
-		capture_type = CaptureType::UpscaledImage;
-		break;
+	case CapturedImageType::Raw: SaveRawImage(task.image); break;
+	case CapturedImageType::Upscaled: SaveUpscaledImage(task.image); break;
 	case CapturedImageType::Rendered:
-		capture_type = CaptureType::RenderedImage;
+		assertm(task.source_image_info_override,
+		        "source_image_info_override must be provided for rendered images");
+		SaveRenderedImage(task.image, *task.source_image_info_override);
 		break;
 	}
 
-	FILE* fp = CAPTURE_CreateFile(capture_type);
-	if (!fp) {
-		return;
-	}
+	CloseOutFile();
+#endif
+}
 
-	// Initialise PNG writer
-	const png_voidp error_ptr    = nullptr;
-	const png_error_ptr error_fn = nullptr;
-	const png_error_ptr warn_fn  = nullptr;
-	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-	                                  error_ptr,
-	                                  error_fn,
-	                                  warn_fn);
-	if (!png_ptr) {
-		LOG_ERR("CAPTURE: Error initialising PNG library for image capture");
-		fclose(fp);
-		return;
-	}
+static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
+                               ImageScaler image_scaler, const ImageInfo& image_info,
+                               const std::optional<ImageInfo> source_image_info,
+                               const uint8_t* palette_data)
+{
+	switch (image_scaler.GetOutputPixelFormat()) {
+	case PixelFormat::Indexed8:
+		if (!png_writer.InitIndexed8(
+		            outfile, image_info, source_image_info, palette_data)) {
+			return;
+		}
+		break;
+	case PixelFormat::Rgb888:
+		if (!png_writer.InitRgb888(outfile, image_info, source_image_info)) {
+			return;
+		}
+		break;
+	};
 
-	SetPngCompressionsParams();
-
-	png_init_io(png_ptr, fp);
-
-	// Write headers and extra metadata
-	png_info_ptr = png_create_info_struct(png_ptr);
-	if (!png_info_ptr) {
-		LOG_ERR("CAPTURE: Error initialising PNG library for image capture");
-		png_destroy_write_struct(&png_ptr, (png_infopp) nullptr);
-		fclose(fp);
-		return;
-	}
-
-	bool out_is_paletted = (image_scaler.GetOutputPixelFormat() ==
-	                        PixelFormat::Indexed8);
-
-	WritePngInfo(image_scaler.GetOutputWidth(),
-	             image_scaler.GetOutputHeight(),
-	             out_is_paletted,
-	             task.image.palette_data);
-
-	// Write image data
 	auto rows_to_write = image_scaler.GetOutputHeight();
 	while (rows_to_write--) {
 		auto row = image_scaler.GetNextOutputRow();
-		png_write_row(png_ptr, &*row);
+		png_writer.WriteRow(row);
 	}
-
-	// We've already written the metadata information to the start of the file
-	const png_infop end_info_ptr = nullptr;
-	png_write_end(png_ptr, end_info_ptr);
-
-	png_destroy_write_struct(&png_ptr, &png_info_ptr);
-	png_ptr      = nullptr;
-	png_info_ptr = nullptr;
-
-	fclose(fp);
 }
 
-void ImageCapturer::SetPngCompressionsParams()
+void ImageCapturer::SaveRawImage(const RenderedImage& image)
 {
-	assert(png_ptr);
+	PngWriter png_writer = {};
 
-	// Default compression (equal to level 6) is the sweet spot between
-	// speed and compression. Z_BEST_COMPRESSION (level 9) rarely results in
-	// smaller file sizes, but makes the compression significantly slower
-	// (by several folds).
-	png_set_compression_level(png_ptr, Z_DEFAULT_COMPRESSION);
+	image_scaler.Init(image, ScalingMode::DoublingOnly);
 
-	// Larger buffer sizes (e.g. 64K or 128K) could significantly speed up
-	// decompression, but not compression.
-	constexpr auto default_buffer_size = 8192;
-	png_set_compression_buffer_size(png_ptr, default_buffer_size);
+	const ImageInfo image_info = {image_scaler.GetOutputWidth(),
+	                              image_scaler.GetOutputHeight(),
+	                              image.pixel_aspect_ratio};
 
-	// TODO compare with PNG_NO_FILTERS, PNG_FILTER_PAETH, and
-	// PNG_ALL_FILTERS
-	// TODO turn off filtering for paletted data?
-	constexpr auto default_filter_method = 0;
-	png_set_filter(png_ptr, default_filter_method, PNG_FAST_FILTERS);
+	constexpr std::optional<ImageInfo> no_source_image_info = {};
 
-	// Do not change the below settings; they are parameters for the zlib
-	// compression library and changing them might result in invalid PNG
-	// files.
-	constexpr auto default_mem_level = 8;
-	png_set_compression_mem_level(png_ptr, default_mem_level);
-
-	constexpr auto default_window_bits = 15;
-	png_set_compression_window_bits(png_ptr, default_window_bits);
-
-	png_set_compression_strategy(png_ptr, Z_DEFAULT_STRATEGY);
-	png_set_compression_method(png_ptr, Z_DEFLATED);
+	write_upscaled_png(outfile,
+	                   png_writer,
+	                   image_scaler,
+	                   image_info,
+	                   no_source_image_info,
+	                   image.palette_data);
 }
 
-void ImageCapturer::WritePngInfo(const uint16_t width, const uint16_t height,
-                                 const bool is_paletted, const uint8_t* palette_data)
+void ImageCapturer::SaveUpscaledImage(const RenderedImage& image)
 {
-	assert(png_ptr);
-	assert(png_info_ptr);
+	PngWriter png_writer = {};
 
-	constexpr auto png_bit_depth = 8;
-	const auto png_color_type    = is_paletted ? PNG_COLOR_TYPE_PALETTE
-	                                           : PNG_COLOR_TYPE_RGB;
-	png_set_IHDR(png_ptr,
-	             png_info_ptr,
-	             width,
-	             height,
-	             png_bit_depth,
-	             png_color_type,
-	             PNG_INTERLACE_NONE,
-	             PNG_COMPRESSION_TYPE_DEFAULT,
-	             PNG_FILTER_TYPE_DEFAULT);
+	image_scaler.Init(image, ScalingMode::AspectRatioPreservingUpscale);
 
-	if (is_paletted) {
-		constexpr auto NumPaletteEntries     = 256;
-		png_color palette[NumPaletteEntries] = {};
+	const auto square_pixel_aspect_ratio = Fraction{1};
 
-		for (auto i = 0; i < NumPaletteEntries; ++i) {
-			palette[i].red   = palette_data[i * 4 + 0];
-			palette[i].green = palette_data[i * 4 + 1];
-			palette[i].blue  = palette_data[i * 4 + 2];
+	const ImageInfo image_info = {image_scaler.GetOutputWidth(),
+	                              image_scaler.GetOutputHeight(),
+	                              square_pixel_aspect_ratio};
+
+	const ImageInfo source_image_info = {image.width,
+	                                     image.height,
+	                                     image.pixel_aspect_ratio};
+	write_upscaled_png(outfile,
+	                   png_writer,
+	                   image_scaler,
+	                   image_info,
+	                   source_image_info,
+	                   image.palette_data);
+}
+
+void ImageCapturer::SaveRenderedImage(const RenderedImage& image,
+                                      const ImageInfo& source_image_info)
+{
+	PngWriter png_writer = {};
+
+	const ImageInfo image_info = {image.width, image.height, image.pixel_aspect_ratio};
+
+	if (!png_writer.InitRgb888(outfile, image_info, source_image_info)) {
+		return;
+	};
+
+	image_decoder.Init(image);
+
+	constexpr auto BytesPerPixel = 3;
+	row_buf.resize(image.width * BytesPerPixel);
+
+	auto rows_to_write = image.height;
+	while (rows_to_write--) {
+		auto out = row_buf.begin();
+
+		for (auto x = 0; x < image.width; ++x) {
+			const auto pixel = image_decoder.GetNextRgb888Pixel();
+
+			*out++ = pixel.red;
+			*out++ = pixel.green;
+			*out++ = pixel.blue;
 		}
-		png_set_PLTE(png_ptr, png_info_ptr, palette, NumPaletteEntries);
+		png_writer.WriteRow(row_buf.begin());
+		image_decoder.AdvanceRow();
 	}
-
-#ifdef PNG_TEXT_SUPPORTED
-	char keyword[] = "Software";
-	static_assert(sizeof(keyword) < 80, "libpng limit");
-
-	char value[] = CANONICAL_PROJECT_NAME " " VERSION;
-
-	constexpr int num_text = 1;
-
-	png_text texts[num_text] = {};
-
-	texts[0].compression = PNG_TEXT_COMPRESSION_NONE;
-	texts[0].key         = static_cast<png_charp>(keyword);
-	texts[0].text        = static_cast<png_charp>(value);
-	texts[0].text_length = sizeof(value);
-
-	png_set_text(png_ptr, png_info_ptr, texts, num_text);
-#endif
-
-	png_write_info(png_ptr, png_info_ptr);
 }
 
-#endif
+void ImageCapturer::CloseOutFile()
+{
+	if (outfile) {
+		fclose(outfile);
+		outfile = nullptr;
+	}
+}
 

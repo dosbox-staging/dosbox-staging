@@ -23,16 +23,48 @@
 
 #include <vector>
 
+#include "image_decoder.h"
+
 #include "render.h"
 #include "rgb888.h"
 
-enum class ScaleMode { Integer, Fractional };
+enum class ScalingMode { DoublingOnly, AspectRatioPreservingUpscale };
 
 enum class PixelFormat { Indexed8, Rgb888 };
 
+enum class PerAxisScaling { Integer, Fractional };
+
+// Row-based image scaler. Currently, it can only upscale in two modes:
+//
+// - DoublingOnly: Simple width/height doubling, according to the
+//   `double_width` and `double_height` image flags. If the input is paletted,
+//   the output will be paletted too. Non-paletted images are converted to
+//   RGB888.
+//
+// - AspectRatioPreservingUpscale: Always upscale by an auto-selected integral
+//   scaling factor vertically so the resulting output height is around
+//   1200px, then horizontally either by an integral or a fractional factor so
+//   the input aspect ratio is preserved. "Sharp-bilinear" interpolation is
+//   used horizontally to preserve the pixeled look as much as possible.
+//   Paletted images are kept paletted only if both the horizontal and
+//   vertical scaling factors are integral, otherwise the output is RGB888.
+//
+// Usage:
+//
+// - Call `Init()` with the input image and the desired scaling mode.
+//
+// - Use `GetOutputWidth()`, `GetOutputHeight()`, and `GetOutputPixelFormat()`
+//   to query the output parameters decided by the upscaler.
+//
+// - Call `GetNextOutputRow()` repeatedly to get the upscaled output until the
+//   end of the iterator is reached.
+//
+// - Call `Init()` again to process another image (no need to destruct &
+//   re-create).
+//
 class ImageScaler {
 public:
-	void Init(const RenderedImage& image);
+	void Init(const RenderedImage& image, const ScalingMode mode);
 
 	std::vector<uint8_t>::const_iterator GetNextOutputRow();
 
@@ -43,25 +75,20 @@ public:
 private:
 	static constexpr auto ComponentsPerRgbPixel = 3;
 
-	void UpdateOutputParams();
-	void LogImageScalerParams();
+	void UpdateOutputParamsDoublingOnly();
+	void UpdateOutputParamsUpscale();
+	void LogParams();
 	void AllocateBuffers();
 
-	bool IsInputPaletted() const;
-
-	Rgb888 DecodeNextPalettedInputPixel();
-	Rgb888 DecodeNextRgbInputPixel();
 	void DecodeNextRowToLinearRgb();
 
 	void SetRowRepeat();
+
 	void GenerateNextIntegerUpscaledOutputRow();
 	void GenerateNextSharpUpscaledOutputRow();
-	void AdvanceInputRow();
 
-	RenderedImage input = {};
-
-	const uint8_t* input_curr_row_start = nullptr;
-	const uint8_t* input_pos            = nullptr;
+	RenderedImage input        = {};
+	ImageDecoder input_decoder = {};
 
 	std::vector<float> linear_row_buf = {};
 
@@ -69,11 +96,11 @@ private:
 		uint16_t width  = 0;
 		uint16_t height = 0;
 
-		float horiz_scale          = 0;
-		float one_per_horiz_scale  = 0;
-		uint8_t vert_scale         = 0.0f;
-		ScaleMode horiz_scale_mode = {};
-		ScaleMode vert_scale_mode  = {};
+		float horiz_scale                 = 0;
+		float one_per_horiz_scale         = 0;
+		uint8_t vert_scale                = 0;
+		PerAxisScaling horiz_scaling_mode = {};
+		PerAxisScaling vert_scaling_mode  = {};
 
 		PixelFormat pixel_format = {};
 
@@ -85,4 +112,3 @@ private:
 };
 
 #endif
-

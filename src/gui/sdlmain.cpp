@@ -734,8 +734,9 @@ static void log_display_properties(int source_w, int source_h,
 	assert(source_w > 0 && source_h > 0);
 	assert(target_w > 0 && target_h > 0);
 
-	const auto scale_x        = static_cast<double>(target_w) / source_w;
-	const auto scale_y        = static_cast<double>(target_h) / source_h;
+	const auto scale_x = static_cast<double>(target_w) / source_w;
+	const auto scale_y = static_cast<double>(target_h) / source_h;
+
 	auto one_per_pixel_aspect = scale_y / scale_x;
 
 	const auto [mode_type, mode_id] = VGA_GetCurrentMode();
@@ -2528,20 +2529,29 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 {
 	sdl.frame.update(changedLines);
 
-	const auto frame_is_new = sdl.update_display_contents && sdl.updating;
+	if (CAPTURE_IsCapturingPostRenderImage()) {
+		// Always present the frame if we want to capture the next rendered
+		// frame, regardless of the presentation mode. This is necessary to
+		// keep the contents of rendered and raw/upscaled screenshots in sync
+		// (so they capture the exact same frame) in multi-output image
+		// capture modes.
+		sdl.frame.present();
+	} else {
+		const auto frame_is_new = sdl.update_display_contents && sdl.updating;
 
-	switch (sdl.frame.mode) {
-	case FRAME_MODE::CFR:
-		maybe_present_synced(frame_is_new);
-		break;
-	case FRAME_MODE::VFR: present_new_or_maybe_dupe(frame_is_new); break;
-	case FRAME_MODE::THROTTLED_VFR:
-		maybe_present_throttled(frame_is_new);
-		break;
-	// Synced CFR is started when the presetation mode is setup
-	case FRAME_MODE::SYNCED_CFR:
-	case FRAME_MODE::UNSET:
-		break;
+		switch (sdl.frame.mode) {
+		case FRAME_MODE::CFR:
+			maybe_present_synced(frame_is_new);
+			break;
+		case FRAME_MODE::VFR: present_new_or_maybe_dupe(frame_is_new); break;
+		case FRAME_MODE::THROTTLED_VFR:
+			maybe_present_throttled(frame_is_new);
+			break;
+		// Synced CFR is started when the presetation mode is setup
+		case FRAME_MODE::SYNCED_CFR:
+		case FRAME_MODE::UNSET:
+			break;
+		}
 	}
 	sdl.updating = false;
 	FrameMark;
@@ -2559,12 +2569,108 @@ static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines)
 	}
 }
 
+static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
+{
+	RenderedImage image = {};
+
+	image.width              = sdl.clip.w;
+	image.height             = sdl.clip.h;
+	image.double_width       = false;
+	image.double_height      = false;
+	image.flip_vertical      = false;
+	image.pixel_aspect_ratio = {1};
+	image.bits_per_pixel     = 24;
+	image.pitch              = image.width * (image.bits_per_pixel / 8);
+	image.palette_data       = nullptr;
+
+	uint8_t* image_data = static_cast<uint8_t*>(
+	        std::malloc(image.height * image.pitch));
+	image.image_data = image_data;
+
+#if C_OPENGL
+	// Get the OpenGL-renderer surface
+	// -------------------------------
+	if (sdl.desktop.type == SCREEN_OPENGL) {
+		glReadBuffer(GL_BACK);
+
+		// Alignment is 4 by default which works fine when using the
+		// GL_BGRA pixel format with glReadPixels(). We need to set it 1
+		// to be able to use the GL_BGR format in order to conserve
+		// memory. This should not cause any slowdowns whatsoever.
+		glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+		glReadPixels(sdl.clip.x,
+		             sdl.clip.y,
+		             image.width,
+		             image.height,
+		             GL_BGR,
+		             GL_UNSIGNED_BYTE,
+		             image_data);
+
+		image.flip_vertical = true;
+		return image;
+	}
+#endif
+
+	// Get the SDL texture-renderer surface
+	// ------------------------------------
+	if (sdl.desktop.type == SCREEN_TEXTURE) {
+		const auto renderer = SDL_GetRenderer(sdl.window);
+		if (!renderer) {
+			LOG_WARNING("SDL: Failed retrieving texture renderer surface: %s",
+			            SDL_GetError());
+			std::free(image_data);
+			return {};
+		}
+
+		// SDL2 pixel formats are a bit weird coming from OpenGL...
+		// You would think SDL_PIXELFORMAT_BGR888 is an alias of
+		// SDL_PIXELFORMAT_BRG24, but the two are actually very
+		// different:
+		//
+		// - SDL_PIXELFORMAT_BRG24 is an "array format"; it specifies
+		//   the endianness-agnostic memory layout just like OpenGL
+		//   pixel formats.
+		//
+		// - SDL_PIXELFORMAT_BGR888 is a "packed format" which uses
+		//   native types, therefore its memory layout depends on the
+		//   endianness.
+		//
+		// More info: https://afrantzis.com/pixel-format-guide/sdl2.html
+		//
+		if (SDL_RenderReadPixels(renderer,
+		                         &sdl.clip,
+		                         SDL_PIXELFORMAT_BGR24,
+		                         image_data,
+		                         image.pitch) != 0) {
+			LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
+			            SDL_GetError());
+			std::free(image_data);
+			return {};
+		}
+		return image;
+	}
+	return {};
+}
+
 static bool present_frame_texture()
 {
 	const auto is_presenting = render_pacer->CanRun();
 	if (is_presenting) {
 		SDL_RenderClear(sdl.renderer);
 		SDL_RenderCopy(sdl.renderer, sdl.texture.texture, nullptr, nullptr);
+
+		if (CAPTURE_IsCapturingPostRenderImage()) {
+			// glReadPixels() implicitly blocks until all pipelined rendering
+			// commands have finished, so we're guaranteed to read the
+			// contents of the up-to-date backbuffer here right before the
+			// buffer swap.
+			const auto image = get_rendered_output_from_backbuffer();
+			if (image) {
+				CAPTURE_AddPostRenderImage(*image);
+			}
+		}
+
 		SDL_RenderPresent(sdl.renderer);
 	}
 	render_pacer->Checkpoint();
@@ -2624,6 +2730,18 @@ static bool present_frame_gl()
 		} else {
 			glCallList(sdl.opengl.displaylist);
 		}
+
+		if (CAPTURE_IsCapturingPostRenderImage()) {
+			// glReadPixels() implicitly blocks until all pipelined rendering
+			// commands have finished, so we're guaranateed to read the
+			// contents of the up-to-date backbuffer here right before the
+			// buffer swap.
+			const auto image = get_rendered_output_from_backbuffer();
+			if (image) {
+				CAPTURE_AddPostRenderImage(*image);
+			}
+		}
+
 		SDL_GL_SwapWindow(sdl.window);
 	}
 	render_pacer->Checkpoint();
@@ -3511,98 +3629,6 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 	SDL_SetWindowOpacity(sdl.window, alpha);
-}
-
-std::optional<RenderedImage> GFX_GetRenderedOutput()
-{
-	RenderedImage image = {};
-	uint8_t* image_data = nullptr;
-
-	auto setup_image = [&](const auto bits_per_pixel) {
-		image.width              = sdl.clip.w;
-		image.height             = sdl.clip.h;
-		image.double_width       = false;
-		image.double_height      = false;
-		image.flip_vertical      = true;
-		image.pixel_aspect_ratio = {1};
-		image.bits_per_pixel     = bits_per_pixel;
-		image.pitch        = image.width * (image.bits_per_pixel / 8);
-		image.palette_data = nullptr;
-
-		image_data = static_cast<uint8_t*>(
-		        std::malloc(image.height * image.pitch));
-		image.image_data = image_data;
-	};
-
-#if C_OPENGL
-	// Get the OpenGL-renderer surface
-	// -------------------------------
-	if (sdl.desktop.type == SCREEN_OPENGL) {
-		constexpr auto bits_per_pixel = 24;
-		setup_image(bits_per_pixel);
-
-		// Alignment is 4 by default which works fine when using the
-		// GL_BGRA pixel format with glReadPixels(). We need to set it 1
-		// to be able to use the GL_BGR format in order to conserve
-		// memory. This should not cause any slowdowns whatsoever.
-		glPixelStorei(GL_PACK_ALIGNMENT, 1);
-
-		glReadPixels(sdl.clip.x,
-		             sdl.clip.y,
-		             image.width,
-		             image.height,
-		             GL_BGR,
-		             GL_UNSIGNED_BYTE,
-		             image_data);
-
-		image.flip_vertical = true;
-		return image;
-	}
-#endif
-
-	// Get the SDL texture-renderer surface
-	// ------------------------------------
-	if (sdl.desktop.type == SCREEN_TEXTURE) {
-		const auto renderer = SDL_GetRenderer(sdl.window);
-		if (!renderer) {
-			LOG_WARNING("SDL: Failed retrieving texture renderer surface: %s",
-			            SDL_GetError());
-			std::free(image_data);
-			return {};
-		}
-
-		// SDL_PIXELFORMAT_RGB888 should give use packed 24-bit RGB
-		// data... except it doesn't as the resulting pixels get padded
-		// to 4 bytes. So it appears we must use
-		// SDL_PIXELFORMAT_XRGB8888 to get the correct results.
-		constexpr auto bits_per_pixel = 32;
-		setup_image(bits_per_pixel);
-
-		// From the SDL doco:
-		//   WARNING: This is a very slow operation, and should not be used
-		//   frequently. If you're using this on the main rendering target, it
-		//   should be called after rendering and before SDL_RenderPresent().
-		//
-		// Indeed, it is much slower than the OpenGL capture path. It could be
-		// probably sped up by doing this somehow reading the pixels before
-		// SDL_RenderPresent(), but that would complicate things a lot. The
-		// texture backend is a fallback option anyway; people should really
-		// use OpenGL...
-		constexpr auto rect = nullptr; // copy entire render target
-		if (SDL_RenderReadPixels(renderer,
-		                         rect,
-		                         SDL_PIXELFORMAT_XRGB8888,
-		                         image_data,
-		                         image.pitch) != 0) {
-			LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
-			            SDL_GetError());
-			std::free(image_data);
-			return {};
-		}
-		return image;
-	}
-
-	return {};
 }
 
 // extern void UI_Run(bool);
@@ -4607,11 +4633,12 @@ void Restart(bool pressed) { // mapper handler
 	restart_program(control->startup_params);
 }
 
+// TODO do we even need this at all?
 static void launchcaptures(const std::string& edit)
 {
 	std::string path,file;
-	Section* t = control->GetSection("dosbox");
-	if(t) file = t->GetPropValue("captures");
+	Section* t = control->GetSection("capture");
+	if(t) file = t->GetPropValue("capture_dir");
 	if(!t || file == NO_SUCH_PROPERTY) {
 		printf("Config system messed up.\n");
 		exit(1);

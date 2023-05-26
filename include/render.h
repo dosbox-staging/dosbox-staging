@@ -19,6 +19,7 @@
 #ifndef DOSBOX_RENDER_H
 #define DOSBOX_RENDER_H
 
+#include <cstring>
 #include <deque>
 #include <string>
 
@@ -101,11 +102,49 @@ struct RenderedImage {
 	bool double_width           = false;
 	bool double_height          = false;
 	bool flip_vertical          = false;
-	Fraction pixel_aspect_ratio = 0.0;
+	Fraction pixel_aspect_ratio = {};
 	uint8_t bits_per_pixel      = 0;
 	uint16_t pitch              = 0;
 	const uint8_t* image_data   = nullptr;
 	const uint8_t* palette_data = nullptr;
+
+	inline bool is_paletted() const
+	{
+		return (bits_per_pixel == 8);
+	}
+
+	RenderedImage deep_copy() const
+	{
+		RenderedImage copy = *this;
+
+		// Deep-copy image and palette data
+		const auto image_data_num_bytes = height * pitch;
+
+		copy.image_data = new uint8_t[image_data_num_bytes];
+
+		assert(image_data);
+		std::memcpy(const_cast<uint8_t*>(copy.image_data),
+		            image_data,
+		            image_data_num_bytes);
+
+		// TODO it's bad that we need to make this assumption downstream
+		// on the size and alignment of the palette...
+		if (palette_data) {
+			constexpr auto PaletteNumBytes = 256 * 4;
+			copy.palette_data = new uint8_t[PaletteNumBytes];
+
+			std::memcpy(const_cast<uint8_t*>(copy.palette_data),
+			            palette_data,
+			            PaletteNumBytes);
+		}
+		return copy;
+	}
+
+	void free()
+	{
+		std::free(const_cast<uint8_t*>(image_data));
+		std::free(const_cast<uint8_t*>(palette_data));
+	}
 };
 
 extern Render_t render;
