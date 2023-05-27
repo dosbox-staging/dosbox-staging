@@ -13391,17 +13391,20 @@ static void imfc_init(Section* sec)
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the
 	// real thing by ear only.
-	const std::string filter_choice = conf->Get_string("imfc_filter");
-	if (filter_choice == "on") {
+	const std::string_view filter_choice = conf->Get_string("imfc_filter");
+	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
+
+	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
 		constexpr auto order       = 1;
 		constexpr auto cutoff_freq = 8000;
 		channel->ConfigureLowPassFilter(order, cutoff_freq);
 		channel->SetLowPassFilter(FilterState::On);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (filter_choice != "off")
+		if (!filter_choice_has_bool) {
 			LOG_WARNING("IMFC: Invalid 'imfc_filter' value: '%s', using 'off'",
-			            filter_choice.c_str());
+			            filter_choice.data());
+		}
 
 		channel->SetLowPassFilter(FilterState::Off);
 	}
