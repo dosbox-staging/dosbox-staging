@@ -3515,9 +3515,6 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 
 std::optional<RenderedImage> GFX_GetRenderedOutput()
 {
-	// Variables common to all screen-modes
-//	const auto renderer = SDL_GetRenderer(sdl.window);
-
 #if C_OPENGL
 	// Get the OpenGL-renderer surface
 	// -------------------------------
@@ -3525,14 +3522,14 @@ std::optional<RenderedImage> GFX_GetRenderedOutput()
 		const auto canvas = get_canvas_size(sdl.desktop.type);
 
 		RenderedImage image      = {};
-		image.width              = canvas.w;
-		image.height             = canvas.h;
+		image.width              = sdl.clip.w;
+		image.height             = sdl.clip.h;
 		image.double_width       = false;
 		image.double_height      = false;
 		image.flip_vertical      = true;
 		image.pixel_aspect_ratio = {1};
 		image.bits_per_pixel     = 24;
-		image.pitch        = canvas.w * (image.bits_per_pixel / 8);
+		image.pitch        = image.width * (image.bits_per_pixel / 8);
 		image.palette_data = nullptr;
 
 		auto image_data = static_cast<uint8_t*>(
@@ -3545,13 +3542,10 @@ std::optional<RenderedImage> GFX_GetRenderedOutput()
 		// memory. This should not cause any slowdowns whatsoever.
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-		constexpr auto first_pixel_x = 0;
-		constexpr auto first_pixel_y = 0;
-
-		glReadPixels(first_pixel_x,
-		             first_pixel_y,
-		             canvas.w,
-		             canvas.h,
+		glReadPixels(sdl.clip.x,
+		             sdl.clip.y,
+		             image.width,
+		             image.height,
 		             GL_BGR,
 		             GL_UNSIGNED_BYTE,
 		             image_data);
