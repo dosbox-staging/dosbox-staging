@@ -324,11 +324,11 @@ void dos_to_utf8(const std::string& str_in, std::string& str_out,
 //   else
 //       log_warning("%s was invalid", s.c_str());
 //
-std::optional<float> parse_value(const std::string &s, const float min_value,
-                                 const float max_value);
+std::optional<float> parse_value(const std::string_view s,
+                                 const float min_value, const float max_value);
 
 // parse_value clamped between 0 and 100
-std::optional<float> parse_percentage(const std::string &s);
+std::optional<float> parse_percentage(const std::string_view s);
 
 // Parse a value from a character-prefixed string, clamp the result within the
 // given min and max values, and return it as a float. This API should give us

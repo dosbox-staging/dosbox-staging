@@ -294,13 +294,15 @@ void clear_language_if_default(std::string &l)
 	}
 }
 
-std::optional<float> parse_value(const std::string &s, const float min_value,
-                                 const float max_value)
+std::optional<float> parse_value(const std::string_view s,
+                                 const float min_value, const float max_value)
 {
 	// parse_value can check if a string holds a number (or not), so we expect
 	// exceptions and return an empty result to indicate conversion status.
 	try {
-		return std::clamp(std::stof(s), min_value, max_value);
+		if (!s.empty()) {
+			return std::clamp(std::stof(s.data()), min_value, max_value);
+		}
 		// Note: stof can throw invalid_argument and out_of_range
 	} catch (const std::invalid_argument &) {
 		// do nothing, we expect these
@@ -310,7 +312,7 @@ std::optional<float> parse_value(const std::string &s, const float min_value,
 	return {}; // empty
 }
 
-std::optional<float> parse_percentage(const std::string &s)
+std::optional<float> parse_percentage(const std::string_view s)
 {
 	constexpr auto min_percentage = 0.0f;
 	constexpr auto max_percentage = 100.0f;
