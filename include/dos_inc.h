@@ -40,7 +40,8 @@
 #endif
 struct CommandTail{
 	uint8_t count = 0;     /* number of bytes returned */
-	char buffer[127] = {}; /* the buffer itself */
+	static constexpr size_t MaxCmdtailBufferSize = 126;
+	char buffer[MaxCmdtailBufferSize + 1] = {}; /* the buffer itself */
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
 #pragma pack ()
