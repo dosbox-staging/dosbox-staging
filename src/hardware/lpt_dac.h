@@ -24,7 +24,7 @@
 #include "dosbox.h"
 
 #include <queue>
-#include <string>
+#include <string_view>
 
 #include "inout.h"
 #include "lpt.h"
@@ -33,7 +33,7 @@
 // Provides mandatory scafolding for derived LPT DAC devices
 class LptDac {
 public:
-	LptDac(const std::string &name, const uint16_t channel_rate_hz,
+	LptDac(const std::string_view name, const uint16_t channel_rate_hz,
 	       channel_features_t extra_features = {});
 	virtual ~LptDac();
 
@@ -41,7 +41,7 @@ public:
 	virtual void ConfigureFilters(const FilterState state) = 0;
 	virtual void BindToPort(const io_port_t lpt_port)      = 0;
 
-	bool TryParseAndSetCustomFilter(const std::string filter_choice);
+	bool TryParseAndSetCustomFilter(const std::string_view filter_choice);
 
 protected:
 	LptDac()                          = delete;
@@ -58,7 +58,7 @@ protected:
 	double last_rendered_ms = 0.0;
 	double ms_per_frame     = 0.0;
 
-	std::string dac_name = {};
+	std::string_view dac_name = {};
 
 	// All LPT devices support data write, status read, and control write
 	void BindHandlers(const io_port_t lpt_port, const io_write_f write_data,
