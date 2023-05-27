@@ -811,12 +811,9 @@ public:
 	}
 	~MPU401()
 	{
-		if (!installed)
-			return;
-		Section_prop *section = static_cast<Section_prop *>(m_configuration);
-		if (strcasecmp(section->Get_string("mpu401"), "intelligent"))
-			return;
-		PIC_SetIRQMask(mpu.irq, true);
+		if (installed && mpu.intelligent) {
+			PIC_SetIRQMask(mpu.irq, true);
+		}
 	}
 };
 
