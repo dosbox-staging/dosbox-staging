@@ -176,7 +176,7 @@ public:
 	void SetLowPassFilter(const FilterState state);
 	void ConfigureHighPassFilter(const uint8_t order, const uint16_t cutoff_freq);
 	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq);
-	bool TryParseAndSetCustomFilter(const std::string &filter_prefs);
+	bool TryParseAndSetCustomFilter(const std::string_view filter_prefs);
 
 	void SetResampleMethod(const ResampleMethod method);
 	void SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_freq);
