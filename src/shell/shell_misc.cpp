@@ -533,14 +533,10 @@ static void run_binary_executable(const std::string_view fullname,
 	full_arguments.assign(args);
 
 	/* Fill the command line */
-	CommandTail cmdtail                    = {};
-	constexpr auto max_cmdtail_buffer_size = 126;
-	std::copy_n(args.begin(), max_cmdtail_buffer_size, cmdtail.buffer);
-
-	cmdtail.count = args.size() > max_cmdtail_buffer_size
-	                      ? max_cmdtail_buffer_size
-	                      : static_cast<uint8_t>(args.size());
-
+	CommandTail cmdtail = {};
+	cmdtail.count       = static_cast<uint8_t>(
+                std::min(args.size(), CommandTail::MaxCmdtailBufferSize));
+	std::copy_n(args.begin(), cmdtail.count, cmdtail.buffer);
 	cmdtail.buffer[cmdtail.count] = '\r';
 
 	/* Copy command line in stack block too */
