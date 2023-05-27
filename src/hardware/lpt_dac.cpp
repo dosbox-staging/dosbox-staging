@@ -31,10 +31,11 @@
 #include "disney.h"
 #include "ston1_dac.h"
 
-LptDac::LptDac(const std::string &name, const uint16_t channel_rate_hz,
+LptDac::LptDac(const std::string_view name, const uint16_t channel_rate_hz,
                channel_features_t extra_features)
         : dac_name(name)
 {
+	assert(!dac_name.empty());
 	using namespace std::placeholders;
 	const auto audio_callback = std::bind(&LptDac::AudioCallback, this, _1);
 
@@ -48,7 +49,7 @@ LptDac::LptDac(const std::string &name, const uint16_t channel_rate_hz,
 	// Setup the mixer callback
 	channel = MIXER_AddChannel(audio_callback,
 	                           channel_rate_hz,
-	                           dac_name.c_str(),
+	                           dac_name.data(),
 	                           features);
 
 	ms_per_frame = millis_in_second / channel->GetSampleRate();
@@ -58,7 +59,7 @@ LptDac::LptDac(const std::string &name, const uint16_t channel_rate_hz,
 	status_reg.busy  = false;
 }
 
-bool LptDac::TryParseAndSetCustomFilter(const std::string filter_choice)
+bool LptDac::TryParseAndSetCustomFilter(const std::string_view filter_choice)
 {
 	assert(channel);
 	return channel->TryParseAndSetCustomFilter(filter_choice);
@@ -118,7 +119,7 @@ void LptDac::AudioCallback(const uint16_t requested_frames)
 
 LptDac::~LptDac()
 {
-	LOG_MSG("%s: Shutting down DAC", dac_name.c_str());
+	LOG_MSG("%s: Shutting down DAC", dac_name.data());
 
 	// Update our status to indicate we're no longer ready
 	status_reg.error = true;
@@ -153,8 +154,8 @@ void LPT_DAC_Init(Section *section)
 	// Get the user's LPT DAC choices
 	assert(section);
 	const auto prop = static_cast<Section_prop *>(section);
-	const std::string dac_choice    = prop->Get_string("lpt_dac");
-	const std::string filter_choice = prop->Get_string("lpt_dac_filter");
+
+	const std::string_view dac_choice = prop->Get_string("lpt_dac");
 
 	if (dac_choice == "disney")
 		lpt_dac = std::make_unique<Disney>();
@@ -162,17 +163,30 @@ void LPT_DAC_Init(Section *section)
 		lpt_dac = std::make_unique<Covox>();
 	else if (dac_choice == "ston1")
 		lpt_dac = std::make_unique<StereoOn1>();
-	else if (dac_choice == "none" || dac_choice == "off")
+	else {
+		const auto dac_choice_has_bool = parse_bool_setting(dac_choice);
+		if (!(dac_choice_has_bool && *dac_choice_has_bool)) {
+			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' choice: '%s', using 'none'",
+			            dac_choice.data());
+		}
 		return;
+	}
 
+	// Let the DAC apply its own filter type
+	const std::string_view filter_choice = prop->Get_string("lpt_dac_filter");
 	assert(lpt_dac);
-
 	if (!lpt_dac->TryParseAndSetCustomFilter(filter_choice)) {
-		const auto filter_state = filter_choice == "on" ? FilterState::On
-														: FilterState::Off;
-		if (filter_state == FilterState::Off && filter_choice != "off")
+		auto filter_state = FilterState::Off;
+		const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
+
+		if (filter_choice_has_bool) {
+			filter_state = *filter_choice_has_bool ? FilterState::On
+			                                       : FilterState::Off;
+		} else {
 			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac_filter' value: '%s', using 'off'",
-						filter_choice.data());
+			            filter_choice.data());
+			assert(filter_state == FilterState::Off);
+		}
 
 		lpt_dac->ConfigureFilters(filter_state);
 	}
