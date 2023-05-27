@@ -49,8 +49,6 @@
 #include <SDL_opengl.h>
 #endif
 
-extern const char* RunningProgram;
-
 #if (C_SSHOT)
 static ImageCapturer image_capturer = {};
 #endif
@@ -58,10 +56,22 @@ static ImageCapturer image_capturer = {};
 static std_fs::path capture_path;
 
 static bool capturing_audio = false;
-static bool capturing_image = false;
 static bool capturing_midi  = false;
 static bool capturing_opl   = false;
+static bool capturing_image = false;
 static bool capturing_video = false;
+
+struct capture_index_t {
+	int32_t audio              = -1;
+	int32_t midi               = -1;
+	int32_t raw_opl_stream     = -1;
+	int32_t rad_opl_instrument = -1;
+	int32_t video              = -1;
+	int32_t image              = -1;
+	int32_t serial_log         = -1;
+};
+
+static capture_index_t next_capture_index = {};
 
 bool CAPTURE_IsCapturingAudio()
 {
@@ -106,6 +116,24 @@ static std::string capture_type_to_string(const CaptureType type)
 	}
 }
 
+static std::string capture_type_to_basename(const CaptureType type)
+{
+	switch (type) {
+	case CaptureType::Audio: return "audio";
+	case CaptureType::Midi: return "midi";
+	case CaptureType::RawOplStream: return "rawopl";
+	case CaptureType::RadOplInstruments: return "oplinstr";
+
+	case CaptureType::Video: return "video";
+
+	case CaptureType::RawImage:
+	case CaptureType::UpscaledImage:
+	case CaptureType::RenderedImage: return "image";
+
+	case CaptureType::SerialLog: return "serial";
+	}
+}
+
 static std::string capture_type_to_extension(const CaptureType type)
 {
 	switch (type) {
@@ -124,31 +152,85 @@ static std::string capture_type_to_extension(const CaptureType type)
 	}
 }
 
-std::optional<std_fs::path> generate_capture_filename(const CaptureType type)
+static int32_t get_next_capture_index(const CaptureType type)
 {
-	const auto capture_type = capture_type_to_string(type);
-	const auto ext = capture_type_to_extension(type);
+	switch (type) {
+	case CaptureType::Audio: return next_capture_index.audio;
+	case CaptureType::Midi: return next_capture_index.midi;
 
+	case CaptureType::RawOplStream:
+		return next_capture_index.raw_opl_stream;
+
+	case CaptureType::RadOplInstruments:
+		return next_capture_index.rad_opl_instrument;
+
+	case CaptureType::Video: return next_capture_index.video;
+
+	case CaptureType::RawImage:
+	case CaptureType::UpscaledImage:
+	case CaptureType::RenderedImage: return next_capture_index.image;
+
+	case CaptureType::SerialLog: return next_capture_index.serial_log;
+	}
+}
+
+static void set_next_capture_index(const CaptureType type, int32_t index)
+{
+	switch (type) {
+	case CaptureType::Audio: next_capture_index.audio = index; break;
+	case CaptureType::Midi: next_capture_index.midi = index; break;
+
+	case CaptureType::RawOplStream:
+		next_capture_index.raw_opl_stream = index;
+		break;
+
+	case CaptureType::RadOplInstruments:
+		next_capture_index.rad_opl_instrument = index;
+		break;
+
+	case CaptureType::Video: next_capture_index.video = index; break;
+
+	case CaptureType::RawImage:
+	case CaptureType::UpscaledImage:
+	case CaptureType::RenderedImage:
+		next_capture_index.image = index;
+		break;
+
+	case CaptureType::SerialLog:
+		next_capture_index.serial_log = index;
+		break;
+	}
+}
+
+static bool maybe_create_capture_directory(const CaptureType type)
+{
 	std::error_code ec = {};
 
-	// Create capture directory if it does not exist
 	if (!std_fs::exists(capture_path, ec)) {
 		if (!std_fs::create_directory(capture_path, ec)) {
 			LOG_WARNING("CAPTURE: Can't create directory '%s' for capturing %s: %s",
 			            capture_path.c_str(),
-			            capture_type.c_str(),
+			            capture_type_to_string(type).c_str(),
 			            ec.message().c_str());
-			return {};
+			return false;
 		}
 		std_fs::permissions(capture_path, std_fs::perms::owner_all, ec);
+
+		next_capture_index = {};
 	}
+	return true;
+}
 
+static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
+{
 	// Find existing capture file with the highest index
-	std::string filename_start = RunningProgram;
+	std::string filename_start = capture_type_to_basename(type);
 	lowcase(filename_start);
-	filename_start += "_";
 
-	int highest_index = 0;
+	const auto capture_type = capture_type_to_string(type);
+	const auto ext          = capture_type_to_extension(type);
+	int32_t highest_index   = 0;
+	std::error_code ec      = {};
 
 	for (const auto& entry : std_fs::directory_iterator(capture_path, ec)) {
 		if (ec) {
@@ -167,38 +249,61 @@ std::optional<std_fs::path> generate_capture_filename(const CaptureType type)
 		auto stem = entry.path().stem().string();
 		lowcase(stem);
 		if (starts_with(stem, filename_start)) {
-			const auto index_and_maybe_postfix = strip_prefix(stem, filename_start);
-			const auto index = to_int(index_and_maybe_postfix);
-			highest_index    = std::max(highest_index, *index);
+			const auto index = to_int(strip_prefix(stem, filename_start));
+			highest_index = std::max(highest_index, *index);
 		}
 	}
+	return highest_index;
+}
 
-	const auto filename = format_string("%s%03d%s",
-	                                    filename_start.c_str(),
-	                                    highest_index + 1,
-	                                    ext.c_str());
+static std::optional<int32_t> generate_capture_index(const CaptureType type)
+{
+	if (!maybe_create_capture_directory(type)) {
+		return {};
+	}
+	auto index = get_next_capture_index(type);
+	if (index < 0) {
+		// This should happen only once per capture type at startup
+		const auto highest_index = find_highest_capture_index(type);
+		if (!highest_index) {
+			return {};
+		}
+		index = *highest_index;
+	}
+	++index;
+	set_next_capture_index(type, index);
+	return index;
+}
+
+static std_fs::path generate_capture_filename(const CaptureType type,
+                                              const int32_t index)
+{
+	const auto filename = format_string("%s%04d%s",
+	                                    capture_type_to_basename(type).c_str(),
+	                                    index,
+	                                    capture_type_to_extension(type).c_str());
 	return {capture_path / filename};
 }
 
 // TODO should be internal to the src/capture module
 FILE* CAPTURE_CreateFile(const CaptureType type)
 {
-	const auto path = generate_capture_filename(type);
-	if (!path) {
+	const auto index = generate_capture_index(type);
+	if (!index) {
 		return nullptr;
 	}
+	const auto path     = generate_capture_filename(type, *index);
+	const auto path_str = path.string();
 
-	const auto filename = path->string();
-
-	FILE* handle = fopen(filename.c_str(), "wb");
+	FILE* handle = fopen(path_str.c_str(), "wb");
 	if (handle) {
 		LOG_MSG("CAPTURE: Capturing %s to '%s'",
 		        capture_type_to_string(type).c_str(),
-		        filename.c_str());
+		        path_str.c_str());
 	} else {
 		LOG_WARNING("CAPTURE: Failed to create file '%s' for capturing %s",
-		            filename.c_str(),
-					capture_type_to_string(type).c_str());
+		            path_str.c_str(),
+		            capture_type_to_string(type).c_str());
 	}
 	return handle;
 }
