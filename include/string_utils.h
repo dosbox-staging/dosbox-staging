@@ -91,19 +91,9 @@ size_t safe_strlen(char (&str)[N]) noexcept
 	return strnlen(str, N - 1);
 }
 
-template <size_t N>
-bool starts_with(const char (&pfx)[N], const char *str) noexcept
-{
-	return (strncmp(pfx, str, N - 1) == 0);
-}
+bool starts_with(const std::string_view prefix, const std::string_view str) noexcept;
 
-template <size_t N>
-bool starts_with(const char (&pfx)[N], const std::string &str) noexcept
-{
-	return (strncmp(pfx, str.c_str(), N - 1) == 0);
-}
-
-bool ends_with(const std::string &str, const std::string &suffix) noexcept;
+bool ends_with(const std::string_view str, const std::string_view suffix) noexcept;
 
 bool find_in_case_insensitive(const std::string &needle, const std::string &haystack);
 
