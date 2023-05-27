@@ -314,14 +314,18 @@ static void set_global_chorus(const mixer_channel_t &channel)
 
 static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 {
-	if (pref == "off")
-		return ReverbPreset::None;
-	if (pref == "tiny")
+	const auto pref_has_bool = parse_bool_setting(pref);
+	if (pref_has_bool) {
+		return *pref_has_bool ? ReverbPreset::Medium : ReverbPreset::None;
+	}
+	if (pref == "tiny") {
 		return ReverbPreset::Tiny;
+	}
 	if (pref == "small")
 		return ReverbPreset::Small;
-	if (pref == "medium" || pref == "on")
+	if (pref == "medium") {
 		return ReverbPreset::Medium;
+	}
 	if (pref == "large")
 		return ReverbPreset::Large;
 	if (pref == "huge")
@@ -332,10 +336,13 @@ static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 	return ReverbPreset::None;
 }
 
-static void configure_reverb(std::string reverb_pref)
+static void configure_reverb(const std::string_view reverb_pref)
 {
 	auto was_reverb_on = mixer.do_reverb;
-	mixer.do_reverb = (reverb_pref != "off");
+
+	const auto reverb_pref_has_bool = parse_bool_setting(reverb_pref);
+
+	mixer.do_reverb = (!reverb_pref_has_bool || *reverb_pref_has_bool == true);
 
 	if (!mixer.do_reverb) {
 		// Disable reverb sending in each channel
@@ -345,10 +352,6 @@ static void configure_reverb(std::string reverb_pref)
 		LOG_MSG("MIXER: Reverb disabled");
 		return;
 	}
-
-	// "on" is an alias for the medium room size preset
-	if (reverb_pref == "on")
-		reverb_pref = "medium";
 
 	auto &r = mixer.reverb; // short-hand reference
 
@@ -388,7 +391,7 @@ static void configure_reverb(std::string reverb_pref)
 	for (auto &it : mixer.channels)
 		set_global_reverb(it.second);
 
-	LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.c_str());
+	LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.data());
 }
 
 static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
