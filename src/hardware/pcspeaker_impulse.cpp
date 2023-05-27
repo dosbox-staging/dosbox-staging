@@ -505,7 +505,7 @@ void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
 	}
 }
 
-bool PcSpeakerImpulse::TryParseAndSetCustomFilter(const std::string &filter_choice)
+bool PcSpeakerImpulse::TryParseAndSetCustomFilter(const std::string_view filter_choice)
 {
 	assert(channel);
 	return channel->TryParseAndSetCustomFilter(filter_choice);
