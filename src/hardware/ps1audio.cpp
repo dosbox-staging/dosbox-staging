@@ -51,7 +51,7 @@ struct Ps1Registers {
 
 class Ps1Dac {
 public:
-	Ps1Dac(const std::string &filter_choice);
+	Ps1Dac(const std::string_view filter_choice);
 	~Ps1Dac();
 
 private:
@@ -120,7 +120,7 @@ static void setup_filter(mixer_channel_t &channel)
 	channel->SetLowPassFilter(FilterState::On);
 }
 
-Ps1Dac::Ps1Dac(const std::string &filter_choice)
+Ps1Dac::Ps1Dac(const std::string_view filter_choice)
 {
 	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
 
@@ -133,7 +133,9 @@ Ps1Dac::Ps1Dac(const std::string &filter_choice)
 	                            ChannelFeature::DigitalAudio});
 
 	// Setup filters
-	if (filter_choice == "on") {
+	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
+
+	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
 		// Using the same filter settings for the DAC as for the PSG
 		// synth. It's unclear whether this is accurate, but in any
 		// case, the filters do a good approximation of how a small
@@ -141,9 +143,10 @@ Ps1Dac::Ps1Dac(const std::string &filter_choice)
 		setup_filter(channel);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (filter_choice != "off")
+		if (!filter_choice_has_bool) {
 			LOG_WARNING("PS1DAC: Invalid 'ps1audio_dac_filter' value: '%s', using 'off'",
-			            filter_choice.c_str());
+			            filter_choice.data());
+		}
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
@@ -371,7 +374,7 @@ Ps1Dac::~Ps1Dac()
 
 class Ps1Synth {
 public:
-	Ps1Synth(const std::string &filter_choice);
+	Ps1Synth(const std::string_view filter_choice);
 	~Ps1Synth();
 
 private:
@@ -405,7 +408,7 @@ private:
 	double last_rendered_ms     = 0.0;
 };
 
-Ps1Synth::Ps1Synth(const std::string &filter_choice)
+Ps1Synth::Ps1Synth(const std::string_view filter_choice)
         : device(machine_config(), 0, 0, ps1_psg_clock_hz)
 {
 	const auto callback = std::bind(&Ps1Synth::AudioCallback, this, _1);
@@ -419,16 +422,19 @@ Ps1Synth::Ps1Synth(const std::string &filter_choice)
 	                            ChannelFeature::Synthesizer});
 
 	// Setup filters
-	if (filter_choice == "on") {
+	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
+
+	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
 		// The filter parameters have been tweaked by analysing real
 		// hardware recordings. The results are virtually
 		// indistinguishable from the real thing by ear only.
 		setup_filter(channel);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (filter_choice != "off")
+		if (!filter_choice_has_bool) {
 			LOG_WARNING("PS1: Invalid 'ps1audio_filter' setting: '%s', using 'off'",
-			            filter_choice.c_str());
+			            filter_choice.data());
+		}
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
