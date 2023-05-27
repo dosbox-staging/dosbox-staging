@@ -2041,26 +2041,29 @@ SB_TYPES find_sbtype()
 	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
 	assert(sect);
 
-	const std::string pref = sect->Get_string("sbtype");
+	const std::string_view pref = sect->Get_string("sbtype");
+
+	const auto pref_has_bool = parse_bool_setting(pref);
 
 	SB_TYPES sbtype = SBT_NONE;
 
-	if (pref == "sb1")
-		sbtype = SBT_1;
-	else if (pref == "sb2")
-		sbtype = SBT_2;
-	else if (pref == "sbpro1")
-		sbtype = SBT_PRO1;
-	else if (pref == "sbpro2")
-		sbtype = SBT_PRO2;
-	else if (pref == "sb16")
-		sbtype = SBT_16;
-	else if (pref == "gb")
-		sbtype = SBT_GB;
-	else if (pref == "none")
+	if (pref_has_bool && *pref_has_bool == false) {
 		sbtype = SBT_NONE;
-	else
+	} else if (pref == "sb1") {
+		sbtype = SBT_1;
+	} else if (pref == "sb2") {
+		sbtype = SBT_2;
+	} else if (pref == "sbpro1") {
+		sbtype = SBT_PRO1;
+	} else if (pref == "sbpro2") {
+		sbtype = SBT_PRO2;
+	} else if (pref == "sb16") {
 		sbtype = SBT_16;
+	} else if (pref == "gb") {
+		sbtype = SBT_GB;
+	} else {
+		sbtype = SBT_16;
+	}
 
 	if (sbtype == SBT_16) {
 		if ((!IS_EGAVGA_ARCH) || !SecondDMAControllerAvailable())
@@ -2074,22 +2077,25 @@ OplMode find_oplmode()
 	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
 	assert(sect);
 
-	const std::string pref = sect->Get_string("oplmode");
+	const std::string_view pref = sect->Get_string("oplmode");
+
+	const auto pref_has_bool = parse_bool_setting(pref);
 
 	OplMode opl_mode = OplMode::None;
 
-	if (pref == "none")
+	if (pref_has_bool && *pref_has_bool == false) {
 		opl_mode = OplMode::None;
-	else if (pref == "cms")
+	} else if (pref == "cms") {
 		opl_mode = OplMode::Cms;
-	else if (pref == "opl2")
+	} else if (pref == "opl2") {
 		opl_mode = OplMode::Opl2;
-	else if (pref == "dualopl2")
+	} else if (pref == "dualopl2") {
 		opl_mode = OplMode::DualOpl2;
-	else if (pref == "opl3")
+	} else if (pref == "opl3") {
 		opl_mode = OplMode::Opl3;
-	else if (pref == "opl3gold")
+	} else if (pref == "opl3gold") {
 		opl_mode = OplMode::Opl3Gold;
+	}
 
 	// Else assume auto
 	else {
