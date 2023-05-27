@@ -128,7 +128,8 @@ class TandyDAC {
 	};
 
 public:
-	TandyDAC(const ConfigProfile config_profile, const std::string &filter_choice);
+	TandyDAC(const ConfigProfile config_profile,
+	         const std::string_view filter_choice);
 	~TandyDAC();
 
 	bool IsEnabled() const
@@ -165,7 +166,7 @@ private:
 class TandyPSG {
 public:
 	TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
-	         const std::string &filter_choice);
+	         const std::string_view filter_choice);
 	~TandyPSG();
 
 private:
@@ -213,7 +214,8 @@ static void setup_filters(mixer_channel_t &channel) {
 	channel->SetLowPassFilter(FilterState::On);
 }
 
-TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter_choice)
+TandyDAC::TandyDAC(const ConfigProfile config_profile,
+                   const std::string_view filter_choice)
 {
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
 
@@ -237,13 +239,16 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string &filter
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	// Setup filters
-	if (filter_choice == "on") {
+	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
+
+	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
 		setup_filters(channel);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (filter_choice != "off")
+		if (!filter_choice_has_bool) {
 			LOG_WARNING("TANDYDAC: Invalid 'tandy_dac_filter' value: '%s', using 'off'",
-			            filter_choice.c_str());
+			            filter_choice.data());
+		}
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
@@ -432,8 +437,8 @@ void TandyDAC::AudioCallback(uint16_t requested)
 	}
 }
 
-TandyPSG::TandyPSG(const ConfigProfile config_profile,
-                   const bool is_dac_enabled, const std::string &filter_choice)
+TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
+                   const std::string_view filter_choice)
 {
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
 
@@ -469,13 +474,16 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	                            ChannelFeature::Synthesizer});
 
 	// Setup filters
-	if (filter_choice == "on") {
+	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
+
+	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
 		setup_filters(channel);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (filter_choice != "off")
+		if (!filter_choice_has_bool) {
 			LOG_WARNING("TANDY: Invalid 'tandy_filter' value: '%s', using 'off'",
-			            filter_choice.c_str());
+			            filter_choice.data());
+		}
 
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
@@ -635,7 +643,10 @@ void TANDYSOUND_Init(Section *section)
 	assert(section);
 	const auto prop = static_cast<Section_prop*>(section);
 	const auto pref = std::string_view(prop->Get_string("tandy"));
-	const auto wants_tandy_sound = pref == "true" || pref == "on" ||
+
+	const auto pref_has_bool = parse_bool_setting(pref);
+
+	const auto wants_tandy_sound = (pref_has_bool && *pref_has_bool == true) ||
 	                               (IS_TANDY_ARCH && pref == "auto");
 	if (!wants_tandy_sound) {
 		set_tandy_sound_flag_in_bios(false);
