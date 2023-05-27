@@ -1396,11 +1396,18 @@ void ReelMagic_Init(Section* sec)
 	const auto section = static_cast<Section_prop*>(sec);
 
 	// Does the user want ReelMagic emulation?
-	const auto reelmagic_choice = std::string_view(section->Get_string("reelmagic"));
-	const auto wants_reelmagic  = (reelmagic_choice == "on" || reelmagic_choice == "cardonly");
+	const auto reelmagic_choice = std::string_view(
+	        section->Get_string("reelmagic"));
 
-	if (!wants_reelmagic) {
-		if (reelmagic_choice != "off") {
+	const auto wants_card_only = (reelmagic_choice == "cardonly");
+
+	const auto reelmagic_choice_has_bool = parse_bool_setting(reelmagic_choice);
+
+	const auto wants_card_and_driver = (reelmagic_choice_has_bool &&
+	                                    *reelmagic_choice_has_bool == true);
+
+	if (!wants_card_only && !wants_card_and_driver) {
+		if (!reelmagic_choice_has_bool) {
 			LOG_WARNING("REELMAGIC: Invalid 'reelmagic' value: '%s', shutting down.",
 			            reelmagic_choice.data());
 		}
@@ -1431,8 +1438,7 @@ void ReelMagic_Init(Section* sec)
 
 	REELMAGIC_MaybeCreateFmpdrvExecutable();
 
-	// User wants the hardware and the driver
-	if (reelmagic_choice == "on") {
+	if (wants_card_and_driver) {
 		_unloadAllowed = false;
 		FMPDRV_InstallINTHandler();
 	}
