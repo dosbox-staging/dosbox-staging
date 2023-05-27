@@ -396,12 +396,16 @@ static void configure_reverb(const std::string_view reverb_pref)
 
 static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 {
-	if (pref == "off")
-		return ChorusPreset::None;
-	if (pref == "light")
+	const auto pref_has_bool = parse_bool_setting(pref);
+	if (pref_has_bool) {
+		return *pref_has_bool ? ChorusPreset::Normal : ChorusPreset::None;
+	}
+	if (pref == "light") {
 		return ChorusPreset::Light;
-	if (pref == "normal" || pref == "on")
+	}
+	if (pref == "normal") {
 		return ChorusPreset::Normal;
+	}
 	if (pref == "strong")
 		return ChorusPreset::Strong;
 
@@ -410,10 +414,13 @@ static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 	return ChorusPreset::None;
 }
 
-static void configure_chorus(std::string chorus_pref)
+static void configure_chorus(const std::string_view chorus_pref)
 {
 	auto was_chorus_on = mixer.do_chorus;
-	mixer.do_chorus = (chorus_pref != "off");
+
+	const auto chorus_pref_has_bool = parse_bool_setting(chorus_pref);
+
+	mixer.do_chorus = (!chorus_pref_has_bool || *chorus_pref_has_bool == true);
 
 	if (!mixer.do_chorus) {
 		// Disable chorus sending in each channel
@@ -423,10 +430,6 @@ static void configure_chorus(std::string chorus_pref)
 		LOG_MSG("MIXER: Chorus disabled");
 		return;
 	}
-
-	// "on" is an alias for the "normal" preset
-	if (chorus_pref == "on")
-		chorus_pref = "normal";
 
 	auto &c = mixer.chorus; // short-hand reference
 
@@ -459,7 +462,7 @@ static void configure_chorus(std::string chorus_pref)
 	for (auto &it : mixer.channels)
 		set_global_chorus(it.second);
 
-	LOG_MSG("MIXER: Chorus enabled ('%s' preset)", chorus_pref.c_str());
+	LOG_MSG("MIXER: Chorus enabled ('%s' preset)", chorus_pref.data());
 }
 
 static void configure_compressor(const bool compressor_enabled)
