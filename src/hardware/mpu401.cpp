@@ -58,41 +58,70 @@ constexpr uint8_t MSG_MPU_ACK = 0xfe;
 constexpr uint8_t MSG_MPU_RESET = 0xff;
 
 static struct {
-	bool intelligent;
-	MpuMode mode;
-	uint8_t irq;
-	uint8_t queue[MPU401_QUEUE];
-	uint8_t queue_pos;
-	uint8_t queue_used;
+	bool intelligent = false;
+	MpuMode mode     = M_UART;
+	uint8_t irq      = 9;
+
+	uint8_t queue[MPU401_QUEUE] = {};
+	uint8_t queue_pos           = 0;
+	uint8_t queue_used          = 0;
+
 	struct track {
-		uint8_t counter;
-		uint8_t value[8];
-		uint8_t sys_val;
-		uint8_t vlength, length;
-		MpuDataType type;
-	} playbuf[8], condbuf;
+		uint8_t counter  = 0;
+		uint8_t value[8] = {};
+		uint8_t sys_val  = 0;
+		uint8_t vlength  = 0;
+		uint8_t length   = 0;
+		MpuDataType type = T_MIDI_NORM;
+	};
+	track playbuf[8] = {};
+	track condbuf    = {};
+
 	struct {
-		bool conductor, cond_req, cond_set, block_ack;
-		bool playing, reset;
-		bool wsd, wsm, wsd_start;
-		bool irq_pending;
-		bool send_now;
-		bool eoi_scheduled;
-		int8_t data_onoff;
-		uint8_t command_byte;
-		uint8_t cmd_pending;
-		uint8_t tmask, cmask, amask;
-		uint16_t midi_mask;
-		uint16_t req_mask;
-		uint8_t channel, old_chan;
-	} state;
+		bool conductor = false;
+		bool cond_req  = false;
+		bool cond_set  = false;
+
+		bool block_ack = false;
+		bool playing   = false;
+		bool reset     = false;
+
+		bool wsd       = false;
+		bool wsm       = false;
+		bool wsd_start = false;
+
+		bool irq_pending     = false;
+		bool send_now        = false;
+		bool eoi_scheduled   = false;
+		int8_t data_onoff    = 0;
+		uint8_t command_byte = 0;
+		uint8_t cmd_pending  = 0;
+
+		uint8_t tmask = 0;
+		uint8_t cmask = 0;
+		uint8_t amask = 0;
+
+		uint16_t midi_mask = 0;
+		uint16_t req_mask  = 0;
+
+		uint8_t channel  = 0;
+		uint8_t old_chan = 0;
+	} state = {};
+
 	struct {
-		uint8_t timebase;
-		uint8_t tempo, tempo_rel, tempo_grad;
-		uint8_t cth_rate, cth_counter, cth_savecount;
-		bool clock_to_host;
-	} clock;
-} mpu;
+		uint8_t timebase = 0;
+
+		uint8_t tempo      = 0;
+		uint8_t tempo_rel  = 0;
+		uint8_t tempo_grad = 0;
+
+		uint8_t cth_rate      = 0;
+		uint8_t cth_counter   = 0;
+		uint8_t cth_savecount = 0;
+
+		bool clock_to_host = false;
+	} clock = {};
+} mpu = {};
 
 static void QueueByte(uint8_t data)
 {
@@ -742,14 +771,12 @@ static void MPU401_Reset()
 
 class MPU401 final : public Module_base {
 private:
-	IO_ReadHandleObject ReadHandler[2];
-	IO_WriteHandleObject WriteHandler[2];
-	bool installed; // as it can fail to install by 2 ways (config and no midi)
+	IO_ReadHandleObject ReadHandler[2]   = {};
+	IO_WriteHandleObject WriteHandler[2] = {};
+	bool installed                       = false;
 
 public:
-	MPU401(Section *configuration)
-	        : Module_base(configuration),
-	          installed(false)
+	MPU401(Section* configuration) : Module_base(configuration)
 	{
 		if (!MIDI_Available())
 			return;
