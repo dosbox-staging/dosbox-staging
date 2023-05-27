@@ -268,10 +268,22 @@ void strip_punctuation(std::string &str)
 	          str.end());
 }
 
-bool ends_with(const std::string &str, const std::string &suffix) noexcept
+// TODO in C++20: replace with str.starts_with(prefix)
+bool starts_with(const std::string_view prefix, const std::string_view str) noexcept
 {
-	return (str.size() >= suffix.size() &&
-	        str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0);
+	if (prefix.length() > str.length()) {
+		return false;
+	}
+	return std::equal(prefix.begin(), prefix.end(), str.begin());
+}
+
+// TODO in C++20: replace with str.ends_with(suffix)
+bool ends_with(const std::string_view str, const std::string_view suffix) noexcept
+{
+	if (suffix.length() > str.length()) {
+		return false;
+	}
+	return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
 }
 
 void clear_language_if_default(std::string &l)
