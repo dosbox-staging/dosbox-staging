@@ -642,7 +642,16 @@ public:
 		PIC_SetIRQMask(2,false);					/* Enable second pic */
 		PIC_SetIRQMask(8,false);					/* Enable RTC IRQ */
 
-		if (machine==MCH_PCJR) {
+		// On AT systems, Both IRQ 2 and 9 were available.
+		// Ref: https://dosdays.co.uk/topics/io_addresses_irq_dma.php
+		// If present, the MPU-401 activates and uses IRQ 9.
+		//
+		if (IS_EGAVGA_ARCH) {
+			PIC_SetIRQMask(9, false);
+			PIC_DeActivateIRQ(9);
+		}
+
+		if (machine == MCH_PCJR) {
 			/* Enable IRQ6 (replacement for the NMI for PCJr) */
 			PIC_SetIRQMask(6,false);
 		}
