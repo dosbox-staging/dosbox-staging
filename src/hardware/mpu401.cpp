@@ -778,16 +778,18 @@ private:
 public:
 	MPU401(Section* configuration) : Module_base(configuration)
 	{
-		if (!MIDI_Available())
+		Section_prop* section = dynamic_cast<Section_prop*>(configuration);
+		if (!section) {
 			return;
+		}
 
-		Section_prop *section = static_cast<Section_prop *>(configuration);
-		const auto mpu_type = std::string(section->Get_string("mpu401"));
-		if (mpu_type == "none" || mpu_type == "off" || mpu_type == "false")
+		const std::string_view mpu_type = section->Get_string("mpu401");
+
+		installed = (mpu_type != "none" && mpu_type != "off" &&
+		             mpu_type != "false");
+		if (!installed) {
 			return;
-
-		// Enabled and there is a Midi
-		installed = true;
+		}
 
 		constexpr io_port_t port_0x330 = 0x330;
 		constexpr io_port_t port_0x331 = 0x331;
