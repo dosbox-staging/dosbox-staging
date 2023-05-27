@@ -167,29 +167,15 @@ bool Value::SetDouble(const std::string& in)
 	return true;
 }
 
+// Sets the '_bool' member variable to either the parsed boolean value or false
+// if it couldn't be parsed. Returns true if the provided string was parsed.
 bool Value::SetBool(const std::string& in)
 {
-	istringstream input(in);
-	string result;
-	input >> result;
-	lowcase(result);
-	_bool = false;
-
-	if (!result.size()) {
-		return false;
-	}
-
-	if (result == "0" || result == "disabled" || result == "false" ||
-	    result == "off" || result == "no") {
-		_bool = false;
-	} else if (result == "1" || result == "enabled" || result == "true" ||
-	           result == "on" || result == "yes") {
-		_bool = true;
-	} else {
-		return false;
-	}
-
-	return true;
+	auto in_lowercase = in;
+	lowcase(in_lowercase);
+	const auto parsed = parse_bool_setting(in_lowercase);
+	_bool = parsed ? *parsed : false;
+	return parsed.has_value();
 }
 
 void Value::SetString(const std::string& in)
