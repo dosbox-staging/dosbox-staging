@@ -267,17 +267,23 @@ static void set_global_crossfeed(mixer_channel_t channel)
 	// Global crossfeed
 	auto crossfeed = 0.0f;
 
-	const std::string crossfeed_pref = sect->Get_string("crossfeed");
-	if (crossfeed_pref == "on") {
-		constexpr auto default_crossfeed_strength = 0.40f;
-		crossfeed = default_crossfeed_strength;
-	} else if (crossfeed_pref == "off") {
-		crossfeed = 0.0f;
-	} else if (const auto p = parse_percentage(crossfeed_pref); p) {
+	const std::string_view crossfeed_pref = sect->Get_string("crossfeed");
+	const auto crossfeed_pref_has_bool = parse_bool_setting(crossfeed_pref);
+
+	if (crossfeed_pref_has_bool) {
+		if (*crossfeed_pref_has_bool == true) {
+			constexpr auto default_crossfeed_strength = 0.40f;
+			crossfeed = default_crossfeed_strength;
+		} else { // false
+			crossfeed = 0.0f;
+		}
+	}
+	// Otherwise a custom value was provided
+	else if (const auto p = parse_percentage(crossfeed_pref); p) {
 		crossfeed = percentage_to_gain(*p);
 	} else {
 		LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s', using 'off'",
-		            crossfeed_pref.c_str());
+		            crossfeed_pref.data());
 	}
 	channel->SetCrossfeedStrength(crossfeed);
 }
