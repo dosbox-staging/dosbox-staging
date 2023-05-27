@@ -996,7 +996,7 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
 // Tries to set custom filter settings from the passed in filter preferences.
 // Returns true if the custom filters could be successfully set, false
 // otherwise and disables all filters for the channel.
-bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
+bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_prefs)
 {
 	SetLowPassFilter(FilterState::Off);
 	SetHighPassFilter(FilterState::Off);
@@ -1013,7 +1013,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 		LOG_WARNING("%s: Invalid custom filter definition: '%s'. Must be "
 		            "specified in \"lfp|hpf ORDER CUTOFF_FREQUENCY\" format",
 		            name.c_str(),
-		            filter_prefs.c_str());
+		            filter_prefs.data());
 		return false;
 	}
 
@@ -1090,7 +1090,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string &filter_prefs)
 			LOG_WARNING("%s: Invalid custom filter definition: '%s'. "
 			            "The two filters must be of different types.",
 			            name.c_str(),
-			            filter_prefs.c_str());
+			            filter_prefs.data());
 			return false;
 		}
 
