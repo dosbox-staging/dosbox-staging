@@ -785,11 +785,12 @@ public:
 
 		const std::string_view mpu_type = section->Get_string("mpu401");
 
-		installed = (mpu_type != "none" && mpu_type != "off" &&
-		             mpu_type != "false");
-		if (!installed) {
+		const auto mpu_as_bool = parse_bool_setting(mpu_type);
+		if (mpu_as_bool && *mpu_as_bool == false) {
 			return;
 		}
+
+		installed = true;
 
 		constexpr io_port_t port_0x330 = 0x330;
 		constexpr io_port_t port_0x331 = 0x331;
