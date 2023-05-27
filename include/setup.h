@@ -29,6 +29,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -38,6 +39,11 @@
 using parse_environ_result_t = std::list<std::tuple<std::string, std::string>>;
 
 parse_environ_result_t parse_environ(const char* const* envp) noexcept;
+
+// Helpers to test if a string setting is boolean
+std::optional<bool> parse_bool_setting(const std::string_view setting);
+bool has_true(const std::string_view setting);
+bool has_false(const std::string_view setting);
 
 class Hex {
 private:

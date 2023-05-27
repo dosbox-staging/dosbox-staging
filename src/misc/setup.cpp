@@ -27,6 +27,7 @@
 #include <regex>
 #include <sstream>
 #include <string_view>
+#include <unordered_map>
 
 #include "control.h"
 #include "cross.h"
@@ -1458,6 +1459,37 @@ parse_environ_result_t parse_environ(const char* const* envp) noexcept
 	}
 
 	return props_to_set;
+}
+
+std::optional<bool> parse_bool_setting(const std::string_view setting)
+{
+	static const std::unordered_map<std::string_view, bool> mapping{
+	        {"enabled", true},
+	        {"true", true},
+	        {"on", true},
+	        {"yes", true},
+
+	        {"disabled", false},
+	        {"false", false},
+	        {"off", false},
+	        {"no", false},
+	        {"none", false},
+	};
+
+	const auto it = mapping.find(setting);
+	return it != mapping.end() ? std::optional<bool>(it->second) : std::nullopt;
+}
+
+bool has_true(const std::string_view setting)
+{
+	const auto has_bool = parse_bool_setting(setting);
+	return (has_bool && *has_bool == true);
+}
+
+bool has_false(const std::string_view setting)
+{
+	const auto has_bool = parse_bool_setting(setting);
+	return (has_bool && *has_bool == false);
 }
 
 void Config::ParseEnv()
