@@ -1849,11 +1849,13 @@ static void change_action_text(const char* text,uint8_t col) {
 
 static std::string humanize_key_name(const CBindList &binds, const std::string &fallback)
 {
-	auto trim_prefix = [](const std::string &bind_name) {
-		if (starts_with("Left ", bind_name))
+	auto trim_prefix = [](const std::string& bind_name) {
+		if (starts_with(bind_name, "Left ")) {
 			return bind_name.substr(sizeof("Left"));
-		if (starts_with("Right ", bind_name))
+		}
+		if (starts_with(bind_name, "Right ")) {
 			return bind_name.substr(sizeof("Right"));
+		}
 		return bind_name;
 	};
 

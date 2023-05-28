@@ -269,7 +269,7 @@ void strip_punctuation(std::string &str)
 }
 
 // TODO in C++20: replace with str.starts_with(prefix)
-bool starts_with(const std::string_view prefix, const std::string_view str) noexcept
+bool starts_with(const std::string_view str, const std::string_view prefix) noexcept
 {
 	if (prefix.length() > str.length()) {
 		return false;
@@ -289,7 +289,7 @@ bool ends_with(const std::string_view str, const std::string_view suffix) noexce
 void clear_language_if_default(std::string &l)
 {
 	lowcase(l);
-	if (l.size() < 2 || starts_with("c.", l) || l == "posix") {
+	if (l.size() < 2 || starts_with(l, "c.") || l == "posix") {
 		l.clear();
 	}
 }

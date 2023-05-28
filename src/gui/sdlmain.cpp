@@ -679,8 +679,9 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 	if (type != SCREEN_TEXTURE)
 		return 0;
 
-	if (starts_with("opengl", sdl.render_driver))
+	if (starts_with(sdl.render_driver, "opengl")) {
 		return SDL_WINDOW_OPENGL;
+	}
 
 	if (sdl.render_driver != "auto")
 		return 0;
@@ -697,7 +698,7 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 		if (info.flags & SDL_RENDERER_TARGETTEXTURE)
 			break;
 	}
-	default_driver_is_opengl = starts_with("opengl", info.name);
+	default_driver_is_opengl = starts_with(info.name, "opengl");
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
@@ -2970,13 +2971,13 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
                                           const SDL_Rect desktop)
 {
 	int percent = DEFAULT_WINDOW_PERCENT;
-	if (starts_with("s", pref))
+	if (starts_with(pref, "s")) {
 		percent = SMALL_WINDOW_PERCENT;
-	else if (starts_with("m", pref) || pref == "default" || pref.empty())
+	} else if (starts_with(pref, "m") || pref == "default" || pref.empty()) {
 		percent = MEDIUM_WINDOW_PERCENT;
-	else if (starts_with("l", pref))
+	} else if (starts_with(pref, "l")) {
 		percent = LARGE_WINDOW_PERCENT;
-	else if (pref == "desktop")
+	} else if (pref == "desktop")
 		percent = 100;
 	else
 		LOG_WARNING("DISPLAY: Requested windowresolution '%s' is invalid, using 'default' instead",
@@ -3313,7 +3314,7 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 		// Currently the default, but... oh well
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 #if C_OPENGL
-	} else if (starts_with("opengl", output)) {
+	} else if (starts_with(output, "opengl")) {
 		RENDER_InitShaderSource(sec);
 		if (output == "opengl") {
 			sdl.desktop.want_type = SCREEN_OPENGL;
