@@ -104,7 +104,8 @@ static const std::vector<uint16_t> list_rates = {
         // issues.
 };
 
-bool MouseConfig::ParseCaptureType(const std::string &capture_str, MouseCapture &capture)
+bool MouseConfig::ParseCaptureType(const std::string_view capture_str,
+                                   MouseCapture& capture)
 {
 	if (capture_str == capture_type_seamless_str)
 		capture = MouseCapture::Seamless;
@@ -119,8 +120,8 @@ bool MouseConfig::ParseCaptureType(const std::string &capture_str, MouseCapture 
 	return true;
 }
 
-bool MouseConfig::ParseCOMModel(const std::string &model_str,
-                                MouseModelCOM &model, bool &auto_msm)
+bool MouseConfig::ParseCOMModel(const std::string_view model_str,
+                                MouseModelCOM& model, bool& auto_msm)
 {
 	if (model_str == model_com_2button_str) {
 		model    = MouseModelCOM::Microsoft;
@@ -155,7 +156,7 @@ bool MouseConfig::ParseCOMModel(const std::string &model_str,
 	return false;
 }
 
-bool MouseConfig::ParsePS2Model(const std::string &model_str, MouseModelPS2 &model)
+bool MouseConfig::ParsePS2Model(const std::string_view model_str, MouseModelPS2& model)
 {
 	if (model_str == model_ps2_standard_str) {
 		model = MouseModelPS2::Standard;
@@ -163,8 +164,9 @@ bool MouseConfig::ParsePS2Model(const std::string &model_str, MouseModelPS2 &mod
 		model = MouseModelPS2::IntelliMouse;
 	} else if (model_str == model_ps2_explorer_str) {
 		model = MouseModelPS2::Explorer;
-	} else if (model_str == model_ps2_nomouse_str) {
-		model = MouseModelPS2::NoMouse;	
+	} else if (auto as_bool = parse_bool_setting(model_str);
+	           as_bool && *as_bool == false) {
+		model = MouseModelPS2::NoMouse;
 	} else {
 		return false;
 	}
