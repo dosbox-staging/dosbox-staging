@@ -402,6 +402,16 @@ bool Prop_string::IsValidValue(const Value& in)
 		return true;
 	}
 
+	// If the property's valid values includes either positive or negative
+	// bool strings ("on", "false", etc..), then check if this incoming
+	// value is either.
+	if (is_positive_bool_valid && has_true(in.ToString())) {
+		return true;
+	}
+	if (is_negative_bool_valid && has_false(in.ToString())) {
+		return true;
+	}
+
 	for (const auto& val : valid_values) {
 		if (val == in) { // Match!
 			return true;
@@ -661,6 +671,21 @@ const std::vector<Value>& PropMultiVal::GetValues() const
 	return valid_values;
 }
 
+// When setting a property's list of valid values (For example, composite =
+// [auto, on, off]), this function inspects the given valid value to see if it's
+// boolean string (ie: "on" or "off"). If so, this records if a boolean is valid
+// and its direction (either positive or negative) so we can accept all of those
+// corresponding boolean strings from the user (ie: composite = disabled")
+//
+void Property::MaybeSetBoolValid(const std::string_view valid_value)
+{
+	if (has_true(valid_value)) {
+		is_positive_bool_valid = true;
+	} else if (has_false(valid_value)) {
+		is_negative_bool_valid = true;
+	}
+}
+
 void Property::Set_values(const char* const* in)
 {
 	Value::Etype type = default_value.type;
@@ -668,6 +693,7 @@ void Property::Set_values(const char* const* in)
 	int i = 0;
 
 	while (in[i]) {
+		MaybeSetBoolValid(in[i]);
 		Value val(in[i], type);
 		valid_values.push_back(val);
 		i++;
@@ -686,6 +712,7 @@ void Property::Set_values(const std::vector<std::string>& in)
 {
 	Value::Etype type = default_value.type;
 	for (auto& str : in) {
+		MaybeSetBoolValid(str);
 		Value val(str, type);
 		valid_values.push_back(val);
 	}
