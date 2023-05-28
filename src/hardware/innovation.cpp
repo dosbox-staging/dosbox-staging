@@ -28,18 +28,21 @@
 
 CHECK_NARROWING();
 
-void Innovation::Open(const std::string &model_choice,
-                      const std::string &clock_choice, const int filter_strength_6581,
+void Innovation::Open(const std::string_view model_choice,
+                      const std::string_view clock_choice,
+                      const int filter_strength_6581,
                       const int filter_strength_8580, const int port_choice,
-                      const std::string &channel_filter_choice)
+                      const std::string_view channel_filter_choice)
 {
 	Close();
 
 	// Sentinel
-	if (model_choice == "none")
+	const auto model_choice_has_bool = parse_bool_setting(model_choice);
+	if (model_choice_has_bool && *model_choice_has_bool == false) {
 		return;
+	}
 
-	std::string model_name;
+	std::string_view model_name = "";
 	int filter_strength = 0;
 	auto sid_service    = std::make_unique<reSIDfp::SID>();
 
@@ -87,9 +90,13 @@ void Innovation::Open(const std::string &model_choice,
 	                                       ChannelFeature::Synthesizer});
 
 	if (!mixer_channel->TryParseAndSetCustomFilter(channel_filter_choice)) {
-		if (channel_filter_choice != "off")
+		const auto filter_choice_has_bool = parse_bool_setting(
+		        channel_filter_choice);
+
+		if (!filter_choice_has_bool) {
 			LOG_WARNING("INNOVATION: Invalid 'innovation_filter' value: '%s', using 'off'",
-			            channel_filter_choice.c_str());
+			            channel_filter_choice.data());
+		}
 
 		mixer_channel->SetHighPassFilter(FilterState::Off);
 		mixer_channel->SetLowPassFilter(FilterState::Off);
@@ -124,12 +131,12 @@ void Innovation::Open(const std::string &model_choice,
 	if (filter_strength == 0)
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz",
 		        base_port,
-		        model_name.c_str(),
+		        model_name.data(),
 		        chip_clock / us_per_s);
 	else
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz filtering at %d%%",
 		        base_port,
-		        model_name.c_str(),
+		        model_name.data(),
 		        chip_clock / us_per_s,
 		        filter_strength);
 
