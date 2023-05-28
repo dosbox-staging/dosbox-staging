@@ -94,11 +94,12 @@ struct MouseConfig {
 	// Helper functions for external modules
 
 	static const std::vector<uint16_t> &GetValidMinRateList();
-	static bool ParseCaptureType(const std::string &capture_str,
-	                             MouseCapture &capture);
-	static bool ParseCOMModel(const std::string &model_str,
-	                          MouseModelCOM &model, bool &auto_msm);
-	static bool ParsePS2Model(const std::string &model_str, MouseModelPS2 &model);
+	static bool ParseCaptureType(const std::string_view capture_str,
+	                             MouseCapture& capture);
+	static bool ParseCOMModel(const std::string_view model_str,
+	                          MouseModelCOM& model, bool& auto_msm);
+	static bool ParsePS2Model(const std::string_view model_str,
+	                          MouseModelPS2& model);
 };
 
 extern MouseConfig mouse_config;
