@@ -103,9 +103,13 @@
 # cannot be decomposed without creating ambiguity, see DECOMPOSITION.TXT
 #
 #
-# Code pages supported by UTF-8 engine, despite not present in bundled CPX files (11 code page):
+# Code pages supported by UTF-8 engine, despite not present in bundled CPX files (15 code pages):
 #
+# 708   - Arabic
+# 720   - Arabic (Egypt, Iraq, Jordan, Saudi Arabia, Syria)
+# 776   - Lithuanian
 # 874   - Thai, with EUR
+# 1169  - Cyrillic (Azerbaijani, Bashkir, Kazakh, Kyrgyz, Mongolian, Tajik, Tatar, Uzbek)
 # 1250  - Central and Eastern European, with EUR
 # 1251  - Cyrillic, with EUR
 # 1252  - Western European, with EUR
@@ -711,6 +715,14 @@ CODEPAGE 668 # Polish, 852 compatible
 0xe4 0x0144        #LATIN SMALL LETTER N WITH ACUTE
 EXTENDS CODEPAGE 437
 
+CODEPAGE 708 # Arabic
+# reference: https://en.wikipedia.org/wiki/Code_page_708
+EXTENDS FILE mapping-wikipedia.org CP_708.TXT
+
+CODEPAGE 720 # Arabic (Egypt, Iraq, Jordan, Saudi Arabia, Syria)
+# reference: https://en.wikipedia.org/wiki/Code_page_720
+EXTENDS FILE mapping-wikipedia.org CP_720.TXT
+
 CODEPAGE 737 # Greek-2
 EXTENDS FILE mapping-unicode.org CP_737.TXT
 
@@ -782,6 +794,10 @@ EXTENDS FILE mapping-wikipedia.org CP_773.TXT
 
 CODEPAGE 775 # Latin-7 (Baltic)
 EXTENDS FILE mapping-unicode.org CP_775.TXT
+
+CODEPAGE 776 # Lithuanian
+# reference: https://en.wikipedia.org/wiki/Code_page_776
+EXTENDS FILE mapping-wikipedia.org CP_776.TXT
 
 CODEPAGE 777 # Lithuanian, Accented (old)
 EXTENDS FILE mapping-wikipedia.org CP_777.TXT
@@ -1036,6 +1052,10 @@ CODEPAGE 1131 # Belarusian, Cyrillic
 0xfd 0x0491        #CYRILLIC SMALL LETTER GHE WITH UPTURN
 0xfe 0x2219        #BULLET OPERATOR
 EXTENDS CODEPAGE 866
+
+CODEPAGE 1169 # Cyrillic (Azerbaijani, Bashkir, Kazakh, Kyrgyz, Mongolian, Tajik, Tatar, Uzbek)
+# reference: https://en.wikipedia.org/wiki/Code_page_1169
+EXTENDS FILE mapping-wikipedia.org CP_1169.TXT
 
 CODEPAGE 1250 # Central and Eastern European, with EUR
 EXTENDS FILE mapping-unicode.org CP_1250.TXT
