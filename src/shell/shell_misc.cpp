@@ -87,8 +87,12 @@ void DOS_Shell::InputCommand(char* line)
 	assert(dos_section != nullptr);
 	const std::string_view expand_shell_variable_pref = dos_section->Get_string(
 	        "expand_shell_variable");
+
+	const auto expand_shell_pref_has_bool = parse_bool_setting(
+	        expand_shell_variable_pref);
+
 	if ((expand_shell_variable_pref == "auto" && dos.version.major >= 7) ||
-	    expand_shell_variable_pref == "true") {
+	    (expand_shell_pref_has_bool && *expand_shell_pref_has_bool == true)) {
 		command = SubstituteEnvironmentVariables(command);
 	}
 
