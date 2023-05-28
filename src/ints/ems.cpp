@@ -1355,12 +1355,15 @@ static Bitu INT4B_Handler() {
 
 Bitu GetEMSType(Section_prop * section) {
 	Bitu rtype = 0;
-	std::string emstypestr(section->Get_string("ems"));
-	if (emstypestr=="true") {
-		rtype = 1;	// mixed mode
-	} else if (emstypestr=="emsboard") {
+	const std::string_view ems_pref = section->Get_string("ems");
+
+	const auto ems_pref_has_bool = parse_bool_setting(ems_pref);
+
+	if (ems_pref_has_bool && *ems_pref_has_bool == true) {
+		rtype = 1; // mixed mode
+	} else if (ems_pref == "emsboard") {
 		rtype = 2;
-	} else if (emstypestr=="emm386") {
+	} else if (ems_pref == "emm386") {
 		rtype = 3;
 	} else {
 		rtype = 0;
