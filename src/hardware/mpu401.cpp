@@ -57,71 +57,80 @@ constexpr uint8_t MSG_MPU_CLOCK = 0xfd;
 constexpr uint8_t MSG_MPU_ACK = 0xfe;
 constexpr uint8_t MSG_MPU_RESET = 0xff;
 
-static struct {
-	bool intelligent = false;
-	MpuMode mode     = M_UART;
-	uint8_t irq      = 9;
+struct MpuTrack {
+	uint8_t counter  = 0;
+	uint8_t value[8] = {};
+	uint8_t sys_val  = 0;
+	uint8_t vlength  = 0;
+	uint8_t length   = 0;
+	MpuDataType type = T_MIDI_NORM;
+};
+
+struct MpuState {
+	bool conductor = false;
+	bool cond_req  = false;
+	bool cond_set  = false;
+
+	bool block_ack = false;
+	bool playing   = false;
+	bool reset     = false;
+
+	bool wsd       = false;
+	bool wsm       = false;
+	bool wsd_start = false;
+
+	bool irq_pending     = false;
+	bool send_now        = false;
+	bool eoi_scheduled   = false;
+	int8_t data_onoff    = 0;
+	uint8_t command_byte = 0;
+	uint8_t cmd_pending  = 0;
+
+	uint8_t tmask = 0;
+	uint8_t cmask = 0;
+	uint8_t amask = 0;
+
+	uint16_t midi_mask = 0;
+	uint16_t req_mask  = 0;
+
+	uint8_t channel  = 0;
+	uint8_t old_chan = 0;
+};
+
+struct MpuClock {
+	uint8_t timebase = 0;
+
+	uint8_t tempo      = 0;
+	uint8_t tempo_rel  = 0;
+	uint8_t tempo_grad = 0;
+
+	uint8_t cth_rate      = 0;
+	uint8_t cth_counter   = 0;
+	uint8_t cth_savecount = 0;
+
+	bool clock_to_host = false;
+};
+
+struct Mpu {
+	bool is_intelligent = false;
+	MpuMode mode        = M_UART;
+
+	// Princess Maker 2 wants it on irq 9
+	uint8_t irq = 9;
 
 	uint8_t queue[MPU401_QUEUE] = {};
 	uint8_t queue_pos           = 0;
 	uint8_t queue_used          = 0;
 
-	struct track {
-		uint8_t counter  = 0;
-		uint8_t value[8] = {};
-		uint8_t sys_val  = 0;
-		uint8_t vlength  = 0;
-		uint8_t length   = 0;
-		MpuDataType type = T_MIDI_NORM;
-	};
-	track playbuf[8] = {};
-	track condbuf    = {};
+	MpuTrack playbuf[8] = {};
+	MpuTrack condbuf    = {};
 
-	struct {
-		bool conductor = false;
-		bool cond_req  = false;
-		bool cond_set  = false;
+	MpuState state = {};
 
-		bool block_ack = false;
-		bool playing   = false;
-		bool reset     = false;
+	MpuClock clock = {};
+};
 
-		bool wsd       = false;
-		bool wsm       = false;
-		bool wsd_start = false;
-
-		bool irq_pending     = false;
-		bool send_now        = false;
-		bool eoi_scheduled   = false;
-		int8_t data_onoff    = 0;
-		uint8_t command_byte = 0;
-		uint8_t cmd_pending  = 0;
-
-		uint8_t tmask = 0;
-		uint8_t cmask = 0;
-		uint8_t amask = 0;
-
-		uint16_t midi_mask = 0;
-		uint16_t req_mask  = 0;
-
-		uint8_t channel  = 0;
-		uint8_t old_chan = 0;
-	} state = {};
-
-	struct {
-		uint8_t timebase = 0;
-
-		uint8_t tempo      = 0;
-		uint8_t tempo_rel  = 0;
-		uint8_t tempo_grad = 0;
-
-		uint8_t cth_rate      = 0;
-		uint8_t cth_counter   = 0;
-		uint8_t cth_savecount = 0;
-
-		bool clock_to_host = false;
-	} clock = {};
-} mpu = {};
+static Mpu mpu = {};
 
 static void QueueByte(uint8_t data)
 {
@@ -129,7 +138,7 @@ static void QueueByte(uint8_t data)
 		mpu.state.block_ack = false;
 		return;
 	}
-	if (!mpu.queue_used && mpu.intelligent) {
+	if (!mpu.queue_used && mpu.is_intelligent) {
 		mpu.state.irq_pending = true;
 		PIC_ActivateIRQ(mpu.irq);
 	}
@@ -339,8 +348,9 @@ static uint8_t MPU401_ReadData(io_port_t, io_width_t)
 		mpu.queue_pos++;
 		mpu.queue_used--;
 	}
-	if (!mpu.intelligent)
+	if (!mpu.is_intelligent) {
 		return ret;
+	}
 
 	if (mpu.queue_used == 0)
 		PIC_DeActivateIRQ(mpu.irq);
@@ -734,7 +744,7 @@ static void MPU401_Reset()
 {
 	MIDI_Reset();
 	PIC_DeActivateIRQ(mpu.irq);
-	mpu.mode = (mpu.intelligent ? M_INTELLIGENT : M_UART);
+	mpu.mode = (mpu.is_intelligent ? M_INTELLIGENT : M_UART);
 	PIC_RemoveEvents(MPU401_Event);
 	PIC_RemoveEvents(MPU401_EOIHandler);
 	mpu.state.eoi_scheduled = false;
@@ -773,7 +783,7 @@ class MPU401 final : public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler[2]   = {};
 	IO_WriteHandleObject WriteHandler[2] = {};
-	bool installed                       = false;
+	bool is_installed                    = false;
 
 public:
 	MPU401(Section* configuration) : Module_base(configuration)
@@ -783,14 +793,12 @@ public:
 			return;
 		}
 
-		const std::string_view mpu_type = section->Get_string("mpu401");
+		const std::string_view mpu_choice = section->Get_string("mpu401");
 
-		const auto mpu_as_bool = parse_bool_setting(mpu_type);
-		if (mpu_as_bool && *mpu_as_bool == false) {
+		if (const auto has_bool = parse_bool_setting(mpu_choice);
+		    has_bool && *has_bool == false) {
 			return;
 		}
-
-		installed = true;
 
 		constexpr io_port_t port_0x330 = 0x330;
 		constexpr io_port_t port_0x331 = 0x331;
@@ -800,38 +808,53 @@ public:
 		ReadHandler[0].Install(port_0x330, &MPU401_ReadData, io_width_t::byte);
 		ReadHandler[1].Install(port_0x331, &MPU401_ReadStatus, io_width_t::byte);
 
-		mpu.queue_used = 0;
-		mpu.queue_pos = 0;
-		mpu.mode = M_UART;
-		mpu.irq = 9; // Princess Maker 2 wants it on irq 9
+		mpu = Mpu{};
+		mpu.is_intelligent = (mpu_choice == "intelligent");
+		if (mpu.is_intelligent) {
+			// Set IRQ and unmask it(for timequest/princess maker 2)
+			PIC_SetIRQMask(mpu.irq, false);
+			MPU401_Reset();
+		}
 
-		mpu.intelligent = (mpu_type == "intelligent");
-		if (!mpu.intelligent)
-			return;
-		// Set IRQ and unmask it(for timequest/princess maker 2)
-		PIC_SetIRQMask(mpu.irq, false);
-		MPU401_Reset();
+		LOG_MSG("MPU-401: Running in %s-mode on ports %xh and %xh",
+		        mpu.is_intelligent ? "intelligent" : "UART",
+		        port_0x330,
+		        port_0x331);
+
+		is_installed = true;
 	}
 	~MPU401()
 	{
-		if (installed && mpu.intelligent) {
+		if (!is_installed) {
+			return;
+		}
+
+		LOG_MSG("MPU-401: Shutting down");
+
+		if (mpu.is_intelligent) {
 			PIC_SetIRQMask(mpu.irq, true);
 		}
+		for (auto& handler : WriteHandler) {
+			handler.Uninstall();
+		}
+		for (auto& handler : ReadHandler) {
+			handler.Uninstall();
+		}
+		is_installed = false;
 	}
 };
 
-static MPU401 *test;
+static std::unique_ptr<MPU401> mpu401 = {};
 
 void MPU401_Destroy(Section * /*sec*/)
 {
-	delete test;
+	mpu401 = {};
 }
-
 void MPU401_Init(Section* sec)
 {
 	assert(sec);
 
-	test = new MPU401(sec);
+	mpu401 = std::make_unique<MPU401>(sec);
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&MPU401_Destroy, changeable_at_runtime);
