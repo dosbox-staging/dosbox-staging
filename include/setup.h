@@ -187,9 +187,15 @@ protected:
 	Value value                                            = {};
 	std::vector<Value> valid_values                        = {};
 	std::map<Value, Value> deprecated_and_alternate_values = {};
+	bool is_positive_bool_valid                            = false;
+	bool is_negative_bool_valid                            = false;
+
 	Value default_value                                    = {};
 	const Changeable::Value change                         = {};
 	typedef std::vector<Value>::const_iterator const_iter;
+
+private:
+	void MaybeSetBoolValid(const std::string_view value);
 };
 
 class Prop_int final : public Property {
