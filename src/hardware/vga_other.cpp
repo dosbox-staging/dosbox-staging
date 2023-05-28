@@ -1474,10 +1474,21 @@ static void composite_init(Section *sec)
 	assert(sec);
 	const auto conf = static_cast<Section_prop *>(sec);
 	assert(conf);
-	const std::string state = conf->Get_string("composite");
-	cga_comp = (state == "auto" ? COMPOSITE_STATE::AUTO
-	            : state == "on" ? COMPOSITE_STATE::ON
-	                            : COMPOSITE_STATE::OFF);
+	const std::string_view state = conf->Get_string("composite");
+
+	if (state == "auto") {
+		cga_comp = COMPOSITE_STATE::AUTO;
+	} else {
+		const auto state_has_bool = parse_bool_setting(state);
+		if (state_has_bool) {
+			cga_comp = *state_has_bool ? COMPOSITE_STATE::ON
+			                           : COMPOSITE_STATE::OFF;
+		} else {
+			LOG_WARNING("COMPOSITE: Invalid 'composite' value: '%s', using 'off'",
+			            state.data());
+			cga_comp = COMPOSITE_STATE::OFF;
+		}
+	}
 
 	const auto era_choice = std::string(conf->Get_string("era"));
 	is_composite_new_era = era_choice == "new" ||
