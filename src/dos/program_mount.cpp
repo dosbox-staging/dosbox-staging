@@ -75,8 +75,9 @@ void MOUNT::Move_Z(char new_z)
 		/* Update batch file if running from Z: (very likely: autoexec) */
 		if (first_shell->bf) {
 			std::string &name = first_shell->bf->filename;
-			if (starts_with("Z:", name))
+			if (starts_with(name, "Z:")) {
 				name[0] = new_drive_z;
+			}
 		}
 		/* Change the active drive */
 		if (DOS_GetDefaultDrive() == 25)

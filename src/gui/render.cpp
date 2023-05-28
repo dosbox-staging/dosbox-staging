@@ -681,8 +681,8 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 	assert(control);
 	const Section *sdl_sec = control->GetSection("sdl");
 	assert(sdl_sec);
-	const bool using_opengl = starts_with("opengl",
-	                                      sdl_sec->GetPropValue("output"));
+	const bool using_opengl = starts_with(sdl_sec->GetPropValue("output"),
+	                                      "opengl");
 
 	const auto render_sec = static_cast<const Section_prop *>(
 	        control->GetSection("render"));

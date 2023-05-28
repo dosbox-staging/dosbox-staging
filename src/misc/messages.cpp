@@ -250,7 +250,7 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 	const auto lang = SETUP_GetLanguage();
 
 	// If the language is english, then use the internal message
-	if (lang.empty() || starts_with("en", lang)) {
+	if (lang.empty() || starts_with(lang, "en")) {
 		LOG_MSG("LANG: Using internal English language messages");
 		return;
 	}

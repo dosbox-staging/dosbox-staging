@@ -2194,11 +2194,13 @@ static cga_colors_t configure_cga_colors()
 	if (cga_colors_prefs == "default")
 		return cga_colors_default;
 
-	else if (starts_with("tandy", cga_colors_prefs))
+	else if (starts_with(cga_colors_prefs, "tandy")) {
 		return handle_cga_colors_prefs_tandy(cga_colors_prefs);
+	}
 
-	else if (starts_with("ibm5153", cga_colors_prefs))
+	else if (starts_with(cga_colors_prefs, "ibm5153")) {
 		return handle_cga_colors_prefs_ibm5153(cga_colors_prefs);
+	}
 
 	else if (cga_colors_prefs == "tandy-warm")
 		return cga_colors_tandy_warm;

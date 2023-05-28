@@ -993,8 +993,9 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_pref
 	SetLowPassFilter(FilterState::Off);
 	SetHighPassFilter(FilterState::Off);
 
-	if (!(starts_with("lpf", filter_prefs) || starts_with("hpf", filter_prefs)))
+	if (!(starts_with(filter_prefs, "lpf") || starts_with(filter_prefs, "hpf"))) {
 		return false;
+	}
 
 	const auto parts = split(filter_prefs, ' ');
 
