@@ -488,6 +488,8 @@ std::string DOS_Shell::Which(const std::string_view name) const
 		path_environment = path_environment.substr(path_equals + 1);
 		auto path_directories = split(path_environment, ';');
 
+		remove_empties(path_directories);
+
 		for (auto& directory : path_directories) {
 			if (directory.back() != '\\') {
 				directory += '\\';
