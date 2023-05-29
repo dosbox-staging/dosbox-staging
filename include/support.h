@@ -295,6 +295,16 @@ void remove_duplicates(container_t &c)
 	c.erase(end, c.end());
 }
 
+// remove empty() values from a container using std::remove_if (C++17)
+template <typename container_t>
+void remove_empties(container_t& c)
+{
+	auto is_empty = [](const auto& item) { return item.empty(); };
+
+	auto new_c_end = std::remove_if(c.begin(), c.end(), is_empty);
+	c.erase(std::move(new_c_end), c.end());
+}
+
 // Convenience function to cast to the underlying type of an enum class
 template <typename enum_t>
 constexpr auto enum_val(enum_t e)
