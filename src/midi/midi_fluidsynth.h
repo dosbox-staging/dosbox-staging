@@ -40,7 +40,7 @@ public:
 	~MidiHandlerFluidsynth() override;
 	void PrintStats();
 
-	const char* GetName() const override
+	std::string_view GetName() const override
 	{
 		return "fluidsynth";
 	}

@@ -49,7 +49,7 @@ public:
 	          m_pCurPacket(nullptr)
 	{}
 
-	const char* GetName() const override
+	std::string_view GetName() const override
 	{
 		return "coremidi";
 	}
