@@ -128,6 +128,31 @@ if get_option('buildtype') in ['release', 'minsize']
     extra_link_flags += ['-Wl,--gc-sections']
 endif
 
+# Let sanitizer builds recover and continue
+if get_option('b_sanitize') != 'none'
+    extra_flags += [
+        '-fsanitize-recover=all'
+    ]
+endif
+
+# Add Debug-specific flags here
+if get_option('buildtype').startswith('debug')
+
+    # Use GCC's and Clang's maximum check flags except 
+    # for macOS and Windows, where Xcode and MSYS2 both 
+    # fails with undefined symbols.
+    if os_family_name not in ['MACOSX', 'WIN32']
+        extra_flags += [
+            '--enable-concept-checks',
+            '-D__GLIBCXX_ASSERTIONS=1',
+            '-D_GLIBCXX_DEBUG=1',
+            '-D__GLIBCXX_DEBUG_PEDANTIC=1',
+            '-D__GLIBCXX_SANITIZE_VECTOR=1',
+            '-D_LIBCPP_DEBUG=1',
+        ]
+    endif
+endif
+
 if get_option('asm')
     extra_flags += ['--save-temps', '/FAs']
 endif
