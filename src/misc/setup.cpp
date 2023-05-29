@@ -1187,12 +1187,16 @@ void Config::Init() const
 
 void Section::AddEarlyInitFunction(SectionFunction func, bool changeable_at_runtime)
 {
-	early_init_functions.emplace_back(func, changeable_at_runtime);
+	if (func) {
+		early_init_functions.emplace_back(func, changeable_at_runtime);
+	}
 }
 
 void Section::AddInitFunction(SectionFunction func, bool changeable_at_runtime)
 {
-	initfunctions.emplace_back(func, changeable_at_runtime);
+	if (func) {
+		initfunctions.emplace_back(func, changeable_at_runtime);
+	}
 }
 
 void Section::AddDestroyFunction(SectionFunction func, bool changeable_at_runtime)
@@ -1204,6 +1208,7 @@ void Section::ExecuteEarlyInit(bool init_all)
 {
 	for (const auto& fn : early_init_functions) {
 		if (init_all || fn.changeable_at_runtime) {
+			assert(fn.function);
 			fn.function(this);
 		}
 	}
@@ -1213,6 +1218,7 @@ void Section::ExecuteInit(bool initall)
 {
 	for (const auto& fn : initfunctions) {
 		if (initall || fn.changeable_at_runtime) {
+			assert(fn.function);
 			fn.function(this);
 		}
 	}
