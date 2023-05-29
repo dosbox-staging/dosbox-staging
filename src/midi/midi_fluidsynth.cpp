@@ -649,12 +649,18 @@ void MidiHandlerFluidsynth::MixerCallBack(const uint16_t requested_audio_frames)
 
 	static std::vector<AudioFrame> audio_frames = {};
 
-	[[maybe_unused]] const auto has_dequeued =
-	        audio_frame_fifo.BulkDequeue(audio_frames, requested_audio_frames);
-	assert(has_dequeued && audio_frames.size() == requested_audio_frames);
+	const auto has_dequeued = audio_frame_fifo.BulkDequeue(audio_frames,
+	                                                       requested_audio_frames);
 
-	channel->AddSamples_sfloat(requested_audio_frames, &audio_frames[0][0]);
-	last_rendered_ms = PIC_FullIndex();
+	if (has_dequeued) {
+		assert(audio_frames.size() == requested_audio_frames);
+		channel->AddSamples_sfloat(requested_audio_frames,
+		                           &audio_frames[0][0]);
+		last_rendered_ms = PIC_FullIndex();
+	} else {
+		assert(!audio_frame_fifo.IsRunning());
+		channel->AddSilence();
+	}
 }
 
 void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const uint16_t num_audio_frames)
