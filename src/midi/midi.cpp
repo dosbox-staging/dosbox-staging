@@ -25,6 +25,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <list>
 #include <string>
 
 #include <SDL.h>
@@ -68,24 +69,6 @@ uint8_t MIDI_message_len_by_status[256] = {
 };
 // clang-format on
 
-static MidiHandler* handler_list = nullptr;
-
-// JN: What the original devs did here is all MIDI devices that extend from
-// MidiHandler are created as global singletons. They relied on the global
-// instance creation combined with inheritance to create a linked-list of all
-// MIDI handlers as a side-effect... You get a kind of a linked list at the
-// end, where `handler_list` points to the last created MIDI device, then you
-// can iterate through the rest of the devices in reverse creation order by
-// following the `next` pointer until you hit a NULL pointer which signifies
-// the end of the chain.
-//
-// This is hacky as hell and needs to be rewritten in a sane way at some
-// point...
-MidiHandler::MidiHandler() : next(handler_list)
-{
-	handler_list = this;
-}
-
 /* Include different midi drivers, lowest ones get checked first for default.
    Each header provides an independent midi interface. */
 
@@ -97,17 +80,58 @@ MidiHandler::MidiHandler() : next(handler_list)
 #	include "midi_coreaudio.h"
 
 #elif defined(WIN32)
-#	include "midi_win32.h"
-
+#include "midi_win32.h"
 #else
-#	include "midi_oss.h"
-
+#include "midi_oss.h"
 #endif
-#include "midi_alsa.h"
-
 #if C_ALSA
-MidiHandler_alsa Midi_alsa;
+#include "midi_alsa.h"
 #endif
+
+static std::list<std::unique_ptr<MidiHandler>> handlers = {};
+
+static void deregister_handlers()
+{
+	handlers.clear();
+}
+
+static void register_handlers()
+{
+	deregister_handlers();
+	
+#if C_FLUIDSYNTH
+	handlers.emplace_back(std::make_unique<MidiHandlerFluidsynth>());
+#endif
+#if C_MT32EMU
+	handlers.emplace_back(std::make_unique<MidiHandler_mt32>());
+#endif
+#if C_COREMIDI
+	handlers.emplace_back(std::make_unique<MidiHandler_coremidi>());
+#endif
+#if C_COREAUDIO
+	handlers.emplace_back(std::make_unique<MidiHandler_coreaudio>());
+#endif
+#if defined(WIN32)
+	handlers.emplace_back(std::make_unique<MidiHandler_win32>());
+#endif
+#if C_ALSA
+	handlers.emplace_back(std::make_unique<MidiHandler_alsa>());
+#endif
+#if !defined(WIN32) && !defined(MACOSX)
+	handlers.emplace_back(std::make_unique<MidiHandler_oss>());
+#endif
+}
+
+MidiHandler* get_handler(const std::string_view name)
+{
+	for (const auto& handler : handlers) {
+		if (handler->GetName() == name) {
+			return handler.get();
+		}
+	}
+	return nullptr;
+}
+
 
 struct Midi {
 	uint8_t status = 0;
@@ -569,14 +593,21 @@ public:
 	MIDI(Section* configuration)
 	{
 		Section_prop* section = static_cast<Section_prop*>(configuration);
-		std::string mididevice_prefs = section->Get_string("mididevice");
-		lowcase(mididevice_prefs);
+
+		const std::string_view device_choice = section->Get_string("mididevice");
+
+		midi = Midi{};
+
+		// Has the user disable MIDI?
+		if (const auto device_has_bool = parse_bool_setting(device_choice);
+		    device_has_bool && *device_has_bool == false) {
+			LOG_MSG("MIDI: MIDI device set to 'none'; disabling MIDI output");
+			return;
+		}
 
 		raw_midi_output_enabled = section->Get_bool("raw_midi_output");
 
 		std::string midiconfig_prefs = section->Get_string("midiconfig");
-
-		MidiHandler* handler = {};
 
 		if (midiconfig_prefs.find("delaysysex") != std::string::npos) {
 			midi.sysex.start_ms = GetTicks();
@@ -587,58 +618,37 @@ public:
 		trim(midiconfig_prefs);
 		const char* midiconfig = midiconfig_prefs.c_str();
 
-		// TODO: Rewrite this logic without using goto
-		if (mididevice_prefs == "none") {
-			LOG_MSG("MIDI: MIDI device set to 'none'; disabling MIDI output");
-			return;
-		} else if (mididevice_prefs == "auto") {
-			goto getdefault;
-		}
-
-		handler = handler_list;
-
-		while (handler) {
-			if (mididevice_prefs == handler->GetName()) {
-				if (!handler->Open(midiconfig)) {
-					LOG_WARNING("MIDI: Can't open device: %s with config: '%s'",
-					            mididevice_prefs.c_str(),
-					            midiconfig);
-					goto getdefault;
-				}
-				midi.handler      = handler;
+		auto open_handler = [&](MidiHandler* handler) -> bool {
+			const auto opened = handler && handler->Open(midiconfig);
+			if (opened) {
 				midi.is_available = true;
-
+				midi.handler      = handler;
 				LOG_MSG("MIDI: Opened device: %s",
-				        handler->GetName());
-				return;
+				        handler->GetName().data());
 			}
-			handler = handler->next;
+			return opened;
+		};
+
+		register_handlers();
+
+		if (device_choice == "auto") {
+			// Use the first working device
+			for (const auto& handler : handlers) {
+				// FluidSynth or MT-32 are opt-in only
+				if (!(handler->GetName() == "fluidsynth" ||
+				      handler->GetName() == "mt32")) {
+					if (open_handler(handler.get())) {
+						break;
+					}
+				}
+			}
+		} else {
+			open_handler(get_handler(device_choice));
 		}
 
-		LOG_MSG("MIDI: Can't find device: %s, using default handler.",
-		        mididevice_prefs.c_str());
-
-	getdefault:
-		for (handler = handler_list; handler; handler = handler->next) {
-			const std::string name = handler->GetName();
-			if (name == "fluidsynth") {
-				// Never select fluidsynth automatically.
-				// Users needs to opt-in, otherwise
-				// fluidsynth will slow down emulator
-				// startup for all games.
-				continue;
-			}
-			if (name == "mt32") {
-				// Never select mt32 automatically.
-				// Users needs to opt-in.
-				continue;
-			}
-			if (handler->Open(midiconfig)) {
-				midi.is_available = true;
-				midi.handler      = handler;
-				LOG_MSG("MIDI: Opened device: %s", name.c_str());
-				return;
-			}
+		if (!midi.is_available) {
+			LOG_MSG("MIDI: Can't find device: '%s', MIDI is not available",
+			        device_choice.data());
 		}
 	}
 
@@ -653,6 +663,8 @@ public:
 		midi.handler->Close();
 		midi.handler      = {};
 		midi.is_available = false;
+
+		deregister_handlers();
 	}
 };
 
@@ -660,12 +672,10 @@ void MIDI_ListAll(Program* caller)
 {
 	constexpr auto msg_indent = "  ";
 
-	for (auto* handler = handler_list; handler; handler = handler->next) {
-		const std::string name = handler->GetName();
-
+	for (const auto& handler : handlers) {
 		std::string name_format = msg_indent;
 		name_format.append(convert_ansi_markup("[color=white]%s:[reset]\n"));
-		caller->WriteOut(name_format.c_str(), name.c_str());
+		caller->WriteOut(name_format.c_str(), handler->GetName().data());
 
 		const auto err = handler->ListAll(caller);
 		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED) {

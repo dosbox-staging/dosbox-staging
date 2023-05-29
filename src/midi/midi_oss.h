@@ -38,7 +38,7 @@ public:
 
 	~MidiHandler_oss() override;
 
-	const char* GetName() const override
+	std::string_view GetName() const override
 	{
 		return "oss";
 	}

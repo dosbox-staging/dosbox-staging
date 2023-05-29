@@ -36,17 +36,13 @@ enum class MidiDeviceType { BuiltIn, External };
 
 class MidiHandler {
 public:
-	MidiHandler();
-
+	MidiHandler() {}
 	MidiHandler(const MidiHandler&) = delete;            // prevent copying
 	MidiHandler& operator=(const MidiHandler&) = delete; // prevent assignment
 
 	virtual ~MidiHandler() = default;
 
-	virtual const char* GetName() const
-	{
-		return "none";
-	}
+	virtual std::string_view GetName() const = 0;
 
 	virtual MidiDeviceType GetDeviceType() const
 	{
@@ -75,8 +71,10 @@ public:
 	{
 		return MIDI_RC::ERR_DEVICE_LIST_NOT_SUPPORTED;
 	}
-
-	MidiHandler* next = nullptr;
 };
+
+void MIDI_RegisterHandler(std::unique_ptr<MidiHandler> handler);
+MidiHandler* MIDI_GetHandler(const std::string_view name);
+void MIDI_DeregisterHandler(const std::string_view name);
 
 #endif
