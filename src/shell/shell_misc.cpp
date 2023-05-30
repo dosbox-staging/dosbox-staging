@@ -229,7 +229,7 @@ std::string DOS_Shell::ReadCommand()
 				}
 				completion_index = 0;
 
-				const auto delimiter = command.find_last_of(" \\");
+				const auto delimiter = command.find_last_of(" \\/");
 				if (delimiter == std::string::npos) {
 					completion_start = 0;
 				} else {
@@ -292,7 +292,12 @@ static std::vector<std::string> get_completions(const std::string_view command)
 	if (!args.empty() && command.back() != ' ') {
 		search += args.back();
 	}
-	search += "*.*";
+
+	search += "*";
+
+	if (search.find_first_of('.') == std::string::npos) {
+		search += ".*";
+	}
 
 	const auto save_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
