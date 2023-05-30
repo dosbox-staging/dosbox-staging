@@ -144,10 +144,10 @@ if get_option('buildtype').startswith('debug')
     if os_family_name not in ['MACOSX', 'WIN32']
         extra_flags += [
             '--enable-concept-checks',
-            '-D__GLIBCXX_ASSERTIONS=1',
+            '-D_GLIBCXX_ASSERTIONS=1',
             '-D_GLIBCXX_DEBUG=1',
-            '-D__GLIBCXX_DEBUG_PEDANTIC=1',
-            '-D__GLIBCXX_SANITIZE_VECTOR=1',
+            '-D_GLIBCXX_DEBUG_PEDANTIC=1',
+            '-D_GLIBCXX_SANITIZE_VECTOR=1',
             '-D_LIBCPP_DEBUG=1',
         ]
     endif
