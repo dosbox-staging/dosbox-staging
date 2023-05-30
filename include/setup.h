@@ -292,13 +292,13 @@ public:
 typedef void (*SectionFunction)(Section*);
 
 class Section {
-private:
+public:
 	// Wrapper class around startup and shutdown functions. the variable
 	// changeable_at_runtime indicates it can be called on configuration
 	// changes
 	struct Function_wrapper {
-		SectionFunction function;
-		bool changeable_at_runtime;
+		SectionFunction function   = nullptr;
+		bool changeable_at_runtime = false;
 
 		Function_wrapper(const SectionFunction fn, bool ch)
 		        : function(fn),
@@ -306,10 +306,14 @@ private:
 		{}
 	};
 
+private:
 	std::deque<Function_wrapper> early_init_functions = {};
-	std::deque<Function_wrapper> initfunctions        = {};
-	std::deque<Function_wrapper> destroyfunctions     = {};
-	std::string sectionname                           = {};
+	std::deque<Function_wrapper> init_functions         = {};
+	std::deque<Function_wrapper> pending_init_functions = {};
+	std::deque<Function_wrapper> destroyfunctions       = {};
+	std::string sectionname                             = {};
+
+	bool is_executing_init_functions = false;
 
 public:
 	Section() = default;

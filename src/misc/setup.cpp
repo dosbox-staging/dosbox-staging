@@ -1194,8 +1194,14 @@ void Section::AddEarlyInitFunction(SectionFunction func, bool changeable_at_runt
 
 void Section::AddInitFunction(SectionFunction func, bool changeable_at_runtime)
 {
-	if (func) {
-		initfunctions.emplace_back(func, changeable_at_runtime);
+	if (!func) {
+		return;
+	}
+	// If we're already executing, then place these in the pending queue
+	if (is_executing_init_functions) {
+		pending_init_functions.emplace_back(func, changeable_at_runtime);
+	} else {
+		init_functions.emplace_back(func, changeable_at_runtime);
 	}
 }
 
@@ -1204,23 +1210,65 @@ void Section::AddDestroyFunction(SectionFunction func, bool changeable_at_runtim
 	destroyfunctions.emplace_front(func, changeable_at_runtime);
 }
 
-void Section::ExecuteEarlyInit(bool init_all)
+// Starting at the given offset, loops through the remaining functions and call
+// them based on their criteria. Returns the number of functions processed.
+//
+static size_t call_functions(const size_t start_offset,
+                             const std::deque<Section::Function_wrapper>& functions,
+                             const bool should_init_all, Section* section_pointer)
 {
-	for (const auto& fn : early_init_functions) {
-		if (init_all || fn.changeable_at_runtime) {
+	assert(section_pointer);
+	assert(start_offset <= functions.size());
+
+	[[maybe_unused]] const auto expected_num_functions = functions.size();
+
+	auto call_function = [&](auto& fn) {
+		if (should_init_all || fn.changeable_at_runtime) {
 			assert(fn.function);
-			fn.function(this);
+			fn.function(section_pointer);
+
+			// Make sure the function didn't alter the container's size
+			assert(functions.size() == expected_num_functions);
 		}
-	}
+	};
+	auto start_it = functions.begin();
+	std::advance(start_it, start_offset);
+	std::for_each(start_it, functions.end(), call_function);
+	return static_cast<size_t>(std::distance(start_it, functions.end()));
 }
 
-void Section::ExecuteInit(bool initall)
+void Section::ExecuteEarlyInit(const bool init_all)
 {
-	for (const auto& fn : initfunctions) {
-		if (initall || fn.changeable_at_runtime) {
-			assert(fn.function);
-			fn.function(this);
-		}
+	constexpr auto start_offset = 0u;
+	call_functions(start_offset, early_init_functions, init_all, this);
+}
+
+void Section::ExecuteInit(const bool init_all)
+{
+	size_t num_called = 0;
+	while (num_called != init_functions.size()) {
+		// When we're executing init functions, any calls to
+		// 'AddInitFunction' will add to the pending set instead of
+		// modifying the init_functions directly.
+		is_executing_init_functions = true;
+
+		// Keep track of the number called thus far, which acts as the
+		// new starting offset if we added pending function during a
+		// prior pass through the loop.
+		num_called += call_functions(num_called, init_functions, init_all, this);
+		is_executing_init_functions = false;
+
+		// The above init functions may add to the pending init
+		// functions, so we move them to the back of the init_functions
+		// (growing the size of init_functions), and then take another
+		// pass through the while loop.
+		std::move(pending_init_functions.begin(),
+		          pending_init_functions.end(),
+		          std::back_inserter(init_functions));
+
+		assert(num_called <= init_functions.size());
+		assert(pending_init_functions.empty());
+		pending_init_functions.clear();
 	}
 }
 
