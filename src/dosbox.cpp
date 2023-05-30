@@ -602,11 +602,11 @@ void DOSBOX_Init()
 
 	pbool = secprop->Add_bool("allow_write_protected_files", only_at_start, true);
 	pbool->Set_help(
-	        "Many games open all their files with writable permissions; even files that they\n"
-	        "never modify. This setting lets you write-protect those files while still\n"
-	        "allowing the game to read them. A second use-case: if you're using a copy-on-write\n"
-	        "or network-based filesystem, this setting avoids triggering write-operations for\n"
-	        "these write-protected files.");
+		"Many games open all their files with writable permissions; even files that they\n"
+		"never modify. This setting lets you write-protect those files while still\n"
+		"allowing the game to read them. A second use-case: if you're using a\n"
+		"copy-on-write or network-based filesystem, this setting avoids triggering\n"
+		"write-operations for these write-protected files.");
 
 	secprop = control->AddSection_prop("render", &RENDER_Init, changeable_at_runtime);
 	secprop->AddEarlyInitFunction(&RENDER_InitShaderSource, changeable_at_runtime);
