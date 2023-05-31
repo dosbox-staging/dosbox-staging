@@ -45,7 +45,6 @@ uint32_t FillTable[16];
 // Get the current video mode's type and numeric ID
 std::pair<VGAModes, uint16_t> VGA_GetCurrentMode()
 {
-	assert(CurMode != ModeList_VGA.end());
 	return {vga.mode, CurMode->mode};
 }
 
