@@ -29,15 +29,15 @@ seamless mouse, %s+F10 to capture
 seamless mouse, %s+F10 or middle-click to capture
 .
 :CONFIG_FULLSCREEN
-Start directly in fullscreen.
+Start directly in fullscreen (disabled by default).
 Run INTRO and see Special Keys for window control hotkeys.
 .
 :CONFIG_DISPLAY
-Number of display to use; values depend on OS and user settings.
+Number of display to use; values depend on OS and user settings (0 by default).
 .
 :CONFIG_FULLRESOLUTION
 What resolution to use for fullscreen: 'original', 'desktop'
-or a fixed size (e.g. 1024x768).
+or a fixed size, e.g. 1024x768 ('desktop' by default).
 .
 :CONFIG_WINDOWRESOLUTION
 Set window size when running in windowed mode:
@@ -57,15 +57,15 @@ Set the viewport size (drawable area) within the window/screen:
 .
 :CONFIG_WINDOW_POSITION
 Set initial window position when running in windowed mode:
-  auto:      Let the window manager decide the position.
+  auto:      Let the window manager decide the position (default).
   <custom>:  Set window position in X,Y format. For example: 250,100
              0,0 is the top-left corner of the screen.
 .
 :CONFIG_WINDOW_DECORATIONS
-Enable window decorations in windowed mode.
+Enable window decorations in windowed mode (enabled by default).
 .
 :CONFIG_TRANSPARENCY
-Set the transparency of the DOSBox Staging screen.
+Set the transparency of the DOSBox Staging screen (0 by default).
 From 0 (no transparency) to 90 (high transparency).
 .
 :CONFIG_MAX_RESOLUTION
@@ -74,7 +74,7 @@ This setting has been renamed to viewport_resolution.
 :CONFIG_HOST_RATE
 Set the host's refresh rate:
   auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh
-             display.
+             display (default).
   sdi:       Use serial device interface (SDI) rates, without further
              adjustment.
   vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR
@@ -83,25 +83,25 @@ Set the host's refresh rate:
              23.000.
 .
 :CONFIG_VSYNC
-Synchronize with display refresh rate if supported.
-This can reduce flickering and tearing, but may also impact performance.
+Synchronize with display refresh rate if supported to eliminate flickering
+and tearing (enabled by default).
 .
 :CONFIG_VSYNC_SKIP
 Number of microseconds to allow rendering to block before skipping the
-next frame. 0 disables this and will always render.
+next frame (7000 by default). 0 disables this and will always render.
 .
 :CONFIG_PRESENTATION_MODE
 Select the frame presentation mode:
-  auto:  Intelligently time and drop frames to prevent
-         emulation stalls, based on host and DOS frame rates.
+  auto:  Intelligently time and drop frames to prevent emulation
+         stalls, based on host and DOS frame rates (default).
   cfr:   Always present DOS frames at a constant frame rate.
   vfr:   Always present changed DOS frames at a variable frame rate.
 .
 :CONFIG_OUTPUT
-Video system to use for output.
+Video system to use for output ('opengl' by default).
 .
 :CONFIG_TEXTURE_RENDERER
-Render driver to use in 'texture' output mode.
+Render driver to use in 'texture' output mode ('auto' by default).
 Use 'texture_renderer = auto' for an automatic choice.
 .
 :CONFIG_CAPTURE_MOUSE
@@ -114,7 +114,7 @@ Moved to [mouse] section.
 Moved to [mouse] section.
 .
 :CONFIG_WAITONERROR
-Keep the console open if an error has occurred.
+Keep the console open if an error has occurred (enabled by default).
 .
 :CONFIG_PRIORITY
 Priority levels to apply when active and inactive, respectively.
@@ -122,10 +122,10 @@ Priority levels to apply when active and inactive, respectively.
 'auto' lets the host operating system manage the priority.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Mute the sound when the window is inactive.
+Mute the sound when the window is inactive (disabled by default).
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
-Pause emulation when the window is inactive.
+Pause emulation when the window is inactive (disabled by default).
 .
 :CONFIG_MAPPERFILE
 File used to load/save the key/event mappings.
@@ -135,8 +135,8 @@ Notes: The -resetmapper commandline flag only deletes the default mapperfile.
 .
 :CONFIG_SCREENSAVER
 Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment
-variable (which usually blocks the OS screensaver while the emulator is
-running).
+variable which usually blocks the OS screensaver while the emulator is
+running ('auto' by default).
 .
 :CONFIG_LANGUAGE
 Select a language to use: de, en, es, fr, it, nl, pl, and ru (unset by default)
@@ -147,10 +147,6 @@ Notes: This setting will override the 'LANG' environment, if set.
 .
 :CONFIG_MACHINE
 The type of machine DOSBox tries to emulate ('svga_s3' by default).
-.
-:CONFIG_CAPTURES
-Directory where audio, video, MIDI, and screenshot captures get saved
-('capture' by default).
 .
 :CONFIG_MEMSIZE
 Amount of memory of the emulated machine has in MB (16 by default).
@@ -171,6 +167,9 @@ corruption errors.
 Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default per
 video adapter ('auto' by default).
 .
+:CONFIG_FORCE_VGA_SINGLE_SCAN
+Always single-scan sub-350 line modes for VGA machine types
+.
 :CONFIG_DOS_RATE
 Customize the emulated video mode's frame rate, in Hz:
   default:  The DOS video mode determines the rate (recommended; default).
@@ -188,6 +187,9 @@ Controls the selection of VESA 1.2 and 2.0 modes offered:
   all:         Offers all modes for a given video memory size, however
                some games may not use them properly (flickering) or may need
                more system memory to use them.
+.
+:CONFIG_VGA_8DOT_FONT
+Use 8-pixel-wide fonts for VGA machine types
 .
 :CONFIG_SPEED_MODS
 Permit changes known to improve performance (enabled by default).
@@ -224,9 +226,9 @@ Controls verbosity prior to displaying the program ('auto' by default):
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
 Many games open all their files with writable permissions; even files that they
 never modify. This setting lets you write-protect those files while still
-allowing the game to read them. A second use-case: if you're using a copy-on-write
-or network-based filesystem, this setting avoids triggering write-operations for
-these write-protected files.
+allowing the game to read them. A second use-case: if you're using a
+copy-on-write or network-based filesystem, this setting avoids triggering
+write-operations for these write-protected files.
 .
 :CONFIG_FRAMESKIP
 Consider capping frame-rates using the '[sdl] host_rate' setting.
@@ -238,6 +240,17 @@ that of the original monitors the majority of DOS games were designed for
 This setting only affects video modes that use non-square pixels, such as
 320x200 or 640x400; whereas square-pixel modes, such as 640x480
 and 800x600, are displayed as-is.
+.
+:CONFIG_INTEGER_SCALING
+Constrain the horizontal or vertical scaling factor to integer values. The
+correct aspect ratio is always maintained, which may result in a non-integer
+scaling factor to be applied in the other dimension.
+  off:         No integer scaling constraint; the aspect ratio correct image
+               fills the viewport (default).
+  horizontal:  Constrain the horizontal scaling factor to integer values
+               within the viewport.
+  vertical:    Constrain the vertical scaling factor to integer values
+               within the viewport.
 .
 :CONFIG_MONOCHROME_PALETTE
 Select default palette for monochrome display ('white' by default).
@@ -269,9 +282,9 @@ of displaying CGA or better graphics. Built-in presets:
   dga16:         A modern take on the canonical CGA palette with dialed back
                  contrast.
 You can also set custom colours by specifying 16 space or comma separated
-colour values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full red),
-or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colours are
-ordered as follows:
+colour values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full
+red), or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colours
+are ordered as follows:
   black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,
   light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.
 Their default values, shown here in 6-digit hex code format, are:
@@ -342,6 +355,34 @@ Number of cycles added or subtracted with speed control hotkeys
 :CONFIG_CYCLEDOWN
 Setting it lower than 100 will be a percentage (20 by default).
 .
+:CONFIG_CAPTURE_DIR
+Directory where the various captures are saved, such as audio, video, MIDI
+and screenshot captures. ('capture' in the current working directory by
+default).
+.
+:CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
+Set the capture format of the default screenshot action ('upscaled' by
+default):
+  raw:       The content of the raw framebuffer is captured
+             (legacy behaviour; this always results in square pixels).
+             The filenames of raw screenshots end with '_raw'
+             (e.g. 'image0001_raw.png').
+  upscaled:  The image is bilinear-sharp upscaled so the height is around
+             1200 pixels and the correct aspect ratio is maintained
+             (depending on the 'aspect' setting). The vertical scaling factor
+             is always an integer. For example, 320x200 content is upscaled
+             to 1600x1200 (5:6 integer scaling), 640x480 to 1920x1440
+             (3:3 integer scaling), and 640x350 to 1867x1400 (2.9165:4
+             scaling, integer vertically and fractional horizontally).
+  rendered:  The post-rendered, post-shader image shown on the screen is
+             captured. The filenames of rendered screenshots end with
+             '_rendered' (e.g. 'image0001_rendered.png').
+If multiple formats are specified separated by spaces, a single default
+screenshot action will result in multiple image files being saved in all
+specified formats. In addition to the default screenshot action, keybindings
+for taking a single capture of a specific format are also available.
+
+.
 :CONFIG_MOUSE_CAPTURE
 Set the mouse capture behaviour:
   onclick:   Capture the mouse when clicking any mouse button in the window 
@@ -358,6 +399,14 @@ For touch-screen control, use 'seamless'.
 :CONFIG_MOUSE_MIDDLE_RELEASE
 If enabled, middle-click will release the captured mouse, and also capture
 when seamless (enabled by default).
+.
+:CONFIG_MOUSE_MULTI_DISPLAY_AWARE
+Allows mouse seamless behavior and mouse pointer release to work in fullscreen
+mode for systems with more than one display. (enabled by default).
+Notes: You should set this to false if it incorrectly detects multiple displays
+       when only one should actually be used. This might happen if you are
+       using mirrored display mode or using an AV receiver's HDMI input for
+       audio-only listening.
 .
 :CONFIG_MOUSE_SENSITIVITY
 Mouse sensitivity for the horizontal and vertical axes, as a percentage
@@ -472,8 +521,9 @@ Notes: You can fine-tune per-channel chorus levels via mixer commands.
 :CONFIG_MIDIDEVICE
 Set where MIDI data from the emulated MPU-401 MIDI interface is sent
 ('auto' by default):
-  oss:         Use the Linux OSS MIDI playback interface.
-  alsa:        Use the Linux ALSA MIDI playback interface.
+  coremidi:    Any device that has been configured in the macOS
+               Audio MIDI Setup.
+  coreaudio:   Use the built-in macOS MIDI synthesiser.
   fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).
                See the [fluidsynth] section for detailed configuration.
   mt32:        The built-in Roland MT-32 synthesizer.
@@ -490,9 +540,7 @@ This is usually the ID or name of the MIDI synthesizer you want
 to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').
 Notes: - This option has no effect when using the built-in synthesizers
          ('mididevice = fluidsynth' or 'mididevice = mt32').
-       - When using ALSA, use the Linux command 'aconnect -l' to list all open
-         MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer
-         client 14, port 0).
+       - When using 'coreaudio', you can specify a SoundFont here.
        - If you're using a physical Roland MT-32 with revision 0 PCB, the
          hardware may require a delay in order to prevent its buffer from
          overflowing. In that case, add 'delaysysex', e.g:
@@ -933,11 +981,16 @@ layout will be used.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Enable expanding environment variables such as %PATH% in the DOS command shell
-(disabled by default).
+(auto by default, enabled if DOS version >= 7.0).
 FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.
 .
 :CONFIG_KEYBOARDLAYOUT
 Language code of the keyboard layout, or 'auto' ('auto' by default).
+.
+:CONFIG_SETVER_TABLE_FILE
+File containing the list of applications and assigned DOS versions, in a
+tab-separated format, used by SETVER.EXE as a persistent storage
+(empty by default).
 .
 :CONFIG_IPX
 Enable IPX over UDP/IP emulation (enabled by default).
@@ -1002,6 +1055,9 @@ You can put your MOUNT lines here.
 .
 :CONFIG_VALID_VALUES
 Possible values
+.
+:CONFIG_DEPRECATED_VALUES
+Deprecated values
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 No such section or property: %s
@@ -1397,7 +1453,7 @@ Notes:
     for CD-based games that need a real DOS environment via bootable HDD image.
 
 Examples:
-  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
+  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/Users/USERNAME/games/doom.iso[reset] -t cdrom
   [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom
   [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
   [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
@@ -1879,7 +1935,7 @@ Notes:
 
 Examples:
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]
-  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/media/USERNAME/Game CD"[reset] -t cdrom
+  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/Volumes/Game CD"[reset] -t cdrom
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay
 
 .
@@ -2176,6 +2232,74 @@ Type must be one of the following:
   %s
 
 .
+:PROGRAM_SETVER_HELP_LONG
+View or set the DOS version reported to applications.
+
+Usage:
+  [color=green]setver[reset] \[/b] [/p]
+  [color=green]setver[reset] [color=cyan]FILE[reset] [color=cyan]VERSION[reset] [/q]
+  [color=green]setver[reset] [color=cyan]FILE[reset] /d [/q]
+  [color=green]setver[reset] [color=cyan]VERSION[reset] /g [/q]
+  [color=green]setver[reset] /d /g [/q]
+  [color=green]setver[reset] /d /all [/q]
+
+Where:
+  [color=cyan]FILE[reset]     is a file (optionally with path) to apply the settings to.
+  [color=cyan]VERSION[reset]  is a DOS version, in [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] or [color=white]n[reset] format.
+  /g       global setting, applied to all executables.
+  /d       delete entry from version table.
+  /all     together with /d clears the whole version table.
+  /b       display the list in a batch file format.
+  /p       display one page a time.
+  /q       quiet, skip confirmation messages.
+  /delete and /quiet have same meaning as /d and /q, respectively.
+
+Notes:
+  For persistent version table, specify storage in the configuration file under
+  the [dos] section, using the 'setver_table_file = [color=cyan]STORAGE[reset]' setting.
+
+Examples:
+  [color=green]setver[reset] /b              ; displays settings as a batch file
+  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; reports DOS version 6.22 for every RETRO.COM file
+  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] /d    ; stop overriding DOS version reported
+
+.
+:PROGRAM_SETVER_WRONG_TABLE
+Only version table in Z:\ directory is supported.
+.
+:PROGRAM_SETVER_INVALID_VERSION
+Invalid DOS version.
+.
+:PROGRAM_SETVER_TABLE_UPDATED
+Version table updated.
+.
+:PROGRAM_SETVER_TABLE_CLEARED
+Version table cleared.
+.
+:PROGRAM_SETVER_TABLE_ALREADY_EMPTY
+Version table already empty.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_REMOVED
+Entry removed from version table.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_NOT_FOUND
+Entry not found in version table.
+.
+:PROGRAM_SETVER_TABLE_EMPTY
+Version table is empty.
+.
+:PROGRAM_SETVER_GLOBAL
+Global reported version
+.
+:PROGRAM_SETVER_BATCH_GLOBAL
+rule for every executable
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_NAME
+rules for matching by file name only
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_PATH
+rules for matching by file name with path
+.
 :PROGRAM_TREE_HELP_LONG
 Displays directory tree in a graphical form.
 
@@ -2222,12 +2346,26 @@ No files or subdirectories to display.
 Too many files or subdirectories.
 
 .
+:AUTOEXEC_BAT_AUTOGENERATED
+autogenerated
+.
+:AUTOEXEC_BAT_CONFIG_SECTION
+from [autoexec] section
+.
 :SHELL_ILLEGAL_PATH
 Illegal path.
 
 .
+:SHELL_ILLEGAL_FILE_NAME
+Illegal file name.
+
+.
 :SHELL_ILLEGAL_SWITCH
 Illegal switch: %s.
+
+.
+:SHELL_ILLEGAL_SWITCH_COMBO
+Illegal switch combination.
 
 .
 :SHELL_MISSING_PARAMETER
@@ -2236,6 +2374,10 @@ Required parameter missing.
 .
 :SHELL_TOO_MANY_PARAMETERS
 Too many parameters.
+
+.
+:SHELL_EXPECTED_FILE_NOT_DIR
+Expected a file, not a directory.
 
 .
 :SHELL_SYNTAX_ERROR
@@ -3112,26 +3254,21 @@ Examples:
 
 .
 :SHELL_CMD_VER_HELP
-View or set the reported DOS version.
+View the DOS version.
 
 .
 :SHELL_CMD_VER_HELP_LONG
 Usage:
   [color=green]ver[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSION[reset]
-
-Where:
-  [color=cyan]VERSION[reset] can be a whole number, such as [color=cyan]5[reset], or include a two-digit decimal
-          value, such as: [color=cyan]6.22[reset], [color=cyan]7.01[reset], or [color=cyan]7.10[reset]. The decimal can alternatively be
-          space-separated, such as: [color=cyan]6 22[reset], [color=cyan]7 01[reset], or [color=cyan]7 10[reset].
 
 Notes:
-  The DOS version can also be set in the configuration file under the [dos]
-  section using the "ver = [color=cyan]VERSION[reset]" setting.
+  The DOS version can be set in the configuration file under the [dos] section,
+  using the 'ver = [color=cyan]VERSION[reset]' setting.
+  The DOS version reported to applications can be changed using [color=green]setver[reset] command.
+  Old '[color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSION[reset]' syntax to change DOS version is deprecated.
 
 Examples:
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]
+  [color=green]ver[reset]
 
 .
 :SHELL_CMD_VER_VER
