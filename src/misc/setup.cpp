@@ -1195,7 +1195,7 @@ void Section::AddEarlyInitFunction(SectionFunction func, bool changeable_at_runt
 void Section::AddInitFunction(SectionFunction func, bool changeable_at_runtime)
 {
 	if (func) {
-		initfunctions.emplace_back(func, changeable_at_runtime);
+		init_functions.emplace_back(func, changeable_at_runtime);
 	}
 }
 
@@ -1214,12 +1214,32 @@ void Section::ExecuteEarlyInit(bool init_all)
 	}
 }
 
-void Section::ExecuteInit(bool initall)
+void Section::ExecuteInit(const bool init_all)
 {
-	for (const auto& fn : initfunctions) {
-		if (initall || fn.changeable_at_runtime) {
-			assert(fn.function);
-			fn.function(this);
+	for (size_t i = 0; i < init_functions.size(); ++i) {
+		// Can we skip calling this function?
+		if (!(init_all || init_functions[i].changeable_at_runtime)) {
+			continue;
+		}
+
+		// Track the size of our container because it might grow.
+		const auto size_on_entry = init_functions.size();
+
+		assert(init_functions[i].function);
+		init_functions[i].function(this);
+
+		const auto size_on_exit = init_functions.size();
+
+		if (size_on_exit > size_on_entry) {
+			//
+			// If the above function call appended items then we
+			// need to avoid calling them immediately in this
+			// current pass by advancing our index across them. The
+			// setup class will call the added function itself.
+			//
+			const auto num_appended = size_on_exit - size_on_entry;
+			i += num_appended;
+			assert(i < init_functions.size());
 		}
 	}
 }

@@ -307,7 +307,7 @@ private:
 	};
 
 	std::deque<Function_wrapper> early_init_functions = {};
-	std::deque<Function_wrapper> initfunctions        = {};
+	std::deque<Function_wrapper> init_functions       = {};
 	std::deque<Function_wrapper> destroyfunctions     = {};
 	std::string sectionname                           = {};
 
