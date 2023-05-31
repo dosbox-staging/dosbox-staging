@@ -25,6 +25,7 @@
 #include "dosbox.h"
 
 #include <cstdio>
+#include <deque>
 #include <list>
 #include <map>
 #include <memory>
@@ -296,8 +297,8 @@ private:
 	// changeable_at_runtime indicates it can be called on configuration
 	// changes
 	struct Function_wrapper {
-		SectionFunction function   = nullptr;
-		bool changeable_at_runtime = false;
+		SectionFunction function;
+		bool changeable_at_runtime;
 
 		Function_wrapper(const SectionFunction fn, bool ch)
 		        : function(fn),
@@ -305,10 +306,10 @@ private:
 		{}
 	};
 
-	std::list<Function_wrapper> early_init_functions = {};
-	std::list<Function_wrapper> initfunctions        = {};
-	std::list<Function_wrapper> destroyfunctions     = {};
-	std::string sectionname                          = {};
+	std::deque<Function_wrapper> early_init_functions = {};
+	std::deque<Function_wrapper> initfunctions        = {};
+	std::deque<Function_wrapper> destroyfunctions     = {};
+	std::string sectionname                           = {};
 
 public:
 	Section() = default;
@@ -350,9 +351,9 @@ class PropMultiValRemain;
 
 class Section_prop final : public Section {
 private:
-	std::list<Property*> properties = {};
-	typedef std::list<Property*>::iterator it;
-	typedef std::list<Property*>::const_iterator const_it;
+	std::deque<Property*> properties = {};
+	typedef std::deque<Property*>::iterator it;
+	typedef std::deque<Property*>::const_iterator const_it;
 
 public:
 	Section_prop(const std::string& name) : Section(name) {}

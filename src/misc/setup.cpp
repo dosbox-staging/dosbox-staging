@@ -1226,7 +1226,7 @@ void Section::ExecuteInit(bool initall)
 
 void Section::ExecuteDestroy(bool destroyall)
 {
-	typedef std::list<Function_wrapper>::iterator func_it;
+	typedef std::deque<Function_wrapper>::iterator func_it;
 
 	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end();) {
 		if (destroyall || (*tel).changeable_at_runtime) {
