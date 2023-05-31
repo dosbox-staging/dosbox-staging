@@ -78,7 +78,8 @@ jobs:
         run: |
           set -xeu
           CC="clang" CXX="clang++" meson setup \
-          -Dbuildtype=debug \
+          -Dbuildtype=minsize \
+          -Db_ndebug=false \
           -Dunit_tests=disabled \
           -Duse_alsa=false \
           -Duse_fluidsynth=false \
