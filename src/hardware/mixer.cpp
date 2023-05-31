@@ -338,33 +338,16 @@ static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 
 static void configure_reverb(const std::string_view reverb_pref)
 {
-	auto was_reverb_on = mixer.do_reverb;
-
-	const auto reverb_pref_has_bool = parse_bool_setting(reverb_pref);
-
-	mixer.do_reverb = (!reverb_pref_has_bool || *reverb_pref_has_bool == true);
-
-	if (!mixer.do_reverb) {
-		// Disable reverb sending in each channel
-		for (auto &it : mixer.channels)
-			set_global_reverb(it.second);
-
-		LOG_MSG("MIXER: Reverb disabled");
-		return;
-	}
-
 	auto &r = mixer.reverb; // short-hand reference
 
-	auto current_preset = r.preset;
-	auto new_preset = reverb_pref_to_preset(reverb_pref);
-	auto preset_unchanged = (current_preset == new_preset);
-
-	if (was_reverb_on && preset_unchanged)
+	// Unchanged?
+	const auto new_preset = reverb_pref_to_preset(reverb_pref);
+	if (new_preset == r.preset) {
 		return;
-
+	}
+	// Set new
+	assert(r.preset != new_preset);
 	r.preset = new_preset;
-
-	const auto rate_hz = mixer.sample_rate.load();
 
 	// Pre-computed (negative) decibel scalars
 	constexpr auto __5_2dB = 0.87f;
@@ -375,6 +358,8 @@ static void configure_reverb(const std::string_view reverb_pref)
 	constexpr auto _36_8dB = 0.08f;
 	constexpr auto _37_2dB = 0.07f;
 	constexpr auto _38_0dB = 0.05f;
+
+	const auto rate_hz = mixer.sample_rate.load();
 
 	// clang-format off
 	switch (r.preset) { //             PDELAY EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
@@ -388,10 +373,15 @@ static void configure_reverb(const std::string_view reverb_pref)
 	// clang-format on
 
 	// Configure the channels
+	mixer.do_reverb = (r.preset != ReverbPreset::None);
 	for (auto &it : mixer.channels)
 		set_global_reverb(it.second);
 
-	LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.data());
+	if (mixer.do_reverb) {
+		LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.data());
+	} else {
+		LOG_MSG("MIXER: Reverb disabled");
+	}
 }
 
 static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
@@ -416,38 +406,23 @@ static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 
 static void configure_chorus(const std::string_view chorus_pref)
 {
-	auto was_chorus_on = mixer.do_chorus;
-
-	const auto chorus_pref_has_bool = parse_bool_setting(chorus_pref);
-
-	mixer.do_chorus = (!chorus_pref_has_bool || *chorus_pref_has_bool == true);
-
-	if (!mixer.do_chorus) {
-		// Disable chorus sending in each channel
-		for (auto &it : mixer.channels)
-			set_global_chorus(it.second);
-
-		LOG_MSG("MIXER: Chorus disabled");
-		return;
-	}
-
 	auto &c = mixer.chorus; // short-hand reference
 
-	const auto rate_hz = mixer.sample_rate.load();
-
-	auto current_preset = c.preset;
-	auto new_preset = chorus_pref_to_preset(chorus_pref);
-	auto preset_unchanged = (current_preset == new_preset);
-
-	if (was_chorus_on && preset_unchanged)
+	// Unchanged?
+	const auto new_preset = chorus_pref_to_preset(chorus_pref);
+	if (new_preset == c.preset) {
 		return;
-
+	}
+	// Set new
+	assert(c.preset != new_preset);
 	c.preset = new_preset;
 
 	// Pre-computed (negative) decibel scalars
 	constexpr auto __6dB = 0.75f;
 	constexpr auto _11dB = 0.54f;
 	constexpr auto _16dB = 0.33f;
+
+	const auto rate_hz = mixer.sample_rate.load();
 
 	// clang-format off
 	switch (c.preset) { //            -SYNLV -DIGLV  RATE_HZ
@@ -459,10 +434,15 @@ static void configure_chorus(const std::string_view chorus_pref)
 	// clang-format on
 
 	// Configure the channels
+	mixer.do_chorus = (c.preset != ChorusPreset::None);
 	for (auto &it : mixer.channels)
 		set_global_chorus(it.second);
 
-	LOG_MSG("MIXER: Chorus enabled ('%s' preset)", chorus_pref.data());
+	if (mixer.do_chorus) {
+		LOG_MSG("MIXER: Chorus enabled ('%s' preset)", chorus_pref.data());
+	} else {
+		LOG_MSG("MIXER: Chorus disabled");
+	}
 }
 
 static void configure_compressor(const bool compressor_enabled)
