@@ -86,10 +86,6 @@ public:
 	DOS_PSP *psp = nullptr;
 
 	virtual void Run(void)=0;
-	bool GetEnvStr(const char *entry, std::string &result) const;
-	bool GetEnvNum(Bitu num, std::string &result) const;
-	Bitu GetEnvCount() const;
-	bool SetEnv(const char * entry,const char * new_string);
 	virtual void WriteOut(const char *format, const char * arguments);
 	virtual void WriteOut(const char *format, ...);	// printf to DOS stdout
 	void WriteOut_NoParsing(const char *str); // write string to DOS stdout

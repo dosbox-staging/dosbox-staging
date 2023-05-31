@@ -114,6 +114,11 @@ public:
 	virtual bool execute_shell_cmd(char *name, char *arguments);
 	void ReadShellHistory();
 	void WriteShellHistory();
+	
+	bool GetEnvStr(const char *entry, std::string &result) const;
+	bool GetEnvNum(Bitu num, std::string &result) const;
+	[[nodiscard]] Bitu GetEnvCount() const;
+	bool SetEnv(const char * entry,const char * new_string);
 
 	/* Commands */
 	void CMD_HELP(char * args);
