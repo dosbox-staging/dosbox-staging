@@ -24,31 +24,19 @@
 #include "string_utils.h"
 
 // Permitted ASCII control characters in batch files
-constexpr uint8_t Esc           = 27;
-constexpr uint8_t UnitSeparator = 31;
+constexpr char Esc           = 27;
+constexpr char UnitSeparator = 31;
 
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 
-BatchFile::BatchFile(DOS_Shell* const host, const char* const resolved_name,
+BatchFile::BatchFile(DOS_Shell* const host, std::unique_ptr<ByteReader> input_reader,
                      const char* const entered_name, const char* const cmd_line)
         : echo(host->echo),
           shell(host),
           prev(host->bf),
-          cmd(new CommandLine(entered_name, cmd_line))
+          cmd(new CommandLine(entered_name, cmd_line)),
+          reader(std::move(input_reader))
 {
-	char totalname[DOS_PATHLENGTH + 4];
-
-	// Get fullname including drive specification
-	if (!DOS_Canonicalize(resolved_name, totalname)) {
-		E_Exit("SHELL: Can't determine path to batch file %s", resolved_name);
-	}
-
-	filename = totalname;
-	// Test if file is openable
-	if (!DOS_OpenFile(totalname, (DOS_NOT_INHERIT | OPEN_READ), &file_handle)) {
-		shell->WriteOut("SHELL: Can't open BatchFile %s\n", totalname);
-	}
-	DOS_CloseFile(file_handle);
 }
 
 BatchFile::~BatchFile()
@@ -87,24 +75,18 @@ bool BatchFile::ReadLine(char* lineout)
 
 std::string BatchFile::GetLine()
 {
-	if (!DOS_OpenFile(filename.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &file_handle)) {
-		LOG(LOG_MISC, LOG_ERROR)
-		("ReadLine Can't open BatchFile %s", filename.c_str());
-		return "";
-	}
-	DOS_SeekFile(file_handle, &(this->location), DOS_SEEK_SET);
-
-	uint8_t data        = 0;
-	uint16_t bytes_read = 1;
-	std::string line    = {};
+	char data        = 0;
+	std::string line = {};
 
 	while (data != '\n') {
-		DOS_ReadFile(file_handle, &data, &bytes_read);
+		const auto result = reader->Read();
 
 		// EOF
-		if (bytes_read == 0) {
+		if (!result) {
 			break;
 		}
+
+		data = *result;
 
 		/* Inclusion criteria:
 		 *  - backspace for alien odyssey
@@ -117,13 +99,9 @@ std::string BatchFile::GetLine()
 			              data,
 			              data);
 		} else {
-			line += static_cast<char>(data);
+			line += data;
 		}
 	}
-
-	this->location = 0;
-	DOS_SeekFile(file_handle, &(this->location), DOS_SEEK_CUR);
-	DOS_CloseFile(file_handle);
 
 	return line;
 }
@@ -175,7 +153,7 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 bool BatchFile::Goto(const std::string_view label)
 {
 	std::string line = " ";
-	this->location = 0;
+	reader->Reset();
 
 	while (!line.empty()) {
 		line = GetLine();

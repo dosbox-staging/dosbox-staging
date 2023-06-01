@@ -54,7 +54,7 @@ public:
 
 class BatchFile {
 public:
-	BatchFile(DOS_Shell* host, const char* const resolved_name,
+	BatchFile(DOS_Shell* host, std::unique_ptr<ByteReader> input_reader,
 	          const char* const entered_name, const char* const cmd_line);
 	BatchFile(const BatchFile&)            = delete; // prevent copying
 	BatchFile& operator=(const BatchFile&) = delete; // prevent assignment
@@ -62,17 +62,16 @@ public:
 	virtual bool ReadLine(char* line);
 	bool Goto(std::string_view label);
 	void Shift();
-	uint16_t file_handle             = 0;
-	uint32_t location                = 0;
 	bool echo                        = false;
 	DOS_Shell* shell                 = nullptr;
 	std::shared_ptr<BatchFile> prev  = {}; // shared with Shell.bf
 	std::unique_ptr<CommandLine> cmd = {};
-	std::string filename{};
 
 private:
 	[[nodiscard]] std::string ExpandedBatchLine(std::string_view line) const;
 	[[nodiscard]] std::string GetLine();
+	
+	std::unique_ptr<ByteReader> reader;
 };
 
 class AutoexecEditor;

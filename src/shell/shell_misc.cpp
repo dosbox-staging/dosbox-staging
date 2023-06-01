@@ -21,9 +21,11 @@
 
 #include <algorithm>
 #include <cstring>
+#include <memory>
 
 #include "../ints/int10.h"
 #include "callback.h"
+#include "file_reader.h"
 #include "keyboard.h"
 #include "regs.h"
 #include "string_utils.h"
@@ -468,11 +470,19 @@ bool DOS_Shell::Execute(std::string_view name, std::string_view args)
 		if (bf && !call) {
 			bf.reset();
 		}
-		bf   = std::make_shared<BatchFile>(this,
-                                                 fullname.c_str(),
-                                                 std::string(name).c_str(),
-                                                 std::string(args).c_str());
+
+		auto reader = FileReader::GetFileReader(fullname);
+		if (reader) {
+			bf = std::make_shared<BatchFile>(this,
+			                                 std::move(*reader),
+			                                 std::string(name).c_str(),
+			                                 std::string(args).c_str());
+		} else {
+			WriteOut("Could not open %s", fullname.c_str());
+		}
+
 		echo = temp_echo;
+
 		return true;
 	}
 
