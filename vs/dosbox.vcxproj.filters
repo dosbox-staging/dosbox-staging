@@ -493,6 +493,9 @@
     <ClCompile Include="..\src\shell\autoexec.cpp">
       <Filter>src\shell</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shell\file_reader.cpp">
+      <Filter>src\shell</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shell\shell.cpp">
       <Filter>src\shell</Filter>
     </ClCompile>

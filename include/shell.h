@@ -23,6 +23,7 @@
 #include "dosbox.h"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "callback.h"
@@ -37,6 +38,19 @@ extern callback_number_t call_shellstop;
 /* first_shell is used to add and delete stuff from the shell env
  * by "external" programs. (config) */
 extern DOS_Shell* first_shell;
+
+class ByteReader {
+public:
+	virtual void Reset()               = 0;
+	virtual std::optional<char> Read() = 0;
+
+	ByteReader()                             = default;
+	ByteReader(const ByteReader&)            = delete;
+	ByteReader& operator=(const ByteReader&) = delete;
+	ByteReader(ByteReader&&)                 = delete;
+	ByteReader& operator=(ByteReader&&)      = delete;
+	virtual ~ByteReader()                    = default;
+};
 
 class BatchFile {
 public:

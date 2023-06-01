@@ -1,5 +1,6 @@
 libshell_sources = files(
     'autoexec.cpp',
+    'file_reader.cpp',
     'shell.cpp',
     'shell_batch.cpp',
     'shell_cmds.cpp',
