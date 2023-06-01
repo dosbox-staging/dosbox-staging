@@ -187,7 +187,7 @@ static inline void FPU_LOG_WARN(unsigned tree, bool ea, uintptr_t group, uintptr
 #define DB_FPU_STACK_CHECK_PUSH DB_FPU_STACK_CHECK_EXIT
 #else
 #define DB_FPU_STACK_CHECK_POP DB_FPU_STACK_CHECK_NONE
-#define DB_FPU_STACK_CHECK_PUSH DB_FPU_STACK_CHECK_EXIT
+#define DB_FPU_STACK_CHECK_PUSH DB_FPU_STACK_CHECK_NONE
 #endif
 
 #endif
