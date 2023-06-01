@@ -193,19 +193,23 @@ static bool load_message_file(const std_fs::path &filename)
 	return true;
 }
 
-const char *MSG_Get(char const *requested_name)
+const char* MSG_Get(const char* requested_name)
 {
 	const auto it = messages.find(requested_name);
-	if (it != messages.end())
+	if (it != messages.end()) {
 		return it->second.GetRendered();
+	}
+	LOG_WARNING("LANG: Message '%s' not found", requested_name);
 	return msg_not_found;
 }
 
-const char* MSG_GetRaw(char const *requested_name)
+const char* MSG_GetRaw(const char* requested_name)
 {
 	const auto it = messages.find(requested_name);
-	if (it != messages.end())
+	if (it != messages.end()) {
 		return it->second.GetRaw();
+	}
+	LOG_WARNING("LANG: Message '%s' not found", requested_name);
 	return msg_not_found;
 }
 
