@@ -523,6 +523,92 @@ static uint8_t * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu /*line*/) {
 	}
 }
 
+enum CursorOp : uint8_t {
+	Foreground  = 0b10,
+	Background  = 0b00,
+	Transparent = 0b01,
+	Invert      = 0b11,
+};
+
+static uint8_t* draw_unwrapped_line_from_dac_palette_with_hwcursor(Bitu vidstart, Bitu /*line*/)
+{
+	// Draw the underlying line without the cursor
+	const auto line_addr = reinterpret_cast<uint32_t*>(
+	        draw_unwrapped_line_from_dac_palette(vidstart));
+
+	// Quick references to hardware cursor properties
+	const auto& cursor = vga.s3.hgc;
+	const auto line_at_y = (vidstart - (vga.config.real_start << 2)) / vga.draw.width;
+
+	// Draw mouse cursor
+	// ~~~~~~~~~~~~~~~~~
+	// The cursor is a 64x64 pattern which is shifted (inside the 64x64 mouse
+	// cursor space) to the right by posx pixels and up by posy pixels.
+	//
+	// This is used when the mouse cursor partially leaves the screen. It is
+	// arranged as bitmap of 16bits of bit A followed by 16bits of bit B, each AB
+	// bits corresponding to a cursor pixel. The whole map is 8kB in size.
+
+	constexpr auto bitmap_width_bits   = 64;
+	constexpr auto bitmap_last_y_index = 63u;
+
+	// Is the mouse cursor pattern on this line?
+	if (cursor.posx >= vga.draw.width || line_at_y < cursor.originy ||
+	    line_at_y > (cursor.originy + (bitmap_last_y_index - cursor.posy))) {
+		return reinterpret_cast<uint8_t*>(line_addr);
+	}
+
+	// the index of the bit inside the cursor bitmap we start at:
+	const auto source_start_bit = ((line_at_y - cursor.originy) + cursor.posy) *
+	                                      bitmap_width_bits + cursor.posx;
+	const auto cursor_start_bit = source_start_bit & 0x7;
+	uint8_t cursor_bit = bit::literals::b7 >> cursor_start_bit;
+
+	// Convert to video memory addr and bit index
+	// start adjusted to the pattern structure (thus shift address by 2
+	// instead of 3) Need to get rid of the third bit, so "/8 *2" becomes
+	// ">> 2 & ~1"
+	auto mem_start = ((source_start_bit >> 2) & ~1u) +
+	                 (static_cast<uint32_t>(cursor.startaddr) << 10);
+
+	// Stay at the right position in the pattern
+	if (mem_start & 0x2) {
+		--mem_start;
+	}
+	const auto mem_end = mem_start + ((bitmap_width_bits - cursor.posx) >> 2);
+
+	constexpr uint8_t mem_delta[] = {1, 3};
+
+	// Iterated for all bitmap positions
+	auto cursor_addr = line_addr + cursor.originx;
+
+	const auto fg_colour = *(vga.dac.palette_map + *cursor.forestack);
+	const auto bg_colour = *(vga.dac.palette_map + *cursor.backstack);
+
+	// for each byte of cursor data
+	for (auto m = mem_start; m < mem_end; m += mem_delta[m & 1]) {
+		const auto bits_a = vga.mem.linear[m];
+		const auto bits_b = vga.mem.linear[m + 2];
+
+		while (cursor_bit != 0) {
+			const auto cursor_op = static_cast<CursorOp>(
+			        (bit::is(bits_b, cursor_bit) << 1) |
+			        bit::is(bits_a, cursor_bit));
+
+			switch (cursor_op) {
+			case CursorOp::Foreground: *cursor_addr = fg_colour; break;
+			case CursorOp::Background: *cursor_addr = bg_colour; break;
+			case CursorOp::Invert: bit::flip_all(*cursor_addr); break;
+			case CursorOp::Transparent: break;
+			};
+			cursor_addr++;
+			cursor_bit >>= 1;
+		}
+		cursor_bit = bit::literals::b7;
+	}
+	return reinterpret_cast<uint8_t*>(line_addr);
+}
+
 static uint8_t * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
 		return &vga.mem.linear[vidstart];
