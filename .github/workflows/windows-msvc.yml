@@ -14,7 +14,15 @@ jobs:
   build_windows_vs:
     name: ${{ matrix.conf.name }}
     runs-on: windows-2022
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+
+# [TEMPORARY]
+#   Skip debug builds under MSVC due to false-positives:
+#   Vcpkg's libiconv fails to build due to broken dependency sources.
+#   Revert when https://github.com/microsoft/vcpkg/issues/31565 is fixed.
+#
+    if: false
+#       github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+
     strategy:
       matrix:
         conf:
@@ -76,16 +84,11 @@ jobs:
         shell: bash
         run:   sed -i 's/C_VOODOO 0/C_VOODOO 1/' src/platform/visualc/config.h
 
-# [TEMPORARY]
-#   Disabling unit tests under MSVC due to false-positives:
-#   Vcpkg's libiconv fails to build due to broken dependency sources.
-#   Revert when https://github.com/microsoft/vcpkg/issues/31565 is fixed.
-#
-#      - name:  Run tests
-#        shell: pwsh
-#        run: |
-#          cd vs
-#          MSBuild -m dosbox.sln -t:tests:Rebuild -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }}
+      - name:  Run tests
+        shell: pwsh
+        run: |
+          cd vs
+          MSBuild -m dosbox.sln -t:tests:Rebuild -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }}
 
       - name:  Build
         shell: pwsh
