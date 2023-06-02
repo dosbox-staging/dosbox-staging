@@ -352,7 +352,8 @@ static uint8_t * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	return ret;
 }
 
-static uint8_t* draw_unwrapped_line_from_dac_palette(Bitu vidstart, Bitu)
+static uint8_t* draw_unwrapped_line_from_dac_palette(Bitu vidstart,
+                                                     [[maybe_unused]] const Bitu line = 0)
 {
 	// Quick references
 	static constexpr auto palette_map        = vga.dac.palette_map;
