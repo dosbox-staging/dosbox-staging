@@ -113,7 +113,7 @@ namespace reSIDfp
  *     I0 = (2 * uCox * Ut^2) / k
  *
  * The remaining problem with the textbook model is that the transition
- * from subthreshold the triode/saturation is not continuous.
+ * from subthreshold to triode/saturation is not continuous.
  *
  * Realizing that the subthreshold and triode/saturation modes may both
  * be defined by independent (and equal) terms of Vgs and Vds,

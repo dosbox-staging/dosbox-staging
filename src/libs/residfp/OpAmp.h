@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2015 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2023 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2004,2010 Dag Lem
  *
@@ -48,6 +48,8 @@ namespace reSIDfp
  * for the currents, we get:
  *
  *     n*((Vddt - vx)^2 - (Vddt - vi)^2) + (Vddt - vx)^2 - (Vddt - vo)^2 = 0
+ * 
+ * where n is the ratio between R1 and R2.
  *
  * Our root function f can thus be written as:
  *
@@ -81,16 +83,22 @@ public:
      * Opamp input -> output voltage conversion
      *
      * @param opamp opamp mapping table as pairs of points (in -> out)
-     * @param opamplength length of the opamp array
-     * @param kVddt transistor dt parameter (in volts)
+     * @param Vddt transistor dt parameter (in volts)
+     * @param vmin
+     * @param vmax
      */
-    OpAmp(const std::vector<Spline::Point> &opamp, double Vddt) :
+    OpAmp(const std::vector<Spline::Point> &opamp, double Vddt,
+            double vmin, double vmax
+    ) :
         x(0.),
         Vddt(Vddt),
-        vmin(opamp.front().x),
-        vmax(opamp.back().x),
+        vmin(vmin),
+        vmax(vmax),
         opamp(new Spline(opamp)) {}
 
+    /**
+     * Reset root position
+     */
     void reset() const
     {
         x = vmin;
@@ -100,8 +108,8 @@ public:
      * Solve the opamp equation for input vi in loading context n
      *
      * @param n the ratio of input/output loading
-     * @param vi input
-     * @return vo
+     * @param vi input voltage
+     * @return vo output voltage
      */
     double solve(double n, double vi) const;
 };

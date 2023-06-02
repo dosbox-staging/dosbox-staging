@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2023 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2004, 2010 Dag Lem <resid@nimrod.no>
  *
@@ -89,7 +89,7 @@ public:
         // Gate voltage is controlled by the switched capacitor voltage divider
         // Ua = Ue * v = 4.76v  1<v<2
         assert(v > 1.0 && v < 2.0);
-        const double Vg = fmc->getVoiceDCVoltage() * v;
+        const double Vg = 4.76 * v;
         const double Vgt = Vg - fmc->getVth();
 
         // Vg - Vth, normalized so that translated values can be subtracted:

@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2023 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  *
  * This program is free software; you can redistribute it and/or modify
@@ -140,11 +140,7 @@ short calculatePulldown(float distancetable[], float pulsestrength, float thresh
 WaveformCalculator::WaveformCalculator() :
     wftable(4, 4096)
 {
-    buildWaveTable();
-}
-
-void WaveformCalculator::buildWaveTable()
-{
+    // Build waveform table.
     for (unsigned int idx = 0; idx < (1u << 12); idx++)
     {
         const short saw = static_cast<short>(idx);

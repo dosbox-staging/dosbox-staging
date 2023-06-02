@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2023 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2004,2010 Dag Lem
  *
@@ -136,7 +136,6 @@ public:
     inline unsigned short getOpampRev(int i) const { return opamp_rev[i]; }
     inline double getVddt() const { return Vddt; }
     inline double getVth() const { return Vth; }
-    inline double getVoiceDCVoltage() const { return voice_DC_voltage; }
 
     // helper functions
     inline unsigned short getNormalizedValue(double value) const
