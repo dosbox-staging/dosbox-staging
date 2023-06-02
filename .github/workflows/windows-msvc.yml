@@ -76,11 +76,16 @@ jobs:
         shell: bash
         run:   sed -i 's/C_VOODOO 0/C_VOODOO 1/' src/platform/visualc/config.h
 
-      - name:  Run tests
-        shell: pwsh
-        run: |
-          cd vs
-          MSBuild -m dosbox.sln -t:tests:Rebuild -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }}
+# [TEMPORARY]
+#   Disabling unit tests under MSVC due to false-positives:
+#   Vcpkg's libiconv fails to build due to broken dependency sources.
+#   Revert when https://github.com/microsoft/vcpkg/issues/31565 is fixed.
+#
+#      - name:  Run tests
+#        shell: pwsh
+#        run: |
+#          cd vs
+#          MSBuild -m dosbox.sln -t:tests:Rebuild -p:Configuration=Debug -p:Platform=${{ matrix.conf.arch }}
 
       - name:  Build
         shell: pwsh
