@@ -69,6 +69,7 @@
 #if C_VOODOO
 
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <cassert>
 #include <cmath>
@@ -91,6 +92,7 @@
 #include "pci_bus.h"
 #include "pic.h"
 #include "render.h"
+#include "semaphore.h"
 #include "setup.h"
 #include "support.h"
 #include "vga.h"
@@ -937,9 +939,9 @@ struct triangle_worker
 	UINT16 *drawbuf;
 	poly_vertex v1, v2, v3;
 	INT32 v1y, v3y, totalpix;
-	SDL_sem* sembegin[TRIANGLE_THREADS];
-	std::condition_variable done_cv;
-	std::mutex done_mutex;
+	std::array<std::thread, TRIANGLE_THREADS> threads;
+	std::array<Semaphore, TRIANGLE_THREADS> sembegin;
+	Semaphore semdone;
 	int done_count;
 };
 
@@ -4269,23 +4271,15 @@ static void triangle_worker_work(triangle_worker& tworker, INT32 worktstart, INT
 	sum_statistics(&v->thread_stats[worktstart], &my_stats);
 }
 
-static int triangle_worker_thread_func(void* p)
+static int triangle_worker_thread_func(INT32 p)
 {
 	triangle_worker& tworker = v->tworker;
-	for (INT32 tnum = (INT32)(size_t)p; tworker.threads_active;)
-	{
-		SDL_SemWait(tworker.sembegin[tnum]);
-		if (tworker.threads_active)
+	for (INT32 tnum = p; tworker.threads_active;) {
+		tworker.sembegin[tnum].wait();
+		if (tworker.threads_active) {
 			triangle_worker_work(tworker, tnum, tnum + 1);
-		bool done = false;
-		{
-			std::lock_guard lock(tworker.done_mutex);
-			tworker.done_count++;
-			done = (tworker.done_count == TRIANGLE_THREADS);
 		}
-		if (done) {
-			tworker.done_cv.notify_one();
-		}
+		tworker.semdone.notify();
 	}
 	return 0;
 }
@@ -4294,21 +4288,18 @@ static void triangle_worker_shutdown(triangle_worker& tworker)
 {
 	if (!tworker.threads_active) return;
 	tworker.threads_active = false;
-	{
-		std::lock_guard lock(tworker.done_mutex);
-		tworker.done_count = 0;
-	}
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
-		SDL_SemPost(tworker.sembegin[i]);
+		tworker.sembegin[i].notify();
 	}
-	{
-		std::unique_lock lock(tworker.done_mutex);
-		tworker.done_cv.wait(lock, [&] {
-			return tworker.done_count == TRIANGLE_THREADS;
-		});
-	}
+
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
-		SDL_DestroySemaphore(tworker.sembegin[i]);
+		tworker.semdone.wait();
+	}
+
+	for (auto& thread : tworker.threads) {
+		if (thread.joinable()) {
+			thread.join();
+		}
 	}
 }
 
@@ -4355,26 +4346,16 @@ static void triangle_worker_run(triangle_worker& tworker)
 	if (!tworker.threads_active)
 	{
 		tworker.threads_active = true;
-		for (size_t i = 0; i != TRIANGLE_THREADS; i++) tworker.sembegin[i] = SDL_CreateSemaphore(0);
 		for (size_t i = 0; i != TRIANGLE_THREADS; i++)
-			SDL_CreateThread(triangle_worker_thread_func,
-			                 "voodoo",
-			                 (void*)i);
-	}
-
-	{
-		std::lock_guard lock(tworker.done_mutex);
-		tworker.done_count = 0;
+			tworker.threads[i] = std::thread(
+			        [i] { triangle_worker_thread_func(i); });
 	}
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
-		SDL_SemPost(tworker.sembegin[i]);
+		tworker.sembegin[i].notify();
 	}
 	triangle_worker_work(tworker, TRIANGLE_THREADS, TRIANGLE_WORKERS);
-	{
-		std::unique_lock lock(tworker.done_mutex);
-		tworker.done_cv.wait(lock, [&] {
-			return tworker.done_count == TRIANGLE_THREADS;
-		});
+	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
+		tworker.semdone.wait();
 	}
 }
 
