@@ -21,7 +21,6 @@
 
 #include "capture.h"
 
-#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 
