@@ -722,6 +722,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\misc\support.cpp" />
     <ClCompile Include="..\src\misc\unicode.cpp" />
     <ClCompile Include="..\src\shell\autoexec.cpp" />
+    <ClCompile Include="..\src\shell\command_line.cpp" />
     <ClCompile Include="..\src\shell\file_reader.cpp" />
     <ClCompile Include="..\src\shell\shell.cpp" />
     <ClCompile Include="..\src\shell\shell_batch.cpp" />
