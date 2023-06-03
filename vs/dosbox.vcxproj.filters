@@ -16,6 +16,9 @@
     <ClCompile Include="..\src\capture\image_capturer.cpp">
       <Filter>src\capture</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\capture\image_decoder.cpp">
+      <Filter>src\capture</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\capture\image_scaler.cpp">
       <Filter>src\capture</Filter>
     </ClCompile>
@@ -942,10 +945,16 @@
     <ClInclude Include="..\include\render.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\rgb16.h">
+    <ClInclude Include="..\include\rgb.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\rgb24.h">
+    <ClInclude Include="..\include\rgb555.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\rgb565.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\rgb888.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\rwqueue.h">
@@ -985,6 +994,9 @@
       <Filter>src\capture</Filter>
     </ClInclude>
     <ClInclude Include="..\src\capture\image_capturer.h">
+      <Filter>src\capture</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\capture\image_decoder.h">
       <Filter>src\capture</Filter>
     </ClInclude>
     <ClCompile Include="..\src\capture\image_scaler.h">
@@ -1428,6 +1440,9 @@
     </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{076f6c33-0103-4281-b437-111cd14a0c23}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\capture">
+      <UniqueIdentifier>{e19191a3-0830-4c33-b6f4-41dd6f76c211}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\cpu">
       <UniqueIdentifier>{034c69b6-a49d-4c92-b15c-9939085f12d7}</UniqueIdentifier>
