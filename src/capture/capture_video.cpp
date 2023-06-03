@@ -26,6 +26,7 @@
 #include "mem.h"
 #include "render.h"
 #include "rgb888.h"
+#include "support.h"
 
 #if (C_SSHOT)
 #include "../libs/zmbv/zmbv.h"
@@ -348,7 +349,9 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	// rgb24's int() cast operator up-convert.
 	case 24: format = ZMBV_FORMAT::BPP_32; break;
 	case 32: format = ZMBV_FORMAT::BPP_32; break;
-	default: return;
+	default:
+		assertm(false, "Invalid bits_per_pixel value");
+		return;
 	}
 
 	if (!video.handle) {
