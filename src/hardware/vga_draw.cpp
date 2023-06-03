@@ -2151,8 +2151,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	vga.changes.frame = 0;
 	vga.changes.writeMask = 1;
 #endif
-	// Cheap hack to make all > 640x480 modes have square pixels
-	if (is_high_resolution(width, height)) {
+	// Cheap hack to make all > 640x480 modes have square pixels.
+	// Leave text modes alone because more than 480 line text modes all
+	// feature non-square pixels.
+	const auto is_text_mode = CurMode->type & M_TEXT_MODES;
+	if (!is_text_mode && is_high_resolution(width, height)) {
 		aspect_ratio = 1.0;
 	}
 //	LOG_MSG("ht %d vt %d ratio %f", htotal, vtotal, aspect_ratio );
