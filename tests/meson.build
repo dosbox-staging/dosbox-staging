@@ -78,7 +78,7 @@ unit_tests = [
     {'name': 'rgb', 'deps': []},
     {'name': 'rwqueue', 'deps': [libmisc_stubs_dep]},
     {'name': 'semaphore', 'deps': [libmisc_stubs_dep]},
-    {'name': 'setup', 'deps': [libmisc_stubs_dep]},
+    {'name': 'setup', 'deps': [libmisc_stubs_dep, libshell_dep]},
     {'name': 'shell_cmds', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'shell_redirection', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'string_utils', 'deps': [libmisc_stubs_dep]},
