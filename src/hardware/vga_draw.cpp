@@ -651,7 +651,7 @@ static uint8_t * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 }
 
 static const uint8_t* VGA_Text_Memwrap(Bitu vidstart) {
-	vidstart &= vga.draw.linear_mask;
+	vidstart = vidstart & vga.draw.linear_mask;
 	Bitu line_end = 2 * vga.draw.blocks;
 	if (GCC_UNLIKELY((vidstart + line_end) > vga.draw.linear_mask)) {
 		// wrapping in this line
