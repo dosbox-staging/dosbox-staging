@@ -470,59 +470,6 @@ static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu /*line*/)
 	return TempLine;
 } */
 
-static uint8_t * VGA_Draw_VGA_Line_HWMouse( Bitu vidstart, Bitu /*line*/) {
-	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
-		// HW Mouse not enabled, use the tried and true call
-		return &vga.mem.linear[vidstart];
-
-	Bitu lineat = (vidstart-(vga.config.real_start<<2)) / vga.draw.width;
-	if ((vga.s3.hgc.posx >= vga.draw.width) ||
-		(lineat < vga.s3.hgc.originy) || 
-		(lineat > (vga.s3.hgc.originy + (63U-vga.s3.hgc.posy))) ) {
-		// the mouse cursor *pattern* is not on this line
-		return &vga.mem.linear[ vidstart ];
-	} else {
-		// Draw mouse cursor: cursor is a 64x64 pattern which is shifted (inside the
-		// 64x64 mouse cursor space) to the right by posx pixels and up by posy pixels.
-		// This is used when the mouse cursor partially leaves the screen.
-		// It is arranged as bitmap of 16bits of bitA followed by 16bits of bitB, each
-		// AB bits corresponding to a cursor pixel. The whole map is 8kB in size.
-		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width);
-		// the index of the bit inside the cursor bitmap we start at:
-		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx; 
-		// convert to video memory addr and bit index
-		// start adjusted to the pattern structure (thus shift address by 2 instead of 3)
-		// Need to get rid of the third bit, so "/8 *2" becomes ">> 2 & ~1"
-		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((uint32_t)vga.s3.hgc.startaddr) << 10);
-		Bitu cursorStartBit = sourceStartBit & 0x7;
-		// stay at the right position in the pattern
-		if (cursorMemStart & 0x2)
-			--cursorMemStart;
-		Bitu cursorMemEnd = cursorMemStart + ((64-vga.s3.hgc.posx) >> 2);
-		uint8_t* xat = &TempLine[vga.s3.hgc.originx]; // mouse data start pos. in scanline
-		for (Bitu m = cursorMemStart; m < cursorMemEnd;
-		     (m & 1) ? (m += 3) : ++m) {
-			// for each byte of cursor data
-			uint8_t bitsA = vga.mem.linear[m];
-			uint8_t bitsB = vga.mem.linear[m+2];
-			for (uint8_t bit=(0x80 >> cursorStartBit); bit != 0; bit >>= 1) {
-				// for each bit
-				cursorStartBit=0; // only the first byte has some bits cut off
-				if (bitsA&bit) {
-					if (bitsB&bit) *xat ^= 0xFF; // Invert screen data
-					//else Transparent
-				} else if (bitsB&bit) {
-					*xat = vga.s3.hgc.forestack[0]; // foreground color
-				} else {
-					*xat = vga.s3.hgc.backstack[0];
-				}
-				xat++;
-			}
-		}
-		return TempLine;
-	}
-}
-
 enum CursorOp : uint8_t {
 	Foreground  = 0b10,
 	Background  = 0b00,
@@ -1402,16 +1349,15 @@ uint8_t VGA_ActivateHardwareCursor()
 {
 	uint8_t bit_per_line_pixel = 0;
 
-	auto should_draw_with_hw_mouse = [&]() {
-		return svga.hardware_cursor_active && svga.hardware_cursor_active();
-	};
+	const bool use_hw_cursor = (svga.hardware_cursor_active &&
+	                            svga.hardware_cursor_active());
 
 	switch (vga.mode) {
 	case M_LIN32: // 32-bit true-colour VESA
 		bit_per_line_pixel = 32;
-		VGA_DrawLine       = should_draw_with_hw_mouse()
-		                           ? VGA_Draw_LIN32_Line_HWMouse
-		                           : VGA_Draw_Linear_Line;
+
+		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN32_Line_HWMouse
+		                             : VGA_Draw_Linear_Line;
 		//
 		// Use the "VGA_Draw_Linear_Line" routine that skips the DAC
 		// 8-bit palette LUT and prepares the true-colour pixels for
@@ -1419,42 +1365,35 @@ uint8_t VGA_ActivateHardwareCursor()
 		break;
 	case M_LIN24: // 24-bit true-colour VESA
 		bit_per_line_pixel = 24;
-		VGA_DrawLine       = should_draw_with_hw_mouse()
-		                           ? VGA_Draw_LIN32_Line_HWMouse
-		                           : VGA_Draw_Linear_Line;
+
+		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN32_Line_HWMouse
+		                             : VGA_Draw_Linear_Line;
 		break;
 	case M_LIN16: // 16-bit high-colour VESA
 		bit_per_line_pixel = 16;
-		VGA_DrawLine       = should_draw_with_hw_mouse()
-		                           ? VGA_Draw_LIN16_Line_HWMouse
-		                           : VGA_Draw_Linear_Line;
+
+		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN16_Line_HWMouse
+		                             : VGA_Draw_Linear_Line;
 		break;
 	case M_LIN15: // 15-bit high-colour VESA
 		bit_per_line_pixel = 15;
-		VGA_DrawLine       = should_draw_with_hw_mouse()
-		                           ? VGA_Draw_LIN16_Line_HWMouse
-		                           : VGA_Draw_Linear_Line;
+
+		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN16_Line_HWMouse
+		                             : VGA_Draw_Linear_Line;
 		break;
-	case M_LIN8: // 8-bit VESA
-		if (should_draw_with_hw_mouse()) {
-			bit_per_line_pixel = 8;
-			VGA_DrawLine = VGA_Draw_VGA_Line_HWMouse;
-		} else {
-			bit_per_line_pixel = 32;
-			VGA_DrawLine = draw_unwrapped_line_from_dac_palette;
-			//
-			// Use a routine that treats the 8-bit pixel values as
-			// indexes into the DAC's palette LUT. The palette LUT
-			// is populated with 32-bit RGB's (XRGB888) pre-scaled
-			// from 18-bit RGB666 values that have been written by
-			// the user-space software via DAC IO write registers.
-		}
-		break;
+	case M_LIN8: // 8-bit and below
 	default:
-		bit_per_line_pixel = 8;
-		VGA_DrawLine = should_draw_with_hw_mouse()
-		                     ? VGA_Draw_VGA_Line_HWMouse
-		                     : VGA_Draw_Linear_Line;
+		bit_per_line_pixel = 32;
+
+		// Use routines that treats the 8-bit pixel values as
+		// indexes into the DAC's palette LUT. The palette LUT
+		// is populated with 32-bit RGB's (XRGB888) pre-scaled
+		// from 18-bit RGB666 values that have been written by
+		// the user-space software via DAC IO write registers.
+		//
+		VGA_DrawLine = use_hw_cursor
+		                     ? draw_unwrapped_line_from_dac_palette_with_hwcursor
+		                     : draw_unwrapped_line_from_dac_palette;
 		break;
 	}
 	assert(bit_per_line_pixel != 0);
