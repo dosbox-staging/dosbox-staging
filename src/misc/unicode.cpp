@@ -40,8 +40,10 @@ CHECK_NARROWING();
 // Note: Most of the Unicode engine data is stored in external files, loaded and
 // parsed during runtime
 
+using box_drawing_set_t = std::array<uint16_t, 40>;
+
 // List of box drawing characters, ordered as in code page 437
-static const std::vector<uint16_t> box_drawing_set_regular = {
+static constexpr box_drawing_set_t box_drawing_set_regular = {
         0x2502, // 0xb3 - '│', BOX DRAWINGS LIGHT VERTICAL
         0x2524, // 0xb4 - '┤', BOX DRAWINGS LIGHT VERTICAL AND LEFT
         0x2561, // 0xb5 - '╡', BOX DRAWINGS VERTICAL SINGLE AND LEFT DOUBLE
@@ -86,7 +88,7 @@ static const std::vector<uint16_t> box_drawing_set_regular = {
 
 // Fallback list of box drawing characters, ordered as above;
 // effectively turns all double lines into light lines
-static const std::vector<uint16_t> box_drawing_set_light = {
+static constexpr box_drawing_set_t box_drawing_set_light = {
         0x2502, // 0xb3 - '│'
         0x2524, // 0xb4 - '┤'
         0x2524, // 0xb5 - '┤' (instead of '╡')
@@ -134,6 +136,7 @@ static const std::vector<uint16_t> box_drawing_set_light = {
 
 using alias_t                         = std::pair<uint16_t, uint16_t>;
 using alias_groups_t                  = std::vector<std::vector<alias_t>>;
+
 const alias_groups_t box_alias_groups = {
 	// Note: If you compare horizontal and vertical, the groups might seem
 	// 'asymetric' to you - this is not a mistake! This is due to the fact
@@ -420,13 +423,11 @@ void Grapheme::AddMark(const uint16_t in_code_point)
 
 void Grapheme::CopyMarksFrom(const Grapheme& other)
 {
-	if (!is_valid || !other.is_valid) {
-		// Can't add combining mark to/from invalid grapheme
-		return;
+	// Can't add combining mark to/from invalid grapheme
+	if (is_valid && other.is_valid) {
+		marks        = other.marks;
+		marks_sorted = other.marks_sorted;
 	}
-
-	marks        = other.marks;
-	marks_sorted = other.marks_sorted;
 }
 
 void Grapheme::StripMarks()
@@ -442,7 +443,7 @@ void Grapheme::Decompose()
 		return;
 	}
 
-	while (decomposition_rules.count(code_point) != 0) {
+	while (decomposition_rules.count(code_point) > 0) {
 		const auto& rule = decomposition_rules.at(code_point);
 		code_point       = rule.code_point;
 		for (const auto mark : rule.marks) {
@@ -640,7 +641,7 @@ static void wide_to_utf8(const std::vector<uint16_t>& str_in, std::string& str_o
 static void warn_code_point(const uint16_t code_point)
 {
 	static std::set<uint16_t> already_warned;
-	if (already_warned.count(code_point)) {
+	if (already_warned.count(code_point) > 0) {
 		return;
 	}
 	already_warned.insert(code_point);
@@ -650,7 +651,7 @@ static void warn_code_point(const uint16_t code_point)
 static void warn_code_page(const uint16_t code_page)
 {
 	static std::set<uint16_t> already_warned;
-	if (already_warned.count(code_page)) {
+	if (already_warned.count(code_page) > 0) {
 		return;
 	}
 	already_warned.insert(code_page);
@@ -726,7 +727,7 @@ static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_ou
 		}
 
 		const auto code_point = grapheme.GetCodePoint();
-		if (!mapping_box->count(code_point)) {
+		if (mapping_box->count(code_point) == 0) {
 			return false; // not a box drawing character
 		}
 
@@ -877,8 +878,8 @@ static void dos_to_wide(const std::string& str_in,
 			// Character above 0x07f - take from code page mapping
 			auto& mappings = per_code_page_mappings[code_page];
 
-			if (!per_code_page_mappings.count(code_page) ||
-			    !mappings.grapheme_to_dos.count(byte)) {
+			if ((per_code_page_mappings.count(code_page) == 0) ||
+			    (mappings.grapheme_to_dos.count(byte) == 0)) {
 				str_out.push_back(unknown_character);
 			} else {
 				mappings.grapheme_to_dos[byte].PushInto(str_out);
@@ -1252,9 +1253,9 @@ static void import_config_main(const std_fs::path& path_root)
 
 	uint16_t curent_code_page = 0;
 
-	config_mappings_t   new_config_mappings   = {};
+	config_mappings_t new_config_mappings     = {};
 	config_duplicates_t new_config_duplicates = {};
-	config_aliases_t    new_config_aliases    = {};
+	config_aliases_t new_config_aliases       = {};
 
 	while (get_line(in_file, line_str, line_num)) {
 		std::vector<std::string> tokens;
@@ -1578,12 +1579,12 @@ static void import_mapping_case(const std_fs::path& path_root)
 			}
 
 			// Make sure there are no repetitions
-			if (all_lowercase.count(code_point_lower) ||
-			    all_uppercase.count(code_point_lower)) {
-					error_code_point_found_twice(code_point_lower,
-					                             file_name,
-					                             line_num);
-					return;
+			if ((all_lowercase.count(code_point_lower) > 0) ||
+			    (all_uppercase.count(code_point_lower) > 0)) {
+				        error_code_point_found_twice(code_point_lower,
+				                                     file_name,
+				                                     line_num);
+				        return;
 			}
 
 			// Store the code point for further repetition checks
@@ -1599,12 +1600,12 @@ static void import_mapping_case(const std_fs::path& path_root)
 			}
 
 			// Make sure there are no repetitions
-			if (all_lowercase.count(code_point_upper) ||
-			    all_uppercase.count(code_point_upper)) {
-					error_code_point_found_twice(code_point_upper,
-					                             file_name,
-					                             line_num);
-					return;
+			if ((all_lowercase.count(code_point_upper) > 0) ||
+			    (all_uppercase.count(code_point_upper) > 0)) {
+				        error_code_point_found_twice(code_point_upper,
+				                                     file_name,
+				                                     line_num);
+				        return;
 			}
 
 			// Store the code point for further repetition checks
@@ -1620,15 +1621,15 @@ static void import_mapping_case(const std_fs::path& path_root)
 		}
 
 		// Make sure there are no repetitions
-		if (all_lowercase.count(code_point_lower) ||
-		    all_uppercase.count(code_point_lower)) {
+		if ((all_lowercase.count(code_point_lower) > 0) ||
+		    (all_uppercase.count(code_point_lower) > 0)) {
 			error_code_point_found_twice(code_point_lower,
 			                             file_name,
 			                             line_num);
 			return;
 		}
-		if (all_lowercase.count(code_point_upper) ||
-		    all_uppercase.count(code_point_upper)) {
+		if ((all_lowercase.count(code_point_upper) > 0) ||
+		    (all_uppercase.count(code_point_upper) > 0)) {
 			error_code_point_found_twice(code_point_upper,
 			                             file_name,
 			                             line_num);
@@ -1687,7 +1688,7 @@ static void construct_box_fallback(const map_grapheme_to_dos_t& code_page_mappin
 		// to be adapted due to missing characters in the given
 		// code page
 		for (const auto& [from, target] : out_box_code_points) {
-			if (!code_page_mapping.count(target)) {
+			if (code_page_mapping.count(target) == 0) {
 				return true;
 			}
 		}
@@ -1709,12 +1710,12 @@ static void construct_box_fallback(const map_grapheme_to_dos_t& code_page_mappin
 					continue;
 				}
 
-				if (!code_page_mapping.count(alias.second)) {
+				if (code_page_mapping.count(alias.second) == 0) {
 					// We cannot apply this alias group
 					return false;
 				}
 
-				if (!code_page_mapping.count(target)) {
+				if (code_page_mapping.count(target) == 0) {
 					is_group_profitable = true;
 				}
 			}
@@ -1723,7 +1724,7 @@ static void construct_box_fallback(const map_grapheme_to_dos_t& code_page_mappin
 		return is_group_profitable;
 	};
 
-	auto try_set = [&](const std::vector<uint16_t>& drawing_set) {
+	auto try_set = [&](const box_drawing_set_t& drawing_set) {
 		assert(box_drawing_set_regular.size() == drawing_set.size());
 
 		// Create initial mapping
@@ -1769,7 +1770,7 @@ static void construct_box_fallback(const map_grapheme_to_dos_t& code_page_mappin
 	// Last resort fallback - use 7-bit ASCII fallback for everything
 	out_box_code_points.clear();
 	for (const auto& code_point : box_drawing_set_regular) {
-		if (mapping_ascii.count(code_point)) {
+		if (mapping_ascii.count(code_point) > 0) {
 			out_box_code_points[code_point] = mapping_ascii.at(code_point);
 		} else {
 			out_box_code_points[code_point] = unknown_character;
@@ -1781,18 +1782,19 @@ static void construct_case_mapping(const map_code_point_case_t& map_case_global,
 		                   const map_grapheme_to_dos_t& code_page_mapping,
 		                   map_dos_character_case_t& out_map_case)
 {
-	out_map_case.resize(UINT8_MAX);
-	for (uint16_t idx = 0; idx < UINT8_MAX; ++idx) {
-		if (idx < decode_threshold_non_ascii && map_case_global.count(idx)) {
+	out_map_case.resize(UINT8_MAX + 1);
+	for (uint16_t idx = 0; idx < UINT8_MAX + 1; ++idx) {
+		if (idx < decode_threshold_non_ascii &&
+		    (map_case_global.count(idx) > 0)) {
 			out_map_case[idx] = static_cast<uint8_t>(
-				map_case_global.at(idx));
+			        map_case_global.at(idx));
 		} else {
 			out_map_case[idx] = static_cast<uint8_t>(idx);
 		}
 	}
 
 	for (const auto& [grapheme, character_code] : code_page_mapping) {
-		if (!map_case_global.count(grapheme.GetCodePoint())) {
+		if (map_case_global.count(grapheme.GetCodePoint()) == 0) {
 			// No information how to switch case for this code point
 			continue;
 		}
@@ -1801,7 +1803,7 @@ static void construct_case_mapping(const map_code_point_case_t& map_case_global,
 			grapheme.GetCodePoint());
 		grapheme_switched.CopyMarksFrom(grapheme);
 
-		if (!code_page_mapping.count(grapheme_switched)) {
+		if (code_page_mapping.count(grapheme_switched) == 0) {
 			// Code page does not contain switched case character
 			continue;
 		}
@@ -1816,12 +1818,12 @@ static bool construct_mapping(const uint16_t code_page)
 	// also protect against circular dependencies
 
 	static std::set<uint16_t> already_tried;
-	if (already_tried.count(code_page)) {
+	if (already_tried.count(code_page) > 0) {
 		return false;
 	}
 	already_tried.insert(code_page);
 
-	assert(!per_code_page_mappings.count(code_page));
+	assert(per_code_page_mappings.count(code_page) == 0);
 
 	// First apply mapping found in main config file
 
@@ -1918,24 +1920,20 @@ static void construct_aliases(const uint16_t code_page)
 	auto& aliases_normalized = mappings.aliases_normalized;
 
 	auto add_alias = [&](const alias_t& alias) {
-		if (!mapping_normalized.count(alias.first) &&
-		    mapping_normalized.count(alias.second) &&
-		    !aliases_normalized.count(alias.first)) {
-			aliases_normalized[alias.first] =
-			        mapping_normalized.find(alias.second)->second;
+		const auto found_it = mapping_normalized.find(alias.second);
+		if ((mapping_normalized.count(alias.first) == 0) &&
+		    (aliases_normalized.count(alias.first) == 0) &&
+		    (found_it != mapping_normalized.end())) {
+			aliases_normalized[alias.first] = found_it->second;
 		}
 	};
 
 	// Construct aliases based on the configuration
-	for (const auto& alias : config_aliases) {
-		add_alias(alias);
-	}
+	std::for_each(config_aliases.begin(), config_aliases.end(), add_alias);
 
 	// Add box drawing aliases
 	for (const auto& alias_group : box_alias_groups) {
-		for (const auto& alias : alias_group) {
-			add_alias(alias);
-		}
+		std::for_each(alias_group.begin(), alias_group.end(), add_alias);
 	}
 
 	// Construct decomposed aliases
@@ -1945,11 +1943,11 @@ static void construct_aliases(const uint16_t code_page)
 
 static bool prepare_code_page(const uint16_t code_page)
 {
-	if (per_code_page_mappings.count(code_page)) {
+	if (per_code_page_mappings.count(code_page) > 0) {
 		return true; // code page already prepared
 	}
 
-	if (!config_mappings.count(code_page) || !construct_mapping(code_page)) {
+	if ((config_mappings.count(code_page) == 0) || !construct_mapping(code_page)) {
 		// Unsupported code page or error
 		per_code_page_mappings.erase(code_page);
 		return false;
@@ -2075,7 +2073,7 @@ void dos_to_utf8(const std::string& in_str, std::string& out_str,
 
 static void lowercase_dos_common(std::string & in_str, const uint16_t code_page)
 {
-	assert(per_code_page_mappings.count(code_page));
+	assert(per_code_page_mappings.count(code_page) > 0);
 	const auto& mapping = per_code_page_mappings[code_page].lowercase;
 
 	assert(mapping.size() == UINT8_MAX);
@@ -2099,7 +2097,7 @@ void lowercase_dos(std::string & in_str, const uint16_t code_page)
 
 static void uppercase_dos_common(std::string & in_str, const uint16_t code_page)
 {
-	assert(per_code_page_mappings.count(code_page));
+	assert(per_code_page_mappings.count(code_page) > 0);
 	const auto& mapping = per_code_page_mappings[code_page].uppercase;
 
 	assert(mapping.size() == UINT8_MAX);
