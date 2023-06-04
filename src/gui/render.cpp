@@ -479,7 +479,7 @@ static void RENDER_CallBack(GFX_CallBackFunctions_t function)
 
 void RENDER_SetSize(const uint32_t width, const uint32_t height,
                     const bool double_width, const bool double_height,
-                    const Fraction pixel_aspect_ratio,
+                    const Fraction& pixel_aspect_ratio,
                     const unsigned bits_per_pixel, const double frames_per_second)
 {
 	RENDER_Halt();

@@ -704,7 +704,7 @@ void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t 
 
 void ReelMagic_RENDER_SetSize(const uint32_t width, const uint32_t height,
                               const bool double_width, const bool double_height,
-                              const Fraction pixel_aspect_ratio,
+                              const Fraction& pixel_aspect_ratio,
                               const uint32_t bits_per_pixel,
                               const double frames_per_second)
 {
