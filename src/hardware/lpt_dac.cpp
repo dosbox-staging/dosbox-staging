@@ -164,8 +164,9 @@ void LPT_DAC_Init(Section *section)
 	else if (dac_choice == "ston1")
 		lpt_dac = std::make_unique<StereoOn1>();
 	else {
+		// The remaining setting is to turn the LPT DAC off
 		const auto dac_choice_has_bool = parse_bool_setting(dac_choice);
-		if (!(dac_choice_has_bool && *dac_choice_has_bool)) {
+		if (!dac_choice_has_bool || *dac_choice_has_bool != false) {
 			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' choice: '%s', using 'none'",
 			            dac_choice.data());
 		}
