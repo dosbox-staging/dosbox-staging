@@ -18,221 +18,226 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <cassert>
-#include <cstdlib>
-#include <cstring>
-#include <vector>
-
 #include "image_capturer.h"
 
-#include "capture.h"
+#include <cassert>
+#include <string>
+
+#include "std_filesystem.h"
+
 #include "checks.h"
-#include "png_writer.h"
-#include "support.h"
+#include "string_utils.h"
 
 CHECK_NARROWING();
 
+ImageCapturer::ImageCapturer(const std::string& grouped_mode_prefs)
+{
+	ConfigureGroupedMode(grouped_mode_prefs);
+
+	for (auto& image_saver : image_savers) {
+		image_saver.Open();
+	}
+
+	LOG_MSG("CAPTURE: Image capturer started");
+}
+
+void ImageCapturer::ConfigureGroupedMode(const std::string& prefs)
+{
+	auto set_defaults = [&] {
+		grouped_mode.wants_raw      = false;
+		grouped_mode.wants_upscaled = true;
+		grouped_mode.wants_rendered = false;
+	};
+
+	grouped_mode.wants_raw      = false;
+	grouped_mode.wants_upscaled = false;
+	grouped_mode.wants_rendered = false;
+
+	const auto formats = split(prefs, ' ');
+	if (formats.size() == 0) {
+		LOG_WARNING("CAPTURE: 'default_image_capture_formats' not specified; "
+		            "defaulting to 'upscaled'");
+		set_defaults();
+		return;
+	}
+	if (formats.size() > 3) {
+		LOG_WARNING("CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
+		            "Must not contain more than 3 formats; defaulting to 'upscaled'.",
+		            prefs.c_str());
+		set_defaults();
+		return;
+	}
+
+	for (const auto& format : formats) {
+		if (format == "raw") {
+			grouped_mode.wants_raw = true;
+		} else if (format == "upscaled") {
+			grouped_mode.wants_upscaled = true;
+		} else if (format == "rendered") {
+			grouped_mode.wants_rendered = true;
+		} else {
+			LOG_WARNING("CAPTURE: Invalid image capture format specified for "
+			            "'default_image_capture_formats': '%s'. "
+			            "Valid formats are 'raw', 'upscaled', and 'rendered'; "
+			            "defaulting to 'upscaled'.",
+			            format.c_str());
+			set_defaults();
+			return;
+		}
+	}
+}
+
 ImageCapturer::~ImageCapturer()
 {
-	Close();
-}
-
-void ImageCapturer::Open()
-{
-	if (is_open) {
-		Close();
+	for (auto& image_saver : image_savers) {
+		image_saver.Close();
 	}
 
-	const auto worker_function = std::bind(&ImageCapturer::SaveQueuedImages, this);
-	renderer = std::thread(worker_function);
-	set_thread_name(renderer, "dosbox:imgcap");
-
-	is_open = true;
+	LOG_MSG("CAPTURE: Image capturer shutting down");
 }
 
-void ImageCapturer::Close()
+bool ImageCapturer::IsCaptureRequested() const
 {
-	if (!is_open) {
+	return state.raw != CaptureState::Off ||
+	       state.upscaled != CaptureState::Off ||
+	       state.rendered != CaptureState::Off ||
+	       state.grouped != CaptureState::Off;
+}
+
+bool ImageCapturer::IsRenderedCaptureRequested() const
+{
+	return state.rendered != CaptureState::Off ||
+	       (state.grouped != CaptureState::Off && grouped_mode.wants_rendered);
+}
+
+void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
+{
+	// No new image capture requests until we finish queuing the current
+	// grouped capture request, otherwise we can get into all sorts of race
+	// conditions.
+	if (state.grouped == CaptureState::InProgress) {
 		return;
 	}
 
-	// Stop queuing new images
-	image_fifo.Stop();
+	bool do_raw      = false;
+	bool do_upscaled = false;
+	bool do_rendered = false;
 
-	// Let the renderer finish saving pending images
-	if (renderer.joinable()) {
-		renderer.join();
-	}
+	if (state.grouped == CaptureState::Off) {
+		// We're in regular single image capture mode
+		do_raw      = (state.raw != CaptureState::Off);
+		do_upscaled = (state.upscaled != CaptureState::Off);
+		do_rendered = (state.rendered != CaptureState::Off);
 
-	is_open = false;
-}
+		// Clear the state flags
+		state.raw      = CaptureState::Off;
+		state.upscaled = CaptureState::Off;
+		// The `rendered` state is cleared in the
+		// CAPTURE_AddPostRenderImage callback
+	} else {
+		assert(state.grouped == CaptureState::Pending);
+		state.grouped = CaptureState::InProgress;
 
-void ImageCapturer::CaptureImage(const RenderedImage& image,
-                                 const CapturedImageType type,
-                                 const std::optional<std_fs::path> path,
-                                 const std::optional<ImageInfo> source_image_info_override)
-{
-	if (!image_fifo.IsRunning()) {
-		LOG_WARNING("CAPTURE: Cannot create screenshots while image capturer"
-		            "is shutting down");
-		return;
-	}
-
-	CaptureImageTask task = {image, type, path, source_image_info_override};
-	image_fifo.Enqueue(std::move(task));
-}
-
-void ImageCapturer::SaveQueuedImages()
-{
-	while (auto task = image_fifo.Dequeue()) {
-		SaveImage(*task);
-		task->image.free();
-	}
-}
-
-// Stop Visual Studio 2019 complaining about "not all control paths return a value"
-#pragma warning( push )
-#pragma warning( disable : 4715)
-static CaptureType to_capture_type(const CapturedImageType type)
-{
-	switch (type) {
-	case CapturedImageType::Raw: return CaptureType::RawImage;
-	case CapturedImageType::Upscaled: return CaptureType::UpscaledImage;
-	case CapturedImageType::Rendered: return CaptureType::RenderedImage;
-	}
-}
-#pragma warning( pop )
-
-void ImageCapturer::SaveImage(const CaptureImageTask& task)
-{
-#if (C_SSHOT)
-	CaptureType capture_type = to_capture_type(task.image_type);
-
-	outfile = CAPTURE_CreateFile(capture_type, task.path);
-	if (!outfile) {
-		return;
-	}
-
-	switch (task.image_type) {
-	case CapturedImageType::Raw: SaveRawImage(task.image); break;
-	case CapturedImageType::Upscaled: SaveUpscaledImage(task.image); break;
-	case CapturedImageType::Rendered:
-		assertm(task.source_image_info_override,
-		        "source_image_info_override must be provided for rendered images");
-		SaveRenderedImage(task.image, *task.source_image_info_override);
-		break;
-	}
-
-	CloseOutFile();
-#endif
-}
-
-static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
-                               ImageScaler image_scaler, const ImageInfo& image_info,
-                               const std::optional<ImageInfo> source_image_info,
-                               const uint8_t* palette_data)
-{
-	switch (image_scaler.GetOutputPixelFormat()) {
-	case PixelFormat::Indexed8:
-		if (!png_writer.InitIndexed8(
-		            outfile, image_info, source_image_info, palette_data)) {
-			return;
+		if (grouped_mode.wants_raw) {
+			do_raw = true;
 		}
-		break;
-	case PixelFormat::Rgb888:
-		if (!png_writer.InitRgb888(outfile, image_info, source_image_info)) {
-			return;
+		if (grouped_mode.wants_upscaled) {
+			do_upscaled = true;
 		}
-		break;
-	};
-
-	auto rows_to_write = image_scaler.GetOutputHeight();
-	while (rows_to_write--) {
-		auto row = image_scaler.GetNextOutputRow();
-		png_writer.WriteRow(row);
+		if (grouped_mode.wants_rendered) {
+			do_rendered = true;
+			// If rendered capture is wanted, the state will be cleared in the
+			// CapturePostRenderImagecallback...
+		} else {
+			// ...otherwise we clear it now
+			state.grouped = CaptureState::Off;
+		}
 	}
-}
 
-void ImageCapturer::SaveRawImage(const RenderedImage& image)
-{
-	PngWriter png_writer = {};
-
-	image_scaler.Init(image, ScalingMode::DoublingOnly);
-
-	const ImageInfo image_info = {image_scaler.GetOutputWidth(),
-	                              image_scaler.GetOutputHeight(),
-	                              image.pixel_aspect_ratio};
-
-	constexpr std::optional<ImageInfo> no_source_image_info = {};
-
-	write_upscaled_png(outfile,
-	                   png_writer,
-	                   image_scaler,
-	                   image_info,
-	                   no_source_image_info,
-	                   image.palette_data);
-}
-
-void ImageCapturer::SaveUpscaledImage(const RenderedImage& image)
-{
-	PngWriter png_writer = {};
-
-	image_scaler.Init(image, ScalingMode::AspectRatioPreservingUpscale);
-
-	const auto square_pixel_aspect_ratio = Fraction{1};
-
-	const ImageInfo image_info = {image_scaler.GetOutputWidth(),
-	                              image_scaler.GetOutputHeight(),
-	                              square_pixel_aspect_ratio};
-
-	const ImageInfo source_image_info = {image.width,
-	                                     image.height,
-	                                     image.pixel_aspect_ratio};
-	write_upscaled_png(outfile,
-	                   png_writer,
-	                   image_scaler,
-	                   image_info,
-	                   source_image_info,
-	                   image.palette_data);
-}
-
-void ImageCapturer::SaveRenderedImage(const RenderedImage& image,
-                                      const ImageInfo& source_image_info)
-{
-	PngWriter png_writer = {};
-
-	const ImageInfo image_info = {image.width, image.height, image.pixel_aspect_ratio};
-
-	if (!png_writer.InitRgb888(outfile, image_info, source_image_info)) {
+	if (!(do_raw || do_upscaled || do_rendered)) {
 		return;
-	};
+	}
 
-	image_decoder.Init(image);
+	// We can pass in any of the image types, it doesn't matter which
+	const auto index = get_next_capture_index(CaptureType::RawImage);
+	if (!index) {
+		return;
+	}
+	if (do_raw) {
+		GetNextImageSaver().QueueImage(
+		        image.deep_copy(),
+		        CapturedImageType::Raw,
+		        generate_capture_filename(CaptureType::RawImage, index));
+	}
+	if (do_upscaled) {
+		GetNextImageSaver().QueueImage(
+		        image.deep_copy(),
+		        CapturedImageType::Upscaled,
+		        generate_capture_filename(CaptureType::UpscaledImage, index));
+	}
 
-	constexpr auto BytesPerPixel = 3;
-	row_buf.resize(image.width * BytesPerPixel);
+	if (do_rendered) {
+		rendered_path = generate_capture_filename(CaptureType::RenderedImage,
+		                                          index);
 
-	auto rows_to_write = image.height;
-	while (rows_to_write--) {
-		auto out = row_buf.begin();
-
-		for (auto x = 0; x < image.width; ++x) {
-			const auto pixel = image_decoder.GetNextRgb888Pixel();
-
-			*out++ = pixel.red;
-			*out++ = pixel.green;
-			*out++ = pixel.blue;
-		}
-		png_writer.WriteRow(row_buf.begin());
-		image_decoder.AdvanceRow();
+		// We need to propagate the image info to the PNG writer
+		// so we can include the source image metadata.
+		rendered_image_info = {image.width,
+		                       image.height,
+		                       image.pixel_aspect_ratio};
 	}
 }
 
-void ImageCapturer::CloseOutFile()
+void ImageCapturer::CapturePostRenderImage(const RenderedImage& image)
 {
-	if (outfile) {
-		fclose(outfile);
-		outfile = nullptr;
+	GetNextImageSaver().QueueImage(image,
+	                               CapturedImageType::Rendered,
+	                               rendered_path,
+	                               rendered_image_info);
+
+	state.rendered = CaptureState::Off;
+
+	// In grouped capture mode, adding the post-render image is always the
+	// last step, so we can safely clear the flag here.
+	state.grouped = CaptureState::Off;
+}
+
+ImageSaver& ImageCapturer::GetNextImageSaver()
+{
+	++current_image_saver_index;
+	current_image_saver_index %= NumImageSavers;
+	return image_savers[current_image_saver_index];
+}
+
+void ImageCapturer::RequestRawCapture()
+{
+	if (state.raw != CaptureState::Off) {
+		return;
 	}
+	state.raw = CaptureState::Pending;
+}
+
+void ImageCapturer::RequestUpscaledCapture()
+{
+	if (state.upscaled != CaptureState::Off) {
+		return;
+	}
+	state.upscaled = CaptureState::Pending;
+}
+
+void ImageCapturer::RequestRenderedCapture()
+{
+	if (state.rendered != CaptureState::Off) {
+		return;
+	}
+	state.rendered = CaptureState::Pending;
+}
+
+void ImageCapturer::RequestGroupedCapture()
+{
+	if (state.grouped != CaptureState::Off) {
+		return;
+	}
+	state.grouped = CaptureState::Pending;
 }
 

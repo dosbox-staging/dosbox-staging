@@ -419,7 +419,7 @@ std::string format_string(const std::string format, Args&&... args) noexcept
 
 	// The buffer should now have the determined output length plus the
 	// terminating zero
-	assert(required_size + 1 == result.size());
+	assert(static_cast<size_t>(required_size + 1) == result.size());
 
 	// Chop off the terminating zero of the C string in the buffer
 	result.pop_back();

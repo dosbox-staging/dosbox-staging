@@ -41,6 +41,8 @@ enum class CaptureType {
 	SerialLog
 };
 
+enum class CaptureState { Off, Pending, InProgress };
+
 void CAPTURE_AddConfigSection(const config_ptr_t& conf);
 
 // TODO move raw OPL and serial log capture into the capture module too
@@ -73,4 +75,9 @@ bool CAPTURE_IsCapturingPostRenderImage();
 bool CAPTURE_IsCapturingMidi();
 bool CAPTURE_IsCapturingVideo();
 
-#endif
+// Only used internally in the capture module
+int32_t get_next_capture_index(const CaptureType type);
+
+std_fs::path generate_capture_filename(const CaptureType type, const int32_t index);
+
+#endif // DOSBOX_CAPTURE_H

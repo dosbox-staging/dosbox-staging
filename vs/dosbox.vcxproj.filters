@@ -19,6 +19,9 @@
     <ClCompile Include="..\src\capture\image_decoder.cpp">
       <Filter>src\capture</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\capture\image_saver.cpp">
+      <Filter>src\capture</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\capture\image_scaler.cpp">
       <Filter>src\capture</Filter>
     </ClCompile>
@@ -999,6 +1002,9 @@
     <ClInclude Include="..\src\capture\image_decoder.h">
       <Filter>src\capture</Filter>
     </ClInclude>
+    <ClCompile Include="..\src\capture\image_saver.h">
+      <Filter>src\capture</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\capture\image_scaler.h">
       <Filter>src\capture</Filter>
     </ClCompile>

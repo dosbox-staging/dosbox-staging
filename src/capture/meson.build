@@ -5,6 +5,7 @@ libcapture_sources = files(
     'capture_video.cpp',
     'image_capturer.cpp',
     'image_decoder.cpp',
+    'image_saver.cpp',
     'image_scaler.cpp',
     'png_writer.cpp',
 )
