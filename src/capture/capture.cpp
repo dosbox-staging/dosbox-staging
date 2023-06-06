@@ -24,24 +24,15 @@
 #include <cassert>
 #include <cerrno>
 #include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <mutex>
-#include <optional>
-#include <string>
-
-#include "std_filesystem.h"
 
 #include "capture_audio.h"
 #include "capture_midi.h"
 #include "capture_video.h"
 #include "checks.h"
 #include "control.h"
-#include "cross.h"
 #include "fs_utils.h"
 #include "image_capturer.h"
 #include "mapper.h"
-#include "render.h"
 #include "sdlmain.h"
 #include "setup.h"
 #include "string_utils.h"
@@ -51,63 +42,10 @@
 
 CHECK_NARROWING();
 
-#if (C_SSHOT)
-class ImageCapturers {
-public:
-	ImageCapturers();
-	~ImageCapturers();
-	ImageCapturer& GetNext();
-
-private:
-	static constexpr int NumImageCapturers           = 3;
-	int current_capturer_index                       = 0;
-	ImageCapturer image_capturers[NumImageCapturers] = {};
-};
-
-ImageCapturers::ImageCapturers()
-{
-	for (auto& image_capturer : image_capturers) {
-		image_capturer.Open();
-	}
-
-	LOG_MSG("CAPTURE: Image capturer started");
-}
-
-ImageCapturers::~ImageCapturers()
-{
-	for (auto& image_capturer : image_capturers) {
-		image_capturer.Close();
-	}
-
-	LOG_MSG("CAPTURE: Image capturer shutting down");
-}
-
-ImageCapturer& ImageCapturers::GetNext()
-{
-	++current_capturer_index;
-	current_capturer_index %= NumImageCapturers;
-	return image_capturers[current_capturer_index];
-}
-
-static std::unique_ptr<ImageCapturers> image_capturers = {};
-#endif
-
-enum class CaptureState { Off, Pending, InProgress };
-
 static struct {
 	std_fs::path path = {};
 
 	struct {
-		struct {
-			CaptureState raw      = {};
-			CaptureState upscaled = {};
-			CaptureState rendered = {};
-			CaptureState grouped  = {};
-
-			std_fs::path rendered_path    = {};
-			ImageInfo rendered_image_info = {};
-		} image = {};
-
 		CaptureState audio = {};
 		CaptureState midi  = {};
 		CaptureState video = {};
@@ -124,11 +62,7 @@ static struct {
 	} next_index = {};
 } capture = {};
 
-static struct {
-	bool capture_raw      = false;
-	bool capture_upscaled = true;
-	bool capture_rendered = false;
-} grouped_image_capture_formats = {};
+static std::unique_ptr<ImageCapturer> image_capturer = {};
 
 bool CAPTURE_IsCapturingAudio()
 {
@@ -137,17 +71,18 @@ bool CAPTURE_IsCapturingAudio()
 
 bool CAPTURE_IsCapturingImage()
 {
-	return capture.state.image.raw != CaptureState::Off ||
-	       capture.state.image.upscaled != CaptureState::Off ||
-	       capture.state.image.rendered != CaptureState::Off ||
-	       capture.state.image.grouped != CaptureState::Off;
+	if (image_capturer) {
+		return image_capturer->IsCaptureRequested();
+	}
+	return false;
 }
 
 bool CAPTURE_IsCapturingPostRenderImage()
 {
-	return capture.state.image.rendered != CaptureState::Off ||
-	       (capture.state.image.grouped != CaptureState::Off &&
-	        grouped_image_capture_formats.capture_rendered);
+	if (image_capturer) {
+		return image_capturer->IsRenderedCaptureRequested();
+	}
+	return false;
 }
 
 bool CAPTURE_IsCapturingMidi()
@@ -229,7 +164,7 @@ static const char* capture_type_to_postfix(const CaptureType type)
 	}
 }
 
-static int32_t get_next_capture_index(const CaptureType type)
+int32_t get_next_capture_index(const CaptureType type)
 {
 	switch (type) {
 	case CaptureType::Audio: return capture.next_index.audio++;
@@ -253,8 +188,7 @@ static int32_t get_next_capture_index(const CaptureType type)
 	}
 }
 
-static std_fs::path generate_capture_filename(const CaptureType type,
-                                              const int32_t index)
+std_fs::path generate_capture_filename(const CaptureType type, const int32_t index)
 {
 	const auto filename = format_string("%s%04d%s%s",
 	                                    capture_type_to_basename(type),
@@ -332,91 +266,13 @@ void CAPTURE_StopVideoCapture()
 #endif
 }
 
-#if (C_SSHOT)
-static void handle_add_frame_image_capture(const RenderedImage& image)
-{
-	// No new image capture requests until we finish queuing the current
-	// grouped capture request, otherwise we can get into all sorts of race
-	// conditions.
-	if (capture.state.image.grouped == CaptureState::InProgress) {
-		return;
-	}
-
-	bool capture_raw      = false;
-	bool capture_upscaled = false;
-	bool capture_rendered = false;
-
-	if (capture.state.image.grouped == CaptureState::Off) {
-		// We're in regular single image capture mode
-		capture_raw = capture.state.image.raw != CaptureState::Off;
-		capture_upscaled = capture.state.image.upscaled != CaptureState::Off;
-		capture_rendered = capture.state.image.rendered != CaptureState::Off;
-
-		// Clear the state flags
-		capture.state.image.raw      = CaptureState::Off;
-		capture.state.image.upscaled = CaptureState::Off;
-		// The `rendered` state is cleared in the
-		// CAPTURE_AddPostRenderImage callback
-	} else {
-		assert(capture.state.image.grouped == CaptureState::Pending);
-		capture.state.image.grouped = CaptureState::InProgress;
-
-		if (grouped_image_capture_formats.capture_raw) {
-			capture_raw = true;
-		}
-		if (grouped_image_capture_formats.capture_upscaled) {
-			capture_upscaled = true;
-		}
-		if (grouped_image_capture_formats.capture_rendered) {
-			capture_rendered = true;
-			// If `rendered` is enabled, the state is cleared in the
-			// CAPTURE_AddPostRenderImage callback...
-		} else {
-			// ...otherwise we clear it now
-			capture.state.image.grouped = CaptureState::Off;
-		}
-	}
-
-	if (!(capture_raw || capture_upscaled || capture_rendered)) {
-		return;
-	}
-
-	// We can pass in any of the image types, it doesn't matter which
-	const auto index = get_next_capture_index(CaptureType::RawImage);
-	if (!index) {
-		return;
-	}
-	if (capture_raw) {
-		image_capturers->GetNext().CaptureImage(
-		        image.deep_copy(),
-		        CapturedImageType::Raw,
-		        generate_capture_filename(CaptureType::RawImage, index));
-	}
-	if (capture_upscaled) {
-		image_capturers->GetNext().CaptureImage(
-		        image.deep_copy(),
-		        CapturedImageType::Upscaled,
-		        generate_capture_filename(CaptureType::UpscaledImage, index));
-	}
-
-	if (capture_rendered) {
-		capture.state.image.rendered_path = generate_capture_filename(
-		        CaptureType::RenderedImage, index);
-
-		// We need to propagate the image info to the PNG writer
-		// so we can include the source image metadata
-		capture.state.image.rendered_image_info = {image.width,
-		                                           image.height,
-		                                           image.pixel_aspect_ratio};
-	}
-}
-#endif
-
 void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage& image,
                       [[maybe_unused]] const float frames_per_second)
 {
 #if (C_SSHOT)
-	handle_add_frame_image_capture(image);
+	if (image_capturer) {
+		image_capturer->MaybeCaptureImage(image);
+	}
 
 	switch (capture.state.video) {
 	case CaptureState::Off: break;
@@ -432,19 +288,9 @@ void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage& image,
 
 void CAPTURE_AddPostRenderImage([[maybe_unused]] const RenderedImage& image)
 {
-#if (C_SSHOT)
-	assert(image_capturers);
-	image_capturers->GetNext().CaptureImage(image,
-	                                        CapturedImageType::Rendered,
-	                                        capture.state.image.rendered_path,
-	                                        capture.state.image.rendered_image_info);
-
-	capture.state.image.rendered = CaptureState::Off;
-
-	// In grouped capture mode adding the post-render image is always the
-	// last step, so we can safely clear the flag here
-	capture.state.image.grouped = CaptureState::Off;
-#endif
+	if (image_capturer) {
+		image_capturer->CapturePostRenderImage(image);
+	}
 }
 
 void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_frames,
@@ -543,10 +389,9 @@ static void handle_capture_grouped_screenshot_event(const bool pressed)
 	if (!pressed) {
 		return;
 	}
-	if (capture.state.image.grouped != CaptureState::Off) {
-		return;
+	if (image_capturer) {
+		image_capturer->RequestGroupedCapture();
 	}
-	capture.state.image.grouped = CaptureState::Pending;
 }
 
 static void handle_capture_single_raw_screenshot_event(const bool pressed)
@@ -555,10 +400,9 @@ static void handle_capture_single_raw_screenshot_event(const bool pressed)
 	if (!pressed) {
 		return;
 	}
-	if (capture.state.image.raw != CaptureState::Off) {
-		return;
+	if (image_capturer) {
+		image_capturer->RequestRawCapture();
 	}
-	capture.state.image.raw = CaptureState::Pending;
 }
 
 static void handle_capture_single_upscaled_screenshot_event(const bool pressed)
@@ -567,10 +411,9 @@ static void handle_capture_single_upscaled_screenshot_event(const bool pressed)
 	if (!pressed) {
 		return;
 	}
-	if (capture.state.image.upscaled != CaptureState::Off) {
-		return;
+	if (image_capturer) {
+		image_capturer->RequestUpscaledCapture();
 	}
-	capture.state.image.upscaled = CaptureState::Pending;
 }
 
 static void handle_capture_single_rendered_screenshot_event(const bool pressed)
@@ -579,10 +422,9 @@ static void handle_capture_single_rendered_screenshot_event(const bool pressed)
 	if (!pressed) {
 		return;
 	}
-	if (capture.state.image.rendered != CaptureState::Off) {
-		return;
+	if (image_capturer) {
+		image_capturer->RequestRenderedCapture();
 	}
-	capture.state.image.rendered = CaptureState::Pending;
 }
 
 static void handle_capture_video_event(bool pressed)
@@ -612,7 +454,7 @@ static void capture_destroy([[maybe_unused]] Section* sec)
 #if (C_SSHOT)
 	// When destructed, the threaded image capturer instances do a blocking
 	// wait until all pending capture tasks are processed.
-	image_capturers = {};
+	image_capturer = {};
 
 	if (capture.state.video == CaptureState::InProgress) {
 		capture_video_finalise();
@@ -621,57 +463,15 @@ static void capture_destroy([[maybe_unused]] Section* sec)
 #endif
 }
 
-static void parse_default_image_capture_formats_setting(const Section_prop* secprop)
-{
-	const std::string capture_format_prefs = secprop->Get_string(
-	        "default_image_capture_formats");
-
-	grouped_image_capture_formats.capture_raw      = false;
-	grouped_image_capture_formats.capture_upscaled = false;
-	grouped_image_capture_formats.capture_rendered = false;
-
-	const auto formats = split(capture_format_prefs, ' ');
-	if (formats.size() == 0) {
-		LOG_WARNING("CAPTURE: 'default_image_capture_formats' not specified; "
-		            "defaulting to 'upscaled'");
-		grouped_image_capture_formats = {};
-		return;
-	}
-	if (formats.size() > 3) {
-		LOG_WARNING("CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
-		            "Must not contain more than 3 formats; defaulting to 'upscaled'.",
-		            capture_format_prefs.c_str());
-		grouped_image_capture_formats = {};
-		return;
-	}
-	for (const auto& format : formats) {
-		if (format == "raw") {
-			grouped_image_capture_formats.capture_raw = true;
-		} else if (format == "upscaled") {
-			grouped_image_capture_formats.capture_upscaled = true;
-		} else if (format == "rendered") {
-			grouped_image_capture_formats.capture_rendered = true;
-		} else {
-			LOG_WARNING("CAPTURE: Invalid image capture format specified for "
-			            "'default_image_capture_formats': '%s'. "
-			            "Valid formats are 'raw', 'upscaled', and 'rendered'; "
-			            "defaulting to 'upscaled'.",
-			            format.c_str());
-			grouped_image_capture_formats = {};
-			return;
-		}
-	}
-}
-
 static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 {
 	// Find existing capture file with the highest index
 	std::string filename_start = capture_type_to_basename(type);
 	lowcase(filename_start);
 
-	const auto ext          = capture_type_to_extension(type);
-	int32_t highest_index   = 0;
-	std::error_code ec      = {};
+	const auto ext        = capture_type_to_extension(type);
+	int32_t highest_index = 0;
+	std::error_code ec    = {};
 
 	for (const auto& entry : std_fs::directory_iterator(capture.path, ec)) {
 		if (ec) {
@@ -757,10 +557,10 @@ static void capture_init(Section* sec)
 		capture.path = "capture";
 	}
 
-	parse_default_image_capture_formats_setting(secprop);
-
 #if (C_SSHOT)
-	image_capturers = std::make_unique<ImageCapturers>();
+	const std::string prefs = secprop->Get_string("default_image_capture_formats");
+
+	image_capturer = std::make_unique<ImageCapturer>(prefs);
 #endif
 
 	constexpr auto changeable_at_runtime = true;

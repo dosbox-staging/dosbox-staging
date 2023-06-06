@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "fraction.h"
-#include "image_capturer.h"
+#include "image_saver.h"
 
 #include <png.h>
 #include <zlib.h>

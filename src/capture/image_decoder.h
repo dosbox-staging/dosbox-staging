@@ -24,8 +24,8 @@
 #include <cassert>
 #include <vector>
 
-#include "checks.h"
 #include "byteorder.h"
+#include "checks.h"
 #include "render.h"
 #include "rgb555.h"
 #include "rgb565.h"
@@ -119,4 +119,4 @@ private:
 	}
 };
 
-#endif
+#endif // DOSBOX_IMAGE_DECODER_H

@@ -111,4 +111,4 @@ private:
 	} output = {};
 };
 
-#endif
+#endif // DOSBOX_IMAGE_SCALER_H
