@@ -640,12 +640,12 @@ void DOSBOX_Init()
 
 	pbool = secprop->Add_bool("aspect", always, true);
 	pbool->Set_help(
-	        "Scale the vertical resolution to produce a 4:3 display aspect ratio, matching\n"
-	        "that of the original monitors the majority of DOS games were designed for\n"
-	        "(enabled by default).\n"
-	        "This setting only affects video modes that use non-square pixels, such as\n"
-	        "320x200 or 640x400; whereas square-pixel modes, such as 640x480\n"
-	        "and 800x600, are displayed as-is.");
+	        "Apply aspect ratio correction for modern square-pixel flat-screen displays,\n"
+	        "so DOS resolutions with non-square pixels appear as they would on a 4:3 display\n"
+	        "aspect ratio CRT monitor the majority of DOS games were designed for (enabled\n"
+	        "by default). This setting only affects video modes that use non-square pixels,\n"
+	        "such as 320x200 or 640x400; square-pixel modes, such as 320x240, 640x480, and\n"
+	        "800x600 are displayed as-is.");
 
 	pstring = secprop->Add_string("integer_scaling", always, "off");
 	pstring->Set_help(
