@@ -570,7 +570,7 @@ void DOSBOX_Init()
 	        "               more system memory to use them.");
 
 	pbool = secprop->Add_bool("vga_8dot_font", only_at_start, false);
-	pbool->Set_help("Use 8-pixel-wide fonts for VGA machine types");
+	pbool->Set_help("Use 8-pixel-wide fonts on VGA adapters (disabled by default).");
 
 	pbool = secprop->Add_bool("speed_mods", only_at_start, true);
 	pbool->Set_help(
