@@ -465,7 +465,29 @@ void DOSBOX_Init()
 	pstring->Set_values(machines);
 	pstring->SetDeprecatedWithAlternateValue("vgaonly", "svga_paradise");
 	pstring->Set_help(
-	        "The type of machine DOSBox tries to emulate ('svga_s3' by default).");
+            "Set the video adapter or machine to emulate:\n"
+            "  hercules:       Hercules Graphics Card (HGC) (see 'monochrome_palette').\n"
+            "  cga_mono:       CGA adapter connected to a monochrome monitor (see\n"
+            "                  'monochrome_palette').\n"
+            "  cga:            IBM Color Graphics Adapter (CGA). Also enables composite\n"
+            "                  video emulation (see [composite] section).\n"
+            "  pcjr:           An IBM PCjr machine. Also enables PCjr sound and composite\n"
+            "                  video emulation (see [composite] section).\n"
+            "  tandy:          A Tandy 1000 machine with TGA graphics. Also enables Tandy\n"
+            "                  sound and composite video emulation (see [composite]\n"
+            "                  section).\n"
+            "  ega:            IBM Enhanced Graphics Adapter (EGA).\n"
+            "  svga_paradise:  Paradise PVGA1A SVGA card (no VESA VBE; 512K vmem by default,\n"
+            "                  can be set to 256K or 1MB with 'vmemsize'). This is the\n"
+            "                  closest to IBM's original VGA adapter.\n"
+            "  svga_et3000:    Tseng Labs ET3000 SVGA card (no VESA VBE; fixed 512K vmem).\n"
+            "  svga_et4000:    Tseng Labs ET4000 SVGA card (no VESA VBE; 1MB vmem by\n"
+            "                  default, can be set to 256K or 512K with 'vmemsize').\n"
+            "  svga_s3:        S3 Trio64 (VESA VBE 2.0; 4MB vmem by default, can be set to\n"
+            "                  512K, 1MB, 2MB, or 8MB with 'vmemsize') (default)\n"
+            "  vesa_oldvbe:    Same as 'svga_s3' but limited to VESA VBE 1.2.\n"
+            "  vesa_nolfb:     Same as 'svga_s3' (VESA VBE 2.0), plus the \"no linear\n"
+            "                  framebuffer\" hack (needed only by a few games).");
 
 	pstring = secprop->Add_path("captures", always, "capture");
 	pstring->Set_help("Directory where audio, video, MIDI, and screenshot captures get saved\n"
