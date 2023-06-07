@@ -545,7 +545,7 @@ void DOSBOX_Init()
 	        "the list of valid options per adapter.");
 
 	pbool = secprop->Add_bool("force_vga_single_scan", when_idle, false);
-	pbool->Set_help("Always single-scan sub-350 line modes for VGA machine types");
+	pbool->Set_help("Always single-scan sub-350 line modes on VGA adapters (disabled by default).");
 
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
 	pstring->Set_help(
