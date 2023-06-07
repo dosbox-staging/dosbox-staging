@@ -565,8 +565,8 @@ void DOSBOX_Init()
 	        "               (default).\n"
 	        "  halfline:    Supports the low-resolution halfline VESA 2.0 mode used by\n"
 	        "               Extreme Assault. Use only if needed, as it's not S3 compatible.\n"
-	        "  all:         Offers all modes for a given video memory size, however\n"
-	        "               some games may not use them properly (flickering) or may need\n"
+	        "  all:         All modes for a given video memory size, however some games \n"
+	        "               may not use them properly (flickering) or may need\n"
 	        "               more system memory to use them.");
 
 	pbool = secprop->Add_bool("vga_8dot_font", only_at_start, false);
