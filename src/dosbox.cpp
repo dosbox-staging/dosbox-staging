@@ -953,8 +953,14 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("tandy", when_idle, "auto");
 	pstring->Set_values(tandys);
 	pstring->Set_help(
-	        "Enable Tandy Sound System emulation ('auto' by default).\n"
-	        "For 'auto', emulation is present only if machine is set to 'tandy'.");
+	        "Set the Tandy/PCjr 3 Voice sound emulation:\n"
+	        "  off:   Disable Tandy/PCjr sound.\n"
+	        "  on:    Enable Tandy/PCjr sound (most games also need the machine set to\n"
+	        "         'tandy' or 'pcjr' to work).\n"
+	        "  auto:  Automatically enable Tandy/PCjr sound for the 'tandy' and 'pcjr'\n"
+	        "         machine types only (default).\n"
+	        "Notes: The Tandy DAC is only emulated if Sound Blaster emulation is disabled\n"
+	        "       with 'sbtype = none' due to resource conflicts.");
 
 	pstring = secprop->Add_string("tandy_filter", when_idle, "on");
 	pstring->Set_help(
