@@ -429,7 +429,7 @@ float Voice::GetSample(const ram_array_t &ram) noexcept
 	float sample = is_16bit ? Read16BitSample(ram, addr)
 	                        : Read8BitSample(ram, addr);
 	if (should_interpolate) {
-		const auto next_addr = addr + (1 << (is_16bit ? 1 : 0));
+		const auto next_addr = addr + 1;
 		const float next_sample = is_16bit ? Read16BitSample(ram, next_addr)
 		                                   : Read8BitSample(ram, next_addr);
 		constexpr float WAVE_WIDTH_INV = 1.0 / WAVE_WIDTH;
