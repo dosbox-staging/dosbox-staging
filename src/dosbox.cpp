@@ -440,10 +440,10 @@ void DOSBOX_Init()
 
 	/* Setup all the different modules making up DOSBox */
 	const char* machines[] = {"hercules",
-	                          "cga",
 	                          "cga_mono",
-	                          "tandy",
+	                          "cga",
 	                          "pcjr",
+	                          "tandy",
 	                          "ega",
 	                          "svga_s3",
 	                          "svga_et3000",
