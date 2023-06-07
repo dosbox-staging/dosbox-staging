@@ -749,7 +749,6 @@ void DOSBOX_Init()
 	        "Number of instructions DOSBox tries to emulate per millisecond\n"
 	        "('auto' by default). Setting this value too high may result in sound drop-outs\n"
 			"and lags.\n"
-	        "Possible settings:\n"
 	        "  auto:            Try to guess what a game needs. It usually works, but can\n"
 	        "                   fail with certain games.\n"
 	        "  fixed <number>:  Set a fixed number of cycles. This is what you usually\n"
