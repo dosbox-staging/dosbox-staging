@@ -539,8 +539,10 @@ void DOSBOX_Init()
 	};
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
 	pstring->Set_values(vmemsize_choices);
-	pstring->Set_help("Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default per\n"
-	                  "video adapter ('auto' by default).");
+	pstring->Set_help(
+	        "Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default for\n"
+	        "the selected video adapter ('auto' by default). See the 'machine' setting for\n"
+	        "the list of valid options per adapter.");
 
 	pbool = secprop->Add_bool("force_vga_single_scan", when_idle, false);
 	pbool->Set_help("Always single-scan sub-350 line modes for VGA machine types");
