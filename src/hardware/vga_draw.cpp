@@ -1813,6 +1813,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	switch (vga.mode) {
 	case M_VGA:
 		width<<=2;
+
+		// Default to basic line drawing
+		VGA_DrawLine = VGA_Draw_Linear_Line;
+
 		if (CurMode->sheight < 350) {
 			// Always round up odd number of lines
 			const auto height_is_odd = (height % 2 != 0);
@@ -1844,8 +1848,20 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 			bpp = 32;
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
-		} else {
-			VGA_DrawLine = VGA_Draw_Linear_Line;
+		}
+		// Mode 12h in a low resolution in need of aspect-correction
+		else if (CurMode->mode == 0x012 &&
+		         !is_high_resolution(width, height) && render.aspect) {
+
+			const auto mode_width  = CurMode->swidth;
+			const auto mode_height = CurMode->sheight;
+
+			constexpr auto ntsc_stretch = 1.2;
+			const auto mode_aspect = mode_width / (mode_height * ntsc_stretch);
+
+			const auto current_aspect = static_cast<double>(width) / height;
+
+			aspect_ratio /= mode_aspect / current_aspect;
 		}
 		break;
 	case M_LIN8:
