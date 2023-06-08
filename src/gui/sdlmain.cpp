@@ -2573,19 +2573,21 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 {
 	RenderedImage image = {};
 
-	image.width              = sdl.clip.w;
-	image.height             = sdl.clip.h;
-	image.double_width       = false;
-	image.double_height      = false;
-	image.flip_vertical      = false;
-	image.pixel_aspect_ratio = {1};
-	image.bits_per_pixel     = 24;
-	image.pitch              = image.width * (image.bits_per_pixel / 8);
-	image.palette_data       = nullptr;
+	auto allocate_image = [&]() {
+		image.width              = sdl.clip.w;
+		image.height             = sdl.clip.h;
+		image.double_width       = false;
+		image.double_height      = false;
+		image.flip_vertical      = false;
+		image.pixel_aspect_ratio = {1};
+		image.bits_per_pixel     = 24;
+		image.pitch              = image.width * (image.bits_per_pixel / 8);
+		image.palette_data       = nullptr;
 
-	uint8_t* image_data = static_cast<uint8_t*>(
-	        std::malloc(image.height * image.pitch));
-	image.image_data = image_data;
+		uint8_t* image_data = static_cast<uint8_t*>(
+				std::malloc(image.height * image.pitch));
+		image.image_data = image_data;
+	};
 
 #if C_OPENGL
 	// Get the OpenGL-renderer surface
@@ -2599,13 +2601,15 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		// memory. This should not cause any slowdowns whatsoever.
 		glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
+		allocate_image();
+
 		glReadPixels(sdl.clip.x,
 		             sdl.clip.y,
 		             image.width,
 		             image.height,
 		             GL_BGR,
 		             GL_UNSIGNED_BYTE,
-		             image_data);
+		             image.image_data);
 
 		image.flip_vertical = true;
 		return image;
@@ -2619,9 +2623,10 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		if (!renderer) {
 			LOG_WARNING("SDL: Failed retrieving texture renderer surface: %s",
 			            SDL_GetError());
-			std::free(image_data);
 			return {};
 		}
+
+		allocate_image();
 
 		// SDL2 pixel formats are a bit weird coming from OpenGL...
 		// You would think SDL_PIXELFORMAT_BGR888 is an alias of
@@ -2641,11 +2646,11 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		if (SDL_RenderReadPixels(renderer,
 		                         &sdl.clip,
 		                         SDL_PIXELFORMAT_BGR24,
-		                         image_data,
+		                         image.image_data,
 		                         image.pitch) != 0) {
 			LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
 			            SDL_GetError());
-			std::free(image_data);
+			std::free(image.image_data);
 			return {};
 		}
 		return image;

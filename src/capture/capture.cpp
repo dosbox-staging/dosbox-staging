@@ -198,7 +198,8 @@ std_fs::path generate_capture_filename(const CaptureType type, const int32_t ind
 	return {capture.path / filename};
 }
 
-FILE* CAPTURE_CreateFile(const CaptureType type, std::optional<std_fs::path> path)
+FILE* CAPTURE_CreateFile(const CaptureType type,
+                         const std::optional<std_fs::path>& path)
 {
 	std::string path_str = {};
 	if (path) {
@@ -476,7 +477,7 @@ static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 	for (const auto& entry : std_fs::directory_iterator(capture.path, ec)) {
 		if (ec) {
 			LOG_WARNING("CAPTURE: Cannot open directory '%s': %s",
-			            capture.path.c_str(),
+			            capture.path.string().c_str(),
 			            ec.message().c_str());
 			return {};
 		}
@@ -530,7 +531,7 @@ static bool create_capture_directory()
 	if (!std_fs::exists(capture.path, ec)) {
 		if (!std_fs::create_directory(capture.path, ec)) {
 			LOG_WARNING("CAPTURE: Can't create directory '%s': %s",
-			            capture.path.c_str(),
+			            capture.path.string().c_str(),
 			            ec.message().c_str());
 			return false;
 		}
@@ -543,7 +544,9 @@ static void capture_init(Section* sec)
 {
 	assert(sec);
 	const Section_prop* secprop = dynamic_cast<Section_prop*>(sec);
-	assert(secprop);
+	if (!secprop) {
+		return;
+	}
 
 	Prop_path* capture_path = secprop->Get_path("capture_dir");
 	assert(capture_path);

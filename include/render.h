@@ -105,8 +105,8 @@ struct RenderedImage {
 	Fraction pixel_aspect_ratio = {};
 	uint8_t bits_per_pixel      = 0;
 	uint16_t pitch              = 0;
-	const uint8_t* image_data   = nullptr;
-	const uint8_t* palette_data = nullptr;
+	uint8_t* image_data         = nullptr;
+	uint8_t* palette_data       = nullptr;
 
 	inline bool is_paletted() const
 	{

@@ -43,7 +43,7 @@ PngWriter::~PngWriter()
 }
 
 bool PngWriter::InitRgb888(FILE* fp, const ImageInfo& image_info,
-                           const std::optional<ImageInfo> source_image_info)
+                           const std::optional<ImageInfo>& source_image_info)
 {
 	if (!Init(fp)) {
 		return false;
@@ -56,7 +56,7 @@ bool PngWriter::InitRgb888(FILE* fp, const ImageInfo& image_info,
 }
 
 bool PngWriter::InitIndexed8(FILE* fp, const ImageInfo& image_info,
-                             const std::optional<ImageInfo> source_image_info,
+                             const std::optional<ImageInfo>& source_image_info,
                              const uint8_t* palette_data)
 {
 	if (!Init(fp)) {
@@ -132,7 +132,7 @@ void PngWriter::SetPngCompressionsParams()
 }
 
 void PngWriter::WritePngInfo(const ImageInfo& image_info,
-                             const std::optional<ImageInfo> source_image_info,
+                             const std::optional<ImageInfo>& source_image_info,
                              const bool is_paletted, const uint8_t* palette_data)
 {
 	assert(png_ptr);
@@ -221,13 +221,14 @@ void PngWriter::WritePngInfo(const ImageInfo& image_info,
 		// `source_value` must be defined in the parent scope, otherwise
 		// the std::string will be freed before png_write_info() is
 		// called and we'll get random runtime libpng crashes...
+		const auto pixel_aspect_ratio = source_image_info->pixel_aspect_ratio;
 		source_value = format_string(
 		        "source resolution: %dx%d; source pixel aspect ratio: %d:%d (1:%1.6f)",
 		        source_image_info->width,
 		        source_image_info->height,
-		        source_image_info->pixel_aspect_ratio.Num(),
-		        source_image_info->pixel_aspect_ratio.Denom(),
-		        source_image_info->pixel_aspect_ratio.Inverse().ToDouble());
+		        pixel_aspect_ratio.Num(),
+		        pixel_aspect_ratio.Denom(),
+		        pixel_aspect_ratio.Inverse().ToDouble());
 
 		texts[1].compression = PNG_TEXT_COMPRESSION_NONE;
 		texts[1].key         = static_cast<png_charp>(source_keyword);

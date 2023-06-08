@@ -32,11 +32,11 @@
 #include <vector>
 
 template <size_t N>
-int safe_sprintf(char (&dst)[N], const char *fmt, ...)
+int safe_sprintf(char (&dst)[N], const char* fmt, ...)
         GCC_ATTRIBUTE(format(printf, 2, 3));
 
 template <size_t N>
-int safe_sprintf(char (&dst)[N], const char *fmt, ...)
+int safe_sprintf(char (&dst)[N], const char* fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
@@ -69,7 +69,7 @@ int safe_sprintf(char (&dst)[N], const char *fmt, ...)
  *     // buffer is filled with "a"
  */
 template <size_t N>
-char *safe_strcpy(char (&dst)[N], const char *src) noexcept
+char* safe_strcpy(char (&dst)[N], const char* src) noexcept
 {
 	assert(src != nullptr);
 	assert(src < &dst[0] || src > &dst[N - 1]);
@@ -78,7 +78,7 @@ char *safe_strcpy(char (&dst)[N], const char *src) noexcept
 }
 
 template <size_t N>
-char *safe_strcat(char (&dst)[N], const char *src) noexcept
+char* safe_strcat(char (&dst)[N], const char* src) noexcept
 {
 	strncat(dst, src, N - strnlen(dst, N) - 1);
 	return &dst[0];
@@ -98,7 +98,7 @@ bool ends_with(const std::string_view str, const std::string_view suffix) noexce
 std::string strip_prefix(const std::string& str, const std::string& prefix) noexcept;
 std::string strip_suffix(const std::string& str, const std::string& suffix) noexcept;
 
-bool find_in_case_insensitive(const std::string &needle, const std::string &haystack);
+bool find_in_case_insensitive(const std::string& needle, const std::string& haystack);
 
 // Safely terminate a C string at the given offset
 //
@@ -112,7 +112,7 @@ bool find_in_case_insensitive(const std::string &needle, const std::string &hays
 // intent (terminating), and where it's being applied (n);
 //
 template <typename T, typename INDEX_T>
-void terminate_str_at(T *str, INDEX_T i) noexcept
+void terminate_str_at(T* str, INDEX_T i) noexcept
 {
 	// Check that we're only operating on bona-fide C strings
 	static_assert(std::is_same_v<T, char> || std::is_same_v<T, wchar_t>,
@@ -128,7 +128,7 @@ void terminate_str_at(T *str, INDEX_T i) noexcept
 
 // reset a C string with the string-terminator character
 template <typename T>
-void reset_str(T *str) noexcept
+void reset_str(T* str) noexcept
 {
 	terminate_str_at(str, 0);
 }
@@ -149,7 +149,6 @@ constexpr bool is_upper_ascii(const char c)
 
 #endif
 }
-
 
 // Is it an ASCII control character?
 constexpr bool is_control_ascii(const char c)
@@ -203,14 +202,14 @@ bool is_hex_digits(const std::string_view s) noexcept;
 
 bool is_digits(const std::string_view s) noexcept;
 
-void strreplace(char *str, char o, char n);
-char *ltrim(char *str);
-char *rtrim(char *str);
-char *trim(char *str);
-char *upcase(char *str);
-char *lowcase(char *str);
+void strreplace(char* str, char o, char n);
+char* ltrim(char* str);
+char* rtrim(char* str);
+char* trim(char* str);
+char* upcase(char* str);
+char* lowcase(char* str);
 
-inline bool is_empty(const char *str) noexcept
+inline bool is_empty(const char* str) noexcept
 {
 	return str[0] == '\0';
 }
@@ -249,11 +248,11 @@ bool natural_compare(const std::string& a, const std::string& b);
 
 char* strip_word(char*& cmd);
 
-std::string replace(const std::string &str, char old_char, char new_char) noexcept;
-void trim(std::string &str, const char trim_chars[] = " \r\t\f\n");
-void upcase(std::string &str);
-void lowcase(std::string &str);
-void strip_punctuation(std::string &str);
+std::string replace(const std::string& str, char old_char, char new_char) noexcept;
+void trim(std::string& str, const char trim_chars[] = " \r\t\f\n");
+void upcase(std::string& str);
+void lowcase(std::string& str);
+void strip_punctuation(std::string& str);
 
 // Split a string on an arbitrary character delimiter. Absent string content on
 // either side of a delimiter is treated as an empty string. For example:
@@ -284,7 +283,7 @@ std::string join_with_commas(const std::vector<std::string>& items,
                              const std::string_view end_punctuation = ".");
 
 // Clear the language if it's set to the POSIX default
-void clear_language_if_default(std::string &language);
+void clear_language_if_default(std::string& language);
 
 // Get recommended DOS code page to render the UTF-8 strings to. This
 // might not be the code page set using KEYB command, for example due
@@ -383,19 +382,28 @@ std::optional<float> parse_percentage(const std::string_view s);
 //   else
 //       log_warning("%s was invalid", s.c_str());
 //
-std::optional<float> parse_prefixed_value(const char prefix, const std::string &s,
+std::optional<float> parse_prefixed_value(const char prefix, const std::string& s,
                                           const float min_value,
                                           const float max_value);
 
 // parse_prefixed_value clamped between 0 and 100
-std::optional<float> parse_prefixed_percentage(const char prefix, const std::string &s);
+std::optional<float> parse_prefixed_percentage(const char prefix,
+                                               const std::string& s);
 
 // tries to convert string to integer,
 // returns value only if succeeded
 std::optional<int> to_int(const std::string& value);
 
+#if defined(__GNUC__) || defined(__clang__)
+// Disable generic "format string is not a string literal (potentially
+// insecure)" warning on GCC/Clang. Of course, it's not a security issue for
+// us; we know what we're doing.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
+#endif
+
 template <typename... Args>
-std::string format_string(const std::string format, Args&&... args) noexcept
+std::string format_string(const std::string& format, Args&&... args) noexcept
 {
 	// Perform a non-writing format to determine the size
 	const auto required_size = std::snprintf(nullptr,
@@ -410,7 +418,9 @@ std::string format_string(const std::string format, Args&&... args) noexcept
 	// characters to be written without the trailing null. However, it still
 	// writes the trailing null into the buffer, so we need to include that
 	// in our allocation.
-	std::string result(static_cast<size_t>(required_size + 1), '\0');
+	std::string result(static_cast<size_t>(required_size) +
+	                           static_cast<size_t>(1),
+	                   '\0');
 
 	std::snprintf(result.data(),
 	              result.size(),
@@ -419,11 +429,16 @@ std::string format_string(const std::string format, Args&&... args) noexcept
 
 	// The buffer should now have the determined output length plus the
 	// terminating zero
-	assert(static_cast<size_t>(required_size + 1) == result.size());
+	assert(static_cast<size_t>(required_size) + static_cast<size_t>(1) ==
+	       result.size());
 
 	// Chop off the terminating zero of the C string in the buffer
 	result.pop_back();
 	return result;
 }
+
+#if defined(__GNUC__) || defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 #endif
