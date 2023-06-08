@@ -182,10 +182,9 @@ struct VGA_Draw {
 	Bitu split_line = 0;
 
 	// when drawing in parts, how many many 'chunks' should we draw at a
-	// time? a value of 1 is the entire frame (which is the default given we
-	// only use this mode for SVGA+). A value of 2 will draw the top then
-	// the bottom, 4 will draw in quarters, and so on.
-	uint8_t parts_total = 1;
+	// time? a value of 1 is the entire frame where as a value of 2 will
+	// draw the top then the bottom, 4 will draw in quarters, and so on.
+	int parts_total = 0;
 
 	uint32_t parts_lines = 0;
 	uint32_t parts_left = 0;

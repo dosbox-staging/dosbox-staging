@@ -1417,9 +1417,13 @@ static bool is_width_low_resolution(const uint16_t width)
 	return width <= 320 || vga.seq.clocking_mode.is_pixel_doubling;
 }
 
-// A single point to set total draw lines and update affected parameters
-static void set_total_lines_to_draw(const uint32_t total_lines)
+// A single point to set total drawn lines and update affected delay values
+static void setup_line_drawing_delays(const uint32_t total_lines)
 {
+	vga.draw.parts_total = total_lines > 480 ? 1 : total_lines;
+
+	vga.draw.delay.parts = vga.draw.delay.vdend / vga.draw.parts_total;
+
 	assert(total_lines > 0 && total_lines <= SCALER_MAXHEIGHT);
 	vga.draw.lines_total = total_lines;
 
@@ -1450,15 +1454,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.mode = EGALINE;
 		break;
 	case MCH_VGA:
-		// Use efficient by-parts drawing for VGA high-res modes because
-		// there are no known games (or demos) that update the palette
-		// mid-frame.
-		if (CurMode->type >= M_VGA && is_high_resolution(CurMode)) {
-			vga.draw.mode = PART;
-		} else {
-			vga.draw.mode = DRAWLINE;
-		}
-		break;
 	default:
 		vga.draw.mode = PART;
 		break;
@@ -1761,7 +1756,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	else
 		aspect_ratio = pheight / pwidth;
 
-	vga.draw.delay.parts = vga.draw.delay.vdend / static_cast<double>(vga.draw.parts_total);
 	vga.draw.resizing = false;
 	vga.draw.vret_triggered=false;
 
@@ -2123,7 +2117,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		doubleheight=true;
 	}
 	vga.draw.vblank_skip = vblank_skip;
-	set_total_lines_to_draw(height);
+	setup_line_drawing_delays(height);
 	vga.draw.line_length = width * ((bpp + 1) / 8);
 #ifdef VGA_KEEP_CHANGES
 	vga.changes.active = false;
