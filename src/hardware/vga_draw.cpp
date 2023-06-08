@@ -1401,17 +1401,6 @@ uint8_t VGA_ActivateHardwareCursor()
 	return bit_per_line_pixel;
 }
 
-// Simple helper to check for SVGA+ resolutions
-static bool is_high_resolution(const uint32_t width, const uint32_t height)
-{
-	return width >= 640 && height >= 480;
-}
-
-static bool is_high_resolution(const video_mode_block_iterator_t mode_block)
-{
-	return is_high_resolution(mode_block->swidth, mode_block->sheight);
-}
-
 static bool is_width_low_resolution(const uint16_t width)
 {
 	return width <= 320 || vga.seq.clocking_mode.is_pixel_doubling;
