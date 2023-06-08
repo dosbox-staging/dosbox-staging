@@ -1306,7 +1306,7 @@ public:
 			s_property[6] = '1' + static_cast<char>(i);
 			PropMultiVal* p = section->GetMultiVal(s_property);
 			std::string type = p->GetSection()->Get_string("type");
-			CommandLine cmd(0,p->GetSection()->Get_string("parameters"));
+			CommandLine cmd("", p->GetSection()->Get_string("parameters"));
 			
 			// detect the type
 			if (type=="dummy") {
