@@ -162,7 +162,34 @@ Note: Questa impostazione, se utilizzata, sovrascriverà la variabile
       Si prega di tenerla insieme all'eseguibile per supportare questa funzione
 .
 :CONFIG_MACHINE
-Tipo di macchina che DOSBox sta cercando di emulare (predefinito 'svga_s3').
+Imposta la scheda video o la macchina da emulare:
+  hercules:       Scheda grafica Hercules (HGC)
+                  (vedi impostazione 'monochrome_palette').
+  cga_mono:       Scheda grafica CGA collegata a un monitor monocromatico
+                  (vedi impostazione 'monochrome_palette').
+  cga:            IBM Color Graphics Adapter (CGA). Abilita anche l'emulazione
+                  del video composito (vedi sezione [composite]).
+  pcjr:           Macchina IBM PCjr. Abilita anche l'emulazione audio PCjr e
+                  del video composito (vedi sezione [composite]).
+  tandy:          Macchina Tandy 1000 con adattatore grafico TGA.
+                  Abilita anche l'emulazione audio Tandy e del video composito
+                  (vedi sezione [composite]).
+  ega:            IBM Enhanced Graphics Adapter (EGA).
+  svga_paradise:  Scheda grafica SVGA Paradise PVGA1A (nessun supporto a VESA
+                  VBE; 512K di memoria video per impostazione predefinita, può
+                  essere impostata a 256K o 1MB con 'vmemsize'). È la scheda
+                  che più si avvicina all'adattatore VGA originale di IBM.
+  svga_et3000:    Scheda grafica SVGA Tseng Labs ET3000 (nessun supporto a VESA
+                  VBE; 512K di memoria video).
+  svga_et4000:    Scheda grafica SVGA Tseng Labs ET4000 (nessun supporto a VESA
+                  VBE; 1MB di memoria video per impostazione predefinita, può
+                  essere impostata a 256K o 512K con 'vmemsize').
+  svga_s3:        Scheda grafica S3 Trio64 (VESA VBE 2.0; 4MB di memoria video
+                  per impostazione predefinita, può essere impostata a 512K,
+                  1MB, 2MB, o 8MB con 'vmemsize') (predefinito).
+  vesa_oldvbe:    Come 'svga_s3' ma limitato a VESA VBE 1.2.
+  vesa_nolfb:     Come 'svga_s3' (VESA VBE 2.0), con in aggiunta l'hack "nessun
+                  framebuffer lineare" (necessario solo per pochi giochi).
 .
 :CONFIG_CAPTURES
 Directory in cui vengono salvate le acquisizioni di audio, video, MIDI
@@ -180,17 +207,18 @@ Come gestire i blocchi della catena di memoria software corrotti:
   repair:  Ripara (e segnala) gli errori con blocchi di catena adiacenti.
   report:  Segnala solo gli errori.
   allow:   Gli errori non vengono segnalati (comportamento hardware).
-L'impostazione predefinita ('deny') è consigliata a meno che un gioco non
-abbia errori di corruzione MCB.
+L'impostazione predefinita 'deny' è consigliata a meno che un gioco non abbia
+errori di corruzione MCB.
 .
 :CONFIG_VMEMSIZE
 Memoria video in MB (1-8) o KB (da 256 a 8192).
-'auto' usa il valore predefinito in base all'adattatore video scelto
-(predefinito 'auto').
+'auto' utilizza il valore predefinito in base alla scheda video selezionata
+(predefinito 'auto'). Fare riferimento all'impostazione 'machine' per l'elenco
+delle opzioni valide per ogni scheda.
 .
 :CONFIG_FORCE_VGA_SINGLE_SCAN
-Forza la scansione singola nelle modalità inferiori a 350 linee per le macchine
-di tipo VGA (predefinito disabilitato).
+Forza la scansione singola nelle modalità inferiori a 350 linee nelle schede
+grafiche VGA (predefinito disabilitato).
 .
 :CONFIG_DOS_RATE
 Personalizza la frequenza dei fotogrammi della modalità video emulata, in Hz:
@@ -213,10 +241,10 @@ Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
   all:         Offre tutte le modalità per una data dimensione della memoria
                video, tuttavia alcuni giochi potrebbero non utilizzarle
                correttamente (sfarfallio) o potrebbe essere necessaria più
-               memoria di sistema (mem = ).
+               memoria di sistema.
 .
 :CONFIG_VGA_8DOT_FONT
-Utilizza caratteri larghi 8 pixel per le macchine di tipo VGA
+Utilizza caratteri larghi 8 pixel nelle schede grafiche VGA
 (predefinito disabilitato).
 .
 :CONFIG_SPEED_MODS
@@ -268,12 +296,13 @@ Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
 utilizzando l'impostazione '[sdl] host_rate'.
 .
 :CONFIG_ASPECT
-Ridimensiona la risoluzione verticale dello schermo per produrre un rapporto
-d'aspetto 4:3, corrispondente a quello dei monitor originali per i quali sono
-stati progettati la maggior parte dei giochi DOS (predefinito abilitato).
+Applica la correzione delle proporzioni per i moderni schermi piatti a pixel
+quadrati, in modo tale che le risoluzioni DOS con pixel non quadrati appaiano
+come sui monitor CRT con rapporto d'aspetto 4:3 per i quali sono stati
+progettati la maggior parte dei giochi DOS (predefinito abilitato).
 Questa impostazione ha effetto solo sulle modalità video che utilizzano pixel
 non quadrati, come 320x200 o 640x400; Le modalità video a pixel quadrati,
-come 640x480 e 800x600, verranno visualizzate così come sono.
+come 320x240, 640x480 e 800x600 verranno visualizzate così come sono.
 .
 :CONFIG_INTEGER_SCALING
 Vincola il fattore di scala orizzontale o verticale a valori interi.
@@ -378,9 +407,8 @@ Tipo di CPU usata nell'emulazione (predefinito 'auto').
 .
 :CONFIG_CYCLES
 Numero di istruzioni che DOSBox tenta di emulare ogni millisecondo
-(predefinito 'auto').
-Un valore troppo alto può causare perdite nell'audio e ritardi.
-Impostazioni possibili:
+(predefinito 'auto'). Un valore troppo alto può causare perdite nell'audio
+e ritardi.
   auto:            Prova a indovinare le necessità del gioco. 
                    Di solito funziona, ma può fallire con alcuni giochi.
   fixed <numero>:  Imposta un numero fisso di cicli. Questo è ciò di cui hai
@@ -868,8 +896,14 @@ Filtro per l'uscita audio dell'altoparlante interno del PC (PC Speaker):
 Il DC offset è ora eliminato globalmente dall'uscita del mixer principale.
 .
 :CONFIG_TANDY
-Abilita l'emulazione del sistema audio Tandy (predefinito 'auto').
-Se 'auto', l'emulazione è presente solo se la macchina è impostata su 'tandy'.
+Imposta l'emulazione del sistema audio Tandy/PCjr a 3 voci:
+  off:   Disabilita il sistema audio Tandy/PCjr.
+  on:    Abilita il sistema audio Tandy/PCjr (la maggior parte dei giochi
+         richiede che anche la macchina sia impostata su 'tandy' o 'pcjr').
+  auto:  Abilita automaticamente il sistema audio Tandy/PCjr solo per i tipi
+         di macchina 'tandy' e 'pcjr' (predefinito).
+Note: Il DAC Tandy viene emulato solo se l'emulazione Sound Blaster è
+      disabilitata con 'sbtype = none' a causa delle risorse in conflitto.
 .
 :CONFIG_TANDY_FILTER
 Filtro per l'uscita audio del sintetizzatore Tandy:
