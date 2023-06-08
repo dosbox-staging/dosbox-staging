@@ -3,11 +3,11 @@ libcapture_sources = files(
     'capture_audio.cpp',
     'capture_midi.cpp',
     'capture_video.cpp',
-    'image_capturer.cpp',
-    'image_decoder.cpp',
-    'image_saver.cpp',
-    'image_scaler.cpp',
-    'png_writer.cpp',
+    'image/image_capturer.cpp',
+    'image/image_decoder.cpp',
+    'image/image_saver.cpp',
+    'image/image_scaler.cpp',
+    'image/png_writer.cpp',
 )
 
 libcapture = static_library(

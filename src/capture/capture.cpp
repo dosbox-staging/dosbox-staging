@@ -31,7 +31,7 @@
 #include "checks.h"
 #include "control.h"
 #include "fs_utils.h"
-#include "image_capturer.h"
+#include "image/image_capturer.h"
 #include "mapper.h"
 #include "sdlmain.h"
 #include "setup.h"

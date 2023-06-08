@@ -20,7 +20,7 @@
 
 #include "rwqueue.h"
 
-#include "../capture/image_saver.h"
+#include "../capture/image/image_saver.h"
 
 #include <cassert>
 
