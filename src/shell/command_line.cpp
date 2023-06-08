@@ -97,7 +97,7 @@ bool CommandLine::FindString(const char* name, std::string& value, bool remove)
 	return true;
 }
 
-bool CommandLine::FindCommand(unsigned int which, std::string& value)
+bool CommandLine::FindCommand(unsigned int which, std::string& value) const
 {
 	if (which < 1) {
 		return false;
@@ -105,7 +105,7 @@ bool CommandLine::FindCommand(unsigned int which, std::string& value)
 	if (which > cmds.size()) {
 		return false;
 	}
-	cmd_it it = cmds.begin();
+	auto it = cmds.begin();
 	for (; which > 1; which--) {
 		it++;
 	}
