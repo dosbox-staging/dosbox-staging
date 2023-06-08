@@ -65,12 +65,12 @@ public:
 	bool echo                        = false;
 	DOS_Shell* shell                 = nullptr;
 	std::shared_ptr<BatchFile> prev  = {}; // shared with Shell.bf
-	std::unique_ptr<CommandLine> cmd = {};
 
 private:
 	[[nodiscard]] std::string ExpandedBatchLine(std::string_view line) const;
 	[[nodiscard]] std::string GetLine();
-	
+
+	CommandLine cmd;
 	std::unique_ptr<ByteReader> reader;
 };
 

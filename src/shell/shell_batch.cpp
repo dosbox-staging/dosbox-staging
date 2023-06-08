@@ -34,14 +34,13 @@ BatchFile::BatchFile(DOS_Shell* const host, std::unique_ptr<ByteReader> input_re
         : echo(host->echo),
           shell(host),
           prev(host->bf),
-          cmd(new CommandLine(entered_name, cmd_line)),
+          cmd(entered_name, cmd_line),
           reader(std::move(input_reader))
 {
 }
 
 BatchFile::~BatchFile()
 {
-	cmd.reset();
 	assert(shell);
 	shell->bf   = prev;
 	shell->echo = echo;
@@ -120,10 +119,10 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 		} else if (line[0] == '%') {
 			expanded += '%';
 		} else if (line[0] == '0') {
-			expanded += cmd->GetFileName();
+			expanded += cmd.GetFileName();
 		} else if (line[0] >= '1' && line[0] <= '9') {
 			std::string arg;
-			if (cmd->FindCommand(line[0] - '0', arg)) {
+			if (cmd.FindCommand(line[0] - '0', arg)) {
 				expanded += arg;
 			}
 		} else {
@@ -167,7 +166,7 @@ bool BatchFile::Goto(const std::string_view label)
 
 void BatchFile::Shift()
 {
-	cmd->Shift(1);
+	cmd.Shift(1);
 }
 
 static bool found_label(std::string_view line, const std::string_view label)
