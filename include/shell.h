@@ -52,6 +52,18 @@ public:
 	virtual ~ByteReader()                    = default;
 };
 
+class HostShell {
+public:
+	virtual bool GetEnvStr(const char* entry, std::string& result) const = 0;
+
+	HostShell()                            = default;
+	HostShell(const HostShell&)            = delete;
+	HostShell& operator=(const HostShell&) = delete;
+	HostShell(HostShell&&)                 = delete;
+	HostShell& operator=(HostShell&&)      = delete;
+	virtual ~HostShell()                   = default;
+};
+
 class BatchFile {
 public:
 	BatchFile(DOS_Shell* host, std::unique_ptr<ByteReader> input_reader,
@@ -85,7 +97,7 @@ struct SHELL_Cmd {
 	HELP_Category category = HELP_Category::Misc;
 };
 
-class DOS_Shell : public Program {
+class DOS_Shell : public Program, public HostShell {
 private:
 	void PrintHelpForCommands(MoreOutputStrings& output, HELP_Filter req_filter);
 	void AddShellCmdsToHelpList();
@@ -122,7 +134,7 @@ public:
 	void ReadShellHistory();
 	void WriteShellHistory();
 
-	bool GetEnvStr(const char* entry, std::string& result) const;
+	bool GetEnvStr(const char* entry, std::string& result) const override;
 	bool GetEnvNum(Bitu num, std::string& result) const;
 	[[nodiscard]] Bitu GetEnvCount() const;
 	bool SetEnv(const char* entry, const char* new_string);
