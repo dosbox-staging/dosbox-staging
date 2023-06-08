@@ -25,7 +25,7 @@
 
 #include "image_saver.h"
 
-#include "capture.h"
+#include "../capture.h"
 #include "checks.h"
 #include "png_writer.h"
 #include "support.h"

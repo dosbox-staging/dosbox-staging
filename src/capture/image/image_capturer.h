@@ -21,7 +21,7 @@
 #ifndef DOSBOX_IMAGE_CAPTURER_H
 #define DOSBOX_IMAGE_CAPTURER_H
 
-#include "capture.h"
+#include "../capture.h"
 
 #include <cstring>
 
