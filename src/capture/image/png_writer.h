@@ -43,23 +43,29 @@ public:
 	// source image is written to the standard tEXt PNG chunk under the
 	// "Source" keyword. For example:
 	//
-	// source resolution: 640x350; source pixel aspect ratio: 35:48 (1:1.371429)
+	// source resolution: 640x350; source pixel aspect ratio: 35:48
+	// (1:1.371429)
 	//
 	bool InitRgb888(FILE* fp, const ImageInfo& image_info,
-	                const std::optional<ImageInfo> source_image_info = {});
+	                const std::optional<ImageInfo>& source_image_info = {});
 
 	bool InitIndexed8(FILE* fp, const ImageInfo& image_info,
-	                  const std::optional<ImageInfo> source_image_info,
+	                  const std::optional<ImageInfo>& source_image_info,
 	                  const uint8_t* palette_data);
 
 	void WriteRow(std::vector<uint8_t>::const_iterator row);
+
+	// prevent copying
+	PngWriter(const PngWriter&) = delete;
+	// prevent assignment
+	PngWriter& operator=(const PngWriter&) = delete;
 
 private:
 	bool Init(FILE* fp);
 	void SetPngCompressionsParams();
 
 	void WritePngInfo(const ImageInfo& image_info,
-	                  const std::optional<ImageInfo> source_image_info,
+	                  const std::optional<ImageInfo>& source_image_info,
 	                  const bool is_paletted, const uint8_t* palette_data);
 
 	void FinalisePng();

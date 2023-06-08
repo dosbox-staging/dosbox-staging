@@ -29,6 +29,7 @@
 
 #include "midi.h"
 #include "pic.h"
+#include "support.h"
 
 static struct {
 	FILE* handle = nullptr;
@@ -130,7 +131,7 @@ void capture_midi_finalise()
 	constexpr auto midi_header_size_offset = 18;
 	if (fseek(midi.handle, midi_header_size_offset, SEEK_SET) != 0) {
 		LOG_WARNING("CAPTURE: Failed to seek in captured MIDI file '%s'",
-		            strerror(errno));
+		            safe_strerror(errno).c_str());
 		return;
 	}
 

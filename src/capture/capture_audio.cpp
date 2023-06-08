@@ -127,8 +127,8 @@ void capture_audio_finalise()
 	// Update headers
 	constexpr auto chunk_header_size = 8;
 
-	const auto riff_chunk_size = wave.data_bytes_written +
-	                             sizeof(wav_header) - chunk_header_size;
+	const auto riff_chunk_size = static_cast<uint32_t>(wave.data_bytes_written +
+	                             sizeof(wav_header) - chunk_header_size);
 
 	constexpr auto riff_chunk_size_offset = 0x04;
 	host_writed(&wav_header[riff_chunk_size_offset], riff_chunk_size);

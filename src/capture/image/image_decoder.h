@@ -58,6 +58,11 @@ public:
 
 	void AdvanceRow();
 
+	// prevent copying
+	ImageDecoder(const ImageDecoder&) = delete;
+	// prevent assignment
+	ImageDecoder& operator=(const ImageDecoder&) = delete;
+
 private:
 	RenderedImage image = {};
 

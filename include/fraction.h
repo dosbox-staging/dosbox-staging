@@ -22,6 +22,7 @@
 #define DOSBOX_FRACTION_H
 
 #include <cassert>
+#include <cstdint>
 #include <numeric>
 
 // Class to represent simple fractions. The fraction is always simplified
@@ -41,11 +42,12 @@ public:
 	{
 		assert(d != 0);
 
-		if (n == 0) {
+		if (n == 0 || d == 0) {
 			assert(num == 0);
 			denom = 1;
 			return;
 		}
+
 		// Simplify fraction
 		const auto gcd = std::gcd(num, denom);
 		num /= gcd;

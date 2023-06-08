@@ -68,8 +68,8 @@ void ImageSaver::Close()
 }
 
 void ImageSaver::QueueImage(const RenderedImage& image, const CapturedImageType type,
-                            const std::optional<std_fs::path> path,
-                            const std::optional<ImageInfo> source_image_info_override)
+                            const std::optional<std_fs::path>& path,
+                            const std::optional<ImageInfo>& source_image_info_override)
 {
 	if (!image_fifo.IsRunning()) {
 		LOG_WARNING("CAPTURE: Cannot create screenshots while image capturer"
@@ -115,7 +115,10 @@ void ImageSaver::SaveImage(const SaveImageTask& task)
 	case CapturedImageType::Rendered:
 		assertm(task.source_image_info_override,
 		        "source_image_info_override must be provided for rendered images");
-		SaveRenderedImage(task.image, *task.source_image_info_override);
+		if (task.source_image_info_override) {
+			SaveRenderedImage(task.image,
+			                  *task.source_image_info_override);
+		}
 		break;
 	}
 
@@ -124,8 +127,8 @@ void ImageSaver::SaveImage(const SaveImageTask& task)
 }
 
 static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
-                               ImageScaler image_scaler, const ImageInfo& image_info,
-                               const std::optional<ImageInfo> source_image_info,
+                               ImageScaler& image_scaler, const ImageInfo& image_info,
+                               const std::optional<ImageInfo>& source_image_info,
                                const uint8_t* palette_data)
 {
 	switch (image_scaler.GetOutputPixelFormat()) {
@@ -205,8 +208,9 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image,
 
 	image_decoder.Init(image);
 
-	constexpr auto BytesPerPixel = 3;
-	row_buf.resize(image.width * BytesPerPixel);
+	constexpr uint8_t BytesPerPixel = 3;
+	row_buf.resize(static_cast<size_t>(image.width) *
+	               static_cast<size_t>(BytesPerPixel));
 
 	auto rows_to_write = image.height;
 	while (rows_to_write--) {

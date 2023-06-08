@@ -146,8 +146,8 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
 		}
 		if (grouped_mode.wants_rendered) {
 			do_rendered = true;
-			// If rendered capture is wanted, the state will be cleared in the
-			// CapturePostRenderImagecallback...
+			// If rendered capture is wanted, the state will be
+			// cleared in the CapturePostRenderImagecallback...
 		} else {
 			// ...otherwise we clear it now
 			state.grouped = CaptureState::Off;

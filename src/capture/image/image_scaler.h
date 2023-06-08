@@ -64,6 +64,9 @@ enum class PerAxisScaling { Integer, Fractional };
 //
 class ImageScaler {
 public:
+	ImageScaler()  = default;
+	~ImageScaler() = default;
+
 	void Init(const RenderedImage& image, const ScalingMode mode);
 
 	std::vector<uint8_t>::const_iterator GetNextOutputRow();
@@ -72,8 +75,13 @@ public:
 	uint16_t GetOutputHeight() const;
 	PixelFormat GetOutputPixelFormat() const;
 
+	// prevent copying
+	ImageScaler(const ImageScaler&) = delete;
+	// prevent assignment
+	ImageScaler& operator=(const ImageScaler&) = delete;
+
 private:
-	static constexpr auto ComponentsPerRgbPixel = 3;
+	static constexpr uint8_t ComponentsPerRgbPixel = 3;
 
 	void UpdateOutputParamsDoublingOnly();
 	void UpdateOutputParamsUpscale();

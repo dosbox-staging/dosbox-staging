@@ -21,13 +21,12 @@
 #ifndef DOSBOX_IMAGE_CAPTURER_H
 #define DOSBOX_IMAGE_CAPTURER_H
 
-#include "../capture.h"
-
-#include <cstring>
+#include <array>
+#include <string>
 
 #include "std_filesystem.h"
 
-#include "capture.h"
+#include "../capture.h"
 #include "image_saver.h"
 #include "render.h"
 
@@ -56,8 +55,12 @@
 //
 // Most of this complexity is encapsulated in the MaybeCaptureImage() method.
 //
-class ImageCapturer { public: ImageCapturer(const std::string&
-		grouped_mode_prefs); ~ImageCapturer();
+class ImageCapturer {
+public:
+	ImageCapturer() = default;
+	ImageCapturer(const std::string& grouped_mode_prefs);
+
+	~ImageCapturer();
 
 	void RequestRawCapture();
 	void RequestUpscaledCapture();
@@ -70,6 +73,11 @@ class ImageCapturer { public: ImageCapturer(const std::string&
 	void MaybeCaptureImage(const RenderedImage& image);
 
 	void CapturePostRenderImage(const RenderedImage& image);
+
+	// prevent copying
+	ImageCapturer(const ImageCapturer&) = delete;
+	// prevent assignment
+	ImageCapturer& operator=(const ImageCapturer&) = delete;
 
 private:
 	struct State {
@@ -90,9 +98,9 @@ private:
 	std_fs::path rendered_path    = {};
 	ImageInfo rendered_image_info = {};
 
-	static constexpr int NumImageSavers     = 3;
-	int current_image_saver_index           = 0;
-	ImageSaver image_savers[NumImageSavers] = {};
+	static constexpr auto NumImageSavers                = 3;
+	size_t current_image_saver_index                    = 0;
+	std::array<ImageSaver, NumImageSavers> image_savers = {};
 
 	void ConfigureGroupedMode(const std::string& prefs);
 

@@ -118,7 +118,7 @@ constexpr auto num_8bit_values = 256; // 2^8
 
 using srgb8_to_lin_lut_t = std::array<float, num_8bit_values>;
 
-static constexpr srgb8_to_lin_lut_t generate_srgb8_to_lin_lut()
+static srgb8_to_lin_lut_t generate_srgb8_to_lin_lut()
 {
 	srgb8_to_lin_lut_t lut = {};
 
@@ -151,7 +151,7 @@ static uint16_t lin_to_srgb8_lut_key(float c)
 	const auto key = static_cast<uint16_t>(
 	        round(c * (lin_to_srgb8_lut_size - 1)));
 
-	assert(key >= 0 && key < lin_to_srgb8_lut_size);
+	assert(key < lin_to_srgb8_lut_size);
 	return key;
 }
 

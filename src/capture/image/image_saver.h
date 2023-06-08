@@ -92,8 +92,13 @@ public:
 	// to pass in a deep-copied copy of the RenderedImage instance, because
 	// you cannot know when exactly in the future will it be freed.
 	void QueueImage(const RenderedImage& image, const CapturedImageType type,
-	                const std::optional<std_fs::path> path,
-	                const std::optional<ImageInfo> source_image_info_override = {});
+	                const std::optional<std_fs::path>& path,
+	                const std::optional<ImageInfo>& source_image_info_override = {});
+
+	// prevent copying
+	ImageSaver(const ImageSaver&) = delete;
+	// prevent assignment
+	ImageSaver& operator=(const ImageSaver&) = delete;
 
 private:
 	static constexpr auto MaxQueuedImages = 10;
