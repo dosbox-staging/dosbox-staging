@@ -1412,6 +1412,11 @@ static bool is_high_resolution(const video_mode_block_iterator_t mode_block)
 	return is_high_resolution(mode_block->swidth, mode_block->sheight);
 }
 
+static bool is_width_low_resolution(const uint16_t width)
+{
+	return width <= 320 || vga.seq.clocking_mode.is_pixel_doubling;
+}
+
 // A single point to set total draw lines and update affected parameters
 static void set_total_lines_to_draw(const uint32_t total_lines)
 {
@@ -1793,7 +1798,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	switch (vga.mode) {
 	case M_VGA:
 		width<<=2;
-		if (CurMode->sheight < 350) {
+		// Consider double or single-scanning if the mode itself is
+		// sub-350 line or the set width is assessed as a low resolution.
+		if (CurMode->sheight < 350 || is_width_low_resolution(width)) {
 			// Always round up odd number of lines
 			const auto height_is_odd = (height % 2 != 0);
 			if (height_is_odd) {
