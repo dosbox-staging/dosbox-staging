@@ -1915,7 +1915,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		safe_strcpy(mountstring, "MOUNT ");
 		StripSpaces(args);
 		std::string arg;
-		CommandLine command(0,args);
+		CommandLine command("", args);
 
 		// Expecting two arguments
 		if (command.GetCount() != 2)

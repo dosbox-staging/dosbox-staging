@@ -342,49 +342,26 @@ uint16_t CommandLine::Get_arglength()
 	return static_cast<uint16_t>(total_length);
 }
 
-CommandLine::CommandLine(const char *name, const char *cmdline)
+CommandLine::CommandLine(const std::string_view name, const std::string_view cmdline)
+        : file_name(name)
 {
-	if (name) {
-		file_name = name;
-	}
+	bool in_quotes = false;
+	cmds.emplace_back();
 
-	// Parse the commands and put them in the list
-	bool inword, inquote;
-	char c;
-	inword  = false;
-	inquote = false;
-	std::string str;
-
-	const char* c_cmdline = cmdline;
-
-	while ((c = *c_cmdline) != 0) {
-		if (inquote) {
-			if (c != '"') {
-				str += c;
-			} else {
-				inquote = false;
-				cmds.push_back(str);
-				str.erase();
+	for (const auto& c : cmdline) {
+		if (c == ' ' && !in_quotes) {
+			if (!cmds.back().empty()) {
+				cmds.emplace_back();
 			}
-		} else if (inword) {
-			if (c != ' ') {
-				str += c;
-			} else {
-				inword = false;
-				cmds.push_back(str);
-				str.erase();
-			}
-		} else if (c == '\"') {
-			inquote = true;
-		} else if (c != ' ') {
-			str += c;
-			inword = true;
+		} else if (c == '"') {
+			in_quotes = !in_quotes;
+		} else {
+			cmds.back() += c;
 		}
-		c_cmdline++;
 	}
 
-	if (inword || inquote) {
-		cmds.push_back(str);
+	if (cmds.back().empty()) {
+		cmds.pop_back();
 	}
 }
 
