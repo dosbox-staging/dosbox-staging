@@ -1412,26 +1412,6 @@ static bool is_high_resolution(const video_mode_block_iterator_t mode_block)
 	return is_high_resolution(mode_block->swidth, mode_block->sheight);
 }
 
-static void maybe_aspect_correct_tall_modes(double &current_ratio)
-{
-	// If we're in a mode that's wider than it is tall, then do nothing
-	if (CurMode->swidth >= CurMode->sheight || current_ratio > 0.9)
-		return;
-
-	// We're in a tall mode
-
-	if (!render.aspect) {
-		LOG_INFO("VGA: Tall resolution (%ux%u) may appear stretched wide, per 'aspect = false'",
-	         CurMode->swidth, CurMode->sheight);
-		// by default, the current ratio is already stretched out
-		return;
-	}
-
-	LOG_INFO("VGA: Tall resolution (%ux%u) will not be wide-stretched, per 'aspect = true'",
-	         CurMode->swidth, CurMode->sheight);
-	current_ratio *= 2;
-}
-
 // A single point to set total draw lines and update affected parameters
 static void set_total_lines_to_draw(const uint32_t total_lines)
 {
@@ -1861,15 +1841,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		width<<=3;
 		if (vga.crtc.mode_control & 0x8) {
  			doublewidth = true;
-			maybe_aspect_correct_tall_modes(aspect_ratio);
-			if (vga.mode == M_LIN32) {
-				// Modes 10f/190/191/192
-				switch (CurMode->mode) {
-				case 0x10f: aspect_ratio *= 2.0; break;
-				case 0x190: aspect_ratio *= 2.0; break;
-				case 0x191: aspect_ratio *= 2.0; break;
-				case 0x192: aspect_ratio *= 2.0; break;
-				};
+			if (vga.mode == M_LIN32 && CurMode->mode == 0x10f) {
+				aspect_ratio *= 2.0;
 			}
 		}
 		/* Use HW mouse cursor drawer if enabled */
@@ -1879,8 +1852,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
  	case M_LIN16:
 		// 15/16 bpp modes double the horizontal values
 		width<<=2;
-		// tall VESA modes
-		maybe_aspect_correct_tall_modes(aspect_ratio);
 		if ((vga.crtc.mode_control & 0x8))
 			doublewidth = true;
 		else
@@ -2152,12 +2123,22 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	vga.changes.frame = 0;
 	vga.changes.writeMask = 1;
 #endif
-	// Cheap hack to make all > 640x480 modes have square pixels.
-	// Leave text modes alone because more than 480 line text modes all
-	// feature non-square pixels.
-	const auto is_text_mode = CurMode->type & M_TEXT_MODES;
-	if (!is_text_mode && is_high_resolution(width, height)) {
-		aspect_ratio = 1.0;
+	// Use square pixels for all non-tweaked modes with 4:3 storage pixel
+	// aspect ratio (e.g., 320x240, 400x300, 640x480, 1024x768, etc.)
+	// The calculated PARs for these modes are not exactly 1:1, but they are
+	// intended to be displayed with square pixels.
+	if (width == CurMode->swidth && height == CurMode->sheight) {
+		constexpr auto display_aspect_ratio = 4.0 / 3.0;
+		const auto storage_aspect_ratio = static_cast<double>(width) / height;
+		if (storage_aspect_ratio == display_aspect_ratio) {
+			// LOG_MSG("VGA: Overriding PAR to 1:1 because SAR == DAR == 4/3");
+			aspect_ratio = 1.0;
+		}
+	}
+	// 1280x1024 is an outlier that needs special handling to stretch it to
+	// 4:3 display aspect ratio in all SVGA/VESA modes
+	if (CurMode->swidth == 1280 && CurMode->sheight == 1024) {
+		aspect_ratio = (1280.0 * 3.0) / (1024.0 * 4.0);
 	}
 //	LOG_MSG("ht %d vt %d ratio %f", htotal, vtotal, aspect_ratio );
 
