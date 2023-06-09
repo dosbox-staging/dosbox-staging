@@ -1571,6 +1571,12 @@ Gus::~Gus()
 	// Deregister the mixer channel, after which it's cleaned up
 	assert(audio_channel);
 	MIXER_DeregisterChannel(audio_channel);
+
+	// Deregister the DMA source once the mixer channel is gone, which can
+	// pull samples from DMA.
+	if (dma_channel) {
+		dma_channel->Register_Callback(nullptr);
+	}
 }
 
 static void gus_destroy([[maybe_unused]] Section *sec)
