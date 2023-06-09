@@ -2319,7 +2319,22 @@ public:
 		assert(sb.chan);
 		MIXER_DeregisterChannel(sb.chan);
 		sb.chan.reset();
+
+		// Deregister the low and high DMA sources once the mixer
+		// channel is gone, which can pull samples from DMA.
+		//
+		auto deregister_dma_channel = [=](const uint8_t dma_num)
+		{
+			if (const auto channel = GetDMAChannel(dma_num); channel) {
+				channel->Register_Callback(nullptr);
+			}
+		};
+
+		deregister_dma_channel(sb.hw.dma8);
+		deregister_dma_channel(sb.hw.dma16);
+		sb.dma.chan = {};
 	}
+
 }; //End of SBLASTER class
 
 static std::unique_ptr<SBLASTER> sblaster = {};
