@@ -649,9 +649,11 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("integer_scaling", always, "off");
 	pstring->Set_help(
-	        "Constrain the horizontal or vertical scaling factor to integer values. The\n"
-	        "correct aspect ratio is always maintained, which may result in a non-integer\n"
-	        "scaling factor to be applied in the other dimension.\n"
+	        "Constrain the horizontal or vertical scaling factor to integer values.\n"
+	        "The correct aspect ratio is always maintained, which may result in a\n"
+	        "non-integer scaling factor to be applied in the other dimension. If the\n"
+	        "image is larger than the viewport, the integer scaling constraint is\n"
+	        "auto-disabled (same as 'off').\n"
 	        "  off:         No integer scaling constraint; the aspect ratio correct image\n"
 	        "               fills the viewport (default).\n"
 	        "  horizontal:  Constrain the horizontal scaling factor to integer values\n"
