@@ -1658,7 +1658,7 @@ void DOS_Shell::CMD_IF(char * args) {
 void DOS_Shell::CMD_GOTO(char * args) {
 	HELP("GOTO");
 	StripSpaces(args);
-	if (!bf) return;
+	if (batchfiles.empty()) return;
 	if (*args &&(*args == ':')) args++;
 	//label ends at the first space
 	char* non_space = args;
@@ -1671,17 +1671,17 @@ void DOS_Shell::CMD_GOTO(char * args) {
 		WriteOut(MSG_Get("SHELL_CMD_GOTO_MISSING_LABEL"));
 		return;
 	}
-	assert(bf);
-	if (!bf->Goto(args)) {
+	assert(!batchfiles.empty());
+	if (!batchfiles.top().Goto(args)) {
 		WriteOut(MSG_Get("SHELL_CMD_GOTO_LABEL_NOT_FOUND"),args);
-		bf.reset();
+		batchfiles.pop();
 		return;
 	}
 }
 
 void DOS_Shell::CMD_SHIFT(char * args ) {
 	HELP("SHIFT");
-	if (bf) bf->Shift();
+	if (!batchfiles.empty()) batchfiles.top().Shift();
 }
 
 void DOS_Shell::CMD_TYPE(char * args) {
