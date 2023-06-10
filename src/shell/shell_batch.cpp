@@ -33,16 +33,13 @@ BatchFile::BatchFile(DOS_Shell* const host, std::unique_ptr<ByteReader> input_re
                      const char* const entered_name, const char* const cmd_line)
         : echo(host->echo),
           shell(host),
-          prev(host->bf),
           cmd(entered_name, cmd_line),
           reader(std::move(input_reader))
-{
-}
+{}
 
 BatchFile::~BatchFile()
 {
 	assert(shell);
-	shell->bf   = prev;
 	shell->echo = echo;
 }
 

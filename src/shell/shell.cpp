@@ -58,7 +58,6 @@ std::unique_ptr<Program> SHELL_ProgramCreate() {
 DOS_Shell::DOS_Shell()
         : Program(),
           input_handle(STDIN),
-          bf(nullptr),
           echo(true),
           call(false)
 {
@@ -358,8 +357,8 @@ void DOS_Shell::ParseLine(char *line)
 void DOS_Shell::RunInternal()
 {
 	char input_line[CMD_MAXLINE] = {0};
-	while (bf && !shutdown_requested) {
-		if (bf->ReadLine(input_line)) {
+	while (!batchfiles.empty() && !shutdown_requested) {
+		if (batchfiles.top().ReadLine(input_line)) {
 			if (echo) {
 				if (input_line[0] != '@') {
 					ShowPrompt();
@@ -370,7 +369,7 @@ void DOS_Shell::RunInternal()
 			ParseLine(input_line);
 			if (echo) WriteOut_NoParsing("\n");
 		} else {
-			bf.reset();
+			batchfiles.pop();
 		}
 	}
 }
@@ -430,8 +429,8 @@ void DOS_Shell::Run()
 		WriteOut(MSG_Get("SHELL_STARTUP_SUB"), DOSBOX_GetDetailedVersion());
 	}
 	do {
-		if (bf){
-			if(bf->ReadLine(input_line)) {
+		if (!batchfiles.empty()){
+			if(batchfiles.top().ReadLine(input_line)) {
 				if (echo) {
 					if (input_line[0]!='@') {
 						ShowPrompt();
@@ -441,7 +440,7 @@ void DOS_Shell::Run()
 				}
 				ParseLine(input_line);
 			} else {
-				bf.reset();
+				batchfiles.pop();
 			}
 		} else {
 			if (echo) ShowPrompt();

@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <optional>
+#include <stack>
 #include <string>
 
 #include "callback.h"
@@ -76,7 +77,6 @@ public:
 	void Shift();
 	bool echo                        = false;
 	DOS_Shell* shell                 = nullptr;
-	std::shared_ptr<BatchFile> prev  = {}; // shared with Shell.bf
 
 private:
 	[[nodiscard]] std::string ExpandedBatchLine(std::string_view line) const;
@@ -108,13 +108,14 @@ private:
 
 	friend class AutoexecEditor;
 	std::vector<std::string> history{};
+	std::stack<BatchFile> batchfiles{};
 
 	bool exit_cmd_called                   = false;
 	static inline bool help_list_populated = false;
 
 public:
 	DOS_Shell();
-	~DOS_Shell() override;
+	~DOS_Shell() override = default;
 	DOS_Shell(const DOS_Shell&)            = delete; // prevent copy
 	DOS_Shell& operator=(const DOS_Shell&) = delete; // prevent assignment
 	void Run() override;
@@ -173,7 +174,6 @@ public:
 
 	/* The shell's variables */
 	uint16_t input_handle         = 0;
-	std::shared_ptr<BatchFile> bf = {}; // shared with BatchFile.prev
 	bool echo                     = false;
 	bool call                     = false;
 };

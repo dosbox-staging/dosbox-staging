@@ -58,11 +58,6 @@ private:
 };
 } // namespace
 
-DOS_Shell::~DOS_Shell()
-{
-	bf.reset();
-}
-
 void DOS_Shell::ShowPrompt()
 {
 	const uint8_t drive = DOS_GetDefaultDrive() + 'A';
@@ -467,16 +462,16 @@ bool DOS_Shell::Execute(std::string_view name, std::string_view args)
 		/* delete old batch file if call is not active*/
 		/*keep the current echostate (as delete bf might change it )*/
 		const bool temp_echo = echo;
-		if (bf && !call) {
-			bf.reset();
+		if (!batchfiles.empty() && !call) {
+			batchfiles.pop();
 		}
 
 		auto reader = FileReader::GetFileReader(fullname);
 		if (reader) {
-			bf = std::make_shared<BatchFile>(this,
-			                                 std::move(*reader),
-			                                 std::string(name).c_str(),
-			                                 std::string(args).c_str());
+			batchfiles.emplace(this,
+			                   std::move(*reader),
+			                   std::string(name).c_str(),
+			                   std::string(args).c_str());
 		} else {
 			WriteOut("Could not open %s", fullname.c_str());
 		}
