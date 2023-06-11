@@ -354,10 +354,10 @@ void DOS_Shell::ParseLine(char *line)
 	}
 }
 
-void DOS_Shell::RunInternal()
+void DOS_Shell::RunBatchFile()
 {
 	char input_line[CMD_MAXLINE] = {0};
-	while (!batchfiles.empty() && !shutdown_requested) {
+	while (!batchfiles.empty() && !shutdown_requested && !exit_cmd_called) {
 		if (batchfiles.top().ReadLine(input_line)) {
 			if (echo) {
 				if (input_line[0] != '@') {
@@ -367,7 +367,6 @@ void DOS_Shell::RunInternal()
 				}
 			}
 			ParseLine(input_line);
-			if (echo) WriteOut_NoParsing("\n");
 		} else {
 			batchfiles.pop();
 		}
@@ -393,8 +392,8 @@ void DOS_Shell::Run()
 		if (sep) *sep = 0;
 		DOS_Shell temp;
 		temp.echo = echo;
-		temp.ParseLine(input_line);		//for *.exe *.com  |*.bat creates the bf needed by runinternal;
-		temp.RunInternal();				// exits when no bf is found.
+		temp.ParseLine(input_line);
+		temp.RunBatchFile();
 		return;
 	}
 	/* Start a normal shell and check for a first command init */
@@ -428,26 +427,15 @@ void DOS_Shell::Run()
 	} else {
 		WriteOut(MSG_Get("SHELL_STARTUP_SUB"), DOSBOX_GetDetailedVersion());
 	}
-	do {
+	while (!exit_cmd_called && !shutdown_requested) {
 		if (!batchfiles.empty()){
-			if(batchfiles.top().ReadLine(input_line)) {
-				if (echo) {
-					if (input_line[0]!='@') {
-						ShowPrompt();
-						WriteOut_NoParsing(input_line);
-						WriteOut_NoParsing("\n");
-					}
-				}
-				ParseLine(input_line);
-			} else {
-				batchfiles.pop();
-			}
+			RunBatchFile();
 		} else {
 			if (echo) ShowPrompt();
 			InputCommand(input_line);
 			ParseLine(input_line);
 		}
-	} while (!exit_cmd_called && !shutdown_requested);
+	}
 }
 
 void DOS_Shell::SyntaxError()
@@ -627,7 +615,7 @@ static Bitu INT2E_Handler()
 	if (safe_strlen(tail.buffer)) {
 		DOS_Shell temp;
 		temp.ParseLine(tail.buffer);
-		temp.RunInternal();
+		temp.RunBatchFile();
 	}
 
 	/* Restore process and "return" to caller */
