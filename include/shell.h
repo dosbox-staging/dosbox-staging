@@ -119,7 +119,8 @@ public:
 	DOS_Shell(const DOS_Shell&)            = delete; // prevent copy
 	DOS_Shell& operator=(const DOS_Shell&) = delete; // prevent assignment
 	void Run() override;
-	void RunInternal(); // for command /C
+	void RunBatchFile();
+
 	/* A load of subfunctions */
 	void ParseLine(char* line);
 	void GetRedirection(char* s, std::string& ifn, std::string& ofn,
