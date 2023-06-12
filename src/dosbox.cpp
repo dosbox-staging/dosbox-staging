@@ -844,11 +844,11 @@ void DOSBOX_Init()
 	const char *dmassb[] = {"0", "1", "3", "5", "6", "7", 0};
 	pint                 = secprop->Add_int("dma", when_idle, 1);
 	pint->Set_values(dmassb);
-	pint->Set_help("The DMA number of the Sound Blaster (1 by default).");
+	pint->Set_help("The DMA channel of the Sound Blaster (1 by default).");
 
 	pint = secprop->Add_int("hdma", when_idle, 5);
 	pint->Set_values(dmassb);
-	pint->Set_help("The High DMA number of the Sound Blaster (5 by default).");
+	pint->Set_help("The High DMA channel of the Sound Blaster 16 (5 by default).");
 
 	pbool = secprop->Add_bool("sbmixer", when_idle, true);
 	pbool->Set_help("Allow the Sound Blaster mixer to modify the DOSBox mixer (enabled by default).");

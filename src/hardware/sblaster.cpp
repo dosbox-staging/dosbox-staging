@@ -2043,31 +2043,22 @@ SB_TYPES find_sbtype()
 
 	const std::string_view pref = sect->Get_string("sbtype");
 
-	const auto pref_has_bool = parse_bool_setting(pref);
+	// Default
+	auto sbtype = SB_TYPES::SBT_NONE;
 
-	SB_TYPES sbtype = SBT_NONE;
-
-	if (pref_has_bool && *pref_has_bool == false) {
-		sbtype = SBT_NONE;
-	} else if (pref == "sb1") {
-		sbtype = SBT_1;
-	} else if (pref == "sb2") {
-		sbtype = SBT_2;
-	} else if (pref == "sbpro1") {
-		sbtype = SBT_PRO1;
+	// Newest to oldest
+	if (pref == "sb16") {
+		sbtype = SBT_16;
 	} else if (pref == "sbpro2") {
 		sbtype = SBT_PRO2;
-	} else if (pref == "sb16") {
-		sbtype = SBT_16;
+	} else if (pref == "sbpro1") {
+		sbtype = SBT_PRO1;
+	} else if (pref == "sb2") {
+		sbtype = SBT_2;
+	} else if (pref == "sb1") {
+		sbtype = SBT_1;
 	} else if (pref == "gb") {
 		sbtype = SBT_GB;
-	} else {
-		sbtype = SBT_16;
-	}
-
-	if (sbtype == SBT_16) {
-		if ((!IS_EGAVGA_ARCH) || !SecondDMAControllerAvailable())
-			sbtype = SBT_PRO2;
 	}
 	return sbtype;
 }
@@ -2079,38 +2070,38 @@ OplMode find_oplmode()
 
 	const std::string_view pref = sect->Get_string("oplmode");
 
-	const auto pref_has_bool = parse_bool_setting(pref);
+	// Default
+	auto opl_mode = OplMode::None;
 
-	OplMode opl_mode = OplMode::None;
-
-	if (pref_has_bool && *pref_has_bool == false) {
-		opl_mode = OplMode::None;
-	} else if (pref == "cms") {
-		opl_mode = OplMode::Cms;
-	} else if (pref == "opl2") {
-		opl_mode = OplMode::Opl2;
-	} else if (pref == "dualopl2") {
-		opl_mode = OplMode::DualOpl2;
+	// Newest to oldest
+	if (pref == "opl3gold") {
+		opl_mode = OplMode::Opl3Gold;
 	} else if (pref == "opl3") {
 		opl_mode = OplMode::Opl3;
-	} else if (pref == "opl3gold") {
-		opl_mode = OplMode::Opl3Gold;
+	} else if (pref == "dualopl2") {
+		opl_mode = OplMode::DualOpl2;
+	} else if (pref == "opl2") {
+		opl_mode = OplMode::Opl2;
+	} else if (pref == "cms") {
+		opl_mode = OplMode::Cms;
 	}
 
 	// Else assume auto
 	else {
 		switch (find_sbtype()) {
-		case SBT_NONE: opl_mode = OplMode::None; break;
-		case SBT_GB: opl_mode = OplMode::Cms; break;
-		case SBT_1:
-		case SBT_2: opl_mode = OplMode::Opl2; break;
+		case SBT_16:
+		case SBT_PRO2: opl_mode = OplMode::Opl3; break;
 		case SBT_PRO1: opl_mode = OplMode::DualOpl2; break;
-		case SBT_PRO2:
-		case SBT_16: opl_mode = OplMode::Opl3; break;
+		case SBT_2:
+		case SBT_1: opl_mode = OplMode::Opl2; break;
+		case SBT_GB: opl_mode = OplMode::Cms; break;
+		case SBT_NONE: opl_mode = OplMode::None; break;
 		}
 	}
 	return opl_mode;
 }
+
+void SBLASTER_ShutDown(Section*);
 
 class SBLASTER final {
 private:
@@ -2170,9 +2161,6 @@ public:
 		sb.hw.base=section->Get_hex("sbbase");
 
 		sb.hw.irq = static_cast<uint8_t>(section->Get_int("irq"));
-		sb.hw.dma8 = static_cast<uint8_t>(section->Get_int("dma"));
-		sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
-		sb.dsp.cold_warmup_ms = check_cast<uint8_t>(section->Get_int("sbwarmup"));
 		sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms >> 5;
 
 		sb.mixer.enabled=section->Get_bool("sbmixer");
@@ -2214,6 +2202,24 @@ public:
 
 		if (sb.type == SBT_NONE || sb.type == SBT_GB)
 			return;
+
+		sb.hw.dma8 = static_cast<uint8_t>(section->Get_int("dma"));
+		auto dma_channel = GetDMAChannel(sb.hw.dma8);
+		assert(dma_channel);
+		dma_channel->ReserveFor(CardType(), SBLASTER_ShutDown);
+
+		// Only Sound Blaster 16 uses a 16-bit DMA channel.
+		if (sb.type == SB_TYPES::SBT_16) {
+			sb.hw.dma16 = static_cast<uint8_t>(section->Get_int("hdma"));
+
+			// Reserve the second DMA channel only if it's unique.
+			if (sb.hw.dma16 != sb.hw.dma8) {
+				dma_channel = GetDMAChannel(sb.hw.dma16);
+				assert(dma_channel);
+				dma_channel->ReserveFor(CardType(),
+				                        SBLASTER_ShutDown);
+			}
+		}
 
 		std::set channel_features = {ChannelFeature::ReverbSend,
 		                             ChannelFeature::ChorusSend,
@@ -2273,12 +2279,20 @@ public:
 			sb.midi = true;
 		}
 
-		LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
-		        CardType(),
-		        sb.hw.base,
-		        sb.hw.irq,
-		        sb.hw.dma8,
-		        sb.hw.dma16);
+		if (sb.type == SB_TYPES::SBT_16) {
+			LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
+			        CardType(),
+			        sb.hw.base,
+			        sb.hw.irq,
+			        sb.hw.dma8,
+			        sb.hw.dma16);
+		} else {
+			LOG_MSG("%s: Running on port %xh, IRQ %d, and DMA %d",
+			        CardType(),
+			        sb.hw.base,
+			        sb.hw.irq,
+			        sb.hw.dma8);
+		}
 	}
 
 	~SBLASTER()
@@ -2320,22 +2334,16 @@ public:
 		MIXER_DeregisterChannel(sb.chan);
 		sb.chan.reset();
 
-		// Deregister the low and high DMA sources once the mixer
-		// channel is gone, which can pull samples from DMA.
-		//
-		auto deregister_dma_channel = [=](const uint8_t dma_num)
-		{
-			if (const auto channel = GetDMAChannel(dma_num); channel) {
-				channel->Register_Callback(nullptr);
-			}
-		};
+		// Reset the DMA channels as the mixer is no longer reading samples
+		DMA_ResetChannel(sb.hw.dma8);
+		if (sb.type == SB_TYPES::SBT_16) {
+			DMA_ResetChannel(sb.hw.dma16);
+		}
 
-		deregister_dma_channel(sb.hw.dma8);
-		deregister_dma_channel(sb.hw.dma16);
-		sb.dma.chan = {};
+		sb = {};
 	}
 
-}; //End of SBLASTER class
+}; // End of SBLASTER class
 
 static std::unique_ptr<SBLASTER> sblaster = {};
 
