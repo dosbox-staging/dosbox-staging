@@ -166,11 +166,6 @@ void CloseSecondDMAController()
 	secondary = {};
 }
 
-/* check availability of second DMA controller, needed for SB16 */
-bool SecondDMAControllerAvailable(void) {
-	return (secondary != nullptr);
-}
-
 static DmaChannel* GetChannelFromPort(const io_port_t port)
 {
 	uint8_t num = UINT8_MAX;
