@@ -29,15 +29,21 @@
 #include "paging.h"
 #include "setup.h"
 
-DmaController *DmaControllers[2];
+std::unique_ptr<DmaController> primary   = {};
+std::unique_ptr<DmaController> secondary = {};
 
 #define EMM_PAGEFRAME4K ((0xE000 * 16) / dos_pagesize)
 uint32_t ems_board_mapping[LINK_START];
 
+// Constants
+constexpr uint8_t SecondaryMin = 4;
+constexpr uint8_t SecondaryMax = 7;
+
 constexpr uint16_t NULL_PAGE = 0xffff;
 static uint32_t dma_wrapping = NULL_PAGE; // initial value
 
-static void UpdateEMSMapping(void) {
+static void UpdateEMSMapping()
+{
 	/* if EMS is not present, this will result in a 1:1 mapping */
 	Bitu i;
 	for (i=0;i<0x10;i++) {
@@ -100,32 +106,72 @@ static void perform_dma_io(const DMA_DIRECTION direction,
 	} while (remaining_bytes);
 }
 
-DmaChannel * GetDMAChannel(uint8_t chan) {
-	if (chan<4) {
-		/* channel on first DMA controller */
-		if (DmaControllers[0]) return DmaControllers[0]->GetChannel(chan);
-	} else if (chan<8) {
-		/* channel on second DMA controller */
-		if (DmaControllers[1]) return DmaControllers[1]->GetChannel(chan-4);
-	}
-	return NULL;
+void TANDYSOUND_ShutDown(Section* = nullptr);
+
+static bool activate_primary()
+{
+	assert(!primary);
+	constexpr uint8_t primary_index = 0;
+	primary = std::make_unique<DmaController>(primary_index);
+	return true;
 }
 
-/* remove the second DMA controller (ports are removed automatically) */
-void CloseSecondDMAController(void) {
-	if (DmaControllers[1]) {
-		delete DmaControllers[1];
-		DmaControllers[1]=NULL;
+static bool activate_secondary()
+{
+	assert(!secondary);
+
+	// The secondary controller and Tandy Sound device conflict in
+	// their use of the 0xc0 IO ports. This is a unique architectural
+	// conflict, so we explicitly shutdown the TandySound device (if
+	// it happens to be running) to meet this request.
+	//
+	TANDYSOUND_ShutDown();
+
+	constexpr uint8_t secondary_index = 1;
+	secondary = std::make_unique<DmaController>(secondary_index);
+	return true;
+}
+
+constexpr uint8_t is_primary(const uint8_t channel_num)
+{
+	return (channel_num < SecondaryMin);
+}
+
+constexpr uint8_t is_secondary(const uint8_t channel_num)
+{
+	return (channel_num >= SecondaryMin &&
+	        channel_num <= SecondaryMax);
+}
+
+constexpr uint8_t to_secondary_num(const uint8_t channel_num)
+{
+	assert(channel_num >= SecondaryMin);
+	assert(channel_num <= SecondaryMax);
+	return (static_cast<uint8_t>(channel_num - SecondaryMin));
+}
+
+DmaChannel* GetDMAChannel(const uint8_t channel_num)
+{
+	if (is_primary(channel_num) && (primary || activate_primary())) {
+		return primary->GetChannel(channel_num);
 	}
+	if (is_secondary(channel_num) && (secondary || activate_secondary())) {
+		return secondary->GetChannel(to_secondary_num(channel_num));
+	}
+	return nullptr;
+}
+
+void CloseSecondDMAController()
+{
+	secondary = {};
 }
 
 /* check availability of second DMA controller, needed for SB16 */
 bool SecondDMAControllerAvailable(void) {
-	if (DmaControllers[1]) return true;
-	else return false;
+	return (secondary != nullptr);
 }
 
-static DmaChannel *GetChannelFromPort(const io_port_t port)
+static DmaChannel* GetChannelFromPort(const io_port_t port)
 {
 	uint8_t num = UINT8_MAX;
 	switch (port) {
@@ -151,10 +197,10 @@ static void DMA_Write_Port(io_port_t port, io_val_t value, io_width_t)
 	// LOG(LOG_DMACONTROL,LOG_ERROR)("Write %" sBitfs(X) " %" sBitfs(X),port,val);
 	if (port < 0x10) {
 		/* write to the first DMA controller (channels 0-3) */
-		DmaControllers[0]->WriteControllerReg(port, val, io_width_t::byte);
+		primary->WriteControllerReg(port, val, io_width_t::byte);
 	} else if (port >= 0xc0 && port <= 0xdf) {
 		/* write to the second DMA controller (channels 4-7) */
-		DmaControllers[1]->WriteControllerReg((port - 0xc0) >> 1, val, io_width_t::byte);
+		secondary->WriteControllerReg((port - 0xc0) >> 1, val, io_width_t::byte);
 	} else {
 		UpdateEMSMapping();
 		auto channel = GetChannelFromPort(port);
@@ -168,10 +214,10 @@ static uint16_t DMA_Read_Port(io_port_t port, io_width_t width)
 	// LOG(LOG_DMACONTROL,LOG_ERROR)("Read %" sBitfs(X),port);
 	if (port < 0x10) {
 		/* read from the first DMA controller (channels 0-3) */
-		return DmaControllers[0]->ReadControllerReg(port, width);
+		return primary->ReadControllerReg(port, width);
 	} else if (port >= 0xc0 && port <= 0xdf) {
 		/* read from the second DMA controller (channels 4-7) */
-		return DmaControllers[1]->ReadControllerReg((port - 0xc0) >> 1, width);
+		return secondary->ReadControllerReg((port - 0xc0) >> 1, width);
 	} else {
 		const auto channel = GetChannelFromPort(port);
 		if (channel)
@@ -304,30 +350,74 @@ uint16_t DmaController::ReadControllerReg(io_port_t reg, io_width_t)
 	return 0xffff;
 }
 
-DmaChannel::DmaChannel(uint8_t num, bool dma16)
-        : pagebase(0),
-          baseaddr(0),
-          curraddr(0),
-          basecnt(0),
-          currcnt(0),
-          channum(0),
-          pagenum(0),
-          DMA16(0x0),
-          increment(false),
-          autoinit(false),
-          masked(true),
-          tcount(false),
-          request(false),
-          callback(nullptr)
+DmaChannel::DmaChannel(uint8_t num, bool is_dma_16bit)
+        : channum(num),
+          DMA16(is_dma_16bit ? 0x1 : 0x0)
 {
-	if (num == 4)
+	if (num == 4) {
 		return;
-	channum = num;
-	DMA16 = dma16 ? 0x1 : 0x0;
-	increment = true;
+	}
+	assert(masked);
+	assert(increment);
 }
 
-size_t DmaChannel::ReadOrWrite(DMA_DIRECTION direction, size_t words, uint8_t *buffer)
+void DmaChannel::DoCallback(DMAEvent event)
+{
+	if (callback) {
+		callback(this, event);
+	}
+}
+
+void DmaChannel::SetMask(bool _mask)
+{
+	masked = _mask;
+	DoCallback(masked ? DMA_MASKED : DMA_UNMASKED);
+}
+
+void DmaChannel::Register_Callback(DMA_Callback _cb)
+{
+	callback = _cb;
+	SetMask(masked);
+	if (callback) {
+		Raise_Request();
+	} else {
+		Clear_Request();
+	}
+}
+
+void DmaChannel::ReachedTC()
+{
+	tcount = true;
+	DoCallback(DMA_REACHED_TC);
+}
+
+void DmaChannel::SetPage(uint8_t val)
+{
+	pagenum  = val;
+	pagebase = (pagenum >> DMA16) << (16 + DMA16);
+}
+
+void DmaChannel::Raise_Request()
+{
+	request = true;
+}
+
+void DmaChannel::Clear_Request()
+{
+	request = false;
+}
+
+size_t DmaChannel::Read(size_t words, uint8_t* dest_buffer)
+{
+	return ReadOrWrite(DMA_DIRECTION::READ, words, dest_buffer);
+}
+
+size_t DmaChannel::Write(size_t words, uint8_t* src_buffer)
+{
+	return ReadOrWrite(DMA_DIRECTION::WRITE, words, src_buffer);
+}
+
+size_t DmaChannel::ReadOrWrite(DMA_DIRECTION direction, size_t words, uint8_t* buffer)
 {
 	auto want = check_cast<uint16_t>(words);
 	uint16_t done = 0;
@@ -356,74 +446,98 @@ again:
 			currcnt = 0xffff;
 			masked = true;
 			UpdateEMSMapping();
-			DoCallBack(DMA_MASKED);
+			DoCallback(DMA_MASKED);
 		}
 	}
 	return done;
 }
 
-class DMA final : public Module_base {
-public:
-	DMA(Section *configuration) : Module_base(configuration)
-	{
-		DmaControllers[0] = new DmaController(0);
-		if (IS_EGAVGA_ARCH)
-			DmaControllers[1] = new DmaController(1);
-		else
-			DmaControllers[1] = nullptr;
+DmaController::DmaController(const uint8_t controller_index)
+        : index(controller_index)
+{
+	// first or second DMA controller
+	assert(index == 0 || index == 1);
 
-		for (io_port_t i = 0; i < 0x10; ++i) {
-			const io_width_t width = (i < 8) ? io_width_t::word : io_width_t::byte;
-			/* install handler for first DMA controller ports */
-			DmaControllers[0]->DMA_WriteHandler[i].Install(i, DMA_Write_Port, width);
-			DmaControllers[0]->DMA_ReadHandler[i].Install(i, DMA_Read_Port, width);
-			if (IS_EGAVGA_ARCH) {
-				/* install handler for second DMA controller ports */
-				const auto dma_port = static_cast<io_port_t>(0xc0 + i * 2);
-				DmaControllers[1]->DMA_WriteHandler[i].Install(dma_port,
-				                                               DMA_Write_Port, width);
-				DmaControllers[1]->DMA_ReadHandler[i].Install(dma_port,
-				                                              DMA_Read_Port, width);
-			}
+	constexpr auto n = static_cast<uint8_t>(ARRAY_LEN(dma_channels));
+
+	for (uint8_t i = 0; i < n; ++i) {
+		const auto channel_num = static_cast<uint8_t>(i + index * n);
+		const auto is_16bit    = (index == 1);
+		dma_channels[i] = std::make_unique<DmaChannel>(channel_num, is_16bit);
+	}
+
+	for (io_port_t i = 0; i < 0x10; ++i) {
+		const io_width_t width = (i < 8) ? io_width_t::word
+		                                 : io_width_t::byte;
+
+		// Install handler for primary DMA controller ports
+		if (index == 0) {
+			DMA_WriteHandler[i].Install(i, DMA_Write_Port, width);
+			DMA_ReadHandler[i].Install(i, DMA_Read_Port, width);
 		}
-		/* install handlers for ports 0x81-0x83,0x87 (on the first DMA controller) */
-		DmaControllers[0]->DMA_WriteHandler[0x10].Install(0x81, DMA_Write_Port, io_width_t::byte, 3);
-		DmaControllers[0]->DMA_ReadHandler[0x10].Install(0x81, DMA_Read_Port, io_width_t::byte, 3);
-		DmaControllers[0]->DMA_WriteHandler[0x11].Install(0x87, DMA_Write_Port, io_width_t::byte, 1);
-		DmaControllers[0]->DMA_ReadHandler[0x11].Install(0x87, DMA_Read_Port, io_width_t::byte, 1);
-
-		if (IS_EGAVGA_ARCH) {
-			/* install handlers for ports 0x89-0x8b,0x8f (on the second DMA controller) */
-			DmaControllers[1]->DMA_WriteHandler[0x10].Install(0x89, DMA_Write_Port, io_width_t::byte, 3);
-			DmaControllers[1]->DMA_ReadHandler[0x10].Install(0x89, DMA_Read_Port, io_width_t::byte, 3);
-			DmaControllers[1]->DMA_WriteHandler[0x11].Install(0x8f, DMA_Write_Port, io_width_t::byte, 1);
-			DmaControllers[1]->DMA_ReadHandler[0x11].Install(0x8f, DMA_Read_Port, io_width_t::byte, 1);
+		// Install handler for secondary DMA controller ports
+		else if (IS_EGAVGA_ARCH) {
+			assert(index == 1);
+			const auto dma_port = static_cast<io_port_t>(0xc0 + i * 2);
+			DMA_WriteHandler[i].Install(dma_port, DMA_Write_Port, width);
+			DMA_ReadHandler[i].Install(dma_port, DMA_Read_Port, width);
 		}
 	}
-	~DMA(){
-		if (DmaControllers[0]) {
-			delete DmaControllers[0];
-			DmaControllers[0]=NULL;
-		}
-		if (DmaControllers[1]) {
-			delete DmaControllers[1];
-			DmaControllers[1]=NULL;
-		}
+	// Install handlers for ports 0x81-0x83,0x87 (on the primary)
+	if (index == 0) {
+		DMA_WriteHandler[0x10].Install(0x81, DMA_Write_Port, io_width_t::byte, 3);
+		DMA_ReadHandler[0x10].Install(0x81, DMA_Read_Port, io_width_t::byte, 3);
+		DMA_WriteHandler[0x11].Install(0x87, DMA_Write_Port, io_width_t::byte, 1);
+		DMA_ReadHandler[0x11].Install(0x87, DMA_Read_Port, io_width_t::byte, 1);
 	}
-};
+	// Install handlers for ports 0x89-0x8b,0x8f (on the secondary)
+	else if (IS_EGAVGA_ARCH) {
+		assert(index == 1);
+		DMA_WriteHandler[0x10].Install(0x89, DMA_Write_Port, io_width_t::byte, 3);
+		DMA_ReadHandler[0x10].Install(0x89, DMA_Read_Port, io_width_t::byte, 3);
+		DMA_WriteHandler[0x11].Install(0x8f, DMA_Write_Port, io_width_t::byte, 1);
+		DMA_ReadHandler[0x11].Install(0x8f, DMA_Read_Port, io_width_t::byte, 1);
+	}
+
+	LOG_MSG("DMA: Initialized %s controller",
+	        (index == 0 ? "primary" : "secondary"));
+}
+
+DmaController::~DmaController()
+{
+	LOG_MSG("DMA: Shutting down %s controller",
+	        (index == 0 ? "primary" : "secondary"));
+
+	// Deregister the controller's IO handlers
+	for (auto& rh : DMA_ReadHandler) {
+		rh.Uninstall();
+	}
+	for (auto& wh : DMA_WriteHandler) {
+		wh.Uninstall();
+	}
+
+	for (auto& channel : dma_channels) {
+		channel = {};
+	}
+}
+
+DmaChannel* DmaController::GetChannel(uint8_t chan) const
+{
+	constexpr auto n = ARRAY_LEN(dma_channels);
+	return (chan < n) ? dma_channels[chan].get() : nullptr;
+}
 
 void DMA_SetWrapping(const uint32_t wrap) {
 	dma_wrapping = wrap;
 }
 
-static DMA* test;
-
-void DMA_Destroy(Section* /*sec*/){
-	delete test;
+void DMA_Destroy(Section* /*sec*/)
+{
+	primary   = {};
+	secondary = {};
 }
 void DMA_Init(Section* sec) {
 	DMA_SetWrapping(0xffff);
-	test = new DMA(sec);
 	sec->AddDestroyFunction(&DMA_Destroy);
 	Bitu i;
 	for (i=0;i<LINK_START;i++) {
