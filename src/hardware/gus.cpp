@@ -327,7 +327,7 @@ private:
 	bool irq_enabled = false;
 	bool irq_previously_interrupted = false;
 	bool is_running = false;
-	bool should_change_irq_dma = false;
+	bool should_change_irq_dma      = false;
 };
 
 using namespace std::placeholders;
@@ -1280,20 +1280,25 @@ static void GUS_TimerEvent(uint32_t t)
 	}
 }
 
+static void gus_destroy(Section*);
+
 void Gus::UpdateDmaAddress(const uint8_t new_address)
 {
 	// Has it changed?
-	if (new_address == dma1)
+	if (new_address == dma1) {
 		return;
+	}
 
-	// Unregister the current callback
-	if (dma_channel)
-		dma_channel->Register_Callback(nullptr);
+	// Reset the old channel
+	if (dma_channel) {
+		dma_channel->Reset();
+	}
 
 	// Update the address, channel, and callback
 	dma1 = new_address;
 	dma_channel = GetDMAChannel(dma1);
 	assert(dma_channel);
+	dma_channel->ReserveFor("GUS", gus_destroy);
 	dma_channel->Register_Callback(std::bind(&Gus::DmaCallback, this, _1, _2));
 #if LOG_GUS
 	LOG_MSG("GUS: Assigned DMA1 address to %u", dma1);
@@ -1575,7 +1580,7 @@ Gus::~Gus()
 	// Deregister the DMA source once the mixer channel is gone, which can
 	// pull samples from DMA.
 	if (dma_channel) {
-		dma_channel->Register_Callback(nullptr);
+		dma_channel->Reset();
 	}
 }
 
