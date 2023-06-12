@@ -953,19 +953,19 @@ void DOSBOX_Init()
 	// Tandy audio emulation
 	secprop->AddInitFunction(&TANDYSOUND_Init, changeable_at_runtime);
 
-	const char *tandys[] = {"auto", "on", "off", 0};
+	const char* tandys[] = {"auto", "on", "psg", "off", 0};
 
 	pstring = secprop->Add_string("tandy", when_idle, "auto");
 	pstring->Set_values(tandys);
 	pstring->Set_help(
 	        "Set the Tandy/PCjr 3 Voice sound emulation:\n"
-	        "  off:   Disable Tandy/PCjr sound.\n"
-	        "  on:    Enable Tandy/PCjr sound (most games also need the machine set to\n"
-	        "         'tandy' or 'pcjr' to work).\n"
 	        "  auto:  Automatically enable Tandy/PCjr sound for the 'tandy' and 'pcjr'\n"
 	        "         machine types only (default).\n"
-	        "Notes: The Tandy DAC is only emulated if Sound Blaster emulation is disabled\n"
-	        "       with 'sbtype = none' due to resource conflicts.");
+	        "  on:    Enable Tandy/PCjr sound with DAC support, when possible.\n"
+	        "         Most games also need the machine set to 'tandy' or 'pcjr' to work.\n"
+	        "  psg:   Only enable the card's three-voice programmable sound generator\n"
+	        "         without DAC to avoid conflicts with other cards using DMA 1.\n"
+	        "  off:   Disable Tandy/PCjr sound.");
 
 	pstring = secprop->Add_string("tandy_filter", when_idle, "on");
 	pstring->Set_help(
