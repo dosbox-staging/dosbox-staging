@@ -68,71 +68,81 @@ constexpr bool USE_NICE_PANNING = true;
 constexpr bool USE_NICE_PARTIAL_MIXING = false;
 
 using Rom = LASynthModel::Rom;
-constexpr auto versioned = LASynthModel::ROM_TYPE::VERSIONED;
-constexpr auto unversioned = LASynthModel::ROM_TYPE::UNVERSIONED;
 
-// Traditional ROMs
-const Rom mt32_pcm_any_f = {"pcm_mt32", "MT32_PCM.ROM", unversioned};
-const Rom mt32_ctrl_any_f = {"ctrl_mt32", "MT32_CONTROL.ROM", unversioned};
-const Rom cm32l_pcm_any_f = {"pcm_cm32l", "CM32L_PCM.ROM", unversioned};
-const Rom cm32l_ctrl_any_f = {"ctrl_cm32l", "CM32L_CONTROL.ROM", unversioned};
-
-// MAME ROMs (versioned)
-const Rom mt32_pcm_100_f = {"pcm_mt32", "r15449121.ic37.bin", versioned};
-const Rom mt32_pcm_100_l = {"pcm_mt32_l", "r15179844.ic21.bin", versioned};
-const Rom mt32_pcm_100_h = {"pcm_mt32_h", "r15179845.ic22.bin", versioned};
-const Rom mt32_ctrl_104_a = {"ctrl_mt32_1_04_a", "mt32_1.0.4.ic27.bin", versioned};
-const Rom mt32_ctrl_104_b = {"ctrl_mt32_1_04_b", "mt32_1.0.4.ic26.bin", versioned};
-const Rom mt32_ctrl_105_a = {"ctrl_mt32_1_05_a", "mt32_1.0.5.ic27.bin", versioned};
-const Rom mt32_ctrl_105_b = {"ctrl_mt32_1_05_b", "mt32_1.0.5.ic26.bin", versioned};
-const Rom mt32_ctrl_106_a = {"ctrl_mt32_1_06_a", "mt32_1.0.6.ic27.bin", versioned};
-const Rom mt32_ctrl_106_b = {"ctrl_mt32_1_06_b", "mt32_1.0.6.ic26.bin", versioned};
-const Rom mt32_ctrl_107_a = {"ctrl_mt32_1_07_a", "mt32_1.0.7.ic27.bin", versioned};
-const Rom mt32_ctrl_107_b = {"ctrl_mt32_1_07_b", "mt32_1.0.7.ic26.bin", versioned};
-const Rom mt32_ctrl_bluer_a = {"ctrl_mt32_bluer_a", "blue_ridge__mt32a.bin", versioned};
-const Rom mt32_ctrl_bluer_b = {"ctrl_mt32_bluer_b", "blue_ridge__mt32b.bin", versioned};
-const Rom mt32_ctrl_204_f = {"ctrl_mt32_2_04", "mt32_2.0.4.ic28.bin", versioned};
-const Rom cm32l_ctrl_100_f = {"ctrl_cm32l_1_00", "lapc-i.v1.0.0.ic3.bin", versioned};
-const Rom cm32l_ctrl_102_f = {"ctrl_cm32l_1_02", "cm32l_control.rom", versioned};
-const Rom cm32l_pcm_100_h = {"pcm_cm32l_h", "r15179945.ic8.bin", versioned};
-const Rom &cm32l_pcm_100_l = mt32_pcm_100_f; // Lower half of samples comes from MT-32
+const Rom mt32_pcm_100_f  = {"pcm_mt32", LASynthModel::ROM_TYPE::PCM};
+const Rom mt32_pcm_100_l  = {"pcm_mt32_l", LASynthModel::ROM_TYPE::PCM};
+const Rom mt32_pcm_100_h  = {"pcm_mt32_h", LASynthModel::ROM_TYPE::PCM};
+const Rom mt32_ctrl_104_f = {"ctrl_mt32_1_04", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_104_a = {"ctrl_mt32_1_04_a", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_104_b = {"ctrl_mt32_1_04_b", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_105_f = {"ctrl_mt32_1_05", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_105_a = {"ctrl_mt32_1_05_a", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_105_b = {"ctrl_mt32_1_05_b", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_106_f = {"ctrl_mt32_1_06", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_106_a = {"ctrl_mt32_1_06_a", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_106_b = {"ctrl_mt32_1_06_b", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_107_f = {"ctrl_mt32_1_07", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_107_a = {"ctrl_mt32_1_07_a", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_107_b = {"ctrl_mt32_1_07_b", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_bluer_f = {"ctrl_mt32_bluer", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_bluer_a = {"ctrl_mt32_bluer_a", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_bluer_b = {"ctrl_mt32_bluer_b", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_204_f = {"ctrl_mt32_2_04", LASynthModel::ROM_TYPE::CONTROL};
+const Rom cm32l_ctrl_100_f = {"ctrl_cm32l_1_00", LASynthModel::ROM_TYPE::CONTROL};
+const Rom cm32l_ctrl_102_f = {"ctrl_cm32l_1_02", LASynthModel::ROM_TYPE::CONTROL};
+const Rom cm32l_pcm_100_f = {"pcm_cm32l", LASynthModel::ROM_TYPE::PCM};
+const Rom cm32l_pcm_100_h  = {"pcm_cm32l_h", LASynthModel::ROM_TYPE::PCM};
+const Rom& cm32l_pcm_100_l = mt32_pcm_100_f; // Lower half of samples comes from
+                                             // MT-32
 
 // Roland LA Models (composed of ROMs)
-const LASynthModel mt32_any_model = {"mt32",  &mt32_pcm_any_f,  nullptr,
-                                     nullptr, &mt32_ctrl_any_f, nullptr,
-                                     nullptr};
-const LASynthModel mt32_104_model = {"mt32_104",      &mt32_pcm_100_f,
-                                     &mt32_pcm_100_l, &mt32_pcm_100_h,
-                                     nullptr,         &mt32_ctrl_104_a,
-                                     &mt32_ctrl_104_b};
-const LASynthModel mt32_105_model = {"mt32_105",      &mt32_pcm_100_f,
-                                     &mt32_pcm_100_l, &mt32_pcm_100_h,
-                                     nullptr,         &mt32_ctrl_105_a,
-                                     &mt32_ctrl_105_b};
-const LASynthModel mt32_106_model = {"mt32_106",      &mt32_pcm_100_f,
-                                     &mt32_pcm_100_l, &mt32_pcm_100_h,
-                                     nullptr,         &mt32_ctrl_106_a,
-                                     &mt32_ctrl_106_b};
-const LASynthModel mt32_107_model = {"mt32_107",      &mt32_pcm_100_f,
-                                     &mt32_pcm_100_l, &mt32_pcm_100_h,
-                                     nullptr,         &mt32_ctrl_107_a,
-                                     &mt32_ctrl_107_b};
-const LASynthModel mt32_bluer_model = {"mt32_bluer",      &mt32_pcm_100_f,
-                                       &mt32_pcm_100_l,   &mt32_pcm_100_h,
-                                       nullptr,           &mt32_ctrl_bluer_a,
+const LASynthModel mt32_104_model   = {"mt32_104",
+                                       &mt32_pcm_100_f,
+                                       &mt32_pcm_100_l,
+                                       &mt32_pcm_100_h,
+                                       &mt32_ctrl_104_f,
+                                       &mt32_ctrl_104_a,
+                                       &mt32_ctrl_104_b};
+const LASynthModel mt32_105_model   = {"mt32_105",
+                                       &mt32_pcm_100_f,
+                                       &mt32_pcm_100_l,
+                                       &mt32_pcm_100_h,
+                                       &mt32_ctrl_105_f,
+                                       &mt32_ctrl_105_a,
+                                       &mt32_ctrl_105_b};
+const LASynthModel mt32_106_model   = {"mt32_106",
+                                       &mt32_pcm_100_f,
+                                       &mt32_pcm_100_l,
+                                       &mt32_pcm_100_h,
+                                       &mt32_ctrl_106_f,
+                                       &mt32_ctrl_106_a,
+                                       &mt32_ctrl_106_b};
+const LASynthModel mt32_107_model   = {"mt32_107",
+                                       &mt32_pcm_100_f,
+                                       &mt32_pcm_100_l,
+                                       &mt32_pcm_100_h,
+                                       &mt32_ctrl_107_f,
+                                       &mt32_ctrl_107_a,
+                                       &mt32_ctrl_107_b};
+const LASynthModel mt32_bluer_model = {"mt32_bluer",
+                                       &mt32_pcm_100_f,
+                                       &mt32_pcm_100_l,
+                                       &mt32_pcm_100_h,
+                                       &mt32_ctrl_bluer_f,
+                                       &mt32_ctrl_bluer_a,
                                        &mt32_ctrl_bluer_b};
-const LASynthModel mt32_204_model = {"mt32_204",       &mt32_pcm_100_f,
-                                     &mt32_pcm_100_l,  &mt32_pcm_100_h,
-                                     &mt32_ctrl_204_f, nullptr,
-                                     nullptr};
-const LASynthModel cm32l_any_model = {"cm32l", &cm32l_pcm_any_f,  nullptr,
-                                      nullptr, &cm32l_ctrl_any_f, nullptr,
-                                      nullptr};
+const LASynthModel mt32_204_model   = {"mt32_204",
+                                       &mt32_pcm_100_f,
+                                       &mt32_pcm_100_l,
+                                       &mt32_pcm_100_h,
+                                       &mt32_ctrl_204_f,
+                                       nullptr,
+                                       nullptr};
 const LASynthModel cm32l_100_model = {
-        "cm32l_100",       nullptr, &cm32l_pcm_100_l, &cm32l_pcm_100_h,
+        "cm32l_100",       &cm32l_pcm_100_f, &cm32l_pcm_100_l, &cm32l_pcm_100_h,
         &cm32l_ctrl_100_f, nullptr, nullptr};
 const LASynthModel cm32l_102_model = {
-        "cm32l_102",       nullptr, &cm32l_pcm_100_l, &cm32l_pcm_100_h,
+        "cm32l_102",       &cm32l_pcm_100_f, &cm32l_pcm_100_l, &cm32l_pcm_100_h,
         &cm32l_ctrl_102_f, nullptr, nullptr};
 
 // Aliased models
@@ -141,15 +151,25 @@ const LASynthModel mt32_new_model = {"mt32_new", // new is 2.04
                                      &mt32_pcm_100_h, &mt32_ctrl_204_f,
                                      nullptr,         nullptr};
 const LASynthModel mt32_old_model = {"mt32_old", // old is 1.07
-                                     &mt32_pcm_100_f,  &mt32_pcm_100_l,
-                                     &mt32_pcm_100_h,  nullptr,
-                                     &mt32_ctrl_107_a, &mt32_ctrl_107_b};
+                                     &mt32_pcm_100_f,
+                                     &mt32_pcm_100_l,
+                                     &mt32_pcm_100_h,
+                                     &mt32_ctrl_107_f,
+                                     &mt32_ctrl_107_a,
+                                     &mt32_ctrl_107_b};
 
 // In order that "model = auto" will load
-const LASynthModel *all_models[] = {
-        &cm32l_any_model, &cm32l_102_model,  &cm32l_100_model, &mt32_any_model,
-        &mt32_old_model,  &mt32_107_model,   &mt32_106_model,  &mt32_105_model,
-        &mt32_104_model,  &mt32_bluer_model, &mt32_new_model,  &mt32_204_model,
+const LASynthModel* all_models[] = {
+        &cm32l_102_model,
+        &cm32l_100_model,
+        &mt32_old_model,
+        &mt32_107_model,
+        &mt32_106_model,
+        &mt32_105_model,
+        &mt32_104_model,
+        &mt32_bluer_model,
+        &mt32_new_model,
+        &mt32_204_model,
 };
 
 MidiHandler_mt32 mt32_instance;
@@ -158,11 +178,9 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	const char *models[] = {"auto",
-	                        cm32l_any_model.GetName(),
+	const char* models[] = {"auto",
 	                        cm32l_102_model.GetName(),
 	                        cm32l_100_model.GetName(),
-	                        mt32_any_model.GetName(),
 	                        mt32_old_model.GetName(),
 	                        mt32_107_model.GetName(),
 	                        mt32_106_model.GetName(),
@@ -383,9 +401,8 @@ MidiHandler_mt32::service_t MidiHandler_mt32::GetService()
 // Calculates the maximum width available to print the rom directory, given
 // the terminal's width, indent size, and space needed for the model names:
 // [indent][max_dir_width][N columns + N delimeters]
-static size_t get_max_dir_width(const LASynthModel *(&models_without_aliases)[10],
-                                const char *indent,
-                                const char *column_delim)
+static size_t get_max_dir_width(const LASynthModel* (&models_without_aliases)[8],
+                                const char* indent, const char* column_delim)
 {
 	const size_t column_delim_width = strlen(column_delim);
 	size_t header_width = strlen(indent);
@@ -429,11 +446,14 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	constexpr char trailing_dots[] = "..";
 	const auto delim_width = strlen(column_delim);
 
-	const LASynthModel *models_without_aliases[] = {
-	        &cm32l_any_model, &cm32l_102_model, &cm32l_100_model,
-	        &mt32_any_model,  &mt32_107_model,  &mt32_106_model,
-	        &mt32_105_model,  &mt32_104_model,  &mt32_bluer_model,
-	        &mt32_204_model};
+	const LASynthModel* models_without_aliases[] = {&cm32l_102_model,
+	                                                &cm32l_100_model,
+	                                                &mt32_107_model,
+	                                                &mt32_106_model,
+	                                                &mt32_105_model,
+	                                                &mt32_104_model,
+	                                                &mt32_bluer_model,
+	                                                &mt32_204_model};
 
 	const size_t max_dir_width = get_max_dir_width(models_without_aliases,
 	                                               indent, column_delim);

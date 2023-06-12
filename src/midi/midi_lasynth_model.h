@@ -26,6 +26,7 @@
 #if C_MT32EMU
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "std_filesystem.h"
@@ -37,11 +38,10 @@
 // form.
 class LASynthModel {
 public:
-	enum class ROM_TYPE { UNVERSIONED, VERSIONED };
+	enum class ROM_TYPE { PCM, CONTROL };
 
 	struct Rom {
 		const std::string id;
-		const std::string filename;
 		const ROM_TYPE type;
 	};
 
@@ -75,6 +75,9 @@ public:
 
 private:
 	size_t SetVersion();
+	static std::optional<std_fs::path> find_rom(const service_t& service,
+	                                            const std_fs::path& dir,
+	                                            const Rom* rom);
 
 	const std::string name = {};
 	const size_t version_pos = std::string::npos;
