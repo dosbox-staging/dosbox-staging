@@ -630,7 +630,7 @@ static void set_tandy_sound_flag_in_bios(const bool is_enabled)
 	real_writeb(0x40, 0xd4, is_enabled ? 0xff : 0x00);
 }
 
-static void TANDYSOUND_ShutDown([[maybe_unused]] Section *section)
+void TANDYSOUND_ShutDown([[maybe_unused]] Section *section)
 {
 	LOG_MSG("TANDY: Shutting down Tandy sound card");
 	set_tandy_sound_flag_in_bios(false);
