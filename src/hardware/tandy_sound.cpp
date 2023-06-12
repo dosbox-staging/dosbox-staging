@@ -108,7 +108,10 @@ enum class ConfigProfile {
 	SoundCardRemoved,
 };
 
+static void shutdown_dac(Section*);
+
 class TandyDAC {
+public:
 	struct IOConfig {
 		uint16_t base = 0;
 		uint8_t irq = 0;
@@ -127,7 +130,9 @@ class TandyDAC {
 		bool irq_activated = false;
 	};
 
-public:
+	// There's only one Tandy sound's IO configuration, so make it permanent
+	static constexpr IOConfig io = {0xc4, 7, 1};
+
 	TandyDAC(const ConfigProfile config_profile,
 	         const std::string_view filter_choice);
 	~TandyDAC();
@@ -135,10 +140,6 @@ public:
 	bool IsEnabled() const
 	{
 		return is_enabled;
-	}
-	const IOConfig& GetIOConfig() const
-	{
-		return io;
 	}
 
 private:
@@ -150,7 +151,6 @@ private:
 	TandyDAC() = delete;
 
 	DMA dma = {};
-	const IOConfig io = {0xc4, 7, 1};
 
 	// Managed objects
 	mixer_channel_t channel = nullptr;
@@ -266,6 +266,11 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 		write_handlers[1].Install(io.base + card_base_offset, writer,
 		                          io_width_t::byte, 4);
 
+	// Reserve the DMA channel
+	if (dma.channel = GetDMAChannel(io.dma); dma.channel) {
+		dma.channel->ReserveFor("Tandy DAC", shutdown_dac);
+	}
+
 	is_enabled = true;
 }
 
@@ -288,6 +293,11 @@ TandyDAC::~TandyDAC()
 	// Deregister the mixer channel, after which it's cleaned up
 	assert(channel);
 	MIXER_DeregisterChannel(channel);
+
+	// Reset the DMA channel as the mixer is no longer reading samples
+	if (dma.channel) {
+		dma.channel->Reset();
+	}
 }
 
 void TandyDAC::DmaCallback([[maybe_unused]] DmaChannel*, DMAEvent event)
@@ -504,8 +514,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 
 	LOG_MSG("TANDY: Initialized audio card with a TI %s PSG %s",
 	        base_device->shortName,
-	        is_dac_enabled ? "and 8-bit DAC"
-	                       : "but no DAC, because a Sound Blaster is present");
+	        is_dac_enabled ? "and 8-bit DAC" : "but without DAC");
 }
 
 TandyPSG::~TandyPSG()
@@ -610,19 +619,10 @@ bool TS_Get_Address(Bitu &tsaddr, Bitu &tsirq, Bitu &tsdma)
 	}
 
 	assert(tandy_dac && tandy_dac->IsEnabled());
-	const auto io = tandy_dac->GetIOConfig();
-	tsaddr = io.base;
-	tsirq = io.irq;
-	tsdma = io.dma;
+	tsaddr = TandyDAC::io.base;
+	tsirq  = TandyDAC::io.irq;
+	tsdma  = TandyDAC::io.dma;
 	return true;
-}
-
-static bool is_sound_blaster_absent()
-{
-	uint16_t sbport;
-	uint8_t sbirq;
-	uint8_t sbdma;
-	return (SB_Get_Address(sbport, sbirq, sbdma) == false);
 }
 
 static void set_tandy_sound_flag_in_bios(const bool is_enabled)
@@ -630,12 +630,22 @@ static void set_tandy_sound_flag_in_bios(const bool is_enabled)
 	real_writeb(0x40, 0xd4, is_enabled ? 0xff : 0x00);
 }
 
-void TANDYSOUND_ShutDown([[maybe_unused]] Section *section)
+static void shutdown_dac(Section*)
 {
-	LOG_MSG("TANDY: Shutting down Tandy sound card");
-	set_tandy_sound_flag_in_bios(false);
-	tandy_dac.reset();
-	tandy_psg.reset();
+	if (tandy_dac) {
+		LOG_MSG("TANDY: Shutting down DAC");
+		tandy_dac.reset();
+	}
+}
+
+void TANDYSOUND_ShutDown(Section*)
+{
+	if (tandy_psg || tandy_dac) {
+		LOG_MSG("TANDY: Shutting down");
+		set_tandy_sound_flag_in_bios(false);
+		tandy_dac.reset();
+		tandy_psg.reset();
+	}
 }
 
 void TANDYSOUND_Init(Section *section)
@@ -643,12 +653,7 @@ void TANDYSOUND_Init(Section *section)
 	assert(section);
 	const auto prop = static_cast<Section_prop*>(section);
 	const auto pref = std::string_view(prop->Get_string("tandy"));
-
-	const auto pref_has_bool = parse_bool_setting(pref);
-
-	const auto wants_tandy_sound = (pref_has_bool && *pref_has_bool == true) ||
-	                               (IS_TANDY_ARCH && pref == "auto");
-	if (!wants_tandy_sound) {
+	if (has_false(pref) || (!IS_TANDY_ARCH && pref == "auto")) {
 		set_tandy_sound_flag_in_bios(false);
 		return;
 	}
@@ -660,17 +665,19 @@ void TANDYSOUND_Init(Section *section)
 	default: cfg = ConfigProfile::SoundCardOnly; break;
 	}
 
-	// the second DMA controller conflicts with the tandy sound's ports 0xc0
+	// The second DMA controller conflicts with the tandy sound's base IO
+	// ports 0xc0. Closing the controller itself means that all the high DMA
+	// ports (4 through 7) get automatically shutdown as well.
+	//
 	CloseSecondDMAController();
 
-	const auto can_use_tandy_dac = is_sound_blaster_absent();
-	if (can_use_tandy_dac) {
+	const auto wants_dac = has_true(pref) || (IS_TANDY_ARCH && pref == "auto");
+	if (wants_dac) {
 		tandy_dac = std::make_unique<TandyDAC>(
 		        cfg, prop->Get_string("tandy_dac_filter"));
 	}
-
 	tandy_psg = std::make_unique<TandyPSG>(cfg,
-	                                       can_use_tandy_dac,
+	                                       wants_dac,
 	                                       prop->Get_string("tandy_filter"));
 
 	set_tandy_sound_flag_in_bios(true);
