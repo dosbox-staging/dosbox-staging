@@ -452,6 +452,74 @@ again:
 	return done;
 }
 
+bool DmaChannel::HasReservation()
+{
+	return (reservation_callback && !reservation_owner.empty());
+}
+
+void DmaChannel::EvictReserver()
+{
+	assert(HasReservation());
+
+	reservation_callback(nullptr);
+
+	reservation_callback = {};
+	reservation_owner    = {};
+}
+
+void DmaChannel::ReserveFor(const std::string_view new_owner,
+                            const DMA_ReservationCallback new_cb)
+{
+	assert(new_cb);
+	assert(!new_owner.empty());
+
+	if (HasReservation()) {
+		LOG_MSG("DMA: %s is replacing %s on %d-bit DMA channel %u",
+		        new_owner.data(),
+		        reservation_owner.data(),
+		        DMA16 == 1 ? 16 : 8,
+		        channum);
+		EvictReserver();
+	}
+	Reset();
+	reservation_callback = new_cb;
+	reservation_owner    = new_owner;
+}
+
+void DmaChannel::Reset()
+{
+	// Defaults at the time of initialization
+	pagebase = 0;
+	curraddr = 0;
+
+	baseaddr = 0;
+	basecnt  = 0;
+	currcnt  = 0;
+
+	pagenum = 0;
+
+	increment = true;
+	autoinit  = false;
+	masked    = true;
+	tcount    = false;
+	request   = false;
+
+	callback             = {};
+	reservation_callback = {};
+	reservation_owner    = {};
+}
+
+DmaChannel::~DmaChannel()
+{
+	if (HasReservation()) {
+		LOG_MSG("DMA: Shutting down %s on %d-bit DMA channel %d",
+		        reservation_owner.data(),
+		        DMA16 == 1 ? 16 : 8,
+		        channum);
+		EvictReserver();
+	}
+}
+
 DmaController::DmaController(const uint8_t controller_index)
         : index(controller_index)
 {
@@ -525,6 +593,22 @@ DmaChannel* DmaController::GetChannel(uint8_t chan) const
 {
 	constexpr auto n = ARRAY_LEN(dma_channels);
 	return (chan < n) ? dma_channels[chan].get() : nullptr;
+}
+
+void DmaController::ResetChannel(const uint8_t channel_num) const
+{
+	if (auto c = GetChannel(channel_num); c) {
+		c->Reset();
+	}
+}
+
+void DMA_ResetChannel(const uint8_t channel_num)
+{
+	if (is_primary(channel_num) && primary) {
+		primary->ResetChannel(channel_num);
+	} else if (is_secondary(channel_num) && secondary) {
+		secondary->ResetChannel(to_secondary_num(channel_num));
+	}
 }
 
 void DMA_SetWrapping(const uint32_t wrap) {
