@@ -131,11 +131,11 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
-static int ticksRemain;
+static int64_t ticksRemain;
 static int64_t ticksLast;
-static int ticksAdded;
-int ticksDone;
-int ticksScheduled;
+static int64_t ticksAdded;
+int64_t ticksDone;
+int64_t ticksScheduled;
 bool ticksLocked;
 void increaseticks();
 
@@ -223,7 +223,10 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
 		/* ratio we are aiming for is around 90% usage*/
-		int32_t ratio = (ticksScheduled * (CPU_CyclePercUsed*90*1024/100/100)) / ticksDone;
+		int32_t ratio = static_cast<int32_t>(
+		        (ticksScheduled * (CPU_CyclePercUsed * 90 * 1024 / 100 / 100)) /
+		        ticksDone);
+
 		int32_t new_cmax = CPU_CycleMax;
 		int64_t cproc = (int64_t)CPU_CycleMax * (int64_t)ticksScheduled;
 		double ratioremoved = 0.0; //increase scope for logging

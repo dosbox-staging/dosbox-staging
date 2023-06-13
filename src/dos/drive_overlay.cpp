@@ -19,6 +19,7 @@
 #include "drives.h"
 
 #include <algorithm>
+#include <cinttypes>
 #include <vector>
 #include <string>
 #include <stdio.h>
@@ -214,8 +215,9 @@ public:
 			const auto a = logoverlay ? GetTicks() : 0;
 			bool r = create_copy();
 			const auto b = logoverlay ? GetTicksSince(a) : 0;
-			if (b > 2)
-				LOG_MSG("OPTIMISE: switching took %d", b);
+			if (b > 2) {
+				LOG_MSG("OPTIMISE: switching took %" PRId64, b);
+			}
 			if (!r) return false;
 			overlay_active = true;
 			
@@ -787,8 +789,9 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 
 		}
 	}
-	if (logoverlay)
-		LOG_MSG("OPTIMISE: update cache took %d", GetTicksSince(a));
+	if (logoverlay) {
+		LOG_MSG("OPTIMISE: update cache took %" PRId64, GetTicksSince(a));
+	}
 }
 
 bool Overlay_Drive::FindNext(DOS_DTA & dta) {
@@ -981,8 +984,9 @@ bool Overlay_Drive::FileUnlink(char * name) {
 		dirCache.DeleteEntry(basename);
 
 		update_cache(false);
-		if (logoverlay)
-			LOG_MSG("OPTIMISE: unlink took %d", GetTicksSince(a));
+		if (logoverlay) {
+			LOG_MSG("OPTIMISE: unlink took %" PRId64, GetTicksSince(a));
+		}
 		return true;
 	}
 }
@@ -1244,9 +1248,10 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		//Mark old file as deleted
 		add_deleted_file(oldname,true);
 		result = true; //success
-		if (logoverlay)
-			LOG_MSG("OPTIMISE: update rename with copy took %d",
+		if (logoverlay) {
+			LOG_MSG("OPTIMISE: update rename with copy took %" PRId64,
 			        GetTicksSince(aa));
+		}
 	}
 	if (result) {
 		//handle the drive_cache (a bit better)
@@ -1254,8 +1259,9 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		if (is_deleted_file(newname)) remove_deleted_file(newname,true);
 		dirCache.EmptyCache();
 		update_cache(true);
-		if (logoverlay)
-			LOG_MSG("OPTIMISE: rename took %d", GetTicksSince(a));
+		if (logoverlay) {
+			LOG_MSG("OPTIMISE: rename took %" PRId64, GetTicksSince(a));
+		}
 	}
 	return result;
 

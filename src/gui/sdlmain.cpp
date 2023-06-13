@@ -882,8 +882,8 @@ static int benchmark_presentation_rate()
 		sdl.frame.update(nullptr);
 		sdl.frame.present();
 	}
-	const auto elapsed_us = std::max(1, GetTicksUsSince(start_us));
-	return (bench_frames * 1'000'000) / elapsed_us;
+	const auto elapsed_us = std::max(static_cast<int64_t>(1L), GetTicksUsSince(start_us));
+	return static_cast<int>((bench_frames * 1'000'000) / elapsed_us);
 }
 
 static VSYNC_STATE get_reported_vsync()

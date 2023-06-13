@@ -21,6 +21,8 @@
 
 #include "pacer.h"
 
+#include <cinttypes>
+
 Pacer::Pacer(const std::string &name, const int timeout, const LogLevel level)
         : pacer_name(name),
           iteration_start(GetTicksUs())
@@ -49,7 +51,7 @@ void Pacer::Checkpoint()
 	// Pacer is reset
 	if (was_reset) {
 		if (log_level == LogLevel::CHECKPOINTS)
-			LOG_MSG("PACER: %s reset ignored %dus of latency",
+			LOG_MSG("PACER: %s reset ignored %" PRId64 "us of latency",
 			        pacer_name.c_str(),
 			        GetTicksUsSince(iteration_start));
 		was_reset = false;
@@ -63,10 +65,10 @@ void Pacer::Checkpoint()
 
 		if (log_level != LogLevel::NOTHING) {
 			if (!can_run) {
-				LOG_WARNING("PACER: %s took %dus, skipping next",
+				LOG_WARNING("PACER: %s took %" PRId64 "us, skipping next",
 				            pacer_name.c_str(), iteration_took);
 			} else if (log_level == LogLevel::CHECKPOINTS) {
-				LOG_MSG("PACER: %s took %dus, can run next",
+				LOG_MSG("PACER: %s took %" PRId64 "us, can run next",
 				        pacer_name.c_str(), iteration_took);
 			}
 		}
