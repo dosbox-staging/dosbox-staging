@@ -149,7 +149,7 @@ struct Midi {
 		uint8_t buf[MIDI_SYSEX_SIZE] = {};
 
 		size_t pos       = 0;
-		int delay_ms     = 0;
+		int64_t delay_ms = 0;
 		int64_t start_ms = 0;
 	} sysex = {};
 

@@ -23,9 +23,10 @@
 
 #include <SDL_net.h>
 
-#include <string.h>
-#include <time.h>
-#include <stdio.h>
+#include <cinttypes>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
 
 #include "cross.h"
 #include "string_utils.h"
@@ -802,11 +803,10 @@ bool ConnectToServer(const char* strAddr)
 			} else {
 				// Wait for return packet from server.
 				// This will contain our IPX address and port num
-				uint32_t elapsed;
 				const auto ticks = GetTicks();
 
 				while(true) {
-					elapsed = GetTicksSince(ticks);
+					const auto elapsed = GetTicksSince(ticks);
 					if(elapsed > 5000) {
 						LOG_MSG("Timeout connecting to server at %s", strAddr);
 						SDLNet_UDP_Close(ipxClientSocket);
@@ -1053,7 +1053,7 @@ public:
 					CALLBACK_Idle();
 					if(pingCheck(&pingHead)) {
 						WriteOut(
-						        "Response from %d.%d.%d.%d, port %d time=%dms\n",
+						        "Response from %d.%d.%d.%d, port %d time=ms\n",
 						        CONVIP(pingHead.src.addr.byIP.host),
 						        SDLNet_Read16(&pingHead.src.addr.byIP.port),
 						        GetTicksSince(ticks));

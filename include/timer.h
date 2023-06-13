@@ -119,33 +119,30 @@ static inline int64_t GetTicksUs()
 	        .count();
 }
 
-static inline int GetTicksDiff(const int64_t new_ticks, const int64_t old_ticks)
+static inline int64_t GetTicksDiff(const int64_t new_ticks, const int64_t old_ticks)
 {
 	assert(new_ticks >= old_ticks);
-	assert((new_ticks - old_ticks) <= std::numeric_limits<int>::max());
-	return static_cast<int>(new_ticks - old_ticks);
+	return new_ticks - old_ticks;
 }
 
-static inline int GetTicksSince(const int64_t old_ticks)
+static inline int64_t GetTicksSince(const int64_t old_ticks)
 {
 	const auto now = GetTicks();
-	assert((now - old_ticks) <= std::numeric_limits<int>::max());
 	return GetTicksDiff(now, old_ticks);
 }
 
-static inline int GetTicksUsSince(const int64_t old_ticks)
+static inline int64_t GetTicksUsSince(const int64_t old_ticks)
 {
 	const auto now = GetTicksUs();
-	assert((now - old_ticks) <= std::numeric_limits<int>::max());
 	return GetTicksDiff(now, old_ticks);
 }
 
-static inline void Delay(const int milliseconds)
+static inline void Delay(const int64_t milliseconds)
 {
 	std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
 }
 
-static inline void DelayUs(const int microseconds)
+static inline void DelayUs(const int64_t microseconds)
 {
 	std::this_thread::sleep_for(std::chrono::microseconds(microseconds));
 }
