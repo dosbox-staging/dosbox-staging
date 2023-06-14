@@ -201,7 +201,7 @@ jobs:
         run: |
           # Construct VC_REDIST_DIR
           readonly VC_REDIST_BASE="C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Redist/MSVC"
-          readonly VC_REDIST_VERSION="14.34.31931"
+          readonly VC_REDIST_VERSION="14.36.32532"
           readonly VC_REDIST_CRT_VERSION="Microsoft.VC143.CRT"
           export VC_REDIST_DIR="$VC_REDIST_BASE/$VC_REDIST_VERSION/${{ matrix.conf.arch }}/$VC_REDIST_CRT_VERSION"
           find "$VC_REDIST_BASE" -maxdepth 3 -type d
