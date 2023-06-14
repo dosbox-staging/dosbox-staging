@@ -171,7 +171,7 @@ static struct { // DOS driver state
 	int16_t update_region_y[2] = {0};
 
 	uint16_t language = 0; // language for driver messages, unused
-	uint8_t mode      = 0;
+	uint8_t bios_screen_mode = 0;
 
 	// sensitivity
 	uint8_t sensitivity_x = 0;
@@ -385,8 +385,9 @@ static void draw_cursor_text()
 	// Save Background
 	state.background.pos_x = static_cast<uint16_t>(x / 8);
 	state.background.pos_y = static_cast<uint16_t>(y / 8);
-	if (state.mode < 2)
+	if (state.bios_screen_mode < 2) {
 		state.background.pos_x = state.background.pos_x / 2;
+	}
 
 	// use current page (CV program)
 	const uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
@@ -512,8 +513,9 @@ static void clip_cursor_area(int16_t &x1, int16_t &x2, int16_t &y1, int16_t &y2,
 
 static void restore_cursor_background()
 {
-	if (state.hidden || state.inhibit_draw || !state.background.enabled)
+	if (state.hidden || state.inhibit_draw || !state.background.enabled) {
 		return;
+	}
 
 	save_vga_registers();
 
@@ -545,9 +547,12 @@ static void restore_cursor_background()
 
 static void draw_cursor()
 {
-	if (state.hidden || state.inhibit_draw)
+	if (state.hidden || state.inhibit_draw) {
 		return;
+	}
+
 	INT10_SetCurMode();
+
 	// In Textmode ?
 	if (CurMode->type == M_TEXT) {
 		draw_cursor_text();
@@ -845,68 +850,79 @@ void MOUSEDOS_NotifyMinRate(const uint16_t value_hz)
 
 void MOUSEDOS_BeforeNewVideoMode()
 {
-	if (CurMode->type != M_TEXT)
+	if (CurMode->type != M_TEXT) {
 		restore_cursor_background();
-	else
+	} else {
 		restore_cursor_background_text();
+	}
 
 	state.hidden             = 1;
 	state.oldhidden          = 1;
 	state.background.enabled = false;
 }
 
-// TODO: Does way to much. Many things should be moved to mouse reset one day
-void MOUSEDOS_AfterNewVideoMode(const bool setmode)
+void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 {
 	state.inhibit_draw = false;
-	// Get the correct resolution from the current video mode
-	const uint8_t mode = mem_readb(BIOS_VIDEO_MODE);
-	if (setmode && mode == state.mode)
+
+	const uint8_t bios_screen_mode = mem_readb(BIOS_VIDEO_MODE);
+	if (is_mode_changing && bios_screen_mode == state.bios_screen_mode) {
 		LOG(LOG_MOUSE, LOG_NORMAL)
 		("New video mode is the same as the old");
+	}
+
 	state.granularity_x = 0xffff;
 	state.granularity_y = 0xffff;
-	switch (mode) {
-	case 0x00:
-	case 0x01:
-	case 0x02:
-	case 0x03:
-	case 0x07: {
-		state.granularity_x = (mode < 2) ? 0xfff0 : 0xfff8;
+
+	switch (bios_screen_mode) {
+	case 0x00: // text, 40x25, black/white        (CGA, EGA, MCGA, VGA)
+	case 0x01: // text, 40x25, 16 colors          (CGA, EGA, MCGA, VGA)
+	case 0x02: // text, 80x25, 16 shades of gray  (CGA, EGA, MCGA, VGA)
+	case 0x03: // text, 80x25, 16 colors          (CGA, EGA, MCGA, VGA)
+	case 0x07: // text, 80x25, monochrome         (MDA, HERC, EGA, VGA)
+	{
+		state.granularity_x = (bios_screen_mode < 2) ? 0xfff0 : 0xfff8;
 		state.granularity_y = 0xfff8;
 		Bitu rows           = IS_EGAVGA_ARCH
 		                            ? real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS)
 		                            : 24;
-		if ((rows == 0) || (rows > 250))
+		if ((rows == 0) || (rows > 250)) {
 			rows = 24;
+		}
 		state.maxpos_y = static_cast<int16_t>(8 * (rows + 1) - 1);
 		break;
 	}
-	case 0x04:
-	case 0x05:
-	case 0x06:
-	case 0x08:
-	case 0x09:
-	case 0x0a:
-	case 0x0d:
-	case 0x0e:
-	case 0x13: // 320x200 VGA
-		if (mode == 0x0d || mode == 0x13)
+	case 0x04: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
+	case 0x05: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
+	case 0x06: // 640x200, black/white  (CGA, EGA, MCGA, VGA)
+	case 0x08: // 160x200, 16 colors    (PCjr)
+	case 0x09: // 320x200, 16 colors    (PCjr)
+	case 0x0a: // 640x200, 4 colors     (PCjr)
+	case 0x0d: // 320x200, 16 colors    (EGA, VGA)
+	case 0x0e: // 640x200, 16 colors    (EGA, VGA)
+	case 0x13: // 320x200, 256 colors   (MCGA, VGA)
+		if (bios_screen_mode == 0x0d || bios_screen_mode == 0x13) {
 			state.granularity_x = 0xfffe;
+		}
 		state.maxpos_y = 199;
 		break;
-	case 0x0f:
-	case 0x10: state.maxpos_y = 349; break;
-	case 0x11:
-	case 0x12: state.maxpos_y = 479; break;
+	case 0x0f: // 640x350, monochrome   (EGA, VGA)
+	case 0x10: // 640x350, 16 colors    (EGA 128K, VGA)
+	           // 640x350, 4 colors     (EGA 64K)
+		state.maxpos_y = 349;
+		break;
+	case 0x11: // 640x480, black/white  (MCGA, VGA)
+	case 0x12: // 640x480, 16 colors    (VGA)
+		state.maxpos_y = 479;
+		break;
 	default:
 		LOG(LOG_MOUSE, LOG_ERROR)
-		("Unhandled videomode %X on reset", mode);
+		("Unhandled videomode %X on reset", bios_screen_mode);
 		state.inhibit_draw = true;
 		return;
 	}
 
-	state.mode               = mode;
+	state.bios_screen_mode   = bios_screen_mode;
 	state.maxpos_x           = 639;
 	state.minpos_x           = 0;
 	state.minpos_y           = 0;
@@ -932,7 +948,8 @@ static void reset()
 	pending.Reset();
 
 	MOUSEDOS_BeforeNewVideoMode();
-	MOUSEDOS_AfterNewVideoMode(false);
+	constexpr bool is_mode_changing = false;
+	MOUSEDOS_AfterNewVideoMode(is_mode_changing);
 
 	set_mickey_pixel_rate(8, 16);
 	set_double_speed_threshold(0); // set default value
@@ -1050,12 +1067,9 @@ static void move_cursor_seamless(const float x_rel, const float y_rel,
 	// the usage of relative movement - to be investigated
 	if (CurMode->type == M_TEXT) {
 		pos_x = x * 8;
-		pos_x *= real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
+		pos_x *= INT10_GetTextColumns();
 		pos_y = y * 8;
-		pos_y *= IS_EGAVGA_ARCH
-		               ? static_cast<float>(
-		                         real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS) + 1)
-		               : 25.0f;
+		pos_y *= INT10_GetTextRows();
 	} else if ((state.maxpos_x < 2048) || (state.maxpos_y < 2048) ||
 	           (state.maxpos_x != state.maxpos_y)) {
 		if ((state.maxpos_x > 0) && (state.maxpos_y > 0)) {
@@ -1274,16 +1288,18 @@ static Bitu int33_handler()
 		reset();
 		break;
 	case 0x01: // MS MOUSE v1.0+ - show mouse cursor
-		if (state.hidden)
+		if (state.hidden) {
 			--state.hidden;
+		}
 		state.update_region_y[1] = -1; // offscreen
 		draw_cursor();
 		break;
 	case 0x02: // MS MOUSE v1.0+ - hide mouse cursor
-		if (CurMode->type != M_TEXT)
+		if (CurMode->type != M_TEXT) {
 			restore_cursor_background();
-		else
+		} else {
 			restore_cursor_background_text();
+		}
 		++state.hidden;
 		break;
 	case 0x03: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get position and button
@@ -1299,10 +1315,12 @@ static Bitu int33_handler()
 		// If position isn't different from current position, don't
 		// change it. (position is rounded so numbers get lost when the
 		// rounded number is set) (arena/simulation Wolf)
-		if (reg_to_signed16(reg_cx) != get_pos_x())
+		if (reg_to_signed16(reg_cx) != get_pos_x()) {
 			pos_x = static_cast<float>(reg_cx);
-		if (reg_to_signed16(reg_dx) != get_pos_y())
+		}
+		if (reg_to_signed16(reg_dx) != get_pos_y()) {
 			pos_y = static_cast<float>(reg_dx);
+		}
 		limit_coordinates();
 		draw_cursor();
 		break;
@@ -1981,7 +1999,7 @@ void MOUSEDOS_Init()
 
 	state.user_callback_segment = 0x6362;    // magic value
 	state.hidden                = 1;         // hide cursor on startup
-	state.mode                  = UINT8_MAX; // non-existing mode
+	state.bios_screen_mode      = UINT8_MAX; // non-existing mode
 
 	set_sensitivity(50, 50, 50);
 	reset_hardware();
