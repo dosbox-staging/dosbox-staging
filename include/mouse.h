@@ -134,7 +134,7 @@ bool MOUSEPS2_SendPacket();
 // ***************************************************************************
 
 void MOUSEDOS_BeforeNewVideoMode();
-void MOUSEDOS_AfterNewVideoMode(const bool setmode);
+void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing);
 
 // ***************************************************************************
 // MOUSECTL.COM / GUI configurator interface
