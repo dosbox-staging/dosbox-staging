@@ -861,66 +861,24 @@ void MOUSEDOS_BeforeNewVideoMode()
 	state.background.enabled = false;
 }
 
-void MOUSEDOS_AfterNewVideoMode([[maybe_unused]] const bool is_mode_changing)
+void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 {
-	state.inhibit_draw = false;
+	// Gather screen mode information
 
+	INT10_SetCurMode();
 	const uint8_t bios_screen_mode = mem_readb(BIOS_VIDEO_MODE);
 
-	state.granularity_x = 0xffff;
-	state.granularity_y = 0xffff;
+	constexpr uint8_t last_non_svga_mode = 0x13;
 
-	switch (bios_screen_mode) {
-	case 0x00: // text, 40x25, black/white        (CGA, EGA, MCGA, VGA)
-	case 0x01: // text, 40x25, 16 colors          (CGA, EGA, MCGA, VGA)
-	case 0x02: // text, 80x25, 16 shades of gray  (CGA, EGA, MCGA, VGA)
-	case 0x03: // text, 80x25, 16 colors          (CGA, EGA, MCGA, VGA)
-	case 0x07: // text, 80x25, monochrome         (MDA, HERC, EGA, VGA)
-	{
-		state.granularity_x = (bios_screen_mode < 2) ? 0xfff0 : 0xfff8;
-		state.granularity_y = 0xfff8;
-		Bitu rows           = IS_EGAVGA_ARCH
-		                            ? real_readb(BIOSMEM_SEG, BIOSMEM_NB_ROWS)
-		                            : 24;
-		if ((rows == 0) || (rows > 250)) {
-			rows = 24;
-		}
-		state.maxpos_y = static_cast<int16_t>(8 * (rows + 1) - 1);
-		break;
-	}
-	case 0x04: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
-	case 0x05: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
-	case 0x06: // 640x200, black/white  (CGA, EGA, MCGA, VGA)
-	case 0x08: // 160x200, 16 colors    (PCjr)
-	case 0x09: // 320x200, 16 colors    (PCjr)
-	case 0x0a: // 640x200, 4 colors     (PCjr)
-	case 0x0d: // 320x200, 16 colors    (EGA, VGA)
-	case 0x0e: // 640x200, 16 colors    (EGA, VGA)
-	case 0x13: // 320x200, 256 colors   (MCGA, VGA)
-		if (bios_screen_mode == 0x0d || bios_screen_mode == 0x13) {
-			state.granularity_x = 0xfffe;
-		}
-		state.maxpos_y = 199;
-		break;
-	case 0x0f: // 640x350, monochrome   (EGA, VGA)
-	case 0x10: // 640x350, 16 colors    (EGA 128K, VGA)
-	           // 640x350, 4 colors     (EGA 64K)
-		state.maxpos_y = 349;
-		break;
-	case 0x11: // 640x480, black/white  (MCGA, VGA)
-	case 0x12: // 640x480, 16 colors    (VGA)
-		state.maxpos_y = 479;
-		break;
-	default:
-		// LOG_MSG("MOUSE (DOS): Unknown video mode 0x%02x", bios_screen_mode);
-		state.inhibit_draw = true;
-		return;
-	}
+	const bool is_svga_mode = IS_VGA_ARCH &&
+	                          (bios_screen_mode > last_non_svga_mode);
+	const bool is_svga_text = is_svga_mode && (CurMode->type == M_TEXT);
+
+	// Perform common actions - clear pending mouse events, etc.
+
+	clear_pending_events();
 
 	state.bios_screen_mode   = bios_screen_mode;
-	state.maxpos_x           = 639;
-	state.minpos_x           = 0;
-	state.minpos_y           = 0;
 	state.hot_x              = 0;
 	state.hot_y              = 0;
 	state.user_screen_mask   = false;
@@ -931,8 +889,120 @@ void MOUSEDOS_AfterNewVideoMode([[maybe_unused]] const bool is_mode_changing)
 	state.update_region_y[1] = -1; // offscreen
 	state.cursor_type        = MouseCursor::Software;
 	state.enabled            = true;
+	state.inhibit_draw       = false;
 
-	clear_pending_events();
+	// Some software (like 'Down by the Laituri' game) is known to first set
+	// the min/max mouse cursor position and then set VESA mode, therefore
+	// (unless this is a driver reset) skip setting min/max position and
+	// granularity for SVGA graphic modes
+
+	if (is_mode_changing && is_svga_mode && !is_svga_text) {
+		return;
+	}
+
+	// Helper lambda for setting text mode max position x/y
+
+	auto set_maxpos_text = [&]() {
+		constexpr uint16_t threshold_lo = 1;
+		constexpr uint16_t threshold_hi = 250;
+
+		constexpr uint16_t default_rows    = 25;
+		constexpr uint16_t default_columns = 80;
+
+		uint16_t columns = INT10_GetTextColumns();
+		uint16_t rows    = INT10_GetTextRows();
+
+		if (rows < threshold_lo || rows > threshold_hi) {
+			rows = default_rows;
+		}
+		if (columns < threshold_lo || columns > threshold_hi) {
+			columns = default_columns;
+		}
+
+		state.maxpos_x = static_cast<int16_t>(8 * columns - 1);
+		state.maxpos_y = static_cast<int16_t>(8 * rows - 1);
+	};
+
+	// Set some common/default parameters
+
+	state.granularity_x = 0xffff;
+	state.granularity_y = 0xffff;
+
+	state.minpos_x = 0;
+	state.minpos_y = 0;
+
+	// Apply settings depending on video mode
+
+	switch (bios_screen_mode) {
+	case 0x00: // text, 40x25, black/white        (CGA, EGA, MCGA, VGA)
+	case 0x01: // text, 40x25, 16 colors          (CGA, EGA, MCGA, VGA)
+		state.granularity_x = 0xfff0;
+		state.granularity_y = 0xfff8;
+		set_maxpos_text();
+		// Apply correction due to different x axis granularity
+		state.maxpos_x = static_cast<int16_t>(state.maxpos_x * 2 + 1);
+		break;
+	case 0x02: // text, 80x25, 16 shades of gray  (CGA, EGA, MCGA, VGA)
+	case 0x03: // text, 80x25, 16 colors          (CGA, EGA, MCGA, VGA)
+	case 0x07: // text, 80x25, monochrome         (MDA, HERC, EGA, VGA)
+		state.granularity_x = 0xfff8;
+		state.granularity_y = 0xfff8;
+		set_maxpos_text();
+		break;
+	case 0x08: // 160x200, 16 colors    (PCjr)
+		state.maxpos_x = 159;
+		state.maxpos_y = 199;
+		break;
+	case 0x04: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
+	case 0x05: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
+	case 0x09: // 320x200, 16 colors    (PCjr)
+		state.maxpos_x = 319;
+		state.maxpos_y = 199;
+		break;
+	case 0x0d: // 320x200, 16 colors    (EGA, VGA)
+	case 0x13: // 320x200, 256 colors   (MCGA, VGA)
+		state.granularity_x = 0xfffe;
+		state.maxpos_x = 639;
+		state.maxpos_y = 199;
+		break;
+	case 0x06: // 640x200, black/white  (CGA, EGA, MCGA, VGA)
+	case 0x0a: // 640x200, 4 colors     (PCjr)
+	case 0x0e: // 640x200, 16 colors    (EGA, VGA)
+		state.maxpos_x = 639;
+		state.maxpos_y = 199;
+		break;
+	case 0x0f: // 640x350, monochrome   (EGA, VGA)
+	case 0x10: // 640x350, 16 colors    (EGA 128K, VGA)
+	           // 640x350, 4 colors     (EGA 64K)
+		state.maxpos_x = 639;
+		state.maxpos_y = 349;
+		break;
+	case 0x11: // 640x480, black/white  (MCGA, VGA)
+	case 0x12: // 640x480, 16 colors    (VGA)
+		state.maxpos_x = 639;
+		state.maxpos_y = 479;
+		break;
+	default: // other modes, most likely SVGA
+		if (!is_svga_mode) {
+			// Unsupported mode, this should probably never happen
+			LOG_WARNING("MOUSE (DOS): Unknown video mode 0x%02x",
+			            bios_screen_mode);
+			// Try to set some sane parameters, do not draw cursor
+			state.inhibit_draw = true;
+			state.maxpos_x = 639;
+			state.maxpos_y = 479;
+		} else if (is_svga_text) {
+			// SVGA text mode
+			state.granularity_x = 0xfff8;
+			state.granularity_y = 0xfff8;
+			set_maxpos_text();
+		} else {
+			// SVGA graphic mode
+			state.maxpos_x = static_cast<int16_t>(CurMode->swidth - 1);
+			state.maxpos_y = static_cast<int16_t>(CurMode->sheight - 1);
+		}
+		break;
+	}
 }
 
 static void reset()
