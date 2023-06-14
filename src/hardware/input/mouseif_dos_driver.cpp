@@ -861,15 +861,11 @@ void MOUSEDOS_BeforeNewVideoMode()
 	state.background.enabled = false;
 }
 
-void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
+void MOUSEDOS_AfterNewVideoMode([[maybe_unused]] const bool is_mode_changing)
 {
 	state.inhibit_draw = false;
 
 	const uint8_t bios_screen_mode = mem_readb(BIOS_VIDEO_MODE);
-	if (is_mode_changing && bios_screen_mode == state.bios_screen_mode) {
-		LOG(LOG_MOUSE, LOG_NORMAL)
-		("New video mode is the same as the old");
-	}
 
 	state.granularity_x = 0xffff;
 	state.granularity_y = 0xffff;
@@ -916,8 +912,7 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 		state.maxpos_y = 479;
 		break;
 	default:
-		LOG(LOG_MOUSE, LOG_ERROR)
-		("Unhandled videomode %X on reset", bios_screen_mode);
+		// LOG_MSG("MOUSE (DOS): Unknown video mode 0x%02x", bios_screen_mode);
 		state.inhibit_draw = true;
 		return;
 	}
@@ -1387,8 +1382,6 @@ static Bitu int33_handler()
 		                   static_cast<float>(state.maxpos_x));
 		// Or alternatively this:
 		// pos_x = (state.maxpos_x - state.minpos_x + 1) / 2;
-		LOG(LOG_MOUSE, LOG_NORMAL)("Define Hortizontal range min:%d max:%d",
-		                           state.minpos_x, state.maxpos_x);
 		break;
 	case 0x08: // MS MOUSE v1.0+ - define vertical cursor range
 		// not sure what to take instead of the CurMode (see case 0x07
@@ -1405,8 +1398,6 @@ static Bitu int33_handler()
 		                   static_cast<float>(state.maxpos_y));
 		// Or alternatively this:
 		// pos_y = (state.maxpos_y - state.minpos_y + 1) / 2;
-		LOG(LOG_MOUSE, LOG_NORMAL)("Define Vertical range min:%d max:%d",
-		                           state.minpos_y, state.maxpos_y);
 		break;
 	case 0x09: // MS MOUSE v3.0+ - define GFX cursor
 	{
@@ -1437,7 +1428,6 @@ static Bitu int33_handler()
 		state.text_xor_mask = reg_dx;
 		if (reg_bx) {
 			INT10_SetCursorShape(reg_cl, reg_dl);
-			LOG(LOG_MOUSE, LOG_NORMAL)("Hardware Text cursor selected");
 		}
 		draw_cursor();
 		break;
@@ -1458,11 +1448,15 @@ static Bitu int33_handler()
 		update_driver_active();
 		break;
 	case 0x0d: // MS MOUSE v1.0+ - light pen emulation on
-	case 0x0e: // MS MOUSE v1.0+ - light pen emulation off
 		// Both buttons down = pen pressed, otherwise pen considered
 		// off-screen
 		// TODO: maybe implement light pen using SDL touch events?
-		LOG(LOG_MOUSE, LOG_ERROR)("Mouse light pen emulation not implemented");
+		LOG_WARNING("MOUSE (DOS): Light pen emulation not implemented");
+		break;
+	case 0x0e: // MS MOUSE v1.0+ - light pen emulation off
+		// Although light pen emulation is not implemented, it is OK for
+		// the application to only disable it (like 'The Settlers' game
+		// is doing during initialization)
 		break;
 	case 0x0f: // MS MOUSE v1.0+ - define mickey/pixel rate
 		set_mickey_pixel_rate(reg_to_signed16(reg_cx),
@@ -1488,7 +1482,7 @@ static Bitu int33_handler()
 		// suppose the WheelAPI extensions are more useful
 		break;
 	case 0x12: // MS MOUSE - set large graphics cursor block
-		LOG(LOG_MOUSE, LOG_ERROR)("Large graphics cursor block not implemented");
+		LOG_WARNING("MOUSE (DOS): Large graphics cursor block not implemented");
 		break;
 	case 0x13: // MS MOUSE v5.0+ - set double-speed threshold
 		set_double_speed_threshold(reg_bx);
@@ -1513,11 +1507,9 @@ static Bitu int33_handler()
 		reg_bx = sizeof(state);
 		break;
 	case 0x16: // MS MOUSE v6.0+ - save driver state
-		LOG(LOG_MOUSE, LOG_WARN)("Saving driver state...");
 		MEM_BlockWrite(SegPhys(es) + reg_dx, &state, sizeof(state));
 		break;
 	case 0x17: // MS MOUSE v6.0+ - load driver state
-		LOG(LOG_MOUSE, LOG_WARN)("Loading driver state...");
 		MEM_BlockRead(SegPhys(es) + reg_dx, &state, sizeof(state));
 		pending.Reset();
 		update_driver_active();
@@ -1529,7 +1521,7 @@ static Bitu int33_handler()
 		break;
 	case 0x18: // MS MOUSE v6.0+ - set alternate mouse user handler
 	case 0x19: // MS MOUSE v6.0+ - set alternate mouse user handler
-		LOG(LOG_MOUSE, LOG_ERROR)("Alternate mouse user handler not implemented");
+		LOG_WARNING("MOUSE (DOS): Alternate mouse user handler not implemented");
 		break;
 	case 0x1a: // MS MOUSE v6.0+ - set mouse sensitivity
 		// NOTE: Ralf Brown Interrupt List (and some other sources)
@@ -1618,7 +1610,7 @@ static Bitu int33_handler()
 		//       DX = Font size, 0 for default
 		//       Returns:
 		//       DX = 0 on success, nonzero (requested video mode) if not
-		LOG(LOG_MOUSE, LOG_ERROR)("Set video mode not implemented");
+		LOG_WARNING("MOUSE (DOS): Set video mode not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
 	case 0x29: // MS MOUSE v7.0+ - enumerate video modes
@@ -1628,7 +1620,7 @@ static Bitu int33_handler()
 		//       Exit:
 		//       BX:DX = named string far ptr
 		//       CX = video mode number
-		LOG(LOG_MOUSE, LOG_ERROR)("Enumerate video modes not implemented");
+		LOG_WARNING("MOUSE (DOS): Enumerate video modes not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
 	case 0x2a: // MS MOUSE v7.01+ - get cursor hot spot
@@ -1662,15 +1654,15 @@ static Bitu int33_handler()
 		//     offset 0x0e - secondary button
 		//     offset 0x0f - click lock enabled
 		//     offset 0x10 - acceleration curves tables (324 bytes)
-		LOG(LOG_MOUSE, LOG_ERROR)("Custom acceleration profiles not implemented");
+		LOG_WARNING("MOUSE (DOS): Custom acceleration profiles not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
 	case 0x2f: // MS MOUSE v7.02+ - mouse hardware reset
-		LOG(LOG_MOUSE, LOG_ERROR)("INT 33 AX=2F mouse hardware reset not implemented");
+		LOG_WARNING("MOUSE (DOS): Hardware reset not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
 	case 0x30: // MS MOUSE v7.04+ - get/set BallPoint information
-		LOG(LOG_MOUSE, LOG_ERROR)("Get/set BallPoint information not implemented");
+		LOG_WARNING("MOUSE (DOS): Get/set BallPoint information not implemented");
 		// TODO: once implemented, update function 0x32
 		break;
 	case 0x31: // MS MOUSE v7.05+ - get current min/max virtual coordinates
@@ -1708,7 +1700,7 @@ static Bitu int33_handler()
 		reg_dx = info_offset_ini_file;
 		break;
 	case 0x35: // MS MOUSE v8.10+ - LCD screen large pointer support
-		LOG(LOG_MOUSE, LOG_ERROR)("LCD screen large pointer support not implemented");
+		LOG_WARNING("MOUSE (DOS): LCD screen large pointer support not implemented");
 		break;
 	case 0x4d: // MS MOUSE - return pointer to copyright string
 		SegSet16(es, info_segment);
@@ -1721,13 +1713,13 @@ static Bitu int33_handler()
 	case 0x70: // Mouse Systems - installation check
 	case 0x72: // Mouse Systems 7.01+, Genius Mouse 9.06+ - unknown
 	case 0x73: // Mouse Systems 7.01+ - get button assignments
-		LOG(LOG_MOUSE, LOG_ERROR)("Mouse Sytems mouse extensions not implemented");
+		LOG_WARNING("MOUSE (DOS): Mouse Sytems extensions not implemented");
 		break;
 	case 0x53C1: // Logitech CyberMan
-		LOG(LOG_MOUSE, LOG_NORMAL)("Mouse function 53C1 for Logitech CyberMan called. Ignored by regular mouse driver.");
+		LOG_WARNING("MOUSE (DOS): Logitech CyberMan function 0x53c1 not implemented");
 		break;
 	default:
-		LOG(LOG_MOUSE, LOG_ERROR)("Mouse function %04X not implemented", reg_ax);
+		LOG_WARNING("MOUSE (DOS): Function 0x%04x not implemented", reg_ax);
 		break;
 	}
 	return CBRET_NONE;
