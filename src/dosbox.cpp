@@ -512,16 +512,16 @@ void DOSBOX_Init()
 	        "though a few games might require a higher value.\n"
 	        "There is generally no speed advantage when raising this value.");
 
-	const char *mcb_fault_strategies[] = {"deny", "repair", "report", "allow", nullptr};
+	const char *mcb_fault_strategies[] = {"repair", "report", "allow", "deny", nullptr};
 	pstring = secprop->Add_string("mcb_fault_strategy",
 	                              only_at_start,
 	                              mcb_fault_strategies[0]);
 	pstring->Set_help(
 	        "How software-corrupted memory chain blocks should be handled:\n"
-	        "  deny:    Quit (and report) when faults are detected (default).\n"
-	        "  repair:  Repair (and report) faults using adjacent chain blocks.\n"
+	        "  repair:  Repair (and report) faults using adjacent blocks (default).\n"
 	        "  report:  Report faults but otherwise proceed as-is.\n"
 	        "  allow:   Allow faults to go unreported (hardware behavior).\n"
+	        "  deny:    Quit (and report) when faults are detected.\n"
 	        "The default ('deny') is recommended unless a game is failing with MCB\n"
 	        "corruption errors.");
 	pstring->Set_values(mcb_fault_strategies);
