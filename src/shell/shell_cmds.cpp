@@ -383,20 +383,34 @@ void DOS_Shell::CMD_RENAME(char * args){
 
 void DOS_Shell::CMD_ECHO(char * args){
 	if (!*args) {
-		if (echo) { WriteOut(MSG_Get("SHELL_CMD_ECHO_ON"));}
-		else { WriteOut(MSG_Get("SHELL_CMD_ECHO_OFF"));}
+		const auto echo_enabled = batchfiles.empty()
+		                                ? echo
+		                                : batchfiles.top().Echo();
+		if (echo_enabled) {
+			WriteOut(MSG_Get("SHELL_CMD_ECHO_ON"));
+		} else {
+			WriteOut(MSG_Get("SHELL_CMD_ECHO_OFF"));
+		}
 		return;
 	}
 	char buffer[512];
 	char* pbuffer = buffer;
 	safe_strcpy(buffer, args);
 	StripSpaces(pbuffer);
-	if (strcasecmp(pbuffer,"OFF") == 0) {
-		echo=false;
+	if (strcasecmp(pbuffer, "OFF") == 0) {
+		if (batchfiles.empty()) {
+			echo = false;
+		} else {
+			batchfiles.top().SetEcho(false);
+		}
 		return;
 	}
-	if (strcasecmp(pbuffer,"ON") == 0) {
-		echo=true;
+	if (strcasecmp(pbuffer, "ON") == 0) {
+		if (batchfiles.empty()) {
+			echo = true;
+		} else {
+			batchfiles.top().SetEcho(true);
+		}
 		return;
 	}
 	if (strcasecmp(pbuffer,"/?") == 0) { HELP("ECHO"); }

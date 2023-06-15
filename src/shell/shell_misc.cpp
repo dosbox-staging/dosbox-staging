@@ -459,9 +459,6 @@ bool DOS_Shell::Execute(std::string_view name, std::string_view args)
 	auto extension = fullname.substr(fullname.size() - extension_size);
 
 	if (iequals(extension, ".BAT")) {
-		/* delete old batch file if call is not active*/
-		/*keep the current echostate (as delete bf might change it )*/
-		const bool temp_echo = echo;
 		if (!batchfiles.empty() && !call) {
 			batchfiles.pop();
 		}
@@ -471,12 +468,11 @@ bool DOS_Shell::Execute(std::string_view name, std::string_view args)
 			batchfiles.emplace(this,
 			                   std::move(*reader),
 			                   std::string(name).c_str(),
-			                   std::string(args).c_str());
+			                   std::string(args).c_str(),
+			                   echo);
 		} else {
 			WriteOut("Could not open %s", fullname.c_str());
 		}
-
-		echo = temp_echo;
 
 		return true;
 	}
