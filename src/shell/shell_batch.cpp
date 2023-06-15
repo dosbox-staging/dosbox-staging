@@ -30,8 +30,8 @@ constexpr char UnitSeparator = 31;
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 
 BatchFile::BatchFile(DOS_Shell* const host, std::unique_ptr<ByteReader> input_reader,
-                     const char* const entered_name, const char* const cmd_line,
-                     const bool echo_on)
+                     const std::string_view entered_name,
+                     const std::string_view cmd_line, const bool echo_on)
         : shell(host),
           cmd(entered_name, cmd_line),
           reader(std::move(input_reader)),
