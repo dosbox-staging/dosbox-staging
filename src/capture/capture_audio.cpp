@@ -38,6 +38,19 @@ static struct {
 
 	uint32_t sample_rate        = 0;
 	uint32_t buf_frames_used    = 0;
+	
+	// TODO A 16-bit / 44.1kHz WAV file is limited to a bit less than 4GB
+	// worth of sample data because the chunk sizes are stored as 32-bit
+	// unsigned integers in the RIFF container the WAV format uses.
+	//
+	// So technically we should chunk the recording into separate WAV files at
+	// ~3.4 hour intervals, which is the duration of a recording of a 2GB
+	// WAV file recorded at 16-bit/44.1kHz (some programs use 32-bit signed
+	// integers when handling WAV files, therefore 2GB is the safe limit).
+	//
+	// This will be more of a problem when adding support for 24 and 32-bit
+	// formats, as in case of a 32-bit float WAV file, the safe duration is
+	// reduced to ~1.7 hour.
 	uint32_t data_bytes_written = 0;
 } wave = {};
 
