@@ -202,9 +202,22 @@ void FILE_closer::operator()(FILE *f) noexcept
 	}
 }
 
+FILE* open_file(const char* filename, const char* mode)
+{
+#if defined(_WIN32) && defined(__STDC_WANT_SECURE_LIB__)
+	FILE* f;
+	if (0 == fopen_s(&f, filename, mode)) {
+		return f;
+	}
+#else
+	return fopen(filename, mode);
+#endif
+	return nullptr;
+}
+
 FILE_unique_ptr make_fopen(const char *fname, const char *mode)
 {
-	FILE *f = fopen(fname, mode);
+	FILE *f = open_file(fname, mode);
 	return f ? FILE_unique_ptr(f) : nullptr;
 }
 

@@ -226,6 +226,8 @@ struct FILE_closer {
 };
 using FILE_unique_ptr = std::unique_ptr<FILE, FILE_closer>;
 
+FILE* open_file(const char* filename, const char* mode);
+
 // Opens and returns a std::unique_ptr to a FILE, which automatically closes
 // itself when it goes out of scope
 FILE_unique_ptr make_fopen(const char *fname, const char *mode);
