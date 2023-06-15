@@ -87,9 +87,13 @@ const Rom mt32_ctrl_107_b = {"ctrl_mt32_1_07_b", LASynthModel::ROM_TYPE::CONTROL
 const Rom mt32_ctrl_bluer_f = {"ctrl_mt32_bluer", LASynthModel::ROM_TYPE::CONTROL};
 const Rom mt32_ctrl_bluer_a = {"ctrl_mt32_bluer_a", LASynthModel::ROM_TYPE::CONTROL};
 const Rom mt32_ctrl_bluer_b = {"ctrl_mt32_bluer_b", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_203_f = {"ctrl_mt32_2_03", LASynthModel::ROM_TYPE::CONTROL};
 const Rom mt32_ctrl_204_f = {"ctrl_mt32_2_04", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_206_f = {"ctrl_mt32_2_06", LASynthModel::ROM_TYPE::CONTROL};
+const Rom mt32_ctrl_207_f = {"ctrl_mt32_2_07", LASynthModel::ROM_TYPE::CONTROL};
 const Rom cm32l_ctrl_100_f = {"ctrl_cm32l_1_00", LASynthModel::ROM_TYPE::CONTROL};
 const Rom cm32l_ctrl_102_f = {"ctrl_cm32l_1_02", LASynthModel::ROM_TYPE::CONTROL};
+const Rom cm32ln_ctrl_100_f = {"ctrl_cm32ln_1_00", LASynthModel::ROM_TYPE::CONTROL};
 const Rom cm32l_pcm_100_f = {"pcm_cm32l", LASynthModel::ROM_TYPE::PCM};
 const Rom cm32l_pcm_100_h  = {"pcm_cm32l_h", LASynthModel::ROM_TYPE::PCM};
 const Rom& cm32l_pcm_100_l = mt32_pcm_100_f; // Lower half of samples comes from
@@ -131,6 +135,13 @@ const LASynthModel mt32_bluer_model = {"mt32_bluer",
                                        &mt32_ctrl_bluer_f,
                                        &mt32_ctrl_bluer_a,
                                        &mt32_ctrl_bluer_b};
+const LASynthModel mt32_203_model   = {"mt32_203",
+                                       &mt32_pcm_100_f,
+                                       &mt32_pcm_100_l,
+                                       &mt32_pcm_100_h,
+                                       &mt32_ctrl_203_f,
+                                       nullptr,
+                                       nullptr};
 const LASynthModel mt32_204_model   = {"mt32_204",
                                        &mt32_pcm_100_f,
                                        &mt32_pcm_100_l,
@@ -138,12 +149,37 @@ const LASynthModel mt32_204_model   = {"mt32_204",
                                        &mt32_ctrl_204_f,
                                        nullptr,
                                        nullptr};
-const LASynthModel cm32l_100_model = {
-        "cm32l_100",       &cm32l_pcm_100_f, &cm32l_pcm_100_l, &cm32l_pcm_100_h,
-        &cm32l_ctrl_100_f, nullptr, nullptr};
+const LASynthModel mt32_206_model   = {"mt32_206",
+                                       &mt32_pcm_100_f,
+                                       &mt32_pcm_100_l,
+                                       &mt32_pcm_100_h,
+                                       &mt32_ctrl_206_f,
+                                       nullptr,
+                                       nullptr};
+const LASynthModel mt32_207_model   = {"mt32_207",
+                                       &mt32_pcm_100_f,
+                                       &mt32_pcm_100_l,
+                                       &mt32_pcm_100_h,
+                                       &mt32_ctrl_207_f,
+                                       nullptr,
+                                       nullptr};
+const LASynthModel cm32l_100_model  = {"cm32l_100",
+                                       &cm32l_pcm_100_f,
+                                       &cm32l_pcm_100_l,
+                                       &cm32l_pcm_100_h,
+                                       &cm32l_ctrl_100_f,
+                                       nullptr,
+                                       nullptr};
 const LASynthModel cm32l_102_model = {
         "cm32l_102",       &cm32l_pcm_100_f, &cm32l_pcm_100_l, &cm32l_pcm_100_h,
         &cm32l_ctrl_102_f, nullptr, nullptr};
+const LASynthModel cm32ln_100_model = {"cm32ln_100",
+                                       &cm32l_pcm_100_f,
+                                       &cm32l_pcm_100_l,
+                                       &cm32l_pcm_100_h,
+                                       &cm32ln_ctrl_100_f,
+                                       nullptr,
+                                       nullptr};
 
 // Aliased models
 const LASynthModel mt32_new_model = {"mt32_new", // new is 2.04
@@ -159,18 +195,20 @@ const LASynthModel mt32_old_model = {"mt32_old", // old is 1.07
                                      &mt32_ctrl_107_b};
 
 // In order that "model = auto" will load
-const LASynthModel* all_models[] = {
-        &cm32l_102_model,
-        &cm32l_100_model,
-        &mt32_old_model,
-        &mt32_107_model,
-        &mt32_106_model,
-        &mt32_105_model,
-        &mt32_104_model,
-        &mt32_bluer_model,
-        &mt32_new_model,
-        &mt32_204_model,
-};
+const LASynthModel* all_models[] = {&cm32ln_100_model,
+                                    &cm32l_102_model,
+                                    &cm32l_100_model,
+                                    &mt32_old_model,
+                                    &mt32_107_model,
+                                    &mt32_106_model,
+                                    &mt32_105_model,
+                                    &mt32_104_model,
+                                    &mt32_bluer_model,
+                                    &mt32_new_model,
+                                    &mt32_204_model,
+                                    &mt32_207_model,
+                                    &mt32_206_model,
+                                    &mt32_203_model};
 
 MidiHandler_mt32 mt32_instance;
 
@@ -179,6 +217,7 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	const char* models[] = {"auto",
+	                        cm32ln_100_model.GetName(),
 	                        cm32l_102_model.GetName(),
 	                        cm32l_100_model.GetName(),
 	                        mt32_old_model.GetName(),
@@ -189,6 +228,9 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	                        mt32_bluer_model.GetName(),
 	                        mt32_new_model.GetName(),
 	                        mt32_204_model.GetName(),
+	                        mt32_207_model.GetName(),
+	                        mt32_206_model.GetName(),
+	                        mt32_203_model.GetName(),
 	                        0};
 	auto *str_prop       = sec_prop.Add_string("model", when_idle, "auto");
 	str_prop->Set_values(models);
@@ -401,7 +443,7 @@ MidiHandler_mt32::service_t MidiHandler_mt32::GetService()
 // Calculates the maximum width available to print the rom directory, given
 // the terminal's width, indent size, and space needed for the model names:
 // [indent][max_dir_width][N columns + N delimeters]
-static size_t get_max_dir_width(const LASynthModel* (&models_without_aliases)[8],
+static size_t get_max_dir_width(const LASynthModel* (&models_without_aliases)[12],
                                 const char* indent, const char* column_delim)
 {
 	const size_t column_delim_width = strlen(column_delim);
@@ -446,14 +488,18 @@ MIDI_RC MidiHandler_mt32::ListAll(Program *caller)
 	constexpr char trailing_dots[] = "..";
 	const auto delim_width = strlen(column_delim);
 
-	const LASynthModel* models_without_aliases[] = {&cm32l_102_model,
+	const LASynthModel* models_without_aliases[] = {&cm32ln_100_model,
+	                                                &cm32l_102_model,
 	                                                &cm32l_100_model,
 	                                                &mt32_107_model,
 	                                                &mt32_106_model,
 	                                                &mt32_105_model,
 	                                                &mt32_104_model,
 	                                                &mt32_bluer_model,
-	                                                &mt32_204_model};
+	                                                &mt32_204_model,
+	                                                &mt32_207_model,
+	                                                &mt32_206_model,
+	                                                &mt32_203_model};
 
 	const size_t max_dir_width = get_max_dir_width(models_without_aliases,
 	                                               indent, column_delim);
