@@ -27,7 +27,12 @@
 #define SCALER_MAX_MUL_HEIGHT 2
 
 constexpr uint16_t SCALER_MAXHEIGHT = 1200;
-constexpr uint16_t SCALER_MAXWIDTH  = 1600;
+constexpr uint16_t SCALER_MAXWIDTH  = 1600 + 30;
+//
+// The additional 30 pixels of width accommodates the full range that tweaked
+// text modes (such as Q200x25x8 used by Necromancer's DOS Navigator) are
+// capable of writing.
+
 
 #define SCALER_BLOCKSIZE	16
 
