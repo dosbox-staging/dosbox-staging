@@ -359,7 +359,7 @@ void DOS_Shell::RunBatchFile()
 	char input_line[CMD_MAXLINE] = {0};
 	while (!batchfiles.empty() && !shutdown_requested && !exit_cmd_called) {
 		if (batchfiles.top().ReadLine(input_line)) {
-			if (echo) {
+			if (batchfiles.top().Echo()) {
 				if (input_line[0] != '@') {
 					ShowPrompt();
 					WriteOut_NoParsing(input_line);

@@ -68,14 +68,16 @@ public:
 class BatchFile {
 public:
 	BatchFile(DOS_Shell* host, std::unique_ptr<ByteReader> input_reader,
-	          const char* const entered_name, const char* const cmd_line);
+	          const char* const entered_name, const char* const cmd_line,
+	          bool echo_on);
 	BatchFile(const BatchFile&)            = delete; // prevent copying
 	BatchFile& operator=(const BatchFile&) = delete; // prevent assignment
-	virtual ~BatchFile();
+	virtual ~BatchFile()                   = default;
 	virtual bool ReadLine(char* line);
 	bool Goto(std::string_view label);
 	void Shift();
-	bool echo                        = false;
+	void SetEcho(bool echo_on);
+	[[nodiscard]] bool Echo() const;
 	DOS_Shell* shell                 = nullptr;
 
 private:
@@ -84,6 +86,7 @@ private:
 
 	CommandLine cmd;
 	std::unique_ptr<ByteReader> reader;
+	bool echo;
 };
 
 class AutoexecEditor;
