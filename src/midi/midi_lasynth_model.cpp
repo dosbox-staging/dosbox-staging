@@ -23,9 +23,9 @@
 #if C_MT32EMU
 
 #include <cassert>
+#include <unordered_set>
 
 #include "fs_utils.h"
-#include "string_utils.h"
 
 // Construct a new model and ensure both PCM and control ROM(s) are provided
 LASynthModel::LASynthModel(const std::string &rom_name,
@@ -54,6 +54,7 @@ std::optional<std_fs::path> LASynthModel::find_rom(const service_t& service,
                                                    const std_fs::path& dir,
                                                    const Rom* rom)
 {
+	static std::unordered_set<std::string> unknown_files;
 	if (!rom) {
 		return {};
 	}
@@ -64,12 +65,18 @@ std::optional<std_fs::path> LASynthModel::find_rom(const service_t& service,
 			continue;
 		}
 
+		const std::string filename = std_fs::canonical(entry.path(), ec).string();
+		if (ec) {
+			continue;
+		}
 		mt32emu_rom_info info;
-		const std::string filename = entry.path().string();
 		if (service->identifyROMFile(&info,
 		                             filename.c_str(),
 		                             nullptr) != MT32EMU_RC_OK) {
-			LOG_WARNING("MT32: Unknown file in ROM folder: %s", filename.c_str());
+			// Only log unknwon files one time (if not already in the unknown_files set).
+			if (unknown_files.insert(filename).second) {
+				LOG_WARNING("MT32: Unknown file in ROM folder: %s", filename.c_str());
+			}
 			continue;
 		}
 
