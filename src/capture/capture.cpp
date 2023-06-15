@@ -209,7 +209,7 @@ FILE* CAPTURE_CreateFile(const CaptureType type,
 		path_str = generate_capture_filename(type, index).string();
 	}
 
-	FILE* handle = fopen(path_str.c_str(), "wb");
+	FILE* handle = open_file(path_str.c_str(), "wb");
 	if (handle) {
 		LOG_MSG("CAPTURE: Capturing %s to '%s'",
 		        capture_type_to_string(type),
