@@ -68,7 +68,7 @@ public:
 class BatchFile {
 public:
 	BatchFile(DOS_Shell* host, std::unique_ptr<ByteReader> input_reader,
-	          const char* const entered_name, const char* const cmd_line,
+	          std::string_view entered_name, std::string_view cmd_line,
 	          bool echo_on);
 	BatchFile(const BatchFile&)            = delete;
 	BatchFile& operator=(const BatchFile&) = delete;
