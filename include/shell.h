@@ -70,9 +70,12 @@ public:
 	BatchFile(DOS_Shell* host, std::unique_ptr<ByteReader> input_reader,
 	          const char* const entered_name, const char* const cmd_line,
 	          bool echo_on);
-	BatchFile(const BatchFile&)            = delete; // prevent copying
-	BatchFile& operator=(const BatchFile&) = delete; // prevent assignment
+	BatchFile(const BatchFile&)            = delete;
+	BatchFile& operator=(const BatchFile&) = delete;
+	BatchFile(BatchFile&&)                 = delete;
+	BatchFile& operator=(BatchFile&&)      = delete;
 	virtual ~BatchFile()                   = default;
+
 	virtual bool ReadLine(char* line);
 	bool Goto(std::string_view label);
 	void Shift();
