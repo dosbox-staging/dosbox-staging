@@ -85,7 +85,6 @@ jobs:
           -Duse_fluidsynth=false \
           -Duse_mt32emu=false \
           -Duse_opengl=false \
-          -Duse_png=false \
           -Duse_sdl2_net=false \
           -Duse_slirp=false \
           -Duse_xinput2=false \

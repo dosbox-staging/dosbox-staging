@@ -115,9 +115,6 @@
 // Define to 1 to enable Novell NE 2000 NIC emulation
 #mesondefine C_NE2000
 
-// Define to 1 to enable surface screenshots in .png format
-#mesondefine C_SSHOT
-
 // Define to 1 to enable the Tracy profiling server
 #mesondefine C_TRACY
 
