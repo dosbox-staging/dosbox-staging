@@ -2194,10 +2194,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			               doublewidth, doubleheight);
 	} else {
 		// Always log mode changes at a minimum
-		static auto previous_mode = CurMode->mode;
-		if (CurMode->mode != previous_mode) {
+		static decltype(CurMode) previous_mode = {};
+		if (CurMode != previous_mode) {
 			GFX_LogDisplayProperties();
-			previous_mode = CurMode->mode;
+			previous_mode = CurMode;
 		}
 	}
 }
