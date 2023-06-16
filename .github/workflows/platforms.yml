@@ -118,7 +118,6 @@ jobs:
                   -Duse_opengl=false \
                   -Duse_mt32emu=false \
                   -Duse_slirp=false \
-                  -Duse_png=false \
                   -Duse_alsa=false \
                   build
             # Build

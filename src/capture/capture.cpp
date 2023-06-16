@@ -222,14 +222,8 @@ FILE* CAPTURE_CreateFile(const CaptureType type,
 	return handle;
 }
 
-#if (!C_SSHOT)
-constexpr auto NoAviSupportMessage =
-        "CAPTURE: Can't capture video output: AVI support has not been compiled in";
-#endif
-
 void CAPTURE_StartVideoCapture()
 {
-#if (C_SSHOT)
 	switch (capture.state.video) {
 	case CaptureState::Off:
 		capture.state.video = CaptureState::Pending;
@@ -239,14 +233,10 @@ void CAPTURE_StartVideoCapture()
 		LOG_WARNING("CAPTURE: Already capturing video output");
 		break;
 	}
-#else
-	LOG_WARNING(NoAviSupportMessage);
-#endif
 }
 
 void CAPTURE_StopVideoCapture()
 {
-#if (C_SSHOT)
 	switch (capture.state.video) {
 	case CaptureState::Off:
 		LOG_WARNING("CAPTURE: Not capturing video output");
@@ -262,15 +252,11 @@ void CAPTURE_StopVideoCapture()
 		capture.state.video = CaptureState::Off;
 		LOG_MSG("CAPTURE: Stopped capturing video output");
 	}
-#else
-	LOG_WARNING(NoAviSupportMessage);
-#endif
 }
 
 void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage& image,
                       [[maybe_unused]] const float frames_per_second)
 {
-#if (C_SSHOT)
 	if (image_capturer) {
 		image_capturer->MaybeCaptureImage(image);
 	}
@@ -284,7 +270,6 @@ void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage& image,
 		capture_video_add_frame(image, frames_per_second);
 		break;
 	}
-#endif
 }
 
 void CAPTURE_AddPostRenderImage([[maybe_unused]] const RenderedImage& image)
@@ -297,7 +282,6 @@ void CAPTURE_AddPostRenderImage([[maybe_unused]] const RenderedImage& image)
 void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_frames,
                           const int16_t* sample_frames)
 {
-#if (C_SSHOT)
 	switch (capture.state.video) {
 	case CaptureState::Off: break;
 	case CaptureState::Pending:
@@ -310,7 +294,6 @@ void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_
 		break;
 	}
 
-#endif
 	switch (capture.state.audio) {
 	case CaptureState::Off: break;
 	case CaptureState::Pending:
@@ -383,7 +366,6 @@ static void handle_capture_midi_event(bool pressed)
 	}
 }
 
-#if (C_SSHOT)
 static void handle_capture_grouped_screenshot_event(const bool pressed)
 {
 	// Ignore key-release events
@@ -440,7 +422,6 @@ static void handle_capture_video_event(bool pressed)
 		CAPTURE_StartVideoCapture();
 	}
 }
-#endif
 
 static void capture_destroy([[maybe_unused]] Section* sec)
 {
@@ -452,7 +433,6 @@ static void capture_destroy([[maybe_unused]] Section* sec)
 		capture_midi_finalise();
 		capture.state.midi = CaptureState::Off;
 	}
-#if (C_SSHOT)
 	// When destructed, the threaded image capturer instances do a blocking
 	// wait until all pending capture tasks are processed.
 	image_capturer = {};
@@ -461,7 +441,6 @@ static void capture_destroy([[maybe_unused]] Section* sec)
 		capture_video_finalise();
 		capture.state.video = CaptureState::Off;
 	}
-#endif
 }
 
 static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
@@ -560,11 +539,9 @@ static void capture_init(Section* sec)
 		capture.path = "capture";
 	}
 
-#if (C_SSHOT)
 	const std::string prefs = secprop->Get_string("default_image_capture_formats");
 
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
-#endif
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&capture_destroy, changeable_at_runtime);
@@ -607,7 +584,6 @@ static void init_key_mappings()
 	                  "caprawmidi",
 	                  "Rec. MIDI");
 
-#if (C_SSHOT)
 	MAPPER_AddHandler(handle_capture_grouped_screenshot_event,
 	                  SDL_SCANCODE_F5,
 	                  PRIMARY_MOD,
@@ -637,7 +613,6 @@ static void init_key_mappings()
 	                  PRIMARY_MOD,
 	                  "video",
 	                  "Rec. Video");
-#endif
 }
 
 static void init_capture_dosbox_settings(Section_prop& secprop)

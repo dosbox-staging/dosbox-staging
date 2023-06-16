@@ -101,7 +101,6 @@ static CaptureType to_capture_type(const CapturedImageType type)
 
 void ImageSaver::SaveImage(const SaveImageTask& task)
 {
-#if (C_SSHOT)
 	CaptureType capture_type = to_capture_type(task.image_type);
 
 	outfile = CAPTURE_CreateFile(capture_type, task.path);
@@ -123,7 +122,6 @@ void ImageSaver::SaveImage(const SaveImageTask& task)
 	}
 
 	CloseOutFile();
-#endif
 }
 
 static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,

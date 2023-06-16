@@ -237,7 +237,6 @@ conf_data.set10('C_SLIRP', get_option('use_slirp'))
 conf_data.set10('C_NE2000', get_option('use_slirp'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
-conf_data.set10('C_SSHOT', get_option('use_png'))
 conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
@@ -449,6 +448,12 @@ opus_dep = dependency(
     static: ('opusfile' in static_libs_list or prefers_static_libs),
 )
 
+png_dep = dependency(
+    'libpng',
+    version: ['>= 1.2', '< 2'],
+    static: ('png' in static_libs_list or prefers_static_libs),
+)
+
 sdl2_dep = dependency(
     'sdl2',
     version: ['>= 2.0.5', '< 3'],
@@ -598,18 +603,6 @@ if get_option('use_mt32emu')
     )
 endif
 summary('mt32emu support', mt32emu_dep.found())
-
-# PNG
-png_dep = optional_dep
-if get_option('use_png')
-    png_dep = dependency(
-        'libpng',
-        version: ['>= 1.2', '< 2'],
-        static: ('png' in static_libs_list or prefers_static_libs),
-        not_found_message: msg.format('use_png'),
-    )
-endif
-summary('PNG support', png_dep.found())
 
 # Tracy
 tracy_dep = optional_dep
