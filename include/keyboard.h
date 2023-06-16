@@ -244,6 +244,11 @@ enum class ScanCode : uint8_t {
 	AltTab = 0xA5,
 };
 
+// After calling, it drops all the input until secure mode is enabled - safety
+// measure to prevent malicious user from possibily interupting AUTOEXEC.BAT
+// execution before it applies the secure mode
+void KEYBOARD_WaitForSecureMode();
+
 // Simulate key press or release
 void KEYBOARD_AddKey(const KBD_KEYS key_type, const bool is_pressed);
 

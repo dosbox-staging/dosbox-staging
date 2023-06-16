@@ -26,6 +26,7 @@
 
 #include "bitops.h"
 #include "checks.h"
+#include "control.h"
 #include "cpu.h"
 #include "intel8042.h"
 #include "intel8255.h"
@@ -123,6 +124,9 @@ static uint8_t code_set = CodeSet1;
 // Command currently being executed, waiting for parameter
 static Command current_command = Command::None;
 
+// If enabled, all keyboard events are dropped until secure mode is enabled
+static bool should_wait_for_secure_mode = false;
+
 // ***************************************************************************
 // Helper routines to log various warnings
 // ***************************************************************************
@@ -151,6 +155,15 @@ static void warn_unknown_scancode_set()
 	static bool already_warned = false;
 	if (!already_warned) {
 		LOG_WARNING("KEYBOARD: Guest requested unknown scancode set");
+		already_warned = true;
+	}
+}
+
+static void warn_waiting_for_secure_mode()
+{
+	static bool already_warned = false;
+	if (!already_warned) {
+		LOG_WARNING("KEYBOARD: Input ignored until secure mode is set");
 		already_warned = true;
 	}
 }
@@ -610,6 +623,12 @@ static void execute_command(const Command command, const uint8_t param)
 // External interfaces
 // ***************************************************************************
 
+void KEYBOARD_WaitForSecureMode()
+{
+	// This should never be undone!
+	should_wait_for_secure_mode = true;
+}
+
 void KEYBOARD_PortWrite(const uint8_t byte)
 {
 	// Highest bit set usuaally means a command
@@ -644,6 +663,11 @@ void KEYBOARD_NotifyReadyForFrame()
 
 void KEYBOARD_AddKey(const KBD_KEYS key_type, const bool is_pressed)
 {
+	if (should_wait_for_secure_mode && !control->SecureMode()) {
+		warn_waiting_for_secure_mode();
+		return;
+	}
+
 	if (!is_scanning) {
 		return;
 	}
