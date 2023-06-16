@@ -2161,10 +2161,19 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	    (vga.draw.bpp != bpp) || fps_changed) {
 		VGA_KillDrawing();
 
-		vga.draw.width = width;
-		vga.draw.height = height;
-		vga.draw.doublewidth = doublewidth;
+		if (width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
+			LOG_ERR("VGA: The calculated video resolution %ux%u will be limited to the maximum of %ux%u",
+			        width,
+			        height,
+			        SCALER_MAXWIDTH,
+			        SCALER_MAXHEIGHT);
+		}
+		vga.draw.width  = std::min(width, static_cast<uint32_t>(SCALER_MAXWIDTH));
+		vga.draw.height = std::min(height, static_cast<uint32_t>(SCALER_MAXHEIGHT));
+
+		vga.draw.doublewidth  = doublewidth;
 		vga.draw.doubleheight = doubleheight;
+
 		vga.draw.aspect_ratio = aspect_ratio;
 		vga.draw.bpp = bpp;
 		if (doubleheight) vga.draw.lines_scaled=2;
