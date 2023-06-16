@@ -1925,10 +1925,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_DrawLine = VGA_Draw_CGA2_Composite_Line;
 		break;
 	case M_CGA4_COMPOSITE:
-		aspect_ratio = 1.2;
 		doubleheight = true;
 		vga.draw.blocks = width * 2;
 		width <<= 4;
+		aspect_ratio = width * 3.0 / (height * 4.0 * (doubleheight ? 2 : 1));
 		VGA_DrawLine = VGA_Draw_CGA4_Composite_Line;
 		break;
 	case M_CGA4:
