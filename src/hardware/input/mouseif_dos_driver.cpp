@@ -879,6 +879,8 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 	clear_pending_events();
 
 	state.bios_screen_mode   = bios_screen_mode;
+	state.granularity_x      = 0xffff;
+	state.granularity_y      = 0xffff;
 	state.hot_x              = 0;
 	state.hot_y              = 0;
 	state.user_screen_mask   = false;
@@ -923,10 +925,7 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 		state.maxpos_y = static_cast<int16_t>(8 * rows - 1);
 	};
 
-	// Set some common/default parameters
-
-	state.granularity_x = 0xffff;
-	state.granularity_y = 0xffff;
+	// Set min/max position - same for all the video modes
 
 	state.minpos_x = 0;
 	state.minpos_y = 0;
