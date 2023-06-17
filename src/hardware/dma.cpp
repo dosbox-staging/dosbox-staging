@@ -161,7 +161,7 @@ DmaChannel* DMA_GetChannel(const uint8_t channel_num)
 	return nullptr;
 }
 
-void CloseSecondDMAController()
+void DMA_ShutdownSecondaryController()
 {
 	secondary = {};
 }

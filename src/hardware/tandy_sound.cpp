@@ -669,7 +669,7 @@ void TANDYSOUND_Init(Section *section)
 	// ports 0xc0. Closing the controller itself means that all the high DMA
 	// ports (4 through 7) get automatically shutdown as well.
 	//
-	CloseSecondDMAController();
+	DMA_ShutdownSecondaryController();
 
 	const auto wants_dac = has_true(pref) || (IS_TANDY_ARCH && pref == "auto");
 	if (wants_dac) {
