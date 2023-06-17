@@ -67,6 +67,7 @@ test(
 
 unit_tests = [
     {'name': 'ansi_code_markup', 'deps': [libmisc_stubs_dep]},
+    {'name': 'batch_file', 'deps': [libmisc_stubs_dep, libshell_dep]},
     {'name': 'bit_view', 'deps': []},
     {'name': 'bitops', 'deps': []},
     {'name': 'dos_files', 'deps': [dosbox_dep], 'extra_cpp': []},
