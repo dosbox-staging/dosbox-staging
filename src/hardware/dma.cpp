@@ -233,10 +233,10 @@ void DmaController::WriteControllerReg(const io_port_t reg, const io_val_t value
 		flipflop=!flipflop;
 		if (flipflop) {
 			chan->baseaddr=(chan->baseaddr&0xff00)|val;
-			chan->curraddr=(chan->curraddr&0xff00)|val;
+			chan->curr_addr=(chan->curr_addr&0xff00)|val;
 		} else {
 			chan->baseaddr=(chan->baseaddr&0x00ff)|(val << 8);
-			chan->curraddr=(chan->curraddr&0x00ff)|(val << 8);
+			chan->curr_addr=(chan->curr_addr&0x00ff)|(val << 8);
 		}
 		break;
 	/* set DMA transfer count (1st byte low part, 2nd byte high part) */
@@ -311,9 +311,9 @@ uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 		chan = GetChannel((uint8_t)(reg >> 1));
 		flipflop = !flipflop;
 		if (flipflop) {
-			return chan->curraddr & 0xff;
+			return chan->curr_addr & 0xff;
 		} else {
-			return (chan->curraddr >> 8) & 0xff;
+			return (chan->curr_addr >> 8) & 0xff;
 		}
 	/* read DMA transfer count (1st byte low part, 2nd byte high part) */
 	case 0x1:
@@ -416,31 +416,31 @@ size_t DmaChannel::ReadOrWrite(const DMA_DIRECTION direction, const size_t words
 {
 	auto want = check_cast<uint16_t>(words);
 	uint16_t done = 0;
-	curraddr &= dma_wrapping;
+	curr_addr &= dma_wrapping;
 
 	// incremented per transfer
 	auto curr_buffer = buffer;
 again:
 	Bitu left = (currcnt + 1);
 	if (want < left) {
-		perform_dma_io(direction, pagebase, curraddr, curr_buffer, want, DMA16);
+		perform_dma_io(direction, pagebase, curr_addr, curr_buffer, want, DMA16);
 		done += want;
-		curraddr += want;
+		curr_addr += want;
 		currcnt -= want;
 	} else {
-		perform_dma_io(direction, pagebase, curraddr, curr_buffer, left, DMA16);
+		perform_dma_io(direction, pagebase, curr_addr, curr_buffer, left, DMA16);
 		curr_buffer += left << DMA16;
 		want -= left;
 		done += left;
 		ReachedTerminalCount();
 		if (autoinit) {
 			currcnt = basecnt;
-			curraddr = baseaddr;
+			curr_addr = baseaddr;
 			if (want)
 				goto again;
 			UpdateEMSMapping();
 		} else {
-			curraddr += left;
+			curr_addr += left;
 			currcnt = 0xffff;
 			masked = true;
 			UpdateEMSMapping();
@@ -488,7 +488,7 @@ void DmaChannel::Reset()
 {
 	// Defaults at the time of initialization
 	pagebase = 0;
-	curraddr = 0;
+	curr_addr = 0;
 
 	baseaddr = 0;
 	basecnt  = 0;
