@@ -623,7 +623,7 @@ static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
 			FlushRemainingDMATransfer();
 			LOG(LOG_SB, LOG_NORMAL)
 			("DMA unmasked,starting output, auto %d block %d",
-			 static_cast<int>(chan->autoinit),
+			 static_cast<int>(chan->is_autoiniting),
 			 chan->base_count);
 		}
 	}

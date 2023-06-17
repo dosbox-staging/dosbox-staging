@@ -835,12 +835,14 @@ void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 
 bool Gus::PerformDmaTransfer()
 {
-	if (dma_channel->masked || !(dma_ctrl & 0x01))
+	if (dma_channel->is_masked || !(dma_ctrl & 0x01)) {
 		return false;
+	}
 
 #if LOG_GUS
 	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=0 cnt=%u",
-	        BYTES_PER_DMA_XFER, dma_channel->tcount ? 1 : 0,
+	        BYTES_PER_DMA_XFER,
+	        dma_channel->has_reached_terminal_count ? 1 : 0,
 	        dma_channel->curr_count + 1);
 #endif
 
@@ -887,7 +889,7 @@ bool Gus::PerformDmaTransfer()
 		dma_ctrl |= DMA_TC_STATUS_BITMASK;
 		irq_status |= 0x80;
 		CheckIrq();
-		assert(dma_channel->tcount); // hit terminal count, we're done
+		assert(dma_channel->has_reached_terminal_count);
 		return false;
 	}
 	return true;

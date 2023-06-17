@@ -265,8 +265,8 @@ void DmaController::WriteControllerReg(const io_port_t reg, const io_val_t value
 	case 0xb:		/* Mode Register */
 		UpdateEMSMapping();
 		chan=GetChannel(val & 3);
-		chan->autoinit=(val & 0x10) > 0;
-		chan->increment=(val & 0x20) > 0;
+		chan->is_autoiniting=(val & 0x10) > 0;
+		chan->is_incremented=(val & 0x20) > 0;
 		//TODO Maybe other bits?
 		break;
 	case 0xc:		/* Clear Flip/Flip */
@@ -276,7 +276,7 @@ void DmaController::WriteControllerReg(const io_port_t reg, const io_val_t value
 		for (uint8_t ct=0;ct<4;ct++) {
 			chan=GetChannel(ct);
 			chan->SetMask(true);
-			chan->tcount=false;
+			chan->has_reached_terminal_count=false;
 		}
 		flipflop=false;
 		break;
@@ -331,10 +331,10 @@ uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 		ret = 0;
 		for (uint8_t ct = 0; ct < 4; ct++) {
 			chan = GetChannel(ct);
-			if (chan->tcount)
+			if (chan->has_reached_terminal_count)
 				ret |= 1 << ct;
-			chan->tcount = false;
-			if (chan->request)
+			chan->has_reached_terminal_count = false;
+			if (chan->has_raised_request)
 				ret |= 1 << (4 + ct);
 		}
 		return ret;
@@ -352,8 +352,8 @@ DmaChannel::DmaChannel(const uint8_t num, const bool is_dma_16bit)
 	if (num == 4) {
 		return;
 	}
-	assert(masked);
-	assert(increment);
+	assert(is_masked);
+	assert(is_incremented);
 }
 
 void DmaChannel::DoCallback(const DMAEvent event)
@@ -365,14 +365,14 @@ void DmaChannel::DoCallback(const DMAEvent event)
 
 void DmaChannel::SetMask(const bool _mask)
 {
-	masked = _mask;
-	DoCallback(masked ? DMA_MASKED : DMA_UNMASKED);
+	is_masked = _mask;
+	DoCallback(is_masked ? DMA_MASKED : DMA_UNMASKED);
 }
 
 void DmaChannel::RegisterCallback(const DMA_Callback _cb)
 {
 	callback = _cb;
-	SetMask(masked);
+	SetMask(is_masked);
 	if (callback) {
 		RaiseRequest();
 	} else {
@@ -382,7 +382,7 @@ void DmaChannel::RegisterCallback(const DMA_Callback _cb)
 
 void DmaChannel::ReachedTerminalCount()
 {
-	tcount = true;
+	has_reached_terminal_count = true;
 	DoCallback(DMA_REACHED_TC);
 }
 
@@ -394,12 +394,12 @@ void DmaChannel::SetPage(const uint8_t val)
 
 void DmaChannel::RaiseRequest()
 {
-	request = true;
+	has_raised_request = true;
 }
 
 void DmaChannel::ClearRequest()
 {
-	request = false;
+	has_raised_request = false;
 }
 
 size_t DmaChannel::Read(const size_t words, uint8_t* const dest_buffer)
@@ -433,7 +433,7 @@ again:
 		want -= left;
 		done += left;
 		ReachedTerminalCount();
-		if (autoinit) {
+		if (is_autoiniting) {
 			curr_count = base_count;
 			curr_addr = base_addr;
 			if (want)
@@ -442,7 +442,7 @@ again:
 		} else {
 			curr_addr += left;
 			curr_count = 0xffff;
-			masked = true;
+			is_masked = true;
 			UpdateEMSMapping();
 			DoCallback(DMA_MASKED);
 		}
@@ -496,11 +496,11 @@ void DmaChannel::Reset()
 
 	page_num = 0;
 
-	increment = true;
-	autoinit  = false;
-	masked    = true;
-	tcount    = false;
-	request   = false;
+	is_incremented = true;
+	is_autoiniting  = false;
+	is_masked    = true;
+	has_reached_terminal_count    = false;
+	has_raised_request   = false;
 
 	callback             = {};
 	reservation_callback = {};
