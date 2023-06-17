@@ -73,8 +73,8 @@ public:
 	void SetPage(uint8_t val);
 	void Raise_Request();
 	void Clear_Request();
-	size_t Read(size_t words, uint8_t* dest_buffer);
-	size_t Write(size_t words, uint8_t* src_buffer);
+	size_t Read(size_t words, uint8_t* const dest_buffer);
+	size_t Write(size_t words, uint8_t* const src_buffer);
 
 	// Reset the channel back to defaults, without callbacks or reservations.
 	void Reset();
@@ -87,8 +87,8 @@ public:
 
 private:
 	void EvictReserver();
-	bool HasReservation();
-	size_t ReadOrWrite(DMA_DIRECTION direction, size_t words, uint8_t *buffer);
+	bool HasReservation() const;
+	size_t ReadOrWrite(DMA_DIRECTION direction, size_t words, uint8_t* const buffer);
 
 	DMA_ReservationCallback reservation_callback = {};
 	std::string_view reservation_owner = {};

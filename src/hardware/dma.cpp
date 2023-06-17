@@ -56,7 +56,7 @@ static void UpdateEMSMapping()
 static void perform_dma_io(const DMA_DIRECTION direction,
                            const PhysPt spage,
                            PhysPt mem_address,
-                           void *data_start,
+                           void * const data_start,
                            const size_t num_words,
                            const uint8_t is_dma16)
 {
@@ -186,7 +186,7 @@ static DmaChannel* GetChannelFromPort(const io_port_t port)
 	return GetDMAChannel(num);
 }
 
-static void DMA_Write_Port(io_port_t port, io_val_t value, io_width_t)
+static void DMA_Write_Port(const io_port_t port, const io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint16_t>(value);
 	// LOG(LOG_DMACONTROL,LOG_ERROR)("Write %" sBitfs(X) " %" sBitfs(X),port,val);
@@ -204,7 +204,7 @@ static void DMA_Write_Port(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
-static uint16_t DMA_Read_Port(io_port_t port, io_width_t width)
+static uint16_t DMA_Read_Port(const io_port_t port, const io_width_t width)
 {
 	// LOG(LOG_DMACONTROL,LOG_ERROR)("Read %" sBitfs(X),port);
 	if (port < 0x10) {
@@ -221,7 +221,7 @@ static uint16_t DMA_Read_Port(io_port_t port, io_width_t width)
 	return 0;
 }
 
-void DmaController::WriteControllerReg(io_port_t reg, io_val_t value, io_width_t)
+void DmaController::WriteControllerReg(const io_port_t reg, const io_val_t value, io_width_t)
 {
 	auto val = check_cast<uint16_t>(value);
 	DmaChannel *chan = nullptr;
@@ -298,7 +298,7 @@ void DmaController::WriteControllerReg(io_port_t reg, io_val_t value, io_width_t
 	}
 }
 
-uint16_t DmaController::ReadControllerReg(io_port_t reg, io_width_t)
+uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 {
 	DmaChannel *chan = nullptr;
 	uint16_t ret = 0;
@@ -345,7 +345,7 @@ uint16_t DmaController::ReadControllerReg(io_port_t reg, io_width_t)
 	return 0xffff;
 }
 
-DmaChannel::DmaChannel(uint8_t num, bool is_dma_16bit)
+DmaChannel::DmaChannel(const uint8_t num, const bool is_dma_16bit)
         : channum(num),
           DMA16(is_dma_16bit ? 0x1 : 0x0)
 {
@@ -356,20 +356,20 @@ DmaChannel::DmaChannel(uint8_t num, bool is_dma_16bit)
 	assert(increment);
 }
 
-void DmaChannel::DoCallback(DMAEvent event)
+void DmaChannel::DoCallback(const DMAEvent event)
 {
 	if (callback) {
 		callback(this, event);
 	}
 }
 
-void DmaChannel::SetMask(bool _mask)
+void DmaChannel::SetMask(const bool _mask)
 {
 	masked = _mask;
 	DoCallback(masked ? DMA_MASKED : DMA_UNMASKED);
 }
 
-void DmaChannel::Register_Callback(DMA_Callback _cb)
+void DmaChannel::Register_Callback(const DMA_Callback _cb)
 {
 	callback = _cb;
 	SetMask(masked);
@@ -386,7 +386,7 @@ void DmaChannel::ReachedTC()
 	DoCallback(DMA_REACHED_TC);
 }
 
-void DmaChannel::SetPage(uint8_t val)
+void DmaChannel::SetPage(const uint8_t val)
 {
 	pagenum  = val;
 	pagebase = (pagenum >> DMA16) << (16 + DMA16);
@@ -402,31 +402,34 @@ void DmaChannel::Clear_Request()
 	request = false;
 }
 
-size_t DmaChannel::Read(size_t words, uint8_t* dest_buffer)
+size_t DmaChannel::Read(const size_t words, uint8_t* const dest_buffer)
 {
 	return ReadOrWrite(DMA_DIRECTION::READ, words, dest_buffer);
 }
 
-size_t DmaChannel::Write(size_t words, uint8_t* src_buffer)
+size_t DmaChannel::Write(const size_t words, uint8_t* const src_buffer)
 {
 	return ReadOrWrite(DMA_DIRECTION::WRITE, words, src_buffer);
 }
 
-size_t DmaChannel::ReadOrWrite(DMA_DIRECTION direction, size_t words, uint8_t* buffer)
+size_t DmaChannel::ReadOrWrite(const DMA_DIRECTION direction, const size_t words, uint8_t* const buffer)
 {
 	auto want = check_cast<uint16_t>(words);
 	uint16_t done = 0;
 	curraddr &= dma_wrapping;
+
+	// incremented per transfer
+	auto curr_buffer = buffer;
 again:
 	Bitu left = (currcnt + 1);
 	if (want < left) {
-		perform_dma_io(direction, pagebase, curraddr, buffer, want, DMA16);
+		perform_dma_io(direction, pagebase, curraddr, curr_buffer, want, DMA16);
 		done += want;
 		curraddr += want;
 		currcnt -= want;
 	} else {
-		perform_dma_io(direction, pagebase, curraddr, buffer, left, DMA16);
-		buffer += left << DMA16;
+		perform_dma_io(direction, pagebase, curraddr, curr_buffer, left, DMA16);
+		curr_buffer += left << DMA16;
 		want -= left;
 		done += left;
 		ReachedTC();
@@ -447,7 +450,7 @@ again:
 	return done;
 }
 
-bool DmaChannel::HasReservation()
+bool DmaChannel::HasReservation() const
 {
 	return (reservation_callback && !reservation_owner.empty());
 }
@@ -584,7 +587,7 @@ DmaController::~DmaController()
 	}
 }
 
-DmaChannel* DmaController::GetChannel(uint8_t chan) const
+DmaChannel* DmaController::GetChannel(const uint8_t chan) const
 {
 	constexpr auto n = ARRAY_LEN(dma_channels);
 	return (chan < n) ? dma_channels[chan].get() : nullptr;
