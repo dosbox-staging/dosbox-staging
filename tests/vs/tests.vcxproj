@@ -345,7 +345,10 @@ $(TargetPath)</Command>
     <ClCompile Include="..\..\src\misc\setup.cpp" />
     <ClCompile Include="..\..\src\misc\string_utils.cpp" />
     <ClCompile Include="..\..\src\misc\support.cpp" />
+    <ClCompile Include="..\..\src\shell\command_line.cpp" />
+    <ClCompile Include="..\..\src\shell\shell_batch.cpp" />
     <ClCompile Include="..\ansi_code_markup_tests.cpp" />
+    <ClCompile Include="..\batch_file_tests.cpp" />
     <ClCompile Include="..\bit_view_tests.cpp" />
     <ClCompile Include="..\bitops_tests.cpp" />
     <ClCompile Include="..\fraction_tests.cpp" />
