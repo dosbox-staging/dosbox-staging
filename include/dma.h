@@ -71,8 +71,8 @@ public:
 	void RegisterCallback(const DMA_Callback cb);
 	void ReachedTC();
 	void SetPage(uint8_t val);
-	void Raise_Request();
-	void Clear_Request();
+	void RaiseRequest();
+	void ClearRequest();
 	size_t Read(size_t words, uint8_t* const dest_buffer);
 	size_t Write(size_t words, uint8_t* const src_buffer);
 

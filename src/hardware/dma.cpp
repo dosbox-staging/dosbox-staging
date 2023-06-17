@@ -374,9 +374,9 @@ void DmaChannel::RegisterCallback(const DMA_Callback _cb)
 	callback = _cb;
 	SetMask(masked);
 	if (callback) {
-		Raise_Request();
+		RaiseRequest();
 	} else {
-		Clear_Request();
+		ClearRequest();
 	}
 }
 
@@ -392,12 +392,12 @@ void DmaChannel::SetPage(const uint8_t val)
 	pagebase = (pagenum >> DMA16) << (16 + DMA16);
 }
 
-void DmaChannel::Raise_Request()
+void DmaChannel::RaiseRequest()
 {
 	request = true;
 }
 
-void DmaChannel::Clear_Request()
+void DmaChannel::ClearRequest()
 {
 	request = false;
 }
