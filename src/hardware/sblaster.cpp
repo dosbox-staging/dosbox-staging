@@ -1116,7 +1116,7 @@ static void DSP_DoDMATransfer(const DMA_MODES mode, uint32_t freq, bool autoinit
 	PIC_RemoveEvents(ProcessDMATransfer);
 	//Set to be masked, the dma call can change this again.
 	sb.mode = MODE_DMA_MASKED;
-	sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
+	sb.dma.chan->RegisterCallback(DSP_DMA_CallBack);
 
 #if (C_DEBUG)
 	LOG(LOG_SB, LOG_NORMAL)
@@ -1242,7 +1242,7 @@ static void DSP_E2_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	if (event==DMA_UNMASKED) {
 		uint8_t val=(uint8_t)(sb.e2.value&0xff);
 		DmaChannel * chan=GetDMAChannel(sb.hw.dma8);
-		chan->Register_Callback(0);
+		chan->RegisterCallback(0);
 		chan->Write(1,&val);
 	}
 }
@@ -1255,7 +1255,7 @@ static void DSP_ADC_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 		ch->Write(1,&val);
 	}
 	SB_RaiseIRQ(SB_IRQ_8);
-	ch->Register_Callback(0);
+	ch->RegisterCallback(0);
 }
 
 static void DSP_ChangeRate(uint32_t freq)
@@ -1339,7 +1339,7 @@ static void DSP_DoCommand() {
 		sb.dma.left = 1 + sb.dsp.in.data[0] + (sb.dsp.in.data[1] << 8);
 		sb.dma.sign=false;
 		LOG(LOG_SB,LOG_ERROR)("DSP:Faked ADC for %u bytes",sb.dma.left);
-		GetDMAChannel(sb.hw.dma8)->Register_Callback(DSP_ADC_CallBack);
+		GetDMAChannel(sb.hw.dma8)->RegisterCallback(DSP_ADC_CallBack);
 		break;
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
 	case 0x15:	/* Wari hack. Waru uses this one instead of 0x14, but some weird stuff going on there anyway */
@@ -1449,7 +1449,7 @@ static void DSP_DoCommand() {
 		LOG(LOG_SB, LOG_NORMAL)("Continue DMA command");
 		if (sb.mode==MODE_DMA_PAUSE) {
 			sb.mode=MODE_DMA_MASKED;
-			if (sb.dma.chan!=NULL) sb.dma.chan->Register_Callback(DSP_DMA_CallBack);
+			if (sb.dma.chan!=NULL) sb.dma.chan->RegisterCallback(DSP_DMA_CallBack);
 		}
 		break;
 	case 0xd9:  /* Exit Autoinitialize 16-bit */
@@ -1489,7 +1489,7 @@ static void DSP_DoCommand() {
 				        sb.e2.value += E2_incr_table[sb.e2.count % 4][i];
 		        sb.e2.value += E2_incr_table[sb.e2.count % 4][8];
 		        sb.e2.count++;
-		        GetDMAChannel(sb.hw.dma8)->Register_Callback(DSP_E2_DMA_CallBack);
+		        GetDMAChannel(sb.hw.dma8)->RegisterCallback(DSP_E2_DMA_CallBack);
 		}
 		break;
 	case 0xe3: /* DSP Copyright */

@@ -1299,7 +1299,7 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 	dma_channel = GetDMAChannel(dma1);
 	assert(dma_channel);
 	dma_channel->ReserveFor("GUS", gus_destroy);
-	dma_channel->Register_Callback(std::bind(&Gus::DmaCallback, this, _1, _2));
+	dma_channel->RegisterCallback(std::bind(&Gus::DmaCallback, this, _1, _2));
 #if LOG_GUS
 	LOG_MSG("GUS: Assigned DMA1 address to %u", dma1);
 #endif

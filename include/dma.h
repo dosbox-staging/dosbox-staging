@@ -68,7 +68,7 @@ public:
 
 	void DoCallback(DMAEvent event);
 	void SetMask(bool _mask);
-	void Register_Callback(const DMA_Callback cb);
+	void RegisterCallback(const DMA_Callback cb);
 	void ReachedTC();
 	void SetPage(uint8_t val);
 	void Raise_Request();
