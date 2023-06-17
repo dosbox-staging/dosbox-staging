@@ -48,7 +48,7 @@ public:
 	uint32_t curr_addr = 0;
 
 	uint16_t base_addr = 0;
-	uint16_t basecnt  = 0;
+	uint16_t base_count  = 0;
 	uint16_t currcnt  = 0;
 
 	const uint8_t channum = 0;
