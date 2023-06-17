@@ -124,7 +124,7 @@ public:
 
 DmaChannel * DMA_GetChannel(uint8_t chan);
 
-void CloseSecondDMAController();
+void DMA_ShutdownSecondaryController();
 void DMA_ResetChannel(const uint8_t channel_num);
 void DMA_SetWrapping(const uint32_t wrap);
 
