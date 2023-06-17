@@ -150,7 +150,7 @@ constexpr uint8_t to_secondary_num(const uint8_t channel_num)
 	return (static_cast<uint8_t>(channel_num - SecondaryMin));
 }
 
-DmaChannel* GetDMAChannel(const uint8_t channel_num)
+DmaChannel* DMA_GetChannel(const uint8_t channel_num)
 {
 	if (is_primary(channel_num) && (primary || activate_primary())) {
 		return primary->GetChannel(channel_num);
@@ -183,7 +183,7 @@ static DmaChannel* GetChannelFromPort(const io_port_t port)
 		LOG_WARNING("DMA: Attempted to lookup DMA channel from invalid port %04x",
 		            port);
 	}
-	return GetDMAChannel(num);
+	return DMA_GetChannel(num);
 }
 
 static void DMA_Write_Port(const io_port_t port, const io_val_t value, io_width_t)
