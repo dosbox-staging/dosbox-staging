@@ -53,7 +53,7 @@ public:
 
 	const uint8_t chan_num = 0;
 	uint8_t page_num = 0;
-	const uint8_t DMA16 = 0;
+	const uint8_t is_16bit = 0;
 
 	bool increment = true;
 	bool autoinit  = false;

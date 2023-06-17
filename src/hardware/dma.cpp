@@ -347,7 +347,7 @@ uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 
 DmaChannel::DmaChannel(const uint8_t num, const bool is_dma_16bit)
         : chan_num(num),
-          DMA16(is_dma_16bit ? 0x1 : 0x0)
+          is_16bit(is_dma_16bit ? 0x1 : 0x0)
 {
 	if (num == 4) {
 		return;
@@ -389,7 +389,7 @@ void DmaChannel::ReachedTerminalCount()
 void DmaChannel::SetPage(const uint8_t val)
 {
 	page_num  = val;
-	page_base = (page_num >> DMA16) << (16 + DMA16);
+	page_base = (page_num >> is_16bit) << (16 + is_16bit);
 }
 
 void DmaChannel::RaiseRequest()
@@ -423,13 +423,13 @@ size_t DmaChannel::ReadOrWrite(const DMA_DIRECTION direction, const size_t words
 again:
 	Bitu left = (curr_count + 1);
 	if (want < left) {
-		perform_dma_io(direction, page_base, curr_addr, curr_buffer, want, DMA16);
+		perform_dma_io(direction, page_base, curr_addr, curr_buffer, want, is_16bit);
 		done += want;
 		curr_addr += want;
 		curr_count -= want;
 	} else {
-		perform_dma_io(direction, page_base, curr_addr, curr_buffer, left, DMA16);
-		curr_buffer += left << DMA16;
+		perform_dma_io(direction, page_base, curr_addr, curr_buffer, left, is_16bit);
+		curr_buffer += left << is_16bit;
 		want -= left;
 		done += left;
 		ReachedTerminalCount();
@@ -475,7 +475,7 @@ void DmaChannel::ReserveFor(const std::string_view new_owner,
 		LOG_MSG("DMA: %s is replacing %s on %d-bit DMA channel %u",
 		        new_owner.data(),
 		        reservation_owner.data(),
-		        DMA16 == 1 ? 16 : 8,
+		        is_16bit == 1 ? 16 : 8,
 		        chan_num);
 		EvictReserver();
 	}
@@ -512,7 +512,7 @@ DmaChannel::~DmaChannel()
 	if (HasReservation()) {
 		LOG_MSG("DMA: Shutting down %s on %d-bit DMA channel %d",
 		        reservation_owner.data(),
-		        DMA16 == 1 ? 16 : 8,
+		        is_16bit == 1 ? 16 : 8,
 		        chan_num);
 		EvictReserver();
 	}
