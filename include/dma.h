@@ -45,7 +45,7 @@ class DmaChannel {
 public:
 	// Defaults at the time of initialization
 	uint32_t pagebase = 0;
-	uint32_t curraddr = 0;
+	uint32_t curr_addr = 0;
 
 	uint16_t baseaddr = 0;
 	uint16_t basecnt  = 0;
