@@ -216,7 +216,7 @@ static uint16_t DMA_Read_Port(const io_port_t port, const io_width_t width)
 	} else {
 		const auto channel = GetChannelFromPort(port);
 		if (channel)
-			return channel->pagenum;
+			return channel->page_num;
 	}
 	return 0;
 }
@@ -346,7 +346,7 @@ uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 }
 
 DmaChannel::DmaChannel(const uint8_t num, const bool is_dma_16bit)
-        : channum(num),
+        : chan_num(num),
           DMA16(is_dma_16bit ? 0x1 : 0x0)
 {
 	if (num == 4) {
@@ -388,8 +388,8 @@ void DmaChannel::ReachedTerminalCount()
 
 void DmaChannel::SetPage(const uint8_t val)
 {
-	pagenum  = val;
-	pagebase = (pagenum >> DMA16) << (16 + DMA16);
+	page_num  = val;
+	page_base = (page_num >> DMA16) << (16 + DMA16);
 }
 
 void DmaChannel::RaiseRequest()
@@ -423,12 +423,12 @@ size_t DmaChannel::ReadOrWrite(const DMA_DIRECTION direction, const size_t words
 again:
 	Bitu left = (curr_count + 1);
 	if (want < left) {
-		perform_dma_io(direction, pagebase, curr_addr, curr_buffer, want, DMA16);
+		perform_dma_io(direction, page_base, curr_addr, curr_buffer, want, DMA16);
 		done += want;
 		curr_addr += want;
 		curr_count -= want;
 	} else {
-		perform_dma_io(direction, pagebase, curr_addr, curr_buffer, left, DMA16);
+		perform_dma_io(direction, page_base, curr_addr, curr_buffer, left, DMA16);
 		curr_buffer += left << DMA16;
 		want -= left;
 		done += left;
@@ -476,7 +476,7 @@ void DmaChannel::ReserveFor(const std::string_view new_owner,
 		        new_owner.data(),
 		        reservation_owner.data(),
 		        DMA16 == 1 ? 16 : 8,
-		        channum);
+		        chan_num);
 		EvictReserver();
 	}
 	Reset();
@@ -487,14 +487,14 @@ void DmaChannel::ReserveFor(const std::string_view new_owner,
 void DmaChannel::Reset()
 {
 	// Defaults at the time of initialization
-	pagebase = 0;
+	page_base = 0;
 	curr_addr = 0;
 
 	base_addr = 0;
 	base_count  = 0;
 	curr_count  = 0;
 
-	pagenum = 0;
+	page_num = 0;
 
 	increment = true;
 	autoinit  = false;
@@ -513,7 +513,7 @@ DmaChannel::~DmaChannel()
 		LOG_MSG("DMA: Shutting down %s on %d-bit DMA channel %d",
 		        reservation_owner.data(),
 		        DMA16 == 1 ? 16 : 8,
-		        channum);
+		        chan_num);
 		EvictReserver();
 	}
 }

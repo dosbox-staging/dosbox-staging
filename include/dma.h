@@ -44,15 +44,15 @@ using DMA_Callback = std::function<void(DmaChannel *chan, DMAEvent event)>;
 class DmaChannel {
 public:
 	// Defaults at the time of initialization
-	uint32_t pagebase = 0;
+	uint32_t page_base = 0;
 	uint32_t curr_addr = 0;
 
 	uint16_t base_addr = 0;
 	uint16_t base_count  = 0;
 	uint16_t curr_count  = 0;
 
-	const uint8_t channum = 0;
-	uint8_t pagenum = 0;
+	const uint8_t chan_num = 0;
+	uint8_t page_num = 0;
 	const uint8_t DMA16 = 0;
 
 	bool increment = true;
