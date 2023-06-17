@@ -465,7 +465,7 @@ bool DOS_Shell::Execute(std::string_view name, std::string_view args)
 
 		auto reader = FileReader::GetFileReader(fullname);
 		if (reader) {
-			batchfiles.emplace(this, std::move(*reader), name, args, echo);
+			batchfiles.emplace(*this, std::move(*reader), name, args, echo);
 		} else {
 			WriteOut("Could not open %s", fullname.c_str());
 		}

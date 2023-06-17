@@ -67,7 +67,7 @@ public:
 
 class BatchFile {
 public:
-	BatchFile(DOS_Shell* host, std::unique_ptr<ByteReader> input_reader,
+	BatchFile(const HostShell& host, std::unique_ptr<ByteReader> input_reader,
 	          std::string_view entered_name, std::string_view cmd_line,
 	          bool echo_on);
 	BatchFile(const BatchFile&)            = delete;
@@ -81,12 +81,12 @@ public:
 	void Shift();
 	void SetEcho(bool echo_on);
 	[[nodiscard]] bool Echo() const;
-	DOS_Shell* shell                 = nullptr;
 
 private:
 	[[nodiscard]] std::string ExpandedBatchLine(std::string_view line) const;
 	[[nodiscard]] std::string GetLine();
 
+	const HostShell& shell;
 	CommandLine cmd;
 	std::unique_ptr<ByteReader> reader;
 	bool echo;
