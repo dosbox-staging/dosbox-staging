@@ -863,7 +863,7 @@ bool Gus::PerformDmaTransfer()
 	assert(transfered == desired);
 
 	// scale the transfer by the DMA channel's bit-depth
-	const auto bytes_transfered = transfered * (dma_channel->DMA16 + 1u);
+	const auto bytes_transfered = transfered * (dma_channel->is_16bit + 1u);
 
 	// Update the GUS's DMA address with the current position
 	UpdateDmaAddr(check_cast<uint32_t>(offset + bytes_transfered));
