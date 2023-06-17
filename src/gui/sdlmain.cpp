@@ -2338,12 +2338,21 @@ void GFX_SetMouseHint(const MouseHint hint_id)
 
 void GFX_CenterMouse()
 {
-	int current_width  = 0;
-	int current_height = 0;
-
 	assert(sdl.window);
-	SDL_GetWindowSize(sdl.window, &current_width, &current_height);
-	SDL_WarpMouseInWindow(sdl.window, current_width / 2, current_height / 2);
+
+	int width  = 0;
+	int height = 0;
+
+#if defined(WIN32)
+	const auto window_canvas_size = get_canvas_size(sdl.desktop.type);
+
+	width  = window_canvas_size.w;
+	height = window_canvas_size.h;
+#else
+	SDL_GetWindowSize(sdl.window, &width, &height);
+#endif
+
+	SDL_WarpMouseInWindow(sdl.window, width / 2, height / 2);
 }
 
 void GFX_SetMouseRawInput(const bool requested_raw_input)
