@@ -47,7 +47,7 @@ public:
 	uint32_t pagebase = 0;
 	uint32_t curr_addr = 0;
 
-	uint16_t baseaddr = 0;
+	uint16_t base_addr = 0;
 	uint16_t basecnt  = 0;
 	uint16_t currcnt  = 0;
 

@@ -232,10 +232,10 @@ void DmaController::WriteControllerReg(const io_port_t reg, const io_val_t value
 		chan=GetChannel((uint8_t)(reg >> 1));
 		flipflop=!flipflop;
 		if (flipflop) {
-			chan->baseaddr=(chan->baseaddr&0xff00)|val;
+			chan->base_addr=(chan->base_addr&0xff00)|val;
 			chan->curr_addr=(chan->curr_addr&0xff00)|val;
 		} else {
-			chan->baseaddr=(chan->baseaddr&0x00ff)|(val << 8);
+			chan->base_addr=(chan->base_addr&0x00ff)|(val << 8);
 			chan->curr_addr=(chan->curr_addr&0x00ff)|(val << 8);
 		}
 		break;
@@ -435,7 +435,7 @@ again:
 		ReachedTerminalCount();
 		if (autoinit) {
 			currcnt = basecnt;
-			curr_addr = baseaddr;
+			curr_addr = base_addr;
 			if (want)
 				goto again;
 			UpdateEMSMapping();
@@ -490,7 +490,7 @@ void DmaChannel::Reset()
 	pagebase = 0;
 	curr_addr = 0;
 
-	baseaddr = 0;
+	base_addr = 0;
 	basecnt  = 0;
 	currcnt  = 0;
 
