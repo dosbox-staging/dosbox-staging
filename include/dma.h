@@ -49,7 +49,7 @@ public:
 
 	uint16_t base_addr = 0;
 	uint16_t base_count  = 0;
-	uint16_t currcnt  = 0;
+	uint16_t curr_count  = 0;
 
 	const uint8_t channum = 0;
 	uint8_t pagenum = 0;

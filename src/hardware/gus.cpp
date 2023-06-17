@@ -841,14 +841,14 @@ bool Gus::PerformDmaTransfer()
 #if LOG_GUS
 	LOG_MSG("GUS DMA event: max %u bytes. DMA: tc=%u mask=0 cnt=%u",
 	        BYTES_PER_DMA_XFER, dma_channel->tcount ? 1 : 0,
-	        dma_channel->currcnt + 1);
+	        dma_channel->curr_count + 1);
 #endif
 
 	// Get the current DMA offset relative to the block of GUS memory
 	const auto offset = GetDmaOffset();
 
 	// Get the pending DMA count from channel
-	const uint16_t desired = dma_channel->currcnt + 1;
+	const uint16_t desired = dma_channel->curr_count + 1;
 
 	// Will the maximum transfer stay within the GUS RAM's size?
 	assert(static_cast<size_t>(offset) + desired <= ram.size());

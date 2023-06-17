@@ -246,10 +246,10 @@ void DmaController::WriteControllerReg(const io_port_t reg, const io_val_t value
 		flipflop=!flipflop;
 		if (flipflop) {
 			chan->base_count=(chan->base_count&0xff00)|val;
-			chan->currcnt=(chan->currcnt&0xff00)|val;
+			chan->curr_count=(chan->curr_count&0xff00)|val;
 		} else {
 			chan->base_count=(chan->base_count&0x00ff)|(val << 8);
-			chan->currcnt=(chan->currcnt&0x00ff)|(val << 8);
+			chan->curr_count=(chan->curr_count&0x00ff)|(val << 8);
 		}
 		break;
 	case 0x8:		/* Comand reg not used */
@@ -323,9 +323,9 @@ uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 		chan = GetChannel((uint8_t)(reg >> 1));
 		flipflop = !flipflop;
 		if (flipflop) {
-			return chan->currcnt & 0xff;
+			return chan->curr_count & 0xff;
 		} else {
-			return (chan->currcnt >> 8) & 0xff;
+			return (chan->curr_count >> 8) & 0xff;
 		}
 	case 0x8: /* Status Register */
 		ret = 0;
@@ -421,12 +421,12 @@ size_t DmaChannel::ReadOrWrite(const DMA_DIRECTION direction, const size_t words
 	// incremented per transfer
 	auto curr_buffer = buffer;
 again:
-	Bitu left = (currcnt + 1);
+	Bitu left = (curr_count + 1);
 	if (want < left) {
 		perform_dma_io(direction, pagebase, curr_addr, curr_buffer, want, DMA16);
 		done += want;
 		curr_addr += want;
-		currcnt -= want;
+		curr_count -= want;
 	} else {
 		perform_dma_io(direction, pagebase, curr_addr, curr_buffer, left, DMA16);
 		curr_buffer += left << DMA16;
@@ -434,14 +434,14 @@ again:
 		done += left;
 		ReachedTerminalCount();
 		if (autoinit) {
-			currcnt = base_count;
+			curr_count = base_count;
 			curr_addr = base_addr;
 			if (want)
 				goto again;
 			UpdateEMSMapping();
 		} else {
 			curr_addr += left;
-			currcnt = 0xffff;
+			curr_count = 0xffff;
 			masked = true;
 			UpdateEMSMapping();
 			DoCallback(DMA_MASKED);
@@ -492,7 +492,7 @@ void DmaChannel::Reset()
 
 	base_addr = 0;
 	base_count  = 0;
-	currcnt  = 0;
+	curr_count  = 0;
 
 	pagenum = 0;
 
