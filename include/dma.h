@@ -39,27 +39,27 @@ class Section;
 using DMA_ReservationCallback = std::function<void(Section*)>;
 
 class DmaChannel;
-using DMA_Callback = std::function<void(DmaChannel *chan, DMAEvent event)>;
+using DMA_Callback = std::function<void(DmaChannel* chan, DMAEvent event)>;
 
 class DmaChannel {
 public:
 	// Defaults at the time of initialization
-	uint32_t page_base = 0;
+	uint32_t page_base  = 0;
 	uint32_t curr_addr = 0;
 
-	uint16_t base_addr = 0;
-	uint16_t base_count  = 0;
-	uint16_t curr_count  = 0;
+	uint16_t base_addr  = 0;
+	uint16_t base_count = 0;
+	uint16_t curr_count = 0;
 
 	const uint8_t chan_num = 0;
 	uint8_t page_num = 0;
 	const uint8_t is_16bit = 0;
 
-	bool is_incremented = true;
-	bool is_autoiniting  = false;
-	bool is_masked    = true;
-	bool has_reached_terminal_count    = false;
-	bool has_raised_request = false;
+	bool is_incremented             = true;
+	bool is_autoiniting             = false;
+	bool is_masked                  = true;
+	bool has_reached_terminal_count = false;
+	bool has_raised_request         = false;
 
 	DMA_Callback callback = {};
 
@@ -88,10 +88,11 @@ public:
 private:
 	void EvictReserver();
 	bool HasReservation() const;
-	size_t ReadOrWrite(DMA_DIRECTION direction, size_t words, uint8_t* const buffer);
+	size_t ReadOrWrite(DMA_DIRECTION direction, size_t words,
+	                   uint8_t* const buffer);
 
 	DMA_ReservationCallback reservation_callback = {};
-	std::string_view reservation_owner = {};
+	std::string_view reservation_owner           = {};
 };
 
 class DmaController {
@@ -122,7 +123,7 @@ public:
 	void ResetChannel(const uint8_t channel_num) const;
 };
 
-DmaChannel * DMA_GetChannel(uint8_t chan);
+DmaChannel* DMA_GetChannel(uint8_t chan);
 
 void DMA_ShutdownSecondaryController();
 void DMA_ResetChannel(const uint8_t channel_num);

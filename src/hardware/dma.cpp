@@ -46,19 +46,17 @@ static void UpdateEMSMapping()
 {
 	/* if EMS is not present, this will result in a 1:1 mapping */
 	Bitu i;
-	for (i=0;i<0x10;i++) {
-		ems_board_mapping[EMM_PAGEFRAME4K+i]=paging.firstmb[EMM_PAGEFRAME4K+i];
+	for (i = 0; i < 0x10; i++) {
+		ems_board_mapping[EMM_PAGEFRAME4K + i] =
+		        paging.firstmb[EMM_PAGEFRAME4K + i];
 	}
 }
 
 // Generic function to read or write a block of data to or from memory.
 // Don't use this directly; call two helpers: DMA_BlockRead or DMA_BlockWrite
-static void perform_dma_io(const DMA_DIRECTION direction,
-                           const PhysPt spage,
-                           PhysPt mem_address,
-                           void * const data_start,
-                           const size_t num_words,
-                           const uint8_t is_dma16)
+static void perform_dma_io(const DMA_DIRECTION direction, const PhysPt spage,
+                           PhysPt mem_address, void* const data_start,
+                           const size_t num_words, const uint8_t is_dma16)
 {
 	assert(is_dma16 == 0 || is_dma16 == 1);
 
@@ -68,37 +66,44 @@ static void perform_dma_io(const DMA_DIRECTION direction,
 	mem_address <<= is_dma16;
 
 	// The data pointer will be incremented per transfer
-	auto data_pt = reinterpret_cast<uint8_t *>(data_start);
+	auto data_pt = reinterpret_cast<uint8_t*>(data_start);
 
 	// Convert from DMA 'words' to actual bytes, no greater than 64 KiB
 	auto remaining_bytes = check_cast<uint16_t>(num_words << is_dma16);
 	do {
 		// Find the right EMS page that contains the current address
 		auto page = highpart_addr_page + (mem_address >> 12);
-		if (page < EMM_PAGEFRAME4K)
+		if (page < EMM_PAGEFRAME4K) {
 			page = paging.firstmb[page];
-		else if (page < EMM_PAGEFRAME4K + 0x10)
+		} else if (page < EMM_PAGEFRAME4K + 0x10) {
 			page = ems_board_mapping[page];
-		else if (page < LINK_START)
+		} else if (page < LINK_START) {
 			page = paging.firstmb[page];
+		}
 
 		// Calculate the offset within the page
-		const auto pos_in_page = mem_address & (dos_pagesize - 1);
-		const auto bytes_to_page_end = check_cast<uint16_t>(dos_pagesize - pos_in_page);
-		const auto chunk_start = check_cast<PhysPt>(page * dos_pagesize + pos_in_page);
+		const auto pos_in_page       = mem_address & (dos_pagesize - 1);
+		const auto bytes_to_page_end = check_cast<uint16_t>(
+		        dos_pagesize - pos_in_page);
+		const auto chunk_start = check_cast<PhysPt>(page * dos_pagesize +
+		                                            pos_in_page);
 
 		// Determine how many bytes to transfer within this page
 		const auto chunk_bytes = std::min(remaining_bytes, bytes_to_page_end);
 
 		// Copy the data from the page address into the data pointer
-		if (direction == DMA_DIRECTION::READ)
-			for (auto i = 0; i < chunk_bytes; ++i)
+		if (direction == DMA_DIRECTION::READ) {
+			for (auto i = 0; i < chunk_bytes; ++i) {
 				data_pt[i] = phys_readb(chunk_start + i);
+			}
+		}
 
 		// Copy the data from the data pointer into the page address
-		else if (direction == DMA_DIRECTION::WRITE)
-			for (auto i = 0; i < chunk_bytes; ++i)
+		else if (direction == DMA_DIRECTION::WRITE) {
+			for (auto i = 0; i < chunk_bytes; ++i) {
 				phys_writeb(chunk_start + i, data_pt[i]);
+			}
+		}
 
 		mem_address += chunk_bytes;
 		data_pt += chunk_bytes;
@@ -139,8 +144,7 @@ constexpr uint8_t is_primary(const uint8_t channel_num)
 
 constexpr uint8_t is_secondary(const uint8_t channel_num)
 {
-	return (channel_num >= SecondaryMin &&
-	        channel_num <= SecondaryMax);
+	return (channel_num >= SecondaryMin && channel_num <= SecondaryMax);
 }
 
 constexpr uint8_t to_secondary_num(const uint8_t channel_num)
@@ -189,7 +193,8 @@ static DmaChannel* GetChannelFromPort(const io_port_t port)
 static void DMA_Write_Port(const io_port_t port, const io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint16_t>(value);
-	// LOG(LOG_DMACONTROL,LOG_ERROR)("Write %" sBitfs(X) " %" sBitfs(X),port,val);
+	// LOG(LOG_DMACONTROL,LOG_ERROR)("Write %" sBitfs(X) " %"
+	// sBitfs(X),port,val);
 	if (port < 0x10) {
 		/* write to the first DMA controller (channels 0-3) */
 		primary->WriteControllerReg(port, val, io_width_t::byte);
@@ -199,8 +204,9 @@ static void DMA_Write_Port(const io_port_t port, const io_val_t value, io_width_
 	} else {
 		UpdateEMSMapping();
 		auto channel = GetChannelFromPort(port);
-		if (channel)
+		if (channel) {
 			channel->SetPage(check_cast<uint8_t>(val));
+		}
 	}
 }
 
@@ -215,84 +221,92 @@ static uint16_t DMA_Read_Port(const io_port_t port, const io_width_t width)
 		return secondary->ReadControllerReg((port - 0xc0) >> 1, width);
 	} else {
 		const auto channel = GetChannelFromPort(port);
-		if (channel)
+		if (channel) {
 			return channel->page_num;
+		}
 	}
 	return 0;
 }
 
-void DmaController::WriteControllerReg(const io_port_t reg, const io_val_t value, io_width_t)
+void DmaController::WriteControllerReg(const io_port_t reg,
+                                       const io_val_t value, io_width_t)
 {
-	auto val = check_cast<uint16_t>(value);
-	DmaChannel *chan = nullptr;
+	auto val         = check_cast<uint16_t>(value);
+	DmaChannel* chan = nullptr;
 	switch (reg) {
-	/* set base address of DMA transfer (1st byte low part, 2nd byte high part) */
-	case 0x0:case 0x2:case 0x4:case 0x6:
+	/* set base address of DMA transfer (1st byte low part, 2nd byte high
+	 * part) */
+	case 0x0:
+	case 0x2:
+	case 0x4:
+	case 0x6:
 		UpdateEMSMapping();
-		chan=GetChannel((uint8_t)(reg >> 1));
-		flipflop=!flipflop;
+		chan     = GetChannel((uint8_t)(reg >> 1));
+		flipflop = !flipflop;
 		if (flipflop) {
-			chan->base_addr=(chan->base_addr&0xff00)|val;
-			chan->curr_addr=(chan->curr_addr&0xff00)|val;
+			chan->base_addr = (chan->base_addr & 0xff00) | val;
+			chan->curr_addr = (chan->curr_addr & 0xff00) | val;
 		} else {
-			chan->base_addr=(chan->base_addr&0x00ff)|(val << 8);
-			chan->curr_addr=(chan->curr_addr&0x00ff)|(val << 8);
+			chan->base_addr = (chan->base_addr & 0x00ff) | (val << 8);
+			chan->curr_addr = (chan->curr_addr & 0x00ff) | (val << 8);
 		}
 		break;
 	/* set DMA transfer count (1st byte low part, 2nd byte high part) */
-	case 0x1:case 0x3:case 0x5:case 0x7:
+	case 0x1:
+	case 0x3:
+	case 0x5:
+	case 0x7:
 		UpdateEMSMapping();
-		chan=GetChannel((uint8_t)(reg >> 1));
-		flipflop=!flipflop;
+		chan     = GetChannel((uint8_t)(reg >> 1));
+		flipflop = !flipflop;
 		if (flipflop) {
-			chan->base_count=(chan->base_count&0xff00)|val;
-			chan->curr_count=(chan->curr_count&0xff00)|val;
+			chan->base_count = (chan->base_count & 0xff00) | val;
+			chan->curr_count = (chan->curr_count & 0xff00) | val;
 		} else {
-			chan->base_count=(chan->base_count&0x00ff)|(val << 8);
-			chan->curr_count=(chan->curr_count&0x00ff)|(val << 8);
+			chan->base_count = (chan->base_count & 0x00ff) | (val << 8);
+			chan->curr_count = (chan->curr_count & 0x00ff) | (val << 8);
 		}
 		break;
-	case 0x8:		/* Comand reg not used */
+	case 0x8: /* Comand reg not used */ break;
+	case 0x9: /* Request registers, memory to memory */
+		// TODO Warning?
 		break;
-	case 0x9:		/* Request registers, memory to memory */
-		//TODO Warning?
+	case 0xa: /* Mask Register */
+		if ((val & 0x4) == 0) {
+			UpdateEMSMapping();
+		}
+		chan = GetChannel(val & 3);
+		chan->SetMask((val & 0x4) > 0);
 		break;
-	case 0xa:		/* Mask Register */
-		if ((val & 0x4)==0) UpdateEMSMapping();
-		chan=GetChannel(val & 3);
-		chan->SetMask((val & 0x4)>0);
-		break;
-	case 0xb:		/* Mode Register */
+	case 0xb: /* Mode Register */
 		UpdateEMSMapping();
-		chan=GetChannel(val & 3);
-		chan->is_autoiniting=(val & 0x10) > 0;
-		chan->is_incremented=(val & 0x20) > 0;
-		//TODO Maybe other bits?
+		chan                 = GetChannel(val & 3);
+		chan->is_autoiniting = (val & 0x10) > 0;
+		chan->is_incremented = (val & 0x20) > 0;
+		// TODO Maybe other bits?
 		break;
-	case 0xc:		/* Clear Flip/Flip */
-		flipflop=false;
-		break;
+	case 0xc: /* Clear Flip/Flip */ flipflop = false; break;
 	case 0xd: /* Clear/Reset all channels */
-		for (uint8_t ct=0;ct<4;ct++) {
-			chan=GetChannel(ct);
+		for (uint8_t ct = 0; ct < 4; ct++) {
+			chan = GetChannel(ct);
 			chan->SetMask(true);
-			chan->has_reached_terminal_count=false;
+			chan->has_reached_terminal_count = false;
 		}
-		flipflop=false;
+		flipflop = false;
 		break;
-	case 0xe:		/* Clear Mask register */		
+	case 0xe: /* Clear Mask register */
 		UpdateEMSMapping();
-		for (uint8_t ct=0;ct<4;ct++) {
-			chan=GetChannel(ct);
+		for (uint8_t ct = 0; ct < 4; ct++) {
+			chan = GetChannel(ct);
 			chan->SetMask(false);
 		}
 		break;
-	case 0xf:		/* Multiple Mask register */
+	case 0xf: /* Multiple Mask register */
 		UpdateEMSMapping();
-		for (uint8_t ct=0;ct<4;ct++) {
-			chan=GetChannel(ct);
+		for (uint8_t ct = 0; ct < 4; ct++) {
+			chan = GetChannel(ct);
 			chan->SetMask(val & 1);
-			val>>=1;
+			val >>= 1;
 		}
 		break;
 	}
@@ -300,15 +314,16 @@ void DmaController::WriteControllerReg(const io_port_t reg, const io_val_t value
 
 uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 {
-	DmaChannel *chan = nullptr;
-	uint16_t ret = 0;
+	DmaChannel* chan = nullptr;
+	uint16_t ret     = 0;
 	switch (reg) {
-	/* read base address of DMA transfer (1st byte low part, 2nd byte high part) */
+	/* read base address of DMA transfer (1st byte low part, 2nd byte high
+	 * part) */
 	case 0x0:
 	case 0x2:
 	case 0x4:
 	case 0x6:
-		chan = GetChannel((uint8_t)(reg >> 1));
+		chan     = GetChannel((uint8_t)(reg >> 1));
 		flipflop = !flipflop;
 		if (flipflop) {
 			return chan->curr_addr & 0xff;
@@ -320,7 +335,7 @@ uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 	case 0x3:
 	case 0x5:
 	case 0x7:
-		chan = GetChannel((uint8_t)(reg >> 1));
+		chan     = GetChannel((uint8_t)(reg >> 1));
 		flipflop = !flipflop;
 		if (flipflop) {
 			return chan->curr_count & 0xff;
@@ -331,15 +346,18 @@ uint16_t DmaController::ReadControllerReg(const io_port_t reg, io_width_t)
 		ret = 0;
 		for (uint8_t ct = 0; ct < 4; ct++) {
 			chan = GetChannel(ct);
-			if (chan->has_reached_terminal_count)
+			if (chan->has_reached_terminal_count) {
 				ret |= 1 << ct;
+			}
 			chan->has_reached_terminal_count = false;
-			if (chan->has_raised_request)
+			if (chan->has_raised_request) {
 				ret |= 1 << (4 + ct);
+			}
 		}
 		return ret;
 	default:
-		LOG(LOG_DMACONTROL, LOG_NORMAL)("Trying to read undefined DMA port %x", reg);
+		LOG(LOG_DMACONTROL, LOG_NORMAL)
+		("Trying to read undefined DMA port %x", reg);
 		break;
 	}
 	return 0xffff;
@@ -388,7 +406,7 @@ void DmaChannel::ReachedTerminalCount()
 
 void DmaChannel::SetPage(const uint8_t val)
 {
-	page_num  = val;
+	page_num = val;
 	page_base = (page_num >> is_16bit) << (16 + is_16bit);
 }
 
@@ -412,9 +430,10 @@ size_t DmaChannel::Write(const size_t words, uint8_t* const src_buffer)
 	return ReadOrWrite(DMA_DIRECTION::WRITE, words, src_buffer);
 }
 
-size_t DmaChannel::ReadOrWrite(const DMA_DIRECTION direction, const size_t words, uint8_t* const buffer)
+size_t DmaChannel::ReadOrWrite(const DMA_DIRECTION direction,
+                               const size_t words, uint8_t* const buffer)
 {
-	auto want = check_cast<uint16_t>(words);
+	auto want     = check_cast<uint16_t>(words);
 	uint16_t done = 0;
 	curr_addr &= dma_wrapping;
 
@@ -435,14 +454,15 @@ again:
 		ReachedTerminalCount();
 		if (is_autoiniting) {
 			curr_count = base_count;
-			curr_addr = base_addr;
-			if (want)
+			curr_addr  = base_addr;
+			if (want) {
 				goto again;
+			}
 			UpdateEMSMapping();
 		} else {
 			curr_addr += left;
 			curr_count = 0xffff;
-			is_masked = true;
+			is_masked  = true;
 			UpdateEMSMapping();
 			DoCallback(DMA_MASKED);
 		}
@@ -487,20 +507,20 @@ void DmaChannel::ReserveFor(const std::string_view new_owner,
 void DmaChannel::Reset()
 {
 	// Defaults at the time of initialization
-	page_base = 0;
+	page_base  = 0;
 	curr_addr = 0;
 
-	base_addr = 0;
-	base_count  = 0;
-	curr_count  = 0;
+	base_addr  = 0;
+	base_count = 0;
+	curr_count = 0;
 
 	page_num = 0;
 
-	is_incremented = true;
-	is_autoiniting  = false;
-	is_masked    = true;
-	has_reached_terminal_count    = false;
-	has_raised_request   = false;
+	is_incremented             = true;
+	is_autoiniting             = false;
+	is_masked                  = true;
+	has_reached_terminal_count = false;
+	has_raised_request         = false;
 
 	callback             = {};
 	reservation_callback = {};
@@ -609,7 +629,8 @@ void DMA_ResetChannel(const uint8_t channel_num)
 	}
 }
 
-void DMA_SetWrapping(const uint32_t wrap) {
+void DMA_SetWrapping(const uint32_t wrap)
+{
 	dma_wrapping = wrap;
 }
 
@@ -618,11 +639,12 @@ void DMA_Destroy(Section* /*sec*/)
 	primary   = {};
 	secondary = {};
 }
-void DMA_Init(Section* sec) {
+void DMA_Init(Section* sec)
+{
 	DMA_SetWrapping(0xffff);
 	sec->AddDestroyFunction(&DMA_Destroy);
 	Bitu i;
-	for (i=0;i<LINK_START;i++) {
-		ems_board_mapping[i]=i;
+	for (i = 0; i < LINK_START; i++) {
+		ems_board_mapping[i] = i;
 	}
 }
