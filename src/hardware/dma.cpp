@@ -369,7 +369,7 @@ void DmaChannel::SetMask(const bool _mask)
 	DoCallback(masked ? DMA_MASKED : DMA_UNMASKED);
 }
 
-void DmaChannel::Register_Callback(const DMA_Callback _cb)
+void DmaChannel::RegisterCallback(const DMA_Callback _cb)
 {
 	callback = _cb;
 	SetMask(masked);

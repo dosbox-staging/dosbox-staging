@@ -339,7 +339,7 @@ void TandyDAC::ChangeMode()
 					const auto callback =
 					        std::bind(&TandyDAC::DmaCallback,
 					                  this, _1, _2);
-					dma.channel->Register_Callback(callback);
+					dma.channel->RegisterCallback(callback);
 					channel->Enable(true);
 					// LOG_MSG("TANDYDAC: playback started with freqency %f, volume %f", freq, vol);
 				}
