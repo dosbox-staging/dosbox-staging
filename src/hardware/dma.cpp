@@ -380,7 +380,7 @@ void DmaChannel::RegisterCallback(const DMA_Callback _cb)
 	}
 }
 
-void DmaChannel::ReachedTC()
+void DmaChannel::ReachedTerminalCount()
 {
 	tcount = true;
 	DoCallback(DMA_REACHED_TC);
@@ -432,7 +432,7 @@ again:
 		curr_buffer += left << DMA16;
 		want -= left;
 		done += left;
-		ReachedTC();
+		ReachedTerminalCount();
 		if (autoinit) {
 			currcnt = basecnt;
 			curraddr = baseaddr;
