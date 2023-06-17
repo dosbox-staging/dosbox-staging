@@ -24,11 +24,11 @@ jobs:
             reconfigure_build: false
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 897
+            max_warnings: 896
             reconfigure_build: false
           - name: MSVC, +voodoo
             arch: x64
-            max_warnings: 910
+            max_warnings: 909
             reconfigure_build: true
 
     steps:
