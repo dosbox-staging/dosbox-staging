@@ -1205,7 +1205,7 @@ static void DSP_Reset() {
 	sb.dma.autoinit=false;
 	sb.dma.mode=DSP_DMA_NONE;
 	sb.dma.remain_size=0;
-	if (sb.dma.chan) sb.dma.chan->Clear_Request();
+	if (sb.dma.chan) sb.dma.chan->ClearRequest();
 
 	sb.adpcm = {};
 	sb.freq = default_playback_rate_hz;
