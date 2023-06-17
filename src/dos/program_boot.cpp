@@ -478,7 +478,7 @@ void BOOT::Run(void)
 
 		/* create appearance of floppy drive DMA usage (Demon's Forge) */
 		if (!IS_TANDY_ARCH && floppysize != 0)
-			DMA_GetChannel(2)->tcount = true;
+			DMA_GetChannel(2)->has_reached_terminal_count = true;
 
 		/* revector some dos-allocated interrupts */
 		real_writed(0, 0x01 * 4, 0xf000ff53);

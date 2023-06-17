@@ -55,11 +55,11 @@ public:
 	uint8_t page_num = 0;
 	const uint8_t is_16bit = 0;
 
-	bool increment = true;
-	bool autoinit  = false;
-	bool masked    = true;
-	bool tcount    = false;
-	bool request   = false;
+	bool is_incremented = true;
+	bool is_autoiniting  = false;
+	bool is_masked    = true;
+	bool has_reached_terminal_count    = false;
+	bool has_raised_request = false;
 
 	DMA_Callback callback = {};
 
