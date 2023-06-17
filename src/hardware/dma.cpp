@@ -538,31 +538,31 @@ DmaController::DmaController(const uint8_t controller_index)
 
 		// Install handler for primary DMA controller ports
 		if (index == 0) {
-			DMA_WriteHandler[i].Install(i, DMA_Write_Port, width);
-			DMA_ReadHandler[i].Install(i, DMA_Read_Port, width);
+			io_write_handlers[i].Install(i, DMA_Write_Port, width);
+			io_read_handlers[i].Install(i, DMA_Read_Port, width);
 		}
 		// Install handler for secondary DMA controller ports
 		else if (IS_EGAVGA_ARCH) {
 			assert(index == 1);
 			const auto dma_port = static_cast<io_port_t>(0xc0 + i * 2);
-			DMA_WriteHandler[i].Install(dma_port, DMA_Write_Port, width);
-			DMA_ReadHandler[i].Install(dma_port, DMA_Read_Port, width);
+			io_write_handlers[i].Install(dma_port, DMA_Write_Port, width);
+			io_read_handlers[i].Install(dma_port, DMA_Read_Port, width);
 		}
 	}
 	// Install handlers for ports 0x81-0x83,0x87 (on the primary)
 	if (index == 0) {
-		DMA_WriteHandler[0x10].Install(0x81, DMA_Write_Port, io_width_t::byte, 3);
-		DMA_ReadHandler[0x10].Install(0x81, DMA_Read_Port, io_width_t::byte, 3);
-		DMA_WriteHandler[0x11].Install(0x87, DMA_Write_Port, io_width_t::byte, 1);
-		DMA_ReadHandler[0x11].Install(0x87, DMA_Read_Port, io_width_t::byte, 1);
+		io_write_handlers[0x10].Install(0x81, DMA_Write_Port, io_width_t::byte, 3);
+		io_read_handlers[0x10].Install(0x81, DMA_Read_Port, io_width_t::byte, 3);
+		io_write_handlers[0x11].Install(0x87, DMA_Write_Port, io_width_t::byte, 1);
+		io_read_handlers[0x11].Install(0x87, DMA_Read_Port, io_width_t::byte, 1);
 	}
 	// Install handlers for ports 0x89-0x8b,0x8f (on the secondary)
 	else if (IS_EGAVGA_ARCH) {
 		assert(index == 1);
-		DMA_WriteHandler[0x10].Install(0x89, DMA_Write_Port, io_width_t::byte, 3);
-		DMA_ReadHandler[0x10].Install(0x89, DMA_Read_Port, io_width_t::byte, 3);
-		DMA_WriteHandler[0x11].Install(0x8f, DMA_Write_Port, io_width_t::byte, 1);
-		DMA_ReadHandler[0x11].Install(0x8f, DMA_Read_Port, io_width_t::byte, 1);
+		io_write_handlers[0x10].Install(0x89, DMA_Write_Port, io_width_t::byte, 3);
+		io_read_handlers[0x10].Install(0x89, DMA_Read_Port, io_width_t::byte, 3);
+		io_write_handlers[0x11].Install(0x8f, DMA_Write_Port, io_width_t::byte, 1);
+		io_read_handlers[0x11].Install(0x8f, DMA_Read_Port, io_width_t::byte, 1);
 	}
 
 	LOG_MSG("DMA: Initialized %s controller",
@@ -575,10 +575,10 @@ DmaController::~DmaController()
 	        (index == 0 ? "primary" : "secondary"));
 
 	// Deregister the controller's IO handlers
-	for (auto& rh : DMA_ReadHandler) {
+	for (auto& rh : io_read_handlers) {
 		rh.Uninstall();
 	}
-	for (auto& wh : DMA_WriteHandler) {
+	for (auto& wh : io_write_handlers) {
 		wh.Uninstall();
 	}
 

@@ -100,8 +100,8 @@ private:
 
 	std::unique_ptr<DmaChannel> dma_channels[4] = {};
 
-	IO_ReadHandleObject DMA_ReadHandler[0x12]   = {};
-	IO_WriteHandleObject DMA_WriteHandler[0x12] = {};
+	IO_ReadHandleObject io_read_handlers[0x12]   = {};
+	IO_WriteHandleObject io_write_handlers[0x12] = {};
 
 	const uint8_t index = 0;
 
