@@ -1296,7 +1296,7 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 
 	// Update the address, channel, and callback
 	dma1 = new_address;
-	dma_channel = GetDMAChannel(dma1);
+	dma_channel = DMA_GetChannel(dma1);
 	assert(dma_channel);
 	dma_channel->ReserveFor("GUS", gus_destroy);
 	dma_channel->RegisterCallback(std::bind(&Gus::DmaCallback, this, _1, _2));

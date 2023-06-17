@@ -267,7 +267,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 		                          io_width_t::byte, 4);
 
 	// Reserve the DMA channel
-	if (dma.channel = GetDMAChannel(io.dma); dma.channel) {
+	if (dma.channel = DMA_GetChannel(io.dma); dma.channel) {
 		dma.channel->ReserveFor("Tandy DAC", shutdown_dac);
 	}
 
@@ -334,7 +334,7 @@ void TandyDAC::ChangeMode()
 			channel->SetAppVolume(vol, vol);
 			if ((regs.mode & 0x0c) == 0x0c) {
 				dma.is_done = false;
-				dma.channel = GetDMAChannel(io.dma);
+				dma.channel = DMA_GetChannel(io.dma);
 				if (dma.channel) {
 					const auto callback =
 					        std::bind(&TandyDAC::DmaCallback,

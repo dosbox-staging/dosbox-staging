@@ -122,7 +122,7 @@ public:
 	void ResetChannel(const uint8_t channel_num) const;
 };
 
-DmaChannel * GetDMAChannel(uint8_t chan);
+DmaChannel * DMA_GetChannel(uint8_t chan);
 
 void CloseSecondDMAController();
 void DMA_ResetChannel(const uint8_t channel_num);

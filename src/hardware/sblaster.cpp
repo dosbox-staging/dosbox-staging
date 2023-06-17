@@ -1130,7 +1130,7 @@ static void DSP_PrepareDMA_Old(DMA_MODES mode,bool autoinit,bool sign) {
 	sb.dma.sign=sign;
 	if (!autoinit)
 		sb.dma.singlesize=1+sb.dsp.in.data[0]+(sb.dsp.in.data[1] << 8);
-	sb.dma.chan=GetDMAChannel(sb.hw.dma8);
+	sb.dma.chan=DMA_GetChannel(sb.hw.dma8);
 	DSP_DoDMATransfer(mode,sb.freq / (sb.mixer.stereo ? 2 : 1), autoinit, sb.mixer.stereo);
 }
 
@@ -1141,21 +1141,21 @@ static void DSP_PrepareDMA_New(DMA_MODES mode, uint32_t length, bool autoinit, b
 	//equal length if data format and dma channel are both 16-bit or 8-bit
 	if (mode==DSP_DMA_16) {
 		if (sb.hw.dma16!=0xff) {
-			sb.dma.chan=GetDMAChannel(sb.hw.dma16);
+			sb.dma.chan=DMA_GetChannel(sb.hw.dma16);
 			if (sb.dma.chan==NULL) {
-				sb.dma.chan=GetDMAChannel(sb.hw.dma8);
+				sb.dma.chan=DMA_GetChannel(sb.hw.dma8);
 				mode=DSP_DMA_16_ALIASED;
 				length *= 2;
 			}
 		} else {
-			sb.dma.chan=GetDMAChannel(sb.hw.dma8);
+			sb.dma.chan=DMA_GetChannel(sb.hw.dma8);
 			mode=DSP_DMA_16_ALIASED;
 			//UNDOCUMENTED:
 			//In aliased mode sample length is written to DSP as number of
 			//16-bit samples so we need double 8-bit DMA buffer length
 			length *= 2;
 		}
-	} else sb.dma.chan=GetDMAChannel(sb.hw.dma8);
+	} else sb.dma.chan=DMA_GetChannel(sb.hw.dma8);
 	//Set the length to the correct register depending on mode
 	if (autoinit) {
 		sb.dma.autosize = length;
@@ -1241,7 +1241,7 @@ static void DSP_DoReset(uint8_t val) {
 static void DSP_E2_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	if (event==DMA_UNMASKED) {
 		uint8_t val=(uint8_t)(sb.e2.value&0xff);
-		DmaChannel * chan=GetDMAChannel(sb.hw.dma8);
+		DmaChannel * chan=DMA_GetChannel(sb.hw.dma8);
 		chan->RegisterCallback(0);
 		chan->Write(1,&val);
 	}
@@ -1250,7 +1250,7 @@ static void DSP_E2_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 static void DSP_ADC_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	if (event!=DMA_UNMASKED) return;
 	uint8_t val=128;
-	DmaChannel * ch=GetDMAChannel(sb.hw.dma8);
+	DmaChannel * ch=DMA_GetChannel(sb.hw.dma8);
 	while (sb.dma.left--) {
 		ch->Write(1,&val);
 	}
@@ -1339,7 +1339,7 @@ static void DSP_DoCommand() {
 		sb.dma.left = 1 + sb.dsp.in.data[0] + (sb.dsp.in.data[1] << 8);
 		sb.dma.sign=false;
 		LOG(LOG_SB,LOG_ERROR)("DSP:Faked ADC for %u bytes",sb.dma.left);
-		GetDMAChannel(sb.hw.dma8)->RegisterCallback(DSP_ADC_CallBack);
+		DMA_GetChannel(sb.hw.dma8)->RegisterCallback(DSP_ADC_CallBack);
 		break;
 	case 0x14:	/* Singe Cycle 8-Bit DMA DAC */
 	case 0x15:	/* Wari hack. Waru uses this one instead of 0x14, but some weird stuff going on there anyway */
@@ -1489,7 +1489,7 @@ static void DSP_DoCommand() {
 				        sb.e2.value += E2_incr_table[sb.e2.count % 4][i];
 		        sb.e2.value += E2_incr_table[sb.e2.count % 4][8];
 		        sb.e2.count++;
-		        GetDMAChannel(sb.hw.dma8)->RegisterCallback(DSP_E2_DMA_CallBack);
+		        DMA_GetChannel(sb.hw.dma8)->RegisterCallback(DSP_E2_DMA_CallBack);
 		}
 		break;
 	case 0xe3: /* DSP Copyright */
@@ -2204,7 +2204,7 @@ public:
 			return;
 
 		sb.hw.dma8 = static_cast<uint8_t>(section->Get_int("dma"));
-		auto dma_channel = GetDMAChannel(sb.hw.dma8);
+		auto dma_channel = DMA_GetChannel(sb.hw.dma8);
 		assert(dma_channel);
 		dma_channel->ReserveFor(CardType(), SBLASTER_ShutDown);
 
@@ -2214,10 +2214,10 @@ public:
 
 			// Reserve the second DMA channel only if it's unique.
 			if (sb.hw.dma16 != sb.hw.dma8) {
-				dma_channel = GetDMAChannel(sb.hw.dma16);
+				dma_channel = DMA_GetChannel(sb.hw.dma16);
 				assert(dma_channel);
 				dma_channel->ReserveFor(CardType(),
-				                        SBLASTER_ShutDown);
+										SBLASTER_ShutDown);
 			}
 		}
 
