@@ -29,7 +29,7 @@ constexpr char UnitSeparator = 31;
 
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 
-BatchFile::BatchFile(DOS_Shell* const host, std::unique_ptr<ByteReader> input_reader,
+BatchFile::BatchFile(const HostShell& host, std::unique_ptr<ByteReader> input_reader,
                      const std::string_view entered_name,
                      const std::string_view cmd_line, const bool echo_on)
         : shell(host),
@@ -126,7 +126,7 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 
 			// Get the key's corresponding value from the environment
 			if (std::string env_val = {};
-			    shell->GetEnvStr(env_key.c_str(), env_val)) {
+			    shell.GetEnvStr(env_key.c_str(), env_val)) {
 				// append just the trailing value portion
 				expanded += env_val.substr(env_key.length() +
 				                           sizeof('='));
