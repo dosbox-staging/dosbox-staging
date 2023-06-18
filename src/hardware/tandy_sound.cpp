@@ -144,7 +144,7 @@ public:
 
 private:
 	void ChangeMode();
-	void DmaCallback(DmaChannel *chan, DMAEvent event);
+	void DmaCallback(const DmaChannel* chan, DMAEvent event);
 	uint8_t ReadFromPort(io_port_t port, io_width_t);
 	void WriteToPort(io_port_t port, io_val_t value, io_width_t);
 	void AudioCallback(uint16_t requested);
@@ -300,7 +300,7 @@ TandyDAC::~TandyDAC()
 	}
 }
 
-void TandyDAC::DmaCallback([[maybe_unused]] DmaChannel*, DMAEvent event)
+void TandyDAC::DmaCallback([[maybe_unused]] const DmaChannel*, DMAEvent event)
 {
 	// LOG_MSG("TANDYDAC: DMA event %d", event);
 	if (event != DMA_REACHED_TC)

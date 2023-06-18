@@ -237,7 +237,7 @@ private:
 	void CheckVoiceIrq();
 	uint32_t GetDmaOffset() noexcept;
 	void UpdateDmaAddr(uint32_t offset) noexcept;
-	void DmaCallback(DmaChannel *chan, DMAEvent event);
+	void DmaCallback(const DmaChannel* chan, DMAEvent event);
 	void StartDmaTransfers();
 	bool IsDmaPcm16Bit() noexcept;
 	bool IsDmaXfer16Bit() noexcept;
@@ -923,7 +923,7 @@ void Gus::StartDmaTransfers()
 	PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 }
 
-void Gus::DmaCallback(DmaChannel *, DMAEvent event)
+void Gus::DmaCallback(const DmaChannel*, DMAEvent event)
 {
 	if (event == DMA_UNMASKED)
 		StartDmaTransfers();

@@ -587,7 +587,8 @@ static void DSP_FlushData()
 
 static double last_dma_callback = 0.0;
 
-static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
+static void DSP_DMA_CallBack(const DmaChannel* chan, DMAEvent event)
+{
 	if (chan!=sb.dma.chan || event==DMA_REACHED_TC) return;
 	else if (event==DMA_MASKED) {
 		if (sb.mode==MODE_DMA) {
@@ -1238,7 +1239,8 @@ static void DSP_DoReset(uint8_t val) {
 	}
 }
 
-static void DSP_E2_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
+static void DSP_E2_DMA_CallBack(const DmaChannel* /*chan*/, DMAEvent event)
+{
 	if (event==DMA_UNMASKED) {
 		uint8_t val=(uint8_t)(sb.e2.value&0xff);
 		DmaChannel * chan=DMA_GetChannel(sb.hw.dma8);
@@ -1247,7 +1249,8 @@ static void DSP_E2_DMA_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
 	}
 }
 
-static void DSP_ADC_CallBack(DmaChannel * /*chan*/, DMAEvent event) {
+static void DSP_ADC_CallBack(const DmaChannel* /*chan*/, DMAEvent event)
+{
 	if (event!=DMA_UNMASKED) return;
 	uint8_t val=128;
 	DmaChannel * ch=DMA_GetChannel(sb.hw.dma8);

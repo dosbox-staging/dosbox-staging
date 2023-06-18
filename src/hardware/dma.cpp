@@ -374,7 +374,7 @@ DmaChannel::DmaChannel(const uint8_t num, const bool is_dma_16bit)
 	assert(is_incremented);
 }
 
-void DmaChannel::DoCallback(const DMAEvent event)
+void DmaChannel::DoCallback(const DMAEvent event) const
 {
 	if (callback) {
 		callback(this, event);
