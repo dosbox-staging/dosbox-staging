@@ -39,7 +39,7 @@ class Section;
 using DMA_ReservationCallback = std::function<void(Section*)>;
 
 class DmaChannel;
-using DMA_Callback = std::function<void(DmaChannel* chan, DMAEvent event)>;
+using DMA_Callback = std::function<void(const DmaChannel* chan, DMAEvent event)>;
 
 class DmaChannel {
 public:
@@ -66,7 +66,7 @@ public:
 	DmaChannel(uint8_t num, bool dma16);
 	~DmaChannel();
 
-	void DoCallback(DMAEvent event);
+	void DoCallback(DMAEvent event) const;
 	void SetMask(bool _mask);
 	void RegisterCallback(const DMA_Callback cb);
 	void ReachedTerminalCount();
