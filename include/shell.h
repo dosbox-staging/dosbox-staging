@@ -111,6 +111,8 @@ public:
 	bool CheckConfig(char* cmd_in,char*line);
 	/* Internal utilities for testing */
 	virtual bool execute_shell_cmd(char *name, char *arguments);
+	void ReadCommandHistory();
+	void WriteCommandHistory();
 
 	/* Commands */
 	void CMD_HELP(char * args);
