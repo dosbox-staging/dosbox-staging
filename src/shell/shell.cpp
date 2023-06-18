@@ -19,6 +19,7 @@
 
 #include "shell.h"
 
+#include <fstream>
 #include <list>
 #include <memory>
 #include <stdarg.h>
@@ -36,6 +37,9 @@
 #include "string_utils.h"
 #include "support.h"
 #include "timer.h"
+
+constexpr int HistoryMaxLineSize = 256;
+constexpr int HistoryMaxNumLines = 500;
 
 callback_number_t call_shellstop = 0;
 /* Larger scope so shell_del autoexec can use it to
@@ -450,6 +454,58 @@ void DOS_Shell::Run()
 void DOS_Shell::SyntaxError()
 {
 	WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
+}
+
+static std_fs::path get_cmd_history_path()
+{
+	return get_platform_config_dir() / "cmd_history.txt";
+}
+
+void DOS_Shell::ReadCommandHistory()
+{
+	std::ifstream history_file(get_cmd_history_path());
+	if (history_file) {
+		std::string line;
+		while (getline(history_file, line)) {
+			trim(line);
+			auto len = line.length();
+			if (len > 0 && len <= HistoryMaxLineSize) {
+				history.emplace_back(std::move(line));
+			}
+		}
+	}
+}
+
+void DOS_Shell::WriteCommandHistory()
+{
+	std_fs::path history_path = get_cmd_history_path();
+	std::ofstream history_file(history_path);
+	if (!history_file) {
+		LOG_WARNING("SHELL: Unable to write command history to file: '%s'", history_path.string().c_str());
+		return;
+	}
+	std::vector<std::string> trimmed_history;
+	trimmed_history.reserve(history.size());
+	for (std::string str : history) {
+		trim(str);
+		auto len = str.length();
+		if (len > 0 && len <= HistoryMaxLineSize) {
+			trimmed_history.emplace_back(std::move(str));
+		}
+	}
+	// Remove "exit" from the history if it is the last command entered
+	if (!trimmed_history.empty()) {
+		std::string last = trimmed_history.back();
+		lowcase(last);
+		if (last == "exit") {
+			trimmed_history.pop_back();
+		}
+	}
+	int size = static_cast<int>(trimmed_history.size());
+	int start = std::max(0, size - HistoryMaxNumLines);
+	for (int i = start; i < size; ++i) {
+		history_file << trimmed_history[i] << std::endl;
+	}
 }
 
 extern int64_t ticks_at_program_launch;
@@ -1268,7 +1324,9 @@ void SHELL_Init() {
 	// first_shell is only setup here, so may as well invoke
 	// it's constructor directly
 	first_shell = new DOS_Shell;
+	first_shell->ReadCommandHistory();
 	first_shell->Run();
+	first_shell->WriteCommandHistory();
 	delete first_shell;
 	first_shell = nullptr; // Make clear that it shouldn't be used anymore
 }
