@@ -2042,7 +2042,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 		break;
 	case M_TANDY4:
-		aspect_ratio = 1.2;
 		doubleheight = true;
 		if (machine == MCH_TANDY)
 			doublewidth = (vga.tandy.mode_control & 0b10000) == 0b00000;
@@ -2051,6 +2050,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		vga.draw.blocks = width * 2;
 		width = vga.draw.blocks * 4;
+		aspect_ratio    = width * 3.0 / (height * 4.0);
+
 		if ((machine == MCH_TANDY && (vga.tandy.gfx_control & 0b01000)) ||
 		    (machine == MCH_PCJR && (vga.tandy.mode_control == 0b01011)))
 			VGA_DrawLine = VGA_Draw_2BPPHiRes_Line;
