@@ -218,6 +218,8 @@ bool CDROM_Interface_Fake::GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& 
 	stTrack = end = 1;
 	leadOut.min	= 60;
 	leadOut.sec = leadOut.fr = 0;
+
+	LagDriveResponse();
 	return true;
 }
 
@@ -226,6 +228,8 @@ bool CDROM_Interface_Fake::GetAudioTrackInfo(uint8_t track, TMSF& start, unsigne
 	start.min = start.fr = 0;
 	start.sec = 2;
 	attr	  = 0x60; // data / permitted
+
+	LagDriveResponse();
 	return true;
 }
 
@@ -234,11 +238,15 @@ bool CDROM_Interface_Fake :: GetAudioSub(unsigned char& attr, unsigned char& tra
 	track	= index = 1;
 	relPos.min = relPos.fr = 0; relPos.sec = 2;
 	absPos.min = absPos.fr = 0; absPos.sec = 2;
+
+	LagDriveResponse();
 	return true;
 }
 
 bool CDROM_Interface_Fake :: GetAudioStatus(bool& playing, bool& pause) {
 	playing = pause = false;
+
+	LagDriveResponse();
 	return true;
 }
 
@@ -246,6 +254,8 @@ bool CDROM_Interface_Fake :: GetMediaTrayStatus(bool& mediaPresent, bool& mediaC
 	mediaPresent = true;
 	mediaChanged = false;
 	trayOpen     = false;
+
+	LagDriveResponse();
 	return true;
 }
 
