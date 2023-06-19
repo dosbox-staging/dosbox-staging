@@ -123,7 +123,7 @@ struct RenderedImage {
 		copy.image_data = new uint8_t[image_data_num_bytes];
 
 		assert(image_data);
-		std::memcpy(const_cast<uint8_t*>(copy.image_data),
+		std::memcpy(copy.image_data,
 		            image_data,
 		            image_data_num_bytes);
 
@@ -133,7 +133,7 @@ struct RenderedImage {
 			constexpr auto PaletteNumBytes = 256 * 4;
 			copy.palette_data = new uint8_t[PaletteNumBytes];
 
-			std::memcpy(const_cast<uint8_t*>(copy.palette_data),
+			std::memcpy(copy.palette_data,
 			            palette_data,
 			            PaletteNumBytes);
 		}
@@ -142,8 +142,8 @@ struct RenderedImage {
 
 	void free()
 	{
-		std::free(const_cast<uint8_t*>(image_data));
-		std::free(const_cast<uint8_t*>(palette_data));
+		delete[] image_data;
+		delete[] palette_data;
 	}
 };
 

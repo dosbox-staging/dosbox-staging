@@ -2581,12 +2581,9 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		image.flip_vertical      = false;
 		image.pixel_aspect_ratio = {1};
 		image.bits_per_pixel     = 24;
-		image.pitch              = image.width * (image.bits_per_pixel / 8);
-		image.palette_data       = nullptr;
-
-		uint8_t* image_data = static_cast<uint8_t*>(
-				std::malloc(image.height * image.pitch));
-		image.image_data = image_data;
+		image.pitch        = image.width * (image.bits_per_pixel / 8);
+		image.palette_data = nullptr;
+		image.image_data   = new uint8_t[image.height * image.pitch];
 	};
 
 #if C_OPENGL
@@ -2650,7 +2647,7 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		                         image.pitch) != 0) {
 			LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
 			            SDL_GetError());
-			std::free(image.image_data);
+			delete[] image.image_data;
 			return {};
 		}
 		return image;
