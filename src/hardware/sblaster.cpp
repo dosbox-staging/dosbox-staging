@@ -588,12 +588,8 @@ static void DSP_FlushData()
 static double last_dma_callback = 0.0;
 
 static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
-	assert(chan && chan == sb.dma.chan);
-
-	if (event == DMA_REACHED_TC) {
-		assert(sb.mode == MODE_DMA);
-		sb.chan->FillUp();
-	} else if (event == DMA_MASKED) {
+	if (chan!=sb.dma.chan || event==DMA_REACHED_TC) return;
+	else if (event==DMA_MASKED) {
 		if (sb.mode==MODE_DMA) {
 			//Catch up to current time, but don't generate an IRQ!
 			//Fixes problems with later sci games.
