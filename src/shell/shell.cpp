@@ -463,6 +463,9 @@ static std_fs::path get_cmd_history_path()
 
 void DOS_Shell::ReadCommandHistory()
 {
+	if (control->SecureMode()) {
+		return;
+	}
 	std::ifstream history_file(get_cmd_history_path());
 	if (history_file) {
 		std::string line;
@@ -478,6 +481,9 @@ void DOS_Shell::ReadCommandHistory()
 
 void DOS_Shell::WriteCommandHistory()
 {
+	if (control->SecureMode()) {
+		return;
+	}
 	std_fs::path history_path = get_cmd_history_path();
 	std::ofstream history_file(history_path);
 	if (!history_file) {
