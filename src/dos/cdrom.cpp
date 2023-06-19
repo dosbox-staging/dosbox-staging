@@ -80,6 +80,7 @@ bool CDROM_Interface_SDL::GetAudioTracks(uint8_t &stTrack, uint8_t &end, TMSF &l
 		stTrack = 1;
 		end = cd->numtracks;
 		leadOut = frames_to_msf(cd->track[cd->numtracks].offset);
+		LagDriveResponse();
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));
 }
@@ -93,6 +94,7 @@ bool CDROM_Interface_SDL::GetAudioTrackInfo(uint8_t track,
 		attr = cd->track[track - 1].type << 4; // sdl uses 0 for audio
 		                                       // and 4 for data. instead
 		                                       // of 0x00 and 0x40
+		LagDriveResponse();
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));
 }
@@ -109,6 +111,7 @@ bool CDROM_Interface_SDL::GetAudioSub(unsigned char &attr,
 		attr = cd->track[track].type << 4;
 		relPos = frames_to_msf(cd->cur_frame);
 		absPos = frames_to_msf(cd->cur_frame + cd->track[track].offset);
+		LagDriveResponse();
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));
 }
@@ -118,6 +121,7 @@ bool CDROM_Interface_SDL::GetAudioStatus(bool &playing, bool &pause)
 	if (CD_INDRIVE(SDL_CDStatus(cd))) {
 		playing = (cd->status == CD_PLAYING);
 		pause = (cd->status == CD_PAUSED);
+		LagDriveResponse();
 	}
 	return CD_INDRIVE(SDL_CDStatus(cd));
 }
@@ -131,8 +135,10 @@ bool CDROM_Interface_SDL::GetMediaTrayStatus(bool &mediaPresent,
 	mediaChanged = (oldLeadOut != cd->track[cd->numtracks].offset);
 	trayOpen = !mediaPresent;
 	oldLeadOut = cd->track[cd->numtracks].offset;
-	if (mediaChanged)
+	if (mediaChanged) {
 		SDL_CDStatus(cd);
+		LagDriveResponse();
+	}
 	return true;
 }
 
@@ -146,6 +152,7 @@ bool CDROM_Interface_SDL::PlayAudioSector(const uint32_t start, uint32_t len)
 
 bool CDROM_Interface_SDL::PauseAudio(bool resume)
 {
+	LagDriveResponse();
 	if (resume)
 		return (SDL_CDResume(cd) == 0);
 	else
@@ -157,11 +164,14 @@ bool CDROM_Interface_SDL::StopAudio()
 	// Has to be there, otherwise wrong cd status report (dunno why, sdl bug ?)
 	SDL_CDClose(cd);
 	cd = SDL_CDOpen(driveID);
+
+	LagDriveResponse();
 	return (SDL_CDStop(cd) == 0);
 }
 
 bool CDROM_Interface_SDL::LoadUnloadMedia([[maybe_unused]] bool unload)
 {
+	LagDriveResponse();
 	return (SDL_CDEject(cd) == 0);
 }
 
