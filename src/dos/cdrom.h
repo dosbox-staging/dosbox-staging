@@ -116,6 +116,9 @@ public:
 	virtual bool ReadSectorsHost    (void* buffer, bool raw, unsigned long sector, unsigned long num) = 0;
 	virtual bool LoadUnloadMedia    (bool unload) = 0;
 	virtual void InitNewMedia       () {}
+
+protected:
+	void LagDriveResponse() const;
 };
 
 class CDROM_Interface_SDL : public CDROM_Interface

@@ -28,7 +28,9 @@
 
 #include "SDL.h"
 
+#include "callback.h"
 #include "dosbox.h"
+#include "pic.h"
 #include "string_utils.h"
 
 CDROM_Interface_SDL::CDROM_Interface_SDL()
@@ -235,4 +237,27 @@ bool CDROM_Interface_Fake :: GetMediaTrayStatus(bool& mediaPresent, bool& mediaC
 	mediaChanged = false;
 	trayOpen     = false;
 	return true;
+}
+
+// Simulate the delay a physical CD-ROM drive took to respond to queries. When
+// added to calls, this ensures that back-to-back queries report monotonically
+// increasing Minute-Second-Frame (MSF) time values.
+//
+void CDROM_Interface::LagDriveResponse() const
+{
+	// Always simulate a very small amount of drive response time
+	CALLBACK_Idle();
+
+	// Handle tick-rollover
+	static decltype(PIC_Ticks) prev_ticks = 0;
+	prev_ticks = std::min(PIC_Ticks, prev_ticks);
+
+	// Ensure results a monotonically increasing
+	auto since_last_response_ms = [=]() { return PIC_Ticks - prev_ticks; };
+	constexpr auto monotonic_response_ms = 1000 / REDBOOK_FRAMES_PER_SECOND;
+	while (since_last_response_ms() < monotonic_response_ms) {
+		CALLBACK_Idle();
+	}
+
+	prev_ticks = PIC_Ticks;
 }
