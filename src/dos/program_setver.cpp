@@ -616,7 +616,7 @@ void SETVER::LoadTableFromFile()
 		already_warned_name = true;
 	};
 
-	// If the file does not exists, save default settings there
+	// If the file does not exist, save default settings there
 	if (!std_fs::exists(file_path)) {
 		SaveTableToFile();
 		return;
@@ -679,6 +679,16 @@ void SETVER::SaveTableToFile()
 	// Do nothing if no file name specified in the configuration
 	const auto file_path = GetTableFilePath();
 	if (file_path.empty()) {
+		return;
+	}
+
+	// Do not store modifed table if we are in secure mode
+	if (control->SecureMode()) {
+		static bool already_warned = false;
+		if (!already_warned) {
+			LOG_WARNING("DOS: SETVER - secure mode, storing table skipped");
+			already_warned = true;
+		}
 		return;
 	}
 
