@@ -1781,6 +1781,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	switch (vga.mode) {
 	case M_VGA:
 		width<<=2;
+
+		// Default to standard VGA linear drawing, which might be
+		// upgraded to 18-bit palette drawing below.
+		VGA_DrawLine = VGA_Draw_Linear_Line;
+
 		// Consider double or single-scanning if the mode itself is
 		// sub-350 line or the set width is assessed as a low resolution.
 		if (CurMode->sheight < 350 || is_width_low_resolution(width)) {
@@ -1812,10 +1817,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			doublewidth  = render.aspect ? true
 			                             : is_line_freq_double_scanned;
 
-			bpp = 32;
-			VGA_DrawLine = draw_linear_line_from_dac_palette;
-		} else {
-			VGA_DrawLine = VGA_Draw_Linear_Line;
+			// The ReelMagic video mixer expects linear VGA drawing
+			// (i.e.: Return to Zork's house intro), so limit the use
+			// of 18-bit palettized LUT routine to non-mixed output.
+			if (!ReelMagic_IsVideoMixerEnabled()) {
+				bpp = 32;
+				VGA_DrawLine = draw_linear_line_from_dac_palette;
+			}
 		}
 		break;
 	case M_LIN8:
