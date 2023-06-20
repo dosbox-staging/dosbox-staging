@@ -1222,6 +1222,10 @@ void DOSBOX_Init()
 	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
 	        "(empty by default).");
 
+	pstring = secprop->Add_path("command_history_file", only_at_start, "cmd_history.txt");
+	pstring->Set_help(
+		"File containing persistent command line history ('cmd_history.txt' by default).");
+
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 	secprop->AddInitFunction(&DRIVES_Init);

@@ -456,9 +456,16 @@ void DOS_Shell::SyntaxError()
 	WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 }
 
-static std_fs::path get_cmd_history_path()
+static std::string get_command_history_path()
 {
-	return get_platform_config_dir() / "cmd_history.txt";
+	const auto section = static_cast<Section_prop *>(control->GetSection("dos"));
+	if (section) {
+		const auto path = section->Get_path("command_history_file");
+		if (path) {
+			return path->realpath;
+		}
+	}
+	return {};
 }
 
 void DOS_Shell::ReadCommandHistory()
@@ -466,7 +473,11 @@ void DOS_Shell::ReadCommandHistory()
 	if (control->SecureMode()) {
 		return;
 	}
-	std::ifstream history_file(get_cmd_history_path());
+	std::string history_path = get_command_history_path();
+	if (history_path.empty()) {
+		return;
+	}
+	std::ifstream history_file(history_path);
 	if (history_file) {
 		std::string line;
 		while (getline(history_file, line)) {
@@ -484,10 +495,13 @@ void DOS_Shell::WriteCommandHistory()
 	if (control->SecureMode()) {
 		return;
 	}
-	std_fs::path history_path = get_cmd_history_path();
+	std::string history_path = get_command_history_path();
+	if (history_path.empty()) {
+		return;
+	}
 	std::ofstream history_file(history_path);
 	if (!history_file) {
-		LOG_WARNING("SHELL: Unable to write command history to file: '%s'", history_path.string().c_str());
+		LOG_WARNING("SHELL: Unable to write command history to file: '%s'", history_path.c_str());
 		return;
 	}
 	std::vector<std::string> trimmed_history;
