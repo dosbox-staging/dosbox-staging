@@ -261,9 +261,11 @@ void SID::setChipModel(ChipModel model)
     {
         voice[i]->setEnvDAC(envDAC);
         voice[i]->setWavDAC(oscDAC);
-        voice[i]->wave()->setModel(is6581);
-        voice[i]->wave()->setWaveformModels(wavetables);
-        voice[i]->wave()->setPulldownModels(pulldowntables);
+        
+        auto wave = voice[i]->wave();
+        wave->setModel(is6581);
+        wave->setWaveformModels(wavetables);
+        wave->setPulldownModels(pulldowntables);
     }
 }
 
