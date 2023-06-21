@@ -635,6 +635,7 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 		 // reserve the track_file as a shared_ptr to avoid deletion in another thread
 		const auto track_file = player.trackFile.lock();
 		if (track_file) {
+			LagDriveResponse();
 			const uint32_t sample_rate = track_file->getRate();
 			const uint32_t played_frames = ceil_udivide(player.playedTrackFrames
 			                               * REDBOOK_FRAMES_PER_SECOND, sample_rate);
@@ -671,7 +672,6 @@ bool CDROM_Interface_Image::GetAudioSub(unsigned char& attr,
 	        absolute_sector + REDBOOK_FRAME_PADDING, track_num, relative_msf.min,
 	        relative_msf.sec, relative_msf.fr, relative_sector);
 #endif
-	LagDriveResponse();
 	return true;
 }
 
