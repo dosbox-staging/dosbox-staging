@@ -1986,7 +1986,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.blocks = width;
 		doublewidth = vga.seq.clocking_mode.is_pixel_doubling;
 		width *= vga.draw.pixels_per_character;
-		aspect_ratio = width * 3.0 * (doublewidth ? 2 : 1) / (height * 4.0);
+		aspect_ratio *= vga.draw.pixels_per_character /
+		                static_cast<double>(PixelsPerChar::Eight);
 		break;
 	case M_HERC_GFX:
 		vga.draw.blocks=width*2;
