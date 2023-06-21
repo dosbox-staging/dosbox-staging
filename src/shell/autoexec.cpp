@@ -318,7 +318,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 		}
 
 		if (is_directory) {
-			drive_c_directory = argument;
+			drive_c_directory = quote + argument + quote;
 			continue;
 		}
 
