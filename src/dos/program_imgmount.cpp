@@ -464,10 +464,12 @@ void IMGMOUNT::Run(void)
 			const bool should_notify = std::next(it) == fat_pointers.end();
 			DriveManager::CycleDisks(drive_index(drive), should_notify);
 			char root[7] = {drive, ':', '\\', '*', '.', '*', 0};
-			DOS_FindFirst(root, DOS_ATTR_VOLUME); // force obtaining
-			                                      // the label and
-			                                      // saving it in
-			                                      // dirCache
+
+			// Obtain the drive label, saving it in the dirCache
+			if (!DOS_FindFirst(root, DOS_ATTR_VOLUME)) {
+				LOG_WARNING("DRIVE: Unable to find %c drive's volume label",
+				            drive);
+			}
 		}
 		dos.dta(save_dta);
 
