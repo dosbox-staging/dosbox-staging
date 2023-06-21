@@ -1,5 +1,6 @@
-# Fallback mapping, Unicode to 7-bit ASCII, to be used if code point
+# Fallback mapping, Unicode to printable 7-bit ASCII, to be used if code point
 # cannot be mapped to character available on current code page
+# printable ASCII: https://en.wikipedia.org/wiki/ASCII#Printable_characters
 
 # NNN - code point has no reasonable ASCII replacement
 # SPC - space character
@@ -490,6 +491,7 @@
 0x040a N   #CYRILLIC CAPITAL LETTER NJE
 0x040b C   #CYRILLIC CAPITAL LETTER TSHE
 0x040c K   #CYRILLIC CAPITAL LETTER KJE
+0x040d I   #CYRILLIC CAPITAL LETTER I WITH GRAVE
 0x040e W   #CYRILLIC CAPITAL LETTER SHORT U
 0x040f Z   #CYRILLIC CAPITAL LETTER DZHE
 0x0410 A   #CYRILLIC CAPITAL LETTER A
@@ -569,6 +571,7 @@
 0x045a n   #CYRILLIC SMALL LETTER NJE
 0x045b c   #CYRILLIC SMALL LETTER TSHE
 0x045c k   #CYRILLIC SMALL LETTER KJE
+0x045d i   #CYRILLIC SMALL LETTER I WITH GRAVE
 0x045e w   #CYRILLIC SMALL LETTER SHORT U
 0x045f z   #CYRILLIC SMALL LETTER DZHE
 0x0464 E   #CYRILLIC CAPITAL LETTER IOTIFIED E
@@ -665,6 +668,38 @@
 0x04f5 c   #CYRILLIC SMALL LETTER CHE WITH DIAERESIS
 0x04f8 E   #CYRILLIC CAPITAL LETTER YERU WITH DIAERESIS
 0x04f9 e   #CYRILLIC SMALL LETTER YERU WITH DIAERESIS
+
+# ****************************************************************************
+# 0x0400 - 0x04ff     Cyrillic Bulgarian
+# ****************************************************************************
+
+# Cyrillic alphabet mapping also depends on the language;
+# to keep the Bulgarian transliterations readable on Latin code pages,
+# for some characters an alternative romanization scheme is used based on:
+# - https://en.wikipedia.org/wiki/Informal_romanizations_of_Cyrillic#Translit_in_Bulgaria
+# - https://en.wikipedia.org/wiki/Romanization_of_Bulgarian
+
+# TODO: utilize the below after it becomes possible to apply alternatives based on language
+# 0x0416 J   #CYRILLIC CAPITAL LETTER ZHE
+# 0x0419 Y   #CYRILLIC CAPITAL LETTER SHORT I
+# 0x0426 C   #CYRILLIC CAPITAL LETTER TSE
+# 0x0427 C   #CYRILLIC CAPITAL LETTER CHE
+# 0x0428 W   #CYRILLIC CAPITAL LETTER SHA
+# 0x0429 W   #CYRILLIC CAPITAL LETTER SHCHA
+# 0x042a X   #CYRILLIC CAPITAL LETTER HARD SIGN
+# 0x042c Y   #CYRILLIC CAPITAL LETTER SOFT SIGN
+# 0x042e U   #CYRILLIC CAPITAL LETTER YU
+# 0x042f Q   #CYRILLIC CAPITAL LETTER YA
+# 0x0436 j   #CYRILLIC SMALL LETTER ZHE
+# 0x0439 y   #CYRILLIC SMALL LETTER SHORT I
+# 0x0446 c   #CYRILLIC SMALL LETTER TSE
+# 0x0447 c   #CYRILLIC SMALL LETTER CHE
+# 0x0448 w   #CYRILLIC SMALL LETTER SHA
+# 0x0449 w   #CYRILLIC SMALL LETTER SHCHA
+# 0x044a x   #CYRILLIC SMALL LETTER HARD SIGN
+# 0x044c y   #CYRILLIC SMALL LETTER SOFT SIGN
+# 0x044e u   #CYRILLIC SMALL LETTER YU
+# 0x044f q   #CYRILLIC SMALL LETTER YA
 
 # ****************************************************************************
 # 0x0500 - 0x052f     Cyrillic Supplement
@@ -1401,6 +1436,7 @@
 0x20b2 G   #GUARANI SIGN
 0x20b4 H   #HRYVNIA SIGN
 0x20b7 S   #SPESMILO SIGN
+0x20bd P   #RUBLE SIGN
 
 # ****************************************************************************
 # 0x2100 - 0x214f     Letterlike Symbols
