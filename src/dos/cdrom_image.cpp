@@ -580,7 +580,6 @@ bool CDROM_Interface_Image::GetAudioTracks(uint8_t& start_track_num,
 	        lead_out_msf.sec,
 	        lead_out_msf.fr);
 #endif
-	LagDriveResponse();
 	return true;
 }
 
@@ -614,7 +613,6 @@ bool CDROM_Interface_Image::GetAudioTrackInfo(uint8_t requested_track_num,
 	        start_msf.fr,
 	        msf_to_frames(start_msf));
 #endif
-	LagDriveResponse();
 	return true;
 }
 
@@ -686,7 +684,6 @@ bool CDROM_Interface_Image::GetAudioStatus(bool& playing, bool& pause)
 	        playing ? "is playing" : "stopped",
 	        pause ? "paused" : "not paused");
 #endif
-	LagDriveResponse();
 	return true;
 }
 
@@ -701,7 +698,6 @@ bool CDROM_Interface_Image::GetMediaTrayStatus(bool& mediaPresent, bool& mediaCh
 	        mediaChanged ? "was changed" : "hasn't been changed",
 	        trayOpen ? "open" : "closed");
 #endif
-	LagDriveResponse();
 	return true;
 }
 
@@ -814,7 +810,6 @@ bool CDROM_Interface_Image::PauseAudio(bool resume)
 	player.isPaused = !resume;
 	if (player.channel) {
 		player.channel->Enable(resume);
-		LagDriveResponse();
 	}
 #ifdef DEBUG
 	LOG_MSG("CDROM: PauseAudio => audio is now %s",
@@ -829,7 +824,6 @@ bool CDROM_Interface_Image::StopAudio(void)
 	player.isPaused = false;
 	if (player.channel) {
 		player.channel->Enable(false);
-		LagDriveResponse();
 	}
 #ifdef DEBUG
 	LOG_MSG("CDROM: StopAudio => stopped playback and halted the mixer");
@@ -955,7 +949,6 @@ track_iter CDROM_Interface_Image::GetTrack(const uint32_t sector)
 		}
 	}
 #endif
-	LagDriveResponse();
 	return track;
 }
 
