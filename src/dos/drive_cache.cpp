@@ -219,13 +219,18 @@ void DOS_Drive_Cache::AddEntry(const char* path, bool checkExists) {
 
 		CreateEntry(dir,file,false);
 
-		Bits index = GetLongName(dir, file, sizeof(file));
-		if (index>=0) {
+		if (const auto rcode = GetLongName(dir, file, sizeof(file));
+		    rcode >= 0) {
+			// if the function succeeded, the return value is the index
+			const auto index = static_cast<size_t>(rcode);
+
 			uint32_t i;
 			// Check if there are any open search dir that are affected by this...
 			for (i=0; i<MAX_OPENDIRS; i++) {
-				if ((dirSearch[i]==dir) && ((uint32_t)index<=dirSearch[i]->nextEntry)) 
+				if ((dirSearch[i] == dir) &&
+				    (index <= dirSearch[i]->nextEntry)) {
 					dirSearch[i]->nextEntry++;
+				}
 			}
 		}
 		//		LOG_DEBUG("DIR: Added Entry %s",path);
@@ -277,15 +282,19 @@ void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, bool checkExists) {
 		}
 
 		CreateEntry(dir,file,true);
-		
 
-		Bits index = GetLongName(dir, file, sizeof(file));
-		if (index>=0) {
+		if (const auto rcode = GetLongName(dir, file, sizeof(file));
+		    rcode >= 0) {
+			// if the function succeeded, the return value is the index
+			const auto index = static_cast<size_t>(rcode);
+
 			uint32_t i;
 			// Check if there are any open search dir that are affected by this...
 			for (i=0; i<MAX_OPENDIRS; i++) {
-				if ((dirSearch[i]==dir) && ((uint32_t)index<=dirSearch[i]->nextEntry)) 
+				if ((dirSearch[i] == dir) &&
+				    (index <= dirSearch[i]->nextEntry)) {
 					dirSearch[i]->nextEntry++;
+				}
 			}
 
 			dir = dir->fileList[index];
