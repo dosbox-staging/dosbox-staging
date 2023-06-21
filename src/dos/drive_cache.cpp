@@ -805,10 +805,10 @@ bool DOS_Drive_Cache::OpenDir(CFileInfo* dir, const char* expand, uint16_t& id) 
 	dirSearch[id] = dir;
 	char expandcopy [CROSS_LEN];
 	safe_strcpy(expandcopy, expand);
-	// Add "/"
-	char end[2]={CROSS_FILESPLIT,0};
 	const size_t expandcopylen = safe_strlen(expandcopy);
 	if (expandcopylen > 0 && expandcopy[expandcopylen - 1] != CROSS_FILESPLIT) {
+		// Add "/"
+		constexpr char end[] = {CROSS_FILESPLIT, 0};
 		safe_strcat(expandcopy, end);
 	}
 	// open dir
