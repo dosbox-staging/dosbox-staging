@@ -351,7 +351,33 @@ struct VGA_TANDY {
 	Bitu addr_mask = 0;
 };
 
-// VGA sequence - 8-bit clocking mode register (Index 01h)
+// CRTC Maximum Scan Line Register (Index 09h)
+// Ref: http://www.osdever.net/FreeVGA/vga/crtcreg.htm#09
+union MaximumScanLineRegister {
+	uint8_t data = 0;
+
+	// In text modes, this field is programmed with the character height - 1
+	// (scan line numbers are zero based.) In graphics modes, a non-zero value
+	// in this field will cause each scan line to be repeated by the value of
+	// this field + 1.
+	bit_view<0, 5> maximum_scan_line;
+
+	// Specifies bit 9 of the Start Vertical Blanking field.
+	bit_view<5, 1> start_vertical_blanking_bit9;
+
+	// Specifies bit 9 of the Line Compare field.
+	bit_view<6, 1> line_compare_bit9;
+
+	// When this bit is set to 1, 200-scan-line video data is converted to
+	// 400-scan-line output. To do this, the clock in the row scan counter is
+	// divided by 2, which allows the 200-line modes to be displayed as 400
+	// lines on the display (this is called double scanning; each line is
+	// displayed twice). When this bit is set to 0, the clock to the row scan
+	// counter is equal to the horizontal scan rate.
+	bit_view<7, 1> is_scan_doubling_enabled;
+};
+
+// Sequencer Clocking Mode Register (Index 01h)
 // Ref: http://www.osdever.net/FreeVGA/vga/seqreg.htm
 union ClockingModeRegister {
 	uint8_t data = 0;
@@ -375,10 +401,10 @@ union ClockingModeRegister {
 	bit_view<3, 1> is_pixel_doubling;
 
 	//	When the Shift 4 field and the Shift Load Field are set to 0,
-	//the video serializers are loaded every character clock. When the Shift
-	//4 field is set to 1, the video serializers are loaded every forth
-	//character clock, which is useful when 32 bits are fetched per cycle
-	//and chained together in the shift registers
+	// the video serializers are loaded every character clock. When the Shift
+	// 4 field is set to 1, the video serializers are loaded every forth
+	// character clock, which is useful when 32 bits are fetched per cycle
+	// and chained together in the shift registers.
 	bit_view<4, 1> is_shift_4_enabled;
 
 	// When set to 1, this bit turns off the display and assigns maximum
@@ -386,6 +412,149 @@ union ClockingModeRegister {
 	// synchronization pulses are maintained. This bit can be used for rapid
 	// full-screen updates.
 	bit_view<5, 1> is_screen_disabled;
+};
+
+// Graphics Mode Register (Index 05h)
+// Ref: http://www.osdever.net/FreeVGA/vga/graphreg.htm#05
+union GraphicsModeRegister {
+	uint8_t data = 0;
+
+	// This field selects between four write modes, simply known as Write
+	// Modes 0-3 (see reference for details).
+	bit_view<0, 2> write_mode;
+
+	// This field selects between two read modes, simply known as Read Mode 0,
+	// and Read Mode 1 (see reference for details).
+	bit_view<3, 1> read_mode;
+
+	// When set to 1, this bit selects the odd/even addressing mode used by
+	// the IBM Color/Graphics Monitor Adapter. Normally, the value here
+	// follows the value of Memory Mode register bit 2 in the sequencer.
+	bit_view<4, 1> is_host_odd_even;
+
+	// When set to 1, this bit directs the shift registers in the graphics
+	// controller to format the serial data stream with even-numbered bits
+	// from both maps on even-numbered maps, and odd-numbered bits from both
+	// maps on the odd-numbered maps. This bit is used for modes 4 and 5.
+	bit_view<5, 1> shift_register_interleave_mode;
+
+	// When set to 0, this bit allows bit 5 to control the loading of the
+	// shift registers. When set to 1, this bit causes the shift registers to
+	// be loaded in a manner that supports the 256-color mode.
+	bit_view<6, 1> is_256_color_shift_mode;
+};
+
+// Attribute Mode Control Register (Index 10h)
+// Ref: http://www.osdever.net/FreeVGA/vga/attrreg.htm#10
+union AttributeModeControlRegister {
+	uint8_t data = 0;
+
+	// 1 in graphics modes, 0 in text modes
+	bit_view<0, 1> is_graphics_enabled;
+
+	// When this bit is set to 1, monochrome emulation mode is selected. When
+	// this bit is set to 0, color |emulation mode is selected. It is present
+	// and programmable in all of the hardware but it apparently does nothing.
+	// The internal palette is used to provide monochrome emulation instead.
+	bit_view<1, 1> is_monochrome_emulation_enabled;
+
+	// This field is used in 9 bit wide character modes to provide continuity
+	// for the horizontal line characters in the range C0h-DFh. If this field
+	// is set to 0, then the 9th column of these characters is replicated from
+	// the 8th column of the character. Otherwise, if it is set to 1 then the
+	// 9th column is set to the background like the rest of the characters.
+	bit_view<2, 1> is_line_graphics_enabled;
+
+	// When this bit is set to 0, the most-significant bit of the attribute
+	// selects the background intensity (allows 16 colors for background).
+	// When set to 1, this bit enables blinking.
+	bit_view<3, 1> is_blink_enabled;
+
+	// This field allows the upper half of the screen to pan independently of
+	// the lower screen. If this field is set to 0 then nothing special occurs
+	// during a successful line compare (see the Line Compare field.) If this
+	// field is set to 1, then upon a successful line compare, the bottom
+	// portion of the screen is displayed as if the Pixel Shift Count and Byte
+	// Panning fields are set to 0.
+	bit_view<5, 1> is_pixel_panning_enabled;
+
+	// When this bit is set to 1, the video data is sampled so that eight bits
+	// are available to select a color in the 256-color mode (0x13). This bit
+	// is set to 0 in all other modes.
+	bit_view<6, 1> is_8bit_color_enabled;
+
+	// This bit selects the source for the P5 and P4 video bits that act as
+	// inputs to the video DAC. When this bit is set to 0, P5 and P4 are the
+	// outputs of the Internal Palette registers. When this bit is set to 1,
+	// P5 and P4 are bits 1 and 0 of the Color Select register.
+	bit_view<7, 1> palette_bits_5_4_select;
+};
+
+// CRTC Mode Control Register (Index 17h)
+// Ref: http://www.osdever.net/FreeVGA/vga/crtcreg.htm#17
+union CrtcModeControlRegister {
+	uint8_t data = 0;
+
+	// This bit selects the source of bit 13 of the output multiplexer. When
+	// this bit is set to 0, bit 0 of the row scan counter is the source, and
+	// when this bit is set to 1, bit 13 of the address counter is the source.
+	// The CRT controller used on the IBM Color/Graphics Adapter was capable
+	// of using 128 horizontal scan-line addresses. For the VGA to obtain
+	// 640-by-200 graphics resolution, the CRT controller is  programmed for
+	// 100 horizontal scan lines with two scan-line addresses per character
+	// row. Row scan  address bit 0 becomes the most-significant address bit
+	// to the display buffer. Successive scan lines of  the display image are
+	// displaced in 8KB of memory. This bit allows compatibility with the
+	// graphics modes of earlier adapters.
+	bit_view<0, 1> map_display_address_13;
+
+	// This bit selects the source of bit 14 of the output multiplexer. When
+	// this bit is set to 0, bit 1 of the row scan counter is the source. When
+	// this bit is set to 1, the bit 14 of the address counter is the source.
+	bit_view<1, 1> map_display_address_14;
+
+	// This bit selects the clock that controls the vertical timing counter.
+	// The clocking is either the horizontal retrace clock or horizontal
+	// retrace clock divided by 2. When this bit is set to 1. the horizontal
+	// retrace clock is divided by 2. Dividing the clock effectively doubles
+	// the vertical resolution of the CRT controller. The vertical counter has
+	// a maximum resolution of 1024 scan lines because the vertical total
+	// value is 10-bits wide. If the vertical counter is clocked with the
+	// horizontal retrace divided by 2, the vertical resolution is doubled to
+	// 2048 scan lines.
+	bit_view<2, 1> div_scan_line_clock_by_2;
+
+	// When this bit is set to 0, the address counter uses the character
+	// clock. When this bit is set to 1, the address counter uses the
+	// character clock input divided by 2. This bit is used to create either a
+	// byte or word refresh address for the display buffer.
+	bit_view<3, 1> div_memory_address_clock_by_2;
+
+	// This bit selects the memory-address bit, bit MA 13 or MA 15, that
+	// appears on the output pin MA 0, in the word address mode. If the VGA is
+	// not in the word address mode, bit 0 from the address counter appears on
+	// the output pin, MA 0. When set to 1, this bit selects MA 15. In
+	// odd/even mode, this bit should be set to 1 because 256KB of video
+	// memory is installed on the system board. (Bit MA 13 is selected in
+	// applications where only 64KB is present. This function maintains
+	// compatibility with the IBM Color/Graphics Monitor Adapter.)
+	bit_view<5, 1> address_wrap_select;
+
+	// When this bit is set to 0, the word mode is selected. The word mode
+	// shifts the memory-address counter bits to the left by one bit; the
+	// most-significant bit of the counter appears on the least-significant
+	// bit of the memory address outputs.  The doubleword bit in the Underline
+	// Location register (0x14) also controls the addressing. When the
+	// doubleword bit is 0, the word/byte bit selects the mode. When the
+	// doubleword bit is set to 1, the addressing is shifted by two bits. When
+	// set to 1, bit 6 selects the byte address mode.
+	bit_view<6, 1> word_byte_mode_select;
+
+	// When set to 0, this bit disables the horizontal and vertical retrace
+	// signals and forces them to an inactive level. When set to 1, this bit
+	// enables the horizontal and vertical retrace signals. This bit does not
+	// reset any other registers or signal outputs.
+	bit_view<7, 1> is_sync_enabled;
 };
 
 struct VGA_Seq {
