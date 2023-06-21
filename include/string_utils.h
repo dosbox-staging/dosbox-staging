@@ -418,9 +418,9 @@ std::string format_string(const std::string& format, Args&&... args) noexcept
 	// characters to be written without the trailing null. However, it still
 	// writes the trailing null into the buffer, so we need to include that
 	// in our allocation.
-	std::string result(static_cast<size_t>(required_size) +
-	                           static_cast<size_t>(1),
-	                   '\0');
+	const auto out_size = static_cast<size_t>(required_size) +
+	                      static_cast<size_t>(1);
+	std::string result(out_size, '\0');
 
 	std::snprintf(result.data(),
 	              result.size(),
@@ -429,8 +429,7 @@ std::string format_string(const std::string& format, Args&&... args) noexcept
 
 	// The buffer should now have the determined output length plus the
 	// terminating zero
-	assert(static_cast<size_t>(required_size) + static_cast<size_t>(1) ==
-	       result.size());
+	assert(out_size == result.size());
 
 	// Chop off the terminating zero of the C string in the buffer
 	result.pop_back();
