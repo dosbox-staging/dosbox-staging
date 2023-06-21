@@ -246,8 +246,8 @@ void IMGMOUNT::Run(void)
 		}
 		drive = int_to_char(i_drive);
 	} else if (fstype == "none") {
-		cmd->FindCommand(1, temp_line);
-		if ((temp_line.size() > 1) || (!isdigit(temp_line[0]))) {
+		if (!cmd->FindCommand(1, temp_line) || temp_line.size() > 1 ||
+		    !isdigit(temp_line[0])) {
 			WriteOut_NoParsing(MSG_Get("PROGRAM_IMGMOUNT_SPECIFY2"));
 			return;
 		}
