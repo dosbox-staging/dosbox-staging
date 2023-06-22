@@ -109,10 +109,9 @@
 #ifndef _WINDOWS_
 /* 64-bit values */
 typedef uint64_t UINT64;
-typedef int64_t INT64;
 #endif
 
-typedef INT64 attoseconds_t;
+typedef int64_t attoseconds_t;
 
 #define ATTOSECONDS_PER_SECOND_SQRT		((attoseconds_t)1000000000)
 #define ATTOSECONDS_PER_SECOND			(ATTOSECONDS_PER_SECOND_SQRT * ATTOSECONDS_PER_SECOND_SQRT)
@@ -209,7 +208,7 @@ struct rectangle
 
 inline int32_t mul_32x32_shift(int32_t a, int32_t b, int8_t shift)
 {
-	return (int32_t)(((INT64)a * (INT64)b) >> shift);
+	return (int32_t)(((int64_t)a * (int64_t)b) >> shift);
 }
 
 #if defined(__SSE2__)
@@ -767,12 +766,12 @@ struct tmu_state
 	//uint32_t			texaddr_mask;			/* mask for texture address */
 	//uint8_t				texaddr_shift;			/* shift for texture address */
 
-	INT64				starts, startt;			/* starting S,T (14.18) */
-	INT64				startw;					/* starting W (2.30) */
-	INT64				dsdx, dtdx;				/* delta S,T per X */
-	INT64				dwdx;					/* delta W per X */
-	INT64				dsdy, dtdy;				/* delta S,T per Y */
-	INT64				dwdy;					/* delta W per Y */
+	int64_t				starts, startt;			/* starting S,T (14.18) */
+	int64_t				startw;					/* starting W (2.30) */
+	int64_t				dsdx, dtdx;				/* delta S,T per X */
+	int64_t				dwdx;					/* delta W per X */
+	int64_t				dsdy, dtdy;				/* delta S,T per Y */
+	int64_t				dwdy;					/* delta W per Y */
 
 	int32_t				lodmin, lodmax;			/* min, max LOD values */
 	int32_t				lodbias;				/* LOD bias */
@@ -850,13 +849,13 @@ struct fbi_state
 	int16_t				cx, cy;					/* vertex C x,y (12.4) */
 	int32_t				startr, startg, startb, starta; /* starting R,G,B,A (12.12) */
 	int32_t				startz;					/* starting Z (20.12) */
-	INT64				startw;					/* starting W (16.32) */
+	int64_t				startw;					/* starting W (16.32) */
 	int32_t				drdx, dgdx, dbdx, dadx;	/* delta R,G,B,A per X */
 	int32_t				dzdx;					/* delta Z per X */
-	INT64				dwdx;					/* delta W per X */
+	int64_t				dwdx;					/* delta W per X */
 	int32_t				drdy, dgdy, dbdy, dady;	/* delta R,G,B,A per Y */
 	int32_t				dzdy;					/* delta Z per Y */
-	INT64				dwdy;					/* delta W per Y */
+	int64_t				dwdy;					/* delta W per Y */
 
 	stats_block			lfb_stats;				/* LFB-access statistics */
 
@@ -985,28 +984,28 @@ struct poly_extra_data
 	int16_t				ax, ay;					/* vertex A x,y (12.4) */
 	int32_t				startr, startg, startb, starta; /* starting R,G,B,A (12.12) */
 	int32_t				startz;					/* starting Z (20.12) */
-	INT64				startw;					/* starting W (16.32) */
+	int64_t				startw;					/* starting W (16.32) */
 	int32_t				drdx, dgdx, dbdx, dadx;	/* delta R,G,B,A per X */
 	int32_t				dzdx;					/* delta Z per X */
-	INT64				dwdx;					/* delta W per X */
+	int64_t				dwdx;					/* delta W per X */
 	int32_t				drdy, dgdy, dbdy, dady;	/* delta R,G,B,A per Y */
 	int32_t				dzdy;					/* delta Z per Y */
-	INT64				dwdy;					/* delta W per Y */
+	int64_t				dwdy;					/* delta W per Y */
 
-	INT64				starts0, startt0;		/* starting S,T (14.18) */
-	INT64				startw0;				/* starting W (2.30) */
-	INT64				ds0dx, dt0dx;			/* delta S,T per X */
-	INT64				dw0dx;					/* delta W per X */
-	INT64				ds0dy, dt0dy;			/* delta S,T per Y */
-	INT64				dw0dy;					/* delta W per Y */
+	int64_t				starts0, startt0;		/* starting S,T (14.18) */
+	int64_t				startw0;				/* starting W (2.30) */
+	int64_t				ds0dx, dt0dx;			/* delta S,T per X */
+	int64_t				dw0dx;					/* delta W per X */
+	int64_t				ds0dy, dt0dy;			/* delta S,T per Y */
+	int64_t				dw0dy;					/* delta W per Y */
 	int32_t				lodbase0;				/* used during rasterization */
 
-	INT64				starts1, startt1;		/* starting S,T (14.18) */
-	INT64				startw1;				/* starting W (2.30) */
-	INT64				ds1dx, dt1dx;			/* delta S,T per X */
-	INT64				dw1dx;					/* delta W per X */
-	INT64				ds1dy, dt1dy;			/* delta S,T per Y */
-	INT64				dw1dy;					/* delta W per Y */
+	int64_t				starts1, startt1;		/* starting S,T (14.18) */
+	int64_t				startw1;				/* starting W (2.30) */
+	int64_t				ds1dx, dt1dx;			/* delta S,T per X */
+	int64_t				dw1dx;					/* delta W per X */
+	int64_t				ds1dy, dt1dy;			/* delta S,T per Y */
+	int64_t				dw1dy;					/* delta W per Y */
 	int32_t				lodbase1;				/* used during rasterization */
 
 	uint16_t				dither[16];				/* dither matrix, for fastfill */
@@ -1153,7 +1152,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 		recip <<= exponent;
 
 	/* on the way out, apply the original sign to the reciprocal */
-	return neg ? -(INT64)recip : (INT64)recip;
+	return neg ? -(int64_t)recip : (int64_t)recip;
 }
 
 
@@ -1187,10 +1186,10 @@ inline int32_t float_to_int32(uint32_t data, int fixedbits)
 	return result;
 }
 
-inline INT64 float_to_int64(uint32_t data, int fixedbits)
+inline int64_t float_to_int64(uint32_t data, int fixedbits)
 {
 	int exponent = ((data >> 23) & 0xff) - 127 - 23 + fixedbits;
-	INT64 result = (data & 0x7fffff) | 0x800000;
+	int64_t result = (data & 0x7fffff) | 0x800000;
 	if (exponent < 0)
 	{
 		if (exponent > -64)
@@ -1924,7 +1923,7 @@ do																				\
 	int32_t blendr, blendg, blendb, blenda;										\
 	int32_t tr, tg, tb, ta;														\
 	int32_t s, t, lod, ilod;														\
-	INT64 oow;																	\
+	int64_t oow;																	\
 	int32_t smax, tmax;															\
 	uint32_t texbase;																\
 	rgb_union c_local;															\
@@ -3122,8 +3121,8 @@ static inline void raster_generic(const voodoo_state* v, uint32_t TMUS, uint32_t
 	int32_t iterb = fbi.startb + dy * fbi.dbdy + dx * fbi.dbdx;
 	int32_t itera = fbi.starta + dy * fbi.dady + dx * fbi.dadx;
 	int32_t iterz = fbi.startz + dy * fbi.dzdy + dx * fbi.dzdx;
-	INT64 iterw = fbi.startw + dy * fbi.dwdy + dx * fbi.dwdx;
-	INT64 iterw0 = 0, iterw1 = 0, iters0 = 0, iters1 = 0, itert0 = 0, itert1 = 0;
+	int64_t iterw = fbi.startw + dy * fbi.dwdy + dx * fbi.dwdx;
+	int64_t iterw0 = 0, iterw1 = 0, iters0 = 0, iters1 = 0, itert0 = 0, itert1 = 0;
 	if (TMUS >= 1)
 	{
 		iterw0 = tmu0.startw + dy * tmu0.dwdy + dx * tmu0.dwdx;
@@ -4102,7 +4101,7 @@ static void recompute_texture_params(tmu_state *t)
 
 static void prepare_tmu(tmu_state *t)
 {
-	INT64 texdx, texdy;
+	int64_t texdx, texdy;
 	int32_t lodbase;
 
 	/* if the texture parameters are dirty, update them */
@@ -4121,8 +4120,8 @@ static void prepare_tmu(tmu_state *t)
 	}
 
 	/* compute (ds^2 + dt^2) in both X and Y as 28.36 numbers */
-	texdx = (INT64)(t->dsdx >> 14) * (INT64)(t->dsdx >> 14) + (INT64)(t->dtdx >> 14) * (INT64)(t->dtdx >> 14);
-	texdy = (INT64)(t->dsdy >> 14) * (INT64)(t->dsdy >> 14) + (INT64)(t->dtdy >> 14) * (INT64)(t->dtdy >> 14);
+	texdx = (int64_t)(t->dsdx >> 14) * (int64_t)(t->dsdx >> 14) + (int64_t)(t->dtdx >> 14) * (int64_t)(t->dtdx >> 14);
+	texdy = (int64_t)(t->dsdy >> 14) * (int64_t)(t->dsdy >> 14) + (int64_t)(t->dtdy >> 14) * (int64_t)(t->dtdy >> 14);
 
 	/* pick whichever is larger and shift off some high bits -> 28.20 */
 	if (texdx < texdy)
@@ -4653,47 +4652,47 @@ static void setup_and_draw_triangle(voodoo_state *v)
 	tdiv = divisor * 65536.0f * 65536.0f;
 	if (v->reg[sSetupMode].u & (1 << 3))
 	{
-		v->fbi.startw = v->tmu[0].startw = v->tmu[1].startw = (INT64)(v->fbi.svert[0].wb * 65536.0f * 65536.0f);
-		v->fbi.dwdx = v->tmu[0].dwdx = v->tmu[1].dwdx = (INT64)(((v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dx1 - (v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dx2) * tdiv);
-		v->fbi.dwdy = v->tmu[0].dwdy = v->tmu[1].dwdy = (INT64)(((v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dy1 - (v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dy2) * tdiv);
+		v->fbi.startw = v->tmu[0].startw = v->tmu[1].startw = (int64_t)(v->fbi.svert[0].wb * 65536.0f * 65536.0f);
+		v->fbi.dwdx = v->tmu[0].dwdx = v->tmu[1].dwdx = (int64_t)(((v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dx1 - (v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dx2) * tdiv);
+		v->fbi.dwdy = v->tmu[0].dwdy = v->tmu[1].dwdy = (int64_t)(((v->fbi.svert[0].wb - v->fbi.svert[2].wb) * dy1 - (v->fbi.svert[0].wb - v->fbi.svert[1].wb) * dy2) * tdiv);
 	}
 
 	/* set up W0 */
 	if (v->reg[sSetupMode].u & (1 << 4))
 	{
-		v->tmu[0].startw = v->tmu[1].startw = (INT64)(v->fbi.svert[0].w0 * 65536.0f * 65536.0f);
-		v->tmu[0].dwdx = v->tmu[1].dwdx = (INT64)(((v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dx1 - (v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dx2) * tdiv);
-		v->tmu[0].dwdy = v->tmu[1].dwdy = (INT64)(((v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dy1 - (v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dy2) * tdiv);
+		v->tmu[0].startw = v->tmu[1].startw = (int64_t)(v->fbi.svert[0].w0 * 65536.0f * 65536.0f);
+		v->tmu[0].dwdx = v->tmu[1].dwdx = (int64_t)(((v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dx1 - (v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dx2) * tdiv);
+		v->tmu[0].dwdy = v->tmu[1].dwdy = (int64_t)(((v->fbi.svert[0].w0 - v->fbi.svert[2].w0) * dy1 - (v->fbi.svert[0].w0 - v->fbi.svert[1].w0) * dy2) * tdiv);
 	}
 
 	/* set up S0,T0 */
 	if (v->reg[sSetupMode].u & (1 << 5))
 	{
-		v->tmu[0].starts = v->tmu[1].starts = (INT64)(v->fbi.svert[0].s0 * 65536.0f * 65536.0f);
-		v->tmu[0].dsdx = v->tmu[1].dsdx = (INT64)(((v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dx1 - (v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dx2) * tdiv);
-		v->tmu[0].dsdy = v->tmu[1].dsdy = (INT64)(((v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dy1 - (v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dy2) * tdiv);
-		v->tmu[0].startt = v->tmu[1].startt = (INT64)(v->fbi.svert[0].t0 * 65536.0f * 65536.0f);
-		v->tmu[0].dtdx = v->tmu[1].dtdx = (INT64)(((v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dx1 - (v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dx2) * tdiv);
-		v->tmu[0].dtdy = v->tmu[1].dtdy = (INT64)(((v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dy1 - (v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dy2) * tdiv);
+		v->tmu[0].starts = v->tmu[1].starts = (int64_t)(v->fbi.svert[0].s0 * 65536.0f * 65536.0f);
+		v->tmu[0].dsdx = v->tmu[1].dsdx = (int64_t)(((v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dx1 - (v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dx2) * tdiv);
+		v->tmu[0].dsdy = v->tmu[1].dsdy = (int64_t)(((v->fbi.svert[0].s0 - v->fbi.svert[2].s0) * dy1 - (v->fbi.svert[0].s0 - v->fbi.svert[1].s0) * dy2) * tdiv);
+		v->tmu[0].startt = v->tmu[1].startt = (int64_t)(v->fbi.svert[0].t0 * 65536.0f * 65536.0f);
+		v->tmu[0].dtdx = v->tmu[1].dtdx = (int64_t)(((v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dx1 - (v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dx2) * tdiv);
+		v->tmu[0].dtdy = v->tmu[1].dtdy = (int64_t)(((v->fbi.svert[0].t0 - v->fbi.svert[2].t0) * dy1 - (v->fbi.svert[0].t0 - v->fbi.svert[1].t0) * dy2) * tdiv);
 	}
 
 	/* set up W1 */
 	if (v->reg[sSetupMode].u & (1 << 6))
 	{
-		v->tmu[1].startw = (INT64)(v->fbi.svert[0].w1 * 65536.0f * 65536.0f);
-		v->tmu[1].dwdx = (INT64)(((v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dx1 - (v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dx2) * tdiv);
-		v->tmu[1].dwdy = (INT64)(((v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dy1 - (v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dy2) * tdiv);
+		v->tmu[1].startw = (int64_t)(v->fbi.svert[0].w1 * 65536.0f * 65536.0f);
+		v->tmu[1].dwdx = (int64_t)(((v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dx1 - (v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dx2) * tdiv);
+		v->tmu[1].dwdy = (int64_t)(((v->fbi.svert[0].w1 - v->fbi.svert[2].w1) * dy1 - (v->fbi.svert[0].w1 - v->fbi.svert[1].w1) * dy2) * tdiv);
 	}
 
 	/* set up S1,T1 */
 	if (v->reg[sSetupMode].u & (1 << 7))
 	{
-		v->tmu[1].starts = (INT64)(v->fbi.svert[0].s1 * 65536.0f * 65536.0f);
-		v->tmu[1].dsdx = (INT64)(((v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dx1 - (v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dx2) * tdiv);
-		v->tmu[1].dsdy = (INT64)(((v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dy1 - (v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dy2) * tdiv);
-		v->tmu[1].startt = (INT64)(v->fbi.svert[0].t1 * 65536.0f * 65536.0f);
-		v->tmu[1].dtdx = (INT64)(((v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dx1 - (v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dx2) * tdiv);
-		v->tmu[1].dtdy = (INT64)(((v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dy1 - (v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dy2) * tdiv);
+		v->tmu[1].starts = (int64_t)(v->fbi.svert[0].s1 * 65536.0f * 65536.0f);
+		v->tmu[1].dsdx = (int64_t)(((v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dx1 - (v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dx2) * tdiv);
+		v->tmu[1].dsdy = (int64_t)(((v->fbi.svert[0].s1 - v->fbi.svert[2].s1) * dy1 - (v->fbi.svert[0].s1 - v->fbi.svert[1].s1) * dy2) * tdiv);
+		v->tmu[1].startt = (int64_t)(v->fbi.svert[0].t1 * 65536.0f * 65536.0f);
+		v->tmu[1].dtdx = (int64_t)(((v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dx1 - (v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dx2) * tdiv);
+		v->tmu[1].dtdy = (int64_t)(((v->fbi.svert[0].t1 - v->fbi.svert[2].t1) * dy1 - (v->fbi.svert[0].t1 - v->fbi.svert[1].t1) * dy2) * tdiv);
 	}
 
 	/* draw the triangle */
@@ -4887,7 +4886,7 @@ static void register_w(uint32_t offset, uint32_t data)
 	uint32_t regnum  = (offset) & 0xff;
 	uint32_t chips   = (offset>>8) & 0xf;
 
-	INT64 data64;
+	int64_t data64;
 
 	//LOG(LOG_VOODOO,LOG_WARN)("V3D:WR chip %x reg %x value %08x(%s)", chips, regnum<<2, data, voodoo_reg_name[regnum]);
 
@@ -5072,8 +5071,8 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 4) v->tmu[1].starts = data64;
 			break;
 		case startS:
-			if (chips & 2) v->tmu[0].starts = (INT64)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].starts = (INT64)(int32_t)data << 14;
+			if (chips & 2) v->tmu[0].starts = (int64_t)(int32_t)data << 14;
+			if (chips & 4) v->tmu[1].starts = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fstartT:
@@ -5082,8 +5081,8 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 4) v->tmu[1].startt = data64;
 			break;
 		case startT:
-			if (chips & 2) v->tmu[0].startt = (INT64)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].startt = (INT64)(int32_t)data << 14;
+			if (chips & 2) v->tmu[0].startt = (int64_t)(int32_t)data << 14;
+			if (chips & 4) v->tmu[1].startt = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fdSdX:
@@ -5092,8 +5091,8 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 4) v->tmu[1].dsdx = data64;
 			break;
 		case dSdX:
-			if (chips & 2) v->tmu[0].dsdx = (INT64)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].dsdx = (INT64)(int32_t)data << 14;
+			if (chips & 2) v->tmu[0].dsdx = (int64_t)(int32_t)data << 14;
+			if (chips & 4) v->tmu[1].dsdx = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fdTdX:
@@ -5102,8 +5101,8 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 4) v->tmu[1].dtdx = data64;
 			break;
 		case dTdX:
-			if (chips & 2) v->tmu[0].dtdx = (INT64)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].dtdx = (INT64)(int32_t)data << 14;
+			if (chips & 2) v->tmu[0].dtdx = (int64_t)(int32_t)data << 14;
+			if (chips & 4) v->tmu[1].dtdx = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fdSdY:
@@ -5112,8 +5111,8 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 4) v->tmu[1].dsdy = data64;
 			break;
 		case dSdY:
-			if (chips & 2) v->tmu[0].dsdy = (INT64)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].dsdy = (INT64)(int32_t)data << 14;
+			if (chips & 2) v->tmu[0].dsdy = (int64_t)(int32_t)data << 14;
+			if (chips & 4) v->tmu[1].dsdy = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fdTdY:
@@ -5122,8 +5121,8 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 4) v->tmu[1].dtdy = data64;
 			break;
 		case dTdY:
-			if (chips & 2) v->tmu[0].dtdy = (INT64)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].dtdy = (INT64)(int32_t)data << 14;
+			if (chips & 2) v->tmu[0].dtdy = (int64_t)(int32_t)data << 14;
+			if (chips & 4) v->tmu[1].dtdy = (int64_t)(int32_t)data << 14;
 			break;
 
 		/* W data is 2.30 formatted fixed point, converted to 16.32 internally */
@@ -5134,9 +5133,9 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 4) v->tmu[1].startw = data64;
 			break;
 		case startW:
-			if (chips & 1) v->fbi.startw = (INT64)(int32_t)data << 2;
-			if (chips & 2) v->tmu[0].startw = (INT64)(int32_t)data << 2;
-			if (chips & 4) v->tmu[1].startw = (INT64)(int32_t)data << 2;
+			if (chips & 1) v->fbi.startw = (int64_t)(int32_t)data << 2;
+			if (chips & 2) v->tmu[0].startw = (int64_t)(int32_t)data << 2;
+			if (chips & 4) v->tmu[1].startw = (int64_t)(int32_t)data << 2;
 			break;
 
 		case fdWdX:
@@ -5146,9 +5145,9 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 4) v->tmu[1].dwdx = data64;
 			break;
 		case dWdX:
-			if (chips & 1) v->fbi.dwdx = (INT64)(int32_t)data << 2;
-			if (chips & 2) v->tmu[0].dwdx = (INT64)(int32_t)data << 2;
-			if (chips & 4) v->tmu[1].dwdx = (INT64)(int32_t)data << 2;
+			if (chips & 1) v->fbi.dwdx = (int64_t)(int32_t)data << 2;
+			if (chips & 2) v->tmu[0].dwdx = (int64_t)(int32_t)data << 2;
+			if (chips & 4) v->tmu[1].dwdx = (int64_t)(int32_t)data << 2;
 			break;
 
 		case fdWdY:
@@ -5158,9 +5157,9 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 4) v->tmu[1].dwdy = data64;
 			break;
 		case dWdY:
-			if (chips & 1) v->fbi.dwdy = (INT64)(int32_t)data << 2;
-			if (chips & 2) v->tmu[0].dwdy = (INT64)(int32_t)data << 2;
-			if (chips & 4) v->tmu[1].dwdy = (INT64)(int32_t)data << 2;
+			if (chips & 1) v->fbi.dwdy = (int64_t)(int32_t)data << 2;
+			if (chips & 2) v->tmu[0].dwdy = (int64_t)(int32_t)data << 2;
+			if (chips & 4) v->tmu[1].dwdy = (int64_t)(int32_t)data << 2;
 			break;
 
 		/* setup bits */
@@ -5891,7 +5890,7 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 			/* make sure we care about this pixel */
 			if (mask & 0x0f)
 			{
-				INT64 iterw = sw[pix] << (30-16);
+				int64_t iterw = sw[pix] << (30-16);
 				int32_t iterz = sw[pix] << 12;
 				rgb_union color;
 
