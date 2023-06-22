@@ -108,7 +108,6 @@
 //
 #ifndef _WINDOWS_
 /* 32-bit values */
-typedef uint32_t UINT32;
 typedef int32_t INT32;
 
 /* 64-bit values */
@@ -135,7 +134,7 @@ struct poly_extent
 };
 
 /* an rgb_t is a single combined R,G,B (and optionally alpha) value */
-typedef UINT32 rgb_t;
+typedef uint32_t rgb_t;
 
 /* an rgb15_t is a single combined 15-bit R,G,B value */
 typedef uint16_t rgb15_t;
@@ -180,8 +179,8 @@ struct rectangle
 
 /* Macros for normalizing data into big or little endian formats */
 #define FLIPENDIAN_INT16(x)	(((((uint16_t) (x)) >> 8) | ((x) << 8)) & 0xffff)
-#define FLIPENDIAN_INT32(x)	((((UINT32) (x)) << 24) | (((UINT32) (x)) >> 24) | \
-	(( ((UINT32) (x)) & 0x0000ff00) << 8) | (( ((UINT32) (x)) & 0x00ff0000) >> 8))
+#define FLIPENDIAN_INT32(x)	((((uint32_t) (x)) << 24) | (((uint32_t) (x)) >> 24) | \
+	(( ((uint32_t) (x)) & 0x0000ff00) << 8) | (( ((uint32_t) (x)) & 0x00ff0000) >> 8))
 #define FLIPENDIAN_INT64(x)	\
 	(												\
 		(((((UINT64) (x)) >> 56) & ((UINT64) 0xFF)) <<  0)	|	\
@@ -230,7 +229,7 @@ inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
 		_mm_srli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb11), _mm_cvtsi32_si128(rgb10)), _mm_setzero_si128()), scale_u), 1)),
 		scale_v), 15), _mm_setzero_si128()), _mm_setzero_si128()));
 #else
-	UINT32 ag0, ag1, rb0, rb1;
+	uint32_t ag0, ag1, rb0, rb1;
 	rb0 = (rgb00 & 0x00ff00ff) + ((((rgb01 & 0x00ff00ff) - (rgb00 & 0x00ff00ff)) * u) >> 8);
 	rb1 = (rgb10 & 0x00ff00ff) + ((((rgb11 & 0x00ff00ff) - (rgb10 & 0x00ff00ff)) * u) >> 8);
 	rgb00 >>= 8;
@@ -318,7 +317,7 @@ enum { TRIANGLE_THREADS = 3, TRIANGLE_WORKERS = TRIANGLE_THREADS + 1 };
 #define RECIPLOG_LOOKUP_BITS	9
 
 /* fast reciprocal+log2 lookup */
-static UINT32 voodoo_reciplog[(2 << RECIPLOG_LOOKUP_BITS) + 2];
+static uint32_t voodoo_reciplog[(2 << RECIPLOG_LOOKUP_BITS) + 2];
 
 /* input precision is how many fraction bits the input value has; this is a 64-bit number */
 #define RECIPLOG_INPUT_PREC		32
@@ -702,7 +701,7 @@ static const uint8_t dither_matrix_2x2[16] =
  *
  *************************************/
 
-typedef UINT32 rgb_t;
+typedef uint32_t rgb_t;
 
 struct rgba
 {
@@ -716,7 +715,7 @@ struct rgba
 union voodoo_reg
 {
 	INT32				i;
-	UINT32				u;
+	uint32_t				u;
 	float				f;
 	rgba				rgb;
 };
@@ -744,7 +743,7 @@ struct fifo_state
 struct pci_state
 {
 	fifo_state			fifo;					/* PCI FIFO */
-	UINT32				init_enable;			/* initEnable value */
+	uint32_t				init_enable;			/* initEnable value */
 	bool				op_pending;				/* true if an operation is pending */
 };
 
@@ -763,12 +762,12 @@ struct ncc_table
 struct tmu_state
 {
 	uint8_t *				ram;					/* pointer to our RAM */
-	UINT32				mask;					/* mask to apply to pointers */
+	uint32_t				mask;					/* mask to apply to pointers */
 	voodoo_reg *		reg;					/* pointer to our register base */
 	bool				regdirty;				/* true if the LOD/mode/base registers have changed */
 
 	enum { texaddr_mask = 0x0fffff, texaddr_shift = 3 };
-	//UINT32			texaddr_mask;			/* mask for texture address */
+	//uint32_t			texaddr_mask;			/* mask for texture address */
 	//uint8_t				texaddr_shift;			/* shift for texture address */
 
 	INT64				starts, startt;			/* starting S,T (14.18) */
@@ -780,15 +779,15 @@ struct tmu_state
 
 	INT32				lodmin, lodmax;			/* min, max LOD values */
 	INT32				lodbias;				/* LOD bias */
-	UINT32				lodmask;				/* mask of available LODs */
-	UINT32				lodoffset[9];			/* offset of texture base for each LOD */
+	uint32_t				lodmask;				/* mask of available LODs */
+	uint32_t				lodoffset[9];			/* offset of texture base for each LOD */
 	INT32				lodbasetemp;			/* lodbase calculated and used during raster */
 	INT32				detailmax;				/* detail clamp */
 	INT32				detailbias;				/* detail bias */
 	uint8_t				detailscale;			/* detail scale */
 
-	UINT32				wmask;					/* mask for the current texture width */
-	UINT32				hmask;					/* mask for the current texture height */
+	uint32_t				wmask;					/* mask for the current texture width */
+	uint32_t				hmask;					/* mask for the current texture height */
 
 	uint8_t				bilinear_mask;			/* mask for bilinear resolution (0xf0 for V1, 0xff for V2) */
 
@@ -825,24 +824,24 @@ struct setup_vertex
 struct fbi_state
 {
 	uint8_t *				ram;					/* pointer to frame buffer RAM */
-	UINT32				mask;					/* mask to apply to pointers */
-	UINT32				rgboffs[3];				/* word offset to 3 RGB buffers */
-	UINT32				auxoffs;				/* word offset to 1 aux buffer */
+	uint32_t				mask;					/* mask to apply to pointers */
+	uint32_t				rgboffs[3];				/* word offset to 3 RGB buffers */
+	uint32_t				auxoffs;				/* word offset to 1 aux buffer */
 
 	uint8_t				frontbuf;				/* front buffer index */
 	uint8_t				backbuf;				/* back buffer index */
 
-	UINT32				yorigin;				/* Y origin subtract value */
+	uint32_t				yorigin;				/* Y origin subtract value */
 
-	UINT32				width;					/* width of current frame buffer */
-	UINT32				height;					/* height of current frame buffer */
-	//UINT32				xoffs;					/* horizontal offset (back porch) */
-	//UINT32				yoffs;					/* vertical offset (back porch) */
-	//UINT32				vsyncscan;				/* vertical sync scanline */
-	UINT32				rowpixels;				/* pixels per row */
-	UINT32				tile_width;				/* width of video tiles */
-	UINT32				tile_height;			/* height of video tiles */
-	UINT32				x_tiles;				/* number of tiles in the X direction */
+	uint32_t				width;					/* width of current frame buffer */
+	uint32_t				height;					/* height of current frame buffer */
+	//uint32_t				xoffs;					/* horizontal offset (back porch) */
+	//uint32_t				yoffs;					/* vertical offset (back porch) */
+	//uint32_t				vsyncscan;				/* vertical sync scanline */
+	uint32_t				rowpixels;				/* pixels per row */
+	uint32_t				tile_width;				/* width of video tiles */
+	uint32_t				tile_height;			/* height of video tiles */
+	uint32_t				x_tiles;				/* number of tiles in the X direction */
 
 	uint8_t				vblank;					/* VBLANK state */
 	bool				vblank_dont_swap;		/* don't actually swap when we hit this point */
@@ -897,15 +896,15 @@ struct raster_info
 #ifdef C_ENABLE_VOODOO_DEBUG
 	bool				is_generic;				/* true if this is one of the generic rasterizers */
 	uint8_t				display;				/* display index */
-	UINT32				hits;					/* how many hits (pixels) we've used this for */
-	UINT32				polys;					/* how many polys we've used this for */
+	uint32_t				hits;					/* how many hits (pixels) we've used this for */
+	uint32_t				polys;					/* how many polys we've used this for */
 #endif
-	UINT32				eff_color_path;			/* effective fbzColorPath value */
-	UINT32				eff_alpha_mode;			/* effective alphaMode value */
-	UINT32				eff_fog_mode;			/* effective fogMode value */
-	UINT32				eff_fbz_mode;			/* effective fbzMode value */
-	UINT32				eff_tex_mode_0;			/* effective textureMode value for TMU #0 */
-	UINT32				eff_tex_mode_1;			/* effective textureMode value for TMU #1 */
+	uint32_t				eff_color_path;			/* effective fbzColorPath value */
+	uint32_t				eff_alpha_mode;			/* effective alphaMode value */
+	uint32_t				eff_fog_mode;			/* effective fogMode value */
+	uint32_t				eff_fbz_mode;			/* effective fbzMode value */
+	uint32_t				eff_tex_mode_0;			/* effective textureMode value for TMU #0 */
+	uint32_t				eff_tex_mode_1;			/* effective textureMode value for TMU #1 */
 
 	bool				shader_ready;
 	GLhandleARB			so_shader_program;
@@ -1039,7 +1038,7 @@ inline INT32 fifo_space(fifo_state* f)
 	return f->size - 1 - items;
 }
 
-inline uint8_t count_leading_zeros(UINT32 value)
+inline uint8_t count_leading_zeros(uint32_t value)
 {
 #ifdef _MSC_VER
 	DWORD idx = 0;
@@ -1090,9 +1089,9 @@ inline uint8_t count_leading_zeros(UINT32 value)
 
 inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 {
-	UINT32 temp, rlog;
-	UINT32 interp;
-	UINT32 *table;
+	uint32_t temp, rlog;
+	uint32_t interp;
+	uint32_t *table;
 	UINT64 recip;
 	bool neg = false;
 	int lz       = 0;
@@ -1108,11 +1107,11 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	/* if we've spilled out of 32 bits, push it down under 32 */
 	if (value & LONGTYPE(0xffff00000000))
 	{
-		temp = (UINT32)(value >> 16);
+		temp = (uint32_t)(value >> 16);
 		exponent -= 16;
 	}
 	else
-		temp = (UINT32)value;
+		temp = (uint32_t)value;
 
 	/* if the resulting value is 0, the reciprocal is infinite */
 	if (GCC_UNLIKELY(temp == 0))
@@ -1128,7 +1127,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 
 	/* compute a pointer to the table entries we want */
 	/* math is a bit funny here because we shift one less than we need to in order */
-	/* to account for the fact that there are two UINT32's per table entry */
+	/* to account for the fact that there are two uint32_t's per table entry */
 	table = &voodoo_reciplog[(temp >> (31 - RECIPLOG_LOOKUP_BITS - 1)) & ((2 << RECIPLOG_LOOKUP_BITS) - 2)];
 
 	/* compute the interpolation value */
@@ -1168,7 +1167,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
  *
  *************************************/
 
-inline INT32 float_to_int32(UINT32 data, int fixedbits)
+inline INT32 float_to_int32(uint32_t data, int fixedbits)
 {
 	int exponent = ((data >> 23) & 0xff) - 127 - 23 + fixedbits;
 	INT32 result = (data & 0x7fffff) | 0x800000;
@@ -1191,7 +1190,7 @@ inline INT32 float_to_int32(UINT32 data, int fixedbits)
 	return result;
 }
 
-inline INT64 float_to_int64(UINT32 data, int fixedbits)
+inline INT64 float_to_int64(uint32_t data, int fixedbits)
 {
 	int exponent = ((data >> 23) & 0xff) - 127 - 23 + fixedbits;
 	INT64 result = (data & 0x7fffff) | 0x800000;
@@ -1223,7 +1222,7 @@ inline INT64 float_to_int64(UINT32 data, int fixedbits)
  *
  *************************************/
 
-inline UINT32 normalize_color_path(UINT32 eff_color_path)
+inline uint32_t normalize_color_path(uint32_t eff_color_path)
 {
 	/* ignore the subpixel adjust and texture enable flags */
 	eff_color_path &= ~((1 << 26) | (1 << 27));
@@ -1231,7 +1230,7 @@ inline UINT32 normalize_color_path(UINT32 eff_color_path)
 	return eff_color_path;
 }
 
-inline UINT32 normalize_alpha_mode(UINT32 eff_alpha_mode)
+inline uint32_t normalize_alpha_mode(uint32_t eff_alpha_mode)
 {
 	/* always ignore alpha ref value */
 	eff_alpha_mode &= ~(0xff << 24);
@@ -1247,7 +1246,7 @@ inline UINT32 normalize_alpha_mode(UINT32 eff_alpha_mode)
 	return eff_alpha_mode;
 }
 
-inline UINT32 normalize_fog_mode(UINT32 eff_fog_mode)
+inline uint32_t normalize_fog_mode(uint32_t eff_fog_mode)
 {
 	/* if not doing fogging, ignore all the other fog bits */
 	if (!FOGMODE_ENABLE_FOG(eff_fog_mode))
@@ -1256,7 +1255,7 @@ inline UINT32 normalize_fog_mode(UINT32 eff_fog_mode)
 	return eff_fog_mode;
 }
 
-inline UINT32 normalize_fbz_mode(UINT32 eff_fbz_mode)
+inline uint32_t normalize_fbz_mode(uint32_t eff_fbz_mode)
 {
 	/* ignore the draw buffer */
 	eff_fbz_mode &= ~(3 << 14);
@@ -1264,7 +1263,7 @@ inline UINT32 normalize_fbz_mode(UINT32 eff_fbz_mode)
 	return eff_fbz_mode;
 }
 
-inline UINT32 normalize_tex_mode(UINT32 eff_tex_mode)
+inline uint32_t normalize_tex_mode(uint32_t eff_tex_mode)
 {
 	/* ignore the NCC table and seq_8_downld flags */
 	eff_tex_mode &= ~((1 << 5) | (1 << 31));
@@ -1280,9 +1279,9 @@ inline UINT32 normalize_tex_mode(UINT32 eff_tex_mode)
 	return eff_tex_mode;
 }
 
-inline UINT32 compute_raster_hash(const raster_info* info)
+inline uint32_t compute_raster_hash(const raster_info* info)
 {
-	UINT32 hash;
+	uint32_t hash;
 
 	/* make a hash */
 	hash = info->eff_color_path;
@@ -1930,7 +1929,7 @@ do																				\
 	INT32 s, t, lod, ilod;														\
 	INT64 oow;																	\
 	INT32 smax, tmax;															\
-	UINT32 texbase;																\
+	uint32_t texbase;																\
 	rgb_union c_local;															\
 																				\
 	/* determine the S/T/LOD values for this texture */							\
@@ -1980,7 +1979,7 @@ do																				\
 	{																			\
 		/* point sampled */														\
 																				\
-		UINT32 texel0;															\
+		uint32_t texel0;															\
 																				\
 		/* adjust S/T for the LOD and strip off the fractions */				\
 		s >>= ilod + 18;														\
@@ -2015,7 +2014,7 @@ do																				\
 	{																			\
 		/* bilinear filtered */													\
 																				\
-		UINT32 texel0, texel1, texel2, texel3;									\
+		uint32_t texel0, texel1, texel2, texel3;									\
 		uint8_t sfrac, tfrac;														\
 		INT32 s1, t1;															\
 																				\
@@ -2302,7 +2301,7 @@ do																				\
 		wfloat = 0x0000;														\
 	else																		\
 	{																			\
-		UINT32 temp = (UINT32)(ITERW);											\
+		uint32_t temp = (uint32_t)(ITERW);											\
 		if ((temp & 0xffff0000) == 0)											\
 			wfloat = 0xffff;													\
 		else																	\
@@ -2324,7 +2323,7 @@ do																				\
 			depthval = 0x0000;													\
 		else																	\
 		{																		\
-			UINT32 temp = (ITERZ) << 4;											\
+			uint32_t temp = (ITERZ) << 4;											\
 			if ((temp & 0xffff0000) == 0)										\
 				depthval = 0xffff;												\
 			else																\
@@ -3045,8 +3044,8 @@ static double Voodoo_GetHRetracePosition();
     RASTERIZER MANAGEMENT
 ***************************************************************************/
 
-static inline void raster_generic(const voodoo_state* v, UINT32 TMUS, UINT32 TEXMODE0,
-                                  UINT32 TEXMODE1, void* destbase, INT32 y,
+static inline void raster_generic(const voodoo_state* v, uint32_t TMUS, uint32_t TEXMODE0,
+                                  uint32_t TEXMODE1, void* destbase, INT32 y,
                                   const poly_extent* extent, stats_block& stats)
 {
 	const uint8_t* dither_lookup = nullptr;
@@ -3060,12 +3059,12 @@ static inline void raster_generic(const voodoo_state* v, UINT32 TMUS, UINT32 TEX
 	const fbi_state& fbi = v->fbi;
 	const tmu_state& tmu0 = v->tmu[0];
 	const tmu_state& tmu1 = v->tmu[1];
-	UINT32 r_fbzColorPath = v->reg[fbzColorPath].u;
-	UINT32 r_fbzMode = v->reg[fbzMode].u;
-	UINT32 r_alphaMode = v->reg[alphaMode].u;
-	UINT32 r_fogMode = v->reg[fogMode].u;
-	UINT32 r_zaColor = v->reg[zaColor].u;
-	UINT32 r_stipple = v->reg[stipple].u;
+	uint32_t r_fbzColorPath = v->reg[fbzColorPath].u;
+	uint32_t r_fbzMode = v->reg[fbzMode].u;
+	uint32_t r_alphaMode = v->reg[alphaMode].u;
+	uint32_t r_fogMode = v->reg[fogMode].u;
+	uint32_t r_zaColor = v->reg[zaColor].u;
+	uint32_t r_stipple = v->reg[stipple].u;
 
 	/* determine the screen Y */
 	if (FBZMODE_Y_ORIGIN(r_fbzMode))
@@ -3116,7 +3115,7 @@ static inline void raster_generic(const voodoo_state* v, UINT32 TMUS, UINT32 TEX
 
 	/* get pointers to the target buffer and depth buffer */
 	uint16_t *dest = (uint16_t *)destbase + scry * v->fbi.rowpixels;
-	uint16_t *depth = (v->fbi.auxoffs != (UINT32)(~0)) ? ((uint16_t *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels) : NULL;
+	uint16_t *depth = (v->fbi.auxoffs != (uint32_t)(~0)) ? ((uint16_t *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels) : NULL;
 
 	/* compute the starting parameters */
 	INT32 dx = startx - (fbi.ax >> 4);
@@ -3565,7 +3564,7 @@ static void raster_fastfill(void *destbase, INT32 y, const poly_extent *extent, 
 	}
 
 	/* fill this dest buffer row */
-	if (FBZMODE_AUX_BUFFER_MASK(v->reg[fbzMode].u) && v->fbi.auxoffs != (UINT32)(~0))
+	if (FBZMODE_AUX_BUFFER_MASK(v->reg[fbzMode].u) && v->fbi.auxoffs != (uint32_t)(~0))
 	{
 		uint16_t color = (uint16_t)(v->reg[zaColor].u & 0xffff);
 		UINT64 expanded = ((UINT64)color << 48) | ((UINT64)color << 32) | (color << 16) | color;
@@ -3597,9 +3596,9 @@ static void init_fbi([[maybe_unused]] voodoo_state* v, fbi_state* f, int fbmem)
 	/* allocate frame buffer RAM and set pointers */
 	assert(fbmem >= 1); //VOODOO: invalid frame buffer memory size requested
 	f->ram = (uint8_t*)malloc(fbmem);
-	f->mask = (UINT32)(fbmem - 1);
+	f->mask = (uint32_t)(fbmem - 1);
 	f->rgboffs[0] = f->rgboffs[1] = f->rgboffs[2] = 0;
-	f->auxoffs = (UINT32)(~0);
+	f->auxoffs = (uint32_t)(~0);
 
 	/* default to 0x0 */
 	f->frontbuf = 0;
@@ -3683,7 +3682,7 @@ static void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, int tmem)
 	if (tmem <= 1) E_Exit("VOODOO: invalid texture buffer memory size requested");
 	/* allocate texture RAM */
 	t->ram = (uint8_t*)malloc(tmem);
-	t->mask = (UINT32)(tmem - 1);
+	t->mask = (uint32_t)(tmem - 1);
 	t->reg = reg;
 	t->regdirty = true;
 	t->bilinear_mask = (vtype >= VOODOO_2) ? 0xff : 0xf0;
@@ -3748,7 +3747,7 @@ static void voodoo_swap_buffers(voodoo_state *v)
 	/* rotate the buffers */
 	if (vtype < VOODOO_2 || !v->fbi.vblank_dont_swap)
 	{
-		if (v->fbi.rgboffs[2] == (UINT32)(~0))
+		if (v->fbi.rgboffs[2] == (uint32_t)(~0))
 		{
 			v->fbi.frontbuf = (uint8_t)(1 - v->fbi.frontbuf);
 			v->fbi.backbuf = (uint8_t)(1 - v->fbi.frontbuf);
@@ -3770,10 +3769,10 @@ static void voodoo_swap_buffers(voodoo_state *v)
 
 static void recompute_video_memory(voodoo_state *v)
 {
-	UINT32 buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(v->reg[fbiInit2].u);
-	UINT32 fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(v->reg[fbiInit4].u);
-	UINT32 fifo_last_page = FBIINIT4_MEMORY_FIFO_STOP_ROW(v->reg[fbiInit4].u);
-	UINT32 memory_config;
+	uint32_t buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(v->reg[fbiInit2].u);
+	uint32_t fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(v->reg[fbiInit4].u);
+	uint32_t fifo_last_page = FBIINIT4_MEMORY_FIFO_STOP_ROW(v->reg[fbiInit4].u);
+	uint32_t memory_config;
 	int buf;
 
 	/* memory config is determined differently between V1 and V2 */
@@ -3809,13 +3808,13 @@ static void recompute_video_memory(voodoo_state *v)
 		[[fallthrough]];
 
 	case 0:	/* 2 color buffers, 1 aux buffer */
-		v->fbi.rgboffs[2] = (UINT32)(~0);
+		v->fbi.rgboffs[2] = (uint32_t)(~0);
 		v->fbi.auxoffs = 2 * buffer_pages * 0x1000;
 		break;
 
 	case 1:	/* 3 color buffers, 0 aux buffers */
 		v->fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
-		v->fbi.auxoffs = (UINT32)(~0);
+		v->fbi.auxoffs = (uint32_t)(~0);
 		break;
 
 	case 2:	/* 3 color buffers, 1 aux buffers */
@@ -3826,11 +3825,11 @@ static void recompute_video_memory(voodoo_state *v)
 
 	/* clamp the RGB buffers to video memory */
 	for (buf = 0; buf < 3; buf++)
-		if (v->fbi.rgboffs[buf] != (UINT32)(~0) && v->fbi.rgboffs[buf] > v->fbi.mask)
+		if (v->fbi.rgboffs[buf] != (uint32_t)(~0) && v->fbi.rgboffs[buf] > v->fbi.mask)
 			v->fbi.rgboffs[buf] = v->fbi.mask;
 
 	/* clamp the aux buffer to video memory */
-	if (v->fbi.auxoffs != (UINT32)(~0) && v->fbi.auxoffs > v->fbi.mask)
+	if (v->fbi.auxoffs != (uint32_t)(~0) && v->fbi.auxoffs > v->fbi.mask)
 		v->fbi.auxoffs = v->fbi.mask;
 
 	/* compute the memory FIFO location and size */
@@ -3850,7 +3849,7 @@ static void recompute_video_memory(voodoo_state *v)
 	}
 
 	/* reset our front/back buffers if they are out of range */
-	if (v->fbi.rgboffs[2] == (UINT32)(~0))
+	if (v->fbi.rgboffs[2] == (uint32_t)(~0))
 	{
 		if (v->fbi.frontbuf == 2)
 			v->fbi.frontbuf = 0;
@@ -3866,12 +3865,12 @@ static void recompute_video_memory(voodoo_state *v)
  *
  *************************************/
 
-static void ncc_table_write(ncc_table *n, UINT32 regnum, UINT32 data)
+static void ncc_table_write(ncc_table *n, uint32_t regnum, uint32_t data)
 {
 	/* I/Q entries reference the palette if the high bit is set */
 	if (regnum >= 4 && (data & 0x80000000) && n->palette)
 	{
-		UINT32 index = ((data >> 23) & 0xfe) | (regnum & 1);
+		uint32_t index = ((data >> 23) & 0xfe) | (regnum & 1);
 
 		rgb_t palette_entry = 0xff000000 | data;
 
@@ -3886,10 +3885,10 @@ static void ncc_table_write(ncc_table *n, UINT32 regnum, UINT32 data)
 		/* if we have an ARGB palette as well, compute its value */
 		if (n->palettea)
 		{
-			UINT32 a = ((data >> 16) & 0xfc) | ((data >> 22) & 0x03);
-			UINT32 r = ((data >> 10) & 0xfc) | ((data >> 16) & 0x03);
-			UINT32 g = ((data >>  4) & 0xfc) | ((data >> 10) & 0x03);
-			UINT32 b = ((data <<  2) & 0xfc) | ((data >>  4) & 0x03);
+			uint32_t a = ((data >> 16) & 0xfc) | ((data >> 22) & 0x03);
+			uint32_t r = ((data >> 10) & 0xfc) | ((data >> 16) & 0x03);
+			uint32_t g = ((data >>  4) & 0xfc) | ((data >> 10) & 0x03);
+			uint32_t b = ((data <<  2) & 0xfc) | ((data >>  4) & 0x03);
 			n->palettea[index] = MAKE_ARGB(a, r, g, b);
 		}
 
@@ -4013,7 +4012,7 @@ static void dacdata_r(dac_state *d, uint8_t regnum)
 static void recompute_texture_params(tmu_state *t)
 {
 	int bppscale;
-	UINT32 base;
+	uint32_t base;
 	int lod;
 
 	/* extract LOD parameters */
@@ -4077,7 +4076,7 @@ static void recompute_texture_params(tmu_state *t)
 	{
 		if (t->lodmask & (1 << (lod - 1)))
 		{
-			UINT32 size = ((t->wmask >> (lod - 1)) + 1) * ((t->hmask >> (lod - 1)) + 1);
+			uint32_t size = ((t->wmask >> (lod - 1)) + 1) * ((t->hmask >> (lod - 1)) + 1);
 			if (size < 4) size = 4;
 			base += size << bppscale;
 		}
@@ -4203,7 +4202,7 @@ static void update_statistics(voodoo_state *v, bool accumulate)
 static void triangle_worker_work(triangle_worker& tworker, INT32 worktstart, INT32 worktend)
 {
 	/* determine the number of TMUs involved */
-	UINT32 tmus = 0, texmode0 = 0, texmode1 = 0;
+	uint32_t tmus = 0, texmode0 = 0, texmode1 = 0;
 	if (!FBIINIT3_DISABLE_TMUS(v->reg[fbiInit3].u) && FBZCP_TEXTURE_ENABLE(v->reg[fbzColorPath].u))
 	{
 		tmus = 1;
@@ -4849,7 +4848,7 @@ static void fastfill(voodoo_state *v)
     swapbuffer - execute the 'swapbuffer'
     command
 -------------------------------------------------*/
-static void swapbuffer(voodoo_state *v, UINT32 data)
+static void swapbuffer(voodoo_state *v, uint32_t data)
 {
 	/* set the don't swap value for Voodoo 2 */
 	v->fbi.vblank_dont_swap = ((data >> 9) & 1)>0;
@@ -4888,8 +4887,8 @@ static void soft_reset(voodoo_state *v)
  *************************************/
 static void register_w(uint32_t offset, uint32_t data)
 {
-	UINT32 regnum  = (offset) & 0xff;
-	UINT32 chips   = (offset>>8) & 0xf;
+	uint32_t regnum  = (offset) & 0xff;
+	uint32_t chips   = (offset>>8) & 0xf;
 
 	INT64 data64;
 
@@ -5344,8 +5343,8 @@ static void register_w(uint32_t offset, uint32_t data)
 					}
 
 					/* configure the new framebuffer info */
-					UINT32 new_width = (hvis+1) & ~1;
-					UINT32 new_height = (vvis+1) & ~1;
+					uint32_t new_width = (hvis+1) & ~1;
+					uint32_t new_height = (vvis+1) & ~1;
 					if ((v->fbi.width != new_width) || (v->fbi.height != new_height)) {
 						v->fbi.width = new_width;
 						v->fbi.height = new_height;
@@ -5554,10 +5553,10 @@ default_case:
  *  Voodoo LFB writes
  *
  *************************************/
-static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
+static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 	//LOG(LOG_VOODOO,LOG_WARN)("V3D:WR LFB offset %X value %08X", offset, data);
 	uint16_t *dest, *depth;
-	UINT32 destmax, depthmax;
+	uint32_t destmax, depthmax;
 
 	int sr[2], sg[2], sb[2], sa[2], sw[2];
 	int x, y, scry, mask;
@@ -5792,7 +5791,7 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 
 		[[maybe_unused]] const uint8_t* dither = nullptr;
 
-		UINT32 bufoffs;
+		uint32_t bufoffs;
 
 		if (LOG_LFB) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:write raw mode %X (%d,%d) = %08X & %08X\n", LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask);
 
@@ -6175,7 +6174,7 @@ nextpixel:
  *  Voodoo texture RAM writes
  *
  *************************************/
-static INT32 texture_w(UINT32 offset, UINT32 data) {
+static INT32 texture_w(uint32_t offset, uint32_t data) {
 	int tmunum = (offset >> 19) & 0x03;
 	//LOG(LOG_VOODOO,LOG_WARN)("V3D:write TMU%x offset %X value %X", tmunum, offset, data);
 
@@ -6203,7 +6202,7 @@ static INT32 texture_w(UINT32 offset, UINT32 data) {
 	if (TEXMODE_FORMAT(t->reg[textureMode].u) < 8)
 	{
 		int lod, tt, ts;
-		UINT32 tbaseaddr;
+		uint32_t tbaseaddr;
 		uint8_t *dest;
 
 		/* extract info */
@@ -6260,7 +6259,7 @@ static INT32 texture_w(UINT32 offset, UINT32 data) {
 	else
 	{
 		int lod, tt, ts;
-		UINT32 tbaseaddr;
+		uint32_t tbaseaddr;
 		uint16_t *dest;
 
 		/* extract info */
@@ -6310,9 +6309,9 @@ static INT32 texture_w(UINT32 offset, UINT32 data) {
  *  Handle a register read
  *
  *************************************/
-static UINT32 register_r(UINT32 offset)
+static uint32_t register_r(uint32_t offset)
 {
-	UINT32 regnum  = (offset) & 0xff;
+	uint32_t regnum  = (offset) & 0xff;
 
 	//LOG(LOG_VOODOO,LOG_WARN)("Voodoo:read chip %x reg %x (%s)", chips, regnum<<2, voodoo_reg_name[regnum]);
 
@@ -6322,7 +6321,7 @@ static UINT32 register_r(UINT32 offset)
 		return 0xffffffff;
 	}
 
-	UINT32 result;
+	uint32_t result;
 
 	/* default result is the FBI register value */
 	result = v->reg[regnum].u;
@@ -6426,15 +6425,15 @@ static UINT32 register_r(UINT32 offset)
  *  Handle an LFB read
  *
  *************************************/
-static UINT32 lfb_r(UINT32 offset)
+static uint32_t lfb_r(uint32_t offset)
 {
 	//LOG(LOG_VOODOO,LOG_WARN)("Voodoo:read LFB offset %X", offset);
 	uint16_t *buffer;
-	UINT32 bufmax;
-	UINT32 bufoffs;
-	UINT32 data;
+	uint32_t bufmax;
+	uint32_t bufoffs;
+	uint32_t data;
 	int x, y, scry;
-	UINT32 destbuf;
+	uint32_t destbuf;
 
 	/* compute X,Y */
 	x = (offset << 1) & 0x3fe;
@@ -6455,7 +6454,7 @@ static UINT32 lfb_r(UINT32 offset)
 			break;
 
 		case 2:			/* aux buffer */
-			if (v->fbi.auxoffs == (UINT32)(~0))
+			if (v->fbi.auxoffs == (uint32_t)(~0))
 				return 0xffffffff;
 			buffer = (uint16_t *)(v->fbi.ram + v->fbi.auxoffs);
 			bufmax = (v->fbi.mask + 1 - v->fbi.auxoffs) / 2;
@@ -6497,7 +6496,7 @@ static UINT32 lfb_r(UINT32 offset)
 	return data;
 }
 
-static void voodoo_w(UINT32 offset, UINT32 data, UINT32 mask) {
+static void voodoo_w(uint32_t offset, uint32_t data, uint32_t mask) {
 	if ((offset & (0xc00000/4)) == 0)
 		register_w(offset, data);
 	else if ((offset & (0x800000/4)) == 0)
@@ -6506,7 +6505,7 @@ static void voodoo_w(UINT32 offset, UINT32 data, UINT32 mask) {
 		texture_w(offset, data);
 }
 
-static UINT32 voodoo_r(UINT32 offset) {
+static uint32_t voodoo_r(uint32_t offset) {
 	if ((offset & (0xc00000/4)) == 0)
 		return register_r(offset);
 	else if ((offset & (0x800000/4)) == 0)
@@ -6550,7 +6549,7 @@ static void voodoo_init() {
 
 #ifdef C_ENABLE_VOODOO_OPENGL
 	v->next_rasterizer = 0;
-	//for (UINT32 rct=0; rct<MAX_RASTERIZERS; rct++)
+	//for (uint32_t rct=0; rct<MAX_RASTERIZERS; rct++)
 	//	v->rasterizer[rct] = raster_info();
 	memset(v->rasterizer, 0, sizeof(v->rasterizer));
 	memset(v->raster_hash, 0, sizeof(v->raster_hash));
@@ -6567,15 +6566,15 @@ static void voodoo_init() {
 	{
 		/* create a table of precomputed 1/n and log2(n) values */
 		/* n ranges from 1.0000 to 2.0000 */
-		for (UINT32 val = 0; val <= (1 << RECIPLOG_LOOKUP_BITS); val++)
+		for (uint32_t val = 0; val <= (1 << RECIPLOG_LOOKUP_BITS); val++)
 		{
-			UINT32 value = (1 << RECIPLOG_LOOKUP_BITS) + val;
+			uint32_t value = (1 << RECIPLOG_LOOKUP_BITS) + val;
 			voodoo_reciplog[val*2 + 0] = (1 << (RECIPLOG_LOOKUP_PREC + RECIPLOG_LOOKUP_BITS)) / value;
-			voodoo_reciplog[val*2 + 1] = (UINT32)(LOGB2((double)value / (double)(1 << RECIPLOG_LOOKUP_BITS)) * (double)(1 << RECIPLOG_LOOKUP_PREC));
+			voodoo_reciplog[val*2 + 1] = (uint32_t)(LOGB2((double)value / (double)(1 << RECIPLOG_LOOKUP_BITS)) * (double)(1 << RECIPLOG_LOOKUP_PREC));
 		}
 
 		/* create dithering tables */
-		for (UINT32 val = 0; val < 256*16*2; val++)
+		for (uint32_t val = 0; val < 256*16*2; val++)
 		{
 			int g = (val >> 0) & 1;
 			int x = (val >> 1) & 3;
@@ -6605,9 +6604,9 @@ static void voodoo_init() {
 
 	v->tmu_config = 0x11;	// revision 1
 
-	UINT32 fbmemsize = 0;
-	UINT32 tmumem0 = 0;
-	UINT32 tmumem1 = 0;
+	uint32_t fbmemsize = 0;
+	uint32_t tmumem0 = 0;
+	uint32_t tmumem1 = 0;
 
 	/* configure type-specific values */
 	switch (vtype)
@@ -6683,11 +6682,11 @@ static void voodoo_init() {
 
 	/* initialize some registers */
 	v->pci.init_enable = 0;
-	v->reg[fbiInit0].u = (UINT32)((1 << 4) | (0x10 << 6));
-	v->reg[fbiInit1].u = (UINT32)((1 << 1) | (1 << 8) | (1 << 12) | (2 << 20));
-	v->reg[fbiInit2].u = (UINT32)((1 << 6) | (0x100 << 23));
-	v->reg[fbiInit3].u = (UINT32)((2 << 13) | (0xf << 17));
-	v->reg[fbiInit4].u = (UINT32)(1 << 0);
+	v->reg[fbiInit0].u = (uint32_t)((1 << 4) | (0x10 << 6));
+	v->reg[fbiInit1].u = (uint32_t)((1 << 1) | (1 << 8) | (1 << 12) | (2 << 20));
+	v->reg[fbiInit2].u = (uint32_t)((1 << 6) | (0x100 << 23));
+	v->reg[fbiInit3].u = (uint32_t)((2 << 13) | (0xf << 17));
+	v->reg[fbiInit4].u = (uint32_t)(1 << 0);
 
 	/* do a soft reset to reset everything else */
 	soft_reset(v);
@@ -6952,9 +6951,9 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr & 3))
-			voodoo_w((addr>>2)&0x3FFFFF,(UINT32)val,0x0000ffff);
+			voodoo_w((addr>>2)&0x3FFFFF,(uint32_t)val,0x0000ffff);
 		else if (!(addr & 1))
-			voodoo_w((addr>>2)&0x3FFFFF,(UINT32)(val<<16),0xffff0000);
+			voodoo_w((addr>>2)&0x3FFFFF,(uint32_t)(val<<16),0xffff0000);
 		else
 			E_Exit("voodoo writew unaligned");
 	}
@@ -6978,19 +6977,19 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr&3)) {
-			voodoo_w((addr>>2)&0x3FFFFF,(UINT32)val,0xffffffff);
+			voodoo_w((addr>>2)&0x3FFFFF,(uint32_t)val,0xffffffff);
 		} else if (!(addr&1)) {
-			voodoo_w((addr>>2)&0x3FFFFF,(UINT32)(val<<16),0xffff0000);
-			voodoo_w(((addr>>2)+1)&0x3FFFFF,(UINT32)val,0x0000ffff);
+			voodoo_w((addr>>2)&0x3FFFFF,(uint32_t)(val<<16),0xffff0000);
+			voodoo_w(((addr>>2)+1)&0x3FFFFF,(uint32_t)val,0x0000ffff);
 		} else {
 			uint32_t val1 = voodoo_r((addr >> 2) & 0x3FFFFF);
 			uint32_t val2 = voodoo_r(((addr >> 2) + 1) & 0x3FFFFF);
 			if ((addr & 3) == 1) {
 				val1 = (val1&0xffffff) | ((val&0xff)<<24);
-				val2 = (val2&0xff000000) | ((UINT32)val>>8);
+				val2 = (val2&0xff000000) | ((uint32_t)val>>8);
 			} else if ((addr & 3) == 3) {
 				val1 = (val1&0xff) | ((val&0xffffff)<<8);
-				val2 = (val2&0xffffff00) | ((UINT32)val>>24);
+				val2 = (val2&0xffffff00) | ((uint32_t)val>>24);
 			}
 			voodoo_w((addr>>2)&0x3FFFFF,val1,0xffffffff);
 			voodoo_w(((addr>>2)+1)&0x3FFFFF,val2,0xffffffff);
@@ -7121,7 +7120,7 @@ struct PCI_SSTDevice : public PCI_Device {
 				return value;
 			case 0x40:
 				Voodoo_Startup();
-				v->pci.init_enable = (UINT32)(value&7);
+				v->pci.init_enable = (uint32_t)(value&7);
 				break;
 			case 0x41:
 			case 0x42:
