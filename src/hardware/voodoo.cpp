@@ -118,8 +118,8 @@ typedef int64_t attoseconds_t;
 /* poly_extent describes start/end points for a scanline, along with per-scanline parameters */
 struct poly_extent
 {
-	int32_t		startx;						/* starting X coordinate (inclusive) */
-	int32_t		stopx;						/* ending X coordinate (exclusive) */
+	int32_t startx = 0; // starting X coordinate (inclusive)
+	int32_t stopx  = 0; // ending X coordinate (exclusive)
 };
 
 /* an rgb_t is a single combined R,G,B (and optionally alpha) value */
@@ -4738,9 +4738,10 @@ static void fastfill(voodoo_state *v)
 	int sy = (v->reg[clipLowYHighY].u >> 16) & 0x3ff;
 	int ey = (v->reg[clipLowYHighY].u >> 0) & 0x3ff;
 
-	poly_extent extents[64];
-	uint16_t dithermatrix[16];
-	uint16_t *drawbuf = NULL;
+	poly_extent extents[64]   = {};
+	uint16_t dithermatrix[16] = {};
+
+	uint16_t* drawbuf = nullptr;
 	int x, y;
 
 	/* if we're not clearing either, take no time */
