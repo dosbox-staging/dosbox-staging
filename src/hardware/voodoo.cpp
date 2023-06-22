@@ -107,7 +107,6 @@
 // FIXME Get rid of these typedefs
 //
 /* 8-bit values */
-typedef uint8_t UINT8;
 typedef int8_t INT8;
 
 /* 16-bit values */
@@ -169,7 +168,7 @@ typedef UINT16 rgb15_t;
 /*-------------------------------------------------
     pal5bit - convert a 5-bit value to 8 bits
 -------------------------------------------------*/
-inline UINT8 pal5bit(UINT8 bits)
+inline uint8_t pal5bit(uint8_t bits)
 {
 	bits &= 0x1f;
 	return (bits << 3) | (bits >> 2);
@@ -229,7 +228,7 @@ static int16_t sse2_scale_table[256][8];
 #endif
 
 inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
-                                  rgb_t rgb11, UINT8 u, UINT8 v)
+                                  rgb_t rgb11, uint8_t u, uint8_t v)
 {
 #if defined(__SSE2__)
 	__m128i  scale_u = *(__m128i *)sse2_scale_table[u], scale_v = *(__m128i *)sse2_scale_table[v];
@@ -345,7 +344,7 @@ static UINT32 voodoo_reciplog[(2 << RECIPLOG_LOOKUP_BITS) + 2];
  *
  *************************************/
 
-static const UINT8 dither_matrix_4x4[16] =
+static const uint8_t dither_matrix_4x4[16] =
 {
 	 0,  8,  2, 10,
 	12,  4, 14,  6,
@@ -353,7 +352,7 @@ static const UINT8 dither_matrix_4x4[16] =
 	15,  7, 13,  5
 };
 
-static const UINT8 dither_matrix_2x2[16] =
+static const uint8_t dither_matrix_2x2[16] =
 {
 	 2, 10,  2, 10,
 	14,  6, 14,  6,
@@ -715,9 +714,9 @@ typedef UINT32 rgb_t;
 struct rgba
 {
 #ifndef WORDS_BIGENDIAN
-	UINT8				b, g, r, a;
+	uint8_t				b, g, r, a;
 #else
-	UINT8				a, r, g, b;
+	uint8_t				a, r, g, b;
 #endif
 };
 
@@ -770,14 +769,14 @@ struct ncc_table
 
 struct tmu_state
 {
-	UINT8 *				ram;					/* pointer to our RAM */
+	uint8_t *				ram;					/* pointer to our RAM */
 	UINT32				mask;					/* mask to apply to pointers */
 	voodoo_reg *		reg;					/* pointer to our register base */
 	bool				regdirty;				/* true if the LOD/mode/base registers have changed */
 
 	enum { texaddr_mask = 0x0fffff, texaddr_shift = 3 };
 	//UINT32			texaddr_mask;			/* mask for texture address */
-	//UINT8				texaddr_shift;			/* shift for texture address */
+	//uint8_t				texaddr_shift;			/* shift for texture address */
 
 	INT64				starts, startt;			/* starting S,T (14.18) */
 	INT64				startw;					/* starting W (2.30) */
@@ -793,12 +792,12 @@ struct tmu_state
 	INT32				lodbasetemp;			/* lodbase calculated and used during raster */
 	INT32				detailmax;				/* detail clamp */
 	INT32				detailbias;				/* detail bias */
-	UINT8				detailscale;			/* detail scale */
+	uint8_t				detailscale;			/* detail scale */
 
 	UINT32				wmask;					/* mask for the current texture width */
 	UINT32				hmask;					/* mask for the current texture height */
 
-	UINT8				bilinear_mask;			/* mask for bilinear resolution (0xf0 for V1, 0xff for V2) */
+	uint8_t				bilinear_mask;			/* mask for bilinear resolution (0xf0 for V1, 0xff for V2) */
 
 	ncc_table			ncc[2];					/* two NCC tables */
 
@@ -832,13 +831,13 @@ struct setup_vertex
 
 struct fbi_state
 {
-	UINT8 *				ram;					/* pointer to frame buffer RAM */
+	uint8_t *				ram;					/* pointer to frame buffer RAM */
 	UINT32				mask;					/* mask to apply to pointers */
 	UINT32				rgboffs[3];				/* word offset to 3 RGB buffers */
 	UINT32				auxoffs;				/* word offset to 1 aux buffer */
 
-	UINT8				frontbuf;				/* front buffer index */
-	UINT8				backbuf;				/* back buffer index */
+	uint8_t				frontbuf;				/* front buffer index */
+	uint8_t				backbuf;				/* back buffer index */
 
 	UINT32				yorigin;				/* Y origin subtract value */
 
@@ -852,7 +851,7 @@ struct fbi_state
 	UINT32				tile_height;			/* height of video tiles */
 	UINT32				x_tiles;				/* number of tiles in the X direction */
 
-	UINT8				vblank;					/* VBLANK state */
+	uint8_t				vblank;					/* VBLANK state */
 	bool				vblank_dont_swap;		/* don't actually swap when we hit this point */
 	bool				vblank_flush_pending;
 
@@ -872,22 +871,22 @@ struct fbi_state
 
 	stats_block			lfb_stats;				/* LFB-access statistics */
 
-	UINT8				sverts;					/* number of vertices ready */
+	uint8_t				sverts;					/* number of vertices ready */
 	setup_vertex		svert[3];				/* 3 setup vertices */
 
 	fifo_state			fifo;					/* framebuffer memory fifo */
 
-	UINT8				fogblend[64];			/* 64-entry fog table */
-	UINT8				fogdelta[64];			/* 64-entry fog table */
-	UINT8				fogdelta_mask;			/* mask for for delta (0xff for V1, 0xfc for V2) */
+	uint8_t				fogblend[64];			/* 64-entry fog table */
+	uint8_t				fogdelta[64];			/* 64-entry fog table */
+	uint8_t				fogdelta_mask;			/* mask for for delta (0xff for V1, 0xfc for V2) */
 
 	//rgb_t				clut[512];				/* clut gamma data */
 };
 
 struct dac_state
 {
-	UINT8				reg[8];					/* 8 registers */
-	UINT8				read_result;			/* pending read result */
+	uint8_t				reg[8];					/* 8 registers */
+	uint8_t				read_result;			/* pending read result */
 };
 
 #ifdef C_ENABLE_VOODOO_OPENGL
@@ -904,7 +903,7 @@ struct raster_info
 	raster_info			*next;					/* pointer to next entry with the same hash */
 #ifdef C_ENABLE_VOODOO_DEBUG
 	bool				is_generic;				/* true if this is one of the generic rasterizers */
-	UINT8				display;				/* display index */
+	uint8_t				display;				/* display index */
 	UINT32				hits;					/* how many hits (pixels) we've used this for */
 	UINT32				polys;					/* how many polys we've used this for */
 #endif
@@ -1047,13 +1046,13 @@ inline INT32 fifo_space(fifo_state* f)
 	return f->size - 1 - items;
 }
 
-inline UINT8 count_leading_zeros(UINT32 value)
+inline uint8_t count_leading_zeros(UINT32 value)
 {
 #ifdef _MSC_VER
 	DWORD idx = 0;
-	return (_BitScanReverse(&idx, value) ? (UINT8)(31 - idx) : (UINT8)32);
+	return (_BitScanReverse(&idx, value) ? (uint8_t)(31 - idx) : (uint8_t)32);
 #else
-	return (value ? (UINT8)__builtin_clz(value) : (UINT8)32);
+	return (value ? (uint8_t)__builtin_clz(value) : (uint8_t)32);
 #endif
 	//INT32 result;
 	//
@@ -1074,7 +1073,7 @@ inline UINT8 count_leading_zeros(UINT32 value)
 	//	value >>= 1;
 	//}
 	//#endif
-	//return (UINT8)result;
+	//return (uint8_t)result;
 }
 
 /*************************************
@@ -1349,7 +1348,7 @@ do																				\
 	if (FBZMODE_ENABLE_DITHERING(FBZMODE))										\
 	{																			\
 		/* look up the dither value from the appropriate matrix */				\
-		const UINT8 *dith = &DITHER_LOOKUP[((XX) & 3) << 1];					\
+		const uint8_t *dith = &DITHER_LOOKUP[((XX) & 3) << 1];					\
 																				\
 		/* apply dithering to R,G,B */											\
 		(RR) = dith[((RR) << 3) + 0];											\
@@ -1413,10 +1412,10 @@ do																				\
 	}																			\
 	else																		\
 	{																			\
-		RESULT.rgb.r = (r < 0) ? 0 : (r > 0xff) ? 0xff : (UINT8)r;				\
-		RESULT.rgb.g = (g < 0) ? 0 : (g > 0xff) ? 0xff : (UINT8)g;				\
-		RESULT.rgb.b = (b < 0) ? 0 : (b > 0xff) ? 0xff : (UINT8)b;				\
-		RESULT.rgb.a = (a < 0) ? 0 : (a > 0xff) ? 0xff : (UINT8)a;				\
+		RESULT.rgb.r = (r < 0) ? 0 : (r > 0xff) ? 0xff : (uint8_t)r;				\
+		RESULT.rgb.g = (g < 0) ? 0 : (g > 0xff) ? 0xff : (uint8_t)g;				\
+		RESULT.rgb.b = (b < 0) ? 0 : (b > 0xff) ? 0xff : (uint8_t)b;				\
+		RESULT.rgb.a = (a < 0) ? 0 : (a > 0xff) ? 0xff : (uint8_t)a;				\
 	}																			\
 }																				\
 while (0)
@@ -1575,7 +1574,7 @@ do																				\
 {																				\
 	if (ALPHAMODE_ALPHATEST(ALPHAMODE))											\
 	{																			\
-		UINT8 alpharef = (VV)->reg[alphaMode].rgb.a;							\
+		uint8_t alpharef = (VV)->reg[alphaMode].rgb.a;							\
 		switch (ALPHAMODE_ALPHAFUNCTION(ALPHAMODE))								\
 		{																		\
 			case 0:		/* alphaOP = never */									\
@@ -2006,7 +2005,7 @@ do																				\
 		/* fetch texel data */													\
 		if (TEXMODE_FORMAT(TEXMODE) < 8)										\
 		{																		\
-			texel0 = *(UINT8 *)&(TT)->ram[(texbase + t + s) & (TT)->mask];		\
+			texel0 = *(uint8_t *)&(TT)->ram[(texbase + t + s) & (TT)->mask];		\
 			c_local.u = (LOOKUP)[texel0];										\
 		}																		\
 		else																	\
@@ -2024,7 +2023,7 @@ do																				\
 		/* bilinear filtered */													\
 																				\
 		UINT32 texel0, texel1, texel2, texel3;									\
-		UINT8 sfrac, tfrac;														\
+		uint8_t sfrac, tfrac;														\
 		INT32 s1, t1;															\
 																				\
 		/* adjust S/T for the LOD and strip off all but the low 8 bits of */	\
@@ -2037,8 +2036,8 @@ do																				\
 		t -= 0x80;																\
 																				\
 		/* extract the fractions */												\
-		sfrac = (UINT8)(s & (TT)->bilinear_mask);								\
-		tfrac = (UINT8)(t & (TT)->bilinear_mask);								\
+		sfrac = (uint8_t)(s & (TT)->bilinear_mask);								\
+		tfrac = (uint8_t)(t & (TT)->bilinear_mask);								\
 																				\
 		/* now toss the rest */													\
 		s >>= 8;																\
@@ -2067,10 +2066,10 @@ do																				\
 		/* fetch texel data */													\
 		if (TEXMODE_FORMAT(TEXMODE) < 8)										\
 		{																		\
-			texel0 = *(UINT8 *)&(TT)->ram[(texbase + t + s) & (TT)->mask];		\
-			texel1 = *(UINT8 *)&(TT)->ram[(texbase + t + s1) & (TT)->mask];		\
-			texel2 = *(UINT8 *)&(TT)->ram[(texbase + t1 + s) & (TT)->mask];		\
-			texel3 = *(UINT8 *)&(TT)->ram[(texbase + t1 + s1) & (TT)->mask];	\
+			texel0 = *(uint8_t *)&(TT)->ram[(texbase + t + s) & (TT)->mask];		\
+			texel1 = *(uint8_t *)&(TT)->ram[(texbase + t + s1) & (TT)->mask];		\
+			texel2 = *(uint8_t *)&(TT)->ram[(texbase + t1 + s) & (TT)->mask];		\
+			texel3 = *(uint8_t *)&(TT)->ram[(texbase + t1 + s1) & (TT)->mask];	\
 			texel0 = (LOOKUP)[texel0];											\
 			texel1 = (LOOKUP)[texel1];											\
 			texel2 = (LOOKUP)[texel2];											\
@@ -2250,10 +2249,10 @@ do																				\
 		ta += c_local.rgb.a;													\
 																				\
 	/* clamp */																	\
-	RESULT.rgb.r = (tr < 0) ? 0 : (tr > 0xff) ? 0xff : (UINT8)tr;				\
-	RESULT.rgb.g = (tg < 0) ? 0 : (tg > 0xff) ? 0xff : (UINT8)tg;				\
-	RESULT.rgb.b = (tb < 0) ? 0 : (tb > 0xff) ? 0xff : (UINT8)tb;				\
-	RESULT.rgb.a = (ta < 0) ? 0 : (ta > 0xff) ? 0xff : (UINT8)ta;				\
+	RESULT.rgb.r = (tr < 0) ? 0 : (tr > 0xff) ? 0xff : (uint8_t)tr;				\
+	RESULT.rgb.g = (tg < 0) ? 0 : (tg > 0xff) ? 0xff : (uint8_t)tg;				\
+	RESULT.rgb.b = (tb < 0) ? 0 : (tb > 0xff) ? 0xff : (uint8_t)tb;				\
+	RESULT.rgb.a = (ta < 0) ? 0 : (ta > 0xff) ? 0xff : (uint8_t)ta;				\
 																				\
 	/* invert */																\
 	if (TEXMODE_TC_INVERT_OUTPUT(TEXMODE))										\
@@ -2691,7 +2690,7 @@ while (0)
  *
  *************************************/
 
-static const UINT8 register_alias_map[0x40] =
+static const uint8_t register_alias_map[0x40] =
 {
 	status,		0x004/4,	vertexAx,	vertexAy,
 	vertexBx,	vertexBy,	vertexCx,	vertexCy,
@@ -2720,7 +2719,7 @@ static const UINT8 register_alias_map[0x40] =
  *
  *************************************/
 
-static const UINT8 voodoo_register_access[0x100] =
+static const uint8_t voodoo_register_access[0x100] =
 {
 	/* 0x000 */
 	REG_RP,		0,			REG_WPF,	REG_WPF,
@@ -2812,7 +2811,7 @@ static const UINT8 voodoo_register_access[0x100] =
 
 // TODO bring this back when enabling voodoo2 code
 #if 0 
-static const UINT8 voodoo2_register_access[0x100] =
+static const uint8_t voodoo2_register_access[0x100] =
 {
 	/* 0x000 */
 	REG_RP,		REG_RWPT,	REG_WPF,	REG_WPF,
@@ -3024,11 +3023,11 @@ iterated W    = 18.32 [48 bits]
 **************************************************************************/
 
 static voodoo_state* v = nullptr;
-static UINT8 vtype = VOODOO_1, vperf;
+static uint8_t vtype = VOODOO_1, vperf;
 
 /* fast dither lookup */
-static UINT8 dither4_lookup[256*16*2];
-static UINT8 dither2_lookup[256*16*2];
+static uint8_t dither4_lookup[256*16*2];
+static uint8_t dither2_lookup[256*16*2];
 
 #define LOG_VOODOO LOG_PCI
 #define LOG_VBLANK_SWAP		(0)
@@ -3264,14 +3263,14 @@ static inline void raster_generic(const voodoo_state* v, UINT32 TMUS, UINT32 TEX
 			{
 				int temp;
 				CLAMPED_Z(iterz, r_fbzColorPath, temp);
-				c_local.rgb.a = (UINT8)temp;
+				c_local.rgb.a = (uint8_t)temp;
 				break;
 			}
 			case 3:		/* clamped iterated W[39:32] */
 			{
 				int temp;
 				CLAMPED_W(iterw, r_fbzColorPath, temp);			/* Voodoo 2 only */
-				c_local.rgb.a = (UINT8)temp;
+				c_local.rgb.a = (uint8_t)temp;
 				break;
 			}
 		}
@@ -3604,7 +3603,7 @@ static void init_fbi([[maybe_unused]] voodoo_state* v, fbi_state* f, int fbmem)
 {
 	/* allocate frame buffer RAM and set pointers */
 	assert(fbmem >= 1); //VOODOO: invalid frame buffer memory size requested
-	f->ram = (UINT8*)malloc(fbmem);
+	f->ram = (uint8_t*)malloc(fbmem);
 	f->mask = (UINT32)(fbmem - 1);
 	f->rgboffs[0] = f->rgboffs[1] = f->rgboffs[2] = 0;
 	f->auxoffs = (UINT32)(~0);
@@ -3620,7 +3619,7 @@ static void init_fbi([[maybe_unused]] voodoo_state* v, fbi_state* f, int fbmem)
 	//f->vsyncscan = 0;
 
 	/* init the pens */
-	//for (UINT8 pen = 0; pen < 32; pen++)
+	//for (uint8_t pen = 0; pen < 32; pen++)
 	//	v->fbi.clut[pen] = MAKE_ARGB(pen, pal5bit(pen), pal5bit(pen), pal5bit(pen));
 	//v->fbi.clut[32] = MAKE_ARGB(32,0xff,0xff,0xff);
 
@@ -3690,7 +3689,7 @@ static void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, int tmem)
 {
 	if (tmem <= 1) E_Exit("VOODOO: invalid texture buffer memory size requested");
 	/* allocate texture RAM */
-	t->ram = (UINT8*)malloc(tmem);
+	t->ram = (uint8_t*)malloc(tmem);
 	t->mask = (UINT32)(tmem - 1);
 	t->reg = reg;
 	t->regdirty = true;
@@ -3758,8 +3757,8 @@ static void voodoo_swap_buffers(voodoo_state *v)
 	{
 		if (v->fbi.rgboffs[2] == (UINT32)(~0))
 		{
-			v->fbi.frontbuf = (UINT8)(1 - v->fbi.frontbuf);
-			v->fbi.backbuf = (UINT8)(1 - v->fbi.frontbuf);
+			v->fbi.frontbuf = (uint8_t)(1 - v->fbi.frontbuf);
+			v->fbi.backbuf = (uint8_t)(1 - v->fbi.frontbuf);
 		}
 		else
 		{
@@ -3980,14 +3979,14 @@ static void ncc_table_update(ncc_table *n)
  *
  *************************************/
 
-static void dacdata_w(dac_state *d, UINT8 regnum, UINT8 data)
+static void dacdata_w(dac_state *d, uint8_t regnum, uint8_t data)
 {
 	d->reg[regnum] = data;
 }
 
-static void dacdata_r(dac_state *d, UINT8 regnum)
+static void dacdata_r(dac_state *d, uint8_t regnum)
 {
-	UINT8 result = 0xff;
+	uint8_t result = 0xff;
 
 	/* switch off the DAC register requested */
 	switch (regnum)
@@ -5990,14 +5989,14 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 					{
 						int temp;
 						CLAMPED_Z(iterz, v->reg[fbzColorPath].u, temp);
-						c_local.rgb.a = (UINT8)temp;
+						c_local.rgb.a = (uint8_t)temp;
 						break;
 					}
 					case 3:		/* clamped iterated W[39:32] */
 					{
 						int temp;
 						CLAMPED_W(iterw, v->reg[fbzColorPath].u, temp);			/* Voodoo 2 only */
-						c_local.rgb.a = (UINT8)temp;
+						c_local.rgb.a = (uint8_t)temp;
 						break;
 					}
 				}
@@ -6212,7 +6211,7 @@ static INT32 texture_w(UINT32 offset, UINT32 data) {
 	{
 		int lod, tt, ts;
 		UINT32 tbaseaddr;
-		UINT8 *dest;
+		uint8_t *dest;
 
 		/* extract info */
 		lod = (offset >> 15) & 0x0f;
@@ -6592,13 +6591,13 @@ static void voodoo_init() {
 
 			if (!g)
 			{
-				dither4_lookup[val] = (UINT8)(DITHER_RB(color, dither_matrix_4x4[y * 4 + x]) >> 3);
-				dither2_lookup[val] = (UINT8)(DITHER_RB(color, dither_matrix_2x2[y * 4 + x]) >> 3);
+				dither4_lookup[val] = (uint8_t)(DITHER_RB(color, dither_matrix_4x4[y * 4 + x]) >> 3);
+				dither2_lookup[val] = (uint8_t)(DITHER_RB(color, dither_matrix_2x2[y * 4 + x]) >> 3);
 			}
 			else
 			{
-				dither4_lookup[val] = (UINT8)(DITHER_G(color, dither_matrix_4x4[y * 4 + x]) >> 2);
-				dither2_lookup[val] = (UINT8)(DITHER_G(color, dither_matrix_2x2[y * 4 + x]) >> 2);
+				dither4_lookup[val] = (uint8_t)(DITHER_G(color, dither_matrix_4x4[y * 4 + x]) >> 2);
+				dither2_lookup[val] = (uint8_t)(DITHER_G(color, dither_matrix_2x2[y * 4 + x]) >> 2);
 			}
 		}
 
@@ -7234,7 +7233,7 @@ void VOODOO_Init(Section* sec) {
 
 	voodoo_current_lfb = (VOODOO_INITIAL_LFB & 0xffff0000);
 	voodoo_pagehandler = &voodoo_init_pagehandler;
-	vperf = (UINT8)section->Get_int("voodoo_perf");
+	vperf = (uint8_t)section->Get_int("voodoo_perf");
 
 	PCI_AddDevice(new PCI_SSTDevice());
 }
