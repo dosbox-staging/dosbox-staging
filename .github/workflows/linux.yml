@@ -70,30 +70,32 @@ jobs:
       matrix:
         conf:
 
-          - name: GCC 10, Ubuntu 20.04
-            os: ubuntu-20.04
-            packages: g++-10
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-10.ini
-            max_warnings: 0
-            needs_all_deps: true
-
-          - name: Clang 12, Ubuntu 20.04
-            os: ubuntu-20.04
-            packages: clang-12
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-clang-12.ini
-            max_warnings: 0
-            needs_all_deps: true
-
-          - name: GCC 12, Ubuntu 22.04
+          - name: GCC 10, Ubuntu 22.04
             os: ubuntu-22.04
-            build_flags: -Dbuildtype=debug
+            packages: g++-12
+            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true --native-file=.github/meson/native-gcc-12.ini
             max_warnings: 0
             needs_all_deps: true
             run_tests: true
 
+          - name: Clang 12, Ubuntu 22.04
+            os: ubuntu-22.04
+            packages: clang-14
+            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true --native-file=.github/meson/native-clang-14.ini
+            max_warnings: 0
+            needs_all_deps: true
+            run_tests: true
+
+          - name: GCC 12, +debugger
+            os: ubuntu-22.04
+            packages: g++-12
+            build_flags: -Denable_debugger=heavy --native-file=.github/meson/native-gcc-12.ini
+            max_warnings: 0
+            needs_all_deps: true
+
           - name: GCC, Debian 10, ARMv7
             os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true --cross-file dosbox-cross
             max_warnings: 2
             run_tests: true
             cross: true
@@ -103,7 +105,7 @@ jobs:
 
           - name: GCC, Debian 10, aarch64
             os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true --cross-file dosbox-cross
             max_warnings: 0
             run_tests: true
             cross: true
@@ -113,7 +115,7 @@ jobs:
 
           - name: GCC, Debian 11, ARMv7
             os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true --cross-file dosbox-cross
             max_warnings: 0
             run_tests: true
             cross: true
@@ -123,7 +125,7 @@ jobs:
 
           - name: GCC, Debian 11, aarch64
             os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true  --cross-file dosbox-cross
             max_warnings: 0
             run_tests: true
             cross: true
@@ -131,55 +133,12 @@ jobs:
             deb_vers: 11
             needs_min_deps: false
 
-          - name: GCC, +tests
+          - name: GCC 9, minimum build
             os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug
-            run_tests: true
-            max_warnings: -1
-            needs_all_deps: true
-
-          - name: GCC, +debugger
-            os: ubuntu-20.04
-            build_flags: -Denable_debugger=normal
-            max_warnings: 0
-            needs_all_deps: true
-
-          - name: GCC, -dyn-x86
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Ddynamic_core=dynrec
-            max_warnings: 0
-            needs_all_deps: true
-
-          - name: GCC, -dyn-x86, +debugger
-            os: ubuntu-20.04
-            build_flags: -Ddynamic_core=dynrec -Dunit_tests=disabled -Denable_debugger=normal
-            max_warnings: 0
-            needs_all_deps: true
-
-          - name: GCC, -network
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Duse_sdl2_net=false -Duse_slirp=false
-            max_warnings: 0
-            needs_all_deps: true
-
-          - name: GCC, +voodoo
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true
-            max_warnings: 0
-            needs_all_deps: true
-            run_tests: true
-
-          - name: Clang, +voodoo
-            os: ubuntu-20.04
-            packages: clang-12
-            build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true --native-file=.github/meson/native-clang-12.ini
-            max_warnings: 0
-            needs_all_deps: true
-
-          - name: GCC, minimum build
-            os: ubuntu-20.04
+            packages: g++-9
             build_flags: >-
-              -Dbuildtype=debug
+              -Dbuildtype=minsize
+              -Dexperimental_voodoo_support=true
               -Dunit_tests=disabled
               -Duse_alsa=false
               -Duse_fluidsynth=false
@@ -189,6 +148,7 @@ jobs:
               -Duse_sdl2_image=false
               -Duse_sdl2_net=false
               -Duse_slirp=false
+              --native-file=.github/meson/native-gcc-9.ini
             needs_min_deps: true
             max_warnings: 0
 
@@ -424,7 +384,7 @@ jobs:
   publish_additional_artifacts:
     name: Publish additional artifacts
     needs: build_linux_release
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
