@@ -395,8 +395,13 @@ int VideoCodec::FinishCompressFrame()
 	zstream.next_out  = compress.writeBuf + compress.writeDone;
 	zstream.avail_out = compress.writeSize - compress.writeDone;
 	zstream.total_out = 0;
-	deflate(&zstream, Z_SYNC_FLUSH);
-	const auto bytes_processed = static_cast<int>(compress.writeDone + zstream.total_out);
+
+	int bytes_processed = 0;
+
+	// Only tally bytes if the stream was OK
+	if (deflate(&zstream, Z_SYNC_FLUSH) >= Z_OK) {
+		bytes_processed = static_cast<int>(compress.writeDone + zstream.total_out);
+	}
 	return bytes_processed;
 }
 
