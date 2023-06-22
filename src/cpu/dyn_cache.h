@@ -50,6 +50,15 @@ class CodePageHandler;
 // basic cache block representation
 class CacheBlock {
 public:
+	CacheBlock() = default;
+	~CacheBlock() = default;
+
+	// Prevent copy and move construction and assignment
+	CacheBlock(const CacheBlock&) = delete;
+	CacheBlock(CacheBlock&&) = delete;
+	CacheBlock& operator=(const CacheBlock&) = delete;
+	CacheBlock& operator=(CacheBlock&&) = delete;
+
 	void Clear();
 
 	// link this cache block to another block, index specifies the code
@@ -62,20 +71,14 @@ public:
 		toblock->link[index].from = this; // remember who links me
 	}
 
-	struct {
+	struct Page {
 		uint16_t start = 0;
 		uint16_t end   = 0; // where in the page is the original code
 
 		CodePageHandler* handler = {}; // page containing this code
 	} page = {};
 
-	struct {
-		// TODO field start used to be a normal pointer, but upstream
-		// changed it to const pointer in r4424 (perhaps by mistake or
-		// as WIP change). Once transition to W^X will be done, decide
-		// if this should be const pointer or not and remove this comment.
-		//
-		// uint8_t *start; // where in the cache are we
+	struct Cache {
 		const uint8_t* start = {}; // where in the cache are we
 
 		Bitu size        = 0;
@@ -87,13 +90,13 @@ public:
 		uint16_t masklen   = 0;
 	} cache = {};
 
-	struct {
+	struct Hash {
 		Bitu index = 0;
 
 		CacheBlock* next = {};
 	} hash = {};
 
-	struct {
+	struct Link {
 		CacheBlock* to = {}; // this block can transfer control to the
 		                     // to-block
 		CacheBlock* next = {};
