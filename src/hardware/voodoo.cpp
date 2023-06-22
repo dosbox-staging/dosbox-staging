@@ -106,9 +106,6 @@
 
 // FIXME Get rid of these typedefs
 //
-/* 16-bit values */
-typedef int16_t INT16;
-
 #ifndef _WINDOWS_
 /* 32-bit values */
 typedef uint32_t UINT32;
@@ -379,7 +376,7 @@ static const uint8_t dither_matrix_2x2[16] =
 	(c) = (((val) << 2) & 0xf8) | (((val) >> 3) & 0x07);	\
 
 #define EXTRACT_1555_TO_8888(val, a, b, c, d)				\
-	(a) = ((INT16)(val) >> 15) & 0xff;						\
+	(a) = ((int16_t)(val) >> 15) & 0xff;						\
 	EXTRACT_x555_TO_888(val, b, c, d)						\
 
 #define EXTRACT_5551_TO_8888(val, a, b, c, d)				\
@@ -852,9 +849,9 @@ struct fbi_state
 	bool				vblank_flush_pending;
 
 	/* triangle setup info */
-	INT16				ax, ay;					/* vertex A x,y (12.4) */
-	INT16				bx, by;					/* vertex B x,y (12.4) */
-	INT16				cx, cy;					/* vertex C x,y (12.4) */
+	int16_t				ax, ay;					/* vertex A x,y (12.4) */
+	int16_t				bx, by;					/* vertex B x,y (12.4) */
+	int16_t				cx, cy;					/* vertex C x,y (12.4) */
 	INT32				startr, startg, startb, starta; /* starting R,G,B,A (12.12) */
 	INT32				startz;					/* starting Z (20.12) */
 	INT64				startw;					/* starting W (16.32) */
@@ -989,7 +986,7 @@ struct poly_extra_data
 	voodoo_state *		state;					/* pointer back to the voodoo state */
 	raster_info *		info;					/* pointer to rasterizer information */
 
-	INT16				ax, ay;					/* vertex A x,y (12.4) */
+	int16_t				ax, ay;					/* vertex A x,y (12.4) */
 	INT32				startr, startg, startb, starta; /* starting R,G,B,A (12.12) */
 	INT32				startz;					/* starting Z (20.12) */
 	INT64				startw;					/* starting W (16.32) */
@@ -1442,7 +1439,7 @@ while (0)
 #define CLAMPED_W(ITERW, FBZCP, RESULT)											\
 do																				\
 {																				\
-	(RESULT) = (INT16)((ITERW) >> 32);											\
+	(RESULT) = (int16_t)((ITERW) >> 32);											\
 	if (FBZCP_RGBZW_CLAMP(FBZCP) == 0)											\
 	{																			\
 		(RESULT) &= 0xffff;														\
@@ -2342,7 +2339,7 @@ do																				\
 	/* add the bias */															\
 	if (FBZMODE_ENABLE_DEPTH_BIAS(FBZMODE))										\
 	{																			\
-		depthval += (INT16)(ZACOLOR);											\
+		depthval += (int16_t)(ZACOLOR);											\
 		CLAMP(depthval, 0, 0xffff);												\
 	}																			\
 																				\
@@ -4593,12 +4590,12 @@ static void setup_and_draw_triangle(voodoo_state *v)
 	float divisor, tdiv;
 
 	/* grab the X/Ys at least */
-	v->fbi.ax = (INT16)(v->fbi.svert[0].x * 16.0);
-	v->fbi.ay = (INT16)(v->fbi.svert[0].y * 16.0);
-	v->fbi.bx = (INT16)(v->fbi.svert[1].x * 16.0);
-	v->fbi.by = (INT16)(v->fbi.svert[1].y * 16.0);
-	v->fbi.cx = (INT16)(v->fbi.svert[2].x * 16.0);
-	v->fbi.cy = (INT16)(v->fbi.svert[2].y * 16.0);
+	v->fbi.ax = (int16_t)(v->fbi.svert[0].x * 16.0);
+	v->fbi.ay = (int16_t)(v->fbi.svert[0].y * 16.0);
+	v->fbi.bx = (int16_t)(v->fbi.svert[1].x * 16.0);
+	v->fbi.by = (int16_t)(v->fbi.svert[1].y * 16.0);
+	v->fbi.cx = (int16_t)(v->fbi.svert[2].x * 16.0);
+	v->fbi.cy = (int16_t)(v->fbi.svert[2].y * 16.0);
 
 	/* compute the divisor */
 	divisor = 1.0f / ((v->fbi.svert[0].x - v->fbi.svert[1].x) * (v->fbi.svert[0].y - v->fbi.svert[2].y) -
@@ -4927,42 +4924,42 @@ static void register_w(uint32_t offset, uint32_t data)
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexAx:
-			if (chips & 1) v->fbi.ax = (INT16)(data&0xffff);
+			if (chips & 1) v->fbi.ax = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexAy:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexAy:
-			if (chips & 1) v->fbi.ay = (INT16)(data&0xffff);
+			if (chips & 1) v->fbi.ay = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexBx:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexBx:
-			if (chips & 1) v->fbi.bx = (INT16)(data&0xffff);
+			if (chips & 1) v->fbi.bx = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexBy:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexBy:
-			if (chips & 1) v->fbi.by = (INT16)(data&0xffff);
+			if (chips & 1) v->fbi.by = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexCx:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexCx:
-			if (chips & 1) v->fbi.cx = (INT16)(data&0xffff);
+			if (chips & 1) v->fbi.cx = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexCy:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexCy:
-			if (chips & 1) v->fbi.cy = (INT16)(data&0xffff);
+			if (chips & 1) v->fbi.cy = (int16_t)(data&0xffff);
 			break;
 
 		/* RGB data is 12.12 formatted fixed point */
