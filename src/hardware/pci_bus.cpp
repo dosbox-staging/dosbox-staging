@@ -80,7 +80,7 @@ static void write_pci(io_port_t port, io_val_t value, io_width_t width)
 	const auto val = check_cast<uint8_t>(value);
 	assert(width == io_width_t::byte);
 
-	LOG(LOG_PCI, LOG_NORMAL)("Write PCI data :=%x (io_width=%d)", port, val, static_cast<int>(width));
+	LOG(LOG_PCI, LOG_NORMAL)("PCI: Write to port: %x, value: %x (io_width=%d)", port, val, static_cast<int>(width));
 
 	// check for enabled/bus 0
 	if ((pci_caddress & 0x80ff0000) == 0x80000000) {
