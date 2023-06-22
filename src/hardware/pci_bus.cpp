@@ -48,7 +48,7 @@ static PCI_Device* pci_devices[PCI_MAX_PCIDEVICES];		// registered PCI devices
 
 static void write_pci_addr([[maybe_unused]] io_port_t port, io_val_t val, io_width_t)
 {
-	LOG(LOG_PCI, LOG_NORMAL)("Write PCI address :=%x", val);
+	LOG(LOG_PCI, LOG_NORMAL)("PCI: Write PCI address :=%x", val);
 	pci_caddress = val;
 }
 
@@ -87,7 +87,7 @@ static void write_pci(io_port_t port, io_val_t value, io_width_t width)
 		uint8_t devnum = (uint8_t)((pci_caddress >> 11) & 0x1f);
 		uint8_t fctnum = (uint8_t)((pci_caddress >> 8) & 0x7);
 		uint8_t regnum = (uint8_t)((pci_caddress & 0xfc) + (port & 0x03));
-		LOG(LOG_PCI,LOG_NORMAL)("  Write to device %x register %x (function %x) (:=%x)",devnum,regnum,fctnum,val);
+		LOG(LOG_PCI,LOG_NORMAL)("PCI: Write to device %x register %x (function %x) (:=%x)",devnum,regnum,fctnum,val);
 
 		if (devnum>=pci_devices_installed) return;
 		PCI_Device *selected_device = pci_devices[devnum];
@@ -121,7 +121,7 @@ static void write_pci(io_port_t port, io_val_t value, io_width_t width)
 
 static uint32_t read_pci_addr([[maybe_unused]] io_port_t port, io_width_t)
 {
-	LOG(LOG_PCI, LOG_NORMAL)("Read PCI address -> %x", pci_caddress);
+	LOG(LOG_PCI, LOG_NORMAL)("PCI: Read PCI address -> %x", pci_caddress);
 	return pci_caddress;
 }
 
@@ -164,7 +164,7 @@ static uint8_t read_pci(io_port_t port, io_width_t width)
 	// requests. Let's check that.
 	assert(width == io_width_t::byte);
 
-	LOG(LOG_PCI, LOG_NORMAL)("Read PCI data -> %x", pci_caddress);
+	LOG(LOG_PCI, LOG_NORMAL)("PCI: Read PCI data -> %x", pci_caddress);
 
 	if ((pci_caddress & 0x80ff0000) == 0x80000000) {
 		uint8_t devnum = (uint8_t)((pci_caddress >> 11) & 0x1f);
@@ -174,7 +174,7 @@ static uint8_t read_pci(io_port_t port, io_width_t width)
 		if (devnum >= pci_devices_installed)
 			return 0xff;
 
-		LOG(LOG_PCI,LOG_NORMAL)("  Read from device %x register %x (function %x); addr %x",
+		LOG(LOG_PCI,LOG_NORMAL)("PCI: Read from device %x register %x (function %x); addr %x",
 			devnum,regnum,fctnum,pci_caddress);
 
 		PCI_Device *selected_device = pci_devices[devnum];
@@ -213,7 +213,7 @@ static uint8_t read_pci(io_port_t port, io_width_t width)
 }
 
 static Bitu PCI_PM_Handler() {
-	LOG_MSG("PCI PMode handler, function %x",reg_ax);
+	LOG_MSG("PCI: PMode handler, function %x",reg_ax);
 	return CBRET_NONE;
 }
 
@@ -240,7 +240,7 @@ void PCI_Device::SetPCIId(const Bits number, const Bits sub_fct)
 
 bool PCI_Device::AddSubdevice(PCI_Device* dev) {
 	if (num_subdevices<PCI_MAX_PCIFUNCTIONS-1) {
-		if (subdevices[num_subdevices]!=NULL) E_Exit("PCI subdevice slot already in use!");
+		if (subdevices[num_subdevices]!=NULL) E_Exit("PCI: subdevice slot already in use!");
 		subdevices[num_subdevices]=dev;
 		num_subdevices++;
 		return true;
@@ -336,7 +336,7 @@ public:
 		Bits subfunction=0;	// main device unless specific already-occupied slot is requested
 		if (pci_devices[slot]!=NULL) {
 			subfunction=pci_devices[slot]->GetNextSubdeviceNumber();
-			if (subfunction<0) E_Exit("Too many PCI subdevices!");
+			if (subfunction<0) E_Exit("PCI: Too many PCI subdevices!");
 		}
 
 		if (device->InitializeRegisters(pci_cfg_data[slot][subfunction])) {
