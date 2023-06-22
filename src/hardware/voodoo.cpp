@@ -107,7 +107,6 @@
 // FIXME Get rid of these typedefs
 //
 /* 16-bit values */
-typedef uint16_t UINT16;
 typedef int16_t INT16;
 
 #ifndef _WINDOWS_
@@ -142,7 +141,7 @@ struct poly_extent
 typedef UINT32 rgb_t;
 
 /* an rgb15_t is a single combined 15-bit R,G,B value */
-typedef UINT16 rgb15_t;
+typedef uint16_t rgb15_t;
 
 /* macros to assemble rgb_t values */
 #define MAKE_ARGB(a,r,g,b)	((((rgb_t)(a) & 0xff) << 24) | (((rgb_t)(r) & 0xff) << 16) | (((rgb_t)(g) & 0xff) << 8) | ((rgb_t)(b) & 0xff))
@@ -183,7 +182,7 @@ struct rectangle
 #endif
 
 /* Macros for normalizing data into big or little endian formats */
-#define FLIPENDIAN_INT16(x)	(((((UINT16) (x)) >> 8) | ((x) << 8)) & 0xffff)
+#define FLIPENDIAN_INT16(x)	(((((uint16_t) (x)) >> 8) | ((x) << 8)) & 0xffff)
 #define FLIPENDIAN_INT32(x)	((((UINT32) (x)) << 24) | (((UINT32) (x)) >> 24) | \
 	(( ((UINT32) (x)) & 0x0000ff00) << 8) | (( ((UINT32) (x)) & 0x00ff0000) >> 8))
 #define FLIPENDIAN_INT64(x)	\
@@ -932,7 +931,7 @@ struct triangle_worker
 {
 	std::atomic_bool threads_active;
 	bool use_threads, disable_bilinear_filter;
-	UINT16 *drawbuf;
+	uint16_t *drawbuf;
 	poly_vertex v1, v2, v3;
 	INT32 v1y, v3y, totalpix;
 	std::array<std::thread, TRIANGLE_THREADS> threads;
@@ -958,7 +957,7 @@ struct voodoo_state
 	uint32_t tmu_config       = {};
 
 #ifdef C_ENABLE_VOODOO_OPENGL
-	UINT16 next_rasterizer = {}; /* next rasterizer index */
+	uint16_t next_rasterizer = {}; /* next rasterizer index */
 	raster_info rasterizer[MAX_RASTERIZERS] = {}; /* array of rasterizers */
 	raster_info* raster_hash[RASTER_HASH_SIZE] = {}; /* hash table of
 	                                                    rasterizers */
@@ -1017,7 +1016,7 @@ struct poly_extra_data
 	INT64				dw1dy;					/* delta W per Y */
 	INT32				lodbase1;				/* used during rasterization */
 
-	UINT16				dither[16];				/* dither matrix, for fastfill */
+	uint16_t				dither[16];				/* dither matrix, for fastfill */
 
 	Bitu				texcount;
 	Bitu				r_fbzColorPath;
@@ -2007,7 +2006,7 @@ do																				\
 		}																		\
 		else																	\
 		{																		\
-			texel0 = *(UINT16 *)&(TT)->ram[(texbase + 2*(t + s)) & (TT)->mask];	\
+			texel0 = *(uint16_t *)&(TT)->ram[(texbase + 2*(t + s)) & (TT)->mask];	\
 			if (TEXMODE_FORMAT(TEXMODE) >= 10 && TEXMODE_FORMAT(TEXMODE) <= 12)	\
 				c_local.u = (LOOKUP)[texel0];									\
 			else																\
@@ -2074,10 +2073,10 @@ do																				\
 		}																		\
 		else																	\
 		{																		\
-			texel0 = *(UINT16 *)&(TT)->ram[(texbase + 2*(t + s)) & (TT)->mask];	\
-			texel1 = *(UINT16 *)&(TT)->ram[(texbase + 2*(t + s1)) & (TT)->mask];\
-			texel2 = *(UINT16 *)&(TT)->ram[(texbase + 2*(t1 + s)) & (TT)->mask];\
-			texel3 = *(UINT16 *)&(TT)->ram[(texbase + 2*(t1 + s1)) & (TT)->mask];\
+			texel0 = *(uint16_t *)&(TT)->ram[(texbase + 2*(t + s)) & (TT)->mask];	\
+			texel1 = *(uint16_t *)&(TT)->ram[(texbase + 2*(t + s1)) & (TT)->mask];\
+			texel2 = *(uint16_t *)&(TT)->ram[(texbase + 2*(t1 + s)) & (TT)->mask];\
+			texel3 = *(uint16_t *)&(TT)->ram[(texbase + 2*(t1 + s1)) & (TT)->mask];\
 			if (TEXMODE_FORMAT(TEXMODE) >= 10 && TEXMODE_FORMAT(TEXMODE) <= 12)	\
 			{																	\
 				texel0 = (LOOKUP)[texel0];										\
@@ -2357,7 +2356,7 @@ do																				\
 		if (FBZMODE_DEPTH_SOURCE_COMPARE(FBZMODE) == 0)							\
 			depthsource = depthval;												\
 		else																	\
-			depthsource = (UINT16)(ZACOLOR);									\
+			depthsource = (uint16_t)(ZACOLOR);									\
 																				\
 		/* test against the depth buffer */										\
 		switch (FBZMODE_DEPTH_FUNCTION(FBZMODE))								\
@@ -2446,16 +2445,16 @@ do																				\
 	{																			\
 		/* apply dithering */													\
 		APPLY_DITHER(FBZMODE, XX, DITHER_LOOKUP, r, g, b);						\
-		dest[XX] = (UINT16)((r << 11) | (g << 5) | b);							\
+		dest[XX] = (uint16_t)((r << 11) | (g << 5) | b);							\
 	}																			\
 																				\
 	/* write to aux buffer */													\
 	if (depth && FBZMODE_AUX_BUFFER_MASK(FBZMODE))								\
 	{																			\
 		if (FBZMODE_ENABLE_ALPHA_PLANES(FBZMODE) == 0)							\
-			depth[XX] = (UINT16)depthval;										\
+			depth[XX] = (uint16_t)depthval;										\
 		else																	\
-			depth[XX] = (UINT16)a;												\
+			depth[XX] = (uint16_t)a;												\
 	}
 
 #define PIXEL_PIPELINE_END(STATS)												\
@@ -3119,8 +3118,8 @@ static inline void raster_generic(const voodoo_state* v, UINT32 TMUS, UINT32 TEX
 	}
 
 	/* get pointers to the target buffer and depth buffer */
-	UINT16 *dest = (UINT16 *)destbase + scry * v->fbi.rowpixels;
-	UINT16 *depth = (v->fbi.auxoffs != (UINT32)(~0)) ? ((UINT16 *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels) : NULL;
+	uint16_t *dest = (uint16_t *)destbase + scry * v->fbi.rowpixels;
+	uint16_t *depth = (v->fbi.auxoffs != (UINT32)(~0)) ? ((uint16_t *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels) : NULL;
 
 	/* compute the starting parameters */
 	INT32 dx = startx - (fbi.ax >> 4);
@@ -3540,7 +3539,7 @@ static raster_info *find_rasterizer(voodoo_state *v, int texcount)
     raster_fastfill - per-scanline
     implementation of the 'fastfill' command
 -------------------------------------------------*/
-static void raster_fastfill(void *destbase, INT32 y, const poly_extent *extent, const UINT16* extra_dither)
+static void raster_fastfill(void *destbase, INT32 y, const poly_extent *extent, const uint16_t* extra_dither)
 {
 	stats_block stats = {};
 	INT32 startx = extent->startx;
@@ -3555,9 +3554,9 @@ static void raster_fastfill(void *destbase, INT32 y, const poly_extent *extent, 
 	/* fill this RGB row */
 	if (FBZMODE_RGB_BUFFER_MASK(v->reg[fbzMode].u))
 	{
-		const UINT16 *ditherow = &extra_dither[(y & 3) * 4];
+		const uint16_t *ditherow = &extra_dither[(y & 3) * 4];
 		UINT64 expanded = *(UINT64 *)ditherow;
-		UINT16 *dest = (UINT16 *)destbase + scry * v->fbi.rowpixels;
+		uint16_t *dest = (uint16_t *)destbase + scry * v->fbi.rowpixels;
 
 		for (x = startx; x < stopx && (x & 3) != 0; x++)
 			dest[x] = ditherow[x & 3];
@@ -3571,9 +3570,9 @@ static void raster_fastfill(void *destbase, INT32 y, const poly_extent *extent, 
 	/* fill this dest buffer row */
 	if (FBZMODE_AUX_BUFFER_MASK(v->reg[fbzMode].u) && v->fbi.auxoffs != (UINT32)(~0))
 	{
-		UINT16 color = (UINT16)(v->reg[zaColor].u & 0xffff);
+		uint16_t color = (uint16_t)(v->reg[zaColor].u & 0xffff);
 		UINT64 expanded = ((UINT64)color << 48) | ((UINT64)color << 32) | (color << 16) | color;
-		UINT16 *dest = (UINT16 *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels;
+		uint16_t *dest = (uint16_t *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels;
 
 		if (v->fbi.auxoffs + 2 * (scry * v->fbi.rowpixels + stopx) >= v->fbi.mask) {
 			stopx = (v->fbi.mask - v->fbi.auxoffs) / 2 - scry * v->fbi.rowpixels;
@@ -4522,15 +4521,15 @@ static void triangle(voodoo_state *v)
 		return;
 
 	/* determine the draw buffer */
-	UINT16 *drawbuf;
+	uint16_t *drawbuf;
 	switch (FBZMODE_DRAW_BUFFER(v->reg[fbzMode].u))
 	{
 		case 0:		/* front buffer */
-			drawbuf = (UINT16 *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
+			drawbuf = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
 			break;
 
 		case 1:		/* back buffer */
-			drawbuf = (UINT16 *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
+			drawbuf = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
 			break;
 
 		default:	/* reserved */
@@ -4755,8 +4754,8 @@ static void fastfill(voodoo_state *v)
 	int ey = (v->reg[clipLowYHighY].u >> 0) & 0x3ff;
 
 	poly_extent extents[64];
-	UINT16 dithermatrix[16];
-	UINT16 *drawbuf = NULL;
+	uint16_t dithermatrix[16];
+	uint16_t *drawbuf = NULL;
 	int x, y;
 
 	/* if we're not clearing either, take no time */
@@ -4771,11 +4770,11 @@ static void fastfill(voodoo_state *v)
 		switch (destbuf)
 		{
 			case 0:		/* front buffer */
-				drawbuf = (UINT16 *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
+				drawbuf = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
 				break;
 
 			case 1:		/* back buffer */
-				drawbuf = (UINT16 *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
+				drawbuf = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
 				break;
 
 			default:	/* reserved */
@@ -4798,7 +4797,7 @@ static void fastfill(voodoo_state *v)
 				int b = v->reg[color1].rgb.b;
 
 				APPLY_DITHER(v->reg[fbzMode].u, x, dither_lookup, r, g, b);
-				dithermatrix[y*4 + x] = (UINT16)((r << 11) | (g << 5) | b);
+				dithermatrix[y*4 + x] = (uint16_t)((r << 11) | (g << 5) | b);
 			}
 		}
 	}
@@ -5560,7 +5559,7 @@ default_case:
  *************************************/
 static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 	//LOG(LOG_VOODOO,LOG_WARN)("V3D:WR LFB offset %X value %08X", offset, data);
-	UINT16 *dest, *depth;
+	uint16_t *dest, *depth;
 	UINT32 destmax, depthmax;
 
 	int sr[2], sg[2], sb[2], sa[2], sw[2];
@@ -5772,12 +5771,12 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 	switch (destbuf)
 	{
 		case 0:			/* front buffer */
-			dest = (UINT16 *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
+			dest = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
 			destmax = (v->fbi.mask + 1 - v->fbi.rgboffs[v->fbi.frontbuf]) / 2;
 			break;
 
 		case 1:			/* back buffer */
-			dest = (UINT16 *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
+			dest = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
 			destmax = (v->fbi.mask + 1 - v->fbi.rgboffs[v->fbi.backbuf]) / 2;
 			break;
 
@@ -5785,7 +5784,7 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 			E_Exit("reserved lfb write");
 			return;
 	}
-	depth = (UINT16 *)(v->fbi.ram + v->fbi.auxoffs);
+	depth = (uint16_t *)(v->fbi.ram + v->fbi.auxoffs);
 	depthmax = (v->fbi.mask + 1 - v->fbi.auxoffs) / 2;
 
 	/* simple case: no pipeline */
@@ -5838,7 +5837,7 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 					{
 						/* apply dithering and write to the screen */
 						APPLY_DITHER(v->reg[fbzMode].u, x, dither_lookup, sr[pix], sg[pix], sb[pix]);
-						dest[bufoffs] = (UINT16)((sr[pix] << 11) | (sg[pix] << 5) | sb[pix]);
+						dest[bufoffs] = (uint16_t)((sr[pix] << 11) | (sg[pix] << 5) | sb[pix]);
 					}
 
 					/* make sure we have an aux buffer to write to */
@@ -5846,11 +5845,11 @@ static void lfb_w(UINT32 offset, UINT32 data, UINT32 mem_mask) {
 					{
 						/* write to the alpha buffer */
 						if (has_alpha)
-							depth[bufoffs] = (UINT16)sa[pix];
+							depth[bufoffs] = (uint16_t)sa[pix];
 
 						/* write to the depth buffer */
 						if (has_depth)
-							depth[bufoffs] = (UINT16)sw[pix];
+							depth[bufoffs] = (uint16_t)sw[pix];
 					}
 				}
 
@@ -6265,7 +6264,7 @@ static INT32 texture_w(UINT32 offset, UINT32 data) {
 	{
 		int lod, tt, ts;
 		UINT32 tbaseaddr;
-		UINT16 *dest;
+		uint16_t *dest;
 
 		/* extract info */
 		tmunum = (offset >> 19) & 0x03;
@@ -6284,7 +6283,7 @@ static INT32 texture_w(UINT32 offset, UINT32 data) {
 		if (LOG_TEXTURE_RAM) LOG(LOG_VOODOO,LOG_WARN)("Texture 16-bit w: lod=%d s=%d t=%d data=%08X\n", lod, ts, tt, data);
 
 		/* write the two words in little-endian order */
-		dest = (UINT16 *)t->ram;
+		dest = (uint16_t *)t->ram;
 		tbaseaddr &= t->mask;
 		tbaseaddr >>= 1;
 
@@ -6433,7 +6432,7 @@ static UINT32 register_r(UINT32 offset)
 static UINT32 lfb_r(UINT32 offset)
 {
 	//LOG(LOG_VOODOO,LOG_WARN)("Voodoo:read LFB offset %X", offset);
-	UINT16 *buffer;
+	uint16_t *buffer;
 	UINT32 bufmax;
 	UINT32 bufoffs;
 	UINT32 data;
@@ -6449,19 +6448,19 @@ static UINT32 lfb_r(UINT32 offset)
 	switch (destbuf)
 	{
 		case 0:			/* front buffer */
-			buffer = (UINT16 *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
+			buffer = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
 			bufmax = (v->fbi.mask + 1 - v->fbi.rgboffs[v->fbi.frontbuf]) / 2;
 			break;
 
 		case 1:			/* back buffer */
-			buffer = (UINT16 *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
+			buffer = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
 			bufmax = (v->fbi.mask + 1 - v->fbi.rgboffs[v->fbi.backbuf]) / 2;
 			break;
 
 		case 2:			/* aux buffer */
 			if (v->fbi.auxoffs == (UINT32)(~0))
 				return 0xffffffff;
-			buffer = (UINT16 *)(v->fbi.ram + v->fbi.auxoffs);
+			buffer = (uint16_t *)(v->fbi.ram + v->fbi.auxoffs);
 			bufmax = (v->fbi.mask + 1 - v->fbi.auxoffs) / 2;
 			break;
 
