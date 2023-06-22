@@ -106,9 +106,6 @@
 
 // FIXME Get rid of these typedefs
 //
-/* 8-bit values */
-typedef int8_t INT8;
-
 /* 16-bit values */
 typedef uint16_t UINT16;
 typedef int16_t INT16;
@@ -218,7 +215,7 @@ struct rectangle
 #define profiler_mark_start(x)	do { } while (0)
 #define profiler_mark_end()		do { } while (0)
 
-inline INT32 mul_32x32_shift(INT32 a, INT32 b, INT8 shift)
+inline INT32 mul_32x32_shift(INT32 a, INT32 b, int8_t shift)
 {
 	return (INT32)(((INT64)a * (INT64)b) >> shift);
 }
@@ -4026,7 +4023,7 @@ static void recompute_texture_params(tmu_state *t)
 	/* extract LOD parameters */
 	t->lodmin = TEXLOD_LODMIN(t->reg[tLOD].u) << 6;
 	t->lodmax = TEXLOD_LODMAX(t->reg[tLOD].u) << 6;
-	t->lodbias = (INT8)(TEXLOD_LODBIAS(t->reg[tLOD].u) << 2) << 4;
+	t->lodbias = (int8_t)(TEXLOD_LODBIAS(t->reg[tLOD].u) << 2) << 4;
 
 	/* determine which LODs are present */
 	t->lodmask = 0x1ff;
@@ -4099,7 +4096,7 @@ static void recompute_texture_params(tmu_state *t)
 
 	/* compute the detail parameters */
 	t->detailmax = TEXDETAIL_DETAIL_MAX(t->reg[tDetail].u);
-	t->detailbias = (INT8)(TEXDETAIL_DETAIL_BIAS(t->reg[tDetail].u) << 2) << 6;
+	t->detailbias = (int8_t)(TEXDETAIL_DETAIL_BIAS(t->reg[tDetail].u) << 2) << 6;
 	t->detailscale = TEXDETAIL_DETAIL_SCALE(t->reg[tDetail].u);
 
 	/* no longer dirty */
