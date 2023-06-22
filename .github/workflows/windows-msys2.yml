@@ -147,6 +147,11 @@ jobs:
 
       - name: Extract subprojects cache
         run:  scripts/extract-subprojects-tar.sh
+        continue-on-error: true
+        #
+        # As of 2023-06-22, MSYS2's tar warns about being unable to apply
+        # directory permission to files, after which it returns a failure code.
+        # This is a work-around until tar is fixed.
 
       - name: Log environment
         run:  ./scripts/log-env.sh
@@ -267,6 +272,11 @@ jobs:
 
       - name: Extract subprojects cache
         run:  scripts/extract-subprojects-tar.sh
+        continue-on-error: true
+        #
+        # As of 2023-06-22, MSYS2's tar warns about being unable to apply
+        # directory permission to files, after which it returns a failure code.
+        # This is a work-around until tar is fixed.
 
       - name: Log environment
         run:  ./scripts/log-env.sh
