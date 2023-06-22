@@ -104,13 +104,6 @@
     TYPE DEFINITIONS
 ***************************************************************************/
 
-// FIXME Get rid of these typedefs
-//
-#ifndef _WINDOWS_
-/* 64-bit values */
-typedef uint64_t UINT64;
-#endif
-
 typedef int64_t attoseconds_t;
 
 #define ATTOSECONDS_PER_SECOND_SQRT		((attoseconds_t)1000000000)
@@ -179,14 +172,14 @@ struct rectangle
 	(( ((uint32_t) (x)) & 0x0000ff00) << 8) | (( ((uint32_t) (x)) & 0x00ff0000) >> 8))
 #define FLIPENDIAN_INT64(x)	\
 	(												\
-		(((((UINT64) (x)) >> 56) & ((UINT64) 0xFF)) <<  0)	|	\
-		(((((UINT64) (x)) >> 48) & ((UINT64) 0xFF)) <<  8)	|	\
-		(((((UINT64) (x)) >> 40) & ((UINT64) 0xFF)) << 16)	|	\
-		(((((UINT64) (x)) >> 32) & ((UINT64) 0xFF)) << 24)	|	\
-		(((((UINT64) (x)) >> 24) & ((UINT64) 0xFF)) << 32)	|	\
-		(((((UINT64) (x)) >> 16) & ((UINT64) 0xFF)) << 40)	|	\
-		(((((UINT64) (x)) >>  8) & ((UINT64) 0xFF)) << 48)	|	\
-		(((((UINT64) (x)) >>  0) & ((UINT64) 0xFF)) << 56)		\
+		(((((uint64_t) (x)) >> 56) & ((uint64_t) 0xFF)) <<  0)	|	\
+		(((((uint64_t) (x)) >> 48) & ((uint64_t) 0xFF)) <<  8)	|	\
+		(((((uint64_t) (x)) >> 40) & ((uint64_t) 0xFF)) << 16)	|	\
+		(((((uint64_t) (x)) >> 32) & ((uint64_t) 0xFF)) << 24)	|	\
+		(((((uint64_t) (x)) >> 24) & ((uint64_t) 0xFF)) << 32)	|	\
+		(((((uint64_t) (x)) >> 16) & ((uint64_t) 0xFF)) << 40)	|	\
+		(((((uint64_t) (x)) >>  8) & ((uint64_t) 0xFF)) << 48)	|	\
+		(((((uint64_t) (x)) >>  0) & ((uint64_t) 0xFF)) << 56)		\
 	)
 
 #define ACCESSING_BITS_0_15				((mem_mask & 0x0000ffff) != 0)
@@ -1088,7 +1081,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	uint32_t temp, rlog;
 	uint32_t interp;
 	uint32_t *table;
-	UINT64 recip;
+	uint64_t recip;
 	bool neg = false;
 	int lz       = 0;
 	int exponent = 0;
@@ -3547,13 +3540,13 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 	if (FBZMODE_RGB_BUFFER_MASK(v->reg[fbzMode].u))
 	{
 		const uint16_t *ditherow = &extra_dither[(y & 3) * 4];
-		UINT64 expanded = *(UINT64 *)ditherow;
+		uint64_t expanded = *(uint64_t *)ditherow;
 		uint16_t *dest = (uint16_t *)destbase + scry * v->fbi.rowpixels;
 
 		for (x = startx; x < stopx && (x & 3) != 0; x++)
 			dest[x] = ditherow[x & 3];
 		for ( ; x < (stopx & ~3); x += 4)
-			*(UINT64 *)&dest[x] = expanded;
+			*(uint64_t *)&dest[x] = expanded;
 		for ( ; x < stopx; x++)
 			dest[x] = ditherow[x & 3];
 		stats.pixels_out += stopx - startx;
@@ -3563,7 +3556,7 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 	if (FBZMODE_AUX_BUFFER_MASK(v->reg[fbzMode].u) && v->fbi.auxoffs != (uint32_t)(~0))
 	{
 		uint16_t color = (uint16_t)(v->reg[zaColor].u & 0xffff);
-		UINT64 expanded = ((UINT64)color << 48) | ((UINT64)color << 32) | (color << 16) | color;
+		uint64_t expanded = ((uint64_t)color << 48) | ((uint64_t)color << 32) | (color << 16) | color;
 		uint16_t *dest = (uint16_t *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels;
 
 		if (v->fbi.auxoffs + 2 * (scry * v->fbi.rowpixels + stopx) >= v->fbi.mask) {
@@ -3574,7 +3567,7 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 		for (x = startx; x < stopx && (x & 3) != 0; x++)
 			dest[x] = color;
 		for ( ; x < (stopx & ~3); x += 4)
-			*(UINT64 *)&dest[x] = expanded;
+			*(uint64_t *)&dest[x] = expanded;
 		for ( ; x < stopx; x++)
 			dest[x] = color;
 	}
