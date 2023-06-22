@@ -179,22 +179,16 @@ static inline void decode_increase_wmapmask(Bitu size) {
 	size_t mapidx        = 0;
 	CacheBlock* activecb = decode.active_block;
 	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
-		activecb->cache.wmapmask = std::make_unique<uint8_t[]>(START_WMMEM);
-		activecb->cache.masklen   = START_WMMEM;
+		activecb->GrowWriteMask(START_WMMEM);
 		activecb->cache.maskstart = decode.page.index;
 	} else {
 		mapidx = decode.page.index - activecb->cache.maskstart;
 		if (GCC_UNLIKELY(mapidx + size >= activecb->cache.masklen)) {
-			size_t newmasklen = activecb->cache.masklen * 4;
-			if (newmasklen < mapidx + size) {
-				newmasklen = ((mapidx + size) & ~3) * 2;
+			size_t new_mask_len = activecb->cache.masklen * 4;
+			if (new_mask_len < mapidx + size) {
+				new_mask_len = ((mapidx + size) & ~3) * 2;
 			}
-			auto tempmem = std::make_unique<uint8_t[]>(newmasklen);
-			memcpy(tempmem.get(),
-			       activecb->cache.wmapmask.get(),
-			       activecb->cache.masklen);
-			activecb->cache.wmapmask = std::move(tempmem);
-			activecb->cache.masklen  = check_cast<uint16_t>(newmasklen);
+			activecb->GrowWriteMask(check_cast<uint16_t>(new_mask_len));
 		}
 	}
 	// update mask entries
