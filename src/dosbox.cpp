@@ -1173,8 +1173,9 @@ void DOSBOX_Init()
 	pstring->Set_help("File used to map fake phone numbers to addresses\n"
 	                  "('phonebook.txt' by default).");
 
-	/* All the DOS Related stuff, which will eventually
-	 * start up in the shell */
+	// All the general DOS Related stuff, on real machines mostly located in
+	// CONFIG.SYS
+
 	secprop = control->AddSection_prop("dos", &DOS_Init);
 	secprop->AddInitFunction(&XMS_Init, changeable_at_runtime);
 	pbool = secprop->Add_bool("xms", when_idle, true);
@@ -1197,11 +1198,20 @@ void DOSBOX_Init()
 	                  "A single number is treated as the major version.\n"
 	                  "Common settings are 3.3, 5.0, 6.22, and 7.1.");
 
+	// DOS locale settings
+
 	pint = secprop->Add_int("country", when_idle, 0);
 	pint->Set_help("Set DOS country code (0 by default).\n"
 	               "This affects country-specific information such as date, time, and decimal\n"
 	               "formats. If set to 0, the country code corresponding to the selected keyboard\n"
 	               "layout will be used.");
+
+	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, changeable_at_runtime);
+	pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");
+	pstring->Set_help(
+	        "Language code of the keyboard layout, or 'auto' ('auto' by default).");
+
+	// COMMAND.COM settings
 
 	pstring = secprop->Add_string("expand_shell_variable", when_idle, "auto");
 	const char *expand_shell_variable_choices[] = {"auto", "true", "false", 0};
@@ -1211,20 +1221,17 @@ void DOSBOX_Init()
 	        "(auto by default, enabled if DOS version >= 7.0).\n"
 	        "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
 
-	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, changeable_at_runtime);
-	pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");
+	pstring = secprop->Add_path("command_history_file", only_at_start, "cmd_history.txt");
 	pstring->Set_help(
-	        "Language code of the keyboard layout, or 'auto' ('auto' by default).");
+		"File containing persistent command line history ('cmd_history.txt' by default).");
+
+	// Misc DOS command settings
 
 	pstring = secprop->Add_path("setver_table_file", only_at_start, "");
 	pstring->Set_help(
 	        "File containing the list of applications and assigned DOS versions, in a\n"
 	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
 	        "(empty by default).");
-
-	pstring = secprop->Add_path("command_history_file", only_at_start, "cmd_history.txt");
-	pstring->Set_help(
-		"File containing persistent command line history ('cmd_history.txt' by default).");
 
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
