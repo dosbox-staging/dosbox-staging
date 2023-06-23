@@ -744,12 +744,24 @@ static void ReloadShader(const bool pressed)
 	if (!pressed)
 		return;
 
+	assert(control);
 	auto render_section = control->GetSection("render");
-	assert(render_section);
 
-	auto sec           = static_cast<const Section_prop *>(render_section);
-	auto glshader_prop = sec->Get_path("glshader");
-	auto shader_path   = std::string(glshader_prop->GetValue());
+	assert(render_section);
+	const auto sec = dynamic_cast<Section_prop*>(render_section);
+
+	auto glshader_prop = sec ? sec->Get_path("glshader") : nullptr;
+	if (!glshader_prop) {
+		LOG_WARNING("RENDER: Failed parsing the 'glshader' setting; not reloading");
+		return;
+	}
+
+	assert(glshader_prop);
+	const auto shader_path = std::string(glshader_prop->GetValue());
+	if (shader_path.empty()) {
+		LOG_WARNING("RENDER: Failed gettina path for 'glshader' setting; not reloading");
+		return;
+	}
 
 	glshader_prop->SetValue("none");
 	RENDER_Init(render_section);
