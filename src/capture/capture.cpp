@@ -43,7 +43,8 @@
 CHECK_NARROWING();
 
 static struct {
-	std_fs::path path = {};
+	std_fs::path path     = {};
+	bool path_initialised = false;
 
 	struct {
 		CaptureState audio = {};
@@ -198,9 +199,120 @@ std_fs::path generate_capture_filename(const CaptureType type, const int32_t ind
 	return {capture.path / filename};
 }
 
+static bool create_capture_directory()
+{
+	std::error_code ec = {};
+
+	if (!std_fs::exists(capture.path, ec)) {
+		if (!std_fs::create_directory(capture.path, ec)) {
+			LOG_WARNING("CAPTURE: Can't create directory '%s': %s",
+			            capture.path.string().c_str(),
+			            ec.message().c_str());
+			return false;
+		}
+		std_fs::permissions(capture.path, std_fs::perms::owner_all, ec);
+	}
+	return true;
+}
+
+static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
+{
+	// Find existing capture file with the highest index
+	std::string filename_start = capture_type_to_basename(type);
+	lowcase(filename_start);
+
+	const auto ext        = capture_type_to_extension(type);
+	int32_t highest_index = 0;
+	std::error_code ec    = {};
+
+	for (const auto& entry : std_fs::directory_iterator(capture.path, ec)) {
+		if (ec) {
+			LOG_WARNING("CAPTURE: Cannot open directory '%s': %s",
+			            capture.path.string().c_str(),
+			            ec.message().c_str());
+			return {};
+		}
+		if (!entry.is_regular_file(ec) || entry.path().extension() != ext) {
+			continue;
+		}
+		auto stem = entry.path().stem().string();
+		lowcase(stem);
+		if (starts_with(stem, filename_start)) {
+			const auto index = to_int(strip_prefix(stem, filename_start));
+			highest_index = std::max(highest_index, *index);
+		}
+	}
+	return highest_index;
+}
+
+static void set_next_capture_index(const CaptureType type, int32_t index)
+{
+	switch (type) {
+	case CaptureType::Audio: capture.next_index.audio = index; break;
+	case CaptureType::Midi: capture.next_index.midi = index; break;
+
+	case CaptureType::RawOplStream:
+		capture.next_index.raw_opl_stream = index;
+		break;
+
+	case CaptureType::RadOplInstruments:
+		capture.next_index.rad_opl_instrument = index;
+		break;
+
+	case CaptureType::Video: capture.next_index.video = index; break;
+
+	case CaptureType::RawImage:
+	case CaptureType::UpscaledImage:
+	case CaptureType::RenderedImage:
+		capture.next_index.image = index;
+		break;
+
+	case CaptureType::SerialLog:
+		capture.next_index.serial_log = index;
+		break;
+
+	default: assertm(false, "Unknown CaptureType");
+	}
+}
+
+static bool create_capture_dir_and_init_capture_indices()
+{
+	if (!create_capture_directory()) {
+		return false;
+	}
+
+	constexpr CaptureType all_capture_types[] = {CaptureType::Audio,
+	                                             CaptureType::Midi,
+	                                             CaptureType::RawOplStream,
+	                                             CaptureType::RadOplInstruments,
+	                                             CaptureType::Video,
+	                                             CaptureType::RawImage,
+	                                             CaptureType::UpscaledImage,
+	                                             CaptureType::RenderedImage,
+	                                             CaptureType::SerialLog};
+
+	for (auto type : all_capture_types) {
+		const auto index = find_highest_capture_index(type);
+		if (index) {
+			set_next_capture_index(type, *index + 1);
+		} else {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 FILE* CAPTURE_CreateFile(const CaptureType type,
                          const std::optional<std_fs::path>& path)
 {
+	if (!capture.path_initialised) {
+		if (!create_capture_dir_and_init_capture_indices()) {
+			return nullptr;
+		}
+		capture.path_initialised = true;
+	}
+
 	std::string path_str = {};
 	if (path) {
 		path_str = path->string();
@@ -441,82 +553,8 @@ static void capture_destroy([[maybe_unused]] Section* sec)
 		capture_video_finalise();
 		capture.state.video = CaptureState::Off;
 	}
-}
 
-static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
-{
-	// Find existing capture file with the highest index
-	std::string filename_start = capture_type_to_basename(type);
-	lowcase(filename_start);
-
-	const auto ext        = capture_type_to_extension(type);
-	int32_t highest_index = 0;
-	std::error_code ec    = {};
-
-	for (const auto& entry : std_fs::directory_iterator(capture.path, ec)) {
-		if (ec) {
-			LOG_WARNING("CAPTURE: Cannot open directory '%s': %s",
-			            capture.path.string().c_str(),
-			            ec.message().c_str());
-			return {};
-		}
-		if (!entry.is_regular_file(ec) || entry.path().extension() != ext) {
-			continue;
-		}
-		auto stem = entry.path().stem().string();
-		lowcase(stem);
-		if (starts_with(stem, filename_start)) {
-			const auto index = to_int(strip_prefix(stem, filename_start));
-			highest_index = std::max(highest_index, *index);
-		}
-	}
-	return highest_index;
-}
-
-static void set_next_capture_index(const CaptureType type, int32_t index)
-{
-	switch (type) {
-	case CaptureType::Audio: capture.next_index.audio = index; break;
-	case CaptureType::Midi: capture.next_index.midi = index; break;
-
-	case CaptureType::RawOplStream:
-		capture.next_index.raw_opl_stream = index;
-		break;
-
-	case CaptureType::RadOplInstruments:
-		capture.next_index.rad_opl_instrument = index;
-		break;
-
-	case CaptureType::Video: capture.next_index.video = index; break;
-
-	case CaptureType::RawImage:
-	case CaptureType::UpscaledImage:
-	case CaptureType::RenderedImage:
-		capture.next_index.image = index;
-		break;
-
-	case CaptureType::SerialLog:
-		capture.next_index.serial_log = index;
-		break;
-
-	default: assertm(false, "Unknown CaptureType");
-	}
-}
-
-static bool create_capture_directory()
-{
-	std::error_code ec = {};
-
-	if (!std_fs::exists(capture.path, ec)) {
-		if (!std_fs::create_directory(capture.path, ec)) {
-			LOG_WARNING("CAPTURE: Can't create directory '%s': %s",
-			            capture.path.string().c_str(),
-			            ec.message().c_str());
-			return false;
-		}
-		std_fs::permissions(capture.path, std_fs::perms::owner_all, ec);
-	}
-	return true;
+	capture = {};
 }
 
 static void capture_init(Section* sec)
@@ -545,29 +583,6 @@ static void capture_init(Section* sec)
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&capture_destroy, changeable_at_runtime);
-
-	if (!create_capture_directory()) {
-		return;
-	}
-
-	constexpr CaptureType all_capture_types[] = {CaptureType::Audio,
-	                                             CaptureType::Midi,
-	                                             CaptureType::RawOplStream,
-	                                             CaptureType::RadOplInstruments,
-	                                             CaptureType::Video,
-	                                             CaptureType::RawImage,
-	                                             CaptureType::UpscaledImage,
-	                                             CaptureType::RenderedImage,
-	                                             CaptureType::SerialLog};
-
-	for (auto type : all_capture_types) {
-		const auto index = find_highest_capture_index(type);
-		if (index) {
-			set_next_capture_index(type, *index + 1);
-		} else {
-			return;
-		}
-	}
 }
 
 static void init_key_mappings()
