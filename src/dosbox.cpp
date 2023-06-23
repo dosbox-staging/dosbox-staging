@@ -521,9 +521,7 @@ void DOSBOX_Init()
 	        "  repair:  Repair (and report) faults using adjacent blocks (default).\n"
 	        "  report:  Report faults but otherwise proceed as-is.\n"
 	        "  allow:   Allow faults to go unreported (hardware behavior).\n"
-	        "  deny:    Quit (and report) when faults are detected.\n"
-	        "The default ('deny') is recommended unless a game is failing with MCB\n"
-	        "corruption errors.");
+	        "  deny:    Quit (and report) when faults are detected.\n");
 	pstring->Set_values(mcb_fault_strategies);
 
 	const char *vmemsize_choices[] = {
