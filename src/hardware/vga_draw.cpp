@@ -1486,6 +1486,15 @@ static std::pair<Fraction, Fraction> determine_pixel_size(const uint32_t htotal,
 	return {pwidth, pheight};
 }
 
+struct DisplayTimings {
+	uint32_t total          = 0;
+	uint32_t display_end    = 0;
+	uint32_t blanking_start = 0;
+	uint32_t blanking_end   = 0;
+	uint32_t retrace_start  = 0;
+	uint32_t retrace_end    = 0;
+};
+
 void VGA_SetupDrawing(uint32_t /*val*/)
 {
 	if (vga.mode == M_ERROR) {
@@ -1513,74 +1522,74 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	/* Calculate the FPS for this screen */
 	uint32_t clock;
-	uint32_t htotal, hdend, hbstart, hbend, hrstart, hrend;
-	uint32_t vtotal, vdend, vbstart, vbend, vrstart, vrend;
+	DisplayTimings horiz = {};
+	DisplayTimings vert = {};
 	uint32_t vblank_skip;
 
 	auto fake_double_scan = false;
 
 	if (IS_EGAVGA_ARCH) {
-		htotal = vga.crtc.horizontal_total;
-		hdend = vga.crtc.horizontal_display_end;
-		hbend = vga.crtc.end_horizontal_blanking&0x1F;
-		hbstart = vga.crtc.start_horizontal_blanking;
-		hrstart = vga.crtc.start_horizontal_retrace;
+		horiz.total = vga.crtc.horizontal_total;
+		horiz.display_end = vga.crtc.horizontal_display_end;
+		horiz.blanking_end = vga.crtc.end_horizontal_blanking&0x1F;
+		horiz.blanking_start = vga.crtc.start_horizontal_blanking;
+		horiz.retrace_start = vga.crtc.start_horizontal_retrace;
 
-		vtotal= vga.crtc.vertical_total | ((vga.crtc.overflow & 1) << 8);
-		vdend = vga.crtc.vertical_display_end | ((vga.crtc.overflow & 2)<<7);
-		vbstart = vga.crtc.start_vertical_blanking | ((vga.crtc.overflow & 0x08) << 5);
-		vrstart = vga.crtc.vertical_retrace_start + ((vga.crtc.overflow & 0x04) << 6);
+		vert.total = vga.crtc.vertical_total | ((vga.crtc.overflow & 1) << 8);
+		vert.display_end = vga.crtc.vertical_display_end | ((vga.crtc.overflow & 2)<<7);
+		vert.blanking_start = vga.crtc.start_vertical_blanking | ((vga.crtc.overflow & 0x08) << 5);
+		vert.retrace_start = vga.crtc.vertical_retrace_start + ((vga.crtc.overflow & 0x04) << 6);
 		
 		if (IS_VGA_ARCH) {
 			// additional bits only present on vga cards
-			htotal |= (vga.s3.ex_hor_overflow & 0x1) << 8;
-			htotal += 3;
-			hdend |= (vga.s3.ex_hor_overflow & 0x2) << 7;
-			hbend |= (vga.crtc.end_horizontal_retrace&0x80) >> 2;
-			hbstart |= (vga.s3.ex_hor_overflow & 0x4) << 6;
-			hrstart |= (vga.s3.ex_hor_overflow & 0x10) << 4;
+			horiz.total |= (vga.s3.ex_hor_overflow & 0x1) << 8;
+			horiz.total += 3;
+			horiz.display_end |= (vga.s3.ex_hor_overflow & 0x2) << 7;
+			horiz.blanking_end |= (vga.crtc.end_horizontal_retrace&0x80) >> 2;
+			horiz.blanking_start |= (vga.s3.ex_hor_overflow & 0x4) << 6;
+			horiz.retrace_start |= (vga.s3.ex_hor_overflow & 0x10) << 4;
 			
-			vtotal |= (vga.crtc.overflow & 0x20) << 4;
-			vtotal |= (vga.s3.ex_ver_overflow & 0x1) << 10;
-			vdend |= (vga.crtc.overflow & 0x40) << 3; 
-			vdend |= (vga.s3.ex_ver_overflow & 0x2) << 9;
-			vbstart |= (vga.crtc.maximum_scan_line & 0x20) << 4;
-			vbstart |= (vga.s3.ex_ver_overflow & 0x4) << 8;
-			vrstart |= ((vga.crtc.overflow & 0x80) << 2);
-			vrstart |= (vga.s3.ex_ver_overflow & 0x10) << 6;
-			vbend = vga.crtc.end_vertical_blanking & 0x7f;
+			vert.total  |= (vga.crtc.overflow & 0x20) << 4;
+			vert.total  |= (vga.s3.ex_ver_overflow & 0x1) << 10;
+			vert.display_end |= (vga.crtc.overflow & 0x40) << 3; 
+			vert.display_end |= (vga.s3.ex_ver_overflow & 0x2) << 9;
+			vert.blanking_start |= (vga.crtc.maximum_scan_line & 0x20) << 4;
+			vert.blanking_start |= (vga.s3.ex_ver_overflow & 0x4) << 8;
+			vert.retrace_start |= ((vga.crtc.overflow & 0x80) << 2);
+			vert.retrace_start |= (vga.s3.ex_ver_overflow & 0x10) << 6;
+			vert.blanking_end = vga.crtc.end_vertical_blanking & 0x7f;
 		} else { // EGA
-			vbend = vga.crtc.end_vertical_blanking & 0x1f;
+			vert.blanking_end = vga.crtc.end_vertical_blanking & 0x1f;
 		}
-		htotal += 2;
-		vtotal += 2;
-		hdend += 1;
-		vdend += 1;
+		horiz.total += 2;
+		vert.total  += 2;
+		horiz.display_end += 1;
+		vert.display_end += 1;
 
-		hbend = hbstart + ((hbend - hbstart) & 0x3F);
-		hrend = vga.crtc.end_horizontal_retrace & 0x1f;
-		hrend = (hrend - hrstart) & 0x1f;
+		horiz.blanking_end = horiz.blanking_start + ((horiz.blanking_end - horiz.blanking_start) & 0x3F);
+		horiz.retrace_end = vga.crtc.end_horizontal_retrace & 0x1f;
+		horiz.retrace_end = (horiz.retrace_end - horiz.retrace_start) & 0x1f;
 		
-		if ( !hrend ) hrend = hrstart + 0x1f + 1;
-		else hrend = hrstart + hrend;
+		if ( !horiz.retrace_end ) horiz.retrace_end = horiz.retrace_start + 0x1f + 1;
+		else horiz.retrace_end = horiz.retrace_start + horiz.retrace_end;
 
-		vrend = vga.crtc.vertical_retrace_end & 0xF;
-		vrend = ( vrend - vrstart)&0xF;
+		vert.retrace_end = vga.crtc.vertical_retrace_end & 0xF;
+		vert.retrace_end = ( vert.retrace_end - vert.retrace_start)&0xF;
 		
-		if ( !vrend) vrend = vrstart + 0xf + 1;
-		else vrend = vrstart + vrend;
+		if ( !vert.retrace_end) vert.retrace_end = vert.retrace_start + 0xf + 1;
+		else vert.retrace_end = vert.retrace_start + vert.retrace_end;
 
-		// Special case vbstart==0:
+		// Special case vert.blanking_start==0:
 		// Most graphics cards agree that lines zero to vbend are
-		// blanked. ET4000 doesn't blank at all if vbstart==vbend.
+		// blanked. ET4000 doesn't blank at all if vert.blanking_start==vbend.
 		// ET3000 blanks lines 1 to vbend (255/6 lines).
-		if (vbstart != 0) {
-			vbstart += 1;
-			vbend = (vbend - vbstart) & 0x7f;
-			if ( !vbend) vbend = vbstart + 0x7f + 1;
-			else vbend = vbstart + vbend;
+		if (vert.blanking_start != 0) {
+			vert.blanking_start += 1;
+			vert.blanking_end = (vert.blanking_end - vert.blanking_start) & 0x7f;
+			if ( !vert.blanking_end) vert.blanking_end = vert.blanking_start + 0x7f + 1;
+			else vert.blanking_end = vert.blanking_start + vert.blanking_end;
 		}
-		vbend++;
+		vert.blanking_end++;
 			
 		if (svga.get_clock) {
 			clock = svga.get_clock();
@@ -1604,7 +1613,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		// Adjust the horizontal frequency if in pixel-doubling mode (clock/2)
 		if (vga.seq.clocking_mode.is_pixel_doubling) {
-			htotal *= 2;
+			horiz.total *= 2;
 		}
 		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
 		if (IS_VGA_ARCH) {
@@ -1642,20 +1651,20 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			}
 		}
 	} else {
-		htotal = vga.other.htotal + 1;
-		hdend = vga.other.hdend;
-		hbstart = hdend;
-		hbend = htotal;
-		hrstart = vga.other.hsyncp;
-		hrend = hrstart + vga.other.hsyncw;
+		horiz.total = vga.other.htotal + 1;
+		horiz.display_end = vga.other.hdend;
+		horiz.blanking_start = horiz.display_end;
+		horiz.blanking_end = horiz.total;
+		horiz.retrace_start = vga.other.hsyncp;
+		horiz.retrace_end = horiz.retrace_start + vga.other.hsyncw;
 
 		vga.draw.address_line_total = vga.other.max_scanline + 1;
-		vtotal = vga.draw.address_line_total * (vga.other.vtotal+1)+vga.other.vadjust;
-		vdend = vga.draw.address_line_total * vga.other.vdend;
-		vrstart = vga.draw.address_line_total * vga.other.vsyncp;
-		vrend = vrstart + 16; // vsync width is fixed to 16 lines on the MC6845 TODO Tandy
-		vbstart = vdend;
-		vbend = vtotal;
+		vert.total  = vga.draw.address_line_total * (vga.other.vtotal+1)+vga.other.vadjust;
+		vert.display_end = vga.draw.address_line_total * vga.other.vdend;
+		vert.retrace_start = vga.draw.address_line_total * vga.other.vsyncp;
+		vert.retrace_end = vert.retrace_start + 16; // vsync width is fixed to 16 lines on the MC6845 TODO Tandy
+		vert.blanking_start = vert.display_end;
+		vert.blanking_end = vert.total ;
 		switch (machine) {
 		case MCH_CGA:
 		case TANDY_ARCH_CASE:
@@ -1670,71 +1679,71 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			break;
 		}
 		// in milliseconds
-		vga.draw.delay.hdend = static_cast<double>(hdend) * 1000.0 /
+		vga.draw.delay.hdend = static_cast<double>(horiz.display_end) * 1000.0 /
 		                       static_cast<double>(clock);
 	}
 #if C_DEBUG
 	LOG(LOG_VGA, LOG_NORMAL)("h total %u end %u blank (%u/%u) retrace (%u/%u)",
-	                         htotal, hdend, hbstart, hbend, hrstart, hrend);
+	                         horiz.total, horiz.display_end, horiz.blanking_start, horiz.blanking_end, horiz.retrace_start, horiz.retrace_end);
 	LOG(LOG_VGA, LOG_NORMAL)("v total %u end %u blank (%u/%u) retrace (%u/%u)",
-	                         vtotal, vdend, vbstart, vbend, vrstart, vrend);
+	                         vert.total , vert.display_end, vert.blanking_start, vert.blanking_end, vert.retrace_start, vert.retrace_end);
 #endif
 
 	// The screen refresh frequency and clock settings, per the DOS-mode
-	vga.draw.dos_refresh_hz = static_cast<double>(clock) / (vtotal * htotal);
+	vga.draw.dos_refresh_hz = static_cast<double>(clock) / (vert.total  * horiz.total);
 	const auto fps = VGA_GetPreferredRate();
-	const auto f_clock = fps * vtotal * htotal;
+	const auto f_clock = fps * vert.total  * horiz.total;
 
 	// Horizontal total (that's how long a line takes with whistles and bells)
-	vga.draw.delay.htotal = static_cast<double>(htotal) * 1000.0 / f_clock; //  milliseconds
+	vga.draw.delay.htotal = static_cast<double>(horiz.total) * 1000.0 / f_clock; //  milliseconds
 	// Start and End of horizontal blanking
-	vga.draw.delay.hblkstart = static_cast<double>(hbstart) * 1000.0 / f_clock; //  milliseconds
-	vga.draw.delay.hblkend = static_cast<double>(hbend) * 1000.0 / f_clock;
+	vga.draw.delay.hblkstart = static_cast<double>(horiz.blanking_start) * 1000.0 / f_clock; //  milliseconds
+	vga.draw.delay.hblkend = static_cast<double>(horiz.blanking_end) * 1000.0 / f_clock;
 	// Start and End of horizontal retrace
-	vga.draw.delay.hrstart = static_cast<double>(hrstart) * 1000.0 / f_clock;
-	vga.draw.delay.hrend = static_cast<double>(hrend) * 1000.0 / f_clock;
+	vga.draw.delay.hrstart = static_cast<double>(horiz.retrace_start) * 1000.0 / f_clock;
+	vga.draw.delay.hrend = static_cast<double>(horiz.retrace_end) * 1000.0 / f_clock;
 	// Start and End of vertical blanking
-	vga.draw.delay.vblkstart = static_cast<double>(vbstart) * vga.draw.delay.htotal;
-	vga.draw.delay.vblkend = static_cast<double>(vbend) * vga.draw.delay.htotal;
+	vga.draw.delay.vblkstart = static_cast<double>(vert.blanking_start) * vga.draw.delay.htotal;
+	vga.draw.delay.vblkend = static_cast<double>(vert.blanking_end) * vga.draw.delay.htotal;
 	// Start and End of vertical retrace pulse
-	vga.draw.delay.vrstart = static_cast<double>(vrstart) * vga.draw.delay.htotal;
-	vga.draw.delay.vrend = static_cast<double>(vrend) * vga.draw.delay.htotal;
+	vga.draw.delay.vrstart = static_cast<double>(vert.retrace_start) * vga.draw.delay.htotal;
+	vga.draw.delay.vrend = static_cast<double>(vert.retrace_end) * vga.draw.delay.htotal;
 
 	// Vertical blanking tricks
 	vblank_skip = 0;
 	if (IS_VGA_ARCH) { // others need more investigation
-		if (vbstart < vtotal) { // There will be no blanking at all otherwise
-			if (vbend > vtotal) {
+		if (vert.blanking_start < vert.total ) { // There will be no blanking at all otherwise
+			if (vert.blanking_end > vert.total ) {
 				// blanking wraps to the start of the screen
-				vblank_skip = vbend&0x7f;
+				vblank_skip = vert.blanking_end&0x7f;
 				
 				// on blanking wrap to 0, the first line is not blanked
 				// this is used by the S3 BIOS and other S3 drivers in some SVGA modes
-				if ((vbend&0x7f)==1) vblank_skip = 0;
+				if ((vert.blanking_end&0x7f)==1) vblank_skip = 0;
 				
 				// it might also cut some lines off the bottom
-				if (vbstart < vdend) {
-					vdend = vbstart;
+				if (vert.blanking_start < vert.display_end) {
+					vert.display_end = vert.blanking_start;
 				}
 				LOG(LOG_VGA, LOG_WARN)("Blanking wrap to line %u", vblank_skip);
-			} else if (vbstart <= 1) {
+			} else if (vert.blanking_start <= 1) {
 				// blanking is used to cut lines at the start of the screen
-				vblank_skip = vbend;
+				vblank_skip = vert.blanking_end;
 				LOG(LOG_VGA, LOG_WARN)("Upper %u lines of the screen blanked", vblank_skip);
-			} else if (vbstart < vdend) {
-				if (vbend < vdend) {
+			} else if (vert.blanking_start < vert.display_end) {
+				if (vert.blanking_end < vert.display_end) {
 					// the game wants a black bar somewhere on the screen
-					LOG(LOG_VGA, LOG_WARN)("Unsupported blanking: line %u-%u", vbstart, vbend);
+					LOG(LOG_VGA, LOG_WARN)("Unsupported blanking: line %u-%u", vert.blanking_start, vert.blanking_end);
 				} else {
 					// blanking is used to cut off some lines from the bottom
-					vdend = vbstart;
+					vert.display_end = vert.blanking_start;
 				}
 			}
-			vdend -= vblank_skip;
+			vert.display_end -= vblank_skip;
 		}
 	}
 	// Display end
-	vga.draw.delay.vdend = static_cast<double>(vdend) * vga.draw.delay.htotal;
+	vga.draw.delay.vdend = static_cast<double>(vert.display_end) * vga.draw.delay.htotal;
 
 	// EGA frequency dependent monitor palette
 	if (machine == MCH_EGA) {
@@ -1764,7 +1773,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	if (machine == MCH_EGA) {
 		pixel_aspect_ratio = {CurMode->sheight * 4, CurMode->swidth * 3};
 	} else {
-		const auto [pwidth, pheight] = determine_pixel_size(htotal, vtotal);
+		const auto [pwidth, pheight] = determine_pixel_size(horiz.total, vert.total );
 		pixel_aspect_ratio = pwidth / pheight;
 	}
 
@@ -1772,11 +1781,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	vga.draw.vret_triggered=false;
 
 	//Check to prevent useless black areas
-	if (hbstart<hdend) hdend=hbstart;
-	if ((!IS_VGA_ARCH) && (vbstart<vdend)) vdend=vbstart;
+	if (horiz.blanking_start<horiz.display_end) horiz.display_end=horiz.blanking_start;
+	if ((!IS_VGA_ARCH) && (vert.blanking_start<vert.display_end)) vert.display_end=vert.blanking_start;
 
-	auto width = hdend;
-	auto height = vdend;
+	auto width = horiz.display_end;
+	auto height = vert.display_end;
 	bool doubleheight = false;
 	bool doublewidth = false;
 
@@ -2167,14 +2176,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		pixel_aspect_ratio = Fraction(4, 3) * Fraction(1024, 1280);
 	}
 
-	/*
-	LOG_MSG("VGA: htotal: %d, vtotal: %d, pixel_aspect_ratio: %lld:%lld (1:%g)",
-	        htotal,
-	        vtotal,
-	        pixel_aspect_ratio.Num(),
-	        pixel_aspect_ratio.Denom(),
-	        pixel_aspect_ratio.Inverse().ToDouble());
-*/
 	bool fps_changed = false;
 	// need to change the vertical timing?
 	if (fabs(vga.draw.delay.vtotal - 1000.0 / fps) > 0.0001) {
