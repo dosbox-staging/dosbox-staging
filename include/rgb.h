@@ -148,7 +148,7 @@ using lin_to_srgb8_lut_t = std::array<uint8_t, LinToSrgb8LutSize>;
 
 static uint16_t lin_to_srgb8_lut_key(float c)
 {
-	const auto key = static_cast<uint16_t>(round(c * (LinToSrgb8LutSize - 1)));
+	const auto key = static_cast<uint16_t>(roundf(c * (LinToSrgb8LutSize - 1)));
 
 	assert(key < LinToSrgb8LutSize);
 	return key;
@@ -163,7 +163,7 @@ static lin_to_srgb8_lut_t generate_lin_to_srgb8_lut()
 		const auto key  = lin_to_srgb8_lut_key(lin);
 		const auto srgb = linear_to_srgb(lin) * Rgb8Max;
 
-		lut[key] = static_cast<uint8_t>(round(srgb));
+		lut[key] = static_cast<uint8_t>(roundf(srgb));
 	}
 	return lut;
 }
