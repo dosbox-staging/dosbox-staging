@@ -1495,63 +1495,51 @@ struct DisplayTimings {
 	uint32_t retrace_end    = 0;
 };
 
-void VGA_SetupDrawing(uint32_t /*val*/)
+struct VgaTimings {
+	uint32_t clock        = 0;
+	DisplayTimings horiz  = {};
+	DisplayTimings vert   = {};
+	bool fake_double_scan = false;
+};
+
+static VgaTimings calculate_vga_timings()
 {
-	if (vga.mode == M_ERROR) {
-		PIC_RemoveEvents(VGA_VerticalTimer);
-		PIC_RemoveEvents(VGA_PanningLatch);
-		PIC_RemoveEvents(VGA_DisplayStartLatch);
-		return;
-	}
-	// set the drawing mode
-	switch (machine) {
-	case MCH_CGA:
-	case MCH_PCJR:
-	case MCH_TANDY:
-		vga.draw.mode = DRAWLINE;
-		break;
-	case MCH_EGA:
-		// Note: The Paradise SVGA uses the same panning mechanism as EGA
-		vga.draw.mode = EGALINE;
-		break;
-	case MCH_VGA:
-	default:
-		vga.draw.mode = PART;
-		break;
-	}
-
-	/* Calculate the FPS for this screen */
-	uint32_t clock;
+	uint32_t clock       = 0;
 	DisplayTimings horiz = {};
-	DisplayTimings vert = {};
-	uint32_t vblank_skip;
-
-	auto fake_double_scan = false;
+	DisplayTimings vert  = {};
+	bool fake_double_scan = false;
 
 	if (IS_EGAVGA_ARCH) {
-		horiz.total = vga.crtc.horizontal_total;
-		horiz.display_end = vga.crtc.horizontal_display_end;
-		horiz.blanking_end = vga.crtc.end_horizontal_blanking&0x1F;
+		horiz.total          = vga.crtc.horizontal_total;
+		horiz.display_end    = vga.crtc.horizontal_display_end;
+		horiz.blanking_end   = vga.crtc.end_horizontal_blanking & 0x1F;
 		horiz.blanking_start = vga.crtc.start_horizontal_blanking;
-		horiz.retrace_start = vga.crtc.start_horizontal_retrace;
+		horiz.retrace_start  = vga.crtc.start_horizontal_retrace;
 
-		vert.total = vga.crtc.vertical_total | ((vga.crtc.overflow & 1) << 8);
-		vert.display_end = vga.crtc.vertical_display_end | ((vga.crtc.overflow & 2)<<7);
-		vert.blanking_start = vga.crtc.start_vertical_blanking | ((vga.crtc.overflow & 0x08) << 5);
-		vert.retrace_start = vga.crtc.vertical_retrace_start + ((vga.crtc.overflow & 0x04) << 6);
-		
+		vert.total = vga.crtc.vertical_total |
+		             ((vga.crtc.overflow & 1) << 8);
+
+		vert.display_end = vga.crtc.vertical_display_end |
+		                   ((vga.crtc.overflow & 2) << 7);
+
+		vert.blanking_start = vga.crtc.start_vertical_blanking |
+		                      ((vga.crtc.overflow & 0x08) << 5);
+
+		vert.retrace_start = vga.crtc.vertical_retrace_start +
+		                     ((vga.crtc.overflow & 0x04) << 6);
+
 		if (IS_VGA_ARCH) {
-			// additional bits only present on vga cards
+			// Additional bits only present on VGA cards
 			horiz.total |= (vga.s3.ex_hor_overflow & 0x1) << 8;
 			horiz.total += 3;
 			horiz.display_end |= (vga.s3.ex_hor_overflow & 0x2) << 7;
-			horiz.blanking_end |= (vga.crtc.end_horizontal_retrace&0x80) >> 2;
+			horiz.blanking_end |= (vga.crtc.end_horizontal_retrace & 0x80) >> 2;
 			horiz.blanking_start |= (vga.s3.ex_hor_overflow & 0x4) << 6;
 			horiz.retrace_start |= (vga.s3.ex_hor_overflow & 0x10) << 4;
-			
-			vert.total  |= (vga.crtc.overflow & 0x20) << 4;
-			vert.total  |= (vga.s3.ex_ver_overflow & 0x1) << 10;
-			vert.display_end |= (vga.crtc.overflow & 0x40) << 3; 
+
+			vert.total |= (vga.crtc.overflow & 0x20) << 4;
+			vert.total |= (vga.s3.ex_ver_overflow & 0x1) << 10;
+			vert.display_end |= (vga.crtc.overflow & 0x40) << 3;
 			vert.display_end |= (vga.s3.ex_ver_overflow & 0x2) << 9;
 			vert.blanking_start |= (vga.crtc.maximum_scan_line & 0x20) << 4;
 			vert.blanking_start |= (vga.s3.ex_ver_overflow & 0x4) << 8;
@@ -1561,61 +1549,77 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		} else { // EGA
 			vert.blanking_end = vga.crtc.end_vertical_blanking & 0x1f;
 		}
+
 		horiz.total += 2;
-		vert.total  += 2;
+		vert.total += 2;
 		horiz.display_end += 1;
 		vert.display_end += 1;
 
-		horiz.blanking_end = horiz.blanking_start + ((horiz.blanking_end - horiz.blanking_start) & 0x3F);
+		horiz.blanking_end = horiz.blanking_start +
+		                     ((horiz.blanking_end - horiz.blanking_start) &
+		                      0x3F);
 		horiz.retrace_end = vga.crtc.end_horizontal_retrace & 0x1f;
 		horiz.retrace_end = (horiz.retrace_end - horiz.retrace_start) & 0x1f;
-		
-		if ( !horiz.retrace_end ) horiz.retrace_end = horiz.retrace_start + 0x1f + 1;
-		else horiz.retrace_end = horiz.retrace_start + horiz.retrace_end;
+
+		if (!horiz.retrace_end) {
+			horiz.retrace_end = horiz.retrace_start + 0x1f + 1;
+		} else {
+			horiz.retrace_end = horiz.retrace_start + horiz.retrace_end;
+		}
 
 		vert.retrace_end = vga.crtc.vertical_retrace_end & 0xF;
-		vert.retrace_end = ( vert.retrace_end - vert.retrace_start)&0xF;
-		
-		if ( !vert.retrace_end) vert.retrace_end = vert.retrace_start + 0xf + 1;
-		else vert.retrace_end = vert.retrace_start + vert.retrace_end;
+		vert.retrace_end = (vert.retrace_end - vert.retrace_start) & 0xF;
 
-		// Special case vert.blanking_start==0:
-		// Most graphics cards agree that lines zero to vbend are
-		// blanked. ET4000 doesn't blank at all if vert.blanking_start==vbend.
-		// ET3000 blanks lines 1 to vbend (255/6 lines).
+		if (!vert.retrace_end) {
+			vert.retrace_end = vert.retrace_start + 0xf + 1;
+		} else {
+			vert.retrace_end = vert.retrace_start + vert.retrace_end;
+		}
+
+		// Special case for vert.blanking_start == 0:
+		// Most graphics cards agree that lines zero to vertical blanking end
+		// are blanked.
+		// Tsend ET4000 doesn't blank at all if vert.blanking_start == vert.blanking_end.
+		// ET3000 blanks lines 1 to vert.blanking_end (255/6 lines).
 		if (vert.blanking_start != 0) {
 			vert.blanking_start += 1;
 			vert.blanking_end = (vert.blanking_end - vert.blanking_start) & 0x7f;
-			if ( !vert.blanking_end) vert.blanking_end = vert.blanking_start + 0x7f + 1;
-			else vert.blanking_end = vert.blanking_start + vert.blanking_end;
+			if (!vert.blanking_end) {
+				vert.blanking_end = vert.blanking_start + 0x7f + 1;
+			} else {
+				vert.blanking_end = vert.blanking_start + vert.blanking_end;
+			}
 		}
 		vert.blanking_end++;
-			
+
 		if (svga.get_clock) {
 			clock = svga.get_clock();
 		} else {
 			switch ((vga.misc_output >> 2) & 3) {
-			case 0:	
-				clock = (machine==MCH_EGA) ? 14318180 : 25175000;
+			case 0:
+				clock = (machine == MCH_EGA) ? 14318180 : 25175000;
 				break;
 			case 1:
 			default:
-				clock = (machine==MCH_EGA) ? 16257000 : 28322000;
+				clock = (machine == MCH_EGA) ? 16257000 : 28322000;
 				break;
 			}
 		}
 
-		// Adjust the VGA clock frequency based on the Clocking Mode Register's
-		// 9/8 Dot Mode. See Timing Model: https://wiki.osdev.org/VGA_Hardware
+		// Adjust the VGA clock frequency based on the Clocking Mode
+		// Register's 9/8 Dot Mode. See Timing Model:
+		// https://wiki.osdev.org/VGA_Hardware
 		clock /= vga.seq.clocking_mode.is_eight_dot_mode
 		               ? PixelsPerChar::Eight
 		               : PixelsPerChar::Nine;
 
-		// Adjust the horizontal frequency if in pixel-doubling mode (clock/2)
+		// Adjust the horizontal frequency if in pixel-doubling mode
+		// (clock/2)
 		if (vga.seq.clocking_mode.is_pixel_doubling) {
 			horiz.total *= 2;
 		}
 		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
+
 		if (IS_VGA_ARCH) {
 			// CRTC Maximum Scan Line Register - Scan Doubling
 			//
@@ -1651,43 +1655,98 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			}
 		}
 	} else {
-		horiz.total = vga.other.htotal + 1;
-		horiz.display_end = vga.other.hdend;
+		horiz.total          = vga.other.htotal + 1;
+		horiz.display_end    = vga.other.hdend;
 		horiz.blanking_start = horiz.display_end;
-		horiz.blanking_end = horiz.total;
-		horiz.retrace_start = vga.other.hsyncp;
-		horiz.retrace_end = horiz.retrace_start + vga.other.hsyncw;
+		horiz.blanking_end   = horiz.total;
+		horiz.retrace_start  = vga.other.hsyncp;
+		horiz.retrace_end    = horiz.retrace_start + vga.other.hsyncw;
 
 		vga.draw.address_line_total = vga.other.max_scanline + 1;
-		vert.total  = vga.draw.address_line_total * (vga.other.vtotal+1)+vga.other.vadjust;
+
+		vert.total = vga.draw.address_line_total * (vga.other.vtotal + 1) +
+		             vga.other.vadjust;
+
 		vert.display_end = vga.draw.address_line_total * vga.other.vdend;
 		vert.retrace_start = vga.draw.address_line_total * vga.other.vsyncp;
-		vert.retrace_end = vert.retrace_start + 16; // vsync width is fixed to 16 lines on the MC6845 TODO Tandy
+		vert.retrace_end = vert.retrace_start + 16; // vsync width is
+		                                            // fixed to 16 lines
+		                                            // on the MC6845
+		                                            // TODO Tandy
 		vert.blanking_start = vert.display_end;
-		vert.blanking_end = vert.total ;
+		vert.blanking_end   = vert.total;
+
 		switch (machine) {
 		case MCH_CGA:
 		case TANDY_ARCH_CASE:
-			clock=((vga.tandy.mode_control & 1) ? 14318180 : (14318180/2))/8;
+			clock = ((vga.tandy.mode_control & 1) ? 14318180
+			                                      : (14318180 / 2)) /
+			        8;
 			break;
 		case MCH_HERC:
-			if (vga.herc.mode_control & 0x2) clock=16000000/16;
-			else clock=16000000/8;
+			if (vga.herc.mode_control & 0x2) {
+				clock = 16000000 / 16;
+			} else {
+				clock = 16000000 / 8;
+			}
 			break;
-		default:
-			clock = 14318180;
-			break;
+		default: clock = 14318180; break;
 		}
+
 		// in milliseconds
-		vga.draw.delay.hdend = static_cast<double>(horiz.display_end) * 1000.0 /
-		                       static_cast<double>(clock);
+		vga.draw.delay.hdend = static_cast<double>(horiz.display_end) *
+		                       1000.0 / static_cast<double>(clock);
 	}
-#if C_DEBUG
-	LOG(LOG_VGA, LOG_NORMAL)("h total %u end %u blank (%u/%u) retrace (%u/%u)",
-	                         horiz.total, horiz.display_end, horiz.blanking_start, horiz.blanking_end, horiz.retrace_start, horiz.retrace_end);
-	LOG(LOG_VGA, LOG_NORMAL)("v total %u end %u blank (%u/%u) retrace (%u/%u)",
-	                         vert.total , vert.display_end, vert.blanking_start, vert.blanking_end, vert.retrace_start, vert.retrace_end);
-#endif
+
+	LOG_MSG("VGA: h total %u end %u blank (%u/%u) retrace (%u/%u)",
+	        horiz.total,
+	        horiz.display_end,
+	        horiz.blanking_start,
+	        horiz.blanking_end,
+	        horiz.retrace_start,
+	        horiz.retrace_end);
+
+	LOG_MSG("VGA: v total %u end %u blank (%u/%u) retrace (%u/%u)",
+	        vert.total,
+	        vert.display_end,
+	        vert.blanking_start,
+	        vert.blanking_end,
+	        vert.retrace_start,
+	        vert.retrace_end);
+
+	return {clock, horiz, vert, fake_double_scan};
+}
+
+void VGA_SetupDrawing(uint32_t /*val*/)
+{
+	if (vga.mode == M_ERROR) {
+		PIC_RemoveEvents(VGA_VerticalTimer);
+		PIC_RemoveEvents(VGA_PanningLatch);
+		PIC_RemoveEvents(VGA_DisplayStartLatch);
+		return;
+	}
+	// set the drawing mode
+	switch (machine) {
+	case MCH_CGA:
+	case MCH_PCJR:
+	case MCH_TANDY:
+		vga.draw.mode = DRAWLINE;
+		break;
+	case MCH_EGA:
+		// Note: The Paradise SVGA uses the same panning mechanism as EGA
+		vga.draw.mode = EGALINE;
+		break;
+	case MCH_VGA:
+	default:
+		vga.draw.mode = PART;
+		break;
+	}
+
+	const auto vga_timings = calculate_vga_timings();
+
+	const auto clock = vga_timings.clock;
+	const auto vert  = vga_timings.vert;
+	const auto horiz = vga_timings.horiz;
 
 	// The screen refresh frequency and clock settings, per the DOS-mode
 	vga.draw.dos_refresh_hz = static_cast<double>(clock) / (vert.total  * horiz.total);
@@ -1710,7 +1769,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	vga.draw.delay.vrend = static_cast<double>(vert.retrace_end) * vga.draw.delay.htotal;
 
 	// Vertical blanking tricks
-	vblank_skip = 0;
+	auto vert_display_end  = vert.display_end;
+	auto horiz_display_end = horiz.display_end;
+
+	uint32_t vblank_skip = 0;
 	if (IS_VGA_ARCH) { // others need more investigation
 		if (vert.blanking_start < vert.total ) { // There will be no blanking at all otherwise
 			if (vert.blanking_end > vert.total ) {
@@ -1723,7 +1785,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 				
 				// it might also cut some lines off the bottom
 				if (vert.blanking_start < vert.display_end) {
-					vert.display_end = vert.blanking_start;
+					vert_display_end = vert.blanking_start;
 				}
 				LOG(LOG_VGA, LOG_WARN)("Blanking wrap to line %u", vblank_skip);
 			} else if (vert.blanking_start <= 1) {
@@ -1736,14 +1798,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 					LOG(LOG_VGA, LOG_WARN)("Unsupported blanking: line %u-%u", vert.blanking_start, vert.blanking_end);
 				} else {
 					// blanking is used to cut off some lines from the bottom
-					vert.display_end = vert.blanking_start;
+					vert_display_end = vert.blanking_start;
 				}
 			}
-			vert.display_end -= vblank_skip;
+			vert_display_end -= vblank_skip;
 		}
 	}
 	// Display end
-	vga.draw.delay.vdend = static_cast<double>(vert.display_end) * vga.draw.delay.htotal;
+	vga.draw.delay.vdend = static_cast<double>(vert_display_end) * vga.draw.delay.htotal;
 
 	// EGA frequency dependent monitor palette
 	if (machine == MCH_EGA) {
@@ -1780,12 +1842,16 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	vga.draw.resizing = false;
 	vga.draw.vret_triggered=false;
 
-	//Check to prevent useless black areas
-	if (horiz.blanking_start<horiz.display_end) horiz.display_end=horiz.blanking_start;
-	if ((!IS_VGA_ARCH) && (vert.blanking_start<vert.display_end)) vert.display_end=vert.blanking_start;
+	// Check to prevent useless black areas
+	if (horiz.blanking_start < horiz.display_end) {
+		horiz_display_end = horiz.blanking_start;
+	}
+	if ((!IS_VGA_ARCH) && (vert.blanking_start < vert_display_end)) {
+		vert_display_end = vert.blanking_start;
+	}
 
-	auto width = horiz.display_end;
-	auto height = vert.display_end;
+	auto width = horiz_display_end;
+	auto height = vert_display_end;
 	bool doubleheight = false;
 	bool doublewidth = false;
 
@@ -2142,7 +2208,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 	VGA_CheckScanLength();
 
-	if (fake_double_scan) {
+	if (vga_timings.fake_double_scan) {
 		if (IS_VGA_ARCH) {
 			vblank_skip /= 2;
 			height /= 2;
