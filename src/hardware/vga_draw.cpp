@@ -324,18 +324,18 @@ static uint8_t * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 static uint8_t * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	Bitu offset = vidstart & vga.draw.linear_mask;
 	uint8_t* ret = &vga.draw.linear_base[offset];
-	
+
 	// in case (vga.draw.line_length + offset) has bits set that
 	// are not set in the mask: ((x|y)!=y) equals (x&~y)
 	if (GCC_UNLIKELY((vga.draw.line_length + offset)& ~vga.draw.linear_mask)) {
 		// this happens, if at all, only once per frame (1 of 480 lines)
 		// in some obscure games
 		Bitu end = (offset + vga.draw.line_length) & vga.draw.linear_mask;
-		
+
 		// assuming lines not longer than 4096 pixels
 		Bitu wrapped_len = end & 0xFFF;
 		Bitu unwrapped_len = vga.draw.line_length-wrapped_len;
-		
+
 		// unwrapped chunk: to top of memory block
 		memcpy(TempLine, &vga.draw.linear_base[offset], unwrapped_len);
 		// wrapped chunk: from base of memory block
@@ -564,12 +564,12 @@ static uint8_t * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 
 	Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 1) / vga.draw.width;
 	if ((vga.s3.hgc.posx >= vga.draw.width) ||
-		(lineat < vga.s3.hgc.originy) || 
+		(lineat < vga.s3.hgc.originy) ||
 		(lineat > (vga.s3.hgc.originy + (63U-vga.s3.hgc.posy))) ) {
 		return &vga.mem.linear[vidstart];
 	} else {
 		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width*2);
-		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx; 
+		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx;
  		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((uint32_t)vga.s3.hgc.startaddr) << 10);
 		Bitu cursorStartBit = sourceStartBit & 0x7;
 		if (cursorMemStart & 0x2) cursorMemStart--;
@@ -592,7 +592,7 @@ static uint8_t * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 					}
 					// else Transparent
 				} else if (bitsB & bit) {
-					// Source as well as destination are uint8_t arrays, 
+					// Source as well as destination are uint8_t arrays,
 					// so this should work out endian-wise?
 					const auto fore = read_unaligned_uint16(vga.s3.hgc.forestack);
 					write_unaligned_uint16_at(TempLine, i, fore);
@@ -613,12 +613,12 @@ static uint8_t * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 
 	Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 2) / vga.draw.width;
 	if ((vga.s3.hgc.posx >= vga.draw.width) ||
-		(lineat < vga.s3.hgc.originy) || 
+		(lineat < vga.s3.hgc.originy) ||
 		(lineat > (vga.s3.hgc.originy + (63U-vga.s3.hgc.posy))) ) {
 		return &vga.mem.linear[ vidstart ];
 	} else {
 		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width*4);
-		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx; 
+		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx;
 		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((uint32_t)vga.s3.hgc.startaddr) << 10);
 		Bitu cursorStartBit = sourceStartBit & 0x7;
 		if (cursorMemStart & 0x2)
@@ -876,10 +876,10 @@ static inline void VGA_ChangesEnd(void ) {
 static void VGA_ProcessSplit() {
 	if (vga.attr.mode_control&0x20) {
 		vga.draw.address=0;
-		// reset panning to 0 here so we don't have to check for 
+		// reset panning to 0 here so we don't have to check for
 		// it in the character draw functions. It will be set back
 		// to its proper value in v-retrace
-		vga.draw.panning=0; 
+		vga.draw.panning=0;
 	} else {
 		// In text mode only the characters are shifted by panning, not the address;
 		// this is done in the text line draw function.
@@ -908,9 +908,9 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			break;
 		case MCH_TANDY:
 			// Either the PCJr way or the CGA way
-			if (vga.tandy.gfx_control& 0x4) { 
+			if (vga.tandy.gfx_control& 0x4) {
 				bg_color_index = vga.tandy.border_color;
-			} else if (vga.mode==M_TANDY4) 
+			} else if (vga.mode==M_TANDY4)
 				bg_color_index = vga.attr.palette[0];
 			else bg_color_index = 0;
 			break;
@@ -925,7 +925,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			//  ET3000, ET4000, Paradise display the border color
 			//  S3 displays the content of the currently selected attribute register
 			// when disabled by sequencer the screen is black "257th color"
-			
+
 			// the DAC table may not match the bits of the overscan register
 			// so use black for this case too...
 			//if (vga.attr.disabled& 2) {
@@ -943,7 +943,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 						break;
 					}
 			}
-			//} else 
+			//} else
             //    bg_color_index = vga.attr.overscan_color;
 			break;
 		default:
@@ -1791,7 +1791,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		PIC_RemoveEvents(VGA_DisplayStartLatch);
 		return;
 	}
-	// set the drawing mode
+
+	// Set the drawing mode
 	switch (machine) {
 	case MCH_CGA:
 	case MCH_PCJR:
@@ -1799,7 +1800,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.mode = DRAWLINE;
 		break;
 	case MCH_EGA:
-		// Note: The Paradise SVGA uses the same panning mechanism as EGA
+		// Paradise SVGA uses the same panning mechanism as EGA
 		vga.draw.mode = EGALINE;
 		break;
 	case MCH_VGA:
@@ -1816,41 +1817,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	const auto vga_timings = calculate_vga_timings();
 
-	if (!IS_EGAVGA_ARCH) {
-		// in milliseconds
-		vga.draw.delay.hdend = static_cast<double>(
-		                               vga_timings.horiz.display_end) *
-		                       1000.0 /
-		                       static_cast<double>(vga_timings.clock);
-	}
-
 	auto fake_double_scan = false;
 	if (IS_VGA_ARCH) {
-		// CRTC Maximum Scan Line Register - Scan Doubling
-		//
-		// When bit 7 is set to 1, 200-scan-line video data is
-		// converted to 400-scan-line output. To do this, the
-		// clock in the row scan counter is divided by 2, which
-		// allows the sub-350 line modes to be displayed as 400
-		// lines on the display (this is called double scanning;
-		// each line is displayed twice). When this bit is set
-		// to 0, the clock to the row scan counter is equal to
-		// the horizontal scan rate.
-		//
-		// Ref: http://www.osdever.net/FreeVGA/vga/crtcreg.htm#09
-
 		const auto is_scan_doubled = bit::is(vga.crtc.maximum_scan_line,
 											 bit::literals::b7);
 
 		if (VGA_IsDoubleScanningSub350LineModes()) {
-			// Set the low resolution modes to have as many
-			// lines as are scanned - Quite a few demos
-			// change the max_scanline register at display
-			// time to get SFX: Majic12 show, Magic circle,
-			// Copper, GBU, Party91.
-			//
-			// Note: can't use with CGA because these use
-			// address_line for their own purposes.
 			if (is_scan_doubled) {
 				vga.draw.address_line_total *= 2;
 			}
@@ -1858,6 +1830,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			// VGA machine not in EGA or VGA modes
 			fake_double_scan = is_scan_doubled;
 		}
+	}
+
+	if (!IS_EGAVGA_ARCH) {
+		// in milliseconds
+		vga.draw.delay.hdend = static_cast<double>(
+		                               vga_timings.horiz.display_end) *
+		                       1000.0 /
+		                       static_cast<double>(vga_timings.clock);
 	}
 
 	// The screen refresh frequency and clock settings, per the DOS-mode
@@ -1882,7 +1862,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			// It is not meant to be autodetected that way, you either
 			// have a monochrome or color monitor connected and
 			// the EGA switches configured appropriately.
-			// But this would only be a problem if a program sets 
+			// But this would only be a problem if a program sets
 			// the adapter to monochrome mode and still expects color output.
 			// Such a program should be shot to the moon...
 			VGA_ATTR_SetEGAMonitorPalette(MONO);
@@ -1899,13 +1879,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		pixel_aspect_ratio = pwidth / pheight;
 	}
 
-	vga.draw.resizing = false;
-	vga.draw.vret_triggered=false;
+	vga.draw.resizing       = false;
+	vga.draw.vret_triggered = false;
 
-	auto width = updated_timings.horiz_display_end;
-	auto height = updated_timings.vert_display_end;
+	auto width        = updated_timings.horiz_display_end;
+	auto height       = updated_timings.vert_display_end;
 	bool doubleheight = false;
-	bool doublewidth = false;
+	bool doublewidth  = false;
 
 	unsigned bpp;
 	switch (vga.mode) {
@@ -1926,11 +1906,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		bpp = 8;
 		break;
 	}
+
 	vga.draw.linear_base = vga.mem.linear;
 	vga.draw.linear_mask = vga.vmemwrap - 1;
+
 	switch (vga.mode) {
 	case M_VGA:
-		width<<=2;
+		width <<= 2;
 
 		// Default to standard VGA linear drawing, which might be
 		// upgraded to 18-bit palette drawing below.
@@ -1964,8 +1946,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			// (ie: "stretched to CRT dimensions") then let them see
 			// art at 1:1 for the single-scanned frequencies (Eg:
 			// 360x480 in Scorched Earth, and others).
-			doublewidth  = render.aspect ? true
-			                             : is_line_freq_double_scanned;
+			doublewidth = render.aspect ? true
+			                            : is_line_freq_double_scanned;
 
 			// The ReelMagic video mixer expects linear VGA drawing
 			// (i.e.: Return to Zork's house intro), so limit the use
@@ -1976,50 +1958,56 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			}
 		}
 		break;
+
 	case M_LIN8:
 		if (vga.crtc.mode_control & 0x8) {
-			width >>=1;
+			width >>= 1;
 		} else if (svgaCard == SVGA_S3Trio && !(vga.s3.reg_3a & 0x10)) {
-			doublewidth=true;
-			width >>=1;
+			doublewidth = true;
+			width >>= 1;
 		}
-		// fall-through
+		[[fallthrough]];
 	case M_LIN24:
 	case M_LIN32:
 		width <<= 3;
 		if (vga.crtc.mode_control & 0x8) {
- 			doublewidth = true;
+			doublewidth = true;
 			if (vga.mode == M_LIN32 && CurMode->mode == 0x10f) {
 				pixel_aspect_ratio /= 2;
 			}
 		}
-		/* Use HW mouse cursor drawer if enabled */
+		// Use HW mouse cursor drawer if enabled
 		bpp = VGA_ActivateHardwareCursor();
 		break;
+
 	case M_LIN15:
- 	case M_LIN16:
+	case M_LIN16:
 		// 15/16 bpp modes double the horizontal values
-		width<<=2;
+		width <<= 2;
 		if ((vga.crtc.mode_control & 0x8)) {
 			doublewidth = true;
 		} else {
 			pixel_aspect_ratio *= 2;
 		}
-		/* Use HW mouse cursor drawer if enabled */
+		// Use HW mouse cursor drawer if enabled
 		bpp = VGA_ActivateHardwareCursor();
 		break;
+
 	case M_LIN4:
-		doublewidth = vga.seq.clocking_mode.is_pixel_doubling;
+		doublewidth     = vga.seq.clocking_mode.is_pixel_doubling;
 		vga.draw.blocks = width;
-		width<<=3;
-		VGA_DrawLine=VGA_Draw_Linear_Line;
+		width <<= 3;
+
+		VGA_DrawLine = VGA_Draw_Linear_Line;
+
 		vga.draw.linear_base = vga.fastmem;
 		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
 		break;
+
 	case M_EGA:
 		// Common settings for EGA and (S)VGA machine types
 		vga.draw.blocks = width;
-		width<<=3;
+		width <<= 3;
 		vga.draw.linear_base = vga.fastmem;
 		vga.draw.linear_mask = (static_cast<uint64_t>(vga.vmemwrap) << 1) - 1;
 
@@ -2028,12 +2016,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			break;
 		}
 		assert(IS_VGA_ARCH);
+
 		VGA_DrawLine = draw_linear_line_from_dac_palette;
+
 		bpp = 32;
 
 		// Only EGA modes that are line-doubled need additional handling
 		if (bit::is(CurMode->special, EGA_LINE_DOUBLE)) {
-
 			const auto wants_single_scanning =
 			        (vga.draw.vga_sub_350_line_handling !=
 			         VgaSub350LineHandling::DoubleScan);
@@ -2042,19 +2031,32 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			constexpr uint16_t ega_640x200 = 0xE;
 			switch (CurMode->mode) {
 			case ega_320x200:
-				// Are we dealing with standard (matching) dimensions?
-				if (width == CurMode->swidth && height == CurMode->sheight * 2) {
+				// Are we dealing with standard (matching)
+				// dimensions?
+				if (width == CurMode->swidth &&
+				    height == CurMode->sheight * 2) {
 					doublewidth  = true;
 					doubleheight = wants_single_scanning;
 				} else {
-					// We're dealing with non-standard dimensions
-					doublewidth  = !wants_single_scanning;
+					// We're dealing with non-standard
+					// dimensions
+					doublewidth = !wants_single_scanning;
 
-					// Adjust the aspect based on the custom dimensions
-					const auto scan_line_divisor = wants_single_scanning ? 2: 1;
-					const auto rendered_mode_height = render.aspect ? 480 : (CurMode->sheight * 2);
-					const Fraction w_scaler = {width, CurMode->swidth};
-					const Fraction h_scaler = {rendered_mode_height, height};
+					// Adjust the aspect based on the custom
+					// dimensions
+					const auto scan_line_divisor = wants_single_scanning
+					                                     ? 2
+					                                     : 1;
+					const auto rendered_mode_height =
+					        render.aspect
+					                ? 480
+					                : (CurMode->sheight * 2);
+
+					const Fraction w_scaler = {width,
+					                           CurMode->swidth};
+
+					const Fraction h_scaler = {rendered_mode_height,
+					                           height};
 
 					pixel_aspect_ratio *= (w_scaler * h_scaler /
 					                       scan_line_divisor)
@@ -2072,26 +2074,32 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			}
 		}
 		break;
+
 	case M_CGA16:
 		pixel_aspect_ratio = {5, 6};
 		doubleheight       = true;
 		vga.draw.blocks    = width * 2;
 		width <<= 4;
+
 		VGA_DrawLine = VGA_Draw_CGA16_Line;
 		break;
+
 	case M_CGA2_COMPOSITE:
 		pixel_aspect_ratio = {5, 6};
 		doubleheight       = true;
 		vga.draw.blocks    = width * 2;
 		width <<= 4;
+
 		VGA_DrawLine = VGA_Draw_CGA2_Composite_Line;
 		break;
+
 	case M_CGA4_COMPOSITE:
 		vga.draw.blocks = width * 2;
 		width <<= 4;
 		pixel_aspect_ratio = {height * 4 * (doubleheight ? 2 : 1), width * 3};
 		VGA_DrawLine = VGA_Draw_CGA4_Composite_Line;
 		break;
+
 	case M_CGA4:
 		if (IS_VGA_ARCH) {
 			if (vga.draw.vga_sub_350_line_handling ==
@@ -2110,75 +2118,87 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 				doublewidth = true;
 			}
 		}
-		vga.draw.blocks=width*2;
-		width<<=3;
-		VGA_DrawLine=VGA_Draw_2BPP_Line;
+		vga.draw.blocks = width * 2;
+		width <<= 3;
+
+		VGA_DrawLine = VGA_Draw_2BPP_Line;
 		break;
+
 	case M_CGA2:
 		if (IS_VGA_ARCH && vga.draw.vga_sub_350_line_handling !=
-			                   VgaSub350LineHandling::DoubleScan) {
+		                           VgaSub350LineHandling::DoubleScan) {
 			doubleheight = true;
 			doublewidth  = true;
 			pixel_aspect_ratio /= 2;
 		}
 		vga.draw.blocks = 2 * width;
 		width <<= 3;
+
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
+
 	case M_TEXT:
 		if (IS_VGA_ARCH) {
 			bpp = 32;
+
 			VGA_DrawLine = draw_text_line_from_dac_palette;
+
 			vga.draw.pixels_per_character = vga.seq.clocking_mode.is_eight_dot_mode
 			                                      ? PixelsPerChar::Eight
 			                                      : PixelsPerChar::Nine;
 		} else {
 			vga.draw.pixels_per_character = PixelsPerChar::Eight;
+
 			VGA_DrawLine = VGA_TEXT_Draw_Line;
 		}
 		vga.draw.blocks = width;
 		doublewidth     = vga.seq.clocking_mode.is_pixel_doubling;
 		width *= vga.draw.pixels_per_character;
+
 		pixel_aspect_ratio *= {PixelsPerChar::Eight,
 		                       vga.draw.pixels_per_character};
 		break;
+
 	case M_HERC_GFX:
 		vga.draw.blocks = width * 2;
 		width *= 16;
+
 		assert(width > 0);
 		assert(height > 0);
 		pixel_aspect_ratio = {height * 4, width * 3};
+
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
 
-		/*
-		Mode Control Registers 1 and 2 bit values for Tandy and PCJr (if different)
-		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		| Colors | Res     | double | MC1: 4 | 3   | 2+bw | 1+gfx | 0+Hi | MC2: 4 | 3     | 2   | 1   | 0 |
-		|--------|---------|--------|--------|-----|------|-------|------|--------|-------|-----|-----|---|
-		| 2      | 640x200 | yes    | 1 (0)  | -   | 0    | 1     | 0    | 0 (-)  | 0 (1) | -   | -   | - |
-		| 4-gray | 320x200 | no     | 0      | -   | 1    | 1     | 0    | 0 (-)  | 0     | -   | -   | - |
-		| 4      | 320x200 | no     | 0      | -   | 0    | 1     | 0    | 0 (-)  | 0     | -   | -   | - |
-		| 4      | 640x200 | yes    | 1 (0)  | -   | 0    | 1     | 1    | 0 (-)  | 1 (0) | -   | -   | - |
-		| 16     | 120x200 | no     | 0 (1)  | -   | 0    | 1     | 0    | 1 (-)  | 0     | -   | -   | - |
-		| 16     | 320x200 | no     | 0 (1)  | -   | 0    | 1     | 1    | 1 (-)  | 0     | -   | -   | - |
+		// clang-format off
 
-		MC1 stands for the Mode control 1 register, bits four through
-		zero. MC2 stands for the Mode control 2 register, bits four
-		through zero.
+		// Mode Control Registers 1 and 2 bit values for Tandy and PCJr (if different)
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// | Colors | Res     | double | MC1: 4 | 3   | 2+bw | 1+gfx | 0+Hi | MC2: 4 | 3     | 2   | 1   | 0 |
+		// |--------|---------|--------|--------|-----|------|-------|------|--------|-------|-----|-----|---|
+		// | 2      | 640x200 | yes    | 1 (0)  | -   | 0    | 1     | 0    | 0 (-)  | 0 (1) | -   | -   | - |
+		// | 4-gray | 320x200 | no     | 0      | -   | 1    | 1     | 0    | 0 (-)  | 0     | -   | -   | - |
+		// | 4      | 320x200 | no     | 0      | -   | 0    | 1     | 0    | 0 (-)  | 0     | -   | -   | - |
+		// | 4      | 640x200 | yes    | 1 (0)  | -   | 0    | 1     | 1    | 0 (-)  | 1 (0) | -   | -   | - |
+		// | 16     | 120x200 | no     | 0 (1)  | -   | 0    | 1     | 0    | 1 (-)  | 0     | -   | -   | - |
+		// | 16     | 320x200 | no     | 0 (1)  | -   | 0    | 1     | 1    | 1 (-)  | 0     | -   | -   | - |
 
-		Dosbox uses vga.tandy.mode_control and vga.tandy.gfx_control to
-		represent the state of these registers. They are used
-		interchangably for Tandy and PCJr modes.
+		// MC1 stands for the Mode control 1 register, bits four through zero.
+		// MC2 stands for the Mode control 2 register, bits four through zero.
+		//
+		// Dosbox uses vga.tandy.mode_control and vga.tandy.gfx_control to
+		// represent the state of these registers. They are used
+		// interchangably for Tandy and PCJr modes.
+		//
+		// References:
+		// -
+		// http://www.thealmightyguru.com/Wiki/images/3/3b/Tandy_1000_-_Manual_-_Technical_Reference.pdf:
+		// pg 58.
+		// -
+		// http://bitsavers.trailing-edge.com/pdf/ibm/pc/pc_jr/PCjr_Technical_Reference_Nov83.pdf:
+		// pg 2-59 to 2-69.
 
-		References:
-		-
-		http://www.thealmightyguru.com/Wiki/images/3/3b/Tandy_1000_-_Manual_-_Technical_Reference.pdf:
-		pg 58.
-		-
-		http://bitsavers.trailing-edge.com/pdf/ibm/pc/pc_jr/PCjr_Technical_Reference_Nov83.pdf:
-		pg 2-59 to 2-69.
-		*/
+		// clang-format on
 
 	case M_TANDY2:
 		pixel_aspect_ratio = {5, 12};
@@ -2186,31 +2206,35 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 
 		if (machine == MCH_PCJR) {
-			doublewidth = (vga.tandy.gfx_control & 0x8) == 0;
+			doublewidth     = (vga.tandy.gfx_control & 0x8) == 0;
 			vga.draw.blocks = width * (doublewidth ? 4 : 8);
-			width = vga.draw.blocks * 2;
+			width           = vga.draw.blocks * 2;
 		} else {
-			doublewidth = (vga.tandy.mode_control & 0x10) == 0;
+			doublewidth     = (vga.tandy.mode_control & 0x10) == 0;
 			vga.draw.blocks = width * (doublewidth ? 1 : 2);
-			width = vga.draw.blocks * 8;
+			width           = vga.draw.blocks * 8;
 		}
 		break;
-	case M_TANDY4:
-		if (machine == MCH_TANDY)
-			doublewidth = (vga.tandy.mode_control & 0b10000) == 0b00000;
-		else
-			doublewidth = (vga.tandy.mode_control & 0b00001) == 0b00000;
 
-		vga.draw.blocks = width * 2;
-		width = vga.draw.blocks * 4;
+	case M_TANDY4:
+		if (machine == MCH_TANDY) {
+			doublewidth = (vga.tandy.mode_control & 0b10000) == 0b00000;
+		} else {
+			doublewidth = (vga.tandy.mode_control & 0b00001) == 0b00000;
+		}
+
+		vga.draw.blocks    = width * 2;
+		width              = vga.draw.blocks * 4;
 		pixel_aspect_ratio = {height * 4, width * 3};
 
 		if ((machine == MCH_TANDY && (vga.tandy.gfx_control & 0b01000)) ||
-		    (machine == MCH_PCJR && (vga.tandy.mode_control == 0b01011)))
+		    (machine == MCH_PCJR && (vga.tandy.mode_control == 0b01011))) {
 			VGA_DrawLine = VGA_Draw_2BPPHiRes_Line;
-		else
+		} else {
 			VGA_DrawLine = VGA_Draw_2BPP_Line;
+		}
 		break;
+
 	case M_TANDY16:
 		pixel_aspect_ratio = {5, 6};
 		doubleheight       = true;
@@ -2220,44 +2244,51 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			if ((machine == MCH_TANDY) &&
 			    (vga.tandy.mode_control & 0b10000)) {
 				doublewidth = false;
-				vga.draw.blocks*=2;
-				width=vga.draw.blocks*2;
+				vga.draw.blocks *= 2;
+				width = vga.draw.blocks * 2;
 			} else {
 				doublewidth = true;
-				width=vga.draw.blocks*2;
+				width       = vga.draw.blocks * 2;
 			}
-			VGA_DrawLine=VGA_Draw_4BPP_Line;
+			VGA_DrawLine = VGA_Draw_4BPP_Line;
 		} else {
-			doublewidth=true;
-			width=vga.draw.blocks*4;
-			VGA_DrawLine=VGA_Draw_4BPP_Line_Double;
+			doublewidth = true;
+			width       = vga.draw.blocks * 4;
+
+			VGA_DrawLine = VGA_Draw_4BPP_Line_Double;
 		}
 		break;
+
 	case M_TANDY_TEXT:
 		pixel_aspect_ratio = {5, 6};
 		doublewidth        = (vga.tandy.mode_control & 0x1) == 0;
 		doubleheight       = true;
 		vga.draw.blocks    = width;
 		width <<= 3;
+
 		VGA_DrawLine = VGA_TEXT_Draw_Line;
 		break;
+
 	case M_CGA_TEXT_COMPOSITE:
 		pixel_aspect_ratio = {5, 6};
 		doubleheight       = true;
 		vga.draw.blocks    = width;
 		width <<= (((vga.tandy.mode_control & 0x1) != 0) ? 3 : 4);
+
 		VGA_DrawLine = VGA_CGA_TEXT_Composite_Draw_Line;
 		break;
+
 	case M_HERC_TEXT:
 		pixel_aspect_ratio = {350, 480};
 		vga.draw.blocks    = width;
 		width <<= 3;
+
 		VGA_DrawLine = VGA_TEXT_Herc_Draw_Line;
 		break;
-	default:
-		LOG(LOG_VGA,LOG_ERROR)("Unhandled VGA mode %d while checking for resolution",vga.mode);
-		break;
+
+	default: LOG_WARNING("VGA: Unhandled VGA mode %02Xh", vga.mode); break;
 	}
+
 	VGA_CheckScanLength();
 
 	auto vblank_skip = updated_timings.vblank_skip;
@@ -2273,8 +2304,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	setup_line_drawing_delays(height);
 	vga.draw.line_length = width * ((bpp + 1) / 8);
 #ifdef VGA_KEEP_CHANGES
-	vga.changes.active = false;
-	vga.changes.frame = 0;
+	vga.changes.active    = false;
+	vga.changes.frame     = 0;
 	vga.changes.writeMask = 1;
 #endif
 	// Use square pixels for all non-tweaked modes with 4:3 storage pixel
@@ -2314,6 +2345,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	LOG(LOG_VGA, LOG_NORMAL)("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
 	                         vga.draw.delay.htotal, (1.0 / vga.draw.delay.htotal), vga.draw.delay.hblkstart,
 	                         vga.draw.delay.hblkend, vga.draw.delay.hrstart, vga.draw.delay.hrend);
+
 	LOG(LOG_VGA, LOG_NORMAL)("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
 	                         vga.draw.delay.vtotal, (1000.0 / vga.draw.delay.vtotal), vga.draw.delay.vblkstart,
 	                         vga.draw.delay.vblkend, vga.draw.delay.vrstart, vga.draw.delay.vrend);
@@ -2388,7 +2420,7 @@ void VGA_KillDrawing(void) {
 
 void VGA_SetOverride(bool vga_override) {
 	if (vga.draw.vga_override!=vga_override) {
-		
+
 		if (vga_override) {
 			VGA_KillDrawing();
 			vga.draw.vga_override=true;
