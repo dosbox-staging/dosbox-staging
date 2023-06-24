@@ -144,6 +144,7 @@ public:
 	void CMD_SHIFT(char * args);
 	void CMD_VER(char * args);
 	void CMD_LS(char *args);
+	void CMD_VOL(char *args);
 
 	/* The shell's variables */
 	uint16_t input_handle = 0;

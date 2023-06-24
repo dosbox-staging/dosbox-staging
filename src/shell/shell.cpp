@@ -1250,6 +1250,25 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_VER_VER", "DOSBox Staging version %s\n"
 	                             "DOS version %d.%02d\n");
 	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n");
+	MSG_Add("SHELL_CMD_VOL_HELP", "Displays the disk volume and serial number, if they exist.\n");
+	MSG_Add("SHELL_CMD_VOL_HELP_LONG",
+	        "Usage:\n"
+	        "  [color=green]vol[reset] [color=cyan][DRIVE:][reset]\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=cyan]DRIVE[reset] is a drive letter followed by a colon.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  Running [color=green]vol[reset] without an argument displays uses the current drive.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]vol[reset]\n"
+	        "  [color=green]vol[reset] [color=cyan]c:[reset]\n");
+	MSG_Add("SHELL_CMD_VOL_OUTPUT",
+			"\n"
+			" Volume in drive %c is %s\n"
+			" Volume Serial Number is %04X-%04X\n"
+			"\n");
 
 	/* Ensure help categories are loaded into the message vector */
 	HELP_AddMessages();

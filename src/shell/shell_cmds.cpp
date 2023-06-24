@@ -81,6 +81,7 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	{ "TIME",     {&DOS_Shell::CMD_TIME,     "TIME",     HELP_Filter::All,    HELP_Category::Misc } },
 	{ "TYPE",     {&DOS_Shell::CMD_TYPE,     "TYPE",     HELP_Filter::Common, HELP_Category::Misc } },
 	{ "VER",      {&DOS_Shell::CMD_VER,      "VER",      HELP_Filter::All,    HELP_Category::Misc } },
+	{ "VOL",      {&DOS_Shell::CMD_VOL,      "VOL",      HELP_Filter::All,    HELP_Category::Misc } }
 	};
 // clang-format on
 
@@ -2166,4 +2167,47 @@ void DOS_Shell::CMD_VER(char *args)
 		WriteOut(MSG_Get("SHELL_CMD_VER_VER"), DOSBOX_GetDetailedVersion(),
 		         dos.version.major, dos.version.minor);
 	}
+}
+
+void DOS_Shell::CMD_VOL(char *args)
+{
+	HELP("VOL");
+
+	uint8_t drive_index;
+	size_t len = 0;
+	if (args) {
+		StripSpaces(args);
+		len = strlen(args);
+	}
+	if (len > 0) {
+		if (len < 2 || args[1] != ':') {
+			SyntaxError();
+			return;
+		}
+		drive_index = toupper(*args) - 'A';
+	} else {
+		drive_index = DOS_GetDefaultDrive();
+	}
+	char drive_letter = drive_index + 'A';
+
+	reg_ah = 0x44;            // DOS IOCTL
+	reg_al = 0x0D;            // Generic block device request
+	reg_bl = drive_index + 1; // Drive (0 = default drive, A = 1, B = 2, etc.)  DOSBox drives start A = 0, so add 1.
+	reg_ch = 0x08;            // Device type (0x08 for block device)
+	reg_cl = 0x66;            // Get volume information (returns serial number, volume label, and filesystem type)
+	reg_dx = 0;               // Offset pointer for return information (DS:DX). Set to 0 for beginning of data segment (hopefully this doesn't step on anyone else's memory?)
+	dos.errorcode = 0;
+	CALLBACK_RunRealInt(0x21);
+	if (dos.errorcode) {
+		WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"), drive_letter);
+		return;
+	}
+	char label[12];
+	uint32_t serial = mem_readd(Segs.phys[ds] + 2);
+	MEM_BlockRead(Segs.phys[ds] + 6, label, 11); // Read in non-null terminated string with spaces at the end.
+	label[11] = 0; // Null terminator
+	unsigned int high = (serial >> 16) & 0xFFFF;
+	unsigned int low = serial & 0xFFFF;
+	char *trimmed_label = trim(label);
+	WriteOut(MSG_Get("SHELL_CMD_VOL_OUTPUT"), drive_letter, trimmed_label, high, low);
 }
