@@ -143,7 +143,10 @@ struct RenderedImage {
 	void free()
 	{
 		delete[] image_data;
+		image_data = nullptr;
+
 		delete[] palette_data;
+		palette_data = nullptr;
 	}
 };
 
