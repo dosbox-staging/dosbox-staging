@@ -158,7 +158,7 @@ static lin_to_srgb8_lut_t generate_lin_to_srgb8_lut()
 {
 	lin_to_srgb8_lut_t lut = {};
 
-	for (auto i = 0; i < LinToSrgb8LutSize; ++i) {
+	for (int16_t i = 0; i < LinToSrgb8LutSize; ++i) {
 		const auto lin  = (1.0f / (LinToSrgb8LutSize - 1)) * i;
 		const auto key  = lin_to_srgb8_lut_key(lin);
 		const auto srgb = linear_to_srgb(lin) * Rgb8Max;
