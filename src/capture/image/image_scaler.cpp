@@ -51,9 +51,9 @@ void ImageScaler::Init(const RenderedImage& image, const ScalingMode mode)
 	AllocateBuffers();
 }
 
-static bool is_integer(float f)
+static bool is_integer(const float f)
 {
-	return fabs(f - round(f)) < 0.0001;
+	return fabsf(f - roundf(f)) < 0.0001f;
 }
 
 void ImageScaler::UpdateOutputParamsDoublingOnly()
@@ -84,14 +84,14 @@ void ImageScaler::UpdateOutputParamsUpscale()
 	constexpr auto target_output_height = 1200;
 
 	// Slight fudge factor to push 350-line modes into 4x vertical scaling
-	constexpr auto fudge_offset = 0.1;
+	constexpr auto fudge_offset = 0.1f;
 
 	// Calculate integer vertical scaling factor so the
 	// resulting output image height is roughly around
 	// 1200px. See TODO table for further details.
 	output.vert_scale = static_cast<uint8_t>(
-	        round(static_cast<float>(target_output_height) / input.height +
-	              fudge_offset));
+	        roundf(static_cast<float>(target_output_height) / input.height +
+	               fudge_offset));
 
 	output.vert_scaling_mode = PerAxisScaling::Integer;
 
