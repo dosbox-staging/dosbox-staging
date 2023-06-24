@@ -142,26 +142,18 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 		*/
 		break;
 	case 0x09: /* Maximum Scan Line Register */
-		if (IS_VGA_ARCH)
-			vga.config.line_compare=(vga.config.line_compare & 0x5ff)|(val&0x40)<<3;
-
+		if (IS_VGA_ARCH) {
+			vga.config.line_compare = (vga.config.line_compare & 0x5ff) |
+			                          (val & 0x40) << 3;
+		}
 		if (VGA_IsDoubleScanningSub350LineModes()) {
-			if ((vga.crtc.maximum_scan_line ^ val) & 0x20) {
-				crtc(maximum_scan_line)=val;
-				VGA_StartResize();
-			} else {
-				crtc(maximum_scan_line)=val;
-			}
-			vga.draw.address_line_total = (val &0x1F) + 1;
-			if (val&0x80) vga.draw.address_line_total*=2;
-		} else {
-			if ((vga.crtc.maximum_scan_line ^ val) & 0xbf) {
-				crtc(maximum_scan_line)=val;
-				VGA_StartResize();
-			} else {
-				crtc(maximum_scan_line)=val;
+			vga.draw.address_line_total = (val & 0x1F) + 1;
+			if (val & 0x80) {
+				vga.draw.address_line_total *= 2;
 			}
 		}
+		vga.crtc.maximum_scan_line = val;
+		VGA_StartResize();
 		/*
 			0-4	Number of scan lines in a character row -1. In graphics modes this is
 				the number of times (-1) the line is displayed before passing on to
