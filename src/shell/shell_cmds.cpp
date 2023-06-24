@@ -81,6 +81,7 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	{ "TIME",     {&DOS_Shell::CMD_TIME,     "TIME",     HELP_Filter::All,    HELP_Category::Misc } },
 	{ "TYPE",     {&DOS_Shell::CMD_TYPE,     "TYPE",     HELP_Filter::Common, HELP_Category::Misc } },
 	{ "VER",      {&DOS_Shell::CMD_VER,      "VER",      HELP_Filter::All,    HELP_Category::Misc } },
+	{ "VOL",      {&DOS_Shell::CMD_VOL,      "VOL",      HELP_Filter::All,    HELP_Category::Misc } }
 	};
 // clang-format on
 
@@ -2166,4 +2167,62 @@ void DOS_Shell::CMD_VER(char *args)
 		WriteOut(MSG_Get("SHELL_CMD_VER_VER"), DOSBOX_GetDetailedVersion(),
 		         dos.version.major, dos.version.minor);
 	}
+}
+
+void DOS_Shell::CMD_VOL(char* args)
+{
+	HELP("VOL");
+
+	char drive;
+	size_t len = 0;
+	if (args) {
+		StripSpaces(args);
+		len = strlen(args);
+	}
+	if (len > 0) {
+		drive = toupper(args[0]);
+		if (len < 2 || args[1] != ':' || drive < 'A' || drive > 'Z') {
+			SyntaxError();
+			return;
+		}
+	} else {
+		drive = drive_letter(DOS_GetDefaultDrive());
+	}
+
+	// DOS IOCTL
+	reg_ah = 0x44;
+
+	// Generic block device request
+	reg_al = 0x0D;
+
+	// Drive (0 = default drive, A = 1, B = 2, etc.)  DOSBox drives start A
+	// = 0, so add 1.
+	reg_bl = drive_index(drive) + 1;
+
+	// Device type (0x08 for block device)
+	reg_ch = 0x08;
+
+	// Get volume information (returns serial number, volume label, and
+	// filesystem type)
+	reg_cl = 0x66;
+
+	// Offset pointer for return information (DS:DX). Set to 0 for beginning
+	// of data segment (hopefully this doesn't step on anyone else's memory?)
+	reg_dx        = 0;
+	dos.errorcode = 0;
+	CALLBACK_RunRealInt(0x21);
+	if (dos.errorcode) {
+		WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"), drive);
+		return;
+	}
+	const auto serial = mem_readd(Segs.phys[ds] + 2);
+
+	// Read in non-null terminated string with spaces at the end.
+	char label[DOS_NAMELENGTH] = {};
+	MEM_BlockRead(Segs.phys[ds] + 6, label, ARRAY_LEN(label) - 1);
+
+	const auto high = check_cast<uint16_t>((serial >> 16) & 0xFFFF);
+	const auto low  = check_cast<uint16_t>(serial & 0xFFFF);
+	const auto trimmed_label = trim(label);
+	WriteOut(MSG_Get("SHELL_CMD_VOL_OUTPUT"), drive, trimmed_label, high, low);
 }

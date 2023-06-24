@@ -47,7 +47,8 @@ extern DOS_Shell * first_shell;
 
 class BatchFile {
 public:
-	BatchFile(DOS_Shell * host,char const* const resolved_name,char const* const entered_name, char const * const cmd_line);
+	BatchFile(DOS_Shell* host, const char* const resolved_name,
+	          const char* const entered_name, const char* const cmd_line);
 	BatchFile(const BatchFile&) = delete; // prevent copying
 	BatchFile& operator=(const BatchFile&) = delete; // prevent assignment
 	virtual ~BatchFile();
@@ -144,6 +145,7 @@ public:
 	void CMD_SHIFT(char * args);
 	void CMD_VER(char * args);
 	void CMD_LS(char *args);
+	void CMD_VOL(char* args);
 
 	/* The shell's variables */
 	uint16_t input_handle = 0;
