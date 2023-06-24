@@ -118,7 +118,7 @@ struct RenderedImage {
 		RenderedImage copy = *this;
 
 		// Deep-copy image and palette data
-		const auto image_data_num_bytes = height * pitch;
+		const auto image_data_num_bytes = static_cast<uint32_t>(height * pitch);
 
 		copy.image_data = new uint8_t[image_data_num_bytes];
 
@@ -130,7 +130,7 @@ struct RenderedImage {
 		// TODO it's bad that we need to make this assumption downstream
 		// on the size and alignment of the palette...
 		if (palette_data) {
-			constexpr auto PaletteNumBytes = 256 * 4;
+			constexpr uint16_t PaletteNumBytes = 256 * 4;
 			copy.palette_data = new uint8_t[PaletteNumBytes];
 
 			std::memcpy(copy.palette_data,
