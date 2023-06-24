@@ -1676,6 +1676,113 @@ static VgaTimings calculate_vga_timings()
 	return {clock, horiz, vert};
 }
 
+struct UpdatedTimings {
+	uint32_t horiz_display_end = 0;
+	uint32_t vert_display_end  = 0;
+	uint32_t vblank_skip       = 0;
+};
+
+static UpdatedTimings update_vga_timings(const VgaTimings& timings)
+{
+	const auto vert  = timings.vert;
+	const auto horiz = timings.horiz;
+
+	const auto fps     = VGA_GetPreferredRate();
+	const auto f_clock = fps * vert.total * horiz.total;
+
+	// Horizontal total (that's how long a line takes with whistles and bells)
+	vga.draw.delay.htotal = static_cast<double>(horiz.total) * 1000.0 /
+	                        f_clock; //  milliseconds
+									 //
+	// Start and End of horizontal blanking
+	vga.draw.delay.hblkstart = static_cast<double>(horiz.blanking_start) *
+	                           1000.0 / f_clock; //  milliseconds
+	vga.draw.delay.hblkend = static_cast<double>(horiz.blanking_end) *
+	                         1000.0 / f_clock;
+
+	// Start and End of horizontal retrace
+	vga.draw.delay.hrstart = static_cast<double>(horiz.retrace_start) *
+	                         1000.0 / f_clock;
+	vga.draw.delay.hrend = static_cast<double>(horiz.retrace_end) * 1000.0 /
+	                       f_clock;
+
+	// Start and End of vertical blanking
+	vga.draw.delay.vblkstart = static_cast<double>(vert.blanking_start) *
+	                           vga.draw.delay.htotal;
+	vga.draw.delay.vblkend = static_cast<double>(vert.blanking_end) *
+	                         vga.draw.delay.htotal;
+
+	// Start and End of vertical retrace pulse
+	vga.draw.delay.vrstart = static_cast<double>(vert.retrace_start) *
+	                         vga.draw.delay.htotal;
+	vga.draw.delay.vrend = static_cast<double>(vert.retrace_end) *
+	                       vga.draw.delay.htotal;
+
+	// Vertical blanking tricks
+	auto vert_display_end  = vert.display_end;
+	auto horiz_display_end = horiz.display_end;
+
+	uint32_t vblank_skip = 0;
+	if (IS_VGA_ARCH) {
+		// Others need more investigation
+		if (vert.blanking_start < vert.total) {
+			// There will be no blanking at all otherwise
+			//
+			if (vert.blanking_end > vert.total) {
+				// blanking wraps to the start of the screen
+				vblank_skip = vert.blanking_end & 0x7f;
+
+				// On blanking wrap to 0, the first line is not blanked this
+				// is used by the S3 BIOS and other S3 drivers in some SVGA
+				// modes
+				if ((vert.blanking_end & 0x7f) == 1) {
+					vblank_skip = 0;
+				}
+
+				// It might also cut some lines off the bottom
+				if (vert.blanking_start < vert.display_end) {
+					vert_display_end = vert.blanking_start;
+				}
+				LOG(LOG_VGA, LOG_WARN)
+				("Blanking wrap to line %u", vblank_skip);
+
+			} else if (vert.blanking_start <= 1) {
+				// Blanking is used to cut lines at the start of the screen
+				vblank_skip = vert.blanking_end;
+				LOG(LOG_VGA, LOG_WARN)
+				("Upper %u lines of the screen blanked", vblank_skip);
+
+			} else if (vert.blanking_start < vert.display_end) {
+				if (vert.blanking_end < vert.display_end) {
+					// The game wants a black bar somewhere on the screen
+					LOG(LOG_VGA, LOG_WARN)
+					("Unsupported blanking: line %u-%u",
+					 vert.blanking_start,
+					 vert.blanking_end);
+				} else {
+					// Blanking is used to cut off some
+					// lines from the bottom
+					vert_display_end = vert.blanking_start;
+				}
+			}
+			vert_display_end -= vblank_skip;
+		}
+	}
+	// Display end
+	vga.draw.delay.vdend = static_cast<double>(vert_display_end) *
+	                       vga.draw.delay.htotal;
+
+	// Check to prevent useless black areas
+	if (horiz.blanking_start < horiz.display_end) {
+		horiz_display_end = horiz.blanking_start;
+	}
+	if ((!IS_VGA_ARCH) && (vert.blanking_start < vert_display_end)) {
+		vert_display_end = vert.blanking_start;
+	}
+
+	return {horiz_display_end, vert_display_end, vblank_skip};
+}
+
 void VGA_SetupDrawing(uint32_t /*val*/)
 {
 	if (vga.mode == M_ERROR) {
@@ -1753,69 +1860,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 	}
 
-	const auto vert  = vga_timings.vert;
-	const auto horiz = vga_timings.horiz;
-
 	// The screen refresh frequency and clock settings, per the DOS-mode
 	vga.draw.dos_refresh_hz = static_cast<double>(vga_timings.clock) /
-	                          (vert.total * horiz.total);
+	                          (vga_timings.vert.total * vga_timings.horiz.total);
 
-	const auto fps     = VGA_GetPreferredRate();
-	const auto f_clock = fps * vert.total * horiz.total;
-
-	// Horizontal total (that's how long a line takes with whistles and bells)
-	vga.draw.delay.htotal = static_cast<double>(horiz.total) * 1000.0 / f_clock; //  milliseconds
-	// Start and End of horizontal blanking
-	vga.draw.delay.hblkstart = static_cast<double>(horiz.blanking_start) * 1000.0 / f_clock; //  milliseconds
-	vga.draw.delay.hblkend = static_cast<double>(horiz.blanking_end) * 1000.0 / f_clock;
-	// Start and End of horizontal retrace
-	vga.draw.delay.hrstart = static_cast<double>(horiz.retrace_start) * 1000.0 / f_clock;
-	vga.draw.delay.hrend = static_cast<double>(horiz.retrace_end) * 1000.0 / f_clock;
-	// Start and End of vertical blanking
-	vga.draw.delay.vblkstart = static_cast<double>(vert.blanking_start) * vga.draw.delay.htotal;
-	vga.draw.delay.vblkend = static_cast<double>(vert.blanking_end) * vga.draw.delay.htotal;
-	// Start and End of vertical retrace pulse
-	vga.draw.delay.vrstart = static_cast<double>(vert.retrace_start) * vga.draw.delay.htotal;
-	vga.draw.delay.vrend = static_cast<double>(vert.retrace_end) * vga.draw.delay.htotal;
-
-	// Vertical blanking tricks
-	auto vert_display_end  = vert.display_end;
-	auto horiz_display_end = horiz.display_end;
-
-	uint32_t vblank_skip = 0;
-	if (IS_VGA_ARCH) { // others need more investigation
-		if (vert.blanking_start < vert.total ) { // There will be no blanking at all otherwise
-			if (vert.blanking_end > vert.total ) {
-				// blanking wraps to the start of the screen
-				vblank_skip = vert.blanking_end&0x7f;
-				
-				// on blanking wrap to 0, the first line is not blanked
-				// this is used by the S3 BIOS and other S3 drivers in some SVGA modes
-				if ((vert.blanking_end&0x7f)==1) vblank_skip = 0;
-				
-				// it might also cut some lines off the bottom
-				if (vert.blanking_start < vert.display_end) {
-					vert_display_end = vert.blanking_start;
-				}
-				LOG(LOG_VGA, LOG_WARN)("Blanking wrap to line %u", vblank_skip);
-			} else if (vert.blanking_start <= 1) {
-				// blanking is used to cut lines at the start of the screen
-				vblank_skip = vert.blanking_end;
-				LOG(LOG_VGA, LOG_WARN)("Upper %u lines of the screen blanked", vblank_skip);
-			} else if (vert.blanking_start < vert.display_end) {
-				if (vert.blanking_end < vert.display_end) {
-					// the game wants a black bar somewhere on the screen
-					LOG(LOG_VGA, LOG_WARN)("Unsupported blanking: line %u-%u", vert.blanking_start, vert.blanking_end);
-				} else {
-					// blanking is used to cut off some lines from the bottom
-					vert_display_end = vert.blanking_start;
-				}
-			}
-			vert_display_end -= vblank_skip;
-		}
-	}
-	// Display end
-	vga.draw.delay.vdend = static_cast<double>(vert_display_end) * vga.draw.delay.htotal;
+	const auto updated_timings = update_vga_timings(vga_timings);
 
 	// EGA frequency dependent monitor palette
 	if (machine == MCH_EGA) {
@@ -1845,23 +1894,16 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	if (machine == MCH_EGA) {
 		pixel_aspect_ratio = {CurMode->sheight * 4, CurMode->swidth * 3};
 	} else {
-		const auto [pwidth, pheight] = determine_pixel_size(horiz.total, vert.total );
+		const auto [pwidth, pheight] = determine_pixel_size(
+		        vga_timings.horiz.total, vga_timings.vert.total);
 		pixel_aspect_ratio = pwidth / pheight;
 	}
 
 	vga.draw.resizing = false;
 	vga.draw.vret_triggered=false;
 
-	// Check to prevent useless black areas
-	if (horiz.blanking_start < horiz.display_end) {
-		horiz_display_end = horiz.blanking_start;
-	}
-	if ((!IS_VGA_ARCH) && (vert.blanking_start < vert_display_end)) {
-		vert_display_end = vert.blanking_start;
-	}
-
-	auto width = horiz_display_end;
-	auto height = vert_display_end;
+	auto width = updated_timings.horiz_display_end;
+	auto height = updated_timings.vert_display_end;
 	bool doubleheight = false;
 	bool doublewidth = false;
 
@@ -2218,6 +2260,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 	VGA_CheckScanLength();
 
+	auto vblank_skip = updated_timings.vblank_skip;
 	if (fake_double_scan) {
 		if (IS_VGA_ARCH) {
 			vblank_skip /= 2;
@@ -2252,8 +2295,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		pixel_aspect_ratio = Fraction(4, 3) * Fraction(1024, 1280);
 	}
 
-	bool fps_changed = false;
 	// need to change the vertical timing?
+	bool fps_changed = false;
+	const auto fps   = VGA_GetPreferredRate();
+
 	if (fabs(vga.draw.delay.vtotal - 1000.0 / fps) > 0.0001) {
 		fps_changed = true;
 		vga.draw.delay.vtotal = 1000.0 / fps;
