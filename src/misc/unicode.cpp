@@ -2005,12 +2005,13 @@ static uint16_t get_custom_code_page(const uint16_t in_code_page)
 
 uint16_t get_utf8_code_page()
 {
+	load_config_if_needed();
+
 	if (!IS_EGAVGA_ARCH) {
 		// Below EGA it wasn't possible to change the character set
 		return get_default_code_page();
 	}
 
-	load_config_if_needed();
 	const uint16_t code_page = deduplicate_code_page(dos.loaded_codepage);
 
 	// For unsupported code pages revert to default one
@@ -2025,6 +2026,8 @@ static bool utf8_to_dos_common(const std::string& in_str, std::string& out_str,
                                const UnicodeFallback fallback,
                                const uint16_t code_page)
 {
+	load_config_if_needed();
+
 	std::vector<uint16_t> tmp = {};
 
 	const bool status1 = utf8_to_wide(in_str, tmp);
@@ -2036,7 +2039,6 @@ static bool utf8_to_dos_common(const std::string& in_str, std::string& out_str,
 bool utf8_to_dos(const std::string& in_str, std::string& out_str,
                  const UnicodeFallback fallback)
 {
-	load_config_if_needed();
 	return utf8_to_dos_common(in_str, out_str, fallback, get_utf8_code_page());
 }
 
@@ -2044,7 +2046,6 @@ bool utf8_to_dos(const std::string& in_str, std::string& out_str,
                  const UnicodeFallback fallback,
                  const uint16_t code_page)
 {
-	load_config_if_needed();
 	return utf8_to_dos_common(in_str, out_str, fallback,
 			          get_custom_code_page(code_page));
 }
@@ -2052,6 +2053,8 @@ bool utf8_to_dos(const std::string& in_str, std::string& out_str,
 static void dos_to_utf8_common(const std::string& in_str, std::string& out_str,
                                const uint16_t code_page)
 {
+	load_config_if_needed();
+
 	std::vector<uint16_t> tmp = {};
 
 	dos_to_wide(in_str, tmp, code_page);
@@ -2060,19 +2063,19 @@ static void dos_to_utf8_common(const std::string& in_str, std::string& out_str,
 
 void dos_to_utf8(const std::string& in_str, std::string& out_str)
 {
-	load_config_if_needed();
 	dos_to_utf8_common(in_str, out_str, get_utf8_code_page());
 }
 
 void dos_to_utf8(const std::string& in_str, std::string& out_str,
                  const uint16_t code_page)
 {
-	load_config_if_needed();
 	dos_to_utf8_common(in_str, out_str, get_custom_code_page(code_page));
 }
 
 static void lowercase_dos_common(std::string & in_str, const uint16_t code_page)
 {
+	load_config_if_needed();
+
 	assert(per_code_page_mappings.count(code_page) > 0);
 	const auto& mapping = per_code_page_mappings[code_page].lowercase;
 
@@ -2085,18 +2088,18 @@ static void lowercase_dos_common(std::string & in_str, const uint16_t code_page)
 
 void lowercase_dos(std::string & in_str)
 {
-	load_config_if_needed();
 	lowercase_dos_common(in_str, get_utf8_code_page());
 }
 
 void lowercase_dos(std::string & in_str, const uint16_t code_page)
 {
-	load_config_if_needed();
 	lowercase_dos_common(in_str, get_custom_code_page(code_page));
 }
 
 static void uppercase_dos_common(std::string & in_str, const uint16_t code_page)
 {
+	load_config_if_needed();
+
 	assert(per_code_page_mappings.count(code_page) > 0);
 	const auto& mapping = per_code_page_mappings[code_page].uppercase;
 
@@ -2109,12 +2112,10 @@ static void uppercase_dos_common(std::string & in_str, const uint16_t code_page)
 
 void uppercase_dos(std::string & in_str)
 {
-	load_config_if_needed();
 	uppercase_dos_common(in_str, get_utf8_code_page());
 }
 
 void uppercase_dos(std::string & in_str, const uint16_t code_page)
 {
-	load_config_if_needed();
 	uppercase_dos_common(in_str, get_custom_code_page(code_page));
 }
