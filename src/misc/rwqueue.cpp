@@ -169,7 +169,8 @@ std::optional<T> RWQueue<T>::Dequeue()
 	std::unique_lock<std::mutex> lock(mutex);
 	has_items.wait(lock, [this] { return !is_running || !queue.empty(); });
 
-	std::optional<T> optional_item = std::nullopt;
+	auto optional_item = std::optional<T>();
+
 	// Even if the queue has stopped, we need to drain the (previously)
 	// queued items before we're done.
 	if (is_running || !queue.empty()) {
