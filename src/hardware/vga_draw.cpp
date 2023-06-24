@@ -1501,6 +1501,8 @@ struct VgaTimings {
 	DisplayTimings vert   = {};
 };
 
+// This function reads various VGA registers to calculate the display timings,
+// but does not modify any of them as a side-effect.
 static VgaTimings calculate_vga_timings()
 {
 	uint32_t clock       = 0;
@@ -1616,7 +1618,6 @@ static VgaTimings calculate_vga_timings()
 		if (vga.seq.clocking_mode.is_pixel_doubling) {
 			horiz.total *= 2;
 		}
-		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
 
 	} else {
 		horiz.total          = vga.other.htotal + 1;
@@ -1625,8 +1626,6 @@ static VgaTimings calculate_vga_timings()
 		horiz.blanking_end   = horiz.total;
 		horiz.retrace_start  = vga.other.hsyncp;
 		horiz.retrace_end    = horiz.retrace_start + vga.other.hsyncw;
-
-		vga.draw.address_line_total = vga.other.max_scanline + 1;
 
 		vert.total = vga.draw.address_line_total * (vga.other.vtotal + 1) +
 		             vga.other.vadjust;
@@ -1656,10 +1655,6 @@ static VgaTimings calculate_vga_timings()
 			break;
 		default: clock = 14318180; break;
 		}
-
-		// in milliseconds
-		vga.draw.delay.hdend = static_cast<double>(horiz.display_end) *
-		                       1000.0 / static_cast<double>(clock);
 	}
 
 	LOG_MSG("VGA: h total %u end %u blank (%u/%u) retrace (%u/%u)",
@@ -1706,7 +1701,21 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		break;
 	}
 
+	if (IS_EGAVGA_ARCH) {
+		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
+	} else {
+		vga.draw.address_line_total = vga.other.max_scanline + 1;
+	}
+
 	const auto vga_timings = calculate_vga_timings();
+
+	if (!IS_EGAVGA_ARCH) {
+		// in milliseconds
+		vga.draw.delay.hdend = static_cast<double>(
+		                               vga_timings.horiz.display_end) *
+		                       1000.0 /
+		                       static_cast<double>(vga_timings.clock);
+	}
 
 	auto fake_double_scan = false;
 	if (IS_VGA_ARCH) {
@@ -1744,14 +1753,15 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 	}
 
-	const auto clock = vga_timings.clock;
 	const auto vert  = vga_timings.vert;
 	const auto horiz = vga_timings.horiz;
 
 	// The screen refresh frequency and clock settings, per the DOS-mode
-	vga.draw.dos_refresh_hz = static_cast<double>(clock) / (vert.total  * horiz.total);
-	const auto fps = VGA_GetPreferredRate();
-	const auto f_clock = fps * vert.total  * horiz.total;
+	vga.draw.dos_refresh_hz = static_cast<double>(vga_timings.clock) /
+	                          (vert.total * horiz.total);
+
+	const auto fps     = VGA_GetPreferredRate();
+	const auto f_clock = fps * vert.total * horiz.total;
 
 	// Horizontal total (that's how long a line takes with whistles and bells)
 	vga.draw.delay.htotal = static_cast<double>(horiz.total) * 1000.0 / f_clock; //  milliseconds
