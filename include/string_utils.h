@@ -403,13 +403,10 @@ std::optional<int> to_int(const std::string& value);
 #endif
 
 template <typename... Args>
-std::string format_string(const std::string& format, Args&&... args) noexcept
+std::string format_string(const std::string& format, const Args&... args) noexcept
 {
 	// Perform a non-writing format to determine the size
-	const auto required_size = std::snprintf(nullptr,
-	                                         0,
-	                                         format.c_str(),
-	                                         std::forward<Args>(args)...);
+	const auto required_size = std::snprintf(nullptr, 0, format.c_str(), args...);
 	if (required_size <= 0) {
 		return {};
 	}
@@ -422,10 +419,7 @@ std::string format_string(const std::string& format, Args&&... args) noexcept
 	                      static_cast<size_t>(1);
 	std::string result(out_size, '\0');
 
-	std::snprintf(result.data(),
-	              result.size(),
-	              format.c_str(),
-	              std::forward<Args>(args)...);
+	std::snprintf(result.data(), result.size(), format.c_str(), args...);
 
 	// The buffer should now have the determined output length plus the
 	// terminating zero
