@@ -187,13 +187,13 @@ Imposta la scheda video o la macchina da emulare:
   svga_s3:        Scheda grafica S3 Trio64 (VESA VBE 2.0; 4MB di memoria video
                   per impostazione predefinita, può essere impostata a 512K,
                   1MB, 2MB, o 8MB con 'vmemsize') (predefinito).
-  vesa_oldvbe:    Come 'svga_s3' ma limitato a VESA VBE 1.2.
-  vesa_nolfb:     Come 'svga_s3' (VESA VBE 2.0), con in aggiunta l'hack "nessun
-                  framebuffer lineare" (necessario solo per pochi giochi).
+  vesa_oldvbe:    Equivalente a 'svga_s3' ma limitato a VESA VBE 1.2.
+  vesa_nolfb:     Equivalente a 'svga_s3' (VESA VBE 2.0), con in aggiunta
+                  l'hack "nessun framebuffer lineare" (necessario solo per
+                  alcuni giochi).
 .
 :CONFIG_CAPTURES
-Directory in cui vengono salvate le acquisizioni di audio, video, MIDI
-e instantanee dello schermo (predefinito 'capture').
+Spostato nella sezione [capture] e rinominato in 'capture_dir'.
 .
 :CONFIG_MEMSIZE
 Quantità di memoria della macchina emulata in MB (predefinito 16).
@@ -202,13 +202,11 @@ giochi, anche se altri potrebbero richiedere un valore più alto.
 Di solito non vi è nessun guadagno in velocità aumentando questo valore.
 .
 :CONFIG_MCB_FAULT_STRATEGY
-Come gestire i blocchi della catena di memoria software corrotti:
-  deny:    Chiude (e segnala) quando vengono rilevati errori (predefinito).
-  repair:  Ripara (e segnala) gli errori con blocchi di catena adiacenti.
+Gestisce i blocchi della catena di memoria software corrotti:
+  repair:  Segnala gli errori e li ripara con blocchi adiacenti (predefinito).
   report:  Segnala solo gli errori.
   allow:   Gli errori non vengono segnalati (comportamento hardware).
-L'impostazione predefinita 'deny' è consigliata a meno che un gioco non abbia
-errori di corruzione MCB.
+  deny:    Arresta l'emulazione e segnala gli errori rilevati.
 .
 :CONFIG_VMEMSIZE
 Memoria video in MB (1-8) o KB (da 256 a 8192).
@@ -308,6 +306,8 @@ come 320x240, 640x480 e 800x600 verranno visualizzate così come sono.
 Vincola il fattore di scala orizzontale o verticale a valori interi.
 Saranno mantenute sempre le proporzioni corrette, il che può comportare
 l'applicazione di un fattore di scala non intero nell'altra dimensione.
+Se l'immagine è più grande dell'area di visualizzazione, il ridimensionamento
+dei numeri interi viene disabilitato automaticamente (equivalente ad 'off').
   off:         Nessun ridimensionamento dei numeri interi; l'immagine con
                proporzioni corrette riempie l'area di visualizzazione
                (predefinito).
@@ -422,8 +422,37 @@ Numero di cicli di cui aumentare utilizzando i tasti di scelta rapida
 .
 :CONFIG_CYCLEDOWN
 Numero di cicli di cui diminuire utilizzando i tasti di scelta rapida
-(predefinito 20).
-Un valore più basso di 100 indica una percentuale.
+(predefinito 20). Un valore più basso di 100 indica una percentuale.
+.
+:CONFIG_CAPTURE_DIR
+Directory in cui vengono salvate le acquisizioni audio, video, MIDI e
+instantanee dello schermo (predefinito 'capture' nella directory di lavoro
+corrente).
+.
+:CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
+Imposta il formato di acquisizione delle instantanee dello schermo
+(predefinito 'upscaled'):
+  raw:       Viene acquisito il contenuto del framebuffer non elaborato
+             (comportamento originale; risulta sempre in pixel quadrati).
+             I nomi dei file delle instantanee non elaborate terminano
+             con '_raw' (es. 'image0001_raw.png').
+  upscaled:  L'immagine viene ridimensionata utilizzando il metodo di 
+             ricampionamento bilineare più nitido, con un'altezza di circa
+             1200 pixel e mantenendo le proporzioni corrette (a seconda
+             dell'impostazione 'aspect'). Il fattore di scala verticale è
+             sempre un numero intero. Ad esempio, i contenuti con risoluzione
+             320x200 vengono ridimensionati a 1600x1200 (ridimensionamento dei
+             numeri interi 5:6), quelli 640x480 a 1920x1440 (ridimensionamento
+             dei numeri interi 3:3) e quelli 640x350 a 1867 x 1400
+             (ridimensionamento 2,9165:4, fattore di scala con numeri interi in
+             verticale e frazionario in orizzontale).
+  rendered:  Viene acquisita l'immagine postrenderizzata mostrata sullo schermo
+             I nomi dei file delle instantanee renderizzate terminano con
+             '_rendered' (es. 'image0001_rendered.png').
+Se vengono specificati più formati separati da spazi, l'acquisizione comporterà
+il salvataggio di più file immagine in tutti i formati specificati. Inoltre
+sono disponibili tasti di scelta rapida per effettuare le acquisizioni in un
+formato specifico.
 .
 :CONFIG_MOUSE_CAPTURE
 Imposta la modalità di cattura del mouse:
@@ -583,9 +612,12 @@ Note: È possibile regolare con precisione i livelli di coro per ogni canale
 :CONFIG_MIDIDEVICE
 Imposta dove vengono inviati i dati MIDI dall'interfaccia MPU-401 emulata
 (predefinito 'auto'):
-  win32:       Utilizza l'interfaccia di riproduzione MIDI Win32.
+  win32:       Utilizza l'interfaccia di riproduzione MIDI Win32 di Windows.
   oss:         Utilizza l'interfaccia di riproduzione MIDI OSS di Linux.
   alsa:        Utilizza l'interfaccia di riproduzione MIDI ALSA di Linux.
+  coremidi:    Utilizza qualsiasi dispositivo configurato nelle impostazioni
+               audio MIDI di macOS.
+  coreaudio:   Utilizza il sintetizzatore MIDI integrato in macOS.
   fluidsynth:  Utilizza il sintetizzatore MIDI FluidSynth incluso in DOSBox.
                Fare riferimento alla sezione [fluidsynth] per una
                configurazione dettagliata.
@@ -596,7 +628,7 @@ Imposta dove vengono inviati i dati MIDI dall'interfaccia MPU-401 emulata
                (se `midiconfig` è impostato su 'fluidsynth' o 'mt32'), o un
                dispositivo MIDI esterno a DOSBox (qualsiasi altro valore in
                'midiconfig'). Quest'ultimo potrebbe essere un sintetizzatore
-               software o un dispositivo fisico. (predefinito)
+               software o un dispositivo fisico (predefinito).
   none:        Disabilita l'uscita MIDI.
 .
 :CONFIG_MIDICONFIG
@@ -609,6 +641,7 @@ Note: - Questa opzione non ha effetto quando si utilizzano i sintetizzatori
       - Quando si utilizza ALSA, utilizzare il comando Linux 'aconnect -l' per
         elencare le porte MIDI aperte e selezionarne una
         (ad esempio 'midiconfig = 14:0' per il client sequencer 14, porta 0).
+      - Quando si utilizza 'coreaudio', puoi specificare un SoundFont qui.
       - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
         potrebbe richiedere un ritardo per evitare che il suo buffer si
         sovraccarichi. In tal caso, aggiungi 'delaysysex', ad esempio:
@@ -734,7 +767,7 @@ Numero IRQ della scheda Sound Blaster (predefinito 7).
 Canale DMA della scheda Sound Blaster (predefinito 1).
 .
 :CONFIG_HDMA
-Canale High DMA della scheda Sound Blaster (predefinito 5).
+Canale High DMA della scheda Sound Blaster 16 (predefinito 5).
 .
 :CONFIG_SBMIXER
 Permette al mixer della scheda Sound Blaster di modificare il mixer
@@ -843,9 +876,9 @@ Modello di chip da emulare nella scheda Innovation SSI-2001:
   auto:  Utilizza il chip 6581.
   6581:  Il chip originale, noto per il suo suono basso e ricco.
   8580:  Una revisione successiva che corrispondeva più da vicino alla
-          specifica SID. 
-          Ha corretto il bias DC del 6581 ed è meno incline alla distorsione.
-          L'8580 è un'opzione sulle schede di riproduzione, come il DuoSID.
+         specifica SID. È stata corretta la polarizzazione CC del 6581 ed è
+         meno incline alla distorsione. L'8580 è un'opzione sulle schede di
+         riproduzione, come il DuoSID.
   none:  Disabilita la scheda (predefinito).
 .
 :CONFIG_SIDCLOCK
@@ -893,17 +926,19 @@ Filtro per l'uscita audio dell'altoparlante interno del PC (PC Speaker):
              fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_ZERO_OFFSET
-Il DC offset è ora eliminato globalmente dall'uscita del mixer principale.
+La compensazione CC è ora rimossa globalmente dall'uscita del mixer principale.
 .
 :CONFIG_TANDY
-Imposta l'emulazione del sistema audio Tandy/PCjr a 3 voci:
-  off:   Disabilita il sistema audio Tandy/PCjr.
-  on:    Abilita il sistema audio Tandy/PCjr (la maggior parte dei giochi
-         richiede che anche la macchina sia impostata su 'tandy' o 'pcjr').
+Configura l'emulazione del sistema audio Tandy/PCjr a 3 voci:
   auto:  Abilita automaticamente il sistema audio Tandy/PCjr solo per i tipi
          di macchina 'tandy' e 'pcjr' (predefinito).
-Note: Il DAC Tandy viene emulato solo se l'emulazione Sound Blaster è
-      disabilitata con 'sbtype = none' a causa delle risorse in conflitto.
+  on:    Abilita il sistema audio Tandy/PCjr con il supporto al DAC, quando
+         possibile. La maggior parte dei giochi richiede inoltre che la
+         macchina sia impostata su 'tandy' o 'pcjr'.
+  psg:   Abilita solo il generatore sonoro programmabile a tre voci della
+         scheda audio, senza DAC, per evitare conflitti con altre schede che
+         utilizzano il DMA 1.
+  off:   Disabilita il sistema audio Tandy/PCjr.
 .
 :CONFIG_TANDY_FILTER
 Filtro per l'uscita audio del sintetizzatore Tandy:
@@ -1095,13 +1130,17 @@ Ciò influisce su informazioni come data, ora e formati decimali.
 Se impostato a 0, verrà utilizzato il codice paese corrispondente al layout
 di tastiera selezionato.
 .
+:CONFIG_KEYBOARDLAYOUT
+Codice lingua del layout della tastiera, o 'auto' (predefinito 'auto').
+.
 :CONFIG_EXPAND_SHELL_VARIABLE
 Abilita l'espansione delle variabili di ambiente come %PATH% nella shell
 dei comandi DOS (predefinito 'auto', viene abilitato se la versione DOS >= 7.0)
 COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
 .
-:CONFIG_KEYBOARDLAYOUT
-Codice lingua del layout della tastiera, o 'auto' (predefinito 'auto').
+:CONFIG_SHELL_HISTORY_FILE
+File contenente la cronologia dei comandi digitati dall'utente sulla riga di
+comando (predefinito 'shell_history.txt').
 .
 :CONFIG_SETVER_TABLE_FILE
 File contenente l'elenco dei programmi e le versioni DOS loro assegnate,
@@ -1262,7 +1301,7 @@ Valore corrente:
 
 .
 :PROGRAM_CONFIG_HLP_NOCHANGE
-Questa proprietà non può essere modificata mentre il programma è in esecuzione.
+Questa proprietà non può essere modificata mentre l'emulatore è in esecuzione.
 
 .
 :PROGRAM_CONFIG_HLP_POSINT
@@ -2490,8 +2529,8 @@ Nessun file o sottodirectory da visualizzare.
 Troppi file o sottodirectory.
 
 .
-:AUTOEXEC_BAT_AUTOGENERATED
-autogenerato
+:AUTOEXEC_BAT_GENERATED
+generato dalle opzioni di configurazione e dalla riga di comando
 .
 :AUTOEXEC_BAT_CONFIG_SECTION
 dalla sezione [autoexec]
@@ -2745,7 +2784,7 @@ Controllare la variabile %%TEMP%%.
 
 .
 :SHELL_CMD_DIR_BYTES_FREE
-%17d Directory  %21s byte disponibili
+%17d Directory  %15s byte disponibili
 
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
@@ -3454,6 +3493,33 @@ DOS versione %d.%02d
 .
 :SHELL_CMD_VER_INVALID
 La versione DOS specificata non è corretta.
+
+.
+:SHELL_CMD_VOL_HELP
+Visualizza l'etichetta di volume e il numero di serie del disco.
+
+.
+:SHELL_CMD_VOL_HELP_LONG
+Utilizzo:
+  [color=green]vol[reset] [color=cyan][UNITÀ:][reset]
+
+Dove:
+  [color=cyan]UNITÀ[reset] è una lettera di unità seguita da due punti.
+
+Note:
+  L'esecuzione di [color=green]vol[reset] senza un argomento visualizza le informazioni dell'unità
+  corrente.
+
+Esempi:
+  [color=green]vol[reset]
+  [color=green]vol[reset] [color=cyan]c:[reset]
+
+.
+:SHELL_CMD_VOL_OUTPUT
+
+ Il volume nell'unità %c è %s
+ Numero di serie del volume: %04X-%04X
+
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
