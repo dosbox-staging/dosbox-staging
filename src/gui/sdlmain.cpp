@@ -2583,7 +2583,10 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		image.bits_per_pixel     = 24;
 		image.pitch        = image.width * (image.bits_per_pixel / 8);
 		image.palette_data = nullptr;
-		image.image_data   = new uint8_t[image.height * image.pitch];
+
+		const auto image_size_bytes = check_cast<uint32_t>(image.height *
+		                                                   image.pitch);
+		image.image_data = new uint8_t[image_size_bytes];
 	};
 
 #if C_OPENGL
