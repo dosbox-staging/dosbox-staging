@@ -77,12 +77,12 @@ public:
 
 	constexpr double ToDouble() const
 	{
-		return static_cast<double>(num) / denom;
+		return static_cast<double>(num) / static_cast<double>(denom);
 	}
 
 	constexpr float ToFloat() const
 	{
-		return static_cast<float>(num) / denom;
+		return static_cast<float>(num) / static_cast<float>(denom);
 	}
 
 	// Equality
