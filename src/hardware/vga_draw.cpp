@@ -1499,7 +1499,6 @@ struct VgaTimings {
 	uint32_t clock        = 0;
 	DisplayTimings horiz  = {};
 	DisplayTimings vert   = {};
-	bool fake_double_scan = false;
 };
 
 static VgaTimings calculate_vga_timings()
@@ -1507,7 +1506,6 @@ static VgaTimings calculate_vga_timings()
 	uint32_t clock       = 0;
 	DisplayTimings horiz = {};
 	DisplayTimings vert  = {};
-	bool fake_double_scan = false;
 
 	if (IS_EGAVGA_ARCH) {
 		horiz.total          = vga.crtc.horizontal_total;
@@ -1620,40 +1618,6 @@ static VgaTimings calculate_vga_timings()
 		}
 		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
 
-		if (IS_VGA_ARCH) {
-			// CRTC Maximum Scan Line Register - Scan Doubling
-			//
-			// When bit 7 is set to 1, 200-scan-line video data is
-			// converted to 400-scan-line output. To do this, the
-			// clock in the row scan counter is divided by 2, which
-			// allows the sub-350 line modes to be displayed as 400
-			// lines on the display (this is called double scanning;
-			// each line is displayed twice). When this bit is set
-			// to 0, the clock to the row scan counter is equal to
-			// the horizontal scan rate.
-			//
-			// Ref: http://www.osdever.net/FreeVGA/vga/crtcreg.htm#09
-
-			const auto is_scan_doubled = bit::is(vga.crtc.maximum_scan_line,
-			                                     bit::literals::b7);
-
-			if (VGA_IsDoubleScanningSub350LineModes()) {
-				// Set the low resolution modes to have as many
-				// lines as are scanned - Quite a few demos
-				// change the max_scanline register at display
-				// time to get SFX: Majic12 show, Magic circle,
-				// Copper, GBU, Party91.
-				//
-				// Note: can't use with CGA because these use
-				// address_line for their own purposes.
-				if (is_scan_doubled) {
-					vga.draw.address_line_total *= 2;
-				}
-			} else {
-				// VGA machine not in EGA or VGA modes
-				fake_double_scan = is_scan_doubled;
-			}
-		}
 	} else {
 		horiz.total          = vga.other.htotal + 1;
 		horiz.display_end    = vga.other.hdend;
@@ -1714,7 +1678,7 @@ static VgaTimings calculate_vga_timings()
 	        vert.retrace_start,
 	        vert.retrace_end);
 
-	return {clock, horiz, vert, fake_double_scan};
+	return {clock, horiz, vert};
 }
 
 void VGA_SetupDrawing(uint32_t /*val*/)
@@ -1743,6 +1707,42 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 
 	const auto vga_timings = calculate_vga_timings();
+
+	auto fake_double_scan = false;
+	if (IS_VGA_ARCH) {
+		// CRTC Maximum Scan Line Register - Scan Doubling
+		//
+		// When bit 7 is set to 1, 200-scan-line video data is
+		// converted to 400-scan-line output. To do this, the
+		// clock in the row scan counter is divided by 2, which
+		// allows the sub-350 line modes to be displayed as 400
+		// lines on the display (this is called double scanning;
+		// each line is displayed twice). When this bit is set
+		// to 0, the clock to the row scan counter is equal to
+		// the horizontal scan rate.
+		//
+		// Ref: http://www.osdever.net/FreeVGA/vga/crtcreg.htm#09
+
+		const auto is_scan_doubled = bit::is(vga.crtc.maximum_scan_line,
+											 bit::literals::b7);
+
+		if (VGA_IsDoubleScanningSub350LineModes()) {
+			// Set the low resolution modes to have as many
+			// lines as are scanned - Quite a few demos
+			// change the max_scanline register at display
+			// time to get SFX: Majic12 show, Magic circle,
+			// Copper, GBU, Party91.
+			//
+			// Note: can't use with CGA because these use
+			// address_line for their own purposes.
+			if (is_scan_doubled) {
+				vga.draw.address_line_total *= 2;
+			}
+		} else {
+			// VGA machine not in EGA or VGA modes
+			fake_double_scan = is_scan_doubled;
+		}
+	}
 
 	const auto clock = vga_timings.clock;
 	const auto vert  = vga_timings.vert;
@@ -2208,7 +2208,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 	VGA_CheckScanLength();
 
-	if (vga_timings.fake_double_scan) {
+	if (fake_double_scan) {
 		if (IS_VGA_ARCH) {
 			vblank_skip /= 2;
 			height /= 2;
