@@ -300,14 +300,13 @@ double VGA_GetPreferredRate()
 	return vga.draw.dos_refresh_hz;
 }
 
-// Are we using a VGA card, in a sub-350 line mode, and asked to draw the
-// double-scanned lines? (This is a helper function to avoid repeating this
-// logic in the VGA drawing and CRTC areas).
-bool VGA_IsDoubleScanningSub350LineModes()
+// Are we using a VGA card and asked to emulate double-scanning? (This is a
+// helper function to avoid repeating this logic in the VGA drawing and CRTC
+// areas).
+bool VGA_IsDoubleScanningVgaModes()
 {
 	return IS_VGA_ARCH &&
-	       vga.draw.vga_sub_350_line_handling ==
-	               VgaSub350LineHandling::DoubleScan &&
+	       vga.draw.vga_double_scan_handling == VgaDoubleScanHandling::DoubleScan &&
 	       (vga.mode == M_EGA || vga.mode == M_VGA);
 
 	// TODO: Non-composite CGA modes should be included here too, as VGA
@@ -404,13 +403,13 @@ void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3) {
 	}	
 }
 
-void VGA_SetVgaSub350LineHandling(const VgaSub350LineHandling vga_sub_350_line_handling)
+void VGA_SetVgaDoubleScanHandling(const VgaDoubleScanHandling vga_double_scan_handling)
 {
-	if (vga.draw.vga_sub_350_line_handling ==
-	    VgaSub350LineHandling::ForceSingleScan) {
+	if (vga.draw.vga_double_scan_handling ==
+	    VgaDoubleScanHandling::ForceSingleScan) {
 		return;
 	}
-	vga.draw.vga_sub_350_line_handling = vga_sub_350_line_handling;
+	vga.draw.vga_double_scan_handling = vga_double_scan_handling;
 }
 
 static void set_vga_single_scanning_pref()
@@ -419,10 +418,10 @@ static void set_vga_single_scanning_pref()
 	const auto section = dynamic_cast<Section_prop*>(conf);
 
 	if (section && section->Get_bool("force_vga_single_scan")) {
-		vga.draw.vga_sub_350_line_handling = VgaSub350LineHandling::ForceSingleScan;
-		LOG_MSG("VIDEO: Single-scanning sub-350 line modes for VGA machine types");
+		vga.draw.vga_double_scan_handling = VgaDoubleScanHandling::ForceSingleScan;
+		LOG_MSG("VIDEO: Forcing single-scanning of double-scanned screen modes for VGA machine types");
 	} else {
-		vga.draw.vga_sub_350_line_handling = {};
+		vga.draw.vga_double_scan_handling = {};
 	}
 }
 

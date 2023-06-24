@@ -1718,19 +1718,19 @@ static void check_kmsdrm_setting()
 // double-scanning) but provides finer integer multiplication steps (for sub-4k
 // screens) and also reduces load on slow systems like the Raspberry Pi.
 //
-static void update_vga_sub_350_line_handling([[maybe_unused]] const SCREEN_TYPES screen_type,
-                                             const InterpolationMode interpolation_mode)
+static void update_vga_double_scan_handling([[maybe_unused]] const SCREEN_TYPES screen_type,
+                                            const InterpolationMode interpolation_mode)
 {
-	auto line_handling = VgaSub350LineHandling::SingleScan;
+	auto line_handling = VgaDoubleScanHandling::SingleScan;
 #if C_OPENGL
 	if (screen_type == SCREEN_OPENGL && get_glshader_value() != "none") {
-		line_handling = VgaSub350LineHandling::DoubleScan;
+		line_handling = VgaDoubleScanHandling::DoubleScan;
 	}
 #endif
 	if (interpolation_mode == InterpolationMode::Bilinear) {
-		line_handling = VgaSub350LineHandling::DoubleScan;
+		line_handling = VgaDoubleScanHandling::DoubleScan;
 	}
-	VGA_SetVgaSub350LineHandling(line_handling);
+	VGA_SetVgaDoubleScanHandling(line_handling);
 }
 
 bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
@@ -2283,7 +2283,7 @@ dosurface:
 	// Ensure mouse emulation knows the current parameters
 	NewMouseScreenParams();
 	update_vsync_state();
-	update_vga_sub_350_line_handling(sdl.desktop.type, sdl.interpolation_mode);
+	update_vga_double_scan_handling(sdl.desktop.type, sdl.interpolation_mode);
 
 	if (sdl.draw.has_changed)
 		log_display_properties(sdl.draw.width,

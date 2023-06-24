@@ -1822,7 +1822,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		const auto is_scan_doubled = bit::is(vga.crtc.maximum_scan_line,
 											 bit::literals::b7);
 
-		if (VGA_IsDoubleScanningSub350LineModes()) {
+		if (VGA_IsDoubleScanningVgaModes()) {
 			if (is_scan_doubled) {
 				vga.draw.address_line_total *= 2;
 			}
@@ -1928,8 +1928,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			}
 
 			const auto is_single_scan_permitted =
-			        (vga.draw.vga_sub_350_line_handling !=
-			         VgaSub350LineHandling::DoubleScan);
+			        (vga.draw.vga_double_scan_handling !=
+			         VgaDoubleScanHandling::DoubleScan);
 
 			const auto is_line_freq_double_scanned =
 			        (vga.draw.address_line_total == 2);
@@ -2024,8 +2024,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// Only EGA modes that are line-doubled need additional handling
 		if (bit::is(CurMode->special, EGA_LINE_DOUBLE)) {
 			const auto wants_single_scanning =
-			        (vga.draw.vga_sub_350_line_handling !=
-			         VgaSub350LineHandling::DoubleScan);
+			        (vga.draw.vga_double_scan_handling !=
+			         VgaDoubleScanHandling::DoubleScan);
 
 			constexpr uint16_t ega_320x200 = 0xD;
 			constexpr uint16_t ega_640x200 = 0xE;
@@ -2102,12 +2102,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_CGA4:
 		if (IS_VGA_ARCH) {
-			if (vga.draw.vga_sub_350_line_handling ==
-			    VgaSub350LineHandling::DoubleScan) {
+			if (vga.draw.vga_double_scan_handling ==
+			    VgaDoubleScanHandling::DoubleScan) {
 				pixel_aspect_ratio *= 2;
 				// TODO (CGA4_DOUBLE_SCAN_WORKAROUND):
 				//   Despite correctly line-doubling CGA
-				//   sub-350 line modes when VGA machines are
+				//   200-line modes when VGA machines are
 				//   double-scanning, we are currently unable to
 				//   width-double them up to 640 columns at the
 				//   VGA-draw level, so this aspect change is
@@ -2125,8 +2125,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		break;
 
 	case M_CGA2:
-		if (IS_VGA_ARCH && vga.draw.vga_sub_350_line_handling !=
-		                           VgaSub350LineHandling::DoubleScan) {
+		if (IS_VGA_ARCH && vga.draw.vga_double_scan_handling !=
+		                           VgaDoubleScanHandling::DoubleScan) {
 			doubleheight = true;
 			doublewidth  = true;
 			pixel_aspect_ratio /= 2;
