@@ -14,7 +14,7 @@ jobs:
     name: PVS-Studio static analyzer
     runs-on: ubuntu-latest
     env:
-      debfile: pvs-studio-7.23.68432.289-amd64.deb
+      debfile: pvs-studio-7.25.72091.324-amd64.deb
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -64,7 +64,7 @@ jobs:
       - name: Build
         run: |
           set -xeu
-          meson setup -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini build
+          meson setup -Dbuildtype=debug -Dexperimental_voodoo_support=true -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini build
           pvs-studio-analyzer trace -- meson compile -C build
 
       - name: Analyze
@@ -111,7 +111,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 315
+          MAX_BUGS: 333
         run: |
           echo "Full report is included in build Artifacts"
           echo
