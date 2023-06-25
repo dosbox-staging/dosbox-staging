@@ -141,7 +141,7 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 				(3C0h index 13h).
 		*/
 		break;
-	case 0x09: /* Maximum Scan Line Register */
+	case 0x09:
 		if (IS_VGA_ARCH) {
 			vga.config.line_compare = (vga.config.line_compare & 0x5ff) |
 			                          (val & 0x40) << 3;
@@ -152,19 +152,10 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 				vga.draw.address_line_total *= 2;
 			}
 		}
-		vga.crtc.maximum_scan_line = val;
+		vga.crtc.maximum_scan_line.data = val;
 		VGA_StartResize();
-		/*
-			0-4	Number of scan lines in a character row -1. In graphics modes this is
-				the number of times (-1) the line is displayed before passing on to
-				the next line (0: normal, 1: double, 2: triple...).
-				This is independent of bit 7, except in CGA modes which seems to
-				require this field to be 1 and bit 7 to be set to work.
-			5	Bit 9 of Start Vertical Blanking
-			6	Bit 9 of Line Compare Register
-			7	Doubles each scan line if set. I.e. displays 200 lines on a 400 display.
-		*/
 		break;
+
 	case 0x0A:	/* Cursor Start Register */
 		crtc(cursor_start)=val;
 		vga.draw.cursor.sline=val&0x1f;
@@ -376,7 +367,7 @@ uint8_t vga_read_p3d5(io_port_t, io_width_t)
 	case 0x06: /* Vertical Total Register */ return crtc(vertical_total);
 	case 0x07: /* Overflow Register */ return crtc(overflow);
 	case 0x08: /* Preset Row Scan Register */ return crtc(preset_row_scan);
-	case 0x09: /* Maximum Scan Line Register */ return crtc(maximum_scan_line);
+	case 0x09: return vga.crtc.maximum_scan_line.data;
 	case 0x0A: /* Cursor Start Register */ return crtc(cursor_start);
 	case 0x0B: /* Cursor End Register */ return crtc(cursor_end);
 	case 0x0C: /* Start Address High Register */ return crtc(start_address_high);
