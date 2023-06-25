@@ -411,7 +411,10 @@ union MaximumScanLineRegister {
 	// In text modes, this field is programmed with the character height - 1
 	// (scan line numbers are zero based.) In graphics modes, a non-zero value
 	// in this field will cause each scan line to be repeated by the value of
-	// this field + 1.
+	// this field + 1 (0: single line, 1: doubled, 2: tripled, etc).
+	//
+	// This is independent of bit 7 (Scan Doubling), except in CGA modes which
+	// seems to require this field to be 1 and bit 7 to be set to work.
 	bit_view<0, 5> maximum_scan_line;
 
 	// Specifies bit 9 of the Start Vertical Blanking field.
@@ -649,7 +652,7 @@ struct VGA_Crtc {
 	uint8_t vertical_total = 0;
 	uint8_t overflow = 0;
 	uint8_t preset_row_scan = 0;
-	uint8_t maximum_scan_line = 0;
+	MaximumScanLineRegister maximum_scan_line = {};
 	uint8_t cursor_start = 0;
 	uint8_t cursor_end = 0;
 	uint8_t start_address_high = 0;

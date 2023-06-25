@@ -1541,7 +1541,7 @@ static VgaTimings calculate_vga_timings()
 			vert.total |= (vga.s3.ex_ver_overflow & 0x1) << 10;
 			vert.display_end |= (vga.crtc.overflow & 0x40) << 3;
 			vert.display_end |= (vga.s3.ex_ver_overflow & 0x2) << 9;
-			vert.blanking_start |= (vga.crtc.maximum_scan_line & 0x20) << 4;
+			vert.blanking_start |= vga.crtc.maximum_scan_line.start_vertical_blanking_bit9 << 4;
 			vert.blanking_start |= (vga.s3.ex_ver_overflow & 0x4) << 8;
 			vert.retrace_start |= ((vga.crtc.overflow & 0x80) << 2);
 			vert.retrace_start |= (vga.s3.ex_ver_overflow & 0x10) << 6;
@@ -1810,7 +1810,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 
 	if (IS_EGAVGA_ARCH) {
-		vga.draw.address_line_total = (vga.crtc.maximum_scan_line & 0x1f) + 1;
+		vga.draw.address_line_total = vga.crtc.maximum_scan_line.maximum_scan_line +
+		                              1;
 	} else {
 		vga.draw.address_line_total = vga.other.max_scanline + 1;
 	}
@@ -1819,8 +1820,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	auto fake_double_scan = false;
 	if (IS_VGA_ARCH) {
-		const auto is_scan_doubled = bit::is(vga.crtc.maximum_scan_line,
-											 bit::literals::b7);
+		const auto is_scan_doubled = vga.crtc.maximum_scan_line.is_scan_doubling_enabled;
 
 		if (VGA_IsDoubleScanningVgaModes()) {
 			if (is_scan_doubled) {
