@@ -120,11 +120,14 @@ std::string create_autoexec_bat_utf8()
 	// If currently printed lines are from '[autoexec]' section(s)
 	bool is_pushing_autoexec_section = false;
 
-	static const std::string comment_start = ":: ";
+	// We want unprocessed UTF8 form of messages here (thus 'MSG_GetRaw'
+	// calls, not 'MSG_Get'), they will be converted to DOS code page later,
+	// together with the '[autoexec]' section content
+	static const std::string comment_start    = ":: ";
 	static const std::string header_generated = comment_start +
-		MSG_Get("AUTOEXEC_BAT_GENERATED");
+		MSG_GetRaw("AUTOEXEC_BAT_GENERATED");
 	static const std::string header_autoexec_section = comment_start +
-		MSG_Get("AUTOEXEC_BAT_CONFIG_SECTION");
+		MSG_GetRaw("AUTOEXEC_BAT_CONFIG_SECTION");
 
 	// Put 'ECHO OFF' and 'SET variable=value' if needed
 
