@@ -817,9 +817,12 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 			}
 		} else {
 			font <<= 1; // 9 pixels
-			// extend to the 9th pixel if needed
-			if ((font&0x2) && (vga.attr.mode_control&0x04) &&
-				(chr>=0xc0) && (chr<=0xdf)) font |= 1;
+			// Extend to the 9th pixel if needed
+			if ((font & 0x2) &&
+			    vga.attr.mode_control.is_line_graphics_enabled &&
+			    (chr >= 0xc0) && (chr <= 0xdf)) {
+				font |= 1;
+			}
 			for (auto n = 0; n < 9; ++n) {
 				const auto color = (font & 0x100) ? fg_colour
 				                                  : bg_colour;
@@ -872,21 +875,23 @@ static inline void VGA_ChangesEnd(void ) {
 }
 #endif
 
-
-static void VGA_ProcessSplit() {
-	if (vga.attr.mode_control&0x20) {
-		vga.draw.address=0;
+static void VGA_ProcessSplit()
+{
+	if (vga.attr.mode_control.is_pixel_panning_enabled) {
+		vga.draw.address = 0;
 		// reset panning to 0 here so we don't have to check for
 		// it in the character draw functions. It will be set back
 		// to its proper value in v-retrace
-		vga.draw.panning=0;
+		vga.draw.panning = 0;
 	} else {
-		// In text mode only the characters are shifted by panning, not the address;
-		// this is done in the text line draw function.
-		vga.draw.address = vga.draw.byte_panning_shift*vga.draw.bytes_skip;
-		if ((vga.mode!=M_TEXT)&&(machine!=MCH_EGA)) vga.draw.address += vga.draw.panning;
+		// In text mode only the characters are shifted by panning, not
+		// the address; this is done in the text line draw function.
+		vga.draw.address = vga.draw.byte_panning_shift * vga.draw.bytes_skip;
+		if ((vga.mode != M_TEXT) && (machine != MCH_EGA)) {
+			vga.draw.address += vga.draw.panning;
+		}
 	}
-	vga.draw.address_line=0;
+	vga.draw.address_line = 0;
 }
 
 static uint16_t from_rgb_888_to_565(const uint32_t rgb888)
@@ -1051,17 +1056,18 @@ void VGA_SetBlinking(const uint8_t enabled)
 	LOG(LOG_VGA, LOG_NORMAL)("Blinking %u", enabled);
 	if (enabled) {
 		vga.draw.blinking = 1; // used to -1 but blinking is unsigned
-		vga.attr.mode_control|=0x08;
-		vga.tandy.mode_control|=0x20;
+		vga.attr.mode_control.is_blink_enabled = 1;
+		vga.tandy.mode_control |= 0x20;
 	} else {
 		vga.draw.blinking = 0;
-		vga.attr.mode_control&=~0x08;
-		vga.tandy.mode_control&=~0x20;
+		vga.attr.mode_control.is_blink_enabled = 0;
+		vga.tandy.mode_control &= ~0x20;
 	}
 	const uint8_t b = (enabled ? 0 : 8);
-	for (uint8_t i = 0; i < 8; ++i)
+	for (uint8_t i = 0; i < 8; ++i) {
 		TXT_BG_Table[i + 8] = (b + i) | ((b + i) << 8) |
 		                      ((b + i) << 16) | ((b + i) << 24);
+	}
 }
 
 #ifdef VGA_KEEP_CHANGES
@@ -1180,8 +1186,11 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 #endif
 	switch (vga.mode) {
 	case M_EGA:
-		if (!(vga.crtc.mode_control&0x1)) vga.draw.linear_mask &= ~0x10000;
-		else vga.draw.linear_mask |= 0x10000;
+		if (!(vga.crtc.mode_control & 0x1)) {
+			vga.draw.linear_mask &= ~0x10000;
+		} else {
+			vga.draw.linear_mask |= 0x10000;
+		}
 		[[fallthrough]];
 	case M_LIN4:
 		vga.draw.byte_panning_shift = 8;

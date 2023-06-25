@@ -159,7 +159,7 @@ void VGA_DetermineMode(void) {
 	/* Test for VGA output active or direct colour modes */
 	switch (vga.s3.misc_control_2 >> 4) {
 	case 0:
-		if (vga.attr.mode_control & 1) { // graphics mode
+		if (vga.attr.mode_control.is_graphics_enabled) {
 			if (IS_VGA_ARCH && (vga.gfx.mode & 0x40)) {
 				// access above 256k?
 				if (vga.s3.reg_31 & 0x8) VGA_SetMode(M_LIN8);

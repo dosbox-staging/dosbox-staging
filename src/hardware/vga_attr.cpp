@@ -81,7 +81,7 @@ void VGA_ATTR_SetPalette(uint8_t index, uint8_t val)
 	val = vga.attr.palette[index & vga.attr.color_plane_enable];
 
 	// replace bits 4-5 if configured
-	if (vga.attr.mode_control & 0x80)
+	if (vga.attr.mode_control.palette_bits_5_4_select)
 		val = static_cast<uint8_t>((val & 0xf) | (vga.attr.color_select << 4));
 
 	// set bits 6 and 7 (not relevant for EGA)
@@ -128,50 +128,50 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			        10h and 14h.
 			*/
 			break;
-		case 0x10: { /* Mode Control Register */
-			if (!IS_VGA_ARCH) val&=0x1f;	// not really correct, but should do it
-			Bitu difference = attr(mode_control)^val;
-			attr(mode_control) = val;
 
-			if (difference & 0x80)
+		case 0x10: {
+			// Not really correct, but should do it
+			AttributeModeControlRegister new_value = {val};
+			if (!IS_VGA_ARCH) {
+				new_value.is_pixel_panning_enabled = 0;
+				new_value.is_8bit_color_enabled    = 0;
+				new_value.palette_bits_5_4_select  = 0;
+			}
+
+			const AttributeModeControlRegister has_changed = {
+			        check_cast<uint8_t>(vga.attr.mode_control.data ^
+			                            new_value.data)};
+
+			vga.attr.mode_control.data = new_value.data;
+
+			if (has_changed.palette_bits_5_4_select) {
 				update_palette_mappings();
-
-			if (difference & 0x08)
-				VGA_SetBlinking(val & 0x8);
-			
-			if (difference & 0x41)
+			}
+			if (has_changed.is_blink_enabled) {
+				VGA_SetBlinking(vga.attr.mode_control.is_blink_enabled);
+			}
+			if (has_changed.is_graphics_enabled ||
+			    has_changed.is_8bit_color_enabled) {
 				VGA_DetermineMode();
-
-			if (difference & 0x04) {
-				// recompute the panning value
-				if(vga.mode==M_TEXT) {
-					const uint8_t pan_reg = attr(horizontal_pel_panning);
-					if (pan_reg > 7)
-						vga.config.pel_panning=0;
-					else if (val&0x4) // 9-dot wide characters
+			}
+			if (has_changed.is_line_graphics_enabled) {
+				// Recompute the panning value
+				if (vga.mode == M_TEXT) {
+					const uint8_t pan_reg = vga.attr.horizontal_pel_panning;
+					if (pan_reg > 7) {
+						vga.config.pel_panning = 0;
+					} else if (vga.attr.mode_control.is_line_graphics_enabled) {
+						// 9-dot wide characters
 						vga.config.pel_panning = pan_reg + 1u;
-					else // 8-dot characters
+					} else {
+						// 8-dot characters
 						vga.config.pel_panning = pan_reg;
+					}
 				}
 			}
-			/*
-				0	Graphics mode if set, Alphanumeric mode else.
-				1	Monochrome mode if set, color mode else.
-				2	9-bit wide characters if set.
-					The 9th bit of characters C0h-DFh will be the same as
-					the 8th bit. Otherwise it will be the background color.
-				3	If set Attribute bit 7 is blinking, else high intensity.
-				5	If set the PEL panning register (3C0h index 13h) is temporarily set
-					to 0 from when the line compare causes a wrap around until the next
-					vertical retrace when the register is automatically reloaded with
-					the old value, else the PEL panning register ignores line compares.
-				6	If set pixels are 8 bits wide. Used in 256 color modes.
-				7	If set bit 4-5 of the index into the DAC table are taken from port
-					3C0h index 14h bit 0-1, else the bits in the palette register are
-					used.
-			*/
 			break;
 		}
+
 		case 0x11:	/* Overscan Color Register */
 			attr(overscan_color) = val;
 			/* 0-5  Color of screen border. Color is defined as in the palette registers. */
@@ -199,12 +199,14 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			attr(horizontal_pel_panning)=val & 0xF;
 			switch (vga.mode) {
 			case M_TEXT:
-				if (val > 7)
-					vga.config.pel_panning=0;
-				else if (vga.attr.mode_control&0x4) // 9-dot wide characters
+				if (val > 7) {
+					vga.config.pel_panning = 0;
+				} else if (vga.attr.mode_control.is_line_graphics_enabled) {
+					// 9-dot wide characters
 					vga.config.pel_panning = val + 1u;
-				else // 8-dot characters
+				} else { // 8-dot characters
 					vga.config.pel_panning = val;
+				}
 				break;
 			case M_VGA:
 			case M_LIN8:
@@ -269,8 +271,7 @@ uint8_t read_p3c1(io_port_t, io_width_t)
 	case 0x08:		case 0x09:		case 0x0a:		case 0x0b:
 	case 0x0c:		case 0x0d:		case 0x0e:		case 0x0f:
 		return attr(palette[attr(index)]);
-	case 0x10: /* Mode Control Register */
-		return attr(mode_control);
+	case 0x10: return vga.attr.mode_control.data;
 	case 0x11:	/* Overscan Color Register */
 		return attr(overscan_color);
 	case 0x12:	/* Color Plane Enable Register */

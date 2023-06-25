@@ -526,11 +526,18 @@ union AttributeModeControlRegister {
 	bit_view<3, 1> is_blink_enabled;
 
 	// This field allows the upper half of the screen to pan independently of
-	// the lower screen. If this field is set to 0 then nothing special occurs
-	// during a successful line compare (see the Line Compare field.) If this
-	// field is set to 1, then upon a successful line compare, the bottom
-	// portion of the screen is displayed as if the Pixel Shift Count and Byte
-	// Panning fields are set to 0.
+	// the lower screen.
+	//
+	// If this field is set to 0 then nothing special occurs during a
+	// successful line compare (see the Line Compare field.)
+	//
+	// If this field is set to 1, then upon a successful line compare, the
+	// bottom portion of the screen is displayed as if the Pixel Shift Count
+	// and Byte Panning fields are set to 0. The PEL panning register (3C0h
+	// index 13h) is temporarily set to 0 from when the line compare causes a
+	// wrap around until the next vertical retrace when the register is
+	// automatically reloaded with the old value, else the PEL panning
+	// register ignores line compares.
 	bit_view<5, 1> is_pixel_panning_enabled;
 
 	// When this bit is set to 1, the video data is sampled so that eight bits
@@ -627,7 +634,7 @@ struct VGA_Seq {
 
 struct VGA_Attr {
 	uint8_t palette[16] = {};
-	uint8_t mode_control = 0;
+	AttributeModeControlRegister mode_control = {};
 	uint8_t horizontal_pel_panning = 0;
 	uint8_t overscan_color = 0;
 	uint8_t color_plane_enable = 0;
