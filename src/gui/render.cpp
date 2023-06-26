@@ -336,20 +336,18 @@ static void RENDER_Reset(void)
 		render.scale.size = maxsize_current_input;
 
 	if (double_height && double_width) {
-		/* Initialize always working defaults */
-		simpleBlock = &ScaleNormal1x;
+		simpleBlock = &ScaleNormal2x;
 	} else if (double_width) {
 		simpleBlock = &ScaleNormalDw;
-		if (width * simpleBlock->xscale > SCALER_MAXWIDTH) {
-			// This should only happen if you pick really bad
-			// values... but might be worth adding selecting a
-			// scaler that fits
-			simpleBlock = &ScaleNormal1x;
-		}
 	} else if (double_height) {
 		simpleBlock = &ScaleNormalDh;
 	} else {
 		simpleBlock  = &ScaleNormal1x;
+	}
+
+	if ((width * simpleBlock->xscale > SCALER_MAXWIDTH) ||
+	    (render.src.height * simpleBlock->yscale > SCALER_MAXHEIGHT)) {
+		simpleBlock = &ScaleNormal1x;
 	}
 
 	gfx_flags = simpleBlock->gfxFlags;
