@@ -570,6 +570,7 @@ void VGA_SetMonoPalette(const char *colour);
 void VGA_SetMode(VGAModes mode);
 void VGA_DetermineMode(void);
 void VGA_SetupHandlers(void);
+std::string VGA_ModeToString(const VGAModes mode);
 
 void VGA_StartResize();
 void VGA_StartResizeAfter(const uint16_t delay_ms);

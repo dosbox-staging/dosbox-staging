@@ -20,12 +20,14 @@
 
 #include <cassert>
 #include <cstring>
+#include <string>
 #include <utility>
 
 #include "../ints/int10.h"
 #include "logging.h"
 #include "math_utils.h"
 #include "pic.h"
+#include "string_utils.h"
 #include "video.h"
 
 VGA_Type vga;
@@ -179,6 +181,37 @@ void VGA_DetermineMode(void) {
 	case 5:VGA_SetMode(M_LIN16);break;
 	case 7: VGA_SetMode(M_LIN24); break;
 	case 13:VGA_SetMode(M_LIN32);break;
+	}
+}
+
+std::string VGA_ModeToString(const VGAModes mode)
+{
+	switch (mode) {
+	case M_CGA2: return "M_CGA2";
+	case M_CGA4: return "M_CGA4";
+	case M_EGA: return "M_EGA";
+	case M_VGA: return "M_VGA";
+	case M_LIN4: return "M_LIN4";
+	case M_LIN8: return "M_LIN8";
+	case M_LIN15: return "M_LIN15";
+	case M_LIN16: return "M_LIN16";
+	case M_LIN24: return "M_LIN24";
+	case M_LIN32: return "M_LIN32";
+	case M_TEXT: return "M_TEXT";
+	case M_HERC_GFX: return "M_HERC_GFX";
+	case M_HERC_TEXT: return "M_HERC_TEXT";
+	case M_TANDY2: return "M_TANDY2";
+	case M_TANDY4: return "M_TANDY4";
+	case M_TANDY16: return "M_TANDY16";
+	case M_TANDY_TEXT: return "M_TANDY_TEXT";
+	case M_CGA16: return "M_CGA16";
+	case M_CGA2_COMPOSITE: return "M_CGA2_COMPOSITE";
+	case M_CGA4_COMPOSITE: return "M_CGA4_COMPOSITE";
+	case M_CGA_TEXT_COMPOSITE: return "M_CGA_TEXT_COMPOSITE";
+	case M_ERROR: return "M_ERROR";
+	default:
+		assert(false);
+		return format_string("Invalid VGAmode value: %04x", mode);
 	}
 }
 
