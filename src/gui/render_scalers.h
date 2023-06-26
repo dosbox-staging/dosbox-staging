@@ -77,4 +77,5 @@ struct ScalerSimpleBlock_t {
 extern ScalerSimpleBlock_t ScaleNormal1x;
 extern ScalerSimpleBlock_t ScaleNormalDw;
 extern ScalerSimpleBlock_t ScaleNormalDh;
+extern ScalerSimpleBlock_t ScaleNormal2x;
 #endif
