@@ -93,7 +93,8 @@ void INT10_SetSinglePaletteRegister(uint8_t reg, uint8_t val)
 void INT10_SetOverscanBorderColor(uint8_t val)
 {
 	switch (machine) {
-	case TANDY_ARCH_CASE:
+	case MCH_PCJR:
+	case MCH_TANDY:
 		IO_Read(VGAREG_TDY_RESET);
 		WriteTandyACTL(0x02,val);
 		IO_Write(VGAREG_TDY_ADDRESS, 0); // enable the screen
@@ -113,7 +114,8 @@ void INT10_SetOverscanBorderColor(uint8_t val)
 void INT10_SetAllPaletteRegisters(PhysPt data)
 {
 	switch (machine) {
-	case TANDY_ARCH_CASE:
+	case MCH_PCJR:
+	case MCH_TANDY:
 		IO_Read(VGAREG_TDY_RESET);
 		// First the colors
 		for(uint8_t i=0;i<0x10;i++) {

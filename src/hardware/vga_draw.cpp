@@ -1641,7 +1641,8 @@ static VgaTimings calculate_vga_timings()
 
 		switch (machine) {
 		case MCH_CGA:
-		case TANDY_ARCH_CASE:
+		case MCH_PCJR:
+		case MCH_TANDY:
 			clock = ((vga.tandy.mode_control & 1) ? 14318180
 			                                      : (14318180 / 2)) /
 			        8;

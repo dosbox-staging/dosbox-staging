@@ -439,7 +439,8 @@ void ReadCharAttr(uint16_t col,uint16_t row,uint8_t page,uint16_t * result) {
 		case MCH_HERC:
 			fontdata=RealMake(0xf000,0xfa6e);
 			break;
-		case TANDY_ARCH_CASE:
+		case MCH_PCJR:
+		case MCH_TANDY:
 			fontdata=RealGetVec(0x44);
 			break;
 		default:
@@ -532,7 +533,8 @@ void WriteChar(uint16_t col,uint16_t row,uint8_t page,uint8_t chr,uint8_t attr,b
 		case MCH_HERC:
 			fontdata=RealMake(0xf000,0xfa6e);
 			break;
-		case TANDY_ARCH_CASE:
+		case MCH_PCJR:
+		case MCH_TANDY:
 			fontdata=RealGetVec(0x44);
 			break;
 		default:
