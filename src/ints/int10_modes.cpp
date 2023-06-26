@@ -621,14 +621,17 @@ void INT10_SetCurMode(void) {
 	uint16_t bios_mode=(uint16_t)real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE);
 	if (GCC_UNLIKELY(CurMode->mode!=bios_mode)) {
 		bool mode_changed=false;
+
 		switch (machine) {
 		case MCH_CGA:
 			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
 			break;
+
 		case MCH_PCJR:
 		case MCH_TANDY:
 			if (bios_mode!=7 && bios_mode<=0xa) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
 			break;
+
 		case MCH_HERC:
 			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
 			else if (bios_mode == 7) {
@@ -636,10 +639,12 @@ void INT10_SetCurMode(void) {
 				CurMode = Hercules_Mode.begin();
 			}
 			break;
+
 		case MCH_EGA:
 			mode_changed=SetCurMode(ModeList_EGA,bios_mode);
 			break;
-		case VGA_ARCH_CASE:
+
+		case MCH_VGA:
 			switch (svgaCard) {
 			case SVGA_TsengET4K:
 			case SVGA_TsengET3K:
@@ -658,6 +663,7 @@ void INT10_SetCurMode(void) {
 			if (mode_changed && CurMode->type==M_TEXT) SetTextLines();
 			break;
 		}
+
 		if (mode_changed) LOG(LOG_INT10,LOG_WARN)("BIOS video mode changed to %X",bios_mode);
 	}
 }
