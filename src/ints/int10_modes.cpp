@@ -625,7 +625,8 @@ void INT10_SetCurMode(void) {
 		case MCH_CGA:
 			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
 			break;
-		case TANDY_ARCH_CASE:
+		case MCH_PCJR:
+		case MCH_TANDY:
 			if (bios_mode!=7 && bios_mode<=0xa) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
 			break;
 		case MCH_HERC:
@@ -758,7 +759,8 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		if (mode > 6)
 			return false;
 		[[fallthrough]];
-	case TANDY_ARCH_CASE:
+	case MCH_PCJR:
+	case MCH_TANDY:
 		if (mode>0xa) return false;
 		if (mode==7) mode=0; // PCJR defaults to 0 on illegal mode 7
 		if (!SetCurMode(ModeList_OTHER,mode)) {

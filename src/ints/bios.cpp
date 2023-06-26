@@ -1415,7 +1415,8 @@ public:
 			break;
 		case EGAVGA_ARCH_CASE:
 		case MCH_CGA:
-		case TANDY_ARCH_CASE:
+		case MCH_PCJR:
+		case MCH_TANDY:
 			//Startup 80x25 color
 			config|=0x20;
 			break;
