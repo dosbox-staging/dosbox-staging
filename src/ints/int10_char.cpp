@@ -618,7 +618,8 @@ void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bo
 	if (CurMode->type!=M_TEXT) {
 		showattr=true; //Use attr in graphics mode always
 		switch (machine) {
-			case EGAVGA_ARCH_CASE:
+			case MCH_EGA:
+			case MCH_VGA:
 				switch (CurMode->type) {
 				case M_VGA:
 				case M_LIN8:
@@ -630,11 +631,13 @@ void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bo
 					break;
 				}
 				break;
+
 			case MCH_CGA:
 			case MCH_PCJR:
 				page=0;
 				pospage=0;
 				break;
+
 			case MCH_HERC:
 			case MCH_TANDY:
 				break;

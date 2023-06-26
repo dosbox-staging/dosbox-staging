@@ -1413,10 +1413,11 @@ public:
 			//Startup monochrome
 			config|=0x30;
 			break;
-		case EGAVGA_ARCH_CASE:
 		case MCH_CGA:
 		case MCH_PCJR:
 		case MCH_TANDY:
+		case MCH_EGA:
+		case MCH_VGA:
 			//Startup 80x25 color
 			config|=0x20;
 			break;
