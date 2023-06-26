@@ -948,25 +948,21 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 		state.granularity_y = 0xfff8;
 		set_maxpos_text();
 		break;
-	case 0x08: // 160x200, 16 colors    (PCjr)
-		state.maxpos_x = 159;
-		state.maxpos_y = 199;
-		break;
-	case 0x04: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
-	case 0x05: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
-	case 0x09: // 320x200, 16 colors    (PCjr)
-		state.maxpos_x = 319;
-		state.maxpos_y = 199;
-		break;
 	case 0x0d: // 320x200, 16 colors    (EGA, VGA)
 	case 0x13: // 320x200, 256 colors   (MCGA, VGA)
 		state.granularity_x = 0xfffe;
 		state.maxpos_x = 639;
 		state.maxpos_y = 199;
 		break;
+	case 0x04: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
+	case 0x05: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
 	case 0x06: // 640x200, black/white  (CGA, EGA, MCGA, VGA)
+	case 0x08: // 160x200, 16 colors    (PCjr)
+	case 0x09: // 320x200, 16 colors    (PCjr)
 	case 0x0a: // 640x200, 4 colors     (PCjr)
 	case 0x0e: // 640x200, 16 colors    (EGA, VGA)
+		// Note: Setting true horixontal resolution for <640 modes
+		// can break some games, like 'Life & Death' - be careful here!
 		state.maxpos_x = 639;
 		state.maxpos_y = 199;
 		break;
