@@ -226,9 +226,6 @@ void DOS_Shell::CMD_CLS(char *args)
 
 void DOS_Shell::CMD_DELETE(char * args) {
 	HELP("DELETE");
-	/* Command uses dta so set it to our internal dta */
-	const RealPt save_dta = dos.dta();
-	dos.dta(dos.tables.tempdta);
 
 	char * rem=ScanCMDRemain(args);
 	if (rem) {
@@ -242,6 +239,11 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	args = ExpandDot(args,buffer, CROSS_LEN);
 	StripSpaces(args);
 	if (!DOS_Canonicalize(args,full)) { WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));return; }
+
+	/* Command uses dta so set it to our internal dta */
+	const RealPt save_dta = dos.dta();
+	dos.dta(dos.tables.tempdta);
+
 //TODO Maybe support confirmation for *.* like dos does.
 	bool res=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
 	if (!res) {
