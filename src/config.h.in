@@ -246,16 +246,4 @@
 // XDG_DATA_HOME or XDG_DATA_DIRS to include the --datadir.
 #mesondefine CUSTOM_DATADIR
 
-/* Loguru-related defines
- */
-
-// Prevent loguru from parsing command-line arguments with
-// with the hosts's locale-applied, because this can foul up
-// ncurses. (DOSBox also doesn't have foreign-language arguments).
-//
-#define LOGURU_USE_LOCALE 0
-
-// Redefine “assert” to call Loguru version (!NDEBUG only).
-#define LOGURU_REDEFINE_ASSERT 1
-
 #endif
