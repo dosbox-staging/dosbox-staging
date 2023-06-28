@@ -131,3 +131,6 @@
 // ncurses. (DOSBox also doesn't have foreign-language arguments).
 //
 #define LOGURU_USE_LOCALE 0
+
+// Redefine “assert” to call Loguru version (!NDEBUG only).
+#define LOGURU_REDEFINE_ASSERT 1
