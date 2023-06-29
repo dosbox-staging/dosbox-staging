@@ -36,11 +36,11 @@ public:
 	isoFile(const isoFile &) = delete;            // prevent copying
 	isoFile &operator=(const isoFile &) = delete; // prevent assignment
 
-	bool Read(uint8_t *data, uint16_t *size);
-	bool Write(uint8_t *data, uint16_t *size);
-	bool Seek(uint32_t *pos, uint32_t type);
-	bool Close();
-	uint16_t GetInformation(void);
+	bool Read(uint8_t *data, uint16_t *size) override;
+	bool Write(uint8_t *data, uint16_t *size) override;
+	bool Seek(uint32_t *pos, uint32_t type) override;
+	bool Close() override;
+	uint16_t GetInformation(void) override;
 
 private:
 	isoDrive *drive = nullptr;

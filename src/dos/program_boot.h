@@ -35,7 +35,7 @@ class BOOT final : public Program {
 		                   HELP_CmdType::Program,
 		                   "BOOT"};
 	    }
-	    void Run(void);
+	    void Run(void) override;
 
     private:
         static void AddMessages();

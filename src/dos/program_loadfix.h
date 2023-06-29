@@ -34,7 +34,7 @@ public:
 		               HELP_CmdType::Program,
 		               "LOADFIX"};
 	}
-	void Run(void);
+	void Run(void) override;
 private:
     static void AddMessages();
 };

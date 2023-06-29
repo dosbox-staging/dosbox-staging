@@ -35,7 +35,7 @@ public:
 		               HELP_CmdType::Program,
 		               "TREE"};
 	}
-	void Run();
+	void Run() override;
 
 private:
 	void PreRender();

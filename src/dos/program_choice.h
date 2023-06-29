@@ -34,7 +34,7 @@ public:
 		               HELP_CmdType::Program,
 		               "CHOICE"};
 	}
-	void Run();
+	void Run() override;
 };
 
 #endif

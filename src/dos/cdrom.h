@@ -100,7 +100,7 @@ inline uint32_t msf_to_frames(const TMSF &msf)
 class CDROM_Interface
 {
 public:
-	virtual ~CDROM_Interface        () {}
+	virtual ~CDROM_Interface        () = default;
 	virtual bool SetDevice          (const char *path, const int cd_number) = 0;
 	virtual bool GetUPC             (unsigned char& attr, char* upc) = 0;
 	virtual bool GetAudioTracks     (uint8_t& stTrack, uint8_t& end, TMSF& leadOut) = 0;
@@ -126,43 +126,43 @@ class CDROM_Interface_SDL : public CDROM_Interface
 public:
 	CDROM_Interface_SDL();
 	CDROM_Interface_SDL(const CDROM_Interface_SDL&);
-	CDROM_Interface_SDL& operator = (const CDROM_Interface_SDL&);
-	~CDROM_Interface_SDL();
-	bool SetDevice(const char* path, int cd_number);
-	bool GetUPC(unsigned char& attr, char* upc)
+	CDROM_Interface_SDL& operator=(const CDROM_Interface_SDL&);
+	~CDROM_Interface_SDL() override;
+	bool SetDevice(const char* path, int cd_number) override;
+	bool GetUPC(unsigned char& attr, char* upc) override
 	{
 		attr = '\0';
 		strcpy(upc, "UPC");
 		return true;
 	}
-	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
-	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr);
+	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
+	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
 	bool GetAudioSub(unsigned char& attr, unsigned char& track,
-	                 unsigned char& index, TMSF& relPos, TMSF& absPos);
-	bool GetAudioStatus(bool& playing, bool& pause);
+	                 unsigned char& index, TMSF& relPos, TMSF& absPos) override;
+	bool GetAudioStatus(bool& playing, bool& pause) override;
 	bool GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged,
-	                        bool& trayOpen);
-	bool PlayAudioSector(const uint32_t start, uint32_t len);
-	bool PauseAudio(bool resume);
-	bool StopAudio();
-	void ChannelControl([[maybe_unused]] TCtrl ctrl)
+	                        bool& trayOpen) override;
+	bool PlayAudioSector(const uint32_t start, uint32_t len) override;
+	bool PauseAudio(bool resume) override;
+	bool StopAudio() override;
+	void ChannelControl([[maybe_unused]] TCtrl ctrl) override
 	{
 		return;
 	}
 	bool ReadSectors([[maybe_unused]] PhysPt buffer,
 	                 [[maybe_unused]] const bool raw,
 	                 [[maybe_unused]] const uint32_t sector,
-	                 [[maybe_unused]] const uint16_t num)
+	                 [[maybe_unused]] const uint16_t num) override
 	{
 		return false;
 	}
 	bool ReadSectorsHost([[maybe_unused]] void* buffer, [[maybe_unused]] bool raw,
 	                     [[maybe_unused]] unsigned long sector,
-	                     [[maybe_unused]] unsigned long num)
+	                     [[maybe_unused]] unsigned long num) override
 	{
 		return true;
 	}
-	bool LoadUnloadMedia(bool unload);
+	bool LoadUnloadMedia(bool unload) override;
 
 private:
 	bool Open();
@@ -173,25 +173,58 @@ private:
 	Uint32 oldLeadOut = 0;
 };
 
-class CDROM_Interface_Fake final : public CDROM_Interface
-{
+class CDROM_Interface_Fake final : public CDROM_Interface {
 public:
-	bool SetDevice          ([[maybe_unused]] const char *path, [[maybe_unused]] const int cd_number) { return true; }
-	bool GetUPC             (unsigned char& attr, char* upc) { attr = 0; strcpy(upc,"UPC"); return true; }
-	bool GetAudioTracks     (uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
-	bool GetAudioTrackInfo  (uint8_t track, TMSF& start, unsigned char& attr);
-	bool GetAudioSub        (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
-	bool GetAudioStatus     (bool& playing, bool& pause);
-	bool GetMediaTrayStatus (bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	bool PlayAudioSector    (const uint32_t start, uint32_t len) { (void)start; (void)len; return true; }
-	bool PauseAudio         (bool /*resume*/) { return true; }
-	bool StopAudio          () { return true; }
+	bool SetDevice([[maybe_unused]] const char* path,
+	               [[maybe_unused]] const int cd_number) override
+	{
+		return true;
+	}
+	bool GetUPC(unsigned char& attr, char* upc) override
+	{
+		attr = 0;
+		strcpy(upc, "UPC");
+		return true;
+	}
+	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
+	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
+	bool GetAudioSub(unsigned char& attr, unsigned char& track,
+	                 unsigned char& index, TMSF& relPos, TMSF& absPos) override;
+	bool GetAudioStatus(bool& playing, bool& pause) override;
+	bool GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged,
+	                        bool& trayOpen) override;
+	bool PlayAudioSector(const uint32_t start, uint32_t len) override
+	{
+		(void)start;
+		(void)len;
+		return true;
+	}
+	bool PauseAudio(bool /*resume*/) override
+	{
+		return true;
+	}
+	bool StopAudio() override
+	{
+		return true;
+	}
 
-	void ChannelControl([[maybe_unused]] TCtrl ctrl) {}
+	void ChannelControl([[maybe_unused]] TCtrl ctrl) override {}
 
-	bool ReadSectors        (PhysPt /*buffer*/, const bool /*raw*/, const uint32_t /*sector*/, const uint16_t /*num*/) { return true; }
-	bool ReadSectorsHost    ([[maybe_unused]] void* buffer, [[maybe_unused]] bool raw, [[maybe_unused]] unsigned long sector, [[maybe_unused]] unsigned long num) { return true; }
-	bool LoadUnloadMedia    (bool /*unload*/) { return true; }
+	bool ReadSectors(PhysPt /*buffer*/, const bool /*raw*/,
+	                 const uint32_t /*sector*/, const uint16_t /*num*/) override
+	{
+		return true;
+	}
+	bool ReadSectorsHost([[maybe_unused]] void* buffer, [[maybe_unused]] bool raw,
+	                     [[maybe_unused]] unsigned long sector,
+	                     [[maybe_unused]] unsigned long num) override
+	{
+		return true;
+	}
+	bool LoadUnloadMedia(bool /*unload*/) override
+	{
+		return true;
+	}
 };
 
 class CDROM_Interface_Image final : public CDROM_Interface
@@ -205,70 +238,84 @@ private:
 		uint32_t adjustOverRead(const uint32_t offset,
 		                        const uint32_t requested_bytes);
 		int length_redbook_bytes = -1;
-		uint32_t audio_pos = std::numeric_limits<uint32_t>::max(); // last position when playing audio
+
+		// last position when playing audio
+		uint32_t audio_pos = std::numeric_limits<uint32_t>::max();
 
 	public:
-		virtual          ~TrackFile() = default;
-		virtual bool     read(uint8_t *buffer,
-		                      const uint32_t offset,
-		                      const uint32_t requested_bytes) = 0;
-		virtual bool     seek(const uint32_t offset) = 0;
-		virtual uint32_t decode(int16_t *buffer, const uint32_t desired_track_frames) = 0;
-		virtual uint16_t   getEndian() = 0;
-		virtual uint32_t   getRate() = 0;
-		virtual uint8_t    getChannels() = 0;
-		virtual int      getLength() = 0;
+		virtual ~TrackFile()                              = default;
+		virtual bool read(uint8_t* buffer, const uint32_t offset,
+		                  const uint32_t requested_bytes) = 0;
+		virtual bool seek(const uint32_t offset)          = 0;
+		virtual uint32_t decode(int16_t* buffer,
+		                        const uint32_t desired_track_frames) = 0;
+		virtual uint16_t getEndian()                = 0;
+		virtual uint32_t getRate()                  = 0;
+		virtual uint8_t getChannels()               = 0;
+		virtual int getLength()                     = 0;
 		virtual void setAudioPosition(uint32_t pos) = 0;
-		const uint16_t chunkSize = 0;
+		const uint16_t chunkSize                    = 0;
 	};
 
 	class BinaryFile final : public TrackFile {
 	public:
-		BinaryFile      (const char *filename, bool &error);
-		~BinaryFile     ();
+		BinaryFile(const char* filename, bool& error);
+		~BinaryFile() override;
 
-		BinaryFile      () = delete;
-		BinaryFile      (const BinaryFile&) = delete; // prevent copying
-		BinaryFile&     operator= (const BinaryFile&) = delete; // prevent assignment
+		BinaryFile()                  = delete;
+		BinaryFile(const BinaryFile&) = delete; // prevent copying
+		BinaryFile& operator=(const BinaryFile&) = delete; // prevent
+		                                                   // assignment
 
-		bool            read(uint8_t *buffer,
-		                     const uint32_t offset,
-		                     const uint32_t requested_bytes);
-		bool            seek(const uint32_t offset);
-		uint32_t        decode(int16_t *buffer, const uint32_t desired_track_frames);
-		uint16_t          getEndian();
-		uint32_t          getRate() { return 44100; }
-		uint8_t           getChannels() { return 2; }
-		int             getLength();
-		void setAudioPosition(uint32_t pos) { audio_pos = pos; }
+		bool read(uint8_t* buffer, const uint32_t offset,
+		          const uint32_t requested_bytes) override;
+		bool seek(const uint32_t offset) override;
+		uint32_t decode(int16_t* buffer,
+		                const uint32_t desired_track_frames) override;
+		uint16_t getEndian() override;
+		uint32_t getRate() override
+		{
+			return 44100;
+		}
+		uint8_t getChannels() override
+		{
+			return 2;
+		}
+		int getLength() override;
+		void setAudioPosition(uint32_t pos) override
+		{
+			audio_pos = pos;
+		}
 
 	private:
-		std::ifstream   *file;
+		std::ifstream* file;
 	};
 
 	class AudioFile final : public TrackFile {
 	public:
-		AudioFile       (const char *filename, bool &error);
-		~AudioFile      ();
+		AudioFile(const char* filename, bool& error);
+		~AudioFile() override;
 
-		AudioFile       () = delete;
-		AudioFile       (const AudioFile&) = delete; // prevent copying
-		AudioFile&      operator= (const AudioFile&) = delete; // prevent assignment
+		AudioFile()                 = delete;
+		AudioFile(const AudioFile&) = delete; // prevent copying
+		AudioFile& operator=(const AudioFile&) = delete; // prevent
+		                                                 // assignment
 
-		bool            read(uint8_t *buffer,
-		                     const uint32_t offset,
-		                     const uint32_t requested_bytes);
-		bool            seek(const uint32_t offset);
-		uint32_t        decode(int16_t *buffer, const uint32_t desired_track_frames);
-		uint16_t          getEndian();
-		uint32_t          getRate();
-		uint8_t           getChannels();
-		int             getLength();
+		bool read(uint8_t* buffer, const uint32_t offset,
+		          const uint32_t requested_bytes) override;
+		bool seek(const uint32_t offset) override;
+		uint32_t decode(int16_t* buffer,
+		                const uint32_t desired_track_frames) override;
+		uint16_t getEndian() override;
+		uint32_t getRate() override;
+		uint8_t getChannels() override;
+		int getLength() override;
 		// This is a no-op because we track the audio position in all
 		// areas of this class.
-		void setAudioPosition([[maybe_unused]] uint32_t pos) {}
+		void setAudioPosition([[maybe_unused]] uint32_t pos) override {}
+
 	private:
-		Sound_Sample *sample = nullptr;
+		Sound_Sample* sample = nullptr;
 	};
 
 public:
@@ -286,24 +333,28 @@ public:
 
 	CDROM_Interface_Image(uint8_t sub_unit);
 
-	virtual ~CDROM_Interface_Image  ();
-	void	InitNewMedia            () {}
-	bool	SetDevice               (const char *path, const int cd_number);
-	bool	GetUPC                  (unsigned char& attr, char* upc);
-	bool	GetAudioTracks          (uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
-	bool	GetAudioTrackInfo       (uint8_t track, TMSF& start, unsigned char& attr);
-	bool	GetAudioSub             (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos);
-	bool	GetAudioStatus          (bool& playing, bool& pause);
-	bool	GetMediaTrayStatus      (bool& mediaPresent, bool& mediaChanged, bool& trayOpen);
-	bool	PlayAudioSector         (const uint32_t start, uint32_t len);
-	bool	PauseAudio              (bool resume);
-	bool	StopAudio               ();
-	void	ChannelControl          (TCtrl ctrl);
-	bool	ReadSectors             (PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num);
-	bool	ReadSectorsHost         (void* buffer, bool raw, unsigned long sector, unsigned long num);
-	bool	LoadUnloadMedia         (bool unload);
-	bool	ReadSector              (uint8_t *buffer, const bool raw, const uint32_t sector);
-	bool	HasDataTrack            ();
+	~CDROM_Interface_Image() override;
+	void InitNewMedia() override {}
+	bool SetDevice(const char* path, const int cd_number) override;
+	bool GetUPC(unsigned char& attr, char* upc) override;
+	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
+	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
+	bool GetAudioSub(unsigned char& attr, unsigned char& track,
+	                 unsigned char& index, TMSF& relPos, TMSF& absPos) override;
+	bool GetAudioStatus(bool& playing, bool& pause) override;
+	bool GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged,
+	                        bool& trayOpen) override;
+	bool PlayAudioSector(const uint32_t start, uint32_t len) override;
+	bool PauseAudio(bool resume) override;
+	bool StopAudio() override;
+	void ChannelControl(TCtrl ctrl) override;
+	bool ReadSectors(PhysPt buffer, const bool raw, const uint32_t sector,
+	                 const uint16_t num) override;
+	bool ReadSectorsHost(void* buffer, bool raw, unsigned long sector,
+	                     unsigned long num) override;
+	bool LoadUnloadMedia(bool unload) override;
+	bool ReadSector(uint8_t* buffer, const bool raw, const uint32_t sector);
+	bool HasDataTrack();
 	static CDROM_Interface_Image* images[26];
 
 private:
@@ -351,26 +402,26 @@ private:
 #if defined (LINUX)
 class CDROM_Interface_Ioctl : public CDROM_Interface {
 public:
-	~CDROM_Interface_Ioctl();
+	~CDROM_Interface_Ioctl() override;
 
-	bool SetDevice(const char* path, const int cd_number);
-	bool GetUPC(unsigned char& attr, char* upc);
-	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
-	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr);
+	bool SetDevice(const char* path, const int cd_number) override;
+	bool GetUPC(unsigned char& attr, char* upc) override;
+	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
+	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
 	bool GetAudioSub(unsigned char& attr, unsigned char& track,
-	                 unsigned char& index, TMSF& relPos, TMSF& absPos);
-	bool GetAudioStatus(bool& playing, bool& pause);
+	                 unsigned char& index, TMSF& relPos, TMSF& absPos) override;
+	bool GetAudioStatus(bool& playing, bool& pause) override;
 	bool GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged,
-	                        bool& trayOpen);
+	                        bool& trayOpen) override;
 	bool ReadSectors(PhysPt buffer, const bool raw, const uint32_t sector,
-	                 const uint16_t num);
+	                 const uint16_t num) override;
 	bool ReadSectorsHost(void* buffer, bool raw, unsigned long sector,
-	                     unsigned long num);
-	bool PlayAudioSector(const uint32_t start, uint32_t len);
-	bool PauseAudio(bool resume);
-	bool StopAudio();
-	void ChannelControl(TCtrl ctrl);
-	bool LoadUnloadMedia(bool unload);
+	                     unsigned long num) override;
+	bool PlayAudioSector(const uint32_t start, uint32_t len) override;
+	bool PauseAudio(bool resume) override;
+	bool StopAudio() override;
+	void ChannelControl(TCtrl ctrl) override;
+	bool LoadUnloadMedia(bool unload) override;
 
 private:
 	void CdAudioCallback(const uint16_t requested_frames);

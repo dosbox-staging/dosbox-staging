@@ -45,12 +45,12 @@ public:
 	fatFile(const char* name, uint32_t startCluster, uint32_t fileLen, fatDrive *useDrive);
 	fatFile(const fatFile&) = delete; // prevent copy
 	fatFile& operator=(const fatFile&) = delete; // prevent assignment
-	bool Read(uint8_t * data,uint16_t * size);
-	bool Write(uint8_t * data,uint16_t * size);
-	bool Seek(uint32_t * pos,uint32_t type);
-	bool Close();
-	uint16_t GetInformation(void);
-	bool UpdateDateTimeFromHost(void);   
+	bool Read(uint8_t * data,uint16_t * size) override;
+	bool Write(uint8_t * data,uint16_t * size) override;
+	bool Seek(uint32_t * pos,uint32_t type) override;
+	bool Close() override;
+	uint16_t GetInformation(void) override;
+	bool UpdateDateTimeFromHost(void) override;
 public:
 	uint32_t firstCluster;
 	uint32_t seekpos;

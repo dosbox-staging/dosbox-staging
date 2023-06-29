@@ -161,34 +161,46 @@ public:
 		return *this;
 	}
 
-	virtual bool	Read(uint8_t * data,uint16_t * size);
-	virtual bool	Write(uint8_t * data,uint16_t * size);
-	virtual bool	Seek(uint32_t * pos,uint32_t type);
-	virtual bool	Close();
-	virtual uint16_t	GetInformation(void);
-	virtual bool	ReadFromControlChannel(PhysPt bufptr,uint16_t size,uint16_t * retcode);
-	virtual bool	WriteToControlChannel(PhysPt bufptr,uint16_t size,uint16_t * retcode);
+	bool Read(uint8_t* data, uint16_t* size) override;
+	bool Write(uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, uint32_t type) override;
+	bool Close() override;
+	uint16_t GetInformation(void) override;
+	virtual bool ReadFromControlChannel(PhysPt bufptr, uint16_t size,
+	                                    uint16_t* retcode);
+	virtual bool WriteToControlChannel(PhysPt bufptr, uint16_t size,
+	                                   uint16_t* retcode);
 	virtual uint8_t GetStatus(bool input_flag);
-	void SetDeviceNumber(Bitu num) { devnum=num;}
+	void SetDeviceNumber(Bitu num)
+	{
+		devnum = num;
+	}
+
 private:
 	Bitu devnum;
 };
 
 class localFile : public DOS_File {
 public:
-	localFile(const char *name, FILE *handle, const char *basedir);
-	localFile(const localFile &) = delete;            // prevent copying
-	localFile &operator=(const localFile &) = delete; // prevent assignment
-	bool Read(uint8_t *data, uint16_t *size);
-	bool Write(uint8_t *data, uint16_t *size);
-	bool Seek(uint32_t *pos, uint32_t type);
-	bool Close();
-	uint16_t GetInformation();
-	bool UpdateDateTimeFromHost();
+	localFile(const char* name, FILE* handle, const char* basedir);
+	localFile(const localFile&)            = delete; // prevent copying
+	localFile& operator=(const localFile&) = delete; // prevent assignment
+	bool Read(uint8_t* data, uint16_t* size) override;
+	bool Write(uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, uint32_t type) override;
+	bool Close() override;
+	uint16_t GetInformation() override;
+	bool UpdateDateTimeFromHost() override;
 	void Flush();
-	void SetFlagReadOnlyMedium() { read_only_medium = true; }
-	const char *GetBaseDir() const { return basedir; }
-	FILE *fhandle = nullptr; // todo handle this properly
+	void SetFlagReadOnlyMedium() override
+	{
+		read_only_medium = true;
+	}
+	const char* GetBaseDir() const
+	{
+		return basedir;
+	}
+	FILE* fhandle = nullptr; // todo handle this properly
 private:
 	const char *basedir;
 	long stream_pos = 0;

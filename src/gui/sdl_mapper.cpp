@@ -158,10 +158,10 @@ protected:
 class CTriggeredEvent : public CEvent {
 public:
 	CTriggeredEvent(const char* const _entry) : CEvent(_entry) {}
-	virtual bool IsTrigger() {
+	bool IsTrigger() override {
 		return true;
 	}
-	void ActivateEvent(bool ev_trigger,bool skip_action) {
+	void ActivateEvent(bool ev_trigger,bool skip_action) override {
 		if (current_value>25000) {
 			/* value exceeds boundary, trigger event if not active */
 			if (!activity && !skip_action) Active(true);
@@ -174,7 +174,7 @@ public:
 			}
 		}
 	}
-	void DeActivateEvent(bool /*ev_trigger*/) {
+	void DeActivateEvent(bool /*ev_trigger*/) override {
 		activity--;
 		if (!activity) Active(false);
 	}
@@ -184,10 +184,10 @@ public:
 class CContinuousEvent : public CEvent {
 public:
 	CContinuousEvent(const char* const _entry) : CEvent(_entry) {}
-	virtual bool IsTrigger() {
+	bool IsTrigger() override {
 		return false;
 	}
-	void ActivateEvent(bool ev_trigger,bool skip_action) {
+	void ActivateEvent(bool ev_trigger,bool skip_action) override {
 		if (ev_trigger) {
 			activity++;
 			if (!skip_action) Active(true);
@@ -197,7 +197,7 @@ public:
 			if (!GetActivityCount()) Active(true);
 		}
 	}
-	void DeActivateEvent(bool ev_trigger) {
+	void DeActivateEvent(bool ev_trigger) override {
 		if (ev_trigger) {
 			if (activity>0) activity--;
 			if (activity==0) {
@@ -407,7 +407,7 @@ public:
 			lists[i].clear();
 	}
 
-	~CKeyBindGroup()
+	~CKeyBindGroup() override
 	{
 		delete[] lists;
 		lists = nullptr;
@@ -416,7 +416,7 @@ public:
 	CKeyBindGroup(const CKeyBindGroup&) = delete; // prevent copy
 	CKeyBindGroup& operator=(const CKeyBindGroup&) = delete; // prevent assignment
 
-	CBind *CreateConfigBind(char *&buf)
+	CBind *CreateConfigBind(char *&buf) override
 	{
 		if (strncasecmp(buf, configname, strlen(configname)))
 			return nullptr;
@@ -426,14 +426,14 @@ public:
 		return CreateKeyBind((SDL_Scancode)code);
 	}
 
-	CBind *CreateEventBind(SDL_Event *event)
+	CBind *CreateEventBind(SDL_Event *event) override
 	{
 		if (event->type != SDL_KEYDOWN)
 			return nullptr;
 		return CreateKeyBind(event->key.keysym.scancode);
 	}
 
-	bool CheckEvent(SDL_Event * event) {
+	bool CheckEvent(SDL_Event * event) override {
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
 		uintptr_t key = static_cast<uintptr_t>(event->key.keysym.scancode);
 		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[key],0x7fff,true);
@@ -444,10 +444,10 @@ public:
 		return new CKeyBind(&lists[(Bitu)_key],_key);
 	}
 private:
-	const char * ConfigStart() {
+	const char * ConfigStart() override {
 		return configname;
 	}
-	const char * BindStart() {
+	const char * BindStart() override {
 		return "Key";
 	}
 protected:
@@ -655,7 +655,7 @@ public:
 		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
 	}
 
-	~CStickBindGroup()
+	~CStickBindGroup() override
 	{
 		set_joystick_led(sdl_joystick, off_color);
 		SDL_JoystickClose(sdl_joystick);
@@ -677,7 +677,7 @@ public:
 	CStickBindGroup(const CStickBindGroup&) = delete; // prevent copy
 	CStickBindGroup& operator=(const CStickBindGroup&) = delete; // prevent assignment
 
-	CBind * CreateConfigBind(char *& buf)
+	CBind * CreateConfigBind(char *& buf) override
 	{
 		if (strncasecmp(configname,buf,strlen(configname))) return 0;
 		strip_word(buf);
@@ -698,7 +698,7 @@ public:
 		return bind;
 	}
 
-	CBind * CreateEventBind(SDL_Event * event) {
+	CBind * CreateEventBind(SDL_Event * event) override {
 		if (event->type==SDL_JOYAXISMOTION) {
 			const int axis_id = event->jaxis.axis;
 			const auto axis_position = event->jaxis.value;
@@ -733,7 +733,7 @@ public:
 		} else return 0;
 	}
 
-	virtual bool CheckEvent(SDL_Event * event) {
+	bool CheckEvent(SDL_Event * event) override {
 		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent *jbutton = NULL;
 
@@ -900,12 +900,12 @@ private:
 		                     this, hat, value);
 	}
 
-	const char * ConfigStart()
+	const char * ConfigStart() override
 	{
 		return configname;
 	}
 
-	const char * BindStart()
+	const char * BindStart() override
 	{
 		if (sdl_joystick)
 			return SDL_JoystickNameForIndex(stick);
@@ -951,7 +951,7 @@ public:
 		JOYSTICK_Enable(1, true);
 	}
 
-	bool CheckEvent(SDL_Event * event) {
+	bool CheckEvent(SDL_Event * event) override {
 		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent *jbutton = NULL;
 
@@ -979,7 +979,7 @@ public:
 		return false;
 	}
 
-	virtual void UpdateJoystick() {
+	void UpdateJoystick() override {
 		/* query SDL joystick and activate bindings */
 		ActivateJoystickBoundEvents();
 
@@ -1015,7 +1015,7 @@ public:
 		JOYSTICK_Move_Y(1, INT16_MAX);
 	}
 
-	bool CheckEvent(SDL_Event * event) {
+	bool CheckEvent(SDL_Event * event) override {
 		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
 		SDL_JoyHatEvent *jhat = NULL;
@@ -1051,7 +1051,7 @@ public:
 		return false;
 	}
 
-	virtual void UpdateJoystick() {
+	void UpdateJoystick() override {
 		/* query SDL joystick and activate bindings */
 		ActivateJoystickBoundEvents();
 
@@ -1141,7 +1141,7 @@ public:
 		JOYSTICK_Enable(1,true);
 	}
 
-	bool CheckEvent(SDL_Event * event) {
+	bool CheckEvent(SDL_Event * event) override {
 		SDL_JoyAxisEvent * jaxis = NULL;
 		SDL_JoyButtonEvent * jbutton = NULL;
 		SDL_JoyHatEvent * jhat = NULL;
@@ -1201,7 +1201,7 @@ public:
 		return false;
 	}
 
-	void UpdateJoystick() {
+	void UpdateJoystick() override {
 		static const unsigned button_priority[6] = {7, 11, 13, 14, 5, 6};
 		static const unsigned hat_priority[2][4] = {{0, 1, 2, 3},
 		                                            {8, 9, 10, 12}};
@@ -1505,7 +1505,7 @@ public:
 	CTextButton(const CTextButton&) = delete; // prevent copy
 	CTextButton& operator=(const CTextButton&) = delete; // prevent assignment
 
-	void Draw()
+	void Draw() override
 	{
 		if (!enabled)
 			return;
@@ -1525,7 +1525,7 @@ public:
 		: CTextButton(_x, _y, _dx, _dy, _text)
 	{}
 
-	void BindColor()
+	void BindColor() override
 	{
 		this->SetColor(CLR_WHITE);
 	}
@@ -1544,10 +1544,10 @@ public:
 	CEventButton(const CEventButton&) = delete; // prevent copy
 	CEventButton& operator=(const CEventButton&) = delete; // prevent assignment
 
-	void BindColor() {
+	void BindColor() override {
 		this->SetColor(event->bindlist.begin()==event->bindlist.end() ? CLR_GREY : CLR_WHITE);
 	}
-	void Click() {
+	void Click() override {
 		if (last_clicked) last_clicked->BindColor();
 		this->SetColor(CLR_GREEN);
 		SetActiveEvent(event);
@@ -1564,7 +1564,7 @@ public:
 	}
 	void Change(const char * format,...) GCC_ATTRIBUTE(__format__(__printf__,2,3));
 
-	void Draw() {
+	void Draw() override {
 		if (!enabled) return;
 		DrawText(x+2,y+2,caption,color);
 	}
@@ -1591,7 +1591,7 @@ public:
 		  type(_type)
 	{}
 
-	void Click() {
+	void Click() override {
 		switch (type) {
 		case BB_Add:
 			mapper.addbind=true;
@@ -1636,7 +1636,7 @@ public:
 		  type(t)
 	{}
 
-	void Draw() {
+	void Draw() override {
 		if (!enabled) return;
 		bool checked=false;
 		switch (type) {
@@ -1662,7 +1662,7 @@ public:
 		}
 		CClickableTextButton::Draw();
 	}
-	void Click() {
+	void Click() override {
 		switch (type) {
 		case BC_Mod1:
 			mapper.abind->mods^=BMOD_Mod1;
@@ -1690,7 +1690,7 @@ public:
 	          key(k)
 	{}
 
-	void Active(bool yesno) {
+	void Active(bool yesno) override {
 		KEYBOARD_AddKey(key,yesno);
 	}
 
@@ -1714,13 +1714,13 @@ public:
 	CJAxisEvent(const CJAxisEvent&) = delete; // prevent copy
 	CJAxisEvent& operator=(const CJAxisEvent&) = delete; // prevent assignment
 
-	void Active(bool /*moved*/) {
+	void Active(bool /*moved*/) override {
 		virtual_joysticks[stick].axis_pos[axis]=(int16_t)(GetValue()*(positive?1:-1));
 	}
-	virtual Bitu GetActivityCount() {
+	Bitu GetActivityCount() override {
 		return activity|opposite_axis->activity;
 	}
-	virtual void RepostActivity() {
+	void RepostActivity() override {
 		/* caring for joystick movement into the opposite direction */
 		opposite_axis->Active(true);
 	}
@@ -1741,7 +1741,7 @@ public:
 	          button(btn)
 	{}
 
-	void Active(bool pressed)
+	void Active(bool pressed) override
 	{
 		virtual_joysticks[stick].button_pressed[button]=pressed;
 	}
@@ -1759,7 +1759,7 @@ public:
 	          dir(d)
 	{}
 
-	void Active(bool pressed)
+	void Active(bool pressed) override
 	{
 		virtual_joysticks[stick].hat_pressed[(hat<<2)+dir]=pressed;
 	}
@@ -1775,7 +1775,7 @@ public:
 	          wmod(_wmod)
 	{}
 
-	void Active(bool yesno)
+	void Active(bool yesno) override
 	{
 		if (yesno)
 			mapper.mods |= (static_cast<Bitu>(1) << (wmod-1));
@@ -1803,11 +1803,11 @@ public:
 		handlergroup.push_back(this);
 	}
 
-	~CHandlerEvent() = default;
+	~CHandlerEvent() override = default;
 	CHandlerEvent(const CHandlerEvent&) = delete; // prevent copy
 	CHandlerEvent& operator=(const CHandlerEvent&) = delete; // prevent assignment
 
-	void Active(bool yesno) { (*handler)(yesno); }
+	void Active(bool yesno) override { (*handler)(yesno); }
 
 	void MakeDefaultBind(char *buf)
 	{

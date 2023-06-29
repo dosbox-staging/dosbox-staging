@@ -36,7 +36,7 @@ class MOUNT final : public Program {
 	    }
 	    void Move_Z(char new_z);
 	    void ListMounts();
-	    void Run();
+	    void Run() override;
     private:
         static void AddMessages();
 };

@@ -35,7 +35,7 @@ public:
 		               HELP_CmdType::Program,
 		               "MORE"};
 	}
-	void Run();
+	void Run() override;
 
 private:
 	bool ParseCommandLine(MoreOutputFiles &output);

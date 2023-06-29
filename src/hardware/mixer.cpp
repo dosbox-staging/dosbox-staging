@@ -2247,7 +2247,7 @@ public:
 		               "MIXER"};
 	}
 
-	void Run()
+	void Run() override
 	{
 		if (HelpRequested()) {
 			WriteOut(MSG_Get("SHELL_CMD_MIXER_HELP_LONG"));

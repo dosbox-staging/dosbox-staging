@@ -33,7 +33,7 @@ class BIOSTEST final : public Program {
 		                   HELP_CmdType::Program,
 		                   "BIOSTEST"};
 	    }
-	void Run(void);
+	void Run(void) override;
 };
 
 #endif // DOSBOX_PROGRAM_BIOSTEST_H

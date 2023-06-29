@@ -33,7 +33,7 @@ public:
 		               HELP_CmdType::Program,
 		               "PLACEHOLDER"};
 	}
-	void Run();
+	void Run() override;
 private:
 	static void AddMessages();
 };

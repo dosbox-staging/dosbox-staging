@@ -244,8 +244,8 @@ public:
 	{
 		default_value = value = _value;
 	}
-	bool SetValue(const std::string& input);
-	~Prop_double() {}
+	bool SetValue(const std::string& input) override;
+	~Prop_double() override = default;
 };
 
 class Prop_bool final : public Property {
@@ -255,8 +255,8 @@ public:
 	{
 		default_value = value = _value;
 	}
-	bool SetValue(const std::string& in);
-	~Prop_bool() {}
+	bool SetValue(const std::string& in) override;
+	~Prop_bool() override = default;
 };
 
 class Prop_string : public Property {
@@ -296,8 +296,8 @@ public:
 	{
 		default_value = value = _value;
 	}
-	bool SetValue(const std::string& in);
-	~Prop_hex() {}
+	bool SetValue(const std::string& in) override;
+	~Prop_hex() override = default;
 };
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
@@ -466,7 +466,7 @@ public:
 	        : PropMultiVal(_propname, when, sep)
 	{}
 
-	virtual bool SetValue(const std::string& input);
+	bool SetValue(const std::string& input) override;
 };
 
 class Section_line final : public Section {

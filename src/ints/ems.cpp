@@ -111,16 +111,35 @@ public:
 		GEMMIS_seg = 0;
 	}
 
-	bool Read(uint8_t * /*data*/,uint16_t * /*size*/) { return false;}
-	bool Write(uint8_t * /*data*/,uint16_t * /*size*/){
-		LOG(LOG_IOCTL,LOG_NORMAL)("EMS:Write to device");
+	bool Read(uint8_t* /*data*/, uint16_t* /*size*/) override
+	{
 		return false;
 	}
-	bool Seek(uint32_t * /*pos*/,uint32_t /*type*/){return false;}
-	bool Close(){return false;}
-	uint16_t GetInformation(void){return 0xc0c0;}
-	bool ReadFromControlChannel(PhysPt bufptr,uint16_t size,uint16_t * retcode);
-	bool WriteToControlChannel(PhysPt /*bufptr*/,uint16_t /*size*/,uint16_t * /*retcode*/){return true;}
+	bool Write(uint8_t* /*data*/, uint16_t* /*size*/) override
+	{
+		LOG(LOG_IOCTL, LOG_NORMAL)("EMS:Write to device");
+		return false;
+	}
+	bool Seek(uint32_t* /*pos*/, uint32_t /*type*/) override
+	{
+		return false;
+	}
+	bool Close() override
+	{
+		return false;
+	}
+	uint16_t GetInformation(void) override
+	{
+		return 0xc0c0;
+	}
+	bool ReadFromControlChannel(PhysPt bufptr, uint16_t size,
+	                            uint16_t* retcode) override;
+	bool WriteToControlChannel(PhysPt /*bufptr*/, uint16_t /*size*/,
+	                           uint16_t* /*retcode*/) override
+	{
+		return true;
+	}
+
 private:
 	bool is_emm386;
 };
