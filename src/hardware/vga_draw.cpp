@@ -1806,17 +1806,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	switch (machine) {
 	case MCH_CGA:
 	case MCH_PCJR:
-	case MCH_TANDY:
-		vga.draw.mode = DRAWLINE;
-		break;
+	case MCH_TANDY: vga.draw.mode = DRAWLINE; break;
 	case MCH_EGA:
 		// Paradise SVGA uses the same panning mechanism as EGA
 		vga.draw.mode = EGALINE;
 		break;
 	case MCH_VGA:
-	default:
-		vga.draw.mode = PART;
-		break;
+	default: vga.draw.mode = PART; break;
 	}
 
 	if (IS_EGAVGA_ARCH) {
@@ -1869,12 +1865,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			}
 		} else {
 			// EGA card in monochrome mode
-			// It is not meant to be autodetected that way, you either
-			// have a monochrome or color monitor connected and
-			// the EGA switches configured appropriately.
-			// But this would only be a problem if a program sets
-			// the adapter to monochrome mode and still expects color output.
-			// Such a program should be shot to the moon...
+			// It is not meant to be autodetected that way, you
+			// either have a monochrome or color monitor connected
+			// and the EGA switches configured appropriately. But
+			// this would only be a problem if a program sets the
+			// adapter to monochrome mode and still expects color
+			// output. Such a program should be shot to the moon...
 			VGA_ATTR_SetEGAMonitorPalette(MONO);
 		}
 	}
@@ -1899,22 +1895,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	unsigned bpp;
 	switch (vga.mode) {
-	case M_LIN15:
-		bpp = 15;
-		break;
-	case M_LIN16:
-		bpp = 16;
-		break;
-	case M_LIN24:
-		bpp = 24;
-		break;
+	case M_LIN15: bpp = 15; break;
+	case M_LIN16: bpp = 16; break;
+	case M_LIN24: bpp = 24; break;
 	case M_LIN32:
 	case M_CGA2_COMPOSITE:
 	case M_CGA4_COMPOSITE:
 	case M_CGA_TEXT_COMPOSITE: bpp = 32; break;
-	default:
-		bpp = 8;
-		break;
+	default: bpp = 8; break;
 	}
 
 	vga.draw.linear_base = vga.mem.linear;
