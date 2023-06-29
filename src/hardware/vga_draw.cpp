@@ -1186,7 +1186,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 #endif
 	switch (vga.mode) {
 	case M_EGA:
-		if (!(vga.crtc.mode_control & 0x1)) {
+		if (!(vga.crtc.mode_control.map_display_address_13)) {
 			vga.draw.linear_mask &= ~0x10000;
 		} else {
 			vga.draw.linear_mask |= 0x10000;
@@ -1970,7 +1970,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		break;
 
 	case M_LIN8:
-		if (vga.crtc.mode_control & 0x8) {
+		if (vga.crtc.mode_control.div_memory_address_clock_by_2) {
 			width >>= 1;
 		} else if (svgaCard == SVGA_S3Trio && !(vga.s3.reg_3a & 0x10)) {
 			doublewidth = true;
@@ -1980,7 +1980,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_LIN24:
 	case M_LIN32:
 		width <<= 3;
-		if (vga.crtc.mode_control & 0x8) {
+		if (vga.crtc.mode_control.div_memory_address_clock_by_2) {
 			doublewidth = true;
 			if (vga.mode == M_LIN32 && CurMode->mode == 0x10f) {
 				pixel_aspect_ratio /= 2;
@@ -1994,7 +1994,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_LIN16:
 		// 15/16 bpp modes double the horizontal values
 		width <<= 2;
-		if ((vga.crtc.mode_control & 0x8)) {
+		if (vga.crtc.mode_control.div_memory_address_clock_by_2) {
 			doublewidth = true;
 		} else {
 			pixel_aspect_ratio *= 2;

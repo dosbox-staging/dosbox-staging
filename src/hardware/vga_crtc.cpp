@@ -263,7 +263,7 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 			//Byte,word,dword mode
 			if ( crtc(underline_location) & 0x20 )
 				vga.config.addr_shift = 2;
-			else if ( crtc( mode_control) & 0x40 )
+			else if (vga.crtc.mode_control.word_byte_mode_select)
 				vga.config.addr_shift = 0;
 			else
 				vga.config.addr_shift = 1;
@@ -298,42 +298,31 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 				IBM actually says bits 0-7.
 		*/
 		break;
-	case 0x17:	/* Mode Control Register */
-		crtc(mode_control)=val;
-		vga.tandy.line_mask = (~val) & 3;
-		//Byte,word,dword mode
-		if ( crtc(underline_location) & 0x20 )
-			vga.config.addr_shift = 2;
-		else if ( crtc( mode_control) & 0x40 )
-			vga.config.addr_shift = 0;
-		else
-			vga.config.addr_shift = 1;
 
-		if ( vga.tandy.line_mask ) {
-			vga.tandy.line_shift = 13;
-			vga.tandy.addr_mask = (1 << 13) - 1;
+	case 0x17:
+		vga.crtc.mode_control.data = val;
+		vga.tandy.line_mask        = (~val) & 3;
+
+		// Byte, word, dword mode
+		if (vga.crtc.underline_location & 0x20) {
+			vga.config.addr_shift = 2;
+		} else if (vga.crtc.mode_control.word_byte_mode_select) {
+			vga.config.addr_shift = 0;
 		} else {
-			vga.tandy.addr_mask = ~0;
+			vga.config.addr_shift = 1;
+		}
+
+		if (vga.tandy.line_mask) {
+			vga.tandy.line_shift = 13;
+			vga.tandy.addr_mask  = (1 << 13) - 1;
+		} else {
+			vga.tandy.addr_mask  = ~0;
 			vga.tandy.line_shift = 0;
 		}
-		//Should we really need to do a determinemode here?
-//		VGA_DetermineMode();
-		/*
-			0	If clear use CGA compatible memory addressing system
-				by substituting character row scan counter bit 0 for address bit 13,
-				thus creating 2 banks for even and odd scan lines.
-			1	If clear use Hercules compatible memory addressing system by
-				substituting character row scan counter bit 1 for address bit 14,
-				thus creating 4 banks.
-			2	If set increase scan line counter only every second line.
-			3	If set increase memory address counter only every other character clock.
-			5	When in Word Mode bit 15 is rotated to bit 0 if this bit is set else
-				bit 13 is rotated into bit 0.
-			6	If clear system is in word mode. Addresses are rotated 1 position up
-				bringing either bit 13 or 15 into bit 0.
-			7	Clearing this bit will reset the display system until the bit is set again.
-		*/
+		// Should we really need to do a determinemode here?
+		// VGA_DetermineMode();
 		break;
+
 	case 0x18:	/* Line Compare Register */
 		crtc(line_compare)=val;
 		vga.config.line_compare=(vga.config.line_compare & 0x700) | val;
@@ -381,7 +370,7 @@ uint8_t vga_read_p3d5(io_port_t, io_width_t)
 	case 0x14: return crtc(underline_location);
 	case 0x15: return crtc(start_vertical_blanking);
 	case 0x16: return crtc(end_vertical_blanking);
-	case 0x17: return crtc(mode_control);
+	case 0x17: return vga.crtc.mode_control.data;
 	case 0x18: return crtc(line_compare);
 	default:
 		if (svga.read_p3d5) {
