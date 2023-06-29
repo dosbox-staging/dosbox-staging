@@ -285,7 +285,6 @@ struct VGA_Draw {
 	double custom_refresh_hz = RefreshRateDosDefault;
 	VgaRateMode dos_rate_mode = VgaRateMode::Default;
 	Fraction pixel_aspect_ratio = {};
-	bool double_scan = false;
 	bool doublewidth = false;
 	bool doubleheight = false;
 	VgaSub350LineHandling vga_sub_350_line_handling = {};
