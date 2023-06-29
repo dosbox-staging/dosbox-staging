@@ -253,12 +253,6 @@ void VGA_SetRatePreference(const std::string &pref)
 
 double VGA_GetPreferredRate()
 {
-	// If we're in a text-mode, always use the as-indicated DOS rate because
-	// the vblank rate is often used for timing.
-	if (CurMode->type & M_TEXT_MODES)
-		return vga.draw.dos_refresh_hz;
-
-	// In we're in a graphical mode, then we can use preferred rates
 	switch (vga.draw.dos_rate_mode) {
 	case VGA_RATE_MODE::DEFAULT:
 		return vga.draw.dos_refresh_hz;

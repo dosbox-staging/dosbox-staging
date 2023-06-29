@@ -51,7 +51,6 @@ enum class FRAME_MODE {
 	UNSET,
 	CFR,        // constant frame rate, as defined by the emulated system
 	VFR,        // variable frame rate, as defined by the emulated system
-	SYNCED_CFR, // constant frame rate, synced with the display's refresh rate
 	THROTTLED_VFR, // variable frame rate, throttled to the display's rate
 };
 
@@ -64,22 +63,26 @@ enum class HOST_RATE_MODE {
 
 enum class SCALING_MODE { NONE, NEAREST };
 
-enum class VSYNC_STATE {
-	UNSET = -2,
-	ADAPTIVE = -1,
-	OFF = 0,
-	ON = 1,
+enum class VsyncState {
+	Unset    = -2,
+	Adaptive = -1,
+	Off      = 0,
+	On       = 1,
+	Yield    = 2,
 };
 
-// A vsync preference consists of three parts:
-//  - What the user asked for
-//  - What the host reports vsync as after setting it
-//  - What the actual resulting state is after setting it
-struct VsyncPreference {
-	VSYNC_STATE requested = VSYNC_STATE::UNSET;
-	VSYNC_STATE reported = VSYNC_STATE::UNSET;
-	VSYNC_STATE resultant = VSYNC_STATE::UNSET;
-	int benchmarked_rate = 0;
+// The vsync settings consists of three parts:
+//  - What the user asked for,
+//  - What the measured state is after setting the requested. The video driver
+//    may honor the requested vsync state, ignore it, change it, or be outright
+//    buggy.
+//  - The benchmarked rate is the actual frame rate after setting the requested
+//    stated, and is used to determined the measured state.
+//
+struct VsyncSettings {
+	VsyncState requested = VsyncState::Unset;
+	VsyncState measured  = VsyncState::Unset;
+	int benchmarked_rate  = 0;
 };
 
 enum PRIORITY_LEVELS {
@@ -161,9 +164,9 @@ struct SDL_Block {
 		std::string cycles_ms_str   = {};
 	} title_bar = {};
 	struct {
-		VsyncPreference when_windowed = {};
-		VsyncPreference when_fullscreen = {};
-		VSYNC_STATE current = VSYNC_STATE::ON;
+		VsyncSettings when_windowed = {};
+		VsyncSettings when_fullscreen = {};
+		VsyncState current = VsyncState::On;
 		int skip_us = 0;
 	} vsync = {};
 #if C_OPENGL
