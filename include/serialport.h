@@ -165,7 +165,7 @@ public:
 	bool dbg_register = false;
 	bool dbg_interrupt = false;
 	bool dbg_aux = false;
-	void log_ser(bool active, char const *format, ...);
+	void log_ser(bool active, const char* format, ...);
 #endif
 
 	static bool getUintFromString(const char *name,
@@ -487,12 +487,12 @@ public:
 	// Creates a COM device that communicates with the num-th parallel port,
 	// i.e. is LPTnum
 	device_COM(class CSerial* sc);
-	~device_COM();
-	bool Read(uint8_t *data, uint16_t *size);
-	bool Write(uint8_t *data, uint16_t *size);
-	bool Seek(uint32_t *pos, uint32_t type);
-	bool Close();
-	uint16_t GetInformation();
+	~device_COM() override;
+	bool Read(uint8_t* data, uint16_t* size) override;
+	bool Write(uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, uint32_t type) override;
+	bool Close() override;
+	uint16_t GetInformation() override;
 
 private:
 	CSerial *sclass = nullptr;

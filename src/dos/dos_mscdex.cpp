@@ -1324,19 +1324,38 @@ static bool MSCDEX_Handler(void) {
 
 class device_MSCDEX final : public DOS_Device {
 public:
-	device_MSCDEX() { SetName("MSCD001"); }
-	bool Read (uint8_t * /*data*/,uint16_t * /*size*/) { return false;}
-	bool Write(uint8_t * /*data*/,uint16_t * /*size*/) { 
-		LOG(LOG_ALL,LOG_NORMAL)("Write to mscdex device");	
+	device_MSCDEX()
+	{
+		SetName("MSCD001");
+	}
+	bool Read(uint8_t* /*data*/, uint16_t* /*size*/) override
+	{
 		return false;
 	}
-	bool Seek(uint32_t * /*pos*/,uint32_t /*type*/){return false;}
-	bool Close(){return false;}
-	uint16_t GetInformation(void){return 0xc880;}
-	bool ReadFromControlChannel(PhysPt bufptr,uint16_t size,uint16_t * retcode);
-	bool WriteToControlChannel(PhysPt bufptr,uint16_t size,uint16_t * retcode);
+	bool Write(uint8_t* /*data*/, uint16_t* /*size*/) override
+	{
+		LOG(LOG_ALL, LOG_NORMAL)("Write to mscdex device");
+		return false;
+	}
+	bool Seek(uint32_t* /*pos*/, uint32_t /*type*/) override
+	{
+		return false;
+	}
+	bool Close() override
+	{
+		return false;
+	}
+	uint16_t GetInformation(void) override
+	{
+		return 0xc880;
+	}
+	bool ReadFromControlChannel(PhysPt bufptr, uint16_t size,
+	                            uint16_t* retcode) override;
+	bool WriteToControlChannel(PhysPt bufptr, uint16_t size,
+	                           uint16_t* retcode) override;
+
 private:
-//	uint8_t cache;
+	//	uint8_t cache;
 };
 
 bool device_MSCDEX::ReadFromControlChannel(PhysPt bufptr,uint16_t size,uint16_t * retcode) { 

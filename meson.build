@@ -102,6 +102,7 @@ foreach flag : [
     '-Wsizeof-pointer-div',
     '-Wstack-protector',
     '-Wstrict-null-sentinel',
+    '-Wsuggest-override',
 ]
     if cxx.has_argument(flag)
        warnings += flag

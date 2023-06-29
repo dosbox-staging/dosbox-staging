@@ -6926,18 +6926,18 @@ static void Voodoo_Startup();
 static struct Voodoo_Real_PageHandler : public PageHandler {
 	Voodoo_Real_PageHandler() { flags = PFLAG_NOCODE; }
 
-	uint8_t readb([[maybe_unused]] PhysPt addr)
+	uint8_t readb([[maybe_unused]] PhysPt addr) override
 	{
 		// LOG_MSG("VOODOO: readb at %x", addr);
 		return 0xff;
 	}
 
-	void writeb([[maybe_unused]] PhysPt addr, [[maybe_unused]] uint8_t val)
+	void writeb([[maybe_unused]] PhysPt addr, [[maybe_unused]] uint8_t val) override
 	{
 		// LOG_MSG("VOODOO: writeb at %x", addr);
 	}
 
-	uint16_t readw(PhysPt addr)
+	uint16_t readw(PhysPt addr) override
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		Bitu retval=voodoo_r((addr>>2)&0x3FFFFF);
@@ -6950,7 +6950,7 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 		return retval;
 	}
 
-	void writew(PhysPt addr, uint16_t val)
+	void writew(PhysPt addr, uint16_t val) override
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr & 3))
@@ -6961,7 +6961,7 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 			E_Exit("voodoo writew unaligned");
 	}
 
-	uint32_t readd(PhysPt addr)
+	uint32_t readd(PhysPt addr) override
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr&3)) {
@@ -6976,7 +6976,7 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 		}
 	}
 
-	void writed(PhysPt addr, uint32_t val)
+	void writed(PhysPt addr, uint32_t val) override
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr&3)) {
@@ -7003,33 +7003,33 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 static struct Voodoo_Init_PageHandler : public PageHandler {
 	Voodoo_Init_PageHandler() { flags = PFLAG_NOCODE; }
 
-	uint8_t readb([[maybe_unused]] PhysPt addr)
+	uint8_t readb([[maybe_unused]] PhysPt addr) override
 	{
 		return 0xff;
 	}
 
-	uint16_t readw(PhysPt addr)
+	uint16_t readw(PhysPt addr) override
 	{
 		Voodoo_Startup();
 		return voodoo_real_pagehandler.readw(addr);
 	}
 
-	uint32_t readd(PhysPt addr)
+	uint32_t readd(PhysPt addr) override
 	{
 		Voodoo_Startup();
 		return voodoo_real_pagehandler.readd(addr);
 	}
 
-	void writeb([[maybe_unused]] PhysPt addr, [[maybe_unused]] uint8_t val)
+	void writeb([[maybe_unused]] PhysPt addr, [[maybe_unused]] uint8_t val) override
 	{}
 
-	void writew(PhysPt addr, uint16_t val)
+	void writew(PhysPt addr, uint16_t val) override
 	{
 		Voodoo_Startup();
 		voodoo_real_pagehandler.writew(addr, val);
 	}
 
-	void writed(PhysPt addr, uint32_t val)
+	void writed(PhysPt addr, uint32_t val) override
 	{
 		Voodoo_Startup();
 		voodoo_real_pagehandler.writed(addr, val);
@@ -7063,7 +7063,7 @@ struct PCI_SSTDevice : public PCI_Device {
 		device_id = _device_id;
 	}
 
-	Bits ParseReadRegister(uint8_t regnum)
+	Bits ParseReadRegister(uint8_t regnum) override
 	{
 		//LOG_MSG("SST ParseReadRegister %x",regnum);
 		switch (regnum) {
@@ -7077,7 +7077,7 @@ struct PCI_SSTDevice : public PCI_Device {
 		return regnum;
 	}
 
-	bool OverrideReadRegister(uint8_t regnum, uint8_t* rval, uint8_t* rval_mask)
+	bool OverrideReadRegister(uint8_t regnum, uint8_t* rval, uint8_t* rval_mask) override
 	{
 		if (vtype != VOODOO_2) return false;
 		switch (regnum) {
@@ -7103,7 +7103,7 @@ struct PCI_SSTDevice : public PCI_Device {
 		return false;
 	}
 
-	Bits ParseWriteRegister(uint8_t regnum, uint8_t value)
+	Bits ParseWriteRegister(uint8_t regnum, uint8_t value) override
 	{
 		//LOG_MSG("SST ParseWriteRegister %x:=%x",regnum,value);
 		if ((regnum>=0x14) && (regnum<0x28)) return -1;	// base addresses are read-only
@@ -7145,7 +7145,7 @@ struct PCI_SSTDevice : public PCI_Device {
 		return value;
 	}
 
-	bool InitializeRegisters(uint8_t registers[256])
+	bool InitializeRegisters(uint8_t registers[256]) override
 	{
 		// init (3dfx voodoo)
 		registers[0x08] = 0x02;	// revision

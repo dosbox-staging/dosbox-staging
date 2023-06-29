@@ -50,14 +50,16 @@ public:
 		ext.strategy = real_readw(seg, off + 6);
 		ext.interrupt = real_readw(seg, off + 8);
 	}
-	virtual bool Read(uint8_t *data, uint16_t *size);
-	virtual bool Write(uint8_t *data, uint16_t *size);
-	virtual bool Seek(uint32_t *pos, uint32_t type);
-	virtual bool Close();
-	virtual uint16_t GetInformation();
-	virtual bool ReadFromControlChannel(PhysPt bufptr, uint16_t size, uint16_t *retcode);
-	virtual bool WriteToControlChannel(PhysPt bufptr, uint16_t size, uint16_t *retcode);
-	virtual uint8_t GetStatus(bool input_flag);
+	bool Read(uint8_t* data, uint16_t* size) override;
+	bool Write(uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, uint32_t type) override;
+	bool Close() override;
+	uint16_t GetInformation() override;
+	bool ReadFromControlChannel(PhysPt bufptr, uint16_t size,
+	                            uint16_t* retcode) override;
+	bool WriteToControlChannel(PhysPt bufptr, uint16_t size,
+	                           uint16_t* retcode) override;
+	uint8_t GetStatus(bool input_flag) override;
 	bool CheckSameDevice(uint16_t seg, uint16_t s_off, uint16_t i_off);
 
 private:
@@ -267,35 +269,62 @@ static void DOS_CheckOpenExtDevice(const char *name)
 
 class device_NUL : public DOS_Device {
 public:
-	device_NUL() { SetName("NUL"); }
+	device_NUL()
+	{
+		SetName("NUL");
+	}
 
-	virtual bool Read(uint8_t * /*data*/,uint16_t * size) {
-		*size = 0; //Return success and no data read. 
-		LOG(LOG_IOCTL,LOG_NORMAL)("%s:READ",GetName());
+	bool Read(uint8_t* /*data*/, uint16_t* size) override
+	{
+		*size = 0; // Return success and no data read.
+		LOG(LOG_IOCTL, LOG_NORMAL)("%s:READ", GetName());
 		return true;
 	}
-	virtual bool Write(uint8_t * /*data*/,uint16_t * /*size*/) {
-		LOG(LOG_IOCTL,LOG_NORMAL)("%s:WRITE",GetName());
+	bool Write(uint8_t* /*data*/, uint16_t* /*size*/) override
+	{
+		LOG(LOG_IOCTL, LOG_NORMAL)("%s:WRITE", GetName());
 		return true;
 	}
-	virtual bool Seek(uint32_t * /*pos*/,uint32_t /*type*/) {
-		LOG(LOG_IOCTL,LOG_NORMAL)("%s:SEEK",GetName());
+	bool Seek(uint32_t* /*pos*/, uint32_t /*type*/) override
+	{
+		LOG(LOG_IOCTL, LOG_NORMAL)("%s:SEEK", GetName());
 		return true;
 	}
-	virtual bool Close() { return true; }
-	virtual uint16_t GetInformation() { return 0x8084; }
-	virtual bool ReadFromControlChannel(PhysPt /*bufptr*/,uint16_t /*size*/,uint16_t * /*retcode*/){return false;}
-	virtual bool WriteToControlChannel(PhysPt /*bufptr*/,uint16_t /*size*/,uint16_t * /*retcode*/){return false;}
+	bool Close() override
+	{
+		return true;
+	}
+	uint16_t GetInformation() override
+	{
+		return 0x8084;
+	}
+	bool ReadFromControlChannel(PhysPt /*bufptr*/, uint16_t /*size*/,
+	                            uint16_t* /*retcode*/) override
+	{
+		return false;
+	}
+	bool WriteToControlChannel(PhysPt /*bufptr*/, uint16_t /*size*/,
+	                           uint16_t* /*retcode*/) override
+	{
+		return false;
+	}
 };
 
 class device_LPT1 final : public device_NUL {
 public:
-   	device_LPT1() { SetName("LPT1");}
-	uint16_t GetInformation() { return 0x80A0; }
-	bool Read(uint8_t* /*data*/,uint16_t * /*size*/){
+	device_LPT1()
+	{
+		SetName("LPT1");
+	}
+	uint16_t GetInformation() override
+	{
+		return 0x80A0;
+	}
+	bool Read(uint8_t* /*data*/, uint16_t* /*size*/) override
+	{
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
-	}	
+	}
 };
 
 bool DOS_Device::Read(uint8_t * data,uint16_t * size) {

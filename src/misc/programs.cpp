@@ -303,7 +303,7 @@ public:
 		               HELP_CmdType::Program,
 		               "CONFIG"};
 	}
-	void Run(void);
+	void Run(void) override;
 
 private:
 	void restart(const char* useconfig);

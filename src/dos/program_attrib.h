@@ -34,7 +34,7 @@ public:
 		               HELP_CmdType::Program,
 		               "ATTRIB"};
 	}
-	void Run();
+	void Run() override;
 };
 
 #endif

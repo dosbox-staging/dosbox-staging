@@ -34,7 +34,7 @@ class LOADROM final : public Program {
 		                   HELP_CmdType::Program,
 		                   "LOADROM"};
 	    }
-	    void Run(void);
+	    void Run(void) override;
     private:
         static void AddMessages();
 };

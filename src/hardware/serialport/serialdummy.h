@@ -27,17 +27,17 @@
 class CSerialDummy final : public CSerial {
 public:
 	CSerialDummy(const uint8_t port_idx, CommandLine *cmd);
-	~CSerialDummy();
+	~CSerialDummy() override;
 
-	void setRTSDTR(bool rts, bool dtr);
-	void setRTS(bool val);
-	void setDTR(bool val);
+	void setRTSDTR(bool rts, bool dtr) override;
+	void setRTS(bool val) override;
+	void setDTR(bool val) override;
 
-	void updatePortConfig(uint16_t, uint8_t lcr);
-	void updateMSR();
-	void transmitByte(uint8_t val, bool first);
-	void setBreak(bool value);
-	void handleUpperEvent(uint16_t type);
+	void updatePortConfig(uint16_t, uint8_t lcr) override;
+	void updateMSR() override;
+	void transmitByte(uint8_t val, bool first) override;
+	void setBreak(bool value) override;
+	void handleUpperEvent(uint16_t type) override;
 
 #ifdef CHECKIT_TESTPLUG
 	uint8_t loopbackdata = 0;

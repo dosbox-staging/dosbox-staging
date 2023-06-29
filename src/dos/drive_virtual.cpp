@@ -326,11 +326,11 @@ public:
 	Virtual_File(const Virtual_File &) = delete; // prevent copying
 	Virtual_File &operator=(const Virtual_File &) = delete; // prevent assignment
 
-	bool Read(uint8_t * data,uint16_t * size);
-	bool Write(uint8_t * data,uint16_t * size);
-	bool Seek(uint32_t * pos,uint32_t type);
-	bool Close();
-	uint16_t GetInformation();
+	bool Read(uint8_t* data, uint16_t* size) override;
+	bool Write(uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, uint32_t type) override;
+	bool Close() override;
+	uint16_t GetInformation() override;
 
 private:
 	const vfile_data_t file_data;

@@ -2179,11 +2179,11 @@ class DEBUG final : public Program {
 public:
 	DEBUG() : active(false) { pDebugcom = this; }
 
-	~DEBUG() { pDebugcom = nullptr; }
+	~DEBUG() override { pDebugcom = nullptr; }
 
 	bool IsActive() const { return active; }
 
-	void Run()
+	void Run() override
 	{
 		if(cmd->FindExist("/NOMOUSE",false)) {
 	        	real_writed(0,0x33<<2,0);

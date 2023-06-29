@@ -159,9 +159,9 @@ public:
 	IDEATADevice(IDEController *c, uint8_t disk_index);
 	IDEATADevice(const IDEATADevice &other) = delete;            // prevent copying
 	IDEATADevice &operator=(const IDEATADevice &other) = delete; // prevent assignment
-	virtual ~IDEATADevice();
+	~IDEATADevice() override;
 
-	virtual void writecommand(uint8_t cmd);
+	void writecommand(uint8_t cmd) override;
 
 public:
 	std::string id_serial = "8086";
@@ -172,8 +172,10 @@ public:
 	imageDisk* getBIOSdisk();
 
 	void update_from_biosdisk();
-	virtual uint32_t data_read(io_width_t width);          /* read from 1F0h data port from IDE device */
-	virtual void data_write(uint32_t v, io_width_t width); /* write to 1F0h data port to IDE device */
+	/* read from 1F0h data port from IDE device */
+	uint32_t data_read(io_width_t width) override;
+	/* write to 1F0h data port to IDE device */
+	void data_write(uint32_t v, io_width_t width) override;
 	virtual void generate_identify_device();
 	virtual void prepare_read(uint32_t offset, uint32_t size);
 	virtual void prepare_write(uint32_t offset, uint32_t size);
@@ -216,9 +218,9 @@ public:
 	IDEATAPICDROMDevice(IDEController *c, uint8_t requested_drive_index);
 	IDEATAPICDROMDevice(const IDEATAPICDROMDevice &other) = delete;            // prevent copying
 	IDEATAPICDROMDevice &operator=(const IDEATAPICDROMDevice &other) = delete; // prevent assignment
-	virtual ~IDEATAPICDROMDevice();
+	~IDEATAPICDROMDevice() override;
 
-	virtual void writecommand(uint8_t cmd);
+	void writecommand(uint8_t cmd) override;
 
 public:
 	std::string id_serial = "123456789";
@@ -228,13 +230,16 @@ public:
 
 	CDROM_Interface *getMSCDEXDrive();
 	void update_from_cdrom();
-	virtual uint32_t data_read(io_width_t width);          /* read from 1F0h data port from IDE device */
-	virtual void data_write(uint32_t v, io_width_t width); /* write to 1F0h data port to IDE device */
+	/* read from 1F0h data port from IDE device */
+	uint32_t data_read(io_width_t width) override;
+	/* write to 1F0h data port to IDE device */
+	void data_write(uint32_t v, io_width_t width) override;
 	virtual void generate_identify_device();
 	virtual void generate_mmc_inquiry();
 	virtual void prepare_read(uint32_t offset, uint32_t size);
 	virtual void prepare_write(uint32_t offset, uint32_t size);
-	virtual void set_sense(uint8_t SK, uint8_t ASC = 0, uint8_t ASCQ = 0, uint32_t len = 0);
+	virtual void set_sense(uint8_t SK, uint8_t ASC = 0, uint8_t ASCQ = 0,
+	                       uint32_t len = 0);
 	virtual bool common_spinup_response(bool trigger, bool wait);
 	virtual void on_mode_select_io_complete();
 	virtual void atapi_io_completion();

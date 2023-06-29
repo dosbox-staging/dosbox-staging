@@ -67,27 +67,33 @@ class SlirpEthernetConnection : public EthernetConnection {
 public:
 	/* Boilerplate EthernetConnection interface */
 	SlirpEthernetConnection();
-	~SlirpEthernetConnection();
+	~SlirpEthernetConnection() override;
 
 	/* We can't copy this */
-	SlirpEthernetConnection(const SlirpEthernetConnection &) = delete;
-	SlirpEthernetConnection &operator=(const SlirpEthernetConnection &) = delete;
+	SlirpEthernetConnection(const SlirpEthernetConnection&) = delete;
+	SlirpEthernetConnection& operator=(const SlirpEthernetConnection&) = delete;
 
-	bool Initialize(Section *config);
-	void SendPacket(const uint8_t *packet, int len);
-	void GetPackets(std::function<int(const uint8_t *, int)> callback);
+	bool Initialize(Section* config) override;
+	void SendPacket(const uint8_t* packet, int len) override;
+	void GetPackets(std::function<int(const uint8_t*, int)> callback) override;
 
 	/* Called by libslirp when it has a packet for us */
-	int ReceivePacket(const uint8_t *packet, int len);
+	int ReceivePacket(const uint8_t* packet, int len);
 
 	// Used in callbacks to bounds-check packet lengths
-	int GetMTU() const { return static_cast<int>(config.if_mtu); }
-	int GetMRU() const { return static_cast<int>(config.if_mru); }
+	int GetMTU() const
+	{
+		return static_cast<int>(config.if_mtu);
+	}
+	int GetMRU() const
+	{
+		return static_cast<int>(config.if_mru);
+	}
 
 	/* Called by libslirp to create, free and modify timers */
-	struct slirp_timer *TimerNew(SlirpTimerCb cb, void *cb_opaque);
-	void TimerFree(struct slirp_timer *timer);
-	void TimerMod(struct slirp_timer *timer, int64_t expire_time);
+	struct slirp_timer* TimerNew(SlirpTimerCb cb, void* cb_opaque);
+	void TimerFree(struct slirp_timer* timer);
+	void TimerMod(struct slirp_timer* timer, int64_t expire_time);
 
 	/* Called by libslirp to interact with our polling system */
 	int PollAdd(int fd, int slirp_events);

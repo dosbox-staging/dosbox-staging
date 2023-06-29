@@ -35,7 +35,7 @@ public:
 		               HELP_CmdType::Program,
 		               "AUTOTYPE"};
 	}
-	void Run();
+	void Run() override;
 private:
 	static void AddMessages();
 	void PrintUsage();

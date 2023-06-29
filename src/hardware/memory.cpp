@@ -66,7 +66,7 @@ public:
 	IllegalPageHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
 	}
-	uint8_t readb(PhysPt addr)
+	uint8_t readb(PhysPt addr) override
 	{
 #if C_DEBUG
 		LOG_MSG("Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
@@ -79,7 +79,7 @@ public:
 #endif
 		return 0xff;
 	}
-	void writeb(PhysPt addr, [[maybe_unused]] uint8_t val)
+	void writeb(PhysPt addr, [[maybe_unused]] uint8_t val) override
 	{
 #if C_DEBUG
 		LOG_MSG("Illegal write to %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
@@ -99,12 +99,12 @@ public:
 		flags=PFLAG_READABLE|PFLAG_WRITEABLE;
 	}
 	// Get the starting byte address for the give page
-	HostPt GetHostReadPt(const size_t phys_page)
+	HostPt GetHostReadPt(const size_t phys_page) override
 	{
 		assert(phys_page < memory.pages.size());
 		return &(memory.pages[phys_page].bytes[0]);
 	}
-	HostPt GetHostWritePt(const size_t phys_page)
+	HostPt GetHostWritePt(const size_t phys_page) override
 	{
 		return GetHostReadPt(phys_page); // same
 	}
@@ -115,13 +115,13 @@ public:
 	ROMPageHandler() {
 		flags=PFLAG_READABLE|PFLAG_HASROM;
 	}
-	void writeb(PhysPt addr,uint8_t val){
+	void writeb(PhysPt addr,uint8_t val) override{
 		LOG(LOG_CPU, LOG_ERROR)("Write 0x%x to rom at %x", val, addr);
 	}
-	void writew(PhysPt addr,uint16_t val){
+	void writew(PhysPt addr,uint16_t val) override{
 		LOG(LOG_CPU, LOG_ERROR)("Write 0x%x to rom at %x", val, addr);
 	}
-	void writed(PhysPt addr,uint32_t val){
+	void writed(PhysPt addr,uint32_t val) override{
 		LOG(LOG_CPU, LOG_ERROR)("Write 0x%x to rom at %x", val, addr);
 	}
 };

@@ -35,7 +35,7 @@ public:
 		               HELP_CmdType::Program,
 		               "SETVER"};
 	}
-	void Run();
+	void Run() override;
 
 	static void LoadTableFromFile();
 	static void SaveTableToFile();

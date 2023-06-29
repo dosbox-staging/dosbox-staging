@@ -35,7 +35,7 @@ public:
 		               HELP_CmdType::Program,
 		               "SERIAL"};
 	}
-	void Run();
+	void Run() override;
 
 private:
 	static void AddMessages();

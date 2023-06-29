@@ -34,7 +34,7 @@ public:
 		               HELP_CmdType::Program,
 		               "RESCAN"};
 	}
-	void Run(void);
+	void Run(void) override;
 private:
 	static void AddMessages();
 };

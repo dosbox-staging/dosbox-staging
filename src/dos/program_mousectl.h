@@ -35,7 +35,7 @@ public:
 		               HELP_CmdType::Program,
 		               "MOUSECTL"};
 	}
-	void Run();
+	void Run() override;
 
 private:
 	bool ParseAndRun();

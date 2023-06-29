@@ -253,81 +253,81 @@ public:
 	InitPageHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
 	}
-	uint8_t readb(PhysPt addr)
+	uint8_t readb(PhysPt addr) override
 	{
 		const auto needs_reset = InitPage(addr, false);
 		const auto val = mem_readb(addr);
 		InitPageUpdateLink(needs_reset, addr);
 		return val;
 	}
-	uint16_t readw(PhysPt addr)
+	uint16_t readw(PhysPt addr) override
 	{
 		const auto needs_reset = InitPage(addr, false);
 		const auto val = mem_readw(addr);
 		InitPageUpdateLink(needs_reset, addr);
 		return val;
 	}
-	uint32_t readd(PhysPt addr)
+	uint32_t readd(PhysPt addr) override
 	{
 		const auto needs_reset = InitPage(addr, false);
 		const auto val = mem_readd(addr);
 		InitPageUpdateLink(needs_reset, addr);
 		return val;
 	}
-	void writeb(PhysPt addr, uint8_t val)
+	void writeb(PhysPt addr, uint8_t val) override
 	{
 		const auto needs_reset = InitPage(addr, true);
 		mem_writeb(addr, val);
 		InitPageUpdateLink(needs_reset,addr);
 	}
-	void writew(PhysPt addr, uint16_t val)
+	void writew(PhysPt addr, uint16_t val) override
 	{
 		const auto needs_reset = InitPage(addr, true);
 		mem_writew(addr, val);
 		InitPageUpdateLink(needs_reset,addr);
 	}
-	void writed(PhysPt addr, uint32_t val)
+	void writed(PhysPt addr, uint32_t val) override
 	{
 		const auto needs_reset = InitPage(addr, true);
 		mem_writed(addr, val);
 		InitPageUpdateLink(needs_reset,addr);
 	}
-	bool readb_checked(PhysPt addr, uint8_t *val)
+	bool readb_checked(PhysPt addr, uint8_t *val) override
 	{
 		if (InitPageCheckOnly(addr,false)) {
 			*val=mem_readb(addr);
 			return false;
 		} else return true;
 	}
-	bool readw_checked(PhysPt addr, uint16_t *val)
+	bool readw_checked(PhysPt addr, uint16_t *val) override
 	{
 		if (InitPageCheckOnly(addr,false)){
 			*val=mem_readw(addr);
 			return false;
 		} else return true;
 	}
-	bool readd_checked(PhysPt addr, uint32_t *val)
+	bool readd_checked(PhysPt addr, uint32_t *val) override
 	{
 		if (InitPageCheckOnly(addr,false)) {
 			*val=mem_readd(addr);
 			return false;
 		} else return true;
 	}
-	bool writeb_checked(PhysPt addr, uint8_t val)
+	bool writeb_checked(PhysPt addr, uint8_t val) override
 	{
 		if (InitPageCheckOnly(addr,true)) {
 			mem_writeb(addr,val);
 			return false;
 		} else return true;
 	}
-	bool writew_checked(PhysPt addr, uint16_t val)
+	bool writew_checked(PhysPt addr, uint16_t val) override
 	{
 		if (InitPageCheckOnly(addr,true)) {
 			mem_writew(addr,val);
 			return false;
 		} else return true;
 	}
-	bool writed_checked(PhysPt addr, uint32_t val)
+	bool writed_checked(PhysPt addr, uint32_t val) override
 	{
 		if (InitPageCheckOnly(addr,true)) {
 			mem_writed(addr,val);
@@ -494,22 +494,22 @@ public:
 	InitPageUserROHandler() {
 		flags=PFLAG_INIT|PFLAG_NOCODE;
 	}
-	void writeb(PhysPt addr, uint8_t val)
+	void writeb(PhysPt addr, uint8_t val) override
 	{
 		InitPage(addr, val);
 		host_writeb(get_tlb_read(addr) + addr, val);
 	}
-	void writew(PhysPt addr, uint16_t val)
+	void writew(PhysPt addr, uint16_t val) override
 	{
 		InitPage(addr, val);
 		host_writew(get_tlb_read(addr) + addr, val);
 	}
-	void writed(PhysPt addr, uint32_t val)
+	void writed(PhysPt addr, uint32_t val) override
 	{
 		InitPage(addr, val);
 		host_writed(get_tlb_read(addr) + addr, val);
 	}
-	bool writeb_checked(PhysPt addr, uint8_t val)
+	bool writeb_checked(PhysPt addr, uint8_t val) override
 	{
 		const auto writecode = InitPageCheckOnly(addr, val);
 		if (writecode) {
@@ -521,7 +521,7 @@ public:
 		}
 		return true;
 	}
-	bool writew_checked(PhysPt addr, uint16_t val)
+	bool writew_checked(PhysPt addr, uint16_t val) override
 	{
 		const auto writecode = InitPageCheckOnly(addr, val);
 		if (writecode) {
@@ -533,7 +533,7 @@ public:
 		}
 		return true;
 	}
-	bool writed_checked(PhysPt addr, uint32_t val)
+	bool writed_checked(PhysPt addr, uint32_t val) override
 	{
 		const auto writecode = InitPageCheckOnly(addr, val);
 		if (writecode) {

@@ -40,12 +40,13 @@ public:
 
 	DECLARE_WRITE8_MEMBER( write );
 
-//protected:
-	// device-level overrides
-	virtual void device_start();
+	// protected:
+	//  device-level overrides
+	void device_start() override;
 
 	// sound stream update overrides
-	virtual void sound_stream_update(sound_stream &stream, stream_sample_t **inputs, stream_sample_t **outputs, int samples);
+	void sound_stream_update(sound_stream& stream, stream_sample_t** inputs,
+	                         stream_sample_t** outputs, int samples) override;
 
 private:
 	struct saa1099_channel {

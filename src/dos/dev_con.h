@@ -26,15 +26,27 @@
 
 class device_CON final : public DOS_Device {
 public:
-	device_CON() { SetName("CON"); }
+	device_CON()
+	{
+		SetName("CON");
+	}
 
-	bool Read(uint8_t * data,uint16_t * size);
-	bool Write(uint8_t * data,uint16_t * size);
-	bool Seek(uint32_t * pos,uint32_t type);
-	bool Close();
-	uint16_t GetInformation(void);
-	bool ReadFromControlChannel(PhysPt /*bufptr*/,uint16_t /*size*/,uint16_t * /*retcode*/){return false;}
-	bool WriteToControlChannel(PhysPt /*bufptr*/,uint16_t /*size*/,uint16_t * /*retcode*/){return false;}
+	bool Read(uint8_t* data, uint16_t* size) override;
+	bool Write(uint8_t* data, uint16_t* size) override;
+	bool Seek(uint32_t* pos, uint32_t type) override;
+	bool Close() override;
+	uint16_t GetInformation(void) override;
+	bool ReadFromControlChannel(PhysPt /*bufptr*/, uint16_t /*size*/,
+	                            uint16_t* /*retcode*/) override
+	{
+		return false;
+	}
+	bool WriteToControlChannel(PhysPt /*bufptr*/, uint16_t /*size*/,
+	                           uint16_t* /*retcode*/) override
+	{
+		return false;
+	}
+
 private:
 	void ClearAnsi();
 	void Output(uint8_t chr);
