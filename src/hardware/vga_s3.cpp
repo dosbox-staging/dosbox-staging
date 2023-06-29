@@ -745,17 +745,16 @@ void filter_s3_modes_to_oem_only()
 			return (m.mode == 0x10d || m.mode == 0x10e || m.mode == 0x10f);
 
 		// Allow all modes that aren't part of the VESA VGA set (CGA/EGA/Hercules/etc)
-		constexpr auto vesa_vga_modes = M_LIN4 | M_LIN8 | M_LIN15 | M_LIN16 | M_LIN24 | M_LIN32;
-		const bool is_a_vesa_vga_mode = m.type & vesa_vga_modes;
-		if (!is_a_vesa_vga_mode)
+		if (!VESA_IsVesaMode(m.mode)) {
 			return false;
+		}
 
 		// Does the S3 OEM list have this mode for the given DRAM size?
 		const auto it = oem_modes.find(hash(m.swidth, m.sheight, m.type));
 		const bool is_an_oem_mode = (it != oem_modes.end()) && (it->second & dram_size);
 
-		// LOG_MSG("S3: %x: %ux%u - m.type=%d is_a_vesa_vga_mode=%d is_an_oem_mode=%d",
-		//         m.mode, m.swidth, m.sheight, m.type, is_a_vesa_vga_mode, is_an_oem_mode);
+		// LOG_MSG("S3: %x: %ux%u - m.type=%d is_vesa_mode=%d is_an_oem_mode=%d",
+		//         m.mode, m.swidth, m.sheight, m.type, VESA_IsVesaMode(m.mode), is_an_oem_mode);
 
 		return !is_an_oem_mode;
 	};
