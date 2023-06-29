@@ -217,32 +217,34 @@ enum class VgaDoubleScanHandling : int8_t {
 
 struct VGA_Draw {
 	bool resizing = false;
-	Bitu width = 0;
-	Bitu height = 0;
-	uint32_t blocks = 0;
-	Bitu address = 0;
-	uint16_t panning = 0;
-	Bitu bytes_skip = 0;
-	uint8_t *linear_base = nullptr;
-	Bitu linear_mask = 0;
-	Bitu address_add = 0;
-	uint32_t line_length = 0;
-	uint32_t address_line_total = 0;
-	Bitu address_line = 0;
-	uint32_t lines_total = 0;
-	Bitu vblank_skip = 0;
-	uint32_t lines_done = 0;
-	Bitu lines_scaled = 0;
-	Bitu split_line = 0;
+	Bitu width    = 0;
+	Bitu height   = 0;
 
-	// when drawing in parts, how many many 'chunks' should we draw at a
-	// time? a value of 1 is the entire frame where as a value of 2 will
+	uint32_t blocks             = 0;
+	Bitu address                = 0;
+	uint16_t panning            = 0;
+	Bitu bytes_skip             = 0;
+	uint8_t* linear_base        = nullptr;
+	Bitu linear_mask            = 0;
+	Bitu address_add            = 0;
+	uint32_t line_length        = 0;
+	uint32_t address_line_total = 0;
+	Bitu address_line           = 0;
+	uint32_t lines_total        = 0;
+	Bitu vblank_skip            = 0;
+	uint32_t lines_done         = 0;
+	Bitu lines_scaled           = 0;
+	Bitu split_line             = 0;
+
+	// When drawing in parts, how many many 'chunks' should we draw at a
+	// time? A value of 1 is the entire frame where as a value of 2 will
 	// draw the top then the bottom, 4 will draw in quarters, and so on.
 	int parts_total = 0;
 
-	uint32_t parts_lines = 0;
-	uint32_t parts_left = 0;
+	uint32_t parts_lines    = 0;
+	uint32_t parts_left     = 0;
 	Bitu byte_panning_shift = 0;
+
 	struct {
 		double framestart = 0;
 		double vrstart = 0, vrend = 0;     // V-retrace
@@ -251,7 +253,7 @@ struct VGA_Draw {
 		double vblkstart = 0, vblkend = 0; // V-Blanking
 		double vdend = 0, vtotal = 0;
 		double hdend = 0, htotal = 0;
-		double parts = 0;
+		double parts       = 0;
 		double per_line_ms = 0;
 	} delay = {};
 
@@ -284,26 +286,32 @@ struct VGA_Draw {
 	double dos_refresh_hz = RefreshRateDosDefault;
 	double custom_refresh_hz = RefreshRateDosDefault;
 	VgaRateMode dos_rate_mode = VgaRateMode::Default;
+
 	Fraction pixel_aspect_ratio = {};
-	bool doublewidth = false;
-	bool doubleheight = false;
+	bool doublewidth            = false;
+	bool doubleheight           = false;
+
 	VgaDoubleScanHandling vga_double_scan_handling = {};
+
 	uint8_t font[64 * 1024] = {};
-	uint8_t *font_tables[2] = {nullptr, nullptr};
-	Bitu blinking = 0;
-	bool blink = false;
+	uint8_t* font_tables[2] = {nullptr, nullptr};
+
+	Bitu blinking                      = 0;
+	bool blink                         = false;
 	PixelsPerChar pixels_per_character = PixelsPerChar::Eight;
+
 	struct {
-		Bitu address = 0;
-		uint8_t sline = 0;
-		uint8_t eline = 0;
-		uint8_t count = 0;
-		uint8_t delay = 0;
+		Bitu address    = 0;
+		uint8_t sline   = 0;
+		uint8_t eline   = 0;
+		uint8_t count   = 0;
+		uint8_t delay   = 0;
 		uint8_t enabled = 0;
 	} cursor = {};
-	Drawmode mode = {};
+
+	Drawmode mode       = {};
 	bool vret_triggered = false;
-	bool vga_override = false;
+	bool vga_override   = false;
 };
 
 struct VGA_HWCURSOR {
