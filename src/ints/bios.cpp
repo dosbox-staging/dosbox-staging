@@ -1228,7 +1228,7 @@ public:
 		callback[8].Set_RealVec(0x70);
 
 		/* Irq 9 rerouted to irq 2 */
-		callback[9].Install(NULL,CB_IRQ9,"irq 9 bios");
+		callback[9].Install(nullptr,CB_IRQ9,"irq 9 bios");
 		callback[9].Set_RealVec(0x71);
 
 		/* Reboot */
@@ -1258,7 +1258,7 @@ public:
 
 		/* Irq 2 */
 		auto call_irq2 = CALLBACK_Allocate();
-		CALLBACK_Setup(call_irq2,NULL,CB_IRET_EOI_PIC1,RealToPhysical(BIOS_DEFAULT_IRQ2_LOCATION),"irq 2 bios");
+		CALLBACK_Setup(call_irq2,nullptr,CB_IRET_EOI_PIC1,RealToPhysical(BIOS_DEFAULT_IRQ2_LOCATION),"irq 2 bios");
 		RealSetVec(0x0a,BIOS_DEFAULT_IRQ2_LOCATION);
 
 		/* Default IRQ handler */
@@ -1323,7 +1323,7 @@ public:
 				tandy_DAC_callback[0]=new CALLBACK_HandlerObject();
 				tandy_DAC_callback[1]=new CALLBACK_HandlerObject();
 				tandy_DAC_callback[0]->Install(&IRQ_TandyDAC,CB_IRET,"Tandy DAC IRQ");
-				tandy_DAC_callback[1]->Install(NULL,CB_TDE_IRET,"Tandy DAC end transfer");
+				tandy_DAC_callback[1]->Install(nullptr,CB_TDE_IRET,"Tandy DAC end transfer");
 				// pseudocode for CB_TDE_IRET:
 				//	push ax
 				//	mov ax, 0x91fb
@@ -1466,8 +1466,8 @@ public:
 			}
 			delete tandy_DAC_callback[0];
 			delete tandy_DAC_callback[1];
-			tandy_DAC_callback[0]=NULL;
-			tandy_DAC_callback[1]=NULL;
+			tandy_DAC_callback[0]=nullptr;
+			tandy_DAC_callback[1]=nullptr;
 		}
 	}
 };

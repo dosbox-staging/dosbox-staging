@@ -2651,7 +2651,7 @@ void MIXER_Init(Section *sec)
 		set_mixer_state(MixerState::NoSound);
 
 	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(
-	                    NULL, 0, &spec, &obtained, sdl_allow_flags)) == 0) {
+	                    nullptr, 0, &spec, &obtained, sdl_allow_flags)) == 0) {
 		LOG_WARNING("MIXER: Can't open audio: %s , running in nosound mode.",
 		            SDL_GetError());
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
@@ -2825,11 +2825,11 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_rate);
 	assert(int_prop);
 	const char *rates[] = {
-	        "8000", "11025", "16000", "22050", "32000", "44100", "48000", 0};
+	        "8000", "11025", "16000", "22050", "32000", "44100", "48000", nullptr};
 	int_prop->Set_values(rates);
 	int_prop->Set_help("Mixer sample rate (48000 by default).");
 
-	const char *blocksizes[] = {"128", "256", "512", "1024", "2048", "4096", "8192", 0};
+	const char *blocksizes[] = {"128", "256", "512", "1024", "2048", "4096", "8192", nullptr};
 
 	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_blocksize);
 	int_prop->Set_values(blocksizes);

@@ -149,7 +149,7 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 	setCTS(dtrrespect||transparent);
 	setDSR(dtrrespect||transparent);
 	setRI(false);
-	setCD(clientsocket != 0); // CD on if connection established
+	setCD(clientsocket != nullptr); // CD on if connection established
 }
 
 CNullModem::~CNullModem() {
@@ -205,7 +205,7 @@ bool CNullModem::ClientConnect(NETClientSocket *newsocket)
 	if (!clientsocket->isopen) {
 		LOG_MSG("SERIAL: Port %" PRIu8 " connection failed.", GetPortNumber());
 		delete clientsocket;
-		clientsocket=0;
+		clientsocket=nullptr;
 		setCD(false);
 		return false;
 	}
@@ -252,7 +252,7 @@ bool CNullModem::ServerConnect() {
 	
 	// we don't accept further connections
 	delete serversocket;
-	serversocket=0;
+	serversocket=nullptr;
 
 	// transmit the line status
 	setRTSDTR(getRTS(), getDTR());
@@ -266,7 +266,7 @@ void CNullModem::Disconnect() {
 	// it was disconnected; free the socket and restart the server socket
 	LOG_MSG("SERIAL: Port %" PRIu8 " disconnected.", GetPortNumber());
 	delete clientsocket;
-	clientsocket=0;
+	clientsocket=nullptr;
 	setDSR(false);
 	setCTS(false);
 	setCD(false);

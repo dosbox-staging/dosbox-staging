@@ -348,15 +348,15 @@ TEST_F(DOS_FilesTest, DOS_DTAExtendName_Enforces_8_3)
 
 TEST_F(DOS_FilesTest, VFILE_Register)
 {
-	VFILE_Register("TEST", 0, 0, "/");
+	VFILE_Register("TEST", nullptr, 0, "/");
 	EXPECT_FALSE(DOS_FindFirst("Z:\\TEST\\FILENA~1.TXT", 0, false));
-	VFILE_Register("filename_1.txt", 0, 0, "/TEST/");
+	VFILE_Register("filename_1.txt", nullptr, 0, "/TEST/");
 	EXPECT_TRUE(DOS_FindFirst("Z:\\TEST\\FILENA~1.TXT", 0, false));
 	EXPECT_FALSE(DOS_FindFirst("Z:\\TEST\\FILENA~2.TXT", 0, false));
-	VFILE_Register("filename_2.txt", 0, 0, "/TEST/");
+	VFILE_Register("filename_2.txt", nullptr, 0, "/TEST/");
 	EXPECT_TRUE(DOS_FindFirst("Z:\\TEST\\FILENA~2.TXT", 0, false));
 	EXPECT_FALSE(DOS_FindFirst("Z:\\TEST\\FILENA~3.TXT", 0, false));
-	VFILE_Register("filename_3.txt", 0, 0, "/TEST/");
+	VFILE_Register("filename_3.txt", nullptr, 0, "/TEST/");
 	EXPECT_TRUE(DOS_FindFirst("Z:\\TEST\\FILENA~3.TXT", 0, false));
 }
 

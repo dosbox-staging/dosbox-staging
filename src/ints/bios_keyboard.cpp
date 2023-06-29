@@ -679,7 +679,7 @@ void BIOS_SetupKeyboard(void) {
 
 	if (machine==MCH_PCJR) {
 		call_irq6=CALLBACK_Allocate();
-		CALLBACK_Setup(call_irq6,NULL,CB_IRQ6_PCJR,"PCJr kb irq");
+		CALLBACK_Setup(call_irq6,nullptr,CB_IRQ6_PCJR,"PCJr kb irq");
 		RealSetVec(0x0e,CALLBACK_RealPointer(call_irq6));
 		// pseudocode for CB_IRQ6_PCJR:
 		//	push ax

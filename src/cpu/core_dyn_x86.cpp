@@ -329,7 +329,7 @@ restart_core:
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
-	CodePageHandler * chandler=0;
+	CodePageHandler * chandler=nullptr;
 	if (GCC_UNLIKELY(MakeCodePage(ip_point,chandler))) {
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
 		goto restart_core;
@@ -357,7 +357,7 @@ restart_core:
 		}
 	}
 run_block:
-	cache.block.running=0;
+	cache.block.running=nullptr;
 	const auto ret = sync_normal_fpu_and_run_dyn_code(block->cache.start);
 #	if C_DEBUG
 	cycle_count += 32;
@@ -442,7 +442,7 @@ Bits CPU_Core_Dyn_X86_Trap_Run() noexcept
 void CPU_Core_Dyn_X86_Init(void) {
 	Bits i;
 	/* Setup the global registers and their flags */
-	for (i=0;i<G_MAX;i++) DynRegs[i].genreg=0;
+	for (i=0;i<G_MAX;i++) DynRegs[i].genreg=nullptr;
 	DynRegs[G_EAX].data=&reg_eax;
 	DynRegs[G_EAX].flags=DYNFLG_HAS8|DYNFLG_HAS16|DYNFLG_LOAD|DYNFLG_SAVE;
 	DynRegs[G_ECX].data=&reg_ecx;
@@ -495,7 +495,7 @@ void CPU_Core_Dyn_X86_Init(void) {
 	DynRegs[G_TMPW].flags=DYNFLG_HAS16;
 	DynRegs[G_SHIFT].data=&extra_regs.shift;
 	DynRegs[G_SHIFT].flags=DYNFLG_HAS8|DYNFLG_HAS16;
-	DynRegs[G_EXIT].data=0;
+	DynRegs[G_EXIT].data=nullptr;
 	DynRegs[G_EXIT].flags=DYNFLG_HAS16;
 	/* Init the generator */
 	gen_init();

@@ -1,9 +1,9 @@
 
 /*
-	Ripped out some stuff from the mame releae to only make it for 386's 
-	Changed some variables to use the standard DOSBox data types 
-	Added my callback opcode 
-	
+	Ripped out some stuff from the mame releae to only make it for 386's
+	Changed some variables to use the standard DOSBox data types
+	Added my callback opcode
+
 */
 
 /*
@@ -178,6 +178,9 @@ static int addr32bit=0;
 
 static char const* (*opmap1)[256];
 
+
+// clang-format off
+
 static char const * op386map1[256] = {
 /* 0 */
   "add %Eb,%Gb",      "add %Ev,%Gv",     "add %Gb,%Eb",    "add %Gv,%Ev",
@@ -269,36 +272,36 @@ static char const * op386map1[256] = {
 static char const *second[] = {
 /* 0 */
   "%g5",              "%g6",             "lar %Gv,%Ew",    "lsl %Gv,%Ew",
-  0,                  "[loadall]",       "clts",           "[loadall]",
-  "invd",             "wbinvd",          0,                "UD2",
-  0,                  0,                 0,                0,
+  nullptr,            "[loadall]",       "clts",           "[loadall]",
+  "invd",             "wbinvd",          nullptr,          "UD2",
+  nullptr,            nullptr,           nullptr,          nullptr,
 /* 1 */
   "mov %Eb,%Gb",      "mov %Ev,%Gv",     "mov %Gb,%Eb",    "mov %Gv,%Ev",
-  0,                  0,                 0,                0,
-  0,                  0,                 0,                0,
-  0,                  0,                 0,                0,
+  nullptr,            nullptr,           nullptr,          nullptr,
+  nullptr,            nullptr,           nullptr,          nullptr,
+  nullptr,            nullptr,           nullptr,          nullptr,
 /* 2 */
   "mov %Rd,%Cd",      "mov %Rd,%Dd",     "mov %Cd,%Rd",    "mov %Dd,%Rd",
-  "mov %Rd,%Td",      0,                 "mov %Td,%Rd",    0,
-  0,                  0,                 0,                0,
-  0,                  0,                 0,                0,
+  "mov %Rd,%Td",      nullptr,           "mov %Td,%Rd",    nullptr,
+  nullptr,            nullptr,           nullptr,          nullptr,
+  nullptr,            nullptr,           nullptr,          nullptr,
 /* 3 */
-  0,                  "rdtsc",           0,                0,
-  0,                  0,                 0,                0,
-  0,                  0,                 0,                0,
-  0,                  0,                 0,                0,
+  nullptr,            "rdtsc",           nullptr,                nullptr,
+  nullptr,            nullptr,           nullptr,                nullptr,
+  nullptr,            nullptr,           nullptr,                nullptr,
+  nullptr,            nullptr,           nullptr,                nullptr,
 /* 4 */
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 /* 5 */
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 /* 6 */
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 /* 7 */
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 /* 8 */
   "jo %Jv",           "jno %Jv",         "jb %Jv",         "jnb %Jv",
   "jz %Jv",           "jnz %Jv",         "jbe %Jv",        "ja %Jv",
@@ -311,28 +314,28 @@ static char const *second[] = {
   "setl %Eb",         "setge %Eb",       "setle %Eb",      "setg %Eb",
 /* a */
   "push fs",          "pop fs",          "cpuid",          "bt %Ev,%Gv",
-  "shld %Ev,%Gv,%Ib", "shld %Ev,%Gv,cl", 0,                0,
-  "push gs",          "pop gs",          0,                "bts %Ev,%Gv",
-  "shrd %Ev,%Gv,%Ib", "shrd %Ev,%Gv,cl", 0,                "imul %Gv,%Ev",
+  "shld %Ev,%Gv,%Ib", "shld %Ev,%Gv,cl", nullptr,          nullptr,
+  "push gs",          "pop gs",          nullptr,          "bts %Ev,%Gv",
+  "shrd %Ev,%Gv,%Ib", "shrd %Ev,%Gv,cl", nullptr,          "imul %Gv,%Ev",
 /* b */
   "cmpxchg %Eb,%Gb",  "cmpxchg %Ev,%Gv", "lss %Mp",        "btr %Ev,%Gv",
   "lfs %Mp",          "lgs %Mp",         "movzx %Gv,%Eb",  "movzx %Gv,%Ew",
-  0,                  0,                 "%g7 %Ev,%Ib",    "btc %Ev,%Gv",
+  nullptr,            nullptr,           "%g7 %Ev,%Ib",    "btc %Ev,%Gv",
   "bsf %Gv,%Ev",      "bsr %Gv,%Ev",     "movsx %Gv,%Eb",  "movsx %Gv,%Ew",
 /* c */
-  "xadd %Eb,%Gb",     "xadd %Ev,%Gv",    0,                0,
-  0,                  0,                 0,                0,
+  "xadd %Eb,%Gb",     "xadd %Ev,%Gv",    nullptr,          nullptr,
+  nullptr,            nullptr,           nullptr,          nullptr,
   "bswap eax",        "bswap ecx",       "bswap edx",      "bswap ebx",
   "bswap esp",        "bswap ebp",       "bswap esi",      "bswap edi",
 /* d */
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 /* e */
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 /* f */
-  0, 0, 0, 0, 0, 0, 0, 0,
-  0, 0, 0, 0, 0, 0, 0, 0,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
 };
 
 static char const *groups[][8] = {   /* group 0 is group 3 for %Ev set */
@@ -346,38 +349,40 @@ static char const *groups[][8] = {   /* group 0 is group 3 for %Ev set */
   { "test %Eq,%Iq",   "test %Eq,%Iq",    "not %Ec",        "neg %Ec",
     "mul %Ec",        "imul %Ec",        "div %Ec",        "idiv %Ec"      },
 /* 3 */
-  { "inc %Eb",        "dec %Eb",         0,                0,
-    0,                0,                 0,                "callback %Iw"  },
+  { "inc %Eb",        "dec %Eb",         nullptr,          nullptr,
+    nullptr,          nullptr,           nullptr,          "callback %Iw"  },
 /* 4 */
   { "inc %Ev",        "dec %Ev",         "call %Kn%Ev",  "call %Kf%Ep",
-    "jmp %Kn%Ev",     "jmp %Kf%Ep",      "push %Ev",       0               },
+    "jmp %Kn%Ev",     "jmp %Kf%Ep",      "push %Ev",       nullptr         },
 /* 5 */
   { "sldt %Ew",       "str %Ew",         "lldt %Ew",       "ltr %Ew",
-    "verr %Ew",       "verw %Ew",        0,                0               },
+    "verr %Ew",       "verw %Ew",        nullptr,          nullptr         },
 /* 6 */
   { "sgdt %Ms",       "sidt %Ms",        "lgdt %Ms",       "lidt %Ms",
-    "smsw %Ew",       0,                 "lmsw %Ew",       "invlpg"        },
+    "smsw %Ew",       nullptr,           "lmsw %Ew",       "invlpg"        },
 /* 7 */
-  { 0,                0,                 0,                0,
+  { nullptr,          nullptr,           nullptr,          nullptr,
     "bt",             "bts",             "btr",            "btc"           }
 };
 
+// clang-format on
+
 /* zero here means invalid.  If first entry starts with '*', use st(i) */
 /* no assumed %EFs here.  Indexed by RM(modrm())                       */
-static char const *f0[]     = { 0, 0, 0, 0, 0, 0, 0, 0};
+static char const *f0[]     = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
 static char const *fop_8[]  = { "*fld st,%GF" };
 static char const *fop_9[]  = { "*fxch st,%GF" };
-static char const *fop_10[] = { "fnop", 0, 0, 0, 0, 0, 0, 0 };
+static char const *fop_10[] = { "fnop", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 static char const *fop_11[]  = { "*fstp st,%GF" };
-static char const *fop_12[] = { "fchs", "fabs", 0, 0, "ftst", "fxam", 0, 0 };
+static char const *fop_12[] = { "fchs", "fabs", nullptr, nullptr, "ftst", "fxam", nullptr, nullptr };
 static char const *fop_13[] = { "fld1", "fldl2t", "fldl2e", "fldpi",
-                   "fldlg2", "fldln2", "fldz", 0 };
+                   "fldlg2", "fldln2", "fldz", nullptr };
 static char const *fop_14[] = { "f2xm1", "fyl2x", "fptan", "fpatan",
                    "fxtract", "fprem1", "fdecstp", "fincstp" };
 static char const *fop_15[] = { "fprem", "fyl2xp1", "fsqrt", "fsincos",
                    "frndint", "fscale", "fsin", "fcos" };
-static char const *fop_21[] = { 0, "fucompp", 0, 0, 0, 0, 0, 0 };
-static char const *fop_28[] = { "[fneni]", "[fndisi]", "fclex", "finit", "[fnsetpm]", "[frstpm]", 0, 0 };
+static char const *fop_21[] = { nullptr, "fucompp", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+static char const *fop_28[] = { "[fneni]", "[fndisi]", "fclex", "finit", "[fnsetpm]", "[frstpm]", nullptr, nullptr };
 static char const *fop_32[] = { "*fadd %GF,st" };
 static char const *fop_33[] = { "*fmul %GF,st" };
 static char const *fop_34[] = { "*fcom %GF,st" };
@@ -395,7 +400,7 @@ static char const *fop_45[] = { "*fucomp %GF" };
 static char const *fop_48[] = { "*faddp %GF,st" };
 static char const *fop_49[] = { "*fmulp %GF,st" };
 static char const *fop_50[] = { "*fcomp %GF,st" };
-static char const *fop_51[] = { 0, "fcompp", 0, 0, 0, 0, 0, 0 };
+static char const *fop_51[] = { nullptr, "fcompp", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 static char const *fop_52[] = { "*fsubrp %GF,st" };
 static char const *fop_53[] = { "*fsubp %GF,st" };
 static char const *fop_54[] = { "*fdivrp %GF,st" };
@@ -404,10 +409,10 @@ static char const *fop_56[] = { "*ffreep %GF" };
 static char const *fop_57[] = { "*fxch %GF" };
 static char const *fop_58[] = { "*fstp %GF" };
 static char const *fop_59[] = { "*fstp %GF" };
-static char const *fop_60[] = { "fstsw ax", 0, 0, 0, 0, 0, 0, 0 };
+static char const *fop_60[] = { "fstsw ax", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
 
 static char const **fspecial[] = { /* 0=use st(i), 1=undefined 0 in fop_* means undefined */
-  0, 0, 0, 0, 0, 0, 0, 0,
+  nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
   fop_8, fop_9, fop_10, fop_11, fop_12, fop_13, fop_14, fop_15,
   f0, f0, f0, f0, f0, fop_21, f0, f0,
   f0, f0, f0, f0, fop_28, f0, f0, f0,
@@ -420,19 +425,19 @@ static char const **fspecial[] = { /* 0=use st(i), 1=undefined 0 in fop_* means 
 static const char *floatops[] = { /* assumed " %EF" at end of each.  mod != 3 only */
 /*00*/ "fadd", "fmul", "fcom", "fcomp",
        "fsub", "fsubr", "fdiv", "fdivr",
-/*08*/ "fld", 0, "fst", "fstp",
+/*08*/ "fld", nullptr, "fst", "fstp",
        "fldenv", "fldcw", "fstenv", "fstcw",
 /*16*/ "fiadd", "fimul", "ficom", "ficomp",
        "fisub", "fisubr", "fidiv", "fidivr",
-/*24*/ "fild", 0, "fist", "fistp",
-       0, "fldt", 0, "fstpt",
+/*24*/ "fild", nullptr, "fist", "fistp",
+       nullptr, "fldt", nullptr, "fstpt",
 /*32*/ "faddq", "fmulq", "fcomq", "fcompq",
        "fsubq", "fsubrq", "fdivq", "fdivrq",
-/*40*/ "fldq", 0, "fstq", "fstpq",
-       "frstor", 0, "fsave", "fstsw",
+/*40*/ "fldq", nullptr, "fstq", "fstpq",
+       "frstor", nullptr, "fsave", "fstsw",
 /*48*/ "fiaddw", "fimulw", "ficomw", "ficompw",
        "fisubw", "fisubrw", "fidivw", "fidivrw",
-/*56*/ "fildw", 0, "fistw", "fistpw",
+/*56*/ "fildw", nullptr, "fistw", "fistpw",
        "fbldt", "fildq", "fbstpt", "fistpq"
 };
 
@@ -454,7 +459,7 @@ static char *addr_to_hex(UINT32 addr, int splitup) {
 #endif
 
 	sprintf(buffer, "%08X", addr );
-	
+
   }
 
   return buffer;
@@ -827,7 +832,7 @@ static void floating_point(int e1)
 static void percent(char type, char subtype)
 {
   INT32 vofs = 0;
-  char *name=NULL;
+  char *name=nullptr;
   int extend = (addrsize == 32) ? 4 : 2;
   UINT8 c;
 
@@ -1043,7 +1048,7 @@ static void ua_str(char const *str)
 {
   char c;
 
-  if (str == 0) {
+  if (str == nullptr) {
     invalid_opcode = 1;
     uprintf("?");
     return;

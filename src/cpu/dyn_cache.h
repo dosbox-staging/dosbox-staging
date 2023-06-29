@@ -488,7 +488,7 @@ public:
 		Bitu count=active_blocks;
 		CacheBlock **map=hash_map;
 		for (CacheBlock * block=*map;count;count--) {
-			while (block==NULL)
+			while (block==nullptr)
 				block=*++map;
 			CacheBlock * nextblock=block->hash.next;
 			block->page.handler=nullptr;			// no need, full clear
@@ -507,7 +507,7 @@ public:
 				return block; // found
 			block=block->hash.next;
 		}
-		return 0; // none found
+		return nullptr; // none found
 	}
 
 	HostPt GetHostReadPt(Bitu phys_page) override

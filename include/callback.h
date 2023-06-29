@@ -63,7 +63,7 @@ using callback_number_t = uint8_t;
 #define CB_SEG		0xF000
 #define CB_SOFFSET	0x1000
 
-enum {	
+enum {
 	CBRET_NONE=0,CBRET_STOP=1
 };
 
@@ -129,7 +129,7 @@ public:
 	void Uninstall();
 
 	//Only allocate a callback number
-	void Allocate(CallBack_Handler handler,const char* description=0);
+	void Allocate(CallBack_Handler handler,const char* description=nullptr);
 	uint16_t Get_callback() {
 		return m_cb_number;
 	}

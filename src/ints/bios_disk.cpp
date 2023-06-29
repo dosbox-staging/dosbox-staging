@@ -554,7 +554,7 @@ static Bitu INT13_DiskHandler(void) {
 			}
 			CALLBACK_SCF(false);
 		} else {
-			if (drivenum <DOS_DRIVES && (Drives[drivenum] != 0 || drivenum <2)) {
+			if (drivenum <DOS_DRIVES && (Drives[drivenum] != nullptr || drivenum <2)) {
 				if (drivenum <2) {
 					//TODO use actual size (using 1.44 for now).
 					reg_ah = 0x1; // type

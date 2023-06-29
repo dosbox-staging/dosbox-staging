@@ -1140,8 +1140,8 @@ static void dyn_loop(LoopTypes type) {
 	dyn_reduce_cycles();
 	Bits eip_add=(int8_t)decode_fetchb();
 	Bitu eip_base=decode.code-decode.code_start;
-	const uint8_t* branch1=0;
-	const uint8_t* branch2=0;
+	const uint8_t* branch1=nullptr;
+	const uint8_t* branch2=nullptr;
 	switch (type) {
 	case LOOP_E:
 		dyn_branchflag_to_reg(BR_NZ);

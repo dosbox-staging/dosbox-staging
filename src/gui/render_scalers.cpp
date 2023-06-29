@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -18,7 +19,7 @@
 
 
 //TODO:
-//Maybe just do the cache checking back into the simple scalers so they can 
+//Maybe just do the cache checking back into the simple scalers so they can
 //just handle it all in one go, but this seems to work well enough for now
 
 #include "dosbox.h"
@@ -174,22 +175,24 @@ static inline void ScalerAddLines( Bitu changed, Bitu count ) {
 #undef SBPP
 #undef DBPP
 
+// clang-format off
+
 ScalerSimpleBlock_t ScaleNormal1x = {
 	"Normal",
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	1,1,{
 {	Normal1x_8_8_L,		Normal1x_8_15_L ,	Normal1x_8_16_L ,	Normal1x_8_32_L },
-{	             0,		Normal1x_15_15_L,	Normal1x_15_16_L,	Normal1x_15_32_L},
-{	             0,		Normal1x_16_15_L,	Normal1x_16_16_L,	Normal1x_16_32_L},
-{	             0,		Normal1x_24_15_L,	Normal1x_24_16_L,	Normal1x_24_32_L},
-{	             0,		Normal1x_32_15_L,	Normal1x_32_16_L,	Normal1x_32_32_L},
+{	       nullptr,		Normal1x_15_15_L,	Normal1x_15_16_L,	Normal1x_15_32_L},
+{	       nullptr,		Normal1x_16_15_L,	Normal1x_16_16_L,	Normal1x_16_32_L},
+{	       nullptr,		Normal1x_24_15_L,	Normal1x_24_16_L,	Normal1x_24_32_L},
+{	       nullptr,		Normal1x_32_15_L,	Normal1x_32_16_L,	Normal1x_32_32_L},
 {	Normal1x_8_8_L,		Normal1x_9_15_L ,	Normal1x_9_16_L ,	Normal1x_9_32_L }
 },{
 {	Normal1x_8_8_R,		Normal1x_8_15_R ,	Normal1x_8_16_R ,	Normal1x_8_32_R },
-{	             0,		Normal1x_15_15_R,	Normal1x_15_16_R,	Normal1x_15_32_R},
-{	             0,		Normal1x_16_15_R,	Normal1x_16_16_R,	Normal1x_16_32_R},
-{	             0,		Normal1x_24_15_R,	Normal1x_24_16_R,	Normal1x_24_32_R},
-{	             0,		Normal1x_32_15_R,	Normal1x_32_16_R,	Normal1x_32_32_R},
+{	       nullptr,		Normal1x_15_15_R,	Normal1x_15_16_R,	Normal1x_15_32_R},
+{	       nullptr,		Normal1x_16_15_R,	Normal1x_16_16_R,	Normal1x_16_32_R},
+{	       nullptr,		Normal1x_24_15_R,	Normal1x_24_16_R,	Normal1x_24_32_R},
+{	       nullptr,		Normal1x_32_15_R,	Normal1x_32_16_R,	Normal1x_32_32_R},
 {	Normal1x_8_8_R,		Normal1x_9_15_R ,	Normal1x_9_16_R ,	Normal1x_9_32_R }
 }};
 
@@ -199,17 +202,17 @@ ScalerSimpleBlock_t ScaleNormalDw = {
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	2,1,{
 {	NormalDw_8_8_L,		NormalDw_8_15_L ,	NormalDw_8_16_L ,	NormalDw_8_32_L },
-{	             0,		NormalDw_15_15_L,	NormalDw_15_16_L,	NormalDw_15_32_L},
-{	             0,		NormalDw_16_15_L,	NormalDw_16_16_L,	NormalDw_16_32_L},
-{	             0,		NormalDw_24_15_L,	NormalDw_24_16_L,	NormalDw_24_32_L},
-{	             0,		NormalDw_32_15_L,	NormalDw_32_16_L,	NormalDw_32_32_L},
+{	       nullptr,		NormalDw_15_15_L,	NormalDw_15_16_L,	NormalDw_15_32_L},
+{	       nullptr,		NormalDw_16_15_L,	NormalDw_16_16_L,	NormalDw_16_32_L},
+{	       nullptr,		NormalDw_24_15_L,	NormalDw_24_16_L,	NormalDw_24_32_L},
+{	       nullptr,		NormalDw_32_15_L,	NormalDw_32_16_L,	NormalDw_32_32_L},
 {	NormalDw_8_8_L,		NormalDw_9_15_L ,	NormalDw_9_16_L ,	NormalDw_9_32_L }
 },{
 {	NormalDw_8_8_R,		NormalDw_8_15_R ,	NormalDw_8_16_R ,	NormalDw_8_32_R },
-{	             0,		NormalDw_15_15_R,	NormalDw_15_16_R,	NormalDw_15_32_R},
-{	             0,		NormalDw_16_15_R,	NormalDw_16_16_R,	NormalDw_16_32_R},
-{	             0,		NormalDw_24_15_R,	NormalDw_24_16_R,	NormalDw_24_32_R},
-{	             0,		NormalDw_32_15_R,	NormalDw_32_16_R,	NormalDw_32_32_R},
+{	       nullptr,		NormalDw_15_15_R,	NormalDw_15_16_R,	NormalDw_15_32_R},
+{	       nullptr,		NormalDw_16_15_R,	NormalDw_16_16_R,	NormalDw_16_32_R},
+{	       nullptr,		NormalDw_24_15_R,	NormalDw_24_16_R,	NormalDw_24_32_R},
+{	       nullptr,		NormalDw_32_15_R,	NormalDw_32_16_R,	NormalDw_32_32_R},
 {	NormalDw_8_8_R,		NormalDw_9_15_R ,	NormalDw_9_16_R ,	NormalDw_9_32_R }
 }};
 
@@ -219,16 +222,18 @@ ScalerSimpleBlock_t ScaleNormalDh = {
 	GFX_CAN_8|GFX_CAN_15|GFX_CAN_16|GFX_CAN_32,
 	1,2,{
 {	NormalDh_8_8_L,		NormalDh_8_15_L ,	NormalDh_8_16_L ,	NormalDh_8_32_L },
-{	             0,		NormalDh_15_15_L,	NormalDh_15_16_L,	NormalDh_15_32_L},
-{	             0,		NormalDh_16_15_L,	NormalDh_16_16_L,	NormalDh_16_32_L},
-{	             0,		NormalDh_24_15_L,	NormalDh_24_16_L,	NormalDh_24_32_L},
-{	             0,		NormalDh_32_15_L,	NormalDh_32_16_L,	NormalDh_32_32_L},
+{	       nullptr,		NormalDh_15_15_L,	NormalDh_15_16_L,	NormalDh_15_32_L},
+{	       nullptr,		NormalDh_16_15_L,	NormalDh_16_16_L,	NormalDh_16_32_L},
+{	       nullptr,		NormalDh_24_15_L,	NormalDh_24_16_L,	NormalDh_24_32_L},
+{	       nullptr,		NormalDh_32_15_L,	NormalDh_32_16_L,	NormalDh_32_32_L},
 {	NormalDh_8_8_L,		NormalDh_9_15_L ,	NormalDh_9_16_L ,	NormalDh_9_32_L }
 },{
 {	NormalDh_8_8_R,		NormalDh_8_15_R ,	NormalDh_8_16_R ,	NormalDh_8_32_R },
-{	             0,		NormalDh_15_15_R,	NormalDh_15_16_R,	NormalDh_15_32_R},
-{	             0,		NormalDh_16_15_R,	NormalDh_16_16_R,	NormalDh_16_32_R},
-{	             0,		NormalDh_24_15_R,	NormalDh_24_16_R,	NormalDh_24_32_R},
-{	             0,		NormalDh_32_15_R,	NormalDh_32_16_R,	NormalDh_32_32_R},
+{	       nullptr,		NormalDh_15_15_R,	NormalDh_15_16_R,	NormalDh_15_32_R},
+{	       nullptr,		NormalDh_16_15_R,	NormalDh_16_16_R,	NormalDh_16_32_R},
+{	       nullptr,		NormalDh_24_15_R,	NormalDh_24_16_R,	NormalDh_24_32_R},
+{	       nullptr,		NormalDh_32_15_R,	NormalDh_32_16_R,	NormalDh_32_32_R},
 {	NormalDh_8_8_R,		NormalDh_9_15_R ,	NormalDh_9_16_R ,	NormalDh_9_32_R }
 }};
+
+// clang-format on

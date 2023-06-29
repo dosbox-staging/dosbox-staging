@@ -1153,7 +1153,7 @@ static void DSP_PrepareDMA_New(DMA_MODES mode, uint32_t length, bool autoinit, b
 	if (mode==DSP_DMA_16) {
 		if (sb.hw.dma16!=0xff) {
 			sb.dma.chan=DMA_GetChannel(sb.hw.dma16);
-			if (sb.dma.chan==NULL) {
+			if (sb.dma.chan==nullptr) {
 				sb.dma.chan=DMA_GetChannel(sb.hw.dma8);
 				mode=DSP_DMA_16_ALIASED;
 				length *= 2;
@@ -1254,7 +1254,7 @@ static void DSP_E2_DMA_CallBack(const DmaChannel* /*chan*/, DMAEvent event)
 	if (event==DMA_UNMASKED) {
 		uint8_t val=(uint8_t)(sb.e2.value&0xff);
 		DmaChannel * chan=DMA_GetChannel(sb.hw.dma8);
-		chan->RegisterCallback(0);
+		chan->RegisterCallback(nullptr);
 		chan->Write(1,&val);
 	}
 }
@@ -1268,7 +1268,7 @@ static void DSP_ADC_CallBack(const DmaChannel* /*chan*/, DMAEvent event)
 		ch->Write(1,&val);
 	}
 	SB_RaiseIRQ(SB_IRQ_8);
-	ch->RegisterCallback(0);
+	ch->RegisterCallback(nullptr);
 }
 
 static void DSP_ChangeRate(uint32_t freq)
@@ -1462,7 +1462,7 @@ static void DSP_DoCommand() {
 		LOG(LOG_SB, LOG_NORMAL)("Continue DMA command");
 		if (sb.mode==MODE_DMA_PAUSE) {
 			sb.mode=MODE_DMA_MASKED;
-			if (sb.dma.chan!=NULL) sb.dma.chan->RegisterCallback(DSP_DMA_CallBack);
+			if (sb.dma.chan!=nullptr) sb.dma.chan->RegisterCallback(DSP_DMA_CallBack);
 		}
 		break;
 	case 0xd9:  /* Exit Autoinitialize 16-bit */
@@ -2257,7 +2257,7 @@ public:
 
 		sb.dsp.state=DSP_S_NORMAL;
 		sb.dsp.out.lastval=0xaa;
-		sb.dma.chan=NULL;
+		sb.dma.chan=nullptr;
 
 		for (uint8_t i = 4; i <= 0xf; ++i) {
 			if (i == 8 || i == 9)

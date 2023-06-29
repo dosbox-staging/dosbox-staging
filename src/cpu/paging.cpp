@@ -77,11 +77,11 @@ void PageHandler::writed(PhysPt addr, uint32_t val)
 }
 
 HostPt PageHandler::GetHostReadPt(Bitu /*phys_page*/) {
-	return 0;
+	return nullptr;
 }
 
 HostPt PageHandler::GetHostWritePt(Bitu /*phys_page*/) {
-	return 0;
+	return nullptr;
 }
 
 bool PageHandler::readb_checked(PhysPt addr, uint8_t *val)

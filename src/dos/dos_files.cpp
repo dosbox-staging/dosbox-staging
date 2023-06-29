@@ -527,10 +527,10 @@ bool DOS_CloseFile(uint16_t entry, bool fcb, uint8_t * refcnt) {
 	Bits refs=Files[handle]->RemoveRef();
 	if (refs<=0) {
 		delete Files[handle];
-		Files[handle]=0;
+		Files[handle]=nullptr;
 		refs=0;
 	}
-	if (refcnt!=NULL) *refcnt=static_cast<uint8_t>(refs+1);
+	if (refcnt!=nullptr) *refcnt=static_cast<uint8_t>(refs+1);
 	return true;
 }
 

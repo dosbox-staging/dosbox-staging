@@ -231,7 +231,7 @@ static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 	                        mt32_207_model.GetName(),
 	                        mt32_206_model.GetName(),
 	                        mt32_203_model.GetName(),
-	                        0};
+	                        nullptr};
 	auto *str_prop       = sec_prop.Add_string("model", when_idle, "auto");
 	str_prop->Set_values(models);
 	str_prop->Set_help(

@@ -103,6 +103,7 @@ foreach flag : [
     '-Wstack-protector',
     '-Wstrict-null-sentinel',
     '-Wsuggest-override',
+    '-Wzero-as-null-pointer-constant',
 ]
     if cxx.has_argument(flag)
        warnings += flag

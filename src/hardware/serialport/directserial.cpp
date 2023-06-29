@@ -34,7 +34,7 @@ CDirectSerial::CDirectSerial(const uint8_t port_idx, CommandLine *cmd)
         : CSerial(port_idx, cmd)
 {
 	InstallationSuccessful = false;
-	comport = 0;
+	comport = nullptr;
 
 	rx_retry = 0;
     rx_retry_max = 0;

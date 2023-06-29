@@ -234,7 +234,7 @@ CMscdex::~CMscdex()
 {
 	for (size_t i = 0; i < GetNumDrives(); i++) {
 		delete cdrom[i];
-		cdrom[i] = 0;
+		cdrom[i] = nullptr;
 	}
 }
 
@@ -272,7 +272,7 @@ int CMscdex::RemoveDrive(uint16_t _drive)
 	if (idx==0) {
 		for (uint16_t i=0; i<GetNumDrives(); i++) {
 			if (i == MSCDEX_MAX_DRIVES-1) {
-				cdrom[i] = 0;
+				cdrom[i] = nullptr;
 				memset(&dinfo[i],0,sizeof(TDriveInfo));
 			} else {
 				dinfo[i] = dinfo[i+1];
@@ -280,7 +280,7 @@ int CMscdex::RemoveDrive(uint16_t _drive)
 			}
 		}
 	} else {
-		cdrom[idx] = 0;
+		cdrom[idx] = nullptr;
 		memset(&dinfo[idx],0,sizeof(TDriveInfo));
 	}
 	numDrives--;
@@ -422,7 +422,7 @@ bool CMscdex::HasDrive(uint16_t drive) {
 }
 
 void CMscdex::ReplaceDrive(CDROM_Interface* newCdrom, uint8_t subUnit) {
-	if (cdrom[subUnit] != NULL) {
+	if (cdrom[subUnit] != nullptr) {
 		StopAudio(subUnit);
 		delete cdrom[subUnit];
 	}
@@ -693,7 +693,7 @@ bool CMscdex::GetDirectoryEntry(uint16_t drive, bool copyFlag, PhysPt pathname, 
 	bool	foundComplete = false;
 	bool	foundName;
 	bool	nextPart = true;
-	char*	useName = 0;
+	char*	useName = nullptr;
 	Bitu	entryLength,nameLength;
 	// clear error
 	error = 0;
@@ -915,19 +915,19 @@ bool CMscdex::GetChannelControl(uint8_t subUnit, TCtrl& ctrl) {
 	return true;
 }
 
-static CMscdex* mscdex = 0;
+static CMscdex* mscdex = nullptr;
 static PhysPt curReqheaderPtr = 0;
 
 bool GetMSCDEXDrive(unsigned char drive_letter,CDROM_Interface **_cdrom) {
 	Bitu i;
 
-	if (mscdex == NULL) {
-		if (_cdrom) *_cdrom = NULL;
+	if (mscdex == nullptr) {
+		if (_cdrom) *_cdrom = nullptr;
 		return false;
 	}
 
 	for (i=0;i < MSCDEX_MAX_DRIVES;i++) {
-		if (mscdex->cdrom[i] == NULL) continue;
+		if (mscdex->cdrom[i] == nullptr) continue;
 		if (mscdex->dinfo[i].drive == drive_letter) {
 			if (_cdrom) *_cdrom = mscdex->cdrom[i];
 			return true;
@@ -1105,7 +1105,7 @@ static uint16_t MSCDEX_IOCTL_Optput(PhysPt buffer,uint8_t drive_unit) {
 
 static MountType MSCDEX_GetMountType(const char *path)
 {
-	assert(path != NULL);
+	assert(path != nullptr);
 	std::string path_string = path;
 	upcase(path_string);
 
@@ -1442,7 +1442,7 @@ void MSCDEX_SetCDInterface(int int_nr, int num_cd) {
 
 void MSCDEX_ShutDown(Section* /*sec*/) {
 	delete mscdex;
-	mscdex = 0;
+	mscdex = nullptr;
 	curReqheaderPtr = 0;
 }
 

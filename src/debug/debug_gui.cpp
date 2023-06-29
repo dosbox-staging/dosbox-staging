@@ -50,7 +50,7 @@ using namespace std;
 static list<string> logBuff = {};
 static list<string>::iterator logBuffPos = logBuff.end();
 
-static _LogGroup loggrp[LOG_MAX]={{"",true},{0,false}};
+static _LogGroup loggrp[LOG_MAX]={{"",true},{nullptr,false}};
 static FILE *debuglog = nullptr;
 
 extern int old_cursor_state;
@@ -221,7 +221,7 @@ static void MakePairs() {
 }
 static void LOG_Destroy(Section*) {
 	if(debuglog) fclose(debuglog);
-	debuglog = 0;
+	debuglog = nullptr;
 }
 
 static void LOG_Init(Section * sec) {
@@ -230,7 +230,7 @@ static void LOG_Init(Section * sec) {
 	if(blah && blah[0] && (debuglog = fopen(blah,"wt+"))){
 		;
 	} else {
-		debuglog = 0;
+		debuglog = nullptr;
 	}
 	sect->AddDestroyFunction(&LOG_Destroy);
 	char buf[64];

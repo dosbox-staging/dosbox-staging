@@ -406,7 +406,7 @@ uint8_t DOS_FindDevice(const char* name)
 						return index;
 					} else {
 						delete Devices[index];
-						Devices[index] = 0;
+						Devices[index] = nullptr;
 						break;
 					}
 				}
@@ -455,7 +455,7 @@ void DOS_DelDevice(DOS_Device * dev) {
 	for (Bitu i = 0; i <DOS_DEVICES;i++) {
 		if (Devices[i] && !strcasecmp(Devices[i]->GetName(), dev->GetName())) {
 			delete Devices[i];
-			Devices[i] = 0;
+			Devices[i] = nullptr;
 			return;
 		}
 	}

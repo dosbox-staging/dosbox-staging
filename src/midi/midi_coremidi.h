@@ -74,7 +74,7 @@ public:
 				for(Bitu i = 0; i<numDests; i++) {
 					MIDIEndpointRef dummy = MIDIGetDestination(i);
 					if (!dummy) continue;
-					CFStringRef midiname = 0;
+					CFStringRef midiname = nullptr;
 					if (MIDIObjectGetStringProperty(dummy,kMIDIPropertyDisplayName,&midiname) == noErr) {
 						const char* s = CFStringGetCStringPtr(midiname,kCFStringEncodingMacRoman);
 						if (s) {
@@ -96,7 +96,7 @@ public:
 		}
 
 		// Create a MIDI client and port
-		MIDIClientCreate(CFSTR("MyClient"), 0, 0, &m_client);
+		MIDIClientCreate(CFSTR("MyClient"), nullptr, nullptr, &m_client);
 
 		if (!m_client)
 		{
@@ -174,7 +174,7 @@ public:
 		for(Bitu i = 0; i < numDests; i++){
 			MIDIEndpointRef dest = MIDIGetDestination(i);
 			if (!dest) continue;
-			CFStringRef midiname = 0;
+			CFStringRef midiname = nullptr;
 			if(MIDIObjectGetStringProperty(dest, kMIDIPropertyDisplayName, &midiname) == noErr) {
 				const char * s = CFStringGetCStringPtr(midiname, kCFStringEncodingMacRoman);
 				if (s) {

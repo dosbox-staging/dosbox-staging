@@ -155,7 +155,7 @@ static void SERIAL_Write(io_port_t port, io_val_t value, io_width_t)
 		case 0x2e8: i=3; break;
 		default: return;
 	}
-	if(serialports[i]==0) return;
+	if(serialports[i]==nullptr) return;
 	
 #if SERIAL_DEBUG
 		const char* const dbgtext[]={"THR","IER","FCR",
@@ -226,7 +226,7 @@ void CSerial::changeLineProperties() {
 static void Serial_EventHandler(uint32_t val)
 {
 	const uint32_t serclassid = val & 0x3;
-	if (serialports[serclassid] != 0) {
+	if (serialports[serclassid] != nullptr) {
 		const auto event_type = static_cast<uint16_t>(val >> 2);
 		serialports[serclassid]->handleEvent(event_type);
 	}
@@ -1147,9 +1147,9 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 
 	if(dbg_serialtraffic|dbg_modemcontrol|dbg_register|dbg_interrupt|dbg_aux)
 		debugfp=CAPTURE_CreateFile(CaptureType::SerialLog);
-	else debugfp=0;
+	else debugfp=nullptr;
 
-	if(debugfp == 0) {
+	if(debugfp == nullptr) {
 		dbg_serialtraffic= 
 		dbg_modemcontrol= 
 		dbg_register=
@@ -1372,7 +1372,7 @@ public:
 		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i) {
 			if (serialports[i]) {
 				delete serialports[i];
-				serialports[i] = 0;
+				serialports[i] = nullptr;
 			}
 		}
 #if C_MODEM
@@ -1387,7 +1387,7 @@ void SERIAL_Destroy(Section *sec)
 {
 	(void)sec; // unused, but required for API compliance
 	delete testSerialPortsBaseclass;
-	testSerialPortsBaseclass = NULL;
+	testSerialPortsBaseclass = nullptr;
 }
 
 void SERIAL_Init (Section* sec)

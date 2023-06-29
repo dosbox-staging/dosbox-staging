@@ -13242,7 +13242,7 @@ public:
 		using namespace std::chrono_literals;
 		std::this_thread::sleep_for(20ms);
 
-		SDL_WaitThread(m_mainThread, 0);
+		SDL_WaitThread(m_mainThread, nullptr);
 		SDL_DestroyMutex(m_hardwareMutex);
 	}
 };

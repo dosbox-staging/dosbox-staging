@@ -1521,9 +1521,9 @@ public:
 		BIOS_ZeroExtendedSize(false);
 
 		/* Remove ems device */
-		if (emm_device!=NULL) {
+		if (emm_device!=nullptr) {
 			DOS_DelDevice(emm_device);
-			emm_device=NULL;
+			emm_device=nullptr;
 		}
 		GEMMIS_seg=0;
 

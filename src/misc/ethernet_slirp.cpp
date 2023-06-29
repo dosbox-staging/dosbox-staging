@@ -198,11 +198,11 @@ bool SlirpEthernetConnection::Initialize(Section *dosbox_config)
 
 	/* DHCPv4, BOOTP, TFTP */
 	config.vhostname = CANONICAL_PROJECT_NAME;
-	config.vdnssearch = NULL;
-	config.vdomainname = NULL;
-	config.tftp_server_name = NULL;
-	config.tftp_path = NULL;
-	config.bootfile = NULL;
+	config.vdnssearch = nullptr;
+	config.vdomainname = nullptr;
+	config.tftp_server_name = nullptr;
+	config.tftp_path = nullptr;
+	config.bootfile = nullptr;
 
 	slirp = slirp_new(&config, &slirp_callbacks, this);
 	if (slirp) {
@@ -421,7 +421,7 @@ void SlirpEthernetConnection::TimerMod(struct slirp_timer *timer, int64_t expire
 
 void SlirpEthernetConnection::TimersRun()
 {
-	int64_t now = slirp_clock_get_ns(NULL);
+	int64_t now = slirp_clock_get_ns(nullptr);
 	for (struct slirp_timer *timer : timers) {
 		if (timer->expires_ns && timer->expires_ns < now) {
 			timer->expires_ns = 0;

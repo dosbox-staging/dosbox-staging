@@ -80,7 +80,7 @@ std::optional<std_fs::path> LASynthModel::find_rom(const service_t& service,
 			continue;
 		}
 
-		const char* rom_id = NULL;
+		const char* rom_id = nullptr;
 		if (rom->type == ROM_TYPE::PCM) {
 			rom_id = info.pcm_rom_id;
 		} else if (rom->type == ROM_TYPE::CONTROL) {

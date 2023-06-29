@@ -55,7 +55,7 @@ static void write_pci_addr([[maybe_unused]] io_port_t port, io_val_t val, io_wid
 static void write_pci_register(PCI_Device* dev,uint8_t regnum,uint8_t value) {
 	// vendor/device/class IDs/header type/etc. are read-only
 	if ((regnum<0x04) || ((regnum>=0x06) && (regnum<0x0c)) || (regnum==0x0e)) return;
-	if (dev==NULL) return;
+	if (dev==nullptr) return;
 	switch (pci_cfg_data[dev->PCIId()][dev->PCISubfunction()][0x0e]&0x7f) {	// header-type specific handling
 		case 0x00:
 			if ((regnum>=0x28) && (regnum<0x30)) return;	// subsystem information is read-only
@@ -224,7 +224,7 @@ PCI_Device::PCI_Device(uint16_t vendor, uint16_t device) {
 	vendor_id=vendor;
 	device_id=device;
 	num_subdevices=0;
-	for (Bitu dct=0;dct<PCI_MAX_PCIFUNCTIONS-1;dct++) subdevices[dct]=0;
+	for (Bitu dct=0;dct<PCI_MAX_PCIFUNCTIONS-1;dct++) subdevices[dct]=nullptr;
 }
 
 void PCI_Device::SetPCIId(const Bits number, const Bits sub_fct)
@@ -240,7 +240,7 @@ void PCI_Device::SetPCIId(const Bits number, const Bits sub_fct)
 
 bool PCI_Device::AddSubdevice(PCI_Device* dev) {
 	if (num_subdevices<PCI_MAX_PCIFUNCTIONS-1) {
-		if (subdevices[num_subdevices]!=NULL) E_Exit("PCI: subdevice slot already in use!");
+		if (subdevices[num_subdevices]!=nullptr) E_Exit("PCI: subdevice slot already in use!");
 		subdevices[num_subdevices]=dev;
 		num_subdevices++;
 		return true;
@@ -252,7 +252,7 @@ void PCI_Device::RemoveSubdevice(Bits subfct) {
 	if ((subfct>0) && (subfct<PCI_MAX_PCIFUNCTIONS)) {
 		if (subfct<=this->NumSubdevices()) {
 			delete subdevices[subfct-1];
-			subdevices[subfct-1]=NULL;
+			subdevices[subfct-1]=nullptr;
 			// should adjust things like num_subdevices as well...
 		}
 	}
@@ -320,7 +320,7 @@ public:
 
 	// register PCI device to bus and setup data
 	Bits RegisterPCIDevice(PCI_Device* device, Bits slot=-1) {
-		if (device==NULL) return -1;
+		if (device==nullptr) return -1;
 
 		if (slot>=0) {
 			// specific slot specified, basic check for validity
@@ -334,14 +334,14 @@ public:
 
 		if (slot<0) slot=pci_devices_installed;	// use next slot
 		Bits subfunction=0;	// main device unless specific already-occupied slot is requested
-		if (pci_devices[slot]!=NULL) {
+		if (pci_devices[slot]!=nullptr) {
 			subfunction=pci_devices[slot]->GetNextSubdeviceNumber();
 			if (subfunction<0) E_Exit("PCI: Too many PCI subdevices!");
 		}
 
 		if (device->InitializeRegisters(pci_cfg_data[slot][subfunction])) {
 			device->SetPCIId(slot, subfunction);
-			if (pci_devices[slot]==NULL) {
+			if (pci_devices[slot]==nullptr) {
 				pci_devices[slot]=device;
 				pci_devices_installed++;
 			} else {
@@ -379,11 +379,11 @@ public:
 
 	void RemoveDevice(uint16_t vendor_id, uint16_t device_id) {
 		for (Bitu dct=0;dct<pci_devices_installed;dct++) {
-			if (pci_devices[dct]!=NULL) {
+			if (pci_devices[dct]!=nullptr) {
 				if (pci_devices[dct]->NumSubdevices()>0) {
 					for (Bitu sct=1;sct<PCI_MAX_PCIFUNCTIONS;sct++) {
 						PCI_Device* sdev=pci_devices[dct]->GetSubdevice(sct);
-						if (sdev!=NULL) {
+						if (sdev!=nullptr) {
 							if ((sdev->VendorID()==vendor_id) && (sdev->DeviceID()==device_id)) {
 								pci_devices[dct]->RemoveSubdevice(sct);
 							}
@@ -393,7 +393,7 @@ public:
 
 				if ((pci_devices[dct]->VendorID()==vendor_id) && (pci_devices[dct]->DeviceID()==device_id)) {
 					delete pci_devices[dct];
-					pci_devices[dct]=NULL;
+					pci_devices[dct]=nullptr;
 				}
 			}
 		}
@@ -402,7 +402,7 @@ public:
 		bool any_device_left=false;
 		for (Bitu dct=0;dct<PCI_MAX_PCIDEVICES;dct++) {
 			if (dct>=pci_devices_installed) break;
-			if (pci_devices[dct]!=NULL) {
+			if (pci_devices[dct]!=nullptr) {
 				any_device_left=true;
 				break;
 			}
@@ -411,7 +411,7 @@ public:
 
 		Bitu last_active_device=PCI_MAX_PCIDEVICES;
 		for (Bitu dct=0;dct<PCI_MAX_PCIDEVICES;dct++) {
-			if (pci_devices[dct]!=NULL) last_active_device=dct;
+			if (pci_devices[dct]!=nullptr) last_active_device=dct;
 		}
 		if (last_active_device<pci_devices_installed)
 			pci_devices_installed=last_active_device+1;
@@ -422,7 +422,7 @@ public:
 		pci_devices_installed = 0;
 
 		for (Bitu devct=0;devct<PCI_MAX_PCIDEVICES;devct++)
-			pci_devices[devct]=NULL;
+			pci_devices[devct]=nullptr;
 
 		if (num_rqueued_devices>0) {
 			// register all devices that have been added before the PCI bus was instantiated
@@ -440,7 +440,7 @@ public:
 	}
 };
 
-static PCI* pci_interface=NULL;
+static PCI* pci_interface=nullptr;
 
 
 PhysPt PCI_GetPModeInterface(void) {
@@ -470,7 +470,7 @@ void PCI_Init(Section* sec)
 }
 
 void PCI_AddDevice(PCI_Device* dev) {
-	if (pci_interface!=NULL) {
+	if (pci_interface!=nullptr) {
 		pci_interface->RegisterPCIDevice(dev);
 	} else {
 		if (num_rqueued_devices<max_rqueued_devices)

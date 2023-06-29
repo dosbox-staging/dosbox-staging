@@ -134,7 +134,7 @@ char * ScanCMDRemain(char * cmd) {
 		while ( *scan && !isspace(*reinterpret_cast<unsigned char*>(scan)) ) scan++;
 		*scan=0;
 		return found;
-	} else return 0;
+	} else return nullptr;
 }
 
 static char e_exit_buf[1024]; // greater scope as else it doesn't always gets

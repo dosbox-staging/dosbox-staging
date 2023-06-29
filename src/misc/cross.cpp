@@ -155,8 +155,8 @@ void CROSS_DetermineConfigPaths() {}
 static void W32_ConfDir(std::string& in,bool create) {
 	int c = create?1:0;
 	char result[MAX_PATH] = { 0 };
-	BOOL r = SHGetSpecialFolderPath(NULL,result,CSIDL_LOCAL_APPDATA,c);
-	if(!r || result[0] == 0) r = SHGetSpecialFolderPath(NULL,result,CSIDL_APPDATA,c);
+	BOOL r = SHGetSpecialFolderPath(nullptr,result,CSIDL_LOCAL_APPDATA,c);
+	if(!r || result[0] == 0) r = SHGetSpecialFolderPath(nullptr,result,CSIDL_APPDATA,c);
 	if(!r || result[0] == 0) {
 		const char* windir = getenv("windir");
 		if(!windir) windir = "c:\\windows";
@@ -264,10 +264,10 @@ bool Cross::IsPathAbsolute(const std::string& in)
 #if defined (WIN32)
 
 dir_information* open_directory(const char* dirname) {
-	if (dirname == NULL) return NULL;
+	if (dirname == nullptr) return nullptr;
 
 	size_t len = strlen(dirname);
-	if (len == 0) return NULL;
+	if (len == 0) return nullptr;
 
 	static dir_information dir;
 
@@ -324,7 +324,7 @@ dir_information* open_directory(const char* dirname) {
 	static dir_information dir;
 	dir.dir=opendir(dirname);
 	safe_strcpy(dir.base_path, dirname);
-	return dir.dir?&dir:NULL;
+	return dir.dir?&dir:nullptr;
 }
 
 bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_directory) {
@@ -335,7 +335,7 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory) {
 	if (!dirp) return false;
 	struct dirent* dentry = readdir(dirp->dir);
-	if (dentry==NULL) {
+	if (dentry==nullptr) {
 		return false;
 	}
 
@@ -399,12 +399,12 @@ FILE *fopen_wrap(const char *path, const char *mode) {
 			//However as realpath only works for exising files. The testing is 
 			//in that case not done against new files.
 		}
-		char* check = realpath(work,NULL);
+		char* check = realpath(work,nullptr);
 		if (check) {
 			if ( ( strlen(check) == 5 && strcmp(check,"/proc") == 0) || strncmp(check,"/proc/",6) == 0) {
 //				LOG_MSG("lst hit %s blocking!",path);
 				free(check);
-				return NULL;
+				return nullptr;
 			}
 			free(check);
 		}
@@ -559,7 +559,7 @@ bool WildFileCmp(const char* file, const char* wild, bool long_compare)
 	upcase(file_ext);
 	char nwild[LFN_NAMELENGTH + 2];
 	strcpy(nwild, wild);
-	if (long_compare && strrchr(nwild, '*') && strrchr(nwild, '.') == NULL)
+	if (long_compare && strrchr(nwild, '*') && strrchr(nwild, '.') == nullptr)
 		strcat(nwild, ".*");
 	find_ext = strrchr(nwild, '.');
 	if (find_ext) {

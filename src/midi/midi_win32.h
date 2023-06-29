@@ -59,7 +59,7 @@ public:
 	bool Open(const char *conf) override
 	{
 		if (isOpen) return false;
-		m_event = CreateEvent (NULL, true, true, NULL);
+		m_event = CreateEvent (nullptr, true, true, nullptr);
 		MMRESULT res = MMSYSERR_NOERROR;
 		if(conf && *conf) {
 			std::string strconf(conf);
