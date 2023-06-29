@@ -180,18 +180,29 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		return;
 	}
 
-	const auto ticksNew = GetTicks();
+	const auto ticksNewUs = GetTicksUs();
+	const auto ticksNew = ticksNewUs / 1000;
+
 	ticksScheduled += ticksAdded;
 	if (ticksNew <= ticksLast) { //lower should not be possible, only equal.
 		ticksAdded = 0;
 
-		constexpr auto duration = std::chrono::milliseconds(1);
-		std::this_thread::sleep_for(duration);
+		static int64_t cumulativeTimeSlept = 0;
 
-		const auto timeslept = GetTicksSince(ticksNew);
+		constexpr auto sleepDuration = std::chrono::microseconds(100);
+		std::this_thread::sleep_for(sleepDuration);
 
-		// Update ticksDone with the time spent sleeping
-		ticksDone -= timeslept;
+		const auto timeslept = GetTicksUsSince(ticksNewUs);
+
+		cumulativeTimeSlept += timeslept;
+
+		// Update ticksDone with the total time spent sleeping
+		if (cumulativeTimeSlept >= 1000) {
+			const auto cumulativeTicksSlept = cumulativeTimeSlept / 1000;
+			ticksDone -= cumulativeTicksSlept;
+			cumulativeTimeSlept %= 1000;
+		}
+
 		if (ticksDone < 0)
 			ticksDone = 0;
 		return; //0
@@ -264,7 +275,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		if (new_cmax < CPU_CYCLES_LOWER_LIMIT)
 			new_cmax = CPU_CYCLES_LOWER_LIMIT;
 		/*
-		LOG(LOG_MISC,LOG_ERROR)("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03d   sched %03d Add %d rr %4.2f",
+		LOG_INFO("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03d   sched %03d Add %d rr %4.2f",
 			CPU_CycleMax,
 			new_cmax,
 			ratio,
