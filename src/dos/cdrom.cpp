@@ -49,7 +49,7 @@ CDROM_Interface_SDL::~CDROM_Interface_SDL()
 
 bool CDROM_Interface_SDL::SetDevice(const char *path, const int cd_number)
 {
-	assert(path != NULL);
+	assert(path != nullptr);
 	std::string path_string = path;
 	upcase(path_string);
 

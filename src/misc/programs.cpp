@@ -521,16 +521,16 @@ void CONFIG::Run(void)
 			// if we have one value in pvars, it's a section
 			// two values are section + property
 			Section* sec = control->GetSection(pvars[0].c_str());
-			if (sec == NULL) {
+			if (sec == nullptr) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
 				         pvars[0].c_str());
 				return;
 			}
 			Section_prop* psec = dynamic_cast<Section_prop*>(sec);
-			if (psec == NULL) {
+			if (psec == nullptr) {
 				// failed; maybe it's the autoexec section?
 				Section_line* pline = dynamic_cast<Section_line*>(sec);
-				if (pline == NULL) {
+				if (pline == nullptr) {
 					E_Exit("Section dynamic cast failed.");
 				}
 
@@ -549,7 +549,7 @@ void CONFIG::Run(void)
 				while (true) {
 					// list the properties
 					Property* p = psec->Get_prop(i++);
-					if (p == NULL) {
+					if (p == nullptr) {
 						break;
 					}
 					WriteOut("  - %s\n", p->propname.c_str());
@@ -559,7 +559,7 @@ void CONFIG::Run(void)
 				size_t i = 0;
 				while (true) {
 					Property* p = psec->Get_prop(i++);
-					if (p == NULL) {
+					if (p == nullptr) {
 						break;
 					}
 					if (!strcasecmp(p->propname.c_str(),
@@ -580,7 +580,7 @@ void CONFIG::Run(void)
 							Prop_int* pint =
 							        dynamic_cast<Prop_int*>(
 							                p);
-							if (pint == NULL) {
+							if (pint == nullptr) {
 								E_Exit("Int property dynamic cast failed.");
 							}
 							if (pint->GetMin() !=
@@ -701,11 +701,11 @@ void CONFIG::Run(void)
 					Bitu i = 0;
 					Section_prop* psec =
 					        dynamic_cast<Section_prop*>(sec);
-					if (psec == NULL) {
+					if (psec == nullptr) {
 						// autoexec section
 						Section_line* pline =
 						        dynamic_cast<Section_line*>(sec);
-						if (pline == NULL) {
+						if (pline == nullptr) {
 							E_Exit("Section dynamic cast failed.");
 						}
 
@@ -715,7 +715,7 @@ void CONFIG::Run(void)
 					while (true) {
 						// list the properties
 						Property* p = psec->Get_prop(i++);
-						if (p == NULL) {
+						if (p == nullptr) {
 							break;
 						}
 						WriteOut(

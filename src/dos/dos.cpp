@@ -166,7 +166,7 @@ static const CountryInfo& LookupCountryInfo(const uint16_t country_number) {
 
 void DOS_SetCountry(uint16_t country_number)
 {
-	if (dos.tables.country == NULL)
+	if (dos.tables.country == nullptr)
 		return;
 
 	const auto country_info = LookupCountryInfo(country_number);
@@ -1516,8 +1516,8 @@ bool DOS_IsCancelRequest()
 DOS_Version DOS_ParseVersion(const char *word, const char *args)
 {
 	DOS_Version new_version = {5, 0, 0}; // Default to 5.0
-	assert(word != NULL && args != NULL);
-	if (*word && !*args && (strchr(word, '.') != 0)) {
+	assert(word != nullptr && args != nullptr);
+	if (*word && !*args && (strchr(word, '.') != nullptr)) {
 		// Allow usual syntax: ver set 7.1
 		const char *p = strchr(word, '.');
 		p++;
@@ -1581,10 +1581,10 @@ public:
 		callback[4].Install(DOS_27Handler,CB_IRET,"DOS Int 27");
 		callback[4].Set_RealVec(0x27);
 
-		callback[5].Install(NULL,CB_IRET,"DOS Int 28");
+		callback[5].Install(nullptr,CB_IRET,"DOS Int 28");
 		callback[5].Set_RealVec(0x28);
 
-		callback[6].Install(NULL,CB_INT29,"CON Output Int 29");
+		callback[6].Install(nullptr,CB_INT29,"CON Output Int 29");
 		callback[6].Set_RealVec(0x29);
 		// pseudocode for CB_INT29:
 		//	push ax

@@ -39,7 +39,7 @@ void BIOSTEST::Run(void) {
 
 	uint8_t drive;
 	char fullname[DOS_PATHLENGTH];
-	localDrive *ldp = 0;
+	localDrive *ldp = nullptr;
 	if (!DOS_MakeName((char *)temp_line.c_str(), fullname, &drive))
 		return;
 
@@ -50,7 +50,7 @@ void BIOSTEST::Run(void) {
 			return;
 
 		FILE *tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
-		if (tmpfile == NULL) {
+		if (tmpfile == nullptr) {
 			WriteOut("Can't open a file");
 			return;
 		}

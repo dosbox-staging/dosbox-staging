@@ -48,18 +48,18 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 	char fullname[DOS_PATHLENGTH];
 
 	if (!DOS_MakeName(const_cast<char *>(filename), fullname, &drive))
-		return NULL;
+		return nullptr;
 
 	try {
 		const auto ldp = dynamic_cast<localDrive*>(Drives.at(drive));
 		if (!ldp)
-			return NULL;
+			return nullptr;
 
 		tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
-		if (tmpfile == NULL) {
+		if (tmpfile == nullptr) {
 			if (!tryload)
 				*error = 1;
-			return NULL;
+			return nullptr;
 		}
 
 		// get file size
@@ -69,21 +69,21 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		fclose(tmpfile);
 
 		tmpfile = ldp->GetSystemFilePtr(fullname, "rb+");
-		if (tmpfile == NULL) {
+		if (tmpfile == nullptr) {
 			//				if (!tryload) *error=2;
 			//				return NULL;
 			WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
 			tmpfile = ldp->GetSystemFilePtr(fullname, "rb");
-			if (tmpfile == NULL) {
+			if (tmpfile == nullptr) {
 				if (!tryload)
 					*error = 1;
-				return NULL;
+				return nullptr;
 			}
 		}
 
 		return tmpfile;
 	} catch (...) {
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -115,7 +115,7 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 			WriteOut(MSG_Get("PROGRAM_BOOT_NOT_EXIST"));
 		if (error == 2)
 			WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
-		return NULL;
+		return nullptr;
 	}
 	fseek(tmpfile, 0L, SEEK_END);
 	*ksize = (ftell(tmpfile) / 1024);
@@ -153,8 +153,8 @@ void BOOT::Run(void)
 		return;
 	}
 
-	FILE *usefile_1 = NULL;
-	FILE *usefile_2 = NULL;
+	FILE *usefile_1 = nullptr;
+	FILE *usefile_2 = nullptr;
 	Bitu i = 0;
 	uint32_t floppysize = 0;
 	uint32_t rombytesize_1 = 0;
@@ -239,10 +239,10 @@ void BOOT::Run(void)
 			uint32_t rombytesize;
 			FILE *usefile = getFSFile(temp_line.c_str(),
 			                          &floppysize, &rombytesize);
-			if (usefile != NULL) {
+			if (usefile != nullptr) {
 				diskSwap[i] = DriveManager::RegisterRawFloppyImage(
 				        usefile, temp_line, floppysize);
-				if (usefile_1 == NULL) {
+				if (usefile_1 == nullptr) {
 					usefile_1 = usefile;
 					rombytesize_1 = rombytesize;
 				} else {
@@ -371,12 +371,12 @@ void BOOT::Run(void)
 			disable_umb_ems_xms();
 			MEM_PreparePCJRCartRom();
 
-			if (usefile_1 == NULL)
+			if (usefile_1 == nullptr)
 				return;
 
 			uint32_t sz1, sz2;
 			FILE *tfile = getFSFile("system.rom", &sz1, &sz2, true);
-			if (tfile != NULL) {
+			if (tfile != nullptr) {
 				fseek(tfile, 0x3000L, SEEK_SET);
 				uint32_t drd = (uint32_t)fread(rombuf, 1, 0xb000, tfile);
 				if (drd == 0xb000) {
@@ -386,7 +386,7 @@ void BOOT::Run(void)
 				fclose(tfile);
 			}
 
-			if (usefile_2 != NULL) {
+			if (usefile_2 != nullptr) {
 				fseek(usefile_2, 0x0L, SEEK_SET);
 				if (fread(rombuf, 1, 0x200, usefile_2) < 0x200) {
 					LOG_MSG("Failed to read sufficient ROM data");

@@ -346,7 +346,7 @@ void DOS_Shell::CMD_RENAME(char * args){
 	HELP("RENAME");
 	StripSpaces(args);
 	if (!*args) {SyntaxError();return;}
-	if ((strchr(args,'*')!=NULL) || (strchr(args,'?')!=NULL) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
+	if ((strchr(args,'*')!=nullptr) || (strchr(args,'?')!=nullptr) ) { WriteOut(MSG_Get("SHELL_CMD_NO_WILD"));return;}
 	char * arg1=strip_word(args);
 	StripSpaces(args);
 	if (!*args) {SyntaxError();return;}
@@ -1161,7 +1161,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 	// Gather all sources (extension to copy more then 1 file specified at command line)
 	// Concatenating files go as follows: All parts except for the last bear the concat flag.
 	// This construction allows them to be counted (only the non concat set)
-	char* source_p = NULL;
+	char* source_p = nullptr;
 	char source_x[DOS_PATHLENGTH+CROSS_LEN];
 	while ( (source_p = strip_word(args)) && *source_p ) {
 		do {
@@ -1364,11 +1364,11 @@ static void show_attributes(DOS_Shell *shell, const uint16_t fattr, const char *
 char *get_filename(char *args)
 {
 	static char *fname = strrchr(args, '\\');
-	if (fname != NULL)
+	if (fname != nullptr)
 		fname++;
 	else {
 		fname = strrchr(args, ':');
-		if (fname != NULL)
+		if (fname != nullptr)
 			fname++;
 		else
 			fname = args;
@@ -1383,7 +1383,7 @@ static bool attrib_recursive(DOS_Shell *shell,
                              attributes attribs)
 {
 	char path[DOS_PATHLENGTH + 4], full[DOS_PATHLENGTH];
-	if (!DOS_Canonicalize(args, full) || strrchr(full, '\\') == NULL) {
+	if (!DOS_Canonicalize(args, full) || strrchr(full, '\\') == nullptr) {
 		shell->WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return false;
 	}
@@ -1405,7 +1405,7 @@ static bool attrib_recursive(DOS_Shell *shell,
 	while (res) {
 		dta.GetResult(name, size, date, time, attr);
 		if (!((!strcmp(name, ".") || !strcmp(name, "..") ||
-		       strchr(args, '*') != NULL || strchr(args, '?') != NULL) &&
+		       strchr(args, '*') != nullptr || strchr(args, '?') != nullptr) &&
 		      attr & DOS_ATTR_DIRECTORY)) {
 			found = true;
 			strcpy(end, name);
@@ -1867,7 +1867,7 @@ void DOS_Shell::CMD_TIME(char * args) {
 	}
 	if (ScanCMDBool(args, "H")) {
 		// synchronize time with host
-		const time_t curtime = time(NULL);
+		const time_t curtime = time(nullptr);
 		struct tm datetime;
 		cross::localtime_r(&curtime, &datetime);
 		reg_ah = 0x2d; // set system time
@@ -1923,7 +1923,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
  * E.g. make basedir member dos_drive instead of localdrive
  */
 	HELP("SUBST");
-	localDrive* ldp=0;
+	localDrive* ldp=nullptr;
 	char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
 	char temp_str[2] = { 0,0 };
 	try {

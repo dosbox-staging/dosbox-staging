@@ -173,7 +173,7 @@ saa1099_device::saa1099_device(const machine_config &mconfig, const char *tag, d
                                const uint32_t clock, const int rate_divisor)
         : device_t(mconfig, SAA1099, tag, owner, clock),
           device_sound_interface(mconfig, *this),
-          m_stream(0),
+          m_stream(nullptr),
           m_noise_freqs{2 * clock / 256.0, 2 * clock / 512.0, 2 * clock / 1024.0},
 
 #if 0

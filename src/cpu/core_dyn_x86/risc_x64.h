@@ -466,7 +466,7 @@ static void gen_synchreg(DynReg * dnew,DynReg * dsynch) {
 	if ((dnew->flags ^ dsynch->flags) & DYNFLG_CHANGED) {
 		/* Ensure the changed value gets saved */	
 		if (dnew->flags & DYNFLG_CHANGED) {
-			if (GCC_LIKELY(dnew->genreg != NULL))
+			if (GCC_LIKELY(dnew->genreg != nullptr))
 				dnew->genreg->Save();
 		} else dnew->flags|=DYNFLG_CHANGED;
 	}
@@ -732,7 +732,7 @@ static void gen_sop_byte(SingleOps op,DynReg * dr1,Bitu di1) {
 }
 
 static void gen_extend_word(bool sign,DynReg * ddr,DynReg * dsr) {
-	if (ddr==dsr && dsr->genreg==NULL)
+	if (ddr==dsr && dsr->genreg==nullptr)
 		opcode(FindDynReg(ddr,true)->index).setabsaddr(dsr->data).Emit16(sign ? 0xBF0F:0xB70F);
 	else {
 		int src = FindDynReg(dsr)->index;
@@ -745,7 +745,7 @@ static void gen_extend_word(bool sign,DynReg * ddr,DynReg * dsr) {
 }
 
 static void gen_extend_byte(bool sign,bool dword,DynReg * ddr,DynReg * dsr,Bitu dsi) {
-	if (ddr==dsr && dword && dsr->genreg==NULL) {
+	if (ddr==dsr && dword && dsr->genreg==nullptr) {
 		opcode op = opcode(FindDynReg(ddr,true)->index);
 		if (dsi) op.setabsaddr((void*)(((uint8_t*)dsr->data)+1));
 		else op.setabsaddr(dsr->data);
@@ -770,9 +770,9 @@ static void gen_extend_byte(bool sign,bool dword,DynReg * ddr,DynReg * dsr,Bitu 
 }
 
 static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bits imm) {
-	if (ddr==dsr1 && dsr2==NULL && !imm)
+	if (ddr==dsr1 && dsr2==nullptr && !imm)
 		return;
-	if (ddr==dsr2 && dsr1==NULL) {
+	if (ddr==dsr2 && dsr1==nullptr) {
 		if (!scale && !imm) 
 			return;
 		else if (scale<2) {
@@ -780,7 +780,7 @@ static void gen_lea(DynReg * ddr,DynReg * dsr1,DynReg * dsr2,Bitu scale,Bits imm
 			// or [0+1*reg] to [reg+0*reg]
 			// (index with no base requires 32-bit offset)
 			dsr1 = dsr2;
-			if (!scale) dsr2 = NULL;
+			if (!scale) dsr2 = nullptr;
 			else scale = 0;
 		}
 	}
@@ -939,7 +939,7 @@ static void gen_imul_word(bool dword,DynReg * dr1,DynReg * dr2) {
 static void gen_imul_word_imm(bool dword,DynReg * dr1,DynReg * dr2,Bits imm) {
 	// dr1 = dr2*imm
 	opcode op;
-	if (dr1==dr2 && dword && dr1->genreg==NULL)
+	if (dr1==dr2 && dword && dr1->genreg==nullptr)
 		op = opcode(FindDynReg(dr1,true)->index).setabsaddr(dr2->data);
 	else
 		op = opcode(FindDynReg(dr1,dword&&dr1!=dr2)->index,dword).setrm(FindDynReg(dr2)->index);
@@ -999,7 +999,7 @@ static void gen_cbw(bool dword,DynReg * dyn_ax) {
 static void gen_cwd(bool dword,DynReg * dyn_ax,DynReg * dyn_dx) {
 	if (dyn_dx->genreg != x64gen.regs[X64_REG_RDX]) {
 		if (dword) {
-			if (dyn_dx->genreg) dyn_dx->genreg->dynreg = NULL;
+			if (dyn_dx->genreg) dyn_dx->genreg->dynreg = nullptr;
 			x64gen.regs[X64_REG_RDX]->Load(dyn_dx,true);
 		} else ForceDynReg(x64gen.regs[X64_REG_RDX],dyn_dx);
 	}
@@ -1019,7 +1019,7 @@ static void gen_mul_word(bool imul,DynReg * dyn_ax,DynReg * dyn_dx,bool dword,Dy
 	ForceDynReg(x64gen.regs[X64_REG_RAX],dyn_ax);
 	if (dword && dyn_dx!=dr1) {
 		// release current genreg
-		if (dyn_dx->genreg) dyn_dx->genreg->dynreg = NULL;
+		if (dyn_dx->genreg) dyn_dx->genreg->dynreg = nullptr;
 		x64gen.regs[X64_REG_RDX]->Load(dyn_dx,true);
 	} else ForceDynReg(x64gen.regs[X64_REG_RDX],dyn_dx);
 	opcode(imul?5:4,dword).setrm(FindDynReg(dr1)->index).Emit8(0xF7);
@@ -1040,7 +1040,7 @@ static void gen_dshift_cl(bool dword,bool left,DynReg * dr1,DynReg * dr2,DynReg 
 	dr1->flags|=DYNFLG_CHANGED;
 }
 
-static void gen_call_ptr(void *func=NULL, uint8_t ptr=0) {
+static void gen_call_ptr(void *func=nullptr, uint8_t ptr=0) {
 	x64gen.regs[X64_REG_RAX]->Clear();
 	x64gen.regs[X64_REG_RCX]->Clear();
 	x64gen.regs[X64_REG_RDX]->Clear();
@@ -1057,7 +1057,7 @@ static void gen_call_ptr(void *func=NULL, uint8_t ptr=0) {
 		DynRegs[G_ESP].genreg->Save();
 
 	/* Do the actual call to the procedure */
-	if (func!=NULL) {
+	if (func!=nullptr) {
 		Bits diff = (Bits)func - (Bits)cache.pos - 5;
 		if ((int32_t)diff == diff) {
 			opcode(0).setimm(diff,4).Emit8Reg(0xE8); // call rel32
@@ -1071,12 +1071,12 @@ static void gen_call_ptr(void *func=NULL, uint8_t ptr=0) {
 static void gen_call_function(void * func,const char* ops,...) {
 	Bitu paramcount=0;
 	va_list params;
-	DynReg *dynret=NULL;
+	DynReg *dynret=nullptr;
 	char rettype='\0';
 
 	/* Save the flags */
 	if (GCC_LIKELY(!skip_flags)) gen_protectflags();
-	if (ops==NULL) IllegalOption("gen_call_function NULL format");
+	if (ops==nullptr) IllegalOption("gen_call_function NULL format");
 	va_start(params,ops);
 	while (*ops) {
 		if (*ops++=='%') {
@@ -1144,7 +1144,7 @@ static void gen_call_function(void * func,const char* ops,...) {
 }
 
 static void gen_call_write(DynReg * dr,uint32_t val,Bitu write_size) {
-	void *func = NULL;
+	void *func = nullptr;
 	gen_protectflags();
 	gen_load_arg_reg(0,dr,"rd");
 
@@ -1186,7 +1186,7 @@ static void gen_fill_branch_long(const uint8_t * data,const uint8_t * from=cache
 	cache_addd((uint32_t)(from-data-4),data);
 }
 
-static const uint8_t * gen_create_jump(const uint8_t * to=0) {
+static const uint8_t * gen_create_jump(const uint8_t * to=nullptr) {
 	/* First free all registers */
 	cache_addb(0xe9);
 	cache_addd(to - cache.pos - sizeof(uint32_t));

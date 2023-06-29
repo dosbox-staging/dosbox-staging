@@ -102,12 +102,12 @@ typedef GLvoid* (APIENTRYP PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum access)
 typedef GLboolean (APIENTRYP PFNGLUNMAPBUFFERARBPROC) (GLenum target);
 #endif
 
-PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;
-PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
-PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;
-PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
-PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
-PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
+PFNGLGENBUFFERSARBPROC glGenBuffersARB = nullptr;
+PFNGLBINDBUFFERARBPROC glBindBufferARB = nullptr;
+PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = nullptr;
+PFNGLBUFFERDATAARBPROC glBufferDataARB = nullptr;
+PFNGLMAPBUFFERARBPROC glMapBufferARB = nullptr;
+PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = nullptr;
 
 /* Don't guard these with GL_VERSION_2_0 - Apple defines it but not these typedefs.
  * If they're already defined they should match these definitions, so no conflicts.
@@ -139,25 +139,25 @@ typedef void (APIENTRYP PFNGLVERTEXATTRIBPOINTERPROC) (GLuint index, GLint size,
  * namespace here to keep the official names but avoid collisions.
  */
 namespace gl2 {
-PFNGLATTACHSHADERPROC glAttachShader = NULL;
-PFNGLCOMPILESHADERPROC glCompileShader = NULL;
-PFNGLCREATEPROGRAMPROC glCreateProgram = NULL;
-PFNGLCREATESHADERPROC glCreateShader = NULL;
-PFNGLDELETEPROGRAMPROC glDeleteProgram = NULL;
-PFNGLDELETESHADERPROC glDeleteShader = NULL;
-PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = NULL;
-PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation = NULL;
-PFNGLGETPROGRAMIVPROC glGetProgramiv = NULL;
-PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog = NULL;
-PFNGLGETSHADERIVPROC glGetShaderiv = NULL;
-PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog = NULL;
-PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = NULL;
-PFNGLLINKPROGRAMPROC glLinkProgram = NULL;
-PFNGLSHADERSOURCEPROC_NP glShaderSource = NULL;
-PFNGLUNIFORM2FPROC glUniform2f = NULL;
-PFNGLUNIFORM1IPROC glUniform1i = NULL;
-PFNGLUSEPROGRAMPROC glUseProgram = NULL;
-PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = NULL;
+PFNGLATTACHSHADERPROC glAttachShader = nullptr;
+PFNGLCOMPILESHADERPROC glCompileShader = nullptr;
+PFNGLCREATEPROGRAMPROC glCreateProgram = nullptr;
+PFNGLCREATESHADERPROC glCreateShader = nullptr;
+PFNGLDELETEPROGRAMPROC glDeleteProgram = nullptr;
+PFNGLDELETESHADERPROC glDeleteShader = nullptr;
+PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray = nullptr;
+PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation = nullptr;
+PFNGLGETPROGRAMIVPROC glGetProgramiv = nullptr;
+PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog = nullptr;
+PFNGLGETSHADERIVPROC glGetShaderiv = nullptr;
+PFNGLGETSHADERINFOLOGPROC glGetShaderInfoLog = nullptr;
+PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation = nullptr;
+PFNGLLINKPROGRAMPROC glLinkProgram = nullptr;
+PFNGLSHADERSOURCEPROC_NP glShaderSource = nullptr;
+PFNGLUNIFORM2FPROC glUniform2f = nullptr;
+PFNGLUNIFORM1IPROC glUniform1i = nullptr;
+PFNGLUSEPROGRAMPROC glUseProgram = nullptr;
+PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer = nullptr;
 }
 
 /* "using" is meant to hide identical names declared in outer scope
@@ -1602,7 +1602,7 @@ static GLuint BuildShader(GLenum type, const std::string_view source_sv)
 	if (shader == 0) return 0;
 
 	// Load the shader source
-	glShaderSource(shader, 2, src_strings, NULL);
+	glShaderSource(shader, 2, src_strings, nullptr);
 
 	// Compile the shader
 	glCompileShader(shader);
@@ -1616,7 +1616,7 @@ static GLuint BuildShader(GLenum type, const std::string_view source_sv)
 
 		if (info_len > 1) {
 			std::vector<GLchar> info_log(info_len);
-			glGetShaderInfoLog(shader, info_len, NULL, info_log.data());
+			glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
 			LOG_ERR("Error compiling shader: %s", info_log.data());
 		}
 
@@ -1860,7 +1860,7 @@ dosurface:
 		}
 		/* Fix a glitch with aspect=true occuring when
 		changing between modes with different dimensions */
-		SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
+		SDL_FillRect(sdl.surface, nullptr, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
 		SDL_UpdateWindowSurface(sdl.window);
 
 		sdl.frame.update = update_frame_surface;
@@ -1908,7 +1908,7 @@ dosurface:
 		SDL_SetRenderDrawColor(sdl.renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
 		uint32_t pixel_format;
 		assert(sdl.texture.texture);
-		SDL_QueryTexture(sdl.texture.texture, &pixel_format, NULL, NULL, NULL);
+		SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
 
 		assert(sdl.texture.pixelFormat == nullptr); // ensure we don't leak
 		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
@@ -1972,7 +1972,7 @@ dosurface:
 		} else {
 			free(sdl.opengl.framebuf);
 		}
-		sdl.opengl.framebuf=0;
+		sdl.opengl.framebuf=nullptr;
 		if (!(flags & GFX_CAN_32))
 			goto dosurface;
 
@@ -2079,7 +2079,7 @@ dosurface:
 
 						if (info_len > 1) {
 							std::vector<GLchar> info_log(info_len);
-							glGetProgramInfoLog(sdl.opengl.program_object, info_len, NULL, info_log.data());
+							glGetProgramInfoLog(sdl.opengl.program_object, info_len, nullptr, info_log.data());
 							LOG_ERR("SDL:OPENGL: Error link program:\n %s", info_log.data());
 						}
 						glDeleteProgram(sdl.opengl.program_object);
@@ -2119,7 +2119,7 @@ dosurface:
 		if (sdl.opengl.pixel_buffer_object) {
 			glGenBuffersARB(1, &sdl.opengl.buffer);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
-			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, framebuffer_bytes, NULL, GL_STREAM_DRAW_ARB);
+			glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_EXT, framebuffer_bytes, nullptr, GL_STREAM_DRAW_ARB);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 		} else {
 			sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
@@ -2711,7 +2711,7 @@ static void update_frame_gl_pbo([[maybe_unused]] const uint16_t *changedLines)
 		glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, sdl.draw.width,
 		                sdl.draw.height, GL_BGRA_EXT,
-		                GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+		                GL_UNSIGNED_INT_8_8_8_8_REV, nullptr);
 		glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 	} else {
 		sdl.opengl.actual_frame_count++;
@@ -3537,7 +3537,7 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 			sdl.desktop.want_type = SCREEN_SURFACE;
 		} else {
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
-			if (sdl.opengl.context == 0) {
+			if (sdl.opengl.context == nullptr) {
 				LOG_WARNING("Could not create OpenGL context, switching back to surface");
 				sdl.desktop.want_type = SCREEN_SURFACE;
 			}
@@ -3594,7 +3594,7 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 			         glVertexAttribPointer);
 
 			sdl.opengl.buffer = 0;
-			sdl.opengl.framebuf = 0;
+			sdl.opengl.framebuf = nullptr;
 			sdl.opengl.texture = 0;
 			sdl.opengl.displaylist = 0;
 			glGetIntegerv(GL_MAX_TEXTURE_SIZE, &sdl.opengl.max_texsize);
@@ -4478,7 +4478,7 @@ void config_add_sdl() {
 	        "  <custom>:  Specify a custom rate as an integer or decimal Hz value\n"
 	        "             (23.000 is the allowed minimum).");
 
-	const char* vsync_prefs[] = {"auto", "on", "off", "yield", 0};
+	const char* vsync_prefs[] = {"auto", "on", "off", "yield", nullptr};
 	pstring = sdl_sec->Add_string("vsync", always, "auto");
 
 	pstring->Set_help(
@@ -4499,7 +4499,7 @@ void config_add_sdl() {
 	               "at 70 Hz. 0 disables this and will always render (default).");
 	pint->SetMinMax(0, 14000);
 
-	const char *presentation_modes[] = {"auto", "cfr", "vfr", 0};
+	const char *presentation_modes[] = {"auto", "cfr", "vfr", nullptr};
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
 	pstring->Set_help(
 	        "Select the frame presentation mode:\n"
@@ -4517,7 +4517,7 @@ void config_add_sdl() {
 	  "opengl",
 	  "openglnb",
 #endif
-	  0 };
+	  nullptr };
 
 #if C_OPENGL
 	Pstring = sdl_sec->Add_string("output", always, "opengl");
@@ -4560,7 +4560,7 @@ void config_add_sdl() {
 	        "normal",
 	        "higher",
 	        "highest",
-	        0,
+	        nullptr,
 	};
 	psection = Pmulti->GetSection();
 	psection->Add_string("active", always, priority_level_choices[0])
@@ -4586,7 +4586,7 @@ void config_add_sdl() {
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
 	        "running ('auto' by default).");
-	const char *ssopts[] = {"auto", "allow", "block", 0};
+	const char *ssopts[] = {"auto", "allow", "block", nullptr};
 	pstring->Set_values(ssopts);
 }
 
@@ -4654,7 +4654,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	QuitSDL();
 #if C_DEBUG
 	// shutdown curses
-	DEBUG_ShutDown(NULL);
+	DEBUG_ShutDown(nullptr);
 #endif
 
 	if(execvp(newargs[0], newargs) == -1) {
@@ -4695,7 +4695,7 @@ static void launchcaptures(const std::string& edit)
 		exit(1);
 	}
 
-	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) 0);
+	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) nullptr);
 	//if you get here the launching failed!
 	fprintf(stderr, "can't find filemanager %s\n", edit.c_str());
 	exit(1);
@@ -4993,12 +4993,12 @@ int sdl_main(int argc, char *argv[])
 	} catch (char *error) {
 		rcode = 1;
 		GFX_ShowMsg("Exit to error: %s",error);
-		fflush(NULL);
+		fflush(nullptr);
 		if(sdl.wait_on_error) {
 			//TODO Maybe look for some way to show message in linux?
 #if (C_DEBUG)
 			GFX_ShowMsg("Press enter to continue");
-			fflush(NULL);
+			fflush(nullptr);
 			fgetc(stdin);
 #elif defined(WIN32)
 			Sleep(5000);

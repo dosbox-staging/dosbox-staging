@@ -670,7 +670,7 @@ void INT10_SetupVESA(void) {
 	}
 	/* Prepare the real mode interface */
 	int10.rom.wait_retrace=RealMake(0xc000,int10.rom.used);
-	int10.rom.used += (uint16_t)CALLBACK_Setup(0, NULL, CB_VESA_WAIT, PhysicalMake(0xc000,int10.rom.used), "");
+	int10.rom.used += (uint16_t)CALLBACK_Setup(0, nullptr, CB_VESA_WAIT, PhysicalMake(0xc000,int10.rom.used), "");
 	callback.rmWindow=CALLBACK_Allocate();
 	int10.rom.set_window=RealMake(0xc000,int10.rom.used);
 	int10.rom.used += (uint16_t)CALLBACK_Setup(callback.rmWindow, VESA_SetWindow, CB_RETF, PhysicalMake(0xc000,int10.rom.used), "VESA Real Set Window");
@@ -694,7 +694,7 @@ void INT10_SetupVESA(void) {
 	int10.rom.pmode_interface_palette = int10.rom.used - RealOffset( int10.rom.pmode_interface );
 	phys_writew( RealToPhysical(int10.rom.pmode_interface) + 4, int10.rom.pmode_interface_palette);
 	callback.pmPalette=CALLBACK_Allocate();
-	int10.rom.used += (uint16_t)CALLBACK_Setup(0, NULL, CB_VESA_PM, PhysicalMake(0xc000,int10.rom.used), "");
+	int10.rom.used += (uint16_t)CALLBACK_Setup(0, nullptr, CB_VESA_PM, PhysicalMake(0xc000,int10.rom.used), "");
 	int10.rom.used += (uint16_t)CALLBACK_Setup(callback.pmPalette, VESA_PMSetPalette, CB_RETN, PhysicalMake(0xc000,int10.rom.used), "VESA PM Set Palette");
 	/* Finalize the size and clear the required ports pointer */
 	phys_writew( RealToPhysical(int10.rom.pmode_interface) + 6, 0);

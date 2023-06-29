@@ -222,7 +222,7 @@ public:
 		: list(binds)
 	{
 		list->push_back(this);
-		event=0;
+		event=nullptr;
 		all_binds.push_back(this);
 	}
 
@@ -625,7 +625,7 @@ public:
 
 		sdl_joystick=SDL_JoystickOpen(_stick);
 		set_joystick_led(sdl_joystick, on_color);
-		if (sdl_joystick==NULL) {
+		if (sdl_joystick==nullptr) {
 			button_wrap=emulated_buttons;
 			axes=MAXAXIS;
 			return;
@@ -679,7 +679,7 @@ public:
 
 	CBind * CreateConfigBind(char *& buf) override
 	{
-		if (strncasecmp(configname,buf,strlen(configname))) return 0;
+		if (strncasecmp(configname,buf,strlen(configname))) return nullptr;
 		strip_word(buf);
 		char *type = strip_word(buf);
 		CBind *bind = nullptr;
@@ -704,13 +704,13 @@ public:
 			const auto axis_position = event->jaxis.value;
 
 			if (event->jaxis.which != stick)
-				return 0;
+				return nullptr;
 #if defined(REDUCE_JOYSTICK_POLLING)
 			if (axis_id >= axes)
 				return nullptr;
 #endif
 			if (abs(axis_position) < 25000)
-				return 0;
+				return nullptr;
 
 			// Axis IDs 2 and 5 are triggers on six-axis controllers
 			const bool is_trigger = (axis_id == 2 || axis_id == 5) && axes == 6;
@@ -719,23 +719,23 @@ public:
 
 		} else if (event->type == SDL_JOYBUTTONDOWN) {
 			if (event->jbutton.which != stick)
-				return 0;
+				return nullptr;
 #if defined (REDUCE_JOYSTICK_POLLING)
 			return CreateButtonBind(event->jbutton.button%button_wrap);
 #else
 			return CreateButtonBind(event->jbutton.button);
 #endif
 		} else if (event->type==SDL_JOYHATMOTION) {
-			if (event->jhat.which!=stick) return 0;
-			if (event->jhat.value==0) return 0;
-			if (event->jhat.value>(SDL_HAT_UP|SDL_HAT_RIGHT|SDL_HAT_DOWN|SDL_HAT_LEFT)) return 0;
+			if (event->jhat.which!=stick) return nullptr;
+			if (event->jhat.value==0) return nullptr;
+			if (event->jhat.value>(SDL_HAT_UP|SDL_HAT_RIGHT|SDL_HAT_DOWN|SDL_HAT_LEFT)) return nullptr;
 			return CreateHatBind(event->jhat.hat, event->jhat.value);
-		} else return 0;
+		} else return nullptr;
 	}
 
 	bool CheckEvent(SDL_Event * event) override {
-		SDL_JoyAxisEvent * jaxis = NULL;
-		SDL_JoyButtonEvent *jbutton = NULL;
+		SDL_JoyAxisEvent * jaxis = nullptr;
+		SDL_JoyButtonEvent *jbutton = nullptr;
 
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
@@ -784,7 +784,7 @@ public:
 	}
 
 	void ActivateJoystickBoundEvents() {
-		if (GCC_UNLIKELY(sdl_joystick==NULL)) return;
+		if (GCC_UNLIKELY(sdl_joystick==nullptr)) return;
 
 		bool button_pressed[MAXBUTTON];
 		std::fill_n(button_pressed, MAXBUTTON, false);
@@ -952,8 +952,8 @@ public:
 	}
 
 	bool CheckEvent(SDL_Event * event) override {
-		SDL_JoyAxisEvent * jaxis = NULL;
-		SDL_JoyButtonEvent *jbutton = NULL;
+		SDL_JoyAxisEvent * jaxis = nullptr;
+		SDL_JoyButtonEvent *jbutton = nullptr;
 
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
@@ -1016,9 +1016,9 @@ public:
 	}
 
 	bool CheckEvent(SDL_Event * event) override {
-		SDL_JoyAxisEvent * jaxis = NULL;
-		SDL_JoyButtonEvent * jbutton = NULL;
-		SDL_JoyHatEvent *jhat = NULL;
+		SDL_JoyAxisEvent * jaxis = nullptr;
+		SDL_JoyButtonEvent * jbutton = nullptr;
+		SDL_JoyHatEvent *jhat = nullptr;
 
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
@@ -1142,9 +1142,9 @@ public:
 	}
 
 	bool CheckEvent(SDL_Event * event) override {
-		SDL_JoyAxisEvent * jaxis = NULL;
-		SDL_JoyButtonEvent * jbutton = NULL;
-		SDL_JoyHatEvent * jhat = NULL;
+		SDL_JoyAxisEvent * jaxis = nullptr;
+		SDL_JoyButtonEvent * jbutton = nullptr;
+		SDL_JoyHatEvent * jhat = nullptr;
 		Bitu but = 0;
 		static const unsigned button_magic[6] = {
 		        0x02, 0x04, 0x10, 0x100, 0x20, 0x200};
@@ -1532,7 +1532,7 @@ public:
 };
 
 class CEventButton;
-static CEventButton * last_clicked = NULL;
+static CEventButton * last_clicked = nullptr;
 
 class CEventButton final : public CClickableTextButton {
 public:
@@ -1595,7 +1595,7 @@ public:
 		switch (type) {
 		case BB_Add:
 			mapper.addbind=true;
-			SetActiveBind(0);
+			SetActiveBind(nullptr);
 			change_action_text("Press a key/joystick button or move the joystick.",CLR_RED);
 			break;
 		case BB_Del:
@@ -1608,7 +1608,7 @@ public:
 					mapper.abindit=mapper.aevent->bindlist.begin();
 			}
 			if (mapper.abindit!=mapper.aevent->bindlist.end()) SetActiveBind(*(mapper.abindit));
-			else SetActiveBind(0);
+			else SetActiveBind(nullptr);
 			break;
 		case BB_Next:
 			if (mapper.abindit != mapper.aevent->bindlist.end())
@@ -1972,14 +1972,14 @@ static void SetActiveEvent(CEvent * event) {
 	if (!event) {
 		change_action_text("Select an event to change.",CLR_WHITE);
 		bind_but.add->Enable(false);
-		SetActiveBind(0);
+		SetActiveBind(nullptr);
 	} else {
 		change_action_text("Modify the bindings for this event or select a different event.",
 		                   CLR_WHITE);
 		mapper.abindit=event->bindlist.begin();
 		if (mapper.abindit!=event->bindlist.end()) {
 			SetActiveBind(*(mapper.abindit));
-		} else SetActiveBind(0);
+		} else SetActiveBind(nullptr);
 		bind_but.add->Enable(true);
 	}
 }
@@ -1989,13 +1989,13 @@ extern SDL_Rect GFX_GetSDLSurfaceSubwindowDims(uint16_t width, uint16_t height);
 extern void GFX_UpdateDisplayDimensions(int width, int height);
 
 static void DrawButtons() {
-	SDL_FillRect(mapper.draw_surface,0,CLR_BLACK);
+	SDL_FillRect(mapper.draw_surface,nullptr,CLR_BLACK);
 	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
 		(*but_it)->Draw();
 	}
 	// We can't just use SDL_BlitScaled (say for Android) in one step
-	SDL_BlitSurface(mapper.draw_surface, NULL, mapper.draw_surface_nonpaletted, NULL);
-	SDL_BlitScaled(mapper.draw_surface_nonpaletted, NULL, mapper.surface, &mapper.draw_rect);
+	SDL_BlitSurface(mapper.draw_surface, nullptr, mapper.draw_surface_nonpaletted, nullptr);
+	SDL_BlitScaled(mapper.draw_surface_nonpaletted, nullptr, mapper.surface, &mapper.draw_rect);
 	//SDL_BlitSurface(mapper.draw_surface, NULL, mapper.surface, NULL);
 	SDL_UpdateWindowSurface(mapper.window);
 }
@@ -2129,8 +2129,8 @@ static KeyBlock combo_4[12] = {{"\\|", "oem102", KBD_oem102},
                                {"/?", "slash", KBD_slash},
                                {"/?", "abnt1", KBD_abnt1}};
 
-static CKeyEvent * caps_lock_event=NULL;
-static CKeyEvent * num_lock_event=NULL;
+static CKeyEvent * caps_lock_event=nullptr;
+static CKeyEvent * num_lock_event=nullptr;
 
 static void CreateLayout() {
 	Bitu i;
@@ -2237,9 +2237,9 @@ static void CreateLayout() {
 	AddJButtonButton(PX(XO),PY(YO),BW,BH,"1" ,0,0);
 	AddJButtonButton(PX(XO+2),PY(YO),BW,BH,"2" ,0,1);
 	/* Axes 1+2 (X+Y) of 1st Joystick */
-	CJAxisEvent * cjaxis=AddJAxisButton(PX(XO+1),PY(YO),BW,BH,"Y-",0,1,false,NULL);
+	CJAxisEvent * cjaxis=AddJAxisButton(PX(XO+1),PY(YO),BW,BH,"Y-",0,1,false,nullptr);
 	AddJAxisButton  (PX(XO+1),PY(YO+1),BW,BH,"Y+",0,1,true,cjaxis);
-	cjaxis=AddJAxisButton  (PX(XO),PY(YO+1),BW,BH,"X-",0,0,false,NULL);
+	cjaxis=AddJAxisButton  (PX(XO),PY(YO+1),BW,BH,"X-",0,0,false,nullptr);
 	AddJAxisButton  (PX(XO+2),PY(YO+1),BW,BH,"X+",0,0,true,cjaxis);
 
 	CJAxisEvent * tmp_ptr;
@@ -2254,17 +2254,17 @@ static void CreateLayout() {
 		AddJButtonButton_hidden(0,3);
 
 		/* Axes 1+2 (X+Y) of 2nd Joystick */
-		cjaxis  = AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",1,0,false,NULL);
+		cjaxis  = AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",1,0,false,nullptr);
 		tmp_ptr = AddJAxisButton(PX(XO+4+2),PY(YO+1),BW,BH,"X+",1,0,true,cjaxis);
 		(void)tmp_ptr;
-		cjaxis  = AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",1,1,false,NULL);
+		cjaxis  = AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",1,1,false,nullptr);
 		tmp_ptr = AddJAxisButton(PX(XO+4+1),PY(YO+1),BW,BH,"Y+",1,1,true,cjaxis);
 		(void)tmp_ptr;
 		/* Axes 3+4 (X+Y) of 1st Joystick, not accessible */
-		cjaxis  = AddJAxisButton_hidden(0,2,false,NULL);
+		cjaxis  = AddJAxisButton_hidden(0,2,false,nullptr);
 		tmp_ptr = AddJAxisButton_hidden(0,2,true,cjaxis);
 		(void)tmp_ptr;
-		cjaxis  = AddJAxisButton_hidden(0,3,false,NULL);
+		cjaxis  = AddJAxisButton_hidden(0,3,false,nullptr);
 		tmp_ptr = AddJAxisButton_hidden(0,3,true,cjaxis);
 		(void)tmp_ptr;
 	} else {
@@ -2276,17 +2276,17 @@ static void CreateLayout() {
 		AddJButtonButton_hidden(1,1);
 
 		/* Axes 3+4 (X+Y) of 1st Joystick */
-		cjaxis  = AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",0,2,false,NULL);
+		cjaxis  = AddJAxisButton(PX(XO+4),PY(YO+1),BW,BH,"X-",0,2,false,nullptr);
 		tmp_ptr = AddJAxisButton(PX(XO+4+2),PY(YO+1),BW,BH,"X+",0,2,true,cjaxis);
 		(void)tmp_ptr;
-		cjaxis  = AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",0,3,false,NULL);
+		cjaxis  = AddJAxisButton(PX(XO+4+1),PY(YO+0),BW,BH,"Y-",0,3,false,nullptr);
 		tmp_ptr = AddJAxisButton(PX(XO+4+1),PY(YO+1),BW,BH,"Y+",0,3,true,cjaxis);
 		(void)tmp_ptr;
 		/* Axes 1+2 (X+Y) of 2nd Joystick , not accessible*/
-		cjaxis  = AddJAxisButton_hidden(1,0,false,NULL);
+		cjaxis  = AddJAxisButton_hidden(1,0,false,nullptr);
 		tmp_ptr = AddJAxisButton_hidden(1,0,true,cjaxis);
 		(void)tmp_ptr;
-		cjaxis  = AddJAxisButton_hidden(1,1,false,NULL);
+		cjaxis  = AddJAxisButton_hidden(1,1,false,nullptr);
 		tmp_ptr = AddJAxisButton_hidden(1,1,true,cjaxis);
 		(void)tmp_ptr;
 	}
@@ -2534,7 +2534,7 @@ static struct {
                    // 115 (0x73)
                    {"abnt1", SDL_SCANCODE_INTERNATIONAL1},
 
-                   {0, SDL_SCANCODE_UNKNOWN}};
+                   {nullptr, SDL_SCANCODE_UNKNOWN}};
 
 static void ClearAllBinds() {
 	// wait for the auto-typer to complete because it might be accessing events
@@ -2698,7 +2698,7 @@ void MAPPER_CheckEvent(SDL_Event *event)
 void BIND_MappingEvents() {
 	SDL_Event event;
 	static bool isButtonPressed = false;
-	static CButton *lastHoveredButton = NULL;
+	static CButton *lastHoveredButton = nullptr;
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
 		case SDL_MOUSEBUTTONDOWN:
@@ -2744,7 +2744,7 @@ void BIND_MappingEvents() {
 				/* For most buttons the actual new color is going to be green; But not for a few others. */
 				lastHoveredButton->BindColor();
 				mapper.redraw = true;
-				lastHoveredButton = NULL;
+				lastHoveredButton = nullptr;
 			}
 			/* Normalize position in case a scaled sub-window is used (say on Android) */
 			event.button.x = (event.button.x - mapper.draw_rect.x) * mapper.draw_surface->w / mapper.draw_rect.w;
@@ -2780,7 +2780,7 @@ void BIND_MappingEvents() {
 			break;
 		case SDL_QUIT:
 			isButtonPressed = false;
-			lastHoveredButton = NULL;
+			lastHoveredButton = nullptr;
 			mapper.exit=true;
 			break;
 		default:
@@ -2995,7 +2995,7 @@ void MAPPER_DisplayUI() {
 	GFX_DisengageRendering();
 
 	// Be sure that there is no update in progress
-	GFX_EndUpdate( 0 );
+	GFX_EndUpdate( nullptr );
 	mapper.window = GFX_SetSDLSurfaceWindow(640, 480);
 	if (mapper.window == nullptr)
 		E_Exit("Could not initialize video mode for mapper: %s", SDL_GetError());
@@ -3014,12 +3014,12 @@ void MAPPER_DisplayUI() {
 	SDL_SetSurfacePalette(mapper.draw_surface, sdl2_map_pal_ptr);
 	if (last_clicked) {
 		last_clicked->BindColor();
-		last_clicked=NULL;
+		last_clicked=nullptr;
 	}
 	/* Go in the event loop */
 	mapper.exit = false;
 	mapper.redraw=true;
-	SetActiveEvent(0);
+	SetActiveEvent(nullptr);
 #if defined (REDUCE_JOYSTICK_POLLING)
 	SDL_JoystickEventState(SDL_ENABLE);
 #endif

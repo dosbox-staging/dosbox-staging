@@ -163,7 +163,7 @@ static bool load_message_file(const std_fs::path &filename)
 	/* Start out with empty strings */
 	name[0] = 0;
 	message[0] = 0;
-	while (fgets(linein, LINE_IN_MAXLEN, mfile) != 0) {
+	while (fgets(linein, LINE_IN_MAXLEN, mfile) != nullptr) {
 		/* Parse the read line */
 		/* First remove characters 10 and 13 from the line */
 		char * parser=linein;

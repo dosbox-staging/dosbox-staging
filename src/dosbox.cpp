@@ -461,7 +461,7 @@ void DOSBOX_Init()
 	                          "svga_paradise",
 	                          "vesa_nolfb",
 	                          "vesa_oldvbe",
-	                          0};
+	                          nullptr};
 
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
 	pstring = secprop->Add_string("language", always, "");
@@ -541,7 +541,7 @@ void DOSBOX_Init()
 	        "2048",
 	        "4096",
 	        "8192",
-	        0, // KB
+	        nullptr, // KB
 	};
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
 	pstring->Set_values(vmemsize_choices);
@@ -561,7 +561,7 @@ void DOSBOX_Init()
 	        "  <value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).\n"
 	        "We recommend the 'default' rate; otherwise test and set on a per-game basis.");
 
-	const char *vesa_modes_choices[] = {"compatible", "all", "halfline", 0};
+	const char *vesa_modes_choices[] = {"compatible", "all", "halfline", nullptr};
 	pstring = secprop->Add_string("vesa_modes", only_at_start, "compatible");
 	pstring->Set_values(vesa_modes_choices);
 	pstring->Set_help(
@@ -594,7 +594,7 @@ void DOSBOX_Init()
 	const char *autoexec_section_choices[] = {
 	        "join",
 	        "overwrite",
-	        0,
+	        nullptr,
 	};
 	pstring = secprop->Add_string("autoexec_section", only_at_start, "join");
 	pstring->Set_values(autoexec_section_choices);
@@ -618,7 +618,7 @@ void DOSBOX_Init()
 	        "  verbose = true or false");
 
 	const char *verbosity_choices[] = {
-	        "auto", "high", "low", "quiet", 0,
+	        "auto", "high", "low", "quiet", nullptr,
 	};
 	pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
 	pstring->Set_values(verbosity_choices);
@@ -672,7 +672,7 @@ void DOSBOX_Init()
 	        "Select default palette for monochrome display ('white' by default).\n"
 	        "Works only when emulating 'hercules' or 'cga_mono'.\n"
 	        "You can also cycle through available colours using F11.");
-	const char* mono_pal[] = {"white", "paperwhite", "green", "amber", 0};
+	const char* mono_pal[] = {"white", "paperwhite", "green", "amber", nullptr};
 	pstring->Set_values(mono_pal);
 
 	pstring = secprop->Add_string("cga_colors", only_at_start, "default");
@@ -740,13 +740,13 @@ void DOSBOX_Init()
 #endif
 	  "normal",
 	  "simple",
-	  0 };
+	  nullptr };
 	pstring = secprop->Add_string("core", when_idle, "auto");
 	pstring->Set_values(cores);
 	pstring->Set_help("CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic\n"
 	                  "if available and appropriate.");
 
-	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow", "386_prefetch", 0};
+	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow", "386_prefetch", nullptr};
 	pstring = secprop->Add_string("cputype", always, "auto");
 	pstring->Set_values(cputype_values);
 	pstring->Set_help(
@@ -763,7 +763,7 @@ void DOSBOX_Init()
 	        "                   need if 'auto' fails (e.g. 'fixed 4000').\n"
 	        "  max:             Allocate as much cycles as your computer is able to handle.");
 
-	const char* cyclest[] = { "auto", "fixed", "max", "%u", 0 };
+	const char* cyclest[] = { "auto", "fixed", "max", "%u", nullptr };
 	pstring = pmulti_remain->GetSection()->Add_string("type", always, "auto");
 	pmulti_remain->SetValue("auto");
 	pstring->Set_values(cyclest);
@@ -792,7 +792,7 @@ void DOSBOX_Init()
 #if C_VOODOO
 	secprop->AddInitFunction(&VOODOO_Init, false);
 
-	const char* voodootypes[] = { "12mb", "4mb", "disabled", 0 };
+	const char* voodootypes[] = { "12mb", "4mb", "disabled", nullptr };
 	pstring = secprop->Add_string("voodoo", only_at_start, "12mb");
 	pstring->Set_values(voodootypes);
 	pstring->Set_help("RAM amount of emulated Vodooo 3dfx card.");
@@ -831,23 +831,23 @@ void DOSBOX_Init()
 	                                   &SBLASTER_Init,
 	                                   changeable_at_runtime);
 
-	const char* sbtypes[] = {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", 0};
+	const char* sbtypes[] = {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", nullptr};
 	pstring = secprop->Add_string("sbtype", when_idle, "sb16");
 	pstring->Set_values(sbtypes);
 	pstring->Set_help("Type of Sound Blaster to emulate ('sb16' by default).\n"
 	                  "'gb' is Game Blaster.");
 
-	const char *ios[] = {"220", "240", "260", "280", "2a0", "2c0", "2e0", "300", 0};
+	const char *ios[] = {"220", "240", "260", "280", "2a0", "2c0", "2e0", "300", nullptr};
 	phex              = secprop->Add_hex("sbbase", when_idle, 0x220);
 	phex->Set_values(ios);
 	phex->Set_help("The IO address of the Sound Blaster (220 by default).");
 
-	const char *irqssb[] = {"3", "5", "7", "9", "10", "11", "12", 0};
+	const char *irqssb[] = {"3", "5", "7", "9", "10", "11", "12", nullptr};
 	pint                 = secprop->Add_int("irq", when_idle, 7);
 	pint->Set_values(irqssb);
 	pint->Set_help("The IRQ number of the Sound Blaster (7 by default).");
 
-	const char *dmassb[] = {"0", "1", "3", "5", "6", "7", 0};
+	const char *dmassb[] = {"0", "1", "3", "5", "6", "7", nullptr};
 	pint                 = secprop->Add_int("dma", when_idle, 1);
 	pint->Set_values(dmassb);
 	pint->Set_help("The DMA channel of the Sound Blaster (1 by default).");
@@ -870,7 +870,7 @@ void DOSBOX_Init()
 	pint->Set_help("The OPL waveform is now sampled at the mixer's playback rate to avoid\n"
 	               "resampling.");
 
-	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", 0};
+	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", nullptr};
 	pstring = secprop->Add_string("oplmode", when_idle, "auto");
 	pstring->Set_values(oplmodes);
 	pstring->Set_help("Type of OPL emulation ('auto' by default).\n"
@@ -933,7 +933,7 @@ void DOSBOX_Init()
 	                                   &PCSPEAKER_Init,
 	                                   changeable_at_runtime);
 
-	const char *pcspeaker_models[] = {"discrete", "impulse", "none", "off", 0};
+	const char *pcspeaker_models[] = {"discrete", "impulse", "none", "off", nullptr};
 	pstring = secprop->Add_string("pcspeaker", when_idle, pcspeaker_models[0]);
 	pstring->Set_help(
 	        "PC speaker emulation model:\n"
@@ -959,7 +959,7 @@ void DOSBOX_Init()
 	// Tandy audio emulation
 	secprop->AddInitFunction(&TANDYSOUND_Init, changeable_at_runtime);
 
-	const char* tandys[] = {"auto", "on", "psg", "off", 0};
+	const char* tandys[] = {"auto", "on", "psg", "off", nullptr};
 
 	pstring = secprop->Add_string("tandy", when_idle, "auto");
 	pstring->Set_values(tandys);
@@ -989,7 +989,7 @@ void DOSBOX_Init()
 
 	// LPT DAC device emulation
 	secprop->AddInitFunction(&LPT_DAC_Init, changeable_at_runtime);
-	const char *lpt_dac_types[] = {"none", "disney", "covox", "ston1", "off", 0};
+	const char *lpt_dac_types[] = {"none", "disney", "covox", "ston1", "off", nullptr};
 	pstring = secprop->Add_string("lpt_dac", when_idle, lpt_dac_types[0]);
 	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
 	                  "  disney:    Disney Sound Source.\n"
@@ -1063,7 +1063,7 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init, changeable_at_runtime);
 	const char *joytypes[] = {"auto", "2axis", "4axis",    "4axis_2", "fcs",
-	                          "ch",   "hidden",  "disabled", 0};
+	                          "ch",   "hidden",  "disabled", nullptr};
 	pstring = secprop->Add_string("joysticktype", when_idle, "auto");
 	pstring->Set_values(joytypes);
 	pstring->Set_help(
@@ -1132,7 +1132,7 @@ void DOSBOX_Init()
 
 	secprop = control->AddSection_prop("serial", &SERIAL_Init, changeable_at_runtime);
 	const char* serials[] = {
-	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct", 0};
+	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct", nullptr};
 
 	pmulti_remain = secprop->AddMultiValRemain("serial1", when_idle, " ");
 	pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
@@ -1188,7 +1188,7 @@ void DOSBOX_Init()
 	pbool->Set_help("Enable XMS support (enabled by default).");
 
 	secprop->AddInitFunction(&EMS_Init, changeable_at_runtime);
-	const char* ems_settings[] = {"true", "emsboard", "emm386", "false", 0};
+	const char* ems_settings[] = {"true", "emsboard", "emm386", "false", nullptr};
 	pstring = secprop->Add_string("ems", when_idle, "true");
 	pstring->Set_values(ems_settings);
 	pstring->Set_help(
@@ -1220,7 +1220,7 @@ void DOSBOX_Init()
 	// COMMAND.COM settings
 
 	pstring = secprop->Add_string("expand_shell_variable", when_idle, "auto");
-	const char *expand_shell_variable_choices[] = {"auto", "true", "false", 0};
+	const char *expand_shell_variable_choices[] = {"auto", "true", "false", nullptr};
 	pstring->Set_values(expand_shell_variable_choices);
 	pstring->Set_help(
 	        "Enable expanding environment variables such as %PATH% in the DOS command shell\n"
@@ -1267,7 +1267,7 @@ void DOSBOX_Init()
 	        "       server for multiplayer games.");
 
 	const char *nic_addresses[] = {"200", "220", "240", "260", "280", "2c0",
-	                               "300", "320", "340", "360", 0};
+	                               "300", "320", "340", "360", nullptr};
 	phex = secprop->Add_hex("nicbase", when_idle, 0x300);
 	phex->Set_values(nic_addresses);
 	phex->Set_help("Base address of the NE2000 card (300 by default).\n"
@@ -1275,7 +1275,7 @@ void DOSBOX_Init()
 	               "       Sound Blaster and Gravis UltraSound by default.");
 
 	const char *nic_irqs[] = {"3",  "4",  "5",  "9",  "10",
-	                          "11", "12", "14", "15", 0};
+	                          "11", "12", "14", "15", nullptr};
 	pint                   = secprop->Add_int("nicirq", when_idle, 3);
 	pint->Set_values(nic_irqs);
 	pint->Set_help("The interrupt used by the NE2000 card (3 by default).\n"

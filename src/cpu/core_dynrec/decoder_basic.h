@@ -179,7 +179,7 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 
 	// adjust previous and next page pointer
 	cpagehandler->prev=cache.last_page;
-	cpagehandler->next=0;
+	cpagehandler->next=nullptr;
 	if (cache.last_page) cache.last_page->next=cpagehandler;
 	cache.last_page=cpagehandler;
 	if (!cache.used_pages) cache.used_pages=cpagehandler;
@@ -282,7 +282,7 @@ static bool decode_fetchb_imm(Bitu & val) {
 		decode_advancepage();
 	}
 	// see if position is directly accessible
-	if (decode.page.invmap != NULL) {
+	if (decode.page.invmap != nullptr) {
 		if (decode.page.invmap[decode.page.index] == 0) {
 			// position not yet modified
 			val=(uint32_t)decode_fetchb();
@@ -307,7 +307,7 @@ static bool decode_fetchb_imm(Bitu & val) {
 // otherwise val contains the current value read from the position
 static bool decode_fetchw_imm(Bitu & val) {
 	if (decode.page.index<4095) {
-		if (decode.page.invmap != NULL) {
+		if (decode.page.invmap != nullptr) {
 			if ((decode.page.invmap[decode.page.index] == 0) &&
 				(decode.page.invmap[decode.page.index + 1] == 0)) {
 				// position not yet modified
@@ -335,7 +335,7 @@ static bool decode_fetchw_imm(Bitu & val) {
 // otherwise val contains the current value read from the position
 static bool decode_fetchd_imm(Bitu & val) {
 	if (decode.page.index<4093) {
-		if (decode.page.invmap != NULL) {
+		if (decode.page.invmap != nullptr) {
 			if ((decode.page.invmap[decode.page.index] == 0) &&
 				(decode.page.invmap[decode.page.index + 1] == 0) &&
 				(decode.page.invmap[decode.page.index + 2] == 0) &&
@@ -799,7 +799,7 @@ static void dyn_write_word(HostReg reg_addr,HostReg reg_val,bool dword) {
                                          Bits imm)
 {
 	if (scale || imm) {
-		if (op1!=NULL) {
+		if (op1!=nullptr) {
 			gen_mov_word_to_reg(ea_reg,op1,true);
 			gen_mov_word_to_reg(TEMP_REG_DRC,op2,true);
 
@@ -810,7 +810,7 @@ static void dyn_write_word(HostReg reg_addr,HostReg reg_val,bool dword) {
 		}
 	} else {
 		gen_mov_word_to_reg(ea_reg,op2,true);
-		if (op1!=NULL) gen_add(ea_reg,op1);
+		if (op1!=nullptr) gen_add(ea_reg,op1);
 	}
 }
 
@@ -985,7 +985,7 @@ skip_extend_word:
 								if (!scaled_reg_used) {
 									gen_mov_LE_word_to_reg(ea_reg,(void*)val,true);
 								} else {
-									DYN_LEA_MEM_REG_VAL(ea_reg,NULL,scaled_reg,scale,0);
+									DYN_LEA_MEM_REG_VAL(ea_reg,nullptr,scaled_reg,scale,0);
 									gen_add_LE(ea_reg,(void*)val);
 								}
 							} else {
@@ -1005,7 +1005,7 @@ skip_extend_word:
 							if (!scaled_reg_used) {
 								gen_mov_dword_to_reg_imm(ea_reg,(uint32_t)imm);
 							} else {
-								DYN_LEA_MEM_REG_VAL(ea_reg,NULL,scaled_reg,scale,imm);
+								DYN_LEA_MEM_REG_VAL(ea_reg,nullptr,scaled_reg,scale,imm);
 							}
 						} else {
 							if (!scaled_reg_used) {

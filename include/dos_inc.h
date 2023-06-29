@@ -119,7 +119,7 @@ void DOS_SetupFiles (void);
 bool DOS_ReadFile(uint16_t handle,uint8_t * data,uint16_t * amount, bool fcb = false);
 bool DOS_WriteFile(uint16_t handle,uint8_t * data,uint16_t * amount,bool fcb = false);
 bool DOS_SeekFile(uint16_t handle,uint32_t * pos,uint32_t type,bool fcb = false);
-bool DOS_CloseFile(uint16_t handle,bool fcb = false,uint8_t * refcnt = NULL);
+bool DOS_CloseFile(uint16_t handle,bool fcb = false,uint8_t * refcnt = nullptr);
 bool DOS_FlushFile(uint16_t handle);
 bool DOS_DuplicateEntry(uint16_t entry,uint16_t * newentry);
 bool DOS_ForceDuplicateEntry(uint16_t entry,uint16_t newentry);

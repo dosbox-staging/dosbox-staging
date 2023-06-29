@@ -36,7 +36,7 @@ struct _COMPORT {
 bool SERIAL_open(const char* portname, COMPORT* port) {
 	// allocate COMPORT structure
 	COMPORT cp = (_COMPORT*)malloc(sizeof(_COMPORT));
-	if(cp == NULL) return false;
+	if(cp == nullptr) return false;
 	
 	cp->breakstatus=false;
 
@@ -54,10 +54,10 @@ bool SERIAL_open(const char* portname, COMPORT* port) {
 	cp->porthandle = CreateFile (extended_portname,
 					   GENERIC_READ | GENERIC_WRITE, 0,
 									  // must be opened with exclusive-access
-	                   NULL,          // no security attributes
+	                   nullptr,          // no security attributes
 	                   OPEN_EXISTING, // must use OPEN_EXISTING
 	                   0,             // non overlapped I/O
-	                   NULL           // hTemplate must be NULL for comm devices
+	                   nullptr           // hTemplate must be NULL for comm devices
 	                  );
 
 	if (cp->porthandle == INVALID_HANDLE_VALUE) goto cleanup_error;
@@ -105,7 +105,7 @@ bool SERIAL_open(const char* portname, COMPORT* port) {
 		//goto cleanup_error;
 	}
 	DWORD errors;
-	if(!ClearCommError(cp->porthandle, &errors, NULL)) {
+	if(!ClearCommError(cp->porthandle, &errors, nullptr)) {
 		goto cleanup_error;
 	}
 	*port = cp;
@@ -133,11 +133,11 @@ void SERIAL_getErrorString(char* buffer, size_t length) {
 	// get the error message text from the operating system
 	LPVOID sysmessagebuffer;
 	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-		NULL,
+		nullptr,
 		error,
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 		(LPTSTR) &sysmessagebuffer,
-		0,NULL);
+		0,nullptr);
 
 	const char* err5text = "The specified port is already in use.\n";
 	const char* err2text = "The specified port does not exist.\n";
@@ -189,7 +189,7 @@ bool SERIAL_sendchar(COMPORT port, char data) {
 	// mean bug: with break = 1, WriteFile will never return.
 	if(port->breakstatus) return true; // true or false?!
 
-	WriteFile (port->porthandle, &data, 1, &bytesWritten, NULL);
+	WriteFile (port->porthandle, &data, 1, &bytesWritten, nullptr);
 	if(bytesWritten==1) return true;
 	else return false;
 }
@@ -202,10 +202,10 @@ int SERIAL_getextchar(COMPORT port) {
 
 	int retval = 0;
 	// receive a byte; TODO communicate failure
-	if (ReadFile (port->porthandle, &chRead, 1, &dwRead, NULL)) {
+	if (ReadFile (port->porthandle, &chRead, 1, &dwRead, nullptr)) {
 		if (dwRead) {
 			// check for errors
-			ClearCommError(port->porthandle, &errors, NULL);
+			ClearCommError(port->porthandle, &errors, nullptr);
 			// mask bits are identical
 			errors &= CE_BREAK|CE_FRAME|CE_RXPARITY|CE_OVERRUN;
 			retval |= (errors<<8);
@@ -284,7 +284,7 @@ bool SERIAL_open(const char* portname, COMPORT* port) {
 	int result;
 	// allocate COMPORT structure
 	COMPORT cp = (_COMPORT*)malloc(sizeof(_COMPORT));
-	if(cp == NULL) return false;
+	if(cp == nullptr) return false;
 
 	cp->breakstatus=false;
 

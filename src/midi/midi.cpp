@@ -747,7 +747,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	  "mt32",
 #endif
 	  "none",
-	  0 };
+	  nullptr };
 
 	str_prop->Set_values(midi_devices);
 	str_prop->Set_help(
@@ -806,7 +806,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "         'midiconfig = 2 delaysysex'.");
 
 	str_prop = secprop.Add_string("mpu401", when_idle, "intelligent");
-	const char* mputypes[] = {"intelligent", "uart", "none", 0};
+	const char* mputypes[] = {"intelligent", "uart", "none", nullptr};
 	str_prop->Set_values(mputypes);
 	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
 

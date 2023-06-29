@@ -1512,7 +1512,7 @@ static void composite_settings(Section_prop &secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	const char* states[] = {"auto", "on", "off", 0};
+	const char* states[] = {"auto", "on", "off", nullptr};
 	auto str_prop = secprop.Add_string("composite", when_idle, "auto");
 	str_prop->Set_values(states);
 	str_prop->Set_help(
@@ -1521,7 +1521,7 @@ static void composite_settings(Section_prop &secprop)
 	        "Notes: Fine-tune the settings below (i.e., hue) using the composite hotkeys,\n"
 	        "       then read the new settings from your console and enter them here.");
 
-	const char* eras[] = {"auto", "old", "new", 0};
+	const char* eras[] = {"auto", "old", "new", nullptr};
 	str_prop           = secprop.Add_string("era", when_idle, "auto");
 	str_prop->Set_values(eras);
 	str_prop->Set_help("Era of composite technology ('auto' by default).\n"

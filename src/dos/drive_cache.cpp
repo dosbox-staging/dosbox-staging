@@ -148,7 +148,7 @@ void DOS_Drive_Cache::SetBaseDir(const char *baseDir)
 
 	static uint16_t id = 0;
 	if (OpenDir(baseDir,id)) {
-		char* result = 0;
+		char* result = nullptr;
 		ReadDir(id,result);
 	}
 	// Get Volume Label
@@ -157,7 +157,7 @@ void DOS_Drive_Cache::SetBaseDir(const char *baseDir)
 	char labellocal[256]={ 0 };
 	char drive[4] = "C:\\";
 	drive[0] = basePath[0];
-	if (GetVolumeInformation(drive,labellocal,256,NULL,NULL,NULL,NULL,0)) {
+	if (GetVolumeInformation(drive,labellocal,256,nullptr,nullptr,nullptr,nullptr,0)) {
 	UINT test = GetDriveType(drive);
 	if(test == DRIVE_CDROM) cdrom = true;
 		/* Set label and allow being updated */
@@ -515,7 +515,7 @@ static Bits wine_hash_short_file_name( char* name, char* buffer )
 	hash = (hash<<3) ^ (hash>>5) ^ tolower(*p); // Last character
 
 	// Find last dot for start of the extension
-	for (p = name + 1, ext = NULL; p < end - 1; p++) if (*p == '.') ext = p;
+	for (p = name + 1, ext = nullptr; p < end - 1; p++) if (*p == '.') ext = p;
 
 	// Copy first 4 chars, replacing invalid chars with '_'
 	for (i = 4, p = name, dst = buffer; i > 0; i--, p++)
@@ -728,7 +728,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 		safe_strcpy(work, basePath);
 		if (OpenDir(curDir,work,id)) {
 			char buffer[CROSS_LEN];
-			char* result = 0;
+			char* result = nullptr;
 			safe_strcpy(buffer, dirPath);
 			ReadDir(id,result);
 			safe_strcpy(dirPath, buffer);
@@ -765,7 +765,7 @@ DOS_Drive_Cache::CFileInfo* DOS_Drive_Cache::FindDirInfo(const char* path, char*
 			if (!IsCachedIn(curDir)) {
 				if (OpenDir(curDir,expandedPath,id)) {
 					char buffer[CROSS_LEN];
-					char* result = 0;
+					char* result = nullptr;
 					safe_strcpy(buffer, dirPath);
 					ReadDir(id,result);
 					safe_strcpy(dirPath, buffer);

@@ -183,7 +183,7 @@ bool RENDER_StartUpdate(void)
 	render.scale.inLine     = 0;
 	render.scale.outLine    = 0;
 	render.scale.cacheRead  = (uint8_t *)&scalerSourceCache;
-	render.scale.outWrite   = 0;
+	render.scale.outWrite   = nullptr;
 	render.scale.outPitch   = 0;
 	Scaler_ChangedLines[0]  = 0;
 	Scaler_ChangedLineIndex = 0;
@@ -225,7 +225,7 @@ bool RENDER_StartUpdate(void)
 static void RENDER_Halt(void)
 {
 	RENDER_DrawLine = RENDER_EmptyLineHandler;
-	GFX_EndUpdate(0);
+	GFX_EndUpdate(nullptr);
 	render.updating = false;
 	render.active   = false;
 }
@@ -269,7 +269,7 @@ void RENDER_EndUpdate(bool abort)
 	}
 
 	if (render.scale.outWrite) {
-		GFX_EndUpdate(abort ? NULL : Scaler_ChangedLines);
+		GFX_EndUpdate(abort ? nullptr : Scaler_ChangedLines);
 	} else {
 		// If we made it here, then there's nothing new to render.
 		GFX_EndUpdate(nullptr);
@@ -421,25 +421,25 @@ static void RENDER_Reset(void)
 		break;
 	case 15:
 		render.scale.lineHandler = (*lineBlock)[1][render.scale.outMode];
-		render.scale.linePalHandler = 0;
+		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode15;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
 	case 16:
 		render.scale.lineHandler = (*lineBlock)[2][render.scale.outMode];
-		render.scale.linePalHandler = 0;
+		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode16;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
 	case 24:
 		render.scale.lineHandler = (*lineBlock)[3][render.scale.outMode];
-		render.scale.linePalHandler = 0;
+		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 3;
 		break;
 	case 32:
 		render.scale.lineHandler = (*lineBlock)[4][render.scale.outMode];
-		render.scale.linePalHandler = 0;
+		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 4;
 		break;
@@ -455,7 +455,7 @@ static void RENDER_Reset(void)
 	memset(render.pal.modified, 0, sizeof(render.pal.modified));
 	// Finish this frame using a copy only handler
 	RENDER_DrawLine       = RENDER_FinishLineHandler;
-	render.scale.outWrite = 0;
+	render.scale.outWrite = nullptr;
 	/* Signal the next frame to first reinit the cache */
 	render.scale.clearCache = true;
 	render.active           = true;
@@ -470,7 +470,7 @@ static void RENDER_CallBack(GFX_CallBackFunctions_t function)
 		render.scale.clearCache = true;
 		return;
 	} else if (function == GFX_CallBackReset) {
-		GFX_EndUpdate(0);
+		GFX_EndUpdate(nullptr);
 		RENDER_Reset();
 	} else {
 		E_Exit("Unhandled GFX_CallBackReset %d", function);

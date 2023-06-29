@@ -408,7 +408,7 @@ private:
 			fwrite(&header, 1, sizeof(header), handle);
 			fclose(handle);
 
-			handle = 0;
+			handle = nullptr;
 		}
 	}
 };

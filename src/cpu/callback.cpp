@@ -53,7 +53,7 @@ callback_number_t CALLBACK_Allocate()
 
 	for (callback_number_t i = 1; i < CB_MAX; ++i) {
 		if (CallBack_Handlers[i] == &illegal_handler) {
-			CallBack_Handlers[i] = 0;
+			CallBack_Handlers[i] = nullptr;
 			return i;
 		}
 	}
@@ -148,7 +148,7 @@ void CALLBACK_SetDescription(callback_number_t cb_num, const char* descr)
 const char* CALLBACK_GetDescription(callback_number_t cb_num)
 {
 	if (cb_num >= CB_MAX)
-		return 0;
+		return nullptr;
 	return CallBack_Description[cb_num].c_str();
 }
 

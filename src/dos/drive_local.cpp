@@ -791,7 +791,7 @@ bool localFile::Close() {
 	// only close if one reference left
 	if (refCtr==1) {
 		if (fhandle) fclose(fhandle);
-		fhandle = 0;
+		fhandle = nullptr;
 		open = false;
 	};
 

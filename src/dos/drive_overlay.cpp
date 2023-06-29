@@ -297,7 +297,7 @@ bool OverlayFile::create_copy() {
 		return false;
 	}
 
-	FILE* newhandle = NULL;
+	FILE* newhandle = nullptr;
 	uint8_t drive_set = GetDrive();
 	if (drive_set != 0xff && drive_set < DOS_DRIVES && Drives[drive_set]){
 		const auto od = dynamic_cast<Overlay_Drive*>(Drives[drive_set]);
@@ -558,7 +558,7 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 	if (!lastdir) return true; 
 	
 	const char* leaddir = dos_filename;
-	while ( (leaddir=strchr(leaddir,'\\')) != 0) {
+	while ( (leaddir=strchr(leaddir,'\\')) != nullptr) {
 		char dirname[CROSS_LEN] = {0};
 
 		assert(leaddir >= dos_filename);
@@ -635,7 +635,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 	std::string::size_type const prefix_lengh = special_prefix.length();
 	if (read_directory_contents) {
 		dir_information* dirp = open_directory(overlaydir);
-		if (dirp == NULL) return;
+		if (dirp == nullptr) return;
 		// Read complete directory
 		char dir_name[CROSS_LEN];
 		bool is_directory;
@@ -679,7 +679,7 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 
 			assert(dirp == nullptr);
 			dirp = open_directory(dir);
-			if (dirp == NULL) continue;
+			if (dirp == nullptr) continue;
 
 #if OVERLAY_DIR
 			//Good directory, add to DOSdirs_cache if not existing in localDrive. tested earlier to prevent problems with opendir
@@ -1156,7 +1156,7 @@ void Overlay_Drive::remove_deleted_path(const char* name, bool create_on_disk) {
 }
 bool Overlay_Drive::check_if_leading_is_deleted(const char* name){
 	const char* dname = strrchr(name,'\\');
-	if (dname != NULL) {
+	if (dname != nullptr) {
 		char dirname[CROSS_LEN];
 
 		assert(dname >= name);

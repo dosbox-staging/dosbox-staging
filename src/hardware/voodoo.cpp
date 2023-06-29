@@ -3105,7 +3105,7 @@ static inline void raster_generic(const voodoo_state* v, uint32_t TMUS, uint32_t
 
 	/* get pointers to the target buffer and depth buffer */
 	uint16_t *dest = (uint16_t *)destbase + scry * v->fbi.rowpixels;
-	uint16_t *depth = (v->fbi.auxoffs != (uint32_t)(~0)) ? ((uint16_t *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels) : NULL;
+	uint16_t *depth = (v->fbi.auxoffs != (uint32_t)(~0)) ? ((uint16_t *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels) : nullptr;
 
 	/* compute the starting parameters */
 	int32_t dx = startx - (fbi.ax >> 4);
@@ -3689,8 +3689,8 @@ static void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, int tmem)
 	t->texel[3] = v->tmushare.int8;
 	t->texel[4] = v->tmushare.ai44;
 	t->texel[5] = t->palette;
-	t->texel[6] = (vtype >= VOODOO_2) ? t->palettea : NULL;
-	t->texel[7] = NULL;
+	t->texel[6] = (vtype >= VOODOO_2) ? t->palettea : nullptr;
+	t->texel[7] = nullptr;
 	t->texel[8] = v->tmushare.rgb332;
 	t->texel[9] = t->ncc[0].texel;
 	t->texel[10] = v->tmushare.rgb565;
@@ -3698,12 +3698,12 @@ static void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, int tmem)
 	t->texel[12] = v->tmushare.argb4444;
 	t->texel[13] = v->tmushare.int8;
 	t->texel[14] = t->palette;
-	t->texel[15] = NULL;
+	t->texel[15] = nullptr;
 	t->lookup = t->texel[0];
 
 	/* attach the palette to NCC table 0 */
 	t->ncc[0].palette = t->palette;
-	t->ncc[0].palettea = (vtype >= VOODOO_2) ? t->palettea : NULL;
+	t->ncc[0].palettea = (vtype >= VOODOO_2) ? t->palettea : nullptr;
 
 	///* set up texture address calculations */
 	//t->texaddr_mask = 0x0fffff;
@@ -6644,19 +6644,19 @@ static void voodoo_init() {
 
 	v->fbi.rowpixels = v->fbi.width;
 
-	v->tmu[0].ncc[0].palette = NULL;
-	v->tmu[0].ncc[1].palette = NULL;
-	v->tmu[1].ncc[0].palette = NULL;
-	v->tmu[1].ncc[1].palette = NULL;
-	v->tmu[0].ncc[0].palettea = NULL;
-	v->tmu[0].ncc[1].palettea = NULL;
-	v->tmu[1].ncc[0].palettea = NULL;
-	v->tmu[1].ncc[1].palettea = NULL;
+	v->tmu[0].ncc[0].palette = nullptr;
+	v->tmu[0].ncc[1].palette = nullptr;
+	v->tmu[1].ncc[0].palette = nullptr;
+	v->tmu[1].ncc[1].palette = nullptr;
+	v->tmu[0].ncc[0].palettea = nullptr;
+	v->tmu[0].ncc[1].palettea = nullptr;
+	v->tmu[1].ncc[0].palettea = nullptr;
+	v->tmu[1].ncc[1].palettea = nullptr;
 
-	v->tmu[0].ram = NULL;
-	v->tmu[1].ram = NULL;
-	v->tmu[0].lookup = NULL;
-	v->tmu[1].lookup = NULL;
+	v->tmu[0].ram = nullptr;
+	v->tmu[1].ram = nullptr;
+	v->tmu[0].lookup = nullptr;
+	v->tmu[1].lookup = nullptr;
 
 	/* build shared TMU tables */
 	init_tmu_shared(&v->tmushare);
@@ -6686,24 +6686,24 @@ static void voodoo_init() {
 }
 
 static void voodoo_shutdown() {
-	if (v!=NULL) {
+	if (v!=nullptr) {
 #ifdef C_ENABLE_VOODOO_OPENGL
 		if (v->ogl)
 			voodoo_ogl_shutdown(v);
 #endif
 		free(v->fbi.ram);
-		if (v->tmu[0].ram != NULL) {
+		if (v->tmu[0].ram != nullptr) {
 			free(v->tmu[0].ram);
-			v->tmu[0].ram = NULL;
+			v->tmu[0].ram = nullptr;
 		}
-		if (v->tmu[1].ram != NULL) {
+		if (v->tmu[1].ram != nullptr) {
 			free(v->tmu[1].ram);
-			v->tmu[1].ram = NULL;
+			v->tmu[1].ram = nullptr;
 		}
 		v->active=false;
 		triangle_worker_shutdown(v->tworker);
 		delete v;
-		v = NULL;
+		v = nullptr;
 	}
 }
 
@@ -7203,7 +7203,7 @@ static void Voodoo_Startup() {
 }
 
 PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu page) {
-	return (page >= (voodoo_current_lfb>>12) && page < (voodoo_current_lfb>>12) + VOODOO_PAGES ? voodoo_pagehandler : NULL);
+	return (page >= (voodoo_current_lfb>>12) && page < (voodoo_current_lfb>>12) + VOODOO_PAGES ? voodoo_pagehandler : nullptr);
 }
 
 void VOODOO_Destroy(Section* /*sec*/) {

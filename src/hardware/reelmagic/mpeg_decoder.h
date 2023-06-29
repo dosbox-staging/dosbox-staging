@@ -870,7 +870,7 @@ void plm_read_packets(plm_t *self, int requested_type);
 plm_t *plm_create_with_filename(const char *filename) {
 	plm_buffer_t *buffer = plm_buffer_create_with_filename(filename);
 	if (!buffer) {
-		return NULL;
+		return nullptr;
 	}
 
 	return plm_create_with_buffer(buffer, TRUE);
@@ -884,7 +884,7 @@ plm_t *plm_create_with_file(FILE *fh, int close_when_done) {
 	// closing the file handle on failure if it can't give us a buffer.
 	plm_buffer_t *buffer = plm_buffer_create_with_file(fh, close_when_done);
 	if (!buffer) {
-		return NULL;
+		return nullptr;
 	}
 
 	return plm_create_with_buffer(buffer, TRUE);
@@ -896,7 +896,7 @@ plm_t *plm_create_with_file(FILE *fh, int close_when_done) {
 plm_t *plm_create_with_memory(uint8_t *bytes, size_t length, int free_when_done) {
 	plm_buffer_t *buffer = plm_buffer_create_with_memory(bytes, length, free_when_done);
 	if (!buffer) {
-		return NULL;
+		return nullptr;
 	}
 
 	return plm_create_with_buffer(buffer, TRUE);
@@ -915,7 +915,7 @@ plm_t *plm_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
 		if (buffer && destroy_when_done) {
 			plm_buffer_destroy(buffer);
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	memset(self, 0, sizeof(plm_t));
@@ -926,7 +926,7 @@ plm_t *plm_create_with_buffer(plm_buffer_t *buffer, int destroy_when_done) {
 	//  - otherwise, plm_destroy() is responsible.
 	if (!self->demux) {
 		plm_destroy(self);
-		return NULL;
+		return nullptr;
 	}
 
 	self->video_enabled = TRUE;
@@ -1188,11 +1188,11 @@ void plm_decode(plm_t *self, double tick) {
 
 plm_frame_t *plm_decode_video(plm_t *self) {
 	if (!plm_init_decoders(self)) {
-		return NULL;
+		return nullptr;
 	}
 
 	if (!self->video_packet_type) {
-		return NULL;
+		return nullptr;
 	}
 
 	plm_frame_t *frame = plm_video_decode(self->video_decoder);
@@ -1207,11 +1207,11 @@ plm_frame_t *plm_decode_video(plm_t *self) {
 
 plm_samples_t *plm_decode_audio(plm_t *self) {
 	if (!plm_init_decoders(self)) {
-		return NULL;
+		return nullptr;
 	}
 
 	if (!self->audio_packet_type) {
-		return NULL;
+		return nullptr;
 	}
 
 	plm_samples_t *samples = plm_audio_decode(self->audio_decoder);
@@ -1272,11 +1272,11 @@ void plm_read_packets(plm_t *self, int requested_type) {
 
 plm_frame_t *plm_seek_frame(plm_t *self, double time, int seek_exact) {
 	if (!plm_init_decoders(self)) {
-		return NULL;
+		return nullptr;
 	}
 
 	if (!self->video_packet_type) {
-		return NULL;
+		return nullptr;
 	}
 
 	int type = self->video_packet_type;
@@ -1293,7 +1293,7 @@ plm_frame_t *plm_seek_frame(plm_t *self, double time, int seek_exact) {
 	
 	plm_packet_t *packet = plm_demux_seek(self->demux, time, type, TRUE);
 	if (!packet) {
-		return NULL;
+		return nullptr;
 	}
 
 	// Disable writing to the audio buffer while decoding video
@@ -1348,7 +1348,7 @@ int plm_seek(plm_t *self, double time, int seek_exact) {
 	double start_time = plm_demux_get_start_time(self->demux, self->video_packet_type);
 	plm_audio_rewind(self->audio_decoder);
 
-	plm_packet_t *packet = NULL;
+	plm_packet_t *packet = nullptr;
 	while ((packet = plm_demux_decode(self->demux))) {
 		if (packet->type == self->video_packet_type) {
 			plm_buffer_write(self->video_buffer, packet->data, packet->length);
@@ -1427,14 +1427,14 @@ uint16_t plm_buffer_read_vlc_uint(plm_buffer_t *self, const plm_vlc_uint_t *tabl
 plm_buffer_t *plm_buffer_create_with_filename(const char *filename) {
 	FILE *fh = fopen(filename, "rb");
 	if (!fh) {
-		return NULL;
+		return nullptr;
 	}
 	return plm_buffer_create_with_file(fh, TRUE);
 }
 
 plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done) {
 	if (!fh) {
-		return NULL;
+		return nullptr;
 	}
 
 	plm_buffer_t *self = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE);
@@ -1445,7 +1445,7 @@ plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done) {
 		if (close_when_done) {
 			fclose(fh);
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	self->fh = fh;
@@ -1457,24 +1457,24 @@ plm_buffer_t *plm_buffer_create_with_file(FILE *fh, int close_when_done) {
 	if (fseek(self->fh, 0, SEEK_END) != 0) {
 		// buffer_destroy takes care of closing the file
 		plm_buffer_destroy(self);
-		return NULL;
+		return nullptr;
 	}
 	self->total_size = ftell(self->fh);
 
 	if (fseek(self->fh, 0, SEEK_SET) != 0) {
 		// buffer_destroy takes care of closing the file
 		plm_buffer_destroy(self);
-		return NULL;
+		return nullptr;
 	}
 
-	plm_buffer_set_load_callback(self, plm_buffer_load_file_callback, NULL);
+	plm_buffer_set_load_callback(self, plm_buffer_load_file_callback, nullptr);
 	return self;
 }
 
 plm_buffer_t *plm_buffer_create_with_virtual_file(plm_buffer_load_callback load_fp, plm_buffer_seek_callback seek_fp, void *user, size_t file_size) {
 	plm_buffer_t *self = plm_buffer_create_with_capacity(PLM_BUFFER_DEFAULT_SIZE);
 	if (!self) {
-		return NULL;
+		return nullptr;
 	}
 
 	self->mode = PLM_BUFFER_MODE_FILE;
@@ -1488,7 +1488,7 @@ plm_buffer_t *plm_buffer_create_with_virtual_file(plm_buffer_load_callback load_
 plm_buffer_t *plm_buffer_create_with_memory(uint8_t *bytes, size_t length, int free_when_done) {
 	plm_buffer_t *self = (plm_buffer_t *)malloc(sizeof(plm_buffer_t));
 	if (!self) {
-		return NULL;
+		return nullptr;
 	}
 
 	memset(self, 0, sizeof(plm_buffer_t));
@@ -1505,7 +1505,7 @@ plm_buffer_t *plm_buffer_create_with_memory(uint8_t *bytes, size_t length, int f
 plm_buffer_t *plm_buffer_create_with_capacity(size_t capacity) {
 	plm_buffer_t *self = (plm_buffer_t *)malloc(sizeof(plm_buffer_t));
 	if (!self) {
-		return NULL;
+		return nullptr;
 	}
 
 	memset(self, 0, sizeof(plm_buffer_t));
@@ -1520,7 +1520,7 @@ plm_buffer_t *plm_buffer_create_with_capacity(size_t capacity) {
 plm_buffer_t *plm_buffer_create_for_appending(size_t initial_capacity) {
 	plm_buffer_t *self = plm_buffer_create_with_capacity(initial_capacity);
 	if (!self) {
-		return NULL;
+		return nullptr;
 	}
 
 	self->mode = PLM_BUFFER_MODE_APPEND;
@@ -1576,7 +1576,7 @@ size_t plm_buffer_write(plm_buffer_t *self, uint8_t *bytes, size_t length) {
 			new_size *= 2;
 		} while (new_size - self->length < length);
 		const auto tmp = (uint8_t *)realloc(self->bytes, new_size);
-		if (tmp == NULL) {
+		if (tmp == nullptr) {
 			return 0;
 		}
 		self->bytes = tmp;
@@ -1843,7 +1843,7 @@ plm_demux_t *plm_demux_create(plm_buffer_t *buffer, int destroy_when_done) {
 		if (buffer && destroy_when_done) {
 			plm_buffer_destroy(buffer);
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	memset(self, 0, sizeof(plm_demux_t));
@@ -2011,7 +2011,7 @@ double plm_demux_get_duration(plm_demux_t *self, int type) {
 		self->current_packet.length = 0;
 
 		double last_pts = PLM_PACKET_INVALID_TS;
-		plm_packet_t *packet = NULL;
+		plm_packet_t *packet = nullptr;
 		while ((packet = plm_demux_decode(self))) {
 			if (packet->pts != PLM_PACKET_INVALID_TS && packet->type == type) {
 				last_pts = packet->pts;
@@ -2031,7 +2031,7 @@ double plm_demux_get_duration(plm_demux_t *self, int type) {
 
 plm_packet_t *plm_demux_seek(plm_demux_t *self, double seek_time, int type, int force_intra) {
 	if (!plm_demux_has_headers(self)) {
-		return NULL;
+		return nullptr;
 	}
 
 	// Using the current time, current byte position and the average bytes per
@@ -2169,18 +2169,18 @@ plm_packet_t *plm_demux_seek(plm_demux_t *self, double seek_time, int type, int 
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 plm_packet_t *plm_demux_decode(plm_demux_t *self) {
 	if (!plm_demux_has_headers(self)) {
-		return NULL;
+		return nullptr;
 	}
 
 	if (self->current_packet.length) {
 		size_t bits_till_next_packet = self->current_packet.length << 3;
 		if (!plm_buffer_has(self->buffer, bits_till_next_packet)) {
-			return NULL;
+			return nullptr;
 		}
 		plm_buffer_skip(self->buffer, bits_till_next_packet);
 		self->current_packet.length = 0;
@@ -2208,11 +2208,11 @@ plm_packet_t *plm_demux_decode(plm_demux_t *self) {
 			return plm_demux_decode_packet(self, self->start_code);
 		}
 		else if (self->start_code == PLM_DEMUX_PROGRAM_END) {
-			if (self->stop_on_program_end) return NULL;
+			if (self->stop_on_program_end) return nullptr;
 		}
 	} while (self->start_code != -1);
 
-	return NULL;
+	return nullptr;
 }
 
 int plm_demux_get_stop_on_program_end(plm_demux_t *self) {
@@ -2235,7 +2235,7 @@ double plm_demux_decode_time(plm_demux_t *self) {
 
 plm_packet_t *plm_demux_decode_packet(plm_demux_t *self, int type) {
 	if (!plm_buffer_has(self->buffer, 16 << 3)) {
-		return NULL;
+		return nullptr;
 	}
 
 	self->start_code = -1;
@@ -2268,7 +2268,7 @@ plm_packet_t *plm_demux_decode_packet(plm_demux_t *self, int type) {
 		self->next_packet.length -= 1;
 	}
 	else {
-		return NULL; // invalid
+		return nullptr; // invalid
 	}
 	
 	return plm_demux_get_packet(self);
@@ -2276,7 +2276,7 @@ plm_packet_t *plm_demux_decode_packet(plm_demux_t *self, int type) {
 
 plm_packet_t *plm_demux_get_packet(plm_demux_t *self) {
 	if (!plm_buffer_has(self->buffer, self->next_packet.length << 3)) {
-		return NULL;
+		return nullptr;
 	}
 
 	self->current_packet.data = self->buffer->bytes + (self->buffer->bit_index >> 3);
@@ -2432,7 +2432,7 @@ static const plm_vlc_t PLM_VIDEO_MACROBLOCK_TYPE_B[] = {
 };
 
 static const plm_vlc_t *PLM_VIDEO_MACROBLOCK_TYPE[] = {
-	NULL,
+	nullptr,
 	PLM_VIDEO_MACROBLOCK_TYPE_INTRA,
 	PLM_VIDEO_MACROBLOCK_TYPE_PREDICTIVE,
 	PLM_VIDEO_MACROBLOCK_TYPE_B
@@ -2793,7 +2793,7 @@ plm_video_t * plm_video_create_with_buffer(plm_buffer_t *buffer, int destroy_whe
 		if (buffer && destroy_when_done) {
 			plm_buffer_destroy(buffer);
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	memset(self, 0, sizeof(plm_video_t));
@@ -2872,10 +2872,10 @@ int plm_video_has_ended(plm_video_t *self) {
 
 plm_frame_t *plm_video_decode(plm_video_t *self) {
 	if (!plm_video_has_header(self)) {
-		return NULL;
+		return nullptr;
 	}
 	
-	plm_frame_t *frame = NULL;
+	plm_frame_t *frame = nullptr;
 	do {
 		if (self->start_code != PLM_START_PICTURE) {
 			self->start_code = plm_buffer_find_start_code(self->buffer, PLM_START_PICTURE);
@@ -2896,7 +2896,7 @@ plm_frame_t *plm_video_decode(plm_video_t *self) {
 					break;
 				}
 
-				return NULL;
+				return nullptr;
 			}
 		}
 
@@ -2909,7 +2909,7 @@ plm_frame_t *plm_video_decode(plm_video_t *self) {
 			plm_buffer_has_start_code(self->buffer, PLM_START_PICTURE) == -1 &&
 			!plm_buffer_has_ended(self->buffer)
 		) {
-			return NULL;
+			return nullptr;
 		}
 		plm_buffer_discard_read_bytes(self->buffer);
 		
@@ -3022,7 +3022,7 @@ int plm_video_decode_sequence_header(plm_video_t *self) {
 	size_t frame_data_size = (luma_plane_size + 2 * chroma_plane_size);
 
 	self->frames_data = (uint8_t*)malloc(frame_data_size * 3);
-	if (self->frames_data == NULL)
+	if (self->frames_data == nullptr)
 		return FALSE;
 	
 	plm_video_init_frame(self, &self->frame_current, self->frames_data + frame_data_size * 0);
@@ -3926,7 +3926,7 @@ plm_audio_t *plm_audio_create_with_buffer(plm_buffer_t *buffer, int destroy_when
 		if (buffer && destroy_when_done) {
 			plm_buffer_destroy(buffer);
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	memset(self, 0, sizeof(plm_audio_t));
@@ -3998,7 +3998,7 @@ plm_samples_t *plm_audio_decode(plm_audio_t *self) {
 	// Do we have at least enough information to decode the frame header?
 	if (!self->next_frame_data_size) {
 		if (!plm_buffer_has(self->buffer, 48)) {
-			return NULL;
+			return nullptr;
 		}
 		self->next_frame_data_size = plm_audio_decode_header(self);
 	}
@@ -4007,7 +4007,7 @@ plm_samples_t *plm_audio_decode(plm_audio_t *self) {
 		self->next_frame_data_size == 0 ||
 		!plm_buffer_has(self->buffer, static_cast<size_t>(self->next_frame_data_size) << 3)
 	) {
-		return NULL;
+		return nullptr;
 	}
 
 	plm_audio_decode_frame(self);
@@ -4282,7 +4282,7 @@ void plm_audio_decode_frame(plm_audio_t *self) {
 const plm_quantizer_spec_t *plm_audio_read_allocation(plm_audio_t *self, int sb, int tab3) {
 	int tab4 = PLM_AUDIO_QUANT_LUT_STEP_3[tab3][sb];
 	int qtab = PLM_AUDIO_QUANT_LUT_STEP_4[tab4 & 15][plm_buffer_read(self->buffer, tab4 >> 4)];
-	return qtab ? (&PLM_AUDIO_QUANT_TAB[qtab - 1]) : 0;
+	return qtab ? (&PLM_AUDIO_QUANT_TAB[qtab - 1]) : nullptr;
 }
 
 void plm_audio_read_samples(plm_audio_t *self, int ch, int sb, int part) {

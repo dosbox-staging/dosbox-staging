@@ -442,13 +442,13 @@ bool fatDrive::getEntryName(char *fullname, char *entname) {
 
 	//LOG_MSG("Testing for filename %s", fullname);
 	findDir = strtok(dirtoken,"\\");
-	if (findDir==NULL) {
+	if (findDir==nullptr) {
 		return true;	// root always exists
 	}
 	findFile = findDir;
-	while(findDir != NULL) {
+	while(findDir != nullptr) {
 		findFile = findDir;
-		findDir = strtok(NULL,"\\");
+		findDir = strtok(nullptr,"\\");
 	}
 
 	assert(entname);
@@ -476,7 +476,7 @@ bool fatDrive::getFileDirEntry(const char* const filename, direntry* useEntry,
 		//LOG_MSG("Testing for filename %s", filename);
 		findDir = strtok(dirtoken,"\\");
 		findFile = findDir;
-		while(findDir != NULL) {
+		while(findDir != nullptr) {
 			imgDTA->SetupSearch(0,DOS_ATTR_DIRECTORY,findDir);
 			imgDTA->SetDirID(0);
 			
@@ -488,8 +488,8 @@ bool fatDrive::getFileDirEntry(const char* const filename, direntry* useEntry,
 				imgDTA->GetResult(find_name,find_size,find_date,find_time,find_attr);
 				if(!(find_attr & DOS_ATTR_DIRECTORY)) break;
 				char *findNext;
-				findNext = strtok(NULL, "\\");
-				if (findNext == NULL && dir_ok)
+				findNext = strtok(nullptr, "\\");
+				if (findNext == nullptr && dir_ok)
 					break;
 				findDir = findNext;
 			}
@@ -523,11 +523,11 @@ bool fatDrive::getDirClustNum(char *dir, uint32_t *clustNum, bool parDir) {
 	if ((len>0) && (dir[len-1]!='\\')) {
 		//LOG_MSG("Testing for dir %s", dir);
 		findDir = strtok(dirtoken,"\\");
-		while(findDir != NULL) {
+		while(findDir != nullptr) {
 			imgDTA->SetupSearch(0,DOS_ATTR_DIRECTORY,findDir);
 			imgDTA->SetDirID(0);
-			findDir = strtok(NULL,"\\");
-			if(parDir && (findDir == NULL)) break;
+			findDir = strtok(nullptr,"\\");
+			if(parDir && (findDir == nullptr)) break;
 
 			char find_name[DOS_NAMELENGTH_ASCII];uint16_t find_date,find_time;uint32_t find_size;uint8_t find_attr;
 			if(!FindNextInternal(currentClust, *imgDTA, &foundEntry)) {
