@@ -568,11 +568,19 @@ union CrtcModeControlRegister {
 	// to the display buffer. Successive scan lines of  the display image are
 	// displaced in 8KB of memory. This bit allows compatibility with the
 	// graphics modes of earlier adapters.
+	//
+	// If clear use CGA compatible memory addressing system by substituting
+	// character row scan counter bit 0 for address bit 13, thus creating 2
+	// banks for even and odd scan lines.
 	bit_view<0, 1> map_display_address_13;
 
 	// This bit selects the source of bit 14 of the output multiplexer. When
 	// this bit is set to 0, bit 1 of the row scan counter is the source. When
 	// this bit is set to 1, the bit 14 of the address counter is the source.
+	//
+	// If clear use Hercules compatible memory addressing system by
+	// substituting character row scan counter bit 1 for address bit 14, thus
+	// creating 4 banks.
 	bit_view<1, 1> map_display_address_14;
 
 	// This bit selects the clock that controls the vertical timing counter.
@@ -600,6 +608,9 @@ union CrtcModeControlRegister {
 	// memory is installed on the system board. (Bit MA 13 is selected in
 	// applications where only 64KB is present. This function maintains
 	// compatibility with the IBM Color/Graphics Monitor Adapter.)
+	//
+	// When in Word Mode bit 15 is rotated to bit 0 if this bit is set else
+	// bit 13 is rotated into bit 0.
 	bit_view<5, 1> address_wrap_select;
 
 	// When this bit is set to 0, the word mode is selected. The word mode
@@ -610,12 +621,18 @@ union CrtcModeControlRegister {
 	// doubleword bit is 0, the word/byte bit selects the mode. When the
 	// doubleword bit is set to 1, the addressing is shifted by two bits. When
 	// set to 1, bit 6 selects the byte address mode.
+	//
+	// If clear system is in word mode. Addresses are rotated 1 position up
+	// bringing either bit 13 or 15 into bit 0.
 	bit_view<6, 1> word_byte_mode_select;
 
 	// When set to 0, this bit disables the horizontal and vertical retrace
 	// signals and forces them to an inactive level. When set to 1, this bit
 	// enables the horizontal and vertical retrace signals. This bit does not
 	// reset any other registers or signal outputs.
+	//
+	// Clearing this bit will reset the display system until the bit is set
+	// again.
 	bit_view<7, 1> is_sync_enabled;
 };
 
@@ -673,7 +690,7 @@ struct VGA_Crtc {
 	uint8_t underline_location = 0;
 	uint8_t start_vertical_blanking = 0;
 	uint8_t end_vertical_blanking = 0;
-	uint8_t mode_control = 0;
+	CrtcModeControlRegister mode_control = {};
 	uint8_t line_compare = 0;
 
 	uint8_t index = 0;
