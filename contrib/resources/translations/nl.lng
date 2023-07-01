@@ -151,50 +151,74 @@ Opmerkingen: Deze instelling overschrijft de 'LANG'-omgeving, indien ingesteld.
              bestand om deze functie te ondersteunen.
 .
 :CONFIG_MACHINE
-Het type machine dat DOSBox probeert te emuleren.
+Het type machine dat DOSBox zal emuleren.
+  hercules:       Hercules Grafische Kaart (HGC) (zie 'monochrome_palette').
+  cga_mono:       CGA-adapter aangesloten op een monochrome monitor (zie
+                  'monochrome_palette').
+  cga:            IBM Color Graphics Adapter (CGA). Maakt ook composiet
+                  video-emulatie mogelijk (zie sectie [composiet]).
+  pcjr:           Een IBM PCjr-machine. Maakt ook PCjr-geluid en composiet
+                  video-emulatie mogelijk (zie sectie [composiet]).
+  tandy:          een Tandy 1000-machine met TGA-graphics. Schakelt ook
+                  Tandy-geluid en composiet video-emulatie in (zie [composiet]
+                  sectie).
+  ega:            IBM Enhanced Graphics Adapter (EGA).
+  svga_paradise:  Paradise PVGA1A SVGA-kaart (geen VESA VBE; standaard 512K
+                  RAM, kan worden ingesteld op 256K of 1MB met 'vmemsize').
+                  Meest compatibel met de originele IBM VGA-adapter.
+  svga_et3000:    Tseng Labs ET3000 SVGA-kaart (geen VESA VBE; vaste 512K vmem).
+  svga_et4000:    Tseng Labs ET4000 SVGA-kaart (geen VESA VBE; standaard 1MB
+                  vmem, kan worden ingesteld op 256K of 512K met 'vmemsize').
+  svga_s3:        S3 Trio64 (VESA VBE 2.0; 4MB vmem standaard, ondersteunt ook
+                  512K, 1MB, 2MB of 8MB met 'vmemsize') (standaard)
+  vesa_oldvbe:    Hetzelfde als 'svga_s3' maar beperkt tot VESA VBE 1.2.
+  vesa_nolfb:     Hetzelfde als 'svga_s3' (VESA VBE 2.0), plus de "no linear
+                  framebuffer" hack (slechts nodig voor een paar games).
 .
 :CONFIG_CAPTURES
-Map waar zaken als wave, midi, screenshot worden vastgelegd.
+Verplaatst naar [capture] sectie en hernoemd naar 'capture_dir'.
 .
 :CONFIG_MEMSIZE
-Hoeveelheid geheugen DOSBox heeft in megabytes.
-Deze waarde kunt u het beste op zijn standaardwaarde laten staan om problemen
-met sommige spellen te voorkomen, hoewel er voor weinig spellen een hogere
-waarde nodig is. Er is over het algemeen geen snelheidsvoordeel bij het
-verhogen van deze waarde.
+Hoeveelheid geheugen DOSBox heeft in megabytes (standaard 16).
+Meestal is het best om deze waarde niet te veranderen om problemen met sommige
+spelen te voorkomen. Er zijn echter een paar spelen die een hogere waarde
+nodig hebben. Er is meestal geen snelheidsvoordeel voor een hogere waarde.
 .
 :CONFIG_MCB_FAULT_STRATEGY
 Hoe door software beschadigde geheugenketenblokken moeten worden behandeld:
-  deny:    Stop (en rapporteer) wanneer fouten worden gedetecteerd (standaard).
   repair:  Herstel (en meld) storingen met aangrenzende kettingblokken.
   report:  Rapporteer fouten, maar ga verder zoals het is.
   allow:   Toestaan dat fouten niet worden gemeld (hardwaregedrag).
-De standaardinstelling (deny) wordt aanbevolen, tenzij een spel faalt met
-MCB-corruptiefouten.
+  deny:    Stop (en rapporteer) wanneer fouten worden gedetecteerd (standaard).
 .
 :CONFIG_VMEMSIZE
 Videogeheugen in MiB (1-8) of KiB (256 tot 8192). 'auto' gebruikt de
-standaardwaarde per videoadapter.
+standaardwaarde per videoadapter. (standaard 'auto'). Zie de 'machine'
+instellingen voor geldige opties per adapter.
+.
+:CONFIG_FORCE_VGA_SINGLE_SCAN
+Always single-scan sub-350 line modes on VGA adapters (disabled by default).
 .
 :CONFIG_DOS_RATE
 Pas de framesnelheid van de geëmuleerde videomodus aan, in Hz:
-default:  De DOS-videomodus bepaalt de snelheid (aanbevolen).
-host:     Stem de DOS-snelheid af op de hostsnelheid (zie instelling
-          'host_rate').
-<waarde>: Stelt de snelheid in op een exacte waarde, tussen 24.000 en
-          1.000.000 (Hz).
-Wij raden de 'default' optie aan; anders testen en instellen per spel.
+  default:  De DOS-videomodus bepaalt de snelheid (aanbevolen).
+  host:     Gebruik de hostsnelheid (zie installing 'host_rate').
+  <waarde>: Gebruik een exacte waarde, tussen 24.000 en 1.000.000 (Hz).
+De 'default' optie is aangeraden; anders testen en instellen per spel.
 .
 :CONFIG_VESA_MODES
 Regelt de selectie van de aangeboden VESA 1.2- en 2.0-modi:
-compatible: Een selectie op maat voor maximale compatibiliteit van spelen.
-            Dit wordt aanbevolen samen met 4 of 8 MB videogeheugen.
-halfline:   Voegt de halflijn VESA 2.0-modus toe met lage resolutie die wordt
-            gebruikt door Extreme Assault. Gebruik alleen indien nodig, omdat
-            het niet S3-compatibel is.
-all:        Biedt alle modi voor een bepaalde grootte van het videogeheugen,
-            maar sommige spelen gebruiken ze mogelijk niet goed (flikkeren)
-            of hebben meer systeemgeheugen nodig (mem = ) om ze te gebruiken.
+  compatible:  Een selectie op maat voor maximale compatibiliteit van spelen.
+               Dit wordt aanbevolen samen met 4 of 8 MB videogeheugen.
+  halfline:    Voegt de lage resolutie halflijn VESA 2.0-modus toe die wordt
+               gebruikt door Extreme Assault. Gebruik alleen indien nodig,
+               omdat het niet S3-compatibel is.
+  all:         Biedt alle modi voor de hoeveelheid videogeheugen, maar sommige
+               spelen gebruiken ze mogelijk niet goed (flikkeren) of hebben
+               meer systeemgeheugen nodig om ze te kunnen gebruiken.
+.
+:CONFIG_VGA_8DOT_FONT
+Gebruik lettertypen van 8 pixels breed op VGA-adapters (standaard uit).
 .
 :CONFIG_SPEED_MODS
 Wijzigingen toestaan waarvan bekend is dat ze de prestaties verbeteren.
@@ -203,9 +227,9 @@ bij het project als u een spel vindt dat niet werkt wanneer dit is ingesteld
 op "true", zodanig dat we ze hier kunnen vermelden.
 .
 :CONFIG_AUTOEXEC_SECTION
-Hoe autoexec-secties worden afgehandeld vanuit meerdere configuratiebestanden.
-join      : combineert ze tot één grote sectie (legacy-gedrag).
-overwrite : gebruik de laatst gevonden, net als andere conf-instellingen.
+Hoe autoexec-secties worden afgehandeld vanuit meerdere configuratiebestanden:
+  join:       combineert ze tot één grote sectie (legacy-gedrag).
+  overwrite:  gebruik de laatst gevonden, net als andere conf-instellingen.
 .
 :CONFIG_AUTOMOUNT
 Koppelt 'drives/[c]'-mappen als stations bij het opstarten, waarbij [c] een
@@ -221,13 +245,13 @@ Koppel-instellingen kunnen optioneel worden geleverd met behulp van een
   verbose = true of false
 .
 :CONFIG_STARTUP_VERBOSITY
-Bepaalt hoe uitgebreid de opstart is voordat het programma wordt weergegeven:
-Breedsprakigheid | Welkom | vroege stdout
-high             |   ja    |    ja
-low              |   nee   |    na
-quiet            |   nee   |    nee
-auto             | 'low' als een uitvoerbaar bestand of map is opgegeven,
-                    anders 'high'
+Bepaalt hoe verbose de opstart is voordat het programma wordt weergegeven:
+  Breedsprakigheid | Welkom | vroege stdout
+  high             |   ja    |    ja
+  low              |   nee   |    na
+  quiet            |   nee   |    nee
+  auto             | 'low' als een uitvoerbaar bestand of map is opgegeven,
+                      anders 'high'
 .
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
 Veel spelen openen al hun bestanden met beschrijfbare rechten; zelfs bestanden
@@ -247,6 +271,19 @@ de meeste DOS-spelen zijn ontworpen.
 Deze instelling is alleen van invloed op videomodi die niet-vierkante pixels
 gebruiken, zoals 320x200 of 640x400; waar als vierkante-pixelmodi, zoals
 640x480 en 800x600, worden weergegeven zoals ze zijn.
+.
+:CONFIG_INTEGER_SCALING
+Beperk de horizontale of verticale schaalfactor tot gehele waarden.
+De juiste beeldverhouding wordt altijd behouden, wat kan resulteren in een
+niet-gehele schaalfactor die moet worden toegepast in de andere dimensie.
+Als de afbeelding groter is dan de viewport, wordt de schaalbeperking voor
+gehele getallen automatisch uitgeschakeld (hetzelfde als 'uit').
+  uit:         geen beperking voor schaal van gehele getallen; de
+               beeldverhouding correct beeld vult de viewport (standaard).
+  horizontaal: beperk de horizontale schaalfactor tot gehele waarden binnen
+               het kijkvenster.
+  verticaal:   beperk de verticale schaalfactor tot gehele waarden binnen het
+               kijkvenster.
 .
 :CONFIG_MONOCHROME_PALETTE
 Selecteer standaardpalet voor monochrome weergave.
@@ -289,16 +326,16 @@ respectievelijk.
 .
 :CONFIG_SCALER
 Software scalers zijn verouderd ten gunste van hardware-versnelde opties:
- - Als u de normale 2x/3x scalers hebt gebruikt, stel dan een gewenste 'windowresolution' in.
- - Als u een geavanceerde scaler hebt gebruikt, overweeg de 'glshader'-opties.
+  - Als u de normale 2x/3x scalers hebt gebruikt, stel dan een gewenste
+    'windowresolution' in.
+  - Als u een geavanceerde scaler hebt gebruikt, overweeg de 'glshader'-opties.
 .
 :CONFIG_GLSHADER
-Ofwel 'none' of een GLSL-shadernaam. Werkt alleen met OpenGL-uitvoer.
-Kan ofwel een absoluut pad zijn, een bestand in de 'glshaders'-submap van de
-DOSBox-configuratiemap, een van de gebundelde shaders:
-advinterp2x, advinterp3x, advmame2x, advmame3x,
-crt-easymode-flat, crt-fakelottes-flat, rgb2x, rgb3x,
-scan2x, scan3x, tv2x, tv3x, sharp (standaard).
+Stel de GLSL-shader in om te gebruiken in OpenGL-uitvoermodi.
+Opties omvatten 'default', 'none', een shader vermeld met behulp van de
+--list-glshaders opdrachtregelargument of een absoluut of relatief pad naar
+een bestand. 'default' stelt de `interpolation/sharp.glsl` shader in.
+In alle gevallen kunt u de bestandsextensie '.glsl' van de shader weglaten.
 .
 :CONFIG_COMPOSITE
 Schakel de composietmodus in bij het starten. 'auto' laat het programma
@@ -327,40 +364,80 @@ Helderheid van het beeld, van donker naar licht.
 Convergentie van subpixelelementen, van wazig tot scherp (alleen CGA en Tandy).
 .
 :CONFIG_CORE
-CPU Core gebruikt in emulatie. auto zal, indien beschikbaar en van toepassing,
-overschakelen naar dynamisch.
+CPU Core gebruikt in emulatie (standaard 'auto'). 'auto' zal, indien
+beschikbaar en van toepassing, overschakelen naar `dynamic`.
 .
 :CONFIG_CPUTYPE
-CPU-type gebruikt in emulatie. auto is de snelste keuze.
+CPU-type gebruikt in emulatie (standaard 'auto'). `auto` is de snelste keuze.
 .
 :CONFIG_CYCLES
 Aantal instructies DOSBox probeert elke milliseconde te emuleren.
-Als u deze waarde te hoog instelt, leidt dit tot geluidsuitval en vertragingen.
+Indien te hoog instelt, leidt dit tot geluidsuitval en vertragingen.
 Cycli kunnen op 3 manieren worden ingesteld:
-  'auto'          Probeert te raden wat een spel nodig heeft.
-                  Het werkt meestal, maar kan voor bepaalde spelen mislukken.
-  'fixed #nummer' Zal een vast aantal cycli instellen. Dit is wat u meestal
-                  nodig hebt als 'auto' faalt (voorbeeld: fixed 4000).
-  'max'           Zal zoveel cycli toewijzen als uw computer aankan.
+  auto:            Probeert te raden wat een spel nodig heeft.
+                   Het werkt meestal, maar kan voor bepaalde spelen mislukken.
+  fixed <nummer>:  Zal een vast aantal cycli instellen. Dit is wat u meestal
+                   nodig hebt als 'auto' faalt (voorbeeld: fixed 4000).
+  max:             Zal zoveel cycli toewijzen als uw computer aankan.
 .
 :CONFIG_CYCLEUP
-Aantal cycli toegevoegd of afgetrokken met sneltoetsen voor snelheidsregeling.
-Voer INTRO uit en zie Speciale toetsen voor een lijst met sneltoetsen.
+Aantal cycli toegevoegd of afgetrokken met sneltoetsen voor snelheidsregeling
+(standaard 10).
 .
 :CONFIG_CYCLEDOWN
-Als u deze lager instelt dan 100, is dit een percentage.
+Als u deze lager instelt dan 100, is dit een percentage (standaard 20).
+.
+:CONFIG_CAPTURE_DIR
+Directory waar de verschillende opnames worden opgeslagen, zoals audio-,
+video-, MIDI- en screenshot-opnames. ('capture' standaard in de huidige
+werkdirectory).
+.
+:CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
+Stel het opslagformaat van de standaard screenshot-actie in
+(standaard 'upscaled'):
+  raw:       De inhoud van de raw framebuffer wordt vastgelegd (oud gedrag;
+             dit resulteert altijd in vierkante pixels).
+             De bestandsnamen van onbewerkte screenshots eindigen op '_raw'
+             (bijv. 'image0001_raw.png').
+  upscaled:  Het beeld wordt bilineair scherp opgeschaald zodat de hoogte rond
+             de 1200 pixels ligt en de juiste beeldverhouding behouden blijft
+             (afhankelijk van de instelling 'aspect'). De verticale
+             schaalfactor is altijd een geheel getal. Bijv. 320 x 200 wordt
+             opgeschaald naar 1600 x 1200 (schaling van gehele getallen 5:6),
+             640 x 480 naar 1920 x 1440 (schaling van gehele getallen van 3:3)
+             en 640 x 350 naar 1867 x 1400 (schaling van 2,9165:4).
+  rendered:  het na-gerenderde, post-shaderbeeld zoals op het scherm wordt
+             weergegeven. De bestandsnamen van gerenderde screenshots eindigen
+             op '_rendered' (bijv. 'image0001_rendered.png').
+Als meerdere instellingen zijn opgegeven, gescheiden door spaties, zal een
+screenshot actie resulteren in meerdere afbeeldingsbestanden. Naast de
+standaard actie voor het maken van screenshots, zijn er ook sneltoetsen
+beschikbaar voor het maken van een enkele opname van een specifiek formaat.
 .
 :CONFIG_MOUSE_CAPTURE
-Kies een muisbesturingsmethode:
-  onclick:   Leg de muis vast wanneer u op een knop in het venster klikt.
-  onstart:   Leg de muis meteen vast bij het starten.
-  seamless:  Laat de muis naadloos bewegen; legt alleen vast met
-             middelste klik of sneltoets.
-  nomouse:   Verberg de muis en stuur geen invoer naar het spel.
+Kies een muis vang methode:
+  onclick:   Vang de muis wanneer u in het venster klikt (standaard).
+  onstart:   Vang de muis meteen bij het starten van DOSBox staging.
+             Werkt mogelijk niet correct op sommige hostbesturingssystemen.
+  seamless:  Laat de muis naadloos bewegen tussen de host en DOSBox staging;
+             Vang de muis alleen met de middelste muis knop of sneltoets.
+             Naadloze muis werkt niet goed voor alle spelen.
+             Windows 3.1x kan hiermee werken met een speciale muis driver.
+  nomouse:   Verberg de muis en stuur geen muis invoer naar het spel.
+Gebruik 'seamless' voor touchscreenbediening.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
 Indien 'true', middelklik laat de vastgelegde muis los en legt ook vast
 wanneer deze naadloos is.
+.
+:CONFIG_MOUSE_MULTI_DISPLAY_AWARE
+Maakt naadloos gedrag van de muis en loslaten van de muisaanwijzer mogelijk in
+volledig scherm voor systemen met meer dan één beeldscherm. (standaard aan).
+Opmerkingen: u moet dit uitzetten als het ten onrechte meerdere beeldschermen
+             detecteert terwijl er eigenlijk maar één gebruikt zou moeten
+             worden. Dit kan gebeuren als u de gespiegelde weergavemodus
+             gebruikt of de HDMI-ingang van een AV-ontvanger gebruikt om
+             alleen naar audio te luisteren.
 .
 :CONFIG_MOUSE_SENSITIVITY
 Standaard muisgevoeligheid. 100 is een basiswaarde, 150 is 150% gevoeligheid.
@@ -376,7 +453,7 @@ besturingssysteem te omzeilen. Werkt in volledig scherm of wanneer de muis
 wordt vastgelegd in venstermodus.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Schakel het ingebouwde DOS-muisstuurprogramma in.
+Activeer het ingebouwde DOS-muisstuurprogramma (standaard aan).
 Opmerkingen:
    - Schakel deze optie uit als u van plan bent het originele MOUSE.COM
      stuurprogramma te gebruiken in geëmuleerde DOS.
@@ -396,28 +473,29 @@ wanneer dit is ingeschakeld, we zullen deze lijst bijwerken.
 .
 :CONFIG_PS2_MOUSE_MODEL
 PS/2 AUX-poort muismodel:
-   standard:       3 knoppen, standaard PS/2-muis.
-   intellimouse:   3 knoppen + wiel, Microsoft IntelliMouse.
-Standaard: intellimouse
+  standard:      3 knoppen, standaard PS/2-muis.
+  intellimouse:  3 knoppen + wiel, Microsoft IntelliMouse.
+  explorer:      5 knoppen + wiel, Microsoft IntelliMouse Explorer.
+  none:          geen PS/2 muis emulatie.
+Standaard: explorer
 .
 :CONFIG_COM_MOUSE_MODEL
 COM (seriële) poort standaard muismodel:
-   2button:        2 knoppen, Microsoft muis.
-   3button:        3 knoppen, Logitech-muis, grotendeels MS-muis compatibel.
-   wheel:          3 knoppen + wiel, meestal compatibel met Microsoft-muis.
-   msm:            3 knoppen, Mouse Systems-muis, NIET COMPATIBEL met MS-muis.
-   2button+msm:    Automatische keuze tussen 2button en msm.
-   3button+msm:    Automatische keuze tussen 3button en msm.
-   wheel+msm:      Automatische keuze tussen wiel en msm.
-Standaard: wiel+msm
-Opmerkingen:
-    Ga naar de sectie [serial] om COM-poortmuizen in of uit te schakelen.
+  2button:      2 knoppen, Microsoft muis.
+  3button:      3 knoppen, Logitech-muis, grotendeels MS-muis compatibel.
+  wheel:        3 knoppen + wiel, meestal compatibel met Microsoft-muis.
+  msm:          3 knoppen, Mouse Systems-muis, NIET compatibel met MS-muis.
+  2button+msm:  Automatische keuze tussen 2button en msm.
+  3button+msm:  Automatische keuze tussen 3button en msm.
+  wheel+msm:    Automatische keuze tussen wiel en msm (standaard).
+Opmerkingen: Activeer COM-poort muis in de [serial] sectie.
 .
 :CONFIG_NOSOUND
-Schakel de stille modus in, het geluid wordt echter nog steeds geëmuleerd.
+Schakel de stille modus in (standaard uitgeschakeld).
+Geluid wordt echter nog steeds geëmuleerd, maar DOSBox maakt geen geluid.
 .
 :CONFIG_RATE
-Samplesnelheid van de mixer.
+Samplesnelheid van de mixer (48000 standaard).
 .
 :CONFIG_BLOCKSIZE
 Grootte mixerblok; grotere waarden kunnen helpen bij haperend geluid, maar het
@@ -473,40 +551,46 @@ te voegen:
   on:      Activeer chorus (normale voorinstelling).
   light:   Een licht choruseffect (vooral geschikt voor synthmuziek met veel
            witte ruis.)
-  normal:  Normaal chorus dat goed werkt met een grote verscheidenheid aan
-           spellen.
+  normal:  Normaal chorus dat goed werkt met vele spellen.
   strong:  Een duidelijk en upfront chorus effect.
 Opmerking: u kunt de chorusniveaus per kanaal afstemmen via mixercommando's.
 .
 :CONFIG_MIDIDEVICE
-Apparaat dat de MIDI-gegevens ontvangt (van de geëmuleerde MIDI-interface - 
-MPU-401). Kies een van de volgende:
-'fluidsynth', om de ingebouwde MIDI-synthesizer te gebruiken. Zie de sectie
-       [fluidsynth] voor gedetailleerde configuratie.
-'mt32', om de ingebouwde Roland MT-32 synthesizer te gebruiken.
-        Zie de sectie [mt32] voor gedetailleerde configuratie.
-'auto', om de eerste werkende externe MIDI-speler te gebruiken. Dit kan een
-        softwaresynthesizer of een fysiek apparaat zijn.
+Stel in waar MIDI-data van de geëmuleerde MPU-401 MIDI-interface naartoe wordt
+gestuurd (standaard 'auto'):
+  oss:         Gebruik de Linux OSS MIDI-afspeelinterface.
+  alsa:        Gebruik de Linux ALSA MIDI-afspeelinterface.
+  fluidsynth:  De ingebouwde FluidSynth MIDI-synthesizer (SoundFont-speler).
+               Zie de [fluidsynth] sectie voor gedetailleerde configuratie.
+  mt32:        De ingebouwde Roland MT-32 synthesizer.
+               Zie de [mt32] sectie voor gedetailleerde configuratie.
+  auto:        Ofwel een van de ingebouwde MIDI-synthesizers (als `midiconfig`
+               is ingesteld op 'fluidsynth' of 'mt32'), of een MIDI-apparaat
+               extern aan DOSBox (elke andere 'midiconfig'-waarde). Dit kan
+               een softwaresynthesizer of een fysiek apparaat zijn. Dit is het
+               standaardgedrag.
+  none:        Schakel MIDI-uitvoer uit.
 .
 :CONFIG_MIDICONFIG
 Configuratie-opties voor de geselecteerde MIDI-interface.
-Dit is meestal de id of naam van de MIDI-synthesizer die u wilt gebruiken
-(zoek de id/naam op met het DOS-commando 'mixer /listmidi').
-- Deze optie heeft geen effect bij gebruik van de ingebouwde synthesizers
-  (mididevice = fluidsynth of mt32).
-- Als u ALSA gebruikt, gebruik dan het Linux-commando 'aconnect -l' om de
-  open MIDI-poorten weer te geven en selecteer er een (bijvoorbeeld
-  'midiconfig=14:0' voor sequencerclient 14, poort 0).
-- Als u een fysieke Roland MT-32 met revisie 0 PCB gebruikt, kan de
-  hardware een vertraging nodig hebben om te voorkomen dat de buffer overloopt.
-  Voeg in dat geval 'delaysysex' toe, bijvoorbeeld: 'midiconfig=2 delaysysex'.
-Zie de README/handleiding voor meer details.
+Dit is meestal het ID of naam van de MIDI-synthesizer die u wilt gebruiken
+(zoek het ID/naam op met het DOS-commando 'MIXER /LISTMIDI').
+Opmerkingen: - Deze optie heeft geen effect bij gebruik van de ingebouwde
+               synthesizers ('mididevice = fluidsynth' of mt32).
+             - Als u ALSA gebruikt, gebruik dan het Linux-commando
+               'aconnect -l' om de open MIDI-poorten weer te geven en
+               selecteer er een (bijvoorbeeld 'midiconfig=14:0' voor
+               sequencerclient 14, poort 0).
+             - Als u een fysieke Roland MT-32 met revisie 0 PCB gebruikt, kan
+               de hardware een vertraging nodig hebben om te voorkomen dat de
+               buffer overloopt. Voeg in dat geval 'delaysysex' toe,
+               bijvoorbeeld: 'midiconfig=2 delaysysex'.
 .
 :CONFIG_MPU401
-Type MPU-401 om te emuleren.
+Type MPU-401 om te emuleren (standaard: 'intelligent').
 .
 :CONFIG_RAW_MIDI_OUTPUT
-Schakel onbewerkte, ongewijzigde MIDI-uitvoer in (standaard uitgeschakeld).
+Schakel onbewerkte, ongewijzigde MIDI-uitvoer in (standaard uit).
 De MIDI-stuurprogramma's van veel spelen voldoen niet volledig aan de MIDI-
 standaard, waardoor het bewerken van de MIDI-opnamen van deze spelen erg
 foutgevoelig en omslachtig is in MIDI-sequencers, wat vaak resulteert in
@@ -522,40 +606,39 @@ Pad naar een SoundFont-bestand in .sf2-indeling. U kunt een absoluut of
 relatief pad gebruiken, of de naam van een .sf2 in de 'soundfonts'-map in uw
 DOSBox-configuratiemap.
 Opmerking: het optionele volumeschaalpercentage na de bestandsnaam is niet meer
-ondersteund. Gebruik in plaats daarvan een mixeropdracht om het volume van het
-FluidSynth-audiokanaal te wijzigen, bijvoorbeeld:
-  MIXER FSYNTH 200
+           ondersteund. Gebruik een mixeropdracht om het volume van het
+           FluidSynth-audiokanaal te wijzigen, bijv.: 'MIXER FSYNTH 200'
 .
 :CONFIG_FSYNTH_CHORUS
 Chorus effect: 'auto', 'on', 'off', of aangepaste waarden.
 Bij gebruik van aangepaste waarden:
   Alle vijf moeten op volgorde en spatie gescheiden worden verstrekt.
   Dit zijn: stemmentelling level snelheid breedte modulatie-golf, waar:
-  - stemmentelling is een geheel getal van 0 tot 99.
-  - level is een decimaal van 0.0 tot 10.0
-  - snelheid is een decimaal, gemeten in Hz, van 0.1 tot 5.0
-  - breedte is een decimaal van 0.0 tot 21.0
-  - modulatie-golf is ofwel 'sine' of 'triangle'
+    - stemmentelling is een geheel getal van 0 tot 99.
+    - level is een decimaal van 0.0 tot 10.0
+    - snelheid is een decimaal, gemeten in Hz, van 0.1 tot 5.0
+    - breedte is een decimaal van 0.0 tot 21.0
+    - modulatie-golf is ofwel 'sine' of 'triangle'
   Bijvoorbeeld: chorus = 3 1.2 0.3 8.0 sine
 Opmerking: U kunt de FluidSynth-chorus uitschakelen en in plaats daarvan de
-chorus op mixerniveau op het FluidSynth-kanaal inschakelen, of beide
-chorus-effecten tegelijkertijd inschakelen. Of dit goed klinkt, hangt af van
-het SoundFont en de chorus-instellingen.
+           chorus op mixerniveau op het FluidSynth-kanaal inschakelen, of
+           beide chorus-effecten tegelijkertijd inschakelen. Of dit goed
+           klinkt, hangt af van het SoundFont en de chorus-instellingen.
 .
 :CONFIG_FSYNTH_REVERB
 Reverb-effect: 'auto', 'on', 'off' of aangepaste waarden.
 Bij gebruik van aangepaste waarden:
   Alle vier moeten op volgorde en spatie gescheiden worden verstrekt.
   Dit zijn: kamer-grootte demping breedte level, waar:
-  - kamer-grootte is een decimaal van 0.0 tot 1.0
-  - demping is een decimaal van 0.0 tot 1.0
-  - breedte is een decimaal van 0.0 tot 100.0
-  - level is een decimaal van 0.0 tot 1.0
+    - kamer-grootte is een decimaal van 0.0 tot 1.0
+    - demping is een decimaal van 0.0 tot 1.0
+    - breedte is een decimaal van 0.0 tot 100.0
+    - level is een decimaal van 0.0 tot 1.0
   Bijvoorbeeld: reverb = 0.61 0.23 0.76 0.56
 Opmerking: U kunt de FluidSynth-reverb uitschakelen en in plaats daarvan de
-reverb op mixerniveau op het FluidSynth-kanaal inschakelen, of beide
-reverb-effecten tegelijkertijd inschakelen. Of dit goed klinkt, hangt af van
-het SoundFont en de gebruikte reverb-instellingen.
+           reverb op mixerniveau op het FluidSynth-kanaal inschakelen, of
+           beide reverb-effecten tegelijkertijd inschakelen. Of dit goed
+           klinkt, hangt af van het SoundFont en de reverb-instellingen.
 .
 :CONFIG_FSYNTH_FILTER
 Filter voor de FluidSynth-audio-uitgang:
@@ -563,10 +646,12 @@ Filter voor de FluidSynth-audio-uitgang:
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_MODEL
-Model van synthesizer om te gebruiken.
-'auto' kiest het eerste model met beschikbare ROM's, in aangegeven volgorde.
-'cm32l' en 'mt32' kiezen het eerste model van hun type, in aangegeven volgorde.
-'mt32_old' en 'mt32_new' zijn aliassen voor respectievelijk 1.07 en 2.04.
+MT-32 model om te gebruiken.
+  auto:  kies het eerste beschikbare model, in de aangegeven volgorde.
+  mt32:  kies het eerste beschikbare MT-32-model, in de aangegeven volgorde.
+  cm32l: kies het eerste beschikbare CM-32L-model, in de aangegeven volgorde.
+  mt32_old: alias voor MT-32 v1.07.
+  mt32_new: alias voor MT-32 v2.04.
 .
 :CONFIG_ROMDIR
 De map met ROM's voor een of meer modellen.
@@ -602,22 +687,23 @@ Actieve ROM :
 Geladen van : 
 .
 :CONFIG_SBTYPE
-Type Sound Blaster om te emuleren. 'gb' is Game Blaster.
+Type Sound Blaster om te emuleren (standaard 'sb16').
+'gb' is Game Blaster.
 .
 :CONFIG_SBBASE
-Het IO-basisadres van de Sound Blaster.
+Het IO-basisadres van de Sound Blaster (standaard 220).
 .
 :CONFIG_IRQ
-Het IRQ-nummer van de Sound Blaster.
+Het IRQ-nummer van de Sound Blaster (standaard 7).
 .
 :CONFIG_DMA
-Het DMA-nummer van de Sound Blaster.
+Het DMA-nummer van de Sound Blaster (standaard 1).
 .
 :CONFIG_HDMA
-Het hoge DMA-nummer van de Sound Blaster.
+Het hoge DMA-nummer van de Sound Blaster (standaard 5).
 .
 :CONFIG_SBMIXER
-Laat de Sound Blaster-mixer de DOSBox-mixer aanpassen.
+Laat de Sound Blaster-mixer de DOSBox-mixer aanpassen (standaard ingeschakeld)
 .
 :CONFIG_SBWARMUP
 Stil initiële DMA-audio nadat de kaart is ingeschakeld, in milliseconden.
@@ -629,11 +715,12 @@ De OPL-golfvorm wordt nu gesampled met de afspeelsnelheid van de mixer om
 hersamplen te voorkomen.
 .
 :CONFIG_OPLMODE
-Type OPL-emulatie. Op 'auto' wordt de modus bepaald door 'sbtype'.
+Type OPL-emulatie (standaard 'auto').
+Op 'auto' wordt de modus bepaald door 'sbtype'.
 Alle OPL-modi zijn AdLib-compatibel, behalve 'cms'.
 .
 :CONFIG_OPLEMU
-Alleen 'nuked' OPL-emulatie wordt nu ondersteund.
+Alleen 'nuked' OPL-emulatie wordt nog ondersteund.
 .
 :CONFIG_SB_FILTER
 Type filter om te emuleren voor de Sound Blaster digitale geluidsuitvoer:
@@ -653,8 +740,8 @@ Type filter om te emuleren voor de Sound Blaster digitale geluidsuitvoer:
                 hpf 3 120 lfp 1 6500
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
-Forceer het Sound Blaster-filter om altijd aan te staan
-(laat programma's het filter niet uitschakelen).
+Forceer de Sound Blaster-filter om altijd aan te staan
+(laat programma's het filter niet uitschakelen; standaard uitgeschakeld).
 .
 :CONFIG_OPL_FILTER
 Type filter om te emuleren voor de Sound Blaster OPL-uitgang:
@@ -674,18 +761,18 @@ Filter voor de Sound Blaster CMS-uitvoer:
 Schakel Gravis UltraSound-emulatie in.
 .
 :CONFIG_GUSBASE
-Het IO-basisadres van de Gravis UltraSound.
+Het IO-basisadres van de Gravis UltraSound (standaard 240).
 .
 :CONFIG_GUSIRQ
-Het IRQ-nummer van de Gravis UltraSound.
+Het IRQ-nummer van de Gravis UltraSound (standaard 5).
 .
 :CONFIG_GUSDMA
-Het DMA-nummer van de Gravis UltraSound.
+Het DMA-nummer van de Gravis UltraSound (standaard 3).
 .
 :CONFIG_ULTRADIR
-Pad naar UltraSound-map. In deze map zou er een MIDI-map moeten zijn die de
-patchbestanden voor GUS-weergave bevat. Patch-sets die met Timidity worden
-gebruikt, zouden goed moeten werken.
+Pad naar UltraSound-map (standaard 'C:\ULTRASND'). In deze map zou er een
+MIDI-map moeten zijn die de patchbestanden voor GUS-weergave bevat.
+Patch-sets die met Timidity worden gebruikt, zouden goed moeten werken.
 .
 :CONFIG_GUS_FILTER
 Filter voor de Gravis UltraSound audio-uitgang:
@@ -703,35 +790,37 @@ Het IRQ-nummer van de IBM Music Feature Card (standaard 3).
 .
 :CONFIG_IMFC_FILTER
 Filter voor de uitvoer van de IBM Music Feature Card:
-   on:          filter de uitvoer.
-   off:         de uitvoer niet filteren (standaard).
-   <aangepast>: aangepaste filterdefinitie; zie 'sb_filter' voor details.
+  on:          filter de uitvoer.
+  off:         de uitvoer niet filteren (standaard).
+  <aangepast>: aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_SIDMODEL
 Model van chip om te emuleren voor de Innovation SSI-2001-kaart:
- - auto: Selecteert de 6581-chip.
- - 6581: De originele chip, bekend om zijn basachtige en rijke karakter.
- - 8580: Een latere herziening die beter overeenkwam met de SID-specificatie.
+  auto:  Emuleer de 6581-chip.
+  6581:  De originele chip, bekend om zijn basachtige en rijke karakter.
+  8580:  Een latere herziening die beter overeenkwam met de SID-specificatie.
          Het lost de DC-bias van de 6581 op en heeft minder vervorming.
          De 8580 is een optie op reproductiekaarten, zoals de DuoSID.
- - none: Schakelt de kaart uit.
+  none:  Schakelt de kaart uit (standaard).
 .
 :CONFIG_SIDCLOCK
 De SID-chip klokfrequentie, die op reproductiekaarten kan worden gekozen.
- - default: gebruikt 0.895 MHz, zoals de originele SSI-2001-kaart.
- - c64ntsc: gebruikt 1.023 MHz, zoals NTSC Commodore PC's en de DuoSID.
- - c64pal:  gebruikt 0.985 MHz, zoals PAL Commodore PCs en de DuoSID.
- - hardsid: gebruikt 1.000 MHz, zoals beschikbaar op de DuoSID.
+  default: gebruikt 0.895 MHz, zoals de originele SSI-2001-kaart.
+  c64ntsc: gebruikt 1.023 MHz, zoals NTSC Commodore PC's en de DuoSID.
+  c64pal:  gebruikt 0.985 MHz, zoals PAL Commodore PCs en de DuoSID.
+  hardsid: gebruikt 1.000 MHz, zoals beschikbaar op de DuoSID.
 .
 :CONFIG_SIDPORT
-Het IO-basisadres van de Innovation SSI-2001.
+Het IO-basisadres van de Innovation SSI-2001 (standaard 280).
 .
 :CONFIG_6581FILTER
 De analoge filtering van de SID betekende dat elke chip fysiek uniek was.
-Past de filtersterkte van de 6581 aan als een percentage van 0 tot 100.
+Past de filtersterkte van de 6581 aan als een percentage van 0 tot 100
+(standaard 50).
 .
 :CONFIG_8580FILTER
-Past de filtersterkte van de 8580 aan als een percentage van 0 tot 100.
+Past de filtersterkte van de 8580 aan als een percentage van 0 tot 100
+(standaard 50).
 .
 :CONFIG_INNOVATION_FILTER
 Filter voor de Innovation audio-uitgang:
@@ -740,12 +829,12 @@ Filter voor de Innovation audio-uitgang:
 .
 :CONFIG_PCSPEAKER
 PC-luidspreker emulatiemodel:
-  discrete: Golfvorm wordt gemaakt met discrete stappen (standaard).
-            Werkt goed voor spelen die RealSound-effecten gebruiken.
-  impulse:  Golfvorm wordt gemaakt met behulp van sinc-impulsen.
-            Aanbevolen voor blokgolfspellen, zoals Commander Keen.
-            Hoewel het de nauwkeurigheid verbetert, is het CPU-intensiever.
-  none/off: Gebruik de pc-luidspreker niet.
+  discrete:  Golfvorm wordt gemaakt met discrete stappen (standaard).
+             Werkt goed voor spelen die RealSound-effecten gebruiken.
+  impulse:   Golfvorm wordt gemaakt met behulp van sinc-impulsen.
+             Aanbevolen voor blokgolfspellen, zoals Commander Keen.
+             Hoewel het de nauwkeurigheid verbetert, is het CPU-intensiever.
+  none/off:  Gebruik de pc-luidspreker niet.
 .
 :CONFIG_PCSPEAKER_FILTER
 Filter voor de pc-luidsprekeruitgang:
@@ -757,8 +846,16 @@ Filter voor de pc-luidsprekeruitgang:
 DC-offset wordt nu globaal geëlimineerd uit de mastermixeruitgang.
 .
 :CONFIG_TANDY
-Schakel Tandy Sound System-emulatie in. Voor 'auto' is emulatie alleen
-aanwezig als de machine is ingesteld op 'tandy'.
+Stel de Tandy/PCjr 3 Voice-geluidemulatie in:
+  auto:  Tandy/PCjr-geluid alleen automatisch inschakelen voor de machinetypes
+         'tandy' en 'pcjr' (standaard).
+  on:    Tandy/PCjr-geluid met DAC-ondersteuning inschakelen, indien mogelijk.
+         Bij de meeste spellen moet de machine ook op 'tandy' of 'pcjr' staan
+         om te werken.
+  psg:   schakel alleen de driestemmige programmeerbare geluidsgenerator van
+         de kaart in zonder DAC om conflicten met andere kaarten die DMA 1
+         gebruiken te voorkomen.
+  off:   Tandy/PCjr-geluid uitschakelen.
 .
 :CONFIG_TANDY_FILTER
 Filter voor de Tandy synth-uitgang:
@@ -789,7 +886,7 @@ Filter voor de LPT DAC-audioapparaat(en):
 Gebruik 'lpt_dac=disney' om de Disney Sound Source in te schakelen.
 .
 :CONFIG_PS1AUDIO
-Schakel IBM PS/1 Audio-emulatie in.
+Schakel IBM PS/1 Audio-emulatie in (standaard uitgeschakeld).
 .
 :CONFIG_PS1AUDIO_FILTER
 Filter voor de PS/1 Audio synth-uitgang:
@@ -810,51 +907,52 @@ ReelMagic (ook bekend als REALmagic) MPEG-afspeelondersteuning.
   on:       Emuleer de kaart en laad de FMPDRV.EXE bij het opstarten.
 .
 :CONFIG_REELMAGIC_KEY
-Stel de 32-bits magische sleutel in die wordt gebruikt om de video's van
+Zet de 32-bits magische sleutel die wordt gebruikt om de video's van
 het spel te decoderen.
-  auto     : Probeer de sleutel automatisch te bepalen (standaard).
-  common   : Gebruik de meest voorkomende sleutel, namelijk 0x40044041.
-  thehorde : Gebruik de sleutel van 'The Horde', namelijk 0xC39D7088.
-  <op-maat>: stel een aangepaste sleutel in hex-indeling in (bijv. 0x12345678).
+  auto:      Probeer de sleutel automatisch te bepalen (standaard).
+  common:    Gebruik de meest voorkomende sleutel, namelijk 0x40044041.
+  thehorde:  Gebruik de sleutel van 'The Horde', namelijk 0xC39D7088.
+  <op-maat>: stel een aangepaste sleutel in hex-formaat in (bijv. 0x12345678).
 .
 :CONFIG_REELMAGIC_FCODE
-Negeer de framesnelheidscode die wordt gebruikt tijdens het afspelen van video.
+Negeer de framesnelheidscode die wordt gebruikt tijdens video afspelen.
   0: Geen override: poging tot automatische snelheidsdetectie (standaard).
   1 t/m 7: Gebruik een van de volgende framesnelheden (gebruik 1 t/m 7):
-            1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.
+           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.
 .
 :CONFIG_JOYSTICKTYPE
-Type joystick om te emuleren: auto (standaard),
-auto     : Detecteer en gebruik eventuele joystick(s), indien mogelijk.,
-2axis    : Ondersteuning voor maximaal twee joysticks, elk met 2 assen.
-4axis    : Ondersteun alleen de eerste joystick, als 4-assig type.
-4axis_2  : Ondersteun alleen de tweede joystick, als 4-assig type.
-fcs      : Joystick emuleren als een originele Thrustmaster FCS.
-ch       : Joystick emuleren als een originele CH Flightstick.
-hidden   : Voorkom dat DOS de joystick(s) ziet, maar sta mapping toe.
-disabled : Joysticks volledig uitschakelen.
-(Vergeet niet om het mapperbestand van DOSBox te resetten als u het eerder
-hebt opgeslagen)
+Type joystick om te emuleren: (standaard 'auto')
+  auto:      Detecteer en gebruik eventuele joystick(s), indien mogelijk.
+  2axis:     Ondersteuning voor maximaal twee joysticks, elk met 2 assen.
+  4axis:     Ondersteun alleen de eerste joystick, als 4-assig type.
+  4axis_2:   Ondersteun alleen de tweede joystick, als 4-assig type.
+  fcs:       Joystick emuleren als een originele Thrustmaster FCS.
+  ch:        Joystick emuleren als een originele CH Flightstick.
+  hidden:    Voorkom dat DOS de joystick(s) ziet, maar sta mapping toe.
+  disabled:  Joysticks volledig uitschakelen.
+AUB mapperbestand resetten indien eerder opgeslagen.
 .
 :CONFIG_TIMED
-Schakel getimede intervallen in voor de as. Experimenteer met deze optie als
-de joystick afdrijft.
+Schakel getimede intervallen in voor de as (standaard uitgeschakeld).
+Experimenteer met deze optie als de joystick afdrijft.
 .
 :CONFIG_AUTOFIRE
-Vuurt continue, zolang de knop ingedrukt wordt.
+Vuurt continue, zolang de knop ingedrukt wordt (standaard uitgeschakeld).
 .
 :CONFIG_SWAP34
-Verwissel de 3e en de 4e as. Kan handig zijn voor bepaalde joysticks.
+Verwissel de 3e en de 4e as (standaard uitgeschakeld).
+Kan handig zijn voor bepaalde joysticks.
 .
 :CONFIG_BUTTONWRAP
-Schakel knopomloop in bij het aantal geëmuleerde knoppen.
+Knopomloop bij het aantal geëmuleerde knoppen (standaard uitgeschakeld).
 .
 :CONFIG_CIRCULARINPUT
-Maak vertaling van circulaire input naar vierkante output mogelijk. Probeer dit
-in te schakelen als u linker analoge stick alleen in een cirkel kan bewegen.
+Vertaal van circulaire input naar vierkante output (standaard uitgeschakeld).
+Probeer dit als u linker analoge stick alleen in een cirkel kan bewegen.
 .
 :CONFIG_DEADZONE
-Percentage beweging om te negeren. 100 verandert de stick in een digitale.
+Percentage beweging om te negeren (standaard 10).
+100 verandert de stick in een digitale.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
 Activeert sneltoetsen om realtime kalibratie van de x- en y-as van de joystick
@@ -872,52 +970,51 @@ instellen. Als u parameters vindt die werken, stop dan het spel, zet deze
 instelling terug op false en vul de gerapporteerde kalibratieparameters in.
 .
 :CONFIG_JOY_X_CALIBRATION
-Pas de kalibratieparameters van de x-as toe via de sneltoetsen.
-Standaard is 'auto'.
+Pas de kalibratieparameters van de x-as toe via de sneltoetsen
+(standaard 'auto').
 .
 :CONFIG_JOY_Y_CALIBRATION
-Pas de kalibratieparameters van de Y-as toe via de sneltoetsen.
-Standaard is 'auto'.
+Pas de kalibratieparameters van de Y-as toe via de sneltoetsen
+(standaard 'auto').
 .
 :CONFIG_SERIAL1
 Stel het type apparaat in dat is aangesloten op de com-poort.
-Opties: disabled, dummy, mouse, modem, nullmodem, direct.
+Opties: disabled, dummy, mouse, modem, nullmodem, direct (standaard 'dummy').
 Aanvullende parameters moeten op dezelfde regel staan in de vorm van
 parameter:waarde. Parameter voor alle typen is irq (optioneel).
-voor muis:
-   "type", heeft voorrang op instellingen van [mouse]-sectie
-voor direct: realport (vereist), rxdelay (optioneel).
-   (realport:COM1 realport:ttyS0).
-voor modem: listenport, sock, baudrate (allemaal optioneel).
-voor nullmodem: server, rxdelay, txdelay, telnet, usedtr,
-   transparent, port, inhsocket, sock (allemaal optioneel).
+  - voor 'mouse':      "model", gaat voor op instellingen van [mouse]-sectie
+  - voor 'direct':     realport (vereist), rxdelay (optioneel).
+                      (realport:COM1 realport:ttyS0).
+  - voor 'modem':      listenport, sock, baudrate (allemaal optioneel).
+  - voor 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,
+                       transparent, port, inhsocket, sock (allemaal optioneel).
 SOCK-parameter specificeert het protocol dat door beide zijden van de
 verbinding moet worden gebruikt. 0 voor TCP en 1 voor ENet betrouwbaar UDP.
 Bijvoorbeeld: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-Zie serial1
+Zie 'serial1'
 .
 :CONFIG_SERIAL3
-Zie serial1
+Zie 'serial1'
 .
 :CONFIG_SERIAL4
-Zie serial1
+Zie 'serial1'
 .
 :CONFIG_PHONEBOOKFILE
-Bestand dat wordt gebruikt om valse telefoonnummers aan adressen toe te wijzen.
+Bestand dat wordt gebruikt om valse telefoonnummers aan adressen toe te wijzen
+(standaard 'phonebook.txt').
 .
 :CONFIG_XMS
 XMS-ondersteuning inschakelen.
 .
 :CONFIG_EMS
-Schakel EMS-ondersteuning in. De standaard (=true) biedt de beste
-compatibiliteit, maar bepaalde applicaties werken mogelijk beter met andere
-keuzes, of vereisen dat EMS-ondersteuning is uitgeschakeld (=false) om
-überhaupt te werken.
+Schakel EMS-ondersteuning in (standaard). Dit biedt de beste compatibiliteit,
+maar bepaalde applicaties werken mogelijk beter met andere keuzes, of
+vereisen dat EMS-ondersteuning is uitgeschakeld om überhaupt te werken.
 .
 :CONFIG_UMB
-Schakel UMB-ondersteuning in.
+Schakel UMB-ondersteuning in (standaard aan).
 .
 :CONFIG_VER
 Stel DOS-versie in (standaard 5.0). Specificeer als hoofdversie.minor formaat.
@@ -925,46 +1022,56 @@ Een enkel nummer wordt behandeld als de hoofdversie.
 Gebruikelijke instellingen zijn 3.3, 5.0, 6.22 en 7.1.
 .
 :CONFIG_COUNTRY
-Stel de DOS-landcode in die van invloed is op landspecifieke informatie, zoals
-datum, tijd en decimale notaties.
+Stel de DOS-landcode in (standaard 0). Dit heeft invloed op landspecifieke
+informatie, zoals datum, tijd en decimale notaties.
 Indien ingesteld op 0, wordt de landcode gebruikt die overeenkomt met de
 geselecteerde toetsenbordindeling.
 .
+:CONFIG_KEYBOARDLAYOUT
+Taalcode van de toetsenbordindeling, of 'auto' (standaard 'auto').
+.
 :CONFIG_EXPAND_SHELL_VARIABLE
 Schakel uitbreidende omgevingsvariabelen zoals %PATH% in in de
-DOS-opdrachtshell. FreeDOS en MS-DOS 7/8 COMMAND.COM ondersteunen dit gedrag.
+DOS-opdrachtshell (standaard uitgeschakeld).
+FreeDOS en MS-DOS 7/8 COMMAND.COM ondersteunen dit gedrag.
 .
-:CONFIG_KEYBOARDLAYOUT
-Taalcode van de toetsenbordindeling (of "none").
+:CONFIG_SHELL_HISTORY_FILE
+Bestand met permanente opdrachtregelgeschiedenis (standaard
+'shell_history.txt').
+.
+:CONFIG_SETVER_TABLE_FILE
+Bestand met de lijst met applicaties en toegewezen DOS-versies, in een door
+tabs gescheiden indeling, gebruikt door SETVER.EXE als permanente opslag
+(standaard leeg).
 .
 :CONFIG_IPX
-Schakel IPX over UDP/IP-emulatie in.
+Schakel IPX over UDP/IP-emulatie in (standaard aan).
 .
 :CONFIG_NE2000
 Activeer emulatie van een Novell NE2000-netwerkkaart op een softwaregebaseerd
-netwerk (met libslirp) met de volgende eigenschappen:
- - 255.255.255.0 : Subnetmasker van het 10.0.2.0 virtuele LAN.
- - 10.0.2.2      : IP of the gateway en DHCP-service.
- - 10.0.2.3      : IP van de virtuele DNS-server.
- - 10.0.2.15     : Eerste IP geleverd door DHCP, uw IP!
+netwerk (met libslirp) met de volgende eigenschappen (standaard actief):
+  - 255.255.255.0:  Subnetmasker van het 10.0.2.0 virtuele LAN.
+  - 10.0.2.2:       IP of the gateway en DHCP-service.
+  - 10.0.2.3:       IP van de virtuele DNS-server.
+  - 10.0.2.15:      Eerste IP geleverd door DHCP, uw IP!
 Opmerking: Instellen binnen DOS vereist een NE2000-pakketstuurprogramma, een
            DHCP-client en een TCP/IP-stack. Mogelijk hebt u port-forwarding
            nodig van de host naar de DOS-gast en van uw router naar uw host
            wanneer u fungeert als server voor multiplayer-spelen.
 .
 :CONFIG_NICBASE
-Het IO-basisadres van de NE2000-kaart.
+Het IO-basisadres van de NE2000-kaart (standaard 300).
 Opmerking: Adressen 220 en 240 zijn mogelijk niet beschikbaar omdat ze
            standaard zijn toegewezen aan de Sound Blaster en
            Gravis UltraSound.
 .
 :CONFIG_NICIRQ
-De interrupt die door de NE2000-kaart wordt gebruikt.
+De interrupt die door de NE2000-kaart wordt gebruikt (standaard 3).
 Opmerking: IRQ's 3 en 5 zijn mogelijk niet beschikbaar omdat ze standaard zijn
            toegewezen aan 'serial2' en de Gravis UltraSound.
 .
 :CONFIG_MACADDR
-Het MAC-adres van de NE2000-kaart.
+Het MAC-adres van de NE2000-kaart (standaard 'AC:DE:48:88:99:AA').
 .
 :CONFIG_TCP_PORT_FORWARDS
 Stuurt een of meer TCP-poorten door van de host naar de DOS-gast.
@@ -986,8 +1093,8 @@ Opmerkingen:
   - Bij conflicterende gastpoorten, heeft de laatste regel voorrang.
 .
 :CONFIG_UDP_PORT_FORWARDS
-Stuurt een of meer UDP-poorten door van de host naar de DOS-gast.
-Het formaat is hetzelfde als voor TCP port forwards.
+Stuurt een of meer UDP-poorten door van de host naar de DOS-gast
+(standaard uit). Het formaat is hetzelfde als voor TCP port forwards.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 Regels in deze sectie worden uitgevoerd bij het opstarten.
@@ -1001,6 +1108,9 @@ U kunt hier uw MOUNT-lijnen plaatsen.
 .
 :CONFIG_VALID_VALUES
 Mogelijke waarden
+.
+:CONFIG_DEPRECATED_VALUES
+Deprecated values
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Geen dergelijke sectie of eigenschap: %s
@@ -1595,7 +1705,8 @@ Ze kunnen worden gewijzigd in de [color=light-yellow]toetsenmapper[reset].
 [color=yellow]%s+Pause[reset]  Emulator pauzeren/opheffen.
 [color=yellow]%s+F1[reset]   %s Start de [color=light-yellow]toetsenmapper[reset].
 [color=yellow]%s+F4[reset]   %s Verwissel gemonteerde schijfkopie, scan op wijzigingen.
-[color=yellow]%s+F5[reset]   %s Sla een schermafbeelding op.
+[color=yellow]%s+F5[reset]     Sla een weergegeven schermafbeelding op.
+[color=yellow]%s+F5[reset]   %s Sla een vooraf-weergegeven schermafbeelding op.
 [color=yellow]%s+F6[reset]   %s Start/Stop het opnemen van geluidsuitvoer naar een wave-bestand.
 [color=yellow]%s+F7[reset]   %s Start/stop het opnemen van video-uitvoer naar een zmbv-bestand.
 [color=yellow]%s+F8[reset]   %s Het geluid dempen/dempen opheffen.
@@ -1751,9 +1862,8 @@ Waar:
   Deze opdracht heeft geen parameters.
 
 Opmerkingen:
-  Deze opdracht toont de status van het DOS-geheugen, inclusief het vrije
-  conventionele geheugen, UMB (bovenste) geheugen, XMS (extended) geheugen
-  en EMS (expanded) geheugen.
+  Toont de status van het DOS-geheugen, inclusief vrij conventioneel geheugen,
+  UMB (bovenste) geheugen, XMS (extended) geheugen en EMS (expanded) geheugen.
 
 Voorbeelden:
   [color=green]mem[reset]
@@ -2079,10 +2189,8 @@ Waar:
   [color=cyan]SCHIJF[reset] is de schijf om te scannen op veranderingen.
 
 Opmerkingen:
-  - Door [color=green]rescan[reset] uit te voeren zonder een argument wordt gescand op wijzigingen
-    van de huidige drive.
-  - Wijzigingen aan deze schijf die op de host zijn aangebracht, worden
-    vervolgens weergegeven in DOS.
+  - [color=green]rescan[reset] uitvoeren zonder argumented zal enkel de huidige drive scannen.
+  - Wijzigingen die op de host zijn gemaakt, worden vervolgens weergegeven.
   - Scannen op wijzigingen op alle gekoppelde schijven kan met de optie /a.
 
 Voorbeelden:
@@ -2180,6 +2288,74 @@ Type moet een van de volgende zijn:
   %s
 
 .
+:PROGRAM_SETVER_HELP_LONG
+Bekijk of stel de DOS-versie in die wordt gerapporteerd aan toepassingen.
+
+Gebruik:
+  [color=green]setver[reset] \[/b] [/p]
+  [color=green]setver[reset] [color=cyan]BESTAND[reset] [color=cyan]VERSIE[reset] [/q]
+  [color=green]setver[reset] [color=cyan]BESTAND[reset] /d [/q]
+  [color=green]setver[reset] [color=cyan]VERSIE[reset] /g [/q]
+  [color=green]setver[reset] /d /g [/q]
+  [color=green]setver[reset] /d /all [/q]
+
+Waar:
+  [color=cyan]BESTAND[reset]  bestand (met optioneel pad) om de installingen op toe te passen.
+  [color=cyan]VERSION[reset]  DOS versiw, in [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] of [color=white]n[reset] formaat.
+  /g       globale instelling, toegepast op alle uitvoerbare bestanden.
+  /d       verwijder uit versietabel.
+  /all     tezamen met /d wordt de hele versietabel gewist.
+  /b       de lijst weergeven in een batchbestandsindeling.
+  /p       één pagina per keer weergeven.
+  /q       stil, sla bevestigingsberichten over.
+  /delete en /quiet hebben dezelfde betekenis als /d en /q, respectievelijk.
+
+Opmerkingen:
+  Voor een persistente versietabel opslag gebruik in het configuratiebestand
+  onder de [dos]-sectie, de instelling 'setver_table_file = [color=cyan]STORAGE[reset]'.
+
+Voorbeelden:
+  [color=green]setver[reset] /b              ; toon instellingen as een batchbestand
+  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; rapporteert DOS-versie 6.22 voor elk RETRO.COM-bestand
+  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] /d    ; stop met het overschrijven van de gemelde DOS versie
+
+.
+:PROGRAM_SETVER_WRONG_TABLE
+Alleen de versietabel in de map Z:\ wordt ondersteund.
+.
+:PROGRAM_SETVER_INVALID_VERSION
+Ongeldige DOS-versie.
+.
+:PROGRAM_SETVER_TABLE_UPDATED
+Versietabel bijgewerkt.
+.
+:PROGRAM_SETVER_TABLE_CLEARED
+Versietabel gewist.
+.
+:PROGRAM_SETVER_TABLE_ALREADY_EMPTY
+Versietabel reeds leeg.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_REMOVED
+Invoer verwijderd uit versietabel.
+.
+:PROGRAM_SETVER_TABLE_ENTRY_NOT_FOUND
+Invoer niet gevonden in versietabel.
+.
+:PROGRAM_SETVER_TABLE_EMPTY
+Versietabel is leeg.
+.
+:PROGRAM_SETVER_GLOBAL
+Wereldwijd gerapporteerde versie
+.
+:PROGRAM_SETVER_BATCH_GLOBAL
+regel voor elk uitvoerbaar bestand
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_NAME
+regels voor alleen matchen op bestandsnaam
+.
+:PROGRAM_SETVER_BATCH_BY_FILE_PATH
+regels voor matchen op bestandsnaam met pad
+.
 :PROGRAM_TREE_HELP_LONG
 Toont de directorystructuur in een grafische vorm.
 
@@ -2226,6 +2402,12 @@ Geen bestanden of submappen om weer te geven.
 Te veel bestanden of submappen.
 
 .
+:AUTOEXEC_BAT_GENERATED
+gegenereerd van de configuratie- en opdrachtregel
+.
+:AUTOEXEC_BAT_CONFIG_SECTION
+Van de [autoexec] sectie
+.
 :SHELL_ILLEGAL_PATH
 Illegaal pad.
 
@@ -2236,6 +2418,10 @@ Illegale optie: %s.
 .
 :SHELL_MISSING_PARAMETER
 Vereiste parameter ontbreekt.
+
+.
+:SHELL_TOO_MANY_PARAMETERS
+Teveel parameters.
 
 .
 :SHELL_SYNTAX_ERROR
@@ -2260,6 +2446,10 @@ Bestand niet gevonden - '%s'
 .
 :SHELL_FILE_EXISTS
 Bestand '%s' bestaat al.
+
+.
+:SHELL_DIRECTORY_NOT_FOUND
+Map niet gevonden - '%s'
 
 .
 :SHELL_CMD_HELP
@@ -2477,7 +2667,7 @@ Waar:
   Deze opdracht heeft geen parameters.
 
 Opmerkingen:
-  Deze opdracht is vooral handig in batchprogramma's, zodat een gebruiker de
+  Deze opdracht is bedoeld voor batchprogramma's, zodat een gebruiker de
   uitvoering van het batchprogramma kan voortzetten met een toetsdruk. De
   gebruiker kan op een willekeurige toets op het toetsenbord drukken (behalve
   bepaalde bedieningstoetsen) om door te gaan.
@@ -3122,26 +3312,22 @@ Voorbeelden:
 
 .
 :SHELL_CMD_VER_HELP
-Bekijk of stel de gerapporteerde DOS-versie in.
+Bekijk de DOS-versie.
 
 .
 :SHELL_CMD_VER_HELP_LONG
 Gebruik:
   [color=green]ver[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSIE[reset]
-
-Waar:
-  [color=cyan]VERSIE[reset] kan een geheel getal zijn, zoals [color=cyan]5[reset], of een tweecijferige decimale
-         waarde bevatten, zoals: [color=cyan]6.22[reset], [color=cyan]7.01[reset], of [color=cyan]7.10[reset]. Het decimaalteken kan ook
-         met spaties worden gescheiden, zoals: [color=cyan]6 22[reset], [color=cyan]7 01[reset] of [color=cyan]7 10[reset].
 
 Opmerkingen:
-  De DOS-versie kan ook worden ingesteld in het configuratiebestand onder de
-  sectie [dos] met de instelling "ver = [color=cyan]VERSIE[reset]".
+  De DOS-versie kan worden ingesteld in het configuratiebestand onder de [dos]
+  sectie met de instelling 'ver = [color=cyan]VERSION[reset]'.
+  De DOS-versie die aan applicaties wordt gerapporteerd, kan worden gewijzigd
+  met de opdracht [color=green]setver[reset].
+  De oude syntax '[color=green]ver[reset] [color=white]set[reset] [color=cyaan]VERSION[reset]' om de DOS-versie te wijzigen, is verouderd.
 
 Voorbeelden:
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]
+  [color=green]ver[reset]
 
 .
 :SHELL_CMD_VER_VER
@@ -3153,14 +3339,40 @@ DOS versie %d.%02d
 De opgegeven DOS-versie is niet correct.
 
 .
+:SHELL_CMD_VOL_HELP
+Geeft het schijfvolume en het serienummer weer, indien aanwezig.
+
+.
+:SHELL_CMD_VOL_HELP_LONG
+Gebruik:
+  [color=green]vol[reset] [color=cyan][SCHIJF:][reset]
+
+Waar:
+  [color=cyan]SCHIJF[reset] is een stationsletter gevolgd door een dubbele punt.
+
+Opmerkingen:
+  [color=green]vol[reset] zonder argument, gebruikt de huidige schijf.
+
+Voorbeelden:
+  [color=green]vol[reset]
+  [color=green]vol[reset] [color=cyan]c:[reset]
+
+.
+:SHELL_CMD_VOL_OUTPUT
+
+ Volume in schijf %c is %s
+ Volume Serie Nummer is %04X-%04X
+
+
+.
 :HELP_UTIL_CATEGORY_DOSBOX
 DOSBox-opdrachten
 .
 :HELP_UTIL_CATEGORY_FILE
-Bestand/Map-opdrachten
+Bestands-/mapopdrachten
 .
 :HELP_UTIL_CATEGORY_BATCH
-Opdrachten voor batchbestanden
+Batch-bestandsopdrachten
 .
 :HELP_UTIL_CATEGORY_MISC
 Diverse opdrachten
