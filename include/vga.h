@@ -280,7 +280,7 @@ struct VGA_Draw {
 	//                 stored as packed uint32 data with highest 8 bits unused
 	//
 	// clang-format on
-	Bitu bpp = 0;
+	uint8_t bpp = 0;
 
 	double host_refresh_hz = RefreshRateHostDefault;
 	double dos_refresh_hz = RefreshRateDosDefault;

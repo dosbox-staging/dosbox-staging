@@ -53,7 +53,7 @@ struct Render_t {
 		bool double_width           = false;
 		bool double_height          = false;
 		Fraction pixel_aspect_ratio = {};
-		unsigned bpp                = 0;
+		uint8_t bpp                 = 0;
 		double fps                  = 0;
 	} src = {};
 
