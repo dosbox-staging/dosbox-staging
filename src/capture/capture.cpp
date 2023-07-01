@@ -24,6 +24,7 @@
 #include <cassert>
 #include <cerrno>
 #include <cstdio>
+#include <mutex>
 
 #include "capture_audio.h"
 #include "capture_midi.h"
@@ -165,40 +166,6 @@ static const char* capture_type_to_postfix(const CaptureType type)
 	}
 }
 
-int32_t get_next_capture_index(const CaptureType type)
-{
-	switch (type) {
-	case CaptureType::Audio: return capture.next_index.audio++;
-	case CaptureType::Midi: return capture.next_index.midi++;
-
-	case CaptureType::RawOplStream:
-		return capture.next_index.raw_opl_stream++;
-
-	case CaptureType::RadOplInstruments:
-		return capture.next_index.rad_opl_instrument++;
-
-	case CaptureType::Video: return capture.next_index.video++;
-
-	case CaptureType::RawImage:
-	case CaptureType::UpscaledImage:
-	case CaptureType::RenderedImage: return capture.next_index.image++;
-
-	case CaptureType::SerialLog: return capture.next_index.serial_log++;
-
-	default: assertm(false, "Unknown CaptureType"); return 0;
-	}
-}
-
-std_fs::path generate_capture_filename(const CaptureType type, const int32_t index)
-{
-	const auto filename = format_string("%s%04d%s%s",
-	                                    capture_type_to_basename(type),
-	                                    index,
-	                                    capture_type_to_postfix(type),
-	                                    capture_type_to_extension(type));
-	return {capture.path / filename};
-}
-
 static bool create_capture_directory()
 {
 	std::error_code ec = {};
@@ -275,8 +242,14 @@ static void set_next_capture_index(const CaptureType type, int32_t index)
 	}
 }
 
-static bool create_capture_dir_and_init_capture_indices()
+static bool maybe_create_capture_dir_and_init_capture_indices()
 {
+	static std::mutex mutex = {};
+	std::lock_guard<std::mutex> lock(mutex);
+
+	if (capture.path_initialised) {
+		return true;
+	}
 	if (!create_capture_directory()) {
 		return false;
 	}
@@ -300,17 +273,54 @@ static bool create_capture_dir_and_init_capture_indices()
 		}
 	}
 
+	capture.path_initialised = true;
+
 	return true;
+}
+
+int32_t get_next_capture_index(const CaptureType type)
+{
+	if (!maybe_create_capture_dir_and_init_capture_indices()) {
+		return 0;
+	}
+
+	switch (type) {
+	case CaptureType::Audio: return capture.next_index.audio++;
+	case CaptureType::Midi: return capture.next_index.midi++;
+
+	case CaptureType::RawOplStream:
+		return capture.next_index.raw_opl_stream++;
+
+	case CaptureType::RadOplInstruments:
+		return capture.next_index.rad_opl_instrument++;
+
+	case CaptureType::Video: return capture.next_index.video++;
+
+	case CaptureType::RawImage:
+	case CaptureType::UpscaledImage:
+	case CaptureType::RenderedImage: return capture.next_index.image++;
+
+	case CaptureType::SerialLog: return capture.next_index.serial_log++;
+
+	default: assertm(false, "Unknown CaptureType"); return 0;
+	}
+}
+
+std_fs::path generate_capture_filename(const CaptureType type, const int32_t index)
+{
+	const auto filename = format_string("%s%04d%s%s",
+	                                    capture_type_to_basename(type),
+	                                    index,
+	                                    capture_type_to_postfix(type),
+	                                    capture_type_to_extension(type));
+	return {capture.path / filename};
 }
 
 FILE* CAPTURE_CreateFile(const CaptureType type,
                          const std::optional<std_fs::path>& path)
 {
-	if (!capture.path_initialised) {
-		if (!create_capture_dir_and_init_capture_indices()) {
-			return nullptr;
-		}
-		capture.path_initialised = true;
+	if (!maybe_create_capture_dir_and_init_capture_indices()) {
+		return nullptr;
 	}
 
 	std::string path_str = {};
