@@ -55,7 +55,8 @@ FILE* CAPTURE_CreateFile(const CaptureType type,
 
 // Used to add the last rendered frame to be captured either as a screenshot
 // or as a video recording (or both).
-void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second);
+void CAPTURE_AddFrame(const RenderedImage& image, const VideoMode& video_mode,
+                      const float frames_per_second);
 
 void CAPTURE_AddPostRenderImage([[maybe_unused]] const RenderedImage& image);
 

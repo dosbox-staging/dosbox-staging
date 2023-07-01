@@ -70,7 +70,8 @@ public:
 	bool IsCaptureRequested() const;
 	bool IsRenderedCaptureRequested() const;
 
-	void MaybeCaptureImage(const RenderedImage& image);
+	void MaybeCaptureImage(const RenderedImage& image,
+	                       const VideoMode& video_mode);
 
 	void CapturePostRenderImage(const RenderedImage& image);
 
@@ -96,7 +97,7 @@ private:
 	GroupedMode grouped_mode = {};
 
 	std_fs::path rendered_path    = {};
-	ImageInfo rendered_image_info = {};
+	VideoMode rendered_video_mode = {};
 
 	static constexpr auto NumImageSavers                = 3;
 	size_t current_image_saver_index                    = 0;

@@ -26,8 +26,9 @@
 #include <optional>
 #include <vector>
 
-#include "fraction.h"
 #include "image_saver.h"
+
+#include "render.h"
 
 #include <png.h>
 #include <zlib.h>
@@ -39,19 +40,13 @@ public:
 	PngWriter() = default;
 	~PngWriter();
 
-	// If `source_image_info` is specified, a textual description of the
-	// source image is written to the standard tEXt PNG chunk under the
-	// "Source" keyword. For example:
-	//
-	// source resolution: 640x350; source pixel aspect ratio: 35:48
-	// (1:1.371429)
-	//
-	bool InitRgb888(FILE* fp, const ImageInfo& image_info,
-	                const std::optional<ImageInfo>& source_image_info = {});
+	bool InitRgb888(FILE* fp, const uint16_t width, const uint16_t height,
+	                const Fraction& pixel_aspect_ratio,
+	                const VideoMode& video_mode);
 
-	bool InitIndexed8(FILE* fp, const ImageInfo& image_info,
-	                  const std::optional<ImageInfo>& source_image_info,
-	                  const uint8_t* palette_data);
+	bool InitIndexed8(FILE* fp, const uint16_t width, const uint16_t height,
+	                  const Fraction& pixel_aspect_ratio,
+	                  const VideoMode& video_mode, const uint8_t* palette_data);
 
 	void WriteRow(std::vector<uint8_t>::const_iterator row);
 
@@ -64,9 +59,10 @@ private:
 	bool Init(FILE* fp);
 	void SetPngCompressionsParams();
 
-	void WritePngInfo(const ImageInfo& image_info,
-	                  const std::optional<ImageInfo>& source_image_info,
-	                  const bool is_paletted, const uint8_t* palette_data);
+	void WritePngInfo(const uint16_t width, const uint16_t height,
+	                  const Fraction& pixel_aspect_ratio,
+	                  const VideoMode& video_mode, const bool is_paletted,
+	                  const uint8_t* palette_data);
 
 	void FinalisePng();
 

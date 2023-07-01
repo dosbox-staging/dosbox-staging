@@ -35,18 +35,11 @@
 
 enum class CapturedImageType { Raw, Upscaled, Rendered };
 
-struct ImageInfo {
-	uint16_t width              = 0;
-	uint16_t height             = 0;
-	Fraction pixel_aspect_ratio = {};
-};
-
 struct SaveImageTask {
 	RenderedImage image              = {};
+	VideoMode video_mode             = {};
 	CapturedImageType image_type     = {};
 	std::optional<std_fs::path> path = {};
-	// Only for the Rendered image type
-	std::optional<ImageInfo> source_image_info_override = {};
 };
 
 // Threaded image capturer; capture requests are placed in a FIFO queue then
@@ -91,9 +84,9 @@ public:
 	// image was saved. Consider the implications carefully; you might need
 	// to pass in a deep-copied copy of the RenderedImage instance, because
 	// you cannot know when exactly in the future will it be freed.
-	void QueueImage(const RenderedImage& image, const CapturedImageType type,
-	                const std::optional<std_fs::path>& path,
-	                const std::optional<ImageInfo>& source_image_info_override = {});
+	void QueueImage(const RenderedImage& image, const VideoMode& video_mode,
+	                const CapturedImageType type,
+	                const std::optional<std_fs::path>& path);
 
 	// prevent copying
 	ImageSaver(const ImageSaver&) = delete;
@@ -106,12 +99,13 @@ private:
 	void SaveQueuedImages();
 	void SaveImage(const SaveImageTask& task);
 
-	void SaveRawImage(const RenderedImage& image);
+	void SaveRawImage(const RenderedImage& image, const VideoMode& video_mode);
 
-	void SaveUpscaledImage(const RenderedImage& image);
+	void SaveUpscaledImage(const RenderedImage& image,
+	                       const VideoMode& video_mode);
 
 	void SaveRenderedImage(const RenderedImage& image,
-	                       const ImageInfo& source_image_info);
+	                       const VideoMode& video_mode);
 
 	void CloseOutFile();
 

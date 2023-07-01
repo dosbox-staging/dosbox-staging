@@ -265,7 +265,7 @@ void RENDER_EndUpdate(bool abort)
 
 		const auto frames_per_second = static_cast<float>(render.src.fps);
 
-		CAPTURE_AddFrame(image, frames_per_second);
+		CAPTURE_AddFrame(image, render.video_mode, frames_per_second);
 	}
 
 	if (render.scale.outWrite) {
