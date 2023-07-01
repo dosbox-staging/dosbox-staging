@@ -42,8 +42,9 @@ PngWriter::~PngWriter()
 	png_info_ptr = nullptr;
 }
 
-bool PngWriter::InitRgb888(FILE* fp, const ImageInfo& image_info,
-                           const std::optional<ImageInfo>& source_image_info)
+bool PngWriter::InitRgb888(FILE* fp, const uint16_t width, const uint16_t height,
+                           const Fraction& pixel_aspect_ratio,
+                           const VideoMode& video_mode)
 {
 	if (!Init(fp)) {
 		return false;
@@ -51,20 +52,20 @@ bool PngWriter::InitRgb888(FILE* fp, const ImageInfo& image_info,
 
 	constexpr auto is_paletted  = false;
 	constexpr auto palette_data = nullptr;
-	WritePngInfo(image_info, source_image_info, is_paletted, palette_data);
+	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, palette_data);
 	return true;
 }
 
-bool PngWriter::InitIndexed8(FILE* fp, const ImageInfo& image_info,
-                             const std::optional<ImageInfo>& source_image_info,
-                             const uint8_t* palette_data)
+bool PngWriter::InitIndexed8(FILE* fp, const uint16_t width, const uint16_t height,
+                             const Fraction& pixel_aspect_ratio,
+                             const VideoMode& video_mode, const uint8_t* palette_data)
 {
 	if (!Init(fp)) {
 		return false;
 	}
 
 	constexpr auto is_paletted = true;
-	WritePngInfo(image_info, source_image_info, is_paletted, palette_data);
+	WritePngInfo(width, height, pixel_aspect_ratio, video_mode, is_paletted, palette_data);
 	return true;
 }
 
@@ -131,8 +132,9 @@ void PngWriter::SetPngCompressionsParams()
 	png_set_compression_method(png_ptr, Z_DEFLATED);
 }
 
-void PngWriter::WritePngInfo(const ImageInfo& image_info,
-                             const std::optional<ImageInfo>& source_image_info,
+void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
+                             const Fraction& pixel_aspect_ratio,
+                             const VideoMode& video_mode,
                              const bool is_paletted, const uint8_t* palette_data)
 {
 	assert(png_ptr);
@@ -143,8 +145,8 @@ void PngWriter::WritePngInfo(const ImageInfo& image_info,
 	                                           : PNG_COLOR_TYPE_RGB;
 	png_set_IHDR(png_ptr,
 	             png_info_ptr,
-	             image_info.width,
-	             image_info.height,
+	             width,
+	             height,
 	             png_bit_depth,
 	             png_color_type,
 	             PNG_INTERLACE_NONE,
@@ -186,10 +188,10 @@ void PngWriter::WritePngInfo(const ImageInfo& image_info,
 	//   https://www.w3.org/TR/2003/REC-PNG-20031110/#11pHYs)
 	//
 	const uint32_t pixels_per_unit_x = static_cast<uint32_t>(
-	        image_info.pixel_aspect_ratio.Num());
+	        pixel_aspect_ratio.Num());
 
 	const uint32_t pixels_per_unit_y = static_cast<uint32_t>(
-	        image_info.pixel_aspect_ratio.Denom());
+	        pixel_aspect_ratio.Denom());
 
 	// "When the unit specifier is 0, the pHYs chunk defines pixel aspect
 	// ratio only; the actual size of the pixels remains unspecified."
@@ -215,28 +217,21 @@ void PngWriter::WritePngInfo(const ImageInfo& image_info,
 
 	char source_keyword[] = "Source";
 	static_assert(sizeof(source_keyword) < 80, "libpng limit");
-	std::string source_value = {};
 
-	if (source_image_info) {
-		// `source_value` must be defined in the parent scope, otherwise
-		// the std::string will be freed before png_write_info() is
-		// called and we'll get random runtime libpng crashes...
-		const auto pixel_aspect_ratio = source_image_info->pixel_aspect_ratio;
-		source_value = format_string(
-		        "source resolution: %dx%d; source pixel aspect ratio: %d:%d (1:%1.6f)",
-		        source_image_info->width,
-		        source_image_info->height,
-		        pixel_aspect_ratio.Num(),
-		        pixel_aspect_ratio.Denom(),
-		        pixel_aspect_ratio.Inverse().ToDouble());
+	const auto source_value = format_string(
+	        "source resolution: %dx%d; source pixel aspect ratio: %d:%d (1:%1.6f)",
+	        video_mode.width,
+	        video_mode.height,
+	        video_mode.pixel_aspect_ratio.Num(),
+	        video_mode.pixel_aspect_ratio.Denom(),
+	        video_mode.pixel_aspect_ratio.Inverse().ToDouble());
 
-		texts[1].compression = PNG_TEXT_COMPRESSION_NONE;
-		texts[1].key         = static_cast<png_charp>(source_keyword);
-		texts[1].text = const_cast<png_charp>(source_value.data());
-		texts[1].text_length = source_value.size();
+	texts[1].compression = PNG_TEXT_COMPRESSION_NONE;
+	texts[1].key         = static_cast<png_charp>(source_keyword);
+	texts[1].text        = const_cast<png_charp>(source_value.data());
+	texts[1].text_length = source_value.size();
 
-		++num_text;
-	}
+	++num_text;
 
 	png_set_text(png_ptr, png_info_ptr, texts, num_text);
 #endif

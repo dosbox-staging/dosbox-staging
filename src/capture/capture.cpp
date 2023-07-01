@@ -376,11 +376,11 @@ void CAPTURE_StopVideoCapture()
 	}
 }
 
-void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage& image,
-                      [[maybe_unused]] const float frames_per_second)
+void CAPTURE_AddFrame(const RenderedImage& image, const VideoMode& video_mode,
+                      const float frames_per_second)
 {
 	if (image_capturer) {
-		image_capturer->MaybeCaptureImage(image);
+		image_capturer->MaybeCaptureImage(image, video_mode);
 	}
 
 	switch (capture.state.video) {
@@ -394,7 +394,7 @@ void CAPTURE_AddFrame([[maybe_unused]] const RenderedImage& image,
 	}
 }
 
-void CAPTURE_AddPostRenderImage([[maybe_unused]] const RenderedImage& image)
+void CAPTURE_AddPostRenderImage(const RenderedImage& image)
 {
 	if (image_capturer) {
 		image_capturer->CapturePostRenderImage(image);
@@ -548,7 +548,7 @@ static void handle_capture_video_event(bool pressed)
 	}
 }
 
-static void capture_destroy([[maybe_unused]] Section* sec)
+static void capture_destroy(Section* sec)
 {
 	if (capture.state.audio == CaptureState::InProgress) {
 		capture_audio_finalise();

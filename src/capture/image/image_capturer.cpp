@@ -110,7 +110,8 @@ bool ImageCapturer::IsRenderedCaptureRequested() const
 	       (state.grouped != CaptureState::Off && grouped_mode.wants_rendered);
 }
 
-void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
+void ImageCapturer::MaybeCaptureImage(const RenderedImage& image,
+                                      const VideoMode& video_mode)
 {
 	// No new image capture requests until we finish queuing the current
 	// grouped capture request, otherwise we can get into all sorts of race
@@ -166,12 +167,14 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
 	if (do_raw) {
 		GetNextImageSaver().QueueImage(
 		        image.deep_copy(),
+		        video_mode,
 		        CapturedImageType::Raw,
 		        generate_capture_filename(CaptureType::RawImage, index));
 	}
 	if (do_upscaled) {
 		GetNextImageSaver().QueueImage(
 		        image.deep_copy(),
+		        video_mode,
 		        CapturedImageType::Upscaled,
 		        generate_capture_filename(CaptureType::UpscaledImage, index));
 	}
@@ -180,25 +183,23 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
 		rendered_path = generate_capture_filename(CaptureType::RenderedImage,
 		                                          index);
 
-		// We need to propagate the image info to the PNG writer
-		// so we can include the source image metadata.
-		rendered_image_info = {image.width,
-		                       image.height,
-		                       image.pixel_aspect_ratio};
+		// We need to propagate the video mode to the PNG writer so we
+		// can include the source image metadata.
+		rendered_video_mode = video_mode;
 	}
 }
 
 void ImageCapturer::CapturePostRenderImage(const RenderedImage& image)
 {
 	GetNextImageSaver().QueueImage(image,
+	                               rendered_video_mode,
 	                               CapturedImageType::Rendered,
-	                               rendered_path,
-	                               rendered_image_info);
+	                               rendered_path);
 
 	state.rendered = CaptureState::Off;
 
-	// In grouped capture mode, adding the post-render image is always the
-	// last step, so we can safely clear the flag here.
+	// In grouped capture mode, adding the post-render image is
+	// always the last step, so we can safely clear the flag here.
 	state.grouped = CaptureState::Off;
 }
 

@@ -67,9 +67,9 @@ void ImageSaver::Close()
 	is_open = false;
 }
 
-void ImageSaver::QueueImage(const RenderedImage& image, const CapturedImageType type,
-                            const std::optional<std_fs::path>& path,
-                            const std::optional<ImageInfo>& source_image_info_override)
+void ImageSaver::QueueImage(const RenderedImage& image, const VideoMode& video_mode,
+                            const CapturedImageType type,
+                            const std::optional<std_fs::path>& path)
 {
 	if (!image_fifo.IsRunning()) {
 		LOG_WARNING("CAPTURE: Cannot create screenshots while image capturer"
@@ -77,7 +77,7 @@ void ImageSaver::QueueImage(const RenderedImage& image, const CapturedImageType 
 		return;
 	}
 
-	SaveImageTask task = {image, type, path, source_image_info_override};
+	SaveImageTask task = {image, video_mode, type, path};
 	image_fifo.Enqueue(std::move(task));
 }
 
@@ -109,15 +109,14 @@ void ImageSaver::SaveImage(const SaveImageTask& task)
 	}
 
 	switch (task.image_type) {
-	case CapturedImageType::Raw: SaveRawImage(task.image); break;
-	case CapturedImageType::Upscaled: SaveUpscaledImage(task.image); break;
+	case CapturedImageType::Raw:
+		SaveRawImage(task.image, task.video_mode);
+		break;
+	case CapturedImageType::Upscaled:
+		SaveUpscaledImage(task.image, task.video_mode);
+		break;
 	case CapturedImageType::Rendered:
-		assertm(task.source_image_info_override,
-		        "source_image_info_override must be provided for rendered images");
-		if (task.source_image_info_override) {
-			SaveRenderedImage(task.image,
-			                  *task.source_image_info_override);
-		}
+		SaveRenderedImage(task.image, task.video_mode);
 		break;
 	}
 
@@ -125,19 +124,26 @@ void ImageSaver::SaveImage(const SaveImageTask& task)
 }
 
 static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
-                               ImageScaler& image_scaler, const ImageInfo& image_info,
-                               const std::optional<ImageInfo>& source_image_info,
+                               ImageScaler& image_scaler, const uint16_t width,
+                               const uint16_t height,
+                               const Fraction& pixel_aspect_ratio,
+                               const VideoMode& video_mode,
                                const uint8_t* palette_data)
 {
 	switch (image_scaler.GetOutputPixelFormat()) {
 	case PixelFormat::Indexed8:
-		if (!png_writer.InitIndexed8(
-		            outfile, image_info, source_image_info, palette_data)) {
+		if (!png_writer.InitIndexed8(outfile,
+		                             width,
+		                             height,
+		                             pixel_aspect_ratio,
+		                             video_mode,
+		                             palette_data)) {
 			return;
 		}
 		break;
 	case PixelFormat::Rgb888:
-		if (!png_writer.InitRgb888(outfile, image_info, source_image_info)) {
+		if (!png_writer.InitRgb888(
+		            outfile, width, height, pixel_aspect_ratio, video_mode)) {
 			return;
 		}
 		break;
@@ -150,57 +156,59 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
 	}
 }
 
-void ImageSaver::SaveRawImage(const RenderedImage& image)
+void ImageSaver::SaveRawImage(const RenderedImage& image, const VideoMode& video_mode)
 {
 	PngWriter png_writer = {};
 
 	image_scaler.Init(image, ScalingMode::DoublingOnly);
 
-	const ImageInfo image_info = {image_scaler.GetOutputWidth(),
-	                              image_scaler.GetOutputHeight(),
-	                              image.pixel_aspect_ratio};
-
-	constexpr std::optional<ImageInfo> no_source_image_info = {};
+	// Write the pixel aspect ratio of the video mode into the PNG pHYs
+	// chunk for raw images
+	const auto pixel_aspect_ratio = video_mode.pixel_aspect_ratio;
 
 	write_upscaled_png(outfile,
 	                   png_writer,
 	                   image_scaler,
-	                   image_info,
-	                   no_source_image_info,
+	                   image_scaler.GetOutputWidth(),
+	                   image_scaler.GetOutputHeight(),
+	                   pixel_aspect_ratio,
+	                   video_mode,
 	                   image.palette_data);
 }
 
-void ImageSaver::SaveUpscaledImage(const RenderedImage& image)
+static auto square_pixel_aspect_ratio = Fraction{1};
+
+void ImageSaver::SaveUpscaledImage(const RenderedImage& image,
+                                   const VideoMode& video_mode)
 {
 	PngWriter png_writer = {};
 
 	image_scaler.Init(image, ScalingMode::AspectRatioPreservingUpscale);
 
-	const auto square_pixel_aspect_ratio = Fraction{1};
-
-	const ImageInfo image_info = {image_scaler.GetOutputWidth(),
-	                              image_scaler.GetOutputHeight(),
-	                              square_pixel_aspect_ratio};
-
-	const ImageInfo source_image_info = {image.width,
-	                                     image.height,
-	                                     image.pixel_aspect_ratio};
+	// Always write 1:1 pixel aspect ratio into the PNG pHYs chunk for
+	// upscaled image
 	write_upscaled_png(outfile,
 	                   png_writer,
 	                   image_scaler,
-	                   image_info,
-	                   source_image_info,
+	                   image_scaler.GetOutputWidth(),
+	                   image_scaler.GetOutputHeight(),
+	                   square_pixel_aspect_ratio,
+	                   video_mode,
 	                   image.palette_data);
 }
 
 void ImageSaver::SaveRenderedImage(const RenderedImage& image,
-                                   const ImageInfo& source_image_info)
+                                   const VideoMode& video_mode)
 {
 	PngWriter png_writer = {};
 
-	const ImageInfo image_info = {image.width, image.height, image.pixel_aspect_ratio};
-
-	if (!png_writer.InitRgb888(outfile, image_info, source_image_info)) {
+	// Always write 1:1 pixel aspect ratio into the PNG pHYs chunk for
+	// upscaled image
+	if (!png_writer.InitRgb888(outfile,
+	                           image.width,
+	                           image.height,
+	                           square_pixel_aspect_ratio,
+	                           video_mode)) {
 		return;
 	};
 
