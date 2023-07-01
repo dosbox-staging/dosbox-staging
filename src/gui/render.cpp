@@ -489,7 +489,7 @@ static void RENDER_CallBack(GFX_CallBackFunctions_t function)
 	}
 }
 
-void RENDER_SetSize(const uint32_t width, const uint32_t height,
+void RENDER_SetSize(const uint16_t width, const uint16_t height,
                     const bool double_width, const bool double_height,
                     const Fraction& render_pixel_aspect_ratio,
                     const uint8_t bits_per_pixel,

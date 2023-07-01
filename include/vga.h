@@ -219,9 +219,9 @@ enum class VgaDoubleScanHandling : int8_t {
 };
 
 struct VGA_Draw {
-	bool resizing = false;
-	Bitu width    = 0;
-	Bitu height   = 0;
+	bool resizing   = false;
+	uint16_t width  = 0;
+	uint16_t height = 0;
 
 	uint32_t blocks             = 0;
 	Bitu address                = 0;
