@@ -63,10 +63,10 @@ struct Render_t {
 	//   - double_height = false (we're rendering scan-doubled)
 	struct {
 		// Width of the rendered image (prior to optional width-doubling)
-		uint32_t width = 0;
+		uint16_t width = 0;
 
 		// Height of the rendered image (prior to optional height-doubling)
-		uint32_t height = 0;
+		uint16_t height = 0;
 
 		// If true, the rendered image is doubled horizontally after via
 		// a scaler (e.g. to achieve pixel-doubling)
@@ -229,7 +229,7 @@ extern ScalerLineHandler_t RENDER_DrawLine;
 
 std::deque<std::string> RENDER_InventoryShaders();
 
-void RENDER_SetSize(const uint32_t width, const uint32_t height,
+void RENDER_SetSize(const uint16_t width, const uint16_t height,
                     const bool double_width, const bool double_height,
                     const Fraction& render_pixel_aspect_ratio,
                     const uint8_t bits_per_pixel,

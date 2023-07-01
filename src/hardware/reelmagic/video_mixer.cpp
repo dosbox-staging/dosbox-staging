@@ -191,8 +191,8 @@ VGA32bppPixel VGAPalettePixel::_vgaPalette32bpp[256] = {};
 VGA16bppPixel VGAPalettePixel::_vgaPalette16bpp[256] = {};
 uint8_t VGAOverPalettePixel::_alphaChannelIndex      = 0;
 
-static uint32_t _vgaWidth  = 0;
-static uint32_t _vgaHeight = 0;
+static uint16_t _vgaWidth  = 0;
+static uint16_t _vgaHeight = 0;
 
 static bool _vgaDoubleWidth  = false;
 static bool _vgaDoubleHeight = false;
@@ -708,7 +708,7 @@ void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t 
 	RENDER_SetPal(entry, red, green, blue);
 }
 
-void ReelMagic_RENDER_SetSize(const uint32_t width, const uint32_t height,
+void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
                               const bool double_width, const bool double_height,
                               const Fraction& render_pixel_aspect_ratio,
                               const uint8_t bits_per_pixel,
