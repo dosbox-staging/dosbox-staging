@@ -554,7 +554,7 @@ static void draw_cursor()
 	INT10_SetCurMode();
 
 	// In Textmode ?
-	if (CurMode->type == M_TEXT) {
+	if (CurMode->type & M_TEXT_MODES) {
 		draw_cursor_text();
 		return;
 	}
@@ -850,10 +850,10 @@ void MOUSEDOS_NotifyMinRate(const uint16_t value_hz)
 
 void MOUSEDOS_BeforeNewVideoMode()
 {
-	if (CurMode->type != M_TEXT) {
-		restore_cursor_background();
-	} else {
+	if (CurMode->type & M_TEXT_MODES) {
 		restore_cursor_background_text();
+	} else {
+		restore_cursor_background();
 	}
 
 	state.hidden             = 1;
@@ -872,7 +872,7 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 
 	const bool is_svga_mode = IS_VGA_ARCH &&
 	                          (bios_screen_mode > last_non_svga_mode);
-	const bool is_svga_text = is_svga_mode && (CurMode->type == M_TEXT);
+	const bool is_svga_text = is_svga_mode && (CurMode->type & M_TEXT_MODES);
 
 	// Perform common actions - clear pending mouse events, etc.
 
@@ -1125,7 +1125,7 @@ static void move_cursor_seamless(const float x_rel, const float y_rel,
 
 	// TODO: this is probably overcomplicated, especially
 	// the usage of relative movement - to be investigated
-	if (CurMode->type == M_TEXT) {
+	if (CurMode->type & M_TEXT_MODES) {
 		pos_x = x * 8;
 		pos_x *= INT10_GetTextColumns();
 		pos_y = y * 8;
@@ -1355,10 +1355,10 @@ static Bitu int33_handler()
 		draw_cursor();
 		break;
 	case 0x02: // MS MOUSE v1.0+ - hide mouse cursor
-		if (CurMode->type != M_TEXT) {
-			restore_cursor_background();
-		} else {
+		if (CurMode->type & M_TEXT_MODES) {
 			restore_cursor_background_text();
+		} else {
+			restore_cursor_background();
 		}
 		++state.hidden;
 		break;
