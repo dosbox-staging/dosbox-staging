@@ -18,12 +18,17 @@ Do some verification:
     $ rpmlint ~/rpmbuild/RPMS/x86_64/dosbox-staging-*
     $ rpmlint ~/rpmbuild/SRPMS/dosbox-staging-*
 
+Validate build using mock:
+  mock will do a build in a clean chroot environment. This is useful to check
+  if all all the necessary BuildRequires are specified to do a clean build:
+    $ mock -r default ~/rpmbuild/SRPMS/dosbox-staging-0.80.1-1.src.rpm
+
 Fedora build (via Koji buildsystem):
 
     $ sudo dnf install -y fedora-packager
     $ echo "<user>" > ~/.fedora.upn
     $ kinit <user>@FEDORAPROJECT.ORG
-    $ koji build --scratch rawhide ~/rpmbuild/SRPMS/dosbox-staging-0.77.0-*
+    $ koji build --scratch rawhide ~/rpmbuild/SRPMS/dosbox-staging-0.80.1-*
 
 Koji will print build status and URL (Task info).
 

@@ -23,7 +23,7 @@ example, the **debug** and **release** configurations can reside in
 `build/debug` and `build/release`, respectively.
 
 We recommend setting the following Ccache environment variables to maximize
-the use of storage and benefit from precompiled headers:
+the use of storage and benefit from pre-compiled headers:
 
 ```shell
 CCACHE_COMPRESS=true
@@ -91,12 +91,12 @@ meson compile -C build/release-tracy
 
 If using Visual Studio, select the `Tracy` build configuration.
 
-We have instrumented a very small core of subsystem functions for baseline 
+We have instrumented a very small core of subsystem functions for baseline
 demonstration purposes. You can add additional profiling macros to your functions
 of interest.
 
 The resulting binary requires the Tracy profiler server to view profiling
-data. If using Meson on a *nix system, switch to 
+data. If using Meson on a *nix system, switch to
 `subprojects/tracy.x.x.x.x/profiler/build/unix` and run `make`
 
 If using Windows, binaries are available from the [releases](https://github.com/wolfpld/tracy/releases)
@@ -106,7 +106,7 @@ page, or you can build it locally with Visual Studio using the solution at
 Start the instrumented Staging binary, then start the server. You should see
 Staging as an available client for Connect.
 
-You can also run the server on a different machine on the network, even on a 
+You can also run the server on a different machine on the network, even on a
 different platform, profiling Linux from Windows or vice versa, for example.
 
 Please refer to the Tracy documentation for further information.
@@ -115,13 +115,13 @@ Please refer to the Tracy documentation for further information.
 
 By default, the Meson build system will lookup shared (or dynamic)
 libraries using PATH-provided pkg-config or cmake.  If they're not
-avaiable or usable, Meson's wrap system will will build local static
+available or usable, Meson's wrap system will will build local static
 libraries to meet this need.
 
 If your environment requires all dependencies be provided by the system,
 then you can disable the wrap system using Meson's setup flag:
 `-Dwrap_mode=nofallback`.  However, this will require the operating
-system satify all of DOSBox Staging's library dependencies.
+system satisfy all of DOSBox Staging's library dependencies.
 
 Detailed documentation: [Meson: Core options][meson-core]
 
@@ -155,7 +155,7 @@ meson configure build
 ```
 
 Options can be passed to the `meson setup` command using `-Doption=value`
-notation or using comma-separated notation (ie: `-Doption=value1,value2,value3`)
+notation or using comma-separated notation (i.e.: `-Doption=value1,value2,value3`)
 when the option supports multiple values.
 
 ### If your build fails
@@ -170,7 +170,7 @@ when the option supports multiple values.
 3. If the build fails with errors from the compiler (gcc/clang/msvc)
    or linker, then please open a new issue.
 
-4. If Meson reports a problem with a subpackage, try resetting it
+4. If Meson reports a problem with a sub-package, try resetting it
    with `meson subprojects update --reset name-of-subpackage`. For example,
    to reset FluidSynth: `meson subprojects update --reset fluidsynth`.
 
@@ -291,7 +291,7 @@ meson compile -C build/debug scan-build
 Recent compilers can add runtime checks for various classes of issues.
 Compared to a debug build, sanitizer builds take longer to compile
 and run slower, so are often reserved to exercise new features or
-perform a periodic whole-program checkup.
+perform a periodic whole-program check-up.
 
 - **Linux users:**:  We recommend using Clang's latest
 stable version. If you're using a Debian or Ubuntu-based distro,
@@ -317,6 +317,5 @@ The directory `build/sanitizer` will contain the compiled files, which
 will leave your normal `build/` files untouched.
 
 Run the sanitizer binary as you normally would, then exit and look for
-sanitizer mesasge in the log output.  If none exist, then your program
+sanitizer messages in the log output.  If none exist, then your program
 is running clean.
-
