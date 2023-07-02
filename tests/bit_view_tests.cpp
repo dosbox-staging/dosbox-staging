@@ -28,9 +28,10 @@ namespace {
 
 union Register {
 	uint8_t data = 0;
-	bit_view<0, 2> first_2;  // is bits 0 and 1
-	bit_view<2, 3> middle_3; // is bits 2, 3, and 4
-	bit_view<5, 3> last_3;   // is bits 5, 6, and 7
+	bit_view<0, 2> first_2;        // is bits 0 and 1
+	bit_view<0, 2> first_2_alias;  // is an alias to bits 0 and 1
+	bit_view<2, 3> middle_3;       // is bits 2, 3, and 4
+	bit_view<5, 3> last_3;         // is bits 5, 6, and 7
 };
 
 // function to take in and return a Register by value
@@ -175,6 +176,22 @@ TEST(bit_view, assign_from_disparate_parts)
 	//          assignment
 	//
 	// r2.first_bit = r1.first_2;
+}
+
+TEST(bit_view, read_by_alias)
+{
+	Register r1 = {0b111'000'10};
+
+	EXPECT_EQ(r1.first_2_alias, 0b10);
+}
+
+TEST(bit_view, assign_by_alias)
+{
+	Register r1 = {0b111'000'10};
+
+	r1.first_2_alias = 0b01;
+
+	EXPECT_EQ(r1.first_2, 0b01);
 }
 
 TEST(bit_view, flip)
