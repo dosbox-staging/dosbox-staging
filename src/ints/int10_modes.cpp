@@ -585,6 +585,10 @@ static void init_all_palettes(const cga_colors_t &cga_colors)
 
 video_mode_block_iterator_t CurMode = std::prev(ModeList_VGA.end());
 
+static void log_invalid_video_mode_error(const uint16_t mode) {
+	LOG_ERR("INT10H: Trying to set invalid video mode: %02Xh", mode);
+}
+
 static bool SetCurMode(const std::vector<VideoModeBlock> &modeblock, uint16_t mode)
 {
 	size_t i = 0;
@@ -668,7 +672,9 @@ void INT10_SetCurMode(void) {
 			break;
 		}
 
-		if (mode_changed) LOG(LOG_INT10,LOG_WARN)("BIOS video mode changed to %X",bios_mode);
+		if (mode_changed) {
+		//	LOG_MSG("INT10H: BIOS video mode changed to %02Xh", bios_mode);
+		}
 	}
 }
 
@@ -772,9 +778,9 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	case MCH_PCJR:
 	case MCH_TANDY:
 		if (mode>0xa) return false;
-		if (mode==7) mode=0; // PCJR defaults to 0 on illegal mode 7
+		if (mode==7) mode=0; // PCJR defaults to 0 on invalid mode 7
 		if (!SetCurMode(ModeList_OTHER,mode)) {
-			LOG(LOG_INT10,LOG_ERROR)("Trying to set illegal mode %X",mode);
+			log_invalid_video_mode_error(mode);
 			return false;
 		}
 		break;
@@ -782,8 +788,7 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		// Allow standard color modes if equipment word is not set to mono (Victory Road)
 		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30 && mode<7) {
 			if (!SetCurMode(ModeList_OTHER, mode)) {
-				LOG(LOG_INT10, LOG_ERROR)
-				("Trying to set illegal mode %X", mode);
+				log_invalid_video_mode_error(mode);
 				return false;
 			}
 			FinishSetMode(clearmem);
@@ -799,7 +804,6 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		assert(false);
 		break;
 	}
-	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
 
 	//  Setup the VGA to the correct mode
 	//	VGA_SetMode(CurMode->type);
@@ -1014,7 +1018,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 		mode -= 0x80;
 	}
 	int10.vesa_setmode=0xffff;
-	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
+	// LOG_MSG("INT10H: Setting BIOS video mode %02Xh", mode);
 
 	if (!IS_EGAVGA_ARCH)
 		return INT10_SetVideoMode_OTHER(mode, clearmem);
@@ -1033,26 +1037,26 @@ bool INT10_SetVideoMode(uint16_t mode)
 		case SVGA_TsengET4K:
 		case SVGA_TsengET3K:
 			if (!SetCurMode(ModeList_VGA_Tseng,mode)){
-				LOG(LOG_INT10,LOG_ERROR)("VGA:Trying to set illegal mode %X",mode);
+				log_invalid_video_mode_error(mode);
 				return false;
 			}
 			break;
 		case SVGA_ParadisePVGA1A:
 			if (!SetCurMode(ModeList_VGA_Paradise,mode)){
-				LOG(LOG_INT10,LOG_ERROR)("VGA:Trying to set illegal mode %X",mode);
+				log_invalid_video_mode_error(mode);
 				return false;
 			}
 			break;
 		default:
 			if (!SetCurMode(ModeList_VGA, mode)) {
-				LOG(LOG_INT10,LOG_ERROR)("VGA:Trying to set illegal mode %X",mode);
+				log_invalid_video_mode_error(mode);
 				return false;
 			}
 		}
 		if (CurMode->type==M_TEXT) SetTextLines();
 	} else {
 		if (!SetCurMode(ModeList_EGA,mode)){
-			LOG(LOG_INT10,LOG_ERROR)("EGA:Trying to set illegal mode %X",mode);
+			log_invalid_video_mode_error(mode);
 			return false;
 		}
 	}
@@ -1940,7 +1944,7 @@ static cga_colors_t handle_cga_colors_prefs_tandy(const std::string &cga_colors_
 			                                           brown_level);
 			return cga_colors;
 		} else {
-			LOG_WARNING("INT10: Invalid brown level value for 'tandy' CGA colors: '%s', "
+			LOG_WARNING("INT10H: Invalid brown level value for 'tandy' CGA colors: '%s', "
 			            "using default brown level of %3.2f",
 			            brown_level_pref.c_str(),
 			            default_brown_level * 100);
@@ -1978,7 +1982,7 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string &cga_color
 			}
 			return cga_colors;
 		} else {
-			LOG_WARNING("INT10: Invalid contrast value for 'ibm5153' CGA colors: '%s', "
+			LOG_WARNING("INT10H: Invalid contrast value for 'ibm5153' CGA colors: '%s', "
 			            "using default contrast of %3.2f",
 			            contrast_pref.c_str(),
 			            default_contrast * 100);
@@ -2061,7 +2065,7 @@ std::optional<RGBEntry> parse_color_token(const std::string &token,
 		return {};
 
 	auto log_warning = [&](const std::string &message) {
-		LOG_WARNING("INT10: Error parsing 'cga_colors' color value '%s' at index %u: %s",
+		LOG_WARNING("INT10H: Error parsing 'cga_colors' color value '%s' at index %u: %s",
 		            token.c_str(),
 		            color_index,
 		            message.c_str());
@@ -2168,7 +2172,7 @@ std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs
 	const auto tokens = tokenize_cga_colors_pref(cga_colors_prefs);
 
 	if (tokens.size() != num_cga_colors) {
-		LOG_WARNING("INT10: Invalid 'cga_colors' value: 16 colors must be specified "
+		LOG_WARNING("INT10H: Invalid 'cga_colors' value: 16 colors must be specified "
 				    "(found only %u)", static_cast<uint32_t>(tokens.size()));
 		return {};
 	}
@@ -2207,7 +2211,7 @@ static cga_colors_t configure_cga_colors()
 	const std::string cga_colors_prefs = render_section->Get_string("cga_colors");
 
 	if (cga_colors_prefs.empty()) {
-		LOG_WARNING("INT10: No value specified for 'cga_colors', using default CGA colors");
+		LOG_WARNING("INT10H: No value specified for 'cga_colors', using default CGA colors");
 		return cga_colors_default;
 	}
 
@@ -2252,7 +2256,7 @@ static cga_colors_t configure_cga_colors()
 	else {
 		const auto cga_colors = parse_cga_colors(cga_colors_prefs);
 		if (!cga_colors) {
-			LOG_WARNING("INT10: Using default CGA colors");
+			LOG_WARNING("INT10H: Using default CGA colors");
 		}
 		return cga_colors.value_or(cga_colors_default);
 	}
