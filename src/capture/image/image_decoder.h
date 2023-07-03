@@ -74,8 +74,6 @@ private:
 		assert(pos - curr_row_start < image.pitch);
 		const auto pal_index = *pos++;
 
-		assert((pal_index * 4 + 2) < 256);
-
 		const auto r = image.palette_data[pal_index * 4 + 0];
 		const auto g = image.palette_data[pal_index * 4 + 1];
 		const auto b = image.palette_data[pal_index * 4 + 2];
