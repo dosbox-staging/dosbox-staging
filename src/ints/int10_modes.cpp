@@ -25,16 +25,20 @@
 #include <optional>
 #include <vector>
 
+#include "bitops.h"
 #include "inout.h"
 #include "math_utils.h"
 #include "setup.h"
 #include "string_utils.h"
-#include "video.h"
 #include "vga.h"
+#include "video.h"
 
 #define SEQ_REGS 0x05
 #define GFX_REGS 0x09
 #define ATT_REGS 0x15
+
+using namespace bit;
+using namespace bit::literals;
 
 // clang-format off
 std::vector<VideoModeBlock> ModeList_VGA = {
@@ -992,14 +996,22 @@ bool INT10_SetVideoMode(uint16_t mode)
 {
 	bool clearmem = true;
 	Bitu i;
-	if (mode>=0x100) {
-		if ((mode & 0x4000) && int10.vesa_nolfb) return false;
-		if (mode & 0x8000) clearmem=false;
-		mode&=0xfff;
+
+	const auto UseLinearFramebuffer    = is(mode, b14);
+	const auto DoNotClearDisplayMemory = is(mode, b15);
+
+	if (mode >= MinVesaMode) {
+		if (UseLinearFramebuffer && int10.vesa_nolfb) {
+			return false;
+		}
+		if (DoNotClearDisplayMemory) {
+			clearmem = false;
+		}
+		mode &= 0xfff;
 	}
-	if ((mode<0x100) && (mode & 0x80)) {
-		clearmem=false;
-		mode-=0x80;
+	if ((mode <= MinVesaMode) && (mode & 0x80)) {
+		clearmem = false;
+		mode -= 0x80;
 	}
 	int10.vesa_setmode=0xffff;
 	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
@@ -1410,7 +1422,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 
 	if (svgaCard == SVGA_S3Trio) {
 		//  Setup the correct clock
-		if (CurMode->mode>=0x100) {
+		if (CurMode->mode >= MinVesaMode) {
 			if (CurMode->vdispend>480)
 				misc_output|=0xc0;	//480-line sync
 			misc_output|=0x0c;		//Select clock 3
