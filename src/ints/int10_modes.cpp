@@ -1115,16 +1115,16 @@ bool INT10_SetVideoMode(uint16_t mode)
 		seq_data[2]|=0xf;				//Enable all planes for writing
 		seq_data[4]|=0xc;				//Graphics - odd/even - Chained
 		break;
-	case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
-	case M_CGA2_COMPOSITE:     // only in MCH_CGA
-	case M_CGA4_COMPOSITE:     // only in MCH_CGA
-	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
-	case M_TANDY2:             // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-	case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-	case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
-	case M_TANDY_TEXT: // only in MCH_CGA, MCH_TANDY
-	case M_HERC_TEXT:  // only in MCH_HERC
-	case M_HERC_GFX:   // only in MCH_HERC
+	case M_CGA16:
+	case M_CGA2_COMPOSITE:
+	case M_CGA4_COMPOSITE:
+	case M_CGA_TEXT_COMPOSITE:
+	case M_TANDY2:
+	case M_TANDY4:
+	case M_TANDY16:
+	case M_TANDY_TEXT:
+	case M_HERC_TEXT:
+	case M_HERC_GFX:
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
 		// with MCH_EGA and MCH_VGA.
@@ -1378,16 +1378,16 @@ bool INT10_SetVideoMode(uint16_t mode)
 		if (CurMode->special & VGA_PIXEL_DOUBLE)
 			mode_control |= 0x08;
 		break;
-	case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
-	case M_CGA2_COMPOSITE:     // only in MCH_CGA
-	case M_CGA4_COMPOSITE:     // only in MCH_CGA
-	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
-	case M_TANDY2:             // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-	case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-	case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
-	case M_TANDY_TEXT: // only in MCH_CGA, MCH_TANDY
-	case M_HERC_TEXT:  // only in MCH_HERC
-	case M_HERC_GFX:   // only in MCH_HERC
+	case M_CGA16:
+	case M_CGA2_COMPOSITE:
+	case M_CGA4_COMPOSITE:
+	case M_CGA_TEXT_COMPOSITE:
+	case M_TANDY2:
+	case M_TANDY4:
+	case M_TANDY16:
+	case M_TANDY_TEXT:
+	case M_HERC_TEXT:
+	case M_HERC_GFX:
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
 		// with MCH_EGA and MCH_VGA.
@@ -1491,16 +1491,16 @@ bool INT10_SetVideoMode(uint16_t mode)
 			gfx_data[0x6]|=0x0f;		//graphics mode at at 0xb800=0xbfff
 		}
 		break;
-	case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
-	case M_CGA2_COMPOSITE:     // only in MCH_CGA
-	case M_CGA4_COMPOSITE:     // only in MCH_CGA
-	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
-	case M_TANDY2:             // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-	case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-	case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
-	case M_TANDY_TEXT: // only in MCH_CGA, MCH_TANDY
-	case M_HERC_TEXT:  // only in MCH_HERC
-	case M_HERC_GFX:   // only in MCH_HERC
+	case M_CGA16:
+	case M_CGA2_COMPOSITE:
+	case M_CGA4_COMPOSITE:
+	case M_CGA_TEXT_COMPOSITE:
+	case M_TANDY2:
+	case M_TANDY4:
+	case M_TANDY16:
+	case M_TANDY_TEXT:
+	case M_HERC_TEXT:
+	case M_HERC_GFX:
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
 		// with MCH_EGA and MCH_VGA.
@@ -1608,16 +1608,16 @@ att_text16:
 		for (uint8_t ct=0;ct<16;ct++) att_data[ct]=ct;
 		att_data[0x10]=0x41;		//Color Graphics 8-bit
 		break;
-	case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
-	case M_CGA2_COMPOSITE:     // only in MCH_CGA
-	case M_CGA4_COMPOSITE:     // only in MCH_CGA
-	case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
-	case M_TANDY2:             // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-	case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-	// case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
-	case M_TANDY_TEXT: // only in MCH_CGA, MCH_TANDY
-	case M_HERC_TEXT:  // only in MCH_HERC
-	case M_HERC_GFX:   // only in MCH_HERC
+	case M_CGA16:
+	case M_CGA2_COMPOSITE:
+	case M_CGA4_COMPOSITE:
+	case M_CGA_TEXT_COMPOSITE:
+	case M_TANDY2:
+	case M_TANDY4:
+	// case M_TANDY16:
+	case M_TANDY_TEXT:
+	case M_HERC_TEXT:
+	case M_HERC_GFX:
 	case M_ERROR:
 		// This code should be unreachable, as this function deals only
 		// with MCH_EGA and MCH_VGA.
@@ -1676,16 +1676,16 @@ dac_text16:
 			// Palette index is left at 0xf8 as on most clones, IBM leaves it at 0x10.
 			write_palette_dac_data(palette.vga);
 			break;
-		case M_CGA16:              // only in MCH_TANDY, MCH_PCJR
-		case M_CGA2_COMPOSITE:     // only in MCH_CGA
-		case M_CGA4_COMPOSITE:     // only in MCH_CGA
-		case M_CGA_TEXT_COMPOSITE: // only in MCH_CGA
-		case M_TANDY2:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-		case M_TANDY4:     // only in MCH_CGA, MCH_TANDY, MCH_PCJR
-		// case M_TANDY16:    // only in MCH_TANDY, MCH_PCJR
-		case M_TANDY_TEXT: // only in MCH_CGA, MCH_TANDY
-		case M_HERC_TEXT:  // only in MCH_HERC
-		case M_HERC_GFX:   // only in MCH_HERC
+		case M_CGA16:
+		case M_CGA2_COMPOSITE:
+		case M_CGA4_COMPOSITE:
+		case M_CGA_TEXT_COMPOSITE:
+		case M_TANDY2:
+		case M_TANDY4:
+		// case M_TANDY16:
+		case M_TANDY_TEXT:
+		case M_HERC_TEXT:
+		case M_HERC_GFX:
 		case M_ERROR:
 			// This code should be unreachable, as this function deals only
 			// with MCH_EGA and MCH_VGA.

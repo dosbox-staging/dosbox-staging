@@ -35,29 +35,82 @@
 
 class PageHandler;
 
+// These tags are assigned to video modes primarily based on their memory
+// organisation, *not* the name of the graphics adapter that first introduced
+// them. That's why for example all planar 16-colour modes get the M_EGA tag,
+// including the 640x480 16-colour VGA mode, and M_VGA is only used for the
+// "chunky" ("chained") 320x200 256-colour 13H VGA mode and its many tweaked
+// "Mode X" variants, while all other 256-colour SVGA/VESA modes get the
+// M_LIN8 tag.
+//
 enum VGAModes {
+	// 640x200 monochrome CGA mode on EGA & VGA
 	M_CGA2 = 1 << 0,
+
+	// 320x200 4-colour CGA mode on EGA & VGA
 	M_CGA4 = 1 << 1,
+
+	// 640x480 monochrome EGA mode
+	// All 16-colour EGA and VGA modes
 	M_EGA = 1 << 2,
+
+	// 320x200 256-colour "chunky" or "chanined" VGA mode (mode 13h)
+	// Also its numerous tweaked "Mode X" variants (e.g. 320x240, 360x240,
+	// 320x400, 256x256, etc.) that use mode 13h as a starting point.
 	M_VGA = 1 << 3,
+
+	// 16-colour SVGA & VESA modes
 	M_LIN4 = 1 << 4,
+
+	// 256-colour SVGA & VESA modes (other than mode 13h)
 	M_LIN8 = 1 << 5,
+
+	// 15-bit high colour (32K-colour) VESA modes
 	M_LIN15 = 1 << 6,
+
+	// 16-bit high colour (65K-colour) VESA modes
 	M_LIN16 = 1 << 7,
+
+	// 24-bit true colour (16.7M-colour) VESA modes
 	M_LIN24 = 1 << 8,
+
+	// 32-bit true colour (16.7M-colour) VESA modes
 	M_LIN32 = 1 << 9,
+
+	// All EGA, VGA, SVGA & VESA text modes
 	M_TEXT = 1 << 10,
+
+	// Hercules graphics mode
 	M_HERC_GFX = 1 << 11,
+
+	// Hercules text mode
 	M_HERC_TEXT = 1 << 12,
+
+	// 640x200 monochrome CGA mode on CGA, Tandy & PCjr
 	M_TANDY2 = 1 << 13,
+
+	// 320x200 4-colour CGA mode on CGA, Tandy & PCjr
+	// 640x200 4-colour mode on Tandy & PCjr
 	M_TANDY4 = 1 << 14,
+
+	// 160x200 and 320x200 16-colour modes on Tandy & PCjr
 	M_TANDY16 = 1 << 15,
+
+	// CGA, Tandy & PCjr text modes
 	M_TANDY_TEXT = 1 << 16,
+
+	// Composite output in 320x200 4-colour CGA mode on PCjr only
 	M_CGA16 = 1 << 17,
+
+	// Composite output in 640x200 monochrome CGA mode on CGA, Tandy & PCjr
 	M_CGA2_COMPOSITE = 1 << 18,
+
+	// Composite output in 320x200 & 640x200 4-colour modes on CGA & Tandy
 	M_CGA4_COMPOSITE = 1 << 19,
+
+	// Composite output in text modes on CGA, Tandy & PCjr
 	M_CGA_TEXT_COMPOSITE = 1 << 20,
-	// bits 20 through 30 for more modes
+
 	M_ERROR = 1 << 31,
 };
 
@@ -209,19 +262,19 @@ struct VGA_Draw {
 	//
 	// Valid values are the following:
 	//
-	//  8 - Indexed8   up to 256-colour, paletted;
+	//  8 - Indexed8   Up to 256 colours, paletted;
 	//                 stored as packed uint8 data
 	//
-	// 15 - BGR555     32k hi-colour, 5 bits per red/blue/green component;
+	// 15 - BGR555     32K high colour, 5 bits per red/blue/green component;
 	//                 stored as packed uint16 data with highest bit unused
 	//
-	// 16 - BGR565     64k hi-colour, 5 bits for red/blue, 6 bit for green;
+	// 16 - BGR565     65K high colour, 5 bits for red/blue, 6 bit for green;
 	//                 stored as packed uint16 data
 	//
-	// 24 - BGR888     16M (24-bit) true-colour, 8 bits per red/blue/green component;
+	// 24 - BGR888     16.7M (24-bit) true colour, 8 bits per red/blue/green component;
 	//                 stored as packed 24-bit data
 	//
-	// 32 - BGRX8888   24-bit true-colour; 8 bits per red/blue/green component;
+	// 32 - BGRX8888   16.7M (32-bit) true colour; 8 bits per red/blue/green component;
 	//                 stored as packed uint32 data with highest 8 bits unused
 	//
 	// clang-format on
@@ -714,7 +767,7 @@ struct VGA_Type {
 	VGA_Memory mem = {};
 	// this is assumed to be power of 2
 	uint32_t vmemwrap = 0;
-	 // memory for fast (usually 16-color) rendering, 
+	 // memory for fast (usually 16-color) rendering,
 	 // always twice as big as vmemsize
 	uint8_t* fastmem  = {};
 	uint32_t vmemsize = 0;
