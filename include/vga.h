@@ -500,11 +500,11 @@ union TandyModeControlRegister {
 
 struct VGA_TANDY {
 	uint8_t pcjr_flipflop = 0;
-	uint8_t mode_control = 0;
+	TandyModeRegister mode = {};
 	uint8_t color_select = 0;
 	uint8_t disp_bank = 0;
 	uint8_t reg_index = 0;
-	uint8_t gfx_control = 0;
+	TandyModeControlRegister mode_control = {};
 	uint8_t palette_mask = 0;
 	uint8_t extended_ram = 0;
 	uint8_t border_color = 0;
