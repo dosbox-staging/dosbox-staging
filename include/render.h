@@ -246,5 +246,6 @@ bool RENDER_UseSrgbFramebuffer();
 #endif
 
 bool RENDER_IsVgaSingleScanningForced();
+bool RENDER_IsNoPixelDoublingForced();
 
 #endif

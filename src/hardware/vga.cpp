@@ -406,6 +406,12 @@ void VGA_EnableVgaDoubleScanning(const bool enabled)
 	vga.draw.double_scanning_enabled = enabled;
 }
 
+void VGA_EnablePixelDoubling(const bool enabled)
+{
+	vga.draw.pixel_doubling_enabled = enabled;
+}
+
+
 void VGA_Init(Section* sec)
 {
 	vga.draw.resizing = false;

@@ -796,11 +796,17 @@ static void ReloadShader(const bool pressed)
 	RENDER_Init(render_section);
 }
 
-static bool force_vga_single_scan = false;
+static bool force_vga_single_scan   = false;
+static bool force_no_pixel_doubling = false;
 
 bool RENDER_IsVgaSingleScanningForced()
 {
 	return force_vga_single_scan;
+}
+
+bool RENDER_IsNoPixelDoublingForced()
+{
+	return force_no_pixel_doubling;
 }
 
 void RENDER_Init(Section* sec)
@@ -812,9 +818,10 @@ void RENDER_Init(Section* sec)
 	static auto running = false;
 
 	const auto prev_aspect_ratio_correction = render.aspect_ratio_correction;
-	const auto prev_scale_size            = render.scale.size;
-	const auto prev_force_vga_single_scan = force_vga_single_scan;
-	const auto prev_integer_scaling_mode  = GFX_GetIntegerScalingMode();
+	const auto prev_scale_size              = render.scale.size;
+	const auto prev_force_vga_single_scan   = force_vga_single_scan;
+	const auto prev_force_no_pixel_doubling = force_no_pixel_doubling;
+	const auto prev_integer_scaling_mode    = GFX_GetIntegerScalingMode();
 
 	render.pal.first = 256;
 	render.pal.last  = 0;
@@ -830,6 +837,13 @@ void RENDER_Init(Section* sec)
 		LOG_MSG("RENDER: Double-scanning VGA video modes enabled");
 	}
 
+	force_no_pixel_doubling = section->Get_bool("force_no_pixel_doubling");
+	if (force_no_pixel_doubling) {
+		LOG_MSG("RENDER: Forcing no pixel-doubling of any video mode");
+	} else {
+		LOG_MSG("RENDER: Pixel-doubling enabled");
+	}
+
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;
 
@@ -840,9 +854,9 @@ void RENDER_Init(Section* sec)
 	RENDER_InitShaderSource(section);
 #endif
 
-	// If something changed that needs a ReInit
-	//  Only ReInit when there is a src.bpp (fixes crashes on startup and
-	//  directly changing the scaler without a screen specified yet)
+	// If something changed that needs a re-init.
+	// Only re-init when there is a src.bpp (fixes crashes on startup and
+	// directly changing the scaler without a screen specified yet).
 	if (running && render.src.bpp &&
 	    ((render.aspect_ratio_correction !=
 	      prev_aspect_ratio_correction) ||
@@ -851,7 +865,8 @@ void RENDER_Init(Section* sec)
 #if C_OPENGL
 	     || (previous_shader_filename != render.shader.filename)
 #endif
-	     || (prev_force_vga_single_scan != force_vga_single_scan))) {
+	     || (prev_force_vga_single_scan != force_vga_single_scan) ||
+	     (prev_force_no_pixel_doubling != force_no_pixel_doubling))) {
 		RENDER_CallBack(GFX_CallBackReset);
 	}
 

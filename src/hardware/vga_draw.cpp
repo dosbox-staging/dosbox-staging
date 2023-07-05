@@ -2026,7 +2026,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		default: assert(false);
 		}
 
-		double_width = is_vga_pixel_doubling();
+		double_width = is_vga_pixel_doubling() &&
+		               vga.draw.pixel_doubling_enabled;
 
 		// No need to render double-scanned for non mode 13H VGA
 		// modes (and its tweak-mode variants)
@@ -2078,8 +2079,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// clock by 2 like in other SVGA/VESA modes, but by some complex
 		// interaction between various VGA registers that is specific to
 		// mode 13H.
-		double_width = true;
-		render_pixel_aspect_ratio /= 2;
+		if (vga.draw.pixel_doubling_enabled) {
+			double_width = true;
+			render_pixel_aspect_ratio /= 2;
+		}
 
 		if (vga.draw.double_scanning_enabled) {
 			render_height = video_mode.height * 2;
@@ -2110,6 +2113,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		video_mode.width = horiz_end * 8;
 		render_width     = video_mode.width;
 
+		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
+		               vga.draw.pixel_doubling_enabled;
+
 		if (machine == MCH_EGA) {
 			video_mode.height = vert_end;
 			render_height     = video_mode.height;
@@ -2137,7 +2143,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 				video_mode.height = vert_end;
 				render_height     = video_mode.height;
 			}
-			if (vga.seq.clocking_mode.is_pixel_doubling) {
+			if (vga.seq.clocking_mode.is_pixel_doubling &&
+			    !vga.draw.pixel_doubling_enabled) {
 				render_pixel_aspect_ratio *= 2;
 			}
 		}
@@ -2162,11 +2169,13 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 				video_mode.width = horiz_end * 8;
 				render_width     = video_mode.width;
 			} else {
+				double_width = vga.draw.pixel_doubling_enabled;
 				video_mode.width = horiz_end * 4;
 				render_width     = video_mode.width;
 			}
 			VGA_DrawLine = VGA_Draw_4BPP_Line;
 		} else {
+			double_width     = vga.draw.pixel_doubling_enabled;
 			video_mode.width = horiz_end * 4;
 			render_width     = video_mode.width * 2;
 
@@ -2202,6 +2211,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		        }
 		*/
 
+		double_width = (video_mode.width < 640) &&
+		               vga.draw.pixel_doubling_enabled;
+
 		render_width  = video_mode.width;
 		render_height = video_mode.height;
 
@@ -2229,11 +2241,17 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			                                       : 4);
 			video_mode.width = vga.draw.blocks * 2;
 
+			double_width = !vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics &&
+			               vga.draw.pixel_doubling_enabled;
+
 		} else {
 			vga.draw.blocks = horiz_end * (vga.tandy.mode.is_tandy_640_dot_graphics
 			                                       ? 2
 			                                       : 1);
 			video_mode.width = vga.draw.blocks * 8;
+
+			double_width = !vga.tandy.mode.is_tandy_640_dot_graphics &&
+			               vga.draw.pixel_doubling_enabled;
 		}
 
 		video_mode.height = vert_end;
@@ -2256,6 +2274,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		video_mode.width = horiz_end * 8;
 		render_width     = video_mode.width;
 
+		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
+		               vga.draw.pixel_doubling_enabled;
+
 		if (machine == MCH_EGA) {
 			video_mode.height = vert_end;
 			render_height     = video_mode.height;
@@ -2274,7 +2295,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			if (!vga.draw.double_scanning_enabled) {
 				render_pixel_aspect_ratio /= 2;
 			}
-			if (vga.seq.clocking_mode.is_pixel_doubling) {
+			if (vga.seq.clocking_mode.is_pixel_doubling &&
+			    !vga.draw.pixel_doubling_enabled) {
 				render_pixel_aspect_ratio *= 2;
 			}
 		}
@@ -2292,6 +2314,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		video_mode.width  = horiz_end * 8;
 		video_mode.height = vert_end;
+
+		double_width = vga.draw.pixel_doubling_enabled;
 
 		// Composite emulation is rendered at 2x the horizontal resolution
 		render_width  = video_mode.width * 2;
@@ -2377,6 +2401,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		render_width  = video_mode.width;
 		render_height = video_mode.height;
 
+		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
+		               vga.draw.pixel_doubling_enabled;
+
 		if (machine == MCH_EGA) {
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_dimensions(
 			        render_width, render_height, double_width, double_height);
@@ -2401,6 +2428,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		render_width  = video_mode.width;
 		render_height = video_mode.height;
+
+		double_width = !vga.tandy.mode.is_high_bandwidth &&
+		               vga.draw.pixel_doubling_enabled;
 
 		render_pixel_aspect_ratio = calc_pixel_aspect_from_dimensions(
 		        render_width, render_height, double_width, double_height);
