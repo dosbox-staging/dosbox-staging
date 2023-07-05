@@ -4525,7 +4525,11 @@ void config_add_sdl() {
 
 #if C_OPENGL
 	Pstring = sdl_sec->Add_string("output", always, "opengl");
-	Pstring->Set_help("Video system to use for output ('opengl' by default).");
+	Pstring->Set_help(
+	        "Video system to use for output ('opengl' by default).\n"
+	        "'texture' and 'opengl' use bilinear interpolation, 'texturenb' and\n"
+	        "'openglnb' use nearest-neighbour (no-bilinear). Some shaders require\n"
+	        "bilinear interpolation, making that the safest choice.");
 	Pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
 #else
 	Pstring = sdl_sec->Add_string("output", always, "texture");
