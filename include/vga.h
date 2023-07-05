@@ -392,6 +392,112 @@ struct VGA_OTHER {
 	uint8_t cursor_end = 0;
 };
 
+// clang-format off
+
+// The Tandy and PCjr graphics registers are very similar with only a few
+// differences, therefore DOSBox uses a unified structure to represent both.
+// "Tandy" is preferred in the namings and is the default. The words "tandy"
+// and "pcjr" are only present in a bitfield's name when the bits have
+// different meanings on the two machines.
+//
+// The below table summarises the state of the two registers that control the
+// selected video mode. Tandy values comes first, the PCjr values are only
+// noted in parenthesis if they're different.
+//
+// MR  = Mode Register ("Mode Control Register 1" on the PCjr)
+// MCR = Mode Control Register ("Mode Control Register 2" on the PCjr)
+// ------------------------------------------------------------------------
+// | Colours | Res     ||MR: b4 640|b2 bw|b1 gfx| b0 hi||MCR: b4  |b3     |
+// |         |         ||   (16col)|     |      | bandw||   16col |640x200|
+// |---------|---------||----------|-----|------|------||---------|-------|
+// | 2       | 640x200 || 1 (0)    | 0   | 1    | 0    || 0 (-)   | 0 (1) |
+// | 4-gray  | 320x200 || 0        | 1   | 1    | 0    || 0 (-)   | 0     |
+// | 4       | 320x200 || 0        | 0   | 1    | 0    || 0 (-)   | 0     |
+// | 4       | 640x200 || 1 (0)    | 0   | 1    | 1    || 0 (-)   | 1 (0) |
+// | 16      | 160x200 || 0 (1)    | 0   | 1    | 0    || 1 (-)   | 0     |
+// | 16      | 320x200 || 0 (1)    | 0   | 1    | 1    || 1 (-)   | 0     |
+//
+// References:
+// -
+// http://www.thealmightyguru.com/Wiki/images/3/3b/Tandy_1000_-_Manual_-_Technical_Reference.pdf:
+// pg 58.
+// -
+// http://bitsavers.trailing-edge.com/pdf/ibm/pc/pc_jr/PCjr_Technical_Reference_Nov83.pdf:
+// pg 2-59 to 2-69.
+
+// clang-format on
+
+// Tandy Mode Register (3D8h)
+// (PCjr Mode Control 1 Register (address 00))
+union TandyModeRegister {
+	uint8_t data = 0;
+
+	// 1 for 80 character text and high-bandwidth graphics (640x200 4-colour
+	// and 320x200 16-colour)
+	// 0 for 40 character text and all other graphics modes
+	bit_view<0, 1> is_high_bandwidth;
+
+	// 1 for graphics modes, 0 for text modes
+	bit_view<1, 1> is_graphics_enabled;
+
+	// 1 for black and white output
+	// Tandy: A different color palette is selected by this bit in 320x200 (cyan-red-white)
+	// 4-color graphics mode (also on PCjr or only on Tandy?)
+	bit_view<2, 1> is_black_and_white_mode;
+
+	// 1 when the video signal is enabled. When the video signal is disabled,
+	// the screen is forced to the border color.
+	bit_view<3, 1> is_video_enabled;
+
+	// Tandy: 1 in 640x200 graphics modes
+	// PCjr: 1 in all 16-colour graphics modes (160x200 and 320x200)
+	bit_view<4, 1> is_tandy_640_dot_graphics;
+	bit_view<4, 1> is_pcjr_16_color_graphics;
+
+	// Tandy: This control bit is used in the alpha mode only.
+	// 1 selects blinking if the attribute bit is set (bit 7).
+	// 0 selects 16 background colors. (With blinking selected, only 8
+	// background colors are available.)
+	bit_view<5, 1> is_tandy_blink_enabled;
+};
+
+// Tandy Mode Control Register (address 03h)
+// (PCjr Mode Control 2 Register (address 03h))
+union TandyModeControlRegister {
+	uint8_t data = 0;
+
+	// If enabled in a text mode, the highest bit of the attribute byte
+	// serves as the blink enabled flag.
+	//
+	// If the enable-blink bit is on in a graphics mode, the high-order
+	// address of the palette (PA3) is replaced with the character-blink
+	// rate. This causes displayed colors to switch between two sets of
+	// colors.
+	//
+	// If the colors in the lower half of the palette are the same as in the
+	// upper half of the palette, no color changes will occur. If the colors
+	// in the upper half of the palette are different from the lower half of
+	// the palette, the colors will alternately change between the 2 palette
+	// colors at the blink rate.
+	//
+	// Only eight colors are available in the 16-color modes when using this
+	// feature. Bit 3 of the palette mask has no effect on this mode.
+	bit_view<1, 1> is_pcjr_blink_enabled;
+
+	// Tandy: This bit enables the border color register. For PC compatibility
+	// this bit should be 0. For PCjr compatibility this bit should be 1.
+	// (Interestingly, the PCjr manual states this bit should be always 0).
+	bit_view<2, 1> is_tandy_border_enabled;
+
+	// Tandy: 1 for the 640x200 4-colour graphics mode
+	// PCjr: 1 in the 640x200 2-colour graphics mode only
+	bit_view<3, 1> is_tandy_640x200_4_color_graphics;
+	bit_view<3, 1> is_pcjr_640x200_2_color_graphics;
+
+	// 1 for 16 colour modes, 0 for all other modes
+	bit_view<4, 1> is_tandy_16_color_enabled;
+};
+
 struct VGA_TANDY {
 	uint8_t pcjr_flipflop = 0;
 	uint8_t mode_control = 0;
