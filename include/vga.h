@@ -289,6 +289,7 @@ struct VGA_Draw {
 	bool doubleheight           = false;
 
 	bool double_scanning_enabled = false;
+	bool pixel_doubling_enabled  = false;
 
 	uint8_t font[64 * 1024] = {};
 	uint8_t* font_tables[2] = {nullptr, nullptr};
@@ -994,6 +995,7 @@ void VGA_LogInitialization(const char *adapter_name,
                            const size_t num_modes);
 
 void VGA_EnableVgaDoubleScanning(const bool enabled);
+void VGA_EnablePixelDoubling(const bool enabled);
 
 extern VGA_Type vga;
 

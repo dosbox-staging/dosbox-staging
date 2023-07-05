@@ -671,6 +671,18 @@ void DOSBOX_Init()
 	        "       'integer_scaling' enabled, this results in finer scaling steps with the\n"
 	        "       output remaining identical.");
 
+	pbool = secprop->Add_bool("force_no_pixel_doubling", when_idle, false);
+	pbool->Set_help(
+	        "Don't pixel double any video modes (disabled by default).\n"
+	        "Pixel-doubling is performed by default for most sub-640 pixel video modes\n"
+	        "to allow for more realistic PC CRT monitor emulation via shaders. You might\n"
+	        "want to disable this when emulating a low-resolution consumer monitor or TV,\n"
+	        "or to increase performance on low-powered devices.\n"
+	        "Notes: The default 'interpolation/sharp.glsl' shader and the 'texturenb' and\n"
+	        "       'openglnb' output modes force no pixel-doubling implicitly. With\n"
+	        "       'integer_scaling' enabled, this results in finer scaling steps with the\n"
+	        "       output remaining identical.");
+
 	pstring = secprop->Add_string("monochrome_palette", always, "white");
 	pstring->Set_help(
 	        "Select default palette for monochrome display ('white' by default).\n"
