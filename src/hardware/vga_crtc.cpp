@@ -146,12 +146,6 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 			vga.config.line_compare = (vga.config.line_compare & 0x5ff) |
 			                          (val & 0x40) << 3;
 		}
-		if (VGA_IsDoubleScanningVgaModes()) {
-			vga.draw.address_line_total = (val & 0x1F) + 1;
-			if (val & 0x80) {
-				vga.draw.address_line_total *= 2;
-			}
-		}
 		vga.crtc.maximum_scan_line.data = val;
 		VGA_StartResize();
 		break;

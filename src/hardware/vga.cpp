@@ -300,20 +300,6 @@ double VGA_GetPreferredRate()
 	return vga.draw.dos_refresh_hz;
 }
 
-// Are we using a VGA card and asked to emulate double-scanning? (This is a
-// helper function to avoid repeating this logic in the VGA drawing and CRTC
-// areas).
-bool VGA_IsDoubleScanningVgaModes()
-{
-	return IS_VGA_ARCH &&
-	       vga.draw.vga_double_scan_handling == VgaDoubleScanHandling::DoubleScan &&
-	       (vga.mode == M_EGA || vga.mode == M_VGA);
-
-	// TODO: Non-composite CGA modes should be included here too, as VGA
-	// cards also line-doubled those modes, however more work is needed to
-	// correctly draw double-scanned CGA lines.
-}
-
 void VGA_SetClock(const Bitu which, const uint32_t desired_clock)
 {
 	if (svga.set_clock) {
@@ -516,3 +502,4 @@ void SVGA_Setup_Driver(void) {
 		break;
 	}
 }
+
