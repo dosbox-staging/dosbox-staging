@@ -130,6 +130,9 @@ constexpr auto RefreshRateDosDefault     = 70;
 constexpr auto InterpolatingVrrMinRateHz = 140;
 constexpr auto RefreshRateMax            = 1000;
 
+// 4x the NTSC color-burst frequency of 3.579545 MHz
+constexpr auto CgaPixelClockHz = 14318180;
+
 #define CLK_25 25175
 #define CLK_28 28322
 
@@ -499,22 +502,22 @@ union TandyModeControlRegister {
 };
 
 struct VGA_TANDY {
-	uint8_t pcjr_flipflop = 0;
-	TandyModeRegister mode = {};
-	uint8_t color_select = 0;
-	uint8_t disp_bank = 0;
-	uint8_t reg_index = 0;
+	uint8_t pcjr_flipflop                 = 0;
+	TandyModeRegister mode                = {};
+	uint8_t color_select                  = 0;
+	uint8_t disp_bank                     = 0;
+	uint8_t reg_index                     = 0;
 	TandyModeControlRegister mode_control = {};
-	uint8_t palette_mask = 0;
-	uint8_t extended_ram = 0;
-	uint8_t border_color = 0;
-	uint8_t line_mask = 0;
-	uint8_t line_shift = 0;
-	uint8_t draw_bank = 0;
-	uint8_t mem_bank = 0;
-	uint8_t *draw_base = nullptr;
-	uint8_t *mem_base = nullptr;
-	Bitu addr_mask = 0;
+	uint8_t palette_mask                  = 0;
+	uint8_t extended_ram                  = 0;
+	uint8_t border_color                  = 0;
+	uint8_t line_mask                     = 0;
+	uint8_t line_shift                    = 0;
+	uint8_t draw_bank                     = 0;
+	uint8_t mem_bank                      = 0;
+	uint8_t* draw_base                    = nullptr;
+	uint8_t* mem_base                     = nullptr;
+	Bitu addr_mask                        = 0;
 };
 
 // CRTC Maximum Scan Line Register (Index 09h)
@@ -995,7 +998,6 @@ void VGA_LogInitialization(const char *adapter_name,
                            const size_t num_modes);
 
 void VGA_SetVgaDoubleScanHandling(const VgaDoubleScanHandling vga_double_scane_handling);
-bool VGA_IsDoubleScanningVgaModes();
 
 extern VGA_Type vga;
 

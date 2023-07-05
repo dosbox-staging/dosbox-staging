@@ -45,17 +45,61 @@ struct RenderPal_t {
 	uint32_t last         = 0;
 };
 
+struct VideoMode {
+	uint16_t width              = 0;
+	uint16_t height             = 0;
+	Fraction pixel_aspect_ratio = {};
+};
+
 struct Render_t {
+	// Details about the rendered image.
+	// E.g. for the 320x200 256-colour 13h VGA mode with double-scanning
+	// and pixel-doubling enabled:
+	//   - width = 320 (will be pixel-doubled post-render via double_width)
+	//   - height = 400 (2*200 lines because we're rendering scan-doubled)
+	//   - pixel_aspect_ratio = 5/6 (1:1.2) (because the PAR is meant for the
+	//     final image, post the optional width & height doubling)
+	//   - double_width = true (pixel-doubling)
+	//   - double_height = false (we're rendering scan-doubled)
 	struct {
-		uint32_t width              = 0;
-		uint32_t start              = 0;
-		uint32_t height             = 0;
-		bool double_width           = false;
-		bool double_height          = false;
+		// Width of the rendered image (prior to optional width-doubling)
+		uint32_t width = 0;
+
+		// Height of the rendered image (prior to optional height-doubling)
+		uint32_t height = 0;
+
+		// If true, the rendered image is doubled horizontally after via
+		// a scaler (e.g. to achieve pixel-doubling)
+		bool double_width = false;
+
+		// If true, the rendered image is doubled vertically via a
+		// scaler (e.g. to achieve fake double-scanning)
+		bool double_height = false;
+
+		// Pixel aspect ratio to be applied to the final image (post
+		// width & height doubling) so it appears as intended on screen.
+		// (video_mode.pixel_aspect_ratio holds the "nominal" pixel
+		// aspect ratio of the source video mode)
 		Fraction pixel_aspect_ratio = {};
-		uint8_t bpp                 = 0;
-		double fps                  = 0;
+
+		uint32_t start = 0;
+
+		// Pixel format (see vga.h)
+		uint8_t bpp = 0;
+
+		// Frames per second
+		double fps = 0;
 	} src = {};
+
+	// Details about the source video mode.
+	// This is usually different than the rendered image's details.
+	// E.g. for the 320x200 256-colour 13h VGA mode we always have the
+	// following, regardless of whether double-scanning and pixel-doubling
+	// is enabled at the rendering level:
+	//   - width = 320
+	//   - height = 200
+	//   - pixel_aspect_ratio = 5/6 (1:1.2)
+	VideoMode video_mode = {};
 
 	struct {
 		uint32_t size = 0;
