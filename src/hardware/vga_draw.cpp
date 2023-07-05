@@ -1957,9 +1957,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	// via a scaler.
 	bool double_width = false;
 
-	const auto force_single_scan = (vga.draw.vga_double_scan_handling !=
-	                                VgaDoubleScanHandling::DoubleScan);
-
 	Fraction render_pixel_aspect_ratio = {1};
 
 	unsigned bpp;
@@ -2036,7 +2033,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		if (is_vga_scan_doubling()) {
 			vga.draw.address_line_total /= 2;
 			video_mode.height = vert_end / 2;
-			double_height     = !force_single_scan;
+			double_height     = vga.draw.double_scanning_enabled;
 		} else {
 			video_mode.height = vert_end;
 		}
@@ -2084,12 +2081,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		double_width = true;
 		render_pixel_aspect_ratio /= 2;
 
-		if (force_single_scan) {
-			vga.draw.address_line_total /= 2;
-			render_height = video_mode.height;
-		} else {
+		if (vga.draw.double_scanning_enabled) {
 			render_height = video_mode.height * 2;
 			render_pixel_aspect_ratio *= 2;
+		} else {
+			vga.draw.address_line_total /= 2;
+			render_height = video_mode.height;
 		}
 
 		const auto is_reelmagic_vga_passthrough = !ReelMagic_IsVideoMixerEnabled();
@@ -2129,12 +2126,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			// a scaler.
 			if (is_vga_scan_doubling()) {
 				video_mode.height = vert_end / 2;
-				if (force_single_scan) {
+				if (vga.draw.double_scanning_enabled) {
+					render_height = video_mode.height * 2;
+				} else {
 					vga.draw.address_line_total /= 2;
 					render_height = video_mode.height;
 					render_pixel_aspect_ratio /= 2;
-				} else {
-					render_height = video_mode.height * 2;
 				}
 			} else {
 				video_mode.height = vert_end;
@@ -2269,12 +2266,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			video_mode.height = vert_end / 2;
 			render_height     = video_mode.height;
 
-			double_height = !force_single_scan;
+			double_height = vga.draw.double_scanning_enabled;
 
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
 			        vga_timings);
 
-			if (force_single_scan) {
+			if (!vga.draw.double_scanning_enabled) {
 				render_pixel_aspect_ratio /= 2;
 			}
 			if (vga.seq.clocking_mode.is_pixel_doubling) {
