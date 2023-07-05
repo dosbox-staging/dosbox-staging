@@ -441,8 +441,8 @@ static void update_cga16_color_pcjr()
 	const auto tv_saturation = saturation.as_float() / 100.0f;
 	const auto tv_contrast = (1 - tv_brightness) * contrast.as_float() / 100.0f;
 
-	const bool bw = vga.tandy.mode_control & 4;
-	const bool bpp1 = vga.tandy.gfx_control & 0x08;
+	const bool bw = vga.tandy.mode.is_black_and_white_mode;
+	const bool bpp1 = vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics;
 
 	std::array<float, 16> rgbi_coefficients = {};
 	for (uint8_t c = 0; c < rgbi_coefficients.size(); c++)
@@ -655,13 +655,13 @@ static void update_cga16_color()
 	const auto mode_brightness = brightness.as_float() * 5 - 256 * min_v / (max_v - min_v);
 
 	const bool in_tandy_text_mode = (vga.mode == M_CGA_TEXT_COMPOSITE) &&
-	                                (vga.tandy.mode_control & 1);
+	                                (vga.tandy.mode.is_high_bandwidth);
 	const auto mode_hue = in_tandy_text_mode ? 14.0f : 4.0f;
 
 	const auto mode_saturation = saturation.as_float() * (is_composite_new_era ? 5.8f : 2.9f) / 100;
 
 	// Update the Composite CGA palette
-	const bool in_tandy_mode_4 = vga.tandy.mode_control & 4;
+	const bool in_tandy_mode_4 = vga.tandy.mode.is_black_and_white_mode;
 	for (uint16_t x = 0; x < 1024; ++x) {
 		const uint16_t right = (x >> 2) & 15;
 		const uint16_t rc = in_tandy_mode_4
@@ -788,7 +788,7 @@ static void write_cga_color_select(uint8_t val)
 	case M_CGA4_COMPOSITE: {
 		uint8_t base = (val & 0x10) ? 0x08 : 0;
 		uint8_t bg = val & 0xf;
-		if (vga.tandy.mode_control & 0x4) // cyan red white
+		if (vga.tandy.mode.is_black_and_white_mode) // cyan red white
 			VGA_SetCGA4Table(bg, 3 + base, 4 + base, 7 + base);
 		else if (val & 0x20) // cyan magenta white
 			VGA_SetCGA4Table(bg, 3 + base, 5 + base, 7 + base);
@@ -819,10 +819,10 @@ static void write_cga(io_port_t port, io_val_t value, io_width_t)
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3d8:
-		vga.tandy.mode_control = val;
+		vga.tandy.mode.data = val;
 		vga.attr.disabled = (val&0x8)? 0: 1;
-		if (vga.tandy.mode_control & 0x2) {		// graphics mode
-			if (vga.tandy.mode_control & 0x10) {// highres mode
+		if (vga.tandy.mode.is_graphics_enabled) {
+			if (vga.tandy.mode.is_tandy_640_dot_graphics) {
 				if (cga_comp == COMPOSITE_STATE::ON ||
 				    ((cga_comp == COMPOSITE_STATE::AUTO &&
 				      !(val & 0x4)) &&
@@ -873,17 +873,18 @@ static void PCJr_FindMode();
 
 static void apply_composite_state()
 {
-	// switch RGB and Composite if in graphics mode
-	if (vga.tandy.mode_control & 0x2 && machine == MCH_PCJR)
+	// Switch RGB and Composite if in graphics mode
+	if (machine == MCH_PCJR && vga.tandy.mode.is_graphics_enabled) {
 		PCJr_FindMode();
-	else
-		write_cga(0x3d8, vga.tandy.mode_control, io_width_t::byte);
+	} else {
+		write_cga(0x3d8, vga.tandy.mode.data, io_width_t::byte);
+	}
 
-/* 	if (vga.tandy.mode_control & 0x2) {
+/* 	if (vga.tandy.mode.is_graphics_enabled) {
 		if (machine == MCH_PCJR) {
 			PCJr_FindMode();
 		} else {
-			write_cga(0x3d8, vga.tandy.mode_control, io_width_t::byte);
+			write_cga(0x3d8, vga.tandy.mode.data, io_width_t::byte);
 		}
 	}
  */
@@ -918,19 +919,20 @@ static void tandy_update_palette() {
 				vga.attr.palette[vga.tandy.color_select&0xf]);
 			break;
 		case M_TANDY4:
-			if (vga.tandy.gfx_control & 0x8) {
-				// 4-color high resolution - might be an idea to introduce M_TANDY4H
+			if (vga.tandy.mode_control.is_tandy_640x200_4_color_graphics) {
 				VGA_SetCGA4Table( // function sets both medium and highres 4color tables
 					vga.attr.palette[0], vga.attr.palette[1],
 					vga.attr.palette[2], vga.attr.palette[3]);
 			} else {
 				uint8_t color_set = 0;
 				uint8_t r_mask = 0xf;
-				if (is(vga.tandy.color_select, b4))
+				if (is(vga.tandy.color_select, b4)) {
 					set(color_set, b3); // intensity
-				if (is(vga.tandy.color_select, b5))
+				}
+				if (is(vga.tandy.color_select, b5)) {
 					set(color_set, b0); // Cyan Mag. White
-				if (is(vga.tandy.mode_control, b2)) { // Cyan Red White
+				}
+				if (vga.tandy.mode.is_black_and_white_mode) { // Cyan Red White
 					set(color_set, b0);
 					clear(r_mask, b0);
 				}
@@ -969,13 +971,12 @@ void VGA_SetModeNow(VGAModes mode);
 
 static void TANDY_FindMode()
 {
-	if (vga.tandy.mode_control & 0x2) {
-		if (vga.tandy.gfx_control & 0x10) {
+	if (vga.tandy.mode.is_graphics_enabled) {
+		if (vga.tandy.mode_control.is_tandy_16_color_enabled) {
 			if (vga.mode==M_TANDY4) {
 				VGA_SetModeNow(M_TANDY16);
 			} else VGA_SetMode(M_TANDY16);
-		}
-		else if (vga.tandy.gfx_control & 0x08) {
+		} else if (vga.tandy.mode_control.is_tandy_640x200_4_color_graphics) {
 			if (cga_comp == COMPOSITE_STATE::ON) {
 				// composite ntsc 640x200 16 color mode
 				VGA_SetMode(M_CGA4_COMPOSITE);
@@ -983,7 +984,7 @@ static void TANDY_FindMode()
 			} else {
 				VGA_SetMode(M_TANDY4);
 			}
-		} else if (vga.tandy.mode_control & 0x10) {
+		} else if (vga.tandy.mode.is_tandy_640_dot_graphics) {
 			if (cga_comp == COMPOSITE_STATE::ON) {
 				// composite ntsc 640x200 16 color mode
 				VGA_SetMode(M_CGA2_COMPOSITE);
@@ -1011,18 +1012,18 @@ static void TANDY_FindMode()
 static void PCJr_FindMode()
 {
 	assert(machine == MCH_PCJR);
-	if (vga.tandy.mode_control & 0x2) {
-		if (vga.tandy.mode_control & 0x10) {
-			// bit4 of mode control 1 signals 16 colour graphics mode
-			if (vga.mode == M_TANDY4)
+	if (vga.tandy.mode.is_graphics_enabled) {
+		if (vga.tandy.mode.is_pcjr_16_color_graphics) {
+			if (vga.mode == M_TANDY4) {
 				VGA_SetModeNow(M_TANDY16); // TODO lowres mode only
-			else
+			} else {
 				VGA_SetMode(M_TANDY16);
-		} else if (vga.tandy.gfx_control & 0x08) {
+			}
+		} else if (vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics) {
 			// bit3 of mode control 2 signals 2 colour graphics mode
 			if (cga_comp == COMPOSITE_STATE::ON ||
 			    (cga_comp == COMPOSITE_STATE::AUTO &&
-			     !(vga.tandy.mode_control & 0x4))) {
+			     !(vga.tandy.mode.is_black_and_white_mode))) {
 				VGA_SetMode(M_CGA16);
 			} else {
 				VGA_SetMode(M_TANDY2);
@@ -1048,7 +1049,7 @@ static void PCJr_FindMode()
 static void TandyCheckLineMask(void ) {
 	if ( vga.tandy.extended_ram & 1 ) {
 		vga.tandy.line_mask = 0;
-	} else if (is(vga.tandy.mode_control, b1)) {
+	} else if (vga.tandy.mode.is_graphics_enabled) {
 		set(vga.tandy.line_mask, b0);
 	}
 	if ( vga.tandy.line_mask ) {
@@ -1066,7 +1067,7 @@ static void write_tandy_reg(uint8_t val)
 	switch (vga.tandy.reg_index) {
 	case 0x0:
 		if (machine==MCH_PCJR) {
-			vga.tandy.mode_control=val;
+			vga.tandy.mode.data = val;
 			VGA_SetBlinking(val & 0x20);
 			PCJr_FindMode();
 			if (is(val, b3))
@@ -1085,7 +1086,7 @@ static void write_tandy_reg(uint8_t val)
 		vga.tandy.border_color=val;
 		break;
 	case 0x3:	/* More control */
-		vga.tandy.gfx_control=val;
+		vga.tandy.mode_control.data = val;
 		if (machine==MCH_TANDY) TANDY_FindMode();
 		else PCJr_FindMode();
 		break;
@@ -1113,8 +1114,8 @@ static void write_tandy(io_port_t port, io_val_t value, io_width_t)
 	switch (port) {
 	case 0x3d8:
 		clear(val, b7 | b6); // only bits 0-5 are used
-		if (vga.tandy.mode_control ^ val) {
-			vga.tandy.mode_control = val;
+		if (vga.tandy.mode.data ^ val) {
+			vga.tandy.mode.data = val;
 			if (is(val, b3))
 				clear(vga.attr.disabled, b0);
 			else
@@ -1377,7 +1378,24 @@ uint8_t read_herc_status(io_port_t, io_width_t)
 
 void VGA_SetupOther()
 {
-	vga.tandy = VGA_TANDY(); // reset our Tandy struct
+	// Reset our Tandy struct
+	vga.tandy.pcjr_flipflop     = 0;
+	vga.tandy.mode.data         = 0;
+	vga.tandy.color_select      = 0;
+	vga.tandy.disp_bank         = 0;
+	vga.tandy.reg_index         = 0;
+	vga.tandy.mode_control.data = 0;
+	vga.tandy.palette_mask      = 0;
+	vga.tandy.extended_ram      = 0;
+	vga.tandy.border_color      = 0;
+	vga.tandy.line_mask         = 0;
+	vga.tandy.line_shift        = 0;
+	vga.tandy.draw_bank         = 0;
+	vga.tandy.mem_bank          = 0;
+	vga.tandy.draw_base         = nullptr;
+	vga.tandy.mem_base          = nullptr;
+	vga.tandy.addr_mask         = 0;
+
 	vga.attr.disabled = 0;
 	vga.config.bytes_skip=0;
 

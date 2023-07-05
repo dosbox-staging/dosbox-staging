@@ -187,7 +187,7 @@ static uint8_t *Composite_Process(uint8_t border, uint32_t blocks, bool doublewi
 	for (int x = 0; x < 5; ++x)
 		push_pixel(b[x & 3]);
 
-	if ((vga.tandy.mode_control & 4) != 0) {
+	if ((vga.tandy.mode.data & 4) != 0) {
 		// Decode
 		int *i = temp + 5;
 		uint16_t idx = 0;
@@ -248,7 +248,7 @@ static uint8_t *VGA_CGA_TEXT_Composite_Draw_Line(Bitu vidstart, Bitu line)
 {
 	VGA_TEXT_Draw_Line(vidstart, line);
 	return Composite_Process(vga.tandy.color_select & 0x0f, vga.draw.blocks * 2,
-	                         (vga.tandy.mode_control & 0x1) == 0);
+	                         (vga.tandy.mode.data & 0x1) == 0);
 }
 
 static uint8_t *VGA_Draw_CGA2_Composite_Line(Bitu vidstart, Bitu line)
@@ -913,7 +913,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			break;
 		case MCH_TANDY:
 			// Either the PCJr way or the CGA way
-			if (vga.tandy.gfx_control& 0x4) {
+			if (vga.tandy.mode_control.data & 0x4) {
 				bg_color_index = vga.tandy.border_color;
 			} else if (vga.mode==M_TANDY4)
 				bg_color_index = vga.attr.palette[0];
@@ -1057,11 +1057,11 @@ void VGA_SetBlinking(const uint8_t enabled)
 	if (enabled) {
 		vga.draw.blinking = 1; // used to -1 but blinking is unsigned
 		vga.attr.mode_control.is_blink_enabled = 1;
-		vga.tandy.mode_control |= 0x20;
+		vga.tandy.mode.data |= 0x20;
 	} else {
 		vga.draw.blinking = 0;
 		vga.attr.mode_control.is_blink_enabled = 0;
-		vga.tandy.mode_control &= ~0x20;
+		vga.tandy.mode.data &= ~0x20;
 	}
 	const uint8_t b = (enabled ? 0 : 8);
 	for (uint8_t i = 0; i < 8; ++i) {
@@ -1652,8 +1652,8 @@ static VgaTimings calculate_vga_timings()
 		case MCH_CGA:
 		case MCH_PCJR:
 		case MCH_TANDY:
-			clock = ((vga.tandy.mode_control & 1) ? 14318180
-			                                      : (14318180 / 2)) /
+			clock = ((vga.tandy.mode.data & 1) ? 14318180
+			                                   : (14318180 / 2)) /
 			        8;
 			break;
 		case MCH_HERC:
@@ -2204,11 +2204,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 
 		if (machine == MCH_PCJR) {
-			doublewidth     = (vga.tandy.gfx_control & 0x8) == 0;
+			doublewidth     = (vga.tandy.mode_control.data & 0x8) == 0;
 			vga.draw.blocks = width * (doublewidth ? 4 : 8);
 			width           = vga.draw.blocks * 2;
 		} else {
-			doublewidth     = (vga.tandy.mode_control & 0x10) == 0;
+			doublewidth     = (vga.tandy.mode.data & 0x10) == 0;
 			vga.draw.blocks = width * (doublewidth ? 1 : 2);
 			width           = vga.draw.blocks * 8;
 		}
@@ -2216,17 +2216,17 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_TANDY4:
 		if (machine == MCH_TANDY) {
-			doublewidth = (vga.tandy.mode_control & 0b10000) == 0b00000;
+			doublewidth = (vga.tandy.mode.data & 0b10000) == 0b00000;
 		} else {
-			doublewidth = (vga.tandy.mode_control & 0b00001) == 0b00000;
+			doublewidth = (vga.tandy.mode.data & 0b00001) == 0b00000;
 		}
 
 		vga.draw.blocks    = width * 2;
 		width              = vga.draw.blocks * 4;
 		pixel_aspect_ratio = {height * 4, width * 3};
 
-		if ((machine == MCH_TANDY && (vga.tandy.gfx_control & 0b01000)) ||
-		    (machine == MCH_PCJR && (vga.tandy.mode_control == 0b01011))) {
+		if ((machine == MCH_TANDY && (vga.tandy.mode_control.data & 0b01000)) ||
+		    (machine == MCH_PCJR && (vga.tandy.mode.data == 0b01011))) {
 			VGA_DrawLine = VGA_Draw_2BPPHiRes_Line;
 		} else {
 			VGA_DrawLine = VGA_Draw_2BPP_Line;
@@ -2238,9 +2238,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		doubleheight       = true;
 		vga.draw.blocks    = width * 2;
 
-		if (vga.tandy.mode_control & 0x1) {
+		if (vga.tandy.mode.data & 0x1) {
 			if ((machine == MCH_TANDY) &&
-			    (vga.tandy.mode_control & 0b10000)) {
+			    (vga.tandy.mode.data & 0b10000)) {
 				doublewidth = false;
 				vga.draw.blocks *= 2;
 				width = vga.draw.blocks * 2;
@@ -2259,7 +2259,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_TANDY_TEXT:
 		pixel_aspect_ratio = {5, 6};
-		doublewidth        = (vga.tandy.mode_control & 0x1) == 0;
+		doublewidth        = (vga.tandy.mode.data & 0x1) == 0;
 		doubleheight       = true;
 		vga.draw.blocks    = width;
 		width <<= 3;
@@ -2271,7 +2271,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		pixel_aspect_ratio = {5, 6};
 		doubleheight       = true;
 		vga.draw.blocks    = width;
-		width <<= (((vga.tandy.mode_control & 0x1) != 0) ? 3 : 4);
+		width <<= (((vga.tandy.mode.data & 0x1) != 0) ? 3 : 4);
 
 		VGA_DrawLine = VGA_CGA_TEXT_Composite_Draw_Line;
 		break;
