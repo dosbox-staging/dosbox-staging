@@ -44,74 +44,85 @@ uint32_t ExpandTable[256];
 uint32_t Expand16Table[4][16];
 uint32_t FillTable[16];
 
-// Get the current video mode's type and numeric ID
-std::pair<VGAModes, uint16_t> VGA_GetCurrentMode()
+// Get the current video mode's mode description block and the actual mode
+// in use
+std::pair<const VideoModeBlock&, const VGAModes> VGA_GetCurrentMode()
 {
-	return {CurMode->type, CurMode->mode};
+	// `CurMode->type` only holds the "coarse" mode associated with the last
+	// requested BIOS video mode via an INT 10H call (`CurMode->mode` is the
+	// BIOS mode number). This may get "refined" later into another mode (e.g.
+	// M_TEXT may get refined into M_CGA_TEXT_COMPOSITE), and this more
+	// "accurate" mode is stored in `vga.draw`.
+	return {*CurMode, vga.mode};
 }
 
-// Describes the given video mode's type and ID, ie: "VGA, "256 colour"
-std::pair<const char*, const char*> VGA_DescribeMode(const VGAModes video_mode_type,
-                                                     const uint16_t video_mode_id,
-                                                     const uint16_t width,
-                                                     const uint16_t height)
+// Describes the given video mode's type and colour-depth, e.g: "VGA, "256-colour"
+std::tuple<const char*, const char*, bool> VGA_DescribeMode(
+        const MachineType machine, const VideoModeBlock& mode_block,
+        const VGAModes mode_type, const uint16_t actual_width,
+        const uint16_t actual_height)
 {
-	auto maybe_cga_on_tandy = [=]() {
-		constexpr uint16_t cga_max_mode = 0x006;
-		return video_mode_id <= cga_max_mode ? "CGA" : "Tandy";
+	auto pcjr_or_tandy = [=]() {
+		return (machine == MCH_PCJR) ? "PCjr" : "Tandy";
 	};
 
-	auto maybe_mcga_if_320x200 = [=]() {
-		constexpr uint16_t mcga_width  = 320;
-		constexpr uint16_t mcga_height = 200;
-
-		const auto is_single_scan_mcga = (width == mcga_width &&
-		                                  height == mcga_height);
-		const auto is_double_scan_mcga = (width == (mcga_width * 2) &&
-		                                  height == (mcga_height * 2));
-
-		if (is_single_scan_mcga || is_double_scan_mcga) {
-			return "MCGA";
+	auto cga_pcjr_or_tandy = [=]() {
+		constexpr auto first_non_cga_mode = 0x08;
+		if (mode_block.mode < first_non_cga_mode) {
+			return "CGA";
 		}
-		return "VGA";
+		return pcjr_or_tandy();
 	};
+
+	auto svga_or_vesa = [=]() {
+		return VESA_IsVesaMode(mode_block.mode) ? "VESA" : "SVGA";
+	};
+
+	const auto is_custom = (actual_width != mode_block.swidth) ||
+	                       (actual_height != mode_block.sheight);
 
 	// clang-format off
-	switch (video_mode_type) {
-	case M_HERC_TEXT:          return {"Text",     "monochrome"};
-	case M_HERC_GFX:           return {"Hercules", "monochrome"};
+	switch (mode_type) {
+	case M_HERC_TEXT:          return {"Text",     "monochrome", is_custom};
+	case M_HERC_GFX:           return {"Hercules", "monochrome", is_custom};
+
 	case M_TEXT:
-	case M_TANDY_TEXT:
-	case M_CGA_TEXT_COMPOSITE: return {"Text",  "16-colour"};
+	case M_TANDY_TEXT:         return {"Text", "16-colour", is_custom};
+
+	case M_CGA_TEXT_COMPOSITE: return {"Text", "composite", is_custom};
+
 	case M_CGA2_COMPOSITE:
-	case M_CGA4_COMPOSITE:     return {"CGA",   "composite"};
-	case M_CGA2:               return {"CGA",   "2-colour"};
-	case M_CGA4:               return {"CGA",   "4-colour"};
-	case M_CGA16:              return {"CGA",   "16-colour"};
-	case M_TANDY2:             return {maybe_cga_on_tandy(), "2-colour"};
-	case M_TANDY4:             return {maybe_cga_on_tandy(), "4-colour"};
-	case M_TANDY16:            return {maybe_cga_on_tandy(), "16-colour"};
+	case M_CGA4_COMPOSITE:     return {cga_pcjr_or_tandy(), "composite", is_custom};
+
+	case M_CGA2:               return {"CGA", "2-colour", is_custom};
+	case M_CGA4:               return {"CGA", "4-colour", is_custom};
+	case M_CGA16:              return {"PCjr", "composite", is_custom};
+	case M_TANDY2:             return {cga_pcjr_or_tandy(), "2-colour",  is_custom};
+	case M_TANDY4:             return {cga_pcjr_or_tandy(), "4-colour",  is_custom};
+	case M_TANDY16:            return {pcjr_or_tandy(), "16-colour", is_custom};
 	case M_EGA: // see comment below
-	    switch (video_mode_id) {
-	    case 0x011:            return {"MCGA",  "2-colour"};
-	    case 0x012:            return {"VGA",   "16-colour"};
-	    default:               return {"EGA",   "16-colour"};
+	    switch (mode_block.mode) {
+	    case 0x011:            return {"VGA", "2-colour",  is_custom};
+	    case 0x012:            return {"VGA", "16-colour", is_custom};
+	    default:               return {"EGA", "16-colour", is_custom};
 	    }
-	case M_VGA:                return {maybe_mcga_if_320x200(), "256-colour"};
-	case M_LIN4:               return {"VESA",  "16-colour"};
-	case M_LIN8:               return {"VESA",  "256-colour"};
-	case M_LIN15:              return {"VESA",  "15-bit"};
-	case M_LIN16:              return {"VESA",  "16-bit"};
+	case M_VGA:                return {"VGA", "256-colour", is_custom};
+
+	case M_LIN4:               return {svga_or_vesa(), "16-colour",  is_custom};
+	case M_LIN8:               return {svga_or_vesa(), "256-colour", is_custom};
+	case M_LIN15:              return {"VESA", "15-bit", is_custom};
+	case M_LIN16:              return {"VESA", "16-bit", is_custom};
+
 	case M_LIN24:
-	case M_LIN32:              return {"VESA",  "24-bit"};
+	case M_LIN32:              return {"VESA", "24-bit", is_custom};
 
 	case M_ERROR:
 	default:
-		// Should not occur; log the values and inform the user 
+		// Should not occur; log the values and inform the user
 		LOG_ERR("VIDEO: Unknown mode: %u with ID: %u",
-		        static_cast<uint32_t>(video_mode_type),
-		        video_mode_id);
-		return {"Unknown mode", "Unknown colour-depth"};
+		        static_cast<uint32_t>(mode_type),
+		        mode_block.mode);
+		return {"Unknown mode", "Unknown colour-depth", false};
 	}
 	// clang-format on
 
@@ -119,6 +130,7 @@ std::pair<const char*, const char*> VGA_DescribeMode(const VGAModes video_mode_t
 	// that operate internally more like EGA modes (so DOSBox uses the EGA
 	// type for them), however they were classified as VGA from a standards
 	// perspective, so we report them as such.
+	//
 	// References:
 	// [1] IBM VGA Technical Reference, Mode of Operation, pp 2-12, 19
 	// March, 1992. [2] "IBM PC Family- BIOS Video Modes",

@@ -2537,9 +2537,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	        vga.draw.delay.vrend);
 #endif
 
-	static auto previous_mode = CurMode;
+	static auto previous_mode = vga.mode;
 
-	if ((CurMode != previous_mode) || (render_width != vga.draw.width) ||
+	if ((vga.mode != previous_mode) || (render_width != vga.draw.width) ||
 	    (render_height != vga.draw.height) ||
 	    (vga.draw.doublewidth != double_width) ||
 	    (vga.draw.doubleheight != double_height) ||
@@ -2583,8 +2583,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			                         fps,
 			                         video_mode);
 		}
-
-		previous_mode = CurMode;
+		
+		previous_mode = vga.mode;
 	}
 }
 

@@ -127,8 +127,11 @@ struct palette_t {
 extern palette_t palette;
 
 struct VideoModeBlock {
+	// BIOS video mode number
 	uint16_t mode;
+
 	VGAModes type;
+
 	uint16_t swidth, sheight;
 	uint8_t twidth, theight;
 	uint8_t cwidth, cheight;
@@ -146,6 +149,11 @@ extern std::vector<VideoModeBlock> ModeList_VGA_Paradise;
 extern std::vector<VideoModeBlock> ModeList_VGA_Tseng;
 
 using video_mode_block_iterator_t = std::vector<VideoModeBlock>::const_iterator;
+
+// Holds the last set "coarse" video mode via an INT 10H BIOS call.
+// A "refined", more accurate version of the current mode is stored in the
+// `vga.mode` global (e.g. M_TEXT may get refined into M_CGA_TEXT_COMPOSITE,
+// M_CGA4 into M_TANDY4 or M_CGA4_COMPOSITE, etc.)
 extern video_mode_block_iterator_t CurMode;
 
 enum class VesaModePref {
