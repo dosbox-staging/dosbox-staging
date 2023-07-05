@@ -2580,7 +2580,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			                         double_height,
 			                         render_pixel_aspect_ratio,
 			                         bpp,
-			                         fps);
+			                         fps,
+			                         video_mode);
 		}
 
 		previous_mode = CurMode;

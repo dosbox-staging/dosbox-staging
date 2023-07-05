@@ -768,16 +768,17 @@ static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 // Logs the source and target resolution including describing scaling method
 // and pixel aspect ratio. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
-static void log_display_properties(int source_w, int source_h,
-                                   const std::optional<SDL_Rect>& target_size_override,
+static void log_display_properties(const int width, const int height,
+                                   const VideoMode& video_mode,
+                                   const std::optional<SDL_Rect>& viewport_size_override,
                                    const SCREEN_TYPES screen_type)
 {
-	// Get the target dimentions, with consideration for possible override
+	// Get the viewport dimensions, with consideration for possible override
 	// values
-	auto get_target_dims = [&]() -> std::pair<int, int> {
-		if (target_size_override) {
-			const auto vp = calc_viewport(target_size_override->w,
-			                              target_size_override->h);
+	auto get_viewport_size = [&]() -> std::pair<int, int> {
+		if (viewport_size_override) {
+			const auto vp = calc_viewport(viewport_size_override->w,
+			                              viewport_size_override->h);
 			return {vp.w, vp.h};
 		}
 		const auto canvas   = get_canvas_size(screen_type);
@@ -785,42 +786,30 @@ static void log_display_properties(int source_w, int source_h,
 		return {viewport.w, viewport.h};
 	};
 
-	const auto [target_w, target_h] = get_target_dims();
+	const auto [viewport_w, viewport_h] = get_viewport_size();
 
 	// Check expectations
-	assert(source_w > 0 && source_h > 0);
-	assert(target_w > 0 && target_h > 0);
+	assert(width > 0 && height > 0);
+	assert(viewport_w > 0 && viewport_h > 0);
 
-	const auto scale_x = static_cast<double>(target_w) / source_w;
-	const auto scale_y = static_cast<double>(target_h) / source_h;
+	const auto scale_x = static_cast<double>(viewport_w) / width;
+	const auto scale_y = static_cast<double>(viewport_h) / height;
 
-	auto one_per_pixel_aspect = scale_y / scale_x;
+	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
 
 	const auto [mode_type, mode_id] = VGA_GetCurrentMode();
-	const auto [mode_desc, colours_desc] =
-	        VGA_DescribeMode(mode_type, mode_id, source_w, source_h);
+	const auto [mode_desc, colours_desc] = VGA_DescribeMode(mode_type,
+			mode_id, video_mode.width, video_mode.height);
 
 	const char* frame_mode = nullptr;
 	switch (sdl.frame.mode) {
 	case FrameMode::Cfr: frame_mode = "CFR"; break;
 	case FrameMode::Vfr: frame_mode = "VFR"; break;
 	case FrameMode::ThrottledVfr: frame_mode = "throttled VFR"; break;
-	case FrameMode::Unset: frame_mode = "Unset frame_mode"; break;
+	case FrameMode::Unset: frame_mode = "Unset frame mode"; break;
 	}
 
-	auto refresh_rate = VGA_GetPreferredRate();
-
-	// TODO (CGA4_DOUBLE_SCAN_WORKAROUND):
-	//   Despite being able to line-double CGA 200-line modes when VGA
-	//   machines are double-scanning, we are currently unable to
-	//   width-double them up to 640 columns at the VGA-draw level. Until
-	//   this is fixed, the following is a work-around to simply log this
-	//   correctly for users:
-	const auto in_cga_mode_4h_or_5h = (mode_id == 0x4 || mode_id == 0x5);
-	if (in_cga_mode_4h_or_5h && IS_VGA_ARCH && source_h > 200) {
-		source_w *= 2;
-		one_per_pixel_aspect *= 2;
-	}
+	const auto refresh_rate = VGA_GetPreferredRate();
 
 	// Double check all the char* string variables
 	assert(mode_desc);
@@ -830,21 +819,21 @@ static void log_display_properties(int source_w, int source_h,
 	LOG_MSG("DISPLAY: %s %dx%d %s (mode %02Xh) at %2.5g Hz %s, scaled"
 	        " to %dx%d with 1:%1.3g pixel aspect ratio",
 	        mode_desc,
-	        source_w,
-	        source_h,
+	        video_mode.width,
+	        video_mode.height,
 	        colours_desc,
 	        mode_id,
 	        refresh_rate,
 	        frame_mode,
-	        target_w,
-	        target_h,
-	        one_per_pixel_aspect);
-}
+	        viewport_w,
+	        viewport_h,
+	        video_mode.pixel_aspect_ratio.Inverse().ToFloat());
 
-// A public wrapper to log the current display (both DOS and host) properties
-void GFX_LogDisplayProperties()
-{
-	log_display_properties(sdl.draw.width, sdl.draw.height, {}, sdl.desktop.type);
+	//LOG_MSG("DISPLAY: render width: %d, render height: %d, "
+	//        "render pixel aspect ratio: 1:%1.3g",
+	//        width,
+	//        height,
+	//        one_per_render_pixel_aspect);
 }
 
 static SDL_Point get_initial_window_position_or_default(int default_val)
@@ -1757,8 +1746,9 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	}
 }
 
-Bitu GFX_SetSize(int width, int height, const Bitu flags, double scalex,
-                 double scaley, GFX_CallBack_t callback)
+Bitu GFX_SetSize(const int width, const int height, const Bitu flags,
+                 const double scalex, const double scaley,
+                 const VideoMode& video_mode, GFX_CallBack_t callback)
 {
 	Bitu retFlags = 0;
 	if (sdl.updating)
@@ -1771,20 +1761,24 @@ Bitu GFX_SetSize(int width, int height, const Bitu flags, double scalex,
 	const bool double_width = flags & GFX_DBL_W;
 	const bool double_height = flags & GFX_DBL_H;
 
-	sdl.draw.has_changed = (sdl.draw.width != width || sdl.draw.height != height ||
+	sdl.draw.has_changed = (sdl.draw.width != width ||
+	                        sdl.draw.height != height ||
 	                        sdl.draw.width_was_doubled != double_width ||
 	                        sdl.draw.height_was_doubled != double_height ||
 	                        sdl.draw.scalex != scalex ||
 	                        sdl.draw.scaley != scaley ||
 	                        sdl.draw.previous_mode != CurMode->type);
 
-	sdl.draw.width = width;
-	sdl.draw.height = height;
-	sdl.draw.width_was_doubled = double_width;
+	sdl.draw.width              = width;
+	sdl.draw.height             = height;
+	sdl.draw.width_was_doubled  = double_width;
 	sdl.draw.height_was_doubled = double_height;
-	sdl.draw.scalex = scalex;
-	sdl.draw.scaley = scaley;
-	sdl.draw.callback = callback;
+	sdl.draw.scalex             = scalex;
+	sdl.draw.scaley             = scaley;
+
+	sdl.video_mode = video_mode;
+
+	sdl.draw.callback      = callback;
 	sdl.draw.previous_mode = CurMode->type;
 
 	const auto vsync_pref = get_vsync_settings().requested;
@@ -1885,8 +1879,12 @@ dosurface:
 		SDL_RendererInfo rinfo;
 		SDL_GetRendererInfo(sdl.renderer, &rinfo);
 		const auto texture_format = rinfo.texture_formats[0];
-		sdl.texture.texture = SDL_CreateTexture(sdl.renderer, texture_format,
-		                                        SDL_TEXTUREACCESS_STREAMING, width, height);
+
+		sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
+		                                        texture_format,
+		                                        SDL_TEXTUREACCESS_STREAMING,
+		                                        width,
+		                                        height);
 
 		if (!sdl.texture.texture) {
 			SDL_DestroyRenderer(sdl.renderer);
@@ -2119,7 +2117,8 @@ dosurface:
 		}
 
 		/* Create the texture and display list */
-		const auto framebuffer_bytes = static_cast<size_t>(width) *  height * MAX_BYTES_PER_PIXEL;
+		const auto framebuffer_bytes = static_cast<size_t>(width) *
+		                               height * MAX_BYTES_PER_PIXEL;
 		if (sdl.opengl.pixel_buffer_object) {
 			glGenBuffersARB(1, &sdl.opengl.buffer);
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
@@ -2128,7 +2127,7 @@ dosurface:
 		} else {
 			sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
 		}
-		sdl.opengl.pitch=width*4;
+		sdl.opengl.pitch = width * 4;
 
 		// One-time intialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
@@ -2234,7 +2233,9 @@ dosurface:
 			// Set shader variables
 			glUniform2f(sdl.opengl.ruby.texture_size,
 			            (GLfloat)texsize_w, (GLfloat)texsize_h);
-			glUniform2f(sdl.opengl.ruby.input_size, (GLfloat)width, (GLfloat)height);
+			glUniform2f(sdl.opengl.ruby.input_size,
+			            (GLfloat)width,
+			            (GLfloat)height);
 			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip.w, (GLfloat)sdl.clip.h);
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
@@ -2285,14 +2286,17 @@ dosurface:
 	update_vsync_state();
 	update_vga_double_scan_handling(sdl.desktop.type, sdl.interpolation_mode);
 
-	if (sdl.draw.has_changed)
+	if (sdl.draw.has_changed) {
 		log_display_properties(sdl.draw.width,
 		                       sdl.draw.height,
+		                       sdl.video_mode,
 		                       {},
 		                       sdl.desktop.type);
+	}
 
-	if (retFlags)
+	if (retFlags) {
 		GFX_Start();
+	}
 	return retFlags;
 }
 
@@ -2483,6 +2487,7 @@ void GFX_SwitchFullScreen()
 
 	log_display_properties(sdl.draw.width,
 	                       sdl.draw.height,
+	                       sdl.video_mode,
 	                       canvas_size,
 	                       sdl.desktop.type);
 

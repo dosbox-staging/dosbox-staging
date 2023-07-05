@@ -33,8 +33,6 @@
 #include <string>
 
 #include "../../gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
-#include "fraction.h"
-#include "render.h"
 #include "rgb565.h"
 #include "setup.h"
 
@@ -199,11 +197,13 @@ static uint32_t _vgaHeight = 0;
 static bool _vgaDoubleWidth  = false;
 static bool _vgaDoubleHeight = false;
 
+static VideoMode _videoMode = {};
+
 // != 0 on this variable means we have collected the first call
 static uint32_t _vgaBitsPerPixel = 0;
 
 static double _vgaFramesPerSecond    = 0.0;
-static Fraction _vgaPixelAspectRatio = {};
+static Fraction _vgaRenderPixelAspectRatio = {};
 
 // state captured from current/active MPEG player
 static PlayerPicturePixel _mpegPictureBuffer[SCALER_MAXWIDTH * SCALER_MAXHEIGHT];
@@ -541,9 +541,10 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _vgaHeight,
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight,
-		               _vgaPixelAspectRatio,
+		               _vgaRenderPixelAspectRatio,
 		               _vgaBitsPerPixel,
-		               _vgaFramesPerSecond);
+		               _vgaFramesPerSecond,
+		               _videoMode);
 
 		LOG(LOG_REELMAGIC, LOG_NORMAL)
 		("Video Mixer is Disabled. Passed through VGA RENDER_SetSize()");
@@ -577,27 +578,32 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		LOG(LOG_REELMAGIC, LOG_ERROR)
 		("Video Mixing Buffers Too Small for VGA Mode -- Can't output video!");
 		ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError;
-		_renderWidth              = 320;
-		_renderHeight             = 240;
+
+		_renderWidth  = 320;
+		_renderHeight = 240;
+
 		RENDER_SetSize(_renderWidth,
 		               _renderHeight,
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight,
-		               _vgaPixelAspectRatio,
+		               _vgaRenderPixelAspectRatio,
 		               VIDEOMIXER_BITSPERPIXEL,
-		               _vgaFramesPerSecond);
+		               _vgaFramesPerSecond,
+		               _videoMode);
 		return;
 	}
 
 	// set the RENDER mode only if requested...
-	if (updateRenderMode)
+	if (updateRenderMode) {
 		RENDER_SetSize(_renderWidth,
 		               _renderHeight,
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight,
-		               _vgaPixelAspectRatio,
+		               _vgaRenderPixelAspectRatio,
 		               VIDEOMIXER_BITSPERPIXEL,
-		               _vgaFramesPerSecond);
+		               _vgaFramesPerSecond,
+		               _videoMode);
+	}
 
 	// if no active player, set the VGA only function... the difference between this and
 	// "passthrough mode" is that this keeps the video mixer enabled with a RENDER output
@@ -704,17 +710,19 @@ void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t 
 
 void ReelMagic_RENDER_SetSize(const uint32_t width, const uint32_t height,
                               const bool double_width, const bool double_height,
-                              const Fraction& pixel_aspect_ratio,
-                              const uint32_t bits_per_pixel,
-                              const double frames_per_second)
+                              const Fraction& render_pixel_aspect_ratio,
+                              const uint8_t bits_per_pixel,
+                              const double frames_per_second,
+                              const VideoMode& video_mode)
 {
-	_vgaWidth             = width;
-	_vgaHeight            = height;
-	_vgaDoubleWidth       = double_width;
-	_vgaDoubleHeight      = double_height;
-	_vgaPixelAspectRatio  = pixel_aspect_ratio;
-	_vgaBitsPerPixel      = bits_per_pixel;
-	_vgaFramesPerSecond   = frames_per_second;
+	_vgaWidth                  = width;
+	_vgaHeight                 = height;
+	_vgaDoubleWidth            = double_width;
+	_vgaDoubleHeight           = double_height;
+	_vgaRenderPixelAspectRatio = render_pixel_aspect_ratio;
+	_vgaBitsPerPixel           = bits_per_pixel;
+	_vgaFramesPerSecond        = frames_per_second;
+	_videoMode                 = video_mode;
 
 	SetupVideoMixer(!_mpegDictatesOutputSize);
 }
