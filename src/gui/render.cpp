@@ -796,17 +796,25 @@ static void ReloadShader(const bool pressed)
 	RENDER_Init(render_section);
 }
 
-void RENDER_Init(Section *sec)
+static bool force_vga_single_scan = false;
+
+bool RENDER_IsVgaSingleScanningForced()
 {
-	Section_prop *section = static_cast<Section_prop *>(sec);
+	return force_vga_single_scan;
+}
+
+void RENDER_Init(Section* sec)
+{
+	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
 
 	// For restarting the renderer
 	static auto running = false;
 
-	auto prev_aspect_ratio_correction    = render.aspect_ratio_correction;
-	auto prev_scale_size                 = render.scale.size;
-	const auto prev_integer_scaling_mode = GFX_GetIntegerScalingMode();
+	const auto prev_aspect_ratio_correction = render.aspect_ratio_correction;
+	const auto prev_scale_size            = render.scale.size;
+	const auto prev_force_vga_single_scan = force_vga_single_scan;
+	const auto prev_integer_scaling_mode  = GFX_GetIntegerScalingMode();
 
 	render.pal.first = 256;
 	render.pal.last  = 0;
@@ -814,6 +822,13 @@ void RENDER_Init(Section *sec)
 	render.aspect_ratio_correction = section->Get_bool("aspect");
 
 	VGA_SetMonoPalette(section->Get_string("monochrome_palette"));
+
+	force_vga_single_scan = section->Get_bool("force_vga_single_scan");
+	if (force_vga_single_scan) {
+		LOG_MSG("RENDER: Forcing single-scanning of double-scanned VGA video modes");
+	} else {
+		LOG_MSG("RENDER: Double-scanning VGA video modes enabled");
+	}
 
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;
@@ -836,14 +851,19 @@ void RENDER_Init(Section *sec)
 #if C_OPENGL
 	     || (previous_shader_filename != render.shader.filename)
 #endif
-	             )) {
+	     || (prev_force_vga_single_scan != force_vga_single_scan))) {
 		RENDER_CallBack(GFX_CallBackReset);
 	}
 
-	if (!running)
+	if (!running) {
 		render.updating = true;
+	}
 
 	running = true;
 
-	MAPPER_AddHandler(ReloadShader, SDL_SCANCODE_F2, PRIMARY_MOD, "reloadshader", "Reload Shader");
+	MAPPER_AddHandler(ReloadShader,
+	                  SDL_SCANCODE_F2,
+	                  PRIMARY_MOD,
+	                  "reloadshader",
+	                  "Reload Shader");
 }

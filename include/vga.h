@@ -212,12 +212,6 @@ enum PixelsPerChar : int8_t {
 	Nine  = 9,
 };
 
-enum class VgaDoubleScanHandling : int8_t {
-	DoubleScan,
-	SingleScan,
-	ForceSingleScan,
-};
-
 struct VGA_Draw {
 	bool resizing   = false;
 	uint16_t width  = 0;
@@ -294,7 +288,7 @@ struct VGA_Draw {
 	bool doublewidth            = false;
 	bool doubleheight           = false;
 
-	VgaDoubleScanHandling vga_double_scan_handling = {};
+	bool double_scanning_enabled = false;
 
 	uint8_t font[64 * 1024] = {};
 	uint8_t* font_tables[2] = {nullptr, nullptr};
@@ -999,7 +993,7 @@ void VGA_LogInitialization(const char *adapter_name,
                            const char *ram_type,
                            const size_t num_modes);
 
-void VGA_SetVgaDoubleScanHandling(const VgaDoubleScanHandling vga_double_scane_handling);
+void VGA_EnableVgaDoubleScanning(const bool enabled);
 
 extern VGA_Type vga;
 

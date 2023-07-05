@@ -546,9 +546,6 @@ void DOSBOX_Init()
 	        "the selected video adapter ('auto' by default). See the 'machine' setting for\n"
 	        "the list of valid options per adapter.");
 
-	pbool = secprop->Add_bool("force_vga_single_scan", when_idle, false);
-	pbool->Set_help("Always single-scan sub-350 line modes on VGA adapters (disabled by default).");
-
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
 	pstring->Set_help(
 	        "Customize the emulated video mode's frame rate, in Hz:\n"
@@ -662,6 +659,17 @@ void DOSBOX_Init()
 	        "               within the viewport.\n"
 	        "  vertical:    Constrain the vertical scaling factor to integer values\n"
 	        "               within the viewport.");
+
+	pbool = secprop->Add_bool("force_vga_single_scan", when_idle, false);
+	pbool->Set_help(
+	        "Force single scanning of double-scanned VGA modes, typically sub-400 line modes\n"
+	        "(disabled by default).\n"
+	        "This is useful to achieve a single-scanned look when using CRT shaders, or to\n"
+	        "increase performance on low-powered devices.\n"
+	        "Notes: The default 'interpolation/sharp.glsl' shader and the 'texturenb' and\n"
+	        "       'openglnb' output modes force single-scanning implicitly. With\n"
+	        "       'integer_scaling' enabled, this results in finer scaling steps with the\n"
+	        "       output remaining identical.");
 
 	pstring = secprop->Add_string("monochrome_palette", always, "white");
 	pstring->Set_help(
