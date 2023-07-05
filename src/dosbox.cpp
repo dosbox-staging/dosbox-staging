@@ -720,7 +720,7 @@ void DOSBOX_Init()
 	        "Set the GLSL shader to use in OpenGL output modes.\n"
 			"Options include 'default', 'none', a shader listed using the --list-glshaders\n"
 	        "command-line argument, or an absolute or relative path to a file.\n"
-			"'default' sets the `interpolation/sharp.glsl` shader.\n"
+			"'default' sets the 'interpolation/sharp.glsl' shader.\n"
 	        "In all cases, you may omit the shader's '.glsl' file extension.");
 #endif
 
