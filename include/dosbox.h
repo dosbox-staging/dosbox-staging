@@ -70,7 +70,8 @@ extern SVGACards svgaCard;
 extern bool mono_cga;
 
 enum MachineType {
-	// In age-order: Hercules is the oldest and VGA is the newest
+	// In rough age-order: Hercules is the oldest and VGA is the newest
+	// (Tandy started out as a clone of the PCjr, so PCjr came first)
 	MCH_HERC  = 1 << 0,
 	MCH_CGA   = 1 << 1,
 	MCH_TANDY = 1 << 2,
