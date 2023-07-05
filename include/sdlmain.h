@@ -110,12 +110,16 @@ struct SDL_Block {
 		int height = 0;
 		double scalex = 1.0;
 		double scaley = 1.0;
+
 		uint16_t previous_mode = 0;
 		bool has_changed = false;
 		GFX_CallBack_t callback = nullptr;
 		bool width_was_doubled = false;
 		bool height_was_doubled = false;
 	} draw = {};
+
+	VideoMode video_mode = {};
+
 	struct {
 		struct {
 			int width = 0;

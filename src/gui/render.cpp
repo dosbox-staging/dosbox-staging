@@ -394,8 +394,13 @@ static void RENDER_Reset(void)
 	GFX_SetShader(render.shader.source);
 #endif
 
-	gfx_flags = GFX_SetSize(
-	        width, height, gfx_flags, gfx_scalew, gfx_scaleh, &RENDER_CallBack);
+	gfx_flags = GFX_SetSize(width,
+	                        height,
+	                        gfx_flags,
+	                        gfx_scalew,
+	                        gfx_scaleh,
+	                        render.video_mode,
+	                        &RENDER_CallBack);
 
 	if (gfx_flags & GFX_CAN_8)
 		render.scale.outMode = scalerMode8;
@@ -477,20 +482,26 @@ static void RENDER_CallBack(GFX_CallBackFunctions_t function)
 
 void RENDER_SetSize(const uint32_t width, const uint32_t height,
                     const bool double_width, const bool double_height,
-                    const Fraction& pixel_aspect_ratio,
-                    const unsigned bits_per_pixel, const double frames_per_second)
+                    const Fraction& render_pixel_aspect_ratio,
+                    const uint8_t bits_per_pixel,
+                    const double frames_per_second, const VideoMode& video_mode)
 {
 	RENDER_Halt();
+
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
 		return;
 	}
+
 	render.src.width              = width;
 	render.src.height             = height;
 	render.src.double_width       = double_width;
 	render.src.double_height      = double_height;
-	render.src.pixel_aspect_ratio = pixel_aspect_ratio;
-	render.src.bpp                = bits_per_pixel;
-	render.src.fps                = frames_per_second;
+	render.src.pixel_aspect_ratio = render_pixel_aspect_ratio;
+
+	render.src.bpp = bits_per_pixel;
+	render.src.fps = frames_per_second;
+
+	render.video_mode = video_mode;
 
 	RENDER_Reset();
 }
