@@ -548,7 +548,7 @@ static void handle_capture_video_event(bool pressed)
 	}
 }
 
-static void capture_destroy(Section* sec)
+static void capture_destroy(Section* /*sec*/)
 {
 	if (capture.state.audio == CaptureState::InProgress) {
 		capture_audio_finalise();
