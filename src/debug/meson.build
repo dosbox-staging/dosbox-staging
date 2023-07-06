@@ -15,6 +15,7 @@ libdebug = static_library(
         libiir_dep,
         libloguru_dep,
     ],
+    cpp_args: warnings,
 )
 
 libdebug_dep = declare_dependency(link_with: libdebug)

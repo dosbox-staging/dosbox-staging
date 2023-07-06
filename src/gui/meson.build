@@ -17,6 +17,7 @@ libgui = static_library(
         libloguru_dep,
         tracy_dep,
     ],
+    cpp_args: warnings,
 )
 
 libgui_dep = declare_dependency(link_with: libgui)

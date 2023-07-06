@@ -25,7 +25,7 @@ summary('Unit tests', gmock_dep.found())
 # Disable compiler flags that generate warnings
 # from deliberately flawed unit test code.
 #
-cpp_args = []
+cpp_args = warnings
 foreach false_positive_flag : [
     '-Wno-effc++',
     '-Wno-gnu-zero-variadic-macro-arguments',

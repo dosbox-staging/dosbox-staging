@@ -17,6 +17,7 @@ libshell = static_library(
         ghc_dep,
         libloguru_dep,
     ],
+    cpp_args: warnings,
 )
 
 libshell_dep = declare_dependency(link_with: libshell)
