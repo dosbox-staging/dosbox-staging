@@ -1706,46 +1706,37 @@ static void check_kmsdrm_setting()
 	exit(1);
 }
 
-// Double-scanning criteria:
+// We double-scan VGA modes and pixel-double all video modes by default
+// unless:
 //
-//  - If OpenGL is using any shader (regardless of mode)
-//  - If the output mode is bilinear scaled
+//  - Single-scanning or no pixel-doubling is forced in the configuration
+//  - Single-scanning or no pixel-doubling is forced by the OpenGL shader
+//  - If the output mode is nearest-neighbour
 //
-// Single-scanning is only requested when scaling pixels as flat adjacent
-// rectangles because this not only produces identical output (versus
-// double-scanning) but provides finer integer multiplication steps (for sub-4k
-// screens) and also reduces load on slow systems like the Raspberry Pi.
+// The default `interpolation/sharp.glsl` shader forces both because it
+// scales pixels as flat adjacent rectangles. This not only produces identical
+// output versus double-scanning and pixel-doubling, but provides finer
+// integer multiplication steps (especially important for sub-4K screens) and
+// also reduces load on slow systems like the Raspberry Pi.
 //
 static void update_vga_double_scan_handling([[maybe_unused]] const SCREEN_TYPES screen_type,
                                             const InterpolationMode interpolation_mode,
                                             const bool force_vga_single_scan,
                                             const bool force_no_pixel_doubling)
 {
-	auto enable_vga_double_scan = false;
-	if (!force_vga_single_scan) {
-#if C_OPENGL
-		if (screen_type == SCREEN_OPENGL && get_glshader_value() != "none") {
-			enable_vga_double_scan = true;
-		}
-#endif
-		if (interpolation_mode == InterpolationMode::Bilinear) {
-			enable_vga_double_scan = true;
-		}
+	if (force_vga_single_scan ||
+	    interpolation_mode == InterpolationMode::Bilinear) {
+		VGA_EnableVgaDoubleScanning(false);
+	} else {
+		VGA_EnableVgaDoubleScanning(true);
 	}
-	VGA_EnableVgaDoubleScanning(enable_vga_double_scan);
 
-	auto enable_pixel_doubling = false;
-	if (!force_no_pixel_doubling) {
-#if C_OPENGL
-		if (screen_type == SCREEN_OPENGL && get_glshader_value() != "none") {
-			enable_pixel_doubling = true;
-		}
-#endif
-		if (interpolation_mode == InterpolationMode::Bilinear) {
-			enable_pixel_doubling = true;
-		}
+	if (force_no_pixel_doubling ||
+	    interpolation_mode == InterpolationMode::Bilinear) {
+		VGA_EnablePixelDoubling(false);
+	} else {
+		VGA_EnablePixelDoubling(true);
 	}
-	VGA_EnablePixelDoubling(enable_pixel_doubling);
 }
 
 bool operator!=(const SDL_Point lhs, const SDL_Point rhs)

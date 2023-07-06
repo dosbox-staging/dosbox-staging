@@ -619,7 +619,7 @@ static bool RENDER_GetShader(const std::string &shader_path, std::string &source
 	return true;
 }
 
-static void parse_shader_options(const std::string &source)
+static void parse_shader_options(const std::string& source)
 {
 	try {
 		const std::regex re("\\s*#pragma\\s+(\\w+)");
@@ -628,15 +628,21 @@ static void parse_shader_options(const std::string &source)
 
 		while (next != end) {
 			std::smatch match = *next;
-			auto pragma       = match[1].str();
-			if (pragma == "use_srgb_texture")
+
+			auto pragma = match[1].str();
+			if (pragma == "use_srgb_texture") {
 				render.shader.use_srgb_texture = true;
-			else if (pragma == "use_srgb_framebuffer")
+			} else if (pragma == "use_srgb_framebuffer") {
 				render.shader.use_srgb_framebuffer = true;
+			} else if (pragma == "force_single_scan") {
+				render.shader.force_single_scan = true;
+			} else if (pragma == "force_no_pixel_doubling") {
+				render.shader.force_no_pixel_doubling = true;
+			}
 			++next;
 		}
-	} catch (std::regex_error &e) {
-		LOG_ERR("Regex error while parsing OpenGL shader for pragmas: %d",
+	} catch (std::regex_error& e) {
+		LOG_ERR("RENDER: Regex error while parsing OpenGL shader for pragmas: %d",
 		        e.code());
 	}
 }
@@ -791,12 +797,20 @@ static bool force_no_pixel_doubling = false;
 
 bool RENDER_IsVgaSingleScanningForced()
 {
+#if C_OPENGL
+	return force_vga_single_scan || render.shader.force_single_scan;
+#else
 	return force_vga_single_scan;
+#endif
 }
 
 bool RENDER_IsNoPixelDoublingForced()
 {
+#if C_OPENGL
+	return force_no_pixel_doubling || render.shader.force_no_pixel_doubling;
+#else
 	return force_no_pixel_doubling;
+#endif
 }
 
 void RENDER_Init(Section* sec)
@@ -822,18 +836,7 @@ void RENDER_Init(Section* sec)
 	VGA_SetMonoPalette(section->Get_string("monochrome_palette"));
 
 	force_vga_single_scan = section->Get_bool("force_vga_single_scan");
-	if (force_vga_single_scan) {
-		LOG_MSG("RENDER: Forcing single-scanning of double-scanned VGA video modes");
-	} else {
-		LOG_MSG("RENDER: Double-scanning VGA video modes enabled");
-	}
-
 	force_no_pixel_doubling = section->Get_bool("force_no_pixel_doubling");
-	if (force_no_pixel_doubling) {
-		LOG_MSG("RENDER: Forcing no pixel-doubling of any video mode");
-	} else {
-		LOG_MSG("RENDER: Pixel-doubling enabled");
-	}
 
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;
