@@ -41,6 +41,10 @@
 
 #define LFN_NAMELENGTH 255
 
+constexpr auto CurrentDirectory = ".";
+constexpr auto ParentDirectory  = "..";
+constexpr auto DosSeparator     = '\\';
+
 // obsolete - TODO: remove
 enum FatAttributeFlagsValues : uint8_t { // 7-bit
 	DOS_ATTR_READ_ONLY = 0b000'0001,

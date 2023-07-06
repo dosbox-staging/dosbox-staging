@@ -68,6 +68,7 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	{ "LOADHIGH", {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc } },
 	{ "MD",       {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::Common, HELP_Category::File } },
 	{ "MKDIR",    {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::All,    HELP_Category::File } },
+	{ "MOVE",     {&DOS_Shell::CMD_MOVE,     "MOVE",     HELP_Filter::All,    HELP_Category::File } },
 	{ "PATH",     {&DOS_Shell::CMD_PATH,     "PATH",     HELP_Filter::All,    HELP_Category::Misc} },
 	{ "PAUSE",    {&DOS_Shell::CMD_PAUSE,    "PAUSE",    HELP_Filter::All,    HELP_Category::Batch } },
 	{ "RD",       {&DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Filter::Common, HELP_Category::File } },
@@ -2241,4 +2242,303 @@ void DOS_Shell::CMD_VOL(char* args)
 	const auto low  = check_cast<uint16_t>(serial & 0xFFFF);
 	const auto trimmed_label = trim(label);
 	WriteOut(MSG_Get("SHELL_CMD_VOL_OUTPUT"), drive, trimmed_label, high, low);
+}
+
+static std::vector<std::string> cmd_move_parse_sources(const char*& args)
+{
+	bool parsing             = true;
+	bool inside_quote        = false;
+	bool stop_next_letter    = false;
+	bool continue_after_stop = false;
+	std::string source;
+	std::vector<std::string> sources;
+
+	// Sources are seperated by commas and terminated by a trailing space
+	while (parsing) {
+		const auto ch = *args;
+		switch (ch) {
+		case '"':
+			inside_quote = !inside_quote;
+			++args;
+			break;
+		case ' ':
+			if (inside_quote) {
+				source.push_back(ch);
+				++args;
+			} else {
+				if (!source.empty()) {
+					sources.emplace_back(std::move(source));
+					source              = {};
+					stop_next_letter    = true;
+					continue_after_stop = false;
+				}
+				++args;
+			}
+			break;
+		case ',':
+			stop_next_letter    = true;
+			continue_after_stop = true;
+			if (!source.empty()) {
+				sources.emplace_back(std::move(source));
+				source = {};
+			}
+			++args;
+			break;
+		case 0:
+			if (!source.empty()) {
+				sources.emplace_back(std::move(source));
+			}
+			parsing = false;
+			break;
+		default:
+			if (stop_next_letter) {
+				parsing             = continue_after_stop;
+				continue_after_stop = false;
+				stop_next_letter    = false;
+			} else {
+				source.push_back(ch);
+				++args;
+			}
+		}
+	}
+	return sources;
+}
+
+static std::string cmd_move_parse_destination(const char*& args)
+{
+	std::string destination;
+	bool parsing      = true;
+	bool inside_quote = false;
+
+	while (parsing) {
+		const auto ch = *args;
+		switch (ch) {
+		case '"':
+			inside_quote = !inside_quote;
+			++args;
+			break;
+		case ' ':
+			if (inside_quote) {
+				destination.push_back(ch);
+				++args;
+			} else {
+				++args;
+				parsing = false;
+			}
+			break;
+		case 0: parsing = false; break;
+		default: destination.push_back(ch); ++args;
+		}
+	}
+	return destination;
+}
+
+struct cmd_move_arguments {
+	std::vector<std::string> sources = {};
+	std::string destination          = {};
+	const char* error                = nullptr;
+};
+
+cmd_move_arguments cmd_move_parse_arguments(const char* args)
+{
+	cmd_move_arguments ret;
+	// args pointer gets advanced by the two helper functions
+	ret.sources = cmd_move_parse_sources(args);
+	if (ret.sources.empty()) {
+		ret.error = "SHELL_MISSING_PARAMETER";
+		return ret;
+	}
+	ret.destination = cmd_move_parse_destination(args);
+	if (ret.destination.empty()) {
+		ret.error = "SHELL_MISSING_PARAMETER";
+		return ret;
+	}
+	// Check for extra arguments
+	while (*args) {
+		if (*args++ != ' ') {
+			ret.error = "SHELL_TOO_MANY_PARAMETERS";
+			return ret;
+		}
+	}
+	return ret;
+}
+
+void DOS_Shell::CMD_MOVE(char* args)
+{
+	HELP("MOVE");
+
+	// TODO: Add support for these flags along with the COPYCMD environment
+	// variable (overwrite prompts) Also currently ignored by CMD_COPY
+	(void)ScanCMDBool(args, "Y");
+	(void)ScanCMDBool(args, "-Y");
+
+	char* rem = ScanCMDRemain(args);
+	if (rem) {
+		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), rem);
+		return;
+	}
+
+	cmd_move_arguments parsed = cmd_move_parse_arguments(args);
+	if (parsed.error) {
+		WriteOut(MSG_Get(parsed.error));
+		return;
+	}
+
+	char temp[DOS_PATHLENGTH];
+	if (!DOS_Canonicalize(parsed.destination.c_str(), temp)) {
+		WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),
+		         parsed.destination.c_str());
+		return;
+	}
+	std::string canonical_destination = temp;
+
+	// Command uses dta so set it to our internal dta
+	const RealPt save_dta = dos.dta();
+	dos.dta(dos.tables.tempdta);
+	DOS_DTA dta(dos.dta());
+
+	// Each raw source can be a wildcard (*.*) containing multiple real
+	// sources.
+	std::vector<std::string> final_sources;
+	for (const std::string& source : parsed.sources) {
+		FatAttributeFlags attr = {0xff};
+		attr.volume.flip();
+		if (!DOS_FindFirst(source.c_str(), attr._data)) {
+			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"), source.c_str());
+			continue;
+		}
+		if (!DOS_Canonicalize(source.c_str(), temp)) {
+			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"), source.c_str());
+			continue;
+		}
+		std::string source_dir = temp;
+		source_dir = source_dir.substr(0, source_dir.rfind(DosSeparator) + 1);
+		do {
+			DOS_DTA::Result result = {};
+			dta.GetResult(result);
+			if (result.name != CurrentDirectory &&
+			    result.name != ParentDirectory) {
+				final_sources.emplace_back(source_dir + result.name);
+			}
+		} while (DOS_FindNext());
+	}
+
+	// Done with DTA. Restore it.
+	dos.dta(save_dta);
+
+	uint16_t destination_attr = 0;
+	bool destination_exists = DOS_GetFileAttr(canonical_destination.c_str(),
+	                                          &destination_attr);
+	bool dest_is_dir        = false;
+
+	if (destination_exists) {
+		if (destination_attr & DOS_ATTR_DIRECTORY) {
+			dest_is_dir = true;
+		} else if (final_sources.size() > 1) {
+			WriteOut(MSG_Get("SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE"));
+			return;
+		}
+	} else if (final_sources.size() > 1) {
+		dest_is_dir = true;
+		if (!DOS_MakeDir(canonical_destination.c_str())) {
+			WriteOut(MSG_Get("SHELL_CMD_MKDIR_ERROR"),
+			         canonical_destination.c_str());
+			return;
+		}
+	}
+
+	if (dest_is_dir && canonical_destination.back() != DosSeparator) {
+		canonical_destination.push_back(DosSeparator);
+	}
+
+	for (const std::string& source : final_sources) {
+		std::string final_destination = canonical_destination;
+		if (dest_is_dir) {
+			final_destination += source.substr(
+			        source.rfind(DosSeparator) + 1);
+		}
+		if (source == final_destination) {
+			WriteOut(MSG_Get("SHELL_FILE_EXISTS"),
+			         final_destination.c_str());
+			continue;
+		}
+		// Overwrite existing file
+		if (destination_exists && !dest_is_dir) {
+			// Condition should be checked for previously
+			assert(final_sources.size() == 1);
+			if (!DOS_UnlinkFile(final_destination.c_str())) {
+				WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),
+				         final_destination.c_str());
+				return;
+			}
+		}
+		// If same drive, do a rename. Otherwise it needs a copy + delete.
+		const auto source_drive_letter = source[0];
+		const auto dest_drive_letter   = final_destination[0];
+		if (source_drive_letter == dest_drive_letter) {
+			if (DOS_Rename(source.c_str(), final_destination.c_str())) {
+				WriteOut("%s => %s\n",
+				         source.c_str(),
+				         final_destination.c_str());
+			} else {
+				WriteOut(MSG_Get("SHELL_FILE_CREATE_ERROR"),
+				         final_destination.c_str());
+			}
+		} else {
+			uint16_t source_attr = 0;
+			if (!DOS_GetFileAttr(source.c_str(), &source_attr)) {
+				WriteOut("SHELL_FILE_NOT_FOUND", source.c_str());
+				continue;
+			}
+			uint16_t source_handle = 0;
+			if (!DOS_OpenFile(source.c_str(), OPEN_READ, &source_handle)) {
+				WriteOut("SHELL_FILE_OPEN_ERROR", source.c_str());
+				continue;
+			}
+			uint16_t dest_handle = 0;
+			if (!DOS_CreateFile(final_destination.c_str(),
+			                    source_attr,
+			                    &dest_handle)) {
+				WriteOut(MSG_Get("SHELL_FILE_CREATE_ERROR"),
+				         final_destination.c_str());
+				DOS_CloseFile(source_handle);
+				continue;
+			}
+			constexpr uint16_t buffer_capacity = 4096;
+			uint8_t buffer[buffer_capacity];
+			uint16_t bytes_requested = buffer_capacity;
+			bool success             = true;
+			do {
+				if (!DOS_ReadFile(source_handle, buffer, &bytes_requested)) {
+					WriteOut(MSG_Get("SHELL_READ_ERROR"),
+					         source.c_str());
+					success = false;
+					break;
+				}
+				uint16_t bytes_read = bytes_requested;
+				if (!DOS_WriteFile(dest_handle, buffer, &bytes_requested) ||
+				    bytes_requested != bytes_read) {
+					WriteOut(MSG_Get("SHELL_WRITE_ERROR"),
+					         final_destination.c_str());
+					success = false;
+					break;
+				}
+			} while (bytes_requested == buffer_capacity);
+
+			if (success) {
+				WriteOut("%s => %s\n",
+				         source.c_str(),
+				         final_destination.c_str());
+			}
+
+			DOS_CloseFile(source_handle);
+			DOS_CloseFile(dest_handle);
+			if (success) {
+				if (!DOS_UnlinkFile(source.c_str())) {
+					WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),
+					         source.c_str());
+				}
+			}
+		}
+	}
 }
