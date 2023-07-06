@@ -2165,17 +2165,23 @@ dosurface:
 
 		int is_framebuffer_srgb_capable = 0;
 		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-		                        &is_framebuffer_srgb_capable))
+		                        &is_framebuffer_srgb_capable)) {
 			LOG_WARNING("OPENGL: Failed getting the framebuffer's sRGB status: %s",
 			            SDL_GetError());
+		}
 
-		sdl.opengl.framebuffer_is_srgb_encoded = RENDER_UseSRGBFramebuffer() && is_framebuffer_srgb_capable > 0;
+		sdl.opengl.framebuffer_is_srgb_encoded =
+		        RENDER_UseSrgbFramebuffer() &&
+		        (is_framebuffer_srgb_capable > 0);
 
-		if (RENDER_UseSRGBFramebuffer() && !sdl.opengl.framebuffer_is_srgb_encoded)
+		if (RENDER_UseSrgbFramebuffer() &&
+		    !sdl.opengl.framebuffer_is_srgb_encoded) {
 			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
+		}
 
-		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly with Mesa drivers on certain integrated Intel GPUs
-		const auto texformat = RENDER_UseSRGBTexture() && sdl.opengl.framebuffer_is_srgb_encoded
+		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
+		// with Mesa drivers on certain integrated Intel GPUs
+		const auto texformat = RENDER_UseSrgbTexture() && sdl.opengl.framebuffer_is_srgb_encoded
 		                             ? GL_SRGB8_ALPHA8
 		                             : GL_RGB8;
 		glTexImage2D(GL_TEXTURE_2D,
