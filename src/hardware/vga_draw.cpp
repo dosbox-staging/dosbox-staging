@@ -1942,7 +1942,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	Fraction render_pixel_aspect_ratio = {1};
 
-	unsigned bpp;
+	uint8_t bpp;
 	switch (vga.mode) {
 	case M_LIN15: bpp = 15; break;
 	case M_LIN16: bpp = 16; break;
