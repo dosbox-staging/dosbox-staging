@@ -647,6 +647,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_FILE_NOT_FOUND", "File not found - '%s'\n");
 	MSG_Add("SHELL_FILE_EXISTS", "File '%s' already exists.\n");
 	MSG_Add("SHELL_DIRECTORY_NOT_FOUND", "Directory not found - '%s'\n");
+	MSG_Add("SHELL_READ_ERROR", "Error reading file - '%s'\n");
+	MSG_Add("SHELL_WRITE_ERROR", "Error writing file - '%s'\n");
 
 	// Command specific messages
 	MSG_Add("SHELL_CMD_HELP","If you want a list of all supported commands type [color=yellow]help /all[reset] .\nA short list of the most often used commands:\n");
@@ -1258,6 +1260,31 @@ void SHELL_Init() {
 	        " Volume in drive %c is %s\n"
 	        " Volume Serial Number is %04X-%04X\n"
 	        "\n");
+	MSG_Add("SHELL_CMD_MOVE_HELP",
+	        "Moves files and renames files and directories.\n");
+	MSG_Add("SHELL_CMD_MOVE_HELP_LONG",
+	        "Usage:\n"
+	        "  [color=green]move[reset] [color=white]FILENAME1[,FILENAME2,...][reset] [color=cyan]DESTINATION[reset]\n"
+	        "  [color=green]move[reset] [color=white]DIRECTORY1[reset] [color=cyan]DIRECTORY2[reset]\n"
+	        "\n"
+	        "Where:\n"
+	        "  [color=white]FILENAME[reset]    Can be either an exact filename or an inexact filename with\n"
+	        "              wildcards, which are the asterisk (*) and the question mark (?).\n"
+	        "              Multiple, comma-seperated, filenames can be provided.\n"
+	        "  [color=white]DIRECTORY[reset]   An exact directory name, not containing any wildcards.\n"
+	        "  [color=cyan]DESTINATION[reset] An exact filename or directory, not containing any wildcards.\n"
+	        "\n"
+	        "Notes:\n"
+	        "  If multiple source files are specified, destination must be a directory.\n"
+	        "  If not, one will be created for you.\n"
+	        "\n"
+	        "  If a single source file is specified, it will overwrite destination.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=green]move[reset] [color=white]source.bat[reset] [color=cyan]new.bat[reset]\n"
+	        "  [color=green]move[reset] [color=white]file1.txt,file2.txt[reset] [color=cyan]mydir[reset]\n");
+	MSG_Add("SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE",
+	        "Cannot move multiple files to a single file.\n");
 
 	/* Ensure help categories are loaded into the message vector */
 	HELP_AddMessages();

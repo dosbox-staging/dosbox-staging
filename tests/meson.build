@@ -70,6 +70,7 @@ unit_tests = [
     {'name': 'batch_file', 'deps': [libmisc_stubs_dep, libshell_dep]},
     {'name': 'bit_view', 'deps': []},
     {'name': 'bitops', 'deps': []},
+    {'name': 'cmd_move', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'dos_files', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'drives', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'fraction', 'deps': []},
