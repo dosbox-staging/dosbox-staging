@@ -615,7 +615,7 @@ static bool RENDER_GetShader(const std::string &shader_path, std::string &source
 static void parse_shader_options(const std::string &source)
 {
 	try {
-		const std::regex re("^\\s*#pragma\\s+(\\w+)");
+		const std::regex re("\\s*#pragma\\s+(\\w+)");
 		std::sregex_iterator next(source.begin(), source.end(), re);
 		const std::sregex_iterator end;
 
