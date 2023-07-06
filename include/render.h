@@ -166,8 +166,8 @@ void RENDER_InitShaderSource([[maybe_unused]] Section* sec);
 void RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t blue);
 
 #if C_OPENGL
-bool RENDER_UseSRGBTexture();
-bool RENDER_UseSRGBFramebuffer();
+bool RENDER_UseSrgbTexture();
+bool RENDER_UseSrgbFramebuffer();
 #endif
 
 #endif

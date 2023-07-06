@@ -634,12 +634,12 @@ static void parse_shader_options(const std::string &source)
 	}
 }
 
-bool RENDER_UseSRGBTexture()
+bool RENDER_UseSrgbTexture()
 {
 	return render.shader.use_srgb_texture;
 }
 
-bool RENDER_UseSRGBFramebuffer()
+bool RENDER_UseSrgbFramebuffer()
 {
 	return render.shader.use_srgb_framebuffer;
 }
