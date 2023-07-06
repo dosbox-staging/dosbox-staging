@@ -2184,6 +2184,13 @@ dosurface:
 		const auto texformat = RENDER_UseSrgbTexture() && sdl.opengl.framebuffer_is_srgb_encoded
 		                             ? GL_SRGB8_ALPHA8
 		                             : GL_RGB8;
+
+#if 0
+		if (texformat == GL_SRGB8_ALPHA8) {
+			LOG_MSG("OPENGL: Using sRGB texture");
+		}
+#endif
+
 		glTexImage2D(GL_TEXTURE_2D,
 		             0,
 		             texformat,
@@ -2197,6 +2204,9 @@ dosurface:
 
 		if (sdl.opengl.framebuffer_is_srgb_encoded) {
 			glEnable(GL_FRAMEBUFFER_SRGB);
+#if 0
+			LOG_MSG("OPENGL: Using sRGB framebuffer");
+#endif
 		}
 
 		glClearColor (0.0f, 0.0f, 0.0f, 1.0f);
