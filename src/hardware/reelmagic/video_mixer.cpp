@@ -200,7 +200,7 @@ static bool _vgaDoubleHeight = false;
 static VideoMode _videoMode = {};
 
 // != 0 on this variable means we have collected the first call
-static uint32_t _vgaBitsPerPixel = 0;
+static uint8_t _vgaBitsPerPixel = 0;
 
 static double _vgaFramesPerSecond    = 0.0;
 static Fraction _vgaRenderPixelAspectRatio = {};

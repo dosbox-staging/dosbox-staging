@@ -44,7 +44,7 @@ static struct {
 	VideoCodec* codec       = nullptr;
 	int width               = 0;
 	int height              = 0;
-	int bits_per_pixel      = 0;
+	uint8_t bits_per_pixel  = 0;
 	float frames_per_second = 0.0f;
 
 	uint32_t written           = 0;
