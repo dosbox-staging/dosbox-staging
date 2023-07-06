@@ -25,6 +25,7 @@ libints = static_library(
         ghc_dep,
         libloguru_dep,
     ],
+    cpp_args: warnings,
 )
 
 libints_dep = declare_dependency(link_with: libints)

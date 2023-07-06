@@ -84,6 +84,28 @@ extra_flags = [
     '-fpch-preprocess',
 ]
 
+warnings = []
+
+foreach flag : [
+    '-Walloca',
+    '-Wctor-dtor-privacy',
+    '-Wdate-time',
+    '-Wdisabled-optimization',
+    '-Wduplicated-branches',
+    '-Weffc++',
+    '-Wextra-semi',
+    '-Wlogical-op',
+    '-Wlogical-not-parentheses',
+    '-Wmismatched-tags',
+    '-Wsizeof-pointer-div',
+    '-Wstack-protector',
+    '-Wstrict-null-sentinel',
+]
+    if cxx.has_argument(flag)
+       warnings += flag
+    endif
+endforeach
+
 # generate linker map file
 extra_link_flags = [
     '-Wl,-map,dosbox.map',
@@ -137,8 +159,8 @@ endif
 # Add Debug-specific flags here
 if get_option('buildtype').startswith('debug')
 
-    # Use GCC's and Clang's maximum check flags except 
-    # for macOS and Windows, where Xcode and MSYS2 both 
+    # Use GCC's and Clang's maximum check flags except
+    # for macOS and Windows, where Xcode and MSYS2 both
     # fails with undefined symbols.
     if os_family_name not in ['MACOSX', 'WIN32']
         extra_flags += [
@@ -891,6 +913,7 @@ executable(
     dependencies: internal_deps + third_party_deps,
     include_directories: incdir,
     install: true,
+    cpp_args: warnings,
 )
 
 # create a library so we can test things inside DOSBOX dep path

@@ -95,6 +95,7 @@ libhardware = static_library(
         winsock2_dep,
         zlib_dep,
     ],
+    cpp_args: warnings,
 )
 
 libhardware_dep = declare_dependency(link_with: libhardware)

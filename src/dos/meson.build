@@ -60,6 +60,7 @@ libdos = static_library(
         libiir_dep,
         libloguru_dep,
     ],
+    cpp_args: warnings,
 )
 
 libdos_dep = declare_dependency(link_with: libdos)

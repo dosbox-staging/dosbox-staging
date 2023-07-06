@@ -39,6 +39,7 @@ libmisc = static_library(
     libmisc_sources,
     include_directories: incdir,
     dependencies: libmisc_dependencies,
+    cpp_args: warnings,
 )
 
 libmisc_stubs = static_library(
@@ -46,6 +47,7 @@ libmisc_stubs = static_library(
     libmisc_stubs_sources,
     include_directories: incdir,
     dependencies: libmisc_dependencies,
+    cpp_args: warnings,
 )
 
 libmisc_dep = declare_dependency(link_with: libmisc)

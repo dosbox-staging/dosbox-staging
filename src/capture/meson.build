@@ -20,6 +20,7 @@ libcapture = static_library(
         png_dep,
         sdl2_dep,
     ],
+    cpp_args: warnings,
 )
 
 libcapture_dep = declare_dependency(link_with: libcapture)

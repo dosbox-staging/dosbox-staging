@@ -23,6 +23,7 @@ libmidi = static_library(
         libiir_dep,
         libloguru_dep,
     ],
+    cpp_args: warnings,
 )
 
 libmidi_dep = declare_dependency(link_with: libmidi)
