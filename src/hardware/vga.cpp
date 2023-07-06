@@ -408,11 +408,23 @@ void VGA_ForceSquarePixels(const bool enabled)
 
 void VGA_EnableVgaDoubleScanning(const bool enabled)
 {
+	if (enabled) {
+		LOG_MSG("VGA: Double-scanning VGA video modes enabled");
+	} else {
+		LOG_MSG("VGA: Forcing single-scanning of double-scanned VGA video modes");
+	}
+
 	vga.draw.double_scanning_enabled = enabled;
 }
 
 void VGA_EnablePixelDoubling(const bool enabled)
 {
+	if (enabled) {
+		LOG_MSG("VGA: Pixel-doubling enabled");
+	} else {
+		LOG_MSG("VGA: Forcing no pixel-doubling of any video mode");
+	}
+
 	vga.draw.pixel_doubling_enabled = enabled;
 }
 
