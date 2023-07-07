@@ -24,7 +24,7 @@
 
 CHECK_NARROWING();
 
-void ImageDecoder::Init(const RenderedImage& image)
+void ImageDecoder::Init(const RenderedImage& image, const uint8_t row_skip_count)
 {
 	assert(image.width > 0);
 	assert(image.height > 0);
@@ -41,22 +41,26 @@ void ImageDecoder::Init(const RenderedImage& image)
 		assert(image.palette_data);
 	}
 
-	if (image.flip_vertical) {
+	if (image.is_flipped_vertically) {
 		curr_row_start = image.image_data + (image.height - 1) * image.pitch;
 	} else {
 		curr_row_start = image.image_data;
 	}
 	pos = curr_row_start;
 
-	this->image = image;
+	this->image          = image;
+	this->row_skip_count = row_skip_count;
 }
 
 void ImageDecoder::AdvanceRow()
 {
-	if (image.flip_vertical) {
-		curr_row_start -= image.pitch;
+	auto rows_to_advance = row_skip_count + 1;
+
+	if (image.is_flipped_vertically) {
+		curr_row_start -= image.pitch * rows_to_advance;
 	} else {
-		curr_row_start += image.pitch;
+		curr_row_start += image.pitch * rows_to_advance;
 	}
+
 	pos = curr_row_start;
 }

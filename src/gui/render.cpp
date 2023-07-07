@@ -263,9 +263,18 @@ void RENDER_EndUpdate(bool abort)
 		image.image_data         = (uint8_t*)&scalerSourceCache;
 		image.palette_data       = (uint8_t*)&render.pal.rgb;
 
+		auto video_mode = render.video_mode;
+
+		if (!render.aspect_ratio_correction) {
+			constexpr Fraction square_pixel_aspect_ratio = Fraction{1};
+
+			image.pixel_aspect_ratio = square_pixel_aspect_ratio;
+			video_mode.pixel_aspect_ratio = square_pixel_aspect_ratio;
+		}
+
 		const auto frames_per_second = static_cast<float>(render.src.fps);
 
-		CAPTURE_AddFrame(image, render.video_mode, frames_per_second);
+		CAPTURE_AddFrame(image, video_mode, frames_per_second);
 	}
 
 	if (render.scale.outWrite) {

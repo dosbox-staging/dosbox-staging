@@ -2622,13 +2622,13 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	RenderedImage image = {};
 
 	auto allocate_image = [&]() {
-		image.width              = sdl.clip.w;
-		image.height             = sdl.clip.h;
-		image.double_width       = false;
-		image.double_height      = false;
-		image.flip_vertical      = false;
-		image.pixel_aspect_ratio = {1};
-		image.bits_per_pixel     = 24;
+		image.width                 = sdl.clip.w;
+		image.height                = sdl.clip.h;
+		image.double_width          = false;
+		image.double_height         = false;
+		image.is_flipped_vertically = false;
+		image.pixel_aspect_ratio    = {1};
+		image.bits_per_pixel        = 24;
 		image.pitch        = image.width * (image.bits_per_pixel / 8);
 		image.palette_data = nullptr;
 
@@ -2659,7 +2659,7 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		             GL_UNSIGNED_BYTE,
 		             image.image_data);
 
-		image.flip_vertical = true;
+		image.is_flipped_vertically = true;
 		return image;
 	}
 #endif

@@ -156,37 +156,82 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
 	}
 }
 
+// to avoid circular dependency
+uint8_t get_double_scan_row_skip_count(const RenderedImage&, const VideoMode&);
+
 void ImageSaver::SaveRawImage(const RenderedImage& image, const VideoMode& video_mode)
 {
 	PngWriter png_writer = {};
 
-	image_scaler.Init(image, ScalingMode::DoublingOnly);
+	auto row_skip_count = get_double_scan_row_skip_count(image, video_mode);
+	image_decoder.Init(image, row_skip_count);
+
+	const auto raw_image_height = video_mode.height;
 
 	// Write the pixel aspect ratio of the video mode into the PNG pHYs
 	// chunk for raw images
 	const auto pixel_aspect_ratio = video_mode.pixel_aspect_ratio;
 
-	write_upscaled_png(outfile,
-	                   png_writer,
-	                   image_scaler,
-	                   image_scaler.GetOutputWidth(),
-	                   image_scaler.GetOutputHeight(),
-	                   pixel_aspect_ratio,
-	                   video_mode,
-	                   image.palette_data);
+	if (image.is_paletted()) {
+		if (!png_writer.InitIndexed8(outfile,
+		                             image.width,
+		                             raw_image_height,
+		                             pixel_aspect_ratio,
+		                             video_mode,
+		                             image.palette_data)) {
+			return;
+		};
+	} else {
+		if (!png_writer.InitRgb888(outfile,
+		                           image.width,
+		                           raw_image_height,
+		                           pixel_aspect_ratio,
+		                           video_mode)) {
+			return;
+		};
+	}
+
+	constexpr uint8_t MaxBytesPerPixel = 3;
+	row_buf.resize(static_cast<size_t>(image.width) *
+	               static_cast<size_t>(MaxBytesPerPixel));
+
+	auto rows_to_write = raw_image_height;
+	while (rows_to_write--) {
+		auto out = row_buf.begin();
+
+		auto pixels_to_write = image.width;
+		if (image.is_paletted()) {
+			while (pixels_to_write--) {
+				const auto pixel = image_decoder.GetNextIndexed8Pixel();
+
+				*out++ = pixel;
+			}
+		} else {
+			while (pixels_to_write--) {
+				const auto pixel = image_decoder.GetNextPixelAsRgb888();
+
+				*out++ = pixel.red;
+				*out++ = pixel.green;
+				*out++ = pixel.blue;
+			}
+		}
+		png_writer.WriteRow(row_buf.begin());
+		image_decoder.AdvanceRow();
+	}
 }
 
-static auto square_pixel_aspect_ratio = Fraction{1};
+static constexpr auto square_pixel_aspect_ratio = Fraction{1};
 
 void ImageSaver::SaveUpscaledImage(const RenderedImage& image,
                                    const VideoMode& video_mode)
 {
 	PngWriter png_writer = {};
 
-	image_scaler.Init(image, ScalingMode::AspectRatioPreservingUpscale);
+	image_scaler.Init(image, video_mode);
 
 	// Always write 1:1 pixel aspect ratio into the PNG pHYs chunk for
-	// upscaled image
+	// upscaled images as the "non-squaredness" is "baked into" the image
+	// data.
 	write_upscaled_png(outfile,
 	                   png_writer,
 	                   image_scaler,
@@ -203,7 +248,8 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image,
 	PngWriter png_writer = {};
 
 	// Always write 1:1 pixel aspect ratio into the PNG pHYs chunk for
-	// upscaled image
+	// rendered images as the "non-squaredness" is "baked into" the image
+	// data.
 	if (!png_writer.InitRgb888(outfile,
 	                           image.width,
 	                           image.height,
@@ -212,7 +258,8 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image,
 		return;
 	};
 
-	image_decoder.Init(image);
+	const auto row_skip_count = 0;
+	image_decoder.Init(image, row_skip_count);
 
 	constexpr uint8_t BytesPerPixel = 3;
 	row_buf.resize(static_cast<size_t>(image.width) *
@@ -222,8 +269,9 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image,
 	while (rows_to_write--) {
 		auto out = row_buf.begin();
 
-		for (auto x = 0; x < image.width; ++x) {
-			const auto pixel = image_decoder.GetNextRgb888Pixel();
+		auto pixels_to_write = image.width;
+		while (pixels_to_write--) {
+			const auto pixel = image_decoder.GetNextPixelAsRgb888();
 
 			*out++ = pixel.red;
 			*out++ = pixel.green;

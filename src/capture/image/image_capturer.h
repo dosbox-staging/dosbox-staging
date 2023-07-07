@@ -108,4 +108,7 @@ private:
 	ImageSaver& GetNextImageSaver();
 };
 
+uint8_t get_double_scan_row_skip_count(const RenderedImage& image,
+                                       const VideoMode& video_mode);
+
 #endif // DOSBOX_IMAGE_CAPTURER_H
