@@ -84,7 +84,7 @@ struct Render_t {
 
 		uint32_t start = 0;
 
-		// Pixel format (see vga.h)
+		// Pixel format of the image data (see `bpp` in vga.h for details)
 		uint8_t bpp = 0;
 
 		// Frames per second
@@ -140,17 +140,51 @@ struct Render_t {
 	bool fullFrame               = true;
 };
 
+// A frame of the emulated video output that's passed to the rendering backend
+// or to the image and video capturers.
+//
+// Also used for passing the post-shader output read back from the frame buffer
+// to the image capturer.
+//
 struct RenderedImage {
-	uint16_t width              = 0;
-	uint16_t height             = 0;
-	bool double_width           = false;
-	bool double_height          = false;
-	bool flip_vertical          = false;
+	// Width of the rendered image (prior to optional width-doubling)
+	uint16_t width = 0;
+
+	// Height of the rendered image (prior to optional height-doubling)
+	uint16_t height = 0;
+
+	// If true, the rendered image is doubled horizontally after via
+	// a scaler (e.g. to achieve pixel-doubling)
+	bool double_width = false;
+
+	// If true, the rendered image is doubled vertically via a
+	// scaler (e.g. to achieve fake double-scanning)
+	bool double_height = false;
+
+	// If true, the image is stored flipped vertically, starting from the
+	// bottom row
+	bool is_flipped_vertically = false;
+
+	// Pixel aspect ratio to be applied to the final image (post
+	// width & height doubling) so it appears as intended on screen.
+	// (video_mode.pixel_aspect_ratio holds the "nominal" pixel
+	// aspect ratio of the source video mode)
 	Fraction pixel_aspect_ratio = {};
-	uint8_t bits_per_pixel      = 0;
-	uint16_t pitch              = 0;
-	uint8_t* image_data         = nullptr;
-	uint8_t* palette_data       = nullptr;
+
+	// Pixel format of the image data (see `bpp` in vga.h for details)
+	uint8_t bits_per_pixel = 0;
+
+	// Bytes per row
+	uint16_t pitch = 0;
+
+	// (width * height) number of pixels stored in the pixel format defined
+	// by bits_per_pixel
+	uint8_t* image_data = nullptr;
+
+	// Pointer to a (256 * 4) byte long palette data, stored as 8-bit RGB
+	// values with 1 extra padding byte per entry (R0, G0, B0, X0, R1, G1,
+	// B1, X1, etc.)
+	uint8_t* palette_data = nullptr;
 
 	inline bool is_paletted() const
 	{
@@ -167,9 +201,7 @@ struct RenderedImage {
 		copy.image_data = new uint8_t[image_data_num_bytes];
 
 		assert(image_data);
-		std::memcpy(copy.image_data,
-		            image_data,
-		            image_data_num_bytes);
+		std::memcpy(copy.image_data, image_data, image_data_num_bytes);
 
 		// TODO it's bad that we need to make this assumption downstream
 		// on the size and alignment of the palette...
@@ -177,9 +209,7 @@ struct RenderedImage {
 			constexpr uint16_t PaletteNumBytes = 256 * 4;
 			copy.palette_data = new uint8_t[PaletteNumBytes];
 
-			std::memcpy(copy.palette_data,
-			            palette_data,
-			            PaletteNumBytes);
+			std::memcpy(copy.palette_data, palette_data, PaletteNumBytes);
 		}
 		return copy;
 	}

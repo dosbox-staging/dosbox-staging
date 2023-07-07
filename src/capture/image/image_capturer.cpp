@@ -242,3 +242,30 @@ void ImageCapturer::RequestGroupedCapture()
 	state.grouped = CaptureState::Pending;
 }
 
+uint8_t get_double_scan_row_skip_count(const RenderedImage& image,
+                                       const VideoMode& video_mode)
+{
+	// Double-scanning can be either:
+	//
+	// 1) "baked" into the image; `image.image_data` contains twice as many
+	// rows (e.g. `video_mode.height` is 200 and `image.height` 400),
+	//
+	// 2) or it can be "faked" with `image.double_height` set to true, in
+	// which case `video_mode.height` equals `image.height` (e.g. both are
+	// 200) and the height-doubling happens as a post-processing step on
+	// `image.image_data` just before the final output.
+	//
+	// For case 2, there's nothing to do; the image data itself is not
+	// double-scanned. For case 1, we need to reconstruct the raw,
+	// non-double-scanned image to serve as the basis for our further output
+	// and scaling operations, so we must skip every second row if we're
+	// dealing with "baked in" double-scanning.
+	//
+	// This function returns `0` for case 1 images (faked double-scan), and
+	// `1` for case 2 images (baked-in double-scan).
+	//
+	assert(image.height >= video_mode.height);
+	assert(image.height % video_mode.height == 0);
+
+	return check_cast<uint8_t>(image.height / video_mode.height - 1);
+}

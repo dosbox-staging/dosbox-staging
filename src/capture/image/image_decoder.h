@@ -37,15 +37,18 @@ public:
 	ImageDecoder()  = default;
 	~ImageDecoder() = default;
 
-	void Init(const RenderedImage& image);
+	// Set `row_skip_count` to 1 to de-double-scan an image with "baked in"
+	// double-scanning.
+	void Init(const RenderedImage& image, const uint8_t row_skip_count);
 
 	inline uint8_t GetNextIndexed8Pixel()
 	{
+		assert(image.is_paletted());
 		assert(pos - curr_row_start < image.pitch);
 		return *pos++;
 	}
 
-	inline Rgb888 GetNextRgb888Pixel()
+	inline Rgb888 GetNextPixelAsRgb888()
 	{
 		assert(pos - curr_row_start < image.pitch);
 
@@ -66,25 +69,46 @@ public:
 private:
 	RenderedImage image = {};
 
+	uint8_t row_skip_count = 0;
+
 	const uint8_t* curr_row_start = nullptr;
 	const uint8_t* pos            = nullptr;
 
+	inline void IncrementPos()
+	{
+		switch (image.bits_per_pixel) {
+		case 8: // Indexed8
+			++pos;
+			break;
+		case 15: // BGR555
+		case 16: // BGR565
+			pos += 2;
+			break;
+		case 24: // BGR888
+			pos += 3;
+			break;
+		case 32: // XBGR8888
+			pos += 4;
+			break;
+		default: assertm(false, "Invalid bits_per_pixel value");
+		}
+	}
+
 	inline Rgb888 GetNextPalettedPixelAsRgb888()
 	{
-		assert(pos - curr_row_start < image.pitch);
-		const auto pal_index = *pos++;
+		const auto pal_index = *pos;
 
 		const auto r = image.palette_data[pal_index * 4 + 0];
 		const auto g = image.palette_data[pal_index * 4 + 1];
 		const auto b = image.palette_data[pal_index * 4 + 2];
+
+		IncrementPos();
 
 		return {r, g, b};
 	}
 
 	inline Rgb888 GetNextRgbPixelAsRgb888()
 	{
-		assert(pos - curr_row_start < image.pitch);
-
 		Rgb888 pixel = {};
 
 		switch (image.bits_per_pixel) {
@@ -92,31 +116,26 @@ private:
 			const auto p = host_to_le(
 			        *reinterpret_cast<const uint16_t*>(pos));
 			pixel = Rgb555(p).ToRgb888();
-			pos += 2;
 		} break;
 
 		case 16: { // BGR565
 			const auto p = host_to_le(
 			        *reinterpret_cast<const uint16_t*>(pos));
 			pixel = Rgb565(p).ToRgb888();
-			pos += 2;
 		} break;
 
 		case 24:   // BGR888
 		case 32: { // XBGR8888
-			const auto b = *(pos++);
-			const auto g = *(pos++);
-			const auto r = *(pos++);
+			const auto b = *(pos + 0);
+			const auto g = *(pos + 1);
+			const auto r = *(pos + 2);
 
 			pixel = {r, g, b};
 		} break;
 		default: assertm(false, "Invalid bits_per_pixel value");
 		}
 
-		if (image.bits_per_pixel == 32) {
-			// skip padding byte
-			++pos;
-		}
+		IncrementPos();
 
 		return pixel;
 	}
