@@ -22,9 +22,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#pragma use_srgb_texture
-#pragma use_srgb_framebuffer
-
 varying vec2 v_texCoord;
 #if defined(VERTEX)
 uniform vec2 rubyTextureSize;
