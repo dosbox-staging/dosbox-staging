@@ -941,9 +941,15 @@ void Gus::SetupEnvironment(uint16_t port, const char* ultradir_env_val)
 	// ULTRASND variable
 	char ultrasnd_env_val[] = "HHH,D,D,II,II";
 	safe_sprintf(ultrasnd_env_val, "%x,%u,%u,%u,%u", port, dma1, dma2, irq1, irq2);
+	LOG_MSG("GUS: Setting '%s' environment variable to '%s'",
+	        ultrasnd_env_name,
+	        ultrasnd_env_val);
 	AUTOEXEC_SetVariable(ultrasnd_env_name, ultrasnd_env_val);
 
 	// ULTRADIR variable
+	LOG_MSG("GUS: Setting '%s' environment variable to '%s'",
+	        ultradir_env_name,
+	        ultradir_env_val);
 	AUTOEXEC_SetVariable(ultradir_env_name, ultradir_env_val);
 }
 
