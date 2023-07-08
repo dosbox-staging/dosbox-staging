@@ -3289,8 +3289,6 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	// Can the window be resized?
 	sdl.desktop.want_resizable_window = detect_resizable_window();
 
-	const auto desktop = get_desktop_resolution();
-
 	// The refined scaling mode tell the refiner how it should adjust
 	// the coarse-resolution.
 	SCALING_MODE refined_scaling_mode = scaling_mode;
@@ -3306,9 +3304,11 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
 	if (sdl.use_exact_window_resolution) {
-		coarse_size = parse_window_resolution_from_conf(pref);
+		coarse_size          = parse_window_resolution_from_conf(pref);
 		refined_scaling_mode = drop_nearest();
 	} else {
+		const auto desktop = get_desktop_resolution();
+
 		coarse_size = window_bounds_from_label(pref, desktop);
 		if (pref == "desktop") {
 			refined_scaling_mode = drop_nearest();
@@ -3330,15 +3330,17 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	auto describe_scaling_mode = [scaling_mode]() -> const char * {
 		switch (scaling_mode) {
-		case SCALING_MODE::NONE: return "Bilinear";
-		case SCALING_MODE::NEAREST: return "Nearest-neighbour";
+		case SCALING_MODE::NONE: return "bilinear";
+		case SCALING_MODE::NEAREST: return "nearest-neighbour";
 		}
 		return "Unknown mode!";
 	};
 
 	// Let the user know the resulting window properties
-	LOG_MSG("DISPLAY: Initialized %dx%d window-mode using %s scaling on %dp display-%d",
-	        refined_size.x, refined_size.y, describe_scaling_mode(), desktop.h,
+	LOG_MSG("DISPLAY: Initialised %dx%d windowed mode using %s scaling on display-%d",
+	        refined_size.x,
+	        refined_size.y,
+	        describe_scaling_mode(),
 	        sdl.display_number);
 }
 
@@ -4788,7 +4790,7 @@ int sdl_main(int argc, char *argv[])
 	LOG_MSG("%s version %s", CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
-	LOG_MSG("LOG: Loguru version %d.%d.%d initialized", LOGURU_VERSION_MAJOR,
+	LOG_MSG("LOG: Loguru version %d.%d.%d initialised", LOGURU_VERSION_MAJOR,
 	        LOGURU_VERSION_MINOR, LOGURU_VERSION_PATCH);
 
 	int rcode = 0; // assume good until proven otherwise
@@ -4805,7 +4807,7 @@ int sdl_main(int argc, char *argv[])
 			}
 		}
 
-		OverrideWMClass(); // Before SDL2 video subsystem is initialized
+		OverrideWMClass(); // Before SDL2 video subsystem is initialised
 
 		CROSS_DetermineConfigPaths();
 
@@ -4881,10 +4883,10 @@ int sdl_main(int argc, char *argv[])
 		LOG_WARNING("Failed to init CD-ROM support");
 
 	sdl.initialized = true;
-	// Once initialized, ensure we clean up SDL for all exit conditions
+	// Once initialised, ensure we clean up SDL for all exit conditions
 	atexit(QuitSDL);
 
-	LOG_MSG("SDL: version %d.%d.%d initialized (%s video and %s audio)",
+	LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
 		SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL,
 		SDL_GetCurrentVideoDriver(), SDL_GetCurrentAudioDriver());
 

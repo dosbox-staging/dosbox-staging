@@ -2145,7 +2145,7 @@ private:
 		}
 
 		// Update AUTOEXEC.BAT line
-		LOG_MSG("%s: %s=%s", CardType(), blaster_env_name, blaster_env_val);
+		LOG_MSG("%s: Setting '%s' environment variable to '%s'", CardType(), blaster_env_name, blaster_env_val);
 		AUTOEXEC_SetVariable(blaster_env_name, blaster_env_val);
 	}
 

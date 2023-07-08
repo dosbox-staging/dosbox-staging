@@ -2685,7 +2685,7 @@ void MIXER_Init(Section *sec)
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		set_mixer_state(MixerState::On);
 
-		LOG_MSG("MIXER: Negotiated %u-channel %u-Hz audio in %u-frame blocks",
+		LOG_MSG("MIXER: Negotiated %u-channel %u Hz audio in %u-frame blocks",
 		        obtained.channels,
 		        mixer.sample_rate.load(),
 		        mixer.blocksize);

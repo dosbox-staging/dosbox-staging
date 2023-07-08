@@ -512,7 +512,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	base_device->device_start();
 	device->convert_samplerate(render_rate_hz);
 
-	LOG_MSG("TANDY: Initialized audio card with a TI %s PSG %s",
+	LOG_MSG("TANDY: Initialised audio card with a TI %s PSG %s",
 	        base_device->shortName,
 	        is_dac_enabled ? "and 8-bit DAC" : "but without DAC");
 }

@@ -1479,7 +1479,7 @@ public:
 			base=0x300;
 		}
 
-        LOG_MSG("NE2000: Base=0x%x irq=%u", base, irq);
+        LOG_MSG("NE2000: Initialised on port %xh and IRQ %u", base, irq);
 
 		// mac address
 		const char* macstring=section->Get_string("macaddr");

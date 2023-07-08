@@ -570,7 +570,7 @@ void PS1AUDIO_Init(Section *section)
 	ps1_synth = std::make_unique<Ps1Synth>(
 	        prop->Get_string("ps1audio_filter"));
 
-	LOG_MSG("PS1: Initialized IBM PS/1 Audio card");
+	LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
 
 	constexpr auto changeable_at_runtime = true;
 	section->AddDestroyFunction(&PS1AUDIO_ShutDown, changeable_at_runtime);
