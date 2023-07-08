@@ -24,6 +24,8 @@
 
 #pragma use_srgb_texture
 #pragma use_srgb_framebuffer
+#pragma force_single_scan
+#pragma force_no_pixel_doubling
 
 varying vec2 v_texCoord;
 uniform vec2 rubyInputSize;
