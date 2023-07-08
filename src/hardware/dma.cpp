@@ -69,7 +69,7 @@ static void perform_dma_io(const DMA_DIRECTION direction, const PhysPt spage,
 	// The data pointer will be incremented per transfer
 	auto data_pt = reinterpret_cast<uint8_t*>(data_start);
 
-	// Convert from DMA 'words' to actual bytes, no greater than 64 KiB
+	// Convert from DMA 'words' to actual bytes, no greater than 64 KB
 	auto remaining_bytes = check_cast<uint16_t>(num_words << is_dma16);
 	do {
 		// Find the right EMS page that contains the current address

@@ -244,7 +244,7 @@ static int64_t stdio_size_with_divisor(FILE* f, const int divisor)
 	return -1;
 }
 
-// File size in KiB, returns -1 on error
+// File size in KB, returns -1 on error
 // The file position will be restored
 int64_t stdio_size_kb(FILE* f)
 {

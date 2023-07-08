@@ -52,7 +52,7 @@ const auto ultrasnd_env_name = "ULTRASND";
 const auto ultradir_env_name = "ULTRADIR";
 
 // Buffer and memory constants
-constexpr uint32_t RAM_SIZE = 1024 * 1024; // 1 MiB
+constexpr uint32_t RAM_SIZE = 1024 * 1024; // 1 MB
 
 // DMA transfer size and rate constants
 constexpr uint32_t BYTES_PER_DMA_XFER = 8 * 1024;         // 8 KB per transfer
