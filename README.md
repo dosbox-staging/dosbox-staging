@@ -38,47 +38,49 @@ support today's systems.
 | **Unit tests**                 | Yes<sup>[6]</sup>
 | **Automated regression tests** | WIP
 
-[1]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
-[2]:https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
-[3]:https://scan.coverity.com/projects/dosbox-staging
-[4]:https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
+[1]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
+[2]: https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
+[3]: https://scan.coverity.com/projects/dosbox-staging
+[4]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22PVS-Studio+analysis%22
 [5]: https://github.com/emilk/loguru
-[6]:tests/README.md
-[Development builds]:https://dosbox-staging.github.io/downloads/development-builds/
+[6]: https://github.com/dosbox-staging/dosbox-staging/tree/main/tests
+[Development builds]: https://dosbox-staging.github.io/downloads/development-builds/
 
 ### For users
 
-| **Feature**                 | **Status**
-|-                            |-
-| **CD-DA file codecs**       | Yes: Opus, OGG/Vorbus, MP3, FLAC, and WAV
-| **Integer scaling**         | `vertical` or `horizontal`; replaced pixel-perfect mode<sup>[7]</sup>
-| **Resizable window**        | Yes, for all hardware-accelerated modes
-| **Relative window size**    | `windowresolution=small`, `medium`, or `large`
-| **Window placement**        | `windowposition = 0,0`, and more<sup>[16]</sup>
-| **[OPL] emulator**          |  Nuked OPL, a highly accurate (YMF262, CT1747) emulator <sup>[8]</sup>
-| **[CGA]/mono support**      | `machine=cga_mono`<sup>[9]</sup>
-| **CGA composite modes**     | `machine=pcjr/tandy/cga` with hotkeys)
-| **[Wayland] support**       | Experimental: use `SDL_VIDEODRIVER=wayland`
-| **Modem phonebook file**    | `phonebookfile=<name>`
-| **Raw mouse input**         | Yes: `raw_mouse_input=true`
-| **`Autotype` command**      | Yes<sup>[10]</sup>
-| **Startup verbosity**       | Yes<sup>[11]</sup>
-| **[GUS] enhancements**      | Yes<sup>[12]</sup>
-| **[FluidSynth][FS] MIDI**   | Yes<sup>[13]</sup>: FluidSynth 2.x
-| **[MT-32] emulator**        | Yes: libmt32emu 2.4.2 (Requires ROM files)
-| **Expanded S3 support**     | 4 and 8 MiB of RAM<sup>[14]</sup>
-| **Portable & layered conf** | By default<sup>[15]</sup>
-| **Translations handling**   | Bundled, see section 14 in README
-| **[ENet] modem transport**  | Yes: serialport `sock:1` flag or `SERIAL.COM`<sup>[17]</sup>
-| **Ethernet via [slirp]**    | Yes: See `[ethernet]` section in conf file
-| **IDE support for CDROMs**  | Yes: See `-ide` flag in `IMGMOUNT.COM /help`
-| **Networking in Win3.11**   | Yes: Via local shell<sup>[18]</sup>
-| **Audio filters**           | Yes: See `*_filter` settings in conf file
-| **Audio reverb and chorus** | Yes: See `[mixer]` conf section and `MIXER.COM /help`
-| **Audio stereo crossfeed**  | Yes: See `[mixer]` conf section and `MIXER.COM /help`
-| **`More` command**          | Yes<sup>[19]</sup>
-| **Dual/multi-mouse input**  | Yes: See `[mouse]` section in conf file
-| **ReelMagic support**       | Yes: See `[reelmagic]` section in conf file
+| **Feature**                  | **Description**
+|-                             |-
+| **CD-DA file codecs**        | Opus, OGG/Vorbus, MP3, FLAC, and WAV
+| **Integer scaling**          | `integer_scaling = vertical` or `horizontal`; replaced "pixel-perfect" mode<sup>[7]</sup>
+| **Resizable window**         | For all hardware-accelerated modes
+| **Relative window size**     | `windowresolution = small`, `medium`, or `large` config setting
+| **Window placement**         | `windowposition` config setting<sup>[16]</sup>
+| **[OPL] emulator**           |  Nuked OPL, a highly accurate (YMF262, CT1747) emulator <sup>[8]</sup>
+| **[CGA]/mono support**       | `machine = cga_mono` and `monochrome_palette` config settings<sup>[9]</sup>
+| **CGA composite modes**      | For `machine = pcjr`, `tandy`, and `cga`; toggleable via hotkeys
+| **[Wayland] support**        | Experimental: use `SDL_VIDEODRIVER=wayland`
+| **Modem phonebook file**     | `phonebookfile` config setting
+| **Raw mouse input**          | `raw_mouse_input` config setting
+| **`AUTOTYPE` command**       | Yes<sup>[10]</sup>
+| **`MORE` command**           | Yes<sup>[21]</sup>
+| **Startup verbosity**        | Yes<sup>[11]</sup>
+| **[GUS] enhancements**       | Yes<sup>[12]</sup>
+| **[FluidSynth][FS] MIDI**    | Built-in<sup>[13]</sup>; via FluidSynth 2.x (SoundFonts not included)
+| **[MT-32] emulator**         | Built-in; via libmt32emu 2.4.2 (requires user-supplied ROM files)
+| **Expanded S3 support**      | 4 and 8 MB of RAM<sup>[14]</sup>
+| **Portable & layered conf**  | By default<sup>[15]</sup>
+| **Translations handling**    | Bundled, see section 14 in README
+| **[ENet] modem transport**   | serialport `sock:1` flag or `SERIAL.COM`<sup>[17]</sup>
+| **Ethernet via [slirp]**     | See `[ethernet]` config section
+| **IDE support for CD-ROMs**  | See `-ide` flag in `IMGMOUNT.COM /help`
+| **Networking in Win3.11**    | Via local shell<sup>[18]</sup>
+| **Audio filters**            | See `*_filter` config settings
+| **Audio reverb and chorus**  | See `reverb` config setting and `MIXER.COM /help`
+| **Audio stereo crossfeed**   | See `chorus` config setting and `MIXER.COM /help`
+| **AdLib Gold emulation**     | Via `oplmode = opl3gold`; emulates the surround add-on module too<sup>[19]</sup>
+| **Master audio compressor**  | `compressor` config setting<sup>[20]</sup>
+| **Dual/multi-mouse input**   | See `[mouse]` config section
+| **ReelMagic support**        | See `[reelmagic]` config section
 
 [OPL]: https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]: https://en.wikipedia.org/wiki/Color_Graphics_Adapter
@@ -99,7 +101,9 @@ support today's systems.
 [16]:    https://github.com/dosbox-staging/dosbox-staging/pull/1272
 [17]:    https://github.com/dosbox-staging/dosbox-staging/pull/1398
 [18]:    https://github.com/dosbox-staging/dosbox-staging/pull/1447
-[19]:    https://github.com/dosbox-staging/dosbox-staging/pull/2020
+[19]:    https://github.com/dosbox-staging/dosbox-staging/pull/1715
+[20]:    https://github.com/dosbox-staging/dosbox-staging/pull/1831
+[21]:    https://github.com/dosbox-staging/dosbox-staging/pull/2020
 
 ## Stable release builds
 
