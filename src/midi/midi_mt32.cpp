@@ -639,7 +639,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	mt32_service->getROMInfo(&rom_info);
 
 	assert(loaded_model_and_dir.has_value());
-	LOG_MSG("MT32: Initialized %s from %s",
+	LOG_MSG("MT32: Initialised %s from %s",
 	        rom_info.control_rom_description,
 	        loaded_model_and_dir->second.string().c_str());
 

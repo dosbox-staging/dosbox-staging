@@ -816,7 +816,7 @@ public:
 			MPU401_Reset();
 		}
 
-		LOG_MSG("MPU-401: Running in %s-mode on ports %xh and %xh",
+		LOG_MSG("MPU-401: Running in %s mode on ports %xh and %xh",
 		        mpu.is_intelligent ? "intelligent" : "UART",
 		        port_0x330,
 		        port_0x331);

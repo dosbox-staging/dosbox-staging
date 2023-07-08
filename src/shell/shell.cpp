@@ -300,7 +300,7 @@ void DOS_Shell::ParseLine(char *line)
 		if (out_file.length() && pipe_file.length())
 			WriteOut(MSG_Get("SHELL_CMD_DUPLICATE_REDIRECTION"),
 			         out_file.c_str());
-		LOG_MSG("SHELL: Redirect output to %s",
+		LOG_MSG("SHELL: Redirecting output to %s",
 		        pipe_file.length() ? pipe_tempfile : out_file.c_str());
 		close_stdout(normalstdout);
 		open_console_device(!normalstdin && !in_file.length());
@@ -559,7 +559,7 @@ std::tuple<std::string, std::string, std::string> parse_drive_conf(
 	// If we couldn't parse it, return the defaults
 	auto conf = specify_drive_config();
 	assert(conf);
-	if (!conf->ParseConfigFile("drive", conf_path.string()))
+	if (!conf->ParseConfigFile("auto-mounted drive", conf_path.string()))
 		return {drive_letter, default_args, default_path};
 
 	const auto settings = static_cast<Section_prop *>(conf->GetSection("drive"));

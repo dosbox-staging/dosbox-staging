@@ -1448,9 +1448,9 @@ void ReelMagic_Init(Section* sec)
 	const bool driver_initialized = _installedInterruptNumber != 0;
 
 	if (card_initialized && driver_initialized)
-		LOG_MSG("REELMAGIC: Initialized ReelMagic MPEG playback card and driver");
+		LOG_MSG("REELMAGIC: Initialised ReelMagic MPEG playback card and driver");
 	else if (card_initialized)
-		LOG_MSG("REELMAGIC: Initialized ReelMagic MPEG playback card");
+		LOG_MSG("REELMAGIC: Initialised ReelMagic MPEG playback card");
 	else {
 		// Should be impossible to initialize the driver without the card
 		assert(driver_initialized == false);

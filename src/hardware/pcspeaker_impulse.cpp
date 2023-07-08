@@ -538,7 +538,7 @@ PcSpeakerImpulse::PcSpeakerImpulse()
 	                            ChannelFeature::Synthesizer});
 	assert(channel);
 
-	LOG_MSG("%s: Initialized %s model", device_name, model_name);
+	LOG_MSG("%s: Initialised %s model", device_name, model_name);
 
 	channel->SetPeakAmplitude(static_cast<uint32_t>(positive_amplitude));
 }

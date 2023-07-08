@@ -504,7 +504,7 @@ CDROM_Interface_Image::CDROM_Interface_Image(uint8_t sub_unit)
 			player.channel->Enable(false); // only enabled during playback periods
 		}
 #ifdef DEBUG
-		LOG_MSG("CDROM: Initialized the CDAUDIO audio channel");
+		LOG_MSG("CDROM: Initialised the CDAUDIO audio channel");
 #endif
 	}
 	refCount++;

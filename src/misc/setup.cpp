@@ -1429,7 +1429,7 @@ bool Config::ParseConfigFile(const std::string& type,
 	// So internal changes don't use the path information
 	current_config_dir.clear();
 
-	LOG_INFO("CONFIG: Loaded '%s' config file '%s'",
+	LOG_INFO("CONFIG: Loaded %s config file '%s'",
 	         type.c_str(),
 	         config_file_name.c_str());
 

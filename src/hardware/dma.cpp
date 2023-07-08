@@ -586,7 +586,7 @@ DmaController::DmaController(const uint8_t controller_index)
 		io_read_handlers[0x11].Install(0x8f, DMA_Read_Port, io_width_t::byte, 1);
 	}
 
-	LOG_MSG("DMA: Initialized %s controller",
+	LOG_MSG("DMA: Initialised %s controller",
 	        (index == 0 ? "primary" : "secondary"));
 }
 

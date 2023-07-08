@@ -651,7 +651,7 @@ public:
 		if (button_wrap > MAXBUTTON)
 			button_wrap = MAXBUTTON;
 
-		LOG_MSG("MAPPER: Initialized %s with %d axes, %d buttons, and %d hat(s)",
+		LOG_MSG("MAPPER: Initialised %s with %d axes, %d buttons, and %d hat(s)",
 		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
 	}
 
@@ -2396,7 +2396,7 @@ static void CreateStringBind(char * line) {
 			goto foundevent;
 		}
 	}
-	LOG_WARNING("MAPPER: Can't find key binding for %s event", eventname);
+	LOG_WARNING("MAPPER: Can't find key binding for '%s' event", eventname);
 	return ;
 foundevent:
 	CBind * bind = nullptr;
@@ -2667,7 +2667,7 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 		for (auto &line : lines)
 			CreateStringBind(line.data());
 
-		LOG_MSG("MAPPER: Loaded %d key bindings from %s",
+		LOG_MSG("MAPPER: Loaded %d key bindings from '%s'",
 		        static_cast<int>(lines.size()),
 		        mapper_path.string().c_str());
 
@@ -2831,7 +2831,7 @@ static void QueryJoysticks()
 	assert(num_joysticks >= 0);
 	mapper.sticks.num = static_cast<unsigned int>(num_joysticks);
 	if (num_joysticks == 0) {
-		LOG_MSG("MAPPER: no joysticks found");
+		LOG_MSG("MAPPER: No joysticks found");
 		return;
 	}
 
