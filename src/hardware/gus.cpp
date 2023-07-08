@@ -1640,7 +1640,12 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 
 	auto *bool_prop = secprop.Add_bool("gus", when_idle, false);
 	assert(bool_prop);
-	bool_prop->Set_help("Enable Gravis UltraSound emulation (disabled by default).");
+	bool_prop->Set_help(
+	        "Enable Gravis UltraSound emulation (disabled by default).\n"
+	        "The default settings of base address 240, IRQ 5, and DMA 3 have been chosen\n"
+	        "so the GUS can coexist with a Sound Blaster card. This works fine for the\n"
+	        "majority of programs, but some games and demos expect the GUS factory\n"
+	        "defaults of base address 220, IRQ 11, DMA 1.");
 
 	auto *hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
 	assert(hex_prop);
