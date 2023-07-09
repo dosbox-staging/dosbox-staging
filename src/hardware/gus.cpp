@@ -1671,8 +1671,8 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Path to UltraSound directory ('C:\\ULTRASND' by default).\n"
-	        "In this directory there should be a MIDI directory that contains the patch\n"
-	        "files for GUS playback. Patch sets used with Timidity should work fine.");
+	        "In this directory there should be a 'MIDI' directory that contains the patch\n"
+	        "files for GUS playback.");
 
 	str_prop = secprop.Add_string("gus_filter", when_idle, "off");
 	assert(str_prop);
