@@ -58,7 +58,7 @@
 
 #include <cstdint>
 #include <functional>
-
+#include <string>
 
 typedef struct AudioFrame AudioFrame_;
 
@@ -88,7 +88,7 @@ private:
 	using process_f = std::function<void(Envelope &, const bool, AudioFrame &)>;
 	process_f process = &Envelope::Apply;
 
-	const char *channel_name = nullptr;
+	std::string channel_name = {};
 
 	int expire_after_frames = 0; // Stop enveloping when this many
 	                             // frames have been processed.
