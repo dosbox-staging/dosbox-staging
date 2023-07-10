@@ -77,7 +77,10 @@ void DOS_Shell::ShowPrompt()
 void DOS_Shell::InputCommand(char* line)
 {
 	std::string command = ReadCommand();
-	history.emplace_back(command);
+	trim(command);
+	if (!command.empty()) {
+		history.emplace_back(command);
+	}
 
 	const auto* const dos_section = dynamic_cast<Section_prop*>(
 	        control->GetSection("dos"));
