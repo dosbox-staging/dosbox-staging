@@ -608,7 +608,7 @@ void IMGMOUNT::AddMessages()
 {
 	AddCommonMountMessages();
 	MSG_Add("PROGRAM_IMGMOUNT_HELP_LONG",
-	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
+	        "Mounts a CD-ROM, floppy, or disk image to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso\n"
