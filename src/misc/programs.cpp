@@ -502,7 +502,7 @@ void CONFIG::Run(void)
 					// list the sections
 					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
 					for (const Section* sec : *control) {
-						WriteOut("%s\n", sec->GetName());
+						WriteOut("  - %s\n", sec->GetName());
 					}
 					return;
 				}
@@ -572,7 +572,7 @@ void CONFIG::Run(void)
 					if (p == NULL) {
 						break;
 					}
-					WriteOut("%s\n", p->propname.c_str());
+					WriteOut("  - %s\n", p->propname.c_str());
 				}
 			} else {
 				// find the property by it's name
@@ -788,19 +788,6 @@ void CONFIG::Run(void)
 			return;
 		}
 		case P_SETPROP: {
-			// Code for the configuration changes
-			// Official format: config -set "section property=value"
-			// Accepted: with or without -set,
-			// "section property value"
-			// "section property=value"
-			// "property" "value"
-			// "section" "property=value"
-			// "section" "property=value" "value" "value" ...
-			// "section" "property" "value" "value" ...
-			// "section property" "value" "value" ...
-			// "property" "value" "value" ...
-			// "property=value" "value" "value" ...
-
 			if (pvars.size() == 0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_SET_SYNTAX"));
 				return;
@@ -891,76 +878,129 @@ void PROGRAMS_Destroy([[maybe_unused]] Section* sec)
 
 void PROGRAMS_Init(Section* sec)
 {
-	/* Setup a special callback to start virtual programs */
+	// Setup a special callback to start virtual programs
 	call_program = CALLBACK_Allocate();
 	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
 
-	// Cleanup -- allows unit tests to run indefinitely & cleanly
+	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
 	sec->AddDestroyFunction(&PROGRAMS_Destroy);
 
-	// listconf
-	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE", "No config file loaded!\n");
-	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF", "Primary config file: \n%s\n");
-	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF", "Additional config files:\n");
+	// List config
+	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE", "No config file loaded\n");
+	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF", "[color=white]Primary config file:[reset]\n  %s\n");
+	MSG_Add("PROGRAM_CONFIG_ADDITIONAL_CONF", "\n[color=white]Additional config files:[reset]\n  ");
+
 	MSG_Add("PROGRAM_CONFIG_CONFDIR",
-	        "DOSBox Staging %s configuration directory: \n%s\n\n");
+	        "[color=white]DOSBox Staging %s configuration directory:[reset]\n  %s\n\n");
 
-	// writeconf
-	MSG_Add("PROGRAM_CONFIG_FILE_ERROR", "\nCan't open file %s\n");
-	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file %s\n");
+	// Write config
+	MSG_Add("PROGRAM_CONFIG_FILE_ERROR", "\nCan't open file '%s'\n");
+	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file '%s'\n");
 
-	// help
+	// Help
 	MSG_Add("SHELL_CMD_CONFIG_HELP_LONG",
-	        "Adjusts DOSBox Staging's configurable parameters.\n"
-	        "-writeconf or -wc without parameter: write to primary loaded config file.\n"
-	        "-writeconf or -wc with filename: write file to config directory.\n"
-	        "Use -writelang or -wl filename to write the current language strings.\n"
-	        "-r [parameters]\n"
-	        " Restart DOSBox, either using the previous parameters or any that are appended.\n"
-	        "-wcp [filename]\n"
-	        " Write config file to the program directory, dosbox.conf or the specified\n"
-	        " filename.\n"
-	        "-wcd\n"
-	        " Write to the default config file in the config directory.\n"
-	        "-l lists configuration parameters.\n"
-	        "-h, -help, -? sections / sectionname / propertyname\n"
-	        " Without parameters, displays this help screen. Add \"sections\" for a list of\n"
-	        " sections."
-	        " For info about a specific section or property add its name behind.\n"
-	        "-axclear clears the autoexec section.\n"
-	        "-axadd [line] adds a line to the autoexec section.\n"
-	        "-axtype prints the content of the autoexec section.\n"
-	        "-securemode switches to secure mode.\n"
-	        "-avistart starts AVI recording.\n"
-	        "-avistop stops AVI recording.\n"
-	        "-startmapper starts the keymapper.\n"
-	        "-get \"section property\" returns the value of the property.\n"
-	        "-set \"section property=value\" sets the value.\n");
+	        "Performs configuration management and other miscellaneous actions.\n"
+	        "\n"
+	        "Usage:\n"
+	        "  [color=green]config[reset] [color=white]COMMAND[reset] [color=cyan][PARAMETERS][reset]\n"
+	        "\n"
+	        "Where [color=white]COMMAND[reset] is one of:\n"
+	        "  -writeconf\n"
+	        "  -wc               Writes the config to the primary config file.\n"
+	        "\n"
+	        "  -writeconf [color=white]FILENAME[reset]\n"
+	        "  -wc [color=white]PATH          [reset]Writes the config to [color=white]PATH[reset] relative to the config directory,\n"
+	        "                    or to an absolute path.\n"
+	        "\n"
+	        "  -wcp [color=white]FILENAME     [reset]Writes the config to the current working directory as\n"
+	        "                    'dosbox.conf', or as the specified filename.\n"
+	        "  -wcd              Writes the config to the default global config file.\n"
+	        "\n"
+	        "  -writelang [color=white]FILENAME[reset]\n"
+	        "  -wl [color=white]FILENAME      [reset]Writes the current language strings to [color=white]FILENAME [reset]in the\n"
+	        "                    current working directory.\n"
+	        "\n"
+	        "  -r [color=cyan][PROPERTY1=VALUE1 [PROPERTY2=VALUE2 ...]][reset]\n"
+	        "                    Restarts DOSBox with the optionally supplied config\n"
+	        "                    properties.\n"
+	        "\n"
+	        "  -l                Shows the currently loaded config files and command line\n"
+	        "                    arguments provided at startup.\n"
+	        "\n"
+	        "  -help sections\n"
+	        "  -h    sections\n"
+	        "  -?    sections    Lists the names of all config sections.\n"
+	        "\n"
+	        "  -help [color=white]SECTION[reset]\n"
+	        "  -h    [color=white]SECTION[reset]\n"
+	        "  -?    [color=white]SECTION     [reset]Lists the names of all properties in a config section.\n"
+	        "\n"
+	        "  -help [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "  -h    [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "  -?    [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "                    Shows the description and the current value of a config\n"
+	        "                    property.\n"
+	        "\n"
+	        "  -axclear          Clears the [autoexec] section.\n"
+	        "  -axadd [color=white]LINE[reset]       Appends a line to the end of the [autoexec] section.\n"
+	        "  -axtype           Shows the contents of the [autoexec] section.\n"
+	        "  -securemode       Switches to secure mode.\n"
+	        "  -avistart         Starts AVI recording.\n"
+	        "  -avistop          Stops AVI recording.\n"
+	        "  -startmapper      Starts the keymapper.\n"
+	        "\n"
+	        "  -get [color=white]SECTION      [reset]Shows all properties and their values in a config section.\n"
+	        "  -get [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "                    Shows the value of a single config property.\n"
+	        "\n"
+	        "  -set [color=cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
+	        "                    Sets the value of a config property.");
+
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
-	        "Purpose of property \"%s\" (contained in section \"%s\"):\n%s\n\nPossible Values: %s\nDefault value: %s\nCurrent value: %s\n");
+	        "[color=white]Purpose of property [color=green]'%s'[color=white] "
+			"(contained in section [color=cyan][%s][color=white])[reset]:\n\n%s\n\n"
+	        "[color=white]Possible values:[reset]  %s\n"
+	        "[color=white]Default value:[reset]    %s\n"
+	        "[color=white]Current value:[reset]    %s\n");
+
 	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP",
-	        "Purpose of section \"%s\":\n%s\nCurrent value:\n%s\n");
+	        "[color=white]Purpose of section [%s][reset]:\n"
+			"%s\n[color=white]Current value:[reset]\n%s\n");
+
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
 	        "This property cannot be changed at runtime.\n");
+
 	MSG_Add("PROGRAM_CONFIG_HLP_POSINT", "positive integer");
+
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTHLP",
-	        "Section %s contains the following properties:\n");
+	        "[color=white]Section [color=cyan][%s] [color=white]contains the following properties:[reset]\n");
+
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTLIST",
-	        "DOSBox configuration contains the following sections:\n\n");
+	        "[color=white]DOSBox configuration contains the following sections:[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_SECURE_ON", "Switched to secure mode.\n");
+
 	MSG_Add("PROGRAM_CONFIG_SECURE_DISALLOW",
 	        "This operation is not permitted in secure mode.\n");
-	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section \"%s\" doesn't exist.\n");
+
+	MSG_Add("PROGRAM_CONFIG_SECTION_ERROR", "Section [%s] doesn't exist.\n");
+
 	MSG_Add("PROGRAM_CONFIG_VALUE_ERROR",
-	        "\"%s\" is not a valid value for property \"%s\".\n");
+	        "'%s' is not a valid value for property '%s'.\n");
+
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
-	        "Correct syntax: config -get \"section property\".\n");
+	        "Usage: [color=green]config[reset] -get "
+	        "[color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n");
+
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP",
-	        "\nDOSBox was started with the following command line parameters:\n%s\n");
+	        "\n[color=white]DOSBox was started with the following command line arguments:[reset]\n  %s\n");
+
 	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM", "Missing parameter.\n");
+
 	MSG_Add("PROGRAM_PATH_TOO_LONG",
-	        "The path \"%s\" exceeds the DOS maximum length of %d characters\n");
-	MSG_Add("PROGRAM_EXECUTABLE_MISSING", "Executable file not found: %s\n");
+	        "The path '%s' exceeds the DOS limit of %d characters.\n");
+
+	MSG_Add("PROGRAM_EXECUTABLE_MISSING", "Executable file not found: '%s'\n");
+
 	MSG_Add("CONJUNCTION_AND", "and");
 }

@@ -4895,9 +4895,11 @@ int sdl_main(int argc, char *argv[])
 
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-		"There is no property \"%s\" in section \"%s\".\n");
+		"There is no property '%s' in section [%s]\n");
 	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-		"Correct syntax: config -set \"[section] property=value\".\n");
+		"Usage: [color=green]config [/reset]-set [color=cyan][SECTION][/reset] "
+		"[color=white]PROPERTY[/reset][=][color=white]VALUE[/reset]\n");
+
 	std::string line;
 	while (control->cmdline->FindString("-set", line, true)) {
 		trim(line);

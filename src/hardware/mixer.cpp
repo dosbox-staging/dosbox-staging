@@ -2377,7 +2377,7 @@ private:
 	void AddMessages()
 	{
 		MSG_Add("SHELL_CMD_MIXER_HELP_LONG",
-		        "Displays or changes the sound mixer settings.\n"
+		        "\nDisplays or changes the sound mixer settings.\n"
 		        "\n"
 		        "Usage:\n"
 		        "  [color=green]mixer[reset] [color=cyan][CHANNEL][reset] [color=white]COMMANDS[reset] [/noshow]\n"
