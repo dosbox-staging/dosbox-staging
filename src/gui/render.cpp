@@ -314,7 +314,7 @@ static void RENDER_Reset(void)
 
 	Bitu gfx_flags, xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
-	if (render.aspect) {
+	if (render.aspect_ratio_correction) {
 		const auto one_per_pixel_aspect =
 		        render.src.pixel_aspect_ratio.Inverse().ToDouble();
 
@@ -795,13 +795,14 @@ void RENDER_Init(Section *sec)
 	// For restarting the renderer
 	static auto running = false;
 
-	auto prev_aspect       = render.aspect;
-	auto prev_scale_size   = render.scale.size;
+	auto prev_aspect_ratio_correction    = render.aspect_ratio_correction;
+	auto prev_scale_size                 = render.scale.size;
 	const auto prev_integer_scaling_mode = GFX_GetIntegerScalingMode();
 
 	render.pal.first = 256;
 	render.pal.last  = 0;
-	render.aspect    = section->Get_bool("aspect");
+
+	render.aspect_ratio_correction = section->Get_bool("aspect");
 
 	VGA_SetMonoPalette(section->Get_string("monochrome_palette"));
 
@@ -819,7 +820,9 @@ void RENDER_Init(Section *sec)
 	//  Only ReInit when there is a src.bpp (fixes crashes on startup and
 	//  directly changing the scaler without a screen specified yet)
 	if (running && render.src.bpp &&
-	    ((render.aspect != prev_aspect) || (render.scale.size != prev_scale_size) ||
+	    ((render.aspect_ratio_correction !=
+	      prev_aspect_ratio_correction) ||
+	     (render.scale.size != prev_scale_size) ||
 	     (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode)
 #if C_OPENGL
 	     || (previous_shader_filename != render.shader.filename)

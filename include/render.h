@@ -134,10 +134,10 @@ struct Render_t {
 
 	RenderPal_t pal = {};
 
-	bool updating  = false;
-	bool active    = false;
-	bool aspect    = true;
-	bool fullFrame = true;
+	bool updating                = false;
+	bool active                  = false;
+	bool aspect_ratio_correction = true;
+	bool fullFrame               = true;
 };
 
 struct RenderedImage {
