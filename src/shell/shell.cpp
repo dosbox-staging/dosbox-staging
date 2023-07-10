@@ -445,14 +445,19 @@ void DOS_Shell::SyntaxError()
 
 static std::string get_shell_history_path()
 {
-	const auto section = static_cast<Section_prop *>(control->GetSection("dos"));
+	const auto section = static_cast<Section_prop*>(control->GetSection("dos"));
 	if (section) {
 		const auto path = section->Get_path("shell_history_file");
 		if (path) {
-			// Workaround: If shell_history_file is not in the user's config, path->SetValue function never gets called which sets realpath.
-			// Append the config dir here to prevent this from getting written to current working directory in that case.
-			if (!path->realpath.empty() && path->realpath.find(CROSS_FILESPLIT) == std::string::npos) {
-				return (get_platform_config_dir() / path->realpath).string();
+			// Workaround: If shell_history_file is not in the
+			// user's config, path->SetValue function never gets
+			// called which sets realpath. Append the config dir
+			// here to prevent this from getting written to current
+			// working directory in that case.
+			if (!path->realpath.empty() &&
+			    path->realpath.find(CROSS_FILESPLIT) == std::string::npos) {
+				return (get_platform_config_dir() / path->realpath)
+				        .string();
 			}
 			return path->realpath;
 		}
