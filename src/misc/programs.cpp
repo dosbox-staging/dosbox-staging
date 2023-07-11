@@ -308,13 +308,8 @@ public:
 private:
 	void restart(const char* useconfig);
 
-	void writeconf(std::string name, bool configdir)
+	void WriteConfig(const std::string& name)
 	{
-		if (configdir) {
-			// write file to the default config directory
-			const auto config_path = get_platform_config_dir() / name;
-			name = config_path.string();
-		}
 		WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_WHICH"), name.c_str());
 		if (!control->PrintConfig(name)) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"), name.c_str());
@@ -335,17 +330,16 @@ private:
 void CONFIG::Run(void)
 {
 	static const char* const params[] = {
-	        "-r",          "-wcp",      "-wcd",       "-wc",
-	        "-writeconf",  "-l",        "-rmconf",    "-h",
-	        "-help",       "-?",        "-axclear",   "-axadd",
-	        "-axtype",     "-avistart", "-avistop",   "-startmapper",
-	        "-get",        "-set",      "-writelang", "-wl",
-	        "-securemode", ""};
+	        "-r",        "-wcd",       "-wc",          "-writeconf",
+	        "-l",        "-rmconf",    "-h",           "-help",
+	        "-?",        "-axclear",   "-axadd",       "-axtype",
+	        "-avistart", "-avistop",   "-startmapper", "-get",
+	        "-set",      "-writelang", "-wl",          "-securemode",
+	        ""};
 	enum prs {
 		P_NOMATCH,
 		P_NOPARAMS, // fixed return values for GetParameterFromList
 		P_RESTART,
-		P_WRITECONF_PORTABLE,
 		P_WRITECONF_DEFAULT,
 		P_WRITECONF,
 		P_WRITECONF2,
@@ -430,54 +424,40 @@ void CONFIG::Run(void)
 			}
 			break;
 		}
+		case P_WRITECONF_DEFAULT: {
+			if (securemode_check()) {
+				return;
+			}
+			if (pvars.size() > 0) {
+				WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
+				return;
+			}
+			std::string name;
+			Cross::GetPlatformConfigName(name);
+
+			// write file to the default config directory
+			const auto config_path = get_platform_config_dir() / name;
+			name = config_path.string();
+			WriteConfig(name);
+			break;
+		}
 		case P_WRITECONF:
 		case P_WRITECONF2:
 			if (securemode_check()) {
 				return;
 			}
 			if (pvars.size() > 1) {
-				return;
-			} else if (pvars.size() == 1) {
-				// write config to specific file, except if it
-				// is an absolute path
-				writeconf(pvars[0],
-				          !Cross::IsPathAbsolute(pvars[0]));
-			} else {
-				// -wc without parameter: write primary config file
-				if (control->configfiles.size()) {
-					writeconf(control->configfiles[0], false);
-				} else {
-					WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
-				}
-			}
-			break;
-		case P_WRITECONF_DEFAULT: {
-			// write to /userdir/dosbox0.xx.conf
-			if (securemode_check()) {
+				WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 				return;
 			}
-			if (pvars.size() > 0) {
-				return;
-			}
-			std::string confname;
-			Cross::GetPlatformConfigName(confname);
-			writeconf(confname, true);
-			break;
-		}
-		case P_WRITECONF_PORTABLE:
-			if (securemode_check()) {
-				return;
-			}
-			if (pvars.size() > 1) {
-				return;
-			} else if (pvars.size() == 1) {
+
+			if (pvars.size() == 1) {
 				// write config to startup directory
-				writeconf(pvars[0], false);
+				WriteConfig(pvars[0]);
 			} else {
-				// -wcp without parameter: write dosbox.conf to
-				// startup directory
+				// -wc without parameter: write dosbox.conf to startup directory
 				if (control->configfiles.size()) {
-					writeconf(std::string("dosbox.conf"), false);
+					WriteConfig("dosbox.conf");
 				} else {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
 				}
@@ -894,8 +874,8 @@ void PROGRAMS_Init(Section* sec)
 	        "[color=white]DOSBox Staging %s configuration directory:[reset]\n  %s\n\n");
 
 	// Write config
-	MSG_Add("PROGRAM_CONFIG_FILE_ERROR", "\nCan't open file '%s'\n");
-	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing config file '%s'\n");
+	MSG_Add("PROGRAM_CONFIG_FILE_ERROR", "\nCan't open config file '%s'\n");
+	MSG_Add("PROGRAM_CONFIG_FILE_WHICH", "Writing current config to '%s'\n");
 
 	// Help
 	MSG_Add("SHELL_CMD_CONFIG_HELP_LONG",
@@ -906,15 +886,16 @@ void PROGRAMS_Init(Section* sec)
 	        "\n"
 	        "Where [color=white]COMMAND[reset] is one of:\n"
 	        "  -writeconf\n"
-	        "  -wc               Writes the config to the primary config file.\n"
+	        "  -wc               Writes the config to `dosbox.conf` in the current working\n"
+	        "                    directory.\n"
 	        "\n"
-	        "  -writeconf [color=white]FILENAME[reset]\n"
-	        "  -wc [color=white]PATH          [reset]Writes the config to [color=white]PATH[reset] relative to the config directory,\n"
-	        "                    or to an absolute path.\n"
+	        "  -writeconf [color=white]PATH[reset]\n"
+	        "  -wc [color=white]PATH          [reset]If [color=white]PATH[reset] is a filename, writes the config to that name\n"
+	        "                    in the current working directory, otherwise to the\n"
+	        "                    specified absolute or relative path.\n"
 	        "\n"
-	        "  -wcp [color=white]FILENAME     [reset]Writes the config to the current working directory as\n"
-	        "                    'dosbox.conf', or as the specified filename.\n"
-	        "  -wcd              Writes the config to the default global config file.\n"
+	        "  -wcd              Writes the config to the global `dosbox-staging.conf`\n"
+	        "                    file in the configuration directory.\n"
 	        "\n"
 	        "  -writelang [color=white]FILENAME[reset]\n"
 	        "  -wl [color=white]FILENAME      [reset]Writes the current language strings to [color=white]FILENAME [reset]in the\n"
