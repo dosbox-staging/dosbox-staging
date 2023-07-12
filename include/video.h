@@ -65,6 +65,7 @@ Bitu GFX_GetRGB(uint8_t red,uint8_t green,uint8_t blue);
 void GFX_SetShader(const std::string &source);
 void GFX_SetIntegerScalingMode(const std::string& new_mode);
 IntegerScalingMode GFX_GetIntegerScalingMode();
+InterpolationMode GFX_GetInterpolationMode();
 
 struct VideoMode;
 

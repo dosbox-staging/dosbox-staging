@@ -702,6 +702,7 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 	assert(control);
 	const Section *sdl_sec = control->GetSection("sdl");
 	assert(sdl_sec);
+
 	const bool using_opengl = starts_with(sdl_sec->GetPropValue("output"),
 	                                      "opengl");
 
@@ -722,6 +723,7 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 	log_warning_if_legacy_shader_name(filename);
 
 	std::string source = {};
+
 	if (!RENDER_GetShader(sh->realpath.string(), source) &&
 	    (sh->realpath == filename || !RENDER_GetShader(filename, source))) {
 		sh->SetValue("none");
@@ -795,22 +797,37 @@ static bool force_square_pixels     = false;
 static bool force_vga_single_scan   = false;
 static bool force_no_pixel_doubling = false;
 
-bool RENDER_IsVgaSingleScanningForced()
+// We double-scan VGA modes and pixel-double all video modes by default unless:
+//
+//  1) Single-scanning or no pixel-doubling is forced in the
+//     configuration
+//  2) Single-scanning or no pixel-doubling is forced by the OpenGL
+//     shader
+//  3) If the interpolation mode is nearest-neighbour
+//
+// About point 2: The default `interpolation/sharp.glsl` shader forces both
+// because it scales pixels as flat adjacent rectangles. This not only produces
+// identical output versus double-scanning and pixel-doubling, but provides
+// finer integer multiplication steps (especially important for sub-4K screens)
+// and also reduces load on slow systems like the Raspberry Pi.
+//
+static void setup_scan_and_pixel_doubling(Section_prop* section)
 {
-#if C_OPENGL
-	return force_vga_single_scan || render.shader.force_single_scan;
-#else
-	return force_vga_single_scan;
-#endif
-}
+	const auto nearest_neighbour_enabled = (GFX_GetInterpolationMode() ==
+	                                        InterpolationMode::NearestNeighbour);
 
-bool RENDER_IsNoPixelDoublingForced()
-{
+	force_vga_single_scan = section->Get_bool("force_vga_single_scan") ||
+	                        nearest_neighbour_enabled;
+
+	force_no_pixel_doubling = section->Get_bool("force_no_pixel_doubling") ||
+	                          nearest_neighbour_enabled;
 #if C_OPENGL
-	return force_no_pixel_doubling || render.shader.force_no_pixel_doubling;
-#else
-	return force_no_pixel_doubling;
+	force_vga_single_scan |= render.shader.force_single_scan;
+	force_no_pixel_doubling |= render.shader.force_no_pixel_doubling;
 #endif
+
+	VGA_EnableVgaDoubleScanning(!force_vga_single_scan);
+	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
 }
 
 void RENDER_Init(Section* sec)
@@ -835,9 +852,6 @@ void RENDER_Init(Section* sec)
 
 	VGA_SetMonoPalette(section->Get_string("monochrome_palette"));
 
-	force_vga_single_scan = section->Get_bool("force_vga_single_scan");
-	force_no_pixel_doubling = section->Get_bool("force_no_pixel_doubling");
-
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;
 
@@ -847,6 +861,8 @@ void RENDER_Init(Section* sec)
 	const auto previous_shader_filename = render.shader.filename;
 	RENDER_InitShaderSource(section);
 #endif
+
+	setup_scan_and_pixel_doubling(section);
 
 	// If something changed that needs a re-init.
 	// Only re-init when there is a src.bpp (fixes crashes on startup and

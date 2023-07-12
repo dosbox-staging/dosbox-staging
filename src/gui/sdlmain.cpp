@@ -1706,39 +1706,6 @@ static void check_kmsdrm_setting()
 	exit(1);
 }
 
-// We double-scan VGA modes and pixel-double all video modes by default
-// unless:
-//
-//  - Single-scanning or no pixel-doubling is forced in the configuration
-//  - Single-scanning or no pixel-doubling is forced by the OpenGL shader
-//  - If the output mode is nearest-neighbour
-//
-// The default `interpolation/sharp.glsl` shader forces both because it
-// scales pixels as flat adjacent rectangles. This not only produces identical
-// output versus double-scanning and pixel-doubling, but provides finer
-// integer multiplication steps (especially important for sub-4K screens) and
-// also reduces load on slow systems like the Raspberry Pi.
-//
-static void update_vga_double_scan_handling([[maybe_unused]] const SCREEN_TYPES screen_type,
-                                            const InterpolationMode interpolation_mode,
-                                            const bool force_vga_single_scan,
-                                            const bool force_no_pixel_doubling)
-{
-	if (force_vga_single_scan ||
-	    interpolation_mode == InterpolationMode::NearestNeighbour) {
-		VGA_EnableVgaDoubleScanning(false);
-	} else {
-		VGA_EnableVgaDoubleScanning(true);
-	}
-
-	if (force_no_pixel_doubling ||
-	    interpolation_mode == InterpolationMode::NearestNeighbour) {
-		VGA_EnablePixelDoubling(false);
-	} else {
-		VGA_EnablePixelDoubling(true);
-	}
-}
-
 bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
 {
 	return lhs.x != rhs.x || lhs.y != rhs.y;
@@ -2303,11 +2270,6 @@ dosurface:
 	// Ensure mouse emulation knows the current parameters
 	NewMouseScreenParams();
 	update_vsync_state();
-
-	update_vga_double_scan_handling(sdl.desktop.type,
-	                                sdl.interpolation_mode,
-	                                RENDER_IsVgaSingleScanningForced(),
-									RENDER_IsNoPixelDoublingForced());
 
 	if (sdl.draw.has_changed) {
 		log_display_properties(sdl.draw.width,
@@ -3491,6 +3453,11 @@ void GFX_SetIntegerScalingMode(const std::string& new_mode)
 IntegerScalingMode GFX_GetIntegerScalingMode()
 {
 	return sdl.integer_scaling_mode;
+}
+
+InterpolationMode GFX_GetInterpolationMode()
+{
+	return sdl.interpolation_mode;
 }
 
 static void set_output(Section* sec, bool should_stretch_pixels)
