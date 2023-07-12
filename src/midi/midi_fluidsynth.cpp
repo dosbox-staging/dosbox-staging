@@ -373,7 +373,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 			                                0.0,
 			                                21.0);
 
-			if (chorus[4] == "triange") {
+			if (chorus[4] == "triangle") {
 				chorus_mod_wave = fluid_chorus_mod::FLUID_CHORUS_MOD_TRIANGLE;
 			} else if (chorus[4] != "sine") { // default is sine
 				LOG_WARNING("FSYNTH: Invalid chorus modulation wave type ('%s'), "
