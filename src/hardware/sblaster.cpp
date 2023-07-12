@@ -1020,18 +1020,28 @@ static void FlushRemainingDMATransfer()
 
 static void set_channel_rate_hz(const uint32_t requested_rate_hz)
 {
-	// Valid output rates range from 5000 to 45 000 Hz, inclusive.
+	// The official guide states the following:
+	// "Valid output rates range from 5000 to 45 000 Hz, inclusive."
+	//
+	// However, this statement is wrong as in actual reality the maximum
+	// achievable sample rate is the native SB DAC rate of 45454 Hz, and
+	// many programs use this highest rate. Limiting the max rate to 45000
+	// Hz would result in a slightly out-of-tune, detuned pitch in such
+	// programs.
+	//
+	// More details:
+	// https://www.vogons.org/viewtopic.php?p=621717#p621717
+	//
 	// Ref:
 	//   Sound Blaster Series Hardware Programming Guide,
 	//   41h Set digitized sound output sampling rate, DSP Commands 6-15
 	//   https://pdos.csail.mit.edu/6.828/2018/readings/hardware/SoundBlaster.pdf
 	//
 	constexpr int min_rate_hz = 5000;
-	constexpr int max_rate_hz = 45000;
 
 	const auto rate_hz = std::clamp(static_cast<int>(requested_rate_hz),
 	                                min_rate_hz,
-	                                max_rate_hz);
+	                                native_dac_rate_hz);
 
 	assert(sb.chan);
 	if (sb.chan->GetSampleRate() != rate_hz) {
