@@ -29,21 +29,22 @@ naadloze muis, %s+F10 om te vangen
 naadloze muis, %s+F10 of middenklik om te langen
 .
 :CONFIG_FULLSCREEN
-DOSBox rechtstreeks op volledig scherm starten.
+DOSBox rechtstreeks op volledig scherm starten (standaard uit).
 Voer INTRO uit en zie Speciale toetsen voor sneltoetsen voor vensterbediening.
 .
 :CONFIG_DISPLAY
-Te gebruiken beeldschermnummer; waarde is afhankelijk van OS en instellingen.
+Te gebruiken beeldschermnummer; waarde is afhankelijk van OS en instellingen
+(standaard 0).
 .
 :CONFIG_FULLRESOLUTION
 Welke resolutie te gebruiken voor volledig scherm: 'original', 'desktop'
-of een vast formaat (bijvoorbeeld 1024x768).
+of een vast formaat, bijv. 1024x768 (standaard 'desktop').
 .
 :CONFIG_WINDOWRESOLUTION
 Stelt de venster grootte in om te gebruiken:
   default:    Selecteer de beste optie op basis van uw
               omgeving en andere instellingen.
-  small, medium, of large (of s, m, l):
+  small, medium, of large (s, m, l):
               Grootte van het venster ten opzichte van het bureaublad.
   <op-maat>:  Schaal het venster naar de opgegeven afmetingen in
               BxH-formaat. Bijvoorbeeld: 1024x768.
@@ -58,15 +59,15 @@ Stel de viewport-grootte (tekengebied) in het venster/scherm in:
 .
 :CONFIG_WINDOW_POSITION
 Stel de initiële vensterpositie in bij gebruik in de venstermodus:
-  auto:      Laat de windowmanager de positie bepalen.
+  auto:      Laat de windowmanager de positie bepalen (standaard).
   <op-maat>: Stel de vensterpositie in X, Y-formaat in. Bijvoorbeeld: 250,100
              0,0 is de linkerbovenhoek van het scherm.
 .
 :CONFIG_WINDOW_DECORATIONS
-Bepaalt of raamdecoraties in de venstermodus moeten worden weergegeven.
+Activeer window decoraties in venstermodus (standaard aan).
 .
 :CONFIG_TRANSPARENCY
-Stel de transparantie van het DOSBox Staging-scherm in.
+Stel de transparantie van het DOSBox Staging-scherm in (standaard 0).
 Van 0 (geen transparantie) tot 90 (hoge transparantie).
 .
 :CONFIG_MAX_RESOLUTION
@@ -75,7 +76,7 @@ Deze instelling is hernoemd naar viewport_resolution.
 :CONFIG_HOST_RATE
 Stel de verversingssnelheid van de host in:
   auto:      Gebruik SDI-snelheden of VRR-snelheden bij volledig scherm op een
-             scherm met hoge verversing.
+             scherm met hoge verversing (standaard).
   sdi:       Gebruik seriële apparaatinterface (SDI)-snelheden, zonder verdere
              aanpassingen.
   vrr:       Trek 3 Hz af van de gerapporteerde frequentie (best-practice voor
@@ -86,27 +87,27 @@ Stel de verversingssnelheid van de host in:
 :CONFIG_VSYNC
 Synchroniseer met de vernieuwingsfrequentie van het scherm, indien ondersteund.
 Dit kan flikkeren en scheuren verminderen, maar kan ook de prestaties
-beïnvloeden.
+beïnvloeden (standaard aan).
 .
 :CONFIG_VSYNC_SKIP
 Aantal microseconden dat de weergave kan worden geblokkeerd voordat het
-volgende frame wordt overgeslagen. 0 schakelt dit uit en wordt altijd
-weergegeven.
+volgende frame wordt overgeslagen (standaard 7000). 0 schakelt dit uit en
+wordt altijd weergegeven.
 .
 :CONFIG_PRESENTATION_MODE
 Selecteer optioneel de framepresentatiemodus:
   auto:  Intelligent time-en-drop frames om te voorkomen dat emulatie
-         vastloopt, op basis van host- en DOS-framerates.
+         vastloopt, op basis van host- en DOS-framerates (standaard).
   cfr:   Presenteer DOS-frames altijd met een constante framesnelheid.
   vfr:   Presenteer gewijzigde DOS-frames altijd met een variabele
          framesnelheid.
 .
 :CONFIG_OUTPUT
-Welk videosysteem moet worden gebruikt voor uitvoer.
+Welk videosysteem moet worden gebruikt voor uitvoer (standaard 'opengl').
 .
 :CONFIG_TEXTURE_RENDERER
 Kies een rendererstuurprogramma wanneer u een textuuruitvoermodus gebruikt.
-Gebruik texture_renderer=auto voor een automatische keuze.
+Gebruik `texture_renderer=auto` (standaard) voor een automatische keuze.
 .
 :CONFIG_CAPTURE_MOUSE
 Verplaatst naar de [mouse] sectie.
@@ -118,7 +119,7 @@ Verplaatst naar de [mouse] sectie.
 Verplaatst naar de [mouse] sectie.
 .
 :CONFIG_WAITONERROR
-Wacht voordat de console sluit als dosbox een fout heeft.
+Wacht voordat de console sluit als dosbox een fout heeft (standaard aan).
 .
 :CONFIG_PRIORITY
 Prioriteitsniveaus die moeten worden toegepast wanneer respectievelijk actief
@@ -127,10 +128,10 @@ en inactief. De tweede waarde is voor wanneer DOSBox geen focus heeft.
 Standaard is: 'auto auto'
 .
 :CONFIG_MUTE_WHEN_INACTIVE
-Demp het geluid wanneer het venster inactief is.
+Demp het geluid wanneer het venster inactief is (standaard uit).
 .
 :CONFIG_PAUSE_WHEN_INACTIVE
-Pauzeer emulatie wanneer het venster inactief is.
+Pauzeer emulatie wanneer het venster inactief is (standaard uit).
 .
 :CONFIG_MAPPERFILE
 Bestand om toets-/gebeurtenistoewijzingen te laden/op te slaan.
@@ -140,12 +141,13 @@ Opmerking: de -resetmapper optie verwijdert alleen het standaard mapperbestand.
 .
 :CONFIG_SCREENSAVER
 Gebruik 'allow' of 'block' om de omgevingsvariabele SDL_VIDEO_ALLOW_SCREENSAVER
-te overschrijven (die gewoonlijk de OS-screensaver blokkeert terwijl de
-emulator actief is).
+te overschrijven die gewoonlijk de OS-screensaver blokkeert terwijl de
+emulator actief is (standaard 'auto').
 .
 :CONFIG_LANGUAGE
 Selecteer een te gebruiken taal: de, en, es, fr, it, nl, pl, and ru
-Opmerkingen: Deze instelling overschrijft de 'LANG'-omgeving, indien ingesteld.
+(standaard niet gezet).
+Opmerkingen: Dit overschrijft de 'LANG'-omgevingsvariabele, indien ingesteld.
              De map 'resources/translations' gebundeld met het uitvoerbare
              bestand bevat deze bestanden. Bewaar het naast het uitvoerbare
              bestand om deze functie te ondersteunen.
@@ -1110,7 +1112,7 @@ U kunt hier uw MOUNT-lijnen plaatsen.
 Mogelijke waarden
 .
 :CONFIG_DEPRECATED_VALUES
-Deprecated values
+Verouderde waarden
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Geen dergelijke sectie of eigenschap: %s
@@ -1121,7 +1123,7 @@ Er is geen eigenschap "%s" in sectie "%s".
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Correcte syntaxis: config -set "[sectie] eigenschap=waarde".
+Correcte syntaxis: [color=green]config [/reset]-set [color=cyan][SECTIE][/reset] [color=white]EIGENSCHAP[/reset][=][color=white]WAARDE[/reset]
 
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -1129,69 +1131,104 @@ Geen configuratiebestand geladen!
 
 .
 :PROGRAM_CONFIG_PRIMARY_CONF
-Primair configuratiebestand: 
+[color=white]Primair configuratiebestand:[reset]
 %s
 
 .
 :PROGRAM_CONFIG_ADDITIONAL_CONF
-Extra configuratiebestanden:
 
+[color=white]Extra configuratiebestanden:[reset]
+  
 .
 :PROGRAM_CONFIG_CONFDIR
-DOSBox Staging %s configuratiemap: 
+[color=white]DOSBox Staging %s configuratiemap:[reset]
 %s
 
 
 .
 :PROGRAM_CONFIG_FILE_ERROR
 
-Kan bestand %s niet openen
+Kan bestand '%s' niet openen
 
 .
 :PROGRAM_CONFIG_FILE_WHICH
-Configuratiebestand %s . schrijven
+Configuratiebestand '%s' schrijven
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
-Past de configureerbare parameters van DOSBox Staging aan.
--writeconf of -wc zonder parameter: 1e geladen configuratiebestand schrijven.
--writeconf of -wc met bestandsnaam: schrijf bestand naar de configuratiemap.
-Gebruik -writelang of -wl bestandsnaam om de huidige taalstrings te schrijven.
--r [parameters]
- Start DOSBox opnieuw, met behulp van de vorige, of de toegevoegde parameters.
--wcp [bestandsnaam]
- Schrijf het configuratiebestand naar de programmamap, dosbox.conf of de
- opgegeven bestandsnaam.
--wcd
- Schrijf naar het standaardconfiguratiebestand in de configuratiemap.
--l geeft configuratieparameters weer.
--h, -help, -? secties / sectienaam / eigenschapnaam
- Dit helpscherm. Voeg "secties" toe voor een lijst met secties. Voor info over
- een specifieke sectie of eigenschap voegt u de naam erachter toe.
--axclear wist de autoexec-sectie.
--axadd [regel] voegt een regel toe aan de autoexec-sectie.
--axtype drukt de inhoud van de autoexec-sectie af.
--securemode schakelt over naar de beveiligde modus.
--avistart start AVI-opname.
--avistop stopt de AVI-opname.
--startmapper start de keymapper.
--get "sectie eigenschap" retourneert de waarde van de eigenschap.
--set "sectie eigenschap=waarde" stelt de waarde in.
+Voert configuratiebeheer en andere diverse acties uit.
 
+Gebruik:
+  [color=green]config[reset] [color=white]COMMANDO[reset] [color=cyan][PARAMETERS][reset]
+
+Waar [color=white]COMMANDO[reset] een van de volgende is:
+  -writeconf
+  -wc               Scrijf de configuratie naar `dosbox.conf` in de huidige
+                    werkmap.
+
+  -writeconf [color=white]PAD[reset]
+  -wc [color=white]PAD           Als [color=white]PAD[reset] een bestandsnaam is, wordt de configuratie
+                    naar die naam in de huidige werkmap geschreven, anders
+                    naar het opgegeven absolute of relatieve pad.
+
+  -wcd              Schrijft de configuratie naar het globale bestand
+                    `dosbox-staging.conf` in de configuratiemap.
+
+  -writelang [color=white]BESTAND[reset]
+  -wl [color=white]BESTAND       [reset]Schrijft de huidige taalstrings naar [color=white]BESTAND [reset]in de huidige
+                    werkmap.
+
+  -r [color=cyan][EIGENSCHAP1=WAARDE1 [EIGENSCHAP2=WAARDE2 ...]][reset]
+                    Herstart DOSBox met de optioneel geleverde configuratie
+                    eigenschappen.
+
+  -l                Toont de momenteel geladen configuratiebestanden en
+                    argumenten die bij het opstarten zijn opgegeven.
+
+  -help sections
+  -h    sections
+  -?    sections    Toont de namen van alle configuratiesecties.
+
+  -help [color=white]SECTIE[reset]
+  -h    [color=white]SECTIE[reset]
+  -?    [color=white]SECTIE      [reset]Toont de namen van alle eigenschappen in een
+                    configuratiesectie.
+
+  -help [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
+  -h    [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
+  -?    [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
+                    Toont de beschrijving en de huidige waarde van een
+                    configuratie-eigenschap.
+
+  -axclear          Wist de [autoexec] sectie.
+  -axadd [color=white]LIJN[reset]       Voegt een regel toe aan het einde van de [autoexec] sectie.
+  -axtype           Toont de inhoud van de [autoexec] sectie.
+  -securemode       Activeer beveiligde modus.
+  -avistart         Start AVI video opname.
+  -avistop          Stop AVI video opname.
+  -startmapper      Start de toetsenbordtoewijzer.
+
+  -get [color=white]SECTIE       [reset]Toont alle eigenschappen en hun waarden in een
+                    configuratiesectie.
+  -get [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
+                    Toont de waarde van een enkele configuratie-eigenschap.
+
+  -set [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]
+                    Stelt de waarde in van een configuratie-eigenschap.
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-Doel van eigenschap "%s" (opgenomen in sectie "%s"):
+[color=white]Doel van eigenschap [color=green]'%s'[color=white] (opgenomen in sectie [color=cyan][%s][color=white])[reset]:
 %s
 
-Mogelijke waarden: %s
-Standaard waarden
-Huidige waarde: %s
+[color=white]Mogelijke waarden:[reset]  %s
+[color=white]Standaard waarde:[reset]   %s
+[color=white]Huidige waarde:[reset]     %s
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
-Doel van sectie "%s":
+[color=white]Doel van sectie [%s][reset]:
 %s
-Huidige waarde:
+[color=white]Huidige waarde:[reset]
 %s
 
 .
@@ -1203,11 +1240,11 @@ Deze eigenschap kan tijdens runtime niet worden gewijzigd.
 positief geheel getal
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-Sectie %s bevat de volgende eigenschappen:
+[color=white]Sectie [color=cyan][%s] [color=white]bevat de volgende eigenschappen:[reset]
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
-DOSBox-configuratie bevat de volgende secties:
+[color=white]DOSBox-configuratie bevat de volgende secties:[reset]
 
 
 .
@@ -1220,21 +1257,21 @@ Deze bewerking is niet toegestaan in de beveiligde modus.
 
 .
 :PROGRAM_CONFIG_SECTION_ERROR
-Sectie "%s" bestaat niet.
+Sectie [%s] bestaat niet.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
-"%s" is geen geldige waarde voor eigenschap "%s".
+'%s' is geen geldige waarde voor eigenschap '%s'.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
-Correcte syntaxis: config -get "sectie eigenschap".
+Gebruik: [color=green]config[reset] -get [color=cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset]
 
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
 
-DOSBox is gestart met de volgende opdrachtregelparameters:
-%s
+[color=white]DOSBox is gestart met de volgende opdrachtregelparameters:[reset]
+  %s
 
 .
 :PROGRAM_CONFIG_MISSINGPARAM
@@ -1246,7 +1283,7 @@ Het pad "%s" overschrijdt de DOS maximale lengte van %d karakters
 
 .
 :PROGRAM_EXECUTABLE_MISSING
-Uitvoerbaar bestand niet gevonden: %s
+Uitvoerbaar bestand niet gevonden: '%s'
 .
 :CONJUNCTION_AND
 en
@@ -2412,8 +2449,16 @@ Van de [autoexec] sectie
 Illegaal pad.
 
 .
+:SHELL_ILLEGAL_FILE_NAME
+Illegale bestandsnaam.
+
+.
 :SHELL_ILLEGAL_SWITCH
 Illegale optie: %s.
+
+.
+:SHELL_ILLEGAL_SWITCH_COMBO
+Illegale optie combinatie.
 
 .
 :SHELL_MISSING_PARAMETER
@@ -2422,6 +2467,10 @@ Vereiste parameter ontbreekt.
 .
 :SHELL_TOO_MANY_PARAMETERS
 Teveel parameters.
+
+.
+:SHELL_EXPECTED_FILE_NOT_DIR
+Verwachte een bestand, niet een map.
 
 .
 :SHELL_SYNTAX_ERROR
@@ -2450,6 +2499,14 @@ Bestand '%s' bestaat al.
 .
 :SHELL_DIRECTORY_NOT_FOUND
 Map niet gevonden - '%s'
+
+.
+:SHELL_READ_ERROR
+Fout met lezen bestand - '%s'
+
+.
+:SHELL_WRITE_ERROR
+Fout met schrijven bestand - '%s'
 
 .
 :SHELL_CMD_HELP
@@ -2645,7 +2702,7 @@ Controleer de %%TEMP%% variabele.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Schijf %c bestaat niet!
-U moet het eerst koppelen met [color=light-red]mount[reset]. Typ [color=yellow]intro[reset] of [color=yellow]intro mount[reset] voor meer info.
+U moet het eerst koppelen met [color=yellow]mount[reset]. Typ [color=yellow]intro[reset] of [color=yellow]intro mount[reset] voor meer info.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -3363,6 +3420,38 @@ Voorbeelden:
  Volume in schijf %c is %s
  Volume Serie Nummer is %04X-%04X
 
+
+.
+:SHELL_CMD_MOVE_HELP
+Verplaatst bestanden en hernoemt bestanden en mappen.
+
+.
+:SHELL_CMD_MOVE_HELP_LONG
+Gebruik:
+  [color=green]move[reset] [color=white]BESTAND1[,BESTAND2,...][reset] [color=cyan]BESTEMMING[reset]
+  [color=green]move[reset] [color=white]MAP1[reset] [color=cyan]MAP2[reset]
+
+Waar:
+  [color=white]BESTAND[reset]    Kan een exacte bestandsnaam zijn of een onnauwkeurige bestandsnaam
+             met jokertekens, de asterisk (*) en het vraagteken (?).
+             Meerdere, door komma's gescheiden bestandsnamen kunnen worden
+             opgegeven.
+  [color=white]MAP[reset]        Een exacte mapnaam, zonder jokertekens.
+  [color=cyan]BESTEMMING[reset] Een exacte bestandsnaam of map, zonder jokertekens.
+
+Opmerkingen:
+  Als er meerdere bronbestanden zijn opgegeven, moet de bestemming een map
+  zijn. Zo niet, dan wordt er een voor u aangemaakt.
+
+  Als een enkel bronbestand is opgegeven, wordt de bestemming overschreven.
+
+Voorbeelden:
+  [color=green]move[reset] [color=white]bron.bat[reset] [color=cyan]nieuw.bat[reset]
+  [color=green]move[reset] [color=white]bestand1.txt,bestand2.txt[reset] [color=cyan]mijnmap[reset]
+
+.
+:SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE
+Kan niet meerdere bestanden naar één bestand verplaatsen.
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
