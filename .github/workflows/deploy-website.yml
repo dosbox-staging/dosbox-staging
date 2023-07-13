@@ -72,7 +72,9 @@ jobs:
         run: |
           cd dosbox-staging.github.io
           DEST_PATH=$(pwd)/${{ env.dest_path_prefix }}
-          mkdocs build --config-file ../dosbox-staging/website/mkdocs.yml --site-dir $DEST_PATH --dirty
+          MKDOCS_SRC_PATH=../dosbox-staging/website/
+          mkdocs build --config-file $MKDOCS_SRC_PATH/mkdocs.yml --site-dir $DEST_PATH --dirty
+          cp -R MKDOCS_SRC_PATH/.well-known $DEST_PATH
 
       - name: Setup Git config
         run: |
