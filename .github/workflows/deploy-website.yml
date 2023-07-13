@@ -86,6 +86,7 @@ jobs:
         run: |
           cd dosbox-staging.github.io
           git add .
+          git add .well-known/*
           git commit -m "Deployed current website (${{ env.source_git_hash }})"
           git push
 
