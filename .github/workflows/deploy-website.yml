@@ -75,6 +75,7 @@ jobs:
           MKDOCS_SRC_PATH=../dosbox-staging/website/
           mkdocs build --config-file $MKDOCS_SRC_PATH/mkdocs.yml --site-dir $DEST_PATH --dirty
           cp -R $MKDOCS_SRC_PATH/docs/.well-known $DEST_PATH
+          touch $DEST_PATH .nojekyll
 
       - name: Setup Git config
         run: |
@@ -87,6 +88,7 @@ jobs:
           cd dosbox-staging.github.io
           git add .
           git add .well-known/*
+          git add .jekyll
           git commit -m "Deployed current website (${{ env.source_git_hash }})"
           git push
 
