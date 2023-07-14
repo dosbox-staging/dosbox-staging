@@ -134,10 +134,9 @@ struct Render_t {
 
 	RenderPal_t pal = {};
 
-	bool updating                = false;
-	bool active                  = false;
-	bool aspect_ratio_correction = true;
-	bool fullFrame               = true;
+	bool updating            = false;
+	bool active              = false;
+	bool fullFrame           = true;
 };
 
 // A frame of the emulated video output that's passed to the rendering backend

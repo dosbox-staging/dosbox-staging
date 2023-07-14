@@ -771,8 +771,7 @@ static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 static void log_display_properties(const int width, const int height,
                                    const VideoMode& video_mode,
                                    const std::optional<SDL_Rect>& viewport_size_override,
-                                   const SCREEN_TYPES screen_type,
-                                   const bool should_stretch_pixels)
+                                   const SCREEN_TYPES screen_type)
 {
 	// Get the viewport dimensions, with consideration for possible override
 	// values
@@ -822,12 +821,6 @@ static void log_display_properties(const int width, const int height,
 	assert(colours_desc);
 	assert(frame_mode);
 
-	constexpr auto square_pixel_aspect_ratio = Fraction{1};
-
-	const auto pixel_aspect_ratio = (should_stretch_pixels
-	                                         ? video_mode.pixel_aspect_ratio
-	                                         : square_pixel_aspect_ratio);
-
 	LOG_MSG("DISPLAY: %s %dx%d %s%s at %2.5g Hz %s, "
 	        "scaled to %dx%d with 1:%1.6g (%d:%d) pixel aspect ratio",
 	        mode_type_desc,
@@ -839,9 +832,9 @@ static void log_display_properties(const int width, const int height,
 	        frame_mode,
 	        viewport_w,
 	        viewport_h,
-	        pixel_aspect_ratio.Inverse().ToDouble(),
-	        static_cast<int32_t>(pixel_aspect_ratio.Num()),
-	        static_cast<int32_t>(pixel_aspect_ratio.Denom()));
+	        video_mode.pixel_aspect_ratio.Inverse().ToDouble(),
+	        static_cast<int32_t>(video_mode.pixel_aspect_ratio.Num()),
+	        static_cast<int32_t>(video_mode.pixel_aspect_ratio.Denom()));
 
 #if 0
 	LOG_MSG("DISPLAY: render width: %d, render height: %d, "
@@ -2329,8 +2322,7 @@ dosurface:
 		                       sdl.draw.height,
 		                       sdl.video_mode,
 		                       {},
-		                       sdl.desktop.type,
-		                       wants_stretched_pixels());
+		                       sdl.desktop.type);
 	}
 
 	if (retFlags) {
@@ -2528,8 +2520,7 @@ void GFX_SwitchFullScreen()
 	                       sdl.draw.height,
 	                       sdl.video_mode,
 	                       canvas_size,
-	                       sdl.desktop.type,
-	                       wants_stretched_pixels());
+	                       sdl.desktop.type);
 
 	sdl.desktop.switching_fullscreen = false;
 }

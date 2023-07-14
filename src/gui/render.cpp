@@ -265,13 +265,6 @@ void RENDER_EndUpdate(bool abort)
 
 		auto video_mode = render.video_mode;
 
-		if (!render.aspect_ratio_correction) {
-			constexpr Fraction square_pixel_aspect_ratio = Fraction{1};
-
-			image.pixel_aspect_ratio = square_pixel_aspect_ratio;
-			video_mode.pixel_aspect_ratio = square_pixel_aspect_ratio;
-		}
-
 		const auto frames_per_second = static_cast<float>(render.src.fps);
 
 		CAPTURE_AddFrame(image, video_mode, frames_per_second);
@@ -323,19 +316,15 @@ static void RENDER_Reset(void)
 
 	Bitu gfx_flags, xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
-	if (render.aspect_ratio_correction) {
-		const auto one_per_pixel_aspect =
-		        render.src.pixel_aspect_ratio.Inverse().ToDouble();
 
-		if (one_per_pixel_aspect > 1.0) {
-			gfx_scalew = 1;
-			gfx_scaleh = one_per_pixel_aspect;
-		} else {
-			gfx_scalew = render.src.pixel_aspect_ratio.ToDouble();
-			gfx_scaleh = 1;
-		}
-	} else {
+	const auto one_per_pixel_aspect =
+			render.src.pixel_aspect_ratio.Inverse().ToDouble();
+
+	if (one_per_pixel_aspect > 1.0) {
 		gfx_scalew = 1;
+		gfx_scaleh = one_per_pixel_aspect;
+	} else {
+		gfx_scalew = render.src.pixel_aspect_ratio.ToDouble();
 		gfx_scaleh = 1;
 	}
 
@@ -796,6 +785,7 @@ static void ReloadShader(const bool pressed)
 	RENDER_Init(render_section);
 }
 
+static bool force_square_pixels     = false;
 static bool force_vga_single_scan   = false;
 static bool force_no_pixel_doubling = false;
 
@@ -817,8 +807,8 @@ void RENDER_Init(Section* sec)
 	// For restarting the renderer
 	static auto running = false;
 
-	const auto prev_aspect_ratio_correction = render.aspect_ratio_correction;
 	const auto prev_scale_size              = render.scale.size;
+	const auto prev_force_square_pixels     = force_square_pixels;
 	const auto prev_force_vga_single_scan   = force_vga_single_scan;
 	const auto prev_force_no_pixel_doubling = force_no_pixel_doubling;
 	const auto prev_integer_scaling_mode    = GFX_GetIntegerScalingMode();
@@ -826,7 +816,8 @@ void RENDER_Init(Section* sec)
 	render.pal.first = 256;
 	render.pal.last  = 0;
 
-	render.aspect_ratio_correction = section->Get_bool("aspect");
+	force_square_pixels = !section->Get_bool("aspect");
+	VGA_ForceSquarePixels(force_square_pixels);
 
 	VGA_SetMonoPalette(section->Get_string("monochrome_palette"));
 
@@ -858,8 +849,7 @@ void RENDER_Init(Section* sec)
 	// Only re-init when there is a src.bpp (fixes crashes on startup and
 	// directly changing the scaler without a screen specified yet).
 	if (running && render.src.bpp &&
-	    ((render.aspect_ratio_correction !=
-	      prev_aspect_ratio_correction) ||
+	    ((force_square_pixels != prev_force_square_pixels) ||
 	     (render.scale.size != prev_scale_size) ||
 	     (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode)
 #if C_OPENGL

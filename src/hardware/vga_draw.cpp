@@ -2502,10 +2502,22 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vblank_skip /= 2;
 	}
 
-	video_mode.pixel_aspect_ratio =
-	        render_pixel_aspect_ratio *
-	        Fraction((render_width * (double_width ? 2 : 1)) / video_mode.width,
-	                 (render_height * (double_height ? 2 : 1)) / video_mode.height);
+	// Derive video mode pixel aspect ratio from the render PAR
+	const auto final_render_width = (render_width * (double_width ? 2 : 1));
+	const auto final_render_height = (render_height * (double_height ? 2 : 1));
+
+	const auto render_per_video_mode_scale =
+	        Fraction(final_render_width / video_mode.width,
+	                 final_render_height / video_mode.height);
+
+	video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio *
+	                                render_per_video_mode_scale;
+
+	// Override PARs if square pixels are forced ("no aspect ratio correction")
+	if (vga.draw.force_square_pixels) {
+		render_pixel_aspect_ratio = render_per_video_mode_scale.Inverse();
+		video_mode.pixel_aspect_ratio = {1};
+	}
 
 	vga.draw.vblank_skip = vblank_skip;
 	setup_line_drawing_delays(render_height);
