@@ -288,6 +288,7 @@ struct VGA_Draw {
 	bool doublewidth            = false;
 	bool doubleheight           = false;
 
+	bool force_square_pixels     = false;
 	bool double_scanning_enabled = false;
 	bool pixel_doubling_enabled  = false;
 
@@ -994,6 +995,7 @@ void VGA_LogInitialization(const char *adapter_name,
                            const char *ram_type,
                            const size_t num_modes);
 
+void VGA_ForceSquarePixels(const bool enabled);
 void VGA_EnableVgaDoubleScanning(const bool enabled);
 void VGA_EnablePixelDoubling(const bool enabled);
 
