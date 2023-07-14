@@ -462,20 +462,23 @@ void MOUNT::AddMessages() {
 	        "\n"
 	        "Notes:\n"
 	        "  - '-t overlay' redirects writes for mounted drive to another directory.\n"
+	        "  - '-usecd ID' gives direct access to a CD-ROM drive.\n"
+	        "    This is needed for CD audio (only supported on Windows and Linux).\n"
+	        "    Run 'mount -cd' to find out the list of valid IDs.\n"
 	        "  - Additional options are described in the manual (README file, chapter 4).\n"
 	        "\n"
 	        "Examples:\n"
 #if defined(WIN32)
 	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]C:\\dosgames[reset]\n"
-	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]D:\\[reset] -t cdrom\n"
+	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]D:\\[reset] -t cdrom -usecd 0\n"
 	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay\n"
 #elif defined(MACOSX)
 	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]\n"
-	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]\"/Volumes/Game CD\"[reset] -t cdrom\n"
+	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]\"/Volumes/Game CD\"[reset] -t cdrom -usecd 0\n"
 	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay\n"
 #else
 	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]\n"
-	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom\n"
+	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom -usecd 0\n"
 	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay\n"
 #endif
 	);

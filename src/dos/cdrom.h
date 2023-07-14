@@ -127,47 +127,42 @@ public:
 	CDROM_Interface_SDL();
 	CDROM_Interface_SDL(const CDROM_Interface_SDL&);
 	CDROM_Interface_SDL& operator = (const CDROM_Interface_SDL&);
-	virtual ~CDROM_Interface_SDL();
-	virtual bool SetDevice(const char *path, int cd_number);
-	virtual bool GetUPC(unsigned char &attr, char *upc)
+	~CDROM_Interface_SDL();
+	bool SetDevice(const char* path, int cd_number);
+	bool GetUPC(unsigned char& attr, char* upc)
 	{
 		attr = '\0';
 		strcpy(upc, "UPC");
 		return true;
 	}
-	virtual bool GetAudioTracks(uint8_t &stTrack, uint8_t &end, TMSF &leadOut);
-	virtual bool GetAudioTrackInfo(uint8_t track, TMSF &start, unsigned char &attr);
-	virtual bool GetAudioSub(unsigned char &attr,
-	                         unsigned char &track,
-	                         unsigned char &index,
-	                         TMSF &relPos,
-	                         TMSF &absPos);
-	virtual bool GetAudioStatus(bool &playing, bool &pause);
-	virtual bool GetMediaTrayStatus(bool &mediaPresent,
-	                                bool &mediaChanged,
-	                                bool &trayOpen);
-	virtual bool PlayAudioSector(const uint32_t start, uint32_t len);
-	virtual bool PauseAudio(bool resume);
-	virtual bool StopAudio();
-	virtual void ChannelControl([[maybe_unused]] TCtrl ctrl)
+	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
+	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr);
+	bool GetAudioSub(unsigned char& attr, unsigned char& track,
+	                 unsigned char& index, TMSF& relPos, TMSF& absPos);
+	bool GetAudioStatus(bool& playing, bool& pause);
+	bool GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged,
+	                        bool& trayOpen);
+	bool PlayAudioSector(const uint32_t start, uint32_t len);
+	bool PauseAudio(bool resume);
+	bool StopAudio();
+	void ChannelControl([[maybe_unused]] TCtrl ctrl)
 	{
 		return;
 	}
-	virtual bool ReadSectors([[maybe_unused]] PhysPt buffer,
-	                         [[maybe_unused]] const bool raw,
-	                         [[maybe_unused]] const uint32_t sector,
-	                         [[maybe_unused]] const uint16_t num)
+	bool ReadSectors([[maybe_unused]] PhysPt buffer,
+	                 [[maybe_unused]] const bool raw,
+	                 [[maybe_unused]] const uint32_t sector,
+	                 [[maybe_unused]] const uint16_t num)
 	{
 		return false;
 	}
-	virtual bool ReadSectorsHost([[maybe_unused]] void *buffer,
-	                             [[maybe_unused]] bool raw,
-	                             [[maybe_unused]] unsigned long sector,
-	                             [[maybe_unused]] unsigned long num)
+	bool ReadSectorsHost([[maybe_unused]] void* buffer, [[maybe_unused]] bool raw,
+	                     [[maybe_unused]] unsigned long sector,
+	                     [[maybe_unused]] unsigned long num)
 	{
 		return true;
 	}
-	virtual bool LoadUnloadMedia(bool unload);
+	bool LoadUnloadMedia(bool unload);
 
 private:
 	bool Open();
@@ -354,18 +349,45 @@ private:
 };
 
 #if defined (LINUX)
-class CDROM_Interface_Ioctl : public CDROM_Interface_SDL
-{
+class CDROM_Interface_Ioctl : public CDROM_Interface {
 public:
-	CDROM_Interface_Ioctl		();
+	~CDROM_Interface_Ioctl();
 
-	bool	SetDevice		(const char* path, const int cd_number);
-	bool	GetUPC			(unsigned char& attr, char* upc);
-	bool	ReadSectors		(PhysPt buffer, const bool raw, const uint32_t sector, const uint16_t num);
-	bool	ReadSectorsHost	(void* buffer, bool raw, unsigned long sector, unsigned long num);
+	bool SetDevice(const char* path, const int cd_number);
+	bool GetUPC(unsigned char& attr, char* upc);
+	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut);
+	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr);
+	bool GetAudioSub(unsigned char& attr, unsigned char& track,
+	                 unsigned char& index, TMSF& relPos, TMSF& absPos);
+	bool GetAudioStatus(bool& playing, bool& pause);
+	bool GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged,
+	                        bool& trayOpen);
+	bool ReadSectors(PhysPt buffer, const bool raw, const uint32_t sector,
+	                 const uint16_t num);
+	bool ReadSectorsHost(void* buffer, bool raw, unsigned long sector,
+	                     unsigned long num);
+	bool PlayAudioSector(const uint32_t start, uint32_t len);
+	bool PauseAudio(bool resume);
+	bool StopAudio();
+	void ChannelControl(TCtrl ctrl);
+	bool LoadUnloadMedia(bool unload);
 
 private:
-	char	device_name[512];
+	void CdAudioCallback(const uint16_t requested_frames);
+	void InitAudio(const int device_number);
+	bool IsOpen() const;
+	bool Open(const char* device_name);
+
+	int cdrom_fd                          = -1;
+	mixer_channel_t mixer_channel         = nullptr;
+	std::vector<int16_t> input_buffer     = {};
+	std::vector<AudioFrame> output_buffer = {};
+	size_t input_buffer_position          = 0;
+	size_t input_buffer_samples           = 0;
+	int current_sector                    = 0;
+	int sectors_remaining                 = 0;
+	bool is_playing                       = false;
+	bool is_paused                        = false;
 };
 
 #endif /* LINUX */
