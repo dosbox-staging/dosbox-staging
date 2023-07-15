@@ -42,6 +42,9 @@ CDROM_Interface_Ioctl::~CDROM_Interface_Ioctl()
 	if (mixer_channel) {
 		MIXER_DeregisterChannel(mixer_channel);
 	}
+	if (IsOpen()) {
+		close(cdrom_fd);
+	}
 }
 
 bool CDROM_Interface_Ioctl::IsOpen() const
