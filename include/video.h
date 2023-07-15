@@ -39,6 +39,8 @@ enum class IntegerScalingMode {
 	Vertical,
 };
 
+enum class InterpolationMode { Bilinear, NearestNeighbour };
+
 typedef void (*GFX_CallBack_t)(GFX_CallBackFunctions_t function);
 
 constexpr uint8_t GFX_CAN_8      = 1 << 0;
