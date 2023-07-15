@@ -2088,6 +2088,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// interaction between various VGA registers that is specific to
 		// mode 13h. So we'll just assume that pixel-doubling is always
 		// on for M_VGA.
+		//
+		// More information here:
+		// https://github.com/joncampbell123/dosbox-x/issues/951
+		//
 		if (vga.draw.pixel_doubling_enabled) {
 			double_width = true;
 		} else {
