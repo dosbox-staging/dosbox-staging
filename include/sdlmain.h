@@ -61,8 +61,6 @@ enum class HostRateMode {
 	Custom,
 };
 
-enum class InterpolationMode { Bilinear, NearestNeighbour };
-
 enum class VsyncState {
 	Unset    = -2,
 	Adaptive = -1,

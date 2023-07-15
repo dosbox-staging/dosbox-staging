@@ -1725,14 +1725,14 @@ static void update_vga_double_scan_handling([[maybe_unused]] const SCREEN_TYPES 
                                             const bool force_no_pixel_doubling)
 {
 	if (force_vga_single_scan ||
-	    interpolation_mode == InterpolationMode::Bilinear) {
+	    interpolation_mode == InterpolationMode::NearestNeighbour) {
 		VGA_EnableVgaDoubleScanning(false);
 	} else {
 		VGA_EnableVgaDoubleScanning(true);
 	}
 
 	if (force_no_pixel_doubling ||
-	    interpolation_mode == InterpolationMode::Bilinear) {
+	    interpolation_mode == InterpolationMode::NearestNeighbour) {
 		VGA_EnablePixelDoubling(false);
 	} else {
 		VGA_EnablePixelDoubling(true);
@@ -2180,6 +2180,7 @@ dosurface:
 		const GLint filter = (sdl.interpolation_mode == InterpolationMode::NearestNeighbour
 		                              ? GL_NEAREST
 		                              : GL_LINEAR);
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
 
@@ -3027,8 +3028,8 @@ static SDL_Point refine_window_size(const SDL_Point size,
 	switch (interpolation_mode) {
 	case (InterpolationMode::Bilinear): {
 		const auto game_ratios = should_stretch_pixels
-		                                 ? RATIOS_FOR_STRETCHED_PIXELS
-		                                 : RATIOS_FOR_SQUARE_PIXELS;
+		                               ? RATIOS_FOR_STRETCHED_PIXELS
+		                               : RATIOS_FOR_SQUARE_PIXELS;
 
 		const auto window_aspect = static_cast<double>(size.x) / size.y;
 		const auto game_aspect = static_cast<double>(game_ratios.x) / game_ratios.y;
@@ -3290,7 +3291,7 @@ static void save_window_size(const int w, const int h)
 // Takes in:
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
-//  - The previously configured scaling mode: None or Nearest.
+//  - The previously configured scaling mode: Bilinear or NearestNeighbour.
 //  - If aspect correction (stretched pixels) is requested.
 
 // Except for SURFACE rendering, this function returns a refined size and
@@ -3308,7 +3309,7 @@ static void save_window_size(const int w, const int h)
 //    the closest fixed resolution is picked from a list, with aspect correction
 //    factored in.
 
-static void setup_window_sizes_from_conf(const char *windowresolution_val,
+static void setup_window_sizes_from_conf(const char* windowresolution_val,
                                          const InterpolationMode interpolation_mode,
                                          const bool should_stretch_pixels)
 {
@@ -3326,7 +3327,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	// The refined scaling mode tell the refiner how it should adjust
 	// the coarse-resolution.
-	InterpolationMode refined_interpolation_mode = interpolation_mode;
+	auto refined_interpolation_mode = interpolation_mode;
 
 	auto drop_nearest = [interpolation_mode]() {
 		return (interpolation_mode == InterpolationMode::NearestNeighbour)
@@ -3351,6 +3352,7 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 			refined_interpolation_mode = drop_nearest();
 		}
 	}
+
 	// Save the coarse bounds in the SDL struct for future sizing events
 	sdl.desktop.requested_window_bounds = {coarse_size.x, coarse_size.y};
 
@@ -3528,6 +3530,7 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 			sdl.opengl.bilinear = false;
 		}
 #endif
+
 	} else {
 		LOG_WARNING("SDL: Unsupported output device %s, switching back to surface",
 		            output.c_str());
@@ -3559,7 +3562,8 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 	setup_viewport_resolution_from_conf(section->Get_string("viewport_resolution"));
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
-	                             sdl.interpolation_mode, should_stretch_pixels);
+	                             sdl.interpolation_mode,
+	                             should_stretch_pixels);
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
@@ -5059,3 +5063,4 @@ int sdl_main(int argc, char *argv[])
 
 	return rcode;
 }
+
