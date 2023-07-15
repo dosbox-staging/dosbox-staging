@@ -742,6 +742,10 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 			       fallback_shader);
 		}
 	}
+
+	// Reset shader settings to defaults
+	render.shader = {};
+
 	if (using_opengl && source.length() && render.shader.filename != filename) {
 		LOG_MSG("RENDER: Using GLSL shader '%s'", filename.c_str());
 		parse_shader_options(source);
