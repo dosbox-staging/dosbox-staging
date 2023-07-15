@@ -712,7 +712,7 @@ void SETVER::SaveTableToFile()
 void SETVER::AddMessages()
 {
 	MSG_Add("PROGRAM_SETVER_HELP_LONG",
-	        "View or set the DOS version reported to applications.\n"
+	        "Displays or sets the DOS version reported to applications.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=green]setver[reset] \\[/b] [/p]\n"

@@ -1085,7 +1085,7 @@ public:
 			return;
 
 		MSG_Add("PROGRAM_FMPDRV_HELP_LONG",
-		        "Load or unload the built-in ReelMagic Full Motion Player driver.\n"
+		        "Loads or unloads the built-in ReelMagic Full Motion Player driver.\n"
 		        "\n"
 		        "Usage:\n"
 		        "  [color=green]fmpdrv[reset]    (loads the driver)\n"

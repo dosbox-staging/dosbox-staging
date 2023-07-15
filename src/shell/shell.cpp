@@ -1275,7 +1275,7 @@ void SHELL_Init() {
 	        "  [color=green]path[reset]\n"
 	        "  [color=green]path[reset] [color=cyan]Z:\\;C:\\DOS[reset]\n");
 
-	MSG_Add("SHELL_CMD_VER_HELP", "Shows the DOS version.\n");
+	MSG_Add("SHELL_CMD_VER_HELP", "Displays the DOS version.\n");
 	MSG_Add("SHELL_CMD_VER_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=green]ver[reset]\n"
