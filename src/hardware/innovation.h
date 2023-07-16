@@ -29,7 +29,8 @@
 
 #include "mixer.h"
 #include "inout.h"
-#include "../libs/residfp/SID.h"
+
+#include "residfp/SID.h"
 
 class Innovation {
 public:

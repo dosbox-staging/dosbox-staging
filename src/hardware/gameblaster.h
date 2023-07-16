@@ -36,7 +36,8 @@
 
 #include "mame/emu.h"
 #include "mame/saa1099.h"
-#include "../libs/residfp/resample/TwoPassSincResampler.h"
+
+#include "residfp/resample/TwoPassSincResampler.h"
 
 class GameBlaster {
 public:

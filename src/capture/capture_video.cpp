@@ -28,7 +28,7 @@
 #include "rgb888.h"
 #include "support.h"
 
-#include "../libs/zmbv/zmbv.h"
+#include "zmbv/zmbv.h"
 
 static constexpr auto NumSampleFramesInBuffer = 16 * 1024;
 

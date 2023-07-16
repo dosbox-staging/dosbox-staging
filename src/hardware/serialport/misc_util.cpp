@@ -21,7 +21,6 @@
 #if C_MODEM
 
 #define ENET_IMPLEMENTATION
-#include "../../libs/enet/include/enet.h" // Must be included before misc_util.h
 
 #include "misc_util.h"
 

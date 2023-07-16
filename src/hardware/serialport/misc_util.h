@@ -58,7 +58,7 @@
 
 #include <SDL_net.h>
 
-#include "../../libs/enet/include/enet.h"
+#include "enet/include/enet.h"
 
 enum SocketTypesE { SOCKET_TYPE_TCP = 0, SOCKET_TYPE_ENET, SOCKET_TYPE_COUNT };
 

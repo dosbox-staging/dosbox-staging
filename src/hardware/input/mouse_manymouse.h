@@ -26,7 +26,7 @@
 #include <vector>
 
 #if C_MANYMOUSE
-#	include "../../libs/manymouse/manymouse.h"
+#	include "manymouse/manymouse.h"
 #endif // C_MANYMOUSE
 
 class MousePhysical {
