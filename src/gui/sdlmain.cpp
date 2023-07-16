@@ -4886,8 +4886,10 @@ int sdl_main(int argc, char *argv[])
 	// Once initialised, ensure we clean up SDL for all exit conditions
 	atexit(QuitSDL);
 
+	SDL_version sdl_version;
+	SDL_GetVersion(&sdl_version);
 	LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
-		SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL,
+		sdl_version.major, sdl_version.minor, sdl_version.patch,
 		SDL_GetCurrentVideoDriver(), SDL_GetCurrentAudioDriver());
 
 	const auto config_path = get_platform_config_dir();
