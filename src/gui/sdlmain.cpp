@@ -3713,7 +3713,7 @@ static void GUI_StartUp(Section *sec)
 	sdl.resizing_window = false;
 	sdl.wait_on_error = section->Get_bool("waitonerror");
 
-	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
+	sdl.desktop.fullscreen = control->cmdline->FindExist("-fullscreen", true) || section->Get_bool("fullscreen");
 
 	auto priority_conf = section->GetMultiVal("priority")->GetSection();
 	SetPriorityLevels(priority_conf->Get_string("active"),
@@ -4958,13 +4958,6 @@ int sdl_main(int argc, char *argv[])
 		control->Init();
 		/* Some extra SDL Functions */
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
-
-		if (control->cmdline->FindExist("-fullscreen") ||
-		    sdl_sec->Get_bool("fullscreen")) {
-			if(!sdl.desktop.fullscreen) { //only switch if not already in fullscreen
-				GFX_SwitchFullScreen();
-			}
-		}
 
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
