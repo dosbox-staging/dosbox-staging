@@ -63,8 +63,8 @@
 #include "timer.h"
 #include "tracy.h"
 
-#include "../src/libs/mverb/MVerb.h"
-#include "../src/libs/tal-chorus/ChorusEngine.h"
+#include "mverb/MVerb.h"
+#include "tal-chorus/ChorusEngine.h"
 
 constexpr auto mixer_frame_size = 4;
 

@@ -32,7 +32,7 @@
 #include "pic.h"
 #include "hardware.h"
 
-#include "../libs/nuked/opl3.h"
+#include "nuked/opl3.h"
 
 class Timer {
 public:

@@ -39,8 +39,9 @@
 #include "support.h"
 #include "mem.h"
 #include "mixer.h"
-#include "../../libs/sdlcd/SDL_cdrom.h"
-#include "../libs/decoders/SDL_sound.h"
+
+#include "decoders/SDL_sound.h"
+#include "sdlcd/SDL_cdrom.h"
 
 // CDROM data and audio format constants
 #define BYTES_PER_RAW_REDBOOK_FRAME    2352u

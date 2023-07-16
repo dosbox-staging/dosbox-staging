@@ -25,7 +25,8 @@
 
 #include "bit_view.h"
 #include "mixer.h"
-#include "../libs/YM7128B_emu/YM7128B_emu.h"
+
+#include "YM7128B_emu/YM7128B_emu.h"
 
 class SurroundProcessor {
 public:

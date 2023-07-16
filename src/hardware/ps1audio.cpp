@@ -38,7 +38,8 @@
 
 #include "mame/emu.h"
 #include "mame/sn76496.h"
-#include "../libs/residfp/resample/TwoPassSincResampler.h"
+
+#include "residfp/resample/TwoPassSincResampler.h"
 
 using namespace std::placeholders;
 
