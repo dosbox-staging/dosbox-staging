@@ -167,7 +167,6 @@ struct SDL_Block {
 	struct {
 		VsyncSettings when_windowed   = {};
 		VsyncSettings when_fullscreen = {};
-		VsyncState current            = VsyncState::On;
 		int skip_us                   = 0;
 	} vsync = {};
 

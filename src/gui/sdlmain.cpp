@@ -1142,9 +1142,7 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 
 	// Consider any vsync state that isn't explicitly off as having some
 	// level of vsync enforcement as "on"
-	const auto vsync_is_on = (sdl.vsync.current == VsyncState::On ||
-	                          get_vsync_settings().requested !=
-	                                  VsyncState::Off);
+	const auto vsync_is_on = (get_vsync_settings().requested != VsyncState::Off);
 
 	// to be set below
 	auto mode = FRAME_MODE::UNSET;
