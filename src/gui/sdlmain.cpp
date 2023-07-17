@@ -4464,38 +4464,38 @@ void config_add_sdl() {
 	        "             display (default).\n"
 	        "  sdi:       Use serial device interface (SDI) rates, without further\n"
 	        "             adjustment.\n"
-	        "  vrr:       Deduct 3 Hz from the reported rate (best-practice for VRR\n"
+	        "  vrr:       Deduct 3 Hz from the reported rate (best practice for VRR\n"
 	        "             displays).\n"
-	        "  <custom>:  Specify a custom rate as a whole or decimal value greater than\n"
-	        "             23.000.");
+	        "  <custom>:  Specify a custom rate as an integer or decimal Hz value\n"
+	        "             (23.000 is the allowed minimum).");
 
 	const char* vsync_prefs[] = {"auto", "on", "off", "yield", 0};
 	pstring = sdl_sec->Add_string("vsync", always, "auto");
 
 	pstring->Set_help(
-	        "Set the host video drivers synchronization mode:\n"
-	        "  auto:      Limit the synchronization to beneficial cases, such as when\n"
-	        "             using an interpolating VRR display in fullscreen (default).\n"
-	        "  on:        Enable synchronization. This can prevent tearing in some games\n"
-	        "             but will impact performance or drop frames when the DOS rate\n"
-	        "             exceeds the host rate (e.g., 70 Hz vs. 60 Hz).\n"
-	        "  off:       Attempt to disable video synchronization to allow quicker\n"
-	        "             frame presentation at the risk of tearing in some games.\n"
+	        "Set the host video driver's vertical synchronization (vsync) mode:\n"
+	        "  auto:      Limit vsync to beneficial cases, such as when using an\n"
+	        "             interpolating VRR display in fullscreen (default).\n"
+	        "  on:        Enable vsync. This can prevent tearing in some games but will\n"
+	        "             impact performance or drop frames when the DOS rate exceeds the\n"
+	        "             host rate (e.g. 70 Hz DOS rate vs 60 Hz host rate).\n"
+	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
+	        "             the risk of tearing in some games.\n"
 	        "  yield:     Let the host's video driver control video synchronization.");
 	pstring->Set_values(vsync_prefs);
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 0);
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
-	               "next frame. For example, a value of 7000 is roughly half the frame time at 70 Hz.\n"
-				   "0 disables this and will always render (default).");
+	               "next frame. For example, a value of 7000 is roughly half the frame time\n"
+	               "at 70 Hz. 0 disables this and will always render (default).");
 	pint->SetMinMax(0, 14000);
 
 	const char *presentation_modes[] = {"auto", "cfr", "vfr", 0};
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
 	pstring->Set_help(
 	        "Select the frame presentation mode:\n"
-	        "  auto:  Intelligently time and drop frames to prevent emulation\n"
-	        "         stalls, based on host and DOS frame rates (default).\n"
+	        "  auto:  Intelligently time and drop frames to prevent emulation stalls,\n"
+	        "         based on host and DOS frame rates (default).\n"
 	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
 	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
 	pstring->Set_values(presentation_modes);
