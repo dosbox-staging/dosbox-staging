@@ -905,8 +905,10 @@ static void set_vfr_dupe_countdown_from_rate(const double dos_rate_hz)
 
 	sdl.frame.vfr_dupe_countdown = check_cast<int8_t>(dos_to_dupe_frames);
 
-	// LOG_MSG("SDL: Setting VFR duplicate countdown to %d "
-	//         "from a DOS rate of %.1f Hz ", dos_to_dupe_frames, dos_rate_hz);
+#if 0
+	LOG_MSG("SDL: Setting VFR duplicate countdown to %d "
+	        "from a DOS rate of %.1f Hz ", dos_to_dupe_frames, dos_rate_hz);
+#endif
 }
 
 static void save_rate_to_frame_period(const double rate_hz)
@@ -1162,8 +1164,9 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	}
 	// Automatic CFR or VFR modes
 	else {
+		const auto has_bench_rate = get_benchmarked_vsync_rate();
+
 		auto get_supported_rate = [=]() -> double {
-			const auto has_bench_rate = get_benchmarked_vsync_rate();
 			if (!has_bench_rate) {
 				return host_rate;
 			}
@@ -1184,24 +1187,24 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 		        (sdl.desktop.fullscreen && vsync_is_on &&
 		         display_might_be_interpolating);
 
-		/*
-		LOG_MSG("Auto presentation mode conditions:");
-		LOG_MSG("  - DOS rate is %2.5g Hz", dos_rate);
+#if 0	
+		LOG_MSG("SDL: Auto presentation mode conditions:");
+		LOG_MSG("SDL:   - DOS rate is %2.5g Hz", dos_rate);
 		if (has_bench_rate) {
-		        LOG_MSG("  - Host renders at %d FPS", *has_bench_rate);
+		        LOG_MSG("SDL:   - Host renders at %d FPS", *has_bench_rate);
 		}
-		LOG_MSG("  - Display refresh rate is %.3f Hz", host_rate);
-		LOG_MSG("  - %s",
+		LOG_MSG("SDL:   - Display refresh rate is %.3f Hz", host_rate);
+		LOG_MSG("SDL:   - %s",
 		        supported_rate >= dos_rate
 		                ? "Host can handle the full DOS rate"
 		                : "Host cannot handle the DOS rate");
-		LOG_MSG("  - %s",
+		LOG_MSG("SDL:   - %s",
 		        conditions_prefer_constant_rate
 		                ? "CFR selected because we're fullscreen, "
 		                  "vsync'd, and display is 140+Hz"
 		                : "VFR selected because we're not "
 		                  "fullscreen, nor vsync'd, nor < 140Hz");
-		*/
+#endif
 
 		if (supported_rate >= dos_rate) {
 			mode = conditions_prefer_constant_rate ? FRAME_MODE::CFR
