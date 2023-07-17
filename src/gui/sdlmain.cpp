@@ -242,7 +242,7 @@ static void update_frame_gl_fb(const uint16_t *changedLines);
 static bool present_frame_gl();
 #endif
 
-static const char *vsync_state_as_string(const VsyncState state)
+static const char* vsync_state_as_string(const VsyncState state)
 {
 	switch (state) {
 	case VsyncState::Unset: return "unset";
@@ -495,15 +495,15 @@ static void populate_requested_vsync_settings()
 		sdl.vsync.when_fullscreen.requested = VsyncState::Yield;
 	} else {
 		assert(user_pref == "auto");
-		// In window-mode, assume the window manager has exclusive
+		// In windowed-mode, assume the window manager has exclusive
 		// access to the GPU so leave vsync off
 		sdl.vsync.when_windowed.requested = VsyncState::Off;
 
 		// For fullscreen mode, VRR displays that perform
-		// frame-interpolation need vsync enabled to lock onto the
-		// content. So we select vsync-on whenever a display is
-		// /potentially/ this type.  This has little downside because at
-		// > 140+ Hz, all DOS refresh rates are going to be presented.
+		// frame interpolation need vsync enabled to lock onto the
+		// content. So we select "vsync on" whenever a display is
+		// /potentially/ this type. This has little downside because at
+		// >140+ Hz, all DOS refresh rates are going to be presented.
 		//
 		const bool prefers_vsync_when_fullscreen =
 		        (get_host_refresh_rate() >= InterpolatingVrrMinRateHz);
@@ -517,10 +517,10 @@ static void populate_requested_vsync_settings()
 		//
 		// 2) is "less worse" when the *unique* DOS frame rate actually
 		//    exceeds the host rate. Why? When disabled, frames might
-		//    tear, but there is no slow down or full frames dropped.
+		//    tear, but there is no slowdown or full frames dropped.
 		//    When enabled, entire frames will either be dropped or
 		//    the host will jam up with a rendering stall, drain the
-		//    audio buffer and possible stutter or pop.
+		//    audio buffer, and possible stutter or pop.
 		//
 		// 'auto' lets us make a judgement call for average user, so
 		// we accept the risk of tearing with the guarantee of no
@@ -887,7 +887,7 @@ static VsyncSettings& get_vsync_settings()
 }
 
 // Benchmarks are run in each vsync'd mode as part of the vsync detection
-// process. This routine returns the vsync-mode's current benchmark rate
+// process. This routine returns the vsync mode's current benchmark rate
 // if available.
 static std::optional<int> get_benchmarked_vsync_rate()
 {
@@ -1136,7 +1136,7 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	VGA_SetHostRate(host_rate);
 	const auto dos_rate = VGA_GetPreferredRate();
 
-	// Update the VFR duplicate cowndown based on the DOS rate to produce a
+	// Update the VFR duplicate countdown based on the DOS rate to produce a
 	// fixed lower-bound dupe refresh rate.
 	set_vfr_dupe_countdown_from_rate(dos_rate);
 
@@ -1174,14 +1174,13 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 			return vsync_is_on ? std::min(bench_rate, host_rate)
 			                   : std::max(bench_rate, host_rate);
 		};
-
 		const auto supported_rate = get_supported_rate();
 
 		const auto display_might_be_interpolating = (host_rate >=
 		                                             InterpolatingVrrMinRateHz);
 
 		// If we're fullscreen, vsynced, and using a VRR display that
-		// performs frame-interpolation, then we prefer to use a
+		// performs frame interpolation, then we prefer to use a
 		// constant rate.
 		const auto conditions_prefer_constant_rate =
 		        (sdl.desktop.fullscreen && vsync_is_on &&

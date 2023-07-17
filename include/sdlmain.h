@@ -72,17 +72,17 @@ enum class VsyncState {
 };
 
 // The vsync settings consists of three parts:
-//  - What the user asked for,
-//  - What the measured state is after setting the requested. The video driver
-//    may honor the requested vsync state, ignore it, change it, or be outright
-//    buggy.
+//  - What the user asked for.
+//  - What the measured state is after setting the requested vsync state.
+//    The video driver may honor the requested vsync state, ignore it, change
+//    it, or be outright buggy.
 //  - The benchmarked rate is the actual frame rate after setting the requested
 //    stated, and is used to determined the measured state.
 //
 struct VsyncSettings {
 	VsyncState requested = VsyncState::Unset;
 	VsyncState measured  = VsyncState::Unset;
-	int benchmarked_rate  = 0;
+	int benchmarked_rate = 0;
 };
 
 enum PRIORITY_LEVELS {
@@ -163,12 +163,14 @@ struct SDL_Block {
 		std::string hint_paused_str = {};
 		std::string cycles_ms_str   = {};
 	} title_bar = {};
+
 	struct {
-		VsyncSettings when_windowed = {};
+		VsyncSettings when_windowed   = {};
 		VsyncSettings when_fullscreen = {};
-		VsyncState current = VsyncState::On;
-		int skip_us = 0;
+		VsyncState current            = VsyncState::On;
+		int skip_us                   = 0;
 	} vsync = {};
+
 #if C_OPENGL
 	struct {
 		SDL_GLContext context;
