@@ -541,6 +541,9 @@
     <ClCompile Include="..\src\dos\program_ls.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\program_move.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\program_placeholder.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>

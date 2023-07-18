@@ -571,6 +571,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\dos\program_mount_common.cpp" />
     <ClCompile Include="..\src\dos\program_mount.cpp" />
     <ClCompile Include="..\src\dos\program_mousectl.cpp" />
+    <ClCompile Include="..\src\dos\program_move.cpp" />
     <ClCompile Include="..\src\dos\program_placeholder.cpp" />
     <ClCompile Include="..\src\dos\program_rescan.cpp" />
     <ClCompile Include="..\src\dos\program_serial.cpp" />
