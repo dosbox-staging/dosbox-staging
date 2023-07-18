@@ -438,7 +438,7 @@ static double get_host_refresh_rate()
 	const char *rate_description = ""; // description of the refresh rate
 
 	switch (sdl.desktop.host_rate_mode) {
-	case HOST_RATE_MODE::AUTO:
+	case HostRateMode::Auto:
 		if (const auto sdl_rate = get_sdl_rate();
 		    sdl.desktop.fullscreen && sdl_rate >= InterpolatingVrrMinRateHz) {
 			rate = get_vrr_rate(sdl_rate);
@@ -448,15 +448,15 @@ static double get_host_refresh_rate()
 			rate_description = "standard SDI (auto)";
 		}
 		break;
-	case HOST_RATE_MODE::SDI:
+	case HostRateMode::Sdi:
 		rate = get_sdi_rate(get_sdl_rate());
 		rate_description = "standard SDI";
 		break;
-	case HOST_RATE_MODE::VRR:
+	case HostRateMode::Vrr:
 		rate = get_vrr_rate(get_sdl_rate());
 		rate_description = "VRR-adjusted";
 		break;
-	case HOST_RATE_MODE::CUSTOM:
+	case HostRateMode::Custom:
 		assert(sdl.desktop.preferred_host_rate >= REFRESH_RATE_MIN);
 		rate = sdl.desktop.preferred_host_rate;
 		rate_description = "custom";
@@ -3763,21 +3763,21 @@ static void GUI_StartUp(Section *sec)
 	}
 
 	const std::string host_rate_pref = section->Get_string("host_rate");
-	if (host_rate_pref == "auto")
-		sdl.desktop.host_rate_mode = HOST_RATE_MODE::AUTO;
-	else if (host_rate_pref == "sdi")
-		sdl.desktop.host_rate_mode = HOST_RATE_MODE::SDI;
-	else if (host_rate_pref == "vrr")
-		sdl.desktop.host_rate_mode = HOST_RATE_MODE::VRR;
-	else {
+	if (host_rate_pref == "auto") {
+		sdl.desktop.host_rate_mode = HostRateMode::Auto;
+	} else if (host_rate_pref == "sdi") {
+		sdl.desktop.host_rate_mode = HostRateMode::Sdi;
+	} else if (host_rate_pref == "vrr") {
+		sdl.desktop.host_rate_mode = HostRateMode::Vrr;
+	} else {
 		const auto rate = to_finite<double>(host_rate_pref);
 		if (std::isfinite(rate) && rate >= REFRESH_RATE_MIN) {
-			sdl.desktop.host_rate_mode = HOST_RATE_MODE::CUSTOM;
+			sdl.desktop.host_rate_mode      = HostRateMode::Custom;
 			sdl.desktop.preferred_host_rate = rate;
 		} else {
 			LOG_WARNING("SDL: Invalid 'host_rate' value: '%s', using 'auto'",
 			            host_rate_pref.c_str());
-			sdl.desktop.host_rate_mode = HOST_RATE_MODE::AUTO;
+			sdl.desktop.host_rate_mode = HostRateMode::Auto;
 		}
 	}
 
