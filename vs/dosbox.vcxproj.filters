@@ -547,6 +547,9 @@
     <ClCompile Include="..\src\dos\program_placeholder.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\program_subst.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\misc\fs_utils.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
