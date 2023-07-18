@@ -760,7 +760,7 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 }
 
 static SDL_Point refine_window_size(const SDL_Point size,
-                                    const SCALING_MODE scaling_mode,
+                                    const InterpolationMode interpolation_mode,
                                     const bool should_stretch_pixels);
 
 static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
@@ -1715,7 +1715,7 @@ static void check_kmsdrm_setting()
 // screens) and also reduces load on slow systems like the Raspberry Pi.
 //
 static void update_vga_sub_350_line_handling([[maybe_unused]] const SCREEN_TYPES screen_type,
-                                             const SCALING_MODE scaling_mode)
+                                             const InterpolationMode interpolation_mode)
 {
 	auto line_handling = VgaSub350LineHandling::SingleScan;
 #if C_OPENGL
@@ -1723,7 +1723,7 @@ static void update_vga_sub_350_line_handling([[maybe_unused]] const SCREEN_TYPES
 		line_handling = VgaSub350LineHandling::DoubleScan;
 	}
 #endif
-	if (scaling_mode == SCALING_MODE::NONE) {
+	if (interpolation_mode == InterpolationMode::Bilinear) {
 		line_handling = VgaSub350LineHandling::DoubleScan;
 	}
 	VGA_SetVgaSub350LineHandling(line_handling);
@@ -2156,7 +2156,7 @@ dosurface:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
 
-		const GLint filter = (sdl.scaling_mode == SCALING_MODE::NEAREST
+		const GLint filter = (sdl.interpolation_mode == InterpolationMode::NearestNeighbour
 		                              ? GL_NEAREST
 		                              : GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
@@ -2279,7 +2279,7 @@ dosurface:
 	// Ensure mouse emulation knows the current parameters
 	NewMouseScreenParams();
 	update_vsync_state();
-	update_vga_sub_350_line_handling(sdl.desktop.type, sdl.scaling_mode);
+	update_vga_sub_350_line_handling(sdl.desktop.type, sdl.interpolation_mode);
 
 	if (sdl.draw.has_changed)
 		log_display_properties(sdl.draw.width,
@@ -2990,11 +2990,11 @@ static SDL_Point remove_stretched_aspect(const SDL_Point size)
 }
 
 static SDL_Point refine_window_size(const SDL_Point size,
-                                    const SCALING_MODE scaling_mode,
+                                    const InterpolationMode interpolation_mode,
                                     const bool should_stretch_pixels)
 {
-	switch (scaling_mode) {
-	case (SCALING_MODE::NONE): {
+	switch (interpolation_mode) {
+	case (InterpolationMode::Bilinear): {
 		const auto game_ratios = should_stretch_pixels
 		                                 ? RATIOS_FOR_STRETCHED_PIXELS
 		                                 : RATIOS_FOR_SQUARE_PIXELS;
@@ -3013,7 +3013,7 @@ static SDL_Point refine_window_size(const SDL_Point size,
 			return {size.x, y};
 		}
 	}
-	case (SCALING_MODE::NEAREST): {
+	case (InterpolationMode::NearestNeighbour): {
 		constexpr SDL_Point resolutions[] = {
 		        {7680, 5760}, // 8K  at 4:3 aspect
 		        {7360, 5520}, //
@@ -3259,7 +3259,7 @@ static void save_window_size(const int w, const int h)
 // Takes in:
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
-//  - The previously configured scaling mode: NONE or NEAREST.
+//  - The previously configured scaling mode: None or Nearest.
 //  - If aspect correction (stretched pixels) is requested.
 
 // Except for SURFACE rendering, this function returns a refined size and
@@ -3278,7 +3278,7 @@ static void save_window_size(const int w, const int h)
 //    factored in.
 
 static void setup_window_sizes_from_conf(const char *windowresolution_val,
-                                         const SCALING_MODE scaling_mode,
+                                         const InterpolationMode interpolation_mode,
                                          const bool should_stretch_pixels)
 {
 	// TODO: Deprecate SURFACE output and remove this.
@@ -3295,27 +3295,29 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 
 	// The refined scaling mode tell the refiner how it should adjust
 	// the coarse-resolution.
-	SCALING_MODE refined_scaling_mode = scaling_mode;
-	auto drop_nearest = [scaling_mode]() {
-		return (scaling_mode == SCALING_MODE::NEAREST) ? SCALING_MODE::NONE
-		                                               : scaling_mode;
+	InterpolationMode refined_interpolation_mode = interpolation_mode;
+
+	auto drop_nearest = [interpolation_mode]() {
+		return (interpolation_mode == InterpolationMode::NearestNeighbour)
+		             ? InterpolationMode::Bilinear
+		             : interpolation_mode;
 	};
 
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
 	const std::string pref = windowresolution_val;
-	SDL_Point coarse_size = FALLBACK_WINDOW_DIMENSIONS;
+	SDL_Point coarse_size  = FALLBACK_WINDOW_DIMENSIONS;
 
 	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
 	if (sdl.use_exact_window_resolution) {
-		coarse_size          = parse_window_resolution_from_conf(pref);
-		refined_scaling_mode = drop_nearest();
+		coarse_size = parse_window_resolution_from_conf(pref);
+		refined_interpolation_mode = drop_nearest();
 	} else {
 		const auto desktop = get_desktop_resolution();
 
 		coarse_size = window_bounds_from_label(pref, desktop);
 		if (pref == "desktop") {
-			refined_scaling_mode = drop_nearest();
+			refined_interpolation_mode = drop_nearest();
 		}
 	}
 	// Save the coarse bounds in the SDL struct for future sizing events
@@ -3326,25 +3328,27 @@ static void setup_window_sizes_from_conf(const char *windowresolution_val,
 	if (sdl.use_exact_window_resolution) {
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
-		refined_size = refine_window_size(coarse_size, refined_scaling_mode,
+		refined_size = refine_window_size(coarse_size,
+		                                  refined_interpolation_mode,
 		                                  should_stretch_pixels);
 	}
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	save_window_size(refined_size.x, refined_size.y);
 
-	auto describe_scaling_mode = [scaling_mode]() -> const char * {
-		switch (scaling_mode) {
-		case SCALING_MODE::NONE: return "bilinear";
-		case SCALING_MODE::NEAREST: return "nearest-neighbour";
+	auto describe_interpolation_mode = [interpolation_mode]() -> const char* {
+		switch (interpolation_mode) {
+		case InterpolationMode::Bilinear: return "bilinear";
+		case InterpolationMode::NearestNeighbour:
+			return "nearest-neighbour";
 		}
-		return "Unknown mode!";
+		return "unknown";
 	};
 
 	// Let the user know the resulting window properties
 	LOG_MSG("DISPLAY: Initialised %dx%d windowed mode using %s scaling on display-%d",
 	        refined_size.x,
 	        refined_size.y,
-	        describe_scaling_mode(),
+	        describe_interpolation_mode(),
 	        sdl.display_number);
 }
 
@@ -3467,26 +3471,30 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 
 	if (output == "surface") {
 		sdl.desktop.want_type = SCREEN_SURFACE;
+
 	} else if (output == "texture") {
-		sdl.desktop.want_type = SCREEN_TEXTURE;
-		sdl.scaling_mode = SCALING_MODE::NONE;
+		sdl.desktop.want_type  = SCREEN_TEXTURE;
+		sdl.interpolation_mode = InterpolationMode::Bilinear;
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+
 	} else if (output == "texturenb") {
-		sdl.desktop.want_type = SCREEN_TEXTURE;
-		sdl.scaling_mode = SCALING_MODE::NEAREST;
+		sdl.desktop.want_type  = SCREEN_TEXTURE;
+		sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
 		// Currently the default, but... oh well
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+
 #if C_OPENGL
 	} else if (starts_with(output, "opengl")) {
 		RENDER_InitShaderSource(sec);
 		if (output == "opengl") {
-			sdl.desktop.want_type = SCREEN_OPENGL;
-			sdl.scaling_mode      = SCALING_MODE::NONE;
-			sdl.opengl.bilinear   = true;
+			sdl.desktop.want_type  = SCREEN_OPENGL;
+			sdl.interpolation_mode = InterpolationMode::Bilinear;
+			sdl.opengl.bilinear    = true;
+
 		} else if (output == "openglnb") {
 			sdl.desktop.want_type = SCREEN_OPENGL;
-			sdl.scaling_mode      = SCALING_MODE::NEAREST;
-			sdl.opengl.bilinear   = false;
+			sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
+			sdl.opengl.bilinear = false;
 		}
 #endif
 	} else {
@@ -3520,7 +3528,7 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 	setup_viewport_resolution_from_conf(section->Get_string("viewport_resolution"));
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
-	                             sdl.scaling_mode, should_stretch_pixels);
+	                             sdl.interpolation_mode, should_stretch_pixels);
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
