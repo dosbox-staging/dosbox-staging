@@ -42,6 +42,7 @@
 #include "program_rescan.h"
 #include "program_serial.h"
 #include "program_setver.h"
+#include "program_subst.h"
 #include "program_tree.h"
 
 #if C_DEBUG
@@ -94,6 +95,7 @@ void Add_VFiles(const bool add_autoexec)
 	PROGRAMS_MakeFile("SETVER.EXE", ProgramCreate<SETVER>);
 	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
 	PROGRAMS_MakeFile("MOVE.EXE", ProgramCreate<MOVE>);
+	PROGRAMS_MakeFile("SUBST.EXE", ProgramCreate<SUBST>);
 	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 
 	if (add_autoexec) {

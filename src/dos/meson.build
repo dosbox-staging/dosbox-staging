@@ -44,6 +44,7 @@ libdos_sources = files(
     'program_rescan.cpp',
     'program_serial.cpp',
     'program_setver.cpp',
+    'program_subst.cpp',
     'program_tree.cpp',
 )
 
