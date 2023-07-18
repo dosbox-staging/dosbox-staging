@@ -54,11 +54,11 @@ enum class FrameMode {
 	ThrottledVfr, // variable frame rate, throttled to the display's rate
 };
 
-enum class HOST_RATE_MODE {
-	AUTO,
-	SDI, // serial digital interface
-	VRR, // variable refresh rate
-	CUSTOM,
+enum class HostRateMode {
+	Auto,
+	Sdi, // serial digital interface
+	Vrr, // variable refresh rate
+	Custom,
 };
 
 enum class InterpolationMode { Bilinear, NearestNeighbour };
@@ -153,7 +153,7 @@ struct SDL_Block {
 		// position when leaving fullscreen for the first time.
 		// See FinalizeWindowState function for details.
 		bool lazy_init_window_size = false;
-		HOST_RATE_MODE host_rate_mode = HOST_RATE_MODE::AUTO;
+		HostRateMode host_rate_mode = HostRateMode::Auto;
 		double preferred_host_rate = 0.0;
 		bool want_resizable_window = false;
 		SCREEN_TYPES type = SCREEN_SURFACE;
