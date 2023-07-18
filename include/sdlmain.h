@@ -61,7 +61,7 @@ enum class HOST_RATE_MODE {
 	CUSTOM,
 };
 
-enum class SCALING_MODE { NONE, NEAREST };
+enum class InterpolationMode { Bilinear, NearestNeighbour };
 
 enum class VsyncState {
 	Unset    = -2,
@@ -101,8 +101,10 @@ struct SDL_Block {
 	bool update_display_contents = true;
 	bool resizing_window = false;
 	bool wait_on_error = false;
-	SCALING_MODE scaling_mode = SCALING_MODE::NONE;
+
+	InterpolationMode interpolation_mode    = InterpolationMode::Bilinear;
 	IntegerScalingMode integer_scaling_mode = IntegerScalingMode::Off;
+
 	struct {
 		int width = 0;
 		int height = 0;
