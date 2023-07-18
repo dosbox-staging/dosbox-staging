@@ -70,12 +70,12 @@ constexpr uint16_t EGA_LINE_DOUBLE = 1 << 1;
 constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
 
 // Refresh rate constants
-constexpr auto REFRESH_RATE_MIN = 23;
-constexpr auto REFRESH_RATE_HOST_VRR_LFC = 48;
-constexpr auto REFRESH_RATE_HOST_DEFAULT = 60;
-constexpr auto REFRESH_RATE_DOS_DEFAULT = 70;
+constexpr auto RefreshRateMin            = 23;
+constexpr auto RefreshRateHostVrrLfc     = 48;
+constexpr auto RefreshRateHostDefault    = 60;
+constexpr auto RefreshRateDosDefault     = 70;
 constexpr auto InterpolatingVrrMinRateHz = 140;
-constexpr auto REFRESH_RATE_MAX = 1000;
+constexpr auto RefreshRateMax            = 1000;
 
 #define CLK_25 25175
 #define CLK_28 28322
@@ -149,7 +149,7 @@ struct VGA_Config {
 
 enum Drawmode { PART, DRAWLINE, EGALINE };
 
-enum class VGA_RATE_MODE { DEFAULT, HOST, CUSTOM };
+enum class VgaRateMode { Default, Host, Custom };
 
 enum PixelsPerChar : int8_t {
 	Eight = 8,
@@ -227,10 +227,10 @@ struct VGA_Draw {
 	// clang-format on
 	Bitu bpp = 0;
 
-	double host_refresh_hz = REFRESH_RATE_HOST_DEFAULT;
-	double dos_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
-	double custom_refresh_hz = REFRESH_RATE_DOS_DEFAULT;
-	VGA_RATE_MODE dos_rate_mode = VGA_RATE_MODE::DEFAULT;
+	double host_refresh_hz = RefreshRateHostDefault;
+	double dos_refresh_hz = RefreshRateDosDefault;
+	double custom_refresh_hz = RefreshRateDosDefault;
+	VgaRateMode dos_rate_mode = VgaRateMode::Default;
 	Fraction pixel_aspect_ratio = {};
 	bool double_scan = false;
 	bool doublewidth = false;

@@ -403,19 +403,19 @@ static double get_host_refresh_rate()
 		if (display_in_use < 0) {
 			LOG_ERR("SDL: Could not get the current window index: %s",
 			        SDL_GetError());
-			return REFRESH_RATE_HOST_DEFAULT;
+			return RefreshRateHostDefault;
 		}
 		if (SDL_GetCurrentDisplayMode(display_in_use, &mode) != 0) {
 			LOG_ERR("SDL: Could not get the current display mode: %s",
 			        SDL_GetError());
-			return REFRESH_RATE_HOST_DEFAULT;
+			return RefreshRateHostDefault;
 		}
-		if (sdl_rate < REFRESH_RATE_MIN) {
+		if (sdl_rate < RefreshRateMin) {
 			LOG_WARNING("SDL: Got a strange refresh rate of %d Hz",
 			            sdl_rate);
-			return REFRESH_RATE_HOST_DEFAULT;
+			return RefreshRateHostDefault;
 		}
-		assert(sdl_rate >= REFRESH_RATE_MIN);
+		assert(sdl_rate >= RefreshRateMin);
 		return sdl_rate;
 	};
 
@@ -457,12 +457,12 @@ static double get_host_refresh_rate()
 		rate_description = "VRR-adjusted";
 		break;
 	case HostRateMode::Custom:
-		assert(sdl.desktop.preferred_host_rate >= REFRESH_RATE_MIN);
+		assert(sdl.desktop.preferred_host_rate >= RefreshRateMin);
 		rate = sdl.desktop.preferred_host_rate;
 		rate_description = "custom";
 		break;
 	}
-	assert(rate >= REFRESH_RATE_MIN);
+	assert(rate >= RefreshRateMin);
 
 	// Log if changed
 	static auto last_int_rate = 0;
@@ -900,7 +900,7 @@ static void set_vfr_dupe_countdown_from_rate(const double dos_rate_hz)
 	constexpr auto max_dupe_rate_hz = 10.0;
 
 	assert(dos_rate_hz >= max_dupe_rate_hz);
-	assert(dos_rate_hz <= REFRESH_RATE_MAX);
+	assert(dos_rate_hz <= RefreshRateMax);
 	const auto dos_to_dupe_frames = iround(dos_rate_hz / max_dupe_rate_hz);
 
 	sdl.frame.vfr_dupe_countdown = check_cast<int8_t>(dos_to_dupe_frames);
@@ -3771,7 +3771,7 @@ static void GUI_StartUp(Section *sec)
 		sdl.desktop.host_rate_mode = HostRateMode::Vrr;
 	} else {
 		const auto rate = to_finite<double>(host_rate_pref);
-		if (std::isfinite(rate) && rate >= REFRESH_RATE_MIN) {
+		if (std::isfinite(rate) && rate >= RefreshRateMin) {
 			sdl.desktop.host_rate_mode      = HostRateMode::Custom;
 			sdl.desktop.preferred_host_rate = rate;
 		} else {
