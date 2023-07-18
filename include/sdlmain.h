@@ -47,11 +47,11 @@ enum SCREEN_TYPES	{
 #endif
 };
 
-enum class FRAME_MODE {
-	UNSET,
-	CFR,        // constant frame rate, as defined by the emulated system
-	VFR,        // variable frame rate, as defined by the emulated system
-	THROTTLED_VFR, // variable frame rate, throttled to the display's rate
+enum class FrameMode {
+	Unset,
+	Cfr,          // constant frame rate, as defined by the emulated system
+	Vfr,          // variable frame rate, as defined by the emulated system
+	ThrottledVfr, // variable frame rate, throttled to the display's rate
 };
 
 enum class HOST_RATE_MODE {
@@ -210,25 +210,30 @@ struct SDL_Block {
 	SDL_Renderer *renderer = nullptr;
 	std::string render_driver = "";
 	int display_number = 0;
+
 	struct {
 		SDL_Surface *input_surface = nullptr;
 		SDL_Texture *texture = nullptr;
 		SDL_PixelFormat *pixelFormat = nullptr;
 	} texture = {};
+
 	struct {
-		present_frame_f *present = present_frame_noop;
-		update_frame_buffer_f *update = update_frame_noop;
-		FRAME_MODE desired_mode = FRAME_MODE::UNSET;
-		FRAME_MODE mode = FRAME_MODE::UNSET;
-		double period_ms = 0.0; // in ms, for use with PIC timers
-		int period_us = 0;      // same but in us, for use with chrono
+		present_frame_f* present      = present_frame_noop;
+		update_frame_buffer_f* update = update_frame_noop;
+		FrameMode desired_mode        = FrameMode::Unset;
+		FrameMode mode                = FrameMode::Unset;
+		double period_ms    = 0.0; // in ms, for use with PIC timers
+		int period_us       = 0; // same but in us, for use with chrono
 		int period_us_early = 0;
-		int period_us_late = 0;
+		int period_us_late  = 0;
 		int8_t vfr_dupe_countdown = 0;
 	} frame = {};
+
 	SDL_Rect updateRects[1024] = {};
+
 	bool use_exact_window_resolution = false;
 	bool use_viewport_limits = false;
+
 	SDL_Point viewport_resolution = {-1, -1};
 #if defined (WIN32)
 	// Time when sdl regains focus (Alt+Tab) in windowed mode

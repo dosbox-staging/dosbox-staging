@@ -800,12 +800,12 @@ static void log_display_properties(int source_w, int source_h,
 	const auto [mode_desc, colours_desc] =
 	        VGA_DescribeMode(mode_type, mode_id, source_w, source_h);
 
-	const char *frame_mode = nullptr;
+	const char* frame_mode = nullptr;
 	switch (sdl.frame.mode) {
-	case FRAME_MODE::CFR: frame_mode = "CFR"; break;
-	case FRAME_MODE::VFR: frame_mode = "VFR"; break;
-	case FRAME_MODE::THROTTLED_VFR: frame_mode = "throttled VFR"; break;
-	case FRAME_MODE::UNSET: frame_mode = "Unset frame_mode"; break;
+	case FrameMode::Cfr: frame_mode = "CFR"; break;
+	case FrameMode::Vfr: frame_mode = "VFR"; break;
+	case FrameMode::ThrottledVfr: frame_mode = "throttled VFR"; break;
+	case FrameMode::Unset: frame_mode = "Unset frame_mode"; break;
 	}
 
 	auto refresh_rate = VGA_GetPreferredRate();
@@ -1129,7 +1129,7 @@ static void maybe_present_synced(const bool present_if_last_skipped)
 	last_sync_time = should_present ? GetTicksUs() : now;
 }
 
-static void setup_presentation_mode(FRAME_MODE &previous_mode)
+static void setup_presentation_mode(FrameMode &previous_mode)
 {
 	// Always get the reported refresh rate and hint the VGA side with it.
 	// This ensures the VGA side always has the host's rate to prior to its
@@ -1147,11 +1147,11 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	const auto vsync_is_on = (get_vsync_settings().requested != VsyncState::Off);
 
 	// to be set below
-	auto mode = FRAME_MODE::UNSET;
+	auto mode = FrameMode::Unset;
 
 	// Manual CFR or VFR modes
-	if (sdl.frame.desired_mode == FRAME_MODE::CFR ||
-	    sdl.frame.desired_mode == FRAME_MODE::VFR) {
+	if (sdl.frame.desired_mode == FrameMode::Cfr ||
+	    sdl.frame.desired_mode == FrameMode::Vfr) {
 		mode = sdl.frame.desired_mode;
 
 		// Frames will be presented at the DOS rate.
@@ -1207,11 +1207,11 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 #endif
 
 		if (supported_rate >= dos_rate) {
-			mode = conditions_prefer_constant_rate ? FRAME_MODE::CFR
-			                                       : FRAME_MODE::VFR;
+			mode = conditions_prefer_constant_rate ? FrameMode::Cfr
+			                                       : FrameMode::Vfr;
 			save_rate_to_frame_period(dos_rate);
 		} else {
-			mode =FRAME_MODE::THROTTLED_VFR;
+			mode = FrameMode::ThrottledVfr;
 			save_rate_to_frame_period(nearest_common_rate(supported_rate));
 		}
 		// In auto-mode, the presentation rate doesn't exceed supported
@@ -1220,7 +1220,7 @@ static void setup_presentation_mode(FRAME_MODE &previous_mode)
 	}
 
 	// If the mode is unchanged, do nothing
-	assert(mode != FRAME_MODE::UNSET);
+	assert(mode != FrameMode::Unset);
 	if (previous_mode == mode)
 		return;
 	previous_mode = mode;
@@ -2562,14 +2562,14 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 		const auto frame_is_new = sdl.update_display_contents && sdl.updating;
 
 		switch (sdl.frame.mode) {
-		case FRAME_MODE::CFR:
+		case FrameMode::Cfr:
 			maybe_present_synced(frame_is_new);
 			break;
-		case FRAME_MODE::VFR: present_new_or_maybe_dupe(frame_is_new); break;
-		case FRAME_MODE::THROTTLED_VFR:
+		case FrameMode::Vfr: present_new_or_maybe_dupe(frame_is_new); break;
+		case FrameMode::ThrottledVfr:
 			maybe_present_throttled_or_dupe(frame_is_new);
 			break;
-		case FRAME_MODE::UNSET:
+		case FrameMode::Unset:
 			break;
 		}
 	}
@@ -3790,13 +3790,13 @@ static void GUI_StartUp(Section *sec)
 	const std::string presentation_mode_pref = section->Get_string(
 	        "presentation_mode");
 	if (presentation_mode_pref == "auto")
-		sdl.frame.desired_mode = FRAME_MODE::UNSET;
+		sdl.frame.desired_mode = FrameMode::Unset;
 	else if (presentation_mode_pref == "cfr")
-		sdl.frame.desired_mode = FRAME_MODE::CFR;
+		sdl.frame.desired_mode = FrameMode::Cfr;
 	else if (presentation_mode_pref == "vfr")
-		sdl.frame.desired_mode = FRAME_MODE::VFR;
+		sdl.frame.desired_mode = FrameMode::Vfr;
 	else {
-		sdl.frame.desired_mode = FRAME_MODE::UNSET;
+		sdl.frame.desired_mode = FrameMode::Unset;
 		LOG_WARNING("SDL: Invalid 'presentation_mode' value: '%s'",
 		            presentation_mode_pref.c_str());
 	}
