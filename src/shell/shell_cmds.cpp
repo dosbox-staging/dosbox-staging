@@ -68,7 +68,6 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	{ "LOADHIGH", {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc } },
 	{ "MD",       {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::Common, HELP_Category::File } },
 	{ "MKDIR",    {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::All,    HELP_Category::File } },
-	{ "MOVE",     {&DOS_Shell::CMD_MOVE,     "MOVE",     HELP_Filter::All,    HELP_Category::File } },
 	{ "PATH",     {&DOS_Shell::CMD_PATH,     "PATH",     HELP_Filter::All,    HELP_Category::Misc} },
 	{ "PAUSE",    {&DOS_Shell::CMD_PAUSE,    "PAUSE",    HELP_Filter::All,    HELP_Category::Batch } },
 	{ "RD",       {&DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Filter::Common, HELP_Category::File } },
