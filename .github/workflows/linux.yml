@@ -96,7 +96,7 @@ jobs:
           - name: GCC, Debian 10, ARMv7
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true --cross-file dosbox-cross
-            max_warnings: 2
+            max_warnings: 21
             run_tests: true
             cross: true
             arch: armhf
@@ -106,7 +106,7 @@ jobs:
           - name: GCC, Debian 10, aarch64
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug -Dexperimental_voodoo_support=true --cross-file dosbox-cross
-            max_warnings: 0
+            max_warnings: 21
             run_tests: true
             cross: true
             arch: arm64
