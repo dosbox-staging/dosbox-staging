@@ -2802,10 +2802,11 @@ void BIND_MappingEvents() {
 // results. If no joysticks are valid then joytype is set to JOY_NONE_FOUND.
 // This also resets mapper.sticks.num_groups to 0 and mapper.sticks.num to the
 // number of found SDL joysticks.
+
+// 7-21-2023: No longer resetting mapper.sticks.num_groups due to https://github.com/dosbox-staging/dosbox-staging/issues/2687
 static void QueryJoysticks()
 {
 	// Reset our joystick status
-	mapper.sticks.num_groups = 0;
 	mapper.sticks.num = 0;
 
 	JOYSTICK_ParseConfiguredType();
