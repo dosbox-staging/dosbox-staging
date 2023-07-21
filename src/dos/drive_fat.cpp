@@ -1075,8 +1075,7 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
                                     fileEntry.loFirstClust,
                                     fileEntry.entrysize,
                                     this);
-	bool is_readonly     = fileEntry.attrib & DOS_ATTR_READ_ONLY;
-	fat_file->flags      = is_readonly ? OPEN_READ : OPEN_READWRITE;
+	fat_file->flags      = OPEN_READWRITE;
 	fat_file->dirCluster = dirClust;
 	fat_file->dirIndex   = subEntry;
 	fat_file->time       = fileEntry.modTime;
