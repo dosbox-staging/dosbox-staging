@@ -44,6 +44,7 @@
 #	include <shlobj.h>
 #else
 #	include <libgen.h>
+#	include <sys/xattr.h>
 #endif
 
 #if defined HAVE_PWD_H
@@ -781,6 +782,91 @@ std::string cfstr_to_string(CFStringRef source)
 	assert(lang.empty());
 	return lang;
 }
+
+#ifndef WIN32
+uint16_t xattr_string_to_fattr(const char* xattr)
+{
+	uint16_t fattr = 0;
+
+	if (strchr(xattr, 'R')) {
+		fattr |= DOS_ATTR_READ_ONLY;
+	}
+	if (strchr(xattr, 'H')) {
+		fattr |= DOS_ATTR_HIDDEN;
+	}
+	if (strchr(xattr, 'S')) {
+		fattr |= DOS_ATTR_SYSTEM;
+	}
+	if (strchr(xattr, 'A')) {
+		fattr |= DOS_ATTR_ARCHIVE;
+	}
+
+	return fattr;
+}
+
+void fattr_to_xattr_string(uint16_t fattr, char* outbuf, size_t outsize)
+{
+	memset(outbuf, 0, outsize);
+
+	if (fattr & DOS_ATTR_READ_ONLY) {
+		strcat(outbuf, "R");
+	}
+	if (fattr & DOS_ATTR_HIDDEN) {
+		strcat(outbuf, "H");
+	}
+	if (fattr & DOS_ATTR_SYSTEM) {
+		strcat(outbuf, "S");
+	}
+	if (fattr & DOS_ATTR_ARCHIVE) {
+		strcat(outbuf, "A");
+	}
+}
+
+uint16_t get_fat_attribs_from_xattr(const char *path)
+{
+	char xattr[XATTR_FATTR_LEN];
+#ifdef MACOSX
+	int read_len = getxattr(path, XATTR_FATTR_NAME, xattr, XATTR_FATTR_LEN - 1, 0, 0);
+#else
+	int read_len = getxattr(path, XATTR_FATTR_NAME, xattr, XATTR_FATTR_LEN - 1);
+#endif
+	if (read_len > 0) {
+		// xattr strings are not null terminated.
+		xattr[read_len] = '\0';
+		return xattr_string_to_fattr(xattr);
+	}
+
+	return 0;
+}
+
+int set_xattr_from_fat_attribs(const char *path, uint16_t fattr)
+{
+	char xattr[XATTR_FATTR_LEN];
+	fattr_to_xattr_string(fattr, xattr, XATTR_FATTR_LEN);
+	size_t xattr_len = strlen(xattr);
+#ifdef MACOSX
+	int result = setxattr(path, XATTR_FATTR_NAME, xattr, xattr_len, 0, 0);
+#else
+	int result = setxattr(path, XATTR_FATTR_NAME, xattr, xattr_len, 0);
+#endif
+
+	return result;
+}
+
+int set_xattr_from_fat_attribs(int fd, uint16_t fattr)
+{
+	char xattr[XATTR_FATTR_LEN];
+	fattr_to_xattr_string(fattr, xattr, XATTR_FATTR_LEN);
+	size_t xattr_len = strlen(xattr);
+#ifdef MACOSX
+	int result = fsetxattr(fd, XATTR_FATTR_NAME, xattr, xattr_len, 0, 0);
+#else
+	int result = fsetxattr(fd, XATTR_FATTR_NAME, xattr, xattr_len, 0);
+#endif
+
+	return result;
+}
+#endif
 
 namespace cross {
 

@@ -161,4 +161,13 @@ bool get_expanded_files(const std::string &path,
 
 std::string get_language_from_os();
 
+#ifndef WIN32
+#define XATTR_FATTR_NAME "user.dosbox_fattr"
+#define XATTR_FATTR_LEN 9 // 8 bits + null terminator
+
+uint16_t get_fat_attribs_from_xattr(const char *path);
+int set_xattr_from_fat_attribs(const char* path, uint16_t fattr);
+int set_xattr_from_fat_attribs(int fd, uint16_t fattr);
+#endif
+
 #endif

@@ -28,6 +28,7 @@
 #include <climits>
 #include <cstdio>
 #include <ctime>
+#include <fcntl.h>
 #include <limits>
 #include <stdlib.h>
 #include <string.h>
@@ -46,32 +47,53 @@
 #include "cross.h"
 #include "inout.h"
 
-bool localDrive::FileCreate(DOS_File * * file,char * name,uint16_t /*attributes*/) {
-//TODO Maybe care for attributes but not likely
+bool localDrive::FileCreate(DOS_File * * file,char * name,uint16_t attributes) {
+	// Don't allow overwriting read-only files.
+	uint16_t test_attr = 0;
+	if (GetFileAttr(name, &test_attr) && (test_attr & DOS_ATTR_READ_ONLY)) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
+	bool existing_file = FileExists(name);
+
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
-	char* temp_name = dirCache.GetExpandName(newname); //Can only be used in till a new drive_cache action is preformed */
-	/* Test if file exists (so we need to truncate it). don't add to dirCache then */
-	bool existing_file = false;
-	
-	FILE * test = fopen_wrap(temp_name,"rb+");
-	if (test) {
-		fclose(test);
-		existing_file=true;
+	FILE* fp = nullptr;
 
+#ifdef WIN32
+	DWORD win_attribs = attributes ? (DWORD)attributes : FILE_ATTRIBUTE_NORMAL;
+	HANDLE win_fhandle = CreateFile(newname,
+	                                GENERIC_READ | GENERIC_WRITE,
+	                                0,
+	                                nullptr,
+	                                CREATE_ALWAYS,
+	                                win_attribs,
+	                                nullptr);
+	if (win_fhandle != INVALID_HANDLE_VALUE) {
+		int fd = _open_osfhandle((intptr_t)win_fhandle, _O_RDWR | _O_BINARY);
+		fp = _fdopen(fd, "wb+");
 	}
-	
-	FILE * hand = fopen_wrap(temp_name,"wb+");
-	if (!hand) {
+#else
+	constexpr int rw_perms = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+	int fd = open(newname, O_CREAT | O_RDWR | O_TRUNC, rw_perms);
+	if (fd != -1) {
+		set_xattr_from_fat_attribs(fd, attributes);
+		fp = fdopen(fd, "wb+");
+	}
+#endif
+
+	if (!fp) {
 		LOG_MSG("Warning: file creation failed: %s",newname);
+		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
    
 	if (!existing_file) dirCache.AddEntry(newname, true);
 	/* Make the 16 bit device information */
-	*file = new localFile(name, hand, basedir);
+	*file = new localFile(name, fp, basedir);
 	(*file)->flags=OPEN_READWRITE;
 
 	return true;
@@ -121,6 +143,15 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 		DOS_SetError(DOSERR_ACCESS_CODE_INVALID);
 		return false;
 	}
+
+	// Don't allow opening read-only files in write mode.
+	uint16_t test_attr = 0;
+	if (((flags & 0xf) == OPEN_WRITE || (flags & 0xf) == OPEN_READWRITE) &&
+	    (GetFileAttr(name, &test_attr) && (test_attr & DOS_ATTR_READ_ONLY))) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
+		return false;
+	}
+
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
@@ -236,6 +267,13 @@ bool localDrive::FileUnlink(char * name) {
 		DEBUG_LOG_MSG("FS: Skipping removal of %s because it doesn't exist",
 		              name);
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
+		return false;
+	}
+
+	// Don't allow deleting read-only files.
+	uint16_t test_attr = 0;
+	if (GetFileAttr(name, &test_attr) && (test_attr & DOS_ATTR_READ_ONLY)) {
+		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 
@@ -384,9 +422,8 @@ bool localDrive::FindNext(DOS_DTA & dta) {
 		if (!(find_attr & DOS_ATTR_DIRECTORY)) {
 			find_attr |= DOS_ATTR_ARCHIVE;
 		}
-		if (!(stat_block.st_mode & S_IWUSR)) {
-			find_attr |= DOS_ATTR_READ_ONLY;
-		}
+		
+		find_attr |= get_fat_attribs_from_xattr(temp_name);
 #endif
 		if (~srch_attr & find_attr &
 		    (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) {
@@ -438,11 +475,12 @@ bool localDrive::GetFileAttr(char *name, uint16_t *attr)
 #else
 	struct stat status;
 	if (stat(newname, &status) == 0) {
-		*attr = status.st_mode & S_IFDIR ? 0 : DOS_ATTR_ARCHIVE;
-		if (status.st_mode & S_IFDIR)
-			*attr |= DOS_ATTR_DIRECTORY;
-		if (!(status.st_mode & S_IWUSR))
-			*attr |= DOS_ATTR_READ_ONLY;
+		// HACK: Always report Archive attribute on Unix since managing it
+		// manually would be a pain.
+		*attr = status.st_mode & S_IFDIR ? DOS_ATTR_DIRECTORY
+		                                 : DOS_ATTR_ARCHIVE;
+
+		*attr |= get_fat_attribs_from_xattr(newname);
 		return true;
 	}
 	*attr = 0;
@@ -471,14 +509,7 @@ bool localDrive::SetFileAttr(const char *name, const uint16_t attr)
 		return false;
 	}
 
-	if (attr & (DOS_ATTR_SYSTEM | DOS_ATTR_HIDDEN))
-		LOG_WARNING("FILESYSTEM: Application attempted to set system or hidden"
-		            " attributes for '%s', which is ignored for local drives",
-		            newname);
-
-	const auto result = attr & DOS_ATTR_READ_ONLY ? make_readonly(f)
-	                                              : make_writable(f);
-	if (!result) {
+	if (set_xattr_from_fat_attribs(newname, attr) == -1) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
