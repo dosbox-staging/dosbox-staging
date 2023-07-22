@@ -24,9 +24,10 @@
 #include <array>
 #include <iomanip>
 #include <memory>
+#include <queue>
 #include <string>
 #include <unistd.h>
-#include <queue>
+#include <vector>
 
 #include "autoexec.h"
 #include "control.h"
@@ -134,9 +135,10 @@ class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq) noexcept;
 
-	AudioFrame RenderFrame(const ram_array_t &ram,
-	                       const vol_scalars_array_t &vol_scalars,
-	                       const pan_scalars_array_t &pan_scalars);
+	void RenderFrames(const ram_array_t& ram,
+	                  const vol_scalars_array_t& vol_scalars,
+	                  const pan_scalars_array_t& pan_scalars,
+	                  std::vector<AudioFrame>& frames);
 
 	uint8_t ReadVolState() const noexcept;
 	uint8_t ReadWaveState() const noexcept;
@@ -253,7 +255,9 @@ private:
 
 	void RegisterIoHandlers();
 	void Reset(uint8_t state);
-	AudioFrame RenderFrame();
+
+	const std::vector<AudioFrame>& RenderFrames(const int num_requested_frames);
+
 	void RenderUpToNow();
 	void StopPlayback();
 	void UpdateDmaAddress(uint8_t new_address);
@@ -271,6 +275,7 @@ private:
 	read_io_array_t read_handlers   = {};
 	write_io_array_t write_handlers = {};
 	voice_array_t voices            = {{nullptr}};
+	std::vector<AudioFrame> rendered_frames = {};
 
 	const address_array_t dma_addresses = {
 	        {MIN_DMA_ADDRESS, 1, 3, 5, 6, MAX_IRQ_ADDRESS, 0, 0}};
@@ -441,21 +446,25 @@ float Voice::GetSample(const ram_array_t &ram) noexcept
 	return sample;
 }
 
-AudioFrame Voice::RenderFrame(const ram_array_t &ram,
-                              const vol_scalars_array_t &vol_scalars,
-                              const pan_scalars_array_t &pan_scalars)
+void Voice::RenderFrames(const ram_array_t& ram,
+                         const vol_scalars_array_t& vol_scalars,
+                         const pan_scalars_array_t& pan_scalars,
+                         std::vector<AudioFrame>& frames)
 {
 	if (vol_ctrl.state & wave_ctrl.state & CTRL::DISABLED)
-		return {0.0f, 0.0f};
-
-	// Keep track of how many ms this voice has generated
-	Is16Bit() ? ++generated_16bit_ms : ++generated_8bit_ms;
-
-	const auto sample = GetSample(ram) * PopVolScalar(vol_scalars);
+		return;
 
 	const auto pan_scalar = pan_scalars.at(pan_position);
 
-	return {sample * pan_scalar.left, sample * pan_scalar.right};
+	// Sum the voice's samples into the exising frames, angled in L-R space
+	for (auto& frame : frames) {
+		float sample = GetSample(ram);
+		sample *= PopVolScalar(vol_scalars);
+		frame.left += sample * pan_scalar.left;
+		frame.right += sample * pan_scalar.right;
+	}
+	// Keep track of how many ms this voice has generated
+	Is16Bit() ? generated_16bit_ms++ : generated_8bit_ms++;
 }
 
 // Returns the current wave position and increments the position
@@ -665,27 +674,34 @@ void Gus::ActivateVoices(uint8_t requested_voices)
 	}
 }
 
-AudioFrame Gus::RenderFrame()
+const std::vector<AudioFrame>& Gus::RenderFrames(const int num_requested_frames)
 {
-	AudioFrame accumulator = {};
+	// Size and zero the vector
+	rendered_frames.resize(check_cast<size_t>(num_requested_frames));
+	for (auto& frame : rendered_frames) {
+		frame = {0.0f, 0.0f};
+	}
 
 	if (dac_enabled) {
-
 		auto voice = voices.begin();
-		const auto voice_end = voice + active_voices;
-
-		while (voice < voice_end && *voice) {
-			const auto voice_frame = voice->get()->RenderFrame(
-			        ram, vol_scalars, pan_scalars);
-
-			accumulator.left += voice_frame.left;
-			accumulator.right += voice_frame.right;
-
+		const auto last_voice = voice + active_voices;
+		while (voice < last_voice && *voice) {
+			// Render all of the requested frames from each voice
+			// before moving onto the next voice. This ensures each
+			// voice can deliver all its samples without being
+			// affected by state changes that (might) occur when
+			// rendering subsequent voices.
+			voice->get()->RenderFrames(ram,
+			                           vol_scalars,
+			                           pan_scalars,
+			                           rendered_frames);
 			++voice;
 		}
 	}
+	// If the DAC isn't enabled we still check the IRQ return a silent vector
+
 	CheckVoiceIrq();
-	return accumulator;
+	return rendered_frames;
 }
 
 void Gus::RenderUpToNow()
@@ -698,33 +714,45 @@ void Gus::RenderUpToNow()
 		last_rendered_ms = now;
 		return;
 	}
-	// Keep rendering until we're current
-	while (last_rendered_ms < now) {
-		last_rendered_ms += ms_per_render;
-		fifo.emplace(RenderFrame());
+
+	const auto elapsed_ms = now - last_rendered_ms;
+	if (elapsed_ms > ms_per_render) {
+		// How many frames have elapsed since we last rendered?
+		const auto num_elapsed_frames = iround(
+		        std::floor(elapsed_ms / ms_per_render));
+		assert(num_elapsed_frames > 0);
+
+		// Enqueue in the FIFO that will be drained when the mixer pulls
+		// frames
+		for (auto& frame : RenderFrames(num_elapsed_frames)) {
+			fifo.emplace(frame);
+		}
+		last_rendered_ms += num_elapsed_frames * ms_per_render;
 	}
 }
 
-void Gus::AudioCallback(const uint16_t requested_frames)
+void Gus::AudioCallback(const uint16_t num_requested_frames)
 {
 	assert(audio_channel);
 
-	//if (fifo.size())
-	//	LOG_MSG("GUS: Queued %2lu cycle-accurate frames", fifo.size());
+#if 0
+	if (fifo.size())
+		LOG_MSG("GUS: Queued %2lu cycle-accurate frames", fifo.size());
+#endif
 
-	auto frames_remaining = requested_frames;
+	auto num_frames_remaining = num_requested_frames;
 
 	// First, send any frames we've queued since the last callback
-	while (frames_remaining && fifo.size()) {
+	while (num_frames_remaining && fifo.size()) {
 		audio_channel->AddSamples_sfloat(1, &fifo.front()[0]);
 		fifo.pop();
-		--frames_remaining;
+		--num_frames_remaining;
 	}
 	// If the queue's run dry, render the remainder and sync-up our time datum
-	while (frames_remaining) {
-		const auto frame = RenderFrame();
-		audio_channel->AddSamples_sfloat(1, &frame[0]);
-		--frames_remaining;
+	if (num_frames_remaining > 0) {
+		const auto frames = RenderFrames(num_frames_remaining);
+		audio_channel->AddSamples_sfloat(num_frames_remaining,
+		                                 &frames[0][0]);
 	}
 	last_rendered_ms = PIC_FullIndex();
 }
