@@ -134,12 +134,6 @@ are designed with developers and testers in mind.
   sha256: aebf8619bb44934f18d0e219d50c4e2c<wbr>03b179c37daa67a9b800e7bd3aefc262
   </small>
 
-- [DOSBox Staging 0.79.0 (tar.xz)][0_79_0]
-  <br>
-  <small>
-  sha256: 804adb294096ab651490b1664570203f<wbr>24e460048d7e6e2e388d210a8380016a
-  </small>
-
 - [DOSBox Staging 0.78.1 (tar.xz)][0_78_1]
   <br>
   <small>
@@ -197,7 +191,6 @@ are designed with developers and testers in mind.
 [0_80_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.1/dosbox-staging-linux-v0.80.1.tar.xz
 [0_80_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-linux-v0.80.0.tar.xz
 [0_79_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.1/dosbox-staging-linux-v0.79.1.tar.xz
-[0_79_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.0/dosbox-staging-linux-v0.79.0.tar.xz
 [0_78_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.78.1/dosbox-staging-linux-v0.78.1.tar.xz
 [0_78_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.78.0/dosbox-staging-linux-v0.78.0.tar.xz
 [0_77_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.77.1/dosbox-staging-linux-v0.77.1.tar.xz
