@@ -120,8 +120,6 @@ void CDROM_Image_Init(Section*);
 void EMS_Init(Section*);
 void XMS_Init(Section*);
 
-void DOS_KeyboardLayout_Init(Section*);
-
 void AUTOEXEC_Init(Section*);
 void SHELL_Init();
 

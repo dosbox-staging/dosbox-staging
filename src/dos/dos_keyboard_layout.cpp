@@ -1723,8 +1723,6 @@ void DOS_KeyboardLayout_ShutDown(Section* /*sec*/) {
 	KeyboardLayout.reset();
 }
 
-const char *DOS_GetLoadedLayout();
-
 void DOS_SetCountry(uint16_t countryNo);
 
 static void set_country_from_pref(const int country_pref)

@@ -35,10 +35,6 @@ std::string generate_8x3(const char *lfn, const unsigned int num, const bool sta
 bool filename_not_8x3(const char *n);
 bool filename_not_strict_8x3(const char *n);
 char *VFILE_Generate_8x3(const char *name, const unsigned int onpos);
-void VFILE_Register(const char *name,
-                    const uint8_t *data,
-                    const uint32_t size,
-                    const char *dir);
 
 class imageDisk; // forward declare
 
