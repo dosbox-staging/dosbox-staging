@@ -134,6 +134,7 @@ using write_io_array_t    = std::array<IO_WriteHandleObject, WRITE_HANDLERS>;
 class Voice {
 public:
 	Voice(uint8_t num, VoiceIrq &irq) noexcept;
+	Voice(Voice&&) = default;
 
 	void RenderFrames(const ram_array_t& ram,
 	                  const vol_scalars_array_t& vol_scalars,
@@ -190,8 +191,6 @@ private:
 
 static void GUS_TimerEvent(uint32_t t);
 static void GUS_DMA_Event(uint32_t val);
-
-using voice_array_t = std::array<std::unique_ptr<Voice>, MAX_VOICES>;
 
 // The Gravis UltraSound GF1 DSP (classic)
 // This class:
@@ -274,7 +273,7 @@ private:
 	ram_array_t ram                 = {};
 	read_io_array_t read_handlers   = {};
 	write_io_array_t write_handlers = {};
-	voice_array_t voices            = {{nullptr}};
+	std::vector<Voice> voices       = {};
 	std::vector<AudioFrame> rendered_frames = {};
 
 	const address_array_t dma_addresses = {
@@ -609,8 +608,9 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 
 	// Create the internal voice channels
 	for (uint8_t i = 0; i < MAX_VOICES; ++i) {
-		voices.at(i) = std::make_unique<Voice>(i, voice_irq);
+		voices.emplace_back(i, voice_irq);
 	}
+	assert(voices.size() == MAX_VOICES);
 
 	RegisterIoHandlers();
 
@@ -685,16 +685,13 @@ const std::vector<AudioFrame>& Gus::RenderFrames(const int num_requested_frames)
 	if (dac_enabled) {
 		auto voice = voices.begin();
 		const auto last_voice = voice + active_voices;
-		while (voice < last_voice && *voice) {
+		while (voice < last_voice) {
 			// Render all of the requested frames from each voice
 			// before moving onto the next voice. This ensures each
 			// voice can deliver all its samples without being
 			// affected by state changes that (might) occur when
 			// rendering subsequent voices.
-			voice->get()->RenderFrames(ram,
-			                           vol_scalars,
-			                           pan_scalars,
-			                           rendered_frames);
+			voice->RenderFrames(ram, vol_scalars, pan_scalars, rendered_frames);
 			++voice;
 		}
 	}
@@ -1066,7 +1063,7 @@ void Gus::PrepareForPlayback() noexcept
 {
 	// Initialize the voice states
 	for (auto &voice : voices)
-		voice->ResetCtrls();
+		voice.ResetCtrls();
 
 	// Initialize the OPL emulator state
 	adlib_command_reg = ADLIB_CMD_DEFAULT;
@@ -1089,12 +1086,12 @@ void Gus::PrintStats()
 	uint32_t used_8bit_voices = 0u;
 	uint32_t used_16bit_voices = 0u;
 	for (const auto &voice : voices) {
-		if (voice->generated_8bit_ms) {
-			combined_8bit_ms += voice->generated_8bit_ms;
+		if (voice.generated_8bit_ms) {
+			combined_8bit_ms += voice.generated_8bit_ms;
 			used_8bit_voices++;
 		}
-		if (voice->generated_16bit_ms) {
-			combined_16bit_ms += voice->generated_16bit_ms;
+		if (voice.generated_16bit_ms) {
+			combined_16bit_ms += voice.generated_16bit_ms;
 			used_16bit_voices++;
 		}
 	}
@@ -1404,7 +1401,7 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 		break;
 	case 0x302:
 		voice_index = val & 31;
-		target_voice = voices.at(voice_index).get();
+		target_voice = &voices.at(voice_index);
 		break;
 	case 0x303:
 		selected_register = static_cast<uint8_t>(val);
