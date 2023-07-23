@@ -94,6 +94,7 @@ foreach flag : [
     '-Wduplicated-branches',
     '-Weffc++',
     '-Wextra-semi',
+    '-Wfloat-conversion',
     '-Wlogical-op',
     '-Wlogical-not-parentheses',
     '-Wmismatched-tags',

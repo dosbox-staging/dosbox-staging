@@ -118,9 +118,9 @@ TEST(rgb, linear_to_srgb8_lut)
 	// This is good enough accuracy with a (16 * 1024) element LUT
 	constexpr auto NumIter = 500;
 	for (auto i = 0; i < NumIter; ++i) {
-		const float lin        = i * (1.0f / NumIter);
-		const uint8_t expected = round(linear_to_srgb(lin) * Rgb8Max);
+		const float lin     = i * (1.0f / NumIter);
+		const auto expected = static_cast<std::uint8_t>(
+		        std::round(linear_to_srgb(lin) * Rgb8Max));
 		EXPECT_EQ(linear_to_srgb8_lut(lin), expected);
 	}
 }
-
