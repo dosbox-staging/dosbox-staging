@@ -202,7 +202,6 @@ uint8_t get_midi_channel(const uint8_t channel_status);
 bool MIDI_Available();
 void MIDI_Reset();
 void MIDI_Init(Section* sec);
-void MIDI_Reset();
 void MIDI_ListAll(Program* output_handler);
 void MIDI_RawOutByte(uint8_t data);
 

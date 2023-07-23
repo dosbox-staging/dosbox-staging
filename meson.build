@@ -97,6 +97,7 @@ foreach flag : [
     '-Wfloat-conversion',
     '-Wlogical-op',
     '-Wlogical-not-parentheses',
+    '-Wredundant-decls',
     '-Wmismatched-tags',
     '-Wsizeof-pointer-div',
     '-Wstack-protector',

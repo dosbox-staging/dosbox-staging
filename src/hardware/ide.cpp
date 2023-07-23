@@ -2479,8 +2479,6 @@ static bool IDE_CPU_Is_Vm86()
 	return (cpu.pmode && ((GETFLAG_IOPL < cpu.cpl) || GETFLAG(VM)));
 }
 
-static void ide_baseio_w(io_port_t port, io_val_t val, io_width_t width);
-
 static uint32_t IDE_SelfIO_In(IDEController * /* ide */, io_port_t port, io_width_t width)
 {
 	return ide_baseio_r(port, width);

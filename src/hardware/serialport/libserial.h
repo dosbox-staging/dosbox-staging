@@ -16,7 +16,10 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <string.h>
+#ifndef DOSBOX_LIBSERIAL_H
+#define DOSBOX_LIBSERIAL_H
+
+#include <cstddef>
 
 typedef struct _COMPORT *COMPORT;
 
@@ -54,3 +57,5 @@ bool SERIAL_sendchar(COMPORT port, char data);
 #define SERIAL_OVERRUN_ERR 0x02
 
 int SERIAL_getextchar(COMPORT port);
+
+#endif
