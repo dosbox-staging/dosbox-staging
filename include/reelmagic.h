@@ -38,16 +38,15 @@ struct ReelMagic_VideoMixerMPEGProvider {
 
 void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t blue);
 
-void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
+void ReelMagic_RENDER_SetSize(const uint32_t width, const uint32_t height,
                               const bool double_width, const bool double_height,
                               const Fraction& pixel_aspect_ratio,
-                              const uint8_t bits_per_pixel,
+                              const uint32_t bits_per_pixel,
                               const double frames_per_second);
 
 bool ReelMagic_RENDER_StartUpdate(void);
-// void ReelMagic_RENDER_EndUpdate(bool abort);
-// void ReelMagic_RENDER_DrawLine(const void *src);
-typedef void (*ReelMagic_ScalerLineHandler_t)(const void* src);
+
+using ReelMagic_ScalerLineHandler_t = void(*)(const void* src);
 extern ReelMagic_ScalerLineHandler_t ReelMagic_RENDER_DrawLine;
 
 bool ReelMagic_IsVideoMixerEnabled();

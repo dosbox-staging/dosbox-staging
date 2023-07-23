@@ -31,7 +31,7 @@
 #include "math_utils.h"
 #include "mem.h"
 #include "pic.h"
-#include "reelmagic/vga_passthrough.h"
+#include "reelmagic.h"
 #include "render.h"
 #include "vga.h"
 
@@ -582,7 +582,7 @@ static void update_cga16_color_pcjr()
 			const auto b = to_linear_rgb(-0.0272f * R - 0.0401f * G + 1.1677f * B);
 
 			const uint8_t index = bits | ((x & 1) == 0 ? 0x30 : 0x80) | ((x & 2) == 0 ? 0x40 : 0);
-			RENDER_SetPal(index, r, g, b);
+			ReelMagic_RENDER_SetPal(index, r, g, b);
 		}
 	}
 }
