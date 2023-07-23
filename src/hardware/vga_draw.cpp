@@ -30,7 +30,7 @@
 #include "math_utils.h"
 #include "mem_unaligned.h"
 #include "pic.h"
-#include "reelmagic/vga_passthrough.h"
+#include "reelmagic.h"
 #include "render.h"
 #include "vga.h"
 #include "video.h"
@@ -970,10 +970,10 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 				write_unaligned_uint32_at(TempLine, i++, background_color);
 			}
 		}
-		RENDER_DrawLine(TempLine);
+		ReelMagic_RENDER_DrawLine(TempLine);
 	} else {
-		uint8_t * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );	
-		RENDER_DrawLine(data);
+		uint8_t * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );
+		ReelMagic_RENDER_DrawLine(data);
 	}
 
 	++vga.draw.address_line;
@@ -992,12 +992,12 @@ static void VGA_DrawEGASingleLine(uint32_t /*blah*/)
 {
 	if (GCC_UNLIKELY(vga.attr.disabled)) {
 		std::fill(templine_buffer.begin(), templine_buffer.end(), 0);
-		RENDER_DrawLine(TempLine);
+		ReelMagic_RENDER_DrawLine(TempLine);
 	} else {
 		Bitu address = vga.draw.address;
 		if (vga.mode!=M_TEXT) address += vga.draw.panning;
-		uint8_t * data=VGA_DrawLine(address, vga.draw.address_line );	
-		RENDER_DrawLine(data);
+		uint8_t * data=VGA_DrawLine(address, vga.draw.address_line );
+		ReelMagic_RENDER_DrawLine(data);
 	}
 
 	++vga.draw.address_line;
@@ -1016,7 +1016,7 @@ static void VGA_DrawPart(uint32_t lines)
 {
 	while (lines--) {
 		uint8_t * data=VGA_DrawLine( vga.draw.address, vga.draw.address_line );
-		RENDER_DrawLine(data);
+		ReelMagic_RENDER_DrawLine(data);
 		++vga.draw.address_line;
 		if (vga.draw.address_line>=vga.draw.address_line_total) {
 			vga.draw.address_line=0;
@@ -1154,7 +1154,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	//Check if we can actually render, else skip the rest (frameskip)
 	++vga.draw.cursor.count; // Do this here, else the cursor speed depends
 	                         // on the frameskip
-	if (vga.draw.vga_override || !RENDER_StartUpdate()) {
+	if (vga.draw.vga_override || !ReelMagic_RENDER_StartUpdate()) {
 		return;
 	}
 
@@ -2237,7 +2237,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 #endif
 
 		if (!vga.draw.vga_override) {
-			RENDER_SetSize(width,
+			ReelMagic_RENDER_SetSize(width,
 			               height,
 			               doublewidth,
 			               doubleheight,
