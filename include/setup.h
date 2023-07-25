@@ -277,15 +277,16 @@ public:
 class Prop_path final : public Prop_string {
 public:
 	Prop_path(const std::string& name, Changeable::Value when, const char* val)
-	        : Prop_string(name, when, val),
-	          realpath(val)
-	{}
+	        : Prop_string(name, when, val)
+	{
+		SetValue(val);
+	}
 
 	~Prop_path() override = default;
 
 	bool SetValue(const std::string& in) override;
 
-	std::string realpath;
+	std_fs::path realpath = {};
 };
 
 class Prop_hex final : public Property {
