@@ -67,7 +67,7 @@ private:
 	                                          const NameVersionTable& table);
 	static bool IsTableEmpty();
 
-	static std::string GetTableFilePath();
+	static std_fs::path GetTableFilePath();
 
 	void AddMessages();
 };

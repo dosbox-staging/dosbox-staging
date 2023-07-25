@@ -47,7 +47,7 @@ using namespace std;
 std::unique_ptr<Config> control = {};
 
 // Set by parseconfigfile so Prop_path can use it to construct the realpath
-static std::string current_config_dir;
+static std_fs::path current_config_dir;
 
 Value::operator bool() const
 {
@@ -444,18 +444,17 @@ bool Prop_path::SetValue(const std::string& input)
 		return false;
 	}
 
-	const std::string workcopy = resolve_home(input).string();
+	const std_fs::path workcopy = resolve_home(input);
 
-	// Prepend config directory in it exists. Check for absolute paths later
-	if (current_config_dir.empty()) {
+	if (workcopy.is_absolute()) {
 		realpath = workcopy;
-	} else {
-		realpath = current_config_dir + CROSS_FILESPLIT + workcopy;
+		return is_valid;
 	}
 
-	// Absolute paths
-	if (Cross::IsPathAbsolute(workcopy)) {
-		realpath = workcopy;
+	if (current_config_dir.empty()) {
+		realpath = get_platform_config_dir() / workcopy;
+	} else {
+		realpath = current_config_dir / workcopy;
 	}
 
 	return is_valid;
@@ -1348,7 +1347,7 @@ bool Config::ParseConfigFile(const std::string& type,
 	configFilesCanonical.push_back(canonical_path);
 
 	// Get directory from config_file_name, used with relative paths.
-	current_config_dir = canonical_path.parent_path().string();
+	current_config_dir = canonical_path.parent_path();
 
 	// If this is an autoexec section, the above takes care of the joining
 	// while this handles the overwrriten mode. We need to be prepared for

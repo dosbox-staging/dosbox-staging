@@ -545,7 +545,7 @@ void SETVER::OverrideVersion(const char* name, DOS_PSP& psp)
 	try_override(name_str, setver_table.by_file_name);
 }
 
-std::string SETVER::GetTableFilePath()
+std_fs::path SETVER::GetTableFilePath()
 {
 	// Original SETVER.EXE stores the version table in its own executable;
 	// this is not feasible in DOSBox, therefore we are using external file

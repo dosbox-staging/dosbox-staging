@@ -709,7 +709,7 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 	log_warning_if_legacy_shader_name(filename);
 
 	std::string source = {};
-	if (!RENDER_GetShader(sh->realpath, source) &&
+	if (!RENDER_GetShader(sh->realpath.string(), source) &&
 	    (sh->realpath == filename || !RENDER_GetShader(filename, source))) {
 		sh->SetValue("none");
 		source.clear();

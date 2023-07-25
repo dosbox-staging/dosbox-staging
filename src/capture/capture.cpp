@@ -580,7 +580,7 @@ static void capture_init(Section* sec)
 
 	// We can safely change the capture output path even if capturing of any
 	// type is in progress.
-	capture.path = std_fs::path(capture_path->realpath);
+	capture.path = capture_path->realpath;
 	if (capture.path.empty()) {
 		LOG_WARNING("CAPTURE: No value specified for `capture_dir`; defaulting to 'capture' "
 		            "in the current working directory");
