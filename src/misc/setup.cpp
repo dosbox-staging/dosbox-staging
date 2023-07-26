@@ -444,17 +444,17 @@ bool Prop_path::SetValue(const std::string& input)
 		return false;
 	}
 
-	const std_fs::path workcopy = resolve_home(input);
+	const auto temp_path = resolve_home(input);
 
-	if (workcopy.is_absolute()) {
-		realpath = workcopy;
+	if (temp_path.is_absolute()) {
+		realpath = temp_path;
 		return is_valid;
 	}
 
 	if (current_config_dir.empty()) {
-		realpath = get_platform_config_dir() / workcopy;
+		realpath = get_platform_config_dir() / temp_path;
 	} else {
-		realpath = current_config_dir / workcopy;
+		realpath = current_config_dir / temp_path;
 	}
 
 	return is_valid;

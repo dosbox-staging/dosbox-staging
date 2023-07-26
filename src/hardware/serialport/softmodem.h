@@ -63,7 +63,7 @@ enum ResTypes {
 #define TEL_CLIENT 0
 #define TEL_SERVER 1
 
-bool MODEM_ReadPhonebook(const std_fs::path &filename);
+bool MODEM_ReadPhonebook(const std_fs::path &path);
 void MODEM_ClearPhonebook();
 
 class CFifo {
