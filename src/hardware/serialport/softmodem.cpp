@@ -67,13 +67,13 @@ static bool MODEM_IsPhoneValid(const std::string &input) {
 	return true;
 }
 
-bool MODEM_ReadPhonebook(const std_fs::path &filename) {
-	std::ifstream loadfile(filename);
+bool MODEM_ReadPhonebook(const std_fs::path &path) {
+	std::ifstream loadfile(path);
 	if (!loadfile)
 		return false;
 
-	const std::string file_string = filename.string();
-	LOG_MSG("SERIAL: Phonebook loading from %s.", file_string.c_str());
+	const auto path_string = path.string();
+	LOG_MSG("SERIAL: Phonebook loading from %s.", path_string.c_str());
 
 	std::string linein;
 	while (std::getline(loadfile, linein)) {
@@ -81,8 +81,8 @@ bool MODEM_ReadPhonebook(const std_fs::path &filename) {
 		std::string phone, address;
 
 		if (!(iss >> phone >> address)) {
-			LOG_MSG("SERIAL: Phonebook skipped a bad line in %s.",
-			        file_string.c_str());
+			LOG_MSG("SERIAL: Phonebook skipped a bad line in '%s'",
+			        path_string.c_str());
 			continue;
 		}
 
