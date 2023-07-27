@@ -6272,7 +6272,9 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 		uint16_t *dest;
 
 		/* extract info */
+#ifdef C_ENABLE_VOODOO_OPENGL
 		tmunum = (offset >> 19) & 0x03;
+#endif
 		lod = (offset >> 15) & 0x0f;
 		tt = (offset >> 7) & 0xff;
 		ts = (offset << 1) & 0xfe;
