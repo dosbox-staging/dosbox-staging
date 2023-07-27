@@ -7245,7 +7245,6 @@ void VOODOO_Init(Section* sec) {
 
 	Section_prop * section = static_cast<Section_prop *>(sec);
 
-	vtype = VOODOO_1_DTMU;
 	switch (section->Get_string("voodoo")[0])
 	{
 		case '1': vtype = VOODOO_1_DTMU; break; //12mb
