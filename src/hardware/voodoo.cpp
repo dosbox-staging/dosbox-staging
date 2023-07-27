@@ -6310,10 +6310,8 @@ static uint32_t register_r(const uint32_t offset)
 		return 0xffffffff;
 	}
 
-	uint32_t result;
-
 	/* default result is the FBI register value */
-	result = v->reg[regnum].u;
+	auto result = v->reg[regnum].u;
 
 	/* some registers are dynamic; compute them */
 	switch (regnum)
