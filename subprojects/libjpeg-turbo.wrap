@@ -1,13 +1,13 @@
 [wrap-file]
-directory = libjpeg-turbo-2.1.5.1
-source_url = https://sourceforge.net/projects/libjpeg-turbo/files/2.1.5.1/libjpeg-turbo-2.1.5.1.tar.gz
-source_filename = libjpeg-turbo-2.1.5.1.tar.gz
-source_hash = 2fdc3feb6e9deb17adec9bafa3321419aa19f8f4e5dea7bf8486844ca22207bf
-patch_filename = libjpeg-turbo_2.1.5.1-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/libjpeg-turbo_2.1.5.1-1/get_patch
-patch_hash = 7daf69a0795f0fe3aecf2d1bcde78266d7a60a36df8573fe3b442e0adcbb4ca0
-source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libjpeg-turbo_2.1.5.1-1/libjpeg-turbo-2.1.5.1.tar.gz
-wrapdb_version = 2.1.5.1-1
+directory = libjpeg-turbo-3.0.0
+source_url = https://sourceforge.net/projects/libjpeg-turbo/files/3.0.0/libjpeg-turbo-3.0.0.tar.gz
+source_filename = libjpeg-turbo-3.0.0.tar.gz
+source_hash = c77c65fcce3d33417b2e90432e7a0eb05f59a7fff884022a9d931775d583bfaa
+patch_filename = libjpeg-turbo_3.0.0-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libjpeg-turbo_3.0.0-1/get_patch
+patch_hash = 8e1de0730d26ccc7f35c8bff9474621084ccc4634e7deb1a7ab2d0fac491b39d
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/libjpeg-turbo_3.0.0-1/libjpeg-turbo-3.0.0.tar.gz
+wrapdb_version = 3.0.0-1
 
 [provide]
 dependency_names = libjpeg
