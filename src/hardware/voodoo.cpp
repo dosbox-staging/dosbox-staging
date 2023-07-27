@@ -4880,7 +4880,6 @@ static void soft_reset(voodoo_state *v)
  *************************************/
 static void register_w(uint32_t offset, uint32_t data)
 {
-	uint32_t regnum  = (offset) & 0xff;
 	uint32_t chips   = (offset>>8) & 0xf;
 
 	int64_t data64;
@@ -4892,10 +4891,10 @@ static void register_w(uint32_t offset, uint32_t data)
 	chips &= v->chipmask;
 
 	/* the first 64 registers can be aliased differently */
-	if ((offset & 0x800c0) == 0x80000 && v->alt_regmap)
-		regnum = register_alias_map[offset & 0x3f];
-	else
-		regnum = offset & 0xff;
+	const auto is_aliased = (offset & 0x800c0) == 0x80000 && v->alt_regmap;
+
+	const auto regnum = is_aliased ? register_alias_map[offset & 0x3f]
+	                               : static_cast<uint8_t>(offset & 0xff);
 
 	/* first make sure this register is readable */
 	if (!(v->regaccess[regnum] & REGISTER_WRITE))
