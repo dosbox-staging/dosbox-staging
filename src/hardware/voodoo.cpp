@@ -4824,15 +4824,11 @@ static void fastfill(voodoo_state *v)
 
 		for (int32_t curscan = v1yclip; curscan < v3yclip; curscan++)
 		{
-			const poly_extent *extent = &extents[curscan - startscanline];
-			int32_t istartx = extent->startx, istopx = extent->stopx;
+			auto extent = &extents[curscan - startscanline];
 
 			/* force start < stop */
-			if (istartx > istopx)
-			{
-				int32_t temp = istartx;
-				istartx = istopx;
-				istopx = temp;
+			if (extent->startx > extent->stopx) {
+				std::swap(extent->startx, extent->stopx);
 			}
 
 			/* set the extent and update the total pixel count */
