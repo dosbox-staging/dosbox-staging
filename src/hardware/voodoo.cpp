@@ -4334,8 +4334,8 @@ static void triangle_worker_run(triangle_worker& tworker)
 			++worker_id;
 		}
 	}
-	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
-		tworker.sembegin[i].notify();
+	for (auto& begin_semaphore : tworker.sembegin) {
+		begin_semaphore.notify();
 	}
 	triangle_worker_work(tworker, TRIANGLE_THREADS, TRIANGLE_WORKERS);
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
