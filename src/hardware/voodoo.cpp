@@ -4790,8 +4790,12 @@ static void fastfill(voodoo_state *v)
 	/* fill in a block of extents */
 	extents[0].startx = sx;
 	extents[0].stopx = ex;
-	for (auto extnum = 1u; extnum < ARRAY_LEN(extents); ++extnum)
+
+	constexpr auto num_extents = static_cast<int>(ARRAY_LEN(extents));
+
+	for (auto extnum = 1; extnum < num_extents; ++extnum) {
 		extents[extnum] = extents[0];
+	}
 
 #ifdef C_ENABLE_VOODOO_OPENGL
 	if (v->ogl && v->active) {
@@ -4801,9 +4805,8 @@ static void fastfill(voodoo_state *v)
 #endif
 
 	/* iterate over blocks of extents */
-	for (y = sy; y < ey; y += ARRAY_LEN(extents))
-	{
-		int count = std::min<int>(ey - y, ARRAY_LEN(extents));
+	for (y = sy; y < ey; y += num_extents) {
+		const auto count = std::min<int>(ey - y, num_extents);
 		void *dest = drawbuf;
 		int startscanline = y;
 		int numscanlines = count;
