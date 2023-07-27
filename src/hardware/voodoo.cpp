@@ -6961,9 +6961,9 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 		if (!(addr&3)) {
 			return voodoo_r((addr>>2)&0x3FFFFF);
 		} else if (!(addr&1)) {
-			Bitu low = voodoo_r((addr>>2)&0x3FFFFF);
-			Bitu high = voodoo_r(((addr>>2)+1)&0x3FFFFF);
-			return (low>>16) | (high<<16);
+			const auto low = voodoo_r((addr >> 2) & 0x3FFFFF);
+			const auto high = voodoo_r(((addr >> 2) + 1) & 0x3FFFFF);
+			return check_cast<uint32_t>((low >> 16) | (high << 16));
 		} else {
 			E_Exit("voodoo readd unaligned");
 			return 0xffffffff;
