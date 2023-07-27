@@ -2294,8 +2294,9 @@ do																				\
 			wfloat = 0xffff;													\
 		else																	\
 		{																		\
-			int exp = count_leading_zeros(temp);								\
-			wfloat = ((exp << 12) | ((~temp >> (19 - exp)) & 0xfff));			\
+			const auto exp = count_leading_zeros(temp);                         \
+			const auto right_shift = std::max(0, 19 - exp);	                    \
+			wfloat = ((exp << 12) | ((~temp >> right_shift) & 0xfff));          \
 			if (wfloat < 0xffff) wfloat++;										\
 		}																		\
 	}																			\
@@ -2316,8 +2317,9 @@ do																				\
 				depthval = 0xffff;												\
 			else																\
 			{																	\
-				int exp = count_leading_zeros(temp);							\
-				depthval = ((exp << 12) | ((~temp >> (19 - exp)) & 0xfff));		\
+				const auto exp = count_leading_zeros(temp);                     \
+				const auto right_shift = std::max(0, 19 - exp);	                \
+				depthval = ((exp << 12) | ((~temp >> right_shift) & 0xfff));    \
 				if (depthval < 0xffff) depthval++;								\
 			}																	\
 		}																		\
