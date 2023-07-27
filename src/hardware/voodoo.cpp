@@ -6489,22 +6489,38 @@ static uint32_t lfb_r(const uint32_t offset)
 	return data;
 }
 
-static void voodoo_w(uint32_t offset, uint32_t data, uint32_t mask) {
-	if ((offset & (0xc00000/4)) == 0)
-		register_w(offset, data);
-	else if ((offset & (0x800000/4)) == 0)
-		lfb_w(offset, data, mask);
-	else
-		texture_w(offset, data);
+constexpr uint32_t offset_mask = 0x3fffff;
+constexpr uint32_t offset_base = 0xc00000 / 4;
+constexpr uint32_t lfb_base    = 0x800000 / 4;
+
+constexpr uint32_t next_addr(const uint32_t addr)
+{
+	constexpr uint8_t next_offset = 1 << 2;
+	return addr + next_offset;
 }
 
-static constexpr uint32_t voodoo_r(const uint32_t offset)
+static void voodoo_w(const uint32_t addr, const uint32_t data, const uint32_t mask)
 {
-	if ((offset & (0xc00000/4)) == 0)
-		return register_r(offset);
-	else if ((offset & (0x800000/4)) == 0)
-		return lfb_r(offset);
+	const auto offset = static_cast<uint32_t>((addr >> 2) & offset_mask);
 
+	if ((offset & offset_base) == 0) {
+		register_w(offset, data);
+	} else if ((offset & lfb_base) == 0) {
+		lfb_w(offset, data, mask);
+	} else {
+		texture_w(offset, data);
+	}
+}
+
+static constexpr uint32_t voodoo_r(const uint32_t addr)
+{
+	const auto offset = static_cast<uint32_t>((addr >> 2) & offset_mask);
+
+	if ((offset & offset_base) == 0) {
+		return register_r(offset);
+	} else if ((offset & lfb_base) == 0) {
+		return lfb_r(offset);
+	}
 	return 0xffffffff;
 }
 
@@ -6942,7 +6958,7 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 	uint16_t readw(PhysPt addr) override
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
-		Bitu retval=voodoo_r((addr>>2)&0x3FFFFF);
+		Bitu retval = voodoo_r(addr);
 		if (!(addr & 3))
 			retval &= 0xffff;
 		else if (!(addr & 1))
@@ -6956,9 +6972,9 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr & 3))
-			voodoo_w((addr>>2)&0x3FFFFF,(uint32_t)val,0x0000ffff);
+			voodoo_w(addr, (uint32_t)val, 0x0000ffff);
 		else if (!(addr & 1))
-			voodoo_w((addr>>2)&0x3FFFFF,(uint32_t)(val<<16),0xffff0000);
+			voodoo_w(addr, (uint32_t)(val << 16), 0xffff0000);
 		else
 			E_Exit("voodoo writew unaligned");
 	}
@@ -6967,10 +6983,10 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr&3)) {
-			return voodoo_r((addr>>2)&0x3FFFFF);
+			return voodoo_r(addr);
 		} else if (!(addr&1)) {
-			const auto low = voodoo_r((addr >> 2) & 0x3FFFFF);
-			const auto high = voodoo_r(((addr >> 2) + 1) & 0x3FFFFF);
+			const auto low  = voodoo_r(addr);
+			const auto high = voodoo_r(next_addr(addr));
 			return check_cast<uint32_t>((low >> 16) | (high << 16));
 		} else {
 			E_Exit("voodoo readd unaligned");
@@ -6982,13 +6998,13 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
 		if (!(addr&3)) {
-			voodoo_w((addr>>2)&0x3FFFFF,(uint32_t)val,0xffffffff);
+			voodoo_w(addr, (uint32_t)val, 0xffffffff);
 		} else if (!(addr&1)) {
-			voodoo_w((addr>>2)&0x3FFFFF,(uint32_t)(val<<16),0xffff0000);
-			voodoo_w(((addr>>2)+1)&0x3FFFFF,(uint32_t)val,0x0000ffff);
+			voodoo_w(addr, (uint32_t)(val << 16), 0xffff0000);
+			voodoo_w(next_addr(addr), (uint32_t)val, 0x0000ffff);
 		} else {
-			uint32_t val1 = voodoo_r((addr >> 2) & 0x3FFFFF);
-			uint32_t val2 = voodoo_r(((addr >> 2) + 1) & 0x3FFFFF);
+			uint32_t val1 = voodoo_r(addr);
+			uint32_t val2 = voodoo_r(next_addr(addr));
 			if ((addr & 3) == 1) {
 				val1 = (val1&0xffffff) | ((val&0xff)<<24);
 				val2 = (val2&0xff000000) | ((uint32_t)val>>8);
@@ -6996,8 +7012,8 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 				val1 = (val1&0xff) | ((val&0xffffff)<<8);
 				val2 = (val2&0xffffff00) | ((uint32_t)val>>24);
 			}
-			voodoo_w((addr>>2)&0x3FFFFF,val1,0xffffffff);
-			voodoo_w(((addr>>2)+1)&0x3FFFFF,val2,0xffffffff);
+			voodoo_w(addr, val1, 0xffffffff);
+			voodoo_w(next_addr(addr), val2, 0xffffffff);
 		}
 	}
 } voodoo_real_pagehandler;

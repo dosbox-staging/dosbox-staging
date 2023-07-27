@@ -2804,7 +2804,8 @@ void BIND_MappingEvents() {
 // This also resets mapper.sticks.num_groups to 0 and mapper.sticks.num to the
 // number of found SDL joysticks.
 
-// 7-21-2023: No longer resetting mapper.sticks.num_groups due to https://github.com/dosbox-staging/dosbox-staging/issues/2687
+// 7-21-2023: No longer resetting mapper.sticks.num_groups due to
+// https://github.com/dosbox-staging/dosbox-staging/issues/2687
 static void QueryJoysticks()
 {
 	// Reset our joystick status
