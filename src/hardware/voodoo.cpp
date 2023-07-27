@@ -324,22 +324,11 @@ static uint32_t voodoo_reciplog[(2 << RECIPLOG_LOOKUP_BITS) + 2];
  *
  *************************************/
 
-static const uint8_t dither_matrix_4x4[16] =
-{
-	 0,  8,  2, 10,
-	12,  4, 14,  6,
-	 3, 11,  1,  9,
-	15,  7, 13,  5
-};
+static constexpr uint8_t dither_matrix_4x4[16] =
+        {0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5};
 
-static const uint8_t dither_matrix_2x2[16] =
-{
-	 2, 10,  2, 10,
-	14,  6, 14,  6,
-	 2, 10,  2, 10,
-	14,  6, 14,  6
-};
-
+static constexpr uint8_t dither_matrix_2x2[16] =
+        {2, 10, 2, 10, 14, 6, 14, 6, 2, 10, 2, 10, 14, 6, 14, 6};
 
 /*************************************
  *
