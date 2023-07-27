@@ -4325,9 +4325,14 @@ static void triangle_worker_run(triangle_worker& tworker)
 	if (!tworker.threads_active)
 	{
 		tworker.threads_active = true;
-		for (size_t i = 0; i != TRIANGLE_THREADS; i++)
-			tworker.threads[i] = std::thread(
-			        [i] { triangle_worker_thread_func(i); });
+
+		int worker_id = 0;
+		for (auto& triangle_worker : tworker.threads) {
+			triangle_worker = std::thread([worker_id] {
+				triangle_worker_thread_func(worker_id);
+			});
+			++worker_id;
+		}
 	}
 	for (size_t i = 0; i != TRIANGLE_THREADS; i++) {
 		tworker.sembegin[i].notify();
