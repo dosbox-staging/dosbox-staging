@@ -6414,22 +6414,19 @@ static uint32_t register_r(uint32_t offset)
  *  Handle an LFB read
  *
  *************************************/
-static uint32_t lfb_r(uint32_t offset)
+static uint32_t lfb_r(const uint32_t offset)
 {
 	//LOG(LOG_VOODOO,LOG_WARN)("Voodoo:read LFB offset %X", offset);
-	uint16_t *buffer;
-	uint32_t bufmax;
-	uint32_t bufoffs;
-	uint32_t data;
-	int x, y, scry;
-	uint32_t destbuf;
+	uint16_t* buffer = {};
+	uint32_t bufmax  = 0;
+	uint32_t data    = 0;
 
 	/* compute X,Y */
-	x = (offset << 1) & 0x3fe;
-	y = (offset >> 9) & 0x3ff;
+	const auto x = (offset << 1) & 0x3fe;
+	const auto y = (offset >> 9) & 0x3ff;
 
 	/* select the target buffer */
-	destbuf = LFBMODE_READ_BUFFER_SELECT(v->reg[lfbMode].u);
+	const auto destbuf = LFBMODE_READ_BUFFER_SELECT(v->reg[lfbMode].u);
 	switch (destbuf)
 	{
 		case 0:			/* front buffer */
@@ -6454,7 +6451,7 @@ static uint32_t lfb_r(uint32_t offset)
 	}
 
 	/* determine the screen Y */
-	scry = y;
+	auto scry = y;
 	if (LFBMODE_Y_ORIGIN(v->reg[lfbMode].u))
 		scry = (v->fbi.yorigin - y) & 0x3ff;
 
@@ -6465,7 +6462,8 @@ static uint32_t lfb_r(uint32_t offset)
 #endif
 	{
 		/* advance pointers to the proper row */
-		bufoffs = scry * v->fbi.rowpixels + x;
+		const auto bufoffs = static_cast<uint32_t>(
+		        scry * v->fbi.rowpixels + x);
 		if (bufoffs >= bufmax)
 			return 0xffffffff;
 
