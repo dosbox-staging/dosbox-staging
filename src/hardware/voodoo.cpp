@@ -6490,7 +6490,8 @@ static void voodoo_w(uint32_t offset, uint32_t data, uint32_t mask) {
 		texture_w(offset, data);
 }
 
-static uint32_t voodoo_r(uint32_t offset) {
+static constexpr uint32_t voodoo_r(const uint32_t offset)
+{
 	if ((offset & (0xc00000/4)) == 0)
 		return register_r(offset);
 	else if ((offset & (0x800000/4)) == 0)
@@ -6498,7 +6499,6 @@ static uint32_t voodoo_r(uint32_t offset) {
 
 	return 0xffffffff;
 }
-
 
 /***************************************************************************
     DEVICE INTERFACE
