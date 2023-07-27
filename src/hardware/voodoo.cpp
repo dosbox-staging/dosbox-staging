@@ -1286,8 +1286,39 @@ inline uint32_t compute_raster_hash(const raster_info* info)
 
 /* note that these equations and the dither matrixes have
    been confirmed to be exact matches to the real hardware */
-#define DITHER_RB(val,dith)	((((val) << 1) - ((val) >> 4) + ((val) >> 7) + (dith)) >> 1)
-#define DITHER_G(val,dith)	((((val) << 2) - ((val) >> 4) + ((val) >> 6) + (dith)) >> 2)
+
+constexpr uint8_t dither_rb(const int colour, const int amount)
+{
+	const auto dithered = (colour << 1) - (colour >> 4) + (colour >> 7) + amount;
+	return check_cast<uint8_t>(dithered >> 4);
+}
+
+constexpr uint8_t dither_g(const int colour, const int amount)
+{
+	const auto dithered = (colour << 2) - (colour >> 4) + (colour >> 6) + amount;
+	return check_cast<uint8_t>(dithered >> 4);
+}
+
+using dither_lut_t = std::array<uint8_t, 256 * 16 * 2>;
+
+constexpr dither_lut_t generate_dither_lut(const uint8_t dither_amounts[])
+{
+	// To be populated
+	dither_lut_t dither_lut = {};
+
+	for (uint16_t i = 0; i < dither_lut.size(); ++i) {
+		const auto x = (i >> 1) & 3;
+		const auto y = (i >> 11) & 3;
+
+		const auto color = static_cast<uint8_t>((i >> 3) & 0xff);
+		const auto amount = dither_amounts[y * 4 + x];
+		const auto use_rb = (i & 1) == 0;
+
+		dither_lut[i] = use_rb ? dither_rb(color, amount)
+		                       : dither_g(color, amount);
+	}
+	return dither_lut;
+}
 
 #define COMPUTE_DITHER_POINTERS(FBZMODE, YY)									\
 do																				\
@@ -2996,10 +3027,6 @@ iterated W    = 18.32 [48 bits]
 static voodoo_state* v = nullptr;
 static uint8_t vtype = VOODOO_1, vperf;
 
-/* fast dither lookup */
-static uint8_t dither4_lookup[256*16*2];
-static uint8_t dither2_lookup[256*16*2];
-
 #define LOG_VOODOO LOG_PCI
 #define LOG_VBLANK_SWAP		(0)
 #define LOG_REGISTERS		(0)
@@ -3022,6 +3049,9 @@ static double Voodoo_GetHRetracePosition();
 /***************************************************************************
     RASTERIZER MANAGEMENT
 ***************************************************************************/
+
+static dither_lut_t dither2_lookup = {};
+static dither_lut_t dither4_lookup = {};
 
 static inline void raster_generic(const voodoo_state* v, uint32_t TMUS, uint32_t TEXMODE0,
                                   uint32_t TEXMODE1, void* destbase, int32_t y,
@@ -6531,7 +6561,6 @@ static constexpr uint32_t voodoo_r(const uint32_t addr)
 /*-------------------------------------------------
     device start callback
 -------------------------------------------------*/
-
 static void voodoo_init() {
 	assert(!v);
 	v = new voodoo_state;
@@ -6582,25 +6611,8 @@ static void voodoo_init() {
 			voodoo_reciplog[val*2 + 1] = (uint32_t)(LOGB2((double)value / (double)(1 << RECIPLOG_LOOKUP_BITS)) * (double)(1 << RECIPLOG_LOOKUP_PREC));
 		}
 
-		/* create dithering tables */
-		for (uint32_t val = 0; val < 256*16*2; val++)
-		{
-			int g = (val >> 0) & 1;
-			int x = (val >> 1) & 3;
-			int color = (val >> 3) & 0xff;
-			int y = (val >> 11) & 3;
-
-			if (!g)
-			{
-				dither4_lookup[val] = (uint8_t)(DITHER_RB(color, dither_matrix_4x4[y * 4 + x]) >> 3);
-				dither2_lookup[val] = (uint8_t)(DITHER_RB(color, dither_matrix_2x2[y * 4 + x]) >> 3);
-			}
-			else
-			{
-				dither4_lookup[val] = (uint8_t)(DITHER_G(color, dither_matrix_4x4[y * 4 + x]) >> 2);
-				dither2_lookup[val] = (uint8_t)(DITHER_G(color, dither_matrix_2x2[y * 4 + x]) >> 2);
-			}
-		}
+		dither2_lookup = generate_dither_lut(dither_matrix_2x2);
+		dither4_lookup = generate_dither_lut(dither_matrix_4x4);
 
 #if defined(__SSE2__)
 		/* create sse2 scale table for rgba_bilinear_filter */
