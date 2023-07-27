@@ -5552,12 +5552,24 @@ default_case:
  *************************************/
 static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 	//LOG(LOG_VOODOO,LOG_WARN)("V3D:WR LFB offset %X value %08X", offset, data);
-	uint16_t *dest, *depth;
-	uint32_t destmax, depthmax;
+	uint16_t* dest  = {};
+	uint16_t* depth = {};
 
-	int sr[2], sg[2], sb[2], sa[2], sw[2];
-	int x, y, scry, mask;
-	int pix, destbuf;
+	uint32_t destmax  = 0;
+	uint32_t depthmax = 0;
+
+	int sr[2] = {};
+	int sg[2] = {};
+	int sb[2] = {};
+	int sa[2] = {};
+	int sw[2] = {};
+
+	int x       = 0;
+	int y       = 0;
+	int scry    = 0;
+	int mask    = 0;
+	int pix     = 0;
+	int destbuf = 0;
 
 	/* byte swizzling */
 	if (LFBMODE_BYTE_SWIZZLE_WRITES(v->reg[lfbMode].u))
