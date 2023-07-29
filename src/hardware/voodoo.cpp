@@ -7043,7 +7043,7 @@ static void Voodoo_CheckScreenUpdate(uint32_t /*val*/)
 	if (v->draw.screen_update_requested) {
 		v->draw.screen_update_pending = true;
 		Voodoo_UpdateScreen();
-		PIC_AddEvent(Voodoo_CheckScreenUpdate, 100.0f);
+		PIC_AddEvent(Voodoo_CheckScreenUpdate, 100.0);
 	}
 }
 
@@ -7051,7 +7051,7 @@ static void Voodoo_UpdateScreenStart() {
 	v->draw.screen_update_requested = true;
 	if (!v->draw.screen_update_pending) {
 		v->draw.screen_update_pending = true;
-		PIC_AddEvent(Voodoo_CheckScreenUpdate, 0.0f);
+		PIC_AddEvent(Voodoo_CheckScreenUpdate, 0.0);
 	}
 }
 
