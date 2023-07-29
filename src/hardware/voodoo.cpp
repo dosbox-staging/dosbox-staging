@@ -3055,12 +3055,15 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 	const fbi_state& fbi = vs->fbi;
 	const tmu_state& tmu0 = vs->tmu[0];
 	const tmu_state& tmu1 = vs->tmu[1];
-	uint32_t r_fbzColorPath = vs->reg[fbzColorPath].u;
-	uint32_t r_fbzMode = vs->reg[fbzMode].u;
-	uint32_t r_alphaMode = vs->reg[alphaMode].u;
-	uint32_t r_fogMode = vs->reg[fogMode].u;
-	uint32_t r_zaColor = vs->reg[zaColor].u;
-	uint32_t r_stipple = vs->reg[stipple].u;
+
+	const auto regs = vs->reg;
+
+	uint32_t r_fbzColorPath = regs[fbzColorPath].u;
+	uint32_t r_fbzMode      = regs[fbzMode].u;
+	uint32_t r_alphaMode    = regs[alphaMode].u;
+	uint32_t r_fogMode      = regs[fogMode].u;
+	uint32_t r_zaColor      = regs[zaColor].u;
+	uint32_t r_stipple      = regs[stipple].u;
 
 	/* determine the screen Y */
 	if (FBZMODE_Y_ORIGIN(r_fbzMode))
@@ -3086,22 +3089,21 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 	if (FBZMODE_ENABLE_CLIPPING(r_fbzMode))
 	{
 		/* Y clipping buys us the whole scanline */
-		if (scry < (int32_t)((vs->reg[clipLowYHighY].u >> 16) & 0x3ff) ||
-			scry >= (int32_t)(vs->reg[clipLowYHighY].u & 0x3ff))
-		{
+		if (scry < (int32_t)((regs[clipLowYHighY].u >> 16) & 0x3ff) ||
+		    scry >= (int32_t)(regs[clipLowYHighY].u & 0x3ff)) {
 			stats.pixels_in += stopx - startx;
 			//stats.clip_fail += stopx - startx;
 			return;
 		}
 
 		/* X clipping */
-		int32_t tempclip = (vs->reg[clipLeftRight].u >> 16) & 0x3ff;
+		int32_t tempclip = (regs[clipLeftRight].u >> 16) & 0x3ff;
 		if (startx < tempclip)
 		{
 			stats.pixels_in += tempclip - startx;
 			startx = tempclip;
 		}
-		tempclip = vs->reg[clipLeftRight].u & 0x3ff;
+		tempclip = regs[clipLeftRight].u & 0x3ff;
 		if (stopx >= tempclip)
 		{
 			stats.pixels_in += stopx - tempclip;
@@ -3189,7 +3191,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 				c_other.u = texel.u;
 				break;
 			case 2:		/* color1 RGB */
-				c_other.u = vs->reg[color1].u;
+				c_other.u = regs[color1].u;
 				break;
 			case 3:	/* reserved */
 				c_other.u = 0;
@@ -3209,7 +3211,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 				c_other.rgb.a = texel.rgb.a;
 				break;
 			case 2:		/* color1 alpha */
-				c_other.rgb.a = vs->reg[color1].rgb.a;
+				c_other.rgb.a = regs[color1].rgb.a;
 				break;
 			case 3:	/* reserved */
 				c_other.rgb.a = 0;
@@ -3228,14 +3230,14 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 			if (FBZCP_CC_LOCALSELECT(r_fbzColorPath) == 0)	/* iterated RGB */
 				c_local.u = iterargb.u;
 			else											/* color0 RGB */
-				c_local.u = vs->reg[color0].u;
+				c_local.u = regs[color0].u;
 		}
 		else
 		{
 			if (!(texel.rgb.a & 0x80))					/* iterated RGB */
 				c_local.u = iterargb.u;
 			else											/* color0 RGB */
-				c_local.u = vs->reg[color0].u;
+				c_local.u = regs[color0].u;
 		}
 
 		/* compute a_local */
@@ -3245,7 +3247,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 				c_local.rgb.a = iterargb.rgb.a;
 				break;
 			case 1:		/* color0 alpha */
-				c_local.rgb.a = vs->reg[color0].rgb.a;
+				c_local.rgb.a = regs[color0].rgb.a;
 				break;
 			case 2:		/* clamped iterated Z[27:20] */
 			{
@@ -3474,11 +3476,16 @@ static raster_info *find_rasterizer(voodoo_state *vs, int texcount)
 	int hash;
 
 	/* build an info struct with all the parameters */
-	curinfo.eff_color_path = normalize_color_path(vs->reg[fbzColorPath].u);
-	curinfo.eff_alpha_mode = normalize_alpha_mode(vs->reg[alphaMode].u);
-	curinfo.eff_fog_mode = normalize_fog_mode(vs->reg[fogMode].u);
-	curinfo.eff_fbz_mode = normalize_fbz_mode(vs->reg[fbzMode].u);
-	curinfo.eff_tex_mode_0 = (texcount >= 1) ? normalize_tex_mode(vs->tmu[0].reg[textureMode].u) : 0xffffffff;
+	const auto regs = vs->reg;
+
+	curinfo.eff_color_path = normalize_color_path(regs[fbzColorPath].u);
+	curinfo.eff_alpha_mode = normalize_alpha_mode(regs[alphaMode].u);
+	curinfo.eff_fog_mode   = normalize_fog_mode(regs[fogMode].u);
+	curinfo.eff_fbz_mode   = normalize_fbz_mode(regs[fbzMode].u);
+	curinfo.eff_tex_mode_0 = (texcount >= 1)
+	                               ? normalize_tex_mode(
+	                                         vs->tmu[0].reg[textureMode].u)
+	                               : 0xffffffff;
 	curinfo.eff_tex_mode_1 = (texcount >= 2) ? normalize_tex_mode(vs->tmu[1].reg[textureMode].u) : 0xffffffff;
 
 	/* compute the hash */
@@ -3746,7 +3753,9 @@ static void voodoo_swap_buffers(voodoo_state *vs)
 #endif
 
 	/* keep a history of swap intervals */
-	vs->reg[fbiSwapHistory].u = (vs->reg[fbiSwapHistory].u << 4);
+	const auto regs = vs->reg;
+
+	regs[fbiSwapHistory].u = (regs[fbiSwapHistory].u << 4);
 
 	/* rotate the buffers */
 	if (vtype < VOODOO_2 || !vs->fbi.vblank_dont_swap)
@@ -3773,26 +3782,31 @@ static void voodoo_swap_buffers(voodoo_state *vs)
 
 static void recompute_video_memory(voodoo_state *vs)
 {
-	uint32_t buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(vs->reg[fbiInit2].u);
-	uint32_t fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(vs->reg[fbiInit4].u);
-	uint32_t fifo_last_page = FBIINIT4_MEMORY_FIFO_STOP_ROW(vs->reg[fbiInit4].u);
+	const auto regs = vs->reg;
+
+	uint32_t buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(regs[fbiInit2].u);
+	uint32_t fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(regs[fbiInit4].u);
+	uint32_t fifo_last_page = FBIINIT4_MEMORY_FIFO_STOP_ROW(regs[fbiInit4].u);
 	uint32_t memory_config;
 	int buf;
 
 	/* memory config is determined differently between V1 and V2 */
-	memory_config = FBIINIT2_ENABLE_TRIPLE_BUF(vs->reg[fbiInit2].u);
+	memory_config = FBIINIT2_ENABLE_TRIPLE_BUF(regs[fbiInit2].u);
 	if (vtype == VOODOO_2 && memory_config == 0)
-		memory_config = FBIINIT5_BUFFER_ALLOCATION(vs->reg[fbiInit5].u);
+		memory_config = FBIINIT5_BUFFER_ALLOCATION(regs[fbiInit5].u);
 
 	/* tiles are 64x16/32; x_tiles specifies how many half-tiles */
 	vs->fbi.tile_width = (vtype < VOODOO_2) ? 64 : 32;
 	vs->fbi.tile_height = (vtype < VOODOO_2) ? 16 : 32;
-	vs->fbi.x_tiles = FBIINIT1_X_VIDEO_TILES(vs->reg[fbiInit1].u);
+
+	vs->fbi.x_tiles = FBIINIT1_X_VIDEO_TILES(regs[fbiInit1].u);
+
 	if (vtype == VOODOO_2)
 	{
 		vs->fbi.x_tiles = (vs->fbi.x_tiles << 1) |
-						(FBIINIT1_X_VIDEO_TILES_BIT5(vs->reg[fbiInit1].u) << 5) |
-						(FBIINIT6_X_VIDEO_TILES_BIT0(vs->reg[fbiInit6].u));
+		                  (FBIINIT1_X_VIDEO_TILES_BIT5(regs[fbiInit1].u)
+		                   << 5) |
+		                  (FBIINIT6_X_VIDEO_TILES_BIT0(regs[fbiInit6].u));
 	}
 	vs->fbi.rowpixels = vs->fbi.tile_width * vs->fbi.x_tiles;
 
@@ -3841,13 +3855,12 @@ static void recompute_video_memory(voodoo_state *vs)
 		fifo_last_page = vs->fbi.mask / 0x1000;
 
 	/* is it valid and enabled? */
-	if (fifo_start_page <= fifo_last_page && FBIINIT0_ENABLE_MEMORY_FIFO(vs->reg[fbiInit0].u))
-	{
+	if (fifo_start_page <= fifo_last_page &&
+	    FBIINIT0_ENABLE_MEMORY_FIFO(regs[fbiInit0].u)) {
 		vs->fbi.fifo.size = (fifo_last_page + 1 - fifo_start_page) * 0x1000 / 4;
 		if (vs->fbi.fifo.size > 65536*2)
 			vs->fbi.fifo.size = 65536*2;
-	}
-	else	/* if not, disable the FIFO */
+	} else /* if not, disable the FIFO */
 	{
 		vs->fbi.fifo.size = 0;
 	}
@@ -4175,11 +4188,13 @@ static void sum_statistics(stats_block *target, const stats_block *source)
 static void accumulate_statistics(voodoo_state *vs, const stats_block *stats)
 {
 	/* apply internal voodoo statistics */
-	vs->reg[fbiPixelsIn].u += stats->pixels_in;
-	vs->reg[fbiPixelsOut].u += stats->pixels_out;
-	vs->reg[fbiChromaFail].u += stats->chroma_fail;
-	vs->reg[fbiZfuncFail].u += stats->zfunc_fail;
-	vs->reg[fbiAfuncFail].u += stats->afunc_fail;
+	const auto regs = vs->reg;
+
+	regs[fbiPixelsIn].u += stats->pixels_in;
+	regs[fbiPixelsOut].u += stats->pixels_out;
+	regs[fbiChromaFail].u += stats->chroma_fail;
+	regs[fbiZfuncFail].u += stats->zfunc_fail;
+	regs[fbiAfuncFail].u += stats->afunc_fail;
 }
 
 static void update_statistics(voodoo_state *vs, bool accumulate)
@@ -4365,10 +4380,12 @@ static void triangle_worker_run(triangle_worker& tworker)
 -------------------------------------------------*/
 static void triangle(voodoo_state *vs)
 {
+	const auto regs = vs->reg;
+
 	/* determine the number of TMUs involved */
 	int texcount = 0;
-	if (!FBIINIT3_DISABLE_TMUS(vs->reg[fbiInit3].u) && FBZCP_TEXTURE_ENABLE(vs->reg[fbzColorPath].u))
-	{
+	if (!FBIINIT3_DISABLE_TMUS(regs[fbiInit3].u) &&
+	    FBZCP_TEXTURE_ENABLE(regs[fbzColorPath].u)) {
 		texcount = 1;
 		if (vs->chipmask & 0x04)
 			texcount = 2;
@@ -4377,10 +4394,9 @@ static void triangle(voodoo_state *vs)
 	/* perform subpixel adjustments */
 	if (
 #ifdef C_ENABLE_VOODOO_OPENGL
-		!vs->ogl &&
+	        !vs->ogl &&
 #endif
-		FBZCP_CCA_SUBPIXEL_ADJUST(vs->reg[fbzColorPath].u))
-	{
+	    FBZCP_CCA_SUBPIXEL_ADJUST(regs[fbzColorPath].u)) {
 		int32_t dx = 8 - (vs->fbi.ax & 15);
 		int32_t dy = 8 - (vs->fbi.ay & 15);
 
@@ -4481,10 +4497,11 @@ static void triangle(voodoo_state *vs)
 	}
 
 	extra.texcount = texcount;
-	extra.r_fbzColorPath = vs->reg[fbzColorPath].u;
-	extra.r_fbzMode = vs->reg[fbzMode].u;
-	extra.r_alphaMode = vs->reg[alphaMode].u;
-	extra.r_fogMode = vs->reg[fogMode].u;
+	extra.r_fbzColorPath = regs[fbzColorPath].u;
+	extra.r_fbzMode      = regs[fbzMode].u;
+	extra.r_alphaMode    = regs[alphaMode].u;
+	extra.r_fogMode      = regs[fogMode].u;
+
 	extra.r_textureMode0 = vs->tmu[0].reg[textureMode].u;
 	if (vs->tmu[1].ram != NULL) extra.r_textureMode1 = vs->tmu[1].reg[textureMode].u;
 
@@ -4527,18 +4544,16 @@ static void triangle(voodoo_state *vs)
 
 	/* determine the draw buffer */
 	uint16_t *drawbuf;
-	switch (FBZMODE_DRAW_BUFFER(vs->reg[fbzMode].u))
-	{
-		case 0:		/* front buffer */
-			drawbuf = (uint16_t *)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.frontbuf]);
-			break;
+	switch (FBZMODE_DRAW_BUFFER(regs[fbzMode].u)) {
+	case 0: /* front buffer */
+		drawbuf = (uint16_t*)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.frontbuf]);
+		break;
 
-		case 1:		/* back buffer */
-			drawbuf = (uint16_t *)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.backbuf]);
-			break;
+	case 1: /* back buffer */
+		drawbuf = (uint16_t*)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.backbuf]);
+		break;
 
-		default:	/* reserved */
-			return;
+	default: /* reserved */ return;
 	}
 
 	/* determine the number of TMUs involved */
@@ -4557,7 +4572,7 @@ static void triangle(voodoo_state *vs)
 	triangle_worker_run(tworker);
 
 	/* update stats */
-	vs->reg[fbiTrianglesOut].u++;
+	regs[fbiTrianglesOut].u++;
 }
 
 /*-------------------------------------------------
@@ -4569,19 +4584,21 @@ static void begin_triangle(voodoo_state *vs)
 	setup_vertex *sv = &vs->fbi.svert[2];
 
 	/* extract all the data from registers */
-	sv->x = vs->reg[sVx].f;
-	sv->y = vs->reg[sVy].f;
-	sv->wb = vs->reg[sWb].f;
-	sv->w0 = vs->reg[sWtmu0].f;
-	sv->s0 = vs->reg[sS_W0].f;
-	sv->t0 = vs->reg[sT_W0].f;
-	sv->w1 = vs->reg[sWtmu1].f;
-	sv->s1 = vs->reg[sS_Wtmu1].f;
-	sv->t1 = vs->reg[sT_Wtmu1].f;
-	sv->a = vs->reg[sAlpha].f;
-	sv->r = vs->reg[sRed].f;
-	sv->g = vs->reg[sGreen].f;
-	sv->b = vs->reg[sBlue].f;
+	const auto regs = vs->reg;
+
+	sv->x  = regs[sVx].f;
+	sv->y  = regs[sVy].f;
+	sv->wb = regs[sWb].f;
+	sv->w0 = regs[sWtmu0].f;
+	sv->s0 = regs[sS_W0].f;
+	sv->t0 = regs[sT_W0].f;
+	sv->w1 = regs[sWtmu1].f;
+	sv->s1 = regs[sS_Wtmu1].f;
+	sv->t1 = regs[sT_Wtmu1].f;
+	sv->a  = regs[sAlpha].f;
+	sv->r  = regs[sRed].f;
+	sv->g  = regs[sGreen].f;
+	sv->b  = regs[sBlue].f;
 
 	/* spread it across all three verts and reset the count */
 	vs->fbi.svert[0] = vs->fbi.svert[1] = vs->fbi.svert[2];
@@ -4609,15 +4626,17 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	divisor = 1.0f / ((vs->fbi.svert[0].x - vs->fbi.svert[1].x) * (vs->fbi.svert[0].y - vs->fbi.svert[2].y) -
 					  (vs->fbi.svert[0].x - vs->fbi.svert[2].x) * (vs->fbi.svert[0].y - vs->fbi.svert[1].y));
 
+	const auto regs = vs->reg;
+
 	/* backface culling */
-	if (vs->reg[sSetupMode].u & 0x20000)
-	{
-		int culling_sign = (vs->reg[sSetupMode].u >> 18) & 1;
+	if (regs[sSetupMode].u & 0x20000) {
+		int culling_sign = (regs[sSetupMode].u >> 18) & 1;
 		int divisor_sign = (divisor < 0);
 
 		/* if doing strips and ping pong is enabled, apply the ping pong */
-		if ((vs->reg[sSetupMode].u & 0x90000) == 0x00000)
+		if ((regs[sSetupMode].u & 0x90000) == 0x00000) {
 			culling_sign ^= (vs->fbi.sverts - 3) & 1;
+		}
 
 		/* if our sign matches the culling sign, we're done for */
 		if (divisor_sign == culling_sign)
@@ -4632,8 +4651,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 
 	/* set up R,G,B */
 	tdiv = divisor * 4096.0f;
-	if (vs->reg[sSetupMode].u & (1 << 0))
-	{
+	if (regs[sSetupMode].u & (1 << 0)) {
 		vs->fbi.startr = (int32_t)(vs->fbi.svert[0].r * 4096.0f);
 		vs->fbi.drdx = (int32_t)(((vs->fbi.svert[0].r - vs->fbi.svert[1].r) * dx1 - (vs->fbi.svert[0].r - vs->fbi.svert[2].r) * dx2) * tdiv);
 		vs->fbi.drdy = (int32_t)(((vs->fbi.svert[0].r - vs->fbi.svert[2].r) * dy1 - (vs->fbi.svert[0].r - vs->fbi.svert[1].r) * dy2) * tdiv);
@@ -4646,16 +4664,14 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up alpha */
-	if (vs->reg[sSetupMode].u & (1 << 1))
-	{
+	if (regs[sSetupMode].u & (1 << 1)) {
 		vs->fbi.starta = (int32_t)(vs->fbi.svert[0].a * 4096.0);
 		vs->fbi.dadx = (int32_t)(((vs->fbi.svert[0].a - vs->fbi.svert[1].a) * dx1 - (vs->fbi.svert[0].a - vs->fbi.svert[2].a) * dx2) * tdiv);
 		vs->fbi.dady = (int32_t)(((vs->fbi.svert[0].a - vs->fbi.svert[2].a) * dy1 - (vs->fbi.svert[0].a - vs->fbi.svert[1].a) * dy2) * tdiv);
 	}
 
 	/* set up Z */
-	if (vs->reg[sSetupMode].u & (1 << 2))
-	{
+	if (regs[sSetupMode].u & (1 << 2)) {
 		vs->fbi.startz = (int32_t)(vs->fbi.svert[0].z * 4096.0);
 		vs->fbi.dzdx = (int32_t)(((vs->fbi.svert[0].z - vs->fbi.svert[1].z) * dx1 - (vs->fbi.svert[0].z - vs->fbi.svert[2].z) * dx2) * tdiv);
 		vs->fbi.dzdy = (int32_t)(((vs->fbi.svert[0].z - vs->fbi.svert[2].z) * dy1 - (vs->fbi.svert[0].z - vs->fbi.svert[1].z) * dy2) * tdiv);
@@ -4663,24 +4679,21 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 
 	/* set up Wb */
 	tdiv = divisor * 65536.0f * 65536.0f;
-	if (vs->reg[sSetupMode].u & (1 << 3))
-	{
+	if (regs[sSetupMode].u & (1 << 3)) {
 		vs->fbi.startw = vs->tmu[0].startw = vs->tmu[1].startw = (int64_t)(vs->fbi.svert[0].wb * 65536.0f * 65536.0f);
 		vs->fbi.dwdx = vs->tmu[0].dwdx = vs->tmu[1].dwdx = (int64_t)(((vs->fbi.svert[0].wb - vs->fbi.svert[1].wb) * dx1 - (vs->fbi.svert[0].wb - vs->fbi.svert[2].wb) * dx2) * tdiv);
 		vs->fbi.dwdy = vs->tmu[0].dwdy = vs->tmu[1].dwdy = (int64_t)(((vs->fbi.svert[0].wb - vs->fbi.svert[2].wb) * dy1 - (vs->fbi.svert[0].wb - vs->fbi.svert[1].wb) * dy2) * tdiv);
 	}
 
 	/* set up W0 */
-	if (vs->reg[sSetupMode].u & (1 << 4))
-	{
+	if (regs[sSetupMode].u & (1 << 4)) {
 		vs->tmu[0].startw = vs->tmu[1].startw = (int64_t)(vs->fbi.svert[0].w0 * 65536.0f * 65536.0f);
 		vs->tmu[0].dwdx = vs->tmu[1].dwdx = (int64_t)(((vs->fbi.svert[0].w0 - vs->fbi.svert[1].w0) * dx1 - (vs->fbi.svert[0].w0 - vs->fbi.svert[2].w0) * dx2) * tdiv);
 		vs->tmu[0].dwdy = vs->tmu[1].dwdy = (int64_t)(((vs->fbi.svert[0].w0 - vs->fbi.svert[2].w0) * dy1 - (vs->fbi.svert[0].w0 - vs->fbi.svert[1].w0) * dy2) * tdiv);
 	}
 
 	/* set up S0,T0 */
-	if (vs->reg[sSetupMode].u & (1 << 5))
-	{
+	if (regs[sSetupMode].u & (1 << 5)) {
 		vs->tmu[0].starts = vs->tmu[1].starts = (int64_t)(vs->fbi.svert[0].s0 * 65536.0f * 65536.0f);
 		vs->tmu[0].dsdx = vs->tmu[1].dsdx = (int64_t)(((vs->fbi.svert[0].s0 - vs->fbi.svert[1].s0) * dx1 - (vs->fbi.svert[0].s0 - vs->fbi.svert[2].s0) * dx2) * tdiv);
 		vs->tmu[0].dsdy = vs->tmu[1].dsdy = (int64_t)(((vs->fbi.svert[0].s0 - vs->fbi.svert[2].s0) * dy1 - (vs->fbi.svert[0].s0 - vs->fbi.svert[1].s0) * dy2) * tdiv);
@@ -4690,16 +4703,14 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up W1 */
-	if (vs->reg[sSetupMode].u & (1 << 6))
-	{
+	if (regs[sSetupMode].u & (1 << 6)) {
 		vs->tmu[1].startw = (int64_t)(vs->fbi.svert[0].w1 * 65536.0f * 65536.0f);
 		vs->tmu[1].dwdx = (int64_t)(((vs->fbi.svert[0].w1 - vs->fbi.svert[1].w1) * dx1 - (vs->fbi.svert[0].w1 - vs->fbi.svert[2].w1) * dx2) * tdiv);
 		vs->tmu[1].dwdy = (int64_t)(((vs->fbi.svert[0].w1 - vs->fbi.svert[2].w1) * dy1 - (vs->fbi.svert[0].w1 - vs->fbi.svert[1].w1) * dy2) * tdiv);
 	}
 
 	/* set up S1,T1 */
-	if (vs->reg[sSetupMode].u & (1 << 7))
-	{
+	if (regs[sSetupMode].u & (1 << 7)) {
 		vs->tmu[1].starts = (int64_t)(vs->fbi.svert[0].s1 * 65536.0f * 65536.0f);
 		vs->tmu[1].dsdx = (int64_t)(((vs->fbi.svert[0].s1 - vs->fbi.svert[1].s1) * dx1 - (vs->fbi.svert[0].s1 - vs->fbi.svert[2].s1) * dx2) * tdiv);
 		vs->tmu[1].dsdy = (int64_t)(((vs->fbi.svert[0].s1 - vs->fbi.svert[2].s1) * dy1 - (vs->fbi.svert[0].s1 - vs->fbi.svert[1].s1) * dy2) * tdiv);
@@ -4720,27 +4731,30 @@ static void draw_triangle(voodoo_state *vs)
 {
 	setup_vertex *sv = &vs->fbi.svert[2];
 
+	const auto regs = vs->reg;
+
 	/* for strip mode, shuffle vertex 1 down to 0 */
-	if (!(vs->reg[sSetupMode].u & (1 << 16)))
+	if (!(regs[sSetupMode].u & (1 << 16))) {
 		vs->fbi.svert[0] = vs->fbi.svert[1];
+	}
 
 	/* copy 2 down to 1 regardless */
 	vs->fbi.svert[1] = vs->fbi.svert[2];
 
 	/* extract all the data from registers */
-	sv->x = vs->reg[sVx].f;
-	sv->y = vs->reg[sVy].f;
-	sv->wb = vs->reg[sWb].f;
-	sv->w0 = vs->reg[sWtmu0].f;
-	sv->s0 = vs->reg[sS_W0].f;
-	sv->t0 = vs->reg[sT_W0].f;
-	sv->w1 = vs->reg[sWtmu1].f;
-	sv->s1 = vs->reg[sS_Wtmu1].f;
-	sv->t1 = vs->reg[sT_Wtmu1].f;
-	sv->a = vs->reg[sAlpha].f;
-	sv->r = vs->reg[sRed].f;
-	sv->g = vs->reg[sGreen].f;
-	sv->b = vs->reg[sBlue].f;
+	sv->x  = regs[sVx].f;
+	sv->y  = regs[sVy].f;
+	sv->wb = regs[sWb].f;
+	sv->w0 = regs[sWtmu0].f;
+	sv->s0 = regs[sS_W0].f;
+	sv->t0 = regs[sT_W0].f;
+	sv->w1 = regs[sWtmu1].f;
+	sv->s1 = regs[sS_Wtmu1].f;
+	sv->t1 = regs[sT_Wtmu1].f;
+	sv->a  = regs[sAlpha].f;
+	sv->r  = regs[sRed].f;
+	sv->g  = regs[sGreen].f;
+	sv->b  = regs[sBlue].f;
 
 	/* if we have enough verts, go ahead and draw */
 	if (++vs->fbi.sverts >= 3)
@@ -4753,10 +4767,12 @@ static void draw_triangle(voodoo_state *vs)
 -------------------------------------------------*/
 static void fastfill(voodoo_state *vs)
 {
-	int sx = (vs->reg[clipLeftRight].u >> 16) & 0x3ff;
-	int ex = (vs->reg[clipLeftRight].u >> 0) & 0x3ff;
-	int sy = (vs->reg[clipLowYHighY].u >> 16) & 0x3ff;
-	int ey = (vs->reg[clipLowYHighY].u >> 0) & 0x3ff;
+	const auto regs = vs->reg;
+
+	int sx = (regs[clipLeftRight].u >> 16) & 0x3ff;
+	int ex = (regs[clipLeftRight].u >> 0) & 0x3ff;
+	int sy = (regs[clipLowYHighY].u >> 16) & 0x3ff;
+	int ey = (regs[clipLowYHighY].u >> 0) & 0x3ff;
 
 	poly_extent extents[64]   = {};
 	uint16_t dithermatrix[16] = {};
@@ -4765,14 +4781,15 @@ static void fastfill(voodoo_state *vs)
 	int x, y;
 
 	/* if we're not clearing either, take no time */
-	if (!FBZMODE_RGB_BUFFER_MASK(vs->reg[fbzMode].u) && !FBZMODE_AUX_BUFFER_MASK(vs->reg[fbzMode].u))
+	if (!FBZMODE_RGB_BUFFER_MASK(regs[fbzMode].u) &&
+	    !FBZMODE_AUX_BUFFER_MASK(regs[fbzMode].u)) {
 		return;
+	}
 
 	/* are we clearing the RGB buffer? */
-	if (FBZMODE_RGB_BUFFER_MASK(vs->reg[fbzMode].u))
-	{
+	if (FBZMODE_RGB_BUFFER_MASK(regs[fbzMode].u)) {
 		/* determine the draw buffer */
-		int destbuf = FBZMODE_DRAW_BUFFER(vs->reg[fbzMode].u);
+		int destbuf = FBZMODE_DRAW_BUFFER(regs[fbzMode].u);
 		switch (destbuf)
 		{
 			case 0:		/* front buffer */
@@ -4795,14 +4812,14 @@ static void fastfill(voodoo_state *vs)
 
 			[[maybe_unused]] const uint8_t* dither = nullptr;
 
-			COMPUTE_DITHER_POINTERS(vs->reg[fbzMode].u, y);
+			COMPUTE_DITHER_POINTERS(regs[fbzMode].u, y);
 			for (x = 0; x < 4; x++)
 			{
-				int r = vs->reg[color1].rgb.r;
-				int g = vs->reg[color1].rgb.g;
-				int b = vs->reg[color1].rgb.b;
+				int r = regs[color1].rgb.r;
+				int g = regs[color1].rgb.g;
+				int b = regs[color1].rgb.b;
 
-				APPLY_DITHER(vs->reg[fbzMode].u, x, dither_lookup, r, g, b);
+				APPLY_DITHER(regs[fbzMode].u, x, dither_lookup, r, g, b);
 				dithermatrix[y*4 + x] = (uint16_t)((r << 11) | (g << 5) | b);
 			}
 		}
@@ -4875,11 +4892,13 @@ static void swapbuffer(voodoo_state *vs, uint32_t data)
 static void reset_counters(voodoo_state *vs)
 {
 	update_statistics(vs, false);
-	vs->reg[fbiPixelsIn].u = 0;
-	vs->reg[fbiChromaFail].u = 0;
-	vs->reg[fbiZfuncFail].u = 0;
-	vs->reg[fbiAfuncFail].u = 0;
-	vs->reg[fbiPixelsOut].u = 0;
+	const auto regs = vs->reg;
+
+	regs[fbiPixelsIn].u   = 0;
+	regs[fbiChromaFail].u = 0;
+	regs[fbiZfuncFail].u  = 0;
+	regs[fbiAfuncFail].u  = 0;
+	regs[fbiPixelsOut].u  = 0;
 }
 
 static void soft_reset(voodoo_state *vs)
