@@ -4564,28 +4564,28 @@ static void triangle(voodoo_state *vs)
     begin_triangle - execute the 'beginTri'
     command
 -------------------------------------------------*/
-static void begin_triangle(voodoo_state *v)
+static void begin_triangle(voodoo_state *vs)
 {
-	setup_vertex *sv = &v->fbi.svert[2];
+	setup_vertex *sv = &vs->fbi.svert[2];
 
 	/* extract all the data from registers */
-	sv->x = v->reg[sVx].f;
-	sv->y = v->reg[sVy].f;
-	sv->wb = v->reg[sWb].f;
-	sv->w0 = v->reg[sWtmu0].f;
-	sv->s0 = v->reg[sS_W0].f;
-	sv->t0 = v->reg[sT_W0].f;
-	sv->w1 = v->reg[sWtmu1].f;
-	sv->s1 = v->reg[sS_Wtmu1].f;
-	sv->t1 = v->reg[sT_Wtmu1].f;
-	sv->a = v->reg[sAlpha].f;
-	sv->r = v->reg[sRed].f;
-	sv->g = v->reg[sGreen].f;
-	sv->b = v->reg[sBlue].f;
+	sv->x = vs->reg[sVx].f;
+	sv->y = vs->reg[sVy].f;
+	sv->wb = vs->reg[sWb].f;
+	sv->w0 = vs->reg[sWtmu0].f;
+	sv->s0 = vs->reg[sS_W0].f;
+	sv->t0 = vs->reg[sT_W0].f;
+	sv->w1 = vs->reg[sWtmu1].f;
+	sv->s1 = vs->reg[sS_Wtmu1].f;
+	sv->t1 = vs->reg[sT_Wtmu1].f;
+	sv->a = vs->reg[sAlpha].f;
+	sv->r = vs->reg[sRed].f;
+	sv->g = vs->reg[sGreen].f;
+	sv->b = vs->reg[sBlue].f;
 
 	/* spread it across all three verts and reset the count */
-	v->fbi.svert[0] = v->fbi.svert[1] = v->fbi.svert[2];
-	v->fbi.sverts = 1;
+	vs->fbi.svert[0] = vs->fbi.svert[1] = vs->fbi.svert[2];
+	vs->fbi.sverts = 1;
 }
 
 /*-------------------------------------------------
