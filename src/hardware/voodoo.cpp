@@ -4165,8 +4165,10 @@ static inline int32_t round_coordinate(float value)
 	// Build Engine games (Blood, Shadow Warrior).
 
 	const auto rounded = static_cast<int32_t>(value); // round towards 0
-	const auto rem     = static_cast<int32_t>((value - rounded) > 0.5f);
-	return rounded + rem;
+
+	const auto has_remainder = value - static_cast<float>(rounded) > 0.5f;
+
+	return rounded + static_cast<int32_t>(has_remainder);
 }
 
 /*************************************
