@@ -7076,12 +7076,14 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 	void writew(PhysPt addr, uint16_t val) override
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
-		if (!(addr & 3))
+
+		// Is the address word-aligned?
+		if ((addr & 0b11) == 0) {
 			voodoo_w(addr, val, 0x0000ffff);
-		else if (!(addr & 1))
+		}
+		// The address must be byte-aligned
+		assert((addr & 0b1) == 0);
 			voodoo_w(addr, static_cast<uint32_t>(val << 16), 0xffff0000);
-		else
-			E_Exit("voodoo writew unaligned");
 	}
 
 	uint32_t readd(PhysPt addr) override
