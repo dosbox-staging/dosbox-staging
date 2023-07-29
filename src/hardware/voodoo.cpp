@@ -6618,7 +6618,7 @@ static void voodoo_w(const uint32_t addr, const uint32_t data, const uint32_t ma
 
 static constexpr uint32_t voodoo_r(const uint32_t addr)
 {
-	const auto offset = static_cast<uint32_t>((addr >> 2) & offset_mask);
+	const auto offset = (addr >> 2) & offset_mask;
 
 	if ((offset & offset_base) == 0) {
 		return register_r(offset);
