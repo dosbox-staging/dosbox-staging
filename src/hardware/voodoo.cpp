@@ -3734,32 +3734,32 @@ static void init_tmu(voodoo_state *vs, tmu_state *t, voodoo_reg *reg, int tmem)
  *
  *************************************/
 
-static void voodoo_swap_buffers(voodoo_state *v)
+static void voodoo_swap_buffers(voodoo_state *vs)
 {
-	//if (LOG_VBLANK_SWAP) LOG(LOG_VOODOO,LOG_WARN)("--- swap_buffers @ %d\n", video_screen_get_vpos(v->screen));
+	//if (LOG_VBLANK_SWAP) LOG(LOG_VOODOO,LOG_WARN)("--- swap_buffers @ %d\n", video_screen_get_vpos(vs->screen));
 
 #ifdef C_ENABLE_VOODOO_OPENGL
-	if (v->ogl && v->active) {
+	if (vs->ogl && vs->active) {
 		voodoo_ogl_swap_buffer();
 		return;
 	}
 #endif
 
 	/* keep a history of swap intervals */
-	v->reg[fbiSwapHistory].u = (v->reg[fbiSwapHistory].u << 4);
+	vs->reg[fbiSwapHistory].u = (vs->reg[fbiSwapHistory].u << 4);
 
 	/* rotate the buffers */
-	if (vtype < VOODOO_2 || !v->fbi.vblank_dont_swap)
+	if (vtype < VOODOO_2 || !vs->fbi.vblank_dont_swap)
 	{
-		if (v->fbi.rgboffs[2] == (uint32_t)(~0))
+		if (vs->fbi.rgboffs[2] == (uint32_t)(~0))
 		{
-			v->fbi.frontbuf = (uint8_t)(1 - v->fbi.frontbuf);
-			v->fbi.backbuf = (uint8_t)(1 - v->fbi.frontbuf);
+			vs->fbi.frontbuf = (uint8_t)(1 - vs->fbi.frontbuf);
+			vs->fbi.backbuf = (uint8_t)(1 - vs->fbi.frontbuf);
 		}
 		else
 		{
-			v->fbi.frontbuf = (v->fbi.frontbuf + 1) % 3;
-			v->fbi.backbuf = (v->fbi.frontbuf + 1) % 3;
+			vs->fbi.frontbuf = (vs->fbi.frontbuf + 1) % 3;
+			vs->fbi.backbuf = (vs->fbi.frontbuf + 1) % 3;
 		}
 	}
 }
