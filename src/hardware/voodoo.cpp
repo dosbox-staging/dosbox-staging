@@ -1992,7 +1992,7 @@ do																				\
 		/* fetch texel data */													\
 		if (TEXMODE_FORMAT(TEXMODE) < 8)										\
 		{																		\
-			texel0 = *(uint8_t *)&(TT)->ram[(texbase + t + s) & (TT)->mask];		\
+			texel0 = (TT)->ram[(texbase + t + s) & (TT)->mask];					\
 			c_local.u = (LOOKUP)[texel0];										\
 		}																		\
 		else																	\
@@ -2053,10 +2053,10 @@ do																				\
 		/* fetch texel data */													\
 		if (TEXMODE_FORMAT(TEXMODE) < 8)										\
 		{																		\
-			texel0 = *(uint8_t *)&(TT)->ram[(texbase + t + s) & (TT)->mask];		\
-			texel1 = *(uint8_t *)&(TT)->ram[(texbase + t + s1) & (TT)->mask];		\
-			texel2 = *(uint8_t *)&(TT)->ram[(texbase + t1 + s) & (TT)->mask];		\
-			texel3 = *(uint8_t *)&(TT)->ram[(texbase + t1 + s1) & (TT)->mask];	\
+			texel0 = (TT)->ram[(texbase + t + s) & (TT)->mask];					\
+			texel1 = (TT)->ram[(texbase + t + s1) & (TT)->mask];				\
+			texel2 = (TT)->ram[(texbase + t1 + s) & (TT)->mask];				\
+			texel3 = (TT)->ram[(texbase + t1 + s1) & (TT)->mask];				\
 			texel0 = (LOOKUP)[texel0];											\
 			texel1 = (LOOKUP)[texel1];											\
 			texel2 = (LOOKUP)[texel2];											\
