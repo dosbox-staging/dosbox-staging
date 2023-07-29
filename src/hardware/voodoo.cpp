@@ -4632,10 +4632,8 @@ static void begin_triangle(voodoo_state *vs)
 -------------------------------------------------*/
 static void setup_and_draw_triangle(voodoo_state *vs)
 {
-	float dx1, dy1, dx2, dy2;
-	float divisor, tdiv;
-
 	// Quick references
+	const auto regs = vs->reg;
 	auto& fbi = vs->fbi;
 	auto& tmu0 = vs->tmu[0];
 	auto& tmu1 = vs->tmu[1];
@@ -4654,10 +4652,9 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	fbi.cy = (int16_t)(vertex2.y * 16.0);
 
 	/* compute the divisor */
-	divisor = 1.0f / ((vertex0.x - vertex1.x) * (vertex0.y - vertex2.y) -
-	                  (vertex0.x - vertex2.x) * (vertex0.y - vertex1.y));
-
-	const auto regs = vs->reg;
+	const auto divisor = 1.0f /
+	                     ((vertex0.x - vertex1.x) * (vertex0.y - vertex2.y) -
+	                      (vertex0.x - vertex2.x) * (vertex0.y - vertex1.y));
 
 	/* backface culling */
 	if (regs[sSetupMode].u & 0x20000) {
@@ -4675,13 +4672,13 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* compute the dx/dy values */
-	dx1 = vertex0.y - vertex2.y;
-	dx2 = vertex0.y - vertex1.y;
-	dy1 = vertex0.x - vertex1.x;
-	dy2 = vertex0.x - vertex2.x;
+	const auto dx1 = vertex0.y - vertex2.y;
+	const auto dx2 = vertex0.y - vertex1.y;
+	const auto dy1 = vertex0.x - vertex1.x;
+	const auto dy2 = vertex0.x - vertex2.x;
 
 	/* set up R,G,B */
-	tdiv = divisor * 4096.0f;
+	auto tdiv = divisor * 4096.0f;
 	if (regs[sSetupMode].u & (1 << 0)) {
 		fbi.startr = (int32_t)(vertex0.r * 4096.0f);
 		fbi.drdx   = (int32_t)(((vertex0.r - vertex1.r) * dx1 -
