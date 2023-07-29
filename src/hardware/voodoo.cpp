@@ -925,8 +925,8 @@ struct voodoo_state
 	pci_state pci = {}; /* PCI state */
 	dac_state dac = {}; /* DAC state */
 
-	fbi_state fbi             = {}; /* FBI states */
-	tmu_state tmu[MAX_TMU]    = {}; /* TMU states */
+	fbi_state fbi             = {}; /* Frame Buffer Interface (FBI) states */
+	tmu_state tmu[MAX_TMU]    = {}; /* Texture Mapper Unit (TMU) states */
 	tmu_shared_state tmushare = {}; /* TMU shared state */
 	uint32_t tmu_config       = {};
 
