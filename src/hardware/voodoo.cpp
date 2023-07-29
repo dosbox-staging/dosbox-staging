@@ -4363,141 +4363,141 @@ static void triangle_worker_run(triangle_worker& tworker)
     triangle - execute the 'triangle'
     command
 -------------------------------------------------*/
-static void triangle(voodoo_state *v)
+static void triangle(voodoo_state *vs)
 {
 	/* determine the number of TMUs involved */
 	int texcount = 0;
-	if (!FBIINIT3_DISABLE_TMUS(v->reg[fbiInit3].u) && FBZCP_TEXTURE_ENABLE(v->reg[fbzColorPath].u))
+	if (!FBIINIT3_DISABLE_TMUS(vs->reg[fbiInit3].u) && FBZCP_TEXTURE_ENABLE(vs->reg[fbzColorPath].u))
 	{
 		texcount = 1;
-		if (v->chipmask & 0x04)
+		if (vs->chipmask & 0x04)
 			texcount = 2;
 	}
 
 	/* perform subpixel adjustments */
 	if (
 #ifdef C_ENABLE_VOODOO_OPENGL
-		!v->ogl &&
+		!vs->ogl &&
 #endif
-		FBZCP_CCA_SUBPIXEL_ADJUST(v->reg[fbzColorPath].u))
+		FBZCP_CCA_SUBPIXEL_ADJUST(vs->reg[fbzColorPath].u))
 	{
-		int32_t dx = 8 - (v->fbi.ax & 15);
-		int32_t dy = 8 - (v->fbi.ay & 15);
+		int32_t dx = 8 - (vs->fbi.ax & 15);
+		int32_t dy = 8 - (vs->fbi.ay & 15);
 
 		/* adjust iterated R,G,B,A and W/Z */
-		v->fbi.startr += (dy * v->fbi.drdy + dx * v->fbi.drdx) >> 4;
-		v->fbi.startg += (dy * v->fbi.dgdy + dx * v->fbi.dgdx) >> 4;
-		v->fbi.startb += (dy * v->fbi.dbdy + dx * v->fbi.dbdx) >> 4;
-		v->fbi.starta += (dy * v->fbi.dady + dx * v->fbi.dadx) >> 4;
-		v->fbi.startw += (dy * v->fbi.dwdy + dx * v->fbi.dwdx) >> 4;
-		v->fbi.startz += mul_32x32_shift(dy, v->fbi.dzdy, 4) + mul_32x32_shift(dx, v->fbi.dzdx, 4);
+		vs->fbi.startr += (dy * vs->fbi.drdy + dx * vs->fbi.drdx) >> 4;
+		vs->fbi.startg += (dy * vs->fbi.dgdy + dx * vs->fbi.dgdx) >> 4;
+		vs->fbi.startb += (dy * vs->fbi.dbdy + dx * vs->fbi.dbdx) >> 4;
+		vs->fbi.starta += (dy * vs->fbi.dady + dx * vs->fbi.dadx) >> 4;
+		vs->fbi.startw += (dy * vs->fbi.dwdy + dx * vs->fbi.dwdx) >> 4;
+		vs->fbi.startz += mul_32x32_shift(dy, vs->fbi.dzdy, 4) + mul_32x32_shift(dx, vs->fbi.dzdx, 4);
 
 		/* adjust iterated W/S/T for TMU 0 */
 		if (texcount >= 1)
 		{
-			v->tmu[0].startw += (dy * v->tmu[0].dwdy + dx * v->tmu[0].dwdx) >> 4;
-			v->tmu[0].starts += (dy * v->tmu[0].dsdy + dx * v->tmu[0].dsdx) >> 4;
-			v->tmu[0].startt += (dy * v->tmu[0].dtdy + dx * v->tmu[0].dtdx) >> 4;
+			vs->tmu[0].startw += (dy * vs->tmu[0].dwdy + dx * vs->tmu[0].dwdx) >> 4;
+			vs->tmu[0].starts += (dy * vs->tmu[0].dsdy + dx * vs->tmu[0].dsdx) >> 4;
+			vs->tmu[0].startt += (dy * vs->tmu[0].dtdy + dx * vs->tmu[0].dtdx) >> 4;
 
 			/* adjust iterated W/S/T for TMU 1 */
 			if (texcount >= 2)
 			{
-				v->tmu[1].startw += (dy * v->tmu[1].dwdy + dx * v->tmu[1].dwdx) >> 4;
-				v->tmu[1].starts += (dy * v->tmu[1].dsdy + dx * v->tmu[1].dsdx) >> 4;
-				v->tmu[1].startt += (dy * v->tmu[1].dtdy + dx * v->tmu[1].dtdx) >> 4;
+				vs->tmu[1].startw += (dy * vs->tmu[1].dwdy + dx * vs->tmu[1].dwdx) >> 4;
+				vs->tmu[1].starts += (dy * vs->tmu[1].dsdy + dx * vs->tmu[1].dsdx) >> 4;
+				vs->tmu[1].startt += (dy * vs->tmu[1].dtdy + dx * vs->tmu[1].dtdx) >> 4;
 			}
 		}
 	}
 
 	/* fill in the vertex data */
 	poly_vertex vert[3];
-	vert[0].x = (float)v->fbi.ax * (1.0f / 16.0f);
-	vert[0].y = (float)v->fbi.ay * (1.0f / 16.0f);
-	vert[1].x = (float)v->fbi.bx * (1.0f / 16.0f);
-	vert[1].y = (float)v->fbi.by * (1.0f / 16.0f);
-	vert[2].x = (float)v->fbi.cx * (1.0f / 16.0f);
-	vert[2].y = (float)v->fbi.cy * (1.0f / 16.0f);
+	vert[0].x = (float)vs->fbi.ax * (1.0f / 16.0f);
+	vert[0].y = (float)vs->fbi.ay * (1.0f / 16.0f);
+	vert[1].x = (float)vs->fbi.bx * (1.0f / 16.0f);
+	vert[1].y = (float)vs->fbi.by * (1.0f / 16.0f);
+	vert[2].x = (float)vs->fbi.cx * (1.0f / 16.0f);
+	vert[2].y = (float)vs->fbi.cy * (1.0f / 16.0f);
 
 #ifdef C_ENABLE_VOODOO_OPENGL
 	/* find a rasterizer that matches our current state */
 	//    setup and create the work item
 	poly_extra_data extra;
 	/* fill in the extra data */
-	extra.state = v;
+	extra.state = vs;
 
-	raster_info *info  = find_rasterizer(v, texcount);
+	raster_info *info  = find_rasterizer(vs, texcount);
 	extra.info = info;
 
 	/* fill in triangle parameters */
-	extra.ax = v->fbi.ax;
-	extra.ay = v->fbi.ay;
-	extra.startr = v->fbi.startr;
-	extra.startg = v->fbi.startg;
-	extra.startb = v->fbi.startb;
-	extra.starta = v->fbi.starta;
-	extra.startz = v->fbi.startz;
-	extra.startw = v->fbi.startw;
-	extra.drdx = v->fbi.drdx;
-	extra.dgdx = v->fbi.dgdx;
-	extra.dbdx = v->fbi.dbdx;
-	extra.dadx = v->fbi.dadx;
-	extra.dzdx = v->fbi.dzdx;
-	extra.dwdx = v->fbi.dwdx;
-	extra.drdy = v->fbi.drdy;
-	extra.dgdy = v->fbi.dgdy;
-	extra.dbdy = v->fbi.dbdy;
-	extra.dady = v->fbi.dady;
-	extra.dzdy = v->fbi.dzdy;
-	extra.dwdy = v->fbi.dwdy;
+	extra.ax = vs->fbi.ax;
+	extra.ay = vs->fbi.ay;
+	extra.startr = vs->fbi.startr;
+	extra.startg = vs->fbi.startg;
+	extra.startb = vs->fbi.startb;
+	extra.starta = vs->fbi.starta;
+	extra.startz = vs->fbi.startz;
+	extra.startw = vs->fbi.startw;
+	extra.drdx = vs->fbi.drdx;
+	extra.dgdx = vs->fbi.dgdx;
+	extra.dbdx = vs->fbi.dbdx;
+	extra.dadx = vs->fbi.dadx;
+	extra.dzdx = vs->fbi.dzdx;
+	extra.dwdx = vs->fbi.dwdx;
+	extra.drdy = vs->fbi.drdy;
+	extra.dgdy = vs->fbi.dgdy;
+	extra.dbdy = vs->fbi.dbdy;
+	extra.dady = vs->fbi.dady;
+	extra.dzdy = vs->fbi.dzdy;
+	extra.dwdy = vs->fbi.dwdy;
 
 	/* fill in texture 0 parameters */
 	if (texcount > 0)
 	{
-		extra.starts0 = v->tmu[0].starts;
-		extra.startt0 = v->tmu[0].startt;
-		extra.startw0 = v->tmu[0].startw;
-		extra.ds0dx = v->tmu[0].dsdx;
-		extra.dt0dx = v->tmu[0].dtdx;
-		extra.dw0dx = v->tmu[0].dwdx;
-		extra.ds0dy = v->tmu[0].dsdy;
-		extra.dt0dy = v->tmu[0].dtdy;
-		extra.dw0dy = v->tmu[0].dwdy;
-		extra.lodbase0 = v->tmu[0].lodbasetemp;
+		extra.starts0 = vs->tmu[0].starts;
+		extra.startt0 = vs->tmu[0].startt;
+		extra.startw0 = vs->tmu[0].startw;
+		extra.ds0dx = vs->tmu[0].dsdx;
+		extra.dt0dx = vs->tmu[0].dtdx;
+		extra.dw0dx = vs->tmu[0].dwdx;
+		extra.ds0dy = vs->tmu[0].dsdy;
+		extra.dt0dy = vs->tmu[0].dtdy;
+		extra.dw0dy = vs->tmu[0].dwdy;
+		extra.lodbase0 = vs->tmu[0].lodbasetemp;
 
 		/* fill in texture 1 parameters */
 		if (texcount > 1)
 		{
-			extra.starts1 = v->tmu[1].starts;
-			extra.startt1 = v->tmu[1].startt;
-			extra.startw1 = v->tmu[1].startw;
-			extra.ds1dx = v->tmu[1].dsdx;
-			extra.dt1dx = v->tmu[1].dtdx;
-			extra.dw1dx = v->tmu[1].dwdx;
-			extra.ds1dy = v->tmu[1].dsdy;
-			extra.dt1dy = v->tmu[1].dtdy;
-			extra.dw1dy = v->tmu[1].dwdy;
-			extra.lodbase1 = v->tmu[1].lodbasetemp;
+			extra.starts1 = vs->tmu[1].starts;
+			extra.startt1 = vs->tmu[1].startt;
+			extra.startw1 = vs->tmu[1].startw;
+			extra.ds1dx = vs->tmu[1].dsdx;
+			extra.dt1dx = vs->tmu[1].dtdx;
+			extra.dw1dx = vs->tmu[1].dwdx;
+			extra.ds1dy = vs->tmu[1].dsdy;
+			extra.dt1dy = vs->tmu[1].dtdy;
+			extra.dw1dy = vs->tmu[1].dwdy;
+			extra.lodbase1 = vs->tmu[1].lodbasetemp;
 		}
 	}
 
 	extra.texcount = texcount;
-	extra.r_fbzColorPath = v->reg[fbzColorPath].u;
-	extra.r_fbzMode = v->reg[fbzMode].u;
-	extra.r_alphaMode = v->reg[alphaMode].u;
-	extra.r_fogMode = v->reg[fogMode].u;
-	extra.r_textureMode0 = v->tmu[0].reg[textureMode].u;
-	if (v->tmu[1].ram != NULL) extra.r_textureMode1 = v->tmu[1].reg[textureMode].u;
+	extra.r_fbzColorPath = vs->reg[fbzColorPath].u;
+	extra.r_fbzMode = vs->reg[fbzMode].u;
+	extra.r_alphaMode = vs->reg[alphaMode].u;
+	extra.r_fogMode = vs->reg[fogMode].u;
+	extra.r_textureMode0 = vs->tmu[0].reg[textureMode].u;
+	if (vs->tmu[1].ram != NULL) extra.r_textureMode1 = vs->tmu[1].reg[textureMode].u;
 
 #ifdef C_ENABLE_VOODOO_DEBUG
 	info->polys++;
 #endif
 
-	if (v->ogl_palette_changed && v->ogl && v->active) {
+	if (vs->ogl_palette_changed && vs->ogl && vs->active) {
 		voodoo_ogl_invalidate_paltex();
-		v->ogl_palette_changed = false;
+		vs->ogl_palette_changed = false;
 	}
 
-	if (v->ogl && v->active) {
+	if (vs->ogl && vs->active) {
 		if (extra.info)
 			voodoo_ogl_draw_triangle(&extra);
 		return;
@@ -4527,14 +4527,14 @@ static void triangle(voodoo_state *v)
 
 	/* determine the draw buffer */
 	uint16_t *drawbuf;
-	switch (FBZMODE_DRAW_BUFFER(v->reg[fbzMode].u))
+	switch (FBZMODE_DRAW_BUFFER(vs->reg[fbzMode].u))
 	{
 		case 0:		/* front buffer */
-			drawbuf = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
+			drawbuf = (uint16_t *)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.frontbuf]);
 			break;
 
 		case 1:		/* back buffer */
-			drawbuf = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
+			drawbuf = (uint16_t *)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.backbuf]);
 			break;
 
 		default:	/* reserved */
@@ -4544,12 +4544,12 @@ static void triangle(voodoo_state *v)
 	/* determine the number of TMUs involved */
 	if (texcount >= 1)
 	{
-		prepare_tmu(&v->tmu[0]);
+		prepare_tmu(&vs->tmu[0]);
 		if (texcount >= 2)
-			prepare_tmu(&v->tmu[1]);
+			prepare_tmu(&vs->tmu[1]);
 	}
 
-	triangle_worker& tworker = v->tworker;
+	triangle_worker& tworker = vs->tworker;
 	tworker.v1 = *v1, tworker.v2 = *v2, tworker.v3 = *v3;
 	tworker.drawbuf = drawbuf;
 	tworker.v1y = v1y;
@@ -4557,7 +4557,7 @@ static void triangle(voodoo_state *v)
 	triangle_worker_run(tworker);
 
 	/* update stats */
-	v->reg[fbiTrianglesOut].u++;
+	vs->reg[fbiTrianglesOut].u++;
 }
 
 /*-------------------------------------------------
