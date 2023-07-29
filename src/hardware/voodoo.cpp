@@ -1621,164 +1621,156 @@ while (0)
  *
  *************************************/
 
-#define APPLY_ALPHA_BLEND(FBZMODE, ALPHAMODE, XX, DITHER, RR, GG, BB, AA)		\
-do																				\
-{																				\
-	if (ALPHAMODE_ALPHABLEND(ALPHAMODE))										\
-	{																			\
-		int dpix = dest[XX];													\
-		int dr = (dpix >> 8) & 0xf8;											\
-		int dg = (dpix >> 3) & 0xfc;											\
-		int db = (dpix << 3) & 0xf8;											\
-		int da = (FBZMODE_ENABLE_ALPHA_PLANES(FBZMODE) && depth) ? depth[XX] : 0xff;		\
-		int sr_val = (RR);														\
-		int sg_val = (GG);														\
-		int sb_val = (BB);														\
-		int sa_val = (AA);														\
-		int ta = 0;																\
-																				\
-		/* apply dither subtraction */											\
-		if ((FBZMODE_ALPHA_DITHER_SUBTRACT(FBZMODE)) && DITHER)					\
-		{																		\
-			/* look up the dither value from the appropriate matrix */			\
-			int dith = DITHER[(XX) & 3];										\
-																				\
-			/* subtract the dither value */										\
-			dr = ((dr << 1) + 15 - dith) >> 1;									\
-			dg = ((dg << 2) + 15 - dith) >> 2;									\
-			db = ((db << 1) + 15 - dith) >> 1;									\
-		}																		\
-																				\
-		/* compute source portion */											\
-		switch (ALPHAMODE_SRCRGBBLEND(ALPHAMODE))								\
-		{																		\
-			default:	/* reserved */											\
-			case 0:		/* AZERO */												\
-				(RR) = (GG) = (BB) = 0;											\
-				break;															\
-																				\
-			case 1:		/* ASRC_ALPHA */										\
-				(RR) = (sr_val * (sa_val + 1)) >> 8;							\
-				(GG) = (sg_val * (sa_val + 1)) >> 8;							\
-				(BB) = (sb_val * (sa_val + 1)) >> 8;							\
-				break;															\
-																				\
-			case 2:		/* A_COLOR */											\
-				(RR) = (sr_val * (dr + 1)) >> 8;								\
-				(GG) = (sg_val * (dg + 1)) >> 8;								\
-				(BB) = (sb_val * (db + 1)) >> 8;								\
-				break;															\
-																				\
-			case 3:		/* ADST_ALPHA */										\
-				(RR) = (sr_val * (da + 1)) >> 8;								\
-				(GG) = (sg_val * (da + 1)) >> 8;								\
-				(BB) = (sb_val * (da + 1)) >> 8;								\
-				break;															\
-																				\
-			case 4:		/* AONE */												\
-				break;															\
-																				\
-			case 5:		/* AOMSRC_ALPHA */										\
-				(RR) = (sr_val * (0x100 - sa_val)) >> 8;						\
-				(GG) = (sg_val * (0x100 - sa_val)) >> 8;						\
-				(BB) = (sb_val * (0x100 - sa_val)) >> 8;						\
-				break;															\
-																				\
-			case 6:		/* AOM_COLOR */											\
-				(RR) = (sr_val * (0x100 - dr)) >> 8;							\
-				(GG) = (sg_val * (0x100 - dg)) >> 8;							\
-				(BB) = (sb_val * (0x100 - db)) >> 8;							\
-				break;															\
-																				\
-			case 7:		/* AOMDST_ALPHA */										\
-				(RR) = (sr_val * (0x100 - da)) >> 8;							\
-				(GG) = (sg_val * (0x100 - da)) >> 8;							\
-				(BB) = (sb_val * (0x100 - da)) >> 8;							\
-				break;															\
-																				\
-			case 15:	/* ASATURATE */											\
-				ta = (sa_val < (0x100 - da)) ? sa_val : (0x100 - da);			\
-				(RR) = (sr_val * (ta + 1)) >> 8;								\
-				(GG) = (sg_val * (ta + 1)) >> 8;								\
-				(BB) = (sb_val * (ta + 1)) >> 8;								\
-				break;															\
-		}																		\
-																				\
-		/* add in dest portion */												\
-		switch (ALPHAMODE_DSTRGBBLEND(ALPHAMODE))								\
-		{																		\
-			default:	/* reserved */											\
-			case 0:		/* AZERO */												\
-				break;															\
-																				\
-			case 1:		/* ASRC_ALPHA */										\
-				(RR) += (dr * (sa_val + 1)) >> 8;								\
-				(GG) += (dg * (sa_val + 1)) >> 8;								\
-				(BB) += (db * (sa_val + 1)) >> 8;								\
-				break;															\
-																				\
-			case 2:		/* A_COLOR */											\
-				(RR) += (dr * (sr_val + 1)) >> 8;								\
-				(GG) += (dg * (sg_val + 1)) >> 8;								\
-				(BB) += (db * (sb_val + 1)) >> 8;								\
-				break;															\
-																				\
-			case 3:		/* ADST_ALPHA */										\
-				(RR) += (dr * (da + 1)) >> 8;									\
-				(GG) += (dg * (da + 1)) >> 8;									\
-				(BB) += (db * (da + 1)) >> 8;									\
-				break;															\
-																				\
-			case 4:		/* AONE */												\
-				(RR) += dr;														\
-				(GG) += dg;														\
-				(BB) += db;														\
-				break;															\
-																				\
-			case 5:		/* AOMSRC_ALPHA */										\
-				(RR) += (dr * (0x100 - sa_val)) >> 8;							\
-				(GG) += (dg * (0x100 - sa_val)) >> 8;							\
-				(BB) += (db * (0x100 - sa_val)) >> 8;							\
-				break;															\
-																				\
-			case 6:		/* AOM_COLOR */											\
-				(RR) += (dr * (0x100 - sr_val)) >> 8;							\
-				(GG) += (dg * (0x100 - sg_val)) >> 8;							\
-				(BB) += (db * (0x100 - sb_val)) >> 8;							\
-				break;															\
-																				\
-			case 7:		/* AOMDST_ALPHA */										\
-				(RR) += (dr * (0x100 - da)) >> 8;								\
-				(GG) += (dg * (0x100 - da)) >> 8;								\
-				(BB) += (db * (0x100 - da)) >> 8;								\
-				break;															\
-																				\
-			case 15:	/* A_COLORBEFOREFOG */									\
-				(RR) += (dr * (prefogr + 1)) >> 8;								\
-				(GG) += (dg * (prefogg + 1)) >> 8;								\
-				(BB) += (db * (prefogb + 1)) >> 8;								\
-				break;															\
-		}																		\
-																				\
-		/* blend the source alpha */											\
-		(AA) = 0;																\
-		if (ALPHAMODE_SRCALPHABLEND(ALPHAMODE) == 4)							\
-			(AA) = sa_val;														\
-																				\
-		/* blend the dest alpha */												\
-		if (ALPHAMODE_DSTALPHABLEND(ALPHAMODE) == 4)							\
-			(AA) += da;															\
-																				\
-		/* clamp */																\
-		CLAMP((RR), 0x00, 0xff);												\
-		CLAMP((GG), 0x00, 0xff);												\
-		CLAMP((BB), 0x00, 0xff);												\
-		CLAMP((AA), 0x00, 0xff);												\
-	}																			\
-}																				\
-while (0)
-
-
+#define APPLY_ALPHA_BLEND(FBZMODE, ALPHAMODE, XX, DITHER, RR, GG, BB, AA) \
+	do { \
+		if (ALPHAMODE_ALPHABLEND(ALPHAMODE)) { \
+			int dpix = dest[XX]; \
+			int dr   = (dpix >> 8) & 0xf8; \
+			int dg   = (dpix >> 3) & 0xfc; \
+			int db   = (dpix << 3) & 0xf8; \
+			int da = (FBZMODE_ENABLE_ALPHA_PLANES(FBZMODE) && depth) \
+			               ? depth[XX] \
+			               : 0xff; \
+			int sr_val = (RR); \
+			int sg_val = (GG); \
+			int sb_val = (BB); \
+			int sa_val = (AA); \
+			int ta     = 0; \
+\
+			/* apply dither subtraction */ \
+			if ((FBZMODE_ALPHA_DITHER_SUBTRACT(FBZMODE)) && DITHER) { \
+				/* look up the dither value from the \
+				 * appropriate matrix */ \
+				int dith = DITHER[(XX) & 3]; \
+\
+				/* subtract the dither value */ \
+				dr = ((dr << 1) + 15 - dith) >> 1; \
+				dg = ((dg << 2) + 15 - dith) >> 2; \
+				db = ((db << 1) + 15 - dith) >> 1; \
+			} \
+\
+			/* compute source portion */ \
+			switch (ALPHAMODE_SRCRGBBLEND(ALPHAMODE)) { \
+			default: /* reserved */ \
+			case 0: /* AZERO */ (RR) = (GG) = (BB) = 0; break; \
+\
+			case 1: /* ASRC_ALPHA */ \
+				(RR) = (sr_val * (sa_val + 1)) >> 8; \
+				(GG) = (sg_val * (sa_val + 1)) >> 8; \
+				(BB) = (sb_val * (sa_val + 1)) >> 8; \
+				break; \
+\
+			case 2: /* A_COLOR */ \
+				(RR) = (sr_val * (dr + 1)) >> 8; \
+				(GG) = (sg_val * (dg + 1)) >> 8; \
+				(BB) = (sb_val * (db + 1)) >> 8; \
+				break; \
+\
+			case 3: /* ADST_ALPHA */ \
+				(RR) = (sr_val * (da + 1)) >> 8; \
+				(GG) = (sg_val * (da + 1)) >> 8; \
+				(BB) = (sb_val * (da + 1)) >> 8; \
+				break; \
+\
+			case 4: /* AONE */ break; \
+\
+			case 5: /* AOMSRC_ALPHA */ \
+				(RR) = (sr_val * (0x100 - sa_val)) >> 8; \
+				(GG) = (sg_val * (0x100 - sa_val)) >> 8; \
+				(BB) = (sb_val * (0x100 - sa_val)) >> 8; \
+				break; \
+\
+			case 6: /* AOM_COLOR */ \
+				(RR) = (sr_val * (0x100 - dr)) >> 8; \
+				(GG) = (sg_val * (0x100 - dg)) >> 8; \
+				(BB) = (sb_val * (0x100 - db)) >> 8; \
+				break; \
+\
+			case 7: /* AOMDST_ALPHA */ \
+				(RR) = (sr_val * (0x100 - da)) >> 8; \
+				(GG) = (sg_val * (0x100 - da)) >> 8; \
+				(BB) = (sb_val * (0x100 - da)) >> 8; \
+				break; \
+\
+			case 15: /* ASATURATE */ \
+				ta   = (sa_val < (0x100 - da)) ? sa_val \
+				                               : (0x100 - da); \
+				(RR) = (sr_val * (ta + 1)) >> 8; \
+				(GG) = (sg_val * (ta + 1)) >> 8; \
+				(BB) = (sb_val * (ta + 1)) >> 8; \
+				break; \
+			} \
+\
+			/* add in dest portion */ \
+			switch (ALPHAMODE_DSTRGBBLEND(ALPHAMODE)) { \
+			default: /* reserved */ \
+			case 0: /* AZERO */ break; \
+\
+			case 1: /* ASRC_ALPHA */ \
+				(RR) += (dr * (sa_val + 1)) >> 8; \
+				(GG) += (dg * (sa_val + 1)) >> 8; \
+				(BB) += (db * (sa_val + 1)) >> 8; \
+				break; \
+\
+			case 2: /* A_COLOR */ \
+				(RR) += (dr * (sr_val + 1)) >> 8; \
+				(GG) += (dg * (sg_val + 1)) >> 8; \
+				(BB) += (db * (sb_val + 1)) >> 8; \
+				break; \
+\
+			case 3: /* ADST_ALPHA */ \
+				(RR) += (dr * (da + 1)) >> 8; \
+				(GG) += (dg * (da + 1)) >> 8; \
+				(BB) += (db * (da + 1)) >> 8; \
+				break; \
+\
+			case 4: /* AONE */ \
+				(RR) += dr; \
+				(GG) += dg; \
+				(BB) += db; \
+				break; \
+\
+			case 5: /* AOMSRC_ALPHA */ \
+				(RR) += (dr * (0x100 - sa_val)) >> 8; \
+				(GG) += (dg * (0x100 - sa_val)) >> 8; \
+				(BB) += (db * (0x100 - sa_val)) >> 8; \
+				break; \
+\
+			case 6: /* AOM_COLOR */ \
+				(RR) += (dr * (0x100 - sr_val)) >> 8; \
+				(GG) += (dg * (0x100 - sg_val)) >> 8; \
+				(BB) += (db * (0x100 - sb_val)) >> 8; \
+				break; \
+\
+			case 7: /* AOMDST_ALPHA */ \
+				(RR) += (dr * (0x100 - da)) >> 8; \
+				(GG) += (dg * (0x100 - da)) >> 8; \
+				(BB) += (db * (0x100 - da)) >> 8; \
+				break; \
+\
+			case 15: /* A_COLORBEFOREFOG */ \
+				(RR) += (dr * (prefogr + 1)) >> 8; \
+				(GG) += (dg * (prefogg + 1)) >> 8; \
+				(BB) += (db * (prefogb + 1)) >> 8; \
+				break; \
+			} \
+\
+			/* blend the source alpha */ \
+			(AA) = 0; \
+			if (ALPHAMODE_SRCALPHABLEND(ALPHAMODE) == 4) \
+				(AA) = sa_val; \
+\
+			/* blend the dest alpha */ \
+			if (ALPHAMODE_DSTALPHABLEND(ALPHAMODE) == 4) \
+				(AA) += da; \
+\
+			/* clamp */ \
+			CLAMP((RR), 0x00, 0xff); \
+			CLAMP((GG), 0x00, 0xff); \
+			CLAMP((BB), 0x00, 0xff); \
+			CLAMP((AA), 0x00, 0xff); \
+		} \
+	} while (0)
 
 /*************************************
  *
