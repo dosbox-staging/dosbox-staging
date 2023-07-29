@@ -3429,15 +3429,15 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
     add_rasterizer - add a rasterizer to our
     hash table
 -------------------------------------------------*/
-static raster_info *add_rasterizer(voodoo_state *v, const raster_info *cinfo)
+static raster_info *add_rasterizer(voodoo_state *vs, const raster_info *cinfo)
 {
-	if (v->next_rasterizer >= MAX_RASTERIZERS)
+	if (vs->next_rasterizer >= MAX_RASTERIZERS)
 	{
 		E_Exit("Out of space for new rasterizers!");
-		v->next_rasterizer = 0;
+		vs->next_rasterizer = 0;
 	}
 
-	raster_info *info = &v->rasterizer[v->next_rasterizer++];
+	raster_info *info = &vs->rasterizer[vs->next_rasterizer++];
 	int hash = compute_raster_hash(cinfo);
 
 	/* make a copy of the info */
@@ -3450,8 +3450,8 @@ static raster_info *add_rasterizer(voodoo_state *v, const raster_info *cinfo)
 #endif
 
 	/* hook us into the hash table */
-	info->next = v->raster_hash[hash];
-	v->raster_hash[hash] = info;
+	info->next = vs->raster_hash[hash];
+	vs->raster_hash[hash] = info;
 
 	if (LOG_RASTERIZERS)
 		LOG_MSG("Adding rasterizer @ %p : %08X %08X %08X %08X %08X %08X (hash=%d)\n",
