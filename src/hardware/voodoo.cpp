@@ -88,6 +88,7 @@
 #include "control.h"
 #include "cross.h"
 #include "fraction.h"
+#include "math_utils.h"
 #include "mem.h"
 #include "paging.h"
 #include "pci_bus.h"
@@ -1092,7 +1093,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 
 	/* the exponent is the non-fractional part of the log; normally, we would subtract it from rlog */
 	/* but since we want the log(1/value) = -log(value), we subtract rlog from the exponent */
-	*log_2 = ((exponent - (31 - RECIPLOG_INPUT_PREC)) << LOG_OUTPUT_PREC) - rlog;
+	*log_2 = left_shift_signed(exponent - (31 - RECIPLOG_INPUT_PREC), LOG_OUTPUT_PREC) - rlog;
 
 	/* adjust the exponent to account for all the reciprocal-related parameters to arrive at a final shift amount */
 	exponent += (RECIP_OUTPUT_PREC - RECIPLOG_LOOKUP_PREC) -
