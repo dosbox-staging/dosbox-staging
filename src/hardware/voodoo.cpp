@@ -3681,7 +3681,7 @@ static void init_tmu_shared(tmu_shared_state *s)
 	}
 }
 
-static void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, int tmem)
+static void init_tmu(voodoo_state *vs, tmu_state *t, voodoo_reg *reg, int tmem)
 {
 	if (tmem <= 1) E_Exit("VOODOO: invalid texture buffer memory size requested");
 	/* allocate texture RAM */
@@ -3697,20 +3697,20 @@ static void init_tmu(voodoo_state *v, tmu_state *t, voodoo_reg *reg, int tmem)
 	t->ncc[1].reg = &t->reg[nccTable+12];
 
 	/* create pointers to all the tables */
-	t->texel[0] = v->tmushare.rgb332;
+	t->texel[0] = vs->tmushare.rgb332;
 	t->texel[1] = t->ncc[0].texel;
-	t->texel[2] = v->tmushare.alpha8;
-	t->texel[3] = v->tmushare.int8;
-	t->texel[4] = v->tmushare.ai44;
+	t->texel[2] = vs->tmushare.alpha8;
+	t->texel[3] = vs->tmushare.int8;
+	t->texel[4] = vs->tmushare.ai44;
 	t->texel[5] = t->palette;
 	t->texel[6] = (vtype >= VOODOO_2) ? t->palettea : nullptr;
 	t->texel[7] = nullptr;
-	t->texel[8] = v->tmushare.rgb332;
+	t->texel[8] = vs->tmushare.rgb332;
 	t->texel[9] = t->ncc[0].texel;
-	t->texel[10] = v->tmushare.rgb565;
-	t->texel[11] = v->tmushare.argb1555;
-	t->texel[12] = v->tmushare.argb4444;
-	t->texel[13] = v->tmushare.int8;
+	t->texel[10] = vs->tmushare.rgb565;
+	t->texel[11] = vs->tmushare.argb1555;
+	t->texel[12] = vs->tmushare.argb4444;
+	t->texel[13] = vs->tmushare.int8;
 	t->texel[14] = t->palette;
 	t->texel[15] = nullptr;
 	t->lookup = t->texel[0];
