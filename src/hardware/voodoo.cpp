@@ -4872,20 +4872,20 @@ static void swapbuffer(voodoo_state *vs, uint32_t data)
  *
  *************************************/
 
-static void reset_counters(voodoo_state *v)
+static void reset_counters(voodoo_state *vs)
 {
-	update_statistics(v, false);
-	v->reg[fbiPixelsIn].u = 0;
-	v->reg[fbiChromaFail].u = 0;
-	v->reg[fbiZfuncFail].u = 0;
-	v->reg[fbiAfuncFail].u = 0;
-	v->reg[fbiPixelsOut].u = 0;
+	update_statistics(vs, false);
+	vs->reg[fbiPixelsIn].u = 0;
+	vs->reg[fbiChromaFail].u = 0;
+	vs->reg[fbiZfuncFail].u = 0;
+	vs->reg[fbiAfuncFail].u = 0;
+	vs->reg[fbiPixelsOut].u = 0;
 }
 
-static void soft_reset(voodoo_state *v)
+static void soft_reset(voodoo_state *vs)
 {
-	reset_counters(v);
-	v->reg[fbiTrianglesOut].u = 0;
+	reset_counters(vs);
+	vs->reg[fbiTrianglesOut].u = 0;
 }
 
 
