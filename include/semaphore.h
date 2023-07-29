@@ -35,18 +35,19 @@ public:
      *
      * @param count The initial count. Defaults to 0.
      */
-    Semaphore(int count = 0) : count(count) {}
+	Semaphore(const int initial_count = 0) : count(initial_count) {}
 
-    /**
-     * Decrements (acquires) the semaphore. If the count is 0, this will block
-     * until another thread calls notify().
-     */
-    void wait() {
-        std::unique_lock lock(mtx);
-        while (count == 0) {
-            cv.wait(lock);
-        }
-        --count;
+	/**
+	 * Decrements (acquires) the semaphore. If the count is 0, this will
+	 * block until another thread calls notify().
+	 */
+	void wait()
+	{
+		std::unique_lock lock(mtx);
+		while (count == 0) {
+			cv.wait(lock);
+		}
+		--count;
     }
 
     /**
