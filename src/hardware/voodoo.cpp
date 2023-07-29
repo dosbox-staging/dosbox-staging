@@ -4861,7 +4861,7 @@ static void fastfill(voodoo_state *vs)
 	int ey = (regs[clipLowYHighY].u >> 0) & 0x3ff;
 
 	poly_extent extents[64]   = {};
-	uint16_t dithermatrix[16] = {};
+	static uint16_t dithermatrix[16] = {};
 
 	uint16_t* drawbuf = nullptr;
 	int x, y;
