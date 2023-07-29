@@ -3676,7 +3676,12 @@ static void init_tmu_shared(tmu_shared_state *s)
 
 static void init_tmu(voodoo_state *vs, tmu_state *t, voodoo_reg *reg, int tmem)
 {
-	if (tmem <= 1) E_Exit("VOODOO: invalid texture buffer memory size requested");
+	// Sanity check inputs
+	assert(vs);
+	assert(t);
+	assert(reg);
+	assert(tmem > 1);
+
 	/* allocate texture RAM */
 	t->ram = (uint8_t*)malloc(tmem);
 	t->mask = (uint32_t)(tmem - 1);
