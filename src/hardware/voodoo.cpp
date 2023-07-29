@@ -7206,24 +7206,32 @@ struct PCI_SSTDevice : public PCI_Device {
 	{
 		if (vtype != VOODOO_2) return false;
 		switch (regnum) {
-			case 0x54:
-				oscillator_ctr++;
-				pci_ctr--;
-				*rval=(oscillator_ctr | ((pci_ctr<<16) & 0x0fff0000)) & 0xff;
-				*rval_mask=0xff;
-				return true;
-			case 0x55:
-				*rval=((oscillator_ctr | ((pci_ctr<<16) & 0x0fff0000)) >> 8) & 0xff;
-				*rval_mask=0xff;
-				return true;
-			case 0x56:
-				*rval=((oscillator_ctr | ((pci_ctr<<16) & 0x0fff0000)) >> 16) & 0xff;
-				*rval_mask=0xff;
-				return true;
-			case 0x57:
-				*rval=((oscillator_ctr | ((pci_ctr<<16) & 0x0fff0000)) >> 24) & 0xff;
-				*rval_mask=0x0f;
-				return true;
+		case 0x54:
+			oscillator_ctr++;
+			pci_ctr--;
+			*rval = static_cast<uint8_t>(
+			        (oscillator_ctr | ((pci_ctr << 16) & 0x0fff0000)) &
+			        0xff);
+			*rval_mask = 0xff;
+			return true;
+		case 0x55:
+			*rval = static_cast<uint8_t>(
+			        ((oscillator_ctr | ((pci_ctr << 16) & 0x0fff0000)) >> 8) &
+			        0xff);
+			*rval_mask = 0xff;
+			return true;
+		case 0x56:
+			*rval = static_cast<uint8_t>(
+			        ((oscillator_ctr | ((pci_ctr << 16) & 0x0fff0000)) >> 16) &
+			        0xff);
+			*rval_mask = 0xff;
+			return true;
+		case 0x57:
+			*rval = static_cast<uint8_t>(
+			        ((oscillator_ctr | ((pci_ctr << 16) & 0x0fff0000)) >> 24) &
+			        0xff);
+			*rval_mask = 0x0f;
+			return true;
 		}
 		return false;
 	}
