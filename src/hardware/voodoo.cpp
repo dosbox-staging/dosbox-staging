@@ -7276,7 +7276,7 @@ struct PCI_SSTDevice : public PCI_Device {
 		registers[0x3c] = 0xff;	// no irq
 
 		// memBaseAddr: size is 16MB
-		uint32_t address_space = (((uint32_t)VOODOO_INITIAL_LFB) & 0xfffffff0) |
+		uint32_t address_space = (VOODOO_INITIAL_LFB & 0xfffffff0) |
 		                         0x08; // memory space, within first
 		                               // 4GB, prefetchable
 		registers[0x10] = (uint8_t)(address_space & 0xff); // base
