@@ -3758,8 +3758,8 @@ static void voodoo_swap_buffers(voodoo_state *vs)
 			fbi.frontbuf = (uint8_t)(1 - fbi.frontbuf);
 			fbi.backbuf  = (uint8_t)(1 - fbi.frontbuf);
 		} else {
-			fbi.frontbuf = (fbi.frontbuf + 1) % 3;
-			fbi.backbuf  = (fbi.frontbuf + 1) % 3;
+			fbi.frontbuf = static_cast<uint8_t>((fbi.frontbuf + 1) % 3);
+			fbi.backbuf = static_cast<uint8_t>((fbi.frontbuf + 1) % 3);
 		}
 	}
 }
