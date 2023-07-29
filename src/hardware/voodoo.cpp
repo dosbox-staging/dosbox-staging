@@ -4902,7 +4902,7 @@ static void soft_reset(voodoo_state *v)
  *************************************/
 static void register_w(uint32_t offset, uint32_t data)
 {
-	uint32_t chips   = (offset>>8) & 0xf;
+	auto chips = check_cast<uint8_t>((offset >> 8) & 0xf);
 
 	int64_t data64;
 
