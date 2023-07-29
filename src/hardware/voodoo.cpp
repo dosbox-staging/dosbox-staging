@@ -790,7 +790,9 @@ struct setup_vertex
 
 struct fbi_state
 {
-	uint8_t *				ram;					/* pointer to frame buffer RAM */
+	uint8_t*				ram;					/* pointer to aligned frame buffer RAM */
+	mem_buffer_t				ram_buffer;				/* Managed buffer backing the RAM */
+
 	uint32_t				mask;					/* mask to apply to pointers */
 	uint32_t				rgboffs[3];				/* word offset to 3 RGB buffers */
 	uint32_t				auxoffs;				/* word offset to 1 aux buffer */
@@ -3597,7 +3599,12 @@ static void init_fbi(fbi_state* f, int fbmem)
 {
 	/* allocate frame buffer RAM and set pointers */
 	assert(fbmem >= 1); //VOODOO: invalid frame buffer memory size requested
-	f->ram = (uint8_t*)malloc(fbmem);
+
+	// Align FBI memory to 64-bit, which is the maximum type written
+	constexpr auto mem_alignment = sizeof(uint64_t);
+	std::tie(f->ram_buffer, f->ram) = make_unique_aligned_array<uint8_t>(mem_alignment, fbmem);
+	assert(reinterpret_cast<uintptr_t>(f->ram) % mem_alignment == 0);
+
 	f->mask = (uint32_t)(fbmem - 1);
 	f->rgboffs[0] = f->rgboffs[1] = f->rgboffs[2] = 0;
 	f->auxoffs = (uint32_t)(~0);
@@ -6816,15 +6823,6 @@ static void voodoo_shutdown() {
 		if (v->ogl)
 			voodoo_ogl_shutdown(v);
 #endif
-		free(v->fbi.ram);
-		if (v->tmu[0].ram != nullptr) {
-			free(v->tmu[0].ram);
-			v->tmu[0].ram = nullptr;
-		}
-		if (v->tmu[1].ram != nullptr) {
-			free(v->tmu[1].ram);
-			v->tmu[1].ram = nullptr;
-		}
 		v->active=false;
 		triangle_worker_shutdown(v->tworker);
 		delete v;
