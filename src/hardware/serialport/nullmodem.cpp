@@ -89,9 +89,10 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 	if (getUintFromString("inhsocket:", bool_temp, cmd)) {
 #ifdef NATIVESOCKETS
 		if (bool_temp == 1) {
-			int sock;
-			if (control->cmdline->FindInt("-socket", sock, true)) {
-				dtrrespect = false;
+			const auto arguments = &control->arguments;
+			if (arguments->socket) {
+				int sock    = *arguments->socket;
+				dtrrespect  = false;
 				transparent = true;
 				LOG_MSG("SERIAL: Port %" PRIu8 " inheritance "
 				        "socket handle: %d",

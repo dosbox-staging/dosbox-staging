@@ -255,10 +255,11 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	// Check -securemode switch to disable mount/imgmount/boot after
 	// running autoexec.bat
 	const auto cmdline = control->cmdline; // short-lived copy
-	const bool has_option_securemode = cmdline->FindExist("-securemode", true);
+	const auto arguments = &control->arguments;
+	const bool has_option_securemode = arguments->securemode;
 
 	// Are autoexec sections permitted?
-	const bool has_option_no_autoexec = cmdline->FindExist("-noautoexec", true);
+	const bool has_option_no_autoexec = arguments->noautoexec;
 
 	// Should autoexec sections be joined or overwritten?
 	const std::string_view section_pref = sec->Get_string("autoexec_section");
@@ -291,7 +292,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	}
 
 	// Check for the -exit switch, which indicates they want to quit
-	const bool exit_arg_exists = cmdline->FindExist("-exit", true);
+	const bool exit_arg_exists = arguments->exit;
 
 	// Check if instant-launch is active
 	const bool using_instant_launch_with_executable =

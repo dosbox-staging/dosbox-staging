@@ -428,7 +428,7 @@ void DOS_Shell::CMD_EXIT(char *args)
 {
 	HELP("EXIT");
 
-	const bool wants_force_exit = control->cmdline->FindExist("-exit");
+	const bool wants_force_exit = control->arguments.exit;
 	const bool is_normal_launch = control->GetStartupVerbosity() !=
 	                              Verbosity::InstantLaunch;
 

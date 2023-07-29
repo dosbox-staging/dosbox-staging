@@ -353,10 +353,11 @@ static void DOSBOX_RealInit(Section * sec) {
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, SDL_SCANCODE_F12, MMOD2,
 	                  "speedlock", "Speedlock");
 
-	std::string cmd_machine;
-	if (control->cmdline->FindString("-machine",cmd_machine,true)){
+	const auto arguments = &control->arguments;
+	if (!arguments->machine.empty()) {
 		//update value in config (else no matching against suggested values
-		section->HandleInputline(std::string("machine=") + cmd_machine);
+		section->HandleInputline(std::string("machine=") +
+		                         arguments->machine);
 	}
 
 	std::string mtype(section->Get_string("machine"));

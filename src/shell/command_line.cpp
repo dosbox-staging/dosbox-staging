@@ -374,3 +374,82 @@ void CommandLine::Shift(unsigned int amount)
 		}
 	}
 }
+
+bool CommandLine::FindBoolArgument(const std::string& name, bool remove,
+                                   char short_letter)
+{
+	const std::string double_dash = "--" + name;
+	const std::string dash        = '-' + name;
+	char short_name[3]            = {};
+	short_name[0]                 = '-';
+	short_name[1]                 = short_letter;
+	return FindExist(double_dash.c_str(), remove) ||
+	       FindExist(dash.c_str(), remove) ||
+	       (short_letter && FindExist(short_name, remove));
+}
+
+bool CommandLine::FindRemoveBoolArgument(const std::string& name, char short_letter)
+{
+	constexpr bool remove_arg = true;
+	return FindBoolArgument(name, remove_arg, short_letter);
+}
+
+std::string CommandLine::FindRemoveSingleString(const char* name)
+{
+	cmd_it it                    = {};
+	constexpr bool need_next_arg = true;
+	while (FindEntry(name, it, need_next_arg)) {
+		cmd_it it_next = it;
+		++it_next;
+		std::string value = *it_next;
+		bool is_valid     = !value.empty() && value[0] != '-';
+		if (is_valid) {
+			++it_next;
+		}
+		cmds.erase(it, it_next);
+		if (is_valid) {
+			return value;
+		}
+	}
+	return {};
+}
+
+std::string CommandLine::FindRemoveStringArgument(const std::string& name)
+{
+	const std::string double_dash = "--" + name;
+	const std::string dash        = '-' + name;
+
+	std::string ret = FindRemoveSingleString(double_dash.c_str());
+	if (!ret.empty()) {
+		return ret;
+	}
+	return FindRemoveSingleString(dash.c_str());
+}
+
+std::vector<std::string> CommandLine::FindRemoveVectorArgument(const std::string& name)
+{
+	std::vector<std::string> arg = {};
+	for (;;) {
+		std::string str = FindRemoveStringArgument(name);
+		if (str.empty()) {
+			break;
+		}
+		arg.emplace_back(std::move(str));
+	}
+	return arg;
+}
+
+std::optional<std::vector<std::string>> CommandLine::FindRemoveOptionalArgument(
+        const std::string& name)
+{
+	constexpr bool remove_arg = false;
+	if (!FindBoolArgument(name, remove_arg)) {
+		return {};
+	}
+	return FindRemoveVectorArgument(name);
+}
+
+std::optional<int> CommandLine::FindRemoveIntArgument(const std::string& name)
+{
+	return to_int(FindRemoveStringArgument(name));
+}
