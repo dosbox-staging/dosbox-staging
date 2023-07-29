@@ -3771,38 +3771,38 @@ static void voodoo_swap_buffers(voodoo_state *vs)
  *
  *************************************/
 
-static void recompute_video_memory(voodoo_state *v)
+static void recompute_video_memory(voodoo_state *vs)
 {
-	uint32_t buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(v->reg[fbiInit2].u);
-	uint32_t fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(v->reg[fbiInit4].u);
-	uint32_t fifo_last_page = FBIINIT4_MEMORY_FIFO_STOP_ROW(v->reg[fbiInit4].u);
+	uint32_t buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(vs->reg[fbiInit2].u);
+	uint32_t fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(vs->reg[fbiInit4].u);
+	uint32_t fifo_last_page = FBIINIT4_MEMORY_FIFO_STOP_ROW(vs->reg[fbiInit4].u);
 	uint32_t memory_config;
 	int buf;
 
 	/* memory config is determined differently between V1 and V2 */
-	memory_config = FBIINIT2_ENABLE_TRIPLE_BUF(v->reg[fbiInit2].u);
+	memory_config = FBIINIT2_ENABLE_TRIPLE_BUF(vs->reg[fbiInit2].u);
 	if (vtype == VOODOO_2 && memory_config == 0)
-		memory_config = FBIINIT5_BUFFER_ALLOCATION(v->reg[fbiInit5].u);
+		memory_config = FBIINIT5_BUFFER_ALLOCATION(vs->reg[fbiInit5].u);
 
 	/* tiles are 64x16/32; x_tiles specifies how many half-tiles */
-	v->fbi.tile_width = (vtype < VOODOO_2) ? 64 : 32;
-	v->fbi.tile_height = (vtype < VOODOO_2) ? 16 : 32;
-	v->fbi.x_tiles = FBIINIT1_X_VIDEO_TILES(v->reg[fbiInit1].u);
+	vs->fbi.tile_width = (vtype < VOODOO_2) ? 64 : 32;
+	vs->fbi.tile_height = (vtype < VOODOO_2) ? 16 : 32;
+	vs->fbi.x_tiles = FBIINIT1_X_VIDEO_TILES(vs->reg[fbiInit1].u);
 	if (vtype == VOODOO_2)
 	{
-		v->fbi.x_tiles = (v->fbi.x_tiles << 1) |
-						(FBIINIT1_X_VIDEO_TILES_BIT5(v->reg[fbiInit1].u) << 5) |
-						(FBIINIT6_X_VIDEO_TILES_BIT0(v->reg[fbiInit6].u));
+		vs->fbi.x_tiles = (vs->fbi.x_tiles << 1) |
+						(FBIINIT1_X_VIDEO_TILES_BIT5(vs->reg[fbiInit1].u) << 5) |
+						(FBIINIT6_X_VIDEO_TILES_BIT0(vs->reg[fbiInit6].u));
 	}
-	v->fbi.rowpixels = v->fbi.tile_width * v->fbi.x_tiles;
+	vs->fbi.rowpixels = vs->fbi.tile_width * vs->fbi.x_tiles;
 
-	//logerror("VOODOO.%d.VIDMEM: buffer_pages=%X  fifo=%X-%X  tiles=%X  rowpix=%d\n", v->index, buffer_pages, fifo_start_page, fifo_last_page, v->fbi.x_tiles, v->fbi.rowpixels);
+	//logerror("VOODOO.%d.VIDMEM: buffer_pages=%X  fifo=%X-%X  tiles=%X  rowpix=%d\n", vs->index, buffer_pages, fifo_start_page, fifo_last_page, vs->fbi.x_tiles, vs->fbi.rowpixels);
 
 	/* first RGB buffer always starts at 0 */
-	v->fbi.rgboffs[0] = 0;
+	vs->fbi.rgboffs[0] = 0;
 
 	/* second RGB buffer starts immediately afterwards */
-	v->fbi.rgboffs[1] = buffer_pages * 0x1000;
+	vs->fbi.rgboffs[1] = buffer_pages * 0x1000;
 
 	/* remaining buffers are based on the config */
 	switch (memory_config)
@@ -3812,53 +3812,53 @@ static void recompute_video_memory(voodoo_state *v)
 		[[fallthrough]];
 
 	case 0:	/* 2 color buffers, 1 aux buffer */
-		v->fbi.rgboffs[2] = (uint32_t)(~0);
-		v->fbi.auxoffs = 2 * buffer_pages * 0x1000;
+		vs->fbi.rgboffs[2] = (uint32_t)(~0);
+		vs->fbi.auxoffs = 2 * buffer_pages * 0x1000;
 		break;
 
 	case 1:	/* 3 color buffers, 0 aux buffers */
-		v->fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
-		v->fbi.auxoffs = (uint32_t)(~0);
+		vs->fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
+		vs->fbi.auxoffs = (uint32_t)(~0);
 		break;
 
 	case 2:	/* 3 color buffers, 1 aux buffers */
-		v->fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
-		v->fbi.auxoffs = 3 * buffer_pages * 0x1000;
+		vs->fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
+		vs->fbi.auxoffs = 3 * buffer_pages * 0x1000;
 		break;
 	}
 
 	/* clamp the RGB buffers to video memory */
 	for (buf = 0; buf < 3; buf++)
-		if (v->fbi.rgboffs[buf] != (uint32_t)(~0) && v->fbi.rgboffs[buf] > v->fbi.mask)
-			v->fbi.rgboffs[buf] = v->fbi.mask;
+		if (vs->fbi.rgboffs[buf] != (uint32_t)(~0) && vs->fbi.rgboffs[buf] > vs->fbi.mask)
+			vs->fbi.rgboffs[buf] = vs->fbi.mask;
 
 	/* clamp the aux buffer to video memory */
-	if (v->fbi.auxoffs != (uint32_t)(~0) && v->fbi.auxoffs > v->fbi.mask)
-		v->fbi.auxoffs = v->fbi.mask;
+	if (vs->fbi.auxoffs != (uint32_t)(~0) && vs->fbi.auxoffs > vs->fbi.mask)
+		vs->fbi.auxoffs = vs->fbi.mask;
 
 	/* compute the memory FIFO location and size */
-	if (fifo_last_page > v->fbi.mask / 0x1000)
-		fifo_last_page = v->fbi.mask / 0x1000;
+	if (fifo_last_page > vs->fbi.mask / 0x1000)
+		fifo_last_page = vs->fbi.mask / 0x1000;
 
 	/* is it valid and enabled? */
-	if (fifo_start_page <= fifo_last_page && FBIINIT0_ENABLE_MEMORY_FIFO(v->reg[fbiInit0].u))
+	if (fifo_start_page <= fifo_last_page && FBIINIT0_ENABLE_MEMORY_FIFO(vs->reg[fbiInit0].u))
 	{
-		v->fbi.fifo.size = (fifo_last_page + 1 - fifo_start_page) * 0x1000 / 4;
-		if (v->fbi.fifo.size > 65536*2)
-			v->fbi.fifo.size = 65536*2;
+		vs->fbi.fifo.size = (fifo_last_page + 1 - fifo_start_page) * 0x1000 / 4;
+		if (vs->fbi.fifo.size > 65536*2)
+			vs->fbi.fifo.size = 65536*2;
 	}
 	else	/* if not, disable the FIFO */
 	{
-		v->fbi.fifo.size = 0;
+		vs->fbi.fifo.size = 0;
 	}
 
 	/* reset our front/back buffers if they are out of range */
-	if (v->fbi.rgboffs[2] == (uint32_t)(~0))
+	if (vs->fbi.rgboffs[2] == (uint32_t)(~0))
 	{
-		if (v->fbi.frontbuf == 2)
-			v->fbi.frontbuf = 0;
-		if (v->fbi.backbuf == 2)
-			v->fbi.backbuf = 0;
+		if (vs->fbi.frontbuf == 2)
+			vs->fbi.frontbuf = 0;
+		if (vs->fbi.backbuf == 2)
+			vs->fbi.backbuf = 0;
 	}
 }
 
