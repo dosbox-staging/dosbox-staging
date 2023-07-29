@@ -6573,8 +6573,7 @@ static uint32_t lfb_r(const uint32_t offset)
 #endif
 	{
 		/* advance pointers to the proper row */
-		const auto bufoffs = static_cast<uint32_t>(
-		        scry * v->fbi.rowpixels + x);
+		const auto bufoffs = scry * v->fbi.rowpixels + x;
 		if (bufoffs >= bufmax)
 			return 0xffffffff;
 
