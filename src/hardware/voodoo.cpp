@@ -7093,17 +7093,17 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 		if (!(addr&3)) {
 			voodoo_w(addr, val, 0xffffffff);
 		} else if (!(addr&1)) {
-			voodoo_w(addr, static_cast<uint32_t>(val << 16), 0xffff0000);
+			voodoo_w(addr, val << 16, 0xffff0000);
 			voodoo_w(next_addr(addr), val, 0x0000ffff);
 		} else {
 			auto val1 = voodoo_r(addr);
 			auto val2 = voodoo_r(next_addr(addr));
 			if ((addr & 3) == 1) {
 				val1 = (val1&0xffffff) | ((val&0xff)<<24);
-				val2 = (val2&0xff000000) | ((uint32_t)val>>8);
+				val2 = (val2&0xff000000) | (val>>8);
 			} else if ((addr & 3) == 3) {
 				val1 = (val1&0xff) | ((val&0xffffff)<<8);
-				val2 = (val2&0xffffff00) | ((uint32_t)val>>24);
+				val2 = (val2&0xffffff00) | (val>>24);
 			}
 			voodoo_w(addr, val1, 0xffffffff);
 			voodoo_w(next_addr(addr), val2, 0xffffffff);
