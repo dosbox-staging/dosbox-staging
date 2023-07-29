@@ -5222,9 +5222,6 @@ static void register_w(uint32_t offset, uint32_t data)
 
 		/* triangle drawing */
 		case triangleCMD:
-			triangle(v);
-			break;
-
 		case ftriangleCMD:
 			triangle(v);
 			break;
