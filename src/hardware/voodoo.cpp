@@ -6382,7 +6382,7 @@ static uint32_t register_r(const uint32_t offset)
 			result |= 0xffff << 12;
 
 			/* bits 30:28 are the number of pending swaps */
-			result |= 0 << 28;
+			// result |= 0 << 28; // TODO: pending swaps are not currently trackedgit
 
 			/* bit 31 is not used */
 
