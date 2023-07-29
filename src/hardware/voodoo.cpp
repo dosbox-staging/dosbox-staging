@@ -4857,12 +4857,12 @@ static void fastfill(voodoo_state *vs)
     swapbuffer - execute the 'swapbuffer'
     command
 -------------------------------------------------*/
-static void swapbuffer(voodoo_state *v, uint32_t data)
+static void swapbuffer(voodoo_state *vs, uint32_t data)
 {
 	/* set the don't swap value for Voodoo 2 */
-	v->fbi.vblank_dont_swap = ((data >> 9) & 1)>0;
+	vs->fbi.vblank_dont_swap = ((data >> 9) & 1)>0;
 
-	voodoo_swap_buffers(v);
+	voodoo_swap_buffers(vs);
 }
 
 
