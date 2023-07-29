@@ -1631,10 +1631,11 @@ while (0)
 			int da = (FBZMODE_ENABLE_ALPHA_PLANES(FBZMODE) && depth) \
 			               ? depth[XX] \
 			               : 0xff; \
-			int sr_val = (RR); \
-			int sg_val = (GG); \
-			int sb_val = (BB); \
-			int sa_val = (AA); \
+			const int sr_val = (RR); \
+			const int sg_val = (GG); \
+			const int sb_val = (BB); \
+			const int sa_val = (AA); \
+\
 			int ta     = 0; \
 \
 			/* apply dither subtraction */ \
