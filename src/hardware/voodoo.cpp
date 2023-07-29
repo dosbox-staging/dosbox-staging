@@ -5299,7 +5299,7 @@ static void register_w(uint32_t offset, uint32_t data)
 #ifdef C_ENABLE_VOODOO_DEBUG
 					int hbp = (v->reg[backPorch].u & 0xff) + 2;
 					int vbp = (v->reg[backPorch].u >> 16) & 0xff;
-#endif
+
 					//attoseconds_t refresh = video_screen_get_frame_period(v->screen).attoseconds;
 					attoseconds_t refresh = 0;
 					attoseconds_t stdperiod, medperiod, vgaperiod;
@@ -5321,7 +5321,6 @@ static void register_w(uint32_t offset, uint32_t data)
 					LOG(LOG_VOODOO,LOG_WARN)("hSync=%08X  vSync=%08X  backPorch=%08X  videoDimensions=%08X\n",
 						v->reg[hSync].u, v->reg[vSync].u, v->reg[backPorch].u, v->reg[videoDimensions].u);
 
-#ifdef C_ENABLE_VOODOO_DEBUG
 					rectangle visarea;
 
 					/* create a new visarea */
@@ -5334,7 +5333,6 @@ static void register_w(uint32_t offset, uint32_t data)
 					visarea.max_x = std::min(visarea.max_x, htotal - 1);
 					visarea.max_y = std::min(visarea.max_y, vtotal - 1);
 					LOG(LOG_VOODOO,LOG_WARN)("Horiz: %d-%d (%d total)  Vert: %d-%d (%d total) -- ", visarea.min_x, visarea.max_x, htotal, visarea.min_y, visarea.max_y, vtotal);
-#endif
 
 					/* configure the screen based on which one matches the closest */
 					if (stddiff < meddiff && stddiff < vgadiff)
@@ -5352,6 +5350,7 @@ static void register_w(uint32_t offset, uint32_t data)
 						//video_screen_configure(v->screen, htotal, vtotal, &visarea, vgaperiod);
 						LOG(LOG_VOODOO,LOG_WARN)("VGA resolution, %f Hz\n", ATTOSECONDS_TO_HZ(vgaperiod));
 					}
+#endif
 
 					/* configure the new framebuffer info */
 					uint32_t new_width = (hvis+1) & ~1;
