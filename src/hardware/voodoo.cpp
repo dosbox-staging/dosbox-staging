@@ -6191,15 +6191,18 @@ nextpixel:
  *
  *************************************/
 static int32_t texture_w(uint32_t offset, uint32_t data) {
-	int tmunum = (offset >> 19) & 0x03;
-	//LOG(LOG_VOODOO,LOG_WARN)("V3D:write TMU%x offset %X value %X", tmunum, offset, data);
+	const auto tmu_num = static_cast<uint8_t>((offset >> 19) & 0b11);
 
-	tmu_state *t;
+	// LOG(LOG_VOODOO,LOG_WARN)("V3D:write TMU%x offset %X value %X",
+	// tmunum, offset, data);
 
 	/* point to the right TMU */
-	if (!(v->chipmask & (2 << tmunum)))
+	if (!(v->chipmask & (2 << tmu_num))) {
 		return 0;
-	t = &v->tmu[tmunum];
+	}
+
+	const auto t = &v->tmu[tmu_num];
+	assert(t);
 
 	if (TEXLOD_TDIRECT_WRITE(t->reg[tLOD].u))
 		E_Exit("Texture direct write!");
