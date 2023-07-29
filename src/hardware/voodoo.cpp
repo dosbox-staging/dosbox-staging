@@ -4182,20 +4182,20 @@ static void accumulate_statistics(voodoo_state *vs, const stats_block *stats)
 	vs->reg[fbiAfuncFail].u += stats->afunc_fail;
 }
 
-static void update_statistics(voodoo_state *v, bool accumulate)
+static void update_statistics(voodoo_state *vs, bool accumulate)
 {
 	/* accumulate/reset statistics from all units */
 	for (size_t i = 0; i != TRIANGLE_WORKERS; i++)
 	{
 		if (accumulate)
-			accumulate_statistics(v, &v->thread_stats[i]);
+			accumulate_statistics(vs, &vs->thread_stats[i]);
 	}
-	memset(v->thread_stats, 0, sizeof(v->thread_stats));
+	memset(vs->thread_stats, 0, sizeof(vs->thread_stats));
 
 	/* accumulate/reset statistics from the LFB */
 	if (accumulate)
-		accumulate_statistics(v, &v->fbi.lfb_stats);
-	memset(&v->fbi.lfb_stats, 0, sizeof(v->fbi.lfb_stats));
+		accumulate_statistics(vs, &vs->fbi.lfb_stats);
+	memset(&vs->fbi.lfb_stats, 0, sizeof(vs->fbi.lfb_stats));
 }
 
 
