@@ -383,7 +383,7 @@ static constexpr uint8_t dither_matrix_2x2[16] =
 #define CLAMP(val,min,max)		do { if ((val) < (min)) { (val) = (min); } else if ((val) > (max)) { (val) = (max); } } while (0)
 
 /* macro to compute the base 2 log for LOD calculations */
-#define LOGB2(x)				(log((double)(x)) / log(2.0))
+#define LOGB2(x)				(log((x)) / log(2.0))
 
 
 /*************************************
