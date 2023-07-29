@@ -6392,11 +6392,11 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 
 		[[maybe_unused]] bool changed = false;
 		if (dest[BYTE_XOR_LE(tbaseaddr + 0)] != ((data >> 0) & 0xffff)) {
-			dest[BYTE_XOR_LE(tbaseaddr + 0)] = (data >> 0) & 0xffff;
+			dest[BYTE_XOR_LE(tbaseaddr + 0)] = static_cast<uint16_t>((data >> 0) & 0xffff);
 			changed = true;
 		}
 		if (dest[BYTE_XOR_LE(tbaseaddr + 1)] != ((data >> 16) & 0xffff)) {
-			dest[BYTE_XOR_LE(tbaseaddr + 1)] = (data >> 16) & 0xffff;
+			dest[BYTE_XOR_LE(tbaseaddr + 1)] = static_cast<uint16_t>((data >> 16) & 0xffff);
 			changed = true;
 		}
 
