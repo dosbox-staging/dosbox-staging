@@ -5376,13 +5376,13 @@ static void register_w(uint32_t offset, uint32_t data)
 				v->reg[regnum].u = data;
 				if (v->reg[hSync].u != 0 && v->reg[vSync].u != 0 && v->reg[videoDimensions].u != 0)
 				{
-#ifdef C_ENABLE_VOODOO_DEBUG
-					int htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
-#endif
-					int vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
 					int hvis = v->reg[videoDimensions].u & 0x3ff;
 					int vvis = (v->reg[videoDimensions].u >> 16) & 0x3ff;
+
 #ifdef C_ENABLE_VOODOO_DEBUG
+					int htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
+					int vtotal = ((v->reg[vSync].u >> 16) & 0xfff) + (v->reg[vSync].u & 0xfff);
+
 					int hbp = (v->reg[backPorch].u & 0xff) + 2;
 					int vbp = (v->reg[backPorch].u >> 16) & 0xff;
 
