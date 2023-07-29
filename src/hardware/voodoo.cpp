@@ -3560,14 +3560,18 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 	/* fill this RGB row */
 	if (FBZMODE_RGB_BUFFER_MASK(v->reg[fbzMode].u))
 	{
-		const uint16_t *ditherow = &extra_dither[(y & 3) * 4];
-		uint64_t expanded = *(uint64_t *)ditherow;
-		uint16_t *dest = (uint16_t *)destbase + scry * v->fbi.rowpixels;
+		const uint16_t* ditherow = &extra_dither[(y & 3) * 4];
+
+		const auto expanded = read_unaligned_uint64(
+		        reinterpret_cast<const uint8_t*>(ditherow));
+
+		uint16_t* dest = reinterpret_cast<uint16_t*>(destbase) +
+		                 scry * v->fbi.rowpixels;
 
 		for (x = startx; x < stopx && (x & 3) != 0; x++)
 			dest[x] = ditherow[x & 3];
 		for ( ; x < (stopx & ~3); x += 4)
-			*(uint64_t *)&dest[x] = expanded;
+			write_unaligned_uint64(reinterpret_cast<uint8_t*>(&dest[x]), expanded);
 		for ( ; x < stopx; x++)
 			dest[x] = ditherow[x & 3];
 		stats.pixels_out += stopx - startx;
@@ -3576,9 +3580,15 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 	/* fill this dest buffer row */
 	if (FBZMODE_AUX_BUFFER_MASK(v->reg[fbzMode].u) && v->fbi.auxoffs != (uint32_t)(~0))
 	{
-		uint16_t color = (uint16_t)(v->reg[zaColor].u & 0xffff);
-		uint64_t expanded = ((uint64_t)color << 48) | ((uint64_t)color << 32) | (color << 16) | color;
-		uint16_t *dest = (uint16_t *)(v->fbi.ram + v->fbi.auxoffs) + scry * v->fbi.rowpixels;
+		const auto color = static_cast<uint16_t>(v->reg[zaColor].u & 0xffff);
+
+		const uint64_t expanded = (static_cast<uint64_t>(color) << 48) |
+		                          (static_cast<uint64_t>(color) << 32) |
+		                          (color << 16) | color;
+
+		uint16_t* dest = reinterpret_cast<uint16_t*>(v->fbi.ram +
+		                                             v->fbi.auxoffs) +
+		                 scry * v->fbi.rowpixels;
 
 		if (v->fbi.auxoffs + 2 * (scry * v->fbi.rowpixels + stopx) >= v->fbi.mask) {
 			stopx = (v->fbi.mask - v->fbi.auxoffs) / 2 - scry * v->fbi.rowpixels;
@@ -3588,7 +3598,7 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 		for (x = startx; x < stopx && (x & 3) != 0; x++)
 			dest[x] = color;
 		for ( ; x < (stopx & ~3); x += 4)
-			*(uint64_t *)&dest[x] = expanded;
+			write_unaligned_uint64(reinterpret_cast<uint8_t*>(&dest[x]), expanded);
 		for ( ; x < stopx; x++)
 			dest[x] = color;
 	}
