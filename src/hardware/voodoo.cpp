@@ -5579,10 +5579,11 @@ static void register_w(uint32_t offset, uint32_t data)
 			if (chips & 1)
 			{
 				int base = 2 * (regnum - fogTable);
-				v->fbi.fogdelta[base + 0] = (data >> 0) & 0xff;
-				v->fbi.fogblend[base + 0] = (data >> 8) & 0xff;
-				v->fbi.fogdelta[base + 1] = (data >> 16) & 0xff;
-				v->fbi.fogblend[base + 1] = (data >> 24) & 0xff;
+				auto& fbi = v->fbi;
+				fbi.fogdelta[base + 0] = static_cast<uint8_t>(data & 0xff);
+				fbi.fogblend[base + 0] = static_cast<uint8_t>((data >> 8) & 0xff);
+				fbi.fogdelta[base + 1] = static_cast<uint8_t>((data >> 16) & 0xff);
+				fbi.fogblend[base + 1] = static_cast<uint8_t>((data >> 24) & 0xff);
 			}
 			break;
 
