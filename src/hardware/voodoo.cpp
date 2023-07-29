@@ -4751,12 +4751,12 @@ static void draw_triangle(voodoo_state *vs)
     fastfill - execute the 'fastfill'
     command
 -------------------------------------------------*/
-static void fastfill(voodoo_state *v)
+static void fastfill(voodoo_state *vs)
 {
-	int sx = (v->reg[clipLeftRight].u >> 16) & 0x3ff;
-	int ex = (v->reg[clipLeftRight].u >> 0) & 0x3ff;
-	int sy = (v->reg[clipLowYHighY].u >> 16) & 0x3ff;
-	int ey = (v->reg[clipLowYHighY].u >> 0) & 0x3ff;
+	int sx = (vs->reg[clipLeftRight].u >> 16) & 0x3ff;
+	int ex = (vs->reg[clipLeftRight].u >> 0) & 0x3ff;
+	int sy = (vs->reg[clipLowYHighY].u >> 16) & 0x3ff;
+	int ey = (vs->reg[clipLowYHighY].u >> 0) & 0x3ff;
 
 	poly_extent extents[64]   = {};
 	uint16_t dithermatrix[16] = {};
@@ -4765,22 +4765,22 @@ static void fastfill(voodoo_state *v)
 	int x, y;
 
 	/* if we're not clearing either, take no time */
-	if (!FBZMODE_RGB_BUFFER_MASK(v->reg[fbzMode].u) && !FBZMODE_AUX_BUFFER_MASK(v->reg[fbzMode].u))
+	if (!FBZMODE_RGB_BUFFER_MASK(vs->reg[fbzMode].u) && !FBZMODE_AUX_BUFFER_MASK(vs->reg[fbzMode].u))
 		return;
 
 	/* are we clearing the RGB buffer? */
-	if (FBZMODE_RGB_BUFFER_MASK(v->reg[fbzMode].u))
+	if (FBZMODE_RGB_BUFFER_MASK(vs->reg[fbzMode].u))
 	{
 		/* determine the draw buffer */
-		int destbuf = FBZMODE_DRAW_BUFFER(v->reg[fbzMode].u);
+		int destbuf = FBZMODE_DRAW_BUFFER(vs->reg[fbzMode].u);
 		switch (destbuf)
 		{
 			case 0:		/* front buffer */
-				drawbuf = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
+				drawbuf = (uint16_t *)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.frontbuf]);
 				break;
 
 			case 1:		/* back buffer */
-				drawbuf = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
+				drawbuf = (uint16_t *)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.backbuf]);
 				break;
 
 			default:	/* reserved */
@@ -4795,14 +4795,14 @@ static void fastfill(voodoo_state *v)
 
 			[[maybe_unused]] const uint8_t* dither = nullptr;
 
-			COMPUTE_DITHER_POINTERS(v->reg[fbzMode].u, y);
+			COMPUTE_DITHER_POINTERS(vs->reg[fbzMode].u, y);
 			for (x = 0; x < 4; x++)
 			{
-				int r = v->reg[color1].rgb.r;
-				int g = v->reg[color1].rgb.g;
-				int b = v->reg[color1].rgb.b;
+				int r = vs->reg[color1].rgb.r;
+				int g = vs->reg[color1].rgb.g;
+				int b = vs->reg[color1].rgb.b;
 
-				APPLY_DITHER(v->reg[fbzMode].u, x, dither_lookup, r, g, b);
+				APPLY_DITHER(vs->reg[fbzMode].u, x, dither_lookup, r, g, b);
 				dithermatrix[y*4 + x] = (uint16_t)((r << 11) | (g << 5) | b);
 			}
 		}
@@ -4819,7 +4819,7 @@ static void fastfill(voodoo_state *v)
 	}
 
 #ifdef C_ENABLE_VOODOO_OPENGL
-	if (v->ogl && v->active) {
+	if (vs->ogl && vs->active) {
 		voodoo_ogl_fastfill();
 		return;
 	}
