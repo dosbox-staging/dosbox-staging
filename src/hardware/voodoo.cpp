@@ -885,11 +885,11 @@ struct raster_info
 
 struct draw_state
 {
-	double frame_start;
-	float vfreq;
-	bool override_on;
-	bool screen_update_requested;
-	bool screen_update_pending;
+	double frame_start           = 0.0;
+	float vfreq                  = 0.0f;
+	bool override_on             = false;
+	bool screen_update_requested = false;
+	bool screen_update_pending   = false;
 };
 
 struct triangle_worker
@@ -7332,7 +7332,7 @@ static void Voodoo_Startup() {
 
 	voodoo_init();
 
-	memset(&v->draw, 0, sizeof(v->draw));
+	v->draw = {};
 	v->draw.vfreq = 1000.0f/60.0f;
 
 	v->tworker.use_threads = !!(vperf & 1);
