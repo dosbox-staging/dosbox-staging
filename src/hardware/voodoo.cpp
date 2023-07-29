@@ -7089,16 +7089,16 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 	uint32_t readd(PhysPt addr) override
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
-		if (!(addr&3)) {
+
+		// Is the address word-aligned?
+		if ((addr & 0b11) == 0) {
 			return voodoo_r(addr);
-		} else if (!(addr&1)) {
-			const auto low  = voodoo_r(addr);
-			const auto high = voodoo_r(next_addr(addr));
-			return check_cast<uint32_t>((low >> 16) | (high << 16));
-		} else {
-			E_Exit("voodoo readd unaligned");
-			return 0xffffffff;
 		}
+		// The address must be byte-aligned
+		assert((addr & 0b1) == 0);
+		const auto low  = voodoo_r(addr);
+		const auto high = voodoo_r(next_addr(addr));
+		return check_cast<uint32_t>((low >> 16) | (high << 16));
 	}
 
 	void writed(PhysPt addr, uint32_t val) override
