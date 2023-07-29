@@ -6025,10 +6025,10 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 				// TODO: in the v->ogl case this macro doesn't really work with depth testing
 				PIXEL_PIPELINE_BEGIN(v, stats, x, y, v->reg[fbzColorPath].u, v->reg[fbzMode].u, iterz, iterw, v->reg[zaColor].u, v->reg[stipple].u);
 
-				color.rgb.r = sr[pix];
-				color.rgb.g = sg[pix];
-				color.rgb.b = sb[pix];
-				color.rgb.a = sa[pix];
+				color.rgb.r = static_cast<uint8_t>(sr[pix]);
+				color.rgb.g = static_cast<uint8_t>(sg[pix]);
+				color.rgb.b = static_cast<uint8_t>(sb[pix]);
+				color.rgb.a = static_cast<uint8_t>(sa[pix]);
 
 				/* apply chroma key */
 				APPLY_CHROMAKEY(v, stats, v->reg[fbzMode].u, color);
@@ -6057,9 +6057,9 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 					if (FBZCP_CC_LOCALSELECT(v->reg[fbzColorPath].u) == 0)	/* iterated RGB */
 					{
 						//c_local.u = iterargb.u;
-						c_local.rgb.r = sr[pix];
-						c_local.rgb.g = sg[pix];
-						c_local.rgb.b = sb[pix];
+						c_local.rgb.r = static_cast<uint8_t>(sr[pix]);
+						c_local.rgb.g = static_cast<uint8_t>(sg[pix]);
+						c_local.rgb.b = static_cast<uint8_t>(sb[pix]);
 					}
 					else											/* color0 RGB */
 						c_local.u = v->reg[color0].u;
@@ -6081,7 +6081,7 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 					default:
 					case 0:		/* iterated alpha */
 						//c_local.rgb.a = iterargb.rgb.a;
-						c_local.rgb.a = sa[pix];
+						c_local.rgb.a = static_cast<uint8_t>(sa[pix]);
 						break;
 					case 1:		/* color0 alpha */
 						c_local.rgb.a = v->reg[color0].rgb.a;
