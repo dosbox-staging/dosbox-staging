@@ -6952,13 +6952,18 @@ static double Voodoo_GetVRetracePosition() {
 
 static double Voodoo_GetHRetracePosition() {
 	// TODO proper implementation
-	double time_in_frame = PIC_FullIndex() - v->draw.frame_start;
-	double hfreq = v->draw.vfreq*100.0;
-	if (hfreq <= 0.0) return 0.0;
+	const auto time_in_frame = PIC_FullIndex() - v->draw.frame_start;
+
+	const auto hfreq = static_cast<double>(v->draw.vfreq) * 100;
+
+	if (hfreq <= 0) {
+		return 0.0;
+	}
 	if (v->clock_enabled && v->output_on) {
 		return time_in_frame/hfreq;
-	} else if (v->output_on) {
-		double rtime = time_in_frame/hfreq;
+	}
+	if (v->output_on) {
+		auto rtime = time_in_frame / hfreq;
 		rtime = fmod(rtime, 1.0);
 		return rtime;
 	}
