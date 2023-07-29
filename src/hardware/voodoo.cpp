@@ -129,7 +129,7 @@ typedef uint32_t rgb_t;
 typedef uint16_t rgb15_t;
 
 /* macros to assemble rgb_t values */
-#define MAKE_ARGB(a,r,g,b)	((((rgb_t)(a) & 0xff) << 24) | (((rgb_t)(r) & 0xff) << 16) | (((rgb_t)(g) & 0xff) << 8) | ((rgb_t)(b) & 0xff))
+#define MAKE_ARGB(a,r,g,b)	((((a) & 0xff) << 24) | (((r) & 0xff) << 16) | (((g) & 0xff) << 8) | ((b) & 0xff))
 #define MAKE_RGB(r,g,b)		(MAKE_ARGB(255,r,g,b))
 
 /* macros to extract components from rgb_t values */
