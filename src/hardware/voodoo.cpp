@@ -4172,14 +4172,14 @@ static void sum_statistics(stats_block *target, const stats_block *source)
 	target->afunc_fail += source->afunc_fail;
 }
 
-static void accumulate_statistics(voodoo_state *v, const stats_block *stats)
+static void accumulate_statistics(voodoo_state *vs, const stats_block *stats)
 {
 	/* apply internal voodoo statistics */
-	v->reg[fbiPixelsIn].u += stats->pixels_in;
-	v->reg[fbiPixelsOut].u += stats->pixels_out;
-	v->reg[fbiChromaFail].u += stats->chroma_fail;
-	v->reg[fbiZfuncFail].u += stats->zfunc_fail;
-	v->reg[fbiAfuncFail].u += stats->afunc_fail;
+	vs->reg[fbiPixelsIn].u += stats->pixels_in;
+	vs->reg[fbiPixelsOut].u += stats->pixels_out;
+	vs->reg[fbiChromaFail].u += stats->chroma_fail;
+	vs->reg[fbiZfuncFail].u += stats->zfunc_fail;
+	vs->reg[fbiAfuncFail].u += stats->afunc_fail;
 }
 
 static void update_statistics(voodoo_state *v, bool accumulate)
