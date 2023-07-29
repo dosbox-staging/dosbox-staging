@@ -723,9 +723,12 @@ struct ncc_table
 	rgb_t				texel[256];				/* texel lookup */
 };
 
+using mem_buffer_t = std::unique_ptr<uint8_t[]>;
+
 struct tmu_state
 {
-	uint8_t *				ram;					/* pointer to our RAM */
+	uint8_t*				ram;					/* pointer to aligned RAM */
+	mem_buffer_t				ram_buffer;				/* Managed buffer backing the RAM */
 	uint32_t				mask;					/* mask to apply to pointers */
 	voodoo_reg *		reg;					/* pointer to our register base */
 	bool				regdirty;				/* true if the LOD/mode/base registers have changed */
@@ -3684,8 +3687,11 @@ static void init_tmu(voodoo_state *vs, tmu_state *t, voodoo_reg *reg, int tmem)
 	assert(reg);
 	assert(tmem > 1);
 
-	/* allocate texture RAM */
-	t->ram = (uint8_t*)malloc(tmem);
+	// Allocate and align the texture RAM to 64-bit, which is the maximum type written
+	constexpr auto mem_alignment = sizeof(uint64_t);
+	std::tie(t->ram_buffer, t->ram) = make_unique_aligned_array<uint8_t>(mem_alignment, tmem);
+	assert(reinterpret_cast<uintptr_t>(t->ram) % mem_alignment == 0);
+
 	t->mask = (uint32_t)(tmem - 1);
 	t->reg = reg;
 	t->regdirty = true;
