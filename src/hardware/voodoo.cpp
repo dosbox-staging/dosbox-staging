@@ -1344,54 +1344,59 @@ while (0)
  *
  *************************************/
 
-#define CLAMPED_ARGB(ITERR, ITERG, ITERB, ITERA, FBZCP, RESULT)					\
-do																				\
-{																				\
-	int32_t r = (ITERR) >> 12;													\
-	int32_t g = (ITERG) >> 12;													\
-	int32_t b = (ITERB) >> 12;													\
-	int32_t a = (ITERA) >> 12;													\
-																				\
-	if (FBZCP_RGBZW_CLAMP(FBZCP) == 0)											\
-	{																			\
-		r &= 0xfff;																\
-		RESULT.rgb.r = r;														\
-		if (r == 0xfff)															\
-			RESULT.rgb.r = 0;													\
-		else if (r == 0x100)													\
-			RESULT.rgb.r = 0xff;												\
-																				\
-		g &= 0xfff;																\
-		RESULT.rgb.g = g;														\
-		if (g == 0xfff)															\
-			RESULT.rgb.g = 0;													\
-		else if (g == 0x100)													\
-			RESULT.rgb.g = 0xff;												\
-																				\
-		b &= 0xfff;																\
-		RESULT.rgb.b = b;														\
-		if (b == 0xfff)															\
-			RESULT.rgb.b = 0;													\
-		else if (b == 0x100)													\
-			RESULT.rgb.b = 0xff;												\
-																				\
-		a &= 0xfff;																\
-		RESULT.rgb.a = a;														\
-		if (a == 0xfff)															\
-			RESULT.rgb.a = 0;													\
-		else if (a == 0x100)													\
-			RESULT.rgb.a = 0xff;												\
-	}																			\
-	else																		\
-	{																			\
-		RESULT.rgb.r = (r < 0) ? 0 : (r > 0xff) ? 0xff : (uint8_t)r;				\
-		RESULT.rgb.g = (g < 0) ? 0 : (g > 0xff) ? 0xff : (uint8_t)g;				\
-		RESULT.rgb.b = (b < 0) ? 0 : (b > 0xff) ? 0xff : (uint8_t)b;				\
-		RESULT.rgb.a = (a < 0) ? 0 : (a > 0xff) ? 0xff : (uint8_t)a;				\
-	}																			\
-}																				\
-while (0)
-
+#define CLAMPED_ARGB(ITERR, ITERG, ITERB, ITERA, FBZCP, RESULT) \
+	do { \
+		int32_t red   = (ITERR) >> 12; \
+		int32_t green = (ITERG) >> 12; \
+		int32_t blue  = (ITERB) >> 12; \
+		int32_t alpha = (ITERA) >> 12; \
+\
+		if (FBZCP_RGBZW_CLAMP(FBZCP) == 0) { \
+			red &= 0xfff; \
+			RESULT.rgb.r = static_cast<uint8_t>(red); \
+			if (red == 0xfff) \
+				RESULT.rgb.r = 0; \
+			else if (red == 0x100) \
+				RESULT.rgb.r = 0xff; \
+\
+			green &= 0xfff; \
+			RESULT.rgb.g = static_cast<uint8_t>(green); \
+			if (green == 0xfff) \
+				RESULT.rgb.g = 0; \
+			else if (green == 0x100) \
+				RESULT.rgb.g = 0xff; \
+\
+			blue &= 0xfff; \
+			RESULT.rgb.b = static_cast<uint8_t>(blue); \
+			if (blue == 0xfff) \
+				RESULT.rgb.b = 0; \
+			else if (blue == 0x100) \
+				RESULT.rgb.b = 0xff; \
+\
+			alpha &= 0xfff; \
+			RESULT.rgb.a = static_cast<uint8_t>(alpha); \
+			if (alpha == 0xfff) \
+				RESULT.rgb.a = 0; \
+			else if (alpha == 0x100) \
+				RESULT.rgb.a = 0xff; \
+		} else { \
+			RESULT.rgb.r = (red < 0)    ? 0 \
+			             : (red > 0xff) ? 0xff \
+			                            : static_cast<uint8_t>(red); \
+			RESULT.rgb.g = (green < 0) ? 0 \
+			             : (green > 0xff) \
+			                     ? 0xff \
+			                     : static_cast<uint8_t>(green); \
+			RESULT.rgb.b = (blue < 0) ? 0 \
+			             : (blue > 0xff) \
+			                     ? 0xff \
+			                     : static_cast<uint8_t>(blue); \
+			RESULT.rgb.a = (alpha < 0) ? 0 \
+			             : (alpha > 0xff) \
+			                     ? 0xff \
+			                     : static_cast<uint8_t>(alpha); \
+		} \
+	} while (0)
 
 #define CLAMPED_Z(ITERZ, FBZCP, RESULT)											\
 do																				\
