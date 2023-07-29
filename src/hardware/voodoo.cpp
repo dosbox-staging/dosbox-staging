@@ -6602,13 +6602,20 @@ static void voodoo_init() {
 
 	if (!*voodoo_reciplog)
 	{
-		/* create a table of precomputed 1/n and log2(n) values */
-		/* n ranges from 1.0000 to 2.0000 */
-		for (uint32_t val = 0; val <= (1 << RECIPLOG_LOOKUP_BITS); val++)
-		{
-			uint32_t value = (1 << RECIPLOG_LOOKUP_BITS) + val;
-			voodoo_reciplog[val*2 + 0] = (1 << (RECIPLOG_LOOKUP_PREC + RECIPLOG_LOOKUP_BITS)) / value;
-			voodoo_reciplog[val*2 + 1] = (uint32_t)(LOGB2((double)value / (double)(1 << RECIPLOG_LOOKUP_BITS)) * (double)(1 << RECIPLOG_LOOKUP_PREC));
+		// Create a table of precomputed 1/n and log2(n) values where n
+		// ranges from 1.0000 to 2.0000
+		constexpr auto steps   = 1 << RECIPLOG_LOOKUP_BITS;
+		constexpr double width = 1 << RECIPLOG_LOOKUP_PREC;
+		auto lut_val = voodoo_reciplog;
+
+		for (auto i = 0; i <= steps; ++i) {
+			const double n = steps + i;
+
+			const auto inverse_of_n = steps * width / n;
+			*lut_val++ = static_cast<uint32_t>(inverse_of_n);
+
+			const auto log2_of_n = LOGB2(n / steps) * width;
+			*lut_val++ = static_cast<uint32_t>(log2_of_n);
 		}
 
 		dither2_lookup = generate_dither_lut(dither_matrix_2x2);
