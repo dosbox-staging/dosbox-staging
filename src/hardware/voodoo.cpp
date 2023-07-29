@@ -6294,8 +6294,8 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 	const auto t = &v->tmu[tmu_num];
 	assert(t);
 
-	if (TEXLOD_TDIRECT_WRITE(t->reg[tLOD].u))
-		E_Exit("Texture direct write!");
+	// Should always be indirect writes
+	assert(TEXLOD_TDIRECT_WRITE(t->reg[tLOD].u) == 0);
 
 	/* update texture info if dirty */
 	if (t->regdirty)
