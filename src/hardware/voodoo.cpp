@@ -3067,7 +3067,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 
 	/* determine the screen Y */
 	if (FBZMODE_Y_ORIGIN(r_fbzMode))
-		scry = (vs->fbi.yorigin - y) & 0x3ff;
+		scry = (fbi.yorigin - y) & 0x3ff;
 
 	/* compute the dithering pointers */
 	if (FBZMODE_ENABLE_DITHERING(r_fbzMode))
@@ -3112,8 +3112,11 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 	}
 
 	/* get pointers to the target buffer and depth buffer */
-	uint16_t *dest = (uint16_t *)destbase + scry * vs->fbi.rowpixels;
-	uint16_t *depth = (vs->fbi.auxoffs != (uint32_t)(~0)) ? ((uint16_t *)(vs->fbi.ram + vs->fbi.auxoffs) + scry * vs->fbi.rowpixels) : nullptr;
+	uint16_t* dest  = (uint16_t*)destbase + scry * fbi.rowpixels;
+	uint16_t* depth = (fbi.auxoffs != (uint32_t)(~0))
+	                        ? ((uint16_t*)(fbi.ram + fbi.auxoffs) +
+	                           scry * fbi.rowpixels)
+	                        : nullptr;
 
 	/* compute the starting parameters */
 	int32_t dx = startx - (fbi.ax >> 4);
@@ -3758,17 +3761,15 @@ static void voodoo_swap_buffers(voodoo_state *vs)
 	regs[fbiSwapHistory].u = (regs[fbiSwapHistory].u << 4);
 
 	/* rotate the buffers */
-	if (vtype < VOODOO_2 || !vs->fbi.vblank_dont_swap)
-	{
-		if (vs->fbi.rgboffs[2] == (uint32_t)(~0))
-		{
-			vs->fbi.frontbuf = (uint8_t)(1 - vs->fbi.frontbuf);
-			vs->fbi.backbuf = (uint8_t)(1 - vs->fbi.frontbuf);
-		}
-		else
-		{
-			vs->fbi.frontbuf = (vs->fbi.frontbuf + 1) % 3;
-			vs->fbi.backbuf = (vs->fbi.frontbuf + 1) % 3;
+	auto& fbi = vs->fbi;
+
+	if (vtype < VOODOO_2 || !fbi.vblank_dont_swap) {
+		if (fbi.rgboffs[2] == (uint32_t)(~0)) {
+			fbi.frontbuf = (uint8_t)(1 - fbi.frontbuf);
+			fbi.backbuf  = (uint8_t)(1 - fbi.frontbuf);
+		} else {
+			fbi.frontbuf = (fbi.frontbuf + 1) % 3;
+			fbi.backbuf  = (fbi.frontbuf + 1) % 3;
 		}
 	}
 }
@@ -3796,27 +3797,30 @@ static void recompute_video_memory(voodoo_state *vs)
 		memory_config = FBIINIT5_BUFFER_ALLOCATION(regs[fbiInit5].u);
 
 	/* tiles are 64x16/32; x_tiles specifies how many half-tiles */
-	vs->fbi.tile_width = (vtype < VOODOO_2) ? 64 : 32;
-	vs->fbi.tile_height = (vtype < VOODOO_2) ? 16 : 32;
+	auto& fbi = vs->fbi;
 
-	vs->fbi.x_tiles = FBIINIT1_X_VIDEO_TILES(regs[fbiInit1].u);
+	fbi.tile_width  = (vtype < VOODOO_2) ? 64 : 32;
+	fbi.tile_height = (vtype < VOODOO_2) ? 16 : 32;
+
+	fbi.x_tiles = FBIINIT1_X_VIDEO_TILES(regs[fbiInit1].u);
 
 	if (vtype == VOODOO_2)
 	{
-		vs->fbi.x_tiles = (vs->fbi.x_tiles << 1) |
-		                  (FBIINIT1_X_VIDEO_TILES_BIT5(regs[fbiInit1].u)
-		                   << 5) |
-		                  (FBIINIT6_X_VIDEO_TILES_BIT0(regs[fbiInit6].u));
+		fbi.x_tiles = (fbi.x_tiles << 1) |
+		              (FBIINIT1_X_VIDEO_TILES_BIT5(regs[fbiInit1].u) << 5) |
+		              (FBIINIT6_X_VIDEO_TILES_BIT0(regs[fbiInit6].u));
 	}
-	vs->fbi.rowpixels = vs->fbi.tile_width * vs->fbi.x_tiles;
+	fbi.rowpixels = fbi.tile_width * fbi.x_tiles;
 
-	//logerror("VOODOO.%d.VIDMEM: buffer_pages=%X  fifo=%X-%X  tiles=%X  rowpix=%d\n", vs->index, buffer_pages, fifo_start_page, fifo_last_page, vs->fbi.x_tiles, vs->fbi.rowpixels);
+	// logerror("VOODOO.%d.VIDMEM: buffer_pages=%X  fifo=%X-%X  tiles=%X
+	// rowpix=%d\n", vs->index, buffer_pages, fifo_start_page,
+	// fifo_last_page, fbi.x_tiles, fbi.rowpixels);
 
 	/* first RGB buffer always starts at 0 */
-	vs->fbi.rgboffs[0] = 0;
+	fbi.rgboffs[0] = 0;
 
 	/* second RGB buffer starts immediately afterwards */
-	vs->fbi.rgboffs[1] = buffer_pages * 0x1000;
+	fbi.rgboffs[1] = buffer_pages * 0x1000;
 
 	/* remaining buffers are based on the config */
 	switch (memory_config)
@@ -3826,52 +3830,57 @@ static void recompute_video_memory(voodoo_state *vs)
 		[[fallthrough]];
 
 	case 0:	/* 2 color buffers, 1 aux buffer */
-		vs->fbi.rgboffs[2] = (uint32_t)(~0);
-		vs->fbi.auxoffs = 2 * buffer_pages * 0x1000;
+		fbi.rgboffs[2] = (uint32_t)(~0);
+		fbi.auxoffs    = 2 * buffer_pages * 0x1000;
 		break;
 
 	case 1:	/* 3 color buffers, 0 aux buffers */
-		vs->fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
-		vs->fbi.auxoffs = (uint32_t)(~0);
+		fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
+		fbi.auxoffs    = (uint32_t)(~0);
 		break;
 
 	case 2:	/* 3 color buffers, 1 aux buffers */
-		vs->fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
-		vs->fbi.auxoffs = 3 * buffer_pages * 0x1000;
+		fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
+		fbi.auxoffs    = 3 * buffer_pages * 0x1000;
 		break;
 	}
 
 	/* clamp the RGB buffers to video memory */
 	for (buf = 0; buf < 3; buf++)
-		if (vs->fbi.rgboffs[buf] != (uint32_t)(~0) && vs->fbi.rgboffs[buf] > vs->fbi.mask)
-			vs->fbi.rgboffs[buf] = vs->fbi.mask;
+		if (fbi.rgboffs[buf] != (uint32_t)(~0) && fbi.rgboffs[buf] > fbi.mask) {
+			fbi.rgboffs[buf] = fbi.mask;
+		}
 
 	/* clamp the aux buffer to video memory */
-	if (vs->fbi.auxoffs != (uint32_t)(~0) && vs->fbi.auxoffs > vs->fbi.mask)
-		vs->fbi.auxoffs = vs->fbi.mask;
+	if (fbi.auxoffs != (uint32_t)(~0) && fbi.auxoffs > fbi.mask) {
+		fbi.auxoffs = fbi.mask;
+	}
 
 	/* compute the memory FIFO location and size */
-	if (fifo_last_page > vs->fbi.mask / 0x1000)
-		fifo_last_page = vs->fbi.mask / 0x1000;
+	if (fifo_last_page > fbi.mask / 0x1000) {
+		fifo_last_page = fbi.mask / 0x1000;
+	}
 
 	/* is it valid and enabled? */
 	if (fifo_start_page <= fifo_last_page &&
 	    FBIINIT0_ENABLE_MEMORY_FIFO(regs[fbiInit0].u)) {
-		vs->fbi.fifo.size = (fifo_last_page + 1 - fifo_start_page) * 0x1000 / 4;
-		if (vs->fbi.fifo.size > 65536*2)
-			vs->fbi.fifo.size = 65536*2;
+		fbi.fifo.size = (fifo_last_page + 1 - fifo_start_page) * 0x1000 / 4;
+		if (fbi.fifo.size > 65536 * 2) {
+			fbi.fifo.size = 65536 * 2;
+		}
 	} else /* if not, disable the FIFO */
 	{
-		vs->fbi.fifo.size = 0;
+		fbi.fifo.size = 0;
 	}
 
 	/* reset our front/back buffers if they are out of range */
-	if (vs->fbi.rgboffs[2] == (uint32_t)(~0))
-	{
-		if (vs->fbi.frontbuf == 2)
-			vs->fbi.frontbuf = 0;
-		if (vs->fbi.backbuf == 2)
-			vs->fbi.backbuf = 0;
+	if (fbi.rgboffs[2] == (uint32_t)(~0)) {
+		if (fbi.frontbuf == 2) {
+			fbi.frontbuf = 0;
+		}
+		if (fbi.backbuf == 2) {
+			fbi.backbuf = 0;
+		}
 	}
 }
 
@@ -4208,11 +4217,13 @@ static void update_statistics(voodoo_state *vs, bool accumulate)
 	memset(vs->thread_stats, 0, sizeof(vs->thread_stats));
 
 	/* accumulate/reset statistics from the LFB */
-	if (accumulate)
-		accumulate_statistics(vs, &vs->fbi.lfb_stats);
-	memset(&vs->fbi.lfb_stats, 0, sizeof(vs->fbi.lfb_stats));
-}
+	auto& fbi = vs->fbi;
 
+	if (accumulate) {
+		accumulate_statistics(vs, &fbi.lfb_stats);
+	}
+	memset(&fbi.lfb_stats, 0, sizeof(fbi.lfb_stats));
+}
 
 /***************************************************************************
     COMMAND HANDLERS
@@ -4381,6 +4392,7 @@ static void triangle_worker_run(triangle_worker& tworker)
 static void triangle(voodoo_state *vs)
 {
 	const auto regs = vs->reg;
+	auto& fbi = vs->fbi;
 
 	/* determine the number of TMUs involved */
 	int texcount = 0;
@@ -4397,16 +4409,17 @@ static void triangle(voodoo_state *vs)
 	        !vs->ogl &&
 #endif
 	    FBZCP_CCA_SUBPIXEL_ADJUST(regs[fbzColorPath].u)) {
-		int32_t dx = 8 - (vs->fbi.ax & 15);
-		int32_t dy = 8 - (vs->fbi.ay & 15);
+		int32_t dx = 8 - (fbi.ax & 15);
+		int32_t dy = 8 - (fbi.ay & 15);
 
 		/* adjust iterated R,G,B,A and W/Z */
-		vs->fbi.startr += (dy * vs->fbi.drdy + dx * vs->fbi.drdx) >> 4;
-		vs->fbi.startg += (dy * vs->fbi.dgdy + dx * vs->fbi.dgdx) >> 4;
-		vs->fbi.startb += (dy * vs->fbi.dbdy + dx * vs->fbi.dbdx) >> 4;
-		vs->fbi.starta += (dy * vs->fbi.dady + dx * vs->fbi.dadx) >> 4;
-		vs->fbi.startw += (dy * vs->fbi.dwdy + dx * vs->fbi.dwdx) >> 4;
-		vs->fbi.startz += mul_32x32_shift(dy, vs->fbi.dzdy, 4) + mul_32x32_shift(dx, vs->fbi.dzdx, 4);
+		fbi.startr += (dy * fbi.drdy + dx * fbi.drdx) >> 4;
+		fbi.startg += (dy * fbi.dgdy + dx * fbi.dgdx) >> 4;
+		fbi.startb += (dy * fbi.dbdy + dx * fbi.dbdx) >> 4;
+		fbi.starta += (dy * fbi.dady + dx * fbi.dadx) >> 4;
+		fbi.startw += (dy * fbi.dwdy + dx * fbi.dwdx) >> 4;
+		fbi.startz += mul_32x32_shift(dy, fbi.dzdy, 4) +
+		              mul_32x32_shift(dx, fbi.dzdx, 4);
 
 		/* adjust iterated W/S/T for TMU 0 */
 		if (texcount >= 1)
@@ -4427,12 +4440,12 @@ static void triangle(voodoo_state *vs)
 
 	/* fill in the vertex data */
 	poly_vertex vert[3];
-	vert[0].x = (float)vs->fbi.ax * (1.0f / 16.0f);
-	vert[0].y = (float)vs->fbi.ay * (1.0f / 16.0f);
-	vert[1].x = (float)vs->fbi.bx * (1.0f / 16.0f);
-	vert[1].y = (float)vs->fbi.by * (1.0f / 16.0f);
-	vert[2].x = (float)vs->fbi.cx * (1.0f / 16.0f);
-	vert[2].y = (float)vs->fbi.cy * (1.0f / 16.0f);
+	vert[0].x = (float)fbi.ax * (1.0f / 16.0f);
+	vert[0].y = (float)fbi.ay * (1.0f / 16.0f);
+	vert[1].x = (float)fbi.bx * (1.0f / 16.0f);
+	vert[1].y = (float)fbi.by * (1.0f / 16.0f);
+	vert[2].x = (float)fbi.cx * (1.0f / 16.0f);
+	vert[2].y = (float)fbi.cy * (1.0f / 16.0f);
 
 #ifdef C_ENABLE_VOODOO_OPENGL
 	/* find a rasterizer that matches our current state */
@@ -4445,26 +4458,26 @@ static void triangle(voodoo_state *vs)
 	extra.info = info;
 
 	/* fill in triangle parameters */
-	extra.ax = vs->fbi.ax;
-	extra.ay = vs->fbi.ay;
-	extra.startr = vs->fbi.startr;
-	extra.startg = vs->fbi.startg;
-	extra.startb = vs->fbi.startb;
-	extra.starta = vs->fbi.starta;
-	extra.startz = vs->fbi.startz;
-	extra.startw = vs->fbi.startw;
-	extra.drdx = vs->fbi.drdx;
-	extra.dgdx = vs->fbi.dgdx;
-	extra.dbdx = vs->fbi.dbdx;
-	extra.dadx = vs->fbi.dadx;
-	extra.dzdx = vs->fbi.dzdx;
-	extra.dwdx = vs->fbi.dwdx;
-	extra.drdy = vs->fbi.drdy;
-	extra.dgdy = vs->fbi.dgdy;
-	extra.dbdy = vs->fbi.dbdy;
-	extra.dady = vs->fbi.dady;
-	extra.dzdy = vs->fbi.dzdy;
-	extra.dwdy = vs->fbi.dwdy;
+	extra.ax     = fbi.ax;
+	extra.ay     = fbi.ay;
+	extra.startr = fbi.startr;
+	extra.startg = fbi.startg;
+	extra.startb = fbi.startb;
+	extra.starta = fbi.starta;
+	extra.startz = fbi.startz;
+	extra.startw = fbi.startw;
+	extra.drdx   = fbi.drdx;
+	extra.dgdx   = fbi.dgdx;
+	extra.dbdx   = fbi.dbdx;
+	extra.dadx   = fbi.dadx;
+	extra.dzdx   = fbi.dzdx;
+	extra.dwdx   = fbi.dwdx;
+	extra.drdy   = fbi.drdy;
+	extra.dgdy   = fbi.dgdy;
+	extra.dbdy   = fbi.dbdy;
+	extra.dady   = fbi.dady;
+	extra.dzdy   = fbi.dzdy;
+	extra.dwdy   = fbi.dwdy;
 
 	/* fill in texture 0 parameters */
 	if (texcount > 0)
@@ -4546,11 +4559,11 @@ static void triangle(voodoo_state *vs)
 	uint16_t *drawbuf;
 	switch (FBZMODE_DRAW_BUFFER(regs[fbzMode].u)) {
 	case 0: /* front buffer */
-		drawbuf = (uint16_t*)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.frontbuf]);
+		drawbuf = (uint16_t*)(fbi.ram + fbi.rgboffs[fbi.frontbuf]);
 		break;
 
 	case 1: /* back buffer */
-		drawbuf = (uint16_t*)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.backbuf]);
+		drawbuf = (uint16_t*)(fbi.ram + fbi.rgboffs[fbi.backbuf]);
 		break;
 
 	default: /* reserved */ return;
@@ -4581,10 +4594,12 @@ static void triangle(voodoo_state *vs)
 -------------------------------------------------*/
 static void begin_triangle(voodoo_state *vs)
 {
-	setup_vertex *sv = &vs->fbi.svert[2];
+	const auto regs = vs->reg;
+	auto& fbi       = vs->fbi;
+
+	setup_vertex* sv = &fbi.svert[2];
 
 	/* extract all the data from registers */
-	const auto regs = vs->reg;
 
 	sv->x  = regs[sVx].f;
 	sv->y  = regs[sVy].f;
@@ -4601,8 +4616,8 @@ static void begin_triangle(voodoo_state *vs)
 	sv->b  = regs[sBlue].f;
 
 	/* spread it across all three verts and reset the count */
-	vs->fbi.svert[0] = vs->fbi.svert[1] = vs->fbi.svert[2];
-	vs->fbi.sverts = 1;
+	fbi.svert[0] = fbi.svert[1] = fbi.svert[2];
+	fbi.sverts = 1;
 }
 
 /*-------------------------------------------------
@@ -4615,16 +4630,20 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	float divisor, tdiv;
 
 	/* grab the X/Ys at least */
-	vs->fbi.ax = (int16_t)(vs->fbi.svert[0].x * 16.0);
-	vs->fbi.ay = (int16_t)(vs->fbi.svert[0].y * 16.0);
-	vs->fbi.bx = (int16_t)(vs->fbi.svert[1].x * 16.0);
-	vs->fbi.by = (int16_t)(vs->fbi.svert[1].y * 16.0);
-	vs->fbi.cx = (int16_t)(vs->fbi.svert[2].x * 16.0);
-	vs->fbi.cy = (int16_t)(vs->fbi.svert[2].y * 16.0);
+	auto& fbi = vs->fbi;
+
+	fbi.ax = (int16_t)(fbi.svert[0].x * 16.0);
+	fbi.ay = (int16_t)(fbi.svert[0].y * 16.0);
+	fbi.bx = (int16_t)(fbi.svert[1].x * 16.0);
+	fbi.by = (int16_t)(fbi.svert[1].y * 16.0);
+	fbi.cx = (int16_t)(fbi.svert[2].x * 16.0);
+	fbi.cy = (int16_t)(fbi.svert[2].y * 16.0);
 
 	/* compute the divisor */
-	divisor = 1.0f / ((vs->fbi.svert[0].x - vs->fbi.svert[1].x) * (vs->fbi.svert[0].y - vs->fbi.svert[2].y) -
-					  (vs->fbi.svert[0].x - vs->fbi.svert[2].x) * (vs->fbi.svert[0].y - vs->fbi.svert[1].y));
+	divisor = 1.0f / ((fbi.svert[0].x - fbi.svert[1].x) *
+	                          (fbi.svert[0].y - fbi.svert[2].y) -
+	                  (fbi.svert[0].x - fbi.svert[2].x) *
+	                          (fbi.svert[0].y - fbi.svert[1].y));
 
 	const auto regs = vs->reg;
 
@@ -4635,7 +4654,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 
 		/* if doing strips and ping pong is enabled, apply the ping pong */
 		if ((regs[sSetupMode].u & 0x90000) == 0x00000) {
-			culling_sign ^= (vs->fbi.sverts - 3) & 1;
+			culling_sign ^= (fbi.sverts - 3) & 1;
 		}
 
 		/* if our sign matches the culling sign, we're done for */
@@ -4644,79 +4663,139 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* compute the dx/dy values */
-	dx1 = vs->fbi.svert[0].y - vs->fbi.svert[2].y;
-	dx2 = vs->fbi.svert[0].y - vs->fbi.svert[1].y;
-	dy1 = vs->fbi.svert[0].x - vs->fbi.svert[1].x;
-	dy2 = vs->fbi.svert[0].x - vs->fbi.svert[2].x;
+	dx1 = fbi.svert[0].y - fbi.svert[2].y;
+	dx2 = fbi.svert[0].y - fbi.svert[1].y;
+	dy1 = fbi.svert[0].x - fbi.svert[1].x;
+	dy2 = fbi.svert[0].x - fbi.svert[2].x;
 
 	/* set up R,G,B */
 	tdiv = divisor * 4096.0f;
 	if (regs[sSetupMode].u & (1 << 0)) {
-		vs->fbi.startr = (int32_t)(vs->fbi.svert[0].r * 4096.0f);
-		vs->fbi.drdx = (int32_t)(((vs->fbi.svert[0].r - vs->fbi.svert[1].r) * dx1 - (vs->fbi.svert[0].r - vs->fbi.svert[2].r) * dx2) * tdiv);
-		vs->fbi.drdy = (int32_t)(((vs->fbi.svert[0].r - vs->fbi.svert[2].r) * dy1 - (vs->fbi.svert[0].r - vs->fbi.svert[1].r) * dy2) * tdiv);
-		vs->fbi.startg = (int32_t)(vs->fbi.svert[0].g * 4096.0f);
-		vs->fbi.dgdx = (int32_t)(((vs->fbi.svert[0].g - vs->fbi.svert[1].g) * dx1 - (vs->fbi.svert[0].g - vs->fbi.svert[2].g) * dx2) * tdiv);
-		vs->fbi.dgdy = (int32_t)(((vs->fbi.svert[0].g - vs->fbi.svert[2].g) * dy1 - (vs->fbi.svert[0].g - vs->fbi.svert[1].g) * dy2) * tdiv);
-		vs->fbi.startb = (int32_t)(vs->fbi.svert[0].b * 4096.0f);
-		vs->fbi.dbdx = (int32_t)(((vs->fbi.svert[0].b - vs->fbi.svert[1].b) * dx1 - (vs->fbi.svert[0].b - vs->fbi.svert[2].b) * dx2) * tdiv);
-		vs->fbi.dbdy = (int32_t)(((vs->fbi.svert[0].b - vs->fbi.svert[2].b) * dy1 - (vs->fbi.svert[0].b - vs->fbi.svert[1].b) * dy2) * tdiv);
+		fbi.startr = (int32_t)(fbi.svert[0].r * 4096.0f);
+		fbi.drdx = (int32_t)(((fbi.svert[0].r - fbi.svert[1].r) * dx1 -
+		                      (fbi.svert[0].r - fbi.svert[2].r) * dx2) *
+		                     tdiv);
+		fbi.drdy = (int32_t)(((fbi.svert[0].r - fbi.svert[2].r) * dy1 -
+		                      (fbi.svert[0].r - fbi.svert[1].r) * dy2) *
+		                     tdiv);
+		fbi.startg = (int32_t)(fbi.svert[0].g * 4096.0f);
+		fbi.dgdx = (int32_t)(((fbi.svert[0].g - fbi.svert[1].g) * dx1 -
+		                      (fbi.svert[0].g - fbi.svert[2].g) * dx2) *
+		                     tdiv);
+		fbi.dgdy = (int32_t)(((fbi.svert[0].g - fbi.svert[2].g) * dy1 -
+		                      (fbi.svert[0].g - fbi.svert[1].g) * dy2) *
+		                     tdiv);
+		fbi.startb = (int32_t)(fbi.svert[0].b * 4096.0f);
+		fbi.dbdx = (int32_t)(((fbi.svert[0].b - fbi.svert[1].b) * dx1 -
+		                      (fbi.svert[0].b - fbi.svert[2].b) * dx2) *
+		                     tdiv);
+		fbi.dbdy = (int32_t)(((fbi.svert[0].b - fbi.svert[2].b) * dy1 -
+		                      (fbi.svert[0].b - fbi.svert[1].b) * dy2) *
+		                     tdiv);
 	}
 
 	/* set up alpha */
 	if (regs[sSetupMode].u & (1 << 1)) {
-		vs->fbi.starta = (int32_t)(vs->fbi.svert[0].a * 4096.0);
-		vs->fbi.dadx = (int32_t)(((vs->fbi.svert[0].a - vs->fbi.svert[1].a) * dx1 - (vs->fbi.svert[0].a - vs->fbi.svert[2].a) * dx2) * tdiv);
-		vs->fbi.dady = (int32_t)(((vs->fbi.svert[0].a - vs->fbi.svert[2].a) * dy1 - (vs->fbi.svert[0].a - vs->fbi.svert[1].a) * dy2) * tdiv);
+		fbi.starta = (int32_t)(fbi.svert[0].a * 4096.0);
+		fbi.dadx = (int32_t)(((fbi.svert[0].a - fbi.svert[1].a) * dx1 -
+		                      (fbi.svert[0].a - fbi.svert[2].a) * dx2) *
+		                     tdiv);
+		fbi.dady = (int32_t)(((fbi.svert[0].a - fbi.svert[2].a) * dy1 -
+		                      (fbi.svert[0].a - fbi.svert[1].a) * dy2) *
+		                     tdiv);
 	}
 
 	/* set up Z */
 	if (regs[sSetupMode].u & (1 << 2)) {
-		vs->fbi.startz = (int32_t)(vs->fbi.svert[0].z * 4096.0);
-		vs->fbi.dzdx = (int32_t)(((vs->fbi.svert[0].z - vs->fbi.svert[1].z) * dx1 - (vs->fbi.svert[0].z - vs->fbi.svert[2].z) * dx2) * tdiv);
-		vs->fbi.dzdy = (int32_t)(((vs->fbi.svert[0].z - vs->fbi.svert[2].z) * dy1 - (vs->fbi.svert[0].z - vs->fbi.svert[1].z) * dy2) * tdiv);
+		fbi.startz = (int32_t)(fbi.svert[0].z * 4096.0);
+		fbi.dzdx = (int32_t)(((fbi.svert[0].z - fbi.svert[1].z) * dx1 -
+		                      (fbi.svert[0].z - fbi.svert[2].z) * dx2) *
+		                     tdiv);
+		fbi.dzdy = (int32_t)(((fbi.svert[0].z - fbi.svert[2].z) * dy1 -
+		                      (fbi.svert[0].z - fbi.svert[1].z) * dy2) *
+		                     tdiv);
 	}
 
 	/* set up Wb */
 	tdiv = divisor * 65536.0f * 65536.0f;
 	if (regs[sSetupMode].u & (1 << 3)) {
-		vs->fbi.startw = vs->tmu[0].startw = vs->tmu[1].startw = (int64_t)(vs->fbi.svert[0].wb * 65536.0f * 65536.0f);
-		vs->fbi.dwdx = vs->tmu[0].dwdx = vs->tmu[1].dwdx = (int64_t)(((vs->fbi.svert[0].wb - vs->fbi.svert[1].wb) * dx1 - (vs->fbi.svert[0].wb - vs->fbi.svert[2].wb) * dx2) * tdiv);
-		vs->fbi.dwdy = vs->tmu[0].dwdy = vs->tmu[1].dwdy = (int64_t)(((vs->fbi.svert[0].wb - vs->fbi.svert[2].wb) * dy1 - (vs->fbi.svert[0].wb - vs->fbi.svert[1].wb) * dy2) * tdiv);
+		fbi.startw = vs->tmu[0].startw = vs->tmu[1].startw =
+		        (int64_t)(fbi.svert[0].wb * 65536.0f * 65536.0f);
+		fbi.dwdx = vs->tmu[0].dwdx = vs->tmu[1].dwdx =
+		        (int64_t)(((fbi.svert[0].wb - fbi.svert[1].wb) * dx1 -
+		                   (fbi.svert[0].wb - fbi.svert[2].wb) * dx2) *
+		                  tdiv);
+		fbi.dwdy = vs->tmu[0].dwdy = vs->tmu[1].dwdy =
+		        (int64_t)(((fbi.svert[0].wb - fbi.svert[2].wb) * dy1 -
+		                   (fbi.svert[0].wb - fbi.svert[1].wb) * dy2) *
+		                  tdiv);
 	}
 
 	/* set up W0 */
 	if (regs[sSetupMode].u & (1 << 4)) {
-		vs->tmu[0].startw = vs->tmu[1].startw = (int64_t)(vs->fbi.svert[0].w0 * 65536.0f * 65536.0f);
-		vs->tmu[0].dwdx = vs->tmu[1].dwdx = (int64_t)(((vs->fbi.svert[0].w0 - vs->fbi.svert[1].w0) * dx1 - (vs->fbi.svert[0].w0 - vs->fbi.svert[2].w0) * dx2) * tdiv);
-		vs->tmu[0].dwdy = vs->tmu[1].dwdy = (int64_t)(((vs->fbi.svert[0].w0 - vs->fbi.svert[2].w0) * dy1 - (vs->fbi.svert[0].w0 - vs->fbi.svert[1].w0) * dy2) * tdiv);
+		vs->tmu[0].startw = vs->tmu[1].startw = (int64_t)(fbi.svert[0].w0 *
+		                                                  65536.0f * 65536.0f);
+		vs->tmu[0].dwdx = vs->tmu[1].dwdx =
+		        (int64_t)(((fbi.svert[0].w0 - fbi.svert[1].w0) * dx1 -
+		                   (fbi.svert[0].w0 - fbi.svert[2].w0) * dx2) *
+		                  tdiv);
+		vs->tmu[0].dwdy = vs->tmu[1].dwdy =
+		        (int64_t)(((fbi.svert[0].w0 - fbi.svert[2].w0) * dy1 -
+		                   (fbi.svert[0].w0 - fbi.svert[1].w0) * dy2) *
+		                  tdiv);
 	}
 
 	/* set up S0,T0 */
 	if (regs[sSetupMode].u & (1 << 5)) {
-		vs->tmu[0].starts = vs->tmu[1].starts = (int64_t)(vs->fbi.svert[0].s0 * 65536.0f * 65536.0f);
-		vs->tmu[0].dsdx = vs->tmu[1].dsdx = (int64_t)(((vs->fbi.svert[0].s0 - vs->fbi.svert[1].s0) * dx1 - (vs->fbi.svert[0].s0 - vs->fbi.svert[2].s0) * dx2) * tdiv);
-		vs->tmu[0].dsdy = vs->tmu[1].dsdy = (int64_t)(((vs->fbi.svert[0].s0 - vs->fbi.svert[2].s0) * dy1 - (vs->fbi.svert[0].s0 - vs->fbi.svert[1].s0) * dy2) * tdiv);
-		vs->tmu[0].startt = vs->tmu[1].startt = (int64_t)(vs->fbi.svert[0].t0 * 65536.0f * 65536.0f);
-		vs->tmu[0].dtdx = vs->tmu[1].dtdx = (int64_t)(((vs->fbi.svert[0].t0 - vs->fbi.svert[1].t0) * dx1 - (vs->fbi.svert[0].t0 - vs->fbi.svert[2].t0) * dx2) * tdiv);
-		vs->tmu[0].dtdy = vs->tmu[1].dtdy = (int64_t)(((vs->fbi.svert[0].t0 - vs->fbi.svert[2].t0) * dy1 - (vs->fbi.svert[0].t0 - vs->fbi.svert[1].t0) * dy2) * tdiv);
+		vs->tmu[0].starts = vs->tmu[1].starts = (int64_t)(fbi.svert[0].s0 *
+		                                                  65536.0f * 65536.0f);
+		vs->tmu[0].dsdx = vs->tmu[1].dsdx =
+		        (int64_t)(((fbi.svert[0].s0 - fbi.svert[1].s0) * dx1 -
+		                   (fbi.svert[0].s0 - fbi.svert[2].s0) * dx2) *
+		                  tdiv);
+		vs->tmu[0].dsdy = vs->tmu[1].dsdy =
+		        (int64_t)(((fbi.svert[0].s0 - fbi.svert[2].s0) * dy1 -
+		                   (fbi.svert[0].s0 - fbi.svert[1].s0) * dy2) *
+		                  tdiv);
+		vs->tmu[0].startt = vs->tmu[1].startt = (int64_t)(fbi.svert[0].t0 *
+		                                                  65536.0f * 65536.0f);
+		vs->tmu[0].dtdx = vs->tmu[1].dtdx =
+		        (int64_t)(((fbi.svert[0].t0 - fbi.svert[1].t0) * dx1 -
+		                   (fbi.svert[0].t0 - fbi.svert[2].t0) * dx2) *
+		                  tdiv);
+		vs->tmu[0].dtdy = vs->tmu[1].dtdy =
+		        (int64_t)(((fbi.svert[0].t0 - fbi.svert[2].t0) * dy1 -
+		                   (fbi.svert[0].t0 - fbi.svert[1].t0) * dy2) *
+		                  tdiv);
 	}
 
 	/* set up W1 */
 	if (regs[sSetupMode].u & (1 << 6)) {
-		vs->tmu[1].startw = (int64_t)(vs->fbi.svert[0].w1 * 65536.0f * 65536.0f);
-		vs->tmu[1].dwdx = (int64_t)(((vs->fbi.svert[0].w1 - vs->fbi.svert[1].w1) * dx1 - (vs->fbi.svert[0].w1 - vs->fbi.svert[2].w1) * dx2) * tdiv);
-		vs->tmu[1].dwdy = (int64_t)(((vs->fbi.svert[0].w1 - vs->fbi.svert[2].w1) * dy1 - (vs->fbi.svert[0].w1 - vs->fbi.svert[1].w1) * dy2) * tdiv);
+		vs->tmu[1].startw = (int64_t)(fbi.svert[0].w1 * 65536.0f * 65536.0f);
+		vs->tmu[1].dwdx = (int64_t)(((fbi.svert[0].w1 - fbi.svert[1].w1) * dx1 -
+		                             (fbi.svert[0].w1 - fbi.svert[2].w1) * dx2) *
+		                            tdiv);
+		vs->tmu[1].dwdy = (int64_t)(((fbi.svert[0].w1 - fbi.svert[2].w1) * dy1 -
+		                             (fbi.svert[0].w1 - fbi.svert[1].w1) * dy2) *
+		                            tdiv);
 	}
 
 	/* set up S1,T1 */
 	if (regs[sSetupMode].u & (1 << 7)) {
-		vs->tmu[1].starts = (int64_t)(vs->fbi.svert[0].s1 * 65536.0f * 65536.0f);
-		vs->tmu[1].dsdx = (int64_t)(((vs->fbi.svert[0].s1 - vs->fbi.svert[1].s1) * dx1 - (vs->fbi.svert[0].s1 - vs->fbi.svert[2].s1) * dx2) * tdiv);
-		vs->tmu[1].dsdy = (int64_t)(((vs->fbi.svert[0].s1 - vs->fbi.svert[2].s1) * dy1 - (vs->fbi.svert[0].s1 - vs->fbi.svert[1].s1) * dy2) * tdiv);
-		vs->tmu[1].startt = (int64_t)(vs->fbi.svert[0].t1 * 65536.0f * 65536.0f);
-		vs->tmu[1].dtdx = (int64_t)(((vs->fbi.svert[0].t1 - vs->fbi.svert[1].t1) * dx1 - (vs->fbi.svert[0].t1 - vs->fbi.svert[2].t1) * dx2) * tdiv);
-		vs->tmu[1].dtdy = (int64_t)(((vs->fbi.svert[0].t1 - vs->fbi.svert[2].t1) * dy1 - (vs->fbi.svert[0].t1 - vs->fbi.svert[1].t1) * dy2) * tdiv);
+		vs->tmu[1].starts = (int64_t)(fbi.svert[0].s1 * 65536.0f * 65536.0f);
+		vs->tmu[1].dsdx = (int64_t)(((fbi.svert[0].s1 - fbi.svert[1].s1) * dx1 -
+		                             (fbi.svert[0].s1 - fbi.svert[2].s1) * dx2) *
+		                            tdiv);
+		vs->tmu[1].dsdy = (int64_t)(((fbi.svert[0].s1 - fbi.svert[2].s1) * dy1 -
+		                             (fbi.svert[0].s1 - fbi.svert[1].s1) * dy2) *
+		                            tdiv);
+		vs->tmu[1].startt = (int64_t)(fbi.svert[0].t1 * 65536.0f * 65536.0f);
+		vs->tmu[1].dtdx = (int64_t)(((fbi.svert[0].t1 - fbi.svert[1].t1) * dx1 -
+		                             (fbi.svert[0].t1 - fbi.svert[2].t1) * dx2) *
+		                            tdiv);
+		vs->tmu[1].dtdy = (int64_t)(((fbi.svert[0].t1 - fbi.svert[2].t1) * dy1 -
+		                             (fbi.svert[0].t1 - fbi.svert[1].t1) * dy2) *
+		                            tdiv);
 	}
 
 	/* draw the triangle */
@@ -4729,17 +4808,18 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 -------------------------------------------------*/
 static void draw_triangle(voodoo_state *vs)
 {
-	setup_vertex *sv = &vs->fbi.svert[2];
-
 	const auto regs = vs->reg;
+	auto& fbi = vs->fbi;
+
+	setup_vertex* sv = &fbi.svert[2];
 
 	/* for strip mode, shuffle vertex 1 down to 0 */
 	if (!(regs[sSetupMode].u & (1 << 16))) {
-		vs->fbi.svert[0] = vs->fbi.svert[1];
+		fbi.svert[0] = fbi.svert[1];
 	}
 
 	/* copy 2 down to 1 regardless */
-	vs->fbi.svert[1] = vs->fbi.svert[2];
+	fbi.svert[1] = fbi.svert[2];
 
 	/* extract all the data from registers */
 	sv->x  = regs[sVx].f;
@@ -4757,8 +4837,9 @@ static void draw_triangle(voodoo_state *vs)
 	sv->b  = regs[sBlue].f;
 
 	/* if we have enough verts, go ahead and draw */
-	if (++vs->fbi.sverts >= 3)
+	if (++fbi.sverts >= 3) {
 		setup_and_draw_triangle(vs);
+	}
 }
 
 /*-------------------------------------------------
