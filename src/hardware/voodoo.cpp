@@ -4636,12 +4636,12 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	const auto& vertex2 = fbi.svert[2];
 
 	/* grab the X/Ys at least */
-	fbi.ax = (int16_t)(vertex0.x * 16.0);
-	fbi.ay = (int16_t)(vertex0.y * 16.0);
-	fbi.bx = (int16_t)(vertex1.x * 16.0);
-	fbi.by = (int16_t)(vertex1.y * 16.0);
-	fbi.cx = (int16_t)(vertex2.x * 16.0);
-	fbi.cy = (int16_t)(vertex2.y * 16.0);
+	fbi.ax = (int16_t)(vertex0.x * 16.0f);
+	fbi.ay = (int16_t)(vertex0.y * 16.0f);
+	fbi.bx = (int16_t)(vertex1.x * 16.0f);
+	fbi.by = (int16_t)(vertex1.y * 16.0f);
+	fbi.cx = (int16_t)(vertex2.x * 16.0f);
+	fbi.cy = (int16_t)(vertex2.y * 16.0f);
 
 	/* compute the divisor */
 	const auto divisor = 1.0f /
@@ -4697,7 +4697,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 
 	/* set up alpha */
 	if (regs[sSetupMode].u & (1 << 1)) {
-		fbi.starta = (int32_t)(vertex0.a * 4096.0);
+		fbi.starta = (int32_t)(vertex0.a * 4096.0f);
 		fbi.dadx   = (int32_t)(((vertex0.a - vertex1.a) * dx1 -
                                       (vertex0.a - vertex2.a) * dx2) *
                                      tdiv);
@@ -4708,7 +4708,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 
 	/* set up Z */
 	if (regs[sSetupMode].u & (1 << 2)) {
-		fbi.startz = (int32_t)(vertex0.z * 4096.0);
+		fbi.startz = (int32_t)(vertex0.z * 4096.0f);
 		fbi.dzdx   = (int32_t)(((vertex0.z - vertex1.z) * dx1 -
                                       (vertex0.z - vertex2.z) * dx2) *
                                      tdiv);
