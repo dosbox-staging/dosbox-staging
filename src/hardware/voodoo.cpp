@@ -4640,19 +4640,22 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	auto& tmu0 = vs->tmu[0];
 	auto& tmu1 = vs->tmu[1];
 
-	/* grab the X/Ys at least */	
-	fbi.ax = (int16_t)(fbi.svert[0].x * 16.0);
-	fbi.ay = (int16_t)(fbi.svert[0].y * 16.0);
-	fbi.bx = (int16_t)(fbi.svert[1].x * 16.0);
-	fbi.by = (int16_t)(fbi.svert[1].y * 16.0);
-	fbi.cx = (int16_t)(fbi.svert[2].x * 16.0);
-	fbi.cy = (int16_t)(fbi.svert[2].y * 16.0);
+	// Vertex references
+	const auto& vertex0 = fbi.svert[0];
+	const auto& vertex1 = fbi.svert[1];
+	const auto& vertex2 = fbi.svert[2];
+
+	/* grab the X/Ys at least */
+	fbi.ax = (int16_t)(vertex0.x * 16.0);
+	fbi.ay = (int16_t)(vertex0.y * 16.0);
+	fbi.bx = (int16_t)(vertex1.x * 16.0);
+	fbi.by = (int16_t)(vertex1.y * 16.0);
+	fbi.cx = (int16_t)(vertex2.x * 16.0);
+	fbi.cy = (int16_t)(vertex2.y * 16.0);
 
 	/* compute the divisor */
-	divisor = 1.0f / ((fbi.svert[0].x - fbi.svert[1].x) *
-	                          (fbi.svert[0].y - fbi.svert[2].y) -
-	                  (fbi.svert[0].x - fbi.svert[2].x) *
-	                          (fbi.svert[0].y - fbi.svert[1].y));
+	divisor = 1.0f / ((vertex0.x - vertex1.x) * (vertex0.y - vertex2.y) -
+	                  (vertex0.x - vertex2.x) * (vertex0.y - vertex1.y));
 
 	const auto regs = vs->reg;
 
@@ -4672,139 +4675,130 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* compute the dx/dy values */
-	dx1 = fbi.svert[0].y - fbi.svert[2].y;
-	dx2 = fbi.svert[0].y - fbi.svert[1].y;
-	dy1 = fbi.svert[0].x - fbi.svert[1].x;
-	dy2 = fbi.svert[0].x - fbi.svert[2].x;
+	dx1 = vertex0.y - vertex2.y;
+	dx2 = vertex0.y - vertex1.y;
+	dy1 = vertex0.x - vertex1.x;
+	dy2 = vertex0.x - vertex2.x;
 
 	/* set up R,G,B */
 	tdiv = divisor * 4096.0f;
 	if (regs[sSetupMode].u & (1 << 0)) {
-		fbi.startr = (int32_t)(fbi.svert[0].r * 4096.0f);
-		fbi.drdx = (int32_t)(((fbi.svert[0].r - fbi.svert[1].r) * dx1 -
-		                      (fbi.svert[0].r - fbi.svert[2].r) * dx2) *
-		                     tdiv);
-		fbi.drdy = (int32_t)(((fbi.svert[0].r - fbi.svert[2].r) * dy1 -
-		                      (fbi.svert[0].r - fbi.svert[1].r) * dy2) *
-		                     tdiv);
-		fbi.startg = (int32_t)(fbi.svert[0].g * 4096.0f);
-		fbi.dgdx = (int32_t)(((fbi.svert[0].g - fbi.svert[1].g) * dx1 -
-		                      (fbi.svert[0].g - fbi.svert[2].g) * dx2) *
-		                     tdiv);
-		fbi.dgdy = (int32_t)(((fbi.svert[0].g - fbi.svert[2].g) * dy1 -
-		                      (fbi.svert[0].g - fbi.svert[1].g) * dy2) *
-		                     tdiv);
-		fbi.startb = (int32_t)(fbi.svert[0].b * 4096.0f);
-		fbi.dbdx = (int32_t)(((fbi.svert[0].b - fbi.svert[1].b) * dx1 -
-		                      (fbi.svert[0].b - fbi.svert[2].b) * dx2) *
-		                     tdiv);
-		fbi.dbdy = (int32_t)(((fbi.svert[0].b - fbi.svert[2].b) * dy1 -
-		                      (fbi.svert[0].b - fbi.svert[1].b) * dy2) *
-		                     tdiv);
+		fbi.startr = (int32_t)(vertex0.r * 4096.0f);
+		fbi.drdx   = (int32_t)(((vertex0.r - vertex1.r) * dx1 -
+                                      (vertex0.r - vertex2.r) * dx2) *
+                                     tdiv);
+		fbi.drdy   = (int32_t)(((vertex0.r - vertex2.r) * dy1 -
+                                      (vertex0.r - vertex1.r) * dy2) *
+                                     tdiv);
+		fbi.startg = (int32_t)(vertex0.g * 4096.0f);
+		fbi.dgdx   = (int32_t)(((vertex0.g - vertex1.g) * dx1 -
+                                      (vertex0.g - vertex2.g) * dx2) *
+                                     tdiv);
+		fbi.dgdy   = (int32_t)(((vertex0.g - vertex2.g) * dy1 -
+                                      (vertex0.g - vertex1.g) * dy2) *
+                                     tdiv);
+		fbi.startb = (int32_t)(vertex0.b * 4096.0f);
+		fbi.dbdx   = (int32_t)(((vertex0.b - vertex1.b) * dx1 -
+                                      (vertex0.b - vertex2.b) * dx2) *
+                                     tdiv);
+		fbi.dbdy   = (int32_t)(((vertex0.b - vertex2.b) * dy1 -
+                                      (vertex0.b - vertex1.b) * dy2) *
+                                     tdiv);
 	}
 
 	/* set up alpha */
 	if (regs[sSetupMode].u & (1 << 1)) {
-		fbi.starta = (int32_t)(fbi.svert[0].a * 4096.0);
-		fbi.dadx = (int32_t)(((fbi.svert[0].a - fbi.svert[1].a) * dx1 -
-		                      (fbi.svert[0].a - fbi.svert[2].a) * dx2) *
-		                     tdiv);
-		fbi.dady = (int32_t)(((fbi.svert[0].a - fbi.svert[2].a) * dy1 -
-		                      (fbi.svert[0].a - fbi.svert[1].a) * dy2) *
-		                     tdiv);
+		fbi.starta = (int32_t)(vertex0.a * 4096.0);
+		fbi.dadx   = (int32_t)(((vertex0.a - vertex1.a) * dx1 -
+                                      (vertex0.a - vertex2.a) * dx2) *
+                                     tdiv);
+		fbi.dady   = (int32_t)(((vertex0.a - vertex2.a) * dy1 -
+                                      (vertex0.a - vertex1.a) * dy2) *
+                                     tdiv);
 	}
 
 	/* set up Z */
 	if (regs[sSetupMode].u & (1 << 2)) {
-		fbi.startz = (int32_t)(fbi.svert[0].z * 4096.0);
-		fbi.dzdx = (int32_t)(((fbi.svert[0].z - fbi.svert[1].z) * dx1 -
-		                      (fbi.svert[0].z - fbi.svert[2].z) * dx2) *
-		                     tdiv);
-		fbi.dzdy = (int32_t)(((fbi.svert[0].z - fbi.svert[2].z) * dy1 -
-		                      (fbi.svert[0].z - fbi.svert[1].z) * dy2) *
-		                     tdiv);
+		fbi.startz = (int32_t)(vertex0.z * 4096.0);
+		fbi.dzdx   = (int32_t)(((vertex0.z - vertex1.z) * dx1 -
+                                      (vertex0.z - vertex2.z) * dx2) *
+                                     tdiv);
+		fbi.dzdy   = (int32_t)(((vertex0.z - vertex2.z) * dy1 -
+                                      (vertex0.z - vertex1.z) * dy2) *
+                                     tdiv);
 	}
 
 	/* set up Wb */
 	tdiv = divisor * 65536.0f * 65536.0f;
 	if (regs[sSetupMode].u & (1 << 3)) {
-		fbi.startw = tmu0.startw = tmu1.startw =
-		        (int64_t)(fbi.svert[0].wb * 65536.0f * 65536.0f);
+		fbi.startw = tmu0.startw = tmu1.startw = (int64_t)(vertex0.wb * 65536.0f *
+		                                                   65536.0f);
 		fbi.dwdx = tmu0.dwdx = tmu1.dwdx =
-		        (int64_t)(((fbi.svert[0].wb - fbi.svert[1].wb) * dx1 -
-		                   (fbi.svert[0].wb - fbi.svert[2].wb) * dx2) *
+		        (int64_t)(((vertex0.wb - vertex1.wb) * dx1 -
+		                   (vertex0.wb - vertex2.wb) * dx2) *
 		                  tdiv);
 		fbi.dwdy = tmu0.dwdy = tmu1.dwdy =
-		        (int64_t)(((fbi.svert[0].wb - fbi.svert[2].wb) * dy1 -
-		                   (fbi.svert[0].wb - fbi.svert[1].wb) * dy2) *
+		        (int64_t)(((vertex0.wb - vertex2.wb) * dy1 -
+		                   (vertex0.wb - vertex1.wb) * dy2) *
 		                  tdiv);
 	}
 
 	/* set up W0 */
 	if (regs[sSetupMode].u & (1 << 4)) {
-		tmu0.startw = tmu1.startw = (int64_t)(fbi.svert[0].w0 *
-		                                                  65536.0f * 65536.0f);
-		tmu0.dwdx = tmu1.dwdx =
-		        (int64_t)(((fbi.svert[0].w0 - fbi.svert[1].w0) * dx1 -
-		                   (fbi.svert[0].w0 - fbi.svert[2].w0) * dx2) *
-		                  tdiv);
-		tmu0.dwdy = tmu1.dwdy =
-		        (int64_t)(((fbi.svert[0].w0 - fbi.svert[2].w0) * dy1 -
-		                   (fbi.svert[0].w0 - fbi.svert[1].w0) * dy2) *
-		                  tdiv);
+		tmu0.startw = tmu1.startw = (int64_t)(vertex0.w0 * 65536.0f * 65536.0f);
+		tmu0.dwdx = tmu1.dwdx = (int64_t)(((vertex0.w0 - vertex1.w0) * dx1 -
+		                                   (vertex0.w0 - vertex2.w0) * dx2) *
+		                                  tdiv);
+		tmu0.dwdy = tmu1.dwdy = (int64_t)(((vertex0.w0 - vertex2.w0) * dy1 -
+		                                   (vertex0.w0 - vertex1.w0) * dy2) *
+		                                  tdiv);
 	}
 
 	/* set up S0,T0 */
 	if (regs[sSetupMode].u & (1 << 5)) {
-		tmu0.starts = tmu1.starts = (int64_t)(fbi.svert[0].s0 *
-		                                                  65536.0f * 65536.0f);
-		tmu0.dsdx = tmu1.dsdx =
-		        (int64_t)(((fbi.svert[0].s0 - fbi.svert[1].s0) * dx1 -
-		                   (fbi.svert[0].s0 - fbi.svert[2].s0) * dx2) *
-		                  tdiv);
-		tmu0.dsdy = tmu1.dsdy =
-		        (int64_t)(((fbi.svert[0].s0 - fbi.svert[2].s0) * dy1 -
-		                   (fbi.svert[0].s0 - fbi.svert[1].s0) * dy2) *
-		                  tdiv);
-		tmu0.startt = tmu1.startt = (int64_t)(fbi.svert[0].t0 *
-		                                                  65536.0f * 65536.0f);
-		tmu0.dtdx = tmu1.dtdx =
-		        (int64_t)(((fbi.svert[0].t0 - fbi.svert[1].t0) * dx1 -
-		                   (fbi.svert[0].t0 - fbi.svert[2].t0) * dx2) *
-		                  tdiv);
-		tmu0.dtdy = tmu1.dtdy =
-		        (int64_t)(((fbi.svert[0].t0 - fbi.svert[2].t0) * dy1 -
-		                   (fbi.svert[0].t0 - fbi.svert[1].t0) * dy2) *
-		                  tdiv);
+		tmu0.starts = tmu1.starts = (int64_t)(vertex0.s0 * 65536.0f * 65536.0f);
+		tmu0.dsdx = tmu1.dsdx = (int64_t)(((vertex0.s0 - vertex1.s0) * dx1 -
+		                                   (vertex0.s0 - vertex2.s0) * dx2) *
+		                                  tdiv);
+		tmu0.dsdy = tmu1.dsdy = (int64_t)(((vertex0.s0 - vertex2.s0) * dy1 -
+		                                   (vertex0.s0 - vertex1.s0) * dy2) *
+		                                  tdiv);
+		tmu0.startt = tmu1.startt = (int64_t)(vertex0.t0 * 65536.0f * 65536.0f);
+		tmu0.dtdx = tmu1.dtdx = (int64_t)(((vertex0.t0 - vertex1.t0) * dx1 -
+		                                   (vertex0.t0 - vertex2.t0) * dx2) *
+		                                  tdiv);
+		tmu0.dtdy = tmu1.dtdy = (int64_t)(((vertex0.t0 - vertex2.t0) * dy1 -
+		                                   (vertex0.t0 - vertex1.t0) * dy2) *
+		                                  tdiv);
 	}
 
 	/* set up W1 */
 	if (regs[sSetupMode].u & (1 << 6)) {
-		tmu1.startw = (int64_t)(fbi.svert[0].w1 * 65536.0f * 65536.0f);
-		tmu1.dwdx = (int64_t)(((fbi.svert[0].w1 - fbi.svert[1].w1) * dx1 -
-		                             (fbi.svert[0].w1 - fbi.svert[2].w1) * dx2) *
-		                            tdiv);
-		tmu1.dwdy = (int64_t)(((fbi.svert[0].w1 - fbi.svert[2].w1) * dy1 -
-		                             (fbi.svert[0].w1 - fbi.svert[1].w1) * dy2) *
-		                            tdiv);
+		tmu1.startw = (int64_t)(vertex0.w1 * 65536.0f * 65536.0f);
+		tmu1.dwdx   = (int64_t)(((vertex0.w1 - vertex1.w1) * dx1 -
+                                       (vertex0.w1 - vertex2.w1) * dx2) *
+                                      tdiv);
+		tmu1.dwdy   = (int64_t)(((vertex0.w1 - vertex2.w1) * dy1 -
+                                       (vertex0.w1 - vertex1.w1) * dy2) *
+                                      tdiv);
 	}
 
 	/* set up S1,T1 */
 	if (regs[sSetupMode].u & (1 << 7)) {
-		tmu1.starts = (int64_t)(fbi.svert[0].s1 * 65536.0f * 65536.0f);
-		tmu1.dsdx = (int64_t)(((fbi.svert[0].s1 - fbi.svert[1].s1) * dx1 -
-		                             (fbi.svert[0].s1 - fbi.svert[2].s1) * dx2) *
-		                            tdiv);
-		tmu1.dsdy = (int64_t)(((fbi.svert[0].s1 - fbi.svert[2].s1) * dy1 -
-		                             (fbi.svert[0].s1 - fbi.svert[1].s1) * dy2) *
-		                            tdiv);
-		tmu1.startt = (int64_t)(fbi.svert[0].t1 * 65536.0f * 65536.0f);
-		tmu1.dtdx = (int64_t)(((fbi.svert[0].t1 - fbi.svert[1].t1) * dx1 -
-		                             (fbi.svert[0].t1 - fbi.svert[2].t1) * dx2) *
-		                            tdiv);
-		tmu1.dtdy = (int64_t)(((fbi.svert[0].t1 - fbi.svert[2].t1) * dy1 -
-		                             (fbi.svert[0].t1 - fbi.svert[1].t1) * dy2) *
-		                            tdiv);
+		tmu1.starts = (int64_t)(vertex0.s1 * 65536.0f * 65536.0f);
+		tmu1.dsdx   = (int64_t)(((vertex0.s1 - vertex1.s1) * dx1 -
+                                       (vertex0.s1 - vertex2.s1) * dx2) *
+                                      tdiv);
+		tmu1.dsdy   = (int64_t)(((vertex0.s1 - vertex2.s1) * dy1 -
+                                       (vertex0.s1 - vertex1.s1) * dy2) *
+                                      tdiv);
+		tmu1.startt = (int64_t)(vertex0.t1 * 65536.0f * 65536.0f);
+		tmu1.dtdx   = (int64_t)(((vertex0.t1 - vertex1.t1) * dx1 -
+                                       (vertex0.t1 - vertex2.t1) * dx2) *
+                                      tdiv);
+		tmu1.dtdy   = (int64_t)(((vertex0.t1 - vertex2.t1) * dy1 -
+                                       (vertex0.t1 - vertex1.t1) * dy2) *
+                                      tdiv);
 	}
 
 	/* draw the triangle */
