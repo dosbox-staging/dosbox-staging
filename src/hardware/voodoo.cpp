@@ -3467,25 +3467,25 @@ static raster_info *add_rasterizer(voodoo_state *vs, const raster_info *cinfo)
     matches  our current parameters and return
     it, creating a new one if necessary
 -------------------------------------------------*/
-static raster_info *find_rasterizer(voodoo_state *v, int texcount)
+static raster_info *find_rasterizer(voodoo_state *vs, int texcount)
 {
 	raster_info *info, *prev = NULL;
 	raster_info curinfo;
 	int hash;
 
 	/* build an info struct with all the parameters */
-	curinfo.eff_color_path = normalize_color_path(v->reg[fbzColorPath].u);
-	curinfo.eff_alpha_mode = normalize_alpha_mode(v->reg[alphaMode].u);
-	curinfo.eff_fog_mode = normalize_fog_mode(v->reg[fogMode].u);
-	curinfo.eff_fbz_mode = normalize_fbz_mode(v->reg[fbzMode].u);
-	curinfo.eff_tex_mode_0 = (texcount >= 1) ? normalize_tex_mode(v->tmu[0].reg[textureMode].u) : 0xffffffff;
-	curinfo.eff_tex_mode_1 = (texcount >= 2) ? normalize_tex_mode(v->tmu[1].reg[textureMode].u) : 0xffffffff;
+	curinfo.eff_color_path = normalize_color_path(vs->reg[fbzColorPath].u);
+	curinfo.eff_alpha_mode = normalize_alpha_mode(vs->reg[alphaMode].u);
+	curinfo.eff_fog_mode = normalize_fog_mode(vs->reg[fogMode].u);
+	curinfo.eff_fbz_mode = normalize_fbz_mode(vs->reg[fbzMode].u);
+	curinfo.eff_tex_mode_0 = (texcount >= 1) ? normalize_tex_mode(vs->tmu[0].reg[textureMode].u) : 0xffffffff;
+	curinfo.eff_tex_mode_1 = (texcount >= 2) ? normalize_tex_mode(vs->tmu[1].reg[textureMode].u) : 0xffffffff;
 
 	/* compute the hash */
 	hash = compute_raster_hash(&curinfo);
 
 	/* find the appropriate hash entry */
-	for (info = v->raster_hash[hash]; info; prev = info, info = info->next)
+	for (info = vs->raster_hash[hash]; info; prev = info, info = info->next)
 		if (info->eff_color_path == curinfo.eff_color_path &&
 			info->eff_alpha_mode == curinfo.eff_alpha_mode &&
 			info->eff_fog_mode == curinfo.eff_fog_mode &&
@@ -3497,8 +3497,8 @@ static raster_info *find_rasterizer(voodoo_state *v, int texcount)
 			if (prev)
 			{
 				prev->next = info->next;
-				info->next = v->raster_hash[hash];
-				v->raster_hash[hash] = info;
+				info->next = vs->raster_hash[hash];
+				vs->raster_hash[hash] = info;
 			}
 
 			/* return the result */
@@ -3516,7 +3516,7 @@ static raster_info *find_rasterizer(voodoo_state *v, int texcount)
 	curinfo.next = 0;
 	curinfo.shader_ready = false;
 
-	return add_rasterizer(v, &curinfo);
+	return add_rasterizer(vs, &curinfo);
 }
 #endif
 
