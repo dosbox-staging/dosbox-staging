@@ -5920,7 +5920,7 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 			/* make sure we care about this pixel */
 			if (mask & 0x0f)
 			{
-				int64_t iterw = sw[pix] << (30-16);
+				int64_t iterw = static_cast<int64_t>(sw[pix]) << (30-16);
 				int32_t iterz = sw[pix] << 12;
 				rgb_union color;
 
