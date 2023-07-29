@@ -3595,7 +3595,7 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
  *
  *************************************/
 
-static void init_fbi([[maybe_unused]] voodoo_state* v, fbi_state* f, int fbmem)
+static void init_fbi(fbi_state* f, int fbmem)
 {
 	/* allocate frame buffer RAM and set pointers */
 	assert(fbmem >= 1); //VOODOO: invalid frame buffer memory size requested
@@ -6756,7 +6756,7 @@ static void voodoo_init() {
 	v->pci.fifo.size = 64*2;
 
 	/* set up frame buffer */
-	init_fbi(v, &v->fbi, fbmemsize << 20);
+	init_fbi(&v->fbi, fbmemsize << 20);
 
 	v->fbi.rowpixels = v->fbi.width;
 
