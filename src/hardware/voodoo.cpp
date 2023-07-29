@@ -83,6 +83,7 @@
 #include <emmintrin.h>
 #endif
 
+#include "bitops.h"
 #include "control.h"
 #include "cross.h"
 #include "fraction.h"
@@ -6366,17 +6367,13 @@ static uint32_t register_r(const uint32_t offset)
 			//result |= v->fbi.vblank << 6;
 			result |= (Voodoo_GetRetrace() ? 0x40 : 0);
 
-			/* bit 7 is FBI graphics engine busy */
-			if (v->pci.op_pending)
-				result |= 1 << 7;
-
-			/* bit 8 is TREX busy */
-			if (v->pci.op_pending)
-				result |= 1 << 8;
-
-			/* bit 9 is overall busy */
-			if (v->pci.op_pending)
-				result |= 1 << 9;
+			if (v->pci.op_pending) {
+				// bit 7 is FBI graphics engine busy
+				// bit 8 is TREX busy
+				// bit 9 is overall busy
+				using namespace bit::literals;
+				result |= (b7 | b8 | b9);
+			}
 
 			/* bits 11:10 specifies which buffer is visible */
 			result |= v->fbi.frontbuf << 10;
