@@ -1117,26 +1117,27 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
  *
  *************************************/
 
-inline int32_t float_to_int32(uint32_t data, int fixedbits)
+inline int32_t float_to_int32(const uint32_t data, const int fixedbits)
 {
+	// Clamp the exponent to the type's shift limit
+	constexpr auto max_shift = std::numeric_limits<int32_t>::digits;
 	int exponent = ((data >> 23) & 0xff) - 127 - 23 + fixedbits;
+	exponent = std::clamp(exponent, -max_shift, max_shift);
+
 	int32_t result = (data & 0x7fffff) | 0x800000;
-	if (exponent < 0)
-	{
-		if (exponent > -32)
+
+	if (exponent < 0) {
+		if (exponent > -max_shift) {
 			result >>= -exponent;
-		else
+		} else {
 			result = 0;
 	}
-	else
-	{
-		if (exponent < 32)
-			result <<= exponent;
-		else
-			result = 0x7fffffff;
+	} else {
+		result = clamp_to_int32(static_cast<int64_t>(result) << exponent);
 	}
-	if (data & 0x80000000)
+	if (data & 0x80000000) {
 		result = -result;
+	}
 	return result;
 }
 
