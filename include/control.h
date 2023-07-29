@@ -40,15 +40,44 @@ enum class Verbosity : int8_t {
 	High,          //   yes   |    yes       |
 };
 
+struct CommandLineArguments {
+	bool printconf;
+	bool noprimaryconf;
+	bool nolocalconf;
+	bool fullscreen;
+	bool list_glshaders;
+	bool version;
+	bool help;
+	bool eraseconf;
+	bool erasemapper;
+	bool noconsole;
+	bool startmapper;
+	bool exit;
+	bool securemode;
+	bool noautoexec;
+	std::string opencaptures;
+	std::string working_dir;
+	std::string lang;
+	std::string machine;
+	std::vector<std::string> conf;
+	std::vector<std::string> set;
+	std::optional<std::vector<std::string>> editconf;
+	std::optional<int> socket;
+};
+
 class Config {
 public:
 	CommandLine * cmdline = nullptr;
+	CommandLineArguments arguments = {};
+
 private:
 	std::deque<Section*> sectionlist = {};
 	Section_line overwritten_autoexec_section = {};
 	std::string overwritten_autoexec_conf = {};
 	void (*_start_function)(void) = nullptr;
 	bool secure_mode = false; // Sandbox mode
+	void ParseArguments();
+
 public:
 	std::vector<std::string> startup_params = {};
 	std::vector<std::string> configfiles = {};
@@ -61,6 +90,7 @@ public:
 		assert(cmdline);
 		startup_params.push_back(cmdline->GetFileName());
 		cmdline->FillVector(startup_params);
+		ParseArguments();
 	}
 
 	Config() = default;

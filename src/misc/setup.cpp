@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <limits>
+#include <optional>
 #include <regex>
 #include <sstream>
 #include <string_view>
@@ -1575,7 +1576,7 @@ const std::string& SETUP_GetLanguage()
 	}
 
 	// Has the user provided a language on the command line?
-	(void)control->cmdline->FindString("-lang", lang, true);
+	lang = control->arguments.lang;
 
 	// Is a language provided in the conf file?
 	if (lang.empty()) {
@@ -1618,10 +1619,11 @@ void MSG_Init(Section_prop*);
 void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 {
 	std::string config_file;
+	const auto arguments = &control->arguments;
 
 	// First: parse the user's primary config file
-	const bool wants_primary_conf = !control->cmdline->FindExist("-noprimaryconf",
-	                                                             true);
+	const bool wants_primary_conf = !arguments->noprimaryconf;
+
 	if (wants_primary_conf) {
 		Cross::GetPlatformConfigName(config_file);
 		const auto cfg = config_dir / config_file;
@@ -1629,14 +1631,14 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 	}
 
 	// Second: parse the local 'dosbox.conf', if present
-	const bool wants_local_conf = !control->cmdline->FindExist("-nolocalconf",
-	                                                           true);
+	const bool wants_local_conf = !arguments->nolocalconf;
+
 	if (wants_local_conf) {
 		control->ParseConfigFile("local", "dosbox.conf");
 	}
 
 	// Finally: layer on custom -conf <files>
-	while (control->cmdline->FindString("-conf", config_file, true)) {
+	for (const auto& config_file : arguments->conf) {
 		if (!control->ParseConfigFile("custom", config_file)) {
 			// Try to load it from the user directory
 			const auto cfg = config_dir / config_file;
@@ -1788,4 +1790,38 @@ const char* SetProp(std::vector<std::string>& pvars)
 	}
 
 	return return_msg;
+}
+
+void Config::ParseArguments()
+{
+	arguments.printconf = cmdline->FindRemoveBoolArgument("printconf");
+	arguments.noprimaryconf = cmdline->FindRemoveBoolArgument("noprimaryconf");
+	arguments.nolocalconf = cmdline->FindRemoveBoolArgument("nolocalconf");
+	arguments.fullscreen  = cmdline->FindRemoveBoolArgument("fullscreen");
+	arguments.list_glshaders = cmdline->FindRemoveBoolArgument("list-glshaders");
+	arguments.noconsole   = cmdline->FindRemoveBoolArgument("noconsole");
+	arguments.startmapper = cmdline->FindRemoveBoolArgument("startmapper");
+	arguments.exit        = cmdline->FindRemoveBoolArgument("exit");
+	arguments.securemode = cmdline->FindRemoveBoolArgument("securemode");
+	arguments.noautoexec = cmdline->FindRemoveBoolArgument("noautoexec");
+
+	arguments.eraseconf = cmdline->FindRemoveBoolArgument("eraseconf") ||
+	                      cmdline->FindRemoveBoolArgument("resetconf");
+	arguments.erasemapper = cmdline->FindRemoveBoolArgument("erasemapper") ||
+	                        cmdline->FindRemoveBoolArgument("resetmapper");
+
+	arguments.version = cmdline->FindRemoveBoolArgument("version", 'v');
+	arguments.help    = cmdline->FindRemoveBoolArgument("help", 'h');
+
+	arguments.working_dir = cmdline->FindRemoveStringArgument("working-dir");
+	arguments.lang = cmdline->FindRemoveStringArgument("lang");
+	arguments.opencaptures = cmdline->FindRemoveStringArgument("opencaptures");
+	arguments.machine = cmdline->FindRemoveStringArgument("machine");
+
+	arguments.socket = cmdline->FindRemoveIntArgument("socket");
+
+	arguments.conf = cmdline->FindRemoveVectorArgument("conf");
+	arguments.set  = cmdline->FindRemoveVectorArgument("set");
+
+	arguments.editconf = cmdline->FindRemoveOptionalArgument("editconf");
 }

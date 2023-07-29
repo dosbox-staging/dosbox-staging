@@ -3727,7 +3727,8 @@ static void GUI_StartUp(Section *sec)
 	sdl.resizing_window = false;
 	sdl.wait_on_error = section->Get_bool("waitonerror");
 
-	sdl.desktop.fullscreen = control->cmdline->FindExist("-fullscreen", true) || section->Get_bool("fullscreen");
+	sdl.desktop.fullscreen = control->arguments.fullscreen ||
+	                         section->Get_bool("fullscreen");
 
 	auto priority_conf = section->GetMultiVal("priority")->GetSection();
 	SetPriorityLevels(priority_conf->Get_string("active"),
@@ -4615,14 +4616,13 @@ static int LaunchEditor()
 		execlp(prog.c_str(), prog.c_str(), path.c_str(), (char *)nullptr);
 	};
 
-	std::string editor;
-	constexpr bool remove_arg = true;
 	// Loop until one succeeds
-	while (control->cmdline->FindString("--editconf", editor, remove_arg))
-		replace_with_process(editor);
-
-	while (control->cmdline->FindString("-editconf", editor, remove_arg))
-		replace_with_process(editor);
+	const auto arguments = &control->arguments;
+	if (arguments->editconf) {
+		for (const auto& editor : *arguments->editconf) {
+			replace_with_process(editor);
+		}
+	}
 
 	const char *env_editor = getenv("EDITOR");
 	if (env_editor)
@@ -4787,17 +4787,14 @@ int sdl_main(int argc, char *argv[])
 {
 	CommandLine com_line(argc, argv);
 	control = std::make_unique<Config>(&com_line);
+	const auto arguments = &control->arguments;
 
-	if (control->cmdline->FindExist("--version") ||
-	    control->cmdline->FindExist("-version") ||
-	    control->cmdline->FindExist("-v")) {
+	if (arguments->version) {
 		printf(version_msg, CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 		return 0;
 	}
 
-	if (control->cmdline->FindExist("--help") ||
-	    control->cmdline->FindExist("-help") ||
-	    control->cmdline->FindExist("-h")) {
+	if (arguments->help) {
 		printf(help_msg); // -V618
 		return 0;
 	}
@@ -4821,15 +4818,12 @@ int sdl_main(int argc, char *argv[])
 
 	int rcode = 0; // assume good until proven otherwise
 	try {
-		std::string working_dir;
-		constexpr bool remove_arg = true;
-		if (control->cmdline->FindString("--working-dir", working_dir, remove_arg) ||
-		    control->cmdline->FindString("-working-dir", working_dir, remove_arg)) {
+		if (!arguments->working_dir.empty()) {
 			std::error_code ec;
-			std_fs::current_path(working_dir, ec);
+			std_fs::current_path(arguments->working_dir, ec);
 			if (ec) {
 				LOG_ERR("Cannot set working directory to %s",
-				        working_dir.c_str());
+				        arguments->working_dir.c_str());
 			}
 		}
 
@@ -4842,22 +4836,24 @@ int sdl_main(int argc, char *argv[])
 		config_add_sdl();
 		DOSBOX_Init();
 
-		if (control->cmdline->FindExist("--editconf") ||
-		    control->cmdline->FindExist("-editconf")) {
+		if (arguments->editconf) {
 			const int err = LaunchEditor();
 			return err;
 		}
 
-		std::string editor;
-		if(control->cmdline->FindString("-opencaptures",editor,true)) launchcaptures(editor);
-		if(control->cmdline->FindExist("-eraseconf")) eraseconfigfile();
-		if(control->cmdline->FindExist("-resetconf")) eraseconfigfile();
-		if(control->cmdline->FindExist("-erasemapper")) erasemapperfile();
-		if(control->cmdline->FindExist("-resetmapper")) erasemapperfile();
+		if (!arguments->opencaptures.empty()) {
+			launchcaptures(arguments->opencaptures);
+		}
+		if (arguments->eraseconf) {
+			eraseconfigfile();
+		}
+		if (arguments->erasemapper) {
+			erasemapperfile();
+		}
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
-		if (control->cmdline->FindExist("-noconsole")) {
+		if (arguments->noconsole) {
 			FreeConsole();
 			/* Redirect standard input and standard output */
 			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
@@ -4878,14 +4874,12 @@ int sdl_main(int argc, char *argv[])
 		}
 #endif  //defined(WIN32) && !(C_DEBUG)
 
-		if (control->cmdline->FindExist("--printconf") ||
-		    control->cmdline->FindExist("-printconf")) {
+		if (arguments->printconf) {
 			const int err = PrintConfigLocation();
 			return err;
 		}
 
-		if (control->cmdline->FindExist("--list-glshaders") ||
-		    control->cmdline->FindExist("-list-glshaders")) {
+		if (arguments->list_glshaders) {
 			ListGlShaders();
 			return 0;
 		}
@@ -4928,8 +4922,7 @@ int sdl_main(int argc, char *argv[])
 		"Usage: [color=green]config [/reset]-set [color=cyan][SECTION][/reset] "
 		"[color=white]PROPERTY[/reset][=][color=white]VALUE[/reset]\n");
 
-	std::string line;
-	while (control->cmdline->FindString("-set", line, true)) {
+	for (auto line : arguments->set) {
 		trim(line);
 		if (line.empty()
 		    || line[0] == '%' || line[0] == '\0'
@@ -4990,13 +4983,13 @@ int sdl_main(int argc, char *argv[])
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
 		MAPPER_BindKeys(sdl_sec);
-		if (control->cmdline->FindExist("-startmapper"))
-			MAPPER_DisplayUI();
+		if (arguments->startmapper) {
+		MAPPER_DisplayUI();
+		}
 
 		control->StartUp(); // Run the machine until shutdown
 		control.reset();  // Shutdown and release
-
-	} catch (char *error) {
+	} catch (char* error) {
 		rcode = 1;
 		GFX_ShowMsg("Exit to error: %s",error);
 		fflush(nullptr);
@@ -5010,7 +5003,7 @@ int sdl_main(int argc, char *argv[])
 			Sleep(5000);
 #endif
 		}
-	} catch (const std::exception &e) {
+	} catch (const std::exception& e) {
 		// catch all exceptions that derive from the standard library
 		LOG_ERR("EXCEPTION: Standard library exception: %s", e.what());
 		rcode = 1;
