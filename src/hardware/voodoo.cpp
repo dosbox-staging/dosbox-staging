@@ -4150,8 +4150,8 @@ static void prepare_tmu(tmu_state *t)
 	}
 
 	/* compute (ds^2 + dt^2) in both X and Y as 28.36 numbers */
-	texdx = (int64_t)(t->dsdx >> 14) * (int64_t)(t->dsdx >> 14) + (int64_t)(t->dtdx >> 14) * (int64_t)(t->dtdx >> 14);
-	texdy = (int64_t)(t->dsdy >> 14) * (int64_t)(t->dsdy >> 14) + (int64_t)(t->dtdy >> 14) * (int64_t)(t->dtdy >> 14);
+	texdx = (t->dsdx >> 14) * (t->dsdx >> 14) + (t->dtdx >> 14) * (t->dtdx >> 14);
+	texdy = (t->dsdy >> 14) * (t->dsdy >> 14) + (t->dtdy >> 14) * (t->dtdy >> 14);
 
 	/* pick whichever is larger and shift off some high bits -> 28.20 */
 	if (texdx < texdy)
