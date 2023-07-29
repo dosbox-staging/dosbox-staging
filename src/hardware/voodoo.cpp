@@ -5871,21 +5871,20 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 	/* select the target buffer */
 	destbuf = LFBMODE_WRITE_BUFFER_SELECT(v->reg[lfbMode].u);
 	//LOG(LOG_VOODOO,LOG_WARN)("destbuf %X lfbmode %X",destbuf, v->reg[lfbMode].u);
-	switch (destbuf)
-	{
-		case 0:			/* front buffer */
-			dest = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
+
+	assert(destbuf == 0 || destbuf == 1);
+	switch (destbuf) {
+	case 0: /* front buffer */
+		dest = (uint16_t*)(v->fbi.ram + v->fbi.rgboffs[v->fbi.frontbuf]);
 			destmax = (v->fbi.mask + 1 - v->fbi.rgboffs[v->fbi.frontbuf]) / 2;
 			break;
 
-		case 1:			/* back buffer */
-			dest = (uint16_t *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
+	case 1: /* back buffer */
+		dest = (uint16_t*)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
 			destmax = (v->fbi.mask + 1 - v->fbi.rgboffs[v->fbi.backbuf]) / 2;
 			break;
 
-		default:		/* reserved */
-			E_Exit("reserved lfb write");
-			return;
+	default: /* reserved */ return;
 	}
 	depth = (uint16_t *)(v->fbi.ram + v->fbi.auxoffs);
 	depthmax = (v->fbi.mask + 1 - v->fbi.auxoffs) / 2;
