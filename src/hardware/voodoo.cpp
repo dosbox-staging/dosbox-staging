@@ -6336,19 +6336,19 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 
 		[[maybe_unused]] bool changed = false;
 		if (dest[BYTE4_XOR_LE(tbaseaddr + 0)] != ((data >> 0) & 0xff)) {
-			dest[BYTE4_XOR_LE(tbaseaddr + 0)] = (data >> 0) & 0xff;
+			dest[BYTE4_XOR_LE(tbaseaddr + 0)] = static_cast<uint8_t>((data >> 0) & 0xff);
 			changed = true;
 		}
 		if (dest[BYTE4_XOR_LE(tbaseaddr + 1)] != ((data >> 8) & 0xff)) {
-			dest[BYTE4_XOR_LE(tbaseaddr + 1)] = (data >> 8) & 0xff;
+			dest[BYTE4_XOR_LE(tbaseaddr + 1)] = static_cast<uint8_t>((data >> 8) & 0xff);
 			changed = true;
 		}
 		if (dest[BYTE4_XOR_LE(tbaseaddr + 2)] != ((data >> 16) & 0xff)) {
-			dest[BYTE4_XOR_LE(tbaseaddr + 2)] = (data >> 16) & 0xff;
+			dest[BYTE4_XOR_LE(tbaseaddr + 2)] = static_cast<uint8_t>((data >> 16) & 0xff);
 			changed = true;
 		}
 		if (dest[BYTE4_XOR_LE(tbaseaddr + 3)] != ((data >> 24) & 0xff)) {
-			dest[BYTE4_XOR_LE(tbaseaddr + 3)] = (data >> 24) & 0xff;
+			dest[BYTE4_XOR_LE(tbaseaddr + 3)] = static_cast<uint8_t>((data >> 24) & 0xff);
 			changed = true;
 		}
 
