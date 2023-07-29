@@ -1631,11 +1631,11 @@ do																				\
 		int dg = (dpix >> 3) & 0xfc;											\
 		int db = (dpix << 3) & 0xf8;											\
 		int da = (FBZMODE_ENABLE_ALPHA_PLANES(FBZMODE) && depth) ? depth[XX] : 0xff;		\
-		int sr = (RR);															\
-		int sg = (GG);															\
-		int sb = (BB);															\
-		int sa = (AA);															\
-		int ta;																	\
+		int sr_val = (RR);														\
+		int sg_val = (GG);														\
+		int sb_val = (BB);														\
+		int sa_val = (AA);														\
+		int ta = 0;																\
 																				\
 		/* apply dither subtraction */											\
 		if ((FBZMODE_ALPHA_DITHER_SUBTRACT(FBZMODE)) && DITHER)					\
@@ -1658,49 +1658,49 @@ do																				\
 				break;															\
 																				\
 			case 1:		/* ASRC_ALPHA */										\
-				(RR) = (sr * (sa + 1)) >> 8;									\
-				(GG) = (sg * (sa + 1)) >> 8;									\
-				(BB) = (sb * (sa + 1)) >> 8;									\
+				(RR) = (sr_val * (sa_val + 1)) >> 8;							\
+				(GG) = (sg_val * (sa_val + 1)) >> 8;							\
+				(BB) = (sb_val * (sa_val + 1)) >> 8;							\
 				break;															\
 																				\
 			case 2:		/* A_COLOR */											\
-				(RR) = (sr * (dr + 1)) >> 8;									\
-				(GG) = (sg * (dg + 1)) >> 8;									\
-				(BB) = (sb * (db + 1)) >> 8;									\
+				(RR) = (sr_val * (dr + 1)) >> 8;								\
+				(GG) = (sg_val * (dg + 1)) >> 8;								\
+				(BB) = (sb_val * (db + 1)) >> 8;								\
 				break;															\
 																				\
 			case 3:		/* ADST_ALPHA */										\
-				(RR) = (sr * (da + 1)) >> 8;									\
-				(GG) = (sg * (da + 1)) >> 8;									\
-				(BB) = (sb * (da + 1)) >> 8;									\
+				(RR) = (sr_val * (da + 1)) >> 8;								\
+				(GG) = (sg_val * (da + 1)) >> 8;								\
+				(BB) = (sb_val * (da + 1)) >> 8;								\
 				break;															\
 																				\
 			case 4:		/* AONE */												\
 				break;															\
 																				\
 			case 5:		/* AOMSRC_ALPHA */										\
-				(RR) = (sr * (0x100 - sa)) >> 8;								\
-				(GG) = (sg * (0x100 - sa)) >> 8;								\
-				(BB) = (sb * (0x100 - sa)) >> 8;								\
+				(RR) = (sr_val * (0x100 - sa_val)) >> 8;						\
+				(GG) = (sg_val * (0x100 - sa_val)) >> 8;						\
+				(BB) = (sb_val * (0x100 - sa_val)) >> 8;						\
 				break;															\
 																				\
 			case 6:		/* AOM_COLOR */											\
-				(RR) = (sr * (0x100 - dr)) >> 8;								\
-				(GG) = (sg * (0x100 - dg)) >> 8;								\
-				(BB) = (sb * (0x100 - db)) >> 8;								\
+				(RR) = (sr_val * (0x100 - dr)) >> 8;							\
+				(GG) = (sg_val * (0x100 - dg)) >> 8;							\
+				(BB) = (sb_val * (0x100 - db)) >> 8;							\
 				break;															\
 																				\
 			case 7:		/* AOMDST_ALPHA */										\
-				(RR) = (sr * (0x100 - da)) >> 8;								\
-				(GG) = (sg * (0x100 - da)) >> 8;								\
-				(BB) = (sb * (0x100 - da)) >> 8;								\
+				(RR) = (sr_val * (0x100 - da)) >> 8;							\
+				(GG) = (sg_val * (0x100 - da)) >> 8;							\
+				(BB) = (sb_val * (0x100 - da)) >> 8;							\
 				break;															\
 																				\
 			case 15:	/* ASATURATE */											\
-				ta = (sa < (0x100 - da)) ? sa : (0x100 - da);					\
-				(RR) = (sr * (ta + 1)) >> 8;									\
-				(GG) = (sg * (ta + 1)) >> 8;									\
-				(BB) = (sb * (ta + 1)) >> 8;									\
+				ta = (sa_val < (0x100 - da)) ? sa_val : (0x100 - da);			\
+				(RR) = (sr_val * (ta + 1)) >> 8;								\
+				(GG) = (sg_val * (ta + 1)) >> 8;								\
+				(BB) = (sb_val * (ta + 1)) >> 8;								\
 				break;															\
 		}																		\
 																				\
@@ -1712,15 +1712,15 @@ do																				\
 				break;															\
 																				\
 			case 1:		/* ASRC_ALPHA */										\
-				(RR) += (dr * (sa + 1)) >> 8;									\
-				(GG) += (dg * (sa + 1)) >> 8;									\
-				(BB) += (db * (sa + 1)) >> 8;									\
+				(RR) += (dr * (sa_val + 1)) >> 8;								\
+				(GG) += (dg * (sa_val + 1)) >> 8;								\
+				(BB) += (db * (sa_val + 1)) >> 8;								\
 				break;															\
 																				\
 			case 2:		/* A_COLOR */											\
-				(RR) += (dr * (sr + 1)) >> 8;									\
-				(GG) += (dg * (sg + 1)) >> 8;									\
-				(BB) += (db * (sb + 1)) >> 8;									\
+				(RR) += (dr * (sr_val + 1)) >> 8;								\
+				(GG) += (dg * (sg_val + 1)) >> 8;								\
+				(BB) += (db * (sb_val + 1)) >> 8;								\
 				break;															\
 																				\
 			case 3:		/* ADST_ALPHA */										\
@@ -1736,15 +1736,15 @@ do																				\
 				break;															\
 																				\
 			case 5:		/* AOMSRC_ALPHA */										\
-				(RR) += (dr * (0x100 - sa)) >> 8;								\
-				(GG) += (dg * (0x100 - sa)) >> 8;								\
-				(BB) += (db * (0x100 - sa)) >> 8;								\
+				(RR) += (dr * (0x100 - sa_val)) >> 8;							\
+				(GG) += (dg * (0x100 - sa_val)) >> 8;							\
+				(BB) += (db * (0x100 - sa_val)) >> 8;							\
 				break;															\
 																				\
 			case 6:		/* AOM_COLOR */											\
-				(RR) += (dr * (0x100 - sr)) >> 8;								\
-				(GG) += (dg * (0x100 - sg)) >> 8;								\
-				(BB) += (db * (0x100 - sb)) >> 8;								\
+				(RR) += (dr * (0x100 - sr_val)) >> 8;							\
+				(GG) += (dg * (0x100 - sg_val)) >> 8;							\
+				(BB) += (db * (0x100 - sb_val)) >> 8;							\
 				break;															\
 																				\
 			case 7:		/* AOMDST_ALPHA */										\
@@ -1763,7 +1763,7 @@ do																				\
 		/* blend the source alpha */											\
 		(AA) = 0;																\
 		if (ALPHAMODE_SRCALPHABLEND(ALPHAMODE) == 4)							\
-			(AA) = sa;															\
+			(AA) = sa_val;														\
 																				\
 		/* blend the dest alpha */												\
 		if (ALPHAMODE_DSTALPHABLEND(ALPHAMODE) == 4)							\
