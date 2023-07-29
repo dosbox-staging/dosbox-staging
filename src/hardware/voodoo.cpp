@@ -1002,20 +1002,6 @@ struct poly_extra_data
 };
 #endif
 
-/*************************************
- *
- *  Inline FIFO management
- *
- *************************************/
-
-inline int32_t fifo_space(fifo_state* f)
-{
-	int32_t items = 0;
-	if (items < 0)
-		items += f->size;
-	return f->size - 1 - items;
-}
-
 inline uint8_t count_leading_zeros(uint32_t value)
 {
 #ifdef _MSC_VER
