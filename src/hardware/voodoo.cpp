@@ -3341,13 +3341,11 @@ static inline void raster_generic(const voodoo_state* v, uint32_t TMUS, uint32_t
 				blenda = 0;
 				break;
 			case 1:		/* a_local */
+			case 3:
 				blenda = c_local.rgb.a;
 				break;
 			case 2:		/* a_other */
 				blenda = c_other.rgb.a;
-				break;
-			case 3:		/* a_local */
-				blenda = c_local.rgb.a;
 				break;
 			case 4:		/* texture alpha */
 				blenda = texel.rgb.a;
