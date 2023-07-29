@@ -84,6 +84,7 @@
 #endif
 
 #include "bitops.h"
+#include "byteorder.h"
 #include "control.h"
 #include "cross.h"
 #include "fraction.h"
@@ -165,22 +166,6 @@ struct rectangle
 	int				max_y;			/* maximum Y, or bottom coordinate (inclusive) */
 };
 #endif
-
-/* Macros for normalizing data into big or little endian formats */
-#define FLIPENDIAN_INT16(x)	(((((uint16_t) (x)) >> 8) | ((x) << 8)) & 0xffff)
-#define FLIPENDIAN_INT32(x)	((((uint32_t) (x)) << 24) | (((uint32_t) (x)) >> 24) | \
-	(( ((uint32_t) (x)) & 0x0000ff00) << 8) | (( ((uint32_t) (x)) & 0x00ff0000) >> 8))
-#define FLIPENDIAN_INT64(x)	\
-	(												\
-		(((((uint64_t) (x)) >> 56) & ((uint64_t) 0xFF)) <<  0)	|	\
-		(((((uint64_t) (x)) >> 48) & ((uint64_t) 0xFF)) <<  8)	|	\
-		(((((uint64_t) (x)) >> 40) & ((uint64_t) 0xFF)) << 16)	|	\
-		(((((uint64_t) (x)) >> 32) & ((uint64_t) 0xFF)) << 24)	|	\
-		(((((uint64_t) (x)) >> 24) & ((uint64_t) 0xFF)) << 32)	|	\
-		(((((uint64_t) (x)) >> 16) & ((uint64_t) 0xFF)) << 40)	|	\
-		(((((uint64_t) (x)) >>  8) & ((uint64_t) 0xFF)) << 48)	|	\
-		(((((uint64_t) (x)) >>  0) & ((uint64_t) 0xFF)) << 56)		\
-	)
 
 #define ACCESSING_BITS_0_15				((mem_mask & 0x0000ffff) != 0)
 #define ACCESSING_BITS_16_31			((mem_mask & 0xffff0000) != 0)
@@ -5681,8 +5666,8 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 	/* byte swizzling */
 	if (LFBMODE_BYTE_SWIZZLE_WRITES(v->reg[lfbMode].u))
 	{
-		data = FLIPENDIAN_INT32(data);
-		mem_mask = FLIPENDIAN_INT32(mem_mask);
+		data = bswap_u32(data);
+		mem_mask = bswap_u32(mem_mask);
 	}
 
 	/* word swapping */
@@ -6313,7 +6298,7 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 
 	/* swizzle the data */
 	if (TEXLOD_TDATA_SWIZZLE(t->reg[tLOD].u))
-		data = FLIPENDIAN_INT32(data);
+		data = bswap_u32(data);
 	if (TEXLOD_TDATA_SWAP(t->reg[tLOD].u))
 		data = (data >> 16) | (data << 16);
 
@@ -6603,7 +6588,7 @@ static uint32_t lfb_r(const uint32_t offset)
 
 	/* byte swizzling */
 	if (LFBMODE_BYTE_SWIZZLE_READS(v->reg[lfbMode].u))
-		data = FLIPENDIAN_INT32(data);
+		data = bswap_u32(data);
 
 	if (LOG_LFB) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:read (%d,%d) = %08X\n", x, y, data);
 	return data;
