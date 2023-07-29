@@ -1362,10 +1362,10 @@ while (0)
 #define CLAMPED_ARGB(ITERR, ITERG, ITERB, ITERA, FBZCP, RESULT)					\
 do																				\
 {																				\
-	int32_t r = (int32_t)(ITERR) >> 12;												\
-	int32_t g = (int32_t)(ITERG) >> 12;												\
-	int32_t b = (int32_t)(ITERB) >> 12;												\
-	int32_t a = (int32_t)(ITERA) >> 12;												\
+	int32_t r = (ITERR) >> 12;													\
+	int32_t g = (ITERG) >> 12;													\
+	int32_t b = (ITERB) >> 12;													\
+	int32_t a = (ITERA) >> 12;													\
 																				\
 	if (FBZCP_RGBZW_CLAMP(FBZCP) == 0)											\
 	{																			\
@@ -1411,7 +1411,7 @@ while (0)
 #define CLAMPED_Z(ITERZ, FBZCP, RESULT)											\
 do																				\
 {																				\
-	(RESULT) = (int32_t)(ITERZ) >> 12;											\
+	(RESULT) = (ITERZ) >> 12;													\
 	if (FBZCP_RGBZW_CLAMP(FBZCP) == 0)											\
 	{																			\
 		(RESULT) &= 0xfffff;													\
