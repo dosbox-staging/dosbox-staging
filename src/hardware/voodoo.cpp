@@ -6993,8 +6993,8 @@ static void Voodoo_VerticalTimer(uint32_t /*val*/)
 #endif
 
 		// draw all lines at once
-		uint16_t* viewbuf = (uint16_t*)(v->fbi.ram +
-		                                v->fbi.rgboffs[v->fbi.frontbuf]);
+		auto* viewbuf = (uint16_t*)(v->fbi.ram +
+		                            v->fbi.rgboffs[v->fbi.frontbuf]);
 		for(Bitu i = 0; i < v->fbi.height; i++) {
 			RENDER_DrawLine((uint8_t*)viewbuf);
 			viewbuf += v->fbi.rowpixels;
@@ -7449,7 +7449,7 @@ void VOODOO_Destroy(Section* /*sec*/) {
 }
 
 void VOODOO_Init(Section* sec) {
-	Section_prop* section = dynamic_cast<Section_prop*>(sec);
+	auto* section = dynamic_cast<Section_prop*>(sec);
 
 	// Only activate on SVGA machines
 	if (machine != MCH_VGA || svgaCard == SVGA_None || !section) {
