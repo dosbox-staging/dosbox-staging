@@ -64,7 +64,7 @@ jobs:
       - name: Build
         run: |
           set -xeu
-          meson setup -Dbuildtype=debug -Dexperimental_voodoo_support=true -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini build
+          meson setup -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-clang.ini build
           pvs-studio-analyzer trace -- meson compile -C build
 
       - name: Analyze

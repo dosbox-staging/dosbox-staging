@@ -66,8 +66,6 @@
 
 #include "dosbox.h"
 
-#if C_VOODOO
-
 #include <algorithm>
 #include <array>
 #include <atomic>
@@ -7232,5 +7230,3 @@ void VOODOO_Init(Section* sec) {
 
 	PCI_AddDevice(new PCI_SSTDevice());
 }
-
-#endif

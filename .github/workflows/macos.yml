@@ -19,7 +19,7 @@ jobs:
             host: macos-13
             arch: x86_64
             needs_deps: true
-            build_flags: -Denable_debugger=normal -Dexperimental_voodoo_support=true
+            build_flags: -Denable_debugger=normal
             brew_path: /usr/local/homebrew
             max_warnings: 0
 
@@ -28,7 +28,7 @@ jobs:
             arch: x86_64
             needs_deps: true
             packages: gcc@12
-            build_flags: -Dbuildtype=debug -Dunit_tests=disabled -Dexperimental_voodoo_support=true --native-file=.github/meson/native-gcc-12.ini
+            build_flags: -Dbuildtype=debug -Dunit_tests=disabled --native-file=.github/meson/native-gcc-12.ini
             brew_path: /usr/local/homebrew
             max_warnings: 0
 

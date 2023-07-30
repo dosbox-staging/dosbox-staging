@@ -29,8 +29,6 @@
 #include "setup.h"
 #include "support.h"
 
-#if defined(PCI_FUNCTIONALITY_ENABLED)
-
 static uint32_t pci_caddress=0;			// current PCI addressing
 static Bitu pci_devices_installed=0;	// number of registered PCI devices
 
@@ -482,5 +480,3 @@ uint8_t PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, uint8_t regnum)
 {
 	return pci_cfg_data[pci_id][pci_subfunction][regnum];
 }
-
-#endif
