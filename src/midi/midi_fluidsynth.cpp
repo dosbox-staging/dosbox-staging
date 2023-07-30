@@ -663,10 +663,57 @@ void MidiHandlerFluidsynth::ApplyChannelMessage(const std::vector<uint8_t>& msg)
 
 	// clang-format off
 	switch (status) {
-	case MidiStatus::NoteOff:         fluid_synth_noteoff(         synth.get(), channel, msg[1]);                 break;
-	case MidiStatus::NoteOn:          fluid_synth_noteon(          synth.get(), channel, msg[1], msg[2]);         break;
-	case MidiStatus::PolyKeyPressure: fluid_synth_key_pressure(    synth.get(), channel, msg[1], msg[2]);         break;
-	case MidiStatus::ControlChange:   fluid_synth_cc(              synth.get(), channel, msg[1], msg[2]);         break;
+	case MidiStatus::NoteOff:         fluid_synth_noteoff(     synth.get(), channel, msg[1]);         break;
+	case MidiStatus::NoteOn:          fluid_synth_noteon(      synth.get(), channel, msg[1], msg[2]); break;
+	case MidiStatus::PolyKeyPressure: fluid_synth_key_pressure(synth.get(), channel, msg[1], msg[2]); break;
+
+	case MidiStatus::ControlChange: {
+		const auto controller = msg[1];
+		const auto value = msg[2];
+
+		if (controller == MidiController::Portamento ||
+			controller == MidiController::PortamentoTime ||
+			controller == MidiController::PortamentoControl) {
+
+			// The Roland SC-55 and its clones (Yamaha MU80 or Roland's own
+			// later modules that emulate the SC-55) handle portamento (pitch
+			// glides between consecutive notes on the same channel) in a very
+			// specific and unique way, just like most synthesisers.
+			//
+			// The SC-55 accepts only 7-bit Portamento Time values via MIDI
+			// CC5, where the min value of 0 sets the fastest portamento time
+			// (effectively turns it off), and the max value of 127 the
+			// slowest (up to 8 minutes!). There is an exponential mapping
+			// between the CC values and the duration of the portamento (pitch
+			// slides/glides); this custom curve is apparently approximated by
+			// multiple linear segments. Moreover, the distance between the
+			// source and destination notes also affect the portamento time,
+			// making portamento dynamic and highly dependent on the notes
+			// being played.
+			//
+			// FluidSynth, on the other hand, implements a very different
+			// portamento model. Portament Time values are set via 14-bit CC
+			// messages (via MIDI CC5 (coarse) and CC37 (fine)), and there is
+			// a linear mapping between CC values and the portamento time as
+			// per the following formula:
+			//
+			//   (CC5 * 127 ms) + (CC37 ms)
+			//
+			// Because of these fundamental differences, emulating Roland
+			// SC-55 style portamento on FluidSynth is practically not
+			// possible. Music written for the SC-55 that use portamento
+			// sounds weirdly out of tune on FluidSynth (e.g. the Level 8
+			// music of Descent), and "mapping" SC-55 portamento behaviour to
+			// the FluidSynth range is not possible due to dynamic nature of
+			// the SC-55 portamento handling. All in all, it's for the best to
+			// ignore portamento altogether. This is not a great loss as it's
+			// used rarely and usually only to add some subtle flair to the
+			// start of the notes in synth-oriented soundtracks.
+		} else {
+			fluid_synth_cc(synth.get(), channel, controller, value);
+		}
+	} break;
+
 	case MidiStatus::ProgramChange:   fluid_synth_program_change(  synth.get(), channel, msg[1]);                 break;
 	case MidiStatus::ChannelPressure: fluid_synth_channel_pressure(synth.get(), channel, msg[1]);                 break;
 	case MidiStatus::PitchBend:       fluid_synth_pitch_bend(      synth.get(), channel, msg[1] + (msg[2] << 7)); break;
