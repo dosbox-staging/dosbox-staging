@@ -7390,10 +7390,12 @@ void VOODOO_Destroy(Section* /*sec*/) {
 }
 
 void VOODOO_Init(Section* sec) {
-	// Only active on SVGA machines
-	if (machine != MCH_VGA || svgaCard == SVGA_None) return;
+	Section_prop* section = dynamic_cast<Section_prop*>(sec);
 
-	Section_prop * section = static_cast<Section_prop *>(sec);
+	// Only activate on SVGA machines
+	if (machine != MCH_VGA || svgaCard == SVGA_None || !section) {
+		return;
+	}
 
 	switch (section->Get_string("voodoo")[0])
 	{
