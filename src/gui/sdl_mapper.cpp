@@ -1984,7 +1984,8 @@ static void SetActiveEvent(CEvent * event) {
 	}
 }
 
-extern SDL_Window * GFX_SetSDLSurfaceWindow(uint16_t width, uint16_t height);
+extern SDL_Window* GFX_SetSDLSurfaceWindow(uint16_t width, uint16_t height,
+                                           bool allow_highdpi = true);
 extern SDL_Rect GFX_GetSDLSurfaceSubwindowDims(uint16_t width, uint16_t height);
 extern void GFX_UpdateDisplayDimensions(int width, int height);
 
@@ -2996,7 +2997,7 @@ void MAPPER_DisplayUI() {
 
 	// Be sure that there is no update in progress
 	GFX_EndUpdate( nullptr );
-	mapper.window = GFX_SetSDLSurfaceWindow(640, 480);
+	mapper.window = GFX_SetSDLSurfaceWindow(640, 480, false);
 	if (mapper.window == nullptr)
 		E_Exit("Could not initialize video mode for mapper: %s", SDL_GetError());
 	mapper.surface = SDL_GetWindowSurface(mapper.window);
