@@ -4247,10 +4247,9 @@ static void accumulate_statistics(voodoo_state *vs, const stats_block *stats)
 static void update_statistics(voodoo_state *vs, bool accumulate)
 {
 	/* accumulate/reset statistics from all units */
-	for (size_t i = 0; i != TRIANGLE_WORKERS; i++)
-	{
+	for (auto& thread_stat : vs->thread_stats) {
 		if (accumulate)
-			accumulate_statistics(vs, &vs->thread_stats[i]);
+			accumulate_statistics(vs, &thread_stat);
 	}
 	memset(vs->thread_stats, 0, sizeof(vs->thread_stats));
 
