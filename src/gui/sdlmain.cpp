@@ -1336,7 +1336,8 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 }
 
 static SDL_Window* SetWindowMode(SCREEN_TYPES screen_type, int width,
-                                 int height, bool fullscreen, bool resizable)
+                                 int height, bool fullscreen, bool resizable,
+                                 bool allow_highdpi = true)
 {
 	CleanupSDLResources();
 
@@ -1355,7 +1356,9 @@ static SDL_Window* SetWindowMode(SCREEN_TYPES screen_type, int width,
 		remove_window();
 
 		uint32_t flags = opengl_driver_crash_workaround(screen_type);
-		flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+		if (allow_highdpi) {
+			flags |= SDL_WINDOW_ALLOW_HIGHDPI;
+		}
 #if C_OPENGL
 		if (screen_type == SCREEN_OPENGL)
 			flags |= SDL_WINDOW_OPENGL;
@@ -1472,10 +1475,11 @@ finish:
 
 // Used for the mapper UI and more: Creates a fullscreen window with desktop res
 // on Android, and a non-fullscreen window with the input dimensions otherwise.
-SDL_Window * GFX_SetSDLSurfaceWindow(uint16_t width, uint16_t height)
+SDL_Window* GFX_SetSDLSurfaceWindow(uint16_t width, uint16_t height,
+                                    bool allow_highdpi = true)
 {
 	constexpr bool fullscreen = false;
-	return SetWindowMode(SCREEN_SURFACE, width, height, fullscreen, FIXED_SIZE);
+	return SetWindowMode(SCREEN_SURFACE, width, height, fullscreen, FIXED_SIZE, allow_highdpi);
 }
 
 // Returns the rectangle in the current window to be used for scaling a
