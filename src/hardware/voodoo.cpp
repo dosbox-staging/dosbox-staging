@@ -7336,9 +7336,7 @@ struct PCI_SSTDevice : public PCI_Device {
 		if ((regnum>=0x30) && (regnum<0x34)) return -1;	// expansion rom addresses are read-only
 		switch (regnum) {
 			case 0x10:
-			        uint8_t PCI_GetCFGData(Bits pci_id,
-			                               Bits pci_subfunction,
-			                               uint8_t regnum);
+			        
 			        return (PCI_GetCFGData(this->PCIId(), this->PCISubfunction(), 0x10) & 0x0f);
 			case 0x11:
 				return 0x00;
