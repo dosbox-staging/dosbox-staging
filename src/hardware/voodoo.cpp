@@ -4112,7 +4112,7 @@ static void recompute_texture_params(tmu_state *t)
 	/* LODs 1-3 are different depending on whether we are in multitex mode */
 	/* Several Voodoo 2 games leave the upper bits of TLOD == 0xff, meaning we think */
 	/* they want multitex mode when they really don't -- disable for now */
-	if (0)//TEXLOD_TMULTIBASEADDR(t->reg[tLOD].u))
+	if (false) // TEXLOD_TMULTIBASEADDR(t->reg[tLOD].u))
 	{
 		base = (t->reg[texBaseAddr_1].u & t->texaddr_mask) << t->texaddr_shift;
 		t->lodoffset[1] = base & t->mask;
@@ -4120,9 +4120,7 @@ static void recompute_texture_params(tmu_state *t)
 		t->lodoffset[2] = base & t->mask;
 		base = (t->reg[texBaseAddr_3_8].u & t->texaddr_mask) << t->texaddr_shift;
 		t->lodoffset[3] = base & t->mask;
-	}
-	else
-	{
+	} else {
 		if (t->lodmask & (1 << 0))
 			base += (((t->wmask >> 0) + 1) * ((t->hmask >> 0) + 1)) << bppscale;
 		t->lodoffset[1] = base & t->mask;
