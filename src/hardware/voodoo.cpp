@@ -7224,10 +7224,16 @@ static uint32_t voodoo_current_lfb;
 static PageHandler* voodoo_pagehandler;
 
 struct PCI_SSTDevice : public PCI_Device {
-	enum { vendor = 0x121a, device_voodoo_1 = 0x0001, device_voodoo_2 = 0x0002 }; // 0x121a = 3dfx
-	uint16_t oscillator_ctr, pci_ctr;
+	enum {
+		vendor          = 0x121a,
+		device_voodoo_1 = 0x0001,
+		device_voodoo_2 = 0x0002
+	}; // 0x121a = 3dfx
 
-	PCI_SSTDevice() : PCI_Device(vendor,device_voodoo_1), oscillator_ctr(0), pci_ctr(0) { }
+	uint16_t oscillator_ctr = 0;
+	uint16_t pci_ctr = 0;
+
+	PCI_SSTDevice() : PCI_Device(vendor, device_voodoo_1) {}
 
 	void SetDeviceId(uint16_t _device_id)
 	{
