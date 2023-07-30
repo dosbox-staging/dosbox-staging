@@ -429,6 +429,9 @@ void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_
 
 void CAPTURE_AddMidiData(const bool sysex, const size_t len, const uint8_t* data)
 {
+	if (capture.state.midi == CaptureState::Pending) {
+		capture.state.midi = CaptureState::InProgress;
+	}
 	capture_midi_add_data(sysex, len, data);
 }
 
