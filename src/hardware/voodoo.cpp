@@ -6912,7 +6912,8 @@ static void voodoo_shutdown() {
 	}
 }
 
-static void voodoo_vblank_flush(void) {
+static void voodoo_vblank_flush()
+{
 #ifdef C_ENABLE_VOODOO_OPENGL
 	if (v->ogl)
 		voodoo_ogl_vblank_flush();
@@ -6928,7 +6929,8 @@ static void voodoo_set_window(void) {
 }
 #endif
 
-static void voodoo_leave(void) {
+static void voodoo_leave()
+{
 #ifdef C_ENABLE_VOODOO_OPENGL
 	if (v->ogl) {
 		voodoo_ogl_leave(true);
@@ -6937,7 +6939,8 @@ static void voodoo_leave(void) {
 	v->active = false;
 }
 
-static void voodoo_activate(void) {
+static void voodoo_activate()
+{
 	v->active = true;
 
 #ifdef C_ENABLE_VOODOO_OPENGL
@@ -7061,7 +7064,8 @@ static double Voodoo_GetHRetracePosition() {
 	return 0.0;
 }
 
-static void Voodoo_UpdateScreen(void) {
+static void Voodoo_UpdateScreen()
+{
 	// abort drawing
 	RENDER_EndUpdate(true);
 
