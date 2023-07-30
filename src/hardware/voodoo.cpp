@@ -198,8 +198,8 @@ inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
                                   rgb_t rgb11, uint8_t u, uint8_t v)
 {
 #if defined(__SSE2__)
-	__m128i  scale_u = *(__m128i *)sse2_scale_table[u];
-	__m128i  scale_v = *(__m128i *)sse2_scale_table[v];
+	const __m128i scale_u = *(__m128i*)sse2_scale_table[u];
+	const __m128i scale_v = *(__m128i*)sse2_scale_table[v];
 	return _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packs_epi32(_mm_srli_epi32(_mm_madd_epi16(_mm_max_epi16(
 		_mm_slli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb01), _mm_cvtsi32_si128(rgb00)), _mm_setzero_si128()), scale_u), 15),
 		_mm_srli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb11), _mm_cvtsi32_si128(rgb10)), _mm_setzero_si128()), scale_u), 1)),
@@ -1150,7 +1150,7 @@ inline int32_t float_to_int32(const uint32_t data, const int fixedbits)
 
 inline int64_t float_to_int64(uint32_t data, int fixedbits)
 {
-	int exponent = ((data >> 23) & 0xff) - 127 - 23 + fixedbits;
+	const int exponent = ((data >> 23) & 0xff) - 127 - 23 + fixedbits;
 	int64_t result = (data & 0x7fffff) | 0x800000;
 	if (exponent < 0)
 	{
@@ -3050,12 +3050,13 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 	const auto& tmu0 = vs->tmu[0];
 	const auto& tmu1 = vs->tmu[1];
 
-	uint32_t r_fbzColorPath = regs[fbzColorPath].u;
-	uint32_t r_fbzMode      = regs[fbzMode].u;
-	uint32_t r_alphaMode    = regs[alphaMode].u;
-	uint32_t r_fogMode      = regs[fogMode].u;
-	uint32_t r_zaColor      = regs[zaColor].u;
-	uint32_t r_stipple      = regs[stipple].u;
+	const uint32_t r_fbzColorPath = regs[fbzColorPath].u;
+	const uint32_t r_fbzMode      = regs[fbzMode].u;
+	const uint32_t r_alphaMode    = regs[alphaMode].u;
+	const uint32_t r_fogMode      = regs[fogMode].u;
+	const uint32_t r_zaColor      = regs[zaColor].u;
+
+	uint32_t r_stipple = regs[stipple].u;
 
 	/* determine the screen Y */
 	if (FBZMODE_Y_ORIGIN(r_fbzMode))
@@ -3111,8 +3112,9 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 	                        : nullptr;
 
 	/* compute the starting parameters */
-	int32_t dx = startx - (fbi.ax >> 4);
-	int32_t dy = y - (fbi.ay >> 4);
+	const int32_t dx = startx - (fbi.ax >> 4);
+	const int32_t dy = y - (fbi.ay >> 4);
+
 	int32_t iterr = fbi.startr + dy * fbi.drdy + dx * fbi.drdx;
 	int32_t iterg = fbi.startg + dy * fbi.dgdy + dx * fbi.dgdx;
 	int32_t iterb = fbi.startb + dy * fbi.dbdy + dx * fbi.dbdx;
@@ -3542,7 +3544,7 @@ static raster_info *find_rasterizer(voodoo_state *vs, int texcount)
 static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent, const uint16_t* extra_dither)
 {
 	stats_block stats = {};
-	int32_t startx = extent->startx;
+	const int32_t startx = extent->startx;
 	int32_t stopx = extent->stopx;
 	int scry;
 	int x;
@@ -3805,8 +3807,10 @@ static void recompute_video_memory(voodoo_state *vs)
 {
 	const auto regs = vs->reg;
 
-	uint32_t buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(regs[fbiInit2].u);
-	uint32_t fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(regs[fbiInit4].u);
+	const uint32_t buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(regs[fbiInit2].u);
+
+	const uint32_t fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(regs[fbiInit4].u);
+
 	uint32_t fifo_last_page = FBIINIT4_MEMORY_FIFO_STOP_ROW(regs[fbiInit4].u);
 	uint32_t memory_config;
 	int buf;
@@ -3916,9 +3920,9 @@ static void ncc_table_write(ncc_table *n, uint32_t regnum, uint32_t data)
 	/* I/Q entries reference the palette if the high bit is set */
 	if (regnum >= 4 && (data & 0x80000000) && n->palette)
 	{
-		uint32_t index = ((data >> 23) & 0xfe) | (regnum & 1);
+		const uint32_t index = ((data >> 23) & 0xfe) | (regnum & 1);
 
-		rgb_t palette_entry = 0xff000000 | data;
+		const rgb_t palette_entry = 0xff000000 | data;
 
 		if (n->palette[index] != palette_entry) {
 			/* set the ARGB for this palette index */
@@ -3931,10 +3935,18 @@ static void ncc_table_write(ncc_table *n, uint32_t regnum, uint32_t data)
 		/* if we have an ARGB palette as well, compute its value */
 		if (n->palettea)
 		{
-			uint32_t a = ((data >> 16) & 0xfc) | ((data >> 22) & 0x03);
-			uint32_t r = ((data >> 10) & 0xfc) | ((data >> 16) & 0x03);
-			uint32_t g = ((data >>  4) & 0xfc) | ((data >> 10) & 0x03);
-			uint32_t b = ((data <<  2) & 0xfc) | ((data >>  4) & 0x03);
+			const uint32_t a = ((data >> 16) & 0xfc) |
+			                   ((data >> 22) & 0x03);
+
+			const uint32_t r = ((data >> 10) & 0xfc) |
+			                   ((data >> 16) & 0x03);
+
+			const uint32_t g = ((data >> 4) & 0xfc) |
+			                   ((data >> 10) & 0x03);
+
+			const uint32_t b = ((data << 2) & 0xfc) |
+			                   ((data >> 4) & 0x03);
+
 			n->palettea[index] = MAKE_ARGB(a, r, g, b);
 		}
 
@@ -3989,8 +4001,8 @@ static void ncc_table_update(ncc_table *n)
 	/* generte all 256 possibilities */
 	for (i = 0; i < 256; i++)
 	{
-		int vi = (i >> 2) & 0x03;
-		int vq = (i >> 0) & 0x03;
+		const int vi = (i >> 2) & 0x03;
+		const int vq = (i >> 0) & 0x03;
 
 		/* start with the intensity */
 		r = g = b = n->y[(i >> 4) & 0x0f];
@@ -4278,23 +4290,34 @@ static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, i
 	}
 
 	/* compute the slopes for each portion of the triangle */
-	poly_vertex v1  = tworker.v1;
-	poly_vertex v2  = tworker.v2;
-	poly_vertex v3  = tworker.v3;
-	float dxdy_v1v2 = (v2.y == v1.y) ? 0.0f : (v2.x - v1.x) / (v2.y - v1.y);
-	float dxdy_v1v3 = (v3.y == v1.y) ? 0.0f : (v3.x - v1.x) / (v3.y - v1.y);
-	float dxdy_v2v3 = (v3.y == v2.y) ? 0.0f : (v3.x - v2.x) / (v3.y - v2.y);
+	const poly_vertex v1 = tworker.v1;
+	const poly_vertex v2 = tworker.v2;
+	const poly_vertex v3 = tworker.v3;
+
+	const float dxdy_v1v2 = (v2.y == v1.y) ? 0.0f
+	                                       : (v2.x - v1.x) / (v2.y - v1.y);
+	const float dxdy_v1v3 = (v3.y == v1.y) ? 0.0f
+	                                       : (v3.x - v1.x) / (v3.y - v1.y);
+	const float dxdy_v2v3 = (v3.y == v2.y) ? 0.0f
+	                                       : (v3.x - v2.x) / (v3.y - v2.y);
 
 	stats_block my_stats = {};
-	int32_t from = tworker.totalpix * worktstart / TRIANGLE_WORKERS;
-	int32_t to   = tworker.totalpix * worktend   / TRIANGLE_WORKERS;
-	for (int32_t curscan = tworker.v1y, scanend = tworker.v3y, sumpix = 0, lastsum = 0; curscan != scanend && lastsum < to; lastsum = sumpix, curscan++)
-	{
-		float fully = (float)(curscan) + 0.5f;
-		float startx = v1.x + (fully - v1.y) * dxdy_v1v3;
+
+	const int32_t from = tworker.totalpix * worktstart / TRIANGLE_WORKERS;
+	const int32_t to   = tworker.totalpix * worktend / TRIANGLE_WORKERS;
+
+	for (int32_t curscan = tworker.v1y, scanend = tworker.v3y, sumpix = 0, lastsum = 0;
+	     curscan != scanend && lastsum < to;
+	     lastsum = sumpix, curscan++) {
+
+		const float fully = (float)(curscan) + 0.5f;
+
+		const float startx = v1.x + (fully - v1.y) * dxdy_v1v3;
 
 		/* compute the ending X based on which part of the triangle we're in */
-		float stopx = (fully < v2.y ? (v1.x + (fully - v1.y) * dxdy_v1v2) : (v2.x + (fully - v2.y) * dxdy_v2v3));
+		const float stopx = (fully < v2.y
+		                             ? (v1.x + (fully - v1.y) * dxdy_v1v2)
+		                             : (v2.x + (fully - v2.y) * dxdy_v2v3));
 
 		/* clamp to full pixels */
 		poly_extent extent;
@@ -4325,7 +4348,7 @@ static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, i
 static int triangle_worker_thread_func(int32_t p)
 {
 	triangle_worker& tworker = v->tworker;
-	for (int32_t tnum = p; tworker.threads_active;) {
+	for (const int32_t tnum = p; tworker.threads_active;) {
 		tworker.sembegin[tnum].wait();
 		if (tworker.threads_active) {
 			triangle_worker_work(tworker, tnum, tnum + 1);
@@ -4365,25 +4388,31 @@ static void triangle_worker_run(triangle_worker& tworker)
 	}
 
 	/* compute the slopes for each portion of the triangle */
-	poly_vertex v1  = tworker.v1;
-	poly_vertex v2  = tworker.v2;
-	poly_vertex v3  = tworker.v3;
-	float dxdy_v1v2 = (v2.y == v1.y) ? 0.0f : (v2.x - v1.x) / (v2.y - v1.y);
-	float dxdy_v1v3 = (v3.y == v1.y) ? 0.0f : (v3.x - v1.x) / (v3.y - v1.y);
-	float dxdy_v2v3 = (v3.y == v2.y) ? 0.0f : (v3.x - v2.x) / (v3.y - v2.y);
+	const poly_vertex v1 = tworker.v1;
+	const poly_vertex v2 = tworker.v2;
+	const poly_vertex v3 = tworker.v3;
+
+	const float dxdy_v1v2 = (v2.y == v1.y) ? 0.0f
+	                                       : (v2.x - v1.x) / (v2.y - v1.y);
+	const float dxdy_v1v3 = (v3.y == v1.y) ? 0.0f
+	                                       : (v3.x - v1.x) / (v3.y - v1.y);
+	const float dxdy_v2v3 = (v3.y == v2.y) ? 0.0f
+	                                       : (v3.x - v2.x) / (v3.y - v2.y);
 
 	int32_t pixsum = 0;
 	for (int32_t curscan = tworker.v1y, scanend = tworker.v3y; curscan != scanend; curscan++)
 	{
-		float fully = (float)(curscan) + 0.5f;
-		float startx = v1.x + (fully - v1.y) * dxdy_v1v3;
+		const float fully  = (float)(curscan) + 0.5f;
+		const float startx = v1.x + (fully - v1.y) * dxdy_v1v3;
 
 		/* compute the ending X based on which part of the triangle we're in */
-		float stopx = (fully < v2.y ? (v1.x + (fully - v1.y) * dxdy_v1v2) : (v2.x + (fully - v2.y) * dxdy_v2v3));
+		const float stopx = (fully < v2.y
+		                             ? (v1.x + (fully - v1.y) * dxdy_v1v2)
+		                             : (v2.x + (fully - v2.y) * dxdy_v2v3));
 
 		/* clamp to full pixels */
-		int32_t istartx = round_coordinate(startx);
-		int32_t istopx  = round_coordinate(stopx);
+		const int32_t istartx = round_coordinate(startx);
+		const int32_t istopx  = round_coordinate(stopx);
 
 		/* force start < stop */
 		pixsum += (istartx > istopx ? istartx - istopx : istopx - istartx);
@@ -4445,8 +4474,8 @@ static void triangle(voodoo_state *vs)
 	        !vs->ogl &&
 #endif
 	    FBZCP_CCA_SUBPIXEL_ADJUST(regs[fbzColorPath].u)) {
-		int32_t dx = 8 - (fbi.ax & 15);
-		int32_t dy = 8 - (fbi.ay & 15);
+		const int32_t dx = 8 - (fbi.ax & 15);
+		const int32_t dy = 8 - (fbi.ay & 15);
 
 		/* adjust iterated R,G,B,A and W/Z */
 		fbi.startr += (dy * fbi.drdy + dx * fbi.drdx) >> 4;
@@ -4587,8 +4616,8 @@ static void triangle(voodoo_state *vs)
 	}
 
 	/* compute some integral X/Y vertex values */
-	int32_t v1y = round_coordinate(v1->y);
-	int32_t v3y = round_coordinate(v3->y);
+	const int32_t v1y = round_coordinate(v1->y);
+	const int32_t v3y = round_coordinate(v3->y);
 
 	/* clip coordinates */
 	if (v3y <= v1y)
@@ -4693,7 +4722,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	/* backface culling */
 	if (regs[sSetupMode].u & 0x20000) {
 		int culling_sign = (regs[sSetupMode].u >> 18) & 1;
-		int divisor_sign = (divisor < 0);
+		const int divisor_sign = (divisor < 0);
 
 		/* if doing strips and ping pong is enabled, apply the ping pong */
 		if ((regs[sSetupMode].u & 0x90000) == 0x00000) {
@@ -4884,10 +4913,10 @@ static void fastfill(voodoo_state *vs)
 {
 	const auto regs = vs->reg;
 
-	int sx = (regs[clipLeftRight].u >> 16) & 0x3ff;
-	int ex = (regs[clipLeftRight].u >> 0) & 0x3ff;
-	int sy = (regs[clipLowYHighY].u >> 16) & 0x3ff;
-	int ey = (regs[clipLowYHighY].u >> 0) & 0x3ff;
+	const int sx = (regs[clipLeftRight].u >> 16) & 0x3ff;
+	const int ex = (regs[clipLeftRight].u >> 0) & 0x3ff;
+	const int sy = (regs[clipLowYHighY].u >> 16) & 0x3ff;
+	const int ey = (regs[clipLowYHighY].u >> 0) & 0x3ff;
 
 	poly_extent extents[64] = {};
 
@@ -4907,7 +4936,7 @@ static void fastfill(voodoo_state *vs)
 	/* are we clearing the RGB buffer? */
 	if (FBZMODE_RGB_BUFFER_MASK(regs[fbzMode].u)) {
 		/* determine the draw buffer */
-		int destbuf = FBZMODE_DRAW_BUFFER(regs[fbzMode].u);
+		const int destbuf = FBZMODE_DRAW_BUFFER(regs[fbzMode].u);
 		switch (destbuf)
 		{
 			case 0:		/* front buffer */
@@ -4964,11 +4993,12 @@ static void fastfill(voodoo_state *vs)
 	for (y = sy; y < ey; y += num_extents) {
 		const auto count = std::min<int>(ey - y, num_extents);
 		void *dest = drawbuf;
-		int startscanline = y;
-		int numscanlines = count;
 
-		int32_t v1yclip = startscanline;
-		int32_t v3yclip = startscanline + numscanlines;
+		const int startscanline = y;
+		const int numscanlines  = count;
+
+		const int32_t v1yclip = startscanline;
+		const int32_t v3yclip = startscanline + numscanlines;
 
 		if (v3yclip - v1yclip <= 0)
 			return;
@@ -5421,8 +5451,8 @@ static void register_w(uint32_t offset, uint32_t data)
 				v->reg[regnum].u = data;
 				if (v->reg[hSync].u != 0 && v->reg[vSync].u != 0 && v->reg[videoDimensions].u != 0)
 				{
-					int hvis = v->reg[videoDimensions].u & 0x3ff;
-					int vvis = (v->reg[videoDimensions].u >> 16) & 0x3ff;
+					const int hvis = v->reg[videoDimensions].u & 0x3ff;
+					const int vvis = (v->reg[videoDimensions].u >> 16) & 0x3ff;
 
 #ifdef C_ENABLE_VOODOO_DEBUG
 					int htotal = ((v->reg[hSync].u >> 16) & 0x3ff) + 1 + (v->reg[hSync].u & 0xff) + 1;
@@ -5484,8 +5514,9 @@ static void register_w(uint32_t offset, uint32_t data)
 #endif
 
 					/* configure the new framebuffer info */
-					uint32_t new_width = (hvis+1) & ~1;
-					uint32_t new_height = (vvis+1) & ~1;
+					const uint32_t new_width = (hvis + 1) & ~1;
+					const uint32_t new_height = (vvis + 1) & ~1;
+
 					if ((v->fbi.width != new_width) || (v->fbi.height != new_height)) {
 						v->fbi.width = new_width;
 						v->fbi.height = new_height;
@@ -5513,7 +5544,8 @@ static void register_w(uint32_t offset, uint32_t data)
 		case fbiInit0:
 			if ((chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
 			{
-				bool new_output_on = FBIINIT0_VGA_PASSTHRU(data);
+			    const bool new_output_on = FBIINIT0_VGA_PASSTHRU(data);
+
 				if (v->output_on != new_output_on) {
 					v->output_on = new_output_on;
 					Voodoo_UpdateScreenStart();
@@ -5623,7 +5655,8 @@ static void register_w(uint32_t offset, uint32_t data)
 		case fogTable+31:
 			if (chips & 1)
 			{
-				int base = 2 * (regnum - fogTable);
+				const int base = 2 * (regnum - fogTable);
+
 				auto& fbi = v->fbi;
 				fbi.fogdelta[base + 0] = static_cast<uint8_t>(data & 0xff);
 				fbi.fogblend[base + 0] = static_cast<uint8_t>((data >> 8) & 0xff);
@@ -5965,9 +5998,19 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 			/* make sure we care about this pixel */
 			if (mask & 0x0f)
 			{
-				bool has_rgb = (mask & LFB_RGB_PRESENT) > 0;
-				bool has_alpha = ((mask & LFB_ALPHA_PRESENT) > 0) && (FBZMODE_ENABLE_ALPHA_PLANES(v->reg[fbzMode].u) > 0);
-				bool has_depth = ((mask & (LFB_DEPTH_PRESENT | LFB_DEPTH_PRESENT_MSW)) && !FBZMODE_ENABLE_ALPHA_PLANES(v->reg[fbzMode].u));
+				const bool has_rgb = (mask & LFB_RGB_PRESENT) > 0;
+
+				const bool has_alpha =
+				        ((mask & LFB_ALPHA_PRESENT) > 0) &&
+				        (FBZMODE_ENABLE_ALPHA_PLANES(
+				                 v->reg[fbzMode].u) > 0);
+
+				const bool has_depth =
+				        ((mask & (LFB_DEPTH_PRESENT |
+				                  LFB_DEPTH_PRESENT_MSW)) &&
+				         !FBZMODE_ENABLE_ALPHA_PLANES(
+				                 v->reg[fbzMode].u));
+
 #ifdef C_ENABLE_VOODOO_OPENGL
 				if (v->ogl && v->active) {
 					if (has_rgb || has_alpha) {
@@ -6047,8 +6090,9 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 			/* make sure we care about this pixel */
 			if (mask & 0x0f)
 			{
-				int64_t iterw = static_cast<int64_t>(sw[pix]) << (30-16);
-				int32_t iterz = sw[pix] << 12;
+				const int64_t iterw = static_cast<int64_t>(sw[pix]) << (30 - 16);
+				const int32_t iterz = sw[pix] << 12;
+
 				rgb_union color;
 
 				/* apply clipping */
@@ -7351,10 +7395,10 @@ struct PCI_SSTDevice : public PCI_Device {
 
 		registers[0x3c] = 0xff;	// no irq
 
-		// memBaseAddr: size is 16MB
-		uint32_t address_space = (VOODOO_INITIAL_LFB & 0xfffffff0) |
-		                         0x08; // memory space, within first
-		                               // 4GB, prefetchable
+		// 16MB within within the first 4GB is prefetchable
+		const uint32_t address_space = (VOODOO_INITIAL_LFB & 0xfffffff0) |
+		                               0x08;
+
 		registers[0x10] = (uint8_t)(address_space & 0xff); // base
 		                                                   // addres 0
 		registers[0x11] = (uint8_t)((address_space >> 8) & 0xff);
