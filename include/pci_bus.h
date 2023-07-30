@@ -24,12 +24,6 @@
 
 #include "mem.h"
 
-#if C_VOODOO
-#define PCI_FUNCTIONALITY_ENABLED 1
-#endif
-
-#if defined PCI_FUNCTIONALITY_ENABLED
-
 #define PCI_MAX_PCIDEVICES   10
 #define PCI_MAX_PCIFUNCTIONS 8
 
@@ -114,7 +108,5 @@ RealPt PCI_GetPModeInterface();
 void PCI_AddDevice(PCI_Device* dev);
 
 uint8_t PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, uint8_t regnum);
-
-#endif
 
 #endif

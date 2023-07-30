@@ -266,7 +266,6 @@ conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
-conf_data.set10('C_VOODOO', get_option('experimental_voodoo_support'))
 
 if get_option('enable_debugger') != 'none'
     conf_data.set10('C_DEBUG', true)

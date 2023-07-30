@@ -32,11 +32,7 @@
 #include "support.h"
 #include "vga.h"
 
-#if defined(PCI_FUNCTIONALITY_ENABLED)
-
 void PCI_AddSVGAS3_Device();
-
-#endif
 
 void SVGA_S3_WriteCRTC(io_port_t reg, io_val_t value, io_width_t)
 {
@@ -831,12 +827,8 @@ void SVGA_Setup_S3Trio(void)
 	const auto num_modes = ModeList_VGA.size();
 	VGA_LogInitialization(description.c_str(), ram_type.c_str(), num_modes);
 
-#if defined(PCI_FUNCTIONALITY_ENABLED)
 	PCI_AddSVGAS3_Device();
-#endif
 }
-
-#if defined(PCI_FUNCTIONALITY_ENABLED)
 
 struct PCI_VGADevice : public PCI_Device {
 	enum { vendor = 0x5333 }; // S3
@@ -934,4 +926,3 @@ void PCI_AddSVGAS3_Device() {
 	PCI_AddDevice(new PCI_VGADevice());
 }
 
-#endif

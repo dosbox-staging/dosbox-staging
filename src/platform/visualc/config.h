@@ -59,9 +59,6 @@
 // Define to 1 to enable MT-32 emulator
 #define C_MT32EMU 1
 
-// Define to 1 to enable 3dfx Voodoo card emulation
-#define C_VOODOO 0
-
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1
 
