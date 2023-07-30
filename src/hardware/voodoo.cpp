@@ -3007,11 +3007,13 @@ static voodoo_state* v = nullptr;
 static uint8_t vtype = VOODOO_1, vperf;
 
 #define LOG_VOODOO LOG_PCI
-#define LOG_VBLANK_SWAP		(0)
-#define LOG_REGISTERS		(0)
-#define LOG_LFB				(0)
-#define LOG_TEXTURE_RAM		(0)
-#define LOG_RASTERIZERS		(0)
+enum {
+	LOG_VBLANK_SWAP = 0,
+	LOG_REGISTERS   = 0,
+	LOG_LFB         = 0,
+	LOG_TEXTURE_RAM = 0,
+	LOG_RASTERIZERS = 0,
+};
 
 /*************************************
  *
@@ -7253,11 +7255,13 @@ static struct Voodoo_Init_PageHandler : public PageHandler {
 
 } voodoo_init_pagehandler;
 
-#define VOODOO_INITIAL_LFB	0xd0000000
-#define VOODOO_REG_PAGES	1024
-#define VOODOO_LFB_PAGES	1024
-#define VOODOO_TEX_PAGES	2048
-#define VOODOO_PAGES (VOODOO_REG_PAGES+VOODOO_LFB_PAGES+VOODOO_TEX_PAGES)
+enum {
+	VOODOO_INITIAL_LFB = 0xd0000000,
+	VOODOO_REG_PAGES   = 1024,
+	VOODOO_LFB_PAGES   = 1024,
+	VOODOO_TEX_PAGES   = 2048
+};
+#define VOODOO_PAGES (VOODOO_REG_PAGES + VOODOO_LFB_PAGES + VOODOO_TEX_PAGES)
 
 #ifdef C_ENABLE_VOODOO_OPENGL
 #define VOODOO_EMU_TYPE_OFF			0
