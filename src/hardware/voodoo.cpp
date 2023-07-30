@@ -1311,12 +1311,12 @@ do																				\
 		if (FBZMODE_DITHER_TYPE(FBZMODE) == 0)									\
 		{																		\
 			dither = dither4;													\
-			dither_lookup = &dither4_lookup[(YY & 3) << 11];					\
+			dither_lookup = &dither4_lookup[((YY) & 3) << 11];					\
 		}																		\
 		else																	\
 		{																		\
 			dither = &dither_matrix_2x2[((YY) & 3) * 4];						\
-			dither_lookup = &dither2_lookup[(YY & 3) << 11];					\
+			dither_lookup = &dither2_lookup[((YY) & 3) << 11];					\
 		}																		\
 	}																			\
 }																				\
@@ -1329,7 +1329,7 @@ do																				\
 	if (FBZMODE_ENABLE_DITHERING(FBZMODE))										\
 	{																			\
 		/* look up the dither value from the appropriate matrix */				\
-		const uint8_t *dith = &DITHER_LOOKUP[((XX) & 3) << 1];					\
+		const uint8_t *dith = &(DITHER_LOOKUP)[((XX) & 3) << 1];					\
 																				\
 		/* apply dithering to R,G,B */											\
 		(RR) = dith[((RR) << 3) + 0];											\
@@ -1362,45 +1362,45 @@ while (0)
 \
 		if (FBZCP_RGBZW_CLAMP(FBZCP) == 0) { \
 			red &= 0xfff; \
-			RESULT.rgb.r = static_cast<uint8_t>(red); \
+			(RESULT).rgb.r = static_cast<uint8_t>(red); \
 			if (red == 0xfff) \
-				RESULT.rgb.r = 0; \
+				(RESULT).rgb.r = 0; \
 			else if (red == 0x100) \
-				RESULT.rgb.r = 0xff; \
+				(RESULT).rgb.r = 0xff; \
 \
 			green &= 0xfff; \
-			RESULT.rgb.g = static_cast<uint8_t>(green); \
+			(RESULT).rgb.g = static_cast<uint8_t>(green); \
 			if (green == 0xfff) \
-				RESULT.rgb.g = 0; \
+				(RESULT).rgb.g = 0; \
 			else if (green == 0x100) \
-				RESULT.rgb.g = 0xff; \
+				(RESULT).rgb.g = 0xff; \
 \
 			blue &= 0xfff; \
-			RESULT.rgb.b = static_cast<uint8_t>(blue); \
+			(RESULT).rgb.b = static_cast<uint8_t>(blue); \
 			if (blue == 0xfff) \
-				RESULT.rgb.b = 0; \
+				(RESULT).rgb.b = 0; \
 			else if (blue == 0x100) \
-				RESULT.rgb.b = 0xff; \
+				(RESULT).rgb.b = 0xff; \
 \
 			alpha &= 0xfff; \
-			RESULT.rgb.a = static_cast<uint8_t>(alpha); \
+			(RESULT).rgb.a = static_cast<uint8_t>(alpha); \
 			if (alpha == 0xfff) \
-				RESULT.rgb.a = 0; \
+				(RESULT).rgb.a = 0; \
 			else if (alpha == 0x100) \
-				RESULT.rgb.a = 0xff; \
+				(RESULT).rgb.a = 0xff; \
 		} else { \
-			RESULT.rgb.r = (red < 0)    ? 0 \
+			(RESULT).rgb.r = (red < 0)    ? 0 \
 			             : (red > 0xff) ? 0xff \
 			                            : static_cast<uint8_t>(red); \
-			RESULT.rgb.g = (green < 0) ? 0 \
+			(RESULT).rgb.g = (green < 0) ? 0 \
 			             : (green > 0xff) \
 			                     ? 0xff \
 			                     : static_cast<uint8_t>(green); \
-			RESULT.rgb.b = (blue < 0) ? 0 \
+			(RESULT).rgb.b = (blue < 0) ? 0 \
 			             : (blue > 0xff) \
 			                     ? 0xff \
 			                     : static_cast<uint8_t>(blue); \
-			RESULT.rgb.a = (alpha < 0) ? 0 \
+			(RESULT).rgb.a = (alpha < 0) ? 0 \
 			             : (alpha > 0xff) \
 			                     ? 0xff \
 			                     : static_cast<uint8_t>(alpha); \
@@ -1467,7 +1467,7 @@ do																				\
 		/* non-range version */													\
 		if (!CHROMARANGE_ENABLE((VV)->reg[chromaRange].u))						\
 		{																		\
-			if (((COLOR.u ^ (VV)->reg[chromaKey].u) & 0xffffff) == 0)			\
+			if ((((COLOR).u ^ (VV)->reg[chromaKey].u) & 0xffffff) == 0)			\
 			{																	\
 				ADD_STAT_COUNT(STATS, chroma_fail)								\
 				goto skipdrawdepth;												\
@@ -1483,7 +1483,7 @@ do																				\
 			/* check blue */													\
 			low = (VV)->reg[chromaKey].rgb.b;									\
 			high = (VV)->reg[chromaRange].rgb.b;								\
-			test = COLOR.rgb.b;													\
+			test = (COLOR).rgb.b;													\
 			results = (test >= low && test <= high);							\
 			results ^= CHROMARANGE_BLUE_EXCLUSIVE((VV)->reg[chromaRange].u);	\
 			results <<= 1;														\
@@ -1491,7 +1491,7 @@ do																				\
 			/* check green */													\
 			low = (VV)->reg[chromaKey].rgb.g;									\
 			high = (VV)->reg[chromaRange].rgb.g;								\
-			test = COLOR.rgb.g;													\
+			test = (COLOR).rgb.g;													\
 			results |= (test >= low && test <= high);							\
 			results ^= CHROMARANGE_GREEN_EXCLUSIVE((VV)->reg[chromaRange].u);	\
 			results <<= 1;														\
@@ -1499,7 +1499,7 @@ do																				\
 			/* check red */														\
 			low = (VV)->reg[chromaKey].rgb.r;									\
 			high = (VV)->reg[chromaRange].rgb.r;								\
-			test = COLOR.rgb.r;													\
+			test = (COLOR).rgb.r;													\
 			results |= (test >= low && test <= high);							\
 			results ^= CHROMARANGE_RED_EXCLUSIVE((VV)->reg[chromaRange].u);		\
 																				\
@@ -1648,10 +1648,10 @@ while (0)
 			int ta     = 0; \
 \
 			/* apply dither subtraction */ \
-			if ((FBZMODE_ALPHA_DITHER_SUBTRACT(FBZMODE)) && DITHER) { \
+			if ((FBZMODE_ALPHA_DITHER_SUBTRACT(FBZMODE)) && (DITHER)) { \
 				/* look up the dither value from the \
 				 * appropriate matrix */ \
-				int dith = DITHER[(XX) & 3]; \
+				int dith = (DITHER)[(XX) & 3]; \
 \
 				/* subtract the dither value */ \
 				dr = ((dr << 1) + 15 - dith) >> 1; \
@@ -1847,7 +1847,7 @@ do																				\
 					/* apply dither */											\
 					if (FOGMODE_FOG_DITHER(FOGMODE))							\
 						if (DITHER4)											\
-							deltaval += DITHER4[(XX) & 3];						\
+							deltaval += (DITHER4)[(XX) & 3];						\
 					deltaval >>= 4;												\
 																				\
 					/* add to the blending factor */							\
@@ -1856,7 +1856,7 @@ do																				\
 				}																\
 																				\
 				case 1:		/* iterated A */									\
-					fogblend = ITERAXXX.rgb.a;									\
+					fogblend = (ITERAXXX).rgb.a;									\
 					break;														\
 																				\
 				case 2:		/* iterated Z */									\
@@ -1942,7 +1942,7 @@ do																				\
 	lod += (TT)->lodbias;														\
 	if (TEXMODE_ENABLE_LOD_DITHER(TEXMODE))										\
 		if (DITHER4)															\
-			lod += DITHER4[(XX) & 3] << 4;										\
+			lod += (DITHER4)[(XX) & 3] << 4;										\
 	if (lod < (TT)->lodmin)														\
 		lod = (TT)->lodmin;														\
 	if (lod > (TT)->lodmax)														\
@@ -2087,16 +2087,16 @@ do																				\
 	/* select zero/other for RGB */												\
 	if (!TEXMODE_TC_ZERO_OTHER(TEXMODE))										\
 	{																			\
-		tr = COTHER.rgb.r;														\
-		tg = COTHER.rgb.g;														\
-		tb = COTHER.rgb.b;														\
+		tr = (COTHER).rgb.r;														\
+		tg = (COTHER).rgb.g;														\
+		tb = (COTHER).rgb.b;														\
 	}																			\
 	else																		\
 		tr = tg = tb = 0;														\
 																				\
 	/* select zero/other for alpha */											\
 	if (!TEXMODE_TCA_ZERO_OTHER(TEXMODE))										\
-		ta = COTHER.rgb.a;														\
+		ta = (COTHER).rgb.a;														\
 	else																		\
 		ta = 0;																	\
 																				\
@@ -2125,7 +2125,7 @@ do																				\
 			break;																\
 																				\
 		case 2:		/* a_other */												\
-			blendr = blendg = blendb = COTHER.rgb.a;							\
+			blendr = blendg = blendb = (COTHER).rgb.a;							\
 			break;																\
 																				\
 		case 3:		/* a_local */												\
@@ -2162,7 +2162,7 @@ do																				\
 			break;																\
 																				\
 		case 2:		/* a_other */												\
-			blenda = COTHER.rgb.a;												\
+			blenda = (COTHER).rgb.a;												\
 			break;																\
 																				\
 		case 3:		/* a_local */												\
@@ -2228,16 +2228,16 @@ do																				\
 		ta += c_local.rgb.a;													\
 																				\
 	/* clamp */																	\
-	RESULT.rgb.r = (tr < 0) ? 0 : (tr > 0xff) ? 0xff : (uint8_t)tr;				\
-	RESULT.rgb.g = (tg < 0) ? 0 : (tg > 0xff) ? 0xff : (uint8_t)tg;				\
-	RESULT.rgb.b = (tb < 0) ? 0 : (tb > 0xff) ? 0xff : (uint8_t)tb;				\
-	RESULT.rgb.a = (ta < 0) ? 0 : (ta > 0xff) ? 0xff : (uint8_t)ta;				\
+	(RESULT).rgb.r = (tr < 0) ? 0 : (tr > 0xff) ? 0xff : (uint8_t)tr;				\
+	(RESULT).rgb.g = (tg < 0) ? 0 : (tg > 0xff) ? 0xff : (uint8_t)tg;				\
+	(RESULT).rgb.b = (tb < 0) ? 0 : (tb > 0xff) ? 0xff : (uint8_t)tb;				\
+	(RESULT).rgb.a = (ta < 0) ? 0 : (ta > 0xff) ? 0xff : (uint8_t)ta;				\
 																				\
 	/* invert */																\
 	if (TEXMODE_TC_INVERT_OUTPUT(TEXMODE))										\
-		RESULT.u ^= 0x00ffffff;													\
+		(RESULT).u ^= 0x00ffffff;													\
 	if (TEXMODE_TCA_INVERT_OUTPUT(TEXMODE))										\
-		RESULT.rgb.a ^= 0xff;													\
+		(RESULT).rgb.a ^= 0xff;													\
 }																				\
 while (0)
 
@@ -2430,16 +2430,16 @@ do																				\
 	{																			\
 		/* apply dithering */													\
 		APPLY_DITHER(FBZMODE, XX, DITHER_LOOKUP, r, g, b);						\
-		dest[XX] = (uint16_t)((r << 11) | (g << 5) | b);							\
+		(dest)[XX] = (uint16_t)((r << 11) | (g << 5) | b);							\
 	}																			\
 																				\
 	/* write to aux buffer */													\
-	if (depth && FBZMODE_AUX_BUFFER_MASK(FBZMODE))								\
+	if ((depth) && FBZMODE_AUX_BUFFER_MASK(FBZMODE))								\
 	{																			\
 		if (FBZMODE_ENABLE_ALPHA_PLANES(FBZMODE) == 0)							\
-			depth[XX] = (uint16_t)depthval;										\
+			(depth)[XX] = (uint16_t)depthval;										\
 		else																	\
-			depth[XX] = (uint16_t)a;												\
+			(depth)[XX] = (uint16_t)a;												\
 	}
 
 #define PIXEL_PIPELINE_END(STATS)												\
