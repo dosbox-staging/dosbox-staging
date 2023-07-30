@@ -198,7 +198,8 @@ inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
                                   rgb_t rgb11, uint8_t u, uint8_t v)
 {
 #if defined(__SSE2__)
-	__m128i  scale_u = *(__m128i *)sse2_scale_table[u], scale_v = *(__m128i *)sse2_scale_table[v];
+	__m128i  scale_u = *(__m128i *)sse2_scale_table[u];
+	__m128i  scale_v = *(__m128i *)sse2_scale_table[v];
 	return _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packs_epi32(_mm_srli_epi32(_mm_madd_epi16(_mm_max_epi16(
 		_mm_slli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb01), _mm_cvtsi32_si128(rgb00)), _mm_setzero_si128()), scale_u), 15),
 		_mm_srli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb11), _mm_cvtsi32_si128(rgb10)), _mm_setzero_si128()), scale_u), 1)),
@@ -1044,7 +1045,8 @@ inline uint8_t count_leading_zeros(uint32_t value)
 
 inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 {
-	uint32_t temp, rlog;
+	uint32_t temp;
+	uint32_t rlog;
 	uint32_t interp;
 	uint32_t *table;
 	uint64_t recip;
@@ -3117,7 +3119,12 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 	int32_t itera = fbi.starta + dy * fbi.dady + dx * fbi.dadx;
 	int32_t iterz = fbi.startz + dy * fbi.dzdy + dx * fbi.dzdx;
 	int64_t iterw = fbi.startw + dy * fbi.dwdy + dx * fbi.dwdx;
-	int64_t iterw0 = 0, iterw1 = 0, iters0 = 0, iters1 = 0, itert0 = 0, itert1 = 0;
+	int64_t iterw0 = 0;
+	int64_t iterw1 = 0;
+	int64_t iters0 = 0;
+	int64_t iters1 = 0;
+	int64_t itert0 = 0;
+	int64_t itert1 = 0;
 	if (TMUS >= 1)
 	{
 		iterw0 = tmu0.startw + dy * tmu0.dwdy + dx * tmu0.dwdx;
@@ -3170,7 +3177,10 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 		CLAMPED_ARGB(iterr, iterg, iterb, itera, r_fbzColorPath, iterargb);
 
 
-		int32_t blendr, blendg, blendb, blenda;
+		int32_t blendr;
+		int32_t blendg;
+		int32_t blendb;
+		int32_t blenda;
 		rgb_union c_other;
 		rgb_union c_local;
 
@@ -3534,7 +3544,8 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 	stats_block stats = {};
 	int32_t startx = extent->startx;
 	int32_t stopx = extent->stopx;
-	int scry, x;
+	int scry;
+	int x;
 
 	/* determine the screen Y */
 	scry = y;
@@ -3649,7 +3660,10 @@ static void init_tmu_shared(tmu_shared_state *s)
 	/* build static 8-bit texel tables */
 	for (val = 0; val < 256; val++)
 	{
-		int r, g, b, a;
+		int r;
+		int g;
+		int b;
+		int a;
 
 		/* 8-bit RGB (3-3-2) */
 		EXTRACT_332_TO_888(val, r, g, b);
@@ -3670,7 +3684,10 @@ static void init_tmu_shared(tmu_shared_state *s)
 	/* build static 16-bit texel tables */
 	for (val = 0; val < 65536; val++)
 	{
-		int r, g, b, a;
+		int r;
+		int g;
+		int b;
+		int a;
 
 		/* table 10 = 16-bit RGB (5-6-5) */
 		EXTRACT_565_TO_888(val, r, g, b);
@@ -3964,7 +3981,10 @@ static void ncc_table_write(ncc_table *n, uint32_t regnum, uint32_t data)
 
 static void ncc_table_update(ncc_table *n)
 {
-	int r, g, b, i;
+	int r;
+	int g;
+	int b;
+	int i;
 
 	/* generte all 256 possibilities */
 	for (i = 0; i < 256; i++)
@@ -4134,7 +4154,8 @@ static void recompute_texture_params(tmu_state *t)
 
 static void prepare_tmu(tmu_state *t)
 {
-	int64_t texdx, texdy;
+	int64_t texdx;
+	int64_t texdy;
 	int32_t lodbase;
 
 	/* if the texture parameters are dirty, update them */
@@ -4237,7 +4258,9 @@ static void update_statistics(voodoo_state *vs, bool accumulate)
 static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, int32_t worktend)
 {
 	/* determine the number of TMUs involved */
-	uint32_t tmus = 0, texmode0 = 0, texmode1 = 0;
+	uint32_t tmus     = 0;
+	uint32_t texmode0 = 0;
+	uint32_t texmode1 = 0;
 	if (!FBIINIT3_DISABLE_TMUS(v->reg[fbiInit3].u) && FBZCP_TEXTURE_ENABLE(v->reg[fbzColorPath].u))
 	{
 		tmus = 1;
@@ -4255,7 +4278,9 @@ static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, i
 	}
 
 	/* compute the slopes for each portion of the triangle */
-	poly_vertex v1 = tworker.v1, v2 = tworker.v2, v3 = tworker.v3;
+	poly_vertex v1  = tworker.v1;
+	poly_vertex v2  = tworker.v2;
+	poly_vertex v3  = tworker.v3;
 	float dxdy_v1v2 = (v2.y == v1.y) ? 0.0f : (v2.x - v1.x) / (v2.y - v1.y);
 	float dxdy_v1v3 = (v3.y == v1.y) ? 0.0f : (v3.x - v1.x) / (v3.y - v1.y);
 	float dxdy_v2v3 = (v3.y == v2.y) ? 0.0f : (v3.x - v2.x) / (v3.y - v2.y);
@@ -4340,7 +4365,9 @@ static void triangle_worker_run(triangle_worker& tworker)
 	}
 
 	/* compute the slopes for each portion of the triangle */
-	poly_vertex v1 = tworker.v1, v2 = tworker.v2, v3 = tworker.v3;
+	poly_vertex v1  = tworker.v1;
+	poly_vertex v2  = tworker.v2;
+	poly_vertex v3  = tworker.v3;
 	float dxdy_v1v2 = (v2.y == v1.y) ? 0.0f : (v2.x - v1.x) / (v2.y - v1.y);
 	float dxdy_v1v3 = (v3.y == v1.y) ? 0.0f : (v3.x - v1.x) / (v3.y - v1.y);
 	float dxdy_v2v3 = (v3.y == v2.y) ? 0.0f : (v3.x - v2.x) / (v3.y - v2.y);
@@ -4355,7 +4382,8 @@ static void triangle_worker_run(triangle_worker& tworker)
 		float stopx = (fully < v2.y ? (v1.x + (fully - v1.y) * dxdy_v1v2) : (v2.x + (fully - v2.y) * dxdy_v2v3));
 
 		/* clamp to full pixels */
-		int32_t istartx = round_coordinate(startx), istopx = round_coordinate(stopx);
+		int32_t istartx = round_coordinate(startx);
+		int32_t istopx  = round_coordinate(stopx);
 
 		/* force start < stop */
 		pixsum += (istartx > istopx ? istartx - istopx : istopx - istartx);
@@ -4545,9 +4573,10 @@ static void triangle(voodoo_state *vs)
 #endif
 
 	/* first sort by Y */
-	const poly_vertex *v1 = &vert[0], *v2 = &vert[1], *v3 = &vert[2];
-	if (v2->y < v1->y)
-	{
+	const poly_vertex* v1 = &vert[0];
+	const poly_vertex* v2 = &vert[1];
+	const poly_vertex* v3 = &vert[2];
+	if (v2->y < v1->y) {
 		std::swap(v1, v2);
 	}
 	if (v3->y < v2->y)
@@ -4866,7 +4895,8 @@ static void fastfill(voodoo_state *vs)
 	alignas(sizeof(uint64_t)) static uint16_t dithermatrix[16] = {};
 
 	uint16_t* drawbuf = nullptr;
-	int x, y;
+	int x;
+	int y;
 
 	/* if we're not clearing either, take no time */
 	if (!FBZMODE_RGB_BUFFER_MASK(regs[fbzMode].u) &&
@@ -6327,7 +6357,9 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 	/* 8-bit texture case */
 	if (TEXMODE_FORMAT(t->reg[textureMode].u) < 8)
 	{
-		int lod, tt, ts;
+		int lod;
+		int tt;
+		int ts;
 		uint32_t tbaseaddr;
 		uint8_t *dest;
 
@@ -6384,7 +6416,9 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 	/* 16-bit texture case */
 	else
 	{
-		int lod, tt, ts;
+		int lod;
+		int tt;
+		int ts;
 		uint32_t tbaseaddr;
 		uint16_t *dest;
 
