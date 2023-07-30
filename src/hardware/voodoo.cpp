@@ -6678,7 +6678,8 @@ static constexpr uint32_t voodoo_r(const uint32_t addr)
 
 	if ((offset & offset_base) == 0) {
 		return register_r(offset);
-	} else if ((offset & lfb_base) == 0) {
+	}
+	if ((offset & lfb_base) == 0) {
 		return lfb_r(offset);
 	}
 	return 0xffffffff;
@@ -6986,7 +6987,8 @@ static double Voodoo_GetVRetracePosition() {
 	}
 	if (v->clock_enabled && v->output_on) {
 		return time_in_frame/vfreq;
-	} else if (v->output_on) {
+	}
+	if (v->output_on) {
 		auto rtime = time_in_frame / vfreq;
 		rtime = fmod(rtime, 1.0);
 		return rtime;
