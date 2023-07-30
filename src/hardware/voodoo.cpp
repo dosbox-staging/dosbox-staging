@@ -4104,9 +4104,9 @@ static void recompute_texture_params(tmu_state *t)
 	bppscale = TEXMODE_FORMAT(t->reg[textureMode].u) >> 3;
 
 	/* start with the base of LOD 0 */
-	if (t->texaddr_shift == 0 && ((t->reg[texBaseAddr].u & 1) != 0u))
+	if (tmu_state::texaddr_shift == 0 && ((t->reg[texBaseAddr].u & 1) != 0u))
 		LOG(LOG_VOODOO,LOG_WARN)("Tiled texture\n");
-	base = (t->reg[texBaseAddr].u & t->texaddr_mask) << t->texaddr_shift;
+	base = (t->reg[texBaseAddr].u & tmu_state::texaddr_mask) << tmu_state::texaddr_shift;
 	t->lodoffset[0] = base & t->mask;
 
 	/* LODs 1-3 are different depending on whether we are in multitex mode */
@@ -4114,11 +4114,11 @@ static void recompute_texture_params(tmu_state *t)
 	/* they want multitex mode when they really don't -- disable for now */
 	if (false) // TEXLOD_TMULTIBASEADDR(t->reg[tLOD].u))
 	{
-		base = (t->reg[texBaseAddr_1].u & t->texaddr_mask) << t->texaddr_shift;
+		base = (t->reg[texBaseAddr_1].u & tmu_state::texaddr_mask) << tmu_state::texaddr_shift;
 		t->lodoffset[1] = base & t->mask;
-		base = (t->reg[texBaseAddr_2].u & t->texaddr_mask) << t->texaddr_shift;
+		base = (t->reg[texBaseAddr_2].u & tmu_state::texaddr_mask) << tmu_state::texaddr_shift;
 		t->lodoffset[2] = base & t->mask;
-		base = (t->reg[texBaseAddr_3_8].u & t->texaddr_mask) << t->texaddr_shift;
+		base = (t->reg[texBaseAddr_3_8].u & tmu_state::texaddr_mask) << tmu_state::texaddr_shift;
 		t->lodoffset[3] = base & t->mask;
 	} else {
 		if ((t->lodmask & (1 << 0)) != 0u)
