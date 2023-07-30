@@ -106,7 +106,7 @@
     TYPE DEFINITIONS
 ***************************************************************************/
 
-typedef int64_t attoseconds_t;
+using attoseconds_t = int64_t;
 
 #define ATTOSECONDS_PER_SECOND_SQRT		((attoseconds_t)1000000000)
 #define ATTOSECONDS_PER_SECOND			(ATTOSECONDS_PER_SECOND_SQRT * ATTOSECONDS_PER_SECOND_SQRT)
@@ -125,10 +125,10 @@ struct poly_extent
 };
 
 /* an rgb_t is a single combined R,G,B (and optionally alpha) value */
-typedef uint32_t rgb_t;
+using rgb_t = uint32_t;
 
 /* an rgb15_t is a single combined 15-bit R,G,B value */
-typedef uint16_t rgb15_t;
+using rgb15_t = uint16_t;
 
 /* macros to assemble rgb_t values */
 #define MAKE_ARGB(a,r,g,b)	((((a) & 0xff) << 24) | (((r) & 0xff) << 16) | (((g) & 0xff) << 8) | ((b) & 0xff))
@@ -666,7 +666,7 @@ static constexpr uint8_t dither_matrix_2x2[16] =
  *
  *************************************/
 
-typedef uint32_t rgb_t;
+using rgb_t = uint32_t;
 
 struct rgba
 {
@@ -685,7 +685,7 @@ union voodoo_reg
 	rgba				rgb;
 };
 
-typedef voodoo_reg rgb_union;
+using rgb_union = voodoo_reg;
 
 /* note that this structure is an even 64 bytes long */
 struct stats_block {
