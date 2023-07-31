@@ -416,17 +416,18 @@ static Bitu INT1A_Handler(void) {
 				}
 				break;
 			case 0x03: {	// find device by class code
-				Bitu devnr=0;
-				Bitu count=0x100;
-				uint32_t classtag=reg_ecx&0xffffff;
-				Bits found=-1;
-				for (Bitu i=0; i<=count; i++) {
-					IO_WriteD(0xcf8,0x80000000|(i<<8));	// query unique device/subdevice entries
+				uint32_t devnr = 0;
+				constexpr uint32_t count = 0x100;
+				const uint32_t classtag  = reg_ecx & 0xffffff;
+				int found = -1;
+				for (uint32_t i = 0; i <= count; ++i) {
+					// query unique device/subdevice entries
+					IO_WriteD(0xcf8, 0x80000000 | (i << 8));
 					if (IO_ReadD(0xcfc)!=0xffffffff) {
 						IO_WriteD(0xcf8,0x80000000|(i<<8)|0x08);
 						if ((IO_ReadD(0xcfc)>>8)==classtag) {
 							if (devnr==reg_si) {
-								found=i;
+								found = static_cast<int>(i);
 								break;
 							} else {
 								// device found, but not the SIth device
