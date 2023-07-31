@@ -7146,19 +7146,6 @@ static void voodoo_init() {
 	recompute_video_memory(v);
 }
 
-static void voodoo_shutdown() {
-	if (v!=nullptr) {
-#ifdef C_ENABLE_VOODOO_OPENGL
-		if (v->ogl)
-			voodoo_ogl_shutdown(v);
-#endif
-		v->active=false;
-		triangle_worker_shutdown(v->tworker);
-		delete v;
-		v = nullptr;
-	}
-}
-
 static void voodoo_vblank_flush()
 {
 #ifdef C_ENABLE_VOODOO_OPENGL
@@ -7530,7 +7517,7 @@ static uint32_t voodoo_current_lfb;
 static PageHandler* voodoo_pagehandler;
 
 struct PCI_SSTDevice : public PCI_Device {
-	enum {
+	enum : uint16_t {
 		vendor          = 0x121a,
 		device_voodoo_1 = 0x0001,
 		device_voodoo_2 = 0x0002
@@ -7681,6 +7668,28 @@ struct PCI_SSTDevice : public PCI_Device {
 		return true;
 	}
 };
+
+static void voodoo_shutdown()
+{
+	if (!v) {
+		return;
+	}
+	LOG_MSG("VOODOO: Shutting down");
+
+#ifdef C_ENABLE_VOODOO_OPENGL
+	if (v->ogl) {
+		voodoo_ogl_shutdown(v);
+	}
+#endif
+
+	v->active = false;
+	triangle_worker_shutdown(v->tworker);
+
+	delete v;
+	v = nullptr;
+
+	PCI_RemoveDevice(PCI_SSTDevice::vendor, PCI_SSTDevice::device_voodoo_1);
+}
 
 static void Voodoo_Startup() {
 	// This function is called delayed after booting only once a game actually requests Voodoo support

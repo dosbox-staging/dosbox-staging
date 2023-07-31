@@ -476,6 +476,13 @@ void PCI_AddDevice(PCI_Device* dev) {
 	}
 }
 
+void PCI_RemoveDevice(const uint16_t vendor_id, const uint16_t device_id)
+{
+	if (pci_interface) {
+		pci_interface->RemoveDevice(vendor_id, device_id);
+	}
+}
+
 uint8_t PCI_GetCFGData(Bits pci_id, Bits pci_subfunction, uint8_t regnum)
 {
 	return pci_cfg_data[pci_id][pci_subfunction][regnum];
