@@ -374,16 +374,6 @@ static constexpr uint8_t dither_matrix_2x2[16] =
 	(b) = (((val) << 3) & 0xe0) | (((val) >> 0) & 0x1c) | (((val) >> 3) & 0x03); \
 	(c) = (((val) << 6) & 0xc0) | (((val) << 4) & 0x30) | (((val) << 2) & 0xc0) | (((val) << 0) & 0x03); \
 
-
-/*************************************
- *
- *  Misc. macros
- *
- *************************************/
-
-/* macro for clamping a value between minimum and maximum values */
-#define CLAMP(val,min,max)		do { if ((val) < (min)) { (val) = (min); } else if ((val) > (max)) { (val) = (max); } } while (0)
-
 /*************************************
  *
  *  Macros for extracting bitfields
@@ -1423,7 +1413,7 @@ do																				\
 	}																			\
 	else																		\
 	{																			\
-		CLAMP((RESULT), 0, 0xffff);												\
+		(RESULT) = clamp_to_uint16(RESULT);										\
 	}																			\
 }																				\
 while (0)
@@ -1444,7 +1434,7 @@ do																				\
 	}																			\
 	else																		\
 	{																			\
-		CLAMP((RESULT), 0, 0xff);												\
+		(RESULT) = clamp_to_uint8(RESULT);										\
 	}																			\
 }																				\
 while (0)
@@ -1775,10 +1765,10 @@ while (0)
 				(AA) += da; \
 \
 			/* clamp */ \
-			CLAMP((RR), 0x00, 0xff); \
-			CLAMP((GG), 0x00, 0xff); \
-			CLAMP((BB), 0x00, 0xff); \
-			CLAMP((AA), 0x00, 0xff); \
+			(RR) = clamp_to_uint8(RR); \
+			(GG) = clamp_to_uint8(GG); \
+			(BB) = clamp_to_uint8(BB); \
+			(AA) = clamp_to_uint8(AA); \
 		} \
 	} while (0)
 
@@ -1893,9 +1883,9 @@ do																				\
 		}																		\
 																				\
 		/* clamp */																\
-		CLAMP((RR), 0x00, 0xff);												\
-		CLAMP((GG), 0x00, 0xff);												\
-		CLAMP((BB), 0x00, 0xff);												\
+		(RR) = clamp_to_uint8(RR);												\
+		(GG) = clamp_to_uint8(GG);												\
+		(BB) = clamp_to_uint8(BB);												\
 	}																			\
 }																				\
 while (0)
@@ -1974,9 +1964,9 @@ do																				\
 																				\
 		/* clamp/wrap S/T if necessary */										\
 		if (TEXMODE_CLAMP_S(TEXMODE))											\
-			CLAMP(s, 0, smax);													\
+			s = std::clamp(s, 0, smax);											\
 		if (TEXMODE_CLAMP_T(TEXMODE))											\
-			CLAMP(t, 0, tmax);													\
+			t = std::clamp(t, 0, tmax);											\
 		s &= smax;																\
 		t &= tmax;																\
 		t *= smax + 1;															\
@@ -2027,13 +2017,13 @@ do																				\
 		/* clamp/wrap S/T if necessary */										\
 		if (TEXMODE_CLAMP_S(TEXMODE))											\
 		{																		\
-			CLAMP(s, 0, smax);													\
-			CLAMP(s1, 0, smax);													\
+			s = std::clamp(s, 0, smax);											\
+			s1 = std::clamp(s1, 0, smax);										\
 		}																		\
 		if (TEXMODE_CLAMP_T(TEXMODE))											\
 		{																		\
-			CLAMP(t, 0, tmax);													\
-			CLAMP(t1, 0, tmax);													\
+			t = std::clamp(t, 0, tmax);											\
+			t1 = std::clamp(t1, 0, tmax);										\
 		}																		\
 		s &= smax;																\
 		s1 &= smax;																\
@@ -2328,7 +2318,7 @@ do																				\
 	if (FBZMODE_ENABLE_DEPTH_BIAS(FBZMODE))										\
 	{																			\
 		depthval += (int16_t)(ZACOLOR);											\
-		CLAMP(depthval, 0, 0xffff);												\
+		depthval = clamp_to_uint16(depthval);									\
 	}																			\
 																				\
 	/* handle depth buffer testing */											\
@@ -3425,10 +3415,10 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 		}
 
 		/* clamp */
-		CLAMP(r, 0x00, 0xff);
-		CLAMP(g, 0x00, 0xff);
-		CLAMP(b, 0x00, 0xff);
-		CLAMP(a, 0x00, 0xff);
+		r = clamp_to_uint8(r);
+		g = clamp_to_uint8(g);
+		b = clamp_to_uint8(b);
+		a = clamp_to_uint8(a);
 
 		/* invert */
 		if (FBZCP_CC_INVERT_OUTPUT(r_fbzColorPath))
@@ -4064,9 +4054,9 @@ static void ncc_table_update(ncc_table *n)
 		b += n->ib[vi] + n->qb[vq];
 
 		/* clamp */
-		CLAMP(r, 0, 255);
-		CLAMP(g, 0, 255);
-		CLAMP(b, 0, 255);
+		r = clamp_to_uint8(r);
+		g = clamp_to_uint8(g);
+		b = clamp_to_uint8(b);
 
 		/* fill in the table */
 		n->texel[i] = MAKE_ARGB(0xff, r, g, b);
@@ -6564,10 +6554,10 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 				}
 
 				/* clamp */
-				CLAMP(r, 0x00, 0xff);
-				CLAMP(g, 0x00, 0xff);
-				CLAMP(b, 0x00, 0xff);
-				CLAMP(a, 0x00, 0xff);
+				r = clamp_to_uint8(r);
+				g = clamp_to_uint8(g);
+				b = clamp_to_uint8(b);
+				a = clamp_to_uint8(a);
 
 				/* invert */
 				if (FBZCP_CC_INVERT_OUTPUT(v->reg[fbzColorPath].u))
