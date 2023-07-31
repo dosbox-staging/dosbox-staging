@@ -1000,7 +1000,7 @@ inline uint8_t count_leading_zeros(uint32_t value)
 	DWORD idx = 0;
 	return (_BitScanReverse(&idx, value) ? (uint8_t)(31 - idx) : (uint8_t)32);
 #else
-	return (value ? (uint8_t)__builtin_clz(value) : (uint8_t)32);
+	return (value != 0u ? (uint8_t)__builtin_clz(value) : (uint8_t)32);
 #endif
 	//int32_t result;
 	//
@@ -1062,7 +1062,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	}
 
 	/* if we've spilled out of 32 bits, push it down under 32 */
-	if (value & LONGTYPE(0xffff00000000))
+	if ((value & LONGTYPE(0xffff00000000)) != 0)
 	{
 		temp = (uint32_t)(value >> 16);
 		exponent -= 16;
@@ -1142,7 +1142,7 @@ inline int32_t float_to_int32(const uint32_t data, const int fixedbits)
 	} else {
 		result = clamp_to_int32(static_cast<int64_t>(result) << exponent);
 	}
-	if (data & 0x80000000) {
+	if ((data & 0x80000000) != 0u) {
 		result = -result;
 	}
 	return result;
@@ -1166,7 +1166,7 @@ inline int64_t float_to_int64(uint32_t data, int fixedbits)
 		else
 			result = LONGTYPE(0x7fffffffffffffff);
 	}
-	if (data & 0x80000000)
+	if ((data & 0x80000000) != 0u)
 		result = -result;
 	return result;
 }
@@ -3241,7 +3241,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 		}
 		else
 		{
-			if (!(texel.rgb.a & 0x80))					/* iterated RGB */
+			if ((texel.rgb.a & 0x80) == 0)					/* iterated RGB */
 				c_local.u = iterargb.u;
 			else											/* color0 RGB */
 				c_local.u = regs[color0].u;
@@ -3640,7 +3640,7 @@ static void init_fbi(fbi_state* f, int fbmem)
 	//v->fbi.clut[32] = MAKE_ARGB(32,0xff,0xff,0xff);
 
 	/* allocate a VBLANK timer */
-	f->vblank = false;
+	f->vblank = 0u;
 
 	/* initialize the memory FIFO */
 	f->fifo.size = 0;
@@ -3920,7 +3920,7 @@ static void recompute_video_memory(voodoo_state *vs)
 static void ncc_table_write(ncc_table *n, uint32_t regnum, uint32_t data)
 {
 	/* I/Q entries reference the palette if the high bit is set */
-	if (regnum >= 4 && (data & 0x80000000) && n->palette)
+	if (regnum >= 4 && ((data & 0x80000000) != 0u) && (n->palette != nullptr))
 	{
 		const uint32_t index = ((data >> 23) & 0xfe) | (regnum & 1);
 
@@ -3935,7 +3935,7 @@ static void ncc_table_write(ncc_table *n, uint32_t regnum, uint32_t data)
 		}
 
 		/* if we have an ARGB palette as well, compute its value */
-		if (n->palettea)
+		if (n->palettea != nullptr)
 		{
 			const uint32_t a = ((data >> 16) & 0xfc) |
 			                   ((data >> 22) & 0x03);
@@ -4104,7 +4104,7 @@ static void recompute_texture_params(tmu_state *t)
 	bppscale = TEXMODE_FORMAT(t->reg[textureMode].u) >> 3;
 
 	/* start with the base of LOD 0 */
-	if (t->texaddr_shift == 0 && (t->reg[texBaseAddr].u & 1))
+	if (t->texaddr_shift == 0 && ((t->reg[texBaseAddr].u & 1) != 0u))
 		LOG(LOG_VOODOO,LOG_WARN)("Tiled texture\n");
 	base = (t->reg[texBaseAddr].u & t->texaddr_mask) << t->texaddr_shift;
 	t->lodoffset[0] = base & t->mask;
@@ -4121,13 +4121,13 @@ static void recompute_texture_params(tmu_state *t)
 		base = (t->reg[texBaseAddr_3_8].u & t->texaddr_mask) << t->texaddr_shift;
 		t->lodoffset[3] = base & t->mask;
 	} else {
-		if (t->lodmask & (1 << 0))
+		if ((t->lodmask & (1 << 0)) != 0u)
 			base += (((t->wmask >> 0) + 1) * ((t->hmask >> 0) + 1)) << bppscale;
 		t->lodoffset[1] = base & t->mask;
-		if (t->lodmask & (1 << 1))
+		if ((t->lodmask & (1 << 1)) != 0u)
 			base += (((t->wmask >> 1) + 1) * ((t->hmask >> 1) + 1)) << bppscale;
 		t->lodoffset[2] = base & t->mask;
-		if (t->lodmask & (1 << 2))
+		if ((t->lodmask & (1 << 2)) != 0u)
 			base += (((t->wmask >> 2) + 1) * ((t->hmask >> 2) + 1)) << bppscale;
 		t->lodoffset[3] = base & t->mask;
 	}
@@ -4135,7 +4135,7 @@ static void recompute_texture_params(tmu_state *t)
 	/* remaining LODs make sense */
 	for (lod = 4; lod <= 8; lod++)
 	{
-		if (t->lodmask & (1 << (lod - 1)))
+		if ((t->lodmask & (1 << (lod - 1))) != 0u)
 		{
 			uint32_t size = ((t->wmask >> (lod - 1)) + 1) * ((t->hmask >> (lod - 1)) + 1);
 			if (size < 4) size = 4;
@@ -4276,7 +4276,7 @@ static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, i
 	{
 		tmus = 1;
 		texmode0 = v->tmu[0].reg[textureMode].u;
-		if (v->chipmask & 0x04)
+		if ((v->chipmask & 0x04) != 0)
 		{
 			tmus = 2;
 			texmode1 = v->tmu[1].reg[textureMode].u;
@@ -4463,7 +4463,7 @@ static void triangle(voodoo_state *vs)
 	if (!FBIINIT3_DISABLE_TMUS(regs[fbiInit3].u) &&
 	    FBZCP_TEXTURE_ENABLE(regs[fbzColorPath].u)) {
 		texcount = 1;
-		if (vs->chipmask & 0x04)
+		if ((vs->chipmask & 0x04) != 0)
 			texcount = 2;
 	}
 
@@ -4719,9 +4719,9 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	                      (vertex0.x - vertex2.x) * (vertex0.y - vertex1.y));
 
 	/* backface culling */
-	if (regs[sSetupMode].u & 0x20000) {
+	if ((regs[sSetupMode].u & 0x20000) != 0u) {
 		int culling_sign = (regs[sSetupMode].u >> 18) & 1;
-		const int divisor_sign = (divisor < 0);
+		const auto divisor_sign = static_cast<int>(divisor < 0);
 
 		/* if doing strips and ping pong is enabled, apply the ping pong */
 		if ((regs[sSetupMode].u & 0x90000) == 0x00000) {
@@ -4741,7 +4741,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 
 	/* set up R,G,B */
 	auto tdiv = divisor * 4096.0f;
-	if (regs[sSetupMode].u & (1 << 0)) {
+	if ((regs[sSetupMode].u & (1 << 0)) != 0u) {
 		fbi.startr = (int32_t)(vertex0.r * 4096.0f);
 		fbi.drdx   = (int32_t)(((vertex0.r - vertex1.r) * dx1 -
                                       (vertex0.r - vertex2.r) * dx2) *
@@ -4766,7 +4766,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up alpha */
-	if (regs[sSetupMode].u & (1 << 1)) {
+	if ((regs[sSetupMode].u & (1 << 1)) != 0u) {
 		fbi.starta = (int32_t)(vertex0.a * 4096.0f);
 		fbi.dadx   = (int32_t)(((vertex0.a - vertex1.a) * dx1 -
                                       (vertex0.a - vertex2.a) * dx2) *
@@ -4777,7 +4777,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up Z */
-	if (regs[sSetupMode].u & (1 << 2)) {
+	if ((regs[sSetupMode].u & (1 << 2)) != 0u) {
 		fbi.startz = (int32_t)(vertex0.z * 4096.0f);
 		fbi.dzdx   = (int32_t)(((vertex0.z - vertex1.z) * dx1 -
                                       (vertex0.z - vertex2.z) * dx2) *
@@ -4789,7 +4789,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 
 	/* set up Wb */
 	tdiv = divisor * 65536.0f * 65536.0f;
-	if (regs[sSetupMode].u & (1 << 3)) {
+	if ((regs[sSetupMode].u & (1 << 3)) != 0u) {
 		fbi.startw = tmu0.startw = tmu1.startw = (int64_t)(vertex0.wb * 65536.0f *
 		                                                   65536.0f);
 		fbi.dwdx = tmu0.dwdx = tmu1.dwdx =
@@ -4803,7 +4803,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up W0 */
-	if (regs[sSetupMode].u & (1 << 4)) {
+	if ((regs[sSetupMode].u & (1 << 4)) != 0u) {
 		tmu0.startw = tmu1.startw = (int64_t)(vertex0.w0 * 65536.0f * 65536.0f);
 		tmu0.dwdx = tmu1.dwdx = (int64_t)(((vertex0.w0 - vertex1.w0) * dx1 -
 		                                   (vertex0.w0 - vertex2.w0) * dx2) *
@@ -4814,7 +4814,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up S0,T0 */
-	if (regs[sSetupMode].u & (1 << 5)) {
+	if ((regs[sSetupMode].u & (1 << 5)) != 0u) {
 		tmu0.starts = tmu1.starts = (int64_t)(vertex0.s0 * 65536.0f * 65536.0f);
 		tmu0.dsdx = tmu1.dsdx = (int64_t)(((vertex0.s0 - vertex1.s0) * dx1 -
 		                                   (vertex0.s0 - vertex2.s0) * dx2) *
@@ -4832,7 +4832,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up W1 */
-	if (regs[sSetupMode].u & (1 << 6)) {
+	if ((regs[sSetupMode].u & (1 << 6)) != 0u) {
 		tmu1.startw = (int64_t)(vertex0.w1 * 65536.0f * 65536.0f);
 		tmu1.dwdx   = (int64_t)(((vertex0.w1 - vertex1.w1) * dx1 -
                                        (vertex0.w1 - vertex2.w1) * dx2) *
@@ -4843,7 +4843,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up S1,T1 */
-	if (regs[sSetupMode].u & (1 << 7)) {
+	if ((regs[sSetupMode].u & (1 << 7)) != 0u) {
 		tmu1.starts = (int64_t)(vertex0.s1 * 65536.0f * 65536.0f);
 		tmu1.dsdx   = (int64_t)(((vertex0.s1 - vertex1.s1) * dx1 -
                                        (vertex0.s1 - vertex2.s1) * dx2) *
@@ -4876,7 +4876,7 @@ static void draw_triangle(voodoo_state *vs)
 	setup_vertex* sv = &fbi.svert[2];
 
 	/* for strip mode, shuffle vertex 1 down to 0 */
-	if (!(regs[sSetupMode].u & (1 << 16))) {
+	if ((regs[sSetupMode].u & (1 << 16)) == 0u) {
 		fbi.svert[0] = fbi.svert[1];
 	}
 
@@ -5079,7 +5079,7 @@ static void register_w(uint32_t offset, uint32_t data)
 	                               : static_cast<uint8_t>(offset & 0xff);
 
 	/* first make sure this register is readable */
-	if (!(v->regaccess[regnum] & REGISTER_WRITE))
+	if ((v->regaccess[regnum] & REGISTER_WRITE) == 0)
 	{
 #ifdef C_ENABLE_VOODOO_DEBUG
 		if (regnum <= 0xe0) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.ERROR:Invalid attempt to write %s\n", v->regnames[regnum]);
@@ -5097,42 +5097,42 @@ static void register_w(uint32_t offset, uint32_t data)
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexAx:
-			if (chips & 1) v->fbi.ax = (int16_t)(data&0xffff);
+			if ((chips & 1) != 0) v->fbi.ax = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexAy:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexAy:
-			if (chips & 1) v->fbi.ay = (int16_t)(data&0xffff);
+			if ((chips & 1) != 0) v->fbi.ay = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexBx:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexBx:
-			if (chips & 1) v->fbi.bx = (int16_t)(data&0xffff);
+			if ((chips & 1) != 0) v->fbi.bx = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexBy:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexBy:
-			if (chips & 1) v->fbi.by = (int16_t)(data&0xffff);
+			if ((chips & 1) != 0) v->fbi.by = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexCx:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexCx:
-			if (chips & 1) v->fbi.cx = (int16_t)(data&0xffff);
+			if ((chips & 1) != 0) v->fbi.cx = (int16_t)(data&0xffff);
 			break;
 
 		case fvertexCy:
 			data = float_to_int32(data, 4);
 			[[fallthrough]];
 		case vertexCy:
-			if (chips & 1) v->fbi.cy = (int16_t)(data&0xffff);
+			if ((chips & 1) != 0) v->fbi.cy = (int16_t)(data&0xffff);
 			break;
 
 		/* RGB data is 12.12 formatted fixed point */
@@ -5140,84 +5140,84 @@ static void register_w(uint32_t offset, uint32_t data)
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case startR:
-			if (chips & 1) v->fbi.startr = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.startr = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fstartG:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case startG:
-			if (chips & 1) v->fbi.startg = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.startg = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fstartB:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case startB:
-			if (chips & 1) v->fbi.startb = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.startb = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fstartA:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case startA:
-			if (chips & 1) v->fbi.starta = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.starta = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fdRdX:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dRdX:
-			if (chips & 1) v->fbi.drdx = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.drdx = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fdGdX:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dGdX:
-			if (chips & 1) v->fbi.dgdx = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.dgdx = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fdBdX:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dBdX:
-			if (chips & 1) v->fbi.dbdx = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.dbdx = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fdAdX:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dAdX:
-			if (chips & 1) v->fbi.dadx = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.dadx = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fdRdY:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dRdY:
-			if (chips & 1) v->fbi.drdy = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.drdy = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fdGdY:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dGdY:
-			if (chips & 1) v->fbi.dgdy = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.dgdy = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fdBdY:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dBdY:
-			if (chips & 1) v->fbi.dbdy = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.dbdy = (int32_t)(data << 8) >> 8;
 			break;
 
 		case fdAdY:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dAdY:
-			if (chips & 1) v->fbi.dady = (int32_t)(data << 8) >> 8;
+			if ((chips & 1) != 0) v->fbi.dady = (int32_t)(data << 8) >> 8;
 			break;
 
 		/* Z data is 20.12 formatted fixed point */
@@ -5225,124 +5225,124 @@ static void register_w(uint32_t offset, uint32_t data)
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case startZ:
-			if (chips & 1) v->fbi.startz = (int32_t)data;
+			if ((chips & 1) != 0) v->fbi.startz = (int32_t)data;
 			break;
 
 		case fdZdX:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dZdX:
-			if (chips & 1) v->fbi.dzdx = (int32_t)data;
+			if ((chips & 1) != 0) v->fbi.dzdx = (int32_t)data;
 			break;
 
 		case fdZdY:
 			data = float_to_int32(data, 12);
 			[[fallthrough]];
 		case dZdY:
-			if (chips & 1) v->fbi.dzdy = (int32_t)data;
+			if ((chips & 1) != 0) v->fbi.dzdy = (int32_t)data;
 			break;
 
 		/* S,T data is 14.18 formatted fixed point, converted to 16.32 internally */
 		case fstartS:
 			data64 = float_to_int64(data, 32);
-			if (chips & 2) v->tmu[0].starts = data64;
-			if (chips & 4) v->tmu[1].starts = data64;
+			if ((chips & 2) != 0) v->tmu[0].starts = data64;
+			if ((chips & 4) != 0) v->tmu[1].starts = data64;
 			break;
 		case startS:
-			if (chips & 2) v->tmu[0].starts = (int64_t)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].starts = (int64_t)(int32_t)data << 14;
+			if ((chips & 2) != 0) v->tmu[0].starts = (int64_t)(int32_t)data << 14;
+			if ((chips & 4) != 0) v->tmu[1].starts = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fstartT:
 			data64 = float_to_int64(data, 32);
-			if (chips & 2) v->tmu[0].startt = data64;
-			if (chips & 4) v->tmu[1].startt = data64;
+			if ((chips & 2) != 0) v->tmu[0].startt = data64;
+			if ((chips & 4) != 0) v->tmu[1].startt = data64;
 			break;
 		case startT:
-			if (chips & 2) v->tmu[0].startt = (int64_t)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].startt = (int64_t)(int32_t)data << 14;
+			if ((chips & 2) != 0) v->tmu[0].startt = (int64_t)(int32_t)data << 14;
+			if ((chips & 4) != 0) v->tmu[1].startt = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fdSdX:
 			data64 = float_to_int64(data, 32);
-			if (chips & 2) v->tmu[0].dsdx = data64;
-			if (chips & 4) v->tmu[1].dsdx = data64;
+			if ((chips & 2) != 0) v->tmu[0].dsdx = data64;
+			if ((chips & 4) != 0) v->tmu[1].dsdx = data64;
 			break;
 		case dSdX:
-			if (chips & 2) v->tmu[0].dsdx = (int64_t)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].dsdx = (int64_t)(int32_t)data << 14;
+			if ((chips & 2) != 0) v->tmu[0].dsdx = (int64_t)(int32_t)data << 14;
+			if ((chips & 4) != 0) v->tmu[1].dsdx = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fdTdX:
 			data64 = float_to_int64(data, 32);
-			if (chips & 2) v->tmu[0].dtdx = data64;
-			if (chips & 4) v->tmu[1].dtdx = data64;
+			if ((chips & 2) != 0) v->tmu[0].dtdx = data64;
+			if ((chips & 4) != 0) v->tmu[1].dtdx = data64;
 			break;
 		case dTdX:
-			if (chips & 2) v->tmu[0].dtdx = (int64_t)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].dtdx = (int64_t)(int32_t)data << 14;
+			if ((chips & 2) != 0) v->tmu[0].dtdx = (int64_t)(int32_t)data << 14;
+			if ((chips & 4) != 0) v->tmu[1].dtdx = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fdSdY:
 			data64 = float_to_int64(data, 32);
-			if (chips & 2) v->tmu[0].dsdy = data64;
-			if (chips & 4) v->tmu[1].dsdy = data64;
+			if ((chips & 2) != 0) v->tmu[0].dsdy = data64;
+			if ((chips & 4) != 0) v->tmu[1].dsdy = data64;
 			break;
 		case dSdY:
-			if (chips & 2) v->tmu[0].dsdy = (int64_t)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].dsdy = (int64_t)(int32_t)data << 14;
+			if ((chips & 2) != 0) v->tmu[0].dsdy = (int64_t)(int32_t)data << 14;
+			if ((chips & 4) != 0) v->tmu[1].dsdy = (int64_t)(int32_t)data << 14;
 			break;
 
 		case fdTdY:
 			data64 = float_to_int64(data, 32);
-			if (chips & 2) v->tmu[0].dtdy = data64;
-			if (chips & 4) v->tmu[1].dtdy = data64;
+			if ((chips & 2) != 0) v->tmu[0].dtdy = data64;
+			if ((chips & 4) != 0) v->tmu[1].dtdy = data64;
 			break;
 		case dTdY:
-			if (chips & 2) v->tmu[0].dtdy = (int64_t)(int32_t)data << 14;
-			if (chips & 4) v->tmu[1].dtdy = (int64_t)(int32_t)data << 14;
+			if ((chips & 2) != 0) v->tmu[0].dtdy = (int64_t)(int32_t)data << 14;
+			if ((chips & 4) != 0) v->tmu[1].dtdy = (int64_t)(int32_t)data << 14;
 			break;
 
 		/* W data is 2.30 formatted fixed point, converted to 16.32 internally */
 		case fstartW:
 			data64 = float_to_int64(data, 32);
-			if (chips & 1) v->fbi.startw = data64;
-			if (chips & 2) v->tmu[0].startw = data64;
-			if (chips & 4) v->tmu[1].startw = data64;
+			if ((chips & 1) != 0) v->fbi.startw = data64;
+			if ((chips & 2) != 0) v->tmu[0].startw = data64;
+			if ((chips & 4) != 0) v->tmu[1].startw = data64;
 			break;
 		case startW:
-			if (chips & 1) v->fbi.startw = (int64_t)(int32_t)data << 2;
-			if (chips & 2) v->tmu[0].startw = (int64_t)(int32_t)data << 2;
-			if (chips & 4) v->tmu[1].startw = (int64_t)(int32_t)data << 2;
+			if ((chips & 1) != 0) v->fbi.startw = (int64_t)(int32_t)data << 2;
+			if ((chips & 2) != 0) v->tmu[0].startw = (int64_t)(int32_t)data << 2;
+			if ((chips & 4) != 0) v->tmu[1].startw = (int64_t)(int32_t)data << 2;
 			break;
 
 		case fdWdX:
 			data64 = float_to_int64(data, 32);
-			if (chips & 1) v->fbi.dwdx = data64;
-			if (chips & 2) v->tmu[0].dwdx = data64;
-			if (chips & 4) v->tmu[1].dwdx = data64;
+			if ((chips & 1) != 0) v->fbi.dwdx = data64;
+			if ((chips & 2) != 0) v->tmu[0].dwdx = data64;
+			if ((chips & 4) != 0) v->tmu[1].dwdx = data64;
 			break;
 		case dWdX:
-			if (chips & 1) v->fbi.dwdx = (int64_t)(int32_t)data << 2;
-			if (chips & 2) v->tmu[0].dwdx = (int64_t)(int32_t)data << 2;
-			if (chips & 4) v->tmu[1].dwdx = (int64_t)(int32_t)data << 2;
+			if ((chips & 1) != 0) v->fbi.dwdx = (int64_t)(int32_t)data << 2;
+			if ((chips & 2) != 0) v->tmu[0].dwdx = (int64_t)(int32_t)data << 2;
+			if ((chips & 4) != 0) v->tmu[1].dwdx = (int64_t)(int32_t)data << 2;
 			break;
 
 		case fdWdY:
 			data64 = float_to_int64(data, 32);
-			if (chips & 1) v->fbi.dwdy = data64;
-			if (chips & 2) v->tmu[0].dwdy = data64;
-			if (chips & 4) v->tmu[1].dwdy = data64;
+			if ((chips & 1) != 0) v->fbi.dwdy = data64;
+			if ((chips & 2) != 0) v->tmu[0].dwdy = data64;
+			if ((chips & 4) != 0) v->tmu[1].dwdy = data64;
 			break;
 		case dWdY:
-			if (chips & 1) v->fbi.dwdy = (int64_t)(int32_t)data << 2;
-			if (chips & 2) v->tmu[0].dwdy = (int64_t)(int32_t)data << 2;
-			if (chips & 4) v->tmu[1].dwdy = (int64_t)(int32_t)data << 2;
+			if ((chips & 1) != 0) v->fbi.dwdy = (int64_t)(int32_t)data << 2;
+			if ((chips & 2) != 0) v->tmu[0].dwdy = (int64_t)(int32_t)data << 2;
+			if ((chips & 4) != 0) v->tmu[1].dwdy = (int64_t)(int32_t)data << 2;
 			break;
 
 		/* setup bits */
 		case sARGB:
-			if (chips & 1)
+			if ((chips & 1) != 0)
 			{
 				v->reg[sAlpha].f = (float)RGB_ALPHA(data);
 				v->reg[sRed].f = (float)RGB_RED(data);
@@ -5355,13 +5355,13 @@ static void register_w(uint32_t offset, uint32_t data)
 		case fbzColorPath:
 			if (vtype < VOODOO_2)
 				data &= 0x0fffffff;
-			if (chips & 1) v->reg[fbzColorPath].u = data;
+			if ((chips & 1) != 0) v->reg[fbzColorPath].u = data;
 			break;
 
 		case fbzMode:
 			if (vtype < VOODOO_2)
 				data &= 0x001fffff;
-			if (chips & 1) {
+			if ((chips & 1) != 0) {
 #ifdef C_ENABLE_VOODOO_OPENGL
 				if (v->ogl && v->active && (FBZMODE_Y_ORIGIN(v->reg[fbzMode].u)!=FBZMODE_Y_ORIGIN(data))) {
 					v->reg[fbzMode].u = data;
@@ -5377,7 +5377,7 @@ static void register_w(uint32_t offset, uint32_t data)
 		case fogMode:
 			if (vtype < VOODOO_2)
 				data &= 0x0000003f;
-			if (chips & 1) v->reg[fogMode].u = data;
+			if ((chips & 1) != 0) v->reg[fogMode].u = data;
 			break;
 
 		/* triangle drawing */
@@ -5396,9 +5396,9 @@ static void register_w(uint32_t offset, uint32_t data)
 
 		/* other commands */
 		case nopCMD:
-			if (data & 1)
+			if ((data & 1) != 0u)
 				reset_counters(v);
-			if (data & 2)
+			if ((data & 2) != 0u)
 				v->reg[fbiTrianglesOut].u = 0;
 			break;
 
@@ -5431,9 +5431,9 @@ static void register_w(uint32_t offset, uint32_t data)
 
 		/* external DAC access -- Voodoo/Voodoo2 only */
 		case dacData:
-			if (chips & 1)
+			if ((chips & 1) != 0)
 			{
-				if (!(data & 0x800))
+				if ((data & 0x800) == 0u)
 					dacdata_w(&v->dac, (data >> 8) & 7, data & 0xff);
 				else
 					dacdata_r(&v->dac, (data >> 8) & 7);
@@ -5445,7 +5445,7 @@ static void register_w(uint32_t offset, uint32_t data)
 		case vSync:
 		case backPorch:
 		case videoDimensions:
-			if (chips & 1)
+			if ((chips & 1) != 0)
 			{
 				v->reg[regnum].u = data;
 				if (v->reg[hSync].u != 0 && v->reg[vSync].u != 0 && v->reg[videoDimensions].u != 0)
@@ -5541,7 +5541,7 @@ static void register_w(uint32_t offset, uint32_t data)
 
 		/* fbiInit0 can only be written if initEnable says we can -- Voodoo/Voodoo2 only */
 		case fbiInit0:
-			if ((chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
+			if (((chips & 1) != 0) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
 			{
 			    const bool new_output_on = FBIINIT0_VGA_PASSTHRU(data);
 
@@ -5569,7 +5569,7 @@ static void register_w(uint32_t offset, uint32_t data)
 		case fbiInit1:
 		case fbiInit2:
 		case fbiInit4:
-			if ((chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
+			if (((chips & 1) != 0) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
 			{
 				v->reg[regnum].u = data;
 				recompute_video_memory(v);
@@ -5577,7 +5577,7 @@ static void register_w(uint32_t offset, uint32_t data)
 			break;
 
 		case fbiInit3:
-			if ((chips & 1) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
+			if (((chips & 1) != 0) && INITEN_ENABLE_HW_INIT(v->pci.init_enable))
 			{
 				v->reg[regnum].u = data;
 				v->alt_regmap = (FBIINIT3_TRI_REGISTER_REMAP(data) > 0);
@@ -5599,8 +5599,8 @@ static void register_w(uint32_t offset, uint32_t data)
 		case nccTable+9:
 		case nccTable+10:
 		case nccTable+11:
-			if (chips & 2) ncc_table_write(&v->tmu[0].ncc[0], regnum - nccTable, data);
-			if (chips & 4) ncc_table_write(&v->tmu[1].ncc[0], regnum - nccTable, data);
+			if ((chips & 2) != 0) ncc_table_write(&v->tmu[0].ncc[0], regnum - nccTable, data);
+			if ((chips & 4) != 0) ncc_table_write(&v->tmu[1].ncc[0], regnum - nccTable, data);
 			break;
 
 		case nccTable+12:
@@ -5615,8 +5615,8 @@ static void register_w(uint32_t offset, uint32_t data)
 		case nccTable+21:
 		case nccTable+22:
 		case nccTable+23:
-			if (chips & 2) ncc_table_write(&v->tmu[0].ncc[1], regnum - (nccTable+12), data);
-			if (chips & 4) ncc_table_write(&v->tmu[1].ncc[1], regnum - (nccTable+12), data);
+			if ((chips & 2) != 0) ncc_table_write(&v->tmu[0].ncc[1], regnum - (nccTable+12), data);
+			if ((chips & 4) != 0) ncc_table_write(&v->tmu[1].ncc[1], regnum - (nccTable+12), data);
 			break;
 
 		/* fogTable entries are processed and expanded immediately */
@@ -5652,7 +5652,7 @@ static void register_w(uint32_t offset, uint32_t data)
 		case fogTable+29:
 		case fogTable+30:
 		case fogTable+31:
-			if (chips & 1)
+			if ((chips & 1) != 0)
 			{
 				const int base = 2 * (regnum - fogTable);
 
@@ -5672,12 +5672,12 @@ static void register_w(uint32_t offset, uint32_t data)
 		case texBaseAddr_1:
 		case texBaseAddr_2:
 		case texBaseAddr_3_8:
-			if (chips & 2)
+			if ((chips & 2) != 0)
 			{
 				v->tmu[0].reg[regnum].u = data;
 				v->tmu[0].regdirty = true;
 			}
-			if (chips & 4)
+			if ((chips & 4) != 0)
 			{
 				v->tmu[1].reg[regnum].u = data;
 				v->tmu[1].regdirty = true;
@@ -5692,7 +5692,7 @@ static void register_w(uint32_t offset, uint32_t data)
 
 		case clipLowYHighY:
 		case clipLeftRight:
-			if (chips & 1) v->reg[0x000 + regnum].u = data;
+			if ((chips & 1) != 0) v->reg[0x000 + regnum].u = data;
 #ifdef C_ENABLE_VOODOO_OPENGL
 			if (v->ogl) {
 				voodoo_ogl_clip_window(v);
@@ -5714,10 +5714,10 @@ static void register_w(uint32_t offset, uint32_t data)
 		/* by default, just feed the data to the chips */
 		default:
 default_case:
-			if (chips & 1) v->reg[0x000 + regnum].u = data;
-			if (chips & 2) v->reg[0x100 + regnum].u = data;
-			if (chips & 4) v->reg[0x200 + regnum].u = data;
-			if (chips & 8) v->reg[0x300 + regnum].u = data;
+			if ((chips & 1) != 0) v->reg[0x000 + regnum].u = data;
+			if ((chips & 2) != 0) v->reg[0x100 + regnum].u = data;
+			if ((chips & 4) != 0) v->reg[0x200 + regnum].u = data;
+			if ((chips & 8) != 0) v->reg[0x300 + regnum].u = data;
 			break;
 	}
 }
@@ -5978,7 +5978,7 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 
 		uint32_t bufoffs;
 
-		if (LOG_LFB) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:write raw mode %X (%d,%d) = %08X & %08X\n", LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask);
+		if (LOG_LFB != 0u) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:write raw mode %X (%d,%d) = %08X & %08X\n", LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask);
 
 		/* determine the screen Y */
 		scry = y;
@@ -5992,24 +5992,14 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 		COMPUTE_DITHER_POINTERS(v->reg[fbzMode].u, y);
 
 		/* loop over up to two pixels */
-		for (pix = 0; mask; pix++)
+		for (pix = 0; mask != 0; pix++)
 		{
 			/* make sure we care about this pixel */
-			if (mask & 0x0f)
+			if ((mask & 0x0f) != 0)
 			{
-				const bool has_rgb = (mask & LFB_RGB_PRESENT) > 0;
-
-				const bool has_alpha =
-				        ((mask & LFB_ALPHA_PRESENT) > 0) &&
-				        (FBZMODE_ENABLE_ALPHA_PLANES(
-				                 v->reg[fbzMode].u) > 0);
-
-				const bool has_depth =
-				        ((mask & (LFB_DEPTH_PRESENT |
-				                  LFB_DEPTH_PRESENT_MSW)) &&
-				         !FBZMODE_ENABLE_ALPHA_PLANES(
-				                 v->reg[fbzMode].u));
-
+				const auto has_rgb = (mask & LFB_RGB_PRESENT) > 0;
+				const auto has_alpha = ((mask & LFB_ALPHA_PRESENT) > 0) && (FBZMODE_ENABLE_ALPHA_PLANES(v->reg[fbzMode].u) > 0);
+				const auto has_depth = ((mask & (LFB_DEPTH_PRESENT | LFB_DEPTH_PRESENT_MSW)) && !FBZMODE_ENABLE_ALPHA_PLANES(v->reg[fbzMode].u));
 #ifdef C_ENABLE_VOODOO_OPENGL
 				if (v->ogl && v->active) {
 					if (has_rgb || has_alpha) {
@@ -6032,7 +6022,7 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 					}
 
 					/* make sure we have an aux buffer to write to */
-					if (depth && bufoffs < depthmax)
+					if ((depth != nullptr) && bufoffs < depthmax)
 					{
 						/* write to the alpha buffer */
 						if (has_alpha)
@@ -6062,7 +6052,7 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 		const uint8_t* dither4       = nullptr;
 		const uint8_t* dither        = nullptr;
 
-		if (LOG_LFB) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:write pipelined mode %X (%d,%d) = %08X & %08X\n", LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask);
+		if (LOG_LFB != 0u) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:write pipelined mode %X (%d,%d) = %08X & %08X\n", LFBMODE_WRITE_FORMAT(v->reg[lfbMode].u), x, y, data, mem_mask);
 
 		/* determine the screen Y */
 		scry = y;
@@ -6071,7 +6061,7 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 
 		/* advance pointers to the proper row */
 		dest += scry * v->fbi.rowpixels;
-		if (depth)
+		if (depth != nullptr)
 			depth += scry * v->fbi.rowpixels;
 
 		/* compute dithering */
@@ -6084,10 +6074,10 @@ static void lfb_w(uint32_t offset, uint32_t data, uint32_t mem_mask) {
 
 		/* loop over up to two pixels */
 		stats_block stats = {};
-		for (pix = 0; mask; pix++)
+		for (pix = 0; mask != 0; pix++)
 		{
 			/* make sure we care about this pixel */
-			if (mask & 0x0f)
+			if ((mask & 0x0f) != 0)
 			{
 				const int64_t iterw = static_cast<int64_t>(sw[pix]) << (30 - 16);
 				const int32_t iterz = sw[pix] << 12;
@@ -6377,7 +6367,7 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 	// tmunum, offset, data);
 
 	/* point to the right TMU */
-	if (!(v->chipmask & (2 << tmu_num))) {
+	if ((v->chipmask & (2 << tmu_num)) == 0) {
 		return 0;
 	}
 
@@ -6424,7 +6414,7 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 		tbaseaddr = t->lodoffset[lod];
 		tbaseaddr += tt * ((t->wmask >> lod) + 1) + ts;
 
-		if (LOG_TEXTURE_RAM) LOG(LOG_VOODOO,LOG_WARN)("Texture 8-bit w: lod=%d s=%d t=%d data=%08X\n", lod, ts, tt, data);
+		if (LOG_TEXTURE_RAM != 0u) LOG(LOG_VOODOO,LOG_WARN)("Texture 8-bit w: lod=%d s=%d t=%d data=%08X\n", lod, ts, tt, data);
 
 		/* write the four bytes in little-endian order */
 		dest = t->ram;
@@ -6481,7 +6471,7 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
 		tbaseaddr = t->lodoffset[lod];
 		tbaseaddr += 2 * (tt * ((t->wmask >> lod) + 1) + ts);
 
-		if (LOG_TEXTURE_RAM) LOG(LOG_VOODOO,LOG_WARN)("Texture 16-bit w: lod=%d s=%d t=%d data=%08X\n", lod, ts, tt, data);
+		if (LOG_TEXTURE_RAM != 0u) LOG(LOG_VOODOO,LOG_WARN)("Texture 16-bit w: lod=%d s=%d t=%d data=%08X\n", lod, ts, tt, data);
 
 		/* write the two words in little-endian order */
 		dest = (uint16_t *)t->ram;
@@ -6521,7 +6511,7 @@ static uint32_t register_r(const uint32_t offset)
 	//LOG(LOG_VOODOO,LOG_WARN)("Voodoo:read chip %x reg %x (%s)", chips, regnum<<2, voodoo_reg_name[regnum]);
 
 	/* first make sure this register is readable */
-	if (!(v->regaccess[regnum] & REGISTER_READ))
+	if ((v->regaccess[regnum] & REGISTER_READ) == 0)
 	{
 		return 0xffffffff;
 	}
@@ -6688,7 +6678,7 @@ static uint32_t lfb_r(const uint32_t offset)
 	if (LFBMODE_BYTE_SWIZZLE_READS(v->reg[lfbMode].u))
 		data = bswap_u32(data);
 
-	if (LOG_LFB) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:read (%d,%d) = %08X\n", x, y, data);
+	if (LOG_LFB != 0u) LOG(LOG_VOODOO,LOG_WARN)("VOODOO.LFB:read (%d,%d) = %08X\n", x, y, data);
 	return data;
 }
 
@@ -6774,7 +6764,7 @@ static void voodoo_init() {
 	v->regnames = voodoo_reg_name;
 #endif
 
-	if (!*voodoo_reciplog)
+	if (*voodoo_reciplog == 0u)
 	{
 		// Create a table of precomputed 1/n and log2(n) values where n
 		// ranges from 1.0000 to 2.0000
@@ -7199,9 +7189,9 @@ static struct Voodoo_Real_PageHandler : public PageHandler {
 	void writed(PhysPt addr, uint32_t val) override
 	{
 		addr = PAGING_GetPhysicalAddress(addr);
-		if (!(addr&3)) {
+		if ((addr&3) == 0u) {
 			voodoo_w(addr, val, 0xffffffff);
-		} else if (!(addr&1)) {
+		} else if ((addr&1) == 0u) {
 			voodoo_w(addr, val << 16, 0xffff0000);
 			voodoo_w(next_addr(addr), val, 0x0000ffff);
 		} else {
@@ -7423,15 +7413,15 @@ struct PCI_SSTDevice : public PCI_Device {
 
 static void Voodoo_Startup() {
 	// This function is called delayed after booting only once a game actually requests Voodoo support
-	if (v) return;
+	if (v != nullptr) return;
 
 	voodoo_init();
 
 	v->draw = {};
 	v->draw.vfreq = 1000.0 / 60.0;
 
-	v->tworker.use_threads = !!(vperf & 1);
-	v->tworker.disable_bilinear_filter = !!(vperf & 2);
+	v->tworker.use_threads = !((vperf & 1) == 0);
+	v->tworker.disable_bilinear_filter = !((vperf & 2) == 0);
 
 	// Switch the pagehandler now that v has been allocated and is in use
 	voodoo_pagehandler = &voodoo_real_pagehandler;
@@ -7450,7 +7440,7 @@ void VOODOO_Init(Section* sec) {
 	auto* section = dynamic_cast<Section_prop*>(sec);
 
 	// Only activate on SVGA machines
-	if (machine != MCH_VGA || svgaCard == SVGA_None || !section) {
+	if (machine != MCH_VGA || svgaCard == SVGA_None || (section == nullptr)) {
 		return;
 	}
 
