@@ -4860,8 +4860,10 @@ static void fastfill(voodoo_state *vs)
 	int sy = (regs[clipLowYHighY].u >> 16) & 0x3ff;
 	int ey = (regs[clipLowYHighY].u >> 0) & 0x3ff;
 
-	poly_extent extents[64]   = {};
-	static uint16_t dithermatrix[16] = {};
+	poly_extent extents[64] = {};
+
+	// Align to 64-bit because that's the maximum type written
+	alignas(sizeof(uint64_t)) static uint16_t dithermatrix[16] = {};
 
 	uint16_t* drawbuf = nullptr;
 	int x, y;
