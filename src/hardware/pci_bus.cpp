@@ -71,7 +71,7 @@ static void write_pci_register(PCI_Device* dev,uint8_t regnum,uint8_t value) {
 		pci_cfg_data[dev->PCIId()][dev->PCISubfunction()][regnum]=(uint8_t)(parsed_register&0xff);
 }
 
-static void write_pci(io_port_t port, io_val_t value, io_width_t width)
+static void write_pci(const io_port_t port, const io_val_t value, const io_width_t width)
 {
 	// write_pci is only ever registered as an 8-bit handler, despite appearing to handle up to 32-bit
 	// requests. Let's check that.
@@ -98,22 +98,11 @@ static void write_pci(io_port_t port, io_val_t value, io_width_t width)
 		if (dev == nullptr)
 			return;
 
-		// write data to PCI device/configuration
-		switch (width) {
-		case io_width_t::byte: write_pci_register(dev, regnum + 0, (uint8_t)(val & 0xff)); break;
+		// write 8-bit data to PCI device/configuration
+		write_pci_register(dev, regnum, val);
 
-		// WORD and DWORD are never used
-		case io_width_t::word:
-			write_pci_register(dev, regnum + 0, (uint8_t)(val & 0xff));
-			write_pci_register(dev, regnum + 1, (uint8_t)((val >> 8) & 0xff));
-			break;
-		case io_width_t::dword:
-			write_pci_register(dev, regnum + 0, (uint8_t)(val & 0xff));
-			write_pci_register(dev, regnum + 1, (uint8_t)((val >> 8) & 0xff));
-			write_pci_register(dev, regnum + 2, (uint8_t)((val >> 16) & 0xff));
-			write_pci_register(dev, regnum + 3, (uint8_t)((val >> 24) & 0xff));
-			break;
-		}
+		// (WORD and DWORD writes aren't performed because no port
+		// registers these types)
 	}
 }
 
