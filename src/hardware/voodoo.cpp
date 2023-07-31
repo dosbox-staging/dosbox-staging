@@ -384,10 +384,6 @@ static constexpr uint8_t dither_matrix_2x2[16] =
 /* macro for clamping a value between minimum and maximum values */
 #define CLAMP(val,min,max)		do { if ((val) < (min)) { (val) = (min); } else if ((val) > (max)) { (val) = (max); } } while (0)
 
-/* macro to compute the base 2 log for LOD calculations */
-#define LOGB2(x)				(log((x)) / log(2.0))
-
-
 /*************************************
  *
  *  Macros for extracting bitfields
@@ -7062,7 +7058,7 @@ static void voodoo_init() {
 			const auto inverse_of_n = steps * width / n;
 			*lut_val++ = static_cast<uint32_t>(inverse_of_n);
 
-			const auto log2_of_n = LOGB2(n / steps) * width;
+			const auto log2_of_n = std::log2(n / steps) * width;
 			*lut_val++ = static_cast<uint32_t>(log2_of_n);
 		}
 
