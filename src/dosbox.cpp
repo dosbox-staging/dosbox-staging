@@ -781,19 +781,24 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&DMA_Init);
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
+	secprop->AddInitFunction(&PCI_Init); // PCI bus
 
-	secprop=control->AddSection_prop("pci", &PCI_Init, false); // PCI bus
+	secprop = control->AddSection_prop("voodoo", &VOODOO_Init, false);
 
-	secprop->AddInitFunction(&VOODOO_Init, false);
-
-	const char* voodootypes[] = { "12mb", "4mb", "disabled", nullptr };
-	pstring = secprop->Add_string("voodoo", only_at_start, "12mb");
+	const char* voodootypes[] = {"disabled", "4", "12", nullptr};
+	pstring = secprop->Add_string("voodoo_memsize", only_at_start, "12mb");
 	pstring->Set_values(voodootypes);
-	pstring->Set_help("RAM amount of emulated Vodooo 3dfx card.");
+	pstring->Set_help(
+	        "Memory size (in MB) of the 3dfx Vodooo card (12 MB as default).");
 
-	pint = secprop->Add_int("voodoo_perf", only_at_start, 0);
-	pint->SetMinMax(0, 4);
-	pint->Set_help("Toggle performance optimizations for Vodooo 3dfx emulation (0 = none, 1 = use multi-threading, 2 = disable bilinear filter, 3 = both).");
+	pint = secprop->Add_int("voodoo_perf", only_at_start, 1);
+	pint->SetMinMax(0, 3);
+	pint->Set_help("Performance optimisations to use when emulating the 3dfx Voodoo card:\n"
+	               "Note: emulation is software-based and does not use host-level OpenGL calls.\n"
+	               "   0:  No optimizations.\n"
+	               "   1:  Multi-threading (default).\n"
+	               "   2:  Disable bilinear filtering.\n"
+	               "   3:  All optimizations (both 1 and 2).");
 
 	// Configure capture
 	CAPTURE_AddConfigSection(control);
