@@ -3008,7 +3008,33 @@ iterated W    = 18.32 [48 bits]
 **************************************************************************/
 
 static voodoo_state* v = nullptr;
-static uint8_t vtype = VOODOO_1, vperf;
+static uint8_t vtype   = VOODOO_1;
+
+enum class PerformanceFlags : uint8_t {
+	None                = 0,
+	MultiThreading      = 1 << 0,
+	NoBilinearFiltering = 1 << 1,
+	All                 = (MultiThreading | NoBilinearFiltering),
+};
+
+static const char* describe_performance_flags(const PerformanceFlags flags)
+{
+	// Note: the descriptions are meant to be used as a status postfix
+	switch (flags) {
+	case PerformanceFlags::None:
+		return " and no optimizations";
+	case PerformanceFlags::MultiThreading:
+		return " and multi-threading";
+	case PerformanceFlags::NoBilinearFiltering:
+		return " and no bilinear filtering";
+	case PerformanceFlags::All:
+		return ", multi-threading, and no biliear filtering";
+	}
+	assert(false);
+	return "unknown performance flag";
+}
+
+static PerformanceFlags vperf = {};
 
 #define LOG_VOODOO LOG_PCI
 enum {
@@ -7702,12 +7728,24 @@ static void Voodoo_Startup() {
 	v->draw = {};
 	v->draw.vfreq = 1000.0 / 60.0;
 
-	v->tworker.use_threads = !((vperf & 1) == 0);
-	v->tworker.disable_bilinear_filter = !((vperf & 2) == 0);
+	v->tworker.use_threads = (vperf == PerformanceFlags::MultiThreading ||
+	                          vperf == PerformanceFlags::All);
+
+	v->tworker.disable_bilinear_filter = (vperf == PerformanceFlags::NoBilinearFiltering ||
+	                                      vperf == PerformanceFlags::All);
 
 	// Switch the pagehandler now that v has been allocated and is in use
 	voodoo_pagehandler = &voodoo_real_pagehandler;
 	PAGING_InitTLB();
+
+	// Log the startup
+	const auto ram_size_mb = (vtype == VOODOO_1_DTMU ? 12 : 4);
+
+	const auto performance_msg = describe_performance_flags(vperf);
+
+	LOG_MSG("VOODOO: Initialized with %d MB of RAM%s",
+	        ram_size_mb,
+	        performance_msg);
 }
 
 PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu page) {
@@ -7718,26 +7756,28 @@ void VOODOO_Destroy(Section* /*sec*/) {
 	voodoo_shutdown();
 }
 
-void VOODOO_Init(Section* sec) {
+void VOODOO_Init(Section* sec)
+{
 	auto* section = dynamic_cast<Section_prop*>(sec);
 
 	// Only activate on SVGA machines
-	if (machine != MCH_VGA || svgaCard == SVGA_None || (section == nullptr)) {
+	if (machine != MCH_VGA || svgaCard == SVGA_None || !section) {
 		return;
 	}
 
-	switch (section->Get_string("voodoo")[0])
+	switch (section->Get_string("voodoo_memsize")[0])
 	{
-		case '1': vtype = VOODOO_1_DTMU; break; //12mb
-		case '4': vtype = VOODOO_1; break; //4mb
-		default: return; // disabled
+	case '1': vtype = VOODOO_1_DTMU; break; // 12 MB
+	case '4': vtype = VOODOO_1; break;      // 4 MB
+	default: return;                        // disabled
 	}
 
 	sec->AddDestroyFunction(&VOODOO_Destroy,false);
 
 	voodoo_current_lfb = (VOODOO_INITIAL_LFB & 0xffff0000);
 	voodoo_pagehandler = &voodoo_init_pagehandler;
-	vperf = (uint8_t)section->Get_int("voodoo_perf");
+
+	vperf = static_cast<PerformanceFlags>(section->Get_int("voodoo_perf"));
 
 	PCI_AddDevice(new PCI_SSTDevice());
 }
