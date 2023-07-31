@@ -145,7 +145,7 @@ static uint8_t read_pci_register(PCI_Device* dev,uint8_t regnum) {
 	return 0xff;
 }
 
-static uint8_t read_pci(io_port_t port, io_width_t width)
+static uint8_t read_pci(const io_port_t port, [[maybe_unused]] io_width_t width)
 {
 	// read_pci is only ever registered as an 8-bit handler, despite appearing to handle up to 32-bit
 	// requests. Let's check that.
@@ -174,26 +174,7 @@ static uint8_t read_pci(io_port_t port, io_width_t width)
 		PCI_Device *dev = selected_device->GetSubdevice(fctnum);
 
 		if (dev != nullptr) {
-			switch (width) {
-			case io_width_t::byte: {
-				uint8_t val8 = read_pci_register(dev, regnum);
-				return val8;
-			}
-				// WORD and DWORD are never used
-			case io_width_t::word: {
-				uint16_t val16 = read_pci_register(dev, regnum);
-				val16 |= (read_pci_register(dev, regnum + 1) << 8);
-				return val16;
-			}
-			case io_width_t::dword: {
-				uint32_t val32 = read_pci_register(dev, regnum);
-				val32 |= (read_pci_register(dev, regnum + 1) << 8);
-				val32 |= (read_pci_register(dev, regnum + 2) << 16);
-				val32 |= (read_pci_register(dev, regnum + 3) << 24);
-				return val32;
-			}
-			default: break;
-			}
+			return read_pci_register(dev, regnum);
 		}
 	}
 	return 0xff;
