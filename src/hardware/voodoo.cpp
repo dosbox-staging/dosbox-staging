@@ -5,7 +5,7 @@
  */
 
 /*
- *  Copyright (C) 2023       The DOSBox Staging Team
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2011  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -60,8 +60,17 @@
 
 /*
   3dfx Voodoo Graphics SST-1/2 emulator by Aaron Giles
+
   DOSBox integration by kekko (https://www.vogons.org/viewtopic.php?f=41&t=41853)
+
   Code cleanups and multi-threaded triangle rendering by Bernhard Schelling
+
+  DOSBox Staging team:
+   - Separated OpenGL from software render via preprocessor statements
+   - Migrated to C++ threading
+   - Modernized and cleaned up some (not all) code
+
+  TODO: Import and adapt Aaron's latest MAME Voodoo sources.
 */
 
 #include "dosbox.h"
