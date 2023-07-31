@@ -835,7 +835,7 @@ static void dyn_lea_regval_regval(HostReg ea_reg,Bitu op1_index,Bitu op2_index,B
 // op2 is cpu_regs[op2_index] 
 static void dyn_lea_mem_regval(HostReg ea_reg,void* op1,Bitu op2_index,Bitu scale,Bits imm) {
 	if (scale || imm) {
-		if (op1!=NULL) {
+		if (op1!=nullptr) {
 			gen_mov_word_to_reg(ea_reg,op1,true);
 			MOV_REG_VAL_TO_HOST_REG(TEMP_REG_DRC,op2_index);
 
@@ -846,7 +846,7 @@ static void dyn_lea_mem_regval(HostReg ea_reg,void* op1,Bitu op2_index,Bitu scal
 		}
 	} else {
 		MOV_REG_VAL_TO_HOST_REG(ea_reg,op2_index);
-		if (op1!=NULL) gen_add(ea_reg,op1);
+		if (op1!=nullptr) gen_add(ea_reg,op1);
 	}
 }
 #endif
