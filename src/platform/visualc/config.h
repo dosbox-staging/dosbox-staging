@@ -10,11 +10,17 @@
 
 #define VERSION "0.81.0-alpha"
 
-/* Copyright string - to be returned by virtual drivers, etc. */
-#define DOSBOX_COPYRIGHT "(C) The DOSBox Staging Team"
-
 /* This macro is going to be overriden via CI */
 #define DOSBOX_DETAILED_VERSION "git"
+
+/* Strings to be returned by virtual drivers, etc. */
+
+// Name of the emulator
+#define DOSBOX_NAME "DOSBox Staging"
+// Development team name
+#define DOSBOX_TEAM "The " DOSBOX_NAME " Team"
+// Copyright string
+#define DOSBOX_COPYRIGHT "(C) " DOSBOX_TEAM
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0
