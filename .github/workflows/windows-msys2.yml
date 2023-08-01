@@ -296,10 +296,10 @@ jobs:
 
       - name: Setup release build
         run: |
-          meson setup -Db_lto=true -Db_lto_threads=$(nproc) $BUILD_RELEASE_DIR
+          meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Dtry_static_libs=mt32emu $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
-        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal $BUILD_DEBUGGER_DIR
+        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal -Dtry_static_libs=mt32emu $BUILD_DEBUGGER_DIR
 
       - name: Build release
         run: |
