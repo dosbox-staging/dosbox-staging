@@ -3623,7 +3623,8 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 
 		const uint64_t expanded = (static_cast<uint64_t>(color) << 48) |
 		                          (static_cast<uint64_t>(color) << 32) |
-		                          (color << 16) | color;
+		                          (static_cast<uint32_t>(color) << 16) |
+		                          color;
 
 		uint16_t* dest = reinterpret_cast<uint16_t*>(v->fbi.ram +
 		                                             v->fbi.auxoffs) +
