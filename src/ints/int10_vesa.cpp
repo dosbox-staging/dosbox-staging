@@ -44,10 +44,10 @@ static struct {
 	callback_number_t pmPalette = 0;
 } callback;
 
-static char string_oem[]="S3 Incorporated. Trio64";
-static char string_vendorname[]="DOSBox Development Team";
-static char string_productname[]="DOSBox - The DOS Emulator";
-static char string_productrev[]="DOSBox " VERSION;
+static const std::string string_oem         = "S3 Incorporated. Trio64";
+static const std::string string_vendorname  = DOSBOX_TEAM;
+static const std::string string_productname = DOSBOX_NAME;
+static const std::string string_productrev  = VERSION;
 
 #ifdef _MSC_VER
 #pragma pack (1)
@@ -111,14 +111,22 @@ uint8_t VESA_GetSVGAInformation(uint16_t seg,uint16_t off) {
 	else mem_writew(buffer+0x04,0x102);						//Vesa version 1.2
 	if (vbe2) {
 		mem_writed(buffer+0x06,RealMake(seg,vbe2_pos));
-		for (i=0;i<sizeof(string_oem);i++) real_writeb(seg,vbe2_pos++,string_oem[i]);
-		mem_writew(buffer+0x14,0x200);					//VBE 2 software revision
-		mem_writed(buffer+0x16,RealMake(seg,vbe2_pos));
-		for (i=0;i<sizeof(string_vendorname);i++) real_writeb(seg,vbe2_pos++,string_vendorname[i]);
-		mem_writed(buffer+0x1a,RealMake(seg,vbe2_pos));
-		for (i=0;i<sizeof(string_productname);i++) real_writeb(seg,vbe2_pos++,string_productname[i]);
-		mem_writed(buffer+0x1e,RealMake(seg,vbe2_pos));
-		for (i=0;i<sizeof(string_productrev);i++) real_writeb(seg,vbe2_pos++,string_productrev[i]);
+		for (i = 0; i <= string_oem.size(); i++) {
+			real_writeb(seg, vbe2_pos++, string_oem[i]);
+		}
+		mem_writew(buffer + 0x14, 0x200); // VBE 2 software revision
+		mem_writed(buffer + 0x16, RealMake(seg, vbe2_pos));
+		for (i = 0; i <= string_vendorname.size(); i++) {
+			real_writeb(seg, vbe2_pos++, string_vendorname[i]);
+		}
+		mem_writed(buffer + 0x1a, RealMake(seg, vbe2_pos));
+		for (i = 0; i <= string_productname.size(); i++) {
+			real_writeb(seg, vbe2_pos++, string_productname[i]);
+		}
+		mem_writed(buffer + 0x1e, RealMake(seg, vbe2_pos));
+		for (i = 0; i <= string_productrev.size(); i++) {
+			real_writeb(seg, vbe2_pos++, string_productrev[i]);
+		}
 	} else {
 		mem_writed(buffer+0x06,int10.rom.oemstring);	//Oemstring
 	}
@@ -664,9 +672,8 @@ void INT10_SetupVESA(void) {
 	phys_writew(PhysicalMake(0xc000,int10.rom.used),0xffff);
 	int10.rom.used+=2;
 	int10.rom.oemstring=RealMake(0xc000,int10.rom.used);
-	const auto len = safe_strlen(string_oem) + 1;
-	for (i=0;i<len;i++) {
-		phys_writeb(0xc0000+int10.rom.used++,string_oem[i]);
+	for (i = 0; i <= string_oem.size(); i++) {
+		phys_writeb(0xc0000 + int10.rom.used++, string_oem[i]);
 	}
 	/* Prepare the real mode interface */
 	int10.rom.wait_retrace=RealMake(0xc000,int10.rom.used);
