@@ -84,7 +84,7 @@ jobs:
       - name: Install C++ compiler and libraries
         if:   matrix.conf.needs_deps
         run: |
-          arch -arch=${{ matrix.conf.arch }} brew install \
+          arch -arch=${{ matrix.conf.arch }} brew install --overwrite \
             ${{ matrix.conf.packages }} \
             $(cat packages/macos-12-brew.txt)
 
@@ -200,7 +200,7 @@ jobs:
       - name: Install C++ compiler and libraries
         if:   matrix.runner.needs_deps
         run: >-
-          arch -arch=${{ matrix.runner.arch }} brew install librsvg tree
+          arch -arch=${{ matrix.runner.arch }} brew install --overwrite librsvg tree
           ccache libpng meson opusfile sdl2 sdl2_net speexdsp
 
       - uses:  actions/cache@v3.3.1
@@ -273,7 +273,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install brew depedencies
-        run: brew install librsvg
+        run: brew install --overwrite librsvg
 
       - name: Download binaries
         uses: actions/download-artifact@v3
@@ -303,7 +303,7 @@ jobs:
         id:    prep-clamdb
         shell: bash
         run: |
-          brew install clamav
+          brew install --overwrite clamav
           export CLAMDB_DIR="/usr/local/Cellar/clamav"
           clamscan --heuristic-scan-precedence=yes --recursive --infected dist || true
 
