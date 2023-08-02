@@ -617,15 +617,19 @@ uint8_t SVGA_S3_ReadSEQ(io_port_t reg, io_width_t)
 uint32_t SVGA_S3_GetClock(void)
 {
 	uint32_t clock = (vga.misc_output >> 2) & 3;
-	if (clock == 0)
-		clock = 25175000;
-	else if (clock == 1)
-		clock = 28322000;
-	else
-		clock=1000*S3_CLOCK(vga.s3.clk[clock].m,vga.s3.clk[clock].n,vga.s3.clk[clock].r);
-	/* Check for dual transfer, clock/2 */
-	if (vga.s3.pll.control_2 & 0x10)
+	if (clock == 0) {
+		clock = Vga640PixelClockHz;
+	} else if (clock == 1) {
+		clock = Vga720PixelClockHz;
+	} else {
+		clock = 1000 * S3_CLOCK(vga.s3.clk[clock].m,
+		                        vga.s3.clk[clock].n,
+		                        vga.s3.clk[clock].r);
+	}
+	// Check for dual transfer, clock/2
+	if (vga.s3.pll.control_2 & 0x10) {
 		clock /= 2;
+	}
 	return clock;
 }
 
