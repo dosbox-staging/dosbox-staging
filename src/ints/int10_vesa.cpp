@@ -91,48 +91,73 @@ struct MODE_INFO{
 #pragma pack()
 #endif
 
+uint8_t VESA_GetSVGAInformation(const uint16_t segment, const uint16_t offset)
+{
+	// Fill buffer with VESA information
+	PhysPt buffer = PhysicalMake(segment, offset);
+	const auto id = mem_readd(buffer);
 
+	const auto vbe2 = (((id == 0x56424532) || (id == 0x32454256)) &&
+	                   (!int10.vesa_oldvbe));
 
-uint8_t VESA_GetSVGAInformation(uint16_t seg,uint16_t off) {
-	/* Fill 256 byte buffer with VESA information */
-	PhysPt buffer=PhysicalMake(seg,off);
-	Bitu i;
-	bool vbe2=false;uint16_t vbe2_pos=256+off;
-	Bitu id=mem_readd(buffer);
-	if (((id==0x56424532)||(id==0x32454256)) && (!int10.vesa_oldvbe)) vbe2=true;
-	if (vbe2) {
-		for (i=0;i<0x200;i++) mem_writeb(buffer+i,0);		
-	} else {
-		for (i=0;i<0x100;i++) mem_writeb(buffer+i,0);
+	const auto vbe_bufsize = vbe2 ? 0x200 : 0x100;
+	for (auto i = 0; i < vbe_bufsize; i++) {
+		mem_writeb(buffer + i, 0);
 	}
-	/* Fill common data */
-	MEM_BlockWrite(buffer,(void *)"VESA",4);				//Identification
-	if (!int10.vesa_oldvbe) mem_writew(buffer+0x04,0x200);	//Vesa version 2.0
-	else mem_writew(buffer+0x04,0x102);						//Vesa version 1.2
+
+	// Identification
+	auto vesa_string = "VESA";
+	MEM_BlockWrite(buffer, static_cast<const void*>(vesa_string), 4);
+
+	// VESA version
+	constexpr auto vesa_v1_2 = 0x0102;
+	constexpr auto vesa_v2_0 = 0x0200;
+
+	const auto vesa_version  = int10.vesa_oldvbe ? vesa_v1_2 : vesa_v2_0;
+	mem_writew(buffer + 0x04, vesa_version);
+
 	if (vbe2) {
-		mem_writed(buffer+0x06,RealMake(seg,vbe2_pos));
-		for (i = 0; i <= string_oem.size(); i++) {
-			real_writeb(seg, vbe2_pos++, string_oem[i]);
-		}
-		mem_writew(buffer + 0x14, 0x200); // VBE 2 software revision
-		mem_writed(buffer + 0x16, RealMake(seg, vbe2_pos));
-		for (i = 0; i <= string_vendorname.size(); i++) {
-			real_writeb(seg, vbe2_pos++, string_vendorname[i]);
-		}
-		mem_writed(buffer + 0x1a, RealMake(seg, vbe2_pos));
-		for (i = 0; i <= string_productname.size(); i++) {
-			real_writeb(seg, vbe2_pos++, string_productname[i]);
-		}
-		mem_writed(buffer + 0x1e, RealMake(seg, vbe2_pos));
-		for (i = 0; i <= string_productrev.size(); i++) {
-			real_writeb(seg, vbe2_pos++, string_productrev[i]);
-		}
+		uint16_t vbe2_pos = 256 + offset;
+
+		auto write_string = [&](const std::string& str, uint16_t& pos) {
+			for (const char& c : str) {
+				real_writeb(segment, pos++, c);
+			}
+			real_writeb(segment, pos++, 0);
+		};
+
+		// OEM string
+		mem_writed(buffer + 0x06, RealMake(segment, vbe2_pos));
+		write_string(string_oem, vbe2_pos);
+
+		// VBE 2 software revision
+		mem_writew(buffer + 0x14, 0x200);
+
+		// Vendor name
+		mem_writed(buffer + 0x16, RealMake(segment, vbe2_pos));
+		write_string(string_vendorname, vbe2_pos);
+
+		// Product name
+		mem_writed(buffer + 0x1a, RealMake(segment, vbe2_pos));
+		write_string(string_productname, vbe2_pos);
+
+		// Product revision
+		mem_writed(buffer + 0x1e, RealMake(segment, vbe2_pos));
+		write_string(string_productrev, vbe2_pos);
 	} else {
-		mem_writed(buffer+0x06,int10.rom.oemstring);	//Oemstring
+		// OEM string
+		mem_writed(buffer + 0x06, int10.rom.oemstring);
 	}
-	mem_writed(buffer+0x0a,0x0);					//Capabilities and flags
-	mem_writed(buffer+0x0e,int10.rom.vesa_modes);	//VESA Mode list
-	mem_writew(buffer+0x12,(uint16_t)(vga.vmemsize/(64*1024))); // memory size in 64kb blocks
+
+	// Capabilities and flags
+	mem_writed(buffer + 0x0a, 0x0);
+
+	// VESA mode list
+	mem_writed(buffer + 0x0e, int10.rom.vesa_modes);
+
+	// Memory size in 64KB blocks
+	mem_writew(buffer + 0x12, (uint16_t)(vga.vmemsize / (64 * 1024)));
+
 	return VESA_SUCCESS;
 }
 
@@ -671,10 +696,13 @@ void INT10_SetupVESA(void) {
 	}
 	phys_writew(PhysicalMake(0xc000,int10.rom.used),0xffff);
 	int10.rom.used+=2;
-	int10.rom.oemstring=RealMake(0xc000,int10.rom.used);
-	for (i = 0; i <= string_oem.size(); i++) {
-		phys_writeb(0xc0000 + int10.rom.used++, string_oem[i]);
+
+	int10.rom.oemstring = RealMake(0xc000, int10.rom.used);
+	for (const char& c : string_oem) {
+		phys_writeb(0xc0000 + int10.rom.used++, c);
 	}
+	phys_writeb(0xc0000 + int10.rom.used++, 0);
+
 	/* Prepare the real mode interface */
 	int10.rom.wait_retrace=RealMake(0xc000,int10.rom.used);
 	int10.rom.used += (uint16_t)CALLBACK_Setup(0, nullptr, CB_VESA_WAIT, PhysicalMake(0xc000,int10.rom.used), "");
