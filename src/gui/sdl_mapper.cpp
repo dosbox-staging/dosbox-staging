@@ -197,19 +197,16 @@ public:
 			if (!GetActivityCount()) Active(true);
 		}
 	}
-	void DeActivateEvent(bool ev_trigger) override {
-		if (ev_trigger) {
-			if (activity>0) activity--;
-			if (activity==0) {
-				/* test if still some trigger-activity is present,
-				   adjust the state in this case accordingly */
-				if (GetActivityCount()) RepostActivity();
-				else Active(false);
-			}
-		} else {
-			if (!GetActivityCount()) Active(false);
+	void DeActivateEvent(const bool ev_trigger) override
+	{
+		if (ev_trigger || GetActivityCount() == 0) {
+			// Zero-out this event's pending activity if triggered
+			// or we have no opposite-direction events
+			activity = 0;
+			Active(false);
 		}
 	}
+
 	virtual Bitu GetActivityCount() {
 		return activity;
 	}
