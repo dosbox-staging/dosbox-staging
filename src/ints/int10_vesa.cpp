@@ -98,7 +98,7 @@ uint8_t VESA_GetSVGAInformation(const uint16_t segment, const uint16_t offset)
 	const auto id = mem_readd(buffer);
 
 	const auto vbe2 = (((id == 0x56424532) || (id == 0x32454256)) &&
-	                   (!int10.vesa_oldvbe));
+	                   !int10.vesa_oldvbe);
 
 	const auto vbe_bufsize = vbe2 ? 0x200 : 0x100;
 	for (auto i = 0; i < vbe_bufsize; i++) {
@@ -451,7 +451,7 @@ uint8_t VESA_ScanLineLength(uint8_t subcall,
 	auto new_offset = static_cast<int>(vga.config.scan_len);
 	auto screen_height = CurMode->sheight;
 	auto usable_vmem_bytes = vga.vmemsize;
-	uint8_t bits_per_pixel = 8;
+	uint8_t bits_per_pixel = 0;
 	uint8_t bytes_per_offset = 8;
 	bool align_to_nearest_4th_pixel = false;
 
