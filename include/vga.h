@@ -54,7 +54,7 @@ enum VGAModes {
 	// All 16-colour EGA and VGA modes
 	M_EGA = 1 << 2,
 
-	// 320x200 256-colour "chunky" or "chanined" VGA mode (mode 13h)
+	// 320x200 256-colour "chunky" or "chained" VGA mode (mode 13h)
 	// Also its numerous tweaked "Mode X" variants (e.g. 320x240, 360x240,
 	// 320x400, 256x256, etc.) that use mode 13h as a starting point.
 	M_VGA = 1 << 3,
@@ -130,7 +130,7 @@ constexpr auto RefreshRateDosDefault     = 70;
 constexpr auto InterpolatingVrrMinRateHz = 140;
 constexpr auto RefreshRateMax            = 1000;
 
-// 4x the NTSC color-burst frequency of 3.579545 MHz
+// 4x the NTSC colour-burst frequency of 3.579545 MHz
 constexpr auto CgaPixelClockHz = 14318180;
 
 #define CLK_25 25175
@@ -440,12 +440,12 @@ union TandyModeRegister {
 	bit_view<1, 1> is_graphics_enabled;
 
 	// 1 for black and white output
-	// Tandy: A different color palette is selected by this bit in 320x200 (cyan-red-white)
+	// Tandy: A different colour palette is selected by this bit in 320x200 (cyan-red-white)
 	// 4-color graphics mode (also on PCjr or only on Tandy?)
 	bit_view<2, 1> is_black_and_white_mode;
 
 	// 1 when the video signal is enabled. When the video signal is disabled,
-	// the screen is forced to the border color.
+	// the screen is forced to the border colour.
 	bit_view<3, 1> is_video_enabled;
 
 	// Tandy: 1 in 640x200 graphics modes
@@ -455,8 +455,8 @@ union TandyModeRegister {
 
 	// Tandy: This control bit is used in the alpha mode only.
 	// 1 selects blinking if the attribute bit is set (bit 7).
-	// 0 selects 16 background colors. (With blinking selected, only 8
-	// background colors are available.)
+	// 0 selects 16 background colours. (With blinking selected, only 8
+	// background colours are available.)
 	bit_view<5, 1> is_tandy_blink_enabled;
 };
 
@@ -470,20 +470,20 @@ union TandyModeControlRegister {
 	//
 	// If the enable-blink bit is on in a graphics mode, the high-order
 	// address of the palette (PA3) is replaced with the character-blink
-	// rate. This causes displayed colors to switch between two sets of
-	// colors.
+	// rate. This causes displayed colours to switch between two sets of
+	// colours.
 	//
-	// If the colors in the lower half of the palette are the same as in the
-	// upper half of the palette, no color changes will occur. If the colors
+	// If the colours in the lower half of the palette are the same as in the
+	// upper half of the palette, no colour changes will occur. If the colours
 	// in the upper half of the palette are different from the lower half of
-	// the palette, the colors will alternately change between the 2 palette
-	// colors at the blink rate.
+	// the palette, the colours will alternately change between the 2 palette
+	// colours at the blink rate.
 	//
-	// Only eight colors are available in the 16-color modes when using this
+	// Only eight colours are available in the 16-colour modes when using this
 	// feature. Bit 3 of the palette mask has no effect on this mode.
 	bit_view<1, 1> is_pcjr_blink_enabled;
 
-	// Tandy: This bit enables the border color register. For PC compatibility
+	// Tandy: This bit enables the border colours register. For PC compatibility
 	// this bit should be 0. For PCjr compatibility this bit should be 1.
 	// (Interestingly, the PCjr manual states this bit should be always 0).
 	bit_view<2, 1> is_tandy_border_enabled;
@@ -621,7 +621,7 @@ union AttributeModeControlRegister {
 	bit_view<0, 1> is_graphics_enabled;
 
 	// When this bit is set to 1, monochrome emulation mode is selected. When
-	// this bit is set to 0, color |emulation mode is selected. It is present
+	// this bit is set to 0, colour emulation mode is selected. It is present
 	// and programmable in all of the hardware but it apparently does nothing.
 	// The internal palette is used to provide monochrome emulation instead.
 	bit_view<1, 1> is_monochrome_emulation_enabled;
@@ -634,7 +634,7 @@ union AttributeModeControlRegister {
 	bit_view<2, 1> is_line_graphics_enabled;
 
 	// When this bit is set to 0, the most-significant bit of the attribute
-	// selects the background intensity (allows 16 colors for background).
+	// selects the background intensity (allows 16 colours for background).
 	// When set to 1, this bit enables blinking.
 	bit_view<3, 1> is_blink_enabled;
 
@@ -654,7 +654,7 @@ union AttributeModeControlRegister {
 	bit_view<5, 1> is_pixel_panning_enabled;
 
 	// When this bit is set to 1, the video data is sampled so that eight bits
-	// are available to select a color in the 256-color mode (0x13). This bit
+	// are available to select a colour in the 256-color mode (0x13). This bit
 	// is set to 0 in all other modes.
 	bit_view<6, 1> is_8bit_color_enabled;
 
@@ -906,7 +906,7 @@ struct VGA_Type {
 	VGA_Memory mem = {};
 	// this is assumed to be power of 2
 	uint32_t vmemwrap = 0;
-	 // memory for fast (usually 16-color) rendering,
+	 // memory for fast (usually 16-colour) rendering,
 	 // always twice as big as vmemsize
 	uint8_t* fastmem  = {};
 	uint32_t vmemsize = 0;
