@@ -130,8 +130,20 @@ constexpr auto RefreshRateDosDefault     = 70;
 constexpr auto InterpolatingVrrMinRateHz = 140;
 constexpr auto RefreshRateMax            = 1000;
 
-// 4x the NTSC colour-burst frequency of 3.579545 MHz
+// Ref: https://en.wikipedia.org/wiki/Crystal_oscillator_frequencies
+//
+// CGA pixel clock (4x the NTSC colour-burst frequency of 3.579545 MHz)
 constexpr auto CgaPixelClockHz = 14318180;
+
+// MDA & EGA 640x350 @ 60Hz pixel clock
+constexpr auto EgaPixelClockHz = 16257000;
+
+// VGA pixel clock for 640 pixel wide modes
+// (e.g., 640x480 @ 60Hz and 320/640x200/350/400 @ 70Hz)
+constexpr auto Vga640PixelClockHz = 25175000;
+
+// VGA pixel clock for 720 pixel wide modes (e.g., 720x350/400 @ 70Hz)
+constexpr auto Vga720PixelClockHz = 28322000;
 
 #define CLK_25 25175
 #define CLK_28 28322

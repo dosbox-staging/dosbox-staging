@@ -1602,11 +1602,13 @@ static VgaTimings calculate_vga_timings()
 		} else {
 			switch ((vga.misc_output >> 2) & 3) {
 			case 0:
-				clock = (machine == MCH_EGA) ? CgaPixelClockHz : 25175000;
+				clock = (machine == MCH_EGA) ? CgaPixelClockHz
+				                             : Vga640PixelClockHz;
 				break;
 			case 1:
 			default:
-				clock = (machine == MCH_EGA) ? 16257000 : 28322000;
+				clock = (machine == MCH_EGA) ? EgaPixelClockHz
+				                             : Vga720PixelClockHz;
 				break;
 			}
 		}
