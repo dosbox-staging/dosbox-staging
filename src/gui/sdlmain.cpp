@@ -4808,6 +4808,12 @@ int sdl_main(int argc, char *argv[])
 	loguru::g_preamble_verbose = false; // The verbosity field
 	loguru::g_preamble_pipe    = true; // The pipe symbol right before the message
 
+	if (arguments->printconf || arguments->editconf ||
+	    arguments->eraseconf || arguments->list_glshaders ||
+	    arguments->erasemapper || !arguments->opencaptures.empty()) {
+		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+	}
+
 	loguru::init(argc, argv);
 
 	LOG_MSG("%s version %s", CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
