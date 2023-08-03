@@ -939,13 +939,13 @@ void PROGRAMS_Init(Section* sec)
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
 	        "[color=white]Purpose of property [color=green]'%s'[color=white] "
-			"(contained in section [color=cyan][%s][color=white])[reset]:\n\n%s\n\n"
+			"(contained in section [color=cyan][%s][color=white]):[reset]\n\n%s\n\n"
 	        "[color=white]Possible values:[reset]  %s\n"
 	        "[color=white]Default value:[reset]    %s\n"
 	        "[color=white]Current value:[reset]    %s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP",
-	        "[color=white]Purpose of section [%s][reset]:\n"
+	        "[color=white]Purpose of section [%s]:[reset]\n"
 			"%s\n[color=white]Current value:[reset]\n%s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
