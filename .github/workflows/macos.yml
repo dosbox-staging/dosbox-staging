@@ -84,6 +84,7 @@ jobs:
       - name: Install C++ compiler and libraries
         if:   matrix.conf.needs_deps
         run: |
+          arch -arch=${{ matrix.conf.arch }} brew unlink openssl@1.1 || true
           arch -arch=${{ matrix.conf.arch }} brew install --overwrite \
             ${{ matrix.conf.packages }} \
             $(cat packages/macos-12-brew.txt)
