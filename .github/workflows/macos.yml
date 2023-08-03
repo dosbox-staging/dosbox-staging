@@ -85,6 +85,9 @@ jobs:
         if:   matrix.conf.needs_deps
         run: |
           arch -arch=${{ matrix.conf.arch }} brew unlink openssl@1.1 || true
+          rm -f /usr/local/bin/openssl || true
+          arch -arch=${{ matrix.conf.arch }} brew install --overwrite openssl@3 || \
+          arch -arch=${{ matrix.conf.arch }} brew link --overwrite openssl@3
           arch -arch=${{ matrix.conf.arch }} brew install --overwrite \
             ${{ matrix.conf.packages }} \
             $(cat packages/macos-12-brew.txt)
