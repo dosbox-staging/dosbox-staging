@@ -77,18 +77,31 @@ Częstotliwość odświeżania obrazu w systemie gospodarza:
              o wysokiej częstotliwości odświeżania (domyślne).
   sdi:       Używa częstotliwości SDI (Serial Device Interface), bez
              żadnego korygowania wartości.
-  vrr:       Odejmuje 3 Hz od raportowanej wartości (dobra praktyka dla
-             monitorów VRR).
-  <custom>:  Używa podanej wartości, całkowitej lub dziesiętnej, musi być
-             większa od 23.000.
+  vrr:       Odejmuje 3 Hz od raportowanej wartości (dobra strategia dla
+             monitorów o zmiennej częstotliwości odświeżania).
+  <custom>:  Używa podanej wartości, całkowitej lub dziesiętnej, wartość
+             musi być co najmniej 23.000.
 .
 :CONFIG_VSYNC
-Synchronizacja z odświeżaniem obrazu na monitorze, jeśli obsługiwana
-(domyślnie włączone). Redukuje migotanie i szarpanie obrazu.
+Tryb synchronizacji pionowej obrazu (vsync):
+  auto:      Ogranicza synchronizację tylko do przypadków, gdzie na pewno
+             przyniesie to pozytywny efekt, np. na pełnym ekranie na monitorze
+             o zmiennej częstotliwości odświeżania (domyślne).
+  on:        Włącz synchronizację. Może zapobiec smużeniu obrazu w niektórych
+             grach, ale zmniejszy wydajność i spowoduje gubienie ramek obrazu
+             jeśli częstotliwość odświeżania w DOSie przekroczy częstotliwość
+             odświeżania w systemie gospodarza (np. 70 Hz w DOSie, a 60 Hz
+             w systemie).
+  off:       Próbuje wyłączyć synchronizację pionową, co przyspieszy
+             wyświetlanie poszczególnych ramek obrazu, ale może spowodować
+             smużenie w niektórych grach.
+  yield:     Pozwala kontrolować synchronizację systemowi gospodarza.
 .
 :CONFIG_VSYNC_SKIP
-Czas (w mikrosekundach) blokowania renderowania przed pominięciem kolejnej
-ramki (domyślnie 7000). 0 wyłącza mechanizm i zawsze renderuje ramkę.
+Czas (w mikrosekundach) zablokowanego renderowania przed podjęciem decyzji o
+pominięciu rysowania kolejnej ramki. Np. 7000 to około połowy czasu ramki przy
+częstotliwości odświeżania 70 Hz.
+0 wyłącza pomijanie renderowania ramek (domyślne).
 .
 :CONFIG_PRESENTATION_MODE
 Tryb wyświetlania ramek obrazu:
@@ -99,6 +112,10 @@ Domyślnie 'auto'.
 .
 :CONFIG_OUTPUT
 Wybór wyjścia obrazu (domyślnie 'opengl').
+Ustawienia 'texture' oraz 'opengl' używają interpolacji bilinearnej, podczas
+gdy 'texturenb' oraz 'openglnb' rysują najbliższy sąsiedni piksel.
+Niektóre shadery wymagają interpolacji bilinearnej, przez co jest to
+najbezpieczniejszy wybór.
 .
 :CONFIG_TEXTURE_RENDERER
 Wybór renderera dla 'output = texture'.
@@ -190,11 +207,7 @@ Obsługa uszkodzonych bloków MCB (Memory Control Blocks):
 Rozmiar pamięci graficznej w megabajtach (1-8) lub kilobajtach (256-8192).
 Ustawienie 'auto' (domyślne) wybiera typową dla danej karty graficznej.
 Dozwolone wartości dla poszczególnych kart graficznych opisane przy opcji
-'machine',
-.
-:CONFIG_FORCE_VGA_SINGLE_SCAN
-Używa pojedynczych linii dla obrazu VGA o rozdzielczości pionowej poniżej 350
-(domyślnie wyłączone).
+'machine'.
 .
 :CONFIG_DOS_RATE
 Częstotliwość odświeżania emulowanego obrazu:
@@ -279,6 +292,29 @@ mniejsza od wielkości obszaru wyświetlania (jak dla 'off').
   horizontal:  Ogranicza skalowanie obrazu w poziomie do wartości całkowitych.
   vertical:    Ogranicza skalowanie obrazu w pionie do wartości całkowitych.
 .
+:CONFIG_FORCE_VGA_SINGLE_SCAN
+Zawsze renderuje obraz z pojedynczych linii obrazu (domyślnie wyłączone),
+nawet jeśli tryb graficzny używałby podwójnych linii, jak w trybach VGA
+o rozdzielczości poniżej 400 linii.
+Jest to użyteczne przy shaderach symulujących wygląd ekranu CRT, albo do
+polepszenia wydajności na słabszych komputerach.
+Uwaga: Domyślny shader 'interpolation/sharp.glsl' oraz tryby wyświetlania
+       'texturenb' i 'openglnb' wymuszają pojedyncze linie obrazu.
+       W połączeniu z 'integer_scaling' pojedyncze linie obrazu zapewniają
+       dokładniejsze skalowanie dzięki mniejszym krokom.
+.
+:CONFIG_FORCE_NO_PIXEL_DOUBLING
+Nie podwaja pikseli w żadnych trybach graficznych (domyślnie wyłączone).
+Podwajanie jest domyślnie używane w większości trybów graficznych poniżej 640
+pikseli w poziomie, co pozwala na bardziej realistyczną emulację monitorów
+CRT przy pomocy shaderów.
+Wyłączenie tej podwajania pikseli pozwala lepiej emulować monitor o niskiej
+rozdzielczości, polepsza też wydajność na słabszych komputerach.
+Uwaga: Domyślny shader 'interpolation/sharp.glsl' oraz tryby wyświetlania
+       'texturenb' i 'openglnb' wymuszają pojedyncze piksele obrazu.
+       W połączeniu z 'integer_scaling' pojedyncze piksele zapewniają
+       dokładniejsze skalowanie dzięki mniejszym krokom.
+.
 :CONFIG_MONOCHROME_PALETTE
 Barwa obrazu monochromatycznego (domyślnie 'white'). Działa tylko z systemami
 'hercules' oraz 'cga_mono'. Możesz zmieniać barwę klawiszem F11.
@@ -321,10 +357,10 @@ Skalery programowe zostały usunięte, musisz użyć skalowania sprzętowego:
 .
 :CONFIG_GLSHADER
 Wybór shadera w trybach OpenGL.
-Albo 'none' (żaden), albo 'default' (domyślny), albo ścieżka względna lub
-bezwzględna do pliku z shaderem GLSL. Można również podać jeden z shaderów
-z listy wyświetlonej opcją wiersza poleceń '--list-glshaders'.
-Wartość domyślna wybiera shader 'interpolation/sharp.glsl'.
+Albo 'default' (domyślny), albo 'none' (żaden), albo ścieżka względna lub
+bezwzględna do pliku z shaderem GLSL, albo jeden z shaderów z listy
+wyświetlanej opcją wiersza poleceń '--list-glshaders'.
+Wartość default' wybiera shader 'interpolation/sharp.glsl'.
 Rozszerzenie '.glsl' można pominąć.
 .
 :CONFIG_COMPOSITE
@@ -379,12 +415,16 @@ Ilość cykli na milisekundę, która zostanie odjęta po naciśnięciu skrótu
 klawiszowego. Ustawienie mniejsze niż 100 jest traktowane jak wartość w
 procentach (domyślnie 20).
 .
-:CONFIG_VOODOO
-Wielkość pamięci emulowanej karty 3dfx Vodooo.
+:CONFIG_VOODOO_MEMSIZE
+Wielkość pamięci (w megabajtach) emulowanej karty 3dfx Vodooo (domyślnie 12).
 .
 :CONFIG_VOODOO_PERF
-Włącza poszczególne optymalizacje wydajności emulacji karty 3dfx Vodooo
-(0 = brak, 1 = wielowątkowość, 2 = bez filtrowania bilinearnego, 3 = obydwa).
+Optymalizacje wydajności emulowania karty 3dfx Voodoo:
+   0:  Bez optymalizacji.
+   1:  Renderowanie wielowątkowe (domyślne).
+   2:  Wyłączenie filtrowania bilinearnego.
+   3:  Obydwie optymalizacje (zarówno z punktu 1, jak i 2).
+Uwaga: emulacja jest programowa, nie używa OpenGL.
 .
 :CONFIG_CAPTURE_DIR
 Katalog do zapisywania przechwyconego dźwięku, muzyki w formacie MIDI, zrzutów
@@ -392,9 +432,6 @@ ekranu, itd. (domyślnie 'capture').
 .
 :CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
 Format zapisywanych zrzutów ekranu (domyślnie 'upscaled'):
-  raw:       Zapisuje nieprzetworzoną zawartość bufora ramki (stare
-             zachowanie; rezultatem są kwadratowe piksele).
-             Nazwy plików kończą się na '_raw' (np. 'image0001_raw.png').
   upscaled:  Obraz jest skalowany tak, aby wysokość zrzutu ekranu była około
              1200 pikseli, a prawidłowe proporcje obrazu zostały zachowane (w
              zależności od opcji 'aspect'). Współczynnik skalowania pionowego
@@ -403,9 +440,14 @@ Format zapisywanych zrzutów ekranu (domyślnie 'upscaled'):
              640x480 do rozdzielczości 1920x1440 (skalowanie 3:3), a 640x350
              do rozdzielczości 1867x1400 (skalowanie 2.9165:4, tylko
              rozdzielczość pionowa jest skalowana współczynnikiem całkowitym).
+             Nazwy plików nie mają dodanej końcówki określającej rodzaj zrzutu
+             ekranu (np. 'image0001.png').
   rendered:  Zapisuje obraz po renderingu i zastosowaniu shaderów, w takie
              formie, w jakiej jest wyświetlany na ekranie. Nazwy plików kończą
-             się na '_rendered' (np. 'image0001_rendered.png').
+             się na '-rendered' (np. 'image0001-rendered.png').
+  raw:       Zapisuje nieprzetworzoną zawartość bufora ramki (stare
+             zachowanie; rezultatem są kwadratowe piksele).
+             Nazwy plików kończą się na '-raw' (np. 'image0001-raw.png').
 Można podać więcej wartości, rozdzielonych spacjami, spowoduje to zapisanie
 zrzutu ekranu we wszystkich wybranych formatach.
 .
@@ -584,12 +626,12 @@ Włącz jedynie, jeśli potrzebujesz surowych, nieprzetworzonych danych MIDI, np
 do pracy z programami muzycznymi, lub aby debugować problemy związane z MIDI.
 .
 :CONFIG_SOUNDFONT
-Ścieżka do pliku SoundFont w formacie SF2. Może być względna lub bezwzględna,
-można też podać nazwę pliku z podkatalogu 'soundfonts' katalogu z
-konfiguracją. Domyślnie 'default.sf2'.
-Uwaga: opcjonalny parametr regulujący głośność jest przestarzały; głośność
-       należy zmieniać odpowiednim poleceniem, np.:
-         MIXER FSYNTH 200
+Ścieżka do pliku SoundFont w formacie SF2 (domyślnie 'default.sf2'). Może być
+względna lub bezwzględna, można też podać nazwę pliku z podkatalogu
+'soundfonts' katalogu z konfiguracją.
+Opcjonalny drugi parametr określa głośność muzyki, np. 'my_soundfont.sf2 50'
+zmniejszy głośność syntezy o 50%. Procentowa wartość głośności powinna
+zawierać się w przedziale od 1 do 800.
 .
 :CONFIG_FSYNTH_CHORUS
 Efekt chorus: auto' (domyślne), 'on', 'off' lub ustawienia użytkownika.
@@ -738,6 +780,10 @@ Filtrowanie dźwięku syntetyzowanego CMS karty Sound Blaster:
 .
 :CONFIG_GUS
 Włącza emulację karty muzycznej Gravis UltraSound (domyślnie wyłączone).
+Domyślne ustawienia (adres 240, IRQ 5, DMA 3) zostały dobrane tak, żeby GUS
+mógł koegzystować z kartą SoundBlaster. Działają z większością oprogramowania,
+ale niektóre dema mogą wymagać fabrycznych wartości domyślnych - adresu 220,
+IRQ 11, DMA 1.
 .
 :CONFIG_GUSBASE
 Adres bazowy (I/O) karty muzycznej Gravis UltraSound (domyślnie 240).
@@ -750,8 +796,7 @@ Numer kanału DMA karty muzycznej Gravis UltraSound (domyślnie 3).
 .
 :CONFIG_ULTRADIR
 Ścieżka do katalogu UltraSound, domyślnie 'C:\ULTRASND'.
-Powinien zawierać podkatalog MIDI z definicjami instrumentów w formacie PAT.
-Zestawy instrumentów dla programu Timidity powinny działać poprawnie.
+Powinien zawierać podkatalog 'MIDI' z definicjami instrumentów w formacie PAT.
 .
 :CONFIG_GUS_FILTER
 Filtrowanie dźwięku karty Gravis UltraSound:
@@ -1094,79 +1139,109 @@ Brak sekcji lub parametru: '%s'
 
 .
 :PROGRAM_CONFIG_NO_PROPERTY
-Brak parametru '%s' w sekcji '%s'.
+Brak parametru '%s' w sekcji [%s]
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Składnia: config -set "[sekcja] parametr=wartość".
+Składnia: [color=green]config [/reset]-set [color=cyan][SECTION][/reset] [color=white]PARAMETR[/reset][=][color=white]WARTOŚĆ[/reset]
 
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
-Nie został załadowany żaden plik konfiguracyjny!
+Nie został załadowany żaden plik konfiguracyjny
 
 .
 :PROGRAM_CONFIG_PRIMARY_CONF
-Główny plik konfiguracyjny:
+[color=white]Główny plik konfiguracyjny:[reset]
 %s
 
 .
 :PROGRAM_CONFIG_ADDITIONAL_CONF
-Dodatkowe pliki konfiguracyjne:
 
+[color=white]Dodatkowe pliki konfiguracyjne:[reset]
+  
 .
 :PROGRAM_CONFIG_CONFDIR
-Katalog z konfiguracją DOSBox Staging %s:
+[color=white]Katalog z konfiguracją programu DOSBox Staging %s:[reset]
 %s
 
 
 .
 :PROGRAM_CONFIG_FILE_ERROR
 
-Nie można otworzyć pliku %s
+Nie można otworzyć pliku '%s'
 
 .
 :PROGRAM_CONFIG_FILE_WHICH
-Zapisywanie pliku konfiguracyjnego:
-%s
+Zapisywanie konfiguracji do pliku '%s'
 
 .
 :SHELL_CMD_CONFIG_HELP_LONG
 Zmienia parametry konfiguracyjne.
--writeconf lub -wc : zapisz ustawienia do głównego pliku konfiguracyjnego.
--writeconf lub -wc nazwa_pliku : zapisz plik do katalogu z konfiguracją.
--writelang lub -wl nazwa_pliku : zapisz teksty aktualnego języka.
--r [argumenty] : restart z poprzednimi lub z podanymi argumentami.
--wcp [nazwa_pliku] : zapisz plik konfiguracyjny (dosbox.conf lub o podanej
-  nazwie) do katalogu programu.
--wcd : zapisz do domyślnego pliku konfiguracyjnego w katalogu z konfiguracją.
--l : wyświetl parametry konfiguracji.
--h, -help, -? sections / nazwa_sekcji_lub_parametru
-  Bez parametru, wyświetl tę pomoc. Parametr "sections" - wyświetl listę
-  istniejących sekcji. Aby wyświetlić pomoc na temat sekcji/parametru,
-  podaj jego nazwę.
--axclear                        : skasuj sekcję [autoexec].
--axadd [linia]                  : dodaj linię do sekcji [autoexec].
--axtype                         : wyświetl zawartość sekcji [autoexec].
--securemode                     : przełącz w tryb bezpieczny.
--avistart                       : rozpocznij nagrywanie do pliku AVI.
--avistop                        : zakończ nagrywanie do pliku AVI.
--startmapper                    : uruchom narzędzie mapujące.
--get "sekcja parametr"          : wyświetl wartość parametru.
--set "sekcja parametr=wartość"  : ustaw wartość parametru.
+
+Składnia:
+  [color=green]config[reset] [color=white]POLECENIE[reset] [color=cyan][PARAMETRY][reset]
+
+Gdzie [color=white]POLECENIE[reset] jest jednym z:
+  -writeconf
+  -wc               Zapisz ustawienia do pliku `dosbox.conf` w aktualnym
+                    katalogu.
+
+  -writeconf [color=white]ŚCIEŻKA[reset]
+  -wc [color=white]ŚCIEŻKA       [reset]Jeśli [color=white]ŚCIEŻKA[reset] jest plikiem, zapisz ustawienia do pliku o tej
+                    nazwie w aktualnym katalogu, w przeciwnym wypadku do pliku w
+                    podanej ścieżce, względnej lub bezwzględnej.
+
+  -wcd              Zapisz ustawienia do globalnego pliku `dosbox-staging.conf`
+                    w katalogu z konfiguracją.
+
+  -writelang [color=white]PLIK[reset]
+  -wl [color=white]PLIK[reset]          Zapisz teksty aktualnego języka do  [color=white]PLIK[reset]u w aktualnym
+                    katalogu.
+
+  -r [color=cyan][PARAMETR1=WARTOŚĆ1 [PARAMETR2=WARTOŚĆ2 ...]][reset]
+                    Restart, opcjonalnie z podanymi argumentami.
+
+  -l                Wyświetl używane pliki konfiguracyjne i argumenty
+                    wiersza poleceń.
+
+  -help [color=white]SEKCJA[reset]
+  -h    [color=white]SEKCJA[reset]
+  -?    [color=white]SEKCJA[reset]      Wyświetl parametry z podanej sekcji.
+
+  -help [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
+  -h    [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
+  -?    [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
+                    Wyświetl opis i wartość parametru.
+
+  -axclear          Wyczyść sekcję [autoexec].
+  -axadd [color=white]LINIA[reset]      Dodaj linię do sekcji [autoexec].
+  -axtype           Wyświetl zawartość sekcji [autoexec].
+  -securemode       Przełącz w tryb bezpieczny.
+  -avistart         Rozpocznij nagrywanie do pliku AVI.
+  -avistop          Zakończ nagrywanie do pliku AVI.
+  -startmapper      Uruchom narzędzie do mapowania klawiszy.
+
+  -get [color=white]SEKCJA[reset]       Wyświetl wszystkie parametry i ich wartości z danej sekcji.
+  -get [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
+                    Wyświetl wartość pojedynczego parametru konfiguracji.
+
+  -set [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset][=][color=white]VALUE[reset]
+                    Ustaw wartość parametru konfiguracji.
+
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-Informacja o parametrze '%s' (zawartym w sekcji '%s'):
+[color=white]Informacja o parametrze [color=green]'%s'[color=white] (zawartym w sekcji [color=cyan][%s][color=white]):[reset]
 %s
 
-Możliwe wartości: %s
-Domyślna wartość: %s
-Aktualna wartość: %s
+[color=white]Możliwe wartości:[reset] %s
+[color=white]Domyślna wartość:[reset] %s
+[color=white]Aktualna wartość:[reset] %s
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
-Informacja o sekcji '%s':
+[color=white]Informacja o sekcji [%s]:[reset]
 %s
-Aktualna wartość:
+[color=white]Aktualna wartość:[reset]
 %s
 
 .
@@ -1178,12 +1253,11 @@ Ten parametr nie może być zmieniony w trakcie pracy.
 dodatnia liczba całkowita
 .
 :PROGRAM_CONFIG_HLP_SECTHLP
-Sekcja '%s' zawiera następujące parametry:
+[color=white]Sekcja [color=cyan][%s] [color=white]zawiera następujące parametry:[reset]
 
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
-Konfiguracja składa się z następujących sekcji:
-
+[color=white]Konfiguracja zawiera następujące sekcje:[reset]
 
 .
 :PROGRAM_CONFIG_SECURE_ON
@@ -1195,7 +1269,7 @@ Ta operacja nie jest dozwolona w trybie bezpiecznym.
 
 .
 :PROGRAM_CONFIG_SECTION_ERROR
-Sekcja '%s' nie istnieje.
+Sekcja [%s] nie istnieje.
 
 .
 :PROGRAM_CONFIG_VALUE_ERROR
@@ -1203,13 +1277,13 @@ Sekcja '%s' nie istnieje.
 
 .
 :PROGRAM_CONFIG_GET_SYNTAX
-Składnia: config -get "sekcja parametr".
+Składnia: [color=green]config[reset] -get [color=cyan][SEKCJA][reset] [color=white]PARAMETR[reset]
 
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
 
-DOSBox został uruchomiony z następującymi parametrami wiersza poleceń:
-%s
+[color=white]DOSBox został uruchomiony z następującymi parametrami wiersza poleceń:[reset]
+  %s
 
 .
 :PROGRAM_CONFIG_MISSINGPARAM
@@ -1957,11 +2031,14 @@ Gdzie:
 
 Uwagi:
   Parametr '-t overlay' przekierowuje operacje zapisu do innego katalogu.
+  Parametr '-usecd ID' daje dostęp do fizycznego napędu CD-ROM, jest to
+  potrzebne do obsługi ścieżek dźwiękowych (tylko w systemach Windows oraz
+  Linux). Listę fizycznych napędów można wyświetlić poleceniem 'mount -cd'.
   Dodatkowe opcje są opisane (po angielsku) w podręczniku (README, chapter 4).
 
 Przykłady:
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]
-  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/media/USERNAME/Game CD"[reset] -t cdrom
+  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/media/USERNAME/Game CD"[reset] -t cdrom -usecd 0
   [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
@@ -2389,7 +2466,7 @@ Nieprawidłowa nazwa pliku.
 
 .
 :SHELL_ILLEGAL_SWITCH
-Nieprawidłowy przełącznik: %s.
+Nieprawidłowy przełącznik: %s
 
 .
 :SHELL_ILLEGAL_SWITCH_COMBO
@@ -2433,7 +2510,15 @@ Plik '%s' już istnieje.
 
 .
 :SHELL_DIRECTORY_NOT_FOUND
-Nie odnaleziono katalogu - '%s'
+Nie odnaleziono katalogu - '%s'.
+
+.
+:SHELL_READ_ERROR
+Błąd podczas odczytu pliku - '%s'.
+
+.
+:SHELL_WRITE_ERROR
+Błąd podczas zapisywania pliku - '%s'
 
 .
 :SHELL_CMD_HELP
@@ -2463,28 +2548,28 @@ Przykłady:
   [color=green]command[reset] /init [color=cyan]dir[reset]
 .
 :SHELL_CMD_ECHO_ON
-ECHO jest włączone.
+Echo jest włączone.
 
 .
 :SHELL_CMD_ECHO_OFF
-ECHO jest wyłączone.
+Echo jest wyłączone.
 
 .
 :SHELL_CMD_CHDIR_ERROR
-Nie można przejść do '%s'.
+Nie można przejść do '%s'
 
 .
 :SHELL_CMD_CHDIR_HINT
-Aby przejść do innego dysku wpisz np. [color=light-red]%c:[reset]
+Aby przejść do innego dysku wpisz np. [color=yellow]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
 Nazwa katalogu jest dłuższa niż 8 znaków i/lub zawiera spacje.
-Spróbuj [color=light-red]cd %s[reset]
+Spróbuj [color=yellow]cd %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-Wciąż jesteś na dysku Z:, wpisz [color=light-red]C:[reset] aby przejść na zamontowany dysk.
+Wciąż jesteś na dysku Z:, wpisz [color=yellow]C:[reset] aby przejść na zamontowany dysk.
 
 .
 :SHELL_CMD_DATE_HELP
@@ -2502,7 +2587,7 @@ Podana data jest nieprawidłowa.
 Aktualna data: 
 .
 :SHELL_CMD_DATE_SETHLP
-Wpisz 'date %s' aby zmienić datę.
+Wpisz [color=yellow]date %s[reset] aby zmienić datę.
 
 .
 :SHELL_CMD_DATE_HELP_LONG
@@ -2536,7 +2621,7 @@ Podana godzina jest nieprawidłowa.
 Aktualny czas: 
 .
 :SHELL_CMD_TIME_SETHLP
-Wpisz 'time %s' aby zmienić godzinę.
+Wpisz [color=yellow]time %s[reset] aby zmienić godzinę.
 
 .
 :SHELL_CMD_TIME_HELP_LONG
@@ -2571,7 +2656,7 @@ Nie można usunąć '%s'.
 
 .
 :SHELL_CMD_SET_NOT_SET
-Zmienna środowiskowa %s nie jest zdefiniowana.
+Zmienna środowiskowa '%s' nie została ustawiona.
 
 .
 :SHELL_CMD_SET_OUT_OF_SPACE
@@ -2595,11 +2680,11 @@ GOTO: Brakuje etykiety.
 
 .
 :SHELL_CMD_GOTO_LABEL_NOT_FOUND
-GOTO: Nie odnaleziono etykiety %s.
+GOTO: Nie odnaleziono etykiety '%s'.
 
 .
 :SHELL_CMD_DUPLICATE_REDIRECTION
-Podwójne przekierowanie - '%s'.
+Podwójne przekierowanie: '%s'.
 
 .
 :SHELL_CMD_FAILED_PIPE
@@ -2626,11 +2711,11 @@ Sprawdź zmienną środowiskową %%TEMP%%.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Dysk %c nie istnieje!
-Musisz go najpierw [color=light-red]zamontować[reset]. Wpisz [color=yellow]intro[reset] lub [color=yellow]intro mount[reset] aby uzyskać więcej informacji.
+Musisz go najpierw [color=yellow]zamontować[reset]. Wpisz [color=yellow]intro[reset] lub [color=yellow]intro mount[reset] aby uzyskać więcej informacji.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
-Błędne polecenie lub nazwa pliku: '%s'.
+Błędne polecenie lub nazwa pliku: '%s'
 
 .
 :SHELL_CMD_PAUSE
@@ -2668,9 +2753,8 @@ Nie można usunąć, nie ma takiego dysku.
 
 .
 :SHELL_CMD_SUBST_FAILURE
-Wykonanie polecenia SUBST nie powiodło się. Może to być spowodowane błędem w
-składni lub tym, że docelowy dysk jest używany.
-Polecenia SUBST można użyć jedynie na lokalnych dyskach
+Wykonanie SUBST nie powiodło się, dysk może już istnieć.
+Polecenia można użyć jedynie na lokalnych dyskach.
 .
 :SHELL_STARTUP_BEGIN
 [bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗
@@ -3316,6 +3400,36 @@ Przykłady:
  Dysk %c ma etykietę %s
  Numer seryjny to %04X-%04X
 
+
+.
+:SHELL_CMD_MOVE_HELP
+Przenosi pliki, zmienia nazwy plików i katalogów.
+
+.
+:SHELL_CMD_MOVE_HELP_LONG
+Składnia:
+  [color=green]move[reset] [color=white]PLIK1[,PLIK2,...][reset] [color=cyan]PRZEZNACZENIE[reset]
+  [color=green]move[reset] [color=white]KATALOG1[reset] [color=cyan]KATALOG2[reset]
+
+Gdzie:
+  [color=white]PLIK[reset]           dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
+                 którymi są asterisk ('*') i znak zapytania ('?'). Można podać
+                 wiele nazw plików, rozdzielonych przecinkami.
+  [color=white]KATALOG[reset]        dokładna nazwa katalogu, bez symboli wieloznaczności.
+  [color=cyan]PRZEZNACZENIE[reset]  dokładna nazwa pliku lub katalogu, bez symboli wieloznaczności.
+
+Uwagi:
+  Jeśli podano więcej niż jeden plik źródłowy, [color=cyan]PRZEZNACZENIE[reset] musi być
+  katalogiem. Jeśli nie istnieje, zostanie utworzony.
+  Jeśli podano pojedynczy plik, nadpisze on [color=cyan]PRZEZNACZENIE[reset].
+
+Przykłady:
+  [color=green]move[reset] [color=white]stary.bat[reset] [color=cyan]nowy.bat[reset]
+  [color=green]move[reset] [color=white]plik1.txt,plik2.txt[reset] [color=cyan]moj_kat[reset]
+
+.
+:SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE
+Nie można przenieść wielu plików do jednego.
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
