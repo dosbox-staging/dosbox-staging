@@ -659,6 +659,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\ints\bios.cpp" />
     <ClCompile Include="..\src\ints\bios_disk.cpp" />
     <ClCompile Include="..\src\ints\bios_keyboard.cpp" />
+    <ClCompile Include="..\src\ints\bios_pci.cpp" />
     <ClCompile Include="..\src\ints\ems.cpp" />
     <ClCompile Include="..\src\ints\int10.cpp" />
     <ClCompile Include="..\src\ints\int10_char.cpp" />

@@ -2,6 +2,7 @@ libints_sources = files(
     'bios.cpp',
     'bios_disk.cpp',
     'bios_keyboard.cpp',
+    'bios_pci.cpp',
     'ems.cpp',
     'int10.cpp',
     'int10_char.cpp',

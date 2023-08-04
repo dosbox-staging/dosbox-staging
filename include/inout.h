@@ -128,6 +128,10 @@ constexpr io_port_t port_num_i8255_2 = 0x62u;
 // PS/2 control port, mainly for fast A20
 constexpr io_port_t port_num_fast_a20 = 0x92u;
 
+// PCI bus registers
+constexpr io_port_t port_num_pci_config_address = 0xcf8u;
+constexpr io_port_t port_num_pci_config_data    = 0xcfcu;
+
 // VMware communication interface
 constexpr io_port_t port_num_vmware    = 0x5658u;
 constexpr io_port_t port_num_vmware_hb = 0x5659u; // high bandwidth
