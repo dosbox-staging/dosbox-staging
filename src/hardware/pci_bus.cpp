@@ -268,12 +268,20 @@ public:
 	// set up port handlers and configuration data
 	void InitializePCI(void) {
 		// install PCI-addressing ports
-		PCI_WriteHandler[0].Install(0xcf8, write_pci_addr, io_width_t::dword);
-		PCI_ReadHandler[0].Install(0xcf8, read_pci_addr, io_width_t::dword);
+		PCI_WriteHandler[0].Install(port_num_pci_config_address,
+		                            write_pci_addr,
+		                            io_width_t::dword);
+		PCI_ReadHandler[0].Install(port_num_pci_config_address,
+		                           read_pci_addr,
+		                           io_width_t::dword);
 		// install PCI-register read/write handlers
 		for (uint8_t ct = 0; ct < 4; ++ct) {
-			PCI_WriteHandler[1 + ct].Install(0xcfc + ct, write_pci, io_width_t::byte);
-			PCI_ReadHandler[1 + ct].Install(0xcfc + ct, read_pci, io_width_t::byte);
+			PCI_WriteHandler[1 + ct].Install(port_num_pci_config_data + ct,
+			                                 write_pci,
+			                                 io_width_t::byte);
+			PCI_ReadHandler[1 + ct].Install(port_num_pci_config_data + ct,
+			                                read_pci,
+			                                io_width_t::byte);
 		}
 
 		for (Bitu dev=0; dev<PCI_MAX_PCIDEVICES; dev++)

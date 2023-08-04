@@ -379,6 +379,9 @@
     <ClCompile Include="..\src\ints\bios_keyboard.cpp">
       <Filter>src\ints</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ints\bios_pci.cpp">
+      <Filter>src\ints</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ints\ems.cpp">
       <Filter>src\ints</Filter>
     </ClCompile>
