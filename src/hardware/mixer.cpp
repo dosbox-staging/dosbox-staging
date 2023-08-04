@@ -2398,7 +2398,7 @@ private:
 		        "  The /noshow option applies the changes without showing the mixer settings.\n"
 		        "\n"
 		        "Examples:\n"
-		        "  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
+		        "  [color=green]mixer[reset] [color=cyan]cdaudio[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
 		        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]opl[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
 
 		MSG_Add("SHELL_CMD_MIXER_HEADER_LAYOUT",
