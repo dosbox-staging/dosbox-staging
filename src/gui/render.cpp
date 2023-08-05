@@ -50,9 +50,9 @@
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
 
-static void RENDER_CallBack(GFX_CallBackFunctions_t function);
+static void render_callback(GFX_CallBackFunctions_t function);
 
-static void Check_Palette(void)
+static void check_palette(void)
 {
 	/* Clean up any previous changed palette data */
 	if (render.pal.changed) {
@@ -111,9 +111,9 @@ void RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t blue)
 		render.pal.last = entry;
 }
 
-static void RENDER_EmptyLineHandler(const void *) {}
+static void empty_line_handler(const void *) {}
 
-static void RENDER_StartLineHandler(const void *s)
+static void start_line_handler(const void *s)
 {
 	if (s) {
 		const Bitu *src = (Bitu *)s;
@@ -124,7 +124,7 @@ static void RENDER_StartLineHandler(const void *s)
 			if (GCC_UNLIKELY(src_val != cache[0])) {
 				if (!GFX_StartUpdate(render.scale.outWrite,
 				                     render.scale.outPitch)) {
-					RENDER_DrawLine = RENDER_EmptyLineHandler;
+					RENDER_DrawLine = empty_line_handler;
 					return;
 				}
 				render.scale.outWrite += render.scale.outPitch *
@@ -144,7 +144,7 @@ static void RENDER_StartLineHandler(const void *s)
 	render.scale.outLine++;
 }
 
-static void RENDER_FinishLineHandler(const void *s)
+static void finish_line_handler(const void *s)
 {
 	if (s) {
 		const Bitu *src = (Bitu *)s;
@@ -159,7 +159,7 @@ static void RENDER_FinishLineHandler(const void *s)
 	render.scale.cacheRead += render.scale.cachePitch;
 }
 
-static void RENDER_ClearCacheHandler(const void *src)
+static void clear_cache_handler(const void *src)
 {
 	Bitu x, width;
 	uint32_t *srcLine, *cacheLine;
@@ -178,7 +178,7 @@ bool RENDER_StartUpdate(void)
 	if (GCC_UNLIKELY(!render.active))
 		return false;
 	if (render.scale.inMode == scalerMode8) {
-		Check_Palette();
+		check_palette();
 	}
 	render.scale.inLine     = 0;
 	render.scale.outLine    = 0;
@@ -198,7 +198,7 @@ bool RENDER_StartUpdate(void)
 			return false;
 		render.fullFrame        = true;
 		render.scale.clearCache = false;
-		RENDER_DrawLine         = RENDER_ClearCacheHandler;
+		RENDER_DrawLine         = clear_cache_handler;
 	} else {
 		if (render.pal.changed) {
 			/* Assume pal changes always do a full screen update
@@ -209,7 +209,7 @@ bool RENDER_StartUpdate(void)
 			RENDER_DrawLine  = render.scale.linePalHandler;
 			render.fullFrame = true;
 		} else {
-			RENDER_DrawLine = RENDER_StartLineHandler;
+			RENDER_DrawLine = start_line_handler;
 			if (GCC_UNLIKELY(CAPTURE_IsCapturingImage() ||
 			                 CAPTURE_IsCapturingVideo())) {
 				render.fullFrame = true;
@@ -222,9 +222,9 @@ bool RENDER_StartUpdate(void)
 	return true;
 }
 
-static void RENDER_Halt(void)
+static void halt_render(void)
 {
-	RENDER_DrawLine = RENDER_EmptyLineHandler;
+	RENDER_DrawLine = empty_line_handler;
 	GFX_EndUpdate(nullptr);
 	render.updating = false;
 	render.active   = false;
@@ -237,7 +237,7 @@ void RENDER_EndUpdate(bool abort)
 		return;
 	}
 
-	RENDER_DrawLine = RENDER_EmptyLineHandler;
+	RENDER_DrawLine = empty_line_handler;
 
 	if (GCC_UNLIKELY((CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()))) {
 		bool double_width  = false;
@@ -279,7 +279,7 @@ void RENDER_EndUpdate(bool abort)
 	render.updating = false;
 }
 
-static Bitu MakeAspectTable(Bitu height, double scaley, Bitu miny)
+static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 {
 	Bitu i;
 	double lines    = 0;
@@ -300,7 +300,7 @@ static Bitu MakeAspectTable(Bitu height, double scaley, Bitu miny)
 }
 std::mutex render_reset_mutex;
 
-static void RENDER_Reset(void)
+static void render_reset(void)
 {
 	// Despite rendering being a single-threaded sequence, the Reset() can
 	// be called from the rendering callback, which might come from a video
@@ -378,7 +378,7 @@ static void RENDER_Reset(void)
 		}
 	}
 	width *= xscale;
-	const auto height = MakeAspectTable(render.src.height, yscale, yscale);
+	const auto height = make_aspect_table(render.src.height, yscale, yscale);
 
 	// Setup the scaler variables
 	if (double_height) {
@@ -398,7 +398,7 @@ static void RENDER_Reset(void)
 	                        gfx_scalew,
 	                        gfx_scaleh,
 	                        render.video_mode,
-	                        &RENDER_CallBack);
+	                        &render_callback);
 
 	if (gfx_flags & GFX_CAN_8)
 		render.scale.outMode = scalerMode8;
@@ -455,24 +455,24 @@ static void RENDER_Reset(void)
 	render.pal.changed = false;
 	memset(render.pal.modified, 0, sizeof(render.pal.modified));
 	// Finish this frame using a copy only handler
-	RENDER_DrawLine       = RENDER_FinishLineHandler;
+	RENDER_DrawLine       = finish_line_handler;
 	render.scale.outWrite = nullptr;
 	/* Signal the next frame to first reinit the cache */
 	render.scale.clearCache = true;
 	render.active           = true;
 }
 
-static void RENDER_CallBack(GFX_CallBackFunctions_t function)
+static void render_callback(GFX_CallBackFunctions_t function)
 {
 	if (function == GFX_CallBackStop) {
-		RENDER_Halt();
+		halt_render();
 		return;
 	} else if (function == GFX_CallBackRedraw) {
 		render.scale.clearCache = true;
 		return;
 	} else if (function == GFX_CallBackReset) {
 		GFX_EndUpdate(nullptr);
-		RENDER_Reset();
+		render_reset();
 	} else {
 		E_Exit("Unhandled GFX_CallBackReset %d", function);
 	}
@@ -484,7 +484,7 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
                     const uint8_t bits_per_pixel,
                     const double frames_per_second, const VideoMode& video_mode)
 {
-	RENDER_Halt();
+	halt_render();
 
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
 		return;
@@ -501,7 +501,7 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
 
 	render.video_mode = video_mode;
 
-	RENDER_Reset();
+	render_reset();
 }
 
 #if C_OPENGL
@@ -564,7 +564,7 @@ std::deque<std::string> RENDER_InventoryShaders()
 	return inventory;
 }
 
-static bool RENDER_GetShader(const std::string &shader_path, std::string &source)
+static bool read_shader_source(const std::string& shader_path, std::string& source)
 {
 	// Start with the path as-is and then try from resources
 	const auto candidate_paths = {std_fs::path(shader_path),
@@ -724,8 +724,8 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 
 	std::string source = {};
 
-	if (!RENDER_GetShader(sh->realpath.string(), source) &&
-	    (sh->realpath == filename || !RENDER_GetShader(filename, source))) {
+	if (!read_shader_source(sh->realpath.string(), source) &&
+	    (sh->realpath == filename || !read_shader_source(filename, source))) {
 		sh->SetValue("none");
 		source.clear();
 
@@ -735,7 +735,7 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 			LOG_WARNING("RENDER: %s", line.c_str());
 		}
 		// Fallback to the 'none' shader and otherwise fail
-		if (RENDER_GetShader(fallback_shader, source)) {
+		if (read_shader_source(fallback_shader, source)) {
 			filename = fallback_shader;
 		} else {
 			E_Exit("RENDER: Fallback shader file '%s' not found and is mandatory",
@@ -762,7 +762,7 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 
 void RENDER_Init(Section *sec);
 
-static void ReloadShader(const bool pressed)
+static void reload_shader(const bool pressed)
 {
 	// Quick and dirty hack to reload the current shader. Very useful when
 	// tweaking shader presets. Ultimately, this code will go away once the
@@ -874,7 +874,7 @@ void RENDER_Init(Section* sec)
 	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
 
 	if (running && needs_reinit) {
-		RENDER_CallBack(GFX_CallBackReset);
+		render_callback(GFX_CallBackReset);
 	}
 	if (!running) {
 		render.updating = true;
@@ -882,7 +882,7 @@ void RENDER_Init(Section* sec)
 
 	running = true;
 
-	MAPPER_AddHandler(ReloadShader,
+	MAPPER_AddHandler(reload_shader,
 	                  SDL_SCANCODE_F2,
 	                  PRIMARY_MOD,
 	                  "reloadshader",
