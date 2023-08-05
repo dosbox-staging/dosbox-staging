@@ -72,8 +72,8 @@ std::string BatchFile::GetLine()
 	while (data != '\n') {
 		const auto result = reader->Read();
 
-		// EOF
-		if (!result) {
+		// EOF or EOL?
+		if (!result || *result == '\0') {
 			break;
 		}
 
