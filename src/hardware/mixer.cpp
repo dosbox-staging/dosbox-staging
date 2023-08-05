@@ -2862,7 +2862,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed\n"
 	        "               (off) and 100 full crossfeed (effectively turning stereo content\n"
 	        "               into mono).\n"
-	        "Note: You can set per-channel crossfeed via mixer commands.");
+	        "Note: You can fine-tune per-channel crossfeed strength via mixer commands.");
 
 	const char *reverb_presets[] = {"off", "on", "tiny", "small", "medium", "large", "huge", nullptr};
 	string_prop = sec_prop.Add_string("reverb", when_idle, reverb_presets[0]);
