@@ -3485,7 +3485,7 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 
 #if C_OPENGL
 	} else if (starts_with(output, "opengl")) {
-		RENDER_InitShaderSource(sec);
+		RENDER_InitShader(sec);
 		if (output == "opengl") {
 			sdl.desktop.want_type  = SCREEN_OPENGL;
 			sdl.interpolation_mode = InterpolationMode::Bilinear;

@@ -722,7 +722,7 @@ void log_warning_if_legacy_shader_name(const std::string& name)
 }
 #endif
 
-void RENDER_InitShaderSource([[maybe_unused]] Section* sec)
+void RENDER_InitShader([[maybe_unused]] Section* sec)
 {
 #if C_OPENGL
 	assert(control);
@@ -886,7 +886,7 @@ void RENDER_Init(Section* sec)
 
 #if C_OPENGL
 	const auto previous_shader_filename = render.shader.filename;
-	RENDER_InitShaderSource(section);
+	RENDER_InitShader(section);
 #endif
 
 	setup_scan_and_pixel_doubling(section);
