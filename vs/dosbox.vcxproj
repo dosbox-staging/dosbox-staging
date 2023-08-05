@@ -862,7 +862,6 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClInclude Include="..\src\hardware\innovation.h" />
     <ClInclude Include="..\src\hardware\lpt_dac.h" />
     <ClInclude Include="..\src\hardware\opl.h" />
-    <ClInclude Include="..\src\hardware\pci_devices.h" />
     <ClInclude Include="..\src\hardware\pcspeaker.h" />
     <ClInclude Include="..\src\hardware\pcspeaker_discrete.h" />
     <ClInclude Include="..\src\hardware\pcspeaker_impulse.h" />
