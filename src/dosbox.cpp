@@ -792,11 +792,12 @@ void DOSBOX_Init()
 	pint = secprop->Add_int("voodoo_perf", only_at_start, 1);
 	pint->SetMinMax(0, 3);
 	pint->Set_help("Performance optimisations to use when emulating the 3dfx Voodoo card:\n"
-	               "Note: emulation is software-based and does not use host-level OpenGL calls.\n"
 	               "   0:  No optimizations.\n"
 	               "   1:  Multi-threading (default).\n"
 	               "   2:  Disable bilinear filtering.\n"
-	               "   3:  All optimizations (both 1 and 2).");
+	               "   3:  All optimizations (both 1 and 2).\n"
+	               "Notes: Voodo emulation is software-based and does not use host-level\n"
+	               "       OpenGL calls.");
 
 	// Configure capture
 	CAPTURE_AddConfigSection(control);
