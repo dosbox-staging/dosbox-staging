@@ -902,24 +902,21 @@ struct PCI_VGADevice : public PCI_Device {
 		//registers[0x3c] = 0x0b;	// irq line
 		//registers[0x3d] = 0x01;	// irq pin
 
-		// uint32_t gfx_address_space=(((uint32_t)S3_LFB_BASE)&0xfffffff0)
-		// | 0x08;	// memory space, within first 4GB, prefetchable
-		uint32_t gfx_address_space = (((uint32_t)S3_LFB_BASE) &
-		                              0xfffffff0); // memory space,
-		                                           // within first 4GB
-		registers[0x10] = (uint8_t)(gfx_address_space & 0xff); // base
-		                                                       // addres 0
-		registers[0x11] = (uint8_t)((gfx_address_space >> 8) & 0xff);
-		registers[0x12] = (uint8_t)((gfx_address_space >> 16) & 0xff);
-		registers[0x13] = (uint8_t)((gfx_address_space >> 24) & 0xff);
+		// BAR0 - memory space, within first 4GB
+		// Check 8-byte alignment of LFB base
+		static_assert((PciGfxLfbBase & 0xf) == 0);
+		registers[0x10] = static_cast<uint8_t>(PciGfxLfbBase & 0xff);
+		registers[0x11] = static_cast<uint8_t>((PciGfxLfbBase >> 8) & 0xff);
+		registers[0x12] = static_cast<uint8_t>((PciGfxLfbBase >> 16) & 0xff);
+		registers[0x13] = static_cast<uint8_t>((PciGfxLfbBase >> 24) & 0xff);
 
-		uint32_t gfx_address_space_mmio = (((uint32_t)S3_LFB_BASE + 0x1000000) &
-		                                   0xfffffff0); // memory space,
-		                                                // within first 4GB
-		registers[0x14] = (uint8_t)(gfx_address_space_mmio & 0xff); // base addres 0
-		registers[0x15] = (uint8_t)((gfx_address_space_mmio >> 8) & 0xff);
-		registers[0x16] = (uint8_t)((gfx_address_space_mmio >> 16) & 0xff);
-		registers[0x17] = (uint8_t)((gfx_address_space_mmio >> 24) & 0xff);
+		// BAR1 - MMIO space, within first 4GB
+		// Check 8-byte alignment of MMIO base
+		static_assert((PciGfxMmioBase & 0xf) == 0);
+		registers[0x14] = static_cast<uint8_t>(PciGfxMmioBase & 0xff);
+		registers[0x15] = static_cast<uint8_t>((PciGfxMmioBase >> 8) & 0xff);
+		registers[0x16] = static_cast<uint8_t>((PciGfxMmioBase >> 16) & 0xff);
+		registers[0x17] = static_cast<uint8_t>((PciGfxMmioBase >> 24) & 0xff);
 
 		return true;
 	}

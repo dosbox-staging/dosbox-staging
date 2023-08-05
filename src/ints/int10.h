@@ -26,9 +26,7 @@
 #include "mem.h"
 #include "vga.h"
 
-#define S3_LFB_BASE		0xC0000000
-
-#define BIOSMEM_SEG		0x40
+#define BIOSMEM_SEG 0x40
 
 #define BIOSMEM_INITIAL_MODE  0x10
 #define BIOSMEM_CURRENT_MODE  0x49

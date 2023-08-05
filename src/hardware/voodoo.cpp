@@ -7532,17 +7532,18 @@ static struct Voodoo_Init_PageHandler : public PageHandler {
 } voodoo_init_pagehandler;
 
 enum {
-	VOODOO_INITIAL_LFB = 0xd0000000,
-	VOODOO_REG_PAGES   = 1024,
-	VOODOO_LFB_PAGES   = 1024,
-	VOODOO_TEX_PAGES   = 2048
+	VOODOO_REG_PAGES = 1024,
+	VOODOO_LFB_PAGES = 1024,
+	VOODOO_TEX_PAGES = 2048
 };
+
 #define VOODOO_PAGES (VOODOO_REG_PAGES + VOODOO_LFB_PAGES + VOODOO_TEX_PAGES)
+static_assert(PciVoodooLfbBase + (VOODOO_PAGES * MemPageSize) <= PciVoodooLfbLimit);
 
 #ifdef C_ENABLE_VOODOO_OPENGL
-#define VOODOO_EMU_TYPE_OFF			0
-#define VOODOO_EMU_TYPE_SOFTWARE	1
-#define VOODOO_EMU_TYPE_ACCELERATED	2
+#define VOODOO_EMU_TYPE_OFF         0
+#define VOODOO_EMU_TYPE_SOFTWARE    1
+#define VOODOO_EMU_TYPE_ACCELERATED 2
 #endif
 
 static uint32_t voodoo_current_lfb;
@@ -7680,15 +7681,14 @@ struct PCI_SSTDevice : public PCI_Device {
 
 		registers[0x3c] = 0xff;	// no irq
 
-		// 16MB within within the first 4GB is prefetchable
-		const uint32_t address_space = (VOODOO_INITIAL_LFB & 0xfffffff0) |
-		                               0x08;
-
-		registers[0x10] = (uint8_t)(address_space & 0xff); // base
-		                                                   // addres 0
-		registers[0x11] = (uint8_t)((address_space >> 8) & 0xff);
-		registers[0x12] = (uint8_t)((address_space >> 16) & 0xff);
-		registers[0x13] = (uint8_t)((address_space >> 24) & 0xff);
+		// BAR0 - memory space, within first 4GB
+		// Check 8-byte alignment of LFB base
+		static_assert((PciVoodooLfbBase & 0xf) == 0);
+		constexpr uint32_t address_space = PciVoodooLfbBase | 0x08;
+		registers[0x10] = static_cast<uint8_t>(address_space & 0xff);
+		registers[0x11] = static_cast<uint8_t>((address_space >> 8) & 0xff);
+		registers[0x12] = static_cast<uint8_t>((address_space >> 16) & 0xff);
+		registers[0x13] = static_cast<uint8_t>((address_space >> 24) & 0xff);
 
 		if (vtype == VOODOO_2) {
 			registers[0x40] = 0x00;
@@ -7780,7 +7780,10 @@ void VOODOO_Init(Section* sec)
 
 	sec->AddDestroyFunction(&VOODOO_Destroy,false);
 
-	voodoo_current_lfb = (VOODOO_INITIAL_LFB & 0xffff0000);
+	// Check 64 KB alignment of LFB base
+	static_assert((PciVoodooLfbBase & 0xffff) == 0);
+
+	voodoo_current_lfb = PciVoodooLfbBase;
 	voodoo_pagehandler = &voodoo_init_pagehandler;
 
 	vperf = static_cast<PerformanceFlags>(section->Get_int("voodoo_perf"));

@@ -17,20 +17,21 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "mem.h"
 
 #include <string.h>
 
 #include "inout.h"
-#include "setup.h"
 #include "paging.h"
+#include "pci_bus.h"
 #include "regs.h"
+#include "setup.h"
 #include "support.h"
 
-// Allow up to 3072 MB, at this address emulated S3 card framebuffer starts
-constexpr auto MinMegabytes = 1;
-constexpr auto MaxMegabytes = 3072;
+constexpr auto megabyte = 1024 * 1024;
+
+constexpr auto MinMegabytes = static_cast<uint16_t>(1);
+constexpr auto MaxMegabytes = static_cast<uint16_t>(PciMemoryBase / megabyte);
 
 constexpr auto SafeMegabytesDos   = 31;
 constexpr auto SafeMegabytesWin95 = 480;
@@ -470,8 +471,7 @@ void MEM_A20_Enable(bool enabled) {
 	if (memory.a20.enabled == enabled) {
 		return;
 	}
-	constexpr uint32_t first_mb = 1024 * 1024;
-	constexpr uint32_t a20_base_page = first_mb / dos_pagesize;
+	constexpr uint32_t a20_base_page = megabyte / dos_pagesize;
 
 	const uint32_t phys_base_page = enabled ? a20_base_page : 0;
 
@@ -649,7 +649,7 @@ public:
 		const auto section = static_cast<Section_prop*>(configuration);
 		const auto num_megabytes = section->Get_int("memsize");
 		check_num_megabytes(num_megabytes);
-		const auto num_pages = (num_megabytes * 1024 * 1024) / dos_pagesize;
+		const auto num_pages = (num_megabytes * megabyte) / dos_pagesize;
 
 		// Size the actual memory pages
 		memory.pages.resize(num_pages);
