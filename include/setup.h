@@ -319,10 +319,9 @@ private:
 		{}
 	};
 
-	std::deque<Function_wrapper> early_init_functions = {};
-	std::deque<Function_wrapper> init_functions       = {};
-	std::deque<Function_wrapper> destroyfunctions     = {};
-	std::string sectionname                           = {};
+	std::deque<Function_wrapper> init_functions   = {};
+	std::deque<Function_wrapper> destroyfunctions = {};
+	std::string sectionname                       = {};
 
 public:
 	Section() = default;
@@ -335,15 +334,11 @@ public:
 	// Children must call executedestroy!
 	virtual ~Section() = default;
 
-	void AddEarlyInitFunction(SectionFunction func,
-	                          bool changeable_at_runtime = false);
-
 	void AddInitFunction(SectionFunction func, bool changeable_at_runtime = false);
 
 	void AddDestroyFunction(SectionFunction func,
 	                        bool changeable_at_runtime = false);
 
-	void ExecuteEarlyInit(bool initall = true);
 	void ExecuteInit(bool initall = true);
 	void ExecuteDestroy(bool destroyall = true);
 

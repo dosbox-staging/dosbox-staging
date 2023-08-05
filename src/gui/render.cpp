@@ -722,7 +722,7 @@ void log_warning_if_legacy_shader_name(const std::string& name)
 }
 #endif
 
-void RENDER_InitShader([[maybe_unused]] Section* sec)
+static bool init_shader([[maybe_unused]] Section* sec)
 {
 #if C_OPENGL
 	assert(control);
@@ -784,7 +784,14 @@ void RENDER_InitShader([[maybe_unused]] Section* sec)
 		// Pass the shader source up to the GFX engine
 		GFX_SetShader(render.shader.source);
 	}
+
+	return true;
 #endif
+}
+
+void RENDER_InitShader(Section* sec)
+{
+	init_shader(sec);
 }
 
 void RENDER_Init(Section* sec);
@@ -886,7 +893,7 @@ void RENDER_Init(Section* sec)
 
 #if C_OPENGL
 	const auto previous_shader_filename = render.shader.filename;
-	RENDER_InitShader(section);
+	init_shader(section);
 #endif
 
 	setup_scan_and_pixel_doubling(section);
