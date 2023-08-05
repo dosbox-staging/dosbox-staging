@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2019-2023  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -54,7 +55,7 @@ static void render_callback(GFX_CallBackFunctions_t function);
 
 static void check_palette(void)
 {
-	/* Clean up any previous changed palette data */
+	// Clean up any previous changed palette data
 	if (render.pal.changed) {
 		memset(render.pal.modified, 0, sizeof(render.pal.modified));
 		render.pal.changed = false;
@@ -96,7 +97,8 @@ static void check_palette(void)
 		}
 		break;
 	}
-	/* Setup pal index to startup values */
+
+	// Setup pal index to startup values
 	render.pal.first = 256;
 	render.pal.last  = 0;
 }
@@ -195,10 +197,12 @@ bool RENDER_StartUpdate(void)
 	render.scale.outPitch   = 0;
 	Scaler_ChangedLines[0]  = 0;
 	Scaler_ChangedLineIndex = 0;
-	/* Clearing the cache will first process the line to make sure it's
-	 * never the same */
+
+	// Clearing the cache will first process the line to make sure it's
+	// never the same
 	if (GCC_UNLIKELY(render.scale.clearCache)) {
-		//		LOG_MSG("Clearing cache");
+		// LOG_MSG("Clearing cache");
+
 		// Will always have to update the screen with this one anyway,
 		// so let's update already
 		if (GCC_UNLIKELY(!GFX_StartUpdate(render.scale.outWrite,
@@ -210,8 +214,8 @@ bool RENDER_StartUpdate(void)
 		RENDER_DrawLine         = clear_cache_handler;
 	} else {
 		if (render.pal.changed) {
-			/* Assume pal changes always do a full screen update
-			 * anyway */
+			// Assume pal changes always do a full screen update
+			// anyway
 			if (GCC_UNLIKELY(!GFX_StartUpdate(render.scale.outWrite,
 			                                  render.scale.outPitch))) {
 				return false;
@@ -338,7 +342,7 @@ static void render_reset(void)
 		gfx_scaleh = 1;
 	}
 
-	/* Don't do software scaler sizes larger than 4k */
+	// Don't do software scaler sizes larger than 4k
 	Bitu maxsize_current_input = SCALER_MAXWIDTH / width;
 	if (render.scale.size > maxsize_current_input) {
 		render.scale.size = maxsize_current_input;
@@ -391,7 +395,7 @@ static void render_reset(void)
 	width *= xscale;
 	const auto height = make_aspect_table(render.src.height, yscale, yscale);
 
-	// Setup the scaler variables
+	// Set up scaler variables
 	if (double_height) {
 		gfx_flags |= GFX_DBL_H;
 	}
@@ -461,15 +465,18 @@ static void render_reset(void)
 	render.scale.blocks    = render.src.width / SCALER_BLOCKSIZE;
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
 	render.scale.inHeight  = render.src.height;
-	/* Reset the palette change detection to it's initial value */
+
+	// Reset the palette change detection to it's initial value
 	render.pal.first   = 0;
 	render.pal.last    = 255;
 	render.pal.changed = false;
 	memset(render.pal.modified, 0, sizeof(render.pal.modified));
+
 	// Finish this frame using a copy only handler
 	RENDER_DrawLine       = finish_line_handler;
 	render.scale.outWrite = nullptr;
-	/* Signal the next frame to first reinit the cache */
+
+	// Signal the next frame to first reinit the cache
 	render.scale.clearCache = true;
 	render.active           = true;
 }
@@ -617,7 +624,7 @@ static bool read_shader_source(const std::string& shader_path, std::string& sour
 			}
 		}
 		if (pre_defs.length()) {
-			// if "#version" occurs it must be before anything
+			// If "#version" occurs, it must be before anything,
 			// except comments and whitespace
 			auto pos = s.find("#version ");
 
@@ -753,6 +760,7 @@ void RENDER_InitShaderSource([[maybe_unused]] Section* sec)
 		for (const auto& line : RENDER_InventoryShaders()) {
 			LOG_WARNING("RENDER: %s", line.c_str());
 		}
+
 		// Fallback to the 'none' shader and otherwise fail
 		if (read_shader_source(fallback_shader, source)) {
 			filename = fallback_shader;
