@@ -100,15 +100,19 @@ static void check_palette(void)
 	render.pal.last  = 0;
 }
 
-void RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t blue)
+void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
+                       const uint8_t green, const uint8_t blue)
 {
 	render.pal.rgb[entry].red   = red;
 	render.pal.rgb[entry].green = green;
 	render.pal.rgb[entry].blue  = blue;
-	if (render.pal.first > entry)
+
+	if (render.pal.first > entry) {
 		render.pal.first = entry;
-	if (render.pal.last < entry)
+	}
+	if (render.pal.last < entry) {
 		render.pal.last = entry;
+	}
 }
 
 static void empty_line_handler(const void *) {}

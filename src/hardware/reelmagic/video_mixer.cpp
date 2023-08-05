@@ -695,7 +695,8 @@ static void SetupVideoMixer(const bool updateRenderMode)
 //
 // The RENDER_*() interceptors begin here...
 //
-void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t blue)
+void ReelMagic_RENDER_SetPalette(const uint8_t entry, const uint8_t red,
+                                 const uint8_t green, const uint8_t blue)
 {
 	VGA32bppPixel& p = VGAPalettePixel::_vgaPalette32bpp[entry];
 	p.red            = red;
@@ -705,7 +706,7 @@ void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t 
 
 	VGAPalettePixel::_vgaPalette16bpp[entry].FromRgb888(red, green, blue);
 
-	RENDER_SetPal(entry, red, green, blue);
+	RENDER_SetPalette(entry, red, green, blue);
 }
 
 void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,

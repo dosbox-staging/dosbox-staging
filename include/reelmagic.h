@@ -37,7 +37,8 @@ struct ReelMagic_VideoMixerMPEGProvider {
 	virtual const ReelMagic_PlayerAttributes& GetAttrs() const     = 0;
 };
 
-void ReelMagic_RENDER_SetPal(uint8_t entry, uint8_t red, uint8_t green, uint8_t blue);
+void ReelMagic_RENDER_SetPalette(const uint8_t entry, const uint8_t red,
+                                 const uint8_t green, const uint8_t blue);
 
 void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
                               const bool double_width, const bool double_height,
