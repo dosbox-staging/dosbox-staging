@@ -863,21 +863,19 @@ void RENDER_Init(Section* sec)
 
 	setup_scan_and_pixel_doubling(section);
 
-	// If something changed that needs a re-init.
-	// Only re-init when there is a src.bpp (fixes crashes on startup and
-	// directly changing the scaler without a screen specified yet).
-	if (running && render.src.bpp &&
-	    ((force_square_pixels != prev_force_square_pixels) ||
-	     (render.scale.size != prev_scale_size) ||
-	     (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode)
+	const auto needs_reinit =
+	        ((force_square_pixels != prev_force_square_pixels) ||
+	         (render.scale.size != prev_scale_size) ||
+	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode)
 #if C_OPENGL
-	     || (previous_shader_filename != render.shader.filename)
+	         || (previous_shader_filename != render.shader.filename)
 #endif
-	     || (prev_force_vga_single_scan != force_vga_single_scan) ||
-	     (prev_force_no_pixel_doubling != force_no_pixel_doubling))) {
+	         || (prev_force_vga_single_scan != force_vga_single_scan) ||
+	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
+
+	if (running && needs_reinit) {
 		RENDER_CallBack(GFX_CallBackReset);
 	}
-
 	if (!running) {
 		render.updating = true;
 	}
