@@ -24,7 +24,6 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "mem.h"
-#include "pci_devices.h"
 #include "regs.h"
 #include "setup.h"
 #include "support.h"
