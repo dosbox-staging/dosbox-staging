@@ -2391,11 +2391,11 @@ private:
 		        "    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)\n"
 		        "    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]\n"
 		        "Notes:\n"
-		        "  Running [color=green]mixer[reset] without an argument shows the current mixer settings.\n"
-		        "  You may change the settings of more than one channel in a single command.\n"
-		        "  If channel is unspecified, you can set crossfeed, reverb or chorus globally.\n"
-		        "  You can view the list of available MIDI devices with /listmidi.\n"
-		        "  The /noshow option applies the changes without showing the mixer settings.\n"
+		        "  - Running [color=green]mixer[reset] without an argument shows the current mixer settings.\n"
+		        "  - You may change the settings of more than one channel in a single command.\n"
+		        "  - If channel is unspecified, that sets crossfeed, reverb or chorus globally.\n"
+		        "  - You can view the list of available MIDI devices with /listmidi.\n"
+		        "  - The /noshow option applies the changes without showing the mixer settings.\n"
 		        "\n"
 		        "Examples:\n"
 		        "  [color=green]mixer[reset] [color=cyan]cdaudio[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
@@ -2861,7 +2861,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "  <strength>:  Set crossfeed strength from 0 to 100, where 0 means no crossfeed\n"
 	        "               (off) and 100 full crossfeed (effectively turning stereo content\n"
 	        "               into mono).\n"
-	        "Notes: You can set per-channel crossfeed via mixer commands.");
+	        "Note: You can set per-channel crossfeed via mixer commands.");
 
 	const char *reverb_presets[] = {"off", "on", "tiny", "small", "medium", "large", "huge", nullptr};
 	string_prop = sec_prop.Add_string("reverb", when_idle, reverb_presets[0]);
@@ -2879,7 +2879,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "           channels for music and digital audio.\n"
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
-	        "Notes: You can fine-tune per-channel reverb levels via mixer commands.");
+	        "Note: You can fine-tune per-channel reverb levels via mixer commands.");
 	string_prop->Set_values(reverb_presets);
 
 	const char *chorus_presets[] = {"off", "on", "light", "normal", "strong", nullptr};
@@ -2892,7 +2892,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	        "           features lots of white noise.)\n"
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
 	        "  strong:  An obvious and upfront chorus effect.\n"
-	        "Notes: You can fine-tune per-channel chorus levels via mixer commands.");
+	        "Note: You can fine-tune per-channel chorus levels via mixer commands.");
 	string_prop->Set_values(chorus_presets);
 
 	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");

@@ -4586,7 +4586,7 @@ void config_add_sdl() {
 	        "File used to load/save the key/event mappings.\n"
 	        "Pre-configured maps are bundled in the 'resources/mapperfiles' directory.\n"
 	        "They can be loaded by name, for example: mapperfile = xbox/xenon2.map\n"
-	        "Notes: The -resetmapper commandline flag only deletes the default mapperfile.");
+	        "Note: The --resetmapper command line flag only deletes the default mapperfile.");
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
 	pstring->Set_help(

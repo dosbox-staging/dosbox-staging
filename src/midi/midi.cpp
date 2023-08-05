@@ -789,21 +789,21 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "This is usually the ID or name of the MIDI synthesizer you want\n"
 	        "to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').\n"
 #if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
-	        "Notes: - This option has no effect when using the built-in synthesizers\n"
-	        "         ('mididevice = fluidsynth' or 'mididevice = mt32').\n"
+	        "Notes:\n"
+	        "  - This option has no effect when using the built-in synthesizers\n"
+	        "    ('mididevice = fluidsynth' or 'mididevice = mt32').\n"
 #endif
 #if C_COREAUDIO
-	        "       - When using 'coreaudio', you can specify a SoundFont here.\n"
+	        "  - When using 'coreaudio', you can specify a SoundFont here.\n"
 #endif
 #if C_ALSA
-	        "       - When using ALSA, use the Linux command 'aconnect -l' to list all open\n"
-	        "         MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer\n"
-	        "         client 14, port 0).\n"
+	        "  - When using ALSA, use the Linux command 'aconnect -l' to list all open\n"
+	        "    MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer\n"
+	        "    client 14, port 0).\n"
 #endif
-	        "       - If you're using a physical Roland MT-32 with revision 0 PCB, the\n"
-	        "         hardware may require a delay in order to prevent its buffer from\n"
-	        "         overflowing. In that case, add 'delaysysex', e.g:\n"
-	        "         'midiconfig = 2 delaysysex'.");
+	        "  - If you're using a physical Roland MT-32 with revision 0 PCB, the hardware\n"
+	        "    may require a delay in order to prevent its buffer from overflowing.\n"
+	        "    In that case, add 'delaysysex' (e.g. 'midiconfig = 2 delaysysex').");
 
 	str_prop = secprop.Add_string("mpu401", when_idle, "intelligent");
 	const char* mputypes[] = {"intelligent", "uart", "none", nullptr};

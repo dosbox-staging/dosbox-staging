@@ -1536,8 +1536,8 @@ static void composite_settings(Section_prop &secprop)
 	str_prop->Set_help(
 	        "Enable composite mode on start ('auto' by default).\n"
 	        "'auto' lets the program decide.\n"
-	        "Notes: Fine-tune the settings below (i.e., hue) using the composite hotkeys,\n"
-	        "       then read the new settings from your console and enter them here.");
+	        "Note: Fine-tune the settings below (i.e., hue) using the composite hotkeys,\n"
+	        "      then read the new settings from your console and enter them here.");
 
 	const char* eras[] = {"auto", "old", "new", nullptr};
 	str_prop           = secprop.Add_string("era", when_idle, "auto");
