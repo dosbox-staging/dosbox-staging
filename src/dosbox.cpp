@@ -636,7 +636,6 @@ void DOSBOX_Init()
 		"write-operations for these write-protected files.");
 
 	secprop = control->AddSection_prop("render", &RENDER_Init, changeable_at_runtime);
-	secprop->AddEarlyInitFunction(&RENDER_InitShader, changeable_at_runtime);
 
 	pint = secprop->Add_int("frameskip", deprecated, 0);
 	pint->Set_help("Consider capping frame-rates using the '[sdl] host_rate' setting.");

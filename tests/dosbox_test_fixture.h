@@ -36,14 +36,6 @@ public:
 
 		for (auto section_name : sections) {
 			_sec = control->GetSection(section_name);
-			// NOTE: Some of the sections will return null pointers,
-			// if you add a section below, make sure to test for
-			// nullptr before executing early init.
-			_sec->ExecuteEarlyInit();
-		}
-
-		for (auto section_name : sections) {
-			_sec = control->GetSection(section_name);
 			_sec->ExecuteInit();
 		}
 	}

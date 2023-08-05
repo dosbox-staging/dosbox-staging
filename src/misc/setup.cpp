@@ -1105,15 +1105,6 @@ bool Config::PrintConfig(const std::string& filename) const
 	return true;
 }
 
-Section_prop* Config::AddEarlySectionProp(const char* name, SectionFunction func,
-                                          bool changeable_at_runtime)
-{
-	Section_prop* s = new Section_prop(name);
-	s->AddEarlyInitFunction(func, changeable_at_runtime);
-	sectionlist.push_back(s);
-	return s;
-}
-
 Section_prop* Config::AddSection_prop(const char* section_name, SectionFunction func,
                                       bool changeable_at_runtime)
 {
@@ -1191,18 +1182,7 @@ Config::Config(Config&& source) noexcept
 void Config::Init() const
 {
 	for (const auto& sec : sectionlist) {
-		sec->ExecuteEarlyInit();
-	}
-
-	for (const auto& sec : sectionlist) {
 		sec->ExecuteInit();
-	}
-}
-
-void Section::AddEarlyInitFunction(SectionFunction func, bool changeable_at_runtime)
-{
-	if (func) {
-		early_init_functions.emplace_back(func, changeable_at_runtime);
 	}
 }
 
@@ -1216,16 +1196,6 @@ void Section::AddInitFunction(SectionFunction func, bool changeable_at_runtime)
 void Section::AddDestroyFunction(SectionFunction func, bool changeable_at_runtime)
 {
 	destroyfunctions.emplace_front(func, changeable_at_runtime);
-}
-
-void Section::ExecuteEarlyInit(bool init_all)
-{
-	for (const auto& fn : early_init_functions) {
-		if (init_all || fn.changeable_at_runtime) {
-			assert(fn.function);
-			fn.function(this);
-		}
-	}
 }
 
 void Section::ExecuteInit(const bool init_all)
