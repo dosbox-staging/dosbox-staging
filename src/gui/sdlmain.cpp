@@ -2202,9 +2202,11 @@ dosurface:
 #if 0
 			LOG_MSG("OPENGL: Using sRGB framebuffer");
 #endif
+		} else {
+			glDisable(GL_FRAMEBUFFER_SRGB);
 		}
 
-		glClearColor (0.0f, 0.0f, 0.0f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 		glClear(GL_COLOR_BUFFER_BIT);
 		SDL_GL_SwapWindow(sdl.window);
