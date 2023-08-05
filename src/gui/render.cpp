@@ -803,28 +803,23 @@ static bool force_no_pixel_doubling = false;
 
 // We double-scan VGA modes and pixel-double all video modes by default unless:
 //
-//  1) Single-scanning or no pixel-doubling is forced in the
-//     configuration
-//  2) Single-scanning or no pixel-doubling is forced by the OpenGL
-//     shader
-//  3) If the interpolation mode is nearest-neighbour
+//  1) Single-scanning or no pixel-doubling is forced by the OpenGL shader.
+//  2) The interpolation mode is nearest-neighbour.
 //
-// About point 2: The default `interpolation/sharp.glsl` shader forces both
-// because it scales pixels as flat adjacent rectangles. This not only produces
-// identical output versus double-scanning and pixel-doubling, but provides
-// finer integer multiplication steps (especially important for sub-4K screens)
-// and also reduces load on slow systems like the Raspberry Pi.
+// About the first point: the default `interpolation/sharp.glsl` shader forces
+// both because it scales pixels as flat adjacent rectangles. This not only
+// produces identical output versus double-scanning and pixel-doubling, but
+// also provides finer integer scaling steps (especially important on sub-4K
+// screens) and improves performance on low-end systems like the Raspberry Pi.
 //
-static void setup_scan_and_pixel_doubling(Section_prop* section)
+static void setup_scan_and_pixel_doubling([[maybe_unused]] Section_prop* section)
 {
 	const auto nearest_neighbour_enabled = (GFX_GetInterpolationMode() ==
 	                                        InterpolationMode::NearestNeighbour);
 
-	force_vga_single_scan = section->Get_bool("force_vga_single_scan") ||
-	                        nearest_neighbour_enabled;
+	force_vga_single_scan = nearest_neighbour_enabled;
+	force_no_pixel_doubling = nearest_neighbour_enabled;
 
-	force_no_pixel_doubling = section->Get_bool("force_no_pixel_doubling") ||
-	                          nearest_neighbour_enabled;
 #if C_OPENGL
 	force_vga_single_scan |= render.shader.force_single_scan;
 	force_no_pixel_doubling |= render.shader.force_no_pixel_doubling;
