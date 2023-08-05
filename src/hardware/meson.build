@@ -57,7 +57,6 @@ libhardware_sources = files(
     'ston1_dac.cpp',
     'tandy_sound.cpp',
     'timer.cpp',
-    'voodoo.cpp',
     'vga.cpp',
     'vga_attr.cpp',
     'vga_crtc.cpp',
@@ -72,6 +71,7 @@ libhardware_sources = files(
     'vga_seq.cpp',
     'vga_tseng.cpp',
     'vga_xga.cpp',
+    'voodoo.cpp',
 )
 
 libhardware = static_library(

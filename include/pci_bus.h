@@ -24,6 +24,16 @@
 
 #include "mem.h"
 
+// Start of PCI address space
+constexpr uint32_t PciMemoryBase     = 0xc000'0000; // gives 3072 MB max RAM
+// Graphics card
+constexpr uint32_t PciGfxLfbBase     = 0xc000'0000;
+constexpr uint32_t PciGfxLfbLimit    = 0xc100'0000; // 16 MB max
+constexpr uint32_t PciGfxMmioBase    = 0xc100'0000;
+// 3dfx Voodoo 3D accelerator
+constexpr uint32_t PciVoodooLfbBase  = 0xd000'0000;
+constexpr uint32_t PciVoodooLfbLimit = 0xd100'0000; // 16 MB max
+
 #define PCI_MAX_PCIDEVICES   10
 #define PCI_MAX_PCIFUNCTIONS 8
 

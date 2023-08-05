@@ -529,20 +529,15 @@ void DOSBOX_Init()
 	        "  deny:    Quit (and report) when faults are detected.");
 	pstring->Set_values(mcb_fault_strategies);
 
-	const char *vmemsize_choices[] = {
+	const std::vector<std::string> vmemsize_choices = {
 	        "auto",
-	        "1",
-	        "2",
-	        "4",
-	        "8", // MB
-	        "256",
-	        "512",
-	        "1024",
-	        "2048",
-	        "4096",
-	        "8192",
-	        nullptr, // KB
+	        // values in MB
+	        "1", "2", "4", "8",
+	        // values in KB
+	        "256", "512", "1024", "2048", "4096", "8192",
 	};
+	static_assert(8192 * 1024 <= PciGfxLfbLimit - PciGfxLfbBase);
+
 	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
 	pstring->Set_values(vmemsize_choices);
 	pstring->Set_help(

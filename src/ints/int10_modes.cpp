@@ -28,6 +28,7 @@
 #include "bitops.h"
 #include "inout.h"
 #include "math_utils.h"
+#include "pci_bus.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "vga.h"
@@ -1769,11 +1770,14 @@ dac_text16:
 		IO_Write(crtc_base+1,0);
 		//  Setup the linear frame buffer
 		IO_Write(crtc_base,0x59);
-		IO_Write(crtc_base+1,(uint8_t)((S3_LFB_BASE >> 24)&0xff));
-		IO_Write(crtc_base,0x5a);
-		IO_Write(crtc_base+1,(uint8_t)((S3_LFB_BASE >> 16)&0xff));
-		IO_Write(crtc_base,0x6b); // BIOS scratchpad
-		IO_Write(crtc_base+1,(uint8_t)((S3_LFB_BASE >> 24)&0xff));
+		IO_Write(crtc_base + 1,
+		         static_cast<uint8_t>((PciGfxLfbBase >> 24) & 0xff));
+		IO_Write(crtc_base, 0x5a);
+		IO_Write(crtc_base + 1,
+		         static_cast<uint8_t>((PciGfxLfbBase >> 16) & 0xff));
+		IO_Write(crtc_base, 0x6b); // BIOS scratchpad
+		IO_Write(crtc_base + 1,
+		         static_cast<uint8_t>((PciGfxLfbBase >> 24) & 0xff));
 
 		//  Setup some remaining S3 registers
 		IO_Write(crtc_base,0x41); // BIOS scratchpad

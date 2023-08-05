@@ -23,11 +23,12 @@
 #include <stddef.h>
 
 #include "callback.h"
-#include "regs.h"
+#include "dos_inc.h"
+#include "inout.h"
 #include "math_utils.h"
 #include "mem.h"
-#include "inout.h"
-#include "dos_inc.h"
+#include "pci_bus.h"
+#include "regs.h"
 #include "string_utils.h"
 
 #define VESA_SUCCESS          0x00
@@ -373,7 +374,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off) {
 	minfo.XCharSize = mblock.cwidth;
 	minfo.YCharSize = mblock.cheight;
 	if (!int10.vesa_nolfb)
-		minfo.PhysBasePtr = host_to_le32(S3_LFB_BASE);
+		minfo.PhysBasePtr = host_to_le32(PciGfxLfbBase);
 
 	MEM_BlockWrite(buf,&minfo,sizeof(MODE_INFO));
 	return VESA_SUCCESS;
