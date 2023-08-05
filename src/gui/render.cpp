@@ -59,8 +59,9 @@ static void check_palette(void)
 		memset(render.pal.modified, 0, sizeof(render.pal.modified));
 		render.pal.changed = false;
 	}
-	if (render.pal.first > render.pal.last)
+	if (render.pal.first > render.pal.last) {
 		return;
+	}
 	Bitu i;
 	switch (render.scale.outMode) {
 	case scalerMode8: break;
@@ -115,15 +116,15 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 	}
 }
 
-static void empty_line_handler(const void *) {}
+static void empty_line_handler(const void*) {}
 
-static void start_line_handler(const void *s)
+static void start_line_handler(const void* s)
 {
 	if (s) {
-		const Bitu *src = (Bitu *)s;
-		Bitu *cache     = (Bitu *)(render.scale.cacheRead);
+		const Bitu* src = (Bitu*)s;
+		Bitu* cache     = (Bitu*)(render.scale.cacheRead);
 		for (Bits x = render.src.start; x > 0;) {
-			const auto src_ptr = reinterpret_cast<const uint8_t *>(src);
+			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
 			const auto src_val = read_unaligned_size_t(src_ptr);
 			if (GCC_UNLIKELY(src_val != cache[0])) {
 				if (!GFX_StartUpdate(render.scale.outWrite,
@@ -148,11 +149,11 @@ static void start_line_handler(const void *s)
 	render.scale.outLine++;
 }
 
-static void finish_line_handler(const void *s)
+static void finish_line_handler(const void* s)
 {
 	if (s) {
-		const Bitu *src = (Bitu *)s;
-		Bitu *cache     = (Bitu *)(render.scale.cacheRead);
+		const Bitu* src = (Bitu*)s;
+		Bitu* cache     = (Bitu*)(render.scale.cacheRead);
 		for (Bits x = render.src.start; x > 0;) {
 			cache[0] = src[0];
 			x--;
@@ -163,30 +164,33 @@ static void finish_line_handler(const void *s)
 	render.scale.cacheRead += render.scale.cachePitch;
 }
 
-static void clear_cache_handler(const void *src)
+static void clear_cache_handler(const void* src)
 {
 	Bitu x, width;
 	uint32_t *srcLine, *cacheLine;
-	srcLine   = (uint32_t *)src;
-	cacheLine = (uint32_t *)render.scale.cacheRead;
+	srcLine   = (uint32_t*)src;
+	cacheLine = (uint32_t*)render.scale.cacheRead;
 	width     = render.scale.cachePitch / 4;
-	for (x = 0; x < width; x++)
+	for (x = 0; x < width; x++) {
 		cacheLine[x] = ~srcLine[x];
+	}
 	render.scale.lineHandler(src);
 }
 
 bool RENDER_StartUpdate(void)
 {
-	if (GCC_UNLIKELY(render.updating))
+	if (GCC_UNLIKELY(render.updating)) {
 		return false;
-	if (GCC_UNLIKELY(!render.active))
+	}
+	if (GCC_UNLIKELY(!render.active)) {
 		return false;
+	}
 	if (render.scale.inMode == scalerMode8) {
 		check_palette();
 	}
 	render.scale.inLine     = 0;
 	render.scale.outLine    = 0;
-	render.scale.cacheRead  = (uint8_t *)&scalerSourceCache;
+	render.scale.cacheRead  = (uint8_t*)&scalerSourceCache;
 	render.scale.outWrite   = nullptr;
 	render.scale.outPitch   = 0;
 	Scaler_ChangedLines[0]  = 0;
@@ -198,8 +202,9 @@ bool RENDER_StartUpdate(void)
 		// Will always have to update the screen with this one anyway,
 		// so let's update already
 		if (GCC_UNLIKELY(!GFX_StartUpdate(render.scale.outWrite,
-		                                  render.scale.outPitch)))
+		                                  render.scale.outPitch))) {
 			return false;
+		}
 		render.fullFrame        = true;
 		render.scale.clearCache = false;
 		RENDER_DrawLine         = clear_cache_handler;
@@ -208,8 +213,9 @@ bool RENDER_StartUpdate(void)
 			/* Assume pal changes always do a full screen update
 			 * anyway */
 			if (GCC_UNLIKELY(!GFX_StartUpdate(render.scale.outWrite,
-			                                  render.scale.outPitch)))
+			                                  render.scale.outPitch))) {
 				return false;
+			}
 			RENDER_DrawLine  = render.scale.linePalHandler;
 			render.fullFrame = true;
 		} else {
@@ -311,7 +317,7 @@ static void render_reset(void)
 	// driver operating in a different thread or process.
 	std::lock_guard<std::mutex> guard(render_reset_mutex);
 
-	Bitu width  = render.src.width;
+	Bitu width         = render.src.width;
 	bool double_width  = render.src.double_width;
 	bool double_height = render.src.double_height;
 
@@ -322,7 +328,7 @@ static void render_reset(void)
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
 
 	const auto one_per_pixel_aspect =
-			render.src.pixel_aspect_ratio.Inverse().ToDouble();
+	        render.src.pixel_aspect_ratio.Inverse().ToDouble();
 
 	if (one_per_pixel_aspect > 1.0) {
 		gfx_scalew = 1;
@@ -334,8 +340,9 @@ static void render_reset(void)
 
 	/* Don't do software scaler sizes larger than 4k */
 	Bitu maxsize_current_input = SCALER_MAXWIDTH / width;
-	if (render.scale.size > maxsize_current_input)
+	if (render.scale.size > maxsize_current_input) {
 		render.scale.size = maxsize_current_input;
+	}
 
 	if (double_height && double_width) {
 		simpleBlock = &ScaleNormal2x;
@@ -344,7 +351,7 @@ static void render_reset(void)
 	} else if (double_height) {
 		simpleBlock = &ScaleNormalDh;
 	} else {
-		simpleBlock  = &ScaleNormal1x;
+		simpleBlock = &ScaleNormal1x;
 	}
 
 	if ((width * simpleBlock->xscale > SCALER_MAXWIDTH) ||
@@ -360,19 +367,19 @@ static void render_reset(void)
 	case 8: render.src.start = (render.src.width * 1) / sizeof(Bitu); break;
 	case 15:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
-		gfx_flags = (gfx_flags & ~GFX_CAN_8);
+		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case 16:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
-		gfx_flags = (gfx_flags & ~GFX_CAN_8);
+		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case 24:
 		render.src.start = (render.src.width * 3) / sizeof(Bitu);
-		gfx_flags = (gfx_flags & ~GFX_CAN_8);
+		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	case 32:
 		render.src.start = (render.src.width * 4) / sizeof(Bitu);
-		gfx_flags = (gfx_flags & ~GFX_CAN_8);
+		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	}
 	gfx_flags = GFX_GetBestMode(gfx_flags);
@@ -404,16 +411,17 @@ static void render_reset(void)
 	                        render.video_mode,
 	                        &render_callback);
 
-	if (gfx_flags & GFX_CAN_8)
+	if (gfx_flags & GFX_CAN_8) {
 		render.scale.outMode = scalerMode8;
-	else if (gfx_flags & GFX_CAN_15)
+	} else if (gfx_flags & GFX_CAN_15) {
 		render.scale.outMode = scalerMode15;
-	else if (gfx_flags & GFX_CAN_16)
+	} else if (gfx_flags & GFX_CAN_16) {
 		render.scale.outMode = scalerMode16;
-	else if (gfx_flags & GFX_CAN_32)
+	} else if (gfx_flags & GFX_CAN_32) {
 		render.scale.outMode = scalerMode32;
-	else
+	} else {
 		E_Exit("Failed to create a rendering output");
+	}
 
 	const auto lineBlock = gfx_flags & GFX_CAN_RANDOM ? &simpleBlock->Random
 	                                                  : &simpleBlock->Linear;
@@ -421,8 +429,8 @@ static void render_reset(void)
 	case 8:
 		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];
 		render.scale.linePalHandler = (*lineBlock)[5][render.scale.outMode];
-		render.scale.inMode         = scalerMode8;
-		render.scale.cachePitch     = render.src.width * 1;
+		render.scale.inMode     = scalerMode8;
+		render.scale.cachePitch = render.src.width * 1;
 		break;
 	case 15:
 		render.scale.lineHandler = (*lineBlock)[1][render.scale.outMode];
@@ -511,17 +519,19 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
 #if C_OPENGL
 
 // Reads the given shader path into the string
-static bool read_shader(const std_fs::path &shader_path, std::string &shader_str)
+static bool read_shader(const std_fs::path& shader_path, std::string& shader_str)
 {
 	std::ifstream fshader(shader_path, std::ios_base::binary);
-	if (!fshader.is_open())
+	if (!fshader.is_open()) {
 		return false;
+	}
 
 	std::stringstream buf;
 	buf << fshader.rdbuf();
 	fshader.close();
-	if (buf.str().empty())
+	if (buf.str().empty()) {
 		return false;
+	}
 
 	shader_str = buf.str();
 	shader_str += '\n';
@@ -539,7 +549,7 @@ std::deque<std::string> RENDER_InventoryShaders()
 	const std::string file_prefix = "        ";
 
 	std::error_code ec = {};
-	for (auto &[dir, shaders] : GetFilesInResource("glshaders", ".glsl")) {
+	for (auto& [dir, shaders] : GetFilesInResource("glshaders", ".glsl")) {
 		const auto dir_exists      = std_fs::is_directory(dir, ec);
 		auto shader                = shaders.begin();
 		const auto dir_has_shaders = shader != shaders.end();
@@ -578,9 +588,11 @@ static bool read_shader_source(const std::string& shader_path, std::string& sour
 	                                              shader_path + ".glsl")};
 
 	std::string s; // to be populated with the shader source
-	for (const auto &p : candidate_paths)
-		if (read_shader(p, s))
+	for (const auto& p : candidate_paths) {
+		if (read_shader(p, s)) {
 			break;
+		}
+	}
 
 	if (s.empty()) {
 		source.clear();
@@ -592,12 +604,14 @@ static bool read_shader_source(const std::string& shader_path, std::string& sour
 		const size_t count = first_shell->GetEnvCount();
 		for (size_t i = 0; i < count; ++i) {
 			std::string env;
-			if (!first_shell->GetEnvNum(i, env))
+			if (!first_shell->GetEnvNum(i, env)) {
 				continue;
+			}
 			if (env.compare(0, 9, "GLSHADER_") == 0) {
 				const auto brk = env.find('=');
-				if (brk == std::string::npos)
+				if (brk == std::string::npos) {
 					continue;
+				}
 				env[brk] = ' ';
 				pre_defs += "#define " + env.substr(9) + '\n';
 			}
@@ -607,8 +621,9 @@ static bool read_shader_source(const std::string& shader_path, std::string& sour
 			// except comments and whitespace
 			auto pos = s.find("#version ");
 
-			if (pos != std::string::npos)
+			if (pos != std::string::npos) {
 				pos = s.find('\n', pos + 9);
+			}
 
 			s.insert(pos, pre_defs);
 		}
@@ -664,7 +679,7 @@ bool RENDER_UseSrgbFramebuffer()
 #endif
 
 #if C_OPENGL
-void log_warning_if_legacy_shader_name(const std::string &name)
+void log_warning_if_legacy_shader_name(const std::string& name)
 {
 	static const std::map<std::string, std::string> legacy_name_mappings = {
 	        {"advinterp2x", "scaler/advinterp2x"},
@@ -682,7 +697,7 @@ void log_warning_if_legacy_shader_name(const std::string &name)
 	        {"tv3x", "scaler/tv3x"}};
 
 	std_fs::path shader_path = name;
-	std_fs::path ext  = shader_path.extension();
+	std_fs::path ext         = shader_path.extension();
 
 	if (!(ext == "" || ext == ".glsl")) {
 		return;
@@ -694,23 +709,23 @@ void log_warning_if_legacy_shader_name(const std::string &name)
 	if (it != legacy_name_mappings.end()) {
 		const auto new_name = it->second;
 		LOG_WARNING("RENDER: Built-in shader '%s' has been renamed; please use '%s' instead.",
-					name.c_str(),
-					new_name.c_str());
+		            name.c_str(),
+		            new_name.c_str());
 	}
 }
 #endif
 
-void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
+void RENDER_InitShaderSource([[maybe_unused]] Section* sec)
 {
 #if C_OPENGL
 	assert(control);
-	const Section *sdl_sec = control->GetSection("sdl");
+	const Section* sdl_sec = control->GetSection("sdl");
 	assert(sdl_sec);
 
 	const bool using_opengl = starts_with(sdl_sec->GetPropValue("output"),
 	                                      "opengl");
 
-	const auto render_sec = static_cast<const Section_prop *>(
+	const auto render_sec = static_cast<const Section_prop*>(
 	        control->GetSection("render"));
 
 	assert(render_sec);
@@ -735,7 +750,7 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 
 		// List all the existing shaders for the user
 		LOG_ERR("RENDER: Shader file '%s' not found", filename.c_str());
-		for (const auto &line : RENDER_InventoryShaders()) {
+		for (const auto& line : RENDER_InventoryShaders()) {
 			LOG_WARNING("RENDER: %s", line.c_str());
 		}
 		// Fallback to the 'none' shader and otherwise fail
@@ -764,7 +779,7 @@ void RENDER_InitShaderSource([[maybe_unused]] Section *sec)
 #endif
 }
 
-void RENDER_Init(Section *sec);
+void RENDER_Init(Section* sec);
 
 static void reload_shader(const bool pressed)
 {
@@ -772,8 +787,9 @@ static void reload_shader(const bool pressed)
 	// tweaking shader presets. Ultimately, this code will go away once the
 	// new shading system has been introduced, so massaging the current code
 	// to make this "nicer" would be largely a wasted effort...
-	if (!pressed)
+	if (!pressed) {
 		return;
+	}
 
 	assert(control);
 	auto render_section = control->GetSection("render");
@@ -821,7 +837,7 @@ static void setup_scan_and_pixel_doubling([[maybe_unused]] Section_prop* section
 	const auto nearest_neighbour_enabled = (GFX_GetInterpolationMode() ==
 	                                        InterpolationMode::NearestNeighbour);
 
-	force_vga_single_scan = nearest_neighbour_enabled;
+	force_vga_single_scan   = nearest_neighbour_enabled;
 	force_no_pixel_doubling = nearest_neighbour_enabled;
 
 #if C_OPENGL
