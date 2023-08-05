@@ -786,7 +786,7 @@ static void ReloadShader(const bool pressed)
 	assert(glshader_prop);
 	const auto shader_path = std::string(glshader_prop->GetValue());
 	if (shader_path.empty()) {
-		LOG_WARNING("RENDER: Failed gettina path for 'glshader' setting; not reloading");
+		LOG_WARNING("RENDER: Failed getting path for 'glshader' setting; not reloading");
 		return;
 	}
 
