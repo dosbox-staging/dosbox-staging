@@ -68,7 +68,7 @@ static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 	vga.dac.palette_map[index] = static_cast<uint32_t>((r8 << 16) |
 	                                                   (g8 << 8) | b8);
 
-	ReelMagic_RENDER_SetPal(index, r8, g8, b8);
+	ReelMagic_RENDER_SetPalette(index, r8, g8, b8);
 }
 
 static void VGA_DAC_UpdateColor(uint16_t index)
