@@ -76,7 +76,6 @@ std::string BatchFile::GetLine()
 		if (!result || *result == '\0') {
 			break;
 		}
-
 		data = *result;
 
 		/* Inclusion criteria:
@@ -92,9 +91,21 @@ std::string BatchFile::GetLine()
 			            data,
 			            data);
 			break;
-		} else {
-			line += data;
 		}
+
+		// The maximum batch line length in MS-DOS was 1024 characters,
+		// which is a reasonable maximum.
+		// Ref: https://groups.google.com/g/alt.msdos.batch/c/z_H4JWPih-A/m/C499Mq4eJpAJ
+		//
+		constexpr size_t max_line_length = 1024;
+
+		if (line.length() >= max_line_length) {
+			LOG_WARNING("BATCH: line '%.40s (...)' exceeds the maximum length of 1024 characters; truncating",
+			            line.c_str());
+			break;
+		}
+
+		line += data;
 	}
 
 	return line;
