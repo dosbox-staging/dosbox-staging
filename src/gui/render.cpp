@@ -722,6 +722,8 @@ void log_warning_if_legacy_shader_name(const std::string& name)
 }
 #endif
 
+// Returns true if the shader has been changed, or if a shader has been loaded
+// for the first time since launch
 static bool init_shader([[maybe_unused]] Section* sec)
 {
 #if C_OPENGL
@@ -744,6 +746,10 @@ static bool init_shader([[maybe_unused]] Section* sec)
 		filename = fallback_shader;
 	} else if (filename == "default") {
 		filename = "interpolation/sharp";
+	}
+
+	if (render.shader.filename == filename) {
+		return false;
 	}
 
 	log_warning_if_legacy_shader_name(filename);
@@ -892,8 +898,7 @@ void RENDER_Init(Section* sec)
 	GFX_SetIntegerScalingMode(section->Get_string("integer_scaling"));
 
 #if C_OPENGL
-	const auto previous_shader_filename = render.shader.filename;
-	init_shader(section);
+	const auto shader_changed = init_shader(section);
 #endif
 
 	setup_scan_and_pixel_doubling(section);
@@ -903,7 +908,7 @@ void RENDER_Init(Section* sec)
 	         (render.scale.size != prev_scale_size) ||
 	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode)
 #if C_OPENGL
-	         || (previous_shader_filename != render.shader.filename)
+	         || shader_changed
 #endif
 	         || (prev_force_vga_single_scan != force_vga_single_scan) ||
 	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
