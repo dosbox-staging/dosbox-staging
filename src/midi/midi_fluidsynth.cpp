@@ -72,10 +72,10 @@ static void init_fluid_dosbox_settings(Section_prop& secprop)
 	        "    - depth is a decimal from 0.0 to 21.0\n"
 	        "    - modulation-wave is either 'sine' or 'triangle'\n"
 	        "  For example: chorus = 3 1.2 0.3 8.0 sine\n"
-	        "Notes: You can disable the FluidSynth chorus and enable the mixer-level chorus\n"
-	        "       on the FluidSynth channel instead, or enable both chorus effects at the\n"
-	        "       same time. Whether this sounds good depends on the SoundFont and the\n"
-	        "       chorus settings being used.");
+	        "Note: You can disable the FluidSynth chorus and enable the mixer-level chorus\n"
+	        "      on the FluidSynth channel instead, or enable both chorus effects at the\n"
+	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
+	        "      chorus settings being used.");
 
 	str_prop = secprop.Add_string("fsynth_reverb", when_idle, "auto");
 	str_prop->Set_help(
@@ -88,10 +88,10 @@ static void init_fluid_dosbox_settings(Section_prop& secprop)
 	        "    - width is a decimal from 0.0 to 100.0\n"
 	        "    - level is a decimal from 0.0 to 1.0\n"
 	        "  For example: reverb = 0.61 0.23 0.76 0.56\n"
-	        "Notes: You can disable the FluidSynth reverb and enable the mixer-level reverb\n"
-	        "       on the FluidSynth channel instead, or enable both reverb effects at the\n"
-	        "       same time. Whether this sounds good depends on the SoundFont and the\n"
-	        "       reverb settings being used.");
+	        "Note: You can disable the FluidSynth reverb and enable the mixer-level reverb\n"
+	        "      on the FluidSynth channel instead, or enable both reverb effects at the\n"
+	        "      same time. Whether this sounds good depends on the SoundFont and the\n"
+	        "      reverb settings being used.");
 
 	str_prop = secprop.Add_string("fsynth_filter", when_idle, "off");
 	assert(str_prop);

@@ -278,10 +278,10 @@ static void config_init(Section_prop &secprop)
 	prop_bool = secprop.Add_bool("mouse_multi_display_aware", always, true);
 	prop_bool->Set_help("Allows mouse seamless behavior and mouse pointer release to work in fullscreen\n"
 	                    "mode for systems with more than one display. (enabled by default).\n"
-	                    "Notes: You should set this to false if it incorrectly detects multiple displays\n"
-	                    "       when only one should actually be used. This might happen if you are\n"
-	                    "       using mirrored display mode or using an AV receiver's HDMI input for\n"
-	                    "       audio-only listening.");
+	                    "Note: You should set this to false if it incorrectly detects multiple displays\n"
+	                    "      when only one should actually be used. This might happen if you are\n"
+	                    "      using mirrored display mode or using an AV receiver's HDMI input for\n"
+	                    "      audio-only listening.");
 
 	prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
 	prop_multi->Set_help(
@@ -311,8 +311,9 @@ static void config_init(Section_prop &secprop)
 	assert(prop_bool);
 	prop_bool->Set_help(
 	        "Enable built-in DOS mouse driver (enabled by default).\n"
-	        "Notes: Disable if you intend to use original MOUSE.COM driver in emulated DOS.\n"
-	        "       When guest OS is booted, built-in driver gets disabled automatically.");
+	        "Notes:\n"
+	        "  - Disable if you intend to use original MOUSE.COM driver in emulated DOS.\n"
+	        "  - When guest OS is booted, built-in driver gets disabled automatically.");
 
 	prop_bool = secprop.Add_bool("dos_mouse_immediate", always, false);
 	assert(prop_bool);
@@ -360,7 +361,7 @@ static void config_init(Section_prop &secprop)
 	        "  2button+msm:  Automatic choice between '2button' and 'msm'.\n"
 	        "  3button+msm:  Automatic choice between '3button' and 'msm'.\n"
 	        "  wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).\n"
-	        "Notes: Enable COM port mice in the [serial] section.");
+	        "Note: Enable COM port mice in the [serial] section.");
 }
 
 void MOUSE_AddConfigSection(const config_ptr_t& conf)

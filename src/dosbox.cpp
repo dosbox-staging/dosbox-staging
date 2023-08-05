@@ -463,11 +463,14 @@ void DOSBOX_Init()
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
 	pstring = secprop->Add_string("language", always, "");
 	pstring->Set_help(
-	        "Select a language to use: de, en, es, fr, it, nl, pl, and ru (unset by default)\n"
-	        "Notes: This setting will override the 'LANG' environment, if set.\n"
-	        "       The 'resources/translations' directory bundled with the executable holds\n"
-	        "       these files. Please keep it along-side the executable to support this\n"
-	        "       feature.");
+	        "Select a language to use: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', or 'ru'\n"
+	        "(unset by default; this defaults to English)\n"
+	        "Notes:\n"
+	        "  - This setting will override the 'LANG' environment variable, if set.\n"
+	        "  - The bundled 'resources/translations' directory with the executable holds\n"
+	        "    these files. Please keep it along-side the executable to support this\n"
+	        "    feature.");
+
 	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
 	pstring->Set_values(machines);
 	pstring->SetDeprecatedWithAlternateValue("vgaonly", "svga_paradise");
@@ -796,8 +799,8 @@ void DOSBOX_Init()
 	               "   1:  Multi-threading (default).\n"
 	               "   2:  Disable bilinear filtering.\n"
 	               "   3:  All optimizations (both 1 and 2).\n"
-	               "Notes: Voodo emulation is software-based and does not use host-level\n"
-	               "       OpenGL calls.");
+	               "Note: Voodo emulation is software-based and does not use host-level\n"
+	               "      OpenGL calls.");
 
 	// Configure capture
 	CAPTURE_AddConfigSection(control);
@@ -1257,26 +1260,26 @@ void DOSBOX_Init()
 	        "  - 10.0.2.2:       IP of the gateway and DHCP service.\n"
 	        "  - 10.0.2.3:       IP of the virtual DNS server.\n"
 	        "  - 10.0.2.15:      First IP provided by DHCP, your IP!\n"
-	        "Notes: Inside DOS, setting this up requires an NE2000 packet driver, DHCP\n"
-	        "       client, and TCP/IP stack. You might need port-forwarding from the host\n"
-	        "       into the DOS guest, and from your router to your host when acting as the\n"
-	        "       server for multiplayer games.");
+	        "Note: Inside DOS, setting this up requires an NE2000 packet driver, DHCP\n"
+	        "      client, and TCP/IP stack. You might need port-forwarding from the host\n"
+	        "      into the DOS guest, and from your router to your host when acting as the\n"
+	        "      server for multiplayer games.");
 
 	const char *nic_addresses[] = {"200", "220", "240", "260", "280", "2c0",
 	                               "300", "320", "340", "360", nullptr};
 	phex = secprop->Add_hex("nicbase", when_idle, 0x300);
 	phex->Set_values(nic_addresses);
 	phex->Set_help("Base address of the NE2000 card (300 by default).\n"
-	               "Notes: Addresses 220 and 240 might not be available as they're assigned to the\n"
-	               "       Sound Blaster and Gravis UltraSound by default.");
+	               "Note: Addresses 220 and 240 might not be available as they're assigned to the\n"
+	               "      Sound Blaster and Gravis UltraSound by default.");
 
 	const char *nic_irqs[] = {"3",  "4",  "5",  "9",  "10",
 	                          "11", "12", "14", "15", nullptr};
 	pint                   = secprop->Add_int("nicirq", when_idle, 3);
 	pint->Set_values(nic_irqs);
 	pint->Set_help("The interrupt used by the NE2000 card (3 by default).\n"
-	               "Notes: IRQs 3 and 5 might not be available as they're assigned to\n"
-	               "       'serial2' and the Gravis UltraSound by default.");
+	               "Note: IRQs 3 and 5 might not be available as they're assigned to\n"
+	               "      'serial2' and the Gravis UltraSound by default.");
 
 	pstring = secprop->Add_string("macaddr", when_idle, "AC:DE:48:88:99:AA");
 	pstring->Set_help(
@@ -1298,9 +1301,10 @@ void DOSBOX_Init()
 	        "Mappings and ranges can be combined, too:\n"
 	        "  hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)\n"
 	        "  This forwards ports 8040 to 8080 into 20 to 60 in the guest\n"
-	        "Notes: If mapped ranges differ, the shorter range is extended to fit.\n"
-	        "       If conflicting host ports are given, only the first one is setup.\n"
-	        "       If conflicting guest ports are given, the latter rule takes precedent.");
+	        "Notes:\n"
+	        "  - If mapped ranges differ, the shorter range is extended to fit.\n"
+	        "  - If conflicting host ports are given, only the first one is setup.\n"
+	        "  - If conflicting guest ports are given, the latter rule takes precedent.");
 
 	pstring = secprop->Add_string("udp_port_forwards", when_idle, "");
 	pstring->Set_help(
