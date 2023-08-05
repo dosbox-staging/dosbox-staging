@@ -86,9 +86,12 @@ std::string BatchFile::GetLine()
 		 */
 		if (data <= UnitSeparator && data != '\t' && data != '\b' &&
 		    data != Esc && data != '\n' && data != '\r') {
-			LOG_WARNING("BATCH: Encountered non-standard character: Dec %03u and Hex %#04x",
+			LOG_WARNING("BATCH: line '%s' encountered a non-standard character: "
+			            "Dec %03u and Hex %#04x; skipping the remainder of this line",
+			            line.c_str(),
 			            data,
 			            data);
+			break;
 		} else {
 			line += data;
 		}
