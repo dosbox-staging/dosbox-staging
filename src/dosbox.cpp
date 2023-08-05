@@ -1118,7 +1118,7 @@ void DOSBOX_Init()
 	        "  - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home,\n"
 	        "    respectively.\n"
 	        "Each tap will report X or Y calibration values you can set below. When you find\n"
-	        "parameters that work, quit the game, switch this setting back to false, and\n"
+	        "parameters that work, quit the game, switch this setting back to disabled, and\n"
 	        "populate the reported calibration parameters.");
 
 	pstring = secprop->Add_string("joy_x_calibration", when_idle, "auto");
