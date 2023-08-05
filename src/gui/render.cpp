@@ -645,7 +645,7 @@ static bool read_shader_source(const std::string& shader_path, std::string& sour
 	return true;
 }
 
-static void parse_shader_options(const std::string& source)
+static void set_shader_settings(const std::string& source)
 {
 	try {
 		const std::regex re("\\s*#pragma\\s+(\\w+)");
@@ -657,13 +657,13 @@ static void parse_shader_options(const std::string& source)
 
 			auto pragma = match[1].str();
 			if (pragma == "use_srgb_texture") {
-				render.shader.use_srgb_texture = true;
+				render.shader.settings.use_srgb_texture = true;
 			} else if (pragma == "use_srgb_framebuffer") {
-				render.shader.use_srgb_framebuffer = true;
+				render.shader.settings.use_srgb_framebuffer = true;
 			} else if (pragma == "force_single_scan") {
-				render.shader.force_single_scan = true;
+				render.shader.settings.force_single_scan = true;
 			} else if (pragma == "force_no_pixel_doubling") {
-				render.shader.force_no_pixel_doubling = true;
+				render.shader.settings.force_no_pixel_doubling = true;
 			}
 			++next;
 		}
@@ -675,12 +675,12 @@ static void parse_shader_options(const std::string& source)
 
 bool RENDER_UseSrgbTexture()
 {
-	return render.shader.use_srgb_texture;
+	return render.shader.settings.use_srgb_texture;
 }
 
 bool RENDER_UseSrgbFramebuffer()
 {
-	return render.shader.use_srgb_framebuffer;
+	return render.shader.settings.use_srgb_framebuffer;
 }
 
 #endif
@@ -771,11 +771,11 @@ static bool init_shader([[maybe_unused]] Section* sec)
 	}
 
 	// Reset shader settings to defaults
-	render.shader = {};
+	render.shader.settings = {};
 
 	if (using_opengl && source.length() && render.shader.filename != filename) {
 		LOG_MSG("RENDER: Using GLSL shader '%s'", filename.c_str());
-		parse_shader_options(source);
+		set_shader_settings(source);
 
 		// Move the temporary filename and source into the memebers
 		render.shader.filename = std::move(filename);
@@ -856,8 +856,8 @@ static void setup_scan_and_pixel_doubling([[maybe_unused]] Section_prop* section
 	force_no_pixel_doubling = nearest_neighbour_enabled;
 
 #if C_OPENGL
-	force_vga_single_scan |= render.shader.force_single_scan;
-	force_no_pixel_doubling |= render.shader.force_no_pixel_doubling;
+	force_vga_single_scan |= render.shader.settings.force_single_scan;
+	force_no_pixel_doubling |= render.shader.settings.force_no_pixel_doubling;
 #endif
 
 	VGA_EnableVgaDoubleScanning(!force_vga_single_scan);
