@@ -125,12 +125,15 @@ struct Render_t {
 
 #if C_OPENGL
 	struct {
-		std::string filename         = {};
-		std::string source           = {};
-		bool use_srgb_texture        = false;
-		bool use_srgb_framebuffer    = false;
-		bool force_single_scan       = false;
-		bool force_no_pixel_doubling = false;
+		std::string filename = {};
+		std::string source   = {};
+
+		struct {
+			bool use_srgb_texture        = false;
+			bool use_srgb_framebuffer    = false;
+			bool force_single_scan       = false;
+			bool force_no_pixel_doubling = false;
+		} settings = {};
 	} shader = {};
 #endif
 
