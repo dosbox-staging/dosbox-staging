@@ -20,6 +20,7 @@
 #include "dosbox.h"
 
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -47,6 +48,8 @@
 #include "video.h"
 
 #include "render_scalers.h"
+
+using namespace std::chrono;
 
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
@@ -684,10 +687,12 @@ static bool read_shader_source(const std::string& shader_path, std::string& sour
 	return true;
 }
 
-static void set_shader_settings(const std::string& source)
+static ShaderSettings parse_shader_settings(const std::string& shader_name,
+                                            const std::string& source)
 {
+	ShaderSettings settings = {};
 	try {
-		const std::regex re("\\s*#pragma\\s+(\\w+)");
+		const std::regex re("\\s*#pragma\\s+(\\w+)\\s*([\\w\\.]+)?");
 		std::sregex_iterator next(source.begin(), source.end(), re);
 		const std::sregex_iterator end;
 
@@ -696,13 +701,37 @@ static void set_shader_settings(const std::string& source)
 
 			auto pragma = match[1].str();
 			if (pragma == "use_srgb_texture") {
-				render.shader.settings.use_srgb_texture = true;
+				settings.use_srgb_texture = true;
 			} else if (pragma == "use_srgb_framebuffer") {
-				render.shader.settings.use_srgb_framebuffer = true;
+				settings.use_srgb_framebuffer = true;
 			} else if (pragma == "force_single_scan") {
-				render.shader.settings.force_single_scan = true;
+				settings.force_single_scan = true;
 			} else if (pragma == "force_no_pixel_doubling") {
-				render.shader.settings.force_no_pixel_doubling = true;
+				settings.force_no_pixel_doubling = true;
+			} else if (pragma == "min_vertical_scale_factor") {
+				auto value_str = match[2].str();
+				if (value_str.empty()) {
+					LOG_WARNING("RENDER: No value specified for "
+					            "'min_vertical_scale_factor' pragma in shader '%s'",
+					            shader_name.c_str());
+				} else {
+					constexpr auto MinValidScaleFactor = 0.0f;
+					constexpr auto MaxValidScaleFactor = 100.0f;
+					const auto value =
+					        parse_value(value_str,
+					                    MinValidScaleFactor,
+					                    MaxValidScaleFactor);
+
+					if (value) {
+						LOG_MSG(">>>>>>>> %f", *value);
+						settings.min_vertical_scale_factor = *value;
+					} else {
+						LOG_WARNING("RENDER: Invalid 'min_vertical_scale_factor' "
+						            "pragma value of '%s' in shader '%s'",
+						            value_str.c_str(),
+						            shader_name.c_str());
+					}
+				}
 			}
 			++next;
 		}
@@ -710,6 +739,58 @@ static void set_shader_settings(const std::string& source)
 		LOG_ERR("RENDER: Regex error while parsing OpenGL shader for pragmas: %d",
 		        e.code());
 	}
+	return settings;
+}
+
+struct ShaderInfo {
+	std::string name        = {};
+	ShaderSettings settings = {};
+};
+
+// static std::vector<ShaderInfo> cga_shaders       = {};
+static std::vector<ShaderInfo> ega_shaders = {};
+// static std::vector<ShaderInfo> vga_shaders       = {};
+// static std::vector<ShaderInfo> composite_shaders = {};
+// static std::vector<ShaderInfo> monochrome_shaders  = {};
+
+static auto shader_sets_initialised = false;
+
+static void init_shader_sets()
+{
+	//	static const auto cga_shader_names = {"cga-1080p", "cga-1440p",
+	//"cga-4k"};
+	//
+	static const auto ega_shader_names = {"crt/ega-1080p",
+	                                      "crt/ega-1440p",
+	                                      "crt/ega-4k"};
+
+	//	static const auto vga_shader_names = {"vga-1080p", "vga-1440p",
+	//"vga-4k"};
+
+	//	static const auto composite_shader_names = {"composite-1080p",
+	//	                                            "composite-1440p",
+	//	                                            "composite-4k"};
+
+	//	static const auto monochrome_shader_names = {"monochrome"};
+
+	auto build_set = [](const std::vector<const char*> shader_names)
+	        -> std::vector<ShaderInfo> {
+		std::string source = {};
+
+		std::vector<ShaderInfo> info = {};
+		for (const char* name : shader_names) {
+			if (!(read_shader_source(name, source))) {
+				LOG_ERR("RENDER: Cannot load built-in shader '%s'",
+				        name);
+			}
+			const auto settings = parse_shader_settings(name, source);
+			info.push_back({name, settings});
+		}
+
+		return info;
+	};
+
+	ega_shaders = build_set(ega_shader_names);
 }
 
 bool RENDER_UseSrgbTexture()
@@ -722,9 +803,6 @@ bool RENDER_UseSrgbFramebuffer()
 	return render.shader.settings.use_srgb_framebuffer;
 }
 
-#endif
-
-#if C_OPENGL
 void log_warning_if_legacy_shader_name(const std::string& name)
 {
 	static const std::map<std::string, std::string> legacy_name_mappings = {
@@ -777,38 +855,38 @@ static bool init_shader([[maybe_unused]] Section* sec)
 	        control->GetSection("render"));
 
 	assert(render_sec);
-	auto sh       = render_sec->Get_path("glshader");
-	auto filename = std::string(sh->GetValue());
+	auto sh          = render_sec->Get_path("glshader");
+	auto shader_name = std::string(sh->GetValue());
 
 	constexpr auto fallback_shader = "none";
-	if (filename.empty()) {
-		filename = fallback_shader;
-	} else if (filename == "default") {
-		filename = "interpolation/sharp";
+	if (shader_name.empty()) {
+		shader_name = fallback_shader;
+	} else if (shader_name == "default") {
+		shader_name = "interpolation/sharp";
 	}
 
-	if (render.shader.filename == filename) {
+	if (render.shader.filename == shader_name) {
 		return false;
 	}
 
-	log_warning_if_legacy_shader_name(filename);
+	log_warning_if_legacy_shader_name(shader_name);
 
 	std::string source = {};
 
 	if (!read_shader_source(sh->realpath.string(), source) &&
-	    (sh->realpath == filename || !read_shader_source(filename, source))) {
+	    (sh->realpath == shader_name || !read_shader_source(shader_name, source))) {
 		sh->SetValue("none");
 		source.clear();
 
 		// List all the existing shaders for the user
-		LOG_ERR("RENDER: Shader file '%s' not found", filename.c_str());
+		LOG_ERR("RENDER: Shader file '%s' not found", shader_name.c_str());
 		for (const auto& line : RENDER_InventoryShaders()) {
 			LOG_WARNING("RENDER: %s", line.c_str());
 		}
 
 		// Fallback to the 'none' shader and otherwise fail
 		if (read_shader_source(fallback_shader, source)) {
-			filename = fallback_shader;
+			shader_name = fallback_shader;
 		} else {
 			E_Exit("RENDER: Fallback shader file '%s' not found and is mandatory",
 			       fallback_shader);
@@ -818,13 +896,14 @@ static bool init_shader([[maybe_unused]] Section* sec)
 	// Reset shader settings to defaults
 	render.shader.settings = {};
 
-	if (using_opengl && source.length() && render.shader.filename != filename) {
-		LOG_MSG("RENDER: Using GLSL shader '%s'", filename.c_str());
-		set_shader_settings(source);
+	if (using_opengl && source.length() && render.shader.filename != shader_name) {
+		LOG_MSG("RENDER: Using GLSL shader '%s'", shader_name.c_str());
 
 		// Move the temporary filename and source into the memebers
-		render.shader.filename = std::move(filename);
+		render.shader.filename = std::move(shader_name);
 		render.shader.source   = std::move(source);
+
+		render.shader.settings = parse_shader_settings(shader_name, source);
 
 		// Pass the shader source up to the GFX engine
 		GFX_SetShader(render.shader.source);
@@ -933,6 +1012,17 @@ void RENDER_Init(Section* sec)
 	LOG_MSG(">>>>>>>>>> RENDER_Init enter");
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
+
+	if (!shader_sets_initialised) {
+		const auto start = high_resolution_clock::now();
+
+		init_shader_sets();
+		shader_sets_initialised = true;
+
+		const auto stop     = high_resolution_clock::now();
+		const auto duration = duration_cast<milliseconds>(stop - start);
+		LOG_MSG("RENDER: Building shader sets took %lld ms", duration.count());
+	}
 
 	// For restarting the renderer
 	static auto running = false;

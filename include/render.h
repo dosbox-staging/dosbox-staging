@@ -78,6 +78,16 @@ const char* to_string(const PixelFormat pf);
 
 uint8_t get_bits_per_pixel(const PixelFormat pf);
 
+#if C_OPENGL
+struct ShaderSettings {
+	bool use_srgb_texture           = false;
+	bool use_srgb_framebuffer       = false;
+	bool force_single_scan          = false;
+	bool force_no_pixel_doubling    = false;
+	float min_vertical_scale_factor = 0.0f;
+};
+#endif
+
 struct Render_t {
 	// Details about the rendered image.
 	// E.g. for the 320x200 256-colour 13h VGA mode with double-scanning
@@ -152,15 +162,9 @@ struct Render_t {
 
 #if C_OPENGL
 	struct {
-		std::string filename = {};
-		std::string source   = {};
-
-		struct {
-			bool use_srgb_texture        = false;
-			bool use_srgb_framebuffer    = false;
-			bool force_single_scan       = false;
-			bool force_no_pixel_doubling = false;
-		} settings = {};
+		std::string filename    = {};
+		std::string source      = {};
+		ShaderSettings settings = {};
 	} shader = {};
 #endif
 
