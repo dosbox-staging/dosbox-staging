@@ -25,6 +25,7 @@
 
 #include "../src/gui/render_scalers.h"
 #include "fraction.h"
+#include "vga.h"
 
 struct RenderPal_t {
 	struct {
@@ -84,8 +85,8 @@ struct Render_t {
 
 		uint32_t start = 0;
 
-		// Pixel format of the image data (see `bpp` in vga.h for details)
-		uint8_t bpp = 0;
+		// Pixel format of the image data
+		PixelFormat bpp = {};
 
 		// Frames per second
 		double fps = 0;
@@ -175,8 +176,8 @@ struct RenderedImage {
 	// aspect ratio of the source video mode)
 	Fraction pixel_aspect_ratio = {};
 
-	// Pixel format of the image data (see `bpp` in vga.h for details)
-	uint8_t bits_per_pixel = 0;
+	// Pixel format of the image data
+	PixelFormat bits_per_pixel = {};
 
 	// Bytes per row
 	uint16_t pitch = 0;
@@ -192,7 +193,7 @@ struct RenderedImage {
 
 	inline bool is_paletted() const
 	{
-		return (bits_per_pixel == 8);
+		return (bits_per_pixel == PixelFormat::Indexed8);
 	}
 
 	RenderedImage deep_copy() const
@@ -236,7 +237,7 @@ std::deque<std::string> RENDER_InventoryShaders();
 void RENDER_SetSize(const uint16_t width, const uint16_t height,
                     const bool double_width, const bool double_height,
                     const Fraction& render_pixel_aspect_ratio,
-                    const uint8_t bits_per_pixel,
+                    const PixelFormat bits_per_pixel,
                     const double frames_per_second, const VideoMode& video_mode);
 
 bool RENDER_StartUpdate(void);

@@ -224,6 +224,28 @@ enum PixelsPerChar : int8_t {
 	Nine  = 9,
 };
 
+enum class PixelFormat : uint8_t {
+	// Up to 256 colours, paletted;
+	// stored as packed uint8 data
+	Indexed8 = 8,
+
+	// 32K high colour, 5 bits per red/blue/green component;
+	// stored as packed uint16 data with highest bit unused
+	BGR555 = 15,
+	//
+	// 65K high colour, 5 bits for red/blue, 6 bit for green;
+	// stored as packed uint16 data
+	BGR565 = 16,
+	//
+	// 16.7M (24-bit) true colour, 8 bits per red/blue/green component;
+	// stored as packed 24-bit data
+	BGR888 = 24,
+	//
+	// 16.7M (32-bit) true colour; 8 bits per red/blue/green component;
+	// stored as packed uint32 data with highest 8 bits unused
+	BGRX8888 = 32
+};
+
 struct VGA_Draw {
 	bool resizing   = false;
 	uint16_t width  = 0;
@@ -266,30 +288,7 @@ struct VGA_Draw {
 		double per_line_ms = 0;
 	} delay = {};
 
-	// clang-format off
-	//
-	// Non-paletted RGB image data is stored as a continuous stream of BGR
-	// pixel values in memory.
-	//
-	// Valid values are the following:
-	//
-	//  8 - Indexed8   Up to 256 colours, paletted;
-	//                 stored as packed uint8 data
-	//
-	// 15 - BGR555     32K high colour, 5 bits per red/blue/green component;
-	//                 stored as packed uint16 data with highest bit unused
-	//
-	// 16 - BGR565     65K high colour, 5 bits for red/blue, 6 bit for green;
-	//                 stored as packed uint16 data
-	//
-	// 24 - BGR888     16.7M (24-bit) true colour, 8 bits per red/blue/green component;
-	//                 stored as packed 24-bit data
-	//
-	// 32 - BGRX8888   16.7M (32-bit) true colour; 8 bits per red/blue/green component;
-	//                 stored as packed uint32 data with highest 8 bits unused
-	//
-	// clang-format on
-	uint8_t bpp = 0;
+	PixelFormat bpp = {};
 
 	double host_refresh_hz = RefreshRateHostDefault;
 	double dos_refresh_hz = RefreshRateDosDefault;
@@ -999,7 +998,7 @@ void VGA_StartUpdateLFB(void);
 void VGA_SetBlinking(uint8_t enabled);
 void VGA_SetCGA2Table(uint8_t val0,uint8_t val1);
 void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3);
-uint8_t VGA_ActivateHardwareCursor();
+PixelFormat VGA_ActivateHardwareCursor();
 void VGA_KillDrawing(void);
 
 void VGA_SetOverride(bool vga_override);

@@ -956,11 +956,11 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			bg_color_index = 0;
 			break;
 		}
-		if (vga.draw.bpp==8) {
+		if (vga.draw.bpp == PixelFormat::Indexed8) {
 			std::fill(templine_buffer.begin(),
 			          templine_buffer.end(),
 			          bg_color_index);
-		} else if (vga.draw.bpp == 16) {
+		} else if (vga.draw.bpp == PixelFormat::BGR565) {
 			const auto background_color = from_rgb_888_to_565(
 			        vga.dac.palette_map[bg_color_index]);
 			const auto line_length = templine_buffer.size() / sizeof(uint16_t);
@@ -968,7 +968,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			while (i < line_length) {
 				write_unaligned_uint16_at(TempLine, i++, background_color);
 			}
-		} else if (vga.draw.bpp == 32) {
+		} else if (vga.draw.bpp == PixelFormat::BGRX8888) {
 			const auto background_color = vga.dac.palette_map[bg_color_index];
 			const auto line_length = templine_buffer.size() / sizeof(uint32_t);
 			size_t i = 0;
@@ -1352,50 +1352,50 @@ void VGA_CheckScanLength(void) {
 // If the hardware mouse cursor is activated, this function changes the VGA line
 // drawing function-pointers to call the more complicated hardware cusror
 // routines (for the given color depth).
-
+//
 // If the hardware cursor isn't activated, the simply fallback to the normal
 // line-drawing routines for a given bit-depth.
-
+//
 // Finally, return the current mode's bits per line buffer value.
-uint8_t VGA_ActivateHardwareCursor()
+PixelFormat VGA_ActivateHardwareCursor()
 {
-	uint8_t bit_per_line_pixel = 0;
+	PixelFormat pixel_format = {};
 
 	const bool use_hw_cursor = (svga.hardware_cursor_active &&
 	                            svga.hardware_cursor_active());
 
 	switch (vga.mode) {
 	case M_LIN32: // 32-bit true-colour VESA
-		bit_per_line_pixel = 32;
+		pixel_format = PixelFormat::BGRX8888;
 
 		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN32_Line_HWMouse
 		                             : VGA_Draw_Linear_Line;
-		//
+
 		// Use the "VGA_Draw_Linear_Line" routine that skips the DAC
 		// 8-bit palette LUT and prepares the true-colour pixels for
 		// rendering.
 		break;
 	case M_LIN24: // 24-bit true-colour VESA
-		bit_per_line_pixel = 24;
+		pixel_format = PixelFormat::BGR888;
 
 		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN32_Line_HWMouse
 		                             : VGA_Draw_Linear_Line;
 		break;
 	case M_LIN16: // 16-bit high-colour VESA
-		bit_per_line_pixel = 16;
+		pixel_format = PixelFormat::BGR565;
 
 		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN16_Line_HWMouse
 		                             : VGA_Draw_Linear_Line;
 		break;
 	case M_LIN15: // 15-bit high-colour VESA
-		bit_per_line_pixel = 15;
+		pixel_format = PixelFormat::BGR555;
 
 		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN16_Line_HWMouse
 		                             : VGA_Draw_Linear_Line;
 		break;
 	case M_LIN8: // 8-bit and below
 	default:
-		bit_per_line_pixel = 32;
+		pixel_format = PixelFormat::BGRX8888;
 
 		// Use routines that treats the 8-bit pixel values as
 		// indexes into the DAC's palette LUT. The palette LUT
@@ -1408,8 +1408,7 @@ uint8_t VGA_ActivateHardwareCursor()
 		                     : draw_unwrapped_line_from_dac_palette;
 		break;
 	}
-	assert(bit_per_line_pixel != 0);
-	return bit_per_line_pixel;
+	return pixel_format;
 }
 
 // A single point to set total drawn lines and update affected delay values
@@ -1944,16 +1943,16 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	Fraction render_pixel_aspect_ratio = {1};
 
-	uint8_t bpp;
+	PixelFormat bpp;
 	switch (vga.mode) {
-	case M_LIN15: bpp = 15; break;
-	case M_LIN16: bpp = 16; break;
-	case M_LIN24: bpp = 24; break;
+	case M_LIN15: bpp = PixelFormat::BGR555; break;
+	case M_LIN16: bpp = PixelFormat::BGR565; break;
+	case M_LIN24: bpp = PixelFormat::BGR888; break;
 	case M_LIN32:
 	case M_CGA2_COMPOSITE:
 	case M_CGA4_COMPOSITE:
-	case M_CGA_TEXT_COMPOSITE: bpp = 32; break;
-	default: bpp = 8; break;
+	case M_CGA_TEXT_COMPOSITE: bpp = PixelFormat::BGRX8888; break;
+	default: bpp = PixelFormat::Indexed8; break;
 	}
 
 	switch (vga.mode) {
@@ -2105,7 +2104,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			// The ReelMagic video mixer expects linear VGA drawing
 			// (i.e.: Return to Zork's house intro), so limit the use
 			// of 18-bit palettized LUT routine to non-mixed output.
-			bpp = 32;
+			bpp = PixelFormat::BGRX8888;
 
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
@@ -2161,7 +2160,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 
 		if (IS_VGA_ARCH) {
-			bpp = 32;
+			bpp = PixelFormat::BGRX8888;
 
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
@@ -2401,7 +2400,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			vga.draw.pixels_per_character = vga.seq.clocking_mode.is_eight_dot_mode
 			                                      ? PixelsPerChar::Eight
 			                                      : PixelsPerChar::Nine;
-			bpp = 32;
+			bpp = PixelFormat::BGRX8888;
 
 			VGA_DrawLine = draw_text_line_from_dac_palette;
 
@@ -2527,7 +2526,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	vga.draw.vblank_skip = vblank_skip;
 	setup_line_drawing_delays(render_height);
-	vga.draw.line_length = render_width * ((bpp + 1) / 8);
+	vga.draw.line_length = render_width * ((enum_val(bpp) + 1) / 8);
 #ifdef VGA_KEEP_CHANGES
 	vga.changes.active    = false;
 	vga.changes.frame     = 0;

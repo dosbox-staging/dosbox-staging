@@ -70,8 +70,8 @@ void ImageScaler::UpdateOutputParamsUpscale()
 
 	output.vert_scaling_mode = PerAxisScaling::Integer;
 
-	// Adjusting for a few special modes where the rendered width is twice the
-	// video mode width:
+	// Adjusting for a few special modes where the rendered width is twice
+	// the video mode width:
 	// - The Tandy/PCjr 160x200 is rendered as 320x200
 	// - The Tandy 640x200 4-colour composite mode is rendered as 1280x200
 	assert(input.width % video_mode.width == 0);
@@ -129,9 +129,9 @@ void ImageScaler::UpdateOutputParamsUpscale()
 	         (output.vert_scaling_mode == PerAxisScaling::Integer));
 
 	if (only_integer_scaling && input.is_paletted()) {
-		output.pixel_format = PixelFormat::Indexed8;
+		output.pixel_format = OutputPixelFormat::Indexed8;
 	} else {
-		output.pixel_format = PixelFormat::Rgb888;
+		output.pixel_format = OutputPixelFormat::Rgb888;
 	}
 
 	output.curr_row   = 0;
@@ -140,10 +140,10 @@ void ImageScaler::UpdateOutputParamsUpscale()
 
 void ImageScaler::LogParams()
 {
-	auto pixel_format_to_string = [](const PixelFormat pf) -> std::string {
+	auto pixel_format_to_string = [](const OutputPixelFormat pf) -> std::string {
 		switch (pf) {
-		case PixelFormat::Indexed8: return "Indexed8";
-		case PixelFormat::Rgb888: return "RGB888";
+		case OutputPixelFormat::Indexed8: return "Indexed8";
+		case OutputPixelFormat::Rgb888: return "RGB888";
 		default: assert(false); return {};
 		}
 	};
@@ -183,7 +183,7 @@ void ImageScaler::LogParams()
 	        input.pixel_aspect_ratio.Inverse().ToDouble(),
 	        static_cast<int32_t>(input.pixel_aspect_ratio.Num()),
 	        static_cast<int32_t>(input.pixel_aspect_ratio.Denom()),
-	        input.bits_per_pixel,
+	        enum_val(input.bits_per_pixel),
 	        input.pitch,
 
 	        video_mode.width,
@@ -205,8 +205,8 @@ void ImageScaler::AllocateBuffers()
 {
 	uint8_t bytes_per_pixel = {};
 	switch (output.pixel_format) {
-	case PixelFormat::Indexed8: bytes_per_pixel = 8; break;
-	case PixelFormat::Rgb888: bytes_per_pixel = 24; break;
+	case OutputPixelFormat::Indexed8: bytes_per_pixel = 8; break;
+	case OutputPixelFormat::Rgb888: bytes_per_pixel = 24; break;
 	default: assert(false);
 	}
 
@@ -229,7 +229,7 @@ uint16_t ImageScaler::GetOutputHeight() const
 	return output.height;
 }
 
-PixelFormat ImageScaler::GetOutputPixelFormat() const
+OutputPixelFormat ImageScaler::GetOutputPixelFormat() const
 {
 	return output.pixel_format;
 }

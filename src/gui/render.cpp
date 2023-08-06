@@ -368,20 +368,20 @@ static void render_reset(void)
 	yscale    = simpleBlock->yscale;
 	//		LOG_MSG("Scaler:%s",simpleBlock->name);
 	switch (render.src.bpp) {
-	case 8: render.src.start = (render.src.width * 1) / sizeof(Bitu); break;
-	case 15:
+	case PixelFormat::Indexed8: render.src.start = (render.src.width * 1) / sizeof(Bitu); break;
+	case PixelFormat::BGR555:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
 		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
-	case 16:
+	case PixelFormat::BGR565:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
 		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
-	case 24:
+	case PixelFormat::BGR888:
 		render.src.start = (render.src.width * 3) / sizeof(Bitu);
 		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
-	case 32:
+	case PixelFormat::BGRX8888:
 		render.src.start = (render.src.width * 4) / sizeof(Bitu);
 		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
@@ -430,37 +430,37 @@ static void render_reset(void)
 	const auto lineBlock = gfx_flags & GFX_CAN_RANDOM ? &simpleBlock->Random
 	                                                  : &simpleBlock->Linear;
 	switch (render.src.bpp) {
-	case 8:
+	case PixelFormat::Indexed8:
 		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];
 		render.scale.linePalHandler = (*lineBlock)[5][render.scale.outMode];
 		render.scale.inMode     = scalerMode8;
 		render.scale.cachePitch = render.src.width * 1;
 		break;
-	case 15:
+	case PixelFormat::BGR555:
 		render.scale.lineHandler = (*lineBlock)[1][render.scale.outMode];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode15;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
-	case 16:
+	case PixelFormat::BGR565:
 		render.scale.lineHandler = (*lineBlock)[2][render.scale.outMode];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode16;
 		render.scale.cachePitch     = render.src.width * 2;
 		break;
-	case 24:
+	case PixelFormat::BGR888:
 		render.scale.lineHandler = (*lineBlock)[3][render.scale.outMode];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 3;
 		break;
-	case 32:
+	case PixelFormat::BGRX8888:
 		render.scale.lineHandler = (*lineBlock)[4][render.scale.outMode];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 4;
 		break;
-	default: E_Exit("RENDER:Wrong source bpp %u", render.src.bpp);
+	default: E_Exit("RENDER:Wrong source bpp %u", enum_val(render.src.bpp));
 	}
 	render.scale.blocks    = render.src.width / SCALER_BLOCKSIZE;
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
@@ -500,7 +500,7 @@ static void render_callback(GFX_CallBackFunctions_t function)
 void RENDER_SetSize(const uint16_t width, const uint16_t height,
                     const bool double_width, const bool double_height,
                     const Fraction& render_pixel_aspect_ratio,
-                    const uint8_t bits_per_pixel,
+                    const PixelFormat bits_per_pixel,
                     const double frames_per_second, const VideoMode& video_mode)
 {
 	halt_render();
