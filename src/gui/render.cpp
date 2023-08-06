@@ -859,6 +859,12 @@ static void reload_shader(const bool pressed)
 
 	glshader_prop->SetValue(shader_path);
 	RENDER_Init(render_section);
+
+	// The shader settings might have been changed (e.g. force_single_scan,
+	// force_no_pixel_doubling), so force re-rendering the image using the new
+	// settings. Without this, the altered settings would only take effect on
+	// the next video mode change.
+	VGA_SetupDrawing(0);
 }
 
 static bool force_square_pixels     = false;
