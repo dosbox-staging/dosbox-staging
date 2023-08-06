@@ -332,6 +332,8 @@ std::mutex render_reset_mutex;
 
 static void render_reset(void)
 {
+	LOG_MSG("############### render_reset enter");
+
 	if (render.src.width == 0 && render.src.height == 0) {
 		return;
 	}
@@ -494,17 +496,26 @@ static void render_reset(void)
 	// Signal the next frame to first reinit the cache
 	render.scale.clearCache = true;
 	render.active           = true;
+
+	LOG_MSG("############### render_reset exit");
 }
 
 static void render_callback(GFX_CallBackFunctions_t function)
 {
+	LOG_MSG("****** render_callback enter");
 	if (function == GFX_CallBackStop) {
+		LOG_MSG("*********     GFX_CallBackStop");
 		halt_render();
+		LOG_MSG("****** render_callback exit");
 		return;
 	} else if (function == GFX_CallBackRedraw) {
+		LOG_MSG("*********     GFX_CallBackRedraw");
 		render.scale.clearCache = true;
+		LOG_MSG("****** render_callback exit");
 		return;
 	} else if (function == GFX_CallBackReset) {
+		LOG_MSG("*********     GFX_CallBackReset");
+		LOG_MSG("****** render_callback exit");
 		GFX_EndUpdate(nullptr);
 		render_reset();
 	} else {
@@ -518,6 +529,7 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
                     const PixelFormat pixel_format,
                     const double frames_per_second, const VideoMode& video_mode)
 {
+	LOG_MSG("@@@@@@ RENDER_SetSize");
 	halt_render();
 
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
@@ -535,6 +547,7 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
 	render.video_mode = video_mode;
 
 	render_reset();
+	LOG_MSG("@@@@@@ RENDER_SetSize exit");
 }
 
 #if C_OPENGL
@@ -892,6 +905,7 @@ static void setup_scan_and_pixel_doubling([[maybe_unused]] Section_prop* section
 
 void RENDER_Init(Section* sec)
 {
+	LOG_MSG(">>>>>>>>>> RENDER_Init enter");
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
 
@@ -947,4 +961,6 @@ void RENDER_Init(Section* sec)
 	                  PRIMARY_MOD,
 	                  "reloadshader",
 	                  "Reload Shader");
+
+	LOG_MSG(">>>>>>>>>> RENDER_Init exit");
 }
