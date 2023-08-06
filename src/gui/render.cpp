@@ -272,7 +272,7 @@ void RENDER_EndUpdate(bool abort)
 		image.double_width       = double_width;
 		image.double_height      = double_height;
 		image.pixel_aspect_ratio = render.src.pixel_aspect_ratio;
-		image.bits_per_pixel     = render.src.bpp;
+		image.pixel_format       = render.src.pixel_format;
 		image.pitch              = render.scale.cachePitch;
 		image.image_data         = (uint8_t*)&scalerSourceCache;
 		image.palette_data       = (uint8_t*)&render.pal.rgb;
@@ -367,8 +367,11 @@ static void render_reset(void)
 	xscale    = simpleBlock->xscale;
 	yscale    = simpleBlock->yscale;
 	//		LOG_MSG("Scaler:%s",simpleBlock->name);
-	switch (render.src.bpp) {
-	case PixelFormat::Indexed8: render.src.start = (render.src.width * 1) / sizeof(Bitu); break;
+
+	switch (render.src.pixel_format) {
+	case PixelFormat::Indexed8:
+		render.src.start = (render.src.width * 1) / sizeof(Bitu);
+		break;
 	case PixelFormat::BGR555:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
 		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
@@ -386,7 +389,9 @@ static void render_reset(void)
 		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
 	}
+
 	gfx_flags = GFX_GetBestMode(gfx_flags);
+
 	if (!gfx_flags) {
 		if (simpleBlock == &ScaleNormal1x) {
 			E_Exit("Failed to create a rendering output");
@@ -429,7 +434,7 @@ static void render_reset(void)
 
 	const auto lineBlock = gfx_flags & GFX_CAN_RANDOM ? &simpleBlock->Random
 	                                                  : &simpleBlock->Linear;
-	switch (render.src.bpp) {
+	switch (render.src.pixel_format) {
 	case PixelFormat::Indexed8:
 		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];
 		render.scale.linePalHandler = (*lineBlock)[5][render.scale.outMode];
@@ -460,8 +465,11 @@ static void render_reset(void)
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 4;
 		break;
-	default: E_Exit("RENDER:Wrong source bpp %u", enum_val(render.src.bpp));
+	default:
+		E_Exit("RENDER: Invalid pixel_format %u",
+		       enum_val(render.src.pixel_format));
 	}
+
 	render.scale.blocks    = render.src.width / SCALER_BLOCKSIZE;
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
 	render.scale.inHeight  = render.src.height;
@@ -500,7 +508,7 @@ static void render_callback(GFX_CallBackFunctions_t function)
 void RENDER_SetSize(const uint16_t width, const uint16_t height,
                     const bool double_width, const bool double_height,
                     const Fraction& render_pixel_aspect_ratio,
-                    const PixelFormat bits_per_pixel,
+                    const PixelFormat pixel_format,
                     const double frames_per_second, const VideoMode& video_mode)
 {
 	halt_render();
@@ -514,9 +522,8 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
 	render.src.double_width       = double_width;
 	render.src.double_height      = double_height;
 	render.src.pixel_aspect_ratio = render_pixel_aspect_ratio;
-
-	render.src.bpp = bits_per_pixel;
-	render.src.fps = frames_per_second;
+	render.src.pixel_format       = pixel_format;
+	render.src.fps                = frames_per_second;
 
 	render.video_mode = video_mode;
 

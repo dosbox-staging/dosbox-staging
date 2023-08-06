@@ -77,13 +77,13 @@ private:
 
 	inline void IncrementPos()
 	{
-		switch (image.bits_per_pixel) {
+		switch (image.pixel_format) {
 		case PixelFormat::Indexed8: ++pos; break;
 		case PixelFormat::BGR555:
 		case PixelFormat::BGR565: pos += 2; break;
 		case PixelFormat::BGR888: pos += 3; break;
 		case PixelFormat::BGRX8888: pos += 4; break;
-		default: assertm(false, "Invalid bits_per_pixel value");
+		default: assertm(false, "Invalid pixel_format value");
 		}
 	}
 
@@ -104,7 +104,7 @@ private:
 	{
 		Rgb888 pixel = {};
 
-		switch (image.bits_per_pixel) {
+		switch (image.pixel_format) {
 		case PixelFormat::BGR555: {
 			const auto p = host_to_le(
 			        *reinterpret_cast<const uint16_t*>(pos));
@@ -125,7 +125,7 @@ private:
 
 			pixel = {r, g, b};
 		} break;
-		default: assertm(false, "Invalid bits_per_pixel value");
+		default: assertm(false, "Invalid pixel_format value");
 		}
 
 		IncrementPos();

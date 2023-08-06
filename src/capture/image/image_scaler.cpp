@@ -162,7 +162,7 @@ void ImageScaler::LogParams()
 	        "    input.double_width:         %10s\n"
 	        "    input.double_height:        %10s\n"
 	        "    input.PAR:                  1:%1.6f (%d:%d)\n"
-	        "    input.bits_per_pixel:       %10d\n"
+	        "    input.pixel_format:         %10d\n"
 	        "    input.pitch:                %10d\n"
 	        "    --------------------------------------\n"
 	        "    video_mode.width:           %10d\n"
@@ -183,7 +183,7 @@ void ImageScaler::LogParams()
 	        input.pixel_aspect_ratio.Inverse().ToDouble(),
 	        static_cast<int32_t>(input.pixel_aspect_ratio.Num()),
 	        static_cast<int32_t>(input.pixel_aspect_ratio.Denom()),
-	        enum_val(input.bits_per_pixel),
+	        enum_val(input.pixel_format),
 	        input.pitch,
 
 	        video_mode.width,
