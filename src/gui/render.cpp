@@ -51,6 +51,18 @@
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
 
+const char* to_string(const PixelFormat pf)
+{
+	switch (pf) {
+	case PixelFormat::Indexed8: return "Indexed8";
+	case PixelFormat::BGR555: return "BGR555";
+	case PixelFormat::BGR565: return "BGR565";
+	case PixelFormat::BGR888: return "BGR888";
+	case PixelFormat::BGRX8888: return "BGRX8888";
+	default: assertm(false, "Invalid pixel format"); return {};
+	}
+}
+
 static void render_callback(GFX_CallBackFunctions_t function);
 
 static void check_palette(void)
