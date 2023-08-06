@@ -37,7 +37,7 @@
 
 class CommandLine {
 public:
-	CommandLine(int argc, const char* const argv[]);
+	CommandLine(int argc, char* argv[]);
 	CommandLine(std::string_view name, std::string_view cmdline);
 
 	const char *GetFileName() const { return file_name.c_str(); }

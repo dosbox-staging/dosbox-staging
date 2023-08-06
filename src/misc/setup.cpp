@@ -33,6 +33,7 @@
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
+#include "programs.h"
 #include "string_utils.h"
 #include "support.h"
 
@@ -45,7 +46,7 @@ extern char** environ;
 using namespace std;
 
 // Commonly accessed global that holds configuration records
-std::unique_ptr<Config> control = {};
+Config* control = {};
 
 // Set by parseconfigfile so Prop_path can use it to construct the realpath
 static std_fs::path current_config_dir;
@@ -1791,4 +1792,12 @@ void Config::ParseArguments()
 	arguments.set  = cmdline->FindRemoveVectorArgument("set");
 
 	arguments.editconf = cmdline->FindRemoveOptionalArgument("editconf");
+}
+
+Config* SETUP_CreateConfig(const int argc, char* argv[])
+{
+	static auto command_line = CommandLine(argc, argv);
+
+	static auto config = Config(&command_line);
+	return &config;
 }

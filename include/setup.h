@@ -511,6 +511,9 @@ void ParseConfigFiles(const std_fs::path& config_path);
 
 const std::string& GetLanguage();
 
+class CommandLine;
+Config* SETUP_CreateConfig(const int argc, char* argv[]);
+
 const char* SetProp(std::vector<std::string>& pvars);
 
 #endif

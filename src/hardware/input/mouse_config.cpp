@@ -386,7 +386,7 @@ static void config_init(Section_prop &secprop)
 #endif
 }
 
-void MOUSE_AddConfigSection(const config_ptr_t& conf)
+void MOUSE_AddConfigSection(Config* conf)
 {
 	assert(conf);
 

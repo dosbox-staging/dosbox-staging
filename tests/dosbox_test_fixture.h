@@ -16,9 +16,10 @@ public:
 	DOSBoxTestFixture()
 	        : arg_c_str("-conf tests/files/dosbox-staging-tests.conf\0"),
 	          argv{arg_c_str},
-	          com_line(1, argv)
+	          com_line(1, (char**)argv),
+	          config(&com_line)
 	{
-		control = std::make_unique<Config>(&com_line);
+		control = &config;
 	}
 
 	void SetUp() override
@@ -49,10 +50,10 @@ public:
 	}
 
 private:
-	char const *arg_c_str;
-	const char *argv[1];
+	const char* arg_c_str = {};
+	const char* argv[1]   = {};
 	CommandLine com_line;
-	config_ptr_t config;
+	Config config = {};
 	// Only init these sections for our tests
 	std::vector<std::string> sections{"dosbox", "cpu",      "mixer",
 	                                  "midi",   "sblaster", "speaker",

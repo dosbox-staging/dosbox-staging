@@ -155,7 +155,10 @@ extern ScalerLineHandler_t RENDER_DrawLine;
 void RENDER_Init(Section*);
 void RENDER_Reinit();
 
-void RENDER_AddConfigSection(const config_ptr_t& conf);
+void RENDER_Init(Section*);
+void RENDER_Reinit();
+
+void RENDER_AddConfigSection(Config* const conf);
 
 bool RENDER_IsAspectRatioCorrectionEnabled();
 const std::string RENDER_GetCgaColorsSetting();

@@ -4481,8 +4481,7 @@ extern "C" int SDL_CDROMInit(void);
 
 int sdl_main(int argc, char* argv[])
 {
-	CommandLine command_line(argc, argv);
-	control = std::make_unique<Config>(&command_line);
+	control = SETUP_CreateConfig(argc, argv);
 
 	const auto arguments = &control->arguments;
 
@@ -4502,7 +4501,7 @@ int sdl_main(int argc, char* argv[])
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
 
-	loguru::init(argc, argv);
+	loguru::init(argc, const_cast<char**>(argv));
 
 	LOG_MSG("%s version %s", CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
@@ -4761,11 +4760,7 @@ int sdl_main(int argc, char* argv[])
 			MAPPER_DisplayUI();
 		}
 
-		// Run the machine until shutdown
-		control->StartUp();
-
-		// Shutdown and release
-		control.reset();
+		control->StartUp(); // Run the machine until shutdown
 
 	} catch (char* error) {
 		return_code = 1;

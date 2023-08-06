@@ -2765,7 +2765,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
 
-void MIXER_AddConfigSection(const config_ptr_t& conf)
+void MIXER_AddConfigSection(Config* conf)
 {
 	assert(conf);
 

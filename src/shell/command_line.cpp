@@ -309,7 +309,7 @@ int CommandLine::GetParameterFromList(const char* const params[],
 	return retval;
 }
 
-CommandLine::CommandLine(int argc, const char* const argv[])
+CommandLine::CommandLine(int argc, char* argv[])
 {
 	if (argc > 0) {
 		file_name = argv[0];

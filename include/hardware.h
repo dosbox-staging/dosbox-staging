@@ -43,12 +43,12 @@ bool TS_Get_Address(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 extern uint8_t adlib_commandreg;
 
 // Gravis UltraSound configuration and initialization
-void GUS_AddConfigSection(const config_ptr_t &conf);
+void GUS_AddConfigSection(Config* conf);
 
 // IBM Music Feature Card configuration and initialization
-void IMFC_AddConfigSection(const config_ptr_t& conf);
+void IMFC_AddConfigSection(Config* conf);
 
 // Innovation SSI-2001 configuration and initialization
-void INNOVATION_AddConfigSection(const config_ptr_t &conf);
+void INNOVATION_AddConfigSection(Config* conf);
 
 #endif

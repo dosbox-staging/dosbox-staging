@@ -862,7 +862,7 @@ static void init_render_settings(Section_prop& secprop)
 #endif
 }
 
-void RENDER_AddConfigSection(const config_ptr_t& conf)
+void RENDER_AddConfigSection(Config* const conf)
 {
 	assert(conf);
 

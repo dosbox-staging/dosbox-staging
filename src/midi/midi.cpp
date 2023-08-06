@@ -826,7 +826,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 
 void MPU401_Init(Section*);
 
-void MIDI_AddConfigSection(const config_ptr_t& conf)
+void MIDI_AddConfigSection(Config* conf)
 {
 	assert(conf);
 

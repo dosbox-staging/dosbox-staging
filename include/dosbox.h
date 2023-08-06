@@ -25,7 +25,7 @@
 
 #include <memory>
 
-int sdl_main(int argc, char *argv[]);
+int sdl_main(int argc, char* argv[]);
 
 // The shutdown_requested bool is a conditional break in the parse-loop and
 // machine-loop. Set it to true to gracefully quit in expected circumstances.
@@ -57,8 +57,7 @@ void DOSBOX_SetNormalLoop();
 void DOSBOX_Init(void);
 
 class Config;
-using config_ptr_t = std::unique_ptr<Config>;
-extern config_ptr_t control;
+extern Config* control;
 
 enum SVGACards {
 	SVGA_None,
