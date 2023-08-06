@@ -224,27 +224,7 @@ enum PixelsPerChar : int8_t {
 	Nine  = 9,
 };
 
-enum class PixelFormat : uint8_t {
-	// Up to 256 colours, paletted;
-	// stored as packed uint8 data
-	Indexed8 = 8,
-
-	// 32K high colour, 5 bits per red/blue/green component;
-	// stored as packed uint16 data with highest bit unused
-	BGR555 = 15,
-	//
-	// 65K high colour, 5 bits for red/blue, 6 bit for green;
-	// stored as packed uint16 data
-	BGR565 = 16,
-	//
-	// 16.7M (24-bit) true colour, 8 bits per red/blue/green component;
-	// stored as packed 24-bit data
-	BGR888 = 24,
-	//
-	// 16.7M (32-bit) true colour; 8 bits per red/blue/green component;
-	// stored as packed uint32 data with highest 8 bits unused
-	BGRX8888 = 32
-};
+enum class PixelFormat : uint8_t;
 
 struct VGA_Draw {
 	bool resizing   = false;
