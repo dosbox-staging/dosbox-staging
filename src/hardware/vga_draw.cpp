@@ -2608,6 +2608,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	    (vga.draw.pixel_format != pixel_format) || fps_changed) {
 		VGA_KillDrawing();
 
+		LOG_MSG("video_mode.height: %d", video_mode.height);
+		if (video_mode.height >= 480) {
+			RENDER_LoadShader("crt/vga-4k");
+		} else if (video_mode.height >= 350) {
+			LOG_MSG(">>>>>>>>>>>>> 1111");
+			RENDER_LoadShader("crt/ega-4k");
+		}
+
 		if (render_width > SCALER_MAXWIDTH ||
 		    render_height > SCALER_MAXHEIGHT) {
 			LOG_ERR("VGA: The calculated video resolution %ux%u will be "
