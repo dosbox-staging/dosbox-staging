@@ -74,6 +74,8 @@ enum class PixelFormat : uint8_t {
 	BGRX8888 = 32
 };
 
+const char* to_string(const PixelFormat pf);
+
 struct Render_t {
 	// Details about the rendered image.
 	// E.g. for the 320x200 256-colour 13h VGA mode with double-scanning
