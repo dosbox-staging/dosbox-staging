@@ -333,6 +333,10 @@ std::mutex render_reset_mutex;
 
 static void render_reset(void)
 {
+	if (render.src.width == 0 || render.src.height == 0) {
+		return;
+	}
+
 	// Despite rendering being a single-threaded sequence, the Reset() can
 	// be called from the rendering callback, which might come from a video
 	// driver operating in a different thread or process.
