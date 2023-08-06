@@ -40,12 +40,12 @@ static constexpr auto AviHeaderSize = 500;
 static struct {
 	FILE* handle = nullptr;
 
-	uint32_t frames         = 0;
-	VideoCodec* codec       = nullptr;
-	int width               = 0;
-	int height              = 0;
-	uint8_t bits_per_pixel  = 0;
-	float frames_per_second = 0.0f;
+	uint32_t frames            = 0;
+	VideoCodec* codec          = nullptr;
+	int width                  = 0;
+	int height                 = 0;
+	PixelFormat bits_per_pixel = {};
+	float frames_per_second    = 0.0f;
 
 	uint32_t written           = 0;
 	uint32_t buf_size          = 0;
@@ -286,7 +286,7 @@ void capture_video_add_audio_data(const uint32_t sample_rate,
 }
 
 static void create_avi_file(const uint16_t width, const uint16_t height,
-                            const uint8_t bits_per_pixel,
+                            const PixelFormat bits_per_pixel,
                             const float frames_per_second, ZMBV_FORMAT format)
 {
 	video.handle = CAPTURE_CreateFile(CaptureType::Video);
@@ -337,17 +337,17 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	ZMBV_FORMAT format;
 
 	switch (image.bits_per_pixel) {
-	case 8: format = ZMBV_FORMAT::BPP_8; break;
-	case 15: format = ZMBV_FORMAT::BPP_15; break;
-	case 16: format = ZMBV_FORMAT::BPP_16; break;
+	case PixelFormat::Indexed8: format = ZMBV_FORMAT::BPP_8; break;
+	case PixelFormat::BGR555: format = ZMBV_FORMAT::BPP_15; break;
+	case PixelFormat::BGR565: format = ZMBV_FORMAT::BPP_16; break;
 
 	// ZMBV is "the DOSBox capture format" supported by external
 	// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
 	// didn't have 24-bit color, the format itself doesn't support
 	// it. I this case we tell ZMBV the data is 32-bit and let the
 	// rgb24's int() cast operator up-convert.
-	case 24: format = ZMBV_FORMAT::BPP_32; break;
-	case 32: format = ZMBV_FORMAT::BPP_32; break;
+	case PixelFormat::BGR888: format = ZMBV_FORMAT::BPP_32; break;
+	case PixelFormat::BGRX8888: format = ZMBV_FORMAT::BPP_32; break;
 	default: assertm(false, "Invalid bits_per_pixel value"); return;
 	}
 
@@ -383,8 +383,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 		// made endianness-aware like capture_image.cpp
 		if (image.double_width) {
 			switch (image.bits_per_pixel) {
-			// Indexed8
-			case 8:
+			case PixelFormat::Indexed8:
 				for (auto x = 0; x < image.width; ++x) {
 					const auto pixel      = src_row[x];
 					row_buffer[x * 2 + 0] = pixel;
@@ -392,10 +391,8 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 				}
 				break;
 
-			// BGR555
-			case 15:
-			// BGR565
-			case 16:
+			case PixelFormat::BGR555:
+			case PixelFormat::BGR565:
 				for (auto x = 0; x < image.width; ++x) {
 					const auto pixel = ((uint16_t*)src_row)[x];
 
@@ -404,8 +401,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 				}
 				break;
 
-			// BGR888
-			case 24:
+			case PixelFormat::BGR888:
 				for (auto x = 0; x < image.width; ++x) {
 					const auto pixel = reinterpret_cast<const Rgb888*>(
 					        src_row)[x];
@@ -417,8 +413,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 				}
 				break;
 
-			// BGRX8888
-			case 32:
+			case PixelFormat::BGRX8888:
 				for (auto x = 0; x < image.width; ++x) {
 					const auto pixel = ((uint32_t*)src_row)[x];
 
@@ -430,7 +425,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 			row_pointer = row_buffer;
 
 		} else {
-			if (image.bits_per_pixel == 24) {
+			if (image.bits_per_pixel == PixelFormat::BGR888) {
 				for (auto x = 0; x < image.width; ++x) {
 					const auto pixel = reinterpret_cast<const Rgb888*>(
 					        src_row)[x];

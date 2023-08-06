@@ -200,7 +200,7 @@ static bool _vgaDoubleHeight = false;
 static VideoMode _videoMode = {};
 
 // != 0 on this variable means we have collected the first call
-static uint8_t _vgaBitsPerPixel = 0;
+static PixelFormat _vgaBitsPerPixel = {};
 
 static double _vgaFramesPerSecond    = 0.0;
 static Fraction _vgaRenderPixelAspectRatio = {};
@@ -213,7 +213,7 @@ static uint32_t _mpegPictureWidth  = 0;
 static uint32_t _mpegPictureHeight = 0;
 
 // video mixer is exclusively 32bpp on the RENDER... VGA color palette mapping is re-done here...
-static const Bitu VIDEOMIXER_BITSPERPIXEL = 32;
+static const auto VideoMixerPixelFormat = PixelFormat::BGRX8888;
 
 // current RENDER state
 static void RMR_DrawLine_Passthrough(const void* src);
@@ -341,16 +341,16 @@ static void RMR_DrawLine_MixerError([[maybe_unused]] const void* src)
 	{ \
 		if (VGA_OVER) \
 			switch (VGA_BPP) { \
-			case 8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO8; break; \
-			case 16: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO16; break; \
-			case 32: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO32; break; \
+			case PixelFormat::Indexed8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO8; break; \
+			case PixelFormat::BGR565: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO16; break; \
+			case PixelFormat::BGRX8888: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO32; break; \
 			default: ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError; break; \
 			} \
 		else \
 			switch (VGA_BPP) { \
-			case 8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU8; break; \
-			case 16: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU16; break; \
-			case 32: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU32; break; \
+			case PixelFormat::Indexed8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU8; break; \
+			case PixelFormat::BGR565: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU16; break; \
+			case PixelFormat::BGRX8888: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU32; break; \
 			default: ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError; break; \
 			} \
 	}
@@ -529,10 +529,6 @@ static void SetupVideoMixer(const bool updateRenderMode)
 	//     . The video mixer is in an error state
 	_activeMpegProvider = nullptr; // no MPEG activation unless all is good...
 
-	// need at least one call from VGA before we can do this...
-	if (_vgaBitsPerPixel == 0)
-		return;
-
 	if (!_videoMixerEnabled) {
 		// video mixer is disabled... VGA mode dictates RENDER mode just like "normal dosbox"
 		ReelMagic_RENDER_DrawLine = &RMR_DrawLine_Passthrough;
@@ -587,7 +583,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight,
 		               _vgaRenderPixelAspectRatio,
-		               VIDEOMIXER_BITSPERPIXEL,
+		               VideoMixerPixelFormat,
 		               _vgaFramesPerSecond,
 		               _videoMode);
 		return;
@@ -600,7 +596,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight,
 		               _vgaRenderPixelAspectRatio,
-		               VIDEOMIXER_BITSPERPIXEL,
+		               VideoMixerPixelFormat,
 		               _vgaFramesPerSecond,
 		               _videoMode);
 	}
@@ -712,7 +708,7 @@ void ReelMagic_RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
                               const bool double_width, const bool double_height,
                               const Fraction& render_pixel_aspect_ratio,
-                              const uint8_t bits_per_pixel,
+                              const PixelFormat bits_per_pixel,
                               const double frames_per_second,
                               const VideoMode& video_mode)
 {

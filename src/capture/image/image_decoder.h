@@ -31,6 +31,7 @@
 #include "rgb565.h"
 #include "rgb888.h"
 #include "support.h"
+#include "vga.h"
 
 class ImageDecoder {
 public:
@@ -77,19 +78,11 @@ private:
 	inline void IncrementPos()
 	{
 		switch (image.bits_per_pixel) {
-		case 8: // Indexed8
-			++pos;
-			break;
-		case 15: // BGR555
-		case 16: // BGR565
-			pos += 2;
-			break;
-		case 24: // BGR888
-			pos += 3;
-			break;
-		case 32: // XBGR8888
-			pos += 4;
-			break;
+		case PixelFormat::Indexed8: ++pos; break;
+		case PixelFormat::BGR555:
+		case PixelFormat::BGR565: pos += 2; break;
+		case PixelFormat::BGR888: pos += 3; break;
+		case PixelFormat::BGRX8888: pos += 4; break;
 		default: assertm(false, "Invalid bits_per_pixel value");
 		}
 	}
@@ -112,20 +105,20 @@ private:
 		Rgb888 pixel = {};
 
 		switch (image.bits_per_pixel) {
-		case 15: { // BGR555
+		case PixelFormat::BGR555: {
 			const auto p = host_to_le(
 			        *reinterpret_cast<const uint16_t*>(pos));
 			pixel = Rgb555(p).ToRgb888();
 		} break;
 
-		case 16: { // BGR565
+		case PixelFormat::BGR565: {
 			const auto p = host_to_le(
 			        *reinterpret_cast<const uint16_t*>(pos));
 			pixel = Rgb565(p).ToRgb888();
 		} break;
 
-		case 24:   // BGR888
-		case 32: { // XBGR8888
+		case PixelFormat::BGR888:
+		case PixelFormat::BGRX8888: {
 			const auto b = *(pos + 0);
 			const auto g = *(pos + 1);
 			const auto r = *(pos + 2);

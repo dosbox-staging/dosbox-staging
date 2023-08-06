@@ -29,10 +29,6 @@ void ImageDecoder::Init(const RenderedImage& image, const uint8_t row_skip_count
 	assert(image.width > 0);
 	assert(image.height > 0);
 
-	assert(image.bits_per_pixel == 8 || image.bits_per_pixel == 15 ||
-	       image.bits_per_pixel == 16 || image.bits_per_pixel == 24 ||
-	       image.bits_per_pixel == 32);
-
 	assert(image.pitch >= image.width);
 	assert(image.pixel_aspect_ratio.ToDouble() >= 0.0);
 	assert(image.image_data);

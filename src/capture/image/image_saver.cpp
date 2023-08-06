@@ -131,7 +131,7 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
                                const uint8_t* palette_data)
 {
 	switch (image_scaler.GetOutputPixelFormat()) {
-	case PixelFormat::Indexed8:
+	case OutputPixelFormat::Indexed8:
 		if (!png_writer.InitIndexed8(outfile,
 		                             width,
 		                             height,
@@ -141,7 +141,7 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
 			return;
 		}
 		break;
-	case PixelFormat::Rgb888:
+	case OutputPixelFormat::Rgb888:
 		if (!png_writer.InitRgb888(
 		            outfile, width, height, pixel_aspect_ratio, video_mode)) {
 			return;

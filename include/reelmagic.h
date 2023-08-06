@@ -43,7 +43,7 @@ void ReelMagic_RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
                               const bool double_width, const bool double_height,
                               const Fraction& render_pixel_aspect_ratio,
-                              const uint8_t bits_per_pixel,
+                              const PixelFormat bits_per_pixel,
                               const double frames_per_second,
                               const VideoMode& video_mode);
 

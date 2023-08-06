@@ -28,7 +28,7 @@
 #include "render.h"
 #include "rgb888.h"
 
-enum class PixelFormat { Indexed8, Rgb888 };
+enum class OutputPixelFormat { Indexed8, Rgb888 };
 
 enum class PerAxisScaling { Integer, Fractional };
 
@@ -87,7 +87,7 @@ public:
 
 	uint16_t GetOutputWidth() const;
 	uint16_t GetOutputHeight() const;
-	PixelFormat GetOutputPixelFormat() const;
+	OutputPixelFormat GetOutputPixelFormat() const;
 
 	// prevent copying
 	ImageScaler(const ImageScaler&) = delete;
@@ -125,7 +125,7 @@ private:
 		PerAxisScaling horiz_scaling_mode = {};
 		PerAxisScaling vert_scaling_mode  = {};
 
-		PixelFormat pixel_format = {};
+		OutputPixelFormat pixel_format = {};
 
 		uint16_t curr_row  = 0;
 		uint8_t row_repeat = 0;
