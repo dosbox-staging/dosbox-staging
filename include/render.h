@@ -86,7 +86,7 @@ struct Render_t {
 		uint32_t start = 0;
 
 		// Pixel format of the image data
-		PixelFormat bpp = {};
+		PixelFormat pixel_format = {};
 
 		// Frames per second
 		double fps = 0;
@@ -177,13 +177,13 @@ struct RenderedImage {
 	Fraction pixel_aspect_ratio = {};
 
 	// Pixel format of the image data
-	PixelFormat bits_per_pixel = {};
+	PixelFormat pixel_format = {};
 
 	// Bytes per row
 	uint16_t pitch = 0;
 
 	// (width * height) number of pixels stored in the pixel format defined
-	// by bits_per_pixel
+	// by pixel_format
 	uint8_t* image_data = nullptr;
 
 	// Pointer to a (256 * 4) byte long palette data, stored as 8-bit RGB
@@ -193,7 +193,7 @@ struct RenderedImage {
 
 	inline bool is_paletted() const
 	{
-		return (bits_per_pixel == PixelFormat::Indexed8);
+		return (pixel_format == PixelFormat::Indexed8);
 	}
 
 	RenderedImage deep_copy() const
@@ -237,7 +237,7 @@ std::deque<std::string> RENDER_InventoryShaders();
 void RENDER_SetSize(const uint16_t width, const uint16_t height,
                     const bool double_width, const bool double_height,
                     const Fraction& render_pixel_aspect_ratio,
-                    const PixelFormat bits_per_pixel,
+                    const PixelFormat pixel_format,
                     const double frames_per_second, const VideoMode& video_mode);
 
 bool RENDER_StartUpdate(void);

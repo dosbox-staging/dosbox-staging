@@ -199,8 +199,7 @@ static bool _vgaDoubleHeight = false;
 
 static VideoMode _videoMode = {};
 
-// != 0 on this variable means we have collected the first call
-static PixelFormat _vgaBitsPerPixel = {};
+static PixelFormat _vgaPixelFormat = {};
 
 static double _vgaFramesPerSecond    = 0.0;
 static Fraction _vgaRenderPixelAspectRatio = {};
@@ -337,17 +336,17 @@ static void RMR_DrawLine_MixerError([[maybe_unused]] const void* src)
 		DRAWLINE_FUNC_NAME((const VGAUnder32bppPixel*)src); \
 	}
 
-#define ASSIGN_RMR_DRAWLINE_FUNCTION(DRAWLINE_FUNC_NAME, VGA_BPP, VGA_OVER) \
+#define ASSIGN_RMR_DRAWLINE_FUNCTION(DRAWLINE_FUNC_NAME, VGA_PF, VGA_OVER) \
 	{ \
 		if (VGA_OVER) \
-			switch (VGA_BPP) { \
+			switch (VGA_PF) { \
 			case PixelFormat::Indexed8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO8; break; \
 			case PixelFormat::BGR565: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO16; break; \
 			case PixelFormat::BGRX8888: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO32; break; \
 			default: ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError; break; \
 			} \
 		else \
-			switch (VGA_BPP) { \
+			switch (VGA_PF) { \
 			case PixelFormat::Indexed8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU8; break; \
 			case PixelFormat::BGR565: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU16; break; \
 			case PixelFormat::BGRX8888: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU32; break; \
@@ -538,7 +537,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		               _vgaDoubleWidth,
 		               _vgaDoubleHeight,
 		               _vgaRenderPixelAspectRatio,
-		               _vgaBitsPerPixel,
+		               _vgaPixelFormat,
 		               _vgaFramesPerSecond,
 		               _videoMode);
 
@@ -608,10 +607,10 @@ static void SetupVideoMixer(const bool updateRenderMode)
 	if ((!mpeg) || (!mpeg->GetConfig().VideoOutputVisible)) {
 		if (_vgaDup5Enabled) {
 			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAOnlyDup5Vertical,
-			                             _vgaBitsPerPixel,
+			                             _vgaPixelFormat,
 			                             true);
 		} else {
-			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAOnly, _vgaBitsPerPixel, true);
+			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAOnly, _vgaPixelFormat, true);
 		}
 		_activeMpegProvider = mpeg;
 		LOG(LOG_REELMAGIC, LOG_NORMAL)
@@ -634,40 +633,40 @@ static void SetupVideoMixer(const bool updateRenderMode)
 				modeStr = "Generic Unoptimized MPEG Resize to DUP5 VGA Pictures";
 				Initialize_RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_Dimensions();
 				ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_GeneralResizeMPEGToVGADup5,
-				                             _vgaBitsPerPixel,
+				                             _vgaPixelFormat,
 				                             vgaOver);
 			} else {
 				modeStr = "Matching Sized MPEG to DUP5 VGA Pictures";
 				ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGADup5VerticalMPEGSameSize,
-				                             _vgaBitsPerPixel,
+				                             _vgaPixelFormat,
 				                             vgaOver);
 			}
 		} else if ((_vgaWidth == _mpegPictureWidth) && (_vgaHeight == _mpegPictureHeight)) {
 			modeStr = "Matching Sized MPEG to VGA Pictures";
-			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAMPEGSameSize, _vgaBitsPerPixel, vgaOver);
+			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAMPEGSameSize, _vgaPixelFormat, vgaOver);
 		} else if ((_vgaWidth == (_mpegPictureWidth * 2)) &&
 		           (_vgaHeight == ((_mpegPictureHeight * 2)))) {
 			modeStr = "Double Sized MPEG to VGA Pictures";
 			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_MPEGDoubleVGASize,
-			                             _vgaBitsPerPixel,
+			                             _vgaPixelFormat,
 			                             vgaOver);
 		} else if ((_vgaWidth == _mpegPictureWidth) &&
 		           ((_mpegPictureHeight / (_mpegPictureHeight - _vgaHeight)) == 6)) {
 			modeStr = "Matching Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
 			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_VGAMPEGSameWidthSkip6Vertical,
-			                             _vgaBitsPerPixel,
+			                             _vgaPixelFormat,
 			                             vgaOver);
 		} else if ((_vgaWidth == (_mpegPictureWidth * 2)) &&
 		           (((_mpegPictureHeight * 2) / ((_mpegPictureHeight * 2) - _vgaHeight)) == 6)) {
 			modeStr = "Double Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
 			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_VGAMPEGDoubleSameWidthSkip6Vertical,
-			                             _vgaBitsPerPixel,
+			                             _vgaPixelFormat,
 			                             vgaOver);
 		} else {
 			modeStr = "Generic Unoptimized MPEG Resize";
 			Initialize_RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_Dimensions();
 			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_GeneralResizeMPEGToVGA,
-			                             _vgaBitsPerPixel,
+			                             _vgaPixelFormat,
 			                             vgaOver);
 		}
 	}
@@ -708,7 +707,7 @@ void ReelMagic_RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
                               const bool double_width, const bool double_height,
                               const Fraction& render_pixel_aspect_ratio,
-                              const PixelFormat bits_per_pixel,
+                              const PixelFormat pixel_format,
                               const double frames_per_second,
                               const VideoMode& video_mode)
 {
@@ -717,7 +716,7 @@ void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
 	_vgaDoubleWidth            = double_width;
 	_vgaDoubleHeight           = double_height;
 	_vgaRenderPixelAspectRatio = render_pixel_aspect_ratio;
-	_vgaBitsPerPixel           = bits_per_pixel;
+	_vgaPixelFormat            = pixel_format;
 	_vgaFramesPerSecond        = frames_per_second;
 	_videoMode                 = video_mode;
 

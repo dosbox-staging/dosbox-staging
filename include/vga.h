@@ -288,7 +288,7 @@ struct VGA_Draw {
 		double per_line_ms = 0;
 	} delay = {};
 
-	PixelFormat bpp = {};
+	PixelFormat pixel_format = {};
 
 	double host_refresh_hz = RefreshRateHostDefault;
 	double dos_refresh_hz = RefreshRateDosDefault;

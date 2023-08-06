@@ -40,12 +40,12 @@ static constexpr auto AviHeaderSize = 500;
 static struct {
 	FILE* handle = nullptr;
 
-	uint32_t frames            = 0;
-	VideoCodec* codec          = nullptr;
-	int width                  = 0;
-	int height                 = 0;
-	PixelFormat bits_per_pixel = {};
-	float frames_per_second    = 0.0f;
+	uint32_t frames          = 0;
+	VideoCodec* codec        = nullptr;
+	int width                = 0;
+	int height               = 0;
+	PixelFormat pixel_format = {};
+	float frames_per_second  = 0.0f;
 
 	uint32_t written           = 0;
 	uint32_t buf_size          = 0;
@@ -286,7 +286,7 @@ void capture_video_add_audio_data(const uint32_t sample_rate,
 }
 
 static void create_avi_file(const uint16_t width, const uint16_t height,
-                            const PixelFormat bits_per_pixel,
+                            const PixelFormat pixel_format,
                             const float frames_per_second, ZMBV_FORMAT format)
 {
 	video.handle = CAPTURE_CreateFile(CaptureType::Video);
@@ -306,7 +306,7 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 
 	video.width             = width;
 	video.height            = height;
-	video.bits_per_pixel    = bits_per_pixel;
+	video.pixel_format      = pixel_format;
 	video.frames_per_second = frames_per_second;
 
 	for (auto i = 0; i < AviHeaderSize; ++i) {
@@ -329,14 +329,14 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 
 	// Disable capturing if any of the test fails
 	if (video.handle && (video.width != video_width || video.height != video_height ||
-	                     video.bits_per_pixel != image.bits_per_pixel ||
+	                     video.pixel_format != image.pixel_format ||
 	                     video.frames_per_second != frames_per_second)) {
 		capture_video_finalise();
 	}
 
 	ZMBV_FORMAT format;
 
-	switch (image.bits_per_pixel) {
+	switch (image.pixel_format) {
 	case PixelFormat::Indexed8: format = ZMBV_FORMAT::BPP_8; break;
 	case PixelFormat::BGR555: format = ZMBV_FORMAT::BPP_15; break;
 	case PixelFormat::BGR565: format = ZMBV_FORMAT::BPP_16; break;
@@ -348,13 +348,13 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	// rgb24's int() cast operator up-convert.
 	case PixelFormat::BGR888: format = ZMBV_FORMAT::BPP_32; break;
 	case PixelFormat::BGRX8888: format = ZMBV_FORMAT::BPP_32; break;
-	default: assertm(false, "Invalid bits_per_pixel value"); return;
+	default: assertm(false, "Invalid pixel_format value"); return;
 	}
 
 	if (!video.handle) {
 		create_avi_file(video_width,
 		                video_height,
-		                image.bits_per_pixel,
+		                image.pixel_format,
 		                frames_per_second,
 		                format);
 	}
@@ -382,7 +382,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 		// TODO This all assumes little-endian byte order; should be
 		// made endianness-aware like capture_image.cpp
 		if (image.double_width) {
-			switch (image.bits_per_pixel) {
+			switch (image.pixel_format) {
 			case PixelFormat::Indexed8:
 				for (auto x = 0; x < image.width; ++x) {
 					const auto pixel      = src_row[x];
@@ -425,7 +425,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 			row_pointer = row_buffer;
 
 		} else {
-			if (image.bits_per_pixel == PixelFormat::BGR888) {
+			if (image.pixel_format == PixelFormat::BGR888) {
 				for (auto x = 0; x < image.width; ++x) {
 					const auto pixel = reinterpret_cast<const Rgb888*>(
 					        src_row)[x];

@@ -956,11 +956,11 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			bg_color_index = 0;
 			break;
 		}
-		if (vga.draw.bpp == PixelFormat::Indexed8) {
+		if (vga.draw.pixel_format == PixelFormat::Indexed8) {
 			std::fill(templine_buffer.begin(),
 			          templine_buffer.end(),
 			          bg_color_index);
-		} else if (vga.draw.bpp == PixelFormat::BGR565) {
+		} else if (vga.draw.pixel_format == PixelFormat::BGR565) {
 			const auto background_color = from_rgb_888_to_565(
 			        vga.dac.palette_map[bg_color_index]);
 			const auto line_length = templine_buffer.size() / sizeof(uint16_t);
@@ -968,7 +968,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			while (i < line_length) {
 				write_unaligned_uint16_at(TempLine, i++, background_color);
 			}
-		} else if (vga.draw.bpp == PixelFormat::BGRX8888) {
+		} else if (vga.draw.pixel_format == PixelFormat::BGRX8888) {
 			const auto background_color = vga.dac.palette_map[bg_color_index];
 			const auto line_length = templine_buffer.size() / sizeof(uint32_t);
 			size_t i = 0;
@@ -1943,16 +1943,16 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	Fraction render_pixel_aspect_ratio = {1};
 
-	PixelFormat bpp;
+	PixelFormat pixel_format;
 	switch (vga.mode) {
-	case M_LIN15: bpp = PixelFormat::BGR555; break;
-	case M_LIN16: bpp = PixelFormat::BGR565; break;
-	case M_LIN24: bpp = PixelFormat::BGR888; break;
+	case M_LIN15: pixel_format = PixelFormat::BGR555; break;
+	case M_LIN16: pixel_format = PixelFormat::BGR565; break;
+	case M_LIN24: pixel_format = PixelFormat::BGR888; break;
 	case M_LIN32:
 	case M_CGA2_COMPOSITE:
 	case M_CGA4_COMPOSITE:
-	case M_CGA_TEXT_COMPOSITE: bpp = PixelFormat::BGRX8888; break;
-	default: bpp = PixelFormat::Indexed8; break;
+	case M_CGA_TEXT_COMPOSITE: pixel_format = PixelFormat::BGRX8888; break;
+	default: pixel_format = PixelFormat::Indexed8; break;
 	}
 
 	switch (vga.mode) {
@@ -2045,7 +2045,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			VGA_DrawLine = VGA_Draw_Linear_Line;
 		} else {
 			// Use HW mouse cursor drawer if enabled
-			bpp = VGA_ActivateHardwareCursor();
+			pixel_format = VGA_ActivateHardwareCursor();
 		}
 	} break;
 
@@ -2104,7 +2104,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			// The ReelMagic video mixer expects linear VGA drawing
 			// (i.e.: Return to Zork's house intro), so limit the use
 			// of 18-bit palettized LUT routine to non-mixed output.
-			bpp = PixelFormat::BGRX8888;
+			pixel_format = PixelFormat::BGRX8888;
 
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
@@ -2160,7 +2160,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 
 		if (IS_VGA_ARCH) {
-			bpp = PixelFormat::BGRX8888;
+			pixel_format = PixelFormat::BGRX8888;
 
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
@@ -2400,7 +2400,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			vga.draw.pixels_per_character = vga.seq.clocking_mode.is_eight_dot_mode
 			                                      ? PixelsPerChar::Eight
 			                                      : PixelsPerChar::Nine;
-			bpp = PixelFormat::BGRX8888;
+			pixel_format = PixelFormat::BGRX8888;
 
 			VGA_DrawLine = draw_text_line_from_dac_palette;
 
@@ -2526,7 +2526,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	vga.draw.vblank_skip = vblank_skip;
 	setup_line_drawing_delays(render_height);
-	vga.draw.line_length = render_width * ((enum_val(bpp) + 1) / 8);
+	vga.draw.line_length = render_width * ((enum_val(pixel_format) + 1) / 8);
 #ifdef VGA_KEEP_CHANGES
 	vga.changes.active    = false;
 	vga.changes.frame     = 0;
@@ -2600,7 +2600,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	    (vga.draw.doublewidth != double_width) ||
 	    (vga.draw.doubleheight != double_height) ||
 	    (vga.draw.pixel_aspect_ratio != render_pixel_aspect_ratio) ||
-	    (vga.draw.bpp != bpp) || fps_changed) {
+	    (vga.draw.pixel_format != pixel_format) || fps_changed) {
 		VGA_KillDrawing();
 
 		if (render_width > SCALER_MAXWIDTH ||
@@ -2621,7 +2621,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.doublewidth        = double_width;
 		vga.draw.doubleheight       = double_height;
 		vga.draw.pixel_aspect_ratio = render_pixel_aspect_ratio;
-		vga.draw.bpp                = bpp;
+		vga.draw.pixel_format       = pixel_format;
 
 		if (double_height) {
 			vga.draw.lines_scaled = 2;
@@ -2635,7 +2635,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			                         double_width,
 			                         double_height,
 			                         render_pixel_aspect_ratio,
-			                         bpp,
+			                         pixel_format,
 			                         fps,
 			                         video_mode);
 		}

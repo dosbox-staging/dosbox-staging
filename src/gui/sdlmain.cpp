@@ -662,7 +662,7 @@ Bitu GFX_GetBestMode(Bitu flags)
 	switch (sdl.desktop.want_type) {
 	case SCREEN_SURFACE:
 	check_surface:
-		switch (sdl.desktop.bpp) {
+		switch (sdl.desktop.pixel_format) {
 		case PixelFormat::Indexed8:
 			if (flags & GFX_CAN_8) flags&=~(GFX_CAN_15|GFX_CAN_16|GFX_CAN_32);
 			break;
@@ -1784,7 +1784,7 @@ dosurface:
 				                           FIXED_SIZE);
 				if (sdl.window == nullptr) {
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
-					       sdl.clip.w, sdl.clip.h, enum_val(sdl.desktop.bpp),
+					       sdl.clip.w, sdl.clip.h, enum_val(sdl.desktop.pixel_format),
 					       SDL_GetError());
 				}
 
@@ -1804,7 +1804,7 @@ dosurface:
 				                           FIXED_SIZE);
 				if (sdl.window == nullptr) {
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
-					       sdl.clip.w, sdl.clip.h, enum_val(sdl.desktop.bpp),
+					       sdl.clip.w, sdl.clip.h, enum_val(sdl.desktop.pixel_format),
 					       SDL_GetError());
 				}
 			}
@@ -1819,7 +1819,7 @@ dosurface:
 			                           FIXED_SIZE);
 			if (sdl.window == nullptr) {
 				E_Exit("Could not set windowed video mode %ix%i-%i: %s",
-				       sdl.clip.w, sdl.clip.h, enum_val(sdl.desktop.bpp),
+				       sdl.clip.w, sdl.clip.h, enum_val(sdl.desktop.pixel_format),
 				       SDL_GetError());
 			}
 		}
@@ -2596,8 +2596,8 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		image.double_height         = false;
 		image.is_flipped_vertically = false;
 		image.pixel_aspect_ratio    = {1};
-		image.bits_per_pixel        = PixelFormat::BGR888;
-		image.pitch        = image.width * (enum_val(image.bits_per_pixel) / 8);
+		image.pixel_format          = PixelFormat::BGR888;
+		image.pitch = image.width * (enum_val(image.pixel_format) / 8);
 		image.palette_data = nullptr;
 
 		const auto image_size_bytes = check_cast<uint32_t>(image.height *

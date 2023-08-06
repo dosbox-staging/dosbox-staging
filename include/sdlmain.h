@@ -142,7 +142,7 @@ struct SDL_Block {
 			int height = 0;
 		} requested_window_bounds = {};
 
-		PixelFormat bpp = {};
+		PixelFormat pixel_format = {};
 		double dpi_scale = 1.0;
 		bool fullscreen = false;
 
