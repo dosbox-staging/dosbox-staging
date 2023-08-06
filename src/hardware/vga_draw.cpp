@@ -2526,7 +2526,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	vga.draw.vblank_skip = vblank_skip;
 	setup_line_drawing_delays(render_height);
-	vga.draw.line_length = render_width * ((enum_val(pixel_format) + 1) / 8);
+
+	vga.draw.line_length = render_width *
+	                       ((get_bits_per_pixel(pixel_format) + 1) / 8);
+
 #ifdef VGA_KEEP_CHANGES
 	vga.changes.active    = false;
 	vga.changes.frame     = 0;

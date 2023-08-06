@@ -63,6 +63,10 @@ const char* to_string(const PixelFormat pf)
 	}
 }
 
+uint8_t get_bits_per_pixel(const PixelFormat pf) {
+	return enum_val(pf);
+}
+
 static void render_callback(GFX_CallBackFunctions_t function);
 
 static void check_palette(void)
@@ -479,7 +483,7 @@ static void render_reset(void)
 		break;
 	default:
 		E_Exit("RENDER: Invalid pixel_format %u",
-		       enum_val(render.src.pixel_format));
+		       static_cast<uint8_t>(render.src.pixel_format));
 	}
 
 	render.scale.blocks    = render.src.width / SCALER_BLOCKSIZE;

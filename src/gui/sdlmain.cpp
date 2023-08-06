@@ -1784,7 +1784,9 @@ dosurface:
 				                           FIXED_SIZE);
 				if (sdl.window == nullptr) {
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
-					       sdl.clip.w, sdl.clip.h, enum_val(sdl.desktop.pixel_format),
+					       sdl.clip.w,
+					       sdl.clip.h,
+					       get_bits_per_pixel(sdl.desktop.pixel_format),
 					       SDL_GetError());
 				}
 
@@ -1804,7 +1806,9 @@ dosurface:
 				                           FIXED_SIZE);
 				if (sdl.window == nullptr) {
 					E_Exit("Could not set fullscreen video mode %ix%i-%i: %s",
-					       sdl.clip.w, sdl.clip.h, enum_val(sdl.desktop.pixel_format),
+					       sdl.clip.w,
+					       sdl.clip.h,
+					       get_bits_per_pixel(sdl.desktop.pixel_format),
 					       SDL_GetError());
 				}
 			}
@@ -1819,7 +1823,9 @@ dosurface:
 			                           FIXED_SIZE);
 			if (sdl.window == nullptr) {
 				E_Exit("Could not set windowed video mode %ix%i-%i: %s",
-				       sdl.clip.w, sdl.clip.h, enum_val(sdl.desktop.pixel_format),
+				       sdl.clip.w,
+				       sdl.clip.h,
+				       get_bits_per_pixel(sdl.desktop.pixel_format),
 				       SDL_GetError());
 			}
 		}
@@ -2597,7 +2603,10 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		image.is_flipped_vertically = false;
 		image.pixel_aspect_ratio    = {1};
 		image.pixel_format          = PixelFormat::BGR888;
-		image.pitch = image.width * (enum_val(image.pixel_format) / 8);
+
+		image.pitch = image.width *
+		              (get_bits_per_pixel(image.pixel_format) / 8);
+
 		image.palette_data = nullptr;
 
 		const auto image_size_bytes = check_cast<uint32_t>(image.height *
