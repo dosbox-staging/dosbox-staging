@@ -1846,6 +1846,8 @@ constexpr auto pixel_aspect_1280x1024 = Fraction(4, 3) / Fraction(1280, 1024);
 
 void VGA_SetupDrawing(uint32_t /*val*/)
 {
+	LOG_MSG("$$$$$$$$ VGA_SetupDrawing()");
+
 	if (vga.mode == M_ERROR) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_PanningLatch);
@@ -2645,6 +2647,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		previous_mode = vga.mode;
 	}
+
+	LOG_MSG("$$$$$$$$ VGA_SetupDrawing() exit");
 }
 
 void VGA_KillDrawing(void) {
