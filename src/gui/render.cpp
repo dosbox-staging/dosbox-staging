@@ -341,22 +341,8 @@ static void render_reset(void)
 	bool double_width  = render.src.double_width;
 	bool double_height = render.src.double_height;
 
-	double gfx_scalew;
-	double gfx_scaleh;
-
 	Bitu gfx_flags, xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
-
-	const auto one_per_pixel_aspect =
-	        render.src.pixel_aspect_ratio.Inverse().ToDouble();
-
-	if (one_per_pixel_aspect > 1.0) {
-		gfx_scalew = 1;
-		gfx_scaleh = one_per_pixel_aspect;
-	} else {
-		gfx_scalew = render.src.pixel_aspect_ratio.ToDouble();
-		gfx_scaleh = 1;
-	}
 
 	// Don't do software scaler sizes larger than 4k
 	Bitu maxsize_current_input = SCALER_MAXWIDTH / width;
@@ -428,11 +414,12 @@ static void render_reset(void)
 	GFX_SetShader(render.shader.source);
 #endif
 
+	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
+
 	gfx_flags = GFX_SetSize(width,
 	                        height,
+	                        render_pixel_aspect_ratio,
 	                        gfx_flags,
-	                        gfx_scalew,
-	                        gfx_scaleh,
 	                        render.video_mode,
 	                        &render_callback);
 

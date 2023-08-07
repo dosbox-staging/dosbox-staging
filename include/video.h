@@ -68,9 +68,10 @@ IntegerScalingMode GFX_GetIntegerScalingMode();
 InterpolationMode GFX_GetInterpolationMode();
 
 struct VideoMode;
+class Fraction;
 
-Bitu GFX_SetSize(const int width, const int height, const Bitu flags,
-                 const double scalex, const double scaley,
+Bitu GFX_SetSize(const int width, const int height,
+                 const Fraction& render_pixel_aspect_ratio, const Bitu flags,
                  const VideoMode& video_mode, GFX_CallBack_t callback);
 
 void GFX_ResetScreen(void);
@@ -112,6 +113,6 @@ struct SDL_Rect;
 
 SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
                           const int draw_width, const int draw_height,
-                          const double draw_scalex, const double draw_scaley);
+                          const Fraction& render_pixel_aspect_ratio);
 
 #endif

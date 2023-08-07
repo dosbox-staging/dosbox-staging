@@ -25,9 +25,12 @@
 #include <string_view>
 #include <string.h>
 #include "SDL.h"
+
 #if C_OPENGL
 #include <SDL_opengl.h>
 #endif
+
+#include "fraction.h"
 #include "render.h"
 #include "video.h"
 
@@ -106,8 +109,7 @@ struct SDL_Block {
 	struct {
 		int width = 0;
 		int height = 0;
-		double scalex = 1.0;
-		double scaley = 1.0;
+		Fraction render_pixel_aspect_ratio = {1};
 
 		uint16_t previous_mode = 0;
 		bool has_changed = false;
