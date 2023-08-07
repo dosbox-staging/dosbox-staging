@@ -97,14 +97,14 @@ Imposta la modalità di sincronizzazione verticale (vsync) del driver video:
              utilizza uno schermo VRR con funzionalità di interpolazione in
              modalità schermo intero (predefinito).
   on:        Abilita il vsync. Ciò può impedire gli strappi dell'immagine su
-             schermo (tearing), ma influirà sulle prestazioni o causerà perdite
-             di fotogrammi quando la frequenza DOS supera la frequenza
+             schermo (tearing), ma può influire sulle prestazioni o causare
+             perdite di fotogrammi quando la frequenza DOS supera la frequenza
              dell'host (es. Frequenza DOS di 70 Hz rispetto alla frequenza
              dell'host di 60 Hz).
   off:       Prova a disabilitare il vsync per consentire una presentazione più
              rapida dei fotogrammi con il rischio di strappi dell'immagine su
              schermo in alcuni giochi.
-  yield:     Consenti al driver video dell'host di controllare la
+  yield:     Consente al driver video dell'host di controllare la
              sincronizzazione video.
 .
 :CONFIG_VSYNC_SKIP
@@ -122,7 +122,11 @@ Seleziona la modalità di presentazione dei fotogrammi:
          variabile.
 .
 :CONFIG_OUTPUT
-Sistema video da utilizzare per l'output (predefinito 'opengl').
+Modalità di uscita video da utilizzare (predefinito 'opengl').
+'texture' e 'opengl' utilizzano il metodo di ricampionamento Bilineare,
+'texturenb' and 'openglnb' utilizzano il metodo di ricampionamento Vicino più
+Prossimo (non bilineare). Alcuni shader richiedono il metodo di ricampionamento
+Bilineare, rendendola la scelta più sicura.
 .
 :CONFIG_TEXTURE_RENDERER
 Driver di rendering da utilizzare nella modalità di uscita 'texture'
@@ -158,7 +162,7 @@ File utilizzato per caricare/salvare le corrispondenze tasto/evento.
 Sono inclusi dei file di mappatura preconfigurati nella directory
 'resources/mapperfiles'. Possono essere caricati per nome, ad esempio: 
 mapperfile = xbox/xenon2.map
-Note: il flag della riga di comando -resetmapper elimina solo il file di
+Nota: il flag della riga di comando --resetmapper elimina solo il file di
       mappatura predefinito.
 .
 :CONFIG_SCREENSAVER
@@ -167,12 +171,14 @@ d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER, che di solito blocca il salvaschermo
 del sistema operativo mentre l'emulatore è in esecuzione (predefinito 'auto').
 .
 :CONFIG_LANGUAGE
-Seleziona la lingua da utilizzare: de, en, es, fr, it, nl, pl e ru
-(predefinito non impostato).
-Note: Questa impostazione, se utilizzata, sovrascriverà la variabile 
-      d'ambiente 'LANG'. La directory 'resources/translations', inclusa nel
-      pacchetto insieme all'eseguibile, contiene questi file.
-      Si prega di tenerla insieme all'eseguibile per supportare questa funzione
+Seleziona la lingua da utilizzare: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl'
+o 'ru' (predefinito non impostato; l'impostazione predefinita è l'inglese).
+Note:
+  - Questa impostazione, se utilizzata, sovrascriverà la variabile
+    d'ambiente 'LANG'.
+  - La directory 'resources/translations', inclusa nel pacchetto di DOSBox
+    Staging, contiene i file di traduzione. Per supportare questa funzione,
+    si prega di tenerla nella stessa cartella dell'eseguibile.
 .
 :CONFIG_MACHINE
 Imposta la scheda video o la macchina da emulare:
@@ -226,10 +232,6 @@ Memoria video in MB (1-8) o KB (da 256 a 8192).
 'auto' utilizza il valore predefinito in base alla scheda video selezionata
 (predefinito 'auto'). Fare riferimento all'impostazione 'machine' per l'elenco
 delle opzioni valide per ogni scheda.
-.
-:CONFIG_FORCE_VGA_SINGLE_SCAN
-Forza la scansione singola nelle modalità inferiori a 350 linee nelle schede
-grafiche VGA (predefinito disabilitato).
 .
 :CONFIG_DOS_RATE
 Personalizza la frequenza dei fotogrammi della modalità video emulata, in Hz:
@@ -381,13 +383,14 @@ hardware:
 Imposta lo shader GLSL da utilizzare nella modalità di uscita OpenGL.
 Le opzioni incluse sono 'default', 'none', uno shader elencato utilizzando
 l'argomento della riga di comando --list-glshaders o un percorso relativo o
-assoluto che fa riferimento ad un file. 
+assoluto che fa riferimento ad un file.
+'default' imposta lo shader 'interpolation/sharp.glsl'.
 In tutti i casi, l'estensione '.glsl' dello shader può essere omessa.
 .
 :CONFIG_COMPOSITE
 Abilita la modalità composita all'avvio (predefinito 'auto'). 
 'auto' lascia decidere al programma.
-Note: Regola le impostazioni di seguito (es. tonalità) usando gli appositi
+Nota: Regola le impostazioni di seguito (es. tonalità) usando gli appositi
       tasti di scelta rapida, quindi leggi le nuove impostazioni dalla
       tua console e inseriscile qui.
 .
@@ -437,6 +440,19 @@ Numero di cicli di cui aumentare utilizzando i tasti di scelta rapida
 Numero di cicli di cui diminuire utilizzando i tasti di scelta rapida
 (predefinito 20). Un valore più basso di 100 indica una percentuale.
 .
+:CONFIG_VOODOO_MEMSIZE
+Dimensione della memoria (in MB) della scheda 3dfx Vodooo (predefinito 12 MB).
+.
+:CONFIG_VOODOO_PERF
+Ottimizzazioni delle prestazioni da utilizzare durante l'emulazione della
+scheda 3dfx Voodoo:
+   0:  Nessuna ottimizzazione.
+   1:  Multi-threading (predefinito).
+   2:  Disabilita il filtro bilineare.
+   3:  Tutte le ottimizzazioni (abilita sia 1 che 2).
+Nota: L'emulazione Voodoo è basata su software e non utilizza chiamate OpenGL
+      a livello di sistema.
+.
 :CONFIG_CAPTURE_DIR
 Directory in cui vengono salvate le acquisizioni audio, video, MIDI e
 instantanee dello schermo (predefinito 'capture' nella directory di lavoro
@@ -445,23 +461,23 @@ corrente).
 :CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
 Imposta il formato di acquisizione delle instantanee dello schermo
 (predefinito 'upscaled'):
-  raw:       Viene acquisito il contenuto del framebuffer non elaborato
-             (comportamento originale; risulta sempre in pixel quadrati).
-             I nomi dei file delle instantanee non elaborate terminano
-             con '_raw' (es. 'image0001_raw.png').
   upscaled:  L'immagine viene ridimensionata utilizzando il metodo di 
-             ricampionamento bilineare più nitido, con un'altezza di circa
-             1200 pixel e mantenendo le proporzioni corrette (a seconda
-             dell'impostazione 'aspect'). Il fattore di scala verticale è
-             sempre un numero intero. Ad esempio, i contenuti con risoluzione
-             320x200 vengono ridimensionati a 1600x1200 (ridimensionamento dei
-             numeri interi 5:6), quelli 640x480 a 1920x1440 (ridimensionamento
-             dei numeri interi 3:3) e quelli 640x350 a 1867 x 1400
-             (ridimensionamento 2,9165:4, fattore di scala con numeri interi in
-             verticale e frazionario in orizzontale).
+             ricampionamento Bilineare più Nitido, mantenendo le proporzioni
+             corrette a seconda dell'impostazione 'aspect'. Il fattore di
+             scala verticale è sempre un numero intero. Ad esempio, i contenuti
+             con risoluzione 320x200 vengono ridimensionati a 1600x1200
+             (ridimensionamento dei numeri interi 5:6), quelli 640x480 a
+             1920x1440 (ridimensionamento dei numeri interi 3:3) e quelli
+             640x350 a 1400x1050 (ridimensionamento 2.1875:3; fattore di scala
+             frazionario in orizzontale e con numeri interi in verticale).
+             I nomi delle acquisizioni ridimensionate non hanno alcun suffisso
+             (es. "image0001.png").
   rendered:  Viene acquisita l'immagine postrenderizzata mostrata sullo schermo
-             I nomi dei file delle instantanee renderizzate terminano con
-             '_rendered' (es. 'image0001_rendered.png').
+             I nomi delle acquisizioni renderizzate terminano con '-rendered'
+             (es. 'image0001-rendered.png').
+  raw:       Viene acquisito il contenuto del framebuffer non elaborato
+             (risulta sempre in pixel quadrati). I nomi delle acquisizioni non
+             elaborate terminano con '-raw' (es. 'image0001-raw.png').
 Se vengono specificati più formati separati da spazi, l'acquisizione comporterà
 il salvataggio di più immagini in tutti i formati specificati. Inoltre sono
 disponibili tasti di scelta rapida per effettuare le acquisizioni in un formato
@@ -493,10 +509,10 @@ occuperà anche di catturarlo (predefinito abilitato).
 Consente il funzionamento della modalità mouse senza soluzione di continuità
 e il rilascio del puntatore del mouse in modalità schermo intero nei sistemi
 multischermo (predefinito abilitato).
-Note: Dovresti impostarlo su 'false' nel caso in cui vengano rilevati
-      erroneamente schermi multipli, quando in realtà ne è presente solo uno.
-      Ciò potrebbe accadere se si utilizza la modalità di visualizzazione
-      speculare o l'ingresso HDMI di un ricevitore AV per l'ascolto dell'audio.
+Nota: Dovresti disabilitarlo nel caso in cui vengano rilevati erroneamente
+      schermi multipli, quando in realtà ne è presente solo uno. Ciò potrebbe
+      accadere se si utilizza la modalità di visualizzazione speculare o
+      l'ingresso HDMI di un ricevitore AV per l'ascolto dell'audio.
 .
 :CONFIG_MOUSE_SENSITIVITY
 Sensibilità del mouse per gli assi orizzontale e verticale, in percentuale
@@ -515,9 +531,10 @@ in modalità finestra.
 .
 :CONFIG_DOS_MOUSE_DRIVER
 Abilita il driver del mouse DOS integrato (predefinito abilitato).
-Note: Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
-      Quando un sistema operativo guest viene avviato, il driver integrato
-      viene disabilitato automaticamente.
+Note: 
+  - Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
+  - Quando un sistema operativo guest viene avviato, il driver integrato viene
+    disabilitato automaticamente.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
 Aggiorna immediatamente i contatori di movimento del mouse, senza attendere
@@ -552,7 +569,7 @@ Modello mouse predefinito porta COM (seriale):
   2button+msm:  Scelta automatica tra '2button' e 'msm'.
   3button+msm:  Scelta automatica tra '3button' e 'msm'.
   wheel+msm:    Scelta automatica tra 'wheel' e 'msm' (predefinito).
-Note: Abilita i mouse della porta COM nella sezione [serial].
+Nota: Abilita i mouse della porta COM nella sezione [serial].
 .
 :CONFIG_NOSOUND
 Abilita la modalità silenziosa (predefinito disabilitato).
@@ -589,8 +606,8 @@ per l'ascolto in cuffia:
   <intensità>:  Imposta l'intensità dell'alimentazione incrociata da 0 a 100,
                 dove 0 significa spento (off) e 100 trasforma di fatto
                 il contenuto stereo in mono.
-Note: È possibile impostare l'alimentazione incrociata per ogni canale tramite
-      i comandi del mixer.
+Nota: È possibile regolare con precisione l'intensità dell'alimentazione
+      incrociata per ogni canale tramite i comandi del mixer.
 .
 :CONFIG_REVERB
 Abilita l'effetto riverbero a livello globale per aggiungere un senso di
@@ -608,7 +625,7 @@ spazializzazione del suono:
            per musica e audio digitale.
   huge:    Variante del preset salone con intensità maggiore; funziona davvero
            bene nei giochi con colonne sonore più suggestive.
-Note: È possibile regolare con precisione i livelli di riverbero per ogni
+Nota: È possibile regolare con precisione i livelli di riverbero per ogni
       canale tramite i comandi del mixer.
 .
 :CONFIG_CHORUS
@@ -619,7 +636,7 @@ Abilita l'effetto coro a livello globale per un suono più avvolgente:
            sintetizzata che presenta molto rumore bianco).
   normal:  Effetto coro normale, funziona bene con un'ampia varietà di giochi.
   strong:  Effetto coro molto evidente.
-Note: È possibile regolare con precisione i livelli di coro per ogni canale
+Nota: È possibile regolare con precisione i livelli di coro per ogni canale
       tramite i comandi del mixer.
 .
 :CONFIG_MIDIDEVICE
@@ -649,16 +666,17 @@ Opzioni di configurazione per l'interfaccia MIDI selezionata
 (predefinito non impostato).
 Di solito è l'ID o il nome del sintetizzatore MIDI che desideri utilizzare
 (trova l'ID/nome con il comando DOS 'MIXER /LISTMIDI').
-Note: - Questa opzione non ha effetto quando si utilizzano i sintetizzatori
-        intergrati ('mididevice = fluidsynth' o 'mididevice = mt32').
-      - Quando si utilizza ALSA, utilizzare il comando Linux 'aconnect -l' per
-        elencare le porte MIDI aperte e selezionarne una
-        (ad esempio 'midiconfig = 14:0' per il client sequencer 14, porta 0).
-      - Quando si utilizza 'coreaudio', puoi specificare un SoundFont qui.
-      - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
-        potrebbe richiedere un ritardo per evitare che il suo buffer si
-        sovraccarichi. In tal caso, aggiungi 'delaysysex', ad esempio:
-        'midiconfig = 2 delaysysex'.
+Note:
+  - Questa opzione non ha effetto quando si utilizzano i sintetizzatori
+    intergrati ('mididevice = fluidsynth' o 'mididevice = mt32').
+  - Quando si utilizza ALSA, utilizzare il comando Linux 'aconnect -l' per
+    elencare le porte MIDI aperte e selezionarne una
+    (ad esempio 'midiconfig = 14:0' per il client sequencer 14, porta 0).
+  - Quando si utilizza 'coreaudio', puoi specificare un SoundFont qui.
+  - Se stai usando un vero Roland MT-32 con revisione 0 del PCB, l'hardware
+    potrebbe richiedere un ritardo per evitare che il suo buffer si
+    sovraccarichi. In tal caso, aggiungi 'delaysysex'
+    (es. 'midiconfig = 2 delaysysex').
 .
 :CONFIG_MPU401
 Modalità MPU-401 da emulare (predefinito 'intelligent').
@@ -697,7 +715,7 @@ Quando si utilizzano valori personalizzati:
     - profondità è un numero decimale compreso tra 0.0 e 21.0
     - modulazione-onda è 'sine' o 'triangle'
   Per esempio: chorus = 3 1.2 0.3 8.0 sine
-Note: È possibile disabilitare l'effetto coro di FluidSynth e abilitare invece
+Nota: È possibile disabilitare l'effetto coro di FluidSynth e abilitare invece
       il coro a livello del mixer sul canale FluidSynth, oppure abilitare 
       entrambi gli effetti contemporaneamente. Il modo in cui il suono verrà
       riprodotto dipende dal SoundFont e dalle impostazioni del coro utilizzate
@@ -712,7 +730,7 @@ Quando si utilizzano valori personalizzati:
     - ampiezza è un numero decimale compreso tra 0.0 e 100.0
     - livello è un numero decimale compreso tra 0.0 e 1.0
   Per esempio: reverb = 0.61 0.23 0.76 0.56
-Note: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
+Nota: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
       invece il riverbero a livello del mixer sul canale FluidSynth, oppure
       abilitare entrambi gli effetti contemporaneamente. Il modo in cui il
       suono verrà riprodotto dipende dal SoundFont e dalle impostazioni di
@@ -1086,7 +1104,7 @@ impostazioni.
 Ad ogni pressione dei tasti precedentemente indicati, saranno riportati i
 valori di calibrazione X o Y che puoi impostare di seguito. Quando hai trovato
 i parametri che funzionano, esci dal gioco, ripristina questa impostazione su
-'false' e inserisci i parametri di calibrazione segnalati.
+disabilitato e inserisci i parametri di calibrazione segnalati.
 .
 :CONFIG_JOY_X_CALIBRATION
 Applica i parametri di calibrazione dell'asse X precedentemente acquisiti
@@ -1175,20 +1193,20 @@ software (usando libslirp) con le seguenti proprietà (predefinito abilitato):
   - 10.0.2.2:       IP del gateway e del servizio DHCP.
   - 10.0.2.3:       IP del server DNS virtuale.
   - 10.0.2.15:      Primo IP fornito dal DHCP, il tuo IP!
-Note: All'interno del DOS, la configurazione richiede un pacchetto driver
+Nota: All'interno del DOS, la configurazione richiede un pacchetto driver
       NE2000, un client DHCP e uno stack TCP/IP. Potrebbe essere necessario
       inoltrare le porte dall'host al guest DOS, e dal router al tuo host
       quando funge da server per i giochi multigiocatore.
 .
 :CONFIG_NICBASE
 Indirizzo di base della scheda NE2000 (predefinito 300).
-Note: Gli indirizzi 220 e 240 potrebbero non essere disponibili poiché sono
+Nota: Gli indirizzi 220 e 240 potrebbero non essere disponibili poiché sono
       assegnati alle schede Sound Blaster e Gravis UltraSound per impostazione
       predefinita.
 .
 :CONFIG_NICIRQ
 Numero IRQ della scheda NE2000 (predefinito 3).
-Note: Gli IRQ 3 e 5 potrebbero non essere disponibili poiché sono assegnati a
+Nota: Gli IRQ 3 e 5 potrebbero non essere disponibili poiché sono assegnati a
       'serial2' e Gravis UltraSound per impostazione predefinita.
 .
 :CONFIG_MACADDR
@@ -1208,11 +1226,12 @@ Un intervallo di porte adiacenti può essere abbreviato con un trattino:
 Le mappature e gli intervalli possono essere combinati:
   hinizio-hfine:ginizio-gfine ..., (ad es. 8040-8080:20-60)
   Questo inoltra le porte da 8040 a 8080 in 20 a 60 nel guest DOS.
-Note: Se gli intervalli mappati differiscono, l'intervallo più corto viene
-      esteso per adattarsi.
-      Se vengono fornite porte host in conflitto, viene impostata solo la prima
-      Se vengono fornite porte guest in conflitto, l'ultima regola ha la
-      precedenza.
+Note:
+  - Se gli intervalli mappati differiscono, l'intervallo più corto viene
+    esteso per adattarsi.
+  - Se vengono fornite porte host in conflitto, viene impostata solo la prima.
+  - Se vengono fornite porte guest in conflitto, l'ultima regola ha la
+    precedenza.
 .
 :CONFIG_UDP_PORT_FORWARDS
 Inoltra una o più porte UDP dall'host al guest DOS (predefinito non impostato).
@@ -1306,10 +1325,6 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
   -l                Mostra i file di configurazione attualmente caricati e gli
                     argomenti della riga di comando forniti all'avvio.
 
-  -help sections
-  -h    sections
-  -?    sections    Elenca i nomi di tutte le sezioni di configurazione.
-
   -help [color=white]SEZIONE[reset]
   -h    [color=white]SEZIONE[reset]
   -?    [color=white]SEZIONE     [reset]Elenca i nomi di tutte le proprietà di una data sezione di
@@ -1338,7 +1353,7 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
                     Imposta il valore di una proprietà di configurazione.
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-[color=white]Scopo della proprietà [color=green]'%s'[color=white] (contenuto nella sezione [color=cyan][%s][color=white])[reset]:
+[color=white]Scopo della proprietà [color=green]'%s'[color=white] (contenuto nella sezione [color=cyan][%s][color=white]):[reset]
 
 %s
 
@@ -1348,7 +1363,7 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
-[color=white]Scopo della sezione [%s][reset]:
+[color=white]Scopo della sezione [%s]:[reset]
 %s
 [color=white]Valore corrente:[reset]
 %s
@@ -2400,15 +2415,16 @@ Dove:
     Uscita:    [color=white]stereo[reset], [color=white]reverse[reset] (solo per canali stereo)
     A.Incrociata: da [color=white]x0[reset] a [color=white]x100[reset]   Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]   Coro: da [color=white]c0[reset] a [color=white]c100[reset]
 Note:
-  L'esecuzione di [color=green]mixer[reset] senza un argomento mostra le impostazioni attuali.
-  È possibile modificare le impostazioni di più canali con un unico comando.
-  Se il canale non è specificato, è possibile impostare alimentazione
-  incrociata, riverbero o coro a livello globale.
-  È possibile visualizzare l'elenco dei dispositivi MIDI con /listmidi.
-  /noshow applica le modifiche senza mostrare le impostazioni del mixer.
+  - L'esecuzione di [color=green]mixer[reset] senza un argomento mostra le impostazioni attuali.
+  - È possibile modificare le impostazioni di più canali con un unico comando.
+  - Se il canale non è specificato, è possibile impostare alimentazione
+    incrociata, riverbero o coro a livello globale.
+  - Esegui [color=green]mixer[reset] /listmidi per elencare tutti i dispositivi MIDI disponibili.
+  - L'opzione /noshow applica le modifiche senza mostrare le impostazioni
+    del mixer.
 
 Esempi:
-  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=green]mixer[reset] [color=cyan]cdaudio[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
   [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
