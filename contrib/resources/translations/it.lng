@@ -124,9 +124,9 @@ Seleziona la modalità di presentazione dei fotogrammi:
 :CONFIG_OUTPUT
 Modalità di uscita video da utilizzare (predefinito 'opengl').
 'texture' e 'opengl' utilizzano il metodo di ricampionamento Bilineare,
-'texturenb' and 'openglnb' utilizzano il metodo di ricampionamento Vicino più
+'texturenb' e 'openglnb' utilizzano il metodo di ricampionamento Vicino più
 Prossimo (non bilineare). Alcuni shader richiedono il metodo di ricampionamento
-Bilineare, rendendola la scelta più sicura.
+Bilineare, rendendolo la scelta più sicura.
 .
 :CONFIG_TEXTURE_RENDERER
 Driver di rendering da utilizzare nella modalità di uscita 'texture'
