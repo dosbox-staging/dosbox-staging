@@ -32,6 +32,7 @@
 #include <sstream>
 #include <unordered_map>
 
+#include <SDL.h>
 #include <sys/types.h>
 
 #include "../capture/capture.h"
@@ -334,6 +335,9 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 
 std::pair<double, double> RENDER_GetScaleFactors(const Fraction& pixel_aspect_ratio)
 {
+	if (pixel_aspect_ratio.Num() == 0) {
+		return {0.0, 0.0};
+	}
 	const auto one_per_pixel_aspect = pixel_aspect_ratio.Inverse().ToDouble();
 
 	if (one_per_pixel_aspect > 1.0) {
@@ -940,8 +944,39 @@ void RENDER_LoadShader(const std::string filename)
 	RENDER_Init(render_section);
 }
 
-void RENDER_HandleAutoShaderSwitching(const uint16_t viewport_height, const VideoMode& video_mode)
+void RENDER_HandleAutoShaderSwitching(const uint16_t canvas_width,
+                                      const uint16_t canvas_height,
+                                      const uint16_t draw_width,
+                                      const uint16_t draw_height,
+                                      const double draw_scalex,
+                                      const double draw_scaley)
 {
+	LOG_WARNING("-------------------------------------------------");
+	LOG_WARNING("####### canvas_width: %d, height: %d", canvas_width, canvas_height);
+	LOG_WARNING("####### draw_width: %d, height: %d", draw_width, draw_height);
+	LOG_WARNING("####### draw_scalex: %g, draw_scaley: %g", draw_scalex, draw_scaley);
+
+	const auto viewport = GFX_CalcViewport(canvas_width,
+	                                       canvas_height,
+	                                       draw_width,
+	                                       draw_height,
+	                                       draw_scalex,
+	                                       draw_scaley);
+
+	const auto pixels_per_scanline = static_cast<double>(viewport.h) / draw_height;
+
+	if (pixels_per_scanline < 3) {
+		RENDER_LoadShader("interpolation/sharp");
+	} else {
+		RENDER_LoadShader("crt/vga-4k");
+	}
+
+	LOG_WARNING("####### pixels_per_scanline: %g", pixels_per_scanline);
+
+	// calc image rect fitting into viewport rect with vert-integer-scaling
+	// scanlines per pixel = vert integer scaling ratio
+	// get best shader for the job :)
+	// change if different
 }
 
 static void reload_shader(const bool pressed)

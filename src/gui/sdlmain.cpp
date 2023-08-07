@@ -4103,13 +4103,21 @@ bool GFX_Events()
 				FocusInput();
 				continue;
 
-			case SDL_WINDOWEVENT_RESIZED:
+			case SDL_WINDOWEVENT_RESIZED: {
 				LOG_WARNING("SDL: Window has been resized to %dx%d",
-				               event.window.data1,
-				               event.window.data2);
+				            event.window.data1,
+				            event.window.data2);
 
-				RENDER_LoadShader("interpolation/sharp");
-				break;
+				const auto canvas = get_canvas_size(sdl.desktop.type);
+				RENDER_HandleAutoShaderSwitching(canvas.w,
+				                                 canvas.h,
+				                                 sdl.draw.width,
+				                                 sdl.draw.height,
+				                                 sdl.draw.scalex,
+				                                 sdl.draw.scaley);
+				// TODO
+				// break;
+
 				// When going from an initial fullscreen to
 				// windowed state, this event will be called
 				// moments before SDL's windowed mode is
@@ -4117,7 +4125,7 @@ bool GFX_Events()
 				// already been established:
 				assert(sdl.desktop.window.width > 0 &&
 				       sdl.desktop.window.height > 0);
-
+			}
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:

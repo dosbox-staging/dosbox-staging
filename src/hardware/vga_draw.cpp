@@ -24,6 +24,8 @@
 #include <cstring>
 #include <utility>
 
+#include <SDL.h>
+
 #include "../gui/render_scalers.h"
 #include "../ints/int10.h"
 #include "bitops.h"
@@ -2608,12 +2610,22 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	    (vga.draw.pixel_format != pixel_format) || fps_changed) {
 		VGA_KillDrawing();
 
-		LOG_MSG("video_mode.height: %d", video_mode.height);
-		if (video_mode.height >= 480) {
-			RENDER_LoadShader("crt/vga-4k");
-		} else if (video_mode.height >= 350) {
-			LOG_MSG(">>>>>>>>>>>>> 1111");
-			RENDER_LoadShader("crt/ega-4k");
+		const auto canvas     = GFX_GetCanvasSize();
+		const auto draw_width = render_width * (double_width ? 2 : 1);
+		const auto draw_height = render_height * (double_height ? 2 : 1);
+
+		double draw_scale_x                  = {};
+		double draw_scale_y                  = {};
+		std::tie(draw_scale_x, draw_scale_y) = RENDER_GetScaleFactors(
+		        render.src.pixel_aspect_ratio);
+
+		if (draw_scale_y > 0) {
+			RENDER_HandleAutoShaderSwitching(canvas.w,
+											 canvas.h,
+											 draw_width,
+											 draw_height,
+											 draw_scale_x,
+											 draw_scale_y);
 		}
 
 		if (render_width > SCALER_MAXWIDTH ||
