@@ -40,8 +40,6 @@
 #include "string_utils.h"
 #include "support.h"
 
-MidiHandlerFluidsynth instance;
-
 constexpr auto SoundFontExtension = ".sf2";
 
 static void init_fluid_dosbox_settings(Section_prop& secprop)

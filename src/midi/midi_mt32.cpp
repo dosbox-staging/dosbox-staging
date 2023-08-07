@@ -210,8 +210,6 @@ const LASynthModel* all_models[] = {&cm32ln_100_model,
                                     &mt32_206_model,
                                     &mt32_203_model};
 
-MidiHandler_mt32 mt32_instance;
-
 static void init_mt32_dosbox_settings(Section_prop &sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
