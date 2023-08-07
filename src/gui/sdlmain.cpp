@@ -3358,23 +3358,26 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	        sdl.display_number);
 }
 
-static SDL_Rect calc_viewport(const int win_w, const int win_h)
+static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height,
+                              const int draw_width, const int draw_height,
+                              const double draw_scalex, const double draw_scaley)
 {
-	assert(sdl.draw.width > 0);
-	assert(sdl.draw.height > 0);
-	assert(sdl.draw.scalex > 0.0);
-	assert(sdl.draw.scaley > 0.0);
-	assert(std::isfinite(sdl.draw.scalex));
-	assert(std::isfinite(sdl.draw.scaley));
+	assert(draw_width > 0);
+	assert(draw_height > 0);
+	assert(draw_scalex > 0.0);
+	assert(draw_scaley > 0.0);
+	assert(std::isfinite(draw_scalex));
+	assert(std::isfinite(draw_scaley));
 
 	// Limit the window to the user's desired viewport, if configured
-	const auto restricted_dims = restrict_to_viewport_resolution(win_w, win_h);
+	const auto restricted_dims = restrict_to_viewport_resolution(canvas_width,
+	                                                             canvas_height);
 	const auto bounds_w = restricted_dims.x;
 	const auto bounds_h = restricted_dims.y;
 
 	// Calculate the aspect ratio of the emulated display mode.
-	const auto output_aspect = (sdl.draw.width * sdl.draw.scalex) /
-	                           (sdl.draw.height * sdl.draw.scaley);
+	const auto output_aspect = (draw_width * draw_scalex) /
+	                           (draw_height * draw_scaley);
 
 	auto calculate_bounded_dims = [&]() -> std::pair<int, int> {
 		// Calculate the viewport contingent on the aspect ratio of the
@@ -3401,49 +3404,54 @@ static SDL_Rect calc_viewport(const int win_w, const int win_h)
 	case IntegerScalingMode::Horizontal: {
 		// Calculate scaling multiplier that will allow to fit the whole
 		// image into the window or viewport bounds.
-		const auto pixel_aspect = round(sdl.draw.height * sdl.draw.scaley) /
-		                          sdl.draw.height;
+		const auto pixel_aspect = round(draw_height * draw_scaley) /
+		                          draw_height;
 		auto integer_scale_factor = std::min(
-		        bounds_w / sdl.draw.width,
-		        static_cast<int>(bounds_h / (sdl.draw.height * pixel_aspect)));
+		        bounds_w / draw_width,
+		        static_cast<int>(bounds_h / (draw_height * pixel_aspect)));
 
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			std::tie(view_w, view_h) = calculate_bounded_dims();
 		} else {
 			// Calculate the final viewport.
-			view_w = sdl.draw.width * integer_scale_factor;
-			view_h = iround(sdl.draw.height * integer_scale_factor * pixel_aspect);
+			view_w = draw_width * integer_scale_factor;
+			view_h = iround(draw_height * integer_scale_factor *
+			                pixel_aspect);
 		}
 		break;
 	}
 	case IntegerScalingMode::Vertical: {
-		auto integer_scale_factor =
-		        std::min(bounds_h / sdl.draw.height,
-		                 static_cast<int>(bounds_w / (sdl.draw.height *
-		                                              output_aspect)));
+		auto integer_scale_factor = std::min(
+		        bounds_h / draw_height,
+		        static_cast<int>(bounds_w / (draw_height * output_aspect)));
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			std::tie(view_w, view_h) = calculate_bounded_dims();
 		} else {
-			view_w = iround(sdl.draw.height * integer_scale_factor * output_aspect);
-			view_h = sdl.draw.height * integer_scale_factor;
+			view_w = iround(draw_height * integer_scale_factor *
+			                output_aspect);
+			view_h = draw_height * integer_scale_factor;
 		}
 		break;
 	}
 	}
 
 	// Calculate centered viewport position.
-	const int view_x = (win_w - view_w) / 2;
-	const int view_y = (win_h - view_h) / 2;
+	const int view_x = (canvas_width - view_w) / 2;
+	const int view_y = (canvas_height - view_h) / 2;
 
-	/*
-	LOG_MSG("DISPLAY: %s win %4dx%4d, lwin %4dx%4d %1.2f"
-	        " vs draw %1.2f => viewport=%3d,%3d %4dx%4d",
-	        __FUNCTION__, win_w, win_h, lwin_w, lwin_h, lwin_aspect,
-	        draw_aspect, view_x, view_y, view_w, view_h);
-	*/
 	return {view_x, view_y, view_w, view_h};
+}
+
+static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height)
+{
+	return calc_viewport(canvas_width,
+	                     canvas_height,
+	                     sdl.draw.width,
+	                     sdl.draw.height,
+	                     sdl.draw.scalex,
+	                     sdl.draw.scaley);
 }
 
 void GFX_SetIntegerScalingMode(const std::string& new_mode)
