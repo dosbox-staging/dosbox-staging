@@ -3358,9 +3358,9 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	        sdl.display_number);
 }
 
-static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height,
-                              const int draw_width, const int draw_height,
-                              const double draw_scalex, const double draw_scaley)
+SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
+                          const int draw_width, const int draw_height,
+                          const double draw_scalex, const double draw_scaley)
 {
 	assert(draw_width > 0);
 	assert(draw_height > 0);
@@ -3446,12 +3446,12 @@ static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height,
 
 static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height)
 {
-	return calc_viewport(canvas_width,
-	                     canvas_height,
-	                     sdl.draw.width,
-	                     sdl.draw.height,
-	                     sdl.draw.scalex,
-	                     sdl.draw.scaley);
+	return GFX_CalcViewport(canvas_width,
+	                        canvas_height,
+	                        sdl.draw.width,
+	                        sdl.draw.height,
+	                        sdl.draw.scalex,
+	                        sdl.draw.scaley);
 }
 
 void GFX_SetIntegerScalingMode(const std::string& new_mode)
