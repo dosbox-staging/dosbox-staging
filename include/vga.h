@@ -21,6 +21,7 @@
 
 #include "dosbox.h"
 
+#include <string>
 #include <utility>
 
 #include "bit_view.h"
@@ -114,11 +115,51 @@ enum VGAModes {
 	M_ERROR = 1 << 31,
 };
 
+// Graphics standards ordered by time of introduction (and roughly by
+// their capabilities)
+enum class GraphicsStandard { Hercules, Cga, Pcjr, Tga, Ega, Vga, Svga, Vesa };
+
+const char* to_string(const GraphicsStandard g);
+
+enum class ColorDepth {
+	Monochrome,
+	Composite,
+	IndexedColor2,
+	IndexedColor4,
+	IndexedColor16,
+	IndexedColor256,
+	HighColor15Bit,
+	HighColor16Bit,
+	TrueColor24Bit
+};
+
+const char* to_string(const ColorDepth c);
+
 struct VideoMode {
+	// Only reliable for non-custom BIOS modes; for custom modes, it's the
+	// mode used as a starting point to set up the tweaked mode, so it can
+	// be literally anything.
+	uint16_t bios_mode_number = 0;
+
+	bool is_graphics_mode = false;
+
+	// True for tweaked non-standard modes (e.g., Mode X on VGA).
+	bool is_custom_mode = false;
+
 	uint16_t width              = 0;
 	uint16_t height             = 0;
 	Fraction pixel_aspect_ratio = {};
+
+	// - For graphics modes, the first graphics standard the mode was
+	//   introduced in, unless there is ambiguity, in which case the emulated
+	//   graphics adapter (e.g. in the case of PCjr and Tandy modes).
+	// - For text modes, the graphics adapter in use.
+	GraphicsStandard graphics_standard = {};
+
+	ColorDepth color_depth = {};
 };
+
+std::string to_string(const VideoMode& video_mode);
 
 constexpr auto M_TEXT_MODES = M_TEXT | M_HERC_TEXT | M_TANDY_TEXT | M_CGA_TEXT_COMPOSITE;
 
@@ -928,7 +969,7 @@ void VGA_SetMonoPalette(const char *colour);
 void VGA_SetMode(VGAModes mode);
 void VGA_DetermineMode(void);
 void VGA_SetupHandlers(void);
-std::string VGA_ModeToString(const VGAModes mode);
+const char* to_string(const VGAModes mode);
 
 void VGA_StartResize();
 void VGA_StartResizeAfter(const uint16_t delay_ms);
