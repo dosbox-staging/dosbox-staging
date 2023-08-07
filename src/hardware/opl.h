@@ -76,7 +76,7 @@ public:
 typedef uint8_t RegisterCache[512];
 
 // Internal class used for dro capturing
-class Capture;
+class DroCapture;
 
 enum class Mode { Opl2, DualOpl2, Opl3, Opl3Gold };
 
@@ -86,7 +86,7 @@ public:
 
 	RegisterCache cache = {};
 
-	std::unique_ptr<Capture> capture = {};
+	std::unique_ptr<DroCapture> capture = {};
 
 	OPL(Section *configuration, const OplMode _oplmode);
 	~OPL();
