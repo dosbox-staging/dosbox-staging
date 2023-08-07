@@ -4788,13 +4788,6 @@ void OverrideWMClass()
 #endif
 }
 
-void GFX_GetSize(int &width, int &height, bool &fullscreen)
-{
-	width = sdl.draw.width;
-	height = sdl.draw.height;
-	fullscreen = sdl.desktop.fullscreen;
-}
-
 extern "C" int SDL_CDROMInit(void);
 int sdl_main(int argc, char *argv[])
 {
