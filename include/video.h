@@ -108,4 +108,10 @@ bool GFX_HaveDesktopEnvironment();
 void MAPPER_UpdateJoysticks(void);
 #endif
 
+struct SDL_Rect;
+
+SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
+                          const int draw_width, const int draw_height,
+                          const double draw_scalex, const double draw_scaley);
+
 #endif
