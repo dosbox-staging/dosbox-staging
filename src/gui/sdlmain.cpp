@@ -1535,6 +1535,22 @@ static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 	             : SDL_Point{w, h};
 }
 
+static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
+        const Fraction& pixel_aspect_ratio)
+{
+       const auto one_per_pixel_aspect = pixel_aspect_ratio.Inverse().ToDouble();
+
+       if (one_per_pixel_aspect > 1.0) {
+               const auto scale_x = 1;
+               const auto scale_y = one_per_pixel_aspect;
+               return {scale_x, scale_y};
+       } else {
+               const auto scale_x = pixel_aspect_ratio.ToDouble();
+               const auto scale_y = 1;
+               return {scale_x, scale_y};
+       }
+}
+
 static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 {
 	int window_width;
@@ -1547,9 +1563,14 @@ static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 		window_height = sdl.desktop.window.height;
 	}
 
+	double draw_scale_x = {};
+	double draw_scale_y = {};
+	std::tie(draw_scale_x, draw_scale_y) = get_scale_factors_from_pixel_aspect_ratio(
+	        sdl.draw.render_pixel_aspect_ratio);
+
 	if (window_width == 0 && window_height == 0) {
-		window_width  = iround(sdl.draw.width * sdl.draw.scalex);
-		window_height = iround(sdl.draw.height * sdl.draw.scaley);
+		window_width  = iround(sdl.draw.width * draw_scale_x);
+		window_height = iround(sdl.draw.height * draw_scale_y);
 	}
 
 	sdl.window = SetWindowMode(screen_type,
@@ -1735,8 +1756,8 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	}
 }
 
-Bitu GFX_SetSize(const int width, const int height, const Bitu flags,
-                 const double scalex, const double scaley,
+Bitu GFX_SetSize(const int width, const int height,
+                 const Fraction& render_pixel_aspect_ratio, const Bitu flags,
                  const VideoMode& video_mode, GFX_CallBack_t callback)
 {
 	Bitu retFlags = 0;
@@ -1751,20 +1772,17 @@ Bitu GFX_SetSize(const int width, const int height, const Bitu flags,
 	const bool double_height = flags & GFX_DBL_H;
 	const auto [_, mode_type] = VGA_GetCurrentMode();
 
-	sdl.draw.has_changed = (sdl.draw.width != width ||
-	                        sdl.draw.height != height ||
+	sdl.draw.has_changed = (sdl.draw.width != width || sdl.draw.height != height ||
 	                        sdl.draw.width_was_doubled != double_width ||
 	                        sdl.draw.height_was_doubled != double_height ||
-	                        sdl.draw.scalex != scalex ||
-	                        sdl.draw.scaley != scaley ||
+	                        sdl.draw.render_pixel_aspect_ratio != render_pixel_aspect_ratio ||
 	                        sdl.draw.previous_mode != mode_type);
 
-	sdl.draw.width              = width;
-	sdl.draw.height             = height;
-	sdl.draw.width_was_doubled  = double_width;
-	sdl.draw.height_was_doubled = double_height;
-	sdl.draw.scalex             = scalex;
-	sdl.draw.scaley             = scaley;
+	sdl.draw.width                     = width;
+	sdl.draw.height                    = height;
+	sdl.draw.width_was_doubled         = double_width;
+	sdl.draw.height_was_doubled        = double_height;
+	sdl.draw.render_pixel_aspect_ratio = render_pixel_aspect_ratio;
 
 	sdl.video_mode = video_mode;
 
@@ -3365,10 +3383,16 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 
 SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
                           const int draw_width, const int draw_height,
-                          const double draw_scalex, const double draw_scaley)
+                          const Fraction& render_pixel_aspect_ratio)
 {
 	assert(draw_width > 0);
 	assert(draw_height > 0);
+
+	double draw_scalex = {};
+	double draw_scaley = {};
+	std::tie(draw_scalex, draw_scaley) = get_scale_factors_from_pixel_aspect_ratio(
+	        render_pixel_aspect_ratio);
+
 	assert(draw_scalex > 0.0);
 	assert(draw_scaley > 0.0);
 	assert(std::isfinite(draw_scalex));
@@ -3380,21 +3404,20 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 	const auto bounds_w = restricted_dims.x;
 	const auto bounds_h = restricted_dims.y;
 
-	// Calculate the aspect ratio of the emulated display mode.
-	const auto output_aspect = (draw_width * draw_scalex) /
-	                           (draw_height * draw_scaley);
+	constexpr auto display_aspect_ratio = 4.0 / 3.0;
 
 	auto calculate_bounded_dims = [&]() -> std::pair<int, int> {
 		// Calculate the viewport contingent on the aspect ratio of the
 		// viewport bounds versus display mode.
 		const auto bounds_aspect = static_cast<double>(bounds_w) / bounds_h;
-		if (bounds_aspect > output_aspect) {
-			const auto w = iround(bounds_h * output_aspect);
+
+		if (bounds_aspect > display_aspect_ratio) {
+			const auto w = iround(bounds_h * display_aspect_ratio);
 			const auto h = bounds_h;
 			return {w, h};
 		} else {
 			const auto w = bounds_w;
-			const auto h = iround(bounds_w / output_aspect);
+			const auto h = iround(bounds_w / display_aspect_ratio);
 			return {w, h};
 		}
 	};
@@ -3429,13 +3452,13 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 	case IntegerScalingMode::Vertical: {
 		auto integer_scale_factor = std::min(
 		        bounds_h / draw_height,
-		        static_cast<int>(bounds_w / (draw_height * output_aspect)));
+		        static_cast<int>(bounds_w / (draw_height * display_aspect_ratio)));
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			std::tie(view_w, view_h) = calculate_bounded_dims();
 		} else {
 			view_w = iround(draw_height * integer_scale_factor *
-			                output_aspect);
+			                display_aspect_ratio);
 			view_h = draw_height * integer_scale_factor;
 		}
 		break;
@@ -3455,8 +3478,7 @@ static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height)
 	                        canvas_height,
 	                        sdl.draw.width,
 	                        sdl.draw.height,
-	                        sdl.draw.scalex,
-	                        sdl.draw.scaley);
+	                        sdl.draw.render_pixel_aspect_ratio);
 }
 
 void GFX_SetIntegerScalingMode(const std::string& new_mode)
@@ -4113,8 +4135,7 @@ bool GFX_Events()
 				                                 canvas.h,
 				                                 sdl.draw.width,
 				                                 sdl.draw.height,
-				                                 sdl.draw.scalex,
-				                                 sdl.draw.scaley);
+				                                 sdl.draw.render_pixel_aspect_ratio);
 				// TODO
 				// break;
 

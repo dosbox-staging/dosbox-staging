@@ -2614,18 +2614,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		const auto draw_width = render_width * (double_width ? 2 : 1);
 		const auto draw_height = render_height * (double_height ? 2 : 1);
 
-		double draw_scale_x                  = {};
-		double draw_scale_y                  = {};
-		std::tie(draw_scale_x, draw_scale_y) = RENDER_GetScaleFactors(
-		        render.src.pixel_aspect_ratio);
-
-		if (draw_scale_y > 0) {
+		if (render.src.pixel_aspect_ratio.Num() > 0) {
 			RENDER_HandleAutoShaderSwitching(canvas.w,
 											 canvas.h,
 											 draw_width,
 											 draw_height,
-											 draw_scale_x,
-											 draw_scale_y);
+											 render.src.pixel_aspect_ratio);
 		}
 
 		if (render_width > SCALER_MAXWIDTH ||

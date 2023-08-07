@@ -285,13 +285,10 @@ bool RENDER_UseSrgbTexture();
 bool RENDER_UseSrgbFramebuffer();
 #endif
 
-std::pair<double, double> RENDER_GetScaleFactors(const Fraction& pixel_aspect_ratio);
-
 void RENDER_HandleAutoShaderSwitching(const uint16_t canvas_width,
                                       const uint16_t canvas_height,
                                       const uint16_t draw_width,
                                       const uint16_t draw_height,
-                                      const double draw_scalex,
-                                      const double draw_scaley);
+                                      const Fraction& render_pixel_aspect_ratio);
 
 #endif

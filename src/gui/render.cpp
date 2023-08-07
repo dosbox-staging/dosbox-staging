@@ -369,11 +369,6 @@ static void render_reset(void)
 	bool double_width  = render.src.double_width;
 	bool double_height = render.src.double_height;
 
-	double gfx_scalew = {};
-	double gfx_scaleh = {};
-	std::tie(gfx_scalew, gfx_scaleh) = RENDER_GetScaleFactors(
-	        render.src.pixel_aspect_ratio);
-
 	Bitu gfx_flags, xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
 
@@ -447,11 +442,12 @@ static void render_reset(void)
 	GFX_SetShader(render.shader.source);
 #endif
 
+	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
+
 	gfx_flags = GFX_SetSize(width,
 	                        height,
+	                        render_pixel_aspect_ratio,
 	                        gfx_flags,
-	                        gfx_scalew,
-	                        gfx_scaleh,
 	                        render.video_mode,
 	                        &render_callback);
 
@@ -948,20 +944,17 @@ void RENDER_HandleAutoShaderSwitching(const uint16_t canvas_width,
                                       const uint16_t canvas_height,
                                       const uint16_t draw_width,
                                       const uint16_t draw_height,
-                                      const double draw_scalex,
-                                      const double draw_scaley)
+                                      const Fraction& render_pixel_aspect_ratio)
 {
 	LOG_WARNING("-------------------------------------------------");
 	LOG_WARNING("####### canvas_width: %d, height: %d", canvas_width, canvas_height);
 	LOG_WARNING("####### draw_width: %d, height: %d", draw_width, draw_height);
-	LOG_WARNING("####### draw_scalex: %g, draw_scaley: %g", draw_scalex, draw_scaley);
 
 	const auto viewport = GFX_CalcViewport(canvas_width,
 	                                       canvas_height,
 	                                       draw_width,
 	                                       draw_height,
-	                                       draw_scalex,
-	                                       draw_scaley);
+	                                       render_pixel_aspect_ratio);
 
 	const auto pixels_per_scanline = static_cast<double>(viewport.h) / draw_height;
 
