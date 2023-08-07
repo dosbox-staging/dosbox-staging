@@ -22,6 +22,7 @@
 #include <cstring>
 #include <deque>
 #include <string>
+#include <utility>
 
 #include "../src/gui/render_scalers.h"
 #include "fraction.h"
@@ -283,5 +284,7 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 bool RENDER_UseSrgbTexture();
 bool RENDER_UseSrgbFramebuffer();
 #endif
+
+std::pair<double, double> RENDER_GetScaleFactors(const Fraction& pixel_aspect_ratio);
 
 #endif

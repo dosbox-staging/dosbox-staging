@@ -332,8 +332,7 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 	return linesadded;
 }
 
-static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
-        const Fraction& pixel_aspect_ratio)
+std::pair<double, double> RENDER_GetScaleFactors(const Fraction& pixel_aspect_ratio)
 {
 	const auto one_per_pixel_aspect = pixel_aspect_ratio.Inverse().ToDouble();
 
@@ -368,7 +367,7 @@ static void render_reset(void)
 
 	double gfx_scalew = {};
 	double gfx_scaleh = {};
-	std::tie(gfx_scalew, gfx_scaleh) = get_scale_factors_from_pixel_aspect_ratio(
+	std::tie(gfx_scalew, gfx_scaleh) = RENDER_GetScaleFactors(
 	        render.src.pixel_aspect_ratio);
 
 	Bitu gfx_flags, xscale, yscale;
