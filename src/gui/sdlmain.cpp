@@ -4091,10 +4091,12 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_RESIZED:
-				// DEBUG_LOG_MSG("SDL: Window has been resized to %dx%d",
-				//               event.window.data1,
-				//               event.window.data2);
+				LOG_WARNING("SDL: Window has been resized to %dx%d",
+				               event.window.data1,
+				               event.window.data2);
 
+				RENDER_LoadShader("interpolation/sharp");
+				break;
 				// When going from an initial fullscreen to
 				// windowed state, this event will be called
 				// moments before SDL's windowed mode is
@@ -4209,7 +4211,7 @@ bool GFX_Events()
 #endif
 
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
-				// DEBUG_LOG_MSG("SDL: The window size has changed");
+				LOG_WARNING("SDL: The window size has changed");
 
 				// The window size has changed either as a
 				// result of an API call or through the system

@@ -933,6 +933,10 @@ void RENDER_LoadShader(const std::string filename)
 	RENDER_Init(render_section);
 }
 
+void RENDER_HandleAutoShaderSwitching(const uint16_t viewport_height, const VideoMode& video_mode)
+{
+}
+
 static void reload_shader(const bool pressed)
 {
 	// Quick and dirty hack to reload the current shader. Very useful when
