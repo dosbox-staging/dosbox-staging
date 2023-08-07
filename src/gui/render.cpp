@@ -331,6 +331,23 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 	}
 	return linesadded;
 }
+
+static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
+        const Fraction& pixel_aspect_ratio)
+{
+	const auto one_per_pixel_aspect = pixel_aspect_ratio.Inverse().ToDouble();
+
+	if (one_per_pixel_aspect > 1.0) {
+		const auto scale_x = 1;
+		const auto scale_y = one_per_pixel_aspect;
+		return {scale_x, scale_y};
+	} else {
+		const auto scale_x = pixel_aspect_ratio.ToDouble();
+		const auto scale_y = 1;
+		return {scale_x, scale_y};
+	}
+}
+
 std::mutex render_reset_mutex;
 
 static void render_reset(void)
@@ -349,22 +366,13 @@ static void render_reset(void)
 	bool double_width  = render.src.double_width;
 	bool double_height = render.src.double_height;
 
-	double gfx_scalew;
-	double gfx_scaleh;
+	double gfx_scalew = {};
+	double gfx_scaleh = {};
+	std::tie(gfx_scalew, gfx_scaleh) = get_scale_factors_from_pixel_aspect_ratio(
+	        render.src.pixel_aspect_ratio);
 
 	Bitu gfx_flags, xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
-
-	const auto one_per_pixel_aspect =
-	        render.src.pixel_aspect_ratio.Inverse().ToDouble();
-
-	if (one_per_pixel_aspect > 1.0) {
-		gfx_scalew = 1;
-		gfx_scaleh = one_per_pixel_aspect;
-	} else {
-		gfx_scalew = render.src.pixel_aspect_ratio.ToDouble();
-		gfx_scaleh = 1;
-	}
 
 	// Don't do software scaler sizes larger than 4k
 	Bitu maxsize_current_input = SCALER_MAXWIDTH / width;
