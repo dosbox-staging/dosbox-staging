@@ -56,87 +56,6 @@ std::pair<const VideoModeBlock&, const VGAModes> VGA_GetCurrentMode()
 	return {*CurMode, vga.mode};
 }
 
-// Describes the given video mode's type and colour-depth, e.g: "VGA, "256-colour"
-std::tuple<const char*, const char*, bool> VGA_DescribeMode(
-        const MachineType machine, const VideoModeBlock& mode_block,
-        const VGAModes mode_type, const uint16_t actual_width,
-        const uint16_t actual_height)
-{
-	auto pcjr_or_tandy = [=]() {
-		return (machine == MCH_PCJR) ? "PCjr" : "Tandy";
-	};
-
-	auto cga_pcjr_or_tandy = [=]() {
-		constexpr auto first_non_cga_mode = 0x08;
-		if (mode_block.mode < first_non_cga_mode) {
-			return "CGA";
-		}
-		return pcjr_or_tandy();
-	};
-
-	auto svga_or_vesa = [=]() {
-		return VESA_IsVesaMode(mode_block.mode) ? "VESA" : "SVGA";
-	};
-
-	const auto is_custom = (actual_width != mode_block.swidth) ||
-	                       (actual_height != mode_block.sheight);
-
-	// clang-format off
-	switch (mode_type) {
-	case M_HERC_TEXT:          return {"Text",     "monochrome", is_custom};
-	case M_HERC_GFX:           return {"Hercules", "monochrome", is_custom};
-
-	case M_TEXT:
-	case M_TANDY_TEXT:         return {"Text", "16-colour", is_custom};
-
-	case M_CGA_TEXT_COMPOSITE: return {"Text", "composite", is_custom};
-
-	case M_CGA2_COMPOSITE:
-	case M_CGA4_COMPOSITE:     return {cga_pcjr_or_tandy(), "composite", is_custom};
-
-	case M_CGA2:               return {"CGA", "2-colour", is_custom};
-	case M_CGA4:               return {"CGA", "4-colour", is_custom};
-	case M_CGA16:              return {"PCjr", "composite", is_custom};
-	case M_TANDY2:             return {cga_pcjr_or_tandy(), "2-colour",  is_custom};
-	case M_TANDY4:             return {cga_pcjr_or_tandy(), "4-colour",  is_custom};
-	case M_TANDY16:            return {pcjr_or_tandy(), "16-colour", is_custom};
-	case M_EGA: // see comment below
-	    switch (mode_block.mode) {
-	    case 0x011:            return {"VGA", "2-colour",  is_custom};
-	    case 0x012:            return {"VGA", "16-colour", is_custom};
-	    default:               return {"EGA", "16-colour", is_custom};
-	    }
-	case M_VGA:                return {"VGA", "256-colour", is_custom};
-
-	case M_LIN4:               return {svga_or_vesa(), "16-colour",  is_custom};
-	case M_LIN8:               return {svga_or_vesa(), "256-colour", is_custom};
-	case M_LIN15:              return {"VESA", "15-bit", is_custom};
-	case M_LIN16:              return {"VESA", "16-bit", is_custom};
-
-	case M_LIN24:
-	case M_LIN32:              return {"VESA", "24-bit", is_custom};
-
-	case M_ERROR:
-	default:
-		// Should not occur; log the values and inform the user
-		LOG_ERR("VIDEO: Unknown mode: %u with ID: %u",
-		        static_cast<uint32_t>(mode_type),
-		        mode_block.mode);
-		return {"Unknown mode", "Unknown colour-depth", false};
-	}
-	// clang-format on
-
-	// Modes 11h and 12h were supported by high-end EGA cards and because of
-	// that operate internally more like EGA modes (so DOSBox uses the EGA
-	// type for them), however they were classified as VGA from a standards
-	// perspective, so we report them as such.
-	//
-	// References:
-	// [1] IBM VGA Technical Reference, Mode of Operation, pp 2-12, 19
-	// March, 1992. [2] "IBM PC Family- BIOS Video Modes",
-	// http://minuszerodegrees.net/video/bios_video_modes.htm
-}
-
 void VGA_LogInitialization(const char *adapter_name,
                            const char *ram_type,
                            const size_t num_modes)
@@ -196,7 +115,64 @@ void VGA_DetermineMode(void) {
 	}
 }
 
-std::string VGA_ModeToString(const VGAModes mode)
+const char* to_string(const GraphicsStandard g)
+{
+	switch (g) {
+	case GraphicsStandard::Hercules: return "Hercules";
+	case GraphicsStandard::Cga: return "CGA";
+	case GraphicsStandard::Pcjr: return "PCjr";
+	case GraphicsStandard::Tga: return "Tandy";
+	case GraphicsStandard::Ega: return "EGA";
+	case GraphicsStandard::Vga: return "VGA";
+	case GraphicsStandard::Svga: return "SVGA";
+	case GraphicsStandard::Vesa: return "VESA";
+	default: assertm(false, "Invalid GraphicsStandard"); return "";
+	}
+}
+
+const char* to_string(const ColorDepth c)
+{
+	switch (c) {
+	case ColorDepth::Monochrome: return "monochrome";
+	case ColorDepth::Composite: return "composite";
+	case ColorDepth::IndexedColor2: return "2-colour";
+	case ColorDepth::IndexedColor4: return "4-colour";
+	case ColorDepth::IndexedColor16: return "16-colour";
+	case ColorDepth::IndexedColor256: return "256-colour";
+	case ColorDepth::HighColor15Bit: return "15-bit high colour";
+	case ColorDepth::HighColor16Bit: return "16-bit high colour";
+	case ColorDepth::TrueColor24Bit: return "24-bit true colour";
+	default: assertm(false, "Invalid ColorDepth"); return "";
+	}
+}
+
+// Return a human-readable description of the video mode, e.g.:
+//   - "CGA 640x200 16-colour text mode 03h"
+//   - "EGA 640x350 16-colour graphics mode 10h"
+//   - "VGA 720x400 16-colour text mode 03h"
+//   - "VGA 320x200 256-colour graphics mode 13h"
+//   - "VGA 360x240 256-colour graphics mode"
+//   - "VESA 800x600 256-colour graphics mode 103h"
+std::string to_string(const VideoMode& video_mode)
+{
+	const char* mode_type = (video_mode.is_graphics_mode ? "graphics mode"
+	                                                     : "text mode");
+
+	const auto mode_number = (video_mode.is_custom_mode
+	                                  ? ""
+	                                  : format_string(" %02Xh",
+	                                                  video_mode.bios_mode_number));
+
+	return format_string("%s %dx%d %s %s%s",
+	                     to_string(video_mode.graphics_standard),
+	                     video_mode.width,
+	                     video_mode.height,
+	                     to_string(video_mode.color_depth),
+	                     mode_type,
+	                     mode_number.c_str());
+}
+
+const char* to_string(const VGAModes mode)
 {
 	switch (mode) {
 	case M_CGA2: return "M_CGA2";
@@ -221,9 +197,7 @@ std::string VGA_ModeToString(const VGAModes mode)
 	case M_CGA4_COMPOSITE: return "M_CGA4_COMPOSITE";
 	case M_CGA_TEXT_COMPOSITE: return "M_CGA_TEXT_COMPOSITE";
 	case M_ERROR: return "M_ERROR";
-	default:
-		assert(false);
-		return format_string("Invalid VGAmode value: %04x", mode);
+	default: assertm(false, "Invalid VGAMode"); return "";
 	}
 }
 
