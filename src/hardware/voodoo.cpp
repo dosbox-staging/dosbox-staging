@@ -7365,11 +7365,17 @@ static void Voodoo_UpdateScreen()
 
 			constexpr Fraction render_pixel_aspect_ratio = {1};
 
-			const auto frames_per_second  = 1000.0f / v->draw.vfreq;
+			VideoMode video_mode        = {};
+			video_mode.bios_mode_number = 0;
+			video_mode.width  = check_cast<uint16_t>(width);
+			video_mode.height = check_cast<uint16_t>(height);
+			video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio;
+			video_mode.graphics_standard  = GraphicsStandard::Svga;
+			video_mode.color_depth        = ColorDepth::HighColor16Bit;
+			video_mode.is_custom_mode     = false;
+			video_mode.is_graphics_mode   = true;
 
-			const VideoMode video_mode = {check_cast<uint16_t>(width),
-			                              check_cast<uint16_t>(height),
-			                              render_pixel_aspect_ratio};
+			const auto frames_per_second  = 1000.0f / v->draw.vfreq;
 
 			RENDER_SetSize(width,
 			               height,

@@ -797,10 +797,7 @@ static void log_display_properties(const int width, const int height,
 
 	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
 
-	const auto [mode_block, mode_type] = VGA_GetCurrentMode();
-
-	const auto [mode_type_desc, colours_desc, is_custom_mode] = VGA_DescribeMode(
-	        machine, mode_block, mode_type, video_mode.width, video_mode.height);
+	const auto video_mode_desc = to_string(video_mode);
 
 	const char* frame_mode = nullptr;
 	switch (sdl.frame.mode) {
@@ -808,26 +805,14 @@ static void log_display_properties(const int width, const int height,
 	case FrameMode::Vfr: frame_mode = "VFR"; break;
 	case FrameMode::ThrottledVfr: frame_mode = "throttled VFR"; break;
 	case FrameMode::Unset: frame_mode = "Unset frame mode"; break;
+	default: assertm(false, "Invalid FrameMode");
 	}
 
 	const auto refresh_rate = VGA_GetPreferredRate();
 
-	const auto mode_desc = is_custom_mode ? ""
-	                                      : format_string(" (mode %02Xh)",
-	                                                      mode_block.mode);
-
-	// Double check all the char* string variables
-	assert(mode_type_desc);
-	assert(colours_desc);
-	assert(frame_mode);
-
-	LOG_MSG("DISPLAY: %s %dx%d %s%s at %2.5g Hz %s, "
+	LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
 	        "scaled to %dx%d with 1:%1.6g (%d:%d) pixel aspect ratio",
-	        mode_type_desc,
-	        video_mode.width,
-	        video_mode.height,
-	        colours_desc,
-	        mode_desc.c_str(),
+	        video_mode_desc.c_str(),
 	        refresh_rate,
 	        frame_mode,
 	        viewport_w,
@@ -1563,9 +1548,7 @@ static SDL_Window *SetupWindowScaled(SCREEN_TYPES screen_type, bool resizable)
 		window_height = sdl.desktop.window.height;
 	}
 
-	double draw_scale_x = {};
-	double draw_scale_y = {};
-	std::tie(draw_scale_x, draw_scale_y) = get_scale_factors_from_pixel_aspect_ratio(
+	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
 	        sdl.draw.render_pixel_aspect_ratio);
 
 	if (window_width == 0 && window_height == 0) {
@@ -3388,14 +3371,10 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 	assert(draw_width > 0);
 	assert(draw_height > 0);
 
-	double draw_scalex = {};
-	double draw_scaley = {};
-	std::tie(draw_scalex, draw_scaley) = get_scale_factors_from_pixel_aspect_ratio(
+	const auto [_, draw_scaley] = get_scale_factors_from_pixel_aspect_ratio(
 	        render_pixel_aspect_ratio);
 
-	assert(draw_scalex > 0.0);
 	assert(draw_scaley > 0.0);
-	assert(std::isfinite(draw_scalex));
 	assert(std::isfinite(draw_scaley));
 
 	// Limit the window to the user's desired viewport, if configured

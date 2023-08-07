@@ -1883,8 +1883,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	const auto vga_timings = calculate_vga_timings();
 
-	if (is_vga_scan_doubling() &&
-	    !(vga.mode == M_CGA2 || vga.mode == M_CGA4)) {
+	if (is_vga_scan_doubling() && !(vga.mode == M_CGA2 || vga.mode == M_CGA4)) {
 		vga.draw.address_line_total *= 2;
 	}
 
@@ -1972,12 +1971,29 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 
 #if 0
-	LOG_MSG("VGA: vga.mode: %s", VGA_ModeToString(vga.mode).c_str());
+	LOG_MSG("VGA: vga.mode: %s", to_string(vga.mode));
 	LOG_MSG("VGA: graphics_enabled: %d, scan_doubling: %d, max_scan_line: %d",
 	        static_cast<uint8_t>(vga.attr.mode_control.is_graphics_enabled),
 	        static_cast<uint8_t>(vga.crtc.maximum_scan_line.is_scan_doubling_enabled),
 	        static_cast<uint8_t>(vga.crtc.maximum_scan_line.maximum_scan_line));
 #endif
+
+	const auto bios_mode_number = CurMode->mode;
+
+	video_mode.bios_mode_number = bios_mode_number;
+
+	auto pcjr_or_tga = [=]() {
+		return (machine == MCH_PCJR) ? GraphicsStandard::Pcjr
+		                             : GraphicsStandard::Tga;
+	};
+
+	auto cga_pcjr_or_tga = [=]() {
+		constexpr auto first_non_cga_mode = 0x08;
+		if (bios_mode_number < first_non_cga_mode) {
+			return GraphicsStandard::Cga;
+		}
+		return pcjr_or_tga();
+	};
 
 	switch (vga.mode) {
 	case M_LIN4:
@@ -1989,9 +2005,16 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// SVGA & VESA modes
 		const auto is_pixel_doubling = vga.crtc.mode_control.div_memory_address_clock_by_2;
 
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = VESA_IsVesaMode(bios_mode_number)
+		                                     ? GraphicsStandard::Vesa
+		                                     : GraphicsStandard::Svga;
+
 		switch (vga.mode) {
 		case M_LIN8:
 			// 256-colour SVGA & VESA modes (other than mode 13h)
+			video_mode.color_depth = ColorDepth::IndexedColor256;
+
 			if (is_pixel_doubling ||
 			    (svgaCard == SVGA_S3Trio && !(vga.s3.reg_3a & 0x10))) {
 				video_mode.width = horiz_end * 4;
@@ -2003,18 +2026,24 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			// 24-bit true colour (16.7M-colour) VESA modes
 		case M_LIN32:
 			// 32-bit true colour (16.7M-colour) VESA modes
-			video_mode.width = horiz_end * 8;
+			video_mode.color_depth = ColorDepth::TrueColor;
+			video_mode.width       = horiz_end * 8;
 			break;
 		case M_LIN15:
 			// 15-bit high colour (32K-colour) VESA modes
+			video_mode.color_depth = ColorDepth::HighColor15Bit;
+			video_mode.width       = horiz_end * 4;
+			break;
 		case M_LIN16:
 			// 16-bit high colour (65K-colour) VESA modes
-			video_mode.width = horiz_end * 4;
+			video_mode.color_depth = ColorDepth::HighColor16Bit;
+			video_mode.width       = horiz_end * 4;
 			break;
 		case M_LIN4:
 			// 16-colour SVGA & VESA modes
-			vga.draw.blocks  = horiz_end;
-			video_mode.width = horiz_end * 8;
+			vga.draw.blocks        = horiz_end;
+			video_mode.width       = horiz_end * 8;
+			video_mode.color_depth = ColorDepth::IndexedColor16;
 			break;
 		default: assert(false);
 		}
@@ -2060,6 +2089,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// modes; the 640x480 / 16-color 12h mode is tagged with M_EGA
 		// (because it's planar like all EGA modes), and all other VGA
 		// modes with M_LIN4, M_LIN8, etc.
+
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = GraphicsStandard::Vga;
+		video_mode.color_depth       = ColorDepth::IndexedColor256;
 
 		const auto is_double_scanning =
 		        (vga.crtc.maximum_scan_line.maximum_scan_line > 0);
@@ -2117,8 +2150,36 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	} break;
 
 	case M_EGA:
-		// 640x480 monochrome EGA mode
+		// 640x480 2-colour VGA mode
 		// All 16-colour EGA and VGA modes
+
+		video_mode.is_graphics_mode = true;
+
+		// Modes 11h and 12h were supported by high-end EGA cards and
+		// because of that operate internally more like EGA modes (so
+		// DOSBox uses the EGA type for them), however they were
+		// classified as VGA from a standards perspective, so we report
+		// them as such.
+		//
+		// References:
+		// [1] IBM VGA Technical Reference, Mode of Operation, pp 2-12,
+		// 19 March, 1992. [2] "IBM PC Family- BIOS Video Modes",
+		// http://minuszerodegrees.net/video/bios_video_modes.htm
+		//
+		switch (bios_mode_number) {
+		case 0x011: // 640x480 2-colour VGA mode
+			video_mode.graphics_standard = GraphicsStandard::Vga;
+			video_mode.color_depth = ColorDepth::IndexedColor2;
+			break;
+		case 0x012: // 640x480 16-colour VGA mode
+			video_mode.graphics_standard = GraphicsStandard::Vga;
+			video_mode.color_depth = ColorDepth::IndexedColor16;
+			break;
+		default: // EGA modes
+			video_mode.graphics_standard = GraphicsStandard::Ega;
+			video_mode.color_depth = ColorDepth::IndexedColor16;
+		}
+
 		vga.draw.blocks = horiz_end;
 
 		video_mode.width = horiz_end * 8;
@@ -2176,6 +2237,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// 160x200 and 320x200 16-colour modes on Tandy & PCjr
 		vga.draw.blocks = horiz_end * 2;
 
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = pcjr_or_tga();
+		video_mode.color_depth       = ColorDepth::IndexedColor16;
+
 		if (vga.tandy.mode.is_high_bandwidth) {
 			if (machine == MCH_TANDY &&
 			    vga.tandy.mode.is_tandy_640_dot_graphics) {
@@ -2207,6 +2272,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_TANDY4:
 		// 320x200 4-colour CGA mode on CGA, Tandy & PCjr
 		// 640x200 4-colour mode on Tandy & PCjr
+
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = cga_pcjr_or_tga();
+		video_mode.color_depth       = ColorDepth::IndexedColor4;
+
 		vga.draw.blocks = horiz_end * 2;
 
 		video_mode.width  = horiz_end * 8;
@@ -2252,6 +2322,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_TANDY2:
 		// 640x200 monochrome CGA mode on CGA, Tandy & PCjr
+
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = cga_pcjr_or_tga();
+		video_mode.color_depth       = ColorDepth::IndexedColor2;
+
 		if (machine == MCH_PCJR) {
 			vga.draw.blocks = horiz_end * (vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics
 			                                       ? 8
@@ -2283,9 +2358,19 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		break;
 
 	case M_CGA2:
-		// 640x200 monochrome CGA mode on EGA & VGA
+		// 640x200 2-colour CGA mode on EGA & VGA
+		// (2-colour and not monochrome because the background is always
+		// black, but the foreground colour can be changed to any of the
+		// 16 CGA colours)
 	case M_CGA4:
 		// 320x200 4-colour CGA mode on EGA & VGA
+
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = GraphicsStandard::Cga;
+		video_mode.color_depth       = (vga.mode == M_CGA2)
+		                                     ? ColorDepth::IndexedColor2
+		                                     : ColorDepth::IndexedColor4;
+
 		vga.draw.blocks = horiz_end * 2;
 
 		video_mode.width = horiz_end * 8;
@@ -2328,6 +2413,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_CGA16:
 		// Composite output in 320x200 4-colour CGA mode on PCjr only
+
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = GraphicsStandard::Pcjr;
+		video_mode.color_depth       = ColorDepth::Composite;
+
 		vga.draw.blocks = horiz_end * 2;
 
 		video_mode.width  = horiz_end * 8;
@@ -2348,6 +2438,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_CGA4_COMPOSITE:
 		// Composite output in 320x200 & 640x200 4-colour modes on CGA &
 		// Tandy
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = cga_pcjr_or_tga();
+		video_mode.color_depth       = ColorDepth::Composite;
+
 		vga.draw.blocks = horiz_end * 2;
 
 		video_mode.width  = horiz_end * 8;
@@ -2366,6 +2460,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	case M_CGA2_COMPOSITE:
 		// Composite output in 640x200 monochrome CGA mode on CGA, Tandy
 		// & PCjr
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = cga_pcjr_or_tga();
+		video_mode.color_depth       = ColorDepth::Composite;
+
 		vga.draw.blocks = horiz_end * 2;
 
 		video_mode.width  = horiz_end * 16;
@@ -2382,6 +2480,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_HERC_GFX:
 		// Hercules graphics mode
+		video_mode.is_graphics_mode  = true;
+		video_mode.graphics_standard = GraphicsStandard::Hercules;
+		video_mode.color_depth       = ColorDepth::Monochrome;
+
 		vga.draw.blocks = horiz_end * 2;
 
 		video_mode.width  = horiz_end * 16;
@@ -2398,6 +2500,28 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_TEXT:
 		// All EGA, VGA, SVGA & VESA text modes
+		video_mode.is_graphics_mode = false;
+
+		switch (machine) {
+		case MCH_EGA:
+			video_mode.graphics_standard = GraphicsStandard::Ega;
+			break;
+		case MCH_VGA: {
+			constexpr auto max_vga_text_mode_number = 0x07;
+			if (bios_mode_number <= max_vga_text_mode_number) {
+				video_mode.graphics_standard = GraphicsStandard::Vga;
+			} else {
+				video_mode.graphics_standard =
+				        VESA_IsVesaMode(bios_mode_number)
+				                ? GraphicsStandard::Vesa
+				                : GraphicsStandard::Svga;
+			}
+		} break;
+		default: assert(false);
+		}
+
+		video_mode.color_depth = ColorDepth::IndexedColor16;
+
 		vga.draw.blocks = horiz_end;
 
 		if (IS_VGA_ARCH) {
@@ -2441,6 +2565,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_TANDY_TEXT:
 		// CGA, Tandy & PCjr text modes
+		video_mode.is_graphics_mode  = false;
+		video_mode.graphics_standard = cga_pcjr_or_tga();
+		video_mode.color_depth       = ColorDepth::IndexedColor16;
+
 		vga.draw.blocks = horiz_end;
 
 		video_mode.width  = horiz_end * 8;
@@ -2460,6 +2588,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_CGA_TEXT_COMPOSITE:
 		// Composite output in text modes on CGA, Tandy & PCjr
+		video_mode.is_graphics_mode  = false;
+		video_mode.graphics_standard = cga_pcjr_or_tga();
+		video_mode.color_depth       = ColorDepth::Composite;
+
 		vga.draw.blocks = horiz_end;
 
 		video_mode.width = horiz_end *
@@ -2478,6 +2610,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 	case M_HERC_TEXT:
 		// Hercules text mode
+		video_mode.is_graphics_mode  = false;
+		video_mode.graphics_standard = GraphicsStandard::Hercules;
+		video_mode.color_depth       = ColorDepth::Monochrome;
+
 		vga.draw.blocks = horiz_end;
 
 		video_mode.width  = horiz_end * 8;
@@ -2527,6 +2663,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		render_pixel_aspect_ratio = render_per_video_mode_scale.Inverse();
 		video_mode.pixel_aspect_ratio = {1};
 	}
+
+	// Try to determine if this is a custom mode
+	video_mode.is_custom_mode = (CurMode->swidth != video_mode.width ||
+	                             CurMode->sheight != video_mode.height);
 
 	vga.draw.vblank_skip = vblank_skip;
 	setup_line_drawing_delays(render_height);
@@ -2616,10 +2756,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 
 		if (render.src.pixel_aspect_ratio.Num() > 0) {
 			RENDER_HandleAutoShaderSwitching(canvas.w,
-											 canvas.h,
-											 draw_width,
-											 draw_height,
-											 render.src.pixel_aspect_ratio);
+			                                 canvas.h,
+			                                 draw_width,
+			                                 draw_height,
+			                                 render.src.pixel_aspect_ratio);
 		}
 
 		if (render_width > SCALER_MAXWIDTH ||
