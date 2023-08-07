@@ -115,4 +115,6 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
                           const int draw_width, const int draw_height,
                           const Fraction& render_pixel_aspect_ratio);
 
+SDL_Rect GFX_GetCanvasSize();
+
 #endif
