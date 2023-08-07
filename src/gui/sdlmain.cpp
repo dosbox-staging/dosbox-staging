@@ -1497,6 +1497,11 @@ static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type)
 	return canvas;
 }
 
+SDL_Rect GFX_GetCanvasSize()
+{
+	return get_canvas_size(sdl.desktop.type);
+}
+
 static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 {
 	return sdl.use_viewport_limits
