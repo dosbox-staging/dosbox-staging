@@ -1391,7 +1391,7 @@ Bitu GetEMSType(Section_prop * section) {
 class EMS final : public Module_base {
 private:
 	uint16_t ems_baseseg = 0;
-	DOS_Device *emm_device = nullptr;
+	std::unique_ptr<DOS_Device> emm_device = {};
 	RealPt old67_pointer = 0;
 	CALLBACK_HandlerObject call_vdma;
 	CALLBACK_HandlerObject call_vcpi;
@@ -1438,8 +1438,8 @@ public:
 
 		/* Register the ems device */
 		//TODO MAYBE put it in the class.
-		emm_device = new device_EMM(ems_type!=2);
-		DOS_AddDevice(emm_device);
+		emm_device = std::make_unique<device_EMM>(ems_type != 2);
+		DOS_AddManagedDevice(emm_device.get());
 
 		/* Clear handle and page tables */
 		Bitu i;
@@ -1519,11 +1519,10 @@ public:
 		BIOS_ZeroExtendedSize(false);
 
 		/* Remove ems device */
-		if (emm_device!=nullptr) {
-			DOS_DelDevice(emm_device);
-			emm_device=nullptr;
-		}
-		GEMMIS_seg=0;
+		DOS_RemoveDevice(emm_device.get());
+		emm_device.reset();
+
+		GEMMIS_seg = 0;
 
 		/* Remove the emsname and callback hack */
 		char buf[32]= { 0 };

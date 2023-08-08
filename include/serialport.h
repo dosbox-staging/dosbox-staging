@@ -22,6 +22,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <memory>
 #include <cassert>
 #include <vector>
 
@@ -298,7 +299,7 @@ public:
 	std::string commandLineString = "";
 
 private:
-	DOS_Device *mydosdevice = nullptr;
+	std::unique_ptr<DOS_Device> dos_device = {};
 
 	// I used this spec: st16c450v420.pdf
 

@@ -221,6 +221,14 @@ public:
 	bool GetChannelControl(uint8_t subUnit, TCtrl &ctrl);
 };
 
+
+// Pointer to the static MSCDEX instance and current request, both used
+// throughout the MSCDEX module.
+CMscdex* mscdex = nullptr;
+static PhysPt curReqheaderPtr = {};
+
+static bool MSCDEX_Handler();
+
 CMscdex::CMscdex()
 	: numDrives(0),
 	  defaultBufSeg(0),
@@ -228,6 +236,11 @@ CMscdex::CMscdex()
 	  cdrom{nullptr}
 {
 	memset(dinfo, 0, sizeof(dinfo));
+
+	// Set the global accessors
+	curReqheaderPtr = {};
+	mscdex = this;
+	DOS_AddMultiplexHandler(MSCDEX_Handler);
 }
 
 CMscdex::~CMscdex()
@@ -236,6 +249,10 @@ CMscdex::~CMscdex()
 		delete cdrom[i];
 		cdrom[i] = nullptr;
 	}
+	// Reset the global accessors
+	DOS_DeleteMultiplexHandler(MSCDEX_Handler);
+	mscdex = nullptr;
+	curReqheaderPtr = {};
 }
 
 void CMscdex::GetDrives(PhysPt data)
@@ -915,11 +932,6 @@ bool CMscdex::GetChannelControl(uint8_t subUnit, TCtrl& ctrl) {
 	return true;
 }
 
-// Pointer to the static MSCDEX instance
-CMscdex* mscdex = nullptr;
-
-static PhysPt curReqheaderPtr = {};
-
 bool GetMSCDEXDrive(unsigned char drive_letter,CDROM_Interface **_cdrom) {
 	Bitu i;
 
@@ -1329,7 +1341,13 @@ public:
 	device_MSCDEX()
 	{
 		SetName("MSCD001");
+		DOS_AddManagedDevice(this);
 	}
+
+	~device_MSCDEX() {
+		DOS_RemoveDevice(this);
+	}
+
 	bool Read(uint8_t* /*data*/, uint16_t* /*size*/) override
 	{
 		return false;
@@ -1445,29 +1463,25 @@ void MSCDEX_SetCDInterface(int int_nr, int num_cd) {
 void MSCDEX_Configure(const ModuleLifecycle lifecycle, Section*)
 {
 	static std::unique_ptr<CMscdex> mscdex_instance = {};
+	static std::unique_ptr<device_MSCDEX> mscdex_dos_device = {};
 
 	switch (lifecycle) {
 	case ModuleLifecycle::Create:
 		if (!mscdex_instance) {
-			// The DOS device system takes ownership and deletes the
-			// device
-			DOS_AddDevice(new device_MSCDEX());
-
-			DOS_AddMultiplexHandler(MSCDEX_Handler);
-
 			mscdex_instance = std::make_unique<CMscdex>();
-			mscdex = mscdex_instance.get();
+		}
+		if (!mscdex_dos_device) {
+			mscdex_dos_device = std::make_unique<device_MSCDEX>();
 		}
 		break;
 
 	// This module doesn't support reconfiguration at runtime
-	case ModuleLifecycle::Reconfigure: break;
+	case ModuleLifecycle::Reconfigure:
+		break;
 
 	case ModuleLifecycle::Destroy:
-		DOS_DeleteMultiplexHandler(MSCDEX_Handler);
-		curReqheaderPtr = {};
-		mscdex = nullptr;
-		mscdex_instance = {};
+		mscdex_dos_device.reset();
+		mscdex_instance.reset();
 		break;
 	}
 }

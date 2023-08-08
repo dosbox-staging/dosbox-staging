@@ -160,6 +160,14 @@ public:
 	virtual bool WriteToControlChannel(PhysPt bufptr, uint16_t size,
 	                                   uint16_t* retcode);
 	virtual uint8_t GetStatus(bool input_flag);
+
+	// Indicate or check if the device is managed (or not). Managed devices
+	// are externally owned and managed per RAII. Unmanaged devices will be
+	// destroyed by the device registry on close.
+	void SetManaged();
+	void SetUnmanaged();
+	bool IsUnmanaged() const;
+
 	void SetDeviceNumber(Bitu num)
 	{
 		devnum = num;
@@ -167,6 +175,9 @@ public:
 
 private:
 	Bitu devnum;
+
+	// Is this device managed? See above 'Managed' member functions.
+	bool is_managed = false;
 };
 
 class localFile : public DOS_File {
@@ -417,10 +428,14 @@ typedef bool (MultiplexHandler)(void);
 void DOS_AddMultiplexHandler(MultiplexHandler* handler);
 void DOS_DeleteMultiplexHandler(MultiplexHandler* const handler);
 
-/* AddDevice stores the pointer to a created device */
-void DOS_AddDevice(DOS_Device * adddev);
-/* DelDevice destroys the device that is pointed to. */
-void DOS_DelDevice(DOS_Device * dev);
+// Add (or remove) the device in the DOS device registry. Managed devices are
+// externally owned and managed per RAII. Unmanaged devices will be destroyed by
+// the device registry on close. Note that when adding, duplicate-named devices
+// are removed from the registry prior to adding because devices must be
+// uniquely named.
+void DOS_AddUnmanagedDevice(DOS_Device* unmanaged_dev);
+void DOS_AddManagedDevice(DOS_Device* managed_dev);
+void DOS_RemoveDevice(DOS_Device* dev);
 
 // Get, append, and query the DOS device header linked list
 RealPt DOS_GetNextDevice(const RealPt rp);

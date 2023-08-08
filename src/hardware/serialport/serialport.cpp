@@ -1170,8 +1170,8 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 	rxfifo = new MyFifo(fifosize);
 	txfifo = new MyFifo(fifosize);
 
-	mydosdevice=new device_COM(this);
-	DOS_AddDevice(mydosdevice);
+	dos_device = std::make_unique<device_COM>(this);
+	DOS_AddManagedDevice(dos_device.get());
 
 	errormsg_pending=false;
 	framingErrors=0;
@@ -1197,9 +1197,12 @@ bool CSerial::getUintFromString(const char *name, uint32_t &data, CommandLine *c
 }
 
 CSerial::~CSerial() {
-	DOS_DelDevice(mydosdevice);
-	for (uint16_t i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
+	DOS_RemoveDevice(dos_device.get());
+	dos_device.reset();
+
+	for (uint16_t i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++) {
 		removeEvent(i);
+	}
 
 	// Free the fifos and devices
 	delete(errorfifo);

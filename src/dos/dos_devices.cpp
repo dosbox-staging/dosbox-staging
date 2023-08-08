@@ -30,8 +30,9 @@
 #include "support.h"
 #include "drives.h"
 #include "dev_con.h"
+#include "string_utils.h"
 
-DOS_Device * Devices[DOS_DEVICES];
+DOS_Device* Devices[DOS_DEVICES] = {};
 
 struct ExtDeviceData {
 	uint16_t attribute;
@@ -263,7 +264,7 @@ static void DOS_CheckOpenExtDevice(const char *name)
 
 	if ((addr = DOS_CheckExtDevice(name, true)) != 0) {
 		DOS_ExtDevice *device = new DOS_ExtDevice(name, addr >> 16, addr & 0xffff);
-		DOS_AddDevice(device);
+		DOS_AddUnmanagedDevice(device);
 	}
 }
 
@@ -364,7 +365,22 @@ uint8_t DOS_Device::GetStatus(bool input_flag)
 	return (info & 0x40) ? 0x00 : 0xff;
 }
 
-DOS_File &DOS_File::operator=(const DOS_File &orig)
+void DOS_Device::SetManaged()
+{
+	is_managed = true;
+}
+
+void DOS_Device::SetUnmanaged()
+{
+	is_managed = false;
+}
+
+bool DOS_Device::IsUnmanaged() const
+{
+	return (is_managed == false);
+}
+
+DOS_File& DOS_File::operator=(const DOS_File& orig)
 {
 	flags = orig.flags;
 	time=orig.time;
@@ -436,27 +452,77 @@ uint8_t DOS_FindDevice(const char* name)
 	return DOS_DEVICES;
 }
 
-void DOS_AddDevice(DOS_Device * adddev) {
-//Caller creates the device. We store a pointer to it
-//TODO Give the Device a real handler in low memory that responds to calls
-	for(Bitu i = 0; i < DOS_DEVICES;i++) {
-		if(!Devices[i]){
-			Devices[i] = adddev;
+static void add_dos_device(DOS_Device* requested_dev)
+{
+	assert(requested_dev);
+
+	// DOS Devices register themselves with the root filesystem and
+	// therefore need to be uniquely named
+	DOS_RemoveDevice(requested_dev);
+
+	for (uint8_t i = 0; i < DOS_DEVICES; ++i) {
+		if (!Devices[i]) {
+			// TODO: Give the Device a real handler in low memory
+			// that responds to calls
+			Devices[i] = requested_dev;
 			Devices[i]->SetDeviceNumber(i);
 			return;
 		}
 	}
-	E_Exit("DOS:Too many devices added");
+	E_Exit("DOS: Too many devices added");
 }
 
-void DOS_DelDevice(DOS_Device * dev) {
-// We will destroy the device if we find it in our list.
-// TODO:The file table is not checked to see the device is opened somewhere!
-	for (Bitu i = 0; i <DOS_DEVICES;i++) {
-		if (Devices[i] && !strcasecmp(Devices[i]->GetName(), dev->GetName())) {
-			delete Devices[i];
-			Devices[i] = nullptr;
+void DOS_AddUnmanagedDevice(DOS_Device* unmanaged_dev)
+{
+	assert(unmanaged_dev);
+	unmanaged_dev->SetUnmanaged();
+	add_dos_device(unmanaged_dev);
+}
+
+void DOS_AddManagedDevice(DOS_Device* managed_dev)
+{
+	assert(managed_dev);
+	managed_dev->SetManaged();
+	add_dos_device(managed_dev);
+}
+
+void DOS_RemoveDevice(DOS_Device* requested_dev)
+{
+	if (!requested_dev) {
+		return;
+	}
+
+	// Helper used below
+	auto maybe_delete = [](auto& dev) {
+		if (dev->IsUnmanaged()) {
+			delete dev;
+		}
+		dev = nullptr;
+	};
+
+	// Store the requested device name in a std::string so it survives
+	// removal of the parent device.
+	assert(requested_dev->GetName());
+	const std::string requested_name = requested_dev->GetName();
+
+	for (auto& queried_dev : Devices) {
+		// Skip empty devices
+		if (!queried_dev) {
+			continue;
+		}
+		// Do we have an exact value match?
+		if (queried_dev == requested_dev) {
+			maybe_delete(queried_dev);
 			return;
+		}
+
+		const auto queried_name = queried_dev->GetName();
+		assert(queried_name);
+
+		// Do we have a name-match?
+		if (iequals(queried_name, requested_name.c_str())) {
+			maybe_delete(queried_dev);
+			// Keep going; maybe there are duplicates
 		}
 	}
 }
@@ -562,21 +628,20 @@ bool DOS_DeviceHasName(const RealPt rp, const std::string_view req_name)
 }
 
 void DOS_SetupDevices() {
-	DOS_Device * newdev;
-	newdev=new device_CON();
-	DOS_AddDevice(newdev);
-	DOS_Device * newdev2;
-	newdev2=new device_NUL();
-	DOS_AddDevice(newdev2);
-	DOS_Device * newdev3;
-	newdev3=new device_LPT1();
-	DOS_AddDevice(newdev3);
+	DOS_AddUnmanagedDevice(new device_CON());
+	DOS_AddUnmanagedDevice(new device_NUL());
+	DOS_AddUnmanagedDevice(new device_LPT1());
 }
 
 void DOS_ShutDownDevices()
 {
 	for (auto &d : Devices) {
-		delete d;
+		if (!d) {
+			continue;
+		}
+		if (d->IsUnmanaged()) {
+			delete d;
+		}
 		d = nullptr;
 	}
 }
