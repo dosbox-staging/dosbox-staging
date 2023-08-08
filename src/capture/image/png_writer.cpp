@@ -242,7 +242,7 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 void PngWriter::WriteRow(std::vector<uint8_t>::const_iterator row)
 {
 	assert(png_ptr);
-	png_write_row(png_ptr, &*row);
+	png_write_row(png_ptr, const_cast<png_bytep>(&*row));
 }
 
 void PngWriter::FinalisePng()
