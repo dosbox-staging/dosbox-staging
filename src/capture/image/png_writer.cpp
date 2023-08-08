@@ -239,10 +239,11 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 	png_write_info(png_ptr, png_info_ptr);
 }
 
-void PngWriter::WriteRow(std::vector<uint8_t>::const_iterator row)
+void PngWriter::WriteRow(png_bytep row)
 {
 	assert(png_ptr);
-	png_write_row(png_ptr, &*row);
+	assert(row);
+	png_write_row(png_ptr, row);
 }
 
 void PngWriter::FinalisePng()

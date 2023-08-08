@@ -328,10 +328,10 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 	SetRowRepeat();
 }
 
-std::vector<uint8_t>::const_iterator ImageScaler::GetNextOutputRow()
+uint8_t* ImageScaler::GetNextOutputRow()
 {
 	if (output.curr_row >= output.height) {
-		return output.row_buf.end();
+		return nullptr;
 	}
 
 	if (output.row_repeat == 0) {
@@ -348,5 +348,5 @@ std::vector<uint8_t>::const_iterator ImageScaler::GetNextOutputRow()
 
 	++output.curr_row;
 
-	return output.row_buf.begin();
+	return output.row_buf.data();
 }

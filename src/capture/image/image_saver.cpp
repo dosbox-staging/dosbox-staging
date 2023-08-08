@@ -149,9 +149,9 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
 		break;
 	};
 
-	auto rows_to_write = image_scaler.GetOutputHeight();
-	while (rows_to_write--) {
-		auto row = image_scaler.GetNextOutputRow();
+	// Write the rows
+	png_bytep row = {};
+	while ((row = image_scaler.GetNextOutputRow())) {
 		png_writer.WriteRow(row);
 	}
 }
@@ -215,7 +215,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image, const VideoMode& video
 				*out++ = pixel.blue;
 			}
 		}
-		png_writer.WriteRow(row_buf.begin());
+		png_writer.WriteRow(row_buf.data());
 		image_decoder.AdvanceRow();
 	}
 }
@@ -277,7 +277,7 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image,
 			*out++ = pixel.green;
 			*out++ = pixel.blue;
 		}
-		png_writer.WriteRow(row_buf.begin());
+		png_writer.WriteRow(row_buf.data());
 		image_decoder.AdvanceRow();
 	}
 }

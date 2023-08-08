@@ -71,7 +71,7 @@ enum class PerAxisScaling { Integer, Fractional };
 //   to query the output parameters decided by the upscaler.
 //
 // - Call `GetNextOutputRow()` repeatedly to get the upscaled output until the
-//   end of the iterator is reached.
+//   end is reached, indicated by a nullptr return value.
 //
 // - Call `Init()` again to process another image (no need to destruct &
 //   re-create).
@@ -83,7 +83,7 @@ public:
 
 	void Init(const RenderedImage& image, const VideoMode& video_mode);
 
-	std::vector<uint8_t>::const_iterator GetNextOutputRow();
+	uint8_t* GetNextOutputRow();
 
 	uint16_t GetOutputWidth() const;
 	uint16_t GetOutputHeight() const;

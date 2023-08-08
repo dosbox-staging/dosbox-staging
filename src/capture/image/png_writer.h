@@ -48,7 +48,7 @@ public:
 	                  const Fraction& pixel_aspect_ratio,
 	                  const VideoMode& video_mode, const uint8_t* palette_data);
 
-	void WriteRow(std::vector<uint8_t>::const_iterator row);
+	void WriteRow(png_bytep row);
 
 	// prevent copying
 	PngWriter(const PngWriter&) = delete;
