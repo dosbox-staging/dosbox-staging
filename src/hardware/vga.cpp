@@ -141,10 +141,10 @@ void VGA_LogInitialization(const char *adapter_name,
                            const char *ram_type,
                            const size_t num_modes)
 {
-	const auto mem_in_kib = vga.vmemsize / 1024;
+	const auto mem_in_kb = vga.vmemsize / 1024;
 	LOG_INFO("VIDEO: Initialised %s with %d %s of %s supporting %d modes",
-	         adapter_name, mem_in_kib < 1024 ? mem_in_kib : mem_in_kib / 1024,
-	         mem_in_kib < 1024 ? "KB" : "MB", ram_type,
+	         adapter_name, mem_in_kb < 1024 ? mem_in_kb : mem_in_kb / 1024,
+	         mem_in_kb < 1024 ? "KB" : "MB", ram_type,
 	         check_cast<int16_t>(num_modes));
 }
 
