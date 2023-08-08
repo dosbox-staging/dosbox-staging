@@ -47,12 +47,6 @@ struct RenderPal_t {
 	uint32_t last         = 0;
 };
 
-struct VideoMode {
-	uint16_t width              = 0;
-	uint16_t height             = 0;
-	Fraction pixel_aspect_ratio = {};
-};
-
 enum class PixelFormat : uint8_t {
 	// Up to 256 colours, paletted;
 	// stored as packed uint8 data
