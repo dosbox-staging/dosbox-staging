@@ -114,6 +114,12 @@ enum VGAModes {
 	M_ERROR = 1 << 31,
 };
 
+struct VideoMode {
+	uint16_t width              = 0;
+	uint16_t height             = 0;
+	Fraction pixel_aspect_ratio = {};
+};
+
 constexpr auto M_TEXT_MODES = M_TEXT | M_HERC_TEXT | M_TANDY_TEXT | M_CGA_TEXT_COMPOSITE;
 
 constexpr auto vesa_2_0_modes_start = 0x120;
