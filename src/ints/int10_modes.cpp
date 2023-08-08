@@ -1005,7 +1005,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	const auto UseLinearFramebuffer    = is(mode, b14);
 	const auto DoNotClearDisplayMemory = is(mode, b15);
 
-	if (mode >= MinVesaMode) {
+	if (mode >= MinVesaBiosModeNumber) {
 		if (UseLinearFramebuffer && int10.vesa_nolfb) {
 			return false;
 		}
@@ -1014,7 +1014,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 		}
 		mode &= 0xfff;
 	}
-	if ((mode <= MinVesaMode) && (mode & 0x80)) {
+	if ((mode <= MinVesaBiosModeNumber) && (mode & 0x80)) {
 		clearmem = false;
 		mode -= 0x80;
 	}
@@ -1427,7 +1427,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 
 	if (svgaCard == SVGA_S3Trio) {
 		//  Setup the correct clock
-		if (CurMode->mode >= MinVesaMode) {
+		if (CurMode->mode >= MinVesaBiosModeNumber) {
 			if (CurMode->vdispend>480)
 				misc_output|=0xc0;	//480-line sync
 			misc_output|=0x0c;		//Select clock 3
