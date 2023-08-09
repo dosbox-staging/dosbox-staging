@@ -466,7 +466,7 @@ static double get_host_refresh_rate()
 
 	// Log if changed
 	static auto last_int_rate = 0;
-	const auto int_rate = static_cast<int>(rate);
+	const auto int_rate = ifloor(rate);
 	if (last_int_rate != int_rate) {
 		last_int_rate = int_rate;
 		LOG_MSG("SDL: Using %s display refresh rate of %2.5g Hz",
@@ -900,10 +900,10 @@ static void save_rate_to_frame_period(const double rate_hz)
 	// backoff by one-onethousandth to avoid hitting the vsync edge
 	sdl.frame.period_ms = 1'001.0 / rate_hz;
 	const auto period_us = sdl.frame.period_ms * 1'000;
-	sdl.frame.period_us = static_cast<int>(period_us);
+	sdl.frame.period_us = ifloor(period_us);
 	// Permit the frame period to be off by up to 90% before "out of sync"
-	sdl.frame.period_us_early = static_cast<int>(55 * period_us / 100);
-	sdl.frame.period_us_late = static_cast<int>(145 * period_us / 100);
+	sdl.frame.period_us_early = ifloor(55 * period_us / 100);
+	sdl.frame.period_us_late = ifloor(145 * period_us / 100);
 }
 
 static std::unique_ptr<Pacer> render_pacer = {};
@@ -3415,9 +3415,9 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 		// image into the window or viewport bounds.
 		const auto pixel_aspect = round(draw_height * draw_scale_y) /
 		                          draw_height;
-		auto integer_scale_factor = std::min(
-		        bounds_w / draw_width,
-		        static_cast<int>(bounds_h / (draw_height * pixel_aspect)));
+		auto integer_scale_factor =
+		        std::min(bounds_w / draw_width,
+		                 ifloor(bounds_h / (draw_height * pixel_aspect)));
 
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
@@ -3433,8 +3433,8 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 	case IntegerScalingMode::Vertical: {
 		auto integer_scale_factor = std::min(
 		        bounds_h / draw_height,
-		        static_cast<int>(bounds_w /
-		                         (draw_height * image_aspect_ratio)));
+		        ifloor(bounds_w / (draw_height * image_aspect_ratio)));
+
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			std::tie(view_w, view_h) = calculate_bounded_dims();
