@@ -865,9 +865,9 @@ static bool init_shader([[maybe_unused]] Section* sec)
 	auto shader_prop = render_sec->Get_path("glshader");
 	auto shader_name = std::string(shader_prop->GetValue());
 
-	constexpr auto fallback_shader = "none";
+	constexpr auto fallback_shader_name = "none";
 	if (shader_name.empty()) {
-		shader_name = fallback_shader;
+		shader_name = fallback_shader_name;
 	} else if (shader_name == "default") {
 		shader_name = "interpolation/sharp";
 	}
@@ -893,11 +893,11 @@ static bool init_shader([[maybe_unused]] Section* sec)
 		}
 
 		// Fallback to the 'none' shader and otherwise fail
-		if (read_shader_source(fallback_shader, source)) {
-			shader_name = fallback_shader;
+		if (read_shader_source(fallback_shader_name, source)) {
+			shader_name = fallback_shader_name;
 		} else {
 			E_Exit("RENDER: Fallback shader file '%s' not found and is mandatory",
-			       fallback_shader);
+			       fallback_shader_name);
 		}
 	}
 
