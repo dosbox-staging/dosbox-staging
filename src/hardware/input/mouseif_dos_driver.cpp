@@ -1775,13 +1775,16 @@ static Bitu int33_handler()
 		SegSet16(es, info_segment);
 		reg_di = info_offset_version;
 		break;
-	case 0x70: // Mouse Systems - installation check
-	case 0x72: // Mouse Systems 7.01+, Genius Mouse 9.06+ - unknown
-	case 0x73: // Mouse Systems 7.01+ - get button assignments
-		LOG_WARNING("MOUSE (DOS): Mouse Sytems extensions not implemented");
-		break;
-	case 0x53C1: // Logitech CyberMan
-		LOG_WARNING("MOUSE (DOS): Logitech CyberMan function 0x53c1 not implemented");
+	case 0x70:   // Mouse Systems       - installation check
+	case 0x72:   // Mouse Systems 7.01+ - unknown functionality
+	             // Genius Mouse 9.06+  - unknown functionality
+	case 0x73:   // Mouse Systems 7.01+ - get button assignments
+	             // VBADOS              - get driver info
+	case 0x53c1: // Logitech CyberMan   - unknown functionality
+		// Do not print out any warnings for known 3rd party oem driver
+		// extensions - every software (except the one bound to the
+		// particular driver) should continue working correctly even if
+		// we completely ignore the call
 		break;
 	default:
 		LOG_WARNING("MOUSE (DOS): Function 0x%04x not implemented", reg_ax);
