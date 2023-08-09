@@ -87,6 +87,22 @@ inline int iroundf(const float x)
 	return static_cast<int>(roundf(x));
 }
 
+inline int ifloor(double x)
+{
+	assert(std::isfinite(x));
+	assert(x >= (std::numeric_limits<int>::min)());
+	assert(x <= (std::numeric_limits<int>::max)());
+	return static_cast<int>(floor(x));
+}
+
+inline int ifloor(const float x)
+{
+	assert(std::isfinite(x));
+	assert(x >= static_cast<float>((std::numeric_limits<int>::min)()));
+	assert(x <= static_cast<float>((std::numeric_limits<int>::max)()));
+	return static_cast<int>(floorf(x));
+}
+
 // Left-shifts a signed value by a given amount, with overflow detection
 template <typename T1, typename T2>
 constexpr T1 left_shift_signed(T1 value, T2 amount)
