@@ -883,7 +883,9 @@ void MixerChannel::AddSilence()
 			const auto mapped_output_right = output_map.right;
 
 			// Position where to write the data
-			auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
+			auto mixpos = check_cast<work_index_t>(
+			        (mixer.pos + frames_done) & MIXER_BUFMASK);
+
 			while (frames_done < frames_needed) {
 				// Fade gradually to silence to avoid clicks.
 				// Maybe the fade factor f depends on the sample
@@ -899,8 +901,6 @@ void MixerChannel::AddSilence()
 						next_frame[ch] = 0.0f;
 				}
 
-				mixpos &= MIXER_BUFMASK;
-
 				mixer.work[mixpos][mapped_output_left] +=
 				        prev_frame.left * combined_volume_scalar.left;
 
@@ -909,7 +909,9 @@ void MixerChannel::AddSilence()
 				        combined_volume_scalar.right;
 
 				prev_frame = next_frame;
-				mixpos++;
+
+				mixpos = static_cast<work_index_t>(
+				        (mixpos + 1) & MIXER_BUFMASK);
 				frames_done++;
 				freq_counter = FREQ_NEXT;
 			}
@@ -1608,12 +1610,12 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	// master output
 	const auto out_frames = static_cast<int>(mixer.resample_out.size()) / 2;
 
-	auto pos    = mixer.resample_out.begin();
-	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
+	auto pos = mixer.resample_out.begin();
+
+	auto mixpos = check_cast<work_index_t>((mixer.pos + frames_done) &
+	                                       MIXER_BUFMASK);
 
 	while (pos != mixer.resample_out.end()) {
-		mixpos &= MIXER_BUFMASK;
-
 		AudioFrame frame = {*pos++, *pos++};
 
 		if (do_highpass_filter) {
@@ -1647,7 +1649,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		mixer.work[mixpos][0] += frame.left;
 		mixer.work[mixpos][1] += frame.right;
 
-		++mixpos;
+		mixpos = static_cast<work_index_t>((mixpos + 1) & MIXER_BUFMASK);
 	}
 	frames_done += out_frames;
 
@@ -1667,8 +1669,11 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 	auto frames_remaining = frames_needed - frames_done;
 	auto index            = 0;
 	auto index_add        = (len << FREQ_SHIFT) / frames_remaining;
-	auto mixpos = check_cast<work_index_t>(mixer.pos + frames_done);
-	auto pos    = 0;
+
+	auto mixpos = check_cast<work_index_t>((mixer.pos + frames_done) &
+	                                       MIXER_BUFMASK);
+
+	auto pos = 0;
 
 	// read-only aliases to avoid dereferencing and inform compiler their
 	// values don't change
@@ -1689,7 +1694,6 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 
 		const auto diff_mul = index & FREQ_MASK;
 		index += index_add;
-		mixpos &= MIXER_BUFMASK;
 
 		const auto sample = prev_frame.left +
 		                    ((diff * diff_mul) >> FREQ_SHIFT);
@@ -1704,7 +1708,7 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 		mixer.work[mixpos][mapped_output_left] += frame_with_gain.left;
 		mixer.work[mixpos][mapped_output_right] += frame_with_gain.right;
 
-		mixpos++;
+		mixpos = static_cast<work_index_t>((mixpos + 1) & MIXER_BUFMASK);
 	}
 
 	frames_done = frames_needed;
@@ -2137,7 +2141,8 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 	mixer.frames_needed -= reduce_frames;
 
 	pos       = mixer.pos;
-	mixer.pos = (mixer.pos + reduce_frames) & MIXER_BUFMASK;
+	mixer.pos = check_cast<work_index_t>((mixer.pos + reduce_frames) &
+	                                     MIXER_BUFMASK);
 
 	if (frames_requested != reduce_frames) {
 		while (frames_requested--) {
