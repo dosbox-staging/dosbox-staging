@@ -1800,9 +1800,19 @@ void MixerChannel::FillUp()
 	if (!is_enabled || frames_done < mixer.frames_done)
 		return;
 	const auto index = PIC_TickIndex();
-	MIXER_LockAudioDevice();
-	Mix(check_cast<uint16_t>(static_cast<int64_t>(index * mixer.frames_needed)));
-	MIXER_UnlockAudioDevice();
+
+	auto frames_remaining = static_cast<int>(index * mixer.frames_needed);
+	while (frames_remaining > 0) {
+		const auto frames_to_mix = std::clamp(
+		        frames_remaining, 0, static_cast<int>(MixerBufferLength));
+
+		MIXER_LockAudioDevice();
+		Mix(check_cast<work_index_t>(frames_to_mix));
+		MIXER_UnlockAudioDevice();
+		// Let SDL fetch frames after each chunk
+
+		frames_remaining = -frames_to_mix;
+	}
 }
 
 std::string MixerChannel::DescribeLineout() const
