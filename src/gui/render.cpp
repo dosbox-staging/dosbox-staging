@@ -872,7 +872,7 @@ static bool init_shader([[maybe_unused]] Section* sec)
 		shader_name = "interpolation/sharp";
 	}
 
-	if (render.shader.filename == shader_name) {
+	if (render.shader.name == shader_name) {
 		return false;
 	}
 
@@ -904,12 +904,12 @@ static bool init_shader([[maybe_unused]] Section* sec)
 	// Reset shader settings to defaults
 	render.shader.settings = {};
 
-	if (using_opengl && source.length() && render.shader.filename != shader_name) {
+	if (using_opengl && source.length() && render.shader.name != shader_name) {
 		LOG_MSG("RENDER: Using GLSL shader '%s'", shader_name.c_str());
 
-		// Move the temporary filename and source into the memebers
-		render.shader.filename = std::move(shader_name);
-		render.shader.source   = std::move(source);
+		// Move the temporary name and source into the memebers
+		render.shader.name   = std::move(shader_name);
+		render.shader.source = std::move(source);
 
 		render.shader.settings = parse_shader_settings(shader_name, source);
 
@@ -928,7 +928,7 @@ void RENDER_InitShader(Section* sec)
 
 void RENDER_Init(Section* sec);
 
-void RENDER_LoadShader(const std::string filename)
+void RENDER_LoadShader(const std::string name)
 {
 	assert(control);
 	auto render_section = control->GetSection("render");
@@ -937,7 +937,7 @@ void RENDER_LoadShader(const std::string filename)
 	const auto sec = dynamic_cast<Section_prop*>(render_section);
 
 	auto glshader_prop = sec ? sec->Get_path("glshader") : nullptr;
-	glshader_prop->SetValue(filename);
+	glshader_prop->SetValue(name);
 	RENDER_Init(render_section);
 }
 
