@@ -81,6 +81,7 @@ void MOUSEPS2_NotifyWheel(const int16_t w_rel);
 
 bool MOUSEBIOS_CheckCallback();
 void MOUSEBIOS_DoCallback();
+void MOUSEBIOS_FinalizeInterrupt();
 
 // ***************************************************************************
 // VMware protocol extension for PS/2 mouse

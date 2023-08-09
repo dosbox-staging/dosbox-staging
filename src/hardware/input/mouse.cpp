@@ -419,6 +419,7 @@ static Bitu int74_handler()
 
 Bitu int74_ret_handler()
 {
+	MOUSEBIOS_FinalizeInterrupt();
 	MOUSEDOS_FinalizeInterrupt();
 	return CBRET_NONE;
 }
