@@ -873,6 +873,16 @@ const char* Section_prop::Get_string(const std::string& _propname) const
 	return "";
 }
 
+Prop_string* Section_prop::GetStringProp(const std::string& propname) const
+{
+	for (const auto property : properties) {
+		if (property->propname == propname) {
+			return dynamic_cast<Prop_string*>(property);
+		}
+	}
+	return nullptr;
+}
+
 Hex Section_prop::Get_hex(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
