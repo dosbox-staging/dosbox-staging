@@ -862,8 +862,8 @@ static bool init_shader([[maybe_unused]] Section* sec)
 	        control->GetSection("render"));
 
 	assert(render_sec);
-	auto sh          = render_sec->Get_path("glshader");
-	auto shader_name = std::string(sh->GetValue());
+	auto shader_prop = render_sec->Get_path("glshader");
+	auto shader_name = std::string(shader_prop->GetValue());
 
 	constexpr auto fallback_shader = "none";
 	if (shader_name.empty()) {
@@ -880,9 +880,10 @@ static bool init_shader([[maybe_unused]] Section* sec)
 
 	std::string source = {};
 
-	if (!read_shader_source(sh->realpath.string(), source) &&
-	    (sh->realpath == shader_name || !read_shader_source(shader_name, source))) {
-		sh->SetValue("none");
+	if (!read_shader_source(shader_prop->realpath.string(), source) &&
+	    (shader_prop->realpath == shader_name ||
+	     !read_shader_source(shader_name, source))) {
+		shader_prop->SetValue("none");
 		source.clear();
 
 		// List all the existing shaders for the user
