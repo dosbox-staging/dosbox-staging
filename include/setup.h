@@ -401,6 +401,8 @@ public:
 
 	const char* Get_string(const std::string& _propname) const;
 
+	Prop_string* GetStringProp(const std::string& propname) const;
+
 	bool Get_bool(const std::string& _propname) const;
 
 	Hex Get_hex(const std::string& _propname) const;
