@@ -634,63 +634,30 @@ std::deque<std::string> RENDER_InventoryShaders()
 	return inventory;
 }
 
-static bool read_shader_source(const std::string& shader_path, std::string& source)
+static bool read_shader_source(const std::string& shader_name, std::string& source)
 {
-	// Start with the path as-is and then try from resources
-	const auto candidate_paths = {std_fs::path(shader_path),
-	                              std_fs::path(shader_path + ".glsl"),
-	                              GetResourcePath("glshaders", shader_path),
-	                              GetResourcePath("glshaders",
-	                                              shader_path + ".glsl")};
+	// Start with the name as-is and then try from resources
+	constexpr auto glsl_ext = ".glsl";
 
-	std::string s; // to be populated with the shader source
-	for (const auto& p : candidate_paths) {
-		if (read_shader(p, s)) {
+	constexpr auto glshaders_dir = "glshaders";
+
+	const auto candidate_paths = {std_fs::path(shader_name),
+	                              std_fs::path(shader_name + glsl_ext),
+	                              GetResourcePath(glshaders_dir, shader_name),
+	                              GetResourcePath(glshaders_dir,
+	                                              shader_name + glsl_ext)};
+
+	// To be populated with the shader source
+	for (const auto& path : candidate_paths) {
+		if (read_shader(path, source)) {
 			break;
 		}
 	}
 
-	if (s.empty()) {
-		source.clear();
+	if (source.empty()) {
+		LOG_ERR("RENDER: Failed to load shader '%s'", shader_name.c_str());
 		return false;
 	}
-
-	if (first_shell) {
-		std::string pre_defs;
-		const size_t count = first_shell->GetEnvCount();
-		for (size_t i = 0; i < count; ++i) {
-			std::string env;
-			if (!first_shell->GetEnvNum(i, env)) {
-				continue;
-			}
-			if (env.compare(0, 9, "GLSHADER_") == 0) {
-				const auto brk = env.find('=');
-				if (brk == std::string::npos) {
-					continue;
-				}
-				env[brk] = ' ';
-				pre_defs += "#define " + env.substr(9) + '\n';
-			}
-		}
-		if (pre_defs.length()) {
-			// If "#version" occurs, it must be before anything,
-			// except comments and whitespace
-			auto pos = s.find("#version ");
-
-			if (pos != std::string::npos) {
-				pos = s.find('\n', pos + 9);
-			}
-
-			s.insert(pos, pre_defs);
-		}
-	}
-	if (s.empty()) {
-		source.clear();
-		LOG_ERR("RENDER: Failed to read shader source");
-		return false;
-	}
-	source = std::move(s);
-	assert(source.length());
 	return true;
 }
 
@@ -846,44 +813,55 @@ void log_warning_if_legacy_shader_name(const std::string& name)
 }
 #endif
 
-// Returns true if the shader has been changed, or if a shader has been loaded
-// for the first time since launch
-static bool init_shader([[maybe_unused]] Section* sec)
-{
 #if C_OPENGL
+constexpr auto fallback_shader_name = "none";
+
+static bool is_using_opengl_output_mode() {
 	assert(control);
-	const Section* sdl_sec = control->GetSection("sdl");
+
+	const auto sdl_sec = static_cast<const Section_prop*>(
+	        control->GetSection("sdl"));
 	assert(sdl_sec);
 
 	const bool using_opengl = starts_with(sdl_sec->GetPropValue("output"),
 	                                      "opengl");
 
+	return using_opengl;
+}
+
+std::string get_shader_name_from_config()
+{
+	assert(control);
+
 	const auto render_sec = static_cast<const Section_prop*>(
 	        control->GetSection("render"));
-
 	assert(render_sec);
-	auto shader_prop = render_sec->Get_path("glshader");
-	auto shader_name = std::string(shader_prop->GetValue());
 
-	constexpr auto fallback_shader_name = "none";
+	const std::string shader_name = render_sec->Get_string("glshader");
+
 	if (shader_name.empty()) {
-		shader_name = fallback_shader_name;
+		return fallback_shader_name;
 	} else if (shader_name == "default") {
-		shader_name = "interpolation/sharp";
+		return "interpolation/sharp";
+	} else {
+		return shader_name;
 	}
+}
+#endif
 
-	if (render.shader.name == shader_name) {
-		return false;
-	}
-
+// Returns true if the shader has been changed, or if a shader has been loaded
+// for the first time since launch
+static void load_shader(const std::string& shader_name)
+{
+#if C_OPENGL
 	log_warning_if_legacy_shader_name(shader_name);
 
-	std::string source = {};
+	std::string source             = {};
+	std::string loaded_shader_name = {};
 
-	if (!read_shader_source(shader_prop->realpath.string(), source) &&
-	    (shader_prop->realpath == shader_name ||
-	     !read_shader_source(shader_name, source))) {
-		shader_prop->SetValue("none");
+	if (read_shader_source(shader_name, source)) {
+		loaded_shader_name = shader_name;
+	} else {
 		source.clear();
 
 		// List all the existing shaders for the user
@@ -894,7 +872,7 @@ static bool init_shader([[maybe_unused]] Section* sec)
 
 		// Fallback to the 'none' shader and otherwise fail
 		if (read_shader_source(fallback_shader_name, source)) {
-			shader_name = fallback_shader_name;
+			loaded_shader_name = fallback_shader_name;
 		} else {
 			E_Exit("RENDER: Fallback shader file '%s' not found and is mandatory",
 			       fallback_shader_name);
@@ -904,26 +882,27 @@ static bool init_shader([[maybe_unused]] Section* sec)
 	// Reset shader settings to defaults
 	render.shader.settings = {};
 
-	if (using_opengl && source.length() && render.shader.name != shader_name) {
-		LOG_MSG("RENDER: Using GLSL shader '%s'", shader_name.c_str());
+	if (source.length() > 0) {
+		LOG_MSG("RENDER: Using GLSL shader '%s'",
+		        loaded_shader_name.c_str());
 
 		// Move the temporary name and source into the memebers
-		render.shader.name   = std::move(shader_name);
+		render.shader.name   = std::move(loaded_shader_name);
 		render.shader.source = std::move(source);
 
-		render.shader.settings = parse_shader_settings(shader_name, source);
+		render.shader.settings = parse_shader_settings(loaded_shader_name,
+		                                               source);
 
 		// Pass the shader source up to the GFX engine
 		GFX_SetShader(render.shader.source);
 	}
-
-	return true;
 #endif
 }
 
-void RENDER_InitShader(Section* sec)
+void RENDER_InitShader()
 {
-	init_shader(sec);
+	const auto shader_name = get_shader_name_from_config();
+	load_shader(shader_name);
 }
 
 void RENDER_Init(Section* sec);
@@ -931,14 +910,16 @@ void RENDER_Init(Section* sec);
 void RENDER_LoadShader(const std::string name)
 {
 	assert(control);
-	auto render_section = control->GetSection("render");
 
-	assert(render_section);
-	const auto sec = dynamic_cast<Section_prop*>(render_section);
+	const auto render_sec = dynamic_cast<Section_prop*>(
+	        control->GetSection("render"));
+	assert(render_sec);
 
-	auto glshader_prop = sec ? sec->Get_path("glshader") : nullptr;
+	auto glshader_prop = render_sec->GetStringProp("glshader");
+	assert(glshader_prop);
 	glshader_prop->SetValue(name);
-	RENDER_Init(render_section);
+
+	RENDER_Init(render_sec);
 }
 
 void RENDER_HandleAutoShaderSwitching(const uint16_t canvas_width,
@@ -976,42 +957,36 @@ void RENDER_HandleAutoShaderSwitching(const uint16_t canvas_width,
 static void reload_shader(const bool pressed)
 {
 	// Quick and dirty hack to reload the current shader. Very useful when
-	// tweaking shader presets. Ultimately, this code will go away once the
-	// new shading system has been introduced, so massaging the current code
-	// to make this "nicer" would be largely a wasted effort...
+	// tweaking shader presets.
 	if (!pressed) {
 		return;
 	}
 
 	assert(control);
-	auto render_section = control->GetSection("render");
 
-	assert(render_section);
-	const auto sec = dynamic_cast<Section_prop*>(render_section);
+	const auto render_sec = dynamic_cast<Section_prop*>(
+	        control->GetSection("render"));
+	assert(render_sec);
 
-	auto glshader_prop = sec ? sec->Get_path("glshader") : nullptr;
-	if (!glshader_prop) {
-		LOG_WARNING("RENDER: Failed parsing the 'glshader' setting; not reloading");
+	const std::string shader_name = render_sec->Get_string("glshader");
+	if (shader_name.empty()) {
+		LOG_WARNING("RENDER: No 'glshader' value set; not reloading shader");
 		return;
 	}
 
+	auto glshader_prop = render_sec->GetStringProp("glshader");
 	assert(glshader_prop);
-	const auto shader_path = std::string(glshader_prop->GetValue());
-	if (shader_path.empty()) {
-		LOG_WARNING("RENDER: Failed getting path for 'glshader' setting; not reloading");
-		return;
-	}
 
 	glshader_prop->SetValue("none");
-	RENDER_Init(render_section);
+	RENDER_Init(render_sec);
 
-	glshader_prop->SetValue(shader_path);
-	RENDER_Init(render_section);
+	glshader_prop->SetValue(shader_name);
+	RENDER_Init(render_sec);
 
 	// The shader settings might have been changed (e.g. force_single_scan,
-	// force_no_pixel_doubling), so force re-rendering the image using the new
-	// settings. Without this, the altered settings would only take effect on
-	// the next video mode change.
+	// force_no_pixel_doubling), so force re-rendering the image using the
+	// new settings. Without this, the altered settings would only take
+	// effect on the next video mode change.
 	VGA_SetupDrawing(0);
 }
 
@@ -1087,7 +1062,15 @@ void RENDER_Init(Section* sec)
 	GFX_SetIntegerScalingMode(section->Get_string("integer_scaling"));
 
 #if C_OPENGL
-	const auto shader_changed = init_shader(section);
+	auto shader_changed = false;
+
+	if (is_using_opengl_output_mode()) {
+		const auto shader_name = get_shader_name_from_config();
+		if (render.shader.name != shader_name) {
+			load_shader(shader_name);
+			shader_changed = true;
+		}
+	}
 #endif
 
 	setup_scan_and_pixel_doubling(section);
