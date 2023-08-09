@@ -369,7 +369,7 @@ private:
 		uint32_t                 totalTrackFrames   = 0;
 		uint32_t                 startSector        = 0;
 		uint32_t                 totalRedbookFrames = 0;
-		int16_t                  buffer[MIXER_BUFSIZE * REDBOOK_CHANNELS] = {0};
+		int16_t buffer[MixerBufferLength * REDBOOK_CHANNELS] = {0};
 		bool                     isPlaying          = false;
 		bool                     isPaused           = false;
 	} player;

@@ -60,10 +60,12 @@ enum class MixerState {
 	Muted
 };
 
-#define MIXER_BUFSIZE (16 * 1024)
-#define MIXER_BUFMASK (MIXER_BUFSIZE - 1)
+using work_index_t = uint16_t;
 
-extern uint8_t MixTemp[MIXER_BUFSIZE];
+static constexpr work_index_t MixerBufferLength = {16 * 1024};
+static constexpr work_index_t MixerBufferMask   = {MixerBufferLength - 1};
+
+extern uint8_t MixTemp[MixerBufferLength];
 extern int16_t lut_u8to16[UINT8_MAX + 1];
 
 #define MAX_AUDIO ((1<<(16-1))-1)
@@ -138,8 +140,6 @@ enum class ResampleMethod {
 	// (everything below half the channel's sample rate is cut).
 	Resample
 };
-
-using work_index_t = uint16_t;
 
 // forward declarations
 struct SpeexResamplerState_;

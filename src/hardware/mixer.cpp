@@ -169,9 +169,9 @@ struct chorus_settings_t {
 
 struct mixer_t {
 	// complex types
-	matrix<float, MIXER_BUFSIZE, 2> work = {};
-	matrix<float, MIXER_BUFSIZE, 2> aux_reverb = {};
-	matrix<float, MIXER_BUFSIZE, 2> aux_chorus = {};
+	matrix<float, MixerBufferLength, 2> work       = {};
+	matrix<float, MixerBufferLength, 2> aux_reverb = {};
+	matrix<float, MixerBufferLength, 2> aux_chorus = {};
 
 	std::vector<float> resample_temp = {};
 	std::vector<float> resample_out = {};
@@ -212,7 +212,7 @@ struct mixer_t {
 
 static struct mixer_t mixer = {};
 
-alignas(sizeof(float)) uint8_t MixTemp[MIXER_BUFSIZE] = {};
+alignas(sizeof(float)) uint8_t MixTemp[MixerBufferLength] = {};
 
 uint16_t MIXER_GetPreBufferMs()
 {
@@ -855,10 +855,16 @@ void MixerChannel::Mix(const int frames_requested)
 		frames_remaining *= freq_add;
 		frames_remaining = (frames_remaining >> FREQ_SHIFT) +
 		                   ((frames_remaining & FREQ_MASK) != 0);
-		if (frames_remaining <= 0) // avoid underflow
+
+		// avoid underflow
+		if (frames_remaining <= 0) {
 			break;
-		frames_remaining = std::min(frames_remaining, MIXER_BUFSIZE); // avoid overflow
-		handler(check_cast<uint16_t>(frames_remaining));
+		}
+		// avoid overflow
+		frames_remaining = std::min(clamp_to_uint16(frames_remaining),
+		                            MixerBufferLength);
+
+		handler(static_cast<work_index_t>(frames_remaining));
 	}
 	if (do_sleep)
 		sleeper.MaybeSleep();
@@ -884,7 +890,7 @@ void MixerChannel::AddSilence()
 
 			// Position where to write the data
 			auto mixpos = check_cast<work_index_t>(
-			        (mixer.pos + frames_done) & MIXER_BUFMASK);
+			        (mixer.pos + frames_done) & MixerBufferMask);
 
 			while (frames_done < frames_needed) {
 				// Fade gradually to silence to avoid clicks.
@@ -911,7 +917,7 @@ void MixerChannel::AddSilence()
 				prev_frame = next_frame;
 
 				mixpos = static_cast<work_index_t>(
-				        (mixpos + 1) & MIXER_BUFMASK);
+				        (mixpos + 1) & MixerBufferMask);
 				frames_done++;
 				freq_counter = FREQ_NEXT;
 			}
@@ -1613,7 +1619,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 	auto pos = mixer.resample_out.begin();
 
 	auto mixpos = check_cast<work_index_t>((mixer.pos + frames_done) &
-	                                       MIXER_BUFMASK);
+	                                       MixerBufferMask);
 
 	while (pos != mixer.resample_out.end()) {
 		AudioFrame frame = {*pos++, *pos++};
@@ -1649,7 +1655,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type *data)
 		mixer.work[mixpos][0] += frame.left;
 		mixer.work[mixpos][1] += frame.right;
 
-		mixpos = static_cast<work_index_t>((mixpos + 1) & MIXER_BUFMASK);
+		mixpos = static_cast<work_index_t>((mixpos + 1) & MixerBufferMask);
 	}
 	frames_done += out_frames;
 
@@ -1671,7 +1677,7 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 	auto index_add        = (len << FREQ_SHIFT) / frames_remaining;
 
 	auto mixpos = check_cast<work_index_t>((mixer.pos + frames_done) &
-	                                       MIXER_BUFMASK);
+	                                       MixerBufferMask);
 
 	auto pos = 0;
 
@@ -1708,7 +1714,7 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 		mixer.work[mixpos][mapped_output_left] += frame_with_gain.left;
 		mixer.work[mixpos][mapped_output_right] += frame_with_gain.right;
 
-		mixpos = static_cast<work_index_t>((mixpos + 1) & MIXER_BUFMASK);
+		mixpos = static_cast<work_index_t>((mixpos + 1) & MixerBufferMask);
 	}
 
 	frames_done = frames_needed;
@@ -1867,7 +1873,7 @@ static void MIXER_MixData(const int frames_requested)
 	        std::min(frames_requested - mixer.frames_done, capture_buf_frames));
 
 	const auto start_pos = check_cast<work_index_t>(
-	        (mixer.pos + mixer.frames_done) & MIXER_BUFMASK);
+	        (mixer.pos + mixer.frames_done) & MixerBufferMask);
 
 	// Render all channels and accumulate results in the master mixbuffer
 	for (auto &it : mixer.channels)
@@ -1903,7 +1909,7 @@ static void MIXER_MixData(const int frames_requested)
 			mixer.work[pos][0] += reverb_buf[0][0];
 			mixer.work[pos][1] += reverb_buf[1][0];
 
-			pos = (pos + 1) & MIXER_BUFMASK;
+			pos = (pos + 1) & MixerBufferMask;
 		}
 	}
 
@@ -1921,7 +1927,7 @@ static void MIXER_MixData(const int frames_requested)
 			mixer.work[pos][0] += frame.left;
 			mixer.work[pos][1] += frame.right;
 
-			pos = (pos + 1) & MIXER_BUFMASK;
+			pos = (pos + 1) & MixerBufferMask;
 		}
 	}
 
@@ -1933,7 +1939,7 @@ static void MIXER_MixData(const int frames_requested)
 			mixer.work[pos][ch] = mixer.highpass_filter[ch].filter(
 			        mixer.work[pos][ch]);
 		}
-		pos = (pos + 1) & MIXER_BUFMASK;
+		pos = (pos + 1) & MixerBufferMask;
 	}
 
 	if (mixer.do_compressor) {
@@ -1948,7 +1954,7 @@ static void MIXER_MixData(const int frames_requested)
 			mixer.work[pos][0] = frame.left;
 			mixer.work[pos][1] = frame.right;
 
-			pos = (pos + 1) & MIXER_BUFMASK;
+			pos = (pos + 1) & MixerBufferMask;
 		}
 	}
 
@@ -1967,7 +1973,7 @@ static void MIXER_MixData(const int frames_requested)
 			out[i][0] = static_cast<int16_t>(host_to_le16(left));
 			out[i][1] = static_cast<int16_t>(host_to_le16(right));
 
-			pos = (pos + 1) & MIXER_BUFMASK;
+			pos = (pos + 1) & MixerBufferMask;
 		}
 
 		CAPTURE_AddAudioData(mixer.sample_rate,
@@ -2009,7 +2015,7 @@ static void MIXER_Mix_NoSound()
 		mixer.work[mixer.pos][0] = 0;
 		mixer.work[mixer.pos][1] = 0;
 
-		mixer.pos = (mixer.pos + 1) & MIXER_BUFMASK;
+		mixer.pos = (mixer.pos + 1) & MixerBufferMask;
 	}
 
 	MIXER_ReduceChannelsDoneCounts(mixer.frames_needed);
@@ -2119,10 +2125,11 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 		//		LOG_WARNING("overflow run requested %u, have %u,
 		// min %u", frames_requested, mixer.frames_done.load(),
 		// mixer.min_frames_needed.load());
-		if (mixer.frames_done > MIXER_BUFSIZE)
-			index_add = MIXER_BUFSIZE - 2 * mixer.min_frames_needed;
-		else
+		if (mixer.frames_done > MixerBufferLength) {
+			index_add = MixerBufferLength - 2 * mixer.min_frames_needed;
+		} else {
 			index_add = mixer.frames_done - 2 * mixer.min_frames_needed;
+		}
 
 		index_add = (index_add << INDEX_SHIFT_LOCAL) / frames_requested;
 		reduce_frames = mixer.frames_done - 2 * mixer.min_frames_needed;
@@ -2142,12 +2149,12 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 
 	pos       = mixer.pos;
 	mixer.pos = check_cast<work_index_t>((mixer.pos + reduce_frames) &
-	                                     MIXER_BUFMASK);
+	                                     MixerBufferMask);
 
 	if (frames_requested != reduce_frames) {
 		while (frames_requested--) {
 			const auto i = check_cast<work_index_t>(
-			        (pos + (index >> INDEX_SHIFT_LOCAL)) & MIXER_BUFMASK);
+			        (pos + (index >> INDEX_SHIFT_LOCAL)) & MixerBufferMask);
 			index += index_add;
 
 			*output++ = MIXER_CLIP(static_cast<int>(mixer.work[i][0]));
@@ -2155,7 +2162,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 		}
 		// Clean the used buffers
 		while (reduce_frames--) {
-			pos &= MIXER_BUFMASK;
+			pos &= MixerBufferMask;
 
 			mixer.work[pos][0] = 0.0f;
 			mixer.work[pos][1] = 0.0f;
@@ -2170,7 +2177,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 		}
 	} else {
 		while (reduce_frames--) {
-			pos &= MIXER_BUFMASK;
+			pos &= MixerBufferMask;
 
 			*output++ = MIXER_CLIP(static_cast<int>(mixer.work[pos][0]));
 			*output++ = MIXER_CLIP(static_cast<int>(mixer.work[pos][1]));
