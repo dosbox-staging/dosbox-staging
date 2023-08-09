@@ -781,7 +781,7 @@ void DOSBOX_Init()
 	secprop = control->AddSection_prop("voodoo", &VOODOO_Init, false);
 
 	const char* voodootypes[] = {"disabled", "4", "12", nullptr};
-	pstring = secprop->Add_string("voodoo_memsize", only_at_start, "12mb");
+	pstring = secprop->Add_string("voodoo_memsize", only_at_start, "12");
 	pstring->Set_values(voodootypes);
 	pstring->Set_help(
 	        "Memory size (in MB) of the 3dfx Vodooo card (12 MB as default).");
