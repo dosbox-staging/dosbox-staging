@@ -62,6 +62,7 @@ enum class MixerState {
 
 #define MIXER_BUFSIZE (16 * 1024)
 #define MIXER_BUFMASK (MIXER_BUFSIZE - 1)
+
 extern uint8_t MixTemp[MIXER_BUFSIZE];
 extern int16_t lut_u8to16[UINT8_MAX + 1];
 
