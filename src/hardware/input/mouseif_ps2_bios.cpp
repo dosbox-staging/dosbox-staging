@@ -883,24 +883,37 @@ bool MOUSEBIOS_CheckCallback()
 	return true;
 }
 
+static bool is_bios_frame_size_supported(const uint8_t frame_size)
+{
+	return (frame_size == 1) || // VBADOS (VBMOUSE.EXE) preferred size
+	       (frame_size == 3) || // standard size, has to be supported
+	       (frame_size == 4);   // CuteMouse 2.1 uses this for wheel mice
+}
+
 void MOUSEBIOS_DoCallback()
 {
-	assert(bios_frame_size == 1 || bios_frame_size == 3 || bios_frame_size == 4);
+	assert(is_bios_frame_size_supported(bios_frame_size));
 	assert(bios_buffer.size() >= bios_frame_size);
 
-	if (bios_frame_size == 3) {
+	switch (bios_frame_size) {
+	case 1:
+		CPU_Push16(bios_buffer[0]);
+		CPU_Push16(0);
+		CPU_Push16(0);
+		break;
+	case 3:
 		CPU_Push16(bios_buffer[0]);
 		CPU_Push16(bios_buffer[1]);
 		CPU_Push16(bios_buffer[2]);
-	} else if (bios_frame_size == 4) {
+		break;
+	case 4: {
 		const auto word_0 = bios_buffer[0] + (bios_buffer[1] << 8);
 		CPU_Push16(static_cast<uint16_t>(word_0));
 		CPU_Push16(bios_buffer[2]);
 		CPU_Push16(bios_buffer[3]);
-	} else { // bios_frame_size == 1
-		CPU_Push16(bios_buffer[0]);
-		CPU_Push16(0);
-		CPU_Push16(0);
+		break;
+	}
+	default: assert(false); break;
 	}
 	CPU_Push16(0u);
 
@@ -986,7 +999,7 @@ void MOUSEBIOS_Subfunction_C2() // INT 15h, AH = 0xc2
 		set_return_value(BiosRetVal::Success);
 		break;
 	case 0x05: // initialize
-		if (reg_bh == 1 || reg_bh == 3 || reg_bh == 4) {
+		if (is_bios_frame_size_supported(reg_bh)) {
 			// NOTE: if you want to support more frame sizes, do not
 			// forget to update 'max_buffer_size' constant in
 			// 'MOUSEBIOS_CheckCallback' routine!
