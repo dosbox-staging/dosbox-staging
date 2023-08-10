@@ -26,6 +26,12 @@
 #include <string>
 #include <vector>
 
+// In many cases the VirtualBox mouse protocol does not work correctly yet, thus
+// it is disabled for now - if you want to enable it, read the  'IMPORTANT NOTE'
+// in 'virtualbox.cpp' and uncomment line below:
+
+// #define EXPERIMENTAL_VIRTUALBOX_MOUSE
+
 // ***************************************************************************
 // Initialization, configuration
 // ***************************************************************************
@@ -39,7 +45,7 @@ void MOUSE_AddConfigSection(const config_ptr_t &);
 
 enum class MouseInterfaceId : uint8_t {
 	DOS,  // emulated DOS mouse driver
-	PS2,  // PS/2 mouse (this includes VMware mouse protocol)
+	PS2,  // PS/2 mouse (this includes VMware and VirtualBox protocols)
 	COM1, // serial mouse
 	COM2,
 	COM3,
@@ -135,6 +141,35 @@ bool MOUSEPS2_SendPacket();
 
 void MOUSEDOS_BeforeNewVideoMode();
 void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing);
+
+// ***************************************************************************
+// Virtual Machine Manager (VMware/VirtualBox) PS/2 mouse protocol extensions
+// ***************************************************************************
+
+struct VirtualBoxPointerStatus {
+	uint16_t absolute_x = 0;
+	uint16_t absolute_y = 0;
+};
+
+bool MOUSE_VirtualBox_IsSupported();
+void MOUSE_VirtualBox_ClientDisconnected();
+void MOUSE_VirtualBox_SetPointerAbsolute(const bool is_absolute);
+void MOUSE_VirtualBox_SetPointerVisible(const bool is_visible);
+void MOUSE_VirtualBox_GetPointerStatus(VirtualBoxPointerStatus& status);
+
+struct VmWarePointerStatus {
+	uint16_t absolute_x = 0;
+	uint16_t absolute_y = 0;
+
+	uint8_t buttons       = 0;
+	uint8_t wheel_counter = 0;
+};
+
+bool MOUSE_VmWare_IsSupported();
+void MOUSE_VmWare_Activate();
+void MOUSE_VmWare_Deactivate();
+bool MOUSE_VmWare_CheckIfUpdated();
+void MOUSE_VmWare_GetPointerStatus(VmWarePointerStatus& status);
 
 // ***************************************************************************
 // MOUSECTL.COM / GUI configurator interface

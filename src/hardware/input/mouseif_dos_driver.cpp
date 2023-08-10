@@ -1178,24 +1178,27 @@ static uint8_t move_cursor()
 	const bool rel_changed = (old_mickey_x != state.mickey_counter_x) ||
 	                         (old_mickey_y != state.mickey_counter_y);
 
-	if (abs_changed || rel_changed)
+	if (abs_changed || rel_changed) {
 		return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
-	else
+	} else {
 		return 0;
+	}
 }
 
 static uint8_t update_moved()
 {
-	if (mouse_config.dos_immediate)
+	if (mouse_config.dos_immediate) {
 		return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
-	else
+	} else {
 		return move_cursor();
+	}
 }
 
 static uint8_t update_buttons(const MouseButtons12S new_buttons_12S)
 {
-	if (buttons._data == new_buttons_12S._data)
+	if (buttons._data == new_buttons_12S._data) {
 		return 0;
+	}
 
 	auto mark_pressed = [](const uint8_t idx) {
 		state.last_pressed_x[idx] = get_pos_x();
@@ -2009,8 +2012,7 @@ void MOUSEDOS_FinalizeInterrupt()
 	}
 }
 
-void MOUSEDOS_NotifyInputType(const bool new_use_relative,
-	                      const bool new_is_input_raw)
+void MOUSEDOS_NotifyInputType(const bool new_use_relative, const bool new_is_input_raw)
 {
 	use_relative = new_use_relative;
 	is_input_raw = new_is_input_raw;

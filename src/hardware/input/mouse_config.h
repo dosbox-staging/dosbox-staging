@@ -91,6 +91,14 @@ struct MouseConfig {
 	MouseModelCOM model_com = MouseModelCOM::Wheel;
 	bool model_com_auto_msm = true;
 
+#ifdef EXPERIMENTAL_VIRTUALBOX_MOUSE
+	bool is_vmware_mouse_enabled     = false;
+	bool is_virtualbox_mouse_enabled = false;
+#else
+	bool is_vmware_mouse_enabled     = true;
+	bool is_virtualbox_mouse_enabled = false;
+#endif
+
 	// Helper functions for external modules
 
 	static const std::vector<uint16_t> &GetValidMinRateList();

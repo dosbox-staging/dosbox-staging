@@ -132,6 +132,10 @@ constexpr io_port_t port_num_fast_a20 = 0x92u;
 constexpr io_port_t port_num_pci_config_address = 0xcf8u;
 constexpr io_port_t port_num_pci_config_data    = 0xcfcu;
 
+// VirtualBox communication interface
+// (can be moved, but two last bits have to be 0)
+constexpr io_port_t port_num_virtualbox = 0x5654u;
+
 // VMware communication interface
 constexpr io_port_t port_num_vmware    = 0x5658u;
 constexpr io_port_t port_num_vmware_hb = 0x5659u; // high bandwidth

@@ -40,9 +40,8 @@ bool MOUSE_IsProbeForMappingAllowed();
 // ***************************************************************************
 
 void MOUSEDOS_Init();
-void MOUSEDOS_SetDelay(const uint8_t new_delay_ms);
-void MOUSEDOS_NotifyInputType(const bool new_use_relative,
-                              const bool new_is_input_raw);
+void MOUSEDOS_SetDelay(const uint8_t delay_ms);
+void MOUSEDOS_NotifyInputType(const bool use_relative, const bool is_input_raw);
 void MOUSEDOS_NotifyMinRate(const uint16_t value_hz);
 
 uint8_t MOUSEDOS_DoInterrupt();
@@ -54,7 +53,7 @@ void MOUSEDOS_FinalizeInterrupt();
 
 void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
                           const uint32_t x_abs, const uint32_t y_abs);
-void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S);
+void MOUSEDOS_NotifyButton(const MouseButtons12S buttons_12S);
 void MOUSEDOS_NotifyWheel(const int16_t w_rel);
 
 // ***************************************************************************
@@ -62,7 +61,7 @@ void MOUSEDOS_NotifyWheel(const int16_t w_rel);
 // ***************************************************************************
 
 void MOUSEPS2_Init();
-void MOUSEPS2_SetDelay(const uint8_t new_delay_ms);
+void MOUSEPS2_SetDelay(const uint8_t delay_ms);
 void MOUSEPS2_UpdateButtonSquish();
 
 // - needs relative movements
@@ -84,12 +83,10 @@ void MOUSEBIOS_DoCallback();
 void MOUSEBIOS_FinalizeInterrupt();
 
 // ***************************************************************************
-// VMware protocol extension for PS/2 mouse
+// Virtual Machine Manager (VMware/VirtualBox) PS/2 mouse protocol extensions
 // ***************************************************************************
 
-void MOUSEVMM_Init();
-void MOUSEVMM_NotifyInputType(const bool new_use_relative,
-                              const bool new_is_input_raw);
+void MOUSEVMM_NotifyInputType(const bool use_relative, const bool is_input_raw);
 void MOUSEVMM_NewScreenParams(const uint32_t x_abs, const uint32_t y_abs);
 void MOUSEVMM_Deactivate();
 
@@ -133,7 +130,7 @@ public:
 	virtual void NotifyButton(const uint8_t idx, const bool pressed) = 0;
 	virtual void NotifyWheel(const int16_t w_rel) = 0;
 
-	void NotifyInterfaceRate(const uint16_t new_rate_hz);
+	void NotifyInterfaceRate(const uint16_t rate_hz);
 	virtual void NotifyBooting();
 	void NotifyDisconnect();
 

@@ -31,7 +31,12 @@ class MouseShared {
 public:
 	bool active_bios = false; // true = BIOS has a registered callback
 	bool active_dos  = false; // true = DOS driver has a functioning callback
-	bool active_vmm  = false; // true = VMware-compatible driver is active
+	bool active_vmm  = false; // true = Virtual Machine Manager (VMM)
+	                          //        compatible driver is active
+
+	// true = Virtual Machine Manager (VMM) compatible mouse driver wants
+	// the host to display its mouse pointer
+	bool vmm_wants_pointer = false;
 
 	bool dos_cb_running = false; // true = DOS callback is running
 

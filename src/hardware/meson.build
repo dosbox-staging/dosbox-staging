@@ -71,6 +71,8 @@ libhardware_sources = files(
     'vga_seq.cpp',
     'vga_tseng.cpp',
     'vga_xga.cpp',
+    'virtualbox.cpp',
+    'vmware.cpp',
     'voodoo.cpp',
 )
 

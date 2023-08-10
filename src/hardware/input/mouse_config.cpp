@@ -237,6 +237,15 @@ static void config_read(Section *section)
 	                           mouse_config.model_com,
 	                           mouse_config.model_com_auto_msm);
 
+	// VMM PCI interfaces
+
+#ifdef EXPERIMENTAL_VIRTUALBOX_MOUSE
+
+	mouse_config.is_vmware_mouse_enabled = conf->Get_bool("vmware_mouse");
+	mouse_config.is_virtualbox_mouse_enabled = conf->Get_bool("virtualbox_mouse");
+
+#endif
+
 	// Start mouse emulation if everything is ready
 	mouse_shared.ready_config = true;
 	MOUSE_StartupIfReady();
@@ -362,6 +371,19 @@ static void config_init(Section_prop &secprop)
 	        "  3button+msm:  Automatic choice between '3button' and 'msm'.\n"
 	        "  wheel+msm:    Automatic choice between 'wheel' and 'msm' (default).\n"
 	        "Note: Enable COM port mice in the [serial] section.");
+
+	// VMM interfaces
+
+#ifdef EXPERIMENTAL_VIRTUALBOX_MOUSE
+
+	prop_bool = secprop.Add_bool("vmware_mouse", only_at_start, true);
+	prop_bool->Set_help("VMware mouse interface (enabled by default).\n"
+	                    "Note: This requires PS/2 mouse to be enabled.\n");
+	prop_bool = secprop.Add_bool("virtualbox_mouse", only_at_start, true);
+	prop_bool->Set_help("VirtualBox mouse interface (enabled by default).\n"
+	                    "Note: This requires PS/2 mouse to be enabled.\n");
+
+#endif
 }
 
 void MOUSE_AddConfigSection(const config_ptr_t& conf)

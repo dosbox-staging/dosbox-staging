@@ -370,6 +370,12 @@
     <ClCompile Include="..\src\hardware\voodoo.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\virtualbox.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\hardware\vmware.cpp">
+      <Filter>src\hardware</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ints\bios.cpp">
       <Filter>src\ints</Filter>
     </ClCompile>

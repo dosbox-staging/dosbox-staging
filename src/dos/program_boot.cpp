@@ -31,7 +31,6 @@
 #include "dma.h"
 #include "drives.h"
 #include "mapper.h"
-#include "mouse.h"
 #include "program_more_output.h"
 #include "regs.h"
 #include "string_utils.h"
@@ -442,7 +441,7 @@ void BOOT::Run(void)
 			diskSwap.fill(nullptr);
 			DriveManager::CloseRawFddImages();
 
-			MOUSE_NotifyBooting();
+			NotifyBooting();
 
 			if (cart_cmd.empty()) {
 				uint32_t old_int18 = mem_readd(0x60);
@@ -471,7 +470,7 @@ void BOOT::Run(void)
 	} else {
 		disable_umb_ems_xms();
 		MEM_RemoveEMSPageFrame();
-		MOUSE_NotifyBooting();
+		NotifyBooting();
 		WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
 		for (i = 0; i < 512; i++)
 			real_writeb(0, 0x7c00 + i, bootarea.rawdata[i]);
@@ -500,7 +499,17 @@ void BOOT::Run(void)
 	}
 }
 
-void BOOT::AddMessages() {
+void MOUSE_NotifyBooting();
+void VIRTUALBOX_NotifyBooting();
+
+void BOOT::NotifyBooting()
+{
+	MOUSE_NotifyBooting();
+	VIRTUALBOX_NotifyBooting();
+}
+
+void BOOT::AddMessages()
+{
 	MSG_Add("PROGRAM_BOOT_HELP_LONG",
 	        "Boots DOSBox Staging from a DOS drive or disk image.\n"
 	        "\n"
