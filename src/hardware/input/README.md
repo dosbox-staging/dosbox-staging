@@ -66,14 +66,13 @@ Implementations (non-object oriented) of various mouse interfaces:
 (like _CtMouse_ wheel API or direct support for _INT33_ Windows driver from
 _javispedro_) 
 - PS/2 (both register-level access abd via BIOS calls)
-- a _VMWare_ mouse protocol (actually a PS/2 mouse extension), allowing for
+- a _VMware_ mouse protocol (actually a PS/2 mouse extension), allowing for
 seamless integration with host mouse cursor if a proper driver is running
+- a _VirtualBox_, similar to  _VMWare_ one, currently disabled due to problems
+with Windows 3.1x driver
 
 Future (not yet implemented) planned interfaces include:
 
-- _VirtualBox_ mouse protocol extension; very similar to the _VMWare_ one,
-but requires a PCI device
-(see <https://wiki.osdev.org/VirtualBox_Guest_Additions> for description)
 - InPort / Bus mouse - I know no description, but Bochs contains an emulation
 code, under GPL2-or-above license
 

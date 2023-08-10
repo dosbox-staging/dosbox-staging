@@ -155,8 +155,8 @@ static void warn_unknown_command(const Command command)
 
 void MOUSEPS2_UpdateButtonSquish()
 {
-	// - if VMware compatible driver is enabled, never try to report
-	//   mouse buttons 4 and 5, that would be asking for trouble
+	// - if VMware or VirtualBox compatible driver is enabled, never try
+	//   to report mouse buttons 4 and 5, that would be asking for trouble
 	// - for PS/2 modes other than IntelliMouse Explorer there is
 	//   no standard way to report buttons 4 and 5
 

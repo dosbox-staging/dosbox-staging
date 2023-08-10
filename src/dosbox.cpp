@@ -86,6 +86,8 @@ void DMA_Init(Section*);
 
 void PCI_Init(Section*);
 void VOODOO_Init(Section*);
+void VIRTUALBOX_Init(Section*);
+void VMWARE_Init(Section*);
 
 void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
@@ -1307,6 +1309,10 @@ void DOSBOX_Init()
 #endif
 
 	//	secprop->AddInitFunction(&CREDITS_Init);
+
+	// VMM interfaces
+	secprop->AddInitFunction(&VIRTUALBOX_Init);
+	secprop->AddInitFunction(&VMWARE_Init);
 
 	//TODO ?
 	control->AddSection_line("autoexec", &AUTOEXEC_Init);

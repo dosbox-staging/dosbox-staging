@@ -39,10 +39,13 @@ class BOOT final : public Program {
 
     private:
         static void AddMessages();
-        FILE* getFSFile_mounted(char const* filename, uint32_t *ksize, uint32_t *bsize, uint8_t *error);
-        FILE* getFSFile(char const * filename, uint32_t *ksize, uint32_t *bsize,bool tryload=false);
-        void printError(void);
-        void disable_umb_ems_xms(void);
+	FILE* getFSFile_mounted(const char* filename, uint32_t* ksize,
+	                        uint32_t* bsize, uint8_t* error);
+	FILE* getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
+	                bool tryload = false);
+	void printError();
+	void disable_umb_ems_xms();
+	void NotifyBooting();
 };
 
 #endif // DOSBOX_PROGRAM_BOOT_H

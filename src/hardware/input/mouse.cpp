@@ -138,8 +138,13 @@ static void update_cursor_visibility()
 		// But show it nevertheless if:
 		// - seamless integration is in effect and
 		// - cursor is outside of drawing area
+		// Or if:
+		// - virtual machine guest addons are running and
+		// - they requested to display host mouse cursor
 		state.is_visible = !(state.is_captured || state.is_seamless) ||
-		                   (state.is_seamless && state.cursor_is_outside);
+		                   (state.is_seamless && state.cursor_is_outside) ||
+		                   (mouse_shared.active_vmm &&
+		                    mouse_shared.vmm_wants_pointer);
 	}
 
 	// Apply calculated settings if changed or if this is the first run
@@ -421,6 +426,7 @@ Bitu int74_ret_handler()
 {
 	MOUSEBIOS_FinalizeInterrupt();
 	MOUSEDOS_FinalizeInterrupt();
+	MOUSEBIOS_FinalizeInterrupt();
 	return CBRET_NONE;
 }
 
@@ -465,8 +471,9 @@ void MOUSE_NewScreenParams(const MouseScreenParams &params)
 
 void MOUSE_ToggleUserCapture(const bool pressed)
 {
-	if (!pressed || !state.should_toggle_on_hotkey)
+	if (!pressed || !state.should_toggle_on_hotkey) {
 		return;
+	}
 
 	state.capture_was_requested = !state.capture_was_requested;
 	MOUSE_UpdateGFX();
@@ -487,14 +494,17 @@ void MOUSE_NotifyWindowActive(const bool is_active)
 void MOUSE_NotifyDisconnect(const MouseInterfaceId interface_id)
 {
 	auto interface = MouseInterface::Get(interface_id);
-	if (interface)
+	if (interface) {
 		interface->NotifyDisconnect();
+	}
 }
 
 void MOUSE_NotifyBooting()
 {
-	for (auto &interface : mouse_interfaces)
+	MOUSEVMM_Deactivate();
+	for (auto& interface : mouse_interfaces) {
 		interface->NotifyBooting();
+	}
 }
 
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
