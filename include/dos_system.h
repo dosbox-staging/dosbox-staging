@@ -412,7 +412,7 @@ enum SeekType : uint8_t {
 
 typedef bool (MultiplexHandler)(void);
 void DOS_AddMultiplexHandler(MultiplexHandler* handler);
-void DOS_DeleteMultiplexHandler(MultiplexHandler* handler);
+void DOS_DeleteMultiplexHandler(MultiplexHandler* const handler);
 
 /* AddDevice stores the pointer to a created device */
 void DOS_AddDevice(DOS_Device * adddev);
