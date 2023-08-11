@@ -779,7 +779,7 @@ PropMultiValRemain* Section_prop::AddMultiValRemain(const std::string& _propname
 
 int Section_prop::Get_int(const std::string& _propname) const
 {
-	for (const_it tel = properties.begin(); tel != properties.end(); tel++) {
+	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {
 			return ((*tel)->GetValue());
 		}
