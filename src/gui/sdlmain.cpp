@@ -219,8 +219,6 @@ constexpr int MEDIUM_WINDOW_PERCENT = 74;
 constexpr int LARGE_WINDOW_PERCENT = 90;
 constexpr int DEFAULT_WINDOW_PERCENT = MEDIUM_WINDOW_PERCENT;
 static SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
-constexpr SDL_Point RATIOS_FOR_STRETCHED_PIXELS = {4, 3};
-constexpr SDL_Point RATIOS_FOR_SQUARE_PIXELS = {8, 5};
 
 /* Alias for indicating, that new window should not be user-resizable: */
 constexpr bool FIXED_SIZE = false;
@@ -1240,7 +1238,7 @@ static void NewMouseScreenParams()
 	MOUSE_NewScreenParams(params);
 }
 
-static bool wants_stretched_pixels()
+static bool wants_aspect_ratio_correction()
 {
 	const auto render_section = static_cast<Section_prop*>(
 	        control->GetSection("render"));
@@ -1251,8 +1249,11 @@ static bool wants_stretched_pixels()
 
 static void update_fallback_dimensions(const double dpi_scale)
 {
-	const auto should_stretch_pixels = wants_stretched_pixels();
-	const auto fallback_height = (should_stretch_pixels ? 480 : 400) / dpi_scale;
+	// TODO This only works for 320x200 games. We cannot make hardcoded
+	// assumptions about aspect ratios in general, e.g. the pixel aspect ratio
+	// is 1:1 for 640x480 games both with 'aspect = on` and 'aspect = off'.
+	const auto fallback_height = (wants_aspect_ratio_correction() ? 480 : 400) /
+	                             dpi_scale;
 
 	assert(dpi_scale > 0);
 	const auto fallback_width = 640 / dpi_scale;
@@ -2987,22 +2988,30 @@ static bool detect_resizable_window()
 }
 
 static SDL_Point refine_window_size(const SDL_Point size,
-                                    const bool should_stretch_pixels)
+                                    const bool wants_aspect_ratio_correction)
 {
-	const auto game_ratios = should_stretch_pixels ? RATIOS_FOR_STRETCHED_PIXELS
-	                                               : RATIOS_FOR_SQUARE_PIXELS;
+	// TODO This only works for 320x200 games. We cannot make hardcoded
+	// assumptions about aspect ratios in general, e.g. the pixel aspect ratio
+	// is 1:1 for 640x480 games both with 'aspect = on` and 'aspect = off'.
+	constexpr SDL_Point ratios_for_stretched_pixels = {4, 3};
+	constexpr SDL_Point ratios_for_square_pixels    = {8, 5};
+
+	const auto image_aspect = wants_aspect_ratio_correction
+	                                ? ratios_for_stretched_pixels
+	                                : ratios_for_square_pixels;
 
 	const auto window_aspect = static_cast<double>(size.x) / size.y;
-	const auto game_aspect   = static_cast<double>(game_ratios.x) /
-	                         game_ratios.y;
+	const auto game_aspect   = static_cast<double>(image_aspect.x) /
+	                         image_aspect.y;
 
-	// Screen is wider than the emulated, so constrain horizonal
+	// Window is wider than the emulated image, so constrain horizonally
 	if (window_aspect > game_aspect) {
-		const int x = ceil_sdivide(size.y * game_ratios.x, game_ratios.y);
+		const int x = ceil_sdivide(size.y * image_aspect.x, image_aspect.y);
 		return {x, size.y};
 	} else {
-		// screen is narrower than the game, so constrain vertical
-		const int y = ceil_sdivide(size.x * game_ratios.y, game_ratios.x);
+		// Window is narrower than the emulated image, so constrain
+		// vertically
+		const int y = ceil_sdivide(size.x * image_aspect.y, image_aspect.x);
 		return {size.x, y};
 	}
 	return FALLBACK_WINDOW_DIMENSIONS;
@@ -3040,7 +3049,7 @@ static void maybe_limit_requested_resolution(int &w, int &h, const char *size_de
 
 	// Add any driver / platform / operating system limits in succession:
 
-	// SDL KMSDRM limitstaions:
+	// SDL KMSDRM limitations:
 	if (is_using_kmsdrm_driver()) {
 		w = desktop.w;
 		h = desktop.h;
@@ -3216,7 +3225,7 @@ static void save_window_size(const int w, const int h)
 //  - The user's windowresolution: default, WxH, small, medium, large,
 //    desktop, or an invalid setting.
 //  - The previously configured scaling mode: Bilinear or NearestNeighbour.
-//  - If aspect correction (stretched pixels) is requested.
+//  - If aspect correction is requested.
 //
 // Except for SURFACE rendering, this function returns a refined size and
 // additionally populates the following struct members:
@@ -3228,7 +3237,7 @@ static void save_window_size(const int w, const int h)
 //
 static void setup_window_sizes_from_conf(const char* windowresolution_val,
                                          const InterpolationMode interpolation_mode,
-                                         const bool should_stretch_pixels)
+                                         const bool wants_aspect_ratio_correction)
 {
 	// TODO: Deprecate SURFACE output and remove this.
 	// For now, let the DOS-side determine the window's resolution.
@@ -3264,7 +3273,8 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	if (sdl.use_exact_window_resolution) {
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
-		refined_size = refine_window_size(coarse_size, should_stretch_pixels);
+		refined_size = refine_window_size(coarse_size,
+		                                  wants_aspect_ratio_correction);
 	}
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	save_window_size(refined_size.x, refined_size.y);
@@ -3416,7 +3426,7 @@ InterpolationMode GFX_GetInterpolationMode()
 	return sdl.interpolation_mode;
 }
 
-static void set_output(Section* sec, bool should_stretch_pixels)
+static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 {
 	// Apply the user's mouse settings
 	const auto section = static_cast<const Section_prop *>(sec);
@@ -3486,7 +3496,7 @@ static void set_output(Section* sec, bool should_stretch_pixels)
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
 	                             sdl.interpolation_mode,
-	                             should_stretch_pixels);
+	                             wants_aspect_ratio_correction);
 
 #if C_OPENGL
 	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
@@ -3773,7 +3783,7 @@ static void GUI_StartUp(Section *sec)
 		GFX_ObtainDisplayDimensions();
 	}
 
-	set_output(section, wants_stretched_pixels());
+	set_output(section, wants_aspect_ratio_correction());
 
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
@@ -3857,7 +3867,7 @@ void GFX_RegenerateWindow(Section *sec) {
 	const auto section = static_cast<const Section_prop *>(sec);
 	if (strcmp(section->Get_string("output"), "surface"))
 		remove_window();
-	set_output(sec, wants_stretched_pixels());
+	set_output(sec, wants_aspect_ratio_correction());
 	GFX_ResetScreen();
 }
 
