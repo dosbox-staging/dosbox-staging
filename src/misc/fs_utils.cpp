@@ -52,7 +52,7 @@ bool is_hidden_by_host(const std_fs::path& pathname)
 
 	// Filenames that don't start with dot or are the two directory entries
 	// are not hidden by the host
-	if (filename.find(".") != 0 || filename == "." || filename == "..") {
+	if (filename.find('.') != 0 || filename == "." || filename == "..") {
 		return false;
 	}
 
