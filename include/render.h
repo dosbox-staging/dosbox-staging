@@ -146,7 +146,7 @@ struct Render_t {
 
 #if C_OPENGL
 	struct {
-		std::string filename = {};
+		std::string name = {};
 		std::string source   = {};
 
 		struct {
