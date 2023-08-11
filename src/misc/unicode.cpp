@@ -1889,8 +1889,8 @@ static bool construct_mapping(const uint16_t code_page)
 
 	auto& mappings = per_code_page_mappings[code_page];
 
-	mappings.dos_to_grapheme_normalized = new_mapping;
-	mappings.grapheme_to_dos = new_mapping_reverse;
+	mappings.dos_to_grapheme_normalized = std::move(new_mapping);
+	mappings.grapheme_to_dos = std::move(new_mapping_reverse);
 
 	// Construct decomposed mapping
 	construct_decomposed(mappings.dos_to_grapheme_normalized,
