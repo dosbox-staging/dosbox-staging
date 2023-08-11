@@ -3448,7 +3448,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 #if C_OPENGL
 	} else if (starts_with(output, "opengl")) {
-		RENDER_InitShader(sec);
+		RENDER_InitShader();
 		if (output == "opengl") {
 			sdl.desktop.want_type  = SCREEN_OPENGL;
 			sdl.interpolation_mode = InterpolationMode::Bilinear;

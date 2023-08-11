@@ -269,7 +269,7 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
 
-void RENDER_InitShader([[maybe_unused]] Section* sec);
+void RENDER_InitShader();
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
