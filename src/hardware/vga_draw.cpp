@@ -2765,12 +2765,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.doubleheight       = double_height;
 		vga.draw.pixel_aspect_ratio = render_pixel_aspect_ratio;
 		vga.draw.pixel_format       = pixel_format;
-
-		if (double_height) {
-			vga.draw.lines_scaled = 2;
-		} else {
-			vga.draw.lines_scaled = 1;
-		}
+		vga.draw.lines_scaled       = double_height ? 2 : 1;
 
 		if (!vga.draw.vga_override) {
 			ReelMagic_RENDER_SetSize(render_width,
