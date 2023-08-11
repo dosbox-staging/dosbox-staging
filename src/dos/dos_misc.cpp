@@ -31,11 +31,11 @@ static callback_number_t call_int2a = 0;
 static std::list<MultiplexHandler*> Multiplex;
 typedef std::list<MultiplexHandler*>::iterator Multiplex_it;
 
-void DOS_AddMultiplexHandler(MultiplexHandler * handler) {
+void DOS_AddMultiplexHandler(MultiplexHandler* handler) {
 	Multiplex.push_front(handler);
 }
 
-void DOS_DeleteMultiplexHandler(MultiplexHandler* handler)
+void DOS_DeleteMultiplexHandler(MultiplexHandler* const handler)
 {
 	for (Multiplex_it it = Multiplex.begin(); it != Multiplex.end(); ++it) {
 		if(*it == handler) {
