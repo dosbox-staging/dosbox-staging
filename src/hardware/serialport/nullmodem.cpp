@@ -154,8 +154,8 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 }
 
 CNullModem::~CNullModem() {
-	if (serversocket) delete serversocket;
-	if (clientsocket) delete clientsocket;
+	delete serversocket;
+	delete clientsocket;
 	// remove events
 	for (uint16_t i = SERIAL_BASE_EVENT_COUNT + 1;
 	     i <= SERIAL_NULLMODEM_EVENT_COUNT; i++) {
