@@ -632,7 +632,7 @@ static ShaderSettings parse_shader_settings(const std::string& shader_name,
 {
 	ShaderSettings settings = {};
 	try {
-		const std::regex re("\\s*#pragma\\s+(\\w+)");
+		const std::regex re("\\s*#pragma\\s+(\\w+)\\s*([\\w\\.]+)?");
 		std::sregex_iterator next(source.begin(), source.end(), re);
 		const std::sregex_iterator end;
 
@@ -648,6 +648,29 @@ static ShaderSettings parse_shader_settings(const std::string& shader_name,
 				settings.force_single_scan = true;
 			} else if (pragma == "force_no_pixel_doubling") {
 				settings.force_no_pixel_doubling = true;
+			} else if (pragma == "min_vertical_scale_factor") {
+				auto value_str = match[2].str();
+				if (value_str.empty()) {
+					LOG_WARNING("RENDER: No value specified for "
+					            "'min_vertical_scale_factor' pragma in shader '%s'",
+					            shader_name.c_str());
+				} else {
+					constexpr auto MinValidScaleFactor = 0.0f;
+					constexpr auto MaxValidScaleFactor = 100.0f;
+					const auto value =
+					        parse_value(value_str,
+					                    MinValidScaleFactor,
+					                    MaxValidScaleFactor);
+
+					if (value) {
+						settings.min_vertical_scale_factor = *value;
+					} else {
+						LOG_WARNING("RENDER: Invalid 'min_vertical_scale_factor' "
+						            "pragma value of '%s' in shader '%s'",
+						            value_str.c_str(),
+						            shader_name.c_str());
+					}
+				}
 			}
 			++next;
 		}
