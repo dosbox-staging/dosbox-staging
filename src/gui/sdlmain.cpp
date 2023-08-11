@@ -759,10 +759,6 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
-static SDL_Point refine_window_size(const SDL_Point size,
-                                    const InterpolationMode interpolation_mode,
-                                    const bool should_stretch_pixels);
-
 static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 
 // Logs the source and target resolution including describing scaling method
@@ -2990,71 +2986,25 @@ static bool detect_resizable_window()
 	return true;
 }
 
-static SDL_Point remove_stretched_aspect(const SDL_Point size)
-{
-	return {size.x, ceil_sdivide(size.y * 5, 6)};
-}
-
 static SDL_Point refine_window_size(const SDL_Point size,
-                                    const InterpolationMode interpolation_mode,
                                     const bool should_stretch_pixels)
 {
-	switch (interpolation_mode) {
-	case (InterpolationMode::Bilinear): {
-		const auto game_ratios = should_stretch_pixels
-		                               ? RATIOS_FOR_STRETCHED_PIXELS
-		                               : RATIOS_FOR_SQUARE_PIXELS;
+	const auto game_ratios = should_stretch_pixels ? RATIOS_FOR_STRETCHED_PIXELS
+	                                               : RATIOS_FOR_SQUARE_PIXELS;
 
-		const auto window_aspect = static_cast<double>(size.x) / size.y;
-		const auto game_aspect = static_cast<double>(game_ratios.x) / game_ratios.y;
+	const auto window_aspect = static_cast<double>(size.x) / size.y;
+	const auto game_aspect   = static_cast<double>(game_ratios.x) /
+	                         game_ratios.y;
 
-		// screen is wider than the game, so constrain horizonal
-		if (window_aspect > game_aspect) {
-			const int x = ceil_sdivide(size.y * game_ratios.x, game_ratios.y);
-			return {x, size.y};
-		} else {
-			// screen is narrower than the game, so constrain vertical
-			const int y = ceil_sdivide(size.x * game_ratios.y,
-			                           game_ratios.x);
-			return {size.x, y};
-		}
+	// Screen is wider than the emulated, so constrain horizonal
+	if (window_aspect > game_aspect) {
+		const int x = ceil_sdivide(size.y * game_ratios.x, game_ratios.y);
+		return {x, size.y};
+	} else {
+		// screen is narrower than the game, so constrain vertical
+		const int y = ceil_sdivide(size.x * game_ratios.y, game_ratios.x);
+		return {size.x, y};
 	}
-	case (InterpolationMode::NearestNeighbour): {
-		constexpr SDL_Point resolutions[] = {
-		        {7680, 5760}, // 8K  at 4:3 aspect
-		        {7360, 5520}, //
-		        {7040, 5280}, //
-		        {6720, 5040}, //
-		        {6400, 4800}, // HUXGA
-		        {6080, 4560}, //
-		        {5760, 4320}, // 8K "Full Format" at 4:3 aspect
-		        {5440, 4080}, //
-		        {5120, 3840}, // HSXGA at 4:3 aspect
-		        {4800, 3600}, //
-		        {4480, 3360}, //
-		        {4160, 3120}, //
-		        {3840, 2880}, // 4K UHD at 4:3 aspect
-		        {3520, 2640}, //
-		        {3200, 2400}, // QUXGA
-		        {2880, 2160}, // 3K UHD at 4:3 aspect
-		        {2560, 1920}, // 4.92M3 (Max CRT, Viewsonic P225f)
-		        {2400, 1800}, //
-		        {1920, 1440}, // 1080p in 4:3
-		        {1600, 1200}, // UXGA
-		        {1280, 960},  // 720p in 4:3
-		        {1024, 768},  // XGA
-		        {800, 600},   // SVGA
-		};
-		// Pick the biggest window size that fits inside the bounds.
-		for (const auto &candidate : resolutions)
-			if (candidate.x <= size.x && candidate.y <= size.y)
-				return (should_stretch_pixels
-				                ? candidate
-				                : remove_stretched_aspect(candidate));
-		break;
-	}
-	}; // end-switch
-
 	return FALLBACK_WINDOW_DIMENSIONS;
 }
 
@@ -3267,22 +3217,15 @@ static void save_window_size(const int w, const int h)
 //    desktop, or an invalid setting.
 //  - The previously configured scaling mode: Bilinear or NearestNeighbour.
 //  - If aspect correction (stretched pixels) is requested.
-
+//
 // Except for SURFACE rendering, this function returns a refined size and
 // additionally populates the following struct members:
+//
 //  - 'sdl.desktop.requested_window_bounds', with the coarse bounds, which do
 //     not take into account scaling or aspect correction.
 //  - 'sdl.desktop.window', with the refined size.
 //  - 'sdl.desktop.want_resizable_window', if the window can be resized.
-
-// Refined sizes:
-//  - If the user requested an exact resolution or 'desktop' size, then the
-//    requested resolution is only trimmed for aspect (4:3 or 8:5).
-
-//  - If the user requested a relative size: small, medium, or large, then
-//    the closest fixed resolution is picked from a list, with aspect correction
-//    factored in.
-
+//
 static void setup_window_sizes_from_conf(const char* windowresolution_val,
                                          const InterpolationMode interpolation_mode,
                                          const bool should_stretch_pixels)
@@ -3299,16 +3242,6 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	// Can the window be resized?
 	sdl.desktop.want_resizable_window = detect_resizable_window();
 
-	// The refined scaling mode tell the refiner how it should adjust
-	// the coarse-resolution.
-	auto refined_interpolation_mode = interpolation_mode;
-
-	auto drop_nearest = [interpolation_mode]() {
-		return (interpolation_mode == InterpolationMode::NearestNeighbour)
-		             ? InterpolationMode::Bilinear
-		             : interpolation_mode;
-	};
-
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
 	const std::string pref = windowresolution_val;
@@ -3317,14 +3250,10 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
 	if (sdl.use_exact_window_resolution) {
 		coarse_size = parse_window_resolution_from_conf(pref);
-		refined_interpolation_mode = drop_nearest();
 	} else {
 		const auto desktop = get_desktop_resolution();
 
 		coarse_size = window_bounds_from_label(pref, desktop);
-		if (pref == "desktop") {
-			refined_interpolation_mode = drop_nearest();
-		}
 	}
 
 	// Save the coarse bounds in the SDL struct for future sizing events
@@ -3335,9 +3264,7 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	if (sdl.use_exact_window_resolution) {
 		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
 	} else {
-		refined_size = refine_window_size(coarse_size,
-		                                  refined_interpolation_mode,
-		                                  should_stretch_pixels);
+		refined_size = refine_window_size(coarse_size, should_stretch_pixels);
 	}
 	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
 	save_window_size(refined_size.x, refined_size.y);
@@ -3377,6 +3304,7 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 	// Limit the window to the user's desired viewport, if configured
 	const auto restricted_dims = restrict_to_viewport_resolution(canvas_width,
 	                                                             canvas_height);
+
 	const auto bounds_w = restricted_dims.x;
 	const auto bounds_h = restricted_dims.y;
 
