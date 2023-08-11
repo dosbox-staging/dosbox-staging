@@ -753,38 +753,38 @@ static bool init_shader([[maybe_unused]] Section* sec)
 	        control->GetSection("render"));
 
 	assert(render_sec);
-	auto sh       = render_sec->Get_path("glshader");
-	auto filename = std::string(sh->GetValue());
+	auto sh          = render_sec->Get_path("glshader");
+	auto shader_name = std::string(sh->GetValue());
 
 	constexpr auto fallback_shader = "none";
-	if (filename.empty()) {
-		filename = fallback_shader;
-	} else if (filename == "default") {
-		filename = "interpolation/sharp";
+	if (shader_name.empty()) {
+		shader_name = fallback_shader;
+	} else if (shader_name == "default") {
+		shader_name = "interpolation/sharp";
 	}
 
-	if (render.shader.filename == filename) {
+	if (render.shader.name == shader_name) {
 		return false;
 	}
 
-	log_warning_if_legacy_shader_name(filename);
+	log_warning_if_legacy_shader_name(shader_name);
 
 	std::string source = {};
 
 	if (!read_shader_source(sh->realpath.string(), source) &&
-	    (sh->realpath == filename || !read_shader_source(filename, source))) {
+	    (sh->realpath == shader_name || !read_shader_source(shader_name, source))) {
 		sh->SetValue("none");
 		source.clear();
 
 		// List all the existing shaders for the user
-		LOG_ERR("RENDER: Shader file '%s' not found", filename.c_str());
+		LOG_ERR("RENDER: Shader file '%s' not found", shader_name.c_str());
 		for (const auto& line : RENDER_InventoryShaders()) {
 			LOG_WARNING("RENDER: %s", line.c_str());
 		}
 
 		// Fallback to the 'none' shader and otherwise fail
 		if (read_shader_source(fallback_shader, source)) {
-			filename = fallback_shader;
+			shader_name = fallback_shader;
 		} else {
 			E_Exit("RENDER: Fallback shader file '%s' not found and is mandatory",
 			       fallback_shader);
@@ -794,13 +794,13 @@ static bool init_shader([[maybe_unused]] Section* sec)
 	// Reset shader settings to defaults
 	render.shader.settings = {};
 
-	if (using_opengl && source.length() && render.shader.filename != filename) {
-		LOG_MSG("RENDER: Using GLSL shader '%s'", filename.c_str());
+	if (using_opengl && source.length() && render.shader.name != shader_name) {
+		LOG_MSG("RENDER: Using GLSL shader '%s'", shader_name.c_str());
 		set_shader_settings(source);
 
-		// Move the temporary filename and source into the memebers
-		render.shader.filename = std::move(filename);
-		render.shader.source   = std::move(source);
+		// Move the temporary name and source into the memebers
+		render.shader.name   = std::move(shader_name);
+		render.shader.source = std::move(source);
 
 		// Pass the shader source up to the GFX engine
 		GFX_SetShader(render.shader.source);
