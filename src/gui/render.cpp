@@ -825,6 +825,19 @@ void RENDER_InitShader(Section* sec)
 
 void RENDER_Init(Section* sec);
 
+void RENDER_LoadShader(const std::string name)
+{
+	assert(control);
+	auto render_section = control->GetSection("render");
+
+	assert(render_section);
+	const auto sec = dynamic_cast<Section_prop*>(render_section);
+
+	auto glshader_prop = sec ? sec->Get_path("glshader") : nullptr;
+	glshader_prop->SetValue(name);
+	RENDER_Init(render_section);
+}
+
 static void reload_shader(const bool pressed)
 {
 	// Quick and dirty hack to reload the current shader. Very useful when
