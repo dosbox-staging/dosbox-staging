@@ -19,18 +19,22 @@
 
 #include "dosbox.h"
 
+#include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <regex>
 #include <sstream>
 #include <unordered_map>
 
+#include <SDL.h>
 #include <sys/types.h>
 
 #include "../capture/capture.h"
@@ -47,6 +51,8 @@
 #include "video.h"
 
 #include "render_scalers.h"
+
+using namespace std::chrono;
 
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
@@ -328,6 +334,7 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 	}
 	return linesadded;
 }
+
 std::mutex render_reset_mutex;
 
 static void render_reset(void)
@@ -680,6 +687,199 @@ static ShaderSettings parse_shader_settings(const std::string& shader_name,
 	return settings;
 }
 
+static std::unique_ptr<ShaderAutoSwitcher> shader_auto_switcher = nullptr;
+
+ShaderAutoSwitcher::ShaderAutoSwitcher() noexcept
+{
+	static const auto cga_shader_names = {"crt/cga-1080p",
+	                                      "crt/cga-1440p",
+	                                      "crt/cga-4k"};
+
+	static const auto ega_shader_names = {"crt/ega-1080p",
+	                                      "crt/ega-1440p",
+	                                      "crt/ega-4k"};
+
+	static const auto vga_shader_names = {"crt/vga-1080p",
+	                                      "crt/vga-1440p",
+	                                      "crt/vga-4k"};
+
+	static const auto composite_shader_names = {"crt/composite-1080p",
+	                                            "crt/composite-1440p",
+	                                            "crt/composite-4k"};
+
+	static const auto monochrome_shader_names = {"crt/monochrome"};
+
+	auto build_set = [](const std::vector<const char*> shader_names) {
+		std::string source = {};
+
+		std::vector<ShaderInfo> info = {};
+		for (const char* name : shader_names) {
+			if (!(read_shader_source(name, source))) {
+				LOG_ERR("RENDER: Cannot load built-in shader '%s'",
+				        name);
+			}
+			const auto settings = parse_shader_settings(name, source);
+			info.push_back({name, settings});
+		}
+
+		auto compare = [](const ShaderInfo& a, const ShaderInfo& b) {
+			const auto fa = a.settings.min_vertical_scale_factor;
+			const auto fb = b.settings.min_vertical_scale_factor;
+			return (fa == fb) ? (a.name < b.name) : (fa > fb);
+		};
+		std::sort(info.begin(), info.end(), compare);
+
+		return info;
+	};
+
+	const auto start = high_resolution_clock::now();
+
+//	shader_set.monochrome = build_set(monochrome_shader_names);
+//	shader_set.composite  = build_set(composite_shader_names);
+//	shader_set.cga        = build_set(cga_shader_names);
+	shader_set.ega        = build_set(ega_shader_names);
+//	shader_set.vga        = build_set(vga_shader_names);
+
+	const auto stop     = high_resolution_clock::now();
+	const auto duration = duration_cast<milliseconds>(stop - start);
+	LOG_MSG("RENDER: Building shader sets took %lld ms", duration.count());
+}
+
+ShaderAutoSwitcher::~ShaderAutoSwitcher() noexcept {}
+
+void ShaderAutoSwitcher::SetMode(const std::string& shader_name)
+{
+	if (shader_name == GraphicsStandardAutoShaderName) {
+		mode = AutoShaderMode::GraphicsStandard;
+	} else if (shader_name == MachineAutoShaderName) {
+		mode = AutoShaderMode::Machine;
+	} else {
+		mode = AutoShaderMode::None;
+	}
+}
+
+AutoShaderMode ShaderAutoSwitcher::GetMode() const
+{
+	return mode;
+}
+
+std::vector<ShaderInfo>& ShaderAutoSwitcher::GetShaderSetForGraphicsStandard(
+        const VideoMode& video_mode)
+{
+	if (video_mode.color_depth == ColorDepth::Monochrome) {
+		return shader_set.monochrome;
+	}
+	if (video_mode.color_depth == ColorDepth::Composite) {
+		return shader_set.composite;
+	}
+	switch (video_mode.graphics_standard) {
+	case GraphicsStandard::Hercules: return shader_set.monochrome;
+	case GraphicsStandard::Cga: return shader_set.cga;
+	case GraphicsStandard::Pcjr:
+	case GraphicsStandard::Tga:
+	case GraphicsStandard::Ega: return shader_set.ega;
+	case GraphicsStandard::Vga:
+	case GraphicsStandard::Svga:
+	case GraphicsStandard::Vesa: return shader_set.vga;
+	}
+}
+
+std::vector<ShaderInfo>& ShaderAutoSwitcher::GetShaderSetForMachineType(
+        const MachineType machine_type, const VideoMode& video_mode)
+{
+	if (video_mode.color_depth == ColorDepth::Composite) {
+		return shader_set.composite;
+	}
+	switch (machine_type) {
+	case MCH_HERC: return shader_set.monochrome;
+	case MCH_CGA: return shader_set.cga;
+	case MCH_TANDY: return shader_set.ega;
+	case MCH_PCJR: return shader_set.ega;
+	case MCH_EGA: return shader_set.ega;
+	case MCH_VGA: return shader_set.vga;
+	};
+}
+
+std::string ShaderAutoSwitcher::DetermineAutoShaderName(
+        const uint16_t canvas_width, const uint16_t canvas_height,
+        const uint16_t draw_width, const uint16_t draw_height,
+        const Fraction& render_pixel_aspect_ratio, const VideoMode& video_mode)
+{
+	LOG_WARNING("-------------------------------------------------");
+	LOG_WARNING("####### canvas_width: %d, height: %d", canvas_width, canvas_height);
+	LOG_WARNING("####### draw_width: %d, height: %d", draw_width, draw_height);
+
+	const auto viewport = GFX_CalcViewport(canvas_width,
+	                                       canvas_height,
+	                                       draw_width,
+	                                       draw_height,
+	                                       render_pixel_aspect_ratio);
+
+	const auto vertical_scale_factor = static_cast<double>(viewport.h) /
+	                                   draw_height;
+	LOG_WARNING("####### vertical_scale_factor: %g", vertical_scale_factor);
+
+	auto get_shader_set = [&]() {
+		switch (mode) {
+		case AutoShaderMode::GraphicsStandard:
+			return GetShaderSetForGraphicsStandard(video_mode);
+		case AutoShaderMode::Machine:
+			return GetShaderSetForMachineType(machine, video_mode);
+		case AutoShaderMode::None: assert(false);
+		}
+	};
+	const auto shader_set = get_shader_set();
+
+	auto find_best_shader_name = [&]() -> std::string {
+		for (auto shader : shader_set) {
+			if (vertical_scale_factor >=
+			    shader.settings.min_vertical_scale_factor) {
+				return shader.name;
+			}
+		}
+		return "interpolation/sharp";
+	};
+	const auto shader_name = find_best_shader_name();
+	LOG_WARNING("####### shader_name: %s", shader_name.c_str());
+
+	return shader_name;
+}
+
+void RENDER_Init(Section*);
+
+void RENDER_HandleShaderAutoSwitching(const uint16_t canvas_width,
+                                      const uint16_t canvas_height,
+                                      const uint16_t draw_width,
+                                      const uint16_t draw_height,
+                                      const Fraction& render_pixel_aspect_ratio,
+                                      const VideoMode& video_mode)
+{
+	assert(shader_auto_switcher);
+
+	if (shader_auto_switcher->GetMode() != AutoShaderMode::None) {
+		const auto shader_name = shader_auto_switcher->DetermineAutoShaderName(
+		        canvas_width,
+		        canvas_height,
+		        draw_width,
+		        draw_height,
+		        render_pixel_aspect_ratio,
+		        video_mode);
+
+		if (render.shader.name != shader_name) {
+			LOG_WARNING("####### SWITCHING SHADER TO: %s", shader_name.c_str());
+			render.next_shader_name = shader_name;
+
+			// TODO
+			assert(control);
+			const auto render_sec = dynamic_cast<Section_prop*>(
+			        control->GetSection("render"));
+			assert(render_sec);
+
+			RENDER_Init(render_sec);
+		}
+	}
+}
+
 bool RENDER_UseSrgbTexture()
 {
 	return render.shader.settings.use_srgb_texture;
@@ -690,9 +890,6 @@ bool RENDER_UseSrgbFramebuffer()
 	return render.shader.settings.use_srgb_framebuffer;
 }
 
-#endif
-
-#if C_OPENGL
 void log_warning_if_legacy_shader_name(const std::string& name)
 {
 	static const std::map<std::string, std::string> legacy_name_mappings = {
@@ -904,11 +1101,54 @@ static void setup_scan_and_pixel_doubling([[maybe_unused]] Section_prop* section
 	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
 }
 
+// Returns true if another shader has been loaded
+static bool handle_shader_switching()
+{
+#if C_OPENGL
+	if (is_using_opengl_output_mode()) {
+		const auto glshader_value = get_shader_name_from_config();
+
+		if (shader_auto_switcher->GetMode() == AutoShaderMode::None) {
+			// Determine whether we're in one of the
+			// auto-shader-switching modes from the 'glshader' value
+			shader_auto_switcher->SetMode(glshader_value);
+		}
+
+		// We might or might not be in an auto-shader-switching mode now
+		if (shader_auto_switcher->GetMode() == AutoShaderMode::None) {
+			// 'glshader' controls the shader in use in non-auto modes
+			if (render.shader.name != glshader_value) {
+				load_shader(glshader_value);
+				return true;
+			}
+		} else {
+			// In auto modes, 'glshader' is ignored and the
+			// 'next_shader_name' optional value indicates that we
+			// need to load a different shader.
+			if (render.next_shader_name) {
+				if (render.shader.name != *render.next_shader_name) {
+					load_shader(*render.next_shader_name);
+					render.next_shader_name = {};
+					return true;
+				}
+			}
+		}
+	}
+#endif
+	return false;
+}
+
 void RENDER_Init(Section* sec)
 {
 	LOG_MSG(">>>>>>>>>> RENDER_Init enter");
+
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
+
+	if (!shader_auto_switcher) {
+		shader_auto_switcher = std::make_unique<ShaderAutoSwitcher>();
+	}
+	assert(shader_auto_switcher);
 
 	// For restarting the renderer
 	static auto running = false;
@@ -932,28 +1172,16 @@ void RENDER_Init(Section* sec)
 
 	GFX_SetIntegerScalingMode(section->Get_string("integer_scaling"));
 
-#if C_OPENGL
-	auto shader_changed = false;
-
-	if (is_using_opengl_output_mode()) {
-		const auto shader_name = get_shader_name_from_config();
-		if (render.shader.name != shader_name) {
-			load_shader(shader_name);
-			shader_changed = true;
-		}
-	}
-#endif
+	const auto shader_changed = handle_shader_switching();
 
 	setup_scan_and_pixel_doubling(section);
 
 	const auto needs_reinit =
 	        ((force_square_pixels != prev_force_square_pixels) ||
 	         (render.scale.size != prev_scale_size) ||
-	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode)
-#if C_OPENGL
-	         || shader_changed
-#endif
-	         || (prev_force_vga_single_scan != force_vga_single_scan) ||
+	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode) ||
+	         shader_changed ||
+	         (prev_force_vga_single_scan != force_vga_single_scan) ||
 	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
 
 	if (running && needs_reinit) {
