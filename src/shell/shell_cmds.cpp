@@ -1229,7 +1229,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 		char pathSource[DOS_PATHLENGTH];
 		char pathTarget[DOS_PATHLENGTH];
 
-		if (!DOS_Canonicalize(const_cast<char*>(source.filename.c_str()),pathSource)) {
+		if (!DOS_Canonicalize(source.filename.c_str(), pathSource)) {
 			WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 			dos.dta(save_dta);
 			return;
@@ -1238,7 +1238,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 		char* pos = strrchr(pathSource,'\\');
 		if (pos) *(pos+1) = 0;
 
-		if (!DOS_Canonicalize(const_cast<char*>(target.filename.c_str()),pathTarget)) {
+		if (!DOS_Canonicalize(target.filename.c_str(), pathTarget)) {
 			WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 			dos.dta(save_dta);
 			return;
@@ -1261,9 +1261,11 @@ void DOS_Shell::CMD_COPY(char * args) {
 			target_is_file = false;
 
 		//Find first sourcefile
-		bool ret = DOS_FindFirst(const_cast<char*>(source.filename.c_str()),0xffff & ~DOS_ATTR_VOLUME);
+		bool ret = DOS_FindFirst(source.filename.c_str(),
+		                         0xffff & ~DOS_ATTR_VOLUME);
 		if (!ret) {
-			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),const_cast<char*>(source.filename.c_str()));
+			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),
+			         source.filename.c_str());
 			dos.dta(save_dta);
 			return;
 		}
@@ -1319,13 +1321,18 @@ void DOS_Shell::CMD_COPY(char * args) {
 							if (!source.concat && !special) count++; //Only count concat files once
 						} else {
 							DOS_CloseFile(sourceHandle);
-							WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),const_cast<char*>(target.filename.c_str()));
+							WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),
+							         target.filename.c_str());
 						}
 					} else {
 						DOS_CloseFile(sourceHandle);
-						WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),const_cast<char*>(target.filename.c_str()));
+						WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),
+						         target.filename.c_str());
 					}
-				} else WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),const_cast<char*>(source.filename.c_str()));
+				} else {
+					WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),
+					         source.filename.c_str());
+				}
 			};
 			//On to the next file if the previous one wasn't a device
 			if ((attr&DOS_ATTR_DEVICE) == 0) ret = DOS_FindNext();
@@ -1965,7 +1972,9 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		strcat(mountstring, " ");
 
    		uint8_t drive;char fulldir[DOS_PATHLENGTH];
-		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) throw 0;
+		if (!DOS_MakeName(arg.c_str(), fulldir, &drive)) {
+			throw 0;
+		}
 
 		ldp = dynamic_cast<localDrive*>(Drives.at(drive));
 		if (!ldp) {
