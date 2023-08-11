@@ -600,63 +600,30 @@ std::deque<std::string> RENDER_InventoryShaders()
 	return inventory;
 }
 
-static bool read_shader_source(const std::string& shader_path, std::string& source)
+static bool read_shader_source(const std::string& shader_name, std::string& source)
 {
-	// Start with the path as-is and then try from resources
-	const auto candidate_paths = {std_fs::path(shader_path),
-	                              std_fs::path(shader_path + ".glsl"),
-	                              GetResourcePath("glshaders", shader_path),
-	                              GetResourcePath("glshaders",
-	                                              shader_path + ".glsl")};
+	// Start with the name as-is and then try from resources
+	constexpr auto glsl_ext = ".glsl";
 
-	std::string s; // to be populated with the shader source
-	for (const auto& p : candidate_paths) {
-		if (read_shader(p, s)) {
+	constexpr auto glshaders_dir = "glshaders";
+
+	const auto candidate_paths = {std_fs::path(shader_name),
+	                              std_fs::path(shader_name + glsl_ext),
+	                              GetResourcePath(glshaders_dir, shader_name),
+	                              GetResourcePath(glshaders_dir,
+	                                              shader_name + glsl_ext)};
+
+	// To be populated with the shader source
+	for (const auto& path : candidate_paths) {
+		if (read_shader(path, source)) {
 			break;
 		}
 	}
 
-	if (s.empty()) {
-		source.clear();
+	if (source.empty()) {
+		LOG_ERR("RENDER: Failed to load shader '%s'", shader_name.c_str());
 		return false;
 	}
-
-	if (first_shell) {
-		std::string pre_defs;
-		const size_t count = first_shell->GetEnvCount();
-		for (size_t i = 0; i < count; ++i) {
-			std::string env;
-			if (!first_shell->GetEnvNum(i, env)) {
-				continue;
-			}
-			if (env.compare(0, 9, "GLSHADER_") == 0) {
-				const auto brk = env.find('=');
-				if (brk == std::string::npos) {
-					continue;
-				}
-				env[brk] = ' ';
-				pre_defs += "#define " + env.substr(9) + '\n';
-			}
-		}
-		if (pre_defs.length()) {
-			// If "#version" occurs, it must be before anything,
-			// except comments and whitespace
-			auto pos = s.find("#version ");
-
-			if (pos != std::string::npos) {
-				pos = s.find('\n', pos + 9);
-			}
-
-			s.insert(pos, pre_defs);
-		}
-	}
-	if (s.empty()) {
-		source.clear();
-		LOG_ERR("RENDER: Failed to read shader source");
-		return false;
-	}
-	source = std::move(s);
-	assert(source.length());
 	return true;
 }
 
