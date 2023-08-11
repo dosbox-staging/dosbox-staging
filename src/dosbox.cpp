@@ -710,7 +710,7 @@ void DOSBOX_Init()
 	        "    options instead.");
 
 #if C_OPENGL
-	pstring = secprop->Add_path("glshader", always, "default");
+	pstring = secprop->Add_string("glshader", always, "default");
 	pstring->Set_help(
 	        "Set the GLSL shader to use in OpenGL output modes.\n"
 			"Options include 'default', 'none', a shader listed using the --list-glshaders\n"
