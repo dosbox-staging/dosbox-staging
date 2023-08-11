@@ -627,8 +627,10 @@ static bool read_shader_source(const std::string& shader_name, std::string& sour
 	return true;
 }
 
-static void set_shader_settings(const std::string& source)
+static ShaderSettings parse_shader_settings(const std::string& shader_name,
+                                            const std::string& source)
 {
+	ShaderSettings settings = {};
 	try {
 		const std::regex re("\\s*#pragma\\s+(\\w+)");
 		std::sregex_iterator next(source.begin(), source.end(), re);
@@ -639,20 +641,22 @@ static void set_shader_settings(const std::string& source)
 
 			auto pragma = match[1].str();
 			if (pragma == "use_srgb_texture") {
-				render.shader.settings.use_srgb_texture = true;
+				settings.use_srgb_texture = true;
 			} else if (pragma == "use_srgb_framebuffer") {
-				render.shader.settings.use_srgb_framebuffer = true;
+				settings.use_srgb_framebuffer = true;
 			} else if (pragma == "force_single_scan") {
-				render.shader.settings.force_single_scan = true;
+				settings.force_single_scan = true;
 			} else if (pragma == "force_no_pixel_doubling") {
-				render.shader.settings.force_no_pixel_doubling = true;
+				settings.force_no_pixel_doubling = true;
 			}
 			++next;
 		}
 	} catch (std::regex_error& e) {
-		LOG_ERR("RENDER: Regex error while parsing OpenGL shader for pragmas: %d",
+		LOG_ERR("RENDER: Regex error while parsing shader '%s' for pragmas: %d",
+		        shader_name.c_str(),
 		        e.code());
 	}
+	return settings;
 }
 
 bool RENDER_UseSrgbTexture()
@@ -764,11 +768,12 @@ static bool init_shader([[maybe_unused]] Section* sec)
 
 	if (using_opengl && source.length() && render.shader.name != shader_name) {
 		LOG_MSG("RENDER: Using GLSL shader '%s'", shader_name.c_str());
-		set_shader_settings(source);
 
 		// Move the temporary name and source into the memebers
 		render.shader.name   = std::move(shader_name);
 		render.shader.source = std::move(source);
+
+		render.shader.settings = parse_shader_settings(shader_name, source);
 
 		// Pass the shader source up to the GFX engine
 		GFX_SetShader(render.shader.source);
