@@ -106,8 +106,8 @@ bool CommandLine::FindCommand(unsigned int which, std::string& value) const
 		return false;
 	}
 	auto it = cmds.begin();
-	for (; which > 1; which--) {
-		it++;
+	for (; which > 1; --which) {
+		++it;
 	}
 	value = (*it);
 	return true;

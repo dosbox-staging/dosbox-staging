@@ -39,7 +39,7 @@
 #endif
 
 struct _LogGroup {
-	char const *front = nullptr;
+	const char* front = nullptr;
 	bool enabled = false;
 };
 #include <list>
@@ -55,9 +55,8 @@ static FILE *debuglog = nullptr;
 
 extern int old_cursor_state;
 
-
-
-void DEBUG_ShowMsg(char const* format,...) {
+void DEBUG_ShowMsg(const char* format, ...)
+{
 	// Quit early if the window hasn't been created yet
 	if (!dbg.win_out)
 		return;
@@ -99,9 +98,9 @@ void DEBUG_RefreshPage(int scroll) {
 		return;
 
 	if (scroll == -1 && logBuffPos != logBuff.begin())
-		logBuffPos--;
+		--logBuffPos;
 	else if (scroll == 1 && logBuffPos != logBuff.end())
-		logBuffPos++;
+		++logBuffPos;
 
 	list<string>::iterator i = logBuffPos;
 	int maxy, maxx; getmaxyx(dbg.win_out,maxy,maxx);
@@ -121,7 +120,8 @@ void DEBUG_RefreshPage(int scroll) {
 	wrefresh(dbg.win_out);
 }
 
-void LOG::operator() (char const* format, ...){
+void LOG::operator()(const char* format, ...)
+{
 	char buf[512];
 	va_list msg;
 	va_start(msg,format);
@@ -132,7 +132,6 @@ void LOG::operator() (char const* format, ...){
 	if ((d_severity!=LOG_ERROR) && (!loggrp[d_type].enabled)) return;
 	DEBUG_ShowMsg("%10u: %s:%s\n",static_cast<uint32_t>(cycle_count),loggrp[d_type].front,buf);
 }
-
 
 static void Draw_RegisterLayout(void) {
 	// Quit early if the window hasn't been created yet
