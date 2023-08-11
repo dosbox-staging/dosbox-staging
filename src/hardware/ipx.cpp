@@ -131,7 +131,7 @@ ECBClass::ECBClass(uint16_t segment, uint16_t offset)
 }
 
 void ECBClass::writeDataBuffer(uint8_t* buffer, uint16_t length) {
-	if(databuffer!=nullptr) delete [] databuffer;
+	delete[] databuffer;
 	databuffer = new uint8_t[length];
 	memcpy(databuffer,buffer,length);
 	buflen=length;
@@ -262,7 +262,7 @@ ECBClass::~ECBClass() {
 			if(nextECB != nullptr) nextECB->prevECB = prevECB;
 		}
 	}
-	if(databuffer!=nullptr) delete [] databuffer;
+	delete[] databuffer;
 }
 
 
