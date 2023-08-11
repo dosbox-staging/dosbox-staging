@@ -21,6 +21,7 @@
 
 #include <cstring>
 #include <deque>
+#include <optional>
 #include <string>
 
 #include "../src/gui/render_scalers.h"
@@ -160,6 +161,8 @@ struct Render_t {
 		std::string source      = {};
 		ShaderSettings settings = {};
 	} shader = {};
+
+	std::optional<std::string> next_shader_name;
 #endif
 
 	RenderPal_t pal = {};
@@ -253,6 +256,92 @@ struct RenderedImage {
 	}
 };
 
+#if C_OPENGL
+
+constexpr auto GraphicsStandardAutoShaderName = "crt-auto";
+constexpr auto MachineAutoShaderName          = "crt-machine-auto";
+
+enum class AutoShaderMode {
+	// No shader auto-switching; the 'glshader' setting always contains the
+	// name of the shader in use.
+	None,
+
+	// Graphics-standard-based shader auto-switching enabled via the
+	// 'crt-auto' magic 'glshader' setting.
+	//
+	// CGA modes will always use the 'crt/cga-*' shaders, EGA modes always the
+	// 'crt/ega-*' shaders, etc. regardless of machine type. In other words,
+	// the choice of the shader is governed by the graphics standard of the
+	// active screen mode, *not* the emulated video adapter.
+	//
+	// As most users leave the machine type at the 'svga_s3' default, this
+	// mode gives them single-scanned CRT emulation in CGA and EGA modes,
+	// providing a more authentic out-of-the-box experience (authentic as in
+	// "how people experienced the game at the time of release", and
+	// prioritising the most probable developer intent.)
+	GraphicsStandard,
+
+
+	// Machine-based shader auto-switching enabled via the 'crt-machine-auto'
+	// magic 'glshader' setting.
+	//
+	// CGA and EGA modes on a VGA machine type will always use 'crt/vga-*'
+	// shaders, on the EGA machine type always the 'crt/ega-*' shaders, and so
+	// on.
+	//
+	// This mode emulates a computer (machine) equipped with the configured
+	// video adapter and matching monitor. The auto-switching only picks the
+	// most approriate shader variant for the chosen adapter/monitor combo
+	// (Hercules, CGA, EGA, (S)VGA, etc.) for a given viewport resolution.
+	Machine
+};
+
+struct ShaderInfo {
+	std::string name        = {};
+	ShaderSettings settings = {};
+};
+
+class ShaderAutoSwitcher {
+public:
+	ShaderAutoSwitcher() noexcept;
+	~ShaderAutoSwitcher() noexcept;
+
+	void SetMode(const std::string& shader_name);
+	AutoShaderMode GetMode() const;
+
+	std::string DetermineAutoShaderName(const uint16_t canvas_width,
+	                                    const uint16_t canvas_height,
+	                                    const uint16_t draw_width,
+	                                    const uint16_t draw_height,
+	                                    const Fraction& render_pixel_aspect_ratio,
+	                                    const VideoMode& video_mode);
+
+	// prevent copying
+	ShaderAutoSwitcher(const ShaderAutoSwitcher&) = delete;
+	// prevent assignment
+	ShaderAutoSwitcher& operator=(const ShaderAutoSwitcher&) = delete;
+
+private:
+	std::vector<ShaderInfo>& GetShaderSetForGraphicsStandard(const VideoMode& video_mode);
+
+	std::vector<ShaderInfo>& GetShaderSetForMachineType(
+	        const MachineType machine_type, const VideoMode& video_mode);
+
+	AutoShaderMode mode = AutoShaderMode::None;
+
+	struct {
+		// Shader sets are sorted by 'min_vertical_scale_factor' in
+		// descending order
+		std::vector<ShaderInfo> monochrome = {};
+		std::vector<ShaderInfo> composite  = {};
+		std::vector<ShaderInfo> cga        = {};
+		std::vector<ShaderInfo> ega        = {};
+		std::vector<ShaderInfo> vga        = {};
+	} shader_set;
+};
+
+#endif
+
 extern Render_t render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 
@@ -276,5 +365,12 @@ void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 bool RENDER_UseSrgbTexture();
 bool RENDER_UseSrgbFramebuffer();
 #endif
+
+void RENDER_HandleShaderAutoSwitching(const uint16_t canvas_width,
+                                      const uint16_t canvas_height,
+                                      const uint16_t draw_width,
+                                      const uint16_t draw_height,
+                                      const Fraction& render_pixel_aspect_ratio,
+                                      const VideoMode& video_mode);
 
 #endif
