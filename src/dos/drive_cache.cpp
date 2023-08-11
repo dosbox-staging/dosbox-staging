@@ -31,21 +31,29 @@
 
 int fileInfoCounter = 0;
 
-bool SortByName(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) {
-	return strcmp(a->shortname,b->shortname)<0;
+bool SortByName(DOS_Drive_Cache::CFileInfo* const a,
+                DOS_Drive_Cache::CFileInfo* const b)
+{
+	return strcmp(a->shortname, b->shortname) < 0;
 }
 
-bool SortByNameRev(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) {
-	return strcmp(a->shortname,b->shortname)>0;
+bool SortByNameRev(DOS_Drive_Cache::CFileInfo* const a,
+                   DOS_Drive_Cache::CFileInfo* const b)
+{
+	return strcmp(a->shortname, b->shortname) > 0;
 }
 
-bool SortByDirName(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) {
+bool SortByDirName(DOS_Drive_Cache::CFileInfo* const a,
+                   DOS_Drive_Cache::CFileInfo* const b)
+{
 	// Directories first...
 	if (a->isDir!=b->isDir) return (a->isDir>b->isDir);	
 	return strcmp(a->shortname,b->shortname)<0;
 }
 
-bool SortByDirNameRev(DOS_Drive_Cache::CFileInfo* const &a, DOS_Drive_Cache::CFileInfo* const &b) {
+bool SortByDirNameRev(DOS_Drive_Cache::CFileInfo* const a,
+                      DOS_Drive_Cache::CFileInfo* const b)
+{
 	// Directories first...
 	if (a->isDir!=b->isDir) return (a->isDir>b->isDir);	
 	return strcmp(a->shortname,b->shortname)>0;
@@ -394,7 +402,7 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname) {
 }
 
 int DOS_Drive_Cache::CompareShortname(const char* compareName, const char* shortName) {
-	char const* cpos = strchr(shortName,'~');
+	const char* cpos = strchr(shortName, '~');
 	if (cpos) {
 /* the following code is replaced as it's not safe when char* is 64 bits */
 /*		Bits compareCount1	= (int)cpos - (int)shortName;
