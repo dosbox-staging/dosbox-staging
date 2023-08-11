@@ -78,6 +78,7 @@ struct ShaderSettings {
 	bool use_srgb_framebuffer       = false;
 	bool force_single_scan          = false;
 	bool force_no_pixel_doubling    = false;
+	float min_vertical_scale_factor = 0.0f;
 };
 #endif
 
