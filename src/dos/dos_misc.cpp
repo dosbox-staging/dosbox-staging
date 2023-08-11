@@ -37,7 +37,7 @@ void DOS_AddMultiplexHandler(MultiplexHandler * handler) {
 
 void DOS_DeleteMultiplexHandler(MultiplexHandler* handler)
 {
-	for(Multiplex_it it =Multiplex.begin();it != Multiplex.end();it++) {
+	for (Multiplex_it it = Multiplex.begin(); it != Multiplex.end(); ++it) {
 		if(*it == handler) {
 			Multiplex.erase(it);
 			return;
@@ -46,9 +46,12 @@ void DOS_DeleteMultiplexHandler(MultiplexHandler* handler)
 }
 
 static Bitu INT2F_Handler(void) {
-	for(Multiplex_it it = Multiplex.begin();it != Multiplex.end();it++)
-		if( (*it)() ) return CBRET_NONE;
-   
+	for (Multiplex_it it = Multiplex.begin(); it != Multiplex.end(); ++it) {
+		if ((*it)()) {
+			return CBRET_NONE;
+		}
+	}
+
 	LOG(LOG_DOSMISC,LOG_ERROR)("DOS:Multiplex Unhandled call %4X",reg_ax);
 	return CBRET_NONE;
 }
