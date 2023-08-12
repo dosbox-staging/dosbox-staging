@@ -2039,7 +2039,7 @@ dosurface:
 				if (sdl.opengl.program_object == 0) {
 					GLuint vertexShader, fragmentShader;
 
-					if (!LoadGLShaders(sdl.opengl.shader_source_sv,
+					if (!LoadGLShaders(sdl.opengl.shader_source,
 					                   &vertexShader,
 					                   &fragmentShader)) {
 						LOG_ERR("SDL:OPENGL: Failed to compile shader!");
@@ -2294,8 +2294,8 @@ dosurface:
 void GFX_SetShader([[maybe_unused]] const std::string &source)
 {
 #if C_OPENGL
-	if (sdl.opengl.shader_source_sv != source)
-		sdl.opengl.shader_source_sv = source;
+	if (sdl.opengl.shader_source != source)
+		sdl.opengl.shader_source = source;
 
 	if (!sdl.opengl.use_shader)
 		return;
