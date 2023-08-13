@@ -215,7 +215,7 @@ void Cross::CreatePlatformConfigDir(std::string &in)
 	in += "\\DOSBox";
 #else
 	assert(!cached_conf_path.empty());
-	in = cached_conf_path.c_str();
+	in = cached_conf_path;
 #endif
 	if (in.back() != CROSS_FILESPLIT)
 		in += CROSS_FILESPLIT;
@@ -462,7 +462,7 @@ bool wild_match(const char *haystack, const char *needle)
 {
 	assert(haystack);
 	assert(needle);
-	char *p = (char *)needle;
+	const char *p = needle;
 	while(*p != '\0') {
 		switch (*p) {
 		case '?':
