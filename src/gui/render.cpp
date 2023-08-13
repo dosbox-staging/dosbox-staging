@@ -540,26 +540,6 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
 
 #if C_OPENGL
 
-// Reads the given shader path into the string
-static bool read_shader(const std_fs::path& shader_path, std::string& shader_str)
-{
-	std::ifstream fshader(shader_path, std::ios_base::binary);
-	if (!fshader.is_open()) {
-		return false;
-	}
-
-	std::stringstream buf;
-	buf << fshader.rdbuf();
-	fshader.close();
-	if (buf.str().empty()) {
-		return false;
-	}
-
-	shader_str = buf.str();
-	shader_str += '\n';
-	return true;
-}
-
 std::deque<std::string> RENDER_InventoryShaders()
 {
 	std::deque<std::string> inventory;
@@ -602,29 +582,35 @@ std::deque<std::string> RENDER_InventoryShaders()
 
 static bool read_shader_source(const std::string& shader_name, std::string& source)
 {
-	// Start with the name as-is and then try from resources
-	constexpr auto glsl_ext = ".glsl";
+	auto read_shader = [&](const std_fs::path& path) {
+		std::ifstream fshader(path, std::ios_base::binary);
+		if (!fshader.is_open()) {
+			return false;
+		}
+		std::stringstream buf;
+		buf << fshader.rdbuf();
+		fshader.close();
 
+		source = buf.str() + '\n';
+		return true;
+	};
+
+	constexpr auto glsl_ext      = ".glsl";
 	constexpr auto glshaders_dir = "glshaders";
 
+	// Start with the name as-is and then try from resources
 	const auto candidate_paths = {std_fs::path(shader_name),
 	                              std_fs::path(shader_name + glsl_ext),
 	                              GetResourcePath(glshaders_dir, shader_name),
 	                              GetResourcePath(glshaders_dir,
 	                                              shader_name + glsl_ext)};
 
-	// To be populated with the shader source
 	for (const auto& path : candidate_paths) {
-		if (read_shader(path, source)) {
-			break;
+		if (std_fs::exists(path)) {
+			return read_shader(path);
 		}
 	}
-
-	if (source.empty()) {
-		LOG_ERR("RENDER: Failed to load shader '%s'", shader_name.c_str());
-		return false;
-	}
-	return true;
+	return false;
 }
 
 static ShaderSettings parse_shader_settings(const std::string& shader_name,
@@ -781,14 +767,12 @@ static void load_shader(const std::string& shader_name)
 		LOG_MSG("RENDER: Using GLSL shader '%s'",
 		        loaded_shader_name.c_str());
 
-		// Move the temporary name and source into the memebers
 		render.shader.name   = std::move(loaded_shader_name);
 		render.shader.source = std::move(source);
 
-		render.shader.settings = parse_shader_settings(loaded_shader_name,
-		                                               source);
+		render.shader.settings = parse_shader_settings(render.shader.name,
+		                                               render.shader.source);
 
-		// Pass the shader source up to the GFX engine
 		GFX_SetShader(render.shader.source);
 	}
 #endif
