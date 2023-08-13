@@ -153,41 +153,41 @@ public:
 	uint16_t GetNumDrives() const { return numDrives; }
 	uint16_t GetFirstDrive() const { return dinfo[0].drive; }
 
-	uint8_t		GetSubUnit			(uint16_t _drive);
-	bool		GetUPC				(uint8_t subUnit, uint8_t& attr, char* upc);
+	uint8_t		GetSubUnit		(uint16_t _drive);
+	bool		GetUPC			(uint8_t subUnit, uint8_t& attr, char* upc);
 
 	void		InitNewMedia		(uint8_t subUnit);
 	bool		PlayAudioSector		(uint8_t subUnit, uint32_t start, uint32_t length);
 	bool		PlayAudioMSF		(uint8_t subUnit, uint32_t start, uint32_t length);
-	bool		StopAudio			(uint8_t subUnit);
+	bool		StopAudio		(uint8_t subUnit);
 	bool		GetAudioStatus		(uint8_t subUnit, bool& playing, bool& pause, TMSF& start, TMSF& end);
 
 	bool		GetSubChannelData	(uint8_t subUnit, uint8_t& attr, uint8_t& track, uint8_t &index, TMSF& rel, TMSF& abs);
 
-	int			RemoveDrive			(uint16_t _drive);
-	int			AddDrive			(uint16_t _drive, char* physicalPath, uint8_t& subUnit);
-	bool 		HasDrive			(uint16_t drive);
+	int		RemoveDrive		(uint16_t _drive);
+	int		AddDrive		(uint16_t _drive, const char* physicalPath, uint8_t& subUnit);
+	bool 		HasDrive		(uint16_t drive);
 	void		ReplaceDrive		(CDROM_Interface* newCdrom, uint8_t subUnit);
-	void		GetDrives			(PhysPt data);
+	void		GetDrives		(PhysPt data);
 	void		GetDriverInfo		(PhysPt data);
 	bool		GetVolumeName		(uint8_t subUnit, char* name);
-	bool		GetFileName			(uint16_t drive, uint16_t pos, PhysPt data);	
+	bool		GetFileName		(uint16_t drive, uint16_t pos, PhysPt data);	
 	bool		GetDirectoryEntry	(uint16_t drive, bool copyFlag, PhysPt pathname, PhysPt buffer, uint16_t& error);
-	bool		ReadVTOC			(uint16_t drive, uint16_t volume, PhysPt data, uint16_t& offset, uint16_t& error);
-	bool		ReadSectors			(uint16_t drive, uint32_t sector, uint16_t num, PhysPt data);
-	bool		ReadSectors			(uint8_t subUnit, bool raw, uint32_t sector, uint16_t num, PhysPt data);
+	bool		ReadVTOC		(uint16_t drive, uint16_t volume, PhysPt data, uint16_t& offset, uint16_t& error);
+	bool		ReadSectors		(uint16_t drive, uint32_t sector, uint16_t num, PhysPt data);
+	bool		ReadSectors		(uint8_t subUnit, bool raw, uint32_t sector, uint16_t num, PhysPt data);
 	bool		ReadSectorsMSF		(uint8_t subUnit, bool raw, uint32_t sector, uint16_t num, PhysPt data);
 	bool		SendDriverRequest	(uint16_t drive, PhysPt data);
 	bool		IsValidDrive		(uint16_t drive);
-	bool		GetCDInfo			(uint8_t subUnit, uint8_t& tr1, uint8_t& tr2, TMSF& leadOut);
-	uint32_t		GetVolumeSize		(uint8_t subUnit);
+	bool		GetCDInfo		(uint8_t subUnit, uint8_t& tr1, uint8_t& tr2, TMSF& leadOut);
+	uint32_t	GetVolumeSize		(uint8_t subUnit);
 	bool		GetTrackInfo		(uint8_t subUnit, uint8_t track, uint8_t& attr, TMSF& start);
-	uint16_t		GetStatusWord		(uint8_t subUnit,uint16_t status);
+	uint16_t	GetStatusWord		(uint8_t subUnit,uint16_t status);
 	bool		GetCurrentPos		(uint8_t subUnit, TMSF& pos);
-	uint32_t		GetDeviceStatus		(uint8_t subUnit);
+	uint32_t	GetDeviceStatus		(uint8_t subUnit);
 	bool		GetMediaStatus		(uint8_t subUnit, uint8_t& status);
 	bool		LoadUnloadMedia		(uint8_t subUnit, bool unload);
-	bool		ResumeAudio			(uint8_t subUnit);
+	bool		ResumeAudio		(uint8_t subUnit);
 	bool		GetMediaStatus		(uint8_t subUnit, bool& media, bool& changed, bool& trayOpen);
 
 private:
@@ -298,7 +298,7 @@ int CMscdex::RemoveDrive(uint16_t _drive)
 	return 1;
 }
 
-int CMscdex::AddDrive(uint16_t _drive, char* physicalPath, uint8_t& subUnit)
+int CMscdex::AddDrive(uint16_t _drive, const char* physicalPath, uint8_t& subUnit)
 {
 	subUnit = 0;
 	if ((Bitu)GetNumDrives()+1>=MSCDEX_MAX_DRIVES) return 4;
@@ -1380,7 +1380,7 @@ bool device_MSCDEX::WriteToControlChannel(PhysPt bufptr,uint16_t size,uint16_t *
 int MSCDEX_AddDrive(char driveLetter, const char* physicalPath, uint8_t& subUnit)
 {
 	int result = mscdex->AddDrive(drive_index(driveLetter),
-	                              const_cast<char*>(physicalPath), subUnit);
+	                              physicalPath, subUnit);
 	return result;
 }
 
