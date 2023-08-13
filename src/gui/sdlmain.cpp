@@ -2294,8 +2294,7 @@ dosurface:
 void GFX_SetShader([[maybe_unused]] const std::string &source)
 {
 #if C_OPENGL
-	if (sdl.opengl.shader_source != source)
-		sdl.opengl.shader_source = source;
+	sdl.opengl.shader_source = source;
 
 	if (!sdl.opengl.use_shader)
 		return;
