@@ -47,7 +47,7 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 	FILE *tmpfile;
 	char fullname[DOS_PATHLENGTH];
 
-	if (!DOS_MakeName(const_cast<char *>(filename), fullname, &drive))
+	if (!DOS_MakeName(filename, fullname, &drive))
 		return nullptr;
 
 	try {
