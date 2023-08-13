@@ -404,8 +404,8 @@ static void draw_cursor_text()
 		state.background.enabled = true;
 
 		// Write Cursor
-		result &= state.text_and_mask;
-		result ^= state.text_xor_mask;
+		result = result & state.text_and_mask;
+		result = result ^ state.text_xor_mask;
 
 		WriteChar(state.background.pos_x,
 		          state.background.pos_y,
