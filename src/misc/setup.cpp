@@ -1683,7 +1683,7 @@ const char* SetProp(std::vector<std::string>& pvars)
 		}
 
 		// Check if the first parameter is a section or property
-		Section* sec = control->GetSection(pvars[0].c_str());
+		Section* sec = control->GetSection(pvars[0]);
 
 		if (!sec) {
 			// Not a section: little duplicate from above
