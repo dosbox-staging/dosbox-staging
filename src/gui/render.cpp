@@ -687,9 +687,9 @@ static ShaderSettings parse_shader_settings(const std::string& shader_name,
 	return settings;
 }
 
-static std::unique_ptr<ShaderAutoSwitcher> shader_auto_switcher = nullptr;
+static std::unique_ptr<ShaderManager> shader_manager = nullptr;
 
-ShaderAutoSwitcher::ShaderAutoSwitcher() noexcept
+ShaderManager::ShaderManager() noexcept
 {
 	static const auto cga_shader_names = {"crt/cga-1080p",
 	                                      "crt/cga-1440p",
@@ -745,25 +745,44 @@ ShaderAutoSwitcher::ShaderAutoSwitcher() noexcept
 	LOG_MSG("RENDER: Building shader sets took %lld ms", duration.count());
 }
 
-ShaderAutoSwitcher::~ShaderAutoSwitcher() noexcept {}
+ShaderManager::~ShaderManager() noexcept {}
 
-void ShaderAutoSwitcher::SetMode(const std::string& shader_name)
+void ShaderManager::NotifyGlshaderSetting(const std::string& setting)
 {
-	if (shader_name == GraphicsStandardAutoShaderName) {
-		mode = AutoShaderMode::GraphicsStandard;
-	} else if (shader_name == MachineAutoShaderName) {
-		mode = AutoShaderMode::Machine;
+	if (setting == AutoGraphicsStandardShaderName) {
+		mode = ShaderMode::AutoGraphicsStandard;
+	} else if (setting == AutoMachineShaderName) {
+		mode = ShaderMode::AutoMachine;
 	} else {
-		mode = AutoShaderMode::None;
+		mode = ShaderMode::Normal;
+		this->glshader_setting = setting;
 	}
 }
 
-AutoShaderMode ShaderAutoSwitcher::GetMode() const
+void ShaderManager::NotifyRenderParameters(const uint16_t canvas_width,
+                                           const uint16_t canvas_height,
+                                           const uint16_t draw_width,
+                                           const uint16_t draw_height,
+                                           const Fraction& render_pixel_aspect_ratio,
+                                           const VideoMode& video_mode)
 {
-	return mode;
+	LOG_WARNING("-------------------------------------------------");
+	LOG_WARNING("####### canvas_width: %d, height: %d", canvas_width, canvas_height);
+	LOG_WARNING("####### draw_width: %d, height: %d", draw_width, draw_height);
+
+	const auto viewport = GFX_CalcViewport(canvas_width,
+	                                       canvas_height,
+	                                       draw_width,
+	                                       draw_height,
+	                                       render_pixel_aspect_ratio);
+
+	vertical_scale_factor = static_cast<double>(viewport.h) / draw_height;
+	LOG_WARNING("####### vertical_scale_factor: %g", vertical_scale_factor);
+
+	this->video_mode = video_mode;
 }
 
-std::vector<ShaderInfo>& ShaderAutoSwitcher::GetShaderSetForGraphicsStandard(
+std::vector<ShaderInfo>& ShaderManager::GetShaderSetForGraphicsStandard(
         const VideoMode& video_mode)
 {
 	if (video_mode.color_depth == ColorDepth::Monochrome) {
@@ -784,7 +803,7 @@ std::vector<ShaderInfo>& ShaderAutoSwitcher::GetShaderSetForGraphicsStandard(
 	}
 }
 
-std::vector<ShaderInfo>& ShaderAutoSwitcher::GetShaderSetForMachineType(
+std::vector<ShaderInfo>& ShaderManager::GetShaderSetForMachineType(
         const MachineType machine_type, const VideoMode& video_mode)
 {
 	if (video_mode.color_depth == ColorDepth::Composite) {
@@ -800,32 +819,19 @@ std::vector<ShaderInfo>& ShaderAutoSwitcher::GetShaderSetForMachineType(
 	};
 }
 
-std::string ShaderAutoSwitcher::DetermineAutoShaderName(
-        const uint16_t canvas_width, const uint16_t canvas_height,
-        const uint16_t draw_width, const uint16_t draw_height,
-        const Fraction& render_pixel_aspect_ratio, const VideoMode& video_mode)
+std::string ShaderManager::GetCurrentShaderName()
 {
-	LOG_WARNING("-------------------------------------------------");
-	LOG_WARNING("####### canvas_width: %d, height: %d", canvas_width, canvas_height);
-	LOG_WARNING("####### draw_width: %d, height: %d", draw_width, draw_height);
-
-	const auto viewport = GFX_CalcViewport(canvas_width,
-	                                       canvas_height,
-	                                       draw_width,
-	                                       draw_height,
-	                                       render_pixel_aspect_ratio);
-
-	const auto vertical_scale_factor = static_cast<double>(viewport.h) /
-	                                   draw_height;
-	LOG_WARNING("####### vertical_scale_factor: %g", vertical_scale_factor);
+	if (mode == ShaderMode::Normal) {
+		return glshader_setting;
+	}
 
 	auto get_shader_set = [&]() {
 		switch (mode) {
-		case AutoShaderMode::GraphicsStandard:
+		case ShaderMode::AutoGraphicsStandard:
 			return GetShaderSetForGraphicsStandard(video_mode);
-		case AutoShaderMode::Machine:
+		case ShaderMode::AutoMachine:
 			return GetShaderSetForMachineType(machine, video_mode);
-		case AutoShaderMode::None: assert(false);
+		case ShaderMode::Normal: assert(false);
 		}
 	};
 	const auto shader_set = get_shader_set();
@@ -839,44 +845,38 @@ std::string ShaderAutoSwitcher::DetermineAutoShaderName(
 		}
 		return "interpolation/sharp";
 	};
-	const auto shader_name = find_best_shader_name();
-	LOG_WARNING("####### shader_name: %s", shader_name.c_str());
+	const auto shader_name =  find_best_shader_name();
+	LOG_WARNING(">>>>>>> shader_name: %s", shader_name.c_str());
 
 	return shader_name;
 }
 
 void RENDER_Init(Section*);
 
-void RENDER_HandleShaderAutoSwitching(const uint16_t canvas_width,
-                                      const uint16_t canvas_height,
-                                      const uint16_t draw_width,
-                                      const uint16_t draw_height,
-                                      const Fraction& render_pixel_aspect_ratio,
-                                      const VideoMode& video_mode)
+void RENDER_NotifyRenderParameters(const uint16_t canvas_width,
+                                   const uint16_t canvas_height,
+                                   const uint16_t draw_width,
+                                   const uint16_t draw_height,
+                                   const Fraction& render_pixel_aspect_ratio,
+                                   const VideoMode& video_mode)
 {
-	assert(shader_auto_switcher);
+	assert(shader_manager);
+	shader_manager->NotifyRenderParameters(canvas_width,
+	                                       canvas_height,
+	                                       draw_width,
+	                                       draw_height,
+	                                       render_pixel_aspect_ratio,
+	                                       video_mode);
 
-	if (shader_auto_switcher->GetMode() != AutoShaderMode::None) {
-		const auto shader_name = shader_auto_switcher->DetermineAutoShaderName(
-		        canvas_width,
-		        canvas_height,
-		        draw_width,
-		        draw_height,
-		        render_pixel_aspect_ratio,
-		        video_mode);
+	const auto shader_name = shader_manager->GetCurrentShaderName();
+	if (render.shader.name != shader_name) {
+		// TODO
+		assert(control);
+		const auto render_sec = dynamic_cast<Section_prop*>(
+		        control->GetSection("render"));
+		assert(render_sec);
 
-		if (render.shader.name != shader_name) {
-			LOG_WARNING("####### SWITCHING SHADER TO: %s", shader_name.c_str());
-			render.next_shader_name = shader_name;
-
-			// TODO
-			assert(control);
-			const auto render_sec = dynamic_cast<Section_prop*>(
-			        control->GetSection("render"));
-			assert(render_sec);
-
-			RENDER_Init(render_sec);
-		}
+		RENDER_Init(render_sec);
 	}
 }
 
@@ -1086,43 +1086,6 @@ static void setup_scan_and_pixel_doubling([[maybe_unused]] Section_prop* section
 	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
 }
 
-// Returns true if another shader has been loaded
-static bool handle_shader_switching()
-{
-#if C_OPENGL
-	if (is_using_opengl_output_mode()) {
-		const auto glshader_value = get_shader_name_from_config();
-
-		if (shader_auto_switcher->GetMode() == AutoShaderMode::None) {
-			// Determine whether we're in one of the
-			// auto-shader-switching modes from the 'glshader' value
-			shader_auto_switcher->SetMode(glshader_value);
-		}
-
-		// We might or might not be in an auto-shader-switching mode now
-		if (shader_auto_switcher->GetMode() == AutoShaderMode::None) {
-			// 'glshader' controls the shader in use in non-auto modes
-			if (render.shader.name != glshader_value) {
-				load_shader(glshader_value);
-				return true;
-			}
-		} else {
-			// In auto modes, 'glshader' is ignored and the
-			// 'next_shader_name' optional value indicates that we
-			// need to load a different shader.
-			if (render.next_shader_name) {
-				if (render.shader.name != *render.next_shader_name) {
-					load_shader(*render.next_shader_name);
-					render.next_shader_name = {};
-					return true;
-				}
-			}
-		}
-	}
-#endif
-	return false;
-}
-
 void RENDER_Init(Section* sec)
 {
 	LOG_MSG(">>>>>>>>>> RENDER_Init enter");
@@ -1130,10 +1093,11 @@ void RENDER_Init(Section* sec)
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
 
-	if (!shader_auto_switcher) {
-		shader_auto_switcher = std::make_unique<ShaderAutoSwitcher>();
+#if C_OPENGL
+	if (!shader_manager && is_using_opengl_output_mode()) {
+		shader_manager = std::make_unique<ShaderManager>();
 	}
-	assert(shader_auto_switcher);
+#endif
 
 	// For restarting the renderer
 	static auto running = false;
@@ -1157,7 +1121,21 @@ void RENDER_Init(Section* sec)
 
 	GFX_SetIntegerScalingMode(section->Get_string("integer_scaling"));
 
-	const auto shader_changed = handle_shader_switching();
+	// Handle shader loading/auto-switching
+	auto shader_changed = false;
+
+#if C_OPENGL
+	if (is_using_opengl_output_mode()) {
+		assert(shader_manager);
+		shader_manager->NotifyGlshaderSetting(get_shader_name_from_config());
+
+		const auto shader_name = shader_manager->GetCurrentShaderName();
+		if (render.shader.name != shader_name) {
+			load_shader(shader_name);
+			shader_changed = true;
+		}
+	}
+#endif
 
 	setup_scan_and_pixel_doubling(section);
 

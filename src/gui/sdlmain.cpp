@@ -4057,12 +4057,12 @@ bool GFX_Events()
 
 				const auto canvas = get_canvas_size(sdl.desktop.type);
 
-				RENDER_HandleShaderAutoSwitching(canvas.w,
-				                                 canvas.h,
-				                                 sdl.draw.width,
-				                                 sdl.draw.height,
-				                                 sdl.draw.render_pixel_aspect_ratio,
-				                                 sdl.video_mode);
+				RENDER_NotifyRenderParameters(canvas.w,
+				                              canvas.h,
+				                              sdl.draw.width,
+				                              sdl.draw.height,
+				                              sdl.draw.render_pixel_aspect_ratio,
+				                              sdl.video_mode);
 				// TODO
 				// break;
 

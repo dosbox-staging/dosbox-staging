@@ -2754,12 +2754,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		const auto draw_width = render_width * (double_width ? 2 : 1);
 		const auto draw_height = render_height * (double_height ? 2 : 1);
 
-		RENDER_HandleShaderAutoSwitching(canvas.w,
-		                                 canvas.h,
-		                                 draw_width,
-		                                 draw_height,
-		                                 render_pixel_aspect_ratio,
-		                                 video_mode);
+		RENDER_NotifyRenderParameters(canvas.w,
+		                              canvas.h,
+		                              draw_width,
+		                              draw_height,
+		                              render_pixel_aspect_ratio,
+		                              video_mode);
 
 		if (render_width > SCALER_MAXWIDTH ||
 		    render_height > SCALER_MAXHEIGHT) {

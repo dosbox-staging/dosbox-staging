@@ -258,13 +258,13 @@ struct RenderedImage {
 
 #if C_OPENGL
 
-constexpr auto GraphicsStandardAutoShaderName = "crt-auto";
-constexpr auto MachineAutoShaderName          = "crt-machine-auto";
+constexpr auto AutoGraphicsStandardShaderName = "crt-auto";
+constexpr auto AutoMachineShaderName          = "crt-machine-auto";
 
-enum class AutoShaderMode {
+enum class ShaderMode {
 	// No shader auto-switching; the 'glshader' setting always contains the
 	// name of the shader in use.
-	None,
+	Normal,
 
 	// Graphics-standard-based shader auto-switching enabled via the
 	// 'crt-auto' magic 'glshader' setting.
@@ -279,7 +279,7 @@ enum class AutoShaderMode {
 	// providing a more authentic out-of-the-box experience (authentic as in
 	// "how people experienced the game at the time of release", and
 	// prioritising the most probable developer intent.)
-	GraphicsStandard,
+	AutoGraphicsStandard,
 
 
 	// Machine-based shader auto-switching enabled via the 'crt-machine-auto'
@@ -293,7 +293,7 @@ enum class AutoShaderMode {
 	// video adapter and matching monitor. The auto-switching only picks the
 	// most approriate shader variant for the chosen adapter/monitor combo
 	// (Hercules, CGA, EGA, (S)VGA, etc.) for a given viewport resolution.
-	Machine
+	AutoMachine
 };
 
 struct ShaderInfo {
@@ -301,33 +301,32 @@ struct ShaderInfo {
 	ShaderSettings settings = {};
 };
 
-class ShaderAutoSwitcher {
+class ShaderManager {
 public:
-	ShaderAutoSwitcher() noexcept;
-	~ShaderAutoSwitcher() noexcept;
+	ShaderManager() noexcept;
+	~ShaderManager() noexcept;
 
-	void SetMode(const std::string& shader_name);
-	AutoShaderMode GetMode() const;
+	void NotifyGlshaderSetting(const std::string& shader_name);
 
-	std::string DetermineAutoShaderName(const uint16_t canvas_width,
-	                                    const uint16_t canvas_height,
-	                                    const uint16_t draw_width,
-	                                    const uint16_t draw_height,
-	                                    const Fraction& render_pixel_aspect_ratio,
-	                                    const VideoMode& video_mode);
+	void NotifyRenderParameters(const uint16_t canvas_width,
+	                            const uint16_t canvas_height,
+	                            const uint16_t draw_width,
+	                            const uint16_t draw_height,
+	                            const Fraction& render_pixel_aspect_ratio,
+	                            const VideoMode& video_mode);
+
+	std::string GetCurrentShaderName();
 
 	// prevent copying
-	ShaderAutoSwitcher(const ShaderAutoSwitcher&) = delete;
+	ShaderManager(const ShaderManager&) = delete;
 	// prevent assignment
-	ShaderAutoSwitcher& operator=(const ShaderAutoSwitcher&) = delete;
+	ShaderManager& operator=(const ShaderManager&) = delete;
 
 private:
 	std::vector<ShaderInfo>& GetShaderSetForGraphicsStandard(const VideoMode& video_mode);
 
 	std::vector<ShaderInfo>& GetShaderSetForMachineType(
 	        const MachineType machine_type, const VideoMode& video_mode);
-
-	AutoShaderMode mode = AutoShaderMode::None;
 
 	struct {
 		// Shader sets are sorted by 'min_vertical_scale_factor' in
@@ -338,6 +337,12 @@ private:
 		std::vector<ShaderInfo> ega        = {};
 		std::vector<ShaderInfo> vga        = {};
 	} shader_set;
+
+	ShaderMode mode = ShaderMode::Normal;
+
+	std::string glshader_setting = {};
+	double vertical_scale_factor = {};
+	VideoMode video_mode         = {};
 };
 
 #endif
@@ -366,11 +371,11 @@ bool RENDER_UseSrgbTexture();
 bool RENDER_UseSrgbFramebuffer();
 #endif
 
-void RENDER_HandleShaderAutoSwitching(const uint16_t canvas_width,
-                                      const uint16_t canvas_height,
-                                      const uint16_t draw_width,
-                                      const uint16_t draw_height,
-                                      const Fraction& render_pixel_aspect_ratio,
-                                      const VideoMode& video_mode);
+void RENDER_NotifyRenderParameters(const uint16_t canvas_width,
+                                   const uint16_t canvas_height,
+                                   const uint16_t draw_width,
+                                   const uint16_t draw_height,
+                                   const Fraction& render_pixel_aspect_ratio,
+                                   const VideoMode& video_mode);
 
 #endif
