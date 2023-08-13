@@ -78,9 +78,9 @@ void AUTOTYPE::PrintKeys()
  */
 bool AUTOTYPE::ReadDoubleArg(const std::string &name,
                              const char *flag,
-                             const double &def_value,
-                             const double &min_value,
-                             const double &max_value,
+                             const double def_value,
+                             const double min_value,
+                             const double max_value,
                              double &value)
 {
 	bool result = false;
