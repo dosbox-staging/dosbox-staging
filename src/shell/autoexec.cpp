@@ -393,7 +393,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 
 	// Enable secure boot if needed
 
-	if (has_option_securemode && !has_boot_image) {
+	if (has_option_securemode) {
 		if (has_boot_image) {
 			// Secure mode does not allow booting - so skip it
 			LOG_WARNING("AUTOEXEC: Secure mode skipped as it does not allow booting");
