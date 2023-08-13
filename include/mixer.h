@@ -298,7 +298,7 @@ private:
 	struct StereoLine {
 		LINE_INDEX left = LEFT;
 		LINE_INDEX right = RIGHT;
-		bool operator==(const StereoLine &other) const;
+		bool operator==(const StereoLine other) const;
 	};
 
 	static constexpr StereoLine STEREO = {LEFT, RIGHT};
