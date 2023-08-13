@@ -548,7 +548,7 @@ void CSerialModem::DoCommand()
 					// be a valid IP/name
 					// Transform by adding dots
 					size_t j = 0;
-					size_t foundlen = strlen(foundstr);
+					const size_t foundlen = strlen(foundstr);
 					for (size_t i = 0; i < foundlen; i++) {
 						buffer[j++] = foundstr[i];
 						// Add a dot after the third, sixth and ninth number
@@ -556,7 +556,7 @@ void CSerialModem::DoCommand()
 							buffer[j++] = '.';
 						// If the string is longer than 12 digits,
 						// interpret the rest as port
-						if (i == 11 && strlen(foundstr) > 12)
+						if (i == 11 && foundlen > 12)
 							buffer[j++] = ':';
 					}
 					buffer[j] = 0;
