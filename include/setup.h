@@ -302,6 +302,23 @@ public:
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
 
+enum class ModuleLifecycle : uint8_t {
+	// Indicates the module's static instance should be destroyed. The work
+	// of actually shutting down, freeing memory, closing its various
+	// states, and so on should be performed by the object itself.
+	Destroy,
+
+	// Indicates the module's static instance should be created. The work of
+	// actually setting up the module, allocating memory, and so on should
+	// be performed by the object itself.
+	Create,
+
+	// Indicates the module's static instance should be reconfigured. If a
+	// module doesn't support on-the-fly configuration changes, it can
+	// simply be destroyed and re-created.
+	Reconfigure,
+};
+
 typedef void (*SectionFunction)(Section*);
 
 class Section {
