@@ -509,6 +509,7 @@ public:
 
 	~Section_line() override
 	{
+		ConfigureModules(ModuleLifecycle::Destroy);
 		ExecuteDestroy(true);
 	}
 

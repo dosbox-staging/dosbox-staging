@@ -794,6 +794,7 @@ void CONFIG::Run(void)
 					return;
 				}
 				std::string inputline = pvars[1] + "=" + value;
+				tsec->ConfigureModules(ModuleLifecycle::Destroy);
 				tsec->ExecuteDestroy(false);
 				bool change_success = tsec->HandleInputline(
 				        inputline.c_str());
@@ -805,6 +806,7 @@ void CONFIG::Run(void)
 					         val.c_str(),
 					         pvars[1].c_str());
 				}
+				tsec->ConfigureModules(ModuleLifecycle::Create);
 				tsec->ExecuteInit(false);
 			}
 			return;

@@ -127,17 +127,16 @@ void BOOT::printError(void)
 	WriteOut(MSG_Get("PROGRAM_BOOT_PRINT_ERROR"), PRIMARY_MOD_NAME);
 }
 
-void BOOT::disable_umb_ems_xms(void)
+void BOOT::disable_umb_ems_xms()
 {
-	Section *dos_sec = control->GetSection("dos");
+	Section* dos_sec = control->GetSection("dos");
 	dos_sec->ExecuteDestroy(false);
-	char test[20];
-	safe_strcpy(test, "umb=false");
-	dos_sec->HandleInputline(test);
-	safe_strcpy(test, "xms=false");
-	dos_sec->HandleInputline(test);
-	safe_strcpy(test, "ems=false");
-	dos_sec->HandleInputline(test);
+
+	dos_sec->HandleInputline("umb=false");
+	dos_sec->HandleInputline("xms=false");
+	dos_sec->HandleInputline("ems=false");
+	dos_sec->ConfigureModules(ModuleLifecycle::Reconfigure);
+
 	dos_sec->ExecuteInit(false);
 }
 

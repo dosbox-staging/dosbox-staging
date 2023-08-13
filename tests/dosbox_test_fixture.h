@@ -16,10 +16,10 @@ public:
 	DOSBoxTestFixture()
 	        : arg_c_str("-conf tests/files/dosbox-staging-tests.conf\0"),
 	          argv{arg_c_str},
-	          com_line(1, (char**)argv),
-	          config(&com_line)
+	          command_line_instance(1, (char**)argv),
+	          config_instance(&command_line_instance)
 	{
-		control = &config;
+		control = &config_instance;
 	}
 
 	void SetUp() override
@@ -31,33 +31,45 @@ public:
 		const auto config_path = GetConfigDir();
 		ParseConfigFiles(config_path);
 
-		Section *_sec;
 		// This will register all the init functions, but won't run them
 		DOSBOX_Init();
 
-		for (auto section_name : sections) {
-			_sec = control->GetSection(section_name);
-			_sec->ExecuteInit();
+		for (const auto section_name : section_names) {
+			auto sec = config_instance.GetSection(section_name);
+			sec->ConfigureModules(ModuleLifecycle::Create);
+			sec->ExecuteInit();
 		}
 	}
 
 	void TearDown() override
 	{
-		std::vector<std::string>::reverse_iterator r = sections.rbegin();
-		for (; r != sections.rend(); ++r)
-			control->GetSection(*r)->ExecuteDestroy();
+		auto section_name = section_names.rbegin();
+		while (section_name != section_names.rend()) {
+			auto section = config_instance.GetSection(*section_name);
+			assert(section);
+			section->ConfigureModules(ModuleLifecycle::Destroy);
+			section->ExecuteDestroy();
+
+			++section_name;
+		}
 		GFX_RequestExit(true);
 	}
 
 private:
 	const char* arg_c_str = {};
 	const char* argv[1]   = {};
-	CommandLine com_line;
-	Config config = {};
-	// Only init these sections for our tests
-	std::vector<std::string> sections{"dosbox", "cpu",      "mixer",
-	                                  "midi",   "sblaster", "speaker",
-	                                  "serial", "dos",      "autoexec"};
+	CommandLine command_line_instance;
+	Config config_instance = {};
+	// Only init these section_names for our tests
+	std::vector<const char*> section_names{"dosbox",
+	                                       "cpu",
+	                                       "mixer",
+	                                       "midi",
+	                                       "sblaster",
+	                                       "speaker",
+	                                       "serial",
+	                                       "dos",
+	                                       "autoexec"};
 };
 
 #endif

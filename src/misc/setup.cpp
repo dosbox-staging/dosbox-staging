@@ -1139,6 +1139,8 @@ Section_prop* Config::AddSection_prop(const char* section_name, SectionFunction 
 
 Section_prop::~Section_prop()
 {
+	ConfigureModules(ModuleLifecycle::Destroy);
+
 	// ExecuteDestroy should be here else the destroy functions use
 	// destroyed properties
 	ExecuteDestroy(true);
