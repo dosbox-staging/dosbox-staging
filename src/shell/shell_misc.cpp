@@ -689,6 +689,7 @@ bool DOS_Shell::SetEnv(const char* entry, const char* new_string)
 	PhysPt env_write          = env_read;
 	PhysPt env_write_start    = env_read;
 	char env_string[1024 + 1] = {0};
+	const auto entry_length = strlen(entry);
 	do {
 		MEM_StrCopy(env_read, env_string, 1024);
 		if (!env_string[0]) {
@@ -698,8 +699,8 @@ bool DOS_Shell::SetEnv(const char* entry, const char* new_string)
 		if (!strchr(env_string, '=')) {
 			continue; /* Remove corrupt entry? */
 		}
-		if ((strncasecmp(entry, env_string, strlen(entry)) == 0) &&
-		    env_string[strlen(entry)] == '=') {
+		if ((strncasecmp(entry, env_string, entry_length) == 0) &&
+		    env_string[entry_length] == '=') {
 			continue;
 		}
 		MEM_BlockWrite(env_write,
