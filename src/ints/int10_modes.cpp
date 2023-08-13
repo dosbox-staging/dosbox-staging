@@ -851,11 +851,9 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 	IO_WriteW(crtc_base,0x09 | (scanline-1) << 8);
 	// Setup the CGA palette using VGA DAC palette
 	for (size_t i = 0; i < palette.cga16.size(); ++i) {
-		auto ct = static_cast<uint8_t>(i);
-		VGA_DAC_SetEntry(ct,
-		                 palette.cga16[ct].red,
-		                 palette.cga16[ct].green,
-		                 palette.cga16[ct].blue);
+		const auto ct     = static_cast<uint8_t>(i);
+		const auto& entry = palette.cga16[ct];
+		VGA_DAC_SetEntry(ct, entry.red, entry.green, entry.blue);
 	}
 	//Setup the tandy palette
 	for (uint8_t ct=0;ct<16;ct++) VGA_DAC_CombineColor(ct,ct);
