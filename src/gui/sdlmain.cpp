@@ -480,8 +480,8 @@ static double get_host_refresh_rate()
 static void populate_requested_vsync_settings()
 {
 	const auto section = dynamic_cast<Section_prop*>(control->GetSection("sdl"));
-	const std::string_view user_pref = (section ? section->Get_string("vsync")
-	                                             : "auto");
+	const std::string user_pref = (section ? section->Get_string("vsync") : "auto");
+
 	if (has_true(user_pref)) {
 		sdl.vsync.when_windowed.requested   = VsyncState::On;
 		sdl.vsync.when_fullscreen.requested = VsyncState::On;
@@ -1570,13 +1570,13 @@ static const char *safe_gl_get_string(const GLenum requested_name,
 }
 
 /* Create a GLSL shader object, load the shader source, and compile the shader. */
-static GLuint BuildShader(GLenum type, const std::string_view source_sv)
+static GLuint BuildShader(GLenum type, const std::string& source)
 {
 	GLuint shader = 0;
 	GLint compiled = 0;
 
-	assert(source_sv.length());
-	const char *shaderSrc = source_sv.data();
+	assert(source.length());
+	const char *shaderSrc = source.c_str();
 	const char *src_strings[2] = {nullptr, nullptr};
 	std::string top;
 
@@ -1627,19 +1627,19 @@ static GLuint BuildShader(GLenum type, const std::string_view source_sv)
 	return shader;
 }
 
-static bool LoadGLShaders(const std::string_view source_sv, GLuint *vertex,
+static bool LoadGLShaders(const std::string& source, GLuint *vertex,
                           GLuint *fragment)
 {
-	if (source_sv.empty())
+	if (source.empty())
 		return false;
 
 	assert(vertex);
 	assert(fragment);
 
-	GLuint s = BuildShader(GL_VERTEX_SHADER, source_sv);
+	GLuint s = BuildShader(GL_VERTEX_SHADER, source);
 	if (s) {
 		*vertex = s;
-		s = BuildShader(GL_FRAGMENT_SHADER, source_sv);
+		s = BuildShader(GL_FRAGMENT_SHADER, source);
 		if (s) {
 			*fragment = s;
 			return true;
@@ -1665,8 +1665,8 @@ static bool LoadGLShaders(const std::string_view source_sv, GLuint *vertex,
 
 [[maybe_unused]] static bool is_shader_flexible()
 {
-	constexpr std::array<std::string_view, 4> flexible_shader_names{{
-	        "interpolation/catmull-rom",
+	static const std::array<std::string, 4> flexible_shader_names{{
+			"interpolation/catmull-rom",
 	        "interpolation/sharp",
 	        "none",
 	        "default",
@@ -1982,8 +1982,8 @@ dosurface:
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-		const std::string_view gl_vendor = safe_gl_get_string(GL_VENDOR,
-		                                                      "unknown vendor");
+		const std::string gl_vendor = safe_gl_get_string(GL_VENDOR,
+		                                                 "unknown vendor");
 #	if WIN32
 		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
 #	else
@@ -2289,14 +2289,15 @@ dosurface:
 	return retFlags;
 }
 
-void GFX_SetShader([[maybe_unused]] const std::string &source)
+void GFX_SetShader([[maybe_unused]] const std::string& source)
 {
 #if C_OPENGL
-	sdl.opengl.shader_source = source;
-
-	if (!sdl.opengl.use_shader)
+	if (sdl.opengl.shader_source != source) {
+		sdl.opengl.shader_source = source;
+	}
+	if (!sdl.opengl.use_shader) {
 		return;
-
+	}
 	if (sdl.opengl.program_object) {
 		glDeleteProgram(sdl.opengl.program_object);
 		sdl.opengl.program_object = 0;
@@ -3654,10 +3655,10 @@ static void ApplyInactiveSettings()
 	}
 }
 
-static void SetPriorityLevels(const std::string_view active_pref,
-                              const std::string_view inactive_pref)
+static void SetPriorityLevels(const std::string& active_pref,
+                              const std::string& inactive_pref)
 {
-	auto to_level = [](const std::string_view pref) {
+	auto to_level = [](const std::string& pref) {
 		if (pref == "auto")
 			return PRIORITY_LEVEL_AUTO;
 		if (pref == "lowest")
