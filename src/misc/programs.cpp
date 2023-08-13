@@ -487,7 +487,7 @@ void CONFIG::Run(void)
 					return;
 				}
 				// if it's a section, leave it as one-param
-				Section* sec = control->GetSection(pvars[0].c_str());
+				Section* sec = control->GetSection(pvars[0]);
 				if (!sec) {
 					// could be a property
 					sec = control->GetSectionFromProperty(
@@ -504,7 +504,7 @@ void CONFIG::Run(void)
 			}
 			case 2: {
 				// sanity check
-				Section* sec = control->GetSection(pvars[0].c_str());
+				Section* sec  = control->GetSection(pvars[0]);
 				Section* sec2 = control->GetSectionFromProperty(
 				        pvars[1].c_str());
 				if (!sec) {
@@ -520,7 +520,7 @@ void CONFIG::Run(void)
 			}
 			// if we have one value in pvars, it's a section
 			// two values are section + property
-			Section* sec = control->GetSection(pvars[0].c_str());
+			Section* sec = control->GetSection(pvars[0]);
 			if (sec == nullptr) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
 				         pvars[0].c_str());
@@ -695,7 +695,7 @@ void CONFIG::Run(void)
 			case 1: {
 				// property/section only
 				// is it a section?
-				Section* sec = control->GetSection(pvars[0].c_str());
+				Section* sec = control->GetSection(pvars[0]);
 				if (sec) {
 					// list properties in section
 					Bitu i = 0;
