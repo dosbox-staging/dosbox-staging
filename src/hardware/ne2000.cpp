@@ -1335,7 +1335,7 @@ int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
     memcpy(startptr + 4, buf, (size_t)(endbytes - 4u));
     startptr = & BX_NE2K_THIS s.mem[BX_NE2K_THIS s.page_start * 256u -
 				 BX_NE2K_MEMSTART];
-    memcpy(startptr, (void *)(pktbuf + endbytes - 4u),
+    memcpy(startptr, (const void *)(pktbuf + endbytes - 4u),
 	   (size_t)(io_len - endbytes + 8u));
     BX_NE2K_THIS s.curr_page = nextpage;
   }
