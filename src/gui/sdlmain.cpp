@@ -214,10 +214,6 @@ SDL_Block sdl;
 
 // Size and ratio constants
 // ------------------------
-constexpr int SMALL_WINDOW_PERCENT = 50;
-constexpr int MEDIUM_WINDOW_PERCENT = 74;
-constexpr int LARGE_WINDOW_PERCENT = 90;
-constexpr int DEFAULT_WINDOW_PERCENT = MEDIUM_WINDOW_PERCENT;
 static SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
 
 /* Alias for indicating, that new window should not be user-resizable: */
@@ -3090,21 +3086,31 @@ static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 static SDL_Point window_bounds_from_label(const std::string& pref,
                                           const SDL_Rect desktop)
 {
-	int percent = DEFAULT_WINDOW_PERCENT;
-	if (starts_with(pref, "s")) {
-		percent = SMALL_WINDOW_PERCENT;
-	} else if (starts_with(pref, "m") || pref == "default" || pref.empty()) {
-		percent = MEDIUM_WINDOW_PERCENT;
-	} else if (starts_with(pref, "l")) {
-		percent = LARGE_WINDOW_PERCENT;
-	} else if (pref == "desktop")
-		percent = 100;
-	else
-		LOG_WARNING("DISPLAY: Requested windowresolution '%s' is invalid, using 'default' instead",
-		            pref.c_str());
+	constexpr int SmallPercent  = 50;
+	constexpr int MediumPercent = 74;
+	constexpr int LargePercent  = 90;
+
+	const int percent = [&] {
+		if (starts_with(pref, "s")) {
+			return SmallPercent;
+		} else if (starts_with(pref, "m") || pref == "default" ||
+		           pref.empty()) {
+			return MediumPercent;
+		} else if (starts_with(pref, "l")) {
+			return LargePercent;
+		} else if (pref == "desktop") {
+			return 100;
+		} else {
+			LOG_WARNING("DISPLAY: Requested windowresolution '%s' is invalid, "
+			            "using 'default' instead",
+			            pref.c_str());
+			return MediumPercent;
+		}
+	}();
 
 	const int w = ceil_sdivide(desktop.w * percent, 100);
 	const int h = ceil_sdivide(desktop.h * percent, 100);
+
 	return {w, h};
 }
 
