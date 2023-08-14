@@ -24,22 +24,22 @@
 #include <array>
 #include <cassert>
 #include <cerrno>
+#include <cmath>
+#include <cstdarg>
+#include <cstdio>
 #include <cstdlib>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <stdarg.h>
+#include <cstring>
 #include <sys/types.h>
 #include <tuple>
-#include <math.h>
+#include <unistd.h>
 
 #if C_DEBUG
 #include <queue>
 #endif
 
 #ifdef WIN32
-#include <signal.h>
 #include <process.h>
+#include <signal.h>
 #endif
 
 #include <SDL.h>
@@ -47,6 +47,7 @@
 #include <SDL_opengl.h>
 #endif
 
+#include "../capture/capture.h"
 #include "../ints/int10.h"
 #include "control.h"
 #include "cpu.h"
@@ -54,7 +55,6 @@
 #include "debug.h"
 #include "fs_utils.h"
 #include "gui_msgs.h"
-#include "../capture/capture.h"
 #include "joystick.h"
 #include "keyboard.h"
 #include "mapper.h"
