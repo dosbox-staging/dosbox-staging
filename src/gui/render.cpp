@@ -380,9 +380,6 @@ static void render_reset(void)
 		render.src.start = (render.src.width * 1) / sizeof(Bitu);
 		break;
 	case PixelFormat::BGR555:
-		render.src.start = (render.src.width * 2) / sizeof(Bitu);
-		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
-		break;
 	case PixelFormat::BGR565:
 		render.src.start = (render.src.width * 2) / sizeof(Bitu);
 		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
