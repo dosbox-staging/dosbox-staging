@@ -1,4 +1,6 @@
 /*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
  *  Copyright (C) 2023-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -8,7 +10,7 @@
  *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License along
@@ -19,22 +21,23 @@
 #ifndef DOSBOX_SHADER_MANAGER_H
 #define DOSBOX_SHADER_MANAGER_H
 
-#include <cstring>
-#include <optional>
 #include <string>
+#include <vector>
 
-#include "fraction.h"
 #include "vga.h"
 
-#if C_OPENGL
+// forward references
+class Fraction;
 
+constexpr auto FallbackShaderName             = "none";
+constexpr auto SharpShaderName                = "interpolation/sharp";
 constexpr auto AutoGraphicsStandardShaderName = "crt-auto";
 constexpr auto AutoMachineShaderName          = "crt-machine-auto";
 
 enum class ShaderMode {
 	// No shader auto-switching; the 'glshader' setting always contains the
 	// name of the shader in use.
-	Normal,
+	Single,
 
 	// Graphics-standard-based shader auto-switching enabled via the
 	// 'crt-auto' magic 'glshader' setting.
@@ -65,26 +68,39 @@ enum class ShaderMode {
 	AutoMachine
 };
 
+struct ShaderSettings {
+	bool use_srgb_texture           = false;
+	bool use_srgb_framebuffer       = false;
+	bool force_single_scan          = false;
+	bool force_no_pixel_doubling    = false;
+	float min_vertical_scale_factor = 0.0f;
+};
+
 struct ShaderInfo {
 	std::string name        = {};
 	ShaderSettings settings = {};
 };
+
+using ShaderSet = std::vector<ShaderInfo>;
 
 class ShaderManager {
 public:
 	ShaderManager() noexcept;
 	~ShaderManager() noexcept;
 
-	void NotifyGlshaderSetting(const std::string& shader_name);
+	std::deque<std::string> InventoryShaders() const;
 
-	void NotifyRenderParameters(const uint16_t canvas_width,
+	bool NotifyGlshaderSetting(const std::string& shader_name);
+
+	bool NotifyRenderParameters(const uint16_t canvas_width,
 	                            const uint16_t canvas_height,
 	                            const uint16_t draw_width,
 	                            const uint16_t draw_height,
 	                            const Fraction& render_pixel_aspect_ratio,
 	                            const VideoMode& video_mode);
 
-	std::string GetCurrentShaderName();
+	ShaderInfo GetCurrentShaderInfo() const;
+	std::string GetCurrentShaderSource() const;
 
 	// prevent copying
 	ShaderManager(const ShaderManager&) = delete;
@@ -92,28 +108,41 @@ public:
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
 private:
-	std::vector<ShaderInfo>& GetShaderSetForGraphicsStandard(const VideoMode& video_mode);
+	std::optional<std::string> MapLegacyShaderName(const std::string& name) const;
 
-	std::vector<ShaderInfo>& GetShaderSetForMachineType(
-	        const MachineType machine_type, const VideoMode& video_mode);
+	bool ReadShaderSource(const std::string& shader_name, std::string& source);
+
+	ShaderSettings ParseShaderSettings(const std::string& shader_name,
+	                                   const std::string& source) const;
+
+	bool MaybeUpdateCurrentShader();
+	bool MaybeLoadShader(const std::string& shader_name);
+
+	const ShaderSet& GetShaderSetForGraphicsStandard(const VideoMode& video_mode) const;
+
+	const ShaderSet& GetShaderSetForMachineType(const MachineType machine_type,
+	                                            const VideoMode& video_mode) const;
 
 	struct {
 		// Shader sets are sorted by 'min_vertical_scale_factor' in
 		// descending order
-		std::vector<ShaderInfo> monochrome = {};
-		std::vector<ShaderInfo> composite  = {};
-		std::vector<ShaderInfo> cga        = {};
-		std::vector<ShaderInfo> ega        = {};
-		std::vector<ShaderInfo> vga        = {};
-	} shader_set;
+		ShaderSet monochrome = {};
+		ShaderSet composite  = {};
+		ShaderSet cga        = {};
+		ShaderSet ega        = {};
+		ShaderSet vga        = {};
+	} shader_set = {};
 
-	ShaderMode mode = ShaderMode::Normal;
+	ShaderMode mode = ShaderMode::Single;
+
+	struct {
+		ShaderInfo info    = {};
+		std::string source = {};
+	} current_shader = {};
 
 	std::string glshader_setting = {};
 	double vertical_scale_factor = {};
 	VideoMode video_mode         = {};
 };
-
-#endif // C_OPENGL
 
 #endif // DOSBOX_SHADER_MANAGER_H
