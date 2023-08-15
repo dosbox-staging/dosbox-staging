@@ -24,6 +24,7 @@ set -euo pipefail
 # Common variables that are setup and used below
 declare temp_file
 declare head_commit
+declare current_branch
 declare -a commits
 declare -a compilers
 declare meson_setup
@@ -118,6 +119,8 @@ populate_commits() {
 
 	populate_gnu_sed
 
+	current_branch=$(git rev-parse --abbrev-ref HEAD)
+
 	local default_branch
 	default_branch=$(git symbolic-ref refs/remotes/origin/HEAD 2> /dev/null \
 		| "$SED" 's@^refs/remotes/origin/@@')
@@ -130,7 +133,7 @@ populate_commits() {
 	commits=()
 	while IFS= read -r line; do
 		commits+=("$line")
-	done < <(git log --format="%h" HEAD --not "$default_branch")
+	done < <(git log --format="%h" HEAD --not "$default_branch" --reverse)
 
 	if ((${#commits[@]} <= 1)); then
 		echo "Branch does not have multiple commits; skipping"
@@ -228,7 +231,7 @@ main() {
 
 	done
 
-	git checkout "$head_commit" &> /dev/null
+	git checkout "$current_branch" &> /dev/null
 }
 
 main
