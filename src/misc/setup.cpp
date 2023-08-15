@@ -20,12 +20,12 @@
 #include "setup.h"
 
 #include <algorithm>
+#include <cctype>
 #include <climits>
 #include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <optional>
-#include <regex>
 #include <sstream>
 #include <string_view>
 #include <unordered_map>
@@ -185,6 +185,15 @@ void Value::SetString(const std::string& in)
 	_string = in;
 }
 
+// Only used in asserts
+[[maybe_unused]] static bool is_conf_name_valid(const std::string& name)
+{
+	auto is_character_valid = [](const char c) {
+		return (std::isalpha(c) || std::isdigit(c) || c == '_');
+	};
+	return std::all_of(name.begin(), name.end(), is_character_valid);
+}
+
 string Value::ToString() const
 {
 	ostringstream oss;
@@ -214,8 +223,8 @@ Property::Property(const std::string& name, Changeable::Value when)
           default_value(),
           change(when)
 {
-	assertm(std::regex_match(name, std::regex{"[a-zA-Z0-9_]+"}),
-	        "Only letters, digits, and underscores are allowed in property names");
+	assertm(is_conf_name_valid(name),
+	        "Only letters, digits, and underscores are allowed in conf names");
 }
 
 bool Property::IsValidValue(const Value& in)
@@ -1119,8 +1128,8 @@ bool Config::WriteConfig(const std_fs::path& path) const
 Section_prop* Config::AddSection_prop(const char* section_name, SectionFunction func,
                                       bool changeable_at_runtime)
 {
-	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
-	        "Only letters and digits are allowed in section name");
+	assertm(is_conf_name_valid(section_name),
+	        "Only letters, digits, and underscores are allowed in conf names");
 
 	Section_prop* s = new Section_prop(section_name);
 	s->AddInitFunction(func, changeable_at_runtime);
@@ -1142,9 +1151,8 @@ Section_prop::~Section_prop()
 
 Section_line* Config::AddSection_line(const char* section_name, SectionFunction func)
 {
-	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
-	        "Only letters and digits are allowed in section name");
-
+	assertm(is_conf_name_valid(section_name),
+	        "Only letters, digits, and underscores are allowed in conf names");
 	Section_line* blah = new Section_line(section_name);
 	blah->AddInitFunction(func);
 	sectionlist.push_back(blah);
@@ -1204,6 +1212,8 @@ void Config::Init() const
 	//
 	atexit(set_shutdown_flag);
 }
+
+Section::Section(const std::string& section_name) : name(section_name) {}
 
 void Section::AddModule(const ConfigureFunction function)
 {

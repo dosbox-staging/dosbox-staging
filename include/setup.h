@@ -346,11 +346,12 @@ private:
 	std::deque<ConfigureFunction> configure_functions = {};
 	std::deque<Function_wrapper> init_functions   = {};
 	std::deque<Function_wrapper> destroyfunctions = {};
-	std::string sectionname                       = {};
+
+	std::string name = {};
 
 public:
 	Section() = default;
-	Section(const std::string& name) : sectionname(name) {}
+	Section(const std::string& section_name);
 
 	// Construct and assign by std::move
 	Section(Section&& other)            = default;
@@ -372,7 +373,7 @@ public:
 
 	const char* GetName() const
 	{
-		return sectionname.c_str();
+		return name.c_str();
 	}
 
 	virtual std::string GetPropValue(const std::string& property) const = 0;
@@ -392,7 +393,7 @@ private:
 	typedef std::deque<Property*>::const_iterator const_it;
 
 public:
-	Section_prop(const std::string& name) : Section(name) {}
+	Section_prop(const std::string& section_name) : Section(section_name) {}
 
 	~Section_prop() override;
 
@@ -497,7 +498,10 @@ public:
 class Section_line final : public Section {
 public:
 	Section_line() = default;
-	Section_line(const std::string& name) : Section(name), data() {}
+	Section_line(const std::string& section_name)
+	        : Section(section_name),
+	          data()
+	{}
 
 	// Construct and assign by std::move
 	Section_line(Section_line&& other)            = default;
