@@ -19,7 +19,6 @@
 
 #include "shell.h"
 
-#include <fstream>
 #include <list>
 #include <memory>
 #include <stdarg.h>
@@ -38,9 +37,6 @@
 #include "support.h"
 #include "timer.h"
 
-constexpr int HistoryMaxLineSize = 256;
-constexpr int HistoryMaxNumLines = 500;
-
 callback_number_t call_shellstop = 0;
 /* Larger scope so shell_del autoexec can use it to
  * remove things from the environment */
@@ -56,10 +52,6 @@ std::unique_ptr<Program> SHELL_ProgramCreate() {
 }
 
 DOS_Shell::DOS_Shell()
-        : Program(),
-          input_handle(STDIN),
-          echo(true),
-          call(false)
 {
 	AddShellCmdsToHelpList();
 	help_detail = {HELP_Filter::All,
@@ -441,79 +433,6 @@ void DOS_Shell::Run()
 void DOS_Shell::SyntaxError()
 {
 	WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
-}
-
-static std_fs::path get_shell_history_path()
-{
-	const auto section = static_cast<Section_prop*>(control->GetSection("dos"));
-	if (section) {
-		const auto path = section->Get_path("shell_history_file");
-		if (path) {
-			return path->realpath;
-		}
-	}
-	return {};
-}
-
-void DOS_Shell::ReadShellHistory()
-{
-	if (control->SecureMode()) {
-		return;
-	}
-	const auto history_path = get_shell_history_path();
-	if (history_path.empty()) {
-		return;
-	}
-	std::ifstream history_file(history_path);
-	if (history_file) {
-		std::string line;
-		while (getline(history_file, line)) {
-			trim(line);
-			auto len = line.length();
-			if (len > 0 && len <= HistoryMaxLineSize) {
-				history.emplace_back(std::move(line));
-			}
-		}
-	}
-}
-
-void DOS_Shell::WriteShellHistory()
-{
-	if (control->SecureMode()) {
-		return;
-	}
-	const auto history_path = get_shell_history_path();
-	if (history_path.empty()) {
-		return;
-	}
-	std::ofstream history_file(history_path);
-	if (!history_file) {
-		LOG_WARNING("SHELL: Unable to update history file: '%s'",
-		            history_path.string().c_str());
-		return;
-	}
-	std::vector<std::string> trimmed_history;
-	trimmed_history.reserve(history.size());
-	for (std::string str : history) {
-		trim(str);
-		auto len = str.length();
-		if (len > 0 && len <= HistoryMaxLineSize) {
-			trimmed_history.emplace_back(std::move(str));
-		}
-	}
-	// Remove "exit" from the history if it is the last command entered
-	if (!trimmed_history.empty()) {
-		std::string last = trimmed_history.back();
-		lowcase(last);
-		if (last == "exit") {
-			trimmed_history.pop_back();
-		}
-	}
-	int size = static_cast<int>(trimmed_history.size());
-	int start = std::max(0, size - HistoryMaxNumLines);
-	for (int i = start; i < size; ++i) {
-		history_file << trimmed_history[i] << std::endl;
-	}
 }
 
 extern int64_t ticks_at_program_launch;
@@ -1427,9 +1346,7 @@ void SHELL_Init() {
 	// first_shell is only setup here, so may as well invoke
 	// it's constructor directly
 	first_shell = new DOS_Shell;
-	first_shell->ReadShellHistory();
 	first_shell->Run();
-	first_shell->WriteShellHistory();
 	delete first_shell;
 	first_shell = nullptr; // Make clear that it shouldn't be used anymore
 }

@@ -103,6 +103,25 @@ struct SHELL_Cmd {
 	HELP_Category category = HELP_Category::Misc;
 };
 
+class ShellHistory {
+public:
+	static ShellHistory& Instance();
+	const std::vector<std::string>& GetCommands() const;
+	void Append(std::string);
+
+	~ShellHistory();
+	ShellHistory(const ShellHistory&)            = delete;
+	ShellHistory& operator=(const ShellHistory&) = delete;
+	ShellHistory(ShellHistory&&)                 = delete;
+	ShellHistory& operator=(ShellHistory&&)      = delete;
+
+private:
+	ShellHistory();
+	std::vector<std::string> commands{};
+	std_fs::path path;
+	bool secure_mode;
+};
+
 class DOS_Shell : public Program, public HostShell {
 private:
 	void PrintHelpForCommands(MoreOutputStrings& output, HELP_Filter req_filter);
@@ -113,15 +132,17 @@ private:
 	[[nodiscard]] std::string Which(std::string_view name) const;
 
 	friend class AutoexecEditor;
-	std::vector<std::string> history{};
-	std::stack<BatchFile> batchfiles{};
 
+	ShellHistory& history = ShellHistory::Instance();
+	std::stack<BatchFile> batchfiles{};
+	uint16_t input_handle                  = STDIN;
+	bool call                              = false;
 	bool exit_cmd_called                   = false;
 	static inline bool help_list_populated = false;
 
 public:
 	DOS_Shell();
-	~DOS_Shell() override = default;
+	~DOS_Shell() override                  = default;
 	DOS_Shell(const DOS_Shell&)            = delete; // prevent copy
 	DOS_Shell& operator=(const DOS_Shell&) = delete; // prevent assignment
 	void Run() override;
@@ -140,9 +161,6 @@ public:
 	virtual bool ExecuteShellCommand(const char* const name, char* arguments);
 	bool ExecuteProgram(std::string_view name, std::string_view args);
 	bool ExecuteConfigChange(const char* const cmd_in, const char* const line);
-
-	void ReadShellHistory();
-	void WriteShellHistory();
 
 	bool GetEnvStr(const char* entry, std::string& result) const override;
 	bool GetEnvNum(Bitu num, std::string& result) const;
@@ -182,10 +200,7 @@ public:
 	void CMD_VOL(char* args);
 	void CMD_MOVE(char* args);
 
-	/* The shell's variables */
-	uint16_t input_handle         = 0;
-	bool echo                     = false;
-	bool call                     = false;
+	bool echo = true;
 };
 
 std::tuple<std::string, std::string, std::string> parse_drive_conf(

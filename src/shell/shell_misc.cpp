@@ -79,7 +79,7 @@ void DOS_Shell::InputCommand(char* line)
 	std::string command = ReadCommand();
 	trim(command);
 	if (!command.empty()) {
-		history.emplace_back(command);
+		history.Append(command);
 	}
 
 	const auto* const dos_section = dynamic_cast<Section_prop*>(
@@ -106,7 +106,7 @@ void DOS_Shell::InputCommand(char* line)
 
 std::string DOS_Shell::ReadCommand()
 {
-	std::vector<std::string> history_clone = history;
+	std::vector<std::string> history_clone = history.GetCommands();
 	history_clone.emplace_back("");
 	auto history_index = history_clone.size() - 1;
 
@@ -150,11 +150,12 @@ std::string DOS_Shell::ReadCommand()
 			DOS_ReadFile(input_handle, &data, &byte_count);
 			switch (static_cast<ScanCode>(data)) {
 			case ScanCode::F3: {
-				if (history.empty()) {
+				if (history.GetCommands().empty()) {
 					break;
 				}
 
-				std::string_view last_command = history.back();
+				std::string_view last_command =
+				        history.GetCommands().back();
 				if (last_command.size() <= command.size()) {
 					break;
 				}
@@ -693,7 +694,7 @@ bool DOS_Shell::SetEnv(const char* entry, const char* new_string)
 	PhysPt env_write          = env_read;
 	PhysPt env_write_start    = env_read;
 	char env_string[1024 + 1] = {0};
-	const auto entry_length = strlen(entry);
+	const auto entry_length   = strlen(entry);
 	do {
 		MEM_StrCopy(env_read, env_string, 1024);
 		if (!env_string[0]) {
