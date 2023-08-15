@@ -1190,10 +1190,68 @@ Config::Config(Config&& source) noexcept
 	*this = std::move(source);
 }
 
+void set_shutdown_flag()
+{
+	shutdown_requested = true;
+}
+
 void Config::Init() const
 {
 	for (const auto& sec : sectionlist) {
+		sec->ConfigureModules(ModuleLifecycle::Create);
 		sec->ExecuteInit();
+	}
+	//
+	atexit(set_shutdown_flag);
+}
+
+void Section::AddModule(const ConfigureFunction function)
+{
+	configure_functions.emplace_back(function);
+}
+
+void Section::ConfigureModules(const ModuleLifecycle desired_lifecycle)
+{
+	// If the program is exiting, our module(s) will have already been
+	// implicitly destructed via descoping, which occurs in reverse-creation
+	// order as part of C++'s program teardown sequence.
+	if (shutdown_requested) {
+		return;
+	}
+
+	auto configure_module = [&](auto& it) {
+		// Track the size of our container because the configure(..)
+		// calls might add more entries, and we need to handle those
+		// additions mid-loop.
+		const auto size_on_entry = configure_functions.size();
+
+		// Apply the configuration with our section settings
+		auto configure = *it;
+		assert(configure);
+		configure(desired_lifecycle, this);
+
+		const auto size_on_exit = configure_functions.size();
+
+		// If the above function call appended items, then we need to
+		// avoid calling them immediately in this current pass by
+		// advancing our index across them. The setup class will call
+		// the added function itself.
+		//
+		assert(size_on_exit >= size_on_entry);
+		std::advance(it, size_on_exit - size_on_entry);
+	};
+
+	// Create and reconfigure in forward-order but destroy in reverse order
+	const auto forward_order = (desired_lifecycle != ModuleLifecycle::Destroy);
+
+	if (forward_order) {
+		std::for_each(configure_functions.begin(),
+		              configure_functions.end(),
+		              configure_module);
+	} else {
+		std::for_each(configure_functions.rbegin(),
+		              configure_functions.rend(),
+		              configure_module);
 	}
 }
 

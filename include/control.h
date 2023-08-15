@@ -104,6 +104,40 @@ public:
 
 	~Config();
 
+	// Add a conf section with its supporting modules. Athough some conf
+	// sections only have a single module such as the audio devices, others
+	// might have many modules.
+	
+	// For example, the "dosbox" section has supporting BIOS, MEMORY, PAGING,
+	// modules that need be aware of the "machine", and "memsize" setting to
+	// configure themselves appropriately.
+	//
+	// When the given conf section is changed at runtime, all the modules in the
+	// section will receive the updated `Section*` settings for them to decide
+	// how they should handle the new settings. Some modules might simply ignore
+	// it while others might simply make a runtime adjustment, and even others
+	// might destroy themselves.
+	//
+	template <typename... ConfigureFunctions>
+	Section_prop* AddSection(const char* section_name,
+	                         ConfigureFunctions... module_config_functions)
+	{
+		const auto section = new Section_prop(section_name);
+		(section->AddModule(module_config_functions), ...);
+		sectionlist.push_back(section);
+		return section;
+	}
+
+	template <typename... ConfigureFunctions>
+	Section_line* AddLineSection(const char* section_name,
+	                             ConfigureFunctions... module_config_functions)
+	{
+		const auto section = new Section_line(section_name);
+		(section->AddModule(module_config_functions), ...);
+		sectionlist.push_back(section);
+		return section;
+	}
+
 	Section_prop* AddEarlySectionProp(const char* name, SectionFunction func,
 	                                  bool changeable_at_runtime = false);
 

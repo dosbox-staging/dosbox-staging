@@ -29,6 +29,11 @@ int sdl_main(int argc, char* argv[]);
 
 // The shutdown_requested bool is a conditional break in the parse-loop and
 // machine-loop. Set it to true to gracefully quit in expected circumstances.
+
+// When the parent program is exiting, all static objects are destructed in
+// reverse creation order as part C++'s "atexit" teardown sequence.  If this
+// bool is true, then all modules will implicitly go out of scope.
+//
 extern bool shutdown_requested;
 
 // The E_Exit function throws an exception to quit. Call it in unexpected

@@ -306,6 +306,8 @@ enum class ModuleLifecycle : uint8_t {
 	// Indicates the module's static instance should be destroyed. The work
 	// of actually shutting down, freeing memory, closing its various
 	// states, and so on should be performed by the object itself.
+
+	// This is the first and therefore default value if none is provided.
 	Destroy,
 
 	// Indicates the module's static instance should be created. The work of
@@ -318,6 +320,8 @@ enum class ModuleLifecycle : uint8_t {
 	// simply be destroyed and re-created.
 	Reconfigure,
 };
+
+using ConfigureFunction = void (*)(const ModuleLifecycle, Section*);
 
 typedef void (*SectionFunction)(Section*);
 
@@ -336,6 +340,10 @@ private:
 		{}
 	};
 
+	// A given config section is composed of one or more modules, each of
+	// which has a configure function that can create, destroy, and
+	// reconfigure.
+	std::deque<ConfigureFunction> configure_functions = {};
 	std::deque<Function_wrapper> init_functions   = {};
 	std::deque<Function_wrapper> destroyfunctions = {};
 	std::string sectionname                       = {};
@@ -350,6 +358,9 @@ public:
 
 	// Children must call executedestroy!
 	virtual ~Section() = default;
+
+	void AddModule(const ConfigureFunction function);
+	void ConfigureModules(const ModuleLifecycle desired_lifecycle);
 
 	void AddInitFunction(SectionFunction func, bool changeable_at_runtime = false);
 
