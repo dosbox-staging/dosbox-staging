@@ -1,5 +1,5 @@
     {
-    "version": 1,
+    "version": 2,
     "warnings": [
         {
             "CodeCurrent": 88293181,
@@ -266,15 +266,7 @@
             "Message": "Expression is always false."
         },
         {
-            "CodeCurrent": 737424757,
-            "CodeNext": 123,
-            "CodePrev": 0,
-            "ErrorCode": "V801",
-            "FileName": "mouseif_virtual_machines.cpp",
-            "Message": "Decreased performance. It is better to redefine the first function argument as a reference. Consider replacing 'const .. buttons__S' with 'const .. &buttons__S'."
-        },
-        {
-            "CodeCurrent": 3135489084,
+            "CodeCurrent": 772513023,
             "CodeNext": 123,
             "CodePrev": 0,
             "ErrorCode": "V801",
@@ -282,15 +274,23 @@
             "Message": "Decreased performance. It is better to redefine the first function argument as a reference. Consider replacing 'const .. new_buttons__S' with 'const .. &new_buttons__S'."
         },
         {
-            "CodeCurrent": 2899585489,
+            "CodeCurrent": 2942993592,
             "CodeNext": 123,
             "CodePrev": 0,
             "ErrorCode": "V801",
             "FileName": "mouseif_dos_driver.cpp",
-            "Message": "Decreased performance. It is better to redefine the second function argument as a reference. Consider replacing 'const .. buttons__S' with 'const .. &buttons__S'."
+            "Message": "Decreased performance. It is better to redefine the first function argument as a reference. Consider replacing 'const .. new_buttons__S' with 'const .. &new_buttons__S'."
         },
         {
-            "CodeCurrent": 3190791416,
+            "CodeCurrent": 49558901,
+            "CodeNext": 123,
+            "CodePrev": 0,
+            "ErrorCode": "V801",
+            "FileName": "mouseif_virtual_machines.cpp",
+            "Message": "Decreased performance. It is better to redefine the first function argument as a reference. Consider replacing 'const .. buttons__S' with 'const .. &buttons__S'."
+        },
+        {
+            "CodeCurrent": 774872314,
             "CodeNext": 588197875,
             "CodePrev": 0,
             "ErrorCode": "V801",
@@ -300,7 +300,7 @@
         {
             "CodeCurrent": 588197875,
             "CodeNext": 123,
-            "CodePrev": 3190791416,
+            "CodePrev": 774872314,
             "ErrorCode": "V801",
             "FileName": "mouseif_ps2_bios.cpp",
             "Message": "Decreased performance. It is better to redefine the second function argument as a reference. Consider replacing 'const .. new_buttons_all' with 'const .. &new_buttons_all'."
