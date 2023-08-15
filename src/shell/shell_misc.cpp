@@ -77,12 +77,8 @@ void DOS_Shell::ShowPrompt()
 void DOS_Shell::InputCommand(char* line)
 {
 	std::string command = ReadCommand();
-	trim(command);
-	std::string utf8_command = {};
-	dos_to_utf8(command, utf8_command);
-	if (!utf8_command.empty() && (utf8_history.empty() || utf8_command != utf8_history.back())) {
-		utf8_history.emplace_back(std::move(utf8_command));
-	}
+
+	history.Append(command, get_utf8_code_page());
 
 	const auto* const dos_section = dynamic_cast<Section_prop*>(
 	        control->GetSection("dos"));
@@ -108,13 +104,15 @@ void DOS_Shell::InputCommand(char* line)
 
 std::string DOS_Shell::ReadCommand()
 {
-	std::vector<std::string> history_clone = {};
-	history_clone.reserve(utf8_history.size() + 1);
-	for (const std::string &utf8_str : utf8_history) {
-		std::string dos_str = {};
-		utf8_to_dos(utf8_str, dos_str, UnicodeFallback::Simple);
-		history_clone.emplace_back(std::move(dos_str));
-	}
+	std::vector<std::string> history_clone = history.GetCommands(
+	        get_utf8_code_page());
+	const auto last_command = [&history_clone]() -> std::string {
+		if (history_clone.empty()) {
+			return "";
+		}
+		return history_clone.back();
+	}();
+
 	history_clone.emplace_back("");
 	auto history_index = history_clone.size() - 1;
 
@@ -158,18 +156,12 @@ std::string DOS_Shell::ReadCommand()
 			DOS_ReadFile(input_handle, &data, &byte_count);
 			switch (static_cast<ScanCode>(data)) {
 			case ScanCode::F3: {
-				if (utf8_history.empty()) {
-					break;
-				}
-
-				std::string last_command = {};
-				utf8_to_dos(utf8_history.back(), last_command, UnicodeFallback::Simple);
 				if (last_command.size() <= command.size()) {
 					break;
 				}
 
-				last_command = last_command.substr(command.size());
-				command += last_command;
+				const auto suffix = last_command.substr(command.size());
+				command += suffix;
 				cursor_position = command.size();
 				break;
 			}
@@ -703,7 +695,7 @@ bool DOS_Shell::SetEnv(const char* entry, const char* new_string)
 	PhysPt env_write          = env_read;
 	PhysPt env_write_start    = env_read;
 	char env_string[1024 + 1] = {0};
-	const auto entry_length = strlen(entry);
+	const auto entry_length   = strlen(entry);
 	do {
 		MEM_StrCopy(env_read, env_string, 1024);
 		if (!env_string[0]) {
