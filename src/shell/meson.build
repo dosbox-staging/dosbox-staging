@@ -5,6 +5,7 @@ libshell_sources = files(
     'shell.cpp',
     'shell_batch.cpp',
     'shell_cmds.cpp',
+    'shell_history.cpp',
     'shell_misc.cpp',
 )
 
