@@ -64,6 +64,7 @@ static struct {
 } capture = {};
 
 static std::unique_ptr<ImageCapturer> image_capturer = {};
+static std::unique_ptr<VideoEncoder> video_encoder   = {};
 
 bool CAPTURE_IsCapturingAudio()
 {
@@ -369,7 +370,7 @@ void CAPTURE_StopVideoCapture()
 		capture.state.video = CaptureState::Off;
 		break;
 	case CaptureState::InProgress:
-		capture_video_finalise();
+		video_encoder->capture_video_finalise();
 		capture.state.video = CaptureState::Off;
 		LOG_MSG("CAPTURE: Stopped capturing video output");
 	}
@@ -387,7 +388,7 @@ void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second)
 		capture.state.video = CaptureState::InProgress;
 		[[fallthrough]];
 	case CaptureState::InProgress:
-		capture_video_add_frame(image, frames_per_second);
+		video_encoder->capture_video_add_frame(image, frames_per_second);
 		break;
 	}
 }
@@ -408,9 +409,9 @@ void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_
 		capture.state.video = CaptureState::InProgress;
 		[[fallthrough]];
 	case CaptureState::InProgress:
-		capture_video_add_audio_data(sample_rate,
-		                             num_sample_frames,
-		                             sample_frames);
+		video_encoder->capture_video_add_audio_data(sample_rate,
+		                                            num_sample_frames,
+		                                            sample_frames);
 		break;
 	}
 
@@ -561,9 +562,17 @@ static void capture_destroy(Section* /*sec*/)
 	image_capturer = {};
 
 	if (capture.state.video == CaptureState::InProgress) {
-		capture_video_finalise();
+		video_encoder->capture_video_finalise();
 		capture.state.video = CaptureState::Off;
 	}
+
+	// FFmepg destructor makes sure the video is finalised.
+	// No harm in also explicity calling capture_video_finalise
+	// It then blocks while joining with worker threads and destroying them.
+
+	// ZMBV destructor does nothing (capture_video_finalise must be called).
+	// It just needs the pointer for virtual functions.
+	video_encoder = {};
 
 	capture = {};
 }
@@ -591,6 +600,7 @@ static void capture_init(Section* sec)
 	const std::string prefs = secprop->Get_string("default_image_capture_formats");
 
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
+	video_encoder  = std::make_unique<ZMBVEncoder>();
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&capture_destroy, changeable_at_runtime);
