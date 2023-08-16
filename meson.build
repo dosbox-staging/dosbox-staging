@@ -485,6 +485,40 @@ elif get_option('unit_tests').disabled()
     wants_tests = false
 endif
 
+#FFmpeg (depends on glib)
+ffmpeg_dep = []
+ffmpeg_static = ('ffmpeg' in static_libs_list or prefers_static_libs)
+
+ffmpeg_dep += dependency(
+    'libavcodec',
+    static: ffmpeg_static,
+    include_type: 'system',
+)
+
+ffmpeg_dep += dependency(
+    'libavutil',
+    static: ffmpeg_static,
+    include_type: 'system',
+)
+
+ffmpeg_dep += dependency(
+    'libswscale',
+    static: ffmpeg_static,
+    include_type: 'system',
+)
+
+ffmpeg_dep += dependency(
+    'libavformat',
+    static: ffmpeg_static,
+    include_type: 'system',
+)
+
+ffmpeg_dep += dependency(
+    'libswresample',
+    static: ffmpeg_static,
+    include_type: 'system',
+)
+
 libiir_dep = dependency(
     'iir',
     version: ['>= 1.9.3', '< 2'],
