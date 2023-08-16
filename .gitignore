@@ -56,7 +56,6 @@ suppress_base.json
 
 # macOS directory prefs
 .DS_Store
-Resources
 
 # Profiling data
 *.prof
