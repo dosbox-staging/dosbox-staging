@@ -375,32 +375,34 @@ void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3) {
 	}	
 }
 
-void VGA_ForceSquarePixels(const bool enabled)
+void VGA_ForceSquarePixels(const bool enable)
 {
-	vga.draw.force_square_pixels = enabled;
+	vga.draw.force_square_pixels = enable;
 }
 
-void VGA_EnableVgaDoubleScanning(const bool enabled)
+void VGA_EnableVgaDoubleScanning(const bool enable)
 {
 	if (machine != MCH_VGA) {
 		return;
 	}
-	if (enabled) {
+	if (enable && !vga.draw.double_scanning_enabled) {
 		LOG_MSG("VGA: Double-scanning VGA video modes enabled");
-	} else {
+	}
+	if (!enable && vga.draw.double_scanning_enabled) {
 		LOG_MSG("VGA: Forcing single-scanning of double-scanned VGA video modes");
 	}
-	vga.draw.double_scanning_enabled = enabled;
+	vga.draw.double_scanning_enabled = enable;
 }
 
-void VGA_EnablePixelDoubling(const bool enabled)
+void VGA_EnablePixelDoubling(const bool enable)
 {
-	if (enabled) {
+	if (enable && !vga.draw.pixel_doubling_enabled) {
 		LOG_MSG("VGA: Pixel-doubling enabled");
-	} else {
+	}
+	if (!enable && vga.draw.pixel_doubling_enabled) {
 		LOG_MSG("VGA: Forcing no pixel-doubling");
 	}
-	vga.draw.pixel_doubling_enabled = enabled;
+	vga.draw.pixel_doubling_enabled = enable;
 }
 
 void VGA_Init(Section* sec)
