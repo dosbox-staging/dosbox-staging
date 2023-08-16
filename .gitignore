@@ -72,6 +72,9 @@ suppress_base.json
 .cache
 compile_commands.json
 
+#Conan package manager
+conan
+
 tools/find_magical_f_code
 tools/find_magical_f_code.exe
 tools/is_magical_asset

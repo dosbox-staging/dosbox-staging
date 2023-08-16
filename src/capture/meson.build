@@ -15,6 +15,7 @@ libcapture = static_library(
     libcapture_sources,
     include_directories: incdir,
     dependencies: [
+        ffmpeg_dep,
         libloguru_dep,
         libzmbv_dep,
         png_dep,
