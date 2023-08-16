@@ -971,7 +971,7 @@ void MOUSEBIOS_Subfunction_C2() // INT 15h, AH = 0xc2
 		break;
 	case 0x01: // reset
 		// VBADOS seems to expect VMware interface to get dectivated
-		MOUSEVMM_Deactivate();
+		MOUSEVMM_DeactivateAll();
 		cmd_reset();
 		bios_disable();
 		cmd_set_defaults();

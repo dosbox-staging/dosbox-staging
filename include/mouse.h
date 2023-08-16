@@ -146,18 +146,17 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing);
 // Virtual Machine Manager (VMware/VirtualBox) PS/2 mouse protocol extensions
 // ***************************************************************************
 
-struct VirtualBoxPointerStatus {
+enum class MouseVmmProtocol : uint8_t {
+	VirtualBox,
+	VmWare,
+};
+
+struct MouseVirtualBoxPointerStatus {
 	uint16_t absolute_x = 0;
 	uint16_t absolute_y = 0;
 };
 
-bool MOUSE_VirtualBox_IsSupported();
-void MOUSE_VirtualBox_ClientDisconnected();
-void MOUSE_VirtualBox_SetPointerAbsolute(const bool is_absolute);
-void MOUSE_VirtualBox_SetPointerVisible(const bool is_visible);
-void MOUSE_VirtualBox_GetPointerStatus(VirtualBoxPointerStatus& status);
-
-struct VmWarePointerStatus {
+struct MouseVmWarePointerStatus {
 	uint16_t absolute_x = 0;
 	uint16_t absolute_y = 0;
 
@@ -165,11 +164,17 @@ struct VmWarePointerStatus {
 	uint8_t wheel_counter = 0;
 };
 
-bool MOUSE_VmWare_IsSupported();
-void MOUSE_VmWare_Activate();
-void MOUSE_VmWare_Deactivate();
-bool MOUSE_VmWare_CheckIfUpdated();
-void MOUSE_VmWare_GetPointerStatus(VmWarePointerStatus& status);
+bool MOUSEVMM_IsSupported(const MouseVmmProtocol protocol);
+
+void MOUSEVMM_Activate(const MouseVmmProtocol protocol);
+void MOUSEVMM_Deactivate(const MouseVmmProtocol protocol);
+void MOUSEVMM_DeactivateAll();
+
+void MOUSEVMM_GetPointerStatus(MouseVirtualBoxPointerStatus& status);
+void MOUSEVMM_GetPointerStatus(MouseVmWarePointerStatus& status);
+
+void MOUSEVMM_SetPointerVisible_VirtualBox(const bool is_visible);
+bool MOUSEVMM_CheckIfUpdated_VmWare();
 
 // ***************************************************************************
 // MOUSECTL.COM / GUI configurator interface

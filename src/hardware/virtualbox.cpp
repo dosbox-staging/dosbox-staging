@@ -335,7 +335,7 @@ static void client_disconnect()
 	}
 
 	if (has_feature_mouse) {
-		MOUSE_VirtualBox_ClientDisconnected();
+		MOUSEVMM_Deactivate(MouseVmmProtocol::VirtualBox);
 	}
 
 	state.is_client_connected = false;
@@ -365,8 +365,8 @@ static void handle_get_mouse_status(const RequestHeader& header,
 			break;
 		}
 
-		VirtualBoxPointerStatus status = {};
-		MOUSE_VirtualBox_GetPointerStatus(status);
+		MouseVirtualBoxPointerStatus status = {};
+		MOUSEVMM_GetPointerStatus(status);
 		mem_writed(struct_pointer, state.mouse_features._data);
 		mem_writed(struct_pointer + 4, status.absolute_x);
 		mem_writed(struct_pointer + 8, status.absolute_y);
@@ -405,7 +405,11 @@ static void handle_set_mouse_status(const RequestHeader& header,
 		const bool guest_can_absolute = features.Get(
 		        features.mask_guest_can_absolute);
 
-		MOUSE_VirtualBox_SetPointerAbsolute(guest_can_absolute);
+		if (guest_can_absolute) {
+			MOUSEVMM_Activate(MouseVmmProtocol::VirtualBox);
+		} else {
+			MOUSEVMM_Deactivate(MouseVmmProtocol::VirtualBox);
+		}
 
 		report_success(header.return_code_pt);
 		break;
@@ -440,7 +444,7 @@ static void handle_set_pointer_shape(const RequestHeader& header,
 			warn_mouse_alpha_shape();
 		}
 
-		MOUSE_VirtualBox_SetPointerVisible(pointer_visible);
+		MOUSEVMM_SetPointerVisible_VirtualBox(pointer_visible);
 
 		report_success(header.return_code_pt);
 		break;
@@ -603,7 +607,7 @@ void VIRTUALBOX_Destroy(Section*)
 
 void VIRTUALBOX_Init(Section* sec)
 {
-	has_feature_mouse = MOUSE_VirtualBox_IsSupported();
+	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VirtualBox);
 	if (has_feature_mouse) {
 		state.mouse_features.SetInitialValue();
 	}
@@ -612,6 +616,9 @@ void VIRTUALBOX_Init(Section* sec)
 	// - shared directories for VBSF.EXE driver by Javis Pedro
 	// - possibly display for the OS/2 Museum work-in-progres drivers
 	//   https://www.os2museum.com/wp/antique-display-driving/
+	// - (very far future) possibly Windows 9x 3D acceleration using
+	//   project like SoftGPU (or whatever will be available):
+	//   https://github.com/JHRobotics/softgpu
 
 	is_interface_enabled = has_feature_mouse;
 	if (is_interface_enabled) {

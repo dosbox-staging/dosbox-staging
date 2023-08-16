@@ -69,8 +69,8 @@ static void command_get_version()
 
 static void command_abs_pointer_data()
 {
-	VmWarePointerStatus status = {};
-	MOUSE_VmWare_GetPointerStatus(status);
+	MouseVmWarePointerStatus status = {};
+	MOUSEVMM_GetPointerStatus(status);
 
 	reg_eax = status.buttons;
 	reg_ebx = status.absolute_x;
@@ -83,15 +83,19 @@ static void command_abs_pointer_status()
 	constexpr uint32_t ABS_UPDATED     = 4;
 	constexpr uint32_t ABS_NOT_UPDATED = 0;
 
-	reg_eax = MOUSE_VmWare_CheckIfUpdated() ? ABS_UPDATED : ABS_NOT_UPDATED;
+	reg_eax = MOUSEVMM_CheckIfUpdated_VmWare() ? ABS_UPDATED : ABS_NOT_UPDATED;
 }
 
 static void command_abs_pointer()
 {
 	switch (static_cast<VmWarePointer>(reg_ebx)) {
 	case VmWarePointer::Enable: break; // can be safely ignored
-	case VmWarePointer::Relative: MOUSE_VmWare_Deactivate(); break;
-	case VmWarePointer::Absolute: MOUSE_VmWare_Activate(); break;
+	case VmWarePointer::Relative:
+		MOUSEVMM_Deactivate(MouseVmmProtocol::VmWare);
+		break;
+	case VmWarePointer::Absolute:
+		MOUSEVMM_Activate(MouseVmmProtocol::VmWare);
+		break;
 	default:
 		LOG_WARNING("VMWARE: unimplemented mouse subcommand 0x%08x", reg_ebx);
 		break;
@@ -135,12 +139,15 @@ void VMWARE_Destroy(Section*)
 
 void VMWARE_Init(Section* sec)
 {
-	has_feature_mouse = MOUSE_VmWare_IsSupported();
+	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VmWare);
 
 	// TODO: implement more features:
 	// - shared directories, for VMSMount tool:
 	//   https://github.com/eduardocasino/vmsmount
-	// - everything supported by Windows 9x Guest Additions
+	// - everything supported by the official Windows 9x VMware Tools
+	// - (very far future) possibly Windows 9x 3D acceleration using
+	//   project like SoftGPU (or whatever will be available):
+	//   https://github.com/JHRobotics/softgpu
 
 	is_interface_enabled = has_feature_mouse;
 	if (is_interface_enabled) {
