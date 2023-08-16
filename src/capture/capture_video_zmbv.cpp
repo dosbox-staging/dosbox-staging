@@ -20,6 +20,7 @@
  */
 
 #include "capture.h"
+#include "capture_video.h"
 
 #include <cassert>
 
@@ -100,7 +101,7 @@ static void add_avi_chunk(const char* tag, const uint32_t size,
 	host_writed(index + 12, size);
 }
 
-void capture_video_finalise()
+void ZMBVEncoder::capture_video_finalise()
 {
 	if (!video.handle) {
 		return;
@@ -265,7 +266,7 @@ void capture_video_finalise()
 	video.handle = nullptr;
 }
 
-void capture_video_add_audio_data(const uint32_t sample_rate,
+void ZMBVEncoder::capture_video_add_audio_data(const uint32_t sample_rate,
                                   const uint32_t num_sample_frames,
                                   const int16_t* sample_frames)
 {
@@ -319,7 +320,7 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 	video.audio.bytes_written   = 0;
 }
 
-void capture_video_add_frame(const RenderedImage& image, const float frames_per_second)
+void ZMBVEncoder::capture_video_add_frame(const RenderedImage& image, const float frames_per_second)
 {
 	const auto& src = image.params;
 	assert(src.width <= SCALER_MAXWIDTH);

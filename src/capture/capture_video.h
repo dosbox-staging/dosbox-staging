@@ -24,13 +24,30 @@
 
 #include "render.h"
 
-void capture_video_add_frame(const RenderedImage& image,
-                             const float frames_per_second);
+class VideoEncoder {
+public:
+	virtual void capture_video_add_frame(const RenderedImage& image,
+	                                     const float frames_per_second) = 0;
 
-void capture_video_add_audio_data(const uint32_t sample_rate,
-                                  const uint32_t num_sample_frames,
-                                  const int16_t* sample_frames);
+	virtual void capture_video_add_audio_data(const uint32_t sample_rate,
+	                                          const uint32_t num_sample_frames,
+	                                          const int16_t* sample_frames) = 0;
 
-void capture_video_finalise();
+	virtual void capture_video_finalise() = 0;
+
+	virtual ~VideoEncoder() = default;
+};
+
+class ZMBVEncoder : public VideoEncoder {
+public:
+	void capture_video_add_frame(const RenderedImage& image,
+	                             const float frames_per_second) override;
+
+	void capture_video_add_audio_data(const uint32_t sample_rate,
+	                                  const uint32_t num_sample_frames,
+	                                  const int16_t* sample_frames) override;
+
+	void capture_video_finalise() override;
+};
 
 #endif
