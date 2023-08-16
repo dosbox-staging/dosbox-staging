@@ -501,7 +501,6 @@ void MOUSE_NotifyDisconnect(const MouseInterfaceId interface_id)
 
 void MOUSE_NotifyBooting()
 {
-	MOUSEVMM_Deactivate();
 	for (auto& interface : mouse_interfaces) {
 		interface->NotifyBooting();
 	}

@@ -179,6 +179,7 @@ public:
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
 	void NotifyButton(const uint8_t idx, const bool pressed) override;
 	void NotifyWheel(const int16_t w_rel) override;
+	void NotifyBooting() override;
 
 	void UpdateInputType() override;
 
@@ -745,6 +746,11 @@ void InterfacePS2::NotifyWheel(const int16_t w_rel)
 	// VMM always first, as it might demand event from PS/2 emulation!
 	MOUSEVMM_NotifyWheel(w_rel);
 	MOUSEPS2_NotifyWheel(w_rel);
+}
+
+void InterfacePS2::NotifyBooting()
+{
+	MOUSEVMM_DeactivateAll();
 }
 
 void InterfacePS2::UpdateInputType()

@@ -36,11 +36,6 @@ CHECK_NARROWING();
 // - https://github.com/NattyNarwhal/vmwmouse (warning: release 0.1 is unstable)
 // - https://git.javispedro.com/cgit/vbmouse.git
 
-enum class VmmProtocol : uint8_t {
-	VirtualBox,
-	VmWare,
-};
-
 union VmWareButtons {
 	uint8_t _data = 0;
 	bit_view<5, 1> left;
@@ -79,20 +74,37 @@ constexpr float acceleration_multiplier = 0.02f;
 static MouseSpeedCalculator speed_xy(acceleration_multiplier *mouse_predefined.acceleration_vmm);
 
 // ***************************************************************************
-// Common Virtual Machine Manager (VMM) part implementation
+// Requests from Virtual Machine Manager guest side drivers
 // ***************************************************************************
 
-static void mouse_vmm_activate(const VmmProtocol protocol)
+bool MOUSEVMM_IsSupported(const MouseVmmProtocol protocol)
+{
+	if (mouse_config.model_ps2 == MouseModelPS2::NoMouse) {
+		return false;
+	}
+
+	switch (protocol) {
+	case MouseVmmProtocol::VmWare:
+		return mouse_config.is_vmware_mouse_enabled;
+	case MouseVmmProtocol::VirtualBox:
+		return mouse_config.is_virtualbox_mouse_enabled;
+	default: assert(false);
+	}
+
+	return false;
+}
+
+void MOUSEVMM_Activate(const MouseVmmProtocol protocol)
 {
 	bool is_activating    = false;
 	const bool was_active = mouse_shared.active_vmm;
 
-	if (protocol == VmmProtocol::VirtualBox && !virtualbox.is_active) {
+	if (protocol == MouseVmmProtocol::VirtualBox && !virtualbox.is_active) {
 		virtualbox.is_active = true;
 		is_activating        = true;
 		LOG_MSG("MOUSE (PS/2): VirtualBox protocol enabled");
 		mouse_shared.vmm_wants_pointer = virtualbox.wants_pointer;
-	} else if (protocol == VmmProtocol::VmWare && !vmware.is_active) {
+	} else if (protocol == MouseVmmProtocol::VmWare && !vmware.is_active) {
 		vmware.is_active = true;
 		is_activating    = true;
 		LOG_MSG("MOUSE (PS/2): VMware protocol enabled");
@@ -113,23 +125,23 @@ static void mouse_vmm_activate(const VmmProtocol protocol)
 		}
 	}
 
-	if (protocol == VmmProtocol::VmWare) {
+	if (protocol == MouseVmmProtocol::VmWare) {
 		vmware.buttons._data = 0;
 		vmware.counter_w     = 0;
 	}
 }
 
-static void mouse_vmm_deactivate(const VmmProtocol protocol)
+void MOUSEVMM_Deactivate(const MouseVmmProtocol protocol)
 {
 	bool is_deactivating  = false;
 	const bool was_active = mouse_shared.active_vmm;
 
-	if (protocol == VmmProtocol::VirtualBox && virtualbox.is_active) {
+	if (protocol == MouseVmmProtocol::VirtualBox && virtualbox.is_active) {
 		virtualbox.is_active = false;
 		is_deactivating      = true;
 		LOG_MSG("MOUSE (PS/2): VirtualBox protocol disabled");
 		mouse_shared.vmm_wants_pointer = false;
-	} else if (protocol == VmmProtocol::VmWare && vmware.is_active) {
+	} else if (protocol == MouseVmmProtocol::VmWare && vmware.is_active) {
 		vmware.is_active = false;
 		is_deactivating  = true;
 		LOG_MSG("MOUSE (PS/2): VMware protocol disabled");
@@ -141,37 +153,29 @@ static void mouse_vmm_deactivate(const VmmProtocol protocol)
 		MOUSE_UpdateGFX();
 	}
 
-	if (protocol == VmmProtocol::VmWare) {
+	if (protocol == MouseVmmProtocol::VmWare) {
 		vmware.buttons._data = 0;
 		vmware.counter_w     = 0;
 	}
 }
 
+void MOUSEVMM_DeactivateAll()
+{
+	MOUSEVMM_Deactivate(MouseVmmProtocol::VirtualBox);
+	MOUSEVMM_Deactivate(MouseVmmProtocol::VmWare);
+}
+
 // ***************************************************************************
-// VirtualBox interface implementation
+// VirtualBox specific requests
 // ***************************************************************************
 
-bool MOUSE_VirtualBox_IsSupported()
+void MOUSEVMM_GetPointerStatus(MouseVirtualBoxPointerStatus& status)
 {
-	return mouse_config.is_virtualbox_mouse_enabled &&
-	       (mouse_config.model_ps2 != MouseModelPS2::NoMouse);
+	status.absolute_x = scaled_x;
+	status.absolute_y = scaled_y;
 }
 
-void MOUSE_VirtualBox_ClientDisconnected()
-{
-	mouse_vmm_deactivate(VmmProtocol::VirtualBox);
-}
-
-void MOUSE_VirtualBox_SetPointerAbsolute(const bool is_absolute)
-{
-	if (is_absolute) {
-		mouse_vmm_activate(VmmProtocol::VirtualBox);
-	} else {
-		mouse_vmm_deactivate(VmmProtocol::VirtualBox);
-	}
-}
-
-void MOUSE_VirtualBox_SetPointerVisible(const bool is_visible)
+void MOUSEVMM_SetPointerVisible_VirtualBox(const bool is_visible)
 {
 	if (virtualbox.wants_pointer != is_visible) {
 		virtualbox.wants_pointer = is_visible;
@@ -182,33 +186,11 @@ void MOUSE_VirtualBox_SetPointerVisible(const bool is_visible)
 	}
 }
 
-void MOUSE_VirtualBox_GetPointerStatus(VirtualBoxPointerStatus& status)
-{
-	status.absolute_x = scaled_x;
-	status.absolute_y = scaled_y;
-}
-
 // ***************************************************************************
-// VMware interface implementation
+// VMware specific requests
 // ***************************************************************************
 
-bool MOUSE_VmWare_IsSupported()
-{
-	return mouse_config.is_vmware_mouse_enabled &&
-	       (mouse_config.model_ps2 != MouseModelPS2::NoMouse);
-}
-
-void MOUSE_VmWare_Activate()
-{
-	mouse_vmm_activate(VmmProtocol::VmWare);
-}
-
-void MOUSE_VmWare_Deactivate()
-{
-	mouse_vmm_deactivate(VmmProtocol::VmWare);
-}
-
-bool MOUSE_VmWare_CheckIfUpdated()
+bool MOUSEVMM_CheckIfUpdated_VmWare()
 {
 	const bool result = vmware.updated;
 	vmware.updated    = false;
@@ -216,7 +198,7 @@ bool MOUSE_VmWare_CheckIfUpdated()
 	return result;
 }
 
-void MOUSE_VmWare_GetPointerStatus(VmWarePointerStatus& status)
+void MOUSEVMM_GetPointerStatus(MouseVmWarePointerStatus& status)
 {
 	status.absolute_x = scaled_x;
 	status.absolute_y = scaled_y;
@@ -228,14 +210,8 @@ void MOUSE_VmWare_GetPointerStatus(VmWarePointerStatus& status)
 }
 
 // ***************************************************************************
-// External notifications
+// Notifications from mouse subsystem
 // ***************************************************************************
-
-void MOUSEVMM_Deactivate()
-{
-	mouse_vmm_deactivate(VmmProtocol::VirtualBox);
-	mouse_vmm_deactivate(VmmProtocol::VmWare);
-}
 
 void MOUSEVMM_NotifyInputType(const bool new_use_relative, const bool new_is_input_raw)
 {
