@@ -382,6 +382,7 @@ void VGA_ForceSquarePixels(const bool enable)
 
 void VGA_EnableVgaDoubleScanning(const bool enable)
 {
+	LOG_ERR("------- VGA_EnableVgaDoubleScanning ------- %d", enable);
 	if (machine != MCH_VGA) {
 		return;
 	}

@@ -604,11 +604,29 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
 	const auto new_shader_name = get_shader_manager().GetCurrentShaderInfo().name;
 
 	const auto changed_shader = (new_shader_name != render.current_shader_name);
+
+	LOG_WARNING("  ]]] new_shader_name: %s, render.current_shader_name: %s",
+	            new_shader_name.c_str(),
+	            render.current_shader_name.c_str());
+
+	LOG_WARNING("  ]]] changed_shader %d", changed_shader);
+
 	if (changed_shader) {
 		if (reinit_render) {
+			LOG_WARNING("  ]]] 111");
 			render_reinit();
+
+			// We can't set the new shader name here yet because
+			// then the "shader changed" reinit path wouldn't be
+			// trigger in RENDER_Init()
 		} else {
+			LOG_WARNING("  ]]] 222");
 			setup_scan_and_pixel_doubling();
+
+			// We must set the new shader name here as we're bypassing
+			// a full render reinit (RENDER_Init() is the only other
+			// place where 'render.current_shader_name' can be set).
+			render.current_shader_name = new_shader_name;
 		}
 	}
 	return changed_shader;

@@ -445,6 +445,7 @@ void ShaderManager::MaybeUpdateCurrentShader()
 	} break;
 
 	case ShaderMode::AutoGraphicsStandard:
+		LOG_WARNING(" video.mode.graphics_standard: %s", to_string(video_mode.graphics_standard));
 		return auto_switch_shader(GetShaderSetForGraphicsStandard(video_mode));
 
 	case ShaderMode::AutoMachine:
