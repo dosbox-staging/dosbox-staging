@@ -103,6 +103,8 @@ public:
 	ShaderInfo GetCurrentShaderInfo() const;
 	std::string GetCurrentShaderSource() const;
 
+	void ReloadCurrentShader();
+
 	// prevent copying
 	ShaderManager(const ShaderManager&) = delete;
 	// prevent assignment
@@ -117,7 +119,7 @@ private:
 	                                   const std::string& source) const;
 
 	void MaybeUpdateCurrentShader();
-	bool MaybeLoadShader(const std::string& shader_name);
+	void LoadShader(const std::string& shader_name);
 
 	const ShaderSet& GetShaderSetForGraphicsStandard(const VideoMode& video_mode) const;
 

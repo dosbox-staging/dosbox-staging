@@ -685,7 +685,6 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 		return;
 	}
 
-	LOG_MSG("RENDER: Reloading current shader");
 	render.force_reload_shader = true;
 	render_reinit();
 
@@ -903,6 +902,10 @@ void RENDER_Init(Section* sec)
 
 	shader_changed = render.force_reload_shader ||
 	                 (new_shader_name != render.current_shader_name);
+
+	if (render.force_reload_shader) {
+		get_shader_manager().ReloadCurrentShader();
+	}
 
 	LOG_ERR("### shader_changed: %d", shader_changed);
 

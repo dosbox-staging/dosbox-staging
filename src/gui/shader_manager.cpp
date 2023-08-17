@@ -174,16 +174,8 @@ void ShaderManager::NotifyRenderParametersChanged(
 	MaybeUpdateCurrentShader();
 }
 
-bool ShaderManager::MaybeLoadShader(const std::string& shader_name)
+void ShaderManager::LoadShader(const std::string& shader_name)
 {
-	LOG_ERR("current_shader.info.name: %s, shader_name: %s",
-	        current_shader.info.name.c_str(),
-	        shader_name.c_str());
-
-	if (current_shader.info.name == shader_name) {
-		return false;
-	}
-
 	auto new_shader_name = shader_name;
 
 	if (shader_name == DefaultShaderName) {
@@ -225,7 +217,6 @@ bool ShaderManager::MaybeLoadShader(const std::string& shader_name)
 	                                          current_shader.source);
 
 	current_shader.info = {new_shader_name, settings};
-	return true;
 }
 
 ShaderInfo ShaderManager::GetCurrentShaderInfo() const
@@ -236,6 +227,13 @@ ShaderInfo ShaderManager::GetCurrentShaderInfo() const
 std::string ShaderManager::GetCurrentShaderSource() const
 {
 	return current_shader.source;
+}
+
+void ShaderManager::ReloadCurrentShader()
+{
+	LoadShader(current_shader.info.name);
+	LOG_MSG("RENDER: Reloaded current shader '%s'",
+	        current_shader.info.name.c_str());
 }
 
 std::deque<std::string> ShaderManager::InventoryShaders() const
@@ -408,6 +406,19 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name
 
 void ShaderManager::MaybeUpdateCurrentShader()
 {
+	auto maybe_load_shader = [&](const std::string& shader_name) {
+		LOG_ERR("current_shader.info.name: %s, shader_name: %s",
+		        current_shader.info.name.c_str(),
+		        shader_name.c_str());
+
+		if (current_shader.info.name == shader_name) {
+			return false;
+		}
+
+		LoadShader(shader_name);
+		return true;
+	};
+
 	auto auto_switch_shader = [&](const ShaderSet& shader_set) {
 		const auto shader_name = [&] {
 			for (auto shader : shader_set) {
@@ -425,7 +436,7 @@ void ShaderManager::MaybeUpdateCurrentShader()
 		LOG_WARNING("  vertical_scale_factor: %g", vertical_scale_factor);
 		LOG_WARNING("  shader_name: %s", shader_name.c_str());
 
-		const auto shader_changed = MaybeLoadShader(shader_name);
+		const auto shader_changed = maybe_load_shader(shader_name);
 		if (shader_changed) {
 			LOG_MSG("RENDER: Auto-switched to shader '%s'",
 			        current_shader.info.name.c_str());
@@ -434,7 +445,7 @@ void ShaderManager::MaybeUpdateCurrentShader()
 
 	switch (mode) {
 	case ShaderMode::Single: {
-		const auto shader_changed = MaybeLoadShader(shader_name_from_config);
+		const auto shader_changed = maybe_load_shader(shader_name_from_config);
 		if (shader_changed) {
 			// TODO explain
 			shader_name_from_config = current_shader.info.name;
@@ -445,7 +456,8 @@ void ShaderManager::MaybeUpdateCurrentShader()
 	} break;
 
 	case ShaderMode::AutoGraphicsStandard:
-		LOG_WARNING(" video.mode.graphics_standard: %s", to_string(video_mode.graphics_standard));
+		LOG_WARNING(" video.mode.graphics_standard: %s",
+		            to_string(video_mode.graphics_standard));
 		return auto_switch_shader(GetShaderSetForGraphicsStandard(video_mode));
 
 	case ShaderMode::AutoMachine:
