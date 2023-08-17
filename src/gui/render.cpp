@@ -22,34 +22,38 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
-#include <cstring>
-#include <fstream>
-#include <functional>
-#include <map>
+#include <memory>
 #include <mutex>
-#include <regex>
-#include <sstream>
-#include <unordered_map>
-
-#include <sys/types.h>
 
 #include "../capture/capture.h"
 #include "control.h"
-#include "cross.h"
 #include "fraction.h"
 #include "mapper.h"
 #include "render.h"
 #include "setup.h"
+#include "shader_manager.h"
 #include "shell.h"
 #include "string_utils.h"
 #include "support.h"
 #include "vga.h"
 #include "video.h"
 
-#include "render_scalers.h"
-
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
+
+#if C_OPENGL
+void RENDER_Init(Section*);
+
+static ShaderManager& get_shader_manager()
+{
+	static std::unique_ptr<ShaderManager> shader_manager = nullptr;
+
+	if (!shader_manager) {
+		shader_manager = std::make_unique<ShaderManager>();
+	}
+	return *shader_manager;
+}
+#endif // C_OPENGL
 
 const char* to_string(const PixelFormat pf)
 {
@@ -329,10 +333,22 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 	}
 	return linesadded;
 }
-std::mutex render_reset_mutex;
+
+static void render_reinit()
+{
+	assert(control);
+
+	const auto render_sec = dynamic_cast<Section_prop*>(
+	        control->GetSection("render"));
+	assert(render_sec);
+
+	RENDER_Init(render_sec);
+}
 
 static void render_reset(void)
 {
+	static std::mutex render_reset_mutex;
+
 	if (render.src.width == 0 && render.src.height == 0) {
 		return;
 	}
@@ -413,7 +429,7 @@ static void render_reset(void)
 	}
 
 #if C_OPENGL
-	GFX_SetShader(render.shader.source);
+	GFX_SetShader(get_shader_manager().GetCurrentShaderSource());
 #endif
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
@@ -535,189 +551,86 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
 	render_reset();
 }
 
+static bool force_square_pixels     = false;
+static bool force_vga_single_scan   = false;
+static bool force_no_pixel_doubling = false;
+
+// We double-scan VGA modes and pixel-double all video modes by default unless:
+//
+//  1) Single-scanning or no pixel-doubling is forced by the OpenGL shader.
+//  2) The interpolation mode is nearest-neighbour.
+//
+// About the first point: the default `interpolation/sharp.glsl` shader forces
+// both because it scales pixels as flat adjacent rectangles. This not only
+// produces identical output versus double-scanning and pixel-doubling, but
+// also provides finer integer scaling steps (especially important on sub-4K
+// screens) and improves performance on low-end systems like the Raspberry Pi.
+//
+static void setup_scan_and_pixel_doubling()
+{
+	const auto nearest_neighbour_enabled = (GFX_GetInterpolationMode() ==
+	                                        InterpolationMode::NearestNeighbour);
+
+	force_vga_single_scan   = nearest_neighbour_enabled;
+	force_no_pixel_doubling = nearest_neighbour_enabled;
+
 #if C_OPENGL
+	const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
 
-std::deque<std::string> RENDER_InventoryShaders()
-{
-	std::deque<std::string> inventory;
-	inventory.emplace_back("");
-	inventory.emplace_back("List of available GLSL shaders");
-	inventory.emplace_back("------------------------------");
+	force_vga_single_scan |= shader_info.settings.force_single_scan;
+	force_no_pixel_doubling |= shader_info.settings.force_no_pixel_doubling;
+#endif
 
-	const std::string dir_prefix  = "Path '";
-	const std::string file_prefix = "        ";
-
-	std::error_code ec = {};
-	for (auto& [dir, shaders] : GetFilesInResource("glshaders", ".glsl")) {
-		const auto dir_exists      = std_fs::is_directory(dir, ec);
-		auto shader                = shaders.begin();
-		const auto dir_has_shaders = shader != shaders.end();
-		const auto dir_postfix     = dir_exists
-		                                   ? (dir_has_shaders ? "' has:"
-		                                                      : "' has no shaders")
-		                                   : "' does not exist";
-
-		inventory.emplace_back(dir_prefix + dir.string() + dir_postfix);
-
-		while (shader != shaders.end()) {
-			shader->replace_extension("");
-			const auto is_last = (shader + 1 == shaders.end());
-			inventory.emplace_back(file_prefix +
-			                       (is_last ? "`- " : "|- ") +
-			                       shader->string());
-			shader++;
-		}
-		inventory.emplace_back("");
-	}
-	inventory.emplace_back(
-	        "The above shaders can be used exactly as listed in the \"glshader\"");
-	inventory.emplace_back(
-	        "conf setting, without the need for the resource path or .glsl extension.");
-	inventory.emplace_back("");
-	return inventory;
+	VGA_EnableVgaDoubleScanning(!force_vga_single_scan);
+	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
 }
 
-static bool read_shader_source(const std::string& shader_name, std::string& source)
+bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
+                                  [[maybe_unused]] const uint16_t canvas_height,
+                                  [[maybe_unused]] const uint16_t draw_width,
+                                  [[maybe_unused]] const uint16_t draw_height,
+                                  [[maybe_unused]] const Fraction& render_pixel_aspect_ratio,
+                                  [[maybe_unused]] const VideoMode& video_mode,
+                                  const bool reinit_render)
 {
-	auto read_shader = [&](const std_fs::path& path) {
-		std::ifstream fshader(path, std::ios_base::binary);
-		if (!fshader.is_open()) {
-			return false;
-		}
-		std::stringstream buf;
-		buf << fshader.rdbuf();
-		fshader.close();
+#if C_OPENGL
+	get_shader_manager().NotifyRenderParametersChanged(canvas_width,
+	                                                   canvas_height,
+	                                                   draw_width,
+	                                                   draw_height,
+	                                                   render_pixel_aspect_ratio,
+	                                                   video_mode);
 
-		source = buf.str() + '\n';
-		return true;
-	};
+	const auto new_shader_name = get_shader_manager().GetCurrentShaderInfo().name;
 
-	constexpr auto glsl_ext      = ".glsl";
-	constexpr auto glshaders_dir = "glshaders";
-
-	// Start with the name as-is and then try from resources
-	const auto candidate_paths = {std_fs::path(shader_name),
-	                              std_fs::path(shader_name + glsl_ext),
-	                              GetResourcePath(glshaders_dir, shader_name),
-	                              GetResourcePath(glshaders_dir,
-	                                              shader_name + glsl_ext)};
-
-	for (const auto& path : candidate_paths) {
-		if (std_fs::exists(path)) {
-			return read_shader(path);
+	const auto changed_shader = (new_shader_name != render.current_shader_name);
+	if (changed_shader) {
+		if (reinit_render) {
+			render_reinit();
+		} else {
+			setup_scan_and_pixel_doubling();
 		}
 	}
-	return false;
+	return changed_shader;
+#endif // C_OPENGL
 }
 
-static ShaderSettings parse_shader_settings(const std::string& shader_name,
-                                            const std::string& source)
-{
-	ShaderSettings settings = {};
-	try {
-		const std::regex re("\\s*#pragma\\s+(\\w+)\\s*([\\w\\.]+)?");
-		std::sregex_iterator next(source.begin(), source.end(), re);
-		const std::sregex_iterator end;
-
-		while (next != end) {
-			std::smatch match = *next;
-
-			auto pragma = match[1].str();
-			if (pragma == "use_srgb_texture") {
-				settings.use_srgb_texture = true;
-			} else if (pragma == "use_srgb_framebuffer") {
-				settings.use_srgb_framebuffer = true;
-			} else if (pragma == "force_single_scan") {
-				settings.force_single_scan = true;
-			} else if (pragma == "force_no_pixel_doubling") {
-				settings.force_no_pixel_doubling = true;
-			} else if (pragma == "min_vertical_scale_factor") {
-				auto value_str = match[2].str();
-				if (value_str.empty()) {
-					LOG_WARNING("RENDER: No value specified for "
-					            "'min_vertical_scale_factor' pragma in shader '%s'",
-					            shader_name.c_str());
-				} else {
-					constexpr auto MinValidScaleFactor = 0.0f;
-					constexpr auto MaxValidScaleFactor = 100.0f;
-					const auto value =
-					        parse_value(value_str,
-					                    MinValidScaleFactor,
-					                    MaxValidScaleFactor);
-
-					if (value) {
-						settings.min_vertical_scale_factor = *value;
-					} else {
-						LOG_WARNING("RENDER: Invalid 'min_vertical_scale_factor' "
-						            "pragma value of '%s' in shader '%s'",
-						            value_str.c_str(),
-						            shader_name.c_str());
-					}
-				}
-			}
-			++next;
-		}
-	} catch (std::regex_error& e) {
-		LOG_ERR("RENDER: Regex error while parsing shader '%s' for pragmas: %d",
-		        shader_name.c_str(),
-		        e.code());
-	}
-	return settings;
-}
+#if C_OPENGL
 
 bool RENDER_UseSrgbTexture()
 {
-	return render.shader.settings.use_srgb_texture;
+	const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
+	return shader_info.settings.use_srgb_texture;
 }
 
 bool RENDER_UseSrgbFramebuffer()
 {
-	return render.shader.settings.use_srgb_framebuffer;
+	const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
+	return shader_info.settings.use_srgb_framebuffer;
 }
 
-#endif
-
-#if C_OPENGL
-void log_warning_if_legacy_shader_name(const std::string& name)
+static bool is_using_opengl_output_mode()
 {
-	static const std::map<std::string, std::string> legacy_name_mappings = {
-	        {"advinterp2x", "scaler/advinterp2x"},
-	        {"advinterp3x", "scaler/advinterp3x"},
-	        {"advmame2x", "scaler/advmame2x"},
-	        {"advmame3x", "scaler/advmame3x"},
-	        {"crt-easymode-flat", "crt/easymode.tweaked"},
-	        {"crt-fakelottes-flat", "crt/fakelottes"},
-	        {"rgb2x", "scaler/rgb2x"},
-	        {"rgb3x", "scaler/rgb3x"},
-	        {"scan2x", "scaler/scan2x"},
-	        {"scan3x", "scaler/scan3x"},
-	        {"sharp", "interpolation/sharp"},
-	        {"tv2x", "scaler/tv2x"},
-	        {"tv3x", "scaler/tv3x"}};
-
-	std_fs::path shader_path = name;
-	std_fs::path ext         = shader_path.extension();
-
-	if (!(ext == "" || ext == ".glsl")) {
-		return;
-	}
-
-	shader_path.replace_extension("");
-
-	const auto it = legacy_name_mappings.find(shader_path.string());
-	if (it != legacy_name_mappings.end()) {
-		const auto new_name = it->second;
-		LOG_WARNING("RENDER: Built-in shader '%s' has been renamed; please use '%s' instead.",
-		            name.c_str(),
-		            new_name.c_str());
-	}
-}
-#endif
-
-#if C_OPENGL
-static constexpr auto FallbackShaderName = "none";
-
-static bool is_using_opengl_output_mode() {
 	assert(control);
 
 	const auto sdl_sec = static_cast<const Section_prop*>(
@@ -738,140 +651,32 @@ std::string get_shader_name_from_config()
 	        control->GetSection("render"));
 	assert(render_sec);
 
-	const std::string shader_name = render_sec->Get_string("glshader");
-
-	if (shader_name.empty()) {
-		return FallbackShaderName;
-	} else if (shader_name == "default") {
-		return "interpolation/sharp";
-	} else {
-		return shader_name;
-	}
+	return render_sec->Get_string("glshader");
 }
-#endif
 
-// Returns true if the shader has been changed, or if a shader has been loaded
-// for the first time since launch
-static void load_shader(const std::string& shader_name)
+std::deque<std::string> RENDER_InventoryShaders()
+{
+	return get_shader_manager().InventoryShaders();
+}
+#endif // C_OPENGL
+
+static void reload_shader([[maybe_unused]] const bool pressed)
 {
 #if C_OPENGL
-	log_warning_if_legacy_shader_name(shader_name);
-
-	std::string source             = {};
-	std::string loaded_shader_name = {};
-
-	if (read_shader_source(shader_name, source)) {
-		loaded_shader_name = shader_name;
-	} else {
-		source.clear();
-
-		// List all the existing shaders for the user
-		LOG_ERR("RENDER: Shader file '%s' not found", shader_name.c_str());
-		for (const auto& line : RENDER_InventoryShaders()) {
-			LOG_WARNING("RENDER: %s", line.c_str());
-		}
-
-		// Fallback to the 'none' shader and otherwise fail
-		if (read_shader_source(FallbackShaderName, source)) {
-			loaded_shader_name = FallbackShaderName;
-		} else {
-			E_Exit("RENDER: Fallback shader file '%s' not found and is mandatory",
-			       FallbackShaderName);
-		}
-	}
-
-	// Reset shader settings to defaults
-	render.shader.settings = {};
-
-	if (source.length() > 0) {
-		LOG_MSG("RENDER: Using GLSL shader '%s'",
-		        loaded_shader_name.c_str());
-
-		render.shader.name   = std::move(loaded_shader_name);
-		render.shader.source = std::move(source);
-
-		render.shader.settings = parse_shader_settings(render.shader.name,
-		                                               render.shader.source);
-
-		GFX_SetShader(render.shader.source);
-	}
-#endif
-}
-
-void RENDER_InitShader()
-{
-	const auto shader_name = get_shader_name_from_config();
-	load_shader(shader_name);
-}
-
-void RENDER_Init(Section* sec);
-
-static void reload_shader(const bool pressed)
-{
-	// Quick and dirty hack to reload the current shader. Very useful when
-	// tweaking shader presets.
 	if (!pressed) {
 		return;
 	}
 
-	assert(control);
-
-	const auto render_sec = dynamic_cast<Section_prop*>(
-	        control->GetSection("render"));
-	assert(render_sec);
-
-	const std::string shader_name = render_sec->Get_string("glshader");
-	if (shader_name.empty()) {
-		LOG_WARNING("RENDER: No 'glshader' value set; not reloading shader");
-		return;
-	}
-
-	auto glshader_prop = render_sec->GetStringProp("glshader");
-	assert(glshader_prop);
-
-	glshader_prop->SetValue("none");
-	RENDER_Init(render_sec);
-
-	glshader_prop->SetValue(shader_name);
-	RENDER_Init(render_sec);
+	LOG_MSG("RENDER: Reloading current shader");
+	render.force_reload_shader = true;
+	render_reinit();
 
 	// The shader settings might have been changed (e.g. force_single_scan,
 	// force_no_pixel_doubling), so force re-rendering the image using the
 	// new settings. Without this, the altered settings would only take
 	// effect on the next video mode change.
 	VGA_SetupDrawing(0);
-}
-
-static bool force_square_pixels     = false;
-static bool force_vga_single_scan   = false;
-static bool force_no_pixel_doubling = false;
-
-// We double-scan VGA modes and pixel-double all video modes by default unless:
-//
-//  1) Single-scanning or no pixel-doubling is forced by the OpenGL shader.
-//  2) The interpolation mode is nearest-neighbour.
-//
-// About the first point: the default `interpolation/sharp.glsl` shader forces
-// both because it scales pixels as flat adjacent rectangles. This not only
-// produces identical output versus double-scanning and pixel-doubling, but
-// also provides finer integer scaling steps (especially important on sub-4K
-// screens) and improves performance on low-end systems like the Raspberry Pi.
-//
-static void setup_scan_and_pixel_doubling([[maybe_unused]] Section_prop* section)
-{
-	const auto nearest_neighbour_enabled = (GFX_GetInterpolationMode() ==
-	                                        InterpolationMode::NearestNeighbour);
-
-	force_vga_single_scan   = nearest_neighbour_enabled;
-	force_no_pixel_doubling = nearest_neighbour_enabled;
-
-#if C_OPENGL
-	force_vga_single_scan |= render.shader.settings.force_single_scan;
-	force_no_pixel_doubling |= render.shader.settings.force_no_pixel_doubling;
-#endif
-
-	VGA_EnableVgaDoubleScanning(!force_vga_single_scan);
-	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
+#endif // C_OPENGL
 }
 
 constexpr auto MonochromePaletteAmber      = "amber";
@@ -1042,6 +847,7 @@ void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
 
 void RENDER_Init(Section* sec)
 {
+	LOG_ERR("### RENDER_Init");
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
 
@@ -1071,30 +877,36 @@ void RENDER_Init(Section* sec)
 
 #if C_OPENGL
 	auto shader_changed = false;
-
 	if (is_using_opengl_output_mode()) {
-		const auto shader_name = get_shader_name_from_config();
-		if (render.shader.name != shader_name) {
-			load_shader(shader_name);
-			shader_changed = true;
-		}
+		get_shader_manager().NotifyGlshaderSettingChanged(
+		        get_shader_name_from_config());
 	}
+	const auto new_shader_name = get_shader_manager().GetCurrentShaderInfo().name;
+
+	shader_changed = render.force_reload_shader ||
+	                 (new_shader_name != render.current_shader_name);
+
+	LOG_ERR("### shader_changed: %d", shader_changed);
+
+	render.force_reload_shader = false;
+	render.current_shader_name = new_shader_name;
 #endif
 
-	setup_scan_and_pixel_doubling(section);
+	setup_scan_and_pixel_doubling();
 
 	const auto needs_reinit =
 	        ((force_square_pixels != prev_force_square_pixels) ||
 	         (render.scale.size != prev_scale_size) ||
-	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode)
+	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode) ||
 #if C_OPENGL
-	         || shader_changed
+	         shader_changed ||
 #endif
-	         || (prev_force_vga_single_scan != force_vga_single_scan) ||
+	         (prev_force_vga_single_scan != force_vga_single_scan) ||
 	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
 
 	if (running && needs_reinit) {
 		render_callback(GFX_CallBackReset);
+		VGA_SetupDrawing(0);
 	}
 	if (!running) {
 		render.updating = true;

@@ -3308,6 +3308,7 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
                           const int draw_width, const int draw_height,
                           const Fraction& render_pixel_aspect_ratio)
 {
+	LOG_WARNING(">>> GFX_CalcViewport: canvas: %d x %d, draw: %d x %d, PAR: 1:%g", canvas_width, canvas_height, draw_width, draw_height, render_pixel_aspect_ratio.Inverse().ToDouble());
 	assert(draw_width > 0);
 	assert(draw_height > 0);
 
@@ -3459,7 +3460,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 #if C_OPENGL
 	} else if (starts_with(output, "opengl")) {
-		RENDER_InitShader();
 		if (output == "opengl") {
 			sdl.desktop.want_type  = SCREEN_OPENGL;
 			sdl.interpolation_mode = InterpolationMode::Bilinear;
@@ -3985,6 +3985,21 @@ static void FinalizeWindowState()
 	GFX_ResetScreen();
 }
 
+static void notify_render_parameters()
+{
+	const auto canvas = get_canvas_size(sdl.desktop.type);
+
+	constexpr auto reinit_render = true;
+
+	RENDER_MaybeAutoSwitchShader(canvas.w,
+	                             canvas.h,
+	                             sdl.draw.width,
+	                             sdl.draw.height,
+	                             sdl.draw.render_pixel_aspect_ratio,
+	                             sdl.video_mode,
+	                             reinit_render);
+}
+
 bool GFX_Events()
 {
 #if defined(MACOSX)
@@ -4057,7 +4072,7 @@ bool GFX_Events()
 				// DEBUG_LOG_MSG("SDL: Window has been resized to %dx%d",
 				//               event.window.data1,
 				//               event.window.data2);
-
+				//
 				// When going from an initial fullscreen to
 				// windowed state, this event will be called
 				// moments before SDL's windowed mode is
@@ -4065,7 +4080,6 @@ bool GFX_Events()
 				// already been established:
 				assert(sdl.desktop.window.width > 0 &&
 				       sdl.desktop.window.height > 0);
-
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
@@ -4116,6 +4130,7 @@ bool GFX_Events()
 
 			case SDL_WINDOWEVENT_SHOWN:
 				// DEBUG_LOG_MSG("SDL: Window has been shown");
+				notify_render_parameters();
 				continue;
 
 			case SDL_WINDOWEVENT_HIDDEN:
@@ -4165,6 +4180,8 @@ bool GFX_Events()
 					           sdl.clip.w,
 					           sdl.clip.h);
 				}
+
+				notify_render_parameters();
 #	endif
 				NewMouseScreenParams();
 				continue;
@@ -4178,6 +4195,7 @@ bool GFX_Events()
 				// result of an API call or through the system
 				// or user changing the window size.
 				FinalizeWindowState();
+				notify_render_parameters();
 				continue;
 
 			case SDL_WINDOWEVENT_MINIMIZED:

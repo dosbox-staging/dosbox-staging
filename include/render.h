@@ -73,13 +73,6 @@ const char* to_string(const PixelFormat pf);
 uint8_t get_bits_per_pixel(const PixelFormat pf);
 
 #if C_OPENGL
-struct ShaderSettings {
-	bool use_srgb_texture           = false;
-	bool use_srgb_framebuffer       = false;
-	bool force_single_scan          = false;
-	bool force_no_pixel_doubling    = false;
-	float min_vertical_scale_factor = 0.0f;
-};
 #endif
 
 struct Render_t {
@@ -154,19 +147,14 @@ struct Render_t {
 		uint32_t outLine    = 0;
 	} scale = {};
 
-#if C_OPENGL
-	struct {
-		std::string name        = {};
-		std::string source      = {};
-		ShaderSettings settings = {};
-	} shader = {};
-#endif
-
 	RenderPal_t pal = {};
 
-	bool updating            = false;
-	bool active              = false;
-	bool fullFrame           = true;
+	bool updating  = false;
+	bool active    = false;
+	bool fullFrame = true;
+
+	std::string current_shader_name = {};
+	bool force_reload_shader        = false;
 };
 
 // A frame of the emulated video output that's passed to the rendering backend
@@ -270,8 +258,6 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);
 
-void RENDER_InitShader();
-
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
 
@@ -280,4 +266,12 @@ bool RENDER_UseSrgbTexture();
 bool RENDER_UseSrgbFramebuffer();
 #endif
 
-#endif
+bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
+                                  [[maybe_unused]] const uint16_t canvas_height,
+                                  [[maybe_unused]] const uint16_t draw_width,
+                                  [[maybe_unused]] const uint16_t draw_height,
+                                  [[maybe_unused]] const Fraction& render_pixel_aspect_ratio,
+                                  [[maybe_unused]] const VideoMode& video_mode,
+                                  const bool reinit_render);
+
+#endif // DOSBOX_RENDER_H
