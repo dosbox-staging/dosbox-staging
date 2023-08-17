@@ -957,8 +957,7 @@ struct VGA_Type {
 	int sharpness = 0;
 };
 
-/* Hercules Palette function */
-void Herc_Palette(void);
+void VGA_SetHerculesPalette();
 
 /* CGA Mono Palette function */
 void Mono_CGA_Palette(void);
