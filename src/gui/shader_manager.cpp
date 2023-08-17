@@ -40,6 +40,12 @@ CHECK_NARROWING();
 
 ShaderManager::ShaderManager() noexcept
 {
+	static const std::vector<const char*> monochrome_shader_names = {
+	        "crt/monochrome"};
+
+	static const std::vector<const char*> composite_shader_names = {
+	        "crt/composite-1080p", "crt/composite-1440p", "crt/composite-4k"};
+
 	static const std::vector<const char*> cga_shader_names = {"crt/cga-1080p",
 	                                                          "crt/cga-1440p",
 	                                                          "crt/cga-4k"};
@@ -52,11 +58,8 @@ ShaderManager::ShaderManager() noexcept
 	                                                          "crt/vga-1440p",
 	                                                          "crt/vga-4k"};
 
-	static const std::vector<const char*> composite_shader_names = {
-	        "crt/composite-1080p", "crt/composite-1440p", "crt/composite-4k"};
-
-	static const std::vector<const char*> monochrome_shader_names = {
-	        "crt/monochrome"};
+//	static const std::vector<const char*> arcade_shader_names = {
+//	        "crt/arcade-1080p", "crt/arcade-1440p", "crt/arcade-4k"};
 
 	auto build_set = [&](const std::vector<const char*>& shader_names) {
 		std::string source = {};
@@ -95,6 +98,7 @@ ShaderManager::ShaderManager() noexcept
 	shader_set.cga        = build_set(cga_shader_names);
 	shader_set.ega        = build_set(ega_shader_names);
 	shader_set.vga        = build_set(vga_shader_names);
+//	shader_set.arcade     = build_set(arcade_shader_names);
 
 	const auto stop = std::chrono::high_resolution_clock::now();
 	const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(

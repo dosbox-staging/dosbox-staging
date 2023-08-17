@@ -33,7 +33,8 @@ const auto FallbackShaderName             = "none";
 const auto DefaultShaderName              = "default";
 const auto SharpShaderName                = "interpolation/sharp";
 const auto AutoGraphicsStandardShaderName = "crt-auto";
-const auto AutoMachineShaderName          = "crt-machine-auto";
+const auto AutoMachineShaderName          = "crt-auto-machine";
+const auto AutoArcadeShaderName           = "crt-auto-arcade";
 
 enum class ShaderMode {
 	// No shader auto-switching; the 'glshader' setting always contains the
@@ -134,6 +135,7 @@ private:
 		ShaderSet cga        = {};
 		ShaderSet ega        = {};
 		ShaderSet vga        = {};
+		ShaderSet arcade     = {};
 	} shader_set = {};
 
 	ShaderMode mode = ShaderMode::Single;
@@ -148,7 +150,7 @@ private:
 
 	double vertical_scale_factor    = 1.0;
 	double vertical_scale_factor_ss = 1.0;
-	VideoMode video_mode         = {};
+	VideoMode video_mode            = {};
 };
 
 #endif // DOSBOX_SHADER_MANAGER_H
