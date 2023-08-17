@@ -64,7 +64,7 @@ enum class PixelFormat : uint8_t {
 	BGR888 = 24,
 	//
 	// 16.7M (32-bit) true colour; 8 bits per red/blue/green component;
-	// stored as packed uint32 data with highest 8 bits unused
+	// stored as packed uint32 data with lowest 8 bits unused
 	BGRX8888 = 32
 };
 
