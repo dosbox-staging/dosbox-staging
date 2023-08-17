@@ -239,6 +239,9 @@ PCI_Device* PCI_Device::GetSubdevice(const Bits sub_fct)
 	return nullptr;
 }
 
+class PCI;
+PCI* pci_interface = {};
+
 // queued devices (PCI device registering requested before the PCI framework was initialized)
 static const Bitu max_rqueued_devices=16;
 static Bitu num_rqueued_devices=0;
@@ -409,14 +412,17 @@ public:
 	}
 
 	~PCI(){
-		initialized=false;
-		pci_devices_installed=0;
-		num_rqueued_devices=0;
+		if (IsInitialized()) {
+			Deinitialize();
+		}
+
+		assert(!initialized);
+		assert(pci_devices_installed == 0);
+		assert(num_rqueued_devices == 0);
+
+		pci_interface = nullptr;
 	}
 };
-
-static PCI* pci_interface=nullptr;
-
 
 PhysPt PCI_GetPModeInterface(void) {
 	if (pci_interface) {
@@ -430,18 +436,11 @@ bool PCI_IsInitialized() {
 	return false;
 }
 
-void PCI_ShutDown([[maybe_unused]] Section* sec)
-{
-	delete pci_interface;
-	pci_interface = nullptr;
-}
-
 void PCI_Init(Section* sec)
 {
 	assert(sec);
 
 	pci_interface = new PCI(sec);
-	sec->AddDestroyFunction(&PCI_ShutDown);
 }
 
 void PCI_AddDevice(PCI_Device* dev) {
