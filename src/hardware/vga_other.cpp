@@ -1235,7 +1235,7 @@ void VGA_SetMonoPalette(const char *colour)
 {
 	if (machine == MCH_HERC) {
 		herc_pal = palette_num(colour);
-		Herc_Palette();
+		VGA_SetHerculesPalette();
 		return;
 	}
 	if (machine == MCH_CGA && mono_cga) {
@@ -1272,11 +1272,10 @@ void Mono_CGA_Palette()
 static void CycleHercPal(bool pressed) {
 	if (!pressed) return;
 	if (++herc_pal>3) herc_pal=0;
-	Herc_Palette();
-	VGA_DAC_CombineColor(1,7);
+	VGA_SetHerculesPalette();
 }
 
-void Herc_Palette()
+void VGA_SetHerculesPalette()
 {
 	switch (herc_pal) {
 	case 0: // Green
@@ -1296,6 +1295,8 @@ void Herc_Palette()
 		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3b);
 		break;
 	}
+	VGA_DAC_CombineColor(0, 0);
+	VGA_DAC_CombineColor(1, 7);
 }
 
 static void write_hercules(io_port_t port, io_val_t value, io_width_t)
