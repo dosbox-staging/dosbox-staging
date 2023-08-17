@@ -2766,7 +2766,10 @@ void BIND_MappingEvents() {
 				GFX_UpdateDisplayDimensions(event.window.data1,
 				                            event.window.data2);
 				SDL_RenderSetLogicalSize(mapper.renderer, 640, 480);
-				DrawButtons();
+				mapper.redraw = true;
+			}
+			if (event.window.event == SDL_WINDOWEVENT_EXPOSED) {
+				mapper.redraw = true;
 			}
 			break;
 		case SDL_QUIT:
@@ -2990,29 +2993,61 @@ void MAPPER_DisplayUI() {
 	GFX_EndUpdate( nullptr );
 	mapper.window = GFX_GetWindow();
 	if (mapper.window == nullptr) {
-		E_Exit("Could not initialize video mode for mapper: %s", SDL_GetError());
+		E_Exit("MAPPER: Could not initialize video mode: %s",
+		       SDL_GetError());
 	}
 	mapper.renderer = SDL_GetRenderer(mapper.window);
 #if C_OPENGL
 	SDL_GLContext context = nullptr;
 	if (!mapper.renderer) {
-		context         = SDL_GL_GetCurrentContext();
-		mapper.renderer = SDL_CreateRenderer(mapper.window, -1, 0);
+		context = SDL_GL_GetCurrentContext();
+		if (!context) {
+			E_Exit("MAPPER: Failed to retrieve current OpenGL context: %s",
+			       SDL_GetError());
+		}
+
+		const auto renderer_drivers_count = SDL_GetNumRenderDrivers();
+		if (renderer_drivers_count <= 0) {
+			E_Exit("MAPPER: Failed to retrieve available SDL renderer drivers: %s",
+			       SDL_GetError());
+		}
+		int renderer_driver_index = -1;
+		for (int i = 0; i < renderer_drivers_count; ++i) {
+			SDL_RendererInfo renderer_info = {};
+			if (SDL_GetRenderDriverInfo(i, &renderer_info) < 0) {
+				E_Exit("MAPPER: Failed to retrieve SDL renderer driver info: %s",
+				       SDL_GetError());
+			}
+			assert(renderer_info.name);
+			if (strcmp(renderer_info.name, "opengl") == 0) {
+				renderer_driver_index = i;
+				break;
+			}
+		}
+		if (renderer_driver_index == -1) {
+			E_Exit("MAPPER: OpenGL support in SDL renderer is unavailable but required for OpenGL output");
+		}
+		constexpr uint32_t renderer_flags = 0;
+		mapper.renderer = SDL_CreateRenderer(mapper.window,
+		                                     renderer_driver_index,
+		                                     renderer_flags);
 	}
 #endif
 	if (mapper.renderer == nullptr) {
-		E_Exit("Could not retrieve window renderer for mapper: %s",
+		E_Exit("MAPPER: Could not retrieve window renderer: %s",
 		       SDL_GetError());
 	}
 
-	SDL_RenderSetLogicalSize(mapper.renderer, 640, 480);
+	if (SDL_RenderSetLogicalSize(mapper.renderer, 640, 480) < 0) {
+		LOG_WARNING("MAPPER: Failed to set renderer logical size: %s",
+		            SDL_GetError());
+	}
 
 	// Create font atlas surface
 	SDL_Surface* atlas_surface = SDL_CreateRGBSurfaceFrom(
 	        int10_font_14, 8, 256 * 14, 1, 1, 0, 0, 0, 0);
 	if (atlas_surface == nullptr) {
-		E_Exit("Failed to create atlas surface for mapper: %s",
-		       SDL_GetError());
+		E_Exit("MAPPER: Failed to create atlas surface: %s", SDL_GetError());
 	}
 
 	// Invert default surface palette
@@ -3020,7 +3055,7 @@ void MAPPER_DisplayUI() {
 	                                   {0xff, 0xff, 0xff, 0xff}};
 	if (SDL_SetPaletteColors(atlas_surface->format->palette, atlas_colors, 0, 2) <
 	    0) {
-		LOG_WARNING("Failed to set colors in font atlas: %s",
+		LOG_WARNING("MAPPER: Failed to set colors in font atlas: %s",
 		            SDL_GetError());
 	}
 
@@ -3030,7 +3065,8 @@ void MAPPER_DisplayUI() {
 	SDL_FreeSurface(atlas_surface);
 	atlas_surface = nullptr;
 	if (mapper.font_atlas == nullptr) {
-		E_Exit("Failed to create font texture atlas: %s", SDL_GetError());
+		E_Exit("MAPPER: Failed to create font texture atlas: %s",
+		       SDL_GetError());
 	}
 
 	if (last_clicked) {
@@ -3063,8 +3099,17 @@ void MAPPER_DisplayUI() {
 	                       SDL_ALPHA_OPAQUE);
 #if C_OPENGL
 	if (context) {
+#if SDL_VERSION_ATLEAST(2, 0, 10)
+		if (SDL_RenderFlush(mapper.renderer) < 0) {
+			LOG_WARNING("MAPPER: Failed to flush pending renderer commands: %s",
+			            SDL_GetError());
+		}
+#endif
 		SDL_DestroyRenderer(mapper.renderer);
-		SDL_GL_MakeCurrent(mapper.window, context);
+		if (SDL_GL_MakeCurrent(mapper.window, context) < 0) {
+			LOG_ERR("MAPPER: Failed to restore OpenGL context: %s",
+			        SDL_GetError());
+		}
 	}
 #endif
 #if defined (REDUCE_JOYSTICK_POLLING)
