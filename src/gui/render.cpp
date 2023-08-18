@@ -887,22 +887,38 @@ static void setup_scan_and_pixel_doubling([[maybe_unused]] Section_prop* section
 	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
 }
 
+constexpr auto MonochromePaletteAmber      = "amber";
+constexpr auto MonochromePaletteGreen      = "green";
+constexpr auto MonochromePaletteWhite      = "white";
+constexpr auto MonochromePalettePaperwhite = "paperwhite";
+
 static MonochromePalette to_monochrome_palette_enum(const char* setting)
 {
-	if (strcasecmp(setting, "green") == 0) {
+	if (strcasecmp(setting, MonochromePaletteGreen) == 0) {
 		return MonochromePalette::Green;
 	}
-	if (strcasecmp(setting, "amber") == 0) {
+	if (strcasecmp(setting, MonochromePaletteAmber) == 0) {
 		return MonochromePalette::Amber;
 	}
-	if (strcasecmp(setting, "white") == 0) {
+	if (strcasecmp(setting, MonochromePaletteWhite) == 0) {
 		return MonochromePalette::White;
 	}
-	if (strcasecmp(setting, "paperwhite") == 0) {
+	if (strcasecmp(setting, MonochromePalettePaperwhite) == 0) {
 		return MonochromePalette::Paperwhite;
 	}
-	assertm(false, "Invalid MonochromePalette value");
+	assertm(false, "Invalid monochrome_palette setting");
 	return {};
+}
+
+static const char* to_string(const enum MonochromePalette palette)
+{
+	switch (palette) {
+	case MonochromePalette::Green: return MonochromePaletteGreen;
+	case MonochromePalette::Amber: return MonochromePaletteAmber;
+	case MonochromePalette::White: return MonochromePaletteWhite;
+	case MonochromePalette::Paperwhite: return MonochromePalettePaperwhite;
+	default: assertm(false, "Invalid MonochromePalette value"); return {};
+	}
 }
 
 static void init_render_settings(Section_prop& secprop)
@@ -938,13 +954,19 @@ static void init_render_settings(Section_prop& secprop)
 	        "  vertical:    Constrain the vertical scaling factor to integer values\n"
 	        "               within the viewport.");
 
-	string_prop = secprop.Add_string("monochrome_palette", always, "white");
+	string_prop = secprop.Add_string("monochrome_palette",
+	                                 always,
+	                                 MonochromePaletteWhite);
 	string_prop->Set_help(
 	        "Set the palette for monochrome display emulation ('white' by default).\n"
 	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
 
-	const char* mono_pal[] = {"white", "paperwhite", "green", "amber", nullptr};
+	const char* mono_pal[] = {MonochromePaletteWhite,
+	                          MonochromePalettePaperwhite,
+	                          MonochromePaletteGreen,
+	                          MonochromePaletteAmber,
+	                          nullptr};
 	string_prop->Set_values(mono_pal);
 
 	string_prop = secprop.Add_string("cga_colors", only_at_start, "default");
@@ -1012,6 +1034,23 @@ void RENDER_AddConfigSection(const config_ptr_t& conf)
 	                                          changeable_at_runtime);
 	assert(sec);
 	init_render_settings(*sec);
+}
+
+void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
+{
+	assert(control);
+
+	auto render_section = control->GetSection("render");
+	assert(render_section);
+
+	const auto sec = dynamic_cast<Section_prop*>(render_section);
+	assert(sec);
+	if (!sec) {
+		return;
+	}
+
+	const auto string_prop = sec->GetStringProp("monochrome_palette");
+	string_prop->SetValue(to_string(palette));
 }
 
 void RENDER_Init(Section* sec)
