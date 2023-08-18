@@ -252,6 +252,8 @@ struct RenderedImage {
 extern Render_t render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 
+void RENDER_AddConfigSection(const config_ptr_t& conf);
+
 std::deque<std::string> RENDER_InventoryShaders();
 
 void RENDER_SetSize(const uint16_t width, const uint16_t height,
