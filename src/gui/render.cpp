@@ -921,9 +921,9 @@ static void init_render_settings(Section_prop& secprop)
 
 	string_prop = secprop.Add_string("monochrome_palette", always, "white");
 	string_prop->Set_help(
-	        "Select default palette for monochrome display ('white' by default).\n"
-	        "Works only when emulating 'hercules' or 'cga_mono'.\n"
-	        "You can also cycle through available colours using F11.");
+	        "Set the palette for monochrome display emulation ('white' by default).\n"
+	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
+	        "Note: You can also cycle through the available palettes via hotkeys.");
 
 	const char* mono_pal[] = {"white", "paperwhite", "green", "amber", nullptr};
 	string_prop->Set_values(mono_pal);
