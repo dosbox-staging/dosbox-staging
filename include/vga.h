@@ -959,8 +959,8 @@ struct VGA_Type {
 
 // Hercules & CGA monochrome palette
 enum class MonochromePalette : uint8_t {
-	Green      = 0,
-	Amber      = 1,
+	Amber      = 0,
+	Green      = 1,
 	White      = 2,
 	Paperwhite = 3
 };
