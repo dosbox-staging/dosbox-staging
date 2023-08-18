@@ -1145,8 +1145,11 @@ static void cycle_mono_cga_palette(bool pressed)
 	if (!pressed) {
 		return;
 	}
+
 	mono_cga_palette = cycle_forward(mono_cga_palette);
 	VGA_SetMonochromeCgaPalette();
+
+	RENDER_SyncMonochromePaletteSetting(mono_cga_palette);
 }
 
 static void cycle_mono_cga_brightness(bool pressed)
@@ -1181,8 +1184,11 @@ static void cycle_hercules_palette(bool pressed)
 	if (!pressed) {
 		return;
 	}
+
 	hercules_palette = cycle_forward(hercules_palette);
 	VGA_SetHerculesPalette();
+
+	RENDER_SyncMonochromePaletteSetting(hercules_palette);
 }
 
 void VGA_SetHerculesPalette()
