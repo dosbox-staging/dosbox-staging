@@ -70,7 +70,6 @@ void IO_Init(Section * );
 void CALLBACK_Init(Section*);
 void PROGRAMS_Init(Section*);
 //void CREDITS_Init(Section*);
-void RENDER_Init(Section*);
 void VGA_Init(Section*);
 
 void DOS_Init(Section*);
@@ -632,99 +631,13 @@ void DOSBOX_Init()
 		"copy-on-write or network-based filesystem, this setting avoids triggering\n"
 		"write-operations for these write-protected files.");
 
-	secprop = control->AddSection_prop("render", &RENDER_Init, changeable_at_runtime);
+	// Configure render settings
+	RENDER_AddConfigSection(control);
 
-	pint = secprop->Add_int("frameskip", deprecated, 0);
-	pint->Set_help("Consider capping frame-rates using the '[sdl] host_rate' setting.");
-
-	pbool = secprop->Add_bool("aspect", always, true);
-	pbool->Set_help(
-	        "Apply aspect ratio correction for modern square-pixel flat-screen displays,\n"
-	        "so DOS resolutions with non-square pixels appear as they would on a 4:3 display\n"
-	        "aspect ratio CRT monitor the majority of DOS games were designed for (enabled\n"
-	        "by default). This setting only affects video modes that use non-square pixels,\n"
-	        "such as 320x200 or 640x400; square-pixel modes, such as 320x240, 640x480, and\n"
-	        "800x600 are displayed as-is.");
-
-	pstring = secprop->Add_string("integer_scaling", always, "off");
-	pstring->Set_help(
-	        "Constrain the horizontal or vertical scaling factor to integer values.\n"
-	        "The correct aspect ratio is always maintained, which may result in a\n"
-	        "non-integer scaling factor to be applied in the other dimension. If the\n"
-	        "image is larger than the viewport, the integer scaling constraint is\n"
-	        "auto-disabled (same as 'off').\n"
-	        "  off:         No integer scaling constraint; the aspect ratio correct image\n"
-	        "               fills the viewport (default).\n"
-	        "  horizontal:  Constrain the horizontal scaling factor to integer values\n"
-	        "               within the viewport.\n"
-	        "  vertical:    Constrain the vertical scaling factor to integer values\n"
-	        "               within the viewport.");
-
-	pstring = secprop->Add_string("monochrome_palette", always, "white");
-	pstring->Set_help(
-	        "Select default palette for monochrome display ('white' by default).\n"
-	        "Works only when emulating 'hercules' or 'cga_mono'.\n"
-	        "You can also cycle through available colours using F11.");
-	const char* mono_pal[] = {"white", "paperwhite", "green", "amber", nullptr};
-	pstring->Set_values(mono_pal);
-
-	pstring = secprop->Add_string("cga_colors", only_at_start, "default");
-	pstring->Set_help(
-	        "Set the interpretation of CGA RGBI colours. Affects all machine types capable\n"
-	        "of displaying CGA or better graphics. Built-in presets:\n"
-	        "  default:       The canonical CGA palette, as emulated by VGA adapters\n"
-	        "                 (default).\n"
-	        "  tandy <bl>:    Emulation of an idealised Tandy monitor with adjustable brown\n"
-	        "                 level. The brown level can be provided as an optional second\n"
-	        "                 parameter (0 - red, 50 - brown, 100 - dark yellow;\n"
-	        "                 defaults to 50). E.g. tandy 100\n"
-	        "  tandy-warm:    Emulation of the actual colour output of an unknown Tandy\n"
-	        "                 monitor.\n"
-	        "  ibm5153 <c>:   Emulation of the actual colour output of an IBM 5153 monitor\n"
-	        "                 with a unique contrast control that dims non-bright colours\n"
-	        "                 only. The contrast can be optionally provided as a second\n"
-	        "                 parameter (0 to 100; defaults to 100), e.g. ibm5153 60\n"
-	        "  agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:\n"
-	        "                 Palettes used by the Amiga ports of Sierra AGI games.\n"
-	        "  agi-amigaish:  A mix of EGA and Amiga colours used by the Sarien\n"
-	        "                 AGI-interpreter.\n"
-	        "  scumm-amiga:   Palette used by the Amiga ports of LucasArts EGA games.\n"
-	        "  colodore:      Commodore 64 inspired colours based on the Colodore palette.\n"
-	        "  colodore-sat:  Colodore palette with 20% more saturation.\n"
-	        "  dga16:         A modern take on the canonical CGA palette with dialed back\n"
-	        "                 contrast.\n"
-	        "You can also set custom colours by specifying 16 space or comma separated\n"
-	        "colour values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full\n"
-	        "red), or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colours\n"
-	        "are ordered as follows:\n"
-	        "  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,\n"
-	        "  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.\n"
-	        "Their default values, shown here in 6-digit hex code format, are:\n"
-	        "  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa\n"
-	        "  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff");
-
-	pstring = secprop->Add_string("scaler", deprecated, "none");
-	pstring->Set_help(
-	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
-	        "  - If you used the normal2x/3x scalers, set a desired 'windowresolution'\n"
-	        "    instead.\n"
-	        "  - If you used an advanced scaler, consider one of the 'glshader'\n"
-	        "    options instead.");
-
-#if C_OPENGL
-	pstring = secprop->Add_path("glshader", always, "default");
-	pstring->Set_help(
-	        "Set the GLSL shader to use in OpenGL output modes.\n"
-			"Options include 'default', 'none', a shader listed using the --list-glshaders\n"
-	        "command-line argument, or an absolute or relative path to a file.\n"
-			"'default' sets the 'interpolation/sharp.glsl' shader.\n"
-	        "In all cases, you may omit the shader's '.glsl' file extension.");
-#endif
-
-	// Add the [composite] conf block after [render]
-	assert(control);
+	// Configure composite video settings
 	VGA_AddCompositeSettings(*control);
 
+	// Configure CPU settings
 	secprop = control->AddSection_prop("cpu", &CPU_Init, changeable_at_runtime);
 	const char* cores[] =
 	{ "auto",
