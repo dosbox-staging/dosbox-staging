@@ -63,7 +63,8 @@ const char* to_string(const PixelFormat pf)
 	}
 }
 
-uint8_t get_bits_per_pixel(const PixelFormat pf) {
+uint8_t get_bits_per_pixel(const PixelFormat pf)
+{
 	return enum_val(pf);
 }
 
@@ -848,9 +849,9 @@ static void reload_shader(const bool pressed)
 	RENDER_Init(render_section);
 
 	// The shader settings might have been changed (e.g. force_single_scan,
-	// force_no_pixel_doubling), so force re-rendering the image using the new
-	// settings. Without this, the altered settings would only take effect on
-	// the next video mode change.
+	// force_no_pixel_doubling), so force re-rendering the image using the
+	// new settings. Without this, the altered settings would only take
+	// effect on the next video mode change.
 	VGA_SetupDrawing(0);
 }
 
