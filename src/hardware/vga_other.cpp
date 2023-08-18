@@ -432,8 +432,9 @@ static void update_cga16_color_pcjr()
 {
 	assert(machine == MCH_PCJR);
 
-	// First composite algorithm based on code by reenigne updated by NewRisingSun and tailored for PCjr-only
-	// composite modes (for DOSBox Staging).
+	// First composite algorithm based on code by reenigne updated by
+	// NewRisingSun and tailored for PCjr-only composite modes (for DOSBox
+	// Staging).
 	constexpr auto tau = 6.28318531f;    // == 2*pi
 	constexpr auto ns = 567.0f / 440.0f; // degrees of hue shift per nanosecond
 
@@ -448,17 +449,20 @@ static void update_cga16_color_pcjr()
 	for (uint8_t c = 0; c < rgbi_coefficients.size(); c++)
 		rgbi_coefficients[c] = get_rgbi_coefficient(is_composite_new_era, c);
 
-	// The pixel clock delay calculation is not accurate for 2bpp, but the difference is small and a more accurate
-	// calculation would be too slow.
+	// The pixel clock delay calculation is not accurate for 2bpp, but the
+	// difference is small and a more accurate calculation would be too slow.
 	constexpr auto rgbi_pixel_delay = 15.5f * ns;
-	constexpr float chroma_pixel_delays[8] = {0.0f,        // Black:   no chroma
-	                                          35.0f * ns,  // Blue:    no XORs
-	                                          44.5f * ns,  // Green:   XOR on rising and falling edges
-	                                          39.5f * ns,  // Cyan:    XOR on falling but not rising edge
-	                                          44.5f * ns,  // Red:     XOR on rising and falling edges
-	                                          39.5f * ns,  // Magenta: XOR on falling but not/ rising edge
-	                                          44.5f * ns,  // Yellow:  XOR on rising and falling edges
-	                                          39.5f * ns}; // White:   XOR on falling but not rising edge
+
+	constexpr float chroma_pixel_delays[8] = {
+	        0.0f,       // Black:   no chroma
+	        35.0f * ns, // Blue:    no XORs
+	        44.5f * ns, // Green:   XOR on rising and falling edges
+	        39.5f * ns, // Cyan:    XOR on falling but not rising edge
+	        44.5f * ns, // Red:     XOR on rising and falling edges
+	        39.5f * ns, // Magenta: XOR on falling but not/ rising edge
+	        44.5f * ns, // Yellow:  XOR on rising and falling edges
+	        39.5f * ns  // White:   XOR on falling but not rising edge
+	};
 
 	constexpr uint8_t overscan = 15;
 	constexpr auto cp_d = chroma_pixel_delays[overscan & 7];
