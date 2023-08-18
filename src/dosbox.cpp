@@ -1013,15 +1013,15 @@ void DOSBOX_Init()
 
 	pbool = secprop->Add_bool("use_joy_calibration_hotkeys", when_idle, false);
 	pbool->Set_help(
-	        "Enable hotkeys to allow realtime calibration of the joystick's x and y axis\n"
+	        "Enable hotkeys to allow realtime calibration of the joystick's X and Y axes\n"
 	        "(disabled by default). Only consider this if in-game calibration fails and\n"
 	        "other settings have been tried.\n"
-	        "  - Ctrl/Cmd+Arrow-keys adjusts the axis' scalar value:\n"
-	        "      - left and right diminish or magnify the x-axis scalar, respectively.\n"
-	        "      - down and up diminish or magnify the y-axis scalar, respectively.\n"
-	        "  - Alt+Arrow-keys adjusts the axis' offset position:\n"
-	        "      - left and right shift x-axis offset in the given direction.\n"
-	        "      - down and up shift the y-axis offset in the given direction.\n"
+	        "  - Ctrl/Cmd+Arrow-keys adjust the axis' scalar value:\n"
+	        "      - Left and Right diminish or magnify the x-axis scalar, respectively.\n"
+	        "      - Down and Up diminish or magnify the y-axis scalar, respectively.\n"
+	        "  - Alt+Arrow-keys adjust the axis' offset position:\n"
+	        "      - Left and Right shift X-axis offset in the given direction.\n"
+	        "      - Down and Up shift the Y-axis offset in the given direction.\n"
 	        "  - Reset the X and Y calibration using Ctrl+Delete and Ctrl+Home,\n"
 	        "    respectively.\n"
 	        "Each tap will report X or Y calibration values you can set below. When you find\n"
@@ -1030,7 +1030,7 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("joy_x_calibration", when_idle, "auto");
 	pstring->Set_help(
-	        "Apply x-axis calibration parameters from the hotkeys ('auto' by default).");
+	        "Apply X-axis calibration parameters from the hotkeys ('auto' by default).");
 
 	pstring = secprop->Add_string("joy_y_calibration", when_idle, "auto");
 	pstring->Set_help(
