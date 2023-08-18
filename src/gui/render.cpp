@@ -894,11 +894,11 @@ constexpr auto MonochromePalettePaperwhite = "paperwhite";
 
 static MonochromePalette to_monochrome_palette_enum(const char* setting)
 {
-	if (strcasecmp(setting, MonochromePaletteGreen) == 0) {
-		return MonochromePalette::Green;
-	}
 	if (strcasecmp(setting, MonochromePaletteAmber) == 0) {
 		return MonochromePalette::Amber;
+	}
+	if (strcasecmp(setting, MonochromePaletteGreen) == 0) {
+		return MonochromePalette::Green;
 	}
 	if (strcasecmp(setting, MonochromePaletteWhite) == 0) {
 		return MonochromePalette::White;
@@ -913,8 +913,8 @@ static MonochromePalette to_monochrome_palette_enum(const char* setting)
 static const char* to_string(const enum MonochromePalette palette)
 {
 	switch (palette) {
-	case MonochromePalette::Green: return MonochromePaletteGreen;
 	case MonochromePalette::Amber: return MonochromePaletteAmber;
+	case MonochromePalette::Green: return MonochromePaletteGreen;
 	case MonochromePalette::White: return MonochromePaletteWhite;
 	case MonochromePalette::Paperwhite: return MonochromePalettePaperwhite;
 	default: assertm(false, "Invalid MonochromePalette value"); return {};
@@ -962,10 +962,10 @@ static void init_render_settings(Section_prop& secprop)
 	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
 
-	const char* mono_pal[] = {MonochromePaletteWhite,
-	                          MonochromePalettePaperwhite,
+	const char* mono_pal[] = {MonochromePaletteAmber,
 	                          MonochromePaletteGreen,
-	                          MonochromePaletteAmber,
+	                          MonochromePaletteWhite,
+	                          MonochromePalettePaperwhite,
 	                          nullptr};
 	string_prop->Set_values(mono_pal);
 
