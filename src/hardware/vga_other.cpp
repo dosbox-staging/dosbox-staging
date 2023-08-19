@@ -255,6 +255,7 @@ enum class COMPOSITE_STATE : uint8_t {
 	ON,
 	OFF,
 };
+
 static COMPOSITE_STATE cga_comp = COMPOSITE_STATE::AUTO;
 static bool is_composite_new_era = false;
 
@@ -322,7 +323,8 @@ static constexpr Rgb888 mono_cga_text_palettes[NumMonochromePalettes][NumCgaColo
 };
 // clang-format on
 
-constexpr float get_rgbi_coefficient(const bool is_new_cga, const uint8_t overscan)
+static constexpr float get_rgbi_coefficient(const bool is_new_cga,
+                                            const uint8_t overscan)
 {
 	const auto r_coefficient = is_new_cga ? 0.10f : 0.0f;
 	const auto g_coefficient = is_new_cga ? 0.22f : 0.0f;
@@ -500,17 +502,15 @@ static void update_cga16_color_pcjr()
 }
 
 template <typename chroma_t>
-constexpr float new_cga_v(const chroma_t c,
-                          const float i,
-                          const float r,
-                          const float g,
-                          const float b)
+static constexpr float new_cga_v(const chroma_t c, const float i, const float r,
+                                 const float g, const float b)
 {
 	const auto c_weighted = 0.29f * c / 0.72f;
 	const auto i_weighted = 0.32f * i / 0.28f;
 	const auto r_weighted = 0.10f * r / 0.28f;
 	const auto g_weighted = 0.22f * g / 0.28f;
 	const auto b_weighted = 0.07f * b / 0.28f;
+
 	return c_weighted + i_weighted + r_weighted + g_weighted + b_weighted;
 }
 
@@ -1262,7 +1262,7 @@ static void write_hercules(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
-uint8_t read_herc_status(io_port_t, io_width_t)
+static uint8_t read_herc_status(io_port_t, io_width_t)
 {
 	// only returns 8-bit data per its IO port registration
 
@@ -1405,6 +1405,7 @@ void VGA_SetupOther()
 		register_crtc_port_handlers_at_base(0x3d0);
 	}
 }
+
 static void composite_init(Section *sec)
 {
 	assert(sec);
