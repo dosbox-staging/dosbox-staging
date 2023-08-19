@@ -803,22 +803,26 @@ static void apply_composite_state()
 
 }
 
-static void Composite(bool pressed)
+static void toggle_cga_composite_mode(bool pressed)
 {
-	if (!pressed)
+	if (!pressed) {
 		return;
+	}
 
 	// Step through the composite modes
-	if (cga_comp == COMPOSITE_STATE::AUTO)
+	if (cga_comp == COMPOSITE_STATE::AUTO) {
 		cga_comp = COMPOSITE_STATE::ON;
-	else if (cga_comp == COMPOSITE_STATE::ON)
+	} else if (cga_comp == COMPOSITE_STATE::ON) {
 		cga_comp = COMPOSITE_STATE::OFF;
-	else
+	} else {
 		cga_comp = COMPOSITE_STATE::AUTO;
+	}
 
-	LOG_MSG("COMPOSITE: State is %s", cga_comp == COMPOSITE_STATE::AUTO ? "auto"
-	                                  : cga_comp == COMPOSITE_STATE::ON ? "on"
-	                                                                    : "off");
+	LOG_MSG("COMPOSITE: State is %s",
+	        (cga_comp == COMPOSITE_STATE::AUTO
+	                 ? "auto"
+	                 : (cga_comp == COMPOSITE_STATE::ON ? "on" : "off")));
+
 	apply_composite_state();
 }
 
@@ -1377,7 +1381,7 @@ void VGA_SetupOther()
 		                  "incval", "Inc Knob");
 		MAPPER_AddHandler(turn_crt_knob_negative, SDL_SCANCODE_F11,
 		                  MMOD2, "decval", "Dec Knob");
-		MAPPER_AddHandler(Composite, SDL_SCANCODE_F12, 0, "cgacomp",
+		MAPPER_AddHandler(toggle_cga_composite_mode, SDL_SCANCODE_F12, 0, "cgacomp",
 		                  "CGA Comp");
 	}
 
