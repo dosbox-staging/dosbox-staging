@@ -161,8 +161,6 @@ struct VideoMode {
 
 std::string to_string(const VideoMode& video_mode);
 
-constexpr auto M_TEXT_MODES = M_TEXT | M_HERC_TEXT | M_TANDY_TEXT | M_CGA_TEXT_COMPOSITE;
-
 constexpr auto vesa_2_0_modes_start = 0x120;
 
 constexpr uint16_t EGA_HALF_CLOCK = 1 << 0;
