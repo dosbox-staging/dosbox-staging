@@ -33,6 +33,7 @@
 #include "pic.h"
 #include "reelmagic.h"
 #include "render.h"
+#include "rgb888.h"
 #include "vga.h"
 
 // CHECK_NARROWING();
@@ -261,7 +262,7 @@ static MonochromePalette mono_cga_palette = {};
 static uint8_t mono_cga_bright = 0;
 
 // clang-format off
-constexpr uint8_t mono_cga_palettes[8][16][3] = {
+constexpr Rgb888 mono_cga_palettes[8][16] = {
 	{
 		// 0 - Amber, 4-colour-optimised contrast
 		{0x00, 0x00, 0x00}, {0x15, 0x05, 0x00}, {0x20, 0x0b, 0x00}, {0x24, 0x0d, 0x00},
@@ -1170,11 +1171,11 @@ void VGA_SetMonochromeCgaPalette()
 		// Use 16-colour palettes
 		const auto palette_idx = 2 * enum_val(mono_cga_palette) + mono_cga_bright;
 
-		const auto r = mono_cga_palettes[palette_idx][entry][0];
-		const auto g = mono_cga_palettes[palette_idx][entry][1];
-		const auto b = mono_cga_palettes[palette_idx][entry][2];
+		const auto red   = mono_cga_palettes[palette_idx][entry].red;
+		const auto green = mono_cga_palettes[palette_idx][entry].green;
+		const auto blue  = mono_cga_palettes[palette_idx][entry].blue;
 
-		VGA_DAC_SetEntry(entry, r, g, b);
+		VGA_DAC_SetEntry(entry, red, green, blue);
 		VGA_DAC_CombineColor(entry, entry);
 	}
 }
