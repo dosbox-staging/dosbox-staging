@@ -23,6 +23,7 @@
 #include <cstdint>
 #include <cstring>
 
+#include "../ints/int10.h"
 #include "bitops.h"
 #include "checks.h"
 #include "control.h"
@@ -259,9 +260,6 @@ static bool is_composite_new_era = false;
 
 static MonochromePalette hercules_palette = {};
 static MonochromePalette mono_cga_palette = {};
-
-// "Bright mode" selects the 16-colour mono palettes optimised for text modes
-static uint8_t mono_cga_bright = 0;
 
 // clang-format off
 
@@ -1162,24 +1160,13 @@ static void cycle_mono_cga_palette(bool pressed)
 	RENDER_SyncMonochromePaletteSetting(mono_cga_palette);
 }
 
-static void cycle_mono_cga_brightness(bool pressed)
-{
-	if (!pressed) {
-		return;
-	}
-	if (++mono_cga_bright > 1) {
-		mono_cga_bright = 0;
-	}
-	VGA_SetMonochromeCgaPalette();
-}
-
 void VGA_SetMonochromeCgaPalette()
 {
 	constexpr auto num_cga_colors = 16;
 	for (uint8_t color_idx = 0; color_idx < num_cga_colors; ++color_idx) {
 		const auto color = [&] {
 			const auto palette_idx = enum_val(mono_cga_palette);
-			if (mono_cga_bright) {
+			if (INT10_IsTextMode(*CurMode)) {
 				return mono_cga_text_palettes[palette_idx][color_idx];
 			} else {
 				return mono_cga_graphics_palettes[palette_idx][color_idx];
@@ -1366,12 +1353,6 @@ void VGA_SetupOther()
 			                  0,
 			                  "monocgapal",
 			                  "Mono CGA Pal");
-
-			MAPPER_AddHandler(cycle_mono_cga_brightness,
-			                  SDL_SCANCODE_F11,
-			                  MMOD2,
-			                  "monocgabright",
-			                  "Mono CGA Bright");
 		}
 	}
 	if (machine==MCH_TANDY) {
