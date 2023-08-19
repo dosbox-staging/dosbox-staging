@@ -25,6 +25,7 @@
 #include <chrono>
 #include <fstream>
 #include <map>
+#include <optional>
 #include <regex>
 #include <sstream>
 #include <utility>
@@ -54,12 +55,13 @@ ShaderManager::ShaderManager() noexcept
 	                                                          "crt/ega-1440p",
 	                                                          "crt/ega-4k"};
 
-	static const std::vector<const char*> vga_shader_names = {"crt/vga-1080p",
+	static const std::vector<const char*> vga_shader_names = {"crt/vga-1080p-fake-double-scan",
+	                                                          "crt/vga-1080p",
 	                                                          "crt/vga-1440p",
 	                                                          "crt/vga-4k"};
 
-//	static const std::vector<const char*> arcade_shader_names = {
-//	        "crt/arcade-1080p", "crt/arcade-1440p", "crt/arcade-4k"};
+	//	static const std::vector<const char*> arcade_shader_names = {
+	//	        "crt/arcade-1080p", "crt/arcade-1440p", "crt/arcade-4k"};
 
 	auto build_set = [&](const std::vector<const char*>& shader_names) {
 		std::string source = {};
@@ -98,7 +100,7 @@ ShaderManager::ShaderManager() noexcept
 	shader_set.cga        = build_set(cga_shader_names);
 	shader_set.ega        = build_set(ega_shader_names);
 	shader_set.vga        = build_set(vga_shader_names);
-//	shader_set.arcade     = build_set(arcade_shader_names);
+	//	shader_set.arcade     = build_set(arcade_shader_names);
 
 	const auto stop = std::chrono::high_resolution_clock::now();
 	const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -129,7 +131,7 @@ void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
 
 	shader_name_from_config = shader_name;
 
-	MaybeUpdateCurrentShader();
+	MaybeAutoSwitchShader();
 }
 
 void ShaderManager::NotifyRenderParametersChanged(
@@ -141,41 +143,46 @@ void ShaderManager::NotifyRenderParametersChanged(
 	LOG_ERR("  canvas_width: %d, height: %d", canvas_width, canvas_height);
 	LOG_ERR("  draw_width: %d, draw_height: %d", draw_width, draw_height);
 
+	const auto d = video_mode.is_double_scanned_mode ? 2 : 1;
 	const auto viewport = GFX_CalcViewport(canvas_width,
 	                                       canvas_height,
-	                                       draw_width,
-	                                       draw_height,
-	                                       render_pixel_aspect_ratio);
+	                                       video_mode.width * d,
+	                                       video_mode.height * d,
+	                                       video_mode.pixel_aspect_ratio);
 
-	vertical_scale_factor = static_cast<double>(viewport.h) / draw_height;
+	scale_y = static_cast<double>(viewport.h) / draw_height;
 	LOG_ERR("    viewport.h:   %d", viewport.h);
-	LOG_ERR("    vertical_scale_factor: %g", vertical_scale_factor);
+	LOG_ERR("    scale_y: %g", scale_y);
 
-	// Force single-scanned
-	auto render_height = draw_height;
+	// Calculate vertical scale factor for forced single-scanning for
+	// double-scanned modes
 	if (video_mode.is_double_scanned_mode) {
-		const auto double_scanned = draw_height > video_mode.height;
-		if (double_scanned) {
-			const auto viewport_ss = GFX_CalcViewport(
+		// Forced single-scanning might already be in effect, so we need
+		// to handle that
+		const auto is_double_scanned = (draw_height == video_mode.height * 2);
+		if (is_double_scanned) {
+			const auto viewport_single_scan = GFX_CalcViewport(
 			        canvas_width,
 			        canvas_height,
-			        draw_width,
+			        video_mode.width,
 			        video_mode.height,
-			        video_mode.pixel_aspect_ratio / 2);
+			        video_mode.pixel_aspect_ratio);
 
-			vertical_scale_factor_ss = static_cast<double>(
-			                                   viewport_ss.h) /
-			                           video_mode.height;
+			scale_y_single_scan = static_cast<double>(
+			                              viewport_single_scan.h) /
+			                      video_mode.height;
 
-			LOG_ERR("    viewport_ss.h:   %d", viewport_ss.h);
-			LOG_ERR("    vertical_scale_factor_ss: %g",
-			        vertical_scale_factor_ss);
+			LOG_ERR("    viewport_single_scan.h:   %d",
+			        viewport_single_scan.h);
+			LOG_ERR("    scale_y_single_scan: %g", scale_y_single_scan);
+		} else {
+			scale_y_single_scan = scale_y;
 		}
 	}
 
 	this->video_mode = video_mode;
 
-	MaybeUpdateCurrentShader();
+	MaybeAutoSwitchShader();
 }
 
 void ShaderManager::LoadShader(const std::string& shader_name)
@@ -408,7 +415,28 @@ ShaderSettings ShaderManager::ParseShaderSettings(const std::string& shader_name
 	return settings;
 }
 
-void ShaderManager::MaybeUpdateCurrentShader()
+std::optional<std::string> ShaderManager::FindBestShader(
+        const ShaderSet& shader_set, const double scale_y,
+        const std::optional<bool> force_single_scan_filter)
+{
+	for (auto shader : shader_set) {
+		if (force_single_scan_filter) {
+			if (shader.settings.force_single_scan !=
+			    *force_single_scan_filter) {
+				continue;
+			}
+		}
+		LOG_WARNING("  >>> vert: %g, shader: %g",
+		            scale_y,
+		            shader.settings.min_vertical_scale_factor);
+		if (scale_y >= shader.settings.min_vertical_scale_factor) {
+			return shader.name;
+		}
+	}
+	return {};
+}
+
+void ShaderManager::MaybeAutoSwitchShader()
 {
 	auto maybe_load_shader = [&](const std::string& shader_name) {
 		LOG_ERR("current_shader.info.name: %s, shader_name: %s",
@@ -424,23 +452,31 @@ void ShaderManager::MaybeUpdateCurrentShader()
 	};
 
 	auto auto_switch_shader = [&](const ShaderSet& shader_set) {
-		const auto shader_name = [&] {
-			for (auto shader : shader_set) {
-				LOG_WARNING("  >>> vert: %g, shader: %g",
-				            vertical_scale_factor,
-				            shader.settings.min_vertical_scale_factor);
-				if (vertical_scale_factor >=
-				    shader.settings.min_vertical_scale_factor) {
-					return shader.name;
-				}
+		std::optional<std::string> shader_name = {};
+
+		switch (video_mode.graphics_standard) {
+		case GraphicsStandard::Vga:
+		case GraphicsStandard::Svga:
+		case GraphicsStandard::Vesa:
+			if (scale_y < 3.0) {
+				constexpr auto force_single_scan_filter = true;
+				shader_name = FindBestShader(shader_set,
+				                             scale_y_single_scan,
+				                             force_single_scan_filter);
 			}
-			return std::string(SharpShaderName);
-		}();
+			if (shader_name) {
+				break;
+			}
+			[[fallthrough]];
 
-		LOG_WARNING("  vertical_scale_factor: %g", vertical_scale_factor);
-		LOG_WARNING("  shader_name: %s", shader_name.c_str());
+		default: shader_name = FindBestShader(shader_set, scale_y);
+		}
 
-		const auto shader_changed = maybe_load_shader(shader_name);
+		if (!shader_name) {
+			shader_name = SharpShaderName;
+		}
+
+		const auto shader_changed = maybe_load_shader(*shader_name);
 		if (shader_changed) {
 			LOG_MSG("RENDER: Auto-switched to shader '%s'",
 			        current_shader.info.name.c_str());

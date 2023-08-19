@@ -119,13 +119,18 @@ private:
 	ShaderSettings ParseShaderSettings(const std::string& shader_name,
 	                                   const std::string& source) const;
 
-	void MaybeUpdateCurrentShader();
 	void LoadShader(const std::string& shader_name);
+
+	void MaybeAutoSwitchShader();
 
 	const ShaderSet& GetShaderSetForGraphicsStandard(const VideoMode& video_mode) const;
 
 	const ShaderSet& GetShaderSetForMachineType(const MachineType machine_type,
 	                                            const VideoMode& video_mode) const;
+
+	std::optional<std::string> FindBestShader(
+	        const ShaderSet& shader_set, const double scale_y,
+	        const std::optional<bool> force_single_scan_filter = {});
 
 	struct {
 		// Shader sets are sorted by 'min_vertical_scale_factor' in
@@ -148,9 +153,9 @@ private:
 	// Shader name from config, resolved to its actual name
 	std::string shader_name_from_config = {};
 
-	double vertical_scale_factor    = 1.0;
-	double vertical_scale_factor_ss = 1.0;
-	VideoMode video_mode            = {};
+	double scale_y             = 1.0;
+	double scale_y_single_scan = 1.0;
+	VideoMode video_mode       = {};
 };
 
 #endif // DOSBOX_SHADER_MANAGER_H
