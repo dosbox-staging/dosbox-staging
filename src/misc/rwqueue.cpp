@@ -51,7 +51,9 @@ void RWQueue<T>::Stop()
 	if (!is_running) {
 		return;
 	}
+	mutex.lock();
 	is_running = false;
+	mutex.unlock();
 
 	// notify the conditions
 	has_items.notify_one();
