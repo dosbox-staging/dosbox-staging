@@ -679,6 +679,17 @@ void INT10_SetCurMode(void) {
 	}
 }
 
+bool INT10_IsTextMode(const VideoModeBlock& mode_block)
+{
+	switch (mode_block.type) {
+	case M_TEXT:
+	case M_HERC_TEXT:
+	case M_TANDY_TEXT:
+	case M_CGA_TEXT_COMPOSITE: return true;
+	default: return false;
+	}
+}
+
 static void FinishSetMode(bool clearmem) {
 	//  Clear video memory if needs be
 	if (clearmem) {

@@ -210,6 +210,8 @@ void INT10_SetupPalette();
 bool INT10_SetVideoMode(uint16_t mode);
 void INT10_SetCurMode(void);
 
+bool INT10_IsTextMode(const VideoModeBlock& mode_block);
+
 void INT10_ScrollWindow(uint8_t rul,uint8_t cul,uint8_t rlr,uint8_t clr,int8_t nlines,uint8_t attr,uint8_t page);
 
 void INT10_SetActivePage(uint8_t page);
