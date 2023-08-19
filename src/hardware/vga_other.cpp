@@ -264,7 +264,7 @@ static MonochromePalette mono_cga_palette = {};
 // clang-format off
 
 // Monochrome CGA palettes with contrast optimised for 4-colour CGA graphics modes
-constexpr Rgb888 mono_cga_graphics_palettes[NumMonochromePalettes][16] = {
+static constexpr Rgb888 mono_cga_graphics_palettes[NumMonochromePalettes][NumCgaColors] = {
 	{
 		// 0 - Amber,
 		{0x00, 0x00, 0x00}, {0x15, 0x05, 0x00}, {0x20, 0x0b, 0x00}, {0x24, 0x0d, 0x00},
@@ -293,7 +293,7 @@ constexpr Rgb888 mono_cga_graphics_palettes[NumMonochromePalettes][16] = {
 };
 
 // Monochrome CGA palettes with contrast optimised for 16-colour CGA text modes
-constexpr Rgb888 mono_cga_text_palettes[NumMonochromePalettes][16] = {
+static constexpr Rgb888 mono_cga_text_palettes[NumMonochromePalettes][NumCgaColors] = {
 	{
 		// 0 - Amber
 		{0x00, 0x00, 0x00}, {0x15, 0x05, 0x00}, {0x1e, 0x09, 0x00}, {0x21, 0x0b, 0x00},
@@ -1162,8 +1162,7 @@ static void cycle_mono_cga_palette(bool pressed)
 
 void VGA_SetMonochromeCgaPalette()
 {
-	constexpr auto num_cga_colors = 16;
-	for (uint8_t color_idx = 0; color_idx < num_cga_colors; ++color_idx) {
+	for (uint8_t color_idx = 0; color_idx < NumCgaColors; ++color_idx) {
 		const auto color = [&] {
 			const auto palette_idx = enum_val(mono_cga_palette);
 			if (INT10_IsTextMode(*CurMode)) {
