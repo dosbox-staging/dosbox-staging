@@ -529,20 +529,20 @@ static Bitu INT14_Handler(void) {
 		//							AH: line status
 
 		// set baud rate
-		Bitu baudrate = 9600;
-		uint16_t baudresult;
-		Bitu rawbaud=reg_al>>5;
-		
-		if (rawbaud==0){ baudrate=110;}
-		else if (rawbaud==1){ baudrate=150;}
-		else if (rawbaud==2){ baudrate=300;}
-		else if (rawbaud==3){ baudrate=600;}
-		else if (rawbaud==4){ baudrate=1200;}
-		else if (rawbaud==5){ baudrate=2400;}
-		else if (rawbaud==6){ baudrate=4800;}
-		else if (rawbaud==7){ baudrate=9600;}
+		Bitu baudrate = {};
+		switch (reg_al >> 5) {
+		case 0: baudrate = 110; break;
+		case 1: baudrate = 150; break;
+		case 2: baudrate = 300; break;
+		case 3: baudrate = 600; break;
+		case 4: baudrate = 1200; break;
+		case 5: baudrate = 2400; break;
+		case 6: baudrate = 4800; break;
+		case 7: baudrate = 9600; break;
+		default: assert(false); return CBRET_NONE;
+		}
 
-		baudresult = (uint16_t)(115200 / baudrate);
+		const auto baudresult = static_cast<uint16_t>(115200 / baudrate);
 
 		IO_WriteB(port+3, 0x80);	// enable divider access
 		IO_WriteB(port, (uint8_t)baudresult&0xff);
