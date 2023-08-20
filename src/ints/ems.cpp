@@ -1293,12 +1293,10 @@ static Bitu V86_Monitor() {
 	return CBRET_NONE;
 }
 
-static void SetupVCPI() {
-	vcpi.enabled=false;
-
-	vcpi.ems_handle=0;	// use EMM system handle for VCPI data
-
-	vcpi.enabled=true;
+static void SetupVCPI()
+{
+	vcpi.ems_handle = 0; // use EMM system handle for VCPI data
+	vcpi.enabled    = true;
 
 	vcpi.pic1_remapping = 0x08; // primary PIC base
 	vcpi.pic2_remapping = 0x70; // secondary PIC base
