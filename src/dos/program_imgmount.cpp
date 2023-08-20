@@ -278,8 +278,8 @@ void IMGMOUNT::Run(void)
 				        temp_line.c_str());
 			}
 		} else {
-			const auto home_resolve = resolve_home(temp_line).string();
-			if (home_resolve == real_path) {
+			const auto home_dir = resolve_home(temp_line).string();
+			if (home_dir == real_path) {
 				LOG_MSG("IMGMOUNT: Path '%s' found",
 				        temp_line.c_str());
 			} else {
@@ -294,9 +294,9 @@ void IMGMOUNT::Run(void)
 		struct stat test;
 		if (stat(temp_line.c_str(), &test)) {
 			// See if it works if the ~ are written out
-			const auto homedir = resolve_home(temp_line).string();
-			if (!stat(homedir.c_str(), &test)) {
-				temp_line = std::move(homedir);
+			const auto home_dir = resolve_home(temp_line).string();
+			if (!stat(home_dir.c_str(), &test)) {
+				temp_line = home_dir;
 			} else {
 				// convert dosbox filename to system filename
 				char fullname[CROSS_LEN];
