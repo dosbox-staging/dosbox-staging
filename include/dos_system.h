@@ -89,18 +89,7 @@ class DOS_DTA;
 
 class DOS_File {
 public:
-	DOS_File()
-	        : flags(0),
-	          time(0),
-	          date(0),
-	          attr(0),
-	          refCtr(0),
-	          open(false),
-	          name(""),
-	          newtime(false),
-	          hdrive(0xff)
-	{}
-
+	DOS_File() = default;
 	DOS_File(const DOS_File &orig) = default;
 	DOS_File &operator=(const DOS_File &orig);
 
@@ -129,17 +118,17 @@ public:
 
 	void SetDrive(uint8_t drv) { hdrive=drv;}
 	uint8_t GetDrive(void) { return hdrive;}
-	uint32_t flags;
-	uint16_t time;
-	uint16_t date;
-	uint16_t attr;
-	Bits refCtr;
-	bool open;
-	std::string name;
-	bool newtime;
+	uint32_t flags   = 0;
+	uint16_t time    = 0;
+	uint16_t date    = 0;
+	uint16_t attr    = 0;
+	Bits refCtr      = 0;
+	bool open        = false;
+	std::string name = {};
+	bool newtime     = false;
 	/* Some Device Specific Stuff */
 private:
-	uint8_t hdrive;
+	uint8_t hdrive = 0xff;
 };
 
 class DOS_Device : public DOS_File {
