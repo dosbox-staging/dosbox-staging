@@ -31,6 +31,15 @@
 // Constants
 constexpr int connection_timeout_ms = 5000;
 
+std::string to_string(const SocketType socket_type)
+{
+	switch (socket_type) {
+	case SocketType::Tcp: return "TCP";
+	case SocketType::Enet: return "ENet";
+	default: assert(false); return "(unknown)";
+	}
+}
+
 // --- GENERIC NET INTERFACE -------------------------------------------------
 
 NETClientSocket::NETClientSocket()
@@ -43,15 +52,13 @@ NETClientSocket::~NETClientSocket()
 	// nothing
 }
 
-NETClientSocket *NETClientSocket::NETClientFactory(SocketTypesE socketType,
-                                                   const char *destination,
-                                                   uint16_t port)
+NETClientSocket* NETClientSocket::NETClientFactory(const SocketType socketType,
+                                                   const char* destination,
+                                                   const uint16_t port)
 {
 	switch (socketType) {
-	case SOCKET_TYPE_TCP: return new TCPClientSocket(destination, port);
-
-	case SOCKET_TYPE_ENET: return new ENETClientSocket(destination, port);
-
+	case SocketType::Tcp: return new TCPClientSocket(destination, port);
+	case SocketType::Enet: return new ENETClientSocket(destination, port);
 	default: return nullptr;
 	}
 	return nullptr;
@@ -101,14 +108,12 @@ NETServerSocket::NETServerSocket()
 NETServerSocket::~NETServerSocket()
 {}
 
-NETServerSocket *NETServerSocket::NETServerFactory(SocketTypesE socketType,
-                                                   uint16_t port)
+NETServerSocket* NETServerSocket::NETServerFactory(const SocketType socketType,
+                                                   const uint16_t port)
 {
 	switch (socketType) {
-	case SOCKET_TYPE_TCP: return new TCPServerSocket(port);
-
-	case SOCKET_TYPE_ENET: return new ENETServerSocket(port);
-
+	case SocketType::Tcp: return new TCPServerSocket(port);
+	case SocketType::Enet: return new ENETServerSocket(port);
 	default: return nullptr;
 	}
 	return nullptr;

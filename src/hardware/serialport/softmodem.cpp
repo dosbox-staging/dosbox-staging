@@ -126,7 +126,7 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 	// enet: Setting to 1 enables enet on the port, otherwise TCP.
 	if (getUintFromString("sock:", bool_temp, cmd)) {
 		if (bool_temp == 1) {
-			socketType = SOCKET_TYPE_ENET;
+			socketType = SocketType::Enet;
 		}
 	}
 
@@ -250,7 +250,7 @@ void CSerialModem::SendNumber(uint32_t val)
 }
 
 void CSerialModem::SendRes(const ResTypes response) {
-	char const * string = nullptr;
+	const char* string = nullptr;
 	uint32_t code = -1;
 	switch (response) {
 		case ResOK:         code = 0; string = "OK"; break;
@@ -494,16 +494,20 @@ void CSerialModem::DoCommand()
 			if (is_next_token("SOCK", scanbuf)) {
 				scanbuf += 4;
 				const uint32_t requested_mode = ScanNumber(scanbuf);
-				if (requested_mode >= SOCKET_TYPE_COUNT) {
+				const auto requestet_type = static_cast<SocketType>(
+				        requested_mode);
+				if (requestet_type >= SocketType::Invalid) {
 					SendRes(ResERROR);
 					return;
 				}
-				if (socketType != (SocketTypesE)requested_mode) {
-					socketType = (SocketTypesE)requested_mode;
-					// This will break when there's more than two socket types.
-					LOG_MSG("SERIAL: Port %" PRIu8 " socket type %s",
+				if (socketType != requestet_type) {
+					socketType = requestet_type;
+					// This will break when there's more
+					// than two socket types.
+					LOG_MSG("SERIAL: Port %" PRIu8
+					        " socket type %s",
 					        GetPortNumber(),
-					        socketType ? "ENet" : "TCP");
+					        to_string(socketType).c_str());
 					// Reset port state.
 					EnterIdleState();
 				}
