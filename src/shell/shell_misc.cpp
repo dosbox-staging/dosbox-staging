@@ -84,7 +84,11 @@ void DOS_Shell::InputCommand(char* line)
 
 	const auto* const dos_section = dynamic_cast<Section_prop*>(
 	        control->GetSection("dos"));
-	assert(dos_section != nullptr);
+	if (dos_section == nullptr) {
+		assert(false);
+		return;
+	}
+
 	const std::string_view expand_shell_variable_pref = dos_section->Get_string(
 	        "expand_shell_variable");
 
