@@ -886,7 +886,10 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		IO_WriteB(0x3d9,color_select);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,mode_control);
 		real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,color_select);
-		if (mono_cga) Mono_CGA_Palette();
+
+		if (mono_cga) {
+			VGA_SetMonochromeCgaPalette();
+		}
 		break;
 	case MCH_TANDY:
 		//  Init some registers
