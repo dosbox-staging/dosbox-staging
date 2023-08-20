@@ -1296,29 +1296,30 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 					frame[0] = static_cast<float>(data[pos * 2 + 0]);
 					frame[1] = static_cast<float>(data[pos * 2 + 1]);
 				} else {
+					auto host_pt0 =
+					        (const uint8_t* const)&data[pos * 2 + 0];
+					auto host_pt1 =
+					        (const uint8_t* const)&data[pos * 2 + 1];
 					if (sizeof(Type) == 2) {
-						frame[0] = (int16_t)host_readw(
-						        (const HostPt)&data[pos * 2 + 0]);
-						frame[1] = (int16_t)host_readw(
-						        (const HostPt)&data[pos * 2 + 1]);
+						frame[0] = (int16_t)host_readw(host_pt0);
+						frame[1] = (int16_t)host_readw(host_pt1);
 					} else {
-						frame[0] = static_cast<float>((int32_t)host_readd(
-						        (const HostPt)&data[pos * 2 + 0]));
-						frame[1] = static_cast<float>((int32_t)host_readd(
-						        (const HostPt)&data[pos * 2 + 1]));
+						frame[0] = static_cast<float>(
+						        (int32_t)host_readd(host_pt0));
+						frame[1] = static_cast<float>(
+						        (int32_t)host_readd(host_pt1));
 					}
 				}
 			} else { // mono
 				if (nativeorder) {
 					frame[0] = static_cast<float>(data[pos]);
 				} else {
+					auto host_pt = (const uint8_t* const)&data[pos];
 					if (sizeof(Type) == 2) {
-						frame[0] = (int16_t)host_readw(
-						        (const HostPt)&data[pos]);
+						frame[0] = (int16_t)host_readw(host_pt);
 					} else {
 						frame[0] = static_cast<float>(
-						        (int32_t)host_readd(
-						                (const HostPt)&data[pos]));
+						        (int32_t)host_readd(host_pt));
 					}
 				}
 			}
@@ -1333,23 +1334,27 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 					        static_cast<int>(data[pos * 2 + 1]) -
 					        offs);
 				} else {
+					auto host_pt0 =
+					        (const uint8_t* const)&data[pos * 2 + 0];
+					auto host_pt1 =
+					        (const uint8_t* const)&data[pos * 2 + 1];
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
-						                (const HostPt)&data[pos * 2 + 0])) -
+						                host_pt0)) -
 						        offs);
 						frame[1] = static_cast<float>(
 						        static_cast<int>(host_readw(
-						                (const HostPt)&data[pos * 2 + 1])) -
+						                host_pt1)) -
 						        offs);
 					} else {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readd(
-						                (const HostPt)&data[pos * 2 + 0])) -
+						                host_pt0)) -
 						        offs);
 						frame[1] = static_cast<float>(
 						        static_cast<int>(host_readd(
-						                (const HostPt)&data[pos * 2 + 1])) -
+						                host_pt1)) -
 						        offs);
 					}
 				}
@@ -1358,15 +1363,16 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 					frame[0] = static_cast<float>(
 					        static_cast<int>(data[pos]) - offs);
 				} else {
+					auto host_pt = (const uint8_t* const)&data[pos];
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
-						                (const HostPt)&data[pos])) -
+						                host_pt)) -
 						        offs);
 					} else {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readd(
-						                (const HostPt)&data[pos])) -
+						                host_pt)) -
 						        offs);
 					}
 				}

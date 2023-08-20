@@ -31,7 +31,7 @@
 constexpr uint16_t MemPageSize = 4096;
 
 typedef uint32_t PhysPt;
-typedef uint8_t *HostPt;
+typedef uint8_t* HostPt;
 typedef uint32_t RealPt;
 typedef int32_t MemHandle;
 

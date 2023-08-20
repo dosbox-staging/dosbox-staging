@@ -47,25 +47,25 @@
  */
 
 // Read a single-byte value; provided for backwards-compatibility only.
-constexpr uint8_t host_readb(const uint8_t *arr) noexcept
+constexpr uint8_t host_readb(const uint8_t* const arr) noexcept
 {
 	return *arr;
 }
 
 // Read a 16-bit word from 8-bit DOS/little-endian byte-ordered memory.
-static inline uint16_t host_readw(const uint8_t *arr) noexcept
+static inline uint16_t host_readw(const uint8_t* const arr) noexcept
 {
 	return le16_to_host(read_unaligned_uint16(arr));
 }
 
 // Read a 32-bit double-word from 8-bit DOS/little-endian byte-ordered memory.
-static inline uint32_t host_readd(const uint8_t *arr) noexcept
+static inline uint32_t host_readd(const uint8_t* const arr) noexcept
 {
 	return le32_to_host(read_unaligned_uint32(arr));
 }
 
 // Read a 64-bit quad-word from 8-bit DOS/little-endian byte-ordered memory.
-static inline uint64_t host_readq(const uint8_t *arr) noexcept
+static inline uint64_t host_readq(const uint8_t* const arr) noexcept
 {
 	return le64_to_host(read_unaligned_uint64(arr));
 }
