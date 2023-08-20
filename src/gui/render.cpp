@@ -140,8 +140,9 @@ static void empty_line_handler(const void*) {}
 static void start_line_handler(const void* s)
 {
 	if (s) {
-		const Bitu* src = (Bitu*)s;
-		Bitu* cache     = (Bitu*)(render.scale.cacheRead);
+		auto src   = static_cast<const Bitu*>(s);
+		auto cache = static_cast<Bitu*>(
+		        static_cast<void*>(render.scale.cacheRead));
 		for (Bits x = render.src.start; x > 0;) {
 			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
 			const auto src_val = read_unaligned_size_t(src_ptr);
@@ -171,8 +172,9 @@ static void start_line_handler(const void* s)
 static void finish_line_handler(const void* s)
 {
 	if (s) {
-		const Bitu* src = (Bitu*)s;
-		Bitu* cache     = (Bitu*)(render.scale.cacheRead);
+		auto src   = static_cast<const Bitu*>(s);
+		auto cache = static_cast<Bitu*>(
+		        static_cast<void*>(render.scale.cacheRead));
 		for (Bits x = render.src.start; x > 0;) {
 			cache[0] = src[0];
 			x--;
