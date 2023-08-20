@@ -887,6 +887,24 @@ static void setup_scan_and_pixel_doubling([[maybe_unused]] Section_prop* section
 	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
 }
 
+static MonochromePalette to_monochrome_palette_enum(const char* setting)
+{
+	if (strcasecmp(setting, "green") == 0) {
+		return MonochromePalette::Green;
+	}
+	if (strcasecmp(setting, "amber") == 0) {
+		return MonochromePalette::Amber;
+	}
+	if (strcasecmp(setting, "white") == 0) {
+		return MonochromePalette::White;
+	}
+	if (strcasecmp(setting, "paperwhite") == 0) {
+		return MonochromePalette::Paperwhite;
+	}
+	assertm(false, "Invalid MonochromePalette value");
+	return {};
+}
+
 static void init_render_settings(Section_prop& secprop)
 {
 	constexpr auto always        = Property::Changeable::Always;
@@ -1016,7 +1034,9 @@ void RENDER_Init(Section* sec)
 	force_square_pixels = !section->Get_bool("aspect");
 	VGA_ForceSquarePixels(force_square_pixels);
 
-	VGA_SetMonoPalette(section->Get_string("monochrome_palette"));
+	const auto mono_palette = to_monochrome_palette_enum(
+	        section->Get_string("monochrome_palette"));
+	VGA_SetMonochromePalette(mono_palette);
 
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;

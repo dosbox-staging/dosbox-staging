@@ -957,12 +957,19 @@ struct VGA_Type {
 	int sharpness = 0;
 };
 
+// Hercules & CGA monochrome palette
+enum class MonochromePalette : uint8_t {
+	Green      = 0,
+	Amber      = 1,
+	White      = 2,
+	Paperwhite = 3
+};
+
+constexpr auto NumMonochromePalettes = enum_val(MonochromePalette::Paperwhite) + 1;
+
+void VGA_SetMonochromePalette(const enum MonochromePalette);
 void VGA_SetHerculesPalette();
-
-/* CGA Mono Palette function */
-void Mono_CGA_Palette(void);
-
-void VGA_SetMonoPalette(const char *colour);
+void VGA_SetMonochromeCgaPalette();
 
 /* Functions for different resolutions */
 void VGA_SetMode(VGAModes mode);

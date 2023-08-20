@@ -256,8 +256,8 @@ enum class COMPOSITE_STATE : uint8_t {
 static COMPOSITE_STATE cga_comp = COMPOSITE_STATE::AUTO;
 static bool is_composite_new_era = false;
 
-static uint8_t herc_pal = 0;
-static uint8_t mono_cga_pal = 0;
+static MonochromePalette hercules_palette = {};
+static MonochromePalette mono_cga_palette = {};
 static uint8_t mono_cga_bright = 0;
 
 // clang-format off
@@ -1122,83 +1122,91 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
-static uint8_t palette_num(const char *colour)
-{
-	if (strcasecmp(colour, "green") == 0)
-		return 0;
-	if (strcasecmp(colour, "amber") == 0)
-		return 1;
-	if (strcasecmp(colour, "white") == 0)
-		return 2;
-	if (strcasecmp(colour, "paperwhite") == 0)
-		return 3;
-	return 2;
-}
-
-void VGA_SetMonoPalette(const char *colour)
+void VGA_SetMonochromePalette(const enum MonochromePalette palette)
 {
 	if (machine == MCH_HERC) {
-		herc_pal = palette_num(colour);
+		hercules_palette = palette;
 		VGA_SetHerculesPalette();
-		return;
-	}
-	if (machine == MCH_CGA && mono_cga) {
-		mono_cga_pal = palette_num(colour);
-		Mono_CGA_Palette();
-		return;
+
+	} else if (machine == MCH_CGA && mono_cga) {
+		mono_cga_palette = palette;
+		VGA_SetMonochromeCgaPalette();
 	}
 }
 
-static void CycleMonoCGAPal(bool pressed) {
-	if (!pressed) return;
-	if (++mono_cga_pal>3) mono_cga_pal=0;
-	Mono_CGA_Palette();
-}
-
-static void CycleMonoCGABright(bool pressed) {
-	if (!pressed) return;
-	if (++mono_cga_bright>1) mono_cga_bright=0;
-	Mono_CGA_Palette();
-}
-
-void Mono_CGA_Palette()
+static MonochromePalette cycle_forward(const MonochromePalette palette)
 {
-	for (uint8_t ct = 0; ct < 16; ++ct) {
-		VGA_DAC_SetEntry(
-		        ct,
-		        mono_cga_palettes[2 * mono_cga_pal + mono_cga_bright][ct][0],
-		        mono_cga_palettes[2 * mono_cga_pal + mono_cga_bright][ct][1],
-		        mono_cga_palettes[2 * mono_cga_pal + mono_cga_bright][ct][2]);
-		VGA_DAC_CombineColor(ct, ct);
+	auto value = (enum_val(palette) + 1) % NumMonochromePalettes;
+	return static_cast<MonochromePalette>(value);
+}
+
+static void cycle_mono_cga_palette(bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
+	mono_cga_palette = cycle_forward(mono_cga_palette);
+	VGA_SetMonochromeCgaPalette();
+}
+
+static void cycle_mono_cga_brightness(bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
+	if (++mono_cga_bright > 1) {
+		mono_cga_bright = 0;
+	}
+	VGA_SetMonochromeCgaPalette();
+}
+
+void VGA_SetMonochromeCgaPalette()
+{
+	constexpr auto num_cga_colors = 16;
+	for (uint8_t entry = 0; entry < num_cga_colors; ++entry) {
+		// Use 16-colour palettes
+		const auto palette_idx = 2 * enum_val(mono_cga_palette) + mono_cga_bright;
+
+		const auto r = mono_cga_palettes[palette_idx][entry][0];
+		const auto g = mono_cga_palettes[palette_idx][entry][1];
+		const auto b = mono_cga_palettes[palette_idx][entry][2];
+
+		VGA_DAC_SetEntry(entry, r, g, b);
+		VGA_DAC_CombineColor(entry, entry);
 	}
 }
 
-static void CycleHercPal(bool pressed) {
-	if (!pressed) return;
-	if (++herc_pal>3) herc_pal=0;
+static void cycle_hercules_palette(bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
+	hercules_palette = cycle_forward(hercules_palette);
 	VGA_SetHerculesPalette();
 }
 
 void VGA_SetHerculesPalette()
 {
-	switch (herc_pal) {
-	case 0: // Green
+	switch (hercules_palette) {
+	case MonochromePalette::Green:
 		VGA_DAC_SetEntry(0x7, 0x00, 0x26, 0x00);
 		VGA_DAC_SetEntry(0xf, 0x00, 0x3f, 0x00);
 		break;
-	case 1: // Amber
+	case MonochromePalette::Amber:
 		VGA_DAC_SetEntry(0x7, 0x34, 0x20, 0x00);
 		VGA_DAC_SetEntry(0xf, 0x3f, 0x34, 0x00);
 		break;
-	case 2: // White
+	case MonochromePalette::White:
 		VGA_DAC_SetEntry(0x7, 0x2a, 0x2a, 0x2a);
 		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3f);
 		break;
-	case 3: // Paper-white
+	case MonochromePalette::Paperwhite:
 		VGA_DAC_SetEntry(0x7, 0x2d, 0x2e, 0x2d);
 		VGA_DAC_SetEntry(0xf, 0x3f, 0x3f, 0x3b);
 		break;
+	default: assertm(false, "Invalid MonochromePalette value");
 	}
+
 	VGA_DAC_CombineColor(0, 0);
 	VGA_DAC_CombineColor(1, 7);
 }
@@ -1328,17 +1336,24 @@ void VGA_SetupOther()
 			memcpy(&vga.draw.font[i * 32], &int10_font_14[i * 14], 14);
 		}
 		vga.draw.font_tables[0] = vga.draw.font_tables[1] = vga.draw.font;
-		MAPPER_AddHandler(CycleHercPal, SDL_SCANCODE_F11, 0,
+		MAPPER_AddHandler(cycle_hercules_palette, SDL_SCANCODE_F11, 0,
 		                  "hercpal", "Herc Pal");
 	}
 	if (machine==MCH_CGA) {
 		IO_RegisterWriteHandler(0x3d8, write_cga, io_width_t::byte);
 		IO_RegisterWriteHandler(0x3d9, write_cga, io_width_t::byte);
 		if (mono_cga) {
-			MAPPER_AddHandler(CycleMonoCGAPal, SDL_SCANCODE_F11, 0,
-			                  "monocgapal", "Mono CGA Pal");
-			MAPPER_AddHandler(CycleMonoCGABright, SDL_SCANCODE_F11, MMOD2,
-			                  "monocgabright", "Mono CGA Bright");
+			MAPPER_AddHandler(cycle_mono_cga_palette,
+			                  SDL_SCANCODE_F11,
+			                  0,
+			                  "monocgapal",
+			                  "Mono CGA Pal");
+
+			MAPPER_AddHandler(cycle_mono_cga_brightness,
+			                  SDL_SCANCODE_F11,
+			                  MMOD2,
+			                  "monocgabright",
+			                  "Mono CGA Bright");
 		}
 	}
 	if (machine==MCH_TANDY) {
