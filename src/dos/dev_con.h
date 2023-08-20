@@ -136,6 +136,7 @@ bool device_CON::Read(uint8_t * data,uint16_t * size) {
 
 
 bool device_CON::Write(uint8_t * data,uint16_t * size) {
+	constexpr uint8_t code_escape = 0x1b;
 	uint16_t count=0;
 	Bitu i;
 	uint8_t col,row,page;
@@ -144,14 +145,14 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 	INT10_SetCurMode();
 	while (*size>count) {
 		if (!ansi.esc){
-			if(data[count]=='\033') {
+			if (data[count] == code_escape) {
 				/*clear the datastructure */
 				ClearAnsi();
 				/* start the sequence */
 				ansi.esc=true;
 				count++;
 				continue;
-			} else if(data[count] == '\t' && !dos.direct_output) {
+			} else if (data[count] == '\t' && !dos.direct_output) {
 				/* expand tab if not direct output */
 				page = real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE);
 				do {
@@ -160,11 +161,11 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 				} while(col%8);
 				count++;
 				continue;
-			} else { 
+			} else {
 				Output(data[count]);
 				count++;
 				continue;
-		}
+			}
 	}
 
 	if(!ansi.sci){
