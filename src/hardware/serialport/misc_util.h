@@ -60,7 +60,13 @@
 
 #include "enet/include/enet.h"
 
-enum SocketTypesE { SOCKET_TYPE_TCP = 0, SOCKET_TYPE_ENET, SOCKET_TYPE_COUNT };
+enum class SocketType {
+	Tcp  = 0,
+	Enet = 1,
+	Invalid,
+};
+
+std::string to_string(const SocketType socket_type);
 
 // helper functions
 bool NetWrapper_InitializeSDLNet();
@@ -82,9 +88,9 @@ public:
 	NETClientSocket(const NETClientSocket &) = delete; // prevent copying
 	NETClientSocket &operator=(const NETClientSocket &) = delete; // prevent assignment
 
-	static NETClientSocket *NETClientFactory(SocketTypesE socketType,
-	                                         const char *destination,
-	                                         uint16_t port);
+	static NETClientSocket* NETClientFactory(const SocketType socketType,
+	                                         const char* destination,
+	                                         const uint16_t port);
 
 	virtual SocketState GetcharNonBlock(uint8_t &val) = 0;
 	virtual bool Putchar(uint8_t val) = 0;
@@ -111,8 +117,8 @@ public:
 	NETServerSocket(const NETServerSocket &) = delete; // prevent copying
 	NETServerSocket &operator=(const NETServerSocket &) = delete; // prevent assignment
 
-	static NETServerSocket *NETServerFactory(SocketTypesE socketType,
-	                                         uint16_t port);
+	static NETServerSocket* NETServerFactory(const SocketType socketType,
+	                                         const uint16_t port);
 
 	virtual NETClientSocket *Accept() = 0;
 

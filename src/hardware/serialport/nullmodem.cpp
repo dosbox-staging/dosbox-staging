@@ -39,7 +39,7 @@ CNullModem::CNullModem(const uint8_t port_idx, CommandLine *cmd)
 	// enet: Setting to 1 enables enet on the port, otherwise TCP.
 	if (getUintFromString("sock:", bool_temp, cmd)) {
 		if (bool_temp == 1) {
-			socketType = SOCKET_TYPE_ENET;
+			socketType = SocketType::Enet;
 		}
 	}
 	// usedtr: The nullmodem will
@@ -228,7 +228,8 @@ bool CNullModem::ServerListen() {
 	LOG_MSG("SERIAL: Port %" PRIu8 " nullmodem server waiting for connection on "
 	        "%s port %" PRIu16 " ...",
 	        GetPortNumber(),
-	        (socketType == SOCKET_TYPE_ENET ? "ENet" : "TCP"), serverport);
+	        to_string(socketType).c_str(),
+	        serverport);
 	setEvent(SERIAL_SERVER_POLLING_EVENT, 50);
 	setCD(false);
 	return true;

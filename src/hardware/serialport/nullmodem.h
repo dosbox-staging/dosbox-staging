@@ -51,7 +51,7 @@ public:
 	void setDTR(bool val) override;
 	void handleUpperEvent(uint16_t type) override;
 
-	SocketTypesE socketType = SOCKET_TYPE_TCP;
+	SocketType socketType = SocketType::Tcp;
 
 private:
 	NETServerSocket *serversocket = nullptr;

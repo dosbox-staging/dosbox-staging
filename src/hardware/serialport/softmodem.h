@@ -248,7 +248,7 @@ protected:
 	uint8_t tmpbuf[MODEM_BUFFER_QUEUE_SIZE] = {0};
 	uint16_t listenport = 23; // 23 is the default telnet TCP/IP port
 	uint8_t reg[SREGS] = {0};
-	SocketTypesE socketType = SOCKET_TYPE_TCP;
+	SocketType socketType = SocketType::Tcp;
 	std::unique_ptr<NETServerSocket> serversocket = nullptr;
 	std::unique_ptr<NETClientSocket> clientsocket = nullptr;
 	std::unique_ptr<NETClientSocket> waitingclientsocket = nullptr;
