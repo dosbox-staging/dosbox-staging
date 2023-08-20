@@ -45,8 +45,8 @@ static void conc4d(SCALERNAME,SBPP,DBPP,R)(const void *s) {
 #endif
 	/* Clear the complete line marker */
 	Bitu hadChange = 0;
-	const SRCTYPE *src = (SRCTYPE*)s;
-	SRCTYPE *cache = (SRCTYPE*)(render.scale.cacheRead);
+	auto src   = static_cast<const SRCTYPE*>(s);
+	auto cache = static_cast<SRCTYPE*>(static_cast<void*>(render.scale.cacheRead));
 	render.scale.cacheRead += render.scale.cachePitch;
 	PTYPE * line0=(PTYPE *)(render.scale.outWrite);
 #if (SBPP == 9)
