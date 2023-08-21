@@ -291,11 +291,12 @@ void IMGMOUNT::Run(void)
 		}
 
 		// Test if input is file on virtual DOS drive.
+		constexpr int posix_success = 0;
 		struct stat test;
-		if (stat(temp_line.c_str(), &test)) {
+		if (posix_success != stat(temp_line.c_str(), &test)) {
 			// See if it works if the ~ are written out
 			const auto home_dir = resolve_home(temp_line).string();
-			if (!stat(home_dir.c_str(), &test)) {
+			if (posix_success == stat(home_dir.c_str(), &test)) {
 				temp_line = home_dir;
 			} else {
 				// convert dosbox filename to system filename
@@ -326,7 +327,7 @@ void IMGMOUNT::Run(void)
 				ldp->GetSystemFilename(tmp, fullname);
 				temp_line = tmp;
 
-				if (stat(temp_line.c_str(), &test)) {
+				if (posix_success != stat(temp_line.c_str(), &test)) {
 					if (add_wildcard_paths(temp_line, paths)) {
 						continue;
 					} else {
