@@ -55,13 +55,13 @@ private:
 
 class MockShell final : public HostShell {
 public:
-	bool GetEnvStr(const char* entry, std::string& result) const override
+	std::optional<std::string> GetEnvStr(std::string_view entry) const override
 	{
-		if (env.find(entry) == std::end(env)) {
-			return false;
+		auto key = std::string(entry);
+		if (env.find(key) == std::end(env)) {
+			return {};
 		}
-		result = std::string(entry) + '=' + env.at(entry);
-		return true;
+		return key + '=' + env.at(key);
 	}
 
 	explicit MockShell(std::unordered_map<std::string, std::string>&& map)

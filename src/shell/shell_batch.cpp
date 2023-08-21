@@ -125,11 +125,10 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 			std::string env_key(line.substr(0, closing_percent));
 
 			// Get the key's corresponding value from the environment
-			if (std::string env_val = {};
-			    shell.GetEnvStr(env_key.c_str(), env_val)) {
+			if (const auto env_val = shell.GetEnvStr(env_key)) {
 				// append just the trailing value portion
-				expanded += env_val.substr(env_key.length() +
-				                           sizeof('='));
+				expanded += env_val->substr(env_key.length() +
+				                            sizeof('='));
 			}
 			line = line.substr(closing_percent);
 		}

@@ -356,8 +356,8 @@ std::string DOS_Shell::SubstituteEnvironmentVariables(std::string_view command)
 		closing_percent += 1;
 
 		const std::string env_key(command.substr(1, closing_percent - 1));
-		if (std::string env_val = {}; GetEnvStr(env_key.c_str(), env_val)) {
-			expanded += env_val.substr(env_key.length() + sizeof('='));
+		if (const auto env_val = GetEnvStr(env_key)) {
+			expanded += env_val->substr(env_key.length() + sizeof('='));
 
 			command = command.substr(closing_percent + 1);
 		} else {
@@ -494,11 +494,10 @@ std::string DOS_Shell::Which(const std::string_view name) const
 	static constexpr auto extensions = {"", ".COM", ".EXE", ".BAT"};
 
 	std::vector<std::string> prefixes = {""};
-	std::string path_environment;
-	const auto have_path_env = GetEnvStr("PATH", path_environment);
-	const auto path_equals   = path_environment.find_first_of('=');
+	auto path_environment             = GetEnvStr("PATH").value_or("");
+	const auto path_equals            = path_environment.find_first_of('=');
 
-	if (have_path_env && path_equals != std::string::npos) {
+	if (path_equals != std::string::npos) {
 		path_environment = path_environment.substr(path_equals + 1);
 		auto path_directories = split(path_environment, ';');
 
@@ -615,20 +614,19 @@ static void run_binary_executable(const std::string_view fullname,
 	reg_sp += 0x200;
 }
 
-bool DOS_Shell::GetEnvStr(const char* entry, std::string& result) const
+std::optional<std::string> DOS_Shell::GetEnvStr(std::string_view entry) const
 {
 	/* Walk through the internal environment and see for a match */
 	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 
 	char env_string[1024 + 1];
-	result.erase();
-	if (!entry[0]) {
-		return false;
+	if (entry.empty()) {
+		return {};
 	}
 	do {
 		MEM_StrCopy(env_read, env_string, 1024);
 		if (!env_string[0]) {
-			return false;
+			return {};
 		}
 		env_read += (PhysPt)(safe_strlen(env_string) + 1);
 		char* equal = strchr(env_string, '=');
@@ -637,18 +635,17 @@ bool DOS_Shell::GetEnvStr(const char* entry, std::string& result) const
 		}
 		/* replace the = with \0 to get the length */
 		*equal = 0;
-		if (strlen(env_string) != strlen(entry)) {
+		if (strlen(env_string) != entry.size()) {
 			continue;
 		}
-		if (strcasecmp(entry, env_string) != 0) {
+		if (!iequals(entry, env_string)) {
 			continue;
 		}
 		/* restore the = to get the original result */
 		*equal = '=';
-		result = env_string;
-		return true;
+		return env_string;
 	} while (1);
-	return false;
+	return {};
 }
 
 bool DOS_Shell::GetEnvNum(Bitu num, std::string& result) const
