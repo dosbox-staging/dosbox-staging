@@ -55,7 +55,7 @@ public:
 
 class HostShell {
 public:
-	virtual bool GetEnvStr(const char* entry, std::string& result) const = 0;
+	virtual std::optional<std::string> GetEnvStr(std::string_view entry) const = 0;
 
 	HostShell()                            = default;
 	HostShell(const HostShell&)            = delete;
@@ -162,7 +162,7 @@ public:
 	bool ExecuteProgram(std::string_view name, std::string_view args);
 	bool ExecuteConfigChange(const char* const cmd_in, const char* const line);
 
-	bool GetEnvStr(const char* entry, std::string& result) const override;
+	std::optional<std::string> GetEnvStr(std::string_view entry) const override;
 	bool GetEnvNum(Bitu num, std::string& result) const;
 	[[nodiscard]] Bitu GetEnvCount() const;
 	bool SetEnv(std::string_view entry, std::string_view new_string);
