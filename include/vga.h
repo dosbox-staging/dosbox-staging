@@ -143,13 +143,26 @@ struct VideoMode {
 	// be literally anything.
 	uint16_t bios_mode_number = 0;
 
+	// True for graphics modes, false for text modes
 	bool is_graphics_mode = false;
 
 	// True for tweaked non-standard modes (e.g., Mode X on VGA).
 	bool is_custom_mode = false;
 
-	uint16_t width              = 0;
-	uint16_t height             = 0;
+	// Dimensions of the video mode. Note that for VGA adapters this does
+	// *not* always match the actual physical output at the signal level but
+	// represents the pixel-dimensions of the mode in the video memory.
+	// E.g., the 320x200 13h VGA mode takes up 64,000 bytes in the video
+	// memory, but is width and height doubled by the VGA hardware to
+	// 640x400 at the signal level. Similarly, all 200-line CGA and EGA
+	// modes are effectively emulated on VGA adapters and are output width
+	// and height doubled.
+	uint16_t width  = 0;
+	uint16_t height = 0;
+
+	// The intended pixel aspect ratio of the video mode. Note this is not
+	// simply calculated by stretching 'width x height' to a 4:3 aspect
+	// ratio rectangle; it can be literally anything.
 	Fraction pixel_aspect_ratio = {};
 
 	// - For graphics modes, the first graphics standard the mode was
@@ -158,6 +171,9 @@ struct VideoMode {
 	// - For text modes, the graphics adapter in use.
 	GraphicsStandard graphics_standard = {};
 
+	// Colour depth of the video mode. Note this is *not* the same as the
+	// storage bit-depth; e.g., some 24-bit true colour modes actually store
+	// pixels at 32-bits with the upper 8-bits unused.
 	ColorDepth color_depth = {};
 };
 
