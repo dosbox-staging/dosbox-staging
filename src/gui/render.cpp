@@ -971,8 +971,8 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop = secprop.Add_string("scaler", deprecated, "none");
 	string_prop->Set_help(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
-	        "  - If you used the normal2x/3x scalers, set a desired 'windowresolution'\n"
-	        "    instead.\n"
+	        "  - If you used the normal2x/3x scalers, set the desired 'windowresolution'\n"
+	        "    or 'viewport_resolution' instead, or consider using 'integer_scaling'.\n"
 	        "  - If you used an advanced scaler, consider one of the 'glshader'\n"
 	        "    options instead.");
 
