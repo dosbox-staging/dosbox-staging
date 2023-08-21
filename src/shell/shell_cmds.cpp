@@ -778,8 +778,8 @@ void DOS_Shell::CMD_DIR(char* args)
 {
 	HELP("DIR");
 
-	std::string line;
-	if (GetEnvStr("DIRCMD",line)){
+	if (const auto envvar = GetEnvStr("DIRCMD")){
+		auto line = *envvar;
 		std::string::size_type idx = line.find('=');
 		std::string value=line.substr(idx +1 , std::string::npos);
 		line = std::string(args) + " " + value;
@@ -1471,12 +1471,18 @@ void DOS_Shell::CMD_SET(char * args) {
 	//There are args:
 	char * pcheck = args;
 	while ( *pcheck && (*pcheck == ' ' || *pcheck == '\t')) pcheck++;
-	if (*pcheck && strlen(pcheck) >3 && (strncasecmp(pcheck,"/p ",3) == 0)) E_Exit("Set /P is not supported. Use Choice!");
+	if (*pcheck && strlen(pcheck) > 3 && (strncasecmp(pcheck, "/p ", 3) == 0)) {
+		E_Exit("Set /P is not supported. Use Choice!");
+	}
 
-	char * p=strpbrk(args, "=");
+	char* p = strpbrk(args, "=");
 	if (!p) {
-		if (!GetEnvStr(args,line)) WriteOut(MSG_Get("SHELL_CMD_SET_NOT_SET"),args);
-		WriteOut("%s\n",line.c_str());
+		if (const auto value = GetEnvStr(args)) {
+			WriteOut("%s\n", value->c_str());
+		} else {
+			WriteOut(MSG_Get("SHELL_CMD_SET_NOT_SET"), args);
+		}
+		return;
 	} else {
 		*p++=0;
 		/* parse p for envirionment variables */
@@ -1490,8 +1496,8 @@ void DOS_Shell::CMD_SET(char * args) {
 				char * second = strchr(++p,'%');
 				if (!second) continue;
 				*second++ = 0;
-				std::string temp;
-				if (GetEnvStr(p,temp)) {
+				if (const auto envvar = GetEnvStr(p)) {
+					const auto& temp = *envvar;
 					std::string::size_type equals = temp.find('=');
 					if (equals == std::string::npos)
 						continue;
@@ -2083,9 +2089,8 @@ void DOS_Shell::CMD_PATH(char *args){
 		this->ParseLine(set_path);
 		return;
 	} else {
-		std::string line;
-		if (GetEnvStr("PATH", line))
-			WriteOut("%s\n", line.c_str());
+		if (const auto envvar = GetEnvStr("PATH"))
+			WriteOut("%s\n", envvar->c_str());
 		else
 			WriteOut("PATH=(null)\n");
 	}
