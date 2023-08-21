@@ -31,12 +31,12 @@
 // Constants
 constexpr int connection_timeout_ms = 5000;
 
-std::string to_string(const SocketType socket_type)
+const char* to_string(const SocketType socket_type)
 {
 	switch (socket_type) {
 	case SocketType::Tcp: return "TCP";
 	case SocketType::Enet: return "ENet";
-	default: assert(false); return "(unknown)";
+	default: assert(false); return "Invalid SocketType value";
 	}
 }
 
