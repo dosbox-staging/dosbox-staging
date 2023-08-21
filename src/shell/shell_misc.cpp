@@ -683,7 +683,7 @@ Bitu DOS_Shell::GetEnvCount() const
 	return num;
 }
 
-bool DOS_Shell::SetEnv(const char* entry, const char* new_string)
+bool DOS_Shell::SetEnv(std::string_view entry, std::string_view new_string)
 {
 	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
 
@@ -694,7 +694,7 @@ bool DOS_Shell::SetEnv(const char* entry, const char* new_string)
 	PhysPt env_write          = env_read;
 	PhysPt env_write_start    = env_read;
 	char env_string[1024 + 1] = {0};
-	const auto entry_length   = strlen(entry);
+	const auto entry_length   = entry.size();
 	do {
 		MEM_StrCopy(env_read, env_string, 1024);
 		if (!env_string[0]) {
@@ -704,7 +704,8 @@ bool DOS_Shell::SetEnv(const char* entry, const char* new_string)
 		if (!strchr(env_string, '=')) {
 			continue; /* Remove corrupt entry? */
 		}
-		if ((strncasecmp(entry, env_string, entry_length) == 0) &&
+		if (iequals(entry,
+		            std::string_view(env_string).substr(0, entry_length)) &&
 		    env_string[entry_length] == '=') {
 			continue;
 		}
@@ -717,19 +718,23 @@ bool DOS_Shell::SetEnv(const char* entry, const char* new_string)
 	/* Save the new entry */
 
 	// ensure room
-	if (envsize <= (env_write - env_write_start) + strlen(entry) + 1 +
-	                       strlen(new_string) + 2) {
+	if (envsize <= (env_write - env_write_start) + entry.size() + 1 +
+	                       new_string.size() + 2) {
 		return false;
 	}
 
-	if (new_string[0]) {
+	if (!new_string.empty()) {
 		std::string bigentry(entry);
 		for (std::string::iterator it = bigentry.begin();
 		     it != bigentry.end();
 		     ++it) {
 			*it = toupper(*it);
 		}
-		snprintf(env_string, 1024 + 1, "%s=%s", bigentry.c_str(), new_string);
+		snprintf(env_string,
+		         1024 + 1,
+		         "%s=%s",
+		         bigentry.c_str(),
+		         std::string(new_string).c_str());
 		MEM_BlockWrite(env_write,
 		               env_string,
 		               (Bitu)(safe_strlen(env_string) + 1));
