@@ -1268,13 +1268,16 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 {
 	AudioFrame frame = {};
 
+	const auto left_pos  = static_cast<work_index_t>(pos * 2 + 0);
+	const auto right_pos = static_cast<work_index_t>(pos * 2 + 1);
+
 	if (sizeof(Type) == 1) {
 		// Integer types
 		// unsigned 8-bit
 		if (!signeddata) {
 			if (stereo) {
-				frame[0] = lut_u8to16[static_cast<uint8_t>(data[pos * 2 + 0])];
-				frame[1] = lut_u8to16[static_cast<uint8_t>(data[pos * 2 + 1])];
+				frame[0] = lut_u8to16[static_cast<uint8_t>(data[left_pos])];
+				frame[1] = lut_u8to16[static_cast<uint8_t>(data[right_pos])];
 			} else {
 				frame[0] = lut_u8to16[static_cast<uint8_t>(data[pos])];
 			}
@@ -1282,8 +1285,8 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 		// signed 8-bit
 		else {
 			if (stereo) {
-				frame[0] = lut_s8to16[static_cast<int8_t>(data[pos * 2 + 0])];
-				frame[1] = lut_s8to16[static_cast<int8_t>(data[pos * 2 + 1])];
+				frame[0] = lut_s8to16[static_cast<int8_t>(data[left_pos])];
+				frame[1] = lut_s8to16[static_cast<int8_t>(data[right_pos])];
 			} else {
 				frame[0] = lut_s8to16[static_cast<int8_t>(data[pos])];
 			}
@@ -1293,13 +1296,13 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 		if (signeddata) {
 			if (stereo) {
 				if (nativeorder) {
-					frame[0] = static_cast<float>(data[pos * 2 + 0]);
-					frame[1] = static_cast<float>(data[pos * 2 + 1]);
+					frame[0] = static_cast<float>(data[left_pos]);
+					frame[1] = static_cast<float>(data[right_pos]);
 				} else {
-					auto host_pt0 =
-					        (const uint8_t* const)&data[pos * 2 + 0];
-					auto host_pt1 =
-					        (const uint8_t* const)&data[pos * 2 + 1];
+					auto host_pt0 = reinterpret_cast<const uint8_t* const>(
+					        data + left_pos);
+					auto host_pt1 = reinterpret_cast<const uint8_t* const>(
+					        data + right_pos);
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(host_pt0);
 						frame[1] = (int16_t)host_readw(host_pt1);
@@ -1314,7 +1317,8 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 				if (nativeorder) {
 					frame[0] = static_cast<float>(data[pos]);
 				} else {
-					auto host_pt = (const uint8_t* const)&data[pos];
+					auto host_pt = reinterpret_cast<const uint8_t* const>(
+					        data + pos);
 					if (sizeof(Type) == 2) {
 						frame[0] = (int16_t)host_readw(host_pt);
 					} else {
@@ -1328,16 +1332,16 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 			if (stereo) {
 				if (nativeorder) {
 					frame[0] = static_cast<float>(
-					        static_cast<int>(data[pos * 2 + 0]) -
+					        static_cast<int>(data[left_pos]) -
 					        offs);
 					frame[1] = static_cast<float>(
-					        static_cast<int>(data[pos * 2 + 1]) -
+					        static_cast<int>(data[right_pos]) -
 					        offs);
 				} else {
-					auto host_pt0 =
-					        (const uint8_t* const)&data[pos * 2 + 0];
-					auto host_pt1 =
-					        (const uint8_t* const)&data[pos * 2 + 1];
+					auto host_pt0 = reinterpret_cast<const uint8_t* const>(
+					        data + left_pos);
+					auto host_pt1 = reinterpret_cast<const uint8_t* const>(
+					        data + right_pos);
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
@@ -1363,7 +1367,8 @@ AudioFrame MixerChannel::ConvertNextFrame(const Type *data, const work_index_t p
 					frame[0] = static_cast<float>(
 					        static_cast<int>(data[pos]) - offs);
 				} else {
-					auto host_pt = (const uint8_t* const)&data[pos];
+					auto host_pt = reinterpret_cast<const uint8_t* const>(
+					        data + pos);
 					if (sizeof(Type) == 2) {
 						frame[0] = static_cast<float>(
 						        static_cast<int>(host_readw(
