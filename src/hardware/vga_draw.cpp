@@ -1846,17 +1846,6 @@ static Fraction calc_pixel_aspect_from_timings(const VgaTimings& timings)
 
 constexpr auto pixel_aspect_1280x1024 = Fraction(4, 3) / Fraction(1280, 1024);
 
-struct RenderParams {
-	uint32_t width              = 0;
-	uint32_t height             = 0;
-	bool double_width           = false;
-	bool double_height          = false;
-	bool force_single_scan      = false;
-	Fraction pixel_aspect_ratio = {};
-	PixelFormat pixel_format    = {};
-	VideoMode video_mode        = {};
-};
-
 // Can change the following VGA state:
 //   vga.draw.mode
 //   vga.draw.address_line_total
@@ -2845,9 +2834,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 
 		vga.draw.width  = std::min(render.width,
-                                          static_cast<uint32_t>(SCALER_MAXWIDTH));
+                                          static_cast<uint16_t>(SCALER_MAXWIDTH));
 		vga.draw.height = std::min(render.height,
-		                           static_cast<uint32_t>(SCALER_MAXHEIGHT));
+		                           static_cast<uint16_t>(SCALER_MAXHEIGHT));
 
 		vga.draw.doublewidth        = render.double_width;
 		vga.draw.doubleheight       = render.double_height;
