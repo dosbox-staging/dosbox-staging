@@ -175,6 +175,10 @@ struct VideoMode {
 	// storage bit-depth; e.g., some 24-bit true colour modes actually store
 	// pixels at 32-bits with the upper 8-bits unused.
 	ColorDepth color_depth = {};
+
+	// True if this is a double-scanned mode on VGA (e.g. 200-line CGA and
+	// EGA modes and most sub-400-line (S)VGA & VESA modes)
+	bool is_double_scanned_mode = false;
 };
 
 std::string to_string(const VideoMode& video_mode);
