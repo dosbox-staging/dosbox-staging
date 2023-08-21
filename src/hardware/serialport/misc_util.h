@@ -61,12 +61,11 @@
 #include "enet/include/enet.h"
 
 enum class SocketType {
-	Tcp  = 0,
-	Enet = 1,
-	Invalid,
+	Tcp  = 0, // +SOCK0 modem command
+	Enet = 1, // +SOCK1 modem command
+	Invalid,  // first invalid value
 };
-
-std::string to_string(const SocketType socket_type);
+const char* to_string(const SocketType socket_type);
 
 // helper functions
 bool NetWrapper_InitializeSDLNet();

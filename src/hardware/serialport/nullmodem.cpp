@@ -228,7 +228,7 @@ bool CNullModem::ServerListen() {
 	LOG_MSG("SERIAL: Port %" PRIu8 " nullmodem server waiting for connection on "
 	        "%s port %" PRIu16 " ...",
 	        GetPortNumber(),
-	        to_string(socketType).c_str(),
+	        to_string(socketType),
 	        serverport);
 	setEvent(SERIAL_SERVER_POLLING_EVENT, 50);
 	setCD(false);

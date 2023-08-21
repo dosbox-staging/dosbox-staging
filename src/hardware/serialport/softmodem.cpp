@@ -250,28 +250,30 @@ void CSerialModem::SendNumber(uint32_t val)
 }
 
 void CSerialModem::SendRes(const ResTypes response) {
-	const char* string = nullptr;
+	const char* response_str = nullptr;
 	uint32_t code = -1;
 	switch (response) {
-		case ResOK:         code = 0; string = "OK"; break;
-		case ResCONNECT:    code = 1; string = connect_string; break;
-		case ResRING:       code = 2; string = "RING"; break;
-		case ResNOCARRIER:  code = 3; string = "NO CARRIER"; break;
-		case ResERROR:      code = 4; string = "ERROR"; break;
-		case ResNODIALTONE: code = 6; string = "NO DIALTONE"; break;
-		case ResBUSY:       code = 7; string = "BUSY"; break;
-		case ResNOANSWER:   code = 8; string = "NO ANSWER"; break;
-		case ResNONE:       return;
+	case ResOK:         code = 0; response_str = "OK"; break;
+	case ResCONNECT:    code = 1; response_str = connect_string; break;
+	case ResRING:       code = 2; response_str = "RING"; break;
+	case ResNOCARRIER:  code = 3; response_str = "NO CARRIER"; break;
+	case ResERROR:      code = 4; response_str = "ERROR"; break;
+	case ResNODIALTONE: code = 6; response_str = "NO DIALTONE"; break;
+	case ResBUSY:       code = 7; response_str = "BUSY"; break;
+	case ResNOANSWER:   code = 8; response_str = "NO ANSWER"; break;
+	case ResNONE: return;
 	}
 
 	if(doresponse != 1) {
 		if (doresponse == 2 && (response == ResRING ||
-			response == ResCONNECT || response == ResNOCARRIER))
+			response == ResCONNECT || response == ResNOCARRIER)) {
 			return;
-		if (numericresponse && code != static_cast<uint32_t>(-1))
+		}
+		if (numericresponse && code != static_cast<uint32_t>(-1)) {
 			SendNumber(code);
-		else if (string != nullptr)
-			SendLine(string);
+		} else if (response_str != nullptr) {
+			SendLine(response_str);
+		}
 
 		// if(CSerial::CanReceiveByte())	// very fast response
 		//	if(rqueue->inuse() && CSerial::getRTS())
@@ -281,9 +283,10 @@ void CSerialModem::SendRes(const ResTypes response) {
 		//	        GetPortNumber(), rbyte);
 		//	}
 
-		if (string != nullptr) {
+		if (response_str != nullptr) {
 			LOG_MSG("SERIAL: Port %" PRIu8 " modem response: %s.",
-			        GetPortNumber(), string);
+			        GetPortNumber(),
+			        response_str);
 		}
 	}
 }
@@ -494,20 +497,20 @@ void CSerialModem::DoCommand()
 			if (is_next_token("SOCK", scanbuf)) {
 				scanbuf += 4;
 				const uint32_t requested_mode = ScanNumber(scanbuf);
-				const auto requestet_type = static_cast<SocketType>(
+				const auto requested_type = static_cast<SocketType>(
 				        requested_mode);
-				if (requestet_type >= SocketType::Invalid) {
+				if (requested_type >= SocketType::Invalid) {
 					SendRes(ResERROR);
 					return;
 				}
-				if (socketType != requestet_type) {
-					socketType = requestet_type;
+				if (socketType != requested_type) {
+					socketType = requested_type;
 					// This will break when there's more
 					// than two socket types.
 					LOG_MSG("SERIAL: Port %" PRIu8
 					        " socket type %s",
 					        GetPortNumber(),
-					        to_string(socketType).c_str());
+					        to_string(socketType));
 					// Reset port state.
 					EnterIdleState();
 				}
