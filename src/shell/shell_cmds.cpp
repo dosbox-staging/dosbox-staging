@@ -778,11 +778,9 @@ void DOS_Shell::CMD_DIR(char* args)
 {
 	HELP("DIR");
 
+	std::string line = {};
 	if (const auto envvar = GetEnvStr("DIRCMD")){
-		auto line = *envvar;
-		std::string::size_type idx = line.find('=');
-		std::string value=line.substr(idx +1 , std::string::npos);
-		line = std::string(args) + " " + value;
+		line = std::string(args) + " " + *envvar;
 		args=const_cast<char*>(line.c_str());
 	}
 
@@ -1477,8 +1475,13 @@ void DOS_Shell::CMD_SET(char * args) {
 
 	char* p = strpbrk(args, "=");
 	if (!p) {
+		auto variable = std::string(args);
+		for (auto& c : variable) {
+			c = std::toupper(c);
+		}
 		if (const auto value = GetEnvStr(args)) {
-			WriteOut("%s\n", value->c_str());
+			WriteOut("%s\n",
+			         std::string(variable + '=' + *value).c_str());
 		} else {
 			WriteOut(MSG_Get("SHELL_CMD_SET_NOT_SET"), args);
 		}
@@ -1498,14 +1501,11 @@ void DOS_Shell::CMD_SET(char * args) {
 				*second++ = 0;
 				if (const auto envvar = GetEnvStr(p)) {
 					const auto& temp = *envvar;
-					std::string::size_type equals = temp.find('=');
-					if (equals == std::string::npos)
-						continue;
 					const uintptr_t remaining_len = std::min(
 					        sizeof(parsed) - static_cast<uintptr_t>(p_parsed - parsed),
 					        sizeof(parsed));
 					safe_strncpy(p_parsed,
-					             temp.substr(equals + 1).c_str(),
+					             temp.c_str(),
 					             remaining_len);
 					p_parsed += strlen(p_parsed);
 				}
