@@ -57,21 +57,21 @@ void MOUNT::Move_Z(char new_z)
 		Drives[25]      = nullptr;
 		if (!first_shell) return; //Should not be possible
 		/* Update environment */
-		std::string line = "";
+		std::string value   = "";
 		std::string tempenv = {new_drive_z, ':', '\\'};
 		if (const auto result = first_shell->GetEnvStr("PATH")) {
-			line = *result;
-			std::string::size_type idx = line.find('=');
-			std::string value = line.substr(idx +1 , std::string::npos);
-			while ( (idx = value.find("Z:\\")) != std::string::npos ||
-				(idx = value.find("z:\\")) != std::string::npos  )
-				value.replace(idx,3,tempenv);
-			line = std::move(value);
+			value = *result;
+			std::string::size_type idx;
+			while ((idx = value.find("Z:\\")) != std::string::npos ||
+			       (idx = value.find("z:\\")) != std::string::npos) {
+				value.replace(idx, 3, tempenv);
+			}
+		} else {
+			value = tempenv;
 		}
-		if (!line.size()) line = tempenv;
-		first_shell->SetEnv("PATH",line.c_str());
+		first_shell->SetEnv("PATH", value);
 		tempenv += "COMMAND.COM";
-		first_shell->SetEnv("COMSPEC",tempenv.c_str());
+		first_shell->SetEnv("COMSPEC", tempenv);
 
 		/* Change the active drive */
 		if (DOS_GetDefaultDrive() == 25)

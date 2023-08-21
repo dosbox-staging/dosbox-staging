@@ -281,13 +281,10 @@ void DOS_Shell::ParseLine(char *line)
 			             "pipe%d.tmp",
 			             get_tick_random_number());
 		} else {
-			const auto idx   = env_temp_path.find('=');
-			std::string temp = env_temp_path.substr(idx + 1,
-			                                        std::string::npos);
-			if (DOS_GetFileAttr(temp.c_str(), &fattr) &&
+			if (DOS_GetFileAttr(env_temp_path.c_str(), &fattr) &&
 			    fattr & DOS_ATTR_DIRECTORY)
 				safe_sprintf(pipe_tempfile, "%s\\pipe%d.tmp",
-				             temp.c_str(),
+				             env_temp_path.c_str(),
 				             get_tick_random_number());
 			else
 				safe_sprintf(pipe_tempfile, "pipe%d.tmp",

@@ -833,10 +833,9 @@ void DOS_Shell::CMD_DIR(char* args)
 {
 	HELP("DIR");
 
+	auto line = std::string();
 	if (const auto envvar = GetEnvStr("DIRCMD")){
-		auto line = *envvar;
-		std::string::size_type idx = line.find('=');
-		std::string value=line.substr(idx +1 , std::string::npos);
+		const auto& value = *envvar;
 		line = std::string(args) + " " + value;
 		args=const_cast<char*>(line.c_str());
 	}
@@ -1591,14 +1590,11 @@ void DOS_Shell::CMD_SET(char * args) {
 				*second++ = 0;
 				if (const auto envvar = GetEnvStr(p)) {
 					const auto& temp = *envvar;
-					std::string::size_type equals = temp.find('=');
-					if (equals == std::string::npos)
-						continue;
 					const uintptr_t remaining_len = std::min(
 					        sizeof(parsed) - static_cast<uintptr_t>(p_parsed - parsed),
 					        sizeof(parsed));
 					safe_strncpy(p_parsed,
-					             temp.substr(equals + 1).c_str(),
+					             temp.c_str(),
 					             remaining_len);
 					p_parsed += strlen(p_parsed);
 				}
