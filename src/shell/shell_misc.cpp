@@ -644,36 +644,20 @@ std::optional<std::string> DOS_Shell::GetEnvStr(const std::string_view entry) co
 	}
 }
 
-bool DOS_Shell::GetEnvNum(Bitu num, std::string& result) const
+std::vector<std::string> DOS_Shell::GetAllEnvVars() const
 {
+	auto all_env_vars = std::vector<std::string>{};
+
 	char env_string[1024 + 1];
 	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
-	do {
+	while(true) {
 		MEM_StrCopy(env_read, env_string, 1024);
 		if (!env_string[0]) {
-			break;
+			return all_env_vars;
 		}
-		if (!num) {
-			result = env_string;
-			return true;
-		}
+		all_env_vars.emplace_back(env_string);
 		env_read += (PhysPt)(safe_strlen(env_string) + 1);
-		num--;
-	} while (1);
-	return false;
-}
-
-Bitu DOS_Shell::GetEnvCount() const
-{
-	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
-	Bitu num        = 0;
-	while (mem_readb(env_read) != 0) {
-		for (; mem_readb(env_read); env_read++) {
-		};
-		env_read++;
-		num++;
 	}
-	return num;
 }
 
 bool DOS_Shell::SetEnv(std::string_view entry, std::string_view new_string)
