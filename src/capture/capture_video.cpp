@@ -321,22 +321,22 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 
 void capture_video_add_frame(const RenderedImage& image, const float frames_per_second)
 {
-	assert(image.width <= SCALER_MAXWIDTH);
+	const auto& src = image.params;
+	assert(src.width <= SCALER_MAXWIDTH);
 
-	const auto video_width = image.double_width ? image.width * 2 : image.width;
-	const auto video_height = image.double_height ? image.height * 2
-	                                              : image.height;
+	const auto video_width = src.double_width ? src.width * 2 : src.width;
+	const auto video_height = src.double_height ? src.height * 2 : src.height;
 
 	// Disable capturing if any of the test fails
 	if (video.handle && (video.width != video_width || video.height != video_height ||
-	                     video.pixel_format != image.pixel_format ||
+	                     video.pixel_format != src.pixel_format ||
 	                     video.frames_per_second != frames_per_second)) {
 		capture_video_finalise();
 	}
 
 	ZMBV_FORMAT format;
 
-	switch (image.pixel_format) {
+	switch (src.pixel_format) {
 	case PixelFormat::Indexed8: format = ZMBV_FORMAT::BPP_8; break;
 	case PixelFormat::BGR555: format = ZMBV_FORMAT::BPP_15; break;
 	case PixelFormat::BGR565: format = ZMBV_FORMAT::BPP_16; break;
@@ -354,7 +354,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	if (!video.handle) {
 		create_avi_file(video_width,
 		                video_height,
-		                image.pixel_format,
+		                src.pixel_format,
 		                frames_per_second,
 		                format);
 	}
@@ -376,15 +376,15 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 
 	auto src_row = image.image_data;
 
-	for (auto i = 0; i < image.height; ++i) {
+	for (auto i = 0; i < src.height; ++i) {
 		const uint8_t* row_pointer = row_buffer;
 
 		// TODO This all assumes little-endian byte order; should be
 		// made endianness-aware like capture_image.cpp
-		if (image.double_width) {
-			switch (image.pixel_format) {
+		if (src.double_width) {
+			switch (src.pixel_format) {
 			case PixelFormat::Indexed8:
-				for (auto x = 0; x < image.width; ++x) {
+				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel      = src_row[x];
 					row_buffer[x * 2 + 0] = pixel;
 					row_buffer[x * 2 + 1] = pixel;
@@ -393,7 +393,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 
 			case PixelFormat::BGR555:
 			case PixelFormat::BGR565:
-				for (auto x = 0; x < image.width; ++x) {
+				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel = ((uint16_t*)src_row)[x];
 
 					((uint16_t*)row_buffer)[x * 2 + 0] = pixel;
@@ -402,7 +402,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 				break;
 
 			case PixelFormat::BGR888:
-				for (auto x = 0; x < image.width; ++x) {
+				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel = reinterpret_cast<const Rgb888*>(
 					        src_row)[x];
 
@@ -414,7 +414,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 				break;
 
 			case PixelFormat::BGRX8888:
-				for (auto x = 0; x < image.width; ++x) {
+				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel = ((uint32_t*)src_row)[x];
 
 					((uint32_t*)row_buffer)[x * 2 + 0] = pixel;
@@ -425,8 +425,8 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 			row_pointer = row_buffer;
 
 		} else {
-			if (image.pixel_format == PixelFormat::BGR888) {
-				for (auto x = 0; x < image.width; ++x) {
+			if (src.pixel_format == PixelFormat::BGR888) {
+				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel = reinterpret_cast<const Rgb888*>(
 					        src_row)[x];
 
@@ -439,7 +439,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 			}
 		}
 
-		auto lines_to_write = image.double_height ? 2 : 1;
+		auto lines_to_write = src.double_height ? 2 : 1;
 		while (lines_to_write--) {
 			video.codec->CompressLines(1, &row_pointer);
 		}

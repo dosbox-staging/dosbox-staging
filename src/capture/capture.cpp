@@ -376,11 +376,10 @@ void CAPTURE_StopVideoCapture()
 	}
 }
 
-void CAPTURE_AddFrame(const RenderedImage& image, const VideoMode& video_mode,
-                      const float frames_per_second)
+void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second)
 {
 	if (image_capturer) {
-		image_capturer->MaybeCaptureImage(image, video_mode);
+		image_capturer->MaybeCaptureImage(image);
 	}
 
 	switch (capture.state.video) {

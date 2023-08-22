@@ -77,7 +77,7 @@ private:
 
 	inline void IncrementPos()
 	{
-		switch (image.pixel_format) {
+		switch (image.params.pixel_format) {
 		case PixelFormat::Indexed8: ++pos; break;
 		case PixelFormat::BGR555:
 		case PixelFormat::BGR565: pos += 2; break;
@@ -104,7 +104,7 @@ private:
 	{
 		Rgb888 pixel = {};
 
-		switch (image.pixel_format) {
+		switch (image.params.pixel_format) {
 		case PixelFormat::BGR555: {
 			const auto p = host_to_le(
 			        *reinterpret_cast<const uint16_t*>(pos));
