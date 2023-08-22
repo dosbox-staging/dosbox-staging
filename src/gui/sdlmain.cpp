@@ -3460,7 +3460,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 #if C_OPENGL
 	} else if (starts_with(output, "opengl")) {
-		RENDER_InitShader();
 		if (output == "opengl") {
 			sdl.desktop.want_type  = SCREEN_OPENGL;
 			sdl.interpolation_mode = InterpolationMode::Bilinear;
@@ -3986,6 +3985,14 @@ static void FinalizeWindowState()
 	GFX_ResetScreen();
 }
 
+static void maybe_auto_switch_shader()
+{
+	const auto canvas = get_canvas_size(sdl.desktop.type);
+
+	constexpr auto reinit_render = true;
+	RENDER_MaybeAutoSwitchShader(canvas.w, canvas.h, sdl.video_mode, reinit_render);
+}
+
 bool GFX_Events()
 {
 #if defined(MACOSX)
@@ -4058,7 +4065,7 @@ bool GFX_Events()
 				// DEBUG_LOG_MSG("SDL: Window has been resized to %dx%d",
 				//               event.window.data1,
 				//               event.window.data2);
-
+				//
 				// When going from an initial fullscreen to
 				// windowed state, this event will be called
 				// moments before SDL's windowed mode is
@@ -4066,7 +4073,6 @@ bool GFX_Events()
 				// already been established:
 				assert(sdl.desktop.window.width > 0 &&
 				       sdl.desktop.window.height > 0);
-
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
@@ -4117,6 +4123,7 @@ bool GFX_Events()
 
 			case SDL_WINDOWEVENT_SHOWN:
 				// DEBUG_LOG_MSG("SDL: Window has been shown");
+				maybe_auto_switch_shader();
 				continue;
 
 			case SDL_WINDOWEVENT_HIDDEN:
@@ -4166,6 +4173,8 @@ bool GFX_Events()
 					           sdl.clip.w,
 					           sdl.clip.h);
 				}
+
+				maybe_auto_switch_shader();
 #	endif
 				NewMouseScreenParams();
 				continue;
@@ -4179,6 +4188,7 @@ bool GFX_Events()
 				// result of an API call or through the system
 				// or user changing the window size.
 				FinalizeWindowState();
+				maybe_auto_switch_shader();
 				continue;
 
 			case SDL_WINDOWEVENT_MINIMIZED:
