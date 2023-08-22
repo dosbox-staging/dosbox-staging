@@ -24,6 +24,8 @@
 #include <cstring>
 #include <utility>
 
+#include <SDL.h>
+
 #include "../gui/render_scalers.h"
 #include "../ints/int10.h"
 #include "bitops.h"
@@ -2821,6 +2823,16 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	    (vga.draw.pixel_aspect_ratio != render.pixel_aspect_ratio) ||
 	    (vga.draw.pixel_format != render.pixel_format) || fps_changed) {
 		VGA_KillDrawing();
+
+		const auto canvas = GFX_GetCanvasSize();
+
+		constexpr auto reinit_render = false;
+		const auto shader_changed    = RENDER_MaybeAutoSwitchShader(
+                        canvas.w, canvas.h, render.video_mode, reinit_render);
+
+		if (shader_changed) {
+			render = setup_drawing();
+		}
 
 		if (render.width > SCALER_MAXWIDTH ||
 		    render.height > SCALER_MAXHEIGHT) {

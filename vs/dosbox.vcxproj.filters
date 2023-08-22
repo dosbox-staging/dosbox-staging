@@ -148,6 +148,9 @@
     <ClCompile Include="..\src\gui\sdl_mapper.cpp">
       <Filter>src\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gui\shader_manager.cpp">
+      <Filter>src\gui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\adlib_gold.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -1153,6 +1156,9 @@
       <Filter>src\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gui\render_templates.h">
+      <Filter>src\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\shader_manager.h">
       <Filter>src\gui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\adlib_gold.h">
