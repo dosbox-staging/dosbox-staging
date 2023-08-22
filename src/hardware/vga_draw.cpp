@@ -1844,15 +1844,31 @@ static Fraction calc_pixel_aspect_from_timings(const VgaTimings& timings)
 
 constexpr auto pixel_aspect_1280x1024 = Fraction(4, 3) / Fraction(1280, 1024);
 
-void VGA_SetupDrawing(uint32_t /*val*/)
-{
-	if (vga.mode == M_ERROR) {
-		PIC_RemoveEvents(VGA_VerticalTimer);
-		PIC_RemoveEvents(VGA_PanningLatch);
-		PIC_RemoveEvents(VGA_DisplayStartLatch);
-		return;
-	}
+struct RenderParams {
+	uint32_t width              = 0;
+	uint32_t height             = 0;
+	bool double_width           = false;
+	bool double_height          = false;
+	bool force_single_scan      = false;
+	Fraction pixel_aspect_ratio = {};
+	PixelFormat pixel_format    = {};
+	VideoMode video_mode        = {};
+};
 
+// Can change the following VGA state:
+//   vga.draw.mode
+//   vga.draw.address_line_total
+//   vga.draw.delay.hdend
+//   vga.draw.dos_refresh_hz
+//   vga.draw.resizing
+//   vga.draw.vret_triggered
+//   vga.draw.linear_base
+//   vga.draw.linear_mask
+//   vga.draw.blocks
+//   vga.draw.vblank_skip
+//   vga.draw.line_length
+RenderParams setup_drawing()
+{
 	// Set the drawing mode
 	switch (machine) {
 	case MCH_CGA:
@@ -2734,6 +2750,49 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	        video_mode.pixel_aspect_ratio.Inverse().ToDouble());
 #endif
 
+#if 0
+	LOG_MSG("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+	        vga.draw.delay.htotal,
+	        (1.0 / vga.draw.delay.htotal),
+	        vga.draw.delay.hblkstart,
+	        vga.draw.delay.hblkend,
+	        vga.draw.delay.hrstart,
+	        vga.draw.delay.hrend);
+
+	LOG_MSG("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+	        vga.draw.delay.vtotal,
+	        (1000.0 / vga.draw.delay.vtotal),
+	        vga.draw.delay.vblkstart,
+	        vga.draw.delay.vblkend,
+	        vga.draw.delay.vrstart,
+	        vga.draw.delay.vrend);
+#endif
+
+	RenderParams render = {};
+
+	render.width              = render_width;
+	render.height             = render_height;
+	render.double_width       = double_width;
+	render.double_height      = double_height;
+	render.force_single_scan  = force_single_scan;
+	render.pixel_aspect_ratio = render_pixel_aspect_ratio;
+	render.pixel_format       = pixel_format;
+	render.video_mode         = video_mode;
+
+	return render;
+}
+
+void VGA_SetupDrawing(uint32_t /*val*/)
+{
+	if (vga.mode == M_ERROR) {
+		PIC_RemoveEvents(VGA_VerticalTimer);
+		PIC_RemoveEvents(VGA_PanningLatch);
+		PIC_RemoveEvents(VGA_DisplayStartLatch);
+		return;
+	}
+
+	auto render = setup_drawing();
+
 	// need to change the vertical timing?
 	bool fps_changed = false;
 	const auto fps   = VGA_GetPreferredRate();
@@ -2753,65 +2812,46 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_VerticalTimer(0);
 	}
 
-#if 0
-	LOG_MSG("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-	        vga.draw.delay.htotal,
-	        (1.0 / vga.draw.delay.htotal),
-	        vga.draw.delay.hblkstart,
-	        vga.draw.delay.hblkend,
-	        vga.draw.delay.hrstart,
-	        vga.draw.delay.hrend);
-
-	LOG_MSG("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-	        vga.draw.delay.vtotal,
-	        (1000.0 / vga.draw.delay.vtotal),
-	        vga.draw.delay.vblkstart,
-	        vga.draw.delay.vblkend,
-	        vga.draw.delay.vrstart,
-	        vga.draw.delay.vrend);
-#endif
-
 	static auto previous_mode = vga.mode;
 
-	if ((vga.mode != previous_mode) || (render_width != vga.draw.width) ||
-	    (render_height != vga.draw.height) ||
-	    (vga.draw.doublewidth != double_width) ||
-	    (vga.draw.doubleheight != double_height) ||
-	    (vga.draw.pixel_aspect_ratio != render_pixel_aspect_ratio) ||
-	    (vga.draw.pixel_format != pixel_format) || fps_changed) {
+	if ((vga.mode != previous_mode) || (render.width != vga.draw.width) ||
+	    (render.height != vga.draw.height) ||
+	    (vga.draw.doublewidth != render.double_width) ||
+	    (vga.draw.doubleheight != render.double_height) ||
+	    (vga.draw.pixel_aspect_ratio != render.pixel_aspect_ratio) ||
+	    (vga.draw.pixel_format != render.pixel_format) || fps_changed) {
 		VGA_KillDrawing();
 
-		if (render_width > SCALER_MAXWIDTH ||
-		    render_height > SCALER_MAXHEIGHT) {
+		if (render.width > SCALER_MAXWIDTH ||
+		    render.height > SCALER_MAXHEIGHT) {
 			LOG_ERR("VGA: The calculated video resolution %ux%u will be "
 			        "limited to the maximum of %ux%u",
-			        render_width,
-			        render_height,
+			        render.width,
+			        render.height,
 			        SCALER_MAXWIDTH,
 			        SCALER_MAXHEIGHT);
 		}
 
-		vga.draw.width  = std::min(render_width,
+		vga.draw.width  = std::min(render.width,
                                           static_cast<uint32_t>(SCALER_MAXWIDTH));
-		vga.draw.height = std::min(render_height,
+		vga.draw.height = std::min(render.height,
 		                           static_cast<uint32_t>(SCALER_MAXHEIGHT));
 
-		vga.draw.doublewidth        = double_width;
-		vga.draw.doubleheight       = double_height;
-		vga.draw.pixel_aspect_ratio = render_pixel_aspect_ratio;
-		vga.draw.pixel_format       = pixel_format;
-
-		vga.draw.lines_scaled = force_single_scan ? 2 : 1;
+		vga.draw.doublewidth        = render.double_width;
+		vga.draw.doubleheight       = render.double_height;
+		vga.draw.pixel_aspect_ratio = render.pixel_aspect_ratio;
+		vga.draw.pixel_format       = render.pixel_format;
+		vga.draw.lines_scaled       = render.force_single_scan ? 2 : 1;
 
 		if (!vga.draw.vga_override) {
-			ReelMagic_RENDER_SetSize(render_width,
-			                         render_height,
-			                         double_width,
-			                         double_height,
-			                         render_pixel_aspect_ratio,
-			                         pixel_format,
+			ReelMagic_RENDER_SetSize(render.width,
+			                         render.height,
+			                         render.double_width,
+			                         render.double_height,
+			                         render.pixel_aspect_ratio,
+			                         render.pixel_format,
 			                         fps,
-			                         video_mode);
+			                         render.video_mode);
 		}
 
 		previous_mode = vga.mode;
