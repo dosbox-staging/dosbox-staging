@@ -1560,9 +1560,8 @@ void DOS_Shell::CMD_SET(char * args) {
 	std::string line;
 	if (!*args) {
 		/* No command line show all environment lines */
-		Bitu count=GetEnvCount();
-		for (Bitu a=0;a<count;a++) {
-			if (GetEnvNum(a,line)) WriteOut("%s\n",line.c_str());
+		for (const auto& entry : GetAllEnvVars()) {
+			WriteOut("%s\n", entry.c_str());
 		}
 		return;
 	}
