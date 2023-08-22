@@ -70,9 +70,7 @@ public:
 	bool IsCaptureRequested() const;
 	bool IsRenderedCaptureRequested() const;
 
-	void MaybeCaptureImage(const RenderedImage& image,
-	                       const VideoMode& video_mode);
-
+	void MaybeCaptureImage(const RenderedImage& image);
 	void CapturePostRenderImage(const RenderedImage& image);
 
 	// prevent copying
@@ -97,7 +95,6 @@ private:
 	GroupedMode grouped_mode = {};
 
 	std_fs::path rendered_path    = {};
-	VideoMode rendered_video_mode = {};
 
 	static constexpr auto NumImageSavers                = 3;
 	size_t current_image_saver_index                    = 0;
@@ -108,7 +105,6 @@ private:
 	ImageSaver& GetNextImageSaver();
 };
 
-uint8_t get_double_scan_row_skip_count(const RenderedImage& image,
-                                       const VideoMode& video_mode);
+uint8_t get_double_scan_row_skip_count(const RenderedImage& image);
 
 #endif // DOSBOX_IMAGE_CAPTURER_H

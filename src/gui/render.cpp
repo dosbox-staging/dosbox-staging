@@ -284,21 +284,16 @@ void RENDER_EndUpdate(bool abort)
 
 		RenderedImage image = {};
 
-		image.width              = render.src.width;
-		image.height             = render.src.height;
-		image.double_width       = double_width;
-		image.double_height      = double_height;
-		image.pixel_aspect_ratio = render.src.pixel_aspect_ratio;
-		image.pixel_format       = render.src.pixel_format;
-		image.pitch              = render.scale.cachePitch;
-		image.image_data         = (uint8_t*)&scalerSourceCache;
-		image.palette_data       = (uint8_t*)&render.pal.rgb;
-
-		auto video_mode = render.src.video_mode;
+		image.params               = render.src;
+		image.params.double_width  = double_width;
+		image.params.double_height = double_height;
+		image.pitch                = render.scale.cachePitch;
+		image.image_data           = (uint8_t*)&scalerSourceCache;
+		image.palette_data         = (uint8_t*)&render.pal.rgb;
 
 		const auto frames_per_second = static_cast<float>(render.fps);
 
-		CAPTURE_AddFrame(image, video_mode, frames_per_second);
+		CAPTURE_AddFrame(image, frames_per_second);
 	}
 
 	if (render.scale.outWrite) {

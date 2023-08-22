@@ -81,7 +81,7 @@ public:
 	ImageScaler()  = default;
 	~ImageScaler() = default;
 
-	void Init(const RenderedImage& image, const VideoMode& video_mode);
+	void Init(const RenderedImage& image);
 
 	std::vector<uint8_t>::const_iterator GetNextOutputRow();
 
@@ -110,7 +110,6 @@ private:
 	void GenerateNextSharpUpscaledOutputRow();
 
 	RenderedImage input        = {};
-	VideoMode video_mode       = {};
 	ImageDecoder input_decoder = {};
 
 	std::vector<float> linear_row_buf = {};

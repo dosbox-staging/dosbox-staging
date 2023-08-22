@@ -110,8 +110,7 @@ bool ImageCapturer::IsRenderedCaptureRequested() const
 	       (state.grouped != CaptureState::Off && grouped_mode.wants_rendered);
 }
 
-void ImageCapturer::MaybeCaptureImage(const RenderedImage& image,
-                                      const VideoMode& video_mode)
+void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
 {
 	// No new image capture requests until we finish queuing the current
 	// grouped capture request, otherwise we can get into all sorts of race
@@ -167,14 +166,12 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image,
 	if (do_raw) {
 		GetNextImageSaver().QueueImage(
 		        image.deep_copy(),
-		        video_mode,
 		        CapturedImageType::Raw,
 		        generate_capture_filename(CaptureType::RawImage, index));
 	}
 	if (do_upscaled) {
 		GetNextImageSaver().QueueImage(
 		        image.deep_copy(),
-		        video_mode,
 		        CapturedImageType::Upscaled,
 		        generate_capture_filename(CaptureType::UpscaledImage, index));
 	}
@@ -182,19 +179,12 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image,
 	if (do_rendered) {
 		rendered_path = generate_capture_filename(CaptureType::RenderedImage,
 		                                          index);
-
-		// We need to propagate the video mode to the PNG writer so we
-		// can include the source image metadata.
-		rendered_video_mode = video_mode;
 	}
 }
 
 void ImageCapturer::CapturePostRenderImage(const RenderedImage& image)
 {
-	GetNextImageSaver().QueueImage(image,
-	                               rendered_video_mode,
-	                               CapturedImageType::Rendered,
-	                               rendered_path);
+	GetNextImageSaver().QueueImage(image, CapturedImageType::Rendered, rendered_path);
 
 	state.rendered = CaptureState::Off;
 
@@ -242,8 +232,7 @@ void ImageCapturer::RequestGroupedCapture()
 	state.grouped = CaptureState::Pending;
 }
 
-uint8_t get_double_scan_row_skip_count(const RenderedImage& image,
-                                       const VideoMode& video_mode)
+uint8_t get_double_scan_row_skip_count(const RenderedImage& image)
 {
 	// Double-scanning can be either:
 	//
@@ -264,8 +253,10 @@ uint8_t get_double_scan_row_skip_count(const RenderedImage& image,
 	// This function returns `0` for case 1 images (faked double-scan), and
 	// `1` for case 2 images (baked-in double-scan).
 	//
-	assert(image.height >= video_mode.height);
-	assert(image.height % video_mode.height == 0);
+	const auto& src = image.params;
 
-	return check_cast<uint8_t>(image.height / video_mode.height - 1);
+	assert(src.height >= src.video_mode.height);
+	assert(src.height % src.video_mode.height == 0);
+
+	return check_cast<uint8_t>(src.height / src.video_mode.height - 1);
 }

@@ -167,32 +167,11 @@ struct Render_t {
 // to the image capturer.
 //
 struct RenderedImage {
-	// Width of the rendered image (prior to optional width-doubling)
-	uint16_t width = 0;
-
-	// Height of the rendered image (prior to optional height-doubling)
-	uint16_t height = 0;
-
-	// If true, the rendered image is doubled horizontally after via
-	// a scaler (e.g. to achieve pixel-doubling)
-	bool double_width = false;
-
-	// If true, the rendered image is doubled vertically via a
-	// scaler (e.g. to achieve fake double-scanning)
-	bool double_height = false;
+	RenderParams params = {};
 
 	// If true, the image is stored flipped vertically, starting from the
 	// bottom row
 	bool is_flipped_vertically = false;
-
-	// Pixel aspect ratio to be applied to the final image (post
-	// width & height doubling) so it appears as intended on screen.
-	// (video_mode.pixel_aspect_ratio holds the "nominal" pixel
-	// aspect ratio of the source video mode)
-	Fraction pixel_aspect_ratio = {};
-
-	// Pixel format of the image data
-	PixelFormat pixel_format = {};
 
 	// Bytes per row
 	uint16_t pitch = 0;
@@ -208,7 +187,7 @@ struct RenderedImage {
 
 	inline bool is_paletted() const
 	{
-		return (pixel_format == PixelFormat::Indexed8);
+		return (params.pixel_format == PixelFormat::Indexed8);
 	}
 
 	RenderedImage deep_copy() const
@@ -216,7 +195,8 @@ struct RenderedImage {
 		RenderedImage copy = *this;
 
 		// Deep-copy image and palette data
-		const auto image_data_num_bytes = static_cast<uint32_t>(height * pitch);
+		const auto image_data_num_bytes = static_cast<uint32_t>(
+		        params.height * pitch);
 
 		copy.image_data = new uint8_t[image_data_num_bytes];
 

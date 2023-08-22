@@ -31,21 +31,19 @@
 CHECK_NARROWING();
 
 // to avoid circular dependency
-uint8_t get_double_scan_row_skip_count(const RenderedImage&, const VideoMode&);
+uint8_t get_double_scan_row_skip_count(const RenderedImage&);
 
-void ImageScaler::Init(const RenderedImage& image, const VideoMode& video_mode)
+void ImageScaler::Init(const RenderedImage& image)
 {
 	input = image;
 
-	this->video_mode = video_mode;
-
-	auto row_skip_count = get_double_scan_row_skip_count(image, video_mode);
+	auto row_skip_count = get_double_scan_row_skip_count(image);
 	input_decoder.Init(image, row_skip_count);
 
 	UpdateOutputParamsUpscale();
 
-	assert(output.width >= video_mode.width);
-	assert(output.height >= video_mode.height);
+	assert(output.width >= image.params.video_mode.width);
+	assert(output.height >= image.params.video_mode.height);
 	assertm(output.horiz_scale >= 1.0f, "ImageScaler can currently only upscale");
 	assertm(output.vert_scale >= 1, "ImageScaler can currently only upscale");
 
@@ -63,6 +61,8 @@ void ImageScaler::UpdateOutputParamsUpscale()
 {
 	constexpr auto target_output_height = 1200;
 
+	auto video_mode = input.params.video_mode;
+
 	// Calculate initial integer vertical scaling factor so the resulting
 	// output image height is roughly around 1200px.
 	output.vert_scale = static_cast<uint8_t>(roundf(
@@ -74,8 +74,8 @@ void ImageScaler::UpdateOutputParamsUpscale()
 	// the video mode width:
 	// - The Tandy/PCjr 160x200 is rendered as 320x200
 	// - The Tandy 640x200 4-colour composite mode is rendered as 1280x200
-	assert(input.width % video_mode.width == 0);
-	const auto par_adjustment_factor = (input.width / video_mode.width);
+	assert(input.params.width % video_mode.width == 0);
+	const auto par_adjustment_factor = (input.params.width / video_mode.width);
 
 	const auto pixel_aspect_ratio = video_mode.pixel_aspect_ratio /
 	                                par_adjustment_factor;
@@ -89,7 +89,7 @@ void ImageScaler::UpdateOutputParamsUpscale()
 		output.one_per_horiz_scale = horiz_scale_fract.Inverse().ToFloat();
 
 		output.width = static_cast<uint16_t>(
-		        roundf(input.width * output.horiz_scale));
+		        roundf(input.params.width * output.horiz_scale));
 
 		output.height = static_cast<uint16_t>(video_mode.height *
 		                                      output.vert_scale);
@@ -156,6 +156,9 @@ void ImageScaler::LogParams()
 		}
 	};
 
+	const auto& src        = input.params;
+	const auto& video_mode = input.params.video_mode;
+
 	LOG_MSG("ImageScaler params:\n"
 	        "    input.width:                %10d\n"
 	        "    input.height:               %10d\n"
@@ -176,14 +179,14 @@ void ImageScaler::LogParams()
 	        "    output.horiz_scaling_mode:  %10s\n"
 	        "    output.vert_scaling_mode:   %10s\n"
 	        "    output.pixel_format:        %10s\n",
-	        input.width,
-	        input.height,
-	        input.double_width ? "yes" : "no",
-	        input.double_height ? "yes" : "no",
-	        input.pixel_aspect_ratio.Inverse().ToDouble(),
-	        static_cast<int32_t>(input.pixel_aspect_ratio.Num()),
-	        static_cast<int32_t>(input.pixel_aspect_ratio.Denom()),
-	        to_string(input.pixel_format),
+	        src.width,
+	        src.height,
+	        src.double_width ? "yes" : "no",
+	        src.double_height ? "yes" : "no",
+	        src.pixel_aspect_ratio.Inverse().ToDouble(),
+	        static_cast<int32_t>(src.pixel_aspect_ratio.Num()),
+	        static_cast<int32_t>(src.pixel_aspect_ratio.Denom()),
+	        to_string(src.pixel_format),
 	        input.pitch,
 
 	        video_mode.width,
@@ -216,7 +219,7 @@ void ImageScaler::AllocateBuffers()
 	// Pad by 1 pixel at the end so we can handle the last pixel of the row
 	// without branching (the interpolator operates on the current and the
 	// next pixel).
-	linear_row_buf.resize((input.width + 1u) * ComponentsPerRgbPixel);
+	linear_row_buf.resize((input.params.width + 1u) * ComponentsPerRgbPixel);
 }
 
 uint16_t ImageScaler::GetOutputWidth() const
@@ -238,7 +241,7 @@ void ImageScaler::DecodeNextRowToLinearRgb()
 {
 	auto out = linear_row_buf.begin();
 
-	for (auto x = 0; x < input.width; ++x) {
+	for (auto x = 0; x < input.params.width; ++x) {
 		const auto pixel = input_decoder.GetNextPixelAsRgb888();
 
 		*out++ = srgb8_to_linear_lut(pixel.red);
@@ -264,7 +267,7 @@ void ImageScaler::GenerateNextIntegerUpscaledOutputRow()
 {
 	auto out = output.row_buf.begin();
 
-	for (auto x = 0; x < input.width; ++x) {
+	for (auto x = 0; x < input.params.width; ++x) {
 		auto pixels_to_write = static_cast<uint32_t>(output.horiz_scale);
 
 		if (input.is_paletted()) {
@@ -294,7 +297,7 @@ void ImageScaler::GenerateNextSharpUpscaledOutputRow()
 	for (auto x = 0; x < output.width; ++x) {
 		const auto x0 = static_cast<float>(x) * output.one_per_horiz_scale;
 		const auto floor_x0 = static_cast<uint16_t>(x0);
-		assert(floor_x0 < input.width);
+		assert(floor_x0 < input.params.width);
 
 		const auto row_offs = floor_x0 * ComponentsPerRgbPixel;
 		auto pixel_addr     = row_start + row_offs;

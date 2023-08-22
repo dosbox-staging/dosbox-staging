@@ -26,11 +26,11 @@ CHECK_NARROWING();
 
 void ImageDecoder::Init(const RenderedImage& image, const uint8_t row_skip_count)
 {
-	assert(image.width > 0);
-	assert(image.height > 0);
+	assert(image.params.width > 0);
+	assert(image.params.height > 0);
 
-	assert(image.pitch >= image.width);
-	assert(image.pixel_aspect_ratio.ToDouble() >= 0.0);
+	assert(image.pitch >= image.params.width);
+	assert(image.params.pixel_aspect_ratio.ToDouble() >= 0.0);
 	assert(image.image_data);
 
 	if (image.is_paletted()) {
@@ -38,7 +38,8 @@ void ImageDecoder::Init(const RenderedImage& image, const uint8_t row_skip_count
 	}
 
 	if (image.is_flipped_vertically) {
-		curr_row_start = image.image_data + (image.height - 1) * image.pitch;
+		curr_row_start = image.image_data +
+		                 (image.params.height - 1) * image.pitch;
 	} else {
 		curr_row_start = image.image_data;
 	}

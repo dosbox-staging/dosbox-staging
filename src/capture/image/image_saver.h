@@ -37,7 +37,6 @@ enum class CapturedImageType { Raw, Upscaled, Rendered };
 
 struct SaveImageTask {
 	RenderedImage image              = {};
-	VideoMode video_mode             = {};
 	CapturedImageType image_type     = {};
 	std::optional<std_fs::path> path = {};
 };
@@ -84,7 +83,7 @@ public:
 	// image was saved. Consider the implications carefully; you might need
 	// to pass in a deep-copied copy of the RenderedImage instance, because
 	// you cannot know when exactly in the future will it be freed.
-	void QueueImage(const RenderedImage& image, const VideoMode& video_mode,
+	void QueueImage(const RenderedImage& image,
 	                const CapturedImageType type,
 	                const std::optional<std_fs::path>& path);
 
@@ -99,13 +98,9 @@ private:
 	void SaveQueuedImages();
 	void SaveImage(const SaveImageTask& task);
 
-	void SaveRawImage(const RenderedImage& image, const VideoMode& video_mode);
-
-	void SaveUpscaledImage(const RenderedImage& image,
-	                       const VideoMode& video_mode);
-
-	void SaveRenderedImage(const RenderedImage& image,
-	                       const VideoMode& video_mode);
+	void SaveRawImage(const RenderedImage& image);
+	void SaveUpscaledImage(const RenderedImage& image);
+	void SaveRenderedImage(const RenderedImage& image);
 
 	void CloseOutFile();
 

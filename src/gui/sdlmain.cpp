@@ -2593,21 +2593,23 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	RenderedImage image = {};
 
 	auto allocate_image = [&]() {
-		image.width                 = sdl.clip.w;
-		image.height                = sdl.clip.h;
-		image.double_width          = false;
-		image.double_height         = false;
-		image.is_flipped_vertically = false;
-		image.pixel_aspect_ratio    = {1};
-		image.pixel_format          = PixelFormat::BGR888;
+		image.params.width              = sdl.clip.w;
+		image.params.height             = sdl.clip.h;
+		image.params.double_width       = false;
+		image.params.double_height      = false;
+		image.params.pixel_aspect_ratio = {1};
+		image.params.pixel_format       = PixelFormat::BGR888;
+		image.params.video_mode         = sdl.video_mode;
 
-		image.pitch = image.width *
-		              (get_bits_per_pixel(image.pixel_format) / 8);
+		image.is_flipped_vertically = false;
+
+		image.pitch = image.params.width *
+		              (get_bits_per_pixel(image.params.pixel_format) / 8);
 
 		image.palette_data = nullptr;
 
-		const auto image_size_bytes = check_cast<uint32_t>(image.height *
-		                                                   image.pitch);
+		const auto image_size_bytes = check_cast<uint32_t>(
+		        image.params.height * image.pitch);
 		image.image_data = new uint8_t[image_size_bytes];
 	};
 
@@ -2627,8 +2629,8 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 
 		glReadPixels(sdl.clip.x,
 		             sdl.clip.y,
-		             image.width,
-		             image.height,
+		             image.params.width,
+		             image.params.height,
 		             GL_BGR,
 		             GL_UNSIGNED_BYTE,
 		             image.image_data);
