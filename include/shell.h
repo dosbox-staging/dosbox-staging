@@ -163,8 +163,7 @@ public:
 	bool ExecuteConfigChange(const char* const cmd_in, const char* const line);
 
 	std::optional<std::string> GetEnvStr(std::string_view entry) const override;
-	bool GetEnvNum(Bitu num, std::string& result) const;
-	[[nodiscard]] Bitu GetEnvCount() const;
+	std::vector<std::string> GetAllEnvVars() const;
 	bool SetEnv(std::string_view entry, std::string_view new_string);
 
 	/* Commands */
