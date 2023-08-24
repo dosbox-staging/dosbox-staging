@@ -422,7 +422,8 @@ static void render_reset(void)
 	}
 
 #if C_OPENGL
-	GFX_SetShader(get_shader_manager().GetCurrentShaderSource());
+	GFX_SetShader(get_shader_manager().GetCurrentShaderInfo(),
+	              get_shader_manager().GetCurrentShaderSource());
 #endif
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
@@ -901,18 +902,20 @@ void RENDER_Init(Section* sec)
 	GFX_SetIntegerScalingMode(section->Get_string("integer_scaling"));
 
 #if C_OPENGL
+	auto& shader_manager = get_shader_manager();
+
 	auto shader_changed = false;
 	if (is_using_opengl_output_mode()) {
-		get_shader_manager().NotifyGlshaderSettingChanged(
+		shader_manager.NotifyGlshaderSettingChanged(
 		        get_shader_name_from_config());
 	}
-	const auto new_shader_name = get_shader_manager().GetCurrentShaderInfo().name;
+	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
 
 	shader_changed = render.force_reload_shader ||
 	                 (new_shader_name != render.current_shader_name);
 
 	if (render.force_reload_shader) {
-		get_shader_manager().ReloadCurrentShader();
+		shader_manager.ReloadCurrentShader();
 	}
 
 	render.force_reload_shader = false;

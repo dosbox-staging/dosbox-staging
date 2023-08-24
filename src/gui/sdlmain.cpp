@@ -2290,12 +2290,13 @@ dosurface:
 	return retFlags;
 }
 
-void GFX_SetShader([[maybe_unused]] const std::string& source)
+void GFX_SetShader([[maybe_unused]] const ShaderInfo& shader_info,
+                   [[maybe_unused]] const std::string& shader_source)
 {
 #if C_OPENGL
-	if (sdl.opengl.shader_source != source) {
-		sdl.opengl.shader_source = source;
-	}
+	sdl.opengl.shader_info   = shader_info;
+	sdl.opengl.shader_source = shader_source;
+
 	if (!sdl.opengl.use_shader) {
 		return;
 	}

@@ -62,7 +62,11 @@ void GFX_DisengageRendering();
 
 Bitu GFX_GetBestMode(Bitu flags);
 Bitu GFX_GetRGB(uint8_t red,uint8_t green,uint8_t blue);
-void GFX_SetShader(const std::string &source);
+
+struct ShaderInfo;
+
+void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
+
 void GFX_SetIntegerScalingMode(const std::string& new_mode);
 IntegerScalingMode GFX_GetIntegerScalingMode();
 InterpolationMode GFX_GetInterpolationMode();
