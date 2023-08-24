@@ -23,7 +23,7 @@ jobs:
             max_warnings: 20
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 893
+            max_warnings: 888
 
     steps:
       - name: Checkout repository
