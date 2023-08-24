@@ -3353,13 +3353,44 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 		}
 	};
 
+	auto calculate_vertical_integer_scaling_dims = [&]() -> std::pair<int, int> {
+		auto integer_scale_factor = std::min(
+		        bounds_h / draw_height,
+		        ifloor(bounds_w / (draw_height * image_aspect_ratio)));
+
+		if (integer_scale_factor < 1) {
+			// Revert to fit to viewport
+			return calculate_bounded_dims();
+		} else {
+			const auto w = iround(draw_height * integer_scale_factor *
+			                      image_aspect_ratio);
+			const auto h = draw_height * integer_scale_factor;
+
+			return {w, h};
+		}
+	};
+
 	int view_w = 0;
 	int view_h = 0;
+
 	switch (sdl.integer_scaling_mode) {
 	case IntegerScalingMode::Off: {
 		std::tie(view_w, view_h) = calculate_bounded_dims();
 		break;
 	}
+	case IntegerScalingMode::Auto:
+#if C_OPENGL
+		if (sdl.opengl.shader_info.is_adaptive) {
+			std::tie(view_w,
+			         view_h) = calculate_vertical_integer_scaling_dims();
+		} else {
+			std::tie(view_w, view_h) = calculate_bounded_dims();
+		}
+#else
+		std::tie(view_w, view_h) = calculate_bounded_dims();
+#endif
+		break;
+
 	case IntegerScalingMode::Horizontal: {
 		// Calculate scaling multiplier that will allow to fit the whole
 		// image into the window or viewport bounds.
@@ -3380,21 +3411,11 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 		}
 		break;
 	}
-	case IntegerScalingMode::Vertical: {
-		auto integer_scale_factor = std::min(
-		        bounds_h / draw_height,
-		        ifloor(bounds_w / (draw_height * image_aspect_ratio)));
-
-		if (integer_scale_factor < 1) {
-			// Revert to fit to viewport
-			std::tie(view_w, view_h) = calculate_bounded_dims();
-		} else {
-			view_w = iround(draw_height * integer_scale_factor *
-			                image_aspect_ratio);
-			view_h = draw_height * integer_scale_factor;
-		}
+	case IntegerScalingMode::Vertical:
+		std::tie(view_w, view_h) = calculate_vertical_integer_scaling_dims();
 		break;
-	}
+
+	default: assertm(false, "Invalid IntegerScalingMode value");
 	}
 
 	// Calculate centered viewport position.
@@ -3417,6 +3438,8 @@ void GFX_SetIntegerScalingMode(const std::string& new_mode)
 {
 	if (new_mode == "off") {
 		sdl.integer_scaling_mode = IntegerScalingMode::Off;
+	} else if (new_mode == "auto") {
+		sdl.integer_scaling_mode = IntegerScalingMode::Auto;
 	} else if (new_mode == "horizontal") {
 		sdl.integer_scaling_mode = IntegerScalingMode::Horizontal;
 	} else if (new_mode == "vertical") {

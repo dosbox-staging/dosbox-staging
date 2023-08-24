@@ -99,6 +99,7 @@ struct ShaderSettings {
 struct ShaderInfo {
 	std::string name        = {};
 	ShaderSettings settings = {};
+	bool is_adaptive        = false;
 };
 
 // Shader manager that picks the best shader to use based on various criteria.
@@ -125,6 +126,8 @@ public:
 
 	std::deque<std::string> InventoryShaders() const;
 
+	std::string MapShaderName(const std::string& name) const;
+
 	void NotifyGlshaderSettingChanged(const std::string& shader_name);
 
 	void NotifyRenderParametersChanged(const uint16_t canvas_width,
@@ -142,8 +145,6 @@ public:
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
 private:
-	std::optional<std::string> MapLegacyShaderName(const std::string& name) const;
-
 	void LoadShader(const std::string& shader_name);
 	bool ReadShaderSource(const std::string& shader_name, std::string& source);
 

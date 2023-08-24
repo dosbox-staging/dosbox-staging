@@ -45,18 +45,21 @@ void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
 	if (shader_name == AutoGraphicsStandardShaderName) {
 		if (mode != ShaderMode::AutoGraphicsStandard) {
 			mode = ShaderMode::AutoGraphicsStandard;
+
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the graphics "
 			        "standard of the video mode");
 		}
 	} else if (shader_name == AutoMachineShaderName) {
 		if (mode != ShaderMode::AutoMachine) {
 			mode = ShaderMode::AutoMachine;
+
 			LOG_MSG("RENDER: Using adaptive CRT shader based on the "
 			        "configured graphics adapter");
 		}
 	} else if (shader_name == AutoArcadeShaderName) {
 		if (mode != ShaderMode::AutoArcade) {
 			mode = ShaderMode::AutoArcade;
+
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
 			        "CRT shader");
 		}
@@ -131,21 +134,6 @@ void ShaderManager::LoadShader(const std::string& shader_name)
 {
 	auto new_shader_name = shader_name;
 
-	if (shader_name == "sharp") {
-		new_shader_name = SharpShaderName;
-	} else {
-		const auto mapped_name = MapLegacyShaderName(shader_name);
-		if (mapped_name) {
-			LOG_WARNING("RENDER: Built-in shader '%s' has been renamed to '%s'; "
-			            "using '%s' instead.",
-			            shader_name.c_str(),
-			            mapped_name->c_str(),
-			            mapped_name->c_str());
-
-			new_shader_name = *mapped_name;
-		}
-	}
-
 	if (!ReadShaderSource(new_shader_name, current_shader.source)) {
 		current_shader.source.clear();
 
@@ -169,7 +157,8 @@ void ShaderManager::LoadShader(const std::string& shader_name)
 	const auto settings = ParseShaderSettings(new_shader_name,
 	                                          current_shader.source);
 
-	current_shader.info = {new_shader_name, settings};
+	const bool is_adaptive = (mode != ShaderMode::Single);
+	current_shader.info    = {new_shader_name, settings, is_adaptive};
 }
 
 const ShaderInfo& ShaderManager::GetCurrentShaderInfo() const
@@ -230,8 +219,19 @@ std::deque<std::string> ShaderManager::InventoryShaders() const
 	return inventory;
 }
 
-std::optional<std::string> ShaderManager::MapLegacyShaderName(const std::string& name) const
+std::string ShaderManager::MapShaderName(const std::string& name) const
 {
+	// Handle empty glshader setting case
+	if (name.empty()) {
+		return FallbackShaderName;
+	}
+
+	// Map shader aliases
+	if (name == "sharp") {
+		return SharpShaderName;
+	}
+
+	// Map legacy shader names
 	static const std::map<std::string, std::string> legacy_name_mappings = {
 	        {"advinterp2x", "scaler/advinterp2x"},
 	        {"advinterp3x", "scaler/advinterp3x"},
@@ -248,18 +248,26 @@ std::optional<std::string> ShaderManager::MapLegacyShaderName(const std::string&
 	std_fs::path shader_path = name;
 	std_fs::path ext         = shader_path.extension();
 
-	if (!(ext == "" || ext == ".glsl")) {
-		return {};
+	if (ext == "" || ext == ".glsl") {
+		shader_path.replace_extension("");
+
+		const auto old_name = shader_path.string();
+		const auto it       = legacy_name_mappings.find(old_name);
+		if (it != legacy_name_mappings.end()) {
+			const auto new_name = it->second;
+
+			LOG_WARNING("RENDER: Built-in shader '%s' has been renamed to '%s'; "
+			            "using '%s' instead.",
+			            old_name.c_str(),
+			            new_name.c_str(),
+			            new_name.c_str());
+
+			return new_name;
+		}
 	}
 
-	shader_path.replace_extension("");
-
-	const auto it = legacy_name_mappings.find(shader_path.string());
-	if (it != legacy_name_mappings.end()) {
-		const auto new_name = it->second;
-		return new_name;
-	}
-	return {};
+	// No mapping required
+	return name;
 }
 
 bool ShaderManager::ReadShaderSource(const std::string& shader_name, std::string& source)
@@ -338,34 +346,46 @@ void ShaderManager::MaybeAutoSwitchShader()
 			return false;
 		}
 		LoadShader(shader_name);
-
-		LOG_MSG("RENDER: Auto-switched to shader '%s'",
-		        current_shader.info.name.c_str());
 		return true;
 	};
 
-	switch (mode) {
-	case ShaderMode::Single: {
+	if (mode == ShaderMode::Single) {
 		const auto shader_changed = maybe_load_shader(shader_name_from_config);
 		if (shader_changed) {
 			LOG_MSG("RENDER: Using shader '%s'",
 			        current_shader.info.name.c_str());
 		}
-	} break;
+		current_shader.info.is_adaptive = false;
 
-	case ShaderMode::AutoGraphicsStandard:
-		maybe_load_shader(FindShaderAutoGraphicsStandard());
-		break;
+	} else {
+		auto shader_changed = false;
 
-	case ShaderMode::AutoMachine:
-		maybe_load_shader(FindShaderAutoMachine());
-		break;
+		switch (mode) {
+		case ShaderMode::AutoGraphicsStandard:
+			shader_changed = maybe_load_shader(
+			        FindShaderAutoGraphicsStandard());
+			break;
 
-	case ShaderMode::AutoArcade:
-		maybe_load_shader(FindShaderAutoArcade());
-		break;
+		case ShaderMode::AutoMachine:
+			shader_changed = maybe_load_shader(FindShaderAutoMachine());
+			break;
 
-	default: assertm(false, "Invalid ShaderMode value");
+		case ShaderMode::AutoArcade:
+			shader_changed = maybe_load_shader(FindShaderAutoArcade());
+			break;
+
+		default: assertm(false, "Invalid ShaderMode value");
+		}
+
+		if (shader_changed) {
+			LOG_MSG("RENDER: Auto-switched to shader '%s'",
+			        current_shader.info.name.c_str());
+		}
+
+		// This will turn off vertical integer scaling for the 'sharp'
+		// shader in 'integer_scaling = auto' mode
+		current_shader.info.is_adaptive = (current_shader.info.name !=
+		                                   SharpShaderName);
 	}
 }
 
