@@ -34,7 +34,6 @@
 #include "fs_utils.h"
 #include "image/image_capturer.h"
 #include "mapper.h"
-#include "sdlmain.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"

@@ -32,6 +32,7 @@
 
 #include "fraction.h"
 #include "render.h"
+#include "shader_manager.h"
 #include "video.h"
 
 #define SDL_NOFRAME 0x00000020
@@ -191,7 +192,10 @@ struct SDL_Block {
 		bool use_shader;
 		bool framebuffer_is_srgb_encoded;
 		GLuint program_object;
+
+		ShaderInfo shader_info    = {};
 		std::string shader_source = {};
+
 		struct {
 			GLint texture_size;
 			GLint input_size;
