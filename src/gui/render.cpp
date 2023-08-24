@@ -140,7 +140,7 @@ static void empty_line_handler(const void*) {}
 static void start_line_handler(const void* s)
 {
 	if (s) {
-		auto src   = static_cast<const uintptr_t*>(s);
+		auto src = static_cast<const uintptr_t*>(s);
 		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
 		for (Bits x = render.src_start; x > 0;) {
 			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
@@ -171,7 +171,7 @@ static void start_line_handler(const void* s)
 static void finish_line_handler(const void* s)
 {
 	if (s) {
-		auto src   = static_cast<const uintptr_t*>(s);
+		auto src = static_cast<const uintptr_t*>(s);
 		auto cache = reinterpret_cast<uintptr_t*>(render.scale.cacheRead);
 		for (Bits x = render.src_start; x > 0;) {
 			cache[0] = src[0];
@@ -613,9 +613,10 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
 		} else {
 			setup_scan_and_pixel_doubling();
 
-			// We must set the new shader name here as we're bypassing
-			// a full render reinit (RENDER_Init() is the only other
-			// place where 'render.current_shader_name' can be set).
+			// We must set the new shader name here as we're
+			// bypassing a full render reinit (RENDER_Init() is the
+			// only other place where 'render.current_shader_name'
+			// can be set).
 			render.current_shader_name = new_shader_name;
 		}
 	}
@@ -651,17 +652,6 @@ static bool is_using_opengl_output_mode()
 	                                      "opengl");
 
 	return using_opengl;
-}
-
-std::string get_shader_name_from_config()
-{
-	assert(control);
-
-	const auto render_sec = static_cast<const Section_prop*>(
-	        control->GetSection("render"));
-	assert(render_sec);
-
-	return render_sec->Get_string("glshader");
 }
 
 std::deque<std::string> RENDER_InventoryShaders()
@@ -741,19 +731,27 @@ static void init_render_settings(Section_prop& secprop)
 	        "such as 320x200 or 640x400; square-pixel modes, such as 320x240, 640x480, and\n"
 	        "800x600 are displayed as-is.");
 
-	auto* string_prop = secprop.Add_string("integer_scaling", always, "off");
+	auto* string_prop = secprop.Add_string("integer_scaling", always, "auto");
 	string_prop->Set_help(
 	        "Constrain the horizontal or vertical scaling factor to integer values.\n"
-	        "The correct aspect ratio is always maintained, which may result in a\n"
-	        "non-integer scaling factor to be applied in the other dimension. If the\n"
-	        "image is larger than the viewport, the integer scaling constraint is\n"
-	        "auto-disabled (same as 'off').\n"
-	        "  off:         No integer scaling constraint; the aspect ratio correct image\n"
-	        "               fills the viewport (default).\n"
-	        "  horizontal:  Constrain the horizontal scaling factor to integer values\n"
-	        "               within the viewport.\n"
-	        "  vertical:    Constrain the vertical scaling factor to integer values\n"
-	        "               within the viewport.");
+	        "The correct aspect ratio is always maintained according to the 'aspect'\n"
+	        "setting, which may result in a non-integer scaling factor in the other\n"
+	        "direction. If the image is larger than the viewport, the integer scaling\n"
+	        "constraint is auto-disabled (same as 'off'). Possible values:\n"
+	        "  auto:        'vertical' mode auto-enabled for adaptive CRT shaders only,\n"
+	        "               otherwise 'off' (default).\n"
+	        "  vertical:    Constrain the vertical scaling factor to integer values within\n"
+	        "               the viewport. This is the recommended setting when using CRT\n"
+	        "               shaders to avoid uneven scanlines and unwanted interference\n"
+	        "               artifacts.\n"
+	        "  horizontal:  Constrain the horizontal scaling factor to integer values within\n"
+	        "               the viewport.\n"
+	        "  off:         No integer scaling constraint is applied; the image fills the\n"
+	        "               viewport according to the 'aspect' setting.");
+
+	const char* integer_scaling_values[] = {
+	        "auto", "vertical", "horizontal", "off", nullptr};
+	string_prop->Set_values(integer_scaling_values);
 
 	string_prop = secprop.Add_string("monochrome_palette",
 	                                 always,
@@ -906,8 +904,13 @@ void RENDER_Init(Section* sec)
 
 	auto shader_changed = false;
 	if (is_using_opengl_output_mode()) {
-		shader_manager.NotifyGlshaderSettingChanged(
-		        get_shader_name_from_config());
+		const auto shader_name = shader_manager.MapShaderName(
+		        section->Get_string("glshader"));
+
+		shader_manager.NotifyGlshaderSettingChanged(shader_name);
+
+		const auto string_prop = section->GetStringProp("glshader");
+		string_prop->SetValue(shader_name);
 	}
 	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
 

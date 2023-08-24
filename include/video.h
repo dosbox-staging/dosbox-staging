@@ -35,6 +35,7 @@ typedef enum {
 
 enum class IntegerScalingMode {
 	Off,
+	Auto,
 	Horizontal,
 	Vertical,
 };
