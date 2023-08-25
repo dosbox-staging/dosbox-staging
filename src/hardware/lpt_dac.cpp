@@ -137,46 +137,59 @@ LptDac::~LptDac()
 	render_queue = {};
 }
 
-std::unique_ptr<LptDac> lpt_dac = {};
-
-void LPT_DAC_ShutDown([[maybe_unused]] Section *sec)
+void LPT_DAC_Configure(const ModuleLifecycle lifecycle, Section* sec)
 {
-	lpt_dac.reset();
-}
+	static std::unique_ptr<LptDac> lpt_dac_instance = {};
 
-void LPT_DAC_Init(Section *section)
-{
-	assert(section);
+	const auto prop = static_cast<const Section_prop*>(sec);
 
-	// Always reset on changes
-	LPT_DAC_ShutDown(nullptr);
-
-	// Get the user's LPT DAC choices
-	assert(section);
-	const auto prop = static_cast<Section_prop *>(section);
-
-	const std::string_view dac_choice = prop->Get_string("lpt_dac");
-
-	if (dac_choice == "disney")
-		lpt_dac = std::make_unique<Disney>();
-	else if (dac_choice == "covox")
-		lpt_dac = std::make_unique<Covox>();
-	else if (dac_choice == "ston1")
-		lpt_dac = std::make_unique<StereoOn1>();
-	else {
-		// The remaining setting is to turn the LPT DAC off
-		const auto dac_choice_has_bool = parse_bool_setting(dac_choice);
-		if (!dac_choice_has_bool || *dac_choice_has_bool != false) {
-			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' choice: '%s', using 'none'",
-			            dac_choice.data());
+	auto get_lpt_dac_model =
+	        [](const std::string_view choice) -> std::unique_ptr<LptDac> {
+		if (choice == "disney") {
+			return std::make_unique<Disney>();
 		}
-		return;
+		if (choice == "covox") {
+			return std::make_unique<Covox>();
+		}
+		if (choice == "ston1") {
+			return std::make_unique<StereoOn1>();
+		}
+		if (!has_false(choice)) {
+			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' choice: '%s', using 'none'",
+			            choice.data());
+		}
+		return {};
+	};
+
+	// Configure the model
+	// ~~~~~~~~~~~~~~~~~~~
+	const auto model_choice = prop->Get_string("lpt_dac");
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		assert(model_choice);
+		lpt_dac_instance = get_lpt_dac_model(model_choice);
+		if (lpt_dac_instance) {
+			lpt_dac_instance->BindToPort(Lpt1Port);
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		lpt_dac_instance.reset();
+		break;
 	}
 
-	// Let the DAC apply its own filter type
-	const std::string_view filter_choice = prop->Get_string("lpt_dac_filter");
-	assert(lpt_dac);
-	if (!lpt_dac->TryParseAndSetCustomFilter(filter_choice)) {
+	// Only configure the filter if we have an LPT DAC
+	if (!lpt_dac_instance) {
+		return;
+	}
+	// Configure the filter
+	// ~~~~~~~~~~~~~~~~~~~~
+	assert(prop);
+	const auto filter_choice = prop->Get_string("lpt_dac_filter");
+	assert(filter_choice);
+
+	if (!lpt_dac_instance->TryParseAndSetCustomFilter(filter_choice)) {
 		auto filter_state = FilterState::Off;
 		const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
 
@@ -185,15 +198,20 @@ void LPT_DAC_Init(Section *section)
 			                                       : FilterState::Off;
 		} else {
 			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac_filter' value: '%s', using 'off'",
-			            filter_choice.data());
+			            filter_choice);
 			assert(filter_state == FilterState::Off);
 		}
-
-		lpt_dac->ConfigureFilters(filter_state);
+		lpt_dac_instance->ConfigureFilters(filter_state);
 	}
+}
 
-	lpt_dac->BindToPort(Lpt1Port);
+void LPT_DAC_Destroy(Section* section) {
+	LPT_DAC_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void LPT_DAC_Init(Section * section) {
+	LPT_DAC_Configure(ModuleLifecycle::Create, section);
 
 	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&LPT_DAC_ShutDown, changeable_at_runtime);
+	section->AddDestroyFunction(&LPT_DAC_Destroy, changeable_at_runtime);
 }
