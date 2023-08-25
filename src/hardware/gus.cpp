@@ -339,7 +339,8 @@ using namespace std::placeholders;
 // External Tie-in for OPL FM-audio
 uint8_t adlib_commandreg = ADLIB_CMD_DEFAULT;
 
-static std::unique_ptr<Gus> gus = nullptr;
+// Pointer to the static instance
+Gus* gus = nullptr;
 
 Voice::Voice(uint8_t num, VoiceIrq &irq) noexcept
         : vol_ctrl{irq.vol_state},
@@ -939,6 +940,7 @@ bool Gus::IsDmaXfer16Bit() noexcept
 
 static void GUS_DMA_Event(uint32_t)
 {
+	assert(gus);
 	if (gus->PerformDmaTransfer())
 		PIC_AddEvent(GUS_DMA_Event, MS_PER_DMA_XFER);
 }
@@ -1309,13 +1311,14 @@ void Gus::StopPlayback()
 
 static void GUS_TimerEvent(uint32_t t)
 {
+	assert(gus);
 	if (gus->CheckTimer(t)) {
 		const auto &timer = t == 0 ? gus->timer_one : gus->timer_two;
 		PIC_AddEvent(GUS_TimerEvent, timer.delay, t);
 	}
 }
 
-static void gus_destroy(Section*);
+void GUS_Destroy(Section* section);
 
 void Gus::UpdateDmaAddress(const uint8_t new_address)
 {
@@ -1333,7 +1336,7 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 	dma1 = new_address;
 	dma_channel = DMA_GetChannel(dma1);
 	assert(dma_channel);
-	dma_channel->ReserveFor("GUS", gus_destroy);
+	dma_channel->ReserveFor("GUS", GUS_Destroy);
 	dma_channel->RegisterCallback(std::bind(&Gus::DmaCallback, this, _1, _2));
 #if LOG_GUS
 	LOG_MSG("GUS: Assigned DMA1 address to %u", dma1);
@@ -1598,6 +1601,7 @@ Gus::~Gus()
 {
 	LOG_MSG("GUS: Shutting down");
 	StopPlayback();
+	PrintStats();
 
 	// Prevent discovery of the GUS via the environment
 	ClearEnvironment();
@@ -1619,46 +1623,58 @@ Gus::~Gus()
 	}
 }
 
-static void gus_destroy([[maybe_unused]] Section *sec)
+void GUS_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	// GUS destroy is run when the user wants to deactivate the GUS:
-	// C:\> config -set gus=false
-	// TODO: therefore, this function should also remove the
-	//       ULTRASND and ULTRADIR environment variables.
+	static std::unique_ptr<Gus> gus_instance = {};
 
-	if (gus) {
-		gus->PrintStats();
-		gus.reset();
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		gus = nullptr;
+
+		gus_instance.reset();
+		[[fallthrough]];
+
+	case ModuleLifecycle::Create:
+		// Read the GUS config settings
+		if (const auto conf = dynamic_cast<Section_prop*>(section);
+		    conf && conf->Get_bool("gus")) {
+			const auto port = static_cast<uint16_t>(conf->Get_hex("gusbase"));
+
+			const auto dma = clamp(static_cast<uint8_t>(conf->Get_int("gusdma")),
+			                       MIN_DMA_ADDRESS,
+			                       MAX_DMA_ADDRESS);
+
+			const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("gusirq")),
+			                       MIN_IRQ_ADDRESS,
+			                       MAX_IRQ_ADDRESS);
+
+			const auto ultradir = conf->Get_string("ultradir");
+
+			const std::string filter_prefs = conf->Get_string("gus_filter");
+
+			gus_instance = std::make_unique<Gus>(port, dma, irq, ultradir, filter_prefs);
+			gus = gus_instance.get();
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		gus = nullptr;
+
+		gus_instance.reset();
+		break;
 	}
 }
 
-static void gus_init(Section *sec)
+void GUS_Destroy(Section* section)
 {
-	assert(sec);
-	const Section_prop *conf = dynamic_cast<Section_prop *>(sec);
-	if (!conf || !conf->Get_bool("gus"))
-		return;
+	GUS_Configure(ModuleLifecycle::Destroy, section);
+}
 
-	// Read the GUS config settings
-	const auto port = static_cast<uint16_t>(conf->Get_hex("gusbase"));
-
-	const auto dma = clamp(static_cast<uint8_t>(conf->Get_int("gusdma")),
-	                       MIN_DMA_ADDRESS,
-	                       MAX_DMA_ADDRESS);
-
-	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("gusirq")),
-	                       MIN_IRQ_ADDRESS,
-	                       MAX_IRQ_ADDRESS);
-
-	const auto ultradir = conf->Get_string("ultradir");
-
-	const std::string filter_prefs = conf->Get_string("gus_filter");
-
-	// Instantiate the GUS with the settings
-	gus = std::make_unique<Gus>(port, dma, irq, ultradir, filter_prefs);
-
+void GUS_Init(Section* section)
+{
+	GUS_Configure(ModuleLifecycle::Create, section);
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&gus_destroy, changeable_at_runtime);
+	section->AddDestroyFunction(&GUS_Destroy, changeable_at_runtime);
 }
 
 void init_gus_dosbox_settings(Section_prop &secprop)
@@ -1715,7 +1731,7 @@ void GUS_AddConfigSection(Config* conf)
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("gus", &gus_init, changeable_at_runtime);
+	Section_prop* sec = conf->AddSection_prop("gus", &GUS_Init, changeable_at_runtime);
 	assert(sec);
 	init_gus_dosbox_settings(*sec);
 }
