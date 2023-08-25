@@ -1609,6 +1609,7 @@ public:
 		dos.direct_output=false;
 		dos.internal_output=false;
 
+		assert(configuration);
 		const Section_prop* section = static_cast<Section_prop*>(configuration);
 		char *args = const_cast<char *>(section->Get_string("ver"));
 		const char* word = strip_word(args);
@@ -1630,16 +1631,22 @@ public:
 	}
 };
 
-static DOS* test;
+void DOS_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	static std::unique_ptr<DOS> dos_instance = {};
 
-void DOS_ShutDown(Section* /*sec*/) {
-	delete test;
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		dos_instance = std::make_unique<DOS>(section);
+		break;
+
+	case ModuleLifecycle::Destroy:
+		dos_instance.reset();
+		break;
+	}
 }
 
-void DOS_Init(Section* sec)
-{
-	assert(sec);
-	test = new DOS(sec);
-
-	sec->AddDestroyFunction(&DOS_ShutDown);
+void DOS_Init(Section * section) {
+	DOS_Configure(ModuleLifecycle::Create, section);
 }

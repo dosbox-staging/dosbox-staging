@@ -53,7 +53,30 @@
 
 namespace {
 
-class DOS_FilesTest : public DOSBoxTestFixture {};
+class DOS_FilesTest : public DOSBoxTestFixture {
+public:
+	void SetUp() override
+	{
+		DOSBoxTestFixture::SetUp();
+
+		// Populate the default virtual drive
+		const auto drive_z_index = drive_index('Z');
+		Drives[drive_z_index]    = &virtual_drive;
+		DOS_SetDefaultDrive(drive_z_index);
+
+		// Populate the devices if needed
+		DOS_SetupDevices();
+	}
+
+	void TearDown() override
+	{
+		DOSBoxTestFixture::TearDown();
+		DOS_ShutDownDevices();
+	}
+
+private:
+	Virtual_Drive virtual_drive = {};
+};
 
 void assert_DTAExtendName(const std::string_view input_fullname,
                           const std::string_view expected_name,
