@@ -171,7 +171,9 @@ public:
 	void SetSampleRate(const int _freq);
 	void SetPeakAmplitude(const int peak);
 	void Mix(const int frames_requested);
-	void AddSilence(); // Fill up until needed
+
+	// Fill up until needed
+	void AddSilence();
 
 	void SetHighPassFilter(const FilterState state);
 	void SetLowPassFilter(const FilterState state);
@@ -217,11 +219,14 @@ public:
 
 	void FillUp();
 	void Enable(const bool should_enable);
-	bool WakeUp(); // pass-through to the sleeper
+
+	// Pass-through to the sleeper
+	bool WakeUp();
+
 	void FlushSamples();
 
-	std::atomic<int> frames_done = 0; // Timing on how many sample frames
-	                                  // have been done by the mixer
+	// Timing on how many sample frames have been done by the mixer
+	std::atomic<int> frames_done = 0;
 
 	bool is_enabled = false;
 
@@ -250,11 +255,17 @@ private:
 	MIXER_Handler handler = nullptr;
 	std::set<ChannelFeature> features = {};
 
-	int freq_add = 0u;           // This gets added the frequency counter each mixer step
-	int freq_counter = 0u;       // When this flows over a new sample needs to be read from the device
-	int frames_needed = 0u;      // Timing on how many samples were needed by the mixer
+	// This gets added the frequency counter each mixer step
+	int freq_add = 0u;
 
-	AudioFrame prev_frame = {}; // Previous and next samples
+	// When this flows over a new sample needs to be read from the device
+	int freq_counter = 0u;
+
+	// Timing on how many samples were needed by the mixer
+	int frames_needed = 0u;
+
+	// Previous and next sample fames
+	AudioFrame prev_frame = {};
 	AudioFrame next_frame = {};
 
 	int sample_rate = 0u;
