@@ -109,7 +109,10 @@ enum class ConfigProfile {
 	SoundCardRemoved,
 };
 
-static void shutdown_dac(Section*);
+// Legacy DMA-eviction callback used when registering a DMA channel. TODO: when
+// all DMA use lifecycles we can then pass in the _Configure call instead of
+// these.
+static void destroy_dac(Section*);
 
 class TandyDAC {
 public:
@@ -269,7 +272,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 
 	// Reserve the DMA channel
 	if (dma.channel = DMA_GetChannel(io.dma); dma.channel) {
-		dma.channel->ReserveFor("Tandy DAC", shutdown_dac);
+		dma.channel->ReserveFor("Tandy DAC", destroy_dac);
 	}
 
 	is_enabled = true;
@@ -606,20 +609,19 @@ void TandyPSG::AudioCallback(const uint16_t requested_frames)
 	last_rendered_ms = PIC_FullIndex();
 }
 
-// The Tandy DAC and PSG (programmable sound generator) managed pointers
-std::unique_ptr<TandyDAC> tandy_dac = {};
-std::unique_ptr<TandyPSG> tandy_psg = {};
+// Pointer to the DAC instance (if available). Used by TS_Get_Address(...)
+TandyDAC* dac = nullptr;
 
 bool TS_Get_Address(Bitu &tsaddr, Bitu &tsirq, Bitu &tsdma)
 {
-	if (!tandy_dac || !tandy_dac->IsEnabled()) {
+	if (!dac || !dac->IsEnabled()) {
 		tsaddr = 0;
 		tsirq = 0;
 		tsdma = 0;
 		return false;
 	}
 
-	assert(tandy_dac && tandy_dac->IsEnabled());
+	assert(dac && dac->IsEnabled());
 	tsaddr = TandyDAC::io.base;
 	tsirq  = TandyDAC::io.irq;
 	tsdma  = TandyDAC::io.dma;
@@ -631,60 +633,155 @@ static void set_tandy_sound_flag_in_bios(const bool is_enabled)
 	real_writeb(0x40, 0xd4, is_enabled ? 0xff : 0x00);
 }
 
-static void shutdown_dac(Section*)
+static const char* get_property(const Section* section, const char* name)
 {
-	if (tandy_dac) {
-		LOG_MSG("TANDY: Shutting down DAC");
-		tandy_dac.reset();
+	const auto property = static_cast<const Section_prop*>(section);
+
+	assert(property);
+	const auto value = property->Get_string(name);
+
+	assert(value);
+	return value;
+}
+
+static bool wants_dac(const Section* section)
+{
+	const std::string_view tandy_choice = get_property(section, "tandy");
+	return (has_true(tandy_choice) || (IS_TANDY_ARCH && tandy_choice == "auto"));
+}
+
+static bool wants_psg(const Section* section)
+{
+	const std::string_view tandy_choice = get_property(section, "tandy");
+	return (wants_dac(section) || tandy_choice == "psg");
+}
+
+static ConfigProfile get_psg_profile()
+{
+	switch (machine) {
+	case MCH_PCJR: return ConfigProfile::PCjrSystem; break;
+	case MCH_TANDY: return ConfigProfile::TandySystem; break;
+	default: return ConfigProfile::SoundCardOnly; break;
 	}
 }
 
-void TANDYSOUND_ShutDown(Section*)
+static void configure_dac(const ModuleLifecycle lifecycle, Section* section)
 {
-	if (tandy_psg || tandy_dac) {
-		LOG_MSG("TANDY: Shutting down");
-		set_tandy_sound_flag_in_bios(false);
-		tandy_dac.reset();
-		tandy_psg.reset();
+	static std::unique_ptr<TandyDAC> dac_instance = {};
+
+	auto reset_dac = [&]() {
+		if (dac_instance) {
+			LOG_MSG("TANDY: Shutting down DAC");
+			dac = nullptr;
+			dac_instance.reset();
+		}
+	};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		reset_dac();
+		[[fallthrough]];
+
+	case ModuleLifecycle::Create:
+		if (wants_dac(section)) {
+			// Do we need to create it?
+			if (!dac_instance) {
+				const auto profile = get_psg_profile();
+
+				const auto filter_pref = get_property(section,
+				                                      "tandy_dac_filter");
+
+				dac_instance = std::make_unique<TandyDAC>(profile,
+				                                          filter_pref);
+				dac = dac_instance.get();
+			}
+		}
+
+		else { // User doesn't want the DAC
+			reset_dac();
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		reset_dac();
+		break;
 	}
+}
+
+static void destroy_dac(Section*)
+{
+	constexpr auto no_section = nullptr;
+	configure_dac(ModuleLifecycle::Destroy, no_section);
 }
 
 void DMA_ConfigureSecondaryController(const ModuleLifecycle lifecycle);
 
-void TANDYSOUND_Init(Section* section)
+static void configure_psg(const ModuleLifecycle lifecycle, Section* section)
 {
-	assert(section);
-	const auto prop = static_cast<Section_prop*>(section);
-	const auto pref = std::string_view(prop->Get_string("tandy"));
-	if (has_false(pref) || (!IS_TANDY_ARCH && pref == "auto")) {
-		set_tandy_sound_flag_in_bios(false);
-		return;
+	// Configure the PSG
+	static std::unique_ptr<TandyPSG> psg_instance = {};
+
+	auto reset_psg = [&]() {
+		if (psg_instance) {
+			LOG_MSG("TANDY: Shutting down PSG");
+			psg_instance.reset();
+		}
+	};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		reset_psg();
+		[[fallthrough]];
+
+	case ModuleLifecycle::Create:
+		if (wants_psg(section)) {
+			// Do we need to create it?
+			if (!psg_instance) {
+				// The second DMA controller conflicts with the
+				// tandy sound's base IO ports 0xc0. Closing the
+				// controller itself means that all the high DMA
+				// ports (4 through 7) get automatically
+				// shutdown as well.
+				//
+				DMA_ConfigureSecondaryController(
+				        ModuleLifecycle::Destroy);
+
+				const auto profile = get_psg_profile();
+
+				const auto filter_pref = get_property(section,
+				                                      "tandy_filter");
+
+				psg_instance = std::make_unique<TandyPSG>(
+				        profile, wants_dac(section), filter_pref);
+			}
+		} else { // User doesn't want Tandy sound
+			reset_psg();
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		reset_psg();
+		break;
 	}
 
-	ConfigProfile cfg;
-	switch (machine) {
-	case MCH_PCJR: cfg = ConfigProfile::PCjrSystem; break;
-	case MCH_TANDY: cfg = ConfigProfile::TandySystem; break;
-	default: cfg = ConfigProfile::SoundCardOnly; break;
-	}
+	// Adjust the BIOS
+	const bool have_psg = (psg_instance != nullptr);
+	set_tandy_sound_flag_in_bios(have_psg);
+}
 
-	// The second DMA controller conflicts with the tandy sound's base IO
-	// ports 0xc0. Closing the controller itself means that all the high DMA
-	// ports (4 through 7) get automatically shutdown as well.
-	//
-	DMA_ConfigureSecondaryController(ModuleLifecycle::Destroy);
+void TANDYSOUND_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	configure_psg(lifecycle, section);
+	configure_dac(lifecycle, section);
+}
 
-	const auto wants_dac = has_true(pref) || (IS_TANDY_ARCH && pref == "auto");
-	if (wants_dac) {
-		tandy_dac = std::make_unique<TandyDAC>(
-		        cfg, prop->Get_string("tandy_dac_filter"));
-	}
-	tandy_psg = std::make_unique<TandyPSG>(cfg,
-	                                       wants_dac,
-	                                       prop->Get_string("tandy_filter"));
+void TANDYSOUND_Destroy(Section* section) {
+	TANDYSOUND_Configure(ModuleLifecycle::Destroy, section);
+}
 
-	set_tandy_sound_flag_in_bios(true);
+void TANDYSOUND_Init(Section * section) {
+	TANDYSOUND_Configure(ModuleLifecycle::Create, section);
 
 	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&TANDYSOUND_ShutDown, changeable_at_runtime);
+	section->AddDestroyFunction(&TANDYSOUND_Destroy, changeable_at_runtime);
 }

@@ -642,7 +642,7 @@ void DMA_ConfigurePrimaryController(const ModuleLifecycle lifecycle)
 	}
 }
 
-void TANDYSOUND_ShutDown(Section* = nullptr);
+void TANDYSOUND_Configure(const ModuleLifecycle, Section* = nullptr);
 
 void DMA_ConfigureSecondaryController(const ModuleLifecycle lifecycle)
 {
@@ -663,7 +663,7 @@ void DMA_ConfigureSecondaryController(const ModuleLifecycle lifecycle)
 			// shutdown the TandySound device (if it happens to be
 			// running) to meet this request.
 			//
-			TANDYSOUND_ShutDown();
+			TANDYSOUND_Configure(ModuleLifecycle::Destroy);
 
 			constexpr uint8_t secondary_index = 1;
 			secondary_instance = std::make_unique<DmaController>(
