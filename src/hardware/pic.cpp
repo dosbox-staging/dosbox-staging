@@ -676,13 +676,32 @@ public:
 	}
 };
 
-static PIC_8259A* test;
+void PIC_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	static std::unique_ptr<PIC_8259A> pic_instance = {};
 
-void PIC_Destroy(Section* /*sec*/){
-	delete test;
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		if (!pic_instance) {
+			pic_instance = std::make_unique<PIC_8259A>(section);
+		}
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		pic_instance.reset();
+		break;
+	}
 }
 
-void PIC_Init(Section* sec) {
-	test = new PIC_8259A(sec);
-	sec->AddDestroyFunction(&PIC_Destroy);
+void PIC_Destroy(Section* section) {
+	PIC_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void PIC_Init(Section * section) {
+	PIC_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&PIC_Destroy);
 }
