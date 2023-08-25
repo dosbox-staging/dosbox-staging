@@ -97,6 +97,7 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-speexdsp
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-python-pip
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-fluidsynth
+            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-ffmpeg
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -223,6 +224,7 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-speexdsp
             mingw-w64-clang-${{matrix.conf.arch}}-python-pip
             mingw-w64-clang-${{matrix.conf.arch}}-fluidsynth
+            mingw-w64-clang-${{matrix.conf.arch}}-ffmpeg
 
       - name:  Prepare compiler cache
         id:    prep-ccache
