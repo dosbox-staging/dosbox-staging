@@ -1742,15 +1742,14 @@ Bitu GFX_SetSize(const int width, const int height,
 	// The rendering objects are recreated below with new sizes, after which
 	// frame rendering is re-engaged with the output-type specific calls.
 
-	const bool double_width = flags & GFX_DBL_W;
+	const bool double_width  = flags & GFX_DBL_W;
 	const bool double_height = flags & GFX_DBL_H;
-	const auto [_, mode_type] = VGA_GetCurrentMode();
 
-	sdl.draw.has_changed = (sdl.draw.width != width || sdl.draw.height != height ||
+	sdl.draw.has_changed = (sdl.video_mode != video_mode ||
+	                        sdl.draw.width != width || sdl.draw.height != height ||
 	                        sdl.draw.width_was_doubled != double_width ||
 	                        sdl.draw.height_was_doubled != double_height ||
-	                        sdl.draw.render_pixel_aspect_ratio != render_pixel_aspect_ratio ||
-	                        sdl.draw.previous_mode != mode_type);
+	                        sdl.draw.render_pixel_aspect_ratio != render_pixel_aspect_ratio);
 
 	sdl.draw.width                     = width;
 	sdl.draw.height                    = height;
@@ -1760,8 +1759,7 @@ Bitu GFX_SetSize(const int width, const int height,
 
 	sdl.video_mode = video_mode;
 
-	sdl.draw.callback      = callback;
-	sdl.draw.previous_mode = mode_type;
+	sdl.draw.callback = callback;
 
 	const auto vsync_pref = get_vsync_settings().requested;
 	assert(vsync_pref != VsyncState::Unset);

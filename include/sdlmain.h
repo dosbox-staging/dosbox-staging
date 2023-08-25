@@ -112,7 +112,6 @@ struct SDL_Block {
 		int height = 0;
 		Fraction render_pixel_aspect_ratio = {1};
 
-		uint16_t previous_mode = 0;
 		bool has_changed = false;
 		GFX_CallBack_t callback = nullptr;
 		bool width_was_doubled = false;
