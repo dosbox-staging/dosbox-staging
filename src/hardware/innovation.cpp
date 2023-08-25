@@ -242,33 +242,62 @@ void Innovation::AudioCallback(const uint16_t requested_frames)
 	last_rendered_ms = PIC_FullIndex();
 }
 
-Innovation innovation;
-static void innovation_destroy([[maybe_unused]] Section *sec)
+static void configure_innovation(const ModuleLifecycle lifecycle, Section* section)
 {
-	innovation.Close();
+	static std::unique_ptr<Innovation> innovation_instance = {};
+
+	const auto properties   = static_cast<Section_prop*>(section);
+	const auto model_choice = properties->Get_string("sidmodel");
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		innovation_instance.reset();
+		[[fallthrough]];
+
+	case ModuleLifecycle::Create:
+
+		if (!has_false(model_choice)) {
+			if (!innovation_instance) {
+				const auto clock_choice = properties->Get_string(
+				        "sidclock");
+				const auto port_choice = properties->Get_hex("sidport");
+				const auto filter_strength_6581 = properties->Get_int(
+				        "6581filter");
+				const auto filter_strength_8580 = properties->Get_int(
+				        "8580filter");
+				const auto channel_filter_choice = properties->Get_string(
+				        "innovation_filter");
+
+				innovation_instance = std::make_unique<Innovation>();
+
+				innovation_instance->Open(model_choice,
+				                          clock_choice,
+				                          filter_strength_6581,
+				                          filter_strength_8580,
+				                          port_choice,
+				                          channel_filter_choice);
+			}
+		} else { // User doesn't want the innovation card
+			innovation_instance.reset();
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		innovation_instance.reset();
+		break;
+	}
 }
 
-static void innovation_init(Section *sec)
+static void innovation_destroy(Section* section)
 {
-	assert(sec);
-	Section_prop *conf = static_cast<Section_prop *>(sec);
+	configure_innovation(ModuleLifecycle::Destroy, section);
+}
 
-	const auto model_choice          = conf->Get_string("sidmodel");
-	const auto clock_choice          = conf->Get_string("sidclock");
-	const auto port_choice           = conf->Get_hex("sidport");
-	const auto filter_strength_6581  = conf->Get_int("6581filter");
-	const auto filter_strength_8580  = conf->Get_int("8580filter");
-	const auto channel_filter_choice = conf->Get_string("innovation_filter");
-
-	innovation.Open(model_choice,
-	                clock_choice,
-	                filter_strength_6581,
-	                filter_strength_8580,
-	                port_choice,
-	                channel_filter_choice);
-
+static void innovation_init(Section* section)
+{
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&innovation_destroy, changeable_at_runtime);
+	configure_innovation(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&innovation_destroy, changeable_at_runtime);
 }
 
 static void init_innovation_dosbox_settings(Section_prop& sec_prop)
