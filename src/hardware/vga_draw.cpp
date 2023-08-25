@@ -2803,10 +2803,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		VGA_VerticalTimer(0);
 	}
 
-	static auto previous_mode = vga.mode;
+	static VideoMode previous_video_mode = {};
 
-	if ((vga.mode != previous_mode) || (render.width != vga.draw.width) ||
-	    (render.height != vga.draw.height) ||
+	if ((previous_video_mode != render.video_mode) ||
+	    (vga.draw.width != render.width) || (vga.draw.height != render.height) ||
 	    (vga.draw.doublewidth != render.double_width) ||
 	    (vga.draw.doubleheight != render.double_height) ||
 	    (vga.draw.pixel_aspect_ratio != render.pixel_aspect_ratio) ||
@@ -2855,7 +2855,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			                         render.video_mode);
 		}
 
-		previous_mode = vga.mode;
+		previous_video_mode = render.video_mode;
 	}
 }
 

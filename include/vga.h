@@ -179,7 +179,25 @@ struct VideoMode {
 	// True if this is a double-scanned mode on VGA (e.g. 200-line CGA and
 	// EGA modes and most sub-400-line (S)VGA & VESA modes)
 	bool is_double_scanned_mode = false;
+
+	constexpr bool operator==(const VideoMode& that) const
+	{
+		return (bios_mode_number == that.bios_mode_number &&
+		        is_graphics_mode == that.is_graphics_mode &&
+		        is_custom_mode == that.is_custom_mode &&
+		        width == that.width && height == that.height &&
+		        pixel_aspect_ratio == that.pixel_aspect_ratio &&
+		        graphics_standard == that.graphics_standard &&
+		        color_depth == that.color_depth &&
+		        is_double_scanned_mode == that.is_double_scanned_mode);
+	}
+
+	constexpr bool operator!=(const VideoMode& that) const
+	{
+		return !operator==(that);
+	}
 };
+
 
 std::string to_string(const VideoMode& video_mode);
 
