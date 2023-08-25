@@ -740,6 +740,7 @@ public:
 
 XMS::XMS(Section* configuration) : Module_base(configuration), callbackhandler{}
 {
+	assert(configuration);
 	Section_prop* section = static_cast<Section_prop*>(configuration);
 
 	umb = {};
@@ -836,21 +837,22 @@ XMS::~XMS()
 // Lifecycle
 // ***************************************************************************
 
-static std::unique_ptr<XMS> instance = {};
-
-static void XMS_ShutDown(Section* /* sec */)
+void XMS_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	instance = {};
+	static std::unique_ptr<XMS> xms_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		xms_instance = std::make_unique<XMS>(section);
+		break;
+
+	case ModuleLifecycle::Destroy:
+		xms_instance.reset();
+		break;
+	}
 }
 
-void XMS_Init(Section* sec)
-{
-	assert(sec);
-
-	if (!instance) {
-		instance = std::make_unique<XMS>(sec);
-	}
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&XMS_ShutDown, changeable_at_runtime);
+void XMS_Init(Section * section) {
+	XMS_Configure(ModuleLifecycle::Create, section);
 }
