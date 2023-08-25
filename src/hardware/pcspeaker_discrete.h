@@ -59,8 +59,8 @@ private:
 	static constexpr float sqw_scalar = pwm_scalar / 2.0f;
 
 	// Amplitude constants
-	static constexpr float amp_positive = MAX_AUDIO * pwm_scalar;
-	static constexpr float amp_negative = MIN_AUDIO * pwm_scalar;
+	static constexpr float amp_positive = Max16BitSampleValue * pwm_scalar;
+	static constexpr float amp_negative = Min16BitSampleValue * pwm_scalar;
 	static constexpr float amp_neutral = (amp_positive + amp_negative) / 2.0f;
 
 	struct DelayEntry {

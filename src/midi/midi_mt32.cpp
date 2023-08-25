@@ -673,8 +673,8 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char *conf)
 	                                       ChannelFeature::Synthesizer});
 
 	// libmt32emu renders float audio frames between -1.0f and +1.0f, so we
-	// ask the channel to scale all the samples up to it's 0db level.
-	mixer_channel->Set0dbScalar(MAX_AUDIO);
+	// ask the channel to scale all the samples up to its 0db level.
+	mixer_channel->Set0dbScalar(Max16BitSampleValue);
 
 	const auto section = static_cast<Section_prop *>(control->GetSection("mt32"));
 	assert(section);

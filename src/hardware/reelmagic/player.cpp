@@ -799,7 +799,7 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 	// The decoded MP2 frame contains samples ranging from [-1.0f, +1.0f],
 	// so to hit 0 dB 16-bit signed, we need to multiply up from unity to
 	// the maximum magnitude (32k).
-	constexpr float mpeg1_db0_volume_scalar = {MAX_AUDIO};
+	constexpr float mpeg1_db0_volume_scalar = {Max16BitSampleValue};
 	mixer_channel->Set0dbScalar(mpeg1_db0_volume_scalar);
 }
 

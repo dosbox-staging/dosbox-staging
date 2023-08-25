@@ -91,9 +91,13 @@ using matrix = std::array<std::array<T, COLS>, ROWS>;
 
 static constexpr int16_t MIXER_CLIP(const int sample)
 {
-	if (sample <= MIN_AUDIO) return MIN_AUDIO;
-	if (sample >= MAX_AUDIO) return MAX_AUDIO;
-	
+	if (sample <= Min16BitSampleValue) {
+		return Min16BitSampleValue;
+	}
+	if (sample >= Max16BitSampleValue) {
+		return Max16BitSampleValue;
+	}
+
 	return static_cast<int16_t>(sample);
 }
 
@@ -453,7 +457,7 @@ static void configure_compressor(const bool compressor_enabled)
 		return;
 	}
 
-	const auto _0dbfs_sample_value = INT16_MAX;
+	const auto _0dbfs_sample_value = Max16BitSampleValue;
 	const auto threshold_db        = -6.0f;
 	const auto ratio               = 3.0f;
 	const auto attack_time_ms      = 0.01f;
@@ -606,7 +610,7 @@ void MixerChannel::Set0dbScalar(const float scalar)
 	// Realistically we expect some channels might need a fixed boost
 	// to get to 0dB, but others might need a range mapping, like from
 	// a unity float [-1.0f, +1.0f] to  16-bit int [-32k,+32k] range.
-	assert(scalar >= 0.0f && scalar <= static_cast<int16_t>(INT16_MAX));
+	assert(scalar >= 0.0f && scalar <= static_cast<int16_t>(Max16BitSampleValue));
 
 	db0_volume_scalar = scalar;
 
@@ -1247,7 +1251,7 @@ constexpr int16_t u8to16(const int u_val)
 	assert(u_val >= 0 && u_val <= UINT8_MAX);
 	const auto s_val = u_val - 128;
 	if (s_val > 0) {
-		constexpr auto scalar = INT16_MAX / 127.0;
+		constexpr auto scalar = Max16BitSampleValue / 127.0;
 		return static_cast<int16_t>(round(s_val * scalar));
 	}
 	return static_cast<int16_t>(s_val * 256);
@@ -1705,8 +1709,8 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 			prev_frame.left = data[0];
 			data++;
 		}
-		assert(prev_frame.left <= INT16_MAX);
-		assert(prev_frame.left >= INT16_MIN);
+		assert(prev_frame.left <= Max16BitSampleValue);
+		assert(prev_frame.left >= Min16BitSampleValue);
 		const auto diff = data[0] - static_cast<int16_t>(prev_frame.left);
 
 		const auto diff_mul = index & FREQ_MASK;
