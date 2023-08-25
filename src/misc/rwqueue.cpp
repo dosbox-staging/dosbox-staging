@@ -46,6 +46,20 @@ size_t RWQueue<T>::Size()
 }
 
 template <typename T>
+void RWQueue<T>::Start()
+{
+	if (is_running) {
+		return;;
+	}
+	mutex.lock();
+	is_running = true;
+	mutex.unlock();
+
+	has_items.notify_all();
+	has_room.notify_all();
+}
+
+template <typename T>
 void RWQueue<T>::Stop()
 {
 	if (!is_running) {
