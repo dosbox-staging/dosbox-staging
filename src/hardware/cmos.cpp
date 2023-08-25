@@ -375,18 +375,34 @@ public:
 	}
 };
 
-static CMOS* test;
+void CMOS_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	static std::unique_ptr<CMOS> cmos_instance = {};
 
-void CMOS_Destroy(Section* /*sec*/){
-	delete test;
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		if (!cmos_instance) {
+			cmos_instance = std::make_unique<CMOS>(section);
+		}
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		cmos_instance.reset();
+		break;
+	}
 }
 
-void CMOS_Init(Section* sec)
-{
-	assert(sec);
+void CMOS_Destroy(Section* section) {
+	CMOS_Configure(ModuleLifecycle::Destroy, section);
+}
 
-	test = new CMOS(sec);
+void CMOS_Init(Section * section) {
+	CMOS_Configure(ModuleLifecycle::Create, section);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&CMOS_Destroy, changeable_at_runtime);
+	section->AddDestroyFunction(&CMOS_Destroy, changeable_at_runtime);
 }
