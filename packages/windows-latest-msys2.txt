@@ -12,3 +12,4 @@ mingw-w64-x86_64-SDL2_image
 mingw-w64-x86_64-SDL2_net
 mingw-w64-x86_64-zlib
 mingw-w64-x86_64-speexdsp
+mingw-w64-x86_64-ffmpeg

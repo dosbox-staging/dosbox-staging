@@ -10,3 +10,8 @@ libsdl2-image-dev
 libsdl2-net-dev
 libspeexdsp-dev
 python3-setuptools
+libavcodec-dev
+libavutil-dev
+libswscale-dev
+libavformat-dev
+libswresample-dev

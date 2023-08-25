@@ -16,3 +16,8 @@ libspeexdsp-dev
 python3-setuptools
 meson
 ninja-build
+libavcodec-dev
+libavutil-dev
+libswscale-dev
+libavformat-dev
+libswresample-dev
