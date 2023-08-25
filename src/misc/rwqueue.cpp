@@ -278,3 +278,11 @@ template class RWQueue<MidiWork>;
 
 #include "render.h"
 template class RWQueue<SaveImageTask>;
+
+extern "C" {
+#include <libavcodec/avcodec.h>
+}
+// FFmpeg Encoder
+template class RWQueue<int16_t>;
+template class RWQueue<RenderedImage>;
+template class RWQueue<AVPacket *>;
