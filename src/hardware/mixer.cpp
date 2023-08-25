@@ -512,7 +512,7 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
 	chan->SetSampleRate(freq);
 	chan->SetAppVolume(1.0f);
 	chan->SetUserVolume(1.0f, 1.0f);
-	chan->ChangeChannelMap(LEFT, RIGHT);
+	chan->ChangeChannelMap(Left, Right);
 	chan->Enable(false);
 
 	set_global_crossfeed(chan);
@@ -637,18 +637,18 @@ static void MIXER_UpdateAllChannelVolumes()
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::ChangeChannelMap(const LINE_INDEX mapped_as_left,
-                                    const LINE_INDEX mapped_as_right)
+void MixerChannel::ChangeChannelMap(const LineIndex mapped_as_left,
+                                    const LineIndex mapped_as_right)
 {
-	assert(mapped_as_left == LEFT || mapped_as_left == RIGHT);
-	assert(mapped_as_right == LEFT || mapped_as_right == RIGHT);
+	assert(mapped_as_left == Left || mapped_as_left == Right);
+	assert(mapped_as_right == Left || mapped_as_right == Right);
 	channel_map = {mapped_as_left, mapped_as_right};
 
 #ifdef DEBUG
 	LOG_MSG("MIXER: %-7s channel: application changed audio-channel mapping to left=>%s and right=>%s",
 	        name,
-	        channel_map.left == LEFT ? "left" : "right",
-	        channel_map.right == LEFT ? "left" : "right");
+	        channel_map.left == Left ? "left" : "right",
+	        channel_map.right == Left ? "left" : "right");
 #endif
 }
 

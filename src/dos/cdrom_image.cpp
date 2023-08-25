@@ -845,8 +845,8 @@ void CDROM_Interface_Image::ChannelControl(TCtrl ctrl)
 	player.channel->SetAppVolume(ctrl.vol[0] / 255.0f, ctrl.vol[1] / 255.0f);
 
 	// Map the audio channels in our mixer channel as defined by the application
-	const auto left_mapped = static_cast<LINE_INDEX>(ctrl.out[0]);
-	const auto right_mapped = static_cast<LINE_INDEX>(ctrl.out[1]);
+	const auto left_mapped = static_cast<LineIndex>(ctrl.out[0]);
+	const auto right_mapped = static_cast<LineIndex>(ctrl.out[1]);
 	player.channel->ChangeChannelMap(left_mapped, right_mapped);
 
 #ifdef DEBUG

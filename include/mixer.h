@@ -34,7 +34,7 @@
 #include "audio_frame.h"
 #include "envelope.h"
 
-// Disable effc++ for Iir until its release.
+// Disable effc++ for IIR until its release.
 // Ref: https://github.com/berndporr/iir1/pull/39
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -100,9 +100,9 @@ constexpr T Mixer_GetSilentDOSSample()
 }
 
 // A simple enum to describe the array index associated with a given audio line
-enum LINE_INDEX : uint8_t {
-	LEFT  = 0,
-	RIGHT = 1,
+enum LineIndex : uint8_t {
+	Left  = 0,
+	Right = 1,
 	// DOS games didn't support surround sound, but if surround sound
 	// becomes standard at the host-level, then additional line indexes
 	// would go here.
@@ -162,7 +162,7 @@ public:
 	const AudioFrame& GetUserVolume() const;
 	const AudioFrame& GetAppVolume() const;
 
-	void ChangeChannelMap(const LINE_INDEX left, const LINE_INDEX right);
+	void ChangeChannelMap(const LineIndex left, const LineIndex right);
 	bool ChangeLineoutMap(std::string choice);
 	std::string DescribeLineout() const;
 	void ReactivateEnvelope();
@@ -307,13 +307,13 @@ private:
 	int peak_amplitude = Max16BitSampleValue;
 
 	struct StereoLine {
-		LINE_INDEX left  = LEFT;
-		LINE_INDEX right = RIGHT;
+		LineIndex left  = Left;
+		LineIndex right = Right;
 		bool operator==(const StereoLine other) const;
 	};
 
-	static constexpr StereoLine STEREO  = {LEFT, RIGHT};
-	static constexpr StereoLine REVERSE = {RIGHT, LEFT};
+	static constexpr StereoLine STEREO  = {Left, Right};
+	static constexpr StereoLine REVERSE = {Right, Left};
 
 	// User-configurable that defines how the channel's stereo line maps
 	// into the mixer.
