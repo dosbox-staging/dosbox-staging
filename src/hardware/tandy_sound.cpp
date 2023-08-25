@@ -649,7 +649,9 @@ void TANDYSOUND_ShutDown(Section*)
 	}
 }
 
-void TANDYSOUND_Init(Section *section)
+void DMA_ConfigureSecondaryController(const ModuleLifecycle lifecycle);
+
+void TANDYSOUND_Init(Section* section)
 {
 	assert(section);
 	const auto prop = static_cast<Section_prop*>(section);
@@ -670,7 +672,7 @@ void TANDYSOUND_Init(Section *section)
 	// ports 0xc0. Closing the controller itself means that all the high DMA
 	// ports (4 through 7) get automatically shutdown as well.
 	//
-	DMA_ShutdownSecondaryController();
+	DMA_ConfigureSecondaryController(ModuleLifecycle::Destroy);
 
 	const auto wants_dac = has_true(pref) || (IS_TANDY_ARCH && pref == "auto");
 	if (wants_dac) {

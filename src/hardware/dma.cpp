@@ -30,8 +30,9 @@
 #include "paging.h"
 #include "setup.h"
 
-std::unique_ptr<DmaController> primary   = {};
-std::unique_ptr<DmaController> secondary = {};
+// Pointers to the static controller instances
+DmaController* primary   = nullptr;
+DmaController* secondary = nullptr;
 
 #define EMM_PAGEFRAME4K ((0xE000 * 16) / dos_pagesize)
 uint32_t ems_board_mapping[LINK_START];
@@ -112,32 +113,6 @@ static void perform_dma_io(const DMA_DIRECTION direction, const PhysPt spage,
 	} while (remaining_bytes);
 }
 
-void TANDYSOUND_ShutDown(Section* = nullptr);
-
-static bool activate_primary()
-{
-	assert(!primary);
-	constexpr uint8_t primary_index = 0;
-	primary = std::make_unique<DmaController>(primary_index);
-	return true;
-}
-
-static bool activate_secondary()
-{
-	assert(!secondary);
-
-	// The secondary controller and Tandy Sound device conflict in
-	// their use of the 0xc0 IO ports. This is a unique architectural
-	// conflict, so we explicitly shutdown the TandySound device (if
-	// it happens to be running) to meet this request.
-	//
-	TANDYSOUND_ShutDown();
-
-	constexpr uint8_t secondary_index = 1;
-	secondary = std::make_unique<DmaController>(secondary_index);
-	return true;
-}
-
 constexpr uint8_t is_primary(const uint8_t channel_num)
 {
 	return (channel_num < SecondaryMin);
@@ -155,20 +130,27 @@ constexpr uint8_t to_secondary_num(const uint8_t channel_num)
 	return (static_cast<uint8_t>(channel_num - SecondaryMin));
 }
 
+void DMA_ConfigurePrimaryController(const ModuleLifecycle lifecycle);
+void DMA_ConfigureSecondaryController(const ModuleLifecycle lifecycle);
+
 DmaChannel* DMA_GetChannel(const uint8_t channel_num)
 {
-	if (is_primary(channel_num) && (primary || activate_primary())) {
+	if (is_primary(channel_num)) {
+		if (!primary) {
+			DMA_ConfigurePrimaryController(ModuleLifecycle::Create);
+		}
+		assert(primary);
 		return primary->GetChannel(channel_num);
 	}
-	if (is_secondary(channel_num) && (secondary || activate_secondary())) {
+
+	if (is_secondary(channel_num)) {
+		if (!secondary) {
+			DMA_ConfigureSecondaryController(ModuleLifecycle::Create);
+		}
+		assert(secondary);
 		return secondary->GetChannel(to_secondary_num(channel_num));
 	}
 	return nullptr;
-}
-
-void DMA_ShutdownSecondaryController()
-{
-	secondary = {};
 }
 
 static DmaChannel* GetChannelFromPort(const io_port_t port)
@@ -635,17 +617,94 @@ void DMA_SetWrapping(const uint32_t wrap)
 	dma_wrapping = wrap;
 }
 
-void DMA_Destroy(Section* /*sec*/)
+void DMA_ConfigurePrimaryController(const ModuleLifecycle lifecycle)
 {
-	primary   = {};
-	secondary = {};
-}
-void DMA_Init(Section* sec)
-{
-	DMA_SetWrapping(0xffff);
-	sec->AddDestroyFunction(&DMA_Destroy);
-	Bitu i;
-	for (i = 0; i < LINK_START; i++) {
-		ems_board_mapping[i] = i;
+	static std::unique_ptr<DmaController> primary_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		if (!primary_instance) {
+			constexpr uint8_t primary_index = 0;
+			primary_instance = std::make_unique<DmaController>(
+			        primary_index);
+			primary = primary_instance.get();
+		}
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		primary = nullptr;
+		primary_instance.reset();
+		break;
 	}
+}
+
+void TANDYSOUND_ShutDown(Section* = nullptr);
+
+void DMA_ConfigureSecondaryController(const ModuleLifecycle lifecycle)
+{
+	static std::unique_ptr<DmaController> secondary_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		secondary = nullptr;
+		secondary_instance.reset();
+		[[fallthrough]];
+		// Reconfigure through re-creation
+
+	case ModuleLifecycle::Create:
+		if (!secondary_instance) {
+			// The secondary controller and Tandy Sound device
+			// conflict in their use of the 0xc0 IO ports. This is a
+			// unique architectural conflict, so we explicitly
+			// shutdown the TandySound device (if it happens to be
+			// running) to meet this request.
+			//
+			TANDYSOUND_ShutDown();
+
+			constexpr uint8_t secondary_index = 1;
+			secondary_instance = std::make_unique<DmaController>(
+			        secondary_index);
+			secondary = secondary_instance.get();
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		secondary = nullptr;
+		secondary_instance.reset();
+		break;
+	}
+}
+
+void DMA_Configure(const ModuleLifecycle lifecycle, Section*)
+{
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		DMA_SetWrapping(0xffff);
+		for (uint32_t i = 0; i < LINK_START; ++i) {
+			ems_board_mapping[i] = i;
+		}
+		// The controllers are created on-demand
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure: break;
+
+	case ModuleLifecycle::Destroy:
+		DMA_ConfigurePrimaryController(lifecycle);
+		DMA_ConfigureSecondaryController(lifecycle);
+		break;
+	}
+}
+
+void DMA_Destroy(Section* section) {
+	DMA_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void DMA_Init(Section * section) {
+	DMA_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&DMA_Destroy);
 }
