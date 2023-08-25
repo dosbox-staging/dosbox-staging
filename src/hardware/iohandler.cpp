@@ -404,13 +404,32 @@ public:
 	}
 };
 
-static IO* test;
+void IO_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	static std::unique_ptr<IO> io_instance = {};
 
-void IO_Destroy(Section*) {
-	delete test;
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		if (!io_instance) {
+			io_instance = std::make_unique<IO>(section);
+		}
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		io_instance.reset();
+		break;
+	}
 }
 
-void IO_Init(Section * sect) {
-	test = new IO(sect);
-	sect->AddDestroyFunction(&IO_Destroy);
+void IO_Destroy(Section* section) {
+	IO_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void IO_Init(Section * section) {
+	IO_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&IO_Destroy);
 }
