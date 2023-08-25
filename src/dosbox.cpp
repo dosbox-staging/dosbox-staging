@@ -343,8 +343,19 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 	}
 }
 
-static void DOSBOX_RealInit(Section * sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
+static void DOSBOX_Configure(const ModuleLifecycle lifecycle,
+                             Section* sec)
+{
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		break;
+
+	// This module doesn't support runtime destruction
+	case ModuleLifecycle::Destroy: return;
+	}
+
+	Section_prop* section = static_cast<Section_prop*>(sec);
 	/* Initialize some dosbox internals */
 	ticksRemain=0;
 	ticksLast=GetTicks();
@@ -461,7 +472,7 @@ void DOSBOX_Init()
 	                          "vesa_oldvbe",
 	                          nullptr};
 
-	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
+	secprop = control->AddSection("dosbox", &DOSBOX_Configure);
 	pstring = secprop->Add_string("language", always, "");
 	pstring->Set_help(
 	        "Select a language to use: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', or 'ru'\n"
