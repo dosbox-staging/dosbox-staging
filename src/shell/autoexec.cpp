@@ -566,9 +566,22 @@ void AUTOEXEC_RegisterFile()
 	create_autoexec_bat_dos(autoexec_bat_utf8, get_utf8_code_page());
 }
 
-static std::unique_ptr<AutoExecModule> autoexec_module{};
-
-void AUTOEXEC_Init(Section* sec)
+void AUTOEXEC_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	autoexec_module = std::make_unique<AutoExecModule>(sec);
+	static std::unique_ptr<AutoExecModule> autoexec_module = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		autoexec_module = std::make_unique<AutoExecModule>(section);
+		break;
+
+	case ModuleLifecycle::Destroy:
+		// Destruction happens on re-configure or on program exit
+		break;
+	}
+}
+
+void AUTOEXEC_Init(Section * section) {
+	AUTOEXEC_Configure(ModuleLifecycle::Create, section);
 }
