@@ -540,39 +540,68 @@ Ps1Synth::~Ps1Synth()
 	MIXER_DeregisterChannel(channel);
 }
 
-static std::unique_ptr<Ps1Dac> ps1_dac = {};
-static std::unique_ptr<Ps1Synth> ps1_synth = {};
-
-static void PS1AUDIO_ShutDown([[maybe_unused]] Section *sec)
-{
-	LOG_MSG("PS1: Shutting down IBM PS/1 Audio card");
-	ps1_dac.reset();
-	ps1_synth.reset();
-}
-
 bool PS1AUDIO_IsEnabled()
 {
+	assert(control);
 	const auto section = control->GetSection("speaker");
-	assert(section);
 	const auto properties = static_cast<Section_prop *>(section);
+
+	assert(properties);
 	return properties->Get_bool("ps1audio");
 }
 
-void PS1AUDIO_Init(Section *section)
+void PS1AUDIO_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	assert(section);
-	const auto prop = static_cast<Section_prop *>(section);
+	static std::unique_ptr<Ps1Dac> ps1_dac_instance     = {};
+	static std::unique_ptr<Ps1Synth> ps1_synth_instance = {};
 
-	if (!PS1AUDIO_IsEnabled())
-		return;
+	// Always reset on section changes
+	auto reset_dac_and_synth = [&]() {
+		if (ps1_dac_instance || ps1_synth_instance) {
+			LOG_MSG("PS1: Shutting down IBM PS/1 Audio card");
+			ps1_dac_instance.reset();
+			ps1_synth_instance.reset();
+		}
+	};
 
-	ps1_dac = std::make_unique<Ps1Dac>(prop->Get_string("ps1audio_dac_filter"));
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		reset_dac_and_synth();
+		[[fallthrough]];
 
-	ps1_synth = std::make_unique<Ps1Synth>(
-	        prop->Get_string("ps1audio_filter"));
+	case ModuleLifecycle::Create:
+		if (PS1AUDIO_IsEnabled()) {
+			// Do we need to create it?
+			if (!ps1_dac_instance || !ps1_synth_instance) {
+				const auto properties = static_cast<Section_prop*>(section);
+				assert(properties);
 
-	LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
+				ps1_dac_instance = std::make_unique<Ps1Dac>(
+				        properties->Get_string("ps1audio_dac_filter"));
+
+				ps1_synth_instance = std::make_unique<Ps1Synth>(
+				        properties->Get_string("ps1audio_filter"));
+
+				LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
+			}
+		} else { // User doesn't want PS/1 audio
+			reset_dac_and_synth();
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		reset_dac_and_synth();
+		break;
+	}
+}
+
+void PS1AUDIO_Destroy(Section* section) {
+	PS1AUDIO_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void PS1AUDIO_Init(Section * section) {
+	PS1AUDIO_Configure(ModuleLifecycle::Create, section);
 
 	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&PS1AUDIO_ShutDown, changeable_at_runtime);
+	section->AddDestroyFunction(&PS1AUDIO_Destroy, changeable_at_runtime);
 }
