@@ -94,7 +94,7 @@ struct EMM_Handle {
 	EMM_Mapping page_map[EMM_MAX_PHYS];
 };
 
-static Bitu ems_type;
+static Bitu ems_type = 0;
 
 static EMM_Handle emm_handles[EMM_MAX_HANDLES];
 static EMM_Mapping emm_mappings[EMM_MAX_PHYS];
@@ -1414,6 +1414,7 @@ public:
 		vcpi.enabled=false;
 		GEMMIS_seg=0;
 
+		assert(configuration);
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		ems_type=GetEMSType(section);
 		if (ems_type<=0) return;
@@ -1550,18 +1551,29 @@ public:
 	}
 };
 
-static EMS* test;
+void EMS_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	static std::unique_ptr<EMS> ems_instance = {};
 
-void EMS_ShutDown(Section* /*sec*/) {
-	delete test;
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		if (ems_type != GetEMSType(static_cast<Section_prop*>(section))) {
+			ems_instance.reset();
+		}
+		[[fallthrough]];
+
+	case ModuleLifecycle::Create:
+		if (!ems_instance) {
+			ems_instance = std::make_unique<EMS>(section);
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		ems_instance.reset();
+		break;
+	}
 }
 
-void EMS_Init(Section* sec)
-{
-	assert(sec);
-
-	test = new EMS(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&EMS_ShutDown, changeable_at_runtime);
+void EMS_Init(Section * section) {
+	EMS_Configure(ModuleLifecycle::Create, section);
 }
