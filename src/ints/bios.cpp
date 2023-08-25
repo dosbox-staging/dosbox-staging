@@ -1375,19 +1375,27 @@ void BIOS_SetComPorts(uint16_t baseaddr[]) {
 	BIOS_SetEquipment(equipmentword);
 }
 
+void BIOS_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	static std::unique_ptr<BIOS> bios_instance = {};
 
-static BIOS* test;
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		bios_instance.reset();
+		[[fallthrough]];
 
-void BIOS_Destroy(Section* /*sec*/){
-	delete test;
+	case ModuleLifecycle::Create:
+		if (!bios_instance) {
+			bios_instance = std::make_unique<BIOS>(section);
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		bios_instance.reset();
+		break;
+	}
 }
 
-void BIOS_Init(Section* sec)
-{
-	assert(sec);
-
-	test = new BIOS(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&BIOS_Destroy, changeable_at_runtime);
+void BIOS_Init(Section * section) {
+	BIOS_Configure(ModuleLifecycle::Create, section);
 }
