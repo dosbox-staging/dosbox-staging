@@ -16,3 +16,4 @@ mingw-w64-clang-i686-SDL2_image
 mingw-w64-clang-i686-SDL2_net
 mingw-w64-clang-i686-zlib
 mingw-w64-clang-i686-speexdsp
+mingw-w64-clang-i686-ffmpeg

@@ -22,3 +22,4 @@ sdl2-net
 speexdsp
 nano
 wget
+ffmpeg
