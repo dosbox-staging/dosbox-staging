@@ -68,23 +68,25 @@
 
 constexpr auto mixer_frame_size = 4;
 
-#define FREQ_SHIFT 14
-#define FREQ_NEXT ( 1 << FREQ_SHIFT)
-#define FREQ_MASK ( FREQ_NEXT -1 )
+constexpr auto FreqShift = 14;
+constexpr auto FreqNext = (1 << FreqShift);
+constexpr auto FreqMask = (FreqNext -1);
 
-#define TICK_SHIFT 24
-#define TICK_NEXT ( 1 << TICK_SHIFT)
-#define TICK_MASK (TICK_NEXT -1)
+constexpr auto TickShift = 24;
+constexpr auto TickNext = ( 1 << TickShift);
+constexpr auto TickMask = (TickNext -1);
+
+constexpr auto IndexShiftLocal = 14;
 
 // Over how many milliseconds will we permit a signal to grow from
 // zero up to peak amplitude? (recommended 10 to 20ms)
-#define ENVELOPE_MAX_EXPANSION_OVER_MS 15u
+constexpr auto EnvelopeMaxExpansionOverMs = 15u;
 
 // Regardless if the signal needed to be eveloped or not, how long
 // should the envelope monitor the initial signal? (recommended > 5s)
-#define ENVELOPE_EXPIRES_AFTER_S 10u
+constexpr auto EnvelopeExpiresAfterSeconds = 10u;
 
-constexpr auto max_prebuffer_ms = 100;
+constexpr auto MaxPrebufferMs = 100;
 
 template <class T, size_t ROWS, size_t COLS>
 using matrix = std::array<std::array<T, COLS>, ROWS>;
@@ -221,7 +223,7 @@ alignas(sizeof(float)) uint8_t MixTemp[MixerBufferLength] = {};
 uint16_t MIXER_GetPreBufferMs()
 {
 	assert(mixer.prebuffer_ms > 0);
-	assert(mixer.prebuffer_ms <= max_prebuffer_ms);
+	assert(mixer.prebuffer_ms <= MaxPrebufferMs);
 
 	return mixer.prebuffer_ms;
 }
@@ -816,12 +818,12 @@ void MixerChannel::SetSampleRate(const int rate)
 	//              target_rate);
 	sample_rate = target_rate;
 
-	freq_add = (sample_rate << FREQ_SHIFT) / mixer.sample_rate;
+	freq_add = (sample_rate << FreqShift) / mixer.sample_rate;
 
 	envelope.Update(sample_rate,
 	                peak_amplitude,
-	                ENVELOPE_MAX_EXPANSION_OVER_MS,
-	                ENVELOPE_EXPIRES_AFTER_S);
+	                EnvelopeMaxExpansionOverMs,
+	                EnvelopeExpiresAfterSeconds);
 
 	ConfigureResampler();
 }
@@ -845,7 +847,7 @@ void MixerChannel::SetPeakAmplitude(const int peak)
 {
 	peak_amplitude = peak;
 	envelope.Update(sample_rate, peak_amplitude,
-	                ENVELOPE_MAX_EXPANSION_OVER_MS, ENVELOPE_EXPIRES_AFTER_S);
+	                EnvelopeMaxExpansionOverMs, EnvelopeExpiresAfterSeconds);
 }
 
 void MixerChannel::Mix(const int frames_requested)
@@ -857,8 +859,8 @@ void MixerChannel::Mix(const int frames_requested)
 	while (frames_needed > frames_done) {
 		auto frames_remaining = frames_needed - frames_done;
 		frames_remaining *= freq_add;
-		frames_remaining = (frames_remaining >> FREQ_SHIFT) +
-		                   ((frames_remaining & FREQ_MASK) != 0);
+		frames_remaining = (frames_remaining >> FreqShift) +
+		                   ((frames_remaining & FreqMask) != 0);
 
 		// avoid underflow
 		if (frames_remaining <= 0) {
@@ -885,7 +887,7 @@ void MixerChannel::AddSilence()
 			// switched to prev
 			next_frame = {0.0f, 0.0f};
 			// This should trigger an instant request for new samples
-			freq_counter = FREQ_NEXT;
+			freq_counter = FreqNext;
 		} else {
 			bool stereo = last_samples_were_stereo;
 
@@ -923,7 +925,7 @@ void MixerChannel::AddSilence()
 				mixpos = static_cast<work_index_t>(
 				        (mixpos + 1) & MixerBufferMask);
 				frames_done++;
-				freq_counter = FREQ_NEXT;
+				freq_counter = FreqNext;
 			}
 		}
 	}
@@ -1689,7 +1691,7 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 	// Target samples this inputs gets stretched into
 	auto frames_remaining = frames_needed - frames_done;
 	auto index            = 0;
-	auto index_add        = (len << FREQ_SHIFT) / frames_remaining;
+	auto index_add        = (len << FreqShift) / frames_remaining;
 
 	auto mixpos = check_cast<work_index_t>((mixer.pos + frames_done) &
 	                                       MixerBufferMask);
@@ -1702,7 +1704,7 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 	const auto mapped_output_right = output_map.right;
 
 	while (frames_remaining--) {
-		const auto new_pos = index >> FREQ_SHIFT;
+		const auto new_pos = index >> FreqShift;
 		if (pos != new_pos) {
 			pos = new_pos;
 			// Forward the previous sample
@@ -1713,11 +1715,11 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t *data)
 		assert(prev_frame.left >= Min16BitSampleValue);
 		const auto diff = data[0] - static_cast<int16_t>(prev_frame.left);
 
-		const auto diff_mul = index & FREQ_MASK;
+		const auto diff_mul = index & FreqMask;
 		index += index_add;
 
 		const auto sample = prev_frame.left +
-		                    ((diff * diff_mul) >> FREQ_SHIFT);
+		                    ((diff * diff_mul) >> FreqShift);
 
 		const AudioFrame frame_with_gain = {
 		        sample * combined_volume_scalar.left,
@@ -1881,12 +1883,8 @@ static inline bool Mixer_irq_important()
 
 static constexpr int calc_tickadd(const int freq)
 {
-#if TICK_SHIFT > 16
 	const auto freq64 = static_cast<int64_t>(freq);
-	return check_cast<int>((freq64 << TICK_SHIFT) / 1000);
-#else
-	return (freq<<TICK_SHIFT)/1000;
-#endif
+	return check_cast<int>((freq64 << TickShift) / 1000);
 }
 
 // Mix a certain amount of new sample frames
@@ -2018,8 +2016,8 @@ static void MIXER_Mix()
 	MIXER_LockAudioDevice();
 	MIXER_MixData(mixer.frames_needed);
 	mixer.tick_counter += mixer.tick_add;
-	mixer.frames_needed += mixer.tick_counter >> TICK_SHIFT;
-	mixer.tick_counter &= TICK_MASK;
+	mixer.frames_needed += mixer.tick_counter >> TickShift;
+	mixer.tick_counter &= TickMask;
 	MIXER_UnlockAudioDevice();
 }
 
@@ -2047,13 +2045,11 @@ static void MIXER_Mix_NoSound()
 
 	/* Set values for next tick */
 	mixer.tick_counter += mixer.tick_add;
-	mixer.frames_needed = (mixer.tick_counter >> TICK_SHIFT);
-	mixer.tick_counter &= TICK_MASK;
+	mixer.frames_needed = (mixer.tick_counter >> TickShift);
+	mixer.tick_counter &= TickMask;
 	mixer.frames_done = 0;
 	MIXER_UnlockAudioDevice();
 }
-
-#define INDEX_SHIFT_LOCAL 14
 
 static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
                                    Uint8 *stream, int len)
@@ -2068,7 +2064,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 
 	// Local resampling counter to manipulate the data when sending it off
 	// to the callback
-	auto index_add = (1 << INDEX_SHIFT_LOCAL);
+	auto index_add = (1 << IndexShiftLocal);
 	auto index     = (index_add % frames_requested) ? frames_requested : 0;
 
 	/* Enough room in the buffer ? */
@@ -2081,7 +2077,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 		                             // stretch.
 			return;
 		reduce_frames = mixer.frames_done;
-		index_add = (reduce_frames << INDEX_SHIFT_LOCAL) / frames_requested;
+		index_add = (reduce_frames << IndexShiftLocal) / frames_requested;
 		mixer.tick_add = calc_tickadd(mixer.sample_rate +
 		                              mixer.min_frames_needed);
 
@@ -2113,11 +2109,11 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 			// frames_requested, mixer.frames_done.load(),
 			// mixer.min_frames_needed.load(), frames_remaining);
 			reduce_frames = frames_requested - frames_remaining;
-			index_add     = (reduce_frames << INDEX_SHIFT_LOCAL) /
+			index_add     = (reduce_frames << IndexShiftLocal) /
 			            frames_requested;
 		} else {
 			reduce_frames = frames_requested;
-			index_add     = (1 << INDEX_SHIFT_LOCAL);
+			index_add     = (1 << IndexShiftLocal);
 			//			LOG_MSG("regular run requested
 			//%d, have %d, min %d, frames_remaining %d",
 			// frames_requested, mixer.frames_done.load(),
@@ -2156,7 +2152,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 			index_add = mixer.frames_done - 2 * mixer.min_frames_needed;
 		}
 
-		index_add = (index_add << INDEX_SHIFT_LOCAL) / frames_requested;
+		index_add = (index_add << IndexShiftLocal) / frames_requested;
 		reduce_frames = mixer.frames_done - 2 * mixer.min_frames_needed;
 
 		mixer.tick_add = calc_tickadd(mixer.sample_rate -
@@ -2179,7 +2175,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 	if (frames_requested != reduce_frames) {
 		while (frames_requested--) {
 			const auto i = check_cast<work_index_t>(
-			        (pos + (index >> INDEX_SHIFT_LOCAL)) & MixerBufferMask);
+			        (pos + (index >> IndexShiftLocal)) & MixerBufferMask);
 			index += index_add;
 
 			*output++ = mixer_clip(static_cast<int>(mixer.work[i][0]));
@@ -2220,8 +2216,6 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void *userdata,
 		}
 	}
 }
-
-#undef INDEX_SHIFT_LOCAL
 
 static void MIXER_Stop([[maybe_unused]] Section *sec)
 {}
@@ -2730,12 +2724,12 @@ void MIXER_Init(Section *sec)
 	}
 
 	// 1000 = 8 *125
-	mixer.tick_counter = (mixer.sample_rate % 125) ? TICK_NEXT : 0;
+	mixer.tick_counter = (mixer.sample_rate % 125) ? TickNext : 0;
 
 	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
 
 	mixer.prebuffer_ms = check_cast<uint16_t>(
-	        clamp(requested_prebuffer_ms, 1, max_prebuffer_ms));
+	        clamp(requested_prebuffer_ms, 1, MaxPrebufferMs));
 
 	const auto prebuffer_frames = (mixer.sample_rate * mixer.prebuffer_ms) / 1000;
 
@@ -2875,7 +2869,7 @@ void init_mixer_dosbox_settings(Section_prop &sec_prop)
 	                   "also be more lagged.");
 
 	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_prebuffer_ms);
-	int_prop->SetMinMax(0, max_prebuffer_ms);
+	int_prop->SetMinMax(0, MaxPrebufferMs);
 	int_prop->Set_help(
 	        "How many milliseconds of sound to render on top of the blocksize; larger values\n"
 	        "might help with sound stuttering but sound will also be more lagged.");
