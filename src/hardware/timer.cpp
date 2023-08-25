@@ -688,12 +688,33 @@ public:
 		PIC_RemoveEvents(PIT0_Event);
 	}
 };
-static TIMER* test;
 
-void TIMER_Destroy(Section*){
-	delete test;
+void TIMER_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	static std::unique_ptr<TIMER> timer_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		if (!timer_instance) {
+			timer_instance = std::make_unique<TIMER>(section);
+		}
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		timer_instance.reset();
+		break;
+	}
 }
-void TIMER_Init(Section* sec) {
-	test = new TIMER(sec);
-	sec->AddDestroyFunction(&TIMER_Destroy);
+
+void TIMER_Destroy(Section* section) {
+	TIMER_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void TIMER_Init(Section * section) {
+	TIMER_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&TIMER_Destroy);
 }
