@@ -440,8 +440,8 @@ float Voice::GetSample(const ram_array_t &ram) noexcept
 		sample += (next_sample - sample) *
 		          static_cast<float>(fraction) * WAVE_WIDTH_INV;
 	}
-	assert(sample >= static_cast<float>(MIN_AUDIO) &&
-	       sample <= static_cast<float>(MAX_AUDIO));
+	assert(sample >= static_cast<float>(Min16BitSampleValue) &&
+	       sample <= static_cast<float>(Max16BitSampleValue));
 	return sample;
 }
 

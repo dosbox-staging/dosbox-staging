@@ -63,8 +63,8 @@ static constexpr work_index_t MixerBufferMask   = {MixerBufferLength - 1};
 extern uint8_t MixTemp[MixerBufferLength];
 extern int16_t lut_u8to16[UINT8_MAX + 1];
 
-#define MAX_AUDIO ((1 << (16 - 1)) - 1)
-#define MIN_AUDIO -(1 << (16 - 1))
+constexpr auto Max16BitSampleValue = INT16_MAX;
+constexpr auto Min16BitSampleValue = INT16_MIN;
 
 static constexpr auto max_filter_order = 16;
 
@@ -304,7 +304,7 @@ private:
 	// Default to signed 16bit max, however channel's that know their own
 	// peak, like the PCSpeaker, should update it with: SetPeakAmplitude()
 	//
-	int peak_amplitude = MAX_AUDIO;
+	int peak_amplitude = Max16BitSampleValue;
 
 	struct StereoLine {
 		LINE_INDEX left  = LEFT;

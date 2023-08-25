@@ -503,8 +503,8 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	                                       ChannelFeature::Synthesizer});
 
 	// FluidSynth renders float audio frames between -1.0f and +1.0f, so we
-	// ask the channel to scale all the samples up to it's 0db level.
-	mixer_channel->Set0dbScalar(MAX_AUDIO);
+	// ask the channel to scale all the samples up to its 0db level.
+	mixer_channel->Set0dbScalar(Max16BitSampleValue);
 
 	const std::string filter_prefs = section->Get_string("fsynth_filter");
 
