@@ -917,9 +917,27 @@ public:
 	}
 };
 
-static std::unique_ptr<PAGING> paging_instance = nullptr;
-
-void PAGING_Init(Section *sec)
+void PAGING_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	paging_instance = std::make_unique<PAGING>(sec);
+	static std::unique_ptr<PAGING> paging_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		if (!paging_instance) {
+			paging_instance = std::make_unique<PAGING>(section);
+		}
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		// Destruction happens on re-configure or on program exit
+		break;
+	}
+}
+
+void PAGING_Init(Section * section) {
+	PAGING_Configure(ModuleLifecycle::Create, section);
 }
