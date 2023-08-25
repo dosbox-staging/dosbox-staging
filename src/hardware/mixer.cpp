@@ -1834,9 +1834,9 @@ std::string MixerChannel::DescribeLineout() const
 {
 	if (!HasFeature(ChannelFeature::Stereo))
 		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_MONO");
-	if (output_map == STEREO)
+	if (output_map == Stereo)
 		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_STEREO");
-	if (output_map == REVERSE)
+	if (output_map == Reverse)
 		return MSG_Get("SHELL_CMD_MIXER_CHANNEL_REVERSE");
 
 	// Output_map is programmtically set (not directly assigned from user
@@ -1853,9 +1853,9 @@ bool MixerChannel::ChangeLineoutMap(std::string choice)
 	lowcase(choice);
 
 	if (choice == "stereo")
-		output_map = STEREO;
+		output_map = Stereo;
 	else if (choice == "reverse")
-		output_map = REVERSE;
+		output_map = Reverse;
 	else
 		return false;
 
