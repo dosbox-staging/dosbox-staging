@@ -1665,7 +1665,8 @@ static bool LoadGLShaders(const std::string_view source_sv, GLuint *vertex,
 
 [[maybe_unused]] static bool is_shader_flexible()
 {
-	constexpr std::array<std::string_view, 3> flexible_shader_names{{
+	constexpr std::array<std::string_view, 4> flexible_shader_names{{
+	        "interpolation/catmull-rom",
 	        "interpolation/sharp",
 	        "none",
 	        "default",

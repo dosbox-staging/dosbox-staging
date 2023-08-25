@@ -10,6 +10,11 @@
 	See http://vec3.ca/bicubic-filtering-in-fewer-taps/ for more details
 */
 
+#pragma use_srgb_texture
+#pragma use_srgb_framebuffer
+#pragma force_single_scan
+#pragma force_no_pixel_doubling
+
 #if defined(VERTEX)
 
 #if __VERSION__ >= 130
