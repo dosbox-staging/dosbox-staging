@@ -646,6 +646,7 @@ public:
 	MEMORY(Section *configuration) : Module_base(configuration)
 	{
 		// Get the users memory size preference
+		assert(configuration);
 		const auto section = static_cast<Section_prop*>(configuration);
 		const auto num_megabytes = section->Get_int("memsize");
 		check_num_megabytes(num_megabytes);
@@ -699,18 +700,33 @@ public:
 	}
 };
 
-static MEMORY* test;
-
-static void MEM_ShutDown([[maybe_unused]] Section *sec)
+void MEM_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	delete test;
+	static std::unique_ptr<MEMORY> memory_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		if (!memory_instance) {
+			memory_instance = std::make_unique<MEMORY>(section);
+		}
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		memory_instance.reset();
+		break;
+	}
 }
 
-void MEM_Init(Section* sec)
-{
-	assert(sec);
+// Temporary
+void MEM_Destroy(Section* section) {
+	MEM_Configure(ModuleLifecycle::Destroy, section);
+}
 
-	/* shutdown function */
-	test = new MEMORY(sec);
-	sec->AddDestroyFunction(&MEM_ShutDown);
+void MEM_Init(Section * section) {
+	MEM_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&MEM_Destroy);
 }
