@@ -1105,6 +1105,7 @@ public:
 		isIpxServer = false;
 		isIpxConnected = false;
 
+		assert(configuration);
 		Section_prop *section = static_cast<Section_prop *>(configuration);
 		if (section && !section->Get_bool("ipx"))
 			return;
@@ -1189,20 +1190,24 @@ public:
 	}
 };
 
-static IPX* test;
+void IPX_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	static std::unique_ptr<IPX> ipx_instance = {};
 
-void IPX_ShutDown([[maybe_unused]] Section* sec) {
-	delete test;
+	switch (lifecycle) {
+	// Simply recreate the serial ports with the current conf section
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		ipx_instance = std::make_unique<IPX>(section);
+		break;
+
+	case ModuleLifecycle::Destroy:
+		break;
+	}
 }
 
-void IPX_Init(Section* sec)
-{
-	assert(sec);
-
-	test = new IPX(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&IPX_ShutDown, changeable_at_runtime);
+void IPX_Init(Section * section) {
+	IPX_Configure(ModuleLifecycle::Create, section);
 }
 
 //Initialize static members;
