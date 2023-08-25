@@ -24,43 +24,65 @@
 #include "pcspeaker_discrete.h"
 #include "pcspeaker_impulse.h"
 
-// The PC Speaker managed pointer
-std::unique_ptr<PcSpeaker> pc_speaker = {};
+// The PC Speaker pointer used in public access functions below
+PcSpeaker* pc_speaker = {};
 
-void PCSPEAKER_ShutDown([[maybe_unused]] Section *sec)
+void PCSPEAKER_Configure(const ModuleLifecycle lifecycle, Section* sec)
 {
-	pc_speaker.reset();
-}
+	static std::unique_ptr<PcSpeaker> pc_speaker_instance = {};
 
-void PCSPEAKER_Init(Section *section)
-{
-	// Always reset the speaker on changes
-	PCSPEAKER_ShutDown(nullptr);
+	assert(sec);
+	const auto prop = static_cast<const Section_prop*>(sec);
 
-	assert(section);
-	const auto prop = static_cast<Section_prop *>(section);
+	auto get_pc_speaker_model =
+	        [](const std::string_view choice) -> std::unique_ptr<PcSpeaker> {
+		if (choice == "discrete") {
+			return std::make_unique<PcSpeakerDiscrete>();
+		}
+		if (choice == "impulse") {
+			return std::make_unique<PcSpeakerImpulse>();
+		}
+		if (!has_false(choice)) {
+			LOG_ERR("PCSPEAKER: Invalid 'pcspeaker' choice: '%s', using 'none'",
+			        choice.data());
+		}
+		return {};
+	};
 
-	// Get the user's PC Speaker model choice
-	const auto model_choice = std::string_view(prop->Get_string("pcspeaker"));
+	// Configure the model
+	// ~~~~~~~~~~~~~~~~~~~
+	const auto model_choice = prop->Get_string("pcspeaker");
+	assert(model_choice);
 
-	const auto model_choice_has_bool = parse_bool_setting(model_choice);
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		pc_speaker = nullptr;
+		pc_speaker_instance.reset();
+		[[fallthrough]];
 
-	if (model_choice_has_bool && *model_choice_has_bool == false) {
-		return;
-	} else if (model_choice == "discrete") {
-		pc_speaker = std::make_unique<PcSpeakerDiscrete>();
-	} else if (model_choice == "impulse") {
-		pc_speaker = std::make_unique<PcSpeakerImpulse>();
-	} else {
-		LOG_ERR("PCSPEAKER: Invalid PC Speaker model: %s",
-		        model_choice.data());
-		return;
+	case ModuleLifecycle::Create:
+		if (!pc_speaker_instance) {
+			assert(!pc_speaker);
+			pc_speaker_instance = get_pc_speaker_model(model_choice);
+			pc_speaker = pc_speaker_instance.get();
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		pc_speaker = nullptr;
+		pc_speaker_instance.reset();
+		break;
 	}
 
+	// Only configure the filter if we have a PC Speaker
+	if (!pc_speaker) {
+		return;
+	}
+	// Configure the filter
+	// ~~~~~~~~~~~~~~~~~~~~
 	// Get the user's filering choice
-	const std::string_view filter_choice = prop->Get_string("pcspeaker_filter");
-
-	assert(pc_speaker);
+	const auto filter_choice = prop->Get_string("pcspeaker_filter");
+	assert(filter_choice);
 
 	if (!pc_speaker->TryParseAndSetCustomFilter(filter_choice)) {
 		const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
@@ -70,13 +92,21 @@ void PCSPEAKER_Init(Section *section)
 			}
 		} else {
 			LOG_WARNING("PCSPEAKER: Invalid 'pcspeaker_filter' value: '%s', using 'off'",
-			            filter_choice.data());
+			            filter_choice);
 			pc_speaker->SetFilterState(FilterState::Off);
 		}
 	}
+}
+
+void PCSPEAKER_Destroy(Section* section) {
+	PCSPEAKER_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void PCSPEAKER_Init(Section * section) {
+	PCSPEAKER_Configure(ModuleLifecycle::Create, section);
 
 	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&PCSPEAKER_ShutDown, changeable_at_runtime);
+	section->AddDestroyFunction(&PCSPEAKER_Destroy, changeable_at_runtime);
 }
 
 // PC Speaker external API, used by the PIT timer and keyboard
