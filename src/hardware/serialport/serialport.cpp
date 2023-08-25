@@ -1293,7 +1293,9 @@ class SERIALPORTS final : public Module_base {
 public:
 	SERIALPORTS (Section * configuration):Module_base (configuration) {
 		uint16_t biosParameter[SERIAL_MAX_PORTS] = {0};
-		Section_prop *section = static_cast <Section_prop*>(configuration);
+
+		assert(configuration);
+		Section_prop* section = static_cast<Section_prop*>(configuration);
 
 #if C_MODEM
 		const Prop_path *pbFilename = section->Get_path("phonebookfile");
@@ -1381,22 +1383,30 @@ public:
 	}
 };
 
-static SERIALPORTS *testSerialPortsBaseclass = nullptr;
-
-void SERIAL_Destroy(Section *sec)
+void SERIAL_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	(void)sec; // unused, but required for API compliance
-	delete testSerialPortsBaseclass;
-	testSerialPortsBaseclass = nullptr;
+	static std::unique_ptr<SERIALPORTS> serial_ports_instance = {};
+
+	switch (lifecycle) {
+	// Simply recreate the serial ports with the current conf section
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		serial_ports_instance = std::make_unique<SERIALPORTS>(section);
+		break;
+
+	case ModuleLifecycle::Destroy:
+		serial_ports_instance.reset();
+		break;
+	}
 }
 
-void SERIAL_Init (Section* sec)
-{
-	assert(sec);
+void SERIAL_Destroy(Section* section) {
+	SERIAL_Configure(ModuleLifecycle::Destroy, section);
+}
 
-	delete testSerialPortsBaseclass;
-	testSerialPortsBaseclass = new SERIALPORTS(sec);
+void SERIAL_Init(Section * section) {
+	SERIAL_Configure(ModuleLifecycle::Create, section);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&SERIAL_Destroy, changeable_at_runtime);
+	section->AddDestroyFunction(&SERIAL_Destroy, changeable_at_runtime);
 }
