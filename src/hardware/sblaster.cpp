@@ -2114,7 +2114,7 @@ OplMode find_oplmode()
 	return opl_mode;
 }
 
-void SBLASTER_ShutDown(Section*);
+void SBLASTER_Destroy(Section*);
 
 class SBLASTER final {
 private:
@@ -2221,7 +2221,7 @@ public:
 		sb.hw.dma8 = static_cast<uint8_t>(section->Get_int("dma"));
 		auto dma_channel = DMA_GetChannel(sb.hw.dma8);
 		assert(dma_channel);
-		dma_channel->ReserveFor(CardType(), SBLASTER_ShutDown);
+		dma_channel->ReserveFor(CardType(), SBLASTER_Destroy);
 
 		// Only Sound Blaster 16 uses a 16-bit DMA channel.
 		if (sb.type == SB_TYPES::SBT_16) {
@@ -2232,7 +2232,7 @@ public:
 				dma_channel = DMA_GetChannel(sb.hw.dma16);
 				assert(dma_channel);
 				dma_channel->ReserveFor(CardType(),
-										SBLASTER_ShutDown);
+										SBLASTER_Destroy);
 			}
 		}
 
@@ -2359,19 +2359,35 @@ public:
 	}
 
 }; // End of SBLASTER class
+void SBLASTER_Configure(const ModuleLifecycle lifecycle, Section* section = nullptr)
+{
+	static std::unique_ptr<SBLASTER> sblaster_instance = {};
 
-static std::unique_ptr<SBLASTER> sblaster = {};
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		sblaster_instance.reset();
+		[[fallthrough]];
+		// reconfigure through recreation
 
-void SBLASTER_ShutDown(Section* /*sec*/) {
-	sblaster = {};
+	case ModuleLifecycle::Create:
+		if (!sblaster_instance) {
+			sblaster_instance = std::make_unique<SBLASTER>(section);
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		sblaster_instance.reset();
+		break;
+	}
 }
 
-void SBLASTER_Init(Section* sec)
-{
-	assert(sec);
+void SBLASTER_Destroy(Section* section) {
+	SBLASTER_Configure(ModuleLifecycle::Destroy, section);
+}
 
-	sblaster = std::make_unique<SBLASTER>(sec);
+void SBLASTER_Init(Section * section) {
+	SBLASTER_Configure(ModuleLifecycle::Create, section);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&SBLASTER_ShutDown, changeable_at_runtime);
+	section->AddDestroyFunction(&SBLASTER_Destroy, changeable_at_runtime);
 }
