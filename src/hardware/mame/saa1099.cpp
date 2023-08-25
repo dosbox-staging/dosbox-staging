@@ -76,6 +76,8 @@
 #include <cmath>
 #include <climits>
 
+#include "mixer.h"
+
 #define LEFT    0x00
 #define RIGHT   0x01
 
@@ -349,11 +351,13 @@ void saa1099_device::sound_stream_update([[maybe_unused]] sound_stream &stream,
 		}
 		/* write sound data to the buffer */
 		const auto left_sample = output_l / 6;
-		assert(left_sample >= INT16_MIN && left_sample <= INT16_MAX);
+		assert(left_sample >= Min16BitSampleValue &&
+		       left_sample <= Max16BitSampleValue);
 		outputs[LEFT][j] = static_cast<int16_t>(left_sample);
 
 		const auto right_sample = output_r / 6;
-		assert(right_sample >= INT16_MIN && right_sample <= INT16_MAX);
+		assert(right_sample >= Min16BitSampleValue &&
+		       right_sample <= Max16BitSampleValue);
 		outputs[RIGHT][j] = static_cast<int16_t>(right_sample);
 	}
 }
