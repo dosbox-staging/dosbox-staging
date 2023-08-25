@@ -562,6 +562,7 @@ public:
 			return;
 
 		// Get the [joystock] conf section
+		assert(configuration);
 		const auto section = static_cast<Section_prop *>(configuration);
 		assert(section);
 
@@ -611,19 +612,35 @@ public:
 	}
 };
 
-static JOYSTICK* test;
-
-void JOYSTICK_Destroy([[maybe_unused]] Section *sec)
+void JOYSTICK_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	delete test;
+	static std::unique_ptr<JOYSTICK> joystick_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		joystick_instance.reset();
+		[[fallthrough]];
+		// reconfigure through recreation
+
+	case ModuleLifecycle::Create:
+	if (!joystick_instance) {
+		joystick_instance = std::make_unique<JOYSTICK>(section);
+	}
+	break;
+
+	case ModuleLifecycle::Destroy:
+		joystick_instance.reset();
+		break;
+	}
 }
 
-void JOYSTICK_Init(Section* sec)
-{
-	assert(sec);
+void JOYSTICK_Destroy(Section* section) {
+	JOYSTICK_Configure(ModuleLifecycle::Destroy, section);
+}
 
-	test = new JOYSTICK(sec);
+void JOYSTICK_Init(Section * section) {
+	JOYSTICK_Configure(ModuleLifecycle::Create, section);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&JOYSTICK_Destroy, changeable_at_runtime); 
+	section->AddDestroyFunction(&JOYSTICK_Destroy, changeable_at_runtime);
 }
