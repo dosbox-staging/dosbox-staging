@@ -21,9 +21,11 @@
 #include "config.h"
 
 #ifdef WIN32
-
+// clang-format off
+// 'windows.h' must be included first, otherwise we'll get compilation errors
 #include <windows.h>
 #include <stdio.h>
+// clang-format on
 
 #include "string_utils.h"
 

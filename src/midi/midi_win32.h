@@ -27,8 +27,12 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+// clang-format off
+// 'windows.h' must be included first, otherwise we'll get compilation errors
 #include <windows.h>
 #include <mmsystem.h>
+// clang-format on
+
 #include <string>
 #include <sstream>
 
