@@ -630,15 +630,16 @@ conf_data.set10('C_OPENGL', opengl_dep.found())
 # FluidSynth (depends on glib)
 fluid_dep = optional_dep
 if get_option('use_fluidsynth')
+    fluid_static = ('fluidsynth' in static_libs_list or prefers_static_libs)
     fluid_dep = dependency(
         'fluidsynth',
         version: ['>= 2.2.3', '< 3'],
         modules: ['FluidSynth::libfluidsynth'],
-        static: ('fluidsynth' in static_libs_list or prefers_static_libs),
+        static: fluid_static,
         not_found_message: msg.format('use_fluidsynth'),
         default_options: [
             'default_library=static',
-            'try-static-deps=true',
+            'try-static-deps=' + fluid_static.to_string(),
             'enable-floats=true',
             'openmp=disabled',
             'enable-threads=false',
