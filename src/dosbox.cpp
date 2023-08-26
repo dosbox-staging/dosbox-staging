@@ -184,7 +184,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 		static int64_t cumulativeTimeSlept = 0;
 
-		constexpr auto sleepDuration = std::chrono::microseconds(100);
+		constexpr auto sleepDuration = std::chrono::microseconds(1000);
 		std::this_thread::sleep_for(sleepDuration);
 
 		const auto timeslept = GetTicksUsSince(ticksNewUs);
