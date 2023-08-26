@@ -26,6 +26,7 @@
 #include <cstring>
 
 #include "mem.h"
+#include "string_utils.h"
 #include "support.h"
 
 static void dos_memset(PhysPt addr, uint8_t val, size_t n)
@@ -305,6 +306,119 @@ bool DOS_PSP::SetNumFiles(uint16_t file_num)
 		SSET_DWORD(sPSP, file_table, data);
 	}
 	SSET_WORD(sPSP, max_files, file_num);
+	return true;
+}
+
+static constexpr auto bytes_to_read = 1024;
+
+std::optional<std::string> DOS_PSP::GetEnvStr(const std::string_view entry) const
+{
+	/* Walk through the internal environment and see for a match */
+	PhysPt env_read = PhysicalMake(GetEnvironment(), 0);
+
+	char env_string[bytes_to_read + 1];
+	if (entry.empty()) {
+		return {};
+	}
+
+	for (;;) {
+		MEM_StrCopy(env_read, env_string, bytes_to_read);
+		if (!env_string[0]) {
+			return {};
+		}
+		env_read += (PhysPt)(safe_strlen(env_string) + 1);
+		char* equal = strchr(env_string, '=');
+		if (!equal) {
+			continue;
+		}
+		/* replace the = with \0 to get the length */
+		*equal = '\0';
+		if (strlen(env_string) != entry.size()) {
+			continue;
+		}
+		if (!iequals(entry, env_string)) {
+			continue;
+		}
+
+		return env_string + entry.size() + sizeof('=');
+	}
+}
+
+std::vector<std::string> DOS_PSP::GetAllEnvVars() const
+{
+	auto all_env_vars = std::vector<std::string>{};
+
+	char env_string[bytes_to_read + 1];
+	PhysPt env_read = PhysicalMake(GetEnvironment(), 0);
+	for (;;) {
+		MEM_StrCopy(env_read, env_string, bytes_to_read);
+		if (!env_string[0]) {
+			return all_env_vars;
+		}
+		all_env_vars.emplace_back(env_string);
+		env_read += (PhysPt)(safe_strlen(env_string) + 1);
+	}
+}
+
+bool DOS_PSP::SetEnv(std::string_view entry, std::string_view new_string)
+{
+	PhysPt env_read = PhysicalMake(GetEnvironment(), 0);
+
+	// Get size of environment.
+	DOS_MCB mcb(GetEnvironment() - 1);
+	uint16_t envsize = mcb.GetSize() * 16;
+
+	PhysPt env_write                   = env_read;
+	PhysPt env_write_start             = env_read;
+	char env_string[bytes_to_read + 1] = {0};
+	const auto entry_length            = entry.size();
+	do {
+		MEM_StrCopy(env_read, env_string, bytes_to_read);
+		if (!env_string[0]) {
+			break;
+		}
+		env_read += (PhysPt)(safe_strlen(env_string) + 1);
+		if (!strchr(env_string, '=')) {
+			continue; /* Remove corrupt entry? */
+		}
+		if (iequals(entry,
+		            std::string_view(env_string).substr(0, entry_length)) &&
+		    env_string[entry_length] == '=') {
+			continue;
+		}
+		MEM_BlockWrite(env_write,
+		               env_string,
+		               (Bitu)(safe_strlen(env_string) + 1));
+		env_write += (PhysPt)(safe_strlen(env_string) + 1);
+	} while (true);
+	/* TODO Maybe save the program name sometime. not really needed though */
+	/* Save the new entry */
+
+	// ensure room
+	if (envsize <= (env_write - env_write_start) + entry.size() + 1 +
+	                       new_string.size() + 2) {
+		return false;
+	}
+
+	if (!new_string.empty()) {
+		std::string bigentry(entry);
+		for (std::string::iterator it = bigentry.begin();
+		     it != bigentry.end();
+		     ++it) {
+			*it = toupper(*it);
+		}
+		snprintf(env_string,
+		         bytes_to_read + 1,
+		         "%s=%s",
+		         bigentry.c_str(),
+		         std::string(new_string).c_str());
+		MEM_BlockWrite(env_write,
+		               env_string,
+		               (Bitu)(safe_strlen(env_string) + 1));
+		env_write += (PhysPt)(safe_strlen(env_string) + 1);
+	}
+	/* Clear out the final piece of the environment */
+	mem_writeb(env_write, 0);
 	return true;
 }
 

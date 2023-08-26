@@ -53,7 +53,7 @@ private:
 	decltype(contents)::size_type index = 0;
 };
 
-class MockShell final : public HostShell {
+class MockShell final : public Environment {
 public:
 	std::optional<std::string> GetEnvStr(std::string_view entry) const override
 	{

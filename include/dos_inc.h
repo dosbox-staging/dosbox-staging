@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <type_traits>
 
@@ -351,17 +352,34 @@ public:
 	MemStruct(uint16_t seg, uint16_t off) : pt(PhysicalMake(seg, off)) {}
 	MemStruct(RealPt addr) : pt(RealToPhysical(addr)) {}
 
-	void SetPt(uint16_t seg) { pt = PhysicalMake(seg, 0); }
+	void SetPt(uint16_t seg)
+	{
+		pt = PhysicalMake(seg, 0);
+	}
 
 protected:
-	PhysPt pt = 0;
+	PhysPt pt    = 0;
+	~MemStruct() = default;
+};
+
+class Environment {
+public:
+	virtual std::optional<std::string> GetEnvStr(std::string_view entry) const = 0;
+
+	virtual ~Environment() = default;
+
+protected:
+	Environment()                              = default;
+	Environment(const Environment&)            = default;
+	Environment& operator=(const Environment&) = default;
+	Environment(Environment&&)                 = default;
+	Environment& operator=(Environment&&)      = default;
 };
 
 /* Program Segment Prefix */
-
-class DOS_PSP final : public MemStruct {
+class DOS_PSP final : public MemStruct, public Environment {
 public:
-	DOS_PSP(uint16_t segment) : seg(segment) { SetPt(seg); }
+	DOS_PSP(uint16_t segment) : seg(segment) { SetPt(seg); }	
 
 	void MakeNew(uint16_t mem_size);
 
@@ -413,6 +431,10 @@ public:
 	void SetFCB1(RealPt src);
 	void SetFCB2(RealPt src);
 	void SetCommandTail(RealPt src);
+
+	std::optional<std::string> GetEnvStr(std::string_view entry) const override;
+	std::vector<std::string> GetAllEnvVars() const;
+	bool SetEnv(std::string_view entry, std::string_view new_string);
 
 private:
 	#ifdef _MSC_VER

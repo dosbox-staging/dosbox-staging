@@ -473,7 +473,7 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 
 		auto reader = FileReader::GetFileReader(fullname);
 		if (reader) {
-			batchfiles.emplace(*this, std::move(*reader), name, args, echo);
+			batchfiles.emplace(*psp, std::move(*reader), name, args, echo);
 		} else {
 			WriteOut("Could not open %s", fullname.c_str());
 		}
@@ -613,111 +613,15 @@ static void run_binary_executable(const std::string_view fullname,
 
 std::optional<std::string> DOS_Shell::GetEnvStr(const std::string_view entry) const
 {
-	/* Walk through the internal environment and see for a match */
-	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
-
-	char env_string[1024 + 1];
-	if (entry.empty()) {
-		return {};
-	}
-
-	while (true) {
-		MEM_StrCopy(env_read, env_string, 1024);
-		if (!env_string[0]) {
-			return {};
-		}
-		env_read += (PhysPt)(safe_strlen(env_string) + 1);
-		char* equal = strchr(env_string, '=');
-		if (!equal) {
-			continue;
-		}
-		/* replace the = with \0 to get the length */
-		*equal = '\0';
-		if (strlen(env_string) != entry.size()) {
-			continue;
-		}
-		if (!iequals(entry, env_string)) {
-			continue;
-		}
-
-		return env_string + entry.size() + sizeof('=');
-	}
+	return psp->GetEnvStr(entry);
 }
 
 std::vector<std::string> DOS_Shell::GetAllEnvVars() const
 {
-	auto all_env_vars = std::vector<std::string>{};
-
-	char env_string[1024 + 1];
-	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
-	while(true) {
-		MEM_StrCopy(env_read, env_string, 1024);
-		if (!env_string[0]) {
-			return all_env_vars;
-		}
-		all_env_vars.emplace_back(env_string);
-		env_read += (PhysPt)(safe_strlen(env_string) + 1);
-	}
+	return psp->GetAllEnvVars();
 }
 
 bool DOS_Shell::SetEnv(std::string_view entry, std::string_view new_string)
 {
-	PhysPt env_read = PhysicalMake(psp->GetEnvironment(), 0);
-
-	// Get size of environment.
-	DOS_MCB mcb(psp->GetEnvironment() - 1);
-	uint16_t envsize = mcb.GetSize() * 16;
-
-	PhysPt env_write          = env_read;
-	PhysPt env_write_start    = env_read;
-	char env_string[1024 + 1] = {0};
-	const auto entry_length   = entry.size();
-	do {
-		MEM_StrCopy(env_read, env_string, 1024);
-		if (!env_string[0]) {
-			break;
-		}
-		env_read += (PhysPt)(safe_strlen(env_string) + 1);
-		if (!strchr(env_string, '=')) {
-			continue; /* Remove corrupt entry? */
-		}
-		if (iequals(entry,
-		            std::string_view(env_string).substr(0, entry_length)) &&
-		    env_string[entry_length] == '=') {
-			continue;
-		}
-		MEM_BlockWrite(env_write,
-		               env_string,
-		               (Bitu)(safe_strlen(env_string) + 1));
-		env_write += (PhysPt)(safe_strlen(env_string) + 1);
-	} while (1);
-	/* TODO Maybe save the program name sometime. not really needed though */
-	/* Save the new entry */
-
-	// ensure room
-	if (envsize <= (env_write - env_write_start) + entry.size() + 1 +
-	                       new_string.size() + 2) {
-		return false;
-	}
-
-	if (!new_string.empty()) {
-		std::string bigentry(entry);
-		for (std::string::iterator it = bigentry.begin();
-		     it != bigentry.end();
-		     ++it) {
-			*it = toupper(*it);
-		}
-		snprintf(env_string,
-		         1024 + 1,
-		         "%s=%s",
-		         bigentry.c_str(),
-		         std::string(new_string).c_str());
-		MEM_BlockWrite(env_write,
-		               env_string,
-		               (Bitu)(safe_strlen(env_string) + 1));
-		env_write += (PhysPt)(safe_strlen(env_string) + 1);
-	}
-	/* Clear out the final piece of the environment */
-	mem_writeb(env_write, 0);
-	return true;
+	return psp->SetEnv(entry, new_string);
 }

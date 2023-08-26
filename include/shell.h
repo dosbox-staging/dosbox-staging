@@ -53,21 +53,9 @@ public:
 	virtual ~ByteReader()                    = default;
 };
 
-class HostShell {
-public:
-	virtual std::optional<std::string> GetEnvStr(std::string_view entry) const = 0;
-
-	HostShell()                            = default;
-	HostShell(const HostShell&)            = delete;
-	HostShell& operator=(const HostShell&) = delete;
-	HostShell(HostShell&&)                 = delete;
-	HostShell& operator=(HostShell&&)      = delete;
-	virtual ~HostShell()                   = default;
-};
-
 class BatchFile {
 public:
-	BatchFile(const HostShell& host, std::unique_ptr<ByteReader> input_reader,
+	BatchFile(const Environment& host, std::unique_ptr<ByteReader> input_reader,
 	          std::string_view entered_name, std::string_view cmd_line,
 	          bool echo_on);
 	BatchFile(const BatchFile&)            = delete;
@@ -86,7 +74,7 @@ private:
 	[[nodiscard]] std::string ExpandedBatchLine(std::string_view line) const;
 	[[nodiscard]] std::string GetLine();
 
-	const HostShell& shell;
+	const Environment& shell;
 	CommandLine cmd;
 	std::unique_ptr<ByteReader> reader;
 	bool echo;
@@ -122,7 +110,7 @@ private:
 	bool secure_mode;
 };
 
-class DOS_Shell : public Program, public HostShell {
+class DOS_Shell : public Program {
 private:
 	void PrintHelpForCommands(MoreOutputStrings& output, HELP_Filter req_filter);
 	void AddShellCmdsToHelpList();
@@ -162,7 +150,7 @@ public:
 	bool ExecuteProgram(std::string_view name, std::string_view args);
 	bool ExecuteConfigChange(const char* const cmd_in, const char* const line);
 
-	std::optional<std::string> GetEnvStr(std::string_view entry) const override;
+	std::optional<std::string> GetEnvStr(std::string_view entry) const;
 	std::vector<std::string> GetAllEnvVars() const;
 	bool SetEnv(std::string_view entry, std::string_view new_string);
 
