@@ -278,29 +278,22 @@ void DOS_Shell::ParseLine(char *line)
 	bool failed_pipe = false;
 	char pipe_tempfile[270]; // Piping requires the use of a temporary file
 	FatAttributeFlags fattr = {};
-	if (pipe_file.length()) {
-		auto result = GetEnvStr("TEMP");
-		if (!result) {
-			result = GetEnvStr("TMP");
+	if (!pipe_file.empty()) {
+		auto env_temp_path = psp->GetEnvironmentValue("TEMP");
+		if (!env_temp_path) {
+			env_temp_path = psp->GetEnvironmentValue("TMP");
 		}
-		std::string env_temp_path = {};
-		if (result) {
-			env_temp_path = *result;
-		}
-		if (env_temp_path.empty()) {
+		if (!env_temp_path ||
+		    (!DOS_GetFileAttr(env_temp_path->c_str(), &fattr) ||
+		     !fattr.directory)) {
 			safe_sprintf(pipe_tempfile,
 			             "pipe%d.tmp",
 			             get_tick_random_number());
 		} else {
-			if (DOS_GetFileAttr(env_temp_path.c_str(), &fattr) &&
-			    fattr.directory) {
-				safe_sprintf(pipe_tempfile,
-				             "%s\\pipe%d.tmp",
-				             env_temp_path.c_str(),
-				             get_tick_random_number());
-		        } else
-				safe_sprintf(pipe_tempfile, "pipe%d.tmp",
-				             get_tick_random_number());
+			safe_sprintf(pipe_tempfile,
+			             "%s\\pipe%d.tmp",
+			             env_temp_path->c_str(),
+			             get_tick_random_number());
 		}
 	}
 	if (out_file.length() || pipe_file.length()) {
