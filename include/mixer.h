@@ -142,7 +142,7 @@ public:
 
 	bool HasFeature(ChannelFeature feature) const;
 	const std::string& GetName() const;
-	int GetSampleRate() const;
+	uint16_t GetSampleRate() const;
 
 	void SetUserVolume(const float left, const float right);
 	void SetAppVolume(const float f);
@@ -157,9 +157,9 @@ public:
 	bool ChangeLineoutMap(std::string choice);
 	std::string DescribeLineout() const;
 	void ReactivateEnvelope();
-	void SetSampleRate(const int _freq);
+	void SetSampleRate(const uint16_t _freq);
 	void SetPeakAmplitude(const int peak);
-	void Mix(const int frames_requested);
+	void Mix(const uint16_t frames_requested);
 
 	// Fill up until needed
 	void AddSilence();
@@ -391,7 +391,7 @@ private:
 
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 
-mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
+mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint16_t freq,
                                  const char* name,
                                  const std::set<ChannelFeature>& features);
 
@@ -401,7 +401,7 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel);
 
 // Mixer configuration and initialization
 void MIXER_AddConfigSection(const config_ptr_t& conf);
-int MIXER_GetSampleRate();
+uint16_t MIXER_GetSampleRate();
 uint16_t MIXER_GetPreBufferMs();
 
 void MIXER_Mute();
