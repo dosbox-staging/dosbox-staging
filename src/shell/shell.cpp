@@ -268,9 +268,9 @@ void DOS_Shell::ParseLine(char *line)
 	char pipe_tempfile[270]; // Piping requires the use of a temporary file
 	uint16_t fattr;
 	if (pipe_file.length()) {
-		auto result = GetEnvStr("TEMP");
+		auto result = psp->GetEnvStr("TEMP");
 		if (!result) {
-			result = GetEnvStr("TMP");
+			result = psp->GetEnvStr("TMP");
 		}
 		std::string env_temp_path = {};
 		if (result) {

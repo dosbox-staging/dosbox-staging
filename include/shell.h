@@ -150,8 +150,8 @@ public:
 	bool ExecuteProgram(std::string_view name, std::string_view args);
 	bool ExecuteConfigChange(const char* const cmd_in, const char* const line);
 
-	std::optional<std::string> GetEnvStr(std::string_view entry) const;
-	std::vector<std::string> GetAllEnvVars() const;
+	// HACK: Don't use in new code
+	// TODO: Remove the call to this function from autoexec
 	bool SetEnv(std::string_view entry, std::string_view new_string);
 
 	/* Commands */

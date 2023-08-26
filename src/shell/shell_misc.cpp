@@ -355,8 +355,8 @@ std::string DOS_Shell::SubstituteEnvironmentVariables(std::string_view command)
 		}
 		closing_percent += 1;
 
-		if (const auto env_val =
-		            GetEnvStr(command.substr(1, closing_percent - 1))) {
+		if (const auto env_val = psp->GetEnvStr(
+		            command.substr(1, closing_percent - 1))) {
 			expanded += *env_val;
 
 			command = command.substr(closing_percent + 1);
@@ -495,7 +495,7 @@ std::string DOS_Shell::Which(const std::string_view name) const
 
 	std::vector<std::string> prefixes = {""};
 
-	if (const auto path = GetEnvStr("PATH")) {
+	if (const auto path = psp->GetEnvStr("PATH")) {
 		auto path_directories = split(*path, ';');
 
 		remove_empties(path_directories);
@@ -609,16 +609,6 @@ static void run_binary_executable(const std::string_view fullname,
 
 	/* Restore CS:IP and the stack */
 	reg_sp += 0x200;
-}
-
-std::optional<std::string> DOS_Shell::GetEnvStr(const std::string_view entry) const
-{
-	return psp->GetEnvStr(entry);
-}
-
-std::vector<std::string> DOS_Shell::GetAllEnvVars() const
-{
-	return psp->GetAllEnvVars();
 }
 
 bool DOS_Shell::SetEnv(std::string_view entry, std::string_view new_string)

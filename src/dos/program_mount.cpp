@@ -59,7 +59,7 @@ void MOUNT::Move_Z(char new_z)
 		/* Update environment */
 		std::string value   = "";
 		std::string tempenv = {new_drive_z, ':', '\\'};
-		if (const auto result = first_shell->GetEnvStr("PATH")) {
+		if (const auto result = psp->GetEnvStr("PATH")) {
 			value = *result;
 			std::string::size_type idx;
 			while ((idx = value.find("Z:\\")) != std::string::npos ||
