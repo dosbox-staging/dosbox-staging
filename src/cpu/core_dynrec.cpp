@@ -29,8 +29,11 @@
 #include <type_traits>
 
 #if defined (WIN32)
+// clang-format off
+// 'windows.h' must be included first, otherwise we'll get compilation errors
 #include <windows.h>
 #include <winbase.h>
+// clang-format on
 #endif
 
 #if defined(HAVE_MPROTECT) || defined(HAVE_MMAP)
