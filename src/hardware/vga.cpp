@@ -44,18 +44,6 @@ uint32_t ExpandTable[256];
 uint32_t Expand16Table[4][16];
 uint32_t FillTable[16];
 
-// Get the current video mode's mode description block and the actual mode
-// in use
-std::pair<const VideoModeBlock&, const VGAModes> VGA_GetCurrentMode()
-{
-	// `CurMode->type` only holds the "coarse" mode associated with the last
-	// requested BIOS video mode via an INT 10H call (`CurMode->mode` is the
-	// BIOS mode number). This may get "refined" later into another mode (e.g.
-	// M_TEXT may get refined into M_CGA_TEXT_COMPOSITE), and this more
-	// "accurate" mode is stored in `vga.draw`.
-	return {*CurMode, vga.mode};
-}
-
 void VGA_LogInitialization(const char *adapter_name,
                            const char *ram_type,
                            const size_t num_modes)
