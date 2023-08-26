@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cinttypes>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -121,7 +122,7 @@ struct reverb_settings_t {
 	           const float density, const float bandwidth_freq,
 	           const float decay, const float dampening_freq,
 	           const float synth_level, const float digital_level,
-	           const float highpass_freq, const int sample_rate)
+	           const float highpass_freq, const uint16_t sample_rate)
 	{
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
@@ -156,7 +157,7 @@ struct chorus_settings_t {
 	float digital_audio_send_level = 0.0f;
 
 	void Setup(const float synth_level, const float digital_level,
-	           const int sample_rate)
+	           const uint16_t sample_rate)
 	{
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
@@ -190,9 +191,9 @@ struct mixer_t {
 	std::atomic<int> max_frames_needed = 0;
 	std::atomic<int> tick_add = 0; // samples needed per millisecond tick
 
-	int tick_counter             = 0;
-	std::atomic<int> sample_rate = 0; // sample rate negotiated with SDL
-	uint16_t blocksize           = 0; // matches SDL AudioSpec.samples type
+	int tick_counter = 0;
+	std::atomic<uint16_t> sample_rate = 0; // sample rate negotiated with SDL
+	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 
 	uint16_t prebuffer_ms = 25; // user-adjustable in conf
 
@@ -226,7 +227,7 @@ uint16_t MIXER_GetPreBufferMs()
 	return mixer.prebuffer_ms;
 }
 
-int MIXER_GetSampleRate()
+uint16_t MIXER_GetSampleRate()
 {
 	const auto sample_rate_hz = mixer.sample_rate.load();
 	assert(sample_rate_hz > 0);
@@ -521,7 +522,7 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
 	MIXER_UnlockAudioDevice();
 }
 
-mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const int freq,
+mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint16_t freq,
                                  const char* name,
                                  const std::set<ChannelFeature>& features)
 {
@@ -769,9 +770,11 @@ void MixerChannel::ConfigureResampler()
 		[[fallthrough]];
 
 	case ResampleMethod::Resample:
-		const auto in_rate = do_zoh_upsample ? zoh_upsampler.target_freq
-		                                     : channel_rate;
-		const auto out_rate = mixer_rate;
+		const spx_uint32_t in_rate  = do_zoh_upsample
+		                                    ? zoh_upsampler.target_freq
+		                                    : check_cast<spx_uint32_t>(
+                                                             channel_rate);
+		const spx_uint32_t out_rate = mixer_rate;
 
 		do_resample = (in_rate != out_rate);
 		if (!do_resample) {
@@ -828,11 +831,11 @@ void MixerChannel::ClearResampler()
 	}
 }
 
-void MixerChannel::SetSampleRate(const int rate)
+void MixerChannel::SetSampleRate(const uint16_t rate)
 {
 	// If the requested rate is zero, then avoid resampling by running the
 	// channel at the mixer's rate
-	const auto target_rate = rate ? rate : mixer.sample_rate.load();
+	const uint16_t target_rate = rate ? rate : mixer.sample_rate.load();
 	assert(target_rate > 0);
 
 	// Nothing to do: the channel is already running at the requested rate
@@ -861,9 +864,9 @@ const std::string& MixerChannel::GetName() const
 	return name;
 }
 
-int MixerChannel::GetSampleRate() const
+uint16_t MixerChannel::GetSampleRate() const
 {
-	return sample_rate;
+	return check_cast<uint16_t>(sample_rate);
 }
 
 void MixerChannel::ReactivateEnvelope()
@@ -880,7 +883,7 @@ void MixerChannel::SetPeakAmplitude(const int peak)
 	                EnvelopeExpiresAfterSeconds);
 }
 
-void MixerChannel::Mix(const int frames_requested)
+void MixerChannel::Mix(const uint16_t frames_requested)
 {
 	if (!is_enabled) {
 		return;
@@ -936,7 +939,7 @@ void MixerChannel::AddSilence()
 				// rate.
 				constexpr auto f = 4.0f;
 
-				for (auto ch = 0; ch < 2; ++ch) {
+				for (size_t ch = 0; ch < 2; ++ch) {
 					if (prev_frame[ch] > f) {
 						next_frame[ch] = prev_frame[ch] - f;
 					} else if (prev_frame[ch] < -f) {
@@ -1074,8 +1077,8 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_pref
 			return false;
 		}
 
-		int cutoff_freq_hz;
-		if (!sscanf(cutoff_freq_pref.c_str(), "%d", &cutoff_freq_hz) ||
+		uint16_t cutoff_freq_hz;
+		if (!sscanf(cutoff_freq_pref.c_str(), "%" SCNu16, &cutoff_freq_hz) ||
 		    cutoff_freq_hz <= 0) {
 			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. Must be a positive number.",
 			            name.c_str(),
@@ -1083,10 +1086,9 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_pref
 			return false;
 		}
 
-		const auto max_cutoff_freq_hz = (do_zoh_upsample ? zoh_upsampler.target_freq
-		                                                 : sample_rate) /
-		                                        2 -
-		                                1;
+		const uint16_t max_cutoff_freq_hz = check_cast<uint16_t>(
+		        (do_zoh_upsample ? zoh_upsampler.target_freq : sample_rate) / 2 -
+		        1);
 
 		if (cutoff_freq_hz > max_cutoff_freq_hz) {
 			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. "
@@ -1099,11 +1101,15 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_pref
 		}
 
 		if (type_pref == "lpf") {
-			ConfigureLowPassFilter(order, cutoff_freq_hz);
+			ConfigureLowPassFilter(check_cast<uint8_t>(order),
+			                       cutoff_freq_hz);
 			SetLowPassFilter(FilterState::On);
+
 		} else if (type_pref == "hpf") {
-			ConfigureHighPassFilter(order, cutoff_freq_hz);
+			ConfigureHighPassFilter(check_cast<uint8_t>(order),
+			                        cutoff_freq_hz);
 			SetHighPassFilter(FilterState::On);
+
 		} else {
 			LOG_WARNING("%s: Invalid custom filter type: '%s'. Must be either 'hpf' or 'lpf'.",
 			            name.c_str(),
@@ -1114,7 +1120,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_pref
 	};
 
 	if (single_filter) {
-		auto i = 0;
+		size_t i = 0;
 
 		const auto filter_type        = parts[i++];
 		const auto filter_order       = parts[i++];
@@ -1122,7 +1128,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_pref
 
 		return set_filter(filter_type, filter_order, filter_cutoff_freq);
 	} else {
-		auto i = 0;
+		size_t i = 0;
 
 		const auto filter1_type        = parts[i++];
 		const auto filter1_order       = parts[i++];
@@ -1679,7 +1685,8 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type* data)
 
 	// Optionally filter, apply crossfeed, then mix the results to the
 	// master output
-	const auto out_frames = static_cast<int>(mixer.resample_out.size()) / 2;
+	const uint16_t out_frames = static_cast<uint16_t>(mixer.resample_out.size()) /
+	                            2;
 
 	auto pos = mixer.resample_out.begin();
 
@@ -1771,11 +1778,12 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t* data)
 		index += index_add;
 
 		const auto sample = prev_frame.left +
-		                    ((diff * diff_mul) >> FreqShift);
+		                    static_cast<float>((diff * diff_mul) >> FreqShift);
 
 		const AudioFrame frame_with_gain = {
 		        sample * combined_volume_scalar.left,
 		        sample * combined_volume_scalar.right};
+
 		if (do_sleep) {
 			sleeper.Listen(frame_with_gain);
 		}
@@ -1958,7 +1966,7 @@ static void MIXER_MixData(const int frames_requested)
 
 	// Render all channels and accumulate results in the master mixbuffer
 	for (auto& it : mixer.channels) {
-		it.second->Mix(frames_requested);
+		it.second->Mix(check_cast<work_index_t>(frames_requested));
 	}
 
 	if (mixer.do_reverb) {
@@ -1971,7 +1979,7 @@ static void MIXER_MixData(const int frames_requested)
 			                    mixer.aux_reverb[pos][1]};
 
 			// High-pass filter the reverb input
-			for (auto ch = 0; ch < 2; ++ch) {
+			for (size_t ch = 0; ch < 2; ++ch) {
 				frame[ch] = mixer.reverb.highpass_filter[ch].filter(
 				        frame[ch]);
 			}
@@ -2018,7 +2026,7 @@ static void MIXER_MixData(const int frames_requested)
 	auto pos = start_pos;
 
 	for (work_index_t i = 0; i < frames_added; ++i) {
-		for (auto ch = 0; ch < 2; ++ch) {
+		for (size_t ch = 0; ch < 2; ++ch) {
 			mixer.work[pos][ch] = mixer.highpass_filter[ch].filter(
 			        mixer.work[pos][ch]);
 		}
@@ -2121,7 +2129,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void* userdata,
                                    Uint8* stream, int len)
 {
 	ZoneScoped;
-	memset(stream, 0, len);
+	memset(stream, 0, static_cast<size_t>(len));
 
 	auto frames_requested = len / MixerFrameSize;
 	auto output           = reinterpret_cast<int16_t*>(stream);
@@ -2184,7 +2192,6 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void* userdata,
 			            frames_requested;
 		} else {
 			reduce_frames = frames_requested;
-			index_add     = (1 << IndexShiftLocal);
 			//			LOG_MSG("regular run requested
 			//%d, have %d, min %d, frames_remaining %d",
 			// frames_requested, mixer.frames_done.load(),
@@ -2773,7 +2780,7 @@ void MIXER_Init(Section* sec)
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	/* Read out config section */
 
-	mixer.sample_rate = section->Get_int("rate");
+	mixer.sample_rate = check_cast<uint16_t>(section->Get_int("rate"));
 	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
 	const auto negotiate = section->Get_bool("negotiate");
 
@@ -2828,7 +2835,7 @@ void MIXER_Init(Section* sec)
 			LOG_WARNING("MIXER: SDL changed the playback rate from %d to %d Hz",
 			            mixer.sample_rate.load(),
 			            obtained.freq);
-			mixer.sample_rate = obtained.freq;
+			mixer.sample_rate = check_cast<uint16_t>(obtained.freq);
 		}
 
 		// Does SDL want a different blocksize?
@@ -2958,18 +2965,18 @@ static void ToggleMute(const bool was_pressed)
 
 void init_mixer_dosbox_settings(Section_prop& sec_prop)
 {
-	constexpr int default_rate = 48000;
+	constexpr uint16_t default_rate = 48000;
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
-	constexpr int default_blocksize        = 1024;
-	constexpr int default_prebuffer_ms     = 25;
-	constexpr bool default_allow_negotiate = false;
+	constexpr uint16_t default_blocksize    = 1024;
+	constexpr uint16_t default_prebuffer_ms = 25;
+	constexpr bool default_allow_negotiate  = false;
 
 #else
 	// Non-Windows platforms tolerate slightly lower latency
-	constexpr int default_blocksize        = 512;
-	constexpr int16_t default_prebuffer_ms = 20;
-	constexpr bool default_allow_negotiate = true;
+	constexpr uint16_t default_blocksize    = 512;
+	constexpr uint16_t default_prebuffer_ms = 20;
+	constexpr bool default_allow_negotiate  = true;
 #endif
 
 	constexpr auto always        = Property::Changeable::Always;
