@@ -29,7 +29,7 @@ constexpr uint8_t UnitSeparator = 31;
 
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 
-BatchFile::BatchFile(const HostShell& host, std::unique_ptr<ByteReader> input_reader,
+BatchFile::BatchFile(const Environment& host, std::unique_ptr<ByteReader> input_reader,
                      const std::string_view entered_name,
                      const std::string_view cmd_line, const bool echo_on)
         : shell(host),
@@ -123,7 +123,7 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 				break;
 			}
 
-			if (const auto env_val = shell.GetEnvStr(
+			if (const auto env_val = shell.GetEnvironmentValue(
 			            line.substr(0, closing_percent))) {
 				expanded += *env_val;
 			}

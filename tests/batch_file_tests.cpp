@@ -53,9 +53,9 @@ private:
 	decltype(contents)::size_type index = 0;
 };
 
-class MockShell final : public HostShell {
+class MockShell final : public Environment {
 public:
-	std::optional<std::string> GetEnvStr(std::string_view entry) const override
+	std::optional<std::string> GetEnvironmentValue(std::string_view entry) const override
 	{
 		auto environment_variable = env.find(std::string(entry));
 		if (environment_variable == std::end(env)) {
