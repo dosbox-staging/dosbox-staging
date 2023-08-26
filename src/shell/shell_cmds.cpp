@@ -779,7 +779,7 @@ void DOS_Shell::CMD_DIR(char* args)
 	HELP("DIR");
 
 	std::string line = {};
-	if (const auto envvar = GetEnvStr("DIRCMD")){
+	if (const auto envvar = psp->GetEnvironmentValue("DIRCMD")){
 		line = std::string(args) + " " + *envvar;
 		args=const_cast<char*>(line.c_str());
 	}
@@ -1460,7 +1460,7 @@ void DOS_Shell::CMD_SET(char * args) {
 	std::string line;
 	if (!*args) {
 		/* No command line show all environment lines */
-		for (const auto& entry : GetAllEnvVars()) {
+		for (const auto& entry : psp->GetAllRawEnvironmentStrings()) {
 			WriteOut("%s\n", entry.c_str());
 		}
 		return;
@@ -1478,7 +1478,7 @@ void DOS_Shell::CMD_SET(char * args) {
 		for (auto& c : variable) {
 			c = std::toupper(c);
 		}
-		if (const auto value = GetEnvStr(args)) {
+		if (const auto value = psp->GetEnvironmentValue(args)) {
 			WriteOut("%s\n",
 			         std::string(variable + '=' + *value).c_str());
 		} else {
@@ -1498,7 +1498,8 @@ void DOS_Shell::CMD_SET(char * args) {
 				char * second = strchr(++p,'%');
 				if (!second) continue;
 				*second++ = 0;
-				if (const auto envvar = GetEnvStr(p)) {
+
+				if (const auto envvar = psp->GetEnvironmentValue(p)) {
 					const auto& temp = *envvar;
 					const uintptr_t remaining_len = std::min(
 					        sizeof(parsed) - static_cast<uintptr_t>(p_parsed - parsed),
@@ -2088,7 +2089,7 @@ void DOS_Shell::CMD_PATH(char *args){
 		this->ParseLine(set_path);
 		return;
 	} else {
-		if (const auto envvar = GetEnvStr("PATH"))
+		if (const auto envvar = psp->GetEnvironmentValue("PATH"))
 			WriteOut("%s\n", envvar->c_str());
 		else
 			WriteOut("PATH=(null)\n");
