@@ -94,18 +94,6 @@ constexpr auto MaxPrebufferMs = 100;
 template <class T, size_t ROWS, size_t COLS>
 using matrix = std::array<std::array<T, COLS>, ROWS>;
 
-static constexpr int16_t mixer_clip(const int sample)
-{
-	if (sample <= Min16BitSampleValue) {
-		return Min16BitSampleValue;
-	}
-	if (sample >= Max16BitSampleValue) {
-		return Max16BitSampleValue;
-	}
-
-	return static_cast<int16_t>(sample);
-}
-
 using highpass_filter_t = std::array<Iir::Butterworth::HighPass<2>, 2>;
 
 using EmVerb = MVerb<float>;
@@ -2056,11 +2044,11 @@ static void MIXER_MixData(const int frames_requested)
 		auto pos = start_pos;
 
 		for (work_index_t i = 0; i < frames_added; i++) {
-			const auto left = static_cast<uint16_t>(
-			        mixer_clip(static_cast<int>(mixer.work[pos][0])));
+			const auto left = static_cast<uint16_t>(clamp_to_int16(
+			        static_cast<int>(mixer.work[pos][0])));
 
-			const auto right = static_cast<uint16_t>(
-			        mixer_clip(static_cast<int>(mixer.work[pos][1])));
+			const auto right = static_cast<uint16_t>(clamp_to_int16(
+			        static_cast<int>(mixer.work[pos][1])));
 
 			out[i][0] = static_cast<int16_t>(host_to_le16(left));
 			out[i][1] = static_cast<int16_t>(host_to_le16(right));
@@ -2262,8 +2250,10 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void* userdata,
 			        (pos + (index >> IndexShiftLocal)) & MixerBufferMask);
 			index += index_add;
 
-			*output++ = mixer_clip(static_cast<int>(mixer.work[i][0]));
-			*output++ = mixer_clip(static_cast<int>(mixer.work[i][1]));
+			*output++ = clamp_to_int16(
+			        static_cast<int>(mixer.work[i][0]));
+			*output++ = clamp_to_int16(
+			        static_cast<int>(mixer.work[i][1]));
 		}
 		// Clean the used buffers
 		while (reduce_frames--) {
@@ -2284,8 +2274,10 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void* userdata,
 		while (reduce_frames--) {
 			pos &= MixerBufferMask;
 
-			*output++ = mixer_clip(static_cast<int>(mixer.work[pos][0]));
-			*output++ = mixer_clip(static_cast<int>(mixer.work[pos][1]));
+			*output++ = clamp_to_int16(
+			        static_cast<int>(mixer.work[pos][0]));
+			*output++ = clamp_to_int16(
+			        static_cast<int>(mixer.work[pos][1]));
 
 			mixer.work[pos][0] = 0.0f;
 			mixer.work[pos][1] = 0.0f;
