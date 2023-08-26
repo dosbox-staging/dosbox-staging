@@ -50,7 +50,7 @@ support today's systems.
 
 | **Feature**                  | **Description**
 |-                             |-
-| **CD-DA file codecs**        | Opus, OGG/Vorbus, MP3, FLAC, and WAV
+| **CD-DA file codecs**        | Opus, OGG/Vorbis, MP3, FLAC, and WAV
 | **Integer scaling**          | `integer_scaling = vertical` or `horizontal`; replaced "pixel-perfect" mode<sup>[7]</sup>
 | **Resizable window**         | For all hardware-accelerated modes
 | **Relative window size**     | `windowresolution = small`, `medium`, or `large` config setting
