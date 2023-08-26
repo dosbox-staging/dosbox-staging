@@ -1047,15 +1047,6 @@ void VGA_AddCompositeSettings(Config &conf);
 
 struct VideoModeBlock;
 
-// Get the current video mode's mode description block and the actual mode in use
-std::pair<const VideoModeBlock&, const VGAModes> VGA_GetCurrentMode();
-
-// Describes the given video mode's type and colour-depth, e.g: "VGA, "256-colour"
-std::tuple<const char*, const char*, bool> VGA_DescribeMode(
-        const MachineType machine, const VideoModeBlock& mode_block,
-        const VGAModes mode_type, const uint16_t actual_width,
-        const uint16_t actual_height);
-
 void VGA_SetClock(Bitu which, uint32_t target);
 
 // Save, get, and limit refresh and clock functions
