@@ -51,6 +51,7 @@
 
 #include "../capture/capture.h"
 #include "ansi_code_markup.h"
+#include "checks.h"
 #include "control.h"
 #include "cross.h"
 #include "hardware.h"
@@ -68,6 +69,8 @@
 
 #include "mverb/MVerb.h"
 #include "tal-chorus/ChorusEngine.h"
+
+CHECK_NARROWING();
 
 constexpr auto MixerFrameSize = 4;
 
