@@ -22,6 +22,7 @@
 
 #include <string>
 
+#include "fraction.h"
 #include "setup.h"
 #include "types.h"
 
@@ -39,6 +40,166 @@ enum class IntegerScalingMode {
 	Horizontal,
 	Vertical,
 };
+
+// Graphics standards ordered by time of introduction (and roughly by
+// their capabilities)
+enum class GraphicsStandard { Hercules, Cga, Pcjr, Tga, Ega, Vga, Svga, Vesa };
+
+const char* to_string(const GraphicsStandard g);
+
+enum class ColorDepth {
+	Monochrome,
+	Composite,
+	IndexedColor2,
+	IndexedColor4,
+	IndexedColor16,
+	IndexedColor256,
+	HighColor15Bit,
+	HighColor16Bit,
+	TrueColor24Bit
+};
+
+const char* to_string(const ColorDepth c);
+
+struct VideoMode {
+	// Only reliable for non-custom BIOS modes; for custom modes, it's the
+	// mode used as a starting point to set up the tweaked mode, so it can
+	// be literally anything.
+	uint16_t bios_mode_number = 0;
+
+	// True for graphics modes, false for text modes
+	bool is_graphics_mode = false;
+
+	// True for tweaked non-standard modes (e.g., Mode X on VGA).
+	bool is_custom_mode = false;
+
+	// Dimensions of the video mode. Note that for VGA adapters this does
+	// *not* always match the actual physical output at the signal level but
+	// represents the pixel-dimensions of the mode in the video memory.
+	// E.g., the 320x200 13h VGA mode takes up 64,000 bytes in the video
+	// memory, but is width and height doubled by the VGA hardware to
+	// 640x400 at the signal level. Similarly, all 200-line CGA and EGA
+	// modes are effectively emulated on VGA adapters and are output width
+	// and height doubled.
+	uint16_t width  = 0;
+	uint16_t height = 0;
+
+	// The intended pixel aspect ratio of the video mode. Note this is not
+	// simply calculated by stretching 'width x height' to a 4:3 aspect
+	// ratio rectangle; it can be literally anything.
+	Fraction pixel_aspect_ratio = {};
+
+	// - For graphics modes, the first graphics standard the mode was
+	//   introduced in, unless there is ambiguity, in which case the emulated
+	//   graphics adapter (e.g. in the case of PCjr and Tandy modes).
+	// - For text modes, the graphics adapter in use.
+	GraphicsStandard graphics_standard = {};
+
+	// Colour depth of the video mode. Note this is *not* the same as the
+	// storage bit-depth; e.g., some 24-bit true colour modes actually store
+	// pixels at 32-bits with the upper 8-bits unused.
+	ColorDepth color_depth = {};
+
+	// True if this is a double-scanned mode on VGA (e.g. 200-line CGA and
+	// EGA modes and most sub-400-line (S)VGA & VESA modes)
+	bool is_double_scanned_mode = false;
+
+	constexpr bool operator==(const VideoMode& that) const
+	{
+		return (bios_mode_number == that.bios_mode_number &&
+		        is_graphics_mode == that.is_graphics_mode &&
+		        is_custom_mode == that.is_custom_mode &&
+		        width == that.width && height == that.height &&
+		        pixel_aspect_ratio == that.pixel_aspect_ratio &&
+		        graphics_standard == that.graphics_standard &&
+		        color_depth == that.color_depth &&
+		        is_double_scanned_mode == that.is_double_scanned_mode);
+	}
+
+	constexpr bool operator!=(const VideoMode& that) const
+	{
+		return !operator==(that);
+	}
+};
+
+std::string to_string(const VideoMode& video_mode);
+
+
+enum class PixelFormat : uint8_t {
+	// Up to 256 colours, paletted;
+	// stored as packed uint8 data
+	Indexed8 = 8,
+
+	// 32K high colour, 5 bits per red/blue/green component;
+	// stored as packed uint16 data with highest bit unused
+	BGR555 = 15,
+	//
+	// 65K high colour, 5 bits for red/blue, 6 bit for green;
+	// stored as packed uint16 data
+	BGR565 = 16,
+	//
+	// 16.7M (24-bit) true colour, 8 bits per red/blue/green component;
+	// stored as packed 24-bit data
+	BGR888 = 24,
+	//
+	// 16.7M (32-bit) true colour; 8 bits per red/blue/green component;
+	// stored as packed uint32 data with lowest 8 bits unused
+	BGRX8888 = 32
+};
+
+const char* to_string(const PixelFormat pf);
+
+uint8_t get_bits_per_pixel(const PixelFormat pf);
+
+
+// Details about the rendered image.
+// E.g. for the 320x200 256-colour 13h VGA mode with double-scanning
+// and pixel-doubling enabled:
+//   - width = 320 (will be pixel-doubled post-render via double_width)
+//   - height = 400 (2*200 lines because we're rendering scan-doubled)
+//   - pixel_aspect_ratio = 5/6 (1:1.2) (because the PAR is meant for the
+//     final image, post the optional width & height doubling)
+//   - double_width = true (pixel-doubling)
+//   - double_height = false (we're rendering scan-doubled)
+struct RenderParams {
+	// Width of the rendered image (prior to optional width-doubling)
+	uint16_t width = 0;
+
+	// Height of the rendered image (prior to optional height-doubling)
+	uint16_t height = 0;
+
+	// If true, the rendered image is doubled horizontally after via
+	// a scaler (e.g. to achieve pixel-doubling)
+	bool double_width = false;
+
+	// If true, the rendered image is doubled vertically via a
+	// scaler (e.g. to achieve fake double-scanning)
+	bool double_height = false;
+
+	// If true, we're dealing with a double-scanned VGA mode that was forced
+	// to be rendered as single-scanned
+	bool force_single_scan = false;
+
+	// Pixel aspect ratio to be applied to the final image (post
+	// width & height doubling) so it appears as intended on screen.
+	// (video_mode.pixel_aspect_ratio holds the "nominal" pixel
+	// aspect ratio of the source video mode)
+	Fraction pixel_aspect_ratio = {};
+
+	// Pixel format of the image data
+	PixelFormat pixel_format = {};
+
+	// Details about the source video mode.
+	// This is usually different than the rendered image's details.
+	// E.g. for the 320x200 256-colour 13h VGA mode we always have the
+	// following, regardless of whether double-scanning and pixel-doubling
+	// is enabled at the rendering level:
+	//   - width = 320
+	//   - height = 200
+	//   - pixel_aspect_ratio = 5/6 (1:1.2)
+	VideoMode video_mode = {};
+};
+
 
 enum class InterpolationMode { Bilinear, NearestNeighbour };
 
