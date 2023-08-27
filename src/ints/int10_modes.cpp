@@ -917,11 +917,13 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		default:
 			IO_WriteB(0x3de,0x0);break;
 		}
-		// write palette
-		for(Bitu i = 0; i < 16; i++) {
-			IO_WriteB(0x3da,i+0x10);
-			IO_WriteB(0x3de,i);
+
+		// Write palette
+		for (uint8_t i = 0; i < NumCgaColors; ++i) {
+			IO_WriteB(0x3da, i + 0x10);
+			IO_WriteB(0x3de, i);
 		}
+
 		//Clear extended mapping
 		IO_WriteB(0x3da,0x5);
 		IO_WriteB(0x3de,0x0);
@@ -2186,8 +2188,10 @@ std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs
 	const auto tokens = tokenize_cga_colors_pref(cga_colors_prefs);
 
 	if (tokens.size() != NumCgaColors) {
-		LOG_WARNING("INT10H: Invalid 'cga_colors' value: 16 colors must be specified "
-				    "(found only %u)", static_cast<uint32_t>(tokens.size()));
+		LOG_WARNING("INT10H: Invalid 'cga_colors' value: %d colors must be specified "
+		            "(found only %u)",
+		            NumCgaColors,
+		            static_cast<uint32_t>(tokens.size()));
 		return {};
 	}
 

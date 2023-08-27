@@ -27,7 +27,7 @@
 
 static void update_palette_mappings()
 {
-	for (uint8_t i = 0; i < 16; ++i)
+	for (uint8_t i = 0; i < NumCgaColors; ++i)
 		VGA_ATTR_SetPalette(i, vga.attr.palette[i]);
 }
 

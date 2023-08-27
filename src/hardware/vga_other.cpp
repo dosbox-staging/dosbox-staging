@@ -355,7 +355,7 @@ static void update_cga16_color_pcjr()
 	const bool bw = vga.tandy.mode.is_black_and_white_mode;
 	const bool bpp1 = vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics;
 
-	std::array<float, 16> rgbi_coefficients = {};
+	std::array<float, NumCgaColors> rgbi_coefficients = {};
 	for (uint8_t c = 0; c < rgbi_coefficients.size(); c++)
 		rgbi_coefficients[c] = get_rgbi_coefficient(is_composite_new_era, c);
 
