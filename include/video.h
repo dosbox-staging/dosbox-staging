@@ -161,6 +161,7 @@ uint8_t get_bits_per_pixel(const PixelFormat pf);
 //     final image, post the optional width & height doubling)
 //   - double_width = true (pixel-doubling)
 //   - double_height = false (we're rendering scan-doubled)
+//
 struct RenderParams {
 	// Width of the rendered image (prior to optional width-doubling)
 	uint16_t width = 0;
@@ -198,6 +199,22 @@ struct RenderParams {
 	//   - height = 200
 	//   - pixel_aspect_ratio = 5/6 (1:1.2)
 	VideoMode video_mode = {};
+
+	constexpr bool operator==(const RenderParams& that) const
+	{
+		return (width == that.width && height == that.height &&
+		        double_width == that.double_width &&
+		        double_height == that.double_height &&
+		        force_single_scan == that.force_single_scan &&
+		        pixel_aspect_ratio == that.pixel_aspect_ratio &&
+		        pixel_format == that.pixel_format &&
+		        video_mode == that.video_mode);
+	}
+
+	constexpr bool operator!=(const RenderParams& that) const
+	{
+		return !operator==(that);
+	}
 };
 
 
