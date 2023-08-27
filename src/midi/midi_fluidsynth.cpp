@@ -749,15 +749,13 @@ void MidiHandlerFluidsynth::MixerCallBack(const uint16_t requested_audio_frames)
 		had_underruns = true;
 	}
 
-	static std::vector<AudioFrame> audio_frames = {};
-
-	const auto has_dequeued = audio_frame_fifo.BulkDequeue(audio_frames,
+	const auto has_dequeued = audio_frame_fifo.BulkDequeue(dequeuing_frames,
 	                                                       requested_audio_frames);
 
 	if (has_dequeued) {
-		assert(audio_frames.size() == requested_audio_frames);
+		assert(dequeuing_frames.size() == requested_audio_frames);
 		channel->AddSamples_sfloat(requested_audio_frames,
-		                           &audio_frames[0][0]);
+		                           &dequeuing_frames[0][0]);
 		last_rendered_ms = PIC_FullIndex();
 	} else {
 		assert(!audio_frame_fifo.IsRunning());
@@ -767,23 +765,21 @@ void MidiHandlerFluidsynth::MixerCallBack(const uint16_t requested_audio_frames)
 
 void MidiHandlerFluidsynth::RenderAudioFramesToFifo(const uint16_t num_audio_frames)
 {
-	static std::vector<AudioFrame> audio_frames = {};
-
 	// Maybe expand the vector
-	if (audio_frames.size() < num_audio_frames) {
-		audio_frames.resize(num_audio_frames);
+	if (rendering_frames.size() < num_audio_frames) {
+		rendering_frames.resize(num_audio_frames);
 	}
 
 	fluid_synth_write_float(synth.get(),
 	                        num_audio_frames,
-	                        &audio_frames[0][0],
+	                        &rendering_frames[0][0],
 	                        0,
 	                        2,
-	                        &audio_frames[0][0],
+	                        &rendering_frames[0][0],
 	                        1,
 	                        2);
 
-	audio_frame_fifo.BulkEnqueue(audio_frames, num_audio_frames);
+	audio_frame_fifo.BulkEnqueue(rendering_frames, num_audio_frames);
 }
 
 void MidiHandlerFluidsynth::ProcessWorkFromFifo()

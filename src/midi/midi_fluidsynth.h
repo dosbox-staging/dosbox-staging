@@ -73,6 +73,9 @@ private:
 	fluid_settings_ptr_t settings{nullptr, &delete_fluid_settings};
 	fsynth_ptr_t synth{nullptr, &delete_fluid_synth};
 
+	std::vector<AudioFrame> dequeuing_frames = {};
+	std::vector<AudioFrame> rendering_frames = {};
+
 	mixer_channel_t channel = nullptr;
 	RWQueue<AudioFrame> audio_frame_fifo{1};
 	RWQueue<MidiWork> work_fifo{1};

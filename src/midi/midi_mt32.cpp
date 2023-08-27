@@ -843,15 +843,13 @@ void MidiHandler_mt32::MixerCallBack(const uint16_t requested_audio_frames)
 		had_underruns = true;
 	}
 
-	static std::vector<AudioFrame> audio_frames = {};
-
-	const auto has_dequeued = audio_frame_fifo.BulkDequeue(audio_frames,
+	const auto has_dequeued = audio_frame_fifo.BulkDequeue(dequeuing_frames,
 	                                                       requested_audio_frames);
 
 	if (has_dequeued) {
-		assert(audio_frames.size() == requested_audio_frames);
+		assert(dequeuing_frames.size() == requested_audio_frames);
 		channel->AddSamples_sfloat(requested_audio_frames,
-		                           &audio_frames[0][0]);
+		                           &dequeuing_frames[0][0]);
 		last_rendered_ms = PIC_FullIndex();
 	} else {
 		assert(!audio_frame_fifo.IsRunning());
@@ -861,17 +859,16 @@ void MidiHandler_mt32::MixerCallBack(const uint16_t requested_audio_frames)
 
 void MidiHandler_mt32::RenderAudioFramesToFifo(const uint16_t num_frames)
 {
-	static std::vector<AudioFrame> audio_frames = {};
 	// Maybe expand the vector
-	if (audio_frames.size() < num_frames) {
-		audio_frames.resize(num_frames);
+	if (rendering_frames.size() < num_frames) {
+		rendering_frames.resize(num_frames);
 	}
 
 	std::unique_lock<std::mutex> lock(service_mutex);
-	service->renderFloat(&audio_frames[0][0], num_frames);
+	service->renderFloat(&rendering_frames[0][0], num_frames);
 	lock.unlock();
 
-	audio_frame_fifo.BulkEnqueue(audio_frames, num_frames);
+	audio_frame_fifo.BulkEnqueue(rendering_frames, num_frames);
 }
 
 // The next MIDI work task is processed, which includes rendering audio frames
