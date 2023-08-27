@@ -590,21 +590,11 @@ bool MIDI_Available()
 // rewrites on the MIDI stuff until then to unnecessary work.
 class MIDI final {
 public:
-	MIDI(Section* configuration)
+	MIDI(const Section_prop* section)
 	{
-		Section_prop* section = static_cast<Section_prop*>(configuration);
-
-		const std::string_view device_choice = section->Get_string("mididevice");
-
 		midi = Midi{};
 
-		// Has the user disable MIDI?
-		if (const auto device_has_bool = parse_bool_setting(device_choice);
-		    device_has_bool && *device_has_bool == false) {
-			LOG_MSG("MIDI: MIDI device set to 'none'; disabling MIDI output");
-			return;
-		}
-
+		assert(section);
 		raw_midi_output_enabled = section->Get_bool("raw_midi_output");
 
 		std::string midiconfig_prefs = section->Get_string("midiconfig");
@@ -631,6 +621,7 @@ public:
 
 		register_handlers();
 
+		const std::string_view device_choice = section->Get_string("mididevice");
 		if (device_choice == "auto") {
 			// Use the first working device
 			for (const auto& handler : handlers) {
@@ -699,23 +690,32 @@ static void register_midi_text_messages()
 	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "device not configured");
 }
 
-static MIDI* test;
-
-void MIDI_Destroy(Section* /*sec*/)
+void MIDI_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	delete test;
+	static std::unique_ptr<MIDI> midi_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create: {
+		const auto midi_section = dynamic_cast<Section_prop*>(section);
+
+		const auto wants_midi = midi_section &&
+		                        !has_false(midi_section->Get_string("mididevice"));
+
+		midi_instance = wants_midi ? std::make_unique<MIDI>(midi_section)
+		                           : nullptr;
+		register_midi_text_messages();
+	} break;
+
+	case ModuleLifecycle::Destroy:
+		midi_instance.reset();
+		break;
+	}
 }
 
-void MIDI_Init(Section* sec)
+void MIDI_Init(Section* section)
 {
-	assert(sec);
-
-	test = new MIDI(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&MIDI_Destroy, changeable_at_runtime);
-
-	register_midi_text_messages();
+	MIDI_Configure(ModuleLifecycle::Create, section);
 }
 
 void init_midi_dosbox_settings(Section_prop& secprop)
@@ -842,4 +842,3 @@ void MIDI_AddConfigSection(Config* conf)
 
 	init_midi_dosbox_settings(*sec);
 }
-
