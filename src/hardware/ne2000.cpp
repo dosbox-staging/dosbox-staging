@@ -1454,6 +1454,7 @@ public:
 	        : Module_base(configuration),
 	          load_success(true)
 	{
+		assert(configuration);
 		Section_prop *section = static_cast<Section_prop *>(configuration);
 		if (!section->Get_bool("ne2000")) {
 			load_success = false;
@@ -1526,27 +1527,28 @@ public:
 	}
 };
 
-static NE2K* instance;
-void NE2K_ShutDown(Section* /* sec */)
+void NE2K_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	delete instance;
-	instance = nullptr;
+	static std::unique_ptr<NE2K> ne2k_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		ne2k_instance.reset();
+		// Create and keep the new instance if it loaded successfully
+		if (auto ne2k = std::make_unique<NE2K>(section); ne2k->load_success) {
+			ne2k_instance = std::move(ne2k);
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+    break;
+	}
 }
 
-void NE2K_Init(Section* sec)
+void NE2K_Init(Section* section)
 {
-	assert(sec);
-	// LOG(LOG_MISC,LOG_DEBUG)("Initializing NE2000 network card emulation");
-
-	instance = new NE2K(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&NE2K_ShutDown, changeable_at_runtime);
-
-	if (!instance->load_success) {
-		delete instance;
-		instance = nullptr;
-	}
+	NE2K_Configure(ModuleLifecycle::Create, section);
 }
 
 #endif // C_NE2000
