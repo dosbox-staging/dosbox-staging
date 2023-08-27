@@ -489,7 +489,7 @@ static uint8_t* draw_unwrapped_line_from_dac_palette_with_hwcursor(Bitu vidstart
 
 	// Quick references to hardware cursor properties
 	const auto& cursor = vga.s3.hgc;
-	const auto line_at_y = (vidstart - (vga.config.real_start << 2)) / vga.draw.width;
+	const auto line_at_y = (vidstart - (vga.config.real_start << 2)) / vga.draw.render.width;
 
 	// Draw mouse cursor
 	// ~~~~~~~~~~~~~~~~~
@@ -504,7 +504,7 @@ static uint8_t* draw_unwrapped_line_from_dac_palette_with_hwcursor(Bitu vidstart
 	constexpr auto bitmap_last_y_index = 63u;
 
 	// Is the mouse cursor pattern on this line?
-	if (cursor.posx >= vga.draw.width || line_at_y < cursor.originy ||
+	if (cursor.posx >= vga.draw.render.width || line_at_y < cursor.originy ||
 	    line_at_y > (cursor.originy + (bitmap_last_y_index - cursor.posy))) {
 		return reinterpret_cast<uint8_t*>(line_addr);
 	}
@@ -565,13 +565,13 @@ static uint8_t * VGA_Draw_LIN16_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
 		return &vga.mem.linear[vidstart];
 
-	Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 1) / vga.draw.width;
-	if ((vga.s3.hgc.posx >= vga.draw.width) ||
+	Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 1) / vga.draw.render.width;
+	if ((vga.s3.hgc.posx >= vga.draw.render.width) ||
 		(lineat < vga.s3.hgc.originy) ||
 		(lineat > (vga.s3.hgc.originy + (63U-vga.s3.hgc.posy))) ) {
 		return &vga.mem.linear[vidstart];
 	} else {
-		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width*2);
+		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.render.width*2);
 		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx;
  		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((uint32_t)vga.s3.hgc.startaddr) << 10);
 		Bitu cursorStartBit = sourceStartBit & 0x7;
@@ -614,13 +614,13 @@ static uint8_t * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 	if (!svga.hardware_cursor_active || !svga.hardware_cursor_active())
 		return &vga.mem.linear[vidstart];
 
-	Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 2) / vga.draw.width;
-	if ((vga.s3.hgc.posx >= vga.draw.width) ||
+	Bitu lineat = ((vidstart-(vga.config.real_start<<2)) >> 2) / vga.draw.render.width;
+	if ((vga.s3.hgc.posx >= vga.draw.render.width) ||
 		(lineat < vga.s3.hgc.originy) ||
 		(lineat > (vga.s3.hgc.originy + (63U-vga.s3.hgc.posy))) ) {
 		return &vga.mem.linear[ vidstart ];
 	} else {
-		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.width*4);
+		memcpy(TempLine, &vga.mem.linear[ vidstart ], vga.draw.render.width*4);
 		Bitu sourceStartBit = ((lineat - vga.s3.hgc.originy) + vga.s3.hgc.posy)*64 + vga.s3.hgc.posx;
 		Bitu cursorMemStart = ((sourceStartBit >> 2)& ~1) + (((uint32_t)vga.s3.hgc.startaddr) << 10);
 		Bitu cursorStartBit = sourceStartBit & 0x7;
@@ -958,11 +958,11 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			bg_color_index = 0;
 			break;
 		}
-		if (vga.draw.pixel_format == PixelFormat::Indexed8) {
+		if (vga.draw.render.pixel_format == PixelFormat::Indexed8) {
 			std::fill(templine_buffer.begin(),
 			          templine_buffer.end(),
 			          bg_color_index);
-		} else if (vga.draw.pixel_format == PixelFormat::BGR565) {
+		} else if (vga.draw.render.pixel_format == PixelFormat::BGR565) {
 			const auto background_color = from_rgb_888_to_565(
 			        vga.dac.palette_map[bg_color_index]);
 			const auto line_length = templine_buffer.size() / sizeof(uint16_t);
@@ -970,7 +970,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			while (i < line_length) {
 				write_unaligned_uint16_at(TempLine, i++, background_color);
 			}
-		} else if (vga.draw.pixel_format == PixelFormat::BGRX8888) {
+		} else if (vga.draw.render.pixel_format == PixelFormat::BGRX8888) {
 			const auto background_color = vga.dac.palette_map[bg_color_index];
 			const auto line_length = templine_buffer.size() / sizeof(uint32_t);
 			size_t i = 0;
@@ -1179,7 +1179,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	vga.draw.byte_panning_shift = 0;
 	// go figure...
 	if (machine==MCH_EGA) {
-		if (vga.draw.doubleheight) // Spacepigs EGA Megademo
+		if (vga.draw.render.double_height) // Spacepigs EGA Megademo
 			vga.draw.split_line*=2;
 		++vga.draw.split_line; // EGA adds one buggy scanline
 	}
@@ -2806,11 +2806,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	static VideoMode previous_video_mode = {};
 
 	if ((previous_video_mode != render.video_mode) ||
-	    (vga.draw.width != render.width) || (vga.draw.height != render.height) ||
-	    (vga.draw.doublewidth != render.double_width) ||
-	    (vga.draw.doubleheight != render.double_height) ||
-	    (vga.draw.pixel_aspect_ratio != render.pixel_aspect_ratio) ||
-	    (vga.draw.pixel_format != render.pixel_format) || fps_changed) {
+	    (vga.draw.render.width != render.width) || (vga.draw.render.height != render.height) ||
+	    (vga.draw.render.double_width != render.double_width) ||
+	    (vga.draw.render.double_height != render.double_height) ||
+	    (vga.draw.render.pixel_aspect_ratio != render.pixel_aspect_ratio) ||
+	    (vga.draw.render.pixel_format != render.pixel_format) || fps_changed) {
 		VGA_KillDrawing();
 
 		const auto canvas = GFX_GetCanvasSize();
@@ -2833,16 +2833,18 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			        SCALER_MAXHEIGHT);
 		}
 
-		vga.draw.width  = std::min(render.width,
+		vga.draw.render.width  = std::min(render.width,
                                           static_cast<uint16_t>(SCALER_MAXWIDTH));
-		vga.draw.height = std::min(render.height,
+		vga.draw.render.height = std::min(render.height,
 		                           static_cast<uint16_t>(SCALER_MAXHEIGHT));
 
-		vga.draw.doublewidth        = render.double_width;
-		vga.draw.doubleheight       = render.double_height;
-		vga.draw.pixel_aspect_ratio = render.pixel_aspect_ratio;
-		vga.draw.pixel_format       = render.pixel_format;
-		vga.draw.lines_scaled       = render.force_single_scan ? 2 : 1;
+		vga.draw.render.double_width       = render.double_width;
+		vga.draw.render.double_height      = render.double_height;
+		vga.draw.render.pixel_aspect_ratio = render.pixel_aspect_ratio;
+		vga.draw.render.pixel_format       = render.pixel_format;
+		vga.draw.render.video_mode         = render.video_mode;
+
+		vga.draw.lines_scaled = render.force_single_scan ? 2 : 1;
 
 		if (!vga.draw.vga_override) {
 			ReelMagic_RENDER_SetSize(render.width,
@@ -2876,7 +2878,7 @@ void VGA_SetOverride(bool vga_override) {
 			vga.draw.vga_override=true;
 		} else {
 			vga.draw.vga_override=false;
-			vga.draw.width=0; // change it so the output window gets updated
+			vga.draw.render.width=0; // change it so the output window gets updated
 			VGA_SetupDrawing(0);
 		}
 	}
