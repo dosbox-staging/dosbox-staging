@@ -39,7 +39,8 @@
 #define HW_DUALOPL2 1
 #define HW_OPL3     2
 
-static std::unique_ptr<OPL> opl = {};
+// Pointer to the static instance, used by functions below
+OPL* opl = nullptr;
 
 Timer::Timer(int16_t micros)
         : clock_interval(micros * 0.001) // interval in milliseconds
@@ -967,16 +968,38 @@ OPL::~OPL()
 	MIXER_DeregisterChannel(channel);
 }
 
-void OPL_ShutDown([[maybe_unused]] Section* sec)
+void OPL_Configure(const ModuleLifecycle lifecycle, Section* section,
+                   const OplMode oplmode)
 {
-	opl = {};
+	static std::unique_ptr<OPL> opl_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		opl = nullptr;
+		opl_instance.reset();
+		if (oplmode != OplMode::None) {
+			opl_instance = std::make_unique<OPL>(section, oplmode);
+			opl = opl_instance.get();
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		opl = nullptr;
+		opl_instance.reset();
+		break;
+	}
 }
 
-void OPL_Init(Section* sec, const OplMode oplmode)
+void OPL_Destroy(Section* section)
 {
-	assert(sec);
-	opl = std::make_unique<OPL>(sec, oplmode);
+	OPL_Configure(ModuleLifecycle::Destroy, section, OplMode::None);
+}
+
+void OPL_Init(Section* section, const OplMode oplmode)
+{
+	OPL_Configure(ModuleLifecycle::Create, section, oplmode);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&OPL_ShutDown, changeable_at_runtime);
+	section->AddDestroyFunction(&OPL_Destroy, changeable_at_runtime);
 }

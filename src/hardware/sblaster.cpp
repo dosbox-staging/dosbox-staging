@@ -2322,7 +2322,7 @@ public:
 		case OplMode::Opl2: CMS_ShutDown(); [[fallthrough]];
 		case OplMode::DualOpl2:
 		case OplMode::Opl3:
-		case OplMode::Opl3Gold: OPL_ShutDown(); break;
+		case OplMode::Opl3Gold: OPL_Destroy(); break;
 		}
 		if (sb.type == SBT_NONE || sb.type == SBT_GB) {
 			return;

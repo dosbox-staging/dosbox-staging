@@ -33,7 +33,7 @@ enum class OplMode { None, Cms, Opl2, DualOpl2, Opl3, Opl3Gold };
 
 void OPL_Init(Section *sec, OplMode mode);
 void CMS_Init(Section *sec);
-void OPL_ShutDown(Section* sec = nullptr);
+void OPL_Destroy(Section* sec = nullptr);
 void CMS_ShutDown(Section* sec = nullptr);
 
 bool PS1AUDIO_IsEnabled();
