@@ -28,6 +28,7 @@
 #include "control.h"
 #include "fraction.h"
 #include "inout.h"
+#include "video.h"
 
 //Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED
@@ -114,90 +115,6 @@ enum VGAModes {
 
 	M_ERROR = 1 << 31,
 };
-
-// Graphics standards ordered by time of introduction (and roughly by
-// their capabilities)
-enum class GraphicsStandard { Hercules, Cga, Pcjr, Tga, Ega, Vga, Svga, Vesa };
-
-const char* to_string(const GraphicsStandard g);
-
-enum class ColorDepth {
-	Monochrome,
-	Composite,
-	IndexedColor2,
-	IndexedColor4,
-	IndexedColor16,
-	IndexedColor256,
-	HighColor15Bit,
-	HighColor16Bit,
-	TrueColor24Bit
-};
-
-const char* to_string(const ColorDepth c);
-
-struct VideoMode {
-	// Only reliable for non-custom BIOS modes; for custom modes, it's the
-	// mode used as a starting point to set up the tweaked mode, so it can
-	// be literally anything.
-	uint16_t bios_mode_number = 0;
-
-	// True for graphics modes, false for text modes
-	bool is_graphics_mode = false;
-
-	// True for tweaked non-standard modes (e.g., Mode X on VGA).
-	bool is_custom_mode = false;
-
-	// Dimensions of the video mode. Note that for VGA adapters this does
-	// *not* always match the actual physical output at the signal level but
-	// represents the pixel-dimensions of the mode in the video memory.
-	// E.g., the 320x200 13h VGA mode takes up 64,000 bytes in the video
-	// memory, but is width and height doubled by the VGA hardware to
-	// 640x400 at the signal level. Similarly, all 200-line CGA and EGA
-	// modes are effectively emulated on VGA adapters and are output width
-	// and height doubled.
-	uint16_t width  = 0;
-	uint16_t height = 0;
-
-	// The intended pixel aspect ratio of the video mode. Note this is not
-	// simply calculated by stretching 'width x height' to a 4:3 aspect
-	// ratio rectangle; it can be literally anything.
-	Fraction pixel_aspect_ratio = {};
-
-	// - For graphics modes, the first graphics standard the mode was
-	//   introduced in, unless there is ambiguity, in which case the emulated
-	//   graphics adapter (e.g. in the case of PCjr and Tandy modes).
-	// - For text modes, the graphics adapter in use.
-	GraphicsStandard graphics_standard = {};
-
-	// Colour depth of the video mode. Note this is *not* the same as the
-	// storage bit-depth; e.g., some 24-bit true colour modes actually store
-	// pixels at 32-bits with the upper 8-bits unused.
-	ColorDepth color_depth = {};
-
-	// True if this is a double-scanned mode on VGA (e.g. 200-line CGA and
-	// EGA modes and most sub-400-line (S)VGA & VESA modes)
-	bool is_double_scanned_mode = false;
-
-	constexpr bool operator==(const VideoMode& that) const
-	{
-		return (bios_mode_number == that.bios_mode_number &&
-		        is_graphics_mode == that.is_graphics_mode &&
-		        is_custom_mode == that.is_custom_mode &&
-		        width == that.width && height == that.height &&
-		        pixel_aspect_ratio == that.pixel_aspect_ratio &&
-		        graphics_standard == that.graphics_standard &&
-		        color_depth == that.color_depth &&
-		        is_double_scanned_mode == that.is_double_scanned_mode);
-	}
-
-	constexpr bool operator!=(const VideoMode& that) const
-	{
-		return !operator==(that);
-	}
-};
-
-
-std::string to_string(const VideoMode& video_mode);
 
 constexpr auto vesa_2_0_modes_start = 0x120;
 
