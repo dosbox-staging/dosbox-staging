@@ -844,18 +844,33 @@ public:
 	}
 };
 
-static std::unique_ptr<MPU401> mpu401 = {};
-
-void MPU401_Destroy(Section * /*sec*/)
+void MPU401_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	mpu401 = {};
+	static std::unique_ptr<MPU401> mpu401_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		mpu401_instance = std::make_unique<MPU401>(section);
+		break;
+
+	case ModuleLifecycle::Destroy:
+		mpu401_instance.reset();
+		break;
+	}
 }
-void MPU401_Init(Section* sec)
-{
-	assert(sec);
 
-	mpu401 = std::make_unique<MPU401>(sec);
+void MPU401_Destroy(Section* section)
+{
+	MPU401_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void MPU401_Init(Section* section)
+{
+	MPU401_Configure(ModuleLifecycle::Create, section);
 
 	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&MPU401_Destroy, changeable_at_runtime);
+
+	assert(section);
+	section->AddDestroyFunction(&MPU401_Destroy, changeable_at_runtime);
 }
