@@ -155,10 +155,10 @@ static void write_p3c9(io_port_t, io_val_t value, io_width_t)
 			} 
 			break;
 		default:
-			/* Check for attributes and DAC entry link */
-			for (uint8_t i = 0; i < 16; i++) {
-				if (vga.dac.combine[i]==vga.dac.write_index) {
-					VGA_DAC_SendColor( i, vga.dac.write_index );
+			// Check for attributes and DAC entry link
+			for (uint8_t i = 0; i < NumCgaColors; ++i) {
+				if (vga.dac.combine[i] == vga.dac.write_index) {
+					VGA_DAC_SendColor(i, vga.dac.write_index);
 				}
 			}
 		}
@@ -212,9 +212,12 @@ void VGA_DAC_SetEntry(Bitu entry,uint8_t red,uint8_t green,uint8_t blue) {
 	vga.dac.rgb[entry].red=red;
 	vga.dac.rgb[entry].green=green;
 	vga.dac.rgb[entry].blue=blue;
-	for (uint8_t i = 0; i < 16; i++)
-		if (vga.dac.combine[i]==entry)
-			VGA_DAC_SendColor( i, i );
+
+	for (uint8_t i = 0; i < NumCgaColors; ++i) {
+		if (vga.dac.combine[i] == entry) {
+			VGA_DAC_SendColor(i, i);
+		}
+	}
 }
 
 void VGA_SetupDAC(void)
