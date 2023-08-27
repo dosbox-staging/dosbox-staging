@@ -228,8 +228,8 @@ enum class PixelFormat : uint8_t;
 
 struct VGA_Draw {
 	bool resizing   = false;
-	uint16_t width  = 0;
-	uint16_t height = 0;
+
+	RenderParams render = {};
 
 	uint32_t blocks             = 0;
 	Bitu address                = 0;
@@ -268,16 +268,10 @@ struct VGA_Draw {
 		double per_line_ms = 0;
 	} delay = {};
 
-	PixelFormat pixel_format = {};
-
 	double host_refresh_hz = RefreshRateHostDefault;
 	double dos_refresh_hz = RefreshRateDosDefault;
 	double custom_refresh_hz = RefreshRateDosDefault;
 	VgaRateMode dos_rate_mode = VgaRateMode::Default;
-
-	Fraction pixel_aspect_ratio = {};
-	bool doublewidth            = false;
-	bool doubleheight           = false;
 
 	bool force_square_pixels     = false;
 	bool double_scanning_enabled = false;
