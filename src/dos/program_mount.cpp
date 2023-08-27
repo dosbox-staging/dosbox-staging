@@ -69,9 +69,15 @@ void MOUNT::Move_Z(char new_z)
 		} else {
 			value = tempenv;
 		}
-		first_shell->SetEnv("PATH", value);
+
 		tempenv += "COMMAND.COM";
-		first_shell->SetEnv("COMSPEC", tempenv);
+
+		auto psp_copy = DOS_PSP(psp->GetSegment());
+		while (psp_copy.GetSegment() != DOS_PSP::rootpsp) {
+			psp_copy = DOS_PSP(psp_copy.GetParent());
+			psp_copy.SetEnv("PATH", value);
+			psp_copy.SetEnv("COMSPEC", tempenv);
+		}
 
 		/* Change the active drive */
 		if (DOS_GetDefaultDrive() == 25)
