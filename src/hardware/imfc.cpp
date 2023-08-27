@@ -13244,6 +13244,12 @@ public:
 
 		SDL_WaitThread(m_mainThread, nullptr);
 		SDL_DestroyMutex(m_hardwareMutex);
+
+#if IMFC_VERBOSE_LOGGING
+		assert(m_loggerMutex);
+		SDL_DestroyMutex(m_loggerMutex);
+		m_loggerMutex = nullptr;
+#endif
 	}
 };
 
@@ -13340,42 +13346,23 @@ void MusicFeatureCard::RegisterIoHandlers(const io_port_t port)
 /// DOSBOX stuff
 ///////////////////////////////////////////////////////////
 
-static std::unique_ptr<MusicFeatureCard> imfc = {};
+// Pointer to the static instance, used in functions below
+MusicFeatureCard* imfc = nullptr;
 
 static void Intel8253_TimerEvent(const uint32_t val)
 {
+	assert(imfc);
 	imfc->onTimerEvent(val);
 }
 
 static void IMFC_Mixer_Callback(const uint16_t requested_frames)
 {
+	assert(imfc);
 	imfc->mixerCallback(requested_frames);
 }
 
-void imfc_destroy(Section* /*sec*/)
+static mixer_channel_t make_imfc_mixer_channel(const char* filter_prefs)
 {
-	imfc = {};
-
-#if IMFC_VERBOSE_LOGGING
-	assert(m_loggerMutex);
-	SDL_DestroyMutex(m_loggerMutex);
-	m_loggerMutex = nullptr;
-#endif
-}
-
-static void imfc_init(Section* sec)
-{
-	assert(sec);
-	const Section_prop* conf = dynamic_cast<Section_prop*>(sec);
-	if (!conf || !conf->Get_bool("imfc")) {
-		return;
-	}
-
-#if IMFC_VERBOSE_LOGGING
-	m_loggerMutex = SDL_CreateMutex();
-#endif
-
-	// Register the Audio channel
 	auto channel = MIXER_AddChannel(IMFC_Mixer_Callback,
 	                                use_mixer_rate,
 	                                "IMFC",
@@ -13391,34 +13378,63 @@ static void imfc_init(Section* sec)
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the
 	// real thing by ear only.
-	const std::string_view filter_choice = conf->Get_string("imfc_filter");
-	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
-
-	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
+	if (has_true(filter_prefs)) {
 		constexpr auto order       = 1;
 		constexpr auto cutoff_freq = 8000;
 		channel->ConfigureLowPassFilter(order, cutoff_freq);
 		channel->SetLowPassFilter(FilterState::On);
 
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		if (!filter_choice_has_bool) {
+	} else if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		if (!has_false(filter_prefs)) {
 			LOG_WARNING("IMFC: Invalid 'imfc_filter' value: '%s', using 'off'",
-			            filter_choice.data());
+			            filter_prefs);
 		}
-
 		channel->SetLowPassFilter(FilterState::Off);
 	}
+	return channel;
+}
 
-	const auto port = static_cast<io_port_t>(conf->Get_hex("imfc_base"));
+void IMFC_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+	static std::unique_ptr<MusicFeatureCard> imfc_instance = {};
 
-	const auto irq = clamp(static_cast<uint8_t>(conf->Get_int("imfc_irq")),
-	                       MinIrqAddress,
-	                       MaxIrqAddress);
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create: {
+		const auto imfc_section = dynamic_cast<Section_prop*>(section);
 
-	imfc = std::make_unique<MusicFeatureCard>(std::move(channel), port, irq);
+		const auto wants_imfc = imfc_section &&
+		                        imfc_section->Get_bool("imfc");
+		if (wants_imfc) {
+			const auto filter_prefs = imfc_section->Get_string(
+			        "imfc_filter");
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&imfc_destroy, changeable_at_runtime);
+			const auto port = static_cast<io_port_t>(
+			        imfc_section->Get_hex("imfc_base"));
+
+			const auto irq = clamp(static_cast<uint8_t>(imfc_section->Get_int(
+			                               "imfc_irq")),
+			                       MinIrqAddress,
+			                       MaxIrqAddress);
+
+#if IMFC_VERBOSE_LOGGING
+			m_loggerMutex = SDL_CreateMutex();
+#endif
+
+			imfc_instance = std::make_unique<MusicFeatureCard>(
+			        make_imfc_mixer_channel(filter_prefs), port, irq);
+			imfc = imfc_instance.get();
+		} else {
+			imfc = nullptr;
+			imfc_instance.reset();
+		}
+	} break;
+
+	case ModuleLifecycle::Destroy:
+		imfc = nullptr;
+		imfc_instance.reset();
+		break;
+	}
 }
 
 void init_imfc_dosbox_settings(Section_prop& secprop)
@@ -13452,15 +13468,27 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
+static void imfc_init(Section* section)
+{
+	IMFC_Configure(ModuleLifecycle::Create, section);
+}
+
+static void imfc_destroy(Section* section)
+{
+	IMFC_Configure(ModuleLifecycle::Destroy, section);
+}
+
 void IMFC_AddConfigSection(Config* conf)
 {
 	assert(conf);
 
 	constexpr auto changeable_at_runtime = true;
 
-	Section_prop* sec = conf->AddSection_prop("imfc",
-	                                          &imfc_init,
-	                                          changeable_at_runtime);
-	assert(sec);
-	init_imfc_dosbox_settings(*sec);
+	Section_prop* section = conf->AddSection_prop("imfc",
+	                                              &imfc_init,
+	                                              changeable_at_runtime);
+	assert(section);
+	section->AddDestroyFunction(&imfc_destroy, changeable_at_runtime);
+
+	init_imfc_dosbox_settings(*section);
 }
