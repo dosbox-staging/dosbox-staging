@@ -1716,13 +1716,6 @@ public:
 		}
 	}
 };
-
-static std::unique_ptr<DOS_KeyboardLayout> KeyboardLayout = {};
-
-void DOS_KeyboardLayout_ShutDown(Section* /*sec*/) {
-	KeyboardLayout.reset();
-}
-
 void DOS_SetCountry(uint16_t countryNo);
 
 static void set_country_from_pref(const int country_pref)
@@ -1746,14 +1739,27 @@ static void set_country_from_pref(const int country_pref)
 	DOS_SetCountry(country_number);
 }
 
-void DOS_KeyboardLayout_Init(Section *sec)
+void DOS_KeyboardLayout_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	assert(sec);
-	KeyboardLayout = std::make_unique<DOS_KeyboardLayout>(sec);
+	static std::unique_ptr<DOS_KeyboardLayout> keyboard_layout_instance = {};
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&DOS_KeyboardLayout_ShutDown, changeable_at_runtime);
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		keyboard_layout_instance = std::make_unique<DOS_KeyboardLayout>(section);
+		if (const auto layout_prefs = dynamic_cast<const Section_prop*>(section);
+		    layout_prefs) {
+			set_country_from_pref(layout_prefs->Get_int("country"));
+		}
+		break;
 
-	const auto settings = static_cast<const Section_prop *>(sec);
-	set_country_from_pref(settings->Get_int("country"));
+	case ModuleLifecycle::Destroy:
+		keyboard_layout_instance.reset();
+		break;
+	}
+}
+
+void DOS_KeyboardLayout_Init(Section* section)
+{
+	DOS_KeyboardLayout_Configure(ModuleLifecycle::Create, section);
 }
