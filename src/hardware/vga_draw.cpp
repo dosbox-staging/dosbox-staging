@@ -148,7 +148,7 @@ static uint8_t byte_clamp(int v)
 	return v < 0 ? 0u : (v > 255 ? 255u : static_cast<uint8_t>(v));
 }
 
-static uint8_t *Composite_Process(uint8_t border, uint32_t blocks, bool doublewidth)
+static uint8_t *Composite_Process(uint8_t border, uint32_t blocks, bool double_width)
 {
 	static int temp[SCALER_MAXWIDTH + 10] = {0};
 	static int atemp[SCALER_MAXWIDTH + 2] = {0};
@@ -156,7 +156,7 @@ static uint8_t *Composite_Process(uint8_t border, uint32_t blocks, bool doublewi
 
 	int w = blocks * 4;
 
-	if (doublewidth) {
+	if (double_width) {
 		uint8_t *source = TempLine + w - 1;
 		uint8_t *dest = TempLine + w * 2 - 2;
 		for (int x = 0; x < w; ++x) {
@@ -463,16 +463,6 @@ static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu /*line*/)
 	}
 	return TempLine;
 }
-
-//Test version, might as well keep it
-/* static uint8_t * VGA_Draw_Chain_Line(Bitu vidstart, Bitu line) {
-	Bitu i = 0;
-	for ( i = 0; i < vga.draw.width;i++ ) {
-		Bitu addr = vidstart + i;
-		TempLine[i] = vga.mem.linear[((addr&~3)<<2)+(addr&3)];
-	}
-	return TempLine;
-} */
 
 enum CursorOp : uint8_t {
 	Foreground  = 0b10,
