@@ -52,7 +52,7 @@ support today's systems.
 |-                             |-
 | **CD-DA file codecs**        | Opus, OGG/Vorbis, MP3, FLAC, and WAV
 | **Integer scaling**          | `integer_scaling = vertical` or `horizontal`; replaced "pixel-perfect" mode<sup>[7]</sup>
-| **Resizable window**         | For all hardware-accelerated modes
+| **Resizable window**         | Yes
 | **Relative window size**     | `windowresolution = small`, `medium`, or `large` config setting
 | **Window placement**         | `windowposition` config setting<sup>[16]</sup>
 | **[OPL] emulator**           |  Nuked OPL, a highly accurate (YMF262, CT1747) emulator <sup>[8]</sup>
