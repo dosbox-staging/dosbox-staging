@@ -2185,7 +2185,7 @@ std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs
 {
 	const auto tokens = tokenize_cga_colors_pref(cga_colors_prefs);
 
-	if (tokens.size() != num_cga_colors) {
+	if (tokens.size() != NumCgaColors) {
 		LOG_WARNING("INT10H: Invalid 'cga_colors' value: 16 colors must be specified "
 				    "(found only %u)", static_cast<uint32_t>(tokens.size()));
 		return {};
