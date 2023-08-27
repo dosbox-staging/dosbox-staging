@@ -135,8 +135,6 @@ enum class ColorDepth {
 
 const char* to_string(const ColorDepth c);
 
-constexpr auto NumCgaColors = 16;
-
 struct VideoMode {
 	// Only reliable for non-custom BIOS modes; for custom modes, it's the
 	// mode used as a starting point to set up the tweaked mode, so it can
@@ -905,8 +903,8 @@ struct RGBEntry {
 	uint8_t blue = 0;
 };
 
-constexpr auto num_cga_colors = 16;
-typedef std::array<RGBEntry, num_cga_colors> cga_colors_t;
+constexpr auto NumCgaColors = 16;
+typedef std::array<RGBEntry, NumCgaColors> cga_colors_t;
 
 struct VGA_Dac {
 	RGBEntry rgb[0x100]       = {};
