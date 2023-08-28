@@ -26,6 +26,7 @@
 #include "callback.h"
 #include "mem.h"
 #include "cpu.h"
+#include "setup.h"
 
 /* CallBack are located at 0xF000:0x1000  (see CB_SEG and CB_SOFFSET in callback.h)
    And they are 16 bytes each and you can define them to behave in certain ways like a
@@ -646,7 +647,8 @@ void CALLBACK_HandlerObject::Set_RealVec(uint8_t vec){
 	} else E_Exit ("double usage of vector handler");
 }
 
-void CALLBACK_Init(Section* /*sec*/) {
+static void reset_callback_handlers()
+{
 	for (callback_number_t i = 0; i < CB_MAX; ++i) {
 		CallBack_Handlers[i]=&illegal_handler;
 	}
@@ -715,4 +717,23 @@ void CALLBACK_Init(Section* /*sec*/) {
 	phys_writeb(CALLBACK_PhysPointer(call_priv_io)+0x0c,(uint8_t)0x66);	// out dx, eax
 	phys_writeb(CALLBACK_PhysPointer(call_priv_io)+0x0d,(uint8_t)0xef);
 	phys_writeb(CALLBACK_PhysPointer(call_priv_io)+0x0e,(uint8_t)0xcb);	// retf
+}
+
+void CALLBACK_Configure(const ModuleLifecycle lifecycle, Section*)
+{
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		reset_callback_handlers();
+		break;
+
+	// This module doesn't support reconfiguration or destruction at runtime
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Destroy:
+		break;
+	}
+}
+
+void CALLBACK_Init(Section* section)
+{
+	CALLBACK_Configure(ModuleLifecycle::Create, section);
 }
