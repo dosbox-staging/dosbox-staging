@@ -28,7 +28,6 @@
 #include "setup.h"
 
 Int10Data int10;
-static callback_number_t call_10 = 0;
 static bool warned_ff=false;
 
 static Bitu INT10_Handler(void) {
@@ -731,16 +730,49 @@ static void SetupTandyBios(void) {
 	}
 }
 
-void INT10_Init(Section* /*sec*/) {
-	INT10_SetupPalette();
-	INT10_InitVGA();
-	if (IS_TANDY_ARCH) SetupTandyBios();
-	/* Setup the INT 10 vector */
-	call_10=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_10,&INT10_Handler,CB_IRET,"Int 10 video");
-	RealSetVec(0x10,CALLBACK_RealPointer(call_10));
-	//Init the 0x40 segment and init the datastructures in the the video rom area
-	INT10_SetupRomMemory();
-	INT10_Seg40Init();
-	INT10_SetVideoMode(0x3);
+void INT10_Configure(const ModuleLifecycle lifecycle, Section*)
+{
+	static callback_number_t callback_number = 0;
+
+	auto reset_int10 = [&]() {
+		if (callback_number != 0) {
+			CALLBACK_RemoveSetup(callback_number);
+			CALLBACK_DeAllocate(callback_number);
+			callback_number = 0;
+		}
+	};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		reset_int10();
+		[[fallthrough]];
+
+	case ModuleLifecycle::Create:
+		INT10_SetupPalette();
+		INT10_InitVGA();
+		if (IS_TANDY_ARCH) {
+			SetupTandyBios();
+		}
+
+		// Setup the INT 10 vector
+		callback_number = CALLBACK_Allocate();
+		CALLBACK_Setup(callback_number, &INT10_Handler, CB_IRET, "Int 10 video");
+		RealSetVec(0x10, CALLBACK_RealPointer(callback_number));
+
+		// Init the 0x40 segment and init the datastructures in the the
+		// video rom area
+		INT10_SetupRomMemory();
+		INT10_Seg40Init();
+		INT10_SetVideoMode(0x3);
+		break;
+
+	case ModuleLifecycle::Destroy:
+		reset_int10();
+		break;
+	}
+}
+
+void INT10_Init(Section* section)
+{
+	INT10_Configure(ModuleLifecycle::Create, section);
 }

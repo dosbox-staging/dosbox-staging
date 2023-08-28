@@ -97,6 +97,8 @@ bool CALLBACK_Setup(callback_number_t cb_number, CallBack_Handler handler, Bitu 
 callback_number_t CALLBACK_Setup(callback_number_t cb_number, CallBack_Handler handler, Bitu type, PhysPt addr,
                                  const char* descr);
 
+void CALLBACK_RemoveSetup(callback_number_t cb_num);
+
 const char* CALLBACK_GetDescription(callback_number_t cb_number);
 
 void CALLBACK_SCF(bool val);
