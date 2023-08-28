@@ -31,6 +31,7 @@
 #include "intel8042.h"
 #include "intel8255.h"
 #include "pic.h"
+#include "setup.h"
 #include "support.h"
 #include "timer.h"
 
@@ -727,13 +728,26 @@ void KEYBOARD_ClrBuffer()
 // Initialization
 // ***************************************************************************
 
-void KEYBOARD_Init(Section* /*sec*/)
+void KEYBOARD_Configure(const ModuleLifecycle lifecycle, Section*)
 {
-	I8042_Init();
-	I8255_Init();
-	TIMER_AddTickHandler(&typematic_tick);
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create: {
+		I8042_Init();
+		I8255_Init();
+		TIMER_AddTickHandler(&typematic_tick);
 
-	constexpr bool is_startup = true;
-	keyboard_reset(is_startup);
-	scancode_set(CodeSet1);
+		constexpr bool is_startup = true;
+		keyboard_reset(is_startup);
+
+		scancode_set(CodeSet1);
+	} break;
+
+	case ModuleLifecycle::Destroy: keyboard_reset(); break;
+	}
+}
+
+void KEYBOARD_Init(Section* section)
+{
+	KEYBOARD_Configure(ModuleLifecycle::Create, section);
 }
