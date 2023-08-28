@@ -817,9 +817,11 @@ struct RGBEntry {
 constexpr auto NumCgaColors = 16;
 typedef std::array<RGBEntry, NumCgaColors> cga_colors_t;
 
+constexpr auto NumVgaDacColors = 256;
+
 struct VGA_Dac {
-	RGBEntry rgb[0x100]       = {};
-	uint32_t palette_map[256] = {};
+	RGBEntry rgb[NumVgaDacColors]         = {};
+	uint32_t palette_map[NumVgaDacColors] = {};
 
 	uint8_t combine[16] = {};
 
