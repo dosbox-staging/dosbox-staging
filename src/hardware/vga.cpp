@@ -393,75 +393,86 @@ void VGA_EnablePixelDoubling(const bool enable)
 	vga.draw.pixel_doubling_enabled = enable;
 }
 
-void VGA_Init(Section* sec)
+void VGA_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	vga.draw.resizing = false;
-	vga.mode          = M_ERROR; // For first init
-	SVGA_Setup_Driver();
-	VGA_SetupMemory(sec);
-	VGA_SetupMisc();
-	VGA_SetupDAC();
-	VGA_SetupGFX();
-	VGA_SetupSEQ();
-	VGA_SetupAttr();
-	VGA_SetupOther();
-	VGA_SetupXGA();
-	VGA_SetClock(0,CLK_25);
-	VGA_SetClock(1,CLK_28);
-/* Generate tables */
-	VGA_SetCGA2Table(0,1);
-	VGA_SetCGA4Table(0,1,2,3);
-	Bitu i,j;
-	for (i=0;i<256;i++) {
-		ExpandTable[i]=i | (i << 8)| (i <<16) | (i << 24);
-	}
-	for (i=0;i<16;i++) {
-		TXT_FG_Table[i]=i | (i << 8)| (i <<16) | (i << 24);
-		TXT_BG_Table[i]=i | (i << 8)| (i <<16) | (i << 24);
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		vga.draw.resizing = false;
+		vga.mode          = M_ERROR;
+
+		SVGA_Setup_Driver();
+		VGA_SetupMemory(section);
+		VGA_SetupMisc();
+		VGA_SetupDAC();
+		VGA_SetupGFX();
+		VGA_SetupSEQ();
+		VGA_SetupAttr();
+		VGA_SetupOther();
+		VGA_SetupXGA();
+		VGA_SetClock(0, CLK_25);
+		VGA_SetClock(1, CLK_28);
+
+		// Generate tables
+		VGA_SetCGA2Table(0, 1);
+		VGA_SetCGA4Table(0, 1, 2, 3);
+
+		for (uint32_t i = 0; i < 256; ++i) {
+			ExpandTable[i] = i | (i << 8) | (i << 16) | (i << 24);
+		}
+		for (uint32_t i = 0; i < 16; ++i) {
+			TXT_FG_Table[i] = i | (i << 8) | (i << 16) | (i << 24);
+			TXT_BG_Table[i] = i | (i << 8) | (i << 16) | (i << 24);
 #ifdef WORDS_BIGENDIAN
-		FillTable[i]=
-			((i & 1) ? 0xff000000 : 0) |
-			((i & 2) ? 0x00ff0000 : 0) |
-			((i & 4) ? 0x0000ff00 : 0) |
-			((i & 8) ? 0x000000ff : 0) ;
-		TXT_Font_Table[i]=
-			((i & 1) ? 0x000000ff : 0) |
-			((i & 2) ? 0x0000ff00 : 0) |
-			((i & 4) ? 0x00ff0000 : 0) |
-			((i & 8) ? 0xff000000 : 0) ;
+			FillTable[i] = ((i & 1) ? 0xff000000 : 0) |
+			               ((i & 2) ? 0x00ff0000 : 0) |
+			               ((i & 4) ? 0x0000ff00 : 0) |
+			               ((i & 8) ? 0x000000ff : 0);
+
+			TXT_Font_Table[i] = ((i & 1) ? 0x000000ff : 0) |
+			                    ((i & 2) ? 0x0000ff00 : 0) |
+			                    ((i & 4) ? 0x00ff0000 : 0) |
+			                    ((i & 8) ? 0xff000000 : 0);
 #else 
-		FillTable[i]=
-			((i & 1) ? 0x000000ff : 0) |
-			((i & 2) ? 0x0000ff00 : 0) |
-			((i & 4) ? 0x00ff0000 : 0) |
-			((i & 8) ? 0xff000000 : 0) ;
-		TXT_Font_Table[i]=	
-			((i & 1) ? 0xff000000 : 0) |
-			((i & 2) ? 0x00ff0000 : 0) |
-			((i & 4) ? 0x0000ff00 : 0) |
-			((i & 8) ? 0x000000ff : 0) ;
-#endif
-	}
-	for (j=0;j<4;j++) {
-		for (i=0;i<16;i++) {
-#ifdef WORDS_BIGENDIAN
-			Expand16Table[j][i] =
-				((i & 1) ? 1 << j : 0) |
-				((i & 2) ? 1 << (8 + j) : 0) |
-				((i & 4) ? 1 << (16 + j) : 0) |
-				((i & 8) ? 1 << (24 + j) : 0);
-#else
-			Expand16Table[j][i] =
-				((i & 1) ? 1 << (24 + j) : 0) |
-				((i & 2) ? 1 << (16 + j) : 0) |
-				((i & 4) ? 1 << (8 + j) : 0) |
-				((i & 8) ? 1 << j : 0);
+			FillTable[i] = ((i & 1) ? 0x000000ff : 0) |
+			               ((i & 2) ? 0x0000ff00 : 0) |
+			               ((i & 4) ? 0x00ff0000 : 0) |
+			               ((i & 8) ? 0xff000000 : 0);
+
+			TXT_Font_Table[i] = ((i & 1) ? 0xff000000 : 0) |
+			                    ((i & 2) ? 0x00ff0000 : 0) |
+			                    ((i & 4) ? 0x0000ff00 : 0) |
+			                    ((i & 8) ? 0x000000ff : 0);
 #endif
 		}
+		for (int j = 0; j < 4; ++j) {
+			for (uint8_t i = 0; i < 16; ++i) {
+#ifdef WORDS_BIGENDIAN
+				Expand16Table[j][i] = ((i & 1) ? 1 << j : 0) |
+				                      ((i & 2) ? 1 << (8 + j) : 0) |
+				                      ((i & 4) ? 1 << (16 + j) : 0) |
+				                      ((i & 8) ? 1 << (24 + j) : 0);
+#else
+				Expand16Table[j][i] = ((i & 1) ? 1 << (24 + j) : 0) |
+				                      ((i & 2) ? 1 << (16 + j) : 0) |
+				                      ((i & 4) ? 1 << (8 + j) : 0) |
+				                      ((i & 8) ? 1 << j : 0);
+#endif
+			}
+		}
+		break;
+
+	case ModuleLifecycle::Destroy: break;
 	}
 }
 
-void SVGA_Setup_Driver(void) {
+void VGA_Init(Section* section)
+{
+	VGA_Configure(ModuleLifecycle::Create, section);
+}
+
+void SVGA_Setup_Driver(void)
+{
 	memset(&svga, 0, sizeof(SVGA_Driver));
 
 	switch(svgaCard) {
@@ -486,4 +497,3 @@ void SVGA_Setup_Driver(void) {
 const VideoMode& VGA_GetCurrentVideoMode() {
 	return vga.draw.render.video_mode;
 }
-
