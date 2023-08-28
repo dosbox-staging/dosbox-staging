@@ -627,6 +627,9 @@ static const char* const full_name      = "Z:\\COMMAND.COM";
 static const char* const init_line      = "/INIT AUTOEXEC.BAT";
 
 void SHELL_Init() {
+	
+	//clang-format off
+	
 	// Generic messages, to be used by any command or DOS program
 	MSG_Add("SHELL_ILLEGAL_PATH", "Illegal path.\n");
 	MSG_Add("SHELL_ILLEGAL_FILE_NAME", "Illegal file name.\n");
@@ -1328,6 +1331,25 @@ void SHELL_Init() {
 	        "  [color=green]move[reset] [color=white]file1.txt,file2.txt[reset] [color=cyan]mydir[reset]\n");
 	MSG_Add("SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE",
 	        "Cannot move multiple files to a single file.\n");
+	MSG_Add("SHELL_CMD_FOR_HELP",
+	        "Runs a parametrized command on every element of a parameter list.\n");
+	MSG_Add("SHELL_CMD_FOR_HELP_LONG",
+		"Usage:\n"
+		"  [color=green]FOR[reset] [color=white]%VAR[reset] [color=cyan]IN[reset] [color=white](PARAMS)[reset] [color=cyan]DO[reset] COMMAND\n"
+		"Where:\n"
+		"  [color=white]%VAR[reset]     A single character variable prefixed by '%'.\n"
+		"  [color=white](PARAMS)[reset] Parameters replacing [color=white]%VAR[reset] instances in COMMAND.\n"
+		"  COMMAND  Any valid command. Use [color=white]%VAR[reset] to parametrize the command.\n"
+		"Notes:\n"
+		"  In batch files, [color=white]%VAR[reset] must be written as [color=white]%%VAR[reset].\n"
+		"  Parameters in [color=white](PARAMS)[reset] can be separated by any valid DOS separator.\n"
+		"  Wildcards in [color=white](PARAMS)[reset] add matching files to the list.\n"
+		"Examples:\n"
+		"  [color=green]FOR[reset] [color=white]%C[reset] [color=cyan]IN[reset] [color=white](HI HELLO)[reset] [color=cyan]DO[reset] ECHO %C\n"
+		"  [color=green]FOR[reset] [color=white]%D[reset] [color=cyan]IN[reset] [color=white](*.TXT)[reset] [color=cyan]DO[reset] DEL %D\n"
+	);
+
+	//clang-format on
 
 	/* Ensure help categories are loaded into the message vector */
 	HELP_AddMessages();

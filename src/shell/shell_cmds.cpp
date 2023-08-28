@@ -50,7 +50,7 @@
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
-	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::All, HELP_Category::Batch } },
+	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::All,    HELP_Category::Batch } },
 	{ "CD",       {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::Common, HELP_Category::File } },
 	{ "CHDIR",    {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::All,    HELP_Category::File } },
 	{ "CLS",      {&DOS_Shell::CMD_CLS,      "CLS",      HELP_Filter::Common, HELP_Category::Misc} },
@@ -62,6 +62,7 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	{ "ECHO",     {&DOS_Shell::CMD_ECHO,     "ECHO",     HELP_Filter::All,    HELP_Category::Batch } },
 	{ "ERASE",    {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::All,    HELP_Category::File } },
 	{ "EXIT",     {&DOS_Shell::CMD_EXIT,     "EXIT",     HELP_Filter::Common, HELP_Category::Misc } },
+	{ "FOR",      {&DOS_Shell::CMD_FOR,      "FOR",      HELP_Filter::All,    HELP_Category::Batch } },
 	{ "GOTO",     {&DOS_Shell::CMD_GOTO,     "GOTO",     HELP_Filter::All,    HELP_Category::Batch } },
 	{ "IF",       {&DOS_Shell::CMD_IF,       "IF",       HELP_Filter::All,    HELP_Category::Batch } },
 	{ "LH",       {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc } },
@@ -81,7 +82,7 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	{ "TYPE",     {&DOS_Shell::CMD_TYPE,     "TYPE",     HELP_Filter::Common, HELP_Category::Misc } },
 	{ "VER",      {&DOS_Shell::CMD_VER,      "VER",      HELP_Filter::All,    HELP_Category::Misc } },
 	{ "VOL",      {&DOS_Shell::CMD_VOL,      "VOL",      HELP_Filter::All,    HELP_Category::Misc } }
-	};
+};
 // clang-format on
 
 // support functions
@@ -2570,5 +2571,123 @@ void DOS_Shell::CMD_MOVE(char* args)
 				}
 			}
 		}
+	}
+}
+
+static std::vector<std::string> search_files(std::string_view query)
+{
+	const auto save_dta = dos.dta();
+	dos.dta(dos.tables.tempdta);
+	const auto dta = DOS_DTA(dos.dta());
+
+	bool found = DOS_FindFirst(std::string(query).c_str(),
+	                           ~(DOS_ATTR_VOLUME | DOS_ATTR_DIRECTORY));
+
+	std::vector<std::string> files = {};
+	while (found) {
+		DOS_DTA::Result result = {};
+		dta.GetResult(result);
+		files.emplace_back(std::move(result.name));
+		found = DOS_FindNext();
+	}
+
+	dos.dta(save_dta);
+	
+	return files;
+}
+
+void DOS_Shell::CMD_FOR(char* args)
+{
+	HELP("FOR");
+	
+	static const auto delimiters = std::string_view(",;= \t");
+
+	auto argsview = std::string_view(args);
+	auto consume_next_token = [&argsview]() -> std::optional<std::string_view> {
+
+		const auto start = argsview.find_first_not_of(delimiters);
+		if (start >= argsview.size()) {
+			return {};
+		}
+
+		const auto end = argsview.substr(start).find_first_of(delimiters);
+		if (end >= argsview.size()) {
+			return {};
+		}
+
+		const auto token = argsview.substr(start, end);
+		argsview         = argsview.substr(end + 1);
+		return token;
+	};
+
+	const auto variable = consume_next_token();
+	if (!variable || variable->size() != sizeof('%') + 1 ||
+	    variable->front() != '%') {
+		return;
+	}
+
+	const auto in_keyword = consume_next_token();
+	if (!in_keyword || !iequals(*in_keyword, "IN")) {
+		return;
+	}
+
+	const auto parameters =
+	        [&argsview]() -> std::optional<std::vector<std::string>> {
+		const auto list_start = argsview.find_first_of('(');
+		if (list_start >= argsview.size()) {
+			return {};
+		}
+		const auto list_end = argsview.substr(list_start).find_first_of(')');
+		if (list_end >= argsview.size()) {
+			return {};
+		}
+		auto string_list = split(argsview.substr(list_start + sizeof('('),
+		                                         list_end - sizeof(')')),
+		                         delimiters);
+		argsview = argsview.substr(list_end + sizeof(')') + 1);
+
+		auto parameters = std::vector<std::string>();
+		for (auto& str : string_list) {
+			if (str.find('*') == std::string::npos &&
+			    str.find('?') == std::string::npos) {
+				parameters.emplace_back(std::move(str));
+				continue;
+			}
+			auto files = search_files(str);
+			parameters.insert(parameters.end(),
+			                  std::make_move_iterator(files.begin()),
+			                  std::make_move_iterator(files.end()));
+		}
+		return parameters;
+	}();
+
+	if (!parameters) {
+		return;
+	}
+
+	const auto do_keyword = consume_next_token();
+	if (!do_keyword || !iequals(*do_keyword, "DO")) {
+		return;
+	}
+
+	const auto format_command = std::string(argsview);
+
+	for (const auto& parameter : *parameters) {
+		
+		// TODO: C++20: Use std::vformat instead
+		auto command  = format_command;
+		auto position = std::string::size_type();
+		while ((position = command.find(*variable, position)) !=
+		       std::string::npos) {
+			command.replace(position, variable->size(), parameter);
+			position += parameter.size();
+		}
+		
+		// TODO: Pass command directly to ParseLine when it takes
+		// a std::string_view instead of a char*
+		char cmd_array[CMD_MAXLINE];
+		std::strncpy(cmd_array, command.c_str(), CMD_MAXLINE);
+		cmd_array[CMD_MAXLINE - 1] = '\0';
+		ParseLine(cmd_array);
 	}
 }
