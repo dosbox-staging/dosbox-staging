@@ -19,6 +19,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "dos_system.h"
 #include "shell.h"
 
 #include <algorithm>
@@ -50,7 +51,7 @@
 
 // clang-format off
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
-	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::All, HELP_Category::Batch } },
+	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::All,    HELP_Category::Batch } },
 	{ "CD",       {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::Common, HELP_Category::File } },
 	{ "CHDIR",    {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::All,    HELP_Category::File } },
 	{ "CLS",      {&DOS_Shell::CMD_CLS,      "CLS",      HELP_Filter::Common, HELP_Category::Misc} },
@@ -62,6 +63,7 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	{ "ECHO",     {&DOS_Shell::CMD_ECHO,     "ECHO",     HELP_Filter::All,    HELP_Category::Batch } },
 	{ "ERASE",    {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::All,    HELP_Category::File } },
 	{ "EXIT",     {&DOS_Shell::CMD_EXIT,     "EXIT",     HELP_Filter::Common, HELP_Category::Misc } },
+	{ "FOR",      {&DOS_Shell::CMD_FOR,      "FOR",      HELP_Filter::All,    HELP_Category::Batch } },
 	{ "GOTO",     {&DOS_Shell::CMD_GOTO,     "GOTO",     HELP_Filter::All,    HELP_Category::Batch } },
 	{ "IF",       {&DOS_Shell::CMD_IF,       "IF",       HELP_Filter::All,    HELP_Category::Batch } },
 	{ "LH",       {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc } },
@@ -81,7 +83,7 @@ static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	{ "TYPE",     {&DOS_Shell::CMD_TYPE,     "TYPE",     HELP_Filter::Common, HELP_Category::Misc } },
 	{ "VER",      {&DOS_Shell::CMD_VER,      "VER",      HELP_Filter::All,    HELP_Category::Misc } },
 	{ "VOL",      {&DOS_Shell::CMD_VOL,      "VOL",      HELP_Filter::All,    HELP_Category::Misc } }
-	};
+};
 // clang-format on
 
 // support functions
@@ -2504,5 +2506,147 @@ void DOS_Shell::CMD_MOVE(char* args)
 				}
 			}
 		}
+	}
+}
+
+static std::vector<std::string> search_files(const std::string_view query)
+{
+	const auto save_dta = dos.dta();
+	dos.dta(dos.tables.tempdta);
+	const auto dta = DOS_DTA(dos.dta());
+
+	auto found = DOS_FindFirst(std::string(query).c_str(),
+	                           ~(FatAttributeFlags::Volume |
+	                             FatAttributeFlags::Directory));
+
+	std::vector<std::string> files = {};
+	while (found) {
+		DOS_DTA::Result result = {};
+		dta.GetResult(result);
+		files.emplace_back(std::move(result.name));
+		found = DOS_FindNext();
+	}
+
+	dos.dta(save_dta);
+
+	return files;
+}
+
+void DOS_Shell::CMD_FOR(char* args)
+{
+	HELP("FOR");
+
+	static constexpr auto delimiters = std::string_view(",;= \t");
+
+	auto argsview = std::string_view(args);
+	auto consume_next_token = [&argsview]() -> std::optional<std::string_view> {
+		const auto start = argsview.find_first_not_of(delimiters);
+		if (start == std::string_view::npos) {
+			return {};
+		}
+
+		argsview       = argsview.substr(start);
+		const auto end = argsview.find_first_of(delimiters);
+		if (end == std::string_view::npos) {
+			return {};
+		}
+
+		const auto token = argsview.substr(0, end);
+		argsview         = argsview.substr(end + 1);
+		return token;
+	};
+
+	const auto variable = consume_next_token();
+	if (!variable || variable->size() != std::strlen("%") + 1 ||
+	    variable->front() != '%') {
+		SyntaxError();
+		return;
+	}
+
+	const auto in_keyword = consume_next_token();
+	if (!in_keyword || !iequals(*in_keyword, "IN")) {
+		SyntaxError();
+		return;
+	}
+
+	const auto parameters =
+	        [&argsview]() -> std::optional<std::vector<std::string>> {
+		const auto parameter_list_start = argsview.find_first_of('(');
+		if (parameter_list_start == std::string_view::npos) {
+			return {};
+		}
+
+		const auto parameter_list_end = argsview.find_first_of(')');
+		if (parameter_list_end == std::string_view::npos &&
+		    parameter_list_start < parameter_list_end) {
+			return {};
+		}
+
+		const auto raw_parameter_input = argsview.substr(
+		        parameter_list_start + std::strlen("("),
+		        parameter_list_end - std::strlen(")") - parameter_list_start);
+		auto raw_parameters = split(raw_parameter_input, delimiters);
+		std::vector<std::string> expanded_parameters = {};
+
+		for (auto& parameter : raw_parameters) {
+			if (parameter.find('*') == std::string::npos &&
+			    parameter.find('?') == std::string::npos) {
+				expanded_parameters.emplace_back(std::move(parameter));
+				continue;
+			}
+
+			auto files = search_files(parameter);
+			expanded_parameters.insert(
+			        expanded_parameters.end(),
+			        std::make_move_iterator(files.begin()),
+			        std::make_move_iterator(files.end()));
+		}
+
+		argsview = argsview.substr(parameter_list_end + std::strlen(")"));
+		return expanded_parameters;
+	}();
+
+	if (!parameters) {
+		SyntaxError();
+		return;
+	}
+
+	const auto do_keyword = consume_next_token();
+	if (!do_keyword || !iequals(*do_keyword, "DO")) {
+		SyntaxError();
+		return;
+	}
+
+	const auto raw_command = [&argsview]() -> std::optional<std::string_view> {
+		const auto start = argsview.find_first_not_of(delimiters);
+		if (start == std::string_view::npos) {
+			return {};
+		}
+
+		return argsview.substr(start);
+	}();
+
+	if (!raw_command || iequals(raw_command->substr(0, std::strlen("for")), "for")) {
+		SyntaxError();
+		return;
+	}
+
+
+	for (const auto& parameter : *parameters) {
+		// TODO: C++20: Use std::vformat instead
+		// Remember to escape the braces in the command string
+		auto command                    = std::string(*raw_command);
+		std::string::size_type position = {};
+		while ((position = command.find(*variable, position)) !=
+		       std::string::npos) {
+			command.replace(position, variable->size(), parameter);
+			position += parameter.size();
+		}
+		// TODO: Pass command directly to ParseLine when it takes
+		// a std::string_view instead of a char*
+		char cmd_array[CMD_MAXLINE];
+		std::strncpy(cmd_array, command.c_str(), CMD_MAXLINE);
+		cmd_array[CMD_MAXLINE - 1] = '\0';
+		ParseLine(cmd_array);
 	}
 }

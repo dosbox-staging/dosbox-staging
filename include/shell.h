@@ -159,6 +159,7 @@ public:
 	void CMD_DELETE(char* args);
 	void CMD_ECHO(char* args);
 	void CMD_EXIT(char* args);
+	void CMD_FOR(char* args);
 	void CMD_MKDIR(char* args);
 	void CMD_CHDIR(char* args);
 	void CMD_RMDIR(char* args);

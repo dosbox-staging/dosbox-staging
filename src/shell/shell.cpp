@@ -1321,6 +1321,30 @@ void SHELL_Init() {
 	        "  [color=light-green]move[reset] [color=white]file1.txt,file2.txt[reset] [color=light-cyan]mydir[reset]\n");
 	MSG_Add("SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE",
 	        "Cannot move multiple files to a single file.\n");
+	MSG_Add("SHELL_CMD_FOR_HELP",
+	        "Runs a specified command for each string in a set.\n");
+	MSG_Add("SHELL_CMD_FOR_HELP_LONG",
+		"Usage:\n"
+		"  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMAND[reset]\n"
+		"\n"
+		"Where:\n"
+		"  [color=white]%VAR[reset]    A single character representing a variable, prefixed by a '%'.\n"
+		"  [color=light-cyan]in[reset]      A case-insensitive keyword.\n"
+		"  [color=white](SET)[reset]   The set of strings to replace [color=white]%VAR[reset] instances in [color=white]COMMAND[reset].\n"
+		"  [color=light-cyan]do[reset]      A case-insensitive keyword.\n"
+		"  [color=white]COMMAND[reset] The command to be repeated for each string in [color=white](SET)[reset].\n"
+		"\n"
+		"Notes:\n"
+		"  - In batch files, [color=white]%VAR[reset] must be written as [color=white]%%VAR[reset] (two percent signs) instead.\n"
+		"  - Strings in [color=white](SET)[reset] may be separated by any valid DOS separator.\n"
+		"  - Any string in [color=white](SET)[reset] containing wildcards (* or ?) will expand to\n" 
+		"    the set of matching files in the current directory.\n"
+		"  - Using another [color=light-green]for[reset] command as [color=white]COMMAND[reset] is not permitted.\n"
+		"\n"
+		"Examples:\n"
+		"  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](ONE TWO)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]\n"
+		"  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]\n"
+	);
 
 	/* Ensure help categories are loaded into the message vector */
 	HELP_AddMessages();
