@@ -30,7 +30,7 @@
 #include "string_utils.h"
 #include "video.h"
 
-VGA_Type vga;
+VgaType vga;
 SVGA_Driver svga;
 
 uint32_t CGA_2_Table[16];
@@ -287,7 +287,7 @@ void VGA_SetClock(const Bitu which, const uint32_t desired_clock)
 
 	// The clk parameters (r, n, m) will be populated with those that find a
 	// clock closest to the desired_clock clock.
-	VGA_S3::clk_t best_clk;
+	VgaS3::clk_t best_clk;
 	auto best_error = clock;
 
 	uint8_t r = 0;
