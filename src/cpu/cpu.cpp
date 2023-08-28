@@ -2254,11 +2254,13 @@ public:
 
 	~CPU() override = default;
 
-	bool Change_Config(Section *newconfig) override
+	bool Change_Config(Section* new_section) override
 	{
-		Section_prop * section=static_cast<Section_prop *>(newconfig);
-		CPU_AutoDetermineMode=CPU_AUTODETERMINE_NONE;
-		//CPU_CycleLeft=0;//needed ?
+		assert(new_section);
+		const auto section = static_cast<Section_prop*>(new_section);
+
+		CPU_AutoDetermineMode = CPU_AUTODETERMINE_NONE;
+		// CPU_CycleLeft=0;//needed ?
 		CPU_Cycles=0;
 		CPU_SkipCycleAutoAdjust=false;
 
@@ -2425,25 +2427,30 @@ public:
 	}
 };
 
-static CPU * test;
-
-void CPU_ShutDown([[maybe_unused]] Section* sec) {
-#if (C_DYNAMIC_X86)
-	CPU_Core_Dyn_X86_Cache_Close();
-#elif (C_DYNREC)
-	CPU_Core_Dynrec_Cache_Close();
-#endif
-	delete test;
-}
-
-void CPU_Init(Section* sec)
+void CPU_Configure(const ModuleLifecycle lifecycle, Section* section)
 {
-	assert(sec);
+	static std::unique_ptr<CPU> cpu_instance = {};
 
-	test = new (std::nothrow) CPU(sec);
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		cpu_instance = std::make_unique<CPU>(section);
+		break;
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&CPU_ShutDown, changeable_at_runtime);
+	case ModuleLifecycle::Reconfigure:
+		if (cpu_instance) {
+			cpu_instance->Change_Config(section);
+		}
+		break;
+
+	case ModuleLifecycle::Destroy:
+		#if (C_DYNAMIC_X86)
+				CPU_Core_Dyn_X86_Cache_Close();
+		#elif (C_DYNREC)
+				CPU_Core_Dynrec_Cache_Close();
+		#endif
+		cpu_instance.reset();
+		break;
+	}
 }
 
 //initialize static members

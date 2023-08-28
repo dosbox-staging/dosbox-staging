@@ -74,8 +74,7 @@ void VGA_Init(Section*);
 
 void DOS_Init(Section*);
 
-
-void CPU_Init(Section*);
+void CPU_Configure(ModuleLifecycle, Section*);
 
 #if C_FPU
 void FPU_Init(Section*);
@@ -654,7 +653,7 @@ void DOSBOX_Init()
 	VGA_AddCompositeSettings(*control);
 
 	// Configure CPU settings
-	secprop = control->AddSection_prop("cpu", &CPU_Init, changeable_at_runtime);
+	secprop = control->AddSection("cpu", CPU_Configure);
 	const char* cores[] =
 	{ "auto",
 #if (C_DYNAMIC_X86) || (C_DYNREC)
