@@ -22,10 +22,12 @@
 
 #include <math.h>
 #include <float.h>
+
 #include "cross.h"
 #include "mem.h"
 #include "fpu.h"
 #include "cpu.h"
+#include "setup.h"
 
 FPU_rec fpu = {};
 
@@ -649,9 +651,23 @@ void FPU_ESC7_Normal(Bitu rm) {
 	}
 }
 
+void FPU_Configure(const ModuleLifecycle lifecycle, Section*)
+{
+	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+	case ModuleLifecycle::Create:
+		fpu = {};
+		FPU_FINIT();
+		break;
 
-void FPU_Init(Section*) {
-	FPU_FINIT();
+	case ModuleLifecycle::Destroy:
+		break;
+	}
+}
+
+void FPU_Init(Section* section)
+{
+	FPU_Configure(ModuleLifecycle::Create, section);
 }
 
 #endif
