@@ -169,49 +169,50 @@ constexpr auto Vga720PixelClockHz = 28322000;
 #define S3_XGA_32BPP 0x30
 #define S3_XGA_CMASK (S3_XGA_8BPP|S3_XGA_16BPP|S3_XGA_32BPP)
 
-struct VGA_Internal {
+struct VgaInternal {
 	bool attrindex = false;
 };
 
-struct VGA_Config {
-	/* Memory handlers */
+struct VgaConfig {
+	// Memory handlers
 	Bitu mh_mask = 0;
 
-	/* Video drawing */
+	// Video drawing
 	uint32_t display_start = 0;
-	Bitu real_start = 0;
-	bool retrace = false; /* A retrace is active */
-	Bitu scan_len = 0;
-	Bitu cursor_start = 0;
+	Bitu real_start        = 0;
+	bool retrace           = false; /* A retrace is active */
+	Bitu scan_len          = 0;
+	Bitu cursor_start      = 0;
 
-	/* Some other screen related variables */
-	Bitu line_compare = 0;
-	bool chained = false; /* Enable or Disabled Chain 4 Mode */
+	// Some other screen related variables
+	Bitu line_compare      = 0;
+
+	// Enable or Disabled Chain 4 Mode
+	bool chained           = false;
 	bool compatible_chain4 = false;
 
-	/* Pixel Scrolling */
-	uint8_t pel_panning = 0; /* Amount of pixels to skip when starting
-	                          horizontal line */
+	// Pixel Scrolling
+	// Amount of pixels to skip when starting horizontal line
+	uint8_t pel_panning = 0;
 	uint8_t hlines_skip = 0;
-	uint8_t bytes_skip = 0;
-	uint8_t addr_shift = 0;
+	uint8_t bytes_skip  = 0;
+	uint8_t addr_shift  = 0;
 
-	/* Specific stuff memory write/read handling */
-
-	uint8_t read_mode = 0;
-	uint8_t write_mode = 0;
+	// Specific stuff memory write/read handling
+	uint8_t read_mode       = 0;
+	uint8_t write_mode      = 0;
 	uint8_t read_map_select = 0;
 	uint8_t color_dont_care = 0;
-	uint8_t color_compare = 0;
-	uint8_t data_rotate = 0;
-	uint8_t raster_op = 0;
+	uint8_t color_compare   = 0;
+	uint8_t data_rotate     = 0;
+	uint8_t raster_op       = 0;
 
-	uint32_t full_bit_mask = 0;
-	uint32_t full_map_mask = 0;
-	uint32_t full_not_map_mask = 0;
-	uint32_t full_set_reset = 0;
+	uint32_t full_bit_mask             = 0;
+	uint32_t full_map_mask             = 0;
+	uint32_t full_not_map_mask         = 0;
+	uint32_t full_set_reset            = 0;
 	uint32_t full_not_enable_set_reset = 0;
-	uint32_t full_enable_set_reset = 0;
+	uint32_t full_enable_set_reset     = 0;
 	uint32_t full_enable_and_set_reset = 0;
 };
 
@@ -226,8 +227,8 @@ enum PixelsPerChar : int8_t {
 
 enum class PixelFormat : uint8_t;
 
-struct VGA_Draw {
-	bool resizing   = false;
+struct VgaDraw {
+	bool resizing = false;
 
 	RenderParams render = {};
 
@@ -268,9 +269,9 @@ struct VGA_Draw {
 		double per_line_ms = 0;
 	} delay = {};
 
-	double host_refresh_hz = RefreshRateHostDefault;
-	double dos_refresh_hz = RefreshRateDosDefault;
-	double custom_refresh_hz = RefreshRateDosDefault;
+	double host_refresh_hz    = RefreshRateHostDefault;
+	double dos_refresh_hz     = RefreshRateDosDefault;
+	double custom_refresh_hz  = RefreshRateDosDefault;
 	VgaRateMode dos_rate_mode = VgaRateMode::Default;
 
 	bool force_square_pixels     = false;
@@ -299,22 +300,23 @@ struct VGA_Draw {
 };
 
 struct VGA_HWCURSOR {
-	uint8_t curmode = 0;
-	uint16_t originx = 0;
-	uint16_t originy = 0;
-	uint8_t fstackpos = 0;
-	uint8_t bstackpos = 0;
+	uint8_t curmode      = 0;
+	uint16_t originx     = 0;
+	uint16_t originy     = 0;
+	uint8_t fstackpos    = 0;
+	uint8_t bstackpos    = 0;
 	uint8_t forestack[4] = {};
 	uint8_t backstack[4] = {};
-	uint16_t startaddr = 0;
-	uint8_t posx = 0;
-	uint8_t posy = 0;
-	uint8_t mc[64][64] = {};
+	uint16_t startaddr   = 0;
+	uint8_t posx         = 0;
+	uint8_t posy         = 0;
+	uint8_t mc[64][64]   = {};
 };
 
-struct VGA_S3 {
+struct VgaS3 {
 	uint8_t reg_lock1 = 0;
 	uint8_t reg_lock2 = 0;
+
 	uint8_t reg_31 = 0;
 	uint8_t reg_35 = 0;
 	uint8_t reg_36 = 0; // RAM size
@@ -330,50 +332,66 @@ struct VGA_S3 {
 	uint8_t reg_55 = 0;
 	uint8_t reg_58 = 0;
 	uint8_t reg_6b = 0; // LFB BIOS scratchpad
+	                    //
 	uint8_t ex_hor_overflow = 0;
 	uint8_t ex_ver_overflow = 0;
-	uint16_t la_window = 0;
-	uint8_t misc_control_2 = 0;
-	uint8_t ext_mem_ctrl = 0;
+
+	uint16_t la_window        = 0;
+	uint8_t misc_control_2    = 0;
+	uint8_t ext_mem_ctrl      = 0;
 	uint16_t xga_screen_width = 0; // from 640 to 1600
+	                               //
 	VGAModes xga_color_mode = {};
+
 	struct clk_t {
 		uint8_t r = 0;
 		uint8_t n = 1;
 		uint8_t m = 1;
 	};
+
 	clk_t clk[4] = {};
-	clk_t mclk = {};
+	clk_t mclk   = {};
+
 	struct pll_t {
-		uint8_t lock = 0; // Extended Sequencer Access Rgister SR8 (pp. 124)
-		uint8_t control_2 = 0; // CLKSYN Control 2 Register SR15 (pp. 130)
-		uint8_t control = 0; // RAMDAC/CLKSYN Control Register SRI8 (pp. 132)
+		// Extended Sequencer Access Rgister SR8 (pp. 124)
+		uint8_t lock = 0;
+
+		// CLKSYN Control 2 Register SR15 (pp. 130)
+		uint8_t control_2 = 0;
+
+		// RAMDAC/CLKSYN Control Register SRI8 (pp. 132)
+		uint8_t control = 0;
 	};
-	pll_t pll = {};
+
+	pll_t pll        = {};
 	VGA_HWCURSOR hgc = {};
 };
 
-struct VGA_HERC {
+struct VgaHerc {
 	uint8_t mode_control = 0;
-	uint8_t enable_bits = 0;
+	uint8_t enable_bits  = 0;
 };
 
-struct VGA_OTHER {
+struct VgaOther {
 	uint8_t index = 0;
-	uint8_t htotal = 0;
-	uint8_t hdend = 0;
-	uint8_t hsyncp = 0;
-	uint8_t hsyncw = 0;
-	uint8_t vtotal = 0;
-	uint8_t vdend = 0;
+
+	uint8_t htotal  = 0;
+	uint8_t hdend   = 0;
+	uint8_t hsyncp  = 0;
+	uint8_t hsyncw  = 0;
+	uint8_t vtotal  = 0;
+	uint8_t vdend   = 0;
 	uint8_t vadjust = 0;
-	uint8_t vsyncp = 0;
-	uint8_t vsyncw = 0;
+	uint8_t vsyncp  = 0;
+	uint8_t vsyncw  = 0;
+
 	uint8_t max_scanline = 0;
-	uint16_t lightpen = 0;
+
+	uint16_t lightpen       = 0;
 	bool lightpen_triggered = false;
+
 	uint8_t cursor_start = 0;
-	uint8_t cursor_end = 0;
+	uint8_t cursor_end   = 0;
 };
 
 // clang-format off
@@ -482,7 +500,7 @@ union TandyModeControlRegister {
 	bit_view<4, 1> is_tandy_16_color_enabled;
 };
 
-struct VGA_TANDY {
+struct VgaTandy {
 	uint8_t pcjr_flipflop                 = 0;
 	TandyModeRegister mode                = {};
 	uint8_t color_select                  = 0;
@@ -734,7 +752,7 @@ union CrtcModeControlRegister {
 	bit_view<7, 1> is_sync_enabled;
 };
 
-struct VGA_Seq {
+struct VgaSeq {
 	uint8_t index = 0;
 	uint8_t reset = 0;
 
@@ -747,71 +765,85 @@ struct VGA_Seq {
 	uint8_t memory_mode = 0;
 };
 
-struct VGA_Attr {
+struct VgaAttr {
 	uint8_t palette[16] = {};
+
 	AttributeModeControlRegister mode_control = {};
+
 	uint8_t horizontal_pel_panning = 0;
-	uint8_t overscan_color = 0;
-	uint8_t color_plane_enable = 0;
-	uint8_t color_select = 0;
-	uint8_t index = 0;
-	uint8_t disabled = 0; // Used for disabling the screen.
-	                    // Bit0: screen disabled by attribute controller
-	                    // index Bit1: screen disabled by sequencer index 1
-	                    // bit 5 These are put together in one variable for
-	                    // performance reasons: the line drawing function is
-	                    // called maybe 60*480=28800 times/s, and we only
-	                    // need to check one variable for zero this way.
+	uint8_t overscan_color         = 0;
+	uint8_t color_plane_enable     = 0;
+	uint8_t color_select           = 0;
+	uint8_t index                  = 0;
+
+	// Used for disabling the screen.
+	// Bit0: screen disabled by attribute controller
+	// index Bit1: screen disabled by sequencer index 1
+	// bit 5 These are put together in one variable for
+	// performance reasons: the line drawing function is
+	// called maybe 60*480=28800 times/s, and we only
+	// need to check one variable for zero this way.
+	uint8_t disabled = 0;
 };
 
-struct VGA_Crtc {
-	uint8_t horizontal_total = 0;
+struct VgaCrtc {
+	uint8_t horizontal_total       = 0;
 	uint8_t horizontal_display_end = 0;
+
 	uint8_t start_horizontal_blanking = 0;
-	uint8_t end_horizontal_blanking = 0;
-	uint8_t start_horizontal_retrace = 0;
-	uint8_t end_horizontal_retrace = 0;
-	uint8_t vertical_total = 0;
-	uint8_t overflow = 0;
+	uint8_t end_horizontal_blanking   = 0;
+	uint8_t start_horizontal_retrace  = 0;
+	uint8_t end_horizontal_retrace    = 0;
+
+	uint8_t vertical_total  = 0;
+	uint8_t overflow        = 0;
 	uint8_t preset_row_scan = 0;
+
 	MaximumScanLineRegister maximum_scan_line = {};
+
 	uint8_t cursor_start = 0;
-	uint8_t cursor_end = 0;
+	uint8_t cursor_end   = 0;
+
 	uint8_t start_address_high = 0;
-	uint8_t start_address_low = 0;
+	uint8_t start_address_low  = 0;
+
 	uint8_t cursor_location_high = 0;
-	uint8_t cursor_location_low = 0;
+	uint8_t cursor_location_low  = 0;
+
 	uint8_t vertical_retrace_start = 0;
-	uint8_t vertical_retrace_end = 0;
-	uint8_t vertical_display_end = 0;
-	uint8_t offset = 0;
-	uint8_t underline_location = 0;
+	uint8_t vertical_retrace_end   = 0;
+	uint8_t vertical_display_end   = 0;
+
+	uint8_t offset                  = 0;
+	uint8_t underline_location      = 0;
 	uint8_t start_vertical_blanking = 0;
-	uint8_t end_vertical_blanking = 0;
+	uint8_t end_vertical_blanking   = 0;
+
 	CrtcModeControlRegister mode_control = {};
+
 	uint8_t line_compare = 0;
 
-	uint8_t index = 0;
+	uint8_t index  = 0;
 	bool read_only = false;
 };
 
-struct VGA_Gfx {
-	uint8_t index = 0;
-	uint8_t set_reset = 0;
+struct VgaGfx {
+	uint8_t index            = 0;
+	uint8_t set_reset        = 0;
 	uint8_t enable_set_reset = 0;
-	uint8_t color_compare = 0;
-	uint8_t data_rotate = 0;
-	uint8_t read_map_select = 0;
-	uint8_t mode = 0;
-	uint8_t miscellaneous = 0;
-	uint8_t color_dont_care = 0;
-	uint8_t bit_mask = 0;
+	uint8_t color_compare    = 0;
+	uint8_t data_rotate      = 0;
+	uint8_t read_map_select  = 0;
+	uint8_t mode             = 0;
+	uint8_t miscellaneous    = 0;
+	uint8_t color_dont_care  = 0;
+	uint8_t bit_mask         = 0;
 };
 
 struct RGBEntry {
-	uint8_t red = 0;
+	uint8_t red   = 0;
 	uint8_t green = 0;
-	uint8_t blue = 0;
+	uint8_t blue  = 0;
 };
 
 constexpr auto NumCgaColors = 16;
@@ -819,7 +851,7 @@ typedef std::array<RGBEntry, NumCgaColors> cga_colors_t;
 
 constexpr auto NumVgaDacColors = 256;
 
-struct VGA_Dac {
+struct VgaDac {
 	RGBEntry rgb[NumVgaDacColors]         = {};
 	uint32_t palette_map[NumVgaDacColors] = {};
 
@@ -834,75 +866,93 @@ struct VGA_Dac {
 	uint8_t read_index  = 0;
 };
 
-struct VGA_SVGA {
+struct VgaSvga {
 	Bitu readStart = 0, writeStart = 0;
-	Bitu bankMask = 0;
-	Bitu bank_read_full = 0;
+	Bitu bankMask        = 0;
+	Bitu bank_read_full  = 0;
 	Bitu bank_write_full = 0;
-	uint8_t bank_read = 0;
-	uint8_t bank_write = 0;
-	Bitu bank_size = 0;
+	uint8_t bank_read    = 0;
+	uint8_t bank_write   = 0;
+	Bitu bank_size       = 0;
 };
 
-union VGA_Latch {
+union VgaLatch {
 	uint32_t d = 0;
 	uint8_t b[4];
 };
 
-struct VGA_Memory {
+struct VgaMemory {
 	uint8_t* linear = {};
 };
 
 struct VGA_Changes {
-	//Add a few more just to be safe
-	uint8_t *map = nullptr; /* allocated dynamically: [(VGA_MEMORY >> VGA_CHANGE_SHIFT) + 32] */
-	uint8_t checkMask = 0;
-	uint8_t frame = 0;
-	uint8_t writeMask = 0;
-	bool active = 0;
-	uint32_t clearMask = 0;
-	uint32_t start = 0, last = 0;
+	// Add a few more just to be safe
+	// Allocated dynamically: [(VGA_MEMORY >> VGA_CHANGE_SHIFT) + 32]
+	uint8_t* map = nullptr;
+
+	uint8_t checkMask    = 0;
+	uint8_t frame        = 0;
+	uint8_t writeMask    = 0;
+	bool active          = 0;
+	uint32_t clearMask   = 0;
+	uint32_t start       = 0;
+	uint32_t last        = 0;
 	uint32_t lastAddress = 0;
 };
 
-struct VGA_LFB {
+struct VgaLfb {
 	uint32_t page = 0;
 	uint32_t addr = 0;
 	uint32_t mask = 0;
-	PageHandler *handler = nullptr;
+
+	PageHandler* handler = nullptr;
 };
 
-struct VGA_Type {
+struct VgaType {
 	VGAModes mode = {}; /* The mode the vga system is in */
-	uint8_t misc_output = 0;
-	VGA_Draw draw = {};
-	VGA_Config config = {};
-	VGA_Internal internal = {};
+
+	uint8_t misc_output  = 0;
+	VgaDraw draw         = {};
+	VgaConfig config     = {};
+	VgaInternal internal = {};
+
 	/* Internal module groups */
-	VGA_Seq seq = {};
-	VGA_Attr attr = {};
-	VGA_Crtc crtc = {};
-	VGA_Gfx gfx = {};
-	VGA_Dac dac = {};
-	VGA_Latch latch = {};
-	VGA_S3 s3 = {};
-	VGA_SVGA svga = {};
-	VGA_HERC herc = {};
-	VGA_TANDY tandy = {};
-	VGA_OTHER other = {};
-	VGA_Memory mem = {};
-	// this is assumed to be power of 2
+	VgaSeq seq     = {};
+	VgaAttr attr   = {};
+	VgaCrtc crtc   = {};
+	VgaGfx gfx     = {};
+	VgaDac dac     = {};
+	VgaLatch latch = {};
+	VgaS3 s3       = {};
+	VgaSvga svga   = {};
+	VgaHerc herc   = {};
+	VgaTandy tandy = {};
+	VgaOther other = {};
+	VgaMemory mem  = {};
+
+	// This is assumed to be power of 2
 	uint32_t vmemwrap = 0;
-	 // memory for fast (usually 16-colour) rendering,
-	 // always twice as big as vmemsize
+
+	// Memory for fast (usually 16-colour) rendering,
+	// always twice as big as vmemsize
+	//
 	uint8_t* fastmem  = {};
 	uint32_t vmemsize = 0;
+
 #ifdef VGA_KEEP_CHANGES
-	VGA_Changes changes = {};
+	VgaChanges changes = {};
 #endif
-	VGA_LFB lfb = {};
+
+	VgaLfb lfb = {};
+
 	// Composite video mode parameters
-	int ri = 0, rq = 0, gi = 0, gq = 0, bi = 0, bq = 0;
+	// TODO enclose in struct
+	int ri        = 0;
+	int rq        = 0;
+	int gi        = 0;
+	int gq        = 0;
+	int bi        = 0;
+	int bq        = 0;
 	int sharpness = 0;
 };
 
@@ -920,7 +970,7 @@ void VGA_SetMonochromePalette(const enum MonochromePalette);
 void VGA_SetHerculesPalette();
 void VGA_SetMonochromeCgaPalette();
 
-/* Functions for different resolutions */
+// Functions for different resolutions
 void VGA_SetMode(VGAModes mode);
 void VGA_DetermineMode(void);
 void VGA_SetupHandlers(void);
@@ -933,16 +983,16 @@ void VGA_SetupDrawing(uint32_t val);
 void VGA_CheckScanLength(void);
 void VGA_ChangedBank(void);
 
-/* Some DAC/Attribute functions */
-void VGA_DAC_CombineColor(uint8_t attr,uint8_t pal);
-void VGA_DAC_SetEntry(Bitu entry,uint8_t red,uint8_t green,uint8_t blue);
-void VGA_ATTR_SetPalette(uint8_t index,uint8_t val);
+// DAC/Attribute functions
+void VGA_DAC_CombineColor(uint8_t attr, uint8_t pal);
+void VGA_DAC_SetEntry(Bitu entry, uint8_t red, uint8_t green, uint8_t blue);
+void VGA_ATTR_SetPalette(uint8_t index, uint8_t val);
 
 enum EGAMonitorMode { CGA, EGA, MONO };
 
 void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m);
 
-/* The VGA Subfunction startups */
+// The VGA subfunction startups
 void VGA_SetupAttr(void);
 void VGA_SetupMemory(Section* sec);
 void VGA_SetupDAC(void);
@@ -952,44 +1002,44 @@ void VGA_SetupGFX(void);
 void VGA_SetupSEQ(void);
 void VGA_SetupOther(void);
 void VGA_SetupXGA(void);
-void VGA_AddCompositeSettings(Config &conf);
+void VGA_AddCompositeSettings(Config& conf);
 
-/* Some support functions */
-
+// Some support functions
 struct VideoModeBlock;
 
 void VGA_SetClock(Bitu which, uint32_t target);
 
 // Save, get, and limit refresh and clock functions
 void VGA_SetHostRate(const double refresh_hz);
-void VGA_SetRatePreference(const std::string &pref);
+void VGA_SetRatePreference(const std::string& pref);
 double VGA_GetPreferredRate();
 
 void VGA_DACSetEntirePalette(void);
 void VGA_StartRetrace(void);
 void VGA_StartUpdateLFB(void);
 void VGA_SetBlinking(uint8_t enabled);
-void VGA_SetCGA2Table(uint8_t val0,uint8_t val1);
-void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3);
+void VGA_SetCGA2Table(uint8_t val0, uint8_t val1);
+void VGA_SetCGA4Table(uint8_t val0, uint8_t val1, uint8_t val2, uint8_t val3);
 PixelFormat VGA_ActivateHardwareCursor();
 void VGA_KillDrawing(void);
 
 void VGA_SetOverride(bool vga_override);
-void VGA_LogInitialization(const char *adapter_name,
-                           const char *ram_type,
+void VGA_LogInitialization(const char* adapter_name, const char* ram_type,
                            const size_t num_modes);
 
 void VGA_ForceSquarePixels(const bool enabled);
 void VGA_EnableVgaDoubleScanning(const bool enabled);
 void VGA_EnablePixelDoubling(const bool enabled);
 
-extern VGA_Type vga;
+extern VgaType vga;
 
-/* Support for modular SVGA implementation */
+// Support for modular SVGA implementation
+
 /* Video mode extra data to be passed to FinishSetMode_SVGA().
    This structure will be in flux until all drivers (including S3)
    are properly separated. Right now it contains only three overflow
    fields in S3 format and relies on drivers re-interpreting those.
+
    For reference:
    ver_overflow:X|line_comp10|X|vretrace10|X|vbstart10|vdispend10|vtotal10
    hor_overflow:X|X|X|hretrace8|X|hblank8|hdispend8|htotal8
@@ -999,16 +1049,16 @@ extern VGA_Type vga;
 struct VGA_ModeExtraData {
 	uint8_t ver_overflow = 0;
 	uint8_t hor_overflow = 0;
-	Bitu offset = 0;
-	Bitu modeNo = 0;
-	uint32_t htotal = 0;
-	uint32_t vtotal = 0;
+	Bitu offset          = 0;
+	Bitu modeNo          = 0;
+	uint32_t htotal      = 0;
+	uint32_t vtotal      = 0;
 };
 
 // Vector function prototypes
 typedef void (*tWritePort)(io_port_t reg, io_val_t value, io_width_t width);
 typedef uint8_t (*tReadPort)(io_port_t reg, io_width_t width);
-typedef void (*tFinishSetMode)(io_port_t crtc_base, VGA_ModeExtraData *modeData);
+typedef void (*tFinishSetMode)(io_port_t crtc_base, VGA_ModeExtraData* modeData);
 typedef void (*tDetermineMode)();
 typedef void (*tSetClock)(Bitu which, uint32_t target);
 typedef uint32_t (*tGetClock)();

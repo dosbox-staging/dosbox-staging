@@ -124,7 +124,7 @@ public:
 		case 0:
 			return (vga.latch.b[vga.config.read_map_select]);
 		case 1:
-			VGA_Latch templatch;
+			VgaLatch templatch;
 			templatch.d=(vga.latch.d &	FillTable[vga.config.color_dont_care]) ^ FillTable[vga.config.color_compare & vga.config.color_dont_care];
 			return (uint8_t)~(templatch.b[0] | templatch.b[1] | templatch.b[2] | templatch.b[3]);
 		}
@@ -167,7 +167,7 @@ public:
 	void writeHandler(PhysPt start, uint8_t val) {
 		ModeOperation(val);
 		/* Update video memory and the pixel buffer */
-		VGA_Latch pixels;
+		VgaLatch pixels;
 		vga.mem.linear[start] = val;
 		start >>= 2;
 		pixels.d=((uint32_t*)vga.mem.linear)[start];
@@ -175,7 +175,7 @@ public:
 		uint8_t * write_pixels=&vga.fastmem[start<<3];
 
 		uint32_t colors0_3, colors4_7;
-		VGA_Latch temp;temp.d=(pixels.d>>4) & 0x0f0f0f0f;
+		VgaLatch temp;temp.d=(pixels.d>>4) & 0x0f0f0f0f;
 		colors0_3 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
@@ -260,7 +260,7 @@ public:
 	void writeHandler(PhysPt start, uint8_t val) {
 		uint32_t data=ModeOperation(val);
 		/* Update video memory and the pixel buffer */
-		VGA_Latch pixels;
+		VgaLatch pixels;
 		pixels.d=((uint32_t*)vga.mem.linear)[start];
 		pixels.d&=vga.config.full_not_map_mask;
 		pixels.d|=(data & vga.config.full_map_mask);
@@ -268,7 +268,7 @@ public:
 		uint8_t * write_pixels=&vga.fastmem[start<<3];
 
 		uint32_t colors0_3, colors4_7;
-		VGA_Latch temp;temp.d=(pixels.d>>4) & 0x0f0f0f0f;
+		VgaLatch temp;temp.d=(pixels.d>>4) & 0x0f0f0f0f;
 			colors0_3 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
@@ -474,7 +474,7 @@ class VGA_UnchainedVGA_Handler final : public VGA_UnchainedRead_Handler {
 public:
 	void writeHandler( PhysPt addr, uint8_t val ) {
 		uint32_t data=ModeOperation(val);
-		VGA_Latch pixels;
+		VgaLatch pixels;
 		pixels.d=((uint32_t*)vga.mem.linear)[addr];
 		pixels.d&=vga.config.full_not_map_mask;
 		pixels.d|=(data & vga.config.full_map_mask);
