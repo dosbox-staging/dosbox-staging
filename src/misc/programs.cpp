@@ -41,8 +41,6 @@
 #include "string_utils.h"
 #include "support.h"
 
-callback_number_t call_program = 0;
-
 /* This registers a file on the virtual drive and creates the correct structure
  * for it*/
 
@@ -59,10 +57,11 @@ constexpr std::array<uint8_t, 19> exe_block = {
 // COM data constants
 constexpr int callback_pos = 12;
 
-// Persistent program containers
+// Pointers to the static instances
 using comdata_t = std::vector<uint8_t>;
-static std::vector<comdata_t> internal_progs_comdata;
-static std::vector<PROGRAMS_Creator> internal_progs;
+callback_number_t* callback_number = nullptr;
+std::vector<comdata_t>* internal_progs_comdata = nullptr;
+std::vector<PROGRAMS_Creator>* internal_progs  = nullptr;
 
 static uint8_t last_written_character = '\n';
 constexpr int WriteOutBufSize         = 2048;
@@ -100,7 +99,9 @@ static void truncated_chars_message(int size)
 void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
 {
 	comdata_t comdata(exe_block.begin(), exe_block.end());
-	comdata.at(callback_pos) = static_cast<uint8_t>(call_program & 0xff);
+
+	assert(callback_number);
+	comdata.at(callback_pos) = static_cast<uint8_t>(*callback_number & 0xff);
 
 	// Taking the upper 8 bits if the callback number is always zero because
 	// the maximum callback number is only 128. So we just confirm that here.
@@ -109,7 +110,8 @@ void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
 	comdata.at(callback_pos + 1)               = upper_8_bits_of_callback;
 
 	// Save the current program's vector index in its COM data
-	const auto index = internal_progs.size();
+	assert(internal_progs);
+	const auto index = internal_progs->size();
 	assert(index <= UINT8_MAX); // saving the index into an 8-bit space
 	comdata.push_back(static_cast<uint8_t>(index));
 
@@ -117,11 +119,12 @@ void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
 	VFILE_Register(name, comdata.data(), static_cast<uint32_t>(comdata.size()));
 
 	// Register the COM data to prevent it from going out of scope
-	internal_progs_comdata.push_back(std::move(comdata));
+	assert(internal_progs_comdata);
+	internal_progs_comdata->push_back(std::move(comdata));
 
 	// Register the program's main pointer
 	// NOTE: This step must come after the index is saved in the COM data
-	internal_progs.emplace_back(creator);
+	internal_progs->emplace_back(creator);
 
 	// Register help for command
 	creator()->AddToHelpList();
@@ -144,8 +147,10 @@ static Bitu PROGRAMS_Handler(void)
 	for (; size > 0; size--) {
 		*writer++ = mem_readb(reader++);
 	}
-	const PROGRAMS_Creator& creator = internal_progs.at(index);
-	const auto new_program          = creator();
+	assert(internal_progs);
+	const PROGRAMS_Creator& creator = internal_progs->at(index);
+
+	const auto new_program = creator();
 	new_program->Run();
 	return CBRET_NONE;
 }
@@ -846,21 +851,8 @@ std::unique_ptr<Program> CONFIG_ProgramCreate()
 	return ProgramCreate<CONFIG>();
 }
 
-void PROGRAMS_Destroy([[maybe_unused]] Section* sec)
+void add_program_messages()
 {
-	internal_progs_comdata.clear();
-	internal_progs.clear();
-}
-
-void PROGRAMS_Init(Section* sec)
-{
-	// Setup a special callback to start virtual programs
-	call_program = CALLBACK_Allocate();
-	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
-
-	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
-	sec->AddDestroyFunction(&PROGRAMS_Destroy);
-
 	// List config
 	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE", "No config file loaded\n");
 	MSG_Add("PROGRAM_CONFIG_PRIMARY_CONF", "[color=white]Primary config file:[reset]\n  %s\n");
@@ -977,4 +969,66 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_EXECUTABLE_MISSING", "Executable file not found: '%s'\n");
 
 	MSG_Add("CONJUNCTION_AND", "and");
+}
+
+void PROGRAMS_Configure(const ModuleLifecycle lifecycle, Section*)
+{
+	static callback_number_t callback_number_instance = {};
+	static std::vector<comdata_t> comdatas_instance        = {};
+	static std::vector<PROGRAMS_Creator> creators_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		if (!callback_number_instance) {
+			comdatas_instance.clear();
+			creators_instance.clear();
+
+			// Setup a special callback to start virtual programs
+			callback_number_instance = CALLBACK_Allocate();
+			CALLBACK_Setup(callback_number_instance,
+			               &PROGRAMS_Handler,
+			               CB_RETF,
+			               "internal program");
+
+			// Update the pointers to our instances
+			internal_progs_comdata = &comdatas_instance;
+			internal_progs = &creators_instance;
+			callback_number = &callback_number_instance;
+
+			add_program_messages();
+		}
+		break;
+
+	// This module doesn't support runtime re-configuration
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		if (callback_number_instance) {
+			CALLBACK_RemoveSetup(callback_number_instance);
+			CALLBACK_DeAllocate(callback_number_instance);
+
+			callback_number_instance = {};
+			callback_number = nullptr;
+
+			// Only clear the pointers. Let the program data persist until
+			// we go out of scope when the vectors are destroyed.
+			internal_progs_comdata = nullptr;
+			internal_progs = nullptr;
+
+		}
+		break;
+	}
+}
+
+void PROGRAMS_Destroy(Section* section)
+{
+	PROGRAMS_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void PROGRAMS_Init(Section* section)
+{
+	PROGRAMS_Configure(ModuleLifecycle::Create, section);
+
+	section->AddDestroyFunction(&PROGRAMS_Destroy);
 }
