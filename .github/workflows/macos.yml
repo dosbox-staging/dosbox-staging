@@ -243,7 +243,9 @@ jobs:
         run: |
           set -x
           eval "$(${{ matrix.runner.brew_path }}/bin/brew shellenv)"
-          meson setup ${{ matrix.runner.build_flags }} -Ddefault_library=static -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
+          conan profile detect --force
+          conan install . --output-folder=conan --build=missing
+          meson setup ${{ matrix.runner.build_flags }} -Ddefault_library=static -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net -Dpkg_config_path=conan build
           meson compile -C build
 
       - name: Upload binary
