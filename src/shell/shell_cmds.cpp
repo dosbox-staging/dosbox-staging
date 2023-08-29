@@ -1009,7 +1009,7 @@ void DOS_Shell::CMD_DIR(char* args)
 		const auto hour   = static_cast<uint8_t>((entry.time >> 5) >> 6);
 		const auto minute = static_cast<uint8_t>((entry.time >> 5) & 0x003f);
 
-		output.AddString("%-8s %-3s   %-21s %s %s\n",
+		output.AddString("%-8s %-3s   %21s %s %s\n",
 		                 entry.GetBareName().c_str(),
 		                 entry.GetExtension().c_str(),
 		                 entry.IsDirectory()
