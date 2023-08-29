@@ -1,5 +1,7 @@
 #version 120
 
+#pragma use_npot_texture
+
 #define SPOT_WIDTH             0.85
 #define SPOT_HEIGHT            0.80
 #define PHOSPHOR_LAYOUT        2.00
