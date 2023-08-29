@@ -1965,7 +1965,18 @@ dosurface:
 			goto dosurface;
 
 		int texsize_w, texsize_h;
-		if (sdl.opengl.npot_textures_supported) {
+
+		const auto use_npot_texture = sdl.opengl.npot_textures_supported &&
+		                              sdl.opengl.shader_info.settings.use_npot_texture;
+#if 0
+		if (use_npot_texture) {
+			LOG_MSG("OPENGL: Using NPOT texture");
+		} else {
+			LOG_MSG("OPENGL: Not using NPOT texture");
+		}
+#endif
+
+		if (use_npot_texture) {
 			texsize_w = width;
 			texsize_h = height;
 		} else {
@@ -2138,10 +2149,11 @@ dosurface:
 		}
 		glGenTextures(1, &sdl.opengl.texture);
 		glBindTexture(GL_TEXTURE_2D,sdl.opengl.texture);
+
 		// No borders
-		const auto wrap_parameter = is_shader_flexible()
-		                                    ? GL_CLAMP_TO_EDGE
-		                                    : GL_CLAMP_TO_BORDER;
+		const auto wrap_parameter = use_npot_texture ? GL_CLAMP_TO_EDGE
+		                                             : GL_CLAMP_TO_BORDER;
+
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_parameter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_parameter);
 
@@ -3633,13 +3645,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			                "GL_ARB_texture_non_power_of_two");
 
 			std::string npot_support_msg = sdl.opengl.npot_textures_supported
-			                                       ? "supported"
-			                                       : "not supported";
-			if (sdl.opengl.npot_textures_supported &&
-			    !is_shader_flexible()) {
-				sdl.opengl.npot_textures_supported = false;
-				npot_support_msg = "disabled to maximize compatibility with custom shader";
-			}
+			                                     ? "supported"
+			                                     : "not supported";
 
 			LOG_INFO("OPENGL: Vendor: %s",
 			         safe_gl_get_string(GL_VENDOR, "unknown"));
@@ -3650,10 +3657,10 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION,
 			                            "unknown"));
 
-			LOG_INFO("OPENGL: Pixel buffer object: %s",
+			LOG_INFO("OPENGL: Pixel buffer object %s",
 			         sdl.opengl.pixel_buffer_object ? "available"
 			                                        : "missing");
-			LOG_INFO("OPENGL: NPOT textures: %s",
+			LOG_INFO("OPENGL: NPOT textures %s",
 			         npot_support_msg.c_str());
 		}
 	} /* OPENGL is requested end */

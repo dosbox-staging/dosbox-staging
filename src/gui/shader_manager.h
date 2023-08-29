@@ -90,6 +90,7 @@ enum class ShaderMode {
 };
 
 struct ShaderSettings {
+	bool use_npot_texture        = false;
 	bool use_srgb_texture        = false;
 	bool use_srgb_framebuffer    = false;
 	bool force_single_scan       = false;
