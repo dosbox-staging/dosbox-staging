@@ -1135,6 +1135,11 @@ void DOSBOX_Init()
 	        "(auto by default, enabled if DOS version >= 7.0).\n"
 	        "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
 
+	pbool = secprop->Add_bool("shell_config_shortcuts", when_idle, true);
+	pbool->Set_help("Allow shortcuts for direct configuration management (enabled by default), i.e.\n"
+	                "instead of 'config -set sbtype sb16' it is enough to execute 'sbtype sb16', \n"
+	                "and instead of 'config -get sbtype' it is enough to execute 'sbtype' command.\n");
+
 	pstring = secprop->Add_path("shell_history_file", only_at_start, "shell_history.txt");
 	pstring->Set_help(
 		"File containing persistent command line history ('shell_history.txt'\n"
