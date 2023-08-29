@@ -2167,17 +2167,18 @@ dosurface:
 		}
 
 		sdl.opengl.framebuffer_is_srgb_encoded =
-		        RENDER_UseSrgbFramebuffer() &&
+		        sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
 		        (is_framebuffer_srgb_capable > 0);
 
-		if (RENDER_UseSrgbFramebuffer() &&
+		if (sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
 		    !sdl.opengl.framebuffer_is_srgb_encoded) {
 			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
 		}
 
 		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
 		// with Mesa drivers on certain integrated Intel GPUs
-		const auto texformat = RENDER_UseSrgbTexture() && sdl.opengl.framebuffer_is_srgb_encoded
+		const auto texformat = sdl.opengl.shader_info.settings.use_srgb_texture &&
+		                                       sdl.opengl.framebuffer_is_srgb_encoded
 		                             ? GL_SRGB8_ALPHA8
 		                             : GL_RGB8;
 

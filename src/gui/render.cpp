@@ -628,18 +628,6 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
 
 #if C_OPENGL
 
-bool RENDER_UseSrgbTexture()
-{
-	const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
-	return shader_info.settings.use_srgb_texture;
-}
-
-bool RENDER_UseSrgbFramebuffer()
-{
-	const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
-	return shader_info.settings.use_srgb_framebuffer;
-}
-
 static bool is_using_opengl_output_mode()
 {
 	assert(control);

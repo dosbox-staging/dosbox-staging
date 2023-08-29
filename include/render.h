@@ -244,11 +244,6 @@ void RENDER_EndUpdate(bool abort);
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
 
-#if C_OPENGL
-bool RENDER_UseSrgbTexture();
-bool RENDER_UseSrgbFramebuffer();
-#endif
-
 bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
                                   [[maybe_unused]] const uint16_t canvas_height,
                                   [[maybe_unused]] const VideoMode& video_mode,
