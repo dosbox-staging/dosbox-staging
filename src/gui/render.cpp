@@ -654,9 +654,9 @@ static bool is_using_opengl_output_mode()
 	return using_opengl;
 }
 
-std::deque<std::string> RENDER_InventoryShaders()
+std::deque<std::string> RENDER_GenerateShaderInventoryMessage()
 {
-	return get_shader_manager().InventoryShaders();
+	return get_shader_manager().GenerateShaderInventoryMessage();
 }
 #endif // C_OPENGL
 

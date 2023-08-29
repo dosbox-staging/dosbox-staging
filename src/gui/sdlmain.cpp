@@ -4719,7 +4719,7 @@ static void launchcaptures(const std::string& edit)
 static void ListGlShaders()
 {
 #if C_OPENGL
-	for (const auto &line : RENDER_InventoryShaders())
+	for (const auto &line : RENDER_GenerateShaderInventoryMessage())
 		printf("%s\n", line.c_str());
 #else
 	LOG_ERR("OpenGL is not supported by this executable "
