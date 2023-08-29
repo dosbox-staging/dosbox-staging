@@ -19,7 +19,6 @@ Défini la taille de la fenêtre pendant l'utilisation en mode fenêtré :
              output=opengl et glshader=sharp (ou none)
   <custom>:  Redimensionne le contenu de la fenêtre
              aux dimensions indiquées, au format lxh (largeur x hauteur). Par ex. : 1024x768.
-             Le redimensionnement n'est pas disponible pour output=surface.
 .
 :CONFIG_VIEWPORT_RESOLUTION
 Set the viewport size (drawable area) within the window/screen:

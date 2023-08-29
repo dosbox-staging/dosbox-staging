@@ -4204,8 +4204,7 @@ void config_add_sdl() {
 	        "  small, medium, large (s, m, l):\n"
 	        "             Size the window relative to the desktop.\n"
 	        "  <custom>:  Scale the window to the given dimensions in WxH format.\n"
-	        "             For example: 1024x768.\n"
-	        "             Scaling is not performed for output=surface.");
+	        "             For example: 1024x768.");
 
 	pstring = sdl_sec->Add_path("viewport_resolution", always, "fit");
 	pstring->Set_help(

@@ -49,7 +49,6 @@ Bestimmt die Fenstergröße, die verwendet werden soll:
              Größe des Fensters relativ zum Desktop.
   <custom>:  Skaliere den Fensterinhalt auf die angegebenen
              Abmessungen, im Format BxH. Zum Beispiel: 1024x768.
-             Die Skalierung wird bei output=surface nicht durchgeführt.
 .
 :CONFIG_VIEWPORT_RESOLUTION
 Legt die Größe des Darstellungsbereichs innerhalb des Fensters/Bildschirms fest:

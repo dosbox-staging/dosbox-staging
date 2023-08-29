@@ -17,7 +17,6 @@ Establezca tamaño de ventana cuando se ejecute en modo ventana:
              Dimensiona la ventana en relación al escritorio.
   <custom>:  Escala la ventana a las dimensiones dadas en
              formato LxA. Por ejemplo: 1024x768.
-             El escalado no se realiza para output=surface.
 .
 :CONFIG_VIEWPORT_RESOLUTION
 Set the viewport size (drawable area) within the window/screen:
