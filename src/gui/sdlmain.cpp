@@ -530,36 +530,50 @@ static void populate_requested_vsync_settings()
 	}
 }
 
-/* This function is SDL_EventFilter which is being called when event is
- * pushed into the SDL event queue.
- *
- * WARNING: Be very careful of what you do in this function, as it may run in
- * a different thread!
- *
- * Read documentation for SDL_AddEventWatch for more details.
- */
-static int watch_sdl_events(void *userdata, SDL_Event *e)
+// Enable or disable the resize handler in SDL's event system. It should be
+// disabled prior to making any significant window or rendering modifications.
+//
+enum class HandlerState { Enable, Disable };
+static void set_window_resize_handler(const HandlerState handler_state)
 {
-	/* There's a significant difference in handling of window resize
-	 * events in different OSes. When handling resize in main event loop
-	 * we receive continuous stream of events (as expected) on Linux,
-	 * but only single event after user stopped dragging cursor on Windows
-	 * and macOS.
-	 *
-	 * Watching resize events here gives us continuous stream on
-	 * every OS.
-	 */
-	if (e->type == SDL_WINDOWEVENT && e->window.event == SDL_WINDOWEVENT_RESIZED) {
-		SDL_Window *win = SDL_GetWindowFromID(e->window.windowID);
-		if (win == (SDL_Window *)userdata) {
-			const int w = e->window.data1;
-			const int h = e->window.data2;
-			// const int id = e->window.windowID;
-			// DEBUG_LOG_MSG("SDL: Resizing window %d to %dx%d", id, w, h);
-			HandleVideoResize(w, h);
+	// The resize_handler is an 'SDL_EventFilter' (see SDL_AddEventWatch)
+	auto resize_handler = [](void* userdata, SDL_Event* e) -> int {
+		assert(userdata);
+		assert(e);
+
+		// Is it a window resize event?
+		if (e->type == SDL_WINDOWEVENT &&
+		    e->window.event == SDL_WINDOWEVENT_RESIZED) {
+			// Does the event's window match our SDL block's window?
+			const auto window = SDL_GetWindowFromID(e->window.windowID);
+			auto sdl_window = reinterpret_cast<SDL_Window*>(userdata);
+			if (window == sdl_window) {
+				const int w = e->window.data1;
+				const int h = e->window.data2;
+				HandleVideoResize(w, h);
+			}
 		}
+		return 0;
+	};
+
+	static void* userdata = nullptr;
+
+	switch (handler_state) {
+	case HandlerState::Enable:
+		if (sdl.window) {
+			assert(userdata == nullptr);
+			userdata = reinterpret_cast<void*>(sdl.window);
+			SDL_AddEventWatch(resize_handler, userdata);
+		}
+		break;
+
+	case HandlerState::Disable:
+		if (userdata) {
+			SDL_DelEventWatch(resize_handler, userdata);
+			userdata = nullptr;
+		}
+		break;
 	}
-	return 0;
 }
 
 /* On macOS, as we use a nicer external icon packaged in App bundle.
@@ -1395,7 +1409,7 @@ static SDL_Window* SetWindowMode(SCREEN_TYPES screen_type, int width,
 		}
 #endif
 		if (resizable) {
-			SDL_AddEventWatch(watch_sdl_events, sdl.window);
+			set_window_resize_handler(HandlerState::Enable);
 			SDL_SetWindowResizable(sdl.window, SDL_TRUE);
 		}
 		sdl.desktop.window.resizable = resizable;
@@ -2859,7 +2873,7 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 
 static void CleanupSDLResources()
 {
-	SDL_DelEventWatch(watch_sdl_events, sdl.window);
+	set_window_resize_handler(HandlerState::Disable);
 
 	if (sdl.texture.pixelFormat) {
 		SDL_FreeFormat(sdl.texture.pixelFormat);
