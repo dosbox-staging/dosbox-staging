@@ -136,7 +136,7 @@ public:
 	void DoCommand(char* cmd);
 	bool Execute(std::string_view name, std::string_view args);
 	/* Checks if it matches a hardware-property */
-	bool CheckConfig(char* cmd_in, char* line);
+	bool CheckConfig(const char* const cmd_in, const char* const line);
 	/* Internal utilities for testing */
 	virtual bool execute_shell_cmd(char* name, char* arguments);
 	void ReadShellHistory();
