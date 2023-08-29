@@ -230,7 +230,7 @@ extern ScalerLineHandler_t RENDER_DrawLine;
 void RENDER_AddConfigSection(const config_ptr_t& conf);
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette);
 
-std::deque<std::string> RENDER_InventoryShaders();
+std::deque<std::string> RENDER_GenerateShaderInventoryMessage();
 
 void RENDER_SetSize(const uint16_t width, const uint16_t height,
                     const bool double_width, const bool double_height,

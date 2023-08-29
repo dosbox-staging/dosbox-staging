@@ -124,7 +124,9 @@ public:
 	ShaderManager()  = default;
 	~ShaderManager() = default;
 
-	std::deque<std::string> InventoryShaders() const;
+	// Generate a human-readable shader inventory message (one list element
+	// per line).
+	std::deque<std::string> GenerateShaderInventoryMessage() const;
 
 	std::string MapShaderName(const std::string& name) const;
 

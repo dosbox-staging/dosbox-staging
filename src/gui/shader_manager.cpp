@@ -141,7 +141,7 @@ void ShaderManager::LoadShader(const std::string& shader_name)
 		LOG_ERR("RENDER: Shader file '%s' not found",
 		        new_shader_name.c_str());
 
-		for (const auto& line : InventoryShaders()) {
+		for (const auto& line : GenerateShaderInventoryMessage()) {
 			LOG_WARNING("RENDER: %s", line.c_str());
 		}
 
@@ -178,7 +178,7 @@ void ShaderManager::ReloadCurrentShader()
 	        current_shader.info.name.c_str());
 }
 
-std::deque<std::string> ShaderManager::InventoryShaders() const
+std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 {
 	std::deque<std::string> inventory;
 	inventory.emplace_back("");
