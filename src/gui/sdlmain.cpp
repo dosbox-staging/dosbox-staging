@@ -1696,13 +1696,17 @@ uint8_t GFX_SetSize(const int width, const int height,
 
 	sdl.draw.callback = callback;
 
-	const auto vsync_pref = get_vsync_settings().requested;
-	assert(vsync_pref != VsyncState::Unset);
+	// If we're changing the rendering type, clear any previously measure
+	// vsync data because the rendering system (OpenGL, Metal, GLES, etc..)
+	// can have different vsync behavior and performance.
+	//
+	if (sdl.desktop.want_type != sdl.desktop.type) {
+		get_vsync_settings().measured = VsyncState::Unset;
+	}
 
 	switch (sdl.desktop.want_type) {
 	case SCREEN_TEXTURE: {
 	fallback_texture: // FIXME: Must be replaced with a proper fallback system.
-		set_vsync(vsync_pref);
 
 		if (!SetupWindowScaled(SCREEN_TEXTURE)) {
 			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
@@ -1870,8 +1874,6 @@ uint8_t GFX_SetSize(const int width, const int height,
 			LOG_WARNING("SDL:OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
 			goto fallback_texture;
 		}
-
-		set_vsync(vsync_pref);
 
 		if (sdl.opengl.use_shader) {
 			GLuint prog=0;
@@ -2125,7 +2127,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 		}
 		// Both update mechanisms use the same presentation call
 		sdl.frame.present = present_frame_gl;
-		sdl.desktop.type = SCREEN_OPENGL;
+		sdl.desktop.type  = SCREEN_OPENGL;
 		break; // SCREEN_OPENGL
 	}
 #endif // C_OPENGL
