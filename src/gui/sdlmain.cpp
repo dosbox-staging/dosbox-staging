@@ -2859,6 +2859,8 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 
 static void CleanupSDLResources()
 {
+	SDL_DelEventWatch(watch_sdl_events, sdl.window);
+
 	if (sdl.texture.pixelFormat) {
 		SDL_FreeFormat(sdl.texture.pixelFormat);
 		sdl.texture.pixelFormat = nullptr;
