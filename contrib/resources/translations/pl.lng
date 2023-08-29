@@ -47,7 +47,6 @@ Rozmiar okna w trybie okienkowym:
              Rozmiar względem pulpitu (mały, średni, duży).
   <custom>:  Skalowanie okna do danej rozdzielczości podanej jako XxY.
              Przykład: 1024x768.
-             Obraz nie jest skalowany jeśli 'output=surface'.
 .
 :CONFIG_VIEWPORT_RESOLUTION
 Rozmiar obszaru wyświetlania w oknie lub na pełnym ekranie:

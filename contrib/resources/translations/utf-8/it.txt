@@ -50,7 +50,6 @@ in modalità finestra:
              Ridimensiona la finestra in base alla risoluzione del desktop.
   <custom>:  Ridimensiona la finestra in base alle dimensioni indicate
              nel formato WxH. Per esempio: 1024x768.
-             Il ridimensionamento non viene eseguito con output=surface.
 .
 :CONFIG_VIEWPORT_RESOLUTION
 Imposta le dimensioni dell'area di visualizzazione all'interno della

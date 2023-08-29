@@ -47,7 +47,6 @@ Set window size when running in windowed mode:
              Size the window relative to the desktop.
   <custom>:  Scale the window to the given dimensions in WxH format.
              For example: 1024x768.
-             Scaling is not performed for output=surface.
 .
 :CONFIG_VIEWPORT_RESOLUTION
 Set the viewport size (drawable area) within the window/screen:

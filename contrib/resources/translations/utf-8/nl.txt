@@ -48,7 +48,6 @@ Stelt de venster grootte in om te gebruiken:
               Grootte van het venster ten opzichte van het bureaublad.
   <op-maat>:  Schaal het venster naar de opgegeven afmetingen in
               BxH-formaat. Bijvoorbeeld: 1024x768.
-              Niet van toepassing voor output=surface.
 .
 :CONFIG_VIEWPORT_RESOLUTION
 Stel de viewport-grootte (tekengebied) in het venster/scherm in:
