@@ -1,5 +1,6 @@
 #version 120
 
+#pragma use_npot_texture
 #pragma force_single_scan
 
 #define PHOSPHOR_LAYOUT       2.00

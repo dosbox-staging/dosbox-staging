@@ -28,6 +28,8 @@
 
 */
 
+#pragma use_npot_texture
+
 /*
 
 #pragma parameter BEAM_PROFILE "BEAM PROFILE (BP)" 0.0 0.0 2.0 1.0
