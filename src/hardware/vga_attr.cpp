@@ -19,7 +19,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
@@ -30,8 +29,9 @@
 
 static void update_palette_mappings()
 {
-	for (uint8_t i = 0; i < NumCgaColors; ++i)
+	for (uint8_t i = 0; i < NumCgaColors; ++i) {
 		VGA_ATTR_SetPalette(i, vga.attr.palette[i]);
+	}
 }
 
 void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
@@ -76,63 +76,85 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
 
 void VGA_ATTR_SetPalette(uint8_t index, uint8_t val)
 {
-	// the attribute table stores only 6 bits
-	val &= 63; 
+	// The attribute table stores only 6 bits
+	val &= 63;
 	vga.attr.palette[index] = val;
 
-	// apply the plane mask
+	// Apply the plane mask
 	val = vga.attr.palette[index & vga.attr.color_plane_enable];
 
-	// replace bits 4-5 if configured
-	if (vga.attr.mode_control.palette_bits_5_4_select)
-		val = static_cast<uint8_t>((val & 0xf) | (vga.attr.color_select << 4));
+	// Replace bits 4-5 if configured
+	if (vga.attr.mode_control.palette_bits_5_4_select) {
+		val = static_cast<uint8_t>((val & 0xf) |
+		                           (vga.attr.color_select << 4));
+	}
 
-	// set bits 6 and 7 (not relevant for EGA)
+	// Set bits 6 and 7 (not relevant for EGA)
 	val |= (vga.attr.color_select & 0xc) << 4;
 
-	// apply
-	VGA_DAC_CombineColor(index,val);
+	// Apply
+	VGA_DAC_CombineColor(index, val);
 }
 
 uint8_t read_p3c0(io_port_t, io_width_t)
 {
 	// Wcharts, Win 3.11 & 95 SVGA
 	uint8_t retval = attr(index) & 0x1f;
-	if (!(attr(disabled) & 0x1)) retval |= 0x20;
+	if (!(attr(disabled) & 0x1)) {
+		retval |= 0x20;
+	}
 	return retval;
 }
 
 void write_p3c0(io_port_t, io_val_t value, io_width_t)
 {
 	auto val = check_cast<uint8_t>(value);
+
 	if (!vga.internal.attrindex) {
-		attr(index)=val & 0x1F;
-		vga.internal.attrindex=true;
-		if (val & 0x20) attr(disabled) &= ~1;
-		else attr(disabled) |= 1;
-		/* 
-			0-4	Address of data register to write to port 3C0h or read from port 3C1h
-			5	If set screen output is enabled and the palette can not be modified,
-				if clear screen output is disabled and the palette can be modified.
-		*/
+		attr(index) = val & 0x1F;
+
+		vga.internal.attrindex = true;
+
+		if (val & 0x20) {
+			attr(disabled) &= ~1;
+		} else {
+			attr(disabled) |= 1;
+		}
+		// 0-4	Address of data register to write to port 3C0h or read
+		// from port 3C1h 5	If set screen output is enabled and the
+		// palette can not be modified, if clear screen output is
+		// disabled and the palette can be modified.
 		return;
+
 	} else {
-		vga.internal.attrindex=false;
+		vga.internal.attrindex = false;
+
 		switch (attr(index)) {
-			/* Palette */
-		case 0x00:		case 0x01:		case 0x02:		case 0x03:
-		case 0x04:		case 0x05:		case 0x06:		case 0x07:
-		case 0x08:		case 0x09:		case 0x0a:		case 0x0b:
-		case 0x0c:		case 0x0d:		case 0x0e:		case 0x0f:
-			if (attr(disabled) & 0x1)
+		// Palette Registers (EGA & VGA)
+		case 0x00:
+		case 0x01:
+		case 0x02:
+		case 0x03:
+		case 0x04:
+		case 0x05:
+		case 0x06:
+		case 0x07:
+		case 0x08:
+		case 0x09:
+		case 0x0a:
+		case 0x0b:
+		case 0x0c:
+		case 0x0d:
+		case 0x0e:
+		case 0x0f:
+			// 0-5	Index into the 256 color DAC table.
+			// May be modified by 3C0h index 10h and 14h.
+			if (attr(disabled) & 0x1) {
 				VGA_ATTR_SetPalette(attr(index), val);
-			/*
-			        0-5	Index into the 256 color DAC table. May be modified by 3C0h index
-			        10h and 14h.
-			*/
+			}
 			break;
 
-		case 0x10: {
+		case 0x10: { // Mode Control Register (EGA & VGA)
 			// Not really correct, but should do it
 			AttributeModeControlRegister new_value = {val};
 			if (!IS_VGA_ARCH) {
@@ -175,31 +197,38 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 			break;
 		}
 
-		case 0x11:	/* Overscan Color Register */
+		case 0x11: // Overscan Color Register (EGA & VGA)
 			attr(overscan_color) = val;
-			/* 0-5  Color of screen border. Color is defined as in the palette registers. */
+			// 0-5  Color of screen border. Color is defined as in
+			// the palette registers.
 			break;
-		case 0x12:	/* Color Plane Enable Register */
-			/* Why disable colour planes? */
-			/* To support weird modes. */
-			if ((attr(color_plane_enable)^val) & 0xf) {
-				// in case the plane enable bits change...
+
+		case 0x12: // Color Plane Enable Register (EGA & VGA)
+			// Why disable colour planes?
+			// To support weird modes.
+			if ((attr(color_plane_enable) ^ val) & 0xf) {
+				// In case the plane enable bits change...
 				attr(color_plane_enable) = val;
 				update_palette_mappings();
-			} else
+			} else {
 				attr(color_plane_enable) = val;
-			/* 
-				0	Bit plane 0 is enabled if set.
-				1	Bit plane 1 is enabled if set.
-				2	Bit plane 2 is enabled if set.
-				3	Bit plane 3 is enabled if set.
-				4-5	Video Status MUX. Diagnostics use only.
-					Two attribute bits appear on bits 4 and 5 of the Input Status
-					Register 1 (3dAh). 0: Bit 2/0, 1: Bit 5/4, 2: bit 3/1, 3: bit 7/6
-			*/
+			}
+			// 0	Bit plane 0 is enabled if set.
+			// 1	Bit plane 1 is enabled if set.
+			// 2	Bit plane 2 is enabled if set.
+			// 3	Bit plane 3 is enabled if set.
+			// 4-5	Video Status MUX. Diagnostics use only.
+			//
+			// Two attribute bits appear on bits 4 and 5 of the
+			// Input Status Register 1 (3dAh).
+			// 0: bit 2/0,
+			// 1: bit 5/4,
+			// 2: bit 3/1,
+			// 3: bit 7/6
 			break;
-		case 0x13:	/* Horizontal PEL Panning Register */
-			attr(horizontal_pel_panning)=val & 0xF;
+
+		case 0x13: // Horizontal PEL Panning Register (EGA & VGA)
+			attr(horizontal_pel_panning) = val & 0xF;
 			switch (vga.mode) {
 			case M_TEXT:
 				if (val > 7) {
@@ -213,52 +242,49 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 				break;
 			case M_VGA:
 			case M_LIN8:
-				vga.config.pel_panning=(val & 0x7)/2;
+				vga.config.pel_panning = (val & 0x7) / 2;
 				break;
 			case M_LIN16:
-			default:
-				vga.config.pel_panning=(val & 0x7);
+			default: vga.config.pel_panning = (val & 0x7);
 			}
-			if (machine==MCH_EGA)
-				// On the EGA panning can be programmed for every scanline:
+			if (machine == MCH_EGA) {
+				// On the EGA panning can be programmed for
+				// every scanline:
 				vga.draw.panning = vga.config.pel_panning;
-			/*
-				0-3	Indicates number of pixels to shift the display left
-					Value  9bit textmode   256color mode   Other modes
-					0          1               0              0
-					1          2              n/a             1
-					2          3               1              2
-					3          4              n/a             3
-					4          5               2              4
-					5          6              n/a             5
-					6          7               3              6
-					7          8              n/a             7
-					8          0              n/a            n/a
-			*/
+			}
+			//      0-3	Indicates number of pixels to shift the
+			// display left Value  9bit textmode   256color mode
+			//  Other modes 0          1               0 0 1 2 n/a 1
+			//              2          3               1 2 3 4 n/a 3
+			//              4          5               2 4 5 6 n/a 5
+			//              6          7               3 6 7 8 n/a 7
+			//              8          0               n/a     n/a
 			break;
-		case 0x14:	/* Color Select Register */
+
+		case 0x14: // Color Select Register (VGA only)
 			if (!IS_VGA_ARCH) {
-				attr(color_select)=0;
+				attr(color_select) = 0;
 				break;
 			}
 			if (attr(color_select) ^ val) {
 				attr(color_select) = val;
 				update_palette_mappings();
 			}
-			/*
-				0-1	If 3C0h index 10h bit 7 is set these 2 bits are used as bits 4-5 of
-					the index into the DAC table.
-				2-3	These 2 bits are used as bit 6-7 of the index into the DAC table
-					except in 256 color mode.
-					Note: this register does not affect 256 color modes.
-			*/
+			// 0-1	If 3C0h index 10h bit 7 is set these 2 bits are
+			// used as bits 4-5 of the index into the DAC table.
+			//
+			// 2-3  These 2 bits are used as bit 6-7 of the index
+			// into the DAC table except in 256 color mode. Note:
+			// this register does not affect 256 color modes.
 			break;
+
 		default:
 			if (svga.write_p3c0) {
 				svga.write_p3c0(attr(index), val, io_width_t::byte);
 				break;
 			}
-			LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Write to unknown Index %2X",attr(index));
+			LOG(LOG_VGAMISC, LOG_NORMAL)
+			("VGA:ATTR:Write to unknown Index %2X", attr(index));
 			break;
 		}
 	}
@@ -266,27 +292,45 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 
 uint8_t read_p3c1(io_port_t, io_width_t)
 {
-	//	vga.internal.attrindex=false;
+	// vga.internal.attrindex=false;
+
 	switch (attr(index)) {
-		/* Palette */
-	case 0x00:		case 0x01:		case 0x02:		case 0x03:
-	case 0x04:		case 0x05:		case 0x06:		case 0x07:
-	case 0x08:		case 0x09:		case 0x0a:		case 0x0b:
-	case 0x0c:		case 0x0d:		case 0x0e:		case 0x0f:
-		return attr(palette[attr(index)]);
+	// Palette
+	case 0x00:
+	case 0x01:
+	case 0x02:
+	case 0x03:
+	case 0x04:
+	case 0x05:
+	case 0x06:
+	case 0x07:
+	case 0x08:
+	case 0x09:
+	case 0x0a:
+	case 0x0b:
+	case 0x0c:
+	case 0x0d:
+	case 0x0e:
+	case 0x0f: return attr(palette[attr(index)]);
 	case 0x10: return vga.attr.mode_control.data;
-	case 0x11:	/* Overscan Color Register */
+
+	case 0x11: // Overscan Color Register
 		return attr(overscan_color);
-	case 0x12:	/* Color Plane Enable Register */
+	case 0x12: // Color Plane Enable Register
 		return attr(color_plane_enable);
-	case 0x13:	/* Horizontal PEL Panning Register */
+
+	case 0x13: // Horizontal PEL Panning Register
 		return attr(horizontal_pel_panning);
-	case 0x14:	/* Color Select Register */
+
+	case 0x14: // Color Select Register
 		return attr(color_select);
+
 	default:
-		if (svga.read_p3c1)
+		if (svga.read_p3c1) {
 			return svga.read_p3c1(attr(index), io_width_t::byte);
-		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:ATTR:Read from unknown Index %2X",attr(index));
+		}
+		LOG(LOG_VGAMISC, LOG_NORMAL)
+		("VGA:ATTR:Read from unknown Index %2X", attr(index));
 	}
 	return 0;
 }
