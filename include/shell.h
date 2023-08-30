@@ -134,11 +134,13 @@ public:
 	void InputCommand(char* line);
 	void ShowPrompt();
 	void DoCommand(char* cmd);
-	bool Execute(std::string_view name, std::string_view args);
-	/* Checks if it matches a hardware-property */
-	bool CheckConfig(const char* const cmd_in, const char* const line);
-	/* Internal utilities for testing */
-	virtual bool execute_shell_cmd(char* name, char* arguments);
+
+	// Execute external shell command / program / configuration change
+	// 'virtual' needed for unit tests
+	virtual bool ExecuteShellCommand(const char* const name, char* arguments);
+	bool ExecuteProgram(std::string_view name, std::string_view args);
+	bool ExecuteConfigChange(const char* const cmd_in, const char* const line);
+
 	void ReadShellHistory();
 	void WriteShellHistory();
 

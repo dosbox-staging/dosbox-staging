@@ -444,7 +444,7 @@ void CommandPrompt::SetCursor(const std::string::size_type index)
 	                   position_zero.page);
 }
 
-bool DOS_Shell::Execute(std::string_view name, std::string_view args)
+bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 {
 	if (name.size() > 1 && (std::isalpha(name[0]) != 0) &&
 	    (name.substr(1) == ":" || name.substr(1) == ":\\")) {

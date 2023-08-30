@@ -62,13 +62,13 @@ public:
 	 * MockDOS_Shell()
 	 * {
 	 * 	// delegate call to the real object.
-	 * 	ON_CALL(*this, execute_shell_cmd)
+	 * 	ON_CALL(*this, ExecuteShellCommand)
 	 * 	        .WillByDefault([this](char *name, char *arguments) {
-	 * 		        return real_.execute_shell_cmd(name, arguments);
+	 * 		        return real_.ExecuteShellCommand(name, arguments);
 	 * 	        });
 	 * }
 	 */
-	MOCK_METHOD(bool, execute_shell_cmd, (char *name, char *arguments), (override));
+	MOCK_METHOD(bool, ExecuteShellCommand, (const char * const name, char *arguments), (override));
 	MOCK_METHOD(void,
 	            WriteOut,
 	            (const char *format, const char *arguments),
@@ -83,7 +83,7 @@ void assert_DoCommand(std::string input, std::string expected_name, std::string 
 	MockDOS_Shell shell;
 	char *input_c_str = const_cast<char *>(input.c_str());
 	EXPECT_CALL(shell,
-	            execute_shell_cmd(StrEq(expected_name), StrEq(expected_args)))
+	            ExecuteShellCommand(StrEq(expected_name), StrEq(expected_args)))
 	        .Times(1)
 	        .WillOnce(Return(true));
 	EXPECT_NO_THROW({ shell.DoCommand(input_c_str); });

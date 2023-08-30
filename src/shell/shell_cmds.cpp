@@ -129,7 +129,7 @@ bool lookup_shell_cmd(std::string name, SHELL_Cmd &shell_cmd)
 	return true;
 }
 
-bool DOS_Shell::CheckConfig(const char* const cmd_in, const char* const line)
+bool DOS_Shell::ExecuteConfigChange(const char* const cmd_in, const char* const line)
 {
 	assert(control);
 	const auto section_dos = static_cast<Section_prop*>(
@@ -160,7 +160,8 @@ bool DOS_Shell::CheckConfig(const char* const cmd_in, const char* const line)
 	return true;
 }
 
-bool DOS_Shell::execute_shell_cmd(char *name, char *arguments) {
+bool DOS_Shell::ExecuteShellCommand(const char* const name, char* arguments)
+{
 	SHELL_Cmd shell_cmd = {};
 	if (!lookup_shell_cmd(name, shell_cmd))
 		return false; // name isn't a shell command!
@@ -182,22 +183,31 @@ void DOS_Shell::DoCommand(char * line) {
 //		if (*line == ':') break; //This breaks drive switching as that is handled at a later stage.
 		if ((*line == '.') ||(*line == '\\')) {  //allow stuff like cd.. and dir.exe cd\kees
 			*cmd_write=0;
-			if (execute_shell_cmd(cmd_buffer, line)) {
+			if (ExecuteShellCommand(cmd_buffer, line)) {
 				return;
 			}
 		}
 		*cmd_write++=*line++;
 	}
 	*cmd_write=0;
-	if (is_empty(cmd_buffer))
+	if (is_empty(cmd_buffer)) {
 		return;
-	/* Check the internal list */
-	if (execute_shell_cmd(cmd_buffer, line))
+	}
+
+	// First try to execute the line as internal shell command
+	if (ExecuteShellCommand(cmd_buffer, line)) {
 		return;
-/* This isn't an internal command execute it */
-	if (Execute(cmd_buffer,line)) return;
-	if (CheckConfig(cmd_buffer,line)) return;
-	WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),cmd_buffer);
+	}
+	// Try to execute the line as external program
+	if (ExecuteProgram(cmd_buffer, line)) {
+		return;
+	}
+	// Last resort - try to handle the line as configuration change request
+	if (ExecuteConfigChange(cmd_buffer, line)) {
+		return;
+	}
+
+	WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"), cmd_buffer);
 }
 
 bool DOS_Shell::WriteHelp(const std::string &command, char *args) {
@@ -336,7 +346,7 @@ void DOS_Shell::CMD_HELP(char * args){
 	char help_arg[] = "/?";
 	const auto& hl = HELP_GetHelpList();
 	if (contains(hl, args) && hl.at(args).type == HELP_CmdType::Program) {
-		Execute(args, help_arg);
+		ExecuteProgram(args, help_arg);
 	} else if (lookup_shell_cmd(args, shell_cmd)) {
 		// Print help for the provided command by
 		// calling it with the '/?' arg

@@ -76,7 +76,7 @@ void LOADFIX::Run(void)
 			}
 			// Use shell to start program
 			DOS_Shell shell;
-			shell.Execute(filename,args);
+			shell.ExecuteProgram(filename, args);
 			DOS_FreeMemory(segment);
 			WriteOut(MSG_Get("PROGRAM_LOADFIX_DEALLOC"),kb);
 		}
