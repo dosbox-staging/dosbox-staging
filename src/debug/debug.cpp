@@ -2215,7 +2215,7 @@ public:
 
 		// Start shell
 		DOS_Shell shell;
-		if (!shell.Execute(filename, args))
+		if (!shell.ExecuteProgram(filename, args))
 			WriteOut(MSG_Get("PROGRAM_EXECUTABLE_MISSING"), filename);
 
 		// set old reg values
