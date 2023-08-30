@@ -34,6 +34,13 @@ option(
 )
 
 option(
+    'use_ffmpeg',
+    type: 'boolean',
+    value: true,
+    description: 'Enable video capture encoding via ffmpeg',
+)
+
+option(
     'tracy',
     type: 'boolean',
     value: false,

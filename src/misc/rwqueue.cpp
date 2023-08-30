@@ -269,6 +269,8 @@ template class RWQueue<MidiWork>;
 #include "render.h"
 template class RWQueue<SaveImageTask>;
 
+#if C_FFMPEG
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 }
@@ -276,3 +278,5 @@ extern "C" {
 template class RWQueue<int16_t>;
 template class RWQueue<RenderedImage>;
 template class RWQueue<AVPacket*>;
+
+#endif // C_FFMPEG

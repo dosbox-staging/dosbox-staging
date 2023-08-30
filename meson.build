@@ -271,6 +271,7 @@ conf_data.set10('C_MODEM', get_option('use_sdl2_net'))
 conf_data.set10('C_IPX', get_option('use_sdl2_net'))
 conf_data.set10('C_SLIRP', get_option('use_slirp'))
 conf_data.set10('C_NE2000', get_option('use_slirp'))
+conf_data.set10('C_FFMPEG', get_option('use_ffmpeg'))
 conf_data.set10('C_FLUIDSYNTH', get_option('use_fluidsynth'))
 conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_TRACY', get_option('tracy'))
@@ -485,39 +486,7 @@ elif get_option('unit_tests').disabled()
     wants_tests = false
 endif
 
-#FFmpeg (depends on glib)
-ffmpeg_dep = []
-ffmpeg_static = ('ffmpeg' in static_libs_list or prefers_static_libs)
 
-ffmpeg_dep += dependency(
-    'libavcodec',
-    static: ffmpeg_static,
-    include_type: 'system',
-)
-
-ffmpeg_dep += dependency(
-    'libavutil',
-    static: ffmpeg_static,
-    include_type: 'system',
-)
-
-ffmpeg_dep += dependency(
-    'libswscale',
-    static: ffmpeg_static,
-    include_type: 'system',
-)
-
-ffmpeg_dep += dependency(
-    'libavformat',
-    static: ffmpeg_static,
-    include_type: 'system',
-)
-
-ffmpeg_dep += dependency(
-    'libswresample',
-    static: ffmpeg_static,
-    include_type: 'system',
-)
 
 libiir_dep = dependency(
     'iir',
@@ -660,6 +629,46 @@ if get_option('use_opengl')
     opengl_dep = dependency('gl', not_found_message: msg.format('use_opengl'))
 endif
 conf_data.set10('C_OPENGL', opengl_dep.found())
+
+#FFmpeg (Can use either system library or build from Conan)
+ffmpeg_dep = optional_dep
+ffmpeg_summary_msg = 'False'
+if get_option('use_ffmpeg')
+    ffmpeg_static = ('ffmpeg' in static_libs_list or prefers_static_libs)
+    ffmpeg_dep = []
+    ffmpeg_dep += dependency(
+        'libavcodec',
+        static: ffmpeg_static,
+        not_found_message: msg.format('use_ffmpeg'),
+        include_type: 'system',
+    )
+    ffmpeg_dep += dependency(
+        'libavutil',
+        static: ffmpeg_static,
+        not_found_message: msg.format('use_ffmpeg'),
+        include_type: 'system',
+    )
+    ffmpeg_dep += dependency(
+        'libswscale',
+        static: ffmpeg_static,
+        not_found_message: msg.format('use_ffmpeg'),
+        include_type: 'system',
+    )
+    ffmpeg_dep += dependency(
+        'libavformat',
+        static: ffmpeg_static,
+        not_found_message: msg.format('use_ffmpeg'),
+        include_type: 'system',
+    )
+    ffmpeg_dep += dependency(
+        'libswresample',
+        static: ffmpeg_static,
+        not_found_message: msg.format('use_ffmpeg'),
+        include_type: 'system',
+    )
+    ffmpeg_summary_msg = 'True'
+endif
+summary('FFmpeg support', ffmpeg_summary_msg)
 
 # FluidSynth (depends on glib)
 fluid_dep = optional_dep
