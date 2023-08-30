@@ -1926,18 +1926,28 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	const auto horiz_end = updated_timings.horiz_display_end;
 	const auto vert_end  = updated_timings.vert_display_end;
 
+	// Determine video mode info, render dimensions, and source & render
+	// pixel aspect ratios
+
 	VideoMode video_mode = {};
 
-	// Calculate render dimensions and source & render pixel aspect ratios
 	uint32_t render_width  = 0;
 	uint32_t render_height = 0;
 
-	// If true, the rendered image will be doubled vertically post-render
-	// via a scaler.
+	// True only if we're rendering a double scanned VGA mode as single
+	// scanned (so rendering half the lines only, e.g., only 200 lines for
+	// the double-scanned 320x200 13h VGA mode).
+	bool force_single_scan = false;
+
+	// If true, the rendered image will be doubled horizontally post-render
+	// via a scaler (to fake double scanning for CGA modes on VGA, and for
+	// double-scanned VESA modes).
 	bool double_height = false;
 
 	// If true, the rendered image will be doubled horizontally post-render
-	// via a scaler.
+	// via a scaler. This is done to achieve a (mostly) constant "emulated
+	// dot pitch" for CRT shaders (or, to be more exact, to avoid the dot
+	// pitch falling too low for less than ~640 pixel wide modes).
 	bool double_width = false;
 
 	Fraction render_pixel_aspect_ratio = {1};
@@ -2053,6 +2063,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			vga.draw.address_line_total /= 2;
 			video_mode.height = vert_end / 2;
 			double_height     = vga.draw.double_scanning_enabled;
+			force_single_scan = !vga.draw.double_scanning_enabled;
 		} else {
 			video_mode.height = vert_end;
 		}
@@ -2104,6 +2115,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// then double the image vertically with a scaler).
 		if (is_double_scanning) {
 			video_mode.height = vert_end / 2;
+			force_single_scan = !vga.draw.double_scanning_enabled;
+
 			if (vga.draw.double_scanning_enabled) {
 				render_height = video_mode.height * 2;
 			} else {
@@ -2195,6 +2208,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			// image vertically with a scaler).
 			if (is_vga_scan_doubling()) {
 				video_mode.height = vert_end / 2;
+				force_single_scan = !vga.draw.double_scanning_enabled;
+
 				if (vga.draw.double_scanning_enabled) {
 					render_height = video_mode.height * 2;
 				} else {
@@ -2380,6 +2395,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			render_height     = video_mode.height;
 
 			double_height = vga.draw.double_scanning_enabled;
+
+			// We never render true double-scanned CGA modes; we
+			// always fake it even if double scanning is requested
+			force_single_scan = true;
 
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
 			        vga_timings);
@@ -2766,11 +2785,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		vga.draw.pixel_aspect_ratio = render_pixel_aspect_ratio;
 		vga.draw.pixel_format       = pixel_format;
 
-		if (double_height) {
-			vga.draw.lines_scaled = 2;
-		} else {
-			vga.draw.lines_scaled = 1;
-		}
+		vga.draw.lines_scaled = force_single_scan ? 2 : 1;
 
 		if (!vga.draw.vga_override) {
 			ReelMagic_RENDER_SetSize(render_width,
