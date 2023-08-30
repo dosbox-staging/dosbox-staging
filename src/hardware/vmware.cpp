@@ -129,31 +129,48 @@ static uint32_t port_read_vmware(const io_port_t, const io_width_t)
 // Lifecycle
 // ***************************************************************************
 
-void VMWARE_Destroy(Section*)
+void VMWARE_Configure(const ModuleLifecycle lifecycle, Section*)
 {
-	if (is_interface_enabled) {
-		IO_FreeReadHandler(port_num_virtualbox, io_width_t::dword);
-		is_interface_enabled = false;
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VmWare);
+
+		// TODO: implement more features:
+		// - shared directories, for VMSMount tool:
+		//   https://github.com/eduardocasino/vmsmount
+		// - everything supported by the official Windows 9x VMware Tools
+		// - (very far future) possibly Windows 9x 3D acceleration using
+		//   project like SoftGPU (or whatever will be available):
+		//   https://github.com/JHRobotics/softgpu
+
+		is_interface_enabled = has_feature_mouse;
+		if (is_interface_enabled) {
+			IO_RegisterReadHandler(port_num_vmware,
+			                       port_read_vmware,
+			                       io_width_t::dword);
+		}
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		if (is_interface_enabled) {
+			IO_FreeReadHandler(port_num_virtualbox, io_width_t::dword);
+			is_interface_enabled = false;
+		}
+		break;
 	}
 }
 
-void VMWARE_Init(Section* sec)
+void VMWARE_Destroy(Section* section)
 {
-	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VmWare);
+	VMWARE_Configure(ModuleLifecycle::Destroy, section);
+}
 
-	// TODO: implement more features:
-	// - shared directories, for VMSMount tool:
-	//   https://github.com/eduardocasino/vmsmount
-	// - everything supported by the official Windows 9x VMware Tools
-	// - (very far future) possibly Windows 9x 3D acceleration using
-	//   project like SoftGPU (or whatever will be available):
-	//   https://github.com/JHRobotics/softgpu
-
-	is_interface_enabled = has_feature_mouse;
-	if (is_interface_enabled) {
-		sec->AddDestroyFunction(&VMWARE_Destroy, false);
-		IO_RegisterReadHandler(port_num_vmware,
-		                       port_read_vmware,
-		                       io_width_t::dword);
-	}
+void VMWARE_Init(Section* section)
+{
+	VMWARE_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&VMWARE_Destroy);
 }
