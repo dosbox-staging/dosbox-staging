@@ -124,13 +124,15 @@ struct MousePointerFlags {
 // Server state
 // ***************************************************************************
 
-static struct {
+struct MouseServerState {
 	bool is_client_connected = false;
 
 	MouseFeatures mouse_features          = {};
 	MousePointerFlags mouse_pointer_flags = {};
+};
 
-} state;
+// Pointer to the static instance
+MouseServerState* state = nullptr;
 
 // ***************************************************************************
 // Request Header constants and structures
@@ -325,12 +327,14 @@ static void warn_mouse_new_protocol()
 
 static void client_connect()
 {
-	state.is_client_connected = true;
+	assert(state);
+	state->is_client_connected = true;
 }
 
 static void client_disconnect()
 {
-	if (!state.is_client_connected) {
+	assert(state);
+	if (!state->is_client_connected) {
 		return;
 	}
 
@@ -338,7 +342,7 @@ static void client_disconnect()
 		MOUSEVMM_Deactivate(MouseVmmProtocol::VirtualBox);
 	}
 
-	state.is_client_connected = false;
+	state->is_client_connected = false;
 }
 
 static void report_success(PhysPt return_code_pt)
@@ -367,7 +371,9 @@ static void handle_get_mouse_status(const RequestHeader& header,
 
 		MouseVirtualBoxPointerStatus status = {};
 		MOUSEVMM_GetPointerStatus(status);
-		mem_writed(struct_pointer, state.mouse_features._data);
+
+		assert(state);
+		mem_writed(struct_pointer, state->mouse_features._data);
 		mem_writed(struct_pointer + 4, status.absolute_x);
 		mem_writed(struct_pointer + 8, status.absolute_y);
 
@@ -399,8 +405,9 @@ static void handle_set_mouse_status(const RequestHeader& header,
 		if (requested.Get(requested.mask_new_protocol)) {
 			warn_mouse_new_protocol();
 		}
-		state.mouse_features.CombineGuestValue(payload.features);
-		const auto& features = state.mouse_features;
+		assert(state);
+		state->mouse_features.CombineGuestValue(payload.features);
+		const auto& features = state->mouse_features;
 
 		const bool guest_can_absolute = features.Get(
 		        features.mask_guest_can_absolute);
@@ -432,8 +439,10 @@ static void handle_set_pointer_shape(const RequestHeader& header,
 		}
 
 		const VirtualBox_MousePointer_1_01 payload(struct_pointer);
-		state.mouse_pointer_flags = payload.flags;
-		const auto& flags         = state.mouse_pointer_flags;
+
+		assert(state);
+		state->mouse_pointer_flags = payload.flags;
+		const auto& flags          = state->mouse_pointer_flags;
 
 		const bool pointer_visible = flags.Get(
 		        payload.flags.mask_pointer_visible);
@@ -494,7 +503,8 @@ static void port_write_virtualbox(io_port_t, io_val_t value, io_width_t width)
 	const PhysPt struct_pointer = value + header_size;
 	RequestHeader header(header_pointer);
 
-	if (!state.is_client_connected &&
+	assert(state);
+	if (!state->is_client_connected &&
 	    header.request_type != RequestType::ReportGuestInfo) {
 		return; // not a proper VirtualBox client
 	}
@@ -594,38 +604,61 @@ void VIRTUALBOX_NotifyBooting()
 	client_disconnect();
 }
 
-void VIRTUALBOX_Destroy(Section*)
+void VIRTUALBOX_Configure(const ModuleLifecycle lifecycle, Section*)
 {
-	if (is_interface_enabled) {
-		client_disconnect();
-		PCI_RemoveDevice(PCI_VirtualBoxDevice::vendor,
-		                 PCI_VirtualBoxDevice::device);
-		IO_FreeWriteHandler(port_num_virtualbox, io_width_t::dword);
-		is_interface_enabled = false;
+	static std::unique_ptr<MouseServerState> state_instance = {};
+
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		state_instance = std::make_unique<MouseServerState>();
+		state = state_instance.get();
+
+		has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VirtualBox);
+		if (has_feature_mouse) {
+			state_instance->mouse_features.SetInitialValue();
+		}
+
+		// TODO: implement more features:
+		// - shared directories for VBSF.EXE driver by Javis Pedro
+		// - possibly display for the OS/2 Museum work-in-progres drivers
+		//   https://www.os2museum.com/wp/antique-display-driving/
+		// - (very far future) possibly Windows 9x 3D acceleration using
+		//   project like SoftGPU (or whatever will be available):
+		//   https://github.com/JHRobotics/softgpu
+
+		is_interface_enabled = has_feature_mouse;
+		if (is_interface_enabled) {
+			PCI_AddDevice(new PCI_VirtualBoxDevice());
+			IO_RegisterWriteHandler(port_num_virtualbox,
+			                        port_write_virtualbox,
+			                        io_width_t::dword);
+		}
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure: break;
+
+	case ModuleLifecycle::Destroy:
+		if (is_interface_enabled) {
+			client_disconnect();
+			PCI_RemoveDevice(PCI_VirtualBoxDevice::vendor,
+			                 PCI_VirtualBoxDevice::device);
+			IO_FreeWriteHandler(port_num_virtualbox, io_width_t::dword);
+			is_interface_enabled = false;
+		}
+		state_instance.reset();
+		state = nullptr;
+		break;
 	}
 }
 
-void VIRTUALBOX_Init(Section* sec)
+void VIRTUALBOX_Destroy(Section* section)
 {
-	has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VirtualBox);
-	if (has_feature_mouse) {
-		state.mouse_features.SetInitialValue();
-	}
+	VIRTUALBOX_Configure(ModuleLifecycle::Destroy, section);
+}
 
-	// TODO: implement more features:
-	// - shared directories for VBSF.EXE driver by Javis Pedro
-	// - possibly display for the OS/2 Museum work-in-progres drivers
-	//   https://www.os2museum.com/wp/antique-display-driving/
-	// - (very far future) possibly Windows 9x 3D acceleration using
-	//   project like SoftGPU (or whatever will be available):
-	//   https://github.com/JHRobotics/softgpu
-
-	is_interface_enabled = has_feature_mouse;
-	if (is_interface_enabled) {
-		sec->AddDestroyFunction(&VIRTUALBOX_Destroy, false);
-		PCI_AddDevice(new PCI_VirtualBoxDevice());
-		IO_RegisterWriteHandler(port_num_virtualbox,
-		                        port_write_virtualbox,
-		                        io_width_t::dword);
-	}
+void VIRTUALBOX_Init(Section* section)
+{
+	VIRTUALBOX_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&VIRTUALBOX_Destroy);
 }
