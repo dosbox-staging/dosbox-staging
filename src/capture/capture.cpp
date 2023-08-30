@@ -605,11 +605,15 @@ static void capture_init(Section* sec)
 	const std::string prefs = secprop->Get_string("default_image_capture_formats");
 
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
+	#if C_FFMPEG
 	if (secprop->Get_string("video_encoder") == std::string("ffmpeg")) {
 		video_encoder  = std::make_unique<FfmpegEncoder>();
 	} else {
 		video_encoder = std::make_unique<ZMBVEncoder>();
 	}
+	#else
+	video_encoder = std::make_unique<ZMBVEncoder>();
+	#endif // C_FFMPEG
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&capture_destroy, changeable_at_runtime);

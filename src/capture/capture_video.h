@@ -25,13 +25,6 @@
 #include "render.h"
 #include "rwqueue.h"
 
-extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libswresample/swresample.h>
-#include <libswscale/swscale.h>
-}
-
 class VideoEncoder {
 public:
 	virtual void CaptureVideoAddFrame(const RenderedImage& image,
@@ -57,6 +50,15 @@ public:
 
 	void CaptureVideoFinalise() override;
 };
+
+#if C_FFMPEG
+
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libswresample/swresample.h>
+#include <libswscale/swscale.h>
+}
 
 struct FfmpegVideoEncoder {
 	RWQueue<RenderedImage> queue{256};
@@ -171,4 +173,5 @@ private:
 	void StartQueues();
 };
 
-#endif
+#endif // C_FFMPEG
+#endif //DOSBOX_CAPTURE_VIDEO_H

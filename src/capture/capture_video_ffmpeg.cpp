@@ -22,6 +22,8 @@
 #include "capture_video.h"
 #include "math_utils.h"
 
+#if C_FFMPEG
+
 // Disable deprecated warnigns coming from ffmpeg libraries.
 // I'm trying to support as many versions as possible.
 // Some of the CI machines don't support the new functions.
@@ -726,3 +728,5 @@ void FfmpegEncoder::EncodeAudio()
 		waiter.notify_all();
 	}
 }
+
+#endif // C_FFMPEG
