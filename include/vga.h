@@ -755,6 +755,58 @@ union CrtcModeControlRegister {
 	bit_view<7, 1> is_sync_enabled;
 };
 
+// Attribute Controller Registers
+// ==============================
+//
+// The Attribute Registers consist of:
+// - the sixteen Palette Registers,
+// - the Mode Control Register,
+// - the Overscan Color Register,
+// - the Color Plane Enable Register,
+// - and the Horizontal Pixel Panning Register.
+//
+// The VGA also includes the Color Select Register.
+
+// Attribute Address Register
+// --------------------------
+// (write port: 3C0h on EGA & VGA, read port: 3C1h on VGA only)
+//
+// Selects the Attribute Controller Registers that will be selected during a
+// write operation for EGA/VGA, or a read operation for VGA.
+//
+// The attribute controller has only one port dedicated to it at 3C0h. An
+// internal flip-flop is used to multiplex this port to load either this Address
+// Attribute Register or one of the Attribute Registers:
+//
+// - When the flip-flop is in the clear state, it causes port writes
+//   3COh to be directed to this Address Attribute Register.
+//
+// - When the flip-flop is in the set state, data written to this port is
+//   directed to whichever Attribute Register index is loaded into the
+//   attribute_address field of this register.
+//
+union AttributeAddressRegister {
+	uint8_t data = 0;
+
+	// Points to one of the Attribute Address Registers:
+	// 00h-0Fh - Palette Registers 0-15
+	// 10h     - Mode Control Register
+	// 11h     - Overscan Color Register
+	// 12h     - Color Plane Enable Register
+	// 13h     - Horizontal Pixel Panning Register
+	bit_view<0, 4> attribute_address;
+
+	// Determines whether the palette dual-ported RAM should be accessed by
+	// the host or by the EGA display memory.
+	//
+	// 0: Allows the host to access the palette RAM. Disables the display
+	// memory from gaining access to the palette.
+	//
+	// 1: Allows the display memory to access the palette RAM. Disables the
+	// host from gaining access to the palette.
+	bit_view<5, 1> palette_address_source;
+};
+
 struct VgaSeq {
 	uint8_t index = 0;
 	uint8_t reset = 0;
