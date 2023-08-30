@@ -832,12 +832,13 @@ struct VgaAttr {
 	uint8_t index                  = 0;
 
 	// Used for disabling the screen.
-	// Bit0: screen disabled by attribute controller
-	// index Bit1: screen disabled by sequencer index 1
-	// bit 5 These are put together in one variable for
-	// performance reasons: the line drawing function is
-	// called maybe 60*480=28800 times/s, and we only
-	// need to check one variable for zero this way.
+	//
+	// Bit0: screen disabled by attribute controller index
+	// Bit1: screen disabled by sequencer index 1 bit 5
+	//
+	// These are put together in one variable for performance reasons: the
+	// line drawing function is called maybe 60*480=28800 times/s, and we
+	// only need to check one variable for zero this way.
 	uint8_t disabled = 0;
 };
 
