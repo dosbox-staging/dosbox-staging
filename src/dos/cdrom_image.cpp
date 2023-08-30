@@ -1457,14 +1457,30 @@ bool CDROM_Interface_Image::GetCueString(string &str, istream &in)
 	return true;
 }
 
-void CDROM_Image_Destroy(Section*) {
-	Sound_Quit();
+void CDROM_Image_Configure(const ModuleLifecycle lifecycle, Section*)
+{
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		Sound_Init();
+		break;
+
+	// This module doesn't support reconfiguration at runtime
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		Sound_Quit();
+		break;
+	}
 }
 
-void CDROM_Image_Init(Section* sec)
+void CDROM_Image_Destroy(Section* section)
 {
-	if (sec != nullptr) {
-		sec->AddDestroyFunction(CDROM_Image_Destroy);
-	}
-	Sound_Init();
+	CDROM_Image_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void CDROM_Image_Init(Section* section)
+{
+	CDROM_Image_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&CDROM_Image_Destroy);
 }
