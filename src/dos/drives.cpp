@@ -21,6 +21,7 @@
 
 #include "bios_disk.h"
 #include "ide.h"
+#include "setup.h"
 #include "string_utils.h"
 
 extern char sfn[DOS_NAMELENGTH_ASCII];
@@ -387,19 +388,41 @@ char *DriveManager::GetDrivePosition(int drive)
 	return swap_position;
 }
 
-void DriveManager::Init(Section* /* sec */) {
+void DriveManager::Init()
+{
 	// setup drive_infos structure
 	currentDrive = 0;
 	for(int i = 0; i < DOS_DRIVES; i++) {
 		drive_infos.at(i).current_disk = 0;
 	}
-
-	// MAPPER_AddHandler(&CycleDisk, SDL_SCANCODE_F3, MMOD1,
-	//                   "cycledisk", "Cycle Disk");
-	// MAPPER_AddHandler(&CycleDrive, SDL_SCANCODE_F3, MMOD2,
-	//                   "cycledrive", "Cycle Drv");
 }
 
-void DRIVES_Init(Section* sec) {
-	DriveManager::Init(sec);
+void DriveManager::Reset()
+{
+	for (auto& drive_info : drive_infos) {
+		drive_info = {};
+	}
+	indexed_images.clear();
+	raw_floppy_images.clear();
+	currentDrive = 0;
+}
+
+void DRIVES_Configure(const ModuleLifecycle lifecycle, Section*)
+{
+	switch (lifecycle) {
+	case ModuleLifecycle::Create: DriveManager::Init(); break;
+	case ModuleLifecycle::Reconfigure: break;
+	case ModuleLifecycle::Destroy: DriveManager::Reset(); break;
+	}
+}
+
+void DRIVES_Destroy(Section* section)
+{
+	DRIVES_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void DRIVES_Init(Section* section)
+{
+	DRIVES_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&DRIVES_Destroy);
 }

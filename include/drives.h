@@ -73,8 +73,9 @@ public:
 	static void CycleDisks(int drive, bool notify);
 	static void CycleAllDisks(void);
 	static char *GetDrivePosition(int drive);
-	static void Init(Section* sec);
-	
+	static void Init();
+	static void Reset();
+
 private:
 	static drive_infos_t drive_infos;
 	static raw_images_t indexed_images;
