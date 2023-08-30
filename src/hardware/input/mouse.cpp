@@ -36,6 +36,7 @@
 
 CHECK_NARROWING();
 
+static callback_number_t int74_callback     = 0;
 static callback_number_t int74_ret_callback = 0;
 
 static ManyMouseGlue &manymouse = ManyMouseGlue::GetInstance();
@@ -1008,8 +1009,8 @@ void MOUSE_StartupIfReady()
 	}
 
 	// Callback for PS/2 BIOS or DOS driver IRQ
-	auto call_int74 = CALLBACK_Allocate();
-	CALLBACK_Setup(call_int74, &int74_handler, CB_IRQ12, "int 74");
+	int74_callback = CALLBACK_Allocate();
+	CALLBACK_Setup(int74_callback, &int74_handler, CB_IRQ12, "int 74");
 	// pseudocode for CB_IRQ12:
 	//    sti
 	//    push ds
@@ -1040,7 +1041,7 @@ void MOUSE_StartupIfReady()
 	//    iret
 
 	// (MOUSE_IRQ > 7) ? (0x70 + MOUSE_IRQ - 8) : (0x8 + MOUSE_IRQ);
-	RealSetVec(0x74, CALLBACK_RealPointer(call_int74));
+	RealSetVec(0x74, CALLBACK_RealPointer(int74_callback));
 
 	MouseInterface::InitAllInstances();
 	mouse_shared.started = true;
@@ -1054,9 +1055,42 @@ void MOUSE_NotifyReadyGFX()
 	MOUSE_StartupIfReady();
 }
 
-void MOUSE_Init(Section * /*sec*/)
+void MOUSE_Configure(const ModuleLifecycle lifecycle, Section*)
 {
-	// Start mouse emulation if ready
-	mouse_shared.ready_init = true;
-	MOUSE_StartupIfReady();
+	switch (lifecycle) {
+	case ModuleLifecycle::Create:
+		// Start mouse emulation if ready
+		mouse_shared.ready_init = true;
+		MOUSE_StartupIfReady();
+		break;
+
+	case ModuleLifecycle::Reconfigure:
+		break;
+
+	case ModuleLifecycle::Destroy:
+		if (int74_ret_callback != 0) {
+			CALLBACK_RemoveSetup(int74_ret_callback);
+			CALLBACK_DeAllocate(int74_ret_callback);
+			int74_ret_callback = 0;
+		}
+		if (int74_callback != 0) {
+			CALLBACK_RemoveSetup(int74_callback);
+			CALLBACK_DeAllocate(int74_callback);
+			int74_callback = 0;
+		}
+		mouse_shared.started    = false;
+		mouse_shared.ready_init = false;
+		break;
+	}
+}
+
+void MOUSE_Destroy(Section* section)
+{
+	MOUSE_Configure(ModuleLifecycle::Destroy, section);
+}
+
+void MOUSE_Init(Section* section)
+{
+	MOUSE_Configure(ModuleLifecycle::Create, section);
+	section->AddDestroyFunction(&MOUSE_Destroy);
 }
