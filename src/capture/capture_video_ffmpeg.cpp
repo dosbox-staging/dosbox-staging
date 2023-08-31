@@ -18,11 +18,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "checks.h"
 #include "capture.h"
 #include "capture_video.h"
 #include "math_utils.h"
 
 #if C_FFMPEG
+
+CHECK_NARROWING();
 
 // Disable deprecated warnigns coming from ffmpeg libraries.
 // I'm trying to support as many versions as possible.
@@ -328,7 +331,7 @@ bool FfmpegAudioEncoder::Init(const uint32_t sample_rate)
 	}
 
 	codec_context->sample_fmt  = AV_SAMPLE_FMT_FLTP;
-	codec_context->sample_rate = sample_rate;
+	codec_context->sample_rate = static_cast<int>(sample_rate);
 	codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
 
 	if (avcodec_open2(codec_context, codec, nullptr) < 0) {
@@ -343,7 +346,7 @@ bool FfmpegAudioEncoder::Init(const uint32_t sample_rate)
 	}
 	frame->format      = codec_context->sample_fmt;
 	frame->nb_samples  = codec_context->frame_size;
-	frame->sample_rate = sample_rate;
+	frame->sample_rate = codec_context->sample_rate;
 	frame->pts         = 0;
 	frame->channel_layout = codec_context->channel_layout;
 	// 0 means auto-align based on current CPU
@@ -361,12 +364,12 @@ bool FfmpegAudioEncoder::Init(const uint32_t sample_rate)
 	constexpr int log_offset = 0;
 	constexpr void *log_context = nullptr;
 	resampler_context = swr_alloc_set_opts(nullptr,
-	                                       codec_context->channel_layout,
+	                                       AV_CH_LAYOUT_STEREO,
 	                                       AV_SAMPLE_FMT_FLTP,
-	                                       sample_rate,
-	                                       codec_context->channel_layout,
+	                                       codec_context->sample_rate,
+	                                       AV_CH_LAYOUT_STEREO,
 	                                       AV_SAMPLE_FMT_S16,
-	                                       sample_rate,
+	                                       codec_context->sample_rate,
 	                                       log_offset,
 	                                       log_context);
 	if (!resampler_context) {
@@ -565,10 +568,10 @@ void FfmpegEncoder::EncodeVideo()
 				uint8_t *in_ptr = image->palette_data;
 				uint32_t *out_ptr = reinterpret_cast<uint32_t *>(image->palette_data);
 				for (int i = 0; i < 256; ++i) {
-					uint8_t red = *in_ptr++;
-					uint8_t green = *in_ptr++;
-					uint8_t blue = *in_ptr++;
-					uint8_t unused = *in_ptr++;
+					uint32_t red = *in_ptr++;
+					uint32_t green = *in_ptr++;
+					uint32_t blue = *in_ptr++;
+					uint32_t unused = *in_ptr++;
 					*out_ptr++ = (unused << 24) | (red << 16) | (green << 8) | blue;
 				}
 			}
@@ -671,7 +674,7 @@ void FfmpegEncoder::EncodeAudio()
 		const int frame_capacity = audio_encoder.frame->nb_samples;
 
 		// 2 samples per frame. Number of int16_ts requested from the queue.
-		const size_t sample_capacity = frame_capacity * SamplesPerFrame;
+		const size_t sample_capacity = static_cast<size_t>(frame_capacity) * SamplesPerFrame;
 
 		for (;;) {
 			audio_encoder.queue.BulkDequeue(audio_data, sample_capacity);
