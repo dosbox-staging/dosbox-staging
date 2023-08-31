@@ -60,7 +60,7 @@ Note:  Each read or write of this register will cycle through first the
 
 enum {DAC_READ,DAC_WRITE};
 
-static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
+static void VGA_DAC_SendColor(const uint8_t index, const uint8_t src)
 {
 	const auto& src_rgb666 = vga.dac.rgb[src];
 
@@ -75,7 +75,7 @@ static void VGA_DAC_SendColor(uint8_t index, uint8_t src)
 	ReelMagic_RENDER_SetPalette(index, r8, g8, b8);
 }
 
-static void VGA_DAC_UpdateColor(uint16_t index)
+static void VGA_DAC_UpdateColor(const uint16_t index)
 {
 	const auto maskIndex = index & vga.dac.pel_mask;
 	assert(maskIndex <= UINT8_MAX); // lookup into 256-byte table
@@ -202,7 +202,7 @@ static uint8_t read_p3c9(io_port_t, io_width_t)
 	return ret;
 }
 
-void VGA_DAC_CombineColor(uint8_t attr,uint8_t pal) {
+void VGA_DAC_CombineColor(const uint8_t attr, const uint8_t pal) {
 	/* Check if this is a new color */
 	vga.dac.combine[attr]=pal;
 	if (vga.mode != M_LIN8) {
@@ -211,7 +211,9 @@ void VGA_DAC_CombineColor(uint8_t attr,uint8_t pal) {
 	}
 }
 
-void VGA_DAC_SetEntry(Bitu entry,uint8_t red,uint8_t green,uint8_t blue) {
+void VGA_DAC_SetEntry(const uint8_t entry, const uint8_t red,
+                      const uint8_t green, const uint8_t blue)
+{
 	//Should only be called in machine != vga
 	vga.dac.rgb[entry].red=red;
 	vga.dac.rgb[entry].green=green;
