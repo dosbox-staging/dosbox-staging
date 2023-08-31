@@ -98,7 +98,7 @@ void VGA_ATTR_SetPalette(uint8_t index, const PaletteRegister value)
 static uint8_t read_p3c0(io_port_t, io_width_t)
 {
 	// Wcharts, Win 3.11 & 95 SVGA
-	uint8_t retval = vga.attr.index & 0x1f;
+	uint8_t retval = vga.attr.index;
 	if (!(vga.attr.disabled & 0x1)) {
 		retval |= 0x20;
 	}
@@ -110,19 +110,16 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 	auto val = check_cast<uint8_t>(value);
 
 	if (vga.attr.is_address_mode) {
-		vga.attr.index = val & 0x1F;
-
 		vga.attr.is_address_mode = false;
 
-		if (val & 0x20) {
+		auto reg       = AttributeAddressRegister{val};
+		vga.attr.index = reg.attribute_address;
+
+		if (reg.palette_address_source) {
 			vga.attr.disabled &= ~1;
 		} else {
 			vga.attr.disabled |= 1;
 		}
-		// 0-4	Address of data register to write to port 3C0h or read
-		// from port 3C1h 5	If set screen output is enabled and the
-		// palette can not be modified, if clear screen output is
-		// disabled and the palette can be modified.
 		return;
 
 	} else {
@@ -146,6 +143,8 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 		case 0x0d:
 		case 0x0e:
 		case 0x0f:
+			// Index into the 256 color DAC table.
+			// May be modified by 3C0h index 10h and 14h.
 			if (vga.attr.disabled & 0x1) {
 				const auto index = vga.attr.index;
 				VGA_ATTR_SetPalette(index, PaletteRegister{val});
