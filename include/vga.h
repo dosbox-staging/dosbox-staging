@@ -807,6 +807,31 @@ union AttributeAddressRegister {
 	bit_view<5, 1> palette_address_source;
 };
 
+// Palette Registers (index 00h-0Fh)
+union PaletteRegister {
+	uint8_t data = 0;
+
+	// On EGA, the values describe the colours directly. sr, sg, and sb stand
+	// for the "secondary" RGB values, forming basically a 2-bit RGB colour
+	// codes:
+	//
+	// sr,sg,sb   r,g,b    saturation
+	//     0        0          0%
+	//     0        1         33%
+	//     1        0         66%
+	//     1        1        100%
+	bit_view<0, 1> b;
+	bit_view<1, 1> g;
+	bit_view<2, 1> r;
+	bit_view<3, 1> sb;
+	bit_view<4, 1> sg;
+	bit_view<5, 1> sr;
+
+	// On VGA, this is treated as 6-bit index that addresses the first 64
+	// Color Registers that store the actual 18-bit RGB colours.
+	bit_view<0, 6> index;
+};
+
 struct VgaSeq {
 	uint8_t index = 0;
 	uint8_t reset = 0;
