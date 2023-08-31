@@ -206,13 +206,9 @@ void FfmpegEncoder::StopQueues()
 
 	audio_encoder.queue.Stop();
 	video_encoder.queue.Stop();
-	while (audio_encoder.is_working || video_encoder.is_working) {
-		waiter.wait(lock);
-	}
+	waiter.wait(lock, [this] { return !audio_encoder.is_working && !video_encoder.is_working; });
 	muxer.queue.Stop();
-	while (muxer.is_working) {
-		waiter.wait(lock);
-	}
+	waiter.wait(lock, [this] { return !muxer.is_working; });
 
 	// At least the muxer queue has been measured
 	// to have stale items left in it if it is never started
@@ -521,9 +517,7 @@ void FfmpegEncoder::EncodeVideo()
 {
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
-		while (!video_encoder.is_initalised && !is_shutting_down) {
-			waiter.wait(lock);
-		}
+		waiter.wait(lock, [this] { return video_encoder.is_initalised || is_shutting_down; });
 		if (is_shutting_down) {
 			return;
 		}
@@ -617,9 +611,7 @@ void FfmpegEncoder::Mux()
 {
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
-		while (!muxer.is_initalised && !is_shutting_down) {
-			waiter.wait(lock);
-		}
+		waiter.wait(lock, [this] { return muxer.is_initalised || is_shutting_down; });
 		if (is_shutting_down) {
 			return;
 		}
@@ -662,9 +654,7 @@ void FfmpegEncoder::EncodeAudio()
 
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
-		while (!audio_encoder.is_initalised && !is_shutting_down) {
-			waiter.wait(lock);
-		}
+		waiter.wait(lock, [this] { return audio_encoder.is_initalised || is_shutting_down; });
 		if (is_shutting_down) {
 			return;
 		}
