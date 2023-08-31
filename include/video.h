@@ -106,6 +106,17 @@ struct VideoMode {
 	// EGA modes and most sub-400-line (S)VGA & VESA modes)
 	bool is_double_scanned_mode = false;
 
+	// True for all (S)VGA and VESA modes, and for 200-line EGA modes on VGA
+	// that reprogram the default canonical 16-colour CGA palette BIOS to
+	// custom 18-bit VGA colours.
+	//
+	// Useful for differentiating "true EGA" modes used for backwards
+	// compatibility on VGA (i.e., to run EGA games) from "repurposed" EGA
+	// modes (typical for demos and ports of Amiga action/platformer games;
+	// many of these use the planar 320x200 16-colour EGA mode to achieve
+	// faster smooth-scrolling, but with custom 18-bit VGA colours).
+	bool has_vga_colors = false;
+
 	constexpr bool operator==(const VideoMode& that) const
 	{
 		return (bios_mode_number == that.bios_mode_number &&
@@ -115,7 +126,8 @@ struct VideoMode {
 		        pixel_aspect_ratio == that.pixel_aspect_ratio &&
 		        graphics_standard == that.graphics_standard &&
 		        color_depth == that.color_depth &&
-		        is_double_scanned_mode == that.is_double_scanned_mode);
+		        is_double_scanned_mode == that.is_double_scanned_mode &&
+		        has_vga_colors == that.has_vga_colors);
 	}
 
 	constexpr bool operator!=(const VideoMode& that) const
