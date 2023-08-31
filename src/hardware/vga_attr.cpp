@@ -32,7 +32,7 @@ static void update_palette_mappings()
 	}
 }
 
-void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
+void VGA_ATTR_SetEGAMonitorPalette(const EgaMonitorMode m)
 {
 	// palette bit assignment:
 	// bit | pin | EGA        | CGA       | monochrome
@@ -46,21 +46,21 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
 	// 6-7 | not used
 	// * additive color brown instead of yellow
 	switch (m) {
-	case CGA: {
+	case EgaMonitorMode::Cga: {
 		// LOG_MSG("Monitor CGA");
 		size_t i = 0;
 		for (const auto& color : palette.cga64) {
 			vga.dac.rgb[i++] = color;
 		}
 	} break;
-	case EGA: {
+	case EgaMonitorMode::Ega: {
 		// LOG_MSG("Monitor EGA");
 		size_t i = 0;
 		for (const auto& color : palette.ega) {
 			vga.dac.rgb[i++] = color;
 		}
 	} break;
-	case MONO: {
+	case EgaMonitorMode::Mono: {
 		// LOG_MSG("Monitor MONO");
 		size_t i = 0;
 		for (const auto& color : palette.mono_text) {

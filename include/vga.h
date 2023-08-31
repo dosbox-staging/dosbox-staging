@@ -1074,9 +1074,9 @@ void VGA_DAC_SetEntry(const uint8_t entry, const uint8_t red,
 
 void VGA_ATTR_SetPalette(const uint8_t index, const PaletteRegister value);
 
-enum EGAMonitorMode { CGA, EGA, MONO };
+enum class EgaMonitorMode { Cga, Ega, Mono };
 
-void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m);
+void VGA_ATTR_SetEGAMonitorPalette(const EgaMonitorMode m);
 
 // The VGA subfunction startups
 void VGA_SetupAttr(void);
