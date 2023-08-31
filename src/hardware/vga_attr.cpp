@@ -335,15 +335,22 @@ uint8_t read_p3c1(io_port_t, io_width_t)
 	return 0;
 }
 
-void VGA_SetupAttr() {
-	if (IS_EGAVGA_ARCH) {
+void VGA_SetupAttr()
+{
+	// The Attribute Control Registers can be written on port 3C0h on EGA
+	// and VGA.
+	if (machine == MCH_EGA || machine == MCH_VGA) {
 		IO_RegisterWriteHandler(0x3c0, write_p3c0, io_width_t::byte);
-		if (machine==MCH_EGA)
-			IO_RegisterWriteHandler(0x3c1, write_p3c0,
-			                        io_width_t::byte); // alias on EGA
-		if (IS_VGA_ARCH) {
-			IO_RegisterReadHandler(0x3c0, read_p3c0, io_width_t::byte);
-			IO_RegisterReadHandler(0x3c1, read_p3c1, io_width_t::byte);
-		}
+	}
+
+	if (machine == MCH_EGA) {
+		IO_RegisterWriteHandler(0x3c1, write_p3c0, io_width_t::byte);
+	}
+
+	if (machine == MCH_VGA) {
+		// The Attribute Control Registers canbe also read from port
+		// 3C1h on VGA only.
+		IO_RegisterReadHandler(0x3c1, read_p3c1, io_width_t::byte);
+		IO_RegisterReadHandler(0x3c0, read_p3c0, io_width_t::byte);
 	}
 }
