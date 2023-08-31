@@ -522,38 +522,6 @@ static void populate_requested_vsync_settings()
 	}
 }
 
-/* This function is SDL_EventFilter which is being called when event is
- * pushed into the SDL event queue.
- *
- * WARNING: Be very careful of what you do in this function, as it may run in
- * a different thread!
- *
- * Read documentation for SDL_AddEventWatch for more details.
- */
-static int watch_sdl_events(void *userdata, SDL_Event *e)
-{
-	/* There's a significant difference in handling of window resize
-	 * events in different OSes. When handling resize in main event loop
-	 * we receive continuous stream of events (as expected) on Linux,
-	 * but only single event after user stopped dragging cursor on Windows
-	 * and macOS.
-	 *
-	 * Watching resize events here gives us continuous stream on
-	 * every OS.
-	 */
-	if (e->type == SDL_WINDOWEVENT && e->window.event == SDL_WINDOWEVENT_RESIZED) {
-		SDL_Window *win = SDL_GetWindowFromID(e->window.windowID);
-		if (win == (SDL_Window *)userdata) {
-			const int w = e->window.data1;
-			const int h = e->window.data2;
-			// const int id = e->window.windowID;
-			// DEBUG_LOG_MSG("SDL: Resizing window %d to %dx%d", id, w, h);
-			HandleVideoResize(w, h);
-		}
-	}
-	return 0;
-}
-
 /* On macOS, as we use a nicer external icon packaged in App bundle.
  *
  * Visual Studio bundles .ico file specified in winres.rc into the
@@ -1307,6 +1275,10 @@ static SDL_Window* SetWindowMode(const SCREEN_TYPES screen_type, const int width
 			return nullptr;
 		}
 
+		// Certain functionality (like setting viewport) doesn't work properly
+		// before initial window events are received.
+		SDL_PumpEvents();
+
 		if (screen_type == SCREEN_TEXTURE) {
 			if (sdl.renderer) {
 				SDL_DestroyRenderer(sdl.renderer);
@@ -1342,8 +1314,6 @@ static SDL_Window* SetWindowMode(const SCREEN_TYPES screen_type, const int width
 			}
 		}
 #endif
-		SDL_AddEventWatch(watch_sdl_events, sdl.window);
-
 		check_and_handle_dpi_change(sdl.window, screen_type);
 
 		GFX_RefreshTitle();
@@ -3722,7 +3692,9 @@ static void HandleVideoResize(int width, int height)
 	NewMouseScreenParams();
 }
 
-/* This function is triggered after window is shown to fixup sdl.window
+/* TODO: Properly set window parameters and remove this routine.
+ *
+ * This function is triggered after window is shown to fixup sdl.window
  * properties in predictable manner on all platforms.
  *
  * In specific usecases, certain sdl.window properties might be left unitialized
@@ -3964,6 +3936,7 @@ bool GFX_Events()
 				// The window size has changed either as a
 				// result of an API call or through the system
 				// or user changing the window size.
+				HandleVideoResize(event.window.data1, event.window.data2);
 				FinalizeWindowState();
 				maybe_auto_switch_shader();
 				continue;
