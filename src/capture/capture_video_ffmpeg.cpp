@@ -344,7 +344,7 @@ bool FfmpegAudioEncoder::Init(const uint32_t sample_rate)
 		LOG_ERR("FFMPEG: Failed to allocate audio frame");
 		return false;
 	}
-	frame->format      = codec_context->sample_fmt;
+	frame->format      = static_cast<int>(codec_context->sample_fmt);
 	frame->nb_samples  = codec_context->frame_size;
 	frame->sample_rate = codec_context->sample_rate;
 	frame->pts         = 0;
@@ -436,7 +436,7 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 	}
 	frame->width  = width;
 	frame->height = height;
-	frame->format = codec_context->pix_fmt;
+	frame->format = static_cast<int>(codec_context->pix_fmt);
 	frame->pts    = 0;
 	// 0 means auto-align based on current CPU
 	constexpr int memory_alignment = 0;
@@ -543,9 +543,10 @@ void FfmpegEncoder::EncodeVideo()
 			// that later by setting the video encoder to a set
 			// value and then re-initalising the FFmpeg rescaler or
 			// doing our own rescaling.
-			assert(image->params.width == video_encoder.width);
-			assert(image->params.height == video_encoder.height);
-			assert(image->params.pixel_format == video_encoder.pixel_format);
+			const auto &image_params = image->params;
+			assert(image_params.width == video_encoder.width);
+			assert(image_params.height == video_encoder.height);
+			assert(image_params.pixel_format == video_encoder.pixel_format);
 
 			// It wants a pointer to an array of linesizes so that
 			// it can work with planar formats.
@@ -564,7 +565,7 @@ void FfmpegEncoder::EncodeVideo()
 			// Convert the palette data from RGB0
 			// To a packed uint32_t as required by ffmpeg.
 			// Should work regardless of endianess.
-			if (image->params.pixel_format == PixelFormat::Indexed8) {
+			if (image_params.pixel_format == PixelFormat::Indexed8) {
 				uint8_t *in_ptr = image->palette_data;
 				uint32_t *out_ptr = reinterpret_cast<uint32_t *>(image->palette_data);
 				for (int i = 0; i < 256; ++i) {
@@ -582,7 +583,7 @@ void FfmpegEncoder::EncodeVideo()
 			          image_pointers,
 			          linesizes,
 			          srcSliceY,
-			          image->params.height,
+			          image_params.height,
 			          video_encoder.frame->data,
 			          video_encoder.frame->linesize);
 
