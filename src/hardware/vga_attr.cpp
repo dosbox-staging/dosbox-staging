@@ -28,7 +28,7 @@
 static void update_palette_mappings()
 {
 	for (uint8_t i = 0; i < NumCgaColors; ++i) {
-		VGA_ATTR_SetPalette(i, vga.attr.palette[i]);
+		VGA_ATTR_SetPalette(i, PaletteRegister{vga.attr.palette[i]});
 	}
 }
 
@@ -72,14 +72,15 @@ void VGA_ATTR_SetEGAMonitorPalette(EGAMonitorMode m)
 	update_palette_mappings();
 }
 
-void VGA_ATTR_SetPalette(uint8_t index, uint8_t val)
+void VGA_ATTR_SetPalette(uint8_t index, const PaletteRegister value)
 {
+	assert(index < 16);
+
 	// The attribute table stores only 6 bits
-	val &= 63;
-	vga.attr.palette[index] = val;
+	vga.attr.palette[index] = value.index;
 
 	// Apply the plane mask
-	val = vga.attr.palette[index & vga.attr.color_plane_enable];
+	auto val = vga.attr.palette[index & vga.attr.color_plane_enable];
 
 	// Replace bits 4-5 if configured
 	if (vga.attr.mode_control.palette_bits_5_4_select) {
@@ -146,7 +147,8 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 		case 0x0e:
 		case 0x0f:
 			if (vga.attr.disabled & 0x1) {
-				VGA_ATTR_SetPalette(vga.attr.index, val);
+				const auto index = vga.attr.index;
+				VGA_ATTR_SetPalette(index, PaletteRegister{val});
 			}
 			break;
 
