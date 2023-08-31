@@ -1914,10 +1914,10 @@ ImageInfo setup_drawing()
 			// EGA card is in color mode
 			if ((1.0 / vga.draw.delay.htotal) > 19.0) {
 				// 64 color EGA mode
-				VGA_ATTR_SetEGAMonitorPalette(EGA);
+				VGA_ATTR_SetEGAMonitorPalette(EgaMonitorMode::Ega);
 			} else {
 				// 16 color CGA mode compatibility
-				VGA_ATTR_SetEGAMonitorPalette(CGA);
+				VGA_ATTR_SetEGAMonitorPalette(EgaMonitorMode::Cga);
 			}
 		} else {
 			// EGA card in monochrome mode
@@ -1927,7 +1927,7 @@ ImageInfo setup_drawing()
 			// this would only be a problem if a program sets the
 			// adapter to monochrome mode and still expects color
 			// output. Such a program should be shot to the moon...
-			VGA_ATTR_SetEGAMonitorPalette(MONO);
+			VGA_ATTR_SetEGAMonitorPalette(EgaMonitorMode::Mono);
 		}
 	}
 
