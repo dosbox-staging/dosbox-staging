@@ -60,7 +60,7 @@ Note:  Each read or write of this register will cycle through first the
 
 enum {DAC_READ,DAC_WRITE};
 
-static void VGA_DAC_SendColor(const uint8_t index, const uint8_t src)
+static void vga_dac_send_color(const uint8_t index, const uint8_t src)
 {
 	const auto& src_rgb666 = vga.dac.rgb[src];
 
@@ -75,12 +75,12 @@ static void VGA_DAC_SendColor(const uint8_t index, const uint8_t src)
 	ReelMagic_RENDER_SetPalette(index, r8, g8, b8);
 }
 
-static void VGA_DAC_UpdateColor(const uint16_t index)
+static void vga_dac_update_color(const uint16_t index)
 {
 	const auto maskIndex = index & vga.dac.pel_mask;
 	assert(maskIndex <= UINT8_MAX); // lookup into 256-byte table
 	assert(index <= UINT8_MAX);     // lookup into 256-byte table
-	VGA_DAC_SendColor(static_cast<uint8_t>(index), static_cast<uint8_t>(maskIndex));
+	vga_dac_send_color(static_cast<uint8_t>(index), static_cast<uint8_t>(maskIndex));
 }
 
 static void write_p3c6(io_port_t, io_val_t value, io_width_t)
@@ -90,7 +90,7 @@ static void write_p3c6(io_port_t, io_val_t value, io_width_t)
 		LOG(LOG_VGAMISC, LOG_NORMAL)("VGA:DCA:Pel Mask set to %X", val);
 		vga.dac.pel_mask = val;
 		for (uint16_t i = 0; i < 256; i++)
-			VGA_DAC_UpdateColor( i );
+			vga_dac_update_color( i );
 	}
 }
 
@@ -148,13 +148,13 @@ static void write_p3c9(io_port_t, io_val_t value, io_width_t)
 		switch (vga.mode) {
 		case M_VGA:
 		case M_LIN8:
-			VGA_DAC_UpdateColor( vga.dac.write_index );
+			vga_dac_update_color( vga.dac.write_index );
 			if ( GCC_UNLIKELY( vga.dac.pel_mask != 0xff)) {
 				const auto index = vga.dac.write_index;
 				if ( (index & vga.dac.pel_mask) == index ) {
 					for (uint16_t i = index + 1u; i < 256; i++)
 						if ( (i & vga.dac.pel_mask) == index )
-							VGA_DAC_UpdateColor(static_cast<uint8_t>(i));
+							vga_dac_update_color(static_cast<uint8_t>(i));
 				}
 			} 
 			break;
@@ -162,7 +162,7 @@ static void write_p3c9(io_port_t, io_val_t value, io_width_t)
 			// Check for attributes and DAC entry link
 			for (uint8_t i = 0; i < NumCgaColors; ++i) {
 				if (vga.dac.combine[i] == vga.dac.write_index) {
-					VGA_DAC_SendColor(i, vga.dac.write_index);
+					vga_dac_send_color(i, vga.dac.write_index);
 				}
 			}
 		}
@@ -207,7 +207,7 @@ void VGA_DAC_CombineColor(const uint8_t attr, const uint8_t pal) {
 	vga.dac.combine[attr]=pal;
 	if (vga.mode != M_LIN8) {
 		// used by copper demo; almost no video card seems to suport it
-		VGA_DAC_SendColor( attr, pal );
+		vga_dac_send_color( attr, pal );
 	}
 }
 
@@ -221,7 +221,7 @@ void VGA_DAC_SetEntry(const uint8_t entry, const uint8_t red,
 
 	for (uint8_t i = 0; i < NumCgaColors; ++i) {
 		if (vga.dac.combine[i] == entry) {
-			VGA_DAC_SendColor(i, i);
+			vga_dac_send_color(i, i);
 		}
 	}
 }
