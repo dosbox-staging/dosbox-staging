@@ -1069,7 +1069,7 @@ void VGA_ChangedBank(void);
 // DAC/Attribute functions
 void VGA_DAC_CombineColor(uint8_t attr, uint8_t pal);
 void VGA_DAC_SetEntry(Bitu entry, uint8_t red, uint8_t green, uint8_t blue);
-void VGA_ATTR_SetPalette(uint8_t index, uint8_t val);
+void VGA_ATTR_SetPalette(uint8_t index, const PaletteRegister value);
 
 enum EGAMonitorMode { CGA, EGA, MONO };
 

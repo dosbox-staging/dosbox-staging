@@ -29,6 +29,7 @@
 #include "render.h"
 #include "rgb.h"
 #include "vga.h"
+#include "../ints/int10.h"
 
 /*
 3C6h (R/W):  PEL Mask
