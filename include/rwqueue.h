@@ -77,6 +77,9 @@ public:
 	void Stop();
 
 	// non-blocking call
+	void Clear();
+
+	// non-blocking call
 	size_t MaxCapacity() const;
 
 	// non-blocking call

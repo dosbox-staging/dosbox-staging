@@ -75,6 +75,16 @@ void RWQueue<T>::Stop()
 }
 
 template <typename T>
+void RWQueue<T>::Clear()
+{
+	mutex.lock();
+	queue.clear();
+	mutex.unlock();
+
+	has_room.notify_all();
+}
+
+template <typename T>
 size_t RWQueue<T>::MaxCapacity() const
 {
 	return capacity;
