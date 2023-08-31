@@ -49,7 +49,7 @@ template <typename T>
 void RWQueue<T>::Start()
 {
 	if (is_running) {
-		return;;
+		return;
 	}
 	mutex.lock();
 	is_running = true;
@@ -285,4 +285,4 @@ extern "C" {
 // FFmpeg Encoder
 template class RWQueue<int16_t>;
 template class RWQueue<RenderedImage>;
-template class RWQueue<AVPacket *>;
+template class RWQueue<AVPacket*>;

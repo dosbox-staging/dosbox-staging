@@ -101,7 +101,7 @@ static void add_avi_chunk(const char* tag, const uint32_t size,
 	host_writed(index + 12, size);
 }
 
-void ZMBVEncoder::capture_video_finalise()
+void ZMBVEncoder::CaptureVideoFinalise()
 {
 	if (!video.handle) {
 		return;
@@ -266,7 +266,7 @@ void ZMBVEncoder::capture_video_finalise()
 	video.handle = nullptr;
 }
 
-void ZMBVEncoder::capture_video_add_audio_data(const uint32_t sample_rate,
+void ZMBVEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
                                   const uint32_t num_sample_frames,
                                   const int16_t* sample_frames)
 {
@@ -320,7 +320,7 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 	video.audio.bytes_written   = 0;
 }
 
-void ZMBVEncoder::capture_video_add_frame(const RenderedImage& image, const float frames_per_second)
+void ZMBVEncoder::CaptureVideoAddFrame(const RenderedImage& image, const float frames_per_second)
 {
 	const auto& src = image.params;
 	assert(src.width <= SCALER_MAXWIDTH);
@@ -332,7 +332,7 @@ void ZMBVEncoder::capture_video_add_frame(const RenderedImage& image, const floa
 	if (video.handle && (video.width != video_width || video.height != video_height ||
 	                     video.pixel_format != src.pixel_format ||
 	                     video.frames_per_second != frames_per_second)) {
-		capture_video_finalise();
+		CaptureVideoFinalise();
 	}
 
 	ZMBV_FORMAT format;
