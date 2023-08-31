@@ -106,7 +106,8 @@ static const char* capture_type_to_string(const CaptureType type)
 	case CaptureType::RawOplStream: return "rawl OPL output";
 	case CaptureType::RadOplInstruments: return "RAD capture";
 
-	case CaptureType::VideoAvi: case CaptureType::VideoMp4: return "video output";
+	case CaptureType::VideoAvi:
+	case CaptureType::VideoMp4: return "video output";
 
 	case CaptureType::RawImage: return "raw image";
 	case CaptureType::UpscaledImage: return "upscaled image";
@@ -126,7 +127,8 @@ static const char* capture_type_to_basename(const CaptureType type)
 	case CaptureType::RawOplStream: return "rawopl";
 	case CaptureType::RadOplInstruments: return "oplinstr";
 
-	case CaptureType::VideoAvi: case CaptureType::VideoMp4: return "video";
+	case CaptureType::VideoAvi:
+	case CaptureType::VideoMp4: return "video";
 
 	case CaptureType::RawImage:
 	case CaptureType::UpscaledImage:
@@ -262,7 +264,7 @@ static bool maybe_create_capture_dir_and_init_capture_indices()
 	                                             CaptureType::RawOplStream,
 	                                             CaptureType::RadOplInstruments,
 	                                             CaptureType::VideoAvi,
-												 CaptureType::VideoMp4,
+	                                             CaptureType::VideoMp4,
 	                                             CaptureType::RawImage,
 	                                             CaptureType::UpscaledImage,
 	                                             CaptureType::RenderedImage,
@@ -415,8 +417,8 @@ void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_
 		[[fallthrough]];
 	case CaptureState::InProgress:
 		video_encoder->CaptureVideoAddAudioData(sample_rate,
-	                                            num_sample_frames,
-	                                            sample_frames);
+		                                        num_sample_frames,
+		                                        sample_frames);
 		break;
 	}
 
@@ -605,15 +607,15 @@ static void capture_init(Section* sec)
 	const std::string prefs = secprop->Get_string("default_image_capture_formats");
 
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
-	#if C_FFMPEG
+#if C_FFMPEG
 	if (secprop->Get_string("video_encoder") == std::string("ffmpeg")) {
-		video_encoder  = std::make_unique<FfmpegEncoder>();
+		video_encoder = std::make_unique<FfmpegEncoder>();
 	} else {
 		video_encoder = std::make_unique<ZMBVEncoder>();
 	}
-	#else
+#else
 	video_encoder = std::make_unique<ZMBVEncoder>();
-	#endif // C_FFMPEG
+#endif // C_FFMPEG
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&capture_destroy, changeable_at_runtime);
@@ -701,15 +703,13 @@ static void init_capture_dosbox_settings(Section_prop& secprop)
 	        "Keybindings for taking single screenshots in specific formats are also\n"
 	        "available.");
 
-	const char *video_encoders[] = {"zmbv", "ffmpeg", nullptr};
+	const char* video_encoders[] = {"zmbv", "ffmpeg", nullptr};
 	str_prop = secprop.Add_string("video_encoder", when_idle, "zmbv");
 	assert(str_prop);
 	str_prop->Set_values(video_encoders);
-	str_prop->Set_help(
-		"Set the video encoder to use for video capture.\n"
-		"  zmbv:   Zip Motion Block Video DOSBox lossless compression (default).\n"
-		"  ffmpeg: H.264 video and AAC audio."
-	);
+	str_prop->Set_help("Set the video encoder to use for video capture.\n"
+	                   "  zmbv:   Zip Motion Block Video DOSBox lossless compression (default).\n"
+	                   "  ffmpeg: H.264 video and AAC audio.");
 }
 
 void CAPTURE_AddConfigSection(const config_ptr_t& conf)

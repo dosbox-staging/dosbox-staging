@@ -28,11 +28,11 @@
 class VideoEncoder {
 public:
 	virtual void CaptureVideoAddFrame(const RenderedImage& image,
-	                                     const float frames_per_second) = 0;
+	                                  const float frames_per_second) = 0;
 
 	virtual void CaptureVideoAddAudioData(const uint32_t sample_rate,
-	                                          const uint32_t num_sample_frames,
-	                                          const int16_t* sample_frames) = 0;
+	                                      const uint32_t num_sample_frames,
+	                                      const int16_t* sample_frames) = 0;
 
 	virtual void CaptureVideoFinalise() = 0;
 
@@ -42,11 +42,11 @@ public:
 class ZMBVEncoder : public VideoEncoder {
 public:
 	void CaptureVideoAddFrame(const RenderedImage& image,
-	                             const float frames_per_second) override;
+	                          const float frames_per_second) override;
 
 	void CaptureVideoAddAudioData(const uint32_t sample_rate,
-	                                  const uint32_t num_sample_frames,
-	                                  const int16_t* sample_frames) override;
+	                              const uint32_t num_sample_frames,
+	                              const int16_t* sample_frames) override;
 
 	void CaptureVideoFinalise() override;
 };
@@ -148,11 +148,11 @@ public:
 	FfmpegEncoder& operator=(const FfmpegEncoder&) = delete;
 
 	void CaptureVideoAddFrame(const RenderedImage& image,
-	                             const float frames_per_second) override;
+	                          const float frames_per_second) override;
 
-	void CaptureVideoAddAudioData (const uint32_t sample_rate,
-	                                  const uint32_t num_sample_frames,
-	                                  const int16_t* sample_frames) override;
+	void CaptureVideoAddAudioData(const uint32_t sample_rate,
+	                              const uint32_t num_sample_frames,
+	                              const int16_t* sample_frames) override;
 
 	void CaptureVideoFinalise() override;
 
@@ -174,4 +174,4 @@ private:
 };
 
 #endif // C_FFMPEG
-#endif //DOSBOX_CAPTURE_VIDEO_H
+#endif // DOSBOX_CAPTURE_VIDEO_H

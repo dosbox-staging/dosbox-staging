@@ -18,9 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "checks.h"
 #include "capture.h"
 #include "capture_video.h"
+#include "checks.h"
 #include "math_utils.h"
 
 #if C_FFMPEG
@@ -32,7 +32,7 @@ CHECK_NARROWING();
 // Some of the CI machines don't support the new functions.
 // And some give deprecated warnings on the new functions.
 #ifdef _MSC_VER
-#pragma warning(disable:4996)
+#pragma warning(disable : 4996)
 #else
 // This also works on Clang
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -88,7 +88,7 @@ static AVPixelFormat map_pixel_format(PixelFormat format)
 }
 
 void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
-                                            const float frames_per_second)
+                                         const float frames_per_second)
 {
 	const int rounded_fps = iroundf(frames_per_second);
 	if (!video_encoder.is_initalised) {
@@ -122,7 +122,6 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 	           video_encoder.height != image.params.height ||
 	           video_encoder.pixel_format != image.params.pixel_format ||
 	           video_encoder.frames_per_second != rounded_fps) {
-
 		CaptureVideoFinalise();
 		if (!video_encoder.Init(image.params.width,
 		                        image.params.height,
@@ -148,8 +147,8 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 }
 
 void FfmpegEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
-                                                 const uint32_t num_sample_frames,
-                                                 const int16_t* sample_frames)
+                                             const uint32_t num_sample_frames,
+                                             const int16_t* sample_frames)
 {
 	if (!audio_encoder.is_initalised) {
 		if (!audio_encoder.Init(sample_rate)) {
@@ -206,7 +205,9 @@ void FfmpegEncoder::StopQueues()
 
 	audio_encoder.queue.Stop();
 	video_encoder.queue.Stop();
-	waiter.wait(lock, [this] { return !audio_encoder.is_working && !video_encoder.is_working; });
+	waiter.wait(lock, [this] {
+		return !audio_encoder.is_working && !video_encoder.is_working;
+	});
 	muxer.queue.Stop();
 	waiter.wait(lock, [this] { return !muxer.is_working; });
 
@@ -214,7 +215,8 @@ void FfmpegEncoder::StopQueues()
 	// to have stale items left in it if it is never started
 	// due to one of the encoders failing to init.
 	// Explicitly clear the queues out so we don't have to worry
-	// about stale work with incorrect video/audio specs for the next recording.
+	// about stale work with incorrect video/audio specs for the next
+	// recording.
 	audio_encoder.queue.Clear();
 	video_encoder.queue.Clear();
 	muxer.queue.Clear();
@@ -241,12 +243,13 @@ bool FfmpegMuxer::Init(FfmpegVideoEncoder& video_encoder,
                        FfmpegAudioEncoder& audio_encoder)
 {
 	const int32_t output_file_index = get_next_capture_index(CaptureType::VideoMp4);
-	const std::string output_file_path = generate_capture_filename(CaptureType::VideoMp4,
-	                                                          output_file_index).string();
+	const std::string output_file_path =
+	        generate_capture_filename(CaptureType::VideoMp4, output_file_index)
+	                .string();
 
 	// Only one of these needs to be specified. We're using filename.
-	constexpr AVOutputFormat *oformat = nullptr;
-	constexpr char *format_name = nullptr;
+	constexpr AVOutputFormat* oformat = nullptr;
+	constexpr char* format_name       = nullptr;
 	avformat_alloc_output_context2(&format_context,
 	                               oformat,
 	                               format_name,
@@ -326,8 +329,8 @@ bool FfmpegAudioEncoder::Init(const uint32_t sample_rate)
 		return false;
 	}
 
-	codec_context->sample_fmt  = AV_SAMPLE_FMT_FLTP;
-	codec_context->sample_rate = static_cast<int>(sample_rate);
+	codec_context->sample_fmt     = AV_SAMPLE_FMT_FLTP;
+	codec_context->sample_rate    = static_cast<int>(sample_rate);
 	codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
 
 	if (avcodec_open2(codec_context, codec, nullptr) < 0) {
@@ -340,10 +343,10 @@ bool FfmpegAudioEncoder::Init(const uint32_t sample_rate)
 		LOG_ERR("FFMPEG: Failed to allocate audio frame");
 		return false;
 	}
-	frame->format      = static_cast<int>(codec_context->sample_fmt);
-	frame->nb_samples  = codec_context->frame_size;
-	frame->sample_rate = codec_context->sample_rate;
-	frame->pts         = 0;
+	frame->format         = static_cast<int>(codec_context->sample_fmt);
+	frame->nb_samples     = codec_context->frame_size;
+	frame->sample_rate    = codec_context->sample_rate;
+	frame->pts            = 0;
 	frame->channel_layout = codec_context->channel_layout;
 	// 0 means auto-align based on current CPU
 	constexpr int memory_alignment = 0;
@@ -357,17 +360,17 @@ bool FfmpegAudioEncoder::Init(const uint32_t sample_rate)
 	// Can resample the audio rate in the same function call if needed
 	// (currently no resampling) I believe there is an extra step or two
 	// required for actual resampling (converting timing and such)
-	constexpr int log_offset = 0;
-	constexpr void *log_context = nullptr;
-	resampler_context = swr_alloc_set_opts(nullptr,
-	                                       AV_CH_LAYOUT_STEREO,
-	                                       AV_SAMPLE_FMT_FLTP,
-	                                       codec_context->sample_rate,
-	                                       AV_CH_LAYOUT_STEREO,
-	                                       AV_SAMPLE_FMT_S16,
-	                                       codec_context->sample_rate,
-	                                       log_offset,
-	                                       log_context);
+	constexpr int log_offset    = 0;
+	constexpr void* log_context = nullptr;
+	resampler_context           = swr_alloc_set_opts(nullptr,
+                                               AV_CH_LAYOUT_STEREO,
+                                               AV_SAMPLE_FMT_FLTP,
+                                               codec_context->sample_rate,
+                                               AV_CH_LAYOUT_STEREO,
+                                               AV_SAMPLE_FMT_S16,
+                                               codec_context->sample_rate,
+                                               log_offset,
+                                               log_context);
 	if (!resampler_context) {
 		LOG_ERR("FFMPEG: Failed to allocate audio resampler");
 		return false;
@@ -441,20 +444,21 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 		return false;
 	}
 
-	// Initalise the re-scaler. Currently only used to convert to YuV color space.
-	constexpr SwsFilter *source_filter = nullptr;
-	constexpr SwsFilter *dest_filter = nullptr;
-	constexpr double *parameters = nullptr;
-	rescaler_contex = sws_getContext(width,
-	                                 height,
-	                                 map_pixel_format(pixel_format),
-	                                 width,
-	                                 height,
-	                                 AV_PIX_FMT_YUV420P,
-	                                 SWS_BILINEAR,
-	                                 source_filter,
-	                                 dest_filter,
-	                                 parameters);
+	// Initalise the re-scaler. Currently only used to convert to YuV color
+	// space.
+	constexpr SwsFilter* source_filter = nullptr;
+	constexpr SwsFilter* dest_filter   = nullptr;
+	constexpr double* parameters       = nullptr;
+	rescaler_contex                    = sws_getContext(width,
+                                         height,
+                                         map_pixel_format(pixel_format),
+                                         width,
+                                         height,
+                                         AV_PIX_FMT_YUV420P,
+                                         SWS_BILINEAR,
+                                         source_filter,
+                                         dest_filter,
+                                         parameters);
 	if (!rescaler_contex) {
 		LOG_ERR("FFMPEG: Failed to get swscaler context");
 		return false;
@@ -517,7 +521,9 @@ void FfmpegEncoder::EncodeVideo()
 {
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
-		waiter.wait(lock, [this] { return video_encoder.is_initalised || is_shutting_down; });
+		waiter.wait(lock, [this] {
+			return video_encoder.is_initalised || is_shutting_down;
+		});
 		if (is_shutting_down) {
 			return;
 		}
@@ -537,7 +543,7 @@ void FfmpegEncoder::EncodeVideo()
 			// that later by setting the video encoder to a set
 			// value and then re-initalising the FFmpeg rescaler or
 			// doing our own rescaling.
-			const auto &image_params = image->params;
+			const auto& image_params = image->params;
 			assert(image_params.width == video_encoder.width);
 			assert(image_params.height == video_encoder.height);
 			assert(image_params.pixel_format == video_encoder.pixel_format);
@@ -550,9 +556,10 @@ void FfmpegEncoder::EncodeVideo()
 			linesizes[0] = image->pitch;
 			linesizes[1] = 0;
 
-			// Pointers to data to correspond with the linesizes above.
-			// The 2nd pointer is only used for Palette formats.
-			uint8_t *image_pointers[2];
+			// Pointers to data to correspond with the linesizes
+			// above. The 2nd pointer is only used for Palette
+			// formats.
+			uint8_t* image_pointers[2];
 			image_pointers[0] = image->image_data;
 			image_pointers[1] = image->palette_data;
 
@@ -560,14 +567,16 @@ void FfmpegEncoder::EncodeVideo()
 			// To a packed uint32_t as required by ffmpeg.
 			// Should work regardless of endianess.
 			if (image_params.pixel_format == PixelFormat::Indexed8) {
-				uint8_t *in_ptr = image->palette_data;
-				uint32_t *out_ptr = reinterpret_cast<uint32_t *>(image->palette_data);
+				uint8_t* in_ptr   = image->palette_data;
+				uint32_t* out_ptr = reinterpret_cast<uint32_t*>(
+				        image->palette_data);
 				for (int i = 0; i < 256; ++i) {
-					uint32_t red = *in_ptr++;
-					uint32_t green = *in_ptr++;
-					uint32_t blue = *in_ptr++;
+					uint32_t red    = *in_ptr++;
+					uint32_t green  = *in_ptr++;
+					uint32_t blue   = *in_ptr++;
 					uint32_t unused = *in_ptr++;
-					*out_ptr++ = (unused << 24) | (red << 16) | (green << 8) | blue;
+					*out_ptr++ = (unused << 24) | (red << 16) |
+					             (green << 8) | blue;
 				}
 			}
 
@@ -611,7 +620,9 @@ void FfmpegEncoder::Mux()
 {
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
-		waiter.wait(lock, [this] { return muxer.is_initalised || is_shutting_down; });
+		waiter.wait(lock, [this] {
+			return muxer.is_initalised || is_shutting_down;
+		});
 		if (is_shutting_down) {
 			return;
 		}
@@ -654,18 +665,23 @@ void FfmpegEncoder::EncodeAudio()
 
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
-		waiter.wait(lock, [this] { return audio_encoder.is_initalised || is_shutting_down; });
+		waiter.wait(lock, [this] {
+			return audio_encoder.is_initalised || is_shutting_down;
+		});
 		if (is_shutting_down) {
 			return;
 		}
 		audio_encoder.is_working = true;
 		lock.unlock();
 
-		// Number of samples per channel (frames) the AVFrame has been allocated to hold
+		// Number of samples per channel (frames) the AVFrame has been
+		// allocated to hold
 		const int frame_capacity = audio_encoder.frame->nb_samples;
 
-		// 2 samples per frame. Number of int16_ts requested from the queue.
-		const size_t sample_capacity = static_cast<size_t>(frame_capacity) * SamplesPerFrame;
+		// 2 samples per frame. Number of int16_ts requested from the
+		// queue.
+		const size_t sample_capacity = static_cast<size_t>(frame_capacity) *
+		                               SamplesPerFrame;
 
 		for (;;) {
 			audio_encoder.queue.BulkDequeue(audio_data, sample_capacity);
@@ -677,9 +693,11 @@ void FfmpegEncoder::EncodeAudio()
 				LOG_ERR("FFMPEG: Failed to make audio frame writable");
 				continue;
 			}
-			const int received_frames = static_cast<int>(audio_data.size()) / static_cast<int>(SamplesPerFrame);
-			const uint8_t* audio_ptr   = reinterpret_cast<uint8_t*>(
-                                audio_data.data());
+			const int received_frames = static_cast<int>(
+			                                    audio_data.size()) /
+			                            static_cast<int>(SamplesPerFrame);
+			const uint8_t* audio_ptr = reinterpret_cast<uint8_t*>(
+			        audio_data.data());
 			const int converted_frames =
 			        swr_convert(audio_encoder.resampler_context,
 			                    audio_encoder.frame->data,
