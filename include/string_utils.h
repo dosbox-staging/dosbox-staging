@@ -392,7 +392,7 @@ std::optional<float> parse_prefixed_percentage(const char prefix,
 
 // tries to convert string to integer,
 // returns value only if succeeded
-std::optional<int> to_int(const std::string& value);
+std::optional<int> to_int(const std::string& value, const int base = 10);
 
 template <typename... Args>
 std::string format_string(const std::string& format, const Args&... args) noexcept

@@ -351,10 +351,13 @@ std::optional<float> parse_prefixed_percentage(const char prefix, const std::str
 	return parse_prefixed_value(prefix, s, min_percentage, max_percentage);
 }
 
-std::optional<int> to_int(const std::string& value)
+std::optional<int> to_int(const std::string& value, const int base)
 {
 	try {
-		return std::stoi(value);
+		// Do not store number of characters processed
+		constexpr std::size_t* pos = nullptr;
+
+		return std::stoi(value, pos, base);
 	} catch (...) {
 		return {};
 	}

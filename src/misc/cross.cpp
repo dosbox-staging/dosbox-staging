@@ -23,13 +23,12 @@
 
 #include <cerrno>
 #include <clocale>
-#include <string>
-#include <vector>
-
 #include <limits.h>
 #include <stdlib.h>
+#include <string>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
 
 #if C_COREFOUNDATION
 #	include <CoreFoundation/CoreFoundation.h>
@@ -44,6 +43,7 @@
 #	include <shlobj.h>
 #else
 #	include <libgen.h>
+#include <sys/xattr.h>
 #endif
 
 #if defined HAVE_PWD_H
@@ -781,6 +781,10 @@ std::string cfstr_to_string(CFStringRef source)
 	assert(lang.empty());
 	return lang;
 }
+
+// ***************************************************************************
+// Local time support
+// ***************************************************************************
 
 namespace cross {
 

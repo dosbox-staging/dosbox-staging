@@ -501,7 +501,8 @@ public:
 	bool FileStat(const char* name, FileStat_Block* const stat_block) override;
 	void EmptyCache(void) override;
 
-	FILE* create_file_in_overlay(const char* dos_filename, const char* mode);
+	std::pair<FILE*, std_fs::path> create_file_in_overlay(const char* dos_filename,
+	                                                      const char* mode);
 
 	Bits UnMount(void) override;
 	bool TestDir(char* dir) override;
