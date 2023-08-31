@@ -52,20 +52,21 @@ public:
 	uint16_t GetInformation(void) override;
 	bool UpdateDateTimeFromHost(void) override;
 public:
-	uint32_t firstCluster;
-	uint32_t seekpos;
-	uint32_t filelength;
-	uint32_t currentSector;
-	uint32_t curSectOff;
-	uint8_t sectorBuffer[BytePerSector];
+	uint32_t firstCluster               = 0;
+	uint32_t seekpos                    = 0;
+	uint32_t filelength                 = 0;
+	uint32_t currentSector              = 0;
+	uint32_t curSectOff                 = 0;
+	uint8_t sectorBuffer[BytePerSector] = {0};
 	/* Record of where in the directory structure this file is located */
-	uint32_t dirCluster;
-	uint32_t dirIndex;
+	uint32_t dirCluster = 0;
+	uint32_t dirIndex   = 0;
 
-	bool loadedSector;
-	fatDrive *myDrive;
+	bool set_archive_on_close = false;
+
+	bool loadedSector = false;
+	fatDrive* myDrive = nullptr;
 };
-
 
 /* IN - char * filename: Name in regular filename format, e.g. bob.txt */
 /* OUT - char * filearray: Name in DOS directory format, eleven char, e.g. bob     txt */
@@ -85,20 +86,11 @@ static void convToDirFile(char *filename, char *filearray) {
 	}
 }
 
-fatFile::fatFile(const char* /*name*/,
-                 uint32_t startCluster,
-                 uint32_t fileLen,
-                 fatDrive *useDrive)
-	: firstCluster(startCluster),
-	  seekpos(0),
-	  filelength(fileLen),
-	  currentSector(0),
-	  curSectOff(0),
-	  sectorBuffer{0},
-	  dirCluster(0),
-	  dirIndex(0),
-	  loadedSector(false),
-	  myDrive(useDrive)
+fatFile::fatFile(const char* /*name*/, uint32_t startCluster, uint32_t fileLen,
+                 fatDrive* useDrive)
+        : firstCluster(startCluster),
+          filelength(fileLen),
+          myDrive(useDrive)
 {
 	uint32_t seekto = 0;
 	open = true;
@@ -173,7 +165,9 @@ bool fatFile::Write(uint8_t * data, uint16_t *size) {
 	sizedec = *size;
 	sizecount = 0;
 
-	if(seekpos < filelength && *size == 0) {
+	set_archive_on_close = true;
+
+	if (seekpos < filelength && *size == 0) {
 		/* Truncate file to current position */
 		if (firstCluster != 0)
 			myDrive->deleteClustChain(firstCluster, seekpos);
@@ -291,13 +285,19 @@ bool fatFile::Seek(uint32_t *pos, uint32_t type) {
 	return true;
 }
 
-bool fatFile::Close() {
+bool fatFile::Close()
+{
 	if ((flags & 0xf) != OPEN_READ && !myDrive->isReadOnly()) {
-		if (newtime) {
+		if (newtime || set_archive_on_close) {
 			direntry tmpentry;
 			myDrive->directoryBrowse(dirCluster, &tmpentry, dirIndex);
-			tmpentry.modTime = time;
-			tmpentry.modDate = date;
+			if (newtime) {
+				tmpentry.modTime = time;
+				tmpentry.modDate = date;
+			}
+			if (set_archive_on_close) {
+				tmpentry.attrib |= DOS_ATTR_ARCHIVE;
+			}
 			myDrive->directoryChange(dirCluster, &tmpentry, dirIndex);
 		}
 
@@ -306,6 +306,8 @@ bool fatFile::Close() {
 			myDrive->writeSector(currentSector, sectorBuffer);
 		}
 	}
+
+	set_archive_on_close = false;
 
 	return true;
 }
@@ -1048,7 +1050,7 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 			fileEntry.loFirstClust = 0;
 		}
 		fileEntry.entrysize = 0;
-		fileEntry.attrib    = check_cast<uint8_t>(attributes);
+		fileEntry.attrib = check_cast<uint8_t>(attributes | DOS_ATTR_ARCHIVE);
 		fileEntry.modTime   = DOS_GetBiosTimePacked();
 		fileEntry.modDate   = DOS_GetBiosDatePacked();
 		directoryChange(dirClust, &fileEntry, subEntry);
@@ -1061,7 +1063,7 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 		if(!getDirClustNum(name, &dirClust, true)) return false;
 		fileEntry = {};
 		memcpy(&fileEntry.entryname, &pathName[0], 11);
-		fileEntry.attrib  = check_cast<uint8_t>(attributes);
+		fileEntry.attrib = check_cast<uint8_t>(attributes | DOS_ATTR_ARCHIVE);
 		fileEntry.modTime = DOS_GetBiosTimePacked();
 		fileEntry.modDate = DOS_GetBiosDatePacked();
 		addDirectoryEntry(dirClust, fileEntry);

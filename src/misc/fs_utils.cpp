@@ -26,6 +26,7 @@
 #include <fstream>
 
 #include "checks.h"
+#include "dos_inc.h"
 #include "dos_system.h"
 #include "std_filesystem.h"
 
@@ -142,4 +143,15 @@ std::time_t to_time_t(const std_fs::file_time_type &fs_time)
 	        fs_time - fs_datum + fs_to_sys_delta);
 
 	return system_clock::to_time_t(sys_time);
+}
+
+// ***************************************************************************
+// Local drive file/directory attribute handling
+// ***************************************************************************
+
+uint16_t local_drive_create_dir(const std_fs::path& path)
+{
+	const auto result = create_dir(path.c_str(), 0775);
+
+	return (result == 0) ? DOSERR_NONE : DOSERR_ACCESS_DENIED;
 }

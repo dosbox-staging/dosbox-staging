@@ -171,7 +171,8 @@ private:
 
 class localFile : public DOS_File {
 public:
-	localFile(const char* name, FILE* handle, const char* basedir);
+	localFile(const char* name, const std_fs::path& path, FILE* handle,
+	          const char* basedir);
 	localFile(const localFile&)            = delete; // prevent copying
 	localFile& operator=(const localFile&) = delete; // prevent assignment
 	bool Read(uint8_t* data, uint16_t* size) override;
@@ -189,15 +190,25 @@ public:
 	{
 		return basedir;
 	}
+	std_fs::path GetPath() const
+	{
+		return path;
+	}
 	FILE* fhandle = nullptr; // todo handle this properly
 private:
-	const char *basedir;
-	long stream_pos = 0;
+	const std_fs::path path = {};
+	const char* basedir     = nullptr;
+	long stream_pos         = 0;
+
 	bool ftell_and_check();
 	void fseek_and_check(int whence);
 	bool fseek_to_and_check(long pos, int whence);
-	bool read_only_medium;
-	enum { NONE,READ,WRITE } last_action;
+
+	bool read_only_medium     = false;
+	bool set_archive_on_close = false;
+
+	enum class LastAction : uint8_t { None, Read, Write };
+	LastAction last_action = LastAction::None;
 };
 
 /* The following variable can be lowered to free up some memory.

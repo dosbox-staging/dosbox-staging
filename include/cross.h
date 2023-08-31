@@ -25,11 +25,11 @@
 #include "dosbox.h"
 
 #include <cstdio>
-#include <string>
-#include <vector>
 #include <ctime>
+#include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <vector>
 
 #if defined (_MSC_VER)						/* MS Visual C++ */
 #include <direct.h>
@@ -116,7 +116,7 @@ class Cross {
 public:
 	static void GetPlatformConfigName(std::string& in);
 	static void CreatePlatformConfigDir(std::string& in);
-	static bool IsPathAbsolute(std::string const& in);
+	static bool IsPathAbsolute(const std::string& in);
 };
 
 #if defined (WIN32)
