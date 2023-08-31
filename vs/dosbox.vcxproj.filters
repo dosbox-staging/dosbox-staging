@@ -10,7 +10,10 @@
     <ClCompile Include="..\src\capture\capture_midi.cpp">
       <Filter>src\capture</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\capture\capture_video.cpp">
+    <ClCompile Include="..\src\capture\capture_video_ffmpeg.cpp">
+      <Filter>src\capture</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\capture\capture_video_zmbv.cpp">
       <Filter>src\capture</Filter>
     </ClCompile>
     <ClCompile Include="..\src\capture\image\image_capturer.cpp">

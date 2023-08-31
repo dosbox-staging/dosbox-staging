@@ -2,6 +2,7 @@ libcapture_sources = files(
     'capture.cpp',
     'capture_audio.cpp',
     'capture_midi.cpp',
+    'capture_video_ffmpeg.cpp',
     'capture_video_zmbv.cpp',
     'image/image_capturer.cpp',
     'image/image_decoder.cpp',
