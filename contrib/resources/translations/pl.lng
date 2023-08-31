@@ -147,7 +147,7 @@ Zatrzymanie emulacji, kiedy okno emulatora traci fokus  (domyślnie wyłączone)
 Plik używany do wczytania/zapisania mapowania klawiszy/zdarzeń.
 Pre-konfigurowane pliki są dostępne w katalogu 'resources/mapperfiles'. Można
 je załadować podając nazwę, np.: 'mapperfile = xbox/xenon2.map'
-Uwaga: opcja wiersza poleceń '-resetmapper' tylko usuwa domyślny plik.
+Uwaga: Opcja wiersza poleceń '-resetmapper' tylko usuwa domyślny plik.
 .
 :CONFIG_SCREENSAVER
 Ustawienie wygaszacza ekranu, ma pierwszeństwo przed zmienną środowiskową
@@ -157,10 +157,12 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
 Domyślnie 'auto'.
 .
 :CONFIG_LANGUAGE
-Język emulatora: de, en, es, fr, it, nl, pl lub ru (domyślnie nieustawiony).
-Uwaga: Ustawienie ma pierwszeństwo przed zmienną środowiskową 'LANG'. Pliki
-tłumaczeń dla poszczególnych języków znajdują się w dostarczonym katalogu
-'resources/translations'.
+Język interfejsu: de, en, es, fr, it, nl, pl lub ru
+(domyślnie nieustawiony - wybiera język angielski).
+Uwagi:
+  - Ustawienie ma pierwszeństwo przed zmienną środowiskową 'LANG'.
+  - Pliki tłumaczeń dla poszczególnych języków znajdują się w dostarczonym
+    katalogu 'resources/translations'.
 .
 :CONFIG_MACHINE
 Typ emulowanej karty graficznej lub komputera:
@@ -270,6 +272,11 @@ zapisem, wciąż pozwalając tym grom na ich otwieranie.
 Drugie zastosowanie: jeśli używasz systemu plików z funkcją copy-on-write,
 lub sieciowego systemu plików, to ustawienie pozwala pominąć operację zapisu.
 .
+:CONFIG_SHELL_CONFIG_SHORTCUTS
+Zezwala na bezpośrednie zarządzania konfiguracją (domyślnie włączone), np.
+zamiast 'config -set sbtype sb16' wystarczy wykonać 'sbtype sb16', a zamiast
+'config -get sbtype' wystarczy wykonać polecenie 'sbtype'.
+.
 :CONFIG_FRAMESKIP
 Użyj ustawienia 'host_rate' z sekcji [sdl].
 .
@@ -283,41 +290,22 @@ Dotyczy tylko trybów graficznych z prostokątnymi pikselami (np. 320x200,
 .
 :CONFIG_INTEGER_SCALING
 Ogranicza współczynnik poziomego lub pionowego skalowania obrazu do wartości
-całkowitych. Zawsze zachowuje właściwe proporcje obrazu, co może wymusić
-niecałkowity współczynnik skalowania w drugim wymiarze. Ograniczenie jest
-automatycznie wyłączane, jeśli rozdzielczość wyświetlanego obrazu jest
-mniejsza od wielkości obszaru wyświetlania (jak dla 'off').
-  off:         Brak ograniczeń we współczynniku skalowania obrazu, obraz
-               wypełnia cały obszar wyświetlania (domyślne).
-  horizontal:  Ogranicza skalowanie obrazu w poziomie do wartości całkowitych.
+całkowitych. Proporcje obrazu są zachowywane według ustawienia 'aspect', co
+może wymusić niecałkowity współczynnik skalowania w drugim wymiarze.
+Ograniczenie jest automatycznie wyłączane, jeśli rozdzielczość wyświetlanego
+obrazu jest mniejsza od wielkości obszaru wyświetlania (jak dla 'off').
+  auto:        Używa 'vertical' dla shaderów symulujących obraz monitora
+               kineskopowego, 'off' w pozostałych przypadkach (domyślne).
   vertical:    Ogranicza skalowanie obrazu w pionie do wartości całkowitych.
-.
-:CONFIG_FORCE_VGA_SINGLE_SCAN
-Zawsze renderuje obraz z pojedynczych linii obrazu (domyślnie wyłączone),
-nawet jeśli tryb graficzny używałby podwójnych linii, jak w trybach VGA
-o rozdzielczości poniżej 400 linii.
-Jest to użyteczne przy shaderach symulujących wygląd ekranu CRT, albo do
-polepszenia wydajności na słabszych komputerach.
-Uwaga: Domyślny shader 'interpolation/sharp.glsl' oraz tryby wyświetlania
-       'texturenb' i 'openglnb' wymuszają pojedyncze linie obrazu.
-       W połączeniu z 'integer_scaling' pojedyncze linie obrazu zapewniają
-       dokładniejsze skalowanie dzięki mniejszym krokom.
-.
-:CONFIG_FORCE_NO_PIXEL_DOUBLING
-Nie podwaja pikseli w żadnych trybach graficznych (domyślnie wyłączone).
-Podwajanie jest domyślnie używane w większości trybów graficznych poniżej 640
-pikseli w poziomie, co pozwala na bardziej realistyczną emulację monitorów
-CRT przy pomocy shaderów.
-Wyłączenie tej podwajania pikseli pozwala lepiej emulować monitor o niskiej
-rozdzielczości, polepsza też wydajność na słabszych komputerach.
-Uwaga: Domyślny shader 'interpolation/sharp.glsl' oraz tryby wyświetlania
-       'texturenb' i 'openglnb' wymuszają pojedyncze piksele obrazu.
-       W połączeniu z 'integer_scaling' pojedyncze piksele zapewniają
-       dokładniejsze skalowanie dzięki mniejszym krokom.
+               Zalecane przy używaniu shaderów symulujących obraz monitora
+               kineskopowego, pozwala uniknąć nierównych linii skanowania.
+  horizontal:  Ogranicza skalowanie obrazu w poziomie do wartości całkowitych.
+  off:         Brak ograniczeń we współczynniku skalowania obrazu, obraz
+               wypełnia cały obszar wyświetlania.
 .
 :CONFIG_MONOCHROME_PALETTE
-Barwa obrazu monochromatycznego (domyślnie 'white'). Działa tylko z systemami
-'hercules' oraz 'cga_mono'. Możesz zmieniać barwę klawiszem F11.
+Barwa obrazu monochromatycznego (domyślnie 'amber'). Działa tylko z systemami
+'hercules' oraz 'cga_mono'. Barwę można zmieniać skrótem klawiszowym.
 .
 :CONFIG_CGA_COLORS
 Odwzorowanie barwy CGA RGBI, dotyczy wszystkich maszyn CGA lub lepszych.
@@ -352,21 +340,38 @@ Ich domyślne wartości, jako 6-cyfrowe liczby szesnastkowe, to odpowiednio:
 .
 :CONFIG_SCALER
 Skalery programowe zostały usunięte, musisz użyć skalowania sprzętowego:
-  - Zamiast normal2x/3x, użyj ustawienia 'windowresolution'.
+  - Zamiast normal2x/3x, użyj ustawień 'windowresolution' oraz
+    'viewport_resolution', rozważ użycie 'integer_scaling'.
   - W innym przypadku spróbuj użyj opcji 'glshader'.
 .
 :CONFIG_GLSHADER
-Wybór shadera w trybach OpenGL.
-Albo 'default' (domyślny), albo 'none' (żaden), albo ścieżka względna lub
+Wybór shadera w trybach OpenGL. Lista dostępnych shaderów adaptacyjnych,
+symulujących obraz monitora kineskopowego (CRT):
+  crt-auto:          Shader symulujący obraz monitora z okresu wypuszczenia
+                     danej gry (domyślnie). Odpowiedni shader jest wybierany
+                     bazując na trybie graficznym i rozdzielczości, bez
+                     uwzględniania opcji 'machine' - zatem nawet podczas
+                     emulowania systemu z kartą VGA, w przypadku uruchomienia
+                     gry korzystającej z trybu EGA wyświetlone zostaną wyraźne
+                     linie skanowania charakterystyczne dla monitora EGA.
+  crt-auto-machine:  Podobne do 'crt-auto', ale wybiera monitor na podstawie
+                     opcji 'machine', np. gry korzystające z trybu CGA lub EGA
+                     zostaną wyświetlone jak na monitorze VGA.
+  crt-auto-arcade:   Symuluje monitor maszyny arcade lub domowy monitor,
+                     typowo mniej ostry od monitora PC, z grubymi liniami
+                     skanowania w trybach graficznych niższej rozdzielczości.
+                     Może być użyteczne np. dla gier przeniesionych do systemu
+                     DOS z komputerów typu Amiga.
+Oprócz tego dostępne są opcje 'sharp' oraz 'none' , albo ścieżka względna lub
 bezwzględna do pliku z shaderem GLSL, albo jeden z shaderów z listy
 wyświetlanej opcją wiersza poleceń '--list-glshaders'.
-Wartość default' wybiera shader 'interpolation/sharp.glsl'.
-Rozszerzenie '.glsl' można pominąć.
+Rozszerzenie '.glsl' można w każdym przypadku pominąć.
 .
 :CONFIG_COMPOSITE
 Włącza trybu sygnału kompozytowego (domyślnie 'auto').
-Porada: dopasuj ustawienia poniżej przy pomocy skrótów klawiszowych, następnie
-odczytaj ustawienia z konsoli tekstowej i wpisz je do pliku konfiguracyjnego.
+Porada: Dopasuj ustawienia poniżej przy pomocy skrótów klawiszowych, następnie
+        odczytaj ustawienia z konsoli tekstowej i wpisz je do pliku
+        konfiguracyjnego.
 .
 :CONFIG_ERA
 Epoka sygnału kompozytowego. Wartość 'auto' (domyślne) wybiera 'new' dla PCjr,
@@ -424,7 +429,7 @@ Optymalizacje wydajności emulowania karty 3dfx Voodoo:
    1:  Renderowanie wielowątkowe (domyślne).
    2:  Wyłączenie filtrowania bilinearnego.
    3:  Obydwie optymalizacje (zarówno z punktu 1, jak i 2).
-Uwaga: emulacja jest programowa, nie używa OpenGL.
+Uwaga: Emulacja jest wyłącznie programowa, nie używa OpenGL.
 .
 :CONFIG_CAPTURE_DIR
 Katalog do zapisywania przechwyconego dźwięku, muzyki w formacie MIDI, zrzutów
@@ -471,7 +476,7 @@ Również włącza przejmowanie kursora środkowym przyciskiem w trybie 'seamles
 :CONFIG_MOUSE_MULTI_DISPLAY_AWARE
 Pozwala na działanie trybu 'seamless' i zwolnienie kursora myszy na pełnym
 ekranie, jeśli system ma więcej niż jeden monitor (domyślnie włączone).
-Uwagi: Wyłącz, jeśli niepoprawnie wykrywa więcej niż jeden monitor, gdy w
+Uwaga: Wyłącz, jeśli niepoprawnie wykrywa więcej niż jeden monitor, gdy w
        rzeczywistości tylko jeden powinien być użyty. Może się tak zdarzyć,
        jeśli używasz zduplikowanego wyświetlania (mirroringu), lub podłączyłeś
        amplituner przez HDMI, a używasz go tylko do dźwięku.
@@ -492,9 +497,10 @@ kiedy kursor myszy jest przejęty w trybie okienkowym.
 .
 :CONFIG_DOS_MOUSE_DRIVER
 Włącza wbudowany sterownik myszy dla programów DOS (domyślnie włączone).
-Uwagi: Wyłącz, jeśli zamierzasz używać oryginalnego sterownika MOUSE.COM.
-       Podczas bootowania systemu operacyjnego z obrazu dysku wbudowany
-       sterownik jest automatycznie wyłączany.
+Uwagi:
+  - Wyłącz, jeśli zamierzasz używać oryginalnego sterownika MOUSE.COM.
+  - Podczas bootowania systemu operacyjnego z obrazu dysku wbudowany
+    sterownik jest automatycznie wyłączany.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
 Natychmiastowa aktualizacja liczników ruchu, bez oczekiwania na przerwanie
@@ -528,7 +534,7 @@ Domyślny model myszy podłączonej do portu COM (serial):
   3button+msm:    Automatyczna selekcja pomiędzy '3button' oraz 'msm'.
   wheel+msm:      Automatyczna selekcja pomiędzy 'wheel' oraz 'msm'.
 Domyślnie 'wheel+msm'.
-Uwagi: Ten rodzaj myszy należy włączyć w sekcji [serial].
+Uwaga: Ten rodzaj myszy należy włączyć w sekcji [serial].
 .
 :CONFIG_NOSOUND
 Włącza tryb cichy (domyślnie wyłączony).
@@ -602,15 +608,15 @@ Domyślnie 'auto'.
 :CONFIG_MIDICONFIG
 Parametry wybranego interfejsu MIDI. Zazwyczaj jest to identyfikator lub nazwa
 syntetyzatora - można je sprawdzić poleceniem DOSu 'MIXER /LISTMIDI'.
-- Opcja nie ma znaczenia, jeśli użyty został wbudowany syntetyzator MIDI
-  (mididevice = fluidsynth lub mt32).
-- Dla systemu Linux i podsystemu dźwiękowego ALSA, wyświetl listę portów MIDI
-  poleceniem 'aconnect -l' i wpisz wybrany, np. 'midiconfig=14:0' dla klienta
-  numer 14 i portu 0.
-- Fizyczny Roland MT-32 w płytą główną w wersji 0 może potrzebować opóźnienia,
-  inaczej przepełni się jego wewnętrzny bufor. W takim wypadku dodaj parametr
-  'delaysysex', np.: 'midiconfig=2 delaysysex'.
-Więcej informacji (po angielsku) znajdziesz w pliku README/Manual.
+Uwagi:
+  - Opcja nie ma znaczenia, jeśli użyty został wbudowany syntetyzator MIDI
+    (mididevice = fluidsynth lub mt32).
+  - Dla systemu Linux i podsystemu dźwiękowego ALSA, wyświetl listę portów
+    MIDI poleceniem 'aconnect -l' i wpisz wybrany, np. 'midiconfig=14:0' dla
+    klienta numer 14 i portu 0.
+  - Fizyczny Roland MT-32 w płytą główną w wersji 0 może potrzebować
+    opóźnienia, inaczej przepełni się jego wewnętrzny bufor. W takim wypadku
+    dodaj parametr 'delaysysex', np.: 'midiconfig=2 delaysysex'.
 .
 :CONFIG_MPU401
 Typ emulowanego interfejsu MPU-401 (domyślnie 'intelligent').
@@ -976,12 +982,12 @@ Procent obszaru ruchu do ignorowania (domyślnie 10).
 100 przekształca joystick w cyfrowy.
 .
 :CONFIG_USE_JOY_CALIBRATION_HOTKEYS
-Włącza skróty klawiszowe do kalibracji osi x i y joysticka w czasie
+Włącza skróty klawiszowe do kalibracji osi X oraz Y joysticka w czasie
 rzeczywistym. Używaj tylko, jeśli zawiedzie kalibracja joysticka
 zaimplementowana w grze, a zmiana innych ustawień nie pomaga.
   - Ctrl/Cmd + klawisze kursora - zmieniają skalowanie:
-    - lewo/prawo - oś x
-    - góra/dół - oś y
+    - lewo/prawo - oś X
+    - góra/dół - oś Y
   - Alt + klawisze kursora - zmieniają offset (przesunięcie)
   - Ctrl+Delete, Ctrl+Home - resetowanie ustawień kalibracji
 Za każdym razem, kiedy zmienisz ustawienia, zostaną one wypisane w konsoli
@@ -1078,19 +1084,21 @@ sieci 'libslirp' z parametrami jak poniżej:
   10.0.2.2       : Adres IP bramy i serwera usługi DHCP.
   10.0.2.3       : Adres IP wirtualnego serwera DNS,
   10.0.2.15      : Pierwszy adres IP przydzielany przez DHCP. Twoje IP!
-Uwagi: Wewnątrz DOSa używanie w/w sieci wymaga sterownika pakietowego karty
-       NE2000, klienta DHCP i stosu TCP/IP. Jeśli chcesz uruchomić serwer gry
-       wieloosobowej, niezbędne może być przekierowanie portów z systemu
-       gospodarza do DOSa, oraz z routera do gospodarza.
+Uwagi:
+  - Wewnątrz DOSa używanie w/w sieci wymaga sterownika pakietowego karty
+    NE2000, klienta DHCP i stosu TCP/IP.
+  - Jeśli chcesz uruchomić serwer gry wieloosobowej, niezbędne może być
+    przekierowanie portów z systemu gospodarza do DOSa, oraz z routera
+    do gospodarza.
 .
 :CONFIG_NICBASE
 Adres bazowy (I/O) karty sieciowej NE2000 (domyślnie 300).
-Uwaga: Adresy 220 oraz 240 ogą być niedostępne, gdyż są domyślnie przypisane
+Uwaga: Adresy 220 oraz 240 mogą być niedostępne, gdyż są domyślnie przypisane
        do kart muzycznych Sound Blaster oraz Gravis UltraSound.
 .
 :CONFIG_NICIRQ
 Numer przerwania (IRQ) karty sieciowej NE2000 (domyślnie 3).
-Uwagi: Przerwania 3 oraz 5 mogą być niedostępne, gdyż są domyślnie przypisane
+Uwaga: Przerwania 3 oraz 5 mogą być niedostępne, gdyż są domyślnie przypisane
        do portu COM2 i karty muzycznej Gravis UltraSound.
 .
 :CONFIG_MACADDR
@@ -1110,9 +1118,10 @@ Zakres portów można podać krócej, przy pomocy myślnika:
 Mapowania i zakresy można łączyć, np.:
   hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)
   Ten przykład przekieruje porty od 8040 do 8080 jako 20 do 60 w DOSie.
-Uwagi: Jeśli długość zakresów będzie się różnić, zostanie użyta krótsza.
-       W razie konfliktu portów gospodarza, tylko pierwszy zostanie ustawiony.
-       W razie konfliktu portów gościa, tylko ostatni zostanie ustawiony.
+Uwagi:
+  - Jeśli długość zakresów będzie się różnić, zostanie użyta krótsza.
+  - W razie konfliktu portów gospodarza, tylko pierwszy zostanie ustawiony.
+  - W razie konfliktu portów gościa, tylko ostatni zostanie ustawiony.
 .
 :CONFIG_UDP_PORT_FORWARDS
 Przekierowuje jeden lub więcej portów UDP z systemu gospodarza do DOSu.
@@ -2272,7 +2281,7 @@ Uwagi:
   Przełącznik /noshow pozwala zmienić ustawienia bez ich wyświetlenia.
 
 Przykłady:
-  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=green]mixer[reset] [color=cyan]cdaudio[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
   [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]opl[reset] [color=white]150[reset] [color=white]r50[reset] [color=cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
