@@ -132,10 +132,10 @@ bool lookup_shell_cmd(std::string name, SHELL_Cmd &shell_cmd)
 bool DOS_Shell::ExecuteConfigChange(const char* const cmd_in, const char* const line)
 {
 	assert(control);
-	const auto section_dos = static_cast<Section_prop*>(
-	        control->GetSection("dos"));
-	assert(section_dos);
-	if (!section_dos->Get_bool("shell_config_shortcuts")) {
+	const auto section_dosbox = static_cast<Section_prop*>(
+	        control->GetSection("dosbox"));
+	assert(section_dosbox);
+	if (!section_dosbox->Get_bool("shell_config_shortcuts")) {
 		return false;
 	}
 
