@@ -1928,21 +1928,8 @@ RenderParams setup_drawing()
 
 	// Determine video mode info, render dimensions, and source & render
 	// pixel aspect ratios
-
-	VideoMode video_mode = {};
-
 	uint32_t render_width  = 0;
 	uint32_t render_height = 0;
-
-	// True only if we're rendering a double scanned VGA mode as single
-	// scanned (so rendering half the lines only, e.g., only 200 lines for
-	// the double-scanned 320x200 13h VGA mode).
-	bool force_single_scan = false;
-
-	// If true, the rendered image will be doubled horizontally post-render
-	// via a scaler (to fake double scanning for CGA modes on VGA, and for
-	// double-scanned VESA modes).
-	bool double_height = false;
 
 	// If true, the rendered image will be doubled horizontally post-render
 	// via a scaler. This is done to achieve a (mostly) constant "emulated
@@ -1950,7 +1937,19 @@ RenderParams setup_drawing()
 	// pitch falling too low for less than ~640 pixel wide modes).
 	bool double_width = false;
 
+	// If true, the rendered image will be doubled vertically post-render
+	// via a scaler (to fake double scanning for CGA modes on VGA, and for
+	// double-scanned VESA modes).
+	bool double_height = false;
+
+	// True only if we're rendering a double scanned VGA mode as single
+	// scanned (so rendering half the lines only, e.g., only 200 lines for
+	// the double-scanned 320x200 13h VGA mode).
+	bool force_single_scan = false;
+
 	Fraction render_pixel_aspect_ratio = {1};
+
+	VideoMode video_mode = {};
 
 	PixelFormat pixel_format;
 	switch (vga.mode) {
