@@ -57,7 +57,8 @@ static struct {
 		int32_t midi               = 1;
 		int32_t raw_opl_stream     = 1;
 		int32_t rad_opl_instrument = 1;
-		int32_t video              = 1;
+		int32_t video_avi          = 1;
+		int32_t video_mp4          = 1;
 		int32_t image              = 1;
 		int32_t serial_log         = 1;
 	} next_index = {};
@@ -105,7 +106,7 @@ static const char* capture_type_to_string(const CaptureType type)
 	case CaptureType::RawOplStream: return "rawl OPL output";
 	case CaptureType::RadOplInstruments: return "RAD capture";
 
-	case CaptureType::Video: return "video output";
+	case CaptureType::VideoAvi: case CaptureType::VideoMp4: return "video output";
 
 	case CaptureType::RawImage: return "raw image";
 	case CaptureType::UpscaledImage: return "upscaled image";
@@ -125,7 +126,7 @@ static const char* capture_type_to_basename(const CaptureType type)
 	case CaptureType::RawOplStream: return "rawopl";
 	case CaptureType::RadOplInstruments: return "oplinstr";
 
-	case CaptureType::Video: return "video";
+	case CaptureType::VideoAvi: case CaptureType::VideoMp4: return "video";
 
 	case CaptureType::RawImage:
 	case CaptureType::UpscaledImage:
@@ -145,7 +146,8 @@ static const char* capture_type_to_extension(const CaptureType type)
 	case CaptureType::RawOplStream: return ".dro";
 	case CaptureType::RadOplInstruments: return ".rad";
 
-	case CaptureType::Video: return ".avi";
+	case CaptureType::VideoAvi: return ".avi";
+	case CaptureType::VideoMp4: return ".mp4";
 
 	case CaptureType::RawImage:
 	case CaptureType::UpscaledImage:
@@ -226,7 +228,8 @@ static void set_next_capture_index(const CaptureType type, int32_t index)
 		capture.next_index.rad_opl_instrument = index;
 		break;
 
-	case CaptureType::Video: capture.next_index.video = index; break;
+	case CaptureType::VideoAvi: capture.next_index.video_avi = index; break;
+	case CaptureType::VideoMp4: capture.next_index.video_mp4 = index; break;
 
 	case CaptureType::RawImage:
 	case CaptureType::UpscaledImage:
@@ -258,7 +261,8 @@ static bool maybe_create_capture_dir_and_init_capture_indices()
 	                                             CaptureType::Midi,
 	                                             CaptureType::RawOplStream,
 	                                             CaptureType::RadOplInstruments,
-	                                             CaptureType::Video,
+	                                             CaptureType::VideoAvi,
+												 CaptureType::VideoMp4,
 	                                             CaptureType::RawImage,
 	                                             CaptureType::UpscaledImage,
 	                                             CaptureType::RenderedImage,
@@ -294,7 +298,8 @@ int32_t get_next_capture_index(const CaptureType type)
 	case CaptureType::RadOplInstruments:
 		return capture.next_index.rad_opl_instrument++;
 
-	case CaptureType::Video: return capture.next_index.video++;
+	case CaptureType::VideoAvi: return capture.next_index.video_avi++;
+	case CaptureType::VideoMp4: return capture.next_index.video_mp4++;
 
 	case CaptureType::RawImage:
 	case CaptureType::UpscaledImage:
