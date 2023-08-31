@@ -790,7 +790,8 @@ union AttributeAddressRegister {
 	// 11h     - Overscan Color Register
 	// 12h     - Color Plane Enable Register
 	// 13h     - Horizontal Pixel Panning Register
-	bit_view<0, 4> attribute_address;
+	// 14h     - Color Plane Enable (VGA only)
+	bit_view<0, 5> attribute_address;
 
 	// Determines whether the palette dual-ported RAM should be accessed by
 	// the host or by the EGA display memory.
@@ -846,6 +847,10 @@ struct VgaAttr {
 	// the Attribute Address Register or one of the Attribute Registers.
 	bool is_address_mode = true;
 
+	// The index of the register selected by Attribute Address Register.
+	// The next byte write to 3C0h will be loaded into this register.
+	uint8_t index = 0;
+
 	uint8_t palette[16] = {};
 
 	AttributeModeControlRegister mode_control = {};
@@ -854,7 +859,6 @@ struct VgaAttr {
 	uint8_t overscan_color         = 0;
 	uint8_t color_plane_enable     = 0;
 	uint8_t color_select           = 0;
-	uint8_t index                  = 0;
 
 	// Used for disabling the screen.
 	//
