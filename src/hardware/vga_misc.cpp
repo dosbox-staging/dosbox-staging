@@ -36,7 +36,7 @@ uint8_t vga_read_p3da(io_port_t, io_width_t)
 	uint8_t retval = 4; // bit 2 set, needed by Blues Brothers
 	const auto timeInFrame = PIC_FullIndex() - vga.draw.delay.framestart;
 
-	vga.internal.attrindex=false;
+	vga.attr.is_address_mode = true;
 	vga.tandy.pcjr_flipflop=false;
 
 	// 3DAh (R):  Status Register

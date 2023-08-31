@@ -109,10 +109,10 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 {
 	auto val = check_cast<uint8_t>(value);
 
-	if (!vga.internal.attrindex) {
+	if (vga.attr.is_address_mode) {
 		vga.attr.index = val & 0x1F;
 
-		vga.internal.attrindex = true;
+		vga.attr.is_address_mode = false;
 
 		if (val & 0x20) {
 			vga.attr.disabled &= ~1;
@@ -126,7 +126,7 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 		return;
 
 	} else {
-		vga.internal.attrindex = false;
+		vga.attr.is_address_mode = true;
 
 		switch (vga.attr.index) {
 		// Palette Registers (EGA & VGA)
@@ -292,8 +292,6 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 
 static uint8_t read_p3c1(io_port_t, io_width_t)
 {
-	// vga.internal.attrindex=false;
-
 	switch (vga.attr.index) {
 	// Palette Registers (EGA & VGA)
 	case 0x00:

@@ -172,10 +172,6 @@ constexpr auto Vga720PixelClockHz = 28322000;
 #define S3_XGA_32BPP 0x30
 #define S3_XGA_CMASK (S3_XGA_8BPP|S3_XGA_16BPP|S3_XGA_32BPP)
 
-struct VgaInternal {
-	bool attrindex = false;
-};
-
 struct VgaConfig {
 	// Memory handlers
 	Bitu mh_mask = 0;
@@ -846,6 +842,10 @@ struct VgaSeq {
 };
 
 struct VgaAttr {
+	// Internal flip-flop is used to multiplex the 3C0h port to load either
+	// the Attribute Address Register or one of the Attribute Registers.
+	bool is_address_mode = true;
+
 	uint8_t palette[16] = {};
 
 	AttributeModeControlRegister mode_control = {};
@@ -995,7 +995,6 @@ struct VgaType {
 	uint8_t misc_output  = 0;
 	VgaDraw draw         = {};
 	VgaConfig config     = {};
-	VgaInternal internal = {};
 
 	/* Internal module groups */
 	VgaSeq seq     = {};
