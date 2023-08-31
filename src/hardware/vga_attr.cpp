@@ -94,7 +94,7 @@ void VGA_ATTR_SetPalette(uint8_t index, uint8_t val)
 	VGA_DAC_CombineColor(index, val);
 }
 
-uint8_t read_p3c0(io_port_t, io_width_t)
+static uint8_t read_p3c0(io_port_t, io_width_t)
 {
 	// Wcharts, Win 3.11 & 95 SVGA
 	uint8_t retval = vga.attr.index & 0x1f;
@@ -104,7 +104,7 @@ uint8_t read_p3c0(io_port_t, io_width_t)
 	return retval;
 }
 
-void write_p3c0(io_port_t, io_val_t value, io_width_t)
+static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 {
 	auto val = check_cast<uint8_t>(value);
 
@@ -288,7 +288,7 @@ void write_p3c0(io_port_t, io_val_t value, io_width_t)
 	}
 }
 
-uint8_t read_p3c1(io_port_t, io_width_t)
+static uint8_t read_p3c1(io_port_t, io_width_t)
 {
 	// vga.internal.attrindex=false;
 
