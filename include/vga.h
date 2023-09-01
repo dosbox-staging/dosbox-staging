@@ -996,13 +996,14 @@ struct VgaLfb {
 };
 
 struct VgaType {
-	VGAModes mode = {}; /* The mode the vga system is in */
+	// The mode the vga system is in
+	VGAModes mode = {};
 
 	uint8_t misc_output  = 0;
 	VgaDraw draw         = {};
 	VgaConfig config     = {};
 
-	/* Internal module groups */
+	// Internal module groups
 	VgaSeq seq     = {};
 	VgaAttr attr   = {};
 	VgaCrtc crtc   = {};
@@ -1039,9 +1040,9 @@ struct VgaType {
 		int32_t gq = 0;
 		int32_t bi = 0;
 		int32_t bq = 0;
-	} composite = {};
 
-	int32_t sharpness = 0;
+		int32_t sharpness = 0;
+	} composite = {};
 };
 
 // Hercules & CGA monochrome palette

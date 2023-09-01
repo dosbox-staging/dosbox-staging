@@ -197,7 +197,7 @@ static uint8_t *Composite_Process(uint8_t border, uint32_t blocks, bool double_w
 		for (uint32_t x = 0; x < blocks * 4; ++x) {
 			int c = (i[0] + i[0]) << 3;
 			int d = (i[-1] + i[1]) << 3;
-			int y = ((c + d) << 8) + vga.sharpness * (c - d);
+			int y = ((c + d) << 8) + vga.composite.sharpness * (c - d);
 			++i;
 			write_unaligned_uint32_at(TempLine, idx++,
 			                          byte_clamp(y) * 0x10101);
@@ -226,7 +226,7 @@ static uint8_t *Composite_Process(uint8_t border, uint32_t blocks, bool double_w
 			const int d = i[-1] + i[1];
 
 			const int y = left_shift_signed(c + d, 8) +
-			              vga.sharpness * (c - d);
+			              vga.composite.sharpness * (c - d);
 
 			const int rr = y + vga.composite.ri * (ii) +
 			               vga.composite.rq * (q);

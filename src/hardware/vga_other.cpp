@@ -640,7 +640,7 @@ static void update_cga16_color()
 	vga.composite.bq = static_cast<int32_t>(-bi * iq_adjust_q + bq * iq_adjust_i);
 	// clang-format on
 
-	vga.sharpness = convergence.get() * 256 / 100;
+	vga.composite.sharpness = convergence.get() * 256 / 100;
 }
 
 enum CRT_KNOB : uint8_t {
