@@ -153,11 +153,12 @@ const char* to_string(const PixelFormat pf);
 
 uint8_t get_bits_per_pixel(const PixelFormat pf);
 
-
-// Extra details about a bitmap image that represents the DOS video output.
+// Extra information about a bitmap image that represents a single frame of
+// DOS video output.
 //
 // E.g. for the 320x200 256-colour 13h VGA mode with double-scanning
 // and pixel-doubling enabled:
+//
 //   - width = 320 (will be pixel-doubled post-render via double_width)
 //   - height = 400 (2*200 lines because we're rendering scan-doubled)
 //   - pixel_aspect_ratio = 5/6 (1:1.2) (because the PAR is meant for the
@@ -166,38 +167,41 @@ uint8_t get_bits_per_pixel(const PixelFormat pf);
 //   - double_height = false (we're rendering scan-doubled)
 //
 struct ImageInfo {
-	// Width of the rendered image (prior to optional width-doubling)
+	// The image data has this many pixels per image row (so this is the
+	// image width prior to optional width-doubling).
 	uint16_t width = 0;
 
-	// Height of the rendered image (prior to optional height-doubling)
+	// The image data has this many rows (so this is the image height prior
+	// to optional height-doubling).
 	uint16_t height = 0;
 
-	// If true, the rendered image is doubled horizontally after via
-	// a scaler (e.g. to achieve pixel-doubling)
+	// If true, the final image should be doubled horizontally via a scaler
+	// before outputting it (e.g. to achieve pixel-doubling).
 	bool double_width = false;
 
-	// If true, the rendered image is doubled vertically via a
-	// scaler (e.g. to achieve fake double-scanning)
+	// If true, the final image should be doubled vertically via a scaler
+	// before outputting it (e.g. to achieve fake double-scanning).
 	bool double_height = false;
 
-	// If true, we're dealing with a double-scanned VGA mode that was forced
-	// to be rendered as single-scanned
+	// If true, we're dealing with a double-scanned VGA mode that was
+	// force-rendered as single-scanned.
 	bool force_single_scan = false;
 
-	// Pixel aspect ratio to be applied to the final image (post
-	// width & height doubling) so it appears as intended on screen.
-	// (video_mode.pixel_aspect_ratio holds the "nominal" pixel
-	// aspect ratio of the source video mode)
+	// Pixel aspect ratio to be applied to the final image, *after*
+	// optional width and height doubling, so it appears as intended.
+	// (`video_mode.pixel_aspect_ratio` holds the "nominal" pixel
+	// aspect ratio of the source video mode, which can be different).
 	Fraction pixel_aspect_ratio = {};
 
-	// Pixel format of the image data
+	// Pixel format of the image data.
 	PixelFormat pixel_format = {};
 
 	// Details about the source video mode.
-	// This is usually different than the rendered image's details.
-	// E.g. for the 320x200 256-colour 13h VGA mode we always have the
-	// following, regardless of whether double-scanning and pixel-doubling
-	// is enabled at the rendering level:
+	//
+	// This is usually different than the details of image data. E.g., for
+	// the 320x200 256-colour 13h VGA mode it always contains the following,
+	// regardless of whether double-scanning and pixel-doubling is enabled
+	// at the rendering level:
 	//   - width = 320
 	//   - height = 200
 	//   - pixel_aspect_ratio = 5/6 (1:1.2)
@@ -219,7 +223,6 @@ struct ImageInfo {
 		return !operator==(that);
 	}
 };
-
 
 enum class InterpolationMode { Bilinear, NearestNeighbour };
 
