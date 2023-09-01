@@ -62,11 +62,11 @@ enum { DacRead, DacWrite };
 
 static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_idx)
 {
-	const auto& src_rgb666 = vga.dac.rgb[color_idx];
+	const auto& rgb666 = vga.dac.rgb[color_idx];
 
-	const auto r8 = rgb6_to_8_lut(src_rgb666.red);
-	const auto g8 = rgb6_to_8_lut(src_rgb666.green);
-	const auto b8 = rgb6_to_8_lut(src_rgb666.blue);
+	const auto r8 = rgb6_to_8_lut(rgb666.red);
+	const auto g8 = rgb6_to_8_lut(rgb666.green);
+	const auto b8 = rgb6_to_8_lut(rgb666.blue);
 
 	// Map the source color into palette's requested index
 	vga.dac.palette_map[palette_idx] = static_cast<uint32_t>((r8 << 16) |

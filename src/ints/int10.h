@@ -26,6 +26,9 @@
 #include "mem.h"
 #include "vga.h"
 
+// forward declarations
+class Rgb666;
+
 #define BIOSMEM_SEG 0x40
 
 #define BIOSMEM_INITIAL_MODE  0x10
@@ -115,25 +118,25 @@ extern uint8_t int10_font_16_alternate[19 * 17 + 1];
 
 struct palette_t {
 	// 64 entries
-	std::vector<RGBEntry> mono_text = {};
+	std::vector<Rgb666> mono_text = {};
 
 	// 64 entries
-	std::vector<RGBEntry> mono_text_s3 = {};
+	std::vector<Rgb666> mono_text_s3 = {};
 
 	// 16 entries. This is default canonical 16-colour CGA palette as emulated
 	// by VGA cards.
-	std::vector<RGBEntry> cga16 = {};
+	std::vector<Rgb666> cga16 = {};
 
 	// 64 entries. This is the default 64-colour 6-bit RGB EGA palette as
 	// emulated by VGA cards. The BIOS sets up these colours in the first 64
 	// of the 256 VGA colour registers in EGA modes.
-	std::vector<RGBEntry> cga64 = {};
+	std::vector<Rgb666> cga64 = {};
 
 	// 64 entries
-	std::vector<RGBEntry> ega = {};
+	std::vector<Rgb666> ega = {};
 
 	// 256 entries. This is the default 256-colour VGA palette.
-	std::vector<RGBEntry> vga = {};
+	std::vector<Rgb666> vga = {};
 };
 
 extern palette_t palette;

@@ -28,15 +28,10 @@
 #include <vector>
 
 // declarations of private functions to test
-std::optional<RGBEntry> parse_color_token(const std::string &token,
-                                          const uint8_t color_index);
+std::optional<Rgb666> parse_color_token(const std::string& token,
+                                       const uint8_t color_index);
 
-std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs);
-
-bool operator==(const RGBEntry& a, const RGBEntry& b)
-{
-	return a.red == b.red && a.green == b.green && a.blue == b.blue;
-}
+std::optional<cga_colors_t> parse_cga_colors(const std::string& cga_colors_prefs);
 
 namespace {
 
@@ -46,24 +41,24 @@ constexpr auto dummy_color_index = 0;
 
 TEST(parse_color_token, hex3_valid)
 {
-	const RGBEntry expected = RGBEntry{0x11, 0xaa, 0xee};
-	const auto result       = parse_color_token("#1ae", dummy_color_index);
+	const Rgb666 expected = Rgb666(0x11, 0xaa, 0xee);
+	const auto result    = parse_color_token("#1ae", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, hex3_valid_min)
 {
-	const RGBEntry expected = RGBEntry{0x00, 0x00, 0x00};
-	const auto result       = parse_color_token("#000", dummy_color_index);
+	const Rgb666 expected = Rgb666(0x00, 0x00, 0x00);
+	const auto result    = parse_color_token("#000", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, hex3_valid_max)
 {
-	const RGBEntry expected = RGBEntry{0xff, 0xff, 0xff};
-	const auto result       = parse_color_token("#fff", dummy_color_index);
+	const Rgb666 expected = Rgb666(0xff, 0xff, 0xff);
+	const auto result    = parse_color_token("#fff", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
@@ -106,24 +101,24 @@ TEST(parse_color_token, hex3_invalid_character)
 
 TEST(parse_color_token, hex6_valid)
 {
-	const RGBEntry expected = RGBEntry{0x12, 0xab, 0xef};
-	const auto result       = parse_color_token("#12abef", dummy_color_index);
+	const Rgb666 expected = Rgb666(0x12, 0xab, 0xef);
+	const auto result    = parse_color_token("#12abef", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, hex6_valid_min)
 {
-	const RGBEntry expected = RGBEntry{0x00, 0x00, 0x00};
-	const auto result       = parse_color_token("#000000", dummy_color_index);
+	const Rgb666 expected = Rgb666(0x00, 0x00, 0x00);
+	const auto result    = parse_color_token("#000000", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, hex6_valid_max)
 {
-	const RGBEntry expected = RGBEntry{0xff, 0xff, 0xff};
-	const auto result       = parse_color_token("#ffffff", dummy_color_index);
+	const Rgb666 expected = Rgb666(0xff, 0xff, 0xff);
+	const auto result    = parse_color_token("#ffffff", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
@@ -152,24 +147,25 @@ TEST(parse_color_token, hex6_invalid_too_long)
 
 TEST(parse_color_token, rgb_triplet_valid_no_whitespaces)
 {
-	const RGBEntry expected = RGBEntry{7, 42, 231};
-	const auto result       = parse_color_token("(7,42,231)", dummy_color_index);
+	const Rgb666 expected = Rgb666(7, 42, 231);
+	const auto result = parse_color_token("(7,42,231)", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, rgb_triplet_valid_single_whitespaces)
 {
-	const RGBEntry expected = RGBEntry{7, 42, 231};
-	const auto result       = parse_color_token("(7, 42, 231)", dummy_color_index);
+	const Rgb666 expected = Rgb666(7, 42, 231);
+	const auto result = parse_color_token("(7, 42, 231)", dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
 
 TEST(parse_color_token, rgb_triplet_valid_multiple_whitespaces)
 {
-	const RGBEntry expected = RGBEntry{7, 42, 231};
-	const auto result       = parse_color_token("( 7 ,  42  ,   231  )", dummy_color_index);
+	const Rgb666 expected = Rgb666(7, 42, 231);
+	const auto result    = parse_color_token("( 7 ,  42  ,   231  )",
+                                              dummy_color_index);
 	EXPECT_TRUE(result.has_value());
 	EXPECT_EQ(expected, result);
 }
@@ -266,22 +262,22 @@ TEST(parse_cga_colors, valid_hex3)
 
 	const auto result = maybe_result.value();
 
-	EXPECT_EQ(result[0], (RGBEntry{0x00, 0x04, 0x08}));
-	EXPECT_EQ(result[1], (RGBEntry{0x04, 0x08, 0x0c}));
-	EXPECT_EQ(result[2], (RGBEntry{0x08, 0x0c, 0x11}));
-	EXPECT_EQ(result[3], (RGBEntry{0x0c, 0x11, 0x15}));
-	EXPECT_EQ(result[4], (RGBEntry{0x11, 0x15, 0x19}));
-	EXPECT_EQ(result[5], (RGBEntry{0x15, 0x19, 0x1d}));
-	EXPECT_EQ(result[6], (RGBEntry{0x19, 0x1d, 0x22}));
-	EXPECT_EQ(result[7], (RGBEntry{0x1d, 0x22, 0x26}));
-	EXPECT_EQ(result[8], (RGBEntry{0x22, 0x26, 0x2a}));
-	EXPECT_EQ(result[9], (RGBEntry{0x26, 0x2a, 0x2e}));
-	EXPECT_EQ(result[10], (RGBEntry{0x2a, 0x2e, 0x33}));
-	EXPECT_EQ(result[11], (RGBEntry{0x2e, 0x33, 0x37}));
-	EXPECT_EQ(result[12], (RGBEntry{0x33, 0x37, 0x3b}));
-	EXPECT_EQ(result[13], (RGBEntry{0x37, 0x3b, 0x3f}));
-	EXPECT_EQ(result[14], (RGBEntry{0x3b, 0x3f, 0x3f}));
-	EXPECT_EQ(result[15], (RGBEntry{0x3f, 0x3f, 0x3f}));
+	EXPECT_EQ(result[0], (Rgb666(0x00, 0x04, 0x08)));
+	EXPECT_EQ(result[1], (Rgb666(0x04, 0x08, 0x0c)));
+	EXPECT_EQ(result[2], (Rgb666(0x08, 0x0c, 0x11)));
+	EXPECT_EQ(result[3], (Rgb666(0x0c, 0x11, 0x15)));
+	EXPECT_EQ(result[4], (Rgb666(0x11, 0x15, 0x19)));
+	EXPECT_EQ(result[5], (Rgb666(0x15, 0x19, 0x1d)));
+	EXPECT_EQ(result[6], (Rgb666(0x19, 0x1d, 0x22)));
+	EXPECT_EQ(result[7], (Rgb666(0x1d, 0x22, 0x26)));
+	EXPECT_EQ(result[8], (Rgb666(0x22, 0x26, 0x2a)));
+	EXPECT_EQ(result[9], (Rgb666(0x26, 0x2a, 0x2e)));
+	EXPECT_EQ(result[10], (Rgb666(0x2a, 0x2e, 0x33)));
+	EXPECT_EQ(result[11], (Rgb666(0x2e, 0x33, 0x37)));
+	EXPECT_EQ(result[12], (Rgb666(0x33, 0x37, 0x3b)));
+	EXPECT_EQ(result[13], (Rgb666(0x37, 0x3b, 0x3f)));
+	EXPECT_EQ(result[14], (Rgb666(0x3b, 0x3f, 0x3f)));
+	EXPECT_EQ(result[15], (Rgb666(0x3f, 0x3f, 0x3f)));
 }
 
 TEST(parse_cga_colors, valid_hex6)
@@ -296,22 +292,22 @@ TEST(parse_cga_colors, valid_hex6)
 
 	const auto result = maybe_result.value();
 
-	EXPECT_EQ(result[0], (RGBEntry{0x00, 0x08, 0x11}));
-	EXPECT_EQ(result[1], (RGBEntry{0x04, 0x0d, 0x15}));
-	EXPECT_EQ(result[2], (RGBEntry{0x08, 0x11, 0x19}));
-	EXPECT_EQ(result[3], (RGBEntry{0x0d, 0x15, 0x1e}));
-	EXPECT_EQ(result[4], (RGBEntry{0x11, 0x19, 0x22}));
-	EXPECT_EQ(result[5], (RGBEntry{0x15, 0x1e, 0x26}));
-	EXPECT_EQ(result[6], (RGBEntry{0x19, 0x22, 0x2a}));
-	EXPECT_EQ(result[7], (RGBEntry{0x1e, 0x26, 0x2f}));
-	EXPECT_EQ(result[8], (RGBEntry{0x22, 0x2a, 0x33}));
-	EXPECT_EQ(result[9], (RGBEntry{0x26, 0x2f, 0x37}));
-	EXPECT_EQ(result[10], (RGBEntry{0x2a, 0x33, 0x3b}));
-	EXPECT_EQ(result[11], (RGBEntry{0x2f, 0x37, 0x3f}));
-	EXPECT_EQ(result[12], (RGBEntry{0x33, 0x3b, 0x3f}));
-	EXPECT_EQ(result[13], (RGBEntry{0x37, 0x3f, 0x3f}));
-	EXPECT_EQ(result[14], (RGBEntry{0x3b, 0x3f, 0x3f}));
-	EXPECT_EQ(result[15], (RGBEntry{0x3f, 0x3f, 0x3f}));
+	EXPECT_EQ(result[0], (Rgb666(0x00, 0x08, 0x11)));
+	EXPECT_EQ(result[1], (Rgb666(0x04, 0x0d, 0x15)));
+	EXPECT_EQ(result[2], (Rgb666(0x08, 0x11, 0x19)));
+	EXPECT_EQ(result[3], (Rgb666(0x0d, 0x15, 0x1e)));
+	EXPECT_EQ(result[4], (Rgb666(0x11, 0x19, 0x22)));
+	EXPECT_EQ(result[5], (Rgb666(0x15, 0x1e, 0x26)));
+	EXPECT_EQ(result[6], (Rgb666(0x19, 0x22, 0x2a)));
+	EXPECT_EQ(result[7], (Rgb666(0x1e, 0x26, 0x2f)));
+	EXPECT_EQ(result[8], (Rgb666(0x22, 0x2a, 0x33)));
+	EXPECT_EQ(result[9], (Rgb666(0x26, 0x2f, 0x37)));
+	EXPECT_EQ(result[10], (Rgb666(0x2a, 0x33, 0x3b)));
+	EXPECT_EQ(result[11], (Rgb666(0x2f, 0x37, 0x3f)));
+	EXPECT_EQ(result[12], (Rgb666(0x33, 0x3b, 0x3f)));
+	EXPECT_EQ(result[13], (Rgb666(0x37, 0x3f, 0x3f)));
+	EXPECT_EQ(result[14], (Rgb666(0x3b, 0x3f, 0x3f)));
+	EXPECT_EQ(result[15], (Rgb666(0x3f, 0x3f, 0x3f)));
 }
 
 TEST(parse_cga_colors, valid_rgb_triplet)
@@ -327,22 +323,22 @@ TEST(parse_cga_colors, valid_rgb_triplet)
 
 	const auto result = maybe_result.value();
 
-	EXPECT_EQ(result[0], (RGBEntry{0x00, 0x08, 0x11}));
-	EXPECT_EQ(result[1], (RGBEntry{0x04, 0x0d, 0x15}));
-	EXPECT_EQ(result[2], (RGBEntry{0x08, 0x11, 0x19}));
-	EXPECT_EQ(result[3], (RGBEntry{0x0d, 0x15, 0x1e}));
-	EXPECT_EQ(result[4], (RGBEntry{0x11, 0x19, 0x22}));
-	EXPECT_EQ(result[5], (RGBEntry{0x15, 0x1e, 0x26}));
-	EXPECT_EQ(result[6], (RGBEntry{0x19, 0x22, 0x2a}));
-	EXPECT_EQ(result[7], (RGBEntry{0x1e, 0x26, 0x2f}));
-	EXPECT_EQ(result[8], (RGBEntry{0x22, 0x2a, 0x33}));
-	EXPECT_EQ(result[9], (RGBEntry{0x26, 0x2f, 0x37}));
-	EXPECT_EQ(result[10], (RGBEntry{0x2a, 0x33, 0x3b}));
-	EXPECT_EQ(result[11], (RGBEntry{0x2f, 0x37, 0x3f}));
-	EXPECT_EQ(result[12], (RGBEntry{0x33, 0x3b, 0x3f}));
-	EXPECT_EQ(result[13], (RGBEntry{0x37, 0x3f, 0x3f}));
-	EXPECT_EQ(result[14], (RGBEntry{0x3b, 0x3f, 0x3f}));
-	EXPECT_EQ(result[15], (RGBEntry{0x3f, 0x3f, 0x3f}));
+	EXPECT_EQ(result[0], (Rgb666(0x00, 0x08, 0x11)));
+	EXPECT_EQ(result[1], (Rgb666(0x04, 0x0d, 0x15)));
+	EXPECT_EQ(result[2], (Rgb666(0x08, 0x11, 0x19)));
+	EXPECT_EQ(result[3], (Rgb666(0x0d, 0x15, 0x1e)));
+	EXPECT_EQ(result[4], (Rgb666(0x11, 0x19, 0x22)));
+	EXPECT_EQ(result[5], (Rgb666(0x15, 0x1e, 0x26)));
+	EXPECT_EQ(result[6], (Rgb666(0x19, 0x22, 0x2a)));
+	EXPECT_EQ(result[7], (Rgb666(0x1e, 0x26, 0x2f)));
+	EXPECT_EQ(result[8], (Rgb666(0x22, 0x2a, 0x33)));
+	EXPECT_EQ(result[9], (Rgb666(0x26, 0x2f, 0x37)));
+	EXPECT_EQ(result[10], (Rgb666(0x2a, 0x33, 0x3b)));
+	EXPECT_EQ(result[11], (Rgb666(0x2f, 0x37, 0x3f)));
+	EXPECT_EQ(result[12], (Rgb666(0x33, 0x3b, 0x3f)));
+	EXPECT_EQ(result[13], (Rgb666(0x37, 0x3f, 0x3f)));
+	EXPECT_EQ(result[14], (Rgb666(0x3b, 0x3f, 0x3f)));
+	EXPECT_EQ(result[15], (Rgb666(0x3f, 0x3f, 0x3f)));
 }
 
 TEST(parse_cga_colors, valid_mixed)
@@ -358,22 +354,22 @@ TEST(parse_cga_colors, valid_mixed)
 
 	const auto result = maybe_result.value();
 
-	EXPECT_EQ(result[0], (RGBEntry{0x00, 0x04, 0x08}));
-	EXPECT_EQ(result[1], (RGBEntry{0x04, 0x08, 0x0c}));
-	EXPECT_EQ(result[2], (RGBEntry{0x08, 0x0c, 0x11}));
-	EXPECT_EQ(result[3], (RGBEntry{0x0c, 0x11, 0x15}));
-	EXPECT_EQ(result[4], (RGBEntry{0x11, 0x19, 0x22}));
-	EXPECT_EQ(result[5], (RGBEntry{0x15, 0x1e, 0x26}));
-	EXPECT_EQ(result[6], (RGBEntry{0x19, 0x22, 0x2a}));
-	EXPECT_EQ(result[7], (RGBEntry{0x1e, 0x26, 0x2f}));
-	EXPECT_EQ(result[8], (RGBEntry{0x22, 0x2a, 0x33}));
-	EXPECT_EQ(result[9], (RGBEntry{0x26, 0x2f, 0x37}));
-	EXPECT_EQ(result[10], (RGBEntry{0x2a, 0x33, 0x3b}));
-	EXPECT_EQ(result[11], (RGBEntry{0x2f, 0x37, 0x3f}));
-	EXPECT_EQ(result[12], (RGBEntry{0x33, 0x3b, 0x3f}));
-	EXPECT_EQ(result[13], (RGBEntry{0x37, 0x3f, 0x3f}));
-	EXPECT_EQ(result[14], (RGBEntry{0x3b, 0x3f, 0x3f}));
-	EXPECT_EQ(result[15], (RGBEntry{0x3f, 0x3f, 0x3f}));
+	EXPECT_EQ(result[0], (Rgb666(0x00, 0x04, 0x08)));
+	EXPECT_EQ(result[1], (Rgb666(0x04, 0x08, 0x0c)));
+	EXPECT_EQ(result[2], (Rgb666(0x08, 0x0c, 0x11)));
+	EXPECT_EQ(result[3], (Rgb666(0x0c, 0x11, 0x15)));
+	EXPECT_EQ(result[4], (Rgb666(0x11, 0x19, 0x22)));
+	EXPECT_EQ(result[5], (Rgb666(0x15, 0x1e, 0x26)));
+	EXPECT_EQ(result[6], (Rgb666(0x19, 0x22, 0x2a)));
+	EXPECT_EQ(result[7], (Rgb666(0x1e, 0x26, 0x2f)));
+	EXPECT_EQ(result[8], (Rgb666(0x22, 0x2a, 0x33)));
+	EXPECT_EQ(result[9], (Rgb666(0x26, 0x2f, 0x37)));
+	EXPECT_EQ(result[10], (Rgb666(0x2a, 0x33, 0x3b)));
+	EXPECT_EQ(result[11], (Rgb666(0x2f, 0x37, 0x3f)));
+	EXPECT_EQ(result[12], (Rgb666(0x33, 0x3b, 0x3f)));
+	EXPECT_EQ(result[13], (Rgb666(0x37, 0x3f, 0x3f)));
+	EXPECT_EQ(result[14], (Rgb666(0x3b, 0x3f, 0x3f)));
+	EXPECT_EQ(result[15], (Rgb666(0x3f, 0x3f, 0x3f)));
 }
 
 TEST(parse_cga_colors, invalid_too_few_colors)
