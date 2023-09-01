@@ -226,9 +226,15 @@ static uint8_t *Composite_Process(uint8_t border, uint32_t blocks, bool double_w
 			const int c = i[0] + i[0];
 			const int d = i[-1] + i[1];
 			const int y = left_shift_signed(c + d, 8) + vga.sharpness * (c - d);
-			const int rr = y + vga.ri * (I) + vga.rq * (Q);
-			const int gg = y + vga.gi * (I) + vga.gq * (Q);
-			const int bb = y + vga.bi * (I) + vga.bq * (Q);
+
+			const int rr = y + vga.composite.ri * (I) +
+			               vga.composite.rq * (Q);
+
+			const int gg = y + vga.composite.gi * (I) +
+			               vga.composite.gq * (Q);
+
+			const int bb = y + vga.composite.bi * (I) +
+			               vga.composite.bq * (Q);
 			++i;
 			++ap;
 			++bp;

@@ -631,12 +631,15 @@ static void update_cga16_color()
 	constexpr auto bi = -1.1069f;
 	constexpr auto bq = 1.7046f;
 
-	vga.ri = static_cast<int>(ri * iq_adjust_i + rq * iq_adjust_q);
-	vga.rq = static_cast<int>(-ri * iq_adjust_q + rq * iq_adjust_i);
-	vga.gi = static_cast<int>(gi * iq_adjust_i + gq * iq_adjust_q);
-	vga.gq = static_cast<int>(-gi * iq_adjust_q + gq * iq_adjust_i);
-	vga.bi = static_cast<int>(bi * iq_adjust_i + bq * iq_adjust_q);
-	vga.bq = static_cast<int>(-bi * iq_adjust_q + bq * iq_adjust_i);
+	// clang-format off
+	vga.composite.ri = static_cast<int32_t>( ri * iq_adjust_i + rq * iq_adjust_q);
+	vga.composite.rq = static_cast<int32_t>(-ri * iq_adjust_q + rq * iq_adjust_i);
+	vga.composite.gi = static_cast<int32_t>( gi * iq_adjust_i + gq * iq_adjust_q);
+	vga.composite.gq = static_cast<int32_t>(-gi * iq_adjust_q + gq * iq_adjust_i);
+	vga.composite.bi = static_cast<int32_t>( bi * iq_adjust_i + bq * iq_adjust_q);
+	vga.composite.bq = static_cast<int32_t>(-bi * iq_adjust_q + bq * iq_adjust_i);
+	// clang-format on
+
 	vga.sharpness = convergence.get() * 256 / 100;
 }
 

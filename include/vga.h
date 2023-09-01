@@ -949,14 +949,16 @@ struct VgaType {
 	VgaLfb lfb = {};
 
 	// Composite video mode parameters
-	// TODO enclose in struct
-	int ri        = 0;
-	int rq        = 0;
-	int gi        = 0;
-	int gq        = 0;
-	int bi        = 0;
-	int bq        = 0;
-	int sharpness = 0;
+	struct {
+		int32_t ri = 0;
+		int32_t rq = 0;
+		int32_t gi = 0;
+		int32_t gq = 0;
+		int32_t bi = 0;
+		int32_t bq = 0;
+	} composite = {};
+
+	int32_t sharpness = 0;
 };
 
 // Hercules & CGA monochrome palette
