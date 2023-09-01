@@ -72,10 +72,11 @@ struct FfmpegVideoEncoder {
 
 	// Accessed only in main thread, used to check if needs re-init
 	// If one of these changes, create a new file
-	PixelFormat pixel_format = {};
-	int frames_per_second    = 0;
-	uint16_t width           = 0;
-	uint16_t height          = 0;
+	Fraction pixel_aspect_ratio = {};
+	PixelFormat pixel_format    = {};
+	int frames_per_second       = 0;
+	uint16_t width              = 0;
+	uint16_t height             = 0;
 
 	// Synchronization flags, guarded by mutex
 
@@ -87,7 +88,8 @@ struct FfmpegVideoEncoder {
 
 	// Init + free called by main thread only.
 	bool Init(const uint16_t width, const uint16_t height,
-	          const PixelFormat pixel_format, const int frames_per_second);
+	          const PixelFormat pixel_format, const int frames_per_second,
+	          const Fraction pixel_aspect_ratio);
 	void Free();
 };
 
