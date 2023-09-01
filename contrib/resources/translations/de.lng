@@ -1393,7 +1393,7 @@ unter der das Image eingebunden werden soll (0,1=fda,fdb;2,3=hda,hdb).
 Für [33mCD-ROM[0m Images:   [34;1mIMGMOUNT laufwerksbuchstabe ort-des-images -t iso[0m
 
 Für [33mFestplattenlaufwerk[0m images: Muss die Laufwerksgeometrie für Festplatten angeben:
-bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
+bytes-per-sector,sectors-per-head,heads,cylinders
 [34;1mIMGMOUNT Laufwerk-Buchstabe Ort-des-Images -size bps,spc,hpc,cyl[0m
 
 .

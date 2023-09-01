@@ -1759,7 +1759,7 @@ Verifica che il percorso sia corretto e che l'immagine sia accessibile.
 .
 :PROGRAM_IMGMOUNT_INVALID_GEOMETRY
 Impossibile estrarre la geometria dell'unità dall'immagine.
-Utilizzare il parametro -size bps,spc,hpc,cyl per specificare la geometria.
+Utilizzare il parametro -size bps,spt,tes,cil per specificare la geometria.
 
 .
 :PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED
