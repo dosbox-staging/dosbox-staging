@@ -62,11 +62,29 @@ enum { DacRead, DacWrite };
 
 static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_idx)
 {
-	const auto& rgb666 = vga.dac.rgb[color_idx];
+	const auto rgb666 = vga.dac.rgb[color_idx];
 
 	const auto r8 = rgb6_to_8_lut(rgb666.red);
 	const auto g8 = rgb6_to_8_lut(rgb666.green);
 	const auto b8 = rgb6_to_8_lut(rgb666.blue);
+
+	const auto& video_mode = VGA_GetCurrentVideoMode();
+
+	constexpr auto mode_640x350_2color  = 0x0f;
+	constexpr auto mode_640x350_16color = 0x10;
+
+	if (machine == MCH_VGA && !vga.ega_mode_with_vga_colors &&
+	    video_mode.graphics_standard == GraphicsStandard::Ega &&
+	    (video_mode.bios_mode_number != mode_640x350_2color &&
+	     video_mode.bios_mode_number != mode_640x350_16color)) {
+
+		const auto default_color = palette.cga64[color_idx];
+
+		if (rgb666 != default_color) {
+			vga.ega_mode_with_vga_colors = true;
+			RENDER_NotifyEgaModeWithVgaPalette();
+		}
+	}
 
 	// Map the source color into palette's requested index
 	vga.dac.palette_map[palette_idx] = static_cast<uint32_t>((r8 << 16) |

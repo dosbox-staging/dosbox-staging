@@ -509,7 +509,12 @@ std::string ShaderManager::FindShaderAutoGraphicsStandard() const
 	case GraphicsStandard::Pcjr: return GetCgaShader();
 
 	case GraphicsStandard::Tga:
-	case GraphicsStandard::Ega: return GetEgaShader();
+		return GetEgaShader();
+
+	case GraphicsStandard::Ega:
+		// Use VGA shaders for VGA games that use EGA modes with an 18-bit
+		// VGA palette (these games won't even work on an EGA card).
+		return video_mode.has_vga_colors ? GetVgaShader() : GetEgaShader();
 
 	case GraphicsStandard::Vga:
 	case GraphicsStandard::Svga:

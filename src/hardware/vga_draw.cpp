@@ -1849,17 +1849,21 @@ static Fraction calc_pixel_aspect_from_timings(const VgaTimings& timings)
 constexpr auto pixel_aspect_1280x1024 = Fraction(4, 3) / Fraction(1280, 1024);
 
 // Can change the following VGA state:
-//   vga.draw.mode
+//
 //   vga.draw.address_line_total
+//   vga.draw.blocks
 //   vga.draw.delay.hdend
 //   vga.draw.dos_refresh_hz
-//   vga.draw.resizing
-//   vga.draw.vret_triggered
+//   vga.draw.line_length
 //   vga.draw.linear_base
 //   vga.draw.linear_mask
-//   vga.draw.blocks
+//   vga.draw.mode
+//   vga.draw.resizing
+//   vga.draw.uses_vga_palette
 //   vga.draw.vblank_skip
-//   vga.draw.line_length
+//   vga.draw.vret_triggered
+//   vga.ega_mode_with_vga_colors
+//
 ImageInfo setup_drawing()
 {
 	// Set the drawing mode
@@ -2239,6 +2243,8 @@ ImageInfo setup_drawing()
 			    !vga.draw.pixel_doubling_enabled) {
 				render_pixel_aspect_ratio *= 2;
 			}
+
+			video_mode.has_vga_colors = vga.ega_mode_with_vga_colors;
 
 		} else { // M_EGA
 			video_mode.height = vert_end;
@@ -2827,9 +2833,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			        SCALER_MAXWIDTH,
 			        SCALER_MAXHEIGHT);
 
-			vga.draw.render.width  = std::min(render.width,
-                                                         static_cast<uint16_t>(
-                                                                 SCALER_MAXWIDTH));
+			vga.draw.render.width = std::min(render.width,
+			                                 static_cast<uint16_t>(
+			                                         SCALER_MAXWIDTH));
+
 			vga.draw.render.height = std::min(render.height,
 			                                  static_cast<uint16_t>(
 			                                          SCALER_MAXHEIGHT));
@@ -2849,6 +2856,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 
 		previous_video_mode = render.video_mode;
+
+		// We always assume a "true EGA mode" first when switching to a
+		// new video mode, then set this flag to true once the first
+		// non-EGA palette colour has been set.
+		vga.ega_mode_with_vga_colors = false;
 	}
 }
 

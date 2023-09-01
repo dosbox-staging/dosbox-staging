@@ -178,4 +178,6 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
                                   [[maybe_unused]] const VideoMode& video_mode,
                                   [[maybe_unused]] const bool reinit_render);
 
+void RENDER_NotifyEgaModeWithVgaPalette();
+
 #endif // DOSBOX_RENDER_H

@@ -934,7 +934,7 @@ struct VgaGfx {
 using cga_colors_t = std::array<Rgb666, NumCgaColors>;
 
 struct VgaDac {
-	Rgb666 rgb[NumVgaColors]            = {};
+	Rgb666 rgb[NumVgaColors]           = {};
 	uint32_t palette_map[NumVgaColors] = {};
 
 	uint8_t combine[16] = {};
@@ -1038,6 +1038,14 @@ struct VgaType {
 
 		int32_t sharpness = 0;
 	} composite = {};
+
+	// This flag is used to detect if a 200-lines EGA mode on VGA uses
+	// custom 18-bit VGA colours. When the first such colour is encountered
+	// when setting up the palette, we set this flag to true and potentially
+	// switch to a VGA shader if an adaptive CRT shader is active. After
+	// that, we stop checking palette changes until the next screen mode
+	// change.
+	bool ega_mode_with_vga_colors = false;
 };
 
 // Hercules & CGA monochrome palette
