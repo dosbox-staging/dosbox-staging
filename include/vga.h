@@ -31,6 +31,7 @@
 #include "control.h"
 #include "fraction.h"
 #include "inout.h"
+#include "rgb666.h"
 #include "video.h"
 
 //Don't enable keeping changes and mapping lfb probably...
@@ -930,16 +931,10 @@ struct VgaGfx {
 	uint8_t bit_mask         = 0;
 };
 
-struct RGBEntry {
-	uint8_t red   = 0;
-	uint8_t green = 0;
-	uint8_t blue  = 0;
-};
-
-typedef std::array<RGBEntry, NumCgaColors> cga_colors_t;
+using cga_colors_t = std::array<Rgb666, NumCgaColors>;
 
 struct VgaDac {
-	RGBEntry rgb[NumVgaColors]         = {};
+	Rgb666 rgb[NumVgaColors]            = {};
 	uint32_t palette_map[NumVgaColors] = {};
 
 	uint8_t combine[16] = {};

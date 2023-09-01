@@ -700,7 +700,7 @@ static void INT10_InitVGA(void)
 			IO_Write(0x3c8, 0);
 
 			for (auto i = 0; i < NumVgaColors; ++i) {
-				constexpr RGBEntry black = {0, 0, 0};
+				constexpr Rgb666 black = {0, 0, 0};
 
 				IO_Write(0x3c9, black.red);
 				IO_Write(0x3c9, black.green);
