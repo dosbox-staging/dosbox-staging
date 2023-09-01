@@ -23,13 +23,13 @@
 
 #include <cassert>
 
+#include "../ints/int10.h"
 #include "inout.h"
 #include "mem.h"
 #include "reelmagic.h"
 #include "render.h"
 #include "rgb.h"
 #include "vga.h"
-#include "../ints/int10.h"
 
 /*
 3C6h (R/W):  PEL Mask
@@ -58,10 +58,9 @@ Note:  Each read or write of this register will cycle through first the
        of the palette to this register.
 */
 
-enum {DAC_READ,DAC_WRITE};
+enum { DacRead, DacWrite };
 
-static void vga_dac_send_color(const uint8_t palette_idx,
-                               const uint8_t color_idx)
+static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_idx)
 {
 	const auto& src_rgb666 = vga.dac.rgb[color_idx];
 
@@ -71,7 +70,7 @@ static void vga_dac_send_color(const uint8_t palette_idx,
 
 	// Map the source color into palette's requested index
 	vga.dac.palette_map[palette_idx] = static_cast<uint32_t>((r8 << 16) |
-	                                                   (g8 << 8) | b8);
+	                                                         (g8 << 8) | b8);
 
 	ReelMagic_RENDER_SetPalette(palette_idx, r8, g8, b8);
 }
@@ -87,7 +86,9 @@ static void write_p3c6(io_port_t, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
 	if (vga.dac.pel_mask != val) {
-		LOG(LOG_VGAMISC, LOG_NORMAL)("VGA:DCA:Pel Mask set to %X", val);
+#if 0
+		LOG_MSG("VGA:DCA: PEL mask set to %Xh", val);
+#endif
 		vga.dac.pel_mask = val;
 
 		for (auto i = 0; i < NumVgaColors; ++i) {
@@ -104,28 +105,29 @@ static uint8_t read_p3c6(io_port_t, io_width_t)
 
 static void write_p3c7(io_port_t, io_val_t value, io_width_t)
 {
-	const auto val = check_cast<uint8_t>(value);
-	vga.dac.read_index = val;
-	vga.dac.pel_index = 0;
-	vga.dac.state = DAC_READ;
+	const auto val      = check_cast<uint8_t>(value);
+	vga.dac.read_index  = val;
+	vga.dac.pel_index   = 0;
+	vga.dac.state       = DacRead;
 	vga.dac.write_index = val + 1;
 }
 
 static uint8_t read_p3c7(io_port_t, io_width_t)
 {
-	if (vga.dac.state == DAC_READ)
+	if (vga.dac.state == DacRead) {
 		return 0x3;
-	else
+	} else {
 		return 0x0;
+	}
 }
 
 static void write_p3c8(io_port_t, io_val_t value, io_width_t)
 {
-	const auto val = check_cast<uint8_t>(value);
+	const auto val      = check_cast<uint8_t>(value);
 	vga.dac.write_index = val;
-	vga.dac.pel_index = 0;
-	vga.dac.state = DAC_WRITE;
-	vga.dac.read_index = val - 1;
+	vga.dac.pel_index   = 0;
+	vga.dac.state       = DacWrite;
+	vga.dac.read_index  = val - 1;
 }
 
 static uint8_t read_p3c8(Bitu, io_width_t)
@@ -137,17 +139,22 @@ static void write_p3c9(io_port_t, io_val_t value, io_width_t)
 {
 	auto val = check_cast<uint8_t>(value);
 	val &= 0x3f;
+
 	switch (vga.dac.pel_index) {
 	case 0:
-		vga.dac.rgb[vga.dac.write_index].red=val;
-		vga.dac.pel_index=1;
+		vga.dac.rgb[vga.dac.write_index].red = val;
+
+		vga.dac.pel_index = 1;
 		break;
+
 	case 1:
-		vga.dac.rgb[vga.dac.write_index].green=val;
-		vga.dac.pel_index=2;
+		vga.dac.rgb[vga.dac.write_index].green = val;
+
+		vga.dac.pel_index = 2;
 		break;
+
 	case 2:
-		vga.dac.rgb[vga.dac.write_index].blue=val;
+		vga.dac.rgb[vga.dac.write_index].blue = val;
 		switch (vga.mode) {
 		case M_VGA:
 		case M_LIN8:
@@ -157,62 +164,75 @@ static void write_p3c9(io_port_t, io_val_t value, io_width_t)
 				const auto index = vga.dac.write_index;
 
 				if ((index & vga.dac.pel_mask) == index) {
-					for (auto i = index + 1u; i < NumVgaColors; i++) {
-						const auto palette_idx = check_cast<uint8_t>(i);
+					for (auto i = index + 1u; i < NumVgaColors;
+					     ++i) {
+						const auto palette_idx =
+						        check_cast<uint8_t>(i);
 
-						if ((palette_idx & vga.dac.pel_mask) == index) {
-							vga_dac_update_color(palette_idx);
+						if ((palette_idx &
+						     vga.dac.pel_mask) == index) {
+							vga_dac_update_color(
+							        palette_idx);
 						}
 					}
 				}
 			}
 			break;
+
 		default:
 			// Check for attributes and DAC entry link
 			for (uint8_t i = 0; i < NumCgaColors; ++i) {
 				const auto palette_idx = i;
-				const auto color_idx = vga.dac.write_index;
+				const auto color_idx   = vga.dac.write_index;
 
 				if (vga.dac.combine[palette_idx] == color_idx) {
-					vga_dac_send_color(palette_idx,
-					                   color_idx);
+					vga_dac_send_color(palette_idx, color_idx);
 				}
 			}
 		}
-		vga.dac.write_index++;
-//		vga.dac.read_index = vga.dac.write_index - 1;//disabled as it breaks Wari
-		vga.dac.pel_index=0;
+
+		++vga.dac.write_index;
+		// vga.dac.read_index = vga.dac.write_index - ;
+		// disabled as it breaks Wari
+
+		vga.dac.pel_index = 0;
 		break;
+
 	default:
-		LOG(LOG_VGAGFX,LOG_NORMAL)("VGA:DAC:Illegal Pel Index");			//If this can actually happen that will be the day
+#if 0
+		LOG_WARNING("Invalid VGA PEL index: %d", vga.dac.pel_index);
+#endif
 		break;
 	};
 }
 
 static uint8_t read_p3c9(io_port_t, io_width_t)
 {
-	uint8_t ret;
 	switch (vga.dac.pel_index) {
 	case 0:
-		ret=vga.dac.rgb[vga.dac.read_index].red;
-		vga.dac.pel_index=1;
-		break;
+		vga.dac.pel_index = 1;
+		return vga.dac.rgb[vga.dac.read_index].red;
+
 	case 1:
-		ret=vga.dac.rgb[vga.dac.read_index].green;
-		vga.dac.pel_index=2;
-		break;
-	case 2:
-		ret=vga.dac.rgb[vga.dac.read_index].blue;
-		vga.dac.read_index++;
-		vga.dac.pel_index=0;
-//		vga.dac.write_index=vga.dac.read_index+1;//disabled as it breaks wari
-		break;
-	default:
-		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:DAC:Illegal Pel Index");			//If this can actually happen that will be the day
-		ret=0;
-		break;
+		vga.dac.pel_index = 2;
+		return vga.dac.rgb[vga.dac.read_index].green;
+
+	case 2: {
+		vga.dac.pel_index = 0;
+
+		auto blue = vga.dac.rgb[vga.dac.read_index].blue;
+		++vga.dac.read_index;
+		// vga.dac.write_index=vga.dac.read_index+1;
+		// disabled as it breaks wari
+		return blue;
 	}
-	return ret;
+
+	default:
+#if 0
+		LOG_WARNING("Invalid VGA PEL index: %d", vga.dac.pel_index);
+#endif
+		return {};
+	}
 }
 
 void VGA_DAC_CombineColor(const uint8_t palette_idx, const uint8_t color_idx)
@@ -220,7 +240,7 @@ void VGA_DAC_CombineColor(const uint8_t palette_idx, const uint8_t color_idx)
 	vga.dac.combine[palette_idx] = color_idx;
 
 	if (vga.mode != M_LIN8) {
-		// Used by copper demo; almost no video card seems to suport it
+		// Used by copper demo; almost no video card seems to support it
 		vga_dac_send_color(palette_idx, color_idx);
 	}
 }
@@ -243,21 +263,24 @@ void VGA_DAC_SetEntry(const uint8_t color_idx, const uint8_t red,
 
 void VGA_SetupDAC(void)
 {
-	vga.dac.bits=6;
-	vga.dac.pel_mask=0xff;
-	vga.dac.pel_index=0;
-	vga.dac.state=DAC_READ;
-	vga.dac.read_index=0;
-	vga.dac.write_index=0;
+	vga.dac.bits        = 6;
+	vga.dac.pel_mask    = 0xff;
+	vga.dac.pel_index   = 0;
+	vga.dac.state       = DacRead;
+	vga.dac.read_index  = 0;
+	vga.dac.write_index = 0;
 
 	if (IS_VGA_ARCH) {
-		/* Setup the DAC IO port Handlers */
+		// Set up the DAC IO port handlers
 		IO_RegisterWriteHandler(0x3c6, write_p3c6, io_width_t::byte);
 		IO_RegisterReadHandler(0x3c6, read_p3c6, io_width_t::byte);
+
 		IO_RegisterWriteHandler(0x3c7, write_p3c7, io_width_t::byte);
 		IO_RegisterReadHandler(0x3c7, read_p3c7, io_width_t::byte);
+
 		IO_RegisterWriteHandler(0x3c8, write_p3c8, io_width_t::byte);
 		IO_RegisterReadHandler(0x3c8, read_p3c8, io_width_t::byte);
+
 		IO_RegisterWriteHandler(0x3c9, write_p3c9, io_width_t::byte);
 		IO_RegisterReadHandler(0x3c9, read_p3c9, io_width_t::byte);
 	}
