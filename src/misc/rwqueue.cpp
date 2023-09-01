@@ -46,6 +46,21 @@ size_t RWQueue<T>::Size()
 }
 
 template <typename T>
+void RWQueue<T>::Start()
+{
+	if (is_running) {
+		return;
+	}
+	mutex.lock();
+	is_running = true;
+	mutex.unlock();
+
+	// notify the conditions
+	has_items.notify_all();
+	has_room.notify_all();
+}
+
+template <typename T>
 void RWQueue<T>::Stop()
 {
 	if (!is_running) {
@@ -254,3 +269,7 @@ template class RWQueue<MidiWork>;
 
 #include "render.h"
 template class RWQueue<SaveImageTask>;
+
+// ZMBV Video Encoder
+#include "../capture/capture_video.h"
+template class RWQueue<ZmbvWorkUnit>;

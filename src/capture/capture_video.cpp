@@ -19,7 +19,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "capture_video.h"
 #include "capture.h"
+#include "rwqueue.h"
 
 #include <cassert>
 
@@ -30,10 +32,10 @@
 
 #include "zmbv/zmbv.h"
 
-static constexpr auto NumSampleFramesInBuffer = 16 * 1024;
-
 static constexpr auto SampleFrameSize  = 4;
 static constexpr auto NumAudioChannels = 2;
+
+static constexpr auto SampleByteSize = sizeof(int16_t);
 
 static constexpr auto AviHeaderSize = 500;
 
@@ -45,6 +47,7 @@ static struct {
 	int width                = 0;
 	int height               = 0;
 	PixelFormat pixel_format = {};
+	ZMBV_FORMAT zmbv_format  = {};
 	float frames_per_second  = 0.0f;
 
 	uint32_t written           = 0;
@@ -54,13 +57,15 @@ static struct {
 	uint32_t index_used        = 0;
 
 	struct {
-		int16_t buf[NumSampleFramesInBuffer][NumAudioChannels] = {};
-
 		uint32_t sample_rate     = 0;
 		uint32_t buf_frames_used = 0;
 		uint32_t bytes_written   = 0;
 	} audio = {};
 } video = {};
+
+static ZmbvWorkUnit main_thread_work = {};
+static std::thread worker_thread     = {};
+static RWQueue<ZmbvWorkUnit> worker_queue{256};
 
 static void add_avi_chunk(const char* tag, const uint32_t size,
                           const void* data, const uint32_t flags)
@@ -100,11 +105,8 @@ static void add_avi_chunk(const char* tag, const uint32_t size,
 	host_writed(index + 12, size);
 }
 
-void capture_video_finalise()
+static void finish_encode_job()
 {
-	if (!video.handle) {
-		return;
-	}
 	if (video.codec) {
 		video.codec->FinishVideo();
 	}
@@ -265,6 +267,17 @@ void capture_video_finalise()
 	video.handle = nullptr;
 }
 
+void capture_video_finalise()
+{
+	if (!video.handle) {
+		return;
+	}
+	worker_queue.Stop();
+	if (worker_thread.joinable()) {
+		worker_thread.join();
+	}
+}
+
 void capture_video_add_audio_data(const uint32_t sample_rate,
                                   const uint32_t num_sample_frames,
                                   const int16_t* sample_frames)
@@ -272,100 +285,20 @@ void capture_video_add_audio_data(const uint32_t sample_rate,
 	if (!video.handle) {
 		return;
 	}
-	auto frames_left = NumSampleFramesInBuffer - video.audio.buf_frames_used;
-	if (frames_left > num_sample_frames) {
-		frames_left = num_sample_frames;
+
+	const uint32_t num_samples = num_sample_frames * NumAudioChannels;
+	for (uint32_t i = 0; i < num_samples; ++i) {
+		main_thread_work.audio.push_back(sample_frames[i]);
 	}
-
-	memcpy(&video.audio.buf[video.audio.buf_frames_used],
-	       sample_frames,
-	       frames_left * SampleFrameSize);
-
-	video.audio.buf_frames_used += frames_left;
 	video.audio.sample_rate = sample_rate;
 }
 
-static void create_avi_file(const uint16_t width, const uint16_t height,
-                            const PixelFormat pixel_format,
-                            const float frames_per_second, ZMBV_FORMAT format)
+static void encode_video_frame(const RenderedImage& image)
 {
-	video.handle = CAPTURE_CreateFile(CaptureType::Video);
-	if (!video.handle) {
-		return;
-	}
-	video.codec = new VideoCodec();
-	if (!video.codec->SetupCompress(width, height)) {
-		return;
-	}
-
-	video.buf_size = video.codec->NeededSize(width, height, format);
-	video.buf.resize(video.buf_size);
-
-	video.index.resize(16 * 4096);
-	video.index_used = 8;
-
-	video.width             = width;
-	video.height            = height;
-	video.pixel_format      = pixel_format;
-	video.frames_per_second = frames_per_second;
-
-	for (auto i = 0; i < AviHeaderSize; ++i) {
-		fputc(0, video.handle);
-	}
-
-	video.frames                = 0;
-	video.written               = 0;
-	video.audio.buf_frames_used = 0;
-	video.audio.bytes_written   = 0;
-}
-
-void capture_video_add_frame(const RenderedImage& image, const float frames_per_second)
-{
-	const auto& src = image.params;
-	assert(src.width <= SCALER_MAXWIDTH);
-
-	const auto video_width = src.double_width ? src.width * 2 : src.width;
-	const auto video_height = src.double_height ? src.height * 2 : src.height;
-
-	// Disable capturing if any of the test fails
-	if (video.handle && (video.width != video_width || video.height != video_height ||
-	                     video.pixel_format != src.pixel_format ||
-	                     video.frames_per_second != frames_per_second)) {
-		capture_video_finalise();
-	}
-
-	ZMBV_FORMAT format;
-
-	switch (src.pixel_format) {
-	case PixelFormat::Indexed8: format = ZMBV_FORMAT::BPP_8; break;
-	case PixelFormat::BGR555: format = ZMBV_FORMAT::BPP_15; break;
-	case PixelFormat::BGR565: format = ZMBV_FORMAT::BPP_16; break;
-
-	// ZMBV is "the DOSBox capture format" supported by external
-	// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
-	// didn't have 24-bit color, the format itself doesn't support
-	// it. I this case we tell ZMBV the data is 32-bit and let the
-	// rgb24's int() cast operator up-convert.
-	case PixelFormat::BGR888: format = ZMBV_FORMAT::BPP_32; break;
-	case PixelFormat::BGRX8888: format = ZMBV_FORMAT::BPP_32; break;
-	default: assertm(false, "Invalid pixel_format value"); return;
-	}
-
-	if (!video.handle) {
-		create_avi_file(video_width,
-		                video_height,
-		                src.pixel_format,
-		                frames_per_second,
-		                format);
-	}
-	if (!video.handle) {
-		return;
-	}
-
 	const auto codec_flags = (video.frames % 300 == 0) ? 1 : 0;
 
 	if (!video.codec->PrepareCompressFrame(codec_flags,
-	                                       format,
+	                                       video.zmbv_format,
 	                                       image.palette_data,
 	                                       video.buf.data(),
 	                                       video.buf_size)) {
@@ -375,6 +308,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	alignas(uint32_t) uint8_t row_buffer[SCALER_MAXWIDTH * 4];
 
 	auto src_row = image.image_data;
+	const auto& src = image.params;
 
 	for (auto i = 0; i < src.height; ++i) {
 		const uint8_t* row_pointer = row_buffer;
@@ -454,17 +388,112 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 
 	add_avi_chunk("00dc", written, video.buf.data(), codec_flags & 1 ? 0x10 : 0x0);
 	video.frames++;
+}
 
-	//		LOG_MSG("CAPTURE: Frame %d video %d audio
-	//%d",video.frames, written, video.audio_buf_frames_used *4 );
-	if (video.audio.buf_frames_used) {
-		add_avi_chunk("01wb",
-		              video.audio.buf_frames_used * SampleFrameSize,
-		              video.audio.buf,
-		              0);
-
-		video.audio.bytes_written = video.audio.buf_frames_used *
-		                            SampleFrameSize;
-		video.audio.buf_frames_used = 0;
+static void worker_function()
+{
+	while (auto work_unit = worker_queue.Dequeue()) {
+		encode_video_frame(work_unit->image);
+		work_unit->image.free();
+		if (!work_unit->audio.empty()) {
+			video.audio.bytes_written = work_unit->audio.size() *
+			                            SampleByteSize;
+			add_avi_chunk("01wb",
+			              video.audio.bytes_written,
+			              work_unit->audio.data(),
+			              0);
+		}
 	}
+	finish_encode_job();
+}
+
+static void create_avi_file(const uint16_t width, const uint16_t height,
+                            const PixelFormat pixel_format,
+                            const float frames_per_second)
+{
+	switch (pixel_format) {
+	case PixelFormat::Indexed8:
+		video.zmbv_format = ZMBV_FORMAT::BPP_8;
+		break;
+	case PixelFormat::BGR555:
+		video.zmbv_format = ZMBV_FORMAT::BPP_15;
+		break;
+	case PixelFormat::BGR565:
+		video.zmbv_format = ZMBV_FORMAT::BPP_16;
+		break;
+
+	// ZMBV is "the DOSBox capture format" supported by external
+	// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
+	// didn't have 24-bit color, the format itself doesn't support
+	// it. I this case we tell ZMBV the data is 32-bit and let the
+	// rgb24's int() cast operator up-convert.
+	case PixelFormat::BGR888:
+		video.zmbv_format = ZMBV_FORMAT::BPP_32;
+		break;
+	case PixelFormat::BGRX8888:
+		video.zmbv_format = ZMBV_FORMAT::BPP_32;
+		break;
+	default: assertm(false, "Invalid pixel_format value"); return;
+	}
+
+	video.handle = CAPTURE_CreateFile(CaptureType::Video);
+	if (!video.handle) {
+		return;
+	}
+	video.codec = new VideoCodec();
+	if (!video.codec->SetupCompress(width, height)) {
+		return;
+	}
+
+	video.buf_size = video.codec->NeededSize(width, height, video.zmbv_format);
+	video.buf.resize(video.buf_size);
+
+	video.index.resize(16 * 4096);
+	video.index_used = 8;
+
+	video.width             = width;
+	video.height            = height;
+	video.pixel_format      = pixel_format;
+	video.frames_per_second = frames_per_second;
+
+	for (auto i = 0; i < AviHeaderSize; ++i) {
+		fputc(0, video.handle);
+	}
+
+	video.frames                = 0;
+	video.written               = 0;
+	video.audio.buf_frames_used = 0;
+	video.audio.bytes_written   = 0;
+
+	worker_queue.Start();
+	worker_thread = std::thread(worker_function);
+}
+
+void capture_video_add_frame(const RenderedImage& image, const float frames_per_second)
+{
+	const auto& src = image.params;
+	assert(src.width <= SCALER_MAXWIDTH);
+
+	const auto video_width = src.double_width ? src.width * 2 : src.width;
+	const auto video_height = src.double_height ? src.height * 2 : src.height;
+
+	// Disable capturing if any of the test fails
+	if (video.handle && (video.width != video_width || video.height != video_height ||
+	                     video.pixel_format != src.pixel_format ||
+	                     video.frames_per_second != frames_per_second)) {
+		capture_video_finalise();
+	}
+
+	if (!video.handle) {
+		create_avi_file(video_width, video_height, src.pixel_format, frames_per_second);
+	}
+	if (!video.handle) {
+		return;
+	}
+
+	main_thread_work.image = image.deep_copy();
+	if (!worker_queue.Enqueue(std::move(main_thread_work))) {
+		main_thread_work.image.free();
+	}
+	main_thread_work = {};
 }

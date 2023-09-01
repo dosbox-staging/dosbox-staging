@@ -24,6 +24,11 @@
 
 #include "render.h"
 
+struct ZmbvWorkUnit {
+	std::vector<int16_t> audio = {};
+	RenderedImage image        = {};
+};
+
 void capture_video_add_frame(const RenderedImage& image,
                              const float frames_per_second);
 
