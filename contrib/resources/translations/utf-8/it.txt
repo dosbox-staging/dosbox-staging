@@ -1712,7 +1712,7 @@ Dove:
   [color=cyan]CDROM[reset]     è un file ISO, CUE+BIN, CUE+ISO, o CUE+ISO+FLAC/OPUS/OGG/MP3/WAV.
   [color=cyan]IMMAGINE[reset]  è un'immagine disco rigido o floppy in formato FAT16 o FAT12.
   [color=cyan]AVVIABILE[reset] è un'immagine disco avviabile con -size GEOMETRIA specificata:
-            byte-per-settore, settori-per-testina, testine, cilindri
+            byte-per-settore,settori-per-testina,testine,cilindri
 Note:
   - %s+F4 scambia e monta il [color=cyan]CDROM[reset] o l'immagine [color=cyan]AVVIABILE[reset] successiva.
   - Il flag -ro monta l'immagine disco in sola lettura (Protetto da scrittura).
@@ -1740,8 +1740,8 @@ Esempi:
 Per le immagini [color=light-yellow]CD-ROM[reset]:   [color=blue]IMGMOUNT lettera-unità posizione-immagine -t iso[reset]
 
 Per le immagini [color=light-yellow]disco rigido[reset]: È necessario specificare la geometria dell'unità:
-byte-per-settore, settori_per_cilindro, testine_per_cilindro, cilindri.
-[color=blue]IMGMOUNT lettera-unità posizione-immagine -size bps,spc,tpc,cil[reset]
+byte-per-settore,settori-per-testina,testine,cilindri
+[color=blue]IMGMOUNT lettera-unità posizione-immagine -size bps,spt,tes,cil[reset]
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
