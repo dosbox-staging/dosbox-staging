@@ -95,7 +95,8 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 		if (!video_encoder.Init(image.params.width,
 		                        image.params.height,
 		                        image.params.pixel_format,
-		                        rounded_fps)) {
+		                        rounded_fps,
+		                        image.params.video_mode.pixel_aspect_ratio)) {
 			LOG_ERR("FFMPEG: Video encoder failed to init");
 			video_encoder.Free();
 			return;
@@ -121,12 +122,15 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 	} else if (video_encoder.width != image.params.width ||
 	           video_encoder.height != image.params.height ||
 	           video_encoder.pixel_format != image.params.pixel_format ||
-	           video_encoder.frames_per_second != rounded_fps) {
+	           video_encoder.frames_per_second != rounded_fps ||
+	           video_encoder.pixel_aspect_ratio !=
+	                   image.params.video_mode.pixel_aspect_ratio) {
 		CaptureVideoFinalise();
 		if (!video_encoder.Init(image.params.width,
 		                        image.params.height,
 		                        image.params.pixel_format,
-		                        rounded_fps)) {
+		                        rounded_fps,
+		                        image.params.video_mode.pixel_aspect_ratio)) {
 			LOG_ERR("FFMPEG: Video encoder failed to init");
 			video_encoder.Free();
 			return;
@@ -265,6 +269,7 @@ bool FfmpegMuxer::Init(FfmpegVideoEncoder& video_encoder,
 		return false;
 	}
 	video_stream->time_base = video_encoder.codec_context->time_base;
+	video_stream->sample_aspect_ratio = video_encoder.codec_context->sample_aspect_ratio;
 
 	if (avcodec_parameters_from_context(video_stream->codecpar,
 	                                    video_encoder.codec_context) < 0) {
@@ -402,7 +407,7 @@ void FfmpegAudioEncoder::Free()
 
 bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
                               const PixelFormat pixel_format,
-                              const int frames_per_second)
+                              const int frames_per_second, Fraction pixel_aspect_ratio)
 {
 	codec = avcodec_find_encoder_by_name("libx264");
 	if (!codec) {
@@ -415,13 +420,17 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 		return false;
 	}
 
-	codec_context->width         = width;
-	codec_context->height        = height;
-	codec_context->time_base.num = 1;
-	codec_context->time_base.den = frames_per_second;
-	codec_context->framerate.num = frames_per_second;
-	codec_context->framerate.den = 1;
-	codec_context->pix_fmt       = AV_PIX_FMT_YUV420P;
+	codec_context->width                   = width;
+	codec_context->height                  = height;
+	codec_context->time_base.num           = 1;
+	codec_context->time_base.den           = frames_per_second;
+	codec_context->framerate.num           = frames_per_second;
+	codec_context->framerate.den           = 1;
+	codec_context->pix_fmt                 = AV_PIX_FMT_YUV420P;
+	codec_context->sample_aspect_ratio.num = static_cast<int>(
+	        pixel_aspect_ratio.Num());
+	codec_context->sample_aspect_ratio.den = static_cast<int>(
+	        pixel_aspect_ratio.Denom());
 
 	if (avcodec_open2(codec_context, codec, nullptr) < 0) {
 		LOG_ERR("FFMPEG: Failed to open video context");
@@ -436,6 +445,7 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 	frame->width  = width;
 	frame->height = height;
 	frame->format = static_cast<int>(codec_context->pix_fmt);
+	frame->sample_aspect_ratio = codec_context->sample_aspect_ratio;
 	frame->pts    = 0;
 	// 0 means auto-align based on current CPU
 	constexpr int memory_alignment = 0;
@@ -464,10 +474,11 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 		return false;
 	}
 
-	this->width             = width;
-	this->height            = height;
-	this->pixel_format      = pixel_format;
-	this->frames_per_second = frames_per_second;
+	this->width              = width;
+	this->height             = height;
+	this->pixel_format       = pixel_format;
+	this->frames_per_second  = frames_per_second;
+	this->pixel_aspect_ratio = pixel_aspect_ratio;
 	return true;
 }
 
