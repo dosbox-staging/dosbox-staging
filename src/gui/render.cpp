@@ -632,6 +632,26 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
 #endif // C_OPENGL
 }
 
+void RENDER_NotifyEgaModeWithVgaPalette()
+{
+	// If we're getting these notifications on non-VGA cards, that's a
+	// programming error.
+	assert(machine == MCH_VGA);
+
+	auto video_mode = VGA_GetCurrentVideoMode();
+	assert(video_mode.graphics_standard == GraphicsStandard::Ega);
+
+	if (!video_mode.has_vga_colors) {
+		video_mode.has_vga_colors = true;
+
+		// We are potentially auto-switching to a VGA shader now.
+		const auto canvas = GFX_GetCanvasSize();
+
+		constexpr auto reinit_render = true;
+		RENDER_MaybeAutoSwitchShader(canvas.w, canvas.h, video_mode, reinit_render);
+	}
+}
+
 #if C_OPENGL
 
 static bool is_using_opengl_output_mode()
