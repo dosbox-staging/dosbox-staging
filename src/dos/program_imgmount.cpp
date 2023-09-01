@@ -656,7 +656,7 @@ void IMGMOUNT::AddMessages()
 	        "For [color=light-yellow]CD-ROM[reset] images:   [color=blue]IMGMOUNT drive-letter location-of-image -t iso[reset]\n"
 	        "\n"
 	        "For [color=light-yellow]hardrive[reset] images: Must specify drive geometry for hard drives:\n"
-	        "bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.\n"
+	        "bytes-per-sector,sectors-per-head,heads,cylinders\n"
 	        "[color=blue]IMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[reset]\n");
 	MSG_Add("PROGRAM_IMGMOUNT_STATUS_NONE", "No drive available\n");
 	MSG_Add("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE",

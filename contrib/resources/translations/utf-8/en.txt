@@ -1415,7 +1415,7 @@ Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).
 For [color=light-yellow]CD-ROM[reset] images:   [color=blue]IMGMOUNT drive-letter location-of-image -t iso[reset]
 
 For [color=light-yellow]hardrive[reset] images: Must specify drive geometry for hard drives:
-bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
+bytes-per-sector,sectors-per-head,heads,cylinders
 [color=blue]IMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[reset]
 
 .

@@ -1704,7 +1704,7 @@ Esempi:
 Per le immagini [color=light-yellow]CD-ROM[reset]:   [color=blue]IMGMOUNT lettera-unità posizione-immagine -t iso[reset]
 
 Per le immagini [color=light-yellow]disco rigido[reset]: È necessario specificare la geometria dell'unità:
-bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
+bytes-per-sector,sectors-per-head,heads,cylinders
 [color=blue]IMGMOUNT lettera-unità posizione-immagine -size bps,spc,hpc,cyl[reset]
 
 .
