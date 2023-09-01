@@ -221,33 +221,38 @@ static uint8_t *Composite_Process(uint8_t border, uint32_t blocks, bool double_w
 		i[0] = (i[0] << 3) - ap[0];
 
 		uint16_t idx = 0;
-		auto COMPOSITE_CONVERT = [&](const int I, const int Q) {
-			i[1] = (i[1] << 3) - ap[1];
+
+		auto composite_convert = [&](const int ii, const int q) {
+			i[1]        = (i[1] << 3) - ap[1];
 			const int c = i[0] + i[0];
 			const int d = i[-1] + i[1];
-			const int y = left_shift_signed(c + d, 8) + vga.sharpness * (c - d);
 
-			const int rr = y + vga.composite.ri * (I) +
-			               vga.composite.rq * (Q);
+			const int y = left_shift_signed(c + d, 8) +
+			              vga.sharpness * (c - d);
 
-			const int gg = y + vga.composite.gi * (I) +
-			               vga.composite.gq * (Q);
+			const int rr = y + vga.composite.ri * (ii) +
+			               vga.composite.rq * (q);
 
-			const int bb = y + vga.composite.bi * (I) +
-			               vga.composite.bq * (Q);
+			const int gg = y + vga.composite.gi * (ii) +
+			               vga.composite.gq * (q);
+
+			const int bb = y + vga.composite.bi * (ii) +
+			               vga.composite.bq * (q);
 			++i;
 			++ap;
 			++bp;
+
 			const auto srgb = (byte_clamp(rr) << 16) |
 			                  (byte_clamp(gg) << 8) | byte_clamp(bb);
+
 			write_unaligned_uint32_at(TempLine, idx++, srgb);
 		};
 
 		for (uint32_t x = 0; x < blocks; ++x) {
-			COMPOSITE_CONVERT(ap[0], bp[0]);
-			COMPOSITE_CONVERT(-bp[0], ap[0]);
-			COMPOSITE_CONVERT(-ap[0], -bp[0]);
-			COMPOSITE_CONVERT(bp[0], -ap[0]);
+			composite_convert(ap[0], bp[0]);
+			composite_convert(-bp[0], ap[0]);
+			composite_convert(-ap[0], -bp[0]);
+			composite_convert(bp[0], -ap[0]);
 		}
 	}
 	return TempLine;
