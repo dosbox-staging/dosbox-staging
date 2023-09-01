@@ -304,6 +304,12 @@ dalla scrittura quei file pur consentendo al gioco di leggerli.
 Un secondo caso d'uso: se stai utilizzando un filesystem copy-on-write 
 o di rete, questa impostazione consente di ignorare le operazioni di scrittura.
 .
+:CONFIG_SHELL_CONFIG_SHORTCUTS
+Consente la gestione diretta delle opzioni di configurazione tramite comandi
+in formato abbreviato (predefinito abilitato), cioè invece di
+'config -set sbtype sb16' è sufficiente eseguire 'sbtype sb16', allo stesso
+modo invece di 'config -get sbtype' è sufficiente eseguire il comando 'sbtype'.
+.
 :CONFIG_FRAMESKIP
 Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
 utilizzando l'impostazione '[sdl] host_rate'.
@@ -319,23 +325,28 @@ come 320x240, 640x480 e 800x600 verranno visualizzate così come sono.
 .
 :CONFIG_INTEGER_SCALING
 Vincola il fattore di scala orizzontale o verticale a valori interi.
-Saranno mantenute sempre le proporzioni corrette, il che può comportare
-l'applicazione di un fattore di scala non intero nell'altra dimensione.
-Se l'immagine è più grande dell'area di visualizzazione, il ridimensionamento
-dei numeri interi viene disabilitato automaticamente (equivalente ad 'off').
-  off:         Nessun ridimensionamento dei numeri interi; l'immagine con
-               proporzioni corrette riempie l'area di visualizzazione
-               (predefinito).
+Saranno mantenute sempre le proporzioni corrette in base all'impostazione
+'aspect', il che può comportare un fattore di scala non intero nell'altra
+direzione. Se l'immagine è più grande dell'area di visualizzazione, il
+ridimensionamento dei numeri interi viene disabilitato automaticamente
+(equivalente ad 'off'). Valori possibili:
+  auto:        Modalità 'vertical' abilitata automaticamente solo per
+               shader CRT adattivi, altrimenti 'off' (predefinito).
+  vertical:    Vincola il fattore di scala verticale a valori interi
+               all'interno dell'area di visualizzazione. Questa è
+               l'impostazione consigliata quando si utilizzano gli shader CRT
+               per evitare linee di scansione irregolari e artefatti.              
   horizontal:  Vincola il fattore di scala orizzontale a valori interi
                all'interno dell'area di visualizzazione.
-  vertical:    Vincola il fattore di scala verticale a valori interi
-               all'interno dell'area di visualizzazione.
+  off:         Nessun ridimensionamento dei numeri interi; l'immagine riempie
+               l'area di visualizzazione in base all'impostazione 'aspect'.
 .
 :CONFIG_MONOCHROME_PALETTE
-Seleziona la tavolozza predefinita per la visualizzazione monocromatica
-(predefinito 'white').
-Funziona solo quando si emula 'hercules' o 'cga_mono'.
-È possibile scorrere i colori disponibili utilizzando il tasto F11.
+Imposta la tavolozza per l'emulazione dello schermo monocromatico
+(predefinito 'amber').
+Funziona solo con i tipi di macchina 'hercules' e 'cga_mono'.
+Nota: È possibile scorrere le tavolozze disponibili tramite i tasti di
+      scelta rapida.
 .
 :CONFIG_CGA_COLORS
 Imposta l'interpretazione dei colori CGA RGBI. Interessa tutti i tipi di
@@ -372,20 +383,45 @@ sono rispettivamente:
   #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff.
 .
 :CONFIG_SCALER
-Gli scaler software sono deprecati a favore delle opzioni con accelerazione
+Gli scaler software sono deprecati a favore delle soluzioni con accelerazione
 hardware:
  - Se hai utilizzato in passato gli scaler normal2x/3x, imposta invece
-   l'opzione 'windowresolution'.
+   le opzioni 'windowresolution' o 'viewport_resolution', oppure considera
+   l'utilizzo dell'opzione 'integer_scaling'.
  - Se hai utilizzato in passato uno scaler avanzato, considera invece una
-   delle opzioni "glshader".
+   delle opzioni 'glshader'.
 .
 :CONFIG_GLSHADER
-Imposta lo shader GLSL da utilizzare nella modalità di uscita OpenGL.
-Le opzioni incluse sono 'default', 'none', uno shader elencato utilizzando
-l'argomento della riga di comando --list-glshaders o un percorso relativo o
-assoluto che fa riferimento ad un file.
-'default' imposta lo shader 'interpolation/sharp.glsl'.
-In tutti i casi, l'estensione '.glsl' dello shader può essere omessa.
+Imposta uno shader di emulazione del monitor CRT adattivo o un normale shader
+GLSL nelle modalità di uscita OpenGL.
+Opzioni shader CRT adattivo:
+  crt-auto:          Shader CRT che dà priorità all'intento dello sviluppatore
+                     e al modo in cui le persone hanno sperimentato il gioco
+                     al momento del rilascio (predefinito). La variante di
+                     shader appropriata viene selezionata automaticamente in
+                     base allo standard grafico della modalità video corrente
+                     e alla risoluzione dell'area di visualizzazione,
+                     indipendentemente dall'impostazione di 'machine'.
+                     Ciò significa che anche su una scheda grafica VGA emulata,
+                     otterrai un'autentica emulazione di un monitor EGA a
+                     scansione singola con "linee di scansione spesse" visibili
+                     nei giochi EGA.                     
+  crt-auto-machine:  Simile a 'crt-auto', ma viene selezionato un monitor CRT
+                     appropriato per l'adattatore video configurato tramite
+                     l'impostazione 'machine'. Ad esempio, i giochi CGA e EGA
+                     utilizzeranno la modalità di visualizzazione a doppia
+                     scansione su una scheda grafica VGA emulata.
+  crt-auto-arcade:   Emulazione di un monitor arcade o di un computer domestico
+                     (es. Commodore 64, Amiga), meno nitido rispetto ad un
+                     tipico monitor per PC, con linee di scansione spesse nelle
+                     modalità a bassa risoluzione. Questa opzione di fantasia
+                     non esiste nella vita reale, ma può essere molto
+                     divertente, specialmente con le conversioni DOS dei giochi
+                     Amiga.
+Altre opzioni includono 'sharp', 'none', uno shader elencato utilizzando
+l'argomento della riga di comando --list-glshaders, o un percorso relativo o
+assoluto che fa riferimento ad un file. In tutti i casi, l'estensione '.glsl'
+dello shader può essere omessa.
 .
 :CONFIG_COMPOSITE
 Abilita la modalità composita all'avvio (predefinito 'auto'). 
@@ -455,11 +491,11 @@ Nota: L'emulazione Voodoo è basata su software e non utilizza chiamate OpenGL
 .
 :CONFIG_CAPTURE_DIR
 Directory in cui vengono salvate le acquisizioni audio, video, MIDI e
-instantanee dello schermo (predefinito 'capture' nella directory di lavoro
+istantanee dello schermo (predefinito 'capture' nella directory di lavoro
 corrente).
 .
 :CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
-Imposta il formato di acquisizione delle instantanee dello schermo
+Imposta il formato di acquisizione delle istantanee dello schermo
 (predefinito 'upscaled'):
   upscaled:  L'immagine viene ridimensionata utilizzando il metodo di 
              ricampionamento Bilineare più Nitido, mantenendo le proporzioni
@@ -470,13 +506,13 @@ Imposta il formato di acquisizione delle instantanee dello schermo
              1920x1440 (ridimensionamento dei numeri interi 3:3) e quelli
              640x350 a 1400x1050 (ridimensionamento 2.1875:3; fattore di scala
              frazionario in orizzontale e con numeri interi in verticale).
-             I nomi delle acquisizioni ridimensionate non hanno alcun suffisso
+             I nomi delle istantanee ridimensionate non hanno alcun suffisso
              (es. "image0001.png").
   rendered:  Viene acquisita l'immagine postrenderizzata mostrata sullo schermo
-             I nomi delle acquisizioni renderizzate terminano con '-rendered'
+             I nomi delle istantanee renderizzate terminano con '-rendered'
              (es. 'image0001-rendered.png').
   raw:       Viene acquisito il contenuto del framebuffer non elaborato
-             (risulta sempre in pixel quadrati). I nomi delle acquisizioni non
+             (risulta sempre in pixel quadrati). I nomi delle istantanee non
              elaborate terminano con '-raw' (es. 'image0001-raw.png').
 Se vengono specificati più formati separati da spazi, l'acquisizione comporterà
 il salvataggio di più immagini in tutti i formati specificati. Inoltre sono
@@ -1666,23 +1702,23 @@ Le unità attualmente montate sono:
 Monta un'immagine CD-ROM, floppy o disco su una lettera di unità.
 
 Utilizzo:
-  [color=green]imgmount[reset] [color=white]UNITÀ[reset] [color=cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso
+  [color=green]imgmount[reset] [color=white]UNITÀ[reset] [color=cyan]CDROM[reset] [-fs iso] [-ide] -t cdrom|iso
   [color=green]imgmount[reset] [color=white]UNITÀ[reset] [color=cyan]IMMAGINE[reset] [IMMAGINE2 [..]] [-fs fat] -t hdd|floppy -ro
   [color=green]imgmount[reset] [color=white]UNITÀ[reset] [color=cyan]AVVIABILE[reset] [-fs fat|none] -t hdd -size GEOMETRIA -ro
   [color=green]imgmount[reset] -u [color=white]UNITÀ[reset]  (smonta l'immagine dell'[color=white]UNITÀ[reset])
 
 Dove:
   [color=white]UNITÀ[reset]     è la lettera dell'unità in cui verrà montata l'immagine: A, C, D ..
-  [color=cyan]CDROM-SET[reset] è un file ISO, CUE+BIN, CUE+ISO, o CUE+ISO+FLAC/OPUS/OGG/MP3/WAV.
+  [color=cyan]CDROM[reset]     è un file ISO, CUE+BIN, CUE+ISO, o CUE+ISO+FLAC/OPUS/OGG/MP3/WAV.
   [color=cyan]IMMAGINE[reset]  è un'immagine disco rigido o floppy in formato FAT16 o FAT12.
   [color=cyan]AVVIABILE[reset] è un'immagine disco avviabile con -size GEOMETRIA specificata:
-            bytes-per-sector,sectors-per-head,heads,cylinders
+            byte-per-settore, settori-per-testina, testine, cilindri
 Note:
-  - %s+F4 scambia e monta il [color=cyan]CDROM-SET[reset] o l'immagine [color=cyan]AVVIABILE[reset] successiva.
+  - %s+F4 scambia e monta il [color=cyan]CDROM[reset] o l'immagine [color=cyan]AVVIABILE[reset] successiva.
   - Il flag -ro monta l'immagine disco in sola lettura (Protetto da scrittura).
   - Il flag -ide emula un controller IDE con un'unità CD IDE collegata, utile
     per i giochi basati su CD che richiedono un vero ambiente DOS tramite
-    un'immagine HDD avviabile.
+    un'immagine disco rigido avviabile.
 
 Esempi:
   [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]C:\giochi\doom.iso[reset] -t cdrom
@@ -1704,8 +1740,8 @@ Esempi:
 Per le immagini [color=light-yellow]CD-ROM[reset]:   [color=blue]IMGMOUNT lettera-unità posizione-immagine -t iso[reset]
 
 Per le immagini [color=light-yellow]disco rigido[reset]: È necessario specificare la geometria dell'unità:
-bytes_per_sector, sectors_per_cylinder, heads_per_cylinder, cylinder_count.
-[color=blue]IMGMOUNT lettera-unità posizione-immagine -size bps,spc,hpc,cyl[reset]
+byte-per-settore, settori_per_cilindro, testine_per_cilindro, cilindri.
+[color=blue]IMGMOUNT lettera-unità posizione-immagine -size bps,spc,tpc,cil[reset]
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
@@ -3598,7 +3634,7 @@ Esempi:
 :SHELL_CMD_VOL_OUTPUT
 
  Il volume nell'unità %c è %s
- Numero di serie del volume: %04X-%04X
+ Il numero di serie del volume è %04X-%04X
 
 
 .
