@@ -431,7 +431,7 @@ constexpr cga_colors_t cga_colors_dga16 = { Rgb666
 
 // clang-format on
 
-static void init_all_palettes(const cga_colors_t &cga_colors)
+static void init_all_palettes(const cga_colors_t& cga_colors)
 {
 	auto i = 0;
 
@@ -591,13 +591,15 @@ static void log_invalid_video_mode_error(const uint16_t mode) {
 	LOG_ERR("INT10H: Trying to set invalid video mode: %02Xh", mode);
 }
 
-static bool SetCurMode(const std::vector<VideoModeBlock> &modeblock, uint16_t mode)
+static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mode)
 {
 	size_t i = 0;
 	while (modeblock[i].mode != 0xffff) {
-		if (modeblock[i].mode!=mode) i++;
-		else {
-			if (!int10.vesa_oldvbe || ModeList_VGA[i].mode < vesa_2_0_modes_start) {
+		if (modeblock[i].mode != mode) {
+			++i;
+		} else {
+			if (!int10.vesa_oldvbe ||
+			    ModeList_VGA[i].mode < vesa_2_0_modes_start) {
 				CurMode = modeblock.begin() + i;
 				return true;
 			}
@@ -1940,7 +1942,7 @@ uint32_t VideoModeMemSize(uint16_t mode) {
 	return static_cast<uint32_t>(mem_bytes);
 }
 
-static cga_colors_t handle_cga_colors_prefs_tandy(const std::string &cga_colors_prefs)
+static cga_colors_t handle_cga_colors_prefs_tandy(const std::string& cga_colors_prefs)
 {
 	constexpr auto default_brown_level = 0.5f;
 
@@ -1970,7 +1972,7 @@ static cga_colors_t handle_cga_colors_prefs_tandy(const std::string &cga_colors_
 	return cga_colors_ibm5153;
 }
 
-static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string &cga_colors_prefs)
+static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string& cga_colors_prefs)
 {
 	constexpr auto default_contrast = 1.0f;
 
@@ -1986,16 +1988,17 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string &cga_color
 
 			auto cga_colors = cga_colors_ibm5153;
 			for (size_t i = 0; i < cga_colors.size() / 2; ++i) {
-				// The contrast control effectively dims the
-				// first 8 non-bright colours only
+				// The contrast control effectively dims
+				// the first 8 non-bright colours only
 				const auto c = cga_colors[i];
+
 				const auto r = static_cast<float>(c.red)   * contrast;
 				const auto g = static_cast<float>(c.green) * contrast;
 				const auto b = static_cast<float>(c.blue)  * contrast;
 
 				cga_colors[i] = {static_cast<uint8_t>(r),
-				                 static_cast<uint8_t>(g),
-				                 static_cast<uint8_t>(b)};
+								 static_cast<uint8_t>(g),
+								 static_cast<uint8_t>(b)};
 			}
 			return cga_colors;
 		} else {
@@ -2011,11 +2014,12 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string &cga_color
 // Tokenize the `cga_colors` string into tokens that each correspond to a
 // single color definition. These tokens will be validated and parsed by
 // `parse_color_token`.
-std::vector<std::string> tokenize_cga_colors_pref(const std::string &cga_colors_pref)
+std::vector<std::string> tokenize_cga_colors_pref(const std::string& cga_colors_pref)
 {
 	std::vector<std::string> tokens;
-	if (cga_colors_pref.size() == 0)
+	if (cga_colors_pref.size() == 0) {
 		return tokens;
+	}
 
 	enum class TokenType { None, Hex, RgbTriplet };
 
@@ -2055,8 +2059,9 @@ std::vector<std::string> tokenize_cga_colors_pref(const std::string &cga_colors_
 
 		case TokenType::RgbTriplet:
 			if (inside_paren) {
-				if (ch == ')')
+				if (ch == ')') {
 					inside_paren = false;
+				}
 			} else if (is_separator(ch)) {
 				store_token();
 				curr_token = TokenType::None;
@@ -2066,8 +2071,9 @@ std::vector<std::string> tokenize_cga_colors_pref(const std::string &cga_colors_
 		++it;
 	}
 
-	if (curr_token != TokenType::None)
+	if (curr_token != TokenType::None) {
 		store_token();
+	}
 
 	return tokens;
 }
@@ -2078,10 +2084,11 @@ std::vector<std::string> tokenize_cga_colors_pref(const std::string &cga_colors_
 std::optional<Rgb666> parse_color_token(const std::string& token,
                                         const uint8_t color_index)
 {
-	if (token.size() == 0)
+	if (token.size() == 0) {
 		return {};
+	}
 
-	auto log_warning = [&](const std::string &message) {
+	auto log_warning = [&](const std::string& message) {
 		LOG_WARNING("INT10H: Error parsing 'cga_colors' color value '%s' at index %u: %s",
 		            token.c_str(),
 		            color_index,
@@ -2139,7 +2146,7 @@ std::optional<Rgb666> parse_color_token(const std::string& token,
 		const auto g_string = parts[1];
 		const auto b_string = parts[2].substr(0, parts[2].size() - 1);
 
-		auto parse_component = [&](const std::string &component) {
+		auto parse_component = [&](const std::string& component) {
 			constexpr char trim_chars[] = " \t,";
 			auto c                      = component;
 			trim(c, trim_chars);
@@ -2165,12 +2172,13 @@ std::optional<Rgb666> parse_color_token(const std::string& token,
 		const auto g = parse_component(g_string);
 		const auto b = parse_component(b_string);
 
-		if (r < 0 || g < 0 || b < 0)
+		if (r < 0 || g < 0 || b < 0) {
 			return {};
-		else
+		} else {
 			return Rgb666(static_cast<uint8_t>(r),
 			              static_cast<uint8_t>(g),
 			              static_cast<uint8_t>(b));
+		}
 	}
 	default:
 		log_warning("colors must be specified as 3 or 6 digit hex values "
@@ -2184,7 +2192,7 @@ std::optional<Rgb666> parse_color_token(const std::string& token,
 // 1. first tokenize the input into individual string tokens, one for each
 // color definition
 // 2. validate and parse the color tokens
-std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs)
+std::optional<cga_colors_t> parse_cga_colors(const std::string& cga_colors_prefs)
 {
 	const auto tokens = tokenize_cga_colors_pref(cga_colors_prefs);
 
@@ -2197,10 +2205,13 @@ std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs
 	}
 
 	cga_colors_t cga_colors = {};
+
 	bool found_errors = false;
 
 	for (size_t i = 0; i < tokens.size(); ++i) {
-		if (auto color = parse_color_token(tokens[i], static_cast<uint8_t>(i)); !color) {
+		if (auto color = parse_color_token(tokens[i],
+		                                   static_cast<uint8_t>(i));
+		    !color) {
 			found_errors = true;
 		} else {
 			// For now we only support 18-bit colours (6-bit
@@ -2215,15 +2226,16 @@ std::optional<cga_colors_t> parse_cga_colors(const std::string &cga_colors_prefs
 		}
 	}
 
-	if (found_errors)
+	if (found_errors) {
 		return {};
-	else
+	} else {
 		return cga_colors;
+	}
 }
 
 static cga_colors_t configure_cga_colors()
 {
-	const auto render_section = static_cast<const Section_prop *>(
+	const auto render_section = static_cast<const Section_prop*>(
 	        control->GetSection("render"));
 	assert(render_section);
 
@@ -2234,45 +2246,43 @@ static cga_colors_t configure_cga_colors()
 		return cga_colors_default;
 	}
 
-	if (cga_colors_prefs == "default")
+	if (cga_colors_prefs == "default") {
 		return cga_colors_default;
 
-	else if (starts_with(cga_colors_prefs, "tandy")) {
+	} else if (starts_with(cga_colors_prefs, "tandy")) {
 		return handle_cga_colors_prefs_tandy(cga_colors_prefs);
-	}
 
-	else if (starts_with(cga_colors_prefs, "ibm5153")) {
+	} else if (starts_with(cga_colors_prefs, "ibm5153")) {
 		return handle_cga_colors_prefs_ibm5153(cga_colors_prefs);
-	}
 
-	else if (cga_colors_prefs == "tandy-warm")
+	} else if (cga_colors_prefs == "tandy-warm") {
 		return cga_colors_tandy_warm;
 
-	else if (cga_colors_prefs == "agi-amiga-v1")
+	} else if (cga_colors_prefs == "agi-amiga-v1") {
 		return cga_colors_agi_amiga_v1;
 
-	else if (cga_colors_prefs == "agi-amiga-v2")
+	} else if (cga_colors_prefs == "agi-amiga-v2") {
 		return cga_colors_agi_amiga_v2;
 
-	else if (cga_colors_prefs == "agi-amiga-v3")
+	} else if (cga_colors_prefs == "agi-amiga-v3") {
 		return cga_colors_agi_amiga_v3;
 
-	else if (cga_colors_prefs == "agi-amigaish")
+	} else if (cga_colors_prefs == "agi-amigaish") {
 		return cga_colors_agi_amigaish;
 
-	else if (cga_colors_prefs == "scumm-amiga")
+	} else if (cga_colors_prefs == "scumm-amiga") {
 		return cga_colors_scumm_amiga;
 
-	else if (cga_colors_prefs == "colodore")
+	} else if (cga_colors_prefs == "colodore") {
 		return cga_colors_colodore_sat50;
 
-	else if (cga_colors_prefs == "colodore-sat")
+	} else if (cga_colors_prefs == "colodore-sat") {
 		return cga_colors_colodore_sat60;
 
-	else if (cga_colors_prefs == "dga16")
+	} else if (cga_colors_prefs == "dga16") {
 		return cga_colors_dga16;
 
-	else {
+	} else {
 		const auto cga_colors = parse_cga_colors(cga_colors_prefs);
 		if (!cga_colors) {
 			LOG_WARNING("INT10H: Using default CGA colors");
