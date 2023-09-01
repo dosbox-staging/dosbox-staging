@@ -154,7 +154,8 @@ const char* to_string(const PixelFormat pf);
 uint8_t get_bits_per_pixel(const PixelFormat pf);
 
 
-// Details about the rendered image.
+// Extra details about a bitmap image that represents the DOS video output.
+//
 // E.g. for the 320x200 256-colour 13h VGA mode with double-scanning
 // and pixel-doubling enabled:
 //   - width = 320 (will be pixel-doubled post-render via double_width)
@@ -164,7 +165,7 @@ uint8_t get_bits_per_pixel(const PixelFormat pf);
 //   - double_width = true (pixel-doubling)
 //   - double_height = false (we're rendering scan-doubled)
 //
-struct RenderParams {
+struct ImageInfo {
 	// Width of the rendered image (prior to optional width-doubling)
 	uint16_t width = 0;
 
@@ -202,7 +203,7 @@ struct RenderParams {
 	//   - pixel_aspect_ratio = 5/6 (1:1.2)
 	VideoMode video_mode = {};
 
-	constexpr bool operator==(const RenderParams& that) const
+	constexpr bool operator==(const ImageInfo& that) const
 	{
 		return (width == that.width && height == that.height &&
 		        double_width == that.double_width &&
@@ -213,7 +214,7 @@ struct RenderParams {
 		        video_mode == that.video_mode);
 	}
 
-	constexpr bool operator!=(const RenderParams& that) const
+	constexpr bool operator!=(const ImageInfo& that) const
 	{
 		return !operator==(that);
 	}

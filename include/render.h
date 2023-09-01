@@ -47,7 +47,7 @@ struct RenderPal_t {
 };
 
 struct Render_t {
-	RenderParams src = {};
+	ImageInfo src = {};
 	uint32_t src_start   = 0;
 
 	// Frames per second
@@ -92,7 +92,7 @@ struct Render_t {
 // to the image capturer.
 //
 struct RenderedImage {
-	RenderParams params = {};
+	ImageInfo params = {};
 
 	// If true, the image is stored flipped vertically, starting from the
 	// bottom row
