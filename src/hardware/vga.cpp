@@ -483,3 +483,7 @@ void SVGA_Setup_Driver(void) {
 	}
 }
 
+const VideoMode& VGA_GetCurrentVideoMode() {
+	return vga.draw.render.video_mode;
+}
+
