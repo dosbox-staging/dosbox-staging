@@ -119,6 +119,9 @@ enum VGAModes {
 	M_ERROR = 1 << 31,
 };
 
+constexpr auto NumCgaColors = 16;
+constexpr auto NumVgaColors = 256;
+
 constexpr auto vesa_2_0_modes_start = 0x120;
 
 constexpr uint16_t EGA_HALF_CLOCK = 1 << 0;
@@ -851,6 +854,8 @@ struct VgaAttr {
 	// The next byte write to 3C0h will be loaded into this register.
 	uint8_t index = 0;
 
+	// On EGA: 2-bit RGB colour values
+	// On VGA: indices into the first 64 Color Registers
 	uint8_t palette[16] = {};
 
 	AttributeModeControlRegister mode_control = {};
@@ -931,14 +936,11 @@ struct RGBEntry {
 	uint8_t blue  = 0;
 };
 
-constexpr auto NumCgaColors = 16;
 typedef std::array<RGBEntry, NumCgaColors> cga_colors_t;
 
-constexpr auto NumVgaDacColors = 256;
-
 struct VgaDac {
-	RGBEntry rgb[NumVgaDacColors]         = {};
-	uint32_t palette_map[NumVgaDacColors] = {};
+	RGBEntry rgb[NumVgaColors]         = {};
+	uint32_t palette_map[NumVgaColors] = {};
 
 	uint8_t combine[16] = {};
 
@@ -1070,9 +1072,9 @@ void VGA_CheckScanLength(void);
 void VGA_ChangedBank(void);
 
 // DAC/Attribute functions
-void VGA_DAC_CombineColor(const uint8_t attr, const uint8_t pal);
+void VGA_DAC_CombineColor(const uint8_t palette_idx, const uint8_t color_idx);
 
-void VGA_DAC_SetEntry(const uint8_t entry, const uint8_t red,
+void VGA_DAC_SetEntry(const uint8_t color_idx, const uint8_t red,
                       const uint8_t green, const uint8_t blue);
 
 void VGA_ATTR_SetPalette(const uint8_t index, const PaletteRegister value);

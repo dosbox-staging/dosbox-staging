@@ -60,27 +60,27 @@ Note:  Each read or write of this register will cycle through first the
 
 enum {DAC_READ,DAC_WRITE};
 
-static void vga_dac_send_color(const uint8_t index, const uint8_t src)
+static void vga_dac_send_color(const uint8_t palette_idx,
+                               const uint8_t color_idx)
 {
-	const auto& src_rgb666 = vga.dac.rgb[src];
+	const auto& src_rgb666 = vga.dac.rgb[color_idx];
 
 	const auto r8 = rgb6_to_8_lut(src_rgb666.red);
 	const auto g8 = rgb6_to_8_lut(src_rgb666.green);
 	const auto b8 = rgb6_to_8_lut(src_rgb666.blue);
 
 	// Map the source color into palette's requested index
-	vga.dac.palette_map[index] = static_cast<uint32_t>((r8 << 16) |
+	vga.dac.palette_map[palette_idx] = static_cast<uint32_t>((r8 << 16) |
 	                                                   (g8 << 8) | b8);
 
-	ReelMagic_RENDER_SetPalette(index, r8, g8, b8);
+	ReelMagic_RENDER_SetPalette(palette_idx, r8, g8, b8);
 }
 
-static void vga_dac_update_color(const uint16_t index)
+static void vga_dac_update_color(const uint8_t palette_idx)
 {
-	const auto maskIndex = index & vga.dac.pel_mask;
-	assert(maskIndex <= UINT8_MAX); // lookup into 256-byte table
-	assert(index <= UINT8_MAX);     // lookup into 256-byte table
-	vga_dac_send_color(static_cast<uint8_t>(index), static_cast<uint8_t>(maskIndex));
+	const uint8_t color_idx = palette_idx & vga.dac.pel_mask;
+
+	vga_dac_send_color(palette_idx, color_idx);
 }
 
 static void write_p3c6(io_port_t, io_val_t value, io_width_t)
@@ -89,8 +89,11 @@ static void write_p3c6(io_port_t, io_val_t value, io_width_t)
 	if (vga.dac.pel_mask != val) {
 		LOG(LOG_VGAMISC, LOG_NORMAL)("VGA:DCA:Pel Mask set to %X", val);
 		vga.dac.pel_mask = val;
-		for (uint16_t i = 0; i < 256; i++)
-			vga_dac_update_color( i );
+
+		for (auto i = 0; i < NumVgaColors; ++i) {
+			const auto palette_idx = check_cast<uint8_t>(i);
+			vga_dac_update_color(palette_idx);
+		}
 	}
 }
 
@@ -148,21 +151,31 @@ static void write_p3c9(io_port_t, io_val_t value, io_width_t)
 		switch (vga.mode) {
 		case M_VGA:
 		case M_LIN8:
-			vga_dac_update_color( vga.dac.write_index );
-			if ( GCC_UNLIKELY( vga.dac.pel_mask != 0xff)) {
+			vga_dac_update_color(vga.dac.write_index);
+
+			if (GCC_UNLIKELY(vga.dac.pel_mask != 0xff)) {
 				const auto index = vga.dac.write_index;
-				if ( (index & vga.dac.pel_mask) == index ) {
-					for (uint16_t i = index + 1u; i < 256; i++)
-						if ( (i & vga.dac.pel_mask) == index )
-							vga_dac_update_color(static_cast<uint8_t>(i));
+
+				if ((index & vga.dac.pel_mask) == index) {
+					for (auto i = index + 1u; i < NumVgaColors; i++) {
+						const auto palette_idx = check_cast<uint8_t>(i);
+
+						if ((palette_idx & vga.dac.pel_mask) == index) {
+							vga_dac_update_color(palette_idx);
+						}
+					}
 				}
-			} 
+			}
 			break;
 		default:
 			// Check for attributes and DAC entry link
 			for (uint8_t i = 0; i < NumCgaColors; ++i) {
-				if (vga.dac.combine[i] == vga.dac.write_index) {
-					vga_dac_send_color(i, vga.dac.write_index);
+				const auto palette_idx = i;
+				const auto color_idx = vga.dac.write_index;
+
+				if (vga.dac.combine[palette_idx] == color_idx) {
+					vga_dac_send_color(palette_idx,
+					                   color_idx);
 				}
 			}
 		}
@@ -202,26 +215,28 @@ static uint8_t read_p3c9(io_port_t, io_width_t)
 	return ret;
 }
 
-void VGA_DAC_CombineColor(const uint8_t attr, const uint8_t pal) {
-	/* Check if this is a new color */
-	vga.dac.combine[attr]=pal;
+void VGA_DAC_CombineColor(const uint8_t palette_idx, const uint8_t color_idx)
+{
+	vga.dac.combine[palette_idx] = color_idx;
+
 	if (vga.mode != M_LIN8) {
-		// used by copper demo; almost no video card seems to suport it
-		vga_dac_send_color( attr, pal );
+		// Used by copper demo; almost no video card seems to suport it
+		vga_dac_send_color(palette_idx, color_idx);
 	}
 }
 
-void VGA_DAC_SetEntry(const uint8_t entry, const uint8_t red,
+void VGA_DAC_SetEntry(const uint8_t color_idx, const uint8_t red,
                       const uint8_t green, const uint8_t blue)
 {
-	//Should only be called in machine != vga
-	vga.dac.rgb[entry].red=red;
-	vga.dac.rgb[entry].green=green;
-	vga.dac.rgb[entry].blue=blue;
+	// Should only be called for non-VGA machine types
+	vga.dac.rgb[color_idx].red   = red;
+	vga.dac.rgb[color_idx].green = green;
+	vga.dac.rgb[color_idx].blue  = blue;
 
 	for (uint8_t i = 0; i < NumCgaColors; ++i) {
-		if (vga.dac.combine[i] == entry) {
-			vga_dac_send_color(i, i);
+		const auto palette_idx = i;
+		if (vga.dac.combine[palette_idx] == color_idx) {
+			vga_dac_send_color(palette_idx, palette_idx);
 		}
 	}
 }
@@ -234,6 +249,7 @@ void VGA_SetupDAC(void)
 	vga.dac.state=DAC_READ;
 	vga.dac.read_index=0;
 	vga.dac.write_index=0;
+
 	if (IS_VGA_ARCH) {
 		/* Setup the DAC IO port Handlers */
 		IO_RegisterWriteHandler(0x3c6, write_p3c6, io_width_t::byte);

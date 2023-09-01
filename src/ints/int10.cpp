@@ -699,7 +699,7 @@ static void INT10_InitVGA(void)
 			// Initialize 256-colour VGA DAC palette to black
 			IO_Write(0x3c8, 0);
 
-			for (auto i = 0; i < NumVgaDacColors; ++i) {
+			for (auto i = 0; i < NumVgaColors; ++i) {
 				constexpr RGBEntry black = {0, 0, 0};
 
 				IO_Write(0x3c9, black.red);
