@@ -233,7 +233,7 @@ enum class PixelFormat : uint8_t;
 struct VgaDraw {
 	bool resizing = false;
 
-	RenderParams render = {};
+	ImageInfo render = {};
 
 	uint32_t blocks             = 0;
 	Bitu address                = 0;

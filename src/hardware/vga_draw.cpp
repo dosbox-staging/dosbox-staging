@@ -1862,7 +1862,7 @@ constexpr auto pixel_aspect_1280x1024 = Fraction(4, 3) / Fraction(1280, 1024);
 //   vga.draw.blocks
 //   vga.draw.vblank_skip
 //   vga.draw.line_length
-RenderParams setup_drawing()
+ImageInfo setup_drawing()
 {
 	// Set the drawing mode
 	switch (machine) {
@@ -2762,7 +2762,7 @@ RenderParams setup_drawing()
 	        vga.draw.delay.vrend);
 #endif
 
-	RenderParams render = {};
+	ImageInfo render = {};
 
 	render.width              = render_width;
 	render.height             = render_height;
