@@ -3158,26 +3158,14 @@ static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height)
 	                        sdl.draw.render_pixel_aspect_ratio);
 }
 
-void GFX_SetIntegerScalingMode(const std::string& new_mode)
-{
-	if (new_mode == "off") {
-		sdl.integer_scaling_mode = IntegerScalingMode::Off;
-	} else if (new_mode == "auto") {
-		sdl.integer_scaling_mode = IntegerScalingMode::Auto;
-	} else if (new_mode == "horizontal") {
-		sdl.integer_scaling_mode = IntegerScalingMode::Horizontal;
-	} else if (new_mode == "vertical") {
-		sdl.integer_scaling_mode = IntegerScalingMode::Vertical;
-	} else {
-		LOG_WARNING("RENDER: Unknown integer scaling mode '%s', defaulting to 'off'",
-		            new_mode.c_str());
-		sdl.integer_scaling_mode = IntegerScalingMode::Off;
-	}
-}
-
 IntegerScalingMode GFX_GetIntegerScalingMode()
 {
 	return sdl.integer_scaling_mode;
+}
+
+void GFX_SetIntegerScalingMode(const IntegerScalingMode mode)
+{
+	sdl.integer_scaling_mode = mode;
 }
 
 InterpolationMode GFX_GetInterpolationMode()
