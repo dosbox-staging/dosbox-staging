@@ -29,6 +29,7 @@
 #include "inout.h"
 #include "math_utils.h"
 #include "pci_bus.h"
+#include "render.h"
 #include "rgb666.h"
 #include "setup.h"
 #include "string_utils.h"
@@ -1942,13 +1943,13 @@ uint32_t VideoModeMemSize(uint16_t mode) {
 	return static_cast<uint32_t>(mem_bytes);
 }
 
-static cga_colors_t handle_cga_colors_prefs_tandy(const std::string& cga_colors_prefs)
+static cga_colors_t handle_cga_colors_prefs_tandy(const std::string& cga_colors_setting)
 {
 	constexpr auto default_brown_level = 0.5f;
 
 	auto brown_level = default_brown_level;
 
-	const auto tokens = split(cga_colors_prefs, ' ');
+	const auto tokens = split(cga_colors_setting, ' ');
 
 	if (tokens.size() > 1) {
 		auto brown_level_pref = tokens[1];
@@ -1972,13 +1973,13 @@ static cga_colors_t handle_cga_colors_prefs_tandy(const std::string& cga_colors_
 	return cga_colors_ibm5153;
 }
 
-static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string& cga_colors_prefs)
+static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string& cga_colors_setting)
 {
 	constexpr auto default_contrast = 1.0f;
 
 	auto contrast = default_contrast;
 
-	const auto tokens = split(cga_colors_prefs, ' ');
+	const auto tokens = split(cga_colors_setting, ' ');
 
 	if (tokens.size() > 1) {
 		auto contrast_pref = tokens[1];
@@ -1988,17 +1989,17 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string& cga_color
 
 			auto cga_colors = cga_colors_ibm5153;
 			for (size_t i = 0; i < cga_colors.size() / 2; ++i) {
-				// The contrast control effectively dims
-				// the first 8 non-bright colours only
-				const auto c = cga_colors[i];
+					// The contrast control effectively dims the first 8
+					// non-bright colours only
+					const auto c = cga_colors[i];
 
-				const auto r = static_cast<float>(c.red)   * contrast;
-				const auto g = static_cast<float>(c.green) * contrast;
-				const auto b = static_cast<float>(c.blue)  * contrast;
+					const auto r = static_cast<float>(c.red)   * contrast;
+					const auto g = static_cast<float>(c.green) * contrast;
+					const auto b = static_cast<float>(c.blue)  * contrast;
 
-				cga_colors[i] = {static_cast<uint8_t>(r),
-								 static_cast<uint8_t>(g),
-								 static_cast<uint8_t>(b)};
+					cga_colors[i] = {static_cast<uint8_t>(r),
+									 static_cast<uint8_t>(g),
+									 static_cast<uint8_t>(b)};
 			}
 			return cga_colors;
 		} else {
@@ -2192,9 +2193,9 @@ std::optional<Rgb666> parse_color_token(const std::string& token,
 // 1. first tokenize the input into individual string tokens, one for each
 // color definition
 // 2. validate and parse the color tokens
-std::optional<cga_colors_t> parse_cga_colors(const std::string& cga_colors_prefs)
+std::optional<cga_colors_t> parse_cga_colors(const std::string& cga_colors_setting)
 {
-	const auto tokens = tokenize_cga_colors_pref(cga_colors_prefs);
+	const auto tokens = tokenize_cga_colors_pref(cga_colors_setting);
 
 	if (tokens.size() != NumCgaColors) {
 		LOG_WARNING("INT10H: Invalid 'cga_colors' value: %d colors must be specified "
@@ -2235,55 +2236,51 @@ std::optional<cga_colors_t> parse_cga_colors(const std::string& cga_colors_prefs
 
 static cga_colors_t configure_cga_colors()
 {
-	const auto render_section = static_cast<const Section_prop*>(
-	        control->GetSection("render"));
-	assert(render_section);
+	const auto cga_colors_setting = RENDER_GetCgaColorsSetting();
 
-	const std::string cga_colors_prefs = render_section->Get_string("cga_colors");
-
-	if (cga_colors_prefs.empty()) {
+	if (cga_colors_setting.empty()) {
 		LOG_WARNING("INT10H: No value specified for 'cga_colors', using default CGA colors");
 		return cga_colors_default;
 	}
 
-	if (cga_colors_prefs == "default") {
+	if (cga_colors_setting == "default") {
 		return cga_colors_default;
 
-	} else if (starts_with(cga_colors_prefs, "tandy")) {
-		return handle_cga_colors_prefs_tandy(cga_colors_prefs);
+	} else if (starts_with(cga_colors_setting, "tandy")) {
+		return handle_cga_colors_prefs_tandy(cga_colors_setting);
 
-	} else if (starts_with(cga_colors_prefs, "ibm5153")) {
-		return handle_cga_colors_prefs_ibm5153(cga_colors_prefs);
+	} else if (starts_with(cga_colors_setting, "ibm5153")) {
+		return handle_cga_colors_prefs_ibm5153(cga_colors_setting);
 
-	} else if (cga_colors_prefs == "tandy-warm") {
+	} else if (cga_colors_setting == "tandy-warm") {
 		return cga_colors_tandy_warm;
 
-	} else if (cga_colors_prefs == "agi-amiga-v1") {
+	} else if (cga_colors_setting == "agi-amiga-v1") {
 		return cga_colors_agi_amiga_v1;
 
-	} else if (cga_colors_prefs == "agi-amiga-v2") {
+	} else if (cga_colors_setting == "agi-amiga-v2") {
 		return cga_colors_agi_amiga_v2;
 
-	} else if (cga_colors_prefs == "agi-amiga-v3") {
+	} else if (cga_colors_setting == "agi-amiga-v3") {
 		return cga_colors_agi_amiga_v3;
 
-	} else if (cga_colors_prefs == "agi-amigaish") {
+	} else if (cga_colors_setting == "agi-amigaish") {
 		return cga_colors_agi_amigaish;
 
-	} else if (cga_colors_prefs == "scumm-amiga") {
+	} else if (cga_colors_setting == "scumm-amiga") {
 		return cga_colors_scumm_amiga;
 
-	} else if (cga_colors_prefs == "colodore") {
+	} else if (cga_colors_setting == "colodore") {
 		return cga_colors_colodore_sat50;
 
-	} else if (cga_colors_prefs == "colodore-sat") {
+	} else if (cga_colors_setting == "colodore-sat") {
 		return cga_colors_colodore_sat60;
 
-	} else if (cga_colors_prefs == "dga16") {
+	} else if (cga_colors_setting == "dga16") {
 		return cga_colors_dga16;
 
 	} else {
-		const auto cga_colors = parse_cga_colors(cga_colors_prefs);
+		const auto cga_colors = parse_cga_colors(cga_colors_setting);
 		if (!cga_colors) {
 			LOG_WARNING("INT10H: Using default CGA colors");
 		}
