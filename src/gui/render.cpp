@@ -325,16 +325,21 @@ static Bitu make_aspect_table(Bitu height, double scaley, Bitu miny)
 	return linesadded;
 }
 
-#if C_OPENGL
-static void render_reinit()
+static Section_prop* get_render_section()
 {
 	assert(control);
 
-	const auto render_sec = dynamic_cast<Section_prop*>(
+	auto render_section = static_cast<Section_prop*>(
 	        control->GetSection("render"));
-	assert(render_sec);
+	assert(render_section);
 
-	RENDER_Init(render_sec);
+	return render_section;
+}
+
+#if C_OPENGL
+static void render_reinit()
+{
+	RENDER_Init(get_render_section());
 }
 #endif
 
@@ -700,6 +705,11 @@ static const char* to_string(const enum MonochromePalette palette)
 	}
 }
 
+bool RENDER_IsAspectRatioCorrectionEnabled()
+{
+	return get_render_section()->Get_bool("aspect");
+}
+
 static void init_render_settings(Section_prop& secprop)
 {
 	constexpr auto always        = Property::Changeable::Always;
@@ -843,18 +853,8 @@ void RENDER_AddConfigSection(const config_ptr_t& conf)
 
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
 {
-	assert(control);
-
-	auto render_section = control->GetSection("render");
-	assert(render_section);
-
-	const auto sec = dynamic_cast<Section_prop*>(render_section);
-	assert(sec);
-	if (!sec) {
-		return;
-	}
-
-	const auto string_prop = sec->GetStringProp("monochrome_palette");
+	const auto string_prop = get_render_section()->GetStringProp(
+	        "monochrome_palette");
 	string_prop->SetValue(to_string(palette));
 }
 

@@ -1162,22 +1162,13 @@ static void NewMouseScreenParams()
 	MOUSE_NewScreenParams(params);
 }
 
-static bool wants_aspect_ratio_correction()
-{
-	const auto render_section = static_cast<Section_prop*>(
-	        control->GetSection("render"));
-	assert(render_section);
-
-	return render_section->Get_bool("aspect");
-}
-
 static void update_fallback_dimensions(const double dpi_scale)
 {
 	// TODO This only works for 320x200 games. We cannot make hardcoded
 	// assumptions about aspect ratios in general, e.g. the pixel aspect ratio
 	// is 1:1 for 640x480 games both with 'aspect = on` and 'aspect = off'.
-	const auto fallback_height = (wants_aspect_ratio_correction() ? 480 : 400) /
-	                             dpi_scale;
+	const auto fallback_height =
+	        (RENDER_IsAspectRatioCorrectionEnabled() ? 480 : 400) / dpi_scale;
 
 	assert(dpi_scale > 0);
 	const auto fallback_width = 640 / dpi_scale;
@@ -3540,7 +3531,7 @@ static void GUI_StartUp(Section *sec)
 		GFX_ObtainDisplayDimensions();
 	}
 
-	set_output(section, wants_aspect_ratio_correction());
+	set_output(section, RENDER_IsAspectRatioCorrectionEnabled());
 
 	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
 	SetIcon();
@@ -3622,7 +3613,7 @@ void GFX_RegenerateWindow(Section *sec) {
 		return;
 	}
 	remove_window();
-	set_output(sec, wants_aspect_ratio_correction());
+	set_output(sec, RENDER_IsAspectRatioCorrectionEnabled());
 	GFX_ResetScreen();
 }
 
