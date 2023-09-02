@@ -55,7 +55,8 @@ install_doc()
             install_file docs/README.template      "${pkg_dir}/README"
             install_file LICENSE                   "${pkg_dir}/LICENSE"
             install_file README                    "${pkg_dir}/doc/manual.txt"
-            install_file docs/dosbox.1             "${pkg_dir}/man/dosbox.1"
+            # Our man page is outated at the moment, do not install it.
+            # install_file docs/dosbox.1             "${pkg_dir}/man/dosbox.1"
             install_file licenses/BSD-2-Clause.txt "${pkg_dir}/doc/licenses/BSD-2-Clause.txt"
             install_file licenses/BSD-3-Clause.txt "${pkg_dir}/doc/licenses/BSD-3-Clause.txt"
             install_file licenses/GPL-2.0.txt      "${pkg_dir}/doc/licenses/GPL-2.0.txt"
