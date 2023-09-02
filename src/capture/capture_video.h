@@ -39,7 +39,7 @@ public:
 	virtual ~VideoEncoder() = default;
 };
 
-class ZMBVEncoder : public VideoEncoder {
+class ZmbvEncoder : public VideoEncoder {
 public:
 	void CaptureVideoAddFrame(const RenderedImage& image,
 	                          const float frames_per_second) override;

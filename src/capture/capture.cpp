@@ -611,10 +611,10 @@ static void capture_init(Section* sec)
 	if (secprop->Get_string("video_encoder") == std::string("ffmpeg")) {
 		video_encoder = std::make_unique<FfmpegEncoder>();
 	} else {
-		video_encoder = std::make_unique<ZMBVEncoder>();
+		video_encoder = std::make_unique<ZmbvEncoder>();
 	}
 #else
-	video_encoder = std::make_unique<ZMBVEncoder>();
+	video_encoder = std::make_unique<ZmbvEncoder>();
 #endif // C_FFMPEG
 
 	constexpr auto changeable_at_runtime = true;

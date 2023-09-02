@@ -101,7 +101,7 @@ static void add_avi_chunk(const char* tag, const uint32_t size,
 	host_writed(index + 12, size);
 }
 
-void ZMBVEncoder::CaptureVideoFinalise()
+void ZmbvEncoder::CaptureVideoFinalise()
 {
 	if (!video.handle) {
 		return;
@@ -266,7 +266,7 @@ void ZMBVEncoder::CaptureVideoFinalise()
 	video.handle = nullptr;
 }
 
-void ZMBVEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
+void ZmbvEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
                                   const uint32_t num_sample_frames,
                                   const int16_t* sample_frames)
 {
@@ -320,7 +320,7 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 	video.audio.bytes_written   = 0;
 }
 
-void ZMBVEncoder::CaptureVideoAddFrame(const RenderedImage& image, const float frames_per_second)
+void ZmbvEncoder::CaptureVideoAddFrame(const RenderedImage& image, const float frames_per_second)
 {
 	const auto& src = image.params;
 	assert(src.width <= SCALER_MAXWIDTH);
