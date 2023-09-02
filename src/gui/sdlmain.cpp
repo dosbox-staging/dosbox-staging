@@ -485,40 +485,43 @@ static void populate_requested_vsync_settings()
 		sdl.vsync.when_fullscreen.requested = VsyncState::Yield;
 	} else {
 		assert(user_pref == "auto");
-		// In windowed-mode, assume the window manager has exclusive
-		// access to the GPU so leave vsync off
+
+		// In 'vsync = auto' windowed-mode, we try to disable vsync for
+		// our Window because enabling vsync both at the program and
+		// compositor levels (which might be enforced) may add latency
+		// (i.e,: extra time blocked inside rendering or presentation
+		// calls), which stalls DOSBox.
+		//
 		sdl.vsync.when_windowed.requested = VsyncState::Off;
 
-		// For fullscreen mode, VRR displays that perform
-		// frame interpolation need vsync enabled to lock onto the
-		// content. So we select "vsync on" whenever a display is
-		// /potentially/ this type. This has little downside because at
-		// >140+ Hz, all DOS refresh rates are going to be presented.
-		//
+		// In fullscreen-mode, the above still applies however we add
+		// handling for VRR displays that perform frame interpolation.
+		// as tehy need vsync enabled to lock onto the content:
 		const bool prefers_vsync_when_fullscreen =
 		        (get_host_refresh_rate() >= InterpolatingVrrMinRateHz);
 
-		// For fullscreen mode with non-interpolating VRR displays, we
-		// try to disable vsync because this:
-		//
-		// 1) has no downside when the DOS rate is below the host rate.
-		//    For example, in DOOM a DOS rate of 35 fps on a 60 Hz host
-		//    will never tear because it won't exceed the host rate.
-		//
-		// 2) is "less worse" when the *unique* DOS frame rate actually
-		//    exceeds the host rate. Why? When disabled, frames might
-		//    tear, but there is no slowdown or full frames dropped.
-		//    When enabled, entire frames will either be dropped or
-		//    the host will jam up with a rendering stall, drain the
-		//    audio buffer, and possible stutter or pop.
-		//
-		// 'auto' lets us make a judgement call for average user, so
-		// we accept the risk of tearing with the guarantee of no
-		// rendering stalls or pops (versus the opposite).
-		//
 		sdl.vsync.when_fullscreen.requested = prefers_vsync_when_fullscreen
 		                                            ? VsyncState::On
 		                                            : VsyncState::Off;
+
+		// In 'vsync = auto', we also /assume/ vsync is enabled
+		// (regardless how the above requests actually played out) by
+		// overriding the measured state, as follows:
+		//
+		sdl.vsync.when_windowed.measured   = VsyncState::On;
+		sdl.vsync.when_fullscreen.measured = VsyncState::On;
+		//
+		// A 60 Hz display can only show 60 complete frames per second.
+		// To achieve a higher frame rate, the host must drop or tear
+		// frames. This creates two layers of tearing when combined with
+		// DOS's (potentially) torn frames, which is common in games
+		// that don't use vblank. In "auto" mode, we aim for the best
+		// user experience, and dual-tearing isn't it. However, users
+		// can always set 'vsync = off'.
+		//
+		// There is no downside to making this assumption when the host
+		// display is faster than the DOS rate because all frames will
+		// be presented.
 	}
 }
 
