@@ -262,6 +262,7 @@ static void halt_render(void)
 }
 
 extern uint32_t PIC_Ticks;
+
 void RENDER_EndUpdate(bool abort)
 {
 	if (GCC_UNLIKELY(!render.updating)) {
@@ -710,6 +711,25 @@ bool RENDER_IsAspectRatioCorrectionEnabled()
 	return get_render_section()->Get_bool("aspect");
 }
 
+static IntegerScalingMode get_integer_scaling_mode_setting()
+{
+	const std::string mode = get_render_section()->Get_string("integer_scaling");
+
+	if (mode == "off") {
+		return IntegerScalingMode::Off;
+	} else if (mode == "auto") {
+		return IntegerScalingMode::Auto;
+	} else if (mode == "horizontal") {
+		return IntegerScalingMode::Horizontal;
+	} else if (mode == "vertical") {
+		return IntegerScalingMode::Vertical;
+	} else {
+		LOG_WARNING("RENDER: Unknown integer scaling mode '%s', defaulting to 'off'",
+		            mode.c_str());
+		return IntegerScalingMode::Off;
+	}
+}
+
 const std::string RENDER_GetCgaColorsSetting()
 {
 	return get_render_section()->Get_string("cga_colors");
@@ -890,7 +910,7 @@ void RENDER_Init(Section* sec)
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;
 
-	GFX_SetIntegerScalingMode(section->Get_string("integer_scaling"));
+	GFX_SetIntegerScalingMode(get_integer_scaling_mode_setting());
 
 #if C_OPENGL
 	auto& shader_manager = get_shader_manager();

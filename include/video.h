@@ -264,8 +264,9 @@ struct ShaderInfo;
 
 void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
 
-void GFX_SetIntegerScalingMode(const std::string& new_mode);
+void GFX_SetIntegerScalingMode(const IntegerScalingMode mode);
 IntegerScalingMode GFX_GetIntegerScalingMode();
+
 InterpolationMode GFX_GetInterpolationMode();
 
 struct VideoMode;
