@@ -1361,6 +1361,7 @@ finish:
 	// latency (and not the rendering pipeline).
 	render_pacer->Reset();
 
+	sdl.desktop.type = screen_type;
 	return sdl.window;
 }
 
@@ -1768,7 +1769,6 @@ uint8_t GFX_SetSize(const int width, const int height,
 		sdl.frame.update = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
 
-		sdl.desktop.type = SCREEN_TEXTURE;
 		break; // SCREEN_TEXTURE
 	}
 #if C_OPENGL
@@ -2096,7 +2096,6 @@ uint8_t GFX_SetSize(const int width, const int height,
 		}
 		// Both update mechanisms use the same presentation call
 		sdl.frame.present = present_frame_gl;
-		sdl.desktop.type  = SCREEN_OPENGL;
 		break; // SCREEN_OPENGL
 	}
 #endif // C_OPENGL
