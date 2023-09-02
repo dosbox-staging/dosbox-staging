@@ -980,29 +980,14 @@ static void remove_window()
 	}
 }
 
-// After the last new frame, present a duplicate frame every N calls of this
-// function. This is an insurance policy to ensure the last frame is shown even
-// if the host previously dropped it. This is a temporary hack; it should be
-// removed in the future when everyone's PC display technology can support the >
-// 70 Hz refresh rates available in 1990s PC CRT monitors.
-static void present_new_or_maybe_dupe(const bool frame_is_new)
-{
-	static auto dupe_countdown = sdl.frame.vfr_dupe_countdown;
-	assert(dupe_countdown > 0);
-
-	if (frame_is_new || --dupe_countdown <= 0) {
-		sdl.frame.present();
-		dupe_countdown = sdl.frame.vfr_dupe_countdown;
-	}
-}
-
-// The throttled presenter skips frames that have inter-frame spaces narrower
-// than the allowed frame period, but also back-fills with duplicate frames as
-// an insurance policy to ensure the last frame is shown even if the host
-// previously dropped it.
-static void maybe_present_throttled_or_dupe(const bool frame_is_new)
+// The throttled presenter skips frames that have inter-frame spacing narrower
+// than the allowed frame period (sdl.frame.period_us). When a frame is skipped,
+// the presenter still tries to present it at its next oppourtunity.
+//
+static void maybe_present_throttled(const bool frame_is_new)
 {
 	static int64_t last_present_time = 0;
+	static auto was_new_and_throttled = false;
 
 	const auto now     = GetTicksUs();
 	const auto elapsed = now - last_present_time;
@@ -1012,7 +997,15 @@ static void maybe_present_throttled_or_dupe(const bool frame_is_new)
 		// this extra wait back by deducting it from the recorded time.
 		const auto wait_overage = elapsed % sdl.frame.period_us;
 		last_present_time = now - (9 * wait_overage / 10);
-		present_new_or_maybe_dupe(frame_is_new);
+
+		if (frame_is_new || was_new_and_throttled) {
+			sdl.frame.present();
+		}
+	}
+	// Otherwise we've had to throttle the frame, however if the frame was
+	// new, we'll record it as such and try to present it next time.
+	else {
+		was_new_and_throttled = frame_is_new;
 	}
 }
 
@@ -2389,9 +2382,13 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 		case FrameMode::Cfr:
 			maybe_present_synced(frame_is_new);
 			break;
-		case FrameMode::Vfr: present_new_or_maybe_dupe(frame_is_new); break;
+		case FrameMode::Vfr:
+			if (frame_is_new) {
+				sdl.frame.present();
+			}
+			break;
 		case FrameMode::ThrottledVfr:
-			maybe_present_throttled_or_dupe(frame_is_new);
+			maybe_present_throttled(frame_is_new);
 			break;
 		case FrameMode::Unset:
 			break;
