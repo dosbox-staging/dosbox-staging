@@ -465,12 +465,14 @@ static double get_host_refresh_rate()
 	return rate;
 }
 
-// Populates the vsync preferences from the user's conf setting. This is called
-// on-demand after startup because we need SDL running to assess the host's
-// frame rate in the "auto" vsync case.
+// Reset and populate the vsync settings from the user's conf setting. This is
+// called on-demand after startup and on output-mode changes (ie: switching from
+// an SDL-based drawing context to an OpenGL-based context).
 //
-static void populate_requested_vsync_settings()
+static void initialize_vsync_settings()
 {
+	sdl.vsync = {};
+
 	const auto section = dynamic_cast<Section_prop*>(control->GetSection("sdl"));
 	const std::string user_pref = (section ? section->Get_string("vsync") : "auto");
 
@@ -786,7 +788,7 @@ static VsyncSettings& get_vsync_settings()
 {
 	if (sdl.vsync.when_fullscreen.requested == VsyncState::Unset ||
 	    sdl.vsync.when_windowed.requested == VsyncState::Unset) {
-		populate_requested_vsync_settings();
+		initialize_vsync_settings();
 	}
 	return sdl.desktop.fullscreen ? sdl.vsync.when_fullscreen
 	                              : sdl.vsync.when_windowed;
@@ -1669,12 +1671,13 @@ uint8_t GFX_SetSize(const int width, const int height,
 
 	sdl.draw.callback = callback;
 
-	// If we're changing the rendering type, clear any previously measure
-	// vsync data because the rendering system (OpenGL, Metal, GLES, etc..)
-	// can have different vsync behavior and performance.
-	//
+	// If we're changing the SDL output type (ie: going from 'output =
+	// texture' to 'output = OpenGL'), then re-initialize our vsync settings
+	// because how the OS's compositor (if one exists) handles (or doesn't
+	// handle) this new type may be different, and thus warrants new
+	// measurements.
 	if (sdl.desktop.want_type != sdl.desktop.type) {
-		get_vsync_settings().measured = VsyncState::Unset;
+		initialize_vsync_settings();
 	}
 
 	switch (sdl.desktop.want_type) {
