@@ -115,7 +115,8 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 
 		mutex.lock();
 		video_encoder.is_initalised = true;
-		muxer.is_initalised         = muxer.is_initalised || init_muxer;
+
+		muxer.is_initalised = muxer.is_initalised || init_muxer;
 		mutex.unlock();
 		waiter.notify_all();
 
@@ -442,11 +443,11 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 		LOG_ERR("FFMPEG: Failed to allocate video frame");
 		return false;
 	}
-	frame->width  = width;
-	frame->height = height;
-	frame->format = static_cast<int>(codec_context->pix_fmt);
+	frame->width               = width;
+	frame->height              = height;
+	frame->format              = static_cast<int>(codec_context->pix_fmt);
 	frame->sample_aspect_ratio = codec_context->sample_aspect_ratio;
-	frame->pts    = 0;
+	frame->pts                 = 0;
 	// 0 means auto-align based on current CPU
 	constexpr int memory_alignment = 0;
 	if (av_frame_get_buffer(frame, memory_alignment) < 0) {
@@ -520,6 +521,7 @@ static void send_packets_to_muxer(AVCodecContext* context, int stream_index,
 			av_packet_free(&packet);
 		}
 	} while (packet_received == 0);
+
 	// These are two legitimate errors that don't need to be logged.
 	// EAGAIN meaning there's no more packets for us right now.
 	// AVERROR_EOF happens once when we flush the encoders.
