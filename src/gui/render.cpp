@@ -710,6 +710,11 @@ bool RENDER_IsAspectRatioCorrectionEnabled()
 	return get_render_section()->Get_bool("aspect");
 }
 
+const std::string RENDER_GetCgaColorsSetting()
+{
+	return get_render_section()->Get_string("cga_colors");
+}
+
 static void init_render_settings(Section_prop& secprop)
 {
 	constexpr auto always        = Property::Changeable::Always;
