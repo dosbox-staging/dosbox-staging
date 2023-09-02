@@ -153,6 +153,9 @@ extern Render_t render;
 extern ScalerLineHandler_t RENDER_DrawLine;
 
 void RENDER_AddConfigSection(const config_ptr_t& conf);
+
+bool RENDER_IsAspectRatioCorrectionEnabled();
+
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette);
 
 std::deque<std::string> RENDER_GenerateShaderInventoryMessage();
