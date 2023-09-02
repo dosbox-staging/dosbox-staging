@@ -1555,30 +1555,6 @@ static bool LoadGLShaders(const std::string& source, GLuint *vertex,
 }
 #endif
 
-
-[[maybe_unused]] static std::string get_glshader_value()
-{
-#if C_OPENGL
-	if (control) {
-		const Section *rs = control->GetSection("render");
-		assert(rs);
-		return rs->GetPropValue("glshader");
-	}
-#endif // C_OPENGL
-	return "";
-}
-
-[[maybe_unused]] static bool is_shader_flexible()
-{
-	static const std::array<std::string, 4> flexible_shader_names{{
-			"interpolation/catmull-rom",
-	        "interpolation/sharp",
-	        "none",
-	        "default",
-	}};
-	return contains(flexible_shader_names, get_glshader_value());
-}
-
 static bool is_using_kmsdrm_driver()
 {
 	const bool is_initialized = SDL_WasInit(SDL_INIT_VIDEO);
