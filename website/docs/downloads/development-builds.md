@@ -90,10 +90,10 @@ function set_ci_status(workflow_file, os_name, description, page = 1) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    set_ci_status("linux.yml", "linux", "Linux");
-    set_ci_status("macos.yml", "macos", "macOS");
-    set_ci_status("windows-msys2.yml", "msys2", "Windows MSYS2 builds ¹");
-    set_ci_status("windows-msvc.yml", "windows", "Windows MSVC builds ²");
+    set_ci_status("linux.yml", "linux", "Linux x86_64");
+    set_ci_status("macos.yml", "macos", "macOS ¹");
+    set_ci_status("windows-msys2.yml", "msys2", "Windows MSYS2 builds ²");
+    set_ci_status("windows-msvc.yml", "windows", "Windows MSVC builds ³");
 });
 
 </script>
@@ -160,10 +160,12 @@ document.addEventListener("DOMContentLoaded", () => {
 </table>
 </div>
 
-¹ Windows MSYS2 builds include 64-bit ZIP and Installer with both 64-bit MSYS2
+¹ macOS builds include Intel, Apple silicon and universal binaries.
+
+² Windows MSYS2 builds include 64-bit ZIP and Installer with both 64-bit MSYS2
 (default) and 64-bit MSVC (optional).
 
-² Windows MSVC builds include 32-bit ZIP and 64-bit ZIP.
+³ Windows MSVC builds include 32-bit ZIP and 64-bit ZIP.
 
 ## Installation notes
 
