@@ -117,6 +117,132 @@ You can always see what's cooking on the main branch! :sunglasses: :beer:
 These [snapshot builds](development-builds.md) might be slow or unstable as they
 are designed with developers and testers in mind.
 
+## Untested snapshot builds
+
+<script>
+
+function set_build_version(gh_api_artifacts, os_name) {
+    fetch(gh_api_artifacts)
+        .then(response => {
+            if (response.status !== 200)
+                return;
+
+            response.json().then(data => {
+                let changelog = data.artifacts
+                    .find(a => a.name.startsWith("changelog-"));
+
+                if (changelog === undefined)
+                    return;
+
+                let n = changelog.name.length;
+                let version = changelog.name.substring(10, n - 4);
+                let version_el = document.getElementById(os_name + "-build-version");
+                version_el.textContent = version;
+            });
+        })
+        .catch(err => {
+            console.log('Fetch Error :-S', err);
+        });
+}
+
+// Fetch build status using GitHub API and update HTML
+function set_ci_status(workflow_file, os_name, description, page = 1) {
+
+    // GitHub has strict rate-limits for anonymous users: 60 requests per hour;
+    // We request 100 results per page (max allowed); main builds are very
+    // likely to be included in the first page anyway.
+    if (page > 10) {
+        return;
+    }
+
+    let per_page = 100;
+    let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/";
+    fetch(gh_api_url + "actions/workflows/" + workflow_file + "/runs" +
+          "?page=" + page + "&per_page=" + per_page)
+        .then(response => {
+
+            // Handle HTTP error
+            if (response.status !== 200) {
+                console.log("Looks like there was a problem." +
+                            "Status Code: " + response.status);
+                return;
+            }
+
+            response.json().then(data => {
+
+                console.log(data.workflow_runs);
+
+                let status = data.workflow_runs
+                    .filter(run => run.head_branch == "main")
+                    .filter(run => run.event == "push")
+                    .find(run => run.conclusion == "success");
+
+                // If result not found, query the next page
+                if (status == undefined) {
+                    set_ci_status(workflow_file, os_name, page + 1);
+                    return;
+                }
+
+                // Update HTML elements
+                let build_link = document.createElement("a");
+                build_link.textContent = description;
+                build_link.setAttribute("href", status.html_url);
+                let build_link_tr_el = document.getElementById(os_name + "-build-link");
+                build_link_tr_el.innerHTML = '';
+                build_link_tr_el.appendChild(build_link);
+
+                let build_date = new Date(status.updated_at);
+                let date_el = document.getElementById(os_name + "-build-date");
+                date_el.textContent = build_date.toUTCString();
+
+                set_build_version(status.artifacts_url, os_name);
+            });
+        })
+        .catch(err => {
+            console.log('Fetch Error :-S', err);
+        });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    set_ci_status("platforms.yml", "platforms", "Linux non-x86");
+});
+
+</script>
+
+Although not maintained, builds for architectures other than x86_64 are being 
+compiled and run through unit tests for feedback and robustness. 
+Contributions improving compatibility for those are welcome!
+- Currently running builds: 32-bit ARMv6 and ARMv7; 64-bit ARM, Power ISA low endian, IBM z
+- Currently disabled builds: 32-bit Power ISA; 64-bit Power ISA big endian, MIPS, RISC-V
+
+!!! warning
+
+    These are unstable development snapshots intended for testing. There are no stable builds for these platforms.
+
+    Build artifacts are hosted on GitHub; you need to be logged in to download them.
+
+<div class="compact">
+<table>
+  <tr>
+    <th style="width: 260px">Download link</th>
+    <th style="width: 260px">Build version</th>
+    <th style="width: 260px">Date</th>
+  </tr>
+  <tr>
+    <td id="platforms-build-link">
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
+    </td>
+    <td id="platforms-build-version">
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
+    </td>
+    <td id="platforms-build-date">
+      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
+    </td>
+  </tr>
+</table>
+</div>
+
+You can also refer to the [Build related documentation](https://github.com/dosbox-staging/dosbox-staging/tree/main/docs).
 
 ## Older builds
 
