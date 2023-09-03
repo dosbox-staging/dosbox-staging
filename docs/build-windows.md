@@ -2,7 +2,7 @@
 
 Windows builds can be created using:
 
-- MSVC compiler, Visual Studio 2019 IDE suite, and vcpkg to provide dependencies
+- MSVC compiler, Visual Studio 2022 IDE suite, and vcpkg to provide dependencies
   *(recommended)*.
 - The Clang or GCC compilers using the Meson buildsystem running within the
   MSYS2 environment to provide dependencies.
@@ -10,7 +10,7 @@ Windows builds can be created using:
 
 ## Build using Visual Studio
 
-1. Install Visual Studio Community 2019: <https://visualstudio.microsoft.com/>.
+1. Install Visual Studio Community 2022: <https://visualstudio.microsoft.com/>.
 2. Install vcpkg: <https://github.com/Microsoft/vcpkg#quick-start-windows>.
 3. Follow instructions in [README.md](/README.md).
 

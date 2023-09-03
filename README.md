@@ -29,7 +29,7 @@ support today's systems.
 | **Language**                   | C++17
 | **SDL**                        | >= 2.0.5
 | **Logging**                    | Loguru for C++<sup>[5]</sup>
-| **Buildsystem**                | Meson or Visual Studio 2019
+| **Buildsystem**                | Meson or Visual Studio 2022
 | **CI**                         | Yes
 | **Static analysis**            | Yes<sup>[1],[3],[4]</sup>
 | **Dynamic analysis**           | Yes
@@ -248,7 +248,7 @@ brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
     symlinking to the binary from your PATH, such as into ~/.local/bin/
     -- Have fun!
 
-### Windows - Visual Studio (2019 or newer)
+### Windows - Visual Studio (2022 or newer)
 
 First, you need to setup [vcpkg] to install build dependencies. Once vcpkg
 is bootstrapped, open PowerShell and run:

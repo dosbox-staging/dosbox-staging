@@ -9,7 +9,7 @@ up builds. The minimum set of dependencies is:
 - C/C++ compiler with support for C++17
 - SDL >= 2.0.5
 - Opusfile
-- Meson >= 0.56, or Visual Studio Community Edition 2019 or 2022
+- Meson >= 0.56, or Visual Studio Community Edition 2022
 - OS that is mostly POSIX-compliant or up-to-date Windows system
 
 
