@@ -197,9 +197,6 @@ Videogeheugen in MiB (1-8) of KiB (256 tot 8192). 'auto' gebruikt de
 standaardwaarde per videoadapter. (standaard 'auto'). Zie de 'machine'
 instellingen voor geldige opties per adapter.
 .
-:CONFIG_FORCE_VGA_SINGLE_SCAN
-Always single-scan sub-350 line modes on VGA adapters (disabled by default).
-.
 :CONFIG_DOS_RATE
 Pas de framesnelheid van de geëmuleerde videomodus aan, in Hz:
   default:  De DOS-videomodus bepaalt de snelheid (aanbevolen).
@@ -262,6 +259,12 @@ een copy-on-write of netwerkgebaseerd bestandssysteem gebruikt, vermijdt deze
 instelling het activeren van schrijfbewerkingen voor deze tegen schrijven
 beveiligde bestanden.
 .
+:CONFIG_SHELL_CONFIG_SHORTCUTS
+Laat snelkoppelingen toe voor direct configuratiebeheer (standaard aan),
+d.w.z. in plaats van 'config -set sbtype sb16' is het voldoende om
+'sbtype sb16' uit te voeren, en in plaats van 'config -get sbtype' is het
+voldoende om de opdracht 'sbtype' uit te voeren .
+.
 :CONFIG_FRAMESKIP
 Overweeg om framesnelheden te beperken met de instelling '[sdl] host_rate'.
 .
@@ -275,33 +278,39 @@ gebruiken, zoals 320x200 of 640x400; waar als vierkante-pixelmodi, zoals
 .
 :CONFIG_INTEGER_SCALING
 Beperk de horizontale of verticale schaalfactor tot gehele waarden.
-De juiste beeldverhouding wordt altijd behouden, wat kan resulteren in een
-niet-gehele schaalfactor die moet worden toegepast in de andere dimensie.
-Als de afbeelding groter is dan de viewport, wordt de schaalbeperking voor
-gehele getallen automatisch uitgeschakeld (hetzelfde als 'uit').
-  uit:         geen beperking voor schaal van gehele getallen; de
-               beeldverhouding correct beeld vult de viewport (standaard).
-  horizontaal: beperk de horizontale schaalfactor tot gehele waarden binnen
-               het kijkvenster.
-  verticaal:   beperk de verticale schaalfactor tot gehele waarden binnen het
-               kijkvenster.
+De juiste beeldverhouding wordt altijd behouden volgens de 'aspect'-instelling,
+wat kan resulteren in een niet-gehele schaalfactor in de andere richting. Als
+de afbeelding groter is dan de viewport, wordt de beperking voor het schalen
+van gehele getallen automatisch uitgeschakeld (hetzelfde als 'off').
+Mogelijke waarden:
+  auto:        'vertical' modus wordt alleen automatisch ingeschakeld voor
+               adaptieve CRT-shaders, anders 'uit' (standaard).
+  vertical:    Beperk de verticale schaalfactor tot gehele waarden binnen de
+               viewport. Dit is de aanbevolen instelling bij gebruik van
+               CRT-shaders om ongelijkmatige scanlijnen en ongewenste
+               interferentieartefacten te voorkomen.
+  horizontal:  Beperk de horizontale schaalfactor tot gehele waarden binnen
+               de viewport.
+  off:         Er wordt geen beperking voor het schalen van gehele getallen
+               toegepast; de afbeelding vult de viewport volgens de
+               'aspect'-instelling.
 .
 :CONFIG_MONOCHROME_PALETTE
-Selecteer standaardpalet voor monochrome weergave.
+Selecteer standaardpalet voor monochrome weergave (standaard 'amber').
 Werkt alleen bij het emuleren van hercules of cga_mono.
-U kunt ook door beschikbare kleuren bladeren met F11.
+Note: U kunt ook door beschikbare kleuren bladeren met sneltoetsen.
 .
 :CONFIG_CGA_COLORS
 Stelt de interpretatie van CGA RGBI-kleuren in. Beïnvloedt alle machinetypes
 die CGA of betere graphics kunnen weergeven. Ingebouwde voorinstellingen:
   default:       Klassiek CGA-palet, zoals geëmuleerd door VGA-adapters
                  (standaard).
-  tandy [BL]:    Emulatie van een geïdealiseerde Tandy-monitor met instelbaar
+  tandy <bl>:    Emulatie van een geïdealiseerde Tandy-monitor met instelbaar
                  bruinniveau (0 - rood, 50 - bruin, 100 - donkergeel; standaard
                  ingesteld op 50).
   tandy-warm:    Emulatie van de werkelijke kleuruitvoer van een onbekende
                  Tandy-monitor.
-  ibm5153 [C]:   Emulatie van de werkelijke kleuruitvoer van een IBM
+  ibm5153 <c>:   Emulatie van de werkelijke kleuruitvoer van een IBM
                  5153-monitor met een unieke contrastregeling die alleen
                  niet-heldere kleuren dimt (0 tot 100; standaard 100).
   agi-amiga-v1, agi-amiga-v2, agi-amiga-v3:
@@ -332,22 +341,43 @@ Software scalers zijn verouderd ten gunste van hardware-versnelde opties:
   - Als u een geavanceerde scaler hebt gebruikt, overweeg de 'glshader'-opties.
 .
 :CONFIG_GLSHADER
-Stel de GLSL-shader in om te gebruiken in OpenGL-uitvoermodi.
-Opties omvatten 'default', 'none', een shader vermeld met behulp van de
---list-glshaders opdrachtregelargument of een absoluut of relatief pad naar
-een bestand. 'default' stelt de `interpolation/sharp.glsl` shader in.
-In alle gevallen kunt u de bestandsextensie '.glsl' van de shader weglaten.
+Stel een adaptieve CRT-monitoremulatie-shader of een gewone GLSL-shader in in
+OpenGL-uitvoermodi.
+Adaptieve CRT-shaderopties:
+  crt-auto:          Een CRT-shader die prioriteit geeft aan de intentie van de
+                     ontwikkelaar en hoe mensen de game hebben ervaren op het
+                     moment van uitgave (standaard). De juiste shader-variant
+                     wordt automatisch geselecteerd op basis van de grafische
+                     standaard van de huidige videomodus en de viewport-
+                     resolutie, ongeacht de 'machine'-instelling. Dit betekent
+                     dat u zelfs op een geëmuleerde VGA-kaart authentieke,
+                     enkelgescande EGA-monitoremulatie krijgt met zichtbare
+                     "dikke scanlijnen" in EGA-games.
+  crt-auto-machine:  Vergelijkbaar met 'crt-auto', maar hierbij wordt een vaste
+                     CRT-monitor gekozen die geschikt is voor de videoadapter
+                     die is geconfigureerd via de 'machine'-instelling. CGA- en
+                     EGA-games worden bijvoorbeeld dubbel gescand weergegeven
+                     op een geëmuleerde VGA-adapter.
+  crt-auto-arcade:   Emulatie van een arcade- of homecomputermonitor die minder
+                     scherp is dan een typische pc-monitor met dikke scanlijnen
+                     in lage resolutiemodi. Deze fantasieoptie bestaat in het
+                     echte leven niet, maar kan erg leuk zijn, vooral met
+                     DOS-poorten van Amiga-spellen.
+Andere opties zijn onder meer 'sharp', 'none', een shader die wordt vermeld met
+het opdrachtregelargument --list-glshaders, of een absoluut of relatief pad
+naar een bestand. In alle gevallen kunt u de bestandsextensie '.glsl' van de
+shader weglaten.
 .
 :CONFIG_COMPOSITE
-Schakel de composietmodus in bij het starten. 'auto' laat het programma
-beslissen.
+Schakel de composietmodus in bij het starten. (standaard 'auto').
+'auto' laat het programma beslissen.
 Opmerking: verfijn de onderstaande instellingen (dwz: tint) met behulp van de
            samengestelde sneltoetsen.
            Lees dan de nieuwe instellingen van u console en voer ze hier in.
 .
 :CONFIG_ERA
-Tijdperk van composiettechnologie.
-Bij 'auto' gebruikt PCjr nieuw en CGA/Tandy oud.
+Tijdperk van composiettechnologie (standaard 'auto').
+Bij 'auto' gebruikt PCjr 'new' en CGA/Tandy 'old'.
 .
 :CONFIG_HUE
 Uiterlijk van RGB-palet. Pas bijvoorbeeld aan totdat de lucht blauw is.
@@ -373,8 +403,8 @@ CPU-type gebruikt in emulatie (standaard 'auto'). `auto` is de snelste keuze.
 .
 :CONFIG_CYCLES
 Aantal instructies DOSBox probeert elke milliseconde te emuleren.
-Indien te hoog instelt, leidt dit tot geluidsuitval en vertragingen.
-Cycli kunnen op 3 manieren worden ingesteld:
+(standaard 'auto'). Indien te hoog instelt, leidt dit tot geluidsuitval en
+vertragingen.
   auto:            Probeert te raden wat een spel nodig heeft.
                    Het werkt meestal, maar kan voor bepaalde spelen mislukken.
   fixed <nummer>:  Zal een vast aantal cycli instellen. Dit is wat u meestal
@@ -388,6 +418,18 @@ Aantal cycli toegevoegd of afgetrokken met sneltoetsen voor snelheidsregeling
 :CONFIG_CYCLEDOWN
 Als u deze lager instelt dan 100, is dit een percentage (standaard 20).
 .
+:CONFIG_VOODOO_MEMSIZE
+Geheugengrootte (in MB) van de 3dfx Vodooo-kaart (standaard 12 MB).
+.
+:CONFIG_VOODOO_PERF
+Optimalisaties om te gebruiken bij het emuleren van de 3dfx Voodoo-kaart:
+   0: Geen optimalisaties.
+   1: Multi-threading (standaard).
+   2: Bilineaire filtering uitschakelen.
+   3: Alle optimalisaties (zowel 1 als 2).
+Opmerking: Voodo-emulatie is softwaregebaseerd en maakt geen gebruik van
+      OpenGL-oproepen op hostniveau.
+.
 :CONFIG_CAPTURE_DIR
 Directory waar de verschillende opnames worden opgeslagen, zoals audio-,
 video-, MIDI- en screenshot-opnames. ('capture' standaard in de huidige
@@ -396,10 +438,6 @@ werkdirectory).
 :CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
 Stel het opslagformaat van de standaard screenshot-actie in
 (standaard 'upscaled'):
-  raw:       De inhoud van de raw framebuffer wordt vastgelegd (oud gedrag;
-             dit resulteert altijd in vierkante pixels).
-             De bestandsnamen van onbewerkte screenshots eindigen op '_raw'
-             (bijv. 'image0001_raw.png').
   upscaled:  Het beeld wordt bilineair scherp opgeschaald zodat de hoogte rond
              de 1200 pixels ligt en de juiste beeldverhouding behouden blijft
              (afhankelijk van de instelling 'aspect'). De verticale
@@ -410,6 +448,10 @@ Stel het opslagformaat van de standaard screenshot-actie in
   rendered:  het na-gerenderde, post-shaderbeeld zoals op het scherm wordt
              weergegeven. De bestandsnamen van gerenderde screenshots eindigen
              op '_rendered' (bijv. 'image0001_rendered.png').
+  raw:       De inhoud van de raw framebuffer wordt vastgelegd (oud gedrag;
+             dit resulteert altijd in vierkante pixels).
+             De bestandsnamen van onbewerkte screenshots eindigen op '_raw'
+             (bijv. 'image0001_raw.png').
 Als meerdere instellingen zijn opgegeven, gescheiden door spaties, zal een
 screenshot actie resulteren in meerdere afbeeldingsbestanden. Naast de
 standaard actie voor het maken van screenshots, zijn er ook sneltoetsen
@@ -441,25 +483,24 @@ Opmerkingen: u moet dit uitzetten als het ten onrechte meerdere beeldschermen
              alleen naar audio te luisteren.
 .
 :CONFIG_MOUSE_SENSITIVITY
-Standaard muisgevoeligheid. 100 is een basiswaarde, 150 is 150% gevoeligheid.
-Negatieve waarden keren de richting van de muis om, 0 schakelt de beweging
-volledig uit. De optionele tweede parameter specificeert de verticale
-gevoeligheid (bijv. 100.200). Instelling kan tijdens runtime worden aangepast
-(ook per muisinterface) met behulp van de interne MOUSECTL.COM-tool,
-beschikbaar op drive Z:.
+Muisgevoeligheid voor de horizontale en verticale assen, als percentage
+(standaard 100,100). Negatieve waarden keren de as om, nul schakelt deze uit.
+Bij slechts één waarde, wordt de gevoeligheid voor beide assen ingesteld.
+De instelling kan tijdens runtime worden aangepast (ook per muisinterface) met
+behulp van de interne MOUSECTL.COM-tool, beschikbaar op schijf Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Schakel dit in om de instellingen voor muisversnelling en gevoeligheid van uw
-besturingssysteem te omzeilen. Werkt in volledig scherm of wanneer de muis
-wordt vastgelegd in venstermodus.
+besturingssysteem te omzeilen (standaard aan). Werkt in volledig scherm of
+wanneer de muis wordt vastgelegd in venstermodus.
 .
 :CONFIG_DOS_MOUSE_DRIVER
 Activeer het ingebouwde DOS-muisstuurprogramma (standaard aan).
 Opmerkingen:
-   - Schakel deze optie uit als u van plan bent het originele MOUSE.COM
-     stuurprogramma te gebruiken in geëmuleerde DOS.
-   - Wanneer het gast-besturingssysteem wordt opgestart, wordt het
-     ingebouwde stuurprogramma automatisch uitgeschakeld.
+  - Schakel deze optie uit als u van plan bent het originele MOUSE.COM
+    stuurprogramma te gebruiken in geëmuleerde DOS.
+  - Wanneer het gast-besturingssysteem wordt opgestart, wordt het
+    ingebouwde stuurprogramma automatisch uitgeschakeld.
 .
 :CONFIG_DOS_MOUSE_IMMEDIATE
 Werkt muisbewegingstellers onmiddellijk bij, zonder te wachten op onderbreking.
@@ -467,8 +508,8 @@ Kan de gameplay verbeteren, vooral in snelle spelen (arcade, FPS, enz.) - zoals
 voor sommige spelen verhoogt het effectief de bemonsteringssnelheid van de muis
 tot 1000 Hz, zonder de interrupt-overhead te verhogen.
 Kan compatibiliteitsproblemen veroorzaken. Bekende incompatibele spelen lijst:
-   - Ultima Underworld: The Stygian Abyss
-   - Ultima Underworld II: Labyrinth of Worlds
+  - Ultima Underworld: The Stygian Abyss
+  - Ultima Underworld II: Labyrinth of Worlds
 Dien een bug in bij het project als je een ander spel vindt dat niet werkt
 wanneer dit is ingeschakeld, we zullen deze lijst bijwerken.
 .
@@ -576,16 +617,15 @@ gestuurd (standaard 'auto'):
 Configuratie-opties voor de geselecteerde MIDI-interface.
 Dit is meestal het ID of naam van de MIDI-synthesizer die u wilt gebruiken
 (zoek het ID/naam op met het DOS-commando 'MIXER /LISTMIDI').
-Opmerkingen: - Deze optie heeft geen effect bij gebruik van de ingebouwde
-               synthesizers ('mididevice = fluidsynth' of mt32).
-             - Als u ALSA gebruikt, gebruik dan het Linux-commando
-               'aconnect -l' om de open MIDI-poorten weer te geven en
-               selecteer er een (bijvoorbeeld 'midiconfig=14:0' voor
-               sequencerclient 14, poort 0).
-             - Als u een fysieke Roland MT-32 met revisie 0 PCB gebruikt, kan
-               de hardware een vertraging nodig hebben om te voorkomen dat de
-               buffer overloopt. Voeg in dat geval 'delaysysex' toe,
-               bijvoorbeeld: 'midiconfig=2 delaysysex'.
+Opmerkingen:
+  - Deze optie heeft geen effect bij gebruik van de ingebouwde synthesizers
+    ('mididevice = fluidsynth' of 'mididedvice = mt32').
+  - Als u ALSA gebruikt, gebruik dan het Linux-commando 'aconnect -l' om de
+    open MIDI-poorten weer te geven en selecteer er een (bijvoorbeeld
+    'midiconfig=14:0' voor sequencerclient 14, poort 0).
+  - Als u een fysieke Roland MT-32 met revisie 0 PCB gebruikt, kan de hardware
+    een vertraging nodig hebben om te voorkomen dat de buffer overloopt. Voeg
+    in dat geval 'delaysysex' toe, bijvoorbeeld: 'midiconfig=2 delaysysex'.
 .
 :CONFIG_MPU401
 Type MPU-401 om te emuleren (standaard: 'intelligent').
@@ -603,15 +643,16 @@ programma wilt vastleggen, b.v. bij het werken met muziektoepassingen of bij
 het debuggen van MIDI-problemen.
 .
 :CONFIG_SOUNDFONT
-Pad naar een SoundFont-bestand in .sf2-indeling. U kunt een absoluut of
-relatief pad gebruiken, of de naam van een .sf2 in de 'soundfonts'-map in uw
-DOSBox-configuratiemap.
-Opmerking: het optionele volumeschaalpercentage na de bestandsnaam is niet meer
-           ondersteund. Gebruik een mixeropdracht om het volume van het
-           FluidSynth-audiokanaal te wijzigen, bijv.: 'MIXER FSYNTH 200'
+Pad naar een SoundFont-bestand in .sf2-formaat. (standaard 'default.sf2').
+U kunt een absoluut of relatief pad gebruiken, of de naam van een .sf2 in de
+'soundfonts'-map in uw DOSBox-configuratiemap.
+Een optionele procentuele waarde achter de naam schaalt het volume van het
+SoundFont. Dit is handig voor het normaliseren van het volume van verschillende
+SoundFonts. Bijvoorbeeld 'my_soundfont.sf2 50' verzwakt het volume met 50%.
+De procentuele waarde kan variëren van 1 tot 800.
 .
 :CONFIG_FSYNTH_CHORUS
-Chorus effect: 'auto', 'on', 'off', of aangepaste waarden.
+Chorus effect: 'auto' (standaard), 'on', 'off', of aangepaste waarden.
 Bij gebruik van aangepaste waarden:
   Alle vijf moeten op volgorde en spatie gescheiden worden verstrekt.
   Dit zijn: stemmentelling level snelheid breedte modulatie-golf, waar:
@@ -759,7 +800,11 @@ Filter voor de Sound Blaster CMS-uitvoer:
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_GUS
-Schakel Gravis UltraSound-emulatie in.
+Schakel Gravis UltraSound-emulatie in (standaard uitgeschakeld).
+De standaardinstellingen van basisadres 240, IRQ 5 en DMA 3 zijn gekozen zodat
+de GUS naast een Sound Blaster-kaart kan bestaan. Dit werkt prima voor de
+meeste programma's, maar sommige games en demo's verwachten de
+GUS-fabrieksinstellingen van basisadres 220, IRQ 11, DMA 1.
 .
 :CONFIG_GUSBASE
 Het IO-basisadres van de Gravis UltraSound (standaard 240).
@@ -1007,12 +1052,13 @@ Bestand dat wordt gebruikt om valse telefoonnummers aan adressen toe te wijzen
 (standaard 'phonebook.txt').
 .
 :CONFIG_XMS
-XMS-ondersteuning inschakelen.
+XMS-ondersteuning inschakelen (standaard aan).
 .
 :CONFIG_EMS
-Schakel EMS-ondersteuning in (standaard). Dit biedt de beste compatibiliteit,
-maar bepaalde applicaties werken mogelijk beter met andere keuzes, of
-vereisen dat EMS-ondersteuning is uitgeschakeld om überhaupt te werken.
+Schakel EMS-ondersteuning in (standaard aan). Dit biedt de beste
+compatibiliteit, maar bepaalde applicaties werken mogelijk beter met andere
+keuzes, of vereisen dat EMS-ondersteuning is uitgeschakeld om überhaupt te
+werken.
 .
 :CONFIG_UMB
 Schakel UMB-ondersteuning in (standaard aan).
@@ -2021,6 +2067,9 @@ Waar:
 
 Opmerkingen:
   - '-t overlay' stuurt schrijfbewerkingen voor schijf om naar een andere map.
+  - '-usecd ID' geeft directe toegang tot een CD-ROM station.
+    Dit is nodig voor CD audio (enkel ondersteunt op Windows en Linux).
+    Voer 'mount -cd' uit om de lijst met geldige ID's te achterhalen.
   - Extra opties zijn beschreven in de handleiding (README-bestand, hfst. 4).
 
 Voorbeelden:
@@ -2253,11 +2302,12 @@ Waar:
     Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (enkel voor stereo kanalen)
     Crossfeed: [color=white]x0[reset] tot [color=white]x100[reset]    Reverb: [color=white]r0[reset] tot [color=white]r100[reset]    Chorus: [color=white]c0[reset] tot [color=white]c100[reset]
 Opmerkingen:
-  Het uitvoeren van [color=green]mixer[reset] zonder argument toont de huidige mixerinstellingen.
-  De instellingen van meer dan één kanaal kan in één opdracht wijzigen. Als het
-  kanaal niet is aangegeven, kan crossfeed, reverb of chorus globaal worden
-  ingesteld. Bekijk de lijst van beschikbare MIDI-apparaten met /listmidi.
-  De optie /noshow past de wijzigingen toe zonder weergave.
+  - [color=green]mixer[reset] zonder argument toont de huidige mixerinstellingen.
+  - De instellingen van meer dan één kanaal kan in één opdracht wijzigen.
+  - Als er geen kanaal is opgegeven, kunt u crossfeed, reverb of chorus globaal
+    voor alle kanalen instellen.
+  - Bekijk de lijst van beschikbare MIDI-apparaten met /listmidi.
+  - De optie /noshow past de wijzigingen toe zonder mixer weergave.
 
 Voorbeelden:
   [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
