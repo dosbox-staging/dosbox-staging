@@ -143,12 +143,8 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 		waiter.notify_all();
 	}
 
-	RenderedImage copy = image.deep_copy();
-	if (!video_encoder.queue.Enqueue(std::move(copy))) {
-		// Should never happen but avoid a memory leak if it does
-		LOG_ERR("FFMPEG: Video encoder queue is stopped");
-		copy.free();
-	}
+	[[maybe_unused]] bool image_queued = video_encoder.queue.Enqueue(image.deep_copy());
+	assert(image_queued);
 }
 
 void FfmpegEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
@@ -512,11 +508,8 @@ static void send_packets_to_muxer(AVCodecContext* context, int stream_index,
 		packet_received = avcodec_receive_packet(context, packet);
 		if (packet_received == 0) {
 			packet->stream_index = stream_index;
-			if (!queue.Enqueue(std::move(packet))) {
-				// Should not ever happen
-				LOG_ERR("FFMPEG: Muxer queue is stopped");
-				av_packet_free(&packet);
-			}
+			[[maybe_unused]] bool packet_queued = queue.Enqueue(std::move(packet));
+			assert(packet_queued);
 		} else {
 			av_packet_free(&packet);
 		}
