@@ -22,6 +22,7 @@
 #define DOSBOX_RGB_H
 
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 

@@ -25,7 +25,7 @@
 #include "dosbox.h"
 
 #include <array>
-#include <assert.h>
+#include <cassert>
 
 #include "setup.h"
 

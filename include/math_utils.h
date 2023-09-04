@@ -22,6 +22,7 @@
 #define DOSBOX_MATH_UTILS_H
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 
 #include "support.h"
