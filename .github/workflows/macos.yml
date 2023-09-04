@@ -67,7 +67,7 @@ jobs:
           BREW_DIR="$(brew --cache)"
           DISCARD_DIR="${{ github.workspace }}/discard"
           mkdir -p "$DISCARD_DIR"
-          mv -f "$BREW_DIR"/* "$DISCARD_DIR"
+          mv -f "$BREW_DIR"/* "$DISCARD_DIR" || true
           mkdir -p "$CCACHE_DIR"
           echo "brew_dir=$BREW_DIR"     >> $GITHUB_OUTPUT
           echo "ccache_dir=$CCACHE_DIR" >> $GITHUB_OUTPUT
