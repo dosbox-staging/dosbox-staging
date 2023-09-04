@@ -185,6 +185,9 @@ struct mixer_t {
 	Compressor compressor             = {};
 	bool do_compressor                = false;
 
+	float crossfeed_strength = {};
+	bool do_crossfeed        = false;
+
 	reverb_settings_t reverb = {};
 	bool do_reverb           = false;
 
@@ -253,33 +256,10 @@ bool MixerChannel::StereoLine::operator==(const StereoLine other) const
 	return left == other.left && right == other.right;
 }
 
+// Apply the global crossfeed settings to the given channel
 static void set_global_crossfeed(mixer_channel_t channel)
 {
-	const auto sect = static_cast<Section_prop*>(control->GetSection("mixer"));
-	assert(sect);
-
-	// Global crossfeed
-	auto crossfeed = 0.0f;
-
-	const std::string crossfeed_pref = sect->Get_string("crossfeed");
-	const auto crossfeed_pref_has_bool = parse_bool_setting(crossfeed_pref);
-
-	if (crossfeed_pref_has_bool) {
-		if (*crossfeed_pref_has_bool == true) {
-			constexpr auto default_crossfeed_strength = 0.40f;
-			crossfeed = default_crossfeed_strength;
-		} else { // false
-			crossfeed = 0.0f;
-		}
-	}
-	// Otherwise a custom value was provided
-	else if (const auto p = parse_percentage(crossfeed_pref); p) {
-		crossfeed = percentage_to_gain(*p);
-	} else {
-		LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s'; crossfeed disabled",
-		            crossfeed_pref.data());
-	}
-	channel->SetCrossfeedStrength(crossfeed);
+	channel->SetCrossfeedStrength(mixer.crossfeed_strength);
 }
 
 // Apply the global reverb settings to the given channel
@@ -391,6 +371,7 @@ void MIXER_SetReverbPreset(const ReverbPreset new_preset)
 
 	// Configure the channels
 	mixer.do_reverb = (r.preset != ReverbPreset::None);
+
 	for (auto& it : mixer.channels) {
 		set_global_reverb(it.second);
 	}
@@ -470,6 +451,7 @@ void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 
 	// Configure the channels
 	mixer.do_chorus = (c.preset != ChorusPreset::None);
+
 	for (auto& it : mixer.channels) {
 		set_global_chorus(it.second);
 	}
@@ -478,6 +460,40 @@ void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 		LOG_MSG("MIXER: Chorus enabled ('%s' preset)", to_string(c.preset));
 	} else {
 		LOG_MSG("MIXER: Chorus disabled");
+	}
+}
+
+static void configure_crossfeed(const std::string_view crossfeed_pref)
+{
+	const auto crossfeed_pref_has_bool = parse_bool_setting(crossfeed_pref);
+
+	if (crossfeed_pref_has_bool) {
+		if (*crossfeed_pref_has_bool == true) {
+			constexpr auto default_crossfeed_strength = 0.40f;
+			mixer.crossfeed_strength = default_crossfeed_strength;
+		} else { // false
+			mixer.crossfeed_strength = 0.0f;
+		}
+	} else if (const auto p = parse_percentage(crossfeed_pref); p) {
+		// Otherwise a custom value was provided
+		mixer.crossfeed_strength = percentage_to_gain(*p);
+	} else {
+		LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s'; crossfeed disabled",
+		            crossfeed_pref.data());
+	}
+
+	// Configure the channels
+	mixer.do_crossfeed = (mixer.crossfeed_strength != 0.0f);
+
+	for (auto& it : mixer.channels) {
+		set_global_crossfeed(it.second);
+	}
+
+	if (mixer.do_crossfeed) {
+		LOG_MSG("MIXER: Crossfeed enabled at %3.2f strength",
+		        mixer.crossfeed_strength);
+	} else {
+		LOG_MSG("MIXER: Crossfeed disabled");
 	}
 }
 
@@ -2599,6 +2615,7 @@ void MIXER_Init(Section* sec)
 	init_compressor(section->Get_bool("compressor"));
 
 	// Initialise send effects
+	configure_crossfeed(section->Get_string("crossfeed"));
 	MIXER_SetReverbPreset(reverb_pref_to_preset(section->Get_string("reverb")));
 	MIXER_SetChorusPreset(chorus_pref_to_preset(section->Get_string("chorus")));
 
