@@ -31,6 +31,7 @@
 #include "pci_bus.h"
 #include "render.h"
 #include "rgb666.h"
+#include "rgb888.h"
 #include "setup.h"
 #include "string_utils.h"
 #include "vga.h"
@@ -2082,7 +2083,7 @@ std::vector<std::string> tokenize_cga_colors_pref(const std::string& cga_colors_
 // Input should be a token output by `tokenize_cga_colors_pref`, representing
 // a color definition. Tokens are assumed to have no leading or trailing
 // white-spaces
-std::optional<Rgb666> parse_color_token(const std::string& token,
+std::optional<Rgb888> parse_color_token(const std::string& token,
                                         const uint8_t color_index)
 {
 	if (token.size() == 0) {
@@ -2119,21 +2120,18 @@ std::optional<Rgb666> parse_color_token(const std::string& token,
 		}
 
 		if (is_hex3_token) {
-			auto r = static_cast<uint8_t>(value >> 8 & 0xf);
-			auto g = static_cast<uint8_t>(value >> 4 & 0xf);
-			auto b = static_cast<uint8_t>(value      & 0xf);
+			auto r4 = static_cast<uint8_t>(value >> 8 & 0xf);
+			auto g4 = static_cast<uint8_t>(value >> 4 & 0xf);
+			auto b4 = static_cast<uint8_t>(value      & 0xf);
 
-			r = r | r << 4;
-			g = g | g << 4;
-			b = b | b << 4;
+			return Rgb888::FromRgb444(r4, g4, b4);
 
-			return Rgb666(r, g, b);
-		} else {
-			auto r = static_cast<uint8_t>(value >> 16 & 0xff);
-			auto g = static_cast<uint8_t>(value >>  8 & 0xff);
-			auto b = static_cast<uint8_t>(value       & 0xff);
+		} else { // hex6 token
+			const auto r8 = static_cast<uint8_t>(value >> 16 & 0xff);
+			const auto g8 = static_cast<uint8_t>(value >>  8 & 0xff);
+			const auto b8 = static_cast<uint8_t>(value       & 0xff);
 
-			return Rgb666(r, g, b);
+			return Rgb888(r8, g8, b8);
 		}
 	}
 	case '(': {
@@ -2147,38 +2145,40 @@ std::optional<Rgb666> parse_color_token(const std::string& token,
 		const auto g_string = parts[1];
 		const auto b_string = parts[2].substr(0, parts[2].size() - 1);
 
-		auto parse_component = [&](const std::string& component) {
+		auto parse_component =
+		        [&](const std::string& component) -> std::optional<uint8_t> {
 			constexpr char trim_chars[] = " \t,";
-			auto c                      = component;
+
+			auto c = component;
 			trim(c, trim_chars);
 
 			if (c.empty() || !is_digits(c)) {
 				log_warning("RGB-triplet values must contain only digits");
-				return -1;
+				return {};
 			}
 
 			int32_t value;
 			if (!sscanf(c.c_str(), "%d", &value)) {
 				log_warning("could not parse RGB-triplet value");
-				return -1;
+				return {};
 			}
-			if (value > 0xff) {
+			if (value < 0 || value > 255) {
 				log_warning("RGB-triplet values must be between 0 and 255");
-				return -1;
+				return {};
 			}
 			return value;
 		};
 
-		const auto r = parse_component(r_string);
-		const auto g = parse_component(g_string);
-		const auto b = parse_component(b_string);
+		const auto r8 = parse_component(r_string);
+		const auto g8 = parse_component(g_string);
+		const auto b8 = parse_component(b_string);
 
-		if (r < 0 || g < 0 || b < 0) {
-			return {};
+		if (r8 && g8 && b8) {
+			return Rgb888(static_cast<uint8_t>(*r8),
+			              static_cast<uint8_t>(*g8),
+			              static_cast<uint8_t>(*b8));
 		} else {
-			return Rgb666(static_cast<uint8_t>(r),
-			              static_cast<uint8_t>(g),
-			              static_cast<uint8_t>(b));
+			return {};
 		}
 	}
 	default:
@@ -2215,15 +2215,12 @@ std::optional<cga_colors_t> parse_cga_colors(const std::string& cga_colors_setti
 		    !color) {
 			found_errors = true;
 		} else {
-			// For now we only support 18-bit colours (6-bit
-			// components) when redefining CGA colors. There's not
-			// too much to be gained by adding full 24-bit support,
-			// and it would complicate the implementation a lot.
-			color->red   >>= 2;
-			color->green >>= 2;
-			color->blue  >>= 2;
+			// We only support 18-bit colours (RGB666) when
+			// redefining CGA colors. There's not too much to be
+			// gained from adding full 24-bit support, and it would
+			// complicate the implementation a lot.
 
-			cga_colors[i] = *color;
+			cga_colors[i] = Rgb666::FromRgb888(*color);
 		}
 	}
 
