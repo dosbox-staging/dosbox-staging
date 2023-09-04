@@ -546,7 +546,7 @@ static inline const uint8_t* gen_call_function_setup(void *func,
                                              Bitu paramcount,
                                              bool fastcall = false)
 {
-	const uint8_t* proc_addr=(const uint8_t*)cache.pos;
+	const auto proc_addr=cache.pos;
 	gen_call_function_raw(func,fastcall);
 	return proc_addr;
 }
@@ -608,7 +608,7 @@ static const uint8_t* gen_create_branch_on_zero(HostReg reg, bool dword)
 		IMM_OP(11, 0, reg, 0);         // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x0C, 2, 0); // bc 12,CR0[Z] (beq)
-	return ((const uint8_t*)(cache.pos-4));
+	return (cache.pos-4);
 }
 
 // short conditional jump (+-127 bytes) if register is nonzero
@@ -621,7 +621,7 @@ static const uint8_t* gen_create_branch_on_nonzero(HostReg reg, bool dword)
 		IMM_OP(11, 0, reg, 0);         // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 2, 0); // bc 4,CR0[Z] (bne)
-	return ((const uint8_t*)(cache.pos-4));
+	return (cache.pos-4);
 }
 
 // calculate relative offset and fill it into the location pointed to by data
@@ -650,7 +650,7 @@ static const uint8_t* gen_create_branch_long_nonzero(HostReg reg, bool dword)
 		IMM_OP(11, 0, reg, 0);       // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 2, 0); // bne
-	return ((const uint8_t*)(cache.pos-4));
+	return (cache.pos-4);
 }
 
 // compare 32bit-register against zero and jump if value less/equal than zero
@@ -659,13 +659,13 @@ static const uint8_t* gen_create_branch_long_leqzero(HostReg reg)
 	IMM_OP(11, 0, reg, 0); // cmpwi cr0, reg, 0
 
 	IMM_OP(16, 0x04, 1, 0); // ble
-	return ((const uint8_t*)(cache.pos-4));
+	return (cache.pos-4);
 }
 
 // calculate long relative offset and fill it into the location pointed to by data
-static void gen_fill_branch_long(const uint8_t* udata)
+static void gen_fill_branch_long(const uint8_t* data)
 {
-	return gen_fill_branch(udata);
+	return gen_fill_branch(data);
 }
 
 static void cache_block_closing(const uint8_t *block_start, Bitu block_size)
@@ -693,9 +693,9 @@ static void cache_block_closing(const uint8_t *block_start, Bitu block_size)
 
 static void cache_block_before_close(void) {}
 
-static void gen_function(void *func)
+static void gen_function(const uint8_t* func)
 {
-	int64_t off = (int64_t)func - (int64_t)cache.pos;
+	int64_t off = (uint64_t)func - (uint64_t)cache.pos;
 
 	// relative branches are limited to +/- 32MB
 	if (off < 0x02000000 && off >= -0x02000000) {
@@ -710,8 +710,8 @@ static void gen_function(void *func)
 }
 
 // gen_run_code is assumed to be called exactly once, gen_return_function() jumps back to it
-static void* epilog_addr;
-static uint8_t *getCF_glue;
+static const uint8_t* epilog_addr = nullptr;
+static const uint8_t* getCF_glue = nullptr;
 static void gen_run_code(void)
 {
 	// prolog
@@ -739,7 +739,7 @@ static void gen_run_code(void)
 	IMM_OP(19, 0x14, 0, 528<<1);     // bctr
 
 	// epilog
-	epilog_addr = (void*)cache.pos;
+	epilog_addr = cache.pos;
 	//TRAP();
 	DSF_OP(58, HOST_R0, HOST_R1, 256+16, 0);  // ld r0,256+16(sp)
 	EXT_OP(HOST_R0, 8, 0, 467, 0);            // mtlr r0
@@ -754,8 +754,8 @@ static void gen_run_code(void)
 	IMM_OP(19, 0x14, 0, 16<<1);          // blr
 
 	// trampoline to call get_CF()
-	getCF_glue = (uint8_t*)cache.pos;
-	gen_function((void*)get_CF);
+	getCF_glue = cache.pos;
+	gen_function(reinterpret_cast<const uint8_t*>(get_CF));
 }
 
 // return from a function
