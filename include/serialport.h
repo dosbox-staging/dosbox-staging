@@ -22,6 +22,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
 #ifndef DOSBOX_INOUT_H
