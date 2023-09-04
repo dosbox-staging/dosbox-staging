@@ -24,6 +24,8 @@
 #include <cassert>
 #include <cstdint>
 
+#include "rgb888.h"
+
 class Rgb666 {
 public:
 	uint8_t red   = 0;
@@ -52,6 +54,16 @@ public:
 	constexpr bool operator!=(const Rgb666& that) const
 	{
 		return !operator==(that);
+	}
+
+	// Scoped conversion helpers
+	static constexpr Rgb666 FromRgb888(const Rgb888 rgb888)
+	{
+		const auto r6 = static_cast<uint8_t>(rgb888.red   >> 2);
+		const auto g6 = static_cast<uint8_t>(rgb888.green >> 2);
+		const auto b6 = static_cast<uint8_t>(rgb888.blue  >> 2);
+
+		return Rgb666(r6, g6, b6);
 	}
 };
 
