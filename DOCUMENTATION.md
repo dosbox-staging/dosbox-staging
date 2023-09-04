@@ -60,7 +60,7 @@ warnings.
 Once the linter is happy, it's time to raise your PR. Separate commits may
 help in some cases, but don't go overboard with them (we're not going to
 "bisect" the documentation, after all). Prefix your documentation related
-commits with `docs:` and website related commits with `website: ` , e.g.:
+commits with `docs:` and website related commits with `website:` , e.g.:
 
 ```
 docs: Fix Sound Blaster Pro 1 default settings
