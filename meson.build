@@ -371,12 +371,20 @@ if host_machine.endian() == 'big'
     conf_data.set10('WORDS_BIGENDIAN', true)
 endif
 
-# Non-4K memory page size is supported only for ppc64 at the moment.
-# TODO re-enable ppc dynrec while working on W^X stuff
-#      disabled because SVN r4424 broke compilation of ppc backends
-#if host_machine.cpu_family() in ['ppc64', 'ppc64le']
-#  conf_data.set('PAGESIZE', 65536)
-#endif
+# 64-bit Power ISA can run with either 4K or 64K page size.
+# (32-bit Power ISA and PowerPC are always 4K.)
+if host_machine.cpu_family() in ['ppc64', 'ppc64le']
+    pagesize_cmd = run_command('getconf', 'PAGESIZE', check: true)
+    if pagesize_cmd.returncode() != 0
+        error('''error executing getconf''')
+    else
+        pagesize = pagesize_cmd.stdout().strip().to_int()
+        if pagesize != 4096
+            warning('''using pagesize of '''+pagesize.to_string())
+            conf_data.set('PAGESIZE', pagesize)
+        endif
+    endif
+endif
 
 set_prio_code = '''
 #include <sys/resource.h>
