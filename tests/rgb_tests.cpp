@@ -19,6 +19,7 @@
  */
 
 #include "rgb.h"
+#include "rgb888.h"
 
 #include <gtest/gtest.h>
 
@@ -33,6 +34,12 @@ constexpr uint8_t rgb6_to_8_reference(const uint8_t c)
 }
 
 constexpr auto AbsError = 0.000001f;
+
+TEST(rgb, Rgb888_FromRgb444)
+{
+	EXPECT_EQ(Rgb888::FromRgb444(0x0, 0x1, 0x2), Rgb888(0x00, 0x11, 0x22));
+	EXPECT_EQ(Rgb888::FromRgb444(0x8, 0xe, 0xf), Rgb888(0x88, 0xee, 0xff));
+}
 
 TEST(rgb, rgb5_to_8)
 {
