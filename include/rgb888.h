@@ -32,10 +32,10 @@ public:
 #pragma pack(pop)
 
 	constexpr Rgb888() = default;
-	constexpr Rgb888(const uint8_t r, const uint8_t g, const uint8_t b)
-	        : red(r),
-	          green(g),
-	          blue(b)
+	constexpr Rgb888(const uint8_t r8, const uint8_t g8, const uint8_t b8)
+	        : red(r8),
+	          green(g8),
+	          blue(b8)
 	{}
 
 	constexpr operator int() const
