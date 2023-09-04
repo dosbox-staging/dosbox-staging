@@ -276,7 +276,7 @@ static void set_global_crossfeed(mixer_channel_t channel)
 	else if (const auto p = parse_percentage(crossfeed_pref); p) {
 		crossfeed = percentage_to_gain(*p);
 	} else {
-		LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s', using 'off'",
+		LOG_WARNING("MIXER: Invalid 'crossfeed' value: '%s'; crossfeed disabled",
 		            crossfeed_pref.data());
 	}
 	channel->SetCrossfeedStrength(crossfeed);
@@ -332,7 +332,7 @@ static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 
 	// the conf system programmatically guarantees only the above prefs are
 	// used
-	LOG_WARNING("MIXER: Received an unknown reverb preset type: '%s'",
+	LOG_WARNING("MIXER: Invalid reverb preset name: '%s'; reverb disabled",
 	            pref.data());
 	return ReverbPreset::None;
 }
@@ -420,7 +420,7 @@ static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 
 	// the conf system programmatically guarantees only the above prefs are
 	// used
-	LOG_WARNING("MIXER: Received an unknown chorus preset type: '%s'",
+	LOG_WARNING("MIXER: Invalid chorus preset name: '%s'; chorus disabled",
 	            pref.data());
 	return ChorusPreset::None;
 }
@@ -701,7 +701,7 @@ void MixerChannel::ChangeChannelMap(const LineIndex mapped_as_left,
 	channel_map = {mapped_as_left, mapped_as_right};
 
 #ifdef DEBUG
-	LOG_MSG("MIXER: %-7s channel: application changed audio-channel mapping to left=>%s and right=>%s",
+	LOG_MSG("MIXER: %-7s channel: application changed audio channel mapping to left=>%s and right=>%s",
 	        name,
 	        channel_map.left == Left ? "left" : "right",
 	        channel_map.right == Left ? "left" : "right");
@@ -2509,13 +2509,13 @@ void MIXER_Init(Section* sec)
 	                                    : MixerState::On;
 
 	if (configured_state == MixerState::NoSound) {
-		LOG_MSG("MIXER: No Sound Mode Selected.");
+		LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		set_mixer_state(MixerState::NoSound);
 
 	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(
 	                    nullptr, 0, &spec, &obtained, sdl_allow_flags)) == 0) {
-		LOG_WARNING("MIXER: Can't open audio: %s , running in nosound mode.",
+		LOG_WARNING("MIXER: Can't open audio device: '%s'; sound output disabled",
 		            SDL_GetError());
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		set_mixer_state(MixerState::NoSound);
@@ -2530,7 +2530,7 @@ void MIXER_Init(Section* sec)
 
 		// Does SDL want a different playback rate?
 		if (obtained.freq != mixer.sample_rate) {
-			LOG_WARNING("MIXER: SDL changed the playback rate from %d to %d Hz",
+			LOG_WARNING("MIXER: SDL changed the requested sample rate of %d to %d Hz",
 			            mixer.sample_rate.load(),
 			            obtained.freq);
 			mixer.sample_rate = check_cast<uint16_t>(obtained.freq);
@@ -2540,7 +2540,7 @@ void MIXER_Init(Section* sec)
 		const auto obtained_blocksize = obtained.samples;
 
 		if (obtained_blocksize != mixer.blocksize) {
-			LOG_WARNING("MIXER: SDL changed the blocksize from %u to %u frames",
+			LOG_WARNING("MIXER: SDL changed the requested blocksize of %u to %u frames",
 			            mixer.blocksize,
 			            obtained_blocksize);
 			mixer.blocksize = obtained_blocksize;
@@ -2549,7 +2549,7 @@ void MIXER_Init(Section* sec)
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 		set_mixer_state(MixerState::On);
 
-		LOG_MSG("MIXER: Negotiated %u-channel %u Hz audio in %u-frame blocks",
+		LOG_MSG("MIXER: Negotiated %u-channel %u Hz audio of %u-frame blocks",
 		        obtained.channels,
 		        mixer.sample_rate.load(),
 		        mixer.blocksize);
@@ -2618,7 +2618,7 @@ void MIXER_Mute()
 	if (mixer.state == MixerState::On) {
 		set_mixer_state(MixerState::Muted);
 		MIDI_Mute();
-		LOG_MSG("MIXER: Muted");
+		LOG_MSG("MIXER: Muted audio output");
 	}
 }
 
@@ -2627,7 +2627,7 @@ void MIXER_Unmute()
 	if (mixer.state == MixerState::Muted) {
 		set_mixer_state(MixerState::On);
 		MIDI_Unmute();
-		LOG_MSG("MIXER: Unmuted");
+		LOG_MSG("MIXER: Unmuted audio output");
 	}
 }
 
@@ -2647,7 +2647,7 @@ static void handle_toggle_mute(const bool was_pressed)
 
 	switch (mixer.state) {
 	case MixerState::NoSound:
-		LOG_WARNING("MIXER: Mute requested, but sound is off (nosound mode)");
+		LOG_WARNING("MIXER: Mute requested, but sound is disabled ('nosound' mode)");
 		break;
 	case MixerState::Muted:
 		MIXER_Unmute();
