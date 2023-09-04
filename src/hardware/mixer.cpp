@@ -481,7 +481,7 @@ void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 	}
 }
 
-static void configure_compressor(const bool compressor_enabled)
+static void init_compressor(const bool compressor_enabled)
 {
 	mixer.do_compressor = compressor_enabled;
 	if (!mixer.do_compressor) {
@@ -2448,22 +2448,11 @@ void MIXER_CloseAudioDevice()
 	mixer.state = MixerState::Uninitialized;
 }
 
-void MIXER_Init(Section* sec)
+static bool init_sdl_sound(Section_prop* section)
 {
-	const auto channel_states = save_channel_states();
-
-	MIXER_CloseAudioDevice();
-
-	sec->AddDestroyFunction(&stop_mixer);
-
-	Section_prop* section = static_cast<Section_prop*>(sec);
-	/* Read out config section */
-
-	mixer.sample_rate = check_cast<uint16_t>(section->Get_int("rate"));
-	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
 	const auto negotiate = section->Get_bool("negotiate");
 
-	/* Start the Mixer using SDL Sound at 22 khz */
+	// Start the mixer using SDL sound
 	SDL_AudioSpec spec;
 	SDL_AudioSpec obtained;
 
@@ -2485,78 +2474,50 @@ void MIXER_Init(Section* sec)
 #endif
 	}
 
-	const auto configured_state = section->Get_bool("nosound")
-	                                    ? MixerState::NoSound
-	                                    : MixerState::On;
-
-	if (configured_state == MixerState::NoSound) {
-		LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
-		mixer.tick_add = calc_tickadd(mixer.sample_rate);
-		set_mixer_state(MixerState::NoSound);
-
-	} else if ((mixer.sdldevice = SDL_OpenAudioDevice(
-	                    nullptr, 0, &spec, &obtained, sdl_allow_flags)) == 0) {
+	constexpr auto sdl_error = 0;
+	if ((mixer.sdldevice = SDL_OpenAudioDevice(
+	             nullptr, 0, &spec, &obtained, sdl_allow_flags)) == sdl_error) {
 		LOG_WARNING("MIXER: Can't open audio device: '%s'; sound output disabled",
 		            SDL_GetError());
-		mixer.tick_add = calc_tickadd(mixer.sample_rate);
-		set_mixer_state(MixerState::NoSound);
 
-	} else {
-		// Does SDL want something other than stereo output?
-		if (obtained.channels != spec.channels) {
-			E_Exit("SDL gave us %u-channel output but we require %u channels",
-			       obtained.channels,
-			       spec.channels);
-		}
-
-		// Does SDL want a different playback rate?
-		if (obtained.freq != mixer.sample_rate) {
-			LOG_WARNING("MIXER: SDL changed the requested sample rate of %d to %d Hz",
-			            mixer.sample_rate.load(),
-			            obtained.freq);
-			mixer.sample_rate = check_cast<uint16_t>(obtained.freq);
-		}
-
-		// Does SDL want a different blocksize?
-		const auto obtained_blocksize = obtained.samples;
-
-		if (obtained_blocksize != mixer.blocksize) {
-			LOG_WARNING("MIXER: SDL changed the requested blocksize of %u to %u frames",
-			            mixer.blocksize,
-			            obtained_blocksize);
-			mixer.blocksize = obtained_blocksize;
-		}
-
-		mixer.tick_add = calc_tickadd(mixer.sample_rate);
-		set_mixer_state(MixerState::On);
-
-		LOG_MSG("MIXER: Negotiated %u-channel %u Hz audio of %u-frame blocks",
-		        obtained.channels,
-		        mixer.sample_rate.load(),
-		        mixer.blocksize);
+		return false;
 	}
 
-	// 1000 = 8 *125
-	mixer.tick_counter = (mixer.sample_rate % 125) ? TickNext : 0;
+	// Does SDL want something other than stereo output?
+	if (obtained.channels != spec.channels) {
+		E_Exit("SDL gave us %u-channel output but we require %u channels",
+		       obtained.channels,
+		       spec.channels);
+	}
 
-	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
+	// Does SDL want a different playback rate?
+	if (obtained.freq != mixer.sample_rate) {
+		LOG_WARNING("MIXER: SDL changed the requested sample rate of %d to %d Hz",
+		            mixer.sample_rate.load(),
+		            obtained.freq);
+		mixer.sample_rate = check_cast<uint16_t>(obtained.freq);
+	}
 
-	mixer.prebuffer_ms = check_cast<uint16_t>(
-	        clamp(requested_prebuffer_ms, 1, MaxPrebufferMs));
+	// Does SDL want a different blocksize?
+	const auto obtained_blocksize = obtained.samples;
 
-	const auto prebuffer_frames = (mixer.sample_rate * mixer.prebuffer_ms) / 1000;
+	if (obtained_blocksize != mixer.blocksize) {
+		LOG_WARNING("MIXER: SDL changed the requested blocksize of %u to %u frames",
+		            mixer.blocksize,
+		            obtained_blocksize);
+		mixer.blocksize = obtained_blocksize;
+	}
 
-	mixer.pos               = 0;
-	mixer.frames_done       = 0;
-	mixer.frames_needed     = clamp_frames_needed(mixer.min_frames_needed + 1);
-	mixer.min_frames_needed = 0;
-	mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
+	LOG_MSG("MIXER: Negotiated %u-channel %u Hz audio of %u-frame blocks",
+	        obtained.channels,
+	        mixer.sample_rate.load(),
+	        mixer.blocksize);
 
-	// Initialize the 8-bit to 16-bit lookup table
-	fill_8to16_lut();
+	return true;
+}
 
-	// Initialise master high-pass filter
-	// ----------------------------------
+static void init_master_highpass_filter()
+{
 	// The purpose of this filter is two-fold:
 	//
 	// - Remove any DC offset from the summed master output (any high-pass
@@ -2578,18 +2539,68 @@ void MIXER_Init(Section* sec)
 	// Thanks to the float mixbuffer, it is sufficient to peform the
 	// high-pass filtering only once at the very end of the processing
 	// chain, instead of doing it on every single mixer channel.
-
+	//
 	constexpr auto highpass_cutoff_freq = 20.0;
 	for (auto& f : mixer.highpass_filter) {
 		f.setup(mixer.sample_rate, highpass_cutoff_freq);
 	}
+}
+
+void MIXER_Init(Section* sec)
+{
+	const auto channel_states = save_channel_states();
+
+	MIXER_CloseAudioDevice();
+
+	sec->AddDestroyFunction(&stop_mixer);
+
+	Section_prop* section = static_cast<Section_prop*>(sec);
+	assert(section);
+
+	mixer.sample_rate = check_cast<uint16_t>(section->Get_int("rate"));
+	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
+
+	const auto configured_state = section->Get_bool("nosound")
+	                                    ? MixerState::NoSound
+	                                    : MixerState::On;
+
+	if (configured_state == MixerState::NoSound) {
+		LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
+		set_mixer_state(MixerState::NoSound);
+
+	} else {
+		if (init_sdl_sound(section)) {
+			set_mixer_state(MixerState::On);
+		} else {
+			set_mixer_state(MixerState::NoSound);
+		}
+	}
+
+	mixer.tick_counter = (mixer.sample_rate % (1000 / 8)) ? TickNext : 0;
+	mixer.tick_add     = calc_tickadd(mixer.sample_rate);
+
+	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
+
+	mixer.prebuffer_ms = check_cast<uint16_t>(
+	        clamp(requested_prebuffer_ms, 1, MaxPrebufferMs));
+
+	const auto prebuffer_frames = (mixer.sample_rate * mixer.prebuffer_ms) / 1000;
+
+	mixer.pos               = 0;
+	mixer.frames_done       = 0;
+	mixer.frames_needed     = clamp_frames_needed(mixer.min_frames_needed + 1);
+	mixer.min_frames_needed = 0;
+	mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
+
+	// Initialize the 8-bit to 16-bit lookup table
+	fill_8to16_lut();
+
+	init_master_highpass_filter();
+	init_compressor(section->Get_bool("compressor"));
 
 	// Initialise send effects
 	MIXER_SetReverbPreset(reverb_pref_to_preset(section->Get_string("reverb")));
 	MIXER_SetChorusPreset(chorus_pref_to_preset(section->Get_string("chorus")));
-
-	// Initialise compressor
-	configure_compressor(section->Get_bool("compressor"));
 
 	restore_channel_states(channel_states);
 }
