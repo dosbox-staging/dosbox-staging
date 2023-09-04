@@ -81,7 +81,7 @@ struct VGA16bppPixel {
 
 	constexpr void FromRgb888(const uint8_t r8, const uint8_t g8, const uint8_t b8)
 	{
-		pixel.FromRgb888(r8, g8, b8);
+		pixel = Rgb565::FromRgb888(Rgb888(r8, g8, b8));
 	}
 };
 
