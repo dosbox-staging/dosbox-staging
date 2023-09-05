@@ -266,7 +266,7 @@ bool MidiHandler_alsa::Open(const char *conf)
 	assert(conf != nullptr);
 	seq = {-1, -1};
 
-	DEBUG_LOG_MSG("MIDI:ALSA: Attempting connection to: '%s'", conf);
+	LOG_DEBUG("MIDI:ALSA: Attempting connection to: '%s'", conf);
 
 	// Try to use port specified in config; if port is not configured,
 	// then attempt to connect to the newest capable port.

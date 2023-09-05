@@ -388,7 +388,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 		{
 			char msg[1024];
 			safe_sprintf(msg, fmt, list);
-			DEBUG_LOG_MSG("MT32: %s", msg);
+			LOG_DEBUG("MT32: %s", msg);
 		}
 
 		static void onErrorControlROM(void *)

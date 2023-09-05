@@ -60,12 +60,12 @@ void Envelope::Update(const int frame_rate, const int peak_amplitude,
 	edge_increment = static_cast<float>(ceil_sdivide(peak_amplitude, expansion_phase_frames));
 
 #if 0
-	DEBUG_LOG_MSG("ENVELOPE: %s grows by %-3f to %-5f across %-3u frames (%u ms)",
-	              channel_name.c_str(),
-	              edge_increment,
-	              edge_limit,
-	              expansion_phase_frames,
-	              expansion_phase_ms);
+	LOG_DEBUG("ENVELOPE: %s grows by %-3f to %-5f across %-3u frames (%u ms)",
+	          channel_name.c_str(),
+	          edge_increment,
+	          edge_limit,
+	          expansion_phase_frames,
+	          expansion_phase_ms);
 #endif
 }
 
@@ -102,10 +102,10 @@ void Envelope::Apply(const bool is_stereo, AudioFrame &frame)
 	if (++frames_done > expire_after_frames || edge >= edge_limit) {
 		process = &Envelope::Skip;
 		(void)channel_name; // [[maybe_unused]] in release builds
-		DEBUG_LOG_MSG("ENVELOPE: %s done after %u frames, peak sample was %.4f",
-		              channel_name.c_str(),
-		              frames_done,
-		              edge);
+		LOG_DEBUG("ENVELOPE: %s done after %u frames, peak sample was %.4f",
+		          channel_name.c_str(),
+		          frames_done,
+		          edge);
 	}
 }
 

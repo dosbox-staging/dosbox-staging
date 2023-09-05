@@ -1053,9 +1053,11 @@ void Gus::PopulatePanScalars() noexcept
 		pan_scalar->right = static_cast<float>(sin(angle));
 		++pan_scalar;
 		++i;
-		// DEBUG_LOG_MSG("GUS: pan_scalar[%u] = %f | %f", i,
-		//               pan_scalar->left,
-		//               pan_scalar->right);
+
+		// LOG_DEBUG("GUS: pan_scalar[%u] = %f | %f",
+		//          i,
+		//          pan_scalar->left,
+		//          pan_scalar->right);
 	}
 }
 

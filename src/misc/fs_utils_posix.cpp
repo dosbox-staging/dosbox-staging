@@ -83,16 +83,19 @@ std::string to_native_path(const std::string &path) noexcept
 		return "";
 	}
 	if (err != 0) {
-		DEBUG_LOG_MSG("FS: glob error (%d) while searching for '%s'",
-		              err, path.c_str());
+		LOG_DEBUG("FS: glob error (%d) while searching for '%s'",
+		          err,
+		          path.c_str());
 		globfree(&pglob);
 		return "";
 	}
 	if (pglob.gl_pathc > 1) {
-		DEBUG_LOG_MSG("FS: Searching for path '%s' gives ambiguous results:",
-		              path.c_str());
-		for (size_t i = 0; i < pglob.gl_pathc; i++)
-			DEBUG_LOG_MSG("%s", pglob.gl_pathv[i]);
+		LOG_DEBUG("FS: Searching for path '%s' gives ambiguous results:",
+		          path.c_str());
+
+		for (size_t i = 0; i < pglob.gl_pathc; i++) {
+			LOG_DEBUG("%s", pglob.gl_pathv[i]);
+		}
 	}
 	const std::string ret = pglob.gl_pathv[0];
 	globfree(&pglob);

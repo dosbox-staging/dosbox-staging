@@ -376,7 +376,10 @@ public:
 			return "abnt1"; // called "ABNT_C1" at kbdlayout.info
 		}
 
-		DEBUG_LOG_MSG("MAPPER: Please report unnamed SDL scancode %d (%xh)", key, key);
+		LOG_DEBUG("MAPPER: Please report unnamed SDL scancode %d (%xh)",
+		          key,
+		          key);
+
 		return sdl_scancode_name;
 	}
 

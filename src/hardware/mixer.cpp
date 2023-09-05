@@ -752,9 +752,8 @@ void MixerChannel::ConfigureResampler()
 		do_resample = (channel_rate != mixer_rate);
 		if (do_resample) {
 			InitLerpUpsamplerState();
-			// DEBUG_LOG_MSG("%s: Linear interpolation resampler is
-			// on",
-			//               name.c_str());
+			// LOG_DEBUG("%s: Linear interpolation resampler is on",
+			//           name.c_str());
 		}
 		break;
 
@@ -762,10 +761,9 @@ void MixerChannel::ConfigureResampler()
 		do_zoh_upsample = (channel_rate < zoh_upsampler.target_freq);
 		if (do_zoh_upsample) {
 			InitZohUpsamplerState();
-			// DEBUG_LOG_MSG("%s: Zero-order-hold upsampler is on,
-			// target rate: %d Hz ",
-			//               name.c_str(),
-			//               zoh_upsampler.target_freq);
+			// LOG_DEBUG("%s: Zero-order-hold upsampler is on, target rate: %d Hz ",
+			//           name.c_str(),
+			//           zoh_upsampler.target_freq);
 		}
 		[[fallthrough]];
 
@@ -790,11 +788,10 @@ void MixerChannel::ConfigureResampler()
 		}
 		speex_resampler_set_rate(speex_resampler.state, in_rate, out_rate);
 
-		// DEBUG_LOG_MSG("%s: Speex resampler is on, input rate: %d Hz,
-		// output rate: %d Hz)",
-		//               name.c_str(),
-		//               in_rate,
-		//               out_rate);
+		// LOG_DEBUG("%s: Speex resampler is on, input rate: %d Hz, output rate: %d Hz)",
+		//           name.c_str(),
+		//           in_rate,
+		//           out_rate);
 		break;
 	}
 }
@@ -821,11 +818,10 @@ void MixerChannel::ClearResampler()
 			speex_resampler_reset_mem(speex_resampler.state);
 			speex_resampler_skip_zeros(speex_resampler.state);
 
-			// DEBUG_LOG_MSG("%s: Speex resampler cleared and primed
-			// %d-frame input queue",
-			//               name.c_str(),
-			//               speex_resampler_get_input_latency(
-			//                       speex_resampler.state));
+			// LOG_DEBUG("%s: Speex resampler cleared and primed %d-frame input queue",
+			//           name.c_str(),
+			//           speex_resampler_get_input_latency(
+			//           speex_resampler.state));
 		}
 		break;
 	}
@@ -843,10 +839,10 @@ void MixerChannel::SetSampleRate(const uint16_t rate)
 		return;
 	}
 
-	// DEBUG_LOG_MSG("%s: Changing rate from %d to %d Hz",
-	//              name.c_str(),
-	//              sample_rate,
-	//              target_rate);
+	// LOG_DEBUG("%s: Changing rate from %d to %d Hz",
+	//           name.c_str(),
+	//           sample_rate,
+	//           target_rate);
 	sample_rate = target_rate;
 
 	freq_add = (sample_rate << FreqShift) / mixer.sample_rate;
@@ -1195,7 +1191,7 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	do_crossfeed = (HasFeature(ChannelFeature::Stereo) && strength > 0.0f);
 
 	if (!do_crossfeed) {
-		// DEBUG_LOG_MSG("%s: Crossfeed is off", name.c_str());
+		// LOG_DEBUG("%s: Crossfeed is off", name.c_str());
 		crossfeed.strength = 0.0f;
 		return;
 	}
@@ -1208,9 +1204,9 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	crossfeed.pan_left    = center - p;
 	crossfeed.pan_right   = center + p;
 
-	// DEBUG_LOG_MSG("%s: Crossfeed is on (strength: %.3f)",
-	//               name.c_str(),
-	//               static_cast<double>(crossfeed.strength));
+	// LOG_DEBUG("%s: Crossfeed is on (strength: %.3f)",
+	//           name.c_str(),
+	//           static_cast<double>(crossfeed.strength));
 }
 
 float MixerChannel::GetCrossfeedStrength()
@@ -1231,7 +1227,7 @@ void MixerChannel::SetReverbLevel(const float level)
 	do_reverb_send = (HasFeature(ChannelFeature::ReverbSend) && level > level_min);
 
 	if (!do_reverb_send) {
-		// DEBUG_LOG_MSG("%s: Reverb send is off", name.c_str());
+		// LOG_DEBUG("%s: Reverb send is off", name.c_str());
 		reverb.level     = level_min;
 		reverb.send_gain = level_min_db;
 		return;
@@ -1243,12 +1239,11 @@ void MixerChannel::SetReverbLevel(const float level)
 
 	reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
-	// DEBUG_LOG_MSG("%s: SetReverbLevel: level: %4.2f, level_db: %6.2f,
-	// gain: %4.2f",
-	//               name.c_str(),
-	//               level,
-	//               level_db,
-	//               reverb.send_gain);
+	// LOG_DEBUG("%s: SetReverbLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f",
+	//           name.c_str(),
+	//           level,
+	//           level_db,
+	//           reverb.send_gain);
 }
 
 float MixerChannel::GetReverbLevel()
@@ -1269,7 +1264,7 @@ void MixerChannel::SetChorusLevel(const float level)
 	do_chorus_send = (HasFeature(ChannelFeature::ChorusSend) && level > level_min);
 
 	if (!do_chorus_send) {
-		// DEBUG_LOG_MSG("%s: Chorus send is off", name.c_str());
+		// LOG_DEBUG("%s: Chorus send is off", name.c_str());
 		chorus.level     = level_min;
 		chorus.send_gain = level_min_db;
 		return;
@@ -1281,12 +1276,11 @@ void MixerChannel::SetChorusLevel(const float level)
 
 	chorus.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
-	// DEBUG_LOG_MSG("%s: SetChorusLevel: level: %4.2f, level_db: %6.2f,
-	// gain: %4.2f",
-	//               name.c_str(),
-	//               level,
-	//               level_db,
-	//               chorus.send_gain);
+	// LOG_DEBUG("%s: SetChorusLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f",
+	//           name.c_str(),
+	//           level,
+	//           level_db,
+	//           chorus.send_gain);
 }
 
 float MixerChannel::GetChorusLevel()
@@ -1626,18 +1620,17 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type* data)
 
 				s.pos += s.step;
 
-				// DEBUG_LOG_MSG("%s: AddSamples last %.1f:%.1f
-				// curr %.1f:%.1f"
-				//               " -> out %.1f:%.1f, pos=%.2f,
-				//               step=%.2f", name.c_str(),
-				//               s.last_frame.left,
-				//               s.last_frame.right,
-				//               curr_frame.left,
-				//               curr_frame.right,
-				//               out_left,
-				//               out_right,
-				//               s.pos,
-				//               s.step);
+				// LOG_DEBUG("%s: AddSamples last %.1f:%.1f curr %.1f:%.1f"
+				//           " -> out %.1f:%.1f, pos=%.2f, step=%.2f",
+				//           name.c_str(),
+				//           s.last_frame.left,
+				//           s.last_frame.right,
+				//           curr_frame.left,
+				//           curr_frame.right,
+				//           out_left,
+				//           out_right,
+				//           s.pos,
+				//           s.step);
 
 				if (s.pos > 1.0f) {
 					s.pos -= 1.0f;
