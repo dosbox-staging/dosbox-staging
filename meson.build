@@ -36,9 +36,7 @@ data_dir = get_option('datadir')
 licenses_dir = data_dir / 'licenses' / meson.project_name()
 doc_dir = data_dir / 'doc' / meson.project_name()
 
-# Our man page is outated at the moment, do not install it.
-# install_man('docs/dosbox.1')
-
+install_man('docs/dosbox.1')
 # Bundle licenses, but skip the ones that are not relevant for
 # binary distribution or allow us to not distribute the license text.
 install_data('LICENSE',
