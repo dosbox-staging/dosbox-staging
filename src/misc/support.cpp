@@ -469,9 +469,9 @@ std::vector<uint8_t> LoadResourceBlob(const std_fs::path &name,
 
 	// non-const to allow movement out of the function
 	std::vector<uint8_t> buffer(std::istreambuf_iterator<char>{file}, {});
-	// DEBUG_LOG_MSG("RESOURCE: Loaded resource '%s' [%d bytes]",
-	//               resource_path.string().c_str(),
-	//               check_cast<int>(buffer.size()));
+	// LOG_DEBUG("RESOURCE: Loaded resource '%s' [%d bytes]",
+	//           resource_path.string().c_str(),
+	//           check_cast<int>(buffer.size()));
 	return buffer;
 }
 

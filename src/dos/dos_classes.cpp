@@ -194,8 +194,8 @@ void DOS_PSP::SetFileHandle(uint16_t index, uint8_t handle)
 		const PhysPt files = RealToPhysical(SGET_DWORD(sPSP, file_table));
 		mem_writeb(files + index, handle);
 	} else {
-		DEBUG_LOG_MSG("DOS: Prevented buffer overflow on write to PSP file_table[%u]",
-		              index);
+		LOG_DEBUG("DOS: Prevented buffer overflow on write to PSP file_table[%u]",
+		          index);
 	}
 }
 

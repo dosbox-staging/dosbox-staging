@@ -423,7 +423,7 @@ void TandyDAC::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 void TandyDAC::AudioCallback(uint16_t requested)
 {
 	if (!channel || !dma.channel) {
-		DEBUG_LOG_MSG("TANDY: Skipping update until the DAC is initialized");
+		LOG_DEBUG("TANDY: Skipping update until the DAC is initialized");
 		return;
 	}
 	const bool should_read = is_enabled && (regs.mode & 0x0c) == 0x0c &&

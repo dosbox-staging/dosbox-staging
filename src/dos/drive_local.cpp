@@ -233,8 +233,8 @@ bool localDrive::GetSystemFilename(char* sysName, const char* const dosName)
 // Attempt to delete the file name from our local drive mount
 bool localDrive::FileUnlink(char * name) {
 	if (!FileExists(name)) {
-		DEBUG_LOG_MSG("FS: Skipping removal of %s because it doesn't exist",
-		              name);
+		LOG_DEBUG("FS: Skipping removal of '%s' because it doesn't exist",
+		          name);
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
@@ -268,7 +268,7 @@ bool localDrive::FileUnlink(char * name) {
 			return true;
 		}
 	}
-	DEBUG_LOG_MSG("FS: Unable to remove file %s", fullname);
+	LOG_DEBUG("FS: Unable to remove file '%s'", fullname);
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
@@ -626,7 +626,7 @@ bool localFile::ftell_and_check()
 	if (stream_pos >= 0)
 		return true;
 
-	DEBUG_LOG_MSG("FS: Failed obtaining position in file %s", name.c_str());
+	LOG_DEBUG("FS: Failed obtaining position in file '%s'", name.c_str());
 	return false;
 }
 
@@ -640,7 +640,9 @@ bool localFile::fseek_to_and_check(long pos, int whence)
 		stream_pos = pos;
 		return true;
 	}
-	DEBUG_LOG_MSG("FS: Failed seeking to byte %ld in file %s", stream_pos, name.c_str());
+	LOG_DEBUG("FS: Failed seeking to byte %ld in file '%s'",
+	          stream_pos,
+	          name.c_str());
 	return false;
 }
 
@@ -670,10 +672,10 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 	*size = actual; // always save the actual
 
 	if (actual != requested) {
-		//DEBUG_LOG_MSG("FS: Only read %u of %u requested bytes from file %s",
-		//              actual,
-		//              requested,
-		//              name.c_str());
+		// LOG_DEBUG("FS: Only read %u of %u requested bytes from file '%s'",
+		//           actual,
+		//           requested,
+		//           name.c_str());
 
 		// Check for host read error
 		if (ferror(fhandle)) {
@@ -712,14 +714,15 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	if (*size == 0) {
 		const auto file = cross_fileno(fhandle);
 		if (file == -1) {
-			DEBUG_LOG_MSG("FS: Could not resolve file number for %s", name.c_str());
+			LOG_DEBUG("FS: Could not resolve file number for '%s'",
+			          name.c_str());
 			return false;
 		}
 		if (!ftell_and_check()) {
 			return false;
 		}
 		if (ftruncate(file, stream_pos) != 0) {
-			DEBUG_LOG_MSG("FS: Failed truncating file %s", name.c_str());
+			LOG_DEBUG("FS: Failed truncating file '%s'", name.c_str());
 			return false;
 		}
 		// Truncation succeeded if we made it here
@@ -730,8 +733,10 @@ bool localFile::Write(uint8_t *data, uint16_t *size)
 	const auto requested = *size;
 	const auto actual = static_cast<uint16_t>(fwrite(data, 1, requested, fhandle));
 	if (actual != requested) {
-		DEBUG_LOG_MSG("FS: Only wrote %u of %u requested bytes to file %s",
-		              actual, requested, name.c_str());
+		LOG_DEBUG("FS: Only wrote %u of %u requested bytes to file '%s'",
+		          actual,
+		          requested,
+		          name.c_str());
 
 		// Check for host write error
 		if (ferror(fhandle)) {

@@ -389,16 +389,18 @@ public:
 		for (uint8_t i = 0; i < io_widths; ++i) {
 			const auto readers = io_read_handlers[i].size();
 			const auto writers = io_write_handlers[i].size();
-			DEBUG_LOG_MSG("IOBUS: Releasing %d read and %d write %d-bit port handlers",
-			              static_cast<int>(readers), static_cast<int>(writers), 8 << i);
+			LOG_DEBUG("IOBUS: Releasing %d read and %d write %d-bit port handlers",
+			          static_cast<int>(readers),
+			          static_cast<int>(writers),
+			          8 << i);
 
 			total_bytes += readers * sizeof(io_read_f) + sizeof(io_read_handlers[i]);
 			total_bytes += writers * sizeof(io_write_f) + sizeof(io_write_handlers[i]);
 			io_read_handlers[i].clear();
 			io_write_handlers[i].clear();
 		}
-		DEBUG_LOG_MSG("IOBUS: Handlers consumed %d total bytes",
-		              static_cast<int>(total_bytes));
+		LOG_DEBUG("IOBUS: Handlers consumed %d total bytes",
+		          static_cast<int>(total_bytes));
 	}
 };
 

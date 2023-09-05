@@ -711,7 +711,7 @@ static void cache_closeblock()
 	                            (block->cache.next->cache.start > limit));
 #endif
 	if (cache_is_full) {
-		// DEBUG_LOG_MSG("Cache full; restarting");
+		// LOG_DEBUG("Cache full; restarting");
 		cache.block.active=cache.block.first;
 	} else {
 		cache.block.active=block->cache.next;

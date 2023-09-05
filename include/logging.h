@@ -91,13 +91,13 @@ void GFX_ShowMsg(const char* format, ...)
 #endif // C_DEBUG
 
 #ifdef NDEBUG
-// DEBUG_LOG_MSG exists only for messages useful during development, and not to
+// LOG_DEBUG exists only for messages useful during development, and not to
 // be redirected into internal DOSBox debugger for DOS programs (C_DEBUG feature).
-#define DEBUG_LOG_MSG(...)
+#define LOG_DEBUG(...)
 #else
 
 template <typename... Args>
-void DEBUG_LOG_MSG(const std::string& format, const Args&... args) noexcept
+void LOG_DEBUG(const std::string& format, const Args&... args) noexcept
 {
 	const auto format_green = std::string(loguru::terminal_green()) +
 	                          loguru::terminal_bold() + format +

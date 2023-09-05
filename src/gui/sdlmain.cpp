@@ -564,7 +564,7 @@ void GFX_RequestExit(const bool pressed)
 {
 	shutdown_requested = pressed;
 	if (shutdown_requested) {
-		DEBUG_LOG_MSG("SDL: Exit requested");
+		LOG_DEBUG("SDL: Exit requested");
 	}
 }
 
@@ -3793,14 +3793,14 @@ bool GFX_Events()
 		case SDL_WINDOWEVENT:
 			switch (event.window.event) {
 			case SDL_WINDOWEVENT_RESTORED:
-				// DEBUG_LOG_MSG("SDL: Window has been restored");
+				// LOG_DEBUG("SDL: Window has been restored");
 				/* We may need to re-create a texture
 				 * and more on Android. Another case:
 				 * Update surface while using X11.
 				 */
 				GFX_ResetScreen();
 #if C_OPENGL && defined(MACOSX)
-				// DEBUG_LOG_MSG("SDL: Reset macOS's GL viewport
+				// LOG_DEBUG("SDL: Reset macOS's GL viewport
 				// after window-restore");
 				if (sdl.desktop.type == SCREEN_OPENGL) {
 					glViewport(sdl.clip.x,
@@ -3813,7 +3813,7 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_RESIZED:
-				// DEBUG_LOG_MSG("SDL: Window has been resized to %dx%d",
+				// LOG_DEBUG("SDL: Window has been resized to %dx%d",
 				//               event.window.data1,
 				//               event.window.data2);
 				//
@@ -3830,7 +3830,7 @@ bool GFX_Events()
 				ApplyActiveSettings();
 				[[fallthrough]];
 			case SDL_WINDOWEVENT_EXPOSED:
-				// DEBUG_LOG_MSG("SDL: Window has been exposed "
+				// LOG_DEBUG("SDL: Window has been exposed "
 				//               "and should be redrawn");
 
 				/* TODO: below is not consistently true :(
@@ -3844,7 +3844,7 @@ bool GFX_Events()
 				 * FOCUS_GAINED event to catch window startup
 				 * and size toggles.
 				 */
-				// DEBUG_LOG_MSG("SDL: Window has gained
+				// LOG_DEBUG("SDL: Window has gained
 				// keyboard focus");
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
@@ -3852,7 +3852,7 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
-				// DEBUG_LOG_MSG("SDL: Window has lost keyboard focus");
+				// LOG_DEBUG("SDL: Window has lost keyboard focus");
 #ifdef WIN32
 				if (sdl.desktop.fullscreen) {
 					VGA_KillDrawing();
@@ -3865,25 +3865,25 @@ bool GFX_Events()
 				break;
 
 			case SDL_WINDOWEVENT_ENTER:
-				// DEBUG_LOG_MSG("SDL: Window has gained mouse focus");
+				// LOG_DEBUG("SDL: Window has gained mouse focus");
 				continue;
 
 			case SDL_WINDOWEVENT_LEAVE:
-				// DEBUG_LOG_MSG("SDL: Window has lost mouse focus");
+				// LOG_DEBUG("SDL: Window has lost mouse focus");
 				continue;
 
 			case SDL_WINDOWEVENT_SHOWN:
-				// DEBUG_LOG_MSG("SDL: Window has been shown");
+				// LOG_DEBUG("SDL: Window has been shown");
 				maybe_auto_switch_shader();
 				continue;
 
 			case SDL_WINDOWEVENT_HIDDEN:
-				// DEBUG_LOG_MSG("SDL: Window has been hidden");
+				// LOG_DEBUG("SDL: Window has been hidden");
 				continue;
 
 #if C_OPENGL && defined(MACOSX)
 			case SDL_WINDOWEVENT_MOVED:
-				// DEBUG_LOG_MSG("SDL: Window has been moved to %d, %d",
+				// LOG_DEBUG("SDL: Window has been moved to %d, %d",
 				//               event.window.data1,
 				//               event.window.data2);
 				if (sdl.desktop.type == SCREEN_OPENGL) {
@@ -3933,7 +3933,7 @@ bool GFX_Events()
 #endif
 
 			case SDL_WINDOWEVENT_SIZE_CHANGED:
-				// DEBUG_LOG_MSG("SDL: The window size has changed");
+				// LOG_DEBUG("SDL: The window size has changed");
 
 				// The window size has changed either as a
 				// result of an API call or through the system
@@ -3944,16 +3944,16 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_MINIMIZED:
-				// DEBUG_LOG_MSG("SDL: Window has been minimized");
+				// LOG_DEBUG("SDL: Window has been minimized");
 				ApplyInactiveSettings();
 				break;
 
 			case SDL_WINDOWEVENT_MAXIMIZED:
-				// DEBUG_LOG_MSG("SDL: Window has been maximized");
+				// LOG_DEBUG("SDL: Window has been maximized");
 				continue;
 
 			case SDL_WINDOWEVENT_CLOSE:
-				// DEBUG_LOG_MSG("SDL: The window manager "
+				// LOG_DEBUG("SDL: The window manager "
 				//               "requests that the window be "
 				//               "closed");
 				GFX_RequestExit(true);
@@ -3965,7 +3965,7 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_HIT_TEST:
-				// DEBUG_LOG_MSG("SDL: Window had a hit test that "
+				// LOG_DEBUG("SDL: Window had a hit test that "
 				//               "wasn't SDL_HITTEST_NORMAL");
 				continue;
 

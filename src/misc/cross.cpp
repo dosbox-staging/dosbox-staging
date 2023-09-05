@@ -759,7 +759,7 @@ std::string cfstr_to_string(CFStringRef source)
 #if C_COREFOUNDATION
 	lang = get_lang_from_macos();
 	if (!lang.empty()) {
-		DEBUG_LOG_MSG("LANG: Got language '%s' from macOS locale", lang.c_str());
+		LOG_DEBUG("LANG: Got language '%s' from macOS locale", lang.c_str());
 		return lang;
 	}
 #endif
@@ -767,14 +767,14 @@ std::string cfstr_to_string(CFStringRef source)
 #if defined(WIN32)
 	lang = get_lang_from_windows();
 	if (!lang.empty()) {
-		DEBUG_LOG_MSG("LANG: Got language '%s' from Windows locale", lang.c_str());
+		LOG_DEBUG("LANG: Got language '%s' from Windows locale", lang.c_str());
 		return lang;
 	}
 #endif
 
 	lang = get_lang_from_posix();
 	if (!lang.empty()) {
-		DEBUG_LOG_MSG("LANG: Got language '%s' from POSIX locale", lang.c_str());
+		LOG_DEBUG("LANG: Got language '%s' from POSIX locale", lang.c_str());
 		return lang;
 	}
 
