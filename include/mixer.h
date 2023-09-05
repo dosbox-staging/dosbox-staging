@@ -416,6 +416,9 @@ void MIXER_AddConfigSection(const config_ptr_t& conf);
 uint16_t MIXER_GetSampleRate();
 uint16_t MIXER_GetPreBufferMs();
 
+const AudioFrame& MIXER_GetMasterVolume();
+void MIXER_SetMasterVolume(const AudioFrame& volume);
+
 void MIXER_Mute();
 void MIXER_Unmute();
 

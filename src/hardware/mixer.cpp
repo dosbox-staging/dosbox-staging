@@ -651,6 +651,16 @@ const AudioFrame& MixerChannel::GetAppVolume() const
 	return app_volume_scalar;
 }
 
+const AudioFrame& MIXER_GetMasterVolume()
+{
+	return mixer.master_volume;
+}
+
+void MIXER_SetMasterVolume(const AudioFrame& volume)
+{
+	mixer.master_volume = volume;
+}
+
 static void MIXER_UpdateAllChannelVolumes()
 {
 	MIXER_LockAudioDevice();
