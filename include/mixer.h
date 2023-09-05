@@ -422,6 +422,9 @@ void MIXER_SetMasterVolume(const AudioFrame& volume);
 void MIXER_Mute();
 void MIXER_Unmute();
 
+void MIXER_LockAudioDevice();
+void MIXER_UnlockAudioDevice();
+
 // Return true if the mixer was explicitly muted by the user (as opposed to
 // auto-muted when `mute_when_inactive` is enabled)
 bool MIXER_IsManuallyMuted();

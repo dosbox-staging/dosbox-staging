@@ -242,12 +242,12 @@ uint16_t MIXER_GetSampleRate()
 	return sample_rate_hz;
 }
 
-static void MIXER_LockAudioDevice()
+void MIXER_LockAudioDevice()
 {
 	SDL_LockAudioDevice(mixer.sdldevice);
 }
 
-static void MIXER_UnlockAudioDevice()
+void MIXER_UnlockAudioDevice()
 {
 	SDL_UnlockAudioDevice(mixer.sdldevice);
 }
