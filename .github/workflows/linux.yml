@@ -133,6 +133,16 @@ jobs:
             deb_vers: 11
             needs_min_deps: false
 
+          - name: GCC, Debian 11, ppc64le
+            os: ubuntu-20.04
+            build_flags: -Dbuildtype=debug --cross-file dosbox-cross
+            max_warnings: 0
+            run_tests: true
+            cross: true
+            arch: ppc64el
+            deb_vers: 11
+            needs_min_deps: false
+
           - name: GCC 9, minimum build
             os: ubuntu-20.04
             packages: g++-9
