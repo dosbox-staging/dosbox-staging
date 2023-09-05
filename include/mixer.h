@@ -422,6 +422,8 @@ void MIXER_SetMasterVolume(const AudioFrame& volume);
 void MIXER_Mute();
 void MIXER_Unmute();
 
+void MIXER_UpdateAllChannelVolumes();
+
 void MIXER_LockAudioDevice();
 void MIXER_UnlockAudioDevice();
 
