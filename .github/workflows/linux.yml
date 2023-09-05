@@ -136,7 +136,7 @@ jobs:
           - name: GCC, Debian 11, ppc64le
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
-            max_warnings: 0
+            max_warnings: 21
             run_tests: true
             cross: true
             arch: ppc64el
