@@ -45,7 +45,7 @@ jobs:
             vers: 11
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Get dosbox-staging version
         id: db_vers
@@ -114,7 +114,7 @@ jobs:
             vers: 11
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
     
       - name: Log in to the Container registry
         uses: docker/login-action@v2
