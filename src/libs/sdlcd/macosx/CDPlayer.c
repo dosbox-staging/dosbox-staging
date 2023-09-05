@@ -78,14 +78,14 @@ static SDL_CD* theCDROM                      = NULL;
 
 #pragma mark -- Prototypes --
 
-static OSStatus CheckInit ();
+static OSStatus CheckInit (void);
 
 static void     FilePlayNotificationHandler (void* inRefCon, OSStatus inStatus);
 
 static int      RunCallBackThread (void* inRefCon);
 
 
-void Lock()
+void Lock(void)
 {
 	if (!apiMutex) {
 		apiMutex = SDL_CreateMutex();
@@ -93,7 +93,7 @@ void Lock()
 	SDL_mutexP(apiMutex);
 }
 
-void Unlock()
+void Unlock(void)
 {
 	SDL_mutexV(apiMutex);
 }
@@ -496,7 +496,7 @@ bail:
 	return error;
 }
 
-int ReleaseFile()
+int ReleaseFile(void)
 {
 	int error = -1;
 
@@ -522,7 +522,7 @@ int ReleaseFile()
 	return error;
 }
 
-int PlayFile()
+int PlayFile(void)
 {
 	OSStatus result = -1;
 
@@ -550,7 +550,7 @@ bail:
 	return result;
 }
 
-int PauseFile()
+int PauseFile(void)
 {
 	OSStatus result = -1;
 
@@ -585,7 +585,7 @@ void SetCompletionProc(CDPlayerCompletionProc proc, SDL_CD* cdrom)
 	thePlayer->SetNotifier(thePlayer, FilePlayNotificationHandler, cdrom);
 }
 
-int GetCurrentFrame()
+int GetCurrentFrame(void)
 {
 	int frame;
 
@@ -600,7 +600,7 @@ int GetCurrentFrame()
 
 #	pragma mark-- Private Functions --
 
-static OSStatus CheckInit()
+static OSStatus CheckInit(void)
 {
 	if (playBackWasInit) {
 		return 0;
