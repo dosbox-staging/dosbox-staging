@@ -7,7 +7,6 @@ on:
       - 'packages/debian-10-docker-apt.txt'
       - 'packages/debian-11-docker-apt.txt'
       - '.github/workflows/debian-docker-build.yml'
-    tags:
   pull_request:
     paths:
       - 'packages/Dockerfile*'
@@ -111,6 +110,9 @@ jobs:
             vers: 11
           - name: Debian 11 cross ARM 32
             arch: armhf
+            vers: 11
+          - name: Debian 11 cross PowerPC 64 LE
+            arch: ppc64el
             vers: 11
     steps:
       - name: Checkout repository
