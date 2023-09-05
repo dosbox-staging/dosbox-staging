@@ -321,7 +321,7 @@ static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 {
 	const auto pref_has_bool = parse_bool_setting(pref);
 	if (pref_has_bool) {
-		return *pref_has_bool ? ReverbPreset::Medium : ReverbPreset::None;
+		return *pref_has_bool ? DefaultReverbPreset : ReverbPreset::None;
 	}
 	if (pref == "tiny") {
 		return ReverbPreset::Tiny;
@@ -358,12 +358,16 @@ static const char* to_string(const ReverbPreset preset)
 	}
 }
 
-static void configure_reverb(const std::string_view reverb_pref)
+ReverbPreset MIXER_GetReverbPreset()
+{
+	return mixer.reverb.preset;
+}
+
+void MIXER_SetReverbPreset(const ReverbPreset new_preset)
 {
 	auto& r = mixer.reverb; // short-hand reference
 
 	// Unchanged?
-	const auto new_preset = reverb_pref_to_preset(reverb_pref);
 	if (new_preset == r.preset) {
 		return;
 	}
@@ -401,7 +405,7 @@ static void configure_reverb(const std::string_view reverb_pref)
 	}
 
 	if (mixer.do_reverb) {
-		LOG_MSG("MIXER: Reverb enabled ('%s' preset)", reverb_pref.data());
+		LOG_MSG("MIXER: Reverb enabled ('%s' preset)", to_string(r.preset));
 	} else {
 		LOG_MSG("MIXER: Reverb disabled");
 	}
@@ -411,7 +415,7 @@ static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 {
 	const auto pref_has_bool = parse_bool_setting(pref);
 	if (pref_has_bool) {
-		return *pref_has_bool ? ChorusPreset::Normal : ChorusPreset::None;
+		return *pref_has_bool ? DefaultChorusPreset : ChorusPreset::None;
 	}
 	if (pref == "light") {
 		return ChorusPreset::Light;
@@ -440,12 +444,16 @@ static const char* to_string(const ChorusPreset preset)
 	}
 }
 
-static void configure_chorus(const std::string_view chorus_pref)
+ChorusPreset MIXER_GetChorusPreset()
+{
+	return mixer.chorus.preset;
+}
+
+void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 {
 	auto& c = mixer.chorus; // short-hand reference
 
 	// Unchanged?
-	const auto new_preset = chorus_pref_to_preset(chorus_pref);
 	if (new_preset == c.preset) {
 		return;
 	}
@@ -476,7 +484,7 @@ static void configure_chorus(const std::string_view chorus_pref)
 	}
 
 	if (mixer.do_chorus) {
-		LOG_MSG("MIXER: Chorus enabled ('%s' preset)", chorus_pref.data());
+		LOG_MSG("MIXER: Chorus enabled ('%s' preset)", to_string(c.preset));
 	} else {
 		LOG_MSG("MIXER: Chorus disabled");
 	}
@@ -2441,7 +2449,7 @@ public:
 
 			// Do we need to start the reverb engine?
 			if (!mixer.do_reverb) {
-				configure_reverb("on");
+				MIXER_SetReverbPreset(DefaultReverbPreset);
 			}
 			for ([[maybe_unused]] const auto& [_, channel] :
 			     mixer.channels) {
@@ -2460,7 +2468,7 @@ public:
 
 			// Do we need to start the chorus engine?
 			if (!mixer.do_chorus) {
-				configure_chorus("on");
+				MIXER_SetChorusPreset(DefaultChorusPreset);
 			}
 			for ([[maybe_unused]] const auto& [_, channel] :
 			     mixer.channels) {
@@ -2957,8 +2965,8 @@ void MIXER_Init(Section* sec)
 	}
 
 	// Initialise send effects
-	configure_reverb(section->Get_string("reverb"));
-	configure_chorus(section->Get_string("chorus"));
+	MIXER_SetReverbPreset(reverb_pref_to_preset(section->Get_string("reverb")));
+	MIXER_SetChorusPreset(chorus_pref_to_preset(section->Get_string("chorus")));
 
 	// Initialise compressor
 	configure_compressor(section->Get_bool("compressor"));

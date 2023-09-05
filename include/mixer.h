@@ -431,4 +431,10 @@ void MIXER_UnlockAudioDevice();
 // auto-muted when `mute_when_inactive` is enabled)
 bool MIXER_IsManuallyMuted();
 
+ReverbPreset MIXER_GetReverbPreset();
+void MIXER_SetReverbPreset(const ReverbPreset new_preset);
+
+ChorusPreset MIXER_GetChorusPreset();
+void MIXER_SetChorusPreset(const ChorusPreset new_preset);
+
 #endif
