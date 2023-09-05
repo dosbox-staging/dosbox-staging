@@ -386,7 +386,7 @@ endif
 
 # 64-bit Power ISA can run with either 4K or 64K page size.
 # (32-bit Power ISA and PowerPC are always 4K.)
-if host_machine.cpu_family() in ['ppc64', 'ppc64le']
+if host_machine.cpu_family() in ['ppc64', 'ppc64le', 'powerpc64le']
     pagesize_cmd = run_command('getconf', 'PAGESIZE', check: true)
     if pagesize_cmd.returncode() != 0
         error('''error executing getconf: unable to determine host architecture page size for ppc64 dynamic core''')
