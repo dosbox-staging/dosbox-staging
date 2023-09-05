@@ -104,8 +104,6 @@ using highpass_filter_t = std::array<Iir::Butterworth::HighPass<2>, 2>;
 
 using EmVerb = MVerb<float>;
 
-enum class ReverbPreset { None, Tiny, Small, Medium, Large, Huge };
-
 struct reverb_settings_t {
 	EmVerb mverb = {};
 
@@ -148,8 +146,6 @@ struct reverb_settings_t {
 		}
 	}
 };
-
-enum class ChorusPreset { None, Light, Normal, Strong };
 
 struct chorus_settings_t {
 	ChorusEngine chorus_engine = ChorusEngine(48000);
