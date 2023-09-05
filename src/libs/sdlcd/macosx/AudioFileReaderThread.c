@@ -343,7 +343,7 @@ void delete_FileReaderThread(FileReaderThread *frt)
     }
 }
 
-FileReaderThread *new_FileReaderThread ()
+static FileReaderThread *new_FileReaderThread (void)
 {
     FileReaderThread *frt = (FileReaderThread *) SDL_malloc(sizeof (FileReaderThread));
     if (frt == NULL)
