@@ -27,8 +27,9 @@ RUN apt-get update &&  apt-get -y install --no-install-recommends \
 RUN pip3 install meson
 
 RUN export DPKG_TRIPLET=$(dpkg-architecture -A ${DPKG_ARCH} -q DEB_TARGET_MULTIARCH); \
+    export QEMU_TRIPLET=$(echo $DPKG_TRIPLET | sed s/powerpc/ppc/g); \
     # Fixup meson cross file for qemu-user-static and ccache
-    sed -i "2i exe_wrapper = '/usr/bin/qemu-${DPKG_TRIPLET%%-*}-static'" ${MESON_CROSS_FILE} \
+    sed -i "2i exe_wrapper = '/usr/bin/qemu-${QEMU_TRIPLET%%-*}-static'" ${MESON_CROSS_FILE} \
     && sed -i -r 's@(c|cpp) = '\'"(/usr/bin/[^']+)'@"'\1'" = ['ccache', '"'\2'"']@g" ${MESON_CROSS_FILE} \
     # Fix opusfile pkgconfig
     && sed 's@libdir=\${exec_prefix}/lib@libdir=\${prefix}/lib/'"${DPKG_TRIPLET}@g" \
