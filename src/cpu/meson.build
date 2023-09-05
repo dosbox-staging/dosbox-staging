@@ -14,19 +14,19 @@ conf_data.set10('C_PER_PAGE_W_OR_X', per_page_w_or_x_pref.auto() or per_page_w_o
 
 # Platform-specific
 core_selection = [
-    # cpu_family selected_core        dynrec_define    target     unaligned  per-page
-    #                                                             mem        W^X
-    [ 'x86_64',  ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86_64',  1,         1 ],
-    [ 'x86',     ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86',     1,         1 ],
-    [ 'x86_64',  ['dynrec'],          'C_DYNREC',      'X86_64',  1,         1 ],
-    [ 'x86',     ['dynrec'],          'C_DYNREC',      'X86',     1,         1 ],
-    [ 'aarch64', ['auto', 'dynrec'],  'C_DYNREC',      'ARMV8LE', 1,         1 ], # ARMv8+ (64-bit)
-    [ 'arm',     ['auto', 'dynrec'],  'C_DYNREC',      'ARMV7LE', 1,         1 ], # ARMv7+
-    [ 'armv6',   ['auto', 'dynrec'],  'C_DYNREC',      'ARMV4LE', 0,         0 ], # ARMv6 or older
-    [ 'ppc64',   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1,         1 ], # 64 bit PPC processors
-    [ 'ppc64le', ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1,         1 ], # 64 bit PPC processors (little-endian)
-    [ 'ppc',     ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC', 1,         0 ], # 32 bit PPC processors (big-endian)
-    [ 'mips',    ['auto', 'dynrec'],  'C_DYNREC',      'MIPSEL',  0,         0 ], # 32 bit MIPS processor
+    # cpu_family                  selected_core        dynrec_define    target     unaligned  per-page
+    #                                                                              mem        W^X
+    [ ['x86_64'],                 ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86_64',  1,         1 ],
+    [ ['x86'],                    ['auto', 'dyn-x86'], 'C_DYNAMIC_X86', 'X86',     1,         1 ],
+    [ ['x86_64'],                 ['dynrec'],          'C_DYNREC',      'X86_64',  1,         1 ],
+    [ ['x86'],                    ['dynrec'],          'C_DYNREC',      'X86',     1,         1 ],
+    [ ['aarch64'],                ['auto', 'dynrec'],  'C_DYNREC',      'ARMV8LE', 1,         1 ], # ARMv8+ (64-bit)
+    [ ['arm'],                    ['auto', 'dynrec'],  'C_DYNREC',      'ARMV7LE', 1,         1 ], # ARMv7+
+    [ ['armv6'],                  ['auto', 'dynrec'],  'C_DYNREC',      'ARMV4LE', 0,         0 ], # ARMv6 or older
+    [ ['ppc64',   'powerpc64'],   ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1,         1 ], # 64 bit PPC processors
+    [ ['ppc64le', 'powerpc64le'], ['auto', 'dynrec'],  'C_DYNREC',      'PPC64LE', 1,         1 ], # 64 bit PPC processors (little-endian)
+    [ ['ppc',     'powerpc'],     ['auto', 'dynrec'],  'C_DYNREC',      'POWERPC', 1,         0 ], # 32 bit PPC processors (big-endian)
+    [ ['mips'],                   ['auto', 'dynrec'],  'C_DYNREC',      'MIPSEL',  0,         0 ], # 32 bit MIPS processor
 ]
 
 selected_core = get_option('dynamic_core')
@@ -39,7 +39,7 @@ foreach line : core_selection
     unaligned_mem = line[4]
     per_page_w_or_x = line[5]
     if (
-        (host_machine.cpu_family() == cpu_family)
+        cpu_family.contains(host_machine.cpu_family())
         and opts_for_arch.contains(selected_core)
     )
         conf_data.set('C_TARGETCPU', target_cpu)
