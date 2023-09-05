@@ -58,12 +58,14 @@ std::unique_ptr<Program> SHELL_ProgramCreate();
 void REELMAGIC_MaybeCreateFmpdrvExecutable();
 
 void VFILE_GetPathZDrive(std::string& path, const std::string& dirname);
-void VFILE_RegisterZDrive(const std_fs::path &z_drive_path);
+void VFILE_RegisterZDrive(const std_fs::path& z_drive_path);
 
 void Add_VFiles(const bool add_autoexec)
 {
 	const std::string dirname = "drivez";
+
 	std::string path = ".";
+
 	path += CROSS_FILESPLIT;
 	path += dirname;
 	VFILE_GetPathZDrive(path, dirname);
@@ -76,7 +78,8 @@ void Add_VFiles(const bool add_autoexec)
 #endif
 	PROGRAMS_MakeFile("BOOT.COM", ProgramCreate<BOOT>);
 	PROGRAMS_MakeFile("CHOICE.COM", ProgramCreate<CHOICE>);
-	REELMAGIC_MaybeCreateFmpdrvExecutable();
+	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
+	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramCreate);
 	PROGRAMS_MakeFile("HELP.COM", ProgramCreate<HELP>);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", ProgramCreate<IMGMOUNT>);
 	PROGRAMS_MakeFile("INTRO.COM", ProgramCreate<INTRO>);
@@ -85,18 +88,18 @@ void Add_VFiles(const bool add_autoexec)
 	PROGRAMS_MakeFile("LOADROM.COM", ProgramCreate<LOADROM>);
 	PROGRAMS_MakeFile("LS.COM", ProgramCreate<LS>);
 	PROGRAMS_MakeFile("MEM.COM", ProgramCreate<MEM>);
+	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramCreate);
 	PROGRAMS_MakeFile("MORE.COM", ProgramCreate<MORE>);
 	PROGRAMS_MakeFile("MOUNT.COM", ProgramCreate<MOUNT>);
 	PROGRAMS_MakeFile("MOUSECTL.COM", ProgramCreate<MOUSECTL>);
+	PROGRAMS_MakeFile("MOVE.EXE", ProgramCreate<MOVE>);
 	PROGRAMS_MakeFile("RESCAN.COM", ProgramCreate<RESCAN>);
-	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramCreate);
-	PROGRAMS_MakeFile("CONFIG.COM", CONFIG_ProgramCreate);
 	PROGRAMS_MakeFile("SERIAL.COM", ProgramCreate<SERIAL>);
 	PROGRAMS_MakeFile("SETVER.EXE", ProgramCreate<SETVER>);
-	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
-	PROGRAMS_MakeFile("MOVE.EXE", ProgramCreate<MOVE>);
 	PROGRAMS_MakeFile("SUBST.EXE", ProgramCreate<SUBST>);
-	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
+	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
+
+	REELMAGIC_MaybeCreateFmpdrvExecutable();
 
 	if (add_autoexec) {
 		AUTOEXEC_RegisterFile();
