@@ -572,6 +572,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\dos\program_loadrom.cpp" />
     <ClCompile Include="..\src\dos\program_ls.cpp" />
     <ClCompile Include="..\src\dos\program_mem.cpp" />
+    <ClCompile Include="..\src\dos\program_mixer.cpp" />
     <ClCompile Include="..\src\dos\program_more.cpp" />
     <ClCompile Include="..\src\dos\program_more_output.cpp" />
     <ClCompile Include="..\src\dos\program_mount_common.cpp" />
