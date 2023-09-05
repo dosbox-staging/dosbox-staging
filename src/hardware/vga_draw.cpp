@@ -40,9 +40,7 @@
 #include "vga.h"
 #include "video.h"
 
-//#undef C_DEBUG
-//#define C_DEBUG 1
-//#define LOG(X,Y) LOG_MSG
+//#define DEBUG_VGA_DRAW
 
 typedef uint8_t * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
@@ -1986,12 +1984,12 @@ ImageInfo setup_drawing()
 		break;
 	}
 
-#if 0
-	LOG_MSG("VGA: vga.mode: %s", to_string(vga.mode));
-	LOG_MSG("VGA: graphics_enabled: %d, scan_doubling: %d, max_scan_line: %d",
-	        static_cast<uint8_t>(vga.attr.mode_control.is_graphics_enabled),
-	        static_cast<uint8_t>(vga.crtc.maximum_scan_line.is_scan_doubling_enabled),
-	        static_cast<uint8_t>(vga.crtc.maximum_scan_line.maximum_scan_line));
+#ifdef DEBUG_VGA_DRAW
+	LOG_DEBUG("VGA: vga.mode: %s, graphics_enabled: %d, scan_doubling: %d, max_scan_line: %d",
+	          to_string(vga.mode),
+	          static_cast<uint8_t>(vga.attr.mode_control.is_graphics_enabled),
+	          static_cast<uint8_t>(vga.crtc.maximum_scan_line.is_scan_doubling_enabled),
+	          static_cast<uint8_t>(vga.crtc.maximum_scan_line.maximum_scan_line));
 #endif
 
 	const auto bios_mode_number = CurMode->mode;
@@ -2720,46 +2718,42 @@ ImageInfo setup_drawing()
 	vga.changes.writeMask = 1;
 #endif
 
-#if 0
-	LOG_MSG("VGA: horiz.total: %d, vert.total: %d",
-	        vga_timings.horiz.total,
-	        vga_timings.vert.total);
-#endif
+#ifdef DEBUG_VGA_DRAW
+	LOG_DEBUG("VGA: horiz.total: %d, vert.total: %d",
+	          vga_timings.horiz.total,
+	          vga_timings.vert.total);
 
-#if 0
-	LOG_MSG("VGA: RENDER: width: %d, height: %d, dblw: %d, dblh: %d, PAR: %lld:%lld (1:%g)",
-	        render_width,
-	        render_height,
-	        double_width,
-	        double_height,
-	        render_pixel_aspect_ratio.Num(),
-	        render_pixel_aspect_ratio.Denom(),
-	        render_pixel_aspect_ratio.Inverse().ToDouble());
+	LOG_DEBUG("VGA: RENDER: width: %d, height: %d, dblw: %d, dblh: %d, PAR: %lld:%lld (1:%g)",
+	          render_width,
+	          render_height,
+	          double_width,
+	          double_height,
+	          render_pixel_aspect_ratio.Num(),
+	          render_pixel_aspect_ratio.Denom(),
+	          render_pixel_aspect_ratio.Inverse().ToDouble());
 
-	LOG_MSG("VGA: VIDEO_MODE: width: %d, height: %d, PAR: %lld:%lld (1:%g)",
-	        video_mode.width,
-	        video_mode.height,
-	        video_mode.pixel_aspect_ratio.Num(),
-	        video_mode.pixel_aspect_ratio.Denom(),
-	        video_mode.pixel_aspect_ratio.Inverse().ToDouble());
-#endif
+	LOG_DEBUG("VGA: VIDEO_MODE: width: %d, height: %d, PAR: %lld:%lld (1:%g)",
+	          video_mode.width,
+	          video_mode.height,
+	          video_mode.pixel_aspect_ratio.Num(),
+	          video_mode.pixel_aspect_ratio.Denom(),
+	          video_mode.pixel_aspect_ratio.Inverse().ToDouble());
 
-#if 0
-	LOG_MSG("h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-	        vga.draw.delay.htotal,
-	        (1.0 / vga.draw.delay.htotal),
-	        vga.draw.delay.hblkstart,
-	        vga.draw.delay.hblkend,
-	        vga.draw.delay.hrstart,
-	        vga.draw.delay.hrend);
+	LOG_DEBUG("VGA: h total %2.5f (%3.2fkHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+	          vga.draw.delay.htotal,
+	          (1.0 / vga.draw.delay.htotal),
+	          vga.draw.delay.hblkstart,
+	          vga.draw.delay.hblkend,
+	          vga.draw.delay.hrstart,
+	          vga.draw.delay.hrend);
 
-	LOG_MSG("v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
-	        vga.draw.delay.vtotal,
-	        (1000.0 / vga.draw.delay.vtotal),
-	        vga.draw.delay.vblkstart,
-	        vga.draw.delay.vblkend,
-	        vga.draw.delay.vrstart,
-	        vga.draw.delay.vrend);
+	LOG_DEBUG("VGA: v total %2.5f (%3.2fHz) blank(%02.5f/%02.5f) retrace(%02.5f/%02.5f)",
+	          vga.draw.delay.vtotal,
+	          (1000.0 / vga.draw.delay.vtotal),
+	          vga.draw.delay.vblkstart,
+	          vga.draw.delay.vblkend,
+	          vga.draw.delay.vrstart,
+	          vga.draw.delay.vrend);
 #endif
 
 	ImageInfo render = {};
