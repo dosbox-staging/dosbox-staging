@@ -25,6 +25,8 @@
 
 CHECK_NARROWING();
 
+//#define DEBUG_ADLIB_GOLD
+
 // Yamaha YM7128B Surround Processor emulation
 // -------------------------------------------
 
@@ -57,9 +59,11 @@ void SurroundProcessor::ControlWrite(const uint8_t val)
 
 	// Change register data at the falling edge of 'a0' word clock
 	if (control_state.a0 && !reg.a0) {
-		// LOG_DEBUG("ADLIBGOLD: Surround: Write control register %d, data: %d",
-		//           control_state.addr,
-		//           control_state.data);
+#ifdef DEBUG_ADLIB_GOLD
+		LOG_DEBUG("ADLIBGOLD: Surround: Write control register %d, data: %d",
+		          control_state.addr,
+		          control_state.data);
+#endif
 
 		YM7128B_ChipIdeal_Write(&chip, control_state.addr, control_state.data);
 	} else {
@@ -180,18 +184,22 @@ void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
 		const auto value = data & volume_control_mask;
 		gain.left        = calc_volume_gain(value);
 
+#ifdef DEBUG_ADLIB_GOLD
 		LOG_DEBUG("ADLIBGOLD: Stereo: Final left volume set to %.2fdB (value %d)",
 		          gain.left,
 		          value);
+#endif
 	} break;
 
 	case StereoProcessorControlReg::VolumeRight: {
 		const auto value = data & volume_control_mask;
 		gain.right       = calc_volume_gain(value);
 
+#ifdef DEBUG_ADLIB_GOLD
 		LOG_DEBUG("ADLIBGOLD: Stereo: Final right volume set to %.2fdB (value %d)",
 		          gain.right,
 		          value);
+#endif
 	} break;
 
 	case StereoProcessorControlReg::Bass: {
@@ -199,9 +207,11 @@ void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
 		const auto gain_db = calc_filter_gain_db(value);
 		SetLowShelfGain(gain_db);
 
+#ifdef DEBUG_ADLIB_GOLD
 		LOG_DEBUG("ADLIBGOLD: Stereo: Bass gain set to %.2fdB (value %d)",
 		          gain_db,
 		          value);
+#endif
 	} break;
 
 	case StereoProcessorControlReg::Treble: {
@@ -212,9 +222,11 @@ void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
 		const auto gain_db = calc_filter_gain_db(value + extra_treble);
 		SetHighShelfGain(gain_db);
 
+#ifdef DEBUG_ADLIB_GOLD
 		LOG_DEBUG("ADLIBGOLD: Stereo: Treble gain set to %.2fdB (value %d)",
 		          gain_db,
 		          value);
+#endif
 	} break;
 
 	case StereoProcessorControlReg::SwitchFunctions: {
@@ -225,9 +237,11 @@ void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
 		stereo_mode = StereoProcessorStereoMode(
 		        static_cast<uint8_t>(sf.stereo_mode));
 
+#ifdef DEBUG_ADLIB_GOLD
 		LOG_DEBUG("ADLIBGOLD: Stereo: Source selector set to %d, stereo mode set to %d",
 		          static_cast<int>(source_selector),
 		          static_cast<int>(stereo_mode));
+#endif
 	} break;
 	}
 }
