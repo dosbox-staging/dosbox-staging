@@ -4,8 +4,9 @@ FROM debian:${DEB_VERS}-slim
 # Enable architectures
 RUN dpkg --add-architecture amd64 && \
     dpkg --add-architecture arm64 && \
-    dpkg --add-architecture i386 &&  \
-    dpkg --add-architecture armhf
+    dpkg --add-architecture i386  &&  \
+    dpkg --add-architecture armhf && \
+    dpkg --add-architecture ppc64el
 
 ENV DEBIAN_FRONTEND=noninteractive
 
