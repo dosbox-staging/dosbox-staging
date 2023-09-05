@@ -346,6 +346,18 @@ static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 	return ReverbPreset::None;
 }
 
+static const char* to_string(const ReverbPreset preset)
+{
+	switch (preset) {
+	case ReverbPreset::Tiny: return "tiny";
+	case ReverbPreset::Small: return "small";
+	case ReverbPreset::Medium: return "medium";
+	case ReverbPreset::Large: return "large";
+	case ReverbPreset::Huge: return "huge";
+	default: assertm(false, "Invalid ReverbPreset"); return "";
+	}
+}
+
 static void configure_reverb(const std::string_view reverb_pref)
 {
 	auto& r = mixer.reverb; // short-hand reference
@@ -416,6 +428,16 @@ static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 	LOG_WARNING("MIXER: Received an unknown chorus preset type: '%s'",
 	            pref.data());
 	return ChorusPreset::None;
+}
+
+static const char* to_string(const ChorusPreset preset)
+{
+	switch (preset) {
+	case ChorusPreset::Light: return "light";
+	case ChorusPreset::Normal: return "normal";
+	case ChorusPreset::Strong: return "string";
+	default: assertm(false, "Invalid ChorusPreset"); return "";
+	}
 }
 
 static void configure_chorus(const std::string_view chorus_pref)
