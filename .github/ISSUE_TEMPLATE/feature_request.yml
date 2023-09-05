@@ -41,7 +41,8 @@ body:
         - Windows 8
         - Windows 7
         - Windows Other
-        - Mac OS
+        - macOS (Intel)
+        - macOS (Apple Silicon)
         - Linux x86
         - Linux x86_64
         - Linux ppc64le
