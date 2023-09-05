@@ -17,7 +17,7 @@ jobs:
       debfile: pvs-studio-7.25.72091.324-amd64.deb
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: false
 

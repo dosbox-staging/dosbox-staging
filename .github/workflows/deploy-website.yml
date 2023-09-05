@@ -18,14 +18,14 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Check out MkDocs sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ inputs.source_branch }}
           submodules: false
           path: dosbox-staging
 
       - name: Check out organisation GitHub Pages repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.ACCESS_TOKEN_REPO }}
           repository: dosbox-staging/dosbox-staging.github.io
