@@ -73,6 +73,8 @@
 
 CHECK_NARROWING();
 
+//#define DEBUG_MIXER
+
 constexpr auto MixerFrameSize = 4;
 
 constexpr auto FreqShift = 14;
@@ -752,8 +754,10 @@ void MixerChannel::ConfigureResampler()
 		do_resample = (channel_rate != mixer_rate);
 		if (do_resample) {
 			InitLerpUpsamplerState();
+#ifdef DEBUG_MIXER
 			LOG_DEBUG("%s: Linear interpolation resampler is on",
 			          name.c_str());
+#endif
 		}
 		break;
 
@@ -761,9 +765,11 @@ void MixerChannel::ConfigureResampler()
 		do_zoh_upsample = (channel_rate < zoh_upsampler.target_freq);
 		if (do_zoh_upsample) {
 			InitZohUpsamplerState();
+#ifdef DEBUG_MIXER
 			LOG_DEBUG("%s: Zero-order-hold upsampler is on, target rate: %d Hz ",
 			          name.c_str(),
 			          zoh_upsampler.target_freq);
+#endif
 		}
 		[[fallthrough]];
 
@@ -788,10 +794,12 @@ void MixerChannel::ConfigureResampler()
 		}
 		speex_resampler_set_rate(speex_resampler.state, in_rate, out_rate);
 
+#ifdef DEBUG_MIXER
 		LOG_DEBUG("%s: Speex resampler is on, input rate: %d Hz, output rate: %d Hz)",
 		          name.c_str(),
 		          in_rate,
 		          out_rate);
+#endif
 		break;
 	}
 }
@@ -818,9 +826,11 @@ void MixerChannel::ClearResampler()
 			speex_resampler_reset_mem(speex_resampler.state);
 			speex_resampler_skip_zeros(speex_resampler.state);
 
+#ifdef DEBUG_MIXER
 			LOG_DEBUG("%s: Speex resampler cleared and primed %d-frame input queue",
 			          name.c_str(),
 			          speex_resampler_get_input_latency(speex_resampler.state));
+#endif
 		}
 		break;
 	}
@@ -838,10 +848,12 @@ void MixerChannel::SetSampleRate(const uint16_t rate)
 		return;
 	}
 
+#ifdef DEBUG_MIXER
 	LOG_DEBUG("%s: Changing rate from %d to %d Hz",
 	          name.c_str(),
 	          sample_rate,
 	          target_rate);
+#endif
 
 	sample_rate = target_rate;
 
@@ -1191,7 +1203,9 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	do_crossfeed = (HasFeature(ChannelFeature::Stereo) && strength > 0.0f);
 
 	if (!do_crossfeed) {
+#ifdef DEBUG_MIXER
 		LOG_DEBUG("%s: Crossfeed is off", name.c_str());
+#endif
 		crossfeed.strength = 0.0f;
 		return;
 	}
@@ -1204,9 +1218,11 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 	crossfeed.pan_left    = center - p;
 	crossfeed.pan_right   = center + p;
 
+#ifdef DEBUG_MIXER
 	LOG_DEBUG("%s: Crossfeed is on (strength: %.3f)",
 	          name.c_str(),
 	          static_cast<double>(crossfeed.strength));
+#endif
 }
 
 float MixerChannel::GetCrossfeedStrength()
@@ -1227,7 +1243,9 @@ void MixerChannel::SetReverbLevel(const float level)
 	do_reverb_send = (HasFeature(ChannelFeature::ReverbSend) && level > level_min);
 
 	if (!do_reverb_send) {
+#ifdef DEBUG_MIXER
 		LOG_DEBUG("%s: Reverb send is off", name.c_str());
+#endif
 		reverb.level     = level_min;
 		reverb.send_gain = level_min_db;
 		return;
@@ -1239,11 +1257,13 @@ void MixerChannel::SetReverbLevel(const float level)
 
 	reverb.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
+#ifdef DEBUG_MIXER
 	LOG_DEBUG("%s: SetReverbLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f",
 	          name.c_str(),
 	          level,
 	          level_db,
 	          reverb.send_gain);
+#endif
 }
 
 float MixerChannel::GetReverbLevel()
@@ -1264,7 +1284,9 @@ void MixerChannel::SetChorusLevel(const float level)
 	do_chorus_send = (HasFeature(ChannelFeature::ChorusSend) && level > level_min);
 
 	if (!do_chorus_send) {
+#ifdef DEBUG_MIXER
 		LOG_DEBUG("%s: Chorus send is off", name.c_str());
+#endif
 		chorus.level     = level_min;
 		chorus.send_gain = level_min_db;
 		return;
@@ -1276,11 +1298,13 @@ void MixerChannel::SetChorusLevel(const float level)
 
 	chorus.send_gain = static_cast<float>(decibel_to_gain(level_db));
 
+#ifdef DEBUG_MIXER
 	LOG_DEBUG("%s: SetChorusLevel: level: %4.2f, level_db: %6.2f, gain: %4.2f",
 	          name.c_str(),
 	          level,
 	          level_db,
 	          chorus.send_gain);
+#endif
 }
 
 float MixerChannel::GetChorusLevel()
@@ -1620,6 +1644,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type* data)
 
 				s.pos += s.step;
 
+#ifdef DEBUG_MIXER
 				LOG_DEBUG("%s: AddSamples last %.1f:%.1f curr %.1f:%.1f"
 				          " -> out %.1f:%.1f, pos=%.2f, step=%.2f",
 				          name.c_str(),
@@ -1631,6 +1656,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type* data)
 				          out_right,
 				          s.pos,
 				          s.step);
+#endif
 
 				if (s.pos > 1.0f) {
 					s.pos -= 1.0f;
