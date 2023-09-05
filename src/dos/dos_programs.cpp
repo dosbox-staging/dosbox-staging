@@ -34,6 +34,7 @@
 #include "program_loadrom.h"
 #include "program_ls.h"
 #include "program_mem.h"
+#include "program_mixer.h"
 #include "program_more.h"
 #include "program_mount.h"
 #include "program_mousectl.h"
@@ -88,7 +89,7 @@ void Add_VFiles(const bool add_autoexec)
 	PROGRAMS_MakeFile("LOADROM.COM", ProgramCreate<LOADROM>);
 	PROGRAMS_MakeFile("LS.COM", ProgramCreate<LS>);
 	PROGRAMS_MakeFile("MEM.COM", ProgramCreate<MEM>);
-	PROGRAMS_MakeFile("MIXER.COM", MIXER_ProgramCreate);
+	PROGRAMS_MakeFile("MIXER.COM", ProgramCreate<MIXER>);
 	PROGRAMS_MakeFile("MORE.COM", ProgramCreate<MORE>);
 	PROGRAMS_MakeFile("MOUNT.COM", ProgramCreate<MOUNT>);
 	PROGRAMS_MakeFile("MOUSECTL.COM", ProgramCreate<MOUSECTL>);
