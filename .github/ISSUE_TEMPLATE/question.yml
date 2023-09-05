@@ -44,6 +44,7 @@ body:
         - Mac OS
         - Linux x86
         - Linux x86_64
+        - Linux ppc64le
         - Linux ARM (Raspberry Pi)
         - Other
     validations:
