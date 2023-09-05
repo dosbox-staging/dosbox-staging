@@ -580,6 +580,10 @@ mixer_channel_t MIXER_FindChannel(const char* name)
 	return chan;
 }
 
+std::map<std::string, mixer_channel_t>& MIXER_GetChannels() {
+	return mixer.channels;
+}
+
 void MixerChannel::RecalcCombinedVolume()
 {
 	combined_volume_scalar.left = user_volume_scalar.left *
