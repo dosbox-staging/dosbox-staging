@@ -20,6 +20,7 @@
 #define DOSBOX_LOGGING_H
 
 #include <cstdio>
+#include <string>
 
 #include "compiler.h"
 
@@ -56,11 +57,12 @@ public:
 		d_type(type),
 		d_severity(severity)
 		{}
-	void operator() (char const* buf, ...) GCC_ATTRIBUTE(__format__(__printf__, 2, 3));  //../src/debug/debug_gui.cpp
-
+	        void operator()(const char* buf, ...)
+	                GCC_ATTRIBUTE(__format__(__printf__, 2, 3)); //../src/debug/debug_gui.cpp
 };
 
-void DEBUG_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
+void DEBUG_ShowMsg(const char* format, ...)
+        GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 #define LOG_MSG DEBUG_ShowMsg
 
 #define LOG_INFO(...)    LOG(LOG_ALL, LOG_NORMAL)(__VA_ARGS__)
@@ -72,11 +74,12 @@ void DEBUG_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 
 struct LOG
 {
 	inline LOG(LOG_TYPES, LOG_SEVERITIES){ }
-	inline void operator()(char const* , ...){ }
+	inline void operator()(const char*, ...) {}
 }; //add missing operators to here
 
 	//try to avoid anything smaller than bit32...
-void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
+void GFX_ShowMsg(const char* format, ...)
+        GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 
 // Keep for compatibility
 #define LOG_MSG(...)	LOG_F(INFO, __VA_ARGS__)
@@ -92,7 +95,17 @@ void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1,
 // be redirected into internal DOSBox debugger for DOS programs (C_DEBUG feature).
 #define DEBUG_LOG_MSG(...)
 #else
-#define DEBUG_LOG_MSG(...) DLOG_F(INFO, __VA_ARGS__)
+
+template <typename... Args>
+void DEBUG_LOG_MSG(const std::string& format, const Args&... args) noexcept
+{
+	const auto format_green = std::string(loguru::terminal_green()) +
+	                          loguru::terminal_bold() + format +
+	                          loguru::terminal_reset();
+
+	DLOG_F(INFO, format_green.c_str(), args...);
+}
+
 #endif // NDEBUG
 
 #endif
