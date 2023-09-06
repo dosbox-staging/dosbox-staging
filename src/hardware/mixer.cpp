@@ -1990,7 +1990,7 @@ MixerChannel::~MixerChannel()
 }
 
 extern bool ticksLocked;
-static inline bool Mixer_irq_important()
+static inline bool is_mixer_irq_important()
 {
 	/* In some states correct timing of the irqs is more important than
 	 * non stuttering audo */
@@ -2005,7 +2005,7 @@ static constexpr int calc_tickadd(const int freq)
 }
 
 // Mix a certain amount of new sample frames
-static void MIXER_MixData(const int frames_requested)
+static void mix_samples(const int frames_requested)
 {
 	constexpr auto capture_buf_frames = 1024;
 
@@ -2124,18 +2124,18 @@ static void MIXER_MixData(const int frames_requested)
 	}
 
 	// Reset the the tick_add for constant speed
-	if (Mixer_irq_important()) {
+	if (is_mixer_irq_important()) {
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 	}
 
 	mixer.frames_done = frames_requested;
 }
 
-static void MIXER_Mix()
+static void handle_mix_samples()
 {
 	MIXER_LockAudioDevice();
 
-	MIXER_MixData(mixer.frames_needed);
+	mix_samples(mixer.frames_needed);
 	mixer.tick_counter += mixer.tick_add;
 
 	const auto frames_needed = mixer.frames_needed +
@@ -2147,7 +2147,7 @@ static void MIXER_Mix()
 	MIXER_UnlockAudioDevice();
 }
 
-static void MIXER_ReduceChannelsDoneCounts(const int at_most)
+static void reduce_channels_done_counts(const int at_most)
 {
 	for (auto& it : mixer.channels) {
 		it.second->frames_done -= std::min(it.second->frames_done.load(),
@@ -2155,11 +2155,11 @@ static void MIXER_ReduceChannelsDoneCounts(const int at_most)
 	}
 }
 
-static void MIXER_Mix_NoSound()
+static void handle_mix_no_sound()
 {
 	MIXER_LockAudioDevice();
 
-	MIXER_MixData(mixer.frames_needed);
+	mix_samples(mixer.frames_needed);
 
 	/* Clear piece we've just generated */
 	for (auto i = 0; i < mixer.frames_needed; ++i) {
@@ -2169,7 +2169,7 @@ static void MIXER_Mix_NoSound()
 		mixer.pos = (mixer.pos + 1) & MixerBufferMask;
 	}
 
-	MIXER_ReduceChannelsDoneCounts(mixer.frames_needed);
+	reduce_channels_done_counts(mixer.frames_needed);
 
 	/* Set values for next tick */
 	mixer.tick_counter += mixer.tick_add;
@@ -2180,7 +2180,7 @@ static void MIXER_Mix_NoSound()
 	MIXER_UnlockAudioDevice();
 }
 
-static void SDLCALL MIXER_CallBack([[maybe_unused]] void* userdata,
+static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
                                    Uint8* stream, int len)
 {
 	ZoneScoped;
@@ -2216,7 +2216,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void* userdata,
 		auto frames_remaining = mixer.frames_done - frames_requested;
 
 		if (frames_remaining < mixer.min_frames_needed) {
-			if (!Mixer_irq_important()) {
+			if (!is_mixer_irq_important()) {
 				auto frames_needed = mixer.frames_needed -
 				                     frames_requested;
 
@@ -2295,10 +2295,10 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void* userdata,
 		                              (mixer.min_frames_needed / 5));
 	}
 
-	MIXER_ReduceChannelsDoneCounts(reduce_frames);
+	reduce_channels_done_counts(reduce_frames);
 
 	// Reset mixer.tick_add when irqs are important
-	if (Mixer_irq_important()) {
+	if (is_mixer_irq_important()) {
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 	}
 
@@ -2360,7 +2360,7 @@ static void SDLCALL MIXER_CallBack([[maybe_unused]] void* userdata,
 	}
 }
 
-static void MIXER_Stop([[maybe_unused]] Section* sec) {}
+static void stop_mixer([[maybe_unused]] Section* sec) {}
 
 [[maybe_unused]] static const char* MixerStateToString(const MixerState s)
 {
@@ -2395,14 +2395,14 @@ static void set_mixer_state(const MixerState requested)
 		// MixerStateToString(mixer.state));
 
 	} else if (mixer.state == MixerState::On && new_state != MixerState::On) {
-		TIMER_DelTickHandler(MIXER_Mix);
-		TIMER_AddTickHandler(MIXER_Mix_NoSound);
+		TIMER_DelTickHandler(handle_mix_samples);
+		TIMER_AddTickHandler(handle_mix_no_sound);
 		// LOG_MSG("MIXER: Changed from on to %s",
 		// MixerStateToString(new_state));
 
 	} else if (mixer.state != MixerState::On && new_state == MixerState::On) {
-		TIMER_DelTickHandler(MIXER_Mix_NoSound);
-		TIMER_AddTickHandler(MIXER_Mix);
+		TIMER_DelTickHandler(handle_mix_no_sound);
+		TIMER_AddTickHandler(handle_mix_samples);
 		// LOG_MSG("MIXER: Changed from %s to on",
 		// MixerStateToString(mixer.state));
 
@@ -2418,13 +2418,14 @@ static void set_mixer_state(const MixerState requested)
 		SDL_PauseAudioDevice(mixer.sdldevice, mixer.state != MixerState::On);
 	}
 	//
-	// When unpaused, the device pulls frames queued by the MIXER_Mix
-	// function, which it fetches from each channel's callback (every
-	// millisecond tick), and mixes into a stereo frame buffer.
-
+	// When unpaused, the device pulls frames queued by the
+	// handle_mix_samples() function, which it fetches from each channel's
+	// callback (every millisecond tick), and mixes into a stereo frame
+	// buffer.
+	//
 	// When paused, the audio device stops reading frames from our buffer,
 	// so it's imporant that the we no longer queue them, which is why we
-	// use MIXER_Mix_NoSound (to throw away frames instead of queuing).
+	// use handle_mix_no_sound() (to throw away frames instead of queuing).
 }
 
 using channel_state_t = std::pair<std::string, bool>;
@@ -2450,8 +2451,8 @@ static void restore_channel_states(const std::vector<channel_state_t>& states)
 void MIXER_CloseAudioDevice()
 {
 	// Stop either mixing method
-	TIMER_DelTickHandler(MIXER_Mix);
-	TIMER_DelTickHandler(MIXER_Mix_NoSound);
+	TIMER_DelTickHandler(handle_mix_samples);
+	TIMER_DelTickHandler(handle_mix_no_sound);
 
 	MIXER_LockAudioDevice();
 	for (auto& it : mixer.channels) {
@@ -2472,7 +2473,7 @@ void MIXER_Init(Section* sec)
 
 	MIXER_CloseAudioDevice();
 
-	sec->AddDestroyFunction(&MIXER_Stop);
+	sec->AddDestroyFunction(&stop_mixer);
 
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	/* Read out config section */
@@ -2488,7 +2489,7 @@ void MIXER_Init(Section* sec)
 	spec.freq     = static_cast<int>(mixer.sample_rate);
 	spec.format   = AUDIO_S16SYS;
 	spec.channels = 2;
-	spec.callback = MIXER_CallBack;
+	spec.callback = mixer_callback;
 	spec.userdata = nullptr;
 	spec.samples  = mixer.blocksize;
 
@@ -2636,7 +2637,7 @@ bool MIXER_IsManuallyMuted()
 }
 
 // Toggle the mixer on/off when a 'true' bool is passed in.
-static void ToggleMute(const bool was_pressed)
+static void handle_toggle_mute(const bool was_pressed)
 {
 	// The "pressed" bool argument is used by the Mapper API, which sends a
 	// true-bool for key down events and a false-bool for key up events.
@@ -2761,7 +2762,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "Note: You can fine-tune per-channel chorus levels via mixer commands.");
 	string_prop->Set_values(chorus_presets);
 
-	MAPPER_AddHandler(ToggleMute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
+	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
 
 void MIXER_AddConfigSection(const config_ptr_t& conf)
