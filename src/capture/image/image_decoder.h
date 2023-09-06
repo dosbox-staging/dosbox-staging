@@ -106,22 +106,28 @@ private:
 
 		switch (image.params.pixel_format) {
 		case PixelFormat::RGB555_Packed16: {
-			const auto p = host_to_le(
-			        *reinterpret_cast<const uint16_t*>(pos));
+			const auto p = read_unaligned_uint16(pos);
 			pixel = Rgb555(p).ToRgb888();
 		} break;
 
 		case PixelFormat::RGB565_Packed16: {
-			const auto p = host_to_le(
-			        *reinterpret_cast<const uint16_t*>(pos));
+			const auto p = read_unaligned_uint16(pos);
 			pixel = Rgb565(p).ToRgb888();
 		} break;
 
-		case PixelFormat::BGR24_ByteArray:
-		case PixelFormat::XRGB8888_Packed32: {
+		case PixelFormat::BGR24_ByteArray: {
 			const auto b = *(pos + 0);
 			const auto g = *(pos + 1);
 			const auto r = *(pos + 2);
+
+			pixel = {r, g, b};
+		} break;
+
+		case PixelFormat::XRGB8888_Packed32: {
+			const auto p = read_unaligned_uint32(pos);
+			const uint8_t r = (p >> 16) & 0XFF;
+			const uint8_t g = (p >> 8) & 0xFF;
+			const uint8_t b = p & 0xFF;
 
 			pixel = {r, g, b};
 		} break;
