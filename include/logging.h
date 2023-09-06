@@ -106,6 +106,17 @@ void LOG_DEBUG(const std::string& format, const Args&... args) noexcept
 	DLOG_F(INFO, format_green.c_str(), args...);
 }
 
+template <typename... Args>
+void LOG_TRACE(const std::string& format, const Args&... args) noexcept
+{
+	const auto format_purple = std::string(loguru::terminal_purple()) +
+	                           loguru::terminal_bold() + format +
+	                           loguru::terminal_reset();
+
+	DLOG_F(INFO, format_purple.c_str(), args...);
+}
+
+
 #endif // NDEBUG
 
 #endif
