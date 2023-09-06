@@ -2385,7 +2385,7 @@ using channels_set_t = std::set<mixer_channel_t>;
 static channels_set_t set_of_channels()
 {
 	channels_set_t channels = {};
-	for (const auto& it : mixer.channels) {
+	for (const auto& it : MIXER_GetChannels()) {
 		channels.emplace(it.second);
 	}
 	return channels;
@@ -2462,14 +2462,15 @@ public:
 
 		auto set_reverb_level = [&](const float level,
 		                            const channels_set_t& selected_channels) {
-			const auto should_zero_other_channels = !mixer.do_reverb;
+			const auto should_zero_other_channels =
+			        (MIXER_GetReverbPreset() == ReverbPreset::None);
 
 			// Do we need to start the reverb engine?
-			if (!mixer.do_reverb) {
+			if (MIXER_GetReverbPreset() == ReverbPreset::None) {
 				MIXER_SetReverbPreset(DefaultReverbPreset);
 			}
 			for ([[maybe_unused]] const auto& [_, channel] :
-			     mixer.channels) {
+			     MIXER_GetChannels()) {
 				if (selected_channels.find(channel) !=
 				    selected_channels.end()) {
 					channel->SetReverbLevel(level);
@@ -2481,14 +2482,15 @@ public:
 
 		auto set_chorus_level = [&](const float level,
 		                            const channels_set_t& selected_channels) {
-			const auto should_zero_other_channels = !mixer.do_chorus;
+			const auto should_zero_other_channels =
+			        (MIXER_GetChorusPreset() == ChorusPreset::None);
 
 			// Do we need to start the chorus engine?
-			if (!mixer.do_chorus) {
+			if (MIXER_GetChorusPreset() == ChorusPreset::None) {
 				MIXER_SetChorusPreset(DefaultChorusPreset);
 			}
 			for ([[maybe_unused]] const auto& [_, channel] :
-			     mixer.channels) {
+			     MIXER_GetChannels()) {
 				if (selected_channels.find(channel) !=
 				    selected_channels.end()) {
 					channel->SetChorusLevel(level);
@@ -2532,7 +2534,7 @@ public:
 				if (auto p = parse_prefixed_percentage(crossfeed_command,
 				                                       arg);
 				    p) {
-					for (auto& it : mixer.channels) {
+					for (auto& it : MIXER_GetChannels()) {
 						const auto strength = percentage_to_gain(
 						        *p);
 						it.second->SetCrossfeedStrength(
@@ -2559,7 +2561,7 @@ public:
 				// Only setting the volume is allowed for the
 				// master channel
 				if (const auto v = parse_volume(arg); v) {
-					mixer.master_volume = *v;
+					MIXER_SetMasterVolume(*v);
 				}
 
 			} else if (channel) {
@@ -2681,13 +2683,13 @@ private:
 		constexpr auto master_channel_string = "[color=cyan]MASTER[reset]";
 
 		show_channel(convert_ansi_markup(master_channel_string),
-		             mixer.master_volume,
+		             MIXER_GetMasterVolume(),
 		             MSG_Get("SHELL_CMD_MIXER_CHANNEL_STEREO"),
 		             none_value,
 		             none_value,
 		             none_value);
 
-		for (auto& [name, chan] : mixer.channels) {
+		for (auto& [name, chan] : MIXER_GetChannels()) {
 			std::string xfeed = none_value;
 			if (chan->HasFeature(ChannelFeature::Stereo)) {
 				if (chan->GetCrossfeedStrength() > 0.0f) {
