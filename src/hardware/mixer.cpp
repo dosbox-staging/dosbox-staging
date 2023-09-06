@@ -624,6 +624,18 @@ std::map<std::string, mixer_channel_t>& MIXER_GetChannels() {
 	return mixer.channels;
 }
 
+void MixerChannel::Set0dbScalar(const float scalar)
+{
+	// Realistically we expect some channels might need a fixed boost
+	// to get to 0dB, but others might need a range mapping, like from
+	// a unity float [-1.0f, +1.0f] to  16-bit int [-32k,+32k] range.
+	assert(scalar >= 0.0f && scalar <= static_cast<int16_t>(Max16BitSampleValue));
+
+	db0_volume_scalar = scalar;
+
+	RecalcCombinedVolume();
+}
+
 void MixerChannel::RecalcCombinedVolume()
 {
 	combined_volume_scalar.left = user_volume_scalar.left *
@@ -635,6 +647,11 @@ void MixerChannel::RecalcCombinedVolume()
 	                               mixer.master_volume.right * db0_volume_scalar;
 }
 
+const AudioFrame& MixerChannel::GetUserVolume() const
+{
+	return user_volume_scalar;
+}
+
 void MixerChannel::SetUserVolume(const float left, const float right)
 {
 	// Allow unconstrained user-defined values
@@ -642,9 +659,9 @@ void MixerChannel::SetUserVolume(const float left, const float right)
 	RecalcCombinedVolume();
 }
 
-void MixerChannel::SetAppVolume(const float v)
+const AudioFrame& MixerChannel::GetAppVolume() const
 {
-	SetAppVolume(v, v);
+	return app_volume_scalar;
 }
 
 void MixerChannel::SetAppVolume(const float left, const float right)
@@ -669,26 +686,9 @@ void MixerChannel::SetAppVolume(const float left, const float right)
 #endif
 }
 
-void MixerChannel::Set0dbScalar(const float scalar)
+void MixerChannel::SetAppVolume(const float v)
 {
-	// Realistically we expect some channels might need a fixed boost
-	// to get to 0dB, but others might need a range mapping, like from
-	// a unity float [-1.0f, +1.0f] to  16-bit int [-32k,+32k] range.
-	assert(scalar >= 0.0f && scalar <= static_cast<int16_t>(Max16BitSampleValue));
-
-	db0_volume_scalar = scalar;
-
-	RecalcCombinedVolume();
-}
-
-const AudioFrame& MixerChannel::GetUserVolume() const
-{
-	return user_volume_scalar;
-}
-
-const AudioFrame& MixerChannel::GetAppVolume() const
-{
-	return app_volume_scalar;
+	SetAppVolume(v, v);
 }
 
 const AudioFrame& MIXER_GetMasterVolume()
