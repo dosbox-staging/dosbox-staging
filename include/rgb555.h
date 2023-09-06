@@ -25,6 +25,7 @@
 
 #include "rgb.h"
 #include "rgb888.h"
+#include "support.h"
 
 class Rgb555 {
 public:
@@ -76,19 +77,19 @@ public:
 	static uint8_t Red5To8(const uint16_t val)
 	{
 		const auto red5 = (val & r5_mask) >> r5_offset;
-		return rgb5_to_8_lut(static_cast<uint8_t>(red5));
+		return rgb5_to_8_lut(check_cast<uint8_t>(red5));
 	}
 
 	static uint8_t Green5To8(const uint16_t val)
 	{
 		const auto green5 = (val & g5_mask) >> g5_offset;
-		return rgb5_to_8_lut(static_cast<uint8_t>(green5));
+		return rgb5_to_8_lut(check_cast<uint8_t>(green5));
 	}
 
 	static uint8_t Blue5To8(const uint16_t val)
 	{
 		const auto blue5 = (val & b5_mask) >> b5_offset;
-		return rgb5_to_8_lut(static_cast<uint8_t>(blue5));
+		return rgb5_to_8_lut(check_cast<uint8_t>(blue5));
 	}
 
 	// Allow read-write to the underlying data because the class holds no
@@ -112,7 +113,7 @@ private:
 		const auto g5 = ((g8 >> 2) << g5_offset) & g5_mask;
 		const auto b5 = ((b8 >> 3) << b5_offset) & b5_mask;
 
-		return static_cast<uint16_t>(r5 | g5 | b5);
+		return check_cast<uint16_t>(r5 | g5 | b5);
 	}
 };
 
