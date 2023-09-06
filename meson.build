@@ -86,6 +86,7 @@ extra_flags = [
 
 warnings = []
 
+# Enable additional warnings
 foreach flag : [
     '-Walloca',
     '-Wctor-dtor-privacy',
@@ -104,6 +105,15 @@ foreach flag : [
     '-Wstrict-null-sentinel',
     '-Wsuggest-override',
     '-Wzero-as-null-pointer-constant',
+]
+    if cxx.has_argument(flag)
+       warnings += flag
+    endif
+endforeach
+
+# Ignore some warnings enabled by default
+foreach flag : [
+    '-Wno-format-security'
 ]
     if cxx.has_argument(flag)
        warnings += flag

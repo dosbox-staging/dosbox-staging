@@ -394,14 +394,6 @@ std::optional<float> parse_prefixed_percentage(const char prefix,
 // returns value only if succeeded
 std::optional<int> to_int(const std::string& value);
 
-#if defined(__GNUC__) || defined(__clang__)
-// Disable generic "format string is not a string literal (potentially
-// insecure)" warning on GCC/Clang. Of course, it's not a security issue for
-// us; we know what we're doing.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-security"
-#endif
-
 template <typename... Args>
 std::string format_string(const std::string& format, const Args&... args) noexcept
 {
@@ -429,9 +421,5 @@ std::string format_string(const std::string& format, const Args&... args) noexce
 	result.pop_back();
 	return result;
 }
-
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
 
 #endif
