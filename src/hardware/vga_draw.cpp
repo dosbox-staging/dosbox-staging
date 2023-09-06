@@ -427,6 +427,13 @@ static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu /*line*/)
 	auto pixels_remaining = check_cast<uint16_t>(vga.draw.line_length /
 	                                             bytes_per_pixel);
 
+	// If the screen is disabled, just paint black. This fixes screen
+	// fades in titles like Alien Carnage.
+	if (GCC_UNLIKELY(vga.seq.clocking_mode.is_screen_disabled)) {
+		memset(line_addr, 0, vga.draw.line_length);
+		return TempLine;
+	}
+
 	// see VGA_Draw_Linear_Line
 	if (GCC_UNLIKELY((vga.draw.line_length + offset) & ~vga.draw.linear_mask)) {
 		// Note: To exercise these wrapped scenarios, run:
