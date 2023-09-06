@@ -212,7 +212,7 @@ static uint32_t _mpegPictureWidth  = 0;
 static uint32_t _mpegPictureHeight = 0;
 
 // video mixer is exclusively 32bpp on the RENDER... VGA color palette mapping is re-done here...
-static const auto VideoMixerPixelFormat = PixelFormat::BGRX8888;
+static const auto VideoMixerPixelFormat = PixelFormat::XRGB8888_Packed32;
 
 // current RENDER state
 static void RMR_DrawLine_Passthrough(const void* src);
@@ -341,15 +341,15 @@ static void RMR_DrawLine_MixerError([[maybe_unused]] const void* src)
 		if (VGA_OVER) \
 			switch (VGA_PF) { \
 			case PixelFormat::Indexed8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO8; break; \
-			case PixelFormat::BGR565: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO16; break; \
-			case PixelFormat::BGRX8888: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO32; break; \
+			case PixelFormat::RGB565_Packed16: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO16; break; \
+			case PixelFormat::XRGB8888_Packed32: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAO32; break; \
 			default: ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError; break; \
 			} \
 		else \
 			switch (VGA_PF) { \
 			case PixelFormat::Indexed8: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU8; break; \
-			case PixelFormat::BGR565: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU16; break; \
-			case PixelFormat::BGRX8888: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU32; break; \
+			case PixelFormat::RGB565_Packed16: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU16; break; \
+			case PixelFormat::XRGB8888_Packed32: ReelMagic_RENDER_DrawLine = &DRAWLINE_FUNC_NAME##_VGAU32; break; \
 			default: ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError; break; \
 			} \
 	}

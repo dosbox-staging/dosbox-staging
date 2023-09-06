@@ -964,7 +964,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			std::fill(templine_buffer.begin(),
 			          templine_buffer.end(),
 			          bg_color_index);
-		} else if (vga.draw.render.pixel_format == PixelFormat::BGR565) {
+		} else if (vga.draw.render.pixel_format == PixelFormat::RGB565_Packed16) {
 			const auto background_color = from_rgb_888_to_565(
 			        vga.dac.palette_map[bg_color_index]);
 			const auto line_length = templine_buffer.size() / sizeof(uint16_t);
@@ -972,7 +972,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			while (i < line_length) {
 				write_unaligned_uint16_at(TempLine, i++, background_color);
 			}
-		} else if (vga.draw.render.pixel_format == PixelFormat::BGRX8888) {
+		} else if (vga.draw.render.pixel_format == PixelFormat::XRGB8888_Packed32) {
 			const auto background_color = vga.dac.palette_map[bg_color_index];
 			const auto line_length = templine_buffer.size() / sizeof(uint32_t);
 			size_t i = 0;
@@ -1370,7 +1370,7 @@ PixelFormat VGA_ActivateHardwareCursor()
 
 	switch (vga.mode) {
 	case M_LIN32: // 32-bit true-colour VESA
-		pixel_format = PixelFormat::BGRX8888;
+		pixel_format = PixelFormat::XRGB8888_Packed32;
 
 		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN32_Line_HWMouse
 		                             : VGA_Draw_Linear_Line;
@@ -1380,26 +1380,26 @@ PixelFormat VGA_ActivateHardwareCursor()
 		// rendering.
 		break;
 	case M_LIN24: // 24-bit true-colour VESA
-		pixel_format = PixelFormat::BGR888;
+		pixel_format = PixelFormat::BGR24_ByteArray;
 
 		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN32_Line_HWMouse
 		                             : VGA_Draw_Linear_Line;
 		break;
 	case M_LIN16: // 16-bit high-colour VESA
-		pixel_format = PixelFormat::BGR565;
+		pixel_format = PixelFormat::RGB565_Packed16;
 
 		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN16_Line_HWMouse
 		                             : VGA_Draw_Linear_Line;
 		break;
 	case M_LIN15: // 15-bit high-colour VESA
-		pixel_format = PixelFormat::BGR555;
+		pixel_format = PixelFormat::RGB555_Packed16;
 
 		VGA_DrawLine = use_hw_cursor ? VGA_Draw_LIN16_Line_HWMouse
 		                             : VGA_Draw_Linear_Line;
 		break;
 	case M_LIN8: // 8-bit and below
 	default:
-		pixel_format = PixelFormat::BGRX8888;
+		pixel_format = PixelFormat::XRGB8888_Packed32;
 
 		// Use routines that treats the 8-bit pixel values as
 		// indexes into the DAC's palette LUT. The palette LUT
@@ -1966,13 +1966,13 @@ ImageInfo setup_drawing()
 
 	PixelFormat pixel_format;
 	switch (vga.mode) {
-	case M_LIN15: pixel_format = PixelFormat::BGR555; break;
-	case M_LIN16: pixel_format = PixelFormat::BGR565; break;
-	case M_LIN24: pixel_format = PixelFormat::BGR888; break;
+	case M_LIN15: pixel_format = PixelFormat::RGB555_Packed16; break;
+	case M_LIN16: pixel_format = PixelFormat::RGB565_Packed16; break;
+	case M_LIN24: pixel_format = PixelFormat::BGR24_ByteArray; break;
 	case M_LIN32:
 	case M_CGA2_COMPOSITE:
 	case M_CGA4_COMPOSITE:
-	case M_CGA_TEXT_COMPOSITE: pixel_format = PixelFormat::BGRX8888; break;
+	case M_CGA_TEXT_COMPOSITE: pixel_format = PixelFormat::XRGB8888_Packed32; break;
 	default: pixel_format = PixelFormat::Indexed8; break;
 	}
 
@@ -2166,7 +2166,7 @@ ImageInfo setup_drawing()
 			// The ReelMagic video mixer expects linear VGA drawing
 			// (i.e.: Return to Zork's house intro), so limit the use
 			// of 18-bit palettized LUT routine to non-mixed output.
-			pixel_format = PixelFormat::BGRX8888;
+			pixel_format = PixelFormat::XRGB8888_Packed32;
 
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
@@ -2255,7 +2255,7 @@ ImageInfo setup_drawing()
 		}
 
 		if (IS_VGA_ARCH) {
-			pixel_format = PixelFormat::BGRX8888;
+			pixel_format = PixelFormat::XRGB8888_Packed32;
 
 			VGA_DrawLine = draw_linear_line_from_dac_palette;
 		} else {
@@ -2571,7 +2571,7 @@ ImageInfo setup_drawing()
 			vga.draw.pixels_per_character = vga.seq.clocking_mode.is_eight_dot_mode
 			                                      ? PixelsPerChar::Eight
 			                                      : PixelsPerChar::Nine;
-			pixel_format = PixelFormat::BGRX8888;
+			pixel_format = PixelFormat::XRGB8888_Packed32;
 
 			VGA_DrawLine = draw_text_line_from_dac_palette;
 
