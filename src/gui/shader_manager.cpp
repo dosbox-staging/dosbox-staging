@@ -157,8 +157,18 @@ void ShaderManager::LoadShader(const std::string& shader_name)
 	const auto settings = ParseShaderSettings(new_shader_name,
 	                                          current_shader.source);
 
-	const bool is_adaptive = (mode != ShaderMode::Single);
-	current_shader.info    = {new_shader_name, settings, is_adaptive};
+	const bool is_adaptive = [&] {
+		if (mode == ShaderMode::Single) {
+			return false;
+
+		} else {
+			// This will turn off vertical integer scaling for the
+			// 'sharp' shader in 'integer_scaling = auto' mode
+			return (new_shader_name != SharpShaderName);
+		}
+	}();
+
+	current_shader.info = {new_shader_name, settings, is_adaptive};
 }
 
 const ShaderInfo& ShaderManager::GetCurrentShaderInfo() const
@@ -358,7 +368,6 @@ void ShaderManager::MaybeAutoSwitchShader()
 			LOG_MSG("RENDER: Using shader '%s'",
 			        current_shader.info.name.c_str());
 		}
-		current_shader.info.is_adaptive = false;
 
 	} else {
 		auto shader_changed = false;
@@ -384,11 +393,6 @@ void ShaderManager::MaybeAutoSwitchShader()
 			LOG_MSG("RENDER: Auto-switched to shader '%s'",
 			        current_shader.info.name.c_str());
 		}
-
-		// This will turn off vertical integer scaling for the 'sharp'
-		// shader in 'integer_scaling = auto' mode
-		current_shader.info.is_adaptive = (current_shader.info.name !=
-		                                   SharpShaderName);
 	}
 }
 
