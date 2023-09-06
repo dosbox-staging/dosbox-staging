@@ -573,16 +573,15 @@ void FfmpegEncoder::EncodeVideo()
 			// To a packed uint32_t as required by ffmpeg.
 			// Should work regardless of endianess.
 			if (image_params.pixel_format == PixelFormat::Indexed8) {
-				uint8_t* in_ptr   = image->palette_data;
-				uint32_t* out_ptr = reinterpret_cast<uint32_t*>(
-				        image->palette_data);
+				uint8_t* pal_ptr = image->palette_data;
 				for (int i = 0; i < 256; ++i) {
-					uint32_t red    = *in_ptr++;
-					uint32_t green  = *in_ptr++;
-					uint32_t blue   = *in_ptr++;
-					uint32_t unused = *in_ptr++;
-					*out_ptr++ = (unused << 24) | (red << 16) |
-					             (green << 8) | blue;
+					uint32_t red   = pal_ptr[0];
+					uint32_t green = pal_ptr[1];
+					uint32_t blue  = pal_ptr[2];
+					uint32_t pixel = (red << 16) |
+					                 (green << 8) | blue;
+					write_unaligned_uint32(pal_ptr, pixel);
+					pal_ptr += 4;
 				}
 			}
 
