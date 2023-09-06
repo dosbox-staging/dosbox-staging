@@ -7382,7 +7382,7 @@ static void Voodoo_UpdateScreen()
 			               double_width,
 			               double_height,
 			               render_pixel_aspect_ratio,
-			               PixelFormat::BGR565,
+			               PixelFormat::RGB565_Packed16,
 			               frames_per_second,
 			               video_mode);
 		}

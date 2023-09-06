@@ -146,19 +146,54 @@ enum class PixelFormat : uint8_t {
 
 	// 32K high colour, 5 bits per red/blue/green component;
 	// stored as packed uint16 data with highest bit unused
-	BGR555 = 15,
 	//
+	// Stored as array of uint16_t in host native endianess.
+	// Each uint16_t is layed out as follows:
+	// (msb)1X 5R 5G 5B(lsb)
+	// Example:
+	// uint16_t pixel = (red << 10) | (green << 5) | (blue << 0)
+	//
+	// SDL Equivalent: SDL_PIXELFORMAT_RGB555
+	// FFmpeg Equivalent: AV_PIX_FMT_RGB555
+	RGB555_Packed16 = 15,
+
 	// 65K high colour, 5 bits for red/blue, 6 bit for green;
 	// stored as packed uint16 data
-	BGR565 = 16,
 	//
+	// Stored as array of uint16_t in host native endianess.
+	// Each uint16_t is layed out as follows:
+	// (msb)5R 6G 5B(lsb)
+	// Example:
+	// uint16_t pixel = (red << 11) | (green << 5) | (blue << 0)
+	//
+	// SDL Equivalent: SDL_PIXELFORMAT_RGB565
+	// FFmpeg Equivalent: AV_PIX_FMT_RGB565
+	RGB565_Packed16 = 16,
+
 	// 16.7M (24-bit) true colour, 8 bits per red/blue/green component;
 	// stored as packed 24-bit data
-	BGR888 = 24,
 	//
+	// Stored as array of uint8_t in BGR memory order (endian agnostic)
+	// Example:
+	// uint8_t *pixels = image.image_data;
+	// pixels[0] = blue; pixels[1] = green; pixels[2] = red;
+	//
+	// SDL Equivalent: SDL_PIXELFORMAT_BGR24
+	// FFmpeg Equivalent: AV_PIX_FMT_BGR24
+	BGR24_ByteArray = 24,
+
 	// 16.7M (32-bit) true colour; 8 bits per red/blue/green component;
-	// stored as packed uint32 data with lowest 8 bits unused
-	BGRX8888 = 32
+	// stored as packed uint32 data with highest 8 bits unused
+	//
+	// Stored as array of uint32_t in host native endianess.
+	// Each uint32_t is layed out as follows:
+	// (msb)8X 8R 8G 8B(lsb)
+	// Example:
+	// uint32_t pixel = (unused << 24) | (red << 16) | (green << 8) | (blue << 0)
+	//
+	// SDL Equivalent: SDL_PIXELFORMAT_XRGB8888
+	// FFmpeg Equivalent: AV_PIX_FMT_0RGB32
+	XRGB8888_Packed32 = 32
 };
 
 const char* to_string(const PixelFormat pf);

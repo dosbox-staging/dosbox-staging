@@ -2384,7 +2384,7 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		image.params.double_width       = false;
 		image.params.double_height      = false;
 		image.params.pixel_aspect_ratio = {1};
-		image.params.pixel_format       = PixelFormat::BGR888;
+		image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
 		image.params.video_mode         = sdl.video_mode;
 
 		image.is_flipped_vertically = false;

@@ -338,16 +338,16 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 
 	switch (src.pixel_format) {
 	case PixelFormat::Indexed8: format = ZMBV_FORMAT::BPP_8; break;
-	case PixelFormat::BGR555: format = ZMBV_FORMAT::BPP_15; break;
-	case PixelFormat::BGR565: format = ZMBV_FORMAT::BPP_16; break;
+	case PixelFormat::RGB555_Packed16: format = ZMBV_FORMAT::BPP_15; break;
+	case PixelFormat::RGB565_Packed16: format = ZMBV_FORMAT::BPP_16; break;
 
 	// ZMBV is "the DOSBox capture format" supported by external
 	// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
 	// didn't have 24-bit color, the format itself doesn't support
 	// it. I this case we tell ZMBV the data is 32-bit and let the
 	// rgb24's int() cast operator up-convert.
-	case PixelFormat::BGR888: format = ZMBV_FORMAT::BPP_32; break;
-	case PixelFormat::BGRX8888: format = ZMBV_FORMAT::BPP_32; break;
+	case PixelFormat::BGR24_ByteArray: format = ZMBV_FORMAT::BPP_32; break;
+	case PixelFormat::XRGB8888_Packed32: format = ZMBV_FORMAT::BPP_32; break;
 	default: assertm(false, "Invalid pixel_format value"); return;
 	}
 
@@ -391,8 +391,8 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 				}
 				break;
 
-			case PixelFormat::BGR555:
-			case PixelFormat::BGR565:
+			case PixelFormat::RGB555_Packed16:
+			case PixelFormat::RGB565_Packed16:
 				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel = ((uint16_t*)src_row)[x];
 
@@ -401,7 +401,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 				}
 				break;
 
-			case PixelFormat::BGR888:
+			case PixelFormat::BGR24_ByteArray:
 				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel = reinterpret_cast<const Rgb888*>(
 					        src_row)[x];
@@ -413,7 +413,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 				}
 				break;
 
-			case PixelFormat::BGRX8888:
+			case PixelFormat::XRGB8888_Packed32:
 				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel = ((uint32_t*)src_row)[x];
 
@@ -425,7 +425,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 			row_pointer = row_buffer;
 
 		} else {
-			if (src.pixel_format == PixelFormat::BGR888) {
+			if (src.pixel_format == PixelFormat::BGR24_ByteArray) {
 				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel = reinterpret_cast<const Rgb888*>(
 					        src_row)[x];
