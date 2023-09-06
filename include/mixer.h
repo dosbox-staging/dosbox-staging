@@ -154,14 +154,15 @@ public:
 	const std::string& GetName() const;
 	uint16_t GetSampleRate() const;
 
-	void SetUserVolume(const float left, const float right);
-	void SetAppVolume(const float f);
-	void SetAppVolume(const float left, const float right);
 	void Set0dbScalar(const float f);
 	void RecalcCombinedVolume();
 
 	const AudioFrame& GetUserVolume() const;
+	void SetUserVolume(const float left, const float right);
+
 	const AudioFrame& GetAppVolume() const;
+	void SetAppVolume(const float f);
+	void SetAppVolume(const float left, const float right);
 
 	void ChangeChannelMap(const LineIndex left, const LineIndex right);
 	bool ChangeLineoutMap(std::string choice);
