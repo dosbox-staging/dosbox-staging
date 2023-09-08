@@ -85,8 +85,7 @@ void SETVER::Run()
 		return;
 	}
 
-	std::vector<std::string> params;
-	cmd->FillVector(params);
+	auto params = cmd->GetArguments();
 
 	// Handle first parameter being a path to SETVER.EXE database
 	const bool is_database_candidate = !params.empty() &&

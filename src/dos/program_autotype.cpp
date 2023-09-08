@@ -153,8 +153,8 @@ void AUTOTYPE::Run()
 	const auto pace_ms = static_cast<uint32_t>(pace_s * 1000);
 
 	// Get the button sequence
-	std::vector<std::string> sequence;
-	cmd->FillVector(sequence);
+	auto sequence = cmd->GetArguments();
+
 	if (sequence.empty()) {
 		WriteOut_NoParsing("AUTOTYPE: button sequence is empty\n");
 		return;

@@ -54,7 +54,7 @@ public:
 	bool GetStringRemain(std::string& value);
 	int GetParameterFromList(const char* const params[],
 	                         std::vector<std::string>& output);
-	void FillVector(std::vector<std::string> & vector);
+	std::vector<std::string> GetArguments();
 	bool HasDirectory() const;
 	bool HasExecutableName() const;
 	unsigned int GetCount(void);

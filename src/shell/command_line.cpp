@@ -242,19 +242,21 @@ unsigned int CommandLine::GetCount(void)
 	return (unsigned int)cmds.size();
 }
 
-void CommandLine::FillVector(std::vector<std::string>& vector)
+std::vector<std::string> CommandLine::GetArguments()
 {
-	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
-		vector.push_back((*it));
+	std::vector<std::string> args;
+	for (const auto& cmd : cmds) {
+		args.emplace_back(cmd);
 	}
 #ifdef WIN32
 	// Add back the \" if the parameter contained a space
-	for (Bitu i = 0; i < vector.size(); i++) {
-		if (vector[i].find(' ') != std::string::npos) {
-			vector[i] = "\"" + vector[i] + "\"";
+	for (auto& arg : args) {
+		if (arg.find(' ') != std::string::npos) {
+			arg = "\"" + arg + "\"";
 		}
 	}
 #endif
+	return args;
 }
 
 int CommandLine::GetParameterFromList(const char* const params[],
