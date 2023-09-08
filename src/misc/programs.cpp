@@ -386,8 +386,11 @@ void CONFIG::Run(void)
 				for (size_t i = 0; i < pvars.size(); i++) {
 					restart_params.push_back(pvars[i]);
 				}
-				// the rest on the commandline, too
-				cmd->FillVector(restart_params);
+				const auto remaining_args = cmd->GetArguments();
+				restart_params.insert(restart_params.end(),
+				                      remaining_args.begin(),
+				                      remaining_args.end());
+
 				restart_program(restart_params);
 			}
 			return;

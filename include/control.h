@@ -91,8 +91,10 @@ public:
 	          overwritten_autoexec_section("overwritten-autoexec")
 	{
 		assert(cmdline);
-		startup_params.push_back(cmdline->GetFileName());
-		cmdline->FillVector(startup_params);
+		startup_params = cmdline->GetArguments();
+		startup_params.insert(startup_params.begin(),
+		                      cmdline->GetFileName());
+
 		ParseArguments();
 	}
 

@@ -108,9 +108,7 @@ bool MORE::ParseCommandLine(MoreOutputFiles &output)
 
 bool MORE::FindInputFiles(MoreOutputFiles &output)
 {
-	// Put all the remaining parameters into vector
-	std::vector<std::string> params;
-	cmd->FillVector(params);
+	const auto params = cmd->GetArguments();
 	if (params.empty()) {
 		return true;
 	}

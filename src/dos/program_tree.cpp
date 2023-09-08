@@ -108,8 +108,7 @@ void TREE::Run()
 	}
 
 	// Check if directory is provided
-	std::vector<std::string> params;
-	cmd->FillVector(params);
+	const auto params = cmd->GetArguments();
 	if (params.size() > 1) {
 		WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 		return;

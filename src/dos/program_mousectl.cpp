@@ -44,9 +44,7 @@ void MOUSECTL::Run()
 
 bool MOUSECTL::ParseAndRun()
 {
-	// Put all the parameters into vector
-	std::vector<std::string> params;
-	cmd->FillVector(params);
+	auto params = cmd->GetArguments();
 
 	// Extract the list of interfaces from the vector
 	list_ids.clear();

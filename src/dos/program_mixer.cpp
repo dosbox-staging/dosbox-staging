@@ -104,8 +104,7 @@ void MIXER::Run()
 
 	auto showStatus = !cmd->FindExist("/NOSHOW", true);
 
-	std::vector<std::string> args = {};
-	cmd->FillVector(args);
+	auto args = cmd->GetArguments();
 
 	auto set_reverb_level = [&](const float level,
 	                            const channels_set_t& selected_channels) {
