@@ -50,9 +50,6 @@ CHECK_NARROWING();
 // Static check if port number is valid
 static_assert((port_num_virtualbox & 0xfffc) == port_num_virtualbox);
 
-static bool is_interface_enabled = false;
-static bool has_feature_mouse    = false;
-
 // ***************************************************************************
 // Various common type definitions
 // ***************************************************************************
@@ -121,20 +118,6 @@ struct MousePointerFlags {
 };
 
 // ***************************************************************************
-// Server state
-// ***************************************************************************
-
-struct MouseServerState {
-	bool is_client_connected = false;
-
-	MouseFeatures mouse_features          = {};
-	MousePointerFlags mouse_pointer_flags = {};
-};
-
-// Pointer to the static instance
-MouseServerState* state = nullptr;
-
-// ***************************************************************************
 // Request Header constants and structures
 // ***************************************************************************
 
@@ -184,7 +167,7 @@ bool RequestHeader::CheckStructSize(const uint32_t needed_size) const
 {
 	assert(struct_size > header_size);
 
-	const auto available = static_cast<uint32_t>(struct_size - header_size);
+	const uint32_t available = struct_size - header_size;
 	if (needed_size > available) {
 		LOG_WARNING("VIRTUALBOX: request #%d - structure v%d.%02d too short, %d instead of at least %d",
 		            enum_val(request_type),
@@ -322,216 +305,6 @@ static void warn_mouse_new_protocol()
 }
 
 // ***************************************************************************
-// Request decoding & handling
-// ***************************************************************************
-
-static void client_connect()
-{
-	assert(state);
-	state->is_client_connected = true;
-}
-
-static void client_disconnect()
-{
-	assert(state);
-	if (!state->is_client_connected) {
-		return;
-	}
-
-	if (has_feature_mouse) {
-		MOUSEVMM_Deactivate(MouseVmmProtocol::VirtualBox);
-	}
-
-	state->is_client_connected = false;
-}
-
-static void report_success(PhysPt return_code_pt)
-{
-	mem_writed(return_code_pt, 0);
-}
-
-template <typename T>
-static bool check_size(const RequestHeader& header)
-{
-	return header.CheckStructSize(T::GetSize());
-}
-
-static void handle_get_mouse_status(const RequestHeader& header,
-                                    const PhysPt struct_pointer)
-{
-	if (!has_feature_mouse) {
-		return;
-	}
-
-	switch (header.struct_version) {
-	case ver_1_01: {
-		if (!check_size<VirtualBox_MouseStatus_1_01>(header)) {
-			break;
-		}
-
-		MouseVirtualBoxPointerStatus status = {};
-		MOUSEVMM_GetPointerStatus(status);
-
-		assert(state);
-		mem_writed(struct_pointer, state->mouse_features._data);
-		mem_writed(struct_pointer + 4, status.absolute_x);
-		mem_writed(struct_pointer + 8, status.absolute_y);
-
-		report_success(header.return_code_pt);
-		break;
-	}
-	default: warn_unsupported_struct_version(header); break;
-	}
-}
-
-static void handle_set_mouse_status(const RequestHeader& header,
-                                    const PhysPt struct_pointer)
-{
-	if (!has_feature_mouse) {
-		return;
-	}
-
-	switch (header.struct_version) {
-	case ver_1_01: {
-		if (!check_size<VirtualBox_MouseStatus_1_01>(header)) {
-			break;
-		}
-
-		const VirtualBox_MouseStatus_1_01 payload(struct_pointer);
-		const auto& requested = payload.features;
-		if (requested.Get(requested.mask_guest_needs_host_cursor)) {
-			warn_mouse_host_cursor();
-		}
-		if (requested.Get(requested.mask_new_protocol)) {
-			warn_mouse_new_protocol();
-		}
-		assert(state);
-		state->mouse_features.CombineGuestValue(payload.features);
-		const auto& features = state->mouse_features;
-
-		const bool guest_can_absolute = features.Get(
-		        features.mask_guest_can_absolute);
-
-		if (guest_can_absolute) {
-			MOUSEVMM_Activate(MouseVmmProtocol::VirtualBox);
-		} else {
-			MOUSEVMM_Deactivate(MouseVmmProtocol::VirtualBox);
-		}
-
-		report_success(header.return_code_pt);
-		break;
-	}
-	default: warn_unsupported_struct_version(header); break;
-	}
-}
-
-static void handle_set_pointer_shape(const RequestHeader& header,
-                                     const PhysPt struct_pointer)
-{
-	if (!has_feature_mouse) {
-		return;
-	}
-
-	switch (header.struct_version) {
-	case ver_1_01: {
-		if (!check_size<VirtualBox_MousePointer_1_01>(header)) {
-			break;
-		}
-
-		const VirtualBox_MousePointer_1_01 payload(struct_pointer);
-
-		assert(state);
-		state->mouse_pointer_flags = payload.flags;
-		const auto& flags          = state->mouse_pointer_flags;
-
-		const bool pointer_visible = flags.Get(
-		        payload.flags.mask_pointer_visible);
-		const bool pointer_alpha = flags.Get(payload.flags.mask_pointer_alpha);
-		const bool pointer_shape = flags.Get(payload.flags.mask_pointer_shape);
-
-		if (pointer_visible && (pointer_alpha || pointer_shape)) {
-			warn_mouse_alpha_shape();
-		}
-
-		MOUSEVMM_SetPointerVisible_VirtualBox(pointer_visible);
-
-		report_success(header.return_code_pt);
-		break;
-	}
-	default: warn_unsupported_struct_version(header); break;
-	}
-}
-
-static void handle_report_guest_info(const RequestHeader& header,
-                                     const PhysPt struct_pointer)
-{
-	switch (header.struct_version) {
-	case ver_1_01: {
-		if (!check_size<VirtualBox_GuestInfo_1_01>(header)) {
-			break;
-		}
-
-		const VirtualBox_GuestInfo_1_01 payload(struct_pointer);
-
-		if (payload.interface_version != ver_1_04) {
-			LOG_WARNING("VIRTUALBOX: unimplemented protocol v%d.%02d",
-			            payload.interface_version >> 16,
-			            payload.interface_version && 0xffff);
-			client_disconnect();
-			break;
-		}
-
-		client_connect();
-		report_success(header.return_code_pt);
-		break;
-	}
-	default: warn_unsupported_struct_version(header); break;
-	}
-}
-
-// ***************************************************************************
-// I/O port
-// ***************************************************************************
-
-static void port_write_virtualbox(io_port_t, io_val_t value, io_width_t width)
-{
-	if (width != io_width_t::dword) {
-		return; // not a VirtualBox protocol
-	}
-
-	const PhysPt header_pointer = value;
-	const PhysPt struct_pointer = value + header_size;
-	RequestHeader header(header_pointer);
-
-	assert(state);
-	if (!state->is_client_connected &&
-	    header.request_type != RequestType::ReportGuestInfo) {
-		return; // not a proper VirtualBox client
-	}
-
-	if (!header.IsValid()) {
-		LOG_WARNING("VIRTUALBOX: invalid request header");
-		return;
-	}
-
-	switch (header.request_type) {
-	case RequestType::GetMouseStatus:
-		handle_get_mouse_status(header, struct_pointer);
-		break;
-	case RequestType::SetMouseStatus:
-		handle_set_mouse_status(header, struct_pointer);
-		break;
-	case RequestType::SetPointerShape:
-		handle_set_pointer_shape(header, struct_pointer);
-		break;
-	case RequestType::ReportGuestInfo:
-		handle_report_guest_info(header, struct_pointer);
-		break;
-	default: warn_unsupported_request(header.request_type); break;
-	}
-}
-
-// ***************************************************************************
 // PCI card
 // ***************************************************************************
 
@@ -596,69 +369,260 @@ Bits PCI_VirtualBoxDevice::ParseWriteRegister([[maybe_unused]] uint8_t regnum,
 }
 
 // ***************************************************************************
+// Mouse Server, which maintains state and handles I/O port writes
+// ***************************************************************************
+
+class MouseServer {
+public:
+	MouseServer();
+	~MouseServer();
+
+private:
+	void WriteToPort(io_port_t, io_val_t value, io_width_t width);
+
+	void HandleGetMouseStatus(const RequestHeader& header,
+	                          const PhysPt struct_pointer);
+	void HandleSetMouseStatus(const RequestHeader& header,
+	                          const PhysPt struct_pointer);
+
+	void HandleSetPointerShape(const RequestHeader& header,
+	                           const PhysPt struct_pointer);
+
+	static void HandleReportGuestInfo(const RequestHeader& header,
+	                                  const PhysPt struct_pointer);
+
+	MouseFeatures mouse_features          = {};
+	MousePointerFlags mouse_pointer_flags = {};
+};
+
+MouseServer::MouseServer()
+{
+	mouse_features.SetInitialValue();
+
+	// TODO: implement more features:
+	// - shared directories for VBSF.EXE driver by Javis Pedro
+	// - possibly display for the OS/2 Museum work-in-progres drivers
+	//   https://www.os2museum.com/wp/antique-display-driving/
+	// - (very far future) possibly Windows 9x 3D acceleration using
+	//   project like SoftGPU (or whatever will be available):
+	//   https://github.com/JHRobotics/softgpu
+
+	PCI_AddDevice(new PCI_VirtualBoxDevice());
+
+	using namespace std::placeholders;
+	const auto write_to = std::bind(&MouseServer::WriteToPort, this, _1, _2, _3);
+	IO_RegisterWriteHandler(port_num_virtualbox, write_to, io_width_t::dword);
+}
+
+MouseServer::~MouseServer()
+{
+	MOUSEVMM_Deactivate(MouseVmmProtocol::VirtualBox);
+	IO_FreeWriteHandler(port_num_virtualbox, io_width_t::dword);
+	PCI_RemoveDevice(PCI_VirtualBoxDevice::vendor, PCI_VirtualBoxDevice::device);
+}
+
+template <typename T>
+static constexpr bool check_size(const RequestHeader& header)
+{
+	return header.CheckStructSize(T::GetSize());
+}
+
+static void report_success(PhysPt return_code_pt)
+{
+	mem_writed(return_code_pt, 0);
+}
+
+void MouseServer::HandleGetMouseStatus(const RequestHeader& header,
+                                       const PhysPt struct_pointer)
+{
+	switch (header.struct_version) {
+	case ver_1_01: {
+		if (!check_size<VirtualBox_MouseStatus_1_01>(header)) {
+			break;
+		}
+
+		MouseVirtualBoxPointerStatus status = {};
+		MOUSEVMM_GetPointerStatus(status);
+
+		mem_writed(struct_pointer, mouse_features._data);
+		mem_writed(struct_pointer + 4, status.absolute_x);
+		mem_writed(struct_pointer + 8, status.absolute_y);
+
+		report_success(header.return_code_pt);
+		break;
+	}
+	default: warn_unsupported_struct_version(header); break;
+	}
+}
+
+void MouseServer::HandleSetMouseStatus(const RequestHeader& header,
+                                       const PhysPt struct_pointer)
+{
+	switch (header.struct_version) {
+	case ver_1_01: {
+		if (!check_size<VirtualBox_MouseStatus_1_01>(header)) {
+			break;
+		}
+
+		const VirtualBox_MouseStatus_1_01 payload(struct_pointer);
+		const auto& requested = payload.features;
+		if (requested.Get(requested.mask_guest_needs_host_cursor)) {
+			warn_mouse_host_cursor();
+		}
+		if (requested.Get(requested.mask_new_protocol)) {
+			warn_mouse_new_protocol();
+		}
+
+		mouse_features.CombineGuestValue(payload.features);
+		const auto& features = mouse_features;
+
+		const bool guest_can_absolute = features.Get(
+		        features.mask_guest_can_absolute);
+
+		if (guest_can_absolute) {
+			MOUSEVMM_Activate(MouseVmmProtocol::VirtualBox);
+		} else {
+			MOUSEVMM_Deactivate(MouseVmmProtocol::VirtualBox);
+		}
+
+		report_success(header.return_code_pt);
+		break;
+	}
+	default: warn_unsupported_struct_version(header); break;
+	}
+}
+
+void MouseServer::HandleSetPointerShape(const RequestHeader& header,
+                                        const PhysPt struct_pointer)
+{
+	switch (header.struct_version) {
+	case ver_1_01: {
+		if (!check_size<VirtualBox_MousePointer_1_01>(header)) {
+			break;
+		}
+
+		const VirtualBox_MousePointer_1_01 payload(struct_pointer);
+
+		mouse_pointer_flags = payload.flags;
+		const auto& flags   = mouse_pointer_flags;
+
+		const bool pointer_visible = flags.Get(
+		        payload.flags.mask_pointer_visible);
+		const bool pointer_alpha = flags.Get(payload.flags.mask_pointer_alpha);
+		const bool pointer_shape = flags.Get(payload.flags.mask_pointer_shape);
+
+		if (pointer_visible && (pointer_alpha || pointer_shape)) {
+			warn_mouse_alpha_shape();
+		}
+
+		MOUSEVMM_SetPointerVisible_VirtualBox(pointer_visible);
+
+		report_success(header.return_code_pt);
+		break;
+	}
+	default: warn_unsupported_struct_version(header); break;
+	}
+}
+
+void VIRTUALBOX_Configure(const ModuleLifecycle, Section* = nullptr);
+
+void MouseServer::HandleReportGuestInfo(const RequestHeader& header,
+                                        const PhysPt struct_pointer)
+{
+	switch (header.struct_version) {
+	case ver_1_01: {
+		if (!check_size<VirtualBox_GuestInfo_1_01>(header)) {
+			break;
+		}
+
+		const VirtualBox_GuestInfo_1_01 payload(struct_pointer);
+
+		if (payload.interface_version != ver_1_04) {
+			LOG_WARNING("VIRTUALBOX: unimplemented protocol v%d.%02d",
+			            payload.interface_version >> 16,
+			            payload.interface_version && 0xffff);
+
+			VIRTUALBOX_Configure(ModuleLifecycle::Destroy);
+			break;
+		}
+
+		MOUSEVMM_Activate(MouseVmmProtocol::VirtualBox);
+		VIRTUALBOX_Configure(ModuleLifecycle::Create);
+
+		report_success(header.return_code_pt);
+		break;
+	}
+	default: warn_unsupported_struct_version(header); break;
+	}
+}
+
+void MouseServer::WriteToPort(io_port_t, io_val_t value, io_width_t width)
+{
+	if (width != io_width_t::dword) {
+		return; // not a VirtualBox protocol
+	}
+
+	const PhysPt header_pointer = value;
+	const PhysPt struct_pointer = value + header_size;
+	RequestHeader header(header_pointer);
+
+	if (header.request_type != RequestType::ReportGuestInfo) {
+		return; // not a proper VirtualBox client
+	}
+
+	if (!header.IsValid()) {
+		LOG_WARNING("VIRTUALBOX: invalid request header");
+		return;
+	}
+
+	switch (header.request_type) {
+	case RequestType::GetMouseStatus:
+		HandleGetMouseStatus(header, struct_pointer);
+		break;
+	case RequestType::SetMouseStatus:
+		HandleSetMouseStatus(header, struct_pointer);
+		break;
+	case RequestType::SetPointerShape:
+		HandleSetPointerShape(header, struct_pointer);
+		break;
+	case RequestType::ReportGuestInfo:
+		HandleReportGuestInfo(header, struct_pointer);
+		break;
+	default: warn_unsupported_request(header.request_type); break;
+	}
+}
+
+// ***************************************************************************
 // Lifecycle
 // ***************************************************************************
 
-void VIRTUALBOX_NotifyBooting()
-{
-	client_disconnect();
-}
-
 void VIRTUALBOX_Configure(const ModuleLifecycle lifecycle, Section*)
 {
-	static std::unique_ptr<MouseServerState> state_instance = {};
+	static std::unique_ptr<MouseServer> state_instance = {};
 
 	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		state_instance.reset();
+		[[fallthrough]];
+
 	case ModuleLifecycle::Create:
-		state_instance = std::make_unique<MouseServerState>();
-		state = state_instance.get();
-
-		has_feature_mouse = MOUSEVMM_IsSupported(MouseVmmProtocol::VirtualBox);
-		if (has_feature_mouse) {
-			state_instance->mouse_features.SetInitialValue();
-		}
-
-		// TODO: implement more features:
-		// - shared directories for VBSF.EXE driver by Javis Pedro
-		// - possibly display for the OS/2 Museum work-in-progres drivers
-		//   https://www.os2museum.com/wp/antique-display-driving/
-		// - (very far future) possibly Windows 9x 3D acceleration using
-		//   project like SoftGPU (or whatever will be available):
-		//   https://github.com/JHRobotics/softgpu
-
-		is_interface_enabled = has_feature_mouse;
-		if (is_interface_enabled) {
-			PCI_AddDevice(new PCI_VirtualBoxDevice());
-			IO_RegisterWriteHandler(port_num_virtualbox,
-			                        port_write_virtualbox,
-			                        io_width_t::dword);
+		if (MOUSEVMM_IsSupported(MouseVmmProtocol::VirtualBox) &&
+		    !state_instance) {
+			state_instance = std::make_unique<MouseServer>();
 		}
 		break;
 
-	// This module doesn't support reconfiguration at runtime
-	case ModuleLifecycle::Reconfigure: break;
-
 	case ModuleLifecycle::Destroy:
-		if (is_interface_enabled) {
-			client_disconnect();
-			PCI_RemoveDevice(PCI_VirtualBoxDevice::vendor,
-			                 PCI_VirtualBoxDevice::device);
-			IO_FreeWriteHandler(port_num_virtualbox, io_width_t::dword);
-			is_interface_enabled = false;
-		}
 		state_instance.reset();
-		state = nullptr;
 		break;
 	}
 }
 
-void VIRTUALBOX_Destroy(Section* section)
+void VIRTUALBOX_NotifyBooting()
 {
-	VIRTUALBOX_Configure(ModuleLifecycle::Destroy, section);
+	VIRTUALBOX_Configure(ModuleLifecycle::Destroy);
 }
-
 void VIRTUALBOX_Init(Section* section)
 {
 	VIRTUALBOX_Configure(ModuleLifecycle::Create, section);
-	section->AddDestroyFunction(&VIRTUALBOX_Destroy);
 }
