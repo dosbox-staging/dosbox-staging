@@ -167,12 +167,11 @@ public:
 	void Set0dbScalar(const float f);
 	void RecalcCombinedVolume();
 
-	const AudioFrame& GetUserVolume() const;
-	void SetUserVolume(const float left, const float right);
+	const AudioFrame GetUserVolume() const;
+	void SetUserVolume(const AudioFrame volume);
 
-	const AudioFrame& GetAppVolume() const;
-	void SetAppVolume(const float f);
-	void SetAppVolume(const float left, const float right);
+	const AudioFrame GetAppVolume() const;
+	void SetAppVolume(const AudioFrame volume);
 
 	void SetChannelMap(const StereoLine map);
 	void SetLineoutMap(const StereoLine map);

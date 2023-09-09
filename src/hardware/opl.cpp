@@ -634,8 +634,8 @@ void OPL::AdlibGoldControlWrite(const uint8_t val)
 			// Dune CD version uses 32 volume steps in an apparent
 			// mistake, should be 128
 			channel->SetAppVolume(
-			        static_cast<float>(ctrl.lvol & 0x1f) / 31.0f,
-			        static_cast<float>(ctrl.rvol & 0x1f) / 31.0f);
+			        {static_cast<float>(ctrl.lvol & 0x1f) / 31.0f,
+			         static_cast<float>(ctrl.rvol & 0x1f) / 31.0f});
 		}
 		break;
 

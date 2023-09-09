@@ -554,8 +554,8 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint16_t freq,
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name, features);
 	chan->SetSampleRate(freq);
-	chan->SetAppVolume(1.0f);
-	chan->SetUserVolume(1.0f, 1.0f);
+	chan->SetAppVolume({1.0f, 1.0f});
+	chan->SetUserVolume({1.0f, 1.0f});
 
 	// We're only dealing with stereo channels internally, so we need to set
 	// the "stereo" line-out even for mono content.
@@ -639,24 +639,24 @@ void MixerChannel::RecalcCombinedVolume()
 	                               mixer.master_volume.right * db0_volume_scalar;
 }
 
-const AudioFrame& MixerChannel::GetUserVolume() const
+const AudioFrame MixerChannel::GetUserVolume() const
 {
 	return user_volume_scalar;
 }
 
-void MixerChannel::SetUserVolume(const float left, const float right)
+void MixerChannel::SetUserVolume(const AudioFrame volume)
 {
 	// Allow unconstrained user-defined values
-	user_volume_scalar = {left, right};
+	user_volume_scalar = volume;
 	RecalcCombinedVolume();
 }
 
-const AudioFrame& MixerChannel::GetAppVolume() const
+const AudioFrame MixerChannel::GetAppVolume() const
 {
 	return app_volume_scalar;
 }
 
-void MixerChannel::SetAppVolume(const float left, const float right)
+void MixerChannel::SetAppVolume(const AudioFrame volume)
 {
 	// Constrain application-defined volume between 0% and 100%
 	auto clamp_to_unity = [](const float vol) {
@@ -664,7 +664,8 @@ void MixerChannel::SetAppVolume(const float left, const float right)
 		constexpr auto max_unity_volume = 1.0f;
 		return clamp(vol, min_unity_volume, max_unity_volume);
 	};
-	app_volume_scalar = {clamp_to_unity(left), clamp_to_unity(right)};
+	app_volume_scalar = {clamp_to_unity(volume.left),
+	                     clamp_to_unity(volume.right)};
 	RecalcCombinedVolume();
 
 #ifdef DEBUG
@@ -676,11 +677,6 @@ void MixerChannel::SetAppVolume(const float left, const float right)
 	        static_cast<double>(app_volume_scalar.left * 100.0f),
 	        static_cast<double>(app_volume_scalar.right * 100.0f));
 #endif
-}
-
-void MixerChannel::SetAppVolume(const float v)
-{
-	SetAppVolume(v, v);
 }
 
 const AudioFrame MIXER_GetMasterVolume()
