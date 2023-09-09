@@ -256,7 +256,7 @@ private:
 	void InitZohUpsamplerState();
 	void InitLerpUpsamplerState();
 
-	AudioFrame ApplyCrossfeed(const AudioFrame& frame) const;
+	AudioFrame ApplyCrossfeed(const AudioFrame frame) const;
 
 	std::string name = {};
 	Envelope envelope;
@@ -385,7 +385,7 @@ private:
 	public:
 		Sleeper() = delete;
 		Sleeper(MixerChannel& c);
-		void Listen(const AudioFrame& frame);
+		void Listen(const AudioFrame frame);
 		void MaybeSleep();
 		bool WakeUp();
 
@@ -414,8 +414,8 @@ void MIXER_AddConfigSection(const config_ptr_t& conf);
 uint16_t MIXER_GetSampleRate();
 uint16_t MIXER_GetPreBufferMs();
 
-const AudioFrame& MIXER_GetMasterVolume();
-void MIXER_SetMasterVolume(const AudioFrame& volume);
+const AudioFrame MIXER_GetMasterVolume();
+void MIXER_SetMasterVolume(const AudioFrame volume);
 
 void MIXER_Mute();
 void MIXER_Unmute();

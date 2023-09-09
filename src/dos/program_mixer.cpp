@@ -311,7 +311,7 @@ void MIXER::ShowMixerStatus()
 	column_layout.append({'\n'});
 
 	auto show_channel = [&](const std::string& name,
-	                        const AudioFrame& volume,
+	                        const AudioFrame volume,
 	                        const std::string& mode,
 	                        const std::string& xfeed,
 	                        const std::string& reverb,

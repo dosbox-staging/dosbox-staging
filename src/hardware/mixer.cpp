@@ -683,12 +683,12 @@ void MixerChannel::SetAppVolume(const float v)
 	SetAppVolume(v, v);
 }
 
-const AudioFrame& MIXER_GetMasterVolume()
+const AudioFrame MIXER_GetMasterVolume()
 {
 	return mixer.master_volume;
 }
 
-void MIXER_SetMasterVolume(const AudioFrame& volume)
+void MIXER_SetMasterVolume(const AudioFrame volume)
 {
 	mixer.master_volume = volume;
 }
@@ -1576,7 +1576,7 @@ spx_uint32_t estimate_max_out_frames(SpeexResamplerState* resampler_state,
 	return ceil_udivide(in_frames * ratio_den, ratio_num);
 }
 
-AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame& frame) const
+AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame frame) const
 {
 	// Pan mono sample using -6dB linear pan law in the stereo field
 	// pan: 0.0 = left, 0.5 = center, 1.0 = right
@@ -1592,7 +1592,7 @@ MixerChannel::Sleeper::Sleeper(MixerChannel& c) : channel(c) {}
 
 // Records if samples had a magnitude great than 1. This is a one-way street;
 // once "had_noise" is tripped, it can only be reset after waking up.
-void MixerChannel::Sleeper::Listen(const AudioFrame& frame)
+void MixerChannel::Sleeper::Listen(const AudioFrame frame)
 {
 	if (had_noise) {
 		return;

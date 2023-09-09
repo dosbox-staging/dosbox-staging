@@ -85,7 +85,7 @@ public:
 	               const float release_time_ms, const float rms_window_ms);
 	void Reset();
 
-	AudioFrame Process(const AudioFrame &in);
+	AudioFrame Process(const AudioFrame in);
 
 	// prevent copying
 	Compressor(const Compressor &) = delete;

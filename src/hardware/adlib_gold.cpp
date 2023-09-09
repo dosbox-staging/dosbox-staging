@@ -90,7 +90,7 @@ void SurroundProcessor::ControlWrite(const uint8_t val)
 	control_state.a0  = reg.a0;
 }
 
-AudioFrame SurroundProcessor::Process(const AudioFrame &frame)
+AudioFrame SurroundProcessor::Process(const AudioFrame frame)
 {
 	YM7128B_ChipIdeal_Process_Data data = {};
 
@@ -249,7 +249,7 @@ void StereoProcessor::ControlWrite(const StereoProcessorControlReg reg,
 	}
 }
 
-AudioFrame StereoProcessor::ProcessSourceSelection(const AudioFrame &frame)
+AudioFrame StereoProcessor::ProcessSourceSelection(const AudioFrame frame)
 {
 	switch (source_selector) {
 	case StereoProcessorSourceSelector::SoundA1:
@@ -269,7 +269,7 @@ AudioFrame StereoProcessor::ProcessSourceSelection(const AudioFrame &frame)
 	}
 }
 
-AudioFrame StereoProcessor::ProcessShelvingFilters(const AudioFrame &frame)
+AudioFrame StereoProcessor::ProcessShelvingFilters(const AudioFrame frame)
 {
 	AudioFrame out_frame = {};
 
@@ -280,7 +280,7 @@ AudioFrame StereoProcessor::ProcessShelvingFilters(const AudioFrame &frame)
 	return out_frame;
 }
 
-AudioFrame StereoProcessor::ProcessStereoProcessing(const AudioFrame &frame)
+AudioFrame StereoProcessor::ProcessStereoProcessing(const AudioFrame frame)
 {
 	AudioFrame out_frame = {};
 
@@ -311,7 +311,7 @@ AudioFrame StereoProcessor::ProcessStereoProcessing(const AudioFrame &frame)
 	return out_frame;
 }
 
-AudioFrame StereoProcessor::Process(const AudioFrame &frame)
+AudioFrame StereoProcessor::Process(const AudioFrame frame)
 {
 	auto out_frame = ProcessSourceSelection(frame);
 	out_frame      = ProcessShelvingFilters(out_frame);
