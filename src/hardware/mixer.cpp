@@ -201,6 +201,11 @@ static struct mixer_t mixer = {};
 
 alignas(sizeof(float)) uint8_t MixTemp[MixerBufferLength] = {};
 
+void MixerChannel::SetLineoutMap(const StereoLine map)
+{
+	output_map = map;
+}
+
 // TODO Once the mixer code is thorougly refactored, revisit whether this is
 // still necessary (i.e., we might be able to be more precise with our
 // 'frames_needed' calculation so we never under or overshoot).
@@ -251,7 +256,7 @@ bool MixerChannel::HasFeature(const ChannelFeature feature) const
 	return features.find(feature) != features.end();
 }
 
-bool MixerChannel::StereoLine::operator==(const StereoLine other) const
+bool StereoLine::operator==(const StereoLine other) const
 {
 	return left == other.left && right == other.right;
 }
@@ -551,7 +556,11 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint16_t freq,
 	chan->SetSampleRate(freq);
 	chan->SetAppVolume(1.0f);
 	chan->SetUserVolume(1.0f, 1.0f);
-	chan->ChangeChannelMap(Left, Right);
+
+	// We're only dealing with stereo channels internally, so we need to set
+	// the "stereo" line-out even for mono content.
+	chan->SetChannelMap(Stereo);
+
 	chan->Enable(false);
 
 	set_global_crossfeed(chan);
@@ -695,12 +704,11 @@ void MIXER_UpdateAllChannelVolumes()
 	MIXER_UnlockAudioDevice();
 }
 
-void MixerChannel::ChangeChannelMap(const LineIndex mapped_as_left,
-                                    const LineIndex mapped_as_right)
+void MixerChannel::SetChannelMap(const StereoLine map)
 {
-	assert(mapped_as_left == Left || mapped_as_left == Right);
-	assert(mapped_as_right == Left || mapped_as_right == Right);
-	channel_map = {mapped_as_left, mapped_as_right};
+	assert(map.left == Left || map.left == Right);
+	assert(map.right == Left || map.right == Right);
+	channel_map = map;
 
 #ifdef DEBUG
 	LOG_MSG("MIXER: %-7s channel: application changed audio channel mapping to left=>%s and right=>%s",
@@ -1957,25 +1965,6 @@ std::string MixerChannel::DescribeLineout() const
 	// data), so we can assert.
 	assertm(false, "Unknown lineout mode");
 	return "unknown";
-}
-
-bool MixerChannel::ChangeLineoutMap(std::string choice)
-{
-	if (!HasFeature(ChannelFeature::Stereo)) {
-		return false;
-	}
-
-	lowcase(choice);
-
-	if (choice == "stereo") {
-		output_map = Stereo;
-	} else if (choice == "reverse") {
-		output_map = Reverse;
-	} else {
-		return false;
-	}
-
-	return true;
 }
 
 MixerChannel::~MixerChannel()

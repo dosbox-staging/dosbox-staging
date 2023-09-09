@@ -847,7 +847,7 @@ void CDROM_Interface_Image::ChannelControl(TCtrl ctrl)
 	// Map the audio channels in our mixer channel as defined by the application
 	const auto left_mapped = static_cast<LineIndex>(ctrl.out[0]);
 	const auto right_mapped = static_cast<LineIndex>(ctrl.out[1]);
-	player.channel->ChangeChannelMap(left_mapped, right_mapped);
+	player.channel->SetChannelMap({left_mapped, right_mapped});
 
 #ifdef DEBUG
 	LOG_MSG("CDROM: ChannelControl => volumes %d/255 and %d/255, "

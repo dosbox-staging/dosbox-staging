@@ -149,6 +149,17 @@ void MIXER::Run()
 		}
 	};
 
+	auto parse_stereo_mode =
+	        [&](const std::string& arg) -> std::optional<StereoLine> {
+		if (arg == "STEREO") {
+			return Stereo;
+		}
+		if (arg == "REVERSE") {
+			return Reverse;
+		}
+		return {};
+	};
+
 	auto is_master = false;
 
 	mixer_channel_t channel = {};
@@ -231,7 +242,8 @@ void MIXER::Run()
 				continue;
 			}
 
-			if (channel->ChangeLineoutMap(arg)) {
+			if (auto mode = parse_stereo_mode(arg); mode) {
+				channel->SetLineoutMap(*mode);
 				continue;
 			}
 
