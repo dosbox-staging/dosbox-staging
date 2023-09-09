@@ -275,8 +275,7 @@ jobs:
           sudo apt-get install -y tree \
             $(cat packages/ubuntu-20.04-apt.txt)
           sudo pip3 install --upgrade meson ninja conan
-          conan profile detect --force
-          conan install . --output-folder=conan --build=missing
+          scripts/setup_conan.sh
 
       - name: Restore subprojects cache
         id:   cache-subprojects
