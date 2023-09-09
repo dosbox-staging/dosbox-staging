@@ -1173,7 +1173,7 @@ static void SetMixerVolume(const char* const channelName, const uint16_t percent
 
 	AudioFrame vol_gain     = chan->GetAppVolume();
 	vol_gain[right ? 1 : 0] = percentage_to_gain(percentage);
-	chan->SetAppVolume(vol_gain.left, vol_gain.right);
+	chan->SetAppVolume({vol_gain.left, vol_gain.right});
 }
 
 static bool RMDEV_SYS_int2fHandler()

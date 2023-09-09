@@ -461,7 +461,8 @@ void CDROM_Interface_Ioctl::ChannelControl(TCtrl ctrl)
 
 	constexpr float MaxVolume = 255.0f;
 	// Adjust the volume of our mixer channel as defined by the application
-	mixer_channel->SetAppVolume(ctrl.vol[0] / MaxVolume, ctrl.vol[1] / MaxVolume);
+	mixer_channel->SetAppVolume(
+	        {ctrl.vol[0] / MaxVolume, ctrl.vol[1] / MaxVolume});
 
 	// Map the audio channels in our mixer channel as defined by the
 	// application
