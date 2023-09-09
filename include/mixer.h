@@ -101,6 +101,16 @@ enum LineIndex : uint8_t {
 	// would go here.
 };
 
+struct StereoLine {
+	LineIndex left  = Left;
+	LineIndex right = Right;
+
+	bool operator==(const StereoLine other) const;
+};
+
+static constexpr StereoLine Stereo  = {Left, Right};
+static constexpr StereoLine Reverse = {Right, Left};
+
 enum class ChannelFeature {
 	ChorusSend,
 	DigitalAudio,
@@ -164,8 +174,8 @@ public:
 	void SetAppVolume(const float f);
 	void SetAppVolume(const float left, const float right);
 
-	void ChangeChannelMap(const LineIndex left, const LineIndex right);
-	bool ChangeLineoutMap(std::string choice);
+	void SetChannelMap(const StereoLine map);
+	void SetLineoutMap(const StereoLine map);
 	std::string DescribeLineout() const;
 	void SetSampleRate(const uint16_t _freq);
 	void SetPeakAmplitude(const int peak);
@@ -304,15 +314,6 @@ private:
 	// peak, like the PCSpeaker, should update it with: SetPeakAmplitude()
 	//
 	int peak_amplitude = Max16BitSampleValue;
-
-	struct StereoLine {
-		LineIndex left  = Left;
-		LineIndex right = Right;
-		bool operator==(const StereoLine other) const;
-	};
-
-	static constexpr StereoLine Stereo  = {Left, Right};
-	static constexpr StereoLine Reverse = {Right, Left};
 
 	// User-configurable that defines how the channel's Stereo line maps
 	// into the mixer.
