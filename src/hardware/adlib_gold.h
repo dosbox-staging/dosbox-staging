@@ -37,9 +37,9 @@ public:
 	AudioFrame Process(const AudioFrame &frame);
 
 	// prevent copying
-	SurroundProcessor(const SurroundProcessor &) = delete;
+	SurroundProcessor(const SurroundProcessor&) = delete;
 	// prevent assignment
-	SurroundProcessor &operator=(const SurroundProcessor &) = delete;
+	SurroundProcessor& operator=(const SurroundProcessor&) = delete;
 
 private:
 	YM7128B_ChipIdeal chip = {};
@@ -97,9 +97,9 @@ public:
 	void SetHighShelfGain(const double gain_db);
 
 	// prevent copying
-	StereoProcessor(const StereoProcessor &) = delete;
+	StereoProcessor(const StereoProcessor&) = delete;
 	// prevent assignment
-	StereoProcessor &operator=(const StereoProcessor &) = delete;
+	StereoProcessor& operator=(const StereoProcessor&) = delete;
 
 private:
 	uint16_t sample_rate = 0;
@@ -130,7 +130,7 @@ public:
 	void StereoControlWrite(const StereoProcessorControlReg reg,
 	                        const uint8_t data);
 
-	void Process(const int16_t *in, const uint32_t frames, float *out);
+	void Process(const int16_t* in, const uint32_t frames, float* out);
 
 private:
 	std::unique_ptr<SurroundProcessor> surround_processor = {};
