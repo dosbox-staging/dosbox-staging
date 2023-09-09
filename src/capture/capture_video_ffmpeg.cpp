@@ -406,7 +406,7 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
                               const PixelFormat pixel_format,
                               const int frames_per_second, Fraction pixel_aspect_ratio)
 {
-	codec = avcodec_find_encoder_by_name("libx264");
+	codec = avcodec_find_encoder_by_name("h264_nvenc");
 	if (!codec) {
 		LOG_ERR("FFMPEG: Failed to find libx264 encoder");
 		return false;
@@ -417,8 +417,8 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 		return false;
 	}
 
-	codec_context->width                   = width;
-	codec_context->height                  = height;
+	codec_context->width                   = 1920;
+	codec_context->height                  = 1080;
 	codec_context->time_base.num           = 1;
 	codec_context->time_base.den           = frames_per_second;
 	codec_context->framerate.num           = frames_per_second;
@@ -439,8 +439,8 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 		LOG_ERR("FFMPEG: Failed to allocate video frame");
 		return false;
 	}
-	frame->width               = width;
-	frame->height              = height;
+	frame->width               = codec_context->width;
+	frame->height              = codec_context->height;
 	frame->format              = static_cast<int>(codec_context->pix_fmt);
 	frame->sample_aspect_ratio = codec_context->sample_aspect_ratio;
 	frame->pts                 = 0;
@@ -459,8 +459,8 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 	rescaler_contex                    = sws_getContext(width,
                                          height,
                                          map_pixel_format(pixel_format),
-                                         width,
-                                         height,
+                                         codec_context->width,
+                                         codec_context->height,
                                          AV_PIX_FMT_YUV420P,
                                          SWS_BILINEAR,
                                          source_filter,
