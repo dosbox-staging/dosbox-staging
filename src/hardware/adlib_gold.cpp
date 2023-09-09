@@ -25,7 +25,7 @@
 
 CHECK_NARROWING();
 
-//#define DEBUG_ADLIB_GOLD
+// #define DEBUG_ADLIB_GOLD
 
 // Yamaha YM7128B Surround Processor emulation
 // -------------------------------------------
@@ -72,16 +72,17 @@ void SurroundProcessor::ControlWrite(const uint8_t val)
 		// the rising edge of 'sci'.
 		if (!control_state.sci && reg.sci) {
 			// The 'a0' word clock determines the type of the data.
-			if (reg.a0)
+			if (reg.a0) {
 				// Data cycle
 				control_state.data = static_cast<uint8_t>(
 				                             control_state.data << 1) |
 				                     reg.din;
-			else
+			} else {
 				// Address cycle
 				control_state.addr = static_cast<uint8_t>(
 				                             control_state.addr << 1) |
 				                     reg.din;
+			}
 		}
 	}
 
@@ -119,16 +120,18 @@ void StereoProcessor::SetLowShelfGain(const double gain_db)
 {
 	constexpr auto cutoff_freq = 400.0;
 	constexpr auto slope       = 0.5;
-	for (auto &f : lowshelf)
+	for (auto& f : lowshelf) {
 		f.setup(sample_rate, cutoff_freq, gain_db, slope);
+	}
 }
 
 void StereoProcessor::SetHighShelfGain(const double gain_db)
 {
 	constexpr auto cutoff_freq = 2500.0;
 	constexpr auto slope       = 0.5;
-	for (auto &f : highshelf)
+	for (auto& f : highshelf) {
 		f.setup(sample_rate, cutoff_freq, gain_db, slope);
+	}
 }
 
 StereoProcessor::~StereoProcessor() = default;
@@ -344,7 +347,7 @@ void AdlibGold::SurroundControlWrite(const uint8_t val)
 	surround_processor->ControlWrite(val);
 }
 
-void AdlibGold::Process(const int16_t *in, const uint32_t frames, float *out)
+void AdlibGold::Process(const int16_t* in, const uint32_t frames, float* out)
 {
 	auto frames_remaining = frames;
 
