@@ -73,7 +73,7 @@ void Compressor::Reset()
 	max_over_db     = 0.0f;
 }
 
-AudioFrame Compressor::Process(const AudioFrame &in)
+AudioFrame Compressor::Process(const AudioFrame in)
 {
 	const float left  = in.left  * scale_in;
 	const float right = in.right * scale_in;

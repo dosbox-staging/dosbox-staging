@@ -34,7 +34,7 @@ public:
 	~SurroundProcessor();
 
 	void ControlWrite(const uint8_t val);
-	AudioFrame Process(const AudioFrame &frame);
+	AudioFrame Process(const AudioFrame frame);
 
 	// prevent copying
 	SurroundProcessor(const SurroundProcessor&) = delete;
@@ -91,7 +91,7 @@ public:
 
 	void Reset();
 	void ControlWrite(const StereoProcessorControlReg, const uint8_t data);
-	AudioFrame Process(const AudioFrame &frame);
+	AudioFrame Process(const AudioFrame frame);
 
 	void SetLowShelfGain(const double gain_db);
 	void SetHighShelfGain(const double gain_db);
@@ -116,9 +116,9 @@ private:
 	// All-pass filter for pseudo-stereo processing
 	Iir::RBJ::AllPass allpass = {};
 
-	AudioFrame ProcessSourceSelection(const AudioFrame &frame);
-	AudioFrame ProcessShelvingFilters(const AudioFrame &frame);
-	AudioFrame ProcessStereoProcessing(const AudioFrame &frame);
+	AudioFrame ProcessSourceSelection(const AudioFrame frame);
+	AudioFrame ProcessShelvingFilters(const AudioFrame frame);
+	AudioFrame ProcessStereoProcessing(const AudioFrame frame);
 };
 
 class AdlibGold {
