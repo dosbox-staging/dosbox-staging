@@ -288,5 +288,6 @@ extern "C" {
 template class RWQueue<int16_t>;
 template class RWQueue<RenderedImage>;
 template class RWQueue<AVPacket*>;
+template class RWQueue<AVFrame*>;
 
 #endif // C_FFMPEG

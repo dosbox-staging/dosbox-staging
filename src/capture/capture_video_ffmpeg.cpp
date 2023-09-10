@@ -22,7 +22,6 @@
 #include "capture_video.h"
 #include "checks.h"
 #include "math_utils.h"
-#include "image/image_scaler.h"
 #include "timer.h"
 
 #if C_FFMPEG
@@ -51,8 +50,11 @@ constexpr size_t SamplesPerFrame = 2;
 constexpr int ScaledWidth = 1280;
 constexpr int ScaledHeight = 960;
 
+constexpr AVPixelFormat OutputFormat = AV_PIX_FMT_YUV420P;
+
 FfmpegEncoder::FfmpegEncoder()
 {
+	video_scaler.thread  = std::thread(&FfmpegEncoder::ScaleVideo, this);
 	audio_encoder.thread = std::thread(&FfmpegEncoder::EncodeAudio, this);
 	video_encoder.thread = std::thread(&FfmpegEncoder::EncodeVideo, this);
 	muxer.thread         = std::thread(&FfmpegEncoder::Mux, this);
@@ -67,6 +69,9 @@ FfmpegEncoder::~FfmpegEncoder()
 
 	StopQueues();
 
+	if (video_scaler.thread.joinable()) {
+		video_scaler.thread.join();
+	}
 	if (audio_encoder.thread.joinable()) {
 		audio_encoder.thread.join();
 	}
@@ -140,7 +145,7 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 		waiter.notify_all();
 	}
 
-	[[maybe_unused]] bool image_queued = video_encoder.queue.Enqueue(image.deep_copy());
+	[[maybe_unused]] bool image_queued = video_scaler.queue.Enqueue(image.deep_copy());
 	assert(image_queued);
 }
 
@@ -201,6 +206,11 @@ void FfmpegEncoder::StopQueues()
 	video_encoder.is_initalised = false;
 	muxer.is_initalised         = false;
 
+	video_scaler.queue.Stop();
+	waiter.wait(lock, [this] {
+		return !video_scaler.is_working;
+	});
+
 	audio_encoder.queue.Stop();
 	video_encoder.queue.Stop();
 	waiter.wait(lock, [this] {
@@ -215,6 +225,7 @@ void FfmpegEncoder::StopQueues()
 	// Explicitly clear the queues out so we don't have to worry
 	// about stale work with incorrect video/audio specs for the next
 	// recording.
+	video_scaler.queue.Clear();
 	audio_encoder.queue.Clear();
 	video_encoder.queue.Clear();
 	muxer.queue.Clear();
@@ -226,6 +237,7 @@ void FfmpegEncoder::StopQueues()
 
 void FfmpegEncoder::StartQueues()
 {
+	video_scaler.queue.Start();
 	audio_encoder.queue.Start();
 	video_encoder.queue.Start();
 	muxer.queue.Start();
@@ -423,7 +435,7 @@ bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_s
 	codec_context->time_base.den           = frames_per_second;
 	codec_context->framerate.num           = frames_per_second;
 	codec_context->framerate.den           = 1;
-	codec_context->pix_fmt                 = AV_PIX_FMT_YUV420P;
+	codec_context->pix_fmt                 = OutputFormat;
 	#if 0
 	codec_context->sample_aspect_ratio.num = static_cast<int>(
 	        pixel_aspect_ratio.Num());
@@ -436,32 +448,11 @@ bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_s
 		return false;
 	}
 
-	frame = av_frame_alloc();
-	if (!frame) {
-		LOG_ERR("FFMPEG: Failed to allocate video frame");
-		return false;
-	}
-	frame->width               = codec_context->width;
-	frame->height              = codec_context->height;
-	frame->format              = static_cast<int>(codec_context->pix_fmt);
-	frame->sample_aspect_ratio = codec_context->sample_aspect_ratio;
-	frame->pts                 = 0;
-	// 0 means auto-align based on current CPU
-	constexpr int memory_alignment = 0;
-	if (av_frame_get_buffer(frame, memory_alignment) < 0) {
-		LOG_ERR("FFMPEG: Failed to get video frame buffer");
-		return false;
-	}
-
 	return true;
 }
 
 void FfmpegVideoEncoder::Free()
 {
-	if (frame) {
-		av_frame_free(&frame);
-		frame = nullptr;
-	}
 	if (codec_context) {
 		avcodec_free_context(&codec_context);
 		codec_context = nullptr;
@@ -496,7 +487,7 @@ static void send_packets_to_muxer(AVCodecContext* context, int stream_index,
 	}
 }
 
-void FfmpegEncoder::EncodeVideo()
+void FfmpegEncoder::ScaleVideo()
 {
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
@@ -506,27 +497,14 @@ void FfmpegEncoder::EncodeVideo()
 		if (is_shutting_down) {
 			return;
 		}
-		video_encoder.is_working = true;
+		video_scaler.is_working = true;
 		lock.unlock();
 
-		// Dequeue returns a false std::optional when the queue is stopped.
-		while (auto image = video_encoder.queue.Dequeue()) {
-			if (av_frame_make_writable(video_encoder.frame) < 0) {
-				LOG_ERR("FFMPEG: Failed to make video frame writable");
-				image->free();
-				continue;
-			}
-			// The image's attributes must match what the video
-			// encoder was initalised with. If we want to provide a
-			// single output when resolution changes, we must handle
-			// that later by setting the video encoder to a set
-			// value and then re-initalising the FFmpeg rescaler or
-			// doing our own rescaling.
-			const auto& image_params = image->params;
-			assert(image_params.width == video_encoder.width);
-			assert(image_params.height == video_encoder.height);
-			assert(image_params.pixel_format == video_encoder.pixel_format);
+		int64_t pts = 0;
 
+		while (auto image = video_scaler.queue.Dequeue()) {
+			++pts;
+			const auto& image_params = image->params;
 			if (image_params.width != 640 || image_params.height != 480 || image_params.pixel_format != PixelFormat::XRGB8888_Packed32) {
 				LOG_ERR("FFMPEG: Wrong format");
 				image->free();
@@ -534,12 +512,31 @@ void FfmpegEncoder::EncodeVideo()
 			}
 
 			int64_t start = GetTicksUs();
-			uint8_t* y_row = video_encoder.frame->data[0];
-			uint8_t* cr_row = video_encoder.frame->data[2];
-			uint8_t* cb_row = video_encoder.frame->data[1];
-			int y_pitch = video_encoder.frame->linesize[0];
-			int cr_pitch = video_encoder.frame->linesize[2];
-			int cb_pitch = video_encoder.frame->linesize[1];
+			AVFrame* frame = av_frame_alloc();
+			if (!frame) {
+				LOG_ERR("FFMPEG: Failed to allocate video frame");
+				image->free();
+				continue;
+			}
+			frame->width               = ScaledWidth;
+			frame->height              = ScaledHeight;
+			frame->format              = OutputFormat;
+			frame->pts                 = pts;
+			// 0 means auto-align based on current CPU
+			constexpr int memory_alignment = 0;
+			if (av_frame_get_buffer(frame, memory_alignment) < 0) {
+				LOG_ERR("FFMPEG: Failed to get video frame buffer");
+				av_frame_free(&frame);
+				image->free();
+				continue;
+			}
+
+			uint8_t* y_row = frame->data[0];
+			uint8_t* cr_row = frame->data[2];
+			uint8_t* cb_row = frame->data[1];
+			int y_pitch = frame->linesize[0];
+			int cr_pitch = frame->linesize[2];
+			int cb_pitch = frame->linesize[1];
 			constexpr int HorizonatalScale = 2;
 			constexpr int VerticalScale = 2;
 			uint8_t* row = image->image_data;
@@ -588,16 +585,46 @@ void FfmpegEncoder::EncodeVideo()
 				row += image->pitch;
 			}
 			LOG_MSG("Dosbox scaler: %ld", GetTicksUsSince(start));
+			image->free();
 
-			video_encoder.frame->pts += 1;
-			if (avcodec_send_frame(video_encoder.codec_context,
-			                       video_encoder.frame) < 0) {
+			[[maybe_unused]] bool frame_queued = video_encoder.queue.Enqueue(std::move(frame));
+			assert(frame_queued);
+		}
+
+		lock.lock();
+		video_scaler.is_working = false;
+		lock.unlock();
+		waiter.notify_all();
+	}
+}
+
+void FfmpegEncoder::EncodeVideo()
+{
+	for (;;) {
+		std::unique_lock<std::mutex> lock(mutex);
+		waiter.wait(lock, [this] {
+			return video_encoder.is_initalised || is_shutting_down;
+		});
+		if (is_shutting_down) {
+			return;
+		}
+		video_encoder.is_working = true;
+		lock.unlock();
+
+		// Dequeue returns a false std::optional when the queue is stopped.
+		while (auto optional = video_encoder.queue.Dequeue()) {
+			AVFrame* frame = *optional;
+			assert(frame->width == video_encoder.codec_context->width);
+			assert(frame->height == video_encoder.codec_context->height);
+			assert(frame->format == video_encoder.codec_context->pix_fmt);
+
+			if (avcodec_send_frame(video_encoder.codec_context, frame) < 0) {
 				LOG_ERR("FFMPEG: Failed to send video frame");
 			}
+			av_frame_free(&frame);
 			send_packets_to_muxer(video_encoder.codec_context,
 			                      MuxerVideoStreamIndex,
 			                      muxer.queue);
-			image->free();
 		}
 
 		// Queue has been stopped. Flush the encoder by sending nullptr
