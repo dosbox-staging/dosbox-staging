@@ -40,14 +40,14 @@
 #include "vga.h"
 #include "video.h"
 
-//#define DEBUG_VGA_DRAW
+// #define DEBUG_VGA_DRAW
 
-typedef uint8_t * (* VGA_Line_Handler)(Bitu vidstart, Bitu line);
+typedef uint8_t* (*VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
 static VGA_Line_Handler VGA_DrawLine;
 
 // Confirm the maximum dimensions accomodate VGA's pixel and scan doubling
-constexpr auto max_pixel_doubled_width  = 512;
+constexpr auto max_pixel_doubled_width = 512;
 constexpr auto max_scan_doubled_height = 400;
 static_assert(SCALER_MAXWIDTH >= SCALER_MAX_MUL_WIDTH * max_pixel_doubled_width);
 static_assert(SCALER_MAXHEIGHT >= SCALER_MAX_MUL_HEIGHT * max_scan_doubled_height);
@@ -2608,9 +2608,6 @@ ImageInfo setup_drawing()
 		render_pixel_aspect_ratio *= {PixelsPerChar::Eight,
 		                              vga.draw.pixels_per_character};
 
-		if (double_width) {
-			render_pixel_aspect_ratio /= 2;
-		}
 		break;
 
 	case M_TANDY_TEXT:
