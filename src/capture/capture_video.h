@@ -57,7 +57,6 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswresample/swresample.h>
-#include <libswscale/swscale.h>
 }
 
 struct FfmpegVideoEncoder {
@@ -68,7 +67,6 @@ struct FfmpegVideoEncoder {
 	const AVCodec* codec          = nullptr;
 	AVCodecContext* codec_context = nullptr;
 	AVFrame* frame                = nullptr;
-	SwsContext* rescaler_contex   = nullptr;
 
 	// Accessed only in main thread, used to check if needs re-init
 	// If one of these changes, create a new file
@@ -87,9 +85,7 @@ struct FfmpegVideoEncoder {
 	bool is_initalised = false;
 
 	// Init + free called by main thread only.
-	bool Init(const uint16_t width, const uint16_t height,
-	          const PixelFormat pixel_format, const int frames_per_second,
-	          const Fraction pixel_aspect_ratio);
+	bool Init(const RenderedImage& image, const int frames_per_second);
 	void Free();
 };
 
