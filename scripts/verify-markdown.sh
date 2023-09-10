@@ -17,6 +17,7 @@ set -euo pipefail
 list_markdown_files () {
 	git ls-files -- \
 	  '*.md' \
+	  ':!:.github/*.md' \
 	  ':!:.github/**/*.md' \
 	  ':!:src/libs/*.md' \
 	  ':!:src/hardware/reelmagic/docs/*.md' \
