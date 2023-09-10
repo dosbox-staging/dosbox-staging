@@ -2174,6 +2174,8 @@ public:
 		sb.hw.base=section->Get_hex("sbbase");
 
 		sb.hw.irq = static_cast<uint8_t>(section->Get_int("irq"));
+
+		sb.dsp.cold_warmup_ms = check_cast<uint8_t>(section->Get_int("sbwarmup"));
 		sb.dsp.hot_warmup_ms = sb.dsp.cold_warmup_ms >> 5;
 
 		sb.mixer.enabled=section->Get_bool("sbmixer");
