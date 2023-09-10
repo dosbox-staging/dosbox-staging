@@ -59,14 +59,20 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
+struct FfmpegVideoScaler {
+	RWQueue<RenderedImage> queue{32};
+	std::thread thread = {};
+
+	bool is_working = false;
+};
+
 struct FfmpegVideoEncoder {
-	RWQueue<RenderedImage> queue{64};
+	RWQueue<AVFrame*> queue{32};
 	std::thread thread = {};
 
 	// FFmpeg pointers. Initialsed in main thread. Used by worker thread.
 	const AVCodec* codec          = nullptr;
 	AVCodecContext* codec_context = nullptr;
-	AVFrame* frame                = nullptr;
 
 	// Accessed only in main thread, used to check if needs re-init
 	// If one of these changes, create a new file
@@ -157,6 +163,7 @@ public:
 private:
 	std::mutex mutex                 = {};
 	std::condition_variable waiter   = {};
+	FfmpegVideoScaler video_scaler   = {};
 	FfmpegVideoEncoder video_encoder = {};
 	FfmpegAudioEncoder audio_encoder = {};
 	FfmpegMuxer muxer                = {};
@@ -164,6 +171,7 @@ private:
 	// Guarded by mutex, only set in destructor
 	bool is_shutting_down = false;
 
+	void ScaleVideo();
 	void EncodeVideo();
 	void EncodeAudio();
 	void Mux();
