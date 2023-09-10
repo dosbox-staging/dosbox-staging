@@ -22,6 +22,8 @@
 #include "capture_video.h"
 #include "checks.h"
 #include "math_utils.h"
+#include "image/image_scaler.h"
+#include "timer.h"
 
 #if C_FFMPEG
 
@@ -45,6 +47,9 @@ constexpr int MuxerAudioStreamIndex = 1;
 
 // Always stereo audio
 constexpr size_t SamplesPerFrame = 2;
+
+constexpr int ScaledWidth = 1600;
+constexpr int ScaledHeight = 1200;
 
 FfmpegEncoder::FfmpegEncoder()
 {
@@ -92,11 +97,7 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 {
 	const int rounded_fps = iroundf(frames_per_second);
 	if (!video_encoder.is_initalised) {
-		if (!video_encoder.Init(image.params.width,
-		                        image.params.height,
-		                        image.params.pixel_format,
-		                        rounded_fps,
-		                        image.params.video_mode.pixel_aspect_ratio)) {
+		if (!video_encoder.Init(image, rounded_fps)) {
 			LOG_ERR("FFMPEG: Video encoder failed to init");
 			video_encoder.Free();
 			return;
@@ -127,11 +128,7 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 	           video_encoder.pixel_aspect_ratio !=
 	                   image.params.video_mode.pixel_aspect_ratio) {
 		CaptureVideoFinalise();
-		if (!video_encoder.Init(image.params.width,
-		                        image.params.height,
-		                        image.params.pixel_format,
-		                        rounded_fps,
-		                        image.params.video_mode.pixel_aspect_ratio)) {
+		if (!video_encoder.Init(image, rounded_fps)) {
 			LOG_ERR("FFMPEG: Video encoder failed to init");
 			video_encoder.Free();
 			return;
@@ -402,11 +399,14 @@ void FfmpegAudioEncoder::Free()
 	}
 }
 
-bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
-                              const PixelFormat pixel_format,
-                              const int frames_per_second, Fraction pixel_aspect_ratio)
+bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_second)
 {
-	codec = avcodec_find_encoder_by_name("h264_nvenc");
+	this->width              = image.params.width;
+	this->height             = image.params.height;
+	this->pixel_format       = image.params.pixel_format;
+	this->frames_per_second  = frames_per_second;
+	this->pixel_aspect_ratio = image.params.video_mode.pixel_aspect_ratio;
+	codec = avcodec_find_encoder_by_name("libx264");
 	if (!codec) {
 		LOG_ERR("FFMPEG: Failed to find libx264 encoder");
 		return false;
@@ -417,17 +417,19 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 		return false;
 	}
 
-	codec_context->width                   = 1920;
-	codec_context->height                  = 1080;
+	codec_context->width                   = ScaledWidth;
+	codec_context->height                  = ScaledHeight;
 	codec_context->time_base.num           = 1;
 	codec_context->time_base.den           = frames_per_second;
 	codec_context->framerate.num           = frames_per_second;
 	codec_context->framerate.den           = 1;
-	codec_context->pix_fmt                 = AV_PIX_FMT_YUV420P;
+	codec_context->pix_fmt                 = AV_PIX_FMT_YUV444P;
+	#if 0
 	codec_context->sample_aspect_ratio.num = static_cast<int>(
 	        pixel_aspect_ratio.Num());
 	codec_context->sample_aspect_ratio.den = static_cast<int>(
 	        pixel_aspect_ratio.Denom());
+	#endif
 
 	if (avcodec_open2(codec_context, codec, nullptr) < 0) {
 		LOG_ERR("FFMPEG: Failed to open video context");
@@ -451,40 +453,11 @@ bool FfmpegVideoEncoder::Init(const uint16_t width, const uint16_t height,
 		return false;
 	}
 
-	// Initalise the re-scaler. Currently only used to convert to YuV color
-	// space.
-	constexpr SwsFilter* source_filter = nullptr;
-	constexpr SwsFilter* dest_filter   = nullptr;
-	constexpr double* parameters       = nullptr;
-	rescaler_contex                    = sws_getContext(width,
-                                         height,
-                                         map_pixel_format(pixel_format),
-                                         codec_context->width,
-                                         codec_context->height,
-                                         AV_PIX_FMT_YUV420P,
-                                         SWS_BILINEAR,
-                                         source_filter,
-                                         dest_filter,
-                                         parameters);
-	if (!rescaler_contex) {
-		LOG_ERR("FFMPEG: Failed to get swscaler context");
-		return false;
-	}
-
-	this->width              = width;
-	this->height             = height;
-	this->pixel_format       = pixel_format;
-	this->frames_per_second  = frames_per_second;
-	this->pixel_aspect_ratio = pixel_aspect_ratio;
 	return true;
 }
 
 void FfmpegVideoEncoder::Free()
 {
-	if (rescaler_contex) {
-		sws_freeContext(rescaler_contex);
-		rescaler_contex = nullptr;
-	}
 	if (frame) {
 		av_frame_free(&frame);
 		frame = nullptr;
@@ -554,46 +527,64 @@ void FfmpegEncoder::EncodeVideo()
 			assert(image_params.height == video_encoder.height);
 			assert(image_params.pixel_format == video_encoder.pixel_format);
 
-			// It wants a pointer to an array of linesizes so that
-			// it can work with planar formats.
-			// For RGB formats, there is only 1 linesize.
-			// For Palette formats, the second linesize is 0.
-			int linesizes[2];
-			linesizes[0] = image->pitch;
-			linesizes[1] = 0;
-
-			// Pointers to data to correspond with the linesizes
-			// above. The 2nd pointer is only used for Palette
-			// formats.
-			uint8_t* image_pointers[2];
-			image_pointers[0] = image->image_data;
-			image_pointers[1] = image->palette_data;
-
-			// Convert the palette data from RGB0
-			// To a packed uint32_t as required by ffmpeg.
-			// Should work regardless of endianess.
-			if (image_params.pixel_format == PixelFormat::Indexed8) {
-				uint8_t* pal_ptr = image->palette_data;
-				for (int i = 0; i < 256; ++i) {
-					uint32_t red   = pal_ptr[0];
-					uint32_t green = pal_ptr[1];
-					uint32_t blue  = pal_ptr[2];
-					uint32_t pixel = (red << 16) |
-					                 (green << 8) | blue;
-					write_unaligned_uint32(pal_ptr, pixel);
-					pal_ptr += 4;
-				}
+			if (image_params.width != 320 || image_params.height != 200 || image_params.pixel_format != PixelFormat::XRGB8888_Packed32) {
+				LOG_ERR("FFMPEG: Wrong format");
+				image->free();
+				continue;
 			}
 
-			// Rescale the image to YuV colorspace.
-			constexpr int srcSliceY = 0;
-			sws_scale(video_encoder.rescaler_contex,
-			          image_pointers,
-			          linesizes,
-			          srcSliceY,
-			          image_params.height,
-			          video_encoder.frame->data,
-			          video_encoder.frame->linesize);
+			uint8_t* y_row = video_encoder.frame->data[0];
+			uint8_t* cr_row = video_encoder.frame->data[2];
+			uint8_t* cb_row = video_encoder.frame->data[1];
+			int y_pitch = video_encoder.frame->linesize[0];
+			int cr_pitch = video_encoder.frame->linesize[2];
+			int cb_pitch = video_encoder.frame->linesize[1];
+			int64_t start = GetTicksUs();
+			constexpr int HorizonatalScale = 5;
+			constexpr int VerticalScale = 6;
+			uint8_t* row = image->image_data;
+			for (int y = 0; y < image_params.height; ++y) {
+				for (int x = 0; x < image_params.width; ++x) {
+					uint32_t src_pixel = read_unaligned_uint32_at(row, x);
+					float red = static_cast<float>((src_pixel >> 16) & 0xFF);
+					float green = static_cast<float>((src_pixel >> 8) & 0xFF);
+					float blue = static_cast<float>(src_pixel & 0xFF);
+
+					float yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
+					float crf = (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
+					float cbf = -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
+
+					uint8_t y_out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+					uint8_t cr_out = static_cast<uint8_t>(clamp(crf, 0.0f, 255.0f));
+					uint8_t cb_out = static_cast<uint8_t>(clamp(cbf, 0.0f, 255.0f));
+
+					memset(y_row + (x * HorizonatalScale), y_out, HorizonatalScale);
+					memset(cr_row + (x * HorizonatalScale), cr_out, HorizonatalScale);
+					memset(cb_row + (x * HorizonatalScale), cb_out, HorizonatalScale);
+				}
+
+				for (int i = 1; i < VerticalScale; ++i) {
+					uint8_t* prev_row = y_row;
+					y_row += y_pitch;
+					memcpy(y_row, prev_row, ScaledWidth);
+				}
+				for (int i = 1; i < VerticalScale; ++i) {
+					uint8_t* prev_row = cr_row;
+					cr_row += cr_pitch;
+					memcpy(cr_row, prev_row, ScaledWidth);
+				}
+				for (int i = 1; i < VerticalScale; ++i) {
+					uint8_t* prev_row = cb_row;
+					cb_row += cb_pitch;
+					memcpy(cb_row, prev_row, ScaledWidth);
+				}
+
+				y_row += y_pitch;
+				cr_row += cr_pitch;
+				cb_row += cb_pitch;
+				row += image->pitch;
+			}
+			LOG_MSG("Dosbox scaler: %ld", GetTicksUsSince(start));
 
 			video_encoder.frame->pts += 1;
 			if (avcodec_send_frame(video_encoder.codec_context,
