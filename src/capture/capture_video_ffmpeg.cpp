@@ -48,8 +48,8 @@ constexpr int MuxerAudioStreamIndex = 1;
 // Always stereo audio
 constexpr size_t SamplesPerFrame = 2;
 
-constexpr int ScaledWidth = 1600;
-constexpr int ScaledHeight = 1200;
+constexpr int ScaledWidth = 1280;
+constexpr int ScaledHeight = 960;
 
 FfmpegEncoder::FfmpegEncoder()
 {
@@ -406,7 +406,7 @@ bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_s
 	this->pixel_format       = image.params.pixel_format;
 	this->frames_per_second  = frames_per_second;
 	this->pixel_aspect_ratio = image.params.video_mode.pixel_aspect_ratio;
-	codec = avcodec_find_encoder_by_name("libx264");
+	codec = avcodec_find_encoder_by_name("h264_nvenc");
 	if (!codec) {
 		LOG_ERR("FFMPEG: Failed to find libx264 encoder");
 		return false;
@@ -423,7 +423,7 @@ bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_s
 	codec_context->time_base.den           = frames_per_second;
 	codec_context->framerate.num           = frames_per_second;
 	codec_context->framerate.den           = 1;
-	codec_context->pix_fmt                 = AV_PIX_FMT_YUV444P;
+	codec_context->pix_fmt                 = AV_PIX_FMT_YUV420P;
 	#if 0
 	codec_context->sample_aspect_ratio.num = static_cast<int>(
 	        pixel_aspect_ratio.Num());
@@ -527,40 +527,41 @@ void FfmpegEncoder::EncodeVideo()
 			assert(image_params.height == video_encoder.height);
 			assert(image_params.pixel_format == video_encoder.pixel_format);
 
-			if (image_params.width != 320 || image_params.height != 200 || image_params.pixel_format != PixelFormat::XRGB8888_Packed32) {
+			if (image_params.width != 640 || image_params.height != 480 || image_params.pixel_format != PixelFormat::XRGB8888_Packed32) {
 				LOG_ERR("FFMPEG: Wrong format");
 				image->free();
 				continue;
 			}
 
+			int64_t start = GetTicksUs();
 			uint8_t* y_row = video_encoder.frame->data[0];
 			uint8_t* cr_row = video_encoder.frame->data[2];
 			uint8_t* cb_row = video_encoder.frame->data[1];
 			int y_pitch = video_encoder.frame->linesize[0];
 			int cr_pitch = video_encoder.frame->linesize[2];
 			int cb_pitch = video_encoder.frame->linesize[1];
-			int64_t start = GetTicksUs();
-			constexpr int HorizonatalScale = 5;
-			constexpr int VerticalScale = 6;
+			constexpr int HorizonatalScale = 2;
+			constexpr int VerticalScale = 2;
 			uint8_t* row = image->image_data;
-			for (int y = 0; y < image_params.height; ++y) {
-				for (int x = 0; x < image_params.width; ++x) {
+			for (uint16_t y = 0; y < image_params.height; ++y) {
+				for (uint16_t x = 0; x < image_params.width; ++x) {
 					uint32_t src_pixel = read_unaligned_uint32_at(row, x);
 					float red = static_cast<float>((src_pixel >> 16) & 0xFF);
 					float green = static_cast<float>((src_pixel >> 8) & 0xFF);
 					float blue = static_cast<float>(src_pixel & 0xFF);
 
 					float yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
-					float crf = (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
-					float cbf = -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
-
 					uint8_t y_out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
-					uint8_t cr_out = static_cast<uint8_t>(clamp(crf, 0.0f, 255.0f));
-					uint8_t cb_out = static_cast<uint8_t>(clamp(cbf, 0.0f, 255.0f));
-
 					memset(y_row + (x * HorizonatalScale), y_out, HorizonatalScale);
-					memset(cr_row + (x * HorizonatalScale), cr_out, HorizonatalScale);
-					memset(cb_row + (x * HorizonatalScale), cb_out, HorizonatalScale);
+
+					if (y % 2 == 0 && x % 2 == 0) {
+						float crf = (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
+						float cbf = -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
+						uint8_t cr_out = static_cast<uint8_t>(clamp(crf, 0.0f, 255.0f));
+						uint8_t cb_out = static_cast<uint8_t>(clamp(cbf, 0.0f, 255.0f));
+						memset(cr_row + (x / 2) * HorizonatalScale, cr_out, HorizonatalScale);
+						memset(cb_row + (x / 2) * HorizonatalScale, cb_out, HorizonatalScale);
+					}
 				}
 
 				for (int i = 1; i < VerticalScale; ++i) {
@@ -568,20 +569,22 @@ void FfmpegEncoder::EncodeVideo()
 					y_row += y_pitch;
 					memcpy(y_row, prev_row, ScaledWidth);
 				}
-				for (int i = 1; i < VerticalScale; ++i) {
-					uint8_t* prev_row = cr_row;
+				if (y % 2 == 0) {
+					for (int i = 1; i < VerticalScale; ++i) {
+						uint8_t* prev_row = cr_row;
+						cr_row += cr_pitch;
+						memcpy(cr_row, prev_row, ScaledWidth / 2);
+					}
+					for (int i = 1; i < VerticalScale; ++i) {
+						uint8_t* prev_row = cb_row;
+						cb_row += cb_pitch;
+						memcpy(cb_row, prev_row, ScaledWidth / 2);
+					}
 					cr_row += cr_pitch;
-					memcpy(cr_row, prev_row, ScaledWidth);
-				}
-				for (int i = 1; i < VerticalScale; ++i) {
-					uint8_t* prev_row = cb_row;
 					cb_row += cb_pitch;
-					memcpy(cb_row, prev_row, ScaledWidth);
 				}
 
 				y_row += y_pitch;
-				cr_row += cr_pitch;
-				cb_row += cb_pitch;
 				row += image->pitch;
 			}
 			LOG_MSG("Dosbox scaler: %ld", GetTicksUsSince(start));
