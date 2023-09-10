@@ -61,7 +61,7 @@ extern "C" {
 }
 
 struct FfmpegVideoEncoder {
-	RWQueue<RenderedImage> queue{256};
+	RWQueue<RenderedImage> queue{64};
 	std::thread thread = {};
 
 	// FFmpeg pointers. Initialsed in main thread. Used by worker thread.
@@ -94,7 +94,7 @@ struct FfmpegVideoEncoder {
 };
 
 struct FfmpegAudioEncoder {
-	RWQueue<int16_t> queue{480000};
+	RWQueue<int16_t> queue{48000};
 	std::thread thread = {};
 
 	// FFmpeg pointers. Initialsed in main thread. Used by worker thread.
@@ -121,7 +121,7 @@ struct FfmpegAudioEncoder {
 };
 
 struct FfmpegMuxer {
-	RWQueue<AVPacket*> queue{1024};
+	RWQueue<AVPacket*> queue{64};
 	std::thread thread = {};
 
 	// FFmpeg pointers. Initialsed in main thread. Used by worker thread.
