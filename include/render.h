@@ -110,6 +110,8 @@ struct RenderedImage {
 	// B1, X1, etc.)
 	uint8_t* palette_data = nullptr;
 
+	int64_t pts = 0;
+
 	inline bool is_paletted() const
 	{
 		return (params.pixel_format == PixelFormat::Indexed8);
