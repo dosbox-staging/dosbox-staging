@@ -47,8 +47,8 @@ constexpr int MuxerAudioStreamIndex = 1;
 // Always stereo audio
 constexpr size_t SamplesPerFrame = 2;
 
-constexpr int ScaledWidth = 1280;
-constexpr int ScaledHeight = 960;
+constexpr int ScaledWidth = 1600;
+constexpr int ScaledHeight = 1200;
 
 constexpr AVPixelFormat OutputFormat = AV_PIX_FMT_YUV420P;
 
@@ -410,7 +410,7 @@ bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_s
 	this->pixel_format       = image.params.pixel_format;
 	this->frames_per_second  = frames_per_second;
 	this->pixel_aspect_ratio = image.params.video_mode.pixel_aspect_ratio;
-	codec = avcodec_find_encoder_by_name("h264_nvenc");
+	codec = avcodec_find_encoder_by_name("libx264");
 	if (!codec) {
 		LOG_ERR("FFMPEG: Failed to find libx264 encoder");
 		return false;
@@ -491,20 +491,23 @@ static void scale_yuv420(const size_t horizontal_scale, const size_t vertical_sc
 	int y_pitch = frame->linesize[0];
 	int cr_pitch = frame->linesize[2];
 	int cb_pitch = frame->linesize[1];
+	uint8_t* src_row = image.image_data;
 
 	// Operate on a square block of 4 pixels at a time
 	// Cr and Cb values use 1 value as the average of the 4 pixels
 	// Y values are output every pixel
-	for (int y = 0; y < frame->height; y += 2) {
-		uint8_t* y_row2 = y_row + y_pitch;
-		for (int x = 0; x < frame->width; x += 2) {
+	for (uint16_t y = 0; y < image.params.height; y += 2) {
+		uint8_t* src_row2 = src_row + image.pitch;
+		uint8_t* y_row2 = y_row + (y_pitch * vertical_scale);
+		for (uint16_t x = 0; x < image.params.width; x += 2) {
+			uint8_t out;
 			uint32_t src_pixel;
 			float red, green, blue, yf;
 			float crf = 0.0f;
 			float cbf = 0.0f;
 
 			// Top left
-			src_pixel = read_unaligned_uint32_at(image.image_data + ((y / vertical_scale) * image.pitch), x / horizontal_scale);
+			src_pixel = read_unaligned_uint32_at(src_row, x);
 			red = static_cast<float>((src_pixel >> 16) & 0xFF);
 			green = static_cast<float>((src_pixel >> 8) & 0xFF);
 			blue = static_cast<float>(src_pixel & 0xFF);
@@ -513,10 +516,13 @@ static void scale_yuv420(const size_t horizontal_scale, const size_t vertical_sc
 			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
 			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
 
-			y_row[x] = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			memset(y_row + (x * horizontal_scale), out, horizontal_scale);
+
+
 
 			// Top Right
-			src_pixel = read_unaligned_uint32_at(image.image_data + ((y / vertical_scale) * image.pitch), (x + 1) / horizontal_scale);
+			src_pixel = read_unaligned_uint32_at(src_row, x + 1);
 			red = static_cast<float>((src_pixel >> 16) & 0xFF);
 			green = static_cast<float>((src_pixel >> 8) & 0xFF);
 			blue = static_cast<float>(src_pixel & 0xFF);
@@ -525,10 +531,13 @@ static void scale_yuv420(const size_t horizontal_scale, const size_t vertical_sc
 			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
 			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
 
-			y_row[x + 1] = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			memset(y_row + ((x + 1) * horizontal_scale), out, horizontal_scale);
+
+
 
 			// Bottom Left
-			src_pixel = read_unaligned_uint32_at(image.image_data + (((y + 1) / vertical_scale) * image.pitch), x / horizontal_scale);
+			src_pixel = read_unaligned_uint32_at(src_row2, x);
 			red = static_cast<float>((src_pixel >> 16) & 0xFF);
 			green = static_cast<float>((src_pixel >> 8) & 0xFF);
 			blue = static_cast<float>(src_pixel & 0xFF);
@@ -537,11 +546,13 @@ static void scale_yuv420(const size_t horizontal_scale, const size_t vertical_sc
 			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
 			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
 
-			y_row2[x] = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			memset(y_row2 + (x * horizontal_scale), out, horizontal_scale);
+
 
 
 			// Bottom Right
-			src_pixel = read_unaligned_uint32_at(image.image_data + (((y + 1) / vertical_scale) * image.pitch), (x + 1) / horizontal_scale);
+			src_pixel = read_unaligned_uint32_at(src_row2, x + 1);
 			red = static_cast<float>((src_pixel >> 16) & 0xFF);
 			green = static_cast<float>((src_pixel >> 8) & 0xFF);
 			blue = static_cast<float>(src_pixel & 0xFF);
@@ -550,16 +561,44 @@ static void scale_yuv420(const size_t horizontal_scale, const size_t vertical_sc
 			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
 			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
 
-			y_row2[x + 1] = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			memset(y_row2 + ((x + 1) * horizontal_scale), out, horizontal_scale);
+
 
 			// Write out Cr and Cb average values
-			cr_row[x / 2] = static_cast<uint8_t>(clamp(crf / 4.0f, 0.0f, 255.0f));
+			out = static_cast<uint8_t>(clamp(crf / 4.0f, 0.0f, 255.0f));
+			memset(cr_row + ((x / 2) * horizontal_scale), out, horizontal_scale);
 
-			cb_row[x / 2] = static_cast<uint8_t>(clamp(cbf / 4.0f, 0.0f, 255.0f));
+			out = static_cast<uint8_t>(clamp(cbf / 4.0f, 0.0f, 255.0f));
+			memset(cb_row + ((x / 2) * horizontal_scale), out, horizontal_scale);
+		}
+
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = y_row;
+			y_row += y_pitch;
+			memcpy(y_row, prev_row, ScaledWidth);
+		}
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = y_row2;
+			y_row2 += y_pitch;
+			memcpy(y_row2, prev_row, ScaledWidth);
+		}
+
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = cr_row;
+			cr_row += cr_pitch;
+			memcpy(cr_row, prev_row, ScaledWidth / 2);
+		}
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = cb_row;
+			cb_row += cb_pitch;
+			memcpy(cb_row, prev_row, ScaledWidth / 2);
 		}
 		cr_row += cr_pitch;
 		cb_row += cb_pitch;
+
 		y_row = y_row2 + y_pitch;
+		src_row += (image.pitch * 2);
 	}
 }
 
@@ -650,8 +689,8 @@ void FfmpegEncoder::ScaleVideo()
 				continue;
 			}
 
-			constexpr size_t HorizontalScale = 2;
-			constexpr size_t VerticalScale = 2;
+			constexpr size_t HorizontalScale = 5;
+			constexpr size_t VerticalScale = 6;
 			int64_t start = GetTicksUs();
 			if (OutputFormat == AV_PIX_FMT_YUV444P) {
 				scale_yuv444(HorizontalScale, VerticalScale, image, frame);
