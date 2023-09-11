@@ -503,7 +503,7 @@ void FfmpegEncoder::ScaleVideo()
 			}
 			frame->width               = ScaledWidth;
 			frame->height              = ScaledHeight;
-			frame->format              = OutputFormat;
+			frame->format              = static_cast<int>(OutputFormat);
 			frame->pts                 = optional->pts;
 			// 0 means auto-align based on current CPU
 			constexpr int memory_alignment = 0;
