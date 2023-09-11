@@ -59,8 +59,14 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
+struct VideoScalerWork
+{
+	int64_t pts = 0;
+	RenderedImage image = {};
+};
+
 struct FfmpegVideoScaler {
-	RWQueue<RenderedImage> queue{32};
+	RWQueue<VideoScalerWork> queue{32};
 	std::thread thread = {};
 
 	bool is_working = false;
@@ -167,6 +173,7 @@ private:
 	FfmpegVideoEncoder video_encoder = {};
 	FfmpegAudioEncoder audio_encoder = {};
 	FfmpegMuxer muxer                = {};
+	int64_t pts                      = 0;
 
 	// Guarded by mutex, only set in destructor
 	bool is_shutting_down = false;

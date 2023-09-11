@@ -47,8 +47,8 @@ constexpr int MuxerAudioStreamIndex = 1;
 // Always stereo audio
 constexpr size_t SamplesPerFrame = 2;
 
-constexpr int ScaledWidth = 1280;
-constexpr int ScaledHeight = 960;
+constexpr int ScaledWidth = 1600;
+constexpr int ScaledHeight = 1200;
 
 constexpr AVPixelFormat OutputFormat = AV_PIX_FMT_YUV420P;
 
@@ -83,20 +83,6 @@ FfmpegEncoder::~FfmpegEncoder()
 	}
 }
 
-static AVPixelFormat map_pixel_format(PixelFormat format)
-{
-	switch (format) {
-	case PixelFormat::Indexed8: return AV_PIX_FMT_PAL8;
-	case PixelFormat::RGB555_Packed16: return AV_PIX_FMT_RGB555;
-	case PixelFormat::RGB565_Packed16: return AV_PIX_FMT_RGB565;
-	case PixelFormat::BGR24_ByteArray: return AV_PIX_FMT_BGR24;
-	case PixelFormat::XRGB8888_Packed32: return AV_PIX_FMT_0RGB32;
-	default:
-		assertm(false, "Invalid PixelFormat value");
-		return AV_PIX_FMT_NONE;
-	}
-}
-
 void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
                                          const float frames_per_second)
 {
@@ -121,6 +107,7 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 
 		mutex.lock();
 		video_encoder.is_initalised = true;
+		pts = 0;
 
 		muxer.is_initalised = muxer.is_initalised || init_muxer;
 		mutex.unlock();
@@ -141,12 +128,17 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 
 		mutex.lock();
 		video_encoder.is_initalised = true;
+		pts = 0;
 		mutex.unlock();
 		waiter.notify_all();
 	}
 
-	[[maybe_unused]] bool image_queued = video_scaler.queue.Enqueue(image.deep_copy());
-	assert(image_queued);
+	VideoScalerWork work;
+	work.pts = pts++;
+	work.image = image.deep_copy();
+	if (!video_scaler.queue.MaybeEnqueue(std::move(work))) {
+		work.image.free();
+	}
 }
 
 void FfmpegEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
@@ -418,7 +410,7 @@ bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_s
 	this->pixel_format       = image.params.pixel_format;
 	this->frames_per_second  = frames_per_second;
 	this->pixel_aspect_ratio = image.params.video_mode.pixel_aspect_ratio;
-	codec = avcodec_find_encoder_by_name("h264_nvenc");
+	codec = avcodec_find_encoder_by_name("libx264");
 	if (!codec) {
 		LOG_ERR("FFMPEG: Failed to find libx264 encoder");
 		return false;
@@ -500,34 +492,25 @@ void FfmpegEncoder::ScaleVideo()
 		video_scaler.is_working = true;
 		lock.unlock();
 
-		int64_t pts = 0;
+		while (auto optional = video_scaler.queue.Dequeue()) {
+			RenderedImage& image = optional->image;
 
-		while (auto image = video_scaler.queue.Dequeue()) {
-			++pts;
-			const auto& image_params = image->params;
-			if (image_params.width != 640 || image_params.height != 480 || image_params.pixel_format != PixelFormat::XRGB8888_Packed32) {
-				LOG_ERR("FFMPEG: Wrong format");
-				image->free();
-				continue;
-			}
-
-			int64_t start = GetTicksUs();
 			AVFrame* frame = av_frame_alloc();
 			if (!frame) {
 				LOG_ERR("FFMPEG: Failed to allocate video frame");
-				image->free();
+				image.free();
 				continue;
 			}
 			frame->width               = ScaledWidth;
 			frame->height              = ScaledHeight;
 			frame->format              = OutputFormat;
-			frame->pts                 = pts;
+			frame->pts                 = optional->pts;
 			// 0 means auto-align based on current CPU
 			constexpr int memory_alignment = 0;
 			if (av_frame_get_buffer(frame, memory_alignment) < 0) {
 				LOG_ERR("FFMPEG: Failed to get video frame buffer");
 				av_frame_free(&frame);
-				image->free();
+				image.free();
 				continue;
 			}
 
@@ -537,11 +520,11 @@ void FfmpegEncoder::ScaleVideo()
 			int y_pitch = frame->linesize[0];
 			int cr_pitch = frame->linesize[2];
 			int cb_pitch = frame->linesize[1];
-			constexpr int HorizonatalScale = 2;
-			constexpr int VerticalScale = 2;
-			uint8_t* row = image->image_data;
-			for (uint16_t y = 0; y < image_params.height; ++y) {
-				for (uint16_t x = 0; x < image_params.width; ++x) {
+			constexpr int HorizonatalScale = 5;
+			constexpr int VerticalScale = 6;
+			uint8_t* row = image.image_data;
+			for (uint16_t y = 0; y < image.params.height; ++y) {
+				for (uint16_t x = 0; x < image.params.width; ++x) {
 					uint32_t src_pixel = read_unaligned_uint32_at(row, x);
 					float red = static_cast<float>((src_pixel >> 16) & 0xFF);
 					float green = static_cast<float>((src_pixel >> 8) & 0xFF);
@@ -582,10 +565,9 @@ void FfmpegEncoder::ScaleVideo()
 				}
 
 				y_row += y_pitch;
-				row += image->pitch;
+				row += image.pitch;
 			}
-			LOG_MSG("Dosbox scaler: %ld", GetTicksUsSince(start));
-			image->free();
+			image.free();
 
 			[[maybe_unused]] bool frame_queued = video_encoder.queue.Enqueue(std::move(frame));
 			assert(frame_queued);
