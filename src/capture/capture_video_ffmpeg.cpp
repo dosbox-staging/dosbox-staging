@@ -479,32 +479,131 @@ static void send_packets_to_muxer(AVCodecContext* context, int stream_index,
 	}
 }
 
-static AVFrame* create_scaled_frame(const size_t horizontal_scale, const size_t vertical_scale, const RenderedImage& image, const int64_t pts)
+static void scale_yuv420(const size_t horizontal_scale, const size_t vertical_scale, const RenderedImage& image, AVFrame* frame)
 {
-	AVFrame* frame = av_frame_alloc();
-	if (!frame) {
-		LOG_ERR("FFMPEG: Failed to allocate video frame");
-		return nullptr;
-	}
-	frame->width               = ScaledWidth;
-	frame->height              = ScaledHeight;
-	frame->format              = static_cast<int>(OutputFormat);
-	frame->pts                 = pts;
-	// 0 means auto-align based on current CPU
-	constexpr int memory_alignment = 0;
-	if (av_frame_get_buffer(frame, memory_alignment) < 0) {
-		LOG_ERR("FFMPEG: Failed to get video frame buffer");
-		av_frame_free(&frame);
-		return nullptr;
-	}
+	// Needs an even number of rows and columns for chroma subsampling.
+	assert(image.params.width % 2 == 0);
+	assert(image.params.height % 2 == 0);
 
-	// AV_PIX_FMT_YUV420P
-	uint16_t chroma_subsample_rate = 2;
+	uint8_t* y_row = frame->data[0];
+	uint8_t* cr_row = frame->data[2];
+	uint8_t* cb_row = frame->data[1];
+	int y_pitch = frame->linesize[0];
+	int cr_pitch = frame->linesize[2];
+	int cb_pitch = frame->linesize[1];
+	uint8_t* src_row = image.image_data;
 
-	if (OutputFormat == AV_PIX_FMT_YUV444P) {
-		chroma_subsample_rate = 1;
+	// Operate on a square block of 4 pixels at a time
+	// Cr and Cb values use 1 value as the average of the 4 pixels
+	// Y values are output every pixel
+	for (uint16_t y = 0; y < image.params.height; y += 2) {
+		uint8_t* src_row2 = src_row + image.pitch;
+		uint8_t* y_row2 = y_row + (y_pitch * vertical_scale);
+		for (uint16_t x = 0; x < image.params.width; x += 2) {
+			uint8_t out;
+			uint32_t src_pixel;
+			float red, green, blue, yf;
+			float crf = 0.0f;
+			float cbf = 0.0f;
+
+			// Top left
+			src_pixel = read_unaligned_uint32_at(src_row, x);
+			red = static_cast<float>((src_pixel >> 16) & 0xFF);
+			green = static_cast<float>((src_pixel >> 8) & 0xFF);
+			blue = static_cast<float>(src_pixel & 0xFF);
+
+			yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
+			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
+			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
+
+			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			memset(y_row + (x * horizontal_scale), out, horizontal_scale);
+
+
+
+			// Top Right
+			src_pixel = read_unaligned_uint32_at(src_row, x + 1);
+			red = static_cast<float>((src_pixel >> 16) & 0xFF);
+			green = static_cast<float>((src_pixel >> 8) & 0xFF);
+			blue = static_cast<float>(src_pixel & 0xFF);
+
+			yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
+			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
+			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
+
+			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			memset(y_row + ((x + 1) * horizontal_scale), out, horizontal_scale);
+
+
+
+			// Bottom Left
+			src_pixel = read_unaligned_uint32_at(src_row2, x);
+			red = static_cast<float>((src_pixel >> 16) & 0xFF);
+			green = static_cast<float>((src_pixel >> 8) & 0xFF);
+			blue = static_cast<float>(src_pixel & 0xFF);
+
+			yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
+			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
+			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
+
+			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			memset(y_row2 + (x * horizontal_scale), out, horizontal_scale);
+
+
+
+			// Bottom Right
+			src_pixel = read_unaligned_uint32_at(src_row2, x + 1);
+			red = static_cast<float>((src_pixel >> 16) & 0xFF);
+			green = static_cast<float>((src_pixel >> 8) & 0xFF);
+			blue = static_cast<float>(src_pixel & 0xFF);
+
+			yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
+			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
+			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
+
+			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			memset(y_row2 + ((x + 1) * horizontal_scale), out, horizontal_scale);
+
+
+			// Write out Cr and Cb average values
+			out = static_cast<uint8_t>(clamp(crf / 4.0f, 0.0f, 255.0f));
+			memset(cr_row + ((x / 2) * horizontal_scale), out, horizontal_scale);
+
+			out = static_cast<uint8_t>(clamp(cbf / 4.0f, 0.0f, 255.0f));
+			memset(cb_row + ((x / 2) * horizontal_scale), out, horizontal_scale);
+		}
+
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = y_row;
+			y_row += y_pitch;
+			memcpy(y_row, prev_row, ScaledWidth);
+		}
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = y_row2;
+			y_row2 += y_pitch;
+			memcpy(y_row2, prev_row, ScaledWidth);
+		}
+
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = cr_row;
+			cr_row += cr_pitch;
+			memcpy(cr_row, prev_row, ScaledWidth / 2);
+		}
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = cb_row;
+			cb_row += cb_pitch;
+			memcpy(cb_row, prev_row, ScaledWidth / 2);
+		}
+		cr_row += cr_pitch;
+		cb_row += cb_pitch;
+
+		y_row = y_row2 + y_pitch;
+		src_row += (image.pitch * 2);
 	}
+}
 
+static void scale_yuv444(const size_t horizontal_scale, const size_t vertical_scale, const RenderedImage& image, AVFrame* frame)
+{
 	uint8_t* y_row = frame->data[0];
 	uint8_t* cr_row = frame->data[2];
 	uint8_t* cb_row = frame->data[1];
@@ -520,17 +619,16 @@ static AVFrame* create_scaled_frame(const size_t horizontal_scale, const size_t 
 			float blue = static_cast<float>(src_pixel & 0xFF);
 
 			float yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
-			uint8_t y_out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
-			memset(y_row + (x * horizontal_scale), y_out, horizontal_scale);
+			float crf = (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
+			float cbf = -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
 
-			if (y % chroma_subsample_rate == 0 && x % chroma_subsample_rate == 0) {
-				float crf = (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
-				float cbf = -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
-				uint8_t cr_out = static_cast<uint8_t>(clamp(crf, 0.0f, 255.0f));
-				uint8_t cb_out = static_cast<uint8_t>(clamp(cbf, 0.0f, 255.0f));
-				memset(cr_row + (x / chroma_subsample_rate) * horizontal_scale, cr_out, horizontal_scale);
-				memset(cb_row + (x / chroma_subsample_rate) * horizontal_scale, cb_out, horizontal_scale);
-			}
+			uint8_t y_out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			uint8_t cr_out = static_cast<uint8_t>(clamp(crf, 0.0f, 255.0f));
+			uint8_t cb_out = static_cast<uint8_t>(clamp(cbf, 0.0f, 255.0f));
+
+			memset(y_row + (x * horizontal_scale), y_out, horizontal_scale);
+			memset(cr_row + (x * horizontal_scale), cr_out, horizontal_scale);
+			memset(cb_row + (x * horizontal_scale), cb_out, horizontal_scale);
 		}
 
 		for (size_t i = 1; i < vertical_scale; ++i) {
@@ -538,26 +636,22 @@ static AVFrame* create_scaled_frame(const size_t horizontal_scale, const size_t 
 			y_row += y_pitch;
 			memcpy(y_row, prev_row, ScaledWidth);
 		}
-		if (y % chroma_subsample_rate == 0) {
-			for (size_t i = 1; i < vertical_scale; ++i) {
-				uint8_t* prev_row = cr_row;
-				cr_row += cr_pitch;
-				memcpy(cr_row, prev_row, ScaledWidth / chroma_subsample_rate);
-			}
-			for (size_t i = 1; i < vertical_scale; ++i) {
-				uint8_t* prev_row = cb_row;
-				cb_row += cb_pitch;
-				memcpy(cb_row, prev_row, ScaledWidth / chroma_subsample_rate);
-			}
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = cr_row;
 			cr_row += cr_pitch;
-			cb_row += cb_pitch;
+			memcpy(cr_row, prev_row, ScaledWidth);
 		}
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = cb_row;
+			cb_row += cb_pitch;
+			memcpy(cb_row, prev_row, ScaledWidth);
+		}
+		cr_row += cr_pitch;
+		cb_row += cb_pitch;
 
 		y_row += y_pitch;
 		row += image.pitch;
 	}
-
-	return frame;
 }
 
 void FfmpegEncoder::ScaleVideo()
@@ -576,13 +670,35 @@ void FfmpegEncoder::ScaleVideo()
 		while (auto optional = video_scaler.queue.Dequeue()) {
 			RenderedImage& image = optional->image;
 
-			constexpr size_t HorizontalScale = 5;
-			constexpr size_t VerticalScale = 6;
-			AVFrame *frame = create_scaled_frame(HorizontalScale, VerticalScale, image, pts);
+			AVFrame* frame = av_frame_alloc();
 			if (!frame) {
+				LOG_ERR("FFMPEG: Failed to allocate video frame");
 				image.free();
 				continue;
 			}
+			frame->width               = ScaledWidth;
+			frame->height              = ScaledHeight;
+			frame->format              = static_cast<int>(OutputFormat);
+			frame->pts                 = optional->pts;
+			// 0 means auto-align based on current CPU
+			constexpr int memory_alignment = 0;
+			if (av_frame_get_buffer(frame, memory_alignment) < 0) {
+				LOG_ERR("FFMPEG: Failed to get video frame buffer");
+				av_frame_free(&frame);
+				image.free();
+				continue;
+			}
+
+			constexpr size_t HorizontalScale = 5;
+			constexpr size_t VerticalScale = 6;
+			int64_t start = GetTicksUs();
+			if (OutputFormat == AV_PIX_FMT_YUV444P) {
+				scale_yuv444(HorizontalScale, VerticalScale, image, frame);
+			} else {
+				scale_yuv420(HorizontalScale, VerticalScale, image, frame);
+			}
+			LOG_MSG("Scaling: %ld", GetTicksUsSince(start));
+			image.free();
 
 			[[maybe_unused]] bool frame_queued = video_encoder.queue.Enqueue(std::move(frame));
 			assert(frame_queued);
