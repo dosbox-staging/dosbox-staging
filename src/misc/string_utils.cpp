@@ -148,30 +148,29 @@ std::vector<std::string> split(const std::string_view seq, const char delim)
 	return words;
 }
 
-std::vector<std::string> split(const std::string_view seq)
+std::vector<std::string> split(const std::string_view seq, const std::string_view delims)
 {
 	std::vector<std::string> words;
-	if (seq.empty())
+	if (seq.empty()) {
 		return words;
-
-	constexpr auto whitespace = " \f\n\r\t\v";
+	}
 
 	// count words to reserve space in our vector
 	size_t n  = 0;
-	auto head = seq.find_first_not_of(whitespace, 0);
+	auto head = seq.find_first_not_of(delims, 0);
 	while (head != std::string::npos) {
-		const auto tail = seq.find_first_of(whitespace, head);
-		head            = seq.find_first_not_of(whitespace, tail);
+		const auto tail = seq.find_first_of(delims, head);
+		head            = seq.find_first_not_of(delims, tail);
 		++n;
 	}
 	words.reserve(n);
 
 	// populate the vector with the words
-	head = seq.find_first_not_of(whitespace, 0);
+	head = seq.find_first_not_of(delims, 0);
 	while (head != std::string::npos) {
-		const auto tail = seq.find_first_of(whitespace, head);
+		const auto tail = seq.find_first_of(delims, head);
 		words.emplace_back(seq.substr(head, tail - head));
-		head = seq.find_first_not_of(whitespace, tail);
+		head = seq.find_first_not_of(delims, tail);
 	}
 
 	// did we reserve the exact space needed?
