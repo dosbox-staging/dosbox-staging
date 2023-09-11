@@ -112,6 +112,20 @@ bool RWQueue<T>::IsRunning() const
 }
 
 template <typename T>
+bool RWQueue<T>::MaybeEnqueue(T&& item)
+{
+	mutex.lock();
+	if (is_running && queue.size() < capacity) {
+		queue.emplace(queue.end(), std::move(item));
+		mutex.unlock();
+		has_items.notify_one();
+		return true;
+	}
+	mutex.unlock();
+	return false;
+}
+
+template <typename T>
 bool RWQueue<T>::Enqueue(T&& item)
 {
 	// wait until we're stopped or the queue has room to accept the item

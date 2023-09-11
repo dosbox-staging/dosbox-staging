@@ -85,6 +85,9 @@ public:
 	// non-blocking call
 	float GetPercentFull();
 
+	// non-blocking enqueue
+	bool MaybeEnqueue(T&& item);
+
 	// Discourage copying into the queue. Instead, use std::move into the
 	// queue to explicitly invalidate the source object to avoid having
 	// two source objects floating around.
