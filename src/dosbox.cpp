@@ -704,7 +704,7 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("voodoo_memsize", only_at_start, "12");
 	pstring->Set_values(voodootypes);
 	pstring->Set_help(
-	        "Memory size (in MB) of the 3dfx Vodooo card (12 MB as default).");
+	        "Memory size (in MB) of the 3dfx Voodoo card (12 MB as default).");
 
 	pint = secprop->Add_int("voodoo_perf", only_at_start, 1);
 	pint->SetMinMax(0, 3);
@@ -713,7 +713,7 @@ void DOSBOX_Init()
 	               "   1:  Multi-threading (default).\n"
 	               "   2:  Disable bilinear filtering.\n"
 	               "   3:  All optimizations (both 1 and 2).\n"
-	               "Note: Voodo emulation is software-based and does not use host-level\n"
+	               "Note: Voodoo emulation is software-based and does not use host-level\n"
 	               "      OpenGL calls.");
 
 	// Configure capture
