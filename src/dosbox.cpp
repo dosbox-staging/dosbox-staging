@@ -66,7 +66,6 @@ SVGACards svgaCard;
 void LOG_StartUp();
 void MEM_Init(Section *);
 void PAGING_Init(Section *);
-void IO_Init(Section * );
 void CALLBACK_Init(Section*);
 void PROGRAMS_Init(Section*);
 //void CREDITS_Init(Section*);
@@ -75,6 +74,7 @@ void VGA_Init(Section*);
 void DOS_Init(Section*);
 
 void CPU_Configure(ModuleLifecycle, Section*);
+void IO_Configure(ModuleLifecycle, Section*);
 
 #if C_FPU
 void FPU_Init(Section*);
@@ -516,8 +516,6 @@ void DOSBOX_Init()
 #if C_DEBUG
 	LOG_StartUp();
 #endif
-
-	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);
 	secprop->AddInitFunction(&MEM_Init);
 	pint = secprop->Add_int("memsize", when_idle, 16);
@@ -653,7 +651,7 @@ void DOSBOX_Init()
 	VGA_AddCompositeSettings(*control);
 
 	// Configure CPU settings
-	secprop = control->AddSection("cpu", CPU_Configure);
+	secprop = control->AddSection("cpu", CPU_Configure, IO_Configure);
 	const char* cores[] =
 	{ "auto",
 #if (C_DYNAMIC_X86) || (C_DYNREC)

@@ -424,12 +424,3 @@ void IO_Configure(const ModuleLifecycle lifecycle, Section* section)
 		break;
 	}
 }
-
-void IO_Destroy(Section* section) {
-	IO_Configure(ModuleLifecycle::Destroy, section);
-}
-
-void IO_Init(Section * section) {
-	IO_Configure(ModuleLifecycle::Create, section);
-	section->AddDestroyFunction(&IO_Destroy);
-}
