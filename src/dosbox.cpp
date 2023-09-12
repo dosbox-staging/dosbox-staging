@@ -68,8 +68,7 @@ void MEM_Init(Section *);
 void PAGING_Init(Section *);
 void CALLBACK_Init(Section*);
 void PROGRAMS_Init(Section*);
-//void CREDITS_Init(Section*);
-void VGA_Init(Section*);
+// void CREDITS_Init(Section*);
 
 void DOS_Init(Section*);
 
@@ -79,6 +78,7 @@ void IO_Configure(ModuleLifecycle, Section*);
 void FPU_Configure(ModuleLifecycle, Section*);
 #endif
 void DMA_Configure(ModuleLifecycle, Section*);
+void VGA_Configure(ModuleLifecycle, Section*);
 
 void PCI_Init(Section*);
 void VOODOO_Init(Section*);
@@ -655,7 +655,8 @@ void DOSBOX_Init()
 #if C_FPU
 	                              FPU_Configure,
 #endif
-	                              DMA_Configure);
+	                              DMA_Configure,
+	                              VGA_Configure);
 
 	const char* cores[] =
 	{ "auto",
@@ -703,7 +704,6 @@ void DOSBOX_Init()
 	pint->SetMinMax(1, 1000000);
 	pint->Set_help("Setting it lower than 100 will be a percentage (20 by default).");
 
-	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
 	secprop->AddInitFunction(&PCI_Init); // PCI bus
 

@@ -399,7 +399,7 @@ void VGA_Configure(const ModuleLifecycle lifecycle, Section* section)
 	case ModuleLifecycle::Reconfigure:
 	case ModuleLifecycle::Create:
 		vga.draw.resizing = false;
-		vga.mode          = M_ERROR;
+		vga.mode = M_ERROR;
 
 		SVGA_Setup_Driver();
 		VGA_SetupMemory(section);
@@ -462,13 +462,9 @@ void VGA_Configure(const ModuleLifecycle lifecycle, Section* section)
 		}
 		break;
 
-	case ModuleLifecycle::Destroy: break;
+	case ModuleLifecycle::Destroy:
+		break;
 	}
-}
-
-void VGA_Init(Section* section)
-{
-	VGA_Configure(ModuleLifecycle::Create, section);
 }
 
 void SVGA_Setup_Driver(void)
