@@ -665,9 +665,4 @@ void FPU_Configure(const ModuleLifecycle lifecycle, Section*)
 	}
 }
 
-void FPU_Init(Section* section)
-{
-	FPU_Configure(ModuleLifecycle::Create, section);
-}
-
 #endif

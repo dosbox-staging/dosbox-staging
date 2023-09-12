@@ -75,9 +75,8 @@ void DOS_Init(Section*);
 
 void CPU_Configure(ModuleLifecycle, Section*);
 void IO_Configure(ModuleLifecycle, Section*);
-
 #if C_FPU
-void FPU_Init(Section*);
+void FPU_Configure(ModuleLifecycle, Section*);
 #endif
 
 void DMA_Init(Section*);
@@ -651,7 +650,14 @@ void DOSBOX_Init()
 	VGA_AddCompositeSettings(*control);
 
 	// Configure CPU settings
-	secprop = control->AddSection("cpu", CPU_Configure, IO_Configure);
+	secprop = control->AddSection("cpu",
+	                              CPU_Configure,
+	                              IO_Configure,
+#if C_FPU
+	                              FPU_Configure
+#endif
+	);
+
 	const char* cores[] =
 	{ "auto",
 #if (C_DYNAMIC_X86) || (C_DYNREC)
@@ -698,9 +704,6 @@ void DOSBOX_Init()
 	pint->SetMinMax(1, 1000000);
 	pint->Set_help("Setting it lower than 100 will be a percentage (20 by default).");
 
-#if C_FPU
-	secprop->AddInitFunction(&FPU_Init);
-#endif
 	secprop->AddInitFunction(&DMA_Init);
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
