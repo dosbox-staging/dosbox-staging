@@ -743,11 +743,8 @@ void KEYBOARD_Configure(const ModuleLifecycle lifecycle, Section*)
 		scancode_set(CodeSet1);
 	} break;
 
-	case ModuleLifecycle::Destroy: keyboard_reset(); break;
+	case ModuleLifecycle::Destroy:
+		keyboard_reset();
+		break;
 	}
-}
-
-void KEYBOARD_Init(Section* section)
-{
-	KEYBOARD_Configure(ModuleLifecycle::Create, section);
 }

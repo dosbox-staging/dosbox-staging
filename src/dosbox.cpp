@@ -72,6 +72,7 @@ void PROGRAMS_Init(Section*);
 
 void DOS_Init(Section*);
 
+// [cpu] section modules:
 void CPU_Configure(ModuleLifecycle, Section*);
 void IO_Configure(ModuleLifecycle, Section*);
 #if C_FPU
@@ -79,13 +80,14 @@ void FPU_Configure(ModuleLifecycle, Section*);
 #endif
 void DMA_Configure(ModuleLifecycle, Section*);
 void VGA_Configure(ModuleLifecycle, Section*);
+void KEYBOARD_Configure(ModuleLifecycle, Section*); // TODO Keyboard should setup INT 16 too.
+
 
 void PCI_Init(Section*);
 void VOODOO_Init(Section*);
 void VIRTUALBOX_Init(Section*);
 void VMWARE_Init(Section*);
 
-void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
 void JOYSTICK_Init(Section*);
 void SBLASTER_Init(Section*);
 void PCSPEAKER_Init(Section*);
@@ -656,7 +658,8 @@ void DOSBOX_Init()
 	                              FPU_Configure,
 #endif
 	                              DMA_Configure,
-	                              VGA_Configure);
+	                              VGA_Configure,
+								  KEYBOARD_Configure);
 
 	const char* cores[] =
 	{ "auto",
@@ -704,7 +707,6 @@ void DOSBOX_Init()
 	pint->SetMinMax(1, 1000000);
 	pint->Set_help("Setting it lower than 100 will be a percentage (20 by default).");
 
-	secprop->AddInitFunction(&KEYBOARD_Init);
 	secprop->AddInitFunction(&PCI_Init); // PCI bus
 
 	secprop = control->AddSection_prop("voodoo", &VOODOO_Init, false);
