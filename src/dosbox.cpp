@@ -80,10 +80,9 @@ void FPU_Configure(ModuleLifecycle, Section*);
 #endif
 void DMA_Configure(ModuleLifecycle, Section*);
 void VGA_Configure(ModuleLifecycle, Section*);
-void KEYBOARD_Configure(ModuleLifecycle, Section*); // TODO Keyboard should setup INT 16 too.
+void KEYBOARD_Configure(ModuleLifecycle, Section*); // TODO Keyboard should setup INT 16.
+void PCI_Configure(ModuleLifecycle, Section*);
 
-
-void PCI_Init(Section*);
 void VOODOO_Init(Section*);
 void VIRTUALBOX_Init(Section*);
 void VMWARE_Init(Section*);
@@ -659,7 +658,8 @@ void DOSBOX_Init()
 #endif
 	                              DMA_Configure,
 	                              VGA_Configure,
-								  KEYBOARD_Configure);
+	                              KEYBOARD_Configure,
+	                              PCI_Configure);
 
 	const char* cores[] =
 	{ "auto",
@@ -706,8 +706,6 @@ void DOSBOX_Init()
 	pint = secprop->Add_int("cycledown", always, 20);
 	pint->SetMinMax(1, 1000000);
 	pint->Set_help("Setting it lower than 100 will be a percentage (20 by default).");
-
-	secprop->AddInitFunction(&PCI_Init); // PCI bus
 
 	secprop = control->AddSection_prop("voodoo", &VOODOO_Init, false);
 
