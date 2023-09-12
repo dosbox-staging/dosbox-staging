@@ -873,6 +873,17 @@ std::string Section_prop::Get_string(const std::string& _propname) const
 	return "";
 }
 
+Prop_bool* Section_prop::GetBoolProp(const std::string& propname) const
+{
+	for (const auto property : properties) {
+		if (property->propname == propname) {
+			return dynamic_cast<Prop_bool*>(property);
+		}
+	}
+	return nullptr;
+}
+
+
 Prop_string* Section_prop::GetStringProp(const std::string& propname) const
 {
 	for (const auto property : properties) {

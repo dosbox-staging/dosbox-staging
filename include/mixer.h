@@ -95,7 +95,7 @@ constexpr T Mixer_GetSilentDOSSample()
 }
 
 // A simple enum to describe the array index associated with a given audio line
-enum LineIndex : uint8_t {
+enum LineIndex {
 	Left  = 0,
 	Right = 1,
 	// DOS games didn't support surround sound, but if surround sound
@@ -151,6 +151,10 @@ enum class ResampleMethod {
 	// (everything below half the channel's sample rate is cut).
 	Resample
 };
+
+enum class CrossfeedPreset { None, Light, Normal, Strong };
+
+constexpr auto DefaultCrossfeedPreset = CrossfeedPreset::Normal;
 
 enum class ReverbPreset { None, Tiny, Small, Medium, Large, Huge };
 
@@ -257,8 +261,6 @@ private:
 	// prevent default construction, copying, and assignment
 	MixerChannel()                    = delete;
 	MixerChannel(const MixerChannel&) = delete;
-
-	MixerChannel& operator=(const MixerChannel&) = delete;
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	AudioFrame ConvertNextFrame(const Type* data, const work_index_t pos);
@@ -436,14 +438,15 @@ void MIXER_SetMasterVolume(const AudioFrame volume);
 void MIXER_Mute();
 void MIXER_Unmute();
 
-void MIXER_UpdateAllChannelVolumes();
-
 void MIXER_LockAudioDevice();
 void MIXER_UnlockAudioDevice();
 
 // Return true if the mixer was explicitly muted by the user (as opposed to
 // auto-muted when `mute_when_inactive` is enabled)
 bool MIXER_IsManuallyMuted();
+
+CrossfeedPreset MIXER_GetCrossfeedPreset();
+void MIXER_SetCrossfeedPreset(const CrossfeedPreset new_preset);
 
 ReverbPreset MIXER_GetReverbPreset();
 void MIXER_SetReverbPreset(const ReverbPreset new_preset);

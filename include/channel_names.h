@@ -68,6 +68,7 @@ static std::vector<std::string> AllChannelNames = {
         ChannelName::IbmMusicFeatureCard,
         ChannelName::InnovationSsi2001,
         ChannelName::Master,
+        ChannelName::Opl,
         ChannelName::PcSpeaker,
         ChannelName::Ps1AudioCardDac,
         ChannelName::Ps1AudioCardPsg,
