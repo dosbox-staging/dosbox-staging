@@ -277,9 +277,6 @@ conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
 
-# Default page size is 4K, but not on all platforms.
-pagesize = 4096
-
 if get_option('enable_debugger') != 'none'
     conf_data.set10('C_DEBUG', true)
 endif
@@ -384,24 +381,12 @@ if host_machine.endian() == 'big'
     conf_data.set10('WORDS_BIGENDIAN', true)
 endif
 
-# 64-bit Power ISA can run with either 4K or 64K page size.
-# (32-bit Power ISA and PowerPC are always 4K.)
-if host_machine.cpu_family() in ['ppc64', 'ppc64le']
-    pagesize_cmd = run_command('getconf', 'PAGESIZE', check: true)
-    if pagesize_cmd.returncode() != 0
-        error('''error executing getconf: unable to determine host architecture page size for ppc64 dynamic core''')
-    else
-        pagesize = pagesize_cmd.stdout().strip().to_int()
-        if pagesize < 4096
-            # unexpected; did getconf return an empty or bogus string?
-            error('''need at least 4096-byte pages, getconf PAGESIZE returned '''+pagesize_cmd.stdout())
-        else
-            if pagesize != 4096
-                conf_data.set('PAGESIZE', pagesize)
-            endif
-        endif
-    endif
-endif
+# Non-4K memory page size is supported only for ppc64 at the moment.
+# TODO re-enable ppc dynrec while working on W^X stuff
+#      disabled because SVN r4424 broke compilation of ppc backends
+#if host_machine.cpu_family() in ['ppc64', 'ppc64le']
+#  conf_data.set('PAGESIZE', 65536)
+#endif
 
 set_prio_code = '''
 #include <sys/resource.h>
@@ -869,10 +854,6 @@ if host_machine.system() in ['windows', 'cygwin']
     winmm_dep = cxx.find_library('winmm', required: true)
     summary('Windows Multimedia support', winmm_dep.found())
 endif
-
-# Display page size in use (and to alert the user this may be salient).
-summary('Host page size (bytes)', pagesize.to_string())
-
 
 # Setup include directories
 incdir = [

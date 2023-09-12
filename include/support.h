@@ -52,8 +52,7 @@
 #endif
 
 #ifdef PAGESIZE
-// Some platforms like ppc64 have page sizes of 64K, so uint16_t isn't enough.
-constexpr uint32_t host_pagesize = { PAGESIZE };
+constexpr uint16_t host_pagesize = { PAGESIZE };
 #else
 constexpr uint16_t host_pagesize = 4096;
 #endif
