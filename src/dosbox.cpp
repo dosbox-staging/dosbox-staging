@@ -471,7 +471,7 @@ void DOSBOX_Init()
 	                          "vesa_oldvbe",
 	                          nullptr};
 
-	secprop = control->AddSection("dosbox", &DOSBOX_Configure);
+	secprop = control->AddSection("dosbox", DOSBOX_Configure);
 	pstring = secprop->Add_string("language", always, "");
 	pstring->Set_help(
 	        "Select a language to use: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', or 'ru'\n"
