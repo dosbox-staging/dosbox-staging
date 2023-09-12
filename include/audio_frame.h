@@ -51,6 +51,11 @@ struct AudioFrame {
 		assert(i < 2);
 		return i == 0 ? left : right;
 	}
+
+	constexpr bool operator==(const AudioFrame& that) const
+	{
+		return (left == that.left && right == that.right);
+	}
 };
 
 #endif
