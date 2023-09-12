@@ -78,7 +78,7 @@ jobs:
             type=raw,${{ matrix.conf.vers }}-${{ steps.db_vers.outputs.DOSBOX_VERS }}
       
       - name: Build and push base Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./packages
           file: ./packages/Dockerfile.debian-base
@@ -135,7 +135,7 @@ jobs:
             type=raw,${{ matrix.conf.vers }}-${{ needs.build_base_image.outputs.db_vers }}-${{ matrix.conf.arch }}
       
       - name: Build and push base Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./packages
           file: ./packages/Dockerfile.debian
