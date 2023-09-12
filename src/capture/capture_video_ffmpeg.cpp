@@ -23,6 +23,7 @@
 #include "checks.h"
 #include "math_utils.h"
 #include "timer.h"
+#include "image/image_decoder.h"
 
 #if C_FFMPEG
 
@@ -46,11 +47,6 @@ constexpr int MuxerAudioStreamIndex = 1;
 
 // Always stereo audio
 constexpr size_t SamplesPerFrame = 2;
-
-constexpr int ScaledWidth = 1600;
-constexpr int ScaledHeight = 1200;
-
-constexpr AVPixelFormat OutputFormat = AV_PIX_FMT_YUV420P;
 
 FfmpegEncoder::FfmpegEncoder()
 {
@@ -421,19 +417,17 @@ bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_s
 		return false;
 	}
 
-	codec_context->width                   = ScaledWidth;
-	codec_context->height                  = ScaledHeight;
+	codec_context->width                   = width;
+	codec_context->height                  = height;
 	codec_context->time_base.num           = 1;
 	codec_context->time_base.den           = frames_per_second;
 	codec_context->framerate.num           = frames_per_second;
 	codec_context->framerate.den           = 1;
-	codec_context->pix_fmt                 = OutputFormat;
-	#if 0
+	codec_context->pix_fmt                 = AV_PIX_FMT_YUV444P;
 	codec_context->sample_aspect_ratio.num = static_cast<int>(
 	        pixel_aspect_ratio.Num());
 	codec_context->sample_aspect_ratio.den = static_cast<int>(
 	        pixel_aspect_ratio.Denom());
-	#endif
 
 	if (avcodec_open2(codec_context, codec, nullptr) < 0) {
 		LOG_ERR("FFMPEG: Failed to open video context");
@@ -479,144 +473,43 @@ static void send_packets_to_muxer(AVCodecContext* context, int stream_index,
 	}
 }
 
-static void scale_yuv420(const size_t horizontal_scale, const size_t vertical_scale, const RenderedImage& image, AVFrame* frame)
+static void scale_image(const RenderedImage& image, AVFrame* frame)
 {
-	// Needs an even number of rows and columns for chroma subsampling.
-	assert(image.params.width % 2 == 0);
-	assert(image.params.height % 2 == 0);
-
-	uint8_t* y_row = frame->data[0];
-	uint8_t* cr_row = frame->data[2];
-	uint8_t* cb_row = frame->data[1];
-	int y_pitch = frame->linesize[0];
-	int cr_pitch = frame->linesize[2];
-	int cb_pitch = frame->linesize[1];
-	uint8_t* src_row = image.image_data;
-
-	// Operate on a square block of 4 pixels at a time
-	// Cr and Cb values use 1 value as the average of the 4 pixels
-	// Y values are output every pixel
-	for (uint16_t y = 0; y < image.params.height; y += 2) {
-		uint8_t* src_row2 = src_row + image.pitch;
-		uint8_t* y_row2 = y_row + (y_pitch * vertical_scale);
-		for (uint16_t x = 0; x < image.params.width; x += 2) {
-			uint8_t out;
-			uint32_t src_pixel;
-			float red, green, blue, yf;
-			float crf = 0.0f;
-			float cbf = 0.0f;
-
-			// Top left
-			src_pixel = read_unaligned_uint32_at(src_row, x);
-			red = static_cast<float>((src_pixel >> 16) & 0xFF);
-			green = static_cast<float>((src_pixel >> 8) & 0xFF);
-			blue = static_cast<float>(src_pixel & 0xFF);
-
-			yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
-			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
-			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
-
-			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
-			memset(y_row + (x * horizontal_scale), out, horizontal_scale);
-
-
-
-			// Top Right
-			src_pixel = read_unaligned_uint32_at(src_row, x + 1);
-			red = static_cast<float>((src_pixel >> 16) & 0xFF);
-			green = static_cast<float>((src_pixel >> 8) & 0xFF);
-			blue = static_cast<float>(src_pixel & 0xFF);
-
-			yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
-			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
-			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
-
-			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
-			memset(y_row + ((x + 1) * horizontal_scale), out, horizontal_scale);
-
-
-
-			// Bottom Left
-			src_pixel = read_unaligned_uint32_at(src_row2, x);
-			red = static_cast<float>((src_pixel >> 16) & 0xFF);
-			green = static_cast<float>((src_pixel >> 8) & 0xFF);
-			blue = static_cast<float>(src_pixel & 0xFF);
-
-			yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
-			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
-			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
-
-			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
-			memset(y_row2 + (x * horizontal_scale), out, horizontal_scale);
-
-
-
-			// Bottom Right
-			src_pixel = read_unaligned_uint32_at(src_row2, x + 1);
-			red = static_cast<float>((src_pixel >> 16) & 0xFF);
-			green = static_cast<float>((src_pixel >> 8) & 0xFF);
-			blue = static_cast<float>(src_pixel & 0xFF);
-
-			yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
-			crf += (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
-			cbf += -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
-
-			out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
-			memset(y_row2 + ((x + 1) * horizontal_scale), out, horizontal_scale);
-
-
-			// Write out Cr and Cb average values
-			out = static_cast<uint8_t>(clamp(crf / 4.0f, 0.0f, 255.0f));
-			memset(cr_row + ((x / 2) * horizontal_scale), out, horizontal_scale);
-
-			out = static_cast<uint8_t>(clamp(cbf / 4.0f, 0.0f, 255.0f));
-			memset(cb_row + ((x / 2) * horizontal_scale), out, horizontal_scale);
-		}
-
-		for (size_t i = 1; i < vertical_scale; ++i) {
-			uint8_t* prev_row = y_row;
-			y_row += y_pitch;
-			memcpy(y_row, prev_row, ScaledWidth);
-		}
-		for (size_t i = 1; i < vertical_scale; ++i) {
-			uint8_t* prev_row = y_row2;
-			y_row2 += y_pitch;
-			memcpy(y_row2, prev_row, ScaledWidth);
-		}
-
-		for (size_t i = 1; i < vertical_scale; ++i) {
-			uint8_t* prev_row = cr_row;
-			cr_row += cr_pitch;
-			memcpy(cr_row, prev_row, ScaledWidth / 2);
-		}
-		for (size_t i = 1; i < vertical_scale; ++i) {
-			uint8_t* prev_row = cb_row;
-			cb_row += cb_pitch;
-			memcpy(cb_row, prev_row, ScaledWidth / 2);
-		}
-		cr_row += cr_pitch;
-		cb_row += cb_pitch;
-
-		y_row = y_row2 + y_pitch;
-		src_row += (image.pitch * 2);
+	size_t horizontal_scale = 1;
+	size_t vertical_scale = 1;
+	if (frame->format == AV_PIX_FMT_YUV420P) {
+		horizontal_scale = static_cast<size_t>(frame->width) / static_cast<size_t>(image.params.width);
+		vertical_scale = static_cast<size_t>(frame->height) / static_cast<size_t>(image.params.height);
+		horizontal_scale -= horizontal_scale % 2;
+		vertical_scale -= vertical_scale % 2;
 	}
-}
 
-static void scale_yuv444(const size_t horizontal_scale, const size_t vertical_scale, const RenderedImage& image, AVFrame* frame)
-{
+	size_t scaled_width = image.params.width * horizontal_scale;
+
+	size_t uv_horizontal_scale = horizontal_scale;
+	size_t uv_vertical_scale = vertical_scale;
+	size_t uv_width = scaled_width;
+	if (frame->format == AV_PIX_FMT_YUV420P) {
+		uv_horizontal_scale /= 2;
+		uv_vertical_scale /= 2;
+		uv_width /= 2;
+	}
+
 	uint8_t* y_row = frame->data[0];
 	uint8_t* cr_row = frame->data[2];
 	uint8_t* cb_row = frame->data[1];
 	int y_pitch = frame->linesize[0];
 	int cr_pitch = frame->linesize[2];
 	int cb_pitch = frame->linesize[1];
-	uint8_t* row = image.image_data;
+
+	ImageDecoder image_decoder;
+	image_decoder.Init(image, 0);
 	for (uint16_t y = 0; y < image.params.height; ++y) {
 		for (uint16_t x = 0; x < image.params.width; ++x) {
-			uint32_t src_pixel = read_unaligned_uint32_at(row, x);
-			float red = static_cast<float>((src_pixel >> 16) & 0xFF);
-			float green = static_cast<float>((src_pixel >> 8) & 0xFF);
-			float blue = static_cast<float>(src_pixel & 0xFF);
+			Rgb888 src_pixel = image_decoder.GetNextPixelAsRgb888();
+			float red = static_cast<float>(src_pixel.red);
+			float green = static_cast<float>(src_pixel.green);
+			float blue = static_cast<float>(src_pixel.blue);
 
 			float yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
 			float crf = (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
@@ -627,30 +520,30 @@ static void scale_yuv444(const size_t horizontal_scale, const size_t vertical_sc
 			uint8_t cb_out = static_cast<uint8_t>(clamp(cbf, 0.0f, 255.0f));
 
 			memset(y_row + (x * horizontal_scale), y_out, horizontal_scale);
-			memset(cr_row + (x * horizontal_scale), cr_out, horizontal_scale);
-			memset(cb_row + (x * horizontal_scale), cb_out, horizontal_scale);
+			memset(cr_row + (x * uv_horizontal_scale), cr_out, uv_horizontal_scale);
+			memset(cb_row + (x * uv_horizontal_scale), cb_out, uv_horizontal_scale);
 		}
 
 		for (size_t i = 1; i < vertical_scale; ++i) {
 			uint8_t* prev_row = y_row;
 			y_row += y_pitch;
-			memcpy(y_row, prev_row, ScaledWidth);
+			memcpy(y_row, prev_row, scaled_width);
 		}
-		for (size_t i = 1; i < vertical_scale; ++i) {
+		for (size_t i = 1; i < uv_vertical_scale; ++i) {
 			uint8_t* prev_row = cr_row;
 			cr_row += cr_pitch;
-			memcpy(cr_row, prev_row, ScaledWidth);
+			memcpy(cr_row, prev_row, uv_width);
 		}
-		for (size_t i = 1; i < vertical_scale; ++i) {
+		for (size_t i = 1; i < uv_vertical_scale; ++i) {
 			uint8_t* prev_row = cb_row;
 			cb_row += cb_pitch;
-			memcpy(cb_row, prev_row, ScaledWidth);
+			memcpy(cb_row, prev_row, uv_width);
 		}
-		cr_row += cr_pitch;
-		cb_row += cb_pitch;
 
 		y_row += y_pitch;
-		row += image.pitch;
+		cr_row += cr_pitch;
+		cb_row += cb_pitch;
+		image_decoder.AdvanceRow();
 	}
 }
 
@@ -676,10 +569,12 @@ void FfmpegEncoder::ScaleVideo()
 				image.free();
 				continue;
 			}
-			frame->width               = ScaledWidth;
-			frame->height              = ScaledHeight;
-			frame->format              = static_cast<int>(OutputFormat);
+
+			frame->width               = video_encoder.codec_context->width;
+			frame->height              = video_encoder.codec_context->height;
+			frame->format              = static_cast<int>(video_encoder.codec_context->pix_fmt);
 			frame->pts                 = optional->pts;
+			frame->sample_aspect_ratio = video_encoder.codec_context->sample_aspect_ratio;
 			// 0 means auto-align based on current CPU
 			constexpr int memory_alignment = 0;
 			if (av_frame_get_buffer(frame, memory_alignment) < 0) {
@@ -689,15 +584,7 @@ void FfmpegEncoder::ScaleVideo()
 				continue;
 			}
 
-			constexpr size_t HorizontalScale = 5;
-			constexpr size_t VerticalScale = 6;
-			int64_t start = GetTicksUs();
-			if (OutputFormat == AV_PIX_FMT_YUV444P) {
-				scale_yuv444(HorizontalScale, VerticalScale, image, frame);
-			} else {
-				scale_yuv420(HorizontalScale, VerticalScale, image, frame);
-			}
-			LOG_MSG("Scaling: %ld", GetTicksUsSince(start));
+			scale_image(image, frame);
 			image.free();
 
 			[[maybe_unused]] bool frame_queued = video_encoder.queue.Enqueue(std::move(frame));
