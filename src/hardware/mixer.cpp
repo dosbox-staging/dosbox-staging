@@ -908,11 +908,6 @@ uint16_t MixerChannel::GetSampleRate() const
 	return check_cast<uint16_t>(sample_rate);
 }
 
-void MixerChannel::ReactivateEnvelope()
-{
-	envelope.Reactivate();
-}
-
 void MixerChannel::SetPeakAmplitude(const int peak)
 {
 	peak_amplitude = peak;
