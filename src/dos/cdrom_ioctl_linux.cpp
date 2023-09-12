@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "cdrom.h"
+#include "channel_names.h"
 #include "support.h"
 
 #if defined(LINUX)

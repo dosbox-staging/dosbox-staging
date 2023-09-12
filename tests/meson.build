@@ -63,6 +63,20 @@ test(
     is_parallel: false,
 )
 
+program_mixer = executable(
+    'program_mixer',
+    ['program_mixer_tests.cpp'],
+    dependencies: [gmock_dep, dosbox_dep, libiir_dep],
+    include_directories: incdir,
+    cpp_args: cpp_args,
+)
+test(
+    'gtest program_mixer',
+    program_mixer,
+    workdir: project_source_root,
+    is_parallel: false,
+)
+
 # other unit tests
 
 unit_tests = [

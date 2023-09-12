@@ -401,6 +401,7 @@ public:
 
 	std::string Get_string(const std::string& _propname) const;
 
+	Prop_bool* GetBoolProp(const std::string& propname) const;
 	Prop_string* GetStringProp(const std::string& propname) const;
 
 	bool Get_bool(const std::string& _propname) const;
