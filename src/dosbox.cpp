@@ -78,8 +78,7 @@ void IO_Configure(ModuleLifecycle, Section*);
 #if C_FPU
 void FPU_Configure(ModuleLifecycle, Section*);
 #endif
-
-void DMA_Init(Section*);
+void DMA_Configure(ModuleLifecycle, Section*);
 
 void PCI_Init(Section*);
 void VOODOO_Init(Section*);
@@ -654,9 +653,9 @@ void DOSBOX_Init()
 	                              CPU_Configure,
 	                              IO_Configure,
 #if C_FPU
-	                              FPU_Configure
+	                              FPU_Configure,
 #endif
-	);
+	                              DMA_Configure);
 
 	const char* cores[] =
 	{ "auto",
@@ -704,7 +703,6 @@ void DOSBOX_Init()
 	pint->SetMinMax(1, 1000000);
 	pint->Set_help("Setting it lower than 100 will be a percentage (20 by default).");
 
-	secprop->AddInitFunction(&DMA_Init);
 	secprop->AddInitFunction(&VGA_Init);
 	secprop->AddInitFunction(&KEYBOARD_Init);
 	secprop->AddInitFunction(&PCI_Init); // PCI bus

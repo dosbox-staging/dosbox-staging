@@ -632,6 +632,7 @@ void DMA_ConfigurePrimaryController(const ModuleLifecycle lifecycle)
 		break;
 
 	// This module doesn't support reconfiguration at runtime
+	// The primary control always exists
 	case ModuleLifecycle::Reconfigure:
 		break;
 
@@ -691,20 +692,12 @@ void DMA_Configure(const ModuleLifecycle lifecycle, Section*)
 		break;
 
 	// This module doesn't support reconfiguration at runtime
-	case ModuleLifecycle::Reconfigure: break;
+	case ModuleLifecycle::Reconfigure:
+		break;
 
 	case ModuleLifecycle::Destroy:
 		DMA_ConfigurePrimaryController(lifecycle);
 		DMA_ConfigureSecondaryController(lifecycle);
 		break;
 	}
-}
-
-void DMA_Destroy(Section* section) {
-	DMA_Configure(ModuleLifecycle::Destroy, section);
-}
-
-void DMA_Init(Section * section) {
-	DMA_Configure(ModuleLifecycle::Create, section);
-	section->AddDestroyFunction(&DMA_Destroy);
 }
