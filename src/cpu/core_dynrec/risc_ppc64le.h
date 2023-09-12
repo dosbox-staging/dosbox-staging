@@ -155,12 +155,7 @@ static void gen_mov_regs(HostReg reg_dst, HostReg reg_src)
 // the upper 16bit of the destination register may be destroyed
 static void gen_mov_word_to_reg_imm(HostReg dest_reg, uint16_t imm)
 {
-	if (imm & 0x8000) { // watch out for sign extension
-		IMM_OP(14, dest_reg, 0, 0); // li dest,0
-		IMM_OP(24, dest_reg, dest_reg, imm); // ori dest,dest,imm
-	} else {
-		IMM_OP(14, dest_reg, 0, imm); // li dest,imm
-	}
+	IMM_OP(14, dest_reg, 0, imm); // li dest,imm
 }
 
 DRC_PTR_SIZE_IM block_ptr;
