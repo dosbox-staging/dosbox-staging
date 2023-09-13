@@ -939,18 +939,16 @@ static void cache_init(bool enable) {
 			if (cache_code_start_ptr == MAP_FAILED) {
 				E_Exit("DYNCACHE: Failed memory-mapping cache memory because: %s", strerror(errno));
 			}
-			// aligned by definition
-			cache_code = reinterpret_cast<uint8_t *>(cache_code_start_ptr);
 #else
 			cache_code_start_ptr=static_cast<uint8_t *>(malloc(cache_code_size));
 			if (!cache_code_start_ptr) {
 				E_Exit("DYNCACHE: Failed allocating cache memory because: %s", strerror(errno));
 			}
+#endif
 			// align the cache at a page boundary
 			cache_code = reinterpret_cast<uint8_t *>(
 			    (reinterpret_cast<uintptr_t>(cache_code_start_ptr) +
 			    host_pagesize - 1) & ~(host_pagesize - 1));
-#endif
 
 			cache_code_link_blocks=cache_code;
 			cache_code=cache_code+host_pagesize;
