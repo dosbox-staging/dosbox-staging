@@ -208,7 +208,7 @@ bool SETVER::ParseVersion(const std::string& version_str, FakeVersion& version)
 	const auto& major_str = match[1].str();
 	const auto& minor_str = match[3].str();
 
-	const auto major = to_int(major_str);
+	const auto major = parse_int(major_str);
 	if (!major) {
 		// It would be enough to assert, but PVS-Studio was unhappy
 		assert(false);
@@ -221,7 +221,7 @@ bool SETVER::ParseVersion(const std::string& version_str, FakeVersion& version)
 		return true;
 	}
 
-	const auto minor = to_int(minor_str);
+	const auto minor = parse_int(minor_str);
 	if (!minor) {
 		// It would be enough to assert, but PVS-Studio was unhappy
 		assert(false);

@@ -28,8 +28,9 @@
 bool is_hex_digits(const std::string_view s) noexcept
 {
 	for (const auto ch : s) {
-		if (!isxdigit(ch))
+		if (!isxdigit(ch)) {
 			return false;
+		}
 	}
 	return true;
 }
@@ -338,55 +339,55 @@ void clear_language_if_default(std::string &l)
 	}
 }
 
-std::optional<float> parse_value(const std::string_view s,
-                                 const float min_value, const float max_value)
+std::optional<float> parse_float(const std::string& s)
 {
-	// parse_value can check if a string holds a number (or not), so we expect
-	// exceptions and return an empty result to indicate conversion status.
+	// parse_float can check if a string holds a number (or not), so we
+	// expect exceptions and return an empty result to indicate conversion
+	// status.
 	try {
 		if (!s.empty()) {
-			return std::clamp(std::stof(s.data()), min_value, max_value);
+			size_t num_chars_processed = 0;
+			const auto number = std::stof(s, &num_chars_processed);
+			if (s.size() == num_chars_processed) {
+				return number;
+			}
 		}
 		// Note: stof can throw invalid_argument and out_of_range
-	} catch (const std::invalid_argument &) {
+	} catch (const std::invalid_argument&) {
 		// do nothing, we expect these
-	} catch (const std::out_of_range &) {
+	} catch (const std::out_of_range&) {
 		// do nothing, we expect these
 	}
-	return {}; // empty
+	return {};
 }
 
-std::optional<float> parse_percentage(const std::string_view s)
-{
-	constexpr auto min_percentage = 0.0f;
-	constexpr auto max_percentage = 100.0f;
-	return parse_value(s, min_percentage, max_percentage);
-}
-
-std::optional<float> parse_prefixed_value(const char prefix, const std::string &s,
-                                          const float min_value, const float max_value)
-{
-	if (s.size() <= 1 || !ciequals(s[0], prefix))
-		return {};
-
-	return parse_value(s.substr(1), min_value, max_value);
-}
-
-std::optional<float> parse_prefixed_percentage(const char prefix, const std::string &s)
-{
-	constexpr auto min_percentage = 0.0f;
-	constexpr auto max_percentage = 100.0f;
-	return parse_prefixed_value(prefix, s, min_percentage, max_percentage);
-}
-
-std::optional<int> to_int(const std::string& value, const int base)
+std::optional<int> parse_int(const std::string& s, const int base)
 {
 	try {
-		// Do not store number of characters processed
-		constexpr std::size_t* pos = nullptr;
-
-		return std::stoi(value, pos, base);
-	} catch (...) {
-		return {};
+		if (!s.empty()) {
+			size_t num_chars_processed = 0;
+			const auto number = std::stoi(s, &num_chars_processed, base);
+			if (s.size() == num_chars_processed) {
+				return number;
+			}
+		}
+		// Note: stof can throw invalid_argument and out_of_range
+	} catch (const std::invalid_argument&) {
+		// do nothing, we expect these
+	} catch (const std::out_of_range&) {
+		// do nothing, we expect these
 	}
+	return {};
+}
+
+std::optional<float> parse_percentage(const std::string& s)
+{
+	constexpr auto min_percentage = 0.0f;
+	constexpr auto max_percentage = 100.0f;
+	if (const auto p = parse_float(s); p) {
+		if (*p >= min_percentage && *p <= max_percentage) {
+			return p;
+		}
+	}
+	return {};
 }

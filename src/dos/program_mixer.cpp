@@ -54,7 +54,7 @@ static std::optional<AudioFrame> parse_volume(const std::string& s)
 		constexpr auto min_percent = 0.0f;
 		constexpr auto max_percent = 9999.0f;
 
-		if (const auto p = parse_value(s, min_percent, max_percent); p) {
+		if (const auto p = parse_float(s); p) {
 			return percentage_to_gain(*p);
 		}
 
@@ -63,10 +63,10 @@ static std::optional<AudioFrame> parse_volume(const std::string& s)
 		constexpr auto max_db         = 39.999f;
 		constexpr auto decibel_prefix = 'd';
 
-		if (const auto d = parse_prefixed_value(decibel_prefix, s, min_db, max_db);
+/*		if (const auto d = parse_prefixed_value(decibel_prefix, s, min_db, max_db);
 		    d) {
 			return decibel_to_gain(*d);
-		}
+		} */
 
 		return {};
 	};
@@ -191,7 +191,7 @@ void MIXER::Run()
 
 		if (global_command) {
 			// Global commands apply to all non-master channels
-			if (auto p = parse_prefixed_percentage(crossfeed_command, arg);
+/*			if (auto p = parse_prefixed_percentage(crossfeed_command, arg);
 			    p) {
 				for (auto& it : MIXER_GetChannels()) {
 					const auto strength = percentage_to_gain(*p);
@@ -210,7 +210,7 @@ void MIXER::Run()
 				const auto level = percentage_to_gain(*p);
 				set_chorus_level(level, set_of_channels());
 				continue;
-			}
+			} */
 
 		} else if (is_master) {
 			// Only setting the volume is allowed for the
@@ -221,7 +221,7 @@ void MIXER::Run()
 
 		} else if (channel) {
 			// Adjust settings of a regular non-master channel
-			if (auto p = parse_prefixed_percentage(crossfeed_command, arg);
+/*			if (auto p = parse_prefixed_percentage(crossfeed_command, arg);
 			    p) {
 				const auto strength = percentage_to_gain(*p);
 				channel->SetCrossfeedStrength(strength);
@@ -239,7 +239,7 @@ void MIXER::Run()
 				set_chorus_level(level, {channel});
 
 				continue;
-			}
+			} */
 
 			if (auto mode = parse_stereo_mode(arg); mode) {
 				channel->SetLineoutMap(*mode);

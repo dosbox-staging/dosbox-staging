@@ -475,7 +475,7 @@ void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 	}
 }
 
-static void configure_crossfeed(const std::string_view crossfeed_pref)
+static void configure_crossfeed(const std::string& crossfeed_pref)
 {
 	const auto crossfeed_pref_has_bool = parse_bool_setting(crossfeed_pref);
 

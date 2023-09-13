@@ -453,5 +453,5 @@ std::optional<std::vector<std::string>> CommandLine::FindRemoveOptionalArgument(
 
 std::optional<int> CommandLine::FindRemoveIntArgument(const std::string& name)
 {
-	return to_int(FindRemoveStringArgument(name));
+	return parse_int(FindRemoveStringArgument(name));
 }
