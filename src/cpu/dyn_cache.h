@@ -948,7 +948,7 @@ static void cache_init(bool enable) {
 			// align the cache at a page boundary
 			cache_code = reinterpret_cast<uint8_t *>(
 			    (reinterpret_cast<uintptr_t>(cache_code_start_ptr) +
-			    host_pagesize - 1) & ~(host_pagesize - 1));
+			    static_cast<size_t>(host_pagesize) - 1) & ~(static_cast<size_t>(host_pagesize) - 1));
 
 			cache_code_link_blocks=cache_code;
 			cache_code=cache_code+host_pagesize;
