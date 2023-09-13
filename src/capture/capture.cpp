@@ -203,7 +203,7 @@ static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 		auto stem = entry.path().stem().string();
 		lowcase(stem);
 		if (starts_with(stem, filename_start)) {
-			const auto index = to_int(strip_prefix(stem, filename_start));
+			const auto index = parse_int(strip_prefix(stem, filename_start));
 			if (index) {
 				highest_index = std::max(highest_index, *index);
 			}

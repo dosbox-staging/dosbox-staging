@@ -71,7 +71,7 @@ bool MORE::ParseCommandLine(MoreOutputFiles &output)
 
 	// Check if specified tabulation size
 	if (cmd->FindStringBegin("/t", tmp_str, true)) {
-		const auto value = to_int(tmp_str);
+		const auto value = parse_int(tmp_str);
 		if (!value || *value < 1 || *value > 9) {
 			std::string full_switch = std::string("/t") + tmp_str;
 			result_errorcode = DOSERR_FUNCTION_NUMBER_INVALID;
@@ -84,7 +84,7 @@ bool MORE::ParseCommandLine(MoreOutputFiles &output)
 
 	// Check if specified start line
 	if (cmd->FindStringBegin("+", tmp_str, true)) {
-		const auto value = to_int(tmp_str);
+		const auto value = parse_int(tmp_str);
 		if (!value || *value < 0) {
 			std::string full_switch = std::string("+") + tmp_str;
 			result_errorcode = DOSERR_FUNCTION_NUMBER_INVALID;
