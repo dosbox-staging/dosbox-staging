@@ -863,16 +863,14 @@ void MOUSEDOS_BeforeNewVideoMode()
 
 void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 {
+	constexpr uint8_t last_non_svga_mode = 0x13;
+
 	// Gather screen mode information
 
-	INT10_SetCurMode();
 	const uint8_t bios_screen_mode = mem_readb(BIOS_VIDEO_MODE);
-
-	constexpr uint8_t last_non_svga_mode = 0x13;
 
 	const bool is_svga_mode = IS_VGA_ARCH &&
 	                          (bios_screen_mode > last_non_svga_mode);
-
 	const bool is_svga_text = is_svga_mode && INT10_IsTextMode(*CurMode);
 
 	// Perform common actions - clear pending mouse events, etc.
