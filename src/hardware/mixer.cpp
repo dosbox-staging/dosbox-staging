@@ -162,6 +162,8 @@ struct mixer_t {
 
 	std::map<std::string, mixer_channel_t> channels = {};
 
+	std::map<std::string, MixerChannelSettings> channel_settings = {};
+
 	// Counters accessed by multiple threads
 	std::atomic<work_index_t> pos      = 0;
 	std::atomic<int> frames_done       = 0;
@@ -543,7 +545,15 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
 
 	auto it = mixer.channels.begin();
 	while (it != mixer.channels.end()) {
-		if (it->second.get() == channel_to_remove.get()) {
+		const auto [name, channel] = *it;
+
+		if (channel.get() == channel_to_remove.get()) {
+			// Save channel settings in a persistent map so we can
+			// restore them if the channel gets recreated later.
+			// This is necessary to persist channel settings when
+			// changing the `sbtype` , for example.
+			mixer.channel_settings[name] = channel->GetSettings();
+
 			it = mixer.channels.erase(it);
 			break;
 		}
@@ -560,17 +570,6 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint16_t freq,
 	auto chan = std::make_shared<MixerChannel>(handler, name, features);
 	chan->SetSampleRate(freq);
 	chan->SetAppVolume({1.0f, 1.0f});
-	chan->SetUserVolume({1.0f, 1.0f});
-
-	// We're only dealing with stereo channels internally, so we need to set
-	// the "stereo" line-out even for mono content.
-	chan->SetChannelMap(Stereo);
-
-	chan->Enable(false);
-
-	set_global_crossfeed(chan);
-	set_global_reverb(chan);
-	set_global_chorus(chan);
 
 	const auto chan_rate = chan->GetSampleRate();
 	if (chan_rate == mixer.sample_rate) {
@@ -580,6 +579,24 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint16_t freq,
 		        name,
 		        chan_rate,
 		        chan_rate > mixer.sample_rate ? "downsampling" : "upsampling");
+	}
+
+	// Try to restore saved channel settings first.
+	if (mixer.channel_settings.find(name) != mixer.channel_settings.end()) {
+		chan->SetSettings(mixer.channel_settings[name]);
+	} else {
+		// If no saved settings exist, set the defaults.
+		chan->Enable(false);
+
+		chan->SetUserVolume({1.0f, 1.0f});
+
+		// We're only dealing with stereo channels internally, so we
+		// need to set the "stereo" line-out even for mono content.
+		chan->SetChannelMap(Stereo);
+
+		set_global_crossfeed(chan);
+		set_global_reverb(chan);
+		set_global_chorus(chan);
 	}
 
 	MIXER_LockAudioDevice();
@@ -2439,22 +2456,18 @@ static void set_mixer_state(const MixerState requested)
 	// use handle_mix_no_sound() (to throw away frames instead of queuing).
 }
 
-using channel_state_t = std::pair<std::string, bool>;
-
-static std::vector<channel_state_t> save_channel_states()
+static void update_channel_settings()
 {
-	std::vector<channel_state_t> states = {};
 	for (const auto& [name, channel] : mixer.channels) {
-		states.emplace_back(name, channel->is_enabled);
+		mixer.channel_settings[name] = channel->GetSettings();
 	}
-	return states;
 }
 
-static void restore_channel_states(const std::vector<channel_state_t>& states)
+static void restore_channel_settings()
 {
-	for (const auto& [name, was_enabled] : states) {
+	for (const auto& [name, settings] : mixer.channel_settings) {
 		if (auto channel = MIXER_FindChannel(name.c_str()); channel) {
-			channel->Enable(was_enabled);
+			channel->SetSettings(settings);
 		}
 	}
 }
@@ -2578,7 +2591,7 @@ static void init_master_highpass_filter()
 
 void MIXER_Init(Section* sec)
 {
-	const auto channel_states = save_channel_states();
+	update_channel_settings();
 
 	MIXER_CloseAudioDevice();
 
@@ -2633,7 +2646,7 @@ void MIXER_Init(Section* sec)
 	MIXER_SetReverbPreset(reverb_pref_to_preset(section->Get_string("reverb")));
 	MIXER_SetChorusPreset(chorus_pref_to_preset(section->Get_string("chorus")));
 
-	restore_channel_states(channel_states);
+	restore_channel_settings();
 }
 
 void MIXER_Mute()
