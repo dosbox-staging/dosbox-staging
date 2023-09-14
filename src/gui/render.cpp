@@ -338,7 +338,7 @@ static Section_prop* get_render_section()
 }
 
 #if C_OPENGL
-static void render_reinit()
+void RENDER_Reinit()
 {
 	RENDER_Init(get_render_section());
 }
@@ -615,7 +615,7 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
 
 	if (changed_shader) {
 		if (reinit_render) {
-			render_reinit();
+			RENDER_Reinit();
 
 			// We can't set the new shader name here yet because
 			// then the "shader changed" reinit path wouldn't be
@@ -672,7 +672,7 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 	}
 
 	render.force_reload_shader = true;
-	render_reinit();
+	RENDER_Reinit();
 
 	// The shader settings might have been changed (e.g. force_single_scan,
 	// force_no_pixel_doubling), so force re-rendering the image using the
