@@ -591,6 +591,10 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
                                   [[maybe_unused]] const bool reinit_render)
 {
 #if C_OPENGL
+	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
+		return false;
+	}
+
 	// Currently, the init sequence is slightly different on Windows, macOS,
 	// and Linux. The first call to this function on Windows receives an
 	// uninitialised VideoMode param with width and height set to 0 which
@@ -653,20 +657,6 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 }
 
 #if C_OPENGL
-
-static bool is_using_opengl_output_mode()
-{
-	assert(control);
-
-	const auto sdl_sec = static_cast<const Section_prop*>(
-	        control->GetSection("sdl"));
-	assert(sdl_sec);
-
-	const bool using_opengl = starts_with(sdl_sec->GetPropValue("output"),
-	                                      "opengl");
-
-	return using_opengl;
-}
 
 std::deque<std::string> RENDER_GenerateShaderInventoryMessage()
 {
@@ -936,7 +926,7 @@ void RENDER_Init(Section* sec)
 	auto& shader_manager = get_shader_manager();
 
 	auto shader_changed = false;
-	if (is_using_opengl_output_mode()) {
+	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
 		const auto shader_name = shader_manager.MapShaderName(
 		        section->Get_string("glshader"));
 
