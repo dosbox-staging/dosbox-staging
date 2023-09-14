@@ -41,8 +41,6 @@
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
 
-void RENDER_Init(Section*);
-
 #if C_OPENGL
 static ShaderManager& get_shader_manager()
 {
