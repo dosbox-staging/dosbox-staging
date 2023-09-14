@@ -1263,7 +1263,7 @@ void MixerChannel::SetCrossfeedStrength(const float strength)
 #endif
 }
 
-float MixerChannel::GetCrossfeedStrength()
+float MixerChannel::GetCrossfeedStrength() const
 {
 	return crossfeed.strength;
 }
@@ -1304,7 +1304,7 @@ void MixerChannel::SetReverbLevel(const float level)
 #endif
 }
 
-float MixerChannel::GetReverbLevel()
+float MixerChannel::GetReverbLevel() const
 {
 	return reverb.level;
 }
@@ -1345,7 +1345,7 @@ void MixerChannel::SetChorusLevel(const float level)
 #endif
 }
 
-float MixerChannel::GetChorusLevel()
+float MixerChannel::GetChorusLevel() const
 {
 	return chorus.level;
 }
@@ -1966,6 +1966,30 @@ std::string MixerChannel::DescribeLineout() const
 	// data), so we can assert.
 	assertm(false, "Unknown lineout mode");
 	return "unknown";
+}
+
+MixerChannelSettings MixerChannel::GetSettings() const
+{
+	MixerChannelSettings s = {};
+
+	s.is_enabled         = is_enabled;
+	s.user_volume        = GetUserVolume();
+	s.lineout_map        = GetLineoutMap();
+	s.crossfeed_strength = GetCrossfeedStrength();
+	s.reverb_level       = GetReverbLevel();
+	s.chorus_level       = GetChorusLevel();
+
+	return s;
+}
+
+void MixerChannel::SetSettings(const MixerChannelSettings& s)
+{
+	is_enabled = s.is_enabled;
+	SetUserVolume(s.user_volume);
+	SetLineoutMap(s.lineout_map);
+	SetCrossfeedStrength(s.crossfeed_strength);
+	SetReverbLevel(s.reverb_level);
+	SetChorusLevel(s.chorus_level);
 }
 
 MixerChannel::~MixerChannel()

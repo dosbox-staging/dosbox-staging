@@ -123,6 +123,15 @@ using channel_features_t = std::set<ChannelFeature>;
 
 enum class FilterState { Off, On, ForcedOn };
 
+struct MixerChannelSettings {
+	bool is_enabled          = {};
+	AudioFrame user_volume   = {};
+	StereoLine lineout_map   = {};
+	float crossfeed_strength = {};
+	float reverb_level       = {};
+	float chorus_level       = {};
+};
+
 enum class ResampleMethod {
 	// Use simple linear interpolation to resample from the channel sample
 	// rate to the mixer rate. This is the legacy behaviour, and it acts as a
@@ -183,6 +192,9 @@ public:
 	void SetPeakAmplitude(const int peak);
 	void Mix(const uint16_t frames_requested);
 
+	MixerChannelSettings GetSettings() const;
+	void SetSettings(const MixerChannelSettings& s);
+
 	// Fill up until needed
 	void AddSilence();
 
@@ -196,13 +208,13 @@ public:
 	void SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_freq);
 
 	void SetCrossfeedStrength(const float strength);
-	float GetCrossfeedStrength();
+	float GetCrossfeedStrength() const;
 
 	void SetReverbLevel(const float level);
-	float GetReverbLevel();
+	float GetReverbLevel() const;
 
 	void SetChorusLevel(const float level);
-	float GetChorusLevel();
+	float GetChorusLevel() const;
 
 	template <class Type, bool stereo, bool signeddata, bool nativeorder>
 	void AddSamples(const uint16_t len, const Type* data);
