@@ -361,4 +361,6 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 
 SDL_Rect GFX_GetCanvasSize();
 
+RenderingBackend GFX_GetRenderingBackend();
+
 #endif
