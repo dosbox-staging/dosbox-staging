@@ -3380,6 +3380,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 	SDL_SetWindowOpacity(sdl.window, alpha);
+
+	RENDER_Reinit();
 }
 
 // extern void UI_Run(bool);
