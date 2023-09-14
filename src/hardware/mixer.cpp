@@ -507,20 +507,6 @@ static void configure_compressor(const bool compressor_enabled)
 	LOG_MSG("MIXER: Master compressor enabled");
 }
 
-// Remove a channel by name from the mixer's map of channels.
-void MIXER_DeregisterChannel(const std::string& name_to_remove)
-{
-	MIXER_LockAudioDevice();
-
-	auto it = mixer.channels.find(name_to_remove);
-	if (it != mixer.channels.end()) {
-		mixer.channels.erase(it);
-	}
-
-	MIXER_UnlockAudioDevice();
-}
-
-// Remove a channel using the shared pointer variable.
 void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
 {
 	if (!channel_to_remove) {

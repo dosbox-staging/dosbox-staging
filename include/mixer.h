@@ -406,7 +406,6 @@ mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint16_t freq,
 mixer_channel_t MIXER_FindChannel(const char* name);
 std::map<std::string, mixer_channel_t>& MIXER_GetChannels();
 
-void MIXER_DeregisterChannel(const std::string& name);
 void MIXER_DeregisterChannel(mixer_channel_t& channel);
 
 // Mixer configuration and initialization
