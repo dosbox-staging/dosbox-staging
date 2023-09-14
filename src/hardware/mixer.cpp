@@ -206,6 +206,11 @@ void MixerChannel::SetLineoutMap(const StereoLine map)
 	output_map = map;
 }
 
+StereoLine MixerChannel::GetLineoutMap() const
+{
+	return output_map;
+}
+
 // TODO Once the mixer code is thorougly refactored, revisit whether this is
 // still necessary (i.e., we might be able to be more precise with our
 // 'frames_needed' calculation so we never under or overshoot).
