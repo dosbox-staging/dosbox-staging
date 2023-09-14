@@ -660,10 +660,11 @@ void GFX_ForceFullscreenExit()
 // crashes on Windows and Linux, and prevents initial window from being visibly
 // destroyed (for window managers that show animations while creating window,
 // e.g. Gnome 3).
-static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
+static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_backend)
 {
-	if (type != SCREEN_TEXTURE)
+	if (rendering_backend != RenderingBackend::Texture) {
 		return 0;
+	}
 
 	if (starts_with(sdl.render_driver, "opengl")) {
 		return SDL_WINDOW_OPENGL;
@@ -688,7 +689,7 @@ static uint32_t opengl_driver_crash_workaround(SCREEN_TYPES type)
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
-static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
+static SDL_Rect get_canvas_size(const RenderingBackend rendering_backend);
 
 // Logs the source and target resolution including describing scaling method
 // and pixel aspect ratio. Note that this function deliberately doesn't use
@@ -696,7 +697,7 @@ static SDL_Rect get_canvas_size(const SCREEN_TYPES screen_type);
 static void log_display_properties(const int width, const int height,
                                    const VideoMode& video_mode,
                                    const std::optional<SDL_Rect>& viewport_size_override,
-                                   const SCREEN_TYPES screen_type)
+                                   const RenderingBackend rendering_backend)
 {
 	// Get the viewport dimensions, with consideration for possible override
 	// values
@@ -706,7 +707,7 @@ static void log_display_properties(const int width, const int height,
 			                              viewport_size_override->h);
 			return {vp.w, vp.h};
 		}
-		const auto canvas   = get_canvas_size(screen_type);
+		const auto canvas   = get_canvas_size(rendering_backend);
 		const auto viewport = calc_viewport(canvas.w, canvas.h);
 		return {viewport.w, viewport.h};
 	};
@@ -917,7 +918,7 @@ static void set_vsync(const VsyncState state)
 		return;
 	}
 #if C_OPENGL
-	if (sdl.desktop.type == SCREEN_OPENGL) {
+	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		assert(sdl.opengl.context);
 		const auto interval = static_cast<int>(state);
 		// -1=adaptive, 0=off, 1=on
@@ -940,7 +941,7 @@ static void set_vsync(const VsyncState state)
 		return;
 	}
 #endif
-	assert(sdl.desktop.type == SCREEN_TEXTURE);
+	assert(sdl.rendering_backend == RenderingBackend::Texture);
 	// https://wiki.libsdl.org/SDL_HINT_RENDER_VSYNC - can only be
 	// set to "1", "0", adapative is currently not supported, so we
 	// also treat it as "1"
@@ -1204,14 +1205,14 @@ static void apply_new_dpi_scale(const double dpi_scale)
 }
 
 static void check_and_handle_dpi_change(SDL_Window* sdl_window,
-                                        const SCREEN_TYPES screen_type,
+                                        const RenderingBackend rendering_backend,
                                         int width_in_logical_units = 0)
 {
 	if (width_in_logical_units <= 0) {
 		SDL_GetWindowSize(sdl_window, &width_in_logical_units, nullptr);
 	}
 
-	const auto canvas = get_canvas_size(screen_type);
+	const auto canvas = get_canvas_size(rendering_backend);
 	const auto width_in_physical_pixels = static_cast<double>(canvas.w);
 
 	assert(width_in_logical_units > 0);
@@ -1230,8 +1231,9 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	apply_new_dpi_scale(new_dpi_scale);
 }
 
-static SDL_Window* SetWindowMode(const SCREEN_TYPES screen_type, const int width,
-                                 const int height, const bool fullscreen)
+static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
+                                 const int width, const int height,
+                                 const bool fullscreen)
 {
 	if (sdl.window && sdl.resizing_window) {
 		return sdl.window;
@@ -1239,14 +1241,15 @@ static SDL_Window* SetWindowMode(const SCREEN_TYPES screen_type, const int width
 
 	CleanupSDLResources();
 
-	if (!sdl.window || (sdl.desktop.type != screen_type)) {
+	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
 		remove_window();
 
-		uint32_t flags = opengl_driver_crash_workaround(screen_type);
+		uint32_t flags = opengl_driver_crash_workaround(rendering_backend);
 		flags |= SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
 #if C_OPENGL
-		if (screen_type == SCREEN_OPENGL)
+		if (rendering_backend == RenderingBackend::OpenGl) {
 			flags |= SDL_WINDOW_OPENGL;
+		}
 #endif
 		if (!sdl.desktop.window.show_decorations) {
 			flags |= SDL_WINDOW_BORDERLESS;
@@ -1268,7 +1271,7 @@ static SDL_Window* SetWindowMode(const SCREEN_TYPES screen_type, const int width
 		// before initial window events are received.
 		SDL_PumpEvents();
 
-		if (screen_type == SCREEN_TEXTURE) {
+		if (rendering_backend == RenderingBackend::Texture) {
 			if (sdl.renderer) {
 				SDL_DestroyRenderer(sdl.renderer);
 				sdl.renderer = nullptr;
@@ -1283,7 +1286,7 @@ static SDL_Window* SetWindowMode(const SCREEN_TYPES screen_type, const int width
 			}
 		}
 #if C_OPENGL
-		if (screen_type == SCREEN_OPENGL) {
+		if (rendering_backend == RenderingBackend::OpenGl) {
 			if (sdl.opengl.context) {
 				SDL_GL_DeleteContext(sdl.opengl.context);
 				sdl.opengl.context = nullptr;
@@ -1303,7 +1306,7 @@ static SDL_Window* SetWindowMode(const SCREEN_TYPES screen_type, const int width
 			}
 		}
 #endif
-		check_and_handle_dpi_change(sdl.window, screen_type);
+		check_and_handle_dpi_change(sdl.window, rendering_backend);
 
 		GFX_RefreshTitle();
 
@@ -1352,7 +1355,7 @@ finish:
 	// latency (and not the rendering pipeline).
 	render_pacer->Reset();
 
-	sdl.desktop.type = screen_type;
+	sdl.rendering_backend = rendering_backend;
 	return sdl.window;
 }
 
@@ -1365,20 +1368,22 @@ SDL_Window* GFX_GetWindow()
 // Returns the actual output size in pixels, when possible.
 // Needed for DPI-scaled windows, when logical window and actual output sizes
 // might not match.
-static SDL_Rect get_canvas_size([[maybe_unused]] const SCREEN_TYPES screen_type)
+static SDL_Rect get_canvas_size([[maybe_unused]] const RenderingBackend rendering_backend)
 {
 	SDL_Rect canvas = {};
 #if SDL_VERSION_ATLEAST(2, 26, 0)
 	SDL_GetWindowSizeInPixels(sdl.window, &canvas.w, &canvas.h);
 #else
-	switch (screen_type) {
-	case SCREEN_TEXTURE:
-		if (SDL_GetRendererOutputSize(sdl.renderer, &canvas.w, &canvas.h) != 0)
+	switch (rendering_backend) {
+	case RenderingBackend::Texture:
+		if (SDL_GetRendererOutputSize(sdl.renderer, &canvas.w, &canvas.h) !=
+		    0) {
 			LOG_ERR("SDL: Failed to retrieve output size: %s",
 			        SDL_GetError());
+		}
 		break;
 #if C_OPENGL
-	case SCREEN_OPENGL:
+	case RenderingBackend::OpenGl:
 		SDL_GL_GetDrawableSize(sdl.window, &canvas.w, &canvas.h);
 		break;
 #endif
@@ -1391,7 +1396,7 @@ static SDL_Rect get_canvas_size([[maybe_unused]] const SCREEN_TYPES screen_type)
 
 SDL_Rect GFX_GetCanvasSize()
 {
-	return get_canvas_size(sdl.desktop.type);
+	return get_canvas_size(sdl.rendering_backend);
 }
 
 static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
@@ -1422,7 +1427,7 @@ static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
        }
 }
 
-static SDL_Window* SetupWindowScaled(SCREEN_TYPES screen_type)
+static SDL_Window* SetupWindowScaled(const RenderingBackend rendering_backend)
 {
 	int window_width;
 	int window_height;
@@ -1442,7 +1447,7 @@ static SDL_Window* SetupWindowScaled(SCREEN_TYPES screen_type)
 		window_height = iround(sdl.draw.height * draw_scale_y);
 	}
 
-	sdl.window = SetWindowMode(screen_type,
+	sdl.window = SetWindowMode(rendering_backend,
 	                           window_width,
 	                           window_height,
 	                           sdl.desktop.fullscreen);
@@ -1637,15 +1642,15 @@ uint8_t GFX_SetSize(const int width, const int height,
 	// because how the OS's compositor (if one exists) handles (or doesn't
 	// handle) this new type may be different, and thus warrants new
 	// measurements.
-	if (sdl.desktop.want_type != sdl.desktop.type) {
+	if (sdl.want_rendering_backend  != sdl.rendering_backend) {
 		initialize_vsync_settings();
 	}
 
-	switch (sdl.desktop.want_type) {
-	case SCREEN_TEXTURE: {
+	switch (sdl.want_rendering_backend ) {
+	case RenderingBackend::Texture: {
 	fallback_texture: // FIXME: Must be replaced with a proper fallback system.
 
-		if (!SetupWindowScaled(SCREEN_TEXTURE)) {
+		if (!SetupWindowScaled(RenderingBackend::Texture)) {
 			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
 			E_Exit("Creating window failed");
 		}
@@ -1723,7 +1728,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 			                            sdl.desktop.window.height});
 			sdl.desktop.window.adjusted_initial_size = true;
 		}
-		const auto canvas = get_canvas_size(sdl.desktop.want_type);
+		const auto canvas = get_canvas_size(sdl.want_rendering_backend);
 		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
 		//         (canvas.w - sdl.clip.w) / 2,
 		//         (canvas.h - sdl.clip.h) / 2,
@@ -1736,10 +1741,10 @@ uint8_t GFX_SetSize(const int width, const int height,
 		sdl.frame.update = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
 
-		break; // SCREEN_TEXTURE
+		break; // RenderingBackend::Texture
 	}
 #if C_OPENGL
-	case SCREEN_OPENGL: {
+	case RenderingBackend::OpenGl: {
 		if (sdl.opengl.pixel_buffer_object) {
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, 0);
 			if (sdl.opengl.buffer) glDeleteBuffersARB(1, &sdl.opengl.buffer);
@@ -1802,7 +1807,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 		                         FALLBACK_WINDOW_DIMENSIONS.x,
 		                         FALLBACK_WINDOW_DIMENSIONS.y);
 
-		SetupWindowScaled(SCREEN_OPENGL);
+		SetupWindowScaled(RenderingBackend::OpenGl);
 
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
@@ -1920,7 +1925,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 			sdl.desktop.window.adjusted_initial_size = true;
 		}
 
-		const auto canvas = get_canvas_size(sdl.desktop.want_type);
+		const auto canvas = get_canvas_size(sdl.want_rendering_backend);
 		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
 		//         (canvas.w - sdl.clip.w) / 2,
 		//         (canvas.h - sdl.clip.h) / 2,
@@ -2063,7 +2068,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 		}
 		// Both update mechanisms use the same presentation call
 		sdl.frame.present = present_frame_gl;
-		break; // SCREEN_OPENGL
+		break; // RenderingBackend::OpenGl
 	}
 #endif // C_OPENGL
 	}
@@ -2076,7 +2081,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 		                       sdl.draw.height,
 		                       sdl.video_mode,
 		                       {},
-		                       sdl.desktop.type);
+		                       sdl.rendering_backend);
 	}
 
 	if (retFlags) {
@@ -2161,7 +2166,7 @@ void GFX_CenterMouse()
 	int height = 0;
 
 #if defined(WIN32) && !SDL_VERSION_ATLEAST(2, 28, 1)
-	const auto window_canvas_size = get_canvas_size(sdl.desktop.type);
+	const auto window_canvas_size = get_canvas_size(sdl.rendering_backend);
 
 	width  = window_canvas_size.w;
 	height = window_canvas_size.h;
@@ -2251,7 +2256,7 @@ void GFX_SwitchFullScreen()
 	// Record the window's current canvas size if we're departing window-mode
 	auto &window_canvas_size = sdl.desktop.window.canvas_size;
 	if (!sdl.desktop.fullscreen)
-		window_canvas_size = get_canvas_size(sdl.desktop.type);
+		window_canvas_size = get_canvas_size(sdl.rendering_backend);
 
 #if defined(WIN32)
 	// We are about to switch to the opposite of our current mode
@@ -2268,14 +2273,14 @@ void GFX_SwitchFullScreen()
 	// After switching modes, get the current canvas size, which might be
 	// the windowed size or full screen size.
 	auto canvas_size = sdl.desktop.fullscreen
-	                         ? get_canvas_size(sdl.desktop.type)
+	                         ? get_canvas_size(sdl.rendering_backend)
 	                         : window_canvas_size;
 
 	log_display_properties(sdl.draw.width,
 	                       sdl.draw.height,
 	                       sdl.video_mode,
 	                       canvas_size,
-	                       sdl.desktop.type);
+	                       sdl.rendering_backend);
 
 	sdl.desktop.switching_fullscreen = false;
 }
@@ -2302,15 +2307,15 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	if (!sdl.active || sdl.updating)
 		return false;
 
-	switch (sdl.desktop.type) {
-	case SCREEN_TEXTURE:
+	switch (sdl.rendering_backend) {
+	case RenderingBackend::Texture:
 		assert(sdl.texture.input_surface);
 		pixels = static_cast<uint8_t *>(sdl.texture.input_surface->pixels);
 		pitch = sdl.texture.input_surface->pitch;
 		sdl.updating = true;
 		return true;
 #if C_OPENGL
-	case SCREEN_OPENGL:
+	case RenderingBackend::OpenGl:
 		if (sdl.opengl.pixel_buffer_object) {
 			glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, sdl.opengl.buffer);
 			pixels = static_cast<uint8_t *>(glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_EXT, GL_WRITE_ONLY));
@@ -2402,7 +2407,7 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 #if C_OPENGL
 	// Get the OpenGL-renderer surface
 	// -------------------------------
-	if (sdl.desktop.type == SCREEN_OPENGL) {
+	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		glReadBuffer(GL_BACK);
 
 		// Alignment is 4 by default which works fine when using the
@@ -2563,12 +2568,12 @@ static bool present_frame_gl()
 
 uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 {
-	switch (sdl.desktop.type) {
-	case SCREEN_TEXTURE:
+	switch (sdl.rendering_backend) {
+	case RenderingBackend::Texture:
 		assert(sdl.texture.pixelFormat);
 		return SDL_MapRGB(sdl.texture.pixelFormat, red, green, blue);
 #if C_OPENGL
-	case SCREEN_OPENGL:
+	case RenderingBackend::OpenGl:
 		return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
 #endif
 	}
@@ -2717,13 +2722,13 @@ static SDL_Window *SetDefaultWindowMode()
 
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
-		return SetWindowMode(sdl.desktop.want_type,
+		return SetWindowMode(sdl.want_rendering_backend,
 		                     sdl.desktop.full.width,
 		                     sdl.desktop.full.height,
 		                     sdl.desktop.fullscreen);
 	}
 	sdl.desktop.lazy_init_window_size = false;
-	return SetWindowMode(sdl.desktop.want_type,
+	return SetWindowMode(sdl.want_rendering_backend,
 	                     sdl.desktop.window.width,
 	                     sdl.desktop.window.height,
 	                     sdl.desktop.fullscreen);
@@ -3183,12 +3188,12 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	// it's the job of everything after this to re-engage it.
 
 	if (output == "texture") {
-		sdl.desktop.want_type  = SCREEN_TEXTURE;
+		sdl.want_rendering_backend = RenderingBackend::Texture;
 		sdl.interpolation_mode = InterpolationMode::Bilinear;
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
 
 	} else if (output == "texturenb") {
-		sdl.desktop.want_type  = SCREEN_TEXTURE;
+		sdl.want_rendering_backend = RenderingBackend::Texture;
 		sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
 		// Currently the default, but... oh well
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
@@ -3196,12 +3201,12 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 #if C_OPENGL
 	} else if (starts_with(output, "opengl")) {
 		if (output == "opengl") {
-			sdl.desktop.want_type  = SCREEN_OPENGL;
+			sdl.want_rendering_backend = RenderingBackend::OpenGl;
 			sdl.interpolation_mode = InterpolationMode::Bilinear;
 			sdl.opengl.bilinear    = true;
 
 		} else if (output == "openglnb") {
-			sdl.desktop.want_type = SCREEN_OPENGL;
+			sdl.want_rendering_backend = RenderingBackend::OpenGl;
 			sdl.interpolation_mode = InterpolationMode::NearestNeighbour;
 			sdl.opengl.bilinear = false;
 		}
@@ -3210,7 +3215,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	} else {
 		LOG_WARNING("SDL: Unsupported output device %s, switching back to texture",
 		            output.c_str());
-		sdl.desktop.want_type = SCREEN_TEXTURE;
+		sdl.want_rendering_backend = RenderingBackend::Texture;
 	}
 
 	const std::string screensaver = section->Get_string("screensaver");
@@ -3241,18 +3246,18 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	                             wants_aspect_ratio_correction);
 
 #if C_OPENGL
-	if (sdl.desktop.want_type == SCREEN_OPENGL) { /* OPENGL is requested */
+	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) { /* OPENGL is requested */
 		if (!SetDefaultWindowMode()) {
 			LOG_WARNING("Could not create OpenGL window, switching back to texture");
-			sdl.desktop.want_type = SCREEN_TEXTURE;
+			sdl.want_rendering_backend = RenderingBackend::Texture;
 		} else {
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 			if (sdl.opengl.context == nullptr) {
 				LOG_WARNING("Could not create OpenGL context, switching back to texture");
-				sdl.desktop.want_type = SCREEN_TEXTURE;
+				sdl.want_rendering_backend = RenderingBackend::Texture;
 			}
 		}
-		if (sdl.desktop.want_type == SCREEN_OPENGL) {
+		if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
 			sdl.opengl.program_object = 0;
 			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress(
 			        "glAttachShader");
@@ -3624,13 +3629,13 @@ static void HandleVideoResize(int width, int height)
 		sdl.desktop.full.height = height;
 	}
 
-	const auto canvas = get_canvas_size(sdl.desktop.type);
+	const auto canvas = get_canvas_size(sdl.rendering_backend);
 	sdl.clip          = calc_viewport(canvas.w, canvas.h);
-	if (sdl.desktop.type == SCREEN_TEXTURE) {
+	if (sdl.rendering_backend == RenderingBackend::Texture) {
 		SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
 	}
 #if C_OPENGL
-	if (sdl.desktop.type == SCREEN_OPENGL) {
+	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
 		glUniform2f(sdl.opengl.ruby.output_size,
 		            (GLfloat)sdl.clip.w,
@@ -3642,7 +3647,7 @@ static void HandleVideoResize(int width, int height)
 		// If the window was resized, it might have been
 		// triggered by the OS setting DPI scale, so recalculate
 		// that based on the incoming logical width.
-		check_and_handle_dpi_change(sdl.window, sdl.desktop.type, width);
+		check_and_handle_dpi_change(sdl.window, sdl.rendering_backend, width);
 	}
 
 	// Ensure mouse emulation knows the current parameters
@@ -3693,7 +3698,7 @@ static void FinalizeWindowState()
 
 static void maybe_auto_switch_shader()
 {
-	const auto canvas = get_canvas_size(sdl.desktop.type);
+	const auto canvas = get_canvas_size(sdl.rendering_backend);
 
 	constexpr auto reinit_render = true;
 	RENDER_MaybeAutoSwitchShader(canvas.w, canvas.h, sdl.video_mode, reinit_render);
@@ -3757,7 +3762,7 @@ bool GFX_Events()
 #if C_OPENGL && defined(MACOSX)
 				// LOG_DEBUG("SDL: Reset macOS's GL viewport
 				// after window-restore");
-				if (sdl.desktop.type == SCREEN_OPENGL) {
+				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 					glViewport(sdl.clip.x,
 					           sdl.clip.y,
 					           sdl.clip.w,
@@ -3841,7 +3846,7 @@ bool GFX_Events()
 				// LOG_DEBUG("SDL: Window has been moved to %d, %d",
 				//               event.window.data1,
 				//               event.window.data2);
-				if (sdl.desktop.type == SCREEN_OPENGL) {
+				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 					glViewport(sdl.clip.x,
 					           sdl.clip.y,
 					           sdl.clip.w,
@@ -3856,7 +3861,7 @@ bool GFX_Events()
 				// and DPI scaling set, so recalculate that and
 				// set viewport
 				check_and_handle_dpi_change(sdl.window,
-				                            sdl.desktop.type);
+				                            sdl.rendering_backend);
 
 				SDL_Rect display_bounds = {};
 				SDL_GetDisplayBounds(event.window.data1,
@@ -3866,14 +3871,14 @@ bool GFX_Events()
 
 				sdl.display_number = event.window.data1;
 
-				const auto canvas = get_canvas_size(sdl.desktop.type);
+				const auto canvas = get_canvas_size(sdl.rendering_backend);
 				sdl.clip = calc_viewport(canvas.w, canvas.h);
-				if (sdl.desktop.type == SCREEN_TEXTURE) {
+				if (sdl.rendering_backend == RenderingBackend::Texture) {
 					SDL_RenderSetViewport(sdl.renderer,
 					                      &sdl.clip);
 				}
 #	if C_OPENGL
-				if (sdl.desktop.type == SCREEN_OPENGL) {
+				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 					glViewport(sdl.clip.x,
 					           sdl.clip.y,
 					           sdl.clip.w,
