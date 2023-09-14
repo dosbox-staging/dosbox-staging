@@ -43,13 +43,6 @@ using present_frame_f = bool();
 constexpr void update_frame_noop([[maybe_unused]] const uint16_t *) { /* no-op */ }
 static inline bool present_frame_noop() { return true; }
 
-enum SCREEN_TYPES {
-	SCREEN_TEXTURE,
-#if C_OPENGL
-	SCREEN_OPENGL
-#endif
-};
-
 enum class FrameMode {
 	Unset,
 	Cfr,          // constant frame rate, as defined by the emulated system
@@ -101,6 +94,9 @@ struct SDL_Block {
 	bool updating        = false;
 	bool resizing_window = false;
 	bool wait_on_error = false;
+
+	RenderingBackend rendering_backend      = RenderingBackend::Texture;
+	RenderingBackend want_rendering_backend = RenderingBackend::Texture;
 
 	InterpolationMode interpolation_mode    = InterpolationMode::Bilinear;
 	IntegerScalingMode integer_scaling_mode = IntegerScalingMode::Off;
@@ -156,9 +152,8 @@ struct SDL_Block {
 		bool lazy_init_window_size  = false;
 		HostRateMode host_rate_mode = HostRateMode::Auto;
 		double preferred_host_rate  = 0.0;
-		SCREEN_TYPES type           = SCREEN_TEXTURE;
-		SCREEN_TYPES want_type      = SCREEN_TEXTURE;
 	} desktop = {};
+
 	struct {
 		int num_cycles = 0;
 		std::string hint_mouse_str  = {};

@@ -30,6 +30,13 @@
 
 #define REDUCE_JOYSTICK_POLLING
 
+enum class RenderingBackend {
+	Texture,
+#if C_OPENGL
+	OpenGl
+#endif
+};
+
 typedef enum {
 	GFX_CallBackReset,
 	GFX_CallBackStop,
