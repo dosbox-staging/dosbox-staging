@@ -1399,6 +1399,11 @@ SDL_Rect GFX_GetCanvasSize()
 	return get_canvas_size(sdl.rendering_backend);
 }
 
+RenderingBackend GFX_GetRenderingBackend()
+{
+	return sdl.rendering_backend;
+}
+
 static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 {
 	return sdl.use_viewport_limits
