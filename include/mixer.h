@@ -174,7 +174,10 @@ public:
 	void SetAppVolume(const AudioFrame volume);
 
 	void SetChannelMap(const StereoLine map);
+
 	void SetLineoutMap(const StereoLine map);
+	StereoLine GetLineoutMap() const;
+
 	std::string DescribeLineout() const;
 	void SetSampleRate(const uint16_t _freq);
 	void SetPeakAmplitude(const int peak);
