@@ -76,36 +76,28 @@ struct FfmpegVideoEncoder {
 	RWQueue<AVFrame*> queue{32};
 	std::thread thread = {};
 
-	// FFmpeg pointers. Initialsed in main thread. Used by worker thread.
 	const AVCodec* codec          = nullptr;
 	AVCodecContext* codec_context = nullptr;
 
 	// Accessed only in main thread, used to check if needs re-init
 	// If one of these changes, create a new file
 	Fraction pixel_aspect_ratio = {};
-	PixelFormat pixel_format    = {};
 	int frames_per_second       = 0;
 	uint16_t width              = 0;
 	uint16_t height             = 0;
 
-	// Synchronization flags, guarded by mutex
-
-	// Main thread waits for worker to finish working.
 	bool is_working = false;
+	bool ready_for_init = false;
 
-	// Worker thread waits on main thread to initalise.
-	bool is_initalised = false;
-
-	// Init + free called by main thread only.
-	bool Init(const RenderedImage& image, const int frames_per_second);
+	bool Init();
 	void Free();
+	bool UpdateSettingsIfNeeded(uint16_t width, uint16_t height, Fraction pixel_aspect_ratio, int frames_per_second);
 };
 
 struct FfmpegAudioEncoder {
 	RWQueue<int16_t> queue{48000};
 	std::thread thread = {};
 
-	// FFmpeg pointers. Initialsed in main thread. Used by worker thread.
 	const AVCodec* codec          = nullptr;
 	AVCodecContext* codec_context = nullptr;
 	AVFrame* frame                = nullptr;
@@ -115,16 +107,10 @@ struct FfmpegAudioEncoder {
 	// If sample rate changes, create a new file
 	uint32_t sample_rate = 0;
 
-	// Synchronization flags, guarded by mutex
-
-	// Main thread waits for worker to finish working.
 	bool is_working = false;
+	bool ready_for_init = false;
 
-	// Worker thread waits on main thread to initalise.
-	bool is_initalised = false;
-
-	// Init + free called by main thread only.
-	bool Init(const uint32_t sample_rate);
+	bool Init();
 	void Free();
 };
 
@@ -132,18 +118,10 @@ struct FfmpegMuxer {
 	RWQueue<AVPacket*> queue{64};
 	std::thread thread = {};
 
-	// FFmpeg pointers. Initialsed in main thread. Used by worker thread.
 	AVFormatContext* format_context = nullptr;
 
-	// Synchronization flags, guarded by mutex
-
-	// Main thread waits for worker to finish working
 	bool is_working = false;
 
-	// Worker thread waits on main thread to initalise.
-	bool is_initalised = false;
-
-	// Init + free called by main thread only.
 	// Muxer requires both video and audio encoders to be initalised first.
 	bool Init(FfmpegVideoEncoder& video_encoder,
 	          FfmpegAudioEncoder& audio_encoder);
@@ -173,11 +151,14 @@ private:
 	FfmpegVideoEncoder video_encoder = {};
 	FfmpegAudioEncoder audio_encoder = {};
 	FfmpegMuxer muxer                = {};
-	int64_t pts                      = 0;
+	int64_t main_thread_video_frame  = 0;
+	bool worker_threads_are_initalised = false;
 
 	// Guarded by mutex, only set in destructor
 	bool is_shutting_down = false;
 
+	bool InitEverything();
+	void FreeEverything();
 	void ScaleVideo();
 	void EncodeVideo();
 	void EncodeAudio();

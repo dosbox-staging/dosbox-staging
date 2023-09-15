@@ -79,58 +79,71 @@ FfmpegEncoder::~FfmpegEncoder()
 	}
 }
 
+bool FfmpegEncoder::InitEverything()
+{
+	if (!video_encoder.Init()) {
+		LOG_ERR("FFMPEG: Failed to init video encoder");
+		return false;
+	}
+	if (!audio_encoder.Init()) {
+		LOG_ERR("FFMPEG: Failed to init audio encoder");
+		return false;
+	}
+	if (!muxer.Init(video_encoder, audio_encoder)) {
+		LOG_ERR("FFMPEG: Failed to init muxer");
+		return false;
+	}
+	main_thread_video_frame = 0;
+	mutex.lock();
+	worker_threads_are_initalised = true;
+	mutex.unlock();
+	waiter.notify_all();
+	return true;
+}
+
+void FfmpegEncoder::FreeEverything()
+{
+	muxer.Free();
+	audio_encoder.Free();
+	video_encoder.Free();
+}
+
+bool FfmpegVideoEncoder::UpdateSettingsIfNeeded(uint16_t width, uint16_t height, Fraction pixel_aspect_ratio, int frames_per_second)
+{
+	if (this->width != width || this->height != height || this->pixel_aspect_ratio != pixel_aspect_ratio || this->frames_per_second != frames_per_second) {
+		this->width = width;
+		this->height = height;
+		this->pixel_aspect_ratio = pixel_aspect_ratio;
+		this->frames_per_second = frames_per_second;
+		return true;
+	}
+	return false;
+}
+
 void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
                                          const float frames_per_second)
 {
 	const int rounded_fps = iroundf(frames_per_second);
-	if (!video_encoder.is_initalised) {
-		if (!video_encoder.Init(image, rounded_fps)) {
-			LOG_ERR("FFMPEG: Video encoder failed to init");
-			video_encoder.Free();
-			return;
+	const bool video_settings_changed = video_encoder.UpdateSettingsIfNeeded(image.params.width, image.params.height, image.params.video_mode.pixel_aspect_ratio, rounded_fps);
+
+	if (worker_threads_are_initalised) {
+		if (video_settings_changed) {
+			CaptureVideoFinalise();
 		}
-
-		bool init_muxer = false;
-		if (!muxer.is_initalised && audio_encoder.is_initalised) {
-			init_muxer = muxer.Init(video_encoder, audio_encoder);
-			if (!init_muxer) {
-				LOG_ERR("FFMPEG: Failed to init muxer");
-				muxer.Free();
-				video_encoder.Free();
-				return;
-			}
+	} else if (audio_encoder.ready_for_init) {
+		if (!InitEverything()) {
+			FreeEverything();
 		}
+	}
 
-		mutex.lock();
-		video_encoder.is_initalised = true;
-		pts = 0;
+	video_encoder.ready_for_init = true;
 
-		muxer.is_initalised = muxer.is_initalised || init_muxer;
-		mutex.unlock();
-		waiter.notify_all();
-
-	} else if (video_encoder.width != image.params.width ||
-	           video_encoder.height != image.params.height ||
-	           video_encoder.pixel_format != image.params.pixel_format ||
-	           video_encoder.frames_per_second != rounded_fps ||
-	           video_encoder.pixel_aspect_ratio !=
-	                   image.params.video_mode.pixel_aspect_ratio) {
-		CaptureVideoFinalise();
-		if (!video_encoder.Init(image, rounded_fps)) {
-			LOG_ERR("FFMPEG: Video encoder failed to init");
-			video_encoder.Free();
-			return;
-		}
-
-		mutex.lock();
-		video_encoder.is_initalised = true;
-		pts = 0;
-		mutex.unlock();
-		waiter.notify_all();
+	if (!worker_threads_are_initalised) {
+		return;
 	}
 
 	VideoScalerWork work;
-	work.pts = pts++;
+	work.pts = main_thread_video_frame++;
 	work.image = image.deep_copy();
 	if (!video_scaler.queue.MaybeEnqueue(std::move(work))) {
 		work.image.free();
@@ -141,42 +154,23 @@ void FfmpegEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
                                              const uint32_t num_sample_frames,
                                              const int16_t* sample_frames)
 {
-	if (!audio_encoder.is_initalised) {
-		if (!audio_encoder.Init(sample_rate)) {
-			LOG_ERR("FFMPEG: Failed to init audio encoder");
-			audio_encoder.Free();
-			return;
+	const bool sample_rate_changed = audio_encoder.sample_rate != sample_rate;
+	audio_encoder.sample_rate = sample_rate;
+
+	if (worker_threads_are_initalised) {
+		if (sample_rate_changed) {
+			CaptureVideoFinalise();
 		}
-
-		bool init_muxer = false;
-		if (!muxer.is_initalised && video_encoder.is_initalised) {
-			init_muxer = muxer.Init(video_encoder, audio_encoder);
-			if (!init_muxer) {
-				LOG_ERR("FFMPEG: Failed to init muxer");
-				muxer.Free();
-				audio_encoder.Free();
-				return;
-			}
+	} else if (video_encoder.ready_for_init) {
+		if (!InitEverything()) {
+			FreeEverything();
 		}
+	}
 
-		mutex.lock();
-		audio_encoder.is_initalised = true;
-		muxer.is_initalised         = muxer.is_initalised || init_muxer;
-		mutex.unlock();
-		waiter.notify_all();
+	audio_encoder.ready_for_init = true;
 
-	} else if (audio_encoder.sample_rate != sample_rate) {
-		CaptureVideoFinalise();
-		if (!audio_encoder.Init(sample_rate)) {
-			LOG_ERR("FFMPEG: Failed to init audio encoder");
-			audio_encoder.Free();
-			return;
-		}
-
-		mutex.lock();
-		audio_encoder.is_initalised = true;
-		mutex.unlock();
-		waiter.notify_all();
+	if (!worker_threads_are_initalised) {
+		return;
 	}
 
 	const size_t num_samples = num_sample_frames * SamplesPerFrame;
@@ -188,11 +182,12 @@ void FfmpegEncoder::StopQueues()
 {
 	std::unique_lock<std::mutex> lock(mutex);
 
-	// Set these first so none of the threads start another iteration
+	// Set this first so none of the threads start another iteration
 	// Before the encoders get re-initalised
-	audio_encoder.is_initalised = false;
-	video_encoder.is_initalised = false;
-	muxer.is_initalised         = false;
+	worker_threads_are_initalised = false;
+
+	audio_encoder.ready_for_init = false;
+	video_encoder.ready_for_init = false;
 
 	video_scaler.queue.Stop();
 	waiter.wait(lock, [this] {
@@ -207,20 +202,14 @@ void FfmpegEncoder::StopQueues()
 	muxer.queue.Stop();
 	waiter.wait(lock, [this] { return !muxer.is_working; });
 
-	// At least the muxer queue has been measured
-	// to have stale items left in it if it is never started
-	// due to one of the encoders failing to init.
-	// Explicitly clear the queues out so we don't have to worry
-	// about stale work with incorrect video/audio specs for the next
-	// recording.
-	video_scaler.queue.Clear();
-	audio_encoder.queue.Clear();
-	video_encoder.queue.Clear();
-	muxer.queue.Clear();
+	lock.unlock();
 
-	muxer.Free();
-	audio_encoder.Free();
-	video_encoder.Free();
+	assert(video_scaler.queue.IsEmpty());
+	assert(video_encoder.queue.IsEmpty());
+	assert(audio_encoder.queue.IsEmpty());
+	assert(muxer.queue.IsEmpty());
+
+	FreeEverything();
 }
 
 void FfmpegEncoder::StartQueues()
@@ -301,6 +290,8 @@ bool FfmpegMuxer::Init(FfmpegVideoEncoder& video_encoder,
 	assert(video_stream == format_context->streams[MuxerVideoStreamIndex]);
 	assert(audio_stream == format_context->streams[MuxerAudioStreamIndex]);
 
+	LOG_MSG("FFMPEG: Video capture started to '%s'", output_file_path.c_str());
+
 	return true;
 }
 
@@ -314,9 +305,9 @@ void FfmpegMuxer::Free()
 	}
 }
 
-bool FfmpegAudioEncoder::Init(const uint32_t sample_rate)
+bool FfmpegAudioEncoder::Init()
 {
-	codec = avcodec_find_encoder(AV_CODEC_ID_AAC);
+	codec = avcodec_find_encoder_by_name("aac");
 	if (!codec) {
 		LOG_ERR("FFMPEG: Failed to find audio codec");
 		return false;
@@ -379,7 +370,6 @@ bool FfmpegAudioEncoder::Init(const uint32_t sample_rate)
 		return false;
 	}
 
-	this->sample_rate = sample_rate;
 	return true;
 }
 
@@ -399,13 +389,8 @@ void FfmpegAudioEncoder::Free()
 	}
 }
 
-bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_second)
+bool FfmpegVideoEncoder::Init()
 {
-	this->width              = image.params.width;
-	this->height             = image.params.height;
-	this->pixel_format       = image.params.pixel_format;
-	this->frames_per_second  = frames_per_second;
-	this->pixel_aspect_ratio = image.params.video_mode.pixel_aspect_ratio;
 	codec = avcodec_find_encoder_by_name("libx264");
 	if (!codec) {
 		LOG_ERR("FFMPEG: Failed to find libx264 encoder");
@@ -421,8 +406,6 @@ bool FfmpegVideoEncoder::Init(const RenderedImage& image, const int frames_per_s
 	codec_context->height                  = height;
 	codec_context->time_base.num           = 1;
 	codec_context->time_base.den           = frames_per_second;
-	codec_context->framerate.num           = frames_per_second;
-	codec_context->framerate.den           = 1;
 	codec_context->pix_fmt                 = AV_PIX_FMT_YUV444P;
 	codec_context->sample_aspect_ratio.num = static_cast<int>(
 	        pixel_aspect_ratio.Num());
@@ -552,7 +535,7 @@ void FfmpegEncoder::ScaleVideo()
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
 		waiter.wait(lock, [this] {
-			return video_encoder.is_initalised || is_shutting_down;
+			return worker_threads_are_initalised || is_shutting_down;
 		});
 		if (is_shutting_down) {
 			return;
@@ -603,7 +586,7 @@ void FfmpegEncoder::EncodeVideo()
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
 		waiter.wait(lock, [this] {
-			return video_encoder.is_initalised || is_shutting_down;
+			return worker_threads_are_initalised|| is_shutting_down;
 		});
 		if (is_shutting_down) {
 			return;
@@ -647,7 +630,7 @@ void FfmpegEncoder::Mux()
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
 		waiter.wait(lock, [this] {
-			return muxer.is_initalised || is_shutting_down;
+			return worker_threads_are_initalised || is_shutting_down;
 		});
 		if (is_shutting_down) {
 			return;
@@ -692,7 +675,7 @@ void FfmpegEncoder::EncodeAudio()
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
 		waiter.wait(lock, [this] {
-			return audio_encoder.is_initalised || is_shutting_down;
+			return worker_threads_are_initalised || is_shutting_down;
 		});
 		if (is_shutting_down) {
 			return;
