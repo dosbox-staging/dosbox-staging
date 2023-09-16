@@ -32,17 +32,17 @@
 #include "ston1_dac.h"
 
 LptDac::LptDac(const std::string_view name, const uint16_t channel_rate_hz,
-               channel_features_t extra_features)
+               std::set<ChannelFeature> extra_features)
         : dac_name(name)
 {
 	assert(!dac_name.empty());
 	using namespace std::placeholders;
 	const auto audio_callback = std::bind(&LptDac::AudioCallback, this, _1);
 
-	auto features = channel_features_t{ChannelFeature::Sleep,
-	                                   ChannelFeature::ReverbSend,
-	                                   ChannelFeature::ChorusSend,
-	                                   ChannelFeature::DigitalAudio};
+	std::set<ChannelFeature> features = {ChannelFeature::Sleep,
+	                                     ChannelFeature::ReverbSend,
+	                                     ChannelFeature::ChorusSend,
+	                                     ChannelFeature::DigitalAudio};
 
 	features.insert(extra_features.begin(), extra_features.end());
 
