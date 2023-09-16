@@ -139,7 +139,7 @@ MoreOutputBase::UserDecision MoreOutputBase::DisplaySingleStream()
 	std::string ansi_code  = {};
 	bool is_state_ansi     = false;
 	bool is_state_ansi_end = false;
-	bool is_state_new_line = false;
+	bool is_state_new_line = true;
 
 	bool skipped_already_notified = false;
 	bool should_squish_new_line   = false;
