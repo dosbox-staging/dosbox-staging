@@ -41,13 +41,11 @@
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
 
-#if C_OPENGL
 static ShaderManager& get_shader_manager()
 {
 	static auto shader_manager = ShaderManager();
 	return shader_manager;
 }
-#endif
 
 const char* to_string(const PixelFormat pf)
 {
@@ -335,12 +333,10 @@ static Section_prop* get_render_section()
 	return render_section;
 }
 
-#if C_OPENGL
 void RENDER_Reinit()
 {
 	RENDER_Init(get_render_section());
 }
-#endif
 
 static void render_reset(void)
 {
@@ -425,10 +421,10 @@ static void render_reset(void)
 		gfx_flags |= GFX_DBL_W;
 	}
 
-#if C_OPENGL
-	GFX_SetShader(get_shader_manager().GetCurrentShaderInfo(),
-	              get_shader_manager().GetCurrentShaderSource());
-#endif
+	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
+		GFX_SetShader(get_shader_manager().GetCurrentShaderInfo(),
+		              get_shader_manager().GetCurrentShaderSource());
+	}
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 
@@ -572,12 +568,12 @@ static void setup_scan_and_pixel_doubling()
 	force_vga_single_scan   = nearest_neighbour_enabled;
 	force_no_pixel_doubling = nearest_neighbour_enabled;
 
-#if C_OPENGL
-	const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
+	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
+		const auto shader_info = get_shader_manager().GetCurrentShaderInfo();
 
-	force_vga_single_scan |= shader_info.settings.force_single_scan;
-	force_no_pixel_doubling |= shader_info.settings.force_no_pixel_doubling;
-#endif
+		force_vga_single_scan |= shader_info.settings.force_single_scan;
+		force_no_pixel_doubling |= shader_info.settings.force_no_pixel_doubling;
+	}
 
 	VGA_EnableVgaDoubleScanning(!force_vga_single_scan);
 	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
@@ -588,7 +584,6 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
                                   [[maybe_unused]] const VideoMode& video_mode,
                                   [[maybe_unused]] const bool reinit_render)
 {
-#if C_OPENGL
 	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
 		return false;
 	}
@@ -629,9 +624,6 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
 		}
 	}
 	return changed_shader;
-#else
-	return false;
-#endif // C_OPENGL
 }
 
 void RENDER_NotifyEgaModeWithVgaPalette()
@@ -654,17 +646,17 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 	}
 }
 
-#if C_OPENGL
-
 std::deque<std::string> RENDER_GenerateShaderInventoryMessage()
 {
 	return get_shader_manager().GenerateShaderInventoryMessage();
 }
-#endif // C_OPENGL
 
 static void reload_shader([[maybe_unused]] const bool pressed)
 {
-#if C_OPENGL
+	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
+		return;
+	}
+
 	if (!pressed) {
 		return;
 	}
@@ -677,7 +669,6 @@ static void reload_shader([[maybe_unused]] const bool pressed)
 	// new settings. Without this, the altered settings would only take
 	// effect on the next video mode change.
 	VGA_SetupDrawing(0);
-#endif // C_OPENGL
 }
 
 constexpr auto MonochromePaletteAmber      = "amber";
@@ -920,31 +911,33 @@ void RENDER_Init(Section* sec)
 
 	GFX_SetIntegerScalingMode(get_integer_scaling_mode_setting());
 
-#if C_OPENGL
-	auto& shader_manager = get_shader_manager();
-
 	auto shader_changed = false;
+
 	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
-		const auto shader_name = shader_manager.MapShaderName(
-		        section->Get_string("glshader"));
+		auto& shader_manager = get_shader_manager();
 
-		shader_manager.NotifyGlshaderSettingChanged(shader_name);
+		if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
+			const auto shader_name = shader_manager.MapShaderName(
+			        section->Get_string("glshader"));
 
-		const auto string_prop = section->GetStringProp("glshader");
-		string_prop->SetValue(shader_name);
+			shader_manager.NotifyGlshaderSettingChanged(shader_name);
+
+			const auto string_prop = section->GetStringProp("glshader");
+			string_prop->SetValue(shader_name);
+		}
+		const auto new_shader_name =
+		        shader_manager.GetCurrentShaderInfo().name;
+
+		shader_changed = render.force_reload_shader ||
+		                 (new_shader_name != render.current_shader_name);
+
+		if (render.force_reload_shader) {
+			shader_manager.ReloadCurrentShader();
+		}
+
+		render.force_reload_shader = false;
+		render.current_shader_name = new_shader_name;
 	}
-	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
-
-	shader_changed = render.force_reload_shader ||
-	                 (new_shader_name != render.current_shader_name);
-
-	if (render.force_reload_shader) {
-		shader_manager.ReloadCurrentShader();
-	}
-
-	render.force_reload_shader = false;
-	render.current_shader_name = new_shader_name;
-#endif
 
 	setup_scan_and_pixel_doubling();
 
@@ -952,9 +945,7 @@ void RENDER_Init(Section* sec)
 	        ((force_square_pixels != prev_force_square_pixels) ||
 	         (render.scale.size != prev_scale_size) ||
 	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode) ||
-#if C_OPENGL
 	         shader_changed ||
-#endif
 	         (prev_force_vga_single_scan != force_vga_single_scan) ||
 	         (prev_force_no_pixel_doubling != force_no_pixel_doubling));
 
