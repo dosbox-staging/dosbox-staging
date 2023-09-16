@@ -263,6 +263,11 @@ bool MixerChannel::HasFeature(const ChannelFeature feature) const
 	return features.find(feature) != features.end();
 }
 
+std::set<ChannelFeature> MixerChannel::GetFeatures() const
+{
+	return features;
+}
+
 bool StereoLine::operator==(const StereoLine other) const
 {
 	return left == other.left && right == other.right;

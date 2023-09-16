@@ -31,6 +31,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 
 #include "../src/hardware/compressor.h"
 #include "audio_frame.h"
@@ -169,6 +170,7 @@ public:
 	~MixerChannel();
 
 	bool HasFeature(ChannelFeature feature) const;
+	std::set<ChannelFeature> GetFeatures() const;
 	const std::string& GetName() const;
 	uint16_t GetSampleRate() const;
 
