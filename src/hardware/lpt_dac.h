@@ -24,6 +24,7 @@
 #include "dosbox.h"
 
 #include <queue>
+#include <set>
 #include <string_view>
 
 #include "inout.h"
@@ -34,7 +35,7 @@
 class LptDac {
 public:
 	LptDac(const std::string_view name, const uint16_t channel_rate_hz,
-	       channel_features_t extra_features = {});
+	       std::set<ChannelFeature> extra_features = {});
 	virtual ~LptDac();
 
 	// public interfaces
