@@ -882,6 +882,39 @@ void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
 	string_prop->SetValue(to_string(palette));
 }
 
+static bool handle_shader_changes()
+{
+	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
+		return false;
+	}
+
+	auto& shader_manager = get_shader_manager();
+
+	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
+		const auto section     = get_render_section();
+		const auto shader_name = shader_manager.MapShaderName(
+		        section->Get_string("glshader"));
+
+		shader_manager.NotifyGlshaderSettingChanged(shader_name);
+
+		const auto string_prop = section->GetStringProp("glshader");
+		string_prop->SetValue(shader_name);
+	}
+	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
+
+	const auto shader_changed = render.force_reload_shader ||
+	                            (new_shader_name != render.current_shader_name);
+
+	if (render.force_reload_shader) {
+		shader_manager.ReloadCurrentShader();
+	}
+
+	render.force_reload_shader = false;
+	render.current_shader_name = new_shader_name;
+
+	return shader_changed;
+}
+
 void RENDER_Init(Section* sec)
 {
 	Section_prop* section = static_cast<Section_prop*>(sec);
@@ -911,33 +944,7 @@ void RENDER_Init(Section* sec)
 
 	GFX_SetIntegerScalingMode(get_integer_scaling_mode_setting());
 
-	auto shader_changed = false;
-
-	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
-		auto& shader_manager = get_shader_manager();
-
-		if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
-			const auto shader_name = shader_manager.MapShaderName(
-			        section->Get_string("glshader"));
-
-			shader_manager.NotifyGlshaderSettingChanged(shader_name);
-
-			const auto string_prop = section->GetStringProp("glshader");
-			string_prop->SetValue(shader_name);
-		}
-		const auto new_shader_name =
-		        shader_manager.GetCurrentShaderInfo().name;
-
-		shader_changed = render.force_reload_shader ||
-		                 (new_shader_name != render.current_shader_name);
-
-		if (render.force_reload_shader) {
-			shader_manager.ReloadCurrentShader();
-		}
-
-		render.force_reload_shader = false;
-		render.current_shader_name = new_shader_name;
-	}
+	auto shader_changed = handle_shader_changes();
 
 	setup_scan_and_pixel_doubling();
 
