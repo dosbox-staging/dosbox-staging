@@ -32,9 +32,7 @@
 
 enum class RenderingBackend {
 	Texture,
-#if C_OPENGL
 	OpenGl
-#endif
 };
 
 typedef enum {
