@@ -39,5 +39,5 @@ ffmpeg*:with_programs=False
 ffmpeg*:with_nvenc=True
 ffmpeg*:disable_everything=True
 ffmpeg*:enable_encoders=libx264,aac,h264_nvenc
-ffmpeg*:enable_muxers=mp4
+ffmpeg*:enable_muxers=mp4,matroska
 ffmpeg*:enable_protocols=file

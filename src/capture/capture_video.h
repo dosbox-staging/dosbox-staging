@@ -91,7 +91,7 @@ struct FfmpegVideoEncoder {
 	bool is_working = false;
 	bool ready_for_init = false;
 
-	bool Init();
+	bool Init(CaptureType container);
 	void Free();
 	bool UpdateSettingsIfNeeded(uint16_t width, uint16_t height, Fraction pixel_aspect_ratio, int frames_per_second);
 };
@@ -125,8 +125,9 @@ struct FfmpegMuxer {
 	bool is_working = false;
 
 	// Muxer requires both video and audio encoders to be initalised first.
-	bool Init(FfmpegVideoEncoder& video_encoder,
-	          FfmpegAudioEncoder& audio_encoder);
+	bool Init(const FfmpegVideoEncoder& video_encoder,
+	          const FfmpegAudioEncoder& audio_encoder,
+	          const CaptureType container);
 	void Free();
 };
 

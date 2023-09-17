@@ -81,7 +81,7 @@ FfmpegEncoder::~FfmpegEncoder()
 
 bool FfmpegEncoder::InitEverything()
 {
-	if (!video_encoder.Init()) {
+	if (!video_encoder.Init(container)) {
 		LOG_ERR("FFMPEG: Failed to init video encoder");
 		return false;
 	}
@@ -89,7 +89,7 @@ bool FfmpegEncoder::InitEverything()
 		LOG_ERR("FFMPEG: Failed to init audio encoder");
 		return false;
 	}
-	if (!muxer.Init(video_encoder, audio_encoder)) {
+	if (!muxer.Init(video_encoder, audio_encoder, container)) {
 		LOG_ERR("FFMPEG: Failed to init muxer");
 		return false;
 	}
@@ -154,6 +154,11 @@ void FfmpegEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
                                              const uint32_t num_sample_frames,
                                              const int16_t* sample_frames)
 {
+	// This happens sometimes (rarely) and triggers an assert in BulkEnqueue if it does
+	if (num_sample_frames < 1) {
+		return;
+	}
+
 	const bool sample_rate_changed = audio_encoder.sample_rate != sample_rate;
 	audio_encoder.sample_rate = sample_rate;
 
@@ -226,12 +231,13 @@ void FfmpegEncoder::CaptureVideoFinalise()
 	StartQueues();
 }
 
-bool FfmpegMuxer::Init(FfmpegVideoEncoder& video_encoder,
-                       FfmpegAudioEncoder& audio_encoder)
+bool FfmpegMuxer::Init(const FfmpegVideoEncoder& video_encoder,
+                       const FfmpegAudioEncoder& audio_encoder,
+                       const CaptureType container)
 {
-	const int32_t output_file_index = get_next_capture_index(CaptureType::VideoMp4);
+	const int32_t output_file_index = get_next_capture_index(container);
 	const std::string output_file_path =
-	        generate_capture_filename(CaptureType::VideoMp4, output_file_index)
+	        generate_capture_filename(container, output_file_index)
 	                .string();
 
 	// Only one of these needs to be specified. We're using filename.
@@ -389,7 +395,7 @@ void FfmpegAudioEncoder::Free()
 	}
 }
 
-bool FfmpegVideoEncoder::Init()
+bool FfmpegVideoEncoder::Init(CaptureType container)
 {
 	codec = avcodec_find_encoder_by_name("libx264");
 	if (!codec) {
@@ -412,10 +418,19 @@ bool FfmpegVideoEncoder::Init()
 	codec_context->sample_aspect_ratio.den = static_cast<int>(
 	        pixel_aspect_ratio.Denom());
 
-	if (avcodec_open2(codec_context, codec, nullptr) < 0) {
+	if (container == CaptureType::VideoMkv) {
+		codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+	}
+
+	AVDictionary *options = nullptr;
+	av_dict_set(&options, "crf", "0", 0);
+
+	if (avcodec_open2(codec_context, codec, &options) < 0) {
 		LOG_ERR("FFMPEG: Failed to open video context");
 		return false;
 	}
+
+	av_dict_free(&options);
 
 	return true;
 }
