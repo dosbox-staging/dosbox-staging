@@ -615,7 +615,13 @@ static void capture_init(Section* sec)
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
 #if C_FFMPEG
 	if (secprop->Get_string("video_encoder") == std::string("ffmpeg")) {
-		video_encoder = std::make_unique<FfmpegEncoder>();
+		std::unique_ptr<FfmpegEncoder> ffmpeg_encoder = std::make_unique<FfmpegEncoder>();
+		if (secprop->Get_string("ffmpeg_container") == std::string("mp4")) {
+			ffmpeg_encoder->container = CaptureType::VideoMp4;
+		} else {
+			ffmpeg_encoder->container = CaptureType::VideoMkv;
+		}
+		video_encoder = std::move(ffmpeg_encoder);
 	} else {
 		video_encoder = std::make_unique<ZmbvEncoder>();
 	}
@@ -716,6 +722,13 @@ static void init_capture_dosbox_settings(Section_prop& secprop)
 	str_prop->Set_help("Set the video encoder to use for video capture.\n"
 	                   "  zmbv:   Zip Motion Block Video DOSBox lossless compression (default).\n"
 	                   "  ffmpeg: H.264 video and AAC audio.");
+	str_prop = secprop.Add_string("ffmpeg_container", when_idle, "mkv");
+	assert(str_prop);
+	const char* containers[] = {"mkv", "mp4", nullptr};
+	str_prop->Set_values(containers);
+	str_prop->Set_help("Set the container for ffmpeg to use.\n"
+	                        "  mkv: Output video is typically usable even if Dosbox crashes.\n"
+	                        "  mp4: Less resilance against crashes but better compatability");
 }
 
 void CAPTURE_AddConfigSection(const config_ptr_t& conf)

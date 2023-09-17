@@ -23,7 +23,6 @@
 #define DOSBOX_CAPTURE_VIDEO_H
 
 #include "render.h"
-#include "rwqueue.h"
 
 class VideoEncoder {
 public:
@@ -52,6 +51,9 @@ public:
 };
 
 #if C_FFMPEG
+
+#include "capture.h"
+#include "rwqueue.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -143,6 +145,8 @@ public:
 	                              const int16_t* sample_frames) override;
 
 	void CaptureVideoFinalise() override;
+
+	CaptureType container = CaptureType::VideoMkv;
 
 private:
 	std::mutex mutex                 = {};
