@@ -187,7 +187,6 @@ static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 	std::string filename_start = capture_type_to_basename(type);
 	lowcase(filename_start);
 
-	const auto ext        = capture_type_to_extension(type);
 	int32_t highest_index = 0;
 	std::error_code ec    = {};
 
@@ -198,7 +197,7 @@ static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 			            ec.message().c_str());
 			return {};
 		}
-		if (!entry.is_regular_file(ec) || entry.path().extension() != ext) {
+		if (!entry.is_regular_file(ec)) {
 			continue;
 		}
 		auto stem = entry.path().stem().string();
