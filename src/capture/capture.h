@@ -35,6 +35,7 @@ enum class CaptureType {
 	RawOplStream,
 	RadOplInstruments,
 	VideoAvi,
+	VideoMkv,
 	VideoMp4,
 	RawImage,
 	UpscaledImage,
