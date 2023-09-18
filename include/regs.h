@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
 
 #ifndef DOSBOX_REGS_H
 #define DOSBOX_REGS_H
+
+#include <iostream>
 
 #ifndef DOSBOX_MEM_H
 #include "mem.h"
@@ -92,6 +94,13 @@ struct CPU_Regs {
 
 extern Segments Segs;
 extern CPU_Regs cpu_regs;
+
+//serialization
+std::ostream& operator<<(std::ostream& stream, const Segments& seg);
+std::istream& operator>>(std::istream& stream, Segments& seg);
+
+std::ostream& operator<<(std::ostream& stream, const CPU_Regs& reg);
+std::istream& operator>>(std::istream& stream, CPU_Regs& reg);
 
 static INLINE PhysPt SegPhys(SegNames index) {
 	return Segs.phys[index];

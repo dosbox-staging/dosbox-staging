@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  */
 
 
-#if defined (WIN32)
+#if defined (WIN32) && 0
 
 // *****************************************************************
 // Windows IOCTL functions (not suitable for 95/98/Me)
@@ -27,7 +27,7 @@
 #include <io.h>
 
 #if defined (_MSC_VER)
-#include <ntddcdrm.h>			// Ioctl stuff
+//#include <ntddcdrm.h>			// Ioctl stuff
 #include <winioctl.h>			// Ioctl stuff
 #else 
 #include "ddk/ntddcdrm.h"		// Ioctl stuff
@@ -619,5 +619,10 @@ bool CDROM_Interface_Ioctl::Open(void) {
 void CDROM_Interface_Ioctl::Close(void) {
 	CloseHandle(hIOCTL);
 }
+
+bool CDROM_Interface_Ioctl::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
+{
+	return false;/*TODO*/
+};
 
 #endif

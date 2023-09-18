@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,22 +16,75 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm> //std::copy
 #include <iterator>  //std::front_inserter
 #include "shell.h"
+#include "timer.h"
+#include "bios.h"
+#include "control.h"
 #include "regs.h"
 #include "callback.h"
 #include "support.h"
+#ifdef WIN32
+#include "../dos/cdrom.h"
+#endif 
 
 void DOS_Shell::ShowPrompt(void) {
-	Bit8u drive=DOS_GetDefaultDrive()+'A';
 	char dir[DOS_PATHLENGTH];
 	dir[0] = 0; //DOS_GetCurrentDir doesn't always return something. (if drive is messed up)
 	DOS_GetCurrentDir(0,dir);
-	WriteOut("%c:\\%s>",drive,dir);
+	std::string line;
+	const char * promptstr = "\0";
+
+	if(GetEnvStr("PROMPT",line)) {
+		std::string::size_type idx = line.find('=');
+		std::string value=line.substr(idx +1 , std::string::npos);
+		line = std::string(promptstr) + value;
+		promptstr = line.c_str();
+	}
+
+	while (*promptstr) {
+		if (!strcasecmp(promptstr,"$"))
+			WriteOut("\0");
+		else if(*promptstr != '$')
+			WriteOut("%c",*promptstr);
+		else switch (toupper(*++promptstr)) {
+			case 'A': WriteOut("&"); break;
+			case 'B': WriteOut("|"); break;
+			case 'C': WriteOut("("); break;
+			case 'D': WriteOut("%02d-%02d-%04d",dos.date.day,dos.date.month,dos.date.year); break;
+			case 'E': WriteOut("%c",27);  break;
+			case 'F': WriteOut(")");  break;
+			case 'G': WriteOut(">"); break;
+			case 'H': WriteOut("\b");   break;
+			case 'L': WriteOut("<"); break;
+			case 'N': WriteOut("%c",DOS_GetDefaultDrive()+'A'); break;
+			case 'P': WriteOut("%c:\\%s",DOS_GetDefaultDrive()+'A',dir); break;
+			case 'Q': WriteOut("="); break;
+			case 'S': WriteOut(" "); break;
+			case 'T': {
+				Bitu ticks=(Bitu)(((65536.0 * 100.0)/(double)PIT_TICK_RATE)* mem_readd(BIOS_TIMER));
+				reg_dl=(Bit8u)((Bitu)ticks % 100);
+				ticks/=100;
+				reg_dh=(Bit8u)((Bitu)ticks % 60);
+				ticks/=60;
+				reg_cl=(Bit8u)((Bitu)ticks % 60);
+				ticks/=60;
+				reg_ch=(Bit8u)((Bitu)ticks % 24);
+				WriteOut("%2d:%02d:%02d.%02d",reg_ch,reg_cl,reg_dh,reg_dl);
+				break;
+			}
+			case 'V': WriteOut("DOSBox version %s. Reported DOS version %d.%d.",VERSION,dos.version.major,dos.version.minor); break;
+			case '$': WriteOut("$"); break;
+			case '_': WriteOut("\n"); break;
+			case 'M': break;
+			case '+': break;
+		}
+		promptstr++;
+	}
 }
 
 static void outc(Bit8u c) {
@@ -39,6 +92,7 @@ static void outc(Bit8u c) {
 	DOS_WriteFile(STDOUT,&c,&n);
 }
 
+/* NTS: buffer pointed to by "line" must be at least CMD_MAXLINE+1 large */
 void DOS_Shell::InputCommand(char * line) {
 	Bitu size=CMD_MAXLINE-2; //lastcharacter+0
 	Bit8u c;Bit16u n=1;
@@ -219,11 +273,19 @@ void DOS_Shell::InputCommand(char * line) {
 			}
 			if (l_completion.size()) l_completion.clear();
 			break;
-		case 0x0a:				/* New Line not handled */
-			/* Don't care */
-			break;
-		case 0x0d:				/* Return */
+		case 0x0a:				/* Give a new Line */
 			outc('\n');
+			break;
+		case '': // FAKE CTRL-C
+			outc(94); outc('C');
+			*line = 0;      // reset the line.
+			if (l_completion.size()) l_completion.clear(); //reset the completion list.
+			if(!echo) outc('\n');
+			size = 0;       // stop the next loop
+			str_len = 0;    // prevent multiple adds of the same line
+			break;
+		case 0x0d:				/* Don't care, and return */
+			if(!echo) outc('\n');
 			size=0;			//Kill the while loop
 			break;
 		case'\t':
@@ -366,9 +428,148 @@ void DOS_Shell::InputCommand(char * line) {
 		l_history.pop_front();
 	}
 
-	// add command line to history
+	// add command line to history. Win95 behavior with DOSKey suggests
+	// that the original string is preserved, not the expanded string.
 	l_history.push_front(line); it_history = l_history.begin();
 	if (l_completion.size()) l_completion.clear();
+
+	/* DOS %variable% substitution */
+	ProcessCmdLineEnvVarStitution(line);
+}
+
+
+/* WARNING: Substitution is carried out in-place!
+ * Buffer pointed to by "line" must be at least CMD_MAXLINE+1 bytes long! */
+void DOS_Shell::ProcessCmdLineEnvVarStitution(char *line) {
+	char temp[CMD_MAXLINE]; /* <- NTS: Currently 4096 which is very generous indeed! */
+	char *w=temp,*wf=temp+sizeof(temp)-1;
+	char *r=line;
+
+	/* initial scan: is there anything to substitute? */
+	/* if not, then return without modifying "line" */
+	while (*r != 0 && *r != '%') r++;
+	if (*r != '%') return;
+
+	/* if the incoming string is already too long, then that's a problem too! */
+	if (((size_t)(r+1-line)) >= CMD_MAXLINE) {
+		LOG_MSG("DOS_Shell::ProcessCmdLineEnvVarStitution WARNING incoming string to substitute is already too long!\n");
+		goto overflow;
+	}
+
+	/* copy the string down up to that point */
+	for (char *c=line;c < r;) {
+		assert(w < wf);
+		*w++ = *c++;
+	}
+
+	/* begin substitution process */
+	while (*r != 0) {
+		if (*r == '%') {
+			r++;
+			if (*r == '%' || *r == 0) {
+				/* %% or leaving a trailing % at the end (Win95 behavior) becomes a single '%' */
+				if (w >= wf) goto overflow;
+				*w++ = '%';
+				if (*r != 0) r++;
+				else break;
+			}
+			else {
+				char *name = r; /* store pointer, 'r' is first char of the name following '%' */
+				int spaces = 0,chars = 0;
+
+				/* continue scanning for the ending '%'. variable names are apparently meant to be
+				 * alphanumeric, start with a letter, without spaces (if Windows 95 COMMAND.COM is
+				 * any good example). If it doesn't end in '%' or is broken by space or starts with
+				 * a number, substitution is not carried out. In the middle of the variable name
+				 * it seems to be acceptable to use hyphens.
+				 *
+				 * since spaces break up a variable name to prevent substitution, these commands
+				 * act differently from one another:
+				 *
+				 * C:\>echo %PATH%
+				 * C:\DOS;C:\WINDOWS
+				 *
+				 * C:\>echo %PATH %
+				 * %PATH % */
+				if (isalpha(*r) || *r == ' ') { /* must start with a letter. space is apparently valid too. (Win95) */
+					if (*r == ' ') spaces++;
+					else if (isalpha(*r)) chars++;
+
+					r++;
+					while (*r != 0 && *r != '%') {
+						if (*r == ' ') spaces++;
+						else chars++;
+						r++;
+					}
+				}
+
+				/* Win95 testing:
+				 *
+				 * "%" = "%"
+				 * "%%" = "%"
+				 * "% %" = ""
+				 * "%  %" = ""
+				 * "% % %" = " %"
+				 *
+				 * ^ WTF?
+				 *
+				 * So the below code has funny conditions to match Win95's weird rules on what
+				 * consitutes valid or invalid %variable% names. */
+				if (*r == '%' && ((spaces > 0 && chars == 0) || (spaces == 0 && chars > 0))) {
+					std::string temp;
+
+					/* valid name found. substitute */
+					*r++ = 0; /* ASCIIZ snip */
+					if (GetEnvStr(name,temp)) {
+						size_t equ_pos = temp.find_first_of('=');
+						if (equ_pos != std::string::npos) {
+							const char *base = temp.c_str();
+							const char *value = base + equ_pos + 1;
+							const char *fence = base + temp.length();
+							assert(value >= base && value <= fence);
+							size_t len = (size_t)(fence-value);
+
+							if ((w+len) > wf) goto overflow;
+							memcpy(w,value,len);
+							w += len;
+						}
+					}
+				}
+				else {
+					/* nope. didn't find a valid name */
+
+					while (*r != 0 && *r == ' ') r++; /* skip spaces */
+					name--; /* step "name" back to cover the first '%' we found */
+
+					for (char *c=name;c < r;) {
+						if (w >= wf) goto overflow;
+						*w++ = *c++;
+					}
+				}
+			}
+		}
+		else {
+			if (w >= wf) goto overflow;
+			*w++ = *r++;
+		}
+	}
+
+	/* complete the C-string */
+	assert(w <= wf);
+	*w = 0;
+
+	/* copy the string back over the buffer pointed to by line */
+	{
+		size_t out_len = (size_t)(w+1-temp); /* length counting the NUL too */
+		assert(out_len <= CMD_MAXLINE);
+		memcpy(line,temp,out_len);
+	}
+
+	/* success */
+	return;
+overflow:
+	*line = 0; /* clear string (C-string chop with NUL) */
+	WriteOut("Command input error: string expansion overflow\n");
 }
 
 std::string full_arguments = "";
@@ -395,7 +596,70 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	/* check for a drive change */
 	if (((strcmp(name + 1, ":") == 0) || (strcmp(name + 1, ":\\") == 0)) && isalpha(*name))
 	{
+		if (strrchr(name,'\\')) { WriteOut(MSG_Get("SHELL_EXECUTE_ILLEGAL_COMMAND"),name); return true; }
 		if (!DOS_SetDrive(toupper(name[0])-'A')) {
+#ifdef WIN32
+			Section_prop * sec=0; sec=static_cast<Section_prop *>(control->GetSection("dos"));
+			if(!sec->Get_bool("automount")) { WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(name[0])); return true; }
+			// automount: attempt direct letter to drive map.
+			if((GetDriveType(name)==3) && (strcasecmp(name,"c:")==0)) WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_ACCESS_WARNING_WIN"));
+first_1:
+			if(GetDriveType(name)==5) WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_ACCESS_CDROM"),toupper(name[0]));
+			else if(GetDriveType(name)==2) WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_ACCESS_FLOPPY"),toupper(name[0]));
+			else if((GetDriveType(name)==3)||(GetDriveType(name)==4)||(GetDriveType(name)==6)) WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_ACCESS_FIXED"),toupper(name[0]));
+			else { WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(name[0])); return true; }
+
+first_2:
+		Bit8u c;Bit16u n=1;
+		DOS_ReadFile (STDIN,&c,&n);
+		do switch (c) {
+			case 'n':			case 'N':
+			{
+				DOS_WriteFile (STDOUT,&c, &n);
+				DOS_ReadFile (STDIN,&c,&n);
+				do switch (c) {
+					case 0xD: WriteOut("\n\n"); WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(name[0])); return true;
+					case 0x08: WriteOut("\b \b"); goto first_2;
+				} while (DOS_ReadFile (STDIN,&c,&n));
+			}
+			case 'y':			case 'Y':
+			{
+				DOS_WriteFile (STDOUT,&c, &n);
+				DOS_ReadFile (STDIN,&c,&n);
+				do switch (c) {
+					case 0xD: WriteOut("\n"); goto continue_1;
+					case 0x08: WriteOut("\b \b"); goto first_2;
+				} while (DOS_ReadFile (STDIN,&c,&n));
+			}
+			case 0xD: WriteOut("\n"); goto first_1;
+			case '\t': case 0x08: goto first_2;
+			default:
+			{
+				DOS_WriteFile (STDOUT,&c, &n);
+				DOS_ReadFile (STDIN,&c,&n);
+				do switch (c) {
+					case 0xD: WriteOut("\n");goto first_1;
+					case 0x08: WriteOut("\b \b"); goto first_2;
+				} while (DOS_ReadFile (STDIN,&c,&n));
+				goto first_2;
+			}
+		} while (DOS_ReadFile (STDIN,&c,&n));
+
+continue_1:
+
+			char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
+			sprintf(mountstring,"MOUNT %s ",name);
+
+			if(GetDriveType(name)==5) strcat(mountstring,"-t cdrom ");
+			else if(GetDriveType(name)==2) strcat(mountstring,"-t floppy ");
+			strcat(mountstring,name);
+			strcat(mountstring,"\\");
+//			if(GetDriveType(name)==5) strcat(mountstring," -ioctl");
+			
+			this->ParseLine(mountstring);
+failed:
+			if (!DOS_SetDrive(toupper(name[0])-'A'))
+#endif
 			WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(name[0]));
 		}
 		return true;
@@ -550,13 +814,13 @@ char * DOS_Shell::Which(char * name) {
 	if (!GetEnvStr("PATH",temp)) return 0;
 	const char * pathenv=temp.c_str();
 	if (!pathenv) return 0;
-	pathenv = strchr(pathenv,'=');
+	pathenv=strchr(pathenv,'=');
 	if (!pathenv) return 0;
 	pathenv++;
 	Bitu i_path = 0;
 	while (*pathenv) {
 		/* remove ; and ;; at the beginning. (and from the second entry etc) */
-		while(*pathenv == ';')
+		while(*pathenv && (*pathenv ==';'))
 			pathenv++;
 
 		/* get next entry */
@@ -566,7 +830,7 @@ char * DOS_Shell::Which(char * name) {
 
 		if(i_path == DOS_PATHLENGTH) {
 			/* If max size. move till next ; and terminate path */
-			while(*pathenv && (*pathenv != ';')) 
+			while(*pathenv != ';') 
 				pathenv++;
 			path[DOS_PATHLENGTH - 1] = 0;
 		} else path[i_path] = 0;

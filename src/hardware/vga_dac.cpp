@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +20,8 @@
 #include "inout.h"
 #include "render.h"
 #include "vga.h"
+
+extern bool vga_enable_3C6_ramdac;
 
 /*
 3C6h (R/W):  PEL Mask
@@ -54,9 +56,10 @@ static void VGA_DAC_SendColor( Bitu index, Bitu src ) {
 	const Bit8u red = vga.dac.rgb[src].red;
 	const Bit8u green = vga.dac.rgb[src].green;
 	const Bit8u blue = vga.dac.rgb[src].blue;
-	//Set entry in 16bit output lookup table
+
+	vga.dac.xlat32[index] = (blue<<2) | (green<<(2+8)) | (red<<(2+16)) | 0xFF000000;
 	vga.dac.xlat16[index] = ((blue>>1)&0x1f) | (((green)&0x3f)<<5) | (((red>>1)&0x1f) << 11);
-	
+
 	RENDER_SetPal( index, (red << 2) | ( red >> 4 ), (green << 2) | ( green >> 4 ), (blue << 2) | ( blue >> 4 ) );
 }
 
@@ -65,7 +68,13 @@ static void VGA_DAC_UpdateColor( Bitu index ) {
 	VGA_DAC_SendColor( index, maskIndex );
 }
 
-static void write_p3c6(Bitu port,Bitu val,Bitu iolen) {
+void write_p3c6(Bitu port,Bitu val,Bitu iolen) {
+	if((IS_VGA_ARCH) && (svgaCard==SVGA_None) && (vga.dac.hidac_counter>3)) {
+		vga.dac.reg02=val;
+		vga.dac.hidac_counter=0;
+		VGA_StartResize();
+		return;
+	}
 	if ( vga.dac.pel_mask != val ) {
 		LOG(LOG_VGAMISC,LOG_NORMAL)("VGA:DCA:Pel Mask set to %X", val);
 		vga.dac.pel_mask = val;
@@ -75,34 +84,42 @@ static void write_p3c6(Bitu port,Bitu val,Bitu iolen) {
 }
 
 
-static Bitu read_p3c6(Bitu port,Bitu iolen) {
+Bitu read_p3c6(Bitu port,Bitu iolen) {
+	if (vga_enable_3C6_ramdac)
+		vga.dac.hidac_counter++;
+
 	return vga.dac.pel_mask;
 }
 
 
-static void write_p3c7(Bitu port,Bitu val,Bitu iolen) {
+void write_p3c7(Bitu port,Bitu val,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	vga.dac.read_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_READ;
 	vga.dac.write_index= val + 1;
 }
 
-static Bitu read_p3c7(Bitu port,Bitu iolen) {
+Bitu read_p3c7(Bitu port,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	if (vga.dac.state==DAC_READ) return 0x3;
 	else return 0x0;
 }
 
-static void write_p3c8(Bitu port,Bitu val,Bitu iolen) {
+void write_p3c8(Bitu port,Bitu val,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	vga.dac.write_index=val;
 	vga.dac.pel_index=0;
 	vga.dac.state=DAC_WRITE;
 }
 
-static Bitu read_p3c8(Bitu port, Bitu iolen){
+Bitu read_p3c8(Bitu port, Bitu iolen){
+	vga.dac.hidac_counter=0;
 	return vga.dac.write_index;
 }
 
-static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
+void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	val&=0x3f;
 	switch (vga.dac.pel_index) {
 	case 0:
@@ -146,7 +163,8 @@ static void write_p3c9(Bitu port,Bitu val,Bitu iolen) {
 	};
 }
 
-static Bitu read_p3c9(Bitu port,Bitu iolen) {
+Bitu read_p3c9(Bitu port,Bitu iolen) {
+	vga.dac.hidac_counter=0;
 	Bit8u ret;
 	switch (vga.dac.pel_index) {
 	case 0:
@@ -178,8 +196,8 @@ void VGA_DAC_CombineColor(Bit8u attr,Bit8u pal) {
 	case M_LIN8:
 		break;
 	case M_VGA:
-		// used by copper demo; almost no video card seems to suport it
-		if(!IS_VGA_ARCH || (svgaCard!=SVGA_None)) break;
+		// used by copper demo; almost no video card seems to support it
+		// Update: supported by ET4000AX (and not by ET4000AF)
 	default:
 		VGA_DAC_SendColor( attr, pal );
 	}
@@ -203,15 +221,22 @@ void VGA_SetupDAC(void) {
 	vga.dac.state=DAC_READ;
 	vga.dac.read_index=0;
 	vga.dac.write_index=0;
+	vga.dac.hidac_counter=0;
+	vga.dac.reg02=0;
 	if (IS_VGA_ARCH) {
 		/* Setup the DAC IO port Handlers */
-		IO_RegisterWriteHandler(0x3c6,write_p3c6,IO_MB);
-		IO_RegisterReadHandler(0x3c6,read_p3c6,IO_MB);
-		IO_RegisterWriteHandler(0x3c7,write_p3c7,IO_MB);
-		IO_RegisterReadHandler(0x3c7,read_p3c7,IO_MB);
-		IO_RegisterWriteHandler(0x3c8,write_p3c8,IO_MB);
-		IO_RegisterReadHandler(0x3c8,read_p3c8,IO_MB);
-		IO_RegisterWriteHandler(0x3c9,write_p3c9,IO_MB);
-		IO_RegisterReadHandler(0x3c9,read_p3c9,IO_MB);
+		if (svga.setup_dac) {
+			svga.setup_dac();
+		} else {
+			IO_RegisterWriteHandler(0x3c6,write_p3c6,IO_MB);
+			IO_RegisterReadHandler(0x3c6,read_p3c6,IO_MB);
+			IO_RegisterWriteHandler(0x3c7,write_p3c7,IO_MB);
+			IO_RegisterReadHandler(0x3c7,read_p3c7,IO_MB);
+			IO_RegisterWriteHandler(0x3c8,write_p3c8,IO_MB);
+			IO_RegisterReadHandler(0x3c8,read_p3c8,IO_MB);
+			IO_RegisterWriteHandler(0x3c9,write_p3c9,IO_MB);
+			IO_RegisterReadHandler(0x3c9,read_p3c9,IO_MB);
+		}
 	}
 }
+

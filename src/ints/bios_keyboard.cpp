@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@
  * The proper way is in the mapper, but the repeating key is an unwanted side effect for lower versions of SDL */
 #endif
 
-static Bitu call_int16,call_irq1,call_irq6;
+static Bitu call_int16,call_irq1,irq1_ret_ctrlbreak_callback,call_irq6;
 
 /* Nice table from BOCHS i should feel bad for ripping this */
 #define none 0
@@ -196,6 +196,10 @@ static bool check_key(Bit16u &code) {
 	return true;
 }
 
+static void empty_keyboard_buffer() {
+	mem_writew(BIOS_KEYBOARD_BUFFER_TAIL, mem_readw(BIOS_KEYBOARD_BUFFER_HEAD));
+}
+
 	/*	Flag Byte 1 
 		bit 7 =1 INSert active
 		bit 6 =1 Caps Lock active
@@ -234,8 +238,7 @@ static Bitu IRQ1_Handler(void) {
 /* handling of the locks key is difficult as sdl only gives
  * states for numlock capslock. 
  */
-	Bitu scancode=reg_al;	/* Read the code */
-
+	Bitu scancode=reg_al;
 	Bit8u flags1,flags2,flags3,leds;
 	flags1=mem_readb(BIOS_KEYBOARD_FLAGS1);
 	flags2=mem_readb(BIOS_KEYBOARD_FLAGS2);
@@ -310,16 +313,12 @@ static Bitu IRQ1_Handler(void) {
 	case 0xba:flags1 &=~0x40;leds &=~0x04;break;
 #endif
 	case 0x45:
-		if (flags3 &0x01) {
+		/* if it has E1 prefix or is Ctrl-NumLock on non-enhanced keyboard => Pause */
+		if ((flags3 &0x01) || (!(flags3&0x10) && (flags1&0x04))) {
 			/* last scancode of pause received; first remove 0xe1-prefix */
 			flags3 &=~0x01;
 			mem_writeb(BIOS_KEYBOARD_FLAGS3,flags3);
-			if (flags2&1) {
-				/* ctrl-pause (break), special handling needed:
-				   add zero to the keyboard buffer, call int 0x1b which
-				   sets ctrl-c flag which calls int 0x23 in certain dos
-				   input/output functions;    not handled */
-			} else if ((flags2&8)==0) {
+			if ((flags2&8)==0) {
 				/* normal pause key, enter loop */
 				mem_writeb(BIOS_KEYBOARD_FLAGS2,flags2|8);
 				IO_Write(0x20,0x20);
@@ -339,7 +338,7 @@ static Bitu IRQ1_Handler(void) {
 		}
 		break;
 	case 0xc5:
-		if (flags3 &0x01) {
+		if ((flags3 &0x01) || (!(flags3&0x10) && (flags1&0x04))) {
 			/* pause released */
 			flags3 &=~0x01;
 		} else {
@@ -354,8 +353,28 @@ static Bitu IRQ1_Handler(void) {
 #endif
 		}
 		break;
-	case 0x46:flags2 |=0x10;break;				/* Scroll Lock SDL Seems to do this one fine (so break and make codes) */
-	case 0xc6:flags1 ^=0x10;flags2 &=~0x10;leds ^=0x01;break;
+	case 0x46:						/* Scroll Lock or Ctrl-Break */
+		/* if it has E0 prefix, or is Ctrl-NumLock on non-enhanced keyboard => Break */
+		if((flags3&0x02) || (!(flags3&0x10) && (flags1&0x04))) {				/* Ctrl-Break? */
+			/* remove 0xe0-prefix */
+			flags3 &=~0x02;
+			mem_writeb(BIOS_KEYBOARD_FLAGS3,flags3);
+			mem_writeb(BIOS_CTRL_BREAK_FLAG,0x80);
+			empty_keyboard_buffer();
+			BIOS_AddKeyToBuffer(0);
+			SegSet16(cs, RealSeg(CALLBACK_RealPointer(irq1_ret_ctrlbreak_callback)));
+			reg_ip = RealOff(CALLBACK_RealPointer(irq1_ret_ctrlbreak_callback));
+			return CBRET_NONE;
+		} else {                                        /* Scroll Lock. */
+			flags2 |=0x10;				/* Scroll Lock SDL Seems to do this one fine (so break and make codes) */
+		}
+		break;
+	case 0xc6:
+		if((flags3&0x02) || (!(flags3&0x10) && (flags1&0x04))) {				/* Ctrl-Break released? */
+			/* nothing to do */
+		} else {
+			flags1 ^=0x10;flags2 &=~0x10;leds ^=0x01;break;		/* Scroll Lock released */
+		}
 //	case 0x52:flags2|=128;break;//See numpad					/* Insert */
 	case 0xd2:	
 		if(flags3&0x02) { /* Maybe honour the insert on keypad as well */
@@ -458,6 +477,21 @@ irq1_end:
 	IO_Write(0x61,old61 | 128);
 	IO_Write(0x64,0xae);
 #endif
+	return CBRET_NONE;
+}
+
+static Bitu PCjr_NMI_Keyboard_Handler(void) {
+	while (IO_ReadB(0x64) & 1) { /* while data is available */
+		reg_al=IO_ReadB(0x60);
+		/* FIXME: Need to execute INT 15h hook */
+		IRQ1_Handler();
+	}
+
+	return CBRET_NONE;
+}
+
+static Bitu IRQ1_CtrlBreakAfterInt1B(void) {
+	BIOS_AddKeyToBuffer(0x0000);
 	return CBRET_NONE;
 }
 
@@ -621,19 +655,37 @@ void BIOS_SetupKeyboard(void) {
 	CALLBACK_Setup(call_int16,&INT16_Handler,CB_INT16,"Keyboard");
 	RealSetVec(0x16,CALLBACK_RealPointer(call_int16));
 
-	call_irq1=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRQ1,Real2Phys(BIOS_DEFAULT_IRQ1_LOCATION),"IRQ 1 Keyboard");
-	RealSetVec(0x09,BIOS_DEFAULT_IRQ1_LOCATION);
-	// pseudocode for CB_IRQ1:
-	//	push ax
-	//	in al, 0x60
-	//	mov ah, 0x4f
-	//	stc
-	//	int 15
-	//	jc skip
-	//	callback IRQ1_Handler
-	//	label skip:
+	call_irq1=CALLBACK_Allocate();
+	if (machine == MCH_PCJR) { /* PCjr keyboard interrupt connected to NMI */
+		/* FIXME: This doesn't take INT 15h hook into consideration */
+		CALLBACK_Setup(call_irq1,&PCjr_NMI_Keyboard_Handler,CB_IRET,"PCjr NMI Keyboard");
+		RealSetVec(0x02/*NMI*/,CALLBACK_RealPointer(call_irq1));
+	}
+	else {
+		CALLBACK_Setup(call_irq1,&IRQ1_Handler,CB_IRQ1,Real2Phys(BIOS_DEFAULT_IRQ1_LOCATION),"IRQ 1 Keyboard");
+		RealSetVec(0x09/*IRQ 1*/,BIOS_DEFAULT_IRQ1_LOCATION);
+		// pseudocode for CB_IRQ1:
+		//	push ax
+		//	in al, 0x60
+		//	mov ah, 0x4f
+		//	stc
+		//	int 15
+		//	jc skip
+		//	callback IRQ1_Handler
+		//	label skip:
+		//	cli
+		//	mov al, 0x20
+		//	out 0x20, al
+		//	pop ax
+		//	iret
+	}
+
+	irq1_ret_ctrlbreak_callback=CALLBACK_Allocate();
+	CALLBACK_Setup(irq1_ret_ctrlbreak_callback,&IRQ1_CtrlBreakAfterInt1B,CB_IRQ1_BREAK,"IRQ 1 Ctrl-Break callback");
+	// pseudocode for CB_IRQ1_BREAK:
+	//	int 1b
 	//	cli
+	//	callback IRQ1_CtrlBreakAfterInt1B
 	//	mov al, 0x20
 	//	out 0x20, al
 	//	pop ax

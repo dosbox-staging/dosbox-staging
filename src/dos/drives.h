@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,11 @@ public:
 //	static void CycleDrive(bool pressed);
 //	static void CycleDisk(bool pressed);
 	static void CycleAllDisks(void);
+	static void CycleAllCDs(void);
 	static void Init(Section* sec);
+	
+	static void SaveState( std::ostream& stream );
+	static void LoadState( std::istream& stream );
 	
 private:
 	static struct DriveInfo {
@@ -50,18 +54,18 @@ private:
 class localDrive : public DOS_Drive {
 public:
 	localDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid);
-	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
-	virtual FILE *GetSystemFilePtr(char const * const name, char const * const type);
-	virtual bool GetSystemFilename(char* sysName, char const * const dosName);
-	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
-	virtual bool FileUnlink(char * name);
-	virtual bool RemoveDir(char * dir);
-	virtual bool MakeDir(char * dir);
-	virtual bool TestDir(char * dir);
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
+	virtual bool FileOpen(DOS_File * * file,const char * name,Bit32u flags);
+	virtual FILE *GetSystemFilePtr(char const * const name, char const * const type); 
+	virtual bool GetSystemFilename(char* sysName, char const * const dosName); 
+	virtual bool FileCreate(DOS_File * * file,const char * name,Bit16u attributes);
+	virtual bool FileUnlink(const char * name);
+	virtual bool RemoveDir(const char * dir);
+	virtual bool MakeDir(const char * dir);
+	virtual bool TestDir(const char * dir);
+	virtual bool FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual bool FindNext(DOS_DTA & dta);
-	virtual bool GetFileAttr(char * name,Bit16u * attr);
-	virtual bool Rename(char * oldname,char * newname);
+	virtual bool GetFileAttr(const char * name,Bit16u * attr);
+	virtual bool Rename(const char * oldname,const char * newname);
 	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
 	virtual bool FileExists(const char* name);
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
@@ -69,7 +73,18 @@ public:
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
-private:
+	virtual char const * GetLabel(){return dirCache.GetLabel();};
+	virtual void SetLabel(const char *label, bool iscdrom, bool updatable) { dirCache.SetLabel(label,iscdrom,updatable); };
+	virtual void *opendir(const char *dir);
+	virtual void closedir(void *handle);
+	virtual bool read_directory_first(void *handle, char* entry_name, bool& is_directory);
+	virtual bool read_directory_next(void *handle, char* entry_name, bool& is_directory);
+
+	virtual void EmptyCache(void) { dirCache.EmptyCache(); };
+	virtual void MediaChange() {};
+
+protected:
+	DOS_Drive_Cache dirCache;
 	char basedir[CROSS_LEN];
 	friend void DOS_Shell::CMD_SUBST(char* args); 	
 	struct {
@@ -83,6 +98,36 @@ private:
 		Bit16u free_clusters;
 		Bit8u mediaid;
 	} allocation;
+};
+
+class physfsDrive : public localDrive {
+private:
+	bool isdir(const char *dir);
+
+public:
+	physfsDrive(const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid);
+	virtual bool FileOpen(DOS_File * * file,const char * name,Bit32u flags);
+	virtual bool FileCreate(DOS_File * * file,const char * name,Bit16u attributes);
+	virtual bool FileUnlink(const char * name);
+	virtual bool RemoveDir(const char * dir);
+	virtual bool MakeDir(const char * dir);
+	virtual bool TestDir(const char * dir);
+	virtual bool FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
+	virtual bool FindNext(DOS_DTA & dta);
+	virtual bool GetFileAttr(const char * name,Bit16u * attr);
+	virtual bool Rename(const char * oldname,const char * newname);
+	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
+	virtual bool FileExists(const char* name);
+	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
+	virtual Bit8u GetMediaByte(void);
+	virtual bool isRemote(void);
+	virtual bool isRemovable(void);
+	virtual void *opendir(const char *dir);
+	virtual void closedir(void *handle);
+	virtual bool read_directory_first(void *handle, char* entry_name, bool& is_directory);
+	virtual bool read_directory_next(void *handle, char* entry_name, bool& is_directory);
+	virtual const char *GetInfo(void);
+	virtual ~physfsDrive(void);
 };
 
 #ifdef _MSC_VER
@@ -146,16 +191,17 @@ class imageDisk;
 class fatDrive : public DOS_Drive {
 public:
 	fatDrive(const char * sysFilename, Bit32u bytesector, Bit32u cylsector, Bit32u headscyl, Bit32u cylinders, Bit32u startSector);
-	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
-	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
-	virtual bool FileUnlink(char * name);
-	virtual bool RemoveDir(char * dir);
-	virtual bool MakeDir(char * dir);
-	virtual bool TestDir(char * dir);
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
+	virtual ~fatDrive();
+	virtual bool FileOpen(DOS_File * * file,const char * name,Bit32u flags);
+	virtual bool FileCreate(DOS_File * * file,const char * name,Bit16u attributes);
+	virtual bool FileUnlink(const char * name);
+	virtual bool RemoveDir(const char * dir);
+	virtual bool MakeDir(const char * dir);
+	virtual bool TestDir(const char * dir);
+	virtual bool FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual bool FindNext(DOS_DTA & dta);
-	virtual bool GetFileAttr(char * name,Bit16u * attr);
-	virtual bool Rename(char * oldname,char * newname);
+	virtual bool GetFileAttr(const char * name,Bit16u * attr);
+	virtual bool Rename(const char * oldname,const char * newname);
 	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
 	virtual bool FileExists(const char* name);
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block);
@@ -180,11 +226,11 @@ private:
 	void setClusterValue(Bit32u clustNum, Bit32u clustValue);
 	Bit32u getClustFirstSect(Bit32u clustNum);
 	bool FindNextInternal(Bit32u dirClustNumber, DOS_DTA & dta, direntry *foundEntry);
-	bool getDirClustNum(char * dir, Bit32u * clustNum, bool parDir);
+	bool getDirClustNum(const char * dir, Bit32u * clustNum, bool parDir);
 	bool getFileDirEntry(char const * const filename, direntry * useEntry, Bit32u * dirClust, Bit32u * subEntry);
 	bool addDirectoryEntry(Bit32u dirClustNumber, direntry useEntry);
 	void zeroOutCluster(Bit32u clustNumber);
-	bool getEntryName(char *fullname, char *entname);
+	bool getEntryName(const char *fullname, char *entname);
 	friend void DOS_Shell::CMD_SUBST(char* args); 	
 	struct {
 		char srch_dir[CROSS_LEN];
@@ -217,18 +263,38 @@ class cdromDrive : public localDrive
 {
 public:
 	cdromDrive(const char driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error);
-	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
-	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
-	virtual bool FileUnlink(char * name);
-	virtual bool RemoveDir(char * dir);
-	virtual bool MakeDir(char * dir);
-	virtual bool Rename(char * oldname,char * newname);
-	virtual bool GetFileAttr(char * name,Bit16u * attr);
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
+	virtual bool FileOpen(DOS_File * * file,const char * name,Bit32u flags);
+	virtual bool FileCreate(DOS_File * * file,const char * name,Bit16u attributes);
+	virtual bool FileUnlink(const char * name);
+	virtual bool RemoveDir(const char * dir);
+	virtual bool MakeDir(const char * dir);
+	virtual bool Rename(const char * oldname,const char * newname);
+	virtual bool GetFileAttr(const char * name,Bit16u * attr);
+	virtual bool FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
+	virtual void SetDir(const char* path);
+	virtual bool isRemote(void);
+	virtual bool isRemovable(void);virtual Bits UnMount(void);
+private:
+	Bit8u subUnit;	char driveLetter;
+};
+
+class physfscdromDrive : public physfsDrive
+{
+public:
+	physfscdromDrive(const char driveLetter, const char * startdir,Bit16u _bytes_sector,Bit8u _sectors_cluster,Bit16u _total_clusters,Bit16u _free_clusters,Bit8u _mediaid, int& error);
+	virtual bool FileOpen(DOS_File * * file,const char * name,Bit32u flags);
+	virtual bool FileCreate(DOS_File * * file,const char * name,Bit16u attributes);
+	virtual bool FileUnlink(const char * name);
+	virtual bool RemoveDir(const char * dir);
+	virtual bool MakeDir(const char * dir);
+	virtual bool Rename(const char * oldname,const char * newname);
+	virtual bool GetFileAttr(const char * name,Bit16u * attr);
+	virtual bool FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst=false);
 	virtual void SetDir(const char* path);
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
+	virtual const char *GetInfo(void);
 private:
 	Bit8u subUnit;
 	char driveLetter;
@@ -315,21 +381,22 @@ class isoDrive : public DOS_Drive {
 public:
 	isoDrive(char driveLetter, const char* device_name, Bit8u mediaid, int &error);
 	~isoDrive();
-	virtual bool FileOpen(DOS_File **file, char *name, Bit32u flags);
-	virtual bool FileCreate(DOS_File **file, char *name, Bit16u attributes);
-	virtual bool FileUnlink(char *name);
-	virtual bool RemoveDir(char *dir);
-	virtual bool MakeDir(char *dir);
-	virtual bool TestDir(char *dir);
-	virtual bool FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst);
+	virtual bool FileOpen(DOS_File **file, const char *name, Bit32u flags);
+	virtual bool FileCreate(DOS_File **file, const char *name, Bit16u attributes);
+	virtual bool FileUnlink(const char *name);
+	virtual bool RemoveDir(const char *dir);
+	virtual bool MakeDir(const char *dir);
+	virtual bool TestDir(const char *dir);
+	virtual bool FindFirst(const char *_dir, DOS_DTA &dta, bool fcb_findfirst);
 	virtual bool FindNext(DOS_DTA &dta);
-	virtual bool GetFileAttr(char *name, Bit16u *attr);
-	virtual bool Rename(char * oldname,char * newname);
+	virtual bool GetFileAttr(const char *name, Bit16u *attr);
+	virtual bool Rename(const char * oldname,const char * newname);
 	virtual bool AllocationInfo(Bit16u *bytes_sector, Bit8u *sectors_cluster, Bit16u *total_clusters, Bit16u *free_clusters);
 	virtual bool FileExists(const char *name);
    	virtual bool FileStat(const char *name, FileStat_Block *const stat_block);
 	virtual Bit8u GetMediaByte(void);
 	virtual void EmptyCache(void){}
+	virtual void MediaChange();
 	virtual bool isRemote(void);
 	virtual bool isRemovable(void);
 	virtual Bits UnMount(void);
@@ -363,7 +430,6 @@ private:
 		Bit8u data[ISO_FRAMESIZE];
 	} sectorHashEntries[ISO_MAX_HASH_TABLE_SIZE];
 
-	bool iso;
 	bool dataCD;
 	isoDirEntry rootEntry;
 	Bit8u mediaid;
@@ -378,19 +444,20 @@ struct VFILE_Block;
 class Virtual_Drive: public DOS_Drive {
 public:
 	Virtual_Drive();
-	bool FileOpen(DOS_File * * file,char * name,Bit32u flags);
-	bool FileCreate(DOS_File * * file,char * name,Bit16u attributes);
-	bool FileUnlink(char * name);
-	bool RemoveDir(char * dir);
-	bool MakeDir(char * dir);
-	bool TestDir(char * dir);
-	bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst);
+	bool FileOpen(DOS_File * * file,const char * name,Bit32u flags);
+	bool FileCreate(DOS_File * * file,const char * name,Bit16u attributes);
+	bool FileUnlink(const char * name);
+	bool RemoveDir(const char * dir);
+	bool MakeDir(const char * dir);
+	bool TestDir(const char * dir);
+	bool FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst);
 	bool FindNext(DOS_DTA & dta);
-	bool GetFileAttr(char * name,Bit16u * attr);
-	bool Rename(char * oldname,char * newname);
+	bool GetFileAttr(const char * name,Bit16u * attr);
+	bool Rename(const char * oldname,const char * newname);
 	bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters);
 	bool FileExists(const char* name);
 	bool FileStat(const char* name, FileStat_Block* const stat_block);
+	virtual void MediaChange() {}
 	Bit8u GetMediaByte(void);
 	void EmptyCache(void){}
 	bool isRemote(void);

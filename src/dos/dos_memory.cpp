@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,22 +19,57 @@
 
 #include "dosbox.h"
 #include "mem.h"
+#include "bios.h"
 #include "dos_inc.h"
 #include "callback.h"
 
-#define UMB_START_SEG 0x9fff
+// uncomment for alloc/free debug messages
+#define DEBUG_ALLOC
+
+Bitu UMB_START_SEG = 0x9FFF;
+/* FIXME: This should be a variable that reflects the last RAM segment.
+ *        That means 0x9FFF if 640KB or more, or a lesser value if less than 640KB */
+//#define UMB_START_SEG 0x9fff
+
+Bit16u first_umb_seg = 0xd000;
+Bit16u first_umb_size = 0x2000;
 
 static Bit16u memAllocStrategy = 0x00;
+
+static void DOS_Mem_E_Exit(const char *msg) {
+	Bit16u mcb_segment=dos.firstMCB;
+	DOS_MCB mcb(mcb_segment);
+	DOS_MCB mcb_next(0);
+	Bitu counter=0;
+	
+	LOG_MSG("DOS MCB dump:\n");
+	while (mcb.GetType()!='Z') {
+		if (counter++ > 10000) break;
+		LOG_MSG(" Type=0x%02x(%c) Seg=0x%04x size=0x%04x\n",
+			mcb.GetType(),mcb.GetType(),
+			mcb_segment+1,mcb.GetSize());
+		mcb_next.SetPt((Bit16u)(mcb_segment+mcb.GetSize()+1));
+		mcb_segment+=mcb.GetSize()+1;
+		mcb.SetPt(mcb_segment);
+	}
+	LOG_MSG("FINAL: Type=0x%02x(%c) Seg=0x%04x size=0x%04x\n",
+			mcb.GetType(),mcb.GetType(),
+			mcb_segment+1,mcb.GetSize());
+	LOG_MSG("End dump\n");
+
+	E_Exit(msg);
+}
 
 static void DOS_CompressMemory(void) {
 	Bit16u mcb_segment=dos.firstMCB;
 	DOS_MCB mcb(mcb_segment);
 	DOS_MCB mcb_next(0);
+	Bitu counter=0;
 
-	while (mcb.GetType()!=0x5a) {
+	while (mcb.GetType()!='Z') {
+		if(counter++ > 10000000) DOS_Mem_E_Exit("DOS_CompressMemory: DOS MCB list corrupted.");
 		mcb_next.SetPt((Bit16u)(mcb_segment+mcb.GetSize()+1));
-		if (GCC_UNLIKELY((mcb_next.GetType()!=0x4d) && (mcb_next.GetType()!=0x5a))) E_Exit("Corrupt MCB chain");
-		if ((mcb.GetPSPSeg()==MCB_FREE) && (mcb_next.GetPSPSeg()==MCB_FREE)) {
+		if ((mcb.GetPSPSeg()==0) && (mcb_next.GetPSPSeg()==0)) {
 			mcb.SetSize(mcb.GetSize()+mcb_next.GetSize()+1);
 			mcb.SetType(mcb_next.GetType());
 		} else {
@@ -47,7 +82,10 @@ static void DOS_CompressMemory(void) {
 void DOS_FreeProcessMemory(Bit16u pspseg) {
 	Bit16u mcb_segment=dos.firstMCB;
 	DOS_MCB mcb(mcb_segment);
+	Bitu counter = 0;
+
 	for (;;) {
+		if(counter++ > 10000000) DOS_Mem_E_Exit("DOS_FreeProcessMemory: DOS MCB list corrupted.");
 		if (mcb.GetPSPSeg()==pspseg) {
 			mcb.SetPSPSeg(MCB_FREE);
 		}
@@ -59,7 +97,6 @@ void DOS_FreeProcessMemory(Bit16u pspseg) {
 				mcb.SetType(0x4d);
 			} else break;
 		}
-		if (GCC_UNLIKELY(mcb.GetType()!=0x4d)) E_Exit("Corrupt MCB chain");
 		mcb_segment+=mcb.GetSize()+1;
 		mcb.SetPt(mcb_segment);
 	}
@@ -93,6 +130,22 @@ bool DOS_SetMemAllocStrategy(Bit16u strat) {
 	return false;
 }
 
+extern bool dbg_zero_on_dos_allocmem;
+
+void DOS_zeromem(uint16_t seg,uint16_t para) {
+	uint32_t ofs,cnt;
+
+	if (para == 0) return;
+
+	ofs = ((uint32_t)seg << 4);
+	cnt = ((uint32_t)para << 4);
+	if ((ofs+cnt) > 0x100000) E_Exit("DOS_zeromem out of range");
+	while (cnt != 0) {
+		mem_writeb(ofs++,0);
+		cnt--;
+	}
+}
+
 bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 	DOS_CompressMemory();
 	Bit16u bigsize=0;
@@ -113,7 +166,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 	Bit16u found_seg=0,found_seg_size=0;
 	for (;;) {
 		mcb.SetPt(mcb_segment);
-		if (mcb.GetPSPSeg()==MCB_FREE) {
+		if (mcb.GetPSPSeg()==0) {
 			/* Check for enough free memory in current block */
 			Bit16u block_size=mcb.GetSize();			
 			if (block_size<(*blocks)) {
@@ -126,6 +179,11 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 				/* MCB fits precisely, use it if search strategy is firstfit or bestfit */
 				mcb.SetPSPSeg(dos.psp());
 				*segment=mcb_segment+1;
+
+				if (dbg_zero_on_dos_allocmem) DOS_zeromem(*segment,*blocks);
+#ifdef DEBUG_ALLOC
+				LOG_MSG("DOS_AllocateMemory(blocks=0x%04x) = 0x%04x-0x%04x\n",*blocks,*segment,*segment+*blocks-1);
+#endif
 				return true;
 			} else {
 				switch (mem_strat & 0x3f) {
@@ -140,6 +198,11 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 						mcb.SetFileName(psp_name);
 						//TODO Filename
 						*segment=mcb_segment+1;
+
+						if (dbg_zero_on_dos_allocmem) DOS_zeromem(*segment,*blocks);
+#ifdef DEBUG_ALLOC
+						LOG_MSG("DOS_AllocateMemory(blocks=0x%04x) = 0x%04x-0x%04x\n",*blocks,*segment,*segment+*blocks-1);
+#endif
 						return true;
 					case 1: /* bestfit */
 						if ((found_seg_size==0) || (block_size<found_seg_size)) {
@@ -190,6 +253,11 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 							//Not consistent with line 124. But how many application will use this information ?
 							mcb.SetFileName(psp_name);
 							*segment = found_seg+1;
+
+							if (dbg_zero_on_dos_allocmem) DOS_zeromem(*segment,*blocks);
+#ifdef DEBUG_ALLOC
+							LOG_MSG("DOS_AllocateMemory(blocks=0x%04x) = 0x%04x-0x%04x\n",*blocks,*segment,*segment+*blocks-1);
+#endif
 							return true;
 						}
 						*segment = found_seg+1+found_seg_size - *blocks;
@@ -203,6 +271,11 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 						mcb.SetPSPSeg(MCB_FREE);
 						mcb.SetType(0x4D);
 					}
+
+					if (dbg_zero_on_dos_allocmem) DOS_zeromem(*segment,*blocks);
+#ifdef DEBUG_ALLOC
+					LOG_MSG("DOS_AllocateMemory(blocks=0x%04x) = 0x%04x-0x%04x\n",*blocks,*segment,*segment+*blocks-1);
+#endif
 					return true;
 				}
 				/* no fitting MCB found, return size of largest block */
@@ -212,6 +285,10 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 			}
 		} else mcb_segment+=mcb.GetSize()+1;
 	}
+
+#ifdef DEBUG_ALLOC
+	LOG_MSG("DOS_AllocateMemory(blocks=0x%04x) = 0x%04x-0x%04x\n",*blocks,*segment,*segment+*blocks-1);
+#endif
 	return false;
 }
 
@@ -227,12 +304,12 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		return false;
 	}
 
+	DOS_CompressMemory();
 	Bit16u total=mcb.GetSize();
 	DOS_MCB	mcb_next(segment+total);
 	if (*blocks<=total) {
 		if (GCC_UNLIKELY(*blocks==total)) {
 			/* Nothing to do */
-			DOS_CompressMemory();
 			return true;
 		}
 		/* Shrinking MCB */
@@ -247,7 +324,6 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		mcb_new_next.SetSize(total-*blocks-1);
 		mcb_new_next.SetPSPSeg(MCB_FREE);
 		mcb.SetPSPSeg(dos.psp());
-		DOS_CompressMemory();
 		return true;
 	}
 	/* MCB will grow, try to join with following MCB */
@@ -268,7 +344,6 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		mcb_next.SetPSPSeg(MCB_FREE);
 		mcb.SetType(0x4d);
 		mcb.SetPSPSeg(dos.psp());
-		DOS_CompressMemory();
 		return true;
 	}
 
@@ -281,7 +356,6 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 	}
 	mcb.SetSize(total);
 	mcb.SetPSPSeg(dos.psp());
-	DOS_CompressMemory();
 	if (*blocks==total) return true;	/* block fit exactly */
 
 	*blocks=total;	/* return maximum */
@@ -303,6 +377,11 @@ bool DOS_FreeMemory(Bit16u segment) {
 		DOS_SetError(DOSERR_MB_ADDRESS_INVALID);
 		return false;
 	}
+
+#ifdef DEBUG_ALLOC
+	LOG_MSG("DOS_FreeMemory(seg=0x%04x)\n",segment);
+#endif
+
 	mcb.SetPSPSeg(MCB_FREE);
 //	DOS_CompressMemory();
 	return true;
@@ -310,9 +389,10 @@ bool DOS_FreeMemory(Bit16u segment) {
 
 
 void DOS_BuildUMBChain(bool umb_active,bool ems_active) {
-	if (umb_active  && (machine!=MCH_TANDY)) {
-		Bit16u first_umb_seg = 0xd000;
-		Bit16u first_umb_size = 0x2000;
+	unsigned int seg_limit = MEM_TotalPages()*256;
+
+	/* UMBs are only possible if the machine has 1MB+64KB of RAM */
+	if (umb_active && (machine!=MCH_TANDY) && seg_limit >= (0x10000+0x1000-1)) {
 		if(ems_active || (machine == MCH_PCJR)) first_umb_size = 0x1000;
 
 		dos_infoblock.SetStartOfUMBChain(UMB_START_SEG);
@@ -376,12 +456,18 @@ bool DOS_LinkUMBsToMemChain(Bit16u linkstate) {
 			break;
 		case 0x0001:	// link
 			if (mcb.GetType()==0x5a) {
+				if ((mcb_segment+mcb.GetSize()+1) != umb_start) {
+					LOG_MSG("MCB chain no longer goes to end of memory (corruption?), not linking in UMB!");
+					return false;
+				}
 				mcb.SetType(0x4d);
 				dos_infoblock.SetUMBChainState(1);
 			}
 			break;
 		default:
-			LOG_MSG("Invalid link state %x when reconfiguring MCB chain",linkstate);
+			/* NTS: Some programs apparently call this function incorrectly.
+			 *      The CauseWay extender in Open Watcom 1.9's installer for example
+			 *      calls this function with AX=0x5803 BX=0x58 */
 			return false;
 	}
 
@@ -394,20 +480,37 @@ static Bitu DOS_default_handler(void) {
 	return CBRET_NONE;
 }
 
+#include <assert.h>
+
+extern Bit16u DOS_IHSEG;
+
 static	CALLBACK_HandlerObject callbackhandler;
 void DOS_SetupMemory(void) {
+	unsigned int max_conv;
+	unsigned int seg_limit;
+
+	max_conv = mem_readw(BIOS_MEMORY_SIZE) << (10-4);
+	seg_limit = MEM_TotalPages()*256;
+	if (seg_limit > max_conv) seg_limit = max_conv;
+	UMB_START_SEG = max_conv - 1;
+
 	/* Let dos claim a few bios interrupts. Makes DOSBox more compatible with 
 	 * buggy games, which compare against the interrupt table. (probably a 
 	 * broken linked list implementation) */
 	callbackhandler.Allocate(&DOS_default_handler,"DOS default int");
-	Bit16u ihseg = 0x70;
-	Bit16u ihofs = 0x08;
+	Bit16u ihseg;
+	Bit16u ihofs;
+
+	assert(DOS_IHSEG != 0);
+	ihseg = DOS_IHSEG;
+	ihofs = 0x08;
+
 	real_writeb(ihseg,ihofs+0x00,(Bit8u)0xFE);	//GRP 4
 	real_writeb(ihseg,ihofs+0x01,(Bit8u)0x38);	//Extra Callback instruction
 	real_writew(ihseg,ihofs+0x02,callbackhandler.Get_callback());  //The immediate word
 	real_writeb(ihseg,ihofs+0x04,(Bit8u)0xCF);	//An IRET Instruction
 	RealSetVec(0x01,RealMake(ihseg,ihofs));		//BioMenace (offset!=4)
-	RealSetVec(0x02,RealMake(ihseg,ihofs));		//BioMenace (segment<0x8000)
+	if (machine != MCH_PCJR) RealSetVec(0x02,RealMake(ihseg,ihofs)); //BioMenace (segment<0x8000). Else, taken by BIOS NMI interrupt
 	RealSetVec(0x03,RealMake(ihseg,ihofs));		//Alien Incident (offset!=0)
 	RealSetVec(0x04,RealMake(ihseg,ihofs));		//Shadow President (lower byte of segment!=0)
 //	RealSetVec(0x0f,RealMake(ihseg,ihofs));		//Always a tricky one (soundblaster irq)
@@ -438,14 +541,20 @@ void DOS_SetupMemory(void) {
 	mcb.SetPSPSeg(MCB_FREE);						//Free
 	mcb.SetType(0x5a);								//Last Block
 	if (machine==MCH_TANDY) {
+		if (seg_limit < ((384*1024)/16))
+			E_Exit("Tandy requires at least 384K");
 		/* memory up to 608k available, the rest (to 640k) is used by
 			the tandy graphics system's variable mapping of 0xb800 */
+/*
 		mcb.SetSize(0x9BFF - DOS_MEM_START - mcb_sizes);
+*/		mcb.SetSize(/*0x9BFF*/(seg_limit-0x801) - DOS_MEM_START - mcb_sizes);
 	} else if (machine==MCH_PCJR) {
+		if (seg_limit < ((256*1024)/16))
+			E_Exit("PCjr requires at least 256K");
 		/* memory from 128k to 640k is available */
 		mcb_devicedummy.SetPt((Bit16u)0x2000);
 		mcb_devicedummy.SetPSPSeg(MCB_FREE);
-		mcb_devicedummy.SetSize(0x9FFF - 0x2000);
+		mcb_devicedummy.SetSize(/*0x9FFF*/(seg_limit-1) - 0x2000);
 		mcb_devicedummy.SetType(0x5a);
 
 		/* exclude PCJr graphics region */
@@ -458,11 +567,21 @@ void DOS_SetupMemory(void) {
 		mcb.SetSize(0x1800 - DOS_MEM_START - (2+mcb_sizes));
 		mcb.SetType(0x4d);
 	} else {
+#ifndef DEBUG_ALLOC
+		/* NTS: Testing suggests we can push as low as 4KB. However, Wikipedia and
+		 *      other sites suggest that the IBM PC only went as low as 16KB when
+		 *      it first sold, and even that wasn't too typical. But what the hell,
+		 *      we'll allow as little as 4KB if not for fun DOS hacking. */
+		if (seg_limit < ((4*1024)/16))
+			E_Exit("Standard PC requires at least 4K");
+#endif
+
 		/* complete memory up to 640k available */
 		/* last paragraph used to add UMB chain to low-memory MCB chain */
-		mcb.SetSize(0x9FFE - DOS_MEM_START - mcb_sizes);
+		mcb.SetSize(/*0x9FFE*/(seg_limit-2) - DOS_MEM_START - mcb_sizes);
 	}
 
 	dos.firstMCB=DOS_MEM_START;
 	dos_infoblock.SetFirstMCB(DOS_MEM_START);
 }
+

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,16 +22,22 @@
 
 #include "dosbox.h"
 #include "callback.h"
+#include "logging.h"
+#include "bios.h"
 #include "mem.h"
 #include "cpu.h"
+
+Bit16u CB_SEG=0,CB_SOFFSET=0;
+extern Bitu vm86_fake_io_seg;
+extern Bitu vm86_fake_io_off;
 
 /* CallBack are located at 0xF000:0x1000  (see CB_SEG and CB_SOFFSET in callback.h)
    And they are 16 bytes each and you can define them to behave in certain ways like a
    far return or and IRET
 */
 
-CallBack_Handler CallBack_Handlers[CB_MAX];
-char* CallBack_Description[CB_MAX];
+CallBack_Handler CallBack_Handlers[CB_MAX] = {NULL};
+char* CallBack_Description[CB_MAX] = {NULL};
 
 static Bitu call_stop,call_idle,call_default,call_default2;
 Bitu call_priv_io;
@@ -41,9 +47,17 @@ static Bitu illegal_handler(void) {
 	return 1;
 }
 
+void CALLBACK_Shutdown(void) {
+	for (Bitu i=1;(i<CB_MAX);i++) {
+		CallBack_Handlers[i] = &illegal_handler;
+		CALLBACK_SetDescription(i,NULL);
+	}
+}
+
 Bitu CALLBACK_Allocate(void) {
 	for (Bitu i=1;(i<CB_MAX);i++) {
 		if (CallBack_Handlers[i]==&illegal_handler) {
+			if (CallBack_Description[i] != NULL) LOG_MSG("CALLBACK_Allocate() warning: empty slot still has description string!\n");
 			CallBack_Handlers[i]=0;
 			return i;
 		}
@@ -54,6 +68,7 @@ Bitu CALLBACK_Allocate(void) {
 
 void CALLBACK_DeAllocate(Bitu in) {
 	CallBack_Handlers[in]=&illegal_handler;
+	CALLBACK_SetDescription(in,NULL);
 }
 
 
@@ -97,6 +112,18 @@ void CALLBACK_RunRealFar(Bit16u seg,Bit16u off) {
 	SegSet16(cs,oldcs);
 }
 
+void CALLBACK_RunRealInt_retcsip(Bit8u intnum,Bitu &rcs,Bitu &rip) {
+	Bit32u oldeip=reg_eip;
+	Bit16u oldcs=SegValue(cs);
+	reg_eip=CB_SOFFSET+(CB_MAX*CB_SIZE)+(intnum*6);
+	SegSet16(cs,CB_SEG);
+	DOSBOX_RunMachine();
+	rcs = SegValue(cs);
+	rip = reg_ip;
+	reg_eip=oldeip;
+	SegSet16(cs,oldcs);
+}
+
 void CALLBACK_RunRealInt(Bit8u intnum) {
 	Bit32u oldeip=reg_eip;
 	Bit16u oldcs=SegValue(cs);
@@ -129,11 +156,13 @@ void CALLBACK_SIF(bool val) {
 }
 
 void CALLBACK_SetDescription(Bitu nr, const char* descr) {
-	if (descr) {
+	if (CallBack_Description[nr]) delete[] CallBack_Description[nr];
+	CallBack_Description[nr] = 0;
+
+	if (descr != NULL) {
 		CallBack_Description[nr] = new char[strlen(descr)+1];
 		strcpy(CallBack_Description[nr],descr);
-	} else
-		CallBack_Description[nr] = 0;
+	}
 }
 
 const char* CALLBACK_GetDescription(Bitu nr) {
@@ -257,6 +286,20 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writeb(physAddress+0x0d,(Bit8u)0x58);			// pop ax
 		phys_writeb(physAddress+0x0e,(Bit8u)0xcf);			//An IRET Instruction
 		return (use_cb?0x15:0x0f);
+	case CB_IRQ1_BREAK:	// return from int9, when Ctrl-Break is detected; invokes int 1b
+		phys_writew(physAddress+0x00,(Bit16u)0x1bcd);		// int 1b
+		phys_writeb(physAddress+0x02,(Bit8u)0xfa);		// cli
+		if (use_cb) {
+			phys_writeb(physAddress+0x03,(Bit8u)0xFE);	//GRP 4
+			phys_writeb(physAddress+0x04,(Bit8u)0x38);	//Extra Callback instruction
+			phys_writew(physAddress+0x05,(Bit16u)callback);		//The immediate word
+			physAddress+=4;
+		}
+		phys_writew(physAddress+0x03,(Bit16u)0x20b0);		// mov al, 0x20
+		phys_writew(physAddress+0x05,(Bit16u)0x20e6);		// out 0x20, al
+		phys_writeb(physAddress+0x07,(Bit8u)0x58);			// pop ax
+		phys_writeb(physAddress+0x08,(Bit8u)0xcf);			//An IRET Instruction
+		return (use_cb?0x0d:0x09);
 	case CB_IRQ9:	// pic cascade interrupt
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
@@ -304,26 +347,22 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writew(physAddress+0x01,(Bit16u)0x60e4);		// in al, 0x60
 		phys_writew(physAddress+0x03,(Bit16u)0xe03c);		// cmp al, 0xe0
 		if (use_cb) {
-			phys_writew(physAddress+0x05,(Bit16u)0x0b74);	// je skip
+			phys_writew(physAddress+0x05,(Bit16u)0x0674);	// je skip
 			phys_writeb(physAddress+0x07,(Bit8u)0xFE);		//GRP 4
 			phys_writeb(physAddress+0x08,(Bit8u)0x38);		//Extra Callback instruction
 			phys_writew(physAddress+0x09,(Bit16u)callback);			//The immediate word
 			physAddress+=4;
 		} else {
-			phys_writew(physAddress+0x05,(Bit16u)0x0774);	// je skip
+			phys_writew(physAddress+0x05,(Bit16u)0x0274);	// je skip
 		}
-		phys_writeb(physAddress+0x07,(Bit8u)0x1e);			// push ds
-		phys_writew(physAddress+0x08,(Bit16u)0x406a);		// push 0x0040
-		phys_writeb(physAddress+0x0a,(Bit8u)0x1f);			// pop ds
-		phys_writew(physAddress+0x0b,(Bit16u)0x09cd);		// int 9
-		phys_writeb(physAddress+0x0d,(Bit8u)0x1f);			// pop ds
+		phys_writew(physAddress+0x07,(Bit16u)0x09cd);		// int 9
 		// jump here to (skip):
-		phys_writeb(physAddress+0x0e,(Bit8u)0xfa);			// cli
-		phys_writew(physAddress+0x0f,(Bit16u)0x20b0);		// mov al, 0x20
-		phys_writew(physAddress+0x11,(Bit16u)0x20e6);		// out 0x20, al
-		phys_writeb(physAddress+0x13,(Bit8u)0x58);			// pop ax
-		phys_writeb(physAddress+0x14,(Bit8u)0xcf);			//An IRET Instruction
-		return (use_cb?0x19:0x15);
+		phys_writeb(physAddress+0x09,(Bit8u)0xfa);			// cli
+		phys_writew(physAddress+0x0a,(Bit16u)0x20b0);		// mov al, 0x20
+		phys_writew(physAddress+0x0c,(Bit16u)0x20e6);		// out 0x20, al
+		phys_writeb(physAddress+0x0e,(Bit8u)0x58);			// pop ax
+		phys_writeb(physAddress+0x0f,(Bit8u)0xcf);			//An IRET Instruction
+		return (use_cb?0x14:0x10);
 	case CB_MOUSE:
 		phys_writew(physAddress+0x00,(Bit16u)0x07eb);		// jmp i33hd
 		physAddress+=9;
@@ -348,6 +387,11 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		for (Bitu i=0;i<=0x0b;i++) phys_writeb(physAddress+0x02+i,0x90);
 		phys_writew(physAddress+0x0e,(Bit16u)0xedeb);	//jmp callback
 		return (use_cb?0x10:0x0c);
+	/*case CB_INT28:	// DOS idle
+		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		// STI
+		phys_writeb(physAddress+0x01,(Bit8u)0xF4);		// HLT
+		phys_writeb(physAddress+0x02,(Bit8u)0xcf);		// An IRET Instruction
+		return (0x04);*/
 	case CB_INT29:	// fast console output
 		if (use_cb) {
 			phys_writeb(physAddress+0x00,(Bit8u)0xFE);	//GRP 4
@@ -421,6 +465,27 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 		phys_writeb(physAddress+0x0d,(Bit8u)0x1f);		// pop ds
 		phys_writeb(physAddress+0x0e,(Bit8u)0xcf);		//An IRET Instruction
 		return 0x0f; */
+	case CB_VESA_START: {
+		// pseudocode: if(reg_bl==0x80) while(!(inportb(0x3da)&0x8));
+		phys_writes(physAddress,
+			"\xFE\x38\x90\x90"	// GRP4 CB	####
+			"\x80\xFB\x80"		// cmp		bl,80h
+			"\x75\x11"			// jne		NOVRET
+			"\x66\x50"			// push		ax
+			"\x66\x52"			// push		dx
+			"\x66\xBA\xDA\x03"	// mov		dx,3DAh 
+								// AGAIN:
+			"\xEC"				// in		al,dx
+			"\x24\x08"			// and		al,8
+			"\x74\xFB"			// je		AGAIN
+			"\x66\x5A"			// pop		dx
+			"\x66\x58"			// pop		ax
+								// NOVRET:
+			"\xC3"				// retn
+			,27);
+		phys_writew(physAddress+2, callback); // callback number
+		return 27;
+	}
 	case CB_INT21:
 		phys_writeb(physAddress+0x00,(Bit8u)0xFB);		//STI
 		if (use_cb) {
@@ -542,9 +607,46 @@ void CALLBACK_HandlerObject::Set_RealVec(Bit8u vec){
 }
 
 void CALLBACK_Init(Section* /*sec*/) {
+	if (mainline_compatible_bios_mapping) {
+		CB_SOFFSET=0x1000;
+		CB_SEG=0xF000;
+
+		/* mark the fixed callback location as off-limits */
+		if (ROMBIOS_GetMemory((CB_MAX*CB_SIZE)+(256*6),"DOSBox callbacks region",1,PhysMake(CB_SEG,CB_SOFFSET)) == 0)
+			E_Exit("Mainline compat bios mapping: failed to declare entire BIOS area off-limits");
+
+		vm86_fake_io_seg = 0xF000;	/* unused area in BIOS for IO instruction */
+		vm86_fake_io_off = 0x0700;
+		/* mark the vm86 hack as off-limits */
+		if (ROMBIOS_GetMemory(14/*2+2+3+2+2+3*/,"DOSBox vm86 hack",1,(vm86_fake_io_seg<<4)+vm86_fake_io_off) == 0)
+			E_Exit("Mainline compat bios mapping: failed to declare entire BIOS area off-limits");
+	}
+	else {
+		/* NTS: Layout of the callback area:
+		 *
+		 * CB_MAX entries CB_SIZE each, where executable x86 code is written per callback,
+		 * followed by 256 entries 6 bytes each corresponding to an interrupt call */
+		Bitu o;
+
+		o = ROMBIOS_GetMemory((CB_MAX*CB_SIZE)+(256*6),"DOSBox callback area",1);
+		if (o == 0) E_Exit("Cannot allocate callback area");
+		CB_SOFFSET = o&0xFFFF;
+		CB_SEG = (o>>4)&0xF000;
+		if (((Bitu)CB_SOFFSET + (CB_MAX*CB_SIZE) + (256*6)) > 0x10000) E_Exit("Callback area spans 64KB segment");
+
+		o = ROMBIOS_GetMemory(14/*2+2+3+2+2+3*/,"DOSBox vm86 hack",1);
+		if (o == 0) E_Exit("Cannot allocate vm86 hack");
+		vm86_fake_io_off = o&0xFFFF;
+		vm86_fake_io_seg = (o>>4)&0xF000;
+		if ((vm86_fake_io_off+14) > 0x1000000) E_Exit("vm86 area spans 64KB segment");
+	}
+
+	LOG_MSG("Callback area starts at %04x:%04x",CB_SEG,CB_SOFFSET);
+
 	Bitu i;
 	for (i=0;i<CB_MAX;i++) {
 		CallBack_Handlers[i]=&illegal_handler;
+		CallBack_Description[i]=NULL;
 	}
 
 	/* Setup the Stop Handler */

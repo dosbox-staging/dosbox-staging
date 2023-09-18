@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,12 +26,19 @@
 #include "paging.h"
 #include "setup.h"
 
-DmaController *DmaControllers[2];
+DmaController *DmaControllers[2]={NULL};
+unsigned char dma_extra_page_registers[16]={0}; /* 0x80-0x8F */
+bool enable_dma_extra_page_registers = true;
+bool dma_page_register_writeonly = false;
 
 #define EMM_PAGEFRAME4K	((0xE000*16)/4096)
 Bit32u ems_board_mapping[LINK_START];
 
 static Bit32u dma_wrapping = 0xffff;
+
+bool enable_1st_dma = true;
+bool enable_2nd_dma = true;
+bool allow_decrement_mode = true;
 
 static void UpdateEMSMapping(void) {
 	/* if EMS is not present, this will result in a 1:1 mapping */
@@ -49,9 +56,6 @@ static void DMA_BlockRead(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u
 	offset <<= dma16;
 	Bit32u dma_wrap = ((0xffff<<dma16)+dma16) | dma_wrapping;
 	for ( ; size ; size--, offset++) {
-		if (offset>(dma_wrapping<<dma16)) {
-			LOG_MSG("DMA segbound wrapping (read): %x:%x size %x [%x] wrap %x",spage,offset,size,dma16,dma_wrapping);
-		}
 		offset &= dma_wrap;
 		Bitu page = highpart_addr_page+(offset >> 12);
 		/* care for EMS pageframe etc. */
@@ -59,6 +63,54 @@ static void DMA_BlockRead(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u
 		else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
 		else if (page < LINK_START) page = paging.firstmb[page];
 		*write++=phys_readb(page*4096 + (offset & 4095));
+	}
+}
+
+/* decrement mode. Needed for EMF Internal Damage and other weird demo programs that like to transfer
+ * audio data backwards to the sound card.
+ *
+ * NTS: Don't forget, from 8237 datasheet: The DMA chip transfers a byte (or word if 16-bit) of data,
+ *      and THEN increments or decrements the address. So in decrement mode, "address" is still the
+ *      first byte before decrementing. */
+static void DMA_BlockReadBackwards(PhysPt spage,PhysPt offset,void * data,Bitu size,Bit8u dma16) {
+	Bit8u * write=(Bit8u *) data;
+	Bitu highpart_addr_page = spage>>12;
+
+	size <<= dma16;
+	offset <<= dma16;
+	Bit32u dma_wrap = ((0xffff<<dma16)+dma16) | dma_wrapping;
+
+	if (dma16) {
+		/* I'm going to assume by how ISA DMA works that you can't just copy bytes backwards,
+		 * because things are transferred in 16-bit WORDs. So you would copy each pair of bytes
+		 * in normal order, writing the pairs backwards [*1]. I know of no software that would
+		 * actually want to transfer 16-bit DMA backwards, so, it's not implemented.
+		 *
+		 * Like this:
+		 *
+		 * 0x1234 0x5678 0x9ABC 0xDEF0
+		 *
+		 * becomes:
+		 *
+		 * 0xDEF0 0x9ABC 0x5678 0x1234
+		 *
+		 * it does NOT become:
+		 *
+		 * 0xF0DE 0xBC9A 0x7856 0x3412
+		 *
+		 * */
+		LOG(LOG_DMACONTROL,LOG_WARN)("16-bit decrementing DMA not implemented");
+	}
+	else {
+		for ( ; size ; size--, offset--) {
+			offset &= dma_wrap;
+			Bitu page = highpart_addr_page+(offset >> 12);
+			/* care for EMS pageframe etc. */
+			if (page < EMM_PAGEFRAME4K) page = paging.firstmb[page];
+			else if (page < EMM_PAGEFRAME4K+0x10) page = ems_board_mapping[page];
+			else if (page < LINK_START) page = paging.firstmb[page];
+			*write++=phys_readb(page*4096 + (offset & 4095));
+		}
 	}
 }
 
@@ -117,14 +169,21 @@ static void DMA_Write_Port(Bitu port,Bitu val,Bitu /*iolen*/) {
 		DmaControllers[1]->WriteControllerReg((port-0xc0) >> 1,val,1);
 	} else {
 		UpdateEMSMapping();
+		dma_extra_page_registers[port&0xF] = val;
 		switch (port) {
 			/* write DMA page register */
 			case 0x81:GetDMAChannel(2)->SetPage((Bit8u)val);break;
 			case 0x82:GetDMAChannel(3)->SetPage((Bit8u)val);break;
 			case 0x83:GetDMAChannel(1)->SetPage((Bit8u)val);break;
+			case 0x87:GetDMAChannel(0)->SetPage((Bit8u)val);break;
 			case 0x89:GetDMAChannel(6)->SetPage((Bit8u)val);break;
 			case 0x8a:GetDMAChannel(7)->SetPage((Bit8u)val);break;
 			case 0x8b:GetDMAChannel(5)->SetPage((Bit8u)val);break;
+			case 0x8f:GetDMAChannel(4)->SetPage((Bit8u)val);break;
+			default:
+				  if (!enable_dma_extra_page_registers)
+					  LOG(LOG_DMACONTROL,LOG_NORMAL)("Trying to write undefined DMA page register %x",port);
+				  break;
 		}
 	}
 }
@@ -136,16 +195,31 @@ static Bitu DMA_Read_Port(Bitu port,Bitu iolen) {
 	} else if (port>=0xc0 && port <=0xdf) {
 		/* read from the second DMA controller (channels 4-7) */
 		return DmaControllers[1]->ReadControllerReg((port-0xc0) >> 1,iolen);
-	} else switch (port) {
-		/* read DMA page register */
-		case 0x81:return GetDMAChannel(2)->pagenum;
-		case 0x82:return GetDMAChannel(3)->pagenum;
-		case 0x83:return GetDMAChannel(1)->pagenum;
-		case 0x89:return GetDMAChannel(6)->pagenum;
-		case 0x8a:return GetDMAChannel(7)->pagenum;
-		case 0x8b:return GetDMAChannel(5)->pagenum;
+	} else {
+		/* if we're emulating PC/XT DMA controller behavior, then the page registers
+		 * are write-only and cannot be read */
+		if (dma_page_register_writeonly)
+			return ~0;
+
+		switch (port) {
+			/* read DMA page register */
+			case 0x81:return GetDMAChannel(2)->pagenum;
+			case 0x82:return GetDMAChannel(3)->pagenum;
+			case 0x83:return GetDMAChannel(1)->pagenum;
+			case 0x87:return GetDMAChannel(0)->pagenum;
+			case 0x89:return GetDMAChannel(6)->pagenum;
+			case 0x8a:return GetDMAChannel(7)->pagenum;
+			case 0x8b:return GetDMAChannel(5)->pagenum;
+			case 0x8f:return GetDMAChannel(4)->pagenum;
+			default:
+				  if (enable_dma_extra_page_registers)
+					return dma_extra_page_registers[port&0xF];
+ 
+				  LOG(LOG_DMACONTROL,LOG_NORMAL)("Trying to read undefined DMA page register %x",port);
+				  break;
+		}
 	}
-	return 0;
+	return ~0;
 }
 
 void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu /*len*/) {
@@ -191,8 +265,8 @@ void DmaController::WriteControllerReg(Bitu reg,Bitu val,Bitu /*len*/) {
 		UpdateEMSMapping();
 		chan=GetChannel(val & 3);
 		chan->autoinit=(val & 0x10) > 0;
-		chan->increment=(val & 0x20) > 0;
-		//TODO Maybe other bits?
+		chan->increment=(!allow_decrement_mode) || ((val & 0x20) == 0); /* 0=increment 1=decrement */
+		//TODO Maybe other bits? Like bits 6-7 to select demand/single/block/cascade mode? */
 		break;
 	case 0xc:		/* Clear Flip/Flip */
 		flipflop=false;
@@ -253,6 +327,9 @@ Bitu DmaController::ReadControllerReg(Bitu reg,Bitu /*len*/) {
 			if (chan->request) ret|=1 << (4+ct);
 		}
 		return ret;
+	case 0xc:		/* Clear Flip/Flip (apparently most motherboards will treat read OR write as reset) */
+		flipflop=false;
+		break;
 	default:
 		LOG(LOG_DMACONTROL,LOG_NORMAL)("Trying to read undefined DMA port %x",reg);
 		break;
@@ -284,12 +361,23 @@ Bitu DmaChannel::Read(Bitu want, Bit8u * buffer) {
 again:
 	Bitu left=(currcnt+1);
 	if (want<left) {
-		DMA_BlockRead(pagebase,curraddr,buffer,want,DMA16);
-		done+=want;
-		curraddr+=want;
+		if (increment) {
+			DMA_BlockRead(pagebase,curraddr,buffer,want,DMA16);
+			curraddr+=want;
+		}
+		else {
+			DMA_BlockReadBackwards(pagebase,curraddr,buffer,want,DMA16);
+			curraddr-=want;
+		}
+
 		currcnt-=want;
+		done+=want;
 	} else {
-		DMA_BlockRead(pagebase,curraddr,buffer,want,DMA16);
+		if (increment)
+			DMA_BlockRead(pagebase,curraddr,buffer,want,DMA16);
+		else
+			DMA_BlockReadBackwards(pagebase,curraddr,buffer,want,DMA16);
+
 		buffer+=left << DMA16;
 		want-=left;
 		done+=left;
@@ -300,7 +388,8 @@ again:
 			if (want) goto again;
 			UpdateEMSMapping();
 		} else {
-			curraddr+=left;
+			if (increment) curraddr+=left;
+			else curraddr-=left;
 			currcnt=0xffff;
 			masked=true;
 			UpdateEMSMapping();
@@ -313,6 +402,14 @@ again:
 Bitu DmaChannel::Write(Bitu want, Bit8u * buffer) {
 	Bitu done=0;
 	curraddr &= dma_wrapping;
+
+	/* TODO: Implement DMA_BlockWriteBackwards() if you find a DOS program, any program, that
+	 *       transfers data backwards into system memory */
+	if (!increment) {
+		LOG(LOG_DMACONTROL,LOG_WARN)("DMA decrement mode (writing) not implemented");
+		return 0;
+	}
+
 again:
 	Bitu left=(currcnt+1);
 	if (want<left) {
@@ -345,31 +442,45 @@ again:
 class DMA:public Module_base{
 public:
 	DMA(Section* configuration):Module_base(configuration){
+		Section_prop * section=static_cast<Section_prop *>(configuration);
 		Bitu i;
-		DmaControllers[0] = new DmaController(0);
-		if (IS_EGAVGA_ARCH) DmaControllers[1] = new DmaController(1);
+
+		enable_2nd_dma = section->Get_bool("enable 2nd dma controller");
+		enable_1st_dma = enable_2nd_dma || section->Get_bool("enable 1st dma controller");
+		enable_dma_extra_page_registers = section->Get_bool("enable dma extra page registers");
+		dma_page_register_writeonly = section->Get_bool("dma page registers write-only");
+		allow_decrement_mode = section->Get_bool("allow dma address decrement");
+
+		if (enable_1st_dma) DmaControllers[0] = new DmaController(0);
+		else DmaControllers[0] = NULL;
+		if (enable_2nd_dma) DmaControllers[1] = new DmaController(1);
 		else DmaControllers[1] = NULL;
 	
 		for (i=0;i<0x10;i++) {
 			Bitu mask=IO_MB;
 			if (i<8) mask|=IO_MW;
-			/* install handler for first DMA controller ports */
-			DmaControllers[0]->DMA_WriteHandler[i].Install(i,DMA_Write_Port,mask);
-			DmaControllers[0]->DMA_ReadHandler[i].Install(i,DMA_Read_Port,mask);
-			if (IS_EGAVGA_ARCH) {
+			if (enable_1st_dma) {
+				/* install handler for first DMA controller ports */
+				DmaControllers[0]->DMA_WriteHandler[i].Install(i,DMA_Write_Port,mask);
+				DmaControllers[0]->DMA_ReadHandler[i].Install(i,DMA_Read_Port,mask);
+			}
+			if (enable_2nd_dma) {
 				/* install handler for second DMA controller ports */
 				DmaControllers[1]->DMA_WriteHandler[i].Install(0xc0+i*2,DMA_Write_Port,mask);
 				DmaControllers[1]->DMA_ReadHandler[i].Install(0xc0+i*2,DMA_Read_Port,mask);
 			}
 		}
-		/* install handlers for ports 0x81-0x83 (on the first DMA controller) */
-		DmaControllers[0]->DMA_WriteHandler[0x10].Install(0x81,DMA_Write_Port,IO_MB,3);
-		DmaControllers[0]->DMA_ReadHandler[0x10].Install(0x81,DMA_Read_Port,IO_MB,3);
 
-		if (IS_EGAVGA_ARCH) {
+		if (enable_1st_dma) {
+			/* install handlers for ports 0x81-0x83 (on the first DMA controller) */
+			DmaControllers[0]->DMA_WriteHandler[0x10].Install(0x80,DMA_Write_Port,IO_MB,8);
+			DmaControllers[0]->DMA_ReadHandler[0x10].Install(0x80,DMA_Read_Port,IO_MB,8);
+		}
+
+		if (enable_2nd_dma) {
 			/* install handlers for ports 0x81-0x83 (on the second DMA controller) */
-			DmaControllers[1]->DMA_WriteHandler[0x10].Install(0x89,DMA_Write_Port,IO_MB,3);
-			DmaControllers[1]->DMA_ReadHandler[0x10].Install(0x89,DMA_Read_Port,IO_MB,3);
+			DmaControllers[1]->DMA_WriteHandler[0x10].Install(0x88,DMA_Write_Port,IO_MB,8);
+			DmaControllers[1]->DMA_ReadHandler[0x10].Install(0x88,DMA_Read_Port,IO_MB,8);
 		}
 	}
 	~DMA(){
@@ -391,7 +502,10 @@ void DMA_SetWrapping(Bitu wrap) {
 static DMA* test;
 
 void DMA_Destroy(Section* /*sec*/){
-	delete test;
+	if (test != NULL) {
+		delete test;
+		test = NULL;
+	}
 }
 void DMA_Init(Section* sec) {
 	DMA_SetWrapping(0xffff);
@@ -402,3 +516,4 @@ void DMA_Init(Section* sec) {
 		ems_board_mapping[i]=i;
 	}
 }
+

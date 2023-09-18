@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -48,8 +48,8 @@ using namespace std;
 
 Bit8u adlib_commandreg;
 static MixerChannel * gus_chan;
-static Bit8u irqtable[8] = { 0, 2, 5, 3, 7, 11, 12, 15 };
-static Bit8u dmatable[8] = { 0, 1, 3, 5, 6, 7, 0, 0 };
+static Bit8u const irqtable[8] = { 0, 2, 5, 3, 7, 11, 12, 15 };
+static Bit8u const dmatable[8] = { 0, 1, 3, 5, 6, 7, 0, 0 };
 static Bit8u GUSRam[1024*1024]; // 1024K of GUS Ram
 static Bit32s AutoAmp = 512;
 static Bit16u vol16bit[4096];
@@ -209,8 +209,8 @@ public:
 	}
 	void WritePanPot(Bit8u val) {
 		PanPot = val;
-		PanLeft = pantable[0x0f-(val & 0xf)];
-		PanRight = pantable[(val & 0xf)];
+		PanLeft = pantable[(val & 0xf)];
+		PanRight = pantable[0x0f-(val & 0xf)];
 		UpdateVolumes();
 	}
 	Bit8u ReadPanPot(void) {
@@ -769,10 +769,29 @@ static void MakeTables(void) {
 		vol16bit[i]=(Bit16s)out;
 		out/=1.002709201;		/* 0.0235 dB Steps */
 	}
-	pantable[0] = 4095 << RAMP_FRACT;
-	for (i=1;i<16;i++) {
-		pantable[i]=(Bit32u)(-128.0*(log((double)i/15.0)/log(2.0))*(double)(1 << RAMP_FRACT));
-	}
+	/* FIX: DOSBox 0.74 had code here that produced a pantable which
+	 *      had nothing to do with actual panning control variables.
+	 *      Instead it seemed to generate a 16-element map that started
+	 *      at 0, jumped sharply to unity and decayed to 0.
+	 *      The unfortunate result was that stock builds of DOSBox
+	 *      effectively locked Gravis Ultrasound capable programs
+	 *      to monural audio.
+	 *
+	 *      This fix generates the table properly so that they correspond
+	 *      to how much we attenuate the LEFT channel for any given
+	 *      4-bit value of the Panning register (you attenuate the
+	 *      RIGHT channel by looking at element 0xF - (val&0xF)).
+	 *
+	 *      Having made this fix I can finally enjoy old DOS demos
+	 *      in GUS stereo instead of having everything mushed into
+	 *      mono. */
+	for (i=0;i < 8;i++)
+		pantable[i] = 0;
+	for (i=8;i < 15;i++)
+		pantable[i]=(Bit32u)(-128.0*(log((double)(15-i)/7.0)/log(2.0))*(double)(1 << RAMP_FRACT));
+	/* if the program cranks the pan register all the way, ensure the
+	 * opposite channel is crushed to silence */
+	pantable[15] = 1UL << 30UL;
 }
 
 class GUS:public Module_base{
@@ -791,12 +810,20 @@ public:
 		memset(GUSRam,0,1024*1024);
 	
 		myGUS.rate=section->Get_int("gusrate");
-	
+
+		// FIXME: HUH?? Read the port number and subtract 0x200, then use GUS_BASE
+		// in other parts of the code to compare against 0x200 and 0x300? That's confusing. Fix!
 		myGUS.portbase = section->Get_hex("gusbase") - 0x200;
+
+		// TODO: so, if the GUS ULTRASND variable actually mentions two DMA and two IRQ channels,
+		//       shouldn't we offer the ability to specify them independently? especially when
+		//       GUS NMI is completed to the extent that SBOS and MEGA-EM can run within DOSBox?
 		int dma_val = section->Get_int("gusdma");
 		if ((dma_val<0) || (dma_val>255)) dma_val = 3;	// sensible default
+
 		int irq_val = section->Get_int("gusirq");
 		if ((irq_val<0) || (irq_val>255)) irq_val = 5;	// sensible default
+
 		myGUS.dma1 = (Bit8u)dma_val;
 		myGUS.dma2 = (Bit8u)dma_val;
 		myGUS.irq1 = (Bit8u)irq_val;
@@ -858,6 +885,10 @@ public:
 		autoexecline[1].Install(std::string("SET ULTRADIR=") + section->Get_string("ultradir"));
 	}
 
+	void DOS_Shutdown() { /* very likely, we're booting into a guest OS where our environment variable has no meaning anymore */
+		autoexecline[0].Uninstall();
+		autoexecline[1].Uninstall();
+	}
 
 	~GUS() {
 		if(!IS_EGAVGA_ARCH) return;
@@ -877,13 +908,27 @@ public:
 		}
 };
 
-static GUS* test;
+static GUS* test = NULL;
+
+void GUS_DOS_Shutdown() {
+	if (test != NULL) test->DOS_Shutdown();
+}
 
 void GUS_ShutDown(Section* /*sec*/) {
-	delete test;	
+	if (test != NULL) {
+		delete test;	
+		test = NULL;
+	}
 }
 
 void GUS_Init(Section* sec) {
 	test = new GUS(sec);
 	sec->AddDestroyFunction(&GUS_ShutDown,true);
 }
+
+
+
+// save state support
+void *GUS_TimerEvent_PIC_Event = (void*)GUS_TimerEvent;
+void *GUS_DMA_Callback_Func = (void*)GUS_DMA_Callback;
+

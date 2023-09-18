@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,8 +17,8 @@
  */
 
 
-#if 0
 #include "SDL.h"
+#include "menu.h"
 #include "../libs/gui_tk/gui_tk.h"
 
 #include "dosbox.h"
@@ -29,6 +29,7 @@
 #include "setup.h"
 #include "control.h"
 #include "shell.h"
+#include "cpu.h"
 
 #include <iostream>
 #include <sstream>
@@ -37,16 +38,31 @@
 #include <cctype>
 #include <assert.h>
 
-extern Bit8u int10_font_14[256 * 14];
-extern Program * first_shell;
-extern bool MSG_Write(const char *);
-extern void GFX_SetTitle(Bit32s cycles, Bits frameskip, bool paused);
+/* helper class for command execution */
+class VirtualBatch : public BatchFile {
+public:
+					VirtualBatch(DOS_Shell *host, const std::string& cmds);
+	bool				ReadLine(char *line);
+protected:
+	std::istringstream		lines;
+};
 
-static int cursor, saved_bpp;
-static int old_unicode;
-static bool mousetoggle, running, shell_idle;
+extern Bit8u			int10_font_14[256 * 14];
+extern Program*			first_shell;
 
-static SDL_Surface *screenshot, *background;
+extern bool			MSG_Write(const char *);
+extern void			LoadMessageFile(const char * fname);
+extern void			GFX_SetTitle(Bit32s cycles,Bits frameskip,Bits timing,bool paused);
+
+static int			cursor;
+static bool			running;
+static int			saved_bpp;
+static bool			shell_idle;
+static int			old_unicode;
+static bool			mousetoggle;
+static bool			shortcut=false;
+static SDL_Surface*		screenshot;
+static SDL_Surface*		background;
 
 /* Prepare screen for UI */
 void UI_Init(void) {
@@ -90,23 +106,28 @@ static void getPixel(Bits x, Bits y, int &r, int &g, int &b, int shift)
 	}
 }
 
+extern bool dos_kernel_disabled;
+
 static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 	GFX_EndUpdate(0);
-	GFX_SetTitle(-1,-1,true);
+	GFX_SetTitle(-1,-1,-1,true);
 	if(!screen) { //Coming from DOSBox. Clean up the keyboard buffer.
 		KEYBOARD_ClrBuffer();//Clear buffer
 	}
 	GFX_LosingFocus();//Release any keys pressed (buffer gets filled again). (could be in above if, but clearing the mapper input when exiting the mapper is sensible as well
-	SDL_Delay(500);
+	SDL_Delay(20);
+
+	LoadMessageFile(static_cast<Section_prop*>(control->GetSection("dosbox"))->Get_string("language"));
 
 	// Comparable to the code of intro.com, but not the same! (the code of intro.com is called from within a com file)
-	shell_idle = first_shell && (DOS_PSP(dos.psp()).GetSegment() == DOS_PSP(dos.psp()).GetParent());
+	shell_idle = !dos_kernel_disabled && first_shell && (DOS_PSP(dos.psp()).GetSegment() == DOS_PSP(dos.psp()).GetParent());
 
 	int w, h;
 	bool fs;
 	GFX_GetSize(w, h, fs);
-	if (w < 512) w = 640;
-	if (h < 350) h = 400;
+	if (w <= 400) {
+		w *=2; h *=2;
+	}
 
 	old_unicode = SDL_EnableUNICODE(1);
 	SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,SDL_DEFAULT_REPEAT_INTERVAL);
@@ -129,18 +150,23 @@ static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 		Bit32u *bg = (Bit32u*)(y*background->pitch + (char*)background->pixels);
 		for (int x = 0; x < w; x++) {
 			int r = 0, g = 0, b = 0;
-			getPixel(x    *(int)render.src.width/w, y    *(int)render.src.height/h, r, g, b, 3);
-			getPixel((x-1)*(int)render.src.width/w, y    *(int)render.src.height/h, r, g, b, 3);
-			getPixel(x    *(int)render.src.width/w, (y-1)*(int)render.src.height/h, r, g, b, 3);
-			getPixel((x-1)*(int)render.src.width/w, (y-1)*(int)render.src.height/h, r, g, b, 3);
-			getPixel((x+1)*(int)render.src.width/w, y    *(int)render.src.height/h, r, g, b, 3);
-			getPixel(x    *(int)render.src.width/w, (y+1)*(int)render.src.height/h, r, g, b, 3);
-			getPixel((x+1)*(int)render.src.width/w, (y+1)*(int)render.src.height/h, r, g, b, 3);
-			getPixel((x-1)*(int)render.src.width/w, (y+1)*(int)render.src.height/h, r, g, b, 3);
-			int r1 = (int)((r * 393 + g * 769 + b * 189) / 1351);
-			int g1 = (int)((r * 349 + g * 686 + b * 168) / 1203);
-			int b1 = (int)((r * 272 + g * 534 + b * 131) / 2140);
-			bg[x] = r1 << rs | g1 << gs | b1 << bs | am;
+#ifdef WIN32
+			getPixel(x    *(int)render.src.width/w, y    *(int)render.src.height/h, r, g, b, 0);
+			bg[x] = r << rs | g << gs | b << bs | am;
+#else
+			getPixel(x    *(int)render.src.width/w, y    *(int)render.src.height/h, r, g, b, 3); 
+			getPixel((x-1)*(int)render.src.width/w, y    *(int)render.src.height/h, r, g, b, 3); 
+			getPixel(x    *(int)render.src.width/w, (y-1)*(int)render.src.height/h, r, g, b, 3); 
+			getPixel((x-1)*(int)render.src.width/w, (y-1)*(int)render.src.height/h, r, g, b, 3); 
+			getPixel((x+1)*(int)render.src.width/w, y    *(int)render.src.height/h, r, g, b, 3); 
+			getPixel(x    *(int)render.src.width/w, (y+1)*(int)render.src.height/h, r, g, b, 3); 
+			getPixel((x+1)*(int)render.src.width/w, (y+1)*(int)render.src.height/h, r, g, b, 3); 
+			getPixel((x-1)*(int)render.src.width/w, (y+1)*(int)render.src.height/h, r, g, b, 3); 
+			int r1 = (int)((r * 393 + g * 769 + b * 189) / 1351); // 1351 -- tweak colors 
+			int g1 = (int)((r * 349 + g * 686 + b * 168) / 1503); // 1203 -- for a nice 
+			int b1 = (int)((r * 272 + g * 534 + b * 131) / 2340); // 2140 -- golden hue 
+			bg[x] = r1 << rs | g1 << gs | b1 << bs | am; 
+#endif
 		}
 	}
 
@@ -150,20 +176,21 @@ static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 	mousetoggle = mouselocked;
 	if (mouselocked) GFX_CaptureMouse();
 
-	SDL_Surface* sdlscreen = SDL_SetVideoMode(w, h, 32, SDL_SWSURFACE|(fs?SDL_FULLSCREEN:0));
+	SDL_Surface* sdlscreen = SDL_SetVideoMode(w, h, 32, SDL_SWSURFACE|(fs?SDL_FULLSCREEN:SDL_RESIZABLE));
 	if (sdlscreen == NULL) E_Exit("Could not initialize video mode %ix%ix32 for UI: %s", w, h, SDL_GetError());
 
 	// fade out
-	SDL_Event event;
-	for (int i = 0xff; i > 0; i -= 0x11) {
-		SDL_SetAlpha(screenshot, SDL_SRCALPHA, i);
-		SDL_BlitSurface(background, NULL, sdlscreen, NULL);
-		SDL_BlitSurface(screenshot, NULL, sdlscreen, NULL);
-		SDL_UpdateRect(sdlscreen, 0, 0, 0, 0);
-		while (SDL_PollEvent(&event)) {};
-		SDL_Delay(40);
-	}
-
+	// Jonathan C: do it FASTER!
+	SDL_Event event; 
+	for (int i = 0xff; i > 0; i -= 0x30) { 
+		SDL_SetAlpha(screenshot, SDL_SRCALPHA, i); 
+		SDL_BlitSurface(background, NULL, sdlscreen, NULL); 
+		SDL_BlitSurface(screenshot, NULL, sdlscreen, NULL); 
+		SDL_UpdateRect(sdlscreen, 0, 0, 0, 0); 
+		while (SDL_PollEvent(&event)); 
+		SDL_Delay(40); 
+	} 
+ 
 	SDL_BlitSurface(background, NULL, sdlscreen, NULL);
 	SDL_UpdateRect(sdlscreen, 0, 0, 0, 0);
 
@@ -182,14 +209,15 @@ static void UI_Shutdown(GUI::ScreenSDL *screen) {
 	render.src.bpp = saved_bpp;
 
 	// fade in
+	// Jonathan C: do it FASTER!
 	SDL_Event event;
-	for (int i = 0x00; i < 0xff; i += 0x11) {
+	for (int i = 0x00; i < 0xff; i += 0x30) {
 		SDL_SetAlpha(screenshot, SDL_SRCALPHA, i);
 		SDL_BlitSurface(background, NULL, sdlscreen, NULL);
 		SDL_BlitSurface(screenshot, NULL, sdlscreen, NULL);
 		SDL_UpdateRect(sdlscreen, 0, 0, 0, 0);
 		while (SDL_PollEvent(&event)) {};
-		SDL_Delay(40);
+		SDL_Delay(40); 
 	}
 
 	// clean up
@@ -199,40 +227,52 @@ static void UI_Shutdown(GUI::ScreenSDL *screen) {
 	SDL_FreeSurface(screenshot);
 	SDL_FreeSurface(sdlscreen);
 	screen->setSurface(NULL);
+#ifdef WIN32
+	void res_init(void);
+	void change_output(int output);
+	res_init();
+	change_output(7);
+#else
+#if 1
+	GFX_RestoreMode();
+#else
 	GFX_ResetScreen();
+#endif
+#endif
 	SDL_EnableUNICODE(old_unicode);
 	SDL_EnableKeyRepeat(0,0);
-	GFX_SetTitle(-1,-1,false);
-}
+	GFX_SetTitle(-1,-1,-1,false);
 
-/* helper class for command execution */
-class VirtualBatch : public BatchFile {
-protected:
-	std::istringstream lines;
-public:
-	VirtualBatch(DOS_Shell *host, const std::string& cmds) : BatchFile(host, "CON", ""), lines(cmds) {
-	}
-	bool ReadLine(char *line) {
-		std::string l;
-		if (!std::getline(lines,l)) {
-			delete this;
-			return false;
-		}
-		strcpy(line,l.c_str());
-		return true;
-	}
-};
+	void GFX_ForceRedrawScreen(void);
+	GFX_ForceRedrawScreen();
+}
 
 static void UI_RunCommands(GUI::ScreenSDL *s, const std::string &cmds) {
 	DOS_Shell temp;
 	temp.call = true;
 	UI_Shutdown(s);
+	Bit16u n=1; Bit8u c='\n';
+	DOS_WriteFile(STDOUT,&c,&n);
 	temp.bf = new VirtualBatch(&temp, cmds);
 	temp.RunInternal();
 	temp.ShowPrompt();
 	UI_Startup(s);
 }
 
+VirtualBatch::VirtualBatch(DOS_Shell *host, const std::string& cmds) : BatchFile(host, "CON", "", ""), lines(cmds) {
+}
+
+bool VirtualBatch::ReadLine(char *line) {
+	std::string l;
+
+	if (!std::getline(lines,l)) {
+		delete this;
+		return false;
+	}
+
+	strcpy(line,l.c_str());
+	return true;
+}
 
 /* stringification and conversion from the c++ FAQ */
 class BadConversion : public std::runtime_error {
@@ -363,7 +403,7 @@ public:
 		input = new GUI::Input(this, 130, 0, 50);
 		//Maybe use ToString() of Value
 		input->setText(stringify(static_cast<int>(prop->GetValue())));
-	}
+	};
 
 	bool prepare(std::string &buffer) {
 		int val;
@@ -371,21 +411,39 @@ public:
 		if (val == static_cast<int>(prop->GetValue())) return false;
 		buffer.append(stringify(val));
 		return true;
-	}
+	};
 };
 
-class HelpWindow : public GUI::MessageBox {
+class HelpWindow : public GUI::MessageBox2 {
 public:
 	HelpWindow(GUI::Screen *parent, int x, int y, Section *section) :
-		MessageBox(parent, x, y, 580, "", "") {
+		MessageBox2(parent, x, y, 580, "", "") { // 740
+		if (section == NULL) {
+			LOG_MSG("BUG: HelpWindow constructor called with section == NULL\n");
+			return;
+		}
+
 		std::string title(section->GetName());
 		title.at(0) = std::toupper(title.at(0));
 		setTitle("Help for "+title);
+
+		Section_prop* sec = dynamic_cast<Section_prop*>(section);
+		if (sec) {
+			std::string msg;
+			Property *p;
+			int i = 0;
+			while ((p = sec->Get_prop(i++))) {
+				msg += std::string("\033[34m")+p->propname+":\033[0m "+p->Get_help()+"\n";
+			}
+			msg.replace(msg.end()-1,msg.end(),"");
+			setText(msg);
+		} else {
 		std::string name = section->GetName();
 		std::transform(name.begin(), name.end(), name.begin(), (int(*)(int))std::toupper);
 		name += "_CONFIGFILE_HELP";
 		setText(MSG_Get(name.c_str()));
-	}
+		}
+	};
 };
 
 class SectionEditor : public GUI::ToplevelWindow {
@@ -393,6 +451,10 @@ class SectionEditor : public GUI::ToplevelWindow {
 public:
 	SectionEditor(GUI::Screen *parent, int x, int y, Section_prop *section) :
 		ToplevelWindow(parent, x, y, 510, 300, ""), section(section) {
+		if (section == NULL) {
+			LOG_MSG("BUG: SectionEditor constructor called with section == NULL\n");
+			return;
+		}
 		std::string title(section->GetName());
 		title[0] = std::toupper(title[0]);
 		setTitle("Configuration for "+title);
@@ -411,6 +473,8 @@ public:
 			Prop_double  *pdouble  = dynamic_cast<Prop_double*>(prop);
 			Prop_hex    *phex    = dynamic_cast<Prop_hex*>(prop);
 			Prop_string *pstring = dynamic_cast<Prop_string*>(prop);
+			Prop_multival* pmulti = dynamic_cast<Prop_multival*>(prop);
+			Prop_multival_remain* pmulti_remain = dynamic_cast<Prop_multival_remain*>(prop);
 
 			PropertyEditor *p;
 			if (pbool) p = new PropertyEditorBool(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
@@ -418,15 +482,16 @@ public:
 			else if (pint) p = new PropertyEditorInt(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
 			else if (pdouble) p = new PropertyEditorFloat(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
 			else if (pstring) p = new PropertyEditorString(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
+			else if (pmulti) p = new PropertyEditorString(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
+			else if (pmulti_remain) p = new PropertyEditorString(this, 5+250*(i/6), 40+(i%6)*30, section, prop);
 			else { i++; continue; }
 			b->addActionHandler(p);
 			i++;
 		}
 		b->addActionHandler(this);
 	}
-
 	void actionExecuted(GUI::ActionEventSource *b, const GUI::String &arg) {
-		if (arg == "OK" || arg == "Cancel") close();
+		if (arg == "OK" || arg == "Cancel" || arg == "Close") { close(); if(shortcut) running=false; }
 		else if (arg == "Help") new HelpWindow(static_cast<GUI::Screen*>(parent), getX()-10, getY()-10, section);
 		else ToplevelWindow::actionExecuted(b, arg);
 	}
@@ -438,6 +503,11 @@ class AutoexecEditor : public GUI::ToplevelWindow {
 public:
 	AutoexecEditor(GUI::Screen *parent, int x, int y, Section_line *section) :
 		ToplevelWindow(parent, x, y, 450, 300, ""), section(section) {
+		if (section == NULL) {
+			LOG_MSG("BUG: AutoexecEditor constructor called with section == NULL\n");
+			return;
+		}
+
 		std::string title(section->GetName());
 		title[0] = std::toupper(title[0]);
 		setTitle("Edit "+title);
@@ -452,7 +522,7 @@ public:
 
 	void actionExecuted(GUI::ActionEventSource *b, const GUI::String &arg) {
 		if (arg == "OK") section->data = *(std::string*)content->getText();
-		if (arg == "OK" || arg == "Cancel") close();
+		if (arg == "OK" || arg == "Cancel" || arg == "Close") { close(); if(shortcut) running=false; }
 		else if (arg == "Append Shell Commands") {
 			DOS_Shell *s = static_cast<DOS_Shell *>(first_shell);
 			std::list<std::string>::reverse_iterator i = s->l_history.rbegin();
@@ -477,7 +547,17 @@ public:
 		ToplevelWindow(parent, x, y, 400, 150, title) {
 		new GUI::Label(this, 5, 10, "Enter filename for configuration file:");
 		name = new GUI::Input(this, 5, 30, 350);
-		name->setText("dosbox.conf");
+		extern std::string capturedir;
+		std::string fullpath,file;
+		Cross::GetPlatformConfigName(file);
+		const size_t last_slash_idx = capturedir.find_last_of("\\/");
+		if (std::string::npos != last_slash_idx) {
+			fullpath = capturedir.substr(0, last_slash_idx);
+			fullpath += CROSS_FILESPLIT;
+			fullpath += file;
+		} else
+			fullpath = "dosbox.conf";
+		name->setText(fullpath.c_str());
 		(new GUI::Button(this, 120, 70, "Cancel", 70))->addActionHandler(this);
 		(new GUI::Button(this, 210, 70, "OK", 70))->addActionHandler(this);
 	}
@@ -485,6 +565,7 @@ public:
 	void actionExecuted(GUI::ActionEventSource *b, const GUI::String &arg) {
 		if (arg == "OK") control->PrintConfig(name->getText());
 		close();
+		if(shortcut) running=false;
 	}
 };
 
@@ -504,15 +585,123 @@ public:
 	void actionExecuted(GUI::ActionEventSource *b, const GUI::String &arg) {
 		if (arg == "OK") MSG_Write(name->getText());
 		close();
+		if(shortcut) running=false;
+	}
+};
+
+class SetCycles : public GUI::ToplevelWindow {
+protected:
+	GUI::Input *name;
+public:
+	SetCycles(GUI::Screen *parent, int x, int y, const char *title) :
+		ToplevelWindow(parent, x, y, 400, 150, title) {
+		new GUI::Label(this, 5, 10, "Enter CPU cycles:");
+		name = new GUI::Input(this, 5, 30, 350);
+	    std::ostringstream str;
+		str << "fixed " << CPU_CycleMax;
+
+		std::string cycles=str.str();
+		name->setText(cycles.c_str());
+		(new GUI::Button(this, 120, 70, "Cancel", 70))->addActionHandler(this);
+		(new GUI::Button(this, 210, 70, "OK", 70))->addActionHandler(this);
+	}
+
+	void actionExecuted(GUI::ActionEventSource *b, const GUI::String &arg) {
+		if (arg == "OK") {
+			Section* sec = control->GetSection("cpu");
+			if (sec) {
+				std::string tmp("cycles=");
+				const char* well = name->getText();
+				std::string s(well, 20);
+				sec->ExecuteDestroy(false);
+				tmp.append(s);
+				sec->HandleInputline(tmp);
+				sec->ExecuteInit(false);
+				delete well;
+			}
+		}
+		close();
+		if(shortcut) running=false;
+	}
+};
+
+class SetVsyncrate : public GUI::ToplevelWindow {
+protected:
+	GUI::Input *name;
+public:
+	SetVsyncrate(GUI::Screen *parent, int x, int y, const char *title) :
+		ToplevelWindow(parent, x, y, 400, 150, title) {
+		new GUI::Label(this, 5, 10, "Enter vertical syncrate (Hz):");
+		name = new GUI::Input(this, 5, 30, 350);
+		Section_prop * sec = static_cast<Section_prop *>(control->GetSection("vsync"));
+		if (sec)
+			name->setText(sec->Get_string("vsyncrate"));
+		else
+			name->setText("");
+		(new GUI::Button(this, 120, 70, "Cancel", 70))->addActionHandler(this);
+		(new GUI::Button(this, 210, 70, "OK", 70))->addActionHandler(this);
+	}
+
+	void actionExecuted(GUI::ActionEventSource *b, const GUI::String &arg) {
+		Section_prop * sec = static_cast<Section_prop *>(control->GetSection("vsync"));
+		if (arg == "OK") {
+			if (sec) {
+				const char* well = name->getText();
+				std::string s(well, 20);
+				std::string tmp("vsyncrate=");
+				sec->ExecuteDestroy(false);
+				tmp.append(s);
+				sec->HandleInputline(tmp);
+				sec->ExecuteInit(false);
+				delete well;
+			}
+		}
+		LOG_MSG("GUI: Current Vertical Sync Rate: %s Hz", sec->Get_string("vsyncrate"));
+		close();
+		if(shortcut) running=false;
+	}
+};
+
+class SetLocalSize : public GUI::ToplevelWindow {
+protected:
+	GUI::Input *name;
+public:
+	SetLocalSize(GUI::Screen *parent, int x, int y, const char *title) :
+		ToplevelWindow(parent, x, y, 450, 150, title) {
+			new GUI::Label(this, 5, 10, "Enter default local freesize (MB, min=0, max=1024):");
+			name = new GUI::Input(this, 5, 30, 400);
+			extern unsigned int hdd_defsize;
+			int human_readable = 512 * 32 * hdd_defsize / 1024 / 1024;
+			char buffer[6];
+			sprintf(buffer, "%d", human_readable);
+			name->setText(buffer);
+			(new GUI::Button(this, 120, 70, "Cancel", 70))->addActionHandler(this);
+			(new GUI::Button(this, 210, 70, "OK", 70))->addActionHandler(this);
+	}
+
+	void actionExecuted(GUI::ActionEventSource *b, const GUI::String &arg) {
+		if (arg == "OK") {
+			extern unsigned int hdd_defsize;
+			int human_readable = atoi(name->getText());
+			if (human_readable < 0)
+				hdd_defsize = 0;
+			else if (human_readable > 1024)
+				hdd_defsize = 256000;
+			else
+				hdd_defsize = human_readable * 1024 * 1024 / 512 / 32;
+			LOG_MSG("GUI: Current default freesize for local disk: %dMB", 512 * 32 * hdd_defsize / 1024 / 1024);
+		}
+		close();
+		if (shortcut) running = false;
 	}
 };
 
 class ConfigurationWindow : public GUI::ToplevelWindow {
 public:
 	ConfigurationWindow(GUI::Screen *parent, GUI::Size x, GUI::Size y, GUI::String title) :
-		GUI::ToplevelWindow(parent, x, y, 470, 290, title) {
+		GUI::ToplevelWindow(parent, x, y, 470, 380, title) {
 
-		(new GUI::Button(this, 180, 215, "Close", 70))->addActionHandler(this);
+		(new GUI::Button(this, 185, 305, "Close", 80))->addActionHandler(this);
 
 		GUI::Menubar *bar = new GUI::Menubar(this, 0, 0, getWidth());
 		bar->addMenu("Configuration");
@@ -537,14 +726,14 @@ public:
 		while ((sec = control->GetSection(i))) {
 			std::string name = sec->GetName();
 			name[0] = std::toupper(name[0]);
-			GUI::Button *b = new GUI::Button(this, 12+(i/5)*160, 50+(i%5)*30, name, 100);
+			GUI::Button *b = new GUI::Button(this, 12+(i/7)*110, 50+(i%7)*35, name, 100);
 			b->addActionHandler(this);
 			bar->addItem(1, name);
 			i++;
 		}
 
 		if (first_shell) {
-			(new GUI::Button(this, 12+(i/5)*160, 50+(i%5)*30, "Keyboard", 100))->addActionHandler(this);
+			(new GUI::Button(this, 12+(i/7)*110, 50+(i%7)*35, "Keyboard", 100))->addActionHandler(this);
 			bar->addItem(1, "");
 			bar->addItem(1, "Keyboard");
 		}
@@ -556,11 +745,11 @@ public:
 		GUI::String sname = arg;
 		sname.at(0) = std::tolower(sname.at(0));
 		Section *sec;
-		if (arg == "Close" || arg == "Cancel") {
+		if (arg == "Close" || arg == "Cancel" || arg == "Close") {
 			running = false;
 		} else if (arg == "Keyboard") {
 			UI_Shutdown(dynamic_cast<GUI::ScreenSDL*>(getScreen()));
-			MAPPER_Run(false);
+			MAPPER_RunEvent(0);
 			UI_Startup(dynamic_cast<GUI::ScreenSDL*>(getScreen()));
 		} else if (sname == "autoexec") {
 			Section_line *section = static_cast<Section_line *>(control->GetSection((const char *)sname));
@@ -569,9 +758,9 @@ public:
 			Section_prop *section = static_cast<Section_prop *>(sec);
 			new SectionEditor(getScreen(), 50, 30, section);
 		} else if (arg == "About") {
-			new GUI::MessageBox(getScreen(), 200, 150, 280, "About DOSBox", "\nDOSBox 0.74\nAn emulator for old DOS Games\n\nCopyright 2002-2015\nThe DOSBox Team");
+			new GUI::MessageBox2(getScreen(), 200, 150, 280, "About DOSBox", "\nDOSBox-X\nAn emulator for old DOS Games\n\nCopyright 2002-2014\nThe DOSBox Team");
 		} else if (arg == "Introduction") {
-			new GUI::MessageBox(getScreen(), 20, 50, 600, "Introduction", MSG_Get("PROGRAM_INTRO"));
+			new GUI::MessageBox2(getScreen(), 20, 50, 600, "Introduction", MSG_Get("PROGRAM_INTRO"));
 		} else if (arg == "Getting Started") {
 			std::string msg = MSG_Get("PROGRAM_INTRO_MOUNT_START");
 #ifdef WIN32
@@ -581,11 +770,11 @@ public:
 #endif
 			msg += MSG_Get("PROGRAM_INTRO_MOUNT_END");
 
-			new GUI::MessageBox(getScreen(), 20, 50, 600, std::string("Introduction"), msg);
+			new GUI::MessageBox2(getScreen(), 20, 50, 600, std::string("Introduction"), msg);
 		} else if (arg == "CD-ROM Support") {
-			new GUI::MessageBox(getScreen(), 20, 50, 600, "Introduction", MSG_Get("PROGRAM_INTRO_CDROM"));
+			new GUI::MessageBox2(getScreen(), 20, 50, 600, "Introduction", MSG_Get("PROGRAM_INTRO_CDROM"));
 		} else if (arg == "Special Keys") {
-			new GUI::MessageBox(getScreen(), 20, 50, 600, "Introduction", MSG_Get("PROGRAM_INTRO_SPECIAL"));
+			new GUI::MessageBox2(getScreen(), 20, 50, 600, "Introduction", MSG_Get("PROGRAM_INTRO_SPECIAL"));
 		} else if (arg == "Save...") {
 			new SaveDialog(getScreen(), 90, 100, "Save Configuration...");
 		} else if (arg == "Save Language File...") {
@@ -600,32 +789,156 @@ public:
 /* UI control functions */
 
 static void UI_Execute(GUI::ScreenSDL *screen) {
-	SDL_Surface *sdlscreen = screen->getSurface();
+	SDL_Surface *sdlscreen;
+	SDL_Event event;
+
+	sdlscreen = screen->getSurface();
 	new ConfigurationWindow(screen, 30, 30, "DOSBox Configuration");
 
 	// event loop
-	SDL_Event event;
 	while (running) {
 		while (SDL_PollEvent(&event)) {
 			if (!screen->event(event)) {
 				if (event.type == SDL_QUIT) running = false;
 			}
 		}
+
 		//Selecting keyboard will create a new surface.
+		screen->watchTime();
 		sdlscreen = screen->getSurface();
 		SDL_BlitSurface(background, NULL, sdlscreen, NULL);
-		screen->update(4);
+		screen->update(screen->getTime());
 		SDL_UpdateRect(sdlscreen, 0, 0, 0, 0);
 
 		SDL_Delay(40);
 	}
 }
 
+#ifdef WIN32
+static void UI_Select(GUI::ScreenSDL *screen, int select) {
+	SDL_Surface *sdlscreen = NULL;
+	Section_line *section2 = NULL;
+	Section_prop *section = NULL;
+	Section *sec = NULL;
+	SDL_Event event;
+
+	sdlscreen = screen->getSurface();
+	switch (select) {
+		case 0:
+			new GUI::MessageBox2(screen, 200, 150, 280, "", "");
+			running=false;
+			break;
+		case 1:
+			new SaveDialog(screen, 90, 100, "Save Configuration...");
+			break;
+		case 2:
+			sec = control->GetSection("sdl");
+			section=static_cast<Section_prop *>(sec); 
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 3:
+			sec = control->GetSection("dosbox");
+			section=static_cast<Section_prop *>(sec); 
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 4:
+			sec = control->GetSection("mixer");
+			section=static_cast<Section_prop *>(sec); 
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 5:
+			sec = control->GetSection("serial");
+			section=static_cast<Section_prop *>(sec); 
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 6:
+			sec = control->GetSection("ne2000");
+			section=static_cast<Section_prop *>(sec); 
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 7:
+			section2 = static_cast<Section_line *>(control->GetSection("autoexec"));
+			new AutoexecEditor(screen, 50, 30, section2);
+			break;
+		case 8:
+			sec = control->GetSection("glide");
+			section=static_cast<Section_prop *>(sec); 
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 9:
+			new SaveLangDialog(screen, 90, 100, "Save Language File...");
+			break;
+		case 10:
+			new ConfigurationWindow(screen, 30, 30, "DOSBox Configuration");
+			break;
+		case 11:
+			sec = control->GetSection("parallel");
+			section=static_cast<Section_prop *>(sec);
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 12:
+			sec = control->GetSection("printer");
+			section=static_cast<Section_prop *>(sec);
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 13:
+			sec = control->GetSection("cpu");
+			section=static_cast<Section_prop *>(sec);
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 14:
+			sec = control->GetSection("dos");
+			section=static_cast<Section_prop *>(sec);
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 15:
+			sec = control->GetSection("midi");
+			section=static_cast<Section_prop *>(sec);
+			new SectionEditor(screen,50,30,section);
+			break;
+		case 16:
+			new SetCycles(screen, 90, 100, "Set CPU Cycles...");
+			break;
+		case 17:
+			new SetVsyncrate(screen, 90, 100, "Set vertical syncrate...");
+			break;
+		case 18:
+			new SetLocalSize(screen, 90, 100, "Set Default Local Freesize...");
+			break;
+		default:
+			break;
+	}
+
+	// event loop
+	while (running) {
+		while (SDL_PollEvent(&event)) {
+			if (!screen->event(event)) {
+				if (event.type == SDL_QUIT) running = false;
+			}
+		}
+		SDL_BlitSurface(background, NULL, sdlscreen, NULL);
+		screen->update(4);
+		SDL_UpdateRect(sdlscreen, 0, 0, 0, 0);
+		SDL_Delay(20);
+	}
+}
+
+void UI_Shortcut(int select) {
+	if(running) return;
+	if(menu.maxwindow) ShowWindow(GetHWND(), SW_RESTORE);
+	shortcut=true;
+	GUI::ScreenSDL *screen = UI_Startup(NULL);
+	UI_Select(screen,select);
+	UI_Shutdown(screen);
+	shortcut=false;
+	delete screen;
+}
+#endif
+
 void UI_Run(bool pressed) {
-	if (pressed) return;
+	if (pressed || running) return;
 	GUI::ScreenSDL *screen = UI_Startup(NULL);
 	UI_Execute(screen);
 	UI_Shutdown(screen);
 	delete screen;
 }
-#endif

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,11 +32,15 @@
 #include "support.h"
 
 #include "render_scalers.h"
+#if defined(__SSE__)
+#include <xmmintrin.h>
+#include <emmintrin.h>
+#endif
 
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
 
-static void RENDER_CallBack( GFX_CallBackFunctions_t function );
+void RENDER_CallBack( GFX_CallBackFunctions_t function );
 
 static void Check_Palette(void) {
 	/* Clean up any previous changed palette data */
@@ -100,24 +104,43 @@ static void RENDER_StartLineHandler(const void * s) {
 	if (s) {
 		const Bitu *src = (Bitu*)s;
 		Bitu *cache = (Bitu*)(render.scale.cacheRead);
-		for (Bits x=render.src.start;x>0;) {
-			if (GCC_UNLIKELY(src[0] != cache[0])) {
-				if (!GFX_StartUpdate( render.scale.outWrite, render.scale.outPitch )) {
-					RENDER_DrawLine = RENDER_EmptyLineHandler;
-					return;
-				}
-				render.scale.outWrite += render.scale.outPitch * Scaler_ChangedLines[0];
-				RENDER_DrawLine = render.scale.lineHandler;
-				RENDER_DrawLine( s );
-				return;
+		Bits count = render.src.start;
+#if defined(__SSE__)
+		if(sse2_available) {
+#if defined (_MSC_VER)
+#define SIZEOF_INT_P 4
+#endif
+			static const Bitu simd_inc = 16/SIZEOF_INT_P;
+			while (count >= (Bits)simd_inc) {
+				__m128i v = _mm_loadu_si128((const __m128i*)src);
+				__m128i c = _mm_loadu_si128((const __m128i*)cache);
+				__m128i cmp = _mm_cmpeq_epi32(v, c);
+				if (GCC_UNLIKELY(_mm_movemask_epi8(cmp) != 0xFFFF))
+					goto cacheMiss;
+				count-=simd_inc; src+=simd_inc; cache+=simd_inc;
 			}
-			x--; src++; cache++;
+		}
+#endif
+		while (count) {
+			if (GCC_UNLIKELY(src[0] != cache[0]))
+				goto cacheMiss;
+			count--; src++; cache++;
 		}
 	}
+/* cacheHit */
 	render.scale.cacheRead += render.scale.cachePitch;
 	Scaler_ChangedLines[0] += Scaler_Aspect[ render.scale.inLine ];
 	render.scale.inLine++;
 	render.scale.outLine++;
+	return;
+cacheMiss:
+	if (!GFX_StartUpdate( render.scale.outWrite, render.scale.outPitch )) {
+		RENDER_DrawLine = RENDER_EmptyLineHandler;
+		return;
+	}
+	render.scale.outWrite += render.scale.outPitch * Scaler_ChangedLines[0];
+	RENDER_DrawLine = render.scale.lineHandler;
+	RENDER_DrawLine( s );
 }
 
 static void RENDER_FinishLineHandler(const void * s) {
@@ -143,6 +166,9 @@ static void RENDER_ClearCacheHandler(const void * src) {
 		cacheLine[x] = ~srcLine[x];
 	render.scale.lineHandler( src );
 }
+
+extern void GFX_SetTitle(Bit32s cycles,Bits frameskip,Bits timing,bool paused);
+extern void VGA_TweakUserVsyncOffset(float val);
 
 bool RENDER_StartUpdate(void) {
 	if (GCC_UNLIKELY(render.updating))
@@ -229,6 +255,9 @@ void RENDER_EndUpdate( bool abort ) {
 			total += render.frameskip.hadSkip[i];
 		LOG_MSG( "Skipped frame %d %d", PIC_Ticks, (total * 100) / RENDER_SKIP_CACHE );
 #endif
+		// Force output to update the screen even if nothing changed...
+		// works only with Direct3D output (GFX_StartUpdate() was probably not even called)
+		if (render.forceUpdate) GFX_EndUpdate( 0 );
 	}
 	render.frameskip.index = (render.frameskip.index + 1) & (RENDER_SKIP_CACHE - 1);
 	render.updating=false;
@@ -274,7 +303,7 @@ static void RENDER_Reset( void ) {
 			gfx_scalew = 1;
 			gfx_scaleh = render.src.ratio;
 		} else {
-			gfx_scalew = (1/render.src.ratio);
+			gfx_scalew = (1.0/render.src.ratio);
 			gfx_scaleh = 1;
 		}
 	} else {
@@ -287,6 +316,20 @@ static void RENDER_Reset( void ) {
 			simpleBlock = &ScaleNormal2x;
 		else if (render.scale.size == 3)
 			simpleBlock = &ScaleNormal3x;
+		else if (render.scale.size == 1 && !(dblh || dblw) && render.scale.hardware)
+			simpleBlock = &ScaleNormal1x;
+		else if (render.scale.size == 4 && !(dblh || dblw) && render.scale.hardware)
+			simpleBlock = &ScaleNormal2x;
+		else if (render.scale.size == 6 && !(dblh || dblw) && render.scale.hardware)
+			simpleBlock = &ScaleNormal3x;
+		else if (render.scale.size == 4 && !render.scale.hardware)
+			simpleBlock = &ScaleNormal4x;
+		else if (render.scale.size == 5 && !render.scale.hardware)
+			simpleBlock = &ScaleNormal5x;
+		else if (render.scale.size == 8 && !(dblh || dblw) && render.scale.hardware)
+			simpleBlock = &ScaleNormal4x;
+		else if (render.scale.size == 10 && !(dblh || dblw) && render.scale.hardware)
+			simpleBlock = &ScaleNormal5x;
 		else
 			simpleBlock = &ScaleNormal1x;
 		/* Maybe override them */
@@ -346,9 +389,9 @@ static void RENDER_Reset( void ) {
 			break;
 		}
 #endif
-	} else if (dblw) {
+	} else if (dblw && !render.scale.hardware) {
 		simpleBlock = &ScaleNormalDw;
-	} else if (dblh) {
+	} else if (dblh && !render.scale.hardware) {
 		simpleBlock = &ScaleNormalDh;
 	} else  {
 forcenormal:
@@ -397,6 +440,13 @@ forcenormal:
 			gfx_flags |= GFX_LOVE_32;
 			gfx_flags = (gfx_flags & ~GFX_CAN_8) | GFX_RGBONLY;
 			break;
+	default:
+		render.src.start = ( render.src.width * 1) / sizeof(Bitu);
+		if (gfx_flags & GFX_CAN_8)
+			gfx_flags |= GFX_LOVE_8;
+		else
+			gfx_flags |= GFX_LOVE_32;
+			break;
 	}
 	gfx_flags=GFX_GetBestMode(gfx_flags);
 	if (!gfx_flags) {
@@ -408,8 +458,44 @@ forcenormal:
 	width *= xscale;
 	Bitu skip = complexBlock ? 1 : 0;
 	if (gfx_flags & GFX_SCALING) {
+		if(render.scale.size == 1 && render.scale.hardware) { //hardware_none
+		    if(dblh)
+			gfx_scaleh *= 1;
+		    if(dblw)
+			gfx_scalew *= 1;
+		} else if(render.scale.size == 4 && render.scale.hardware) {
+		    if(dblh)
+			gfx_scaleh *= 2;
+		    if(dblw)
+			gfx_scalew *= 2;
+		} else if(render.scale.size == 6 && render.scale.hardware) {
+		    if(dblh && dblw) {
+			gfx_scaleh *= 3; gfx_scalew *= 3;
+		    } else if(dblh) {
+			gfx_scaleh *= 2;
+		    } else if(dblw)
+			gfx_scalew *= 2;
+		} else if(render.scale.size == 8 && render.scale.hardware) { //hardware4x
+		    if(dblh)
+			gfx_scaleh *= 4;
+		    if(dblw)
+			gfx_scalew *= 4;
+		} else if(render.scale.size == 10 && render.scale.hardware) { //hardware5x
+		    if(dblh && dblw) {
+			gfx_scaleh *= 5; gfx_scalew *= 5;
+		    } else if(dblh) {
+			gfx_scaleh *= 4;
+		    } else if(dblw)
+			gfx_scalew *= 4;
+		}
 		height = MakeAspectTable(skip, render.src.height, yscale, yscale );
 	} else {
+		// Print a warning when hardware scalers are selected, hopefully the first
+		// video mode will not have dblh or dblw or AR will be wrong
+		if (render.scale.hardware) {
+			LOG_MSG("Output does not support hardware scaling, switching to normal scalers");
+			render.scale.hardware=false;
+		}
 		if ((gfx_flags & GFX_CAN_RANDOM) && gfx_scaleh > 1) {
 			gfx_scaleh *= yscale;
 			height = MakeAspectTable( skip, render.src.height, gfx_scaleh, yscale );
@@ -480,7 +566,13 @@ forcenormal:
 		render.scale.cachePitch = render.src.width * 4;
 		break;
 	default:
-		E_Exit("RENDER:Wrong source bpp %d", render.src.bpp );
+		//render.src.bpp=8;
+		render.scale.lineHandler = (*lineBlock)[0][render.scale.outMode];
+		render.scale.linePalHandler = (*lineBlock)[4][render.scale.outMode];
+		render.scale.inMode = scalerMode8;
+		render.scale.cachePitch = render.src.width * 1;
+		break;
+		//E_Exit("RENDER:Wrong source bpp %d", render.src.bpp );
 	}
 	render.scale.blocks = render.src.width / SCALER_BLOCKSIZE;
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
@@ -498,7 +590,7 @@ forcenormal:
 	render.active=true;
 }
 
-static void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
+void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 	if (function == GFX_CallBackStop) {
 		RENDER_Halt( );	
 		return;
@@ -513,13 +605,29 @@ static void RENDER_CallBack( GFX_CallBackFunctions_t function ) {
 	}
 }
 
-void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool dblw,bool dblh) {
+void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double scrn_ratio) {
 	RENDER_Halt( );
 	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) { 
 		return;	
 	}
-	if ( ratio > 1 ) {
-		double target = height * ratio + 0.025;
+
+	// figure out doublewidth/height values
+	bool dblw = false;
+	bool dblh = false;
+	double ratio = (((double)width)/((double)height))/scrn_ratio;
+	if(ratio > 1.6) {
+		dblh=true;
+		ratio /= 2.0;
+	} else if(ratio < 0.75) {
+		dblw=true;
+		ratio *= 2.0;
+	} else if(!dblw && !dblh && (width < 370) && (height < 280)) {
+		dblw=true; dblh=true;
+	}
+	//LOG_MSG("pixratio %1.3f, dw %s, dh %s",ratio,dblw?"true":"false",dblh?"true":"false");
+
+	if ( ratio > 1.0 ) {
+		double target = height * ratio + 0.1;
 		ratio = target / height;
 	} else {
 		//This would alter the width of the screen, we don't care about rounding errors here
@@ -531,16 +639,17 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool 
 	render.src.dblh=dblh;
 	render.src.fps=fps;
 	render.src.ratio=ratio;
+	render.src.scrn_ratio=scrn_ratio;
 	RENDER_Reset( );
 }
 
-extern void GFX_SetTitle(Bit32s cycles, Bits frameskip,bool paused);
+//extern void GFX_SetTitle(Bit32s cycles, Bits frameskip, Bits timing, bool paused);
 static void IncreaseFrameSkip(bool pressed) {
 	if (!pressed)
 		return;
 	if (render.frameskip.max<10) render.frameskip.max++;
 	LOG_MSG("Frame Skip at %d",render.frameskip.max);
-	GFX_SetTitle(-1,render.frameskip.max,false);
+	GFX_SetTitle(-1,render.frameskip.max,-1,false);
 }
 
 static void DecreaseFrameSkip(bool pressed) {
@@ -548,7 +657,7 @@ static void DecreaseFrameSkip(bool pressed) {
 		return;
 	if (render.frameskip.max>0) render.frameskip.max--;
 	LOG_MSG("Frame Skip at %d",render.frameskip.max);
-	GFX_SetTitle(-1,render.frameskip.max,false);
+	GFX_SetTitle(-1,render.frameskip.max,-1,false);
 }
 /* Disabled as I don't want to waste a keybind for that. Might be used in the future (Qbix)
 static void ChangeScaler(bool pressed) {
@@ -563,8 +672,25 @@ static void ChangeScaler(bool pressed) {
 	RENDER_CallBack( GFX_CallBackReset );
 } */
 
+#include "vga.h"
+
+bool RENDER_GetAutofit(void) {
+	return render.autofit;
+}
+
+bool RENDER_GetAspect(void) {
+	return render.aspect;
+}
+
+void RENDER_SetForceUpdate(bool f) {
+	render.forceUpdate = f;
+}
+
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
+
+	vga.draw.doublescan_set=section->Get_bool("doublescan");
+	vga.draw.char9_set=section->Get_bool("char9");
 
 	//For restarting the renderer.
 	static bool running = false;
@@ -573,11 +699,17 @@ void RENDER_Init(Section * sec) {
 	bool scalerforced = render.scale.forced;
 	scalerOperation_t scaleOp = render.scale.op;
 
-	render.pal.first=256;
-	render.pal.last=0;
+	render.pal.first=0;
+	render.pal.last=255;
 	render.aspect=section->Get_bool("aspect");
 	render.frameskip.max=section->Get_int("frameskip");
+
+	/* BUG FIX: Some people's dosbox.conf files have frameskip=-1 WTF?? */
+	/* without this fix, nothing displays, EVER */
+	if ((int)render.frameskip.max < 0) render.frameskip.max = 0;
+								
 	render.frameskip.count=0;
+	render.forceUpdate=false;
 	std::string cline;
 	std::string scaler;
 	//Check for commandline paramters and parse them through the configclass so they get checked against allowed values
@@ -593,28 +725,39 @@ void RENDER_Init(Section * sec) {
 	render.scale.forced = false;
 	if(f == "forced") render.scale.forced = true;
    
-	if (scaler == "none") { render.scale.op = scalerOpNormal;render.scale.size = 1; }
-	else if (scaler == "normal2x") { render.scale.op = scalerOpNormal;render.scale.size = 2; }
-	else if (scaler == "normal3x") { render.scale.op = scalerOpNormal;render.scale.size = 3; }
+	if (scaler == "none") { render.scale.op = scalerOpNormal; render.scale.size = 1; render.scale.hardware=false; }
+	else if (scaler == "normal2x") { render.scale.op = scalerOpNormal; render.scale.size = 2; render.scale.hardware=false; }
+	else if (scaler == "normal3x") { render.scale.op = scalerOpNormal; render.scale.size = 3; render.scale.hardware=false; }
+	else if (scaler == "normal4x") { render.scale.op = scalerOpNormal; render.scale.size = 4; render.scale.hardware=false; }
+	else if (scaler == "normal5x") { render.scale.op = scalerOpNormal; render.scale.size = 5; render.scale.hardware=false; }
 #if RENDER_USE_ADVANCED_SCALERS>2
-	else if (scaler == "advmame2x") { render.scale.op = scalerOpAdvMame;render.scale.size = 2; }
-	else if (scaler == "advmame3x") { render.scale.op = scalerOpAdvMame;render.scale.size = 3; }
-	else if (scaler == "advinterp2x") { render.scale.op = scalerOpAdvInterp;render.scale.size = 2; }
-	else if (scaler == "advinterp3x") { render.scale.op = scalerOpAdvInterp;render.scale.size = 3; }
-	else if (scaler == "hq2x") { render.scale.op = scalerOpHQ;render.scale.size = 2; }
-	else if (scaler == "hq3x") { render.scale.op = scalerOpHQ;render.scale.size = 3; }
-	else if (scaler == "2xsai") { render.scale.op = scalerOpSaI;render.scale.size = 2; }
-	else if (scaler == "super2xsai") { render.scale.op = scalerOpSuperSaI;render.scale.size = 2; }
-	else if (scaler == "supereagle") { render.scale.op = scalerOpSuperEagle;render.scale.size = 2; }
+	else if (scaler == "advmame2x") { render.scale.op = scalerOpAdvMame; render.scale.size = 2; render.scale.hardware=false; }
+	else if (scaler == "advmame3x") { render.scale.op = scalerOpAdvMame; render.scale.size = 3; render.scale.hardware=false; }
+	else if (scaler == "advinterp2x") { render.scale.op = scalerOpAdvInterp; render.scale.size = 2; render.scale.hardware=false; }
+	else if (scaler == "advinterp3x") { render.scale.op = scalerOpAdvInterp; render.scale.size = 3; render.scale.hardware=false; }
+	else if (scaler == "hq2x") { render.scale.op = scalerOpHQ; render.scale.size = 2; render.scale.hardware=false; }
+	else if (scaler == "hq3x") { render.scale.op = scalerOpHQ; render.scale.size = 3; render.scale.hardware=false; }
+	else if (scaler == "2xsai") { render.scale.op = scalerOpSaI; render.scale.size = 2; render.scale.hardware=false; }
+	else if (scaler == "super2xsai") { render.scale.op = scalerOpSuperSaI; render.scale.size = 2; render.scale.hardware=false; }
+	else if (scaler == "supereagle") { render.scale.op = scalerOpSuperEagle; render.scale.size = 2; render.scale.hardware=false; }
 #endif
 #if RENDER_USE_ADVANCED_SCALERS>0
-	else if (scaler == "tv2x") { render.scale.op = scalerOpTV;render.scale.size = 2; }
-	else if (scaler == "tv3x") { render.scale.op = scalerOpTV;render.scale.size = 3; }
-	else if (scaler == "rgb2x"){ render.scale.op = scalerOpRGB;render.scale.size = 2; }
-	else if (scaler == "rgb3x"){ render.scale.op = scalerOpRGB;render.scale.size = 3; }
-	else if (scaler == "scan2x"){ render.scale.op = scalerOpScan;render.scale.size = 2; }
-	else if (scaler == "scan3x"){ render.scale.op = scalerOpScan;render.scale.size = 3; }
+	else if (scaler == "tv2x") { render.scale.op = scalerOpTV; render.scale.size = 2; render.scale.hardware=false; }
+	else if (scaler == "tv3x") { render.scale.op = scalerOpTV; render.scale.size = 3; render.scale.hardware=false; }
+	else if (scaler == "rgb2x"){ render.scale.op = scalerOpRGB; render.scale.size = 2; render.scale.hardware=false; }
+	else if (scaler == "rgb3x"){ render.scale.op = scalerOpRGB; render.scale.size = 3; render.scale.hardware=false; }
+	else if (scaler == "scan2x"){ render.scale.op = scalerOpScan; render.scale.size = 2; render.scale.hardware=false; }
+	else if (scaler == "scan3x"){ render.scale.op = scalerOpScan; render.scale.size = 3; render.scale.hardware=false; }
 #endif
+	else if (scaler == "hardware_none") { render.scale.op = scalerOpNormal; render.scale.size = 1; render.scale.hardware=true; }
+	else if (scaler == "hardware2x") { render.scale.op = scalerOpNormal; render.scale.size = 4; render.scale.hardware=true; }
+	else if (scaler == "hardware3x") { render.scale.op = scalerOpNormal; render.scale.size = 6; render.scale.hardware=true; }
+	else if (scaler == "hardware4x") { render.scale.op = scalerOpNormal; render.scale.size = 8; render.scale.hardware=true; }
+	else if (scaler == "hardware5x") { render.scale.op = scalerOpNormal; render.scale.size = 10; render.scale.hardware=true; }
+
+
+	render.autofit=section->Get_bool("autofit");
+
 
 	//If something changed that needs a ReInit
 	// Only ReInit when there is a src.bpp (fixes crashes on startup and directly changing the scaler without a screen specified yet)
@@ -628,6 +771,8 @@ void RENDER_Init(Section * sec) {
 
 	MAPPER_AddHandler(DecreaseFrameSkip,MK_f7,MMOD1,"decfskip","Dec Fskip");
 	MAPPER_AddHandler(IncreaseFrameSkip,MK_f8,MMOD1,"incfskip","Inc Fskip");
-	GFX_SetTitle(-1,render.frameskip.max,false);
+	VGA_TweakUserVsyncOffset(0.0f);
+
+	GFX_SetTitle(-1,render.frameskip.max,-1,false);
 }
 

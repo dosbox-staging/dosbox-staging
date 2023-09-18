@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -86,7 +86,7 @@ public:
 	Value(char const * const in) :_string(new std::string(in)),type(V_STRING) { };
 	Value(Value const& in):_string(0) {plaincopy(in);}
 	~Value() { destroy();};
-	Value(std::string const& in,Etype _t) :_hex(0),_bool(false),_int(0),_string(0),_double(0),type(V_NONE) {SetValue(in,_t);}
+	Value(std::string const& in,Etype _t) :_string(0),type(V_NONE) {SetValue(in,_t);}
 	
 	/* Assigment operators */
 	Value& operator= (Hex in) throw(WrongType)                { return copy(Value(in));}
@@ -122,7 +122,7 @@ public:
 	struct Changeable { enum Value {Always, WhenIdle,OnlyAtStart};};
 	const std::string propname;
 
-	Property(std::string const& _propname, Changeable::Value when):propname(_propname),change(when) { }
+	Property(std::string const& _propname, Changeable::Value when):propname(_propname),change(when) { use_global_config_str=false; }
 	void Set_values(const char * const * in);
 	void Set_help(std::string const& str);
 	char const* Get_help();
@@ -147,6 +147,8 @@ protected:
 	typedef std::vector<Value>::iterator iter;
 	Value default_value;
 	const Changeable::Value change;
+	bool use_global_config_str;
+	std::string help_string;
 };
 
 class Prop_int:public Property {
@@ -166,7 +168,7 @@ public:
 	int getMax() { return max;}
 	void SetMinMax(Value const& min,Value const& max) {this->min = min; this->max=max;}
 	bool SetValue(std::string const& in);
-	~Prop_int(){ }
+	virtual ~Prop_int(){ }
 	virtual bool CheckValue(Value const& in, bool warn);
 private:
 	Value min,max;
@@ -179,7 +181,7 @@ public:
 		default_value = value = _value;
 	}
 	bool SetValue(std::string const& input);
-	~Prop_double(){ }
+	virtual ~Prop_double(){ }
 };
 
 class Prop_bool:public Property {
@@ -189,7 +191,7 @@ public:
 		default_value = value = _value;
 	}
 	bool SetValue(std::string const& in);
-	~Prop_bool(){ }
+	virtual ~Prop_bool(){ }
 };
 
 class Prop_string:public Property{
@@ -200,7 +202,7 @@ public:
 	}
 	bool SetValue(std::string const& in);
 	virtual bool CheckValue(Value const& in, bool warn);
-	~Prop_string(){ }
+	virtual ~Prop_string(){ }
 };
 class Prop_path:public Prop_string{
 public:
@@ -211,7 +213,7 @@ public:
 		realpath = _value;
 	}
 	bool SetValue(std::string const& in);
-	~Prop_path(){ }
+	virtual ~Prop_path(){ }
 };
 
 class Prop_hex:public Property {
@@ -221,7 +223,7 @@ public:
 		default_value = value = _value;
 	}
 	bool SetValue(std::string const& in);
-	~Prop_hex(){ }
+	virtual ~Prop_hex(){ }
 };
 
 #define NO_SUCH_PROPERTY "PROP_NOT_EXIST"
@@ -252,8 +254,8 @@ public:
 
 	virtual std::string GetPropValue(std::string const& _property) const =0;
 	virtual bool HandleInputline(std::string const& _line)=0;
-	virtual void PrintData(FILE* outfile) const =0;
-	virtual ~Section() { /*Children must call executedestroy ! */}
+	virtual void PrintData(FILE* outfile) = 0;
+	virtual ~Section() { /*Children must call executedestroy ! */ }
 };
 
 class Prop_multival;
@@ -271,7 +273,7 @@ public:
 	Prop_path* Add_path(std::string const& _propname, Property::Changeable::Value when, char const * const _value=NULL);
 	Prop_bool*  Add_bool(std::string const& _propname, Property::Changeable::Value when, bool _value=false);
 	Prop_hex* Add_hex(std::string const& _propname, Property::Changeable::Value when, Hex _value=0);
-//	void Add_double(char const * const _propname, double _value=0.0);   
+	Prop_double* Add_double(std::string const& _propname, Property::Changeable::Value when, double _value=0.0);   
 	Prop_multival *Add_multi(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
 	Prop_multival_remain *Add_multiremain(std::string const& _propname, Property::Changeable::Value when,std::string const& sep);
 
@@ -284,8 +286,8 @@ public:
 	Prop_path* Get_path(std::string const& _propname) const;
 	Prop_multival* Get_multival(std::string const& _propname) const;
 	Prop_multival_remain* Get_multivalremain(std::string const& _propname) const;
-	bool HandleInputline(std::string const& gegevens);
-	void PrintData(FILE* outfile) const;
+	virtual bool HandleInputline(std::string const& gegevens);
+	virtual void PrintData(FILE* outfile);
 	virtual std::string GetPropValue(std::string const& _property) const;
 	//ExecuteDestroy should be here else the destroy functions use destroyed properties
 	virtual ~Section_prop();
@@ -304,7 +306,7 @@ public:
 	const Section_prop *GetSection() const { return section; }
 	virtual bool SetValue(std::string const& input);
 	virtual const std::vector<Value>& GetValues() const;
-	~Prop_multival() { delete section; }
+	virtual ~Prop_multival() { if (section != NULL) { delete section; } }
 }; //value bevat totale string. setvalue zet elk van de sub properties en checked die.
 
 class Prop_multival_remain:public Prop_multival{
@@ -318,9 +320,9 @@ public:
 class Section_line: public Section{
 public:
 	Section_line(std::string const& _sectionname):Section(_sectionname){}
-	~Section_line(){ExecuteDestroy(true);}
-	bool HandleInputline(std::string const& gegevens);
-	void PrintData(FILE* outfile) const;
+	virtual ~Section_line() { ExecuteDestroy(true); }
+	virtual bool HandleInputline(std::string const& gegevens);
+	virtual void PrintData(FILE* outfile);
 	virtual std::string GetPropValue(std::string const& _property) const;
 	std::string data;
 };

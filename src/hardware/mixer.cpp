@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -47,7 +47,6 @@
 #include "mapper.h"
 #include "hardware.h"
 #include "programs.h"
-#include "midi.h"
 
 #define MIXER_SSIZE 4
 #define MIXER_SHIFT 14
@@ -72,6 +71,7 @@ static struct {
 	bool nosound;
 	Bit32u freq;
 	Bit32u blocksize;
+	bool swapstereo;
 } mixer;
 
 Bit8u MixTemp[MIXER_BUFSIZE];
@@ -167,6 +167,9 @@ inline void MixerChannel::AddSamples(Bitu len, const Type* data) {
 	Bitu mixpos=mixer.pos+done;
 	freq_index&=MIXER_REMAIN;
 	Bitu pos=0;Bitu new_pos;
+	int offset[2]; 
+	offset[0] = mixer.swapstereo ? 1:0; 
+	offset[1] = mixer.swapstereo ? 0:1; 
 
 	goto thestart;
 	for (;;) {
@@ -180,15 +183,15 @@ thestart:
 			if ( sizeof( Type) == 1) {
 				if (!signeddata) {
 					if (stereo) {
-						diff[0]=(((Bit8s)(data[pos*2+0] ^ 0x80)) << 8)-last[0];
-						diff[1]=(((Bit8s)(data[pos*2+1] ^ 0x80)) << 8)-last[1];
+						diff[0]=(((Bit8s)(data[pos*2+offset[0]] ^ 0x80)) << 8)-last[0]; 
+						diff[1]=(((Bit8s)(data[pos*2+offset[1]] ^ 0x80)) << 8)-last[1]; 
 					} else {
 						diff[0]=(((Bit8s)(data[pos] ^ 0x80)) << 8)-last[0];
 					}
 				} else {
 					if (stereo) {
-						diff[0]=(data[pos*2+0] << 8)-last[0];
-						diff[1]=(data[pos*2+1] << 8)-last[1];
+						diff[0]=(data[pos*2+offset[0]] << 8)-last[0]; 
+						diff[1]=(data[pos*2+offset[1]] << 8)-last[1]; 
 					} else {
 						diff[0]=(data[pos] << 8)-last[0];
 					}
@@ -198,8 +201,8 @@ thestart:
 				if (signeddata) {
 					if (stereo) {
 						if (nativeorder) {
-							diff[0]=data[pos*2+0]-last[0];
-							diff[1]=data[pos*2+1]-last[1];
+							diff[0]=data[pos*2+offset[0]]-last[0]; 
+							diff[1]=data[pos*2+offset[1]]-last[1]; 
 						} else {
 							if ( sizeof( Type) == 2) {
 								diff[0]=(Bit16s)host_readw((HostPt)&data[pos*2+0])-last[0];
@@ -223,8 +226,8 @@ thestart:
 				} else {
 					if (stereo) {
 						if (nativeorder) {
-							diff[0]=(Bits)data[pos*2+0]-32768-last[0];
-							diff[1]=(Bits)data[pos*2+1]-32768-last[1];
+							diff[0]=(Bits)data[pos*2+offset[0]]-32768-last[0]; 
+							diff[1]=(Bits)data[pos*2+offset[1]]-32768-last[1]; 
 						} else {
 							if ( sizeof( Type) == 2) {
 								diff[0]=(Bits)host_readw((HostPt)&data[pos*2+0])-32768-last[0];
@@ -282,6 +285,39 @@ void MixerChannel::AddStretched(Bitu len,Bit16s * data) {
 		mixpos&=MIXER_BUFMASK;
 		Bits sample=last[0]+((diff*diff_mul) >> MIXER_SHIFT);
 		mixer.work[mixpos][0]+=sample*volmul[0];
+		mixer.work[mixpos][1]+=sample*volmul[1];
+		mixpos++;
+	}
+}
+
+void MixerChannel::AddStretchedStereo(Bitu len/*combined L+R samples*/,Bit16s * data) {
+	if (done>=needed) {
+		LOG_MSG("Can't add, buffer full");	
+		return;
+	}
+	Bitu outlen=needed-done;Bits diff,diff2;
+	freq_index=0;
+	Bitu temp_add=(len << MIXER_SHIFT)/outlen;
+	Bitu mixpos=mixer.pos+done;done=needed;
+	Bitu pos=0;
+	diff=data[0]-last[0];
+	diff2=data[1]-last[1];
+	while (outlen--) {
+		Bitu new_pos=freq_index >> MIXER_SHIFT;
+		if (pos<new_pos) {
+			pos=new_pos;
+			last[0]+=diff;
+			last[1]+=diff2;
+			diff=data[pos*2]-last[0];
+			diff2=data[pos*2+1]-last[1];
+		}
+		Bits diff_mul=freq_index & MIXER_REMAIN;
+		freq_index+=temp_add;
+		mixpos&=MIXER_BUFMASK;
+		Bits sample;
+		sample=last[0]+((diff*diff_mul) >> MIXER_SHIFT);
+		mixer.work[mixpos][0]+=sample*volmul[0];
+		sample=last[1]+((diff2*diff_mul) >> MIXER_SHIFT);
 		mixer.work[mixpos][1]+=sample*volmul[1];
 		mixpos++;
 	}
@@ -578,7 +614,15 @@ private:
 	}
 
 	void ListMidi(){
-		if(midi.handler) midi.handler->ListAll(this);
+#if defined (WIN32)
+		unsigned int total = midiOutGetNumDevs();	
+		for(unsigned int i=0;i<total;i++) {
+			MIDIOUTCAPS mididev;
+			midiOutGetDevCaps(i, &mididev, sizeof(MIDIOUTCAPS));
+			WriteOut("%2d\t \"%s\"\n",i,mididev.szPname);
+		}
+#endif
+	return;
 	};
 
 };
@@ -604,6 +648,11 @@ MixerObject::~MixerObject(){
 	MIXER_DelChannel(MIXER_FindChannel(m_name));
 }
 
+#ifdef WIN32
+void MENU_swapstereo(bool enabled) {
+	mixer.swapstereo=enabled;
+}
+#endif
 
 void MIXER_Init(Section* sec) {
 	sec->AddDestroyFunction(&MIXER_Stop);
@@ -613,6 +662,7 @@ void MIXER_Init(Section* sec) {
 	mixer.freq=section->Get_int("rate");
 	mixer.nosound=section->Get_bool("nosound");
 	mixer.blocksize=section->Get_int("blocksize");
+	mixer.swapstereo=section->Get_bool("swapstereo");
 
 	/* Initialize the internal stuff */
 	mixer.channels=0;
@@ -653,9 +703,16 @@ void MIXER_Init(Section* sec) {
 		SDL_PauseAudio(0);
 	}
 	mixer.min_needed=section->Get_int("prebuffer");
-	if (mixer.min_needed>100) mixer.min_needed=100;
+	if (mixer.min_needed>90) mixer.min_needed=90;
 	mixer.min_needed=(mixer.freq*mixer.min_needed)/1000;
 	mixer.max_needed=mixer.blocksize * 2 + 2*mixer.min_needed;
 	mixer.needed=mixer.min_needed+1;
 	PROGRAMS_MakeFile("MIXER.COM",MIXER_ProgramStart);
 }
+
+
+
+// save state support
+void *MIXER_Mix_NoSound_PIC_Timer = (void*)MIXER_Mix_NoSound;
+void *MIXER_Mix_PIC_Timer = (void*)MIXER_Mix;
+

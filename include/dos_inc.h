@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +19,8 @@
 
 #ifndef DOSBOX_DOS_INC_H
 #define DOSBOX_DOS_INC_H
+
+#include <stddef.h>
 
 #ifndef DOSBOX_DOS_SYSTEM_H
 #include "dos_system.h"
@@ -40,6 +42,12 @@ struct CommandTail{
 #pragma pack ()
 #endif
 
+extern Bit16u first_umb_seg;
+extern Bit16u first_umb_size;
+
+bool MEM_unmap_physmem(Bitu start,Bitu end);
+bool MEM_map_RAM_physmem(Bitu start,Bitu end);
+
 struct DOS_Date {
 	Bit16u year;
 	Bit8u month;
@@ -50,6 +58,27 @@ struct DOS_Version {
 	Bit8u major,minor,revision;
 };
 
+#ifndef MACOSX
+#if defined (__APPLE__)
+#define MACOSX 1
+#endif
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef signed char         INT8, *PINT8;
+typedef signed short        INT16, *PINT16;
+typedef signed int          INT32, *PINT32;
+//typedef signed __int64      INT64, *PINT64;
+typedef unsigned char       UINT8, *PUINT8;
+typedef unsigned short      UINT16, *PUINT16;
+typedef unsigned int        UINT32, *PUINT32;
+//typedef unsigned __int64    UINT64, *PUINT64;
+#ifdef __cplusplus
+}
+#endif
 
 #ifdef _MSC_VER
 #pragma pack (1)
@@ -73,11 +102,13 @@ union bootSector {
 enum { MCB_FREE=0x0000,MCB_DOS=0x0008 };
 enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 
-#define DOS_FILES 127
+extern Bitu DOS_FILES;
+
 #define DOS_DRIVES 26
 #define DOS_DEVICES 10
 
 
+#if 0 /* ORIGINAL DEFINES FOR REFERENCE */
 // dos swappable area is 0x320 bytes beyond the sysvars table
 // device driver chain is inside sysvars
 #define DOS_INFOBLOCK_SEG 0x80	// sysvars (list of lists)
@@ -87,14 +118,31 @@ enum { RETURN_EXIT=0,RETURN_CTRLC=1,RETURN_ABORT=2,RETURN_TSR=3};
 #define DOS_SDA_OFS 0
 #define DOS_CDS_SEG 0x108
 #define DOS_FIRST_SHELL 0x118
-#define DOS_MEM_START 0x16f		//First Segment that DOS can use
+#define DOS_MEM_START 0x158	 // regression to r3437 fixes nascar 2 colors
+//#define DOS_MEM_START 0x16f		//First Segment that DOS can use 
 
 #define DOS_PRIVATE_SEGMENT 0xc800
 #define DOS_PRIVATE_SEGMENT_END 0xd000
+#endif
+
+// dos swappable area is 0x320 bytes beyond the sysvars table
+// device driver chain is inside sysvars
+extern Bit16u DOS_INFOBLOCK_SEG;// 0x80	// sysvars (list of lists)
+extern Bit16u DOS_CONDRV_SEG;// 0xa0
+extern Bit16u DOS_CONSTRING_SEG;// 0xa8
+extern Bit16u DOS_SDA_SEG;// 0xb2		// dos swappable area
+extern Bit16u DOS_SDA_OFS;// 0
+extern Bit16u DOS_CDS_SEG;// 0x108
+extern Bit16u DOS_FIRST_SHELL;// 0x118
+extern Bit16u DOS_FIRST_SHELL_END;
+extern Bit16u DOS_MEM_START;// 0x158	 // regression to r3437 fixes nascar 2 colors
+
+extern Bit16u DOS_PRIVATE_SEGMENT;// 0xc800
+extern Bit16u DOS_PRIVATE_SEGMENT_END;// 0xd000
 
 /* internal Dos Tables */
 
-extern DOS_File * Files[DOS_FILES];
+extern DOS_File ** Files;
 extern DOS_Drive * Drives[DOS_DRIVES];
 extern DOS_Device * Devices[DOS_DEVICES];
 
@@ -113,11 +161,14 @@ void DOS_SetupFiles (void);
 bool DOS_ReadFile(Bit16u handle,Bit8u * data,Bit16u * amount);
 bool DOS_WriteFile(Bit16u handle,Bit8u * data,Bit16u * amount);
 bool DOS_SeekFile(Bit16u handle,Bit32u * pos,Bit32u type);
+/* ert, 20100711: Locking extensions */
+bool DOS_LockFile(Bit16u entry,Bit8u mode,Bit32u pos,Bit32u size);
 bool DOS_CloseFile(Bit16u handle);
 bool DOS_FlushFile(Bit16u handle);
 bool DOS_DuplicateEntry(Bit16u entry,Bit16u * newentry);
 bool DOS_ForceDuplicateEntry(Bit16u entry,Bit16u newentry);
 bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate);
+bool DOS_SetFileDate(Bit16u entry, Bit16u ntime, Bit16u ndate);
 
 /* Routines for Drive Class */
 bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry);
@@ -163,7 +214,8 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks);
 bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks);
 bool DOS_FreeMemory(Bit16u segment);
 void DOS_FreeProcessMemory(Bit16u pspseg);
-Bit16u DOS_GetMemory(Bit16u pages);
+Bit16u BIOS_GetMemory(Bit16u pages,const char *who=NULL);
+Bit16u DOS_GetMemory(Bit16u pages,const char *who=NULL);
 bool DOS_SetMemAllocStrategy(Bit16u strat);
 Bit16u DOS_GetMemAllocStrategy(void);
 void DOS_BuildUMBChain(bool umb_active,bool ems_active);
@@ -223,6 +275,22 @@ static INLINE Bit16u DOS_PackTime(Bit16u hour,Bit16u min,Bit16u sec) {
 static INLINE Bit16u DOS_PackDate(Bit16u year,Bit16u mon,Bit16u day) {
 	return ((year-1980)&0x7f)<<9 | (mon&0x3f) << 5 | (day&0x1f);
 }
+
+/* fopen64, ftello64, fseeko64 */
+#if defined(__APPLE__)
+ #define fopen64 fopen
+ #define ftello64 ftell
+ #define fseeko64 fseek
+#elif defined (_MSC_VER)
+ #define fopen64 fopen
+ #if (_MSC_VER >= 1400)
+  #define ftello64 _ftelli64
+  #define fseeko64 _fseeki64
+ #else
+  #define ftello64 ftell
+  #define fseeko64 fseek
+ #endif
+#endif
 
 /* Dos Error Codes */
 #define DOSERR_NONE 0
@@ -542,7 +610,7 @@ private:
 class DOS_MCB : public MemStruct{
 public:
 	DOS_MCB(Bit16u seg) { SetPt(seg); }
-	void SetFileName(char const * const _name) { MEM_BlockWrite(pt+offsetof(sMCB,filename),_name,8); }
+	void SetFileName(const char * const _name) { MEM_BlockWrite(pt+offsetof(sMCB,filename),_name,8); }
 	void GetFileName(char * const _name) { MEM_BlockRead(pt+offsetof(sMCB,filename),_name,8);_name[8]=0;}
 	void SetType(Bit8u _type) { sSave(sMCB,type,_type);}
 	void SetSize(Bit16u _size) { sSave(sMCB,size,_size);}
@@ -607,15 +675,16 @@ extern DOS_InfoBlock dos_infoblock;
 
 struct DOS_Block {
 	DOS_Date date;
+	bool hostdate;
 	DOS_Version version;
 	Bit16u firstMCB;
 	Bit16u errorcode;
-	Bit16u psp(){return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetPSP();};
-	void psp(Bit16u _seg){ DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetPSP(_seg);};
+	Bit16u psp();//{return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetPSP();};
+	void psp(Bit16u _seg);//{ DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetPSP(_seg);};
 	Bit16u env;
 	RealPt cpmentry;
-	RealPt dta(){return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDTA();};
-	void dta(RealPt _dta){DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDTA(_dta);};
+	RealPt dta();//{return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDTA();};
+	void dta(RealPt _dta);//{DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).SetDTA(_dta);};
 	Bit8u return_code,return_mode;
 	
 	Bit8u current_drive;

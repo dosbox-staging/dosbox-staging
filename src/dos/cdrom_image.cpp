@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
-#include <limits.h> //GCC 2.95
 #include <sstream>
 #include <vector>
 #include <sys/stat.h>
@@ -69,66 +68,9 @@ int CDROM_Interface_Image::BinaryFile::getLength()
 	return length;
 }
 
-#if defined(C_SDL_SOUND)
-CDROM_Interface_Image::AudioFile::AudioFile(const char *filename, bool &error)
-{
-	Sound_AudioInfo desired = {AUDIO_S16, 2, 44100};
-	sample = Sound_NewSampleFromFile(filename, &desired, RAW_SECTOR_SIZE);
-	lastCount = RAW_SECTOR_SIZE;
-	lastSeek = 0;
-	error = (sample == NULL);
-}
-
-CDROM_Interface_Image::AudioFile::~AudioFile()
-{
-	Sound_FreeSample(sample);
-}
-
-bool CDROM_Interface_Image::AudioFile::read(Bit8u *buffer, int seek, int count)
-{
-	if (lastCount != count) {
-		int success = Sound_SetBufferSize(sample, count);
-		if (!success) return false;
-	}
-	if (lastSeek != (seek - count)) {
-		int success = Sound_Seek(sample, (int)((double)(seek) / 176.4f));
-		if (!success) return false;
-	}
-	lastSeek = seek;
-	int bytes = Sound_Decode(sample);
-	if (bytes < count) {
-		memcpy(buffer, sample->buffer, bytes);
-		memset(buffer + bytes, 0, count - bytes);
-	} else {
-		memcpy(buffer, sample->buffer, count);
-	}
-	
-	return !(sample->flags & SOUND_SAMPLEFLAG_ERROR);
-}
-
-int CDROM_Interface_Image::AudioFile::getLength()
-{
-	int time = 1;
-	int shift = 0;
-	if (!(sample->flags & SOUND_SAMPLEFLAG_CANSEEK)) return -1;
-	
-	while (true) {
-		int success = Sound_Seek(sample, (unsigned int)(shift + time));
-		if (!success) {
-			if (time == 1) return lround((double)shift * 176.4f);
-			shift += time >> 1;
-			time = 1;
-		} else {
-			if (time > ((numeric_limits<int>::max() - shift) / 2)) return -1;
-			time = time << 1;
-		}
-	}
-}
-#endif
-
 // initialize static members
 int CDROM_Interface_Image::refCount = 0;
-CDROM_Interface_Image* CDROM_Interface_Image::images[26];
+CDROM_Interface_Image* CDROM_Interface_Image::images[26] = {NULL};
 CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player = {
 	NULL, NULL, NULL, {0}, 0, 0, 0, false, false, false, {0} };
 
@@ -138,9 +80,8 @@ CDROM_Interface_Image::CDROM_Interface_Image(Bit8u subUnit)
 	images[subUnit] = this;
 	if (refCount == 0) {
 		player.mutex = SDL_CreateMutex();
-		if (!player.channel) {
+		if (player.channel == NULL)
 			player.channel = MIXER_AddChannel(&CDAudioCallBack, 44100, "CDAUDIO");
-		}
 		player.channel->Enable(true);
 	}
 	refCount++;
@@ -153,7 +94,11 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	ClearTracks();
 	if (refCount == 0) {
 		SDL_DestroyMutex(player.mutex);
-		player.channel->Enable(false);
+		if (player.channel) {
+			player.channel->Enable(false);
+			MIXER_DelChannel(player.channel);
+			player.channel = NULL;
+		}
 	}
 }
 
@@ -167,10 +112,13 @@ bool CDROM_Interface_Image::SetDevice(char* path, int forceCD)
 	if (LoadIsoFile(path)) return true;
 	
 	// print error message on dosbox console
+	/*
 	char buf[MAX_LINE_LENGTH];
 	snprintf(buf, MAX_LINE_LENGTH, "Could not load image file: %s\n", path);
 	Bit16u size = (Bit16u)strlen(buf);
 	DOS_WriteFile(STDOUT, (Bit8u*)buf, &size);
+	*/
+	LOG_MSG("Could not load image file: %s", path);
 	return false;
 }
 
@@ -281,6 +229,18 @@ bool CDROM_Interface_Image::ReadSectors(PhysPt buffer, bool raw, unsigned long s
 	return success;
 }
 
+bool CDROM_Interface_Image::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
+{
+	int sectorSize = raw ? RAW_SECTOR_SIZE : COOKED_SECTOR_SIZE;
+	bool success = true; //Gobliiins reads 0 sectors
+	for(unsigned long i = 0; i < num; i++) {
+		success = ReadSector((Bit8u*)buffer + (i * sectorSize), raw, sector + i);
+		if (!success) break;
+	}
+
+	return success;
+}
+
 bool CDROM_Interface_Image::LoadUnloadMedia(bool unload)
 {
 	return true;
@@ -304,10 +264,28 @@ bool CDROM_Interface_Image::ReadSector(Bit8u *buffer, bool raw, unsigned long se
 {
 	int track = GetTrack(sector) - 1;
 	if (track < 0) return false;
-	
-	int seek = tracks[track].skip + (sector - tracks[track].start) * tracks[track].sectorSize;
-	int length = (raw ? RAW_SECTOR_SIZE : COOKED_SECTOR_SIZE);
+
 	if (tracks[track].sectorSize != RAW_SECTOR_SIZE && raw) return false;
+
+	/* we must reject non-raw reads against CD audio sectors.
+	 * not just for correctness, but also to avoid a weird bug in MSCDEX.EXE
+	 * that reads the non-data sectors one-by-one looking for a volume label
+	 * that doesn't exist on pure CD audio emulated images */
+	if (tracks[track].sectorSize == RAW_SECTOR_SIZE && !raw) {
+		if ((tracks[track].attr&0x40) == 0x00) {
+			LOG_MSG("Rejecting cooked read from raw audio CD sector\n");
+			return false;
+		}
+	}
+
+	int length = (raw ? RAW_SECTOR_SIZE : COOKED_SECTOR_SIZE);
+
+	if (sector >= (unsigned long)(tracks[track].start + tracks[track].length)) {
+		memset(buffer, 0, length);
+		return true;
+	}
+
+	int seek = tracks[track].skip + (sector - tracks[track].start) * tracks[track].sectorSize;
 	if (tracks[track].sectorSize == RAW_SECTOR_SIZE && !tracks[track].mode2 && !raw) seek += 16;
 	if (tracks[track].mode2 && !raw) seek += 24;
 
@@ -416,9 +394,8 @@ bool CDROM_Interface_Image::CanReadPVD(TrackFile *file, int sectorSize, bool mod
 	if (sectorSize == RAW_SECTOR_SIZE && !mode2) seek += 16;
 	if (mode2) seek += 24;
 	file->read(pvd, seek, COOKED_SECTOR_SIZE);
-	// pvd[0] = descriptor type, pvd[1..5] = standard identifier, pvd[6] = iso version (+8 for High Sierra)
-	return ((pvd[0] == 1 && !strncmp((char*)(&pvd[1]), "CD001", 5) && pvd[6] == 1) ||
-			(pvd[8] == 1 && !strncmp((char*)(&pvd[9]), "CDROM", 5) && pvd[14] == 1));
+	// pvd[0] = descriptor type, pvd[1..5] = standard identifier, pvd[6] = iso version
+	return (pvd[0] == 1 && !strncmp((char*)(&pvd[1]), "CD001", 5) && pvd[6] == 1);
 }
 
 #if defined(WIN32)
@@ -527,21 +504,6 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 			if (type == "BINARY") {
 				track.file = new BinaryFile(filename.c_str(), error);
 			}
-#if defined(C_SDL_SOUND)
-			//The next if has been surpassed by the else, but leaving it in as not 
-			//to break existing cue sheets that depend on this.(mine with OGG tracks specifying MP3 as type)
-			else if (type == "WAVE" || type == "AIFF" || type == "MP3") {
-				track.file = new AudioFile(filename.c_str(), error);
-			} else { 
-				const Sound_DecoderInfo **i;
-				for (i = Sound_AvailableDecoders(); *i != NULL; i++) {
-					if (*(*i)->extensions == type) {
-						track.file = new AudioFile(filename.c_str(), error);
-						break;
-					}
-				}
-			}
-#endif
 			if (error) {
 				delete track.file;
 				success = false;
@@ -741,14 +703,7 @@ void CDROM_Interface_Image::ClearTracks()
 }
 
 void CDROM_Image_Destroy(Section*) {
-#if defined(C_SDL_SOUND)
-	Sound_Quit();
-#endif
 }
 
 void CDROM_Image_Init(Section* section) {
-#if defined(C_SDL_SOUND)
-	Sound_Init();
-	section->AddDestroyFunction(CDROM_Image_Destroy, false);
-#endif
 }

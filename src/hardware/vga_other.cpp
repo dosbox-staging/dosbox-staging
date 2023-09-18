@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
 #include "mapper.h"
 
 static void write_crtc_index_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
-	vga.other.index=(Bit8u)val;
+	vga.other.index=(Bit8u)(val & 0x1f);
 }
 
 static Bitu read_crtc_index_other(Bitu /*port*/,Bitu /*iolen*/) {
@@ -55,7 +55,7 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		break;
 	case 0x04:		//Vertical total
 		if (vga.other.vtotal ^ val) VGA_StartResize();
-		vga.other.vtotal=(Bit8u)val;
+		vga.other.vtotal=(Bit8u)(val&0x7f);
 		break;
 	case 0x05:		//Vertical display adjust
 		if (vga.other.vadjust ^ val) VGA_StartResize();
@@ -63,7 +63,7 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		break;
 	case 0x06:		//Vertical rows
 		if (vga.other.vdend ^ val) VGA_StartResize();
-		vga.other.vdend=(Bit8u)val;
+		vga.other.vdend=(Bit8u)(val&0x7f);
 		break;
 	case 0x07:		//Vertical sync position
 		vga.other.vsyncp=(Bit8u)val;
@@ -99,6 +99,7 @@ static void write_crtc_data_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 		vga.config.cursor_start|=(Bit8u)val;
 		break;
 	case 0x10:	/* Light Pen High */
+		// MC6845 datasheet says the light pen registers are only readable
 		vga.other.lightpen &= 0xff;
 		vga.other.lightpen |= (val & 0x3f)<<8;		// only 6 bits
 		break;
@@ -182,6 +183,35 @@ static bool new_cga = 0;
 static Bit8u cga16_val = 0;
 static void update_cga16_color(void);
 static Bit8u herc_pal = 0;
+static Bit8u mono_cga_pal = 0;
+static Bit8u mono_cga_bright = 0;
+static Bit8u const mono_cga_palettes[6][16][3] =
+{
+	{ // 0 - green, 4-color-optimized contrast
+		{0x00,0x00,0x00},{0x00,0x0d,0x03},{0x01,0x17,0x05},{0x01,0x1a,0x06},{0x02,0x28,0x09},{0x02,0x2c,0x0a},{0x03,0x39,0x0d},{0x03,0x3c,0x0e},
+		{0x00,0x07,0x01},{0x01,0x13,0x04},{0x01,0x1f,0x07},{0x01,0x23,0x08},{0x02,0x31,0x0b},{0x02,0x35,0x0c},{0x05,0x3f,0x11},{0x0d,0x3f,0x17},
+	},
+	{ // 1 - green, 16-color-optimized contrast
+		{0x00,0x00,0x00},{0x00,0x0d,0x03},{0x01,0x15,0x05},{0x01,0x17,0x05},{0x01,0x21,0x08},{0x01,0x24,0x08},{0x02,0x2e,0x0b},{0x02,0x31,0x0b},
+		{0x01,0x22,0x08},{0x02,0x28,0x09},{0x02,0x30,0x0b},{0x02,0x32,0x0c},{0x03,0x39,0x0d},{0x03,0x3b,0x0e},{0x09,0x3f,0x14},{0x0d,0x3f,0x17},
+	},
+	{ // 2 - amber, 4-color-optimized contrast
+		{0x00,0x00,0x00},{0x15,0x05,0x00},{0x20,0x0b,0x00},{0x24,0x0d,0x00},{0x33,0x18,0x00},{0x37,0x1b,0x00},{0x3f,0x26,0x01},{0x3f,0x2b,0x06},
+		{0x0b,0x02,0x00},{0x1b,0x08,0x00},{0x29,0x11,0x00},{0x2e,0x14,0x00},{0x3b,0x1e,0x00},{0x3e,0x21,0x00},{0x3f,0x32,0x0a},{0x3f,0x38,0x0d},
+	},
+	{ // 3 - amber, 16-color-optimized contrast
+		{0x00,0x00,0x00},{0x15,0x05,0x00},{0x1e,0x09,0x00},{0x21,0x0b,0x00},{0x2b,0x12,0x00},{0x2f,0x15,0x00},{0x38,0x1c,0x00},{0x3b,0x1e,0x00},
+		{0x2c,0x13,0x00},{0x32,0x17,0x00},{0x3a,0x1e,0x00},{0x3c,0x1f,0x00},{0x3f,0x27,0x01},{0x3f,0x2a,0x04},{0x3f,0x36,0x0c},{0x3f,0x38,0x0d},
+	},
+	{ // 4 - grey, 4-color-optimized contrast
+		{0x00,0x00,0x00},{0x0d,0x0d,0x0d},{0x15,0x15,0x15},{0x18,0x18,0x18},{0x24,0x24,0x24},{0x27,0x27,0x27},{0x33,0x33,0x33},{0x37,0x37,0x37},
+		{0x08,0x08,0x08},{0x10,0x10,0x10},{0x1c,0x1c,0x1c},{0x20,0x20,0x20},{0x2c,0x2c,0x2c},{0x2f,0x2f,0x2f},{0x3b,0x3b,0x3b},{0x3f,0x3f,0x3f},
+	},
+	{ // 5 - grey, 16-color-optimized contrast
+		{0x00,0x00,0x00},{0x0d,0x0d,0x0d},{0x12,0x12,0x12},{0x15,0x15,0x15},{0x1e,0x1e,0x1e},{0x20,0x20,0x20},{0x29,0x29,0x29},{0x2c,0x2c,0x2c},
+		{0x1f,0x1f,0x1f},{0x23,0x23,0x23},{0x2b,0x2b,0x2b},{0x2d,0x2d,0x2d},{0x34,0x34,0x34},{0x36,0x36,0x36},{0x3d,0x3d,0x3d},{0x3f,0x3f,0x3f},
+	},
+};
 
 static void cga16_color_select(Bit8u val) {
 	cga16_val = val;
@@ -280,9 +310,9 @@ static void update_cga16_color(void) {
 	}
 	Bitu CGApal[4] = {
 		overscan,
-		2 + (color_sel||bw ? 1 : 0) + (background_i ? 8 : 0),
-		4 + (color_sel&&!bw? 1 : 0) + (background_i ? 8 : 0),
-		6 + (color_sel||bw ? 1 : 0) + (background_i ? 8 : 0)
+		(Bitu)(2 + (color_sel||bw ? 1 : 0) + (background_i ? 8 : 0)),
+		(Bitu)(4 + (color_sel&&!bw? 1 : 0) + (background_i ? 8 : 0)),
+		(Bitu)(6 + (color_sel||bw ? 1 : 0) + (background_i ? 8 : 0))
 	};
 	for (Bit8u x=0; x<4; x++) {	 // Position of pixel in question
 		bool even = (x & 1) == 0;
@@ -381,6 +411,9 @@ static void write_cga_color_select(Bitu val) {
 		vga.tandy.border_color = val & 0xf;
 		vga.attr.overscan_color = 0;
 		break;
+	case M_AMSTRAD: // Amstrad "palette". 0x3D9
+		Bitu x = 0;
+		break;
 	}
 }
 
@@ -391,7 +424,9 @@ static void write_cga(Bitu port,Bitu val,Bitu /*iolen*/) {
 		vga.attr.disabled = (val&0x8)? 0: 1; 
 		if (vga.tandy.mode_control & 0x2) {		// graphics mode
 			if (vga.tandy.mode_control & 0x10) {// highres mode
-				if (cga_comp==1 || (cga_comp==0 && !(val&0x4))) {	// composite display
+				if (machine == MCH_AMSTRAD) {
+					VGA_SetMode(M_AMSTRAD);			//Amstrad 640x200x16 video mode.
+				} else if ((cga_comp==1 || (cga_comp==0 && !(val&0x4))) && !mono_cga) {	// composite display
 					VGA_SetMode(M_CGA16);		// composite ntsc 640x200 16 color mode
 				} else {
 					VGA_SetMode(M_TANDY2);
@@ -412,6 +447,18 @@ static void write_cga(Bitu port,Bitu val,Bitu /*iolen*/) {
 		break;
 	case 0x3d9: // color select
 		write_cga_color_select(val);
+		if( machine==MCH_AMSTRAD ) {
+			vga.amstrad.mask_plane = ( val | ( val << 8 ) | ( val << 16 ) | ( val << 24 ) ) & 0x0F0F0F0F;
+		}
+		break;
+	case 0x3dd:
+		vga.amstrad.write_plane = val & 0x0F;
+		break;
+	case 0x3de:
+		vga.amstrad.read_plane = val & 0x03;
+		break;
+	case 0x3df:
+		vga.amstrad.border_color = val & 0x0F;
 		break;
 	}
 }
@@ -688,7 +735,18 @@ static void CycleHercPal(bool pressed) {
 	if (!pressed) return;
 	if (++herc_pal>2) herc_pal=0;
 	Herc_Palette();
-	VGA_DAC_CombineColor(1,7);
+}
+
+static void CycleMonoCGAPal(bool pressed) {
+	if (!pressed) return;
+	if (++mono_cga_pal>2) mono_cga_pal=0;
+	Mono_CGA_Palette();
+}
+
+static void CycleMonoCGABright(bool pressed) {
+	if (!pressed) return;
+	if (++mono_cga_bright>1) mono_cga_bright=0;
+	Mono_CGA_Palette();
 }
 	
 void Herc_Palette(void) {	
@@ -705,6 +763,25 @@ void Herc_Palette(void) {
 		VGA_DAC_SetEntry(0x7,0x00,0x26,0x00);
 		VGA_DAC_SetEntry(0xf,0x00,0x3f,0x00);
 		break;
+	}
+	VGA_DAC_CombineColor(1,0x7);
+	VGA_DAC_CombineColor(2,0xf);
+}
+
+static void HercBlend(bool pressed) {
+	if (!pressed) return;
+	vga.herc.blend = !vga.herc.blend;
+	VGA_SetupDrawing(0);
+}
+
+void Mono_CGA_Palette(void) {	
+	for (Bit8u ct=0;ct<16;ct++) {
+		VGA_DAC_SetEntry(ct,
+						 mono_cga_palettes[2*mono_cga_pal+mono_cga_bright][ct][0],
+						 mono_cga_palettes[2*mono_cga_pal+mono_cga_bright][ct][1],
+						 mono_cga_palettes[2*mono_cga_pal+mono_cga_bright][ct][2]
+		);
+		VGA_DAC_CombineColor(ct,ct);
 	}
 }
 
@@ -799,7 +876,7 @@ void VGA_SetupOther(void) {
 	vga.tandy.line_mask = 3;
 	vga.tandy.line_shift = 13;
 
-	if (machine==MCH_CGA || IS_TANDY_ARCH) {
+	if (machine==MCH_CGA || machine==MCH_AMSTRAD || IS_TANDY_ARCH) {
 		extern Bit8u int10_font_08[256 * 8];
 		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_08[i*8],8);
 		vga.draw.font_tables[0]=vga.draw.font_tables[1]=vga.draw.font;
@@ -812,15 +889,34 @@ void VGA_SetupOther(void) {
 		extern Bit8u int10_font_14[256 * 14];
 		for (i=0;i<256;i++)	memcpy(&vga.draw.font[i*32],&int10_font_14[i*14],14);
 		vga.draw.font_tables[0]=vga.draw.font_tables[1]=vga.draw.font;
+		MAPPER_AddHandler(HercBlend,MK_f11,MMOD2,"hercblend","Herc Blend");
 		MAPPER_AddHandler(CycleHercPal,MK_f11,0,"hercpal","Herc Pal");
 	}
-	if (machine==MCH_CGA) {
+	if (machine==MCH_CGA || machine==MCH_AMSTRAD) {
+		vga.amstrad.mask_plane = 0x07070707;
+		vga.amstrad.write_plane = 0x0F;
+		vga.amstrad.read_plane = 0x00;
+		vga.amstrad.border_color = 0x00;
+
 		IO_RegisterWriteHandler(0x3d8,write_cga,IO_MB);
 		IO_RegisterWriteHandler(0x3d9,write_cga,IO_MB);
-		MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD2,"inchue","Inc Hue");
-		MAPPER_AddHandler(DecreaseHue,MK_f11,0,"dechue","Dec Hue");
+
+		if( machine==MCH_AMSTRAD )
+		{
+			IO_RegisterWriteHandler(0x3dd,write_cga,IO_MB);
+			IO_RegisterWriteHandler(0x3de,write_cga,IO_MB);
+			IO_RegisterWriteHandler(0x3df,write_cga,IO_MB);
+		}
+
+		if(!mono_cga) {
+			MAPPER_AddHandler(IncreaseHue,MK_f11,MMOD2,"inchue","Inc Hue");
+			MAPPER_AddHandler(DecreaseHue,MK_f11,0,"dechue","Dec Hue");
 		MAPPER_AddHandler(CGAModel,MK_f11,MMOD1|MMOD2,"cgamodel","CGA Model");
 		MAPPER_AddHandler(Composite,MK_f12,0,"cgacomp","CGA Comp");
+		} else {
+			MAPPER_AddHandler(CycleMonoCGAPal,MK_f11,0,"monocgapal","Mono CGA Pal"); 
+			MAPPER_AddHandler(CycleMonoCGABright,MK_f11,MMOD2,"monocgabright","Mono CGA Bright"); 
+		}
 	}
 	if (machine==MCH_TANDY) {
 		write_tandy( 0x3df, 0x0, 0 );
@@ -849,6 +945,7 @@ void VGA_SetupOther(void) {
 			IO_RegisterReadHandler(base+i*2,read_crtc_index_other,IO_MB);
 			IO_RegisterReadHandler(base+i*2+1,read_crtc_data_other,IO_MB);
 		}
+		vga.herc.blend=false;
 		vga.herc.enable_bits=0;
 		vga.herc.mode_control=0xa; // first mode written will be text mode
 		vga.crtc.underline_location = 13;
@@ -872,5 +969,22 @@ void VGA_SetupOther(void) {
 		IO_RegisterReadHandler(base,read_crtc_index_other,IO_MB);
 		IO_RegisterReadHandler(base+1,read_crtc_data_other,IO_MB);
 	}
+	if (machine==MCH_AMSTRAD) {
+		Bitu base=machine==MCH_HERC ? 0x3b4 : 0x3d4;
+		IO_RegisterWriteHandler(base,write_crtc_index_other,IO_MB);
+		IO_RegisterWriteHandler(base+1,write_crtc_data_other,IO_MB);
+		IO_RegisterReadHandler(base,read_crtc_index_other,IO_MB);
+		IO_RegisterReadHandler(base+1,read_crtc_data_other,IO_MB);
 
+		// Check for CGA CRTC port mirroring (Prohibition).
+		if( base==0x3d4 ) {
+			base=0x3d0;
+			IO_RegisterWriteHandler(base,write_crtc_index_other,IO_MB);
+			IO_RegisterWriteHandler(base+1,write_crtc_data_other,IO_MB);
+			IO_RegisterReadHandler(base,read_crtc_index_other,IO_MB);
+			IO_RegisterReadHandler(base+1,read_crtc_data_other,IO_MB);
+		}
+	}
+	// AMSTRAD
 }
+

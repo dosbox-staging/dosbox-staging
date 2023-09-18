@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,6 +29,8 @@
 
 #define MAX_DISK_IMAGES 4
 
+extern bool int13_extensions_enable;
+
 diskGeo DiskGeometryList[] = {
 	{ 160,  8, 1, 40, 0},
 	{ 180,  9, 1, 40, 0},
@@ -56,9 +58,32 @@ static bool swapping_requested;
 void CMOS_SetRegister(Bitu regNr, Bit8u val); //For setting equipment word
 
 /* 2 floppys and 2 harddrives, max */
-imageDisk *imageDiskList[MAX_DISK_IMAGES];
-imageDisk *diskSwap[MAX_SWAPPABLE_DISKS];
+imageDisk *imageDiskList[MAX_DISK_IMAGES]={NULL};
+imageDisk *diskSwap[MAX_SWAPPABLE_DISKS]={NULL};
 Bits swapPosition;
+
+imageDisk *GetINT13HardDrive(unsigned char drv) {
+	if (drv < 0x80 || drv >= (0x80+MAX_DISK_IMAGES-2))
+		return NULL;
+
+	return imageDiskList[drv-0x80];
+}
+
+void FreeBIOSDiskList() {
+	for (int i=0;i < MAX_DISK_IMAGES;i++) {
+		if (imageDiskList[i] != NULL) {
+			imageDiskList[i]->Release();
+			imageDiskList[i] = NULL;
+		}
+	}
+
+	for (int j=0;j < MAX_SWAPPABLE_DISKS;j++) {
+		if (diskSwap[j] != NULL) {
+			diskSwap[j]->Release();
+			diskSwap[j] = NULL;
+		}
+	}
+}
 
 void updateDPT(void) {
 	Bit32u tmpheads, tmpcyl, tmpsect, tmpsize;
@@ -119,8 +144,14 @@ void swapInDisks(void) {
 	/* If only one disk is loaded, this loop will load the same disk in dive A and drive B */
 	while(diskcount<2) {
 		if(diskSwap[swapPos] != NULL) {
-			LOG_MSG("Loaded disk %d from swaplist position %d - \"%s\"", diskcount, swapPos, diskSwap[swapPos]->diskname);
+			LOG_MSG("Loaded disk %d from swaplist position %d - \"%s\"", diskcount, swapPos, diskSwap[swapPos]->diskname.c_str());
+
+			if (imageDiskList[diskcount] != NULL)
+				imageDiskList[diskcount]->Release();
+
 			imageDiskList[diskcount] = diskSwap[swapPos];
+			imageDiskList[diskcount]->Addref();
+
 			diskcount++;
 		}
 		swapPos++;
@@ -139,14 +170,31 @@ void swapInNextDisk(bool pressed) {
 		return;
 	DriveManager::CycleAllDisks();
 	/* Hack/feature: rescan all disks as well */
-	LOG_MSG("Diskcaching reset for normal mounted drives.");
-	for(Bitu i=0;i<DOS_DRIVES;i++) {
-		if (Drives[i]) Drives[i]->EmptyCache();
+	LOG_MSG("Diskcaching reset for floppy drives.");
+	for(Bitu i=0;i<2;i++) { /* Swap A: and B: where DOSBox mainline would run through ALL drive letters */
+		if (Drives[i] != NULL) {
+			Drives[i]->EmptyCache();
+			Drives[i]->MediaChange();
+		}
 	}
 	swapPosition++;
 	if(diskSwap[swapPosition] == NULL) swapPosition = 0;
 	swapInDisks();
 	swapping_requested = true;
+}
+
+void swapInNextCD(bool pressed) {
+	if (!pressed)
+		return;
+	DriveManager::CycleAllCDs();
+	/* Hack/feature: rescan all disks as well */
+	LOG_MSG("Diskcaching reset for normal mounted drives.");
+	for(Bitu i=2;i<DOS_DRIVES;i++) { /* Swap C: D: .... Z: TODO: Need to swap ONLY if a CD-ROM drive! */
+		if (Drives[i] != NULL) {
+			Drives[i]->EmptyCache();
+			Drives[i]->MediaChange();
+		}
+	}
 }
 
 
@@ -159,13 +207,22 @@ Bit8u imageDisk::Read_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * da
 }
 
 Bit8u imageDisk::Read_AbsoluteSector(Bit32u sectnum, void * data) {
-	Bit32u bytenum;
+	Bit64u bytenum;
 
-	bytenum = sectnum * sector_size;
+	bytenum = (Bit64u)sectnum * sector_size;
 
-	if (bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
-	size_t ret=fread(data, 1, sector_size, diskimg);
-	current_fpos=bytenum+ret;
+	//LOG_MSG("Reading sectors %ld at bytenum %I64d", sectnum, bytenum);
+
+	fseeko64(diskimg,bytenum,SEEK_SET);
+	if ((Bit64u)ftello64(diskimg) != bytenum) {
+		LOG_MSG("fseek() failed in Read_AbsoluteSector for sector %lu\n",(unsigned long)sectnum);
+		return 0x05;
+	}
+
+	if (fread(data, 1, sector_size, diskimg) != sector_size) {
+		LOG_MSG("fread() failed in Read_AbsoluteSector for sectur %lu\n",(unsigned long)sectnum);
+		return 0x05;
+	}
 
 	return 0x00;
 }
@@ -180,35 +237,43 @@ Bit8u imageDisk::Write_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * d
 
 
 Bit8u imageDisk::Write_AbsoluteSector(Bit32u sectnum, void *data) {
-	Bit32u bytenum;
+	Bit64u bytenum;
 
-	bytenum = sectnum * sector_size;
+	bytenum = (Bit64u)sectnum * sector_size;
 
 	//LOG_MSG("Writing sectors to %ld at bytenum %d", sectnum, bytenum);
 
-	if (bytenum!=current_fpos) fseek(diskimg,bytenum,SEEK_SET);
+	fseeko64(diskimg,bytenum,SEEK_SET);
+	if ((Bit64u)ftello64(diskimg) != bytenum)
+		LOG_MSG("WARNING: fseek() failed in Read_AbsoluteSector for sector %lu\n",(unsigned long)sectnum);
+
 	size_t ret=fwrite(data, sector_size, 1, diskimg);
-	current_fpos=bytenum+ret;
 
 	return ((ret>0)?0x00:0x05);
 
+}
+
+void imageDisk::Set_Reserved_Cylinders(Bitu resCyl) {
+	reserved_cylinders = resCyl;
+}
+
+Bit32u imageDisk::Get_Reserved_Cylinders() {
+	return reserved_cylinders;
 }
 
 imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHardDisk) {
 	heads = 0;
 	cylinders = 0;
 	sectors = 0;
+	refcount = 0;
 	sector_size = 512;
-	current_fpos = 0;
+	reserved_cylinders = 0;
+	auto_delete_on_refcount_zero = true;
 	diskimg = imgFile;
-	fseek(diskimg,0,SEEK_SET);
-	
-	memset(diskname,0,512);
-	if(strlen((const char *)imgName) > 511) {
-		memcpy(diskname, imgName, 511);
-	} else {
-		strcpy((char *)diskname, (const char *)imgName);
-	}
+	class_id = ID_BASE;
+
+	if (imgName != NULL)
+		diskname = (const char*)imgName;
 
 	active = false;
 	hardDrive = isHardDisk;
@@ -239,8 +304,15 @@ imageDisk::imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHard
 }
 
 void imageDisk::Set_Geometry(Bit32u setHeads, Bit32u setCyl, Bit32u setSect, Bit32u setSectSize) {
-	heads = setHeads;
-	cylinders = setCyl;
+	Bitu bigdisk_shift = 0;
+	if(setCyl > 16384 ) LOG_MSG("This disk image is too big.");
+	else if(setCyl > 8192) bigdisk_shift = 4;
+	else if(setCyl > 4096) bigdisk_shift = 3;
+	else if(setCyl > 2048) bigdisk_shift = 2;
+	else if(setCyl > 1024) bigdisk_shift = 1;
+
+	heads = setHeads << bigdisk_shift;
+	cylinders = setCyl >> bigdisk_shift;
 	sectors = setSect;
 	sector_size = setSectSize;
 	active = true;
@@ -304,6 +376,33 @@ static bool driveInactive(Bitu driveNum) {
 	return false;
 }
 
+static struct {
+	Bit8u sz;
+	Bit8u res;
+	Bit16u num;
+	Bit16u off;
+	Bit16u seg;
+	Bit32u sector;
+} dap;
+
+static void readDAP(Bit16u seg, Bit16u off) {
+	dap.sz = real_readb(seg,off++);
+	dap.res = real_readb(seg,off++);
+	dap.num = real_readw(seg,off); off += 2;
+	dap.off = real_readw(seg,off); off += 2;
+	dap.seg = real_readw(seg,off); off += 2;
+
+	/* Although sector size is 64-bit, 32-bit 2TB limit should be more than enough */
+	dap.sector = real_readd(seg,off); off +=4;
+
+	if (real_readd(seg,off)) {
+		E_Exit("INT13: 64-bit sector addressing not supported");
+	}
+}
+
+void IDE_ResetDiskByBIOS(unsigned char disk);
+void IDE_EmuINT13DiskReadByBIOS(unsigned char disk,unsigned int cyl,unsigned int head,unsigned sect);
+void IDE_EmuINT13DiskReadByBIOS_LBA(unsigned char disk,uint64_t lba);
 
 static Bitu INT13_DiskHandler(void) {
 	Bit16u segat, bufptr;
@@ -320,6 +419,14 @@ static Bitu INT13_DiskHandler(void) {
 	// unconditionally enable the interrupt flag
 	CALLBACK_SIF(true);
 
+	/* map out functions 0x40-0x48 if not emulating INT 13h extensions */
+	if (!int13_extensions_enable && reg_ah >= 0x40 && reg_ah <= 0x48) {
+		LOG_MSG("Warning: Guest is attempting to use INT 13h extensions (AH=0x%02X). Set 'int 13 extensions=1' if you want to enable them.\n",reg_ah);
+		reg_ah=0xff;
+		CALLBACK_SCF(true);
+		return CBRET_NONE;
+	}
+
 	//drivenum = 0;
 	//LOG_MSG("INT13: Function %x called on drive %x (dos drive %d)", reg_ah,  reg_dl, drivenum);
 	switch(reg_ah) {
@@ -331,7 +438,7 @@ static Bitu INT13_DiskHandler(void) {
 			 */
 			if (any_images && driveInactive(drivenum)) {
 				/* driveInactive sets carry flag if the specified drive is not available */
-				if ((machine==MCH_CGA) || (machine==MCH_PCJR)) {
+				if ((machine==MCH_CGA) || (machine==MCH_AMSTRAD) || (machine==MCH_PCJR)) {
 					/* those bioses call floppy drive reset for invalid drive values */
 					if (((imageDiskList[0]) && (imageDiskList[0]->active)) || ((imageDiskList[1]) && (imageDiskList[1]->active))) {
 						if (machine!=MCH_PCJR && reg_dl<0x80) reg_ip++;
@@ -342,6 +449,7 @@ static Bitu INT13_DiskHandler(void) {
 				return CBRET_NONE;
 			}
 			if (machine!=MCH_PCJR && reg_dl<0x80) reg_ip++;
+			if (reg_dl >= 0x80) IDE_ResetDiskByBIOS(reg_dl);
 			last_status = 0x00;
 			CALLBACK_SCF(false);
 		}
@@ -380,6 +488,10 @@ static Bitu INT13_DiskHandler(void) {
 		bufptr = reg_bx;
 		for(i=0;i<reg_al;i++) {
 			last_status = imageDiskList[drivenum]->Read_Sector((Bit32u)reg_dh, (Bit32u)(reg_ch | ((reg_cl & 0xc0)<< 2)), (Bit32u)((reg_cl & 63)+i), sectbuf);
+
+			/* IDE emulation: simulate change of IDE state that would occur on a real machine after INT 13h */
+			IDE_EmuINT13DiskReadByBIOS(reg_dl, (Bit32u)(reg_ch | ((reg_cl & 0xc0)<< 2)), (Bit32u)reg_dh, (Bit32u)((reg_cl & 63)+i));
+
 			if((last_status != 0x00) || (killRead)) {
 				LOG_MSG("Error in disk read");
 				killRead = false;
@@ -451,6 +563,24 @@ static Bitu INT13_DiskHandler(void) {
 		CALLBACK_SCF(false);
           
 		break;
+	case 0x05: /* Format track */
+		/* ignore it. I just fucking want FORMAT.COM to write the FAT structure for God's sake */
+		LOG_MSG("WARNING: Format track ignored\n");
+		CALLBACK_SCF(false);
+		reg_ah = 0x00;
+		break;
+	case 0x06: /* Format track set bad sector flags */
+		/* ignore it. I just fucking want FORMAT.COM to write the FAT structure for God's sake */
+		LOG_MSG("WARNING: Format track set bad sector flags ignored (6)\n");
+		CALLBACK_SCF(false);
+		reg_ah = 0x00;
+		break;
+	case 0x07: /* Format track set bad sector flags */
+		/* ignore it. I just fucking want FORMAT.COM to write the FAT structure for God's sake */
+		LOG_MSG("WARNING: Format track set bad sector flags ignored (7)\n");
+		CALLBACK_SCF(false);
+		reg_ah = 0x00;
+		break;
 	case 0x08: /* Get drive parameters */
 		if(driveInactive(drivenum)) {
 			last_status = 0x07;
@@ -466,6 +596,15 @@ static Bitu INT13_DiskHandler(void) {
 		else tmpcyl--;		// cylinder count -> max cylinder
 		if (tmpheads==0) LOG(LOG_BIOS,LOG_ERROR)("INT13 DrivParm: head count zero!");
 		else tmpheads--;	// head count -> max head
+
+		/* older BIOSes were known to subtract 1 or 2 additional "reserved" cylinders.
+		 * some code, such as Windows 3.1 WDCTRL, might assume that fact. emulate that here */
+		{
+			Bit32u reserv = imageDiskList[drivenum]->Get_Reserved_Cylinders();
+			if (tmpcyl > reserv) tmpcyl -= reserv;
+			else tmpcyl = 0;
+		}
+
 		reg_ch = (Bit8u)(tmpcyl & 0xff);
 		reg_cl = (Bit8u)(((tmpcyl >> 2) & 0xc0) | (tmpsect & 0x3f)); 
 		reg_dh = (Bit8u)tmpheads;
@@ -491,6 +630,125 @@ static Bitu INT13_DiskHandler(void) {
 		reg_ah = 0x00;
 		CALLBACK_SCF(false);
 		break;
+	case 0x41: /* Check Extensions Present */
+		if ((reg_bx == 0x55aa) && !(driveInactive(drivenum))) {
+			LOG_MSG("INT13: Check Extensions Present for drive: 0x%x", reg_dl);
+			reg_ah=0x1;	/* 1.x extension supported */
+			reg_bx=0xaa55;	/* Extensions installed */
+			reg_cx=0x1;	/* Extended disk access functions (AH=42h-44h,47h,48h) supported */
+			CALLBACK_SCF(false);
+			break;
+		}
+		LOG_MSG("INT13: AH=41h, Function not supported 0x%x for drive: 0x%x", reg_bx, reg_dl);
+		CALLBACK_SCF(true);
+		break;
+	case 0x42: /* Extended Read Sectors From Drive */
+		/* Read Disk Address Packet */
+		readDAP(SegValue(ds),reg_si);
+
+		if (dap.num==0) {
+			reg_ah = 0x01;
+			CALLBACK_SCF(true);
+			return CBRET_NONE;
+		}
+		if (!any_images) {
+			// Inherit the Earth cdrom (uses it as disk test)
+			if (((reg_dl&0x80)==0x80) && (reg_dh==0) && ((reg_cl&0x3f)==1)) {
+				reg_ah = 0;
+				CALLBACK_SCF(false);
+				return CBRET_NONE;
+			}
+		}
+		if (driveInactive(drivenum)) {
+			reg_ah = 0xff;
+			CALLBACK_SCF(true);
+			return CBRET_NONE;
+		}
+
+		segat = dap.seg;
+		bufptr = dap.off;
+		for(i=0;i<dap.num;i++) {
+			last_status = imageDiskList[drivenum]->Read_AbsoluteSector(dap.sector+i, sectbuf);
+
+			IDE_EmuINT13DiskReadByBIOS_LBA(reg_dl,dap.sector+i);
+
+			if((last_status != 0x00) || (killRead)) {
+				LOG_MSG("Error in disk read");
+				killRead = false;
+				reg_ah = 0x04;
+				CALLBACK_SCF(true);
+				return CBRET_NONE;
+			}
+			for(t=0;t<512;t++) {
+				real_writeb(segat,bufptr,sectbuf[t]);
+				bufptr++;
+			}
+		}
+		reg_ah = 0x00;
+		CALLBACK_SCF(false);
+		break;
+	case 0x43: /* Extended Write Sectors to Drive */
+		if(driveInactive(drivenum)) {
+			reg_ah = 0xff;
+			CALLBACK_SCF(true);
+			return CBRET_NONE;
+		}
+
+		/* Read Disk Address Packet */
+		readDAP(SegValue(ds),reg_si);
+		bufptr = dap.off;
+		for(i=0;i<dap.num;i++) {
+			for(t=0;t<imageDiskList[drivenum]->getSectSize();t++) {
+				sectbuf[t] = real_readb(dap.seg,bufptr);
+				bufptr++;
+			}
+
+			last_status = imageDiskList[drivenum]->Write_AbsoluteSector(dap.sector+i, &sectbuf[0]);
+			if(last_status != 0x00) {
+				CALLBACK_SCF(true);
+				return CBRET_NONE;
+			}
+		}
+		reg_ah = 0x00;
+		CALLBACK_SCF(false);
+		break;
+	case 0x48: { /* get drive parameters */
+		uint16_t bufsz;
+
+		if(driveInactive(drivenum)) {
+			reg_ah = 0xff;
+			CALLBACK_SCF(true);
+			return CBRET_NONE;
+		}
+
+		segat = SegValue(ds);
+		bufptr = reg_si;
+		bufsz = real_readw(segat,bufptr+0);
+		if (bufsz < 0x1A) {
+			reg_ah = 0xff;
+			CALLBACK_SCF(true);
+			return CBRET_NONE;
+		}
+		if (bufsz > 0x1E) bufsz = 0x1E;
+		else bufsz = 0x1A;
+
+		Bit32u tmpheads, tmpcyl, tmpsect, tmpsize;
+		imageDiskList[drivenum]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
+
+		real_writew(segat,bufptr+0x00,bufsz);
+		real_writew(segat,bufptr+0x02,0x0003);	/* C/H/S valid, DMA boundary errors handled */
+		real_writed(segat,bufptr+0x04,tmpcyl);
+		real_writed(segat,bufptr+0x08,tmpheads);
+		real_writed(segat,bufptr+0x0C,tmpsect);
+		real_writed(segat,bufptr+0x10,tmpcyl*tmpheads*tmpsect);
+		real_writed(segat,bufptr+0x14,0);
+		real_writew(segat,bufptr+0x18,512);
+		if (bufsz >= 0x1E)
+			real_writed(segat,bufptr+0x1A,0xFFFFFFFF); /* no EDD information available */
+
+		reg_ah = 0x00;
+		CALLBACK_SCF(false);
+		} break;
 	default:
 		LOG(LOG_BIOS,LOG_ERROR)("INT13: Function %x called on drive %x (dos drive %d)", reg_ah,  reg_dl, drivenum);
 		reg_ah=0xff;
@@ -501,18 +759,17 @@ static Bitu INT13_DiskHandler(void) {
 
 
 void BIOS_SetupDisks(void) {
+	int i;
+
 /* TODO Start the time correctly */
 	call_int13=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_int13,&INT13_DiskHandler,CB_INT13,"Int 13 Bios disk");
 	RealSetVec(0x13,CALLBACK_RealPointer(call_int13));
-	int i;
-	for(i=0;i<4;i++) {
-		imageDiskList[i] = NULL;
-	}
 
-	for(i=0;i<MAX_SWAPPABLE_DISKS;i++) {
+	for(i=0;i<MAX_DISK_IMAGES;i++)
+		imageDiskList[i] = NULL;
+	for(i=0;i<MAX_SWAPPABLE_DISKS;i++)
 		diskSwap[i] = NULL;
-	}
 
 	diskparm0 = CALLBACK_Allocate();
 	diskparm1 = CALLBACK_Allocate();
@@ -533,7 +790,9 @@ void BIOS_SetupDisks(void) {
 /* Setup the Bios Area */
 	mem_writeb(BIOS_HARDDISK_COUNT,2);
 
-	MAPPER_AddHandler(swapInNextDisk,MK_f4,MMOD1,"swapimg","Swap Image");
+	MAPPER_AddHandler(swapInNextDisk,MK_f4,MMOD1,"swapimg","SwapFloppy"); /* Originally "Swap Image" but this version does not swap CDs */
+	MAPPER_AddHandler(swapInNextCD,MK_f3,MMOD1,"swapcd","SwapCD"); /* Variant of "Swap Image" for CDs */
+
 	killRead = false;
 	swapping_requested = false;
 }

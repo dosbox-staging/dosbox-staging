@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
+#include "dos_inc.h"
 static void gen_init(void);
 
 /* End of needed */
@@ -128,17 +128,35 @@ return_address:
 	);
 	reg_flags=(reg_flags & ~FMASK_TEST) | (tempflags & FMASK_TEST);
 #else
+	/* TODO: How can we modify this so that GDB can stack trace into the dynamic
+	 *       code properly as well as from any function called by the dynamic
+	 *       code, so that the next time an I/O handler screws up I can
+	 *       get a correct stack trace? Also, failure to do a stack trace seems
+	 *       to be the reason C++ exceptions do not work properly from functions
+	 *       called by the dynamic code.
+	 *
+	 *       If it helps, according to experimentation, GDB loses track of the
+	 *       overall stack trace the INSTANT we start pushing things in this
+	 *       assembly language code. Literally, one 'stepi' past the pushl
+	 *       at the top of the asm block below and GDB suddenly can't trace
+	 *       past this function. And it doesn't come back until the ESP stack
+	 *       pointer is resolved. Knowing this, is there anything we can do
+	 *       to create a valid stack frame for GDB to stack trace properly?
+	 *
+	 *       In the meantime, I am considering adding an #if 0 block to this
+	 *       code that would contain calls to GLIBC function backtrace().
+	 *       If anything is going wrong, change it to #if 1 and get a stack
+	 *       trace dump every time this function is called to get a general
+	 *       idea how it got there. --J.C. */
 	register Bit32u tempflags=reg_flags & FMASK_TEST;
 	__asm__ volatile (
-		"pushl %%ebp						\n"
-		"pushl $(run_return_adress)			\n"
+		"pushl $(run_return_adress)					\n"
 		"pushl  %2							\n"
 		"jmp  *%3							\n"
-		"run_return_adress:					\n"
-		"popl %%ebp							\n"
+		"run_return_adress:						\n"
 		:"=a" (retval), "=c" (tempflags)
 		:"r" (tempflags),"r" (code)
-		:"%edx","%ebx","%edi","%esi","cc","memory"
+		:"%edx","%ebx","%edi","%esi","%ebp","cc","memory"
 	);
 	reg_flags=(reg_flags & ~FMASK_TEST) | (tempflags & FMASK_TEST);
 #endif
@@ -979,7 +997,7 @@ static Bit8u * gen_create_branch_long(BranchTypes type) {
 }
 
 static void gen_fill_branch_long(Bit8u * data,Bit8u * from=cache.pos) {
-	*(Bit32u*)data=(from-data-4);
+	*((Bit32u*)data) = (from-data-4);
 }
 
 static Bit8u * gen_create_jump(Bit8u * to=0) {
@@ -1068,4 +1086,34 @@ static void gen_init(void) {
 	x86gen.regs[X86_REG_EDI]=new GenReg(7);
 }
 
+static void gen_free(void) {
+	if (x86gen.regs[X86_REG_EAX]) {
+		delete x86gen.regs[X86_REG_EAX];
+		x86gen.regs[X86_REG_EAX] = NULL;
+	}
+	if (x86gen.regs[X86_REG_ECX]) {
+		delete x86gen.regs[X86_REG_ECX];
+		x86gen.regs[X86_REG_ECX] = NULL;
+	}
+	if (x86gen.regs[X86_REG_EDX]) {
+		delete x86gen.regs[X86_REG_EDX];
+		x86gen.regs[X86_REG_EDX] = NULL;
+	}
+	if (x86gen.regs[X86_REG_EBX]) {
+		delete x86gen.regs[X86_REG_EBX];
+		x86gen.regs[X86_REG_EBX] = NULL;
+	}
+	if (x86gen.regs[X86_REG_EBP]) {
+		delete x86gen.regs[X86_REG_EBP];
+		x86gen.regs[X86_REG_EBP] = NULL;
+	}
+	if (x86gen.regs[X86_REG_ESI]) {
+		delete x86gen.regs[X86_REG_ESI];
+		x86gen.regs[X86_REG_ESI] = NULL;
+	}
+	if (x86gen.regs[X86_REG_EDI]) {
+		delete x86gen.regs[X86_REG_EDI];
+		x86gen.regs[X86_REG_EDI] = NULL;
+	}
+}
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,7 +35,7 @@
 #include "../libs/zmbv/zmbv.cpp"
 #endif
 
-static std::string capturedir;
+std::string capturedir;
 extern const char* RunningProgram;
 Bitu CaptureState;
 
@@ -160,7 +160,7 @@ static void CAPTURE_AddAviChunk(const char * tag, Bit32u size, void * data, Bit3
 #endif
 
 #if (C_SSHOT)
-static void CAPTURE_VideoEvent(bool pressed) {
+void CAPTURE_VideoEvent(bool pressed) {
 	if (!pressed)
 		return;
 	if (CaptureState & CAPTURE_VIDEO) {
@@ -572,7 +572,7 @@ skip_video:
 
 
 #if (C_SSHOT)
-static void CAPTURE_ScreenShotEvent(bool pressed) {
+void CAPTURE_ScreenShotEvent(bool pressed) {
 	if (!pressed)
 		return;
 	CaptureState |= CAPTURE_IMAGE;
@@ -631,7 +631,7 @@ void CAPTURE_AddWave(Bit32u freq, Bit32u len, Bit16s * data) {
 		}
 	}
 }
-static void CAPTURE_WaveEvent(bool pressed) {
+void CAPTURE_WaveEvent(bool pressed) {
 	if (!pressed)
 		return;
 	/* Check for previously opened wave file */
@@ -705,7 +705,7 @@ void CAPTURE_AddMidi(bool sysex, Bitu len, Bit8u * data) {
 		RawMidiAdd(data[i]);
 }
 
-static void CAPTURE_MidiEvent(bool pressed) {
+void CAPTURE_MidiEvent(bool pressed) {
 	if (!pressed)
 		return;
 	/* Check for previously opened wave file */

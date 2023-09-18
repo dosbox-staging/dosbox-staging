@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@
 #include "mem.h"
 #include "inout.h"
 #include "int10.h"
+#include "callback.h"
 
 static void CGA2_CopyRow(Bit8u cleft,Bit8u cright,Bit8u rold,Bit8u rnew,PhysPt base) {
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
@@ -155,8 +156,6 @@ static void EGA16_FillRow(Bit8u cleft,Bit8u cright,Bit8u row,PhysPt base,Bit8u a
 	IO_Write(0x3ce,0x8);IO_Write(0x3cf,0xff);
 	IO_Write(0x3ce,0x0);IO_Write(0x3cf,attr);
 	IO_Write(0x3ce,0x1);IO_Write(0x3cf,0xf);
-	/* Enable all Write planes */
-	IO_Write(0x3c4,2);IO_Write(0x3c5,0xf);
 	/* Write some bytes */
 	Bit8u cheight = real_readb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT);
 	PhysPt dest=base+(CurMode->twidth*row)*cheight+cleft;	
@@ -217,8 +216,7 @@ void INT10_ScrollWindow(Bit8u rul,Bit8u cul,Bit8u rlr,Bit8u clr,Bit8s nlines,Bit
 				(real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE) >> 3) & 0x7;
 
 			base = cpupage << 14;
-			if (page!=0xff)
-				base += page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
+			base += page*real_readw(BIOSMEM_SEG,BIOSMEM_PAGE_SIZE);
 		}
 	}
 
@@ -330,7 +328,7 @@ void INT10_SetActivePage(Bit8u page) {
 
 void INT10_SetCursorShape(Bit8u first,Bit8u last) {
 	real_writew(BIOSMEM_SEG,BIOSMEM_CURSOR_TYPE,last|(first<<8));
-	if (machine==MCH_CGA) goto dowrite;
+	if (machine==MCH_CGA || machine==MCH_AMSTRAD) goto dowrite;
 	if (IS_TANDY_ARCH) goto dowrite;
 	/* Skip CGA cursor emulation if EGA/VGA system is active */
 	if (!(real_readb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL) & 0x8)) {
@@ -523,7 +521,7 @@ void WriteChar(Bit16u col,Bit16u row,Bit8u page,Bit8u chr,Bit8u attr,bool useatt
 		case M_TANDY16:
 		case M_EGA:
 		default:
-			attr = 0xf;
+			attr = 0x7;
 			break;
 		}
 	}
@@ -565,6 +563,7 @@ void INT10_WriteChar(Bit8u chr,Bit8u attr,Bit8u page,Bit16u count,bool showattr)
 				break;
 			case MCH_CGA:
 			case MCH_PCJR:
+			case MCH_AMSTRAD:
 				page=0;
 				break;
 		}
@@ -589,9 +588,14 @@ static void INT10_TeletypeOutputAttr(Bit8u chr,Bit8u attr,bool useattr,Bit8u pag
 	Bit8u cur_row=CURSOR_POS_ROW(page);
 	Bit8u cur_col=CURSOR_POS_COL(page);
 	switch (chr) {
-	case 7:
-	//TODO BEEP
+	case 7: {
+		// enable speaker
+		IO_Write(0x61,IO_Read(0x61)|0x3);
+		for(Bitu i=0; i < 333; i++) CALLBACK_Idle();
+		IO_Write(0x61,IO_Read(0x61)&~0x3);
 	break;
+	}
+
 	case 8:
 		if(cur_col>0) cur_col--;
 		break;

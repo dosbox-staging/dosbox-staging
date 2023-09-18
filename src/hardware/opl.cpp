@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *  OPL2/OPL3 emulation library
  *
  *  This library is free software; you can redistribute it and/or
@@ -29,6 +29,7 @@
 #include <stdlib.h> // rand()
 #include "dosbox.h"
 #include "opl.h"
+#include <string.h>
 
 
 static fltype recipsamp;	// inverse of sampling rate
@@ -1459,3 +1460,4 @@ void adlib_getsample(Bit16s* sndptr, Bits numsamples) {
 
 	}
 }
+

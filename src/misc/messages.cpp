@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ void MSG_Replace(const char * _name, const char* _val) {
 	Lang.push_back(MessageBlock(_name,_val));
 }
 
-static void LoadMessageFile(const char * fname) {
+void LoadMessageFile(const char * fname) {
 	if (!fname) return;
 	if(*fname=='\0') return;//empty string=no languagefile
 	FILE * mfile=fopen(fname,"rt");
@@ -85,13 +85,15 @@ static void LoadMessageFile(const char * fname) {
 		/* First remove characters 10 and 13 from the line */
 		char * parser=linein;
 		char * writer=linein;
+
 		while (*parser) {
-			if (*parser!=10 && *parser!=13) {
-				*writer++=*parser;
-			}
-			*parser++;
+			if (*parser != 10 && *parser != 13)
+				*writer++ = *parser;
+
+			parser++;
 		}
 		*writer=0;
+
 		/* New string name */
 		if (linein[0]==':') {
 			string[0]=0;

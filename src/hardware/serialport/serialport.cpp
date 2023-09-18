@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include "callback.h"				// CALLBACK_Idle
 
 #include "serialport.h"
+#include "serialmouse.h"
 #include "directserial.h"
 #include "serialdummy.h"
 #include "softmodem.h"
@@ -88,6 +89,9 @@ device_COM::device_COM(class CSerial* sc) {
 }
 
 device_COM::~device_COM() {
+	/* clear reference to myself so that we're not deleted twice (once by DOS_DelDevice the other by CSerial) */
+	if (sclass != NULL && sclass->mydosdevice == this)
+		sclass->mydosdevice = NULL;
 }
 
 
@@ -1142,10 +1146,27 @@ bool CSerial::getBituSubstring(const char* name,Bitu* data, CommandLine* cmd) {
 }
 
 CSerial::~CSerial(void) {
-	DOS_DelDevice(mydosdevice);
+	if (mydosdevice != NULL) {
+		DOS_DelDevice(mydosdevice);
+		mydosdevice = NULL;
+	}
 	for(Bitu i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++)
 		removeEvent(i);
+
+	if (rxfifo != NULL) {
+		delete rxfifo;
+		rxfifo = NULL;
+	}
+	if (txfifo != NULL) {
+		delete txfifo;
+		txfifo = NULL;
+	}
+	if (errorfifo != NULL) {
+		delete errorfifo;
+		errorfifo = NULL;
+	}
 };
+
 bool CSerial::Getchar(Bit8u* data, Bit8u* lsr, bool wait_dsr, Bitu timeout) {
 	double starttime=PIC_FullIndex();
 	// wait for DSR on
@@ -1213,6 +1234,9 @@ bool CSerial::Putchar(Bit8u data, bool wait_dsr, bool wait_cts, Bitu timeout) {
 	return true;
 }
 
+/* ints/bios.cpp */
+void BIOS_PnP_ComPortRegister(Bitu port,Bitu irq);
+
 class SERIALPORTS:public Module_base {
 public:
 	SERIALPORTS (Section * configuration):Module_base (configuration) {
@@ -1230,6 +1254,9 @@ public:
 			// detect the type
 			if (type=="dummy") {
 				serialports[i] = new CSerialDummy (i, &cmd);
+			}
+			else if (type=="serialmouse") {
+				serialports[i] = new CSerialMouse (i, &cmd);
 			}
 #ifdef DIRECTSERIAL_AVAILIBLE
 			else if (type=="directserial") {
@@ -1263,7 +1290,10 @@ public:
 				serialports[i] = NULL;
 				LOG_MSG("Invalid type for serial%d",i+1);
 			}
-			if(serialports[i]) biosParameter[i] = serial_baseaddr[i];
+			if(serialports[i]) {
+				biosParameter[i] = serial_baseaddr[i];
+				BIOS_PnP_ComPortRegister(serial_baseaddr[i],serialports[i]->irq);
+			}
 		} // for 1-4
 		BIOS_SetComPorts (biosParameter);
 	}
@@ -1290,3 +1320,7 @@ void SERIAL_Init (Section * sec) {
 	testSerialPortsBaseclass = new SERIALPORTS (sec);
 	sec->AddDestroyFunction (&SERIAL_Destroy, true);
 }
+
+
+// save state support
+void *Serial_EventHandler_PIC_Event = (void*)Serial_EventHandler;

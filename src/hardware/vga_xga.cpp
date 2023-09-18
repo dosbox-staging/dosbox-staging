@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -895,6 +895,7 @@ void XGA_DrawPattern(Bitu val) {
 void XGA_DrawCmd(Bitu val, Bitu len) {
 	Bit16u cmd;
 	cmd = val >> 13;
+	if (val & 0x800) cmd |= 0x8; // S3 CMD bit 3
 #if XGA_SHOW_COMMAND_TRACE == 1
 	//LOG_MSG("XGA: Draw command %x", cmd);
 #endif
@@ -1129,7 +1130,7 @@ void XGA_Write(Bitu port, Bitu val, Bitu len) {
 			xga.destx = val&0x3fff;
 			break;
 		case 0xb2e8:
-			LOG_MSG("COLOR_CMP not implemented");
+			//LOG_MSG("COLOR_CMP not implemented");
 			break;
 		case 0xb6e8:
 			xga.backmix = val;
@@ -1317,3 +1318,4 @@ void VGA_SetupXGA(void) {
 	IO_RegisterWriteHandler(0xe2ea,&XGA_Write,IO_MB | IO_MW | IO_MD);
 	IO_RegisterReadHandler(0xe2ea,&XGA_Read,IO_MB | IO_MW | IO_MD);
 }
+

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -142,6 +142,10 @@ bool DOS_IOCTL(void) {
 			// TODO Set bit 9 on drives that don't support direct I/O
 		}
 		reg_ax=0x300;
+		return true;
+	case 0x0A:		/* Is Device of Handle Remote? */
+		reg_dx=0x8000;
+		LOG(LOG_IOCTL,LOG_NORMAL)("0A:Faked output: device of handle %d is remote",handle);
 		return true;
 	case 0x0B:		/* Set sharing retry count */
 		if (reg_dx==0) {

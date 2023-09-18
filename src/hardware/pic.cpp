@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2012  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -114,13 +114,10 @@ static PIC_Controller& master = pics[0];
 static PIC_Controller& slave  = pics[1];
 Bitu PIC_Ticks = 0;
 Bitu PIC_IRQCheck = 0; //Maybe make it a bool and/or ensure 32bit size (x86 dynamic core seems to assume 32 bit variable size)
-
+bool enable_slave_pic = true; /* if set, emulate slave with cascade to master. if clear, emulate only master, and no cascade (IRQ 2 is open) */
+bool enable_pc_xt_nmi_mask = false;
 
 void PIC_Controller::set_imr(Bit8u val) {
-	if (GCC_UNLIKELY(machine==MCH_PCJR)) {
-		//irq 6 is a NMI on the PCJR
-		if (this == &master) val &= ~(1 <<(6));
-	}
 	Bit8u change = (imr) ^ (val); //Bits that have changed become 1.
 	imr  =  val;
 	imrr = ~val;
@@ -159,7 +156,7 @@ void PIC_Controller::start_irq(Bit8u val){
 		isr |= 1<<(val);
 		isrr = ~isr;
 	} else if (GCC_UNLIKELY(rotate_on_auto_eoi)) {
-		E_Exit("rotate on auto EOI not handled");
+		LOG_MSG("rotate on auto EOI not handled");
 	}
 }
 
@@ -181,14 +178,14 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 	PIC_Controller * pic=&pics[port==0x20 ? 0 : 1];
 
 	if (GCC_UNLIKELY(val&0x10)) {		// ICW1 issued
-		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
-		if (val&0x08) E_Exit("PIC: level triggered mode not handled");
-		if (val&0xe0) E_Exit("PIC: 8080/8085 mode not handled");
+		if (val&0x04) LOG_MSG("PIC: 4 byte interval not handled");
+		if (val&0x08) LOG_MSG("PIC: level triggered mode not handled");
+		if (val&0xe0) LOG_MSG("PIC: 8080/8085 mode not handled");
 		pic->single=(val&0x02)==0x02;
 		pic->icw_index=1;			// next is ICW2
 		pic->icw_words=2 + (val&0x01);	// =3 if ICW4 needed
 	} else if (GCC_UNLIKELY(val&0x08)) {	// OCW3 issued
-		if (val&0x04) E_Exit("PIC: poll command not handled");
+		if (val&0x04) LOG_MSG("PIC: poll command not handled");
 		if (val&0x02) {		// function select
 			if (val&0x01) pic->request_issr=true;	/* select read interrupt in-service register */
 			else pic->request_issr=false;			/* select read interrupt request register */
@@ -202,7 +199,7 @@ static void write_command(Bitu port,Bitu val,Bitu iolen) {
 		}
 	} else {	// OCW2 issued
 		if (val&0x20) {		// EOI commands
-			if (GCC_UNLIKELY(val&0x80)) E_Exit("rotate mode not supported");
+			if (GCC_UNLIKELY(val&0x80)) LOG_MSG("rotate mode not supported");
 			if (val&0x40) {		// specific EOI
 				pic->isr &= ~(1<< ((val-0x60)));
 				pic->isrr = ~pic->isr;
@@ -257,7 +254,7 @@ static void write_data(Bitu port,Bitu val,Bitu iolen) {
 		
 		LOG(LOG_PIC,LOG_NORMAL)("%d:ICW 4 %X",port==0x21 ? 0 : 1,val);
 
-		if ((val&0x01)==0) E_Exit("PIC:ICW4: %x, 8085 mode not handled",val);
+		if ((val&0x01)==0) LOG_MSG("PIC:ICW4: %x, 8085 mode not handled",val);
 		if ((val&0x10)!=0) LOG_MSG("PIC:ICW4: %x, special fully-nested mode not handled",val);
 
 		if(pic->icw_index++ >= pic->icw_words) pic->icw_index=0;
@@ -284,7 +281,27 @@ static Bitu read_data(Bitu port,Bitu iolen) {
 	return pic->imr;
 }
 
+/* PC/XT NMI mask register 0xA0. Documentation on the other bits
+ * is sparse and spread across the internet, but many seem to
+ * agree that bit 7 is used to enable/disable the NMI (1=enable,
+ * 0=disable) */
+static void pc_xt_nmi_write(Bitu port,Bitu val,Bitu iolen) {
+	CPU_NMI_gate = (val & 0x80) ? true : false;
+}
+
 void PIC_ActivateIRQ(Bitu irq) {
+	/* Remember what was once IRQ 2 on PC/XT is IRQ 9 on PC/AT */
+	if (enable_slave_pic) { /* PC/AT emulation with slave PIC cascade to master */
+		if (irq == 2) irq = 9;
+	}
+	else { /* PC/XT emulation with only master PIC */
+		if (irq == 9) irq = 2;
+		if (irq >= 8) {
+			LOG(LOG_PIC,LOG_ERROR)("Attempted to raise IRQ %u when slave PIC does not exist",irq);
+			return;
+		}
+	}
+
 	Bitu t = irq>7 ? (irq - 8): irq;
 	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
 
@@ -309,6 +326,18 @@ void PIC_ActivateIRQ(Bitu irq) {
 }
 
 void PIC_DeActivateIRQ(Bitu irq) {
+	/* Remember what was once IRQ 2 on PC/XT is IRQ 9 on PC/AT */
+	if (enable_slave_pic) { /* PC/AT emulation with slave PIC cascade to master */
+		if (irq == 2) irq = 9;
+	}
+	else { /* PC/XT emulation with only master PIC */
+		if (irq == 9) irq = 2;
+		if (irq >= 8) {
+			LOG(LOG_PIC,LOG_ERROR)("Attempted to lower IRQ %u when slave PIC does not exist",irq);
+			return;
+		}
+	}
+
 	Bitu t = irq>7 ? (irq - 8): irq;
 	PIC_Controller * pic=&pics[irq>7 ? 1 : 0];
 	pic->lower_irq(t);
@@ -324,8 +353,15 @@ static void slave_startIRQ(){
 			break;
 		}
 	}
-	// Maybe change the E_Exit to a return
-	if (GCC_UNLIKELY(pic1_irq == 8)) E_Exit("irq 2 is active, but no irq active on the slave PIC.");
+
+	if (GCC_UNLIKELY(pic1_irq == 8)) {
+		/* we have an IRQ routing problem. this code is supposed to emulate the fact that
+		 * what was once IRQ 2 on PC/XT is routed to IRQ 9 on AT systems, because IRQ 8-15
+		 * cascade to IRQ 2 on such systems. but it's nothing to E_Exit() over. */
+		LOG(LOG_PIC,LOG_ERROR)("ISA PIC problem: IRQ 2 is active on master PIC without active IRQ 8-15 on slave PIC.");
+		slave.lower_irq(2); /* clear it */
+		return;
+	}
 
 	slave.start_irq(pic1_irq);
 	master.start_irq(2);
@@ -341,12 +377,13 @@ void PIC_runIRQs(void) {
 	if (!GETFLAG(IF)) return;
 	if (GCC_UNLIKELY(!PIC_IRQCheck)) return;
 	if (GCC_UNLIKELY(cpudecoder==CPU_Core_Normal_Trap_Run)) return;
+	if (GCC_UNLIKELY(CPU_NMI_active) || GCC_UNLIKELY(CPU_NMI_pending)) return; /* NMI has higher priority than PIC */
 
 	const Bit8u p = (master.irr & master.imrr)&master.isrr;
 	const Bit8u max = master.special?8:master.active_irq;
 	for(Bit8u i = 0,s = 1;i < max;i++, s<<=1){
 		if (p&s){
-			if (i==2) { //second pic
+			if (i==2 && enable_slave_pic) { //second pic
 				slave_startIRQ();
 			} else {
 				master_startIRQ(i);
@@ -508,12 +545,27 @@ bool PIC_RunQueue(void) {
 
 /* The TIMER Part */
 struct TickerBlock {
+	/* TODO: carry const char * field for name! */
 	TIMER_TickHandler handler;
 	TickerBlock * next;
 };
 
 static TickerBlock * firstticker=0;
 
+void TIMER_ShutdownTickHandlers() {
+	unsigned int leftovers = 0;
+
+	/* pull in the singly linked list from the front, hand over hand */
+	while (firstticker != NULL) {
+		TickerBlock *n = firstticker->next;
+		delete firstticker;
+		firstticker = n;
+		leftovers++;
+	}
+
+	if (leftovers != 0)
+		LOG_MSG("TIMER: %u leftover handlers (clean up!).\n",leftovers);
+}
 
 void TIMER_DelTickHandler(TIMER_TickHandler handler) {
 	TickerBlock * ticker=firstticker;
@@ -536,11 +588,22 @@ void TIMER_AddTickHandler(TIMER_TickHandler handler) {
 	firstticker=newticker;
 }
 
+static unsigned long PIC_benchstart = 0;
+static unsigned long PIC_tickstart = 0;
+
+extern void GFX_SetTitle(Bit32s cycles, Bits frameskip, Bits timing, bool paused);
 void TIMER_AddTick(void) {
 	/* Setup new amount of cycles for PIC */
+	PIC_Ticks++;
+	if ((PIC_Ticks&0x3fff) == 0) {
+		unsigned long ticks = GetTicks();
+		int delta = (PIC_Ticks-PIC_tickstart)*10000/(ticks-PIC_benchstart)+5;
+		GFX_SetTitle(-1,-1,delta,false);
+		PIC_benchstart = ticks;
+		PIC_tickstart = PIC_Ticks;
+	}
 	CPU_CycleLeft=CPU_CycleMax;
 	CPU_Cycles=0;
-	PIC_Ticks++;
 	/* Go through the list of scheduled events and lower their index with 1000 */
 	PICEntry * entry=pic_queue.next_entry;
 	while (entry) {
@@ -556,6 +619,8 @@ void TIMER_AddTick(void) {
 	}
 }
 
+static IO_WriteHandleObject PCXT_NMI_WriteHandler;
+
 /* Use full name to avoid name clash with compile option for position-independent code */
 class PIC_8259A: public Module_base {
 private:
@@ -563,6 +628,11 @@ private:
 	IO_WriteHandleObject WriteHandler[4];
 public:
 	PIC_8259A(Section* configuration):Module_base(configuration){
+		Section_prop * section=static_cast<Section_prop *>(configuration);
+
+		enable_slave_pic = section->Get_bool("enable slave pic");
+		enable_pc_xt_nmi_mask = section->Get_bool("enable pc nmi mask");
+
 		/* Setup pic0 and pic1 with initial values like DOS has normally */
 		PIC_IRQCheck=0;
 		PIC_Ticks=0;
@@ -587,21 +657,28 @@ public:
 		PIC_SetIRQMask(2,false);					/* Enable second pic */
 		PIC_SetIRQMask(8,false);					/* Enable RTC IRQ */
 
-		if (machine==MCH_PCJR) {
-			/* Enable IRQ6 (replacement for the NMI for PCJr) */
-			PIC_SetIRQMask(6,false);
-		}
 		ReadHandler[0].Install(0x20,read_command,IO_MB);
 		ReadHandler[1].Install(0x21,read_data,IO_MB);
 		WriteHandler[0].Install(0x20,write_command,IO_MB);
 		WriteHandler[1].Install(0x21,write_data,IO_MB);
-		ReadHandler[2].Install(0xa0,read_command,IO_MB);
-		ReadHandler[3].Install(0xa1,read_data,IO_MB);
-		WriteHandler[2].Install(0xa0,write_command,IO_MB);
-		WriteHandler[3].Install(0xa1,write_data,IO_MB);
+
+		/* the secondary slave PIC takes priority over PC/XT NMI mask emulation */
+		if (enable_slave_pic) {
+			ReadHandler[2].Install(0xa0,read_command,IO_MB);
+			ReadHandler[3].Install(0xa1,read_data,IO_MB);
+			WriteHandler[2].Install(0xa0,write_command,IO_MB);
+			WriteHandler[3].Install(0xa1,write_data,IO_MB);
+		}
+		else if (enable_pc_xt_nmi_mask) {
+			PCXT_NMI_WriteHandler.Install(0xa0,pc_xt_nmi_write,IO_MB);
+		}
+
 		/* Initialize the pic queue */
 		for (i=0;i<PIC_QUEUESIZE-1;i++) {
 			pic_queue.entries[i].next=&pic_queue.entries[i+1];
+
+			// savestate compatibility
+			pic_queue.entries[i].pic_event = 0;
 		}
 		pic_queue.entries[PIC_QUEUESIZE-1].next=0;
 		pic_queue.free_entry=&pic_queue.entries[0];
@@ -609,6 +686,7 @@ public:
 	}
 
 	~PIC_8259A(){
+		TIMER_ShutdownTickHandlers();
 	}
 };
 
@@ -622,3 +700,4 @@ void PIC_Init(Section* sec) {
 	test = new PIC_8259A(sec);
 	sec->AddDestroyFunction(&PIC_Destroy);
 }
+

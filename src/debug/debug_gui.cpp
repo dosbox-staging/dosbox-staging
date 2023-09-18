@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,25 +17,26 @@
  */
 
 
-#include "dosbox.h"
-
-#if C_DEBUG
-#include "control.h"
 #include <stdlib.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <curses.h>
 #include <string.h>
+#include <stdio.h>
 
+#include "dosbox.h"
+#include "logging.h"
 #include "support.h"
+#include "control.h"
+
+_LogGroup loggrp[LOG_MAX]={{"",true},{0,false}};
+FILE* debuglog = NULL;
+
+#if C_DEBUG
+#include <curses.h>
+
 #include "regs.h"
 #include "debug.h"
 #include "debug_inc.h"
 
-struct _LogGroup {
-	char const* front;
-	bool enabled;
-};
 #include <list>
 #include <string>
 using namespace std;
@@ -44,40 +45,7 @@ using namespace std;
 static list<string> logBuff;
 static list<string>::iterator logBuffPos = logBuff.end();
 
-static _LogGroup loggrp[LOG_MAX]={{"",true},{0,false}};
-static FILE* debuglog;
-
 extern int old_cursor_state;
-
-
-
-void DEBUG_ShowMsg(char const* format,...) {
-	
-	char buf[512];
-	va_list msg;
-	va_start(msg,format);
-	vsprintf(buf,format,msg);
-	va_end(msg);
-
-	/* Add newline if not present */
-	Bitu len=strlen(buf);
-	if(buf[len-1]!='\n') strcat(buf,"\n");
-
-	if(debuglog) fprintf(debuglog,"%s",buf);
-
-	if (logBuffPos!=logBuff.end()) {
-		logBuffPos=logBuff.end();
-		DEBUG_RefreshPage(0);
-//		mvwprintw(dbg.win_out,dbg.win_out->_maxy-1, 0, "");
-	}
-	logBuff.push_back(buf);
-	if (logBuff.size() > MAX_LOG_BUFFER)
-		logBuff.pop_front();
-
-	logBuffPos = logBuff.end();
-	wprintw(dbg.win_out,"%s",buf);
-	wrefresh(dbg.win_out);
-}
 
 void DEBUG_RefreshPage(char scroll) {
 	if (scroll==-1 && logBuffPos!=logBuff.begin()) logBuffPos--;
@@ -85,19 +53,16 @@ void DEBUG_RefreshPage(char scroll) {
 
 	list<string>::iterator i = logBuffPos;
 	int maxy, maxx; getmaxyx(dbg.win_out,maxy,maxx);
-	int rem_lines = maxy;
+	int rem_lines = maxy - 1;
 	if(rem_lines == -1) return;
 
 	wclear(dbg.win_out);
-
 	while (rem_lines > 0 && i!=logBuff.begin()) {
 		--i;
-		for (string::size_type posf=0, posl; (posl=(*i).find('\n',posf)) != string::npos ;posf=posl+1)
-			rem_lines -= (int) ((posl-posf) / maxx) + 1; // len=(posl+1)-posf-1
 		/* Const cast is needed for pdcurses which has no const char in mvwprintw (bug maybe) */
-		mvwprintw(dbg.win_out,rem_lines-1, 0, const_cast<char*>((*i).c_str()));
+		mvwprintw(dbg.win_out,rem_lines, 0, const_cast<char*>((*i).c_str()));
+		rem_lines--;
 	}
-	mvwprintw(dbg.win_out,maxy-1, 0, "");
 	wrefresh(dbg.win_out);
 }
 
@@ -105,7 +70,7 @@ void LOG::operator() (char const* format, ...){
 	char buf[512];
 	va_list msg;
 	va_start(msg,format);
-	vsprintf(buf,format,msg);
+	vsnprintf(buf,sizeof(buf)-1,format,msg);
 	va_end(msg);
 
 	if (d_type>=LOG_MAX) return;
@@ -179,7 +144,7 @@ static void MakeSubWindows(void) {
 	dbg.win_var=subwin(dbg.win_main,4,win_main_maxx,outy,0);
 	outy+=5; // 34
 	/* The Output Window */	
-	dbg.win_out=subwin(dbg.win_main,win_main_maxy-outy,win_main_maxx,outy,0);
+	dbg.win_out=subwin(dbg.win_main,win_main_maxy-outy-2,win_main_maxx,outy,0);
 	if(!dbg.win_reg ||!dbg.win_data || !dbg.win_code || !dbg.win_var || !dbg.win_out) E_Exit("Setting up windows failed");
 //	dbg.input_y=win_main_maxy-1;
 	scrollok(dbg.win_out,TRUE);
@@ -195,17 +160,85 @@ static void MakePairs(void) {
 	init_pair(PAIR_BLACK_GREY, COLOR_BLACK /*| FOREGROUND_INTENSITY */, COLOR_WHITE);
 	init_pair(PAIR_GREY_RED, COLOR_WHITE/*| FOREGROUND_INTENSITY */, COLOR_RED);
 }
-static void LOG_Destroy(Section*) {
-	if(debuglog) fclose(debuglog);
+
+void DBGUI_StartUp(void) {
+	/* Start the main window */
+	dbg.win_main=initscr();
+	cbreak();       /* take input chars one at a time, no wait for \n */
+	noecho();       /* don't echo input */
+	scrollok(stdscr,false);
+	nodelay(dbg.win_main,true);
+	keypad(dbg.win_main,true);
+	#ifndef WIN32
+	printf("\e[8;50;80t");
+	fflush(NULL);
+	resizeterm(50,80);
+	touchwin(dbg.win_main);
+	#endif
+	old_cursor_state = curs_set(0);
+	start_color();
+	cycle_count=0;
+	MakePairs();
+	MakeSubWindows();
+}
+
+#endif
+
+void DEBUG_ShowMsg(char const* format,...) {
+	char buf[512];
+	va_list msg;
+	size_t len;
+
+	va_start(msg,format);
+	len = vsnprintf(buf,sizeof(buf)-2,format,msg); /* <- NTS: Did you know sprintf/vsnprintf returns number of chars written? */
+	va_end(msg);
+
+	/* Add newline if not present */
+	if (len > 0 && buf[len-1] != '\n') buf[len++] = '\n';
+	buf[len] = 0;
+
+	if (debuglog != NULL) {
+		fprintf(debuglog,"%s",buf);
+		fflush(debuglog);
+	}
+#if !C_DEBUG
+	else {
+		fprintf(stderr,"DOSBox LOG: %s",buf);
+		fflush(stderr);
+	}
+#endif
+
+#if C_DEBUG
+	if (logBuffPos!=logBuff.end()) {
+		logBuffPos=logBuff.end();
+		DEBUG_RefreshPage(0);
+	}
+	logBuff.push_back(buf);
+	if (logBuff.size() > MAX_LOG_BUFFER)
+		logBuff.pop_front();
+
+	logBuffPos = logBuff.end();
+	wprintw(dbg.win_out,"%s",buf);
+	wrefresh(dbg.win_out);
+#endif
+}
+
+void LOG_Destroy(Section*) {
+	if (debuglog != NULL) {
+		fclose(debuglog);
+		debuglog = NULL;
+	}
 }
 
 static void LOG_Init(Section * sec) {
 	Section_prop * sect=static_cast<Section_prop *>(sec);
 	const char * blah=sect->Get_string("logfile");
-	if(blah && blah[0] &&(debuglog = fopen(blah,"wt+"))){
-	}else{
+	if (blah != NULL && blah[0] != 0 && (debuglog=fopen(blah,"wt+")) != NULL) {
+	}
+	else {
 		debuglog=0;
 	}
+
 	sect->AddDestroyFunction(&LOG_Destroy);
 	char buf[1024];
 	for (Bitu i=1;i<LOG_MAX;i++) {
@@ -215,7 +248,6 @@ static void LOG_Init(Section * sec) {
 		loggrp[i].enabled=sect->Get_bool(buf);
 	}
 }
-
 
 void LOG_StartUp(void) {
 	/* Setup logging groups */
@@ -249,6 +281,8 @@ void LOG_StartUp(void) {
 	loggrp[LOG_IO].front="IO";
 	loggrp[LOG_PCI].front="PCI";
 	
+	loggrp[LOG_VOODOO].front="SST";
+	
 	/* Register the log section */
 	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
 	Prop_string* Pstring = sect->Add_string("logfile",Property::Changeable::Always,"");
@@ -263,28 +297,3 @@ void LOG_StartUp(void) {
 //	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }
 
-
-
-
-void DBGUI_StartUp(void) {
-	/* Start the main window */
-	dbg.win_main=initscr();
-	cbreak();       /* take input chars one at a time, no wait for \n */
-	noecho();       /* don't echo input */
-	nodelay(dbg.win_main,true);
-	keypad(dbg.win_main,true);
-	#ifndef WIN32
-	printf("\e[8;50;80t");
-	fflush(NULL);
-	resizeterm(50,80);
-	touchwin(dbg.win_main);
-	#endif
-	old_cursor_state = curs_set(0);
-	start_color();
-	cycle_count=0;
-	MakePairs();
-	MakeSubWindows();
-
-}
-
-#endif

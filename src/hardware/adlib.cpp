@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@
 #include "mem.h"
 #include "dbopl.h"
 
+bool adlib_force_timer_overflow_on_polling = false;
+
 namespace OPL2 {
 	#include "opl.cpp"
 
@@ -48,9 +50,11 @@ namespace OPL2 {
 				chan->AddSamples_m16( todo, buf );
 			}
 		}
+
 		virtual void Init( Bitu rate ) {
 			adlib_init(rate);
 		}
+
 		~Handler() {
 		}
 	};
@@ -77,9 +81,11 @@ namespace OPL3 {
 				chan->AddSamples_s16( todo, buf );
 			}
 		}
+
 		virtual void Init( Bitu rate ) {
 			adlib_init(rate);
 		}
+
 		~Handler() {
 		}
 	};
@@ -350,6 +356,12 @@ Chip
 */
 
 bool Chip::Write( Bit32u reg, Bit8u val ) {
+	if (adlib_force_timer_overflow_on_polling) {
+		/* detect end of polling loop by whether it writes */
+		last_poll = PIC_FullIndex();
+		poll_counter = 0;
+	}
+
 	switch ( reg ) {
 	case 0x02:
 		timer[0].counter = val;
@@ -394,6 +406,30 @@ Bit8u Chip::Read( ) {
 	double time( PIC_FullIndex() );
 	timer[0].Update( time );
 	timer[1].Update( time );
+
+	if (adlib_force_timer_overflow_on_polling) {
+		static const double poll_timeout = 0.1; /* if polling more than 100us per second, do timeout */
+
+		if ((time-last_poll) > poll_timeout) {
+			poll_counter = 0;
+		}
+		else if (++poll_counter >= 50) {
+			LOG_MSG("Adlib polling hack triggered. Forcing timers to reset. Hope this helps your DOS game to detect Adlib.");
+
+			poll_counter = 0;
+			if (!timer[0].overflow && timer[0].enabled) {
+				timer[0].Stop();
+				timer[0].overflow = true;
+			}
+			if (!timer[1].overflow && timer[1].enabled) {
+				timer[1].Stop();
+				timer[1].overflow = true;
+			}
+		}
+
+		last_poll = time;
+	}
+
 	Bit8u ret = 0;
 	//Overflow won't be set if a channel is masked
 	if ( timer[0].overflow ) {
@@ -606,7 +642,7 @@ static void SaveRad() {
 };
 
 
-static void OPL_SaveRawEvent(bool pressed) {
+void OPL_SaveRawEvent(bool pressed) {
 	if (!pressed)
 		return;
 //	SaveRad();return;
@@ -637,6 +673,8 @@ Module::Module( Section* configuration ) : Module_base(configuration) {
 	if ( rate < 8000 )
 		rate = 8000;
 	std::string oplemu( section->Get_string( "oplemu" ) );
+
+	adlib_force_timer_overflow_on_polling = section->Get_bool("adlib force timer overflow on detect");
 
 	mixerChan = mixerObject.Install(OPL_CallBack,rate,"FM");
 	mixerChan->SetScale( 2.0 );
@@ -705,3 +743,4 @@ void OPL_ShutDown(Section* sec){
 	module = 0;
 
 }
+

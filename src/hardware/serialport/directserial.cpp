@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -95,6 +95,26 @@ CDirectSerial::~CDirectSerial () {
 // to be continued...
 
 void CDirectSerial::handleUpperEvent(Bit16u type) {
+/*
+#if SERIAL_DEBUG
+		const char* s;
+		const char* s2;
+		switch(type) {
+		case SERIAL_POLLING_EVENT: s = "POLLING_EVENT"; break;
+		case SERIAL_RX_EVENT: s = "RX_EVENT"; break;
+		case SERIAL_TX_EVENT: s = "TX_EVENT"; break;
+		case SERIAL_THR_EVENT: s = "THR_EVENT"; break;
+		}
+		switch(rx_state) {
+		case D_RX_IDLE: s2 = "RX_IDLE"; break;
+		case D_RX_WAIT: s2 = "RX_WAIT"; break;
+		case D_RX_BLOCKED: s2 = "RX_BLOCKED"; break;
+		case D_RX_FASTWAIT: s2 = "RX_FASTWAIT"; break;
+		}
+		log_ser(dbg_aux,"Directserial: Event enter %s, %s",s,s2);
+#endif
+		*/
+
 	switch(type) {
 		case SERIAL_POLLING_EVENT: {
 			setEvent(SERIAL_POLLING_EVENT, 1.0f);
@@ -231,6 +251,22 @@ void CDirectSerial::handleUpperEvent(Bit16u type) {
 			break;				   
 		}
 	}
+	/*
+	#if SERIAL_DEBUG
+		switch(type) {
+		case SERIAL_POLLING_EVENT: s = "POLLING_EVENT"; break;
+		case SERIAL_RX_EVENT: s = "RX_EVENT"; break;
+		case SERIAL_TX_EVENT: s = "TX_EVENT"; break;
+		case SERIAL_THR_EVENT: s = "THR_EVENT"; break;
+		}
+		switch(rx_state) {
+			case D_RX_IDLE: s2 = "RX_IDLE"; break;
+			case D_RX_WAIT: s2 = "RX_WAIT"; break;
+			case D_RX_BLOCKED: s2 = "RX_BLOCKED"; break;
+			case D_RX_FASTWAIT: s2 = "RX_FASTWAIT"; break;
+		}
+		log_ser(dbg_aux,"Directserial: Event exit %s, %s",s,s2);
+#endif*/
 }
 
 bool CDirectSerial::doReceive() {

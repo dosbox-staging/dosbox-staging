@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,18 @@
 #include "int10.h"
 #include "dos_inc.h"
 
+int hack_lfb_yadjust = 0;
+
+extern bool allow_vesa_lowres_modes;
+extern bool vesa12_modes_32bpp;
+extern bool allow_vesa_32bpp;
+extern bool allow_vesa_24bpp;
+extern bool allow_vesa_16bpp;
+extern bool allow_vesa_15bpp;
+extern bool allow_vesa_8bpp;
+extern bool allow_vesa_4bpp;
+extern bool allow_vesa_tty;
+
 #define VESA_SUCCESS          0x00
 #define VESA_FAIL             0x01
 #define VESA_HW_UNSUPPORTED   0x02
@@ -45,7 +57,7 @@ static struct {
 static char string_oem[]="S3 Incorporated. Trio64";
 static char string_vendorname[]="DOSBox Development Team";
 static char string_productname[]="DOSBox - The DOS Emulator";
-static char string_productrev[]="DOSBox "VERSION;
+static char string_productrev[]="DOSBox SVN-X";
 
 #ifdef _MSC_VER
 #pragma pack (1)
@@ -140,14 +152,29 @@ Bit8u VESA_GetSVGAModeInformation(Bit16u mode,Bit16u seg,Bit16u off) {
 		if (!svga.accepts_mode(mode)) return 0x01;
 	}
 	while (ModeList_VGA[i].mode!=0xffff) {
-		if (mode==ModeList_VGA[i].mode) goto foundit; else i++;
+		/* Hack for VBE 1.2 modes and 24/32bpp ambiguity */
+		if (ModeList_VGA[i].mode >= 0x100 && ModeList_VGA[i].mode <= 0x11F &&
+			((ModeList_VGA[i].type == M_LIN32 && !vesa12_modes_32bpp) ||
+			 (ModeList_VGA[i].type == M_LIN24 && vesa12_modes_32bpp))) {
+			/* ignore */
+			i++;
+		}
+		else if (mode==ModeList_VGA[i].mode)
+			goto foundit;
+		else
+			i++;
 	}
 	return VESA_FAIL;
 foundit:
 	if ((int10.vesa_oldvbe) && (ModeList_VGA[i].mode>=0x120)) return 0x01;
 	VideoModeBlock * mblock=&ModeList_VGA[i];
+
+	bool allow_res = allow_vesa_lowres_modes ||
+		(ModeList_VGA[i].swidth >= 640 && ModeList_VGA[i].sheight >= 400);
+
 	switch (mblock->type) {
 	case M_LIN4:
+		if (!allow_vesa_4bpp) return VESA_FAIL;
 		pageSize = mblock->sheight * mblock->swidth/2;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth/8);
 		var_write(&minfo.NumberOfPlanes,0x4);
@@ -156,6 +183,7 @@ foundit:
 		modeAttributes = 0x1b;	// Color, graphics, no linear buffer
 		break;
 	case M_LIN8:
+		if (!allow_vesa_8bpp || !allow_res) return VESA_FAIL;
 		pageSize = mblock->sheight * mblock->swidth;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth);
 		var_write(&minfo.NumberOfPlanes,0x1);
@@ -165,6 +193,7 @@ foundit:
 		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
 		break;
 	case M_LIN15:
+		if (!allow_vesa_15bpp || !allow_res) return VESA_FAIL;
 		pageSize = mblock->sheight * mblock->swidth*2;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
 		var_write(&minfo.NumberOfPlanes,0x1);
@@ -182,6 +211,7 @@ foundit:
 		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
 		break;
 	case M_LIN16:
+		if (!allow_vesa_16bpp || !allow_res) return VESA_FAIL;
 		pageSize = mblock->sheight * mblock->swidth*2;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*2);
 		var_write(&minfo.NumberOfPlanes,0x1);
@@ -196,7 +226,24 @@ foundit:
 		modeAttributes = 0x1b;	// Color, graphics
 		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
 		break;
+	case M_LIN24:
+		if (!allow_vesa_24bpp || !allow_res) return VESA_FAIL;
+		pageSize = mblock->sheight * mblock->swidth*3;
+		var_write(&minfo.BytesPerScanLine,mblock->swidth*3);
+		var_write(&minfo.NumberOfPlanes,0x1);
+		var_write(&minfo.BitsPerPixel,24);
+		var_write(&minfo.MemoryModel,6);	//HiColour
+		var_write(&minfo.RedMaskSize,8);
+		var_write(&minfo.RedMaskPos,0x10);
+		var_write(&minfo.GreenMaskSize,0x8);
+		var_write(&minfo.GreenMaskPos,0x8);
+		var_write(&minfo.BlueMaskSize,0x8);
+		var_write(&minfo.BlueMaskPos,0x0);
+		modeAttributes = 0x1b;	// Color, graphics
+		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
+		break;
 	case M_LIN32:
+		if (!allow_vesa_32bpp || !allow_res) return VESA_FAIL;
 		pageSize = mblock->sheight * mblock->swidth*4;
 		var_write(&minfo.BytesPerScanLine,mblock->swidth*4);
 		var_write(&minfo.NumberOfPlanes,0x1);
@@ -214,6 +261,7 @@ foundit:
 		if (!int10.vesa_nolfb) modeAttributes |= 0x80;	// linear framebuffer
 		break;
 	case M_TEXT:
+		if (!allow_vesa_tty) return VESA_FAIL;
 		pageSize = 0;
 		var_write(&minfo.BytesPerScanLine, mblock->twidth * 2);
 		var_write(&minfo.NumberOfPlanes,0x4);
@@ -259,7 +307,7 @@ foundit:
 	var_write(&minfo.Reserved_page,0x1);
 	var_write(&minfo.XCharSize,mblock->cwidth);
 	var_write(&minfo.YCharSize,mblock->cheight);
-	if (!int10.vesa_nolfb) var_write(&minfo.PhysBasePtr,S3_LFB_BASE);
+	if (!int10.vesa_nolfb) var_write(&minfo.PhysBasePtr,S3_LFB_BASE + (hack_lfb_yadjust*host_readw((HostPt)(&minfo.BytesPerScanLine))));
 
 	MEM_BlockWrite(buf,&minfo,sizeof(MODE_INFO));
 	return VESA_SUCCESS;
@@ -539,6 +587,11 @@ static Bitu VESA_PMSetStart(void) {
 
 
 void INT10_SetupVESA(void) {
+	/* BUGFIX: Generating VESA BIOS data when machine=ega or machine=vgaonly is dumb.
+	 * Stop wasting ROM space! --J.C. */
+	if (machine != MCH_VGA) return;
+	if (svgaCard == SVGA_None) return;
+
 	/* Put the mode list somewhere in memory */
 	Bitu i;
 	i=0;
@@ -546,9 +599,32 @@ void INT10_SetupVESA(void) {
 //TODO Maybe add normal vga modes too, but only seems to complicate things
 	while (ModeList_VGA[i].mode!=0xffff) {
 		bool canuse_mode=false;
-		if (!svga.accepts_mode) canuse_mode=true;
+		if (!svga.accepts_mode)
+			canuse_mode=true;
+		/* Hack for VBE 1.2 modes and 24/32bpp ambiguity */
+		else if (ModeList_VGA[i].mode >= 0x100 && ModeList_VGA[i].mode <= 0x11F &&
+			((ModeList_VGA[i].type == M_LIN32 && !vesa12_modes_32bpp) ||
+			 (ModeList_VGA[i].type == M_LIN24 && vesa12_modes_32bpp))) {
+			/* ignore */
+		}
 		else {
-			if (svga.accepts_mode(ModeList_VGA[i].mode)) canuse_mode=true;
+			if (svga.accepts_mode(ModeList_VGA[i].mode)) {
+				canuse_mode=true;
+				if (ModeList_VGA[i].mode >= 0x100) {
+					bool allow_res = allow_vesa_lowres_modes ||
+						(ModeList_VGA[i].swidth >= 640 && ModeList_VGA[i].sheight >= 400);
+
+					switch (ModeList_VGA[i].type) {
+						case M_LIN32:	canuse_mode=allow_vesa_32bpp && allow_res; break;
+						case M_LIN24:	canuse_mode=allow_vesa_24bpp && allow_res; break;
+						case M_LIN16:	canuse_mode=allow_vesa_16bpp && allow_res; break;
+						case M_LIN15:	canuse_mode=allow_vesa_15bpp && allow_res; break;
+						case M_LIN8:	canuse_mode=allow_vesa_8bpp && allow_res; break;
+						case M_LIN4:	canuse_mode=allow_vesa_4bpp; break;
+						case M_TEXT:	canuse_mode=allow_vesa_tty; break;
+					}
+				}
+			}
 		}
 		if (ModeList_VGA[i].mode>=0x100 && canuse_mode) {
 			if ((!int10.vesa_oldvbe) || (ModeList_VGA[i].mode<0x120)) {
@@ -585,7 +661,7 @@ void INT10_SetupVESA(void) {
 	int10.rom.pmode_interface_start = int10.rom.used - RealOff( int10.rom.pmode_interface );
 	phys_writew( Real2Phys(int10.rom.pmode_interface) + 2, int10.rom.pmode_interface_start);
 	callback.pmStart=CALLBACK_Allocate();
-	int10.rom.used += (Bit16u)CALLBACK_Setup(callback.pmStart, VESA_PMSetStart, CB_RETN, PhysMake(0xc000,int10.rom.used), "VESA PM Set Start");
+	int10.rom.used += (Bit16u)CALLBACK_Setup(callback.pmStart, VESA_PMSetStart, CB_VESA_START, PhysMake(0xc000,int10.rom.used), "VESA PM Set Start");
 	/* PM Set Palette call */
 	int10.rom.pmode_interface_palette = int10.rom.used - RealOff( int10.rom.pmode_interface );
 	phys_writew( Real2Phys(int10.rom.pmode_interface) + 4, int10.rom.pmode_interface_palette);

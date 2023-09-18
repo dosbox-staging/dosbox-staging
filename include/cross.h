@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,6 +35,8 @@
 #define LONGTYPE(a) a##i64
 #define snprintf _snprintf
 #define vsnprintf _vsnprintf
+#define alloca _alloca
+#define putenv _putenv
 #else										/* LINUX / GCC */
 #include <dirent.h>
 #include <unistd.h>

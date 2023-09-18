@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@
 #include "pic.h"
 #include "fpu.h"
 #include "paging.h"
+#include "mmx.h"
+
+extern bool ignore_opcode_63;
 
 #if C_DEBUG
 #include "debug.h"
@@ -37,17 +40,21 @@
 #define LoadMb(off) mem_readb(off)
 #define LoadMw(off) mem_readw(off)
 #define LoadMd(off) mem_readd(off)
+#define LoadMq(off) ((Bit64u)((Bit64u)mem_readd(off+4)<<32 | (Bit64u)mem_readd(off)))
 #define SaveMb(off,val)	mem_writeb(off,val)
 #define SaveMw(off,val)	mem_writew(off,val)
 #define SaveMd(off,val)	mem_writed(off,val)
+#define SaveMq(off,val) {mem_writed(off,val&0xffffffff);mem_writed(off+4,(val>>32)&0xffffffff);}
 #else 
 #include "paging.h"
 #define LoadMb(off) mem_readb_inline(off)
 #define LoadMw(off) mem_readw_inline(off)
 #define LoadMd(off) mem_readd_inline(off)
+#define LoadMq(off) ((Bit64u)((Bit64u)mem_readd_inline(off+4)<<32 | (Bit64u)mem_readd_inline(off)))
 #define SaveMb(off,val)	mem_writeb_inline(off,val)
 #define SaveMw(off,val)	mem_writew_inline(off,val)
 #define SaveMd(off,val)	mem_writed_inline(off,val)
+#define SaveMq(off,val) {mem_writed_inline(off,val&0xffffffff);mem_writed_inline(off+4,(val>>32)&0xffffffff);}
 #endif
 
 extern Bitu cycle_count;
@@ -266,17 +273,21 @@ restart_opcode:
 		#include "core_normal/prefix_66_0f.h"
 		default:
 		illegal_opcode:
-#if C_DEBUG	
+#if C_DEBUG
 			{
+				bool ignore=false;
 				Bitu len=(GETIP-reg_eip);
 				LOADIP;
 				if (len>16) len=16;
 				char tempcode[16*2+1];char * writecode=tempcode;
+				if (ignore_opcode_63 && mem_readb(core.cseip) == 0x63)
+					ignore = true;
 				for (;len>0;len--) {
 					sprintf(writecode,"%02X",mem_readb(core.cseip++));
 					writecode+=2;
 				}
-				LOG(LOG_CPU,LOG_NORMAL)("Illegal/Unhandled opcode %s",tempcode);
+				if (!ignore)
+					LOG(LOG_CPU,LOG_NORMAL)("Illegal/Unhandled opcode %s",tempcode);
 			}
 #endif
 			CPU_Exception(6,0);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ static void RestoreRegisters(void) {
 	reg_sp+=18;
 }
 
-extern void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused);
+extern void GFX_SetTitle(Bit32s cycles, Bits frameskip, Bits timing, bool paused);
 void DOS_UpdatePSPName(void) {
 	DOS_MCB mcb(dos.psp()-1);
 	static char name[9];
@@ -100,7 +100,7 @@ void DOS_UpdatePSPName(void) {
 		if ( !isprint(*reinterpret_cast<unsigned char*>(&name[i])) ) name[i] = '?';
 	}
 	RunningProgram = name;
-	GFX_SetTitle(-1,-1,false);
+	GFX_SetTitle(-1,-1,-1,false);
 }
 
 void DOS_Terminate(Bit16u pspseg,bool tsr,Bit8u exitcode) {
@@ -144,11 +144,11 @@ void DOS_Terminate(Bit16u pspseg,bool tsr,Bit8u exitcode) {
 		CPU_CycleLeft=0;
 		CPU_Cycles=0;
 		CPU_CycleMax=CPU_OldCycleMax;
-		GFX_SetTitle(CPU_OldCycleMax,-1,false);
+		GFX_SetTitle(CPU_OldCycleMax,-1,-1,false);
 	} else {
-		GFX_SetTitle(-1,-1,false);
+		GFX_SetTitle(-1,-1,-1,false);
 	}
-#if (C_DYNAMIC_X86) || (C_DYNREC)
+#if (C_DYNAMIC_X86)
 	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
 		cpudecoder=&CPU_Core_Normal_Run;
 		CPU_CycleLeft=0;
@@ -225,10 +225,6 @@ bool DOS_ChildPSP(Bit16u segment, Bit16u size) {
 	psp.SetFCB2(RealMake(parent_psp_seg,0x6c));
 	psp.SetEnvironment(psp_parent.GetEnvironment());
 	psp.SetSize(size);
-	// push registers in case child PSP is terminated
-	SaveRegisters();
-	psp.SetStack(RealMakeSeg(ss,reg_sp));
-	reg_sp+=18;
 	return true;
 }
 
@@ -255,10 +251,18 @@ static void SetupCMDLine(Bit16u pspseg,DOS_ParamBlock & block) {
 	psp.SetCommandTail(block.exec.cmdtail);
 }
 
+/* FIXME: This code (or the shell perhaps) isn't very good at returning or
+ *        printing an error message when it is unable to load and run an
+ *        executable for whatever reason. Worst offense is that if it can't
+ *        run an EXE due to lack of memory, it silently returns to the
+ *        shell without any error message. The least we could do is return
+ *        an error code so that the INT 21h EXEC call can print an informative
+ *        error message! --J.C. */
 bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	EXE_Header head;Bitu i;
 	Bit16u fhandle;Bit16u len;Bit32u pos;
-	Bit16u pspseg,envseg,loadseg,memsize,readsize;
+	Bit16u pspseg,envseg,loadseg,memsize=0xffff,readsize;
+	Bit16u minsize,maxsize,maxfree=0xffff;
 	PhysPt loadaddress;RealPt relocpt;
 	Bitu headersize=0,imagesize=0;
 	DOS_ParamBlock block(block_pt);
@@ -318,7 +322,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 			return false;
 		}
 		/* Get Memory */		
-		Bit16u minsize,maxsize;Bit16u maxfree=0xffff;DOS_AllocateMemory(&pspseg,&maxfree);
+		DOS_AllocateMemory(&pspseg,&maxfree);
 		if (iscom) {
 			minsize=0x1000;maxsize=0xffff;
 			if (machine==MCH_PCJR) {
@@ -368,19 +372,31 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 		loadseg=pspseg+16;
 		if (!iscom) {
 			/* Check if requested to load program into upper part of allocated memory */
-			if ((head.minmemory == 0) && (head.maxmemory == 0))
-				loadseg = (Bit16u)(((pspseg+memsize)*0x10-imagesize)/0x10);
+			if ((head.minmemory == 0) && (head.maxmemory == 0)) {
+				loadseg = (pspseg+memsize);
+				loadseg -= (imagesize+0xF)/0x10;
+				if (loadseg < (pspseg+16)) loadseg = pspseg+16;
+				if ((loadseg+((imagesize+0xF)/0x10)) > (pspseg+memsize))
+					E_Exit("EXE loading error, unable to load to top of block, nor able to fit into block");
+			}
 		}
 	} else loadseg=block.overlay.loadseg;
 	/* Load the executable */
 	loadaddress=PhysMake(loadseg,0);
 
 	if (iscom) {	/* COM Load 64k - 256 bytes max */
+		/* how big is the COM image? make sure it fits */
+		pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_END);
+		readsize = pos;
+		if (readsize > (0xffff-256)) readsize = 0xffff-256;
+		pos += 256; /* plus stack */
+		if (pos > (memsize*0x10)) E_Exit("DOS:Not enough memory for COM executable");
+
 		pos=0;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
-		readsize=0xffff-256;
 		DOS_ReadFile(fhandle,loadbuf,&readsize);
 		MEM_BlockWrite(loadaddress,loadbuf,readsize);
 	} else {	/* EXE Load in 32kb blocks and then relocate */
+		if (imagesize > (memsize*0x10)) E_Exit("DOS:Not enough memory for EXE image");
 		pos=headersize;DOS_SeekFile(fhandle,&pos,DOS_SEEK_SET);	
 		while (imagesize>0x7FFF) {
 			readsize=0x8000;DOS_ReadFile(fhandle,loadbuf,&readsize);
@@ -418,12 +434,29 @@ bool DOS_Execute(char * name,PhysPt block_pt,Bit8u flags) {
 	if (flags==OVERLAY) return true;			/* Everything done for overlays */
 	RealPt csip,sssp;
 	if (iscom) {
+		unsigned int stack_sp = 0xfffe;
+
+		/* On most DOS systems the stack pointer is set to 0xFFFE.
+		 * Limiting the stack pointer to stay within the memory block
+		 * enables COM images to run correctly in less than 72KB of RAM.
+		 * Doing this resolves the random crashes observed with DOSBox's
+		 * builtin commands when less than 72KB of RAM is assigned.
+		 *
+		 * At some point I need to boot MS-DOS/PC-DOS 1.x and 2.x in small
+		 * amounts of RAM to verify that's what actually happens. --J.C. */
+		if (stack_sp >= (memsize*0x10))
+			stack_sp = (memsize*0x10)-2;
+
 		csip=RealMake(pspseg,0x100);
-		sssp=RealMake(pspseg,0xfffe);
-		mem_writew(PhysMake(pspseg,0xfffe),0);
+		sssp=RealMake(pspseg,stack_sp);
+		mem_writew(PhysMake(pspseg,stack_sp),0);
 	} else {
+		/* FIXME: I've heard of EXE files with entry points like FFFF:0100 or something (COM images turned EXE if I recall).
+		 *        Does this check validate those too? */
 		csip=RealMake(loadseg+head.initCS,head.initIP);
 		sssp=RealMake(loadseg+head.initSS,head.initSP);
+		if (sssp >= RealMake(pspseg+memsize,0)) E_Exit("DOS:Initial SS:IP beyond allocated memory block for EXE image");
+		if (csip >= RealMake(pspseg+memsize,0)) E_Exit("DOS:Initial CS:IP beyond allocated memory block for EXE image");
 		if (head.initSP<4) LOG(LOG_EXEC,LOG_ERROR)("stack underflow/wrap at EXEC");
 	}
 

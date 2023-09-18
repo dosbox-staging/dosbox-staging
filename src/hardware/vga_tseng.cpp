@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,10 +23,20 @@
 #include "vga.h"
 #include "inout.h"
 #include "mem.h"
+#include "regs.h"
 #include <cstdlib>
+
+extern bool vga_enable_3C6_ramdac;
+extern bool vga_sierra_lock_565;
+
 // Tseng ET4K data
 typedef struct {
 	Bit8u extensionsEnabled;
+
+// Current DAC mode
+	Bit8u hicolorDACcmdmode;
+// HiColor DAC control register. See comments below. Only bits 5-7 are emulated, close to SC11485 version.
+	Bit8u hicolorDACcommand;
 
 // Stored exact values of some registers. Documentation only specifies some bits but hardware checks may
 // expect other bits to be preserved.
@@ -49,7 +59,7 @@ typedef struct {
 	Bitu biosMode;
 } SVGA_ET4K_DATA;
 
-static SVGA_ET4K_DATA et4k = { 1,0,0,0,0,0,0,0,0, 0,0, 0,0,
+static SVGA_ET4K_DATA et4k = { 1,0,0,0,0,0,0,0,0,0,0, 0,0, 0,0,
                              { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}, 0 };
 
 #define STORE_ET4K(port, index) \
@@ -314,6 +324,15 @@ static void set_clock_index_et4k(Bitu index) {
 }
 
 void FinishSetMode_ET4K(Bitu crtc_base, VGA_ModeExtraData* modeData) {
+	// Note that switching to a mode always puts the DAC in 15-bit color. An extra BIOS call is necessary to switch to 16-bit color.
+	// We are also forcing the mode back to work exactly the way it did on the real hardware
+	if (modeData->modeNo & 0x200) {
+		et4k.hicolorDACcommand = 0xa0;
+		modeData->modeNo &= ~0x200;
+	} else {
+		et4k.hicolorDACcommand = 0x00;
+	}
+
 	et4k.biosMode = modeData->modeNo;
 
 	IO_Write(0x3cd, 0x00); // both banks to 0
@@ -377,6 +396,14 @@ void FinishSetMode_ET4K(Bitu crtc_base, VGA_ModeExtraData* modeData) {
 }
 
 void DetermineMode_ET4K() {
+	// Special case for HiColor DAC enabled modes
+	if ((et4k.hicolorDACcommand & 0xc0) == 0x80) {
+		VGA_SetMode(vga_sierra_lock_565 ? M_LIN16 : M_LIN15);
+		return;
+	} else if ((et4k.hicolorDACcommand & 0xc0) == 0xc0) {
+		VGA_SetMode(M_LIN16);
+		return;
+	}
 	// Close replica from the base implementation. It will stay here
 	// until I figure a way to either distinguish M_VGA and M_LIN8 or
 	// merge them.
@@ -404,6 +431,147 @@ bool AcceptsMode_ET4K(Bitu mode) {
 //	return mode != 0x3d;
 }
 
+// Support for HiColor DAC
+// Support is sufficient for proper detection (WHATVGA detects UMC 70c178, similar to Sierra SC11487, slightly simpler to work with).
+// Control over 15/16-bit color is also implemented. Need better documentation and/or test cases to advance the implementation.
+/*
+REG06 (R/W):  Command Register
+bit   0  (SC11487) (R) Set if bits 5-7 is 1 or 3, clear otherwise
+    3-4  (SC11487) Accesses bits 3-4 of the PEL Mask registers (REG02)
+      5  (not SC11481/6/8)
+         If set two pixel clocks are used to latch the two bytes
+         needed for each pixel. Low byte is latched first.
+         If clear the low byte is latched on the rising edge of the
+         pixel clock and the high byte is latched on the falling edge.
+         Only some VGA chips (ET4000 and C&T655x0) can handle this.
+      6  (SC11485/7/9, OTI66HC, UM70C178) Set in 16bit (64k) modes (Only valid
+           if bit 7 set). On the SC11482/3/4 this bit is read/writable, but
+           has no function. On the SC11481/6/8 this bit does not exist.
+      7  Set in HiColor (32k/64k) modes, clear in palette modes.
+Note:  This register can also be accessed at 3C6h by reading 3C6h four times,
+       then all accesses to 3C6h will go the this register until one of the
+       registers 3C7h, 3C8h or 3C9h is accessed.
+*/
+
+// Need to pass-through all DAC registers
+void write_p3c6(Bitu port,Bitu val,Bitu iolen);
+void write_p3c7(Bitu port,Bitu val,Bitu iolen);
+void write_p3c8(Bitu port,Bitu val,Bitu iolen);
+void write_p3c9(Bitu port,Bitu val,Bitu iolen);
+Bitu read_p3c6(Bitu port,Bitu iolen);
+Bitu read_p3c7(Bitu port,Bitu iolen);
+Bitu read_p3c8(Bitu port,Bitu iolen);
+Bitu read_p3c9(Bitu port,Bitu iolen);
+
+bool et4k_highcolor_half_pixel_rate() {
+	/* if highcolor and NOT using two clocks per pixel */
+	return (et4k.hicolorDACcommand & 0x80) && (!(et4k.hicolorDACcommand & 0x20));
+}
+
+void write_p3c6_et4k(Bitu port,Bitu val,Bitu iolen) {
+	if (et4k.hicolorDACcmdmode <= 3) {
+		write_p3c6(port, val, iolen);
+	} else {
+		Bit8u command = val & 0xe0;
+		if (command != et4k.hicolorDACcommand) {
+			et4k.hicolorDACcommand = command;
+			DetermineMode_ET4K();
+		}
+	}
+}
+void write_p3c7_et4k(Bitu port,Bitu val,Bitu iolen) {
+	et4k.hicolorDACcmdmode = 0;
+	write_p3c7(port, val, iolen);
+}
+void write_p3c8_et4k(Bitu port,Bitu val,Bitu iolen) {
+	et4k.hicolorDACcmdmode = 0;
+	write_p3c8(port, val, iolen);
+}
+void write_p3c9_et4k(Bitu port,Bitu val,Bitu iolen) {
+	et4k.hicolorDACcmdmode = 0;
+	write_p3c9(port, val, iolen);
+}
+Bitu read_p3c6_et4k(Bitu port,Bitu iolen) {
+	if (et4k.hicolorDACcmdmode <= 3) {
+		if (vga_enable_3C6_ramdac)
+			et4k.hicolorDACcmdmode++;
+
+		return read_p3c6(port, iolen);
+	} else {
+		return et4k.hicolorDACcommand;
+	}
+}
+Bitu read_p3c7_et4k(Bitu port,Bitu iolen) {
+	et4k.hicolorDACcmdmode = 0;
+	return read_p3c7(port, iolen);
+}
+Bitu read_p3c8_et4k(Bitu port,Bitu iolen) {
+	et4k.hicolorDACcmdmode = 0;
+	return read_p3c8(port, iolen);
+}
+Bitu read_p3c9_et4k(Bitu port,Bitu iolen) {
+	et4k.hicolorDACcmdmode = 0;
+	return read_p3c9(port, iolen);
+}
+
+void SetupDAC_ET4K() {
+	IO_RegisterWriteHandler(0x3c6,write_p3c6_et4k,IO_MB);
+	IO_RegisterReadHandler(0x3c6,read_p3c6_et4k,IO_MB);
+	IO_RegisterWriteHandler(0x3c7,write_p3c7_et4k,IO_MB);
+	IO_RegisterReadHandler(0x3c7,read_p3c7_et4k,IO_MB);
+	IO_RegisterWriteHandler(0x3c8,write_p3c8_et4k,IO_MB);
+	IO_RegisterReadHandler(0x3c8,read_p3c8_et4k,IO_MB);
+	IO_RegisterWriteHandler(0x3c9,write_p3c9_et4k,IO_MB);
+	IO_RegisterReadHandler(0x3c9,read_p3c9_et4k,IO_MB);
+}
+
+// BIOS extensions for HiColor-enabled cards
+bool INT10_SetVideoMode(Bit16u mode);
+
+void INT10Extensions_ET4K() {
+	switch (reg_ax)	{
+	case 0x10F0: /* ET4000: SET HiColor GRAPHICS MODE */
+		if (INT10_SetVideoMode(0x200 | Bit16u(reg_bl))) {
+			reg_ax = 0x0010;
+		}
+		break;
+	case 0x10F1: /* ET4000: GET DAC TYPE */
+		reg_ax = 0x0010;
+		if (vga_enable_3C6_ramdac)
+			reg_bl = 0x01;
+		else
+			reg_bl = 0x00;
+		break;
+	case 0x10F2: /* ET4000: CHECK/SET HiColor MODE */
+		switch (reg_bl) {
+		case 0:
+			reg_ax = 0x0010;
+			break;
+		case 1: case 2:
+			{
+				Bit8u val = (reg_bl == 1) ? 0xa0 : 0xe0;
+				if (val != et4k.hicolorDACcommand) {
+					et4k.hicolorDACcommand = val;
+					DetermineMode_ET4K();
+					reg_ax = 0x0010;
+				}
+			}
+			break;
+		}
+		switch (et4k.hicolorDACcommand & 0xc0) {
+		case 0x80:
+			reg_bl = 1;
+			break;
+		case 0xc0:
+			reg_bl = 2;
+			break;
+		default:
+			reg_bl = 0;
+			break;
+		}
+	}
+}
+
 void SVGA_Setup_TsengET4K(void) {
     svga.write_p3d5 = &write_p3d5_et4k;
 	svga.read_p3d5 = &read_p3d5_et4k;
@@ -417,6 +585,8 @@ void SVGA_Setup_TsengET4K(void) {
 	svga.set_clock = &SetClock_ET4K;
 	svga.get_clock = &GetClock_ET4K;
 	svga.accepts_mode = &AcceptsMode_ET4K;
+	svga.setup_dac = &SetupDAC_ET4K;
+	svga.int10_extensions = &INT10Extensions_ET4K;
 
 	// From the depths of X86Config, probably inexact
 	VGA_SetClock(0,CLK_25);
@@ -451,14 +621,7 @@ void SVGA_Setup_TsengET4K(void) {
 		vga.vmemsize = 1024*1024;
 
 	// Tseng ROM signature
-	PhysPt rom_base=PhysMake(0xc000,0);
-	phys_writeb(rom_base+0x0075,' ');
-	phys_writeb(rom_base+0x0076,'T');
-	phys_writeb(rom_base+0x0077,'s');
-	phys_writeb(rom_base+0x0078,'e');
-	phys_writeb(rom_base+0x0079,'n');
-	phys_writeb(rom_base+0x007a,'g');
-	phys_writeb(rom_base+0x007b,' ');
+	phys_writes(PhysMake(0xc000,0)+0x0075, " Tseng ", 8);
 }
 
 
@@ -803,3 +966,4 @@ void SVGA_Setup_TsengET3K(void) {
 	phys_writeb(rom_base+0x007a,'g');
 	phys_writeb(rom_base+0x007b,' ');
 }
+

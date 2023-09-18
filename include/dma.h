@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 
 #ifndef DOSBOX_DMA_H
 #define DOSBOX_DMA_H
+#include <fstream>
 
 enum DMAEvent {
 	DMA_REACHED_TC,
@@ -78,6 +79,9 @@ public:
 	}
 	Bitu Read(Bitu size, Bit8u * buffer);
 	Bitu Write(Bitu size, Bit8u * buffer);
+
+	void SaveState( std::ostream& stream );
+	void LoadState( std::istream& stream );
 };
 
 class DmaController {
@@ -106,6 +110,9 @@ public:
 	}
 	void WriteControllerReg(Bitu reg,Bitu val,Bitu len);
 	Bitu ReadControllerReg(Bitu reg,Bitu len);
+
+	void SaveState( std::ostream& stream );
+	void LoadState( std::istream& stream );
 };
 
 DmaChannel * GetDMAChannel(Bit8u chan);

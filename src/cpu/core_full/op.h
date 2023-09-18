@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -603,15 +603,15 @@ switch (inst.code.op) {
 		inst_op1_d&=~(1 << (inst_op2_d & 31));
 		break;
 	case O_BSWAPw:
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegalopcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegalopcode;
 		BSWAPW(inst_op1_w);
 		break;
 	case O_BSWAPd:
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLDSLOW) goto illegalopcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486OLD) goto illegalopcode;
 		BSWAPD(inst_op1_d);
 		break;
 	case O_CMPXCHG:
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_486NEWSLOW) goto illegalopcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_486NEW) goto illegalopcode;
 		FillFlags();
 		if (inst_op1_d==reg_eax) {
 			inst_op1_d=reg_32(inst.rm_index);

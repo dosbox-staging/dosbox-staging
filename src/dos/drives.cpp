@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include "dosbox.h"
 #include "dos_system.h"
 #include "drives.h"
+#include "setup.h"
 #include "mapper.h"
 #include "support.h"
 
@@ -113,7 +114,7 @@ DOS_Drive::DOS_Drive() {
 	info[0]=0;
 }
 
-char * DOS_Drive::GetInfo(void) {
+const char * DOS_Drive::GetInfo(void) {
 	return info;
 }
 
@@ -170,7 +171,27 @@ void DriveManager::CycleDisk(bool pressed) {
 */
 
 void DriveManager::CycleAllDisks(void) {
-	for (int idrive=0; idrive<DOS_DRIVES; idrive++) {
+	for (int idrive=0; idrive<2; idrive++) { /* Cycle all DISKS meaning A: and B: */
+		int numDisks = (int)driveInfos[idrive].disks.size();
+		if (numDisks > 1) {
+			// cycle disk
+			int currentDisk = driveInfos[idrive].currentDisk;
+			DOS_Drive* oldDisk = driveInfos[idrive].disks[currentDisk];
+			currentDisk = (currentDisk + 1) % numDisks;		
+			DOS_Drive* newDisk = driveInfos[idrive].disks[currentDisk];
+			driveInfos[idrive].currentDisk = currentDisk;
+			
+			// copy working directory, acquire system resources and finally switch to next drive		
+			strcpy(newDisk->curdir, oldDisk->curdir);
+			newDisk->Activate();
+			Drives[idrive] = newDisk;
+			LOG_MSG("Drive %c: disk %d of %d now active", 'A'+idrive, currentDisk+1, numDisks);
+		}
+	}
+}
+
+void DriveManager::CycleAllCDs(void) {
+	for (int idrive=2; idrive<DOS_DRIVES; idrive++) { /* Cycle all CDs in C: D: ... Z: */
 		int numDisks = (int)driveInfos[idrive].disks.size();
 		if (numDisks > 1) {
 			// cycle disk
@@ -211,7 +232,12 @@ int DriveManager::UnmountDrive(int drive) {
 	return result;
 }
 
-void DriveManager::Init(Section* /* sec */) {
+bool int13_extensions_enable = true;
+
+void DriveManager::Init(Section* s) {
+	Section_prop * section=static_cast<Section_prop *>(s);
+
+	int13_extensions_enable = section->Get_bool("int 13 extensions");
 	
 	// setup driveInfos structure
 	currentDrive = 0;
@@ -226,3 +252,8 @@ void DriveManager::Init(Section* /* sec */) {
 void DRIVES_Init(Section* sec) {
 	DriveManager::Init(sec);
 }
+
+char * DOS_Drive::GetBaseDir(void) {
+	return info + 16;
+}
+

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,8 +39,15 @@
 
 class CommandLine {
 public:
-	CommandLine(int argc,char const * const argv[]);
-	CommandLine(char const * const name,char const * const cmdline);
+	enum opt_style {
+		dos=0,		// MS-DOS style /switches
+		gnu,		// GNU style --switches or -switches, switch parsing stops at --
+		gnu_getopt,	// GNU style --long or -a -b -c -d or -abcd (short as single char), switch parsing stops at --
+		either		// both dos and gnu, switch parsing stops at --
+	};
+public:
+	CommandLine(int argc,char const * const argv[],enum opt_style opt=CommandLine::either);
+	CommandLine(char const * const name,char const * const cmdline,enum opt_style opt=CommandLine::either);
 	const char * GetFileName(){ return file_name.c_str();}
 
 	bool FindExist(char const * const name,bool remove=false);
@@ -58,10 +65,17 @@ public:
 	void Shift(unsigned int amount=1);
 	Bit16u Get_arglength();
 
+	bool BeginOpt(bool eat_argv=true);
+	bool GetOpt(std::string &name);
+	bool NextOptArgv(std::string &argv);
+	void EndOpt();
 private:
 	typedef std::list<std::string>::iterator cmd_it;
+	cmd_it opt_scan;
+	bool opt_eat_argv;
 	std::list<std::string> cmds;
 	std::string file_name;
+	enum opt_style opt_style;
 	bool FindEntry(char const * const name,cmd_it & it,bool neednext=false);
 };
 
@@ -69,8 +83,8 @@ class Program {
 public:
 	Program();
 	virtual ~Program(){
-		delete cmd;
-		delete psp;
+		if (cmd != NULL) delete cmd;
+		if (psp != NULL) delete psp;
 	}
 	std::string temp_line;
 	CommandLine * cmd;

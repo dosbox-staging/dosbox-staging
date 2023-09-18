@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,22 +41,21 @@ static void FPU_FNOP(void){
 	return;
 }
 
-static void FPU_PREP_PUSH(void){
-	TOP = (TOP - 1) &7;
-	if (GCC_UNLIKELY(fpu.tags[TOP] != TAG_Empty)) E_Exit("FPU stack overflow");
-	fpu.tags[TOP] = TAG_Valid;
-}
-
 static void FPU_PUSH(double in){
-	FPU_PREP_PUSH();
+	TOP = (TOP - 1) &7;
+	//actually check if empty
+	fpu.tags[TOP] = TAG_Valid;
 	fpu.regs[TOP].d = in;
 //	LOG(LOG_FPU,LOG_ERROR)("Pushed at %d  %g to the stack",newtop,in);
 	return;
 }
 
+static void FPU_PREP_PUSH(void){
+	TOP = (TOP - 1) &7;
+	fpu.tags[TOP] = TAG_Valid;
+}
 
 static void FPU_FPOP(void){
-	if (GCC_UNLIKELY(fpu.tags[TOP] == TAG_Empty)) E_Exit("FPU stack underflow");
 	fpu.tags[TOP]=TAG_Empty;
 	//maybe set zero in it as well
 	TOP = ((TOP+1)&7);
@@ -107,7 +106,7 @@ static Real64 FPU_FLD80(PhysPt addr) {
 	FPU_Reg result;
 	result.ll = (sign <<63)|(exp64final << 52)| mant64;
 
-	if(test.eind.l.lower == 0 && test.eind.l.upper == 0x80000000 && (test.begin&0x7fff) == 0x7fff) {
+	if(test.eind.l.lower == 0 && (Bit32u)test.eind.l.upper == (Bit32u)0x80000000UL && (test.begin&0x7fff) == 0x7fff) {
 		//Detect INF and -INF (score 3.11 when drawing a slur.)
 		result.d = sign?-HUGE_VAL:HUGE_VAL;
 	}

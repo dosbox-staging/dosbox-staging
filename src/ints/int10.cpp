@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ static Bitu call_10;
 static bool warned_ff=false;
 
 static Bitu INT10_Handler(void) {
+	INT10_SetCurMode();
 #if 0
 	switch (reg_ah) {
 	case 0x02:
@@ -191,9 +192,11 @@ static Bitu INT10_Handler(void) {
 		case 0x1B:							/* PERFORM GRAY-SCALE SUMMING */
 			INT10_PerformGrayScaleSumming(reg_bx,reg_cx);
 			break;
-		case 0xF0:							/* ET4000: SET HiColor GRAPHICS MODE */
-		case 0xF1:							/* ET4000: GET DAC TYPE */
-		case 0xF2:							/* ET4000: CHECK/SET HiColor MODE */
+		case 0xF0: case 0xF1: case 0xF2: /* ET4000 Sierra HiColor DAC support */
+			if (svgaCard == SVGA_TsengET4K && svga.int10_extensions) {
+				svga.int10_extensions();
+				break;
+			}
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 10:Unhandled EGA/VGA Palette Function %2X",reg_al);
 			break;
@@ -433,6 +436,35 @@ graphics_chars:
 			reg_al=0x12; // success
 			break;
 		}
+#if 0 /* TODO: For Tseng ET4000 emulation. ET4000 W32p driver uses it. */
+/*
+
+   INT 10 - Tseng ET-4000 BIOS - GET/SET SCREEN REFRESH RATE
+
+   AH = 12h
+   BL = F1h
+   AL = subfunction
+   00h set refresh rate
+   01h get refresh rate
+   BH = video mode
+   00h	 640x480
+   01h	 800x600
+   02h	 1024x768
+   03h	 1280x1024
+   CX = new refresh rate (see #00035) if AL = 00h
+Return: AL = 12h if supported
+CX = current rate (for AL=00h, a changed CX indicates failure)
+
+Values for Tseng ET4000 refresh rate:
+CX	640x480	800x600	  1024x768/1280x1024
+00h	60 Hz	 56 Hz	   interlaced
+01h	72 Hz	 60 Hz	   60 Hz
+02h	75 Hz	 72 Hz	   70 Hz
+03h	90 Hz	 75 Hz	   75 Hz
+04h	--	 90 Hz	   --
+
+ */
+#endif
 		default:
 			LOG(LOG_INT10,LOG_ERROR)("Function 12:Call %2X not handled",reg_bl);
 			if (machine!=MCH_EGA) reg_al=0;
@@ -444,45 +476,8 @@ graphics_chars:
 		break;
 	case 0x1A:								/* Display Combination */
 		if (!IS_VGA_ARCH) break;
-		if (reg_al==0) {	// get dcc
-			// walk the tables...
-			RealPt vsavept=real_readd(BIOSMEM_SEG,BIOSMEM_VS_POINTER);
-			RealPt svstable=real_readd(RealSeg(vsavept),RealOff(vsavept)+0x10);
-			if (svstable) {
-				RealPt dcctable=real_readd(RealSeg(svstable),RealOff(svstable)+0x02);
-				Bit8u entries=real_readb(RealSeg(dcctable),RealOff(dcctable)+0x00);
-				Bit8u idx=real_readb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX);
-				// check if index within range
-				if (idx<entries) {
-					Bit16u dccentry=real_readw(RealSeg(dcctable),RealOff(dcctable)+0x04+idx*2);
-					if ((dccentry&0xff)==0) reg_bx=dccentry>>8;
-					else reg_bx=dccentry;
-				} else reg_bx=0xffff;
-			} else reg_bx=0xffff;
-			reg_ax=0x1A;	// high part destroyed or zeroed depending on BIOS
-		} else if (reg_al==1) {	// set dcc
-			Bit8u newidx=0xff;
-			// walk the tables...
-			RealPt vsavept=real_readd(BIOSMEM_SEG,BIOSMEM_VS_POINTER);
-			RealPt svstable=real_readd(RealSeg(vsavept),RealOff(vsavept)+0x10);
-			if (svstable) {
-				RealPt dcctable=real_readd(RealSeg(svstable),RealOff(svstable)+0x02);
-				Bit8u entries=real_readb(RealSeg(dcctable),RealOff(dcctable)+0x00);
-				if (entries) {
-					Bitu ct;
-					Bit16u swpidx=reg_bh|(reg_bl<<8);
-					// search the ddc index in the dcc table
-					for (ct=0; ct<entries; ct++) {
-						Bit16u dccentry=real_readw(RealSeg(dcctable),RealOff(dcctable)+0x04+ct*2);
-						if ((dccentry==reg_bx) || (dccentry==swpidx)) {
-							newidx=(Bit8u)ct;
-							break;
-						}
-					}
-				}
-			}
-
-			real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,newidx);
+		if (reg_al<2) {
+			INT10_DisplayCombinationCode(&reg_bx,(reg_al==1));
 			reg_ax=0x1A;	// high part destroyed or zeroed depending on BIOS
 		}
 		break;
@@ -525,7 +520,8 @@ graphics_chars:
 		}
 		break;
 	case 0x4f:								/* VESA Calls */
-		if ((!IS_VGA_ARCH) || (svgaCard!=SVGA_S3Trio)) break;
+		if ((!IS_VGA_ARCH) || (svgaCard!=SVGA_S3Trio))
+			break;
 		switch (reg_al) {
 		case 0x00:							/* Get SVGA Information */
 			reg_al=0x4f;
@@ -586,6 +582,7 @@ graphics_chars:
 		case 0x07:
 			switch (reg_bl) {
 			case 0x80:						/* Set Display Start during retrace ?? */
+				LOG(LOG_INT10,LOG_ERROR)("Unhandled VESA Function %X Subfunction %X",reg_al,reg_bh);
 			case 0x00:						/* Set display Start */
 				reg_al=0x4f;
 				reg_ah=VESA_SetDisplayStart(reg_cx,reg_dx);
@@ -705,11 +702,10 @@ static void INT10_Seg40Init(void) {
 	// Set the basic screen we have
 	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0xF9);
 	// Set the basic modeset options
-	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,0x51);
+	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,0x51); // why is display switching enabled (bit 6) ?
 	// Set the  default MSR
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x09);
 }
-
 
 static void INT10_InitVGA(void) {
 	if (IS_EGAVGA_ARCH) {
@@ -747,6 +743,13 @@ static void SetupTandyBios(void) {
 	}
 }
 
+bool MEM_map_ROM_physmem(Bitu start,Bitu end);
+
+extern Bitu VGA_BIOS_Size;
+extern Bitu VGA_BIOS_SEG;
+extern Bitu VGA_BIOS_SEG_END;
+extern bool VIDEO_BIOS_disable;
+
 void INT10_Init(Section* /*sec*/) {
 	INT10_InitVGA();
 	if (IS_TANDY_ARCH) SetupTandyBios();
@@ -759,5 +762,20 @@ void INT10_Init(Section* /*sec*/) {
 	INT10_Seg40Init();
 	INT10_SetupVESA();
 	INT10_SetupRomMemoryChecksum();//SetupVesa modifies the rom as well.
+	INT10_SetupBasicVideoParameterTable();
+
+	if (int10.rom.used > VGA_BIOS_Size) /* <- this is fatal, it means the Setup() functions scrozzled over the adjacent ROM or RAM area */
+		E_Exit("VGA BIOS size too small");
+
+	if (VGA_BIOS_Size > 0) {
+		LOG_MSG("VGA BIOS occupies segment 0x%04x-0x%04x\n",VGA_BIOS_SEG,VGA_BIOS_SEG_END-1);
+		if (!MEM_map_ROM_physmem(0xC0000,0xC0000+VGA_BIOS_Size-1))
+			LOG_MSG("INT 10 video: unable to map BIOS\n");
+	}
+	else {
+		LOG_MSG("Not mapping VGA BIOS\n");
+	}
+
 	INT10_SetVideoMode(0x3);
 }
+

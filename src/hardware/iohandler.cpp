@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -160,7 +160,7 @@ static struct {
 	IOF_Entry entries[IOF_QUEUESIZE];
 } iof_queue;
 
-static Bits IOFaultCore(void) {
+Bits IOFaultCore(void) {
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=1;
 	Bits ret=CPU_Core_Full_Run();
@@ -179,29 +179,6 @@ static Bits IOFaultCore(void) {
 /* Some code to make io operations take some virtual time. Helps certain
  * games with their timing of certain operations
  */
-
-
-#define IODELAY_READ_MICROS 1.0
-#define IODELAY_WRITE_MICROS 0.75
-
-inline void IO_USEC_read_delay_old() {
-	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_READ_MICROS*1000.0))) {
-		// this could be calculated whenever CPU_CycleMax changes
-		Bits delaycyc = static_cast<Bits>((CPU_CycleMax/1000)*IODELAY_READ_MICROS);
-		if(CPU_Cycles > delaycyc) CPU_Cycles -= delaycyc;
-		else CPU_Cycles = 0;
-	}
-}
-
-inline void IO_USEC_write_delay_old() {
-	if(CPU_CycleMax > static_cast<Bit32s>((IODELAY_WRITE_MICROS*1000.0))) {
-		// this could be calculated whenever CPU_CycleMax changes
-		Bits delaycyc = static_cast<Bits>((CPU_CycleMax/1000)*IODELAY_WRITE_MICROS);
-		if(CPU_Cycles > delaycyc) CPU_Cycles -= delaycyc;
-		else CPU_Cycles = 0;
-	}
-}
-
 
 #define IODELAY_READ_MICROSk (Bit32u)(1024/1.0)
 #define IODELAY_WRITE_MICROSk (Bit32u)(1024/0.75)
@@ -521,3 +498,4 @@ void IO_Init(Section * sect) {
 	test = new IO(sect);
 	sect->AddDestroyFunction(&IO_Destroy);
 }
+

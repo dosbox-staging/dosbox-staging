@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,68 +19,85 @@
 #ifndef DOSBOX_PCI_H
 #define DOSBOX_PCI_H
 
-//#define PCI_FUNCTIONALITY_ENABLED 0
-
-#if defined PCI_FUNCTIONALITY_ENABLED
-
-#define PCI_MAX_PCIDEVICES		10
-#define PCI_MAX_PCIFUNCTIONS	8
-
+#define PCI_MAX_PCIBUSSES		256
+#define PCI_MAX_PCIDEVICES		32
+#define PCI_MAX_PCIFUNCTIONS		8
 
 class PCI_Device {
-private:
-	Bits pci_id, pci_subfunction;
-	Bit16u vendor_id, device_id;
-
-	// subdevices declarations, they will respond to pci functions 1 to 7
-	// (main device is attached to function 0)
-	Bitu num_subdevices;
-	PCI_Device* subdevices[PCI_MAX_PCIFUNCTIONS-1];
-
 public:
+	/* configuration space */
+	unsigned char config[256];
+	unsigned char config_writemask[256];
+
 	PCI_Device(Bit16u vendor, Bit16u device);
+	virtual ~PCI_Device();
 
-	Bits PCIId(void) {
-		return pci_id;
+	/* configuration space assistant functions */
+
+	Bit16u getDeviceID() {
+		return host_readw(config + 0x02);
 	}
-	Bits PCISubfunction(void) {
-		return pci_subfunction;
-	}
-	Bit16u VendorID(void) {
-		return vendor_id;
-	}
-	Bit16u DeviceID(void) {
-		return device_id;
+	void setDeviceID(const Bit16u device) {
+		return host_writew(config + 0x02,device);
 	}
 
-	void SetPCIId(Bitu number, Bits subfct);
-
-	bool AddSubdevice(PCI_Device* dev);
-	void RemoveSubdevice(Bits subfct);
-
-	PCI_Device* GetSubdevice(Bits subfct);
-
-	Bit16u NumSubdevices(void) {
-		if (num_subdevices>PCI_MAX_PCIFUNCTIONS-1) return (Bit16u)(PCI_MAX_PCIFUNCTIONS-1);
-		return (Bit16u)num_subdevices;
+	Bit16u getVendorID() {
+		return host_readw(config + 0x00);
+	}
+	void setVendorID(const Bit16u vendor) {
+		return host_writew(config + 0x00,vendor);
 	}
 
-	Bits GetNextSubdeviceNumber(void) {
-		if (num_subdevices>=PCI_MAX_PCIFUNCTIONS-1) return -1;
-		return (Bits)num_subdevices+1;
+	/* configuration space I/O */
+	virtual void config_write(Bit8u regnum,Bitu iolen,Bit32u value) {
+		if (iolen == 1) {
+			/* only allow writing to the bits marked off as writeable */
+			config[regnum] = (config[regnum] & (~config_writemask[regnum])) + (config_writemask[regnum] & value);
+		}
+		else if (iolen == 4 && (regnum&3) == 2) { /* unaligned DWORD write (subdividable into two WORD writes) */
+			config_write(regnum,2,value&0xFFFF);
+			config_write(regnum+2,2,value>>16);
+		}
+		else {
+			/* subdivide into 8-bit I/O */
+			/* NTS: If I recall, this virtual function call means that we'll call the
+			 *      C++ subclass's config_write() NOT our own--right? */
+			for (Bitu i=0;i < iolen;i++) {
+				config_write(regnum+i,1,value&0xFF);
+				value >>= 8U;
+			}
+		}
 	}
+	virtual Bit32u config_read(Bit8u regnum,Bitu iolen) {
+		/* subdivide into 8-bit I/O */
+		Bit32u v=0;
 
-	virtual Bits ParseReadRegister(Bit8u regnum)=0;
-	virtual bool OverrideReadRegister(Bit8u regnum, Bit8u* rval, Bit8u* rval_mask)=0;
-	virtual Bits ParseWriteRegister(Bit8u regnum,Bit8u value)=0;
-	virtual bool InitializeRegisters(Bit8u registers[256])=0;
+		if (iolen == 1)
+			return config[regnum];
+		else if (iolen == 4 && (regnum&3) == 2) { /* unaligned DWORD read (subdividable into two WORD reads) */
+			v = config_read(regnum,2);
+			v += config_read(regnum+2,2) << 16;
+		}
+		else {
+			/* NTS: If I recall, this virtual function call means that we'll call the
+			 *      C++ subclass's config_read() NOT our own--right? */
+			for (Bitu i=0;i < iolen;i++)
+				v += ((config_read(regnum+i,1)&0xFF) << ((iolen-i-1)*8));
+		}
 
+		return v;
+	}
 };
 
 bool PCI_IsInitialized();
+
+void PCI_AddSVGAS3_Device(void);
+void PCI_RemoveSVGAS3_Device(void);
+
+void PCI_AddSST_Device(Bitu type);
+void PCI_RemoveSST_Device(void);
 
 RealPt PCI_GetPModeInterface(void);
 
 #endif
 
-#endif
