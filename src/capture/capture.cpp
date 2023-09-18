@@ -205,7 +205,9 @@ static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 		lowcase(stem);
 		if (starts_with(stem, filename_start)) {
 			const auto index = to_int(strip_prefix(stem, filename_start));
-			highest_index = std::max(highest_index, *index);
+			if (index) {
+				highest_index = std::max(highest_index, *index);
+			}
 		}
 	}
 	return highest_index;
