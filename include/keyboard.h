@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,7 +43,27 @@ enum KBD_KEYS {
 	KBD_kp1,KBD_kp2,KBD_kp3,KBD_kp4,KBD_kp5,KBD_kp6,KBD_kp7,KBD_kp8,KBD_kp9,KBD_kp0,
 	KBD_kpdivide,KBD_kpmultiply,KBD_kpminus,KBD_kpplus,KBD_kpenter,KBD_kpperiod,
 
-	
+	/* Windows 95 keys */
+	KBD_lwindows,KBD_rwindows,KBD_rwinmenu,
+
+	/* other bindings */
+	KBD_kpequals,
+
+	/* F13-F24 */
+	KBD_f13,KBD_f14,KBD_f15,KBD_f16,
+	KBD_f17,KBD_f18,KBD_f19,KBD_f20,
+	KBD_f21,KBD_f22,KBD_f23,KBD_f24,
+
+	/* Japanese [see http://www.stanford.edu/class/cs140/projects/pintos/specs/kbd/scancodes-7.html] */
+	KBD_jp_hankaku,		/* Hankaku/zenkaku (half-width/full-width) */
+	KBD_jp_muhenkan,	/* Muhenkan (No conversion from kana to kanji) */
+	KBD_jp_henkan,		/* Henkan/zenkouho (Conversion from kana to kanji, shifted: previous candidate, alt: all candidates) */
+	KBD_jp_hiragana,	/* Hiragana/Katakana (Hiragana, shifted: Katakana, alt: romaji) */
+
+	/* Korean */
+	KBD_kor_hancha,		/* Hancha */
+	KBD_kor_hanyong,	/* Han/yong */
+
 	KBD_LAST
 };
 

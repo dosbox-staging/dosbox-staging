@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,6 +16,9 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
+/* TODO: If biosps2=true and aux=false, also allow an option (default disabled)
+ *       where if set, we don't bother to fire IRQ 12 at all but simply call the
+ *       device callback directly. */
 
 #include <string.h>
 #include <math.h>
@@ -32,6 +35,26 @@
 #include "int10.h"
 #include "bios.h"
 #include "dos_inc.h"
+#include "support.h"
+#include "setup.h"
+ 
+/* ints/bios.cpp */
+void bios_enable_ps2();
+
+/* hardware/keyboard.cpp */
+void AUX_INT33_Takeover();
+int KEYBOARD_AUX_Active();
+void KEYBOARD_AUX_Event(float x,float y,Bitu buttons);
+
+bool en_int33=false;
+bool en_bios_ps2mouse=false;
+
+void DisableINT33() {
+	if (en_int33) {
+		en_int33 = false;
+		/* TODO: Also unregister INT 33h handler */
+	}
+}
 
 static Bitu call_int33,call_int74,int74_ret_callback,call_mouse_bd;
 static Bit16u ps2cbseg,ps2cbofs;
@@ -41,6 +64,9 @@ static RealPt ps2_callback;
 static Bit16s oldmouseX, oldmouseY;
 // forward
 void WriteMouseIntVector(void);
+
+// serial mouse emulation
+void on_mouse_event_for_serial(int delta_x,int delta_y,Bit8u buttonstate);
 
 struct button_event {
 	Bit8u type;
@@ -90,6 +116,7 @@ static struct {
 	Bit16s min_x,max_x,min_y,max_y;
 	float mickey_x,mickey_y;
 	float x,y;
+	float ps2x,ps2y;
 	button_event event_queue[QUEUE_SIZE];
 	Bit8u events;//Increase if QUEUE_SIZE >255 (currently 32)
 	Bit16u sub_seg,sub_ofs;
@@ -152,8 +179,11 @@ void Mouse_ChangePS2Callback(Bit16u pseg, Bit16u pofs) {
 	Mouse_AutoLock(ps2callbackinit);
 }
 
+/* set to true in case of shitty INT 15h device callbacks that fail to preserve CPU registers */
+bool ps2_callback_save_regs = false;
+
 void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {
-	if (useps2callback) {
+	if (useps2callback && ps2cbseg != 0 && ps2cbofs != 0) {
 		Bit16u mdat = (data & 0x03) | 0x08;
 		Bit16s xdiff = mouseX-oldmouseX;
 		Bit16s ydiff = oldmouseY-mouseY;
@@ -171,6 +201,11 @@ void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {
 			ydiff = (0x100+ydiff);
 			mdat |= 0x20;
 		}
+		if (ps2_callback_save_regs) {
+			CPU_Push16(reg_ax);CPU_Push16(reg_cx);CPU_Push16(reg_dx);CPU_Push16(reg_bx);
+			CPU_Push16(reg_bp);CPU_Push16(reg_si);CPU_Push16(reg_di);
+			CPU_Push16(SegValue(ds)); CPU_Push16(SegValue(es));
+		}
 		CPU_Push16((Bit16u)mdat); 
 		CPU_Push16((Bit16u)(xdiff % 256)); 
 		CPU_Push16((Bit16u)(ydiff % 256)); 
@@ -184,6 +219,11 @@ void DoPS2Callback(Bit16u data, Bit16s mouseX, Bit16s mouseY) {
 
 Bitu PS2_Handler(void) {
 	CPU_Pop16();CPU_Pop16();CPU_Pop16();CPU_Pop16();// remove the 4 words
+	if (ps2_callback_save_regs) {
+		SegSet16(es,CPU_Pop16()); SegSet16(ds,CPU_Pop16());
+		reg_di=CPU_Pop16();reg_si=CPU_Pop16();reg_bp=CPU_Pop16();
+		reg_bx=CPU_Pop16();reg_dx=CPU_Pop16();reg_cx=CPU_Pop16();reg_ax=CPU_Pop16();
+	}
 	return CBRET_NONE;
 }
 
@@ -446,13 +486,23 @@ void DrawCursor() {
 	RestoreVgaRegisters();
 }
 
+/* FIXME: Re-test this code */
 void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
+	extern bool Mouse_Vertical;
 	float dx = xrel * mouse.pixelPerMickey_x;
-	float dy = yrel * mouse.pixelPerMickey_y;
+	float dy = (Mouse_Vertical?-yrel:yrel) * mouse.pixelPerMickey_y;
+
+	if (KEYBOARD_AUX_Active()) {
+		KEYBOARD_AUX_Event(xrel,yrel,mouse.buttons);
+		return;
+	}
 
 	if((fabs(xrel) > 1.0) || (mouse.senv_x < 1.0)) dx *= mouse.senv_x;
 	if((fabs(yrel) > 1.0) || (mouse.senv_y < 1.0)) dy *= mouse.senv_y;
 	if (useps2callback) dy *= 2;	
+
+	/* serial mouse, if connected, also wants to know about it */
+	on_mouse_event_for_serial((int)(dx),(int)(dy*2),mouse.buttons);
 
 	mouse.mickey_x += (dx * mouse.mickeysPerPixel_x);
 	mouse.mickey_y += (dy * mouse.mickeysPerPixel_y);
@@ -460,6 +510,7 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 	else if (mouse.mickey_x <= -32769.0) mouse.mickey_x += 65536.0;
 	if (mouse.mickey_y >= 32768.0) mouse.mickey_y -= 65536.0;
 	else if (mouse.mickey_y <= -32769.0) mouse.mickey_y += 65536.0;
+
 	if (emulate) {
 		mouse.x += dx;
 		mouse.y += dy;
@@ -483,28 +534,41 @@ void Mouse_CursorMoved(float xrel,float yrel,float x,float y,bool emulate) {
 
 	/* ignore constraints if using PS2 mouse callback in the bios */
 
-	if (!useps2callback) {		
-		if (mouse.x > mouse.max_x) mouse.x = mouse.max_x;
-		if (mouse.x < mouse.min_x) mouse.x = mouse.min_x;
-		if (mouse.y > mouse.max_y) mouse.y = mouse.max_y;
-		if (mouse.y < mouse.min_y) mouse.y = mouse.min_y;
-	} else {
-		if (mouse.x >= 32768.0) mouse.x -= 65536.0;
-		else if (mouse.x <= -32769.0) mouse.x += 65536.0;
-		if (mouse.y >= 32768.0) mouse.y -= 65536.0;
-		else if (mouse.y <= -32769.0) mouse.y += 65536.0;
-	}
-	Mouse_AddEvent(MOUSE_HAS_MOVED);
-	DrawCursor();
-}
+	if (mouse.x > mouse.max_x) mouse.x = mouse.max_x;
+	if (mouse.x < mouse.min_x) mouse.x = mouse.min_x;
+	if (mouse.y > mouse.max_y) mouse.y = mouse.max_y;
+	if (mouse.y < mouse.min_y) mouse.y = mouse.min_y;
 
-void Mouse_CursorSet(float x,float y) {
-	mouse.x=x;
-	mouse.y=y;
-	DrawCursor();
+	mouse.ps2x += xrel;
+	mouse.ps2y += yrel;
+	if (mouse.ps2x >= 32768.0)       mouse.ps2x -= 65536.0;
+	else if (mouse.ps2x <= -32769.0) mouse.ps2x += 65536.0;
+	if (mouse.ps2y >= 32768.0)       mouse.ps2y -= 65536.0;
+	else if (mouse.ps2y <= -32769.0) mouse.ps2y += 65536.0;
+
+	Mouse_AddEvent(MOUSE_HAS_MOVED);
 }
 
 void Mouse_ButtonPressed(Bit8u button) {
+	if (KEYBOARD_AUX_Active()) {
+		switch (button) {
+			case 0:
+				mouse.buttons|=1;
+				break;
+			case 1:
+				mouse.buttons|=2;
+				break;
+			case 2:
+				mouse.buttons|=4;
+				break;
+			default:
+				return;
+		}
+
+		KEYBOARD_AUX_Event(0,0,mouse.buttons);
+		return;
+	}
+
 	switch (button) {
 #if (MOUSE_BUTTONS >= 1)
 	case 0:
@@ -530,9 +594,31 @@ void Mouse_ButtonPressed(Bit8u button) {
 	mouse.times_pressed[button]++;
 	mouse.last_pressed_x[button]=POS_X;
 	mouse.last_pressed_y[button]=POS_Y;
+
+	/* serial mouse, if connected, also wants to know about it */
+	on_mouse_event_for_serial(0,0,mouse.buttons);
 }
 
 void Mouse_ButtonReleased(Bit8u button) {
+	if (KEYBOARD_AUX_Active()) {
+		switch (button) {
+			case 0:
+				mouse.buttons&=~1;
+				break;
+			case 1:
+				mouse.buttons&=~2;
+				break;
+			case 2:
+				mouse.buttons&=~4;
+				break;
+			default:
+				return;
+		}
+
+		KEYBOARD_AUX_Event(0,0,mouse.buttons);
+		return;
+	}
+
 	switch (button) {
 #if (MOUSE_BUTTONS >= 1)
 	case 0:
@@ -558,6 +644,9 @@ void Mouse_ButtonReleased(Bit8u button) {
 	mouse.times_released[button]++;	
 	mouse.last_released_x[button]=POS_X;
 	mouse.last_released_y[button]=POS_Y;
+
+	/* serial mouse, if connected, also wants to know about it */
+	on_mouse_event_for_serial(0,0,mouse.buttons);
 }
 
 static void Mouse_SetMickeyPixelRate(Bit16s px, Bit16s py){
@@ -663,11 +752,6 @@ void Mouse_NewVideoMode(void) {
 	mouse.cursorType = 0;
 	mouse.enabled=true;
 	mouse.oldhidden=1;
-
-	oldmouseX = static_cast<Bit16s>(mouse.x);
-	oldmouseY = static_cast<Bit16s>(mouse.y);
-
-
 }
 
 //Much too empty, Mouse_NewVideoMode contains stuff that should be in here
@@ -692,14 +776,20 @@ static void Mouse_Reset(void) {
 
 static Bitu INT33_Handler(void) {
 //	LOG(LOG_MOUSE,LOG_NORMAL)("MOUSE: %04X %X %X %d %d",reg_ax,reg_bx,reg_cx,POS_X,POS_Y);
+	INT10_SetCurMode();
 	switch (reg_ax) {
 	case 0x00:	/* Reset Driver and Read Status */
 		Mouse_ResetHardware(); /* fallthrough */
 	case 0x21:	/* Software Reset */
-		reg_ax=0xffff;
-		reg_bx=MOUSE_BUTTONS;
-		Mouse_Reset();
-		Mouse_AutoLock(true);
+		extern bool Mouse_Drv;
+		if (Mouse_Drv) {
+			reg_ax=0xffff;
+			reg_bx=MOUSE_BUTTONS;
+			Mouse_Reset();
+			Mouse_AutoLock(true);
+			AUX_INT33_Takeover();
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("INT 33h reset");
+		}
 		break;
 	case 0x01:	/* Show Mouse */
 		if(mouse.hidden) mouse.hidden--;
@@ -1010,6 +1100,15 @@ static Bitu MOUSE_BD_Handler(void) {
 static Bitu INT74_Handler(void) {
 	if (mouse.events>0) {
 		mouse.events--;
+
+		/* INT 33h emulation: HERE within the IRQ 12 handler is the appropriate place to
+		 * redraw the cursor. OSes like Windows 3.1 expect real-mode code to do it in
+		 * response to IRQ 12, not "out of the blue" from the SDL event handler like
+		 * the original DOSBox code did it. Doing this allows the INT 33h emulation
+		 * to draw the cursor while not causing Windows 3.1 to crash or behave
+		 * erratically. */
+		if (en_int33) DrawCursor();
+
 		/* Check for an active Interrupt Handler that will get called */
 		if (mouse.sub_mask & mouse.event_queue[mouse.events].type) {
 			reg_ax=mouse.event_queue[mouse.events].type;
@@ -1027,7 +1126,7 @@ static Bitu INT74_Handler(void) {
 		} else if (useps2callback) {
 			CPU_Push16(RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			CPU_Push16(RealOff(CALLBACK_RealPointer(int74_ret_callback)));
-			DoPS2Callback(mouse.event_queue[mouse.events].buttons, static_cast<Bit16s>(mouse.x), static_cast<Bit16s>(mouse.y));
+			DoPS2Callback(mouse.event_queue[mouse.events].buttons, static_cast<Bit16s>(mouse.ps2x), static_cast<Bit16s>(mouse.ps2y));
 		} else {
 			SegSet16(cs, RealSeg(CALLBACK_RealPointer(int74_ret_callback)));
 			reg_ip = RealOff(CALLBACK_RealPointer(int74_ret_callback));
@@ -1050,14 +1149,41 @@ Bitu MOUSE_UserInt_CB_Handler(void) {
 	return CBRET_NONE;
 }
 
-void MOUSE_Init(Section* /*sec*/) {
-	// Callback for mouse interrupt 0x33
-	call_int33=CALLBACK_Allocate();
-//	RealPt i33loc=RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10);
-	RealPt i33loc=RealMake(DOS_GetMemory(0x1)-1,0x10);
-	CALLBACK_Setup(call_int33,&INT33_Handler,CB_MOUSE,Real2Phys(i33loc),"Mouse");
-	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
-	real_writed(0,0x33<<2,i33loc);
+bool MouseTypeNone();
+
+void MOUSE_Init(Section* sec) {
+	Section_prop *section=static_cast<Section_prop *>(sec);
+	RealPt i33loc=0;
+
+	if (en_int33=section->Get_bool("int33")) {
+		LOG(LOG_KEYBOARD,LOG_NORMAL)("INT 33H emulation enabled");
+	}
+
+	/* NTS: This assumes MOUSE_Init() is called after KEYBOARD_Init() */
+	if (en_bios_ps2mouse=section->Get_bool("biosps2")) {
+		if (MouseTypeNone()) {
+			LOG(LOG_KEYBOARD,LOG_WARN)("INT 15H PS/2 emulation NOT enabled. biosps2=1 but mouse type=none");
+		}
+		else {
+			LOG(LOG_KEYBOARD,LOG_NORMAL)("INT 15H PS/2 emulation enabled");
+			bios_enable_ps2();
+		}
+	}
+
+	ps2_callback_save_regs = section->Get_bool("int15 mouse callback does not preserve registers");
+
+	if (en_int33) {
+		// Callback for mouse interrupt 0x33
+		call_int33=CALLBACK_Allocate();
+		// i33loc=RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10);
+		i33loc=RealMake(DOS_GetMemory(0x1,"i33loc")-1,0x10);
+		CALLBACK_Setup(call_int33,&INT33_Handler,CB_MOUSE,Real2Phys(i33loc),"Mouse");
+		// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
+		real_writed(0,0x33<<2,i33loc);
+	}
+	else {
+		call_int33=0;
+	}
 
 	call_mouse_bd=CALLBACK_Allocate();
 	CALLBACK_Setup(call_mouse_bd,&MOUSE_BD_Handler,CB_RETF8,
@@ -1114,7 +1240,13 @@ void MOUSE_Init(Section* /*sec*/) {
 	mouse.sub_seg=0x6362;	// magic value
 	mouse.sub_ofs=0;
 
+	oldmouseX = oldmouseY = 0;
+	mouse.ps2x = mouse.ps2y = 0;
+
 	Mouse_ResetHardware();
 	Mouse_Reset();
 	Mouse_SetSensitivity(50,50,50);
 }
+
+void *MOUSE_Limit_Events_PIC_Event = (void*)MOUSE_Limit_Events;
+

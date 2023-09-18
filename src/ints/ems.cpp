@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include "dosbox.h"
@@ -131,7 +131,7 @@ bool device_EMM::ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retco
 		case 0x01: {
 			if (!is_emm386) return false;
 			if (size!=6) return false;
-			if (GEMMIS_seg==0) GEMMIS_seg=DOS_GetMemory(0x20);
+			if (GEMMIS_seg==0) GEMMIS_seg=DOS_GetMemory(0x20,"GEMMIS_seg");
 			PhysPt GEMMIS_addr=PhysMake(GEMMIS_seg,0);
 
 			mem_writew(GEMMIS_addr+0x00,0x0004);			// flags
@@ -236,6 +236,23 @@ static bool INLINE ValidHandle(Bit16u handle) {
 	return true;
 }
 
+void EMS_ZeroAllocation(MemHandle mem,unsigned int pages) {
+	PhysPt address;
+
+	if (pages == 0) return;
+	address = mem*4096;
+	pages *= 4096;
+
+	if ((address+pages) > 0xC0000000) E_Exit("EMS_ZeroAllocation out of range");
+	while (pages != 0) {
+		mem_writeb(address++,0);
+		pages--;
+	}
+}
+
+extern bool dbg_zero_on_ems_allocmem;
+
+/* NTS: "page" in EMS refers to 16KB regions, not the 4KB memory pages we normally work with */
 static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & dhandle,bool can_allocate_zpages) {
 	/* Check for 0 page allocation */
 	if (!pages) {
@@ -252,6 +269,7 @@ static Bit8u EMM_AllocateMemory(Bit16u pages,Bit16u & dhandle,bool can_allocate_
 	if (pages) {
 		mem = MEM_AllocatePages(pages*4,false);
 		if (!mem) E_Exit("EMS:Memory allocation failure");
+		else if (dbg_zero_on_ems_allocmem) EMS_ZeroAllocation(mem,pages*4);
 	}
 	emm_handles[handle].pages = pages;
 	emm_handles[handle].mem = mem;
@@ -951,7 +969,7 @@ static Bitu INT67_Handler(void) {
 				break;
 			case 0x0c: {	/* VCPI Switch from V86 to Protected Mode */
 				reg_flags&=(~FLAG_IF);
-				cpu.cpl=0;
+				CPU_SetCPL(0);
 
 				/* Read data from ESI (linear address) */
 				Bit32u new_cr3=mem_readd(reg_esi);
@@ -1307,6 +1325,7 @@ private:
 	/* location in protected unfreeable memory where the ems name and callback are
 	 * stored  32 bytes.*/
 	static Bit16u ems_baseseg;
+	unsigned int oshandle_memsize_16kb;
 	RealPt old4b_pointer,old67_pointer;
 	CALLBACK_HandlerObject call_vdma,call_vcpi,call_v86mon;
 	Bitu call_int67;
@@ -1334,7 +1353,18 @@ public:
 		}
 		BIOS_ZeroExtendedSize(true);
 
-		if (!ems_baseseg) ems_baseseg=DOS_GetMemory(2);	//We have 32 bytes
+		dbg_zero_on_ems_allocmem = section->Get_bool("zero memory on ems memory allocation");
+
+		if (dbg_zero_on_ems_allocmem) {
+			LOG_MSG("Debug option enabled: EMS memory allocation will always clear memory block before returning\n");
+		}
+
+		oshandle_memsize_16kb = section->Get_int("ems system handle memory size");
+		/* convert KB to 16KB pages */
+		oshandle_memsize_16kb = (oshandle_memsize_16kb+15)/16;
+		if (oshandle_memsize_16kb == 0) oshandle_memsize_16kb = 1;
+
+		if (!ems_baseseg) ems_baseseg=DOS_GetMemory(2,"ems_baseseg");	//We have 32 bytes
 
 		/* Add a little hack so it appears that there is an actual ems device installed */
 		char const* emsname="EMMXXXX0";
@@ -1365,7 +1395,7 @@ public:
 			emm_segmentmappings[i].handle=NULL_HANDLE;
 		}
 
-		EMM_AllocateSystemHandle(24);	// allocate OS-dedicated handle (ems handle zero, 384kb)
+		EMM_AllocateSystemHandle(oshandle_memsize_16kb);	// allocate OS-dedicated handle (ems handle zero, 384kb)
 
 		if (ems_type==3) {
 			DMA_SetWrapping(0xffffffff);	// emm386-bug that disables dma wrapping
@@ -1411,7 +1441,7 @@ public:
 				CPU_Push32(SegValue(cs));
 				CPU_Push32(reg_eip&0xffff);
 				/* Switch to V86-mode */
-				cpu.cpl=0;
+				CPU_SetCPL(0);
 				CPU_IRET(true,0);
 			}
 		}
@@ -1451,21 +1481,30 @@ public:
 			CPU_SET_CRX(3, 0);
 			reg_flags&=(~(FLAG_IOPL|FLAG_VM));
 			CPU_LIDT(0x3ff, 0);
-			cpu.cpl=0;
+			CPU_SetCPL(0);
 		}
 	}
 };
 		
-static EMS* test;
+static EMS* test = NULL;
+
+void EMS_DoShutDown() {
+	if (test != NULL) {
+		delete test;
+		test = NULL;
+	}
+}
 
 void EMS_ShutDown(Section* /*sec*/) {
-	delete test;	
+	EMS_DoShutDown();
 }
 
 void EMS_Init(Section* sec) {
+	assert(test == NULL);
 	test = new EMS(sec);
 	sec->AddDestroyFunction(&EMS_ShutDown,true);
 }
 
 //Initialize static members
 Bit16u EMS::ems_baseseg = 0;
+

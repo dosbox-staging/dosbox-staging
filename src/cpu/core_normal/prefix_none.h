@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1165,8 +1165,10 @@
 				else {GetEAa;Push_16(LoadMw(eaa));}
 				break;
 			default:
-				LOG(LOG_CPU,LOG_ERROR)("CPU:GRP5:Illegal Call %2X",which);
-				goto illegal_opcode;
+				//LOG(LOG_CPU,LOG_ERROR)("CPU:GRP5:Illegal Call %2X",which);
+				//goto illegal_opcode;
+				CPU_Exception(6,0);
+				continue;
 			}
 			break;
 		}

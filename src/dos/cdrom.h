@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -33,10 +33,6 @@
 #include "mixer.h"
 #include "SDL.h"
 #include "SDL_thread.h"
-
-#if defined(C_SDL_SOUND)
-#include "SDL_sound.h"
-#endif
 
 #define RAW_SECTOR_SIZE		2352
 #define COOKED_SECTOR_SIZE	2048
@@ -78,6 +74,8 @@ public:
 	virtual void	ChannelControl		(TCtrl ctrl) = 0;
 	
 	virtual bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num) = 0;
+	/* This is needed for IDE hack, who's buffer does not exist in DOS physical memory */
+	virtual bool	ReadSectorsHost			(void* buffer, bool raw, unsigned long sector, unsigned long num) = 0;
 
 	virtual bool	LoadUnloadMedia		(bool unload) = 0;
 	
@@ -102,6 +100,9 @@ public:
 	virtual bool	StopAudio			(void);
 	virtual void	ChannelControl		(TCtrl ctrl) { return; };
 	virtual bool	ReadSectors			(PhysPt /*buffer*/, bool /*raw*/, unsigned long /*sector*/, unsigned long /*num*/) { return false; };
+	/* This is needed for IDE hack, who's buffer does not exist in DOS physical memory */
+	virtual bool	ReadSectorsHost			(void* buffer, bool raw, unsigned long sector, unsigned long num);
+
 	virtual bool	LoadUnloadMedia		(bool unload);
 
 private:
@@ -128,6 +129,9 @@ public:
 	bool	StopAudio			(void) { return true; };
 	void	ChannelControl		(TCtrl ctrl) { return; };
 	bool	ReadSectors			(PhysPt /*buffer*/, bool /*raw*/, unsigned long /*sector*/, unsigned long /*num*/) { return true; };
+	/* This is needed for IDE hack, who's buffer does not exist in DOS physical memory */
+	bool	ReadSectorsHost			(void* buffer, bool raw, unsigned long sector, unsigned long num);
+
 	bool	LoadUnloadMedia		(bool /*unload*/) { return true; };
 };	
 
@@ -151,22 +155,7 @@ private:
 		BinaryFile();
 		std::ifstream *file;
 	};
-	
-	#if defined(C_SDL_SOUND)
-	class AudioFile : public TrackFile {
-	public:
-		AudioFile(const char *filename, bool &error);
-		~AudioFile();
-		bool read(Bit8u *buffer, int seek, int count);
-		int getLength();
-	private:
-		AudioFile();
-		Sound_Sample *sample;
-		int lastCount;
-		int lastSeek;
-	};
-	#endif
-	
+
 	struct Track {
 		int number;
 		int attr;
@@ -194,6 +183,8 @@ public:
 	bool	StopAudio		(void);
 	void	ChannelControl		(TCtrl ctrl);
 	bool	ReadSectors		(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
+	/* This is needed for IDE hack, who's buffer does not exist in DOS physical memory */
+	bool	ReadSectorsHost			(void* buffer, bool raw, unsigned long sector, unsigned long num);
 	bool	LoadUnloadMedia		(bool unload);
 	bool	ReadSector		(Bit8u *buffer, bool raw, unsigned long sector);
 	bool	HasDataTrack		(void);
@@ -266,7 +257,9 @@ public:
 	void	ChannelControl		(TCtrl ctrl) { return; };
 	
 	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
-
+	/* This is needed for IDE hack, who's buffer does not exist in DOS physical memory */
+	bool	ReadSectorsHost			(void* buffer, bool raw, unsigned long sector, unsigned long num);
+	
 	bool	LoadUnloadMedia		(bool unload);
 	
 private:
@@ -318,7 +311,9 @@ public:
 	
 	bool	ReadSector			(Bit8u *buffer, bool raw, unsigned long sector);
 	bool	ReadSectors			(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
-
+	/* This is needed for IDE hack, who's buffer does not exist in DOS physical memory */
+	bool	ReadSectorsHost			(void* buffer, bool raw, unsigned long sector, unsigned long num);
+	
 	bool	LoadUnloadMedia		(bool unload);
 
 	void	InitNewMedia		(void) { Close(); Open(); };
@@ -387,6 +382,8 @@ public:
 	bool	SetDevice		(char* path, int forceCD);
 	bool	GetUPC			(unsigned char& attr, char* upc);
 	bool	ReadSectors		(PhysPt buffer, bool raw, unsigned long sector, unsigned long num);
+	/* This is needed for IDE hack, who's buffer does not exist in DOS physical memory */
+	bool	ReadSectorsHost			(void* buffer, bool raw, unsigned long sector, unsigned long num);
 
 private:
 	char	device_name[512];

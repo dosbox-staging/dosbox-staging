@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,6 +18,10 @@
 
 #ifndef DOSBOX_LOGGING_H
 #define DOSBOX_LOGGING_H
+
+#include <stdio.h>
+#include "setup.h"
+
 enum LOG_TYPES {
 	LOG_ALL,
 	LOG_VGA, LOG_VGAGFX,LOG_VGAMISC,LOG_INT10,
@@ -28,6 +32,7 @@ enum LOG_TYPES {
 	LOG_MOUSE,LOG_BIOS,LOG_GUI,LOG_MISC,
 	LOG_IO,
 	LOG_PCI,
+	LOG_VOODOO,
 	LOG_MAX
 };
 
@@ -37,7 +42,19 @@ enum LOG_SEVERITIES {
 	LOG_ERROR
 };
 
+struct _LogGroup {
+	char const* front;
+	bool enabled;
+};
+
+extern _LogGroup loggrp[LOG_MAX];
+extern FILE* debuglog;
+
+void LOG_Destroy(Section*);
+void LOG_StartUp(void);
+
 #if C_DEBUG
+
 class LOG 
 { 
 	LOG_TYPES       d_type;
@@ -48,43 +65,42 @@ public:
 		d_type(type),
 		d_severity(severity)
 		{}
+
 	void operator() (char const* buf, ...) GCC_ATTRIBUTE(__format__(__printf__, 2, 3));  //../src/debug/debug_gui.cpp
-
 };
-
-void DEBUG_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
-#define LOG_MSG DEBUG_ShowMsg
 
 #else  //C_DEBUG
 
 struct LOG
 {
-	LOG(LOG_TYPES , LOG_SEVERITIES )										{ }
-	void operator()(char const* )													{ }
-	void operator()(char const* , double )											{ }
-	void operator()(char const* , double , double )								{ }
-	void operator()(char const* , double , double , double )					{ }
-	void operator()(char const* , double , double , double , double )					{ }
-	void operator()(char const* , double , double , double , double , double )					{ }
-	void operator()(char const* , double , double , double , double , double , double )					{ }
-	void operator()(char const* , double , double , double , double , double , double , double)					{ }
+	LOG(LOG_TYPES , LOG_SEVERITIES )								{ }
+	void operator() (char const* )									{ }
+	void operator() (char const* , double )								{ }
+	void operator() (char const* , double , double )						{ }
+	void operator() (char const* , double , double , double )					{ }
+	void operator() (char const* , double , double , double , double )				{ }
+	void operator() (char const* , double , double , double , double , double )			{ }
+	void operator() (char const* , double , double , double , double , double , double )		{ }
+	void operator() (char const* , double , double , double , double , double , double , double)	{ }
 
 
 
-	void operator()(char const* , char const* )									{ }
-	void operator()(char const* , char const* , double )							{ }
-	void operator()(char const* , char const* , double ,double )				{ }
-	void operator()(char const* , double , char const* )						{ }
-	void operator()(char const* , double , double, char const* )						{ }
-	void operator()(char const* , char const*, char const*)				{ }
+	void operator() (char const* , char const* )							{ }
+	void operator() (char const* , char const* , double )						{ }
+	void operator() (char const* , char const* , double ,double )					{ }
+	void operator() (char const* , double , char const* )						{ }
+	void operator() (char const* , double , double, char const* )					{ }
+	void operator() (char const* , char const*, char const*)					{ }
 
-	void operator()(char const* , double , double , double , char const* )					{ }
+	void operator() (char const* , double , double , double , char const* )				{ }
 }; //add missing operators to here
-	//try to avoid anything smaller than bit32...
-void GFX_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
-#define LOG_MSG GFX_ShowMsg
+//try to avoid anything smaller than bit32...
 
 #endif //C_DEBUG
 
+void					DEBUG_ShowMsg(char const* format,...) GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
+
+#define LOG_MSG				DEBUG_ShowMsg
 
 #endif //DOSBOX_LOGGING_H
+

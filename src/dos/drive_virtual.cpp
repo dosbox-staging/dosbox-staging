@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,14 @@ struct VFILE_Block {
 
 
 static VFILE_Block * first_file;	
+
+void VFILE_Shutdown(void) {
+	while (first_file != NULL) {
+		VFILE_Block *n = first_file->next;
+		delete first_file;
+		first_file = n;
+	}
+}
 
 void VFILE_Register(const char * name,Bit8u * data,Bit32u size) {
 	VFILE_Block * new_file=new VFILE_Block;
@@ -140,7 +148,7 @@ Virtual_Drive::Virtual_Drive() {
 }
 
 
-bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
+bool Virtual_Drive::FileOpen(DOS_File * * file,const char * name,Bit32u flags) {
 /* Scan through the internal list of files */
 	VFILE_Block * cur_file=first_file;
 	while (cur_file) {
@@ -155,23 +163,23 @@ bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,Bit32u flags) {
 	return false;
 }
 
-bool Virtual_Drive::FileCreate(DOS_File * * file,char * name,Bit16u attributes) {
+bool Virtual_Drive::FileCreate(DOS_File * * file,const char * name,Bit16u attributes) {
 	return false;
 }
 
-bool Virtual_Drive::FileUnlink(char * name) {
+bool Virtual_Drive::FileUnlink(const char * name) {
 	return false;
 }
 
-bool Virtual_Drive::RemoveDir(char * dir) {
+bool Virtual_Drive::RemoveDir(const char * dir) {
 	return false;
 }
 
-bool Virtual_Drive::MakeDir(char * dir) {
+bool Virtual_Drive::MakeDir(const char * dir) {
 	return false;
 }
 
-bool Virtual_Drive::TestDir(char * dir) {
+bool Virtual_Drive::TestDir(const char * dir) {
 	if (!dir[0]) return true;		//only valid dir is the empty dir
 	return false;
 }
@@ -200,7 +208,7 @@ bool Virtual_Drive::FileExists(const char* name){
 	return false;
 }
 
-bool Virtual_Drive::FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
+bool Virtual_Drive::FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 	search_file=first_file;
 	Bit8u attr;char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr,pattern);
@@ -231,7 +239,7 @@ bool Virtual_Drive::FindNext(DOS_DTA & dta) {
 	return false;
 }
 
-bool Virtual_Drive::GetFileAttr(char * name,Bit16u * attr) {
+bool Virtual_Drive::GetFileAttr(const char * name,Bit16u * attr) {
 	VFILE_Block * cur_file=first_file;
 	while (cur_file) {
 		if (strcasecmp(name,cur_file->name)==0) { 
@@ -243,7 +251,7 @@ bool Virtual_Drive::GetFileAttr(char * name,Bit16u * attr) {
 	return false;
 }
 
-bool Virtual_Drive::Rename(char * oldname,char * newname) {
+bool Virtual_Drive::Rename(const char * oldname,const char * newname) {
 	return false;
 }
 

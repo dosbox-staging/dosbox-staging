@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -15,6 +15,10 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
+#include <stdio.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #ifndef DOSBOX_BIOS_H
 #define DOSBOX_BIOS_H
@@ -63,7 +67,7 @@
 /* 0x467-0x468 is reserved */
 #define BIOS_TIMER                      0x46c
 #define BIOS_24_HOURS_FLAG              0x470
-#define BIOS_KEYBOARD_FLAGS             0x471
+#define BIOS_CTRL_BREAK_FLAG            0x471
 #define BIOS_CTRL_ALT_DEL_FLAG          0x472
 #define BIOS_HARDDISK_COUNT		0x475
 /* 0x474, 0x476, 0x477 is reserved */
@@ -102,11 +106,22 @@
 #define BIOS_VIDEO_SAVEPTR              0x4a8
 
 
-#define BIOS_DEFAULT_HANDLER_LOCATION	(RealMake(0xf000,0xff53))
-#define BIOS_DEFAULT_IRQ0_LOCATION		(RealMake(0xf000,0xfea5))
-#define BIOS_DEFAULT_IRQ1_LOCATION		(RealMake(0xf000,0xe987))
-#define BIOS_DEFAULT_IRQ2_LOCATION		(RealMake(0xf000,0xff55))
-#define BIOS_DEFAULT_RESET_LOCATION		(RealMake(0xf000,0xe05b))
+//#define BIOS_DEFAULT_IRQ0_LOCATION		(RealMake(0xf000,0xfea5))
+//#define BIOS_DEFAULT_IRQ1_LOCATION		(RealMake(0xf000,0xe987))
+//#define BIOS_DEFAULT_IRQ2_LOCATION		(RealMake(0xf000,0xff55))
+//#define BIOS_DEFAULT_HANDLER_LOCATION		(RealMake(0xf000,0xff53))
+//#define BIOS_VIDEO_TABLE_LOCATION		(RealMake(0xf000,0xf0a4))
+//#define BIOS_DEFAULT_RESET_LOCATION		(RealMake(0xf000,0xe05b))
+
+extern Bitu BIOS_DEFAULT_IRQ0_LOCATION;		// (RealMake(0xf000,0xfea5))
+extern Bitu BIOS_DEFAULT_IRQ1_LOCATION;		// (RealMake(0xf000,0xe987))
+extern Bitu BIOS_DEFAULT_IRQ2_LOCATION;		// (RealMake(0xf000,0xff55))
+extern Bitu BIOS_DEFAULT_HANDLER_LOCATION;	// (RealMake(0xf000,0xff53))
+extern Bitu BIOS_VIDEO_TABLE_LOCATION;		// (RealMake(0xf000,0xf0a4))
+extern Bitu BIOS_DEFAULT_RESET_LOCATION;	// RealMake(0xf000,0xe05b)
+extern Bitu BIOS_VIDEO_TABLE_SIZE;
+
+Bitu ROMBIOS_GetMemory(Bitu bytes,const char *who=NULL,Bitu alignment=1,Bitu must_be_at=0);
 
 /* maximum of scancodes handled by keyboard bios routines */
 #define MAX_SCAN_CODE 0x58
@@ -130,5 +145,92 @@ bool BIOS_AddKeyToBuffer(Bit16u code);
 void INT10_ReloadRomFonts();
 
 void BIOS_SetComPorts (Bit16u baseaddr[]);
+void BIOS_SetLPTPort (Bitu port, Bit16u baseaddr);
 
+bool ISAPNP_RegisterSysDev(const unsigned char *raw,Bitu len,bool already=false);
+
+class ISAPnPDevice {
+public:
+	ISAPnPDevice();
+	virtual ~ISAPnPDevice();
+public:
+	void checksum_ident();
+public:
+	virtual void config(Bitu val);
+	virtual void wakecsn(Bitu val);
+	virtual void select_logical_device(Bitu val);
+	virtual void on_pnp_key();
+	/* ISA PnP I/O data read/write */
+	virtual uint8_t read(Bitu addr);
+	virtual void write(Bitu addr,Bitu val);
+public:
+	unsigned char		CSN;
+	unsigned char		logical_device;
+	unsigned char		ident[9];		/* 72-bit vendor + serial + checksum identity */
+	unsigned char		ident_bp;		/* bit position of identity read */
+	unsigned char		ident_2nd;
+	unsigned char		resource_ident;
+	unsigned char*		resource_data;
+	size_t			resource_data_len;
+	unsigned int		resource_data_pos;
+};
+
+/* abc = ASCII letters of the alphabet
+ * defg = hexadecimal digits */
+#define ISAPNP_ID(a,b,c,d,e,f,g) \
+	 (((a)&0x1F)    <<  2) | \
+	 (((b)&0x1F)    >>  3) | \
+	((((b)&0x1F)&7) << 13) | \
+	 (((c)&0x1F)    <<  8) | \
+	 (((d)&0x1F)    << 20) | \
+	 (((e)&0x1F)    << 16) | \
+	 (((f)&0x1F)    << 28) | \
+	 (((g)&0x1F)    << 24)
+
+#define ISAPNP_TYPE(a,b,c) (a),(b),(c)
+#define ISAPNP_SMALL_TAG(t,l) (((t) << 3) | (l))
+
+#define ISAPNP_SYSDEV_HEADER(id,type,ctrl) \
+	( (id)        & 0xFF), \
+	(((id) >>  8) & 0xFF), \
+	(((id) >> 16) & 0xFF), \
+	(((id) >> 24) & 0xFF), \
+	type, \
+	( (ctrl)       & 0xFF), \
+	(((ctrl) >> 8) & 0xFF)
+
+#define ISAPNP_IO_RANGE(info,min,max,align,len) \
+	ISAPNP_SMALL_TAG(8,7), \
+	(info), \
+	((min) & 0xFF), (((min) >> 8) & 0xFF), \
+	((max) & 0xFF), (((max) >> 8) & 0xFF), \
+	(align), \
+	(len)
+
+#define ISAPNP_IRQ_SINGLE(irq,flags) \
+	ISAPNP_SMALL_TAG(4,3), \
+	((1 << (irq)) & 0xFF), \
+	(((1 << (irq)) >> 8) & 0xFF), \
+	(flags)
+
+#define ISAPNP_IRQ(irqmask,flags) \
+	ISAPNP_SMALL_TAG(4,3), \
+	((irqmask) & 0xFF), \
+	(((irqmask) >> 8) & 0xFF), \
+	(flags)
+
+#define ISAPNP_DMA_SINGLE(dma,flags) \
+	ISAPNP_SMALL_TAG(5,2), \
+	((1 << (dma)) & 0xFF), \
+	(flags)
+
+#define ISAPNP_DMA(dma,flags) \
+	ISAPNP_SMALL_TAG(5,2), \
+	((dma) & 0xFF), \
+	(flags)
+
+#define ISAPNP_END \
+	ISAPNP_SMALL_TAG(0xF,1), 0x00
+
+void ISA_PNP_devreg(ISAPnPDevice *x);
 #endif

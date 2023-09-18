@@ -1,5 +1,5 @@
 dnl Init.
-AC_INIT(dosbox,SVN)
+AC_INIT(dosbox,DOSBox-X)
 AC_PREREQ(2.50)
 AC_CONFIG_SRCDIR(README)
 
@@ -18,6 +18,12 @@ AC_PROG_CPP
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_RANLIB
+
+dnl Need GCC to know this code is using C++ lamda functions
+CXXFLAGS="$CXXFLAGS -std=gnu++11 -Wall"
+
+dnl Scalars in the code use MMX/SSE intrinsics
+CXXFLAGS="$CXXFLAGS -mmmx -msse -msse2 -D_FILE_OFFSET_BITS=64"
 
 dnl Some needed libaries for OS2
 dnl perharps join this with the other target depended checks. move them upwards
@@ -169,21 +175,6 @@ int x=10;if( __builtin_expect ((x==1),0) ) ;
 #switch language back
 AC_LANG_POP(C++)
 
-dnl test if compiler supports -mno-ms-bitfields as it is bugged 
-# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=52991
-BACKUP_CFLAGS="$CFLAGS"
-CFLAGS="-mno-ms-bitfields"
-AC_MSG_CHECKING(if compiler supports -mno-ms-bitfields)
-AC_COMPILE_IFELSE([AC_LANG_SOURCE([
-void blah(){
-;
-}
-])],[
-AC_MSG_RESULT([yes])
-CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
-],[AC_MSG_RESULT([no])])
-CFLAGS="$BACKUP_CFLAGS"
-
 dnl enable disable alsa and pass it's cflags to CXXFLAGS
 AC_ARG_ENABLE(alsa-midi,
 AC_HELP_STRING([--enable-alsa-midi],[compile with alsa midi support (default yes)]),
@@ -242,6 +233,34 @@ AC_ARG_ENABLE(core-inline,AC_HELP_STRING([--enable-core-inline],[Enable inlined 
   fi
 ],)
 
+AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
+AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
+AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
+AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
+AC_ARG_ENABLE(opengl,AC_HELP_STRING([--disable-opengl],[Disable opengl support]),,enable_opengl=yes)
+AC_MSG_CHECKING(whether opengl display output will be enabled) 
+if test x$enable_opengl = xyes; then
+case "$host" in
+    *-*-darwin*)
+       AC_MSG_RESULT(yes)
+       LIBS="$LIBS -framework OpenGL"
+       AC_DEFINE(C_OPENGL,1)
+       ;;
+    *)
+       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then 
+         AC_MSG_RESULT(yes)
+         LIBS="$LIBS -lGL"
+         AC_DEFINE(C_OPENGL,1)
+       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then 
+         AC_MSG_RESULT(yes)
+         LIBS="$LIBS -lopengl32"
+         AC_DEFINE(C_OPENGL,1)
+       else
+         AC_MSG_RESULT(no)
+       fi
+       ;;
+esac
+fi
 
 dnl The target cpu checks for dynamic cores
 AH_TEMPLATE(C_TARGETCPU,[The type of cpu this target has])
@@ -294,30 +313,6 @@ else
   fi
 fi
 
-AH_TEMPLATE(C_DYNREC,[Define to 1 to use recompiling cpu core. Can not be used together with the dynamic-x86 core])
-AC_ARG_ENABLE(dynrec,AC_HELP_STRING([--disable-dynrec],[Disable recompiling cpu core]),,enable_dynrec=yes)
-AC_MSG_CHECKING(whether recompiling cpu core will be enabled) 
-if test x$enable_dynrec = xno -o x$enable_dynamic_core = xno; then 
-   AC_MSG_RESULT(no)
-else
-dnl x86 only enable it if dynamic-x86 is disabled.
-  if test x$c_targetcpu = xx86 ; then
-    if test x$enable_dynamic_x86 = xno ; then
-        AC_DEFINE(C_DYNREC,1)
-        AC_MSG_RESULT(yes)
-    else
-        AC_MSG_RESULT([no, using dynamic-x86])
-    fi
-  else 
-    if test x$c_targetcpu = xx86_64 ; then
-        AC_DEFINE(C_DYNREC,1)
-        AC_MSG_RESULT(yes)
-    else      
-      AC_MSG_RESULT(no)
-    fi
-  fi
-fi
-
 AH_TEMPLATE(C_FPU,[Define to 1 to enable floating point emulation])
 AC_ARG_ENABLE(fpu,AC_HELP_STRING([--disable-fpu],[Disable fpu support]),,enable_fpu=yes)
 AC_MSG_CHECKING(whether fpu emulation will be enabled) 
@@ -327,24 +322,6 @@ if test x$enable_fpu = xyes ; then
 else 
   AC_MSG_RESULT(no)
 fi 
-
-AH_TEMPLATE(C_FPU_X86,[Define to 1 to use a x86 assembly fpu core])
-AC_ARG_ENABLE(fpu-x86,AC_HELP_STRING([--disable-fpu-x86],[Disable x86 assembly fpu core]),,enable_fpu_x86=yes)
-AC_MSG_CHECKING(whether x86 assembly fpu core will be enabled) 
-if test x$enable_fpu_x86 = xno ; then 
-   AC_MSG_RESULT(no)
-else
-  if test x$enable_fpu = xyes; then
-    if test x$c_targetcpu = xx86 -o x$c_targetcpu = xx86_64; then
-        AC_DEFINE(C_FPU_X86,1)
-        AC_MSG_RESULT(yes)
-    else
-        AC_MSG_RESULT(no)
-    fi
-  else
-      AC_MSG_RESULT(no)
-  fi
-fi
 
 AH_TEMPLATE(C_UNALIGNED_MEMORY,[Define to 1 to use a unaligned memory access])
 AC_ARG_ENABLE(unaligned_memory,AC_HELP_STRING([--disable-unaligned-memory],[Disable unaligned memory access]),,enable_unaligned_memory=yes)
@@ -356,14 +333,26 @@ else
   AC_MSG_RESULT(no)
 fi
 
+AH_TEMPLATE(C_LIBPNG,[Define to 1 if you have libpng])
 AH_TEMPLATE(C_SSHOT,[Define to 1 to enable screenshots, requires libpng])
 AC_CHECK_HEADER(png.h,have_png_h=yes,)
 AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, ,-lz)
 if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
   LIBS="$LIBS -lpng -lz"
+  AC_DEFINE(C_LIBPNG,1)
   AC_DEFINE(C_SSHOT,1)
 else
   AC_MSG_WARN([Can't find libpng, screenshot support disabled])
+fi
+
+AH_TEMPLATE(C_NE2000,[Define to 1 to enable NE2000 ethernet passthrough, requires libpcap])
+AC_CHECK_HEADER(pcap.h,have_pcap_h=yes,)
+AC_CHECK_LIB(pcap, pcap_open_live, have_pcap_lib=yes, ,-lz)
+if test x$have_pcap_lib = xyes -a x$have_pcap_h = xyes ; then
+  LIBS="$LIBS -lpcap";
+  AC_DEFINE(C_NE2000,1)
+else
+  AC_MSG_WARN([Can't find libpcap, NE2000 ethernet passthrough disabled])
 fi
 
 AH_TEMPLATE(C_MODEM,[Define to 1 to enable internal modem support, requires SDL_net])
@@ -401,48 +390,14 @@ else
    AC_MSG_RESULT(no)
 fi
 
-AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
-AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
-AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
-AC_CHECK_HEADER(GL/gl.h, have_gl_h=yes , have_gl_h=no , )
-AC_ARG_ENABLE(opengl,AC_HELP_STRING([--disable-opengl],[Disable opengl support]),,enable_opengl=yes)
-AC_MSG_CHECKING(whether opengl display output will be enabled) 
-if test x$enable_opengl = xyes; then
-case "$host" in
-    *-*-darwin*)
-       AC_MSG_RESULT(yes)
-       LIBS="$LIBS -framework OpenGL"
-       AC_DEFINE(C_OPENGL,1)
-       ;;
-    *)
-       if test x$have_gl_h = xyes -a x$have_gl_lib = xyes ; then 
-         AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lGL"
-         AC_DEFINE(C_OPENGL,1)
-       elif test x$have_gl_h = xyes -a x$have_opengl32_lib = xyes ; then 
-         AC_MSG_RESULT(yes)
-         LIBS="$LIBS -lopengl32"
-         AC_DEFINE(C_OPENGL,1)
-       else
-         AC_MSG_RESULT(no)
-       fi
-       ;;
-esac
-fi
-
-AH_TEMPLATE(C_SDL_SOUND,[Define to 1 to enable SDL_sound support])
-AC_CHECK_HEADER(SDL_sound.h,have_SDL_sound_h=yes,)
-AC_CHECK_LIB(SDL_sound, Sound_Init, have_SDL_sound_init=yes,,)
-AC_CHECK_LIB(SDL_sound, Sound_Seek, have_SDL_sound_seek=yes,,)
-if test x$have_SDL_sound_h = xyes -a x$have_SDL_sound_init = xyes ; then
-  if test x$have_SDL_sound_seek = xyes ; then
-    LIBS="-lSDL_sound $LIBS"
-    AC_DEFINE(C_SDL_SOUND,1)
-   else 
-     AC_MSG_WARN([Can't find SoundSeek in libSDL_Sound, libSDL_sound support disabled])
-   fi
+AH_TEMPLATE(C_FLUIDSYNTH,[Define to 1 to enable fluidsynth MIDI synthesis])
+AC_CHECK_HEADER(fluidsynth.h,have_fluidsynth_h=yes,)
+AC_CHECK_LIB(fluidsynth, new_fluid_synth, have_fluidsynth_lib=yes,,)
+if test x$have_fluidsynth_lib = xyes -a x$have_fluidsynth_h = xyes ; then
+  LIBS="$LIBS -lfluidsynth"
+  AC_DEFINE(C_FLUIDSYNTH,1)
 else
-  AC_MSG_WARN([Can't find libSDL_sound, libSDL_sound support disabled])
+  AC_MSG_WARN([fluidsynth MIDI synthesis not available])
 fi
 
 dnl Check for mprotect. Needed for 64 bits linux 
@@ -461,13 +416,50 @@ int main(int argc,char * argv[]) {
 };
 ])],AC_MSG_RESULT(yes);AC_DEFINE(C_SET_PRIORITY,1),AC_MSG_RESULT(no))
 
-
 dnl Some target detection and actions for them
 case "$host" in
     *-*-cygwin* | *-*-mingw32*)
        LIBS="$LIBS -lwinmm"
+       AH_TEMPLATE(C_D3DSHADERS,[Define to 1 to use Direct3D shaders, requires d3d9.h and libd3dx9])
+       AC_ARG_WITH(dx-headers,[  --with-dx-headers=DIR   DirectX include files location],
+		   dx_headers="$withval", dx_headers="")
+       AC_ARG_WITH(dx-libs,[  --with-dx-libs=DIR      DirectX library location],
+		   dx_libs="$withval", dx_libs="")
+       ac_save_CPPFLAGS=$CPPFLAGS
+       if test x$dx_headers != x ; then
+        CPPFLAGS="$CPPFLAGS -I$dx_headers"
+       fi
+       AC_LANG(C++)
        AC_CHECK_HEADERS(ddraw.h)
+       AC_CHECK_HEADERS(d3d9.h,have_d3d9_h=yes,)
+       AC_MSG_CHECKING(whether direct3d display output will be enabled)
+       if test x$have_d3d9_h = xyes ; then
+        AC_MSG_RESULT(yes)
+        AC_ARG_ENABLE(shaders,AC_HELP_STRING([--disable-shaders],[Disable d3d pixelshader support (which requires libd3dx9)]),,[
+		AC_MSG_CHECKING(whether direct3d pixelshaders will be enabled)
+		ac_save_LIBS=$LIBS
+		if test x$dx_libs != x ; then
+		 dx_libs=" -L$dx_libs"
+		fi
+		LIBS="$LIBS$dx_libs -ld3dx9"
+		AC_TRY_LINK([#include <d3d9.h>
+			     #include <d3dx9.h>
+			     extern "C" int main();],D3DXCreateEffect(0, 0, 0, 0, 0, 0, 0, 0, 0), have_d3dx9_lib=yes,)
+		if test x$have_d3dx9_lib = xyes ; then
+		 AC_MSG_RESULT(yes)
+		 AC_DEFINE(C_D3DSHADERS,1)
+		else
+		 LIBS=$ac_save_LIBS
+		 AC_MSG_RESULT(no)
+		 AC_MSG_WARN([Can't find libd3dx9, pixelshader support disabled])
+		fi
+	],)
+       else
+        CPPFLAGS=$ac_save_CPPFLAGS
+        AC_MSG_RESULT(no)
+       fi
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2 only).])
+       AC_DEFINE(C_DIRECTLPT, 1, [ Define to 1 if you want parallel passthrough support (Win32 only).])
        if test x$have_sdl_net_lib = xyes -a x$have_sdl_net_h = xyes ; then
          LIBS="$LIBS -lws2_32"
        fi
@@ -484,6 +476,7 @@ case "$host" in
     *-*-linux*)
        AC_DEFINE(LINUX, 1, [Compiling on GNU/Linux])
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
+       AC_DEFINE(C_DIRECTLPT, 1, [ Define to 1 if you want parallel passthrough support (Win32, Linux).])
        ;;
     *-*-freebsd* | *-*-dragonfly* | *-*-netbsd* | *-*-openbsd*)
        dnl Disabled directserial for now. It doesn't do anything without
@@ -521,23 +514,22 @@ src/cpu/Makefile
 src/cpu/core_full/Makefile
 src/cpu/core_normal/Makefile
 src/cpu/core_dyn_x86/Makefile
-src/cpu/core_dynrec/Makefile
 src/debug/Makefile
 src/dos/Makefile
 src/fpu/Makefile
 src/gui/Makefile
 src/hardware/Makefile
 src/hardware/serialport/Makefile
+src/hardware/reSID/Makefile
+src/hardware/parport/Makefile
 src/ints/Makefile
 src/libs/Makefile
 src/libs/zmbv/Makefile
 src/libs/gui_tk/Makefile
+src/libs/porttalk/Makefile
 src/misc/Makefile
 src/shell/Makefile
 src/platform/Makefile
-src/platform/visualc/Makefile
-visualc_net/Makefile
 include/Makefile
-docs/Makefile
 ])
 AC_OUTPUT

@@ -1,5 +1,5 @@
  /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,22 +23,19 @@
 #ifndef DOSBOX_DOSBOX_H
 #include "dosbox.h"
 #endif
+#include <iostream>
 
-//Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED
-//#define VGA_KEEP_CHANGES
-#define VGA_CHANGE_SHIFT	9
 
 class PageHandler;
-
 
 enum VGAModes {
 	M_CGA2, M_CGA4,
 	M_EGA, M_VGA,
-	M_LIN4, M_LIN8, M_LIN15, M_LIN16, M_LIN32,
+	M_LIN4, M_LIN8, M_LIN15, M_LIN16, M_LIN24, M_LIN32,
 	M_TEXT,
 	M_HERC_GFX, M_HERC_TEXT,
-	M_CGA16, M_TANDY2, M_TANDY4, M_TANDY16, M_TANDY_TEXT,
+	M_CGA16, M_TANDY2, M_TANDY4, M_TANDY16, M_TANDY_TEXT, M_AMSTRAD,
 	M_ERROR
 };
 
@@ -58,6 +55,7 @@ enum VGAModes {
 #define S3_XGA_640		0x40
 #define S3_XGA_800		0x80
 #define S3_XGA_1280		0xc0
+#define S3_XGA_1600		0x81
 #define S3_XGA_WMASK	(S3_XGA_640|S3_XGA_800|S3_XGA_1024|S3_XGA_1152|S3_XGA_1280)
 
 #define S3_XGA_8BPP  0x00
@@ -111,7 +109,6 @@ typedef struct {
 } VGA_Config;
 
 typedef enum {
-	PART,
 	LINE,
 	EGALINE
 } Drawmode;
@@ -133,11 +130,7 @@ typedef struct {
 	Bitu lines_total;
 	Bitu vblank_skip;
 	Bitu lines_done;
-	Bitu lines_scaled;
 	Bitu split_line;
-	Bitu parts_total;
-	Bitu parts_lines;
-	Bitu parts_left;
 	Bitu byte_panning_shift;
 	struct {
 		double framestart;
@@ -147,12 +140,10 @@ typedef struct {
 		double vblkstart, vblkend;	// V-Blanking
 		double vdend, vtotal;
 		double hdend, htotal;
-		double parts;
+		float singleline_delay;
 	} delay;
-	Bitu bpp;
-	double aspect_ratio;
-	bool double_scan;
-	bool doublewidth,doubleheight;
+	double screen_ratio;
+	double refresh;
 	Bit8u font[64*1024];
 	Bit8u * font_tables[2];
 	Bitu blinking;
@@ -167,6 +158,12 @@ typedef struct {
 	Drawmode mode;
 	bool vret_triggered;
 	bool vga_override;
+	bool doublescan_set;
+	bool doublescan_effect;
+	bool char9_set;
+	Bitu bpp;
+	double clock;
+	Bit8u cga_snow[80];			// one bit per horizontal column where snow should occur
 } VGA_Draw;
 
 typedef struct {
@@ -189,6 +186,7 @@ typedef struct {
 	Bit8u reg_3a; // 4/8/doublepixel bit in there
 	Bit8u reg_40; // 8415/A functionality register
 	Bit8u reg_41; // BIOS flags 
+	Bit8u reg_42; // CR42 Mode Control
 	Bit8u reg_43;
 	Bit8u reg_45; // Hardware graphics cursor
 	Bit8u reg_50;
@@ -219,7 +217,15 @@ typedef struct {
 typedef struct {
 	Bit8u mode_control;
 	Bit8u enable_bits;
+	bool blend;
 } VGA_HERC;
+
+typedef struct {
+	Bit32u mask_plane;
+	Bit8u write_plane;
+	Bit8u read_plane;
+	Bit8u border_color;
+} VGA_AMSTRAD;
 
 typedef struct {
 	Bit8u index;
@@ -341,6 +347,9 @@ typedef struct {
 	Bit8u combine[16];
 	RGBEntry rgb[0x100];
 	Bit16u xlat16[256];
+	Bit32u xlat32[256];
+	Bit8u hidac_counter;
+	Bit8u reg02;
 } VGA_Dac;
 
 typedef struct {
@@ -382,6 +391,7 @@ typedef struct {
 
 typedef struct {
 	VGAModes mode;								/* The mode the vga system is in */
+	VGAModes lastmode;
 	Bit8u misc_output;
 	VGA_Draw draw;
 	VGA_Config config;
@@ -397,21 +407,20 @@ typedef struct {
 	VGA_SVGA svga;
 	VGA_HERC herc;
 	VGA_TANDY tandy;
+	VGA_AMSTRAD amstrad;
 	VGA_OTHER other;
 	VGA_Memory mem;
 	Bit32u vmemwrap; /* this is assumed to be power of 2 */
-	Bit8u* fastmem;  /* memory for fast (usually 16-color) rendering, always twice as big as vmemsize */
-	Bit8u* fastmem_orgptr;
 	Bit32u vmemsize;
-#ifdef VGA_KEEP_CHANGES
-	VGA_Changes changes;
-#endif
 	VGA_LFB lfb;
 } VGA_Type;
 
 
 /* Hercules Palette function */
 void Herc_Palette(void);
+
+/* CGA Mono Palette function */
+void Mono_CGA_Palette(void);
 
 /* Functions for different resolutions */
 void VGA_SetMode(VGAModes mode);
@@ -486,6 +495,8 @@ typedef void (*tSetClock)(Bitu which,Bitu target);
 typedef Bitu (*tGetClock)();
 typedef bool (*tHWCursorActive)();
 typedef bool (*tAcceptsMode)(Bitu modeNo);
+typedef void (*tSetupDAC)();
+typedef void (*tINT10Extensions)();
 
 struct SVGA_Driver {
 	tWritePort write_p3d5;
@@ -503,9 +514,12 @@ struct SVGA_Driver {
 	tGetClock get_clock;
 	tHWCursorActive hardware_cursor_active;
 	tAcceptsMode accepts_mode;
+	tSetupDAC setup_dac;
+	tINT10Extensions int10_extensions;
 };
 
 extern SVGA_Driver svga;
+extern int enableCGASnow;
 
 void SVGA_Setup_S3Trio(void);
 void SVGA_Setup_TsengET4K(void);

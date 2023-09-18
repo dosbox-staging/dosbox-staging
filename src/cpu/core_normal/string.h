@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ static void DoString(STRING_OP type) {
 	PhysPt  si_base,di_base;
 	Bitu	si_index,di_index;
 	Bitu	add_mask;
-	Bitu	count,count_left;
+	Bitu	count,count_left=0;
 	Bits	add_index;
 	
 	si_base=BaseDS;
@@ -55,7 +55,6 @@ static void DoString(STRING_OP type) {
 			/* Won't interrupt scas and cmps instruction since they can interrupt themselves */
 			if ((count<=1) && (CPU_Cycles<=1)) CPU_Cycles--;
 			else if (type<R_SCASB) CPU_Cycles-=count;
-			count_left=0;
 		}
 	}
 	add_index=cpu.direction;

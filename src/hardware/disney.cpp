@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,8 @@
 #include "mixer.h"
 #include "pic.h"
 #include "setup.h"
+#include "bios.h"
+#include "mem.h"
 
 #define DISNEY_BASE 0x0378
 
@@ -357,18 +359,25 @@ static void DISNEY_CallBack(Bitu len) {
 	}
 }
 
+void CPU_Snap_Back_To_Real_Mode();
+void CPU_Snap_Back_Restore();
+
 class DISNEY: public Module_base {
 private:
 	IO_ReadHandleObject ReadHandler;
 	IO_WriteHandleObject WriteHandler;
+	//FIXME: this conflicts with MPU-401, is this really needed? //IO_WriteHandleObject WriteHandler_cvm;
 	//MixerObject MixerChan;
 public:
 	DISNEY(Section* configuration):Module_base(configuration) {
 		Section_prop * section=static_cast<Section_prop *>(configuration);
 		if(!section->Get_bool("disney")) return;
+		if(mem_readw(BIOS_ADDRESS_LPT1) != 0) return;
+		BIOS_SetLPTPort(0,0x378);
 	
 		WriteHandler.Install(DISNEY_BASE,disney_write,IO_MB,3);
 		ReadHandler.Install(DISNEY_BASE,disney_read,IO_MB,3);
+		// see above //WriteHandler_cvm.Install(0x330,disney_write,IO_MB,1);
 	
 		disney.status=0x84;
 		disney.control=0;
@@ -381,9 +390,14 @@ public:
 
 	}
 	~DISNEY(){
+		CPU_Snap_Back_To_Real_Mode();
+
+		BIOS_SetLPTPort(0,0);
 		DISNEY_disable(0);
 		if (disney.mo)
 			delete disney.mo;
+
+		CPU_Snap_Back_Restore();
 	}
 };
 
@@ -397,3 +411,9 @@ void DISNEY_Init(Section* sec) {
 	test = new DISNEY(sec);
 	sec->AddDestroyFunction(&DISNEY_ShutDown,true);
 }
+
+
+
+// save state support
+void *DISNEY_disable_PIC_Event = (void*)DISNEY_disable;
+

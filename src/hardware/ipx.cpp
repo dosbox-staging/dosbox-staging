@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1119,7 +1119,7 @@ public:
 		callback_esr.Allocate(&IPX_ESRHandler,"IPX_ESR");
 		Bit16u call_ipxesr1 = callback_esr.Get_callback();
 
-		if(!dospage) dospage = DOS_GetMemory(2); // can not be freed yet
+		if(!dospage) dospage = DOS_GetMemory(2,"IPX dospage"); // can not be freed yet
 
 		PhysPt phyDospage = PhysMake(dospage,0);
 
@@ -1196,5 +1196,10 @@ void IPX_Init(Section* sec) {
 
 //Initialize static members;
 Bit16u IPX::dospage = 0;
+
+
+// save state support
+void *IPX_AES_EventHandler_PIC_Event = (void*)IPX_AES_EventHandler;
+void *IPX_ClientLoop_PIC_Timer = (void*)IPX_ClientLoop;
 
 #endif

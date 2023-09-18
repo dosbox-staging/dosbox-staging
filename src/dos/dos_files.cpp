@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include "dos_inc.h"
 #include "drives.h"
 #include "cross.h"
+#include "dos_network2.h"
 
 #define DOS_FILESTART 4
 
@@ -39,9 +40,9 @@
 #define FCB_ERR_EOF     3
 #define FCB_ERR_WRITE   1
 
-
-DOS_File * Files[DOS_FILES];
-DOS_Drive * Drives[DOS_DRIVES];
+Bitu DOS_FILES = 127;
+DOS_File ** Files = NULL;
+DOS_Drive * Drives[DOS_DRIVES] = {NULL};
 
 Bit8u DOS_GetDefaultDrive(void) {
 //	return DOS_SDA(DOS_SDA_SEG,DOS_SDA_OFS).GetDrive();
@@ -88,20 +89,11 @@ bool DOS_MakeName(char const * const name,char * const fullname,Bit8u * drive) {
 			break;
 		case ' ': /* should be seperator */
 			break;
-		case '\\':	case '$':	case '#':	case '@':	case '(':	case ')':
-		case '!':	case '%':	case '{':	case '}':	case '`':	case '~':
-		case '_':	case '-':	case '.':	case '*':	case '?':	case '&':
-		case '\'':	case '+':	case '^':	case 246:	case 255:	case 0xa0:
-		case 0xe5:	case 0xbd:	case 0x9d:
-			upname[w++]=c;
-			break;
 		default:
-			LOG(LOG_FILES,LOG_NORMAL)("Makename encountered an illegal char %c hex:%X in %s!",c,c,name);
-			DOS_SetError(DOSERR_PATH_NOT_FOUND);return false;
+			upname[w++]=c;
 			break;
 		}
 	}
-	while (r>0 && name_int[r-1]==' ') r--;
 	if (r>=DOS_PATHLENGTH) { DOS_SetError(DOSERR_PATH_NOT_FOUND);return false; }
 	upname[w]=0;
 	/* Now parse the new file name to make the final filename */
@@ -363,6 +355,10 @@ bool DOS_FindNext(void) {
 
 
 bool DOS_ReadFile(Bit16u entry,Bit8u * data,Bit16u * amount) {
+#ifdef WIN32
+	if(Network_IsActiveResource(entry))
+		return Network_ReadFile(entry,data,amount);
+#endif
 	Bit32u handle=RealHandle(entry);
 	if (handle>=DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
@@ -385,6 +381,10 @@ bool DOS_ReadFile(Bit16u entry,Bit8u * data,Bit16u * amount) {
 }
 
 bool DOS_WriteFile(Bit16u entry,Bit8u * data,Bit16u * amount) {
+#ifdef WIN32
+	if(Network_IsActiveResource(entry))
+		return Network_WriteFile(entry,data,amount);
+#endif
 	Bit32u handle=RealHandle(entry);
 	if (handle>=DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
@@ -419,7 +419,29 @@ bool DOS_SeekFile(Bit16u entry,Bit32u * pos,Bit32u type) {
 	return Files[handle]->Seek(pos,type);
 }
 
+/* ert, 20100711: Locking extensions */
+bool DOS_LockFile(Bit16u entry,Bit8u mode,Bit32u pos,Bit32u size) {
+	Bit32u handle=RealHandle(entry);
+	if (handle>=DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	if (!Files[handle] || !Files[handle]->IsOpen()) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+#ifdef WIN32
+	return Files[handle]->LockFile(mode,pos,size);
+#else
+	return true;
+#endif
+}
+
 bool DOS_CloseFile(Bit16u entry) {
+#ifdef WIN32
+	if(Network_IsActiveResource(entry))
+		return Network_CloseFile(entry);
+#endif
 	Bit32u handle=RealHandle(entry);
 	if (handle>=DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
@@ -507,6 +529,7 @@ bool DOS_CreateFile(char const * name,Bit16u attributes,Bit16u * entry) {
 	if (foundit) { 
 		Files[handle]->SetDrive(drive);
 		Files[handle]->AddRef();
+		Files[handle]->drive = drive;
 		psp.SetFileHandle(*entry,handle);
 		return true;
 	} else {
@@ -517,6 +540,10 @@ bool DOS_CreateFile(char const * name,Bit16u attributes,Bit16u * entry) {
 }
 
 bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry) {
+#ifdef WIN32
+	if(Network_IsNetworkResource(const_cast<char *>(name)))
+		return Network_OpenFile(const_cast<char *>(name),flags,entry);
+#endif
 	/* First check for devices */
 	if (flags>2) LOG(LOG_FILES,LOG_ERROR)("Special file open command %X file %s",flags,name);
 	else LOG(LOG_FILES,LOG_NORMAL)("file open command %X file %s",flags,name);
@@ -565,6 +592,7 @@ bool DOS_OpenFile(char const * name,Bit8u flags,Bit16u * entry) {
 	if (exists || device ) { 
 		Files[handle]->AddRef();
 		psp.SetFileHandle(*entry,handle);
+		Files[handle]->drive = drive;
 		return true;
 	} else {
 		//Test if file exists, but opened in read-write mode (and writeprotected)
@@ -1269,8 +1297,27 @@ bool DOS_GetFileDate(Bit16u entry, Bit16u* otime, Bit16u* odate) {
 	return true;
 }
 
+bool DOS_SetFileDate(Bit16u entry, Bit16u ntime, Bit16u ndate)
+{
+	Bit32u handle=RealHandle(entry);
+	if (handle>=DOS_FILES) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	if (!Files[handle]) {
+		DOS_SetError(DOSERR_INVALID_HANDLE);
+		return false;
+	};
+	Files[handle]->time = ntime;
+	Files[handle]->date = ndate;
+	Files[handle]->newtime = true;
+
+	return true;
+};
+
 void DOS_SetupFiles (void) {
 	/* Setup the File Handles */
+	Files = new DOS_File * [DOS_FILES];
 	Bit32u i;
 	for (i=0;i<DOS_FILES;i++) {
 		Files[i]=0;
@@ -1281,3 +1328,4 @@ void DOS_SetupFiles (void) {
 	}
 	Drives[25]=new Virtual_Drive();
 }
+

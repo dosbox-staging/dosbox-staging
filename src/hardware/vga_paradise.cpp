@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -169,6 +169,8 @@ void FinishSetMode_PVGA1A(Bitu /*crtc_base*/, VGA_ModeExtraData* modeData) {
 		vga.vmemwrap = 256*1024;
 	}
 
+	vga.config.compatible_chain4 = false;
+
 	VGA_SetupHandlers();
 }
 
@@ -239,3 +241,4 @@ void SVGA_Setup_ParadisePVGA1A(void) {
 
 	IO_Write(0x3cf, 0x05); // Enable!
 }
+

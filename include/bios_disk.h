@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,29 +43,55 @@ struct diskGeo {
 };
 extern diskGeo DiskGeometryList[];
 
-class imageDisk  {
+class imageDisk {
 public:
-	Bit8u Read_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * data);
-	Bit8u Write_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * data);
-	Bit8u Read_AbsoluteSector(Bit32u sectnum, void * data);
-	Bit8u Write_AbsoluteSector(Bit32u sectnum, void * data);
+	enum {
+		ID_BASE=0,
+		ID_EL_TORITO_FLOPPY
+	};
+public:
+	virtual Bit8u Read_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * data);
+	virtual Bit8u Write_Sector(Bit32u head,Bit32u cylinder,Bit32u sector,void * data);
+	virtual Bit8u Read_AbsoluteSector(Bit32u sectnum, void * data);
+	virtual Bit8u Write_AbsoluteSector(Bit32u sectnum, void * data);
 
-	void Set_Geometry(Bit32u setHeads, Bit32u setCyl, Bit32u setSect, Bit32u setSectSize);
-	void Get_Geometry(Bit32u * getHeads, Bit32u *getCyl, Bit32u *getSect, Bit32u *getSectSize);
-	Bit8u GetBiosType(void);
-	Bit32u getSectSize(void);
+	virtual void Set_Reserved_Cylinders(Bitu resCyl);
+	virtual Bit32u Get_Reserved_Cylinders();
+	virtual void Set_Geometry(Bit32u setHeads, Bit32u setCyl, Bit32u setSect, Bit32u setSectSize);
+	virtual void Get_Geometry(Bit32u * getHeads, Bit32u *getCyl, Bit32u *getSect, Bit32u *getSectSize);
+	virtual Bit8u GetBiosType(void);
+	virtual Bit32u getSectSize(void);
 	imageDisk(FILE *imgFile, Bit8u *imgName, Bit32u imgSizeK, bool isHardDisk);
-	~imageDisk() { if(diskimg != NULL) { fclose(diskimg); }	};
+	virtual ~imageDisk() { if(diskimg != NULL) { fclose(diskimg); }	};
+
+	int class_id;
 
 	bool hardDrive;
 	bool active;
 	FILE *diskimg;
-	Bit8u diskname[512];
+	std::string diskname;
 	Bit8u floppytype;
 
 	Bit32u sector_size;
 	Bit32u heads,cylinders,sectors;
-	Bit32u current_fpos;
+	Bit32u reserved_cylinders;
+	Bit64u current_fpos;
+
+	volatile int refcount;
+	bool auto_delete_on_refcount_zero;
+
+	int Addref() {
+		return ++refcount;
+	}
+	int Release() {
+		int ret = --refcount;
+		if (ret < 0) {
+			fprintf(stderr,"WARNING: imageDisk Release() changed refcount to %d\n",ret);
+			abort();
+		}
+		if (ret == 0 && auto_delete_on_refcount_zero) delete this;
+		return ret;
+	}
 };
 
 void updateDPT(void);
@@ -83,5 +109,6 @@ extern DOS_DTA *imgDTA;
 void swapInDisks(void);
 void swapInNextDisk(void);
 bool getSwapRequest(void);
+imageDisk *GetINT13HardDrive(unsigned char drv);
 
 #endif

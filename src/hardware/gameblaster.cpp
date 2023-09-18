@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -496,3 +496,4 @@ void CMS_Init(Section* sec) {
 void CMS_ShutDown(Section* sec) {
 	delete test;	       
 }
+

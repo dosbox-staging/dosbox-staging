@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -501,7 +501,7 @@ l_M_Ed:
 		CPU_SW_Interrupt_NoIOPLCheck(1,GetIP());
 		continue;
 	case D_RDTSC: {
-		if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUMSLOW) goto illegalopcode;
+		if (CPU_ArchitectureType<CPU_ARCHTYPE_PENTIUM) goto illegalopcode;
 		Bit64s tsc=(Bit64s)(PIC_FullIndex()*(double)(CPU_CycleAutoAdjust?70000:CPU_CycleMax));
 		reg_edx=(Bit32u)(tsc>>32);
 		reg_eax=(Bit32u)(tsc&0xffffffff);

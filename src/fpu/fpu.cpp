@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -41,11 +41,7 @@ Bit16u FPU_GetTag(void){
 	return tag;
 }
 
-#if C_FPU_X86
-#include "fpu_instructions_x86.h"
-#else
 #include "fpu_instructions.h"
-#endif
 
 /* WATCHIT : ALWAYS UPDATE REGISTERS BEFORE AND AFTER USING THEM 
 			STATUS WORD =>	FPU_SET_TOP(TOP) BEFORE a read
@@ -628,3 +624,4 @@ void FPU_Init(Section*) {
 }
 
 #endif
+

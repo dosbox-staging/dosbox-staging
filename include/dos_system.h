@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -60,9 +60,13 @@ struct FileStat_Block {
 
 class DOS_DTA;
 
+#ifdef WIN32 /* Shaddup MSVC! */
+# define stricmp _stricmp
+#endif
+
 class DOS_File {
 public:
-	DOS_File():flags(0)		{ name=0; refCtr = 0; hdrive=0xff; };
+	DOS_File():flags(0)		{ name=0; refCtr = 0; hdrive=0xff; newtime=false;};
 	DOS_File(const DOS_File& orig);
 	DOS_File & operator= (const DOS_File & orig);
 	virtual	~DOS_File(){if(name) delete [] name;};
@@ -70,6 +74,8 @@ public:
 	virtual bool	Write(Bit8u * data,Bit16u * size)=0;
 	virtual bool	Seek(Bit32u * pos,Bit32u type)=0;
 	virtual bool	Close()=0;
+	/* ert, 20100711: Locking extensions */
+	virtual bool    LockFile(Bit8u mode, Bit32u pos, Bit16u size) { return false; };
 	virtual Bit16u	GetInformation(void)=0;
 	virtual void	SetName(const char* _name)	{ if (name) delete[] name; name = new char[strlen(_name)+1]; strcpy(name,_name); }
 	virtual char*	GetName(void)				{ return name; };
@@ -78,16 +84,21 @@ public:
 	virtual void	AddRef()					{ refCtr++; };
 	virtual Bits	RemoveRef()					{ return --refCtr; };
 	virtual bool	UpdateDateTimeFromHost()	{ return true; }
+	virtual Bit32u	GetSeekPos()	{ return 0xffffffff; }
 	void SetDrive(Bit8u drv) { hdrive=drv;}
 	Bit8u GetDrive(void) { return hdrive;}
+
+	char* name;
+	Bit8u drive;
 	Bit32u flags;
+	bool open;
+
+	Bit16u attr;
 	Bit16u time;
 	Bit16u date;
-	Bit16u attr;
 	Bits refCtr;
-	bool open;
-	char* name;
-/* Some Device Specific Stuff */
+	bool newtime;
+	/* Some Device Specific Stuff */
 private:
 	Bit8u hdrive;
 };
@@ -105,6 +116,7 @@ public:
 		return *this;
 	}
 	DOS_Device():DOS_File(),devnum(0){};
+	virtual ~DOS_Device() {};
 	virtual bool	Read(Bit8u * data,Bit16u * size);
 	virtual bool	Write(Bit8u * data,Bit16u * size);
 	virtual bool	Seek(Bit32u * pos,Bit32u type);
@@ -120,18 +132,19 @@ private:
 /* The following variable can be lowered to free up some memory.
  * The negative side effect: The stored searches will be turned over faster.
  * Should not have impact on systems with few directory entries. */
+class DOS_Drive;
 #define MAX_OPENDIRS 2048
 //Can be high as it's only storage (16 bit variable)
 
 class DOS_Drive_Cache {
 public:
 	DOS_Drive_Cache					(void);
-	DOS_Drive_Cache					(const char* path);
+	DOS_Drive_Cache					(const char* path, DOS_Drive *drive); 
 	~DOS_Drive_Cache				(void);
 
 	enum TDirSort { NOSORT, ALPHABETICAL, DIRALPHABETICAL, ALPHABETICALREV, DIRALPHABETICALREV };
 
-	void		SetBaseDir			(const char* path);
+	void		SetBaseDir			(const char* path, DOS_Drive *drive);
 	void		SetDirSort			(TDirSort sort) { sortDirType = sort; };
 	bool		OpenDir				(const char* path, Bit16u& id);
 	bool		ReadDir				(Bit16u id, char* &result);
@@ -148,6 +161,7 @@ public:
 	void		DeleteEntry			(const char* path, bool ignoreLastDir = false);
 
 	void		EmptyCache			(void);
+	void		MediaChange			(void);
 	void		SetLabel			(const char* name,bool cdrom,bool allowupdate);
 	char*		GetLabel			(void) { return label; };
 
@@ -196,6 +210,7 @@ private:
 
 	CFileInfo*	dirBase;
 	char		dirPath				[CROSS_LEN];
+	DOS_Drive*	drive;
 	char		basePath			[CROSS_LEN];
 	bool		dirFirstTime;
 	TDirSort	sortDirType;
@@ -217,34 +232,42 @@ class DOS_Drive {
 public:
 	DOS_Drive();
 	virtual ~DOS_Drive(){};
-	virtual bool FileOpen(DOS_File * * file,char * name,Bit32u flags)=0;
-	virtual bool FileCreate(DOS_File * * file,char * name,Bit16u attributes)=0;
-	virtual bool FileUnlink(char * _name)=0;
-	virtual bool RemoveDir(char * _dir)=0;
-	virtual bool MakeDir(char * _dir)=0;
-	virtual bool TestDir(char * _dir)=0;
-	virtual bool FindFirst(char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
+	virtual bool FileOpen(DOS_File * * file,const char * name,Bit32u flags)=0;
+	virtual bool FileCreate(DOS_File * * file,const char * name,Bit16u attributes)=0;
+	virtual bool FileUnlink(const char * _name)=0;
+	virtual bool RemoveDir(const char * _dir)=0;
+	virtual bool MakeDir(const char * _dir)=0;
+	virtual bool TestDir(const char * _dir)=0;
+	virtual bool FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst=false)=0;
 	virtual bool FindNext(DOS_DTA & dta)=0;
-	virtual bool GetFileAttr(char * name,Bit16u * attr)=0;
-	virtual bool Rename(char * oldname,char * newname)=0;
+	virtual bool GetFileAttr(const char * name,Bit16u * attr)=0;
+	virtual bool Rename(const char * oldname,const char * newname)=0;
 	virtual bool AllocationInfo(Bit16u * _bytes_sector,Bit8u * _sectors_cluster,Bit16u * _total_clusters,Bit16u * _free_clusters)=0;
 	virtual bool FileExists(const char* name)=0;
 	virtual bool FileStat(const char* name, FileStat_Block * const stat_block)=0;
 	virtual Bit8u GetMediaByte(void)=0;
 	virtual void SetDir(const char* path) { strcpy(curdir,path); };
-	virtual void EmptyCache(void) { dirCache.EmptyCache(); };
+//	virtual void EmptyCache(void) { dirCache.EmptyCache(); };
 	virtual bool isRemote(void)=0;
 	virtual bool isRemovable(void)=0;
 	virtual Bits UnMount(void)=0;
 
-	char * GetInfo(void);
+	/* these 4 may only be used by DOS_Drive_Cache because they have special calling conventions */
+	virtual void *opendir(const char *dir) {return NULL;};
+	virtual void closedir(void *handle) {};
+	virtual bool read_directory_first(void *handle, char* entry_name, bool& is_directory) { return false; };
+	virtual bool read_directory_next(void *handle, char* entry_name, bool& is_directory) { return false; };
+
+	virtual const char * GetInfo(void);
+	char * GetBaseDir(void);
+
 	char curdir[DOS_PATHLENGTH];
 	char info[256];
 	/* Can be overridden for example in iso images */
-	virtual char const * GetLabel(){return dirCache.GetLabel();};
-
-	DOS_Drive_Cache dirCache;
-
+	virtual char const * GetLabel() {return "NOLABEL";}; 
+	virtual void SetLabel(const char *label, bool iscdrom, bool updatable) {}; 
+	virtual void EmptyCache() {};
+	virtual void MediaChange() {};
 	// disk cycling functionality (request resources)
 	virtual void Activate(void) {};
 };

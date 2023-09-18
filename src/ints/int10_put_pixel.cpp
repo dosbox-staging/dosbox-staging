@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -198,26 +198,6 @@ void INT10_GetPixel(Bit16u x,Bit16u y,Bit8u page,Bit8u * color) {
 			if (y&1) off+=8*1024;
 			Bit8u val=real_readb(0xb800,off);
 			*color=(val>>(((7-(x&7))))) & 1 ;
-		}
-		break;
-	case M_TANDY16:
-		{
-			bool is_32k = (real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_MODE) >= 9)?true:false;
-			Bit16u segment, offset;
-			if (is_32k) {
-				if (machine==MCH_PCJR) {
-					Bitu cpupage = (real_readb(BIOSMEM_SEG, BIOSMEM_CRTCPU_PAGE) >> 3) & 0x7;
-					segment = cpupage << 10;
-				} else segment = 0xb800;
-				offset = (y >> 2) * (CurMode->swidth >> 1) + (x>>1);
-				offset += (8*1024) * (y & 3);
-			} else {
-				segment = 0xb800;
-				offset = (y >> 1) * (CurMode->swidth >> 1) + (x>>1);
-				offset += (8*1024) * (y & 1);
-			}
-			Bit8u val=real_readb(segment,offset);
-			*color=(val>>((x&1)?0:4)) & 0xf;
 		}
 		break;
 	case M_EGA:

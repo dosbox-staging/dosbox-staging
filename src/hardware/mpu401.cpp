@@ -612,6 +612,15 @@ static void MPU401_Reset(void) {
 	for (Bitu i=0;i<8;i++) {mpu.playbuf[i].type=T_OVERFLOW;mpu.playbuf[i].counter=0;}
 }
 
+static void IMF_Write(Bitu port,Bitu val,Bitu iolen) {
+	LOG(LOG_MISC,LOG_NORMAL)("IMF:Wr %4X,%X",port,val);
+}
+
+static Bitu IMF_Read(Bitu port,Bitu iolen) {
+	LOG(LOG_MISC,LOG_NORMAL)("IMF:Rd %4X",port);
+	return 0x00;
+}
+
 class MPU401:public Module_base{
 private:
 	IO_ReadHandleObject ReadHandler[2];
@@ -633,7 +642,42 @@ public:
 		WriteHandler[1].Install(0x331,&MPU401_WriteCommand,IO_MB);
 		ReadHandler[0].Install(0x330,&MPU401_ReadData,IO_MB);
 		ReadHandler[1].Install(0x331,&MPU401_ReadStatus,IO_MB);
-	
+/*
+		IO_RegisterWriteHandler(0x280,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x281,&IMF_Write,IO_MB);
+		IO_RegisterReadHandler(0x280,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x281,&IMF_Read,IO_MB);
+*/
+/*
+		IO_RegisterWriteHandler(0x200,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x201,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x202,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x203,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x204,&IMF_Write,IO_MB);
+
+		IO_RegisterReadHandler(0x200,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x201,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x202,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x203,&IMF_Read,IO_MB);
+		IO_RegisterReadHandler(0x204,&IMF_Read,IO_MB);
+*/
+		IO_RegisterWriteHandler(0x2A20,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A21,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A22,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A23,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A24,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A25,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A26,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A27,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A28,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A29,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2A,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2B,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2C,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2D,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2E,&IMF_Write,IO_MB);
+		IO_RegisterWriteHandler(0x2A2F,&IMF_Write,IO_MB);
+
 		mpu.queue_used=0;
 		mpu.queue_pos=0;
 		mpu.mode=M_UART;
@@ -664,3 +708,9 @@ void MPU401_Init(Section* sec) {
 	test = new MPU401(sec);
 	sec->AddDestroyFunction(&MPU401_Destroy,true);
 }
+
+
+
+// save state support
+void *MPU401_Event_PIC_Event = (void*)MPU401_Event;
+

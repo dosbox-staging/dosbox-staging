@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -67,6 +67,11 @@ bool CDROM_Interface_SDL::SetDevice(char* path, int forceCD) {
 	};
 	return false; 
 }
+
+bool CDROM_Interface_SDL::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
+{
+	return false;/*TODO*/
+};
 
 bool CDROM_Interface_SDL::GetAudioTracks(int& stTrack, int& end, TMSF& leadOut) {
 
@@ -214,5 +219,10 @@ bool CDROM_Interface_Fake :: GetMediaTrayStatus(bool& mediaPresent, bool& mediaC
 	trayOpen     = false;
 	return true;
 }
+
+bool CDROM_Interface_Fake::ReadSectorsHost(void *buffer, bool raw, unsigned long sector, unsigned long num)
+{
+	return false;/*TODO*/
+};
 
 

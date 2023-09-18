@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,9 +19,11 @@
 
 #include "dosbox.h"
 #include "mem.h"
+#include "bios.h"
 #include "inout.h"
 #include "int10.h"
 
+bool rom_bios_vptable_enable = true;
 
 const Bit8u vparams[] = {
 	// 40x25 mode 0 and 1 crtc registers
@@ -531,25 +533,57 @@ Bit16u INT10_SetupVideoParameterTable(PhysPt basepos) {
 	}
 }
 
+Bitu RealToPhys(Bitu x) {
+	return PhysMake(x>>16,x&0xFFFF);
+}
+
 void INT10_SetupBasicVideoParameterTable(void) {
-	/* video parameter table at F000:F0A4 */
-	RealSetVec(0x1d,RealMake(0xF000, 0xF0A4));
+	const unsigned char *copy = NULL;
+	size_t copy_sz = 0;
+	Bitu ofs;
+
 	switch (machine) {
-	case MCH_TANDY:
-		for (Bit16u i = 0; i < sizeof(vparams_tandy); i++) {
-			phys_writeb(0xFF0A4+i,vparams_tandy[i]);
+		case MCH_TANDY:
+			copy = vparams_tandy;
+			copy_sz = sizeof(vparams_tandy);
+			break;
+		case MCH_PCJR:
+			copy = vparams_pcjr;
+			copy_sz = sizeof(vparams_pcjr);
+			break;
+		default:
+			copy = vparams;
+			copy_sz = sizeof(vparams);
+			break;
+	}
+
+	if (BIOS_VIDEO_TABLE_LOCATION == ~0 || BIOS_VIDEO_TABLE_SIZE != (Bitu)copy_sz) {
+		if (rom_bios_vptable_enable) {
+			/* TODO: Free previous block */
+
+			BIOS_VIDEO_TABLE_SIZE = copy_sz;
+			if (mainline_compatible_bios_mapping)
+				BIOS_VIDEO_TABLE_LOCATION = RealMake(0xf000,0xf0a4);
+			else
+				BIOS_VIDEO_TABLE_LOCATION = PhysToReal416(ROMBIOS_GetMemory(copy_sz,"BIOS video table (INT 1Dh)")); /* TODO: make option */
+
+			/* NTS: Failure to allocate means BIOS_VIDEO_TABLE_LOCATION == 0 */
 		}
-		break;
-	case MCH_PCJR:
-		for (Bit16u i = 0; i < sizeof(vparams_pcjr); i++) {
-			phys_writeb(0xFF0A4+i,vparams_pcjr[i]);
+		else {
+			BIOS_VIDEO_TABLE_LOCATION = 0;
 		}
-		break;
-	default:
-		for (Bit16u i = 0; i < sizeof(vparams); i++) {
-			phys_writeb(0xFF0A4+i,vparams[i]);
+	}
+
+	RealSetVec(0x1d,BIOS_VIDEO_TABLE_LOCATION);
+	ofs = RealToPhys(BIOS_VIDEO_TABLE_LOCATION);
+	if (ofs != 0) {
+		if (copy && copy_sz <= BIOS_VIDEO_TABLE_SIZE) {
+			for (size_t i=0;i < copy_sz;i++)
+				phys_writeb(ofs+i,copy[i]);
 		}
-		break;
+		else {
+			E_Exit("Somehow, INT 10 video param table too large");
+		}
 	}
 }
 

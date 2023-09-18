@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -256,16 +256,15 @@ static void dyn_restoreregister(DynReg * src_reg, DynReg * dst_reg) {
 }
 #endif
 
+extern int dynamic_core_cache_block_size;
 
 Bits CPU_Core_Dyn_X86_Run(void) {
 	/* Determine the linear address of CS:EIP */
 restart_core:
 	PhysPt ip_point=SegPhys(cs)+reg_eip;
-#if C_DEBUG
-#if C_HEAVY_DEBUG
+	#if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
-#endif
-#endif
+	#endif
 	CodePageHandler * chandler=0;
 	if (GCC_UNLIKELY(MakeCodePage(ip_point,chandler))) {
 		CPU_Exception(cpu.exception.which,cpu.exception.error);
@@ -279,7 +278,7 @@ restart_core:
 	CacheBlock * block=chandler->FindCacheBlock(ip_point&4095);
 	if (!block) {
 		if (!chandler->invalidation_map || (chandler->invalidation_map[ip_point&4095]<4)) {
-			block=CreateCacheBlock(chandler,ip_point,32);
+			block=CreateCacheBlock(chandler,ip_point,dynamic_core_cache_block_size);
 		} else {
 			Bitu old_cycles=CPU_Cycles;
 			CPU_Cycles=1;
@@ -294,17 +293,17 @@ restart_core:
 		}
 	}
 run_block:
+	Bitu CPU_CyclesOld = CPU_Cycles;
 	cache.block.running=0;
 	BlockReturn ret=gen_runcode(block->cache.start);
+	cycle_count += CPU_CyclesOld - CPU_Cycles;
 	switch (ret) {
 	case BR_Iret:
-#if C_DEBUG
 #if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) {
 			if (dyn_dh_fpu.state_used) DH_FPU_SAVE_REINIT
 			return debugCallback;
 		}
-#endif
 #endif
 		if (!GETFLAG(TF)) {
 			if (GETFLAG(IF) && PIC_IRQCheck) {
@@ -319,17 +318,13 @@ run_block:
 		return CBRET_NONE;
 	case BR_Normal:
 		/* Maybe check if we staying in the same page? */
-#if C_DEBUG
 #if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
-#endif
 		goto restart_core;
 	case BR_Cycles:
-#if C_DEBUG
 #if C_HEAVY_DEBUG			
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
-#endif
 #endif
 		if (!dyn_dh_fpu.state_used) return CBRET_NONE;
 		DH_FPU_SAVE_REINIT
@@ -359,7 +354,7 @@ run_block:
 		{
 			Bitu temp_ip=SegPhys(cs)+reg_eip;
 			CodePageHandler * temp_handler=(CodePageHandler *)get_tlb_readhandler(temp_ip);
-			if (temp_handler->flags & PFLAG_HASCODE) {
+			if (temp_handler->getFlags() & PFLAG_HASCODE) {
 				block=temp_handler->FindCacheBlock(temp_ip & 4095);
 				if (!block) goto restart_core;
 				cache.block.running->LinkTo(ret==BR_Link2,block);
@@ -383,6 +378,10 @@ Bits CPU_Core_Dyn_X86_Trap_Run(void) {
 	cpudecoder = &CPU_Core_Dyn_X86_Run;
 
 	return ret;
+}
+
+void CPU_Core_Dyn_X86_Shutdown(void) {
+	gen_free();
 }
 
 void CPU_Core_Dyn_X86_Init(void) {

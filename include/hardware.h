@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 
 class Section;
 enum OPL_Mode {
-	OPL_none,OPL_cms,OPL_opl2,OPL_dualopl2,OPL_opl3
+	OPL_none,OPL_cms,OPL_opl2,OPL_dualopl2,OPL_opl3,OPL_hardware,OPL_hardwareCMS
 };
 #define CAPTURE_WAVE	0x01
 #define CAPTURE_OPL		0x02

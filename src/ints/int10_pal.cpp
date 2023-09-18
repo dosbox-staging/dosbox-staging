@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -370,7 +370,7 @@ void INT10_SetColorSelect(Bit8u val) {
 	Bit8u temp=real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL);
 	temp=(temp & 0xdf) | ((val & 1) ? 0x20 : 0x0);
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAL,temp);
-	if (machine == MCH_CGA || machine==MCH_TANDY)
+	if (machine == MCH_CGA || machine == MCH_AMSTRAD || machine==MCH_TANDY)
 		IO_Write(0x3d9,temp);
 	else if (machine == MCH_PCJR) {
 		IO_Read(VGAREG_TDY_RESET); // reset the flipflop

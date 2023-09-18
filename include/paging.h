@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #define DOSBOX_PAGING_H
 
 #ifndef DOSBOX_DOSBOX_H
+#include <iostream>
 #include "dosbox.h"
 #endif
 #ifndef DOSBOX_MEM_H
@@ -59,6 +60,7 @@ class PageDirectory;
 
 class PageHandler {
 public:
+	PageHandler(Bitu flg) : flags(flg) {}
 	virtual ~PageHandler(void) { }
 	virtual Bitu readb(PhysPt addr);
 	virtual Bitu readw(PhysPt addr);
@@ -74,12 +76,26 @@ public:
 	virtual bool writeb_checked(PhysPt addr,Bitu val);
 	virtual bool writew_checked(PhysPt addr,Bitu val);
 	virtual bool writed_checked(PhysPt addr,Bitu val);
-	Bitu flags;
+   PageHandler (void) { }
+	Bitu flags; 
+	const Bitu getFlags() const {
+		return flags;
+	}
+	void setFlags(Bitu flagsNew) {
+		flags = flagsNew;
+	}
+
+private:
+	PageHandler(const PageHandler&);
+	PageHandler& operator=(const PageHandler&);
+
 };
 
 /* Some other functions */
 void PAGING_Enable(bool enabled);
 bool PAGING_Enabled(void);
+void PAGING_SetWP(bool wp);
+void PAGING_SwitchCPL(bool isUser);
 
 Bitu PAGING_GetDirBase(void);
 void PAGING_SetDirBase(Bitu cr3);
@@ -152,6 +168,7 @@ typedef struct {
 struct PagingBlock {
 	Bitu			cr3;
 	Bitu			cr2;
+	bool wp;
 	struct {
 		Bitu page;
 		PhysPt addr;
@@ -172,6 +189,18 @@ struct PagingBlock {
 		Bitu used;
 		Bit32u entries[PAGING_LINKS];
 	} links;
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} ur_links;
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} krw_links;
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} kr_links; // WP-only
 	Bit32u		firstmb[LINK_START];
 	bool		enabled;
 };
@@ -361,5 +390,25 @@ static INLINE bool mem_writed_checked(PhysPt address,Bit32u val) {
 	} else return mem_unalignedwrited_checked(address,val);
 }
 
+extern bool dosbox_enable_nonrecursive_page_fault;	/* user option */
+extern bool dosbox_allow_nonrecursive_page_fault;	/* when set, do nonrecursive mode (when executing instruction) */
+
+#include <exception>
+
+class GuestPageFaultException : public std::exception {
+public:
+	virtual const char *what() const throw() {
+		return "Guest page fault exception";
+	}
+	GuestPageFaultException(PhysPt n_lin_addr, Bitu n_page_addr, Bitu n_faultcode) {
+		lin_addr = n_lin_addr;
+		page_addr = n_page_addr;
+		faultcode = n_faultcode;
+	}
+public:
+	PhysPt lin_addr;
+	Bitu page_addr;
+	Bitu faultcode;
+};
 
 #endif

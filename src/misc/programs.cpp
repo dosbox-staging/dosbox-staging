@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include <vector>
 #include <sstream>
 #include <ctype.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -33,6 +34,8 @@
 #include "shell.h"
 
 Bitu call_program;
+
+extern bool dos_kernel_disabled;
 
 /* This registers a file on the virtual drive and creates the correct structure for it*/
 
@@ -49,25 +52,62 @@ static Bit8u exe_block[]={
 
 #define CB_POS 12
 
-static std::vector<PROGRAMS_Main*> internal_progs;
+class InternalProgramEntry {
+public:
+	InternalProgramEntry() {
+		main = NULL;
+		comsize = 0;
+		comdata = NULL;
+	}
+	~InternalProgramEntry() {
+		if (comdata != NULL) free(comdata);
+		comdata = NULL;
+		comsize = 0;
+		main = NULL;
+	}
+public:
+	std::string	name;
+	Bit8u*		comdata;
+	Bit32u		comsize;
+	PROGRAMS_Main*	main;
+};
+
+static std::vector<InternalProgramEntry*> internal_progs;
+
+void PROGRAMS_Shutdown(void) {
+	for (size_t i=0;i < internal_progs.size();i++) {
+		if (internal_progs[i] != NULL) {
+			delete internal_progs[i];
+			internal_progs[i] = NULL;
+		}
+	}
+	internal_progs.clear();
+}
 
 void PROGRAMS_MakeFile(char const * const name,PROGRAMS_Main * main) {
-	Bit8u * comdata=(Bit8u *)malloc(32); //MEM LEAK
-	memcpy(comdata,&exe_block,sizeof(exe_block));
-	comdata[CB_POS]=(Bit8u)(call_program&0xff);
-	comdata[CB_POS+1]=(Bit8u)((call_program>>8)&0xff);
+	Bit32u size=sizeof(exe_block)+sizeof(Bit8u);
+	InternalProgramEntry *ipe;
+	Bit8u *comdata;
+	Bit8u index;
 
 	/* Copy save the pointer in the vector and save it's index */
 	if (internal_progs.size()>255) E_Exit("PROGRAMS_MakeFile program size too large (%d)",static_cast<int>(internal_progs.size()));
-	Bit8u index = (Bit8u)internal_progs.size();
-	internal_progs.push_back(main);
 
+	index = (Bit8u)internal_progs.size();
+	comdata = (Bit8u *)malloc(32); //MEM LEAK
+	memcpy(comdata,&exe_block,sizeof(exe_block));
 	memcpy(&comdata[sizeof(exe_block)],&index,sizeof(index));
-	Bit32u size=sizeof(exe_block)+sizeof(index);	
-	VFILE_Register(name,comdata,size);	
+	comdata[CB_POS]=(Bit8u)(call_program&0xff);
+	comdata[CB_POS+1]=(Bit8u)((call_program>>8)&0xff);
+
+	ipe = new InternalProgramEntry();
+	ipe->main = main;
+	ipe->name = name;
+	ipe->comsize = size;
+	ipe->comdata = comdata;
+	internal_progs.push_back(ipe);
+	VFILE_Register(name,ipe->comdata,ipe->comsize);
 }
-
-
 
 static Bitu PROGRAMS_Handler(void) {
 	/* This sets up everything for a program start up call */
@@ -77,18 +117,27 @@ static Bitu PROGRAMS_Handler(void) {
 	PhysPt reader=PhysMake(dos.psp(),256+sizeof(exe_block));
 	HostPt writer=(HostPt)&index;
 	for (;size>0;size--) *writer++=mem_readb(reader++);
-	Program * new_program;
+	Program * new_program = NULL;
 	if (index > internal_progs.size()) E_Exit("something is messing with the memory");
-	PROGRAMS_Main * handler = internal_progs[index];
+	InternalProgramEntry *ipe = internal_progs[index];
+	if (ipe == NULL) E_Exit("Attempt to run internal program slot with nothing allocated");
+	if (ipe->main == NULL) return CBRET_NONE;
+	PROGRAMS_Main * handler = internal_progs[index]->main;
 	(*handler)(&new_program);
-	new_program->Run();
-	delete new_program;
+
+	try { /* "BOOT" can throw an exception (int(2)) */
+		new_program->Run();
+		delete new_program;
+	}
+	catch (...) { /* well if it happened, free the program anyway to avert memory leaks */
+		delete new_program;
+		throw; /* pass it on */
+	}
+
 	return CBRET_NONE;
 }
 
-
 /* Main functions used in all program */
-
 
 Program::Program() {
 	/* Find the command line and setup the PSP */
@@ -165,82 +214,241 @@ void Program::WriteOut_NoParsing(const char * format) {
 //	DOS_WriteFile(STDOUT,(Bit8u *)format,&size);
 }
 
+static bool LocateEnvironmentBlock(PhysPt &env_base,PhysPt &env_fence,Bitu env_seg) {
+	if (env_seg == 0) {
+		/* The DOS program might have freed it's environment block perhaps. */
+		return false;
+	}
+
+	DOS_MCB env_mcb(env_seg-1); /* read the environment block's MCB to determine how large it is */
+	env_base = PhysMake(env_seg,0);
+	env_fence = env_base + (env_mcb.GetSize() << 4);
+	return true;
+}
+
+int EnvPhys_StrCmp(PhysPt es,PhysPt ef,const char *ls) {
+	unsigned char a,b;
+
+	while (1) {
+		a = mem_readb(es++);
+		b = (unsigned char)(*ls++);
+		if (a == '=') a = 0;
+		if (a == 0 && b == 0) break;
+		if (a == b) continue;
+		return (int)a - (int)b;
+	}
+
+	return 0;
+}
+
+void EnvPhys_StrCpyToCPPString(std::string &result,PhysPt &env_scan,PhysPt env_fence) {
+	char tmp[512],*w=tmp,*wf=tmp+sizeof(tmp)-1,c;
+
+	result.clear();
+	while (env_scan < env_fence) {
+		if ((c=(char)mem_readb(env_scan++)) == 0) break;
+
+		if (w >= wf) {
+			*w = 0;
+			result += tmp;
+			w = tmp;
+		}
+
+		assert(w < wf);
+		*w++ = c;
+	}
+	if (w != tmp) {
+		*w = 0;
+		result += tmp;
+	}
+}
+
+bool EnvPhys_ScanUntilNextString(PhysPt &env_scan,PhysPt env_fence) {
+	/* scan until end of block or NUL */
+	while (env_scan < env_fence && mem_readb(env_scan) != 0) env_scan++;
+
+	/* if we hit the fence, that's something to warn about. */
+	if (env_scan >= env_fence) {
+		LOG_MSG("Warning: environment string scan hit the end of the environment block without terminating NUL\n");
+		return false;
+	}
+
+	/* if we stopped at anything other than a NUL, that's something to warn about */
+	if (mem_readb(env_scan) != 0) {
+		LOG_MSG("Warning: environment string scan scan stopped without hitting NUL\n");
+		return false;
+	}
+
+	env_scan++; /* skip NUL */
+	return true;
+}
 
 bool Program::GetEnvStr(const char * entry,std::string & result) {
-	/* Walk through the internal environment and see for a match */
-	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
+	PhysPt env_base,env_fence,env_scan;
 
-	char env_string[1024+1];
-	result.erase();
-	if (!entry[0]) return false;
-	do 	{
-		MEM_StrCopy(env_read,env_string,1024);
-		if (!env_string[0]) return false;
-		env_read += (PhysPt)(strlen(env_string)+1);
-		char* equal = strchr(env_string,'=');
-		if (!equal) continue;
-		/* replace the = with \0 to get the length */
-		*equal = 0;
-		if (strlen(env_string) != strlen(entry)) continue;
-		if (strcasecmp(entry,env_string)!=0) continue;
-		/* restore the = to get the original result */
-		*equal = '=';
-		result = env_string;
-		return true;
-	} while (1);
+	if (dos_kernel_disabled) {
+		LOG_MSG("BUG: Program::GetEnvNum() called with DOS kernel disabled (such as OS boot).\n");
+		return false;
+	}
+
+	if (!LocateEnvironmentBlock(env_base,env_fence,psp->GetEnvironment())) {
+		LOG_MSG("Warning: GetEnvCount() was not able to locate the program's environment block\n");
+		return false;
+	}
+
+	env_scan = env_base;
+	while (env_scan < env_fence) {
+		/* "NAME" + "=" + "VALUE" + "\0" */
+		/* end of the block is a NULL string meaning a \0 follows the last string's \0 */
+		if (mem_readb(env_scan) == 0) break; /* normal end of block */
+
+		if (EnvPhys_StrCmp(env_scan,env_fence,entry) == 0) {
+			EnvPhys_StrCpyToCPPString(result,env_scan,env_fence);
+			return true;
+		}
+
+		if (!EnvPhys_ScanUntilNextString(env_scan,env_fence)) break;
+	}
+
 	return false;
 }
 
-bool Program::GetEnvNum(Bitu num,std::string & result) {
-	char env_string[1024+1];
-	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
-	do 	{
-		MEM_StrCopy(env_read,env_string,1024);
-		if (!env_string[0]) break;
-		if (!num) { result=env_string;return true;}
-		env_read += (PhysPt)(strlen(env_string)+1);
-		num--;
-	} while (1);
+bool Program::GetEnvNum(Bitu want_num,std::string & result) {
+	PhysPt env_base,env_fence,env_scan;
+	Bitu num = 0;
+
+	if (dos_kernel_disabled) {
+		LOG_MSG("BUG: Program::GetEnvNum() called with DOS kernel disabled (such as OS boot).\n");
+		return false;
+	}
+
+	if (!LocateEnvironmentBlock(env_base,env_fence,psp->GetEnvironment())) {
+		LOG_MSG("Warning: GetEnvCount() was not able to locate the program's environment block\n");
+		return false;
+	}
+
+	result.clear();
+	env_scan = env_base;
+	while (env_scan < env_fence) {
+		/* "NAME" + "=" + "VALUE" + "\0" */
+		/* end of the block is a NULL string meaning a \0 follows the last string's \0 */
+		if (mem_readb(env_scan) == 0) break; /* normal end of block */
+
+		if (num == want_num) {
+			EnvPhys_StrCpyToCPPString(result,env_scan,env_fence);
+			return true;
+		}
+
+		num++;
+		if (!EnvPhys_ScanUntilNextString(env_scan,env_fence)) break;
+	}
+
 	return false;
 }
 
 Bitu Program::GetEnvCount(void) {
-	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
-	Bitu num=0;
-	while (mem_readb(env_read)!=0) {
-		for (;mem_readb(env_read);env_read++) {};
-		env_read++;
-		num++;
+	PhysPt env_base,env_fence,env_scan;
+	Bitu num = 0;
+
+	if (dos_kernel_disabled) {
+		LOG_MSG("BUG: Program::GetEnvCount() called with DOS kernel disabled (such as OS boot).\n");
+		return 0;
 	}
+
+	if (!LocateEnvironmentBlock(env_base,env_fence,psp->GetEnvironment())) {
+		LOG_MSG("Warning: GetEnvCount() was not able to locate the program's environment block\n");
+		return false;
+	}
+
+	env_scan = env_base;
+	while (env_scan < env_fence) {
+		/* "NAME" + "=" + "VALUE" + "\0" */
+		/* end of the block is a NULL string meaning a \0 follows the last string's \0 */
+		if (mem_readb(env_scan++) == 0) break; /* normal end of block */
+		num++;
+		if (!EnvPhys_ScanUntilNextString(env_scan,env_fence)) break;
+	}
+
 	return num;
 }
 
+/* NTS: "entry" string must have already been converted to uppercase */
 bool Program::SetEnv(const char * entry,const char * new_string) {
-	PhysPt env_read=PhysMake(psp->GetEnvironment(),0);
-	PhysPt env_write=env_read;
-	char env_string[1024+1];
-	do 	{
-		MEM_StrCopy(env_read,env_string,1024);
-		if (!env_string[0]) break;
-		env_read += (PhysPt)(strlen(env_string)+1);
-		if (!strchr(env_string,'=')) continue;		/* Remove corrupt entry? */
-		if ((strncasecmp(entry,env_string,strlen(entry))==0) && 
-			env_string[strlen(entry)]=='=') continue;
-		MEM_BlockWrite(env_write,env_string,(Bitu)(strlen(env_string)+1));
-		env_write += (PhysPt)(strlen(env_string)+1);
-	} while (1);
-/* TODO Maybe save the program name sometime. not really needed though */
-	/* Save the new entry */
-	if (new_string[0]) {
-		std::string bigentry(entry);
-		for (std::string::iterator it = bigentry.begin(); it != bigentry.end(); ++it) *it = toupper(*it);
-		sprintf(env_string,"%s=%s",bigentry.c_str(),new_string); 
-//		sprintf(env_string,"%s=%s",entry,new_string); //oldcode
-		MEM_BlockWrite(env_write,env_string,(Bitu)(strlen(env_string)+1));
-		env_write += (PhysPt)(strlen(env_string)+1);
+	PhysPt env_base,env_fence,env_scan;
+	size_t nsl = 0,el = 0,needs;
+
+	if (dos_kernel_disabled) {
+		LOG_MSG("BUG: Program::SetEnv() called with DOS kernel disabled (such as OS boot).\n");
+		return false;
 	}
-	/* Clear out the final piece of the environment */
-	mem_writed(env_write,0);
+
+	if (!LocateEnvironmentBlock(env_base,env_fence,psp->GetEnvironment())) {
+		LOG_MSG("Warning: SetEnv() was not able to locate the program's environment block\n");
+		return false;
+	}
+
+	el = strlen(entry);
+	if (*new_string != 0) nsl = strlen(new_string);
+	needs = nsl+1+el+1+1; /* entry + '=' + new_string + '\0' + '\0' */
+
+	/* look for the variable in the block. break the loop if found */
+	env_scan = env_base;
+	while (env_scan < env_fence) {
+		if (mem_readb(env_scan) == 0) break;
+
+		if (EnvPhys_StrCmp(env_scan,env_fence,entry) == 0) {
+			/* found it. remove by shifting the rest of the environment block over */
+			int zeroes=0;
+			PhysPt s,d;
+
+			/* before we remove it: is there room for the new value? */
+			if (nsl != 0) {
+				if ((env_scan+needs) > env_fence) {
+					LOG_MSG("Program::SetEnv() error, insufficient room for environment variable %s=%s\n",entry,new_string);
+					return false;
+				}
+			}
+
+			s = env_scan; d = env_scan;
+			while (s < env_fence && mem_readb(s) != 0) s++;
+			if (s < env_fence && mem_readb(s) == 0) s++;
+
+			while (s < env_fence) {
+				unsigned char b = mem_readb(s++);
+
+				if (b == 0) zeroes++;
+				else zeroes=0;
+
+				mem_writeb(d++,b);
+				if (zeroes >= 2) break; /* two consecutive zeros means the end of the block */
+			}
+		}
+		else {
+			/* scan to next string */
+			if (!EnvPhys_ScanUntilNextString(env_scan,env_fence)) break;
+		}
+	}
+
+	/* At this point, env_scan points to the first byte beyond the block */
+	/* add the string to the end of the block */
+	if (*new_string != 0) {
+		if ((env_scan+needs) > env_fence) {
+			LOG_MSG("Program::SetEnv() error, insufficient room for environment variable %s=%s\n",entry,new_string);
+			return false;
+		}
+
+		assert(env_scan < env_fence);
+		for (const char *s=entry;*s != 0;) mem_writeb(env_scan++,*s++);
+		mem_writeb(env_scan++,'=');
+
+		assert(env_scan < env_fence);
+		for (const char *s=new_string;*s != 0;) mem_writeb(env_scan++,*s++);
+		mem_writeb(env_scan++,0);
+		mem_writeb(env_scan++,0);
+
+		assert(env_scan < env_fence);
+	}
+
 	return true;
 }
 
@@ -280,7 +488,7 @@ void CONFIG::Run(void) {
 	static const char* const params[] = {
 		"-r", "-wcp", "-wcd", "-wc", "-writeconf", "-l", "-rmconf",
 		"-h", "-help", "-?", "-axclear", "-axadd", "-axtype", "-get", "-set",
-		"-writelang", "-wl", "-securemode", "" };
+		"-writelang", "-wl", "-securemode", NULL };
 	enum prs {
 		P_NOMATCH, P_NOPARAMS, // fixed return values for GetParameterFromList
 		P_RESTART,
@@ -575,7 +783,6 @@ void CONFIG::Run(void) {
 					// it's a property name
 					std::string val = sec->GetPropValue(pvars[0].c_str());
 					WriteOut("%s",val.c_str());
-					first_shell->SetEnv("CONFIG",val.c_str());
 				}
 				break;
 			}
@@ -593,7 +800,6 @@ void CONFIG::Run(void) {
 					return;
 				}
 				WriteOut("%s",val.c_str());
-				first_shell->SetEnv("CONFIG",val.c_str());
 				break;
 			}
 			default:

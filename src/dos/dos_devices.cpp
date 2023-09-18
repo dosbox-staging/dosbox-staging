@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2015  The DOSBox Team
+ *  Copyright (C) 2002-2013  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,19 +25,21 @@
 #include "bios.h"
 #include "dos_inc.h"
 #include "support.h"
+#include "parport.h"
 #include "drives.h" //Wildcmp
 /* Include all the devices */
 
 #include "dev_con.h"
 
 
-DOS_Device * Devices[DOS_DEVICES];
+DOS_Device * Devices[DOS_DEVICES] = {NULL};
 
 class device_NUL : public DOS_Device {
 public:
 	device_NUL() { SetName("NUL"); };
 	virtual bool Read(Bit8u * data,Bit16u * size) {
-		*size = 0; //Return success and no data read. 
+		for(Bitu i = 0; i < *size;i++) 
+			data[i]=0; 
 		LOG(LOG_IOCTL,LOG_NORMAL)("%s:READ",GetName());
 		return true;
 	}
@@ -55,14 +57,38 @@ public:
 	virtual bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
 };
 
-class device_LPT1 : public device_NUL {
+class device_PRN : public DOS_Device {
 public:
-   	device_LPT1() { SetName("LPT1");}
-	Bit16u GetInformation(void) { return 0x80A0; }
-	bool Read(Bit8u* data,Bit16u * size){
+	device_PRN() {
+		SetName("PRN");
+	}
+	bool Read(Bit8u * data,Bit16u * size) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
-	}	
+	}
+	bool Write(Bit8u * data,Bit16u * size) {
+		for(int i = 0; i < 3; i++) {
+			// look up a parallel port
+			if(parallelPortObjects[i] != NULL) {
+				// send the data
+				for (Bit16u j=0; j<*size; j++) {
+					if(!parallelPortObjects[i]->Putchar(data[j])) return false;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	bool Seek(Bit32u * pos,Bit32u type) {
+		*pos = 0;
+		return true;
+	}
+	Bit16u GetInformation(void) {
+		return 0x80A0;
+	}
+	bool Close() {
+		return false;
+	}
 };
 
 bool DOS_Device::Read(Bit8u * data,Bit16u * size) {
@@ -161,8 +187,10 @@ Bit8u DOS_FindDevice(char const * name) {
 void DOS_AddDevice(DOS_Device * adddev) {
 //Caller creates the device. We store a pointer to it
 //TODO Give the Device a real handler in low memory that responds to calls
+	if (adddev == NULL) E_Exit("DOS_AddDevice with null ptr");
 	for(Bitu i = 0; i < DOS_DEVICES;i++) {
-		if(!Devices[i]){
+		if (Devices[i] == NULL){
+//			LOG_MSG("DOS_AddDevice %s (%p)\n",adddev->name,(void*)adddev);
 			Devices[i] = adddev;
 			Devices[i]->SetDeviceNumber(i);
 			return;
@@ -174,11 +202,28 @@ void DOS_AddDevice(DOS_Device * adddev) {
 void DOS_DelDevice(DOS_Device * dev) {
 // We will destroy the device if we find it in our list.
 // TODO:The file table is not checked to see the device is opened somewhere!
+	if (dev == NULL) E_Exit("DOS_DelDevice with null ptr");
 	for (Bitu i = 0; i <DOS_DEVICES;i++) {
-		if(Devices[i] && !strcasecmp(Devices[i]->name,dev->name)){
+		if (Devices[i] == dev) { /* NTS: The mainline code deleted by matching names??? Why? */
+//			LOG_MSG("DOS_DelDevice %s (%p)\n",dev->name,(void*)dev);
 			delete Devices[i];
 			Devices[i] = 0;
 			return;
+		}
+	}
+
+	/* hm. unfortunately, too much code in DOSBox assumes that we delete the object.
+	 * prior to this fix, failure to delete caused a memory leak */
+	LOG_MSG("WARNING: DOS_DelDevice() failed to match device object '%s' (%p). Deleting anyway\n",dev->name,(void*)dev);
+	delete dev;
+}
+
+void DOS_ShutdownDevices(void) {
+	for (Bitu i=0;i < DOS_DEVICES;i++) {
+		if (Devices[i] != NULL) {
+//			LOG_MSG("DOS: Shutting down device %s (%p)\n",Devices[i]->name,(void*)Devices[i]);
+			delete Devices[i];
+			Devices[i] = NULL;
 		}
 	}
 }
@@ -191,6 +236,7 @@ void DOS_SetupDevices(void) {
 	newdev2=new device_NUL();
 	DOS_AddDevice(newdev2);
 	DOS_Device * newdev3;
-	newdev3=new device_LPT1();
+	newdev3=new device_PRN();
 	DOS_AddDevice(newdev3);
 }
+
