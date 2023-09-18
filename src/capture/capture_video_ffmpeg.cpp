@@ -424,6 +424,7 @@ bool FfmpegVideoEncoder::Init(CaptureType container)
 
 	AVDictionary *options = nullptr;
 	av_dict_set(&options, "crf", "0", 0);
+	av_dict_set(&options, "preset", "veryslow", 0);
 
 	if (avcodec_open2(codec_context, codec, &options) < 0) {
 		LOG_ERR("FFMPEG: Failed to open video context");
