@@ -649,19 +649,7 @@ if get_option('use_ffmpeg')
         include_type: 'system',
     )
     ffmpeg_dep += dependency(
-        'libswscale',
-        static: ffmpeg_static,
-        not_found_message: msg.format('use_ffmpeg'),
-        include_type: 'system',
-    )
-    ffmpeg_dep += dependency(
         'libavformat',
-        static: ffmpeg_static,
-        not_found_message: msg.format('use_ffmpeg'),
-        include_type: 'system',
-    )
-    ffmpeg_dep += dependency(
-        'libswresample',
         static: ffmpeg_static,
         not_found_message: msg.format('use_ffmpeg'),
         include_type: 'system',
