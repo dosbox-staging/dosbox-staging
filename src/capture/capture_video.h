@@ -61,6 +61,11 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 
+enum class AudioCodec {
+	AAC,
+	FLAC
+};
+
 struct VideoScalerWork
 {
 	int64_t pts = 0;
@@ -91,7 +96,7 @@ struct FfmpegVideoEncoder {
 	bool is_working = false;
 	bool ready_for_init = false;
 
-	bool Init(CaptureType container);
+	bool Init();
 	void Free();
 	bool UpdateSettingsIfNeeded(uint16_t width, uint16_t height, Fraction pixel_aspect_ratio, int frames_per_second);
 };
@@ -111,7 +116,7 @@ struct FfmpegAudioEncoder {
 	bool is_working = false;
 	bool ready_for_init = false;
 
-	bool Init();
+	bool Init(const AudioCodec audio_codec);
 	void Free();
 };
 
@@ -147,8 +152,6 @@ public:
 
 	void CaptureVideoFinalise() override;
 
-	CaptureType container = CaptureType::VideoMkv;
-
 private:
 	std::mutex mutex                 = {};
 	std::condition_variable waiter   = {};
@@ -161,6 +164,10 @@ private:
 
 	// Guarded by mutex, only set in destructor
 	bool is_shutting_down = false;
+
+	// Configuration settings set in constructor
+	CaptureType container = CaptureType::VideoMkv;
+	AudioCodec audio_codec = AudioCodec::AAC;
 
 	bool InitEverything();
 	void FreeEverything();

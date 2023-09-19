@@ -55,6 +55,11 @@ FfmpegEncoder::FfmpegEncoder(const Section_prop* secprop)
 	} else {
 		container = CaptureType::VideoMkv;
 	}
+	if (secprop->Get_string("ffmpeg_audio_codec") == std::string("flac")) {
+		audio_codec = AudioCodec::FLAC;
+	} else {
+		audio_codec = AudioCodec::AAC;
+	}
 
 	video_scaler.thread  = std::thread(&FfmpegEncoder::ScaleVideo, this);
 	set_thread_name(video_scaler.thread, "dosbox:scaler");
@@ -94,11 +99,11 @@ FfmpegEncoder::~FfmpegEncoder()
 
 bool FfmpegEncoder::InitEverything()
 {
-	if (!video_encoder.Init(container)) {
+	if (!video_encoder.Init()) {
 		LOG_ERR("FFMPEG: Failed to init video encoder");
 		return false;
 	}
-	if (!audio_encoder.Init()) {
+	if (!audio_encoder.Init(audio_codec)) {
 		LOG_ERR("FFMPEG: Failed to init audio encoder");
 		return false;
 	}
@@ -324,11 +329,56 @@ void FfmpegMuxer::Free()
 	}
 }
 
-bool FfmpegAudioEncoder::Init()
+static bool codec_supports_format(const AVCodec* codec, const AVSampleFormat requested)
 {
-	codec = avcodec_find_encoder_by_name("aac");
+	const AVSampleFormat* format = codec->sample_fmts;
+	while (*format != -1) {
+		if (*format == requested) {
+			return true;
+		}
+		++format;
+	}
+	return false;
+}
+
+// From testing on my system, flac supports S16 (interleaved int16_t) and does not support float
+// AAC only supports FLTP (floating point planar format, not interleaved)
+// Try S16 first because that is what comes in as input
+// Re-vist this when Dosbox changes audio formats to float
+static AVSampleFormat find_best_audio_format(const AVCodec *codec)
+{
+	if (codec_supports_format(codec, AV_SAMPLE_FMT_S16)) {
+		return AV_SAMPLE_FMT_S16;
+	}
+	if (codec_supports_format(codec, AV_SAMPLE_FMT_FLTP)) {
+		return AV_SAMPLE_FMT_FLTP;
+	}
+	return AV_SAMPLE_FMT_NONE;
+}
+
+bool FfmpegAudioEncoder::Init(const AudioCodec audio_codec)
+{
+	switch (audio_codec) {
+	case AudioCodec::AAC:
+		codec = avcodec_find_encoder_by_name("aac");
+		break;
+	case AudioCodec::FLAC:
+		codec = avcodec_find_encoder_by_name("flac");
+		break;
+	default:
+		codec = nullptr;
+	}
+
 	if (!codec) {
 		LOG_ERR("FFMPEG: Failed to find audio codec");
+		return false;
+	}
+
+	const AVSampleFormat format = find_best_audio_format(codec);
+	if (format == AV_SAMPLE_FMT_NONE) {
+		// If we hit this from some new audio codec, it means we need to write
+		// a new conversion routine in EncodeAudio().
+		LOG_ERR("FFMPEG: No conversion routine for audio codec's supported format");
 		return false;
 	}
 
@@ -338,7 +388,7 @@ bool FfmpegAudioEncoder::Init()
 		return false;
 	}
 
-	codec_context->sample_fmt     = AV_SAMPLE_FMT_FLTP;
+	codec_context->sample_fmt     = format;
 	codec_context->sample_rate    = static_cast<int>(sample_rate);
 	codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
 
@@ -379,7 +429,7 @@ void FfmpegAudioEncoder::Free()
 	}
 }
 
-bool FfmpegVideoEncoder::Init(CaptureType container)
+bool FfmpegVideoEncoder::Init()
 {
 	codec = avcodec_find_encoder_by_name("libx264");
 	if (!codec) {
@@ -402,9 +452,10 @@ bool FfmpegVideoEncoder::Init(CaptureType container)
 	codec_context->sample_aspect_ratio.den = static_cast<int>(
 	        pixel_aspect_ratio.Denom());
 
-	if (container == CaptureType::VideoMkv) {
-		codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-	}
+	// This flag is required for Matroska (MKV)
+	// It's also required for MP4 when using FLAC
+	// It doesn't seem to have any adverse side effects so just turn it on all the time.
+	codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
 	AVDictionary *options = nullptr;
 	av_dict_set(&options, "crf", "0", 0);
@@ -694,7 +745,8 @@ void FfmpegEncoder::EncodeAudio()
 
 		for (;;) {
 			audio_encoder.queue.BulkDequeue(audio_data, sample_capacity);
-			if (audio_data.empty()) {
+			const int received_frames = static_cast<int>(audio_data.size()) / static_cast<int>(SamplesPerFrame);
+			if (received_frames < 1) {
 				assert(!audio_encoder.queue.IsRunning());
 				break;
 			}
@@ -702,15 +754,24 @@ void FfmpegEncoder::EncodeAudio()
 				LOG_ERR("FFMPEG: Failed to make audio frame writable");
 				continue;
 			}
-			const int received_frames = static_cast<int>(
-			                                    audio_data.size()) /
-			                            static_cast<int>(SamplesPerFrame);
-			float* left_channel = reinterpret_cast<float*>(audio_encoder.frame->data[0]);
-			float* right_channel = reinterpret_cast<float*>(audio_encoder.frame->data[1]);
-			for (int frame = 0; frame < received_frames; ++frame) {
-				const size_t sample = static_cast<size_t>(frame) * SamplesPerFrame;
-				left_channel[frame] = static_cast<float>(audio_data[sample]) / 32768.0f;
-				right_channel[frame] = static_cast<float>(audio_data[sample + 1]) / 32768.0f;
+			switch(audio_encoder.codec_context->sample_fmt) {
+			case AV_SAMPLE_FMT_FLTP: {
+				float* left_channel = reinterpret_cast<float*>(audio_encoder.frame->data[0]);
+				float* right_channel = reinterpret_cast<float*>(audio_encoder.frame->data[1]);
+				for (int frame = 0; frame < received_frames; ++frame) {
+					const size_t sample = static_cast<size_t>(frame) * SamplesPerFrame;
+					left_channel[frame] = static_cast<float>(audio_data[sample]) / 32768.0f;
+					right_channel[frame] = static_cast<float>(audio_data[sample + 1]) / 32768.0f;
+				}
+				break;
+			}
+			case AV_SAMPLE_FMT_S16: {
+				memcpy(audio_encoder.frame->data[0], audio_data.data(), audio_data.size() * sizeof(int16_t));
+				break;
+			}
+			default: {
+				assertm(false, "Invalid audio sample format");
+			}
 			}
 			audio_encoder.frame->nb_samples = received_frames;
 			audio_encoder.frame->pts += received_frames;

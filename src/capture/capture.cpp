@@ -723,6 +723,13 @@ static void init_capture_dosbox_settings(Section_prop& secprop)
 	str_prop->Set_help("Set the container for ffmpeg to use.\n"
 	                        "  mkv: Output video is typically usable even if Dosbox crashes.\n"
 	                        "  mp4: Less resilance against crashes but better compatability");
+	const char* audio_codecs[] = {"aac", "flac", nullptr};
+	str_prop = secprop.Add_string("ffmpeg_audio_codec", when_idle, "aac");
+	assert(str_prop);
+	str_prop->Set_values(audio_codecs);
+	str_prop->Set_help("Set the audio codec for ffmpeg to use.\n"
+	                        "  aac: Lossy codec\n"
+	                        "  flac: Lossless codec");
 }
 
 void CAPTURE_AddConfigSection(const config_ptr_t& conf)
