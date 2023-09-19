@@ -48,8 +48,14 @@ constexpr int MuxerAudioStreamIndex = 1;
 // Always stereo audio
 constexpr size_t SamplesPerFrame = 2;
 
-FfmpegEncoder::FfmpegEncoder()
+FfmpegEncoder::FfmpegEncoder(const Section_prop* secprop)
 {
+	if (secprop->Get_string("ffmpeg_container") == std::string("mp4")) {
+		container = CaptureType::VideoMp4;
+	} else {
+		container = CaptureType::VideoMkv;
+	}
+
 	video_scaler.thread  = std::thread(&FfmpegEncoder::ScaleVideo, this);
 	set_thread_name(video_scaler.thread, "dosbox:scaler");
 

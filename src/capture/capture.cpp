@@ -615,13 +615,7 @@ static void capture_init(Section* sec)
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
 #if C_FFMPEG
 	if (secprop->Get_string("video_encoder") == std::string("ffmpeg")) {
-		std::unique_ptr<FfmpegEncoder> ffmpeg_encoder = std::make_unique<FfmpegEncoder>();
-		if (secprop->Get_string("ffmpeg_container") == std::string("mp4")) {
-			ffmpeg_encoder->container = CaptureType::VideoMp4;
-		} else {
-			ffmpeg_encoder->container = CaptureType::VideoMkv;
-		}
-		video_encoder = std::move(ffmpeg_encoder);
+		video_encoder = std::make_unique<FfmpegEncoder>(secprop);
 	} else {
 		video_encoder = std::make_unique<ZmbvEncoder>();
 	}

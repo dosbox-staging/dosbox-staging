@@ -133,7 +133,8 @@ struct FfmpegMuxer {
 
 class FfmpegEncoder : public VideoEncoder {
 public:
-	FfmpegEncoder();
+	FfmpegEncoder() = delete;
+	FfmpegEncoder(const Section_prop* secprop);
 	~FfmpegEncoder();
 	FfmpegEncoder(const FfmpegEncoder&)            = delete;
 	FfmpegEncoder& operator=(const FfmpegEncoder&) = delete;
