@@ -364,40 +364,11 @@ bool FfmpegAudioEncoder::Init()
 		return false;
 	}
 
-	// Resampler used to convert from interleaved 16 bit signed int
-	// To planar floating point format
-	// Can resample the audio rate in the same function call if needed
-	// (currently no resampling) I believe there is an extra step or two
-	// required for actual resampling (converting timing and such)
-	constexpr int log_offset    = 0;
-	constexpr void* log_context = nullptr;
-	resampler_context           = swr_alloc_set_opts(nullptr,
-                                               AV_CH_LAYOUT_STEREO,
-                                               AV_SAMPLE_FMT_FLTP,
-                                               codec_context->sample_rate,
-                                               AV_CH_LAYOUT_STEREO,
-                                               AV_SAMPLE_FMT_S16,
-                                               codec_context->sample_rate,
-                                               log_offset,
-                                               log_context);
-	if (!resampler_context) {
-		LOG_ERR("FFMPEG: Failed to allocate audio resampler");
-		return false;
-	}
-	if (swr_init(resampler_context) < 0) {
-		LOG_ERR("FFMPEG: Failed to init audio resampler");
-		return false;
-	}
-
 	return true;
 }
 
 void FfmpegAudioEncoder::Free()
 {
-	if (resampler_context) {
-		swr_free(&resampler_context);
-		resampler_context = nullptr;
-	}
 	if (frame) {
 		av_frame_free(&frame);
 		frame = nullptr;
@@ -734,21 +705,15 @@ void FfmpegEncoder::EncodeAudio()
 			const int received_frames = static_cast<int>(
 			                                    audio_data.size()) /
 			                            static_cast<int>(SamplesPerFrame);
-			const uint8_t* audio_ptr = reinterpret_cast<uint8_t*>(
-			        audio_data.data());
-			const int converted_frames =
-			        swr_convert(audio_encoder.resampler_context,
-			                    audio_encoder.frame->data,
-			                    frame_capacity,
-			                    &audio_ptr,
-			                    received_frames);
-			if (converted_frames < 0) {
-				LOG_ERR("FFMPEG: Failed to convert audio frame");
-				continue;
+			float* left_channel = reinterpret_cast<float*>(audio_encoder.frame->data[0]);
+			float* right_channel = reinterpret_cast<float*>(audio_encoder.frame->data[1]);
+			for (int frame = 0; frame < received_frames; ++frame) {
+				const size_t sample = static_cast<size_t>(frame) * SamplesPerFrame;
+				left_channel[frame] = static_cast<float>(audio_data[sample]) / 32768.0f;
+				right_channel[frame] = static_cast<float>(audio_data[sample + 1]) / 32768.0f;
 			}
-			assert(converted_frames == received_frames);
-			audio_encoder.frame->nb_samples = converted_frames;
-			audio_encoder.frame->pts += converted_frames;
+			audio_encoder.frame->nb_samples = received_frames;
+			audio_encoder.frame->pts += received_frames;
 			if (avcodec_send_frame(audio_encoder.codec_context,
 			                       audio_encoder.frame) < 0) {
 				LOG_ERR("FFMPEG: Failed to send audio frame");
@@ -760,7 +725,7 @@ void FfmpegEncoder::EncodeAudio()
 			// The encoder must receive full capacity except for the
 			// last frame. If we hit this, the queue should be
 			// stopped anyway.
-			if (converted_frames != frame_capacity) {
+			if (received_frames != frame_capacity) {
 				assert(!audio_encoder.queue.IsRunning());
 				break;
 			}

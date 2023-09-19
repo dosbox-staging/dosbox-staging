@@ -103,7 +103,6 @@ struct FfmpegAudioEncoder {
 	const AVCodec* codec          = nullptr;
 	AVCodecContext* codec_context = nullptr;
 	AVFrame* frame                = nullptr;
-	SwrContext* resampler_context = nullptr;
 
 	// Accessed only in main thread, used to check if needs re-init
 	// If sample rate changes, create a new file
