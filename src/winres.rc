@@ -1,5 +1,5 @@
 
-#include "afxres.h"
+#include <windows.h>
 #include "../include/resource.h"
 
 // icon resource
@@ -12,13 +12,54 @@ BEGIN
 		MENUITEM "Quick Launch",		ID_OPENFILE
 		MENUITEM "Mapper\tCtrl-F1",		ID_KEYMAP
 		MENUITEM SEPARATOR
-		MENUITEM "Wait on error",		ID_WAITONERR
-		MENUITEM "Avoid usage of symkeys",		ID_USESCANCODES
-		MENUITEM "Capture/Release mouse\tCtrl-F10",		ID_CAPMOUSE
-		MENUITEM "Autolock mouse",			ID_AUTOLOCK
+		MENUITEM "Wait On Error",		ID_WAITONERR
+		MENUITEM "Avoid Usage of Symkeys",		ID_USESCANCODES
+		MENUITEM "Capture/Release Mouse\tCtrl-F10",		ID_CAPMOUSE
+		MENUITEM "Autolock Mouse",			ID_AUTOLOCK
 		MENUITEM "Pause\tAlt-Pause",		ID_PAUSE
 		MENUITEM SEPARATOR
-		POPUP "Send key"
+		POPUP "Save State\tAlt-F5"
+		    BEGIN
+  		    MENUITEM "1", ID_SAVESTATE_1
+  		    MENUITEM "2", ID_SAVESTATE_2
+   		    MENUITEM "3", ID_SAVESTATE_3
+  		    MENUITEM "4", ID_SAVESTATE_4
+   		    MENUITEM "5", ID_SAVESTATE_5
+  		    MENUITEM "6", ID_SAVESTATE_6
+   		    MENUITEM "7", ID_SAVESTATE_7
+  		    MENUITEM "8", ID_SAVESTATE_8
+   		    MENUITEM "9", ID_SAVESTATE_9
+  		    MENUITEM "10", ID_SAVESTATE_10
+		    END
+		POPUP "Load State\tAlt-F9"
+		    BEGIN
+  		    MENUITEM "1", ID_LOADSTATE_1
+  		    MENUITEM "2", ID_LOADSTATE_2
+   		    MENUITEM "3", ID_LOADSTATE_3
+  		    MENUITEM "4", ID_LOADSTATE_4
+   		    MENUITEM "5", ID_LOADSTATE_5
+  		    MENUITEM "6", ID_LOADSTATE_6
+   		    MENUITEM "7", ID_LOADSTATE_7
+  		    MENUITEM "8", ID_LOADSTATE_8
+   		    MENUITEM "9", ID_LOADSTATE_9
+  		    MENUITEM "10", ID_LOADSTATE_10
+		    END
+		POPUP "Remove state"
+		    BEGIN
+  		    MENUITEM "1", ID_REMOVE_STATE_1
+  		    MENUITEM "2", ID_REMOVE_STATE_2
+   		    MENUITEM "3", ID_REMOVE_STATE_3
+  		    MENUITEM "4", ID_REMOVE_STATE_4
+   		    MENUITEM "5", ID_REMOVE_STATE_5
+  		    MENUITEM "6", ID_REMOVE_STATE_6
+   		    MENUITEM "7", ID_REMOVE_STATE_7
+  		    MENUITEM "8", ID_REMOVE_STATE_8
+   		    MENUITEM "9", ID_REMOVE_STATE_9
+  		    MENUITEM "10", ID_REMOVE_STATE_10
+  		    MENUITEM "Remove All", ID_REMOVE_STATE_ALL
+		    END
+		MENUITEM SEPARATOR
+		POPUP "Send Key"
 		    BEGIN
   		    MENUITEM "Send Ctrl-Esc", ID_SEND_CTRL_ESC
   		    MENUITEM "Send Alt-Tab", ID_SEND_ALT_TAB
@@ -26,11 +67,11 @@ BEGIN
 		    END
 		POPUP "Configuration"
 		BEGIN
-			MENUITEM "Basic settings",		ID_DOSBOX_SECTION
-			MENUITEM "Save the current settings",		ID_REFRESH
-			MENUITEM "Save the current language strings",		ID_SAVELANG
+			MENUITEM "Basic Settings",		ID_DOSBOX_SECTION
+			MENUITEM "Save the Current Settings",		ID_REFRESH
+			MENUITEM "Save the Current Language Strings",		ID_SAVELANG
 		END
-		MENUITEM "Show details",		ID_HIDECYCL
+		MENUITEM "Show Details",		ID_HIDECYCL
 		MENUITEM "Restart\tCtrl-Alt-Home",		ID_RESTART
 		MENUITEM "Exit\tCtrl-F9",		ID_QUIT
 	END
@@ -66,7 +107,7 @@ BEGIN
 	BEGIN
 		MENUITEM "Fullscreen\tAlt-Enter",				       ID_FULLSCREEN
 		MENUITEM "Hide Menu Bar\tCtrl-Alt-Enter",		ID_TOGGLE
-		MENUITEM "Always on top",			ID_ALWAYS_ON_TOP
+		MENUITEM "Always On Top",			ID_ALWAYS_ON_TOP
 		MENUITEM SEPARATOR
 		MENUITEM "Aspect Correction",				       ID_ASPECT
 		MENUITEM "Double Buffering (Fullscreen)",				       ID_FULLDOUBLE
@@ -148,7 +189,7 @@ BEGIN
 		MENUITEM "Host",	ID_VSYNC_HOST
 		MENUITEM "Off",	ID_VSYNC_OFF
 		MENUITEM SEPARATOR
-		MENUITEM "Set syncrate",	ID_VSYNC
+		MENUITEM "Set Rate",	ID_VSYNC
 	END
 	POPUP "Overscan"
 	BEGIN
@@ -166,14 +207,15 @@ BEGIN
 	END
 	POPUP "Compatibility"
 	BEGIN
-		MENUITEM "Allow 9-pixel wide text mode fonts",	ID_CHAR9
-		MENUITEM "Multiscan",	ID_MULTISCAN
+		//MENUITEM "Draw the Display Line by Line",	ID_LINEWISE
+		MENUITEM "Allow 9-pixel Wide Text Mode Fonts",	ID_CHAR9
+		MENUITEM "Doublescan",	ID_DOUBLESCAN
 	END
 	POPUP "Driver"
 	BEGIN
-		MENUITEM "Reset DOSBox with DirectX driver only",	ID_DRVFORCE_DIRECTX
-		MENUITEM "Reset DOSBox with WINDIB driver only",	ID_DRVFORCE_WINDIB
-		MENUITEM "Reset DOSBox with automatic driver selection",	ID_DRVFORCE_AUTO
+		MENUITEM "Reset DOSBox with DirectX Driver Only",	ID_DRVFORCE_DIRECTX
+		MENUITEM "Reset DOSBox with WINDIB Driver Only",	ID_DRVFORCE_WINDIB
+		MENUITEM "Reset DOSBox with Automatic Driver Selection",	ID_DRVFORCE_AUTO
 	END
 	MENUITEM SEPARATOR
 		MENUITEM "Direct3D Pixelshader",	ID_D3D_PS
@@ -182,7 +224,7 @@ BEGIN
 	BEGIN
 		MENUITEM "Mixer", ID_MIXER_SECTION
 		MENUITEM "Mute", ID_MUTE
-		MENUITEM "Swap stereo", ID_SWAPSTEREO
+		MENUITEM "Swap Stereo", ID_SWAPSTEREO
 	    MENUITEM SEPARATOR
 		POPUP "MIDI"
 		BEGIN
@@ -199,13 +241,13 @@ BEGIN
 			MENUITEM "ALSA", ID_MIDI_ALSA
 			MENUITEM "OSS", ID_MIDI_OSS
 			MENUITEM "Win32", ID_MIDI_WIN32
-			MENUITEM "Core audio", ID_MIDI_COREAUDIO
+			MENUITEM "Core Audio", ID_MIDI_COREAUDIO
 			MENUITEM "MT-32", ID_MIDI_MT32
 			MENUITEM "Fluidsynth", ID_MIDI_SYNTH
-			MENUITEM "Timidity server", ID_MIDI_TIMIDITY
+			MENUITEM "Timidity Server", ID_MIDI_TIMIDITY
 			END
 			MENUITEM SEPARATOR
-			POPUP "MT-32 reverb mode"
+			POPUP "MT-32 Reverb Mode"
 			BEGIN
 			MENUITEM "Auto", ID_MIDI_MT32_REVERBMODE_AUTO
 			MENUITEM "0", ID_MIDI_MT32_REVERBMODE_0
@@ -213,7 +255,7 @@ BEGIN
 			MENUITEM "2", ID_MIDI_MT32_REVERBMODE_2
 			MENUITEM "3", ID_MIDI_MT32_REVERBMODE_3
 		    END
-			POPUP "MT-32 reverb time"
+			POPUP "MT-32 Reverb Time"
 			BEGIN
 			MENUITEM "0", ID_MIDI_MT32_REVERBTIME_0
 			MENUITEM "1", ID_MIDI_MT32_REVERBTIME_1
@@ -224,7 +266,7 @@ BEGIN
 			MENUITEM "6", ID_MIDI_MT32_REVERBTIME_6
 			MENUITEM "7", ID_MIDI_MT32_REVERBTIME_7
 			END
-			POPUP "MT-32 reverb level"
+			POPUP "MT-32 Reverb Level"
 			BEGIN
 			MENUITEM "0", ID_MIDI_MT32_REVERBLEV_0
 			MENUITEM "1", ID_MIDI_MT32_REVERBLEV_1
@@ -235,7 +277,7 @@ BEGIN
 			MENUITEM "6", ID_MIDI_MT32_REVERBLEV_6
 			MENUITEM "7", ID_MIDI_MT32_REVERBLEV_7
 			END
-			POPUP "MT-32 DAC modes"
+			POPUP "MT-32 DAC Modes"
 			BEGIN
 			MENUITEM "Auto", ID_MIDI_MT32_DAC_AUTO
 			MENUITEM "0", ID_MIDI_MT32_DAC_0
@@ -648,7 +690,8 @@ BEGIN
 		END
 		POPUP "Layout"
 		BEGIN
-			MENUITEM "Auto",	ID_KEY_NONE
+			MENUITEM "Auto",	ID_KEY_AUTO
+			MENUITEM "None",	ID_KEY_NONE
 			MENUITEM "BG - Bulgaria",	ID_KEY_BG
 			MENUITEM "CZ - Czech Republic",	ID_KEY_CZ
 			MENUITEM "FR - France",	ID_KEY_FR
@@ -678,6 +721,7 @@ BEGIN
 				MENUITEM "UK - United Kingdom (English)",	 ID_KEY_UK
 				MENUITEM "US - United States (English)",	 ID_KEY_US
 				MENUITEM "YU - Yugoslavia",	 ID_KEY_YU
+				MENUITEM "YC - Unknown",	 ID_KEY_YC
 				MENUITEM "FO - Unknown",	 ID_KEY_FO
 				MENUITEM "MK - Unknown",	 ID_KEY_MK
 				MENUITEM "MT - Unknown",	 ID_KEY_MT
@@ -687,10 +731,10 @@ BEGIN
 				MENUITEM "TM - Unknown",	 ID_KEY_TM
 				MENUITEM "TR - Unknown",	 ID_KEY_TR
 				MENUITEM "UX - Unknown",	 ID_KEY_UX
-				MENUITEM "YC - Unknown",	 ID_KEY_YC
 				MENUITEM "DV - Two-handed DVORAK",	 ID_KEY_DV
 				MENUITEM "RH - Right-handed DVORAK",	 ID_KEY_RH
 				MENUITEM "LH - Left-handed DVORAK",	 ID_KEY_LH
+				MENUITEM "Others",	 ID_KEY_OTHERS
 			END
 		END
 	END
@@ -733,7 +777,7 @@ BEGIN
 				MENUITEM "Write_noaux",	ID_GLIDE_LFB_WRITE_NOAUX
 				MENUITEM "None",	ID_GLIDE_LFB_NONE
 			END
-			MENUITEM "Show 3dfx splash screen",	ID_GLIDE_SPLASH
+			MENUITEM "Show 3dfx Splash Screen",	ID_GLIDE_SPLASH
 		END
 		POPUP "Internal Emulation"
 		BEGIN
@@ -748,7 +792,7 @@ BEGIN
 		END
 	END
 	MENUITEM SEPARATOR
-	MENUITEM "Edit AUTOEXEC.BAT",			   ID_AUTOEXEC
+	MENUITEM "Automatic Execution",				   ID_AUTOEXEC
 	MENUITEM "Advanced",				   ID_DOS_ADVANCED
 	END
 	POPUP "Capture"
@@ -756,8 +800,8 @@ BEGIN
 	MENUITEM "Screenshot\tCtrl-F5", ID_SSHOT
 	MENUITEM "Movie\tCtrl-Alt-F5",				       ID_MOVIE
 	MENUITEM "Wave\tCtrl-F6",				       ID_WAVE
-	MENUITEM "OPL commands\tCtrl-Alt-F7",				       ID_OPL
-	MENUITEM "Raw MIDI commands\tCtrl-Alt-F8",				       ID_MIDI
+	MENUITEM "OPL Commands\tCtrl-Alt-F7",				       ID_OPL
+	MENUITEM "Raw MIDI Commands\tCtrl-Alt-F8",				       ID_MIDI
 	END
 	POPUP "Drive"
 	BEGIN
@@ -1031,12 +1075,12 @@ BEGIN
     BEGIN
 		BLOCK "040904b0"
 		BEGIN
-		    VALUE "Comments", "(C) 2002-2014 DOSBox Team, published under GNU GPL"
+		    VALUE "Comments", "?2002-2013 DOSBox Team, published under GNU GPL"
 		    VALUE "CompanyName", "DOSBox Team"
 		    VALUE "FileDescription", "DOSBox DOS Emulator"
 		    VALUE "FileVersion", "0, 74, 0, 0"
 		    VALUE "InternalName", "DOSBox"
-		    VALUE "LegalCopyright", "Copyright ?2002-2014 DOSBox Team"
+		    VALUE "LegalCopyright", "Copyright ?2002-2013 DOSBox Team"
 		    VALUE "OriginalFilename", "dosbox.exe"
 		    VALUE "ProductName", "DOSBox DOS Emulator"
 		    VALUE "ProductVersion", "0, 74, 0, 0"
