@@ -51,9 +51,16 @@ constexpr size_t SamplesPerFrame = 2;
 FfmpegEncoder::FfmpegEncoder()
 {
 	video_scaler.thread  = std::thread(&FfmpegEncoder::ScaleVideo, this);
+	set_thread_name(video_scaler.thread, "dosbox:scaler");
+
 	audio_encoder.thread = std::thread(&FfmpegEncoder::EncodeAudio, this);
+	set_thread_name(audio_encoder.thread, "dosbox:audioenc");
+
 	video_encoder.thread = std::thread(&FfmpegEncoder::EncodeVideo, this);
+	set_thread_name(video_encoder.thread, "dosbox:videoenc");
+
 	muxer.thread         = std::thread(&FfmpegEncoder::Mux, this);
+	set_thread_name(audio_encoder.thread, "dosbox:muxer");
 }
 
 FfmpegEncoder::~FfmpegEncoder()
