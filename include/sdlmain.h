@@ -177,17 +177,7 @@ struct SDL_Block {
 		bool bilinear;
 		bool npot_textures_supported = false;
 		bool framebuffer_is_srgb_encoded;
-		GLuint program_object;
 
-		ShaderInfo shader_info    = {};
-		std::string shader_source = {};
-
-		struct {
-			GLint texture_size;
-			GLint input_size;
-			GLint output_size;
-			GLint frame_count;
-		} ruby = {};
 		GLuint actual_frame_count;
 		GLfloat vertex_data[2*3];
 	} opengl = {};

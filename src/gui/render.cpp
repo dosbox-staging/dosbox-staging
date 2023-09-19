@@ -422,8 +422,7 @@ static void render_reset(void)
 	}
 
 	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
-		GFX_SetShader(get_shader_manager().GetCurrentShaderInfo(),
-		              get_shader_manager().GetCurrentShaderSource());
+		GFX_SetShader(get_shader_manager().GetCurrentShaderInfo());
 	}
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
@@ -624,6 +623,11 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
 		}
 	}
 	return changed_shader;
+}
+
+const std::string RENDER_GetShaderSource()
+{
+	return get_shader_manager().GetCurrentShaderSource();
 }
 
 void RENDER_NotifyEgaModeWithVgaPalette()

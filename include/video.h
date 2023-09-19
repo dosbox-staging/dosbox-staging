@@ -302,7 +302,7 @@ uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue);
 
 struct ShaderInfo;
 
-void GFX_SetShader(const ShaderInfo& shader_info, const std::string& shader_source);
+bool GFX_SetShader(const ShaderInfo& shader_info);
 
 void GFX_SetIntegerScalingMode(const IntegerScalingMode mode);
 IntegerScalingMode GFX_GetIntegerScalingMode();

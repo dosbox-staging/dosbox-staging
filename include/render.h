@@ -180,6 +180,7 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
                                   [[maybe_unused]] const uint16_t canvas_height,
                                   [[maybe_unused]] const VideoMode& video_mode,
                                   [[maybe_unused]] const bool reinit_render);
+const std::string RENDER_GetShaderSource();
 
 void RENDER_NotifyEgaModeWithVgaPalette();
 

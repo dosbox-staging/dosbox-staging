@@ -1213,9 +1213,8 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		return sdl.window;
 	}
 
-	CleanupSDLResources();
-
 	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
+		CleanupSDLResources();
 		remove_window();
 
 		uint32_t flags = opengl_driver_crash_workaround(rendering_backend);
@@ -1449,8 +1448,15 @@ static const char *safe_gl_get_string(const GLenum requested_name,
 	return result ? reinterpret_cast<const char *>(result) : default_result;
 }
 
-/* Create a GLSL shader object, load the shader source, and compile the shader. */
-static GLuint BuildShader(GLenum type, const std::string& source)
+/**
+Create a GLSL shader object, load the shader source, and compile the shader.
+
+`type` is an OpenGL shader stage enum, either GL_VERTEX_SHADER
+or GL_FRAGMENT_SHADER. Other shader types are not supported.
+
+Returns the compiled shader object, or zero on failure.
+*/
+static GLuint build_gl_shader(GLenum type, const std::string& source)
 {
 	GLuint shader = 0;
 	GLint compiled = 0;
@@ -1507,26 +1513,155 @@ static GLuint BuildShader(GLenum type, const std::string& source)
 	return shader;
 }
 
-static bool LoadGLShaders(const std::string& source, GLuint *vertex,
-                          GLuint *fragment)
+/**
+Assembles OpenGL shader program.
+
+Input GLSL source must contain both vertex and fragment stages inside their
+respective preprocessor definitions.
+
+Returns a ready to use OpenGL shader program, or zero on failure.
+*/
+static GLuint load_gl_shader(const std::string& source)
 {
-	if (source.empty())
-		return false;
-
-	assert(vertex);
-	assert(fragment);
-
-	GLuint s = BuildShader(GL_VERTEX_SHADER, source);
-	if (s) {
-		*vertex = s;
-		s = BuildShader(GL_FRAGMENT_SHADER, source);
-		if (s) {
-			*fragment = s;
-			return true;
-		}
-		glDeleteShader(*vertex);
+	if (source.empty()) {
+		LOG_ERR("OPENGL: No shader source present");
+		return 0;
 	}
-	return false;
+
+	const GLuint vertex_shader = build_gl_shader(GL_VERTEX_SHADER, source);
+	if (!vertex_shader) {
+		LOG_ERR("OPENGL: Failed compiling vertex shader");
+		return 0;
+	}
+
+	const GLuint fragment_shader = build_gl_shader(GL_FRAGMENT_SHADER, source);
+	if (!fragment_shader) {
+		LOG_ERR("OPENGL: Failed compiling fragment shader");
+		glDeleteShader(vertex_shader);
+		return 0;
+	}
+
+	const GLuint shader_program = glCreateProgram();
+	if (!shader_program) {
+		LOG_ERR("OPENGL: Failed creating shader program");
+		glDeleteShader(vertex_shader);
+		glDeleteShader(fragment_shader);
+		return 0;
+	}
+	glAttachShader(shader_program, vertex_shader);
+	glAttachShader(shader_program, fragment_shader);
+	glLinkProgram(shader_program);
+	glDeleteShader(vertex_shader);
+	glDeleteShader(fragment_shader);
+
+	GLint is_program_linked = GL_FALSE;
+	glGetProgramiv(shader_program, GL_LINK_STATUS, &is_program_linked);
+	if (is_program_linked == GL_FALSE) {
+		GLint log_length = 0;
+		glGetProgramiv(shader_program, GL_INFO_LOG_LENGTH, &log_length);
+
+		std::vector<GLchar> info_log(static_cast<size_t>(log_length));
+		glGetProgramInfoLog(shader_program, log_length, nullptr, info_log.data());
+
+		LOG_ERR("OPENGL: Failed linking shader program: %s",
+		        info_log.data());
+
+		glDeleteProgram(shader_program);
+		return 0;
+	}
+
+	// Set vertex data. Vertices in counter-clockwise order.
+	const GLint vertex_attrib_location = glGetAttribLocation(shader_program,
+	                                                         "a_position");
+	if (vertex_attrib_location == -1) {
+		LOG_ERR("OPENGL: Failed to retrieve vertex position attribute location");
+		glDeleteProgram(shader_program);
+		return 0;
+	}
+	// Lower left.
+	sdl.opengl.vertex_data[0] = -1.0f;
+	sdl.opengl.vertex_data[1] = -1.0f;
+	// Lower right.
+	sdl.opengl.vertex_data[2] = 3.0f;
+	sdl.opengl.vertex_data[3] = -1.0f;
+	// Upper left.
+	sdl.opengl.vertex_data[4] = -1.0f;
+	sdl.opengl.vertex_data[5] = 3.0f;
+
+	// Load the vertices' positions.
+	constexpr GLint num_components            = 2; // vec2 (X, Y)
+	constexpr GLenum component_data_type      = GL_FLOAT;
+	constexpr GLboolean normalize_fixed_point = GL_FALSE;
+	constexpr GLsizei data_stride             = 0;
+
+	glVertexAttribPointer(static_cast<GLuint>(vertex_attrib_location),
+	                      num_components,
+	                      component_data_type,
+	                      normalize_fixed_point,
+	                      data_stride,
+	                      sdl.opengl.vertex_data);
+	glEnableVertexAttribArray(static_cast<GLuint>(vertex_attrib_location));
+
+	// Set texture slot.
+	const GLint texture_uniform = glGetUniformLocation(shader_program,
+	                                                   "rubyTexture");
+	glUniform1i(texture_uniform, 0);
+
+	return shader_program;
+}
+
+struct ShaderObject {
+	GLuint program = 0;
+	struct {
+		// Size of a texture holding contents of the emulated display memory.
+		GLint texture_size = -1;
+		// Dimensions of the emulated display mode, with pixel doubling applied.
+		GLint input_size   = -1;
+		// Size of the output viewport, with aspect correction applied.
+		GLint output_size  = -1;
+		// The amount of presented frames.
+		GLint frame_count  = -1;
+	} uniforms              = {};
+	ShaderSettings settings = {};
+	bool is_adaptive        = false;
+};
+
+std::map<std::string, ShaderObject> shader_objects = {};
+ShaderObject current_shader                        = {};
+
+/// Retrieves and sets shader uniforms locations.
+static void get_uniform_locations(ShaderObject& shader)
+{
+	shader.uniforms.texture_size = glGetUniformLocation(shader.program,
+	                                                    "rubyTextureSize");
+	shader.uniforms.input_size   = glGetUniformLocation(shader.program,
+	                                                    "rubyInputSize");
+	shader.uniforms.output_size  = glGetUniformLocation(shader.program,
+	                                                    "rubyOutputSize");
+	shader.uniforms.frame_count  = glGetUniformLocation(shader.program,
+	                                                    "rubyFrameCount");
+}
+
+/// Updates shader uniforms values.
+static void update_shader_uniforms(ShaderObject& shader)
+{
+	GLfloat texture_width  = 0;
+	GLfloat texture_height = 0;
+	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &texture_width);
+	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &texture_height);
+	// TODO: Uncomment once initialization order is fixed.
+	// assert(texture_width > 0 && texture_height > 0);
+
+	GLfloat viewport[4] = {0, 0, 0, 0}; // X, Y, W, H
+	glGetFloatv(GL_VIEWPORT, viewport);
+	// TODO: Ditto.
+	// assert(viewport[2] > 0 && viewport[3] > 0);
+
+	glUniform2f(shader.uniforms.texture_size, texture_width, texture_height);
+	glUniform2f(shader.uniforms.input_size,
+	            static_cast<GLfloat>(sdl.draw.width),
+	            static_cast<GLfloat>(sdl.draw.height));
+	glUniform2f(shader.uniforms.output_size, viewport[2], viewport[3]);
 }
 #endif
 
@@ -1669,15 +1804,16 @@ uint8_t GFX_SetSize(const int width, const int height,
 		assert(sdl.texture.texture);
 		SDL_QueryTexture(sdl.texture.texture, &pixel_format, nullptr, nullptr, nullptr);
 
-		assert(sdl.texture.pixelFormat == nullptr); // ensure we don't leak
-		sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
-		switch (SDL_BITSPERPIXEL(pixel_format)) {
-			case 8:  retFlags = GFX_CAN_8;  break;
+		if (!sdl.texture.pixelFormat) {
+			sdl.texture.pixelFormat = SDL_AllocFormat(pixel_format);
+			switch (SDL_BITSPERPIXEL(pixel_format)) {
+			case 8: retFlags = GFX_CAN_8; break;
 			case 15: retFlags = GFX_CAN_15; break;
 			case 16: retFlags = GFX_CAN_16; break;
 			case 24: /* SDL_BYTESPERPIXEL is probably 4, though. */
 			case 32: retFlags = GFX_CAN_32; break;
-		        }
+			}
+		}
 
 		// Log changes to the rendering driver
 		static std::string render_driver = {};
@@ -1733,7 +1869,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 		int texsize_w, texsize_h;
 
 		const auto use_npot_texture = sdl.opengl.npot_textures_supported &&
-		                              sdl.opengl.shader_info.settings.use_npot_texture;
+		                              current_shader.settings.use_npot_texture;
 #if 0
 		if (use_npot_texture) {
 			LOG_MSG("OPENGL: Using NPOT texture");
@@ -1790,116 +1926,6 @@ uint8_t GFX_SetSize(const int width, const int height,
 		    SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window)) < 2) {
 			LOG_WARNING("SDL:OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
 			goto fallback_texture;
-		}
-
-		GLuint prog = 0;
-		// reset error
-		glGetError();
-		glGetIntegerv(GL_CURRENT_PROGRAM, (GLint*)&prog);
-		// if there was an error this context doesn't support shaders
-		if (glGetError() == GL_NO_ERROR &&
-		    (sdl.opengl.program_object == 0 ||
-		     prog != sdl.opengl.program_object)) {
-			// check if existing program is valid
-			if (sdl.opengl.program_object) {
-				glUseProgram(sdl.opengl.program_object);
-				if (glGetError() != GL_NO_ERROR) {
-					// program is not usable (probably new
-					// context), purge it
-					glDeleteProgram(sdl.opengl.program_object);
-					sdl.opengl.program_object = 0;
-				}
-			}
-
-			// does program need to be rebuilt?
-			if (sdl.opengl.program_object == 0) {
-				GLuint vertexShader, fragmentShader;
-
-				if (!LoadGLShaders(sdl.opengl.shader_source,
-				                   &vertexShader,
-				                   &fragmentShader)) {
-					LOG_ERR("SDL:OPENGL: Failed to compile shader!");
-					goto fallback_texture;
-				}
-
-				sdl.opengl.program_object = glCreateProgram();
-				if (!sdl.opengl.program_object) {
-					glDeleteShader(vertexShader);
-					glDeleteShader(fragmentShader);
-					LOG_WARNING("SDL:OPENGL: Can't create program object, falling back to texture");
-					goto fallback_texture;
-				}
-				glAttachShader(sdl.opengl.program_object,
-				               vertexShader);
-				glAttachShader(sdl.opengl.program_object,
-				               fragmentShader);
-				// Link the program
-				glLinkProgram(sdl.opengl.program_object);
-				// Even if we *are* successful, we may delete
-				// the shader objects
-				glDeleteShader(vertexShader);
-				glDeleteShader(fragmentShader);
-
-				// Check the link status
-				GLint isProgramLinked;
-				glGetProgramiv(sdl.opengl.program_object,
-				               GL_LINK_STATUS,
-				               &isProgramLinked);
-				if (!isProgramLinked) {
-					GLint info_len = 0;
-					glGetProgramiv(sdl.opengl.program_object,
-					               GL_INFO_LOG_LENGTH,
-					               &info_len);
-
-					if (info_len > 1) {
-						std::vector<GLchar> info_log(info_len);
-						glGetProgramInfoLog(sdl.opengl.program_object,
-						                    info_len,
-						                    nullptr,
-						                    info_log.data());
-						LOG_ERR("SDL:OPENGL: Error link program:\n %s",
-						        info_log.data());
-					}
-					glDeleteProgram(sdl.opengl.program_object);
-					sdl.opengl.program_object = 0;
-					goto fallback_texture;
-				}
-
-				glUseProgram(sdl.opengl.program_object);
-
-				GLint u = glGetAttribLocation(sdl.opengl.program_object,
-				                              "a_position");
-				// upper left
-				sdl.opengl.vertex_data[0] = -1.0f;
-				sdl.opengl.vertex_data[1] = 1.0f;
-				// lower left
-				sdl.opengl.vertex_data[2] = -1.0f;
-				sdl.opengl.vertex_data[3] = -3.0f;
-				// upper right
-				sdl.opengl.vertex_data[4] = 3.0f;
-				sdl.opengl.vertex_data[5] = 1.0f;
-				// Load the vertex positions
-				glVertexAttribPointer(u,
-				                      2,
-				                      GL_FLOAT,
-				                      GL_FALSE,
-				                      0,
-				                      sdl.opengl.vertex_data);
-				glEnableVertexAttribArray(u);
-
-				u = glGetUniformLocation(sdl.opengl.program_object,
-				                         "rubyTexture");
-				glUniform1i(u, 0);
-
-				sdl.opengl.ruby.texture_size = glGetUniformLocation(
-				        sdl.opengl.program_object, "rubyTextureSize");
-				sdl.opengl.ruby.input_size = glGetUniformLocation(
-				        sdl.opengl.program_object, "rubyInputSize");
-				sdl.opengl.ruby.output_size = glGetUniformLocation(
-				        sdl.opengl.program_object, "rubyOutputSize");
-				sdl.opengl.ruby.frame_count = glGetUniformLocation(
-				        sdl.opengl.program_object, "rubyFrameCount");
-			}
 		}
 
 		/* Create the texture */
@@ -1961,17 +1987,17 @@ uint8_t GFX_SetSize(const int width, const int height,
 		}
 
 		sdl.opengl.framebuffer_is_srgb_encoded =
-		        sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
+		        current_shader.settings.use_srgb_framebuffer &&
 		        (is_framebuffer_srgb_capable > 0);
 
-		if (sdl.opengl.shader_info.settings.use_srgb_framebuffer &&
+		if (current_shader.settings.use_srgb_framebuffer &&
 		    !sdl.opengl.framebuffer_is_srgb_encoded) {
 			LOG_WARNING("OPENGL: sRGB framebuffer not supported");
 		}
 
 		// Using GL_SRGB8_ALPHA8 because GL_SRGB8 doesn't work properly
 		// with Mesa drivers on certain integrated Intel GPUs
-		const auto texformat = sdl.opengl.shader_info.settings.use_srgb_texture &&
+		const auto texformat = current_shader.settings.use_srgb_texture &&
 		                                       sdl.opengl.framebuffer_is_srgb_encoded
 		                             ? GL_SRGB8_ALPHA8
 		                             : GL_RGB8;
@@ -2002,6 +2028,10 @@ uint8_t GFX_SetSize(const int width, const int height,
 			glDisable(GL_FRAMEBUFFER_SRGB);
 		}
 
+		if (current_shader.program) {
+			update_shader_uniforms(current_shader);
+		}
+
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -2012,17 +2042,6 @@ uint8_t GFX_SetSize(const int width, const int height,
 		glDisable(GL_LIGHTING);
 		glDisable(GL_CULL_FACE);
 		glEnable(GL_TEXTURE_2D);
-
-		// Set shader variables
-		glUniform2f(sdl.opengl.ruby.texture_size,
-		            (GLfloat)texsize_w,
-		            (GLfloat)texsize_h);
-		glUniform2f(sdl.opengl.ruby.input_size, (GLfloat)width, (GLfloat)height);
-		glUniform2f(sdl.opengl.ruby.output_size,
-		            (GLfloat)sdl.clip.w,
-		            (GLfloat)sdl.clip.h);
-		// The following uniform is *not* set right now
-		sdl.opengl.actual_frame_count = 0;
 
 		OPENGL_ERROR("End of setsize");
 
@@ -2051,17 +2070,29 @@ uint8_t GFX_SetSize(const int width, const int height,
 	return retFlags;
 }
 
-void GFX_SetShader([[maybe_unused]] const ShaderInfo& shader_info,
-                   [[maybe_unused]] const std::string& shader_source)
+bool GFX_SetShader([[maybe_unused]] const ShaderInfo& shader_info)
 {
 #if C_OPENGL
-	sdl.opengl.shader_info   = shader_info;
-	sdl.opengl.shader_source = shader_source;
+	auto& new_shader = shader_objects[shader_info.name];
 
-	if (sdl.opengl.program_object) {
-		glDeleteProgram(sdl.opengl.program_object);
-		sdl.opengl.program_object = 0;
+	if (!new_shader.program) {
+		new_shader.program = load_gl_shader(RENDER_GetShaderSource());
+		if (!new_shader.program) {
+			shader_objects.erase(shader_info.name);
+			return false;
+		}
+
+		get_uniform_locations(new_shader);
+		new_shader.settings = shader_info.settings;
 	}
+
+	glUseProgram(new_shader.program);
+	update_shader_uniforms(new_shader);
+
+	new_shader.is_adaptive = shader_info.is_adaptive;
+	current_shader         = new_shader;
+
+	return true;
 #endif
 }
 
@@ -2480,7 +2511,7 @@ static bool present_frame_gl()
 	const auto is_presenting = render_pacer->CanRun();
 	if (is_presenting) {
 		glClear(GL_COLOR_BUFFER_BIT);
-		glUniform1i(sdl.opengl.ruby.frame_count,
+		glUniform1i(current_shader.uniforms.frame_count,
 		            ++sdl.opengl.actual_frame_count);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -2552,6 +2583,15 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 
 static void CleanupSDLResources()
 {
+#if C_OPENGL
+	if (!shader_objects.empty()) {
+		for (auto& [_, shader] : shader_objects) {
+			glDeleteProgram(shader.program);
+		}
+		shader_objects.clear();
+		current_shader = {};
+	}
+#endif
 	if (sdl.texture.pixelFormat) {
 		SDL_FreeFormat(sdl.texture.pixelFormat);
 		sdl.texture.pixelFormat = nullptr;
@@ -3046,7 +3086,7 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 	case IntegerScalingMode::Auto:
 #if C_OPENGL
 		if (sdl.rendering_backend == RenderingBackend::OpenGl &&
-		    sdl.opengl.shader_info.is_adaptive) {
+		    current_shader.is_adaptive) {
 			std::tie(view_w,
 			         view_h) = calculate_vertical_integer_scaling_dims();
 		} else {
@@ -3195,7 +3235,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 			}
 		}
 		if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
-			sdl.opengl.program_object = 0;
 			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress(
 			        "glAttachShader");
 			glCompileShader = (PFNGLCOMPILESHADERPROC)SDL_GL_GetProcAddress(
@@ -3551,7 +3590,7 @@ static void HandleVideoResize(int width, int height)
 #if C_OPENGL
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
-		glUniform2f(sdl.opengl.ruby.output_size,
+		glUniform2f(current_shader.uniforms.output_size,
 		            (GLfloat)sdl.clip.w,
 		            (GLfloat)sdl.clip.h);
 	}
