@@ -73,14 +73,14 @@ struct VideoScalerWork
 };
 
 struct FfmpegVideoScaler {
-	RWQueue<VideoScalerWork> queue{32};
+	RWQueue<VideoScalerWork> queue{8};
 	std::thread thread = {};
 
 	bool is_working = false;
 };
 
 struct FfmpegVideoEncoder {
-	RWQueue<AVFrame*> queue{32};
+	RWQueue<AVFrame*> queue{8};
 	std::thread thread = {};
 
 	const AVCodec* av_codec       = nullptr;
