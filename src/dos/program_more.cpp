@@ -226,11 +226,11 @@ void MORE::AddMessages()
 	MSG_Add("PROGRAM_MORE_NEW_DEVICE",
 	        "[reset][color=light-yellow]--- device %s ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_SINGLE",
-	        "[reset][color=light-yellow]--- press SPACE or ENTER for more ---[reset]");
+	        "[reset][color=light-yellow]--- press SPACE for next page, ENTER for next line, Q to quit ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_PERCENT",
-	        "[reset][color=light-yellow]--- (%d%%) press SPACE or ENTER for more ---[reset]");
+	        "[reset][color=light-yellow]--- (%d%%) press SPACE for next page, ENTER for next line, Q to quit ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_MULTI",
-	        "[reset][color=light-yellow]--- press SPACE or ENTER for more, N for next file ---[reset]");
+	        "[reset][color=light-yellow]--- press SPACE or ENTER for more, N for next file, Q to quit ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_LINE",
 	        "[reset][color=light-yellow]--- line %u ---[reset]");
 	MSG_Add("PROGRAM_MORE_OPEN_ERROR",
