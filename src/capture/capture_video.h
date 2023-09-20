@@ -83,8 +83,10 @@ struct FfmpegVideoEncoder {
 	RWQueue<AVFrame*> queue{32};
 	std::thread thread = {};
 
-	const AVCodec* codec          = nullptr;
+	const AVCodec* av_codec       = nullptr;
 	AVCodecContext* codec_context = nullptr;
+	int max_vertical_resolution   = 0;
+	int crf                       = 18;
 
 	// Accessed only in main thread, used to check if needs re-init
 	// If one of these changes, create a new file
@@ -105,9 +107,10 @@ struct FfmpegAudioEncoder {
 	RWQueue<int16_t> queue{48000};
 	std::thread thread = {};
 
-	const AVCodec* codec          = nullptr;
+	const AVCodec* av_codec       = nullptr;
 	AVCodecContext* codec_context = nullptr;
 	AVFrame* frame                = nullptr;
+	AudioCodec requested_codec    = AudioCodec::AAC;
 
 	// Accessed only in main thread, used to check if needs re-init
 	// If sample rate changes, create a new file
@@ -116,7 +119,7 @@ struct FfmpegAudioEncoder {
 	bool is_working = false;
 	bool ready_for_init = false;
 
-	bool Init(const AudioCodec audio_codec);
+	bool Init();
 	void Free();
 };
 
@@ -125,13 +128,13 @@ struct FfmpegMuxer {
 	std::thread thread = {};
 
 	AVFormatContext* format_context = nullptr;
+	CaptureType container = CaptureType::VideoMkv;
 
 	bool is_working = false;
 
 	// Muxer requires both video and audio encoders to be initalised first.
 	bool Init(const FfmpegVideoEncoder& video_encoder,
-	          const FfmpegAudioEncoder& audio_encoder,
-	          const CaptureType container);
+	          const FfmpegAudioEncoder& audio_encoder);
 	void Free();
 };
 
@@ -164,10 +167,6 @@ private:
 
 	// Guarded by mutex, only set in destructor
 	bool is_shutting_down = false;
-
-	// Configuration settings set in constructor
-	CaptureType container = CaptureType::VideoMkv;
-	AudioCodec audio_codec = AudioCodec::AAC;
 
 	bool InitEverything();
 	void FreeEverything();

@@ -51,15 +51,27 @@ constexpr size_t SamplesPerFrame = 2;
 FfmpegEncoder::FfmpegEncoder(const Section_prop* secprop)
 {
 	if (secprop->Get_string("ffmpeg_container") == std::string("mp4")) {
-		container = CaptureType::VideoMp4;
+		muxer.container = CaptureType::VideoMp4;
 	} else {
-		container = CaptureType::VideoMkv;
+		muxer.container = CaptureType::VideoMkv;
 	}
 	if (secprop->Get_string("ffmpeg_audio_codec") == std::string("flac")) {
-		audio_codec = AudioCodec::FLAC;
+		audio_encoder.requested_codec = AudioCodec::FLAC;
 	} else {
-		audio_codec = AudioCodec::AAC;
+		audio_encoder.requested_codec = AudioCodec::AAC;
 	}
+	std::string quality = secprop->Get_string("ffmpeg_quality");
+	if (quality == "lossless") {
+		video_encoder.crf = 0;
+	} else if (quality == "medium") {
+		video_encoder.crf = 23;
+	} else if (quality == "low") {
+		video_encoder.crf = 30;
+	} else {
+		// Default to high
+		video_encoder.crf = 18;
+	}
+	video_encoder.max_vertical_resolution = secprop->Get_int("ffmpeg_resolution");
 
 	video_scaler.thread  = std::thread(&FfmpegEncoder::ScaleVideo, this);
 	set_thread_name(video_scaler.thread, "dosbox:scaler");
@@ -103,11 +115,11 @@ bool FfmpegEncoder::InitEverything()
 		LOG_ERR("FFMPEG: Failed to init video encoder");
 		return false;
 	}
-	if (!audio_encoder.Init(audio_codec)) {
+	if (!audio_encoder.Init()) {
 		LOG_ERR("FFMPEG: Failed to init audio encoder");
 		return false;
 	}
-	if (!muxer.Init(video_encoder, audio_encoder, container)) {
+	if (!muxer.Init(video_encoder, audio_encoder)) {
 		LOG_ERR("FFMPEG: Failed to init muxer");
 		return false;
 	}
@@ -250,8 +262,7 @@ void FfmpegEncoder::CaptureVideoFinalise()
 }
 
 bool FfmpegMuxer::Init(const FfmpegVideoEncoder& video_encoder,
-                       const FfmpegAudioEncoder& audio_encoder,
-                       const CaptureType container)
+                       const FfmpegAudioEncoder& audio_encoder)
 {
 	const int32_t output_file_index = get_next_capture_index(container);
 	const std::string output_file_path =
@@ -270,7 +281,7 @@ bool FfmpegMuxer::Init(const FfmpegVideoEncoder& video_encoder,
 		return false;
 	}
 	AVStream* video_stream = avformat_new_stream(format_context,
-	                                             video_encoder.codec);
+	                                             video_encoder.av_codec);
 	if (!video_stream) {
 		LOG_ERR("FFMPEG: Failed to create video stream");
 		return false;
@@ -285,7 +296,7 @@ bool FfmpegMuxer::Init(const FfmpegVideoEncoder& video_encoder,
 	}
 
 	AVStream* audio_stream = avformat_new_stream(format_context,
-	                                             audio_encoder.codec);
+	                                             audio_encoder.av_codec);
 	if (!audio_stream) {
 		LOG_ERR("FFMPEG: Failed to create audio stream");
 		return false;
@@ -356,25 +367,25 @@ static AVSampleFormat find_best_audio_format(const AVCodec *codec)
 	return AV_SAMPLE_FMT_NONE;
 }
 
-bool FfmpegAudioEncoder::Init(const AudioCodec audio_codec)
+bool FfmpegAudioEncoder::Init()
 {
-	switch (audio_codec) {
+	switch (requested_codec) {
 	case AudioCodec::AAC:
-		codec = avcodec_find_encoder_by_name("aac");
+		av_codec = avcodec_find_encoder_by_name("aac");
 		break;
 	case AudioCodec::FLAC:
-		codec = avcodec_find_encoder_by_name("flac");
+		av_codec = avcodec_find_encoder_by_name("flac");
 		break;
 	default:
-		codec = nullptr;
+		av_codec = nullptr;
 	}
 
-	if (!codec) {
+	if (!av_codec) {
 		LOG_ERR("FFMPEG: Failed to find audio codec");
 		return false;
 	}
 
-	const AVSampleFormat format = find_best_audio_format(codec);
+	const AVSampleFormat format = find_best_audio_format(av_codec);
 	if (format == AV_SAMPLE_FMT_NONE) {
 		// If we hit this from some new audio codec, it means we need to write
 		// a new conversion routine in EncodeAudio().
@@ -382,7 +393,7 @@ bool FfmpegAudioEncoder::Init(const AudioCodec audio_codec)
 		return false;
 	}
 
-	codec_context = avcodec_alloc_context3(codec);
+	codec_context = avcodec_alloc_context3(av_codec);
 	if (!codec_context) {
 		LOG_ERR("FFMPEG: Failed to allocate audio context");
 		return false;
@@ -392,7 +403,7 @@ bool FfmpegAudioEncoder::Init(const AudioCodec audio_codec)
 	codec_context->sample_rate    = static_cast<int>(sample_rate);
 	codec_context->channel_layout = AV_CH_LAYOUT_STEREO;
 
-	if (avcodec_open2(codec_context, codec, nullptr) < 0) {
+	if (avcodec_open2(codec_context, av_codec, nullptr) < 0) {
 		LOG_ERR("FFMPEG: Failed to open audio context");
 		return false;
 	}
@@ -431,22 +442,34 @@ void FfmpegAudioEncoder::Free()
 
 bool FfmpegVideoEncoder::Init()
 {
-	codec = avcodec_find_encoder_by_name("libx264");
-	if (!codec) {
+	av_codec = avcodec_find_encoder_by_name("libx264");
+	if (!av_codec) {
 		LOG_ERR("FFMPEG: Failed to find libx264 encoder");
 		return false;
 	}
-	codec_context = avcodec_alloc_context3(codec);
+	codec_context = avcodec_alloc_context3(av_codec);
 	if (!codec_context) {
 		LOG_ERR("FFMPEG: Failed to allocate video context");
 		return false;
 	}
 
-	codec_context->width                   = width;
-	codec_context->height                  = height;
-	codec_context->time_base.num           = 1;
-	codec_context->time_base.den           = frames_per_second;
-	codec_context->pix_fmt                 = AV_PIX_FMT_YUV444P;
+	int scale_factor = std::max(max_vertical_resolution / height, 1);
+
+	// Round down to nearest multiple of 2
+	// Scaling alogirthim is much faster this way when converting to YuV420
+	if (scale_factor > 1) {
+		scale_factor -= scale_factor % 2;
+	}
+
+	codec_context->width         = width * scale_factor;
+	codec_context->height        = height * scale_factor;
+	codec_context->time_base.num = 1;
+	codec_context->time_base.den = frames_per_second;
+	if (scale_factor == 1) {
+		codec_context->pix_fmt = AV_PIX_FMT_YUV444P;
+	} else {
+		codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
+	}
 	codec_context->sample_aspect_ratio.num = static_cast<int>(
 	        pixel_aspect_ratio.Num());
 	codec_context->sample_aspect_ratio.den = static_cast<int>(
@@ -458,10 +481,14 @@ bool FfmpegVideoEncoder::Init()
 	codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
 	AVDictionary *options = nullptr;
-	av_dict_set(&options, "crf", "0", 0);
-	av_dict_set(&options, "preset", "veryslow", 0);
 
-	if (avcodec_open2(codec_context, codec, &options) < 0) {
+	// Constant rate factor determining video quality. 0 means lossless.
+	av_dict_set(&options, "crf", std::to_string(crf).c_str(), 0);
+
+	// Encoding speed vs compression rate. Does not affect quality.
+	av_dict_set(&options, "preset", "medium", 0);
+
+	if (avcodec_open2(codec_context, av_codec, &options) < 0) {
 		LOG_ERR("FFMPEG: Failed to open video context");
 		return false;
 	}
@@ -509,14 +536,8 @@ static void send_packets_to_muxer(AVCodecContext* context, int stream_index,
 
 static void scale_image(const RenderedImage& image, AVFrame* frame)
 {
-	size_t horizontal_scale = 1;
-	size_t vertical_scale = 1;
-	if (frame->format == AV_PIX_FMT_YUV420P) {
-		horizontal_scale = static_cast<size_t>(frame->width) / static_cast<size_t>(image.params.width);
-		vertical_scale = static_cast<size_t>(frame->height) / static_cast<size_t>(image.params.height);
-		horizontal_scale -= horizontal_scale % 2;
-		vertical_scale -= vertical_scale % 2;
-	}
+	size_t horizontal_scale = static_cast<size_t>(frame->width) / image.params.width;
+	size_t vertical_scale = static_cast<size_t>(frame->height) / image.params.height;
 
 	size_t scaled_width = image.params.width * horizontal_scale;
 

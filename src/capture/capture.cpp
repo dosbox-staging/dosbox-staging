@@ -716,6 +716,9 @@ static void init_capture_dosbox_settings(Section_prop& secprop)
 	str_prop->Set_help("Set the video encoder to use for video capture.\n"
 	                   "  zmbv:   Zip Motion Block Video DOSBox lossless compression (default).\n"
 	                   "  ffmpeg: H.264 video and AAC audio.");
+	const char *quality_settings[] = {"lossless", "high", "medium", "low", nullptr};
+	str_prop = secprop.Add_string("ffmpeg_quality", when_idle, "high");
+	str_prop->Set_values(quality_settings);
 	str_prop = secprop.Add_string("ffmpeg_container", when_idle, "mkv");
 	assert(str_prop);
 	const char* containers[] = {"mkv", "mp4", nullptr};
@@ -730,6 +733,9 @@ static void init_capture_dosbox_settings(Section_prop& secprop)
 	str_prop->Set_help("Set the audio codec for ffmpeg to use.\n"
 	                        "  aac: Lossy codec\n"
 	                        "  flac: Lossless codec");
+	Prop_int* int_prop = secprop.Add_int("ffmpeg_resolution", when_idle, 0);
+	assert(int_prop);
+	int_prop->Set_help("Sets maximum vertical resolution for ffmpeg.");
 }
 
 void CAPTURE_AddConfigSection(const config_ptr_t& conf)
