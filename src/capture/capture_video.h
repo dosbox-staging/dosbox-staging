@@ -104,7 +104,7 @@ struct FfmpegVideoEncoder {
 };
 
 struct FfmpegAudioEncoder {
-	RWQueue<int16_t> queue{48000};
+	RWQueue<AVFrame*> queue{16};
 	std::thread thread = {};
 
 	const AVCodec* av_codec       = nullptr;
@@ -124,7 +124,7 @@ struct FfmpegAudioEncoder {
 };
 
 struct FfmpegMuxer {
-	RWQueue<AVPacket*> queue{64};
+	RWQueue<AVPacket*> queue{32};
 	std::thread thread = {};
 
 	AVFormatContext* format_context = nullptr;
@@ -156,13 +156,14 @@ public:
 	void CaptureVideoFinalise() override;
 
 private:
-	std::mutex mutex                 = {};
-	std::condition_variable waiter   = {};
-	FfmpegVideoScaler video_scaler   = {};
-	FfmpegVideoEncoder video_encoder = {};
-	FfmpegAudioEncoder audio_encoder = {};
-	FfmpegMuxer muxer                = {};
-	int64_t main_thread_video_frame  = 0;
+	std::mutex mutex                   = {};
+	std::condition_variable waiter     = {};
+	FfmpegVideoScaler video_scaler     = {};
+	FfmpegVideoEncoder video_encoder   = {};
+	FfmpegAudioEncoder audio_encoder   = {};
+	FfmpegMuxer muxer                  = {};
+	AVFrame* main_thread_audio_frame   = {};
+	int64_t main_thread_video_pts      = 0;
 	bool worker_threads_are_initalised = false;
 
 	// Guarded by mutex, only set in destructor

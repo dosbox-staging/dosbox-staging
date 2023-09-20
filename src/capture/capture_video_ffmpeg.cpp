@@ -48,6 +48,10 @@ constexpr int MuxerAudioStreamIndex = 1;
 // Always stereo audio
 constexpr size_t SamplesPerFrame = 2;
 
+// Used by av_frame_get_buffer
+// 0 means auto-align based on current CPU
+constexpr int MemoryAlignment = 0;
+
 FfmpegEncoder::FfmpegEncoder(const Section_prop* secprop)
 {
 	if (secprop->Get_string("ffmpeg_container") == std::string("mp4")) {
@@ -109,6 +113,31 @@ FfmpegEncoder::~FfmpegEncoder()
 	}
 }
 
+static AVFrame *init_audio_frame(const AVCodecContext* codec_context, const int64_t pts)
+{
+	AVFrame* frame = av_frame_alloc();
+	if (!frame) {
+		LOG_ERR("FFMPEG: Failed to allocate audio frame");
+		return nullptr;
+	}
+
+	frame->format = static_cast<int>(codec_context->sample_fmt);
+	frame->nb_samples = codec_context->frame_size;
+	frame->sample_rate = codec_context->sample_rate;
+	frame->pts = pts;
+	frame->channel_layout = codec_context->channel_layout;
+
+	if (av_frame_get_buffer(frame, MemoryAlignment) < 0) {
+		LOG_ERR("FFMPEG: Failed to get audio frame buffer");
+		av_frame_free(&frame);
+		return nullptr;
+	}
+
+	frame->nb_samples = 0;
+
+	return frame;
+}
+
 bool FfmpegEncoder::InitEverything()
 {
 	if (!video_encoder.Init()) {
@@ -123,7 +152,12 @@ bool FfmpegEncoder::InitEverything()
 		LOG_ERR("FFMPEG: Failed to init muxer");
 		return false;
 	}
-	main_thread_video_frame = 0;
+	main_thread_audio_frame = init_audio_frame(audio_encoder.codec_context, 0);
+	if (!main_thread_audio_frame) {
+		LOG_ERR("FFMPEG: Failed to initalise audio frame");
+		return false;
+	}
+	main_thread_video_pts = 0;
 	mutex.lock();
 	worker_threads_are_initalised = true;
 	mutex.unlock();
@@ -136,6 +170,10 @@ void FfmpegEncoder::FreeEverything()
 	muxer.Free();
 	audio_encoder.Free();
 	video_encoder.Free();
+	if (main_thread_audio_frame) {
+		av_frame_free(&main_thread_audio_frame);
+		main_thread_audio_frame = nullptr;
+	}
 }
 
 bool FfmpegVideoEncoder::UpdateSettingsIfNeeded(uint16_t width, uint16_t height, Fraction pixel_aspect_ratio, int frames_per_second)
@@ -173,22 +211,42 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 	}
 
 	VideoScalerWork work;
-	work.pts = main_thread_video_frame++;
+	work.pts = main_thread_video_pts++;
 	work.image = image.deep_copy();
 	if (!video_scaler.queue.MaybeEnqueue(std::move(work))) {
 		work.image.free();
 	}
 }
 
+static void write_audio_to_frame(const int16_t* audio_data, AVFrame *frame, const uint32_t num_frames)
+{
+	switch(frame->format) {
+	case AV_SAMPLE_FMT_FLTP: {
+		float* left_channel = reinterpret_cast<float*>(frame->data[0]) + frame->nb_samples;
+		float* right_channel = reinterpret_cast<float*>(frame->data[1]) + frame->nb_samples;
+		for (uint32_t frame = 0; frame < num_frames; ++frame) {
+			const size_t sample = static_cast<size_t>(frame) * SamplesPerFrame;
+			left_channel[frame] = static_cast<float>(audio_data[sample]) / 32768.0f;
+			right_channel[frame] = static_cast<float>(audio_data[sample + 1]) / 32768.0f;
+		}
+		break;
+	}
+	case AV_SAMPLE_FMT_S16: {
+		int16_t* dest = reinterpret_cast<int16_t*>(frame->data[0]) + (static_cast<size_t>(frame->nb_samples) * SamplesPerFrame);
+		memcpy(dest, audio_data, num_frames * SamplesPerFrame * sizeof(int16_t));
+		break;
+	}
+	default: {
+		assertm(false, "Invalid audio sample format");
+	}
+	}
+	frame->nb_samples += static_cast<int>(num_frames);
+}
+
 void FfmpegEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
                                              const uint32_t num_sample_frames,
                                              const int16_t* sample_frames)
 {
-	// This happens sometimes (rarely) and triggers an assert in BulkEnqueue if it does
-	if (num_sample_frames < 1) {
-		return;
-	}
-
 	const bool sample_rate_changed = audio_encoder.sample_rate != sample_rate;
 	audio_encoder.sample_rate = sample_rate;
 
@@ -208,13 +266,37 @@ void FfmpegEncoder::CaptureVideoAddAudioData(const uint32_t sample_rate,
 		return;
 	}
 
-	const size_t num_samples = num_sample_frames * SamplesPerFrame;
-	std::vector<int16_t> audio_data(sample_frames, sample_frames + num_samples);
-	audio_encoder.queue.BulkEnqueue(audio_data, num_samples);
+	uint32_t remaining = num_sample_frames;
+	while (remaining > 0) {
+		const uint32_t space_left = static_cast<uint32_t>(audio_encoder.codec_context->frame_size) - static_cast<uint32_t>(main_thread_audio_frame->nb_samples);
+		const uint32_t num_frames_to_write = std::min(space_left, remaining);
+		write_audio_to_frame(sample_frames, main_thread_audio_frame, num_frames_to_write);
+		if (main_thread_audio_frame->nb_samples == audio_encoder.codec_context->frame_size) {
+			const int64_t pts = main_thread_audio_frame->pts + main_thread_audio_frame->nb_samples;
+			audio_encoder.queue.Enqueue(std::move(main_thread_audio_frame));
+			main_thread_audio_frame = init_audio_frame(audio_encoder.codec_context, pts);
+		}
+		remaining -= num_frames_to_write;
+		sample_frames += num_frames_to_write * SamplesPerFrame;
+	}
 }
 
 void FfmpegEncoder::StopQueues()
 {
+	// CaptureVideoAddAudioData() gathers up the data into an AVFrame
+	// It enqueues once it reaches capacity (usually around 1024 audio frames per AVFrame)
+	// The last (and only the last) AVFrame may be less than capacity.
+	// Go ahead and enqueue that partially filled AVFrame here.
+	if (main_thread_audio_frame) {
+		assert(worker_threads_are_initalised);
+		if (main_thread_audio_frame->nb_samples > 0) {
+			audio_encoder.queue.Enqueue(std::move(main_thread_audio_frame));
+		} else {
+			av_frame_free(&main_thread_audio_frame);
+		}
+		main_thread_audio_frame = nullptr;
+	}
+
 	std::unique_lock<std::mutex> lock(mutex);
 
 	// Set this first so none of the threads start another iteration
@@ -388,7 +470,7 @@ bool FfmpegAudioEncoder::Init()
 	const AVSampleFormat format = find_best_audio_format(av_codec);
 	if (format == AV_SAMPLE_FMT_NONE) {
 		// If we hit this from some new audio codec, it means we need to write
-		// a new conversion routine in EncodeAudio().
+		// a new conversion routine in write_audio_to_frame().
 		LOG_ERR("FFMPEG: No conversion routine for audio codec's supported format");
 		return false;
 	}
@@ -630,9 +712,7 @@ void FfmpegEncoder::ScaleVideo()
 			frame->format              = static_cast<int>(video_encoder.codec_context->pix_fmt);
 			frame->pts                 = optional->pts;
 			frame->sample_aspect_ratio = video_encoder.codec_context->sample_aspect_ratio;
-			// 0 means auto-align based on current CPU
-			constexpr int memory_alignment = 0;
-			if (av_frame_get_buffer(frame, memory_alignment) < 0) {
+			if (av_frame_get_buffer(frame, MemoryAlignment) < 0) {
 				LOG_ERR("FFMPEG: Failed to get video frame buffer");
 				av_frame_free(&frame);
 				image.free();
@@ -755,62 +835,15 @@ void FfmpegEncoder::EncodeAudio()
 		audio_encoder.is_working = true;
 		lock.unlock();
 
-		// Number of samples per channel (frames) the AVFrame has been
-		// allocated to hold
-		const int frame_capacity = audio_encoder.frame->nb_samples;
-
-		// 2 samples per frame. Number of int16_ts requested from the
-		// queue.
-		const size_t sample_capacity = static_cast<size_t>(frame_capacity) *
-		                               SamplesPerFrame;
-
-		for (;;) {
-			audio_encoder.queue.BulkDequeue(audio_data, sample_capacity);
-			const int received_frames = static_cast<int>(audio_data.size()) / static_cast<int>(SamplesPerFrame);
-			if (received_frames < 1) {
-				assert(!audio_encoder.queue.IsRunning());
-				break;
-			}
-			if (av_frame_make_writable(audio_encoder.frame) < 0) {
-				LOG_ERR("FFMPEG: Failed to make audio frame writable");
-				continue;
-			}
-			switch(audio_encoder.codec_context->sample_fmt) {
-			case AV_SAMPLE_FMT_FLTP: {
-				float* left_channel = reinterpret_cast<float*>(audio_encoder.frame->data[0]);
-				float* right_channel = reinterpret_cast<float*>(audio_encoder.frame->data[1]);
-				for (int frame = 0; frame < received_frames; ++frame) {
-					const size_t sample = static_cast<size_t>(frame) * SamplesPerFrame;
-					left_channel[frame] = static_cast<float>(audio_data[sample]) / 32768.0f;
-					right_channel[frame] = static_cast<float>(audio_data[sample + 1]) / 32768.0f;
-				}
-				break;
-			}
-			case AV_SAMPLE_FMT_S16: {
-				memcpy(audio_encoder.frame->data[0], audio_data.data(), audio_data.size() * sizeof(int16_t));
-				break;
-			}
-			default: {
-				assertm(false, "Invalid audio sample format");
-			}
-			}
-			audio_encoder.frame->nb_samples = received_frames;
-			audio_encoder.frame->pts += received_frames;
-			if (avcodec_send_frame(audio_encoder.codec_context,
-			                       audio_encoder.frame) < 0) {
+		while (auto optional = audio_encoder.queue.Dequeue()) {
+			AVFrame* frame = *optional;
+			if (avcodec_send_frame(audio_encoder.codec_context, frame) < 0) {
 				LOG_ERR("FFMPEG: Failed to send audio frame");
 			}
+			av_frame_free(&frame);
 			send_packets_to_muxer(audio_encoder.codec_context,
 			                      MuxerAudioStreamIndex,
 			                      muxer.queue);
-
-			// The encoder must receive full capacity except for the
-			// last frame. If we hit this, the queue should be
-			// stopped anyway.
-			if (received_frames != frame_capacity) {
-				assert(!audio_encoder.queue.IsRunning());
-				break;
-			}
 		}
 
 		// Send nullptr frame to flush the encoder.

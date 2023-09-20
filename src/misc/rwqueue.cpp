@@ -273,7 +273,6 @@ template class RWQueue<SaveImageTask>;
 
 #include "../capture/capture_video.h"
 // FFmpeg Encoder
-template class RWQueue<int16_t>;
 template class RWQueue<VideoScalerWork>;
 template class RWQueue<AVPacket*>;
 template class RWQueue<AVFrame*>;
