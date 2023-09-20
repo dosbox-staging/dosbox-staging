@@ -734,7 +734,9 @@ bool ChannelInfos::HasFeature(const std::string& channel_name,
 void MIXER::Run()
 {
 	if (HelpRequested()) {
-		WriteOut(MSG_Get("SHELL_CMD_MIXER_HELP_LONG"));
+		MoreOutputStrings output(*this);
+		output.AddString(MSG_Get("SHELL_CMD_MIXER_HELP_LONG"));
+		output.Display();
 		return;
 	}
 	if (cmd->FindExist("/LISTMIDI")) {
