@@ -202,8 +202,16 @@ static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 		}
 		auto stem = entry.path().stem().string();
 		lowcase(stem);
+
 		if (starts_with(stem, filename_start)) {
-			const auto index = parse_int(strip_prefix(stem, filename_start));
+			auto index_str = strip_prefix(stem, filename_start);
+
+			// Strip "-raw" or "-rendered" postfix if it's there
+			if (const auto dash_pos = index_str.find('-');
+			    dash_pos != std::string::npos) {
+				index_str = index_str.substr(0, dash_pos);
+			}
+			const auto index = parse_int(index_str);
 			if (index) {
 				highest_index = std::max(highest_index, *index);
 			}
