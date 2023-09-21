@@ -345,18 +345,29 @@ MoreOutputBase::UserDecision MoreOutputBase::PromptUser()
 	bool prompt_type_line_num = false;
 
 	auto display_prompt = [this, &line_num](const bool prompt_type_line_num) {
+		// If using 40-column screen mode (or any custom one with less
+		// columns than standard 80), use short prompts to avoid display
+		// corruption
+		const bool use_short_prompt = max_columns < 80;
 		if (prompt_type_line_num) {
 			WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_LINE"), line_num);
 		} else if (has_multiple_files) {
-			WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_MULTI"));
+			WriteOut(MSG_Get(use_short_prompt
+			                         ? "PROGRAM_MORE_PROMPT_SHORT"
+			                         : "PROGRAM_MORE_PROMPT_MULTI"));
 		} else {
 			if (lines_in_stream) {
 				const auto tmp = static_cast<float>(line_num) /
 			                     static_cast<float>(lines_in_stream);
-				WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_PERCENT"),
+				WriteOut(MSG_Get(use_short_prompt
+				                         ? "PROGRAM_MORE_PROMPT_SHORT_PERCENT"
+				                         : "PROGRAM_MORE_PROMPT_PERCENT"),
 				         std::min(static_cast<int>(tmp * 100), 100));
 			} else {
-				WriteOut(MSG_Get("PROGRAM_MORE_PROMPT_SINGLE"));
+				WriteOut(MSG_Get(
+				        use_short_prompt
+				                ? "PROGRAM_MORE_PROMPT_SHORT"
+				                : "PROGRAM_MORE_PROMPT_SINGLE"));
 			}
 		}
 	};
