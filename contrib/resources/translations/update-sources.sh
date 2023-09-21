@@ -2,7 +2,7 @@
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2022  The DOSBox Staging Team
+# Copyright (C) 2022-2023  The DOSBox Staging Team
 # Copyright (C) 2020-2021  Patryk Obara <patryk.obara@gmail.com>
 
 set -euo pipefail
@@ -12,8 +12,6 @@ PACKAGED_BUILD="build/lang"
 LNG_DIR="contrib/resources/translations"
 
 EN_LANG_PATH="$LNG_DIR/en.lng"
-
-OUTPUT_DIR="$LNG_DIR/utf-8"
 
 cd "$(git rev-parse --show-toplevel)" || exit
 
@@ -41,7 +39,6 @@ check_package() {
 update() {
 	local -r lang="$1"
 	local -r lng_path="$LNG_DIR/${lang}.lng"
-	local -r txt_path="$OUTPUT_DIR/$lang.txt"
 
 	# If the languge is english, then we zero-out the en.lng file
 	# to ensure we get only those strings defined int the source-code
@@ -51,36 +48,41 @@ update() {
 	fi
 
 	# Ensure the language file exists
+	#
 	if [[ ! -f "$lng_path" ]]; then
 		echo "Language file $lng_path is missing"
 		exit 1
 	fi
 
+	# List messages that no longer exist in the English version
+	# and therefore can be safely deleted from the translated source
+	#
+	if [[ "$lang" != "en" ]]; then
+		echo "Messages that can be deleted from $lng_path"
+		comm -1 -3 <(grep ^: "$EN_LANG_PATH" | sort -u) <(grep ^: "$lng_path" | sort -u)
+	fi
+
 	# Dump the messages from source into the .lng file
+	#
 	./build/lang/dosbox \
+		-noprimaryconf \
+		-nolocalconf \
 		-lang "$lang" \
 		-c "config -wl $lng_path" \
 		-c 'exit' \
 		&> /dev/null
 
-	# List messages that no longer exist in the English version
-	# and therefore can be safely deleted from the translated source.
-	echo "Messages that can be deleted from $txt_path"
-	comm -1 -3 <(grep ^: "$EN_LANG_PATH" | sort -u) <(grep ^: "$lng_path" | sort -u)
-
-	# NFC-normalize the translation file, this is required
-	uconv -f UTF-8 -t UTF-8 -x '::nfc;' "$lng_path" > "$txt_path"
-
-	# Finally, restore the non-English .lng files.
+	# NFC-normalize the translation file - for UTF-8 format locale
 	#
-	if [[ "$lang" != "en" ]]; then
-		git restore "$lng_path"
-	fi
+	temp_file="$(mktemp)"
+	uconv -f UTF-8 -t UTF-8 -x '::nfc;' "$lng_path" > "$temp_file"
+	mv "$temp_file" "$lng_path"
 }
 
 # Staging needs to be packaged up (using the create-pacakge.sh) script
 # to use the simpler -lang loader format supported by 0.78+.
-check_package
+#
+git status
 
 # Because English is the source language from which others are
 # translated, we first dump the latest English translations.

@@ -21,7 +21,8 @@ list_markdown_files () {
 	  ':!:.github/**/*.md' \
 	  ':!:src/libs/*.md' \
 	  ':!:src/hardware/reelmagic/docs/*.md' \
-	  ':!:contrib/resources/*.md'
+	  ':!:contrib/resources/*.md' \
+	  ':!:contrib/resources/translations/*.md'
 }
 
 main () {

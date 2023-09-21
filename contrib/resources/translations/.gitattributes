@@ -1,0 +1,3 @@
+*.lng text eol=lf
+*.bat text eol=crlf
+*.sh  text eol=lf
