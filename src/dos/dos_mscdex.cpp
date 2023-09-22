@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2013  The DOSBox Team
+ *  Copyright (C) 2002-2015  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -509,17 +509,17 @@ bool CMscdex::GetAudioStatus(Bit8u subUnit, bool& playing, bool& pause, TMSF& st
 	dinfo[subUnit].lastResult = cdrom[subUnit]->GetAudioStatus(playing,pause);
 	if (dinfo[subUnit].lastResult) {
 		if (playing) {
-		// Start
-		Bit32u addr	= dinfo[subUnit].audioStart + 150;
-		start.fr	= (Bit8u)(addr%75);	addr/=75;
-		start.sec	= (Bit8u)(addr%60); 
-		start.min	= (Bit8u)(addr/60);
-		// End
-		addr		= dinfo[subUnit].audioEnd + 150;
-		end.fr		= (Bit8u)(addr%75);	addr/=75;
-		end.sec		= (Bit8u)(addr%60); 
-		end.min		= (Bit8u)(addr/60);
-	} else {
+			// Start
+			Bit32u addr	= dinfo[subUnit].audioStart + 150;
+			start.fr	= (Bit8u)(addr%75);	addr/=75;
+			start.sec	= (Bit8u)(addr%60); 
+			start.min	= (Bit8u)(addr/60);
+			// End
+			addr		= dinfo[subUnit].audioEnd + 150;
+			end.fr		= (Bit8u)(addr%75);	addr/=75;
+			end.sec		= (Bit8u)(addr%60); 
+			end.min		= (Bit8u)(addr/60);
+		} else {
 			memset(&start,0,sizeof(start));
 			memset(&end,0,sizeof(end));
 		}
