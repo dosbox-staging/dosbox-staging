@@ -2898,7 +2898,7 @@ UINT32 voodoo_r(UINT32 offset) {
 void voodoo_init(int type) {
 	v->active = false;
 
-	v->type = VOODOO_1_DTMU;
+	v->type = VOODOO_1;
 
 	switch (type) {
 		case VOODOO_1:
@@ -2996,7 +2996,7 @@ void voodoo_init(int type) {
 			tmumem0 = 4;
 			tmumem1 = 4;
 			break;
-
+/*
 		case VOODOO_2:
 			v->regaccess = voodoo2_register_access;
 			fbmemsize = 4;
@@ -3004,7 +3004,7 @@ void voodoo_init(int type) {
 			tmumem1 = 4;
 			v->tmu_config |= 0x800;
 			break;
-
+*/
 		default:
 			E_Exit("Unsupported voodoo card in voodoo_start!");
 			break;
@@ -3078,7 +3078,7 @@ void voodoo_shutdown() {
 			free(v->tmu[1].ram);
 			v->tmu[1].ram = NULL;
 		}
-		delete[] v->thread_stats;
+		delete v->thread_stats;
 		v->active=false;
 	}
 }

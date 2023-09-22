@@ -22,19 +22,17 @@
 #include <map>
 
 #include "dosbox.h"
-#include "dos_inc.h"
 
 #if C_OPENGL
 
 #include "voodoo_vogl.h"
 
 /* NTS: This causes errors in Linux because MesaGL already defines these */
-#ifdef WIN32
-PFNGLMULTITEXCOORD4FVARBPROC glMultiTexCoord4fvARB = NULL;
-PFNGLMULTITEXCOORD4FARBPROC glMultiTexCoord4fARB = NULL;
+//#ifdef WIN32
 PFNGLACTIVETEXTUREARBPROC glActiveTextureARB = NULL;
-#endif
-
+PFNGLMULTITEXCOORD4FARBPROC glMultiTexCoord4fARB = NULL;
+PFNGLMULTITEXCOORD4FVARBPROC glMultiTexCoord4fvARB = NULL;
+//#endif
 PFNGLCREATESHADEROBJECTARBPROC glCreateShaderObjectARB = NULL;
 PFNGLSHADERSOURCEARBPROC glShaderSourceARB = NULL;
 PFNGLCOMPILESHADERARBPROC glCompileShaderARB = NULL;
@@ -168,33 +166,31 @@ bool VOGL_Initialize(void) {
 	
 	VOGL_InitVersion();
 
-#ifdef WIN32
-	glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)((void*)SDL_GL_GetProcAddress("glActiveTextureARB"));
+	glActiveTextureARB = (PFNGLACTIVETEXTUREARBPROC)SDL_GL_GetProcAddress("glActiveTextureARB");
 	if (!glActiveTextureARB) {
 		LOG_MSG("opengl: glActiveTextureARB extension not supported");
 		return false;
 	}
 
-	glMultiTexCoord4fARB = (PFNGLMULTITEXCOORD4FARBPROC)((void*)SDL_GL_GetProcAddress("glMultiTexCoord4fARB"));
+	glMultiTexCoord4fARB = (PFNGLMULTITEXCOORD4FARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4fARB");
 	if (!glMultiTexCoord4fARB) {
 		LOG_MSG("opengl: glMultiTexCoord4fARB extension not supported");
 		return false;
 	}
 
-	glMultiTexCoord4fvARB = (PFNGLMULTITEXCOORD4FVARBPROC)((void*)SDL_GL_GetProcAddress("glMultiTexCoord4fvARB"));
+	glMultiTexCoord4fvARB = (PFNGLMULTITEXCOORD4FVARBPROC)SDL_GL_GetProcAddress("glMultiTexCoord4fvARB");
 	if (!glMultiTexCoord4fvARB) {
 		LOG_MSG("opengl: glMultiTexCoord4fvARB extension not supported");
 		return false;
 	}
-#endif
 
-	glBlendFuncSeparateEXT = (PFNGLBLENDFUNCSEPARATEEXTPROC)((void*)SDL_GL_GetProcAddress("glBlendFuncSeparateEXT"));
+	glBlendFuncSeparateEXT = (PFNGLBLENDFUNCSEPARATEEXTPROC)SDL_GL_GetProcAddress("glBlendFuncSeparateEXT");
 	if (!glBlendFuncSeparateEXT) {
 		LOG_MSG("opengl: glBlendFuncSeparateEXT extension not supported");
 		return false;
 	}
 
-	glGenerateMipmapEXT = (PFNGLGENERATEMIPMAPEXTPROC)((void*)SDL_GL_GetProcAddress("glGenerateMipmapEXT"));
+	glGenerateMipmapEXT = (PFNGLGENERATEMIPMAPEXTPROC)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
 	if (!glGenerateMipmapEXT) {
 		LOG_MSG("opengl: glGenerateMipmapEXT extension not supported");
 		return false;
@@ -205,26 +201,26 @@ bool VOGL_Initialize(void) {
 		if (strstr(extensions, "GL_ARB_shader_objects") && strstr(extensions, "GL_ARB_vertex_shader") &&
 			strstr(extensions, "GL_ARB_fragment_shader")) {
 
-			glCreateShaderObjectARB = (PFNGLCREATESHADEROBJECTARBPROC)((void*)SDL_GL_GetProcAddress("glCreateShaderObjectARB"));
+			glCreateShaderObjectARB = (PFNGLCREATESHADEROBJECTARBPROC)SDL_GL_GetProcAddress("glCreateShaderObjectARB");
 			if (!glCreateShaderObjectARB) {
 				LOG_MSG("opengl: shader extensions not supported. Using fixed pipeline");
 			} else {
-				glShaderSourceARB = (PFNGLSHADERSOURCEARBPROC)((void*)SDL_GL_GetProcAddress("glShaderSourceARB"));
+				glShaderSourceARB = (PFNGLSHADERSOURCEARBPROC)SDL_GL_GetProcAddress("glShaderSourceARB");
 				if (!glShaderSourceARB) LOG_MSG("opengl: glShaderSourceARB extension not supported");
 
-				glCompileShaderARB = (PFNGLCOMPILESHADERARBPROC)((void*)SDL_GL_GetProcAddress("glCompileShaderARB"));
+				glCompileShaderARB = (PFNGLCOMPILESHADERARBPROC)SDL_GL_GetProcAddress("glCompileShaderARB");
 				if (!glCompileShaderARB) LOG_MSG("opengl: glCompileShaderARB extension not supported");
 
-				glCreateProgramObjectARB = (PFNGLCREATEPROGRAMOBJECTARBPROC)((void*)SDL_GL_GetProcAddress("glCreateProgramObjectARB"));
+				glCreateProgramObjectARB = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
 				if (!glCreateProgramObjectARB) LOG_MSG("opengl: glCreateProgramObjectARB extension not supported");
 
-				glAttachObjectARB = (PFNGLATTACHOBJECTARBPROC)((void*)SDL_GL_GetProcAddress("glAttachObjectARB"));
+				glAttachObjectARB = (PFNGLATTACHOBJECTARBPROC)SDL_GL_GetProcAddress("glAttachObjectARB");
 				if (!glAttachObjectARB) LOG_MSG("opengl: glAttachObjectARB extension not supported");
 
-				glLinkProgramARB = (PFNGLLINKPROGRAMARBPROC)((void*)SDL_GL_GetProcAddress("glLinkProgramARB"));
+				glLinkProgramARB = (PFNGLLINKPROGRAMARBPROC)SDL_GL_GetProcAddress("glLinkProgramARB");
 				if (!glLinkProgramARB) LOG_MSG("opengl: glLinkProgramARB extension not supported");
 
-				glUseProgramObjectARB = (PFNGLUSEPROGRAMOBJECTARBPROC)((void*)SDL_GL_GetProcAddress("glUseProgramObjectARB"));
+				glUseProgramObjectARB = (PFNGLUSEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glUseProgramObjectARB");
 				if (!glUseProgramObjectARB) LOG_MSG("opengl: glUseProgramObjectARB extension not supported");
 
 				glUniform1iARB = (PFNGLUNIFORM1IARBPROC)SDL_GL_GetProcAddress("glUniform1iARB");
@@ -277,7 +273,6 @@ bool VOGL_Initialize(void) {
 		}
 	}
 
-	LOG_MSG("opengl: I am able to use OpenGL to emulate Voodoo graphics");
 	return true;
 }
 

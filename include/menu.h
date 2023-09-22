@@ -18,7 +18,18 @@
 
 #include <string>
 #include "menudef.h"
+
 void SetVal(const std::string secname, std::string preval, const std::string val);
+
+enum GETSET {
+	GETSET_wait_on_error,
+	GETSET_desktop_fullscreen,
+	GETSET_desktop_doublebuf,
+	GETSET_desktop_want_type,
+	GETSET_opengl_bilinear,
+	GETSET_mouse_autoenable,
+	GETSET_using_windib
+};
 
 #ifdef __WIN32__
 #include "programs.h"
@@ -30,6 +41,7 @@ void BrowseFolder( char drive , std::string drive_type );
 void Mount_Img(char drive, std::string realpath);
 void Mount_Img_Floppy(char drive, std::string realpath);
 void Mount_Img_HDD(char drive, std::string realpath);
+void Mount_Zip(char drive, std::string temp_line);
 void DOSBox_SetMenu(void);
 void DOSBox_NoMenu(void);
 void DOSBox_RefreshMenu(void);
@@ -38,11 +50,8 @@ void D3D_PS(void);
 void DOSBox_CheckOS(int &id, int &major, int &minor);
 void MountDrive(char drive, const char drive2[DOS_PATHLENGTH]);
 void MountDrive_2(char drive, const char drive2[DOS_PATHLENGTH], std::string drive_type);
-void MENU_Check_Drive(HMENU handle, int cdrom, int floppy, int local, int image, int automount, int umount, char drive);
-bool MENU_SetBool(std::string secname, std::string value);
-void MENU_swapstereo(bool enabled);
 void UI_Shortcut(int select);
-void* GetSetSDLValue(int isget, std::string target, void* setval);
+void* GetSetSDLValue(bool isget, int target, void* setval);
 void Go_Boot(const char boot_drive[_MAX_DRIVE]);
 void Go_Boot2(const char boot_drive[_MAX_DRIVE]);
 void OpenFileDialog(char * path_arg);
@@ -51,6 +60,7 @@ void GFX_SetTitle(Bit32s cycles, Bits frameskip, Bits timing, bool paused);
 void change_output(int output);
 void res_input(bool type, const char * res);
 void res_init(void);
+void MENU_swapstereo(bool enabled);
 int Reflect_Menu(void);
 extern bool DOSBox_Kor(void);
 
@@ -58,6 +68,7 @@ extern unsigned int hdd_defsize;
 extern char hdd_size[20];
 extern HWND GetHWND(void);
 extern void GetDefaultSize(void);
+
 #define SCALER(opscaler,opsize) \
 	if ((render.scale.op==opscaler) && (render.scale.size==opsize))
 

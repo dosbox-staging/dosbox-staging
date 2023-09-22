@@ -24,6 +24,7 @@
 #include "setup.h"
 #include "cpu.h"
 #include "support.h"
+#include "../save_state.h"
 
 void MIDI_RawOutByte(Bit8u data);
 bool MIDI_Available(void);
@@ -122,7 +123,7 @@ static Bitu MPU401_ReadStatus(Bitu port,Bitu iolen) {
 }
 
 static void MPU401_WriteCommand(Bitu port,Bitu val,Bitu iolen) {
-	if (mpu.state.reset) {mpu.state.cmd_pending=val+1;return;}
+	//if (mpu.state.reset) {mpu.state.cmd_pending=val+1;return;}
 	if (val<=0x2f) {
 		switch (val&3) { /* MIDI stop, start, continue */
 			case 1: {MIDI_RawOutByte(0xfc);break;}
@@ -714,3 +715,36 @@ void MPU401_Init(Section* sec) {
 // save state support
 void *MPU401_Event_PIC_Event = (void*)MPU401_Event;
 
+
+void POD_Save_MPU401( std::ostream& stream )
+{
+	const char pod_name[32] = "MPU401";
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+
+
+	WRITE_POD( &pod_name, pod_name );
+
+	// - pure data
+	WRITE_POD( &mpu, mpu );
+}
+
+
+void POD_Load_MPU401( std::istream& stream )
+{
+	char pod_name[32] = {0};
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+
+
+	// error checking
+	READ_POD( &pod_name, pod_name );
+	if( strcmp( pod_name, "MPU401" ) ) {
+		stream.clear( std::istream::failbit | std::istream::badbit );
+		return;
+	}
+	// - pure data
+	READ_POD( &mpu, mpu );
+}

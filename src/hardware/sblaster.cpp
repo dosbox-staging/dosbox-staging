@@ -49,6 +49,7 @@
 #include "setup.h"
 #include "support.h"
 #include "shell.h"
+#include "../save_state.h"
 using namespace std;
 
 void MIDI_RawOutByte(Bit8u data);
@@ -331,7 +332,7 @@ static INLINE void DSP_FlushData(void) {
 }
 
 static void DSP_DMA_CallBack(DmaChannel * chan, DMAEvent event) {
-	if (event==DMA_REACHED_TC) return;
+	if (chan!=sb.dma.chan || event==DMA_REACHED_TC) return;
 	else if (event==DMA_MASKED) {
 		if (sb.mode==MODE_DMA) {
 			if (!sb.dma_dac_mode) GenerateDMASound(sb.dma.min);
@@ -1339,7 +1340,8 @@ static void DSP_DoCommand(void) {
 		DSP_AddData(sb.dsp.test_register);;
 		break;
 	case 0xf2:	/* Trigger 8bit IRQ */
-		SB_RaiseIRQ(SB_IRQ_8);
+		//Small delay in order to emulate the slowness of the DSP, fixes Llamatron 2012 and Lemmings 3D
+		PIC_AddEvent(&DSP_RaiseIRQEvent,0.01f); 
 		break;
 	case 0xf3:   /* Trigger 16bit IRQ */
 		DSP_SB16_ONLY; 
@@ -1553,7 +1555,8 @@ static void CTMIXER_Reset(void) {
 	_WHICH_[1]=   ((((_VAL_) & 0x0f) << 1)|(sb.type==SBT_16 ? 1:3));	\
 
 #define MAKEPROVOL(_WHICH_)			\
-	((((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1)) & (sb.type==SBT_16 ? 0xff:0xee))
+	((((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1)) |	\
+		((sb.type==SBT_PRO1 || sb.type==SBT_PRO2) ? 0x11:0))
 
 static void DSP_ChangeStereo(bool stereo) {
 	if (!sb.dma.stereo && stereo) {
@@ -2384,3 +2387,91 @@ void SBLASTER_Init(Section* sec) {
 	sec->AddDestroyFunction(&SBLASTER_ShutDown,true);
 }
 
+
+
+// save state support
+void *DMA_Silent_Event_PIC_Event = (void*)DMA_Silent_Event;
+void *DSP_FinishReset_PIC_Event = (void*)DSP_FinishReset;
+void *DSP_RaiseIRQEvent_PIC_Event = (void*)DSP_RaiseIRQEvent;
+void *END_DMA_Event_PIC_Event = (void*)END_DMA_Event;
+
+void *SB_DSP_DMA_CallBack_Func = (void*)DSP_DMA_CallBack;
+void *SB_DSP_ADC_CallBack_Func = (void*)DSP_ADC_CallBack;
+void *SB_DSP_E2_DMA_CallBack_Func = (void*)DSP_E2_DMA_CallBack;
+
+
+void POD_Save_Sblaster( std::ostream& stream )
+{
+	const char pod_name[32] = "SBlaster";
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !sb.chan ) return;
+
+
+	WRITE_POD( &pod_name, pod_name );
+
+	Bit8u dma_idx;
+
+	dma_idx = 0xff;
+	for( int lcv=0; lcv<8; lcv++ ) {
+		if( sb.dma.chan == GetDMAChannel(lcv) ) { dma_idx = lcv; break; }
+	}
+
+
+	// - near-pure data
+	WRITE_POD( &sb, sb );
+
+
+	// - pure data
+	WRITE_POD( &ASP_regs, ASP_regs );
+	WRITE_POD( &ASP_init_in_progress, ASP_init_in_progress );
+
+	// - reloc ptr
+	WRITE_POD( &dma_idx, dma_idx );
+
+	sb.chan->SaveState(stream);
+}
+
+void POD_Load_Sblaster( std::istream& stream )
+{
+	char pod_name[32] = {0};
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !sb.chan ) return;
+
+
+	// error checking
+	READ_POD( &pod_name, pod_name );
+	if( strcmp( pod_name, "SBlaster" ) ) {
+		stream.clear( std::istream::failbit | std::istream::badbit );
+		return;
+	}
+	Bit8u dma_idx;
+	MixerChannel *mixer_old;
+
+	
+	// save static ptr
+	mixer_old = sb.chan;
+	// - near-pure data
+	READ_POD( &sb, sb );
+
+
+	// - pure data
+	READ_POD( &ASP_regs, ASP_regs );
+	READ_POD( &ASP_init_in_progress, ASP_init_in_progress );
+
+	// - reloc ptr
+	READ_POD( &dma_idx, dma_idx );
+
+
+	sb.dma.chan = NULL;
+	if( dma_idx != 0xff ) sb.dma.chan = GetDMAChannel(dma_idx);
+
+	// restore static ptr
+	sb.chan = mixer_old;
+
+
+	sb.chan->LoadState(stream);
+}

@@ -36,7 +36,34 @@ extern "C" {
 
 static fluid_log_function_t fluid_log_function[LAST_LOG_LEVEL];
 static int fluid_log_initialized = 0;
+#if 0
+void fluid_log_config(void) {
+  if (fluid_log_initialized == 0) {
 
+    fluid_log_initialized = 1;
+
+    if (fluid_log_function[FLUID_PANIC] == NULL) {
+      fluid_set_log_function(FLUID_PANIC, fluid_default_log_function, NULL);
+    }
+
+    if (fluid_log_function[FLUID_ERR] == NULL) {
+      fluid_set_log_function(FLUID_ERR, fluid_default_log_function, NULL);
+    }
+
+    if (fluid_log_function[FLUID_WARN] == NULL) {
+      fluid_set_log_function(FLUID_WARN, fluid_default_log_function, NULL);
+    }
+
+    if (fluid_log_function[FLUID_INFO] == NULL) {
+      fluid_set_log_function(FLUID_INFO, fluid_default_log_function, NULL);
+    }
+
+    if (fluid_log_function[FLUID_DBG] == NULL) {
+      fluid_set_log_function(FLUID_DBG, fluid_default_log_function, NULL);
+    }
+  }
+}
+#endif
 struct _fluid_midi_event_t {
   fluid_midi_event_t* next; /* Link to next event */
   void *paramptr;           /* Pointer parameter (for SYSEX data), size is stored to param1, param2 indicates if pointer should be freed (dynamic if TRUE) */
@@ -55,7 +82,18 @@ struct _fluid_midi_parser_t {
   unsigned char data[1024]; /* The parameters or SYSEX data */
   fluid_midi_event_t event;        /* The event, that is returned to the MIDI driver. */
 };
-
+#if 0
+fluid_midi_parser_t* new_fluid_midi_parser() {
+      fluid_midi_parser_t* parser;
+      parser = FLUID_NEW(fluid_midi_parser_t);
+      if (parser == NULL) {
+            //FLUID_LOG(FLUID_ERR, "Out of memory");
+            return NULL;
+      }
+      parser->status = 0;
+      return parser;
+}
+#endif
 enum fluid_midi_event_type {
   /* channel messages */
   NOTE_OFF = 0x80,
@@ -110,7 +148,105 @@ static int fluid_midi_event_length(unsigned char event) {
       }
       return 1;
 }
+#if 0
+fluid_midi_event_t * fluid_midi_parser_parse(fluid_midi_parser_t* parser, unsigned char c) {
+  fluid_midi_event_t *event;
 
+  /* Real-time messages (0xF8-0xFF) can occur anywhere, even in the middle
+   * of another message. */
+  if (c >= 0xF8)
+  {
+    if (c == MIDI_SYSTEM_RESET)
+    {
+      parser->event.type = c;
+      parser->status = 0;       /* clear the status */
+      return &parser->event;
+    }
+
+    return NULL;
+  }
+
+  /* Status byte? - If previous message not yet complete, it is discarded (re-sync). */
+  if (c & 0x80)
+  {
+    /* Any status byte terminates SYSEX messages (not just 0xF7) */
+    if (parser->status == MIDI_SYSEX && parser->nr_bytes > 0)
+    {
+      event = &parser->event;
+      fluid_midi_event_set_sysex (event, parser->data, parser->nr_bytes, FALSE);
+    }
+    else event = NULL;
+
+    if (c < 0xF0)       /* Voice category message? */
+    {
+      parser->channel = c & 0x0F;
+      parser->status = c & 0xF0;
+
+      /* The event consumes x bytes of data... (subtract 1 for the status byte) */
+      parser->nr_bytes_total = fluid_midi_event_length (parser->status) - 1;
+
+      parser->nr_bytes = 0;     /* 0  bytes read so far */
+    }
+    else if (c == MIDI_SYSEX)
+    {
+      parser->status = MIDI_SYSEX;
+      parser->nr_bytes = 0;
+    }
+    else parser->status = 0;    /* Discard other system messages (0xF1-0xF7) */
+
+    return event;       /* Return SYSEX event or NULL */
+  }
+
+
+  /* Data/parameter byte */
+
+
+  /* Discard data bytes for events we don't care about */
+  if (parser->status == 0)
+    return NULL;
+
+  /* Max data size exceeded? (SYSEX messages only really) */
+  if (parser->nr_bytes == 1024)
+  {
+    parser->status = 0;         /* Discard the rest of the message */
+    return NULL;
+  }
+
+  /* Store next byte */
+  parser->data[parser->nr_bytes++] = c;
+
+  /* Do we still need more data to get this event complete? */
+  if (parser->nr_bytes < parser->nr_bytes_total)
+    return NULL;
+
+  /* Event is complete, return it.
+   * Running status byte MIDI feature is also handled here. */
+  parser->event.type = parser->status;
+  parser->event.channel = parser->channel;
+  parser->nr_bytes = 0;         /* Reset data size, in case there are additional running status messages */
+
+  switch (parser->status)
+  {
+    case NOTE_OFF:
+    case NOTE_ON:
+    case KEY_PRESSURE:
+    case CONTROL_CHANGE:
+    case PROGRAM_CHANGE:
+    case CHANNEL_PRESSURE:
+      parser->event.param1 = parser->data[0]; /* For example key number */
+      parser->event.param2 = parser->data[1]; /* For example velocity */
+      break;
+    case PITCH_BEND:
+      /* Pitch-bend is transmitted with 14-bit precision. */
+      parser->event.param1 = (parser->data[1] << 7) | parser->data[0];
+      break;
+    default: /* Unlikely */
+      return NULL;
+  }
+
+  return &parser->event;
+}
+#endif
 int delete_fluid_midi_parser(fluid_midi_parser_t* parser) {
       FLUID_FREE(parser);
       return FLUID_OK;
@@ -186,14 +322,42 @@ public:
 		fluid_settings_setstr(settings, "audio.sample-format", "16bits");
 
 		if (synthsamplerate == 0) {
-			synthsamplerate = 44100;
+			synthsamplerate = 48000;
 		}
 
 		fluid_settings_setnum(settings,
 			"synth.sample-rate", (double)synthsamplerate);
 
+		fluid_settings_setnum(settings,
+         		"synth.gain", 0.6);
+		
+		fluid_settings_setstr(settings,
+         		"synth.reverb.active", "yes");
+
+		fluid_settings_setstr(settings,
+         		"synth.chorus.active", "yes");
+
+		fluid_settings_setnum(settings,
+         		"audio.periods", 2);
+
+		fluid_settings_setnum(settings,
+         		"audio.period-size", 256);
+
+		fluid_settings_setnum(settings,
+        		"player.reset-synth", 0);
+
+		fluid_settings_setnum(settings,
+        		"synth.min-note-length", 0);
+
+		fluid_settings_setstr(settings,
+        		"player.timing-source", "system");
+
+		fluid_settings_setnum(settings,
+        		"synth.cpu-cores", 1);
 		//fluid_settings_setnum(settings,
 		//	"synth.gain", 0.5);
+		fluid_settings_setstr(settings,
+         		"synth.midi-bank-select", "gs");
 
 		/* Create the synthesizer. */
 		synth_soft = new_fluid_synth(settings);
@@ -204,25 +368,13 @@ public:
 		}
 
 		/* Load a SoundFont */
-		extern std::string capturedir;
-		char str[260];
-		strcpy(str,capturedir.c_str());
-		#if defined (WIN32) || defined (OS2)
-		strcat(str,"\\");
-		#else
-		strcat(str,"/");
-		#endif
-		strcat(str,conf);
 		sfont_id = fluid_synth_sfload(synth_soft, conf, 0);
 		if (sfont_id == -1) {
-			sfont_id = fluid_synth_sfload(synth_soft, str, 0);
-			if (sfont_id == -1) {
 				LOG_MSG("SYNTH: Failed to load MIDI sound font file \"%s\"",
 				   conf);
 				delete_fluid_synth(synth_soft);
 				delete_fluid_settings(settings);
 				return false;
-			}
 		}
 
 		/* Allocate one event to store the input data */

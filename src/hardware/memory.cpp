@@ -25,13 +25,15 @@
 #include "inout.h"
 #include "setup.h"
 #include "paging.h"
-#include "programs.h"
 #include "regs.h"
+#include "programs.h"
 #ifndef WIN32
 # include <stdlib.h>
 # include <unistd.h>
 # include <stdio.h>
 #endif
+#include "glidedef.h"
+#include "../save_state.h"
 
 #include "voodoo.h"
 
@@ -203,7 +205,9 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page) {
 	} else if ((phys_page>=memory.lfb.start_page+0x01000000/4096) &&
 		(phys_page<memory.lfb.start_page+0x01000000/4096+16)) {
 		return memory.lfb.mmiohandler;
-	} else if (VOODOO_PCI_CheckLFBPage(phys_page)) {
+	} else if (glide.enabled && (phys_page>=(GLIDE_LFB>>12)) && (phys_page<(GLIDE_LFB>>12)+GLIDE_PAGES)) {
+		return (PageHandler*)glide.lfb_pagehandler;
+	} else if (!glide.enabled && VOODOO_PCI_CheckLFBPage(phys_page)) {
 		return VOODOO_GetPageHandler();
 	}
 	return &illegal_page_handler;
@@ -1101,3 +1105,106 @@ void MEM_Init(Section * sec) {
 	sec->AddDestroyFunction(&MEM_ShutDown);
 }
 
+
+
+//save state support
+extern void* VGA_PageHandler_Func[16];
+
+Bit32u Memory_PageHandler_table[] = 
+{
+	(Bit32u) NULL,
+	(Bit32u) &ram_page_handler,
+	(Bit32u) &rom_page_handler,
+
+	(Bit32u) VGA_PageHandler_Func[0],
+	(Bit32u) VGA_PageHandler_Func[1],
+	(Bit32u) VGA_PageHandler_Func[2],
+	(Bit32u) VGA_PageHandler_Func[3],
+	(Bit32u) VGA_PageHandler_Func[4],
+	(Bit32u) VGA_PageHandler_Func[5],
+	(Bit32u) VGA_PageHandler_Func[6],
+	(Bit32u) VGA_PageHandler_Func[7],
+	(Bit32u) VGA_PageHandler_Func[8],
+	(Bit32u) VGA_PageHandler_Func[9],
+	(Bit32u) VGA_PageHandler_Func[10],
+	(Bit32u) VGA_PageHandler_Func[11],
+	(Bit32u) VGA_PageHandler_Func[12],
+	(Bit32u) VGA_PageHandler_Func[13],
+	(Bit32u) VGA_PageHandler_Func[14],
+	(Bit32u) VGA_PageHandler_Func[15],
+};
+
+
+namespace
+{
+class SerializeMemory : public SerializeGlobalPOD
+{
+public:
+	SerializeMemory() : SerializeGlobalPOD("Memory") 
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		Bit8u pagehandler_idx[0x10000];
+		int size_table;
+
+
+		// assume 256MB max memory
+		size_table = sizeof(Memory_PageHandler_table) / sizeof(Bit32u);
+		for( int lcv=0; lcv<memory.pages; lcv++ ) {
+			pagehandler_idx[lcv] = 0xff;
+
+			for( int lcv2=0; lcv2<size_table; lcv2++ ) {
+				if( (Bit32u) memory.phandlers[lcv] == Memory_PageHandler_table[lcv2] ) {
+					pagehandler_idx[lcv] = lcv2;
+					break;
+				}
+			}
+		}
+		SerializeGlobalPOD::getBytes(stream);
+
+		// - near-pure data
+		WRITE_POD( &memory, memory );
+
+		// - static 'new' ptr
+		WRITE_POD_SIZE( MemBase, memory.pages*4096 );
+		WRITE_POD_SIZE( memory.mhandles, sizeof(MemHandle) * memory.pages );
+		WRITE_POD( &pagehandler_idx, pagehandler_idx );
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		Bit8u pagehandler_idx[0x10000];
+		void *old_ptrs[4];
+
+		old_ptrs[0] = (void *) memory.phandlers;
+		old_ptrs[1] = (void *) memory.mhandles;
+		old_ptrs[2] = (void *) memory.lfb.handler;
+		old_ptrs[3] = (void *) memory.lfb.mmiohandler;
+		SerializeGlobalPOD::setBytes(stream);
+
+
+		// - near-pure data
+		READ_POD( &memory, memory );
+
+		// - static 'new' ptr
+		READ_POD_SIZE( MemBase, memory.pages*4096 );
+		memory.phandlers = (PageHandler **) old_ptrs[0];
+		memory.mhandles = (MemHandle *) old_ptrs[1];
+		memory.lfb.handler = (PageHandler *) old_ptrs[2];
+		memory.lfb.mmiohandler = (PageHandler *) old_ptrs[3];
+
+
+		READ_POD_SIZE( memory.mhandles, sizeof(MemHandle) * memory.pages );
+		READ_POD( &pagehandler_idx, pagehandler_idx );
+
+
+		for( int lcv=0; lcv<memory.pages; lcv++ ) {
+			if( pagehandler_idx[lcv] == 0xff ) continue;
+
+			memory.phandlers[lcv] = (PageHandler *) Memory_PageHandler_table[ pagehandler_idx[lcv] ];
+		}
+	}
+} dummy;
+}

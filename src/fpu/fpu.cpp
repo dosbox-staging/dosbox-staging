@@ -26,6 +26,7 @@
 #include "mem.h"
 #include "fpu.h"
 #include "cpu.h"
+#include "../save_state.h"
 
 FPU_rec fpu;
 
@@ -41,7 +42,11 @@ Bit16u FPU_GetTag(void){
 	return tag;
 }
 
+#if C_FPU_X86
+#include "fpu_instructions_x86.h"
+#else
 #include "fpu_instructions.h"
+#endif
 
 /* WATCHIT : ALWAYS UPDATE REGISTERS BEFORE AND AFTER USING THEM 
 			STATUS WORD =>	FPU_SET_TOP(TOP) BEFORE a read
@@ -625,3 +630,18 @@ void FPU_Init(Section*) {
 
 #endif
 
+
+//save state support
+#if C_FPU
+namespace
+{
+class SerializeFpu : public SerializeGlobalPOD
+{
+public:
+    SerializeFpu() : SerializeGlobalPOD("FPU")
+    {
+        registerPOD(fpu);
+    }
+} dummy;
+}
+#endif

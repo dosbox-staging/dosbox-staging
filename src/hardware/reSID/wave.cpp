@@ -19,6 +19,7 @@
 
 #define __WAVE_CC__
 #include "wave.h"
+#include "../../save_state.h"
 
 // ----------------------------------------------------------------------------
 // Constructor.
@@ -143,3 +144,102 @@ void WaveformGenerator::reset()
   msb_rising = false;
 }
 
+
+
+// save state support
+
+void WaveformGenerator::SaveState( std::ostream& stream )
+{
+	unsigned char wave_st_idx, wave_pt_idx, wave_ps_idx, wave_pst_idx;
+
+
+	wave_st_idx = 0xff;
+	wave_pt_idx = 0xff;
+	wave_ps_idx = 0xff;
+	wave_pst_idx = 0xff;
+
+
+	if(0) {}
+	else if( wave__ST == wave6581__ST ) wave_st_idx = 0;
+	else if( wave__ST == wave8580__ST ) wave_st_idx = 1;
+
+
+	if(0) {}
+	else if( wave_P_T == wave6581_P_T ) wave_pt_idx = 0;
+	else if( wave_P_T == wave8580_P_T ) wave_pt_idx = 1;
+
+
+	if(0) {}
+	else if( wave_PS_ == wave6581_PS_ ) wave_ps_idx = 0;
+	else if( wave_PS_ == wave8580_PS_ ) wave_ps_idx = 1;
+
+
+	if(0) {}
+	else if( wave_PST == wave6581_PST ) wave_pst_idx = 0;
+	else if( wave_PST == wave8580_PST ) wave_pst_idx = 1;
+	// - pure data
+	WRITE_POD( &msb_rising, msb_rising );
+
+	WRITE_POD( &accumulator, accumulator );
+	WRITE_POD( &shift_register, shift_register );
+	WRITE_POD( &freq, freq );
+	WRITE_POD( &pw, pw );
+
+	WRITE_POD( &waveform, waveform );
+	WRITE_POD( &test, test );
+	WRITE_POD( &ring_mod, ring_mod );
+	WRITE_POD( &sync, sync );
+
+
+
+	// - reloc ptr
+	WRITE_POD( &wave_st_idx, wave_st_idx );
+	WRITE_POD( &wave_pt_idx, wave_pt_idx );
+	WRITE_POD( &wave_ps_idx, wave_ps_idx );
+	WRITE_POD( &wave_pst_idx, wave_pst_idx );
+}
+
+
+void WaveformGenerator::LoadState( std::istream& stream )
+{
+	unsigned char wave_st_idx, wave_pt_idx, wave_ps_idx, wave_pst_idx;
+	// - pure data
+	READ_POD( &msb_rising, msb_rising );
+
+	READ_POD( &accumulator, accumulator );
+	READ_POD( &shift_register, shift_register );
+	READ_POD( &freq, freq );
+	READ_POD( &pw, pw );
+
+	READ_POD( &waveform, waveform );
+	READ_POD( &test, test );
+	READ_POD( &ring_mod, ring_mod );
+	READ_POD( &sync, sync );
+
+
+
+	// - reloc ptr
+	READ_POD( &wave_st_idx, wave_st_idx );
+	READ_POD( &wave_pt_idx, wave_pt_idx );
+	READ_POD( &wave_ps_idx, wave_ps_idx );
+	READ_POD( &wave_pst_idx, wave_pst_idx );
+	switch( wave_st_idx ) {
+		case 0: wave__ST = wave6581__ST; break;
+		case 1: wave__ST = wave8580__ST; break;
+	}
+
+	switch( wave_pt_idx ) {
+		case 0: wave_P_T = wave6581_P_T; break;
+		case 1: wave_P_T = wave8580_P_T; break;
+	}
+
+	switch( wave_ps_idx ) {
+		case 0: wave_PS_ = wave6581_PS_; break;
+		case 1: wave_PS_ = wave8580_PS_; break;
+	}
+
+	switch( wave_pt_idx ) {
+		case 0: wave_PST = wave6581_PST; break;
+		case 1: wave_PST = wave8580_PST; break;
+	}
+}

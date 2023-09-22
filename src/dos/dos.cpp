@@ -31,6 +31,7 @@
 #include "parport.h"
 #include "serialport.h"
 #include "dos_network.h"
+#include "../save_state.h"
 
 bool DOS_BreakFlag = false;
 bool enable_dbcs_tables = true;
@@ -165,10 +166,6 @@ static inline void overhead() {
 }
 #endif
 
-#define BCD2BIN(x)	((((x) >> 4) * 10) + ((x) & 0x0f))
-#define BIN2BCD(x)	((((x) / 10) << 4) + (x) % 10)
-extern bool date_host_forced;
-
 static Bitu DOS_21Handler(void);
 Bitu DEBUG_EnableDebugger(void);
 void CALLBACK_RunRealInt_retcsip(Bit8u intnum,Bitu &cs,Bitu &ip);
@@ -260,6 +257,10 @@ bool DOS_BreakTest() {
 void DOS_BreakAction() {
 	DOS_BreakFlag = true;
 }
+
+#define BCD2BIN(x)	((((x) >> 4) * 10) + ((x) & 0x0f))
+#define BIN2BCD(x)	((((x) / 10) << 4) + (x) % 10)
+extern bool date_host_forced;
 
 #define DOSNAMEBUF 256
 static Bitu DOS_21Handler(void) {
@@ -1253,8 +1254,8 @@ static Bitu DOS_21Handler(void) {
 			}
 			break;
 		}
-	case 0x5c:	{		/* FLOCK File region locking */
-		/* ert, 20100711: Locking extensions */
+	case 0x5c:			/* FLOCK File region locking */
+		if (!control->cmdline->FindExist("-disable_share")) {	/* ert, 20100711: Locking extensions */
 		Bit32u pos=(reg_cx<<16) + reg_dx;
 		Bit32u size=(reg_si<<16) + reg_di;
 		//LOG_MSG("LockFile: BX=%d, AL=%d, POS=%d, size=%d", reg_bx, reg_al, pos, size);
@@ -1265,13 +1266,13 @@ static Bitu DOS_21Handler(void) {
 			reg_ax=dos.errorcode;
 			CALLBACK_SCF(true);
 		}
-		break; }
-		/*
+		break;
+		} else {
 		DOS_SetError(DOSERR_FUNCTION_NUMBER_INVALID);
 		reg_ax = dos.errorcode;
 		CALLBACK_SCF(true);
 		break;
-		*/
+		}
 	case 0x5d:					/* Network Functions */
 		if(reg_al == 0x06) {
 			SegSet16(ds,DOS_SDA_SEG);
@@ -1633,7 +1634,7 @@ public:
 					DOS_PRIVATE_SEGMENT_END = (MEM_TotalPages() << (12 - 4)) - 1; /* NTS: Remember DOSBox's implementation reuses the last paragraph for UMB linkage */
 			}
 
-			LOG_MSG("Dynamic DOS kernel mode, structures will be allocated from pool 0x%04x-0x%04x\n",
+			LOG_MSG("Dynamic DOS kernel mode, structures will be allocated from pool 0x%04x-0x%04x",
 				DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
 
 			DOS_FIRST_SHELL_SIZE = 19 + (dosbox_shell_env_size >> 4);
@@ -1685,22 +1686,22 @@ public:
 				DOS_PRIVATE_SEGMENT_END = segend;
 				DOS_MEM_START = DOS_PRIVATE_SEGMENT_END;
 				DOS_GetMemory_reset();
-				LOG_MSG("Private area, not stored in UMB on request, occupies 0x%04x-0x%04x\n",
+				LOG_MSG("Private area, not stored in UMB on request, occupies 0x%04x-0x%04x",
 					DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
 			}
 		}
 
-		LOG_MSG("DOS kernel alloc:\n");
-		LOG_MSG("   IHSEG:        seg 0x%04x\n",DOS_IHSEG);
-		LOG_MSG("   infoblock:    seg 0x%04x\n",DOS_INFOBLOCK_SEG);
-		LOG_MSG("   condrv:       seg 0x%04x\n",DOS_CONDRV_SEG);
-		LOG_MSG("   constring:    seg 0x%04x\n",DOS_CONSTRING_SEG);
-		LOG_MSG("   SDA:          seg 0x%04x:0x%04x\n",DOS_SDA_SEG,DOS_SDA_OFS);
-		LOG_MSG("   CDS:          seg 0x%04x\n",DOS_CDS_SEG);
-		LOG_MSG("   first shell:  seg 0x%04x-0x%04x\n",DOS_FIRST_SHELL,DOS_FIRST_SHELL_END-1);
-		LOG_MSG("[private segment @ this point 0x%04x-0x%04x mem=0x%04x]\n",
-			DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END,
-			MEM_TotalPages() << (12 - 4));
+		//LOG_MSG("DOS kernel alloc:\n");
+		//LOG_MSG("   IHSEG:        seg 0x%04x\n",DOS_IHSEG);
+		//LOG_MSG("   infoblock:    seg 0x%04x\n",DOS_INFOBLOCK_SEG);
+		//LOG_MSG("   condrv:       seg 0x%04x\n",DOS_CONDRV_SEG);
+		//LOG_MSG("   constring:    seg 0x%04x\n",DOS_CONSTRING_SEG);
+		//LOG_MSG("   SDA:          seg 0x%04x:0x%04x\n",DOS_SDA_SEG,DOS_SDA_OFS);
+		//LOG_MSG("   CDS:          seg 0x%04x\n",DOS_CDS_SEG);
+		//LOG_MSG("   first shell:  seg 0x%04x-0x%04x\n",DOS_FIRST_SHELL,DOS_FIRST_SHELL_END-1);
+		//LOG_MSG("[private segment @ this point 0x%04x-0x%04x mem=0x%04x]\n",
+		//	DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END,
+		//	MEM_TotalPages() << (12 - 4));
 
 		callback[0].Install(DOS_20Handler,CB_IRET,"DOS Int 20");
 		callback[0].Set_RealVec(0x20);
@@ -1773,11 +1774,11 @@ public:
 				DOS_PRIVATE_SEGMENT_END = segend;
 				DOS_MEM_START = DOS_PRIVATE_SEGMENT_END;
 				DOS_GetMemory_reset();
-				LOG_MSG("Private area, not stored in UMB on request, occupies 0x%04x-0x%04x [dynamic]\n",
+				LOG_MSG("Private area, not stored in UMB on request, occupies 0x%04x-0x%04x [dynamic]",
 					DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
 			}
 		}
-		LOG_MSG("   mem start:    seg 0x%04x\n",DOS_MEM_START);
+		//LOG_MSG("   mem start:    seg 0x%04x\n",DOS_MEM_START);
 
 		/* carry on setup */
 		DOS_SetupMemory();								/* Setup first MCB */
@@ -1839,3 +1840,92 @@ void DOS_Init(Section* sec) {
 	sec->AddDestroyFunction(&DOS_ShutDown,false);
 }
 
+
+extern void POD_Save_DOS_Devices( std::ostream& stream );
+extern void POD_Save_DOS_DriveManager( std::ostream& stream );
+extern void POD_Save_DOS_Files( std::ostream& stream );
+extern void POD_Save_DOS_Memory( std::ostream& stream );
+extern void POD_Save_DOS_Mscdex( std::ostream& stream );
+extern void POD_Save_DOS_Tables( std::ostream& stream );
+extern void POD_Load_DOS_Devices( std::istream& stream );
+extern void POD_Load_DOS_DriveManager( std::istream& stream );
+extern void POD_Load_DOS_Files( std::istream& stream );
+extern void POD_Load_DOS_Memory( std::istream& stream );
+extern void POD_Load_DOS_Mscdex( std::istream& stream );
+extern void POD_Load_DOS_Tables( std::istream& stream );
+
+//save state support
+namespace
+{
+class SerializeDos : public SerializeGlobalPOD
+{
+public:
+	SerializeDos() : SerializeGlobalPOD("Dos") 
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		SerializeGlobalPOD::getBytes(stream);
+		// - pure data
+		WRITE_POD( &dos_copybuf, dos_copybuf );
+
+
+		WRITE_POD( &dos.firstMCB, dos.firstMCB );
+		WRITE_POD( &dos.errorcode, dos.errorcode );
+		WRITE_POD( &dos.env, dos.env );
+		WRITE_POD( &dos.cpmentry, dos.cpmentry );
+		WRITE_POD( &dos.return_code, dos.return_code );
+		WRITE_POD( &dos.return_mode, dos.return_mode );
+
+		WRITE_POD( &dos.current_drive, dos.current_drive );
+		WRITE_POD( &dos.verify, dos.verify );
+		WRITE_POD( &dos.breakcheck, dos.breakcheck );
+		WRITE_POD( &dos.echo, dos.echo );
+
+		WRITE_POD( &dos.loaded_codepage, dos.loaded_codepage );
+
+
+
+
+		POD_Save_DOS_Devices(stream);
+		POD_Save_DOS_DriveManager(stream);
+		POD_Save_DOS_Files(stream);
+		POD_Save_DOS_Memory(stream);
+		POD_Save_DOS_Mscdex(stream);
+		POD_Save_DOS_Tables(stream);
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		SerializeGlobalPOD::setBytes(stream);
+		// - pure data
+		READ_POD( &dos_copybuf, dos_copybuf );
+
+
+		READ_POD( &dos.firstMCB, dos.firstMCB );
+		READ_POD( &dos.errorcode, dos.errorcode );
+		READ_POD( &dos.env, dos.env );
+		READ_POD( &dos.cpmentry, dos.cpmentry );
+		READ_POD( &dos.return_code, dos.return_code );
+		READ_POD( &dos.return_mode, dos.return_mode );
+
+		READ_POD( &dos.current_drive, dos.current_drive );
+		READ_POD( &dos.verify, dos.verify );
+		READ_POD( &dos.breakcheck, dos.breakcheck );
+		READ_POD( &dos.echo, dos.echo );
+	
+		READ_POD( &dos.loaded_codepage, dos.loaded_codepage );
+
+
+
+
+		POD_Load_DOS_Devices(stream);
+		POD_Load_DOS_DriveManager(stream);
+		POD_Load_DOS_Files(stream);
+		POD_Load_DOS_Memory(stream);
+		POD_Load_DOS_Mscdex(stream);
+		POD_Load_DOS_Tables(stream);
+	}
+} dummy;
+}

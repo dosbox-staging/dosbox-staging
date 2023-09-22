@@ -39,6 +39,8 @@
 #include "bios_disk.h" 
 #include "setup.h"
 #include "control.h"
+#include "inout.h"
+#include "dma.h"
 #include <time.h>
 #include "menu.h"
 bool Mouse_Drv=true;
@@ -305,7 +307,11 @@ public:
 			if (!cmd->FindCommand(2,temp_line)) goto showusage;
 			if (!temp_line.size()) goto showusage;
 			bool is_physfs = temp_line.find(':',((temp_line[0]|0x20) >= 'a' && (temp_line[0]|0x20) <= 'z')?2:0) != std::string::npos;
+#if defined (_MSC_VER)
+			struct _stati64 test;
+#else
 			struct stat test;
+#endif
 			//Win32 : strip tailing backslashes
 			//os2: some special drive check
 			//rest: substiture ~ for home
@@ -313,7 +319,11 @@ public:
 #if defined (WIN32) || defined(OS2)
 			/* Removing trailing backslash if not root dir so stat will succeed */
 			if(temp_line.size() > 3 && temp_line[temp_line.size()-1]=='\\') temp_line.erase(temp_line.size()-1,1);
-			if (!is_physfs && stat(temp_line.c_str(),&test)) {
+#if defined (_MSC_VER)
+			if (!is_physfs && _stati64(temp_line.c_str(), &test)) {
+#else
+			if (!is_physfs && stat(temp_line.c_str(), &test)) {
+#endif
 #endif
 #if defined(WIN32)
 // Nothing to do here.
@@ -358,12 +368,24 @@ public:
 					OPEN_FLAGS_DASD | OPEN_SHARE_DENYNONE | OPEN_ACCESS_READONLY, 0L);
 				DosClose(cdrom_fd);
 				if (rc != NO_ERROR && rc != ERROR_NOT_READY) {
-				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
-				return;
-			}
+#if C_HAVE_PHYSFS
+				// Make it a physfs then...
+				is_physfs = true;
+				temp_line.insert(0, 1, ':');
 #else
 				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
 				return;
+#endif
+			}
+#else
+#if C_HAVE_PHYSFS
+				// Make it a physfs then...
+				is_physfs = true;
+				temp_line.insert(0, 1, ':');
+#else
+				WriteOut(MSG_Get("PROGRAM_MOUNT_ERROR_2"),temp_line.c_str());
+				return;
+#endif
 #endif
 
 			}
@@ -403,7 +425,11 @@ public:
 #endif
 				}
 				if (is_physfs) {
+#if C_HAVE_PHYSFS
+					newdrive  = new physfscdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
+#else
 					LOG_MSG("ERROR:This build does not support physfs");
+#endif
 				} else {
 					newdrive  = new cdromDrive(drive,temp_line.c_str(),sizes[0],bit8size,sizes[2],0,mediaid,error);
 				}
@@ -431,7 +457,11 @@ public:
 				if(temp_line == "/") WriteOut(MSG_Get("PROGRAM_MOUNT_WARNING_OTHER"));
 #endif
 				if (is_physfs) {
+#if C_HAVE_PHYSFS
+					newdrive=new physfsDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
+#else
 					LOG_MSG("ERROR:This build does not support physfs");
+#endif
 				} else {
 					newdrive=new localDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
 				}
@@ -915,6 +945,8 @@ public:
 			disable_umb_ems_xms();
 
 			WriteOut(MSG_Get("PROGRAM_BOOT_BOOT"), drive);
+			/* create appearance of floppy drive DMA usage (Demon's Forge) */
+			if (!IS_TANDY_ARCH && floppysize!=0) GetDMAChannel(2)->tcount=true;
 			for(i=0;i<512;i++) real_writeb(0, (load_seg<<4) + i, bootarea.rawdata[i]);
 
 			/* debug */
@@ -2330,13 +2362,24 @@ public:
 			
 			// find all file parameters, assuming that all option parameters have been removed
 			while(cmd->FindCommand((unsigned int)(paths.size() + 2), temp_line) && temp_line.size()) {
-				
+#if defined (_MSC_VER)
+				struct _stati64 test;
+#else
 				struct stat test;
-				if (stat(temp_line.c_str(),&test)) {
+#endif
+#if defined (_MSC_VER)
+				if (_stati64(temp_line.c_str(), &test)) {
+#else
+				if (stat(temp_line.c_str(), &test)) {
+#endif
 					//See if it works if the ~ are written out
 					std::string homedir(temp_line);
 					Cross::ResolveHomedir(homedir);
-					if(!stat(homedir.c_str(),&test)) {
+#if defined (_MSC_VER)
+					if (!_stati64(homedir.c_str(), &test)) {
+#else
+					if (!stat(homedir.c_str(), &test)) {
+#endif
 						temp_line = homedir;
 					} else {
 						// convert dosbox filename to system filename
@@ -2358,7 +2401,11 @@ public:
 						ldp->GetSystemFilename(tmp, fullname);
 						temp_line = tmp;
 
-						if (stat(temp_line.c_str(),&test)) {
+#if defined (_MSC_VER)
+						if (_stati64(temp_line.c_str(), &test)) {
+#else
+						if (stat(temp_line.c_str(), &test)) {
+#endif
 							WriteOut(MSG_Get("PROGRAM_IMGMOUNT_FILE_NOT_FOUND"));
 							return;
 						}
@@ -2821,7 +2868,7 @@ modeparam:
 static void MODE_ProgramStart(Program * * make) {
 	*make=new MODE;
 }
-/*
+
 // MORE
 class MORE : public Program {
 public:
@@ -2864,7 +2911,7 @@ void MORE::Run(void) {
 static void MORE_ProgramStart(Program * * make) {
 	*make=new MORE;
 }
-*/
+
 
 void CLOCKDOM_ProgramStart(Program * * make);
 void A20GATE_ProgramStart(Program * * make);
@@ -2915,12 +2962,13 @@ void DOS_SetupPrograms(void) {
 	MSG_Add("PROGRAM_LOADFIX_ERROR","Memory allocation error.\n");
 
 	MSG_Add("MSCDEX_SUCCESS","MSCDEX installed.\n");
-	MSG_Add("MSCDEX_ERROR_MULTIPLE_CDROMS","MSCDEX: Failure: Drive-letters of multiple CDRom-drives have to be continuous.\n");
+	MSG_Add("MSCDEX_ERROR_MULTIPLE_CDROMS","MSCDEX: Failure: Drive-letters of multiple CD-ROM drives have to be continuous.\n");
 	MSG_Add("MSCDEX_ERROR_NOT_SUPPORTED","MSCDEX: Failure: Not yet supported.\n");
+	MSG_Add("MSCDEX_ERROR_PATH","MSCDEX: Specified location is not a CD-ROM drive.\n");
 	MSG_Add("MSCDEX_ERROR_OPEN","MSCDEX: Failure: Invalid file or unable to open.\n");
-	MSG_Add("MSCDEX_TOO_MANY_DRIVES","MSCDEX: Failure: Too many CDRom-drives (max: 5). MSCDEX Installation failed.\n");
+	MSG_Add("MSCDEX_TOO_MANY_DRIVES","MSCDEX: Failure: Too many CD-ROM drives (max: 5). MSCDEX Installation failed.\n");
 	MSG_Add("MSCDEX_LIMITED_SUPPORT","MSCDEX: Mounted subdirectory: limited support.\n");
-	MSG_Add("MSCDEX_INVALID_FILEFORMAT","MSCDEX: Failure: File is either no iso/cue image or contains errors.\n");
+	MSG_Add("MSCDEX_INVALID_FILEFORMAT","MSCDEX: Failure: File is either no ISO/CUE image or contains errors.\n");
 	MSG_Add("MSCDEX_UNKNOWN_ERROR","MSCDEX: Failure: Unknown error.\n");
 
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive cache cleared.\n");
@@ -2929,7 +2977,7 @@ void DOS_SetupPrograms(void) {
 		"\033[2J\033[32;1mWelcome to DOSBox\033[0m, an x86 emulator with sound and graphics.\n"
 		"DOSBox creates a shell for you which looks like old plain DOS.\n"
 		"\n"
-		"\033[31;1mDOSBox will stop/exit without a warning if an error occured!\033[0m\n"
+		"\033[31;1mDOSBox will stop/exit without a warning if an error occurred!\033[0m\n"
 		"\n"
 		"\n" );
 	MSG_Add("PROGRAM_INTRO_MENU_UP",
@@ -3019,9 +3067,9 @@ void DOS_SetupPrograms(void) {
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
-		"\xBA \033[32mmount c c:\\dosprogs\\\033[37m will create a C drive with c:\\dosprogs as contents.\xBA\n"
+		"\xBA \033[32mmount c c:\\dosgames\\\033[37m will create a C drive with c:\\dosgames as contents.\xBA\n"
 		"\xBA                                                                         \xBA\n"
-		"\xBA \033[32mc:\\dosprogs\\\033[37m is an example. Replace it with your own games directory.  \033[37m \xBA\n"
+		"\xBA \033[32mc:\\dosgames\\\033[37m is an example. Replace it with your own games directory.  \033[37m \xBA\n"
 		"\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
@@ -3030,9 +3078,9 @@ void DOS_SetupPrograms(void) {
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
-		"\xBA \033[32mmount c ~/dosprogs\033[37m will create a C drive with ~/dosprogs as contents.\xBA\n"
+		"\xBA \033[32mmount c ~/dosgames\033[37m will create a C drive with ~/dosgames as contents.\xBA\n"
 		"\xBA                                                                      \xBA\n"
-		"\xBA \033[32m~/dosprogs\033[37m is an example. Replace it with your own games directory.\033[37m  \xBA\n"
+		"\xBA \033[32m~/dosgames\033[37m is an example. Replace it with your own games directory.\033[37m  \xBA\n"
 		"\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC\033[0m\n"
@@ -3200,8 +3248,8 @@ void DOS_SetupPrograms(void) {
 			"\033[1mCO80\033[0m, \033[1mBW80\033[0m, \033[1mCO40\033[0m, \033[1mBW40\033[0m, or \033[1mMONO\033[0m\n"
 			"\033[34;1mMODE CON RATE=\033[0mr \033[34;1mDELAY=\033[0md :typematic rates, r=1-32 (32=fastest), d=1-4 (1=lowest)\n");
 	MSG_Add("PROGRAM_MODE_INVALID_PARAMETERS","Invalid parameter(s).\n");
-	//MSG_Add("PROGRAM_MORE_USAGE","Usage: \033[34;1mMORE <\033[0m text-file\n");
-	//MSG_Add("PROGRAM_MORE_MORE","-- More --");
+	MSG_Add("PROGRAM_MORE_USAGE","Usage: \033[34;1mMORE <\033[0m text-file\n");
+	MSG_Add("PROGRAM_MORE_MORE","-- More --");
 
 	/*regular setup*/
 	PROGRAMS_MakeFile("MOUNT.COM",MOUNT_ProgramStart);
@@ -3213,7 +3261,7 @@ void DOS_SetupPrograms(void) {
 	PROGRAMS_MakeFile("IMGMAKE.COM", IMGMAKE_ProgramStart);
 	PROGRAMS_MakeFile("IMGMOUNT.COM", IMGMOUNT_ProgramStart);
 	PROGRAMS_MakeFile("MODE.COM", MODE_ProgramStart);
-	//PROGRAMS_MakeFile("MORE.COM", MORE_ProgramStart);
+	PROGRAMS_MakeFile("MORE.COM", MORE_ProgramStart);
 	PROGRAMS_MakeFile("25.COM", LINE25_ProgramStart);
 	PROGRAMS_MakeFile("KEYB.COM", KEYB_ProgramStart);
 	PROGRAMS_MakeFile("MOUSE.COM", MOUSE_ProgramStart);

@@ -25,6 +25,7 @@
 #include "mixer.h"
 #include "timer.h"
 #include "setup.h"
+#include "../save_state.h"
 
 enum {
 	PIT_HACK_NONE=0,
@@ -473,15 +474,15 @@ bool TIMER_GetOutput2() {
 void PIT_HACK_Set_type(std::string type) {
 	if (type == "project_angel_demo") {
 		pit_hack_mode = PIT_HACK_PROJECT_ANGEL_DEMO;
-		LOG_MSG("PIT: Hacking PIT emulation to stabilize Project Angel demo\n");
+		//LOG_MSG("PIT: Hacking PIT emulation to stabilize Project Angel demo\n");
 	}
 	else if (type == "pc_speaker_as_timer") {
 		pit_hack_mode = PIT_HACK_PC_SPEAKER_AS_TIMER;
-		LOG_MSG("PIT: Hacking PIT emulation to double PIT 2 countdown value\n");
+		//LOG_MSG("PIT: Hacking PIT emulation to double PIT 2 countdown value\n");
 	}
 	else {
 		pit_hack_mode = PIT_HACK_NONE;
-		LOG_MSG("PIT: Hacks disabled\n");
+		//LOG_MSG("PIT: Hacks disabled\n");
 	}
 }
 
@@ -577,3 +578,18 @@ void TIMER_Init(Section* sec) {
 //save state support
 void *PIT0_Event_PIC_Event = (void*)PIT0_Event;
 
+
+namespace
+{
+class SerializeTimer : public SerializeGlobalPOD
+{
+public:
+    SerializeTimer() : SerializeGlobalPOD("IntTimer10")
+    {
+        registerPOD(pit);
+        registerPOD(gate2);
+        registerPOD(latched_timerstatus);
+		registerPOD(latched_timerstatus_locked);
+    }
+} dummy;
+}

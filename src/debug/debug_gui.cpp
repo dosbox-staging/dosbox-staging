@@ -203,7 +203,8 @@ void DEBUG_ShowMsg(char const* format,...) {
 	}
 #if !C_DEBUG
 	else {
-		fprintf(stderr,"DOSBox LOG: %s",buf);
+		//fprintf(stderr,"DOSBox LOG: %s",buf);
+		fprintf(stderr,"%s",buf);
 		fflush(stderr);
 	}
 #endif

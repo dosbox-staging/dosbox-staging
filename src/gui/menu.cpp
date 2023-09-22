@@ -21,6 +21,7 @@
 #include "cpu.h"
 #include "render.h"
 #include "menu.h"
+#include "glidedef.h"
 #include "SDL.h"
 #include "SDL_syswm.h"
 #include "bios_disk.h"
@@ -62,8 +63,8 @@ void SetVal(const std::string secname, std::string preval, const std::string val
 		}
 	}
 	Section* sec = control->GetSection(secname);
-	sec->ExecuteDestroy(false);
 	if(sec) {
+	sec->ExecuteDestroy(false);
         std::string real_val=preval+"="+val;
 		sec->HandleInputline(real_val);
 		sec->ExecuteInit(false);
@@ -93,7 +94,7 @@ HWND GetHWND(void) {
 void GetDefaultSize(void) {
 	char sizetemp[20]="512,32,32765,";
 	char sizetemp2[20]="";
-	sprintf(sizetemp2,"%d",hdd_defsize);
+	sprintf(sizetemp2,"%d", (int)hdd_defsize);
 	strcat(sizetemp,sizetemp2);
 	sprintf(hdd_size,sizetemp);
 }
@@ -116,11 +117,12 @@ void BrowseFolder( char drive , std::string drive_type ) {
 	std::string title = "Select a drive/directory to mount";
 	char path[MAX_PATH];
 	BROWSEINFO bi = { 0 };
-	if(drive_type=="CDROM")
+
+	if(drive_type=="C") // CD-ROM
 		bi.lpszTitle = ( title + " CD-ROM\nMounting a directory as CD-ROM gives an limited support" ).c_str();
-	else if(drive_type=="FLOPPY")
+	else if(drive_type=="F") // FLOPPY
 		bi.lpszTitle = ( title + " as Floppy" ).c_str();
-	else if(drive_type=="LOCAL")
+	else if(drive_type=="L") // LOCAL
 		bi.lpszTitle = ( title + " as Local").c_str();
 	else
 		bi.lpszTitle = (title.c_str());
@@ -128,7 +130,6 @@ void BrowseFolder( char drive , std::string drive_type ) {
 
 	if ( pidl != 0 ) {
 		SHGetPathFromIDList ( pidl, path );
-//		SetCurrentDirectory ( path );
 		SearchFolder( path , drive, drive_type );
 		IMalloc * imalloc = 0;
 		if ( SUCCEEDED( SHGetMalloc ( &imalloc )) ) {
@@ -200,18 +201,18 @@ void MountDrive_2(char drive, const char drive2[DOS_PATHLENGTH], std::string dri
 	Bit8u mediaid;
 	int num = SDL_CDNumDrives();
 
-	if((drive_type=="LOCAL") && (drive2=="C:\\")) {
+	if((drive_type=="L") && (drive2=="C:\\")) {
 		if (MessageBox(GetHWND(),not_recommended.c_str(), "Warning", MB_YESNO) == IDNO) return;
 	}
 
-	if(drive_type=="CDROM") {
+	if(drive_type=="C") { // CDROM
 		mediaid=0xF8;		/* Hard Disk */
 		str_size="650,127,16513,1700";
 	} else {
-		if(drive_type=="FLOPPY") {
+		if(drive_type=="F") { // FLOPPY
 			str_size="512,1,2847,2847";	/* All space free */
 			mediaid=0xF0;			/* Floppy 1.44 media */
-		} else if(drive_type=="LOCAL") {
+		} else if(drive_type=="L") { // LOCAL
 			mediaid=0xF8;
 			GetDefaultSize();
 			str_size=hdd_size;		/* Hard Disk */
@@ -234,12 +235,12 @@ void MountDrive_2(char drive, const char drive2[DOS_PATHLENGTH], std::string dri
 	if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
 	Bit8u bit8size=(Bit8u) sizes[1];
 
-	if(drive_type=="CDROM") {
+	if(drive_type=="C") {
 		num = -1;
 		int error;
-
 		int id, major, minor;
 		DOSBox_CheckOS(id, major, minor);
+
 		if ((id==VER_PLATFORM_WIN32_NT) && (major>5)) {
 			// Vista/above
 			MSCDEX_SetCDInterface(CDROM_USE_IOCTL_DX, num);
@@ -253,20 +254,22 @@ void MountDrive_2(char drive, const char drive2[DOS_PATHLENGTH], std::string dri
 	if (!newdrive) E_Exit("DOS:Can't create drive");
 	Drives[drive-'A']=newdrive;
 	mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*2,mediaid);
-	if(drive_type=="CDROM")
+	if(drive_type=="C")
 		LOG_MSG("GUI: Drive %c is mounted as CD-ROM",drive);
 	else
 		LOG_MSG("GUI: Drive %c is mounted as local directory",drive);
     if(drive == drive2[0] && sizeof(drive2) == 4) {
         // automatic mount
     } else {
-        if(drive_type=="CDROM") return;
+        if(drive_type=="C") return;
         std::string label;
         label = drive;
-        if(drive_type=="LOCAL")
+        if(drive_type=="L")
             label += "_DRIVE";
-        else
+        else {
             label += "_FLOPPY";
+			incrementFDD();
+		}
         newdrive->SetLabel(label.c_str(),false,true);
     }
 }
@@ -358,6 +361,48 @@ void MountDrive(char drive, const char drive2[DOS_PATHLENGTH]) {
     }
 }
 
+void Mount_Zip(char drive, std::string temp_line) {
+	DOS_Drive * newdrive;
+	std::string str_size;
+	Bit16u sizes[4];
+	Bit8u mediaid;
+	mediaid=0xF8;
+
+	GetDefaultSize();
+	str_size=hdd_size;
+
+	char number[20];const char * scan=str_size.c_str();
+	Bitu index=0;Bitu count=0;
+	/* Parse the str_size string */
+	while (*scan) {
+		if (*scan==',') {
+			number[index]=0;sizes[count++]=atoi(number);
+			index=0;
+		} else number[index++]=*scan;
+		scan++;
+	}
+	number[index]=0;sizes[count++]=atoi(number);
+
+	temp_line.insert(0, 1, ':');
+	temp_line += CROSS_FILESPLIT;
+	if (temp_line.size() > 3 && temp_line[temp_line.size()-1]=='\\') temp_line.erase(temp_line.size()-1,1);
+	if (temp_line[temp_line.size()-1]!=CROSS_FILESPLIT) temp_line+=CROSS_FILESPLIT;
+	Bit8u bit8size=(Bit8u) sizes[1];
+
+#if C_HAVE_PHYSFS
+	newdrive=new physfsDrive(temp_line.c_str(),sizes[0],bit8size,sizes[2],sizes[3],mediaid);
+#else
+	newdrive = 0;
+	LOG_MSG("ERROR:This build does not support physfs");
+#endif
+
+	if (!newdrive) E_Exit("DOS:Can't create drive");
+	Drives[drive-'A']=newdrive;
+	mem_writeb(Real2Phys(dos.tables.mediaid)+(drive-'A')*2,newdrive->GetMediaByte());
+	LOG_MSG("%s",newdrive->GetInfo());
+	LOG_MSG("Drive %c is mounted as PHYSFS directory",drive);
+}
+
 void Mount_Img_Floppy(char drive, std::string realpath) {
 	DOS_Drive * newdrive = NULL;
 	imageDisk * newImage = NULL;
@@ -385,8 +430,13 @@ void Mount_Img_Floppy(char drive, std::string realpath) {
 	}
 
 	number[index]=0;sizes[count++]=atoi(number);
+#if defined (_MSC_VER)
+	struct _stati64 test;
+	if (_stati64(temp_line.c_str(), &test)) {
+#else
 	struct stat test;
 	if (stat(temp_line.c_str(),&test)) {
+#endif
 		// convert dosbox filename to system filename
 		char fullname[CROSS_LEN];
 		char tmp[CROSS_LEN];
@@ -497,8 +547,13 @@ void Mount_Img_HDD(char drive, std::string realpath) {
 		scan++;
 	}
 	number[index]=0;sizes[count++]=atoi(number);
+#if defined (_MSC_VER)
+	struct _stati64 test;
+	if (_stati64(temp_line.c_str(), &test)) {
+#else
 	struct stat test;
 	if (stat(temp_line.c_str(),&test)) {
+#endif
 		// convert dosbox filename to system filename
 		char fullname[CROSS_LEN];
 		char tmp[CROSS_LEN];
@@ -684,8 +739,13 @@ void Mount_Img(char drive, std::string realpath) {
 		scan++;
 	}
 	number[index]=0;sizes[count++]=atoi(number);
+#if defined (_MSC_VER)
+	struct _stati64 test;
+	if (_stati64(temp_line.c_str(), &test)) {
+#else
 	struct stat test;
 	if (stat(temp_line.c_str(),&test)) {
+#endif
 		// convert dosbox filename to system filename
 		char fullname[CROSS_LEN];
 		char tmp[CROSS_LEN];
@@ -736,8 +796,6 @@ void Mount_Img(char drive, std::string realpath) {
 		}
 		LOG_MSG("GUI: Drive %c is mounted as %s", drive, tmp.c_str());
 
-		// check if volume label is given
-		//if (cmd->FindString("-label",label,true)) newdrive->dirCache.SetLabel(label.c_str());
 		return;
 	}
 }
@@ -748,9 +806,13 @@ void DOSBox_SetMenu(void) {
 	SetMenu(GetHWND(), LoadMenu(GetModuleHandle(NULL),MAKEINTRESOURCE(IDR_MENU)));
 	DrawMenuBar (GetHWND());
 
+	if (glide.enabled)
+		GLIDE_ResetScreen();
+	else {
 	if(menu.startup) {
 		RENDER_CallBack( GFX_CallBackReset );
 	}
+}
 }
 
 void DOSBox_NoMenu(void) {
@@ -758,6 +820,9 @@ void DOSBox_NoMenu(void) {
 	menu.toggle=false;
 	SetMenu(GetHWND(), NULL);
 	DrawMenuBar(GetHWND());
+	if (glide.enabled)
+		GLIDE_ResetScreen();
+	else
 	RENDER_CallBack( GFX_CallBackReset );
 }
 
@@ -787,7 +852,7 @@ void DOSBox_RefreshMenu(void) {
     SDL_Prepare();
     if(!menu.gui) return;
 
-    if(fullscreen) {
+	if(fullscreen && !glide.enabled) {
     	SetMenu(GetHWND(), NULL);
     	DrawMenuBar(GetHWND());
         return;
@@ -807,7 +872,7 @@ void DOSBox_RefreshMenu2(void) {
     SDL_Prepare();
     if(!menu.gui) return;
 
-    if(fullscreen) {
+	if(fullscreen && !glide.enabled) {
     	SetMenu(GetHWND(), NULL);
     	DrawMenuBar(GetHWND());
         return;
@@ -838,7 +903,88 @@ void ToggleMenu(bool pressed) {
 	}
 }
 
-void MENU_Check_Drive(HMENU handle, int cdrom, int floppy, int local, int image, int automount, int umount, char drive) {
+extern void SaveGameState_Run(void);
+extern void SetGameState_Run(int value);
+extern void LoadGameState_Run(void);
+
+static void MENU_SaveState(int value) {
+	SetGameState_Run(value-1);
+	SaveGameState_Run();
+}
+
+static void MENU_LoadState(int value) {
+	SetGameState_Run(value-1);
+	LoadGameState_Run();
+}
+
+static void MENU_RemoveState(std::string value) {
+	std::string save_dir;
+	bool Get_Custom_SaveDir(std::string& savedir);
+	if (Get_Custom_SaveDir(save_dir)) {
+		save_dir += CROSS_FILESPLIT;
+	}
+	else {
+		extern std::string capturedir;
+		const size_t last_slash_idx = capturedir.find_last_of("\\/");
+		if (std::string::npos != last_slash_idx) {
+			save_dir = capturedir.substr(0, last_slash_idx);
+		}
+		else {
+			save_dir = ".";
+		}
+		save_dir += CROSS_FILESPLIT;
+		save_dir += "save";
+		save_dir += CROSS_FILESPLIT;
+	}
+
+	save_dir += value+".sav";
+	remove(save_dir.c_str());
+}
+
+static void MENU_RemoveState_All() {
+	std::string save_dir;
+	bool Get_Custom_SaveDir(std::string& savedir);
+	if (Get_Custom_SaveDir(save_dir)) {
+		save_dir += CROSS_FILESPLIT;
+	} else {
+		extern std::string capturedir;
+		const size_t last_slash_idx = capturedir.find_last_of("\\/");
+		if (std::string::npos != last_slash_idx) {
+			save_dir = capturedir.substr(0, last_slash_idx);
+		} else {
+			save_dir = ".";
+		}
+		save_dir += CROSS_FILESPLIT;
+		save_dir += "save";
+		save_dir += CROSS_FILESPLIT;
+	}
+	std::string save_dir2;
+	for (int i=1; i<=10; i++) {
+		save_dir2 = save_dir + static_cast<std::ostringstream*>( &(std::ostringstream() << i) )->str() + ".sav";
+		remove(save_dir2.c_str());
+	}
+}
+
+static void MENU_Check_SaveState(HMENU handle, std::string real_path, int load_state, int save_state, int remove_state) {
+	std::ifstream check_title;
+	check_title.open(real_path.c_str(), std::ifstream::in);
+	if (check_title.fail()) {
+		EnableMenuItem(handle, load_state, MF_GRAYED);
+		CheckMenuItem(handle, load_state, MF_STRING);
+		CheckMenuItem(handle, save_state, MF_STRING);
+		EnableMenuItem(handle, remove_state, MF_GRAYED);
+		CheckMenuItem(handle, remove_state, MF_STRING);
+	} else {
+		EnableMenuItem(handle, load_state, MF_ENABLED);
+		CheckMenuItem(handle, load_state, MF_CHECKED);
+		CheckMenuItem(handle, save_state, MF_CHECKED);
+		EnableMenuItem(handle, remove_state, MF_ENABLED);
+		CheckMenuItem(handle, remove_state, MF_CHECKED);
+	}
+	check_title.close();
+}
+
+static void MENU_Check_Drive(HMENU handle, int cdrom, int floppy, int local, int image, int automount, int umount, char drive) {
 	std::string full_drive(1, drive);
 	Section_prop * sec = static_cast<Section_prop *>(control->GetSection("dos"));
 	full_drive += ":\\";
@@ -850,13 +996,17 @@ void MENU_Check_Drive(HMENU handle, int cdrom, int floppy, int local, int image,
 	EnableMenuItem(handle, umount, (!Drives[drive - 'A']) || menu.boot ? MF_GRAYED : MF_ENABLED);
 }
 
-bool MENU_SetBool(std::string secname, std::string value) {
+static bool MENU_SetBool(std::string secname, std::string value) {
 	Section_prop * sec = static_cast<Section_prop *>(control->GetSection(secname));
-	if(sec) SetVal(secname, value, sec->Get_bool(value) ? "false" : "true");
-	return sec->Get_bool(value);
+	if(sec) {
+		bool bool_val=sec->Get_bool(value);
+		SetVal(secname, value, bool_val ? "false" : "true");
+		return bool_val;
+	}
+	return false;
 }
 
-void MENU_KeyDelayRate(int delay, int rate) {
+static void MENU_KeyDelayRate(int delay, int rate) {
 	IO_Write(0x60,0xf3); IO_Write(0x60,(Bit8u)(((delay-1)<<5)|(32-rate)));
 	LOG_MSG("GUI: Keyboard rate %d, delay %d", rate, delay);
 }
@@ -887,11 +1037,12 @@ int Reflect_Menu(void) {
 		name[0] = 0;
 	}
 
-	CheckMenuItem(m_handle, ID_WAITONERR, GetSetSDLValue(1, "wait_on_error", 0) ? MF_CHECKED : MF_STRING);
+	CheckMenuItem(m_handle, ID_WAITONERR, GetSetSDLValue(true, GETSET_wait_on_error, 0) ? MF_CHECKED : MF_STRING);
 	EnableMenuItem(m_handle, ID_OPENFILE, (strlen(name) || menu.boot) ? MF_GRAYED : MF_ENABLED);
 	EnableMenuItem(m_handle, ID_GLIDE_TRUE, (strlen(name) || menu.boot) ? MF_GRAYED : MF_ENABLED);
 	EnableMenuItem(m_handle, ID_GLIDE_EMU, (strlen(name) || menu.boot) ? MF_GRAYED : MF_ENABLED);
 	EnableMenuItem(m_handle, ID_KEY_NONE, (strlen(name)) ? MF_GRAYED : MF_ENABLED);
+	EnableMenuItem(m_handle, ID_KEY_AUTO, (strlen(name)) ? MF_GRAYED : MF_ENABLED);
 	EnableMenuItem(m_handle, ID_KEY_BG, (strlen(name)) ? MF_GRAYED : MF_ENABLED);
 	EnableMenuItem(m_handle, ID_KEY_CZ, (strlen(name)) ? MF_GRAYED : MF_ENABLED);
 	EnableMenuItem(m_handle, ID_KEY_FR, (strlen(name)) ? MF_GRAYED : MF_ENABLED);
@@ -942,13 +1093,18 @@ int Reflect_Menu(void) {
 	CheckMenuItem(m_handle, ID_AUTOCYCLE, (CPU_CycleAutoAdjust) ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_AUTODETER, (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CYCLES) ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_NORMAL, (!strcasecmp(core_mode, "Normal")) ? MF_CHECKED : MF_STRING);
+
+#if (C_DYNAMIC_X86) || (C_DYNREC)
 	CheckMenuItem(m_handle, ID_DYNAMIC, (!strcasecmp(core_mode, "Dynamic")) ? MF_CHECKED : MF_STRING);
+#endif
+
 	CheckMenuItem(m_handle, ID_FULL, (!strcasecmp(core_mode, "Full")) ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_SIMPLE, (!strcasecmp(core_mode, "Simple")) ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_AUTO, (!strcasecmp(core_mode, "Auto")) ? MF_CHECKED : MF_STRING);
 
 	Section_prop * sec = 0;
 	sec = static_cast<Section_prop *>(control->GetSection("cpu"));
+	if(sec) {
 	const std::string cputype = sec->Get_string("cputype");
 	CheckMenuItem(m_handle, ID_CPUTYPE_AUTO, cputype == "auto" ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_CPUTYPE_386, cputype == "386" ? MF_CHECKED : MF_STRING);
@@ -956,11 +1112,13 @@ int Reflect_Menu(void) {
 	CheckMenuItem(m_handle, ID_CPUTYPE_486, cputype == "486" ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_CPUTYPE_PENTIUM, cputype == "pentium" ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_CPUTYPE_PENTIUM_MMX, cputype == "pentium_mmx" ? MF_CHECKED : MF_STRING);
+	}
 
 	extern bool ticksLocked;
 	CheckMenuItem(m_handle, ID_CPU_TURBO, ticksLocked ? MF_CHECKED : MF_STRING);
 
 	sec = static_cast<Section_prop *>(control->GetSection("joystick"));
+	if(sec) {
 	const std::string joysticktype = sec->Get_string("joysticktype");
 	CheckMenuItem(m_handle, ID_JOYSTICKTYPE_AUTO, joysticktype == "auto" ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_JOYSTICKTYPE_2AXIS, joysticktype == "2axis" ? MF_CHECKED : MF_STRING);
@@ -973,14 +1131,15 @@ int Reflect_Menu(void) {
 	CheckMenuItem(m_handle, ID_JOYSTICK_AUTOFIRE, sec->Get_bool("autofire") ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_JOYSTICK_SWAP34, sec->Get_bool("swap34") ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_JOYSTICK_BUTTONWRAP, sec->Get_bool("buttonwrap") ? MF_CHECKED : MF_STRING);
+	}
 
 	CheckMenuItem(m_handle, ID_ASPECT, (render.aspect) ? MF_CHECKED : MF_STRING);
-	CheckMenuItem(m_handle, ID_SURFACE, ((int) GetSetSDLValue(1, "desktop.want_type", 0) == SCREEN_SURFACE) ? MF_CHECKED : MF_STRING);
-	CheckMenuItem(m_handle, ID_DDRAW, ((int) GetSetSDLValue(1, "desktop.want_type", 0) == SCREEN_SURFACE_DDRAW) ? MF_CHECKED : MF_STRING);
-	CheckMenuItem(m_handle, ID_DIRECT3D, ((int) GetSetSDLValue(1, "desktop.want_type", 0) == SCREEN_DIRECT3D) ? MF_CHECKED : MF_STRING);
-	CheckMenuItem(m_handle, ID_OVERLAY, ((int) GetSetSDLValue(1, "desktop.want_type", 0) == SCREEN_OVERLAY) ? MF_CHECKED : MF_STRING);
-	if ((int) GetSetSDLValue(1, "desktop.want_type", 0) == SCREEN_OPENGL) {
-		if (GetSetSDLValue(1, "opengl.bilinear", 0)) {
+	CheckMenuItem(m_handle, ID_SURFACE, ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) == SCREEN_SURFACE) ? MF_CHECKED : MF_STRING);
+	CheckMenuItem(m_handle, ID_DDRAW, ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) == SCREEN_SURFACE_DDRAW) ? MF_CHECKED : MF_STRING);
+	CheckMenuItem(m_handle, ID_DIRECT3D, ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) == SCREEN_DIRECT3D) ? MF_CHECKED : MF_STRING);
+	CheckMenuItem(m_handle, ID_OVERLAY, ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) == SCREEN_OVERLAY) ? MF_CHECKED : MF_STRING);
+	if ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) == SCREEN_OPENGL) {
+		if (GetSetSDLValue(true, GETSET_opengl_bilinear, 0)) {
 			CheckMenuItem(m_handle, ID_OPENGL, MF_CHECKED);
 			CheckMenuItem(m_handle, ID_OPENGLNB, MF_STRING);
 		}
@@ -988,15 +1147,14 @@ int Reflect_Menu(void) {
 			CheckMenuItem(m_handle, ID_OPENGL, MF_STRING);
 			CheckMenuItem(m_handle, ID_OPENGLNB, MF_CHECKED);
 		}
-	}
-	else {
+	} else {
 		CheckMenuItem(m_handle, ID_OPENGLNB, MF_STRING);
 		CheckMenuItem(m_handle, ID_OPENGL, MF_STRING);
 	}
 	
-	CheckMenuItem(m_handle, ID_OPENGLHQ, ((int) GetSetSDLValue(1, "desktop.want_type", 0) == SCREEN_OPENGLHQ) ? MF_CHECKED : MF_STRING);
-	CheckMenuItem(m_handle, ID_FULLDOUBLE, (GetSetSDLValue(1, "desktop.doublebuf", 0)) ? MF_CHECKED : MF_STRING);
-	CheckMenuItem(m_handle, ID_AUTOLOCK, (GetSetSDLValue(1, "mouse.autoenable", 0)) ? MF_CHECKED : MF_STRING);
+	CheckMenuItem(m_handle, ID_OPENGLHQ, ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) == SCREEN_OPENGLHQ) ? MF_CHECKED : MF_STRING);
+	CheckMenuItem(m_handle, ID_FULLDOUBLE, (GetSetSDLValue(true, GETSET_desktop_doublebuf, 0)) ? MF_CHECKED : MF_STRING);
+	CheckMenuItem(m_handle, ID_AUTOLOCK, (GetSetSDLValue(true, GETSET_mouse_autoenable, 0)) ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_HIDECYCL, !menu.hidecycles ? MF_CHECKED : MF_STRING);
 
 	sec = static_cast<Section_prop *>(control->GetSection("serial"));
@@ -1042,6 +1200,16 @@ int Reflect_Menu(void) {
 		path += "save";
 		path += CROSS_FILESPLIT;
 	}
+	MENU_Check_SaveState(m_handle, path + "1.sav", ID_LOADSTATE_1, ID_SAVESTATE_1, ID_REMOVE_STATE_1);
+	MENU_Check_SaveState(m_handle, path + "2.sav", ID_LOADSTATE_2, ID_SAVESTATE_2, ID_REMOVE_STATE_2);
+	MENU_Check_SaveState(m_handle, path + "3.sav", ID_LOADSTATE_3, ID_SAVESTATE_3, ID_REMOVE_STATE_3);
+	MENU_Check_SaveState(m_handle, path + "4.sav", ID_LOADSTATE_4, ID_SAVESTATE_4, ID_REMOVE_STATE_4);
+	MENU_Check_SaveState(m_handle, path + "5.sav", ID_LOADSTATE_5, ID_SAVESTATE_5, ID_REMOVE_STATE_5);
+	MENU_Check_SaveState(m_handle, path + "6.sav", ID_LOADSTATE_6, ID_SAVESTATE_6, ID_REMOVE_STATE_6);
+	MENU_Check_SaveState(m_handle, path + "7.sav", ID_LOADSTATE_7, ID_SAVESTATE_7, ID_REMOVE_STATE_7);
+	MENU_Check_SaveState(m_handle, path + "8.sav", ID_LOADSTATE_8, ID_SAVESTATE_8, ID_REMOVE_STATE_8);
+	MENU_Check_SaveState(m_handle, path + "9.sav", ID_LOADSTATE_9, ID_SAVESTATE_9, ID_REMOVE_STATE_9);
+	MENU_Check_SaveState(m_handle, path + "10.sav", ID_LOADSTATE_10, ID_SAVESTATE_10, ID_REMOVE_STATE_10);
 
 	sec = static_cast<Section_prop *>(control->GetSection("printer"));
 	if (sec) CheckMenuItem(m_handle, ID_PRINTER_SECTION, sec->Get_bool("printer") ? MF_CHECKED : MF_STRING);
@@ -1067,7 +1235,12 @@ int Reflect_Menu(void) {
 			safe_strncpy(res, windowresolution, sizeof(res));
 			windowresolution = lowcase(res);//so x and X are allowed
 			CheckMenuItem(m_handle, ID_USESCANCODES, (sec->Get_bool("usescancodes")) ? MF_CHECKED : MF_STRING);
+#if defined (xBRZ_w_TBB)
+			CheckMenuItem(m_handle, ID_NONE, !render.xbrz_using && SCALER_SW_2(scalerOpNormal, 1) ? MF_CHECKED : MF_STRING);
+			CheckMenuItem(m_handle, ID_XBRZ, render.xbrz_using && SCALER_SW_2(scalerOpNormal, 1) ? MF_CHECKED : MF_STRING);
+#else
 			CheckMenuItem(m_handle, ID_NONE, SCALER_SW_2(scalerOpNormal, 1) ? MF_CHECKED : MF_STRING);
+#endif
 			CheckMenuItem(m_handle, ID_NORMAL2X, SCALER_SW_2(scalerOpNormal, 2) ? MF_CHECKED : MF_STRING);
 			CheckMenuItem(m_handle, ID_NORMAL3X, SCALER_SW_2(scalerOpNormal, 3) ? MF_CHECKED : MF_STRING);
 			CheckMenuItem(m_handle, ID_NORMAL4X, SCALER_SW_2(scalerOpNormal, 4) ? MF_CHECKED : MF_STRING);
@@ -1092,7 +1265,6 @@ int Reflect_Menu(void) {
 			CheckMenuItem(m_handle, ID_2XSAI, SCALER_2(scalerOpSaI, 2) ? MF_CHECKED : MF_STRING);
 			CheckMenuItem(m_handle, ID_SUPER2XSAI, SCALER_2(scalerOpSuperSaI, 2) ? MF_CHECKED : MF_STRING);
 			CheckMenuItem(m_handle, ID_SUPEREAGLE, SCALER_2(scalerOpSuperEagle, 2) ? MF_CHECKED : MF_STRING);
-			//EnableMenuItem(m_handle,ID_FORCESCALER,SCALER_2(scalerOpNormal,4) || SCALER_2(scalerOpNormal,6)?MF_GRAYED:MF_ENABLED);
 			CheckMenuItem(m_handle, ID_FORCESCALER, render.scale.forced ? MF_CHECKED : MF_STRING);
 			CheckMenuItem(m_handle, ID_SKIP_0, render.frameskip.max==0 ? MF_CHECKED : MF_STRING);
 			CheckMenuItem(m_handle, ID_SKIP_1, render.frameskip.max==1 ? MF_CHECKED : MF_STRING);
@@ -1395,8 +1567,9 @@ int Reflect_Menu(void) {
 	}
 	sec = static_cast<Section_prop *>(control->GetSection("render"));
 	if (sec) {
+		//CheckMenuItem(m_handle, ID_LINEWISE, sec->Get_bool("linewise") ? MF_CHECKED : MF_STRING);
 		CheckMenuItem(m_handle, ID_CHAR9, sec->Get_bool("char9") ? MF_CHECKED : MF_STRING);
-		CheckMenuItem(m_handle, ID_MULTISCAN, sec->Get_bool("multiscan") ? MF_CHECKED : MF_STRING);
+		CheckMenuItem(m_handle, ID_DOUBLESCAN, sec->Get_bool("doublescan") ? MF_CHECKED : MF_STRING);
 	}
 	sec = static_cast<Section_prop *>(control->GetSection("vsync"));
 	if (sec) {
@@ -1408,8 +1581,8 @@ int Reflect_Menu(void) {
 		CheckMenuItem(m_handle, ID_VSYNC_FORCE, (vsyncmode == "force") ? MF_CHECKED : MF_STRING);
 	}
 	char* sdl_videodrv = getenv("SDL_VIDEODRIVER");
-	CheckMenuItem(m_handle, ID_DRVFORCE_DIRECTX, ((!strcmp(sdl_videodrv, "directx")) && (load_videodrv)) ? MF_CHECKED : MF_STRING);
-	CheckMenuItem(m_handle, ID_DRVFORCE_WINDIB, ((!strcmp(sdl_videodrv, "windib")) && (load_videodrv)) ? MF_CHECKED : MF_STRING);
+	CheckMenuItem(m_handle, ID_DRVFORCE_DIRECTX, ((!strcasecmp(sdl_videodrv, "directx")) && (load_videodrv)) ? MF_CHECKED : MF_STRING);
+	CheckMenuItem(m_handle, ID_DRVFORCE_WINDIB, ((!strcasecmp(sdl_videodrv, "windib")) && (load_videodrv)) ? MF_CHECKED : MF_STRING);
 	CheckMenuItem(m_handle, ID_DRVFORCE_AUTO, !load_videodrv ? MF_CHECKED : MF_STRING);
 	extern bool Mouse_Vertical;
 	CheckMenuItem(m_handle, ID_MOUSE_VERTICAL, Mouse_Vertical ? MF_CHECKED : MF_STRING);
@@ -1424,7 +1597,8 @@ int Reflect_Menu(void) {
 		CheckMenuItem(m_handle, ID_UMB, sec->Get_bool("umb") ? MF_CHECKED : MF_STRING);
 
 		const std::string key = sec->Get_string("keyboardlayout");
-		CheckMenuItem(m_handle, ID_KEY_NONE, (key == "auto") ? MF_CHECKED : MF_STRING);
+		CheckMenuItem(m_handle, ID_KEY_NONE, (key == "none") ? MF_CHECKED : MF_STRING);
+		CheckMenuItem(m_handle, ID_KEY_AUTO, (key == "auto") ? MF_CHECKED : MF_STRING);
 		CheckMenuItem(m_handle, ID_KEY_BG, (key == "bg") ? MF_CHECKED : MF_STRING);
 		CheckMenuItem(m_handle, ID_KEY_CZ, (key == "CZ") ? MF_CHECKED : MF_STRING);
 		CheckMenuItem(m_handle, ID_KEY_FR, (key == "fr") ? MF_CHECKED : MF_STRING);
@@ -1506,7 +1680,7 @@ int Reflect_Menu(void) {
 }
 
 void MSG_Loop(void) {
-	if (!menu.gui || GetSetSDLValue(1, "desktop.fullscreen", 0)) return;
+	if (!menu.gui || GetSetSDLValue(true, GETSET_desktop_fullscreen, 0)) return;
 	if (!GetMenu(GetHWND())) return;
 	MSG Message;
 	while (PeekMessage(&Message, GetHWND(), 0, 0, PM_REMOVE)) {
@@ -1522,13 +1696,13 @@ void MSG_Loop(void) {
 				}
 				break;
 			case ID_WAITONERR:
-				if (GetSetSDLValue(1, "wait_on_error", 0)) {
+				if (GetSetSDLValue(true, GETSET_wait_on_error, 0)) {
 					SetVal("sdl", "waitonerror", "false");
-					GetSetSDLValue(0, "wait_on_error", (void*)false);
+					GetSetSDLValue(false, GETSET_wait_on_error, (void*)false);
 				}
 				else {
 					SetVal("sdl", "waitonerror", "true");
-					GetSetSDLValue(0, "wait_on_error", (void*)true);
+					GetSetSDLValue(false, GETSET_wait_on_error, (void*)true);
 				}
 				break;
 			case ID_HDD_SIZE: UI_Shortcut(18); break;
@@ -1542,16 +1716,47 @@ void MSG_Loop(void) {
 			case ID_QUIT: throw(0); break;
 			case ID_OPENFILE: OpenFileDialog(0); break;
 			case ID_PAUSE: void PauseDOSBox(bool pressed); PauseDOSBox(1); break;
+			case ID_SAVESTATE_1: MENU_SaveState(1); break;
+			case ID_SAVESTATE_2: MENU_SaveState(2); break;
+			case ID_SAVESTATE_3: MENU_SaveState(3); break;
+			case ID_SAVESTATE_4: MENU_SaveState(4); break;
+			case ID_SAVESTATE_5: MENU_SaveState(5); break;
+			case ID_SAVESTATE_6: MENU_SaveState(6); break;
+			case ID_SAVESTATE_7: MENU_SaveState(7); break;
+			case ID_SAVESTATE_8: MENU_SaveState(8); break;
+			case ID_SAVESTATE_9: MENU_SaveState(9); break;
+			case ID_SAVESTATE_10: MENU_SaveState(10); break;
+			case ID_LOADSTATE_1: MENU_LoadState(1); break;
+			case ID_LOADSTATE_2: MENU_LoadState(2); break;
+			case ID_LOADSTATE_3: MENU_LoadState(3); break;
+			case ID_LOADSTATE_4: MENU_LoadState(4); break;
+			case ID_LOADSTATE_5: MENU_LoadState(5); break;
+			case ID_LOADSTATE_6: MENU_LoadState(6); break;
+			case ID_LOADSTATE_7: MENU_LoadState(7); break;
+			case ID_LOADSTATE_8: MENU_LoadState(8); break;
+			case ID_LOADSTATE_9: MENU_LoadState(9); break;
+			case ID_LOADSTATE_10: MENU_LoadState(10); break;
+			case ID_REMOVE_STATE_1: MENU_RemoveState("1"); break;
+			case ID_REMOVE_STATE_2: MENU_RemoveState("2"); break;
+			case ID_REMOVE_STATE_3: MENU_RemoveState("3"); break;
+			case ID_REMOVE_STATE_4: MENU_RemoveState("4"); break;
+			case ID_REMOVE_STATE_5: MENU_RemoveState("5"); break;
+			case ID_REMOVE_STATE_6: MENU_RemoveState("6"); break;
+			case ID_REMOVE_STATE_7: MENU_RemoveState("7"); break;
+			case ID_REMOVE_STATE_8: MENU_RemoveState("8"); break;
+			case ID_REMOVE_STATE_9: MENU_RemoveState("9"); break;
+			case ID_REMOVE_STATE_10: MENU_RemoveState("10"); break;
+			case ID_REMOVE_STATE_ALL: MENU_RemoveState_All(); break;
 			case ID_NORMAL:
 				if (strcasecmp(core_mode, "normal") == 0) break;
 				SetVal("cpu", "core", "normal");
 				break;
-#if (C_DYNAMIC_X86)
-			case ID_DYNAMIC: if (strcmp(core_mode, "dynamic") != 0) SetVal("cpu", "core", "dynamic"); break;
+#if (C_DYNAMIC_X86) || (C_DYNREC)
+			case ID_DYNAMIC: if (strcasecmp(core_mode, "dynamic") != 0) SetVal("cpu", "core", "dynamic"); break;
 #endif
-			case ID_FULL: if (strcmp(core_mode, "full") != 0) SetVal("cpu", "core", "full"); break;
-			case ID_SIMPLE: if (strcmp(core_mode, "simple") != 0) SetVal("cpu", "core", "simple"); break;
-			case ID_AUTO: if (strcmp(core_mode, "auto") != 0) SetVal("cpu", "core", "auto"); break;
+			case ID_FULL: if (strcasecmp(core_mode, "full") != 0) SetVal("cpu", "core", "full"); break;
+			case ID_SIMPLE: if (strcasecmp(core_mode, "simple") != 0) SetVal("cpu", "core", "simple"); break;
+			case ID_AUTO: if (strcasecmp(core_mode, "auto") != 0) SetVal("cpu", "core", "auto"); break;
 			case ID_KEYMAP: MAPPER_RunInternal(); break;
 			case ID_AUTOCYCLE: SetVal("cpu", "cycles", (!CPU_CycleAutoAdjust) ? "max" : "auto"); break;
 			case ID_AUTODETER:
@@ -1577,7 +1782,12 @@ void MSG_Loop(void) {
 				GFX_SetTitle(CPU_CycleMax, -1, -1, false);
 				break;
 			case ID_TOGGLE: ToggleMenu(true); break;
+#if defined (xBRZ_w_TBB)
+			case ID_XBRZ: if (render.xbrz_using) break; SetVal("render", "scaler", !render.scale.forced ? "xbrz" : "xbrz forced"); break;
+			case ID_NONE: if (((render.scale.op == scalerOpNormal) && (render.scale.size == 1)) && !render.xbrz_using && !render.scale.hardware) break; SetVal("render", "scaler", !render.scale.forced ? "none" : "none forced"); break;
+#else
 			case ID_NONE: SCALER_SW(scalerOpNormal, 1) break; SetVal("render", "scaler", !render.scale.forced ? "none" : "none forced"); break;
+#endif
 			case ID_NORMAL2X: SCALER_SW(scalerOpNormal, 2) break; SetVal("render", "scaler", !render.scale.forced ? "normal2x" : "normal2x forced"); break;
 			case ID_NORMAL3X: SCALER_SW(scalerOpNormal, 3) break; SetVal("render", "scaler", !render.scale.forced ? "normal3x" : "normal3x forced"); break;
 			case ID_NORMAL4X: SCALER_SW(scalerOpNormal, 4) break; SetVal("render", "scaler", !render.scale.forced ? "normal4x" : "normal4x forced"); break;
@@ -1703,84 +1913,84 @@ void MSG_Loop(void) {
 			case ID_AUTOMOUNT_X: MountDrive('X', "X:\\"); break;
 			case ID_AUTOMOUNT_Y: MountDrive('Y', "Y:\\"); break;
 			case ID_AUTOMOUNT_Z: MountDrive('Z', "Z:\\"); break;
-			case ID_MOUNT_CDROM_A: BrowseFolder('A', "CDROM"); break;
-			case ID_MOUNT_CDROM_B: BrowseFolder('B', "CDROM"); break;
-			case ID_MOUNT_CDROM_C: BrowseFolder('C', "CDROM"); break;
-			case ID_MOUNT_CDROM_D: BrowseFolder('D', "CDROM"); break;
-			case ID_MOUNT_CDROM_E: BrowseFolder('E', "CDROM"); break;
-			case ID_MOUNT_CDROM_F: BrowseFolder('F', "CDROM"); break;
-			case ID_MOUNT_CDROM_G: BrowseFolder('G', "CDROM"); break;
-			case ID_MOUNT_CDROM_H: BrowseFolder('H', "CDROM"); break;
-			case ID_MOUNT_CDROM_I: BrowseFolder('I', "CDROM"); break;
-			case ID_MOUNT_CDROM_J: BrowseFolder('J', "CDROM"); break;
-			case ID_MOUNT_CDROM_K: BrowseFolder('K', "CDROM"); break;
-			case ID_MOUNT_CDROM_L: BrowseFolder('L', "CDROM"); break;
-			case ID_MOUNT_CDROM_M: BrowseFolder('M', "CDROM"); break;
-			case ID_MOUNT_CDROM_N: BrowseFolder('N', "CDROM"); break;
-			case ID_MOUNT_CDROM_O: BrowseFolder('O', "CDROM"); break;
-			case ID_MOUNT_CDROM_P: BrowseFolder('P', "CDROM"); break;
-			case ID_MOUNT_CDROM_Q: BrowseFolder('Q', "CDROM"); break;
-			case ID_MOUNT_CDROM_R: BrowseFolder('R', "CDROM"); break;
-			case ID_MOUNT_CDROM_S: BrowseFolder('S', "CDROM"); break;
-			case ID_MOUNT_CDROM_T: BrowseFolder('T', "CDROM"); break;
-			case ID_MOUNT_CDROM_U: BrowseFolder('U', "CDROM"); break;
-			case ID_MOUNT_CDROM_V: BrowseFolder('V', "CDROM"); break;
-			case ID_MOUNT_CDROM_W: BrowseFolder('W', "CDROM"); break;
-			case ID_MOUNT_CDROM_X: BrowseFolder('X', "CDROM"); break;
-			case ID_MOUNT_CDROM_Y: BrowseFolder('Y', "CDROM"); break;
-			case ID_MOUNT_CDROM_Z: BrowseFolder('Z', "CDROM"); break;
-			case ID_MOUNT_FLOPPY_A: BrowseFolder('A', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_B: BrowseFolder('B', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_C: BrowseFolder('C', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_D: BrowseFolder('D', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_E: BrowseFolder('E', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_F: BrowseFolder('F', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_G: BrowseFolder('G', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_H: BrowseFolder('H', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_I: BrowseFolder('I', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_J: BrowseFolder('J', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_K: BrowseFolder('K', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_L: BrowseFolder('L', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_M: BrowseFolder('M', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_N: BrowseFolder('N', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_O: BrowseFolder('O', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_P: BrowseFolder('P', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_Q: BrowseFolder('Q', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_R: BrowseFolder('R', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_S: BrowseFolder('S', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_T: BrowseFolder('T', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_U: BrowseFolder('U', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_V: BrowseFolder('V', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_W: BrowseFolder('W', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_X: BrowseFolder('X', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_Y: BrowseFolder('Y', "FLOPPY"); break;
-			case ID_MOUNT_FLOPPY_Z: BrowseFolder('Z', "FLOPPY"); break;
-			case ID_MOUNT_LOCAL_A: BrowseFolder('A', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_B: BrowseFolder('B', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_C: BrowseFolder('C', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_D: BrowseFolder('D', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_E: BrowseFolder('E', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_F: BrowseFolder('F', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_G: BrowseFolder('G', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_H: BrowseFolder('H', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_I: BrowseFolder('I', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_J: BrowseFolder('J', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_K: BrowseFolder('K', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_L: BrowseFolder('L', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_M: BrowseFolder('M', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_N: BrowseFolder('N', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_O: BrowseFolder('O', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_P: BrowseFolder('P', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_Q: BrowseFolder('Q', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_R: BrowseFolder('R', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_S: BrowseFolder('S', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_T: BrowseFolder('T', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_U: BrowseFolder('U', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_V: BrowseFolder('V', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_W: BrowseFolder('W', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_X: BrowseFolder('X', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_Y: BrowseFolder('Y', "LOCAL"); break;
-			case ID_MOUNT_LOCAL_Z: BrowseFolder('Z', "LOCAL"); break;
+			case ID_MOUNT_CDROM_A: BrowseFolder('A', "C"); break;
+			case ID_MOUNT_CDROM_B: BrowseFolder('B', "C"); break;
+			case ID_MOUNT_CDROM_C: BrowseFolder('C', "C"); break;
+			case ID_MOUNT_CDROM_D: BrowseFolder('D', "C"); break;
+			case ID_MOUNT_CDROM_E: BrowseFolder('E', "C"); break;
+			case ID_MOUNT_CDROM_F: BrowseFolder('F', "C"); break;
+			case ID_MOUNT_CDROM_G: BrowseFolder('G', "C"); break;
+			case ID_MOUNT_CDROM_H: BrowseFolder('H', "C"); break;
+			case ID_MOUNT_CDROM_I: BrowseFolder('I', "C"); break;
+			case ID_MOUNT_CDROM_J: BrowseFolder('J', "C"); break;
+			case ID_MOUNT_CDROM_K: BrowseFolder('K', "C"); break;
+			case ID_MOUNT_CDROM_L: BrowseFolder('L', "C"); break;
+			case ID_MOUNT_CDROM_M: BrowseFolder('M', "C"); break;
+			case ID_MOUNT_CDROM_N: BrowseFolder('N', "C"); break;
+			case ID_MOUNT_CDROM_O: BrowseFolder('O', "C"); break;
+			case ID_MOUNT_CDROM_P: BrowseFolder('P', "C"); break;
+			case ID_MOUNT_CDROM_Q: BrowseFolder('Q', "C"); break;
+			case ID_MOUNT_CDROM_R: BrowseFolder('R', "C"); break;
+			case ID_MOUNT_CDROM_S: BrowseFolder('S', "C"); break;
+			case ID_MOUNT_CDROM_T: BrowseFolder('T', "C"); break;
+			case ID_MOUNT_CDROM_U: BrowseFolder('U', "C"); break;
+			case ID_MOUNT_CDROM_V: BrowseFolder('V', "C"); break;
+			case ID_MOUNT_CDROM_W: BrowseFolder('W', "C"); break;
+			case ID_MOUNT_CDROM_X: BrowseFolder('X', "C"); break;
+			case ID_MOUNT_CDROM_Y: BrowseFolder('Y', "C"); break;
+			case ID_MOUNT_CDROM_Z: BrowseFolder('Z', "C"); break;
+			case ID_MOUNT_FLOPPY_A: BrowseFolder('A', "F"); break;
+			case ID_MOUNT_FLOPPY_B: BrowseFolder('B', "F"); break;
+			case ID_MOUNT_FLOPPY_C: BrowseFolder('C', "F"); break;
+			case ID_MOUNT_FLOPPY_D: BrowseFolder('D', "F"); break;
+			case ID_MOUNT_FLOPPY_E: BrowseFolder('E', "F"); break;
+			case ID_MOUNT_FLOPPY_F: BrowseFolder('F', "F"); break;
+			case ID_MOUNT_FLOPPY_G: BrowseFolder('G', "F"); break;
+			case ID_MOUNT_FLOPPY_H: BrowseFolder('H', "F"); break;
+			case ID_MOUNT_FLOPPY_I: BrowseFolder('I', "F"); break;
+			case ID_MOUNT_FLOPPY_J: BrowseFolder('J', "F"); break;
+			case ID_MOUNT_FLOPPY_K: BrowseFolder('K', "F"); break;
+			case ID_MOUNT_FLOPPY_L: BrowseFolder('L', "F"); break;
+			case ID_MOUNT_FLOPPY_M: BrowseFolder('M', "F"); break;
+			case ID_MOUNT_FLOPPY_N: BrowseFolder('N', "F"); break;
+			case ID_MOUNT_FLOPPY_O: BrowseFolder('O', "F"); break;
+			case ID_MOUNT_FLOPPY_P: BrowseFolder('P', "F"); break;
+			case ID_MOUNT_FLOPPY_Q: BrowseFolder('Q', "F"); break;
+			case ID_MOUNT_FLOPPY_R: BrowseFolder('R', "F"); break;
+			case ID_MOUNT_FLOPPY_S: BrowseFolder('S', "F"); break;
+			case ID_MOUNT_FLOPPY_T: BrowseFolder('T', "F"); break;
+			case ID_MOUNT_FLOPPY_U: BrowseFolder('U', "F"); break;
+			case ID_MOUNT_FLOPPY_V: BrowseFolder('V', "F"); break;
+			case ID_MOUNT_FLOPPY_W: BrowseFolder('W', "F"); break;
+			case ID_MOUNT_FLOPPY_X: BrowseFolder('X', "F"); break;
+			case ID_MOUNT_FLOPPY_Y: BrowseFolder('Y', "F"); break;
+			case ID_MOUNT_FLOPPY_Z: BrowseFolder('Z', "F"); break;
+			case ID_MOUNT_LOCAL_A: BrowseFolder('A', "L"); break;
+			case ID_MOUNT_LOCAL_B: BrowseFolder('B', "L"); break;
+			case ID_MOUNT_LOCAL_C: BrowseFolder('C', "L"); break;
+			case ID_MOUNT_LOCAL_D: BrowseFolder('D', "L"); break;
+			case ID_MOUNT_LOCAL_E: BrowseFolder('E', "L"); break;
+			case ID_MOUNT_LOCAL_F: BrowseFolder('F', "L"); break;
+			case ID_MOUNT_LOCAL_G: BrowseFolder('G', "L"); break;
+			case ID_MOUNT_LOCAL_H: BrowseFolder('H', "L"); break;
+			case ID_MOUNT_LOCAL_I: BrowseFolder('I', "L"); break;
+			case ID_MOUNT_LOCAL_J: BrowseFolder('J', "L"); break;
+			case ID_MOUNT_LOCAL_K: BrowseFolder('K', "L"); break;
+			case ID_MOUNT_LOCAL_L: BrowseFolder('L', "L"); break;
+			case ID_MOUNT_LOCAL_M: BrowseFolder('M', "L"); break;
+			case ID_MOUNT_LOCAL_N: BrowseFolder('N', "L"); break;
+			case ID_MOUNT_LOCAL_O: BrowseFolder('O', "L"); break;
+			case ID_MOUNT_LOCAL_P: BrowseFolder('P', "L"); break;
+			case ID_MOUNT_LOCAL_Q: BrowseFolder('Q', "L"); break;
+			case ID_MOUNT_LOCAL_R: BrowseFolder('R', "L"); break;
+			case ID_MOUNT_LOCAL_S: BrowseFolder('S', "L"); break;
+			case ID_MOUNT_LOCAL_T: BrowseFolder('T', "L"); break;
+			case ID_MOUNT_LOCAL_U: BrowseFolder('U', "L"); break;
+			case ID_MOUNT_LOCAL_V: BrowseFolder('V', "L"); break;
+			case ID_MOUNT_LOCAL_W: BrowseFolder('W', "L"); break;
+			case ID_MOUNT_LOCAL_X: BrowseFolder('X', "L"); break;
+			case ID_MOUNT_LOCAL_Y: BrowseFolder('Y', "L"); break;
+			case ID_MOUNT_LOCAL_Z: BrowseFolder('Z', "L"); break;
 			case ID_MOUNT_IMAGE_A: OpenFileDialog_Img('A'); break;
 			case ID_MOUNT_IMAGE_B: OpenFileDialog_Img('B'); break;
 			case ID_MOUNT_IMAGE_C: OpenFileDialog_Img('C'); break;
@@ -1807,8 +2017,8 @@ void MSG_Loop(void) {
 			case ID_MOUNT_IMAGE_X: OpenFileDialog_Img('X'); break;
 			case ID_MOUNT_IMAGE_Y: OpenFileDialog_Img('Y'); break;
 			case ID_MOUNT_IMAGE_Z: OpenFileDialog_Img('Z'); break;
-//			case ID_SSHOT: void CAPTURE_ScreenShotEvent(bool pressed); CAPTURE_ScreenShotEvent(true); break;
-//			case ID_MOVIE: void CAPTURE_VideoEvent(bool pressed); CAPTURE_VideoEvent(true); break;
+			case ID_SSHOT: void CAPTURE_ScreenShotEvent(bool pressed); CAPTURE_ScreenShotEvent(true); break;
+			case ID_MOVIE: void CAPTURE_VideoEvent(bool pressed); CAPTURE_VideoEvent(true); break;
 			case ID_WAVE: void CAPTURE_WaveEvent(bool pressed); CAPTURE_WaveEvent(true); break;
 			case ID_OPL: void OPL_SaveRawEvent(bool pressed); OPL_SaveRawEvent(true); break;
 			case ID_MIDI: void CAPTURE_MidiEvent(bool pressed); CAPTURE_MidiEvent(true); break;
@@ -1841,12 +2051,13 @@ void MSG_Loop(void) {
 				KEYBOARD_AddKey(KBD_delete, false);
 				break;
 				}
+			//case ID_LINEWISE: MENU_SetBool("render", "linewise"); break;
 			case ID_CHAR9: MENU_SetBool("render", "char9"); break;
-			case ID_MULTISCAN: MENU_SetBool("render", "multiscan"); break;
+			case ID_DOUBLESCAN: MENU_SetBool("render", "doublescan"); break;
 			case ID_DRVFORCE_DIRECTX: {
 				load_videodrv = true;
 				putenv("SDL_VIDEODRIVER=directx");
-				GetSetSDLValue(0, "using_windib", (void*) false);
+				GetSetSDLValue(false, GETSET_using_windib, (void*) false);
 				void restart_program(std::vector<std::string> & parameters);
 				restart_program(control->startup_params);
 				break;
@@ -1854,7 +2065,7 @@ void MSG_Loop(void) {
 			case ID_DRVFORCE_WINDIB: {
 				load_videodrv = true;
 				putenv("SDL_VIDEODRIVER=windib");
-				GetSetSDLValue(0, "using_windib", (void*) true);
+				GetSetSDLValue(false, GETSET_using_windib, (void*) true);
 				void restart_program(std::vector<std::string> & parameters);
 				restart_program(control->startup_params);
 				break;
@@ -1869,22 +2080,24 @@ void MSG_Loop(void) {
 			case ID_VSYNC_HOST: SetVal("vsync", "vsyncmode", "host"); break;
 			case ID_VSYNC_FORCE: SetVal("vsync", "vsyncmode", "force"); break;
 			case ID_VSYNC_OFF: SetVal("vsync", "vsyncmode", "off"); break;
-			case ID_SURFACE: if ((int) GetSetSDLValue(1, "desktop.want_type", 0) != SCREEN_SURFACE) { change_output(0); SetVal("sdl", "output", "surface"); } break;
-			case ID_DDRAW: if ((int) GetSetSDLValue(1, "desktop.want_type", 0) != SCREEN_SURFACE_DDRAW) { change_output(1); SetVal("sdl", "output", "ddraw"); } break;
-			case ID_OVERLAY: if ((int) GetSetSDLValue(1, "desktop.want_type", 0) != SCREEN_OVERLAY) { change_output(2); SetVal("sdl", "output", "overlay"); } break;
+			case ID_SURFACE: if ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) != SCREEN_SURFACE) { change_output(0); SetVal("sdl", "output", "surface"); } break;
+			case ID_DDRAW: if ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) != SCREEN_SURFACE_DDRAW) { change_output(1); SetVal("sdl", "output", "ddraw"); } break;
+			case ID_OVERLAY: if ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) != SCREEN_OVERLAY) { change_output(2); SetVal("sdl", "output", "overlay"); } break;
 			case ID_OPENGL: change_output(3); SetVal("sdl", "output", "opengl"); break;
 			case ID_OPENGLNB: change_output(4); SetVal("sdl", "output", "openglnb"); break;
-			case ID_DIRECT3D: if ((int) GetSetSDLValue(1, "desktop.want_type", 0) != SCREEN_DIRECT3D) { change_output(5); SetVal("sdl", "output", "direct3d"); } break;
-			case ID_OPENGLHQ: if ((int) GetSetSDLValue(1, "desktop.want_type", 0) != SCREEN_OPENGLHQ) { change_output(6); SetVal("sdl", "output", "openglhq"); } break;
+			case ID_DIRECT3D: if ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) != SCREEN_DIRECT3D) { change_output(5); SetVal("sdl", "output", "direct3d"); } break;
+			case ID_OPENGLHQ: if ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) != SCREEN_OPENGLHQ) { change_output(6); SetVal("sdl", "output", "openglhq"); } break;
 			case ID_WINFULL_USER: case ID_WINRES_USER: UI_Shortcut(2); break;
 			case ID_WINRES_ORIGINAL: res_input(true, "original"); break;
 			case ID_WINFULL_ORIGINAL: res_input(false, "original"); break;
 			case ID_WINRES_DESKTOP: res_input(true, "desktop"); break;
 			case ID_WINFULL_DESKTOP: res_input(false, "desktop"); break;
-			case ID_FULLDOUBLE: SetVal("sdl", "fulldouble", (GetSetSDLValue(1, "desktop.doublebuf", 0)) ? "false" : "true"); res_init(); break;
-			case ID_AUTOLOCK: (GetSetSDLValue(0, "mouse.autoenable", (void*)MENU_SetBool("sdl", "autolock"))); break;
+			case ID_FULLDOUBLE: SetVal("sdl", "fulldouble", (GetSetSDLValue(true, GETSET_desktop_doublebuf, 0)) ? "false" : "true"); res_init(); break;
+			case ID_AUTOLOCK: (GetSetSDLValue(false, GETSET_mouse_autoenable, (void*)MENU_SetBool("sdl", "autolock"))); break;
 			case ID_MOUSE: extern bool Mouse_Drv; Mouse_Drv = !Mouse_Drv; break;
-			case ID_KEY_NONE: SetVal("dos", "keyboardlayout", "auto"); break;
+			case ID_KEY_NONE: SetVal("dos", "keyboardlayout", "none"); break;
+			case ID_KEY_AUTO: SetVal("dos", "keyboardlayout", "auto"); break;
+			case ID_KEY_OTHERS: UI_Shortcut(14); break;
 			case ID_KEY_BG: SetVal("dos", "keyboardlayout", "bg"); break;
 			case ID_KEY_CZ: SetVal("dos", "keyboardlayout", "cz"); break;
 			case ID_KEY_FR: SetVal("dos", "keyboardlayout", "fr"); break;
@@ -2134,7 +2347,7 @@ void MSG_Loop(void) {
 			case ID_OVERSCAN_10: LOG_MSG("GUI: Overscan 10 (surface)"); SetVal("sdl", "overscan", "10"); change_output(7); break;
 			case ID_VSYNC: UI_Shortcut(17); break;
 			case ID_IPXNET: MENU_SetBool("ipx", "ipx"); break;
-			case ID_D3D_PS: D3D_PS(); if ((int) GetSetSDLValue(1, "desktop.want_type", 0) == SCREEN_DIRECT3D) change_output(7); break;
+			case ID_D3D_PS: D3D_PS(); if ((int) GetSetSDLValue(true, GETSET_desktop_want_type, 0) == SCREEN_DIRECT3D) change_output(7); break;
 			case ID_JOYSTICKTYPE_AUTO: SetVal("joystick", "joysticktype", "auto"); break;
 			case ID_JOYSTICKTYPE_2AXIS: SetVal("joystick", "joysticktype", "2axis"); break;
 			case ID_JOYSTICKTYPE_4AXIS: SetVal("joystick", "joysticktype", "4axis"); break;

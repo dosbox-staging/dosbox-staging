@@ -26,6 +26,7 @@
 #include "pic.h"
 #include "render.h"
 #include "mapper.h"
+#include "../save_state.h"
 
 static void write_crtc_index_other(Bitu /*port*/,Bitu val,Bitu /*iolen*/) {
 	vga.other.index=(Bit8u)(val & 0x1f);
@@ -988,3 +989,35 @@ void VGA_SetupOther(void) {
 	// AMSTRAD
 }
 
+
+
+// save state support
+
+void POD_Save_VGA_Other( std::ostream& stream )
+{
+	// - pure struct data
+	WRITE_POD( &vga.other, vga.other );
+	// static globals
+
+	// - system + user data
+	WRITE_POD( &hue_offset, hue_offset );
+	WRITE_POD( &cga16_val, cga16_val );
+	WRITE_POD( &herc_pal, herc_pal );
+	WRITE_POD( &mono_cga_pal, mono_cga_pal );
+	WRITE_POD( &mono_cga_bright, mono_cga_bright );
+}
+
+
+void POD_Load_VGA_Other( std::istream& stream )
+{
+	// - pure struct data
+	READ_POD( &vga.other, vga.other );
+	// static globals
+
+	// - system + user data
+	READ_POD( &hue_offset, hue_offset );
+	READ_POD( &cga16_val, cga16_val );
+	READ_POD( &herc_pal, herc_pal );
+	READ_POD( &mono_cga_pal, mono_cga_pal );
+	READ_POD( &mono_cga_bright, mono_cga_bright );
+}

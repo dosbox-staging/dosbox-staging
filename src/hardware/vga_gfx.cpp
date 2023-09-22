@@ -20,6 +20,7 @@
 #include "dosbox.h"
 #include "inout.h"
 #include "vga.h"
+#include "../save_state.h"
 
 #define gfx(blah) vga.gfx.blah
 static bool index9warned=false;
@@ -232,3 +233,20 @@ void VGA_SetupGFX(void) {
 	}
 }
 
+
+// save state support
+
+void POD_Save_VGA_Gfx( std::ostream& stream )
+{
+	// - pure struct data
+	WRITE_POD( &vga.gfx, vga.gfx );
+
+}
+
+
+void POD_Load_VGA_Gfx( std::istream& stream )
+{
+	// - pure struct data
+	READ_POD( &vga.gfx, vga.gfx );
+
+}

@@ -78,6 +78,7 @@ bool localDrive::FileCreate(DOS_File * * file,const char * name,Bit16u /*attribu
 	FILE * hand=fopen(temp_name,"wb+");
 	if (!hand){
 		LOG_MSG("Warning: file creation failed: %s",newname);
+		if (!strcasecmp(newname, "LPT1")) LOG_MSG("Try setting parallel1=file if this is not a desired result!");
 		return false;
 	}
    
@@ -264,7 +265,11 @@ bool localDrive::FindFirst(const char * _dir,DOS_DTA & dta,bool fcb_findfirst) {
 bool localDrive::FindNext(DOS_DTA & dta) {
 
 	char * dir_ent;
+#if defined (_MSC_VER)
+	struct _stati64 stat_block;
+#else
 	struct stat stat_block;
+#endif
 	char full_name[CROSS_LEN];
 	char dir_entcopy[CROSS_LEN];
 
@@ -288,7 +293,11 @@ again:
 	//and due to its design dir_ent might be lost.)
 	//Copying dir_ent first
 	strcpy(dir_entcopy,dir_ent);
-	if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) { 
+#if defined (_MSC_VER)
+	if (_stati64(dirCache.GetExpandName(full_name), &stat_block) != 0) {
+#else
+	if (stat(dirCache.GetExpandName(full_name), &stat_block) != 0) {
+#endif
 		goto again;//No symlinks and such
 	}	
 
@@ -324,8 +333,13 @@ bool localDrive::GetFileAttr(const char * name,Bit16u * attr) {
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
+#if defined (_MSC_VER)
+	struct _stati64 status;
+	if (_stati64(newname, &status) == 0) {
+#else
 	struct stat status;
 	if (stat(newname,&status)==0) {
+#endif
 		*attr=DOS_ATTR_ARCHIVE;
 		if(status.st_mode & S_IFDIR) *attr|=DOS_ATTR_DIRECTORY;
 		return true;
@@ -369,8 +383,13 @@ bool localDrive::TestDir(const char * dir) {
 	size_t len = strlen(newdir);
 	if (len && (newdir[len-1]!='\\')) {
 		// It has to be a directory !
+#if defined (_MSC_VER)
+		struct _stati64 test;
+		if (_stati64(newdir, &test))			return false;
+#else
 		struct stat test;
 		if (stat(newdir,&test))			return false;
+#endif
 		if ((test.st_mode & S_IFDIR)==0)	return false;
 	};
 	int temp=access(newdir,F_OK);
@@ -408,8 +427,13 @@ bool localDrive::FileExists(const char* name) {
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
+#if defined (_MSC_VER)
+	struct _stati64 temp_stat;
+	if (_stati64(newname, &temp_stat) != 0) return false;
+#else
 	struct stat temp_stat;
 	if(stat(newname,&temp_stat)!=0) return false;
+#endif
 	if(temp_stat.st_mode & S_IFDIR) return false;
 	return true;
 }
@@ -420,8 +444,13 @@ bool localDrive::FileStat(const char* name, FileStat_Block * const stat_block) {
 	strcat(newname,name);
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
+#if defined (_MSC_VER)
+	struct _stati64 temp_stat;
+	if (_stati64(newname, &temp_stat) != 0) return false;
+#else
 	struct stat temp_stat;
 	if(stat(newname,&temp_stat)!=0) return false;
+#endif
 	/* Convert the stat to a FileStat */
 	struct tm *time;
 	if((time=localtime(&temp_stat.st_mtime))!=0) {
@@ -655,8 +684,16 @@ void localFile::FlagReadOnlyMedium(void) {
 
 bool localFile::UpdateDateTimeFromHost(void) {
 	if(!open) return false;
+#if defined (_MSC_VER)
+	struct _stati64 temp_stat;
+#else
 	struct stat temp_stat;
-	fstat(fileno(fhandle),&temp_stat);
+#endif
+#if defined (_MSC_VER)
+	_fstat64(fileno(fhandle),&temp_stat);
+#else
+	fstat(fileno(fhandle), &temp_stat);
+#endif
 	struct tm * ltime;
 	if((ltime=localtime(&temp_stat.st_mtime))!=0) {
 		time=DOS_PackTime((Bit16u)ltime->tm_hour,(Bit16u)ltime->tm_min,(Bit16u)ltime->tm_sec);

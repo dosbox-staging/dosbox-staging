@@ -148,7 +148,7 @@ void DOS_Terminate(Bit16u pspseg,bool tsr,Bit8u exitcode) {
 	} else {
 		GFX_SetTitle(-1,-1,-1,false);
 	}
-#if (C_DYNAMIC_X86)
+#if (C_DYNAMIC_X86) || (C_DYNREC)
 	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
 		cpudecoder=&CPU_Core_Normal_Run;
 		CPU_CycleLeft=0;
@@ -225,6 +225,10 @@ bool DOS_ChildPSP(Bit16u segment, Bit16u size) {
 	psp.SetFCB2(RealMake(parent_psp_seg,0x6c));
 	psp.SetEnvironment(psp_parent.GetEnvironment());
 	psp.SetSize(size);
+	// push registers in case child PSP is terminated
+	SaveRegisters();
+	psp.SetStack(RealMakeSeg(ss,reg_sp));
+	reg_sp+=18;
 	return true;
 }
 

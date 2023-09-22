@@ -273,21 +273,21 @@ void DOS_Shell::ParseLine(char * line) {
 
 
 
-void DOS_Shell::RunInternal(void)
-{
+void DOS_Shell::RunInternal(void) {
 	char input_line[CMD_MAXLINE] = {0};
-	while(bf && bf->ReadLine(input_line)) 
-	{
-		if (echo) {
+	while (bf) {
+		if (bf->ReadLine(input_line)) {
+			if (echo) {
 				if (input_line[0] != '@') {
 					ShowPrompt();
 					WriteOut_NoParsing(input_line);
 					WriteOut_NoParsing("\n");
-				};
-			};
+				}
+			}
 		ParseLine(input_line);
+			if (echo) WriteOut_NoParsing("\n");
 	}
-	return;
+	}
 }
 
 void DOS_Shell::Run(void) {
@@ -404,13 +404,25 @@ public:
 				goto nomount;
 			}
 
+#if defined (_MSC_VER)
+			struct _stati64 test;
+#else
 			struct stat test;
+#endif
 			strcpy(buffer,line.c_str());
-			if (stat(buffer,&test)){
+#if defined (_MSC_VER)
+			if (_stati64(buffer, &test)){
+#else
+			if (stat(buffer, &test)){
+#endif
 				getcwd(buffer,CROSS_LEN);
 				strcat(buffer,cross_filesplit);
 				strcat(buffer,line.c_str());
-				if (stat(buffer,&test)) goto nomount;
+#if defined (_MSC_VER)
+				if (_stati64(buffer, &test)) goto nomount;
+#else
+				if (stat(buffer, &test)) goto nomount;
+#endif
 			}
 			if (test.st_mode & S_IFDIR) { 
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
@@ -423,13 +435,26 @@ public:
 					getcwd(buffer,CROSS_LEN);
 					strcat(buffer,cross_filesplit);
 					strcat(buffer,line.c_str());
-					if(stat(buffer,&test)) goto nomount;
+#if defined (_MSC_VER)
+					if (_stati64(buffer, &test)) goto nomount;
+#else
+					if (stat(buffer, &test)) goto nomount;
+#endif
 					name = strrchr(buffer,CROSS_FILESPLIT);
 					if(!name) goto nomount;
 				}
 				*name++ = 0;
 				if (access(buffer,F_OK)) goto nomount;
 				upcase(name);
+				if((strstr(name,".ZIP") != 0) || (strstr(name,".7Z") != 0)) {
+					//TODO:Add more extensions?
+					LOG_MSG("Mouting %s as PHYSFS write directory", buffer);
+					autoexec[12].Install(std::string("MOUNT C \"") + buffer + std::string(":") + name
+						+ std::string(":\""));
+					autoexec[13].Install("C:");
+					if(secure) autoexec[14].Install("z:\\config.com -securemode");
+					goto nomount;
+				}
 				autoexec[12].Install(std::string("MOUNT C \"") + buffer + "\"");
 				autoexec[13].Install("C:");
 				/* Save the non-modified filename (so boot and imgmount can use it (long filenames, case sensivitive)) */
@@ -503,7 +528,7 @@ void SHELL_Init() {
 	MSG_Add("SHELL_ILLEGAL_SWITCH","Illegal switch: %s.\n");
 	MSG_Add("SHELL_MISSING_PARAMETER","Required parameter missing.\n");
 	MSG_Add("SHELL_CMD_CHDIR_ERROR","Unable to change to: %s.\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT","To change to different drive type \033[31m%c:\033[0m\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT","Hint: To change to different drive type \033[31m%c:\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_2","directoryname is longer than 8 characters and/or contains spaces.\nTry \033[31mcd %s\033[0m\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_3","You are still on drive Z:, change to a mounted drive with \033[31mC:\033[0m.\n");
 	MSG_Add("SHELL_CMD_DATE_HELP","Displays or changes the internal date.\n");
@@ -554,8 +579,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_SUBST_FAILURE","SUBST failed. You either made an error in your commandline or the target drive is already used.\nIt's only possible to use SUBST on Local drives\n");
 
 	MSG_Add("SHELL_STARTUP_BEGIN",
-		"\033[35;1m DOSBox-X\033[37m\n"
-		"\033[33m UPDATED: October 20, 2013\033[37m\n"
+		"\033[35;1m DOSBox SVN-Daum \033[32m[ykhwong.x-y.net]\033[37m\n"
+		"\033[33m UPDATED: JAN 24, 2015\033[37m\n"
 		"\033[44;1m\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD"
 		"\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB\n"
@@ -722,8 +747,8 @@ void SHELL_Init() {
 		   "  $$   $ (dollar sign)\n");
 	MSG_Add("SHELL_CMD_LABEL_HELP","Creates or changes the volume label of a disk.\n");
 	MSG_Add("SHELL_CMD_LABEL_HELP_LONG","LABEL [volume]\n\n\tvolume\t\tSpecifies the drive letter.\n");
-	MSG_Add("SHELL_CMD_MORE_HELP","Displays output one screen at a time.\n");
-	MSG_Add("SHELL_CMD_MORE_HELP_LONG","MORE [filename]\n");
+	//MSG_Add("SHELL_CMD_MORE_HELP","Displays output one screen at a time.\n");
+	//MSG_Add("SHELL_CMD_MORE_HELP_LONG","MORE [filename]\n");
 
 	/* Regular startup */
 	call_shellstop=CALLBACK_Allocate();
@@ -49657,7 +49682,7 @@ static unsigned char hexmem32_exe[] = {
 	VFILE_Register("DOS4GW.EXE",some_data_dos4gw,353668);
 	VFILE_Register("HEXMEM16.EXE",hexmem16_exe,sizeof(hexmem16_exe));
 	VFILE_Register("HEXMEM32.EXE",hexmem32_exe,sizeof(hexmem32_exe));
-	VFILE_Register("DEBUG.EXE",DEBUG_COM_binary,sizeof(DEBUG_COM_binary));
+	VFILE_Register("DEBUGX.EXE",DEBUG_COM_binary,sizeof(DEBUG_COM_binary));
 	VFILE_Register("DOSIDLE.EXE",some_data_dosidle,7052);
 	VFILE_Register("FIND.EXE",some_data_find,7714);
 	VFILE_Register("MEM.COM",some_data_mem,15137);

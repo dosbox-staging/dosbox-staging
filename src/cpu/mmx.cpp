@@ -23,6 +23,7 @@
 #include "mmx.h"
 #include "cpu.h"
 #include "fpu.h"
+#include "../save_state.h"
 
 MMX_reg reg_mmx[8];
 
@@ -100,3 +101,17 @@ void setFPU(Bit16u tag) {
 	FPU_SetTag(tag);
 }
 
+
+// save state support
+void POD_Save_CPU_MMX( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &reg_mmx, reg_mmx );
+}
+
+
+void POD_Load_CPU_MMX( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &reg_mmx, reg_mmx );
+}

@@ -47,6 +47,12 @@ public:
 	bool shouldReverb(int i);
 	void clearAlreadyOutputed();
 	const Partial *getPartial(unsigned int partialNum) const;
+
+	void saveState( std::ostream &stream );
+	void loadState( std::istream &stream );
+
+	// savestate debugging
+	void rawVerifyState( char *name, Synth *synth );
 };
 
 }

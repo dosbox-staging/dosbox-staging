@@ -77,7 +77,7 @@ static SHELL_Cmd cmd_list[]={
 {	"VOL",	0,			&DOS_Shell::CMD_VOL,		"SHELL_CMD_VOL_HELP"},
 {	"PROMPT",	0,			&DOS_Shell::CMD_PROMPT,		"SHELL_CMD_PROMPT_HELP"},
 {	"LABEL",	0,			&DOS_Shell::CMD_LABEL,		"SHELL_CMD_LABEL_HELP"},
-{	"MORE",	1,			&DOS_Shell::CMD_MORE,		"SHELL_CMD_MORE_HELP"},
+//{	"MORE",	1,			&DOS_Shell::CMD_MORE,		"SHELL_CMD_MORE_HELP"},
 {	"FOR",	1,			&DOS_Shell::CMD_FOR,		"SHELL_CMD_FOR_HELP"},
 {	"INT2FDBG",	1,			&DOS_Shell::CMD_INT2FDBG,	"Hook INT 2Fh for debugging purposes"},
 {0,0,0,0}
@@ -324,6 +324,7 @@ void DOS_Shell::CMD_CLS(char * args) {
 void DOS_Shell::CMD_DELETE(char * args) {
 	HELP("DELETE");
 	bool optQ1=ScanCMDBool(args,"Q");
+	bool optP=ScanCMDBool(args,"P");
 
 	// ignore /p /f, /s, /ar, /as, /ah and /aa switches for compatibility
 	ScanCMDBool(args,"P");
@@ -506,13 +507,25 @@ void DOS_Shell::CMD_EXIT(char * args) {
 void DOS_Shell::CMD_CHDIR(char * args) {
 	HELP("CHDIR");
 	StripSpaces(args);
+	Bit8u drive = DOS_GetDefaultDrive()+'A';
+	char dir[DOS_PATHLENGTH];
 	if (!*args) {
-		Bit8u drive=DOS_GetDefaultDrive()+'A';
-		char dir[DOS_PATHLENGTH];
 		DOS_GetCurrentDir(0,dir);
 		WriteOut("%c:\\%s\n",drive,dir);
 	} else if(strlen(args) == 2 && args[1]==':') {
-		WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT"),toupper(*reinterpret_cast<unsigned char*>(&args[0])));
+		Bit8u targetdrive = (args[0] | 0x20)-'a' + 1;
+		unsigned char targetdisplay = *reinterpret_cast<unsigned char*>(&args[0]);
+		if(!DOS_GetCurrentDir(targetdrive,dir)) {
+			if(drive == 'Z') {
+				WriteOut(MSG_Get("SHELL_EXECUTE_DRIVE_NOT_FOUND"),toupper(targetdisplay));
+			} else {
+				WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
+			}
+			return;
+		}
+		WriteOut("%c:\\%s\n",toupper(targetdisplay),dir);
+		if(drive == 'Z')
+			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT"),toupper(targetdisplay));
 	} else 	if (!DOS_ChangeDir(args)) {
 		/* Changedir failed. Check if the filename is longer then 8 and/or contains spaces */
 	   
@@ -537,8 +550,7 @@ void DOS_Shell::CMD_CHDIR(char * args) {
 			temps += "~1";
 			WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_2"),temps.insert(0,slashpart).c_str());
 		} else {
-			Bit8u drive=DOS_GetDefaultDrive()+'A';
-			if (drive=='Z') {
+			if (drive == 'Z') {
 				WriteOut(MSG_Get("SHELL_CMD_CHDIR_HINT_3"));
 			} else {
 				WriteOut(MSG_Get("SHELL_CMD_CHDIR_ERROR"),args);
@@ -1013,6 +1025,10 @@ void DOS_Shell::CMD_COPY(char * args) {
 								failed |= DOS_ReadFile(sourceHandle,buffer,&toread);
 								failed |= DOS_WriteFile(targetHandle,buffer,&toread);
 							} while (toread==0x8000);
+							if (!oldsource.concat) { // credits to FeedingDragon
+								DOS_GetFileDate(sourceHandle,&time,&date);
+								DOS_SetFileDate(targetHandle,time,date);
+							}
 							failed |= DOS_CloseFile(sourceHandle);
 							failed |= DOS_CloseFile(targetHandle);
 							WriteOut(" %s\n",name);
@@ -1027,8 +1043,9 @@ void DOS_Shell::CMD_COPY(char * args) {
 					}
 				} else WriteOut(MSG_Get("SHELL_CMD_COPY_FAILURE"),const_cast<char*>(source.filename.c_str()));
 			};
-			//On the next file
-			ret = DOS_FindNext();
+			//On to the next file if the previous one wasn't a device
+			if ((attr&DOS_ATTR_DEVICE) == 0) ret = DOS_FindNext();
+			else ret = false;
 		};
 	}
 
@@ -1199,7 +1216,7 @@ void DOS_Shell::CMD_SHIFT(char * args ) {
 
 void DOS_Shell::CMD_TYPE(char * args) {
 	HELP("TYPE");
-		
+	bool optP=ScanCMDBool(args,"P");
 	// ignore /p /h and /t for compatibility
 	ScanCMDBool(args,"P");
 	ScanCMDBool(args,"H");
@@ -1232,7 +1249,7 @@ void DOS_Shell::CMD_REM(char * args) {
 	HELP("REM");
 }
 
-static void PAUSED(void) {
+/*static void PAUSED(void) {
 	Bit8u c; Bit16u n=1;
 	DOS_ReadFile (STDIN,&c,&n);
 }
@@ -1241,9 +1258,9 @@ void DOS_Shell::CMD_MORE(char * args) {
 	HELP("MORE");
 	//ScanCMDBool(args,">");
 	if(!*args) {
-		char defaultcon[DOS_PATHLENGTH+CROSS_LEN+20]={ 0 };
-		strcpy(defaultcon,"copy con >nul");
-		this->ParseLine(defaultcon);
+		//char defaultcon[DOS_PATHLENGTH+CROSS_LEN+20]={ 0 };
+		//strcpy(defaultcon,"copy con >nul");
+		//this->ParseLine(defaultcon);
 		return;
 	}
 	int nchars = 0, nlines = 0, linecount = 0, LINES = (Bit16u)mem_readb(BIOS_ROWS_ON_SCREEN_MINUS_1)-3, COLS = mem_readw(BIOS_SCREEN_COLUMNS), TABSIZE = 8;
@@ -1290,7 +1307,7 @@ nextfile:
 		goto nextfile;
 	}
 }
-
+*/
 void DOS_Shell::CMD_PAUSE(char * args){
 	HELP("PAUSE");
 	if(args && *args) {

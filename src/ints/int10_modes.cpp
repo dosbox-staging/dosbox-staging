@@ -363,7 +363,7 @@ VideoModeBlock ModeList_OTHER[]={
 };
 
 VideoModeBlock Hercules_Mode=
-{ 0x007  ,M_TEXT   ,640 ,400 ,80 ,25 ,8 ,14 ,1 ,0xB0000 ,0x1000 ,97 ,25  ,80 ,25  ,0	};
+{ 0x007  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,1 ,0xB0000 ,0x1000 ,97 ,25  ,80 ,25  ,0	};
 
 static Bit8u text_palette[64][3]=
 {
@@ -493,10 +493,20 @@ static bool SetCurMode(VideoModeBlock modeblock[],Bit16u mode) {
 	return false;
 }
 
+#if defined(WIN32) && !(C_DEBUG)
+bool DISP2_Active(void);
+#endif
 bool INT10_SetCurMode(void) {
 	bool mode_changed=false;
 	Bit16u bios_mode=(Bit16u)real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE);
 	if (CurMode->mode!=bios_mode) {
+#if defined(WIN32) && !(C_DEBUG)
+		if (bios_mode==7 && DISP2_Active()) {
+			if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30) return false;
+			CurMode=&Hercules_Mode;
+			return true;
+		}
+#endif
 		switch (machine) {
 		case MCH_CGA:
 			if (bios_mode<7) mode_changed=SetCurMode(ModeList_OTHER,bios_mode);
@@ -544,9 +554,18 @@ static void FinishSetMode(bool clearmem) {
 	/* Clear video memory if needs be */
 	if (clearmem) {
 		switch (CurMode->type) {
+		case M_TANDY16:
+			if ((machine==MCH_PCJR) && (CurMode->mode >= 9)) {
+				// PCJR cannot access the full 32k at 0xb800
+				for (Bit16u ct=0;ct<16*1024;ct++) {
+					// 0x1800 is the last 32k block in 128k, as set in the CRTCPU_PAGE register 
+					real_writew(0x1800,ct*2,0x0000);
+				}
+				break;
+			}
+			// fall-through
 		case M_CGA4:
 		case M_CGA2:
-		case M_TANDY16:
 			for (Bit16u ct=0;ct<16*1024;ct++) {
 				real_writew( 0xb800,ct*2,0x0000);
 			}
@@ -585,7 +604,11 @@ static void FinishSetMode(bool clearmem) {
 	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0x09);
 
 	// this is an index into the dcc table:
+#if defined(WIN32) && !(C_DEBUG)
+	if (IS_VGA_ARCH) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,DISP2_Active()?0x0c:0x0b);
+#else
 	if (IS_VGA_ARCH) real_writeb(BIOSMEM_SEG,BIOSMEM_DCC_INDEX,0x0b);
+#endif
 	real_writed(BIOSMEM_SEG,BIOSMEM_VS_POINTER,int10.rom.video_save_pointers);
 
 	// Set cursor shape
@@ -823,6 +846,17 @@ bool INT10_SetVideoMode(Bit16u mode) {
 	}
 	int10.vesa_setmode=0xffff;
 	LOG(LOG_INT10,LOG_NORMAL)("Set Video Mode %X",mode);
+#if defined(WIN32) && !(C_DEBUG)
+	if (mode==7 && DISP2_Active()) {
+		if ((real_readw(BIOSMEM_SEG,BIOSMEM_INITIAL_MODE)&0x30)!=0x30) return false;
+		CurMode=&Hercules_Mode;
+		FinishSetMode(clearmem);
+		// EGA/VGA inactive
+		if (IS_EGAVGA_ARCH)	real_writeb(BIOSMEM_SEG,BIOSMEM_VIDEO_CTL,(0x68|(clearmem?0:0x80)));
+		INT10_SetCursorShape(0x0b,0x0c);
+		return true;
+	}
+#endif
 	if (!IS_EGAVGA_ARCH) return INT10_SetVideoMode_OTHER(mode,clearmem);
 
 	/* First read mode setup settings from bios area */

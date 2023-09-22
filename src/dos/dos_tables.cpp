@@ -22,6 +22,7 @@
 #include "dos_inc.h"
 #include "callback.h"
 #include <assert.h>
+#include "../save_state.h"
 
 extern Bitu DOS_PRIVATE_SEGMENT_Size;
 
@@ -36,6 +37,10 @@ GCC_ATTRIBUTE (packed);
 #ifdef _MSC_VER
 #pragma pack ()
 #endif
+
+/* allow 256 of private space for BIOS functions (16 para x 16 = 256) */
+#define BIOS_PRIVATE_SEGMENT			0xF300
+#define BIOS_PRIVATE_SEGMENT_END		0xF310
 
 RealPt DOS_TableUpCase;
 RealPt DOS_TableLowCase;
@@ -55,7 +60,7 @@ void DOS_GetMemory_reset() {
 
 void DOS_GetMemory_unmap() {
 	if (DOS_PRIVATE_SEGMENT != 0) {
-		LOG_MSG("Unmapping DOS private segment 0x%04x-0x%04x\n",DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
+		LOG_MSG("Unmapping DOS private segment 0x%04x-0x%04x",DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
 		if (DOS_PRIVATE_SEGMENT >= 0xA000) MEM_unmap_physmem(DOS_PRIVATE_SEGMENT<<4,(DOS_PRIVATE_SEGMENT_END<<4)-1);
 		DOS_GetMemory_unmapped = true;
 		DOS_PRIVATE_SEGMENT_END = 0;
@@ -83,7 +88,7 @@ void DOS_GetMemory_Choose() {
 			MEM_map_RAM_physmem(DOS_PRIVATE_SEGMENT<<4,(DOS_PRIVATE_SEGMENT_END<<4)-1);
 		}
 
-		LOG_MSG("DOS private segment set to 0x%04x-0x%04x\n",DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
+		//LOG_MSG("DOS private segment set to 0x%04x-0x%04x\n",DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END-1);
 	}
 }
 
@@ -97,12 +102,12 @@ Bit16u DOS_GetMemory(Bit16u pages,const char *who) {
 	}
 
 	if (((Bitu)pages+(Bitu)dos_memseg) > DOS_PRIVATE_SEGMENT_END) {
-		LOG_MSG("DOS_GetMemory(%u) failed (alloc=0x%04x segment=0x%04x end=0x%04x)\n",
+		LOG_MSG("DOS_GetMemory(%u) failed (alloc=0x%04x segment=0x%04x end=0x%04x)",
 			pages,dos_memseg,DOS_PRIVATE_SEGMENT,DOS_PRIVATE_SEGMENT_END);
 		E_Exit("DOS:Not enough memory for internal tables");
 	}
 	Bit16u page=dos_memseg;
-	LOG_MSG("DOS_GetMemory(0x%04x pages,\"%s\") = 0x%04x\n",pages,who,page);
+	//fprintf(stderr,"DOS_GetMemory(0x%04x pages,\"%s\") = 0x%04x\n",pages,who,page);
 	dos_memseg+=pages;
 	return page;
 }
@@ -250,3 +255,24 @@ void DOS_SetupTables(void) {
 	dos.tables.country=country_info;
 }
 
+
+
+// save state support
+void POD_Save_DOS_Tables( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &DOS_TableUpCase, DOS_TableUpCase );
+	WRITE_POD( &DOS_TableLowCase, DOS_TableLowCase );
+
+	WRITE_POD( &dos_memseg, dos_memseg );
+}
+
+
+void POD_Load_DOS_Tables( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &DOS_TableUpCase, DOS_TableUpCase );
+	READ_POD( &DOS_TableLowCase, DOS_TableLowCase );
+
+	READ_POD( &dos_memseg, dos_memseg );
+}
