@@ -537,11 +537,11 @@ void CPU_Core_Dyn_X86_RestoreDHFPUState(void) {
 }
 
 #else
-
+#endif
 void CPU_Core_Dyn_X86_SaveDHFPUState(void) {
 }
 
 void CPU_Core_Dyn_X86_RestoreDHFPUState(void) {
 }
 
-#endif
+//#endif
