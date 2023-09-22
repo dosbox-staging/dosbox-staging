@@ -1,3 +1,3 @@
-SUBDIRS = 
+SUBDIRS = visualc
 
-EXTRA_DIST = sdl-win32.diff
+EXTRA_DIST = sdl-win32.diff

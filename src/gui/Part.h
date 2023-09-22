@@ -127,6 +127,12 @@ public:
 	const Poly *getActivePoly(int num);
 	int getActivePolyCount();
 	const PatchCache *getPatchCache(int num);
+
+	virtual void saveState( std::ostream &stream );
+	virtual void loadState( std::istream &stream );
+
+	// savestate debugging
+	void rawVerifyState( char *name, Synth *synth );
 };
 
 class RhythmPart: public Part {
@@ -147,6 +153,11 @@ public:
 	void setProgram(unsigned int patchNum);
 
 	const PatchCache *getDrumCache(int num1, int num2);
+	void saveState( std::ostream &stream );
+	void loadState( std::istream &stream );
+
+	// savestate debugging
+	void rawVerifyState( char *name, Synth *synth );
 };
 
 }

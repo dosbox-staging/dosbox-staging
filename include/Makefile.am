@@ -21,6 +21,7 @@ keyboard.h \
 logging.h \
 mapper.h \
 mem.h \
+midi.h \
 mixer.h \
 modules.h \
 mouse.h \
@@ -50,6 +51,7 @@ iowin32.h \
 unzip.h \
 zip.h \
 crypt.h \
-mztools.h
+mztools.h \
+clockdomain.h
 
 

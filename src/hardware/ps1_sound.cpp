@@ -26,6 +26,7 @@
 #include "pic.h"
 #include "dma.h"
 #include "sn76496.h"
+#include "../save_state.h"
 
 extern bool PS1AudioCard;
 #define DAC_CLOCK 1000000
@@ -366,7 +367,7 @@ public:
 		ps1.last_writeSN = 0;
 		PS1DAC_Reset(true);
 
-		SN76496Reset( &ps1.sn, 3579545, sample_rate );
+		SN76496Reset( &ps1.sn, 4000000, sample_rate );
 	}
 	~PS1SOUND(){ }
 };
@@ -382,3 +383,56 @@ void PS1SOUND_Init(Section* sec) {
 	sec->AddDestroyFunction(&PS1SOUND_ShutDown,true);
 }
 
+
+
+// save state support
+void POD_Save_PS1_Sound( std::ostream& stream )
+{
+	const char pod_name[32] = "PS1";
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !ps1.chanDAC ) return;
+
+
+	WRITE_POD( &pod_name, pod_name );
+
+	// - near-pure struct data
+	WRITE_POD( &ps1, ps1 );
+
+	ps1.chanDAC->SaveState(stream);
+	ps1.chanSN->SaveState(stream);
+}
+void POD_Load_PS1_Sound( std::istream& stream )
+{
+	char pod_name[32] = {0};
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !ps1.chanDAC ) return;
+
+
+	// error checking
+	READ_POD( &pod_name, pod_name );
+	if( strcmp( pod_name, "PS1" ) ) {
+		stream.clear( std::istream::failbit | std::istream::badbit );
+		return;
+	}
+	MixerChannel *chanDAC_old, *chanSN_old;
+
+
+	// save old ptrs
+	chanDAC_old = ps1.chanDAC;
+	chanSN_old = ps1.chanSN;
+
+	// - near-pure struct data
+	READ_POD( &ps1, ps1 );
+
+	// restore old ptrs
+	ps1.chanDAC = chanDAC_old;
+	ps1.chanSN = chanSN_old;
+
+
+	ps1.chanDAC->LoadState(stream);
+	ps1.chanSN->LoadState(stream);
+}

@@ -24,7 +24,6 @@
 #include "config.h"
 #include "setup.h"
 #include "cross.h"
-#include "control.h"
 
 #include "paging.h"
 #include "mem.h"
@@ -32,6 +31,7 @@
 #include "voodoo.h"
 #include "pci_bus.h"
 #include "voodoo_interface.h"
+
 
 class VOODOO;
 static VOODOO* voodoo_dev;
@@ -63,8 +63,17 @@ public:
 			emulation_type=0;
 		}
 
+		if (emulation_type<=0) return;
+
+
 		Bits card_type = 1;
-		bool max_voodoomem = true;
+		bool max_voodoomem;
+		std::string voodoo_mem_str(section->Get_string("voodoomem"));
+		if (voodoo_mem_str=="max") {
+			max_voodoomem = true;
+		} else {
+			max_voodoomem = false;
+		}
 
 		bool needs_pci_device = false;
 

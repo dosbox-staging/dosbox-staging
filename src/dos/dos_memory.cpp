@@ -22,6 +22,7 @@
 #include "bios.h"
 #include "dos_inc.h"
 #include "callback.h"
+#include "../save_state.h"
 
 // uncomment for alloc/free debug messages
 #define DEBUG_ALLOC
@@ -69,7 +70,8 @@ static void DOS_CompressMemory(void) {
 	while (mcb.GetType()!='Z') {
 		if(counter++ > 10000000) DOS_Mem_E_Exit("DOS_CompressMemory: DOS MCB list corrupted.");
 		mcb_next.SetPt((Bit16u)(mcb_segment+mcb.GetSize()+1));
-		if ((mcb.GetPSPSeg()==0) && (mcb_next.GetPSPSeg()==0)) {
+		if (GCC_UNLIKELY((mcb_next.GetType()!=0x4d) && (mcb_next.GetType()!=0x5a))) E_Exit("Corrupt MCB chain");
+		if ((mcb.GetPSPSeg()==MCB_FREE) && (mcb_next.GetPSPSeg()==MCB_FREE)) {
 			mcb.SetSize(mcb.GetSize()+mcb_next.GetSize()+1);
 			mcb.SetType(mcb_next.GetType());
 		} else {
@@ -97,6 +99,7 @@ void DOS_FreeProcessMemory(Bit16u pspseg) {
 				mcb.SetType(0x4d);
 			} else break;
 		}
+		if (GCC_UNLIKELY(mcb.GetType()!=0x4d)) E_Exit("Corrupt MCB chain");
 		mcb_segment+=mcb.GetSize()+1;
 		mcb.SetPt(mcb_segment);
 	}
@@ -166,7 +169,7 @@ bool DOS_AllocateMemory(Bit16u * segment,Bit16u * blocks) {
 	Bit16u found_seg=0,found_seg_size=0;
 	for (;;) {
 		mcb.SetPt(mcb_segment);
-		if (mcb.GetPSPSeg()==0) {
+		if (mcb.GetPSPSeg()==MCB_FREE) {
 			/* Check for enough free memory in current block */
 			Bit16u block_size=mcb.GetSize();			
 			if (block_size<(*blocks)) {
@@ -304,12 +307,12 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		return false;
 	}
 
-	DOS_CompressMemory();
 	Bit16u total=mcb.GetSize();
 	DOS_MCB	mcb_next(segment+total);
 	if (*blocks<=total) {
 		if (GCC_UNLIKELY(*blocks==total)) {
 			/* Nothing to do */
+			DOS_CompressMemory();
 			return true;
 		}
 		/* Shrinking MCB */
@@ -324,6 +327,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		mcb_new_next.SetSize(total-*blocks-1);
 		mcb_new_next.SetPSPSeg(MCB_FREE);
 		mcb.SetPSPSeg(dos.psp());
+		DOS_CompressMemory();
 		return true;
 	}
 	/* MCB will grow, try to join with following MCB */
@@ -344,6 +348,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 		mcb_next.SetPSPSeg(MCB_FREE);
 		mcb.SetType(0x4d);
 		mcb.SetPSPSeg(dos.psp());
+		DOS_CompressMemory();
 		return true;
 	}
 
@@ -356,6 +361,7 @@ bool DOS_ResizeMemory(Bit16u segment,Bit16u * blocks) {
 	}
 	mcb.SetSize(total);
 	mcb.SetPSPSeg(dos.psp());
+	DOS_CompressMemory();
 	if (*blocks==total) return true;	/* block fit exactly */
 
 	*blocks=total;	/* return maximum */
@@ -585,3 +591,16 @@ void DOS_SetupMemory(void) {
 	dos_infoblock.SetFirstMCB(DOS_MEM_START);
 }
 
+
+void POD_Save_DOS_Memory( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &memAllocStrategy, memAllocStrategy );
+}
+
+
+void POD_Load_DOS_Memory( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &memAllocStrategy, memAllocStrategy );
+}

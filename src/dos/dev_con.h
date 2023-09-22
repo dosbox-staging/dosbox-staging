@@ -38,6 +38,9 @@ public:
 	Bit16u GetInformation(void);
 	bool ReadFromControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
 	bool WriteToControlChannel(PhysPt bufptr,Bit16u size,Bit16u * retcode){return false;}
+
+	virtual void SaveState( std::ostream& stream );
+	virtual void LoadState( std::istream& stream );
 private:
 	Bit8u readcache;
 	Bit8u lastwrite;
@@ -268,7 +271,7 @@ bool device_CON::Write(Bit8u * data,Bit16u * size) {
 				/* Some sort of "hack" now that '\n' doesn't set col to 0 (int10_char.cpp old chessgame) */
 				if((data[count] == '\n') && (lastwrite != '\r')) Real_INT10_TeletypeOutputAttr('\r',ansi.attr,ansi.enabled);
  				/* pass attribute only if ansi is enabled */
-				Real_INT10_TeletypeOutputAttr(data[count],ansi.attr,ansi.enabled);
+				Real_INT10_TeletypeOutputAttr(data[count],ansi.enabled?ansi.attr:7,true);
 				lastwrite = data[count++];
 				continue;
 		}
@@ -515,9 +518,9 @@ bool device_CON::Close() {
 	return true;
 }
 
+Bit16u device_CON::GetInformation(void) {
 extern bool dos_con_use_int16_to_detect_input;
 
-Bit16u device_CON::GetInformation(void) {
 	if (dos_con_use_int16_to_detect_input) {
 		Bit16u ret = 0x80D3; /* No Key Available */
 
@@ -592,3 +595,23 @@ void device_CON::ClearAnsi(void){
 	ansi.numberofarg=0;
 }
 
+
+// save state support
+void device_CON::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &readcache, readcache );
+	WRITE_POD( &lastwrite, lastwrite );
+
+	WRITE_POD( &ansi, ansi );
+}
+
+
+void device_CON::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &readcache, readcache );
+	READ_POD( &lastwrite, lastwrite );
+
+	READ_POD( &ansi, ansi );
+}

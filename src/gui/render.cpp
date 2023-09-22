@@ -30,6 +30,7 @@
 #include "cross.h"
 #include "hardware.h"
 #include "support.h"
+#include "../save_state.h"
 
 #include "render_scalers.h"
 #if defined(__SSE__)
@@ -627,7 +628,7 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double scrn_ratio)
 	//LOG_MSG("pixratio %1.3f, dw %s, dh %s",ratio,dblw?"true":"false",dblh?"true":"false");
 
 	if ( ratio > 1.0 ) {
-		double target = height * ratio + 0.1;
+		double target = height * ratio + 0.025;
 		ratio = target / height;
 	} else {
 		//This would alter the width of the screen, we don't care about rounding errors here
@@ -725,7 +726,17 @@ void RENDER_Init(Section * sec) {
 	render.scale.forced = false;
 	if(f == "forced") render.scale.forced = true;
    
+#if (xBRZ_w_TBB)
+	render.xbrz_using=false;
+#endif
 	if (scaler == "none") { render.scale.op = scalerOpNormal; render.scale.size = 1; render.scale.hardware=false; }
+#if (xBRZ_w_TBB)
+	else if (scaler == "xbrz") {
+		render.xbrz_using=true;
+		render.scale.op = scalerOpNormal;render.scale.size = 1;
+		LOG_MSG("To enable xBRZ scaler, set output to surface and fullscreen to true.");
+	}
+#endif
 	else if (scaler == "normal2x") { render.scale.op = scalerOpNormal; render.scale.size = 2; render.scale.hardware=false; }
 	else if (scaler == "normal3x") { render.scale.op = scalerOpNormal; render.scale.size = 3; render.scale.hardware=false; }
 	else if (scaler == "normal4x") { render.scale.op = scalerOpNormal; render.scale.size = 4; render.scale.hardware=false; }
@@ -776,3 +787,53 @@ void RENDER_Init(Section * sec) {
 	GFX_SetTitle(-1,render.frameskip.max,-1,false);
 }
 
+
+
+//save state support
+namespace
+{
+class SerializeRender : public SerializeGlobalPOD
+{
+public:
+	SerializeRender() : SerializeGlobalPOD("Render")
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		SerializeGlobalPOD::getBytes(stream);
+
+
+		// - pure data
+		WRITE_POD( &render.src, render.src );
+
+		WRITE_POD( &render.pal, render.pal );
+		WRITE_POD( &render.updating, render.updating );
+		WRITE_POD( &render.active, render.active );
+		WRITE_POD( &render.fullFrame, render.fullFrame );
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		SerializeGlobalPOD::setBytes(stream);
+
+
+		// - pure data
+		READ_POD( &render.src, render.src );
+
+		READ_POD( &render.pal, render.pal );
+		READ_POD( &render.updating, render.updating );
+		READ_POD( &render.active, render.active );
+		READ_POD( &render.fullFrame, render.fullFrame );
+
+		// reset screen
+		memset( &render.frameskip, 0, sizeof(render.frameskip) );
+
+		render.scale.clearCache = true;
+		if( render.scale.outWrite ) { GFX_EndUpdate(NULL); }
+
+
+		RENDER_SetSize( render.src.width, render.src.height, render.src.bpp, render.src.fps, render.src.scrn_ratio );
+	}
+} dummy;
+}

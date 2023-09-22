@@ -29,6 +29,7 @@
 #include "cpu.h"
 
 #include "cdrom.h"
+#include "../save_state.h"
 
 #define MSCDEX_LOG LOG(LOG_MISC,LOG_ERROR)
 //#define MSCDEX_LOG
@@ -117,7 +118,7 @@ public:
 	bool		GetAbstractName		(Bit16u drive, PhysPt data);
 	bool		GetDocumentationName(Bit16u drive, PhysPt data);
 	bool		GetDirectoryEntry	(Bit16u drive, bool copyFlag, PhysPt pathname, PhysPt buffer, Bit16u& error);
-	bool		ReadVTOC			(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error);
+	bool		ReadVTOC			(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& offset, Bit16u& error);
 	bool		ReadSectors			(Bit16u drive, Bit32u sector, Bit16u num, PhysPt data);
 	bool		ReadSectors			(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, PhysPt data);
 	bool		ReadSectorsMSF		(Bit8u subUnit, bool raw, Bit32u sector, Bit16u num, PhysPt data);
@@ -266,26 +267,26 @@ int CMscdex::AddDrive(Bit16u _drive, char* physicalPath, Bit8u& subUnit)
 		if ((osi.dwPlatformId==VER_PLATFORM_WIN32_NT) && (osi.dwMajorVersion>4)) {
 			// only WIN NT/200/XP
 			if (useCdromInterface==CDROM_USE_IOCTL_DIO) {
-//				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DIO);
-//				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
-//				break;
+				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DIO);
+				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface.");
+				break;
 			}
 			if (useCdromInterface==CDROM_USE_IOCTL_DX) {
-//				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DX);
-//				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (digital audio extraction).");
-//				break;
+				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_DX);
+				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (digital audio extraction).");
+				break;
 			}
 			if (useCdromInterface==CDROM_USE_IOCTL_MCI) {
-//				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_MCI);
-//				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (media control interface).");
-//				break;
+				cdrom[numDrives] = new CDROM_Interface_Ioctl(CDROM_Interface_Ioctl::CDIOCTL_CDA_MCI);
+				LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: IOCTL Interface (media control interface).");
+				break;
 			}
 		}
 		if (useCdromInterface==CDROM_USE_ASPI) {
 			// all Wins - ASPI
-//			cdrom[numDrives] = new CDROM_Interface_Aspi();
-//			LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: ASPI Interface.");
-//			break;
+			cdrom[numDrives] = new CDROM_Interface_Aspi();
+			LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: ASPI Interface.");
+			break;
 		}
 #endif
 #if defined (LINUX) || defined(OS2)
@@ -507,6 +508,7 @@ bool CMscdex::GetAudioStatus(Bit8u subUnit, bool& playing, bool& pause, TMSF& st
 	if (subUnit>=numDrives) return false;
 	dinfo[subUnit].lastResult = cdrom[subUnit]->GetAudioStatus(playing,pause);
 	if (dinfo[subUnit].lastResult) {
+		if (playing) {
 		// Start
 		Bit32u addr	= dinfo[subUnit].audioStart + 150;
 		start.fr	= (Bit8u)(addr%75);	addr/=75;
@@ -517,6 +519,10 @@ bool CMscdex::GetAudioStatus(Bit8u subUnit, bool& playing, bool& pause, TMSF& st
 		end.fr		= (Bit8u)(addr%75);	addr/=75;
 		end.sec		= (Bit8u)(addr%60); 
 		end.min		= (Bit8u)(addr/60);
+	} else {
+			memset(&start,0,sizeof(start));
+			memset(&end,0,sizeof(end));
+		}
 	} else {
 		playing		= false;
 		pause		= false;
@@ -573,7 +579,7 @@ Bit32u CMscdex::GetVolumeSize(Bit8u subUnit) {
 	return 0;
 }
 
-bool CMscdex::ReadVTOC(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error) { 
+bool CMscdex::ReadVTOC(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& offset, Bit16u& error) {
 	Bit8u subunit = GetSubUnit(drive);
 /*	if (subunit>=numDrives) {
 		error=MSCDEX_ERROR_UNKNOWN_DRIVE;
@@ -585,11 +591,16 @@ bool CMscdex::ReadVTOC(Bit16u drive, Bit16u volume, PhysPt data, Bit16u& error) 
 	}
 	char id[5];
 	MEM_BlockRead(data + 1, id, 5);
-	if (strncmp("CD001",id, 5)!=0) {
-		error = MSCDEX_ERROR_BAD_FORMAT;
-		return false;
+	if (strncmp("CD001", id, 5)==0) offset = 0;
+	else {
+		MEM_BlockRead(data + 9, id, 5);
+		if (strncmp("CDROM", id, 5)==0) offset = 8;
+		else {
+			error = MSCDEX_ERROR_BAD_FORMAT;
+			return false;
+		}
 	}
-	Bit8u type = mem_readb(data);
+	Bit8u type = mem_readb(data + offset);
 	error = (type == 1) ? 1 : (type == 0xFF) ? 0xFF : 0;
 	return true;
 }
@@ -598,12 +609,12 @@ bool CMscdex::GetVolumeName(Bit8u subUnit, char* data) {
 	if (subUnit>=numDrives) return false;
 	Bit16u drive = dinfo[subUnit].drive;
 
-	Bit16u error;
+	Bit16u offset = 0, error;
 	bool success = false;
 	PhysPt ptoc = GetTempBuffer();
-	success = ReadVTOC(drive,0x00,ptoc,error);
+	success = ReadVTOC(drive,0x00,ptoc,offset,error);
 	if (success) {
-		MEM_StrCopy(ptoc+40,data,31);
+		MEM_StrCopy(ptoc+offset+40,data,31);
 		data[31] = 0;
 		rtrim(data);
 	};
@@ -612,51 +623,51 @@ bool CMscdex::GetVolumeName(Bit8u subUnit, char* data) {
 }
 
 bool CMscdex::GetCopyrightName(Bit16u drive, PhysPt data) {	
-	Bit16u error;
+	Bit16u offset = 0, error;
 	bool success = false;
 	PhysPt ptoc = GetTempBuffer();
-	success = ReadVTOC(drive,0x00,ptoc,error);
+	success = ReadVTOC(drive,0x00,ptoc,offset,error);
 	if (success) {
 		Bitu len;
 		for (len=0;len<37;len++) {
-			Bit8u c=mem_readb(ptoc+702+len);
+			Bit8u c=mem_readb(ptoc+offset+702+len);
 			if (c==0 || c==0x20) break;
 		}
-		MEM_BlockCopy(data,ptoc+702,len);
+		MEM_BlockCopy(data,ptoc+offset+702,len);
 		mem_writeb(data+len,0);
 	};
 	return success; 
 }
 
 bool CMscdex::GetAbstractName(Bit16u drive, PhysPt data) { 
-	Bit16u error;
+	Bit16u offset = 0, error;
 	bool success = false;
 	PhysPt ptoc = GetTempBuffer();
-	success = ReadVTOC(drive,0x00,ptoc,error);
+	success = ReadVTOC(drive,0x00,ptoc,offset,error);
 	if (success) {
 		Bitu len;
 		for (len=0;len<37;len++) {
-			Bit8u c=mem_readb(ptoc+739+len);
+			Bit8u c=mem_readb(ptoc+offset+739+len);
 			if (c==0 || c==0x20) break;
 		}
-		MEM_BlockCopy(data,ptoc+739,len);
+		MEM_BlockCopy(data,ptoc+offset+739,len);
 		mem_writeb(data+len,0);
 	};
 	return success; 
 }
 
 bool CMscdex::GetDocumentationName(Bit16u drive, PhysPt data) { 
-	Bit16u error;
+	Bit16u offset = 0, error;
 	bool success = false;
 	PhysPt ptoc = GetTempBuffer();
-	success = ReadVTOC(drive,0x00,ptoc,error);
+	success = ReadVTOC(drive,0x00,ptoc,offset,error);
 	if (success) {
 		Bitu len;
 		for (len=0;len<37;len++) {
-			Bit8u c=mem_readb(ptoc+776+len);
+			Bit8u c=mem_readb(ptoc+offset+776+len);
 			if (c==0 || c==0x20) break;
 		}
-		MEM_BlockCopy(data,ptoc+776,len);
+		MEM_BlockCopy(data,ptoc+offset+776,len);
 		mem_writeb(data+len,0);
 	};
 	return success; 
@@ -714,13 +725,17 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 	// read vtoc
 	PhysPt defBuffer = GetDefaultBuffer();
 	if (!ReadSectors(GetSubUnit(drive),false,16,1,defBuffer)) return false;
-	// TODO: has to be iso 9960
 	MEM_StrCopy(defBuffer+1,volumeID,5); volumeID[5] = 0;
-	bool iso = (strcmp("CD001",volumeID)==0);
-	if (!iso) E_Exit("MSCDEX: GetDirEntry: Not an ISO 9960 CD.");
+	Bit16u offset;
+	if (strcmp("CD001",volumeID)==0) offset = 156;
+	else {
+		MEM_StrCopy(defBuffer+9,volumeID,5);
+		if (strcmp("CDROM",volumeID)==0) offset = 180;
+		else E_Exit("MSCDEX: GetDirEntry: Not an ISO 9660 or High Sierra CD.");
+	}
 	// get directory position
-	Bitu dirEntrySector	= mem_readd(defBuffer+156+2);
-	Bits dirSize		= mem_readd(defBuffer+156+10);
+	Bitu dirEntrySector	= mem_readd(defBuffer+offset+2);
+	Bits dirSize		= mem_readd(defBuffer+offset+10);
 	Bitu index;
 	while (dirSize>0) {
 		index = 0;
@@ -786,7 +801,7 @@ bool CMscdex::GetDirectoryEntry(Bit16u drive, bool copyFlag, PhysPt pathname, Ph
 					// Direct copy
 					MEM_BlockCopy(buffer,defBuffer+index,entryLength);
 				}
-				error = iso ? 1:0;
+				error = 1;
 				return true;
 			}
 			// change directory
@@ -1213,8 +1228,8 @@ static bool MSCDEX_Handler(void) {
 						};
 						return true;		
 		case 0x1505: {	// read vtoc 
-						Bit16u error = 0;
-						if (mscdex->ReadVTOC(reg_cx,reg_dx,data,error)) {
+						Bit16u offset = 0, error = 0;
+						if (mscdex->ReadVTOC(reg_cx,reg_dx,data,offset,error)) {
 //							reg_ax = error;	// return code
 							CALLBACK_SCF(false);
 						} else {
@@ -1400,3 +1415,77 @@ void MSCDEX_Init(Section* sec) {
 	mscdex = new CMscdex;
 }
 
+
+
+//save state support
+void CMscdex::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &defaultBufSeg, defaultBufSeg );
+	WRITE_POD( &rootDriverHeaderSeg, rootDriverHeaderSeg );
+}
+
+
+void CMscdex::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &defaultBufSeg, defaultBufSeg );
+	READ_POD( &rootDriverHeaderSeg, rootDriverHeaderSeg );
+}
+
+
+void POD_Save_DOS_Mscdex( std::ostream& stream )
+{
+	for (Bit8u drive_unit=0; drive_unit<mscdex->GetNumDrives(); drive_unit++) {
+		TMSF pos, start, end;
+		bool playing, pause;
+
+		mscdex->GetAudioStatus(drive_unit, playing, pause, start, end);
+		mscdex->GetCurrentPos(drive_unit,pos);
+
+
+		WRITE_POD( &playing, playing );
+		WRITE_POD( &pause, pause );
+		WRITE_POD( &pos, pos );
+		WRITE_POD( &start, start );
+		WRITE_POD( &end, end );
+	}
+
+
+	mscdex->SaveState(stream);
+}
+
+
+void POD_Load_DOS_Mscdex( std::istream& stream )
+{
+	for (Bit8u drive_unit=0; drive_unit<mscdex->GetNumDrives(); drive_unit++) {
+		TMSF pos, start, end;
+		Bit32u msf_time, play_len;
+		bool playing, pause;
+				
+
+		READ_POD( &playing, playing );
+		READ_POD( &pause, pause );
+		READ_POD( &pos, pos );
+		READ_POD( &start, start );
+		READ_POD( &end, end );
+
+
+		// end = total play time (GetAudioStatus adds +150)
+		// pos = current play cursor
+		// start = start play cursor
+		play_len = end.min * 75 * 60 + ( end.sec * 75 ) + end.fr - 150;
+		play_len -= ( pos.min - start.min ) * 75 * 60 + ( pos.sec - start.sec ) * 75 + ( pos.fr - start.fr );
+		msf_time = ( pos.min << 16 ) + ( pos.sec << 8 ) + ( pos.fr );
+
+
+		// first play, then simulate pause
+		mscdex->StopAudio(drive_unit);
+
+		if( playing ) mscdex->PlayAudioMSF(drive_unit, msf_time, play_len);
+		if( pause ) mscdex->PlayAudioMSF(drive_unit, msf_time, 0);
+	}
+
+
+	mscdex->LoadState(stream);
+}

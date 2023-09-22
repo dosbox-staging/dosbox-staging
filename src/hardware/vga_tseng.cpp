@@ -25,6 +25,7 @@
 #include "mem.h"
 #include "regs.h"
 #include <cstdlib>
+#include "../save_state.h"
 
 extern bool vga_enable_3C6_ramdac;
 extern bool vga_sierra_lock_565;
@@ -967,3 +968,27 @@ void SVGA_Setup_TsengET3K(void) {
 	phys_writeb(rom_base+0x007b,' ');
 }
 
+
+
+// save state support
+
+void POD_Save_VGA_Tseng( std::ostream& stream )
+{
+	// static globals
+
+
+	// - pure struct data
+	WRITE_POD( &et4k, et4k );
+	WRITE_POD( &et3k, et3k );
+}
+
+
+void POD_Load_VGA_Tseng( std::istream& stream )
+{
+	// static globals
+
+
+	// - pure struct data
+	READ_POD( &et4k, et4k );
+	READ_POD( &et3k, et3k );
+}

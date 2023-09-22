@@ -19,6 +19,7 @@
 
 #define __FILTER_CC__
 #include "filter.h"
+#include "../../save_state.h"
 
 // Maximum cutoff frequency is specified as
 // FCmax = 2.6e-5/C = 2.6e-5/2200e-12 = 11818.
@@ -304,3 +305,100 @@ PointPlotter<sound_sample> Filter::fc_plotter()
   return PointPlotter<sound_sample>(f0);
 }
 
+
+
+// save state support
+
+void Filter::SaveState( std::ostream& stream )
+{
+	unsigned char f0_idx, f0_points_idx;
+
+
+	f0_idx = 0xff;
+	f0_points_idx = 0xff;
+
+
+	if(0) {}
+	else if( f0 == f0_6581 ) f0_idx = 0;
+	else if( f0 == f0_8580 ) f0_idx = 1;
+
+	
+	if(0) {}
+	else if( f0_points == f0_points_6581 ) f0_points_idx = 0;
+	else if( f0_points == f0_points_8580 ) f0_points_idx = 1;
+	// - pure data
+	WRITE_POD( &enabled, enabled );
+
+	WRITE_POD( &fc, fc );
+	WRITE_POD( &res, res );
+	WRITE_POD( &filt, filt );
+	WRITE_POD( &voice3off, voice3off );
+	WRITE_POD( &hp_bp_lp, hp_bp_lp );
+	WRITE_POD( &vol, vol );
+
+	WRITE_POD( &mixer_DC, mixer_DC );
+	WRITE_POD( &Vhp, Vhp );
+	WRITE_POD( &Vbp, Vbp );
+	WRITE_POD( &Vlp, Vlp );
+	WRITE_POD( &Vnf, Vnf );
+	WRITE_POD( &w0, w0 );
+	WRITE_POD( &w0_ceil_1, w0_ceil_1 );
+	WRITE_POD( &w0_ceil_dt, w0_ceil_dt );
+	WRITE_POD( &_1024_div_Q, _1024_div_Q );
+
+ 	WRITE_POD( &f0_6581, f0_6581 );
+	WRITE_POD( &f0_8580, f0_8580 );
+
+	WRITE_POD( &f0_count, f0_count );
+
+
+
+	// - reloc ptr
+	WRITE_POD( &f0_idx, f0_idx );
+	WRITE_POD( &f0_points_idx, f0_points_idx );
+}
+
+
+void Filter::LoadState( std::istream& stream )
+{
+	unsigned char f0_idx, f0_points_idx;
+	// - pure data
+	READ_POD( &enabled, enabled );
+
+	READ_POD( &fc, fc );
+	READ_POD( &res, res );
+	READ_POD( &filt, filt );
+	READ_POD( &voice3off, voice3off );
+	READ_POD( &hp_bp_lp, hp_bp_lp );
+	READ_POD( &vol, vol );
+
+	READ_POD( &mixer_DC, mixer_DC );
+	READ_POD( &Vhp, Vhp );
+	READ_POD( &Vbp, Vbp );
+	READ_POD( &Vlp, Vlp );
+	READ_POD( &Vnf, Vnf );
+	READ_POD( &w0, w0 );
+	READ_POD( &w0_ceil_1, w0_ceil_1 );
+	READ_POD( &w0_ceil_dt, w0_ceil_dt );
+	READ_POD( &_1024_div_Q, _1024_div_Q );
+
+ 	READ_POD( &f0_6581, f0_6581 );
+	READ_POD( &f0_8580, f0_8580 );
+
+	READ_POD( &f0_count, f0_count );
+
+
+
+	// - reloc ptr
+	READ_POD( &f0_idx, f0_idx );
+	READ_POD( &f0_points_idx, f0_points_idx );
+	switch( f0_idx ) {
+		case 0: f0 = f0_6581; break;
+		case 1: f0 = f0_8580; break;
+	}
+
+	switch( f0_points_idx ) {
+		case 0: f0_points = f0_points_6581; break;
+		case 1: f0_points = f0_points_8580; break;
+	}
+}

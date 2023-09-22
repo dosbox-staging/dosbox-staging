@@ -29,6 +29,7 @@
 #include "inout.h"
 #include "xms.h"
 #include "bios.h"
+#include "../save_state.h"
 
 #include <algorithm>
 
@@ -569,7 +570,7 @@ public:
 		}
 		first_umb_size = (first_umb_size + 1 - first_umb_seg);
 		if (umb_available) {
-			LOG_MSG("UMB assigned region is 0x%04x-0x%04x\n",first_umb_seg,first_umb_seg+first_umb_size-1);
+			//LOG_MSG("UMB assigned region is 0x%04x-0x%04x\n",first_umb_seg,first_umb_seg+first_umb_size-1);
 			if (MEM_map_RAM_physmem(first_umb_seg<<4,((first_umb_seg+first_umb_size)<<4)-1)) {
 				memset(GetMemBase()+(first_umb_seg<<4),0x00,first_umb_size<<4);
 			}
@@ -622,5 +623,19 @@ void XMS_ShutDown(Section* /*sec*/) {
 void XMS_Init(Section* sec) {
 	test = new XMS(sec);
 	sec->AddDestroyFunction(&XMS_ShutDown,true);
+}
+
+
+//save state support
+		namespace
+{
+class SerializeXMS : public SerializeGlobalPOD
+{
+public:
+    SerializeXMS() : SerializeGlobalPOD("XMS")
+    {
+        registerPOD(xms_handles);
+    }
+} dummy;
 }
 

@@ -9,7 +9,7 @@
 #endif
 #include <stdio.h>
 
-#if defined (WIN32) && 0 //|| defined (LINUX)
+#if defined (WIN32) //|| defined (LINUX)
 
 /* prototype (function typedef) for DLL function Inp32: */
 
@@ -83,7 +83,11 @@ void HARDOPL_Init(Bitu hardwareaddr, Bitu blasteraddr, bool isCMSp) {
 
 
      /* Load the library for win 64 driver */
+#if (_WIN64)
+	 hLib = LoadLibrary("inpoutx64.dll");
+#else
      hLib = LoadLibrary("inpout32.dll");
+#endif
 
      if (hLib == NULL) {
           LOG_MSG("LoadLibrary Failed.\n");

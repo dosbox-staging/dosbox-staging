@@ -108,6 +108,8 @@ static void getPixel(Bits x, Bits y, int &r, int &g, int &b, int shift)
 
 extern bool dos_kernel_disabled;
 
+extern void LoadMessageFile(const char * fname);
+
 static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 	GFX_EndUpdate(0);
 	GFX_SetTitle(-1,-1,-1,true);
@@ -125,6 +127,12 @@ static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 	int w, h;
 	bool fs;
 	GFX_GetSize(w, h, fs);
+#ifdef WIN32
+	if (!GFX_SDLUsingWinDIB()) {
+		if (w > 512) w = 640;
+		if (h > 350) h = 400;
+	}
+#endif
 	if (w <= 400) {
 		w *=2; h *=2;
 	}
@@ -180,9 +188,9 @@ static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 	if (sdlscreen == NULL) E_Exit("Could not initialize video mode %ix%ix32 for UI: %s", w, h, SDL_GetError());
 
 	// fade out
-	// Jonathan C: do it FASTER!
+#ifndef WIN32 
 	SDL_Event event; 
-	for (int i = 0xff; i > 0; i -= 0x30) { 
+	for (int i = 0xff; i > 0; i -= 0x11) { 
 		SDL_SetAlpha(screenshot, SDL_SRCALPHA, i); 
 		SDL_BlitSurface(background, NULL, sdlscreen, NULL); 
 		SDL_BlitSurface(screenshot, NULL, sdlscreen, NULL); 
@@ -190,6 +198,7 @@ static GUI::ScreenSDL *UI_Startup(GUI::ScreenSDL *screen) {
 		while (SDL_PollEvent(&event)); 
 		SDL_Delay(40); 
 	} 
+#endif 
  
 	SDL_BlitSurface(background, NULL, sdlscreen, NULL);
 	SDL_UpdateRect(sdlscreen, 0, 0, 0, 0);
@@ -209,9 +218,9 @@ static void UI_Shutdown(GUI::ScreenSDL *screen) {
 	render.src.bpp = saved_bpp;
 
 	// fade in
-	// Jonathan C: do it FASTER!
+#ifndef WIN32
 	SDL_Event event;
-	for (int i = 0x00; i < 0xff; i += 0x30) {
+	for (int i = 0x00; i < 0xff; i += 0x11) {
 		SDL_SetAlpha(screenshot, SDL_SRCALPHA, i);
 		SDL_BlitSurface(background, NULL, sdlscreen, NULL);
 		SDL_BlitSurface(screenshot, NULL, sdlscreen, NULL);
@@ -219,6 +228,7 @@ static void UI_Shutdown(GUI::ScreenSDL *screen) {
 		while (SDL_PollEvent(&event)) {};
 		SDL_Delay(40); 
 	}
+#endif
 
 	// clean up
 	if (mousetoggle) GFX_CaptureMouse();
@@ -589,6 +599,8 @@ public:
 	}
 };
 
+#include "cpu.h"
+
 class SetCycles : public GUI::ToplevelWindow {
 protected:
 	GUI::Input *name;
@@ -681,6 +693,7 @@ public:
 
 	void actionExecuted(GUI::ActionEventSource *b, const GUI::String &arg) {
 		if (arg == "OK") {
+			char * text=name->getText();
 			extern unsigned int hdd_defsize;
 			int human_readable = atoi(name->getText());
 			if (human_readable < 0)
@@ -758,7 +771,7 @@ public:
 			Section_prop *section = static_cast<Section_prop *>(sec);
 			new SectionEditor(getScreen(), 50, 30, section);
 		} else if (arg == "About") {
-			new GUI::MessageBox2(getScreen(), 200, 150, 280, "About DOSBox", "\nDOSBox-X\nAn emulator for old DOS Games\n\nCopyright 2002-2014\nThe DOSBox Team");
+			new GUI::MessageBox2(getScreen(), 200, 150, 280, "About DOSBox", "\nDOSBox SVN-Daum\nAn emulator for old DOS Games\n\nCopyright 2002-2015\nThe DOSBox Team");
 		} else if (arg == "Introduction") {
 			new GUI::MessageBox2(getScreen(), 20, 50, 600, "Introduction", MSG_Get("PROGRAM_INTRO"));
 		} else if (arg == "Getting Started") {
@@ -900,7 +913,7 @@ static void UI_Select(GUI::ScreenSDL *screen, int select) {
 			new SetCycles(screen, 90, 100, "Set CPU Cycles...");
 			break;
 		case 17:
-			new SetVsyncrate(screen, 90, 100, "Set vertical syncrate...");
+			new SetVsyncrate(screen, 90, 100, "Set Vertical Syncrate...");
 			break;
 		case 18:
 			new SetLocalSize(screen, 90, 100, "Set Default Local Freesize...");
@@ -942,3 +955,4 @@ void UI_Run(bool pressed) {
 	UI_Shutdown(screen);
 	delete screen;
 }
+

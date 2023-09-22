@@ -2,6 +2,7 @@
 #include "logging.h"
 
 #if defined (_MSC_VER) 
+/*
 void outportb(Bit32u portid, Bit8u value) {
   __asm mov edx,portid
   __asm mov al,value
@@ -46,9 +47,9 @@ Bit32u inportd(Bit32u portid) {
   __asm mov value,eax
   return value;
 }
-
+*/
 #else
-void outportb(Bit32u portid, Bit8u value) {
+/*void outportb(Bit32u portid, Bit8u value) {
    __asm__ volatile (
       "movl   %0,%%edx   \n"
       "movb   %1,%%al      \n"
@@ -69,7 +70,7 @@ Bit8u inportb(Bit32u portid) {
       :   "edx", "al", "memory"
    );
   return value;
-}
+}*/
 #endif
 
 #ifdef WIN32

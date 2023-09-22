@@ -480,7 +480,6 @@ void ogl_cache_texture(const poly_extra_data *extra, ogl_texture_data *td) {
 				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,TEXMODE_CLAMP_S(TEXMODE)?GL_CLAMP_TO_EDGE:GL_REPEAT);
 				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,TEXMODE_CLAMP_T(TEXMODE)?GL_CLAMP_TO_EDGE:GL_REPEAT);
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, smax, tmax, 0, GL_BGRA_EXT, GL_UNSIGNED_INT_8_8_8_8_REV, texrgbp);
-				extern PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT;
 				glGenerateMipmapEXT(GL_TEXTURE_2D);
 				UINT32 palsum=0;
 				if ((TEXMODE_FORMAT(v->tmu[j].reg[textureMode].u)==0x05) || (TEXMODE_FORMAT(v->tmu[j].reg[textureMode].u)==0x0e)) {
@@ -1577,7 +1576,7 @@ void voodoo_ogl_set_window(voodoo_state *v) {
 	if (size_changed) {
 		//correction for viewport if 640x400
 		if( v->fbi.height < 480 && GFX_IsFullscreen()) adjust_y=(480-v->fbi.height)/2;
-		if( v->fbi.width < 640 && GFX_IsFullscreen()) adjust_x=(640-v->fbi.width)/2;
+		if( v->fbi.height < 640 && GFX_IsFullscreen()) adjust_x=(640-v->fbi.width)/2;
 		glViewport( adjust_x, adjust_y, v->fbi.width, v->fbi.height );
 		last_width = v->fbi.width;
 		last_height = v->fbi.height;
@@ -1611,17 +1610,6 @@ void voodoo_ogl_reset_videomode(void) {
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	glViewport( 0, 0, v->fbi.width, v->fbi.height );
-	last_width = v->fbi.width;
-	last_height = v->fbi.height;
-
-	/*glMatrixMode( GL_PROJECTION );
-	glLoadIdentity();
-	glOrtho( 0, v->fbi.width, v->fbi.height, 0, -1, 1 );
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity();*/
-	// END OF FIX
-
 #if defined (WIN32) && SDL_VERSION_ATLEAST(1, 2, 11)
 	SDL_GL_SetAttribute( SDL_GL_SWAP_CONTROL, 0 );
 #endif
@@ -1646,7 +1634,7 @@ void voodoo_ogl_reset_videomode(void) {
 		ogl_surface = SDL_SetVideoMode(v->fbi.width, v->fbi.height, 32, sdl_flags);
 	}
 
-	if ((ogl_surface != NULL) && (sdl_flags & SDL_FULLSCREEN)) SDL_Delay(1000);
+	if ((ogl_surface != NULL) && (sdl_flags & SDL_FULLSCREEN)) SDL_Delay(500);
 
 	if (ogl_surface == NULL) {
 		if (full_sdl_restart) {

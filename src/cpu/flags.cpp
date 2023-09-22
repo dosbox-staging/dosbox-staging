@@ -25,6 +25,7 @@
 #include "cpu.h"
 #include "lazyflags.h"
 #include "pic.h"
+#include "../save_state.h"
 
 LazyFlags lflags;
 
@@ -1187,3 +1188,18 @@ void DestroyConditionFlags(void) {
 
 #endif
 
+
+
+// save state support
+void POD_Save_CPU_Flags( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &lflags, lflags );
+}
+
+
+void POD_Load_CPU_Flags( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &lflags, lflags );
+}

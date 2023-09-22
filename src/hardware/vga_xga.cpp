@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include "callback.h"
 #include "cpu.h"		// for 0x3da delay
+#include "../save_state.h"
 
 #define XGA_SCREEN_WIDTH	vga.s3.xga_screen_width
 #define XGA_COLOR_MODE		vga.s3.xga_color_mode
@@ -1319,3 +1320,25 @@ void VGA_SetupXGA(void) {
 	IO_RegisterReadHandler(0xe2ea,&XGA_Read,IO_MB | IO_MW | IO_MD);
 }
 
+
+
+// save state support
+
+void POD_Save_VGA_XGA( std::ostream& stream )
+{
+	// static globals
+
+
+	// - pure struct data
+	WRITE_POD( &xga, xga );
+}
+
+
+void POD_Load_VGA_XGA( std::istream& stream )
+{
+	// static globals
+
+
+	// - pure struct data
+	READ_POD( &xga, xga );
+}

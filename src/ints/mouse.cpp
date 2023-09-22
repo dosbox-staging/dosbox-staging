@@ -35,6 +35,7 @@
 #include "int10.h"
 #include "bios.h"
 #include "dos_inc.h"
+#include "../save_state.h"
 #include "support.h"
 #include "setup.h"
  
@@ -48,7 +49,6 @@ void KEYBOARD_AUX_Event(float x,float y,Bitu buttons);
 
 bool en_int33=false;
 bool en_bios_ps2mouse=false;
-
 void DisableINT33() {
 	if (en_int33) {
 		en_int33 = false;
@@ -1173,13 +1173,13 @@ void MOUSE_Init(Section* sec) {
 	ps2_callback_save_regs = section->Get_bool("int15 mouse callback does not preserve registers");
 
 	if (en_int33) {
-		// Callback for mouse interrupt 0x33
-		call_int33=CALLBACK_Allocate();
+	// Callback for mouse interrupt 0x33
+	call_int33=CALLBACK_Allocate();
 		// i33loc=RealMake(CB_SEG+1,(call_int33*CB_SIZE)-0x10);
 		i33loc=RealMake(DOS_GetMemory(0x1,"i33loc")-1,0x10);
-		CALLBACK_Setup(call_int33,&INT33_Handler,CB_MOUSE,Real2Phys(i33loc),"Mouse");
-		// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
-		real_writed(0,0x33<<2,i33loc);
+	CALLBACK_Setup(call_int33,&INT33_Handler,CB_MOUSE,Real2Phys(i33loc),"Mouse");
+	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
+	real_writed(0,0x33<<2,i33loc);
 	}
 	else {
 		call_int33=0;
@@ -1248,5 +1248,92 @@ void MOUSE_Init(Section* sec) {
 	Mouse_SetSensitivity(50,50,50);
 }
 
+//save state support
 void *MOUSE_Limit_Events_PIC_Event = (void*)MOUSE_Limit_Events;
 
+
+namespace
+{
+class SerializeMouse : public SerializeGlobalPOD
+{
+public:
+	SerializeMouse() : SerializeGlobalPOD("Mouse")
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		Bit8u screenMask_idx, cursorMask_idx;
+
+
+		if( mouse.screenMask == defaultScreenMask ) screenMask_idx = 0x00;
+		else if( mouse.screenMask == userdefScreenMask ) screenMask_idx = 0x01;
+
+		if( mouse.cursorMask == defaultCursorMask ) cursorMask_idx = 0x00;
+		else if( mouse.cursorMask == userdefCursorMask ) cursorMask_idx = 0x01;
+
+		SerializeGlobalPOD::getBytes(stream);
+
+
+		// - pure data
+		WRITE_POD( &ps2cbseg, ps2cbseg );
+		WRITE_POD( &ps2cbofs, ps2cbofs );
+		WRITE_POD( &useps2callback, useps2callback );
+		WRITE_POD( &ps2callbackinit, ps2callbackinit );
+		
+		WRITE_POD( &userdefScreenMask, userdefScreenMask );
+		WRITE_POD( &userdefCursorMask, userdefCursorMask );
+
+
+		// - near-pure data
+		WRITE_POD( &mouse, mouse );
+
+
+		// - pure data
+		WRITE_POD( &gfxReg3CE, gfxReg3CE );
+		WRITE_POD( &index3C4, index3C4 );
+		WRITE_POD( &gfxReg3C5, gfxReg3C5 );
+		// - reloc ptr
+		WRITE_POD( &screenMask_idx, screenMask_idx );
+		WRITE_POD( &cursorMask_idx, cursorMask_idx );
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		Bit8u screenMask_idx, cursorMask_idx;
+		SerializeGlobalPOD::setBytes(stream);
+		// - pure data
+		READ_POD( &ps2cbseg, ps2cbseg );
+		READ_POD( &ps2cbofs, ps2cbofs );
+		READ_POD( &useps2callback, useps2callback );
+		READ_POD( &ps2callbackinit, ps2callbackinit );
+		
+		READ_POD( &userdefScreenMask, userdefScreenMask );
+		READ_POD( &userdefCursorMask, userdefCursorMask );
+
+
+		// - near-pure data
+		READ_POD( &mouse, mouse );
+
+
+		// - pure data
+		READ_POD( &gfxReg3CE, gfxReg3CE );
+		READ_POD( &index3C4, index3C4 );
+		READ_POD( &gfxReg3C5, gfxReg3C5 );
+
+		// - reloc ptr
+		READ_POD( &screenMask_idx, screenMask_idx );
+		READ_POD( &cursorMask_idx, cursorMask_idx );
+
+
+		if( screenMask_idx == 0x00 ) mouse.screenMask = defaultScreenMask;
+		else if( screenMask_idx == 0x01 ) mouse.screenMask = userdefScreenMask;
+
+		if( cursorMask_idx == 0x00 ) mouse.cursorMask = defaultCursorMask;
+		else if( cursorMask_idx == 0x01 ) mouse.cursorMask = userdefCursorMask;
+		// reset
+		oldmouseX = static_cast<Bit16s>(mouse.x);
+		oldmouseY = static_cast<Bit16s>(mouse.y);
+	}
+} dummy;
+}

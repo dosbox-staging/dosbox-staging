@@ -29,6 +29,7 @@
 #include "inout.h"
 #include "setup.h"
 #include "cpu.h"
+#include "../save_state.h"
 
 #ifndef C_VGARAM_CHECKED
 #define C_VGARAM_CHECKED 1
@@ -968,11 +969,13 @@ void VGA_ChangedBank(void) {
 	VGA_SetupHandlers();
 }
 
+#if defined(WIN32) && !(C_DEBUG)
+extern void DISP2_SetPageHandler(void);
+#endif
 void MEM_ResetPageHandler_Unmapped(Bitu phys_page, Bitu pages);
 void MEM_ResetPageHandler_RAM(Bitu phys_page, Bitu pages);
 
 extern bool adapter_rom_is_ram;
-
 void VGA_SetupHandlers(void) {
 	vga.svga.bank_read_full = vga.svga.bank_read*vga.svga.bank_size;
 	vga.svga.bank_write_full = vga.svga.bank_write*vga.svga.bank_size;
@@ -1130,6 +1133,9 @@ void VGA_SetupHandlers(void) {
 	if(svgaCard == SVGA_S3Trio && (vga.s3.ext_mem_ctrl & 0x10))
 		MEM_SetPageHandler(VGA_PAGE_A0, 16, &vgaph.mmio);
 range_done:
+#if defined(WIN32) && !(C_DEBUG)
+	DISP2_SetPageHandler();
+#endif
 	PAGING_ClearTLB();
 }
 
@@ -1168,3 +1174,54 @@ void VGA_SetupMemory(Section* sec) {
 	} 
 }
 
+
+
+// save state support
+void *VGA_PageHandler_Func[16] =
+{
+	(void *) &vgaph.map,
+	(void *) &vgaph.slow,
+	//(void *) &vgaph.changes,
+	(void *) &vgaph.text,
+	(void *) &vgaph.cgatext,
+	(void *) &vgaph.tandy,
+	(void *) &vgaph.cega,
+	(void *) &vgaph.cvga,
+	(void *) &vgaph.cvga_et4000,
+	(void *) &vgaph.uega,
+	(void *) &vgaph.uvga,
+	(void *) &vgaph.pcjr,
+	(void *) &vgaph.lin4,
+	(void *) &vgaph.lfb,
+	//(void *) &vgaph.lfbchanges,
+	(void *) &vgaph.mmio,
+	(void *) &vgaph.ams,
+	(void *) &vgaph.empty,
+};
+
+
+void POD_Save_VGA_Memory( std::ostream& stream )
+{
+	// - pure data
+	//WRITE_POD_SIZE( vga.mem.linear_orgptr, sizeof(Bit8u) * (std::max<Bit32u>(vga.vmemsize, 512 * 1024U) + 4096*4 + 16) );
+	WRITE_POD_SIZE(vga.mem.linear_orgptr, sizeof(Bit8u)* vga.vmemsize + 32);
+	//***************************************************
+
+	// static globals
+
+	// - pure struct data
+	WRITE_POD( &vgapages, vgapages );
+
+}
+
+
+void POD_Load_VGA_Memory( std::istream& stream )
+{
+	// - pure data
+	//READ_POD_SIZE( vga.mem.linear_orgptr, sizeof(Bit8u) * (std::max<Bit32u>(vga.vmemsize, 512 * 1024U) + 4096*4 + 16) );
+	READ_POD_SIZE(vga.mem.linear_orgptr, sizeof(Bit8u)* vga.vmemsize + 32);
+	//***************************************************
+	// - pure struct data
+	READ_POD( &vgapages, vgapages );
+
+}

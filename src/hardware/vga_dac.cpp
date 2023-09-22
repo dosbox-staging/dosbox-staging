@@ -20,6 +20,7 @@
 #include "inout.h"
 #include "render.h"
 #include "vga.h"
+#include "../save_state.h"
 
 extern bool vga_enable_3C6_ramdac;
 
@@ -240,3 +241,24 @@ void VGA_SetupDAC(void) {
 	}
 }
 
+
+// save state support
+
+void POD_Save_VGA_Dac( std::ostream& stream )
+{
+	// - pure struct data
+	WRITE_POD( &vga.dac, vga.dac );
+
+
+	// no static globals found
+}
+
+
+void POD_Load_VGA_Dac( std::istream& stream )
+{
+	// - pure struct data
+	READ_POD( &vga.dac, vga.dac );
+
+
+	// no static globals found
+}

@@ -63,6 +63,7 @@ private:
 	friend class AutoexecEditor;
 	std::list<std::string> l_history, l_completion;
 
+	char *completion_start;
 	Bit16u completion_index;
 	
 private:
@@ -120,7 +121,7 @@ public:
 	void CMD_VOL(char * args);
 	void CMD_PROMPT(char * args);
 	void CMD_LABEL(char * args);
-	void CMD_MORE(char * args);
+	//void CMD_MORE(char * args);
 	void CMD_FOR(char * args);
 	/* The shell's variables */
 	Bit16u input_handle;

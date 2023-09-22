@@ -20,6 +20,7 @@
 #define __ENVELOPE_CC__
 
 #include "envelope.h"
+#include "../../save_state.h"
 
 // ----------------------------------------------------------------------------
 // Constructor.
@@ -227,3 +228,45 @@ reg8 EnvelopeGenerator::readENV()
   return output();
 }
 
+
+
+// save state support
+
+void EnvelopeGenerator::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &rate_counter, rate_counter );
+	WRITE_POD( &rate_period, rate_period );
+	WRITE_POD( &exponential_counter, exponential_counter );
+	WRITE_POD( &exponential_counter_period, exponential_counter_period );
+	WRITE_POD( &envelope_counter, envelope_counter );
+	WRITE_POD( &hold_zero, hold_zero );
+
+	WRITE_POD( &attack, attack );
+	WRITE_POD( &decay, decay );
+	WRITE_POD( &sustain, sustain );
+	WRITE_POD( &release, release );
+
+	WRITE_POD( &gate, gate );
+	WRITE_POD( &state, state );
+}
+
+
+void EnvelopeGenerator::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &rate_counter, rate_counter );
+	READ_POD( &rate_period, rate_period );
+	READ_POD( &exponential_counter, exponential_counter );
+	READ_POD( &exponential_counter_period, exponential_counter_period );
+	READ_POD( &envelope_counter, envelope_counter );
+	READ_POD( &hold_zero, hold_zero );
+
+	READ_POD( &attack, attack );
+	READ_POD( &decay, decay );
+	READ_POD( &sustain, sustain );
+	READ_POD( &release, release );
+
+	READ_POD( &gate, gate );
+	READ_POD( &state, state );
+}

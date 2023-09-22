@@ -6972,7 +6972,11 @@ HRESULT WINAPI D3DXCreateEffect(LPDIRECT3DDEVICE9 device,
 
 #else
 
-#include <D3dx9shader.h>
+#if defined (_WIN64)
+	const char windllname[]="D3DX9_43_X64.DLL";
+#else
+	const char windllname[]="D3DX9_43.DLL";
+#endif
 
 typedef HRESULT (WINAPI * pD3DXCreateEffect)(LPDIRECT3DDEVICE9 device,
                                 LPCVOID srcdata,
@@ -6994,7 +6998,7 @@ typedef HRESULT (WINAPI * pD3DXCreateEffect)(LPDIRECT3DDEVICE9 device,
                                 LPD3DXEFFECT* effect,
                                 LPD3DXBUFFER* compilation_errors) {
 	static pD3DXCreateEffect D3DXCreateEffect_p = NULL;
-	HMODULE mod = LoadLibrary(_T("D3DX9_43.DLL"));
+	HMODULE mod = LoadLibrary(_T(windllname));
 	if (mod)
 		D3DXCreateEffect_p = (pD3DXCreateEffect) GetProcAddress(mod, "D3DXCreateEffect");
 	if(NULL != D3DXCreateEffect_p)
@@ -7009,7 +7013,7 @@ typedef HRESULT (WINAPI * pD3DXCreateEffectCompilerFromFileA)(LPCSTR srcfile, co
 /* extern "C" */HRESULT WINAPI D3DXCreateEffectCompilerFromFileA(LPCSTR srcfile, const D3DXMACRO *defines, LPD3DXINCLUDE include,
     DWORD flags, LPD3DXEFFECTCOMPILER *effectcompiler, LPD3DXBUFFER *parseerrors) {
 	static pD3DXCreateEffectCompilerFromFileA D3DXCreateEffectCompilerFromFileA_p = NULL;
-	HMODULE mod = LoadLibrary(_T("D3DX9_43.DLL"));
+	HMODULE mod = LoadLibrary(_T(windllname));
 	if (mod)
 		D3DXCreateEffectCompilerFromFileA_p = (pD3DXCreateEffectCompilerFromFileA) GetProcAddress(mod, "D3DXCreateEffectCompilerFromFileA");
 	if(NULL != D3DXCreateEffectCompilerFromFileA_p)
@@ -7036,7 +7040,7 @@ typedef HRESULT (WINAPI * pD3DXCreateTexture)(LPDIRECT3DDEVICE9 pDevice,
                                   D3DPOOL pool,
                                 LPDIRECT3DTEXTURE9 *ppTexture) {
 	static pD3DXCreateTexture D3DXCreateTexture_p = NULL;
-	HMODULE mod = LoadLibrary(_T("D3DX9_43.DLL"));
+	HMODULE mod = LoadLibrary(_T(windllname));
 	if (mod) 
 		D3DXCreateTexture_p = (pD3DXCreateTexture) GetProcAddress(mod, "D3DXCreateTexture");
 	if(NULL != D3DXCreateTexture_p)
@@ -7061,7 +7065,7 @@ typedef HRESULT (WINAPI * pD3DXCreateCubeTexture)(LPDIRECT3DDEVICE9 device,
                                      D3DPOOL pool,
                                      LPDIRECT3DCUBETEXTURE9 *texture) {
 	static pD3DXCreateCubeTexture D3DXCreateCubeTexture_p = NULL;
-	HMODULE mod = LoadLibrary(_T("D3DX9_43.DLL"));
+	HMODULE mod = LoadLibrary(_T(windllname));
 	if (mod) 
 		D3DXCreateCubeTexture_p = (pD3DXCreateCubeTexture) GetProcAddress(mod, "D3DXCreateCubeTexture");
 	if(NULL != D3DXCreateCubeTexture_p)
@@ -7090,7 +7094,7 @@ typedef HRESULT (WINAPI * pD3DXCreateVolumeTexture)(LPDIRECT3DDEVICE9 device,
                                        D3DPOOL pool,
                                        LPDIRECT3DVOLUMETEXTURE9 *texture) {
 	static pD3DXCreateVolumeTexture D3DXCreateVolumeTexture_p = NULL;
-	HMODULE mod = LoadLibrary(_T("D3DX9_43.DLL"));
+	HMODULE mod = LoadLibrary(_T(windllname));
 	if (mod) 
 		D3DXCreateVolumeTexture_p = (pD3DXCreateVolumeTexture) GetProcAddress(mod, "D3DXCreateVolumeTexture");
 	if(NULL != D3DXCreateVolumeTexture_p)
@@ -7107,7 +7111,7 @@ typedef HRESULT (WINAPI * pD3DXFillVolumeTextureTX)(LPDIRECT3DVOLUMETEXTURE9 pVo
 /* extern "C" */HRESULT WINAPI D3DXFillVolumeTextureTX(LPDIRECT3DVOLUMETEXTURE9 pVolumeTexture,
                                         LPD3DXTEXTURESHADER pTextureShader) {
 	static pD3DXFillVolumeTextureTX D3DXFillVolumeTextureTX_p = NULL;
-	HMODULE mod = LoadLibrary(_T("D3DX9_43.DLL"));
+	HMODULE mod = LoadLibrary(_T(windllname));
 	if (mod) 
 		D3DXFillVolumeTextureTX_p = (pD3DXFillVolumeTextureTX) GetProcAddress(mod, "D3DXFillVolumeTextureTX");
 	//FreeLibrary(mod);
@@ -7126,7 +7130,7 @@ typedef HRESULT (WINAPI * pD3DXFillCubeTextureTX)(
         LPDIRECT3DCUBETEXTURE9    pCubeTexture,
         LPD3DXTEXTURESHADER       pTextureShader) {
 	static pD3DXFillCubeTextureTX D3DXFillCubeTextureTX_p = NULL;
-	HMODULE mod = LoadLibrary(_T("D3DX9_43.DLL"));
+	HMODULE mod = LoadLibrary(_T(windllname));
 	if (mod) 
 		D3DXFillCubeTextureTX_p = (pD3DXFillCubeTextureTX) GetProcAddress(mod, "D3DXFillCubeTextureTX");
 	//FreeLibrary(mod);
@@ -7145,7 +7149,7 @@ typedef HRESULT (WINAPI * pD3DXFillTextureTX)(
         LPDIRECT3DTEXTURE9        pTexture,
         LPD3DXTEXTURESHADER       pTextureShader) {
 	static pD3DXFillTextureTX D3DXFillTextureTX_p = NULL;
-	HMODULE mod = LoadLibrary(_T("D3DX9_43.DLL"));
+	HMODULE mod = LoadLibrary(_T(windllname));
 	//FreeLibrary(mod);
 	if (mod) 
 		D3DXFillTextureTX_p = (pD3DXFillTextureTX) GetProcAddress(mod, "D3DXFillTextureTX");
@@ -7164,7 +7168,7 @@ typedef HRESULT (WINAPI * pD3DXCreateTextureShader)(
   const DWORD *pFunction,
   LPD3DXTEXTURESHADER *ppTextureShader) {
 	static pD3DXCreateTextureShader D3DXCreateTextureShader_p = NULL;
-	HMODULE mod = LoadLibrary(_T("D3DX9_43.DLL"));
+	HMODULE mod = LoadLibrary(_T(windllname));
 	//FreeLibrary(mod);
 	if (mod) 
 		D3DXCreateTextureShader_p = (pD3DXCreateTextureShader) GetProcAddress(mod, "D3DXCreateTextureShader");

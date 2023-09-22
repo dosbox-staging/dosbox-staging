@@ -26,6 +26,7 @@
 #include "pic.h"
 #include <cstring>
 #include <math.h>
+#include "../save_state.h"
 
 
 #define LEFT	0x00
@@ -495,5 +496,57 @@ void CMS_Init(Section* sec) {
 }
 void CMS_ShutDown(Section* sec) {
 	delete test;	       
+}
+
+
+
+// save state support
+void POD_Save_Gameblaster( std::ostream& stream )
+{
+	const char pod_name[32] = "CMS";
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !cms_chan ) return;
+
+	WRITE_POD( &pod_name, pod_name );
+
+	// - pure data
+	WRITE_POD( &sample_rate, sample_rate );
+	WRITE_POD( &saa1099, saa1099 );
+
+	WRITE_POD( &cms_buffer, cms_buffer );
+	WRITE_POD( &last_command, last_command );
+	WRITE_POD( &base_port, base_port );
+	WRITE_POD( &cms_detect_register, cms_detect_register );
+
+	cms_chan->SaveState(stream);
+}
+
+
+void POD_Load_Gameblaster( std::istream& stream )
+{
+	char pod_name[32] = {0};
+
+	if( stream.fail() ) return;
+	if( !test ) return;
+	if( !cms_chan ) return;
+
+	// error checking
+	READ_POD( &pod_name, pod_name );
+	if( strcmp( pod_name, "CMS" ) ) {
+		stream.clear( std::istream::failbit | std::istream::badbit );
+		return;
+	}
+
+	// - pure data
+	READ_POD( &sample_rate, sample_rate );
+	READ_POD( &saa1099, saa1099 );
+
+	READ_POD( &cms_buffer, cms_buffer );
+	READ_POD( &last_command, last_command );
+	READ_POD( &base_port, base_port );
+	READ_POD( &cms_detect_register, cms_detect_register );
+	cms_chan->LoadState(stream);
 }
 

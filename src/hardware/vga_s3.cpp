@@ -22,6 +22,7 @@
 #include "vga.h"
 #include "mem.h"
 #include "pci_bus.h"
+#include "../save_state.h"
 
 void SVGA_S3_WriteCRTC(Bitu reg,Bitu val,Bitu iolen) {
 	switch (reg) {
@@ -584,3 +585,33 @@ void SVGA_Setup_S3Trio(void) {
 	PCI_AddSVGAS3_Device();
 }
 
+
+
+// save state support
+
+void POD_Save_VGA_S3( std::ostream& stream )
+{
+	// - pure struct data
+	WRITE_POD( &vga.s3, vga.s3 );
+
+	//*****************************************
+	//*****************************************
+
+	// static globals
+
+	WRITE_POD( &reg17index, reg17index );
+}
+
+
+void POD_Load_VGA_S3( std::istream& stream )
+{
+	// - pure struct data
+	READ_POD( &vga.s3, vga.s3 );
+
+	//*****************************************
+	//*****************************************
+
+	// static globals
+
+	READ_POD( &reg17index, reg17index );
+}

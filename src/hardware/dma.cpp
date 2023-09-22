@@ -25,6 +25,7 @@
 #include "pic.h"
 #include "paging.h"
 #include "setup.h"
+#include "../save_state.h"
 
 DmaController *DmaControllers[2]={NULL};
 unsigned char dma_extra_page_registers[16]={0}; /* 0x80-0x8F */
@@ -517,3 +518,174 @@ void DMA_Init(Section* sec) {
 	}
 }
 
+
+
+//save state support
+extern void *GUS_DMA_Callback_Func;
+extern void *SB_DSP_DMA_CallBack_Func;
+extern void *SB_DSP_ADC_CallBack_Func;
+extern void *SB_DSP_E2_DMA_CallBack_Func;
+extern void *TandyDAC_DMA_CallBack_Func;
+
+
+const void *dma_state_callback_table[] = {
+	NULL,
+	GUS_DMA_Callback_Func,
+	SB_DSP_DMA_CallBack_Func,
+	SB_DSP_ADC_CallBack_Func,
+	SB_DSP_E2_DMA_CallBack_Func,
+	TandyDAC_DMA_CallBack_Func
+};
+
+
+Bit8u POD_State_Find_DMA_Callback( Bit32u addr )
+{
+	Bit8u size;
+
+	size = sizeof(dma_state_callback_table) / sizeof(Bit32u);
+	for( int lcv=0; lcv<size; lcv++ ) {
+		if( (Bit32u) dma_state_callback_table[lcv] == addr ) return lcv;
+	}
+
+
+	// ERROR! Set debug breakpoint
+	return 0xff;
+}
+
+
+Bit32u POD_State_Index_DMA_Callback( Bit8u index )
+{
+	return (Bit32u) dma_state_callback_table[index];
+}
+
+
+void DmaChannel::SaveState( std::ostream& stream )
+{
+	Bit8u dma_callback;
+
+
+	dma_callback = POD_State_Find_DMA_Callback( (Bit32u) (callback) );
+	// - pure data
+	WRITE_POD( &pagebase, pagebase );
+	WRITE_POD( &baseaddr, baseaddr );
+	WRITE_POD( &curraddr, curraddr );
+	WRITE_POD( &basecnt, basecnt );
+	WRITE_POD( &currcnt, currcnt );
+	WRITE_POD( &channum, channum );
+	WRITE_POD( &pagenum, pagenum );
+	WRITE_POD( &DMA16, DMA16 );
+	WRITE_POD( &increment, increment );
+	WRITE_POD( &autoinit, autoinit );
+	WRITE_POD( &trantype, trantype );
+	WRITE_POD( &masked, masked );
+	WRITE_POD( &tcount, tcount );
+	WRITE_POD( &request, request );
+	// - reloc ptr (!!!)
+	WRITE_POD( &dma_callback, dma_callback );
+}
+
+
+void DmaChannel::LoadState( std::istream& stream )
+{
+	Bit8u dma_callback;
+
+
+	dma_callback = POD_State_Find_DMA_Callback( (Bit32u) (callback) );
+	// - pure data
+	READ_POD( &pagebase, pagebase );
+	READ_POD( &baseaddr, baseaddr );
+	READ_POD( &curraddr, curraddr );
+	READ_POD( &basecnt, basecnt );
+	READ_POD( &currcnt, currcnt );
+	READ_POD( &channum, channum );
+	READ_POD( &pagenum, pagenum );
+	READ_POD( &DMA16, DMA16 );
+	READ_POD( &increment, increment );
+	READ_POD( &autoinit, autoinit );
+	READ_POD( &trantype, trantype );
+	READ_POD( &masked, masked );
+	READ_POD( &tcount, tcount );
+	READ_POD( &request, request );
+	// - reloc func ptr
+	READ_POD( &dma_callback, dma_callback );
+
+
+	callback = (DMA_CallBack) POD_State_Index_DMA_Callback( dma_callback );
+}
+
+
+void DmaController::SaveState( std::ostream& stream )
+{
+	// - pure data
+	WRITE_POD( &ctrlnum, ctrlnum );
+	WRITE_POD( &flipflop, flipflop );
+
+	for( int lcv=0; lcv<4; lcv++ ) {
+		DmaChannels[lcv]->SaveState(stream);
+	}
+}
+
+void DmaController::LoadState( std::istream& stream )
+{
+	// - pure data
+	READ_POD( &ctrlnum, ctrlnum );
+	READ_POD( &flipflop, flipflop );
+
+	for( int lcv=0; lcv<4; lcv++ ) {
+		DmaChannels[lcv]->LoadState(stream);
+	}
+}
+
+
+namespace
+{
+class SerializeDMA : public SerializeGlobalPOD
+{
+public:
+	SerializeDMA() : SerializeGlobalPOD("DMA")
+	{}
+
+private:
+	virtual void getBytes(std::ostream& stream)
+	{
+		SerializeGlobalPOD::getBytes(stream);
+
+
+		// - pure data
+		WRITE_POD( &dma_wrapping, dma_wrapping );
+
+
+		for( int lcv=0; lcv<2; lcv++ ) {
+			// cga, tandy, pcjr = no 2nd controller
+			if( !DmaControllers[lcv] ) continue;
+
+			DmaControllers[lcv]->SaveState(stream);
+		}
+
+
+		// - pure data
+		WRITE_POD( &ems_board_mapping, ems_board_mapping );
+	}
+
+	virtual void setBytes(std::istream& stream)
+	{
+		SerializeGlobalPOD::setBytes(stream);
+
+
+		// - pure data
+		READ_POD( &dma_wrapping, dma_wrapping );
+
+
+		for( int lcv=0; lcv<2; lcv++ ) {
+			// cga, tandy, pcjr = no 2nd controller
+			if( !DmaControllers[lcv] ) continue;
+			
+			DmaControllers[lcv]->LoadState(stream);
+		}
+
+
+		// - pure data
+		READ_POD( &ems_board_mapping, ems_board_mapping );
+	}
+} dummy;
+}

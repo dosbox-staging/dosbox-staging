@@ -24,6 +24,7 @@
 #include "inout.h"
 #include "int10.h"
 #include "setup.h"
+#include "../save_state.h"
 
 Int10Data int10;
 static Bitu call_10;
@@ -694,6 +695,9 @@ CX	640x480	800x600	  1024x768/1280x1024
 	return CBRET_NONE;
 }
 
+#if defined(WIN32) && !(C_DEBUG)
+bool DISP2_Active(void);
+#endif
 static void INT10_Seg40Init(void) {
 	// the default char height
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CHAR_HEIGHT,16);
@@ -702,7 +706,11 @@ static void INT10_Seg40Init(void) {
 	// Set the basic screen we have
 	real_writeb(BIOSMEM_SEG,BIOSMEM_SWITCHES,0xF9);
 	// Set the basic modeset options
+#if defined(WIN32) && !(C_DEBUG)
+	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,0x10|(DISP2_Active()?0:1));
+#else
 	real_writeb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL,0x51); // why is display switching enabled (bit 6) ?
+#endif
 	// Set the  default MSR
 	real_writeb(BIOSMEM_SEG,BIOSMEM_CURRENT_MSR,0x09);
 }
@@ -768,14 +776,38 @@ void INT10_Init(Section* /*sec*/) {
 		E_Exit("VGA BIOS size too small");
 
 	if (VGA_BIOS_Size > 0) {
-		LOG_MSG("VGA BIOS occupies segment 0x%04x-0x%04x\n",VGA_BIOS_SEG,VGA_BIOS_SEG_END-1);
-		if (!MEM_map_ROM_physmem(0xC0000,0xC0000+VGA_BIOS_Size-1))
-			LOG_MSG("INT 10 video: unable to map BIOS\n");
+		//LOG_MSG("VGA BIOS occupies segment 0x%04x-0x%04x\n",VGA_BIOS_SEG,VGA_BIOS_SEG_END-1);
+		if (!MEM_map_ROM_physmem(0xC0000,0xC0000+VGA_BIOS_Size-1)) {
+			//LOG_MSG("INT 10 video: unable to map BIOS\n");
+		}
 	}
 	else {
-		LOG_MSG("Not mapping VGA BIOS\n");
+		//LOG_MSG("Not mapping VGA BIOS\n");
 	}
 
 	INT10_SetVideoMode(0x3);
 }
 
+
+
+
+//save state support
+namespace
+{
+class SerializeInt10 : public SerializeGlobalPOD
+{
+public:
+    SerializeInt10() : SerializeGlobalPOD("Int10")
+    {
+        registerPOD(int10);
+        //registerPOD(CurMode);
+        //registerPOD(call_10);
+        //registerPOD(warned_ff);
+    }
+
+	 //   virtual void setBytes(std::istream& stream)
+    //{
+      //  SerializeGlobalPOD::setBytes(stream);
+		//}
+} dummy;
+}

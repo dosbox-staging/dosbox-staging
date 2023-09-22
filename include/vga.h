@@ -25,9 +25,13 @@
 #endif
 #include <iostream>
 
+//Don't enable keeping changes and mapping lfb probably...
 #define VGA_LFB_MAPPED
+//#define VGA_KEEP_CHANGES
+#define VGA_CHANGE_SHIFT	9
 
 class PageHandler;
+
 
 enum VGAModes {
 	M_CGA2, M_CGA4,
@@ -109,6 +113,7 @@ typedef struct {
 } VGA_Config;
 
 typedef enum {
+	PART,
 	LINE,
 	EGALINE
 } Drawmode;
@@ -131,6 +136,9 @@ typedef struct {
 	Bitu vblank_skip;
 	Bitu lines_done;
 	Bitu split_line;
+	Bitu parts_total;
+	Bitu parts_lines;
+	Bitu parts_left;
 	Bitu byte_panning_shift;
 	struct {
 		double framestart;
@@ -140,10 +148,12 @@ typedef struct {
 		double vblkstart, vblkend;	// V-Blanking
 		double vdend, vtotal;
 		double hdend, htotal;
+		double parts;
 		float singleline_delay;
 	} delay;
 	double screen_ratio;
 	double refresh;
+	bool doublescan_merging;
 	Bit8u font[64*1024];
 	Bit8u * font_tables[2];
 	Bitu blinking;
@@ -158,6 +168,8 @@ typedef struct {
 	Drawmode mode;
 	bool vret_triggered;
 	bool vga_override;
+	bool linewise_set;
+	bool linewise_effect;
 	bool doublescan_set;
 	bool doublescan_effect;
 	bool char9_set;
@@ -411,7 +423,12 @@ typedef struct {
 	VGA_OTHER other;
 	VGA_Memory mem;
 	Bit32u vmemwrap; /* this is assumed to be power of 2 */
+	Bit8u* fastmem;  /* memory for fast (usually 16-color) rendering, always twice as big as vmemsize */
+	Bit8u* fastmem_orgptr;
 	Bit32u vmemsize;
+#ifdef VGA_KEEP_CHANGES
+	VGA_Changes changes;
+#endif
 	VGA_LFB lfb;
 } VGA_Type;
 

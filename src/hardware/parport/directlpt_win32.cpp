@@ -73,7 +73,11 @@ CDirectLPT::CDirectLPT (Bitu nr, Bit8u initIrq, CommandLine* cmd)
 
 
      /* Load the library for win 64 driver */
+#if (_WIN64)
+	 hLib = LoadLibrary("inpout64.dll");
+#else
      hLib = LoadLibrary("inpout32.dll");
+#endif
 
      if (hLib == NULL) {
           LOG_MSG("LoadLibrary Failed.\n");
