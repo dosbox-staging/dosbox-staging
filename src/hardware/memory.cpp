@@ -122,7 +122,7 @@ public:
 			//LOG_MSG("Warning: Illegal read from %x, CS:IP %8x:%8x",addr,SegValue(cs),reg_eip);
 		}
 #endif
-		return 0xFF; /* Real hardware returns 0xFF not 0x00 */
+		return 0xff;
 	} 
 	void writeb(PhysPt addr,Bitu val) {
 #if C_DEBUG
