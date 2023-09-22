@@ -8,6 +8,7 @@
 /* $Id: ide.cpp,v 1.49 2009-04-10 09:53:04 c2woody Exp $ */
 
 #include <math.h>
+#include <algorithm>
 #include <assert.h>
 #include "dosbox.h"
 #include "inout.h"
@@ -22,7 +23,7 @@
 #include "bios_disk.h"
 #include "../src/dos/cdrom.h"
 
-#ifdef _MSC_VER
+#ifndef _MSC_VER
 # define MIN(a,b) ((a) < (b) ? (a) : (b))
 #else
 # define MIN(a,b) std::min(a,b)
