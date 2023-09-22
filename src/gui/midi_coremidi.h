@@ -25,14 +25,13 @@ private:
 public:
 	MidiHandler_coremidi()  {m_pCurPacket = 0;}
 	const char * GetName(void) { return "coremidi"; }
-	bool Open(const char * conf) {
-	
+	bool Open(const char * conf) {	
 		// Get the MIDIEndPoint
 		m_endpoint = 0;
 		OSStatus result;
 		Bitu numDests = MIDIGetNumberOfDestinations();
-	        Bitu destId = 0;
-	        if(conf && conf[0]) destId = atoi(conf);
+		Bitu destId = 0;
+		if(conf && conf[0]) destId = atoi(conf);
 		
 		if (destId < numDests)
 		{
@@ -71,6 +70,7 @@ public:
 		// Not, as it is for Endpoints created by us
 //		MIDIEndpointDispose(m_endpoint);
 	}
+	
 	void PlayMsg(Bit8u * msg) {
 		// Acquire a MIDIPacketList
 		Byte packetBuf[128];
