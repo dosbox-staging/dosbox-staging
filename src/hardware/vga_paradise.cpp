@@ -265,3 +265,26 @@ void POD_Load_VGA_Paradise( std::istream& stream )
 	// - pure struct data
 	READ_POD( &pvga1a, pvga1a );
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals:
+
+static SVGA_PVGA1A_DATA pvga1a;
+
+// - pure data
+	Bitu PR0A;
+	Bitu PR0B;
+	Bitu PR1;
+	Bitu PR2;
+	Bitu PR3;
+	Bitu PR4;
+	Bitu PR5;
+
+	inline bool locked() { return (PR5&7)!=5; }
+
+	Bitu clockFreq[4];
+	Bitu biosMode;
+*/

@@ -1508,6 +1508,7 @@ void Handler::Init( Bitu rate ) {
 	chip.Setup( rate );
 }
 
+
 void Handler::SaveState( std::ostream& stream )
 {
 	const char pod_name[32] = "DBOPL";
@@ -1516,6 +1517,10 @@ void Handler::SaveState( std::ostream& stream )
 
 
 	WRITE_POD( &pod_name, pod_name );
+
+	//************************************************
+	//************************************************
+	//************************************************
 
 	Bit8u volhandler_idx[18][2];
 	Bit32u wavebase_idx[18][2];
@@ -1551,14 +1556,26 @@ void Handler::SaveState( std::ostream& stream )
 		else if( chip.chan[lcv1].synthHandler == (SynthHandler)&Channel::BlockTemplate< sm2Percussion > ) synthhandler_idx[lcv1] = 0x09;
 	}
 
+	//***************************************************
+	//***************************************************
+	//***************************************************
+
+	// dbopl.cpp
+
 	// - pure data
 	WRITE_POD( &WaveTable, WaveTable );
 	WRITE_POD( &doneTables, doneTables );
+
+	//***************************************************
+	//***************************************************
+	//***************************************************
 
 	// dbopl.h
 
 	// - near-pure data
 	WRITE_POD( &chip, chip );
+
+
 
 
 	// - reloc ptr (!!!)
@@ -1581,14 +1598,27 @@ void Handler::LoadState( std::istream& stream )
 		return;
 	}
 
+	//************************************************
+	//************************************************
+	//************************************************
+
 	Bit8u volhandler_idx[18][2];
 	Bit32u wavebase_idx[18][2];
 	Bit8u synthhandler_idx[18];
+
+	//***************************************************
+	//***************************************************
+	//***************************************************
+
 	// dbopl.cpp
 
 	// - pure data
 	READ_POD( &WaveTable, WaveTable );
 	READ_POD( &doneTables, doneTables );
+
+	//***************************************************
+	//***************************************************
+	//***************************************************
 
 	// dbopl.h
 
@@ -1602,6 +1632,10 @@ void Handler::LoadState( std::istream& stream )
 	READ_POD( &volhandler_idx, volhandler_idx );
 	READ_POD( &wavebase_idx, wavebase_idx );
 	READ_POD( &synthhandler_idx, synthhandler_idx );
+
+	//***************************************************
+	//***************************************************
+	//***************************************************
 
 	for( int lcv1=0; lcv1<18; lcv1++ ) {
 		for( int lcv2=0; lcv2<2; lcv2++ ) {
@@ -1627,3 +1661,124 @@ void Handler::LoadState( std::istream& stream )
 }
 
 };		//Namespace DBOPL
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+Handler : DBOPL
+
+// dbopl.cpp
+
+	// - static data
+	Bit8u KslCreateTable[16];
+	Bit8u FreqCreateTable[16];
+	Bit8u AttackSamplesTable[13];
+	Bit8u EnvelopeIncreaseTable[13];
+
+	// - pure data
+	Bit16s WaveTable[ 8 * 512 ];
+
+	// - static data
+	Bit16u WaveBaseTable[8];
+	Bit16u WaveMaskTable[8];
+	Bit16u WaveStartTable[8];
+
+	Bit8u KslTable[ 8 * 16 ];
+	Bit8u TremoloTable[ TREMOLO_TABLE ];
+	Bit16u ChanOffsetTable[32];
+	Bit16u OpOffsetTable[64];
+	Bit8s VibratoTable[ 8 ];
+	Bit8u KslShiftTable[4];
+
+	VolumeHandler VolumeHandlerTable[5];
+
+	// - pure data
+	bool doneTables
+
+
+
+// dbopl.h
+	struct DBOPL::Chip chip;
+
+		// - pure data
+		Bit32u lfoCounter;
+		Bit32u lfoAdd;
+
+		Bit32u noiseCounter;
+		Bit32u noiseAdd;
+		Bit32u noiseValue;
+
+		// - static data
+		Bit32u freqMul[16];
+		Bit32u linearRates[76];
+		Bit32u attackRates[76];
+
+		struct Channel chan[18];
+			Operator op[2];
+				// - reloc func ptr (!!!)
+				VolumeHandler volHandler;
+
+				// - reloc ptr (!!!)
+				Bit16s* waveBase;
+
+				// - pure data
+				Bit32u waveMask;
+				Bit32u waveStart;
+
+				Bit32u waveIndex;
+				Bit32u waveAdd;
+				Bit32u waveCurrent;
+
+				Bit32u chanData;
+				Bit32u freqMul;
+				Bit32u vibrato;
+				Bit32s sustainLevel;
+				Bit32s totalLevel;
+				Bit32u currentLevel;
+				Bit32s volume;
+				
+				Bit32u attackAdd;
+				Bit32u decayAdd;
+				Bit32u releaseAdd;
+				Bit32u rateIndex;
+
+				Bit8u rateZero;
+				Bit8u keyOn;
+				Bit8u reg20, reg40, reg60, reg80, regE0;
+				Bit8u state;
+				Bit8u tremoloMask;
+				Bit8u vibStrength;
+				Bit8u ksr;
+
+			// - reloc func ptr (!!!)
+			SynthHandler synthHandler;
+
+			// - pure data
+			Bit32u chanData;		//Frequency/octave and derived values
+			Bit32s old[2];			//Old data for feedback
+
+			Bit8u feedback;			//Feedback shift
+			Bit8u regB0;			//Register values to check for changes
+			Bit8u regC0;
+
+			Bit8u fourMask;
+			Bit8s maskLeft;		//Sign extended values for both channel's panning
+			Bit8s maskRight;
+
+		// - pure data
+		Bit8u reg104;
+		Bit8u reg08;
+		Bit8u reg04;
+		Bit8u regBD;
+		Bit8u vibratoIndex;
+		Bit8u tremoloIndex;
+		Bit8s vibratoSign;
+		Bit8u vibratoShift;
+		Bit8u tremoloValue;
+		Bit8u vibratoStrength;
+		Bit8u tremoloStrength;
+		Bit8u waveFormMask;
+		Bit8s opl3Active;
+*/

@@ -683,6 +683,10 @@ private:
 
 		if( vga.tandy.mem_base == vga.mem.linear ) tandy_membase_idx=0xffffffff;
 		else tandy_membase_idx = vga.tandy.mem_base - MemBase;
+
+		//********************************
+		//********************************
+
 		SerializeGlobalPOD::getBytes(stream);
 
 
@@ -742,11 +746,23 @@ private:
 		// - pure data
 		WRITE_POD( &vga.vmemwrap, vga.vmemwrap );
 
+
+		// - static ptrs + 'new' data
+		//Bit8u* fastmem;
+		//Bit8u* fastmem_orgptr;
+
+		// - 'new' data
+		//WRITE_POD_SIZE( vga.fastmem_orgptr, sizeof(Bit8u) * ((vga.vmemsize << 1) + 4096 + 16) );
+
+
 		// - pure data (variable on S3 card)
 		WRITE_POD( &vga.vmemsize, vga.vmemsize );
 
 
 #ifdef VGA_KEEP_CHANGES
+		// - static ptr
+		//Bit8u* map;
+
 		// - 'new' data
 		WRITE_POD_SIZE( vga.changes.map, sizeof(Bit8u) * (VGA_MEMORY >> VGA_CHANGE_SHIFT) + 32 );
 
@@ -768,6 +784,11 @@ private:
 		WRITE_POD( &vga.lfb.addr, vga.lfb.addr );
 		WRITE_POD( &vga.lfb.mask, vga.lfb.mask );
 
+		// - static ptr
+		//PageHandler *handler;
+
+
+		// VGA_paradise.cpp / VGA_tseng.cpp / VGA_xga.cpp
 		POD_Save_VGA_Paradise(stream);
 		POD_Save_VGA_Tseng(stream);
 		POD_Save_VGA_XGA(stream);
@@ -776,6 +797,10 @@ private:
 	virtual void setBytes(std::istream& stream)
 	{
 		Bit32u tandy_drawbase_idx, tandy_membase_idx;
+
+		//********************************
+		//********************************
+
 		SerializeGlobalPOD::setBytes(stream);
 
 
@@ -835,6 +860,15 @@ private:
 		// - pure data
 		READ_POD( &vga.vmemwrap, vga.vmemwrap );
 
+
+		// - static ptrs + 'new' data
+		//Bit8u* fastmem;
+		//Bit8u* fastmem_orgptr;
+
+		// - 'new' data
+		//READ_POD_SIZE( vga.fastmem_orgptr, sizeof(Bit8u) * ((vga.vmemsize << 1) + 4096 + 16) );
+
+
 		// - pure data (variable on S3 card)
 		READ_POD( &vga.vmemsize, vga.vmemsize );
 
@@ -863,6 +897,11 @@ private:
 		READ_POD( &vga.lfb.page, vga.lfb.page );
 		READ_POD( &vga.lfb.addr, vga.lfb.addr );
 		READ_POD( &vga.lfb.mask, vga.lfb.mask );
+
+		// - static ptr
+		//PageHandler *handler;
+
+
 		// VGA_paradise.cpp / VGA_tseng.cpp / VGA_xga.cpp
 		POD_Load_VGA_Paradise(stream);
 		POD_Load_VGA_Tseng(stream);
@@ -879,3 +918,246 @@ private:
 	}
 } dummy;
 }
+
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+static globals:
+
+struct VGA_Type vga:
+
+// - pure data
+- VGAModes mode;
+- VGAModes lastmode;
+- Bit8u misc_output;
+
+// - pure + reloc data
+- VGA_Draw draw;
+- VGA_Config config;
+- VGA_Internal internal;
+- VGA_Seq seq;
+- VGA_Attr attr;
+- VGA_Crtc crtc;
+- VGA_Gfx gfx;
+- VGA_Dac dac;
+- VGA_Latch latch;
+- VGA_S3 s3;
+- VGA_SVGA svga;
+- VGA_HERC herc;
+- VGA_TANDY tandy;
+- VGA_AMSTRAD amstrad;
+- VGA_OTHER other;
+- VGA_Memory mem;
+- Bit32u vmemwrap;
+
+
+// - static ptrs + 'new' data
+- Bit8u* fastmem;
+- Bit8u* fastmem_orgptr;
+
+
+// - pure data
+- Bit32u vmemsize;
+
+
+#ifdef VGA_KEEP_CHANGES
+- VGA_Changes changes;
+#endif
+
+
+- VGA_LFB lfb;
+
+
+
+
+// - static class
+struct SVGA_Driver svga:
+
+// - static function ptr (init time)
+- tWritePort write_p3d5;
+- tReadPort read_p3d5;
+- tWritePort write_p3c5;
+- tReadPort read_p3c5;
+- tWritePort write_p3c0;
+- tReadPort read_p3c1;
+- tWritePort write_p3cf;
+- tReadPort read_p3cf;
+- tFinishSetMode set_video_mode;
+- tDetermineMode determine_mode;
+- tSetClock set_clock;
+- tGetClock get_clock;
+- tHWCursorActive hardware_cursor_active;
+- tAcceptsMode accepts_mode;
+- tSetupDAC setup_dac;
+- tINT10Extensions int10_extensions;
+
+
+// - static data
+Bit32u CGA_2_Table[16];
+Bit32u CGA_4_Table[256];
+Bit32u CGA_4_HiRes_Table[256];
+Bit32u CGA_16_Table[256];
+Bit32u TXT_Font_Table[16];
+Bit32u TXT_FG_Table[16];
+Bit32u TXT_BG_Table[16];
+Bit32u ExpandTable[256];
+Bit32u Expand16Table[4][16];
+Bit32u FillTable[16];
+Bit32u ColorTable[16];
+
+
+// - pure data
+static bool hadReset;
+
+// =============================================
+// =============================================
+// =============================================
+
+struct VGA_Config:
+
+// - (all) pure data
+- Bitu mh_mask;
+
+- Bitu display_start;
+- Bitu real_start;
+- bool retrace;
+- Bitu scan_len;
+- Bitu cursor_start;
+
+- Bitu line_compare;
+- bool chained;
+- bool compatible_chain4;
+
+- Bit8u pel_panning;
+- Bit8u hlines_skip;
+- Bit8u bytes_skip;
+- Bit8u addr_shift;
+
+- Bit8u read_mode;
+- Bit8u write_mode;
+- Bit8u read_map_select;
+- Bit8u color_dont_care;
+- Bit8u color_compare;
+- Bit8u data_rotate;
+- Bit8u raster_op;
+
+- Bit32u full_bit_mask;
+- Bit32u full_map_mask;
+- Bit32u full_not_map_mask;
+- Bit32u full_set_reset;
+- Bit32u full_not_enable_set_reset;
+- Bit32u full_enable_set_reset;
+- Bit32u full_enable_and_set_reset;
+
+// =============================================
+// =============================================
+// =============================================
+
+struct VGA_Internal:
+
+// - pure data
+- bool attrindex;
+
+
+// =============================================
+// =============================================
+// =============================================
+
+struct VGA_Latch:
+
+// - pure data
+- Bit32u d;
+- Bit8u b[4];
+
+// =============================================
+// =============================================
+// =============================================
+
+struct VGA_SVGA:
+
+// - pure data
+- Bitu	readStart, writeStart;
+- Bitu	bankMask;
+- Bitu	bank_read_full;
+- Bitu	bank_write_full;
+- Bit8u	bank_read;
+- Bit8u	bank_write;
+- Bitu	bank_size;
+
+
+
+struct VGA_HERC:
+
+// - pure data
+- Bit8u mode_control;
+- Bit8u enable_bits;
+- bool blend;
+
+
+
+struct VGA_TANDY:
+
+// - pure data
+- Bit8u pcjr_flipflop;
+- Bit8u mode_control;
+- Bit8u color_select;
+- Bit8u disp_bank;
+- Bit8u reg_index;
+- Bit8u gfx_control;
+- Bit8u palette_mask;
+- Bit8u extended_ram;
+- Bit8u border_color;
+- Bit8u line_mask, line_shift;
+- Bit8u draw_bank, mem_bank;
+
+// - reloc ptrs
+- Bit8u *draw_base, *mem_base;
+
+// - pure data
+- Bitu addr_mask;
+
+
+
+struct VGA_AMSTRAD:
+
+// - pure data
+- Bit8u mask_plane;
+- Bit8u write_plane;
+- Bit8u read_plane;
+- Bit8u border_color;
+
+// =============================================
+// =============================================
+// =============================================
+
+struct VGA_Changes:
+
+// - static ptr + 'new' data
+- Bit8u* map; //[(VGA_MEMORY >> VGA_CHANGE_SHIFT) + 32]
+
+
+// - pure data
+- Bit8u	checkMask, frame, writeMask;
+- bool active;
+- Bit32u clearMask;
+- Bit32u start, last;
+- Bit32u lastAddress;
+
+// =============================================
+// =============================================
+// =============================================
+
+struct VGA_LFB:
+
+// - pure data
+- Bit32u page;
+- Bit32u addr;
+- Bit32u mask;
+
+
+// - static ptr
+- PageHandler *handler;
+*/

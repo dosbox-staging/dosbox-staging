@@ -726,6 +726,10 @@ void POD_Save_MPU401( std::ostream& stream )
 
 	WRITE_POD( &pod_name, pod_name );
 
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
 	// - pure data
 	WRITE_POD( &mpu, mpu );
 }
@@ -745,6 +749,74 @@ void POD_Load_MPU401( std::istream& stream )
 		stream.clear( std::istream::failbit | std::istream::badbit );
 		return;
 	}
+
+	//************************************************
+	//************************************************
+	//************************************************
+
 	// - pure data
 	READ_POD( &mpu, mpu );
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+static globals:
+
+
+static struct mpu
+
+	// - pure data
+	bool intelligent;
+	MpuMode mode;
+	Bitu irq;
+	Bit8u queue[MPU401_QUEUE];
+	Bitu queue_pos,queue_used;
+
+	// - pure data
+	struct track {
+		Bits counter;
+		Bit8u value[8],sys_val;
+		Bit8u vlength,length;
+		MpuDataType type;
+	} playbuf[8],condbuf;
+
+	// - pure data
+	struct {
+		bool conductor,cond_req,cond_set, block_ack;
+		bool playing,reset;
+		bool wsd,wsm,wsd_start;
+		bool run_irq,irq_pending;
+		bool send_now;
+		Bits data_onoff;
+		Bitu command_byte;
+		Bit8u tmask,cmask,amask;
+		Bit16u midi_mask;
+		Bit16u req_mask;
+		Bit8u channel,old_chan;
+	} state;
+
+	// - pure data
+	struct {
+		Bit8u timebase,old_timebase;
+		Bit8u tempo,old_tempo;
+		Bit8u tempo_rel,old_tempo_rel;
+		Bit8u tempo_grad;
+		Bit8u cth_rate,cth_counter;
+		bool clock_to_host,cth_active;
+	} clock;
+
+
+
+// - static 'new' ptr
+static MPU401* test;
+
+	// - static data
+	IO_ReadHandleObject ReadHandler[2];
+	IO_WriteHandleObject WriteHandler[2];
+
+	// - system data
+	bool installed;
+*/

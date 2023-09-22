@@ -992,3 +992,55 @@ void POD_Load_VGA_Tseng( std::istream& stream )
 	READ_POD( &et4k, et4k );
 	READ_POD( &et3k, et3k );
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals:
+
+static SVGA_ET4K_DATA et4k;
+
+// - pure data
+	Bit8u extensionsEnabled;
+	Bit8u hicolorDACcmdmode;
+	Bit8u hicolorDACcommand;
+	Bitu store_3d4_31;
+	Bitu store_3d4_32;
+	Bitu store_3d4_33;
+	Bitu store_3d4_34;
+	Bitu store_3d4_35;
+	Bitu store_3d4_36;
+	Bitu store_3d4_37;
+	Bitu store_3d4_3f;
+	Bitu store_3c0_16;
+	Bitu store_3c0_17;
+
+	Bitu store_3c4_06;
+	Bitu store_3c4_07;
+
+	Bitu clockFreq[16];
+	Bitu biosMode;
+
+
+
+static SVGA_ET3K_DATA et3k;
+
+// - pure data
+	Bitu store_3d4_1b;
+	Bitu store_3d4_1c;
+	Bitu store_3d4_1d;
+	Bitu store_3d4_1e;
+	Bitu store_3d4_1f;
+	Bitu store_3d4_20;
+	Bitu store_3d4_21;
+	Bitu store_3d4_23;
+	Bitu store_3d4_24;
+	Bitu store_3d4_25;
+	Bitu store_3c0_16;
+	Bitu store_3c0_17;
+	Bitu store_3c4_06;
+	Bitu store_3c4_07;
+	Bitu clockFreq[8];
+	Bitu biosMode;
+*/

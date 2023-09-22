@@ -302,3 +302,26 @@ void POD_Load_DOS_DriveManager( std::istream& stream )
 	DriveManager::LoadState(stream);
 }
 
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+class DriveManager
+	// - pure data
+	int currentDrive;
+
+	// - system data
+	static struct DriveInfo {
+		std::vector<DOS_Drive*> disks;
+		Bit32u currentDisk;
+	} driveInfos[DOS_DRIVES];
+
+
+
+class DOS_Drive
+	// - pure data
+	char curdir[DOS_PATHLENGTH];
+	char info[256];
+*/

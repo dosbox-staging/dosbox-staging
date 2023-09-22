@@ -261,6 +261,7 @@ char const* Property::Get_help() {
 
 bool Prop_int::CheckValue(Value const& in, bool warn) {
 	if(suggested_values.empty() && Property::CheckValue(in,warn)) return true;
+
 	//No >= and <= in Value type and == is ambigious
 	int mi = min;
 	int ma = max;
@@ -277,6 +278,9 @@ bool Prop_double::SetValue(std::string const& input){
 	return SetVal(val,false,true);
 }
 
+//void Property::SetValue(char* input){ 
+//	value.SetValue(input, Value::V_CURRENT);
+//}
 bool Prop_int::SetValue(std::string const& input){;
 	Value val;
 	if(!val.SetValue(input,Value::V_INT)) return false;
@@ -421,7 +425,7 @@ bool Prop_multival::SetValue(std::string const& input) {
 		} else if(local.size()) { //last argument
 			in = local;
 			local = "";
-		}
+		} 
 		//Test Value. If it fails set default
 		Value valtest (in,p->Get_type());
 		if(!p->CheckValue(valtest,true)) {
@@ -865,6 +869,10 @@ bool Config::ParseConfigFile(char const * const configfilename){
 	return true;
 }
 
+/*const char* Config::GetPrimaryConfigFile() {
+	return configfile.c_str();
+}*/
+
 void Config::ParseEnv(char ** envp) {
 	for(char** env=envp; *env;env++) {
 		char copy[1024];
@@ -1088,7 +1096,17 @@ int CommandLine::GetParameterFromList(const char* const params[], std::vector<st
 	}
 	
 	return retval;
-}
+/*
+bool CommandLine::FindEntry(char const * const name,cmd_it & it,bool neednext) {
+	for (it=cmds.begin();it!=cmds.end();it++) {
+		if (!strcasecmp((*it).c_str(),name)) {
+			cmd_it itnext=it;itnext++;
+			if (neednext && (itnext==cmds.end())) return false;
+			return true;
+		}
+	}
+	return false;
+*/
 
 
 /*

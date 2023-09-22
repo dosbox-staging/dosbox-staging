@@ -473,3 +473,44 @@ void POD_Load_VGA_Crtc( std::istream& stream )
 
 	// no static globals found
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals: none
+
+
+struct VGA_Crtc:
+
+// - pure data
+typedef struct {
+	Bit8u horizontal_total;
+	Bit8u horizontal_display_end;
+	Bit8u start_horizontal_blanking;
+	Bit8u end_horizontal_blanking;
+	Bit8u start_horizontal_retrace;
+	Bit8u end_horizontal_retrace;
+	Bit8u vertical_total;
+	Bit8u overflow;
+	Bit8u preset_row_scan;
+	Bit8u maximum_scan_line;
+	Bit8u cursor_start;
+	Bit8u cursor_end;
+	Bit8u start_address_high;
+	Bit8u start_address_low;
+	Bit8u cursor_location_high;
+	Bit8u cursor_location_low;
+	Bit8u vertical_retrace_start;
+	Bit8u vertical_retrace_end;
+	Bit8u vertical_display_end;
+	Bit8u offset;
+	Bit8u underline_location;
+	Bit8u start_vertical_blanking;
+	Bit8u end_vertical_blanking;
+	Bit8u mode_control;
+	Bit8u line_compare;
+
+	Bit8u index;
+	bool read_only;
+*/

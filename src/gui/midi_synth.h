@@ -327,7 +327,7 @@ public:
 
 		fluid_settings_setnum(settings,
 			"synth.sample-rate", (double)synthsamplerate);
-
+		
 		fluid_settings_setnum(settings,
          		"synth.gain", 0.6);
 		
@@ -354,8 +354,26 @@ public:
 
 		fluid_settings_setnum(settings,
         		"synth.cpu-cores", 1);
+
 		//fluid_settings_setnum(settings,
-		//	"synth.gain", 0.5);
+        	//	"synth.overflow.age", -10000);
+
+		//fluid_settings_setnum(settings,
+        	//	"synth.overflow.percussion", -10000);
+
+		//fluid_settings_setnum(settings,
+        	//	"synth.overflow.released", -10000);
+
+		//fluid_settings_setnum(settings,
+        	//	"synth.overflow.sustained", -10000);
+
+		//fluid_settings_setnum(settings,
+        	//	"synth.overflow.volume", -10000);
+
+    		// gm ignores CC0 and CC32 msgs
+    		// gs CC0 becomes the channel bank, CC32 is ignored; default
+    		// xg CC32 becomes the channel bank, CC0 is ignored
+    		// mma bank = CC0*128+CC32 
 		fluid_settings_setstr(settings,
          		"synth.midi-bank-select", "gs");
 

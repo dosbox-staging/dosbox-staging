@@ -184,6 +184,7 @@ static void disney_write(Bitu port,Bitu val,Bitu iolen) {
 	disney.last_used=PIC_Ticks;
 	switch (port-DISNEY_BASE) {
 	case 0:		/* Data Port */
+	//case 0x330-DISNEY_BASE:
 	{
 		disney.data=val;
 		// if data is written here too often without using the stereo
@@ -429,6 +430,11 @@ void POD_Save_Disney( std::ostream& stream )
 
 
 	WRITE_POD( &pod_name, pod_name );
+
+	//************************************************
+	//************************************************
+	//************************************************
+
 	Bit8u dac_leader_idx;
 
 
@@ -436,11 +442,22 @@ void POD_Save_Disney( std::ostream& stream )
 	for( int lcv=0; lcv<2; lcv++ ) {
 		if( disney.leader == &disney.da[lcv] ) { dac_leader_idx = lcv; break; }
 	}
+
+	// *******************************************
+	// *******************************************
+
 	// - near-pure struct data
 	WRITE_POD( &disney, disney );
 
+	// *******************************************
+	// *******************************************
+
 	// - reloc ptr
 	WRITE_POD( &dac_leader_idx, dac_leader_idx );
+
+	// *******************************************
+	// *******************************************
+
 	disney.chan->SaveState(stream);
 }
 
@@ -461,6 +478,9 @@ void POD_Load_Disney( std::istream& stream )
 		return;
 	}
 
+	//************************************************
+	//************************************************
+	//************************************************
 
 	Bit8u dac_leader_idx;
 	MixerObject *mo_old;
@@ -471,9 +491,14 @@ void POD_Load_Disney( std::istream& stream )
 	mo_old = disney.mo;
 	chan_old = disney.chan;
 
+	// *******************************************
+	// *******************************************
+
 	// - near-pure struct data
 	READ_POD( &disney, disney );
 
+	// *******************************************
+	// *******************************************
 
 	// - reloc ptr
 	READ_POD( &dac_leader_idx, dac_leader_idx );
@@ -482,6 +507,8 @@ void POD_Load_Disney( std::istream& stream )
 	disney.leader = NULL;
 	if( dac_leader_idx != 0xff ) disney.leader = &disney.da[dac_leader_idx];
 
+	// *******************************************
+	// *******************************************
 
 	// restore old ptrs
 	disney.mo = mo_old;
@@ -491,3 +518,61 @@ void POD_Load_Disney( std::istream& stream )
 	disney.chan->LoadState(stream);
 }
 
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+static globals:
+
+
+static struct disney
+
+	// - pure data
+	Bit8u data;
+	Bit8u status;
+	Bit8u control;
+	dac_channel da[2];
+
+		// - pure data
+		Bit8u buffer[DISNEY_SIZE];
+		Bitu used;
+		double speedcheck_sum;
+		double speedcheck_last;
+		bool speedcheck_failed;
+		bool speedcheck_init;
+
+
+	// - pure data
+	Bitu last_used;
+
+
+	// - static 'new' ptrs
+	MixerObject * mo;
+	MixerChannel * chan;
+
+
+	// - pure data
+	bool stereo;
+
+
+	// - reloc ptr (!!!)
+	dac_channel* leader;
+
+
+	// - pure data
+	Bitu state;
+	Bitu interface_det;
+	Bitu interface_det_ext;
+
+
+
+// - static 'new' ptr
+static DISNEY* test;
+
+	// - static data
+	IO_ReadHandleObject ReadHandler;
+	IO_WriteHandleObject WriteHandler;
+	IO_WriteHandleObject WriteHandler_cvm;
+	//MixerObject MixerChan;
+*/

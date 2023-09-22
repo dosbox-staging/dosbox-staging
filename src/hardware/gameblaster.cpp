@@ -520,6 +520,9 @@ void POD_Save_Gameblaster( std::ostream& stream )
 	WRITE_POD( &base_port, base_port );
 	WRITE_POD( &cms_detect_register, cms_detect_register );
 
+	//************************************************
+	//************************************************
+
 	cms_chan->SaveState(stream);
 }
 
@@ -547,6 +550,100 @@ void POD_Load_Gameblaster( std::istream& stream )
 	READ_POD( &last_command, last_command );
 	READ_POD( &base_port, base_port );
 	READ_POD( &cms_detect_register, cms_detect_register );
+
+	//************************************************
+	//************************************************
+
 	cms_chan->LoadState(stream);
 }
 
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+static globals:
+
+
+struct SAA1099
+
+	// - pure data
+	int stream;
+	int noise_params[2];
+	int env_enable[2];
+	int env_reverse_right[2];
+	int env_mode[2];
+	int env_bits[2];
+	int env_clock[2];
+	int env_step[2];
+	int all_ch_enable;
+	int sync_state;
+	int selected_reg;
+	struct saa1099_channel channels[6];
+	struct saa1099_noise noise[2];
+
+
+	struct saa1099_channel:
+
+		// - pure data
+		int frequency;
+		int freq_enable;
+		int noise_enable;
+		int octave;
+		int amplitude[2];
+		int envelope[2];
+
+		// - pure data
+		double counter;
+		double freq;
+		int level;
+
+
+	struct saa1099_noise:
+
+		// - pure data
+		double counter;
+		double freq;
+		int level;
+
+
+
+// - static data
+static const UINT8 envelope[8][64];
+static const int amplitude_lookup[16];
+
+
+// - pure data
+static double sample_rate;
+static SAA1099 saa1099[2];
+
+
+// - static 'new' ptr
+static MixerChannel * cms_chan;
+
+
+// - pure data
+static Bit16s cms_buffer[2][2][CMS_BUFFER_SIZE];
+
+
+// - static ptrs
+static Bit16s * cms_buf_point[4] = {
+	cms_buffer[0][0],cms_buffer[0][1],cms_buffer[1][0],cms_buffer[1][1] };
+
+
+// - pure data
+static Bitu last_command;
+static Bitu base_port;
+static Bit8u cms_detect_register;
+
+
+
+// - static 'new' ptr
+static CMS* test;
+
+	// - static data
+	IO_WriteHandleObject WriteHandler;
+	IO_WriteHandleObject DetWriteHandler;
+	IO_ReadHandleObject DetReadHandler;
+	MixerObject MixerChan;
+*/

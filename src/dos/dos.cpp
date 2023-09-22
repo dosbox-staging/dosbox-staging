@@ -1867,6 +1867,11 @@ private:
 	virtual void getBytes(std::ostream& stream)
 	{
 		SerializeGlobalPOD::getBytes(stream);
+
+		//***********************************************
+		//***********************************************
+		//***********************************************
+
 		// - pure data
 		WRITE_POD( &dos_copybuf, dos_copybuf );
 
@@ -1899,6 +1904,11 @@ private:
 	virtual void setBytes(std::istream& stream)
 	{
 		SerializeGlobalPOD::setBytes(stream);
+
+		//***********************************************
+		//***********************************************
+		//***********************************************
+
 		// - pure data
 		READ_POD( &dos_copybuf, dos_copybuf );
 
@@ -1929,3 +1939,45 @@ private:
 	}
 } dummy;
 }
+
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+Bit8u dos_copybuf[DOS_COPYBUFSIZE];
+
+struct DOS_Block
+	// - system data
+	DOS_Date date;
+	bool hostdate;
+	DOS_Version version;
+
+	// - pure data
+	Bit16u firstMCB;
+	Bit16u errorcode;
+	Bit16u env;
+	RealPt cpmentry;
+	Bit8u return_code,return_mode;
+	
+	Bit8u current_drive;
+	bool verify;
+	bool breakcheck;
+	bool echo;          // if set to true dev_con::read will echo input 
+
+	// - system data
+	struct  {
+		RealPt mediaid;
+		RealPt tempdta;
+		RealPt tempdta_fcbdelete;
+		RealPt dbcs;
+		RealPt filenamechar;
+		RealPt collatingseq;
+		RealPt upcase;
+		Bit8u* country;//Will be copied to dos memory. resides in real mem
+		Bit16u dpb; //Fake Disk parameter system using only the first entry so the drive letter matches
+	} tables;
+
+	Bit16u loaded_codepage;
+*/

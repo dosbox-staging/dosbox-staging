@@ -99,7 +99,6 @@ namespace
 size_t memorySize;
 }
 
-
 class UnmappedPageHandler : public PageHandler {
 public:
 	UnmappedPageHandler() : PageHandler(PFLAG_INIT|PFLAG_NOCODE) {}
@@ -1162,6 +1161,10 @@ private:
 				}
 			}
 		}
+		
+		//*******************************************
+		//*******************************************
+
 		SerializeGlobalPOD::getBytes(stream);
 
 		// - near-pure data
@@ -1169,6 +1172,10 @@ private:
 
 		// - static 'new' ptr
 		WRITE_POD_SIZE( MemBase, memory.pages*4096 );
+
+		//***********************************************
+		//***********************************************
+
 		WRITE_POD_SIZE( memory.mhandles, sizeof(MemHandle) * memory.pages );
 		WRITE_POD( &pagehandler_idx, pagehandler_idx );
 	}
@@ -1182,6 +1189,10 @@ private:
 		old_ptrs[1] = (void *) memory.mhandles;
 		old_ptrs[2] = (void *) memory.lfb.handler;
 		old_ptrs[3] = (void *) memory.lfb.mmiohandler;
+
+		//***********************************************
+		//***********************************************
+
 		SerializeGlobalPOD::setBytes(stream);
 
 
@@ -1190,6 +1201,10 @@ private:
 
 		// - static 'new' ptr
 		READ_POD_SIZE( MemBase, memory.pages*4096 );
+
+		//***********************************************
+		//***********************************************
+
 		memory.phandlers = (PageHandler **) old_ptrs[0];
 		memory.mhandles = (MemHandle *) old_ptrs[1];
 		memory.lfb.handler = (PageHandler *) old_ptrs[2];
@@ -1208,3 +1223,60 @@ private:
 	}
 } dummy;
 }
+
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+static struct MemoryBlock memory:
+	// - pure data
+	Bitu pages;
+
+
+	// - static 'new' ptr
+	PageHandler * * phandlers;
+	MemHandle * mhandles;
+
+
+	LinkBlock links;
+		// - pure data
+		Bitu used;
+		Bit32u pages[MAX_LINKS];
+
+
+	struct lfb:
+		// - pure data
+		Bitu		start_page;
+		Bitu		end_page;
+		Bitu		pages;
+
+		// - static ptr (const values to date)
+		PageHandler *handler;
+		PageHandler *mmiohandler;
+
+	struct a20:
+		// - pure data
+		bool enabled;
+		Bit8u controlport;
+
+
+
+// - static 'new' ptr
+HostPt MemBase;
+
+
+// - static data
+static IllegalPageHandler illegal_page_handler;
+static RAMPageHandler ram_page_handler;
+static ROMPageHandler rom_page_handler;
+
+
+// - static 'new' ptr
+static MEMORY* test;	
+
+	// - static data
+	IO_ReadHandleObject ReadHandler;
+	IO_WriteHandleObject WriteHandler;
+*/

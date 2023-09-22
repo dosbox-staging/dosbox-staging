@@ -826,6 +826,9 @@ private:
 		READ_POD( &render.active, render.active );
 		READ_POD( &render.fullFrame, render.fullFrame );
 
+		//***************************************
+		//***************************************
+
 		// reset screen
 		memset( &render.frameskip, 0, sizeof(render.frameskip) );
 
@@ -837,3 +840,79 @@ private:
 	}
 } dummy;
 }
+
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+globals:
+Render_t render;
+
+// - pure data
+	struct {
+		Bitu width, start;
+		Bitu height;
+		Bitu bpp;
+		bool dblw,dblh;
+		double ratio;
+		float fps;
+	} src;
+
+// - system data (reset this?)
+	struct {
+		Bitu count;
+		Bitu max;
+		Bitu index;
+		Bit8u hadSkip[RENDER_SKIP_CACHE];
+	} frameskip;
+
+// - system data (reset as needed)
+	struct {
+		Bitu size;
+		scalerMode_t inMode;
+		scalerMode_t outMode;
+		scalerOperation_t op;
+		bool clearCache;
+		bool forced;
+		ScalerLineHandler_t lineHandler;
+		ScalerLineHandler_t linePalHandler;
+		ScalerComplexHandler_t complexHandler;
+		Bitu blocks, lastBlock;
+		Bitu outPitch;
+		Bit8u *outWrite;
+		Bitu cachePitch;
+		Bit8u *cacheRead;
+		Bitu inHeight, inLine, outLine;
+	} scale;
+
+// - pure data
+	RenderPal_t pal;
+	bool updating;
+	bool active;
+	bool aspect;
+	bool fullFrame;
+
+
+typedef struct RenderPal_t {
+	struct { 
+		Bit8u red;
+		Bit8u green;
+		Bit8u blue;
+		Bit8u unused;
+	} rgb[256];
+	union {
+		Bit16u b16[256];
+		Bit32u b32[256];
+	} lut;
+	bool changed;
+	Bit8u modified[256];
+	Bitu first;
+	Bitu last;
+
+
+
+// - system function ptr
+ScalerLineHandler_t RENDER_DrawLine;
+*/

@@ -270,3 +270,34 @@ void EnvelopeGenerator::LoadState( std::istream& stream )
 	READ_POD( &gate, gate );
 	READ_POD( &state, state );
 }
+
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+class EnvelopeGenerator
+
+	// - pure data
+  reg16 rate_counter;
+  reg16 rate_period;
+  reg8 exponential_counter;
+  reg8 exponential_counter_period;
+  reg8 envelope_counter;
+  bool hold_zero;
+
+  reg4 attack;
+  reg4 decay;
+  reg4 sustain;
+  reg4 release;
+
+  reg8 gate;
+
+  State state;
+
+
+	// - static data
+  static reg16 rate_counter_period[];
+  static reg8 sustain_level[];
+*/

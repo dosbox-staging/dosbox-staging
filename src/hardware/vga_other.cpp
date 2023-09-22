@@ -997,6 +997,10 @@ void POD_Save_VGA_Other( std::ostream& stream )
 {
 	// - pure struct data
 	WRITE_POD( &vga.other, vga.other );
+
+	//****************************************
+	//****************************************
+
 	// static globals
 
 	// - system + user data
@@ -1012,6 +1016,10 @@ void POD_Load_VGA_Other( std::istream& stream )
 {
 	// - pure struct data
 	READ_POD( &vga.other, vga.other );
+
+	//****************************************
+	//****************************************
+
 	// static globals
 
 	// - system + user data
@@ -1021,3 +1029,41 @@ void POD_Load_VGA_Other( std::istream& stream )
 	READ_POD( &mono_cga_pal, mono_cga_pal );
 	READ_POD( &mono_cga_bright, mono_cga_bright );
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals:
+
+- pure data (system + exe modifiable)
+static double hue_offset;
+static Bit8u cga16_val;
+static Bit8u herc_pal;
+static Bit8u mono_cga_pal;
+static Bit8u mono_cga_bright;
+
+- static data
+static const Bit8u mono_cga_palettes[6][16][3];
+
+
+
+struct VGA_Other:
+
+// - pure data
+	Bit8u index;
+	Bit8u htotal;
+	Bit8u hdend;
+	Bit8u hsyncp;
+	Bit8u hsyncw;
+	Bit8u vtotal;
+	Bit8u vdend;
+	Bit8u vadjust;
+	Bit8u vsyncp;
+	Bit8u vsyncw;
+	Bit8u max_scanline;
+	Bit16u lightpen;
+	bool lightpen_triggered;
+	Bit8u cursor_start;
+	Bit8u cursor_end;
+*/

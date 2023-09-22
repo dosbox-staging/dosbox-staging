@@ -704,6 +704,7 @@ void PIC_Init(Section* sec) {
 
 
 
+
 // PIC_EventHandlers
 extern void *cmos_timerevent_PIC_Event;						// Cmos.cpp
 extern void *DISNEY_disable_PIC_Event;						// Disney.cpp
@@ -812,6 +813,9 @@ Bit16u PIC_State_FindEvent( Bit32u addr ) {
 		if( addr == (Bit32u) (pic_state_event_table[lcv]) ) return lcv;
 	}
 
+
+	// ERROR!! (place debug breakpoint here)
+	//MessageBox(0,"PIC - State FindEvent",0,0);
 	return 0xffff;
 }
 
@@ -824,6 +828,9 @@ Bit16u PIC_State_FindTimer( Bit32u addr ) {
 		if( addr == (Bit32u) (pic_state_timer_table[lcv]) ) return lcv;
 	}
 
+
+	// ERROR!! (place debug breakpoint here)
+	//MessageBox(0,"PIC - State FindTimer",0,0);
 	return 0xffff;
 }
 
@@ -884,6 +891,10 @@ private:
 					ticker_size++;
 				}
 
+				// ***************************************************
+				// ***************************************************
+				// ***************************************************
+
         SerializeGlobalPOD::getBytes(stream);
 
 
@@ -891,6 +902,10 @@ private:
         stream.write(reinterpret_cast<const char*>(&PIC_Ticks), sizeof(PIC_Ticks) );
         stream.write(reinterpret_cast<const char*>(&PIC_IRQCheck), sizeof(PIC_IRQCheck) );
         //stream.write(reinterpret_cast<const char*>(&PIC_IRQOnSecondPicActive), sizeof(PIC_IRQOnSecondPicActive) );
+        //stream.write(reinterpret_cast<const char*>(&PIC_IRQActive), sizeof(PIC_IRQActive) );
+
+				// - data structs
+        //stream.write(reinterpret_cast<const char*>(&irqs), sizeof(irqs) );
         stream.write(reinterpret_cast<const char*>(&pics), sizeof(pics) );
 
 
@@ -923,6 +938,9 @@ private:
 				// - data
         stream.write(reinterpret_cast<const char*>(&InEventService), sizeof(InEventService) );
         stream.write(reinterpret_cast<const char*>(&srv_lag), sizeof(srv_lag) );
+        //stream.write(reinterpret_cast<const char*>(&PIC_Special_Mode), sizeof(PIC_Special_Mode) );
+
+
 				// - reloc ptr
         stream.write(reinterpret_cast<const char*>(&ticker_size), sizeof(ticker_size) );
 
@@ -931,11 +949,20 @@ private:
 					// - function ptr
 					ticker_handler_idx = PIC_State_FindTimer( (Bit32u) (ticker_ptr->handler) );
 					stream.write(reinterpret_cast<const char*>(&ticker_handler_idx), sizeof(ticker_handler_idx) );
+
+					// - reloc new ptr (leave alone)
+					//stream.write(reinterpret_cast<const char*>(&ticker_ptr->next), sizeof(ticker_ptr->next) );
+
 					ticker_ptr = ticker_ptr->next;
 				}
 
 
+				// - system (leave alone)
         //stream.write(reinterpret_cast<const char*>(&PIC_benchstart), sizeof(PIC_benchstart) );
+        //stream.write(reinterpret_cast<const char*>(&PIC_tickstart), sizeof(PIC_tickstart) );
+
+				// - static (leave alone)
+				//test->saveState(stream);
 		}
 
     virtual void setBytes(std::istream& stream)
@@ -950,7 +977,11 @@ private:
 				// - data
         stream.read(reinterpret_cast<char*>(&PIC_Ticks), sizeof(PIC_Ticks) );
         stream.read(reinterpret_cast<char*>(&PIC_IRQCheck), sizeof(PIC_IRQCheck) );
+        //stream.read(reinterpret_cast<char*>(&PIC_IRQOnSecondPicActive), sizeof(PIC_IRQOnSecondPicActive) );
+        //stream.read(reinterpret_cast<char*>(&PIC_IRQActive), sizeof(PIC_IRQActive) );
+
 				// - data structs
+        //stream.read(reinterpret_cast<char*>(&irqs), sizeof(irqs) );
         stream.read(reinterpret_cast<char*>(&pics), sizeof(pics) );
 
 
@@ -991,6 +1022,11 @@ private:
 				// - data
         stream.read(reinterpret_cast<char*>(&InEventService), sizeof(InEventService) );
         stream.read(reinterpret_cast<char*>(&srv_lag), sizeof(srv_lag) );
+        //stream.read(reinterpret_cast<char*>(&PIC_Special_Mode), sizeof(PIC_Special_Mode) );
+
+
+				// 1- wipe old data
+				// 2- insert new data
 				while( firstticker != NULL ) {
 					TickerBlock *ticker_ptr;
 
@@ -1030,6 +1066,92 @@ private:
 					}
 				}
 
+
+				// - system (leave alone)
+        //stream.read(reinterpret_cast<char*>(&PIC_benchstart), sizeof(PIC_benchstart) );
+        //stream.read(reinterpret_cast<char*>(&PIC_tickstart), sizeof(PIC_tickstart) );
+
+				// - static (leave alone)
+				//test->loadState(stream);
     }
 } dummy;
 }
+
+
+/*
+2012-02-20 (PIC globals):
+
+// - pure data (probably should save this)
+Bitu PIC_Ticks;
+
+// - pure data (ActivateIRQ / Deactivate IRQ)
+Bitu PIC_IRQCheck;
+Bitu PIC_IRQOnSecondPicActive;
+Bitu PIC_IRQActive;
+
+// - pure data blocks
+static IRQ_Block irqs[16];
+static PIC_Controller pics[2];
+
+
+// - reloc ptrs
+struct pic_queue
+- PICEntry entries[PIC_QUEUESIZE];
+- PICEntry * free_entry;
+- PICEntry * next_entry;
+
+struct PICEntry {
+	// - data
+	float index;
+	Bitu value;
+
+	// - function ptr
+	PIC_EventHandler pic_event;
+
+	// - reloc ptr
+	PICEntry * next;
+};
+
+
+// - pure data
+static bool InEventService;
+static float srv_lag;
+static bool PIC_Special_Mode;
+
+
+// - reloc (new) (reloc ptr + reloc data)
+static TickerBlock * firstticker
+- TIMER_TickHandler handler;
+- TickerBlock * next;
+
+
+// - system (performance)
+static unsigned long PIC_benchstart;
+static unsigned long PIC_tickstart;
+
+
+
+// - static (init constructor) (leave alone)
+class PIC:public Module_base{
+private:
+	IO_ReadHandleObject ReadHandler[4];
+	IO_WriteHandleObject WriteHandler[4];
+
+
+
+// - static'ish
+static PIC* test;
+
+
+
+
+WARNINGS:
+
+CPU cycle depletion (avoid this?)
+- write_command
+- write_data
+- PIC_ActivateIRQ
+- PIC_SetIRQMask
+- PIC_AddEntry
+- TIMER_AddTick
+*/

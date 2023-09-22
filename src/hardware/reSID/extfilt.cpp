@@ -111,3 +111,24 @@ void ExternalFilter::LoadState( std::istream& stream )
 	READ_POD( &w0lp, w0lp );
 	READ_POD( &w0hp, w0hp );
 }
+
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+class ExternalFilter
+
+	// - pure data
+  bool enabled;
+
+  sound_sample mixer_DC;
+
+  sound_sample Vlp;
+  sound_sample Vhp;
+  sound_sample Vo;
+
+  sound_sample w0lp;
+  sound_sample w0hp;
+*/
