@@ -6386,12 +6386,6 @@ HRESULT WINAPI D3DXCreateEffectCompilerFromResourceW(HMODULE srcmodule, LPCWSTR 
 
 
 
-
-
-
-
-
-
 /* Returns TRUE if num is a power of 2, FALSE if not, or if 0 */
 
 static BOOL is_pow2(UINT num)

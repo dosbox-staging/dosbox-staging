@@ -190,3 +190,10 @@ void VGA_SetupMisc(void) {
 #endif
 }
 
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals: none
+*/

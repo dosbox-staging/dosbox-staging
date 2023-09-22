@@ -2266,6 +2266,9 @@ void POD_Save_VGA_Draw( std::ostream& stream )
 	else if (VGA_DrawLine == VGA_Draw_1BPP_Line_as_VGA ) drawline_idx = 22;
 	else if (VGA_DrawLine == VGA_Draw_VGA_Planar_Xlat32_Line ) drawline_idx = 23;
 
+	//**********************************************
+	//**********************************************
+
 	// - near-pure (struct) data
 	WRITE_POD( &vga.draw, vga.draw );
 
@@ -2273,6 +2276,10 @@ void POD_Save_VGA_Draw( std::ostream& stream )
 	// - reloc ptr
 	WRITE_POD( &linear_base_idx, linear_base_idx );
 	WRITE_POD( &font_tables_idx, font_tables_idx );
+
+	//**********************************************
+	//**********************************************
+
 	// static globals
 
 	// - reloc function ptr
@@ -2281,6 +2288,11 @@ void POD_Save_VGA_Draw( std::ostream& stream )
 
 	// - pure data
 	WRITE_POD( &TempLine, TempLine );
+
+
+	// - system data
+	//WRITE_POD( &vsync, vsync );
+	//WRITE_POD( &uservsyncjolt, uservsyncjolt );
 
 
 	// - pure data
@@ -2296,6 +2308,9 @@ void POD_Load_VGA_Draw( std::istream& stream )
 	Bit8u font_tables_idx[2];
 	Bit8u drawline_idx;
 
+	//**********************************************
+	//**********************************************
+
 	// - near-pure (struct) data
 	READ_POD( &vga.draw, vga.draw );
 
@@ -2303,6 +2318,9 @@ void POD_Load_VGA_Draw( std::istream& stream )
 	// - reloc ptr
 	READ_POD( &linear_base_idx, linear_base_idx );
 	READ_POD( &font_tables_idx, font_tables_idx );
+
+	//**********************************************
+	//**********************************************
 
 	// static globals
 
@@ -2313,11 +2331,19 @@ void POD_Load_VGA_Draw( std::istream& stream )
 	// - pure data
 	READ_POD( &TempLine, TempLine );
 
+
+	// - system data
+	//READ_POD( &vsync, vsync );
+	//READ_POD( &uservsyncjolt, uservsyncjolt );
+
+
 	// - pure data
 	READ_POD( &temp, temp );
 	READ_POD( &FontMask, FontMask );
 	READ_POD( &bg_color_index, bg_color_index );
 
+	//**********************************************
+	//**********************************************
 
 	switch( linear_base_idx ) {
 		case 0: vga.draw.linear_base = vga.mem.linear; break;
@@ -2366,3 +2392,117 @@ void POD_Load_VGA_Draw( std::istream& stream )
 		case 23: VGA_DrawLine = VGA_Draw_VGA_Planar_Xlat32_Line; break;
 	}
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals:
+
+// - reloc function ptr
+static VGA_Line_Handler VGA_DrawLine;
+
+// - pure data
+static Bit8u TempLine[SCALER_MAXWIDTH * 4 + 256];
+
+
+// - system data
+static struct vsync
+- double period;
+- bool manual;
+- bool persistent;
+- bool faithful;
+
+
+// - system data
+static float uservsyncjolt;
+
+
+// - pure data
+static Bitu temp[643];
+static Bit32u FontMask[2];
+static Bit8u bg_color_index;
+
+
+
+
+struct VGA_Draw:
+
+typedef struct {
+// - pure data
+	bool resizing;
+	Bitu width;
+	Bitu height;
+	Bitu blocks;
+	Bitu address;
+	Bitu panning;
+	Bitu bytes_skip;
+
+// - reloc ptr
+	Bit8u *linear_base;
+
+// - pure data
+	Bitu linear_mask;
+	Bitu address_add;
+	Bitu line_length;
+	Bitu address_line_total;
+	Bitu address_line;
+	Bitu lines_total;
+	Bitu vblank_skip;
+	Bitu lines_done;
+	Bitu split_line;
+	Bitu parts_total;
+	Bitu parts_lines;
+	Bitu parts_left;
+	Bitu byte_panning_shift;
+
+
+// - pure struct data
+	struct {
+		double framestart;
+		double vrstart, vrend;		// V-retrace
+		double hrstart, hrend;		// H-retrace
+		double hblkstart, hblkend;	// H-blanking
+		double vblkstart, vblkend;	// V-Blanking
+		double vdend, vtotal;
+		double hdend, htotal;
+		double parts;
+		float singleline_delay;
+	} delay;
+
+
+// - pure data
+	double screen_ratio;
+	double refresh;
+	bool doublescan_merging;
+	Bit8u font[64*1024];
+
+// - reloc ptr
+	Bit8u * font_tables[2];
+
+// - pure data
+	Bitu blinking;
+	bool blink;
+	bool char9dot;
+
+
+// - pure struct data
+	struct {
+		Bitu address;
+		Bit8u sline,eline;
+		Bit8u count,delay;
+		Bit8u enabled;
+	} cursor;
+
+
+// - pure data
+	Drawmode mode;
+	bool vret_triggered;
+	bool vga_override;
+	bool linewise_set;
+	bool linewise_effect;
+	bool multiscan_set;
+	bool multiscan_effect;
+	bool char9_set;
+	Bitu bpp;
+*/

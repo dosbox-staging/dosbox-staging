@@ -1246,6 +1246,7 @@ void PAGING_Init(Section * sec) {
 }
 
 
+
 // save state support
 void POD_Save_CPU_Paging( std::ostream& stream )
 {
@@ -1304,3 +1305,80 @@ void POD_Load_CPU_Paging( std::istream& stream )
 		paging.tlb.writehandler[lcv] = &init_page_handler;
 	}
 }
+
+
+
+/*
+ykhwong 2012-05-21
+
+
+struct PagingBlock
+	// - pure data
+	Bitu			cr3;
+	Bitu			cr2;
+	bool wp;
+
+
+	// - pure struct data
+	struct {
+		Bitu page;
+		PhysPt addr;
+	} base;
+
+
+#if defined(USE_FULL_TLB)
+	struct {
+		// - pure data
+		HostPt read[TLB_SIZE];
+		HostPt write[TLB_SIZE];
+
+		// - reloc ptr
+		PageHandler * readhandler[TLB_SIZE];
+		PageHandler * writehandler[TLB_SIZE];
+
+		// - pure data
+		Bit32u	phys_page[TLB_SIZE];
+	} tlb;
+#else
+	tlb_entry tlbh[TLB_SIZE];
+	tlb_entry *tlbh_banks[TLB_BANKS];
+#endif
+
+
+	// - pure struct data
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} links;
+
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} ur_links;
+
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} krw_links;
+
+	struct {
+		Bitu used;
+		Bit32u entries[PAGING_LINKS];
+	} kr_links; // WP-only
+
+	Bit32u		firstmb[LINK_START];
+	bool		enabled;
+
+	
+	
+
+struct pf_queue
+	// - pure data	
+	Bitu used;
+	PF_Entry entries[PF_QUEUESIZE];
+		// - pure data	
+		Bitu cs;
+		Bitu eip;
+		Bitu page_addr;
+		Bitu mpl;
+*/

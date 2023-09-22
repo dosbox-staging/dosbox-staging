@@ -604,3 +604,16 @@ void POD_Load_DOS_Memory( std::istream& stream )
 	// - pure data
 	READ_POD( &memAllocStrategy, memAllocStrategy );
 }
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+// - pure data
+static Bit16u memAllocStrategy;
+
+
+// - static class data
+static CALLBACK_HandlerObject callbackhandler;
+*/

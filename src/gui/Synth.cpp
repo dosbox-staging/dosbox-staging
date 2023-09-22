@@ -2493,6 +2493,94 @@ void Synth::rawVerifyPatchCache( PatchCache *ptr1, PatchCache *ptr2 )
 }
 #endif
 
+
+/*
+NOTES:
+ykhwong svn-daum munt - 2012-02-20
+
+(*#) Synth.cpp = MT-32 top level
+- (*#) MemoryRegion = static data
+- (*#) Tables.cpp = static math tables
+
+- (*#) SynthProperties
+
+- (#) ReverbModel
+  - (*#) AReverbModel.cpp (* not done *)
+  - (#) DelayReverb.cpp
+  - (#) FreeverbModel.cpp
+		@ (#) freeverb (new/delete - check status)
+
+	  - (#) freeverb\revmodel.cpp
+		  - (#) freeverb\allpass.cpp
+		  - (#) freeverb\comb.cpp
+
+- PartialManager.cpp
+  = parts (static fastptr - synth/parts)
+	= synth (static fastptr - synth)
+
+	= partialTable
+		- Partial.cpp
+			= synth (static fastptr - constructor - synth)
+
+			> cachebackup/partialParam (reloc fastptr - (see part.cpp) )
+			> pair (reloc fastptr - startPartial - synth/partialManager/partialTable[] or NULL)
+			> patchCache (reloc fastptr - startPartial - synth/parts[]/patchCache or synth/parts[]/drumCache or NULL)
+			> pcmWave (reloc fastptr - startPartial - synth/pcmWaves[] or NULL)
+			> poly (reloc fastptr - startPartial - synth/parts[]/activePolys[])
+
+			@ tva (static new - contructor)
+			@ tvf (static new - contructor)
+			@ tvp (static new - contructor)
+
+			- LA32Ramp.cpp
+
+			- TVA.cpp
+				= ampRamp (static fastptr - constructor - synth/partialManager/partialTable[]/new LA32Ramp)
+				= partial (static fastptr - constructor - synth/partialManager/partialTable[])
+				= system (static fastptr - constructor - synth/mt32ram/system)
+
+				> part (reloc fastptr - reset - synth/parts)
+				> partialParam (reloc fastptr - reset - synth/mt32ram/timbres[]/timbre/partial[] -or- timbreTemp )
+				> patchTemp (reloc fastptr - reset - synth/mt32ram/patchTemp[] or NULL)
+			  > rhythmTemp (reloc fastptr - reset - synth/mt32ram/rhythmTemp[] or NULL)
+
+			- TVF.cpp
+				= cutoffModifierRamp (static fastptr - constructor - synth/partialManager/partialTable[]/new LA32Ramp)
+				= partial (static fastptr - constructor - synth/partialManager/partialTable[])
+
+				> partialParam (reloc fastptr - reset - synth/mt32ram/timbres[]/timbre/partial[] -or- timbreTemp )
+
+			- TVP.cpp
+				= partial (static fastptr - constructor - synth/partialManager/partialTable[])
+				= system (static fastptr - constructor - synth/mt32ram/system)
+
+				> part (reloc fastptr - reset - synth/parts)
+				> partialParam (reloc fastptr - reset - synth/mt32ram/timbres[]/timbre/partial[] -or- timbreTemp )
+				> patchTemp (reloc fastptr - reset - synth/mt32ram/patchTemp[] or NULL)
+
+- Part.cpp
+	= synth (static fastptr - synth)
+
+	> PatchCache / partialParam (reloc fastptr - timbreTemp or synth/mt32ram/timbres[]/timbre/partial[])
+	> PatchTemp (reloc fastptr - synth/mt32ram/patchTemp[])
+	> timbreTemp (reloc fastptr - synth/mt32ram/timbreTemp[] or NULL)
+
+	@ freePolys / activePolys (new/delete - check status)
+	  (NOTE: PartialManager -uses- these lists // Polys created -here-)
+
+		- Poly.cpp
+			= part (static fastptr - synth/parts[])
+			= synth (static fastptr - synth)
+
+			> partials (reloc fastptr - synth/partialManager/partialTable[])
+
+
+	(class RhythmPart::Part)
+	= rhythmTemp (static fastptr - synth/mt32ram/rhythmTemp[])
+	
+	> PatchCache / drumCache[85][4] (reloc fastptr - timbreTemp or synth/mt32ram/timbres[]/timbre/partial[])
+*/
+
 void Synth::saveState( std::ostream &stream )
 {
 	Bit8u reverbModel_idx;
@@ -2519,6 +2607,15 @@ void Synth::saveState( std::ostream &stream )
 #endif
 
 
+	// - static data
+	//patchTempMemoryRegion->saveState(stream);
+	//rhythmTempMemoryRegion->saveState(stream);
+	//timbreTempMemoryRegion->saveState(stream);
+	//patchesMemoryRegion->saveState(stream);
+	//timbresMemoryRegion->saveState(stream);
+	//systemMemoryRegion->saveState(stream);
+	//displayMemoryRegion->saveState(stream);
+	//resetMemoryRegion->saveState(stream);
 
 	stream.write(reinterpret_cast<const char*>(paddedTimbreMaxTable), sizeof(MemParams::PaddedTimbre) * sizeof(Bit8u) );
 	stream.write(reinterpret_cast<const char*>(&isEnabled), sizeof(isEnabled) );
@@ -2534,6 +2631,11 @@ void Synth::saveState( std::ostream &stream )
 	}
 
 
+	// - static data
+	//const ControlROMMap *controlROMMap;
+	//Bit8u controlROMData[CONTROL_ROM_SIZE];
+	//float *pcmROMData;
+	//int pcmROMSize; // This is in 16-bit samples, therefore half the number of bytes in the ROM
 	
 	stream.write(reinterpret_cast<const char*>(&chantable), sizeof(chantable) );
 	stream.write(reinterpret_cast<const char*>(&renderedSampleCount), sizeof(renderedSampleCount) );
@@ -2624,6 +2726,17 @@ void Synth::loadState( std::istream &stream )
 	rawDumpNo = 0;
 #endif
 
+
+	// - static data
+	//patchTempMemoryRegion->loadState(stream);
+	//rhythmTempMemoryRegion->loadState(stream);
+	//timbreTempMemoryRegion->loadState(stream);
+	//patchesMemoryRegion->loadState(stream);
+	//timbresMemoryRegion->loadState(stream);
+	//systemMemoryRegion->loadState(stream);
+	//displayMemoryRegion->loadState(stream);
+	//resetMemoryRegion->loadState(stream);
+
 	stream.read(reinterpret_cast<char*>(paddedTimbreMaxTable), sizeof(MemParams::PaddedTimbre) * sizeof(Bit8u) );
 	stream.read(reinterpret_cast<char*>(&isEnabled), sizeof(isEnabled) );
 
@@ -2632,11 +2745,23 @@ void Synth::loadState( std::istream &stream )
 		stream.read(reinterpret_cast<char*>(&pcmWaves[lcv].addr), sizeof(pcmWaves[lcv].addr) );
 		stream.read(reinterpret_cast<char*>(&pcmWaves[lcv].len), sizeof(pcmWaves[lcv].len) );
 		stream.read(reinterpret_cast<char*>(&pcmWaves[lcv].loop), sizeof(pcmWaves[lcv].loop) );
+
+		// - static fastptr
+		//ControlROMPCMStruct *controlROMPCMStruct
 	}
 
 
+	// - static data
+	//const ControlROMMap *controlROMMap;
+	//Bit8u controlROMData[CONTROL_ROM_SIZE];
+	//float *pcmROMData;
+	//int pcmROMSize; // This is in 16-bit samples, therefore half the number of bytes in the ROM
+	
 	stream.read(reinterpret_cast<char*>(&chantable), sizeof(chantable) );
 	stream.read(reinterpret_cast<char*>(&renderedSampleCount), sizeof(renderedSampleCount) );
+
+	// - static data
+	//tables->loadState(stream);
 
 	stream.read(reinterpret_cast<char*>(&mt32ram), sizeof(mt32ram) );
 	stream.read(reinterpret_cast<char*>(&mt32default), sizeof(mt32default) );

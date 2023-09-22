@@ -1008,6 +1008,9 @@ int SID2::clock_resample_fast(cycle_count& delta_t, short* buf, int n,
 }
 
 
+
+// save state support
+
 void SID2::SaveState( std::ostream& stream )
 {
 	unsigned char sample_ptr, fir_ptr;
@@ -1018,6 +1021,11 @@ void SID2::SaveState( std::ostream& stream )
 
 	if( fir == NULL ) fir_ptr = 0;
 	else fir_ptr = 1;
+
+	//*************************************************
+	//*************************************************
+	//*************************************************
+
 	// - pure data
 	WRITE_POD( &bus_value, bus_value );
 	WRITE_POD( &bus_value_ttl, bus_value_ttl );
@@ -1056,6 +1064,11 @@ void SID2::SaveState( std::ostream& stream )
 void SID2::LoadState( std::istream& stream )
 {
 	unsigned char sample_ptr, fir_ptr;
+
+	//*************************************************
+	//*************************************************
+	//*************************************************
+
 	// - pure data
 	READ_POD( &bus_value, bus_value );
 	READ_POD( &bus_value_ttl, bus_value_ttl );
@@ -1099,3 +1112,75 @@ void SID2::LoadState( std::istream& stream )
 	extfilt.LoadState(stream);
 }
 
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+class SID2
+
+	// - class data
+  Voice voice[3];
+  Filter filter;
+  ExternalFilter extfilt;
+
+
+	// - class data (none)
+  Potentiometer potx;
+  Potentiometer poty;
+
+
+	// - pure data
+  reg8 bus_value;
+  cycle_count bus_value_ttl;
+
+  double clock_frequency;
+
+  int ext_in;
+
+
+	// - static data
+  static const int FIR_N = 125;
+  static const int FIR_RES_INTERPOLATE = 285;
+  static const int FIR_RES_FAST = 51473;
+  static const int FIR_SHIFT = 15;
+  static const int RINGSIZE = 16384;
+
+  static const int FIXP_SHIFT = 16;
+  static const int FIXP_MASK = 0xffff;
+
+
+	// - pure data
+  sampling_method sampling;
+  cycle_count cycles_per_sample;
+  cycle_count sample_offset;
+  int sample_index;
+  short sample_prev;
+  int fir_N;
+  int fir_RES;
+
+
+	// - 'new' ptr data
+  short* sample;
+  short* fir;
+
+	
+
+	// NOTE: seems unused
+	class State
+		char sid_register[0x20];
+
+    reg8 bus_value;
+    cycle_count bus_value_ttl;
+
+    reg24 accumulator[3];
+    reg24 shift_register[3];
+    reg16 rate_counter[3];
+    reg16 rate_counter_period[3];
+    reg16 exponential_counter[3];
+    reg16 exponential_counter_period[3];
+    reg8 envelope_counter[3];
+    EnvelopeGenerator::State envelope_state[3];
+    bool hold_zero[3];
+*/

@@ -615,3 +615,77 @@ void POD_Load_VGA_S3( std::istream& stream )
 
 	READ_POD( &reg17index, reg17index );
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals:
+
+// - pure data
+Bit8u reg17index;
+
+
+
+struct VGA_S3:
+
+typedef struct {
+
+// - pure data
+	Bit8u reg_lock1;
+	Bit8u reg_lock2;
+	Bit8u reg_31;
+	Bit8u reg_35;
+	Bit8u reg_36; // RAM size
+	Bit8u reg_3a; // 4/8/doublepixel bit in there
+	Bit8u reg_40; // 8415/A functionality register
+	Bit8u reg_41; // BIOS flags 
+	Bit8u reg_42; // CR42 Mode Control
+	Bit8u reg_43;
+	Bit8u reg_45; // Hardware graphics cursor
+	Bit8u reg_50;
+	Bit8u reg_51;
+	Bit8u reg_52;
+	Bit8u reg_55;
+	Bit8u reg_58;
+	Bit8u reg_6b; // LFB BIOS scratchpad
+	Bit8u ex_hor_overflow;
+	Bit8u ex_ver_overflow;
+	Bit16u la_window;
+	Bit8u misc_control_2;
+	Bit8u ext_mem_ctrl;
+	Bitu xga_screen_width;
+	VGAModes xga_color_mode;
+
+
+// - pure struct data
+	struct {
+		Bit8u r;
+		Bit8u n;
+		Bit8u m;
+	} clk[4],mclk;
+
+
+// - pure struct data
+	struct {
+		Bit8u lock;
+		Bit8u cmd;
+	} pll;
+
+
+	VGA_HWCURSOR hgc;
+
+
+
+struct VGA_HWCURSOR:
+
+// - pure data
+	Bit8u curmode;
+	Bit16u originx, originy;
+	Bit8u fstackpos, bstackpos;
+	Bit8u forestack[4];
+	Bit8u backstack[4];
+	Bit16u startaddr;
+	Bit8u posx, posy;
+	Bit8u mc[64][64];
+*/

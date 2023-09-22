@@ -297,6 +297,7 @@ void VGA_SetupAttr(void) {
 }
 
 
+
 // save state support
 void POD_Save_VGA_Attr( std::ostream& stream )
 {
@@ -316,3 +317,23 @@ void POD_Load_VGA_Attr( std::istream& stream )
 
 	// no static globals found
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals: none
+
+
+struct VGA_Attr:
+
+// - pure data
+	Bit8u palette[16];
+	Bit8u mode_control;
+	Bit8u horizontal_pel_panning;
+	Bit8u overscan_color;
+	Bit8u color_plane_enable;
+	Bit8u color_select;
+	Bit8u index;
+	Bit8u disabled;
+*/

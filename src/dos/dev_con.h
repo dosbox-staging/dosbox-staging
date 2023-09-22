@@ -199,6 +199,12 @@ bool device_CON::Read(Bit8u * data,Bit16u * size) {
 		readcache=0;
 	}
 	while (*size>count) {
+	/*	while (true) {
+			reg_ah=0x1; // check for keystroke
+			CALLBACK_RunRealInt(0x16);
+			if (!GETFLAG(ZF)) break;
+			CALLBACK_RunRealInt(0x28);
+		}; */ //DOSIdle
 		reg_ah=(IS_EGAVGA_ARCH)?0x10:0x0;
 		CALLBACK_RunRealInt(0x16);
 		switch(reg_al) {
@@ -615,3 +621,25 @@ void device_CON::LoadState( std::istream& stream )
 
 	READ_POD( &ansi, ansi );
 }
+
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+	// - pure data
+	Bit8u readcache;
+	Bit8u lastwrite;
+	struct ansi
+		bool esc;
+		bool sci;
+		bool enabled;
+		Bit8u attr;
+		Bit8u data[NUMBER_ANSI_DATA];
+		Bit8u numberofarg;
+		Bit16u nrows;
+		Bit16u ncols;
+		Bit8s savecol;
+		Bit8s saverow;
+		bool warned;
+*/

@@ -276,3 +276,25 @@ void POD_Load_DOS_Tables( std::istream& stream )
 
 	READ_POD( &dos_memseg, dos_memseg );
 }
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+// - pure data
+struct DOS_TableCase
+	Bit16u size;
+	Bit8u chars[256];
+
+RealPt DOS_TableUpCase;
+RealPt DOS_TableLowCase;
+
+
+// - assume static func ptr
+static Bitu call_casemap;
+
+
+// - pure data
+static Bit16u dos_memseg;
+*/

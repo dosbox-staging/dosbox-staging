@@ -177,6 +177,11 @@ void WaveformGenerator::SaveState( std::ostream& stream )
 	if(0) {}
 	else if( wave_PST == wave6581_PST ) wave_pst_idx = 0;
 	else if( wave_PST == wave8580_PST ) wave_pst_idx = 1;
+
+	//**********************************************
+	//**********************************************
+	//**********************************************
+
 	// - pure data
 	WRITE_POD( &msb_rising, msb_rising );
 
@@ -203,6 +208,11 @@ void WaveformGenerator::SaveState( std::ostream& stream )
 void WaveformGenerator::LoadState( std::istream& stream )
 {
 	unsigned char wave_st_idx, wave_pt_idx, wave_ps_idx, wave_pst_idx;
+
+	//**********************************************
+	//**********************************************
+	//**********************************************
+
 	// - pure data
 	READ_POD( &msb_rising, msb_rising );
 
@@ -223,6 +233,11 @@ void WaveformGenerator::LoadState( std::istream& stream )
 	READ_POD( &wave_pt_idx, wave_pt_idx );
 	READ_POD( &wave_ps_idx, wave_ps_idx );
 	READ_POD( &wave_pst_idx, wave_pst_idx );
+
+	//**********************************************
+	//**********************************************
+	//**********************************************
+
 	switch( wave_st_idx ) {
 		case 0: wave__ST = wave6581__ST; break;
 		case 1: wave__ST = wave8580__ST; break;
@@ -243,3 +258,51 @@ void WaveformGenerator::LoadState( std::istream& stream )
 		case 1: wave_PST = wave8580_PST; break;
 	}
 }
+
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+class WaveformGenerator
+
+	// - static class ptr
+  const WaveformGenerator* sync_source;
+  WaveformGenerator* sync_dest;
+
+
+	// - pure data
+  bool msb_rising;
+
+  reg24 accumulator;
+  reg24 shift_register;
+
+  reg16 freq;
+  reg12 pw;
+
+  reg8 waveform;
+
+  reg8 test;
+  reg8 ring_mod;
+  reg8 sync;
+
+
+  // - static data
+  static reg8 wave6581__ST[];
+  static reg8 wave6581_P_T[];
+  static reg8 wave6581_PS_[];
+  static reg8 wave6581_PST[];
+
+  static reg8 wave8580__ST[];
+  static reg8 wave8580_P_T[];
+  static reg8 wave8580_PS_[];
+  static reg8 wave8580_PST[];
+
+
+	// - reloc ptr
+  reg8* wave__ST;
+  reg8* wave_P_T;
+  reg8* wave_PS_;
+  reg8* wave_PST;
+*/

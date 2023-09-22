@@ -1471,6 +1471,11 @@ void adlib_savestate( std::ostream& stream )
 	for( int lcv=0; lcv<MAXOPERATORS; lcv++ ) {
 		cur_wform_idx[lcv] = ((Bit32u) (op[lcv].cur_wform)) - ((Bit32u) &wavtable);
 	}
+
+	//****************************************************
+	//****************************************************
+	//****************************************************
+
 	// opl.cpp
 
 	// - pure data
@@ -1479,6 +1484,11 @@ void adlib_savestate( std::ostream& stream )
 
 	WRITE_POD( &vibval_var1, vibval_var1 );
 	WRITE_POD( &vibval_var2, vibval_var2 );
+
+	//****************************************************
+	//****************************************************
+	//****************************************************
+
 	// opl.h
 
 	// - pure data
@@ -1507,9 +1517,15 @@ void adlib_savestate( std::ostream& stream )
 	WRITE_POD( &cur_wform_idx, cur_wform_idx );
 }
 
+
 void adlib_loadstate( std::istream& stream )
 {
 	Bit32u cur_wform_idx[MAXOPERATORS];
+
+	//****************************************************
+	//****************************************************
+	//****************************************************
+
 	// opl.cpp
 
 	// - pure data
@@ -1518,6 +1534,11 @@ void adlib_loadstate( std::istream& stream )
 
 	READ_POD( &vibval_var1, vibval_var1 );
 	READ_POD( &vibval_var2, vibval_var2 );
+
+	//****************************************************
+	//****************************************************
+	//****************************************************
+
 	// opl.h
 
 	// - pure data
@@ -1545,8 +1566,107 @@ void adlib_loadstate( std::istream& stream )
 	// - reloc ptr (!!!)
 	READ_POD( &cur_wform_idx, cur_wform_idx );
 
+	//****************************************************
+	//****************************************************
+	//****************************************************
+
 	for( int lcv=0; lcv<MAXOPERATORS; lcv++ ) {
 		op[lcv].cur_wform = (Bit16s *) ((Bit32u) &wavtable + cur_wform_idx[lcv]);
 	}
 }
 
+
+
+/*
+Handler : OPL2
+Handler : OPL3
+
+opl.cpp
+	// - pure data
+	fltype recipsamp;
+	Bit16s wavtable[WAVEPREC*3];
+
+	// - static data
+	Bit32s vib_table[VIBTAB_SIZE];
+	Bit32s trem_table[TREMTAB_SIZE*2];
+	Bit32s vibval_const[BLOCKBUF_SIZE];
+	Bit32s tremval_const[BLOCKBUF_SIZE];
+
+	// - pure data
+	Bit32s vibval_var1[BLOCKBUF_SIZE];
+	Bit32s vibval_var2[BLOCKBUF_SIZE];
+
+	// - pseudo-reloc ptr (!!!) (NOTE: These are -local- variables only)
+	Bit32s *vibval1, *vibval2, *vibval3, *vibval4;
+	Bit32s *tremval1, *tremval2, *tremval3, *tremval4;
+
+	// - static data
+	fltype kslmul[4];
+	fltype frqmul_tab[16];
+	fltype frqmul[16];
+	Bit8u kslev[8][16];
+	Bit8u modulatorbase[9];
+	Bit8u regbase2modop[44];
+	Bit8u regbase2op[44];
+	Bit32u waveform[8];
+	Bit32u wavemask[8];
+	Bit32u wavestart[8];
+	fltype attackconst[4];
+	fltype decrelconst[4];
+
+
+opl.h
+
+	// - pure data
+	Bitu chip_num;
+
+	// - struct data
+	op_type op[MAXOPERATORS];
+
+		// - pure data
+		Bit32s cval, lastcval;
+		Bit32u tcount, wfpos, tinc;
+		fltype amp, step_amp;
+		fltype vol;
+		fltype sustain_level;
+		Bit32s mfbi;
+		fltype a0, a1, a2, a3;
+		fltype decaymul, releasemul;
+		Bit32u op_state;
+		Bit32u toff;
+		Bit32s freq_high;
+
+		// - reloc ptr (!!!)
+		Bit16s* cur_wform;
+
+		// - pure data
+		Bit32u cur_wmask;
+		Bit32u act_state;
+		bool sus_keep;
+		bool vibrato,tremolo;
+		
+		Bit32u generator_pos;
+		Bits cur_env_step;
+		Bits env_step_a,env_step_d,env_step_r;
+		Bit8u step_skip_pos_a;
+		Bits env_step_skip_a;
+
+		// - OPL3 only (!!!)
+		bool is_4op,is_4op_attached;
+		Bit32s left_pan,right_pan;
+
+
+	Bits int_samplerate;
+
+	Bit8u status;
+	Bit32u opl_index;
+	Bit8u adlibreg[OPL2 / OPL3];
+	Bit8u wave_sel[OPL2 / OPL3];
+
+	// - pure data
+	Bit32u vibtab_pos;
+	Bit32u vibtab_add;
+	Bit32u tremtab_pos;
+	Bit32u tremtab_add;
+	Bit32u generator_add;
+*/

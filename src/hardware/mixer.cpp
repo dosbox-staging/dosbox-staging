@@ -732,6 +732,11 @@ void MixerChannel::LoadState( std::istream& stream )
 	READ_POD( &freq_add, freq_add );
 	READ_POD( &freq_index, freq_index );
 	READ_POD( &enabled, enabled );
+
+	//********************************************
+	//********************************************
+	//********************************************
+
 	// reset mixer channel (system data)
 	done = 0;
 	needed = 0;
@@ -771,6 +776,9 @@ public:
 private:
 	virtual void getBytes(std::ostream& stream)
 	{
+		//*************************************************
+		//*************************************************
+
 		SerializeGlobalPOD::getBytes(stream);
 
 
@@ -788,6 +796,9 @@ private:
 
 	virtual void setBytes(std::istream& stream)
 	{
+		//*************************************************
+		//*************************************************
+
 		SerializeGlobalPOD::setBytes(stream);
 
 
@@ -805,3 +816,33 @@ private:
 
 } dummy;
 }
+
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+class MixerChannel {
+	// - static func ptr
+	MIXER_Handler handler;
+
+	// - pure data
+	float volmain[2];
+	float scale;
+	Bit32s volmul[2];
+	Bitu freq_add,freq_index;
+
+	// - system data
+	Bitu done,needed;
+	Bits last[2];
+
+	// - static data
+	const char * name;
+
+	// - pure data
+	bool enabled;
+
+	// - static ptr
+	MixerChannel * next;
+*/

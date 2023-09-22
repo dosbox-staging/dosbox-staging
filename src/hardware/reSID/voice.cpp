@@ -157,3 +157,21 @@ void Voice::LoadState( std::istream& stream )
 	wave.LoadState(stream);
 	envelope.LoadState(stream);
 }
+
+
+
+/*
+ykhwong svn-daum 2012-05-21
+
+
+class Voice
+
+	// - class data
+  WaveformGenerator wave;
+  EnvelopeGenerator envelope;
+
+
+  // - pure data
+  sound_sample wave_zero;
+  sound_sample voice_DC;
+*/

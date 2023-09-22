@@ -944,6 +944,11 @@ void POD_Save_GUS( std::ostream& stream )
 
 
 	WRITE_POD( &pod_name, pod_name );
+
+	//*******************************************
+	//*******************************************
+	//*******************************************
+
 	Bit8u curchan_idx;
 
 
@@ -951,6 +956,11 @@ void POD_Save_GUS( std::ostream& stream )
 	for( int lcv=0; lcv<32; lcv++ ) {
 		if( curchan == guschan[lcv] ) { curchan_idx = lcv; break; }
 	}
+
+	// *******************************************
+	// *******************************************
+	// *******************************************
+
 	// - pure data
 	WRITE_POD( &adlib_commandreg, adlib_commandreg );
 	WRITE_POD( &GUSRam, GUSRam );
@@ -966,8 +976,17 @@ void POD_Save_GUS( std::ostream& stream )
 	for( int lcv=0; lcv<32; lcv++ ) {
 		WRITE_POD( guschan[lcv], *guschan[lcv] );
 	}
+
+	// *******************************************
+	// *******************************************
+	// *******************************************
+
 	// - reloc ptr
 	WRITE_POD( &curchan_idx, curchan_idx );
+
+	// *******************************************
+	// *******************************************
+	// *******************************************
 
 	gus_chan->SaveState(stream);
 }
@@ -988,7 +1007,17 @@ void POD_Load_GUS( std::istream& stream )
 		stream.clear( std::istream::failbit | std::istream::badbit );
 		return;
 	}
+
+	//************************************************
+	//************************************************
+	//************************************************
+
 	Bit8u curchan_idx;
+
+	// *******************************************
+	// *******************************************
+	// *******************************************
+
 	// - pure data
 	READ_POD( &adlib_commandreg, adlib_commandreg );
 	READ_POD( &GUSRam, GUSRam );
@@ -1003,10 +1032,136 @@ void POD_Load_GUS( std::istream& stream )
 
 		READ_POD( guschan[lcv], *guschan[lcv] );
 	}
+
+	// *******************************************
+	// *******************************************
+	// *******************************************
+
 	// - reloc ptr
 	READ_POD( &curchan_idx, curchan_idx );
 
 	curchan = NULL;
 	if( curchan_idx != 0xff ) curchan = guschan[curchan_idx];
+
+	// *******************************************
+	// *******************************************
+	// *******************************************
+
 	gus_chan->LoadState(stream);
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+static globals:
+
+
+// - pure data
+Bit8u adlib_commandreg;
+
+// - static 'new' ptr
+static MixerChannel * gus_chan;
+
+// - static data
+static const Bit8u irqtable[8] = { 0, 2, 5, 3, 7, 11, 12, 15 };
+static const Bit8u dmatable[8] = { 0, 1, 3, 5, 6, 7, 0, 0 };
+
+// - pure data
+static Bit8u GUSRam[1024*1024]; // 1024K of GUS Ram
+static Bit32s AutoAmp = 512;
+static Bit16u vol16bit[4096];
+static Bit32u pantable[16];
+
+
+
+struct GFGus myGUS
+
+	// - pure data
+	Bit8u gRegSelect;
+	Bit16u gRegData;
+	Bit32u gDramAddr;
+	Bit16u gCurChannel;
+
+	// - pure data
+	Bit8u DMAControl;
+	Bit16u dmaAddr;
+	Bit8u TimerControl;
+	Bit8u SampControl;
+	Bit8u mixControl;
+	Bit8u ActiveChannels;
+	Bit32u basefreq;
+
+	// - pure data
+	struct GusTimer {
+		Bit8u value;
+		bool reached;
+		bool raiseirq;
+		bool masked;
+		bool running;
+		float delay;
+	} timers[2];
+
+	// - pure data
+	Bit32u rate;
+	Bitu portbase;
+	Bit8u dma1;
+	Bit8u dma2;
+
+	// - pure data
+	Bit8u irq1;
+	Bit8u irq2;
+
+	// - pure data
+	bool irqenabled;
+	bool ChangeIRQDMA;
+	Bit8u IRQStatus;
+	Bit32u ActiveMask;
+	Bit8u IRQChan;
+	Bit32u RampIRQ;
+	Bit32u WaveIRQ;
+
+
+// - static 'new' ptr
+static GUSChannels *guschan[32];
+
+// - reloc ptr (!!!)
+static GUSChannels *curchan;
+
+	// - pure data
+	Bit32u WaveStart;
+	Bit32u WaveEnd;
+	Bit32u WaveAddr;
+	Bit32u WaveAdd;
+	Bit8u  WaveCtrl;
+	Bit16u WaveFreq;
+
+	Bit32u RampStart;
+	Bit32u RampEnd;
+	Bit32u RampVol;
+	Bit32u RampAdd;
+	Bit32u RampAddReal;
+
+	Bit8u RampRate;
+	Bit8u RampCtrl;
+
+	Bit8u PanPot;
+	Bit8u channum;
+	Bit32u irqmask;
+	Bit32u PanLeft;
+	Bit32u PanRight;
+	Bit32s VolLeft;
+	Bit32s VolRight;
+
+
+
+// - static 'new' ptr
+static GUS* test;
+
+	// - static data
+	IO_ReadHandleObject ReadHandler[8];
+	IO_WriteHandleObject WriteHandler[9];
+	AutoexecObject autoexecline[2];
+	MixerObject MixerChan;
+*/

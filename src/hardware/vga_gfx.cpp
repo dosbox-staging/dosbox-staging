@@ -234,6 +234,7 @@ void VGA_SetupGFX(void) {
 }
 
 
+
 // save state support
 
 void POD_Save_VGA_Gfx( std::ostream& stream )
@@ -241,6 +242,11 @@ void POD_Save_VGA_Gfx( std::ostream& stream )
 	// - pure struct data
 	WRITE_POD( &vga.gfx, vga.gfx );
 
+	//*******************************************
+	//*******************************************
+
+	// - system data
+	//WRITE_POD( &index9warned, index9warned );
 }
 
 
@@ -249,4 +255,36 @@ void POD_Load_VGA_Gfx( std::istream& stream )
 	// - pure struct data
 	READ_POD( &vga.gfx, vga.gfx );
 
+	//*******************************************
+	//*******************************************
+
+	// - system data
+	//READ_POD( &index9warned, index9warned );
 }
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+static globals:
+
+// - system data
+static bool index9warned=false;
+
+
+
+struct VGA_Gfx:
+	
+// - pure data
+typedef struct {
+	Bit8u index;
+	Bit8u set_reset;
+	Bit8u enable_set_reset;
+	Bit8u color_compare;
+	Bit8u data_rotate;
+	Bit8u read_map_select;
+	Bit8u mode;
+	Bit8u miscellaneous;
+	Bit8u color_dont_care;
+	Bit8u bit_mask;
+*/

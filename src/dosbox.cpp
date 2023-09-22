@@ -283,6 +283,7 @@ public:
 void CLOCKDOM_ProgramStart(Program * * make) {
 	*make=new CLOCKDOM;
 }
+
 /*=============================================================================================================================*/
 
 void run_hw() {
@@ -456,6 +457,14 @@ increaseticks:
 					if (new_cmax<CPU_CYCLES_LOWER_LIMIT)
 						new_cmax=CPU_CYCLES_LOWER_LIMIT;
 
+					/*
+					LOG_MSG("cyclelog: current %6d   cmax %6d   ratio  %5d  done %3d   sched %3d",
+						CPU_CycleMax,
+						new_cmax,
+						ratio,
+						ticksDone,
+						ticksScheduled);
+					*/  
 					/* ratios below 1% are considered to be dropouts due to
 					   temporary load imbalance, the cycles adjusting is skipped */
 					if (ratio>10) {
@@ -605,6 +614,7 @@ void SaveGameState(bool pressed) {
     try
     {
         SaveState::instance().save(currentSlot);
+        //LOG_MSG("[%s]: State %d saved!", getTime().c_str(), currentSlot + 1);
     }
     catch (const SaveState::Error& err)
     {
@@ -614,6 +624,12 @@ void SaveGameState(bool pressed) {
 
 void LoadGameState(bool pressed) {
     if (!pressed) return;
+
+//    if (SaveState::instance().isEmpty(currentSlot))
+//    {
+//        LOG_MSG("[%s]: State %d is empty!", getTime().c_str(), currentSlot + 1);
+//        return;
+//    }
     try
     {
         SaveState::instance().load(currentSlot);
@@ -649,6 +665,7 @@ void SaveGameState_Run(void) { SaveGameState(true); }
 void LoadGameState_Run(void) { LoadGameState(true); }
 void NextSaveSlot_Run(void) { NextSaveSlot(true); }
 void PreviousSaveSlot_Run(void) { PreviousSaveSlot(true); }
+
 /* utility function. rename as appropriate and move to utility collection */
 void parse_busclk_setting_str(ClockDomain *cd,const char *s) {
 	const char *d;
@@ -764,15 +781,19 @@ static void DOSBOX_RealInit(Section * sec) {
 	else if (mtype == "pcjr")          { machine = MCH_PCJR; }
 	else if (mtype == "hercules")      { machine = MCH_HERC; }
 	else if (mtype == "ega")           { machine = MCH_EGA; }
+//	else if (mtype == "vga")          { svgaCard = SVGA_S3Trio; }
 	else if (mtype == "svga_s3")       { svgaCard = SVGA_S3Trio; }
 	else if (mtype == "vesa_nolfb")    { svgaCard = SVGA_S3Trio; int10.vesa_nolfb = true;}
 	else if (mtype == "vesa_oldvbe")   { svgaCard = SVGA_S3Trio; int10.vesa_oldvbe = true;}
 	else if (mtype == "svga_et4000")   { svgaCard = SVGA_TsengET4K; }
 	else if (mtype == "svga_et3000")   { svgaCard = SVGA_TsengET3K; }
+//	else if (mtype == "vga_pvga1a")   { svgaCard = SVGA_ParadisePVGA1A; }
 	else if (mtype == "svga_paradise") { svgaCard = SVGA_ParadisePVGA1A; }
 	else if (mtype == "vgaonly")       { svgaCard = SVGA_None; }
 	else if (mtype == "amstrad")       { machine = MCH_AMSTRAD; }
 	else E_Exit("DOSBOX:Unknown machine type %s",mtype.c_str());
+	// Hack!
+	//mtype=MCH_AMSTRAD;
 
 	std::string isabclk = section->Get_string("isa bus clock");
 	if (isabclk == "std8.3")
@@ -2274,14 +2295,37 @@ public:
 private:
 	virtual void getBytes(std::ostream& stream)
 	{
+		//******************************************
+		//******************************************
+		//******************************************
+
 		SerializeGlobalPOD::getBytes(stream);
+
+		//******************************************
+		//******************************************
+		//******************************************
+
 		POD_Save_Sdlmain(stream);
 	}
 
 	virtual void setBytes(std::istream& stream)
 	{
+		//******************************************
+		//******************************************
+		//******************************************
+
 		SerializeGlobalPOD::setBytes(stream);
+
+		//******************************************
+		//******************************************
+		//******************************************
+
 		POD_Load_Sdlmain(stream);
+
+		//*******************************************
+		//*******************************************
+		//*******************************************
+
 		// Reset any auto cycle guessing for this frame
 		ticksRemain=5;
 		ticksLast = GetTicks();
@@ -2291,3 +2335,32 @@ private:
 	}
 } dummy;
 }
+
+
+
+/*
+ykhwong svn-daum 2012-02-20
+
+
+static globals:
+
+
+// - system data
+Config * control;
+MachineType machine;
+bool PS1AudioCard;
+SVGACards svgaCard;
+
+static LoopHandler * loop;
+bool SDLNetInited;
+
+static Bit32u ticksRemain;
+static Bit32u ticksLast;
+static Bit32u ticksAdded;
+Bit32s ticksDone;
+Bit32u ticksScheduled;
+bool ticksLocked;
+bool mono_cga=false;
+
+static Bit32u Ticks = 0;
+*/
