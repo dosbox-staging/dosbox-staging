@@ -155,6 +155,7 @@ class Capture {
 	bool	doneOpl3;
 	bool	doneDualOpl2;
 
+	Mode mode;
 	RegisterCache* cache;
 
 	void MakeEntry( Bit8u reg, Bit8u& raw ) {
@@ -167,9 +168,16 @@ class Capture {
 		memset( ToReg, 0xff, sizeof ( ToReg ) );
 		memset( ToRaw, 0xff, sizeof ( ToRaw ) );
 		//Select the entries that are valid and the index is the mapping to the index entry
+		if (!control->cmdline->FindExist("-vgmlog")) {
 		MakeEntry( 0x01, index );					//0x01: Waveform select
 		MakeEntry( 0x04, index );					//104: Four-Operator Enable
+		}
 		MakeEntry( 0x05, index );					//105: OPL3 Mode Enable
+		if (control->cmdline->FindExist("-vgmlog")) {
+			// Note by Valley Bell: Moved 05 to the very beginning for correct OPL3 initialization.
+			MakeEntry( 0x01, index );					//0x01: Waveform select
+			MakeEntry( 0x04, index );					//104: Four-Operator Enable
+		}
 		MakeEntry( 0x08, index );					//08: CSW / NOTE-SEL
 		MakeEntry( 0xbd, index );					//BD: Tremolo Depth / Vibrato Depth / Percussion Mode / BD/SD/TT/CY/HH On
 		//Add the 32 byte range that hold the 18 operators
@@ -213,6 +221,8 @@ class Capture {
 			Do some special checks if we're doing opl3 or dualopl2 commands
 			Although you could pretty much just stick to always doing opl3 on the player side
 		*/
+
+		if (!control->cmdline->FindExist("-vgmlog")) {
 		//Enabling opl3 4op modes will make us go into opl3 mode
 		if ( header.hardware != HW_OPL3 && regFull == 0x104 && val && (*cache)[0x105] ) {
 			header.hardware = HW_OPL3;
@@ -221,6 +231,24 @@ class Capture {
 		//Maybe also check for rhythm
 		if ( header.hardware == HW_OPL2 && regFull >= 0x1b0 && regFull <=0x1b8 && val ) {
 			header.hardware = HW_DUALOPL2;
+		}
+		} else {
+			if (mode == MODE_OPL3) {
+				// Valley Bell: OPL3 Mode should be enabled by 0x105 bit 0
+				// else there will be no stereo sound
+				if ( header.hardware != HW_OPL3 && regFull == 0x105 && (val & 0x01) ) {
+					header.hardware = HW_OPL3;
+				}
+			} else if (mode == MODE_DUALOPL2) {
+				//Writing a keyon to a 2nd address enables dual opl2 otherwise
+				//Maybe also check for rhythm
+				if ( header.hardware == HW_OPL2 && regFull >= 0x1b0 && regFull <= 0x1b8 && val ) {
+					header.hardware = HW_DUALOPL2;
+				}
+			} else if (mode == MODE_OPL2) {
+				if (regFull & 0x100)
+					return;
+			}
 		}
 		Bit8u raw = ToRaw[ regMask ];
 		if ( raw == 0xff )
@@ -232,6 +260,7 @@ class Capture {
 	void WriteCache( void  ) {
 		Bitu i, val;
 		/* Check the registers to add */
+		if (!control->cmdline->FindExist("-vgmlog")) {
 		for (i=0;i<256;i++) {
 			//Skip the note on entries
 			if (i>=0xb0 && i<=0xb8) 
@@ -243,6 +272,38 @@ class Capture {
 			val = (*cache)[ 0x100 + i ];
 			if (val) {
 				AddWrite( 0x100 + i, val );
+			}
+		}
+		} else {
+			if (mode == MODE_OPL3)
+			{
+				val = (*cache)[0x105];
+				AddWrite(0x105, val);
+			}
+			else if (mode == MODE_DUALOPL2)
+			{
+				for (i = 0x01B0; i < 0x1B9; i ++)
+				{
+					val = (*cache)[i];
+					if (val)
+					{
+						header.hardware = HW_DUALOPL2;
+						break;
+					}
+				}
+			}
+			// Valley Bell: new loop for better DRO initialization
+			for (i = 1; i < RawUsed; i ++)
+			{
+				val = (*cache)[ToReg[i]];
+				AddWrite(ToReg[i], val);
+				
+				//if (mode != MODE_OPL2)
+				if (header.hardware != HW_OPL2)
+				{
+					val = (*cache)[0x100 | ToReg[i]];
+					AddWrite(0x100 | ToReg[i], val);
+				}
 			}
 		}
 	}
@@ -284,8 +345,10 @@ public:
 			/* Check if this command will not just replace the same value 
 			   in a reg that doesn't do anything with it
 			*/
+			if (!control->cmdline->FindExist("-vgmlog")) {
 			if ( (*cache)[ regFull ] == val )
 				return true;
+			}
 			/* Check how much time has passed */
 			Bitu passed = PIC_Ticks - lastTicks;
 			lastTicks = PIC_Ticks;
@@ -294,9 +357,11 @@ public:
 			//if ( passed > 0 ) LOG_MSG( "Delay %d", passed ) ;
 			
 			// If we passed more than 30 seconds since the last command, we'll restart the the capture
+			if (!control->cmdline->FindExist("-vgmlog")) {
 			if ( passed > 30000 ) {
 				CloseFile();
 				goto skipWrite; 
+			}
 			}
 			while (passed > 0) {
 				if (passed < 257) {			//1-256 millisecond delay
@@ -314,6 +379,7 @@ public:
 skipWrite:
 		//Not yet capturing to a file here
 		//Check for commands that would start capturing, if it's not one of them return
+		if (!control->cmdline->FindExist("-vgmlog")) {
 		if ( !(
 			//note on in any channel 
 			( regMask>=0xb0 && regMask<=0xb8 && (val&0x020) ) ||
@@ -322,6 +388,7 @@ skipWrite:
 		)) {
 			return true;
 		}
+		} // Valley Bell: I don't want this for serious logging
 	  	handle = OpenCaptureFile("Raw Opl",".dro");
 		if (!handle)
 			return false;
@@ -339,7 +406,9 @@ skipWrite:
 		startTicks = PIC_Ticks;
 		return true;
 	}
-	Capture( RegisterCache* _cache ) {
+	//Capture( RegisterCache* _cache ) {
+	Capture( Mode _mode, RegisterCache* _cache ) {
+		mode = _mode;
 		cache = _cache;
 		handle = 0;
 		bufUsed = 0;
@@ -454,6 +523,12 @@ void Module::CacheWrite( Bit32u reg, Bit8u val ) {
 }
 
 void Module::DualWrite( Bit8u index, Bit8u reg, Bit8u val ) {
+	Bit32u fullReg = reg + (index ? 0x100 : 0);
+	if (control->cmdline->FindExist("-vgmlog")) {
+		// Valley Bell: moved here for more accurate logging
+		CacheWrite( fullReg, val );
+	}
+
 	//Make sure you don't use opl3 features
 	//Don't allow write to disable opl3		
 	if ( reg == 5 ) {
@@ -471,8 +546,8 @@ void Module::DualWrite( Bit8u index, Bit8u reg, Bit8u val ) {
 		val &= 0x0f;
 		val |= index ? 0xA0 : 0x50;
 	}
-	Bit32u fullReg = reg + (index ? 0x100 : 0);
-	handler->WriteReg( fullReg, val );
+	handler->WriteReg(fullReg, val);
+	if (!control->cmdline->FindExist("-vgmlog"))
 	CacheWrite( fullReg, val );
 }
 
@@ -490,8 +565,10 @@ void Module::PortWrite( Bitu port, Bitu val, Bitu iolen ) {
 		case MODE_OPL3:
 			if ( !chip[0].Write( reg.normal, val ) ) {
 				handler->WriteReg( reg.normal, val );
-				CacheWrite( reg.normal, val );
+				if (!control->cmdline->FindExist("-vgmlog"))
+					CacheWrite( reg.normal, val );
 			}
+			if (control->cmdline->FindExist("-vgmlog")) CacheWrite( reg.normal, val );
 			break;
 		case MODE_DUALOPL2:
 			//Not a 0x??8 port, then write to a specific port
@@ -569,7 +646,9 @@ void Module::Init( Mode m ) {
 		//Setup opl3 mode in the hander
 		handler->WriteReg( 0x105, 1 );
 		//Also set it up in the cache so the capturing will start opl3
-		CacheWrite( 0x105, 1 );
+		if (!control->cmdline->FindExist("-vgmlog"))
+			CacheWrite( 0x105, 1 );
+			// VGMs can handle Dual OPL2 correctly and don't need OPL3 mode
 		break;
 	}
 }
@@ -652,8 +731,11 @@ void OPL_SaveRawEvent(bool pressed) {
 		module->capture = 0;
 		LOG_MSG("Stopped Raw OPL capturing.");
 	} else {
-		LOG_MSG("Preparing to capture Raw OPL, will start with first note played.");
-		module->capture = new Adlib::Capture( &module->cache );
+		if (!control->cmdline->FindExist("-vgmlog"))
+			LOG_MSG("Preparing to capture Raw OPL, will start with first note played.");
+		module->capture = new Adlib::Capture( module->mode, &module->cache );
+		if (control->cmdline->FindExist("-vgmlog"))
+			module->capture->DoWrite(0x00, 0x00);	// start capturing
 	}
 }
 
