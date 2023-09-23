@@ -682,9 +682,10 @@ static std::string to_search_pattern(const char *arg)
 	// inside the directory.
 	const char *p = pattern.c_str();
 	if (!strrchr(p, '*') && !strrchr(p, '?')) {
-		uint16_t attr = 0;
-		if (DOS_GetFileAttr(p, &attr) && (attr & DOS_ATTR_DIRECTORY))
+		FatAttributeFlags attr = {};
+		if (DOS_GetFileAttr(p, &attr) && attr.directory) {
 			pattern += "\\*.*";
+		}
 	}
 
 	// If no extension, list all files.
@@ -1379,16 +1380,15 @@ struct attributes {
 	bool min_r = false;
 };
 
-static void show_attributes(DOS_Shell *shell, const uint16_t fattr, const char *name) {
-	const bool attr_a = fattr & DOS_ATTR_ARCHIVE;
-	const bool attr_s = fattr & DOS_ATTR_SYSTEM;
-	const bool attr_h = fattr & DOS_ATTR_HIDDEN;
-	const bool attr_r = fattr & DOS_ATTR_READ_ONLY;
+static void show_attributes(DOS_Shell* shell, const FatAttributeFlags fattr,
+                            const char* name)
+{
 	shell->WriteOut("  %c  %c%c%c	%s\n",
-			attr_a ? 'A' : ' ',
-			attr_h ? 'H' : ' ',
-			attr_s ? 'S' : ' ',
-			attr_r ? 'R' : ' ', name);
+	                fattr.archive   ? 'A' : ' ',
+	                fattr.hidden    ? 'H' : ' ',
+	                fattr.system    ? 'S' : ' ',
+	                fattr.read_only ? 'R' : ' ',
+	                name);
 }
 
 char *get_filename(char *args)
@@ -1431,7 +1431,7 @@ static bool attrib_recursive(DOS_Shell *shell,
 	uint16_t date;
 	uint16_t time;
 	uint8_t attr;
-	uint16_t fattr;
+	FatAttributeFlags fattr = {};
 	while (res) {
 		dta.GetResult(name, size, date, time, attr);
 		if (!((!strcmp(name, ".") || !strcmp(name, "..") ||
@@ -1445,20 +1445,34 @@ static bool attrib_recursive(DOS_Shell *shell,
 			} else if (attribs.add_a || attribs.add_s || attribs.add_h ||
 			           attribs.add_r || attribs.min_a || attribs.min_s ||
 			           attribs.min_h || attribs.min_r) {
-				fattr |= (attribs.add_a ? DOS_ATTR_ARCHIVE : 0);
-				fattr |= (attribs.add_s ? DOS_ATTR_SYSTEM : 0);
-				fattr |= (attribs.add_h ? DOS_ATTR_HIDDEN : 0);
-				fattr |= (attribs.add_r ? DOS_ATTR_READ_ONLY : 0);
-				fattr &= (attribs.min_a ? ~DOS_ATTR_ARCHIVE : 0xffff);
-				fattr &= (attribs.min_s ? ~DOS_ATTR_SYSTEM : 0xffff);
-				fattr &= (attribs.min_h ? ~DOS_ATTR_HIDDEN : 0xffff);
-				fattr &= (attribs.min_r ? ~DOS_ATTR_READ_ONLY : 0xffff);
+				if (attribs.min_a) {
+					fattr.archive = false;
+				} else if (attribs.add_a) {
+					fattr.archive = true;
+				}
+				if (attribs.min_s) {
+					fattr.system = false;
+				} else if (attribs.add_s) {
+					fattr.system = true;
+				}
+				if (attribs.min_h) {
+					fattr.hidden = false;
+				} else if (attribs.add_h) {
+					fattr.hidden = true;
+				}
+				if (attribs.min_r) {
+					fattr.read_only = false;
+				} else if (attribs.add_r) {
+					fattr.read_only = true;
+				}
+
 				if (DOS_SetFileAttr(full, fattr) &&
-				    DOS_GetFileAttr(full, &fattr))
+				    DOS_GetFileAttr(full, &fattr)) {
 					show_attributes(shell, fattr, full);
-				else
+				} else {
 					shell->WriteOut(MSG_Get("SHELL_CMD_ATTRIB_SET_ERROR"),
 					                full);
+				}
 			} else {
 				show_attributes(shell, fattr, full);
 			}
@@ -2456,13 +2470,13 @@ void DOS_Shell::CMD_MOVE(char* args)
 	// Done with DTA. Restore it.
 	dos.dta(save_dta);
 
-	uint16_t destination_attr = 0;
+	FatAttributeFlags destination_attr = {};
 	bool destination_exists = DOS_GetFileAttr(canonical_destination.c_str(),
 	                                          &destination_attr);
 	bool dest_is_dir        = false;
 
 	if (destination_exists) {
-		if (destination_attr & DOS_ATTR_DIRECTORY) {
+		if (destination_attr.directory) {
 			dest_is_dir = true;
 		} else if (final_sources.size() > 1) {
 			WriteOut(MSG_Get("SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE"));
@@ -2515,7 +2529,7 @@ void DOS_Shell::CMD_MOVE(char* args)
 				         final_destination.c_str());
 			}
 		} else {
-			uint16_t source_attr = 0;
+			FatAttributeFlags source_attr = 0;
 			if (!DOS_GetFileAttr(source.c_str(), &source_attr)) {
 				WriteOut("SHELL_FILE_NOT_FOUND", source.c_str());
 				continue;

@@ -91,15 +91,16 @@ public:
 	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
 	virtual FILE* GetSystemFilePtr(const char* const name, const char* const type);
 	virtual bool GetSystemFilename(char* sysName, const char* const dosName);
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
+	bool FileCreate(DOS_File** file, char* name,
+	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
 	bool RemoveDir(char* dir) override;
 	bool MakeDir(char* dir) override;
 	bool TestDir(char* dir) override;
 	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
 	bool FindNext(DOS_DTA& dta) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
+	bool GetFileAttr(char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
 	bool Rename(char* oldname, char* newname) override;
 	bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
 	                    uint16_t* _total_clusters,
@@ -200,15 +201,16 @@ public:
 	fatDrive(const fatDrive&)            = delete; // prevent copying
 	fatDrive& operator=(const fatDrive&) = delete; // prevent assignment
 	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
+	bool FileCreate(DOS_File** file, char* name,
+	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
 	bool RemoveDir(char* dir) override;
 	bool MakeDir(char* dir) override;
 	bool TestDir(char* dir) override;
 	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
 	bool FindNext(DOS_DTA& dta) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
+	bool GetFileAttr(char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
 	bool Rename(char* oldname, char* newname) override;
 	bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
 	                    uint16_t* _total_clusters,
@@ -275,12 +277,13 @@ public:
 	           uint16_t _total_clusters, uint16_t _free_clusters,
 	           uint8_t _mediaid, int& error);
 	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
+	bool FileCreate(DOS_File** file, char* name,
+	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
 	bool RemoveDir(char* dir) override;
 	bool MakeDir(char* dir) override;
 	bool Rename(char* oldname, char* newname) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
+	bool GetFileAttr(char* name, FatAttributeFlags* attr) override;
 	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst = false) override;
 	void SetDir(const char* path) override;
 	bool isRemote(void) override;
@@ -375,15 +378,16 @@ public:
 	         int& error);
 	~isoDrive() override;
 	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
+	bool FileCreate(DOS_File** file, char* name,
+	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
 	bool RemoveDir(char* dir) override;
 	bool MakeDir(char* dir) override;
 	bool TestDir(char* dir) override;
 	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
 	bool FindNext(DOS_DTA& dta) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
+	bool GetFileAttr(char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
 	bool Rename(char* oldname, char* newname) override;
 	bool AllocationInfo(uint16_t* bytes_sector, uint8_t* sectors_cluster,
 	                    uint16_t* total_clusters,
@@ -446,15 +450,16 @@ class Virtual_Drive final : public DOS_Drive {
 public:
 	Virtual_Drive();
 	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t attributes) override;
+	bool FileCreate(DOS_File** file, char* name,
+	                FatAttributeFlags attributes) override;
 	bool FileUnlink(char* name) override;
 	bool RemoveDir(char* dir) override;
 	bool MakeDir(char* dir) override;
 	bool TestDir(char* dir) override;
 	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
 	bool FindNext(DOS_DTA& dta) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
+	bool GetFileAttr(char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
 	bool Rename(char* oldname, char* newname) override;
 	bool AllocationInfo(uint16_t* _bytes_sector, uint8_t* _sectors_cluster,
 	                    uint16_t* _total_clusters,
@@ -490,12 +495,13 @@ public:
 	              uint8_t &error);
 
 	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;
-	bool FileCreate(DOS_File** file, char* name, uint16_t /*attributes*/) override;
+	bool FileCreate(DOS_File** file, char* name,
+	                FatAttributeFlags attributes) override;
 	bool FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst) override;
 	bool FindNext(DOS_DTA& dta) override;
 	bool FileUnlink(char* name) override;
-	bool GetFileAttr(char* name, uint16_t* attr) override;
-	bool SetFileAttr(const char* name, const uint16_t attr) override;
+	bool GetFileAttr(char* name, FatAttributeFlags* attr) override;
+	bool SetFileAttr(const char* name, const FatAttributeFlags attr) override;
 	bool FileExists(const char* name) override;
 	bool Rename(char* oldname, char* newname) override;
 	bool FileStat(const char* name, FileStat_Block* const stat_block) override;

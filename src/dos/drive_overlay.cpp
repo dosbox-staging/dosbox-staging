@@ -518,11 +518,12 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	return fileopened;
 }
 
+bool Overlay_Drive::FileCreate(DOS_File** file, char* name,
+                               FatAttributeFlags /*attributes*/)
+{
+	// TODO Check if it exists in the dirCache ? // fix addentry ?  or just
+	// double check (ld and overlay) AddEntry looks sound to me..
 
-bool Overlay_Drive::FileCreate(DOS_File * * file,char * name,uint16_t /*attributes*/) {
-	//TODO Check if it exists in the dirCache ? // fix addentry ?  or just double check (ld and overlay)
-	//AddEntry looks sound to me.. 
-	
 	//check if leading part of filename is a deleted directory
 	if (check_if_leading_is_deleted(name)) return false;
 
@@ -1002,7 +1003,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 	}
 }
 
-bool Overlay_Drive::GetFileAttr(char *name, uint16_t *attr)
+bool Overlay_Drive::GetFileAttr(char* name, FatAttributeFlags* attr)
 {
 	char overlayname[CROSS_LEN];
 	safe_strcpy(overlayname, overlaydir);
@@ -1010,10 +1011,8 @@ bool Overlay_Drive::GetFileAttr(char *name, uint16_t *attr)
 	CROSS_FILENAME(overlayname);
 
 	// Try to retrieve attributes
-	FatAttributeFlags tmp = {};
-	const auto result     = local_drive_get_attributes(overlayname, tmp);
+	const auto result = local_drive_get_attributes(overlayname, *attr);
 	if (result == DOSERR_NONE) {
-		*attr = tmp._data;
 		return true;
 	}
 
@@ -1026,15 +1025,14 @@ bool Overlay_Drive::GetFileAttr(char *name, uint16_t *attr)
 	return localDrive::GetFileAttr(name, attr);
 }
 
-bool Overlay_Drive::SetFileAttr(const char* name, uint16_t attr)
+bool Overlay_Drive::SetFileAttr(const char* name, FatAttributeFlags attr)
 {
 	char overlayname[CROSS_LEN];
 	safe_strcpy(overlayname, overlaydir);
 	safe_strcat(overlayname, name);
 	CROSS_FILENAME(overlayname);
 
-	const auto result = local_drive_set_attributes(overlayname,
-	                                               static_cast<uint8_t>(attr));
+	const auto result = local_drive_set_attributes(overlayname, attr);
 	dirCache.CacheOut(overlayname);
 	
 	if (result == DOSERR_NONE) {
@@ -1211,12 +1209,16 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 	//So oldname is directory => Exit!
 	//If oldname is on overlay => simple rename.
 	//if oldname is on base => copy file to overlay with new name and mark old file as deleted. 
-	//More advanced version. keep track of the file being renamed in order to detect that the file is being renamed back. 
-	
-	uint16_t attr = 0;
-	if (!GetFileAttr(oldname,&attr)) E_Exit("rename, but source doesn't exist, should not happen %s",oldname);
-	if (attr&DOS_ATTR_DIRECTORY) {
-		//See if the directory exists only in the overlay, then it should be possible.
+	//More advanced version. keep track of the file being renamed in order to detect that the file is being renamed back.
+
+	FatAttributeFlags attr = {};
+	if (!GetFileAttr(oldname, &attr)) {
+		E_Exit("rename, but source doesn't exist, should not happen %s",
+		       oldname);
+	}
+	if (attr.directory) {
+		// See if the directory exists only in the overlay, then it
+		// should be possible.
 #if OVERLAY_DIR
 		if (localDrive::TestDir(oldname)) E_Exit("Overlay: renaming base directory %s to %s not yet supported", oldname,newname);
 #endif

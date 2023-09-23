@@ -826,7 +826,7 @@ static Bitu DOS_21Handler(void) {
 		break;
 	case 0x3c:		/* CREATE Create of truncate file */
 		MEM_StrCopy(SegPhys(ds)+reg_dx,name1,DOSNAMEBUF);
-		if (DOS_CreateFile(name1,reg_cx,&reg_ax)) {
+		if (DOS_CreateFile(name1, reg_cl, &reg_ax)) {
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
@@ -908,19 +908,19 @@ static Bitu DOS_21Handler(void) {
 		switch (reg_al) {
 		case 0x00:				/* Get */
 			{
-				uint16_t attr_val=reg_cx;
-				if (DOS_GetFileAttr(name1,&attr_val)) {
-					reg_cx=attr_val;
-					reg_ax=attr_val; /* Undocumented */   
-					CALLBACK_SCF(false);
-				} else {
-					CALLBACK_SCF(true);
+			        FatAttributeFlags attr_val = reg_cl;
+			        if (DOS_GetFileAttr(name1, &attr_val)) {
+				        reg_cx = attr_val._data;
+				        reg_ax = attr_val._data; // Undocumented
+				        CALLBACK_SCF(false);
+			        } else {
+				        CALLBACK_SCF(true);
 					reg_ax=dos.errorcode;
-				}
-				break;
+			        }
+			        break;
 			};
 		case 0x01:				/* Set */
-			if (DOS_SetFileAttr(name1,reg_cx)) {
+			if (DOS_SetFileAttr(name1, reg_cl)) {
 				reg_ax=0x202;	/* ax destroyed */
 				CALLBACK_SCF(false);
 			} else {
@@ -1167,7 +1167,7 @@ static Bitu DOS_21Handler(void) {
 				CALLBACK_SCF(true);
 				break;
 			}
-			if (DOS_CreateFile(name1,reg_cx,&handle)) {
+			if (DOS_CreateFile(name1, reg_cl, &handle)) {
 				reg_ax=handle;
 				CALLBACK_SCF(false);
 			} else {
@@ -1367,7 +1367,8 @@ static Bitu DOS_21Handler(void) {
 		} 
 	case 0x6c:					/* Extended Open/Create */
 		MEM_StrCopy(SegPhys(ds)+reg_si,name1,DOSNAMEBUF);
-		if (DOS_OpenFileExtended(name1,reg_bx,reg_cx,reg_dx,&reg_ax,&reg_cx)) {
+		if (DOS_OpenFileExtended(name1, reg_bx, reg_cl, reg_dx,
+		                         &reg_ax, &reg_cx)) {
 			CALLBACK_SCF(false);
 		} else {
 			reg_ax=dos.errorcode;
