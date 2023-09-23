@@ -137,14 +137,14 @@ bool get_pipe_status(const char *out_file,
                      const bool append,
                      bool &failed_pipe)
 {
-	uint16_t fattr = 0;
+	FatAttributeFlags fattr = {};
 	uint16_t dummy = 0;
 	uint16_t dummy2 = 0;
 	uint32_t bigdummy = 0;
 	bool status = true;
 	/* Create if not exist. Open if exist. Both in read/write mode */
 	if (!pipe_file && append) {
-		if (DOS_GetFileAttr(out_file, &fattr) && fattr & DOS_ATTR_READ_ONLY) {
+		if (DOS_GetFileAttr(out_file, &fattr) && fattr.read_only) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			status = false;
 		} else if ((status = DOS_OpenFile(out_file, OPEN_READWRITE, &dummy))) {
@@ -153,8 +153,7 @@ bool get_pipe_status(const char *out_file,
 			// Create if not exists.
 			status = DOS_CreateFile(out_file, DOS_ATTR_ARCHIVE, &dummy);
 		}
-	} else if (!pipe_file && DOS_GetFileAttr(out_file, &fattr) &&
-	           (fattr & DOS_ATTR_READ_ONLY)) {
+	} else if (!pipe_file && DOS_GetFileAttr(out_file, &fattr) && fattr.read_only) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		status = false;
 	} else {
@@ -274,7 +273,7 @@ void DOS_Shell::ParseLine(char *line)
 	}
 	bool failed_pipe = false;
 	char pipe_tempfile[270]; // Piping requires the use of a temporary file
-	uint16_t fattr;
+	FatAttributeFlags fattr = {};
 	if (pipe_file.length()) {
 		std::string env_temp_path = {};
 		if (!GetEnvStr("TEMP", env_temp_path) &&
@@ -286,12 +285,12 @@ void DOS_Shell::ParseLine(char *line)
 			const auto idx   = env_temp_path.find('=');
 			std::string temp = env_temp_path.substr(idx + 1,
 			                                        std::string::npos);
-			if (DOS_GetFileAttr(temp.c_str(), &fattr) &&
-			    fattr & DOS_ATTR_DIRECTORY)
-				safe_sprintf(pipe_tempfile, "%s\\pipe%d.tmp",
+			if (DOS_GetFileAttr(temp.c_str(), &fattr) && fattr.directory) {
+				safe_sprintf(pipe_tempfile,
+				             "%s\\pipe%d.tmp",
 				             temp.c_str(),
 				             get_tick_random_number());
-			else
+			} else
 				safe_sprintf(pipe_tempfile, "pipe%d.tmp",
 				             get_tick_random_number());
 		}

@@ -141,8 +141,8 @@ void TREE::Run()
 	}
 
 	// Check if directory exists
-	uint16_t attr = 0;
-	if (!DOS_GetFileAttr(path.c_str(), &attr) || !(attr & DOS_ATTR_DIRECTORY)) {
+	FatAttributeFlags attr = {};
+	if (!DOS_GetFileAttr(path.c_str(), &attr) || !attr.directory) {
 		WriteOut(MSG_Get("SHELL_DIRECTORY_NOT_FOUND"), path.c_str());
 		return;
 	}
@@ -287,10 +287,11 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 	dos.dta(dos.tables.tempdta);
 
 	const auto pattern = path + "*.*";
-	FatAttributeFlags flags;
-	flags.system        = true;
-	flags.hidden        = true;
-	flags.directory     = true;
+	FatAttributeFlags flags = {};
+	flags.system    = true;
+	flags.hidden    = true;
+	flags.directory = true;
+
 	bool has_next_entry = DOS_FindFirst(pattern.c_str(), flags._data);
 	size_t space_needed = 7; // length of indentation + ellipsis
 

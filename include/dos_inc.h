@@ -175,10 +175,11 @@ constexpr uint16_t DOS_PackDate(const struct tm &datetime) noexcept
 
 /* Routines for Drive Class */
 bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb = false);
-bool DOS_OpenFileExtended(const char* name, uint16_t flags, uint16_t createAttr,
-                          uint16_t action, uint16_t* entry, uint16_t* status);
-bool DOS_CreateFile(const char* name, uint16_t attribute, uint16_t* entry,
-                    bool fcb = false);
+bool DOS_OpenFileExtended(const char* name, uint16_t flags,
+                          FatAttributeFlags createAttr, uint16_t action,
+                          uint16_t* entry, uint16_t* status);
+bool DOS_CreateFile(const char* name, FatAttributeFlags attribute,
+                    uint16_t* entry, bool fcb = false);
 bool DOS_UnlinkFile(const char* const name);
 bool DOS_FindFirst(const char *search, uint16_t attr, bool fcb_findfirst = false);
 bool DOS_FindNext(void);
@@ -199,8 +200,8 @@ bool DOS_MakeDir(const char* const dir);
 bool DOS_RemoveDir(const char* const dir);
 bool DOS_Rename(const char* const oldname, const char* const newname);
 bool DOS_GetFreeDiskSpace(uint8_t drive,uint16_t * bytes,uint8_t * sectors,uint16_t * clusters,uint16_t * free);
-bool DOS_GetFileAttr(const char* const name, uint16_t* attr);
-bool DOS_SetFileAttr(const char* const name, uint16_t attr);
+bool DOS_GetFileAttr(const char* const name, FatAttributeFlags* attr);
+bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr);
 
 /* IOCTL Stuff */
 bool DOS_IOCTL(void);

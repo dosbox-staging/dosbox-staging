@@ -229,7 +229,9 @@ bool isoDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 	return success;
 }
 
-bool isoDrive::FileCreate(DOS_File** /*file*/, char* /*name*/, uint16_t /*attributes*/) {
+bool isoDrive::FileCreate(DOS_File** /*file*/, char* /*name*/,
+                          FatAttributeFlags /*attributes*/)
+{
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
@@ -329,19 +331,27 @@ bool isoDrive::Rename(char* /*oldname*/, char* /*newname*/) {
 	return false;
 }
 
-bool isoDrive::GetFileAttr(char *name, uint16_t *attr) {
-	*attr = 0;
+bool isoDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
+{
+	*attr = {};
 	isoDirEntry de;
 	bool success = lookup(&de, name);
 	if (success) {
-		*attr = DOS_ATTR_ARCHIVE | DOS_ATTR_READ_ONLY;
-		if (IS_HIDDEN(FLAGS1)) *attr |= DOS_ATTR_HIDDEN;
-		if (IS_DIR(FLAGS1)) *attr |= DOS_ATTR_DIRECTORY;
+		attr->archive   = true;
+		attr->read_only = true;
+		if (IS_HIDDEN(FLAGS1)) {
+			attr->hidden = true;
+		}
+		if (IS_DIR(FLAGS1)) {
+			attr->directory = true;
+		}
 	}
 	return success;
 }
 
-bool isoDrive::SetFileAttr(const char * name, [[maybe_unused]] const uint16_t attr) {
+bool isoDrive::SetFileAttr(const char* name,
+                           [[maybe_unused]] const FatAttributeFlags attr)
+{
 	isoDirEntry de;
 	if (lookup(&de, name))
 		DOS_SetError(DOSERR_ACCESS_DENIED);

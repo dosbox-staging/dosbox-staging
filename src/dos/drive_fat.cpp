@@ -1025,7 +1025,8 @@ uint8_t fatDrive::GetMediaByte(void) {
 }
 
 // name can be a full DOS path with filename, up-to DOS_PATHLENGTH in length
-bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
+bool fatDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)
+{
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -1035,7 +1036,9 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 	char dirName[DOS_NAMELENGTH_ASCII];
 	char pathName[11]; // pathName is actually just the filename, without path
 
-	uint16_t save_errorcode=dos.errorcode;
+	uint16_t save_errorcode = dos.errorcode;
+
+	attributes.archive = true;
 
 	/* Check if file already exists */
 	if(getFileDirEntry(name, &fileEntry, &dirClust, &subEntry)) {
@@ -1050,7 +1053,7 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 			fileEntry.loFirstClust = 0;
 		}
 		fileEntry.entrysize = 0;
-		fileEntry.attrib = check_cast<uint8_t>(attributes | DOS_ATTR_ARCHIVE);
+		fileEntry.attrib    = attributes._data;
 		fileEntry.modTime   = DOS_GetBiosTimePacked();
 		fileEntry.modDate   = DOS_GetBiosDatePacked();
 		directoryChange(dirClust, &fileEntry, subEntry);
@@ -1063,7 +1066,7 @@ bool fatDrive::FileCreate(DOS_File **file, char *name, uint16_t attributes) {
 		if(!getDirClustNum(name, &dirClust, true)) return false;
 		fileEntry = {};
 		memcpy(&fileEntry.entryname, &pathName[0], 11);
-		fileEntry.attrib = check_cast<uint8_t>(attributes | DOS_ATTR_ARCHIVE);
+		fileEntry.attrib  = attributes._data;
 		fileEntry.modTime = DOS_GetBiosTimePacked();
 		fileEntry.modDate = DOS_GetBiosDatePacked();
 		addDirectoryEntry(dirClust, fileEntry);
@@ -1316,7 +1319,7 @@ bool fatDrive::FindNext(DOS_DTA &dta) {
 	return FindNextInternal(dta.GetDirIDCluster(), dta, &dummyClust);
 }
 
-bool fatDrive::GetFileAttr(char *name, uint16_t *attr)
+bool fatDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 {
 	/* you CAN get file attr root directory */
 	if (*name == 0) {
@@ -1334,7 +1337,7 @@ bool fatDrive::GetFileAttr(char *name, uint16_t *attr)
 	return true;
 }
 
-bool fatDrive::SetFileAttr(const char *name, const uint16_t attr)
+bool fatDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 {
 	if (readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -1353,7 +1356,7 @@ bool fatDrive::SetFileAttr(const char *name, const uint16_t attr)
 	if (!getFileDirEntry(name, &fileEntry, &dirClust, &subEntry, true)) {
 		return false;
 	} else {
-		fileEntry.attrib = (uint8_t)attr;
+		fileEntry.attrib = attr._data;
 		directoryChange(dirClust, &fileEntry, (int32_t)subEntry);
 	}
 	return true;

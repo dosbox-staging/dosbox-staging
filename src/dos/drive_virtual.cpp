@@ -436,7 +436,9 @@ bool Virtual_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	return false;
 }
 
-bool Virtual_Drive::FileCreate(DOS_File * * /*file*/,char * /*name*/,uint16_t /*attributes*/) {
+bool Virtual_Drive::FileCreate(DOS_File** /*file*/, char* /*name*/,
+                               FatAttributeFlags /*attributes*/)
+{
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
@@ -575,23 +577,25 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 	return false;
 }
 
-bool Virtual_Drive::GetFileAttr(char *name, uint16_t *attr)
+bool Virtual_Drive::GetFileAttr(char* name, FatAttributeFlags* attr)
 {
+	*attr = {};
 	assert(name);
 	if (*name == 0) {
-		*attr = DOS_ATTR_DIRECTORY;
+		attr->directory = true;
 		return true;
 	}
-	auto vfile = find_vfile_by_name(name);
+	const auto vfile = find_vfile_by_name(name);
 	if (vfile) {
-		*attr = (int)(vfile->isdir ? DOS_ATTR_DIRECTORY // Maybe
-		                           : DOS_ATTR_ARCHIVE); // Read-only?
+		attr->directory = vfile->isdir;
+		attr->archive   = !vfile->isdir;
 		return true;
 	}
 	return false;
 }
 
-bool Virtual_Drive::SetFileAttr(const char *name, [[maybe_unused]] uint16_t attr)
+bool Virtual_Drive::SetFileAttr(const char* name,
+                                [[maybe_unused]] FatAttributeFlags attr)
 {
 	assert(name);
 	if (*name == 0) {

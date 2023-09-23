@@ -46,11 +46,11 @@
 #include "cross.h"
 #include "inout.h"
 
-bool localDrive::FileCreate(DOS_File** file, char* name, uint16_t attributes)
+bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attributes)
 {
 	// Don't allow overwriting read-only files.
-	uint16_t test_attr = 0;
-	if (GetFileAttr(name, &test_attr) && (test_attr & DOS_ATTR_READ_ONLY)) {
+	FatAttributeFlags test_attr = {};
+	if (GetFileAttr(name, &test_attr) && test_attr.read_only) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -62,8 +62,8 @@ bool localDrive::FileCreate(DOS_File** file, char* name, uint16_t attributes)
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 
-	FILE* file_pointer = local_drive_create_file(newname,
-	                                             attributes | DOS_ATTR_ARCHIVE);
+	attributes.archive = true;
+	FILE* file_pointer = local_drive_create_file(newname, attributes);
 
 	if (!file_pointer) {
 		LOG_MSG("Warning: file creation failed: %s",newname);
@@ -131,9 +131,9 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 	}
 
 	// Don't allow opening read-only files in write mode.
-	uint16_t test_attr = 0;
+	FatAttributeFlags test_attr = {};
 	if (((flags & 0xf) == OPEN_WRITE || (flags & 0xf) == OPEN_READWRITE) &&
-	    (GetFileAttr(name, &test_attr) && (test_attr & DOS_ATTR_READ_ONLY))) {
+	    (GetFileAttr(name, &test_attr) && test_attr.read_only)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -258,8 +258,8 @@ bool localDrive::FileUnlink(char* name)
 	}
 
 	// Don't allow deleting read-only files.
-	uint16_t test_attr = 0;
-	if (GetFileAttr(name, &test_attr) && (test_attr & DOS_ATTR_READ_ONLY)) {
+	FatAttributeFlags test_attr = {};
+	if (GetFileAttr(name, &test_attr) && test_attr.read_only) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -434,7 +434,7 @@ bool localDrive::FindNext(DOS_DTA& dta)
 	return false;
 }
 
-bool localDrive::GetFileAttr(char *name, uint16_t *attr)
+bool localDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 {
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
@@ -442,11 +442,9 @@ bool localDrive::GetFileAttr(char *name, uint16_t *attr)
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
-	FatAttributeFlags tmp = {};
-	const auto result     = local_drive_get_attributes(newname, tmp);
-	*attr                 = tmp._data;
-
+	const auto result = local_drive_get_attributes(newname, *attr);
 	if (result != DOSERR_NONE) {
+		*attr = 0;
 		DOS_SetError(result);
 		return false;
 	}
@@ -454,7 +452,7 @@ bool localDrive::GetFileAttr(char *name, uint16_t *attr)
 	return true;
 }
 
-bool localDrive::SetFileAttr(const char *name, const uint16_t attr)
+bool localDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 {
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
@@ -462,8 +460,7 @@ bool localDrive::SetFileAttr(const char *name, const uint16_t attr)
 	CROSS_FILENAME(newname);
 	dirCache.ExpandName(newname);
 
-	const auto result = local_drive_set_attributes(newname,
-	                                               static_cast<uint8_t>(attr));
+	const auto result = local_drive_set_attributes(newname, attr);
 	dirCache.CacheOut(newname);
 
 	if (result != DOSERR_NONE) {
@@ -943,10 +940,11 @@ cdromDrive::cdromDrive(const char _driveLetter,
 	if (MSCDEX_GetVolumeName(subUnit,name)) dirCache.SetLabel(name,true,true);
 }
 
-bool cdromDrive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
-	if ((flags&0xf)==OPEN_READWRITE) {
+bool cdromDrive::FileOpen(DOS_File** file, char* name, uint32_t flags)
+{
+	if ((flags & 0xf) == OPEN_READWRITE) {
 		flags &= ~static_cast<unsigned>(OPEN_READWRITE);
-	} else if ((flags&0xf)==OPEN_WRITE) {
+	} else if ((flags & 0xf) == OPEN_WRITE) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -956,38 +954,48 @@ bool cdromDrive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	return success;
 }
 
-bool cdromDrive::FileCreate(DOS_File * * /*file*/,char * /*name*/,uint16_t /*attributes*/) {
+bool cdromDrive::FileCreate(DOS_File** /*file*/, char* /*name*/,
+                            FatAttributeFlags /*attributes*/)
+{
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::FileUnlink(char * /*name*/) {
+bool cdromDrive::FileUnlink(char* /*name*/)
+{
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::RemoveDir(char * /*dir*/) {
+bool cdromDrive::RemoveDir(char* /*dir*/)
+{
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::MakeDir(char * /*dir*/) {
+bool cdromDrive::MakeDir(char* /*dir*/)
+{
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::Rename(char * /*oldname*/,char * /*newname*/) {
+bool cdromDrive::Rename(char* /*oldname*/, char* /*newname*/)
+{
 	DOS_SetError(DOSERR_ACCESS_DENIED);
 	return false;
 }
 
-bool cdromDrive::GetFileAttr(char * name, uint16_t * attr) {
-	bool result = localDrive::GetFileAttr(name,attr);
-	if (result) *attr |= DOS_ATTR_READ_ONLY;
+bool cdromDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
+{
+	const bool result = localDrive::GetFileAttr(name, attr);
+	if (result) {
+		attr->read_only = true;
+	}
 	return result;
 }
 
-bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool /*fcb_findfirst*/) {
+bool cdromDrive::FindFirst(char* _dir, DOS_DTA& dta, bool /*fcb_findfirst*/)
+{
 	// If media has changed, reInit drivecache.
 	if (MSCDEX_HasMediaChanged(subUnit)) {
 		dirCache.EmptyCache();
@@ -998,7 +1006,8 @@ bool cdromDrive::FindFirst(char * _dir,DOS_DTA & dta,bool /*fcb_findfirst*/) {
 	return localDrive::FindFirst(_dir,dta);
 }
 
-void cdromDrive::SetDir(const char* path) {
+void cdromDrive::SetDir(const char* path)
+{
 	// If media has changed, reInit drivecache.
 	if (MSCDEX_HasMediaChanged(subUnit)) {
 		dirCache.EmptyCache();
@@ -1009,15 +1018,18 @@ void cdromDrive::SetDir(const char* path) {
 	localDrive::SetDir(path);
 }
 
-bool cdromDrive::isRemote(void) {
+bool cdromDrive::isRemote()
+{
 	return true;
 }
 
-bool cdromDrive::isRemovable(void) {
+bool cdromDrive::isRemovable()
+{
 	return true;
 }
 
-Bits cdromDrive::UnMount(void) {
+Bits cdromDrive::UnMount()
+{
 	if (MSCDEX_RemoveDrive(driveLetter)) {
 		return 0;
 	}

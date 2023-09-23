@@ -365,7 +365,7 @@ bool DOS_Rename(const char* const oldname, const char* const newname)
 		return false;
 	}
 	/*Test if target exists => no access */
-	uint16_t attr;
+	FatAttributeFlags attr = {};
 	if (Drives.at(drivenew)->GetFileAttr(fullnew, &attr)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
@@ -548,14 +548,15 @@ bool DOS_FlushFile(uint16_t entry) {
 	return true;
 }
 
-bool DOS_CreateFile(const char* name, uint16_t attributes, uint16_t* entry, bool fcb)
+bool DOS_CreateFile(const char* name, FatAttributeFlags attributes,
+                    uint16_t* entry, bool fcb)
 {
 	// Creation of a device is the same as opening it
 	// Tc201 installer
 	if (DOS_FindDevice(name) != DOS_DEVICES)
 		return DOS_OpenFile(name, OPEN_READ, entry, fcb);
 
-	LOG(LOG_FILES,LOG_NORMAL)("file create attributes %X file %s",attributes,name);
+	LOG(LOG_FILES, LOG_NORMAL)("file create attributes %X file %s", attributes._data, name);
 
 	/* First check if the name is correct */
 	char fullname[DOS_PATHLENGTH];
@@ -584,7 +585,7 @@ bool DOS_CreateFile(const char* name, uint16_t attributes, uint16_t* entry, bool
 		return false;
 	}
 	/* Don't allow directories to be created */
-	if (attributes&DOS_ATTR_DIRECTORY) {
+	if (attributes.directory) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -607,12 +608,13 @@ bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
 	if (flags>2) LOG(LOG_FILES,LOG_ERROR)("Special file open command %X file %s",flags,name);
 	else LOG(LOG_FILES,LOG_NORMAL)("file open command %X file %s",flags,name);
 
-	uint16_t attr = 0;
+	FatAttributeFlags attr = {};
 	uint8_t devnum = DOS_FindDevice(name);
 	bool device = (devnum != DOS_DEVICES);
-	if(!device && DOS_GetFileAttr(name,&attr)) {
-	//DON'T ALLOW directories to be openened.(skip test if file is device).
-		if((attr & DOS_ATTR_DIRECTORY) || (attr & DOS_ATTR_VOLUME)){
+	if (!device && DOS_GetFileAttr(name, &attr)) {
+		// DON'T ALLOW directories to be openened.
+		// (skip test if file is device).
+		if (attr.directory || attr.volume) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			return false;
 		}
@@ -675,8 +677,9 @@ bool DOS_OpenFile(const char* name, uint8_t flags, uint16_t* entry, bool fcb)
 	}
 }
 
-bool DOS_OpenFileExtended(const char* name, uint16_t flags, uint16_t createAttr,
-                          uint16_t action, uint16_t* entry, uint16_t* status)
+bool DOS_OpenFileExtended(const char* name, uint16_t flags,
+                          FatAttributeFlags createAttr, uint16_t action,
+                          uint16_t* entry, uint16_t* status)
 {
 	// FIXME: Not yet supported : Bit 13 of flags (int 0x24 on critical error)
 	uint16_t result = 0;
@@ -748,21 +751,24 @@ bool DOS_UnlinkFile(const char* const name)
 	return Drives.at(drive)->FileUnlink(fullname);
 }
 
-bool DOS_GetFileAttr(const char* const name, uint16_t* attr)
+bool DOS_GetFileAttr(const char* const name, FatAttributeFlags* attr)
 {
 	char fullname[DOS_PATHLENGTH];
 	uint8_t drive;
-	if (!DOS_MakeName(name, fullname, &drive))
+	if (!DOS_MakeName(name, fullname, &drive)) {
 		return false;
+	}
+
 	if (Drives.at(drive)->GetFileAttr(fullname, attr)) {
 		return true;
 	} else {
+		*attr = 0;
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
 }
 
-bool DOS_SetFileAttr(const char* const name, uint16_t attr)
+bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr)
 {
 	char fullname[DOS_PATHLENGTH];
 	uint8_t drive;
@@ -774,23 +780,22 @@ bool DOS_SetFileAttr(const char* const name, uint16_t attr)
 		return false;
 	}
 
-	uint16_t old_attr;
+	FatAttributeFlags old_attr = {};
 	if (!Drives.at(drive)->GetFileAttr(fullname, &old_attr)) {
 		DOS_SetError(DOSERR_FILE_NOT_FOUND);
 		return false;
 	}
 
-	if ((old_attr ^ attr) & DOS_ATTR_VOLUME) { /* change in volume label
-		                                      attribute */
-		LOG_WARNING
-		("Attempted to change volume label attribute of '%s' with SetFileAttr",
-		 name);
+	if (old_attr.volume != attr.volume) {
+		// Change in volume label attribute
+		LOG_WARNING("Attempted to change volume label attribute of '%s' with SetFileAttr",
+		            name);
 		return false;
 	}
 
 	/* define what cannot be changed */
 	const uint16_t attr_mask = (DOS_ATTR_VOLUME | DOS_ATTR_DIRECTORY);
-	attr = (attr & ~attr_mask) | (old_attr & attr_mask);
+	attr = (attr._data & ~attr_mask) | (old_attr._data & attr_mask);
 	return Drives.at(drive)->SetFileAttr(fullname, attr);
 }
 
