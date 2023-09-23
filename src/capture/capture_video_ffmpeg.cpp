@@ -25,7 +25,7 @@
 #include "timer.h"
 #include "image/image_decoder.h"
 
-#include <smmintrin.h>
+#include <emmintrin.h>
 
 #if C_FFMPEG
 
@@ -709,31 +709,23 @@ static void fast_scale(const RenderedImage& image, AVFrame* frame)
 	int cr_pitch = frame->linesize[2];
 	int cb_pitch = frame->linesize[1];
 
-	ImageDecoder image_decoder;
-	image_decoder.Init(image, 0);
+	uint8_t* src = image.image_data;
 	for (uint16_t y = 0; y < image.params.height; ++y) {
 		for (uint16_t x = 0; x < image.params.width; x += 4) {
-			uint8_t redp[4];
-			uint8_t greenp[4];
-			uint8_t bluep[4];
-			for (int i = 0; i < 4; ++i) {
-				Rgb888 pixel = image_decoder.GetNextPixelAsRgb888();
-				redp[i] = pixel.red;
-				greenp[i] = pixel.green;
-				bluep[i] = pixel.blue;
-			}
-			__m128i in;
-			in = _mm_loadu_si32(redp);
-			in = _mm_cvtepu8_epi32(in);
-			__m128 red = _mm_cvtepi32_ps(in);
+			__m128i temp;
 
-			in = _mm_loadu_si32(greenp);
-			in = _mm_cvtepu8_epi32(in);
-			__m128 green = _mm_cvtepi32_ps(in);
+			__m128i in = _mm_loadu_si128(reinterpret_cast<__m128i*>(src + (x * 4)));
 
-			in = _mm_loadu_si32(bluep);
-			in = _mm_cvtepu8_epi32(in);
-			__m128 blue = _mm_cvtepi32_ps(in);
+			temp = _mm_srli_epi32(in, 16);
+			temp = _mm_and_si128(temp, _mm_set1_epi32(0xFF));
+			__m128 red = _mm_cvtepi32_ps(temp);
+
+			temp = _mm_srli_epi32(in, 8);
+			temp = _mm_and_si128(temp, _mm_set1_epi32(0xFF));
+			__m128 green = _mm_cvtepi32_ps(temp);
+
+			temp = _mm_and_si128(in, _mm_set1_epi32(0xFF));
+			__m128 blue = _mm_cvtepi32_ps(temp);
 
 			__m128 red_temp;
 			__m128 green_temp;
@@ -762,16 +754,16 @@ static void fast_scale(const RenderedImage& image, AVFrame* frame)
 			cbf = _mm_add_ps(cbf, _mm_set1_ps(128.0f));
 
 			__m128i y_out = _mm_cvtps_epi32(yf);
-			y_out = _mm_packus_epi32(y_out, y_out);
+			y_out = _mm_packs_epi32(y_out, y_out);
 			y_out = _mm_packus_epi16(y_out, y_out);
 			y_out = _mm_unpacklo_epi8(y_out, y_out);
 
 			__m128i cr_out = _mm_cvtps_epi32(crf);
-			cr_out = _mm_packus_epi32(cr_out, cr_out);
+			cr_out = _mm_packs_epi32(cr_out, cr_out);
 			cr_out = _mm_packus_epi16(cr_out, cr_out);
 
 			__m128i cb_out = _mm_cvtps_epi32(cbf);
-			cb_out = _mm_packus_epi32(cb_out, cb_out);
+			cb_out = _mm_packs_epi32(cb_out, cb_out);
 			cb_out = _mm_packus_epi16(cb_out, cb_out);
 
 			_mm_storeu_si64(y_row + (x * 2), y_out);
@@ -799,7 +791,7 @@ static void fast_scale(const RenderedImage& image, AVFrame* frame)
 		cr_row += cr_pitch;
 		cb_row += cb_pitch;
 
-		image_decoder.AdvanceRow();
+		src += image.pitch;
 	}
 }
 
