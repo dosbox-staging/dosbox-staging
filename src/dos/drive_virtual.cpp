@@ -583,12 +583,13 @@ bool Virtual_Drive::GetFileAttr(char* name, FatAttributeFlags* attr)
 	assert(name);
 	if (*name == 0) {
 		attr->directory = true;
+		attr->read_only = true;
 		return true;
 	}
 	const auto vfile = find_vfile_by_name(name);
 	if (vfile) {
 		attr->directory = vfile->isdir;
-		attr->archive   = !vfile->isdir;
+		attr->read_only = true;
 		return true;
 	}
 	return false;
