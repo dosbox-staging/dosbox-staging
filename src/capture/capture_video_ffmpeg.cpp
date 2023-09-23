@@ -686,12 +686,12 @@ static void scale_image(const RenderedImage& image, AVFrame* frame)
 	}
 }
 
-static void fast_scale(uint8_t* redp, uint8_t* greenp, uint8_t* bluep, uint16_t width, uint16_t height, AVFrame* frame)
+static void fast_scale(const RenderedImage& image, AVFrame* frame)
 {
-	size_t horizontal_scale = static_cast<size_t>(frame->width) / width;
-	size_t vertical_scale = static_cast<size_t>(frame->height) / height;
+	size_t horizontal_scale = static_cast<size_t>(frame->width) / image.params.width;
+	size_t vertical_scale = static_cast<size_t>(frame->height) / image.params.height;
 
-	size_t scaled_width = width * horizontal_scale;
+	size_t scaled_width = image.params.width * horizontal_scale;
 
 	size_t uv_horizontal_scale = horizontal_scale;
 	size_t uv_vertical_scale = vertical_scale;
@@ -709,23 +709,31 @@ static void fast_scale(uint8_t* redp, uint8_t* greenp, uint8_t* bluep, uint16_t 
 	int cr_pitch = frame->linesize[2];
 	int cb_pitch = frame->linesize[1];
 
-	size_t index = 0;
-	for (uint16_t y = 0; y < height; ++y) {
-		for (uint16_t x = 0; x < width; x += 4) {
+	ImageDecoder image_decoder;
+	image_decoder.Init(image, 0);
+	for (uint16_t y = 0; y < image.params.height; ++y) {
+		for (uint16_t x = 0; x < image.params.width; x += 4) {
+			uint8_t redp[4];
+			uint8_t greenp[4];
+			uint8_t bluep[4];
+			for (int i = 0; i < 4; ++i) {
+				Rgb888 pixel = image_decoder.GetNextPixelAsRgb888();
+				redp[i] = pixel.red;
+				greenp[i] = pixel.green;
+				bluep[i] = pixel.blue;
+			}
 			__m128i in;
-			in = _mm_loadu_si32(redp + index);
+			in = _mm_loadu_si32(redp);
 			in = _mm_cvtepu8_epi32(in);
 			__m128 red = _mm_cvtepi32_ps(in);
 
-			in = _mm_loadu_si32(greenp + index);
+			in = _mm_loadu_si32(greenp);
 			in = _mm_cvtepu8_epi32(in);
 			__m128 green = _mm_cvtepi32_ps(in);
 
-			in = _mm_loadu_si32(bluep + index);
+			in = _mm_loadu_si32(bluep);
 			in = _mm_cvtepu8_epi32(in);
 			__m128 blue = _mm_cvtepi32_ps(in);
-
-			index += 4;
 
 			__m128 red_temp;
 			__m128 green_temp;
@@ -790,31 +798,9 @@ static void fast_scale(uint8_t* redp, uint8_t* greenp, uint8_t* bluep, uint16_t 
 		y_row += y_pitch;
 		cr_row += cr_pitch;
 		cb_row += cb_pitch;
-	}
-}
 
-static uint8_t* convert_to_rgb_planar(const RenderedImage& image)
-{
-	const size_t pixels = static_cast<size_t>(image.params.width) * static_cast<size_t>(image.params.height);
-	uint8_t* red = (uint8_t*)malloc(pixels * 3);
-	uint8_t* green = red + pixels;
-	uint8_t* blue = green + pixels;
-
-	ImageDecoder image_decoder;
-	image_decoder.Init(image, 0);
-	size_t index = 0;
-	for (uint16_t y = 0; y < image.params.height; ++y) {
-		for (uint16_t x = 0; x < image.params.width; ++x) {
-			Rgb888 pixel = image_decoder.GetNextPixelAsRgb888();
-			red[index] = pixel.red;
-			green[index] = pixel.green;
-			blue[index] = pixel.blue;
-			++index;
-		}
 		image_decoder.AdvanceRow();
 	}
-
-	return red;
 }
 
 void FfmpegEncoder::ScaleVideo()
@@ -854,11 +840,7 @@ void FfmpegEncoder::ScaleVideo()
 
 			#if 1
 			int64_t start = GetTicksUs();
-			const size_t pixels = static_cast<size_t>(image.params.width) * static_cast<size_t>(image.params.height); 
-			uint8_t* red = convert_to_rgb_planar(image);
-			uint8_t* green = red + pixels;
-			uint8_t* blue = green + pixels;
-			fast_scale(red, green, blue, image.params.width, image.params.height, frame);
+			fast_scale(image, frame);
 			LOG_MSG("FFMPEG: Scaler: %ld", GetTicksUsSince(start));
 			#else
 			int64_t start = GetTicksUs();
@@ -866,7 +848,6 @@ void FfmpegEncoder::ScaleVideo()
 			LOG_MSG("FFMPEG: Scaler: %ld", GetTicksUsSince(start));
 			#endif
 			image.free();
-			free(red);
 
 			[[maybe_unused]] bool frame_queued = video_encoder.queue.Enqueue(std::move(frame));
 			assert(frame_queued);
