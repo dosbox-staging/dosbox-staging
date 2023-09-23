@@ -82,6 +82,7 @@ summary('Install prefix', get_option('prefix'), section: 'Build Summary')
 extra_flags = [
     '-Wno-unknown-pragmas',
     '-fpch-preprocess',
+    '-march=native',
 ]
 
 warnings = []
