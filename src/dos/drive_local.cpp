@@ -989,6 +989,8 @@ bool cdromDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 {
 	const bool result = localDrive::GetFileAttr(name, attr);
 	if (result) {
+		attr->archive   = false;
+		attr->system    = false;
 		attr->read_only = true;
 	}
 	return result;

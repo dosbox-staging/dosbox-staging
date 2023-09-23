@@ -337,7 +337,6 @@ bool isoDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 	isoDirEntry de;
 	bool success = lookup(&de, name);
 	if (success) {
-		attr->archive   = true;
 		attr->read_only = true;
 		if (IS_HIDDEN(FLAGS1)) {
 			attr->hidden = true;
