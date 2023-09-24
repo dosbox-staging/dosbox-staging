@@ -54,7 +54,7 @@ for further details.
 
 ## Hardware requirements
 
-SSE 4.2 instruction set is required for version 0.75.1 or newer.
+From the x86 family of processors, all x86-64 processors are supported.
 
 ## Development snapshot builds
 

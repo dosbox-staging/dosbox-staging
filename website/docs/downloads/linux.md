@@ -110,7 +110,7 @@ You can easily configure your DOS games on
 
 ## Hardware requirements
 
-For x86 CPUs the SSE 4.2 instruction set is required.
+From the x86 family of processors, all x86-64 processors are supported.
 
 ## Development snapshot builds
 
