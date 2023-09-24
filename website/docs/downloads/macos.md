@@ -13,7 +13,7 @@ sha256: 46a256645255e8345981ea357f1416b8<wbr>ce4bc60a2aba9a86b5122d5075aa7fa9
 </small>
 
 This package is compatible with macOS 10.15 (Catalina) or newer and supports both
-Intel and M1 Macs.
+Intel and Apple silicon Macs.
 
 Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
 the changes and improvements introduced by this release.
@@ -52,10 +52,8 @@ to reproduce some issues).
 
 ## Hardware requirements
 
-For x86 CPUs the SSE 4.2 instruction set is required. For Intel Mac models
-that don't support it, you can try using the partial SSE4.2 emulator
-[MouSSE](https://forums.macrumors.com/threads/mp3-1-others-sse-4-2-emulation-to-enable-amd-metal-driver.2206682/).
-
+This package is compatible with macOS 10.15 (Catalina) or newer and supports
+both 64-bit Intel and Apple silicon Macs.
 
 ## Development snapshot builds
 
