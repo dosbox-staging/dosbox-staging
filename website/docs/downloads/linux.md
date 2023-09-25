@@ -53,10 +53,7 @@ repository owners.
 
 [![Download from Flathub](https://flathub.org/assets/badges/flathub-badge-en.png){ class=linux-badge width=35% align=left }][flathub]
 
-[![Download from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg){ class=linux-badge width=37% align=left }][snapstore]
-
 [flathub]:https://flathub.org/apps/details/io.github.dosbox-staging
-[snapstore]:https://snapcraft.io/dosbox-staging
 
 
 ### Fedora repository package
