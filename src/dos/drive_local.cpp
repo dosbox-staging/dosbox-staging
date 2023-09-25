@@ -130,9 +130,11 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 		return false;
 	}
 
-	// Don't allow opening read-only files in write mode.
+	// Don't allow opening read-only files in write mode,
+	// unless configured otherwise
 	FatAttributeFlags test_attr = {};
-	if (((flags & 0xf) == OPEN_WRITE || (flags & 0xf) == OPEN_READWRITE) &&
+	if (!always_open_ro_files &&
+	    ((flags & 0xf) == OPEN_WRITE || (flags & 0xf) == OPEN_READWRITE) &&
 	    (GetFileAttr(name, &test_attr) && test_attr.read_only)) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
