@@ -155,8 +155,9 @@ void PAGING_PageFault(PhysPt lin_addr,uint32_t page_addr,uint32_t faultcode) {
 	paging.cr2=lin_addr;
 	PF_Entry * entry=&pf_queue.entries[pf_queue.used++];
 	LOG(LOG_PAGING, LOG_NORMAL)("PageFault at %X type [%x] queue %u", lin_addr, faultcode, pf_queue.used);
-	// LOG_MSG("EAX:%04X ECX:%04X EDX:%04X EBX:%04X",reg_eax,reg_ecx,reg_edx,reg_ebx);
-	// LOG_MSG("CS:%04X EIP:%08X SS:%04x SP:%08X",SegValue(cs),reg_eip,SegValue(ss),reg_esp);
+	LOG_WARNING("PageFault at %X type [%x] queue %u", lin_addr, faultcode, pf_queue.used);
+	LOG_WARNING("--- EAX:%04X ECX:%04X EDX:%04X EBX:%04X",reg_eax,reg_ecx,reg_edx,reg_ebx);
+	LOG_WARNING("--- CS:%04X EIP:%08X SS:%04x SP:%08X",SegValue(cs),reg_eip,SegValue(ss),reg_esp);
 	entry->cs=SegValue(cs);
 	entry->eip=reg_eip;
 	entry->page_addr=page_addr;
@@ -167,6 +168,7 @@ void PAGING_PageFault(PhysPt lin_addr,uint32_t page_addr,uint32_t faultcode) {
 	DOSBOX_RunMachine();
 	pf_queue.used--;
 	LOG(LOG_PAGING, LOG_NORMAL)("Left PageFault for %x queue %u", lin_addr, pf_queue.used);
+	LOG_WARNING("Left PageFault for %x queue %u", lin_addr, pf_queue.used);
 	lflags = old_lflags;
 	cpudecoder=old_cpudecoder;
 //	LOG_MSG("SS:%04x SP:%08X",SegValue(ss),reg_esp);

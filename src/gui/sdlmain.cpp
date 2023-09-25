@@ -24,14 +24,19 @@
 #include <array>
 #include <cassert>
 #include <cerrno>
+#include <chrono>
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <sys/types.h>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 #include <tuple>
 #include <unistd.h>
+
 
 #if C_DEBUG
 #include <queue>
@@ -4486,6 +4491,33 @@ void OverrideWMClass()
 #endif
 }
 
+static std::string getCurrentDateTimeSuffix() {
+    auto now = std::chrono::system_clock::now();
+
+    auto now_time_t = std::chrono::system_clock::to_time_t(now);
+
+    auto now_since_epoch = now.time_since_epoch();
+    auto duration_in_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now_since_epoch);
+    int milliseconds = duration_in_ms.count() % 1000;
+
+    std::stringstream ss;
+
+    ss << std::put_time(std::localtime(&now_time_t), "%Y%m%d_%H%M%S");
+
+    ss << '_' << std::setfill('0') << std::setw(3) << milliseconds;
+
+    return ss.str();
+}
+
+static std::string getLogFilename(const std::string& baseFilename) {
+    std::string::size_type pos = baseFilename.rfind('.');
+    if (pos == std::string::npos) {
+        return baseFilename + "_" + getCurrentDateTimeSuffix();
+    } else {
+        return baseFilename.substr(0, pos) + "_" + getCurrentDateTimeSuffix() + baseFilename.substr(pos);
+    }
+}
+
 extern "C" int SDL_CDROMInit(void);
 int sdl_main(int argc, char *argv[])
 {
@@ -4519,6 +4551,8 @@ int sdl_main(int argc, char *argv[])
 	}
 
 	loguru::init(argc, argv);
+
+	loguru::add_file(getLogFilename("dosbox-staging.log").c_str(), loguru::Truncate, loguru::Verbosity_MAX);
 
 	LOG_MSG("%s version %s", CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
