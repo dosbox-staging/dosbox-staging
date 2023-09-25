@@ -360,6 +360,30 @@
             "ErrorCode": "V801",
             "FileName": "mouseif_ps2_bios.cpp",
             "Message": "Decreased performance. It is better to redefine the second function argument as a reference. Consider replacing 'const .. new_buttons_all' with 'const .. &new_buttons_all'."
+        },
+        {
+            "CodeCurrent": 481966618,
+            "CodeNext": 368006577,
+            "CodePrev": 0,
+            "ErrorCode": "V813",
+            "FileName": "dos_files.cpp",
+            "Message": "Decreased performance. The 'attributes' argument should probably be rendered as a constant reference."
+        },
+        {
+            "CodeCurrent": 4048577584,
+            "CodeNext": 4015905278,
+            "CodePrev": 3396962584,
+            "ErrorCode": "V813",
+            "FileName": "dos_files.cpp",
+            "Message": "Decreased performance. The 'createAttr' argument should probably be rendered as a constant reference."
+        },
+        {
+            "CodeCurrent": 205934690,
+            "CodeNext": 123,
+            "CodePrev": 0,
+            "ErrorCode": "V813",
+            "FileName": "drive_overlay.cpp",
+            "Message": "Decreased performance. The 'attr' argument should probably be rendered as a constant reference."
         }
     ]
 }
