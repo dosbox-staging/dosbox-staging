@@ -888,29 +888,27 @@ struct draw_state
 	bool screen_update_pending   = false;
 };
 
-struct triangle_worker
-{
-	std::atomic_bool threads_active = false;
-
-	bool use_threads             = false;
-	bool disable_bilinear_filter = true;
-
-	uint16_t* drawbuf = nullptr;
-
-	poly_vertex v1 = {};
-	poly_vertex v2 = {};
-	poly_vertex v3 = {};
-
-	int32_t v1y      = 0;
-	int32_t v3y      = 0;
-	int32_t totalpix = 0;
-
+struct TriangleWorker {
 	std::array<std::thread, TRIANGLE_THREADS> threads = {};
 	std::array<Semaphore, TRIANGLE_THREADS> sembegin  = {};
 
 	Semaphore semdone = {};
 
-	int done_count = 0;
+	std::atomic_bool threads_active = false;
+
+	poly_vertex v1 = {};
+	poly_vertex v2 = {};
+	poly_vertex v3 = {};
+
+	uint16_t* drawbuf = nullptr;
+
+	int32_t v1y      = 0;
+	int32_t v3y      = 0;
+	int32_t totalpix = 0;
+	int done_count   = 0;
+
+	bool use_threads             = false;
+	bool disable_bilinear_filter = true;
 };
 
 struct voodoo_state
@@ -953,7 +951,7 @@ struct voodoo_state
 #endif
 
 	draw_state draw         = {};
-	triangle_worker tworker = {};
+	TriangleWorker tworker  = {};
 };
 
 #ifdef C_ENABLE_VOODOO_OPENGL
@@ -4338,7 +4336,8 @@ static void update_statistics(voodoo_state *vs, bool accumulate)
     COMMAND HANDLERS
 ***************************************************************************/
 
-static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, int32_t worktend)
+static void triangle_worker_work(const TriangleWorker& tworker,
+                                 const int32_t worktstart, const int32_t worktend)
 {
 	/* determine the number of TMUs involved */
 	uint32_t tmus     = 0;
@@ -4423,7 +4422,7 @@ static void triangle_worker_work(triangle_worker& tworker, int32_t worktstart, i
 
 static int triangle_worker_thread_func(int32_t p)
 {
-	triangle_worker& tworker = v->tworker;
+	TriangleWorker& tworker = v->tworker;
 	for (const int32_t tnum = p; tworker.threads_active;) {
 		tworker.sembegin[tnum].wait();
 		if (tworker.threads_active) {
@@ -4434,7 +4433,7 @@ static int triangle_worker_thread_func(int32_t p)
 	return 0;
 }
 
-static void triangle_worker_shutdown(triangle_worker& tworker)
+static void triangle_worker_shutdown(TriangleWorker& tworker)
 {
 	if (!tworker.threads_active) {
 		return;
@@ -4455,7 +4454,7 @@ static void triangle_worker_shutdown(triangle_worker& tworker)
 	}
 }
 
-static void triangle_worker_run(triangle_worker& tworker)
+static void triangle_worker_run(TriangleWorker& tworker)
 {
 	if (!tworker.use_threads)
 	{
@@ -4509,8 +4508,8 @@ static void triangle_worker_run(triangle_worker& tworker)
 		tworker.threads_active = true;
 
 		int worker_id = 0;
-		for (auto& triangle_worker : tworker.threads) {
-			triangle_worker = std::thread([worker_id] {
+		for (auto& TriangleWorker : tworker.threads) {
+			TriangleWorker = std::thread([worker_id] {
 				triangle_worker_thread_func(worker_id);
 			});
 			++worker_id;
@@ -4727,7 +4726,7 @@ static void triangle(voodoo_state *vs)
 		}
 	}
 
-	triangle_worker& tworker = vs->tworker;
+	TriangleWorker& tworker = vs->tworker;
 	tworker.v1 = *v1, tworker.v2 = *v2, tworker.v3 = *v3;
 	tworker.drawbuf = drawbuf;
 	tworker.v1y = v1y;
@@ -7775,7 +7774,31 @@ PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu page) {
 	return (page >= (voodoo_current_lfb>>12) && page < (voodoo_current_lfb>>12) + VOODOO_PAGES ? voodoo_pagehandler : nullptr);
 }
 
-void VOODOO_Destroy(Section* /*sec*/) {
+/* void VOODOO_Configure(const ModuleLifecycle lifecycle, Section* section)
+{
+        static std::unique_ptr<PCI> pci_instance = nullptr;
+
+        switch (lifecycle) {
+        case ModuleLifecycle::Create:
+                if (!pci_instance) {
+                        pci_instance = std::make_unique<PCI>(section);
+                        pci_interface = pci_instance.get();
+                }
+                break;
+
+        // This module doesn't support reconfiguration at runtime
+        case ModuleLifecycle::Reconfigure:
+                break;
+
+        case ModuleLifecycle::Destroy:
+                pci_interface = nullptr;
+                pci_instance.reset();
+                break;
+        }
+} */
+
+void VOODOO_Destroy(Section* /*sec*/)
+{
 	voodoo_shutdown();
 }
 
