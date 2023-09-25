@@ -890,15 +890,27 @@ struct draw_state
 
 struct triangle_worker
 {
-	std::atomic_bool threads_active;
-	bool use_threads, disable_bilinear_filter;
-	uint16_t *drawbuf;
-	poly_vertex v1, v2, v3;
-	int32_t v1y, v3y, totalpix;
-	std::array<std::thread, TRIANGLE_THREADS> threads;
-	std::array<Semaphore, TRIANGLE_THREADS> sembegin;
-	Semaphore semdone;
-	int done_count;
+	std::atomic_bool threads_active = false;
+
+	bool use_threads             = false;
+	bool disable_bilinear_filter = true;
+
+	uint16_t* drawbuf = nullptr;
+
+	poly_vertex v1 = {};
+	poly_vertex v2 = {};
+	poly_vertex v3 = {};
+
+	int32_t v1y      = 0;
+	int32_t v3y      = 0;
+	int32_t totalpix = 0;
+
+	std::array<std::thread, TRIANGLE_THREADS> threads = {};
+	std::array<Semaphore, TRIANGLE_THREADS> sembegin  = {};
+
+	Semaphore semdone = {};
+
+	int done_count = 0;
 };
 
 struct voodoo_state
