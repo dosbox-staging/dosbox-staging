@@ -913,6 +913,9 @@ struct TriangleWorker {
 
 struct voodoo_state
 {
+	void FastFillRaster(void* destbase, const int32_t y,
+	                    const poly_extent* extent, const uint16_t* extra_dither);
+
 	uint8_t chipmask = {}; /* mask for which chips are available */
 
 	voodoo_reg reg[0x400]    = {}; /* raw registers */
@@ -3586,10 +3589,12 @@ static raster_info *find_rasterizer(voodoo_state *vs, int texcount)
 ***************************************************************************/
 
 /*-------------------------------------------------
-    raster_fastfill - per-scanline
+    FastFillRaster - per-scanline
     implementation of the 'fastfill' command
 -------------------------------------------------*/
-static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent, const uint16_t* extra_dither)
+void voodoo_state::FastFillRaster(void* destbase, const int32_t y,
+                                  const poly_extent* extent,
+                                  const uint16_t* extra_dither)
 {
 	stats_block stats = {};
 	const int32_t startx = extent->startx;
@@ -3599,20 +3604,19 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 
 	/* determine the screen Y */
 	scry = y;
-	if (FBZMODE_Y_ORIGIN(v->reg[fbzMode].u)) {
-		scry = (v->fbi.yorigin - y) & 0x3ff;
+	if (FBZMODE_Y_ORIGIN(reg[fbzMode].u)) {
+		scry = (fbi.yorigin - y) & 0x3ff;
 	}
 
 	/* fill this RGB row */
-	if (FBZMODE_RGB_BUFFER_MASK(v->reg[fbzMode].u))
-	{
+	if (FBZMODE_RGB_BUFFER_MASK(reg[fbzMode].u)) {
 		const uint16_t* ditherow = &extra_dither[(y & 3) * 4];
 
 		const auto expanded = read_unaligned_uint64(
 		        reinterpret_cast<const uint8_t*>(ditherow));
 
 		uint16_t* dest = reinterpret_cast<uint16_t*>(destbase) +
-		                 scry * v->fbi.rowpixels;
+		                 scry * fbi.rowpixels;
 
 		for (x = startx; x < stopx && (x & 3) != 0; x++) {
 			dest[x] = ditherow[x & 3];
@@ -3627,21 +3631,20 @@ static void raster_fastfill(void *destbase, int32_t y, const poly_extent *extent
 	}
 
 	/* fill this dest buffer row */
-	if (FBZMODE_AUX_BUFFER_MASK(v->reg[fbzMode].u) && v->fbi.auxoffs != (uint32_t)(~0))
-	{
-		const auto color = static_cast<uint16_t>(v->reg[zaColor].u & 0xffff);
+	if (FBZMODE_AUX_BUFFER_MASK(reg[fbzMode].u) &&
+	    fbi.auxoffs != (uint32_t)(~0)) {
+		const auto color = static_cast<uint16_t>(reg[zaColor].u & 0xffff);
 
 		const uint64_t expanded = (static_cast<uint64_t>(color) << 48) |
 		                          (static_cast<uint64_t>(color) << 32) |
 		                          (static_cast<uint32_t>(color) << 16) |
 		                          color;
 
-		uint16_t* dest = reinterpret_cast<uint16_t*>(v->fbi.ram +
-		                                             v->fbi.auxoffs) +
-		                 scry * v->fbi.rowpixels;
+		uint16_t* dest = reinterpret_cast<uint16_t*>(fbi.ram + fbi.auxoffs) +
+		                 scry * fbi.rowpixels;
 
-		if (v->fbi.auxoffs + 2 * (scry * v->fbi.rowpixels + stopx) >= v->fbi.mask) {
-			stopx = (v->fbi.mask - v->fbi.auxoffs) / 2 - scry * v->fbi.rowpixels;
+		if (fbi.auxoffs + 2 * (scry * fbi.rowpixels + stopx) >= fbi.mask) {
+			stopx = (fbi.mask - fbi.auxoffs) / 2 - scry * fbi.rowpixels;
 			if ((stopx < 0) || (stopx < startx)) {
 				return;
 			}
@@ -5096,7 +5099,7 @@ static void fastfill(voodoo_state *vs)
 			}
 
 			/* set the extent and update the total pixel count */
-			raster_fastfill(dest,curscan,extent,dithermatrix);
+			vs->FastFillRaster(dest, curscan, extent, dithermatrix);
 		}
 	}
 }
