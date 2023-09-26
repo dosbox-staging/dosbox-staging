@@ -343,6 +343,7 @@ public:
 			X86PageEntry table;
 			X86PageEntry entry;
 			InitPageCheckPresence(lin_addr,writing,table,entry);
+			LOG_WARNING("InitPage: %x %x %x",lin_addr,table.load,entry.load);
 
 			// 0: no action
 			// 1: can (but currently does not) fail a user-level access privilege check
