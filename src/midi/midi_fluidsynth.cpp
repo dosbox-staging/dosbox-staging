@@ -31,6 +31,7 @@
 
 #include "../ints/int10.h"
 #include "ansi_code_markup.h"
+#include "channel_names.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
@@ -496,7 +497,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 
 	auto mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                      audio_frame_rate_hz,
-	                                      "FSYNTH",
+	                                      ChannelName::FluidSynth,
 	                                      {ChannelFeature::Sleep,
 	                                       ChannelFeature::Stereo,
 	                                       ChannelFeature::ReverbSend,

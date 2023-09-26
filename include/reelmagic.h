@@ -61,7 +61,6 @@ void ReelMagic_ClearVideoMixerMPEGProvider();
 void ReelMagic_InitVideoMixer(Section* /*sec*/);
 
 // audio mixer related
-constexpr auto reelmagic_channel_name = "REELMAGIC";
 void ReelMagic_EnableAudioChannel(const bool should_enable);
 
 //

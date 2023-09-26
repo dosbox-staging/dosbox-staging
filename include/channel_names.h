@@ -25,25 +25,25 @@
 
 namespace ChannelName {
 
-constexpr auto CdAudio             = "CDAUDIO";
-constexpr auto Cms                 = "CMS";
-constexpr auto CovoxDac            = "COVOX";
-constexpr auto DisneySoundSource   = "DISNEY";
-constexpr auto FluidSynth          = "FSYNTH";
-constexpr auto GravisUltrasound    = "GUS";
-constexpr auto IbmMusicFeatureCard = "IMFC";
-constexpr auto InnovationSsi2001   = "INNOVATION";
-constexpr auto Master              = "MASTER";
-constexpr auto Opl                 = "OPL";
-constexpr auto PcSpeaker           = "PCSPEAKER";
-constexpr auto Ps1AudioDac         = "PS1DAC";
-constexpr auto Ps1AudioPsg         = "PS1";
-constexpr auto ReelMagic           = "REELMAGIC";
-constexpr auto RolandMt32          = "MT32";
-constexpr auto SoundBlasterDac     = "SB";
-constexpr auto StereOn1Dac         = "STON1";
-constexpr auto TandyDac            = "TANDYDAC";
-constexpr auto TandyPsg            = "TANDY";
+constexpr auto CdAudio              = "CDAUDIO";
+constexpr auto Cms                  = "CMS";
+constexpr auto CovoxDac             = "COVOX";
+constexpr auto DisneySoundSourceDac = "DISNEY";
+constexpr auto FluidSynth           = "FSYNTH";
+constexpr auto GravisUltrasound     = "GUS";
+constexpr auto IbmMusicFeatureCard  = "IMFC";
+constexpr auto InnovationSsi2001    = "INNOVATION";
+constexpr auto Master               = "MASTER";
+constexpr auto Opl                  = "OPL";
+constexpr auto PcSpeaker            = "PCSPEAKER";
+constexpr auto Ps1AudioCardDac      = "PS1DAC";
+constexpr auto Ps1AudioCardPsg      = "PS1";
+constexpr auto ReelMagic            = "REELMAGIC";
+constexpr auto RolandMt32           = "MT32";
+constexpr auto SoundBlasterDac      = "SB";
+constexpr auto StereoOn1Dac         = "STON1";
+constexpr auto TandyDac             = "TANDYDAC";
+constexpr auto TandyPsg             = "TANDY";
 
 } // namespace ChannelName
 
@@ -62,21 +62,21 @@ static std::vector<std::string> AllChannelNames = {
         ChannelName::CdAudio,
         ChannelName::Cms,
         ChannelName::CovoxDac,
-        ChannelName::DisneySoundSource,
+        ChannelName::DisneySoundSourceDac,
         ChannelName::FluidSynth,
         ChannelName::GravisUltrasound,
         ChannelName::IbmMusicFeatureCard,
         ChannelName::InnovationSsi2001,
         ChannelName::Master,
-        ChannelName::RolandMt32,
         ChannelName::PcSpeaker,
-        ChannelName::Ps1AudioPsg,
-        ChannelName::Ps1AudioDac,
+        ChannelName::Ps1AudioCardDac,
+        ChannelName::Ps1AudioCardPsg,
         ChannelName::ReelMagic,
+        ChannelName::RolandMt32,
         ChannelName::SoundBlasterDac,
-        ChannelName::StereOn1Dac,
-        ChannelName::TandyPsg,
+        ChannelName::StereoOn1Dac,
         ChannelName::TandyDac,
+        ChannelName::TandyPsg,
 };
 // clang-format on
 

@@ -34,6 +34,7 @@
 
 #include "../ints/int10.h"
 #include "ansi_code_markup.h"
+#include "channel_names.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
@@ -793,7 +794,7 @@ bool MidiHandler_mt32::Open([[maybe_unused]] const char* conf)
 
 	auto mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                      sample_rate_hz,
-	                                      "MT32",
+	                                      ChannelName::RolandMt32,
 	                                      {ChannelFeature::Sleep,
 	                                       ChannelFeature::Stereo,
 	                                       ChannelFeature::Synthesizer});

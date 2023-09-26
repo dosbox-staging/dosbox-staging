@@ -25,6 +25,7 @@
 #include <sys/types.h>
 
 #include "../capture/capture.h"
+#include "channel_names.h"
 #include "cpu.h"
 #include "mapper.h"
 #include "mem.h"
@@ -900,8 +901,11 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	                                      this,
 	                                      std::placeholders::_1);
 
-	// Register the Audio channel
-	channel = MIXER_AddChannel(mixer_callback, use_mixer_rate, "OPL", channel_features);
+	// Register the audio channel
+	channel = MIXER_AddChannel(mixer_callback,
+	                           use_mixer_rate,
+	                           ChannelName::Opl,
+	                           channel_features);
 
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.

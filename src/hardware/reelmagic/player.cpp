@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 
+#include "channel_names.h"
 #include "dos_system.h"
 #include "logging.h"
 #include "mixer.h"
@@ -788,7 +789,7 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 
 	mixer_channel = MIXER_AddChannel(&RMMixerChannelCallback,
 	                                 use_mixer_rate,
-	                                 reelmagic_channel_name,
+	                                 ChannelName::ReelMagic,
 	                                 {// ChannelFeature::Sleep,
 	                                  ChannelFeature::Stereo,
 	                                  // ChannelFeature::ReverbSend,

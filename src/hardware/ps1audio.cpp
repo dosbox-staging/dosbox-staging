@@ -27,6 +27,7 @@
 #include <queue>
 #include <string.h>
 
+#include "channel_names.h"
 #include "control.h"
 #include "dma.h"
 #include "inout.h"
@@ -127,7 +128,7 @@ Ps1Dac::Ps1Dac(const std::string_view filter_choice)
 
 	channel = MIXER_AddChannel(callback,
 	                           use_mixer_rate,
-	                           "PS1DAC",
+	                           ChannelName::Ps1AudioCardDac,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend,
@@ -416,7 +417,7 @@ Ps1Synth::Ps1Synth(const std::string_view filter_choice)
 
 	channel = MIXER_AddChannel(callback,
 	                           use_mixer_rate,
-	                           "PS1",
+	                           ChannelName::Ps1AudioCardPsg,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend,

@@ -21,6 +21,7 @@
 
 #include "innovation.h"
 
+#include "channel_names.h"
 #include "checks.h"
 #include "control.h"
 #include "pic.h"
@@ -83,7 +84,7 @@ void Innovation::Open(const std::string_view model_choice,
 
 	auto mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                      use_mixer_rate,
-	                                      "INNOVATION",
+	                                      ChannelName::InnovationSsi2001,
 	                                      {ChannelFeature::Sleep,
 	                                       ChannelFeature::ReverbSend,
 	                                       ChannelFeature::ChorusSend,

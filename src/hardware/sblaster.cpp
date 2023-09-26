@@ -27,6 +27,7 @@
 #include <tuple>
 
 #include "autoexec.h"
+#include "channel_names.h"
 #include "control.h"
 #include "dma.h"
 #include "hardware.h"
@@ -550,7 +551,7 @@ static void configure_opl_filter(mixer_channel_t channel,
 	case FilterType::SBPro2: enable_lpf(1, 8000); break;
 	}
 
-	log_filter_config("OPL", *filter_type);
+	log_filter_config(ChannelName::Opl, *filter_type);
 	set_filter(channel, config);
 }
 
@@ -1647,17 +1648,17 @@ static void CTMIXER_UpdateVolumes() {
 
 	float m0 = calc_vol(sb.mixer.master[0]);
 	float m1 = calc_vol(sb.mixer.master[1]);
-	auto chan = MIXER_FindChannel("SB");
+	auto chan = MIXER_FindChannel(ChannelName::SoundBlasterDac);
 	if (chan) {
 		chan->SetAppVolume({m0 * calc_vol(sb.mixer.dac[0]),
 		                    m1 * calc_vol(sb.mixer.dac[1])});
 	}
-	chan = MIXER_FindChannel("OPL");
+	chan = MIXER_FindChannel(ChannelName::Opl);
 	if (chan) {
 		chan->SetAppVolume({m0 * calc_vol(sb.mixer.fm[0]),
 		                    m1 * calc_vol(sb.mixer.fm[1])});
 	}
-	chan = MIXER_FindChannel("CDAUDIO");
+	chan = MIXER_FindChannel(ChannelName::CdAudio);
 	if (chan) {
 		chan->SetAppVolume({m0 * calc_vol(sb.mixer.cda[0]),
 		                    m1 * calc_vol(sb.mixer.cda[1])});
@@ -2206,7 +2207,7 @@ public:
 		case OplMode::Opl3:
 		case OplMode::Opl3Gold: {
 			OPL_Init(section, oplmode);
-			auto opl_channel = MIXER_FindChannel("OPL");
+			auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
 			assert(opl_channel);
 
 			const std::string opl_filter_prefs = section->Get_string(
@@ -2245,7 +2246,7 @@ public:
 
 		sb.chan = MIXER_AddChannel(&SBLASTER_CallBack,
 		                           default_playback_rate_hz,
-		                           "SB",
+		                           ChannelName::SoundBlasterDac,
 		                           channel_features);
 
 		const std::string sb_filter_prefs = section->Get_string("sb_filter");

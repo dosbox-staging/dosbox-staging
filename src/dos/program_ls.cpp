@@ -45,8 +45,7 @@ void LS::Run()
 	constexpr bool remove_if_found = true;
 	const bool has_option_all = cmd->FindExist("/a", remove_if_found);
 
-	std::vector<std::string> patterns = {};
-	cmd->FillVector(patterns);
+	auto patterns = cmd->GetArguments();
 
 	// Make sure no other switches are supplied
 
