@@ -25,7 +25,32 @@
 #include "timer.h"
 #include "image/image_decoder.h"
 
+// GCC and Clang define this macro
+#ifdef __SSE2__
+#define HAVE_SSE2
+#endif
+
+// MSVC is a pain in the ass and needs all this:
+// https://learn.microsoft.com/en-us/cpp/preprocessor/predefined-macros?view=msvc-170
+
+// This macro means SSE2 support but is only defined for 32 bit
+#if _M_IX86_FP == 2
+#define HAVE_SSE2
+#endif
+
+// All 64 bit x86 CPUs support SSE2
+#ifdef _M_X64
+#define HAVE_SSE2
+#endif
+
+// Unless you're on this weird emulated ARM target that defines x86 macros for some reason
+#ifdef _M_ARM64EC
+#undef HAVE_SSE2
+#endif
+
+#ifdef HAVE_SSE2
 #include <emmintrin.h>
+#endif
 
 #if C_FFMPEG
 
@@ -618,75 +643,9 @@ static void send_packets_to_muxer(AVCodecContext* context, int stream_index,
 	}
 }
 
+#ifdef HAVE_SSE2
+
 static void scale_image(const RenderedImage& image, AVFrame* frame)
-{
-	size_t horizontal_scale = static_cast<size_t>(frame->width) / image.params.width;
-	size_t vertical_scale = static_cast<size_t>(frame->height) / image.params.height;
-
-	size_t scaled_width = image.params.width * horizontal_scale;
-
-	size_t uv_horizontal_scale = horizontal_scale;
-	size_t uv_vertical_scale = vertical_scale;
-	size_t uv_width = scaled_width;
-	if (frame->format == AV_PIX_FMT_YUV420P) {
-		uv_horizontal_scale /= 2;
-		uv_vertical_scale /= 2;
-		uv_width /= 2;
-	}
-
-	uint8_t* y_row = frame->data[0];
-	uint8_t* cr_row = frame->data[2];
-	uint8_t* cb_row = frame->data[1];
-	int y_pitch = frame->linesize[0];
-	int cr_pitch = frame->linesize[2];
-	int cb_pitch = frame->linesize[1];
-
-	ImageDecoder image_decoder;
-	image_decoder.Init(image, 0);
-	for (uint16_t y = 0; y < image.params.height; ++y) {
-		for (uint16_t x = 0; x < image.params.width; ++x) {
-			Rgb888 src_pixel = image_decoder.GetNextPixelAsRgb888();
-			float red = static_cast<float>(src_pixel.red);
-			float green = static_cast<float>(src_pixel.green);
-			float blue = static_cast<float>(src_pixel.blue);
-
-			float yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
-			float crf = (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
-			float cbf = -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
-
-			uint8_t y_out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
-			uint8_t cr_out = static_cast<uint8_t>(clamp(crf, 0.0f, 255.0f));
-			uint8_t cb_out = static_cast<uint8_t>(clamp(cbf, 0.0f, 255.0f));
-
-			memset(y_row + (x * horizontal_scale), y_out, horizontal_scale);
-			memset(cr_row + (x * uv_horizontal_scale), cr_out, uv_horizontal_scale);
-			memset(cb_row + (x * uv_horizontal_scale), cb_out, uv_horizontal_scale);
-		}
-
-		for (size_t i = 1; i < vertical_scale; ++i) {
-			uint8_t* prev_row = y_row;
-			y_row += y_pitch;
-			memcpy(y_row, prev_row, scaled_width);
-		}
-		for (size_t i = 1; i < uv_vertical_scale; ++i) {
-			uint8_t* prev_row = cr_row;
-			cr_row += cr_pitch;
-			memcpy(cr_row, prev_row, uv_width);
-		}
-		for (size_t i = 1; i < uv_vertical_scale; ++i) {
-			uint8_t* prev_row = cb_row;
-			cb_row += cb_pitch;
-			memcpy(cb_row, prev_row, uv_width);
-		}
-
-		y_row += y_pitch;
-		cr_row += cr_pitch;
-		cb_row += cb_pitch;
-		image_decoder.AdvanceRow();
-	}
-}
-
-static void fast_scale(const RenderedImage& image, AVFrame* frame)
 {
 	size_t horizontal_scale = static_cast<size_t>(frame->width) / image.params.width;
 	size_t vertical_scale = static_cast<size_t>(frame->height) / image.params.height;
@@ -795,6 +754,78 @@ static void fast_scale(const RenderedImage& image, AVFrame* frame)
 	}
 }
 
+#else
+
+static void scale_image(const RenderedImage& image, AVFrame* frame)
+{
+	size_t horizontal_scale = static_cast<size_t>(frame->width) / image.params.width;
+	size_t vertical_scale = static_cast<size_t>(frame->height) / image.params.height;
+
+	size_t scaled_width = image.params.width * horizontal_scale;
+
+	size_t uv_horizontal_scale = horizontal_scale;
+	size_t uv_vertical_scale = vertical_scale;
+	size_t uv_width = scaled_width;
+	if (frame->format == AV_PIX_FMT_YUV420P) {
+		uv_horizontal_scale /= 2;
+		uv_vertical_scale /= 2;
+		uv_width /= 2;
+	}
+
+	uint8_t* y_row = frame->data[0];
+	uint8_t* cr_row = frame->data[2];
+	uint8_t* cb_row = frame->data[1];
+	int y_pitch = frame->linesize[0];
+	int cr_pitch = frame->linesize[2];
+	int cb_pitch = frame->linesize[1];
+
+	ImageDecoder image_decoder;
+	image_decoder.Init(image, 0);
+	for (uint16_t y = 0; y < image.params.height; ++y) {
+		for (uint16_t x = 0; x < image.params.width; ++x) {
+			Rgb888 src_pixel = image_decoder.GetNextPixelAsRgb888();
+			float red = static_cast<float>(src_pixel.red);
+			float green = static_cast<float>(src_pixel.green);
+			float blue = static_cast<float>(src_pixel.blue);
+
+			float yf = (0.257f * red) + (0.504f * green) + (0.098f * blue) + 16.0f;
+			float crf = (0.439f * red) - (0.368f * green) - (0.071f * blue) + 128.0f;
+			float cbf = -(0.148f * red) - (0.291f * green) + (0.439f * blue) + 128.0f;
+
+			uint8_t y_out = static_cast<uint8_t>(clamp(yf, 0.0f, 255.0f));
+			uint8_t cr_out = static_cast<uint8_t>(clamp(crf, 0.0f, 255.0f));
+			uint8_t cb_out = static_cast<uint8_t>(clamp(cbf, 0.0f, 255.0f));
+
+			memset(y_row + (x * horizontal_scale), y_out, horizontal_scale);
+			memset(cr_row + (x * uv_horizontal_scale), cr_out, uv_horizontal_scale);
+			memset(cb_row + (x * uv_horizontal_scale), cb_out, uv_horizontal_scale);
+		}
+
+		for (size_t i = 1; i < vertical_scale; ++i) {
+			uint8_t* prev_row = y_row;
+			y_row += y_pitch;
+			memcpy(y_row, prev_row, scaled_width);
+		}
+		for (size_t i = 1; i < uv_vertical_scale; ++i) {
+			uint8_t* prev_row = cr_row;
+			cr_row += cr_pitch;
+			memcpy(cr_row, prev_row, uv_width);
+		}
+		for (size_t i = 1; i < uv_vertical_scale; ++i) {
+			uint8_t* prev_row = cb_row;
+			cb_row += cb_pitch;
+			memcpy(cb_row, prev_row, uv_width);
+		}
+
+		y_row += y_pitch;
+		cr_row += cr_pitch;
+		cb_row += cb_pitch;
+		image_decoder.AdvanceRow();
+	}
+}
+
+#endif
+
 void FfmpegEncoder::ScaleVideo()
 {
 	for (;;) {
@@ -830,15 +861,9 @@ void FfmpegEncoder::ScaleVideo()
 				continue;
 			}
 
-			#if 1
-			int64_t start = GetTicksUs();
-			fast_scale(image, frame);
-			LOG_MSG("FFMPEG: Scaler: %ld", GetTicksUsSince(start));
-			#else
 			int64_t start = GetTicksUs();
 			scale_image(image, frame);
 			LOG_MSG("FFMPEG: Scaler: %ld", GetTicksUsSince(start));
-			#endif
 			image.free();
 
 			[[maybe_unused]] bool frame_queued = video_encoder.queue.Enqueue(std::move(frame));
