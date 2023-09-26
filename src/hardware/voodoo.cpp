@@ -1008,6 +1008,7 @@ struct voodoo_state {
 
 	// Commands
 	void ExecuteTriangleCmd();
+	void ExecuteBeginTriCmd();
 
 	std::unique_ptr<PageHandler> page_handler = {};
 
@@ -4801,34 +4802,29 @@ void voodoo_state::ExecuteTriangleCmd()
 }
 
 /*-------------------------------------------------
-    begin_triangle - execute the 'beginTri'
-    command
+    execute the 'beginTri' command
 -------------------------------------------------*/
-static void begin_triangle(voodoo_state *vs)
+void voodoo_state::ExecuteBeginTriCmd()
 {
-	// Quick references
-	const auto regs = vs->reg;
-	auto& fbi = vs->fbi;
-
+	// Quick reference
 	setup_vertex* sv = &fbi.svert[2];
 
-	/* extract all the data from registers */
+	// extract all the data from registers
+	sv->x  = reg[sVx].f;
+	sv->y  = reg[sVy].f;
+	sv->wb = reg[sWb].f;
+	sv->w0 = reg[sWtmu0].f;
+	sv->s0 = reg[sS_W0].f;
+	sv->t0 = reg[sT_W0].f;
+	sv->w1 = reg[sWtmu1].f;
+	sv->s1 = reg[sS_Wtmu1].f;
+	sv->t1 = reg[sT_Wtmu1].f;
+	sv->a  = reg[sAlpha].f;
+	sv->r  = reg[sRed].f;
+	sv->g  = reg[sGreen].f;
+	sv->b  = reg[sBlue].f;
 
-	sv->x  = regs[sVx].f;
-	sv->y  = regs[sVy].f;
-	sv->wb = regs[sWb].f;
-	sv->w0 = regs[sWtmu0].f;
-	sv->s0 = regs[sS_W0].f;
-	sv->t0 = regs[sT_W0].f;
-	sv->w1 = regs[sWtmu1].f;
-	sv->s1 = regs[sS_Wtmu1].f;
-	sv->t1 = regs[sT_Wtmu1].f;
-	sv->a  = regs[sAlpha].f;
-	sv->r  = regs[sRed].f;
-	sv->g  = regs[sGreen].f;
-	sv->b  = regs[sBlue].f;
-
-	/* spread it across all three verts and reset the count */
+	// spread it across all three verts and reset the count
 	fbi.svert[0] = fbi.svert[1] = fbi.svert[2];
 	fbi.sverts = 1;
 }
@@ -5624,7 +5620,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 	case triangleCMD:
 	case ftriangleCMD: ExecuteTriangleCmd(); break;
 
-	case sBeginTriCMD: begin_triangle(this); break;
+	case sBeginTriCMD: ExecuteBeginTriCmd(); break;
 
 	case sDrawTriCMD: draw_triangle(this); break;
 
