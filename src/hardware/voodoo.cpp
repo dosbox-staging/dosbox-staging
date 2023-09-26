@@ -1006,6 +1006,9 @@ struct voodoo_state {
 	double GetHRetracePosition();
 	double GetVRetracePosition();
 
+	// Commands
+	void ExecuteTriangleCmd();
+
 	std::unique_ptr<PageHandler> page_handler = {};
 
 	uint8_t chipmask = {}; // mask for which chips are available
@@ -4592,20 +4595,17 @@ void TriangleWorker::Run()
     triangle - execute the 'triangle'
     command
 -------------------------------------------------*/
-static void triangle(voodoo_state *vs)
+void voodoo_state::ExecuteTriangleCmd()
 {
-	// Quick references
-	const auto regs = vs->reg;
-	auto& fbi = vs->fbi;
-	auto& tmu0 = vs->tmu[0];
-	auto& tmu1 = vs->tmu[1];
-
+		// Quick references
+	auto& tmu0 = tmu[0];
+	auto& tmu1 = tmu[1];
 	/* determine the number of TMUs involved */
 	int texcount = 0;
-	if (!FBIINIT3_DISABLE_TMUS(regs[fbiInit3].u) &&
-	    FBZCP_TEXTURE_ENABLE(regs[fbzColorPath].u)) {
+	if (!FBIINIT3_DISABLE_TMUS(reg[fbiInit3].u) &&
+	    FBZCP_TEXTURE_ENABLE(reg[fbzColorPath].u)) {
 		texcount = 1;
-		if ((vs->chipmask & 0x04) != 0) {
+		if ((chipmask & 0x04) != 0) {
 			texcount = 2;
 		}
 	}
@@ -4613,9 +4613,9 @@ static void triangle(voodoo_state *vs)
 	/* perform subpixel adjustments */
 	if (
 #ifdef C_ENABLE_VOODOO_OPENGL
-	        !vs->ogl &&
+	        !ogl &&
 #endif
-	    FBZCP_CCA_SUBPIXEL_ADJUST(regs[fbzColorPath].u)) {
+	    FBZCP_CCA_SUBPIXEL_ADJUST(reg[fbzColorPath].u)) {
 		const int32_t dx = 8 - (fbi.ax & 15);
 		const int32_t dy = 8 - (fbi.ay & 15);
 
@@ -4717,10 +4717,10 @@ static void triangle(voodoo_state *vs)
 	}
 
 	extra.texcount = texcount;
-	extra.r_fbzColorPath = regs[fbzColorPath].u;
-	extra.r_fbzMode      = regs[fbzMode].u;
-	extra.r_alphaMode    = regs[alphaMode].u;
-	extra.r_fogMode      = regs[fogMode].u;
+	extra.r_fbzColorPath = reg[fbzColorPath].u;
+	extra.r_fbzMode      = reg[fbzMode].u;
+	extra.r_alphaMode    = reg[alphaMode].u;
+	extra.r_fogMode      = reg[fogMode].u;
 
 	extra.r_textureMode0 = tmu0.reg[textureMode].u;
 	if (tmu1.ram != nullptr) {
@@ -4731,12 +4731,12 @@ static void triangle(voodoo_state *vs)
 	info->polys++;
 #endif
 
-	if (vs->ogl_palette_changed && vs->ogl && vs->active) {
+	if (ogl_palette_changed && ogl && active) {
 		voodoo_ogl_invalidate_paltex();
-		vs->ogl_palette_changed = false;
+		ogl_palette_changed = false;
 	}
 
-	if (vs->ogl && vs->active) {
+	if (ogl && active) {
 		if (extra.info)
 			voodoo_ogl_draw_triangle(&extra);
 		return;
@@ -4769,7 +4769,7 @@ static void triangle(voodoo_state *vs)
 
 	/* determine the draw buffer */
 	uint16_t *drawbuf;
-	switch (FBZMODE_DRAW_BUFFER(regs[fbzMode].u)) {
+	switch (FBZMODE_DRAW_BUFFER(reg[fbzMode].u)) {
 	case 0: /* front buffer */
 		drawbuf = (uint16_t*)(fbi.ram + fbi.rgboffs[fbi.frontbuf]);
 		break;
@@ -4790,7 +4790,6 @@ static void triangle(voodoo_state *vs)
 		}
 	}
 
-	TriangleWorker& tworker = vs->tworker;
 	tworker.v1 = *v1, tworker.v2 = *v2, tworker.v3 = *v3;
 	tworker.drawbuf = drawbuf;
 	tworker.v1y = v1y;
@@ -4798,7 +4797,7 @@ static void triangle(voodoo_state *vs)
 	tworker.Run();
 
 	/* update stats */
-	regs[fbiTrianglesOut].u++;
+	reg[fbiTrianglesOut].u++;
 }
 
 /*-------------------------------------------------
@@ -5008,7 +5007,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* draw the triangle */
-	triangle(vs);
+	vs->ExecuteTriangleCmd();
 }
 
 /*-------------------------------------------------
@@ -5623,7 +5622,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 
 	/* triangle drawing */
 	case triangleCMD:
-	case ftriangleCMD: triangle(this); break;
+	case ftriangleCMD: ExecuteTriangleCmd(); break;
 
 	case sBeginTriCMD: begin_triangle(this); break;
 
