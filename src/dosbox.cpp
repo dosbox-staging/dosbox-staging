@@ -83,7 +83,9 @@ void VGA_Configure(ModuleLifecycle, Section*);
 void KEYBOARD_Configure(ModuleLifecycle, Section*); // TODO Keyboard should setup INT 16.
 void PCI_Configure(ModuleLifecycle, Section*);
 
-void VOODOO_Init(Section*);
+// [voodoo] section module
+void VOODOO_Configure(ModuleLifecycle, Section*);
+
 void VIRTUALBOX_Init(Section*);
 void VMWARE_Init(Section*);
 
