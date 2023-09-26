@@ -65,6 +65,7 @@
 #include <thread>
 #include <utility>
 
+#include "channel_names.h"
 #include "control.h"
 #include "dma.h"
 #include "inout.h"
@@ -89,7 +90,7 @@ constexpr uint8_t MaxIrqAddress = 7;
 #if IMFC_VERBOSE_LOGGING
 SDL_mutex* m_loggerMutex = nullptr;
 template <typename... Args>
-void IMF_LOG(std::string format, Args const&... args)
+void IMF_LOG(std::string format, const Args&... args)
 {
 	SDL_LockMutex(m_loggerMutex);
 	printf((format + "\n").c_str(), args...);
@@ -5367,7 +5368,7 @@ private:
 
 	template <typename... Args>
 	void log_debug([[maybe_unused]] std::string format,
-	               [[maybe_unused]] Args const&... args)
+	               [[maybe_unused]] const Args&... args)
 	{
 		// IMF_LOG(("[%s] [DEBUG] " + format).c_str(),
 		// getCurrentThreadName().c_str(), args...);
@@ -5375,7 +5376,7 @@ private:
 
 	template <typename... Args>
 	void log_info([[maybe_unused]] std::string format,
-	              [[maybe_unused]] Args const&... args)
+	              [[maybe_unused]] const Args&... args)
 	{
 		// IMF_LOG(("[%s] [INFO] " + format).c_str(),
 		// getCurrentThreadName().c_str(), args...);
@@ -5383,7 +5384,7 @@ private:
 
 	template <typename... Args>
 	void log_error([[maybe_unused]] const char* format,
-	               [[maybe_unused]] Args const&... args)
+	               [[maybe_unused]] const Args&... args)
 	{
 #if IMFC_VERBOSE_LOGGING
 		static std::string message = {};
@@ -5788,7 +5789,7 @@ private:
 			if (readResult.status == ReadStatus::Success) {
 				send_midi_byte_to_System_in_THRU_mode(readResult.data);
 			}
-			SystemReadResult const systemReadResult =
+			const SystemReadResult systemReadResult =
 			        system_read9BitMidiDataByte();
 			if (systemReadResult.status == SystemDataAvailable) {
 				processIncomingMusicCardMessageByte(
@@ -6009,7 +6010,7 @@ private:
 					        m_actualMidiFlowPath.System_To_MidiOut);
 					return {ReadStatus::Error, 0xF7};
 				case MidiDataAvailable:
-					SystemReadResult const systemReadResult =
+					const SystemReadResult systemReadResult =
 					        system_read9BitMidiDataByte();
 					// log_debug("readMidiDataWithTimeout()
 					// - case MidiDataAvailable (0x%02X)",
@@ -6192,7 +6193,7 @@ private:
 			const ReadResult readResult = readMidiData();
 			if (readResult.status == ReadStatus::Error) {
 				log_debug("MUSIC_MODE_LOOP_read_System_And_Dispatch - system_read9BitMidiDataByte()");
-				SystemReadResult const systemReadResult =
+				const SystemReadResult systemReadResult =
 				        system_read9BitMidiDataByte();
 				if (systemReadResult.status == SystemDataAvailable) {
 					log_debug("PC->IMFC: Found system data [1%02X] in queue",
@@ -13382,7 +13383,7 @@ static void imfc_init(Section* sec)
 	// Register the Audio channel
 	auto channel = MIXER_AddChannel(IMFC_Mixer_Callback,
 	                                imfc_sampling_rate_hz,
-	                                "IMFC",
+	                                ChannelName::IbmMusicFeatureCard,
 	                                {ChannelFeature::Stereo,
 	                                 ChannelFeature::ReverbSend,
 	                                 ChannelFeature::ChorusSend,

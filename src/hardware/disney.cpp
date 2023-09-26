@@ -21,11 +21,12 @@
 
 #include <cassert>
 
+#include "channel_names.h"
 #include "checks.h"
 
 CHECK_NARROWING();
 
-Disney::Disney() : LptDac("DISNEY", use_mixer_rate)
+Disney::Disney() : LptDac(ChannelName::DisneySoundSourceDac, use_mixer_rate)
 {
 	// Prime the FIFO with a single silent sample
 	fifo.emplace(data_reg);

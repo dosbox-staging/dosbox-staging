@@ -35,6 +35,7 @@
 #include <speex/speex_resampler.h>
 
 #include "../capture/capture.h"
+#include "channel_names.h"
 #include "checks.h"
 #include "control.h"
 #include "cross.h"
@@ -622,13 +623,13 @@ mixer_channel_t MIXER_FindChannel(const char* name)
 		if (std::string_view(name) == "SPKR") {
 			LOG_WARNING("MIXER: 'SPKR' is deprecated due to inconsistent "
 			            "naming, please use 'PCSPEAKER' instead");
-			it = mixer.channels.find("PCSPEAKER");
+			it = mixer.channels.find(ChannelName::PcSpeaker);
 
 			// Deprecated alias FM to OPL
 		} else if (std::string_view(name) == "FM") {
 			LOG_WARNING("MIXER: 'FM' is deprecated due to inconsistent "
-			            "naming, please use 'OPL' instead");
-			it = mixer.channels.find("OPL");
+			            "naming, please use '%s' instead", ChannelName::Opl);
+			it = mixer.channels.find(ChannelName::Opl);
 		}
 	}
 

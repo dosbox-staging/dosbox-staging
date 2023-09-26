@@ -18,6 +18,7 @@
 
 #include <assert.h>
 #include <string.h>
+
 #include "cdrom.h"
 #include "support.h"
 
@@ -30,7 +31,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-constexpr auto MixerChannelNamePrefix = "CDAUDIO_";
 // ioctl cannot be read more than 75 redbook frames at a time (one second of audio)
 constexpr int InputBufferMaxRedbookFrames = 25;
 constexpr size_t PcmSamplesPerRedbookFrame = BYTES_PER_RAW_REDBOOK_FRAME / REDBOOK_BPS;
@@ -340,7 +340,7 @@ void CDROM_Interface_Ioctl::InitAudio(const int device_number)
 		return;
 	}
 
-	std::string name = std::string(MixerChannelNamePrefix) +
+	std::string name = std::string(ChannelName::CdAudio) + "_" +
 	                   std::to_string(device_number);
 
 	// Input buffer is used as a C-style buffer passed to an ioctl.

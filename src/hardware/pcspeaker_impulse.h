@@ -24,10 +24,11 @@
 #include <deque>
 #include <string>
 
+#include "channel_names.h"
 #include "inout.h"
+#include "pic.h"
 #include "setup.h"
 #include "support.h"
-#include "pic.h"
 
 class PcSpeakerImpulse final : public PcSpeaker {
 public:
@@ -38,7 +39,7 @@ public:
 	bool TryParseAndSetCustomFilter(const std::string_view filter_choice) final;
 	void SetCounter(const int cntr, const PitMode pit_mode) final;
 	void SetPITControl(const PitMode pit_mode) final;
-	void SetType(const PpiPortB &port_b) final;
+	void SetType(const PpiPortB& port_b) final;
 
 private:
 	void AddImpulse(float index, const int16_t amplitude);
@@ -49,13 +50,13 @@ private:
 	void InitializeImpulseLUT();
 
 	// Constants
-	static constexpr char device_name[] = "PCSPEAKER";
-	static constexpr char model_name[]  = "impulse";
+	static constexpr auto device_name = ChannelName::PcSpeaker;
+	static constexpr auto model_name  = "impulse";
 
 	// Amplitude constants
 
 	// The impulse PWM scalar was manually adjusted to roughly match voltage
-	// levels recorded from a hardware PC Speaker 
+	// levels recorded from a hardware PC Speaker
 	// Ref:https://github.com/dosbox-staging/dosbox-staging/files/9494469/3.audio.samples.zip
 	static constexpr float pwm_scalar = 0.5f;
 
@@ -85,7 +86,7 @@ private:
 
 	static constexpr float max_possible_pit_ms = 1320000.0f / PIT_TICK_RATE;
 
-	// Compound types and containers	
+	// Compound types and containers
 	struct PitState {
 		// PIT starts in mode 3 (SquareWave) at ~903 Hz (pit_max) with
 		// positive amplitude

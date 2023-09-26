@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "autoexec.h"
+#include "channel_names.h"
 #include "control.h"
 #include "dma.h"
 #include "hardware.h"
@@ -620,7 +621,7 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 
 	audio_channel = MIXER_AddChannel(mixer_callback,
 	                                 use_mixer_rate,
-	                                 "GUS",
+	                                 ChannelName::GravisUltrasound,
 	                                 {ChannelFeature::Sleep,
 	                                  ChannelFeature::Stereo,
 	                                  ChannelFeature::ReverbSend,
@@ -1333,7 +1334,7 @@ void Gus::UpdateDmaAddress(const uint8_t new_address)
 	dma1 = new_address;
 	dma_channel = DMA_GetChannel(dma1);
 	assert(dma_channel);
-	dma_channel->ReserveFor("GUS", gus_destroy);
+	dma_channel->ReserveFor(ChannelName::GravisUltrasound, gus_destroy);
 	dma_channel->RegisterCallback(std::bind(&Gus::DmaCallback, this, _1, _2));
 #if LOG_GUS
 	LOG_MSG("GUS: Assigned DMA1 address to %u", dma1);

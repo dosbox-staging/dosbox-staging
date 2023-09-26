@@ -36,6 +36,7 @@
 
 #include "../../dos/program_more_output.h"
 #include "callback.h"
+#include "channel_names.h"
 #include "dos_inc.h"
 #include "dos_system.h"
 #include "mapper.h"
@@ -1232,28 +1233,28 @@ static bool RMDEV_SYS_int2fHandler()
 			reg_ax = 100; // can't touch this
 			return true;
 		case 0x0012: // query MPEG left volume
-			reg_ax = GetMixerVolume(reelmagic_channel_name, false);
+			reg_ax = GetMixerVolume(ChannelName::ReelMagic, false);
 			return true;
 		case 0x0013: // query MPEG right volume
-			reg_ax = GetMixerVolume(reelmagic_channel_name, true);
+			reg_ax = GetMixerVolume(ChannelName::ReelMagic, true);
 			return true;
 		case 0x0014: // query SYNT left volume
-			reg_ax = GetMixerVolume("OPL", false);
+			reg_ax = GetMixerVolume(ChannelName::Opl, false);
 			return true;
 		case 0x0015: // query SYNT right volume
-			reg_ax = GetMixerVolume("OPL", true);
+			reg_ax = GetMixerVolume(ChannelName::Opl, true);
 			return true;
 		case 0x0016: // query PCM left volume
-			reg_ax = GetMixerVolume("SB", false);
+			reg_ax = GetMixerVolume(ChannelName::SoundBlasterDac, false);
 			return true;
 		case 0x0017: // query PCM right volume
-			reg_ax = GetMixerVolume("SB", true);
+			reg_ax = GetMixerVolume(ChannelName::SoundBlasterDac, true);
 			return true;
 		case 0x001C: // query CD left volume
-			reg_ax = GetMixerVolume("CDAUDIO", false);
+			reg_ax = GetMixerVolume(ChannelName::CdAudio, false);
 			return true;
 		case 0x001D: // query CD right volume
-			reg_ax = GetMixerVolume("CDAUDIO", true);
+			reg_ax = GetMixerVolume(ChannelName::CdAudio, true);
 			return true;
 		}
 		break;
@@ -1266,28 +1267,28 @@ static bool RMDEV_SYS_int2fHandler()
 			LOG(LOG_REELMAGIC, LOG_ERROR)("RMDEV.SYS: Can't update MAIN Right Volume");
 			return true;
 		case 0x0012: // set MPEG left volume
-			SetMixerVolume(reelmagic_channel_name, reg_dx, false);
+			SetMixerVolume(ChannelName::ReelMagic, reg_dx, false);
 			return true;
 		case 0x0013: // set MPEG right volume
-			SetMixerVolume(reelmagic_channel_name, reg_dx, true);
+			SetMixerVolume(ChannelName::ReelMagic, reg_dx, true);
 			return true;
 		case 0x0014: // set SYNT left volume
-			SetMixerVolume("OPL", reg_dx, false);
+			SetMixerVolume(ChannelName::Opl, reg_dx, false);
 			return true;
 		case 0x0015: // set SYNT right volume
-			SetMixerVolume("OPL", reg_dx, true);
+			SetMixerVolume(ChannelName::Opl, reg_dx, true);
 			return true;
 		case 0x0016: // set PCM left volume
-			SetMixerVolume("SB", reg_dx, false);
+			SetMixerVolume(ChannelName::SoundBlasterDac, reg_dx, false);
 			return true;
 		case 0x0017: // set PCM right volume
-			SetMixerVolume("SB", reg_dx, true);
+			SetMixerVolume(ChannelName::SoundBlasterDac, reg_dx, true);
 			return true;
 		case 0x001C: // set CD left volume
-			SetMixerVolume("CDAUDIO", reg_dx, false);
+			SetMixerVolume(ChannelName::CdAudio, reg_dx, false);
 			return true;
 		case 0x001D: // set CD right volume
-			SetMixerVolume("CDAUDIO", reg_dx, true);
+			SetMixerVolume(ChannelName::CdAudio, reg_dx, true);
 			return true;
 		}
 		break;

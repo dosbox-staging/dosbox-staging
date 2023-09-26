@@ -82,11 +82,12 @@ centerline.
 #include <queue>
 #include <string_view>
 
+#include "channel_names.h"
 #include "dma.h"
 #include "hardware.h"
 #include "inout.h"
-#include "mem.h"
 #include "math_utils.h"
+#include "mem.h"
 #include "mixer.h"
 #include "pic.h"
 #include "setup.h"
@@ -225,7 +226,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 
 	channel = MIXER_AddChannel(callback,
 	                           use_mixer_rate,
-	                           "TANDYDAC",
+	                           ChannelName::TandyDac,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ChorusSend,
 	                            ChannelFeature::ReverbSend,
@@ -478,7 +479,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 
 	channel = MIXER_AddChannel(callback,
 	                           use_mixer_rate,
-	                           "TANDY",
+	                           ChannelName::TandyPsg,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend,

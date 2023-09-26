@@ -32,6 +32,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "../src/hardware/compressor.h"
 #include "audio_frame.h"

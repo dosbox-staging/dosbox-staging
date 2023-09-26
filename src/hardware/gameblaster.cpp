@@ -21,8 +21,9 @@
 
 #include "gameblaster.h"
 
-#include "setup.h"
+#include "channel_names.h"
 #include "pic.h"
+#include "setup.h"
 
 // The Game Blaster is nothing else than a rebranding of Creative's first PC
 // sound card, the Creative Music System (C/MS).
@@ -84,7 +85,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 
 	channel = MIXER_AddChannel(audio_callback,
 	                           use_mixer_rate,
-	                           "CMS",
+	                           ChannelName::Cms,
 	                           {ChannelFeature::Sleep,
 	                            ChannelFeature::Stereo,
 	                            ChannelFeature::ReverbSend,

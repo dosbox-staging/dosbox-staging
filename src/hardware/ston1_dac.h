@@ -21,13 +21,18 @@
 
 #include "dosbox.h"
 
+#include "channel_names.h"
 #include "inout.h"
 #include "lpt_dac.h"
 #include "mixer.h"
 
 class StereoOn1 final : public LptDac {
 public:
-	StereoOn1() : LptDac("STON1", ston1_max_30_khz, {ChannelFeature::Stereo}){}
+	StereoOn1()
+	        : LptDac(ChannelName::StereoOn1Dac, ston1_max_30_khz,
+	                 {ChannelFeature::Stereo})
+	{}
+
 	void BindToPort(const io_port_t lpt_port) final;
 	void ConfigureFilters(const FilterState state) final;
 
