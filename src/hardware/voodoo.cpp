@@ -1010,6 +1010,7 @@ struct voodoo_state {
 	void ExecuteTriangleCmd();
 	void ExecuteBeginTriangleCmd();
 	void ExecuteDrawTriangleCmd();
+	void ExecuteFastFillCmd();
 	void ExecuteSwapBufferCmd(const uint32_t data);
 
 	void SetupAndDrawTriangle();
@@ -5060,17 +5061,14 @@ void voodoo_state::ExecuteDrawTriangleCmd()
 }
 
 /*-------------------------------------------------
-    fastfill - execute the 'fastfill'
-    command
+    Execute the 'fastfill' command
 -------------------------------------------------*/
-static void fastfill(voodoo_state *vs)
+void voodoo_state::ExecuteFastFillCmd()
 {
-	const auto regs = vs->reg;
-
-	const int sx = (regs[clipLeftRight].u >> 16) & 0x3ff;
-	const int ex = (regs[clipLeftRight].u >> 0) & 0x3ff;
-	const int sy = (regs[clipLowYHighY].u >> 16) & 0x3ff;
-	const int ey = (regs[clipLowYHighY].u >> 0) & 0x3ff;
+	const int sx = (reg[clipLeftRight].u >> 16) & 0x3ff;
+	const int ex = (reg[clipLeftRight].u >> 0) & 0x3ff;
+	const int sy = (reg[clipLowYHighY].u >> 16) & 0x3ff;
+	const int ey = (reg[clipLowYHighY].u >> 0) & 0x3ff;
 
 	poly_extent extents[64] = {};
 
@@ -5081,31 +5079,30 @@ static void fastfill(voodoo_state *vs)
 	int x;
 	int y;
 
-	/* if we're not clearing either, take no time */
-	if (!FBZMODE_RGB_BUFFER_MASK(regs[fbzMode].u) &&
-	    !FBZMODE_AUX_BUFFER_MASK(regs[fbzMode].u)) {
+	// If we're not clearing either, take no time
+	if (!FBZMODE_RGB_BUFFER_MASK(reg[fbzMode].u) &&
+	    !FBZMODE_AUX_BUFFER_MASK(reg[fbzMode].u)) {
 		return;
 	}
 
-	/* are we clearing the RGB buffer? */
-	if (FBZMODE_RGB_BUFFER_MASK(regs[fbzMode].u)) {
-		/* determine the draw buffer */
-		const int destbuf = FBZMODE_DRAW_BUFFER(regs[fbzMode].u);
-		switch (destbuf)
-		{
-			case 0:		/* front buffer */
-				drawbuf = (uint16_t *)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.frontbuf]);
-				break;
+	// are we clearing the RGB buffer?
+	if (FBZMODE_RGB_BUFFER_MASK(reg[fbzMode].u)) {
+		// Determine the draw buffer
+		const int destbuf = FBZMODE_DRAW_BUFFER(reg[fbzMode].u);
+		switch (destbuf) {
+		case 0: // front buffer
+			drawbuf = (uint16_t*)(fbi.ram + fbi.rgboffs[fbi.frontbuf]);
+			break;
 
-			case 1:		/* back buffer */
-				drawbuf = (uint16_t *)(vs->fbi.ram + vs->fbi.rgboffs[vs->fbi.backbuf]);
-				break;
+		case 1: // back buffer
+			drawbuf = (uint16_t*)(fbi.ram + fbi.rgboffs[fbi.backbuf]);
+			break;
 
-			default:	/* reserved */
-				break;
+		default: // reserved
+			break;
 		}
 
-		/* determine the dither pattern */
+		// Determine the dither pattern
 		for (y = 0; y < 4; y++)
 		{
 			const uint8_t* dither_lookup = nullptr;
@@ -5113,20 +5110,20 @@ static void fastfill(voodoo_state *vs)
 
 			[[maybe_unused]] const uint8_t* dither = nullptr;
 
-			COMPUTE_DITHER_POINTERS(regs[fbzMode].u, y);
+			COMPUTE_DITHER_POINTERS(reg[fbzMode].u, y);
 			for (x = 0; x < 4; x++)
 			{
-				int r = regs[color1].rgb.r;
-				int g = regs[color1].rgb.g;
-				int b = regs[color1].rgb.b;
+				int r = reg[color1].rgb.r;
+				int g = reg[color1].rgb.g;
+				int b = reg[color1].rgb.b;
 
-				APPLY_DITHER(regs[fbzMode].u, x, dither_lookup, r, g, b);
+				APPLY_DITHER(reg[fbzMode].u, x, dither_lookup, r, g, b);
 				dithermatrix[y*4 + x] = (uint16_t)((r << 11) | (g << 5) | b);
 			}
 		}
 	}
 
-	/* fill in a block of extents */
+	// Fill in a block of extents
 	extents[0].startx = sx;
 	extents[0].stopx = ex;
 
@@ -5137,13 +5134,13 @@ static void fastfill(voodoo_state *vs)
 	}
 
 #ifdef C_ENABLE_VOODOO_OPENGL
-	if (vs->ogl && vs->active) {
+	if (ogl && active) {
 		voodoo_ogl_fastfill();
 		return;
 	}
 #endif
 
-	/* iterate over blocks of extents */
+	// Iterate over blocks of extents
 	for (y = sy; y < ey; y += num_extents) {
 		const auto count = std::min<int>(ey - y, num_extents);
 		void *dest = drawbuf;
@@ -5162,13 +5159,13 @@ static void fastfill(voodoo_state *vs)
 		{
 			auto extent = &extents[curscan - startscanline];
 
-			/* force start < stop */
+			// Force start < stop
 			if (extent->startx > extent->stopx) {
 				std::swap(extent->startx, extent->stopx);
 			}
 
-			/* set the extent and update the total pixel count */
-			vs->FastFillRaster(dest, curscan, extent, dithermatrix);
+			// Set the extent and update the total pixel count
+			FastFillRaster(dest, curscan, extent, dithermatrix);
 		}
 	}
 }
@@ -5646,7 +5643,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 		}
 		break;
 
-	case fastfillCMD: fastfill(this); break;
+	case fastfillCMD: ExecuteFastFillCmd(); break;
 
 	case swapbufferCMD: ExecuteSwapBufferCmd(data); break;
 
