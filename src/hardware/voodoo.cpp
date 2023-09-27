@@ -684,18 +684,23 @@ union voodoo_reg
 
 using rgb_union = voodoo_reg;
 
+enum class StatsCollection {
+	Accumulate,
+	Reset,
+};
+
 // note that this structure is an even 64 bytes long
-struct stats_block {
-	int32_t pixels_in;   // pixels in statistic
-	int32_t pixels_out;  // pixels out statistic
-	int32_t chroma_fail; // chroma test fail statistic
-	int32_t zfunc_fail;  // z function test fail statistic
-	int32_t afunc_fail;  // alpha function test fail statistic
+struct Stats {
+	int32_t pixels_in   = 0; // pixels in statistic
+	int32_t pixels_out  = 0; // pixels out statistic
+	int32_t chroma_fail = 0; // chroma test fail statistic
+	int32_t zfunc_fail  = 0; // z function test fail statistic
+	int32_t afunc_fail  = 0; // alpha function test fail statistic
 	// int32_t clip_fail;       // clipping fail statistic
 	// int32_t stipple_count;   // stipple statistic
-	int32_t filler[64 / 4 - 5]; // pad this structure to 64 bytes
+	int32_t filler[64 / 4 - 5] = {}; // pad this structure to 64 bytes
 };
-static_assert(sizeof(stats_block) == 64);
+static_assert(sizeof(Stats) == 64);
 
 struct fifo_state
 {
@@ -835,7 +840,7 @@ struct fbi_state
 	int32_t dzdy;                           // delta Z per Y
 	int64_t dwdy;                           // delta W per Y
 
-	stats_block lfb_stats; // LFB-access statistics
+	Stats lfb_stats; // LFB-access statistics
 
 	uint8_t sverts;        // number of vertices ready
 	setup_vertex svert[3]; // 3 setup vertices
@@ -1027,7 +1032,9 @@ struct voodoo_state {
 
 	void RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0, uint32_t TEXMODE1,
 	                   void* destbase, int32_t y, const poly_extent* extent,
-	                   stats_block& stats);
+	                   Stats& stats);
+
+	void UpdateStatistics(const StatsCollection collection_action);
 
 	std::unique_ptr<PageHandler> page_handler = {};
 
@@ -1054,7 +1061,8 @@ struct voodoo_state {
 	raster_info* raster_hash[RASTER_HASH_SIZE] = {}; // hash table of rasterizers
 #endif
 
-	stats_block thread_stats[TRIANGLE_WORKERS] = {}; // per-thread statistics
+	std::array<Stats, TRIANGLE_WORKERS> thread_stats = {}; // per-thread
+	                                                       // statistics
 
 	bool send_config        = {};
 	bool clock_enabled      = {};
@@ -3178,7 +3186,7 @@ static dither_lut_t dither4_lookup = {};
 
 void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
                                  uint32_t TEXMODE1, void* destbase, int32_t y,
-                                 const poly_extent* extent, stats_block& stats)
+                                 const poly_extent* extent, Stats& stats)
 {
 	const uint8_t* dither_lookup = nullptr;
 	const uint8_t* dither4       = nullptr;
@@ -3712,7 +3720,7 @@ void voodoo_state::FastFillRaster(void* destbase, const int32_t y,
                                   const poly_extent* extent,
                                   const uint16_t* extra_dither)
 {
-	stats_block stats = {};
+	Stats stats = {};
 	const int32_t startx = extent->startx;
 	int32_t stopx = extent->stopx;
 	int scry;
@@ -3827,7 +3835,7 @@ static void init_fbi(fbi_state* f, int fbmem)
 
 	f->sverts = 0;
 
-	memset(&f->lfb_stats, 0, sizeof(f->lfb_stats));
+	f->lfb_stats = {};
 	memset(&f->fogblend, 0, sizeof(f->fogblend));
 	memset(&f->fogdelta, 0, sizeof(f->fogdelta));
 }
@@ -4407,44 +4415,33 @@ static inline int32_t round_coordinate(float value)
  *
  *************************************/
 
-static void sum_statistics(stats_block *target, const stats_block *source)
+static void sum_statistics(Stats& target, const Stats& source)
 {
-	target->pixels_in += source->pixels_in;
-	target->pixels_out += source->pixels_out;
-	target->chroma_fail += source->chroma_fail;
-	target->zfunc_fail += source->zfunc_fail;
-	target->afunc_fail += source->afunc_fail;
+	target.pixels_in += source.pixels_in;
+	target.pixels_out += source.pixels_out;
+	target.chroma_fail += source.chroma_fail;
+	target.zfunc_fail += source.zfunc_fail;
+	target.afunc_fail += source.afunc_fail;
 }
 
-static void accumulate_statistics(voodoo_state *vs, const stats_block *stats)
+void voodoo_state::UpdateStatistics(const StatsCollection collection_action)
 {
-	/* apply internal voodoo statistics */
-	const auto regs = vs->reg;
-
-	regs[fbiPixelsIn].u += stats->pixels_in;
-	regs[fbiPixelsOut].u += stats->pixels_out;
-	regs[fbiChromaFail].u += stats->chroma_fail;
-	regs[fbiZfuncFail].u += stats->zfunc_fail;
-	regs[fbiAfuncFail].u += stats->afunc_fail;
-}
-
-static void update_statistics(voodoo_state *vs, bool accumulate)
-{
-	/* accumulate/reset statistics from all units */
-	for (auto& thread_stat : vs->thread_stats) {
-		if (accumulate) {
-			accumulate_statistics(vs, &thread_stat);
-		}
+	auto accumulate = [this](const Stats& stats) {
+		// Apply internal voodoo statistics
+		reg[fbiPixelsIn].u += stats.pixels_in;
+		reg[fbiPixelsOut].u += stats.pixels_out;
+		reg[fbiChromaFail].u += stats.chroma_fail;
+		reg[fbiZfuncFail].u += stats.zfunc_fail;
+		reg[fbiAfuncFail].u += stats.afunc_fail;
+	};
+	// Maybe accumulate the threads and frame buffer stats
+	if (collection_action == StatsCollection::Accumulate) {
+		std::for_each(thread_stats.begin(), thread_stats.end(), accumulate);
+		accumulate(fbi.lfb_stats);
 	}
-	memset(vs->thread_stats, 0, sizeof(vs->thread_stats));
-
-	/* accumulate/reset statistics from the LFB */
-	auto& fbi = vs->fbi;
-
-	if (accumulate) {
-		accumulate_statistics(vs, &fbi.lfb_stats);
-	}
-	memset(&fbi.lfb_stats, 0, sizeof(fbi.lfb_stats));
+	// Always reset the stats
+	thread_stats  = {};
+	fbi.lfb_stats = {};
 }
 
 /***************************************************************************
@@ -4480,7 +4477,7 @@ void TriangleWorker::Work(const int32_t worktstart, const int32_t worktend)
 	const float dxdy_v2v3 = (v3.y == v2.y) ? 0.0f
 	                                       : (v3.x - v2.x) / (v3.y - v2.y);
 
-	stats_block my_stats = {};
+	Stats my_stats = {};
 
 	const int32_t from = totalpix * worktstart / TRIANGLE_WORKERS;
 	const int32_t to   = totalpix * worktend / TRIANGLE_WORKERS;
@@ -4525,7 +4522,7 @@ void TriangleWorker::Work(const int32_t worktstart, const int32_t worktend)
 
 		vs->RasterGeneric(tmus, texmode0, texmode1, drawbuf, curscan, &extent, my_stats);
 	}
-	sum_statistics(&vs->thread_stats[worktstart], &my_stats);
+	sum_statistics(vs->thread_stats[worktstart], my_stats);
 }
 
 void TriangleWorker::ThreadFunc(const int32_t p)
@@ -5199,7 +5196,7 @@ void voodoo_state::ExecuteSwapBufferCmd(const uint32_t data)
 
 void voodoo_state::ResetCounters()
 {
-	update_statistics(this, false);
+	UpdateStatistics(StatsCollection::Reset);
 
 	reg[fbiPixelsIn].u   = 0;
 	reg[fbiChromaFail].u = 0;
@@ -6385,7 +6382,7 @@ void voodoo_state::WriteToFrameBuffer(uint32_t offset, uint32_t data, uint32_t m
 		int32_t blenda = 0;
 
 		/* loop over up to two pixels */
-		stats_block stats = {};
+		Stats stats = {};
 		for (pix = 0; mask != 0; pix++) {
 			/* make sure we care about this pixel */
 			if ((mask & 0x0f) != 0) {
@@ -6693,7 +6690,7 @@ void voodoo_state::WriteToFrameBuffer(uint32_t offset, uint32_t data, uint32_t m
 			x++;
 			mask >>= 4;
 		}
-		sum_statistics(&fbi.lfb_stats, &stats);
+		sum_statistics(fbi.lfb_stats, stats);
 	}
 }
 
@@ -6954,7 +6951,9 @@ uint32_t voodoo_state::ReadFromRegister(const uint32_t offset)
 	case fbiChromaFail:
 	case fbiZfuncFail:
 	case fbiAfuncFail:
-	case fbiPixelsOut: update_statistics(this, true); [[fallthrough]];
+	case fbiPixelsOut:
+		UpdateStatistics(StatsCollection::Accumulate);
+		[[fallthrough]];
 	case fbiTrianglesOut: result = reg[regnum].u & 0xffffff; break;
 	}
 
@@ -7116,7 +7115,7 @@ void voodoo_state::Initialize()
 	memset(raster_hash, 0, sizeof(raster_hash));
 #endif
 
-	update_statistics(this, false);
+	UpdateStatistics(StatsCollection::Reset);
 
 	alt_regmap = false;
 #ifdef C_ENABLE_VOODOO_DEBUG
