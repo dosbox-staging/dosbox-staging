@@ -170,10 +170,10 @@ inline uint8_t pal5bit(uint8_t bits)
 /* rectangles describe a bitmap portion */
 struct rectangle
 {
-	int				min_x;			/* minimum X, or left coordinate */
-	int				max_x;			/* maximum X, or right coordinate (inclusive) */
-	int				min_y;			/* minimum Y, or top coordinate */
-	int				max_y;			/* maximum Y, or bottom coordinate (inclusive) */
+	int min_x = 0; // minimum X, or left coordinate
+	int max_x = 0; // maximum X, or right coordinate (inclusive)
+	int min_y = 0; // minimum Y, or top coordinate
+	int max_y = 0; // maximum Y, or bottom coordinate (inclusive)
 };
 #endif
 
@@ -231,9 +231,10 @@ inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
 
 struct poly_vertex
 {
-	float		x;							/* X coordinate */
-	float		y;							/* Y coordinate */
-	//float		p[MAX_VERTEX_PARAMS];		/* interpolated parameter values */
+	float x = 0.0f; // X coordinate
+	float y = 0.0f; // Y coordinate
+
+	// float p[MAX_VERTEX_PARAMS]; // interpolated parameter values
 };
 #endif //DOSBOX_VOODOO_TYPES_H
 
@@ -704,26 +705,36 @@ static_assert(sizeof(Stats) == 64);
 
 struct fifo_state
 {
-	int32_t size; // size of the FIFO
+	int32_t size = 0; // size of the FIFO
 };
 
 struct pci_state
 {
-	fifo_state fifo;      // PCI FIFO
-	uint32_t init_enable; // initEnable value
-	bool op_pending;      // true if an operation is pending
+	fifo_state fifo      = {};    // PCI FIFO
+	uint32_t init_enable = 0;     // initEnable value
+	bool op_pending      = false; // true if an operation is pending
 };
 
 struct ncc_table
 {
-	bool dirty;                  // is the texel lookup dirty?
-	voodoo_reg* reg;             // pointer to our registers
-	int32_t ir[4], ig[4], ib[4]; // I values for R,G,B
-	int32_t qr[4], qg[4], qb[4]; // Q values for R,G,B
-	int32_t y[16];               // Y values
-	rgb_t* palette;              // pointer to associated RGB palette
-	rgb_t* palettea;             // pointer to associated ARGB palette
-	rgb_t texel[256];            // texel lookup
+	bool dirty = false; // is the texel lookup dirty?
+
+	voodoo_reg* reg = nullptr; // pointer to our registers
+
+	int32_t ir[4] = {}; // I values for R,G,B
+	int32_t ig[4] = {};
+	int32_t ib[4] = {};
+
+	int32_t qr[4] = {}; // Q values for R,G,B
+	int32_t qg[4] = {};
+	int32_t qb[4] = {};
+
+	int32_t y[16] = {}; // Y values
+
+	rgb_t* palette  = nullptr; // pointer to associated RGB palette
+	rgb_t* palettea = nullptr; // pointer to associated ARGB palette
+
+	rgb_t texel[256] = {}; // texel lookup
 };
 
 using mem_buffer_t = std::unique_ptr<uint8_t[]>;
@@ -731,14 +742,13 @@ using mem_buffer_t = std::unique_ptr<uint8_t[]>;
 struct tmu_shared_state {
 	constexpr void Initialize();
 
-	rgb_t rgb332[256]; // RGB 3-3-2 lookup table
-	rgb_t alpha8[256]; // alpha 8-bit lookup table
-	rgb_t int8[256];   // intensity 8-bit lookup table
-	rgb_t ai44[256];   // alpha, intensity 4-4 lookup table
-
-	rgb_t rgb565[65536];   // RGB 5-6-5 lookup table
-	rgb_t argb1555[65536]; // ARGB 1-5-5-5 lookup table
-	rgb_t argb4444[65536]; // ARGB 4-4-4-4 lookup table
+	rgb_t rgb332[256]     = {}; // RGB 3-3-2 lookup table
+	rgb_t alpha8[256]     = {}; // alpha 8-bit lookup table
+	rgb_t int8[256]       = {}; // intensity 8-bit lookup table
+	rgb_t ai44[256]       = {}; // alpha, intensity 4-4 lookup table
+	rgb_t rgb565[65536]   = {}; // RGB 5-6-5 lookup table
+	rgb_t argb1555[65536] = {}; // ARGB 1-5-5-5 lookup table
+	rgb_t argb4444[65536] = {}; // ARGB 4-4-4-4 lookup table
 };
 
 struct tmu_state {
@@ -790,74 +800,113 @@ struct tmu_state {
 };
 
 struct setup_vertex {
-	float x, y;       // X, Y coordinates
-	float a, r, g, b; // A, R, G, B values
-	float z, wb;      // Z and broadcast W values
-	float w0, s0, t0; // W, S, T for TMU 0
-	float w1, s1, t1; // W, S, T for TMU 1
+	float x = 0.0f; // X, Y coordinates
+	float y = 0.0f;
+
+	float a = 0.0f; // A, R, G, B values
+	float r = 0.0f;
+	float g = 0.0f;
+	float b = 0.0f;
+
+	float z  = 0.0f; // Z and broadcast W values
+	float wb = 0.0f;
+
+	float w0 = 0.0f; // W, S, T for TMU 0
+	float s0 = 0.0f;
+	float t0 = 0.0f;
+
+	float w1 = 0.0f; // W, S, T for TMU 1
+	float s1 = 0.0f;
+	float t1 = 0.0f;
 };
 
 struct fbi_state
 {
-	uint8_t* ram;            // pointer to aligned frame buffer RAM
-	mem_buffer_t ram_buffer; // Managed buffer backing the RAM
+	uint8_t* ram = nullptr;       // pointer to aligned frame buffer RAM
+	mem_buffer_t ram_buffer = {}; // Managed buffer backing the RAM
 
-	uint32_t mask;       // mask to apply to pointers
-	uint32_t rgboffs[3]; // word offset to 3 RGB buffers
-	uint32_t auxoffs;    // word offset to 1 aux buffer
+	uint32_t mask       = 0;  // mask to apply to pointers
+	uint32_t rgboffs[3] = {}; // word offset to 3 RGB buffers
+	uint32_t auxoffs    = 0;  // word offset to 1 aux buffer
 
-	uint8_t frontbuf; // front buffer index
-	uint8_t backbuf;  // back buffer index
+	uint8_t frontbuf = 0; // front buffer index
+	uint8_t backbuf  = 0; // back buffer index
 
-	uint32_t yorigin; // Y origin subtract value
+	uint32_t yorigin = 0; // Y origin subtract value
 
-	uint32_t width;  // width of current frame buffer
-	uint32_t height; // height of current frame buffer
-	// uint32_t	xoffs; // horizontal offset (back porch)
-	// uint32_t yoffs;	// vertical offset (back porch)
-	// uint32_t	vsyncscan; // vertical sync scanline
+	uint32_t width  = 0; // width of current frame buffer
+	uint32_t height = 0; // height of current frame buffer
 
-	uint32_t rowpixels;   // pixels per row
-	uint32_t tile_width;  // width of video tiles
-	uint32_t tile_height; // height of video tiles
-	uint32_t x_tiles;     // number of tiles in the X direction
+	// uint32_t	xoffs = 0; // horizontal offset (back porch)
+	// uint32_t yoffs = 0;	// vertical offset (back porch)
+	// uint32_t	vsyncscan = 0; // vertical sync scanline
 
-	uint8_t vblank;        // VBLANK state
-	bool vblank_dont_swap; // don't actually swap when we hit this point
-	bool vblank_flush_pending;
+	uint32_t rowpixels   = 0; // pixels per row
+	uint32_t tile_width  = 0; // width of video tiles
+	uint32_t tile_height = 0; // height of video tiles
+	uint32_t x_tiles     = 0; // number of tiles in the X direction
+
+	uint8_t vblank        = 0;     // VBLANK state
+	bool vblank_dont_swap = false; // don't actually swap when we hit this
+	                               // point
+	bool vblank_flush_pending = false;
 
 	// triangle setup info
-	int16_t ax, ay;                         // vertex A x,y (12.4)
-	int16_t bx, by;                         // vertex B x,y (12.4)
-	int16_t cx, cy;                         // vertex C x,y (12.4)
-	int32_t startr, startg, startb, starta; // starting R,G,B,A (12.12)
-	int32_t startz;                         // starting Z (20.12)
-	int64_t startw;                         // starting W (16.32)
-	int32_t drdx, dgdx, dbdx, dadx;         // delta R,G,B,A per X
-	int32_t dzdx;                           // delta Z per X
-	int64_t dwdx;                           // delta W per X
-	int32_t drdy, dgdy, dbdy, dady;         // delta R,G,B,A per Y
-	int32_t dzdy;                           // delta Z per Y
-	int64_t dwdy;                           // delta W per Y
+	int16_t ax = 0; // vertex A x,y (12.4)
+	int16_t ay = 0;
 
-	Stats lfb_stats; // LFB-access statistics
+	int16_t bx = 0; // vertex B x,y (12.4)
+	int16_t by = 0;
 
-	uint8_t sverts;        // number of vertices ready
-	setup_vertex svert[3]; // 3 setup vertices
+	int16_t cx = 0; // vertex C x,y (12.4)
+	int16_t cy = 0;
 
-	fifo_state fifo; // framebuffer memory fifo
+	int32_t startr = 0; // starting R,G,B,A (12.12)
+	int32_t startg = 0;
+	int32_t startb = 0;
+	int32_t starta = 0;
 
-	uint8_t fogblend[64]; // 64-entry fog table
-	uint8_t fogdelta[64]; // 64-entry fog table
-	uint8_t fogdelta_mask; // mask for for delta (0xff for V1, 0xfc for V2)
+	int32_t startz = 0; // starting Z (20.12)
+
+	int64_t startw = 0; // starting W (16.32)
+
+	int32_t drdx = 0; // delta R,G,B,A per X
+	int32_t dgdx = 0;
+	int32_t dbdx = 0;
+	int32_t dadx = 0;
+
+	int32_t dzdx = 0; // delta Z per X
+
+	int64_t dwdx = 0; // delta W per X
+
+	int32_t drdy = 0; // delta R,G,B,A per Y
+	int32_t dgdy = 0;
+	int32_t dbdy = 0;
+	int32_t dady = 0;
+
+	int32_t dzdy = 0; // delta Z per Y
+
+	int64_t dwdy = 0; // delta W per Y
+
+	Stats lfb_stats = {}; // LFB-access statistics
+
+	uint8_t sverts        = 0;  // number of vertices ready
+	setup_vertex svert[3] = {}; // 3 setup vertices
+
+	fifo_state fifo = {}; // framebuffer memory fifo
+
+	uint8_t fogblend[64] = {}; // 64-entry fog table
+	uint8_t fogdelta[64] = {}; // 64-entry fog table
+
+	uint8_t fogdelta_mask = 0; // mask for for delta (0xff for V1, 0xfc for V2)
 
 	// rgb_t clut[512]; // clut gamma data
 };
 
 struct dac_state
 {
-	uint8_t reg[8];      // 8 registers
-	uint8_t read_result; // pending read result
+	uint8_t reg[8]      = {}; // 8 registers
+	uint8_t read_result = 0;  // pending read result
 };
 
 #ifdef C_ENABLE_VOODOO_OPENGL
@@ -871,25 +920,25 @@ typedef unsigned int GLhandleARB;
 
 struct raster_info
 {
-	raster_info* next; // pointer to next entry with the same hash
+	raster_info* next = nulltr; // pointer to next entry with the same hash
 #ifdef C_ENABLE_VOODOO_DEBUG
-	bool is_generic; // true if this is one of the generic rasterizers
-	uint8_t display; // display index
-	uint32_t hits;   // how many hits (pixels) we've used this for
-	uint32_t polys;  // how many polys we've used this for
+	bool is_generic = false; // true if this is one of the generic rasterizers
+	uint8_t display = 0;     // display index
+	uint32_t hits   = 0;     // how many hits (pixels) we've used this for
+	uint32_t polys  = 0;     // how many polys we've used this for
 #endif
-	uint32_t eff_color_path; // effective fbzColorPath value
-	uint32_t eff_alpha_mode; // effective alphaMode value
-	uint32_t eff_fog_mode;   // effective fogMode value
-	uint32_t eff_fbz_mode;   // effective fbzMode value
-	uint32_t eff_tex_mode_0; // effective textureMode value for TMU #0
-	uint32_t eff_tex_mode_1; // effective textureMode value for TMU #1
+	uint32_t eff_color_path = 0; // effective fbzColorPath value
+	uint32_t eff_alpha_mode = 0; // effective alphaMode value
+	uint32_t eff_fog_mode   = 0; // effective fogMode value
+	uint32_t eff_fbz_mode   = 0; // effective fbzMode value
+	uint32_t eff_tex_mode_0 = 0; // effective textureMode value for TMU #0
+	uint32_t eff_tex_mode_1 = 0; // effective textureMode value for TMU #1
 
-	bool shader_ready;
-	GLhandleARB so_shader_program;
-	GLhandleARB so_vertex_shader;
-	GLhandleARB so_fragment_shader;
-	int32_t* shader_ulocations;
+	bool shader_ready              = false;
+	GLhandleARB so_shader_program  = {};
+	GLhandleARB so_vertex_shader   = {};
+	GLhandleARB so_fragment_shader = {};
+	int32_t* shader_ulocations     = nullptr;
 };
 #endif
 
@@ -1086,45 +1135,83 @@ struct voodoo_state {
 #ifdef C_ENABLE_VOODOO_OPENGL
 struct poly_extra_data
 {
-	voodoo_state* state; // pointer back to the voodoo state
-	raster_info* info;   // pointer to rasterizer information
+	voodoo_state* state = nullptr; // pointer back to the voodoo state
+	raster_info* info   = nullptr; // pointer to rasterizer information
 
-	int16_t ax, ay;                         // vertex A x,y (12.4)
-	int32_t startr, startg, startb, starta; // starting R,G,B,A (12.12)
-	int32_t startz;                         // starting Z (20.12)
-	int64_t startw;                         // starting W (16.32)
-	int32_t drdx, dgdx, dbdx, dadx;         // delta R,G,B,A per X
-	int32_t dzdx;                           // delta Z per X
-	int64_t dwdx;                           // delta W per X
-	int32_t drdy, dgdy, dbdy, dady;         // delta R,G,B,A per Y
-	int32_t dzdy;                           // delta Z per Y
-	int64_t dwdy;                           // delta W per Y
+	int16_t ax = 0;
+	int16_t ay = 0; // vertex A x,y (12.4)
 
-	int64_t starts0, startt0; // starting S,T (14.18)
-	int64_t startw0;          // starting W (2.30)
-	int64_t ds0dx, dt0dx;     // delta S,T per X
-	int64_t dw0dx;            // delta W per X
-	int64_t ds0dy, dt0dy;     // delta S,T per Y
-	int64_t dw0dy;            // delta W per Y
-	int32_t lodbase0;         // used during rasterization
+	int32_t startr = 0; // starting R,G,B,A (12.12)
+	int32_t startg = 0;
+	int32_t startb = 0;
+	int32_t starta = 0;
 
-	int64_t starts1, startt1; // starting S,T (14.18)
-	int64_t startw1;          // starting W (2.30)
-	int64_t ds1dx, dt1dx;     // delta S,T per X
-	int64_t dw1dx;            // delta W per X
-	int64_t ds1dy, dt1dy;     // delta S,T per Y
-	int64_t dw1dy;            // delta W per Y
-	int32_t lodbase1;         // used during rasterization
+	int32_t startz = 0; // starting Z (20.12)
 
-	uint16_t dither[16]; // dither matrix, for fastfill
+	int64_t startw = 0; // starting W (16.32)
 
-	Bitu texcount;
-	Bitu r_fbzColorPath;
-	Bitu r_fbzMode;
-	Bitu r_alphaMode;
-	Bitu r_fogMode;
-	int32_t r_textureMode0;
-	int32_t r_textureMode1;
+	int32_t drdx = 0; // delta R,G,B,A per X
+	int32_t dgdx = 0;
+	int32_t dbdx = 0;
+	int32_t dadx = 0;
+
+	int32_t dzdx = 0; // delta Z per X
+
+	int64_t dwdx = 0; // delta W per X
+
+	int32_t drdy = 0; // delta R,G,B,A per Y
+	int32_t dgdy = 0;
+	int32_t dbdy = 0;
+	int32_t dady = 0;
+
+	int32_t dzdy = 0; // delta Z per Y
+
+	int64_t dwdy = 0; // delta W per Y
+
+	int64_t starts0 = 0; // starting S,T (14.18)
+	int64_t startt0 = 0;
+
+	int64_t startw0 = 0; // starting W (2.30)
+
+	int64_t ds0dx = 0; // delta S,T per X
+	int64_t dt0dx = 0;
+
+	int64_t dw0dx = 0; // delta W per X
+
+	int64_t ds0dy = 0; // delta S,T per Y
+	int64_t dt0dy = 0;
+
+	int64_t dw0dy = 0; // delta W per Y
+
+	int32_t lodbase0 = 0; // used during rasterization
+
+	int64_t starts1 = 0; // starting S,T (14.18)
+	int64_t startt1 = 0;
+
+	int64_t startw1 = 0; // starting W (2.30)
+
+	int64_t ds1dx = 0; // delta S,T per X
+	int64_t dt1dx = 0;
+
+	int64_t dw1dx = 0; // delta W per X
+
+	int64_t ds1dy = 0; // delta S,T per Y
+	int64_t dt1dy = 0;
+
+	int64_t dw1dy = 0; // delta W per Y
+
+	int32_t lodbase1 = 0; // used during rasterization
+
+	uint16_t dither[16] = {}; // dither matrix, for fastfill
+
+	Bitu texcount       = 0;
+	Bitu r_fbzColorPath = 0;
+	Bitu r_fbzMode      = 0;
+	Bitu r_alphaMode    = 0;
+	Bitu r_fogMode      = 0;
+
+	int32_t r_textureMode0 = 0;
+	int32_t r_textureMode1 = 0;
 };
 #endif
 
