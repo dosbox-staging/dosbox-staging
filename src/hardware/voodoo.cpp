@@ -1009,7 +1009,10 @@ struct voodoo_state {
 	// Commands
 	void ExecuteTriangleCmd();
 	void ExecuteBeginTriCmd();
+	void ExecuteSwapBufferCmd(const uint32_t data);
+
 	void SetupAndDrawTriangle();
+	void SwapBuffers();
 
 	void RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0, uint32_t TEXMODE1,
 	                   void* destbase, int32_t y, const poly_extent* extent,
@@ -3929,25 +3932,21 @@ static void init_tmu(voodoo_state *vs, tmu_state *t, voodoo_reg *reg, int tmem)
  *
  *************************************/
 
-static void voodoo_swap_buffers(voodoo_state *vs)
+void voodoo_state::SwapBuffers()
 {
 	//if (LOG_VBLANK_SWAP) LOG(LOG_VOODOO,LOG_WARN)("--- swap_buffers @ %d\n", video_screen_get_vpos(vs->screen));
 
 #ifdef C_ENABLE_VOODOO_OPENGL
-	if (vs->ogl && vs->active) {
+	if (ogl && active) {
 		voodoo_ogl_swap_buffer();
 		return;
 	}
 #endif
 
-	/* keep a history of swap intervals */
-	const auto regs = vs->reg;
+	// Keep a history of swap intervals
+	reg[fbiSwapHistory].u = (reg[fbiSwapHistory].u << 4);
 
-	regs[fbiSwapHistory].u = (regs[fbiSwapHistory].u << 4);
-
-	/* rotate the buffers */
-	auto& fbi = vs->fbi;
-
+	// Rotate the buffers
 	if (vtype < VOODOO_2 || !fbi.vblank_dont_swap) {
 		if (fbi.rgboffs[2] == (uint32_t)(~0)) {
 			fbi.frontbuf = (uint8_t)(1 - fbi.frontbuf);
@@ -5178,15 +5177,14 @@ static void fastfill(voodoo_state *vs)
 }
 
 /*-------------------------------------------------
-    swapbuffer - execute the 'swapbuffer'
-    command
+    Execute the 'swapbuffer' command
 -------------------------------------------------*/
-static void swapbuffer(voodoo_state *vs, uint32_t data)
+void voodoo_state::ExecuteSwapBufferCmd(const uint32_t data)
 {
-	/* set the don't swap value for Voodoo 2 */
-	vs->fbi.vblank_dont_swap = ((data >> 9) & 1)>0;
+	// Set the don't swap value for Voodoo 2
+	fbi.vblank_dont_swap = ((data >> 9) & 1) > 0;
 
-	voodoo_swap_buffers(vs);
+	SwapBuffers();
 }
 
 
@@ -5653,7 +5651,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 
 	case fastfillCMD: fastfill(this); break;
 
-	case swapbufferCMD: swapbuffer(this, data); break;
+	case swapbufferCMD: ExecuteSwapBufferCmd(data); break;
 
 	/* gamma table access -- Voodoo/Voodoo2 only */
 	case clutData:
