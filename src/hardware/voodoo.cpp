@@ -1016,6 +1016,9 @@ struct voodoo_state {
 	void SetupAndDrawTriangle();
 	void SwapBuffers();
 
+	void ResetCounters();
+	void SoftReset();
+
 	void RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0, uint32_t TEXMODE1,
 	                   void* destbase, int32_t y, const poly_extent* extent,
 	                   stats_block& stats);
@@ -5188,24 +5191,23 @@ void voodoo_state::ExecuteSwapBufferCmd(const uint32_t data)
  *
  *************************************/
 
-static void reset_counters(voodoo_state *vs)
+void voodoo_state::ResetCounters()
 {
-	update_statistics(vs, false);
-	const auto regs = vs->reg;
+	update_statistics(this, false);
 
-	regs[fbiPixelsIn].u   = 0;
-	regs[fbiChromaFail].u = 0;
-	regs[fbiZfuncFail].u  = 0;
-	regs[fbiAfuncFail].u  = 0;
-	regs[fbiPixelsOut].u  = 0;
+	reg[fbiPixelsIn].u   = 0;
+	reg[fbiChromaFail].u = 0;
+	reg[fbiZfuncFail].u  = 0;
+	reg[fbiAfuncFail].u  = 0;
+	reg[fbiPixelsOut].u  = 0;
 }
 
-static void soft_reset(voodoo_state *vs)
+void voodoo_state::SoftReset()
 {
-	reset_counters(vs);
-	vs->reg[fbiTrianglesOut].u = 0;
-}
+	ResetCounters();
 
+	reg[fbiTrianglesOut].u = 0;
+}
 
 /*************************************
  *
@@ -5636,7 +5638,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 	/* other commands */
 	case nopCMD:
 		if ((data & 1) != 0u) {
-			reset_counters(this);
+			ResetCounters();
 		}
 		if ((data & 2) != 0u) {
 			reg[fbiTrianglesOut].u = 0;
@@ -5811,7 +5813,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 
 			reg[fbiInit0].u = data;
 			if (FBIINIT0_GRAPHICS_RESET(data)) {
-				soft_reset(this);
+				SoftReset();
 			}
 			recompute_video_memory(this);
 		}
@@ -7235,7 +7237,7 @@ void voodoo_state::Initialize()
 	reg[fbiInit4].u = (uint32_t)(1 << 0);
 
 	/* do a soft reset to reset everything else */
-	soft_reset(this);
+	SoftReset();
 
 	recompute_video_memory(this);
 }
