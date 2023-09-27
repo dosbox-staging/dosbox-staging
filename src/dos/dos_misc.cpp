@@ -81,29 +81,29 @@ static bool DOS_MultiplexFunctions(void) {
 
 			uint32_t handle=RealHandle(reg_bx);
 			if (handle>=DOS_FILES) {
-				mem_writew(sftptr+sftofs+0x02,0x02);	// file open mode
-				mem_writeb(sftptr+sftofs+0x04,0x00);	// file attribute
-				mem_writew(sftptr+sftofs+0x05,Files[reg_bx]->GetInformation());	// device info word
-				mem_writed(sftptr+sftofs+0x07,0);		// device driver header
-				mem_writew(sftptr+sftofs+0x0d,0);		// packed time
-				mem_writew(sftptr+sftofs+0x0f,0);		// packed date
-				mem_writew(sftptr+sftofs+0x11,0);		// size
-				mem_writew(sftptr+sftofs+0x15,0);		// current position
+				mem_writew(sftptr+sftofs+0x02,0x02); // file open mode
+				mem_writeb(sftptr+sftofs+0x04,0x00); // file attribute
+				mem_writew(sftptr+sftofs+0x05,Files[reg_bx]->GetInformation()); // device info word
+				mem_writed(sftptr+sftofs+0x07,0); // device driver header
+				mem_writew(sftptr+sftofs+0x0d,0); // packed time
+				mem_writew(sftptr+sftofs+0x0f,0); // packed date
+				mem_writew(sftptr+sftofs+0x11,0); // size
+				mem_writew(sftptr+sftofs+0x15,0); // current position
 			} else {
 				uint8_t drive=Files[reg_bx]->GetDrive();
 
-				mem_writew(sftptr+sftofs+0x02,(uint16_t)(Files[reg_bx]->flags&3));	// file open mode
-				mem_writeb(sftptr+sftofs+0x04,(uint8_t)(Files[reg_bx]->attr));		// file attribute
-				mem_writew(sftptr+sftofs+0x05,0x40|drive);							// device info word
-				mem_writed(sftptr+sftofs+0x07,RealMake(dos.tables.dpb,drive*9));	// dpb of the drive
-				mem_writew(sftptr+sftofs+0x0d,Files[reg_bx]->time);					// packed file time
-				mem_writew(sftptr+sftofs+0x0f,Files[reg_bx]->date);					// packed file date
+				mem_writew(sftptr+sftofs+0x02,(uint16_t)(Files[reg_bx]->flags&3)); // file open mode
+				mem_writeb(sftptr + sftofs + 0x04, Files[reg_bx]->attr._data);     // file attribute
+				mem_writew(sftptr+sftofs+0x05,0x40|drive);                         // device info word
+				mem_writed(sftptr+sftofs+0x07,RealMake(dos.tables.dpb,drive*9));   // dpb of the drive
+				mem_writew(sftptr+sftofs+0x0d,Files[reg_bx]->time);                // packed file time
+				mem_writew(sftptr+sftofs+0x0f,Files[reg_bx]->date);                // packed file date
 				uint32_t curpos=0;
 				Files[reg_bx]->Seek(&curpos,DOS_SEEK_CUR);
 				uint32_t endpos=0;
 				Files[reg_bx]->Seek(&endpos,DOS_SEEK_END);
-				mem_writed(sftptr+sftofs+0x11,endpos);		// size
-				mem_writed(sftptr+sftofs+0x15,curpos);		// current position
+				mem_writed(sftptr+sftofs+0x11,endpos); // size
+				mem_writed(sftptr+sftofs+0x15,curpos); // current position
 				Files[reg_bx]->Seek(&curpos,DOS_SEEK_SET);
 			}
 

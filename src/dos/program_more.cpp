@@ -111,10 +111,13 @@ bool MORE::FindInputFiles(MoreOutputFiles &output)
 	// Put all the remaining parameters into vector
 	std::vector<std::string> params;
 	cmd->FillVector(params);
-	if (params.empty())
+	if (params.empty()) {
 		return true;
+	}
 
-	constexpr auto search_attr = UINT16_MAX & ~DOS_ATTR_DIRECTORY & ~DOS_ATTR_VOLUME;
+	FatAttributeFlags search_attr = {UINT8_MAX};
+	search_attr.directory         = false;
+	search_attr.volume            = false;
 
 	const RealPt save_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
@@ -131,8 +134,7 @@ bool MORE::FindInputFiles(MoreOutputFiles &output)
 		*end = 0;
 
 		// Search for the first file from pattern
-		if (!DOS_FindFirst(param.c_str(),
-		                   static_cast<uint16_t>(search_attr))) {
+		if (!DOS_FindFirst(param.c_str(), search_attr)) {
 			LOG_WARNING("DOS: MORE - no match for pattern '%s'",
 			            param.c_str());
 			continue;
@@ -142,21 +144,17 @@ bool MORE::FindInputFiles(MoreOutputFiles &output)
 		while (!shutdown_requested) {
 			CALLBACK_Idle();
 
-			char name[DOS_NAMELENGTH_ASCII];
-			uint32_t size = 0;
-			uint16_t time = 0;
-			uint16_t date = 0;
-			uint8_t  attr = 0;
+			DOS_DTA::Result search_result = {};
 
 			const DOS_DTA dta(dos.dta());
-			dta.GetResult(name, size, date, time, attr);
-			assert(name);
+			dta.GetResult(search_result);
 
-			const bool is_device = attr & DOS_ATTR_DEVICE;
+			const bool is_device = search_result.IsDevice();
 			if (is_device) {
-				output.AddFile(std::string(name), is_device);
+				output.AddFile(search_result.name, is_device);
 			} else {
-				output.AddFile(std::string(path) + std::string(name), is_device);
+				output.AddFile(std::string(path) + search_result.name,
+				               is_device);
 			}
 
 			if (!DOS_FindNext()) {

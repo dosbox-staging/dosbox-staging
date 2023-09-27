@@ -311,7 +311,7 @@ static std::vector<std::string> get_completions(const std::string_view command)
 	dos.dta(dos.tables.tempdta);
 	const auto dta = DOS_DTA(dos.dta());
 
-	bool res = DOS_FindFirst(search.c_str(), ~DOS_ATTR_VOLUME);
+	bool res = DOS_FindFirst(search.c_str(), FatAttributeNotVolume);
 
 	std::vector<std::string> files           = {};
 	std::vector<std::string> non_executables = {};

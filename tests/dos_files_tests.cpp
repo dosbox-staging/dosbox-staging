@@ -283,16 +283,16 @@ TEST_F(DOS_FilesTest, DOS_FindFirst_Ending_Slash)
 {
 	// `dos` comes from dos_inc.h
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\LFD\\", DOS_ATTR_VOLUME, false));
+	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\LFD\\", FatAttributeVolume, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);
 
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\", DOS_ATTR_VOLUME, false));
+	EXPECT_FALSE(DOS_FindFirst("Z:\\DARK\\", FatAttributeVolume, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NO_MORE_FILES);
 
 	// volume names alone don't trigger the failure
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_TRUE(DOS_FindFirst("Z:\\", DOS_ATTR_VOLUME, false));
+	EXPECT_TRUE(DOS_FindFirst("Z:\\", FatAttributeVolume, false));
 	EXPECT_NE(dos.errorcode, DOSERR_NO_MORE_FILES);
 
 	// volume attr NOT required
@@ -311,14 +311,14 @@ TEST_F(DOS_FilesTest, DOS_FindFirst_Rejects_Invalid_Names)
 TEST_F(DOS_FilesTest, DOS_FindFirst_FindVolume)
 {
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_TRUE(DOS_FindFirst("Z", DOS_ATTR_VOLUME, false));
+	EXPECT_TRUE(DOS_FindFirst("Z", FatAttributeVolume, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NONE);
 }
 
 TEST_F(DOS_FilesTest, DOS_FindFirst_FindDevice)
 {
 	dos.errorcode = DOSERR_NONE;
-	EXPECT_TRUE(DOS_FindFirst("COM1", DOS_ATTR_DEVICE, false));
+	EXPECT_TRUE(DOS_FindFirst("COM1", FatAttributeDevice, false));
 	EXPECT_EQ(dos.errorcode, DOSERR_NONE);
 }
 

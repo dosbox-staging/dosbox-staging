@@ -105,11 +105,12 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 		}
 		return (temp == 0);
 	} else {
-		uint16_t olderror = dos.errorcode; //FindFirst/Next always set an errorcode, while RemoveDir itself shouldn't touch it if successful
+		uint16_t olderror = dos.errorcode; // FindFirst/Next always set an errorcode, while
+		                                   // RemoveDir itself shouldn't touch it if successful
 		DOS_DTA dta(dos.tables.tempdta);
 		char stardotstar[4] = {'*', '.', '*', 0};
-		dta.SetupSearch(0,(0xff & ~DOS_ATTR_VOLUME),stardotstar); //Fake drive as we don't use it.
-		bool ret = this->FindFirst(dir,dta,false);// DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
+		dta.SetupSearch(0, FatAttributeNotVolume, stardotstar); // Fake drive as we don't use it.
+		bool ret = this->FindFirst(dir, dta, false); // DOS_FindFirst(args, FatAttributeNotVolume);
 		if (!ret) {
 			//Path not found. Should not be possible due to removedir doing a testdir, but lets be correct
 			DOS_SetError(DOSERR_PATH_NOT_FOUND);
@@ -117,11 +118,16 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 		}
 		bool empty = true;
 		do {
-			char name[DOS_NAMELENGTH_ASCII];uint32_t size;uint16_t date;uint16_t time;uint8_t attr;
-			dta.GetResult(name,size,date,time,attr);
-			if (logoverlay) LOG_MSG("RemoveDir found %s",name);
-			if (empty && strcmp(".",name ) && strcmp("..",name)) 
-				empty = false; //Neither . or .. so directory not empty.
+			DOS_DTA::Result search_result = {};
+			dta.GetResult(search_result);
+			const auto& name = search_result.name.c_str();
+			if (logoverlay) {
+				LOG_MSG("RemoveDir found %s", name);
+			}
+			if (empty && strcmp(".", name) && strcmp("..", name)) {
+				empty = false; // Neither . or .. so directory
+				               // not empty.
+			}
 		} while (this->FindNext(dta));
 		//Always exhaust list, so drive_cache entry gets invalidated/reused.
 		//FindNext is done, restore error code to old value. DOS_RemoveDir will set the right one if needed.
@@ -814,8 +820,8 @@ bool Overlay_Drive::FindNext(DOS_DTA & dta) {
 	char full_name[CROSS_LEN];
 	char dir_entcopy[CROSS_LEN];
 
-	uint8_t srch_attr;char srch_pattern[DOS_NAMELENGTH_ASCII];
-	uint8_t find_attr;
+	char srch_pattern[DOS_NAMELENGTH_ASCII];
+	FatAttributeFlags srch_attr = {};
 
 	dta.GetSearchParams(srch_attr,srch_pattern);
 	uint16_t id = dta.GetDirID();
@@ -879,9 +885,18 @@ again:
 		}
 	}
 
-	if(stat_block.st_mode & S_IFDIR) find_attr=DOS_ATTR_DIRECTORY;
-	else find_attr=DOS_ATTR_ARCHIVE;
- 	if (~srch_attr & find_attr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) goto again;
+	FatAttributeFlags find_attr = {};
+	if (stat_block.st_mode & S_IFDIR) {
+		find_attr.directory = true;
+	} else {
+		find_attr.archive = true;
+	}
+
+	if ((find_attr.directory && !srch_attr.directory) ||
+	    (find_attr.hidden && !srch_attr.hidden) ||
+	    (find_attr.system && !srch_attr.system)) {
+		goto again;
+	}
 
 	/* file is okay, setup everything to be copied in DTA Block */
 	char find_name[DOS_NAMELENGTH_ASCII] = {};

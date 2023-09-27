@@ -334,10 +334,10 @@ std::string DOS_DTA::Result::GetBareName() const
 	return name.substr(0, pos);
 }
 
-void DOS_DTA::SetupSearch(uint8_t drive, uint8_t attr, char* pattern)
+void DOS_DTA::SetupSearch(uint8_t drive, FatAttributeFlags attr, char* pattern)
 {
 	SSET_BYTE(sDTA, sdrive, drive);
-	SSET_BYTE(sDTA, sattr, attr);
+	SSET_BYTE(sDTA, sattr, attr._data);
 	/* Fill with spaces */
 	dos_memset(pt + offsetof(sDTA, sname), ' ', sizeof(sDTA::sname));
 	dos_memset(pt + offsetof(sDTA, sext), ' ', sizeof(sDTA::sext));
@@ -354,41 +354,31 @@ void DOS_DTA::SetupSearch(uint8_t drive, uint8_t attr, char* pattern)
 	}
 }
 
-void DOS_DTA::SetResult(const char *found_name,
-                        uint32_t found_size,
-                        uint16_t found_date,
-                        uint16_t found_time,
-                        uint8_t found_attr)
+void DOS_DTA::SetResult(const char* found_name, uint32_t found_size,
+                        uint16_t found_date, uint16_t found_time,
+                        FatAttributeFlags found_attr)
 {
 	MEM_BlockWrite(pt + offsetof(sDTA, name), found_name, strlen(found_name) + 1);
 	SSET_DWORD(sDTA, size, found_size);
 	SSET_WORD(sDTA, date, found_date);
 	SSET_WORD(sDTA, time, found_time);
-	SSET_BYTE(sDTA, attr, found_attr);
-}
-
-void DOS_DTA::GetResult(char *found_name,
-                        uint32_t &found_size,
-                        uint16_t &found_date,
-                        uint16_t &found_time,
-                        uint8_t &found_attr) const
-{
-	constexpr auto name_offset = offsetof(sDTA, name);
-	MEM_BlockRead(pt + name_offset, found_name, DOS_NAMELENGTH_ASCII);
-	found_size = SGET_DWORD(sDTA, size);
-	found_date = SGET_WORD(sDTA, date);
-	found_time = SGET_WORD(sDTA, time);
-	found_attr = SGET_BYTE(sDTA, attr);
+	SSET_BYTE(sDTA, attr, found_attr._data);
 }
 
 void DOS_DTA::GetResult(Result& result) const
 {
-	char name[DOS_NAMELENGTH_ASCII];
-	GetResult(name, result.size, result.date, result.time, result.attr._data);
-	result.name = name;
+	char found_name[DOS_NAMELENGTH_ASCII];
+	constexpr auto name_offset = offsetof(sDTA, name);
+	MEM_BlockRead(pt + name_offset, found_name, DOS_NAMELENGTH_ASCII);
+
+	result.size = SGET_DWORD(sDTA, size);
+	result.date = SGET_WORD(sDTA, date);
+	result.time = SGET_WORD(sDTA, time);
+	result.attr = SGET_BYTE(sDTA, attr);
+	result.name = found_name;
 }
 
-void DOS_DTA::GetSearchParams(uint8_t& attr, char* pattern) const
+void DOS_DTA::GetSearchParams(FatAttributeFlags& attr, char* pattern) const
 {
 	attr = SGET_BYTE(sDTA, sattr);
 	char temp[11];
@@ -524,23 +514,27 @@ void DOS_FCB::GetName(char * fillname) {
 	fillname[14]=0;
 }
 
-void DOS_FCB::GetAttr(uint8_t &attr) const
+void DOS_FCB::GetAttr(FatAttributeFlags& attr) const
 {
-	if (extended)
+	if (extended) {
 		attr = mem_readb(pt - 1);
+	}
 }
 
-void DOS_FCB::SetAttr(uint8_t attr)
+void DOS_FCB::SetAttr(FatAttributeFlags attr)
 {
-	if (extended)
-		mem_writeb(pt - 1, attr);
+	if (extended) {
+		mem_writeb(pt - 1, attr._data);
+	}
 }
 
-void DOS_FCB::SetResult(uint32_t size,uint16_t date,uint16_t time,uint8_t attr) {
-	mem_writed(pt + 0x1d,size);
+void DOS_FCB::SetResult(uint32_t size, uint16_t date, uint16_t time,
+                        FatAttributeFlags attr)
+{
+	mem_writed(pt + 0x1d, size);
 	mem_writew(pt + 0x19,date);
 	mem_writew(pt + 0x17,time);
-	mem_writeb(pt + 0x0c,attr);
+	mem_writeb(pt + 0x0c, attr._data);
 }
 
 void DOS_SDA::Init()

@@ -63,7 +63,7 @@ isoFile::isoFile(isoDrive *iso_drive, const char *name, FileStat_Block *stat, ui
 	assert(stat);
 	time = stat->time;
 	date = stat->date;
-	attr = stat->attr;
+	attr = static_cast<uint8_t>(stat->attr);
 	open = true;
 }
 
@@ -220,7 +220,7 @@ bool isoDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 	if (success) {
 		FileStat_Block file_stat;
 		file_stat.size = DATA_LENGTH(de);
-		file_stat.attr = DOS_ATTR_READ_ONLY;
+		file_stat.attr = FatAttributeReadOnly._data;
 		file_stat.date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 		file_stat.time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
 		*file = new isoFile(this, name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
@@ -256,7 +256,8 @@ bool isoDrive::TestDir(char *dir) {
 	return (lookup(&de, dir) && IS_DIR(FLAGS1));
 }
 
-bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
+bool isoDrive::FindFirst(char* dir, DOS_DTA& dta, bool fcb_findfirst)
+{
 	isoDirEntry de;
 	if (!lookup(&de, dir)) {
 		DOS_SetError(DOSERR_PATH_NOT_FOUND);
@@ -269,17 +270,18 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
 	dirIterators[dirIterator].root = isRoot;
 	dta.SetDirID((uint16_t)dirIterator);
 
-	uint8_t attr;
+	FatAttributeFlags attr = {};
 	char pattern[ISO_MAXPATHNAME];
 	dta.GetSearchParams(attr, pattern);
 
-	if (attr == DOS_ATTR_VOLUME) {
-		dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
+	if (attr == FatAttributeVolume) {
+		dta.SetResult(discLabel, 0, 0, 0, FatAttributeVolume);
 		return true;
-	} else if ((attr & DOS_ATTR_VOLUME) && isRoot && !fcb_findfirst) {
+	} else if (attr.volume && isRoot && !fcb_findfirst) {
 		if (WildFileCmp(discLabel,pattern)) {
-			// Get Volume Label (DOS_ATTR_VOLUME) and only in basedir and if it matches the searchstring
-			dta.SetResult(discLabel, 0, 0, 0, DOS_ATTR_VOLUME);
+			// Get Volume Label and only in basedir and if it
+			// matches the searchstring
+			dta.SetResult(discLabel, 0, 0, 0, FatAttributeVolume);
 			return true;
 		}
 	}
@@ -287,23 +289,29 @@ bool isoDrive::FindFirst(char *dir, DOS_DTA &dta, bool fcb_findfirst) {
 	return FindNext(dta);
 }
 
-bool isoDrive::FindNext(DOS_DTA &dta) {
-	uint8_t attr;
+bool isoDrive::FindNext(DOS_DTA& dta)
+{
+	FatAttributeFlags attr = {};
 	char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr, pattern);
 
 	int dirIterator = dta.GetDirID();
 	bool isRoot = dirIterators[dirIterator].root;
 
+	FatAttributeFlags attr_mask = {};
+	attr_mask.directory = true;
+	attr_mask.hidden    = true;
+	attr_mask.system    = true;
+
 	isoDirEntry de;
 	while (GetNextDirEntry(dirIterator, &de)) {
-		uint8_t findAttr = 0;
-		if (IS_DIR(FLAGS1)) findAttr |= DOS_ATTR_DIRECTORY;
-		if (IS_HIDDEN(FLAGS1)) findAttr |= DOS_ATTR_HIDDEN;
+		FatAttributeFlags findAttr = {};
+		findAttr.directory = IS_DIR(FLAGS1);
+		findAttr.hidden    = IS_HIDDEN(FLAGS1);
 
-		if (!IS_ASSOC(FLAGS1) && !(isRoot && de.ident[0]=='.') && WildFileCmp((char*)de.ident, pattern)
-			&& !(~attr & findAttr & (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM))) {
-
+		if (!IS_ASSOC(FLAGS1) && !(isRoot && de.ident[0] == '.') &&
+		    WildFileCmp((char*)de.ident, pattern) &&
+		    !(~(attr._data) & findAttr._data & attr_mask._data)) {
 			/* file is okay, setup everything to be copied in DTA Block */
 			char findName[DOS_NAMELENGTH_ASCII];
 			findName[0] = 0;
@@ -314,7 +322,7 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 			uint32_t findSize = DATA_LENGTH(de);
 			uint16_t findDate = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 			uint16_t findTime = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
-			findAttr |= DOS_ATTR_READ_ONLY;
+			findAttr.read_only = true;
 			dta.SetResult(findName, findSize, findDate, findTime, findAttr);
 			return true;
 		}
@@ -377,11 +385,15 @@ bool isoDrive::FileStat(const char *name, FileStat_Block *const stat_block) {
 	bool success = lookup(&de, name);
 
 	if (success) {
-		stat_block->date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
+		auto attr = FatAttributeReadOnly;
+		attr.directory = IS_DIR(FLAGS1);
+
+		stat_block->date = DOS_PackDate(1900 + de.dateYear,
+		                                de.dateMonth,
+		                                de.dateDay);
 		stat_block->time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
 		stat_block->size = DATA_LENGTH(de);
-		stat_block->attr = DOS_ATTR_READ_ONLY;
-		if (IS_DIR(FLAGS1)) stat_block->attr |= DOS_ATTR_DIRECTORY;
+		stat_block->attr = attr._data;
 	}
 
 	return success;

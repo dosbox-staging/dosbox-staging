@@ -313,7 +313,7 @@ bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 	safe_strcat(tempDir, _dir);
 	CROSS_FILENAME(tempDir);
 
-	if (allocation.mediaid==0xF0) {
+	if (allocation.mediaid == 0xF0) {
 		EmptyCache(); //rescan floppie-content on each findfirst
 	}
 
@@ -331,32 +331,33 @@ bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 	}
 	safe_strcpy(srchInfo[id].srch_dir, tempDir);
 	dta.SetDirID(id);
-	
-	uint8_t sAttr;
+
+	FatAttributeFlags sAttr = {};
 	dta.GetSearchParams(sAttr,tempDir);
 
 	if (this->isRemote() && this->isRemovable()) {
 		// cdroms behave a bit different than regular drives
-		if (sAttr == DOS_ATTR_VOLUME) {
-			dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+		if (sAttr == FatAttributeVolume) {
+			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeVolume);
 			return true;
 		}
 	} else {
-		if (sAttr == DOS_ATTR_VOLUME) {
+		if (sAttr == FatAttributeVolume) {
 			if (is_empty(dirCache.GetLabel())) {
-//				LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
-//				dta.SetResult("NO_LABEL",0,0,0,DOS_ATTR_VOLUME);
-//				return true;
+				// LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
+				// dta.SetResult("NO_LABEL",0,0,0,FatAttributeVolume);
+				// return true;
 				DOS_SetError(DOSERR_NO_MORE_FILES);
 				return false;
 			}
-			dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeVolume);
 			return true;
-		} else if ((sAttr & DOS_ATTR_VOLUME)  && (*_dir == 0) && !fcb_findfirst) { 
-		//should check for a valid leading directory instead of 0
-		//exists==true if the volume label matches the searchmask and the path is valid
+		} else if (sAttr.volume && (*_dir == 0) && !fcb_findfirst) {
+			// should check for a valid leading directory instead of
+			// 0 exists==true if the volume label matches the
+			// searchmask and the path is valid
 			if (WildFileCmp(dirCache.GetLabel(),tempDir)) {
-				dta.SetResult(dirCache.GetLabel(),0,0,0,DOS_ATTR_VOLUME);
+				dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeVolume);
 				return true;
 			}
 		}
@@ -371,7 +372,7 @@ bool localDrive::FindNext(DOS_DTA& dta)
 	char full_name[CROSS_LEN];
 	char dir_entcopy[CROSS_LEN];
 
-	uint8_t srch_attr;
+	FatAttributeFlags srch_attr = {};
 	char srch_pattern[DOS_NAMELENGTH_ASCII];
 
 	dta.GetSearchParams(srch_attr,srch_pattern);
@@ -408,8 +409,9 @@ bool localDrive::FindNext(DOS_DTA& dta)
 			continue;
 		}
 
-		if (~srch_attr & find_attr._data &
-		    (DOS_ATTR_DIRECTORY | DOS_ATTR_HIDDEN | DOS_ATTR_SYSTEM)) {
+		if ((find_attr.directory && !srch_attr.directory) ||
+		    (find_attr.hidden && !srch_attr.hidden) ||
+		    (find_attr.system && !srch_attr.system)) {
 			continue;
 		}
 
@@ -874,10 +876,9 @@ localFile::localFile(const char* _name, const std_fs::path& path, FILE* handle,
           path(path),
           basedir(_basedir)
 {
-	open=true;
+	open = true;
 	UpdateDateTimeFromHost();
-
-	attr=DOS_ATTR_ARCHIVE;
+	attr = FatAttributeArchive;
 
 	SetName(_name);
 }

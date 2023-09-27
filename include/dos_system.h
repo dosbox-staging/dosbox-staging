@@ -45,17 +45,6 @@ constexpr auto CurrentDirectory = ".";
 constexpr auto ParentDirectory  = "..";
 constexpr auto DosSeparator     = '\\';
 
-// obsolete - TODO: remove
-enum FatAttributeFlagsValues : uint8_t { // 7-bit
-	DOS_ATTR_READ_ONLY = 0b000'0001,
-	DOS_ATTR_HIDDEN    = 0b000'0010,
-	DOS_ATTR_SYSTEM    = 0b000'0100,
-	DOS_ATTR_VOLUME    = 0b000'1000,
-	DOS_ATTR_DIRECTORY = 0b001'0000,
-	DOS_ATTR_ARCHIVE   = 0b010'0000,
-	DOS_ATTR_DEVICE    = 0b100'0000,
-};
-
 union FatAttributeFlags {
 	uint8_t _data = 0;
 
@@ -71,12 +60,27 @@ union FatAttributeFlags {
 	FatAttributeFlags() : _data(0) {}
 	FatAttributeFlags(const uint8_t data) : _data(data) {}
 	FatAttributeFlags(const FatAttributeFlags& other) : _data(other._data) {}
+
 	FatAttributeFlags& operator=(const FatAttributeFlags& other)
 	{
 		_data = other._data;
 		return *this;
 	}
+
+	bool operator==(const FatAttributeFlags& other) const
+	{
+		return _data == other._data;
+	}
 };
+
+extern const FatAttributeFlags FatAttributeReadOnly;
+extern const FatAttributeFlags FatAttributeHidden;
+extern const FatAttributeFlags FatAttributeSystem;
+extern const FatAttributeFlags FatAttributeArchive;
+extern const FatAttributeFlags FatAttributeDirectory;
+extern const FatAttributeFlags FatAttributeDevice;
+extern const FatAttributeFlags FatAttributeVolume;    // volume label
+extern const FatAttributeFlags FatAttributeNotVolume; // everything but volume label
 
 struct FileStat_Block {
 	uint32_t size;
@@ -121,7 +125,7 @@ public:
 	uint32_t flags   = 0;
 	uint16_t time    = 0;
 	uint16_t date    = 0;
-	uint16_t attr    = 0;
+	FatAttributeFlags attr = {};
 	Bits refCtr      = 0;
 	bool open        = false;
 	std::string name = {};
