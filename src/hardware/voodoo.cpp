@@ -953,17 +953,31 @@ struct draw_state
 
 struct voodoo_state;
 
-struct TriangleWorker {
-	TriangleWorker() = delete;
+class TriangleWorker {
+public:
 	TriangleWorker(voodoo_state* state) : vs(state) {}
+	~TriangleWorker();
 
-	TriangleWorker(const TriangleWorker&)            = delete;
+	TriangleWorker() = delete;
+	TriangleWorker(const TriangleWorker&) = delete;
 	TriangleWorker& operator=(const TriangleWorker&) = delete;
 
 	void Run();
+
+	poly_vertex v1    = {};
+	poly_vertex v2    = {};
+	poly_vertex v3    = {};
+	uint16_t* drawbuf = nullptr;
+
+	int32_t v1y = 0;
+	int32_t v3y = 0;
+
+	bool use_threads             = false;
+	bool disable_bilinear_filter = true;
+
+private:
 	void Work(const int32_t worktstart, const int32_t worktend);
 	void ThreadFunc(const int32_t p);
-	void Shutdown();
 
 	std::array<std::thread, TRIANGLE_THREADS> threads = {};
 	std::array<Semaphore, TRIANGLE_THREADS> sembegin  = {};
@@ -971,22 +985,10 @@ struct TriangleWorker {
 	Semaphore semdone = {};
 
 	std::atomic_bool threads_active = false;
-
-	poly_vertex v1 = {};
-	poly_vertex v2 = {};
-	poly_vertex v3 = {};
-
 	voodoo_state* vs = nullptr;
 
-	uint16_t* drawbuf = nullptr;
-
-	int32_t v1y      = 0;
-	int32_t v3y      = 0;
 	int32_t totalpix = 0;
 	int done_count   = 0;
-
-	bool use_threads             = false;
-	bool disable_bilinear_filter = true;
 };
 
 struct VoodooPageHandler : public PageHandler {
@@ -4568,7 +4570,7 @@ void TriangleWorker::ThreadFunc(const int32_t p)
 	}
 }
 
-void TriangleWorker::Shutdown()
+TriangleWorker::~TriangleWorker()
 {
 	if (!threads_active) {
 		return;
@@ -7845,7 +7847,6 @@ voodoo_state::~voodoo_state()
 #endif
 
 	active = false;
-	tworker.Shutdown();
 
 	PCI_RemoveDevice(PCI_SSTDevice::vendor, PCI_SSTDevice::device_voodoo_1);
 }
