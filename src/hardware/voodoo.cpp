@@ -1009,6 +1009,7 @@ struct voodoo_state {
 	// Commands
 	void ExecuteTriangleCmd();
 	void ExecuteBeginTriCmd();
+	void SetupAndDrawTriangle();
 
 	std::unique_ptr<PageHandler> page_handler = {};
 
@@ -4830,16 +4831,13 @@ void voodoo_state::ExecuteBeginTriCmd()
 }
 
 /*-------------------------------------------------
-    setup_and_draw_triangle - process the setup
-    parameters and render the triangle
+    Process the setup parameters and render the triangle
 -------------------------------------------------*/
-static void setup_and_draw_triangle(voodoo_state *vs)
+void voodoo_state::SetupAndDrawTriangle()
 {
 	// Quick references
-	const auto regs = vs->reg;
-	auto& fbi = vs->fbi;
-	auto& tmu0 = vs->tmu[0];
-	auto& tmu1 = vs->tmu[1];
+	auto& tmu0 = tmu[0];
+	auto& tmu1 = tmu[1];
 
 	// Vertex references
 	const auto& vertex0 = fbi.svert[0];
@@ -4860,12 +4858,12 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	                      (vertex0.x - vertex2.x) * (vertex0.y - vertex1.y));
 
 	/* backface culling */
-	if ((regs[sSetupMode].u & 0x20000) != 0u) {
-		int culling_sign = (regs[sSetupMode].u >> 18) & 1;
+	if ((reg[sSetupMode].u & 0x20000) != 0u) {
+		int culling_sign = (reg[sSetupMode].u >> 18) & 1;
 		const auto divisor_sign = static_cast<int>(divisor < 0);
 
 		/* if doing strips and ping pong is enabled, apply the ping pong */
-		if ((regs[sSetupMode].u & 0x90000) == 0x00000) {
+		if ((reg[sSetupMode].u & 0x90000) == 0x00000) {
 			culling_sign ^= (fbi.sverts - 3) & 1;
 		}
 
@@ -4883,7 +4881,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 
 	/* set up R,G,B */
 	auto tdiv = divisor * 4096.0f;
-	if ((regs[sSetupMode].u & (1 << 0)) != 0u) {
+	if ((reg[sSetupMode].u & (1 << 0)) != 0u) {
 		fbi.startr = (int32_t)(vertex0.r * 4096.0f);
 		fbi.drdx   = (int32_t)(((vertex0.r - vertex1.r) * dx1 -
                                       (vertex0.r - vertex2.r) * dx2) *
@@ -4908,7 +4906,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up alpha */
-	if ((regs[sSetupMode].u & (1 << 1)) != 0u) {
+	if ((reg[sSetupMode].u & (1 << 1)) != 0u) {
 		fbi.starta = (int32_t)(vertex0.a * 4096.0f);
 		fbi.dadx   = (int32_t)(((vertex0.a - vertex1.a) * dx1 -
                                       (vertex0.a - vertex2.a) * dx2) *
@@ -4919,7 +4917,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up Z */
-	if ((regs[sSetupMode].u & (1 << 2)) != 0u) {
+	if ((reg[sSetupMode].u & (1 << 2)) != 0u) {
 		fbi.startz = (int32_t)(vertex0.z * 4096.0f);
 		fbi.dzdx   = (int32_t)(((vertex0.z - vertex1.z) * dx1 -
                                       (vertex0.z - vertex2.z) * dx2) *
@@ -4931,7 +4929,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 
 	/* set up Wb */
 	tdiv = divisor * 65536.0f * 65536.0f;
-	if ((regs[sSetupMode].u & (1 << 3)) != 0u) {
+	if ((reg[sSetupMode].u & (1 << 3)) != 0u) {
 		fbi.startw = tmu0.startw = tmu1.startw = (int64_t)(vertex0.wb * 65536.0f *
 		                                                   65536.0f);
 		fbi.dwdx = tmu0.dwdx = tmu1.dwdx =
@@ -4945,7 +4943,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up W0 */
-	if ((regs[sSetupMode].u & (1 << 4)) != 0u) {
+	if ((reg[sSetupMode].u & (1 << 4)) != 0u) {
 		tmu0.startw = tmu1.startw = (int64_t)(vertex0.w0 * 65536.0f * 65536.0f);
 		tmu0.dwdx = tmu1.dwdx = (int64_t)(((vertex0.w0 - vertex1.w0) * dx1 -
 		                                   (vertex0.w0 - vertex2.w0) * dx2) *
@@ -4956,7 +4954,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up S0,T0 */
-	if ((regs[sSetupMode].u & (1 << 5)) != 0u) {
+	if ((reg[sSetupMode].u & (1 << 5)) != 0u) {
 		tmu0.starts = tmu1.starts = (int64_t)(vertex0.s0 * 65536.0f * 65536.0f);
 		tmu0.dsdx = tmu1.dsdx = (int64_t)(((vertex0.s0 - vertex1.s0) * dx1 -
 		                                   (vertex0.s0 - vertex2.s0) * dx2) *
@@ -4974,7 +4972,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up W1 */
-	if ((regs[sSetupMode].u & (1 << 6)) != 0u) {
+	if ((reg[sSetupMode].u & (1 << 6)) != 0u) {
 		tmu1.startw = (int64_t)(vertex0.w1 * 65536.0f * 65536.0f);
 		tmu1.dwdx   = (int64_t)(((vertex0.w1 - vertex1.w1) * dx1 -
                                        (vertex0.w1 - vertex2.w1) * dx2) *
@@ -4985,7 +4983,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* set up S1,T1 */
-	if ((regs[sSetupMode].u & (1 << 7)) != 0u) {
+	if ((reg[sSetupMode].u & (1 << 7)) != 0u) {
 		tmu1.starts = (int64_t)(vertex0.s1 * 65536.0f * 65536.0f);
 		tmu1.dsdx   = (int64_t)(((vertex0.s1 - vertex1.s1) * dx1 -
                                        (vertex0.s1 - vertex2.s1) * dx2) *
@@ -5003,7 +5001,7 @@ static void setup_and_draw_triangle(voodoo_state *vs)
 	}
 
 	/* draw the triangle */
-	vs->ExecuteTriangleCmd();
+	ExecuteTriangleCmd();
 }
 
 /*-------------------------------------------------
@@ -5042,7 +5040,7 @@ static void draw_triangle(voodoo_state *vs)
 
 	/* if we have enough verts, go ahead and draw */
 	if (++fbi.sverts >= 3) {
-		setup_and_draw_triangle(vs);
+		vs->SetupAndDrawTriangle();
 	}
 }
 
