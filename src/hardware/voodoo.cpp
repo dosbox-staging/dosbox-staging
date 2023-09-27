@@ -1014,7 +1014,6 @@ struct voodoo_state {
 	void RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0, uint32_t TEXMODE1,
 	                   void* destbase, int32_t y, const poly_extent* extent,
 	                   stats_block& stats);
-
 	std::unique_ptr<PageHandler> page_handler = {};
 
 	uint8_t chipmask = {}; // mask for which chips are available
@@ -1032,6 +1031,8 @@ struct voodoo_state {
 	uint32_t tmu_config       = {};
 
 #ifdef C_ENABLE_VOODOO_OPENGL
+	raster_info* AddRasterizer(const raster_info *cinfo);
+
 	uint16_t next_rasterizer = {}; // next rasterizer index
 	raster_info rasterizer[MAX_RASTERIZERS] = {}; // array of rasterizers
 	raster_info* raster_hash[RASTER_HASH_SIZE] = {}; // hash table of rasterizers
@@ -3588,18 +3589,17 @@ void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
 
 #ifdef C_ENABLE_VOODOO_OPENGL
 /*-------------------------------------------------
-    add_rasterizer - add a rasterizer to our
-    hash table
+    Add a rasterizer to our hash table
 -------------------------------------------------*/
-static raster_info *add_rasterizer(voodoo_state *vs, const raster_info *cinfo)
+raster_info* voodoo_state::AddRasterizer(const raster_info *cinfo)
 {
-	if (vs->next_rasterizer >= MAX_RASTERIZERS)
+	if (next_rasterizer >= MAX_RASTERIZERS)
 	{
 		E_Exit("Out of space for new rasterizers!");
-		vs->next_rasterizer = 0;
+		next_rasterizer = 0;
 	}
 
-	raster_info *info = &vs->rasterizer[vs->next_rasterizer++];
+	raster_info *info = &rasterizer[next_rasterizer++];
 	int hash = compute_raster_hash(cinfo);
 
 	/* make a copy of the info */
@@ -3612,8 +3612,8 @@ static raster_info *add_rasterizer(voodoo_state *vs, const raster_info *cinfo)
 #endif
 
 	/* hook us into the hash table */
-	info->next = vs->raster_hash[hash];
-	vs->raster_hash[hash] = info;
+	info->next = raster_hash[hash];
+	raster_hash[hash] = info;
 
 	if (LOG_RASTERIZERS)
 		LOG_DEBUG("VOODOO: Adding rasterizer @ %p : %08X %08X %08X %08X %08X %08X (hash=%d)\n",
@@ -3683,7 +3683,7 @@ static raster_info *find_rasterizer(voodoo_state *vs, int texcount)
 	curinfo.next = 0;
 	curinfo.shader_ready = false;
 
-	return add_rasterizer(vs, &curinfo);
+	return vs->AddRasterizer(&curinfo);
 }
 #endif
 
