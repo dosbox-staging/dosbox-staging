@@ -181,7 +181,8 @@ bool DOS_OpenFileExtended(const char* name, uint16_t flags,
 bool DOS_CreateFile(const char* name, FatAttributeFlags attribute,
                     uint16_t* entry, bool fcb = false);
 bool DOS_UnlinkFile(const char* const name);
-bool DOS_FindFirst(const char *search, uint16_t attr, bool fcb_findfirst = false);
+bool DOS_FindFirst(const char* search, FatAttributeFlags attr,
+                   bool fcb_findfirst = false);
 bool DOS_FindNext(void);
 bool DOS_Canonicalize(const char* const name, char* const big);
 bool DOS_CreateTempFile(char * const name,uint16_t * entry);
@@ -588,9 +589,9 @@ class DOS_DTA final : public MemStruct {
 public:
 	DOS_DTA(RealPt addr) : MemStruct(addr) {}
 
-	void SetupSearch(uint8_t drive, uint8_t attr, char *pattern);
+	void SetupSearch(uint8_t drive, FatAttributeFlags attr, char* pattern);
 	uint8_t GetSearchDrive() const { return SGET_BYTE(sDTA, sdrive); }
-	void GetSearchParams(uint8_t &attr, char *pattern) const;
+	void GetSearchParams(FatAttributeFlags& attr, char* pattern) const;
 
 	struct Result {
 		std::string name = {};
@@ -618,14 +619,21 @@ public:
 		{
 			return attr.directory && (name == "." || name == "..");
 		}
+
+		bool IsDevice() const
+		{
+			return attr.device;
+		}
+
+		bool IsReadOnly() const
+		{
+			return attr.read_only;
+		}
 	};
 
 	void SetResult(const char* name, uint32_t size, uint16_t date,
-	               uint16_t time, uint8_t attr);
+	               uint16_t time, FatAttributeFlags attr);
 	void GetResult(Result& result) const;
-	// obsolete - TODO: remove
-	void GetResult(char* name, uint32_t& size, uint16_t& date,
-	               uint16_t& time, uint8_t& attr) const;
 
 	void SetDirID(uint16_t id) { SSET_WORD(sDTA, dirID, id); }
 	uint16_t GetDirID() const { return SGET_WORD(sDTA, dirID); }
@@ -702,10 +710,11 @@ public:
 	void SetRandom(uint32_t random) { SSET_DWORD(sFCB, rndm, random); }
 	uint32_t GetRandom() const { return SGET_DWORD(sFCB, rndm); }
 
-	void SetAttr(uint8_t attr);
-	void GetAttr(uint8_t &attr) const;
+	void SetAttr(FatAttributeFlags attr);
+	void GetAttr(FatAttributeFlags& attr) const;
 
-	void SetResult(uint32_t size,uint16_t date,uint16_t time,uint8_t attr);
+	void SetResult(uint32_t size, uint16_t date, uint16_t time,
+	               FatAttributeFlags attr);
 
 	uint8_t GetDrive() const;
 

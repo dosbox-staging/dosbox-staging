@@ -151,19 +151,22 @@ bool get_pipe_status(const char *out_file,
 			DOS_SeekFile(1, &bigdummy, DOS_SEEK_END);
 		} else {
 			// Create if not exists.
-			status = DOS_CreateFile(out_file, DOS_ATTR_ARCHIVE, &dummy);
+			status = DOS_CreateFile(out_file, FatAttributeArchive, &dummy);
 		}
 	} else if (!pipe_file && DOS_GetFileAttr(out_file, &fattr) && fattr.read_only) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		status = false;
 	} else {
-		if (pipe_file && DOS_FindFirst(pipe_tempfile, ~DOS_ATTR_VOLUME) &&
-		    !DOS_UnlinkFile(pipe_tempfile))
+		if (pipe_file && DOS_FindFirst(pipe_tempfile, FatAttributeNotVolume) &&
+		    !DOS_UnlinkFile(pipe_tempfile)) {
 			failed_pipe = true;
-		status = DOS_OpenFileExtended(pipe_file && !failed_pipe ? pipe_tempfile
-		                                                        : out_file,
-		                              OPEN_READWRITE, DOS_ATTR_ARCHIVE,
-		                              0x12, &dummy, &dummy2);
+		}
+		status = DOS_OpenFileExtended(pipe_file && !failed_pipe ? pipe_tempfile : out_file,
+		                              OPEN_READWRITE,
+		                              FatAttributeArchive,
+		                              0x12,
+		                              &dummy,
+		                              &dummy2);
 		if (pipe_file && (failed_pipe || !status) &&
 		    (Drives[0] || Drives[2] || Drives[24]) &&
 		    !strchr(pipe_tempfile, '\\')) {
@@ -176,14 +179,16 @@ bool get_pipe_status(const char *out_file,
 			safe_strcpy(pipe_tempfile, pipe_full_path.c_str());
 
 			failed_pipe = false;
-			if (DOS_FindFirst(pipe_tempfile, ~DOS_ATTR_VOLUME) &&
-			    !DOS_UnlinkFile(pipe_tempfile))
+			if (DOS_FindFirst(pipe_tempfile, FatAttributeNotVolume) &&
+			    !DOS_UnlinkFile(pipe_tempfile)) {
 				failed_pipe = true;
-			else
+			} else
 				status = DOS_OpenFileExtended(pipe_tempfile,
 				                              OPEN_READWRITE,
-				                              DOS_ATTR_ARCHIVE, 0x12,
-				                              &dummy, &dummy2);
+				                              FatAttributeArchive,
+				                              0x12,
+				                              &dummy,
+				                              &dummy2);
 		}
 	}
 	return status;
@@ -246,7 +251,7 @@ void DOS_Shell::ParseLine(char *line)
 	std::string out_file = "";
 	std::string pipe_file = "";
 
-	uint16_t dummy = 0;
+	uint16_t dummy    = 0;
 	bool append = false;
 	bool normalstdin = false;  /* whether stdin/out are open on start. */
 	bool normalstdout = false; /* Bug: Assumed is they are "con"      */
@@ -348,8 +353,9 @@ void DOS_Shell::ParseLine(char *line)
 			WriteOut(MSG_Get("SHELL_CMD_FAILED_PIPE"));
 			LOG_MSG("SHELL: Failed to write pipe content to temporary file");
 		}
-		if (DOS_FindFirst(pipe_tempfile, ~DOS_ATTR_VOLUME))
+		if (DOS_FindFirst(pipe_tempfile, FatAttributeNotVolume)) {
 			DOS_UnlinkFile(pipe_tempfile);
+		}
 	}
 }
 

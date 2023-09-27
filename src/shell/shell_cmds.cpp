@@ -266,8 +266,8 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	const RealPt save_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
 
-//TODO Maybe support confirmation for *.* like dos does.
-	bool res=DOS_FindFirst(args,0xffff & ~DOS_ATTR_VOLUME);
+	// TODO Maybe support confirmation for *.* like dos does.
+	bool res = DOS_FindFirst(args, FatAttributeNotVolume);
 	if (!res) {
 		WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"), args);
 		dos.dta(save_dta);
@@ -275,14 +275,16 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	}
 	//end can't be 0, but if it is we'll get a nice crash, who cares :)
 	char * end=strrchr(full,'\\')+1;*end=0;
-	char name[DOS_NAMELENGTH_ASCII];uint32_t size;uint16_t time,date;uint8_t attr;
+	DOS_DTA::Result search_result       = {};
+
 	DOS_DTA dta(dos.dta());
 	while (res) {
-		dta.GetResult(name,size,date,time,attr);
-		strcpy(end, name);
-		if (attr & DOS_ATTR_READ_ONLY) {
+		DOS_DTA::Result search_result = {};
+		dta.GetResult(search_result);
+		strcpy(end, search_result.name.c_str());
+		if (search_result.IsReadOnly()) {
 			WriteOut(MSG_Get("SHELL_ACCESS_DENIED"), full);
-		} else if (!(attr & DOS_ATTR_DIRECTORY)) {
+		} else if (!search_result.IsDirectory()) {
 			if (!DOS_UnlinkFile(full)) WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),full);
 		}
 		res=DOS_FindNext();
@@ -946,7 +948,7 @@ void DOS_Shell::CMD_DIR(char* args)
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
 
-	bool ret = DOS_FindFirst(pattern.c_str(), 0xffff & ~DOS_ATTR_VOLUME);
+	bool ret = DOS_FindFirst(pattern.c_str(), FatAttributeNotVolume);
 	if (!ret) {
 		if (!has_option_bare)
 			output.AddString(MSG_Get("SHELL_FILE_NOT_FOUND"),
@@ -1091,7 +1093,7 @@ void DOS_Shell::CMD_LS(char *args)
 	DOS_DTA dta(dos.dta());
 
 	const std::string pattern = to_search_pattern(args);
-	if (!DOS_FindFirst(pattern.c_str(), 0xffff & ~DOS_ATTR_VOLUME)) {
+	if (!DOS_FindFirst(pattern.c_str(), FatAttributeNotVolume)) {
 		WriteOut(MSG_Get("SHELL_CMD_LS_PATH_ERR"), trim(args));
 		dos.dta(original_dta);
 		return;
@@ -1156,7 +1158,8 @@ struct copysource {
 	{}
 };
 
-void DOS_Shell::CMD_COPY(char * args) {
+void DOS_Shell::CMD_COPY(char* args)
+{
 	HELP("COPY");
 	static char defaulttarget[] = ".";
 	StripSpaces(args);
@@ -1164,8 +1167,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 	const RealPt save_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
-	uint32_t size;uint16_t date;uint16_t time;uint8_t attr;
-	char name[DOS_NAMELENGTH_ASCII];
+	DOS_DTA::Result search_result = {};
 	std::vector<copysource> sources;
 	// ignore /b and /t switches: always copy binary
 	while (ScanCMDBool(args,"B")) ;
@@ -1176,7 +1178,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 	(void)ScanCMDBool(args, "-Y");
 	(void)ScanCMDBool(args, "V");
 
-	char * rem=ScanCMDRemain(args);
+	char* rem = ScanCMDRemain(args);
 	if (rem) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"),rem);
 		dos.dta(save_dta);
@@ -1207,10 +1209,11 @@ void DOS_Shell::CMD_COPY(char * args) {
 				if (source_x[source_x_len-1] == ':') has_drive_spec = true;
 			}
 			if (!has_drive_spec  && !strpbrk(source_p,"*?") ) { //doubt that fu*\*.* is valid
-				if (DOS_FindFirst(source_p,0xffff & ~DOS_ATTR_VOLUME)) {
-					dta.GetResult(name,size,date,time,attr);
-					if (attr & DOS_ATTR_DIRECTORY)
-						strcat(source_x,"\\*.*");
+				if (DOS_FindFirst(source_p, FatAttributeNotVolume)) {
+					dta.GetResult(search_result);
+					if (search_result.IsDirectory()) {
+						strcat(source_x, "\\*.*");
+					}
 				}
 			}
 			sources.emplace_back(copysource(source_x,(plus)?true:false));
@@ -1274,10 +1277,10 @@ void DOS_Shell::CMD_COPY(char * args) {
 		bool target_is_file = true;
 		const auto target_path_length = strlen(pathTarget);
 		if (target_path_length > 0 && pathTarget[target_path_length - 1] != '\\') {
-			if (DOS_FindFirst(pathTarget, 0xffff & ~DOS_ATTR_VOLUME)) {
-				dta.GetResult(name, size, date, time, attr);
-				if (attr & DOS_ATTR_DIRECTORY) {
-					strcat(pathTarget,"\\");
+			if (DOS_FindFirst(pathTarget, FatAttributeNotVolume)) {
+				dta.GetResult(search_result);
+				if (search_result.IsDirectory()) {
+					strcat(pathTarget, "\\");
 					target_is_file = false;
 				}
 			}
@@ -1285,8 +1288,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 			target_is_file = false;
 
 		//Find first sourcefile
-		bool ret = DOS_FindFirst(source.filename.c_str(),
-		                         0xffff & ~DOS_ATTR_VOLUME);
+		bool ret = DOS_FindFirst(source.filename.c_str(), FatAttributeNotVolume);
 		if (!ret) {
 			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),
 			         source.filename.c_str());
@@ -1301,18 +1303,19 @@ void DOS_Shell::CMD_COPY(char * args) {
 
 		bool second_file_of_current_source = false;
 		while (ret) {
-			dta.GetResult(name,size,date,time,attr);
+			dta.GetResult(search_result);
 
-			if ((attr & DOS_ATTR_DIRECTORY) == 0) {
+			if (!search_result.IsDirectory()) {
 				safe_strcpy(nameSource, pathSource);
-				strcat(nameSource,name);
+				strcat(nameSource, search_result.name.c_str());
 				// Open Source
 				if (DOS_OpenFile(nameSource,0,&sourceHandle)) {
 					// Create Target or open it if in concat mode
 					safe_strcpy(nameTarget, pathTarget);
 					const auto name_length = strlen(nameTarget);
 					if (name_length > 0 && nameTarget[name_length - 1] == '\\')
-						strcat(nameTarget, name);
+						strcat(nameTarget,
+						       search_result.name.c_str());
 
 					//Special variable to ensure that copy * a_file, where a_file is not a directory concats.
 					bool special = second_file_of_current_source && target_is_file;
@@ -1332,16 +1335,18 @@ void DOS_Shell::CMD_COPY(char * args) {
 								DOS_WriteFile(targetHandle, buffer, &toread);
 							} while (toread == 0x8000);
 							if (!oldsource.concat) {
-								DOS_GetFileDate(sourceHandle,
-								                &time,
-								                &date);
-								DOS_SetFileDate(targetHandle,
-								                time,
-								                date);
+								DOS_GetFileDate(
+								        sourceHandle,
+								        &search_result.time,
+								        &search_result.date);
+								DOS_SetFileDate(
+								        targetHandle,
+								        search_result.time,
+								        search_result.date);
 							}
 							DOS_CloseFile(sourceHandle);
 							DOS_CloseFile(targetHandle);
-							WriteOut(" %s\n",name);
+							WriteOut(" %s\n", search_result.name.c_str());
 							if (!source.concat && !special) count++; //Only count concat files once
 						} else {
 							DOS_CloseFile(sourceHandle);
@@ -1359,8 +1364,7 @@ void DOS_Shell::CMD_COPY(char * args) {
 				}
 			};
 			//On to the next file if the previous one wasn't a device
-			if ((attr&DOS_ATTR_DEVICE) == 0) ret = DOS_FindNext();
-			else ret = false;
+			ret = search_result.IsDevice() ? false : DOS_FindNext();
 		};
 	}
 
@@ -1417,7 +1421,7 @@ static bool attrib_recursive(DOS_Shell *shell,
 		shell->WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return false;
 	}
-	bool found = false, res = DOS_FindFirst(args, 0xffff & ~DOS_ATTR_VOLUME);
+	bool found = false, res = DOS_FindFirst(args, FatAttributeNotVolume);
 	if (!res && !optS)
 		return false;
 	char *end = strrchr(full, '\\');
@@ -1426,17 +1430,15 @@ static bool attrib_recursive(DOS_Shell *shell,
 	end++;
 	*end = 0;
 	strcpy(path, full);
-	char name[DOS_NAMELENGTH_ASCII];
-	uint32_t size;
-	uint16_t date;
-	uint16_t time;
-	uint8_t attr;
-	FatAttributeFlags fattr = {};
+
+	DOS_DTA::Result search_result = {};
+	FatAttributeFlags fattr       = {};
 	while (res) {
-		dta.GetResult(name, size, date, time, attr);
+		dta.GetResult(search_result);
+		const auto& name = search_result.name.c_str();
 		if (!((!strcmp(name, ".") || !strcmp(name, "..") ||
 		       strchr(args, '*') != nullptr || strchr(args, '?') != nullptr) &&
-		      attr & DOS_ATTR_DIRECTORY)) {
+		      search_result.IsDirectory())) {
 			found = true;
 			strcpy(end, name);
 			if (!*full || !DOS_GetFileAttr(full, &fattr)) {
@@ -1482,7 +1484,7 @@ static bool attrib_recursive(DOS_Shell *shell,
 	if (optS) {
 		size_t len = strlen(path);
 		strcat(path, "*.*");
-		bool ret = DOS_FindFirst(path, 0xffff & ~DOS_ATTR_VOLUME);
+		bool ret      = DOS_FindFirst(path, FatAttributeNotVolume);
 		*(path + len) = 0;
 		if (ret) {
 			std::vector<std::string> found_dirs;
@@ -1627,12 +1629,13 @@ void DOS_Shell::CMD_SET(char * args) {
 	}
 }
 
-void DOS_Shell::CMD_IF(char * args) {
+void DOS_Shell::CMD_IF(char* args)
+{
 	HELP("IF");
 	StripSpaces(args,'=');
 	bool has_not=false;
 
-	while (strncasecmp(args,"NOT",3) == 0) {
+	while (strncasecmp(args, "NOT", 3) == 0) {
 		if (!isspace(*reinterpret_cast<unsigned char*>(&args[3])) && (args[3] != '=')) break;
 		args += 3;	//skip text
 		//skip more spaces
@@ -1674,7 +1677,7 @@ void DOS_Shell::CMD_IF(char * args) {
 		{	/* DOS_FindFirst uses dta so set it to our internal dta */
 			const RealPt save_dta=dos.dta();
 			dos.dta(dos.tables.tempdta);
-			bool ret=DOS_FindFirst(word,0xffff & ~DOS_ATTR_VOLUME);
+			bool ret = DOS_FindFirst(word, FatAttributeNotVolume);
 			dos.dta(save_dta);
 			if (ret == (!has_not)) DoCommand(args);
 		}
