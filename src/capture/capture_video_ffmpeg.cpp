@@ -237,12 +237,17 @@ void FfmpegEncoder::CaptureVideoAddFrame(const RenderedImage& image,
 		return;
 	}
 
-	VideoScalerWork work;
-	work.pts = main_thread_video_pts++;
-	work.image = image.deep_copy();
-	if (!video_scaler.queue.MaybeEnqueue(std::move(work))) {
-		work.image.free();
+	++main_thread_video_pts;
+
+	// Drop frame rather than stall the main thread if the encoder can't keep up
+	if (video_encoder.queue.Size() >= video_encoder.queue.MaxCapacity()) {
+		return;
 	}
+
+	VideoScalerWork work;
+	work.pts = main_thread_video_pts;
+	work.image = image.deep_copy();
+	video_scaler.queue.Enqueue(std::move(work));
 }
 
 static void write_audio_to_frame(const int16_t* audio_data, AVFrame *frame, const uint32_t num_frames)
