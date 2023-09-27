@@ -1597,73 +1597,64 @@ while (0)
 #define ADD_STAT_COUNT(STATS, STATNAME) (STATS).STATNAME++;
 //#define ADD_STAT_COUNT(STATS, STATNAME)
 
-#define APPLY_CHROMAKEY(STATS, FBZMODE, COLOR)								\
-do																				\
-{																				\
-	if (FBZMODE_ENABLE_CHROMAKEY(FBZMODE))										\
-	{																			\
-		/* non-range version */													\
-		if (!CHROMARANGE_ENABLE(reg[chromaRange].u))						\
-		{																		\
-			if ((((COLOR).u ^ reg[chromaKey].u) & 0xffffff) == 0)			\
-			{																	\
-				ADD_STAT_COUNT(STATS, chroma_fail)								\
-				goto skipdrawdepth;												\
-			}																	\
-		}																		\
-																				\
-		/* tricky range version */												\
-		else																	\
-		{																		\
-			int32_t low, high, test;												\
-			int results = 0;													\
-																				\
-			/* check blue */													\
-			low = reg[chromaKey].rgb.b;									\
-			high = reg[chromaRange].rgb.b;								\
-			test = (COLOR).rgb.b;													\
-			results = (test >= low && test <= high);							\
-			results ^= CHROMARANGE_BLUE_EXCLUSIVE(reg[chromaRange].u);	\
-			results <<= 1;														\
-																				\
-			/* check green */													\
-			low = reg[chromaKey].rgb.g;									\
-			high = reg[chromaRange].rgb.g;								\
-			test = (COLOR).rgb.g;													\
-			results |= (test >= low && test <= high);							\
-			results ^= CHROMARANGE_GREEN_EXCLUSIVE(reg[chromaRange].u);	\
-			results <<= 1;														\
-																				\
-			/* check red */														\
-			low = reg[chromaKey].rgb.r;									\
-			high = reg[chromaRange].rgb.r;								\
-			test = (COLOR).rgb.r;													\
-			results |= (test >= low && test <= high);							\
-			results ^= CHROMARANGE_RED_EXCLUSIVE(reg[chromaRange].u);		\
-																				\
-			/* final result */													\
-			if (CHROMARANGE_UNION_MODE(reg[chromaRange].u))				\
-			{																	\
-				if (results != 0)												\
-				{																\
-					ADD_STAT_COUNT(STATS, chroma_fail)							\
-					goto skipdrawdepth;											\
-				}																\
-			}																	\
-			else																\
-			{																	\
-				if (results == 7)												\
-				{																\
-					ADD_STAT_COUNT(STATS, chroma_fail)							\
-					goto skipdrawdepth;											\
-				}																\
-			}																	\
-		}																		\
-	}																			\
-}																				\
-while (0)
-
-
+#define APPLY_CHROMAKEY(STATS, FBZMODE, COLOR) \
+	do { \
+		if (FBZMODE_ENABLE_CHROMAKEY(FBZMODE)) { \
+			/* non-range version */ \
+			if (!CHROMARANGE_ENABLE(reg[chromaRange].u)) { \
+				if ((((COLOR).u ^ reg[chromaKey].u) & 0xffffff) == \
+				    0) { \
+					ADD_STAT_COUNT(STATS, chroma_fail) \
+					goto skipdrawdepth; \
+				} \
+			} \
+\
+			/* tricky range version */ \
+			else { \
+				int32_t low, high, test; \
+				int results = 0; \
+\
+				/* check blue */ \
+				low     = reg[chromaKey].rgb.b; \
+				high    = reg[chromaRange].rgb.b; \
+				test    = (COLOR).rgb.b; \
+				results = (test >= low && test <= high); \
+				results ^= CHROMARANGE_BLUE_EXCLUSIVE( \
+				        reg[chromaRange].u); \
+				results <<= 1; \
+\
+				/* check green */ \
+				low  = reg[chromaKey].rgb.g; \
+				high = reg[chromaRange].rgb.g; \
+				test = (COLOR).rgb.g; \
+				results |= (test >= low && test <= high); \
+				results ^= CHROMARANGE_GREEN_EXCLUSIVE( \
+				        reg[chromaRange].u); \
+				results <<= 1; \
+\
+				/* check red */ \
+				low  = reg[chromaKey].rgb.r; \
+				high = reg[chromaRange].rgb.r; \
+				test = (COLOR).rgb.r; \
+				results |= (test >= low && test <= high); \
+				results ^= CHROMARANGE_RED_EXCLUSIVE( \
+				        reg[chromaRange].u); \
+\
+				/* final result */ \
+				if (CHROMARANGE_UNION_MODE(reg[chromaRange].u)) { \
+					if (results != 0) { \
+						ADD_STAT_COUNT(STATS, chroma_fail) \
+						goto skipdrawdepth; \
+					} \
+				} else { \
+					if (results == 7) { \
+						ADD_STAT_COUNT(STATS, chroma_fail) \
+						goto skipdrawdepth; \
+					} \
+				} \
+			} \
+		} \
+	} while (0)
 
 /*************************************
  *
@@ -1671,21 +1662,15 @@ while (0)
  *
  *************************************/
 
-#define APPLY_ALPHAMASK(STATS, FBZMODE, AA)									\
-do																				\
-{																				\
-	if (FBZMODE_ENABLE_ALPHA_MASK(FBZMODE))										\
-	{																			\
-		if (((AA) & 1) == 0)													\
-		{																		\
-			ADD_STAT_COUNT(STATS, afunc_fail)									\
-			goto skipdrawdepth;													\
-		}																		\
-	}																			\
-}																				\
-while (0)
-
-
+#define APPLY_ALPHAMASK(STATS, FBZMODE, AA) \
+	do { \
+		if (FBZMODE_ENABLE_ALPHA_MASK(FBZMODE)) { \
+			if (((AA) & 1) == 0) { \
+				ADD_STAT_COUNT(STATS, afunc_fail) \
+				goto skipdrawdepth; \
+			} \
+		} \
+	} while (0)
 
 /*************************************
  *
@@ -1693,74 +1678,61 @@ while (0)
  *
  *************************************/
 
-#define APPLY_ALPHATEST(STATS, ALPHAMODE, AA)								\
-do																				\
-{																				\
-	if (ALPHAMODE_ALPHATEST(ALPHAMODE))											\
-	{																			\
-		uint8_t alpharef = reg[alphaMode].rgb.a;							\
-		switch (ALPHAMODE_ALPHAFUNCTION(ALPHAMODE))								\
-		{																		\
-			case 0:		/* alphaOP = never */									\
-				ADD_STAT_COUNT(STATS, afunc_fail)								\
-				goto skipdrawdepth;												\
-																				\
-			case 1:		/* alphaOP = less than */								\
-				if ((AA) >= alpharef)											\
-				{																\
-					ADD_STAT_COUNT(STATS, afunc_fail)							\
-					goto skipdrawdepth;											\
-				}																\
-				break;															\
-																				\
-			case 2:		/* alphaOP = equal */									\
-				if ((AA) != alpharef)											\
-				{																\
-					ADD_STAT_COUNT(STATS, afunc_fail)							\
-					goto skipdrawdepth;											\
-				}																\
-				break;															\
-																				\
-			case 3:		/* alphaOP = less than or equal */						\
-				if ((AA) > alpharef)											\
-				{																\
-					ADD_STAT_COUNT(STATS, afunc_fail)							\
-					goto skipdrawdepth;											\
-				}																\
-				break;															\
-																				\
-			case 4:		/* alphaOP = greater than */							\
-				if ((AA) <= alpharef)											\
-				{																\
-					ADD_STAT_COUNT(STATS, afunc_fail)							\
-					goto skipdrawdepth;											\
-				}																\
-				break;															\
-																				\
-			case 5:		/* alphaOP = not equal */								\
-				if ((AA) == alpharef)											\
-				{																\
-					ADD_STAT_COUNT(STATS, afunc_fail)							\
-					goto skipdrawdepth;											\
-				}																\
-				break;															\
-																				\
-			case 6:		/* alphaOP = greater than or equal */					\
-				if ((AA) < alpharef)											\
-				{																\
-					ADD_STAT_COUNT(STATS, afunc_fail)							\
-					goto skipdrawdepth;											\
-				}																\
-				break;															\
-																				\
-			case 7:		/* alphaOP = always */									\
-				break;															\
-		}																		\
-	}																			\
-}																				\
-while (0)
-
-
+#define APPLY_ALPHATEST(STATS, ALPHAMODE, AA) \
+	do { \
+		if (ALPHAMODE_ALPHATEST(ALPHAMODE)) { \
+			uint8_t alpharef = reg[alphaMode].rgb.a; \
+			switch (ALPHAMODE_ALPHAFUNCTION(ALPHAMODE)) { \
+			case 0: /* alphaOP = never */ \
+				ADD_STAT_COUNT(STATS, afunc_fail) \
+				goto skipdrawdepth; \
+\
+			case 1: /* alphaOP = less than */ \
+				if ((AA) >= alpharef) { \
+					ADD_STAT_COUNT(STATS, afunc_fail) \
+					goto skipdrawdepth; \
+				} \
+				break; \
+\
+			case 2: /* alphaOP = equal */ \
+				if ((AA) != alpharef) { \
+					ADD_STAT_COUNT(STATS, afunc_fail) \
+					goto skipdrawdepth; \
+				} \
+				break; \
+\
+			case 3: /* alphaOP = less than or equal */ \
+				if ((AA) > alpharef) { \
+					ADD_STAT_COUNT(STATS, afunc_fail) \
+					goto skipdrawdepth; \
+				} \
+				break; \
+\
+			case 4: /* alphaOP = greater than */ \
+				if ((AA) <= alpharef) { \
+					ADD_STAT_COUNT(STATS, afunc_fail) \
+					goto skipdrawdepth; \
+				} \
+				break; \
+\
+			case 5: /* alphaOP = not equal */ \
+				if ((AA) == alpharef) { \
+					ADD_STAT_COUNT(STATS, afunc_fail) \
+					goto skipdrawdepth; \
+				} \
+				break; \
+\
+			case 6: /* alphaOP = greater than or equal */ \
+				if ((AA) < alpharef) { \
+					ADD_STAT_COUNT(STATS, afunc_fail) \
+					goto skipdrawdepth; \
+				} \
+				break; \
+\
+			case 7: /* alphaOP = always */ break; \
+			} \
+		} \
+	} while (0)
 
 /*************************************
  *
@@ -1926,119 +1898,112 @@ while (0)
  *
  *************************************/
 
-#define APPLY_FOGGING(FOGMODE, FBZCP, XX, DITHER4, RR, GG, BB, ITERZ, ITERW, ITERAXXX)	\
-do																				\
-{																				\
-	if (FOGMODE_ENABLE_FOG(FOGMODE))											\
-	{																			\
-		rgb_union fogcolor = reg[fogColor];								\
-		int32_t fr, fg, fb;														\
-																				\
-		/* constant fog bypasses everything else */								\
-		if (FOGMODE_FOG_CONSTANT(FOGMODE))										\
-		{																		\
-			fr = fogcolor.rgb.r;												\
-			fg = fogcolor.rgb.g;												\
-			fb = fogcolor.rgb.b;												\
-		}																		\
-																				\
-		/* non-constant fog comes from several sources */						\
-		else																	\
-		{																		\
-			int32_t fogblend = 0;													\
-																				\
-			/* if fog_add is zero, we start with the fog color */				\
-			if (FOGMODE_FOG_ADD(FOGMODE) == 0)									\
-			{																	\
-				fr = fogcolor.rgb.r;											\
-				fg = fogcolor.rgb.g;											\
-				fb = fogcolor.rgb.b;											\
-			}																	\
-			else																\
-				fr = fg = fb = 0;												\
-																				\
-			/* if fog_mult is zero, we subtract the incoming color */			\
-			if (FOGMODE_FOG_MULT(FOGMODE) == 0)									\
-			{																	\
-				fr -= (RR);														\
-				fg -= (GG);														\
-				fb -= (BB);														\
-			}																	\
-																				\
-			/* fog blending mode */												\
-			switch (FOGMODE_FOG_ZALPHA(FOGMODE))								\
-			{																	\
-				case 0:		/* fog table */										\
-				{																\
-					int32_t delta = fbi.fogdelta[wfloat >> 10];				\
-					int32_t deltaval;												\
-																				\
-					/* perform the multiply against lower 8 bits of wfloat */	\
-					deltaval = (delta & fbi.fogdelta_mask) *				\
-								((wfloat >> 2) & 0xff);							\
-																				\
-					/* fog zones allow for negating this value */				\
-					if (FOGMODE_FOG_ZONES(FOGMODE) && (delta & 2))				\
-						deltaval = -deltaval;									\
-					deltaval >>= 6;												\
-																				\
-					/* apply dither */											\
-					if (FOGMODE_FOG_DITHER(FOGMODE))							\
-						if (DITHER4)											\
-							deltaval += (DITHER4)[(XX) & 3];						\
-					deltaval >>= 4;												\
-																				\
-					/* add to the blending factor */							\
-					fogblend = fbi.fogblend[wfloat >> 10] + deltaval;		\
-					break;														\
-				}																\
-																				\
-				case 1:		/* iterated A */									\
-					fogblend = (ITERAXXX).rgb.a;									\
-					break;														\
-																				\
-				case 2:		/* iterated Z */									\
-					CLAMPED_Z((ITERZ), FBZCP, fogblend);						\
-					fogblend >>= 8;												\
-					break;														\
-																				\
-				case 3:		/* iterated W - Voodoo 2 only */					\
-					CLAMPED_W((ITERW), FBZCP, fogblend);						\
-					break;														\
-			}																	\
-																				\
-			/* perform the blend */												\
-			fogblend++;															\
-			fr = (fr * fogblend) >> 8;											\
-			fg = (fg * fogblend) >> 8;											\
-			fb = (fb * fogblend) >> 8;											\
-		}																		\
-																				\
-		/* if fog_mult is 0, we add this to the original color */				\
-		if (FOGMODE_FOG_MULT(FOGMODE) == 0)										\
-		{																		\
-			(RR) += fr;															\
-			(GG) += fg;															\
-			(BB) += fb;															\
-		}																		\
-																				\
-		/* otherwise this just becomes the new color */							\
-		else																	\
-		{																		\
-			(RR) = fr;															\
-			(GG) = fg;															\
-			(BB) = fb;															\
-		}																		\
-																				\
-		/* clamp */																\
-		(RR) = clamp_to_uint8(RR);												\
-		(GG) = clamp_to_uint8(GG);												\
-		(BB) = clamp_to_uint8(BB);												\
-	}																			\
-}																				\
-while (0)
-
-
+#define APPLY_FOGGING(FOGMODE, FBZCP, XX, DITHER4, RR, GG, BB, ITERZ, ITERW, ITERAXXX) \
+	do { \
+		if (FOGMODE_ENABLE_FOG(FOGMODE)) { \
+			rgb_union fogcolor = reg[fogColor]; \
+			int32_t fr, fg, fb; \
+\
+			/* constant fog bypasses everything else */ \
+			if (FOGMODE_FOG_CONSTANT(FOGMODE)) { \
+				fr = fogcolor.rgb.r; \
+				fg = fogcolor.rgb.g; \
+				fb = fogcolor.rgb.b; \
+			} \
+\
+			/* non-constant fog comes from several sources */ \
+			else { \
+				int32_t fogblend = 0; \
+\
+				/* if fog_add is zero, we start with the fog \
+				 * color */ \
+				if (FOGMODE_FOG_ADD(FOGMODE) == 0) { \
+					fr = fogcolor.rgb.r; \
+					fg = fogcolor.rgb.g; \
+					fb = fogcolor.rgb.b; \
+				} else \
+					fr = fg = fb = 0; \
+\
+				/* if fog_mult is zero, we subtract the \
+				 * incoming color */ \
+				if (FOGMODE_FOG_MULT(FOGMODE) == 0) { \
+					fr -= (RR); \
+					fg -= (GG); \
+					fb -= (BB); \
+				} \
+\
+				/* fog blending mode */ \
+				switch (FOGMODE_FOG_ZALPHA(FOGMODE)) { \
+				case 0: /* fog table */ \
+				{ \
+					int32_t delta = fbi.fogdelta[wfloat >> 10]; \
+					int32_t deltaval; \
+\
+					/* perform the multiply against lower \
+					 * 8 bits of wfloat */ \
+					deltaval = (delta & fbi.fogdelta_mask) * \
+					           ((wfloat >> 2) & 0xff); \
+\
+					/* fog zones allow for negating this \
+					 * value */ \
+					if (FOGMODE_FOG_ZONES(FOGMODE) && \
+					    (delta & 2)) \
+						deltaval = -deltaval; \
+					deltaval >>= 6; \
+\
+					/* apply dither */ \
+					if (FOGMODE_FOG_DITHER(FOGMODE)) \
+						if (DITHER4) \
+							deltaval += (DITHER4)[(XX) & 3]; \
+					deltaval >>= 4; \
+\
+					/* add to the blending factor */ \
+					fogblend = fbi.fogblend[wfloat >> 10] + \
+					           deltaval; \
+					break; \
+				} \
+\
+				case 1: /* iterated A */ \
+					fogblend = (ITERAXXX).rgb.a; \
+					break; \
+\
+				case 2: /* iterated Z */ \
+					CLAMPED_Z((ITERZ), FBZCP, fogblend); \
+					fogblend >>= 8; \
+					break; \
+\
+				case 3: /* iterated W - Voodoo 2 only */ \
+					CLAMPED_W((ITERW), FBZCP, fogblend); \
+					break; \
+				} \
+\
+				/* perform the blend */ \
+				fogblend++; \
+				fr = (fr * fogblend) >> 8; \
+				fg = (fg * fogblend) >> 8; \
+				fb = (fb * fogblend) >> 8; \
+			} \
+\
+			/* if fog_mult is 0, we add this to the original color */ \
+			if (FOGMODE_FOG_MULT(FOGMODE) == 0) { \
+				(RR) += fr; \
+				(GG) += fg; \
+				(BB) += fb; \
+			} \
+\
+			/* otherwise this just becomes the new color */ \
+			else { \
+				(RR) = fr; \
+				(GG) = fg; \
+				(BB) = fb; \
+			} \
+\
+			/* clamp */ \
+			(RR) = clamp_to_uint8(RR); \
+			(GG) = clamp_to_uint8(GG); \
+			(BB) = clamp_to_uint8(BB); \
+		} \
+	} while (0)
 
 /*************************************
  *
@@ -2387,208 +2352,190 @@ while (0)
  *
  *************************************/
 
-#define PIXEL_PIPELINE_BEGIN(STATS, XX, YY, FBZCOLORPATH, FBZMODE, ITERZ, ITERW, ZACOLOR, STIPPLE)	\
-do																				\
-{																				\
-	int32_t depthval, wfloat;														\
-	int32_t prefogr, prefogg, prefogb;											\
-	int32_t r, g, b, a;															\
-																				\
-	/* apply clipping */														\
-	/* note that for perf reasons, we assume the caller has done clipping */	\
-																				\
-	/* handle stippling */														\
-	if (FBZMODE_ENABLE_STIPPLE(FBZMODE))										\
-	{																			\
-		/* rotate mode */														\
-		if (FBZMODE_STIPPLE_PATTERN(FBZMODE) == 0)								\
-		{																		\
-			(STIPPLE) = ((STIPPLE) << 1) | ((STIPPLE) >> 31);					\
-			if (((STIPPLE) & 0x80000000) == 0)									\
-			{																	\
-				goto skipdrawdepth;												\
-			}																	\
-		}																		\
-																				\
-		/* pattern mode */														\
-		else																	\
-		{																		\
-			int stipple_index = (((YY) & 3) << 3) | (~(XX) & 7);				\
-			if ((((STIPPLE) >> stipple_index) & 1) == 0)						\
-			{																	\
-				goto skipdrawdepth;												\
-			}																	\
-		}																		\
-	}																			\
-																				\
-	/* compute "floating point" W value (used for depth and fog) */				\
-	if ((ITERW) & LONGTYPE(0xffff00000000))										\
-		wfloat = 0x0000;														\
-	else																		\
-	{																			\
-		uint32_t temp = (uint32_t)(ITERW);											\
-		if ((temp & 0xffff0000) == 0)											\
-			wfloat = 0xffff;													\
-		else																	\
-		{																		\
-			const auto exp = count_leading_zeros(temp);                         \
-			const auto right_shift = std::max(0, 19 - exp);	                    \
-			wfloat = ((exp << 12) | ((~temp >> right_shift) & 0xfff));          \
-			if (wfloat < 0xffff) wfloat++;										\
-		}																		\
-	}																			\
-																				\
-	/* compute depth value (W or Z) for this pixel */							\
-	if (FBZMODE_WBUFFER_SELECT(FBZMODE) == 0)									\
-		CLAMPED_Z(ITERZ, FBZCOLORPATH, depthval);								\
-	else if (FBZMODE_DEPTH_FLOAT_SELECT(FBZMODE) == 0)							\
-		depthval = wfloat;														\
-	else																		\
-	{																			\
-		if ((ITERZ) & 0xf0000000)												\
-			depthval = 0x0000;													\
-		else																	\
-		{																		\
-			uint32_t temp = (ITERZ) << 4;											\
-			if ((temp & 0xffff0000) == 0)										\
-				depthval = 0xffff;												\
-			else																\
-			{																	\
-				const auto exp = count_leading_zeros(temp);                     \
-				const auto right_shift = std::max(0, 19 - exp);	                \
-				depthval = ((exp << 12) | ((~temp >> right_shift) & 0xfff));    \
-				if (depthval < 0xffff) depthval++;								\
-			}																	\
-		}																		\
-	}																			\
-																				\
-	/* add the bias */															\
-	if (FBZMODE_ENABLE_DEPTH_BIAS(FBZMODE))										\
-	{																			\
-		depthval += (int16_t)(ZACOLOR);											\
-		depthval = clamp_to_uint16(depthval);									\
-	}																			\
-																				\
-	/* handle depth buffer testing */											\
-	if (FBZMODE_ENABLE_DEPTHBUF(FBZMODE))										\
-	{																			\
-		int32_t depthsource;														\
-																				\
-		/* the source depth is either the iterated W/Z+bias or a */				\
-		/* constant value */													\
-		if (FBZMODE_DEPTH_SOURCE_COMPARE(FBZMODE) == 0)							\
-			depthsource = depthval;												\
-		else																	\
-			depthsource = (uint16_t)(ZACOLOR);									\
-																				\
-		/* test against the depth buffer */										\
-		switch (FBZMODE_DEPTH_FUNCTION(FBZMODE))								\
-		{																		\
-			case 0:		/* depthOP = never */									\
-				ADD_STAT_COUNT(STATS, zfunc_fail)								\
-				goto skipdrawdepth;												\
-																				\
-			case 1:		/* depthOP = less than */								\
-				if (depth)														\
-					if (depthsource >= depth[XX])								\
-					{															\
-						ADD_STAT_COUNT(STATS, zfunc_fail)						\
-						goto skipdrawdepth;										\
-					}															\
-				break;															\
-																				\
-			case 2:		/* depthOP = equal */									\
-				if (depth)														\
-					if (depthsource != depth[XX])								\
-					{															\
-						ADD_STAT_COUNT(STATS, zfunc_fail)						\
-						goto skipdrawdepth;										\
-					}															\
-				break;															\
-																				\
-			case 3:		/* depthOP = less than or equal */						\
-				if (depth)														\
-					if (depthsource > depth[XX])								\
-					{															\
-						ADD_STAT_COUNT(STATS, zfunc_fail)						\
-						goto skipdrawdepth;										\
-					}															\
-				break;															\
-																				\
-			case 4:		/* depthOP = greater than */							\
-				if (depth)														\
-					if (depthsource <= depth[XX])								\
-					{															\
-						ADD_STAT_COUNT(STATS, zfunc_fail)						\
-						goto skipdrawdepth;										\
-					}															\
-				break;															\
-																				\
-			case 5:		/* depthOP = not equal */								\
-				if (depth)														\
-					if (depthsource == depth[XX])								\
-					{															\
-						ADD_STAT_COUNT(STATS, zfunc_fail)						\
-						goto skipdrawdepth;										\
-					}															\
-				break;															\
-																				\
-			case 6:		/* depthOP = greater than or equal */					\
-				if (depth)														\
-					if (depthsource < depth[XX])								\
-					{															\
-						ADD_STAT_COUNT(STATS, zfunc_fail)						\
-						goto skipdrawdepth;										\
-					}															\
-				break;															\
-																				\
-			case 7:		/* depthOP = always */									\
-				break;															\
-		}																		\
-	}
+#define PIXEL_PIPELINE_BEGIN( \
+        STATS, XX, YY, FBZCOLORPATH, FBZMODE, ITERZ, ITERW, ZACOLOR, STIPPLE) \
+	do { \
+		int32_t depthval, wfloat; \
+		int32_t prefogr, prefogg, prefogb; \
+		int32_t r, g, b, a; \
+\
+		/* apply clipping */ \
+		/* note that for perf reasons, we assume the caller has done \
+		 * clipping */ \
+\
+		/* handle stippling */ \
+		if (FBZMODE_ENABLE_STIPPLE(FBZMODE)) { \
+			/* rotate mode */ \
+			if (FBZMODE_STIPPLE_PATTERN(FBZMODE) == 0) { \
+				(STIPPLE) = ((STIPPLE) << 1) | ((STIPPLE) >> 31); \
+				if (((STIPPLE) & 0x80000000) == 0) { \
+					goto skipdrawdepth; \
+				} \
+			} \
+\
+			/* pattern mode */ \
+			else { \
+				int stipple_index = (((YY) & 3) << 3) | \
+				                    (~(XX) & 7); \
+				if ((((STIPPLE) >> stipple_index) & 1) == 0) { \
+					goto skipdrawdepth; \
+				} \
+			} \
+		} \
+\
+		/* compute "floating point" W value (used for depth and fog) */ \
+		if ((ITERW) & LONGTYPE(0xffff00000000)) \
+			wfloat = 0x0000; \
+		else { \
+			uint32_t temp = (uint32_t)(ITERW); \
+			if ((temp & 0xffff0000) == 0) \
+				wfloat = 0xffff; \
+			else { \
+				const auto exp = count_leading_zeros(temp); \
+				const auto right_shift = std::max(0, 19 - exp); \
+				wfloat                 = ((exp << 12) | \
+                                          ((~temp >> right_shift) & 0xfff)); \
+				if (wfloat < 0xffff) \
+					wfloat++; \
+			} \
+		} \
+\
+		/* compute depth value (W or Z) for this pixel */ \
+		if (FBZMODE_WBUFFER_SELECT(FBZMODE) == 0) \
+			CLAMPED_Z(ITERZ, FBZCOLORPATH, depthval); \
+		else if (FBZMODE_DEPTH_FLOAT_SELECT(FBZMODE) == 0) \
+			depthval = wfloat; \
+		else { \
+			if ((ITERZ) & 0xf0000000) \
+				depthval = 0x0000; \
+			else { \
+				uint32_t temp = (ITERZ) << 4; \
+				if ((temp & 0xffff0000) == 0) \
+					depthval = 0xffff; \
+				else { \
+					const auto exp = count_leading_zeros(temp); \
+					const auto right_shift = std::max(0, 19 - exp); \
+					depthval = ((exp << 12) | \
+					            ((~temp >> right_shift) & 0xfff)); \
+					if (depthval < 0xffff) \
+						depthval++; \
+				} \
+			} \
+		} \
+\
+		/* add the bias */ \
+		if (FBZMODE_ENABLE_DEPTH_BIAS(FBZMODE)) { \
+			depthval += (int16_t)(ZACOLOR); \
+			depthval = clamp_to_uint16(depthval); \
+		} \
+\
+		/* handle depth buffer testing */ \
+		if (FBZMODE_ENABLE_DEPTHBUF(FBZMODE)) { \
+			int32_t depthsource; \
+\
+			/* the source depth is either the iterated W/Z+bias or \
+			 * a */ \
+			/* constant value */ \
+			if (FBZMODE_DEPTH_SOURCE_COMPARE(FBZMODE) == 0) \
+				depthsource = depthval; \
+			else \
+				depthsource = (uint16_t)(ZACOLOR); \
+\
+			/* test against the depth buffer */ \
+			switch (FBZMODE_DEPTH_FUNCTION(FBZMODE)) { \
+			case 0: /* depthOP = never */ \
+				ADD_STAT_COUNT(STATS, zfunc_fail) \
+				goto skipdrawdepth; \
+\
+			case 1: /* depthOP = less than */ \
+				if (depth) \
+					if (depthsource >= depth[XX]) { \
+						ADD_STAT_COUNT(STATS, zfunc_fail) \
+						goto skipdrawdepth; \
+					} \
+				break; \
+\
+			case 2: /* depthOP = equal */ \
+				if (depth) \
+					if (depthsource != depth[XX]) { \
+						ADD_STAT_COUNT(STATS, zfunc_fail) \
+						goto skipdrawdepth; \
+					} \
+				break; \
+\
+			case 3: /* depthOP = less than or equal */ \
+				if (depth) \
+					if (depthsource > depth[XX]) { \
+						ADD_STAT_COUNT(STATS, zfunc_fail) \
+						goto skipdrawdepth; \
+					} \
+				break; \
+\
+			case 4: /* depthOP = greater than */ \
+				if (depth) \
+					if (depthsource <= depth[XX]) { \
+						ADD_STAT_COUNT(STATS, zfunc_fail) \
+						goto skipdrawdepth; \
+					} \
+				break; \
+\
+			case 5: /* depthOP = not equal */ \
+				if (depth) \
+					if (depthsource == depth[XX]) { \
+						ADD_STAT_COUNT(STATS, zfunc_fail) \
+						goto skipdrawdepth; \
+					} \
+				break; \
+\
+			case 6: /* depthOP = greater than or equal */ \
+				if (depth) \
+					if (depthsource < depth[XX]) { \
+						ADD_STAT_COUNT(STATS, zfunc_fail) \
+						goto skipdrawdepth; \
+					} \
+				break; \
+\
+			case 7: /* depthOP = always */ break; \
+			} \
+		}
 
-
-#define PIXEL_PIPELINE_MODIFY(DITHER, DITHER4, XX, FBZMODE, FBZCOLORPATH, ALPHAMODE, FOGMODE, ITERZ, ITERW, ITERAXXX) \
-																				\
-	/* perform fogging */														\
-	prefogr = r;																\
-	prefogg = g;																\
-	prefogb = b;																\
-	APPLY_FOGGING(FOGMODE, FBZCOLORPATH, XX, DITHER4, r, g, b,				\
-					ITERZ, ITERW, ITERAXXX);									\
-																				\
-	/* perform alpha blending */												\
+#define PIXEL_PIPELINE_MODIFY( \
+        DITHER, DITHER4, XX, FBZMODE, FBZCOLORPATH, ALPHAMODE, FOGMODE, ITERZ, ITERW, ITERAXXX) \
+\
+	/* perform fogging */ \
+	prefogr = r; \
+	prefogg = g; \
+	prefogb = b; \
+	APPLY_FOGGING(FOGMODE, FBZCOLORPATH, XX, DITHER4, r, g, b, ITERZ, ITERW, ITERAXXX); \
+\
+	/* perform alpha blending */ \
 	APPLY_ALPHA_BLEND(FBZMODE, ALPHAMODE, XX, DITHER, r, g, b, a);
 
-
-#define PIXEL_PIPELINE_FINISH(DITHER_LOOKUP, XX, dest, depth, FBZMODE)		\
-																				\
-	/* write to framebuffer */													\
-	if (FBZMODE_RGB_BUFFER_MASK(FBZMODE))										\
-	{																			\
-		/* apply dithering */													\
-		APPLY_DITHER(FBZMODE, XX, DITHER_LOOKUP, r, g, b);						\
-		(dest)[XX] = (uint16_t)((r << 11) | (g << 5) | b);							\
-	}																			\
-																				\
-	/* write to aux buffer */													\
-	if ((depth) && FBZMODE_AUX_BUFFER_MASK(FBZMODE))								\
-	{																			\
-		if (FBZMODE_ENABLE_ALPHA_PLANES(FBZMODE) == 0)							\
-			(depth)[XX] = (uint16_t)depthval;										\
-		else																	\
-			(depth)[XX] = (uint16_t)a;												\
+#define PIXEL_PIPELINE_FINISH(DITHER_LOOKUP, XX, dest, depth, FBZMODE) \
+\
+	/* write to framebuffer */ \
+	if (FBZMODE_RGB_BUFFER_MASK(FBZMODE)) { \
+		/* apply dithering */ \
+		APPLY_DITHER(FBZMODE, XX, DITHER_LOOKUP, r, g, b); \
+		(dest)[XX] = (uint16_t)((r << 11) | (g << 5) | b); \
+	} \
+\
+	/* write to aux buffer */ \
+	if ((depth) && FBZMODE_AUX_BUFFER_MASK(FBZMODE)) { \
+		if (FBZMODE_ENABLE_ALPHA_PLANES(FBZMODE) == 0) \
+			(depth)[XX] = (uint16_t)depthval; \
+		else \
+			(depth)[XX] = (uint16_t)a; \
 	}
 
-#define PIXEL_PIPELINE_END(STATS)												\
-																				\
-	/* track pixel writes to the frame buffer regardless of mask */				\
-	ADD_STAT_COUNT(STATS, pixels_out)											\
-																				\
-skipdrawdepth:																	\
-	;																			\
-}																				\
-while (0)
+#define PIXEL_PIPELINE_END(STATS) \
+\
+	/* track pixel writes to the frame buffer regardless of mask */ \
+	ADD_STAT_COUNT(STATS, pixels_out) \
+\
+	skipdrawdepth:; \
+	} \
+	while (0)
 
 #endif //DOSBOX_VOODOO_DATA_H
 
