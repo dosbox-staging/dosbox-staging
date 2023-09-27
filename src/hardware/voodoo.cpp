@@ -1597,15 +1597,15 @@ while (0)
 #define ADD_STAT_COUNT(STATS, STATNAME) (STATS).STATNAME++;
 //#define ADD_STAT_COUNT(STATS, STATNAME)
 
-#define APPLY_CHROMAKEY(VV, STATS, FBZMODE, COLOR)								\
+#define APPLY_CHROMAKEY(STATS, FBZMODE, COLOR)								\
 do																				\
 {																				\
 	if (FBZMODE_ENABLE_CHROMAKEY(FBZMODE))										\
 	{																			\
 		/* non-range version */													\
-		if (!CHROMARANGE_ENABLE((VV)->reg[chromaRange].u))						\
+		if (!CHROMARANGE_ENABLE(reg[chromaRange].u))						\
 		{																		\
-			if ((((COLOR).u ^ (VV)->reg[chromaKey].u) & 0xffffff) == 0)			\
+			if ((((COLOR).u ^ reg[chromaKey].u) & 0xffffff) == 0)			\
 			{																	\
 				ADD_STAT_COUNT(STATS, chroma_fail)								\
 				goto skipdrawdepth;												\
@@ -1619,30 +1619,30 @@ do																				\
 			int results = 0;													\
 																				\
 			/* check blue */													\
-			low = (VV)->reg[chromaKey].rgb.b;									\
-			high = (VV)->reg[chromaRange].rgb.b;								\
+			low = reg[chromaKey].rgb.b;									\
+			high = reg[chromaRange].rgb.b;								\
 			test = (COLOR).rgb.b;													\
 			results = (test >= low && test <= high);							\
-			results ^= CHROMARANGE_BLUE_EXCLUSIVE((VV)->reg[chromaRange].u);	\
+			results ^= CHROMARANGE_BLUE_EXCLUSIVE(reg[chromaRange].u);	\
 			results <<= 1;														\
 																				\
 			/* check green */													\
-			low = (VV)->reg[chromaKey].rgb.g;									\
-			high = (VV)->reg[chromaRange].rgb.g;								\
+			low = reg[chromaKey].rgb.g;									\
+			high = reg[chromaRange].rgb.g;								\
 			test = (COLOR).rgb.g;													\
 			results |= (test >= low && test <= high);							\
-			results ^= CHROMARANGE_GREEN_EXCLUSIVE((VV)->reg[chromaRange].u);	\
+			results ^= CHROMARANGE_GREEN_EXCLUSIVE(reg[chromaRange].u);	\
 			results <<= 1;														\
 																				\
 			/* check red */														\
-			low = (VV)->reg[chromaKey].rgb.r;									\
-			high = (VV)->reg[chromaRange].rgb.r;								\
+			low = reg[chromaKey].rgb.r;									\
+			high = reg[chromaRange].rgb.r;								\
 			test = (COLOR).rgb.r;													\
 			results |= (test >= low && test <= high);							\
-			results ^= CHROMARANGE_RED_EXCLUSIVE((VV)->reg[chromaRange].u);		\
+			results ^= CHROMARANGE_RED_EXCLUSIVE(reg[chromaRange].u);		\
 																				\
 			/* final result */													\
-			if (CHROMARANGE_UNION_MODE((VV)->reg[chromaRange].u))				\
+			if (CHROMARANGE_UNION_MODE(reg[chromaRange].u))				\
 			{																	\
 				if (results != 0)												\
 				{																\
@@ -1671,7 +1671,7 @@ while (0)
  *
  *************************************/
 
-#define APPLY_ALPHAMASK(VV, STATS, FBZMODE, AA)									\
+#define APPLY_ALPHAMASK(STATS, FBZMODE, AA)									\
 do																				\
 {																				\
 	if (FBZMODE_ENABLE_ALPHA_MASK(FBZMODE))										\
@@ -1693,12 +1693,12 @@ while (0)
  *
  *************************************/
 
-#define APPLY_ALPHATEST(VV, STATS, ALPHAMODE, AA)								\
+#define APPLY_ALPHATEST(STATS, ALPHAMODE, AA)								\
 do																				\
 {																				\
 	if (ALPHAMODE_ALPHATEST(ALPHAMODE))											\
 	{																			\
-		uint8_t alpharef = (VV)->reg[alphaMode].rgb.a;							\
+		uint8_t alpharef = reg[alphaMode].rgb.a;							\
 		switch (ALPHAMODE_ALPHAFUNCTION(ALPHAMODE))								\
 		{																		\
 			case 0:		/* alphaOP = never */									\
@@ -1926,12 +1926,12 @@ while (0)
  *
  *************************************/
 
-#define APPLY_FOGGING(VV, FOGMODE, FBZCP, XX, DITHER4, RR, GG, BB, ITERZ, ITERW, ITERAXXX)	\
+#define APPLY_FOGGING(FOGMODE, FBZCP, XX, DITHER4, RR, GG, BB, ITERZ, ITERW, ITERAXXX)	\
 do																				\
 {																				\
 	if (FOGMODE_ENABLE_FOG(FOGMODE))											\
 	{																			\
-		rgb_union fogcolor = (VV)->reg[fogColor];								\
+		rgb_union fogcolor = reg[fogColor];								\
 		int32_t fr, fg, fb;														\
 																				\
 		/* constant fog bypasses everything else */								\
@@ -1970,11 +1970,11 @@ do																				\
 			{																	\
 				case 0:		/* fog table */										\
 				{																\
-					int32_t delta = (VV)->fbi.fogdelta[wfloat >> 10];				\
+					int32_t delta = fbi.fogdelta[wfloat >> 10];				\
 					int32_t deltaval;												\
 																				\
 					/* perform the multiply against lower 8 bits of wfloat */	\
-					deltaval = (delta & (VV)->fbi.fogdelta_mask) *				\
+					deltaval = (delta & fbi.fogdelta_mask) *				\
 								((wfloat >> 2) & 0xff);							\
 																				\
 					/* fog zones allow for negating this value */				\
@@ -1989,7 +1989,7 @@ do																				\
 					deltaval >>= 4;												\
 																				\
 					/* add to the blending factor */							\
-					fogblend = (VV)->fbi.fogblend[wfloat >> 10] + deltaval;		\
+					fogblend = fbi.fogblend[wfloat >> 10] + deltaval;		\
 					break;														\
 				}																\
 																				\
@@ -2387,7 +2387,7 @@ while (0)
  *
  *************************************/
 
-#define PIXEL_PIPELINE_BEGIN(VV, STATS, XX, YY, FBZCOLORPATH, FBZMODE, ITERZ, ITERW, ZACOLOR, STIPPLE)	\
+#define PIXEL_PIPELINE_BEGIN(STATS, XX, YY, FBZCOLORPATH, FBZMODE, ITERZ, ITERW, ZACOLOR, STIPPLE)	\
 do																				\
 {																				\
 	int32_t depthval, wfloat;														\
@@ -2548,20 +2548,20 @@ do																				\
 	}
 
 
-#define PIXEL_PIPELINE_MODIFY(VV, DITHER, DITHER4, XX, FBZMODE, FBZCOLORPATH, ALPHAMODE, FOGMODE, ITERZ, ITERW, ITERAXXX) \
+#define PIXEL_PIPELINE_MODIFY(DITHER, DITHER4, XX, FBZMODE, FBZCOLORPATH, ALPHAMODE, FOGMODE, ITERZ, ITERW, ITERAXXX) \
 																				\
 	/* perform fogging */														\
 	prefogr = r;																\
 	prefogg = g;																\
 	prefogb = b;																\
-	APPLY_FOGGING(VV, FOGMODE, FBZCOLORPATH, XX, DITHER4, r, g, b,				\
+	APPLY_FOGGING(FOGMODE, FBZCOLORPATH, XX, DITHER4, r, g, b,				\
 					ITERZ, ITERW, ITERAXXX);									\
 																				\
 	/* perform alpha blending */												\
 	APPLY_ALPHA_BLEND(FBZMODE, ALPHAMODE, XX, DITHER, r, g, b, a);
 
 
-#define PIXEL_PIPELINE_FINISH(VV, DITHER_LOOKUP, XX, dest, depth, FBZMODE)		\
+#define PIXEL_PIPELINE_FINISH(DITHER_LOOKUP, XX, dest, depth, FBZMODE)		\
 																				\
 	/* write to framebuffer */													\
 	if (FBZMODE_RGB_BUFFER_MASK(FBZMODE))										\
@@ -3299,8 +3299,7 @@ void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
 		rgb_union texel = { 0 };
 
 		/* pixel pipeline part 1 handles depth testing and stippling */
-		PIXEL_PIPELINE_BEGIN(this,
-		                     stats,
+		PIXEL_PIPELINE_BEGIN(stats,
 		                     x,
 		                     y,
 		                     r_fbzColorPath,
@@ -3364,8 +3363,8 @@ void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
 				break;
 		}
 
-		/* handle chroma key */
-		APPLY_CHROMAKEY(this, stats, r_fbzMode, c_other);
+		// handle chroma key
+		APPLY_CHROMAKEY(stats, r_fbzMode, c_other);
 
 		/* compute a_other */
 		switch (FBZCP_CC_ASELECT(r_fbzColorPath))
@@ -3384,11 +3383,11 @@ void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
 				break;
 		}
 
-		/* handle alpha mask */
-		APPLY_ALPHAMASK(this, stats, r_fbzMode, c_other.rgb.a);
+		// Handle alpha mask
+		APPLY_ALPHAMASK(stats, r_fbzMode, c_other.rgb.a);
 
-		/* handle alpha test */
-		APPLY_ALPHATEST(this, stats, r_alphaMode, c_other.rgb.a);
+		// Handle alpha test
+		APPLY_ALPHATEST(stats, r_alphaMode, c_other.rgb.a);
 
 		/* compute c_local */
 		if (FBZCP_CC_LOCALSELECT_OVERRIDE(r_fbzColorPath) == 0)
@@ -3573,9 +3572,8 @@ void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
 			a ^= 0xff;
 		}
 
-		/* pixel pipeline part 2 handles fog, alpha, and final output */
-		PIXEL_PIPELINE_MODIFY(this,
-		                      dither,
+		// Pixel pipeline part 2 handles fog, alpha, and final output
+		PIXEL_PIPELINE_MODIFY(dither,
 		                      dither4,
 		                      x,
 		                      r_fbzMode,
@@ -3586,7 +3584,7 @@ void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
 		                      iterw,
 		                      iterargb);
 
-		PIXEL_PIPELINE_FINISH(this, dither_lookup, x, dest, depth, r_fbzMode);
+		PIXEL_PIPELINE_FINISH(dither_lookup, x, dest, depth, r_fbzMode);
 
 		PIXEL_PIPELINE_END(stats);
 
@@ -6406,10 +6404,11 @@ void voodoo_state::WriteToFrameBuffer(uint32_t offset, uint32_t data, uint32_t m
 					}
 				}
 
-				/* pixel pipeline part 1 handles depth testing and stippling */
-				// TODO: in the ogl case this macro doesn't really work with depth testing
-				PIXEL_PIPELINE_BEGIN(this,
-				                     stats,
+				// Pixel pipeline part 1 handles depth testing
+				// and stippling
+				// TODO: in the ogl case this macro doesn't
+				// really work with depth testing
+				PIXEL_PIPELINE_BEGIN(stats,
 				                     x,
 				                     y,
 				                     reg[fbzColorPath].u,
@@ -6424,16 +6423,12 @@ void voodoo_state::WriteToFrameBuffer(uint32_t offset, uint32_t data, uint32_t m
 				color.rgb.b = static_cast<uint8_t>(sb[pix]);
 				color.rgb.a = static_cast<uint8_t>(sa[pix]);
 
-				/* apply chroma key */
-				APPLY_CHROMAKEY(this, stats, reg[fbzMode].u, color);
+				// Apply chroma key
+				APPLY_CHROMAKEY(stats, reg[fbzMode].u, color);
 
-				/* apply alpha mask, and alpha testing */
-				APPLY_ALPHAMASK(this,
-				                stats,
-				                reg[fbzMode].u,
-				                color.rgb.a);
-				APPLY_ALPHATEST(this,
-				                stats,
+				// Apply alpha mask, and alpha testing
+				APPLY_ALPHAMASK(stats, reg[fbzMode].u, color.rgb.a);
+				APPLY_ALPHATEST(stats,
 				                reg[alphaMode].u,
 				                color.rgb.a);
 
@@ -6661,10 +6656,9 @@ void voodoo_state::WriteToFrameBuffer(uint32_t offset, uint32_t data, uint32_t m
 				} else
 #endif
 				{
-					/* pixel pipeline part 2 handles color
-					 * combine, fog, alpha, and final output */
-					PIXEL_PIPELINE_MODIFY(this,
-					                      dither,
+					// Pixel pipeline part 2 handles color
+					// combine, fog, alpha, and final output
+					PIXEL_PIPELINE_MODIFY(dither,
 					                      dither4,
 					                      x,
 					                      reg[fbzMode].u,
@@ -6675,8 +6669,7 @@ void voodoo_state::WriteToFrameBuffer(uint32_t offset, uint32_t data, uint32_t m
 					                      iterw,
 					                      reg[zaColor]);
 
-					PIXEL_PIPELINE_FINISH(this,
-					                      dither_lookup,
+					PIXEL_PIPELINE_FINISH(dither_lookup,
 					                      x,
 					                      dest,
 					                      depth,
