@@ -1008,7 +1008,8 @@ struct voodoo_state {
 
 	// Commands
 	void ExecuteTriangleCmd();
-	void ExecuteBeginTriCmd();
+	void ExecuteBeginTriangleCmd();
+	void ExecuteDrawTriangleCmd();
 	void ExecuteSwapBufferCmd(const uint32_t data);
 
 	void SetupAndDrawTriangle();
@@ -4823,7 +4824,7 @@ void voodoo_state::ExecuteTriangleCmd()
 /*-------------------------------------------------
     execute the 'beginTri' command
 -------------------------------------------------*/
-void voodoo_state::ExecuteBeginTriCmd()
+void voodoo_state::ExecuteBeginTriangleCmd()
 {
 	// Quick reference
 	setup_vertex* sv = &fbi.svert[2];
@@ -5023,42 +5024,38 @@ void voodoo_state::SetupAndDrawTriangle()
 }
 
 /*-------------------------------------------------
-    draw_triangle - execute the 'DrawTri'
-    command
+    Execute the 'DrawTri' command
 -------------------------------------------------*/
-static void draw_triangle(voodoo_state *vs)
+void voodoo_state::ExecuteDrawTriangleCmd()
 {
-	const auto regs = vs->reg;
-	auto& fbi = vs->fbi;
-
-	setup_vertex* sv = &fbi.svert[2];
-
-	/* for strip mode, shuffle vertex 1 down to 0 */
-	if ((regs[sSetupMode].u & (1 << 16)) == 0u) {
+	// For strip mode, shuffle vertex 1 down to 0
+	if ((reg[sSetupMode].u & (1 << 16)) == 0u) {
 		fbi.svert[0] = fbi.svert[1];
 	}
 
-	/* copy 2 down to 1 regardless */
+	// Copy 2 down to 1 regardless
 	fbi.svert[1] = fbi.svert[2];
 
-	/* extract all the data from registers */
-	sv->x  = regs[sVx].f;
-	sv->y  = regs[sVy].f;
-	sv->wb = regs[sWb].f;
-	sv->w0 = regs[sWtmu0].f;
-	sv->s0 = regs[sS_W0].f;
-	sv->t0 = regs[sT_W0].f;
-	sv->w1 = regs[sWtmu1].f;
-	sv->s1 = regs[sS_Wtmu1].f;
-	sv->t1 = regs[sT_Wtmu1].f;
-	sv->a  = regs[sAlpha].f;
-	sv->r  = regs[sRed].f;
-	sv->g  = regs[sGreen].f;
-	sv->b  = regs[sBlue].f;
+	// Extract all the data from registers
+	setup_vertex* sv = &fbi.svert[2];
 
-	/* if we have enough verts, go ahead and draw */
+	sv->x  = reg[sVx].f;
+	sv->y  = reg[sVy].f;
+	sv->wb = reg[sWb].f;
+	sv->w0 = reg[sWtmu0].f;
+	sv->s0 = reg[sS_W0].f;
+	sv->t0 = reg[sT_W0].f;
+	sv->w1 = reg[sWtmu1].f;
+	sv->s1 = reg[sS_Wtmu1].f;
+	sv->t1 = reg[sT_Wtmu1].f;
+	sv->a  = reg[sAlpha].f;
+	sv->r  = reg[sRed].f;
+	sv->g  = reg[sGreen].f;
+	sv->b  = reg[sBlue].f;
+
+	// If we have enough verts, go ahead and draw
 	if (++fbi.sverts >= 3) {
-		vs->SetupAndDrawTriangle();
+		SetupAndDrawTriangle();
 	}
 }
 
@@ -5635,9 +5632,9 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 	case triangleCMD:
 	case ftriangleCMD: ExecuteTriangleCmd(); break;
 
-	case sBeginTriCMD: ExecuteBeginTriCmd(); break;
+	case sBeginTriCMD: ExecuteBeginTriangleCmd(); break;
 
-	case sDrawTriCMD: draw_triangle(this); break;
+	case sDrawTriCMD: ExecuteDrawTriangleCmd(); break;
 
 	/* other commands */
 	case nopCMD:
