@@ -1011,6 +1011,10 @@ struct voodoo_state {
 	void ExecuteBeginTriCmd();
 	void SetupAndDrawTriangle();
 
+	void RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0, uint32_t TEXMODE1,
+	                   void* destbase, int32_t y, const poly_extent* extent,
+	                   stats_block& stats);
+
 	std::unique_ptr<PageHandler> page_handler = {};
 
 	uint8_t chipmask = {}; // mask for which chips are available
@@ -3155,9 +3159,9 @@ enum {
 static dither_lut_t dither2_lookup = {};
 static dither_lut_t dither4_lookup = {};
 
-static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_t TEXMODE0,
-                                  uint32_t TEXMODE1, void* destbase, int32_t y,
-                                  const poly_extent* extent, stats_block& stats)
+void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
+                                 uint32_t TEXMODE1, void* destbase, int32_t y,
+                                 const poly_extent* extent, stats_block& stats)
 {
 	const uint8_t* dither_lookup = nullptr;
 	const uint8_t* dither4       = nullptr;
@@ -3168,18 +3172,16 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 	int32_t stopx = extent->stopx;
 
 	// Quick references
-	const auto regs  = vs->reg;
-	const auto& fbi  = vs->fbi;
-	const auto& tmu0 = vs->tmu[0];
-	const auto& tmu1 = vs->tmu[1];
+	const auto& tmu0 = tmu[0];
+	const auto& tmu1 = tmu[1];
 
-	const uint32_t r_fbzColorPath = regs[fbzColorPath].u;
-	const uint32_t r_fbzMode      = regs[fbzMode].u;
-	const uint32_t r_alphaMode    = regs[alphaMode].u;
-	const uint32_t r_fogMode      = regs[fogMode].u;
-	const uint32_t r_zaColor      = regs[zaColor].u;
+	const uint32_t r_fbzColorPath = reg[fbzColorPath].u;
+	const uint32_t r_fbzMode      = reg[fbzMode].u;
+	const uint32_t r_alphaMode    = reg[alphaMode].u;
+	const uint32_t r_fogMode      = reg[fogMode].u;
+	const uint32_t r_zaColor      = reg[zaColor].u;
 
-	uint32_t r_stipple = regs[stipple].u;
+	uint32_t r_stipple = reg[stipple].u;
 
 	/* determine the screen Y */
 	if (FBZMODE_Y_ORIGIN(r_fbzMode)) {
@@ -3206,21 +3208,21 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 	if (FBZMODE_ENABLE_CLIPPING(r_fbzMode))
 	{
 		/* Y clipping buys us the whole scanline */
-		if (scry < (int32_t)((regs[clipLowYHighY].u >> 16) & 0x3ff) ||
-		    scry >= (int32_t)(regs[clipLowYHighY].u & 0x3ff)) {
+		if (scry < (int32_t)((reg[clipLowYHighY].u >> 16) & 0x3ff) ||
+		    scry >= (int32_t)(reg[clipLowYHighY].u & 0x3ff)) {
 			stats.pixels_in += stopx - startx;
 			//stats.clip_fail += stopx - startx;
 			return;
 		}
 
 		/* X clipping */
-		int32_t tempclip = (regs[clipLeftRight].u >> 16) & 0x3ff;
+		int32_t tempclip = (reg[clipLeftRight].u >> 16) & 0x3ff;
 		if (startx < tempclip)
 		{
 			stats.pixels_in += tempclip - startx;
 			startx = tempclip;
 		}
-		tempclip = regs[clipLeftRight].u & 0x3ff;
+		tempclip = reg[clipLeftRight].u & 0x3ff;
 		if (stopx >= tempclip)
 		{
 			stats.pixels_in += stopx - tempclip;
@@ -3271,13 +3273,22 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 		rgb_union texel = { 0 };
 
 		/* pixel pipeline part 1 handles depth testing and stippling */
-		PIXEL_PIPELINE_BEGIN(vs, stats, x, y, r_fbzColorPath, r_fbzMode, iterz, iterw, r_zaColor, r_stipple);
+		PIXEL_PIPELINE_BEGIN(this,
+		                     stats,
+		                     x,
+		                     y,
+		                     r_fbzColorPath,
+		                     r_fbzMode,
+		                     iterz,
+		                     iterw,
+		                     r_zaColor,
+		                     r_stipple);
 
 		/* run the texture pipeline on TMU1 to produce a value in texel */
 		/* note that they set LOD min to 8 to "disable" a TMU */
 
-		if (TMUS >= 2 && vs->tmu[1].lodmin < (8 << 8)) {
-			const tmu_state* const tmus = &vs->tmu[1];
+		if (TMUS >= 2 && tmu1.lodmin < (8 << 8)) {
+			const tmu_state* const tmus = &tmu1;
 			const rgb_t* const lookup = tmus->lookup;
 			TEXTURE_PIPELINE(tmus, x, dither4, TEXMODE1, texel,
 								lookup, tmus->lodbasetemp,
@@ -3288,14 +3299,14 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 		/* result in texel */
 		/* note that they set LOD min to 8 to "disable" a TMU */
 		if (TMUS >= 1 && tmu0.lodmin < (8 << 8)) {
-			if (!vs->send_config) {
+			if (!send_config) {
 				const tmu_state* const tmus = &tmu0;
 				const rgb_t* const lookup = tmus->lookup;
 				TEXTURE_PIPELINE(tmus, x, dither4, TEXMODE0, texel,
 								lookup, tmus->lodbasetemp,
 								iters0, itert0, iterw0, texel);
-			} else {	/* send config data to the frame buffer */
-				texel.u=vs->tmu_config;
+			} else { /* send config data to the frame buffer */
+				texel.u = tmu_config;
 			}
 		}
 
@@ -3320,7 +3331,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 				c_other.u = texel.u;
 				break;
 			case 2:		/* color1 RGB */
-			        c_other.u = regs[color1].u;
+			        c_other.u = reg[color1].u;
 			        break;
 			case 3:	/* reserved */
 				c_other.u = 0;
@@ -3328,7 +3339,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 		}
 
 		/* handle chroma key */
-		APPLY_CHROMAKEY(vs, stats, r_fbzMode, c_other);
+		APPLY_CHROMAKEY(this, stats, r_fbzMode, c_other);
 
 		/* compute a_other */
 		switch (FBZCP_CC_ASELECT(r_fbzColorPath))
@@ -3340,7 +3351,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 				c_other.rgb.a = texel.rgb.a;
 				break;
 			case 2:		/* color1 alpha */
-			        c_other.rgb.a = regs[color1].rgb.a;
+			        c_other.rgb.a = reg[color1].rgb.a;
 			        break;
 			case 3:	/* reserved */
 				c_other.rgb.a = 0;
@@ -3348,10 +3359,10 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 		}
 
 		/* handle alpha mask */
-		APPLY_ALPHAMASK(vs, stats, r_fbzMode, c_other.rgb.a);
+		APPLY_ALPHAMASK(this, stats, r_fbzMode, c_other.rgb.a);
 
 		/* handle alpha test */
-		APPLY_ALPHATEST(vs, stats, r_alphaMode, c_other.rgb.a);
+		APPLY_ALPHATEST(this, stats, r_alphaMode, c_other.rgb.a);
 
 		/* compute c_local */
 		if (FBZCP_CC_LOCALSELECT_OVERRIDE(r_fbzColorPath) == 0)
@@ -3361,7 +3372,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 				c_local.u = iterargb.u;
 			} else {
 				// color0 RGB
-				c_local.u = regs[color0].u;
+				c_local.u = reg[color0].u;
 			}
 		}
 		else
@@ -3371,7 +3382,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 				c_local.u = iterargb.u;
 			} else {
 				// color0 RGB
-				c_local.u = regs[color0].u;
+				c_local.u = reg[color0].u;
 			}
 		}
 
@@ -3382,7 +3393,7 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 				c_local.rgb.a = iterargb.rgb.a;
 				break;
 			case 1:		/* color0 alpha */
-			        c_local.rgb.a = regs[color0].rgb.a;
+			        c_local.rgb.a = reg[color0].rgb.a;
 			        break;
 			case 2:		/* clamped iterated Z[27:20] */
 			{
@@ -3537,10 +3548,20 @@ static inline void raster_generic(const voodoo_state* vs, uint32_t TMUS, uint32_
 		}
 
 		/* pixel pipeline part 2 handles fog, alpha, and final output */
-		PIXEL_PIPELINE_MODIFY(vs, dither, dither4, x,
-							r_fbzMode, r_fbzColorPath, r_alphaMode, r_fogMode,
-							iterz, iterw, iterargb);
-		PIXEL_PIPELINE_FINISH(vs, dither_lookup, x, dest, depth, r_fbzMode);
+		PIXEL_PIPELINE_MODIFY(this,
+		                      dither,
+		                      dither4,
+		                      x,
+		                      r_fbzMode,
+		                      r_fbzColorPath,
+		                      r_alphaMode,
+		                      r_fogMode,
+		                      iterz,
+		                      iterw,
+		                      iterargb);
+
+		PIXEL_PIPELINE_FINISH(this, dither_lookup, x, dest, depth, r_fbzMode);
+
 		PIXEL_PIPELINE_END(stats);
 
 		/* update the iterated parameters */
@@ -4494,7 +4515,7 @@ void TriangleWorker::Work(const int32_t worktstart, const int32_t worktend)
 			extent.stopx -= (sumpix - to);
 		}
 
-		raster_generic(vs, tmus, texmode0, texmode1, drawbuf, curscan, &extent, my_stats);
+		vs->RasterGeneric(tmus, texmode0, texmode1, drawbuf, curscan, &extent, my_stats);
 	}
 	sum_statistics(&vs->thread_stats[worktstart], &my_stats);
 }
