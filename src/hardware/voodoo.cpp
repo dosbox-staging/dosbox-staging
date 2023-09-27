@@ -1014,6 +1014,7 @@ struct voodoo_state {
 	void RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0, uint32_t TEXMODE1,
 	                   void* destbase, int32_t y, const poly_extent* extent,
 	                   stats_block& stats);
+
 	std::unique_ptr<PageHandler> page_handler = {};
 
 	uint8_t chipmask = {}; // mask for which chips are available
@@ -1031,7 +1032,8 @@ struct voodoo_state {
 	uint32_t tmu_config       = {};
 
 #ifdef C_ENABLE_VOODOO_OPENGL
-	raster_info* AddRasterizer(const raster_info *cinfo);
+	raster_info* AddRasterizer(const raster_info* cinfo);
+	raster_info* FindRasterizer(const int texcount);
 
 	uint16_t next_rasterizer = {}; // next rasterizer index
 	raster_info rasterizer[MAX_RASTERIZERS] = {}; // array of rasterizers
@@ -3591,15 +3593,14 @@ void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
 /*-------------------------------------------------
     Add a rasterizer to our hash table
 -------------------------------------------------*/
-raster_info* voodoo_state::AddRasterizer(const raster_info *cinfo)
+raster_info* voodoo_state::AddRasterizer(const raster_info* cinfo)
 {
-	if (next_rasterizer >= MAX_RASTERIZERS)
-	{
+	if (next_rasterizer >= MAX_RASTERIZERS) {
 		E_Exit("Out of space for new rasterizers!");
 		next_rasterizer = 0;
 	}
 
-	raster_info *info = &rasterizer[next_rasterizer++];
+	raster_info* info = &rasterizer[next_rasterizer++];
 	int hash = compute_raster_hash(cinfo);
 
 	/* make a copy of the info */
@@ -3612,7 +3613,7 @@ raster_info* voodoo_state::AddRasterizer(const raster_info *cinfo)
 #endif
 
 	/* hook us into the hash table */
-	info->next = raster_hash[hash];
+	info->next        = raster_hash[hash];
 	raster_hash[hash] = info;
 
 	if (LOG_RASTERIZERS)
@@ -3625,52 +3626,49 @@ raster_info* voodoo_state::AddRasterizer(const raster_info *cinfo)
 }
 
 /*-------------------------------------------------
-    find_rasterizer - find a rasterizer that
-    matches  our current parameters and return
-    it, creating a new one if necessary
+    Find a rasterizer that matches  our current parameters and return it,
+creating a new one if necessary
 -------------------------------------------------*/
-static raster_info *find_rasterizer(voodoo_state *vs, int texcount)
+raster_info* voodoo_state::FindRasterizer(const int texcount)
 {
-	raster_info *info, *prev = NULL;
-	raster_info curinfo;
-	int hash;
+	// build an info struct with all the parameters
+	raster_info curinfo    = {};
+	curinfo.eff_color_path = normalize_color_path(reg[fbzColorPath].u);
+	curinfo.eff_alpha_mode = normalize_alpha_mode(reg[alphaMode].u);
+	curinfo.eff_fog_mode   = normalize_fog_mode(reg[fogMode].u);
+	curinfo.eff_fbz_mode   = normalize_fbz_mode(reg[fbzMode].u);
 
-	/* build an info struct with all the parameters */
-	const auto regs = vs->reg;
-
-	curinfo.eff_color_path = normalize_color_path(regs[fbzColorPath].u);
-	curinfo.eff_alpha_mode = normalize_alpha_mode(regs[alphaMode].u);
-	curinfo.eff_fog_mode   = normalize_fog_mode(regs[fogMode].u);
-	curinfo.eff_fbz_mode   = normalize_fbz_mode(regs[fbzMode].u);
 	curinfo.eff_tex_mode_0 = (texcount >= 1)
-	                               ? normalize_tex_mode(
-	                                         vs->tmu[0].reg[textureMode].u)
+	                               ? normalize_tex_mode(tmu[0].reg[textureMode].u)
 	                               : 0xffffffff;
-	curinfo.eff_tex_mode_1 = (texcount >= 2) ? normalize_tex_mode(vs->tmu[1].reg[textureMode].u) : 0xffffffff;
+
+	curinfo.eff_tex_mode_1 = (texcount >= 2)
+	                               ? normalize_tex_mode(tmu[1].reg[textureMode].u)
+	                               : 0xffffffff;
 
 	/* compute the hash */
-	hash = compute_raster_hash(&curinfo);
+	const auto hash = compute_raster_hash(&curinfo);
 
-	/* find the appropriate hash entry */
-	for (info = vs->raster_hash[hash]; info; prev = info, info = info->next)
+	// find the appropriate hash entry
+	raster_info* prev = nullptr;
+	for (auto info = raster_hash[hash]; info; prev = info, info = info->next) {
 		if (info->eff_color_path == curinfo.eff_color_path &&
-			info->eff_alpha_mode == curinfo.eff_alpha_mode &&
-			info->eff_fog_mode == curinfo.eff_fog_mode &&
-			info->eff_fbz_mode == curinfo.eff_fbz_mode &&
-			info->eff_tex_mode_0 == curinfo.eff_tex_mode_0 &&
-			info->eff_tex_mode_1 == curinfo.eff_tex_mode_1)
-		{
-			/* got it, move us to the head of the list */
-			if (prev)
-			{
+		    info->eff_alpha_mode == curinfo.eff_alpha_mode &&
+		    info->eff_fog_mode == curinfo.eff_fog_mode &&
+		    info->eff_fbz_mode == curinfo.eff_fbz_mode &&
+		    info->eff_tex_mode_0 == curinfo.eff_tex_mode_0 &&
+		    info->eff_tex_mode_1 == curinfo.eff_tex_mode_1) {
+			// got it, move us to the head of the list
+			if (prev) {
 				prev->next = info->next;
-				info->next = vs->raster_hash[hash];
-				vs->raster_hash[hash] = info;
+				info->next = raster_hash[hash];
+				raster_hash[hash] = info;
 			}
 
-			/* return the result */
+			// return the result
 			return info;
 		}
+	}
 
 	/* generate a new one using the generic entry */
 	curinfo.callback = (texcount == 0) ? raster_generic_0tmu : (texcount == 1) ? raster_generic_1tmu : raster_generic_2tmu;
@@ -3683,7 +3681,7 @@ static raster_info *find_rasterizer(voodoo_state *vs, int texcount)
 	curinfo.next = 0;
 	curinfo.shader_ready = false;
 
-	return vs->AddRasterizer(&curinfo);
+	return AddRasterizer(&curinfo);
 }
 #endif
 
@@ -4684,7 +4682,7 @@ void voodoo_state::ExecuteTriangleCmd()
 	/* fill in the extra data */
 	extra.state = vs;
 
-	raster_info *info  = find_rasterizer(vs, texcount);
+	raster_info* info = FindRasterizer(texcount);
 	extra.info = info;
 
 	/* fill in triangle parameters */
