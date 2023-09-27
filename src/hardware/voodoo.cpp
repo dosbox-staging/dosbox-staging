@@ -723,50 +723,9 @@ struct ncc_table
 
 using mem_buffer_t = std::unique_ptr<uint8_t[]>;
 
-struct tmu_state
-{
-	uint8_t* ram;            // pointer to aligned RAM
-	mem_buffer_t ram_buffer; // Managed buffer backing the RAM
-	uint32_t mask;           // mask to apply to pointers
-	voodoo_reg* reg;         // pointer to our register base
-	bool regdirty; // true if the LOD/mode/base registers have changed
+struct tmu_shared_state {
+	constexpr void Initialize();
 
-	enum { texaddr_mask = 0x0fffff, texaddr_shift = 3 };
-	// uint32_t	texaddr_mask; // mask for texture address
-	// uint8_t texaddr_shift; // shift for texture address
-
-	int64_t starts, startt; // starting S,T (14.18)
-	int64_t startw;         // starting W (2.30)
-	int64_t dsdx, dtdx;     // delta S,T per X
-	int64_t dwdx;           // delta W per X
-	int64_t dsdy, dtdy;     // delta S,T per Y
-	int64_t dwdy;           // delta W per Y
-
-	int32_t lodmin, lodmax; // min, max LOD values
-	int32_t lodbias;        // LOD bias
-	uint32_t lodmask;       // mask of available LODs
-	uint32_t lodoffset[9];  // offset of texture base for each LOD
-	int32_t lodbasetemp;    // lodbase calculated and used during raster
-	int32_t detailmax;      // detail clamp
-	int32_t detailbias;     // detail bias
-	uint8_t detailscale;    // detail scale
-
-	uint32_t wmask; // mask for the current texture width
-	uint32_t hmask; // mask for the current texture height
-
-	uint8_t bilinear_mask; // mask for bilinear resolution (0xf0 for V1,  0xff for V2)
-
-	ncc_table ncc[2]; // two NCC tables
-
-	const rgb_t* lookup;    // currently selected lookup
-	const rgb_t* texel[16]; // texel lookups for each format
-
-	rgb_t palette[256];  // palette lookup table
-	rgb_t palettea[256]; // palette+alpha lookup table
-};
-
-struct tmu_shared_state
-{
 	rgb_t rgb332[256]; // RGB 3-3-2 lookup table
 	rgb_t alpha8[256]; // alpha 8-bit lookup table
 	rgb_t int8[256];   // intensity 8-bit lookup table
@@ -777,8 +736,55 @@ struct tmu_shared_state
 	rgb_t argb4444[65536]; // ARGB 4-4-4-4 lookup table
 };
 
-struct setup_vertex
-{
+struct tmu_state {
+	void Initialize(const tmu_shared_state& tmu_shared,
+	                voodoo_reg* voodoo_registers, const int tmem);
+
+	uint8_t* ram            = {}; // pointer to aligned RAM
+	mem_buffer_t ram_buffer = {}; // Managed buffer backing the RAM
+	uint32_t mask           = {}; // mask to apply to pointers
+	voodoo_reg* reg         = {}; // pointer to our register base
+	bool regdirty = {}; // true if the LOD/mode/base registers have changed
+
+	enum {
+		texaddr_mask  = 0x0fffff,
+		texaddr_shift = 3,
+	};
+	// uint32_t	texaddr_mask= {}; // mask for texture address
+	// uint8_t texaddr_shift= {}; // shift for texture address
+
+	int64_t starts, startt = {}; // starting S,T (14.18)
+	int64_t startw = {};         // starting W (2.30)
+	int64_t dsdx, dtdx = {};     // delta S,T per X
+	int64_t dwdx = {};           // delta W per X
+	int64_t dsdy, dtdy = {};     // delta S,T per Y
+	int64_t dwdy = {};           // delta W per Y
+
+	int32_t lodmin, lodmax = {}; // min, max LOD values
+	int32_t lodbias       = {};  // LOD bias
+	uint32_t lodmask      = {};  // mask of available LODs
+	uint32_t lodoffset[9] = {};  // offset of texture base for each LOD
+	int32_t lodbasetemp   = {}; // lodbase calculated and used during raster
+	int32_t detailmax     = {}; // detail clamp
+	int32_t detailbias    = {}; // detail bias
+	uint8_t detailscale   = {}; // detail scale
+
+	uint32_t wmask = {}; // mask for the current texture width
+	uint32_t hmask = {}; // mask for the current texture height
+
+	// mask for bilinear resolution (0xf0 for V1,  0xff for V2)
+	uint8_t bilinear_mask = {};
+
+	ncc_table ncc[2] = {}; // two NCC tables
+
+	const rgb_t* lookup    = {}; // currently selected lookup
+	const rgb_t* texel[16] = {}; // texel lookups for each format
+
+	rgb_t palette[256]  = {}; // palette lookup table
+	rgb_t palettea[256] = {}; // palette+alpha lookup table
+};
+
+struct setup_vertex {
 	float x, y;       // X, Y coordinates
 	float a, r, g, b; // A, R, G, B values
 	float z, wb;      // Z and broadcast W values
@@ -3826,110 +3832,110 @@ static void init_fbi(fbi_state* f, int fbmem)
 	memset(&f->fogdelta, 0, sizeof(f->fogdelta));
 }
 
-static void init_tmu_shared(tmu_shared_state *s)
+constexpr void tmu_shared_state::Initialize()
 {
-	int val;
-
 	/* build static 8-bit texel tables */
-	for (val = 0; val < 256; val++)
-	{
-		int r;
-		int g;
-		int b;
-		int a;
+	for (int val = 0; val < 256; val++) {
+		int r = 0;
+		int g = 0;
+		int b = 0;
+		int a = 0;
 
 		/* 8-bit RGB (3-3-2) */
 		EXTRACT_332_TO_888(val, r, g, b);
-		s->rgb332[val] = MAKE_ARGB(0xff, r, g, b);
+		rgb332[val] = MAKE_ARGB(0xff, r, g, b);
 
 		/* 8-bit alpha */
-		s->alpha8[val] = MAKE_ARGB(val, val, val, val);
+		alpha8[val] = MAKE_ARGB(val, val, val, val);
 
 		/* 8-bit intensity */
-		s->int8[val] = MAKE_ARGB(0xff, val, val, val);
+		int8[val] = MAKE_ARGB(0xff, val, val, val);
 
 		/* 8-bit alpha, intensity */
 		a = ((val >> 0) & 0xf0) | ((val >> 4) & 0x0f);
 		r = ((val << 4) & 0xf0) | ((val << 0) & 0x0f);
-		s->ai44[val] = MAKE_ARGB(a, r, r, r);
+		ai44[val] = MAKE_ARGB(a, r, r, r);
 	}
 
 	/* build static 16-bit texel tables */
-	for (val = 0; val < 65536; val++)
-	{
-		int r;
-		int g;
-		int b;
-		int a;
+	for (int val = 0; val < 65536; val++) {
+		int r = 0;
+		int g = 0;
+		int b = 0;
+		int a = 0;
 
 		/* table 10 = 16-bit RGB (5-6-5) */
 		EXTRACT_565_TO_888(val, r, g, b);
-		s->rgb565[val] = MAKE_ARGB(0xff, r, g, b);
+		rgb565[val] = MAKE_ARGB(0xff, r, g, b);
 
 		/* table 11 = 16 ARGB (1-5-5-5) */
 		EXTRACT_1555_TO_8888(val, a, r, g, b);
-		s->argb1555[val] = MAKE_ARGB(a, r, g, b);
+		argb1555[val] = MAKE_ARGB(a, r, g, b);
 
 		/* table 12 = 16-bit ARGB (4-4-4-4) */
 		EXTRACT_4444_TO_8888(val, a, r, g, b);
-		s->argb4444[val] = MAKE_ARGB(a, r, g, b);
+		argb4444[val] = MAKE_ARGB(a, r, g, b);
 	}
 }
 
-static void init_tmu(voodoo_state *vs, tmu_state *t, voodoo_reg *reg, int tmem)
+void tmu_state::Initialize(const tmu_shared_state& tmu_shared,
+                           voodoo_reg* voodoo_registers, const int tmem)
 {
 	// Sanity check inputs
-	assert(vs);
-	assert(t);
-	assert(reg);
+	assert(voodoo_registers);
 	assert(tmem > 1);
 
 	// Allocate and align the texture RAM to 64-bit, which is the maximum type written
 	constexpr auto mem_alignment = sizeof(uint64_t);
-	std::tie(t->ram_buffer, t->ram) = make_unique_aligned_array<uint8_t>(mem_alignment, tmem);
-	assert(reinterpret_cast<uintptr_t>(t->ram) % mem_alignment == 0);
 
-	t->mask = (uint32_t)(tmem - 1);
-	t->reg = reg;
-	t->regdirty = true;
-	t->bilinear_mask = (vtype >= VOODOO_2) ? 0xff : 0xf0;
+	std::tie(ram_buffer,
+	         ram) = make_unique_aligned_array<uint8_t>(mem_alignment, tmem);
 
-	/* mark the NCC tables dirty and configure their registers */
-	t->ncc[0].dirty = t->ncc[1].dirty = true;
-	t->ncc[0].reg = &t->reg[nccTable+0];
-	t->ncc[1].reg = &t->reg[nccTable+12];
+	assert(reinterpret_cast<uintptr_t>(ram) % mem_alignment == 0);
 
-	/* create pointers to all the tables */
-	t->texel[0] = vs->tmushare.rgb332;
-	t->texel[1] = t->ncc[0].texel;
-	t->texel[2] = vs->tmushare.alpha8;
-	t->texel[3] = vs->tmushare.int8;
-	t->texel[4] = vs->tmushare.ai44;
-	t->texel[5] = t->palette;
-	t->texel[6] = (vtype >= VOODOO_2) ? t->palettea : nullptr;
-	t->texel[7] = nullptr;
-	t->texel[8] = vs->tmushare.rgb332;
-	t->texel[9] = t->ncc[0].texel;
-	t->texel[10] = vs->tmushare.rgb565;
-	t->texel[11] = vs->tmushare.argb1555;
-	t->texel[12] = vs->tmushare.argb4444;
-	t->texel[13] = vs->tmushare.int8;
-	t->texel[14] = t->palette;
-	t->texel[15] = nullptr;
-	t->lookup = t->texel[0];
+	mask = (uint32_t)(tmem - 1);
+	reg = voodoo_registers;
+	regdirty = true;
 
-	/* attach the palette to NCC table 0 */
-	t->ncc[0].palette = t->palette;
-	t->ncc[0].palettea = (vtype >= VOODOO_2) ? t->palettea : nullptr;
+	bilinear_mask = (vtype >= VOODOO_2) ? 0xff : 0xf0;
 
-	///* set up texture address calculations */
-	//t->texaddr_mask = 0x0fffff;
-	//t->texaddr_shift = 3;
+	// Mark the NCC tables dirty and configure their registers
+	ncc[0].dirty = ncc[1].dirty = true;
+	ncc[0].reg = &reg[nccTable + 0];
+	ncc[1].reg = &reg[nccTable + 12];
 
-	t->lodmin=0;
-	t->lodmax=0;
+	// create pointers to all the tables
+	texel[0]  = tmu_shared.rgb332;
+	texel[1]  = ncc[0].texel;
+	texel[2]  = tmu_shared.alpha8;
+	texel[3]  = tmu_shared.int8;
+	texel[4]  = tmu_shared.ai44;
+	texel[5]  = palette;
+	texel[6]  = (vtype >= VOODOO_2) ? palettea : nullptr;
+	texel[7]  = nullptr;
+	texel[8]  = tmu_shared.rgb332;
+	texel[9]  = ncc[0].texel;
+	texel[10] = tmu_shared.rgb565;
+	texel[11] = tmu_shared.argb1555;
+	texel[12] = tmu_shared.argb4444;
+	texel[13] = tmu_shared.int8;
+	texel[14] = palette;
+	texel[15] = nullptr;
+
+	lookup = texel[0];
+
+	// attach the palette to NCC table 0 */
+	ncc[0].palette  = palette;
+	ncc[0].palettea = (vtype >= VOODOO_2) ? palettea : nullptr;
+
+	// Set up texture address calculations
+
+	// texaddr_mask = 0x0fffff;
+	// texaddr_shift = 3;
+
+	lodmin = 0;
+	lodmax = 0;
 }
-
 
 /*************************************
  *
@@ -7217,13 +7223,13 @@ void voodoo_state::Initialize()
 	tmu[1].lookup = nullptr;
 
 	/* build shared TMU tables */
-	init_tmu_shared(&tmushare);
+	tmushare.Initialize();
 
 	/* set up the TMUs */
-	init_tmu(this, &tmu[0], &reg[0x100], tmumem0 << 20);
+	tmu[0].Initialize(tmushare, &reg[0x100], tmumem0 << 20);
 	chipmask |= 0x02;
 	if (tmumem1 != 0) {
-		init_tmu(this, &tmu[1], &reg[0x200], tmumem1 << 20);
+		tmu[1].Initialize(tmushare, &reg[0x200], tmumem1 << 20);
 		chipmask |= 0x04;
 		tmu_config |= 0x40;
 	}
