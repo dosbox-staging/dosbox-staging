@@ -1026,6 +1026,7 @@ struct voodoo_state {
 
 	void SetupAndDrawTriangle();
 	void SwapBuffers();
+	void RecomputeVideoMemory();
 
 	void ResetCounters();
 	void SoftReset();
@@ -3953,7 +3954,8 @@ void tmu_state::Initialize(const tmu_shared_state& tmu_shared,
 
 void voodoo_state::SwapBuffers()
 {
-	//if (LOG_VBLANK_SWAP) LOG(LOG_VOODOO,LOG_WARN)("--- swap_buffers @ %d\n", video_screen_get_vpos(vs->screen));
+	// if (LOG_VBLANK_SWAP) LOG(LOG_VOODOO,LOG_WARN)("--- swap_buffers @
+	// %d\n", video_screen_get_vpos(screen));
 
 #ifdef C_ENABLE_VOODOO_OPENGL
 	if (ogl && active) {
@@ -3984,103 +3986,101 @@ void voodoo_state::SwapBuffers()
  *
  *************************************/
 
-static void recompute_video_memory(voodoo_state *vs)
+void voodoo_state::RecomputeVideoMemory()
 {
-	const auto regs = vs->reg;
+	const uint32_t buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(reg[fbiInit2].u);
 
-	const uint32_t buffer_pages = FBIINIT2_VIDEO_BUFFER_OFFSET(regs[fbiInit2].u);
+	const uint32_t fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(
+	        reg[fbiInit4].u);
 
-	const uint32_t fifo_start_page = FBIINIT4_MEMORY_FIFO_START_ROW(regs[fbiInit4].u);
-
-	uint32_t fifo_last_page = FBIINIT4_MEMORY_FIFO_STOP_ROW(regs[fbiInit4].u);
+	uint32_t fifo_last_page = FBIINIT4_MEMORY_FIFO_STOP_ROW(reg[fbiInit4].u);
 	uint32_t memory_config;
 	int buf;
 
-	/* memory config is determined differently between V1 and V2 */
-	memory_config = FBIINIT2_ENABLE_TRIPLE_BUF(regs[fbiInit2].u);
+	// memory config is determined differently between V1 and V2
+	memory_config = FBIINIT2_ENABLE_TRIPLE_BUF(reg[fbiInit2].u);
 	if (vtype == VOODOO_2 && memory_config == 0) {
-		memory_config = FBIINIT5_BUFFER_ALLOCATION(regs[fbiInit5].u);
+		memory_config = FBIINIT5_BUFFER_ALLOCATION(reg[fbiInit5].u);
 	}
 
-	/* tiles are 64x16/32; x_tiles specifies how many half-tiles */
-	auto& fbi = vs->fbi;
-
+	// Tiles are 64x16/32; x_tiles specifies how many half-tiles
 	fbi.tile_width  = (vtype < VOODOO_2) ? 64 : 32;
 	fbi.tile_height = (vtype < VOODOO_2) ? 16 : 32;
 
-	fbi.x_tiles = FBIINIT1_X_VIDEO_TILES(regs[fbiInit1].u);
+	fbi.x_tiles = FBIINIT1_X_VIDEO_TILES(reg[fbiInit1].u);
 
 	if (vtype == VOODOO_2)
 	{
 		fbi.x_tiles = (fbi.x_tiles << 1) |
-		              (FBIINIT1_X_VIDEO_TILES_BIT5(regs[fbiInit1].u) << 5) |
-		              (FBIINIT6_X_VIDEO_TILES_BIT0(regs[fbiInit6].u));
+		              (FBIINIT1_X_VIDEO_TILES_BIT5(reg[fbiInit1].u) << 5) |
+		              (FBIINIT6_X_VIDEO_TILES_BIT0(reg[fbiInit6].u));
 	}
 	fbi.rowpixels = fbi.tile_width * fbi.x_tiles;
 
 	// logerror("VOODOO.%d.VIDMEM: buffer_pages=%X  fifo=%X-%X  tiles=%X
-	// rowpix=%d\n", vs->index, buffer_pages, fifo_start_page,
+	// rowpix=%d\n", index, buffer_pages, fifo_start_page,
 	// fifo_last_page, fbi.x_tiles, fbi.rowpixels);
 
-	/* first RGB buffer always starts at 0 */
+	// First RGB buffer always starts at 0
 	fbi.rgboffs[0] = 0;
 
-	/* second RGB buffer starts immediately afterwards */
+	// Second RGB buffer starts immediately afterwards
 	fbi.rgboffs[1] = buffer_pages * 0x1000;
 
-	/* remaining buffers are based on the config */
+	// Remaining buffers are based on the config
 	switch (memory_config)
 	{
-	case 3: /* reserved */
-		LOG(LOG_VOODOO,LOG_WARN)("VOODOO.ERROR:Unexpected memory configuration in recompute_video_memory!");
+	case 3: // reserved
+		LOG(LOG_VOODOO, LOG_WARN)
+		("VOODOO.ERROR:Unexpected memory configuration in RecomputeVideoMemory!");
 		[[fallthrough]];
 
-	case 0:	/* 2 color buffers, 1 aux buffer */
+	case 0: // 2 color buffers, 1 aux buffer
 		fbi.rgboffs[2] = (uint32_t)(~0);
 		fbi.auxoffs    = 2 * buffer_pages * 0x1000;
 		break;
 
-	case 1:	/* 3 color buffers, 0 aux buffers */
+	case 1: // 3 color buffers, 0 aux buffers
 		fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
 		fbi.auxoffs    = (uint32_t)(~0);
 		break;
 
-	case 2:	/* 3 color buffers, 1 aux buffers */
+	case 2: // 3 color buffers, 1 aux buffers
 		fbi.rgboffs[2] = 2 * buffer_pages * 0x1000;
 		fbi.auxoffs    = 3 * buffer_pages * 0x1000;
 		break;
 	}
 
-	/* clamp the RGB buffers to video memory */
+	// Clamp the RGB buffers to video memory
 	for (buf = 0; buf < 3; buf++) {
 		if (fbi.rgboffs[buf] != (uint32_t)(~0) && fbi.rgboffs[buf] > fbi.mask) {
 			fbi.rgboffs[buf] = fbi.mask;
 		}
 	}
 
-	/* clamp the aux buffer to video memory */
+	// Clamp the aux buffer to video memory
 	if (fbi.auxoffs != (uint32_t)(~0) && fbi.auxoffs > fbi.mask) {
 		fbi.auxoffs = fbi.mask;
 	}
 
-	/* compute the memory FIFO location and size */
+	// Compute the memory FIFO location and size
 	if (fifo_last_page > fbi.mask / 0x1000) {
 		fifo_last_page = fbi.mask / 0x1000;
 	}
 
-	/* is it valid and enabled? */
+	// Is it valid and enabled?
 	if (fifo_start_page <= fifo_last_page &&
-	    FBIINIT0_ENABLE_MEMORY_FIFO(regs[fbiInit0].u)) {
+	    FBIINIT0_ENABLE_MEMORY_FIFO(reg[fbiInit0].u)) {
 		fbi.fifo.size = (fifo_last_page + 1 - fifo_start_page) * 0x1000 / 4;
 		if (fbi.fifo.size > 65536 * 2) {
 			fbi.fifo.size = 65536 * 2;
 		}
-	} else /* if not, disable the FIFO */
+	} else // If not, disable the FIFO
 	{
 		fbi.fifo.size = 0;
 	}
 
-	/* reset our front/back buffers if they are out of range */
+	// Reset our front/back buffers if they are out of range
 	if (fbi.rgboffs[2] == (uint32_t)(~0)) {
 		if (fbi.frontbuf == 2) {
 			fbi.frontbuf = 0;
@@ -5795,7 +5795,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 				/* if changing dimensions, update video memory
 				 * layout */
 				if (regnum == videoDimensions) {
-					recompute_video_memory(this);
+					RecomputeVideoMemory();
 				}
 
 				UpdateScreenStart();
@@ -5818,7 +5818,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 			if (FBIINIT0_GRAPHICS_RESET(data)) {
 				SoftReset();
 			}
-			recompute_video_memory(this);
+			RecomputeVideoMemory();
 		}
 		break;
 
@@ -5839,7 +5839,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 	case fbiInit4:
 		if (((chips & 1) != 0) && INITEN_ENABLE_HW_INIT(pci.init_enable)) {
 			reg[regnum].u = data;
-			recompute_video_memory(this);
+			RecomputeVideoMemory();
 		}
 		break;
 
@@ -5848,7 +5848,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 			reg[regnum].u = data;
 			alt_regmap    = (FBIINIT3_TRI_REGISTER_REMAP(data) > 0);
 			fbi.yorigin = FBIINIT3_YORIGIN_SUBTRACT(reg[fbiInit3].u);
-			recompute_video_memory(this);
+			RecomputeVideoMemory();
 		}
 		break;
 
@@ -7244,7 +7244,7 @@ void voodoo_state::Initialize()
 	/* do a soft reset to reset everything else */
 	SoftReset();
 
-	recompute_video_memory(this);
+	RecomputeVideoMemory();
 }
 
 void voodoo_state::VblankFlush()
