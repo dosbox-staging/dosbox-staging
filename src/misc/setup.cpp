@@ -1632,31 +1632,12 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 		}
 	}
 
-	// Once we've parsed all the potential conf files, we've down our best
+	// Once we've parsed all the potential config files, we've down our best
 	// to discover the user's desired language. At this point, we can now
-	// initialize the messaging system which honors the language and loads
+	// initialise the messaging system which honours the language and loads
 	// those messages.
 	if (const auto sec = control->GetSection("dosbox"); sec) {
 		MSG_Init(static_cast<Section_prop*>(sec));
-	}
-
-	// Create a new primary if permitted and no other conf was loaded
-	if (load_primary_config && !control->configfiles.size()) {
-		std::string new_config_path = config_dir.string();
-
-		Cross::CreatePlatformConfigDir(new_config_path);
-		Cross::GetPlatformConfigName(config_file);
-
-		const std::string config_combined = new_config_path + config_file;
-
-		if (control->WriteConfig(config_combined)) {
-			LOG_MSG("CONFIG: Wrote new primary config file '%s'",
-			        config_combined.c_str());
-			control->ParseConfigFile("new primary", config_combined);
-		} else {
-			LOG_WARNING("CONFIG: Unable to write a new primary config file '%s'",
-			            config_combined.c_str());
-		}
 	}
 }
 

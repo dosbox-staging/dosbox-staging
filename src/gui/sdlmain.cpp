@@ -4595,6 +4595,25 @@ int sdl_main(int argc, char *argv[])
 		sdl_version.major, sdl_version.minor, sdl_version.patch,
 		SDL_GetCurrentVideoDriver(), SDL_GetCurrentAudioDriver());
 
+	// Write the default primary config if it doesn't exist when not in secure
+	// mode.
+	if (!arguments->securemode) {
+		const auto primary_config_path = SETUP_GetPrimaryConfigPath();
+
+		if (!path_exists(primary_config_path)) {
+			// No config is loaded at this point, so we're writing the default
+			// settings to the primary config.
+			const auto path_string = primary_config_path.string();
+			if (control->WriteConfig(path_string)) {
+				LOG_MSG("CONFIG: Created primary config file '%s'",
+				        path_string.c_str());
+			} else {
+				LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
+				            path_string.c_str());
+			}
+		}
+	}
+
 	const auto config_path = get_platform_config_dir();
 	SETUP_ParseConfigFiles(config_path);
 
