@@ -4310,21 +4310,26 @@ void config_add_sdl() {
 
 static int LaunchEditor()
 {
-	std::string path, file;
-	Cross::CreatePlatformConfigDir(path);
-	Cross::GetPlatformConfigName(file);
-	path += file;
+	std::string config_dir_path;
+	Cross::CreatePlatformConfigDir(config_dir_path);
 
-	FILE *f = fopen(path.c_str(), "r");
+	const auto path        = SETUP_GetPrimaryConfigPath();
+	const auto path_string = path.string();
+
+	FILE* f = fopen(path_string.c_str(), "r");
 	if (!f && !control->WriteConfig(path)) {
-		fprintf(stderr, "Tried creating '%s', but failed.\n", path.c_str());
+		fprintf(stderr,
+		        "Tried creating '%s', but failed.\n",
+		        path_string.c_str());
 		return 1;
 	}
-	if (f)
-		fclose(f);
 
-	auto replace_with_process = [path](const std::string &prog) {
-		execlp(prog.c_str(), prog.c_str(), path.c_str(), (char *)nullptr);
+	if (f) {
+		fclose(f);
+	}
+
+	auto replace_with_process = [&](const std::string& prog) {
+		execlp(prog.c_str(), prog.c_str(), path_string.c_str(), (char*)nullptr);
 	};
 
 	// Loop until one succeeds
@@ -4335,9 +4340,10 @@ static int LaunchEditor()
 		}
 	}
 
-	const char *env_editor = getenv("EDITOR");
-	if (env_editor)
+	const char* env_editor = getenv("EDITOR");
+	if (env_editor) {
 		replace_with_process(env_editor);
+	}
 
 	replace_with_process("nano");
 	replace_with_process("vim");
@@ -4345,9 +4351,11 @@ static int LaunchEditor()
 	replace_with_process("notepad++.exe");
 	replace_with_process("notepad.exe");
 
-	fprintf(stderr, "Can't find any text editors.\n"
-	                "You can set the EDITOR env variable to your preferred "
-	                "text editor.\n");
+	fprintf(stderr,
+	        "Can't find any text editors.\n"
+	        "You can set the EDITOR env variable to your preferred "
+	        "text editor.\n");
+
 	return 1;
 }
 
@@ -4406,35 +4414,40 @@ static void ListGlShaders()
 
 static int PrintConfigLocation()
 {
-	std::string file;
-	Cross::GetPlatformConfigName(file);
-	const auto path = (get_platform_config_dir() / file).string();
+	const auto path = SETUP_GetPrimaryConfigPath();
+	const auto path_string = path.string();
 
-	FILE* f = fopen(path.c_str(), "r");
+	FILE* f = fopen(path_string.c_str(), "r");
 	if (!f && !control->WriteConfig(path)) {
-		fprintf(stderr, "Tried creating '%s', but failed.\n", path.c_str());
+		fprintf(stderr, "Tried creating '%s', but failed.\n", path_string.c_str());
 		return 1;
 	}
 	if (f) {
 		fclose(f);
 	}
-	printf("%s\n", path.c_str());
+	printf("%s\n", path_string.c_str());
 	return 0;
 }
 
-static void eraseconfigfile() {
-	FILE* f = fopen("dosbox.conf","r");
-	if(f) {
+static void eraseconfigfile()
+{
+	FILE* f = fopen("dosbox.conf", "r");
+	if (f) {
 		fclose(f);
-		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nThis will override the configuration file at runtime.\n");
+		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\n"
+		            "This will override the configuration file at runtime.\n");
 	}
-	std::string file;
-	Cross::GetPlatformConfigName(file);
-	const auto path = (get_platform_config_dir() / file).string();
-	f = fopen(path.c_str(),"r");
-	if(!f) exit(0);
+
+	const auto path = SETUP_GetPrimaryConfigPath();
+	const auto path_string = path.string();
+
+	f = fopen(path_string.c_str(), "r");
+	if (!f) {
+		exit(0);
+	}
 	fclose(f);
-	unlink(path.c_str());
+	unlink(path_string.c_str());
+
 	exit(0);
 }
 
