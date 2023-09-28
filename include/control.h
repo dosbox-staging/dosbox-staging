@@ -66,23 +66,27 @@ struct CommandLineArguments {
 
 class Config {
 public:
-	CommandLine * cmdline = nullptr;
+	CommandLine* cmdline = nullptr;
+
 	CommandLineArguments arguments = {};
 
 private:
-	std::deque<Section*> sectionlist = {};
+	std::deque<Section*> sectionlist          = {};
 	Section_line overwritten_autoexec_section = {};
-	std::string overwritten_autoexec_conf = {};
+	std::string overwritten_autoexec_conf     = {};
+
 	void (*_start_function)(void) = nullptr;
-	bool secure_mode = false; // Sandbox mode
+
+	bool secure_mode = false;
+
 	void ParseArguments();
 
 public:
-	std::vector<std::string> startup_params = {};
-	std::vector<std::string> configfiles = {};
+	std::vector<std::string> startup_params        = {};
+	std::vector<std::string> configfiles           = {};
 	std::vector<std_fs::path> configFilesCanonical = {};
 
-	Config(CommandLine *cmd)
+	Config(CommandLine* cmd)
 	        : cmdline(cmd),
 	          overwritten_autoexec_section("overwritten-autoexec")
 	{
@@ -93,45 +97,58 @@ public:
 	}
 
 	Config() = default;
-	Config(Config &&source) noexcept;            // move constructor
-	Config(const Config &) = delete;             // block construct-by-value
-	Config &operator=(Config &&source) noexcept; // move assignment
-	Config &operator=(const Config &) = delete;  // block assign-by-value
+	Config(Config&& source) noexcept;            // move constructor
+	Config(const Config&) = delete;              // block construct-by-value
+	Config& operator=(Config&& source) noexcept; // move assignment
+	Config& operator=(const Config&) = delete;   // block assign-by-value
 
 	~Config();
 
-	Section_prop *AddEarlySectionProp(const char *name,
-	                                  SectionFunction func,
+	Section_prop* AddEarlySectionProp(const char* name, SectionFunction func,
 	                                  bool changeable_at_runtime = false);
 
-	Section_line *AddSection_line(const char *section_name, SectionFunction func);
+	Section_line* AddSection_line(const char* section_name, SectionFunction func);
 
-	Section_prop *AddSection_prop(const char *section_name,
-	                              SectionFunction func,
+	Section_prop* AddSection_prop(const char* section_name, SectionFunction func,
 	                              bool changeable_at_runtime = false);
 
-	auto begin() { return sectionlist.begin(); }
-	auto end() { return sectionlist.end(); }
+	auto begin()
+	{
+		return sectionlist.begin();
+	}
+	auto end()
+	{
+		return sectionlist.end();
+	}
 
-	Section *GetSection(const std::string &section_name) const;
-	Section *GetSectionFromProperty(const char *prop) const;
+	Section* GetSection(const std::string& section_name) const;
+	Section* GetSectionFromProperty(const char* prop) const;
 
-	void OverwriteAutoexec(const std::string &conf, const std::string &line);
-	const Section_line &GetOverwrittenAutoexecSection() const;
-	const std::string &GetOverwrittenAutoexecConf() const;
+	void OverwriteAutoexec(const std::string& conf, const std::string& line);
+	const Section_line& GetOverwrittenAutoexecSection() const;
+	const std::string& GetOverwrittenAutoexecConf() const;
 
 	void SetStartUp(void (*_function)(void));
 	void Init() const;
 	void ShutDown();
 	void StartUp();
 
-	bool WriteConfig(const std::string &filename) const;
+	bool WriteConfig(const std::string& filename) const;
 	bool ParseConfigFile(const std::string& type,
 	                     const std::string& config_file_name);
 
 	void ParseEnv();
-	bool SecureMode() const { return secure_mode; }
-	void SwitchToSecureMode() { secure_mode = true; }//can't be undone
+
+	bool SecureMode() const
+	{
+		return secure_mode;
+	}
+
+	void SwitchToSecureMode()
+	{
+		secure_mode = true;
+	}
+
 	Verbosity GetStartupVerbosity() const;
 };
 
