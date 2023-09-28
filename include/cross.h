@@ -114,7 +114,7 @@ std_fs::path resolve_home(const std::string &str) noexcept;
 
 class Cross {
 public:
-	static void GetPlatformConfigName(std::string& in);
+	static std::string GetPrimaryConfigName();
 	static void CreatePlatformConfigDir(std::string& in);
 	static bool IsPathAbsolute(const std::string& in);
 };

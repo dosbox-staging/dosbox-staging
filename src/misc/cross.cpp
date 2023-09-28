@@ -55,7 +55,7 @@
 #include "support.h"
 #include "drives.h"
 
-static std::string GetConfigName()
+std::string Cross::GetPrimaryConfigName()
 {
 	return CANONICAL_PROJECT_NAME ".conf";
 }
@@ -78,15 +78,15 @@ static std::string DetermineConfigPath()
 static std::string DetermineConfigPath()
 {
 	const auto conf_path = get_xdg_config_home() / "dosbox";
-	std::error_code ec = {};
+	std::error_code ec   = {};
 
-	if (std_fs::exists(conf_path / GetConfigName())) {
+	if (std_fs::exists(conf_path / Cross::GetPrimaryConfigName())) {
 		return conf_path;
 	}
 
 	auto fallback_to_deprecated = []() {
 		const std::string old_conf_path = resolve_home("~/.dosbox").string();
-		if (path_exists(old_conf_path + "/" + GetConfigName())) {
+		if (path_exists(old_conf_path + "/" + Cross::GetPrimaryConfigName())) {
 			LOG_WARNING("CONFIG: Falling back to deprecated path (~/.dosbox) due to errors");
 			LOG_WARNING("CONFIG: Please investigate the problems and try again");
 		}
@@ -113,15 +113,17 @@ static std::string DetermineConfigPath()
 		LOG_ERR("CONFIG: Path '%s' exists, but it's a file",
 		        conf_path.c_str());
 		return fallback_to_deprecated();
-
 	}
 
 	if (std_fs::is_symlink(conf_path, ec)) {
 		auto target_path = std_fs::read_symlink(conf_path, ec);
 
-		// If it's a symlink to a symlink, then keep reading them
-		auto num_symlinks_read = 1; // but bail out if they're circular links
-		while (std_fs::is_symlink(target_path, ec) && num_symlinks_read++ < 100) {
+		// If it's a symlink to a symlink, then keep reading them...
+		auto num_symlinks_read = 1;
+
+		// ...but bail out if they're circular links
+		while (std_fs::is_symlink(target_path, ec) &&
+		       num_symlinks_read++ < 100) {
 			target_path = std_fs::read_symlink(target_path, ec);
 		}
 		// If the last symlink points to a directory, then we'll take it
@@ -180,7 +182,8 @@ std_fs::path get_platform_config_dir()
 		return conf_dir;
 
 	// Check if a portable layout exists
-	const auto portable_conf_path = GetExecutablePath() / GetConfigName();
+	const auto portable_conf_path = GetExecutablePath() /
+	                                Cross::GetPrimaryConfigName();
 
 	std::error_code ec = {};
 	if (std_fs::is_regular_file(portable_conf_path, ec)) {
@@ -201,11 +204,6 @@ std_fs::path get_platform_config_dir()
 	conf_dir = cached_conf_path;
 #endif
 	return conf_dir;
-}
-
-void Cross::GetPlatformConfigName(std::string &in)
-{
-	in = GetConfigName();
 }
 
 void Cross::CreatePlatformConfigDir(std::string &in)
