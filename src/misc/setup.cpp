@@ -1607,9 +1607,8 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 	const bool load_primary_config = !arguments->noprimaryconf;
 
 	if (load_primary_config) {
-		Cross::GetPlatformConfigName(config_file);
-		const auto cfg = config_dir / config_file;
-		control->ParseConfigFile("primary", cfg.string());
+		const auto config_path = config_dir / Cross::GetPrimaryConfigName();
+		control->ParseConfigFile("primary", config_path.string());
 	}
 
 	// Second: parse the local 'dosbox.conf', if present
@@ -1643,9 +1642,7 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 
 std_fs::path SETUP_GetPrimaryConfigPath()
 {
-	std::string name;
-	Cross::GetPlatformConfigName(name);
-	return get_platform_config_dir() / name;
+	return get_platform_config_dir() / Cross::GetPrimaryConfigName();
 }
 
 static char return_msg[200];

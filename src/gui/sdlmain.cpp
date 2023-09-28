@@ -4614,16 +4614,16 @@ int sdl_main(int argc, char *argv[])
 		const auto primary_config_path = SETUP_GetPrimaryConfigPath();
 
 		if (!path_exists(primary_config_path)) {
-			// No config is loaded at this point, so we're writing the default
-			// settings to the primary config.
-			const auto path_string = primary_config_path.string();
-			if (control->WriteConfig(path_string)) {
-				LOG_MSG("CONFIG: Created primary config file '%s'",
-				        path_string.c_str());
-			} else {
-				LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
-				            path_string.c_str());
-			}
+				// No config is loaded at this point, so we're
+				// writing the default settings to the primary
+				// config.
+				if (control->WriteConfig(primary_config_path)) {
+					LOG_MSG("CONFIG: Created primary config file '%s'",
+					        primary_config_path.string().c_str());
+				} else {
+					LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
+					            primary_config_path.string().c_str());
+				}
 		}
 	}
 
