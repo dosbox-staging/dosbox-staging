@@ -432,13 +432,7 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 				return;
 			}
-			std::string name;
-			Cross::GetPlatformConfigName(name);
-
-			// write file to the default config directory
-			const auto config_path = get_platform_config_dir() / name;
-			name = config_path.string();
-			WriteConfig(name);
+			WriteConfig(SETUP_GetPrimaryConfigPath().string());
 			break;
 		}
 		case P_WRITECONF:
