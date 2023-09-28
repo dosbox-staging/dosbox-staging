@@ -988,12 +988,12 @@ std::string Section_line::GetPropValue(const std::string&) const
 	return NO_SUCH_PROPERTY;
 }
 
-bool Config::WriteConfig(const std::string& filename) const
+bool Config::WriteConfig(const std_fs::path& path) const
 {
 	char temp[50];
 	char helpline[256];
 
-	FILE* outfile = fopen(filename.c_str(), "w+t");
+	FILE* outfile = fopen(path.string().c_str(), "w+t");
 	if (!outfile) {
 		return false;
 	}

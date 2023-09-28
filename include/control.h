@@ -133,7 +133,7 @@ public:
 	void ShutDown();
 	void StartUp();
 
-	bool WriteConfig(const std::string& filename) const;
+	bool WriteConfig(const std_fs::path& path) const;
 	bool ParseConfigFile(const std::string& type,
 	                     const std::string& config_file_name);
 
