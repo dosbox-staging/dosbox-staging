@@ -4316,7 +4316,7 @@ static int LaunchEditor()
 	path += file;
 
 	FILE *f = fopen(path.c_str(), "r");
-	if (!f && !control->PrintConfig(path)) {
+	if (!f && !control->WriteConfig(path)) {
 		fprintf(stderr, "Tried creating '%s', but failed.\n", path.c_str());
 		return 1;
 	}
@@ -4410,13 +4410,14 @@ static int PrintConfigLocation()
 	Cross::GetPlatformConfigName(file);
 	const auto path = (get_platform_config_dir() / file).string();
 
-	FILE *f = fopen(path.c_str(), "r");
-	if (!f && !control->PrintConfig(path)) {
+	FILE* f = fopen(path.c_str(), "r");
+	if (!f && !control->WriteConfig(path)) {
 		fprintf(stderr, "Tried creating '%s', but failed.\n", path.c_str());
 		return 1;
 	}
-	if (f)
+	if (f) {
 		fclose(f);
+	}
 	printf("%s\n", path.c_str());
 	return 0;
 }

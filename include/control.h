@@ -124,9 +124,11 @@ public:
 	void Init() const;
 	void ShutDown();
 	void StartUp();
-	bool PrintConfig(const std::string &filename) const;
+
+	bool WriteConfig(const std::string &filename) const;
 	bool ParseConfigFile(const std::string& type,
 	                     const std::string& config_file_name);
+
 	void ParseEnv();
 	bool SecureMode() const { return secure_mode; }
 	void SwitchToSecureMode() { secure_mode = true; }//can't be undone
