@@ -988,7 +988,7 @@ std::string Section_line::GetPropValue(const std::string&) const
 	return NO_SUCH_PROPERTY;
 }
 
-bool Config::PrintConfig(const std::string& filename) const
+bool Config::WriteConfig(const std::string& filename) const
 {
 	char temp[50];
 	char helpline[256];
@@ -1646,7 +1646,7 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 
 		const std::string config_combined = new_config_path + config_file;
 
-		if (control->PrintConfig(config_combined)) {
+		if (control->WriteConfig(config_combined)) {
 			LOG_MSG("CONFIG: Wrote new primary config file '%s'",
 			        config_combined.c_str());
 			control->ParseConfigFile("new primary", config_combined);

@@ -311,7 +311,7 @@ private:
 	void WriteConfig(const std::string& name)
 	{
 		WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_WHICH"), name.c_str());
-		if (!control->PrintConfig(name)) {
+		if (!control->WriteConfig(name)) {
 			WriteOut(MSG_Get("PROGRAM_CONFIG_FILE_ERROR"), name.c_str());
 		}
 		return;
