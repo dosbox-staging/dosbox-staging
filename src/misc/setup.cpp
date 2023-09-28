@@ -1593,31 +1593,34 @@ const std::string& SETUP_GetLanguage()
 	return lang;
 }
 
+// forward declaration
+void MSG_Init(Section_prop*);
+
 // Parse the user's configuration files starting with the primary, then custom
 // -conf's, and finally the local dosbox.conf
-void MSG_Init(Section_prop*);
 void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 {
 	std::string config_file;
 	const auto arguments = &control->arguments;
 
-	// First: parse the user's primary config file
-	const bool wants_primary_conf = !arguments->noprimaryconf;
+	// First: parse the user's primary 'dosbox-staging.conf' config file
+	const bool load_primary_config = !arguments->noprimaryconf;
 
-	if (wants_primary_conf) {
+	if (load_primary_config) {
 		Cross::GetPlatformConfigName(config_file);
 		const auto cfg = config_dir / config_file;
 		control->ParseConfigFile("primary", cfg.string());
 	}
 
 	// Second: parse the local 'dosbox.conf', if present
-	const bool wants_local_conf = !arguments->nolocalconf;
+	const bool load_local_config = !arguments->nolocalconf;
 
-	if (wants_local_conf) {
+	if (load_local_config) {
 		control->ParseConfigFile("local", "dosbox.conf");
 	}
 
-	// Finally: layer on custom -conf <files>
+	// Finally: layer on additional config files specified with the '-conf'
+	// switch
 	for (const auto& config_file : arguments->conf) {
 		if (!control->ParseConfigFile("custom", config_file)) {
 			// Try to load it from the user directory
@@ -1638,7 +1641,7 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 	}
 
 	// Create a new primary if permitted and no other conf was loaded
-	if (wants_primary_conf && !control->configfiles.size()) {
+	if (load_primary_config && !control->configfiles.size()) {
 		std::string new_config_path = config_dir.string();
 
 		Cross::CreatePlatformConfigDir(new_config_path);
