@@ -45,7 +45,7 @@ static void FPU_FFREE(Bitu st) {
 }
 
 
-#if C_FPU_X86
+#if 0
 #include "../../fpu/fpu_instructions_x86.h"
 #else
 #include "../../fpu/fpu_instructions.h"

@@ -67,7 +67,7 @@ void FPU_GetPRegsTo(uint8_t dyn_regs[8][10])
 	}
 }
 
-#if C_FPU_X86
+#if 0
 #include "fpu_instructions_x86.h"
 #else
 #include "fpu_instructions.h"
