@@ -1657,6 +1657,13 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 	}
 }
 
+std_fs::path SETUP_GetPrimaryConfigPath()
+{
+	std::string name;
+	Cross::GetPlatformConfigName(name);
+	return get_platform_config_dir() / name;
+}
+
 static char return_msg[200];
 const char* SetProp(std::vector<std::string>& pvars)
 {
