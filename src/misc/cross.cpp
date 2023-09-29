@@ -154,23 +154,34 @@ void CROSS_DetermineConfigPaths()
 
 void CROSS_DetermineConfigPaths() {}
 
-static void W32_ConfDir(std::string& in,bool create) {
-	int c = create?1:0;
-	char result[MAX_PATH] = { 0 };
-	BOOL r = SHGetSpecialFolderPath(nullptr,result,CSIDL_LOCAL_APPDATA,c);
-	if(!r || result[0] == 0) r = SHGetSpecialFolderPath(nullptr,result,CSIDL_APPDATA,c);
-	if(!r || result[0] == 0) {
-		const char* windir = getenv("windir");
-		if(!windir) windir = "c:\\windows";
-		safe_strcpy(result, windir);
-		const char* appdata = "\\Application Data";
-		size_t len = safe_strlen(result);
-		if (len + strlen(appdata) < MAX_PATH)
-			safe_strcat(result, appdata);
-		if (create)
-			mkdir(result);
+static std::string get_or_create_win32_config_dir(bool create)
+{
+	int c = create ? 1 : 0;
+
+	char path[MAX_PATH] = {0};
+
+	BOOL r = SHGetSpecialFolderPath(nullptr, path, CSIDL_LOCAL_APPDATA, c);
+	if (!r || path[0] == 0) {
+		r = SHGetSpecialFolderPath(nullptr, path, CSIDL_APPDATA, c);
 	}
-	in = result;
+
+	if (!r || path[0] == 0) {
+		const char* windir = getenv("windir");
+		if (!windir) {
+			windir = "c:\\windows";
+		}
+		safe_strcpy(path, windir);
+		const char* appdata = "\\Application Data";
+
+		size_t len = safe_strlen(path);
+		if (len + strlen(appdata) < MAX_PATH) {
+			safe_strcat(path, appdata);
+		}
+		if (create) {
+			mkdir(path);
+		}
+	}
+	return path;
 }
 #endif
 
@@ -196,8 +207,8 @@ std_fs::path get_platform_config_dir()
 
 	// Otherwise get the OS-specific configuration directory
 #ifdef WIN32
-	std::string win_conf_dir;
-	W32_ConfDir(win_conf_dir, false);
+	constexpr auto create = false;
+	const auto win_conf_dir = get_or_create_win32_config_dir(create);
 	conf_dir = std_fs::path(win_conf_dir) / "DOSBox";
 #else
 	assert(!cached_conf_path.empty());
@@ -209,7 +220,8 @@ std_fs::path get_platform_config_dir()
 void Cross::CreatePlatformConfigDir(std::string &in)
 {
 #ifdef WIN32
-	W32_ConfDir(in,true);
+	constexpr auto create = true;
+	in = get_or_create_win32_config_dir(create);
 	in += "\\DOSBox";
 #else
 	assert(!cached_conf_path.empty());
