@@ -66,7 +66,7 @@ std::string cached_conf_path;
 
 #if defined(MACOSX)
 
-static std::string DetermineConfigPath()
+static std::string determine_config_path()
 {
 	const auto conf_path = resolve_home("~/Library/Preferences/DOSBox");
 	create_dir(conf_path, 0700);
@@ -75,7 +75,7 @@ static std::string DetermineConfigPath()
 
 #else
 
-static std::string DetermineConfigPath()
+static std::string determine_config_path()
 {
 	const auto conf_path = get_xdg_config_home() / "dosbox";
 	std::error_code ec   = {};
@@ -145,7 +145,7 @@ static std::string DetermineConfigPath()
 void CROSS_DetermineConfigPaths()
 {
 	if (cached_conf_path.empty())
-		cached_conf_path = DetermineConfigPath();
+		cached_conf_path = determine_config_path();
 }
 
 #endif // !WIN32
