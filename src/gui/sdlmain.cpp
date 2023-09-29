@@ -4309,7 +4309,7 @@ static void config_add_sdl() {
 	pstring->Set_values(ssopts);
 }
 
-static int LaunchEditor()
+static int edit_primary_config()
 {
 	std::string config_dir_path;
 	Cross::CreatePlatformConfigDir(config_dir_path);
@@ -4430,7 +4430,7 @@ static int PrintConfigLocation()
 	return 0;
 }
 
-static void eraseconfigfile()
+static void erase_primary_config_file()
 {
 	const auto path = SETUP_GetPrimaryConfigPath();
 
@@ -4528,12 +4528,12 @@ int sdl_main(int argc, char *argv[])
 		DOSBOX_Init();
 
 		if (arguments->editconf) {
-			const int err = LaunchEditor();
+			const int err = edit_primary_config();
 			return err;
 		}
 
 		if (arguments->eraseconf) {
-			eraseconfigfile();
+			erase_primary_config_file();
 		}
 		if (arguments->erasemapper) {
 			erase_mapper_file();
