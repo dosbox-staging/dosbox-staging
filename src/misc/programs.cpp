@@ -432,7 +432,7 @@ void CONFIG::Run(void)
 				WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
 				return;
 			}
-			WriteConfig(SETUP_GetPrimaryConfigPath().string());
+			WriteConfig(GetPrimaryConfigPath().string());
 			break;
 		}
 		case P_WRITECONF:

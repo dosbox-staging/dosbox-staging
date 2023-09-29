@@ -1546,7 +1546,7 @@ Verbosity Config::GetStartupVerbosity() const
 	return Verbosity::High;
 }
 
-const std::string& SETUP_GetLanguage()
+const std::string& GetLanguage()
 {
 	static bool lang_is_cached = false;
 	static std::string lang    = {};
@@ -1598,7 +1598,7 @@ void MSG_Init(Section_prop*);
 
 // Parse the user's configuration files starting with the primary, then custom
 // -conf's, and finally the local dosbox.conf
-void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
+void ParseConfigFiles(const std_fs::path& config_dir)
 {
 	std::string config_file;
 	const auto arguments = &control->arguments;
@@ -1640,7 +1640,7 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 	}
 }
 
-std_fs::path SETUP_GetPrimaryConfigPath()
+std_fs::path GetPrimaryConfigPath()
 {
 	return GetConfigDir() / GetPrimaryConfigName();
 }

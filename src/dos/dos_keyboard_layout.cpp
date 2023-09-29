@@ -1639,7 +1639,7 @@ KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
 	// If a specific language wasn't provided, get it from setup
 	std::string language = language_pref;
 	if (language == "auto")
-		language = SETUP_GetLanguage();
+		language = GetLanguage();
 
 	// Does the language have a country associate with it?
 	auto country       = default_country;

@@ -28,7 +28,7 @@ public:
 		//
 		DetermineConfigPath();
 		const auto config_path = GetConfigDir();
-		SETUP_ParseConfigFiles(config_path);
+		ParseConfigFiles(config_path);
 
 		Section *_sec;
 		// This will register all the init functions, but won't run them

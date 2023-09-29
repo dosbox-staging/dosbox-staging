@@ -4311,7 +4311,7 @@ static void config_add_sdl() {
 
 static int edit_primary_config()
 {
-	const auto path = SETUP_GetPrimaryConfigPath();
+	const auto path = GetPrimaryConfigPath();
 
 	auto replace_with_process = [&](const std::string& prog) {
 		execlp(prog.c_str(), prog.c_str(), path.string().c_str(), (char*)nullptr);
@@ -4399,14 +4399,14 @@ static void list_glshaders()
 
 static int print_primary_config_location()
 {
-	const auto path = SETUP_GetPrimaryConfigPath();
+	const auto path = GetPrimaryConfigPath();
 	printf("%s\n", path.string().c_str());
 	return 0;
 }
 
 static void erase_primary_config_file()
 {
-	const auto path = SETUP_GetPrimaryConfigPath();
+	const auto path = GetPrimaryConfigPath();
 
 	if (!path_exists(path)) {
 		exit(0);
@@ -4577,7 +4577,7 @@ int sdl_main(int argc, char *argv[])
 	// Write the default primary config if it doesn't exist when not in secure
 	// mode.
 	if (!arguments->securemode) {
-		const auto primary_config_path = SETUP_GetPrimaryConfigPath();
+		const auto primary_config_path = GetPrimaryConfigPath();
 
 		if (!path_exists(primary_config_path)) {
 				// No config is loaded at this point, so we're
@@ -4594,7 +4594,7 @@ int sdl_main(int argc, char *argv[])
 	}
 
 	const auto config_path = GetConfigDir();
-	SETUP_ParseConfigFiles(config_path);
+	ParseConfigFiles(config_path);
 
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
