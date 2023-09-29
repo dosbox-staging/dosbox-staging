@@ -185,7 +185,7 @@ static std::string get_or_create_win32_config_dir(bool create)
 }
 #endif
 
-std_fs::path get_platform_config_dir()
+std_fs::path GetConfigDir()
 {
 	// Cache the result, as this doesn't change
 	static std_fs::path conf_dir = {};

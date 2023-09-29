@@ -108,7 +108,7 @@ constexpr auto localtime_r = ::localtime_r;
 
 void CROSS_DetermineConfigPaths();
 
-std_fs::path get_platform_config_dir();
+std_fs::path GetConfigDir();
 
 std_fs::path resolve_home(const std::string &str) noexcept;
 
