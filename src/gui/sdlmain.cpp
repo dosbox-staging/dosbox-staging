@@ -1089,7 +1089,7 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 		        (sdl.desktop.fullscreen && vsync_is_on &&
 		         display_might_be_interpolating);
 
-#if 0	
+#if 0
 		LOG_MSG("SDL: Auto presentation mode conditions:");
 		LOG_MSG("SDL:   - DOS rate is %2.5g Hz", dos_rate);
 		if (has_bench_rate) {
@@ -4442,34 +4442,37 @@ static void override_wm_class()
 
 extern "C" int SDL_CDROMInit(void);
 
-int sdl_main(int argc, char *argv[])
+int sdl_main(int argc, char* argv[])
 {
-	CommandLine com_line(argc, argv);
-	control = std::make_unique<Config>(&com_line);
+	CommandLine command_line(argc, argv);
+	control = std::make_unique<Config>(&command_line);
+
 	const auto arguments = &control->arguments;
 
 	if (arguments->version) {
-		printf(version_msg, CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
+		printf(version_msg,
+		       CANONICAL_PROJECT_NAME,
+		       DOSBOX_GetDetailedVersion());
 		return 0;
 	}
 
 	if (arguments->help) {
-		printf(help_msg); // -V618
+		printf(help_msg);
 		return 0;
 	}
 
-	// Setup logging after commandline is parsed and trivial arguments handled
-	loguru::g_preamble_date    = true; // The date field
-	loguru::g_preamble_time    = true; // The time of the current day
-	loguru::g_preamble_uptime  = false; // The time since init call
-	loguru::g_preamble_thread  = false; // The logging thread
-	loguru::g_preamble_file    = false; // The file from which the log originates from
-	loguru::g_preamble_verbose = false; // The verbosity field
-	loguru::g_preamble_pipe    = true; // The pipe symbol right before the message
+	// Set up logging after command line was parsed and trivial arguments have
+	// been handled
+	loguru::g_preamble_date    = true;
+	loguru::g_preamble_time    = true;
+	loguru::g_preamble_uptime  = false;
+	loguru::g_preamble_thread  = false;
+	loguru::g_preamble_file    = false;
+	loguru::g_preamble_verbose = false;
+	loguru::g_preamble_pipe    = true;
 
-	if (arguments->printconf || arguments->editconf ||
-	    arguments->eraseconf || arguments->list_glshaders ||
-	    arguments->erasemapper) {
+	if (arguments->printconf || arguments->editconf || arguments->eraseconf ||
+	    arguments->list_glshaders || arguments->erasemapper) {
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
 
@@ -4478,10 +4481,13 @@ int sdl_main(int argc, char *argv[])
 	LOG_MSG("%s version %s", CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
-	LOG_MSG("LOG: Loguru version %d.%d.%d initialised", LOGURU_VERSION_MAJOR,
-	        LOGURU_VERSION_MINOR, LOGURU_VERSION_PATCH);
+	LOG_MSG("LOG: Loguru version %d.%d.%d initialised",
+	        LOGURU_VERSION_MAJOR,
+	        LOGURU_VERSION_MINOR,
+	        LOGURU_VERSION_PATCH);
 
-	int rcode = 0; // assume good until proven otherwise
+	int return_code = 0;
+
 	try {
 		if (!arguments->working_dir.empty()) {
 			std::error_code ec;
@@ -4492,11 +4498,12 @@ int sdl_main(int argc, char *argv[])
 			}
 		}
 
-		override_wm_class(); // Before SDL2 video subsystem is initialised
+		// Before SDL2 video subsystem is initialised
+		override_wm_class();
 
 		DetermineConfigPath();
 
-		/* Init the configuration system and add default values */
+		// Init the configuration system and add default values
 		messages_add_sdl();
 		config_add_sdl();
 		DOSBOX_Init();
@@ -4532,14 +4539,18 @@ int sdl_main(int argc, char *argv[])
 			erase_mapper_file();
 		}
 
-		/* Can't disable the console with debugger enabled */
+		// Can't disable the console with debugger enabled
 #if defined(WIN32) && !(C_DEBUG)
 		if (arguments->noconsole) {
 			FreeConsole();
-			/* Redirect standard input and standard output */
-			if(freopen(STDOUT_FILE, "w", stdout) == NULL)
-				no_stdout = true; // No stdout so don't write messages
+			// Redirect standard input and standard output
+			//
+			if (freopen(STDOUT_FILE, "w", stdout) == NULL) {
+				// No stdout so don't write messages
+				no_stdout = true;
+			}
 			freopen(STDERR_FILE, "w", stderr);
+
 			setvbuf(stdout, NULL, _IOLBF, BUFSIZ); // Line buffered
 			setvbuf(stderr, NULL, _IONBF, BUFSIZ); // No buffering
 		} else {
@@ -4547,13 +4558,13 @@ int sdl_main(int argc, char *argv[])
 				fclose(stdin);
 				fclose(stdout);
 				fclose(stderr);
-				freopen("CONIN$","r",stdin);
-				freopen("CONOUT$","w",stdout);
-				freopen("CONOUT$","w",stderr);
+				freopen("CONIN$", "r", stdin);
+				freopen("CONOUT$", "w", stdout);
+				freopen("CONOUT$", "w", stderr);
 			}
 			SetConsoleTitle("DOSBox Status Window");
 		}
-#endif  //defined(WIN32) && !(C_DEBUG)
+#endif // defined(WIN32) && !(C_DEBUG)
 
 		if (arguments->printconf) {
 			const int err = print_primary_config_location();
@@ -4566,39 +4577,49 @@ int sdl_main(int argc, char *argv[])
 		}
 
 #if defined(WIN32)
-	SetConsoleCtrlHandler((PHANDLER_ROUTINE) console_event_handler,TRUE);
+		SetConsoleCtrlHandler((PHANDLER_ROUTINE)console_event_handler, TRUE);
 
 #if SDL_VERSION_ATLEAST(2, 24, 0)
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE)
-		LOG_WARNING("SDL: Failed to set DPI awareness flag");
-	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE)
-		LOG_WARNING("SDL: Failed to set DPI scaling flag");
+		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") ==
+		    SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to set DPI awareness flag");
+		}
+		if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") == SDL_FALSE) {
+			LOG_WARNING("SDL: Failed to set DPI scaling flag");
+		}
 #endif
-#endif
+#endif // WIN32
 
-	check_kmsdrm_setting();
+		check_kmsdrm_setting();
 
-	if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0)
-		E_Exit("Can't init SDL %s", SDL_GetError());
-	if (SDL_CDROMInit() < 0)
-		LOG_WARNING("Failed to init CD-ROM support");
+		if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0) {
+			E_Exit("Can't init SDL %s", SDL_GetError());
+		}
+		if (SDL_CDROMInit() < 0) {
+			LOG_WARNING("Failed to init CD-ROM support");
+		}
 
-	sdl.initialized = true;
-	// Once initialised, ensure we clean up SDL for all exit conditions
-	atexit(QuitSDL);
+		sdl.initialized = true;
 
-	SDL_version sdl_version;
-	SDL_GetVersion(&sdl_version);
-	LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
-		sdl_version.major, sdl_version.minor, sdl_version.patch,
-		SDL_GetCurrentVideoDriver(), SDL_GetCurrentAudioDriver());
+		// Once initialised, ensure we clean up SDL for all exit conditions
+		atexit(QuitSDL);
 
-	// Write the default primary config if it doesn't exist when not in secure
-	// mode.
-	if (!arguments->securemode) {
-		const auto primary_config_path = GetPrimaryConfigPath();
+		SDL_version sdl_version;
+		SDL_GetVersion(&sdl_version);
 
-		if (!path_exists(primary_config_path)) {
+		LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
+		        sdl_version.major,
+		        sdl_version.minor,
+		        sdl_version.patch,
+		        SDL_GetCurrentVideoDriver(),
+		        SDL_GetCurrentAudioDriver());
+
+		// Write the default primary config if it doesn't exist when not
+		// in secure mode.
+		if (!arguments->securemode) {
+			const auto primary_config_path = GetPrimaryConfigPath();
+
+			if (!path_exists(primary_config_path)) {
 				// No config is loaded at this point, so we're
 				// writing the default settings to the primary
 				// config.
@@ -4609,111 +4630,151 @@ int sdl_main(int argc, char *argv[])
 					LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
 					            primary_config_path.string().c_str());
 				}
+			}
 		}
-	}
 
-	const auto config_path = GetConfigDir();
-	ParseConfigFiles(config_path);
+		const auto config_path = GetConfigDir();
+		ParseConfigFiles(config_path);
 
-	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
-	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-		"There is no property '%s' in section [%s]\n");
-	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-		"Usage: [color=green]config [/reset]-set [color=cyan][SECTION][/reset] "
-		"[color=white]PROPERTY[/reset][=][color=white]VALUE[/reset]\n");
+		MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR",
+		        "No such section or property: %s\n");
 
-	for (auto line : arguments->set) {
-		trim(line);
-		if (line.empty()
-		    || line[0] == '%' || line[0] == '\0'
-		    || line[0] == '#' || line[0] == '\n')
-			continue;
-		std::vector<std::string> pvars(1, std::move(line));
-		const char *result = SetProp(pvars);
-		if (strlen(result))
-			LOG_WARNING("%s", result);
-		else {
-			Section *tsec = control->GetSection(pvars[0]);
-			std::string value(pvars[2]);
-			// Due to parsing there can be a = at the start of value.
-			while (value.size() &&
-			       (value.at(0) == ' ' || value.at(0) == '='))
-				value.erase(0, 1);
-			for (Bitu i = 3; i < pvars.size(); i++)
-				value += (std::string(" ") + pvars[i]);
-			std::string inputline = pvars[1] + "=" + value;
-			bool change_success = tsec->HandleInputline(
-				inputline.c_str());
-			if (!change_success && !value.empty())
-				LOG_WARNING("Cannot set \"%s\"\n",
-					    inputline.c_str());
+		MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
+		        "There is no property '%s' in section [%s]\n");
+
+		MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
+		        "Usage: [color=green]config [/reset]-set [color=cyan][SECTION][/reset] "
+		        "[color=white]PROPERTY[/reset][=][color=white]VALUE[/reset]\n");
+
+		for (auto line : arguments->set) {
+			trim(line);
+
+			if (line.empty() || line[0] == '%' || line[0] == '\0' ||
+			    line[0] == '#' || line[0] == '\n') {
+				continue;
+			}
+
+			std::vector<std::string> pvars(1, std::move(line));
+
+			const char* result = SetProp(pvars);
+
+			if (strlen(result)) {
+				LOG_WARNING("%s", result);
+			} else {
+				Section* tsec = control->GetSection(pvars[0]);
+				std::string value(pvars[2]);
+
+				// Due to parsing, there can be a '=' at the
+				// start of the value.
+				while (value.size() && (value.at(0) == ' ' ||
+				                        value.at(0) == '=')) {
+					value.erase(0, 1);
+				}
+
+				for (Bitu i = 3; i < pvars.size(); i++) {
+					value += (std::string(" ") + pvars[i]);
+				}
+
+				std::string inputline = pvars[1] + "=" + value;
+
+				bool change_success = tsec->HandleInputline(
+				        inputline.c_str());
+
+				if (!change_success && !value.empty()) {
+					LOG_WARNING("Cannot set \"%s\"\n",
+					            inputline.c_str());
+				}
+			}
 		}
-	}
 
 #if C_OPENGL
-	const auto glshaders_dir = config_path / "glshaders";
-	if (create_dir(glshaders_dir, 0700, OK_IF_EXISTS) != 0)
-		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
-			    glshaders_dir.string().c_str(),
-			    safe_strerror(errno).c_str());
-#endif // C_OPENGL
+		const auto glshaders_dir = config_path / "glshaders";
+
+		if (create_dir(glshaders_dir, 0700, OK_IF_EXISTS) != 0) {
+			LOG_WARNING("CONFIG: Can't create dir '%s': %s",
+			            glshaders_dir.string().c_str(),
+			            safe_strerror(errno).c_str());
+		}
+#endif
+
 #if C_FLUIDSYNTH
-	const auto soundfonts_dir = config_path / "soundfonts";
-	if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0)
-		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
-			    soundfonts_dir.string().c_str(),
-			    safe_strerror(errno).c_str());
-#endif // C_FLUIDSYNTH
+		const auto soundfonts_dir = config_path / "soundfonts";
+
+		if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0) {
+			LOG_WARNING("CONFIG: Can't create dir '%s': %s",
+			            soundfonts_dir.string().c_str(),
+			            safe_strerror(errno).c_str());
+		}
+#endif
+
 #if C_MT32EMU
-	const auto mt32_rom_dir = config_path / "mt32-roms";
-	if (create_dir(mt32_rom_dir, 0700, OK_IF_EXISTS) != 0)
-		LOG_WARNING("CONFIG: Can't create dir '%s': %s",
-			    mt32_rom_dir.string().c_str(),
-			    safe_strerror(errno).c_str());
-#endif // C_MT32EMU
+		const auto mt32_rom_dir = config_path / "mt32-roms";
+
+		if (create_dir(mt32_rom_dir, 0700, OK_IF_EXISTS) != 0) {
+			LOG_WARNING("CONFIG: Can't create dir '%s': %s",
+			            mt32_rom_dir.string().c_str(),
+			            safe_strerror(errno).c_str());
+		}
+#endif
 
 		control->ParseEnv();
-//		UI_Init();
-//		if (control->cmdline->FindExist("-startui")) UI_Run(false);
-		/* Init all the sections */
+		//		UI_Init();
+		//		if (control->cmdline->FindExist("-startui"))
+		// UI_Run(false);
+
+		// Init all the sections
 		control->Init();
-		/* Some extra SDL Functions */
-		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
+
+		// Some extra SDL Functions
+		Section_prop* sdl_sec = static_cast<Section_prop*>(
+		        control->GetSection("sdl"));
 
 		// All subsystems' hotkeys need to be registered at this point
 		// to ensure their hotkeys appear in the graphical mapper.
 		MAPPER_BindKeys(sdl_sec);
+
 		if (arguments->startmapper) {
-		MAPPER_DisplayUI();
+			MAPPER_DisplayUI();
 		}
 
-		control->StartUp(); // Run the machine until shutdown
-		control.reset();  // Shutdown and release
+		// Run the machine until shutdown
+		control->StartUp();
+
+		// Shutdown and release
+		control.reset();
+
 	} catch (char* error) {
-		rcode = 1;
-		GFX_ShowMsg("Exit to error: %s",error);
+		return_code = 1;
+
+		GFX_ShowMsg("Exit to error: %s", error);
+
 		fflush(nullptr);
-		if(sdl.wait_on_error) {
-			//TODO Maybe look for some way to show message in linux?
+
+		if (sdl.wait_on_error) {
+			// TODO Maybe look for some way to show message in linux?
 #if (C_DEBUG)
 			GFX_ShowMsg("Press enter to continue");
+
 			fflush(nullptr);
 			fgetc(stdin);
+
 #elif defined(WIN32)
 			Sleep(5000);
 #endif
 		}
 	} catch (const std::exception& e) {
-		// catch all exceptions that derive from the standard library
+		// Catch all exceptions that derive from the standard library
 		LOG_ERR("EXCEPTION: Standard library exception: %s", e.what());
-		rcode = 1;
+		return_code = 1;
 	} catch (...) {
-		// just exit
-		rcode = 1;
+		// Just exit
+		return_code = 1;
 	}
 
-#if defined (WIN32)
-	sticky_keys(true); //Might not be needed if the shutdown function switches to windowed mode, but it doesn't hurt
+#if defined(WIN32)
+	// Might not be needed if the shutdown function switches to windowed
+	// mode, but it doesn't hurt
+	sticky_keys(true);
 #endif
 
 	// We already do this at exit, but do cleanup earlier in case of normal
@@ -4721,6 +4782,6 @@ int sdl_main(int argc, char *argv[])
 	// cleanup order. Happens with SDL_VIDEODRIVER=wayland as of SDL 2.0.12.
 	QuitSDL();
 
-	return rcode;
+	return return_code;
 }
 
