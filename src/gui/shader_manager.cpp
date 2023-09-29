@@ -199,7 +199,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 	const std::string file_prefix = "        ";
 
 	std::error_code ec = {};
-	for (auto& [dir, shaders] : GetFilesInResource("glshaders", ".glsl")) {
+	for (auto& [dir, shaders] : GetFilesInResource(GlShadersDir, ".glsl")) {
 		const auto dir_exists      = std_fs::is_directory(dir, ec);
 		auto shader                = shaders.begin();
 		const auto dir_has_shaders = shader != shaders.end();
@@ -295,14 +295,13 @@ bool ShaderManager::ReadShaderSource(const std::string& shader_name, std::string
 		return true;
 	};
 
-	constexpr auto glsl_ext      = ".glsl";
-	constexpr auto glshaders_dir = "glshaders";
+	constexpr auto glsl_ext = ".glsl";
 
 	// Start with the name as-is and then try from resources
 	const auto candidate_paths = {std_fs::path(shader_name),
 	                              std_fs::path(shader_name + glsl_ext),
-	                              GetResourcePath(glshaders_dir, shader_name),
-	                              GetResourcePath(glshaders_dir,
+	                              GetResourcePath(GlShadersDir, shader_name),
+	                              GetResourcePath(GlShadersDir,
 	                                              shader_name + glsl_ext)};
 
 	for (const auto& path : candidate_paths) {
@@ -512,12 +511,12 @@ std::string ShaderManager::FindShaderAutoGraphicsStandard() const
 	case GraphicsStandard::Cga:
 	case GraphicsStandard::Pcjr: return GetCgaShader();
 
-	case GraphicsStandard::Tga:
-		return GetEgaShader();
+	case GraphicsStandard::Tga: return GetEgaShader();
 
 	case GraphicsStandard::Ega:
-		// Use VGA shaders for VGA games that use EGA modes with an 18-bit
-		// VGA palette (these games won't even work on an EGA card).
+		// Use VGA shaders for VGA games that use EGA modes with an
+		// 18-bit VGA palette (these games won't even work on an EGA
+		// card).
 		return video_mode.has_vga_colors ? GetVgaShader() : GetEgaShader();
 
 	case GraphicsStandard::Vga:

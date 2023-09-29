@@ -4688,30 +4688,30 @@ int sdl_main(int argc, char* argv[])
 		}
 
 #if C_OPENGL
-		const auto glshaders_dir = config_path / "glshaders";
+		const auto glshaders_dir = config_path / GlShadersDir;
 
 		if (create_dir(glshaders_dir, 0700, OK_IF_EXISTS) != 0) {
-			LOG_WARNING("CONFIG: Can't create dir '%s': %s",
+			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
 			            glshaders_dir.string().c_str(),
 			            safe_strerror(errno).c_str());
 		}
 #endif
 
 #if C_FLUIDSYNTH
-		const auto soundfonts_dir = config_path / "soundfonts";
+		const auto soundfonts_dir = config_path / DefaultSoundfontsDir;
 
 		if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0) {
-			LOG_WARNING("CONFIG: Can't create dir '%s': %s",
+			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
 			            soundfonts_dir.string().c_str(),
 			            safe_strerror(errno).c_str());
 		}
 #endif
 
 #if C_MT32EMU
-		const auto mt32_rom_dir = config_path / "mt32-roms";
+		const auto mt32_rom_dir = config_path / DefaultMt32RomsDir;
 
 		if (create_dir(mt32_rom_dir, 0700, OK_IF_EXISTS) != 0) {
-			LOG_WARNING("CONFIG: Can't create dir '%s': %s",
+			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
 			            mt32_rom_dir.string().c_str(),
 			            safe_strerror(errno).c_str());
 		}
