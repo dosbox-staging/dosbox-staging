@@ -112,9 +112,10 @@ std_fs::path GetConfigDir();
 
 std_fs::path resolve_home(const std::string &str) noexcept;
 
+std::string GetPrimaryConfigName();
+
 class Cross {
 public:
-	static std::string GetPrimaryConfigName();
 	static void CreatePlatformConfigDir(std::string& in);
 };
 

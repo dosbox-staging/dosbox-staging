@@ -1607,7 +1607,7 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 	const bool load_primary_config = !arguments->noprimaryconf;
 
 	if (load_primary_config) {
-		const auto config_path = config_dir / Cross::GetPrimaryConfigName();
+		const auto config_path = config_dir / GetPrimaryConfigName();
 		control->ParseConfigFile("primary", config_path.string());
 	}
 
@@ -1642,7 +1642,7 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 
 std_fs::path SETUP_GetPrimaryConfigPath()
 {
-	return GetConfigDir() / Cross::GetPrimaryConfigName();
+	return GetConfigDir() / GetPrimaryConfigName();
 }
 
 static char return_msg[200];
