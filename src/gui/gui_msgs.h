@@ -92,9 +92,6 @@ List of available options:
 
   --socket <num>           Run nullmodem on the specified socket number.
 
-  --opencaptures           Call program with as first parameter the location of the
-                           captures folder.
-
   -h, --help               Print this help message and exit.
 
   -v, --version            Print version information and exit.

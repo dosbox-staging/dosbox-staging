@@ -4393,31 +4393,6 @@ void Restart(bool pressed) { // mapper handler
 	restart_program(control->startup_params);
 }
 
-// TODO do we even need this at all?
-static void launchcaptures(const std::string& edit)
-{
-	std::string path,file;
-	Section* t = control->GetSection("capture");
-	if(t) file = t->GetPropValue("capture_dir");
-	if(!t || file == NO_SUCH_PROPERTY) {
-		printf("Config system messed up.\n");
-		exit(1);
-	}
-	Cross::CreatePlatformConfigDir(path);
-	path += file;
-
-	if (create_dir(path, 0700, OK_IF_EXISTS) != 0) {
-		fprintf(stderr, "Can't access capture dir '%s': %s\n",
-		        path.c_str(), safe_strerror(errno).c_str());
-		exit(1);
-	}
-
-	execlp(edit.c_str(),edit.c_str(),path.c_str(),(char*) nullptr);
-	//if you get here the launching failed!
-	fprintf(stderr, "can't find filemanager %s\n", edit.c_str());
-	exit(1);
-}
-
 static void ListGlShaders()
 {
 #if C_OPENGL
@@ -4514,7 +4489,7 @@ int sdl_main(int argc, char *argv[])
 
 	if (arguments->printconf || arguments->editconf ||
 	    arguments->eraseconf || arguments->list_glshaders ||
-	    arguments->erasemapper || !arguments->opencaptures.empty()) {
+	    arguments->erasemapper) {
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
 
@@ -4551,9 +4526,6 @@ int sdl_main(int argc, char *argv[])
 			return err;
 		}
 
-		if (!arguments->opencaptures.empty()) {
-			launchcaptures(arguments->opencaptures);
-		}
 		if (arguments->eraseconf) {
 			eraseconfigfile();
 		}

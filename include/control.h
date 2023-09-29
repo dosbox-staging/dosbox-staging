@@ -55,7 +55,6 @@ struct CommandLineArguments {
 	bool exit;
 	bool securemode;
 	bool noautoexec;
-	std::string opencaptures;
 	std::string working_dir;
 	std::string lang;
 	std::string machine;

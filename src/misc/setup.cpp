@@ -1795,7 +1795,6 @@ void Config::ParseArguments()
 
 	arguments.working_dir = cmdline->FindRemoveStringArgument("working-dir");
 	arguments.lang = cmdline->FindRemoveStringArgument("lang");
-	arguments.opencaptures = cmdline->FindRemoveStringArgument("opencaptures");
 	arguments.machine = cmdline->FindRemoveStringArgument("machine");
 
 	arguments.socket = cmdline->FindRemoveIntArgument("socket");
