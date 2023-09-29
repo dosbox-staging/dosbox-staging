@@ -109,15 +109,11 @@ constexpr auto localtime_r = ::localtime_r;
 void DetermineConfigPath();
 
 std_fs::path GetConfigDir();
-
-std_fs::path resolve_home(const std::string &str) noexcept;
-
 std::string GetPrimaryConfigName();
 
-class Cross {
-public:
-	static void CreatePlatformConfigDir(std::string& in);
-};
+std_fs::path GetOrCreateConfigDir();
+
+std_fs::path resolve_home(const std::string &str) noexcept;
 
 #if defined (WIN32)
 #ifndef WIN32_LEAN_AND_MEAN
