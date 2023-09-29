@@ -62,20 +62,20 @@ std::string GetPrimaryConfigName()
 
 #ifndef WIN32
 
-std::string cached_conf_path;
+std_fs::path cached_conf_path;
 
 #if defined(MACOSX)
 
-static std::string determine_config_path()
+static std_fs::path determine_config_path()
 {
 	const auto conf_path = resolve_home("~/Library/Preferences/DOSBox");
 	create_dir(conf_path, 0700);
-	return conf_path.string();
+	return conf_path;
 }
 
 #else
 
-static std::string determine_config_path()
+static std_fs::path determine_config_path()
 {
 	const auto conf_path = get_xdg_config_home() / "dosbox";
 	std::error_code ec   = {};
@@ -85,8 +85,8 @@ static std::string determine_config_path()
 	}
 
 	auto fallback_to_deprecated = []() {
-		const std::string old_conf_path = resolve_home("~/.dosbox").string();
-		if (path_exists(old_conf_path + "/" + GetPrimaryConfigName())) {
+		const auto old_conf_path = resolve_home("~/.dosbox");
+		if (path_exists(old_conf_path / GetPrimaryConfigName())) {
 			LOG_WARNING("CONFIG: Falling back to deprecated path (~/.dosbox) due to errors");
 			LOG_WARNING("CONFIG: Please investigate the problems and try again");
 		}
@@ -128,7 +128,7 @@ static std::string determine_config_path()
 		}
 		// If the last symlink points to a directory, then we'll take it
 		if (std_fs::is_directory(target_path, ec)) {
-			return target_path.string();
+			return target_path;
 		}
 		LOG_ERR("CONFIG: Path '%s' cannot be created because it's symlinked to '%s'",
 		        conf_path.c_str(),
@@ -144,8 +144,9 @@ static std::string determine_config_path()
 
 void DetermineConfigPath()
 {
-	if (cached_conf_path.empty())
+	if (cached_conf_path.empty()) {
 		cached_conf_path = determine_config_path();
+	}
 }
 
 #endif // !WIN32
@@ -154,7 +155,7 @@ void DetermineConfigPath()
 
 void DetermineConfigPath() {}
 
-static std::string get_or_create_win32_config_dir(bool create)
+static std_fs::path get_or_create_win32_config_dir(bool create)
 {
 	int c = create ? 1 : 0;
 
@@ -189,8 +190,9 @@ std_fs::path GetConfigDir()
 {
 	// Cache the result, as this doesn't change
 	static std_fs::path conf_dir = {};
-	if (!conf_dir.empty())
+	if (!conf_dir.empty()) {
 		return conf_dir;
+	}
 
 	// Check if a portable layout exists
 	const auto portable_conf_path = GetExecutablePath() / GetPrimaryConfigName();
@@ -198,17 +200,18 @@ std_fs::path GetConfigDir()
 	std::error_code ec = {};
 	if (std_fs::is_regular_file(portable_conf_path, ec)) {
 		conf_dir = portable_conf_path.parent_path();
-		const auto conf_str = conf_dir.string();
+
 		LOG_MSG("CONFIG: Using portable configuration layout in %s",
-		        conf_str.c_str());
+		        conf_dir.c_str());
 		return conf_dir;
 	}
 
 	// Otherwise get the OS-specific configuration directory
 #ifdef WIN32
-	constexpr auto create = false;
+	constexpr auto create   = false;
 	const auto win_conf_dir = get_or_create_win32_config_dir(create);
-	conf_dir = std_fs::path(win_conf_dir) / "DOSBox";
+
+	conf_dir = win_conf_dir / "DOSBox";
 #else
 	assert(!cached_conf_path.empty());
 	conf_dir = cached_conf_path;
@@ -216,23 +219,22 @@ std_fs::path GetConfigDir()
 	return conf_dir;
 }
 
-void Cross::CreatePlatformConfigDir(std::string &in)
+std_fs::path GetOrCreateConfigDir()
 {
 #ifdef WIN32
 	constexpr auto create = true;
-	in = get_or_create_win32_config_dir(create);
-	in += "\\DOSBox";
+	const auto path = get_or_create_win32_config_dir(create) / "DOSBox";
 #else
 	assert(!cached_conf_path.empty());
-	in = cached_conf_path;
+	const auto path = cached_conf_path;
 #endif
-	if (in.back() != CROSS_FILESPLIT)
-		in += CROSS_FILESPLIT;
 
-	if (create_dir(in, 0700, OK_IF_EXISTS) != 0) {
+	if (create_dir(path, 0700, OK_IF_EXISTS) != 0) {
 		LOG_MSG("ERROR: Creation of config directory '%s' failed: %s",
-		        in.c_str(), safe_strerror(errno).c_str());
+		        path.c_str(),
+		        safe_strerror(errno).c_str());
 	}
+	return path;
 }
 
 std_fs::path resolve_home(const std::string &str) noexcept
