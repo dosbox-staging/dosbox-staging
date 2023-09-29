@@ -4311,26 +4311,10 @@ static void config_add_sdl() {
 
 static int edit_primary_config()
 {
-	std::string config_dir_path;
-	Cross::CreatePlatformConfigDir(config_dir_path);
-
-	const auto path        = SETUP_GetPrimaryConfigPath();
-	const auto path_string = path.string();
-
-	FILE* f = fopen(path_string.c_str(), "r");
-	if (!f && !control->WriteConfig(path)) {
-		fprintf(stderr,
-		        "Tried creating '%s', but failed.\n",
-		        path_string.c_str());
-		return 1;
-	}
-
-	if (f) {
-		fclose(f);
-	}
+	const auto path = SETUP_GetPrimaryConfigPath();
 
 	auto replace_with_process = [&](const std::string& prog) {
-		execlp(prog.c_str(), prog.c_str(), path_string.c_str(), (char*)nullptr);
+		execlp(prog.c_str(), prog.c_str(), path.string().c_str(), (char*)nullptr);
 	};
 
 	// Loop until one succeeds
