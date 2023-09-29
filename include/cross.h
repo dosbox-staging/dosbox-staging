@@ -106,7 +106,7 @@ constexpr auto localtime_r = ::localtime_r;
 
 } // namespace cross
 
-void CROSS_DetermineConfigPaths();
+void DetermineConfigPath();
 
 std_fs::path GetConfigDir();
 

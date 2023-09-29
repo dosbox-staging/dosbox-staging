@@ -142,7 +142,7 @@ static std::string determine_config_path()
 
 #endif // !MACOSX
 
-void CROSS_DetermineConfigPaths()
+void DetermineConfigPath()
 {
 	if (cached_conf_path.empty())
 		cached_conf_path = determine_config_path();
@@ -152,7 +152,7 @@ void CROSS_DetermineConfigPaths()
 
 #ifdef WIN32
 
-void CROSS_DetermineConfigPaths() {}
+void DetermineConfigPath() {}
 
 static std::string get_or_create_win32_config_dir(bool create)
 {
