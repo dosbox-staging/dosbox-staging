@@ -37,8 +37,10 @@ extern bool shutdown_requested;
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 
 void MSG_Add(const char*,const char*); // add messages (in UTF-8) to the language file
-const char* MSG_Get(char const *);     // get messages (adapted to current code page) from the language file
-const char* MSG_GetRaw(char const *);  // get messages (in UTF-8, without ANSI preprocessing) from the language file
+const char* MSG_Get(const char*); // get messages (adapted to current code page)
+                                  // from the language file
+const char* MSG_GetRaw(const char*); // get messages (in UTF-8, without ANSI
+                                     // preprocessing) from the language file
 bool MSG_Exists(const char*);
 
 class Section;
@@ -92,5 +94,9 @@ inline bool is_machine(const int type) {
 #ifndef DOSBOX_LOGGING_H
 #include "logging.h"
 #endif // the logging system.
+
+constexpr auto DefaultMt32RomsDir   = "mt32-roms";
+constexpr auto DefaultSoundfontsDir = "soundfonts";
+constexpr auto GlShadersDir         = "glshaders";
 
 #endif /* DOSBOX_DOSBOX_H */

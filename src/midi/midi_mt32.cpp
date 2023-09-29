@@ -280,7 +280,7 @@ static void register_mt32_text_messages()
 static std::deque<std_fs::path> get_rom_dirs()
 {
 	return {
-	        GetConfigDir() / "mt32-roms",
+	        GetConfigDir() / DefaultMt32RomsDir,
 	        "C:\\mt32-rom-data\\",
 	};
 }
@@ -290,7 +290,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 static std::deque<std_fs::path> get_rom_dirs()
 {
 	return {
-	        GetConfigDir() / "mt32-roms",
+	        GetConfigDir() / DefaultMt32RomsDir,
 	        resolve_home("~/Library/Audio/Sounds/MT32-Roms/"),
 	        "/usr/local/share/mt32-rom-data/",
 	        "/usr/share/mt32-rom-data/",
@@ -305,7 +305,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 	const auto xdg_data_home = get_xdg_data_home();
 
 	std::deque<std_fs::path> dirs = {
-	        xdg_data_home / "dosbox/mt32-roms",
+	        xdg_data_home / "dosbox" / DefaultMt32RomsDir,
 	        xdg_data_home / "mt32-rom-data",
 	};
 
@@ -315,7 +315,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(GetConfigDir() / "mt32-roms");
+	dirs.emplace_back(GetConfigDir() / DefaultMt32RomsDir);
 
 	return dirs;
 }
@@ -333,10 +333,13 @@ static std::deque<std_fs::path> get_selected_dirs()
 
 	// Get the user's configured ROM directory; otherwise use 'mt32-roms'
 	std::string selected_romdir = section->Get_string("romdir");
-	if (selected_romdir.empty()) // already trimmed
-		selected_romdir = "mt32-roms";
-	if (selected_romdir.back() != '/' && selected_romdir.back() != '\\')
+
+	if (selected_romdir.empty()) { // already trimmed
+		selected_romdir = DefaultMt32RomsDir;
+	}
+	if (selected_romdir.back() != '/' && selected_romdir.back() != '\\') {
 		selected_romdir += CROSS_FILESPLIT;
+	}
 
 	// Make sure we search the user's configured directory first
 	rom_dirs.emplace_front(resolve_home(selected_romdir));

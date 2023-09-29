@@ -41,7 +41,9 @@
 #include "rwqueue.h"
 #include "std_filesystem.h"
 
+// forward declaration
 class LASynthModel;
+
 using model_and_dir_t = std::pair<const LASynthModel*, std_fs::path>;
 
 static_assert(MT32EMU_VERSION_MAJOR > 2 ||

@@ -146,12 +146,12 @@ std::tuple<std::string, int> parse_soundfont_pref(const std::string& line)
 static std::deque<std_fs::path> get_data_dirs()
 {
 	return {
-	        GetConfigDir() / "soundfonts",
+	        GetConfigDir() / DefaultSoundfontsDir,
 
 	        // C:\soundfonts is the default place where FluidSynth places
 	        // default.sf2
 	        // https://www.fluidsynth.org/api/fluidsettings.xml#synth.default-soundfont
-	        "C:\\soundfonts\\",
+	        std::string("C:\\") + DefaultSoundfontsDir + "\\",
 	};
 }
 
@@ -160,7 +160,7 @@ static std::deque<std_fs::path> get_data_dirs()
 static std::deque<std_fs::path> get_data_dirs()
 {
 	return {
-	        GetConfigDir() / "soundfonts",
+	        GetConfigDir() / DefaultSoundfontsDir,
 	        resolve_home("~/Library/Audio/Sounds/Banks"),
 	};
 }
@@ -173,19 +173,19 @@ static std::deque<std_fs::path> get_data_dirs()
 	const auto xdg_data_home = get_xdg_data_home();
 
 	std::deque<std_fs::path> dirs = {
-	        xdg_data_home / "dosbox/soundfonts",
-	        xdg_data_home / "soundfonts",
+	        xdg_data_home / "dosbox" / DefaultSoundfontsDir,
+	        xdg_data_home / DefaultSoundfontsDir,
 	        xdg_data_home / "sounds/sf2",
 	};
 
 	// Second priority are the $XDG_DATA_DIRS
 	for (const auto& data_dir : get_xdg_data_dirs()) {
-		dirs.emplace_back(data_dir / "soundfonts");
+		dirs.emplace_back(data_dir / DefaultSoundfontsDir);
 		dirs.emplace_back(data_dir / "sounds/sf2");
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(GetConfigDir() / "soundfonts");
+	dirs.emplace_back(GetConfigDir() / DefaultSoundfontsDir);
 
 	return dirs;
 }
