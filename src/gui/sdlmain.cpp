@@ -4520,7 +4520,7 @@ int sdl_main(int argc, char *argv[])
 
 		override_wm_class(); // Before SDL2 video subsystem is initialised
 
-		CROSS_DetermineConfigPaths();
+		DetermineConfigPath();
 
 		/* Init the configuration system and add default values */
 		messages_add_sdl();
