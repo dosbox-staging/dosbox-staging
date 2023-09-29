@@ -394,7 +394,7 @@ void CONFIG::Run(void)
 
 		case P_LISTCONF: {
 			Bitu size = control->configfiles.size();
-			const std_fs::path config_path = get_platform_config_dir();
+			const std_fs::path config_path = GetConfigDir();
 			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"),
 			         VERSION,
 			         config_path.c_str());

@@ -280,7 +280,7 @@ static void register_mt32_text_messages()
 static std::deque<std_fs::path> get_rom_dirs()
 {
 	return {
-	        get_platform_config_dir() / "mt32-roms",
+	        GetConfigDir() / "mt32-roms",
 	        "C:\\mt32-rom-data\\",
 	};
 }
@@ -290,7 +290,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 static std::deque<std_fs::path> get_rom_dirs()
 {
 	return {
-	        get_platform_config_dir() / "mt32-roms",
+	        GetConfigDir() / "mt32-roms",
 	        resolve_home("~/Library/Audio/Sounds/MT32-Roms/"),
 	        "/usr/local/share/mt32-rom-data/",
 	        "/usr/share/mt32-rom-data/",
@@ -315,7 +315,7 @@ static std::deque<std_fs::path> get_rom_dirs()
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(get_platform_config_dir() / "mt32-roms");
+	dirs.emplace_back(GetConfigDir() / "mt32-roms");
 
 	return dirs;
 }

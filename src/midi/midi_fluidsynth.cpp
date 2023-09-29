@@ -146,7 +146,7 @@ std::tuple<std::string, int> parse_soundfont_pref(const std::string& line)
 static std::deque<std_fs::path> get_data_dirs()
 {
 	return {
-	        get_platform_config_dir() / "soundfonts",
+	        GetConfigDir() / "soundfonts",
 
 	        // C:\soundfonts is the default place where FluidSynth places
 	        // default.sf2
@@ -160,7 +160,7 @@ static std::deque<std_fs::path> get_data_dirs()
 static std::deque<std_fs::path> get_data_dirs()
 {
 	return {
-	        get_platform_config_dir() / "soundfonts",
+	        GetConfigDir() / "soundfonts",
 	        resolve_home("~/Library/Audio/Sounds/Banks"),
 	};
 }
@@ -185,7 +185,7 @@ static std::deque<std_fs::path> get_data_dirs()
 	}
 
 	// Third priority is $XDG_CONF_HOME, for convenience
-	dirs.emplace_back(get_platform_config_dir() / "soundfonts");
+	dirs.emplace_back(GetConfigDir() / "soundfonts");
 
 	return dirs;
 }

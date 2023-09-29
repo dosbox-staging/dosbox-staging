@@ -4450,7 +4450,7 @@ static void erase_mapper_file() {
 		             "Please reset configuration as well and delete the dosbox.conf.\n");
 	}
 
-	const auto path = (get_platform_config_dir() / MAPPERFILE).string();
+	const auto path = (GetConfigDir() / MAPPERFILE).string();
 	FILE* f = fopen(path.c_str(),"r");
 	if(!f) exit(0);
 	fclose(f);
@@ -4619,7 +4619,7 @@ int sdl_main(int argc, char *argv[])
 		}
 	}
 
-	const auto config_path = get_platform_config_dir();
+	const auto config_path = GetConfigDir();
 	SETUP_ParseConfigFiles(config_path);
 
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");

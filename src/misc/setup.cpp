@@ -453,7 +453,7 @@ bool Prop_path::SetValue(const std::string& input)
 	}
 
 	if (current_config_dir.empty()) {
-		realpath = get_platform_config_dir() / temp_path;
+		realpath = GetConfigDir() / temp_path;
 	} else {
 		realpath = current_config_dir / temp_path;
 	}
@@ -1642,7 +1642,7 @@ void SETUP_ParseConfigFiles(const std_fs::path& config_dir)
 
 std_fs::path SETUP_GetPrimaryConfigPath()
 {
-	return get_platform_config_dir() / Cross::GetPrimaryConfigName();
+	return GetConfigDir() / Cross::GetPrimaryConfigName();
 }
 
 static char return_msg[200];
