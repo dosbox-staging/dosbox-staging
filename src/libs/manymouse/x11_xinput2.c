@@ -35,6 +35,7 @@
 #include <string.h>
 #include <dlfcn.h>
 #include <X11/extensions/XInput2.h>
+#include <sys/select.h>
 
 #if defined(BSD)
 #include <sys/time.h>
