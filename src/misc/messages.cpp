@@ -253,7 +253,7 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 	static const std_fs::path subdir   = "translations";
 	static const std::string extension = ".lng";
 
-	const auto lang = SETUP_GetLanguage();
+	const auto lang = GetLanguage();
 
 	// If the language is english, then use the internal message
 	if (lang.empty() || starts_with(lang, "en")) {

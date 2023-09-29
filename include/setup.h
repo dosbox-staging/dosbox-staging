@@ -506,10 +506,10 @@ public:
 	}
 };
 
-std_fs::path SETUP_GetPrimaryConfigPath();
-void SETUP_ParseConfigFiles(const std_fs::path& config_path);
+std_fs::path GetPrimaryConfigPath();
+void ParseConfigFiles(const std_fs::path& config_path);
 
-const std::string& SETUP_GetLanguage();
+const std::string& GetLanguage();
 
 const char* SetProp(std::vector<std::string>& pvars);
 
