@@ -4501,6 +4501,25 @@ int sdl_main(int argc, char *argv[])
 		config_add_sdl();
 		DOSBOX_Init();
 
+		// Write the default primary config if it doesn't exist when not
+		// in secure mode.
+		if (!arguments->securemode) {
+			const auto primary_config_path = GetPrimaryConfigPath();
+
+			if (!path_exists(primary_config_path)) {
+				// No config is loaded at this point, so we're
+				// writing the default settings to the primary
+				// config.
+				if (control->WriteConfig(primary_config_path)) {
+					LOG_MSG("CONFIG: Created primary config file '%s'",
+					        primary_config_path.string().c_str());
+				} else {
+					LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
+					            primary_config_path.string().c_str());
+				}
+			}
+		}
+
 		if (arguments->editconf) {
 			const int err = edit_primary_config();
 			return err;
