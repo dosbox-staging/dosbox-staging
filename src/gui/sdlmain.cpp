@@ -247,7 +247,7 @@ static const char* vsync_state_as_string(const VsyncState state)
 extern SDL_Window *pdc_window;
 extern std::queue<SDL_Event> pdc_event_queue;
 
-static bool isDebuggerEvent(const SDL_Event &event)
+static bool is_debugger_event(const SDL_Event &event)
 {
 	switch (event.type) {
 	case SDL_KEYDOWN:
@@ -3745,7 +3745,7 @@ bool GFX_Events()
 #endif
 	while (SDL_PollEvent(&event)) {
 #if C_DEBUG
-		if (isDebuggerEvent(event)) {
+		if (is_debugger_event(event)) {
 			pdc_event_queue.push(event);
 			continue;
 		}
@@ -4048,7 +4048,7 @@ bool GFX_Events()
 }
 
 #if defined (WIN32)
-static BOOL WINAPI ConsoleEventHandler(DWORD event) {
+static BOOL WINAPI console_event_handler(DWORD event) {
 	switch (event) {
 	case CTRL_SHUTDOWN_EVENT:
 	case CTRL_LOGOFF_EVENT:
@@ -4067,6 +4067,7 @@ static BOOL WINAPI ConsoleEventHandler(DWORD event) {
 /* static variable to show wether there is not a valid stdout.
  * Fixes some bugs when -noconsole is used in a read only directory */
 static bool no_stdout = false;
+
 void GFX_ShowMsg(const char* format, ...)
 {
 	char buf[512];
@@ -4080,7 +4081,7 @@ void GFX_ShowMsg(const char* format, ...)
 	if (!no_stdout) puts(buf); //Else buf is parsed again. (puts adds end of line)
 }
 
-static std::vector<std::string> Get_SDL_TextureRenderers()
+static std::vector<std::string> get_sdl_texture_renderers()
 {
 	const int n = SDL_GetNumRenderDrivers();
 	std::vector<std::string> drivers;
@@ -4117,7 +4118,7 @@ static void messages_add_sdl()
 	        "seamless mouse, %s+F10 or middle-click to capture");
 }
 
-void config_add_sdl() {
+static void config_add_sdl() {
 	Section_prop *sdl_sec=control->AddSection_prop("sdl", &GUI_StartUp);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
 	Prop_bool *Pbool; // use pbool for new properties
@@ -4251,7 +4252,7 @@ void config_add_sdl() {
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
 	pstring->Set_help("Render driver to use in 'texture' output mode ('auto' by default).\n"
 	                  "Use 'texture_renderer = auto' for an automatic choice.");
-	pstring->Set_values(Get_SDL_TextureRenderers());
+	pstring->Set_values(get_sdl_texture_renderers());
 
 	Pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
 	Pmulti->Set_help("Moved to [mouse] section.");
@@ -4401,7 +4402,7 @@ void Restart(bool pressed) { // mapper handler
 	restart_program(control->startup_params);
 }
 
-static void ListGlShaders()
+static void list_glshaders()
 {
 #if C_OPENGL
 	for (const auto &line : RENDER_GenerateShaderInventoryMessage())
@@ -4441,7 +4442,7 @@ static void eraseconfigfile()
 	exit(0);
 }
 
-static void erasemapperfile() {
+static void erase_mapper_file() {
 	FILE* g = fopen("dosbox.conf","r");
 	if(g) {
 		fclose(g);
@@ -4457,7 +4458,7 @@ static void erasemapperfile() {
 	exit(0);
 }
 
-void OverrideWMClass()
+static void override_wm_class()
 {
 #if !defined(WIN32)
 	constexpr int overwrite = 0; // don't overwrite
@@ -4466,6 +4467,7 @@ void OverrideWMClass()
 }
 
 extern "C" int SDL_CDROMInit(void);
+
 int sdl_main(int argc, char *argv[])
 {
 	CommandLine com_line(argc, argv);
@@ -4516,7 +4518,7 @@ int sdl_main(int argc, char *argv[])
 			}
 		}
 
-		OverrideWMClass(); // Before SDL2 video subsystem is initialised
+		override_wm_class(); // Before SDL2 video subsystem is initialised
 
 		CROSS_DetermineConfigPaths();
 
@@ -4534,7 +4536,7 @@ int sdl_main(int argc, char *argv[])
 			eraseconfigfile();
 		}
 		if (arguments->erasemapper) {
-			erasemapperfile();
+			erase_mapper_file();
 		}
 
 		/* Can't disable the console with debugger enabled */
@@ -4566,12 +4568,12 @@ int sdl_main(int argc, char *argv[])
 		}
 
 		if (arguments->list_glshaders) {
-			ListGlShaders();
+			list_glshaders();
 			return 0;
 		}
 
 #if defined(WIN32)
-	SetConsoleCtrlHandler((PHANDLER_ROUTINE) ConsoleEventHandler,TRUE);
+	SetConsoleCtrlHandler((PHANDLER_ROUTINE) console_event_handler,TRUE);
 
 #if SDL_VERSION_ATLEAST(2, 24, 0)
 	if (SDL_SetHint(SDL_HINT_WINDOWS_DPI_AWARENESS, "permonitorv2") == SDL_FALSE)
