@@ -4431,23 +4431,13 @@ static int PrintConfigLocation()
 
 static void eraseconfigfile()
 {
-	FILE* f = fopen("dosbox.conf", "r");
-	if (f) {
-		fclose(f);
-		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\n"
-		            "This will override the configuration file at runtime.\n");
-	}
-
 	const auto path = SETUP_GetPrimaryConfigPath();
-	const auto path_string = path.string();
 
-	f = fopen(path_string.c_str(), "r");
-	if (!f) {
+	if (!path_exists(path)) {
 		exit(0);
 	}
-	fclose(f);
-	unlink(path_string.c_str());
 
+	unlink(path.string().c_str());
 	exit(0);
 }
 
