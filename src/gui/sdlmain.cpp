@@ -4397,20 +4397,10 @@ static void list_glshaders()
 #endif
 }
 
-static int PrintConfigLocation()
+static int print_primary_config_location()
 {
 	const auto path = SETUP_GetPrimaryConfigPath();
-	const auto path_string = path.string();
-
-	FILE* f = fopen(path_string.c_str(), "r");
-	if (!f && !control->WriteConfig(path)) {
-		fprintf(stderr, "Tried creating '%s', but failed.\n", path_string.c_str());
-		return 1;
-	}
-	if (f) {
-		fclose(f);
-	}
-	printf("%s\n", path_string.c_str());
+	printf("%s\n", path.string().c_str());
 	return 0;
 }
 
@@ -4547,7 +4537,7 @@ int sdl_main(int argc, char *argv[])
 #endif  //defined(WIN32) && !(C_DEBUG)
 
 		if (arguments->printconf) {
-			const int err = PrintConfigLocation();
+			const int err = print_primary_config_location();
 			return err;
 		}
 
