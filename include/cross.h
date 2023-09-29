@@ -116,7 +116,6 @@ class Cross {
 public:
 	static std::string GetPrimaryConfigName();
 	static void CreatePlatformConfigDir(std::string& in);
-	static bool IsPathAbsolute(const std::string& in);
 };
 
 #if defined (WIN32)

@@ -378,15 +378,14 @@ Overlay_Drive::Overlay_Drive(const char *startdir,
 		return;
 	}
 
-	std::string s(startdir);
-	std::string o(overlay);
-	bool s_absolute = Cross::IsPathAbsolute(s);
-	bool o_absolute = Cross::IsPathAbsolute(o);
 	error = 0;
-	if (s_absolute != o_absolute) { 
+
+	if (std_fs::path(startdir).is_absolute() !=
+	    std_fs::path(overlay).is_absolute()) {
 		error = 1;
 		return;
 	}
+
 	safe_strcpy(overlaydir, overlay);
 	char dirname[CROSS_LEN] = { 0 };
 	//Determine if overlaydir is part of the startdir.
