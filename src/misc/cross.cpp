@@ -257,20 +257,6 @@ std_fs::path resolve_home(const std::string &str) noexcept
 	return temp_line;
 }
 
-bool Cross::IsPathAbsolute(const std::string& in)
-{
-	// Absolute paths
-#if defined (WIN32)
-	// drive letter
-	if (in.size() > 2 && in[1] == ':' ) return true;
-	// UNC path
-	else if (in.size() > 2 && in[0]=='\\' && in[1]=='\\') return true;
-#else
-	if (in.size() > 1 && in[0] == '/' ) return true;
-#endif
-	return false;
-}
-
 #if defined (WIN32)
 
 dir_information* open_directory(const char* dirname) {

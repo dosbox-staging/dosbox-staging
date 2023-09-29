@@ -261,11 +261,17 @@ void MOUNT::Run(void) {
 		if (!temp_line.size()) {
 			goto showusage;
 		}
-		if (path_relative_to_last_config && control->configfiles.size() && !Cross::IsPathAbsolute(temp_line)) {
-			std::string lastconfigdir(control->configfiles[control->configfiles.size() - 1]);
-			std::string::size_type pos = lastconfigdir.rfind(CROSS_FILESPLIT);
+
+		if (path_relative_to_last_config && control->configfiles.size() &&
+		    !std_fs::path(temp_line).is_absolute()) {
+			std::string lastconfigdir =
+			        control->configfiles[control->configfiles.size() - 1];
+
+			std::string::size_type pos = lastconfigdir.rfind(
+			        CROSS_FILESPLIT);
+
 			if (pos == std::string::npos) {
-				pos = 0; //No directory then erase string
+				pos = 0; // No directory then erase string
 			}
 			lastconfigdir.erase(pos);
 			if (lastconfigdir.length()) {
