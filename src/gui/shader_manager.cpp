@@ -224,7 +224,6 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 	        "The above shaders can be used exactly as listed in the 'glshader'");
 	inventory.emplace_back(
 	        "conf setting, without the need for the resource path or .glsl extension.");
-	inventory.emplace_back("");
 
 	return inventory;
 }
