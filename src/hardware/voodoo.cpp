@@ -314,22 +314,6 @@ enum { TRIANGLE_THREADS = 3, TRIANGLE_WORKERS = TRIANGLE_THREADS + 1 };
 #define REG_WPF					(REGISTER_WRITE | REGISTER_PIPELINED | REGISTER_FIFO)
 #define REG_RWPF				(REGISTER_READ | REGISTER_WRITE | REGISTER_PIPELINED | REGISTER_FIFO)
 
-/* lookup bits is the log2 of the size of the reciprocal/log table */
-#define RECIPLOG_LOOKUP_BITS	9
-
-/* fast reciprocal+log2 lookup */
-static uint32_t voodoo_reciplog[(2 << RECIPLOG_LOOKUP_BITS) + 2];
-
-/* input precision is how many fraction bits the input value has; this is a 64-bit number */
-#define RECIPLOG_INPUT_PREC		32
-
-/* lookup precision is how many fraction bits each table entry contains */
-#define RECIPLOG_LOOKUP_PREC	22
-
-/* output precision is how many fraction bits the result should have */
-#define RECIP_OUTPUT_PREC		15
-#define LOG_OUTPUT_PREC			8
-
 /*************************************
  *
  *  Macros for extracting pixels
@@ -1276,8 +1260,46 @@ inline uint8_t count_leading_zeros(uint32_t value)
  *
  *************************************/
 
-inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
+inline int64_t fast_reciprocal_log2(int64_t value, int32_t* log_2)
 {
+	// Lookup bits is the log2 of the size of the reciprocal/log table
+	constexpr auto num_lookup_bits = 9;
+
+	// Input precision is how many fraction bits the input value has; this is a
+	// 64-bit number
+	constexpr auto input_precision_bits = 32;
+
+	// Lookup precision is how many fraction bits each table entry contains
+	constexpr auto lookup_precision_bits = 22;
+
+	// Output precision is how many fraction bits the result should have
+	constexpr auto output_precision_bits = 15;
+	constexpr auto output_precision = 8;
+
+	// Generate a table of precomputed 1/n and log2(n) from n=1.0 to 2.0
+	auto generate_lut = [num_lookup_bits, lookup_precision_bits]() {
+		// create an empty LUT
+		constexpr auto lut_width = (2 << num_lookup_bits) + 2;
+		auto lut = std::array<uint32_t, lut_width>();
+		auto lut_val = lut.data();
+
+		constexpr auto steps = 1 << num_lookup_bits;
+		constexpr double width = 1 << lookup_precision_bits;
+
+		// populate the LUT
+		for (auto i = 0; i <= steps; ++i) {
+			const double n = steps + i;
+
+			const auto inverse_of_n = steps * width / n;
+			*lut_val++ = static_cast<uint32_t>(inverse_of_n);
+
+			const auto log2_of_n = std::log2(n / steps) * width;
+			*lut_val++ = static_cast<uint32_t>(log2_of_n);
+		}
+		return lut;
+	};
+	static auto lut = generate_lut();
+
 	uint32_t temp;
 	uint32_t rlog;
 	uint32_t interp;
@@ -1306,7 +1328,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	/* if the resulting value is 0, the reciprocal is infinite */
 	if (GCC_UNLIKELY(temp == 0))
 	{
-		*log_2 = 1000 << LOG_OUTPUT_PREC;
+		*log_2 = 1000 << output_precision;
 		return neg ? 0x80000000 : 0x7fffffff;
 	}
 
@@ -1318,10 +1340,11 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	/* compute a pointer to the table entries we want */
 	/* math is a bit funny here because we shift one less than we need to in order */
 	/* to account for the fact that there are two uint32_t's per table entry */
-	table = &voodoo_reciplog[(temp >> (31 - RECIPLOG_LOOKUP_BITS - 1)) & ((2 << RECIPLOG_LOOKUP_BITS) - 2)];
+	table = &lut[(temp >> (31 - num_lookup_bits - 1)) &
+	                             ((2 << num_lookup_bits) - 2)];
 
 	/* compute the interpolation value */
-	interp = (temp >> (31 - RECIPLOG_LOOKUP_BITS - 8)) & 0xff;
+	interp = (temp >> (31 - num_lookup_bits - 8)) & 0xff;
 
 	/* do a linear interpolatation between the two nearest table values */
 	/* for both the log and the reciprocal */
@@ -1329,15 +1352,15 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	recip = (table[0] * (0x100 - interp) + table[2] * interp) >> 8;
 
 	/* the log result is the fractional part of the log; round it to the output precision */
-	rlog = (rlog + (1 << (RECIPLOG_LOOKUP_PREC - LOG_OUTPUT_PREC - 1))) >> (RECIPLOG_LOOKUP_PREC - LOG_OUTPUT_PREC);
+	rlog = (rlog + (1 << (lookup_precision_bits - output_precision - 1))) >> (lookup_precision_bits - output_precision);
 
 	/* the exponent is the non-fractional part of the log; normally, we would subtract it from rlog */
 	/* but since we want the log(1/value) = -log(value), we subtract rlog from the exponent */
-	*log_2 = left_shift_signed(exponent - (31 - RECIPLOG_INPUT_PREC), LOG_OUTPUT_PREC) - rlog;
+	*log_2 = left_shift_signed(exponent - (31 - input_precision_bits), output_precision) - rlog;
 
 	/* adjust the exponent to account for all the reciprocal-related parameters to arrive at a final shift amount */
-	exponent += (RECIP_OUTPUT_PREC - RECIPLOG_LOOKUP_PREC) -
-	            (31 - RECIPLOG_INPUT_PREC);
+	exponent += (output_precision_bits - lookup_precision_bits) -
+	            (31 - input_precision_bits);
 
 	/* shift by the exponent */
 	if (exponent < 0) {
@@ -2122,7 +2145,7 @@ do																				\
 	/* determine the S/T/LOD values for this texture */							\
 	if (TEXMODE_ENABLE_PERSPECTIVE(TEXMODE))									\
 	{																			\
-		oow = fast_reciplog((ITERW), &lod);										\
+		oow = fast_reciprocal_log2((ITERW), &lod);								\
 		s = (int32_t)((oow * (ITERS)) >> 29);										\
 		t = (int32_t)((oow * (ITERT)) >> 29);										\
 		lod += (LODBASE);														\
@@ -4430,7 +4453,7 @@ static void prepare_tmu(tmu_state *t)
 	/* adjust the result: negative to get the log of the original value */
 	/* plus 12 to account for the extra exponent, and divided by 2 to */
 	/* get the log of the square root of texdx */
-	(void)fast_reciplog(texdx, &lodbase);
+	(void)fast_reciprocal_log2(texdx, &lodbase);
 	t->lodbasetemp = (-lodbase + (12 << 8)) / 2;
 }
 
@@ -7155,24 +7178,6 @@ void voodoo_state::Initialize()
 #ifdef C_ENABLE_VOODOO_DEBUG
 	regnames = voodoo_reg_name;
 #endif
-
-	if (*voodoo_reciplog == 0u) {
-		// Create a table of precomputed 1/n and log2(n) values where n
-		// ranges from 1.0000 to 2.0000
-		constexpr auto steps   = 1 << RECIPLOG_LOOKUP_BITS;
-		constexpr double width = 1 << RECIPLOG_LOOKUP_PREC;
-		auto lut_val = voodoo_reciplog;
-
-		for (auto i = 0; i <= steps; ++i) {
-			const double n = steps + i;
-
-			const auto inverse_of_n = steps * width / n;
-			*lut_val++ = static_cast<uint32_t>(inverse_of_n);
-
-			const auto log2_of_n = std::log2(n / steps) * width;
-			*lut_val++ = static_cast<uint32_t>(log2_of_n);
-		}
-	}
 
 	tmu_config = 0x11; // revision 1
 
