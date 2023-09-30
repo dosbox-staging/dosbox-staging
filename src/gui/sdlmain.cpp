@@ -1569,22 +1569,22 @@ static bool is_using_kmsdrm_driver()
 	return driver_str == "kmsdrm";
 }
 
-static void check_kmsdrm_setting()
+static int check_kmsdrm_setting()
 {
 	// Simple pre-check to see if we're using kmsdrm
 	if (!is_using_kmsdrm_driver())
-		return;
+		return 0;
 
 	// Do we have read access to the event subsystem
 	if (auto f = fopen("/dev/input/event0", "r"); f) {
 		fclose(f);
-		return;
+		return 0;
 	}
 
 	// We're using KMSDRM, but we don't have read access to the event subsystem
 	LOG_WARNING("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.");
 	LOG_WARNING("SDL: Please run: \"sudo usermod -aG input $(whoami)\", then re-login and try again.");
-	exit(1);
+	return 1;
 }
 
 bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
@@ -4313,6 +4313,12 @@ static int edit_primary_config()
 {
 	const auto path = GetPrimaryConfigPath();
 
+	if (!path_exists(path)) {
+		printf("Primary config does not exist at path '%s'\n",
+		       path.string().c_str());
+		return 1;
+	}
+
 	auto replace_with_process = [&](const std::string& prog) {
 		execlp(prog.c_str(), prog.c_str(), path.string().c_str(), (char*)nullptr);
 	};
@@ -4336,10 +4342,8 @@ static int edit_primary_config()
 	replace_with_process("notepad++.exe");
 	replace_with_process("notepad.exe");
 
-	fprintf(stderr,
-	        "Can't find any text editors.\n"
-	        "You can set the EDITOR env variable to your preferred "
-	        "text editor.\n");
+	LOG_ERR("Can't find any text editors; please set the EDITOR env variable "
+	        "to your preferred text editor.\n");
 
 	return 1;
 }
@@ -4386,50 +4390,83 @@ void Restart(bool pressed) { // mapper handler
 	restart_program(control->startup_params);
 }
 
-static void list_glshaders()
+static int list_glshaders()
 {
 #if C_OPENGL
-	for (const auto &line : RENDER_GenerateShaderInventoryMessage())
+	for (const auto& line : RENDER_GenerateShaderInventoryMessage()) {
 		printf("%s\n", line.c_str());
+	}
+	return 0;
 #else
-	LOG_ERR("OpenGL is not supported by this executable "
-	        "and is missing the functionality to list shaders");
+	fprintf(stderr,
+	        "OpenGL is not supported by this executable "
+	        "and is missing the functionality to list shaders.");
+
+	return 1;
 #endif
 }
 
 static int print_primary_config_location()
 {
 	const auto path = GetPrimaryConfigPath();
+
+	if (!path_exists(path)) {
+		printf("Primary config does not exist at path '%s'\n",
+		       path.string().c_str());
+		return 1;
+	}
+
 	printf("%s\n", path.string().c_str());
 	return 0;
 }
 
-static void erase_primary_config_file()
+static int erase_primary_config_file()
 {
 	const auto path = GetPrimaryConfigPath();
 
 	if (!path_exists(path)) {
-		exit(0);
+		printf("Primary config does not exist at path '%s'\n",
+		       path.string().c_str());
+		return 1;
 	}
 
-	unlink(path.string().c_str());
-	exit(0);
+	constexpr auto success = 0;
+	if (unlink(path.string().c_str()) != success) {
+		fprintf(stderr,
+		        "Cannot delete primary config '%s'",
+		        path.string().c_str());
+		return 1;
+	}
+
+	printf("Primary config '%s' deleted.\n", path.string().c_str());
+	return 0;
 }
 
-static void erase_mapper_file() {
-	FILE* g = fopen("dosbox.conf","r");
-	if(g) {
-		fclose(g);
-		LOG_WARNING("Warning: dosbox.conf exists in current working directory.\nKeymapping might not be properly reset.\n"
-		             "Please reset configuration as well and delete the dosbox.conf.\n");
+static int erase_mapper_file()
+{
+	const auto path = GetConfigDir() / MAPPERFILE;
+
+	if (!path_exists(path)) {
+		printf("Default mapper file does not exist at path '%s'\n",
+		       path.string().c_str());
+		return 1;
 	}
 
-	const auto path = (GetConfigDir() / MAPPERFILE).string();
-	FILE* f = fopen(path.c_str(),"r");
-	if(!f) exit(0);
-	fclose(f);
-	unlink(path.c_str());
-	exit(0);
+	if (path_exists("dosbox.conf")) {
+		printf("Local 'dosbox.conf' exists in current working directory; "
+		       "mappings will not be reset if the local config specifies "
+		       "a custom mapper file.\n");
+	}
+
+	constexpr auto success = 0;
+	if (unlink(path.string().c_str()) != success) {
+		fprintf(stderr,
+		        "Cannot delete mapper file '%s'",
+		        path.string().c_str());
+		return 1;
+	}
+	printf("Mapper file '%s' deleted.\n", path.string().c_str());
+	return 0;
 }
 
 static void override_wm_class()
@@ -4528,15 +4565,19 @@ int sdl_main(int argc, char* argv[])
 		}
 
 		if (arguments->editconf) {
-			const int err = edit_primary_config();
-			return err;
+			return edit_primary_config();
 		}
-
 		if (arguments->eraseconf) {
-			erase_primary_config_file();
+			return erase_primary_config_file();
 		}
 		if (arguments->erasemapper) {
-			erase_mapper_file();
+			return erase_mapper_file();
+		}
+		if (arguments->printconf) {
+			return print_primary_config_location();
+		}
+		if (arguments->list_glshaders) {
+			return list_glshaders();
 		}
 
 		// Can't disable the console with debugger enabled
@@ -4566,16 +4607,6 @@ int sdl_main(int argc, char* argv[])
 		}
 #endif // defined(WIN32) && !(C_DEBUG)
 
-		if (arguments->printconf) {
-			const int err = print_primary_config_location();
-			return err;
-		}
-
-		if (arguments->list_glshaders) {
-			list_glshaders();
-			return 0;
-		}
-
 #if defined(WIN32)
 		SetConsoleCtrlHandler((PHANDLER_ROUTINE)console_event_handler, TRUE);
 
@@ -4590,7 +4621,9 @@ int sdl_main(int argc, char* argv[])
 #endif
 #endif // WIN32
 
-		check_kmsdrm_setting();
+		if (const auto err = check_kmsdrm_setting(); err != 0) {
+			return err;
+		}
 
 		if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0) {
 			E_Exit("Can't init SDL %s", SDL_GetError());
