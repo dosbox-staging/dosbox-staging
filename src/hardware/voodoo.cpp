@@ -1093,7 +1093,8 @@ struct voodoo_state {
 	fbi_state fbi          = {}; // Frame Buffer Interface (FBI) states
 	tmu_state tmu[MAX_TMU] = {}; // Texture Mapper Unit (TMU) states
 	tmu_shared_state tmushare = {}; // TMU shared state
-	uint32_t tmu_config       = {};
+
+	uint32_t tmu_config = 0x11; //  Initial value means "revision 1"
 
 #ifdef C_ENABLE_VOODOO_OPENGL
 	raster_info* AddRasterizer(const raster_info* cinfo);
@@ -7177,9 +7178,6 @@ void voodoo_state::Initialize()
 #ifdef C_ENABLE_VOODOO_DEBUG
 	regnames = voodoo_reg_name;
 #endif
-
-	tmu_config = 0x11; // revision 1
-
 	uint32_t fbmemsize = 0;
 	uint32_t tmumem0   = 0;
 	uint32_t tmumem1   = 0;
