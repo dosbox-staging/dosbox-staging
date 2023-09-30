@@ -7265,11 +7265,6 @@ void voodoo_state::Initialize()
 	reg[fbiInit2].u = (uint32_t)((1 << 6) | (0x100 << 23));
 	reg[fbiInit3].u = (uint32_t)((2 << 13) | (0xf << 17));
 	reg[fbiInit4].u = (uint32_t)(1 << 0);
-
-	/* do a soft reset to reset everything else */
-	SoftReset();
-
-	RecomputeVideoMemory();
 }
 
 void voodoo_state::VblankFlush()
