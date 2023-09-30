@@ -837,7 +837,7 @@ struct fbi_state
 	uint8_t vblank        = 0;     // VBLANK state
 	bool vblank_dont_swap = false; // don't actually swap when we hit this
 	                               // point
-	bool vblank_flush_pending = false;
+	bool vblank_flush_pending = false; // Initial value
 
 	// triangle setup info
 	int16_t ax = 0; // vertex A x,y (12.4)
@@ -7151,8 +7151,6 @@ void voodoo_state::Initialize()
 	active = false;
 
 	memset(reg, 0, sizeof(reg));
-
-	fbi.vblank_flush_pending = false;
 
 	dac.read_result = 0;
 
