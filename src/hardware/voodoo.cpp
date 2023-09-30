@@ -7230,22 +7230,7 @@ void voodoo_state::Initialize()
 
 	/* set up frame buffer */
 	init_fbi(&fbi, fbmemsize << 20);
-
 	fbi.rowpixels = fbi.width;
-
-	tmu[0].ncc[0].palette  = nullptr;
-	tmu[0].ncc[1].palette  = nullptr;
-	tmu[1].ncc[0].palette  = nullptr;
-	tmu[1].ncc[1].palette  = nullptr;
-	tmu[0].ncc[0].palettea = nullptr;
-	tmu[0].ncc[1].palettea = nullptr;
-	tmu[1].ncc[0].palettea = nullptr;
-	tmu[1].ncc[1].palettea = nullptr;
-
-	tmu[0].ram    = nullptr;
-	tmu[1].ram    = nullptr;
-	tmu[0].lookup = nullptr;
-	tmu[1].lookup = nullptr;
 
 	/* build shared TMU tables */
 	tmushare.Initialize();
