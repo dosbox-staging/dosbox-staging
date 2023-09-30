@@ -1081,7 +1081,7 @@ struct voodoo_state {
 
 	std::unique_ptr<PageHandler> page_handler = {};
 
-	uint8_t chipmask = {}; // mask for which chips are available
+	uint8_t chipmask = 0x01; // Initial mask for which chips are available
 
 	voodoo_reg reg[0x400]    = {}; // raw registers
 	const uint8_t* regaccess = {}; // register access array
@@ -7225,9 +7225,6 @@ void voodoo_state::Initialize()
 	if (tmumem1 != 0) {
 		tmu_config |= 0xc0; // two TMUs
 	}
-
-	chipmask = 0x01;
-
 	/* set up frame buffer */
 	init_fbi(&fbi, fbmemsize << 20);
 	fbi.rowpixels = fbi.width;
