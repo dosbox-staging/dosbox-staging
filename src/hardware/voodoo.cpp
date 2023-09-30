@@ -330,19 +330,6 @@ static uint32_t voodoo_reciplog[(2 << RECIPLOG_LOOKUP_BITS) + 2];
 #define RECIP_OUTPUT_PREC		15
 #define LOG_OUTPUT_PREC			8
 
-
-/*************************************
- *
- *  Dithering tables
- *
- *************************************/
-
-static constexpr uint8_t dither_matrix_4x4[16] =
-        {0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5};
-
-static constexpr uint8_t dither_matrix_2x2[16] =
-        {2, 10, 2, 10, 14, 6, 14, 6, 2, 10, 2, 10, 14, 6, 14, 6};
-
 /*************************************
  *
  *  Macros for extracting pixels
@@ -1042,6 +1029,9 @@ struct VoodooInitPageHandler : public PageHandler {
 	voodoo_state* vs = nullptr;
 };
 
+using dither_lut_t = std::array<uint8_t, 256 * 16 * 2>;
+constexpr dither_lut_t generate_dither_lut(const uint8_t dither_amounts[]);
+
 struct voodoo_state {
 	voodoo_state()
 	        : page_handler(std::make_unique<VoodooInitPageHandler>(this)),
@@ -1128,8 +1118,13 @@ struct voodoo_state {
 	raster_info* raster_hash[RASTER_HASH_SIZE] = {}; // hash table of rasterizers
 #endif
 
-	std::array<Stats, TRIANGLE_WORKERS> thread_stats = {}; // per-thread
-	                                                       // statistics
+	std::array<Stats, TRIANGLE_WORKERS> thread_stats = {}; // per-thread stats
+
+	//  Dithering tables
+	static constexpr uint8_t dither_matrix_4x4[16] = {0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5};
+	static constexpr uint8_t dither_matrix_2x2[16] = {2, 10, 2, 10, 14, 6, 14, 6, 2, 10, 2, 10, 14, 6, 14, 6};
+	const dither_lut_t dither4_lookup = generate_dither_lut(dither_matrix_4x4);
+	const dither_lut_t dither2_lookup = generate_dither_lut(dither_matrix_2x2);
 
 	bool send_config        = {};
 	bool clock_enabled      = {};
@@ -1503,7 +1498,7 @@ inline uint32_t compute_raster_hash(const raster_info* info)
 
 /*************************************
  *
- *  Dithering macros
+ *  Dithering functions
  *
  *************************************/
 
@@ -1521,8 +1516,6 @@ constexpr uint8_t dither_g(const int colour, const int amount)
 	const auto dithered = (colour << 2) - (colour >> 4) + (colour >> 6) + amount;
 	return check_cast<uint8_t>(dithered >> 4);
 }
-
-using dither_lut_t = std::array<uint8_t, 256 * 16 * 2>;
 
 constexpr dither_lut_t generate_dither_lut(const uint8_t dither_amounts[])
 {
@@ -3232,9 +3225,6 @@ enum {
 /***************************************************************************
     RASTERIZER MANAGEMENT
 ***************************************************************************/
-
-static dither_lut_t dither2_lookup = {};
-static dither_lut_t dither4_lookup = {};
 
 void voodoo_state::RasterGeneric(uint32_t TMUS, uint32_t TEXMODE0,
                                  uint32_t TEXMODE1, void* destbase, int32_t y,
@@ -7182,9 +7172,6 @@ void voodoo_state::Initialize()
 			const auto log2_of_n = std::log2(n / steps) * width;
 			*lut_val++ = static_cast<uint32_t>(log2_of_n);
 		}
-
-		dither2_lookup = generate_dither_lut(dither_matrix_2x2);
-		dither4_lookup = generate_dither_lut(dither_matrix_4x4);
 	}
 
 	tmu_config = 0x11; // revision 1
