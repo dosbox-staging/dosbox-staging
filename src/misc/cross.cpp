@@ -60,22 +60,26 @@ std::string GetPrimaryConfigName()
 	return CANONICAL_PROJECT_NAME ".conf";
 }
 
-#ifndef WIN32
-
-std_fs::path cached_conf_path;
-
 #if defined(MACOSX)
 
-static std_fs::path determine_config_path()
+static std_fs::path get_or_create_config_dir()
 {
 	const auto conf_path = resolve_home("~/Library/Preferences/DOSBox");
-	create_dir(conf_path, 0700);
+
+	constexpr auto success = 0;
+	if (create_dir(conf_path, 0700, OK_IF_EXISTS) == success) {
+
+	} else {
+		LOG_ERR("CONFIG: Can't create config directory '%s': %s",
+		        conf_path.string().c_str(),
+		        safe_strerror(errno).c_str());
+	}
 	return conf_path;
 }
 
-#else
+#elif defined(LINUX)
 
-static std_fs::path determine_config_path()
+static std_fs::path get_or_create_config_dir()
 {
 	const auto conf_path = get_xdg_config_home() / "dosbox";
 	std::error_code ec   = {};
@@ -140,101 +144,75 @@ static std_fs::path determine_config_path()
 	return fallback_to_deprecated();
 }
 
-#endif // !MACOSX
+#elif defined(WIN32)
 
-void DetermineConfigPath()
+static std_fs::path get_or_create_config_dir()
 {
-	if (cached_conf_path.empty()) {
-		cached_conf_path = determine_config_path();
+	char appdata_path[MAX_PATH] = {0};
+
+	const int create = 1;
+
+	// CSIDL_LOCAL_APPDATA - The file system directory that serves as a data
+	// repository for local (nonroaming) applications. A typical path is:
+	// C:\Documents and Settings\username\Local Settings\Application Data.
+	//
+	BOOL success = SHGetSpecialFolderPath(nullptr,
+	                                      appdata_path,
+	                                      CSIDL_LOCAL_APPDATA,
+	                                      create);
+
+	if (!success || appdata_path[0] == 0) {
+		// CSIDL_APPDATA - The file system directory that serves as a data
+		// repository for local (nonroaming) applications. A typical path is
+		// C:\Documents and Settings\username\Local Settings\Application Data.
+		//
+		success = SHGetSpecialFolderPath(nullptr,
+		                                 appdata_path,
+		                                 CSIDL_APPDATA,
+		                                 create);
 	}
+
+	const auto conf_path = std_fs::path(appdata_path) / "DOSBox";
+
+	constexpr auto success_result = 0;
+	if (create_dir(conf_path, 0700, OK_IF_EXISTS) != success_result) {
+		LOG_ERR("CONFIG: Can't create config directory '%s': %s",
+		        conf_path.string().c_str(),
+		        safe_strerror(errno).c_str());
+	}
+
+	return conf_path;
 }
 
-#endif // !WIN32
+#endif // get_or_create_config_dir()
 
-#ifdef WIN32
+static std_fs::path cached_config_dir = {};
 
-void DetermineConfigPath() {}
-
-static std_fs::path get_or_create_win32_config_dir(bool create)
+void InitConfigDir()
 {
-	int c = create ? 1 : 0;
+	if (cached_config_dir.empty()) {
+		// Check if a portable layout exists
+		const auto portable_conf_path = GetExecutablePath() /
+		                                GetPrimaryConfigName();
 
-	char path[MAX_PATH] = {0};
+		std::error_code ec = {};
+		if (std_fs::is_regular_file(portable_conf_path, ec)) {
+			const auto conf_dir = portable_conf_path.parent_path();
 
-	BOOL r = SHGetSpecialFolderPath(nullptr, path, CSIDL_LOCAL_APPDATA, c);
-	if (!r || path[0] == 0) {
-		r = SHGetSpecialFolderPath(nullptr, path, CSIDL_APPDATA, c);
-	}
+			LOG_MSG("CONFIG: Using portable configuration layout in '%s'",
+			        conf_dir.string().c_str());
 
-	if (!r || path[0] == 0) {
-		const char* windir = getenv("windir");
-		if (!windir) {
-			windir = "c:\\windows";
-		}
-		safe_strcpy(path, windir);
-		const char* appdata = "\\Application Data";
-
-		size_t len = safe_strlen(path);
-		if (len + strlen(appdata) < MAX_PATH) {
-			safe_strcat(path, appdata);
-		}
-		if (create) {
-			mkdir(path);
+			cached_config_dir = conf_dir;
+		} else {
+			cached_config_dir = get_or_create_config_dir();
 		}
 	}
-	return path;
 }
-#endif
 
 std_fs::path GetConfigDir()
 {
-	// Cache the result, as this doesn't change
-	static std_fs::path conf_dir = {};
-	if (!conf_dir.empty()) {
-		return conf_dir;
-	}
-
-	// Check if a portable layout exists
-	const auto portable_conf_path = GetExecutablePath() / GetPrimaryConfigName();
-
-	std::error_code ec = {};
-	if (std_fs::is_regular_file(portable_conf_path, ec)) {
-		conf_dir = portable_conf_path.parent_path();
-
-		LOG_MSG("CONFIG: Using portable configuration layout in %s",
-		        conf_dir.c_str());
-		return conf_dir;
-	}
-
-	// Otherwise get the OS-specific configuration directory
-#ifdef WIN32
-	constexpr auto create   = false;
-	const auto win_conf_dir = get_or_create_win32_config_dir(create);
-
-	conf_dir = win_conf_dir / "DOSBox";
-#else
-	assert(!cached_conf_path.empty());
-	conf_dir = cached_conf_path;
-#endif
-	return conf_dir;
-}
-
-std_fs::path GetOrCreateConfigDir()
-{
-#ifdef WIN32
-	constexpr auto create = true;
-	const auto path = get_or_create_win32_config_dir(create) / "DOSBox";
-#else
-	assert(!cached_conf_path.empty());
-	const auto path = cached_conf_path;
-#endif
-
-	if (create_dir(path, 0700, OK_IF_EXISTS) != 0) {
-		LOG_MSG("ERROR: Creation of config directory '%s' failed: %s",
-		        path.c_str(),
-		        safe_strerror(errno).c_str());
-	}
-	return path;
+	assert(!cached_config_dir.empty());
+	return cached_config_dir;
 }
 
 std_fs::path resolve_home(const std::string &str) noexcept

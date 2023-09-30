@@ -106,12 +106,13 @@ constexpr auto localtime_r = ::localtime_r;
 
 } // namespace cross
 
-void DetermineConfigPath();
+// Create or determine the location of the config directory (e.g., in portable
+// mode, the config directory is the executable dir). Must be called before
+// calling GetConfigDir().
+void InitConfigDir();
 
 std_fs::path GetConfigDir();
 std::string GetPrimaryConfigName();
-
-std_fs::path GetOrCreateConfigDir();
 
 std_fs::path resolve_home(const std::string &str) noexcept;
 

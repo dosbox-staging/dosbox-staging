@@ -4486,18 +4486,6 @@ int sdl_main(int argc, char* argv[])
 
 	const auto arguments = &control->arguments;
 
-	if (arguments->version) {
-		printf(version_msg,
-		       CANONICAL_PROJECT_NAME,
-		       DOSBOX_GetDetailedVersion());
-		return 0;
-	}
-
-	if (arguments->help) {
-		printf(help_msg);
-		return 0;
-	}
-
 	// Set up logging after command line was parsed and trivial arguments have
 	// been handled
 	loguru::g_preamble_date    = true;
@@ -4508,7 +4496,8 @@ int sdl_main(int argc, char* argv[])
 	loguru::g_preamble_verbose = false;
 	loguru::g_preamble_pipe    = true;
 
-	if (arguments->printconf || arguments->editconf || arguments->eraseconf ||
+	if (arguments->version || arguments->help || arguments->printconf ||
+	    arguments->editconf || arguments->eraseconf ||
 	    arguments->list_glshaders || arguments->erasemapper) {
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
@@ -4538,16 +4527,26 @@ int sdl_main(int argc, char* argv[])
 		// Before SDL2 video subsystem is initialised
 		override_wm_class();
 
-		DetermineConfigPath();
+		// Create or determine the location of the config directory
+		// (e.g., in portable mode, the config directory is the
+		// executable dir).
+		//
+		// TODO Consider forcing portable mode in secure mode (this
+		// could be accomplished by passing a flag to InitConfigDir);.
+		//
+		InitConfigDir();
 
 		// Init the configuration system and add default values
 		messages_add_sdl();
 		config_add_sdl();
+
 		DOSBOX_Init();
 
-		// Write the default primary config if it doesn't exist when not
-		// in secure mode.
-		if (!arguments->securemode) {
+		// Write the default primary config if it doesn't exist when:
+		// - secure mode is NOT enabled with the '--securemode' option,
+		// - AND the primary config is NOT disabled with the
+		//   '--noprimaryconf' option.
+		if (!arguments->securemode && !arguments->noprimaryconf) {
 			const auto primary_config_path = GetPrimaryConfigPath();
 
 			if (!path_exists(primary_config_path)) {
@@ -4564,6 +4563,18 @@ int sdl_main(int argc, char* argv[])
 			}
 		}
 
+		// Handle command line options that don't start the emulator but only
+		// perform some actions and print the results to the console.
+		if (arguments->version) {
+			printf(version_msg,
+			       CANONICAL_PROJECT_NAME,
+			       DOSBOX_GetDetailedVersion());
+			return 0;
+		}
+		if (arguments->help) {
+			printf(help_msg);
+			return 0;
+		}
 		if (arguments->editconf) {
 			return edit_primary_config();
 		}
@@ -4647,27 +4658,7 @@ int sdl_main(int argc, char* argv[])
 		        SDL_GetCurrentVideoDriver(),
 		        SDL_GetCurrentAudioDriver());
 
-		// Write the default primary config if it doesn't exist when not
-		// in secure mode.
-		if (!arguments->securemode) {
-			const auto primary_config_path = GetPrimaryConfigPath();
-
-			if (!path_exists(primary_config_path)) {
-				// No config is loaded at this point, so we're
-				// writing the default settings to the primary
-				// config.
-				if (control->WriteConfig(primary_config_path)) {
-					LOG_MSG("CONFIG: Created primary config file '%s'",
-					        primary_config_path.string().c_str());
-				} else {
-					LOG_WARNING("CONFIG: Unable to create primary config file '%s'",
-					            primary_config_path.string().c_str());
-				}
-			}
-		}
-
-		const auto config_path = GetConfigDir();
-		ParseConfigFiles(config_path);
+		ParseConfigFiles(GetConfigDir());
 
 		MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR",
 		        "No such section or property: %s\n");
@@ -4721,7 +4712,7 @@ int sdl_main(int argc, char* argv[])
 		}
 
 #if C_OPENGL
-		const auto glshaders_dir = config_path / GlShadersDir;
+		const auto glshaders_dir = GetConfigDir() / GlShadersDir;
 
 		if (create_dir(glshaders_dir, 0700, OK_IF_EXISTS) != 0) {
 			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
@@ -4731,7 +4722,7 @@ int sdl_main(int argc, char* argv[])
 #endif
 
 #if C_FLUIDSYNTH
-		const auto soundfonts_dir = config_path / DefaultSoundfontsDir;
+		const auto soundfonts_dir = GetConfigDir() / DefaultSoundfontsDir;
 
 		if (create_dir(soundfonts_dir, 0700, OK_IF_EXISTS) != 0) {
 			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
@@ -4741,7 +4732,7 @@ int sdl_main(int argc, char* argv[])
 #endif
 
 #if C_MT32EMU
-		const auto mt32_rom_dir = config_path / DefaultMt32RomsDir;
+		const auto mt32_rom_dir = GetConfigDir() / DefaultMt32RomsDir;
 
 		if (create_dir(mt32_rom_dir, 0700, OK_IF_EXISTS) != 0) {
 			LOG_WARNING("CONFIG: Can't create directory '%s': %s",
