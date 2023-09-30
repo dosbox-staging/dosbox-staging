@@ -1124,7 +1124,7 @@ struct voodoo_state {
 	bool ogl_palette_changed = {};
 #endif
 #ifdef C_ENABLE_VOODOO_DEBUG
-	const char* const* regnames; // register names array
+	const char* const* regnames = voodoo_reg_name; // register names array
 #endif
 
 	draw_state draw = {};
@@ -7175,9 +7175,7 @@ void voodoo_state::Initialize()
 	UpdateStatistics(StatsCollection::Reset);
 
 	alt_regmap = false;
-#ifdef C_ENABLE_VOODOO_DEBUG
-	regnames = voodoo_reg_name;
-#endif
+
 	uint32_t fbmemsize = 0;
 	uint32_t tmumem0   = 0;
 	uint32_t tmumem1   = 0;
