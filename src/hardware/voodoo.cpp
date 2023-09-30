@@ -696,9 +696,11 @@ struct fifo_state
 
 struct pci_state
 {
-	fifo_state fifo      = {};    // PCI FIFO
-	uint32_t init_enable = 0;     // initEnable value
-	bool op_pending      = false; // true if an operation is pending
+	fifo_state fifo = {64 * 2}; // Initial PCI FIFO size (128 bytes)
+	uint32_t init_enable = 0;   // Initial value (not enabled)
+
+	// Inidicates if an operation is pending
+	bool op_pending = false;    // Initial value (false)
 };
 
 struct ncc_table
@@ -7151,7 +7153,6 @@ void voodoo_state::Initialize()
 	memset(reg, 0, sizeof(reg));
 
 	fbi.vblank_flush_pending = false;
-	pci.op_pending           = false;
 
 	dac.read_result = 0;
 
@@ -7227,9 +7228,6 @@ void voodoo_state::Initialize()
 
 	chipmask = 0x01;
 
-	/* set up the PCI FIFO */
-	pci.fifo.size = 64 * 2;
-
 	/* set up frame buffer */
 	init_fbi(&fbi, fbmemsize << 20);
 
@@ -7262,7 +7260,6 @@ void voodoo_state::Initialize()
 	}
 
 	/* initialize some registers */
-	pci.init_enable = 0;
 	reg[fbiInit0].u = (uint32_t)((1 << 4) | (0x10 << 6));
 	reg[fbiInit1].u = (uint32_t)((1 << 1) | (1 << 8) | (1 << 12) | (2 << 20));
 	reg[fbiInit2].u = (uint32_t)((1 << 6) | (0x100 << 23));
