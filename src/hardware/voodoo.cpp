@@ -933,7 +933,10 @@ struct raster_info
 struct draw_state
 {
 	double frame_start           = 0.0;
-	double vfreq                 = 0.0;
+
+	// hmm.. this is actually the vertical frame period in millseconds.
+	double vfreq                 = 1000.0 / 60.0;
+
 	bool override_on             = false;
 	bool screen_update_requested = false;
 	bool screen_update_pending   = false;
@@ -7944,9 +7947,6 @@ PageHandler* voodoo_state::StartHandler()
 	}
 
 	Initialize();
-
-	draw       = {};
-	draw.vfreq = 1000.0 / 60.0;
 
 	tworker.use_threads = (vperf == PerformanceFlags::MultiThreading ||
 	                       vperf == PerformanceFlags::All);
