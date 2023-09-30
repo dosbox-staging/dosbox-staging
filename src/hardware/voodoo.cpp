@@ -199,16 +199,31 @@ inline int32_t mul_32x32_shift(int32_t a, int32_t b, int8_t shift)
 	return (int32_t)(((int64_t)a * (int64_t)b) >> shift);
 }
 
-#if defined(__SSE2__)
-static int16_t sse2_scale_table[256][8];
-#endif
-
 inline rgb_t rgba_bilinear_filter(rgb_t rgb00, rgb_t rgb01, rgb_t rgb10,
                                   rgb_t rgb11, uint8_t u, uint8_t v)
 {
 #if defined(__SSE2__)
-	const __m128i scale_u = *(__m128i*)sse2_scale_table[u];
-	const __m128i scale_v = *(__m128i*)sse2_scale_table[v];
+
+	constexpr int8_t cols = 8;
+	using sse_scale_row_t = std::array<int16_t, cols>;
+
+	constexpr int16_t rows = 256;
+	using sse_scale_lut_t = std::array<sse_scale_row_t, rows>;
+
+	constexpr auto generate_sse2_scale_lut = []() {
+		sse_scale_lut_t lut = {};
+		for (int16_t row = 0; row < rows; ++row) {
+			for (int8_t col = 0; col < cols; ++col) {
+				const auto is_col_even = (col % 2 == 0);
+				lut[row][col] = is_col_even ? row : (rows - row);
+			}
+		}
+		return lut;
+	};
+	static constexpr auto sse2_scale_lut = generate_sse2_scale_lut();
+
+	const __m128i scale_u = *(__m128i*)sse2_scale_lut[u].data();
+	const __m128i scale_v = *(__m128i*)sse2_scale_lut[v].data();
 	return _mm_cvtsi128_si32(_mm_packus_epi16(_mm_packs_epi32(_mm_srli_epi32(_mm_madd_epi16(_mm_max_epi16(
 		_mm_slli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb01), _mm_cvtsi32_si128(rgb00)), _mm_setzero_si128()), scale_u), 15),
 		_mm_srli_epi32(_mm_madd_epi16(_mm_unpacklo_epi8(_mm_unpacklo_epi8(_mm_cvtsi32_si128(rgb11), _mm_cvtsi32_si128(rgb10)), _mm_setzero_si128()), scale_u), 1)),
@@ -7170,14 +7185,6 @@ void voodoo_state::Initialize()
 
 		dither2_lookup = generate_dither_lut(dither_matrix_2x2);
 		dither4_lookup = generate_dither_lut(dither_matrix_4x4);
-
-#if defined(__SSE2__)
-		/* create sse2 scale table for rgba_bilinear_filter */
-		for (int16_t i = 0; i != 256; i++) {
-			sse2_scale_table[i][0] = sse2_scale_table[i][2] = sse2_scale_table[i][4] = sse2_scale_table[i][6] = i;
-			sse2_scale_table[i][1] = sse2_scale_table[i][3] = sse2_scale_table[i][5] = sse2_scale_table[i][7] = 256 - i;
-		}
-#endif
 	}
 
 	tmu_config = 0x11; // revision 1
