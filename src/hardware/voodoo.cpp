@@ -1085,7 +1085,8 @@ struct voodoo_state {
 
 	voodoo_reg reg[0x400]    = {}; // raw registers
 	const uint8_t* regaccess = {}; // register access array
-	bool alt_regmap          = {}; // enable alternate register map?
+	// enable alternate register map?
+	bool alt_regmap = false; // Initial value
 
 	pci_state pci = {}; // PCI state
 	dac_state dac = {}; // DAC state
@@ -1100,7 +1101,7 @@ struct voodoo_state {
 	raster_info* AddRasterizer(const raster_info* cinfo);
 	raster_info* FindRasterizer(const int texcount);
 
-	uint16_t next_rasterizer = {}; // next rasterizer index
+	uint16_t next_rasterizer = 0;  // next rasterizer index
 	raster_info rasterizer[MAX_RASTERIZERS] = {}; // array of rasterizers
 	raster_info* raster_hash[RASTER_HASH_SIZE] = {}; // hash table of rasterizers
 #endif
@@ -1113,14 +1114,14 @@ struct voodoo_state {
 	const dither_lut_t dither4_lookup = generate_dither_lut(dither_matrix_4x4);
 	const dither_lut_t dither2_lookup = generate_dither_lut(dither_matrix_2x2);
 
-	bool send_config        = {};
-	bool clock_enabled      = {};
-	bool output_on          = {};
-	bool active             = {};
+	bool send_config        = false; // Initial value
+	bool clock_enabled      = false; // Initial value
+	bool output_on          = false; // Initial value
+	bool active             = false; // Initial value
 	bool is_handler_started = false;
 #ifdef C_ENABLE_VOODOO_OPENGL
 	bool ogl                 = {};
-	bool ogl_dimchange       = {};
+	bool ogl_dimchange       = true; // Initial value
 	bool ogl_palette_changed = {};
 #endif
 #ifdef C_ENABLE_VOODOO_DEBUG
@@ -7148,33 +7149,6 @@ void voodoo_state::Initialize()
 #ifdef C_ENABLE_VOODOO_OPENGL
 	ogl = (emulation_type == VOODOO_EMU_TYPE_ACCELERATED);
 #endif
-
-	active = false;
-
-	memset(reg, 0, sizeof(reg));
-
-	dac.read_result = 0;
-
-	output_on     = false;
-	clock_enabled = false;
-#ifdef C_ENABLE_VOODOO_OPENGL
-	ogl_dimchange = true;
-#endif
-	send_config = false;
-
-	memset(dac.reg, 0, sizeof(dac.reg));
-
-#ifdef C_ENABLE_VOODOO_OPENGL
-	next_rasterizer = 0;
-	// for (uint32_t rct=0; rct<MAX_RASTERIZERS; rct++)
-	//	rasterizer[rct] = raster_info();
-	memset(rasterizer, 0, sizeof(rasterizer));
-	memset(raster_hash, 0, sizeof(raster_hash));
-#endif
-
-	UpdateStatistics(StatsCollection::Reset);
-
-	alt_regmap = false;
 
 	uint32_t fbmemsize = 0;
 	uint32_t tmumem0   = 0;
