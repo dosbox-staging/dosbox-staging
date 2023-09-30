@@ -41,12 +41,12 @@
 #		define _WIN32_IE 0x0400
 #	endif
 #	include <shlobj.h>
-#else
+#else // other than Windows
 #	include <libgen.h>
 #include <sys/xattr.h>
 #endif
 
-#if defined HAVE_PWD_H
+#if defined(HAVE_PWD_H)
 #	include <pwd.h>
 #endif
 
@@ -246,7 +246,8 @@ std_fs::path resolve_home(const std::string &str) noexcept
 	if(temp_line.size() == 1 || temp_line[1] == CROSS_FILESPLIT) { //The ~ and ~/ variant
 		char * home = getenv("HOME");
 		if(home) temp_line.replace(0,1,std::string(home));
-#if defined HAVE_SYS_TYPES_H && defined HAVE_PWD_H
+
+#if defined(HAVE_SYS_TYPES_H) && defined(HAVE_PWD_H)
 	} else { // The ~username variant
 		std::string::size_type namelen = temp_line.find(CROSS_FILESPLIT);
 		if(namelen == std::string::npos) namelen = temp_line.size();
@@ -258,7 +259,7 @@ std_fs::path resolve_home(const std::string &str) noexcept
 	return temp_line;
 }
 
-#if defined (WIN32)
+#if defined(WIN32)
 
 dir_information* open_directory(const char* dirname) {
 	if (dirname == nullptr) return nullptr;
@@ -380,10 +381,10 @@ void close_directory(dir_information* dirp) {
 FILE *fopen_wrap(const char *path, const char *mode) {
 #if defined(WIN32)
 	;
-#elif defined (MACOSX)
+#elif defined(MACOSX)
 	;
 #else  
-#if defined (HAVE_REALPATH)
+#if defined(HAVE_REALPATH)
 	char work[CROSS_LEN] = {0};
 	strncpy(work,path,CROSS_LEN-1);
 	char* last = strrchr(work,'/');
@@ -722,7 +723,7 @@ std::string cfstr_to_string(CFStringRef source)
 	};
 #endif
 
-// Lamda helper to extract the language from Windows locale
+// Lambda helper to extract the language from Windows locale
 #if defined(WIN32)
 	auto get_lang_from_windows = []() -> std::string {
 		std::string lang = {};
