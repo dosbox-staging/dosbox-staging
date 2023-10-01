@@ -1233,6 +1233,8 @@ struct voodoo_state {
 	voodoo_state& operator=(const voodoo_state&) = delete;
 
 	PageHandler* StartHandler();
+	PageHandler* GetLfbPageHandler(const uintptr_t page) const;
+
 	void Initialize();
 	void Startup();
 
@@ -7703,8 +7705,6 @@ static_assert(PciVoodooLfbBase + (VOODOO_PAGES * MemPageSize) <= PciVoodooLfbLim
 #define VOODOO_EMU_TYPE_ACCELERATED 2
 #endif
 
-static uint32_t voodoo_current_lfb;
-
 struct VoodooPciDevice : public PCI_Device {
 	enum : uint16_t {
 		vendor          = 0x121a,
@@ -7712,8 +7712,10 @@ struct VoodooPciDevice : public PCI_Device {
 		device_voodoo_2 = 0x0002
 	}; // 0x121a = 3dfx
 
-	uint16_t oscillator_ctr = 0;
-	uint16_t pci_ctr        = 0;
+	uint32_t voodoo_current_lfb = PciVoodooLfbBase;
+
+	uint16_t oscillator_ctr  = 0;
+	uint16_t pci_ctr         = 0;
 	const CardType card_type = {};
 
 	VoodooPciDevice() = delete;
@@ -7721,12 +7723,24 @@ struct VoodooPciDevice : public PCI_Device {
 	VoodooPciDevice(const CardType voodoo_card_type)
 	        : PCI_Device(vendor, DeviceIdFromCardType(voodoo_card_type)),
 	          card_type(voodoo_card_type)
-	{}
+	{
+		// Check 64 KB alignment of LFB base
+		static_assert((PciVoodooLfbBase & 0xffff) == 0);
+		assert(voodoo_current_lfb == PciVoodooLfbBase);
+	}
 
 	uint16_t DeviceIdFromCardType(const CardType voodoo_card_type)
 	{
 		return voodoo_card_type == CardType::Voodoo2 ? device_voodoo_2
 		                                             : device_voodoo_1;
+	}
+
+	bool IsPageInLfb(const uintptr_t page)
+	{
+		const auto lfb_page_start = voodoo_current_lfb >> 12;
+		const auto lfb_page_end   = lfb_page_start + VOODOO_PAGES;
+
+		return (page >= lfb_page_start && page < lfb_page_end);
 	}
 
 	Bits ParseReadRegister(uint8_t regnum) override
@@ -7930,13 +7944,15 @@ PageHandler* voodoo_state::StartHandler()
 	return page_handler.get();
 }
 
+PageHandler* voodoo_state::GetLfbPageHandler(const uintptr_t page) const
+{
+	return pci_device->IsPageInLfb(page) ? page_handler.get() : nullptr;
+}
+
 PageHandler* VOODOO_PCI_GetLFBPageHandler(const uintptr_t page)
 {
 	assert(voodoo);
-	return (page >= (voodoo_current_lfb >> 12) &&
-	                        page < (voodoo_current_lfb >> 12) + VOODOO_PAGES
-	                ? voodoo->page_handler.get()
-	                : nullptr);
+	return voodoo->GetLfbPageHandler(page);
 }
 
 void VOODOO_Configure(const ModuleLifecycle lifecycle, Section* section)
@@ -7959,10 +7975,6 @@ void VOODOO_Configure(const ModuleLifecycle lifecycle, Section* section)
 		default: return; // disabled
 		}
 
-		// Check 64 KB alignment of LFB base
-		static_assert((PciVoodooLfbBase & 0xffff) == 0);
-
-		voodoo_current_lfb = PciVoodooLfbBase;
 		vperf = static_cast<PerformanceFlags>(sec->Get_int("voodoo_perf"));
 
 		voodoo_instance = std::make_unique<voodoo_state>(card_type);
