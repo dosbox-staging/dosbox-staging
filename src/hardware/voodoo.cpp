@@ -643,6 +643,210 @@ enum { TRIANGLE_THREADS = 3, TRIANGLE_WORKERS = TRIANGLE_THREADS + 1 };
 
 #define TREXINIT_SEND_TMU_CONFIG(val)		(((val) >> 18) & 1)
 
+/*************************************
+ *
+ *  Register constants
+ *
+ *************************************/
+
+/* Codes to the right:
+    R = readable
+    W = writeable
+    P = pipelined
+    F = goes to FIFO
+*/
+
+// 0x000
+static constexpr uint8_t status   = {0x000 / 4}; // R  P
+static constexpr uint8_t intrCtrl = {0x004 / 4}; // RW P   -- Voodoo2/Banshee only
+static constexpr uint8_t vertexAx = {0x008 / 4}; //  W PF
+static constexpr uint8_t vertexAy = {0x00c / 4}; //  W PF
+static constexpr uint8_t vertexBx = {0x010 / 4}; //  W PF
+static constexpr uint8_t vertexBy = {0x014 / 4}; //  W PF
+static constexpr uint8_t vertexCx = {0x018 / 4}; //  W PF
+static constexpr uint8_t vertexCy = {0x01c / 4}; //  W PF
+static constexpr uint8_t startR   = {0x020 / 4}; //  W PF
+static constexpr uint8_t startG   = {0x024 / 4}; //  W PF
+static constexpr uint8_t startB   = {0x028 / 4}; //  W PF
+static constexpr uint8_t startZ   = {0x02c / 4}; //  W PF
+static constexpr uint8_t startA   = {0x030 / 4}; //  W PF
+static constexpr uint8_t startS   = {0x034 / 4}; //  W PF
+static constexpr uint8_t startT   = {0x038 / 4}; //  W PF
+static constexpr uint8_t startW   = {0x03c / 4}; //  W PF
+
+// 0x040
+static constexpr uint8_t dRdX = {0x040 / 4}; //  W PF
+static constexpr uint8_t dGdX = {0x044 / 4}; //  W PF
+static constexpr uint8_t dBdX = {0x048 / 4}; //  W PF
+static constexpr uint8_t dZdX = {0x04c / 4}; //  W PF
+static constexpr uint8_t dAdX = {0x050 / 4}; //  W PF
+static constexpr uint8_t dSdX = {0x054 / 4}; //  W PF
+static constexpr uint8_t dTdX = {0x058 / 4}; //  W PF
+static constexpr uint8_t dWdX = {0x05c / 4}; //  W PF
+static constexpr uint8_t dRdY = {0x060 / 4}; //  W PF
+static constexpr uint8_t dGdY = {0x064 / 4}; //  W PF
+static constexpr uint8_t dBdY = {0x068 / 4}; //  W PF
+static constexpr uint8_t dZdY = {0x06c / 4}; //  W PF
+static constexpr uint8_t dAdY = {0x070 / 4}; //  W PF
+static constexpr uint8_t dSdY = {0x074 / 4}; //  W PF
+static constexpr uint8_t dTdY = {0x078 / 4}; //  W PF
+static constexpr uint8_t dWdY = {0x07c / 4}; //  W PF
+
+// 0x080
+static constexpr uint8_t triangleCMD = {0x080 / 4}; //  W PF
+static constexpr uint8_t fvertexAx   = {0x088 / 4}; //  W PF
+static constexpr uint8_t fvertexAy   = {0x08c / 4}; //  W PF
+static constexpr uint8_t fvertexBx   = {0x090 / 4}; //  W PF
+static constexpr uint8_t fvertexBy   = {0x094 / 4}; //  W PF
+static constexpr uint8_t fvertexCx   = {0x098 / 4}; //  W PF
+static constexpr uint8_t fvertexCy   = {0x09c / 4}; //  W PF
+static constexpr uint8_t fstartR     = {0x0a0 / 4}; //  W PF
+static constexpr uint8_t fstartG     = {0x0a4 / 4}; //  W PF
+static constexpr uint8_t fstartB     = {0x0a8 / 4}; //  W PF
+static constexpr uint8_t fstartZ     = {0x0ac / 4}; //  W PF
+static constexpr uint8_t fstartA     = {0x0b0 / 4}; //  W PF
+static constexpr uint8_t fstartS     = {0x0b4 / 4}; //  W PF
+static constexpr uint8_t fstartT     = {0x0b8 / 4}; //  W PF
+static constexpr uint8_t fstartW     = {0x0bc / 4}; //  W PF
+
+// 0x0c0
+static constexpr uint8_t fdRdX = {0x0c0 / 4}; //  W PF
+static constexpr uint8_t fdGdX = {0x0c4 / 4}; //  W PF
+static constexpr uint8_t fdBdX = {0x0c8 / 4}; //  W PF
+static constexpr uint8_t fdZdX = {0x0cc / 4}; //  W PF
+static constexpr uint8_t fdAdX = {0x0d0 / 4}; //  W PF
+static constexpr uint8_t fdSdX = {0x0d4 / 4}; //  W PF
+static constexpr uint8_t fdTdX = {0x0d8 / 4}; //  W PF
+static constexpr uint8_t fdWdX = {0x0dc / 4}; //  W PF
+static constexpr uint8_t fdRdY = {0x0e0 / 4}; //  W PF
+static constexpr uint8_t fdGdY = {0x0e4 / 4}; //  W PF
+static constexpr uint8_t fdBdY = {0x0e8 / 4}; //  W PF
+static constexpr uint8_t fdZdY = {0x0ec / 4}; //  W PF
+static constexpr uint8_t fdAdY = {0x0f0 / 4}; //  W PF
+static constexpr uint8_t fdSdY = {0x0f4 / 4}; //  W PF
+static constexpr uint8_t fdTdY = {0x0f8 / 4}; //  W PF
+static constexpr uint8_t fdWdY = {0x0fc / 4}; //  W PF
+
+// 0x100
+static constexpr uint8_t ftriangleCMD  = {0x100 / 4}; //  W PF
+static constexpr uint8_t fbzColorPath  = {0x104 / 4}; // RW PF
+static constexpr uint8_t fogMode       = {0x108 / 4}; // RW PF
+static constexpr uint8_t alphaMode     = {0x10c / 4}; // RW PF
+static constexpr uint8_t fbzMode       = {0x110 / 4}; // RW  F
+static constexpr uint8_t lfbMode       = {0x114 / 4}; // RW  F
+static constexpr uint8_t clipLeftRight = {0x118 / 4}; // RW  F
+static constexpr uint8_t clipLowYHighY = {0x11c / 4}; // RW  F
+static constexpr uint8_t nopCMD        = {0x120 / 4}; //  W  F
+static constexpr uint8_t fastfillCMD   = {0x124 / 4}; //  W  F
+static constexpr uint8_t swapbufferCMD = {0x128 / 4}; //  W  F
+static constexpr uint8_t fogColor      = {0x12c / 4}; //  W  F
+static constexpr uint8_t zaColor       = {0x130 / 4}; //  W  F
+static constexpr uint8_t chromaKey     = {0x134 / 4}; //  W  F
+static constexpr uint8_t chromaRange   = {0x138 / 4}; //  W  F  -- Voodoo2/Banshee only
+static constexpr uint8_t userIntrCMD   = {0x13c / 4}; //  W  F  -- Voodoo2/Banshee only
+
+// 0x140
+static constexpr uint8_t stipple       = {0x140 / 4}; // RW  F
+static constexpr uint8_t color0        = {0x144 / 4}; // RW  F
+static constexpr uint8_t color1        = {0x148 / 4}; // RW  F
+static constexpr uint8_t fbiPixelsIn   = {0x14c / 4}; // R
+static constexpr uint8_t fbiChromaFail = {0x150 / 4}; // R
+static constexpr uint8_t fbiZfuncFail  = {0x154 / 4}; // R
+static constexpr uint8_t fbiAfuncFail  = {0x158 / 4}; // R
+static constexpr uint8_t fbiPixelsOut  = {0x15c / 4}; // R
+static constexpr uint8_t fogTable      = {0x160 / 4}; //  W  F
+
+// 0x1c0
+static constexpr uint8_t cmdFifoBaseAddr = {0x1e0 / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t cmdFifoBump     = {0x1e4 / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t cmdFifoRdPtr    = {0x1e8 / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t cmdFifoAMin     = {0x1ec / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t colBufferAddr   = {0x1ec / 4}; // RW     -- Banshee only
+static constexpr uint8_t cmdFifoAMax     = {0x1f0 / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t colBufferStride = {0x1f0 / 4}; // RW     -- Banshee only
+static constexpr uint8_t cmdFifoDepth    = {0x1f4 / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t auxBufferAddr   = {0x1f4 / 4}; // RW     -- Banshee only
+static constexpr uint8_t cmdFifoHoles    = {0x1f8 / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t auxBufferStride = {0x1f8 / 4}; // RW     -- Banshee only
+
+// 0x200
+static constexpr uint8_t fbiInit4        = {0x200 / 4}; // RW     -- Voodoo/Voodoo2 only
+static constexpr uint8_t clipLeftRight1  = {0x200 / 4}; // RW     -- Banshee only
+static constexpr uint8_t vRetrace        = {0x204 / 4}; // R      -- Voodoo/Voodoo2 only
+static constexpr uint8_t clipTopBottom1  = {0x204 / 4}; // RW     -- Banshee only
+static constexpr uint8_t backPorch       = {0x208 / 4}; // RW     -- Voodoo/Voodoo2 only
+static constexpr uint8_t videoDimensions = {0x20c / 4}; // RW     -- Voodoo/Voodoo2 only
+static constexpr uint8_t fbiInit0        = {0x210 / 4}; // RW     -- Voodoo/Voodoo2 only
+static constexpr uint8_t fbiInit1        = {0x214 / 4}; // RW     -- Voodoo/Voodoo2 only
+static constexpr uint8_t fbiInit2        = {0x218 / 4}; // RW     -- Voodoo/Voodoo2 only
+static constexpr uint8_t fbiInit3        = {0x21c / 4}; // RW     -- Voodoo/Voodoo2 only
+static constexpr uint8_t hSync           = {0x220 / 4}; //  W     -- Voodoo/Voodoo2 only
+static constexpr uint8_t vSync           = {0x224 / 4}; //  W     -- Voodoo/Voodoo2 only
+static constexpr uint8_t clutData        = {0x228 / 4}; //  W  F  -- Voodoo/Voodoo2 only
+static constexpr uint8_t dacData         = {0x22c / 4}; //  W     -- Voodoo/Voodoo2 only
+static constexpr uint8_t maxRgbDelta     = {0x230 / 4}; //  W     -- Voodoo/Voodoo2 only
+static constexpr uint8_t hBorder         = {0x234 / 4}; //  W     -- Voodoo2 only
+static constexpr uint8_t vBorder         = {0x238 / 4}; //  W     -- Voodoo2 only
+static constexpr uint8_t borderColor     = {0x23c / 4}; //  W     -- Voodoo2 only
+
+// 0x240
+static constexpr uint8_t hvRetrace       = {0x240 / 4}; // R      -- Voodoo2 only
+static constexpr uint8_t fbiInit5        = {0x244 / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t fbiInit6        = {0x248 / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t fbiInit7        = {0x24c / 4}; // RW     -- Voodoo2 only
+static constexpr uint8_t swapPending     = {0x24c / 4}; //  W     -- Banshee only
+static constexpr uint8_t leftOverlayBuf  = {0x250 / 4}; //  W     -- Banshee only
+static constexpr uint8_t rightOverlayBuf = {0x254 / 4}; //  W     -- Banshee only
+static constexpr uint8_t fbiSwapHistory  = {0x258 / 4}; // R      -- Voodoo2/Banshee only
+static constexpr uint8_t fbiTrianglesOut = {0x25c / 4}; // R      -- Voodoo2/Banshee only
+static constexpr uint8_t sSetupMode      = {0x260 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sVx             = {0x264 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sVy             = {0x268 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sARGB           = {0x26c / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sRed            = {0x270 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sGreen          = {0x274 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sBlue           = {0x278 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sAlpha          = {0x27c / 4}; //  W PF  -- Voodoo2/Banshee only
+
+// 0x280
+static constexpr uint8_t sVz          = {0x280 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sWb          = {0x284 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sWtmu0       = {0x288 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sS_W0        = {0x28c / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sT_W0        = {0x290 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sWtmu1       = {0x294 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sS_Wtmu1     = {0x298 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sT_Wtmu1     = {0x29c / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sDrawTriCMD  = {0x2a0 / 4}; //  W PF  -- Voodoo2/Banshee only
+static constexpr uint8_t sBeginTriCMD = {0x2a4 / 4}; //  W PF  -- Voodoo2/Banshee only
+
+// 0x2c0
+static constexpr uint8_t bltSrcBaseAddr    = {0x2c0 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltDstBaseAddr    = {0x2c4 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltXYStrides      = {0x2c8 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltSrcChromaRange = {0x2cc / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltDstChromaRange = {0x2d0 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltClipX          = {0x2d4 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltClipY          = {0x2d8 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltSrcXY          = {0x2e0 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltDstXY          = {0x2e4 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltSize           = {0x2e8 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltRop            = {0x2ec / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltColor          = {0x2f0 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltCommand        = {0x2f8 / 4}; // RW PF  -- Voodoo2 only
+static constexpr uint8_t bltData           = {0x2fc / 4}; //  W PF  -- Voodoo2 only
+
+// 0x300
+static constexpr uint8_t textureMode     = {0x300 / 4}; //  W PF
+static constexpr uint8_t tLOD            = {0x304 / 4}; //  W PF
+static constexpr uint8_t tDetail         = {0x308 / 4}; //  W PF
+static constexpr uint8_t texBaseAddr     = {0x30c / 4}; //  W PF
+static constexpr uint8_t texBaseAddr_1   = {0x310 / 4}; //  W PF
+static constexpr uint8_t texBaseAddr_2   = {0x314 / 4}; //  W PF
+static constexpr uint8_t texBaseAddr_3_8 = {0x318 / 4}; //  W PF
+static constexpr uint8_t trexInit0       = {0x31c / 4}; //  W  F  -- Voodoo/Voodoo2 only
+static constexpr uint8_t trexInit1       = {0x320 / 4}; //  W  F */
+static constexpr uint8_t nccTable        = {0x324 / 4}; //  W  F */
 
 /*************************************
  *
@@ -1128,6 +1332,18 @@ struct voodoo_state {
 
 	draw_state draw = {};
 	TriangleWorker tworker;
+
+	// Alias map of the first 64 registers when remapped
+	static constexpr uint8_t register_alias_map[0x40] = {
+	        status,      {0x004 / 4}, vertexAx,  vertexAy,  vertexBx,  vertexBy,  vertexCx,  vertexCy,
+	        startR,      dRdX,        dRdY,      startG,    dGdX,      dGdY,      startB,    dBdX,
+	        dBdY,        startZ,      dZdX,      dZdY,      startA,    dAdX,      dAdY,      startS,
+	        dSdX,        dSdY,        startT,    dTdX,      dTdY,      startW,    dWdX,      dWdY,
+
+	        triangleCMD, {0x084 / 4}, fvertexAx, fvertexAy, fvertexBx, fvertexBy, fvertexCx, fvertexCy,
+	        fstartR,     fdRdX,       fdRdY,     fstartG,   fdGdX,     fdGdY,     fstartB,   fdBdX,
+	        fdBdY,       fstartZ,     fdZdX,     fdZdY,     fstartA,   fdAdX,     fdAdY,     fstartS,
+	        fdSdX,       fdSdY,       fstartT,   fdTdX,     fdTdY,     fstartW,   fdWdX,     fdWdY};
 
 #ifdef C_ENABLE_VOODOO_DEBUG
 	//  register names for debugging
@@ -2892,243 +3108,6 @@ while (0)
 
 #ifndef DOSBOX_VOODOO_DEF_H
 #define DOSBOX_VOODOO_DEF_H
-
-/*************************************
- *
- *  Register constants
- *
- *************************************/
-
-/* Codes to the right:
-    R = readable
-    W = writeable
-    P = pipelined
-    F = goes to FIFO
-*/
-
-/* 0x000 */
-#define status			(0x000/4)	/* R  P  */
-#define intrCtrl		(0x004/4)	/* RW P   -- Voodoo2/Banshee only */
-#define vertexAx		(0x008/4)	/*  W PF */
-#define vertexAy		(0x00c/4)	/*  W PF */
-#define vertexBx		(0x010/4)	/*  W PF */
-#define vertexBy		(0x014/4)	/*  W PF */
-#define vertexCx		(0x018/4)	/*  W PF */
-#define vertexCy		(0x01c/4)	/*  W PF */
-#define startR			(0x020/4)	/*  W PF */
-#define startG			(0x024/4)	/*  W PF */
-#define startB			(0x028/4)	/*  W PF */
-#define startZ			(0x02c/4)	/*  W PF */
-#define startA			(0x030/4)	/*  W PF */
-#define startS			(0x034/4)	/*  W PF */
-#define startT			(0x038/4)	/*  W PF */
-#define startW			(0x03c/4)	/*  W PF */
-
-/* 0x040 */
-#define dRdX			(0x040/4)	/*  W PF */
-#define dGdX			(0x044/4)	/*  W PF */
-#define dBdX			(0x048/4)	/*  W PF */
-#define dZdX			(0x04c/4)	/*  W PF */
-#define dAdX			(0x050/4)	/*  W PF */
-#define dSdX			(0x054/4)	/*  W PF */
-#define dTdX			(0x058/4)	/*  W PF */
-#define dWdX			(0x05c/4)	/*  W PF */
-#define dRdY			(0x060/4)	/*  W PF */
-#define dGdY			(0x064/4)	/*  W PF */
-#define dBdY			(0x068/4)	/*  W PF */
-#define dZdY			(0x06c/4)	/*  W PF */
-#define dAdY			(0x070/4)	/*  W PF */
-#define dSdY			(0x074/4)	/*  W PF */
-#define dTdY			(0x078/4)	/*  W PF */
-#define dWdY			(0x07c/4)	/*  W PF */
-
-/* 0x080 */
-#define triangleCMD		(0x080/4)	/*  W PF */
-#define fvertexAx		(0x088/4)	/*  W PF */
-#define fvertexAy		(0x08c/4)	/*  W PF */
-#define fvertexBx		(0x090/4)	/*  W PF */
-#define fvertexBy		(0x094/4)	/*  W PF */
-#define fvertexCx		(0x098/4)	/*  W PF */
-#define fvertexCy		(0x09c/4)	/*  W PF */
-#define fstartR			(0x0a0/4)	/*  W PF */
-#define fstartG			(0x0a4/4)	/*  W PF */
-#define fstartB			(0x0a8/4)	/*  W PF */
-#define fstartZ			(0x0ac/4)	/*  W PF */
-#define fstartA			(0x0b0/4)	/*  W PF */
-#define fstartS			(0x0b4/4)	/*  W PF */
-#define fstartT			(0x0b8/4)	/*  W PF */
-#define fstartW			(0x0bc/4)	/*  W PF */
-
-/* 0x0c0 */
-#define fdRdX			(0x0c0/4)	/*  W PF */
-#define fdGdX			(0x0c4/4)	/*  W PF */
-#define fdBdX			(0x0c8/4)	/*  W PF */
-#define fdZdX			(0x0cc/4)	/*  W PF */
-#define fdAdX			(0x0d0/4)	/*  W PF */
-#define fdSdX			(0x0d4/4)	/*  W PF */
-#define fdTdX			(0x0d8/4)	/*  W PF */
-#define fdWdX			(0x0dc/4)	/*  W PF */
-#define fdRdY			(0x0e0/4)	/*  W PF */
-#define fdGdY			(0x0e4/4)	/*  W PF */
-#define fdBdY			(0x0e8/4)	/*  W PF */
-#define fdZdY			(0x0ec/4)	/*  W PF */
-#define fdAdY			(0x0f0/4)	/*  W PF */
-#define fdSdY			(0x0f4/4)	/*  W PF */
-#define fdTdY			(0x0f8/4)	/*  W PF */
-#define fdWdY			(0x0fc/4)	/*  W PF */
-
-/* 0x100 */
-#define ftriangleCMD	(0x100/4)	/*  W PF */
-#define fbzColorPath	(0x104/4)	/* RW PF */
-#define fogMode			(0x108/4)	/* RW PF */
-#define alphaMode		(0x10c/4)	/* RW PF */
-#define fbzMode			(0x110/4)	/* RW  F */
-#define lfbMode			(0x114/4)	/* RW  F */
-#define clipLeftRight	(0x118/4)	/* RW  F */
-#define clipLowYHighY	(0x11c/4)	/* RW  F */
-#define nopCMD			(0x120/4)	/*  W  F */
-#define fastfillCMD		(0x124/4)	/*  W  F */
-#define swapbufferCMD	(0x128/4)	/*  W  F */
-#define fogColor		(0x12c/4)	/*  W  F */
-#define zaColor			(0x130/4)	/*  W  F */
-#define chromaKey		(0x134/4)	/*  W  F */
-#define chromaRange		(0x138/4)	/*  W  F  -- Voodoo2/Banshee only */
-#define userIntrCMD		(0x13c/4)	/*  W  F  -- Voodoo2/Banshee only */
-
-/* 0x140 */
-#define stipple			(0x140/4)	/* RW  F */
-#define color0			(0x144/4)	/* RW  F */
-#define color1			(0x148/4)	/* RW  F */
-#define fbiPixelsIn		(0x14c/4)	/* R     */
-#define fbiChromaFail	(0x150/4)	/* R     */
-#define fbiZfuncFail	(0x154/4)	/* R     */
-#define fbiAfuncFail	(0x158/4)	/* R     */
-#define fbiPixelsOut	(0x15c/4)	/* R     */
-#define fogTable		(0x160/4)	/*  W  F */
-
-/* 0x1c0 */
-#define cmdFifoBaseAddr	(0x1e0/4)	/* RW     -- Voodoo2 only */
-#define cmdFifoBump		(0x1e4/4)	/* RW     -- Voodoo2 only */
-#define cmdFifoRdPtr	(0x1e8/4)	/* RW     -- Voodoo2 only */
-#define cmdFifoAMin		(0x1ec/4)	/* RW     -- Voodoo2 only */
-#define colBufferAddr	(0x1ec/4)	/* RW     -- Banshee only */
-#define cmdFifoAMax		(0x1f0/4)	/* RW     -- Voodoo2 only */
-#define colBufferStride	(0x1f0/4)	/* RW     -- Banshee only */
-#define cmdFifoDepth	(0x1f4/4)	/* RW     -- Voodoo2 only */
-#define auxBufferAddr	(0x1f4/4)	/* RW     -- Banshee only */
-#define cmdFifoHoles	(0x1f8/4)	/* RW     -- Voodoo2 only */
-#define auxBufferStride	(0x1f8/4)	/* RW     -- Banshee only */
-
-/* 0x200 */
-#define fbiInit4		(0x200/4)	/* RW     -- Voodoo/Voodoo2 only */
-#define clipLeftRight1	(0x200/4)	/* RW     -- Banshee only */
-#define vRetrace		(0x204/4)	/* R      -- Voodoo/Voodoo2 only */
-#define clipTopBottom1	(0x204/4)	/* RW     -- Banshee only */
-#define backPorch		(0x208/4)	/* RW     -- Voodoo/Voodoo2 only */
-#define videoDimensions	(0x20c/4)	/* RW     -- Voodoo/Voodoo2 only */
-#define fbiInit0		(0x210/4)	/* RW     -- Voodoo/Voodoo2 only */
-#define fbiInit1		(0x214/4)	/* RW     -- Voodoo/Voodoo2 only */
-#define fbiInit2		(0x218/4)	/* RW     -- Voodoo/Voodoo2 only */
-#define fbiInit3		(0x21c/4)	/* RW     -- Voodoo/Voodoo2 only */
-#define hSync			(0x220/4)	/*  W     -- Voodoo/Voodoo2 only */
-#define vSync			(0x224/4)	/*  W     -- Voodoo/Voodoo2 only */
-#define clutData		(0x228/4)	/*  W  F  -- Voodoo/Voodoo2 only */
-#define dacData			(0x22c/4)	/*  W     -- Voodoo/Voodoo2 only */
-#define maxRgbDelta		(0x230/4)	/*  W     -- Voodoo/Voodoo2 only */
-#define hBorder			(0x234/4)	/*  W     -- Voodoo2 only */
-#define vBorder			(0x238/4)	/*  W     -- Voodoo2 only */
-#define borderColor		(0x23c/4)	/*  W     -- Voodoo2 only */
-
-/* 0x240 */
-#define hvRetrace		(0x240/4)	/* R      -- Voodoo2 only */
-#define fbiInit5		(0x244/4)	/* RW     -- Voodoo2 only */
-#define fbiInit6		(0x248/4)	/* RW     -- Voodoo2 only */
-#define fbiInit7		(0x24c/4)	/* RW     -- Voodoo2 only */
-#define swapPending		(0x24c/4)	/*  W     -- Banshee only */
-#define leftOverlayBuf	(0x250/4)	/*  W     -- Banshee only */
-#define rightOverlayBuf	(0x254/4)	/*  W     -- Banshee only */
-#define fbiSwapHistory	(0x258/4)	/* R      -- Voodoo2/Banshee only */
-#define fbiTrianglesOut	(0x25c/4)	/* R      -- Voodoo2/Banshee only */
-#define sSetupMode		(0x260/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sVx				(0x264/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sVy				(0x268/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sARGB			(0x26c/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sRed			(0x270/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sGreen			(0x274/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sBlue			(0x278/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sAlpha			(0x27c/4)	/*  W PF  -- Voodoo2/Banshee only */
-
-/* 0x280 */
-#define sVz				(0x280/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sWb				(0x284/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sWtmu0			(0x288/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sS_W0			(0x28c/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sT_W0			(0x290/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sWtmu1			(0x294/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sS_Wtmu1		(0x298/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sT_Wtmu1		(0x29c/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sDrawTriCMD		(0x2a0/4)	/*  W PF  -- Voodoo2/Banshee only */
-#define sBeginTriCMD	(0x2a4/4)	/*  W PF  -- Voodoo2/Banshee only */
-
-/* 0x2c0 */
-#define bltSrcBaseAddr	(0x2c0/4)	/* RW PF  -- Voodoo2 only */
-#define bltDstBaseAddr	(0x2c4/4)	/* RW PF  -- Voodoo2 only */
-#define bltXYStrides	(0x2c8/4)	/* RW PF  -- Voodoo2 only */
-#define bltSrcChromaRange (0x2cc/4)	/* RW PF  -- Voodoo2 only */
-#define bltDstChromaRange (0x2d0/4)	/* RW PF  -- Voodoo2 only */
-#define bltClipX		(0x2d4/4)	/* RW PF  -- Voodoo2 only */
-#define bltClipY		(0x2d8/4)	/* RW PF  -- Voodoo2 only */
-#define bltSrcXY		(0x2e0/4)	/* RW PF  -- Voodoo2 only */
-#define bltDstXY		(0x2e4/4)	/* RW PF  -- Voodoo2 only */
-#define bltSize			(0x2e8/4)	/* RW PF  -- Voodoo2 only */
-#define bltRop			(0x2ec/4)	/* RW PF  -- Voodoo2 only */
-#define bltColor		(0x2f0/4)	/* RW PF  -- Voodoo2 only */
-#define bltCommand		(0x2f8/4)	/* RW PF  -- Voodoo2 only */
-#define bltData			(0x2fc/4)	/*  W PF  -- Voodoo2 only */
-
-/* 0x300 */
-#define textureMode		(0x300/4)	/*  W PF */
-#define tLOD			(0x304/4)	/*  W PF */
-#define tDetail			(0x308/4)	/*  W PF */
-#define texBaseAddr		(0x30c/4)	/*  W PF */
-#define texBaseAddr_1	(0x310/4)	/*  W PF */
-#define texBaseAddr_2	(0x314/4)	/*  W PF */
-#define texBaseAddr_3_8	(0x318/4)	/*  W PF */
-#define trexInit0		(0x31c/4)	/*  W  F  -- Voodoo/Voodoo2 only */
-#define trexInit1		(0x320/4)	/*  W  F */
-#define nccTable		(0x324/4)	/*  W  F */
-
-
-
-/*************************************
- *
- *  Alias map of the first 64
- *  registers when remapped
- *
- *************************************/
-
-static const uint8_t register_alias_map[0x40] =
-{
-	status,		0x004/4,	vertexAx,	vertexAy,
-	vertexBx,	vertexBy,	vertexCx,	vertexCy,
-	startR,		dRdX,		dRdY,		startG,
-	dGdX,		dGdY,		startB,		dBdX,
-	dBdY,		startZ,		dZdX,		dZdY,
-	startA,		dAdX,		dAdY,		startS,
-	dSdX,		dSdY,		startT,		dTdX,
-	dTdY,		startW,		dWdX,		dWdY,
-
-	triangleCMD,0x084/4,	fvertexAx,	fvertexAy,
-	fvertexBx,	fvertexBy,	fvertexCx,	fvertexCy,
-	fstartR,	fdRdX,		fdRdY,		fstartG,
-	fdGdX,		fdGdY,		fstartB,	fdBdX,
-	fdBdY,		fstartZ,	fdZdX,		fdZdY,
-	fstartA,	fdAdX,		fdAdY,		fstartS,
-	fdSdX,		fdSdY,		fstartT,	fdTdX,
-	fdTdY,		fstartW,	fdWdX,		fdWdY
-};
-
-
 
 /*************************************
  *
