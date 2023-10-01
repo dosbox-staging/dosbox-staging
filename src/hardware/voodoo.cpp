@@ -263,12 +263,11 @@ struct poly_vertex
  *
  *************************************/
 
-/* enumeration specifying which model of Voodoo we are emulating */
-enum
-{
-	VOODOO_1,
-	VOODOO_1_DTMU,
-	VOODOO_2,
+// Which model of Voodoo we are emulating
+enum class CardType : uint8_t {
+	Voodoo1SingleTmu,
+	Voodoo1DualTmu,
+	Voodoo2,
 };
 
 enum { TRIANGLE_THREADS = 3, TRIANGLE_WORKERS = TRIANGLE_THREADS + 1 };
@@ -944,7 +943,7 @@ struct tmu_shared_state {
 };
 
 struct tmu_state {
-	void Initialize(const tmu_shared_state& tmu_shared,
+	void Initialize(const tmu_shared_state& tmu_shared, const CardType card_type,
 	                voodoo_reg* voodoo_registers, const int tmem);
 
 	uint8_t* ram            = {}; // pointer to aligned RAM
@@ -1286,6 +1285,8 @@ struct voodoo_state {
 
 	std::unique_ptr<PageHandler> page_handler = {};
 
+	CardType card_type = CardType::Voodoo1SingleTmu;
+
 	uint8_t chipmask = 0x01; // Initial mask for which chips are available
 
 	voodoo_reg reg[0x400]    = {}; // raw registers
@@ -1335,7 +1336,7 @@ struct voodoo_state {
 
 	// Table of per-register access rights
 	static constexpr uint8_t voodoo1_register_access[0x100] = {
-		// clang-format off
+	        // clang-format off
 		// 0x000
 		REG_RP,		0,			REG_WPF,	REG_WPF,
 		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
@@ -1408,7 +1409,7 @@ struct voodoo_state {
 		REG_WF,		REG_WF,		REG_WF,		REG_WF,
 		// 0x380
 		REG_WF
-		// clang-format on
+	        // clang-format on
 	};
 
 // TODO bring this back when enabling voodoo2 code
@@ -3298,8 +3299,6 @@ iterated W    = 18.32 [48 bits]
 
 **************************************************************************/
 
-static uint8_t vtype   = VOODOO_1;
-
 enum class PerformanceFlags : uint8_t {
 	None                = 0,
 	MultiThreading      = 1 << 0,
@@ -3946,7 +3945,7 @@ void voodoo_state::FastFillRaster(void* destbase, const int32_t y,
  *
  *************************************/
 
-static void init_fbi(fbi_state* f, int fbmem)
+static void init_fbi(fbi_state* f, const CardType card_type, int fbmem)
 {
 	/* allocate frame buffer RAM and set pointers */
 	assert(fbmem >= 1); //VOODOO: invalid frame buffer memory size requested
@@ -3982,7 +3981,7 @@ static void init_fbi(fbi_state* f, int fbmem)
 	f->fifo.size = 0;
 
 	/* set the fog delta mask */
-	f->fogdelta_mask = (vtype < VOODOO_2) ? 0xff : 0xfc;
+	f->fogdelta_mask = (card_type < CardType::Voodoo2) ? 0xff : 0xfc;
 
 	f->yorigin = 0;
 
@@ -4040,6 +4039,7 @@ constexpr void tmu_shared_state::Initialize()
 }
 
 void tmu_state::Initialize(const tmu_shared_state& tmu_shared,
+                           const CardType card_type,
                            voodoo_reg* voodoo_registers, const int tmem)
 {
 	// Sanity check inputs
@@ -4058,7 +4058,7 @@ void tmu_state::Initialize(const tmu_shared_state& tmu_shared,
 	reg = voodoo_registers;
 	regdirty = true;
 
-	bilinear_mask = (vtype >= VOODOO_2) ? 0xff : 0xf0;
+	bilinear_mask = (card_type >= CardType::Voodoo2) ? 0xff : 0xf0;
 
 	// Mark the NCC tables dirty and configure their registers
 	ncc[0].dirty = ncc[1].dirty = true;
@@ -4072,7 +4072,7 @@ void tmu_state::Initialize(const tmu_shared_state& tmu_shared,
 	texel[3]  = tmu_shared.int8;
 	texel[4]  = tmu_shared.ai44;
 	texel[5]  = palette;
-	texel[6]  = (vtype >= VOODOO_2) ? palettea : nullptr;
+	texel[6]  = (card_type >= CardType::Voodoo2) ? palettea : nullptr;
 	texel[7]  = nullptr;
 	texel[8]  = tmu_shared.rgb332;
 	texel[9]  = ncc[0].texel;
@@ -4087,7 +4087,7 @@ void tmu_state::Initialize(const tmu_shared_state& tmu_shared,
 
 	// attach the palette to NCC table 0 */
 	ncc[0].palette  = palette;
-	ncc[0].palettea = (vtype >= VOODOO_2) ? palettea : nullptr;
+	ncc[0].palettea = (card_type >= CardType::Voodoo2) ? palettea : nullptr;
 
 	// Set up texture address calculations
 
@@ -4120,7 +4120,7 @@ void voodoo_state::SwapBuffers()
 	reg[fbiSwapHistory].u = (reg[fbiSwapHistory].u << 4);
 
 	// Rotate the buffers
-	if (vtype < VOODOO_2 || !fbi.vblank_dont_swap) {
+	if (card_type < CardType::Voodoo2 || !fbi.vblank_dont_swap) {
 		if (fbi.rgboffs[2] == (uint32_t)(~0)) {
 			fbi.frontbuf = (uint8_t)(1 - fbi.frontbuf);
 			fbi.backbuf  = (uint8_t)(1 - fbi.frontbuf);
@@ -4151,18 +4151,17 @@ void voodoo_state::RecomputeVideoMemory()
 
 	// memory config is determined differently between V1 and V2
 	memory_config = FBIINIT2_ENABLE_TRIPLE_BUF(reg[fbiInit2].u);
-	if (vtype == VOODOO_2 && memory_config == 0) {
+	if (card_type == CardType::Voodoo2 && memory_config == 0) {
 		memory_config = FBIINIT5_BUFFER_ALLOCATION(reg[fbiInit5].u);
 	}
 
 	// Tiles are 64x16/32; x_tiles specifies how many half-tiles
-	fbi.tile_width  = (vtype < VOODOO_2) ? 64 : 32;
-	fbi.tile_height = (vtype < VOODOO_2) ? 16 : 32;
+	fbi.tile_width  = (card_type < CardType::Voodoo2) ? 64 : 32;
+	fbi.tile_height = (card_type < CardType::Voodoo2) ? 16 : 32;
 
 	fbi.x_tiles = FBIINIT1_X_VIDEO_TILES(reg[fbiInit1].u);
 
-	if (vtype == VOODOO_2)
-	{
+	if (card_type == CardType::Voodoo2) {
 		fbi.x_tiles = (fbi.x_tiles << 1) |
 		              (FBIINIT1_X_VIDEO_TILES_BIT5(reg[fbiInit1].u) << 5) |
 		              (FBIINIT6_X_VIDEO_TILES_BIT0(reg[fbiInit6].u));
@@ -5746,7 +5745,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 
 	/* mask off invalid bits for different cards */
 	case fbzColorPath:
-		if (vtype < VOODOO_2) {
+		if (card_type < CardType::Voodoo2) {
 			data &= 0x0fffffff;
 		}
 		if ((chips & 1) != 0) {
@@ -5755,7 +5754,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 		break;
 
 	case fbzMode:
-		if (vtype < VOODOO_2) {
+		if (card_type < CardType::Voodoo2) {
 			data &= 0x001fffff;
 		}
 		if ((chips & 1) != 0) {
@@ -5774,7 +5773,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 		break;
 
 	case fogMode:
-		if (vtype < VOODOO_2) {
+		if (card_type < CardType::Voodoo2) {
 			data &= 0x0000003f;
 		}
 		if ((chips & 1) != 0) {
@@ -5977,7 +5976,7 @@ void voodoo_state::WriteToRegister(const uint32_t offset, uint32_t data)
 	/* fbiInit5-7 are Voodoo 2-only; ignore them on anything else */
 	case fbiInit5:
 	case fbiInit6:
-		if (vtype < VOODOO_2) {
+		if (card_type < CardType::Voodoo2) {
 			break;
 		}
 	/* else fall through... */
@@ -7059,7 +7058,7 @@ uint32_t voodoo_state::ReadFromRegister(const uint32_t offset)
 		break;
 
 	case hvRetrace:
-		if (vtype < VOODOO_2) {
+		if (card_type < CardType::Voodoo2) {
 			break;
 		}
 
@@ -7086,7 +7085,7 @@ uint32_t voodoo_state::ReadFromRegister(const uint32_t offset)
 	break;
 
 	case fbiInit6:
-	if (vtype < VOODOO_2)
+	if (card_type < CardType::Voodoo2)
 	break;
 	result &= 0xffffe7ff;
 	result |= 0x1000;
@@ -7241,34 +7240,34 @@ void voodoo_state::Initialize()
 	uint32_t tmumem1   = 0;
 
 	/* configure type-specific values */
-	switch (vtype) {
-	case VOODOO_1:
+	switch (card_type) {
+	case CardType::Voodoo1SingleTmu:
 		regaccess = voodoo1_register_access;
 		fbmemsize = 2;
 		tmumem0   = 2;
 		break;
 
-	case VOODOO_1_DTMU:
+	case CardType::Voodoo1DualTmu:
 		regaccess = voodoo1_register_access;
 		fbmemsize = 4;
 		tmumem0   = 4;
 		tmumem1   = 4;
 		break;
 
-	/*
-	As is now this crashes in Windows 9x trying to run a
-	game with Voodoo 2 drivers installed (raster_generic
-	tries to write into a frame buffer at an invalid memory
-	location)
-	
-	case VOODOO_2:
-		regaccess = voodoo2_register_access;
-		fbmemsize = 4;
-		tmumem0 = 4;
-		tmumem1 = 4;
-		tmu_config |= 0x800;
-		break;
-	*/
+		/*
+		As is now this crashes in Windows 9x trying to run a
+		game with Voodoo 2 drivers installed (raster_generic
+		tries to write into a frame buffer at an invalid memory
+		location)
+
+		case CardType::Voodoo2:
+		        regaccess = voodoo2_register_access;
+		        fbmemsize = 4;
+		        tmumem0 = 4;
+		        tmumem1 = 4;
+		        tmu_config |= 0x800;
+		        break;
+		*/
 
 	default: break;
 	}
@@ -7280,17 +7279,17 @@ void voodoo_state::Initialize()
 		tmu_config |= 0xc0; // two TMUs
 	}
 	/* set up frame buffer */
-	init_fbi(&fbi, fbmemsize << 20);
+	init_fbi(&fbi, card_type, fbmemsize << 20);
 	fbi.rowpixels = fbi.width;
 
 	/* build shared TMU tables */
 	tmushare.Initialize();
 
 	/* set up the TMUs */
-	tmu[0].Initialize(tmushare, &reg[0x100], tmumem0 << 20);
+	tmu[0].Initialize(tmushare, card_type, &reg[0x100], tmumem0 << 20);
 	chipmask |= 0x02;
 	if (tmumem1 != 0) {
-		tmu[1].Initialize(tmushare, &reg[0x200], tmumem1 << 20);
+		tmu[1].Initialize(tmushare, card_type, &reg[0x200], tmumem1 << 20);
 		chipmask |= 0x04;
 		tmu_config |= 0x40;
 	}
@@ -7712,12 +7711,19 @@ struct PCI_SSTDevice : public PCI_Device {
 
 	uint16_t oscillator_ctr = 0;
 	uint16_t pci_ctr        = 0;
+	const CardType card_type = {};
 
-	PCI_SSTDevice() : PCI_Device(vendor, device_voodoo_1) {}
+	PCI_SSTDevice() = delete;
 
-	void SetDeviceId(uint16_t _device_id)
+	PCI_SSTDevice(const CardType voodoo_card_type)
+	        : PCI_Device(vendor, DeviceIdFromCardType(voodoo_card_type)),
+	          card_type(voodoo_card_type)
+	{}
+
+	static uint16_t DeviceIdFromCardType(const CardType card_type)
 	{
-		device_id = _device_id;
+		return card_type == CardType::Voodoo2 ? device_voodoo_2
+		                                      : device_voodoo_1;
 	}
 
 	Bits ParseReadRegister(uint8_t regnum) override
@@ -7728,13 +7734,14 @@ struct PCI_SSTDevice : public PCI_Device {
 		case 0x4d:
 		case 0x4e:
 		case 0x4f:
-			LOG_DEBUG("VOODOO: SST ParseReadRegister STATUS %x", regnum);
+			// LOG_DEBUG("VOODOO: SST ParseReadRegister STATUS %x",
+			// regnum);
 			break;
 		case 0x54:
 		case 0x55:
 		case 0x56:
 		case 0x57:
-			if (vtype == VOODOO_2) {
+			if (card_type == CardType::Voodoo2) {
 				return -1;
 			}
 			break;
@@ -7745,7 +7752,7 @@ struct PCI_SSTDevice : public PCI_Device {
 	bool OverrideReadRegister(uint8_t regnum, uint8_t* rval,
 	                          uint8_t* rval_mask) override
 	{
-		if (vtype != VOODOO_2) {
+		if (card_type != CardType::Voodoo2) {
 			return false;
 		}
 		switch (regnum) {
@@ -7851,7 +7858,7 @@ struct PCI_SSTDevice : public PCI_Device {
 		registers[0x12] = static_cast<uint8_t>((address_space >> 16) & 0xff);
 		registers[0x13] = static_cast<uint8_t>((address_space >> 24) & 0xff);
 
-		if (vtype == VOODOO_2) {
+		if (card_type == CardType::Voodoo2) {
 			registers[0x40] = 0x00;
 			registers[0x41] = 0x40; // voodoo2 revision ID (rev4)
 			registers[0x42] = 0x01;
@@ -7874,7 +7881,8 @@ voodoo_state::~voodoo_state()
 
 	active = false;
 
-	PCI_RemoveDevice(PCI_SSTDevice::vendor, PCI_SSTDevice::device_voodoo_1);
+	const auto pci_device_id = PCI_SSTDevice::DeviceIdFromCardType(card_type);
+	PCI_RemoveDevice(PCI_SSTDevice::vendor, pci_device_id);
 }
 
 PageHandler* voodoo_state::StartHandler()
@@ -7900,7 +7908,7 @@ PageHandler* voodoo_state::StartHandler()
 	PAGING_InitTLB();
 
 	// Log the startup
-	const auto ram_size_mb = (vtype == VOODOO_1_DTMU ? 12 : 4);
+	const auto ram_size_mb = (card_type == CardType::Voodoo1DualTmu ? 12 : 4);
 
 	const auto performance_msg = describe_performance_flags(vperf);
 
@@ -7931,10 +7939,11 @@ void VOODOO_Configure(const ModuleLifecycle lifecycle, Section* section)
 			return;
 		}
 
+		CardType card_type = {};
 		switch (sec->Get_string("voodoo_memsize")[0]) {
-		case '1': vtype = VOODOO_1_DTMU; break; // 12 MB
-		case '4': vtype = VOODOO_1; break;      // 4 MB
-		default: return;                        // disabled
+		case '1': card_type = CardType::Voodoo1DualTmu; break; // 12 MB
+		case '4': card_type = CardType::Voodoo1SingleTmu; break; // 4 MB
+		default: return; // disabled
 		}
 
 		// Check 64 KB alignment of LFB base
@@ -7946,7 +7955,7 @@ void VOODOO_Configure(const ModuleLifecycle lifecycle, Section* section)
 		voodoo_instance = std::make_unique<voodoo_state>();
 		voodoo          = voodoo_instance.get();
 
-		PCI_AddDevice(new PCI_SSTDevice());
+		PCI_AddDevice(new PCI_SSTDevice(card_type));
 	}
 
 	// This module doesn't support reconfiguration at runtime
