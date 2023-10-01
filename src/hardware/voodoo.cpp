@@ -1222,12 +1222,13 @@ struct VoodooInitPageHandler : public PageHandler {
 using dither_lut_t = std::array<uint8_t, 256 * 16 * 2>;
 constexpr dither_lut_t generate_dither_lut(const uint8_t dither_amounts[]);
 
+struct VoodooPciDevice;
+
 struct voodoo_state {
-	voodoo_state()
-	        : page_handler(std::make_unique<VoodooInitPageHandler>(this)),
-	          tworker(this)
-	{}
+	voodoo_state(const CardType voodoo_card_type);
 	~voodoo_state();
+
+	voodoo_state()                               = delete;
 	voodoo_state(const voodoo_state&)            = delete;
 	voodoo_state& operator=(const voodoo_state&) = delete;
 
@@ -1283,9 +1284,11 @@ struct voodoo_state {
 
 	void UpdateStatistics(const StatsCollection collection_action);
 
-	std::unique_ptr<PageHandler> page_handler = {};
+	const CardType card_type = {};
 
-	CardType card_type = CardType::Voodoo1SingleTmu;
+	VoodooPciDevice* pci_device = nullptr;
+
+	std::unique_ptr<PageHandler> page_handler = {};
 
 	uint8_t chipmask = 0x01; // Initial mask for which chips are available
 
@@ -7702,7 +7705,7 @@ static_assert(PciVoodooLfbBase + (VOODOO_PAGES * MemPageSize) <= PciVoodooLfbLim
 
 static uint32_t voodoo_current_lfb;
 
-struct PCI_SSTDevice : public PCI_Device {
+struct VoodooPciDevice : public PCI_Device {
 	enum : uint16_t {
 		vendor          = 0x121a,
 		device_voodoo_1 = 0x0001,
@@ -7713,17 +7716,17 @@ struct PCI_SSTDevice : public PCI_Device {
 	uint16_t pci_ctr        = 0;
 	const CardType card_type = {};
 
-	PCI_SSTDevice() = delete;
+	VoodooPciDevice() = delete;
 
-	PCI_SSTDevice(const CardType voodoo_card_type)
+	VoodooPciDevice(const CardType voodoo_card_type)
 	        : PCI_Device(vendor, DeviceIdFromCardType(voodoo_card_type)),
 	          card_type(voodoo_card_type)
 	{}
 
-	static uint16_t DeviceIdFromCardType(const CardType card_type)
+	uint16_t DeviceIdFromCardType(const CardType voodoo_card_type)
 	{
-		return card_type == CardType::Voodoo2 ? device_voodoo_2
-		                                      : device_voodoo_1;
+		return voodoo_card_type == CardType::Voodoo2 ? device_voodoo_2
+		                                             : device_voodoo_1;
 	}
 
 	Bits ParseReadRegister(uint8_t regnum) override
@@ -7869,6 +7872,16 @@ struct PCI_SSTDevice : public PCI_Device {
 	}
 };
 
+voodoo_state::voodoo_state(const CardType voodoo_card_type)
+        : card_type(voodoo_card_type),
+          pci_device(new VoodooPciDevice(card_type)),
+          page_handler(std::make_unique<VoodooInitPageHandler>(this)),
+          tworker(this)
+{
+	assert(pci_device);
+	PCI_AddDevice(pci_device);
+}
+
 voodoo_state::~voodoo_state()
 {
 	LOG_MSG("VOODOO: Shutting down");
@@ -7881,8 +7894,8 @@ voodoo_state::~voodoo_state()
 
 	active = false;
 
-	const auto pci_device_id = PCI_SSTDevice::DeviceIdFromCardType(card_type);
-	PCI_RemoveDevice(PCI_SSTDevice::vendor, pci_device_id);
+	assert(pci_device);
+	PCI_RemoveDevice(pci_device->VendorID(), pci_device->DeviceID());
 }
 
 PageHandler* voodoo_state::StartHandler()
@@ -7952,10 +7965,8 @@ void VOODOO_Configure(const ModuleLifecycle lifecycle, Section* section)
 		voodoo_current_lfb = PciVoodooLfbBase;
 		vperf = static_cast<PerformanceFlags>(sec->Get_int("voodoo_perf"));
 
-		voodoo_instance = std::make_unique<voodoo_state>();
+		voodoo_instance = std::make_unique<voodoo_state>(card_type);
 		voodoo          = voodoo_instance.get();
-
-		PCI_AddDevice(new PCI_SSTDevice(card_type));
 	}
 
 	// This module doesn't support reconfiguration at runtime
