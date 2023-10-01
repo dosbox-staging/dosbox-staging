@@ -1333,6 +1333,163 @@ struct voodoo_state {
 	draw_state draw = {};
 	TriangleWorker tworker;
 
+	// Table of per-register access rights
+	static constexpr uint8_t voodoo1_register_access[0x100] = {
+		// clang-format off
+		// 0x000
+		REG_RP,		0,			REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		// 0x040
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		// 0x080
+		REG_WPF,	0,			REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		// 0x0c0
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		// 0x100
+		REG_WPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
+		REG_RWF,	REG_RWF,	REG_RWF,	REG_RWF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		0,			0,
+		// 0x140
+		REG_RWF,	REG_RWF,	REG_RWF,	REG_R,
+		REG_R,		REG_R,		REG_R,		REG_R,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		// 0x180
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		// 0x1c0
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		// 0x200
+		REG_RW,		REG_R,		REG_RW,		REG_RW,
+		REG_RW,		REG_RW,		REG_RW,		REG_RW,
+		REG_W,		REG_W,		REG_W,		REG_W,
+		REG_W,		0,			0,			0,
+		// 0x240
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		// 0x280
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		// 0x2c0
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		0,			0,			0,			0,
+		// 0x300
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		// 0x340
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		// 0x380
+		REG_WF
+		// clang-format on
+	};
+
+// TODO bring this back when enabling voodoo2 code
+#if 0
+	static constexpr uint8_t voodoo2_register_access[0x100] = {
+		// clang-format off
+		// 0x000
+		REG_RP,		REG_RWPT,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		// 0x040
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		// 0x080
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		// 0x0c0
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		// 0x100
+		REG_WPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
+		REG_RWF,	REG_RWF,	REG_RWF,	REG_RWF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		// 0x140
+		REG_RWF,	REG_RWF,	REG_RWF,	REG_R,
+		REG_R,		REG_R,		REG_R,		REG_R,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		// 0x180
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		// 0x1c0
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_RWT,	REG_RWT,	REG_RWT,	REG_RWT,
+		REG_RWT,	REG_RWT,	REG_RWT,	REG_RW,
+		// 0x200
+		REG_RWT,	REG_R,		REG_RWT,	REG_RWT,
+		REG_RWT,	REG_RWT,	REG_RWT,	REG_RWT,
+		REG_WT,		REG_WT,		REG_WF,		REG_WT,
+		REG_WT,		REG_WT,		REG_WT,		REG_WT,
+		// 0x240
+		REG_R,		REG_RWT,	REG_RWT,	REG_RWT,
+		0,			0,			REG_R,		REG_R,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		// 0x280
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	0,			0,
+		0,			0,			0,			0,
+		// 0x2c0
+		REG_RWPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
+		REG_RWPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
+		REG_RWPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
+		REG_RWPF,	REG_RWPF,	REG_RWPF,	REG_WPF,
+		// 0x300
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
+		REG_WPF,	REG_WPF,	REG_WPF,	REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		// 0x340
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		REG_WF,		REG_WF,		REG_WF,		REG_WF,
+		// 0x380
+		REG_WF };
+		// clang-format on
+#endif
+
 	// Alias map of the first 64 registers when remapped
 	static constexpr uint8_t register_alias_map[0x40] = {
 	        status,      {0x004 / 4}, vertexAx,  vertexAy,  vertexBx,  vertexBy,  vertexCx,  vertexCy,
@@ -3105,200 +3262,6 @@ while (0)
 	while (0)
 
 #endif //DOSBOX_VOODOO_DATA_H
-
-#ifndef DOSBOX_VOODOO_DEF_H
-#define DOSBOX_VOODOO_DEF_H
-
-/*************************************
- *
- *  Table of per-register access rights
- *
- *************************************/
-
-static const uint8_t voodoo_register_access[0x100] =
-{
-	/* 0x000 */
-	REG_RP,		0,			REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-
-	/* 0x040 */
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-
-	/* 0x080 */
-	REG_WPF,	0,			REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-
-	/* 0x0c0 */
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-
-	/* 0x100 */
-	REG_WPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
-	REG_RWF,	REG_RWF,	REG_RWF,	REG_RWF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		0,			0,
-
-	/* 0x140 */
-	REG_RWF,	REG_RWF,	REG_RWF,	REG_R,
-	REG_R,		REG_R,		REG_R,		REG_R,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-
-	/* 0x180 */
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-
-	/* 0x1c0 */
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-
-	/* 0x200 */
-	REG_RW,		REG_R,		REG_RW,		REG_RW,
-	REG_RW,		REG_RW,		REG_RW,		REG_RW,
-	REG_W,		REG_W,		REG_W,		REG_W,
-	REG_W,		0,			0,			0,
-
-	/* 0x240 */
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-
-	/* 0x280 */
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-
-	/* 0x2c0 */
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-	0,			0,			0,			0,
-
-	/* 0x300 */
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-
-	/* 0x340 */
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-
-	/* 0x380 */
-	REG_WF
-};
-
-// TODO bring this back when enabling voodoo2 code
-#if 0 
-static const uint8_t voodoo2_register_access[0x100] =
-{
-	/* 0x000 */
-	REG_RP,		REG_RWPT,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-
-	/* 0x040 */
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-
-	/* 0x080 */
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-
-	/* 0x0c0 */
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-
-	/* 0x100 */
-	REG_WPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
-	REG_RWF,	REG_RWF,	REG_RWF,	REG_RWF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-
-	/* 0x140 */
-	REG_RWF,	REG_RWF,	REG_RWF,	REG_R,
-	REG_R,		REG_R,		REG_R,		REG_R,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-
-	/* 0x180 */
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-
-	/* 0x1c0 */
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_RWT,	REG_RWT,	REG_RWT,	REG_RWT,
-	REG_RWT,	REG_RWT,	REG_RWT,	REG_RW,
-
-	/* 0x200 */
-	REG_RWT,	REG_R,		REG_RWT,	REG_RWT,
-	REG_RWT,	REG_RWT,	REG_RWT,	REG_RWT,
-	REG_WT,		REG_WT,		REG_WF,		REG_WT,
-	REG_WT,		REG_WT,		REG_WT,		REG_WT,
-
-	/* 0x240 */
-	REG_R,		REG_RWT,	REG_RWT,	REG_RWT,
-	0,			0,			REG_R,		REG_R,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-
-	/* 0x280 */
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	0,			0,
-	0,			0,			0,			0,
-
-	/* 0x2c0 */
-	REG_RWPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
-	REG_RWPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
-	REG_RWPF,	REG_RWPF,	REG_RWPF,	REG_RWPF,
-	REG_RWPF,	REG_RWPF,	REG_RWPF,	REG_WPF,
-
-	/* 0x300 */
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WPF,
-	REG_WPF,	REG_WPF,	REG_WPF,	REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-
-	/* 0x340 */
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-	REG_WF,		REG_WF,		REG_WF,		REG_WF,
-
-	/* 0x380 */
-	REG_WF
-};
-#endif
-
-#endif //DOSBOX_VOODOO_DEF_H
 
 /*
     3dfx Voodoo Graphics SST-1/2 emulator
@@ -7280,13 +7243,13 @@ void voodoo_state::Initialize()
 	/* configure type-specific values */
 	switch (vtype) {
 	case VOODOO_1:
-		regaccess = voodoo_register_access;
+		regaccess = voodoo1_register_access;
 		fbmemsize = 2;
 		tmumem0   = 2;
 		break;
 
 	case VOODOO_1_DTMU:
-		regaccess = voodoo_register_access;
+		regaccess = voodoo1_register_access;
 		fbmemsize = 4;
 		tmumem0   = 4;
 		tmumem1   = 4;
