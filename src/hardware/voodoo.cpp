@@ -932,10 +932,8 @@ struct raster_info
 
 struct draw_state
 {
-	double frame_start           = 0.0;
-
-	// hmm.. this is actually the vertical frame period in millseconds.
-	double vfreq                 = 1000.0 / 60.0;
+	double frame_start     = 0.0;
+	double frame_period_ms = 1000.0 / 60.0;
 
 	bool override_on             = false;
 	bool screen_update_requested = false;
@@ -7430,7 +7428,7 @@ static void call_vertical_timer(uint32_t /*val*/)
 void voodoo_state::VerticalTimer()
 {
 	draw.frame_start = PIC_FullIndex();
-	PIC_AddEvent(call_vertical_timer, draw.vfreq);
+	PIC_AddEvent(call_vertical_timer, draw.frame_period_ms);
 
 	if (fbi.vblank_flush_pending) {
 		VblankFlush();
@@ -7476,16 +7474,16 @@ bool voodoo_state::GetRetrace()
 {
 	// TODO proper implementation
 	const auto time_in_frame = PIC_FullIndex() - draw.frame_start;
-	const auto vfreq = draw.vfreq;
-	if (vfreq <= 0) {
+	const auto frame_period_ms = draw.frame_period_ms;
+	if (frame_period_ms <= 0) {
 		return false;
 	}
 	if (clock_enabled && output_on) {
-		if ((time_in_frame / vfreq) > 0.95) {
+		if ((time_in_frame / frame_period_ms) > 0.95) {
 			return true;
 		}
 	} else if (output_on) {
-		auto rtime = time_in_frame / vfreq;
+		auto rtime = time_in_frame / frame_period_ms;
 		rtime = fmod(rtime, 1.0);
 		if (rtime > 0.95) {
 			return true;
@@ -7498,15 +7496,15 @@ double voodoo_state::GetVRetracePosition()
 {
 	// TODO proper implementation
 	const auto time_in_frame = PIC_FullIndex() - draw.frame_start;
-	const auto vfreq = draw.vfreq;
-	if (vfreq <= 0) {
+	const auto frame_period_ms = draw.frame_period_ms;
+	if (frame_period_ms <= 0) {
 		return 0.0;
 	}
 	if (clock_enabled && output_on) {
-		return time_in_frame / vfreq;
+		return time_in_frame / frame_period_ms;
 	}
 	if (output_on) {
-		auto rtime = time_in_frame / vfreq;
+		auto rtime = time_in_frame / frame_period_ms;
 		rtime = fmod(rtime, 1.0);
 		return rtime;
 	}
@@ -7518,17 +7516,17 @@ double voodoo_state::GetHRetracePosition()
 	// TODO proper implementation
 	const auto time_in_frame = PIC_FullIndex() - draw.frame_start;
 
-	const auto hfreq = draw.vfreq * 100;
+	const auto horizontal_period_ms = draw.frame_period_ms * 100;
 
-	if (hfreq <= 0) {
+	if (horizontal_period_ms <= 0) {
 		return 0.0;
 	}
 	if (clock_enabled && output_on) {
-		return time_in_frame / hfreq;
+		return time_in_frame / horizontal_period_ms;
 	}
 	if (output_on) {
-		auto rtime = time_in_frame / hfreq;
-		rtime      = fmod(rtime, 1.0);
+		auto rtime = time_in_frame / horizontal_period_ms;
+		rtime = fmod(rtime, 1.0);
 		return rtime;
 	}
 	return 0.0;
@@ -7553,7 +7551,6 @@ void voodoo_state::UpdateScreen()
 		PIC_RemoveEvents(call_vertical_timer); // shouldn't be needed
 
 		// TODO proper implementation of refresh rates and timings
-		draw.vfreq = 1000.0 / 60.0;
 		VGA_SetOverride(true);
 		draw.override_on = true;
 
@@ -7580,7 +7577,7 @@ void voodoo_state::UpdateScreen()
 			video_mode.is_custom_mode = false;
 			video_mode.is_graphics_mode = true;
 
-			const auto frames_per_second = 1000.0 / draw.vfreq;
+			const auto frames_per_second = 1000.0 / draw.frame_period_ms;
 
 			RENDER_SetSize(video_mode.width,
 			               video_mode.height,
