@@ -709,23 +709,26 @@ void DOSBOX_Init()
 	pint->SetMinMax(1, 1000000);
 	pint->Set_help("Setting it lower than 100 will be a percentage (20 by default).");
 
-	secprop = control->AddSection_prop("voodoo", &VOODOO_Init, false);
+	secprop = control->AddSection("voodoo", VOODOO_Configure);
 
-	const char* voodootypes[] = {"disabled", "4", "12", nullptr};
-	pstring = secprop->Add_string("voodoo_memsize", only_at_start, "12");
-	pstring->Set_values(voodootypes);
-	pstring->Set_help(
-	        "Memory size (in MB) of the 3dfx Voodoo card (12 MB as default).");
+	constexpr auto voodoo_default = true;
+	pbool = secprop->Add_bool("voodoo", when_idle, voodoo_default);
+	pbool->Set_help("Enable the 3dfx Voodoo card (enabled by default).");
 
-	pint = secprop->Add_int("voodoo_perf", only_at_start, 1);
-	pint->SetMinMax(0, 3);
-	pint->Set_help("Performance optimisations to use when emulating the 3dfx Voodoo card:\n"
-	               "   0:  No optimizations.\n"
-	               "   1:  Multi-threading (default).\n"
-	               "   2:  Disable bilinear filtering.\n"
-	               "   3:  All optimizations (both 1 and 2).\n"
-	               "Note: Voodoo emulation is software-based and does not use host-level\n"
-	               "      OpenGL calls.");
+	const char* voodoo_memsizes[] = {"4", "12", nullptr};
+	pint = secprop->Add_int("voodoo_memsize", when_idle, 4);
+	pint->Set_values(voodoo_memsizes);
+	pint->Set_help("Memory size (in MB) of the 3dfx Voodoo card (4 MB as default).");
+
+	constexpr auto voodoo_threading_default = true;
+	pbool = secprop->Add_bool("voodoo_threading", when_idle, voodoo_threading_default);
+	pbool->Set_help("Use multiple threads to boost Voodoo performance (enabled by default).");
+
+	constexpr auto voodoo_filtering_default = false;
+	pbool = secprop->Add_bool("voodoo_filtering", when_idle, voodoo_filtering_default);
+	pbool->Set_help(
+	        "Improve Voodoo texture quality with bilinear filtering (disabled by default).\n"
+	        "Enable this if you have either fast hardware or no qualms with low frame rates.");
 
 	// Configure capture
 	CAPTURE_AddConfigSection(control);

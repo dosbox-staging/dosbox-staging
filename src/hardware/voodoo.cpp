@@ -1147,7 +1147,14 @@ struct voodoo_state;
 
 class TriangleWorker {
 public:
-	TriangleWorker(voodoo_state* state) : vs(state) {}
+	TriangleWorker(voodoo_state* const state, const bool wants_threading,
+	               const bool wants_filtering)
+	        : vs(state),
+	          use_threading(wants_threading),
+	          use_filtering(wants_filtering)
+	{
+		assert(vs);
+	}
 	~TriangleWorker();
 
 	TriangleWorker() = delete;
@@ -1164,9 +1171,6 @@ public:
 	int32_t v1y = 0;
 	int32_t v3y = 0;
 
-	bool use_threads             = false;
-	bool disable_bilinear_filter = true;
-
 private:
 	void Work(const int32_t worktstart, const int32_t worktend);
 	void ThreadFunc(const int32_t p);
@@ -1177,10 +1181,12 @@ private:
 	Semaphore semdone = {};
 
 	std::atomic_bool threads_active = false;
-	voodoo_state* vs = nullptr;
-
 	int32_t totalpix = 0;
 	int done_count   = 0;
+
+	voodoo_state* const vs = nullptr;
+	const bool use_threading = {};
+	const bool use_filtering = {};
 };
 
 struct VoodooPageHandler : public PageHandler {
@@ -1225,7 +1231,7 @@ constexpr dither_lut_t generate_dither_lut(const uint8_t dither_amounts[]);
 struct VoodooPciDevice;
 
 struct voodoo_state {
-	voodoo_state(const CardType voodoo_card_type);
+	voodoo_state(const Section_prop* const config);
 	~voodoo_state();
 
 	voodoo_state()                               = delete;
@@ -1286,7 +1292,10 @@ struct voodoo_state {
 
 	void UpdateStatistics(const StatsCollection collection_action);
 
+	// Configurable settings
 	const CardType card_type = {};
+	const bool wants_threading = {};
+	const bool wants_filtering = {};
 
 	VoodooPciDevice* pci_device = nullptr;
 
@@ -3304,32 +3313,6 @@ iterated W    = 18.32 [48 bits]
 
 **************************************************************************/
 
-enum class PerformanceFlags : uint8_t {
-	None                = 0,
-	MultiThreading      = 1 << 0,
-	NoBilinearFiltering = 1 << 1,
-	All                 = (MultiThreading | NoBilinearFiltering),
-};
-
-static const char* describe_performance_flags(const PerformanceFlags flags)
-{
-	// Note: the descriptions are meant to be used as a status postfix
-	switch (flags) {
-	case PerformanceFlags::None:
-		return " and no optimizations";
-	case PerformanceFlags::MultiThreading:
-		return " and multi-threading";
-	case PerformanceFlags::NoBilinearFiltering:
-		return " and no bilinear filtering";
-	case PerformanceFlags::All:
-		return ", multi-threading, and no biliear filtering";
-	}
-	assert(false);
-	return "unknown performance flag";
-}
-
-static PerformanceFlags vperf = {};
-
 #define LOG_VOODOO LOG_PCI
 enum {
 	LOG_VBLANK_SWAP = 0,
@@ -4618,7 +4601,7 @@ void TriangleWorker::Work(const int32_t worktstart, const int32_t worktend)
 			tmus = 2;
 			texmode1 = vs->tmu[1].reg[textureMode].u;
 		}
-		if (disable_bilinear_filter) // force disable bilinear filter
+		if (!use_filtering) // disable bilinear filtering
 		{
 			texmode0 &= ~6;
 			texmode1 &= ~6;
@@ -4715,7 +4698,7 @@ TriangleWorker::~TriangleWorker()
 
 void TriangleWorker::Run()
 {
-	if (!use_threads) {
+	if (!use_threading) {
 		// do not use threaded calculation
 		totalpix = 0xFFFFFFF;
 		Work(0, TRIANGLE_WORKERS);
@@ -7886,14 +7869,38 @@ struct VoodooPciDevice : public PCI_Device {
 	}
 };
 
-voodoo_state::voodoo_state(const CardType voodoo_card_type)
-        : card_type(voodoo_card_type),
+static CardType get_card_type(const int ram_mb)
+{
+	switch (ram_mb) {
+	case 4: return CardType::Voodoo1SingleTmu;
+	case 12: return CardType::Voodoo1DualTmu;
+	default:
+		LOG_WARNING("VOODOO: Unknown RAM amount: %d MB; falling back to 4 MB", ram_mb);
+		return CardType::Voodoo1SingleTmu;
+	}
+}
+
+voodoo_state::voodoo_state(const Section_prop* const config)
+        : card_type(get_card_type(config->Get_int("voodoo_memsize"))),
+          wants_threading(config->Get_bool("voodoo_threading")),
+          wants_filtering(config->Get_bool("voodoo_filtering")),
           pci_device(new VoodooPciDevice(card_type)),
           page_handler(std::make_unique<VoodooInitPageHandler>(this)),
-          tworker(this)
+          tworker(this, wants_threading, wants_filtering)
 {
 	assert(pci_device);
 	PCI_AddDevice(pci_device);
+
+	const auto ram_size_mb = (card_type == CardType::Voodoo1SingleTmu ? 4 : 12);
+	const auto num_tmus = (card_type == CardType::Voodoo1SingleTmu ? "single" : "dual");
+	const auto filtering_choice = (wants_filtering ? "filtered" : "unfiltered");
+	const auto threading_choice = (wants_threading ? "multi-" : "without ");
+
+	LOG_MSG("VOODOO: Initialized a %d-MB %s-TMU card with %s textures and %sthreading",
+	        ram_size_mb,
+	        num_tmus,
+	        filtering_choice,
+	        threading_choice);
 }
 
 voodoo_state::~voodoo_state()
@@ -7922,25 +7929,11 @@ PageHandler* voodoo_state::StartHandler()
 
 	Initialize();
 
-	tworker.use_threads = (vperf == PerformanceFlags::MultiThreading ||
-	                       vperf == PerformanceFlags::All);
-
-	tworker.disable_bilinear_filter = (vperf == PerformanceFlags::NoBilinearFiltering ||
-	                                   vperf == PerformanceFlags::All);
-
 	// Switch the pagehandler now that has been allocated and is in use
 	page_handler       = std::make_unique<VoodooPageHandler>(this);
 	is_handler_started = true;
 
 	PAGING_InitTLB();
-
-	// Log the startup
-	const auto ram_size_mb = (card_type == CardType::Voodoo1DualTmu ? 12 : 4);
-
-	const auto performance_msg = describe_performance_flags(vperf);
-
-	LOG_MSG("VOODOO: Initialized with %d MB of RAM%s", ram_size_mb, performance_msg);
-
 	return page_handler.get();
 }
 
@@ -7960,29 +7953,19 @@ void VOODOO_Configure(const ModuleLifecycle lifecycle, Section* section)
 	static std::unique_ptr<voodoo_state> voodoo_instance = {};
 
 	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
 	case ModuleLifecycle::Create: {
-		auto* sec = dynamic_cast<Section_prop*>(section);
+		const auto config = dynamic_cast<Section_prop*>(section);
 
-		// Only activate on SVGA machines
-		if (machine != MCH_VGA || svgaCard == SVGA_None || !sec) {
-			return;
-		}
-
-		CardType card_type = {};
-		switch (sec->Get_string("voodoo_memsize")[0]) {
-		case '1': card_type = CardType::Voodoo1DualTmu; break; // 12 MB
-		case '4': card_type = CardType::Voodoo1SingleTmu; break; // 4 MB
-		default: return; // disabled
-		}
-
-		vperf = static_cast<PerformanceFlags>(sec->Get_int("voodoo_perf"));
-
-		voodoo_instance = std::make_unique<voodoo_state>(card_type);
-		voodoo          = voodoo_instance.get();
-	}
-
-	// This module doesn't support reconfiguration at runtime
-	case ModuleLifecycle::Reconfigure: break;
+		// Voodoo is only possible on SVGA-enabled configurations
+		const auto wants_voodoo = (machine == MCH_VGA &&
+		                           svgaCard != SVGA_None && config &&
+		                           config->Get_bool("voodoo"));
+		voodoo_instance = wants_voodoo
+		                        ? std::make_unique<voodoo_state>(config)
+		                        : nullptr;
+		voodoo = voodoo_instance.get();
+	} break;
 
 	case ModuleLifecycle::Destroy:
 		voodoo_instance.reset();
