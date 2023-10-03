@@ -48,39 +48,39 @@ support today's systems.
 
 ### For users
 
-| **Feature**                  | **Description**
-|-                             |-
-| **CD-DA file codecs**        | Opus, OGG/Vorbis, MP3, FLAC, and WAV
-| **Integer scaling**          | `integer_scaling = vertical` or `horizontal`; replaced "pixel-perfect" mode<sup>[7]</sup>
-| **Resizable window**         | Yes
-| **Relative window size**     | `windowresolution = small`, `medium`, or `large` config setting
-| **Window placement**         | `windowposition` config setting<sup>[16]</sup>
-| **[OPL] emulator**           |  Nuked OPL, a highly accurate (YMF262, CT1747) emulator <sup>[8]</sup>
-| **[CGA]/mono support**       | `machine = cga_mono` and `monochrome_palette` config settings<sup>[9]</sup>
-| **CGA composite modes**      | For `machine = pcjr`, `tandy`, and `cga`; toggleable via hotkeys
-| **[Wayland] support**        | Experimental: use `SDL_VIDEODRIVER=wayland`
-| **Modem phonebook file**     | `phonebookfile` config setting
-| **Raw mouse input**          | `raw_mouse_input` config setting
-| **`AUTOTYPE` command**       | Yes<sup>[10]</sup>
-| **`MORE` command**           | Yes<sup>[21]</sup>
-| **Startup verbosity**        | Yes<sup>[11]</sup>
-| **[GUS] enhancements**       | Yes<sup>[12]</sup>
-| **[FluidSynth][FS] MIDI**    | Built-in<sup>[13]</sup>; via FluidSynth 2.x (SoundFonts not included)
-| **[MT-32] emulator**         | Built-in; via libmt32emu 2.4.2 (requires user-supplied ROM files)
-| **Expanded S3 support**      | 4 and 8 MB of RAM<sup>[14]</sup>
-| **Portable & layered conf**  | By default<sup>[15]</sup>
-| **Translations handling**    | Bundled, see section 14 in README
-| **[ENet] modem transport**   | serialport `sock:1` flag or `SERIAL.COM`<sup>[17]</sup>
-| **Ethernet via [slirp]**     | See `[ethernet]` config section
-| **IDE support for CD-ROMs**  | See `-ide` flag in `IMGMOUNT.COM /help`
-| **Networking in Win3.11**    | Via local shell<sup>[18]</sup>
-| **Audio filters**            | See `*_filter` config settings
-| **Audio reverb and chorus**  | See `reverb` config setting and `MIXER.COM /help`
-| **Audio stereo crossfeed**   | See `chorus` config setting and `MIXER.COM /help`
-| **AdLib Gold emulation**     | Via `oplmode = opl3gold`; emulates the surround add-on module too<sup>[19]</sup>
-| **Master audio compressor**  | `compressor` config setting<sup>[20]</sup>
-| **Dual/multi-mouse input**   | See `[mouse]` config section
-| **ReelMagic support**        | See `[reelmagic]` config section
+| **Feature**                 | **Description**                                                                           |
+|-----------------------------|-------------------------------------------------------------------------------------------|
+| **CD-DA file codecs**       | Opus, OGG/Vorbis, MP3, FLAC, and WAV                                                      |
+| **Integer scaling**         | `integer_scaling = vertical` or `horizontal`; replaced "pixel-perfect" mode<sup>[7]</sup> |
+| **Resizable window**        | Yes                                                                                       |
+| **Relative window size**    | `windowresolution = small`, `medium`, or `large` config setting                           |
+| **Window placement**        | `windowposition` config setting<sup>[16]</sup>                                            |
+| **[OPL] emulator**          | Nuked OPL, a highly accurate (YMF262, CT1747) emulator <sup>[8]</sup>                     |
+| **[CGA]/mono support**      | `machine = cga_mono` and `monochrome_palette` config settings<sup>[9]</sup>               |
+| **CGA composite modes**     | For `machine = pcjr`, `tandy`, and `cga`; toggleable via hotkeys                          |
+| **[Wayland] support**       | Experimental: use `SDL_VIDEODRIVER=wayland`                                               |
+| **Modem phonebook file**    | `phonebookfile` config setting                                                            |
+| **Raw mouse input**         | `raw_mouse_input` config setting                                                          |
+| **`AUTOTYPE` command**      | Yes<sup>[10]</sup>                                                                        |
+| **`MORE` command**          | Yes<sup>[21]</sup>                                                                        |
+| **Startup verbosity**       | Yes<sup>[11]</sup>                                                                        |
+| **[GUS] enhancements**      | Yes<sup>[12]</sup>                                                                        |
+| **[FluidSynth][FS] MIDI**   | Built-in<sup>[13]</sup>; via FluidSynth 2.x (SoundFonts not included)                     |
+| **[MT-32] emulator**        | Built-in; via libmt32emu 2.4.2 (requires user-supplied ROM files)                         |
+| **Expanded S3 support**     | 4 and 8 MB of RAM<sup>[14]</sup>                                                          |
+| **Portable & layered conf** | By default<sup>[15]</sup>                                                                 |
+| **Translations handling**   | Bundled, see section 14 in README                                                         |
+| **[ENet] modem transport**  | serialport `sock:1` flag or `SERIAL.COM`<sup>[17]</sup>                                   |
+| **Ethernet via [slirp]**    | See `[ethernet]` config section                                                           |
+| **IDE support for CD-ROMs** | See `-ide` flag in `IMGMOUNT.COM /help`                                                   |
+| **Networking in Win3.11**   | Via local shell<sup>[18]</sup>                                                            |
+| **Audio filters**           | See `*_filter` config settings                                                            |
+| **Audio reverb and chorus** | See `reverb` config setting and `MIXER.COM /help`                                         |
+| **Audio stereo crossfeed**  | See `chorus` config setting and `MIXER.COM /help`                                         |
+| **AdLib Gold emulation**    | Via `oplmode = opl3gold`; emulates the surround add-on module too<sup>[19]</sup>          |
+| **Master audio compressor** | `compressor` config setting<sup>[20]</sup>                                                |
+| **Dual/multi-mouse input**  | See `[mouse]` config section                                                              |
+| **ReelMagic support**       | See `[reelmagic]` config section                                                          |
 
 [OPL]: https://en.wikipedia.org/wiki/Yamaha_YMF262
 [CGA]: https://en.wikipedia.org/wiki/Color_Graphics_Adapter
