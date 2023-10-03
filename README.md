@@ -23,20 +23,20 @@ support today's systems.
 
 ### For developers
 
-| **Feature**                    | **Status**
-|-                               |-
-| **Version control**            | Git
-| **Language**                   | C++17
-| **SDL**                        | >= 2.0.5
-| **Logging**                    | Loguru for C++<sup>[5]</sup>
-| **Buildsystem**                | Meson or Visual Studio 2022
-| **CI**                         | Yes
-| **Static analysis**            | Yes<sup>[1],[3],[4]</sup>
-| **Dynamic analysis**           | Yes
-| **clang-format**               | Yes
-| **[Development builds]**       | Yes
-| **Unit tests**                 | Yes<sup>[6]</sup>
-| **Automated regression tests** | WIP
+| **Feature**                    | **Status**                   |
+|--------------------------------|------------------------------|
+| **Version control**            | Git                          |
+| **Language**                   | C++17                        |
+| **SDL**                        | >= 2.0.5                     |
+| **Logging**                    | Loguru for C++<sup>[5]</sup> |
+| **Buildsystem**                | Meson or Visual Studio 2022  |
+| **CI**                         | Yes                          |
+| **Static analysis**            | Yes<sup>[1],[3],[4]</sup>    |
+| **Dynamic analysis**           | Yes                          |
+| **clang-format**               | Yes                          |
+| **[Development builds]**       | Yes                          |
+| **Unit tests**                 | Yes<sup>[6]</sup>            |
+| **Automated regression tests** | WIP                          |
 
 [1]: https://github.com/dosbox-staging/dosbox-staging/actions?query=workflow%3A%22Code+analysis%22
 [2]: https://lgtm.com/projects/g/dosbox-staging/dosbox-staging/
