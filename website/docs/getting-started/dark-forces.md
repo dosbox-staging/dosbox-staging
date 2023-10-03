@@ -132,12 +132,12 @@ the slight judder resulting from the 60/70 Hz mismatch.
 
 For reference, these are the refresh rates of all emulated graphics cards:
 
-| Graphics adapter      | Refresh rate
-| ----------------------| -------------
-| SVGA and VESA         | 70 Hz or higher --- 640&times;480 or higher extended and VESA modes
-| VGA                   | 60 Hz --- 640&times;480 standard mode only<br>70 Hz --- all other standard modes
-| CGA, PCjr, Tandy, EGA | 60 Hz
-| Hercules              | 50 Hz
+| Graphics adapter      | Refresh rate                                                                     |
+|-----------------------|----------------------------------------------------------------------------------|
+| SVGA and VESA         | 70 Hz or higher --- 640&times;480 or higher extended and VESA modes              |
+| VGA                   | 60 Hz --- 640&times;480 standard mode only<br>70 Hz --- all other standard modes |
+| CGA, PCjr, Tandy, EGA | 60 Hz                                                                            |
+| Hercules              | 50 Hz                                                                            |
 
 !!! tip "Creating custom 60 and 70 Hz screen modes"
 
