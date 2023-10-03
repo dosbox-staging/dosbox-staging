@@ -62,11 +62,16 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 
+	// GetExpandName returns a pointer to a static local string.
+	// Make a copy to ensure it doesn't get overwritten by future calls.
+	char expanded_name[CROSS_LEN];
+	safe_strcpy(expanded_name, dirCache.GetExpandName(newname));
+
 	attributes.archive = true;
-	FILE* file_pointer = local_drive_create_file(newname, attributes);
+	FILE* file_pointer = local_drive_create_file(expanded_name, attributes);
 
 	if (!file_pointer) {
-		LOG_MSG("Warning: file creation failed: %s",newname);
+		LOG_MSG("Warning: file creation failed: %s", expanded_name);
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
@@ -76,7 +81,7 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 	}
 
 	// Make the 16 bit device information
-	*file = new localFile(name, newname, file_pointer, basedir);
+	*file = new localFile(name, expanded_name, file_pointer, basedir);
 
 	(*file)->flags = OPEN_READWRITE;
 
