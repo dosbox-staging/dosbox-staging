@@ -2021,7 +2021,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		safe_strcpy(newname, ldp->GetBasedir());
 		strcat(newname,fulldir);
 		CROSS_FILENAME(newname);
-		ldp->dirCache.ExpandName(newname);
+		ldp->dirCache.ExpandNameAndNormaliseCase(newname);
 		strcat(mountstring,"\"");
 		strcat(mountstring, newname);
 		strcat(mountstring,"\"");

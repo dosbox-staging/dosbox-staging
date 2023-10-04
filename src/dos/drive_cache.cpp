@@ -174,11 +174,13 @@ void DOS_Drive_Cache::SetBaseDir(const char *baseDir)
 #endif
 }
 
-void DOS_Drive_Cache::ExpandName(char* path) {
-	safe_strncpy(path, GetExpandName(path), CROSS_LEN);
+void DOS_Drive_Cache::ExpandNameAndNormaliseCase(char* path)
+{
+	safe_strncpy(path, GetExpandNameAndNormaliseCase(path), CROSS_LEN);
 }
 
-char* DOS_Drive_Cache::GetExpandName(const char* path) {
+char* DOS_Drive_Cache::GetExpandNameAndNormaliseCase(const char* path)
+{
 	static char work [CROSS_LEN] = { 0 };
 	char dir [CROSS_LEN];
 

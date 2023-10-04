@@ -583,7 +583,9 @@ bool Overlay_Drive::Sync_leading_dirs(const char* dos_filename){
 		safe_strcat(dirnamebase, dirname);
 		CROSS_FILENAME(dirnamebase);
 		struct stat basetest;
-		if (stat(dirCache.GetExpandName(dirnamebase),&basetest) == 0 && basetest.st_mode & S_IFDIR) {
+		if (stat(dirCache.GetExpandNameAndNormaliseCase(dirnamebase),
+		         &basetest) == 0 &&
+		    basetest.st_mode & S_IFDIR) {
 			if (logoverlay) LOG_MSG("base exists: %s",dirnamebase);
 			//Directory exists in base folder.
 			//Ensure it exists in overlay as well
@@ -828,9 +830,9 @@ again:
 	safe_strcpy(full_name, srchInfo[id].srch_dir);
 	safe_strcat(full_name, dir_ent);
 
-	//GetExpandName might indirectly destroy dir_ent (by caching in a new directory 
-	//and due to its design dir_ent might be lost.)
-	//Copying dir_ent first
+	// GetExpandNameAndNormaliseCase might indirectly destroy dir_ent (by
+	// caching in a new directory and due to its design dir_ent might be
+	// lost.) Copying dir_ent first
 	safe_strcpy(dir_entcopy, dir_ent);
 
 	//First try overlay:
@@ -866,9 +868,14 @@ again:
 			if (logoverlay) LOG_MSG("skipping deleted file %s %s %s",preldos,full_name,ovname);
 			goto again;
 		}
-		if (stat(dirCache.GetExpandName(full_name),&stat_block)!=0) {
-			if (logoverlay) LOG_MSG("stat failed for %s . This should not happen.",dirCache.GetExpandName(full_name));
-			goto again;//No symlinks and such
+		if (stat(dirCache.GetExpandNameAndNormaliseCase(full_name),
+		         &stat_block) != 0) {
+			if (logoverlay) {
+				LOG_MSG("stat failed for %s . This should not happen.",
+				        dirCache.GetExpandNameAndNormaliseCase(
+				                full_name));
+			}
+			goto again; // No symlinks and such
 		}
 	}
 
@@ -916,7 +923,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 	safe_strcpy(overlayname, overlaydir);
 	safe_strcat(overlayname, name);
 	CROSS_FILENAME(overlayname);
-//	char *fullname = dirCache.GetExpandName(newname);
+	//	char *fullname = dirCache.GetExpandNameAndNormaliseCase(newname);
 	if (unlink(overlayname)) {
 		//Unlink failed for some reason try finding it.
 		struct stat buffer;
@@ -928,8 +935,8 @@ bool Overlay_Drive::FileUnlink(char * name) {
 				return false;
 			}
 
-
-			char *fullname = dirCache.GetExpandName(basename);
+			char* fullname = dirCache.GetExpandNameAndNormaliseCase(
+			        basename);
 			if (stat(fullname,&buffer)) {
 				DOS_SetError(DOSERR_FILE_NOT_FOUND);
 				return false; // File not found in either, return file false.
@@ -1258,7 +1265,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		safe_strcpy(newold, basedir);
 		safe_strcat(newold, oldname);
 		CROSS_FILENAME(newold);
-		dirCache.ExpandName(newold);
+		dirCache.ExpandNameAndNormaliseCase(newold);
 		FILE* o = fopen_wrap(newold,"rb");
 		if (!o) return false;
 		auto [n, path] = create_file_in_overlay(newname, "wb+");

@@ -232,9 +232,9 @@ public:
 	bool  OpenDir              (const char* path, uint16_t& id);
 	bool  ReadDir              (uint16_t id, char* &result);
 
-	void  ExpandName           (char* path);
-	char* GetExpandName        (const char* path);
-	bool  GetShortName         (const char* fullname, char* shortname);
+	void ExpandNameAndNormaliseCase(char* path);
+	char* GetExpandNameAndNormaliseCase(const char* path);
+	bool GetShortName(const char* fullname, char* shortname);
 
 	bool  FindFirst            (char* path, uint16_t& id);
 	bool  FindNext             (uint16_t id, char* &result);
