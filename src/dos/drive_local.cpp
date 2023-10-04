@@ -62,10 +62,11 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 
-	// GetExpandName returns a pointer to a static local string.
-	// Make a copy to ensure it doesn't get overwritten by future calls.
+	// GetExpandNameAndNormaliseCase returns a pointer to a static local
+	// string. Make a copy to ensure it doesn't get overwritten by future
+	// calls.
 	char expanded_name[CROSS_LEN];
-	safe_strcpy(expanded_name, dirCache.GetExpandName(newname));
+	safe_strcpy(expanded_name, dirCache.GetExpandNameAndNormaliseCase(newname));
 
 	attributes.archive = true;
 	FILE* file_pointer = local_drive_create_file(expanded_name, attributes);
@@ -149,7 +150,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
-	dirCache.ExpandName(newname);
+	dirCache.ExpandNameAndNormaliseCase(newname);
 
 	// If the file's already open then flush it before continuing
 	// (Betrayal in Antara)
@@ -240,7 +241,7 @@ FILE* localDrive::GetSystemFilePtr(const char* const name, const char* const typ
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
-	dirCache.ExpandName(newname);
+	dirCache.ExpandNameAndNormaliseCase(newname);
 
 	return fopen_wrap(newname,type);
 }
@@ -250,7 +251,7 @@ bool localDrive::GetSystemFilename(char* sysName, const char* const dosName)
 	strcpy(sysName, basedir);
 	strcat(sysName, dosName);
 	CROSS_FILENAME(sysName);
-	dirCache.ExpandName(sysName);
+	dirCache.ExpandNameAndNormaliseCase(sysName);
 	return true;
 }
 
@@ -275,7 +276,7 @@ bool localDrive::FileUnlink(char* name)
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
-	const char *fullname = dirCache.GetExpandName(newname);
+	const char* fullname = dirCache.GetExpandNameAndNormaliseCase(newname);
 
 	// Can we remove the file without issue?
 	if (remove(fullname) == 0) {
@@ -388,11 +389,12 @@ bool localDrive::FindNext(DOS_DTA& dta)
 		safe_strcpy(full_name, srchInfo[id].srch_dir);
 		safe_strcat(full_name, dir_ent);
 
-		// GetExpandName might indirectly destroy dir_ent (by caching in
-		// a new directory and due to its design dir_ent might be lost.)
-		// Copying dir_ent first
+		// GetExpandNameAndNormaliseCase might indirectly destroy
+		// dir_ent (by caching in a new directory and due to its design
+		// dir_ent might be lost.) Copying dir_ent first
 		safe_strcpy(dir_entcopy, dir_ent);
-		const char* temp_name = dirCache.GetExpandName(full_name);
+		const char* temp_name = dirCache.GetExpandNameAndNormaliseCase(
+		        full_name);
 		if (stat(temp_name, &stat_block) != 0) {
 			continue; // No symlinks and such
 		}
@@ -447,7 +449,7 @@ bool localDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
-	dirCache.ExpandName(newname);
+	dirCache.ExpandNameAndNormaliseCase(newname);
 
 	const auto result = local_drive_get_attributes(newname, *attr);
 	if (result != DOSERR_NONE) {
@@ -465,7 +467,7 @@ bool localDrive::SetFileAttr(const char* name, const FatAttributeFlags attr)
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
-	dirCache.ExpandName(newname);
+	dirCache.ExpandNameAndNormaliseCase(newname);
 
 	const auto result = local_drive_set_attributes(newname, attr);
 	dirCache.CacheOut(newname);
@@ -485,7 +487,8 @@ bool localDrive::MakeDir(char* dir)
 	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
 
-	const auto result = local_drive_create_dir(dirCache.GetExpandName(newdir));
+	const auto result = local_drive_create_dir(
+	        dirCache.GetExpandNameAndNormaliseCase(newdir));
 	if (result == DOSERR_NONE) {
 		dirCache.CacheOut(newdir, true);
 	}
@@ -498,7 +501,7 @@ bool localDrive::RemoveDir(char* dir)
 	safe_strcpy(newdir, basedir);
 	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
-	int temp=rmdir(dirCache.GetExpandName(newdir));
+	int temp = rmdir(dirCache.GetExpandNameAndNormaliseCase(newdir));
 	if (temp==0) dirCache.DeleteEntry(newdir,true);
 	return (temp==0);
 }
@@ -509,7 +512,7 @@ bool localDrive::TestDir(char* dir)
 	safe_strcpy(newdir, basedir);
 	safe_strcat(newdir, dir);
 	CROSS_FILENAME(newdir);
-	dirCache.ExpandName(newdir);
+	dirCache.ExpandNameAndNormaliseCase(newdir);
 	// Skip directory test, if "\"
 	size_t len = safe_strlen(newdir);
 	if (len && (newdir[len-1]!='\\')) {
@@ -527,13 +530,13 @@ bool localDrive::Rename(char* oldname, char* newname)
 	safe_strcpy(newold, basedir);
 	safe_strcat(newold, oldname);
 	CROSS_FILENAME(newold);
-	dirCache.ExpandName(newold);
-	
+	dirCache.ExpandNameAndNormaliseCase(newold);
+
 	char newnew[CROSS_LEN];
 	safe_strcpy(newnew, basedir);
 	safe_strcat(newnew, newname);
 	CROSS_FILENAME(newnew);
-	int temp=rename(newold,dirCache.GetExpandName(newnew));
+	int temp = rename(newold, dirCache.GetExpandNameAndNormaliseCase(newnew));
 	if (temp==0) dirCache.CacheOut(newnew);
 	return (temp == 0);
 }
@@ -554,7 +557,7 @@ bool localDrive::FileExists(const char* name)
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
-	dirCache.ExpandName(newname);
+	dirCache.ExpandNameAndNormaliseCase(newname);
 	struct stat temp_stat;
 	if (stat(newname,&temp_stat)!=0) return false;
 	if (temp_stat.st_mode & S_IFDIR) return false;
@@ -567,7 +570,7 @@ bool localDrive::FileStat(const char* name, FileStat_Block* const stat_block)
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
-	dirCache.ExpandName(newname);
+	dirCache.ExpandNameAndNormaliseCase(newname);
 	struct stat temp_stat;
 
 	FatAttributeFlags attributes = {};
