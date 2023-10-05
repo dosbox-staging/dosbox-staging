@@ -33,8 +33,7 @@ DOSBox rechtstreeks op volledig scherm starten (standaard uit).
 Voer INTRO uit en zie Speciale toetsen voor sneltoetsen voor vensterbediening.
 .
 :CONFIG_DISPLAY
-Te gebruiken beeldschermnummer; waarde is afhankelijk van OS en instellingen
-(standaard 0).
+Beeldschermnummer; waarde is afhankelijk van OS en instellingen (standaard 0).
 .
 :CONFIG_FULLRESOLUTION
 Welke resolutie te gebruiken voor volledig scherm: 'original', 'desktop'
@@ -53,8 +52,7 @@ Stelt de venster grootte in om te gebruiken:
 Stel de viewport-grootte (tekengebied) in het venster/scherm in:
   fit:       Pas de viewport aan op het beschikbare venster/scherm (standaard).
   <op-maat>: beperk de viewport tot een aangepaste resolutie of percentage van
-             het bureaublad. Gespecificeerd in BxH, N%, N.M%.
-             Voorbeelden: 960x720 of 50%
+             het bureaublad. Als BxH, N%, N.M%. Bijv.: 960x720 of 50%
 .
 :CONFIG_WINDOW_POSITION
 Stel de initiële vensterpositie in bij gebruik in de venstermodus:
@@ -84,9 +82,16 @@ Stel de verversingssnelheid van de host in:
              groter dan 23.000.
 .
 :CONFIG_VSYNC
-Synchroniseer met de vernieuwingsfrequentie van het scherm, indien ondersteund.
-Dit kan flikkeren en scheuren verminderen, maar kan ook de prestaties
-beïnvloeden (standaard aan).
+Stel de verticale synchronisatie (vsync) van het hostvideostuurprogramma in:
+  auto:      Beperk vsync tot gunstige gevallen, zoals bij gebruik van een
+             interpolerende VRR-weergave op volledig scherm (standaard).
+  on:        vsync inschakelen. Dit kan scheuren in sommige games voorkomen,
+             maar heeft invloed op de prestaties of laat frames wegvallen
+             wanneer de DOS-snelheid de hostsnelheid overschrijdt (bijvoorbeeld
+             70 Hz DOS-snelheid versus 60 Hz hostsnelheid).
+  off:       Probeer vsync uit te schakelen om een snellere framepresentatie
+             mogelijk te maken, met het risico op scheuren in sommige games.
+  yield:     laat het videostuurprogramma van de host de vsync regelen.
 .
 :CONFIG_VSYNC_SKIP
 Aantal microseconden dat de weergave kan worden geblokkeerd voordat het
@@ -102,7 +107,10 @@ Selecteer optioneel de framepresentatiemodus:
          framesnelheid.
 .
 :CONFIG_OUTPUT
-Welk videosysteem moet worden gebruikt voor uitvoer (standaard 'opengl').
+Videosysteem om te gebruiken voor uitvoer (standaard 'opengl').
+'texture' en 'opengl' gebruiken bilineaire interpolatie, 'texturenb' en
+'openglnb' gebruiken dichtstbijzijnde buur (niet-bilineair). Sommige shaders
+vereisen bilineaire interpolatie, waardoor dit de veiligste keuze is.
 .
 :CONFIG_TEXTURE_RENDERER
 Kies een rendererstuurprogramma wanneer u een textuuruitvoermodus gebruikt.
@@ -121,8 +129,7 @@ Verplaatst naar de [mouse] sectie.
 Wacht voordat de console sluit als dosbox een fout heeft (standaard aan).
 .
 :CONFIG_PRIORITY
-Prioriteitsniveaus die moeten worden toegepast wanneer respectievelijk actief
-en inactief. De tweede waarde is voor wanneer DOSBox geen focus heeft.
+Respectieve prioriteitsniveaus om toe te passen bij actief en inactief.
    auto:  Laat het hostbesturingssysteem de prioriteit beheren.
 Standaard is: 'auto auto'
 .
@@ -336,8 +343,9 @@ respectievelijk.
 .
 :CONFIG_SCALER
 Software scalers zijn verouderd ten gunste van hardware-versnelde opties:
-  - Als u de normale 2x/3x scalers hebt gebruikt, stel dan een gewenste
-    'windowresolution' in.
+  - Als u de normale 2x/3x scalers heeft gebruikt, stel dan de gewenste
+    'windowresolutie' of 'viewport_resolutie' in, of overweeg het gebruik van
+    'integer_scaling'.
   - Als u een geavanceerde scaler hebt gebruikt, overweeg de 'glshader'-opties.
 .
 :CONFIG_GLSHADER
@@ -1230,10 +1238,6 @@ Waar [color=white]COMMANDO[reset] een van de volgende is:
   -l                Toont de momenteel geladen configuratiebestanden en
                     argumenten die bij het opstarten zijn opgegeven.
 
-  -help sections
-  -h    sections
-  -?    sections    Toont de namen van alle configuratiesecties.
-
   -help [color=white]SECTIE[reset]
   -h    [color=white]SECTIE[reset]
   -?    [color=white]SECTIE      [reset]Toont de namen van alle eigenschappen in een
@@ -1463,46 +1467,6 @@ Beschikbare opdrachten voor PCjr-cartridges: %s
 .
 :PROGRAM_BOOT_CART_NO_CMDS
 Geen PCjr-cartridge opdrachten gevonden
-.
-:PROGRAM_FMPDRV_HELP_LONG
-Laad of ontlaad de ingebouwde ReelMagic Full Motion Player-driver.
-
-Gebruik:
-  [color=green]fmpdrv[reset]    (laad de driver)
-  [color=green]fmpdrv[reset] /u (ontlaad de driver)
-
-Opmerkingen:
-  De configuratie-instelling "reelmagic = on" laadt de driver bij het
-  opstarten en voorkomt dat deze wordt ontladen.
-
-.
-:PROGRAM_FMPDRV_TITLE
-ReelMagic Full Motion Player-stuurprogramma (ingebouwd) %hhu.%hhu
-
-.
-:PROGRAM_FMPDRV_LOADED
-[reset][color=light-yellow]Geladen op interrupt %xh[reset]
-
-.
-:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
-[reset][color=light-yellow]Reeds geladen op interrupt %xh[reset]
-
-.
-:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
-[reset][color=red]Niet geladen: Geen vrije interrupten![reset]
-
-.
-:PROGRAM_FMPDRV_UNLOADED
-[reset][color=light-yellow]Stuurprogramma ontladen[reset]
-
-.
-:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
-[reset][color=light-yellow]Stuurprogramma was niet geladen[reset]
-
-.
-:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
-[reset][color=light-yellow]Stuurprogramma niet geladen: ingesteld om resident te blijven[reset]
-
 .
 :MSCDEX_SUCCESS
 MSCDEX geïnstalleerd.
@@ -1967,6 +1931,50 @@ Voorbeelden:
 %10d kB vrij bovenste geheugen %d blok(ken) (grootste UMB %d kB)
 
 .
+:SHELL_CMD_MIXER_HELP_LONG
+Toont of wijzigt de instellingen van de geluidsmixer.
+
+Gebruik:
+  [color=green]mixer[reset] [color=cyan][KANAAL][reset] [color=white]COMMANDO[reset] [/noshow]
+  [color=green]mixer[reset] [/listmidi]
+
+Waar:
+  [color=cyan]KANAAL[reset]   is het geluidskanaal om te wijzigen.
+  [color=white]COMMANDO[reset] is een of meer van de volgende opdrachten:
+    Volume:    [color=white]0[reset] tot [color=white]100[reset], of decibelwaarde voorafgegaan door [color=white]d[reset] (bijv. [color=white]d-7.5[reset])
+               gebruik [color=white]L:R[reset] om stereo afzonderlijk in te stellen (bijv. [color=white]10:20[reset])
+    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (enkel voor stereo kanalen)
+    Crossfeed: [color=white]x0[reset] tot [color=white]x100[reset]    Reverb: [color=white]r0[reset] tot [color=white]r100[reset]    Chorus: [color=white]c0[reset] tot [color=white]c100[reset]
+Opmerkingen:
+  - [color=green]mixer[reset] zonder argument toont de huidige mixerinstellingen.
+  - De instellingen van meer dan één kanaal kan in één opdracht wijzigen.
+  - Als er geen kanaal is opgegeven, kunt u crossfeed, reverb of chorus globaal
+    voor alle kanalen instellen.
+  - Bekijk de lijst van beschikbare MIDI-apparaten met /listmidi.
+  - De optie /noshow past de wijzigingen toe zonder mixer weergave.
+
+Voorbeelden:
+  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+.
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
+.
+:SHELL_CMD_MIXER_HEADER_LABELS
+[color=white]Kanaal       Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_OFF
+uit
+.
+:SHELL_CMD_MIXER_CHANNEL_STEREO
+Stereo
+.
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Omgekeerd
+.
+:SHELL_CMD_MIXER_CHANNEL_MONO
+Mono
+.
 :PROGRAM_MORE_HELP_LONG
 Geef opdrachtuitvoer of tekstbestand één scherm tegelijk weer.
 
@@ -2027,6 +2035,12 @@ Geen invoerbestand gevonden.
 .
 :PROGRAM_MORE_PROMPT_MULTI
 [reset][color=light-yellow]--- druk op SPATIEBALK voor meer, N for volgend bestand ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT
+[reset][color=light-yellow]--- meer ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT_PERCENT
+[reset][color=light-yellow]--- (%d%%) meer ---[reset]
 .
 :PROGRAM_MORE_PROMPT_LINE
 [reset][color=light-yellow]--- regel %u ---[reset]
@@ -2287,50 +2301,6 @@ Voorbeelden:
 Schijf opnieuw gescand.
 
 .
-:SHELL_CMD_MIXER_HELP_LONG
-Toont of wijzigt de instellingen van de geluidsmixer.
-
-Gebruik:
-  [color=green]mixer[reset] [color=cyan][KANAAL][reset] [color=white]COMMANDO[reset] [/noshow]
-  [color=green]mixer[reset] [/listmidi]
-
-Waar:
-  [color=cyan]KANAAL[reset]   is het geluidskanaal om te wijzigen.
-  [color=white]COMMANDO[reset] is een of meer van de volgende opdrachten:
-    Volume:    [color=white]0[reset] tot [color=white]100[reset], of decibelwaarde voorafgegaan door [color=white]d[reset] (bijv. [color=white]d-7.5[reset])
-               gebruik [color=white]L:R[reset] om stereo afzonderlijk in te stellen (bijv. [color=white]10:20[reset])
-    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (enkel voor stereo kanalen)
-    Crossfeed: [color=white]x0[reset] tot [color=white]x100[reset]    Reverb: [color=white]r0[reset] tot [color=white]r100[reset]    Chorus: [color=white]c0[reset] tot [color=white]c100[reset]
-Opmerkingen:
-  - [color=green]mixer[reset] zonder argument toont de huidige mixerinstellingen.
-  - De instellingen van meer dan één kanaal kan in één opdracht wijzigen.
-  - Als er geen kanaal is opgegeven, kunt u crossfeed, reverb of chorus globaal
-    voor alle kanalen instellen.
-  - Bekijk de lijst van beschikbare MIDI-apparaten met /listmidi.
-  - De optie /noshow past de wijzigingen toe zonder mixer weergave.
-
-Voorbeelden:
-  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
-.
-:SHELL_CMD_MIXER_HEADER_LAYOUT
-%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
-.
-:SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Kanaal       Volume    Volume (dB)   Mode     Xfeed  Reverb  Chorus[reset]
-.
-:SHELL_CMD_MIXER_CHANNEL_OFF
-uit
-.
-:SHELL_CMD_MIXER_CHANNEL_STEREO
-Stereo
-.
-:SHELL_CMD_MIXER_CHANNEL_REVERSE
-Omgekeerd
-.
-:SHELL_CMD_MIXER_CHANNEL_MONO
-Mono
-.
 :PROGRAM_SERIAL_HELP_LONG
 Beheert de seriële poorten.
 
@@ -2486,6 +2456,46 @@ Geen bestanden of submappen om weer te geven.
 .
 :PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
 Te veel bestanden of submappen.
+
+.
+:PROGRAM_FMPDRV_HELP_LONG
+Laad of ontlaad de ingebouwde ReelMagic Full Motion Player-driver.
+
+Gebruik:
+  [color=green]fmpdrv[reset]    (laad de driver)
+  [color=green]fmpdrv[reset] /u (ontlaad de driver)
+
+Opmerkingen:
+  De configuratie-instelling "reelmagic = on" laadt de driver bij het
+  opstarten en voorkomt dat deze wordt ontladen.
+
+.
+:PROGRAM_FMPDRV_TITLE
+ReelMagic Full Motion Player-stuurprogramma (ingebouwd) %hhu.%hhu
+
+.
+:PROGRAM_FMPDRV_LOADED
+[reset][color=light-yellow]Geladen op interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
+[reset][color=light-yellow]Reeds geladen op interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
+[reset][color=red]Niet geladen: Geen vrije interrupten![reset]
+
+.
+:PROGRAM_FMPDRV_UNLOADED
+[reset][color=light-yellow]Stuurprogramma ontladen[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
+[reset][color=light-yellow]Stuurprogramma was niet geladen[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
+[reset][color=light-yellow]Stuurprogramma niet geladen: ingesteld om resident te blijven[reset]
 
 .
 :AUTOEXEC_BAT_GENERATED
