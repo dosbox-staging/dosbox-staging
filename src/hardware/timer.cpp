@@ -710,11 +710,6 @@ void TIMER_Configure(const ModuleLifecycle lifecycle, Section* section)
 	}
 }
 
-void TIMER_Destroy(Section* section) {
-	TIMER_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void TIMER_Init(Section * section) {
 	TIMER_Configure(ModuleLifecycle::Create, section);
-	section->AddDestroyFunction(&TIMER_Destroy);
 }

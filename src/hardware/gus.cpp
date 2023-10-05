@@ -1673,8 +1673,6 @@ void GUS_Destroy(Section* section)
 void GUS_Init(Section* section)
 {
 	GUS_Configure(ModuleLifecycle::Create, section);
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&GUS_Destroy, changeable_at_runtime);
 }
 
 void init_gus_dosbox_settings(Section_prop &secprop)

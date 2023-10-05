@@ -721,12 +721,6 @@ void MEM_Configure(const ModuleLifecycle lifecycle, Section* section)
 	}
 }
 
-// Temporary
-void MEM_Destroy(Section* section) {
-	MEM_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void MEM_Init(Section * section) {
 	MEM_Configure(ModuleLifecycle::Create, section);
-	section->AddDestroyFunction(&MEM_Destroy);
 }

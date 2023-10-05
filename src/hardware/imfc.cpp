@@ -13475,11 +13475,6 @@ static void imfc_init(Section* section)
 	IMFC_Configure(ModuleLifecycle::Create, section);
 }
 
-static void imfc_destroy(Section* section)
-{
-	IMFC_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void IMFC_AddConfigSection(Config* conf)
 {
 	assert(conf);
@@ -13489,8 +13484,6 @@ void IMFC_AddConfigSection(Config* conf)
 	Section_prop* section = conf->AddSection_prop("imfc",
 	                                              &imfc_init,
 	                                              changeable_at_runtime);
-	assert(section);
-	section->AddDestroyFunction(&imfc_destroy, changeable_at_runtime);
 
 	init_imfc_dosbox_settings(*section);
 }

@@ -999,7 +999,4 @@ void OPL_Destroy(Section* section)
 void OPL_Init(Section* section, const OplMode oplmode)
 {
 	OPL_Configure(ModuleLifecycle::Create, section, oplmode);
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&OPL_Destroy, changeable_at_runtime);
 }

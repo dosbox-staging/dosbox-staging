@@ -697,11 +697,6 @@ void PIC_Configure(const ModuleLifecycle lifecycle, Section* section)
 	}
 }
 
-void PIC_Destroy(Section* section) {
-	PIC_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void PIC_Init(Section * section) {
 	PIC_Configure(ModuleLifecycle::Create, section);
-	section->AddDestroyFunction(&PIC_Destroy);
 }

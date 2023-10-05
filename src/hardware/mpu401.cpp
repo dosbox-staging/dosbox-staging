@@ -860,17 +860,7 @@ void MPU401_Configure(const ModuleLifecycle lifecycle, Section* section)
 	}
 }
 
-void MPU401_Destroy(Section* section)
-{
-	MPU401_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void MPU401_Init(Section* section)
 {
 	MPU401_Configure(ModuleLifecycle::Create, section);
-
-	constexpr auto changeable_at_runtime = true;
-
-	assert(section);
-	section->AddDestroyFunction(&MPU401_Destroy, changeable_at_runtime);
 }

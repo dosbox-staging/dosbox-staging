@@ -1615,6 +1615,7 @@ uint8_t GFX_SetSize(const int width, const int height,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_CallBack_t callback)
 {
+	LOG_MSG("GFX_SetSize");
 	uint8_t retFlags = 0;
 	if (sdl.updating)
 		GFX_EndUpdate(nullptr);

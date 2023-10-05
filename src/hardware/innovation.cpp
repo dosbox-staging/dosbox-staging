@@ -288,16 +288,9 @@ static void configure_innovation(const ModuleLifecycle lifecycle, Section* secti
 	}
 }
 
-static void innovation_destroy(Section* section)
-{
-	configure_innovation(ModuleLifecycle::Destroy, section);
-}
-
 static void innovation_init(Section* section)
 {
-	constexpr auto changeable_at_runtime = true;
 	configure_innovation(ModuleLifecycle::Create, section);
-	section->AddDestroyFunction(&innovation_destroy, changeable_at_runtime);
 }
 
 static void init_innovation_dosbox_settings(Section_prop& sec_prop)

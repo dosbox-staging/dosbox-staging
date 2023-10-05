@@ -101,7 +101,7 @@ device_COM::~device_COM() {
 
 
 // COM1 - COM4 objects
-CSerial *serialports[SERIAL_MAX_PORTS] = {nullptr};
+serial_ports_t serialports = {};
 
 static uint8_t SERIAL_Read(io_port_t port, io_width_t)
 {
@@ -155,8 +155,10 @@ static void SERIAL_Write(io_port_t port, io_val_t value, io_width_t)
 		case 0x2e8: i=3; break;
 		default: return;
 	}
-	if(serialports[i]==nullptr) return;
-	
+	if (!serialports[i]) {
+		return;
+	}
+
 #if SERIAL_DEBUG
 		const char* const dbgtext[]={"THR","IER","FCR",
 			"LCR","MCR","!LSR","MSR","SPR","DLL","DLM"};
@@ -226,7 +228,7 @@ void CSerial::changeLineProperties() {
 static void Serial_EventHandler(uint32_t val)
 {
 	const uint32_t serclassid = val & 0x3;
-	if (serialports[serclassid] != nullptr) {
+	if (serialports[serclassid]) {
 		const auto event_type = static_cast<uint16_t>(val >> 2);
 		serialports[serclassid]->handleEvent(event_type);
 	}
@@ -260,7 +262,7 @@ void CSerial::handleEvent(uint16_t type)
 		break;
 
 	case SERIAL_THR_LOOPBACK_EVENT:
-		loopback_data = txfifo->probeByte();
+		loopback_data = txfifo.probeByte();
 		ByteTransmitting();
 		setEvent(SERIAL_TX_LOOPBACK_EVENT, bytetime);
 		break;
@@ -364,7 +366,7 @@ void CSerial::ComputeInterrupts () {
 /* Can a byte be received?                                                  **/
 /*****************************************************************************/
 bool CSerial::CanReceiveByte() {
-	return !rxfifo->isFull();
+	return !rxfifo.isFull();
 }
 
 /*****************************************************************************/
@@ -377,13 +379,15 @@ void CSerial::receiveByteEx(uint8_t data, uint8_t error)
 	        data < 0x10 ? "\t\t\t\trx 0x%02x (%" PRIu8 ")" : "\t\t\t\trx 0x%02x (%c)",
 	        data, data);
 #endif
-	if (!(rxfifo->addb(data))) {
+	if (!(rxfifo.addb(data))) {
 		// Overrun error ;o
 		error |= LSR_OVERRUN_ERROR_MASK;
 	}
 	removeEvent(SERIAL_RX_TIMEOUT_EVENT);
-	if(rxfifo->getUsage()==rx_interrupt_threshold) rise (RX_PRIORITY);
-	else setEvent(SERIAL_RX_TIMEOUT_EVENT,bytetime*4.0f);
+	if (rxfifo.getUsage() == rx_interrupt_threshold) {
+		rise(RX_PRIORITY);
+	} else
+		setEvent(SERIAL_RX_TIMEOUT_EVENT, bytetime * 4.0f);
 
 	if(error) {
 		// A lot of UART chips generate a framing error too when receiving break
@@ -395,16 +399,15 @@ void CSerial::receiveByteEx(uint8_t data, uint8_t error)
 #endif
 		if(FCR&FCR_ACTIVATE) {
 			// error and FIFO active
-			if(!errorfifo->isFull()) {
+			if (!errorfifo.isFull()) {
 				errors_in_fifo++;
-				errorfifo->addb(error);
-			}
-			else {
-				uint8_t toperror = errorfifo->getTop();
+				errorfifo.addb(error);
+			} else {
+				uint8_t toperror = errorfifo.getTop();
 				if(!toperror) errors_in_fifo++;
-				errorfifo->addb(error|toperror);
+				errorfifo.addb(error | toperror);
 			}
-			if(errorfifo->probeByte()) {
+			if (errorfifo.probeByte()) {
 				// the next byte in the error fifo has an error
 				rise (ERROR_PRIORITY);
 				LSR |= error;
@@ -438,7 +441,7 @@ void CSerial::receiveByteEx(uint8_t data, uint8_t error)
 	} else {
 		// no error
 		if(FCR&FCR_ACTIVATE) {
-			errorfifo->addb(error);
+			errorfifo.addb(error);
 		}
 	}
 }
@@ -453,18 +456,21 @@ void CSerial::receiveByte(uint8_t data)
 /*****************************************************************************/
 void CSerial::ByteTransmitting() {
 	if(sync_guardtime) {
-		// LOG_MSG("SERIAL: Port %" PRIu8 " byte transmitting after guard.",
+		// LOG_MSG("SERIAL: Port %" PRIu8 " byte transmitting after
+		// guard.",
 		//         GetPortNumber());
-		// if(txfifo->isEmpty())
-		//	LOG_MSG("SERIAL: Port %" PRIu8 " FIFO empty when it should not",
-		//	        GetPortNumber());
+		// if(txfifo.isEmpty())
+		//	LOG_MSG("SERIAL: Port %" PRIu8 " FIFO empty when it
+		//should not", 	        GetPortNumber());
 		sync_guardtime=false;
-		txfifo->getb();
+		txfifo.getb();
 	}
 	// else
 	// 	LOG_MSG("SERIAL: Port %" PRIu8 " byte transmitting.",
 	// 	        GetPortNumber());
-	if(txfifo->isEmpty())rise (TX_PRIORITY);
+	if (txfifo.isEmpty()) {
+		rise(TX_PRIORITY);
+	}
 }
 
 
@@ -472,9 +478,9 @@ void CSerial::ByteTransmitting() {
 /* ByteTransmitted: When a byte was sent, notify here.                      **/
 /*****************************************************************************/
 void CSerial::ByteTransmitted () {
-	if(!txfifo->isEmpty()) {
+	if (!txfifo.isEmpty()) {
 		// there is more data
-		uint8_t data = txfifo->getb();
+		uint8_t data = txfifo.getb();
 #if SERIAL_DEBUG
 		log_ser(dbg_serialtraffic,data<0x10?
 			"\t\t\t\t\ttx 0x%02x (%" PRIu8 ") (from buffer)":
@@ -482,7 +488,9 @@ void CSerial::ByteTransmitted () {
 #endif
 		if (loopback) setEvent(SERIAL_TX_LOOPBACK_EVENT, bytetime);
 		else transmitByte(data,false);
-		if(txfifo->isEmpty())rise (TX_PRIORITY);
+		if (txfifo.isEmpty()) {
+			rise(TX_PRIORITY);
+		}
 
 	} else {
 #if SERIAL_DEBUG
@@ -510,30 +518,37 @@ void CSerial::Write_THR(uint8_t data)
 
 		if((LSR & LSR_TX_EMPTY_MASK))
 		{	// we were idle before
-			// LOG_MSG("SERIAL: Port %" PRIu8 " starting new transmit cycle", GetPortNumber());
-			// if(sync_guardtime) LOG_MSG("SERIAL: Port %" PRIu8 " internal error 1", GetPortNumber());
-			// if(!(LSR & LSR_TX_EMPTY_MASK)) LOG_MSG("SERIAL: Port %" PRIu8 " internal error 2", GetPortNumber());
-			// if(txfifo->getUsage()) LOG_MSG("SERIAL: Port %" PRIu8 " internal error 3", GetPortNumber());
-			
+			// LOG_MSG("SERIAL: Port %" PRIu8 " starting new
+			// transmit cycle", GetPortNumber()); if(sync_guardtime)
+			// LOG_MSG("SERIAL: Port %" PRIu8 " internal error 1",
+			// GetPortNumber()); if(!(LSR & LSR_TX_EMPTY_MASK))
+			// LOG_MSG("SERIAL: Port %" PRIu8 " internal error 2",
+			// GetPortNumber()); if(txfifo.getUsage())
+			// LOG_MSG("SERIAL: Port %" PRIu8 " internal error 3",
+			// GetPortNumber());
+
 			// need "warming up" time
 			sync_guardtime=true;
 			// block the fifo so it returns THR full (or not in case of FIFO on)
-			txfifo->addb(data); 
+			txfifo.addb(data);
 			// transmit shift register is busy
 			LSR &= (~LSR_TX_EMPTY_MASK);
 			if(loopback) setEvent(SERIAL_THR_LOOPBACK_EVENT, bytetime/10);
 			else {
 #if SERIAL_DEBUG
-				log_ser(dbg_serialtraffic, data < 0x10 ?
-				        "\t\t\t\t\ttx 0x%02x (%" PRIu8 ") [FIFO=%2zu]":
-				        "\t\t\t\t\ttx 0x%02x (%c) [FIFO=%2zu]",
-				        data, data, txfifo->getUsage());
+				log_ser(dbg_serialtraffic,
+				        data < 0x10 ? "\t\t\t\t\ttx 0x%02x (%" PRIu8
+				                      ") [FIFO=%2zu]"
+				                    : "\t\t\t\t\ttx 0x%02x (%c) [FIFO=%2zu]",
+				        data,
+				        data,
+				        txfifo.getUsage());
 #endif
 				transmitByte (data,true);
 			}
 		} else {
 			//  shift register is transmitting
-			if(!txfifo->addb(data)) {
+			if (!txfifo.addb(data)) {
 				// TX overflow
 #if SERIAL_DEBUG
 				log_ser(dbg_serialtraffic,"tx overflow");
@@ -556,14 +571,14 @@ uint32_t CSerial::Read_RHR()
 	// 0-7 received data
 	if ((LCR & LCR_DIVISOR_Enable_MASK)) return baud_divider&0xff;
 	else {
-		uint8_t data = rxfifo->getb();
+		uint8_t data = rxfifo.getb();
 		if(FCR&FCR_ACTIVATE) {
-			uint8_t error = errorfifo->getb();
+			uint8_t error = errorfifo.getb();
 			if(error) errors_in_fifo--;
 			// new error
-			if(!rxfifo->isEmpty()) {
-				error=errorfifo->probeByte();
-				if(error) {
+			if (!rxfifo.isEmpty()) {
+				error = errorfifo.probeByte();
+				if (error) {
 					LSR |= error;
 					rise(ERROR_PRIORITY);
 				}
@@ -572,9 +587,13 @@ uint32_t CSerial::Read_RHR()
 		// Reading RHR resets the FIFO timeout
 		clear (TIMEOUT_PRIORITY);
 		// RX int. is cleared if the buffer holds less data than the threshold
-		if(rxfifo->getUsage()<rx_interrupt_threshold)clear(RX_PRIORITY);
+		if (rxfifo.getUsage() < rx_interrupt_threshold) {
+			clear(RX_PRIORITY);
+		}
 		removeEvent(SERIAL_RX_TIMEOUT_EVENT);
-		if(!rxfifo->isEmpty()) setEvent(SERIAL_RX_TIMEOUT_EVENT,bytetime*4.0f);
+		if (!rxfifo.isEmpty()) {
+			setEvent(SERIAL_RX_TIMEOUT_EVENT, bytetime * 4.0f);
+		}
 		return data;
 	}
 }
@@ -604,9 +623,10 @@ void CSerial::Write_IER(uint8_t data)
 		changeLineProperties();
 	} else {
 		// Retrigger TX interrupt
-		if (txfifo->isEmpty()&& (data&TX_PRIORITY))
+		if (txfifo.isEmpty() && (data & TX_PRIORITY)) {
 			waiting_interrupts |= TX_PRIORITY;
-		
+		}
+
 		IER = data&0xF;
 		if((FCR&FCR_ACTIVATE)&&data&RX_PRIORITY) IER |= TIMEOUT_PRIORITY; 
 		ComputeInterrupts();
@@ -648,24 +668,26 @@ void CSerial::Write_FCR(uint8_t data)
 	if (BIT_CHANGE_H(FCR, data, FCR_ACTIVATE)) {
 		// FIFO was switched on
 		errors_in_fifo=0; // should already be 0
-		errorfifo->setSize(fifosize);
-		rxfifo->setSize(fifosize);
-		txfifo->setSize(fifosize);
+		errorfifo.setSize(fifosize);
+		rxfifo.setSize(fifosize);
+		txfifo.setSize(fifosize);
 	} else if (BIT_CHANGE_L(FCR, data, FCR_ACTIVATE)) {
 		// FIFO was switched off
 		errors_in_fifo=0;
-		errorfifo->setSize(1);
-		rxfifo->setSize(1);
-		txfifo->setSize(1);
-		rx_interrupt_threshold=1;
+		errorfifo.setSize(1);
+		rxfifo.setSize(1);
+		txfifo.setSize(1);
+		rx_interrupt_threshold = 1;
 	}
 	FCR=data&0xCF;
 	if(FCR&FCR_CLEAR_RX) {
 		errors_in_fifo=0;
-		errorfifo->clear();
-		rxfifo->clear();
+		errorfifo.clear();
+		rxfifo.clear();
 	}
-	if(FCR&FCR_CLEAR_TX) txfifo->clear();
+	if (FCR & FCR_CLEAR_TX) {
+		txfifo.clear();
+	}
 	if(FCR&FCR_ACTIVATE) {
 		switch(FCR>>6) {
 			case 0: rx_interrupt_threshold=1; break;
@@ -837,10 +859,12 @@ void CSerial::Write_MCR(uint8_t data)
 uint32_t CSerial::Read_LSR()
 {
 	uint32_t retval = LSR & (LSR_ERROR_MASK | LSR_TX_EMPTY_MASK);
-	if (txfifo->isEmpty())
+	if (txfifo.isEmpty()) {
 		retval |= LSR_TX_HOLDING_EMPTY_MASK;
-	if (!(rxfifo->isEmpty()))
+	}
+	if (!(rxfifo.isEmpty())) {
 		retval |= LSR_RX_DATA_READY_MASK;
+	}
 	if (errors_in_fifo)
 		retval |= FIFO_ERROR;
 	LSR &= (~LSR_ERROR_MASK); // clear error bits on read
@@ -1117,8 +1141,11 @@ void CSerial::Init_Registers () {
 	PIC_DeActivateIRQ(irq);
 }
 
-CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
-        : port_index(port_idx)
+CSerial::CSerial(const uint8_t port_idx, CommandLine* cmd)
+        : port_index(port_idx),
+          errorfifo(fifosize),
+          rxfifo(fifosize),
+          txfifo(fifosize)
 {
 	const uint16_t base = serial_baseaddr[port_index];
 
@@ -1164,12 +1191,6 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 		        GetPortNumber(), base, irq, cleft.c_str());
 	}
 #endif
-	fifosize=16;
-
-	errorfifo = new MyFifo(fifosize);
-	rxfifo = new MyFifo(fifosize);
-	txfifo = new MyFifo(fifosize);
-
 	dos_device = std::make_unique<device_COM>(this);
 	DOS_AddManagedDevice(dos_device.get());
 
@@ -1203,14 +1224,6 @@ CSerial::~CSerial() {
 	for (uint16_t i = 0; i <= SERIAL_BASE_EVENT_COUNT; i++) {
 		removeEvent(i);
 	}
-
-	// Free the fifos and devices
-	delete(errorfifo);
-	errorfifo = nullptr;
-	delete(rxfifo);
-	rxfifo = nullptr;
-	delete(txfifo);
-	txfifo = nullptr;
 
 	// Uninstall the IO handlers
 	for (uint32_t i = 0; i < SERIAL_IO_HANDLERS; ++i) {
@@ -1315,55 +1328,51 @@ public:
 			
 			// detect the type
 			if (type=="dummy") {
-				serialports[i] = new CSerialDummy (i, &cmd);
+				serialports[i] = std::make_unique<CSerialDummy>(i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::DUMMY;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 			}
 #ifdef C_DIRECTSERIAL
 			else if (type=="direct") {
-				serialports[i] = new CDirectSerial (i, &cmd);
+				serialports[i] = std::make_unique<CDirectSerial>(i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::DIRECT;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful) {
 					// serial port name was wrong or already in use
-					delete serialports[i];
-					serialports[i] = nullptr;
+					serialports[i].reset();
 				}
 			}
 #endif
 #if C_MODEM
 			else if(type=="modem") {
-				serialports[i] = new CSerialModem (i, &cmd);
+				serialports[i] = std::make_unique<CSerialModem>(i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::MODEM;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful) {
-					delete serialports[i];
-					serialports[i] = nullptr;
+					serialports[i].reset();
 				}
 			}
 			else if(type=="nullmodem") {
-				serialports[i] = new CNullModem (i, &cmd);
+				serialports[i] = std::make_unique<CNullModem>(i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::NULL_MODEM;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful) {
-					delete serialports[i];
-					serialports[i] = nullptr;
+					serialports[i].reset();
 				}
 			}
 #endif
 			else if(type=="mouse") {
-				serialports[i] = new CSerialMouse (i, &cmd);
+				serialports[i] = std::make_unique<CSerialMouse>(i, &cmd);
 				serialports[i]->serialType = SERIAL_PORT_TYPE::MOUSE;
 				cmd.GetStringRemain(serialports[i]->commandLineString);
 				if (!serialports[i]->InstallationSuccessful) {
-					delete serialports[i];
-					serialports[i] = nullptr;
+					serialports[i].reset();
 				}
 			}
 			else if(type=="disabled") {
-				serialports[i] = nullptr;
+				serialports[i].reset();
 			} else {
-				serialports[i] = nullptr;
+				serialports[i].reset();
 				LOG_MSG("SERIAL: Port %" PRIu8 " invalid type \"%s\".",
 				        static_cast<uint8_t>(i + 1), type.c_str());
 			}
@@ -1374,12 +1383,6 @@ public:
 
 	~SERIALPORTS()
 	{
-		for (uint8_t i = 0; i < SERIAL_MAX_PORTS; ++i) {
-			if (serialports[i]) {
-				delete serialports[i];
-				serialports[i] = nullptr;
-			}
-		}
 #if C_MODEM
 		MODEM_ClearPhonebook();
 #endif
@@ -1397,9 +1400,8 @@ void SERIAL_Configure(const ModuleLifecycle lifecycle, Section* section)
 		serial_ports_instance = std::make_unique<SERIALPORTS>(section);
 		break;
 
-	case ModuleLifecycle::Destroy:
-		serial_ports_instance.reset();
-		break;
+	// this module doesn't support destruction at runtime
+	case ModuleLifecycle::Destroy: break;
 	}
 }
 

@@ -72,7 +72,7 @@ void PROGRAMS_Init(Section*);
 
 void DOS_Init(Section*);
 
-// [cpu] section modules:
+// [cpu] section modules
 void CPU_Configure(ModuleLifecycle, Section*);
 void IO_Configure(ModuleLifecycle, Section*);
 #if C_FPU

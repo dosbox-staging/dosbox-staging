@@ -47,7 +47,7 @@ static std::map<SERIAL_PORT_TYPE, const std::string> serial_type_names = {
 
 void SERIAL::showPort(int port)
 {
-	if (serialports[port] != nullptr) {
+	if (serialports[port]) {
 		WriteOut(MSG_Get("PROGRAM_SERIAL_SHOW_PORT"), port + 1,
 		         serial_type_names[serialports[port]->serialType].c_str(),
 		         serialports[port]->commandLineString.c_str());
@@ -136,45 +136,44 @@ void SERIAL::Run()
 			commandLineString.append(temp_line);
 			commandLineString.append(" ");
 		}
-		CommandLine *commandLine = new CommandLine("SERIAL.COM",
+		CommandLine* commandLine = new CommandLine("SERIAL.COM",
 		                                           commandLineString.c_str());
-		// Remove existing port.
-		delete serialports[port_index];
 		// Recreate the port with the new type.
 		switch (desired_type) {
 		case SERIAL_PORT_TYPE::INVALID:
 		case SERIAL_PORT_TYPE::DISABLED:
-			serialports[port_index] = nullptr;
+			serialports[port_index].reset();
 			break;
 		case SERIAL_PORT_TYPE::DUMMY:
-			serialports[port_index] = new CSerialDummy(port_index,
-			                                           commandLine);
+			serialports[port_index] = std::make_unique<CSerialDummy>(
+			        port_index, commandLine);
 			break;
 #ifdef C_DIRECTSERIAL
 		case SERIAL_PORT_TYPE::DIRECT:
-			serialports[port_index] = new CDirectSerial(port_index,
-			                                            commandLine);
+			serialports[port_index] = std::make_unique<CDirectSerial>(
+			        port_index, commandLine);
 			break;
 #endif
 #if C_MODEM
 		case SERIAL_PORT_TYPE::MODEM:
-			serialports[port_index] = new CSerialModem(port_index,
-			                                           commandLine);
+			serialports[port_index] = std::make_unique<CSerialModem>(
+			        port_index, commandLine);
 			break;
 		case SERIAL_PORT_TYPE::NULL_MODEM:
-			serialports[port_index] = new CNullModem(port_index, commandLine);
+			serialports[port_index] = std::make_unique<CNullModem>(
+			        port_index, commandLine);
 			break;
 #endif
 		case SERIAL_PORT_TYPE::MOUSE:
-			serialports[port_index] = new CSerialMouse(port_index,
-			                                           commandLine);
+			serialports[port_index] = std::make_unique<CSerialMouse>(
+			        port_index, commandLine);
 			break;
 		default:
-			serialports[port_index] = nullptr;
+			serialports[port_index].reset();
 			LOG_WARNING("SERIAL: Unknown serial port type %d", desired_type);
 			break;
 		}
-		if (serialports[port_index] != nullptr) {
+		if (serialports[port_index]) {
 			serialports[port_index]->serialType = desired_type;
 			serialports[port_index]->commandLineString = commandLineString;
 		}

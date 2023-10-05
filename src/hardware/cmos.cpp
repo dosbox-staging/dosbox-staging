@@ -380,14 +380,14 @@ void CMOS_Configure(const ModuleLifecycle lifecycle, Section* section)
 	static std::unique_ptr<CMOS> cmos_instance = {};
 
 	switch (lifecycle) {
+	case ModuleLifecycle::Reconfigure:
+		cmos_instance.reset();
+		[[fallthrough]];
+
 	case ModuleLifecycle::Create:
 		if (!cmos_instance) {
 			cmos_instance = std::make_unique<CMOS>(section);
 		}
-		break;
-
-	// This module doesn't support reconfiguration at runtime
-	case ModuleLifecycle::Reconfigure:
 		break;
 
 	case ModuleLifecycle::Destroy:
@@ -396,13 +396,6 @@ void CMOS_Configure(const ModuleLifecycle lifecycle, Section* section)
 	}
 }
 
-void CMOS_Destroy(Section* section) {
-	CMOS_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void CMOS_Init(Section * section) {
 	CMOS_Configure(ModuleLifecycle::Create, section);
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&CMOS_Destroy, changeable_at_runtime);
 }

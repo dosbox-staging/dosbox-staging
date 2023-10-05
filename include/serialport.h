@@ -454,14 +454,14 @@ private:
 
 	// 16C550 (FIFO)
 public: // todo remove
-	MyFifo *rxfifo = nullptr;
+	uint32_t fifosize = 16; // Default to a 16-byte FIFO
+	MyFifo rxfifo;
 
 private:
-	MyFifo *txfifo = nullptr;
-	MyFifo *errorfifo = nullptr;
-	uint32_t errors_in_fifo = 0;
+	MyFifo txfifo;
+	MyFifo errorfifo;
+	uint32_t errors_in_fifo         = 0;
 	uint32_t rx_interrupt_threshold = 0;
-	uint32_t fifosize = 0;
 	uint8_t FCR = 0;
 	bool sync_guardtime = false;
 
@@ -474,10 +474,13 @@ private:
 	#define FIFO_FLOWCONTROL 0x20
 };
 
-extern CSerial* serialports[];
-const uint8_t serial_defaultirq[] = {4, 3, 4, 3};
-const uint16_t serial_baseaddr[] = {0x3f8, 0x2f8, 0x3e8, 0x2e8};
-const char *const serial_comname[] = {"COM1", "COM2", "COM3", "COM4"};
+using serial_port_t  = std::unique_ptr<CSerial>;
+using serial_ports_t = std::array<serial_port_t, SERIAL_MAX_PORTS>;
+
+extern serial_ports_t serialports;
+constexpr uint8_t serial_defaultirq[] = {4, 3, 4, 3};
+constexpr uint16_t serial_baseaddr[] = {0x3f8, 0x2f8, 0x3e8, 0x2e8};
+constexpr const char* const serial_comname[] = {"COM1", "COM2", "COM3", "COM4"};
 
 // the COM devices
 

@@ -595,13 +595,6 @@ void PS1AUDIO_Configure(const ModuleLifecycle lifecycle, Section* section)
 	}
 }
 
-void PS1AUDIO_Destroy(Section* section) {
-	PS1AUDIO_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void PS1AUDIO_Init(Section * section) {
 	PS1AUDIO_Configure(ModuleLifecycle::Create, section);
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&PS1AUDIO_Destroy, changeable_at_runtime);
 }

@@ -98,15 +98,8 @@ void PCSPEAKER_Configure(const ModuleLifecycle lifecycle, Section* sec)
 	}
 }
 
-void PCSPEAKER_Destroy(Section* section) {
-	PCSPEAKER_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void PCSPEAKER_Init(Section * section) {
 	PCSPEAKER_Configure(ModuleLifecycle::Create, section);
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&PCSPEAKER_Destroy, changeable_at_runtime);
 }
 
 // PC Speaker external API, used by the PIT timer and keyboard

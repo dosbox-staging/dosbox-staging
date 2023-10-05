@@ -205,13 +205,6 @@ void LPT_DAC_Configure(const ModuleLifecycle lifecycle, Section* sec)
 	}
 }
 
-void LPT_DAC_Destroy(Section* section) {
-	LPT_DAC_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void LPT_DAC_Init(Section * section) {
 	LPT_DAC_Configure(ModuleLifecycle::Create, section);
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&LPT_DAC_Destroy, changeable_at_runtime);
 }

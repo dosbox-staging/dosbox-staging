@@ -443,14 +443,13 @@ void PCI_Configure(const ModuleLifecycle lifecycle, Section* section)
 	switch (lifecycle) {
 	case ModuleLifecycle::Create:
 		if (!pci_instance) {
-			pci_instance = std::make_unique<PCI>(section);
+			pci_instance  = std::make_unique<PCI>(section);
 			pci_interface = pci_instance.get();
 		}
 		break;
 
 	// This module doesn't support reconfiguration at runtime
-	case ModuleLifecycle::Reconfigure:
-		break;
+	case ModuleLifecycle::Reconfigure: break;
 
 	case ModuleLifecycle::Destroy:
 		pci_interface = nullptr;

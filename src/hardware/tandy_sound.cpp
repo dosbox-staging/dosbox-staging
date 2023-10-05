@@ -775,13 +775,6 @@ void TANDYSOUND_Configure(const ModuleLifecycle lifecycle, Section* section)
 	configure_dac(lifecycle, section);
 }
 
-void TANDYSOUND_Destroy(Section* section) {
-	TANDYSOUND_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void TANDYSOUND_Init(Section * section) {
 	TANDYSOUND_Configure(ModuleLifecycle::Create, section);
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&TANDYSOUND_Destroy, changeable_at_runtime);
 }

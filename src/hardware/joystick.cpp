@@ -634,13 +634,6 @@ void JOYSTICK_Configure(const ModuleLifecycle lifecycle, Section* section)
 	}
 }
 
-void JOYSTICK_Destroy(Section* section) {
-	JOYSTICK_Configure(ModuleLifecycle::Destroy, section);
-}
-
 void JOYSTICK_Init(Section * section) {
 	JOYSTICK_Configure(ModuleLifecycle::Create, section);
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&JOYSTICK_Destroy, changeable_at_runtime);
 }
