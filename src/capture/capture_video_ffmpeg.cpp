@@ -971,8 +971,6 @@ void FfmpegEncoder::Mux()
 
 void FfmpegEncoder::EncodeAudio()
 {
-	std::vector<int16_t> audio_data;
-
 	for (;;) {
 		std::unique_lock<std::mutex> lock(mutex);
 		waiter.wait(lock, [this] {
