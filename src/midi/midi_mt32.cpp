@@ -230,9 +230,9 @@ const LASynthModel mt32_old_model = {"mt32_old", // "mt32_old" is 1.07
                                      &mt32_ctrl_107_b};
 
 // In order that "model = auto" will load
-const LASynthModel* all_models[] = {&cm32ln_100_model,
-                                    &cm32l_102_model,
+const LASynthModel* all_models[] = {&cm32l_102_model,
                                     &cm32l_100_model,
+                                    &cm32ln_100_model,
                                     &mt32_old_model,
                                     &mt32_107_model,
                                     &mt32_106_model,
@@ -252,9 +252,9 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	const char* models[] = {"auto",
-	                        cm32ln_100_model.GetName(),
 	                        cm32l_102_model.GetName(),
 	                        cm32l_100_model.GetName(),
+	                        cm32ln_100_model.GetName(),
 	                        mt32_old_model.GetName(),
 	                        mt32_107_model.GetName(),
 	                        mt32_106_model.GetName(),
