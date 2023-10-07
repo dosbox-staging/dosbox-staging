@@ -468,8 +468,7 @@ bool Virtual_Drive::FileStat(const char* name, FileStat_Block * const stat_block
 	assert(name);
 	auto vfile = find_vfile_by_name(name);
 	if (vfile) {
-		stat_block->attr = (int)(vfile->isdir ? DOS_ATTR_DIRECTORY
-		                                      : DOS_ATTR_ARCHIVE);
+		stat_block->attr = (int)(vfile->isdir ? DOS_ATTR_DIRECTORY : 0);
 		stat_block->size = vfile->data->size();
 		stat_block->date = default_date;
 		stat_block->time = default_time;
@@ -553,7 +552,7 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 		bool cmp = WildFileCmp("..", pattern);
 		if (cmp)
 			dta.SetResult("..", 0, default_date,
-			              default_time, DOS_ATTR_DIRECTORY);
+			              default_time, DOS_ATTR_DIRECTORY | DOS_ATTR_READ_ONLY);
 		search_file = first_file;
 		if (cmp)
 			return true;
@@ -567,8 +566,8 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 		              search_file->data->size(),
 		              search_file->date,
 		              search_file->time,
-		              (int)(search_file->isdir ? DOS_ATTR_DIRECTORY
-		                                       : DOS_ATTR_ARCHIVE));
+		              (int)(search_file->isdir ? DOS_ATTR_DIRECTORY | DOS_ATTR_READ_ONLY :
+		                                         DOS_ATTR_READ_ONLY));
 		search_file = search_file->next;
 		return true;
 	}
