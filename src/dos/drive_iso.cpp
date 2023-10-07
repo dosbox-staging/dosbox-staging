@@ -220,7 +220,7 @@ bool isoDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 	if (success) {
 		FileStat_Block file_stat;
 		file_stat.size = DATA_LENGTH(de);
-		file_stat.attr = DOS_ATTR_ARCHIVE | DOS_ATTR_READ_ONLY;
+		file_stat.attr = DOS_ATTR_READ_ONLY;
 		file_stat.date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 		file_stat.time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
 		*file = new isoFile(this, name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
@@ -299,7 +299,6 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 	while (GetNextDirEntry(dirIterator, &de)) {
 		uint8_t findAttr = 0;
 		if (IS_DIR(FLAGS1)) findAttr |= DOS_ATTR_DIRECTORY;
-		else findAttr |= DOS_ATTR_ARCHIVE;
 		if (IS_HIDDEN(FLAGS1)) findAttr |= DOS_ATTR_HIDDEN;
 
 		if (!IS_ASSOC(FLAGS1) && !(isRoot && de.ident[0]=='.') && WildFileCmp((char*)de.ident, pattern)
@@ -315,6 +314,7 @@ bool isoDrive::FindNext(DOS_DTA &dta) {
 			uint32_t findSize = DATA_LENGTH(de);
 			uint16_t findDate = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 			uint16_t findTime = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
+			findAttr |= DOS_ATTR_READ_ONLY;
 			dta.SetResult(findName, findSize, findDate, findTime, findAttr);
 			return true;
 		}
@@ -380,7 +380,7 @@ bool isoDrive::FileStat(const char *name, FileStat_Block *const stat_block) {
 		stat_block->date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 		stat_block->time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
 		stat_block->size = DATA_LENGTH(de);
-		stat_block->attr = DOS_ATTR_ARCHIVE | DOS_ATTR_READ_ONLY;
+		stat_block->attr = DOS_ATTR_READ_ONLY;
 		if (IS_DIR(FLAGS1)) stat_block->attr |= DOS_ATTR_DIRECTORY;
 	}
 
