@@ -68,10 +68,10 @@ public:
 		return MidiDeviceType::BuiltIn;
 	}
 
-	MIDI_RC ListAll(Program *caller) override;
-	bool Open(const char *conf) override;
+	MIDI_RC ListAll(Program* caller) override;
+	bool Open(const char* conf) override;
 	void PlayMsg(const MidiMessage& msg) override;
-	void PlaySysex(uint8_t *sysex, size_t len) override;
+	void PlaySysex(uint8_t* sysex, size_t len) override;
 	void PrintStats();
 
 private:
@@ -89,13 +89,14 @@ private:
 	RWQueue<MidiWork> work_fifo{1};
 
 	std::mutex service_mutex = {};
-	service_t service = {};
-	std::thread renderer = {};
+	service_t service        = {};
+	std::thread renderer     = {};
+
 	std::optional<model_and_dir_t> model_and_dir = {};
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI Sysex or Msg event.
-	double last_rendered_ms = 0.0;
+	double last_rendered_ms   = 0.0;
 	double ms_per_audio_frame = 0.0;
 
 	bool had_underruns = false;
