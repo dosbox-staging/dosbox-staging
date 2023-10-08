@@ -220,7 +220,7 @@ bool isoDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 	if (success) {
 		FileStat_Block file_stat;
 		file_stat.size = DATA_LENGTH(de);
-		file_stat.attr = FatAttributeReadOnly._data;
+		file_stat.attr = FatAttributeFlags::ReadOnly;
 		file_stat.date = DOS_PackDate(1900 + de.dateYear, de.dateMonth, de.dateDay);
 		file_stat.time = DOS_PackTime(de.timeHour, de.timeMin, de.timeSec);
 		*file = new isoFile(this, name, &file_stat, EXTENT_LOCATION(de) * ISO_FRAMESIZE);
@@ -274,14 +274,14 @@ bool isoDrive::FindFirst(char* dir, DOS_DTA& dta, bool fcb_findfirst)
 	char pattern[ISO_MAXPATHNAME];
 	dta.GetSearchParams(attr, pattern);
 
-	if (attr == FatAttributeVolume) {
-		dta.SetResult(discLabel, 0, 0, 0, FatAttributeVolume);
+	if (attr == FatAttributeFlags::Volume) {
+		dta.SetResult(discLabel, 0, 0, 0, FatAttributeFlags::Volume);
 		return true;
 	} else if (attr.volume && isRoot && !fcb_findfirst) {
 		if (WildFileCmp(discLabel,pattern)) {
 			// Get Volume Label and only in basedir and if it
 			// matches the searchstring
-			dta.SetResult(discLabel, 0, 0, 0, FatAttributeVolume);
+			dta.SetResult(discLabel, 0, 0, 0, FatAttributeFlags::Volume);
 			return true;
 		}
 	}
@@ -386,7 +386,7 @@ bool isoDrive::FileStat(const char *name, FileStat_Block *const stat_block) {
 	bool success = lookup(&de, name);
 
 	if (success) {
-		auto attr      = FatAttributeReadOnly;
+		FatAttributeFlags attr = {FatAttributeFlags::ReadOnly};
 		attr.directory = IS_DIR(FLAGS1);
 
 		stat_block->date = DOS_PackDate(1900 + de.dateYear,

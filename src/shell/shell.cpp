@@ -151,20 +151,23 @@ bool get_pipe_status(const char *out_file,
 			DOS_SeekFile(1, &bigdummy, DOS_SEEK_END);
 		} else {
 			// Create if not exists.
-			status = DOS_CreateFile(out_file, FatAttributeArchive, &dummy);
+			status = DOS_CreateFile(out_file,
+			                        FatAttributeFlags::Archive,
+			                        &dummy);
 		}
 	} else if (!pipe_file && DOS_GetFileAttr(out_file, &fattr) && fattr.read_only) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		status = false;
 	} else {
-		if (pipe_file && DOS_FindFirst(pipe_tempfile, FatAttributeNotVolume) &&
+		if (pipe_file &&
+		    DOS_FindFirst(pipe_tempfile, FatAttributeFlags::NotVolume) &&
 		    !DOS_UnlinkFile(pipe_tempfile)) {
 			failed_pipe = true;
 		}
 		status = DOS_OpenFileExtended(pipe_file && !failed_pipe ? pipe_tempfile
 		                                                        : out_file,
 		                              OPEN_READWRITE,
-		                              FatAttributeArchive,
+		                              FatAttributeFlags::Archive,
 		                              0x12,
 		                              &dummy,
 		                              &dummy2);
@@ -180,13 +183,13 @@ bool get_pipe_status(const char *out_file,
 			safe_strcpy(pipe_tempfile, pipe_full_path.c_str());
 
 			failed_pipe = false;
-			if (DOS_FindFirst(pipe_tempfile, FatAttributeNotVolume) &&
+			if (DOS_FindFirst(pipe_tempfile, FatAttributeFlags::NotVolume) &&
 			    !DOS_UnlinkFile(pipe_tempfile)) {
 				failed_pipe = true;
 			} else {
 				status = DOS_OpenFileExtended(pipe_tempfile,
 				                              OPEN_READWRITE,
-				                              FatAttributeArchive,
+				                              FatAttributeFlags::Archive,
 				                              0x12,
 				                              &dummy,
 				                              &dummy2);
@@ -355,7 +358,7 @@ void DOS_Shell::ParseLine(char *line)
 			WriteOut(MSG_Get("SHELL_CMD_FAILED_PIPE"));
 			LOG_MSG("SHELL: Failed to write pipe content to temporary file");
 		}
-		if (DOS_FindFirst(pipe_tempfile, FatAttributeNotVolume)) {
+		if (DOS_FindFirst(pipe_tempfile, FatAttributeFlags::NotVolume)) {
 			DOS_UnlinkFile(pipe_tempfile);
 		}
 	}

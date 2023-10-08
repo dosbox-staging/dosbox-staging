@@ -267,7 +267,7 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	dos.dta(dos.tables.tempdta);
 
 	// TODO Maybe support confirmation for *.* like dos does.
-	bool res = DOS_FindFirst(args, FatAttributeNotVolume);
+	bool res = DOS_FindFirst(args, FatAttributeFlags::NotVolume);
 	if (!res) {
 		WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"), args);
 		dos.dta(save_dta);
@@ -948,7 +948,7 @@ void DOS_Shell::CMD_DIR(char* args)
 	dos.dta(dos.tables.tempdta);
 	DOS_DTA dta(dos.dta());
 
-	bool ret = DOS_FindFirst(pattern.c_str(), FatAttributeNotVolume);
+	bool ret = DOS_FindFirst(pattern.c_str(), FatAttributeFlags::NotVolume);
 	if (!ret) {
 		if (!has_option_bare)
 			output.AddString(MSG_Get("SHELL_FILE_NOT_FOUND"),
@@ -1093,7 +1093,7 @@ void DOS_Shell::CMD_LS(char *args)
 	DOS_DTA dta(dos.dta());
 
 	const std::string pattern = to_search_pattern(args);
-	if (!DOS_FindFirst(pattern.c_str(), FatAttributeNotVolume)) {
+	if (!DOS_FindFirst(pattern.c_str(), FatAttributeFlags::NotVolume)) {
 		WriteOut(MSG_Get("SHELL_CMD_LS_PATH_ERR"), trim(args));
 		dos.dta(original_dta);
 		return;
@@ -1209,7 +1209,8 @@ void DOS_Shell::CMD_COPY(char* args)
 				if (source_x[source_x_len-1] == ':') has_drive_spec = true;
 			}
 			if (!has_drive_spec  && !strpbrk(source_p,"*?") ) { //doubt that fu*\*.* is valid
-				if (DOS_FindFirst(source_p, FatAttributeNotVolume)) {
+				if (DOS_FindFirst(source_p,
+				                  FatAttributeFlags::NotVolume)) {
 					dta.GetResult(search_result);
 					if (search_result.IsDirectory()) {
 						strcat(source_x, "\\*.*");
@@ -1277,7 +1278,7 @@ void DOS_Shell::CMD_COPY(char* args)
 		bool target_is_file = true;
 		const auto target_path_length = strlen(pathTarget);
 		if (target_path_length > 0 && pathTarget[target_path_length - 1] != '\\') {
-			if (DOS_FindFirst(pathTarget, FatAttributeNotVolume)) {
+			if (DOS_FindFirst(pathTarget, FatAttributeFlags::NotVolume)) {
 				dta.GetResult(search_result);
 				if (search_result.IsDirectory()) {
 					strcat(pathTarget, "\\");
@@ -1289,7 +1290,7 @@ void DOS_Shell::CMD_COPY(char* args)
 
 		//Find first sourcefile
 		bool ret = DOS_FindFirst(source.filename.c_str(),
-		                         FatAttributeNotVolume);
+		                         FatAttributeFlags::NotVolume);
 		if (!ret) {
 			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),
 			         source.filename.c_str());
@@ -1428,7 +1429,7 @@ static bool attrib_recursive(DOS_Shell *shell,
 		shell->WriteOut(MSG_Get("SHELL_ILLEGAL_PATH"));
 		return false;
 	}
-	bool found = false, res = DOS_FindFirst(args, FatAttributeNotVolume);
+	bool found = false, res = DOS_FindFirst(args, FatAttributeFlags::NotVolume);
 	if (!res && !optS)
 		return false;
 	char *end = strrchr(full, '\\');
@@ -1491,7 +1492,7 @@ static bool attrib_recursive(DOS_Shell *shell,
 	if (optS) {
 		size_t len = strlen(path);
 		strcat(path, "*.*");
-		bool ret      = DOS_FindFirst(path, FatAttributeNotVolume);
+		bool ret = DOS_FindFirst(path, FatAttributeFlags::NotVolume);
 		*(path + len) = 0;
 		if (ret) {
 			std::vector<std::string> found_dirs;
@@ -1684,7 +1685,7 @@ void DOS_Shell::CMD_IF(char* args)
 		{	/* DOS_FindFirst uses dta so set it to our internal dta */
 			const RealPt save_dta=dos.dta();
 			dos.dta(dos.tables.tempdta);
-			bool ret = DOS_FindFirst(word, FatAttributeNotVolume);
+			bool ret = DOS_FindFirst(word, FatAttributeFlags::NotVolume);
 			dos.dta(save_dta);
 			if (ret == (!has_not)) DoCommand(args);
 		}

@@ -46,6 +46,17 @@ constexpr auto ParentDirectory  = "..";
 constexpr auto DosSeparator     = '\\';
 
 union FatAttributeFlags {
+	enum : uint8_t {
+		ReadOnly  = bit::literals::b0,
+		Hidden    = bit::literals::b1,
+		System    = bit::literals::b2,
+		Volume    = bit::literals::b3,
+		Directory = bit::literals::b4,
+		Archive   = bit::literals::b5,
+		Device    = bit::literals::b6,
+		NotVolume = bit::mask_flip_all(Volume),
+	};
+
 	uint8_t _data = 0;
 
 	bit_view<0, 1> read_only;
@@ -72,16 +83,6 @@ union FatAttributeFlags {
 		return _data == other._data;
 	}
 };
-
-extern const FatAttributeFlags FatAttributeReadOnly;
-extern const FatAttributeFlags FatAttributeHidden;
-extern const FatAttributeFlags FatAttributeSystem;
-extern const FatAttributeFlags FatAttributeArchive;
-extern const FatAttributeFlags FatAttributeDirectory;
-extern const FatAttributeFlags FatAttributeDevice;
-extern const FatAttributeFlags FatAttributeVolume;    // volume label
-extern const FatAttributeFlags FatAttributeNotVolume; // everything but volume
-                                                      // label
 
 struct FileStat_Block {
 	uint32_t size;

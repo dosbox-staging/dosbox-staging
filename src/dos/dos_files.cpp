@@ -395,7 +395,7 @@ bool DOS_FindFirst(const char* search, FatAttributeFlags attr, bool fcb_findfirs
 	size_t len = strlen(search);
 
 	const bool is_root = (len > 2) && (search[len - 2] == ':') &&
-	                     (attr == FatAttributeVolume);
+	                     (attr == FatAttributeFlags::Volume);
 	const bool is_directory = len && search[len - 1] == '\\';
 	if (!is_root && is_directory) {
 		// Dark Forces installer, but c:\ is allright for volume
@@ -425,7 +425,7 @@ bool DOS_FindFirst(const char* search, FatAttributeFlags attr, bool fcb_findfirs
 		find_last = strrchr(pattern,'.');
 		if(find_last) *find_last = 0;
 		//TODO use current date and time
-		dta.SetResult(pattern, 0, 0, 0, FatAttributeDevice);
+		dta.SetResult(pattern, 0, 0, 0, FatAttributeFlags::Device);
 		LOG(LOG_DOSMISC, LOG_WARN)("finding device %s", pattern);
 		return true;
 	}
@@ -1206,7 +1206,7 @@ bool DOS_FCBFindFirst(uint16_t seg, uint16_t offset)
 	RealPt old_dta = dos.dta();
 	dos.dta(dos.tables.tempdta);
 	char name[DOS_FCBNAME];fcb.GetName(name);
-	auto attr = FatAttributeArchive;
+	FatAttributeFlags attr = {FatAttributeFlags::Archive};
 	fcb.GetAttr(attr); /* Gets search attributes if extended */
 	bool ret=DOS_FindFirst(name,attr,true);
 	dos.dta(old_dta);

@@ -467,7 +467,7 @@ void IMGMOUNT::Run(void)
 			char root[7] = {drive, ':', '\\', '*', '.', '*', 0};
 
 			// Obtain the drive label, saving it in the dirCache
-			if (!DOS_FindFirst(root, FatAttributeVolume)) {
+			if (!DOS_FindFirst(root, FatAttributeFlags::Volume)) {
 				LOG_WARNING("DRIVE: Unable to find %c drive's volume label",
 				            drive);
 			}
