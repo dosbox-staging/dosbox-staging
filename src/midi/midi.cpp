@@ -76,8 +76,8 @@ uint8_t MIDI_message_len_by_status[256] = {
 #include "midi_mt32.h"
 
 #if defined(MACOSX)
-#	include "midi_coremidi.h"
-#	include "midi_coreaudio.h"
+#include "midi_coreaudio.h"
+#include "midi_coremidi.h"
 
 #elif defined(WIN32)
 #include "midi_win32.h"
@@ -98,7 +98,7 @@ static void deregister_handlers()
 static void register_handlers()
 {
 	deregister_handlers();
-	
+
 #if C_FLUIDSYNTH
 	handlers.emplace_back(std::make_unique<MidiHandlerFluidsynth>());
 #endif
@@ -131,7 +131,6 @@ MidiHandler* get_handler(const std::string_view name)
 	}
 	return nullptr;
 }
-
 
 struct Midi {
 	uint8_t status = 0;
@@ -470,8 +469,9 @@ void MIDI_RawOutByte(uint8_t data)
 			midi_state.UpdateState(midi.message.msg);
 
 			// 2. Sanitise the MIDI stream unless raw output is
-			// enabled. Currently, this can result in the emission of extra
-			// MIDI Note Off events only, and updating the MIDI state.
+			// enabled. Currently, this can result in the emission
+			// of extra MIDI Note Off events only, and updating the
+			// MIDI state.
 			//
 			// `sanitise_midi_stream` also captures these extra
 			// events if MIDI capture is enabled and sends them to
@@ -726,12 +726,12 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	const char* midi_devices[] =
 	{ "auto",
 #if defined(MACOSX)
-#	if C_COREMIDI
+#if C_COREMIDI
 	  "coremidi",
-#	endif
-#	if C_COREAUDIO
+#endif
+#if C_COREAUDIO
 	  "coreaudio",
-#	endif
+#endif
 #elif defined(WIN32)
 	  "win32",
 #else
@@ -754,13 +754,13 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
 	        "('auto' by default):\n"
 #if defined(MACOSX)
-#	if C_COREMIDI
+#if C_COREMIDI
 	        "  coremidi:    Any device that has been configured in the macOS\n"
 	        "               Audio MIDI Setup.\n"
-#	endif
-#	if C_COREAUDIO
+#endif
+#if C_COREAUDIO
 	        "  coreaudio:   Use the built-in macOS MIDI synthesiser.\n"
-#	endif
+#endif
 #elif defined(WIN32)
 	        "  win32:       Use the Win32 MIDI playback interface.\n"
 #else
