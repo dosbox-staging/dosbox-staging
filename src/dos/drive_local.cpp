@@ -337,28 +337,31 @@ bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 
 	if (this->isRemote() && this->isRemovable()) {
 		// cdroms behave a bit different than regular drives
-		if (sAttr == FatAttributeVolume) {
-			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeVolume);
+		if (sAttr == FatAttributeFlags::Volume) {
+			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
 			return true;
 		}
 	} else {
-		if (sAttr == FatAttributeVolume) {
+		if (sAttr == FatAttributeFlags::Volume) {
 			if (is_empty(dirCache.GetLabel())) {
-				// LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL
-				// REQUESTED: none present, returned  NOLABEL");
-				// dta.SetResult("NO_LABEL",0,0,0,FatAttributeVolume);
+				// LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
+				// dta.SetResult("NO_LABEL",0,0,0,FatAttributeFlags::Volume);
 				// return true;
 				DOS_SetError(DOSERR_NO_MORE_FILES);
 				return false;
 			}
-			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeVolume);
+			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
 			return true;
 		} else if (sAttr.volume && (*_dir == 0) && !fcb_findfirst) {
 			// should check for a valid leading directory instead of
 			// 0 exists==true if the volume label matches the
 			// searchmask and the path is valid
 			if (WildFileCmp(dirCache.GetLabel(), tempDir)) {
-				dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeVolume);
+				dta.SetResult(dirCache.GetLabel(),
+				              0,
+				              0,
+				              0,
+				              FatAttributeFlags::Volume);
 				return true;
 			}
 		}
@@ -879,7 +882,7 @@ localFile::localFile(const char* _name, const std_fs::path& path, FILE* handle,
 {
 	open = true;
 	UpdateDateTimeFromHost();
-	attr = FatAttributeArchive;
+	attr = FatAttributeFlags::Archive;
 
 	SetName(_name);
 }

@@ -469,7 +469,7 @@ bool Virtual_Drive::FileStat(const char* name, FileStat_Block* const stat_block)
 	assert(name);
 	auto vfile = find_vfile_by_name(name);
 	if (vfile) {
-		auto attr      = FatAttributeReadOnly;
+		FatAttributeFlags attr = {FatAttributeFlags::ReadOnly};
 		attr.directory = vfile->isdir;
 
 		stat_block->attr = attr._data;
@@ -517,17 +517,21 @@ bool Virtual_Drive::FindFirst(char *_dir, DOS_DTA &dta, bool fcb_findfirst)
 	char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr, pattern);
 	search_file = attr.directory && position > 0 ? parent_dir : first_file;
-	if (attr == FatAttributeVolume) {
-		dta.SetResult(GetLabel(), 0, 0, 0, FatAttributeVolume);
+	if (attr == FatAttributeFlags::Volume) {
+		dta.SetResult(GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
 		return true;
 	} else if (attr.volume && !fcb_findfirst) {
 		if (WildFileCmp(GetLabel(), pattern)) {
-			dta.SetResult(GetLabel(), 0, 0, 0, FatAttributeVolume);
+			dta.SetResult(GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
 			return true;
 		}
 	} else if (attr.directory && position > 0) {
 		if (WildFileCmp(".", pattern)) {
-			dta.SetResult(".", 0, default_date, default_time, FatAttributeDirectory);
+			dta.SetResult(".",
+			              0,
+			              default_date,
+			              default_time,
+			              FatAttributeFlags::Directory);
 			return true;
 		}
 	}
@@ -554,7 +558,11 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 	if (search_file == parent_dir) {
 		bool cmp = WildFileCmp("..", pattern);
 		if (cmp)
-			dta.SetResult("..", 0, default_date, default_time, FatAttributeDirectory);
+			dta.SetResult("..",
+			              0,
+			              default_date,
+			              default_time,
+			              FatAttributeFlags::Directory);
 		search_file = first_file;
 		if (cmp)
 			return true;
@@ -564,7 +572,7 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 	                                                     pattern,
 	                                                     pos);
 	if (search_file) {
-		auto attr      = FatAttributeReadOnly;
+		FatAttributeFlags attr = {FatAttributeFlags::ReadOnly};
 		attr.directory = search_file->isdir;
 
 		dta.SetResult(search_file->name.c_str(),

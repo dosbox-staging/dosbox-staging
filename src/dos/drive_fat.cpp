@@ -481,7 +481,7 @@ bool fatDrive::getFileDirEntry(const char* const filename, direntry* useEntry,
 		findDir = strtok(dirtoken,"\\");
 		findFile = findDir;
 		while(findDir != nullptr) {
-			imgDTA->SetupSearch(0, FatAttributeDirectory, findDir);
+			imgDTA->SetupSearch(0, FatAttributeFlags::Directory, findDir);
 			imgDTA->SetDirID(0);
 			
 			findFile = findDir;
@@ -539,7 +539,7 @@ bool fatDrive::getDirClustNum(char* dir, uint32_t* clustNum, bool parDir)
 		//LOG_MSG("Testing for dir %s", dir);
 		findDir = strtok(dirtoken,"\\");
 		while(findDir != nullptr) {
-			imgDTA->SetupSearch(0, FatAttributeDirectory, findDir);
+			imgDTA->SetupSearch(0, FatAttributeFlags::Directory, findDir);
 			imgDTA->SetDirID(0);
 			findDir = strtok(nullptr,"\\");
 			if(parDir && (findDir == nullptr)) break;
@@ -1194,15 +1194,15 @@ bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 #if 0
 	uint8_t attr;char pattern[DOS_NAMELENGTH_ASCII];
 	dta.GetSearchParams(attr,pattern);
-	if(attr==FatAttributeVolume) {
+	if(attr == FatAttributeFlags::Volume) {
 		if (strcmp(GetLabel(), "") == 0 ) {
 			DOS_SetError(DOSERR_NO_MORE_FILES);
 			return false;
 		}
-		dta.SetResult(GetLabel(),0,0,0,FatAttributeVolume);
+		dta.SetResult(GetLabel(),0,0,0,FatAttributeFlags::Volume);
 		return true;
 	}
-	if(attr & FatAttributeVolume) //check for root dir or fcb_findfirst
+	if(attr & FatAttributeFlags::Volume) //check for root dir or fcb_findfirst
 		LOG(LOG_DOSMISC,LOG_WARN)("findfirst for volumelabel used on fatDrive. Unhandled!!!!!");
 #endif
 	if(!getDirClustNum(_dir, &cwdDirCluster, false)) {
@@ -1306,7 +1306,7 @@ nextfile:
 	trimString(&find_name[0], sizeof(find_name));
 	trimString(&extension[0], sizeof(extension));
 
-	// if(!(sectbuf[entryoffset].attrib & FatAttributeDirectory._data))
+	// if(!(sectbuf[entryoffset].attrib & FatAttributeFlags::Directory))
 	if (extension[0]!=0) {
 		safe_strcat(find_name, ".");
 		safe_strcat(find_name, extension);
@@ -1320,8 +1320,8 @@ nextfile:
 	attr_mask.hidden    = true;
 
 	// TODO What about volume/directory attributes?
-	if (attrs == FatAttributeVolume) {
-		if (!(sectbuf[entryoffset].attrib & FatAttributeVolume._data)) {
+	if (attrs == FatAttributeFlags::Volume) {
+		if (!(sectbuf[entryoffset].attrib & FatAttributeFlags::Volume)) {
 			goto nextfile;
 		}
 		dirCache.SetLabel(find_name, false, true);
@@ -1353,7 +1353,7 @@ bool fatDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 {
 	/* you CAN get file attr root directory */
 	if (*name == 0) {
-		*attr = FatAttributeDirectory;
+		*attr = FatAttributeFlags::Directory;
 		return true;
 	}
 
@@ -1554,7 +1554,7 @@ bool fatDrive::MakeDir(char* dir)
 	memcpy(&tmpentry.entryname, &pathName[0], 11);
 	tmpentry.loFirstClust = (uint16_t)(dummyClust & 0xffff);
 	tmpentry.hiFirstClust = (uint16_t)(dummyClust >> 16);
-	tmpentry.attrib       = FatAttributeDirectory._data;
+	tmpentry.attrib       = FatAttributeFlags::Directory;
 	addDirectoryEntry(dirClust, tmpentry);
 
 	/* Add the [.] and [..] entries to our new directory*/
@@ -1563,7 +1563,7 @@ bool fatDrive::MakeDir(char* dir)
 	memcpy(&tmpentry.entryname, ".          ", 11);
 	tmpentry.loFirstClust = (uint16_t)(dummyClust & 0xffff);
 	tmpentry.hiFirstClust = (uint16_t)(dummyClust >> 16);
-	tmpentry.attrib       = FatAttributeDirectory._data;
+	tmpentry.attrib       = FatAttributeFlags::Directory;
 	addDirectoryEntry(dummyClust, tmpentry);
 
 	/* [..] entry */
@@ -1571,7 +1571,7 @@ bool fatDrive::MakeDir(char* dir)
 	memcpy(&tmpentry.entryname, "..         ", 11);
 	tmpentry.loFirstClust = (uint16_t)(dirClust & 0xffff);
 	tmpentry.hiFirstClust = (uint16_t)(dirClust >> 16);
-	tmpentry.attrib       = FatAttributeDirectory._data;
+	tmpentry.attrib       = FatAttributeFlags::Directory;
 	addDirectoryEntry(dummyClust, tmpentry);
 
 	return true;
