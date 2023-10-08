@@ -103,16 +103,13 @@ static void SetActiveBind(CBind * _bind);
 extern uint8_t int10_font_14[256 * 14];
 
 static std::vector<std::unique_ptr<CEvent>> events;
-static std::vector<CButton *> buttons;
+static std::vector<std::unique_ptr<CButton>> buttons;
 static std::vector<CBindGroup *> bindgroups;
 static std::vector<CHandlerEvent *> handlergroup;
 static std::list<CBind *> all_binds;
 
 typedef std::list<CBind *> CBindList;
-typedef std::list<CEvent *>::iterator CEventList_it;
 typedef std::list<CBind *>::iterator CBindList_it;
-typedef std::vector<CButton *>::iterator CButton_it;
-typedef std::vector<CEvent *>::iterator CEventVector_it;
 typedef std::vector<CBindGroup *>::iterator CBindGroup_it;
 
 static CBindList holdlist;
@@ -1445,7 +1442,7 @@ public:
 	          color(color_white),
 	          enabled(true)
 	{
-		buttons.push_back(this);
+		buttons.emplace_back(this);
 	}
 
 	virtual ~CButton() = default;
@@ -2020,8 +2017,8 @@ static void DrawButtons() {
 	                       color_black.blue,
 	                       SDL_ALPHA_OPAQUE);
 	SDL_RenderClear(mapper.renderer);
-	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
-		(*but_it)->Draw();
+	for (const auto& button : buttons) {
+		button->Draw();
 	}
 	SDL_RenderPresent(mapper.renderer);
 }
@@ -2791,11 +2788,12 @@ void BIND_MappingEvents() {
 				lastHoveredButton = nullptr;
 			}
 			/* Check which button are we currently pointing at */
-			for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
-				if (dynamic_cast<CClickableTextButton *>(*but_it) && (*but_it)->OnTop(event.button.x,event.button.y)) {
-					(*but_it)->SetColor(color_red);
+			for (const auto& button : buttons) {
+				if (dynamic_cast<CClickableTextButton*>(button.get()) &&
+				    button->OnTop(event.button.x, event.button.y)) {
+					button->SetColor(color_red);
 					mapper.redraw     = true;
-					lastHoveredButton = *but_it;
+					lastHoveredButton = button.get();
 					break;
 				}
 			}
@@ -2809,9 +2807,10 @@ void BIND_MappingEvents() {
 				lastHoveredButton = nullptr;
 			}
 			/* Check the press */
-			for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it) {
-				if (dynamic_cast<CClickableTextButton *>(*but_it) && (*but_it)->OnTop(event.button.x,event.button.y)) {
-					(*but_it)->Click();
+			for (const auto& button : buttons) {
+				if (dynamic_cast<CClickableTextButton*>(button.get()) &&
+				    button->OnTop(event.button.x, event.button.y)) {
+					button->Click();
 					break;
 				}
 			}
@@ -3195,8 +3194,6 @@ static void MAPPER_Destroy(Section *sec) {
 		delete ptr;
 	all_binds.clear();
 
-	for (auto & ptr : buttons)
-		delete ptr;
 	buttons.clear();
 
 	for (auto & ptr : keybindgroups)
@@ -3247,8 +3244,9 @@ void MAPPER_BindKeys(Section *sec)
 	if (!load_binds_from_file(mapper.filename, mapperfile_value))
 		CreateDefaultBinds();
 
-	for (CButton_it but_it = buttons.begin(); but_it != buttons.end(); ++but_it)
-		(*but_it)->BindColor();
+	for (const auto& button : buttons) {
+		button->BindColor();
+	}
 
 	if (SDL_GetModState()&KMOD_CAPS)
 		MAPPER_TriggerEvent(caps_lock_event, false);
