@@ -102,7 +102,7 @@ static void SetActiveEvent(CEvent * event);
 static void SetActiveBind(CBind * _bind);
 extern uint8_t int10_font_14[256 * 14];
 
-static std::vector<CEvent *> events;
+static std::vector<std::unique_ptr<CEvent>> events;
 static std::vector<CButton *> buttons;
 static std::vector<CBindGroup *> bindgroups;
 static std::vector<CHandlerEvent *> handlergroup;
@@ -122,7 +122,7 @@ public:
 	CEvent(const char *ev_entry) : bindlist{}
 	{
 		safe_strcpy(entry, ev_entry);
-		events.push_back(this);
+		events.emplace_back(this);
 	}
 
 	virtual ~CEvent() = default;
@@ -1266,7 +1266,7 @@ public:
 	Typer(const Typer &) = delete;            // prevent copy
 	Typer &operator=(const Typer &) = delete; // prevent assignment
 	~Typer() { Stop(); }
-	void Start(std::vector<CEvent *> *ext_events,
+	void Start(std::vector<std::unique_ptr<CEvent>> *ext_events,
 	           std::vector<std::string> &ext_sequence,
 	           const uint32_t wait_ms,
 	           const uint32_t pace_ms)
@@ -1307,7 +1307,7 @@ private:
 		static CEvent *lshift_event = nullptr;
 		for (auto &event : *m_events) {
 			if (std::string("key_lshift") == event->GetName()) {
-				lshift_event = event;
+				lshift_event = event.get();
 				break;
 			}
 		}
@@ -1374,7 +1374,7 @@ private:
 
 	std::thread m_instance = {};
 	std::vector<std::string> m_sequence = {};
-	std::vector<CEvent *> *m_events = nullptr;
+	std::vector<std::unique_ptr<CEvent>>* m_events = nullptr;
 	uint32_t m_wait_ms = 0;
 	uint32_t m_pace_ms = 0;
 	std::atomic_bool m_stop_requested{false};
@@ -2459,9 +2459,9 @@ static void CreateStringBind(char * line) {
 	line=trim(line);
 	char * eventname=strip_word(line);
 	CEvent * event = nullptr;
-	for (CEventVector_it ev_it = events.begin(); ev_it != events.end(); ++ev_it) {
-		if (!strcasecmp((*ev_it)->GetName(),eventname)) {
-			event=*ev_it;
+	for (const auto& evt : events) {
+		if (!strcasecmp(evt->GetName(), eventname)) {
+			event = evt.get();
 			goto foundevent;
 		}
 	}
@@ -2609,7 +2609,7 @@ static void ClearAllBinds() {
 	// wait for the auto-typer to complete because it might be accessing events
 	mapper.typist.Wait();
 
-	for (CEvent *event : events) {
+	for (const auto& event : events) {
 		event->ClearBinds();
 	}
 }
@@ -2703,8 +2703,7 @@ static void MAPPER_SaveBinds() {
 		return;
 	}
 	char buf[128];
-	for (CEventVector_it event_it = events.begin(); event_it != events.end(); ++event_it) {
-		CEvent * event=*(event_it);
+	for (const auto& event : events) {
 		fprintf(savefile,"%s ",event->GetName());
 		for (CBindList_it bind_it = event->bindlist.begin(); bind_it != event->bindlist.end(); ++bind_it) {
 			CBind * bind=*(bind_it);
@@ -3023,9 +3022,10 @@ void MAPPER_UpdateJoysticks() {
 #endif
 
 void MAPPER_LosingFocus() {
-	for (CEventVector_it evit = events.begin(); evit != events.end(); ++evit) {
-		if(*evit != caps_lock_event && *evit != num_lock_event)
-			(*evit)->DeActivateAll();
+	for (const auto& event : events) {
+		if (event.get() != caps_lock_event && event.get() != num_lock_event) {
+			event->DeActivateAll();
+		}
 	}
 }
 
@@ -3189,8 +3189,6 @@ static void MAPPER_Destroy(Section *sec) {
 	mapper.typist.Stop();
 
 	// Release all the accumulated allocations by the mapper
-	for (auto &ptr : events)
-		delete ptr;
 	events.clear();
 
 	for (auto & ptr : all_binds)
