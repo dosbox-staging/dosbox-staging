@@ -1202,7 +1202,7 @@ bool fatDrive::FindFirst(char *_dir, DOS_DTA &dta,bool /*fcb_findfirst*/) {
 		dta.SetResult(GetLabel(),0,0,0,FatAttributeFlags::Volume);
 		return true;
 	}
-	if(attr & FatAttributeFlags::Volume) //check for root dir or fcb_findfirst
+	if (FatAttributeFlags(attr).volume) //check for root dir or fcb_findfirst
 		LOG(LOG_DOSMISC,LOG_WARN)("findfirst for volumelabel used on fatDrive. Unhandled!!!!!");
 #endif
 	if(!getDirClustNum(_dir, &cwdDirCluster, false)) {
@@ -1306,27 +1306,31 @@ nextfile:
 	trimString(&find_name[0], sizeof(find_name));
 	trimString(&extension[0], sizeof(extension));
 
-	// if(!(sectbuf[entryoffset].attrib & FatAttributeFlags::Directory))
-	if (extension[0]!=0) {
+	const auto entry_attributes = FatAttributeFlags(sectbuf[entryoffset].attrib);
+
+	// if(!entry_attributes.directory)
+
+	if (extension[0] != 0) {
 		safe_strcat(find_name, ".");
 		safe_strcat(find_name, extension);
 	}
 
-	/* Compare attributes to search attributes */
-	FatAttributeFlags attr_mask = {};
-	attr_mask.directory = true;
-	attr_mask.volume    = true;
-	attr_mask.system    = true;
-	attr_mask.hidden    = true;
-
 	// TODO What about volume/directory attributes?
 	if (attrs == FatAttributeFlags::Volume) {
-		if (!(sectbuf[entryoffset].attrib & FatAttributeFlags::Volume)) {
+		if (!entry_attributes.volume) {
 			goto nextfile;
 		}
 		dirCache.SetLabel(find_name, false, true);
 	} else {
-		if (~(attrs._data) & sectbuf[entryoffset].attrib & attr_mask._data) {
+		// Compare attributes to search attributes
+		// Compare attributes to search attributes
+		const FatAttributeFlags attr_mask = {
+		        FatAttributeFlags::Directory |
+		        FatAttributeFlags::Volume |
+		        FatAttributeFlags::System |
+		        FatAttributeFlags::Hidden};
+
+		if (~(attrs._data) & entry_attributes._data & attr_mask._data) {
 			goto nextfile;
 		}
 	}
