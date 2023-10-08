@@ -344,7 +344,8 @@ bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 	} else {
 		if (sAttr == FatAttributeVolume) {
 			if (is_empty(dirCache.GetLabel())) {
-				// LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
+				// LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL
+				// REQUESTED: none present, returned  NOLABEL");
 				// dta.SetResult("NO_LABEL",0,0,0,FatAttributeVolume);
 				// return true;
 				DOS_SetError(DOSERR_NO_MORE_FILES);
@@ -356,7 +357,7 @@ bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 			// should check for a valid leading directory instead of
 			// 0 exists==true if the volume label matches the
 			// searchmask and the path is valid
-			if (WildFileCmp(dirCache.GetLabel(),tempDir)) {
+			if (WildFileCmp(dirCache.GetLabel(), tempDir)) {
 				dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeVolume);
 				return true;
 			}

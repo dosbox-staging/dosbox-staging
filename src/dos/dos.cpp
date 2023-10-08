@@ -40,15 +40,15 @@
 #include <winsock2.h> // for gethostname
 #endif
 
-const FatAttributeFlags FatAttributeReadOnly  = { 0b0000'0001u };
-const FatAttributeFlags FatAttributeHidden    = { 0b0000'0010u };
-const FatAttributeFlags FatAttributeSystem    = { 0b0000'0100u };
-const FatAttributeFlags FatAttributeVolume    = { 0b0000'1000u }; // volume label
-const FatAttributeFlags FatAttributeDirectory = { 0b0001'0000u };
-const FatAttributeFlags FatAttributeArchive   = { 0b0010'0000u };
-const FatAttributeFlags FatAttributeDevice    = { 0b0100'0000u };
+const FatAttributeFlags FatAttributeReadOnly  = {0b0000'0001u};
+const FatAttributeFlags FatAttributeHidden    = {0b0000'0010u};
+const FatAttributeFlags FatAttributeSystem    = {0b0000'0100u};
+const FatAttributeFlags FatAttributeVolume    = {0b0000'1000u}; // volume label
+const FatAttributeFlags FatAttributeDirectory = {0b0001'0000u};
+const FatAttributeFlags FatAttributeArchive   = {0b0010'0000u};
+const FatAttributeFlags FatAttributeDevice    = {0b0100'0000u};
 
-const FatAttributeFlags FatAttributeNotVolume = { 0b1111'0111u };
+const FatAttributeFlags FatAttributeNotVolume = {0b1111'0111u};
 
 DOS_Block dos;
 DOS_InfoBlock dos_infoblock;

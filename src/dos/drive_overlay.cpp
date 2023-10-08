@@ -105,12 +105,19 @@ bool Overlay_Drive::RemoveDir(char * dir) {
 		}
 		return (temp == 0);
 	} else {
-		uint16_t olderror = dos.errorcode; // FindFirst/Next always set an errorcode, while
-		                                   // RemoveDir itself shouldn't touch it if successful
+		uint16_t olderror = dos.errorcode; // FindFirst/Next always set
+		                                   // an errorcode, while RemoveDir
+		                                   // itself shouldn't touch it
+		                                   // if successful
 		DOS_DTA dta(dos.tables.tempdta);
 		char stardotstar[4] = {'*', '.', '*', 0};
-		dta.SetupSearch(0, FatAttributeNotVolume, stardotstar); // Fake drive as we don't use it.
-		bool ret = this->FindFirst(dir, dta, false); // DOS_FindFirst(args, FatAttributeNotVolume);
+		dta.SetupSearch(0, FatAttributeNotVolume, stardotstar); // Fake
+		                                                        // drive
+		                                                        // as we
+		                                                        // don't
+		                                                        // use it.
+		bool ret = this->FindFirst(dir, dta, false); // DOS_FindFirst(args,
+		                                             // FatAttributeNotVolume);
 		if (!ret) {
 			//Path not found. Should not be possible due to removedir doing a testdir, but lets be correct
 			DOS_SetError(DOSERR_PATH_NOT_FOUND);

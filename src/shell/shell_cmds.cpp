@@ -1288,7 +1288,8 @@ void DOS_Shell::CMD_COPY(char* args)
 			target_is_file = false;
 
 		//Find first sourcefile
-		bool ret = DOS_FindFirst(source.filename.c_str(), FatAttributeNotVolume);
+		bool ret = DOS_FindFirst(source.filename.c_str(),
+		                         FatAttributeNotVolume);
 		if (!ret) {
 			WriteOut(MSG_Get("SHELL_FILE_NOT_FOUND"),
 			         source.filename.c_str());
@@ -1337,16 +1338,22 @@ void DOS_Shell::CMD_COPY(char* args)
 							if (!oldsource.concat) {
 								DOS_GetFileDate(
 								        sourceHandle,
-								        &search_result.time,
-								        &search_result.date);
+								        &search_result
+								                 .time,
+								        &search_result
+								                 .date);
 								DOS_SetFileDate(
 								        targetHandle,
-								        search_result.time,
-								        search_result.date);
+								        search_result
+								                .time,
+								        search_result
+								                .date);
 							}
 							DOS_CloseFile(sourceHandle);
 							DOS_CloseFile(targetHandle);
-							WriteOut(" %s\n", search_result.name.c_str());
+							WriteOut(" %s\n",
+							         search_result
+							                 .name.c_str());
 							if (!source.concat && !special) count++; //Only count concat files once
 						} else {
 							DOS_CloseFile(sourceHandle);

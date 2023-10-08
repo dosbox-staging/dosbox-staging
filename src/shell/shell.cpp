@@ -161,7 +161,8 @@ bool get_pipe_status(const char *out_file,
 		    !DOS_UnlinkFile(pipe_tempfile)) {
 			failed_pipe = true;
 		}
-		status = DOS_OpenFileExtended(pipe_file && !failed_pipe ? pipe_tempfile : out_file,
+		status = DOS_OpenFileExtended(pipe_file && !failed_pipe ? pipe_tempfile
+		                                                        : out_file,
 		                              OPEN_READWRITE,
 		                              FatAttributeArchive,
 		                              0x12,
@@ -182,13 +183,14 @@ bool get_pipe_status(const char *out_file,
 			if (DOS_FindFirst(pipe_tempfile, FatAttributeNotVolume) &&
 			    !DOS_UnlinkFile(pipe_tempfile)) {
 				failed_pipe = true;
-			} else
+			} else {
 				status = DOS_OpenFileExtended(pipe_tempfile,
 				                              OPEN_READWRITE,
 				                              FatAttributeArchive,
 				                              0x12,
 				                              &dummy,
 				                              &dummy2);
+			}
 		}
 	}
 	return status;

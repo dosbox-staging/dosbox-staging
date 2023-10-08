@@ -469,7 +469,7 @@ bool Virtual_Drive::FileStat(const char* name, FileStat_Block* const stat_block)
 	assert(name);
 	auto vfile = find_vfile_by_name(name);
 	if (vfile) {
-		auto attr = FatAttributeReadOnly;
+		auto attr      = FatAttributeReadOnly;
 		attr.directory = vfile->isdir;
 
 		stat_block->attr = attr._data;
@@ -564,7 +564,7 @@ bool Virtual_Drive::FindNext(DOS_DTA& dta)
 	                                                     pattern,
 	                                                     pos);
 	if (search_file) {
-		auto attr = FatAttributeReadOnly;
+		auto attr      = FatAttributeReadOnly;
 		attr.directory = search_file->isdir;
 
 		dta.SetResult(search_file->name.c_str(),
