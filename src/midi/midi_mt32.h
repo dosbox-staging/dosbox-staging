@@ -44,7 +44,7 @@
 // forward declaration
 class LASynthModel;
 
-using model_and_dir_t = std::pair<const LASynthModel*, std_fs::path>;
+using ModelAndDir = std::pair<const LASynthModel*, std_fs::path>;
 
 static_assert(MT32EMU_VERSION_MAJOR > 2 ||
                       (MT32EMU_VERSION_MAJOR == 2 && MT32EMU_VERSION_MINOR >= 5),
@@ -92,7 +92,7 @@ private:
 	service_t service        = {};
 	std::thread renderer     = {};
 
-	std::optional<model_and_dir_t> model_and_dir = {};
+	std::optional<ModelAndDir> model_and_dir = {};
 
 	// Used to track the balance of time between the last mixer callback
 	// versus the current MIDI Sysex or Msg event.

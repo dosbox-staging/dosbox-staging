@@ -30,8 +30,8 @@
 
 #include <SDL.h>
 
-#include "ansi_code_markup.h"
 #include "../capture/capture.h"
+#include "ansi_code_markup.h"
 #include "control.h"
 #include "cross.h"
 #include "mapper.h"
@@ -674,9 +674,10 @@ void MIDI_ListAll(Program* caller)
 	constexpr auto msg_indent = "  ";
 
 	for (const auto& handler : handlers) {
-		std::string name_format = msg_indent;
-		name_format.append(convert_ansi_markup("[color=white]%s:[reset]\n"));
-		caller->WriteOut(name_format.c_str(), handler->GetName().data());
+		const auto device_name = convert_ansi_markup(
+		        "[color=white]%s:[reset]\n");
+
+		caller->WriteOut(device_name.c_str(), handler->GetName().data());
 
 		const auto err = handler->ListAll(caller);
 		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED) {
@@ -696,8 +697,8 @@ void MIDI_ListAll(Program* caller)
 
 static void register_midi_text_messages()
 {
-	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "listing not supported");
-	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "device not configured");
+	MSG_Add("MIDI_DEVICE_LIST_NOT_SUPPORTED", "Listing not supported");
+	MSG_Add("MIDI_DEVICE_NOT_CONFIGURED", "Device not configured");
 }
 
 static MIDI* test;
