@@ -532,7 +532,7 @@ void DOS_FCB::SetResult(uint32_t size, uint16_t date, uint16_t time,
                         FatAttributeFlags attr)
 {
 	mem_writed(pt + 0x1d, size);
-	mem_writew(pt + 0x19,date);
+	mem_writew(pt + 0x19, date);
 	mem_writew(pt + 0x17,time);
 	mem_writeb(pt + 0x0c, attr._data);
 }

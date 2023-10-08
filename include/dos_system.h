@@ -80,7 +80,8 @@ extern const FatAttributeFlags FatAttributeArchive;
 extern const FatAttributeFlags FatAttributeDirectory;
 extern const FatAttributeFlags FatAttributeDevice;
 extern const FatAttributeFlags FatAttributeVolume;    // volume label
-extern const FatAttributeFlags FatAttributeNotVolume; // everything but volume label
+extern const FatAttributeFlags FatAttributeNotVolume; // everything but volume
+                                                      // label
 
 struct FileStat_Block {
 	uint32_t size;

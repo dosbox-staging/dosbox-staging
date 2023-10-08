@@ -299,20 +299,21 @@ bool isoDrive::FindNext(DOS_DTA& dta)
 	bool isRoot = dirIterators[dirIterator].root;
 
 	FatAttributeFlags attr_mask = {};
-	attr_mask.directory = true;
-	attr_mask.hidden    = true;
-	attr_mask.system    = true;
+	attr_mask.directory         = true;
+	attr_mask.hidden            = true;
+	attr_mask.system            = true;
 
 	isoDirEntry de;
 	while (GetNextDirEntry(dirIterator, &de)) {
 		FatAttributeFlags findAttr = {};
-		findAttr.directory = IS_DIR(FLAGS1);
-		findAttr.hidden    = IS_HIDDEN(FLAGS1);
+		findAttr.directory         = IS_DIR(FLAGS1);
+		findAttr.hidden            = IS_HIDDEN(FLAGS1);
 
 		if (!IS_ASSOC(FLAGS1) && !(isRoot && de.ident[0] == '.') &&
 		    WildFileCmp((char*)de.ident, pattern) &&
 		    !(~(attr._data) & findAttr._data & attr_mask._data)) {
-			/* file is okay, setup everything to be copied in DTA Block */
+			/* file is okay, setup everything to be copied in DTA
+			 * Block */
 			char findName[DOS_NAMELENGTH_ASCII];
 			findName[0] = 0;
 			if(strlen((char*)de.ident) < DOS_NAMELENGTH_ASCII) {
@@ -385,7 +386,7 @@ bool isoDrive::FileStat(const char *name, FileStat_Block *const stat_block) {
 	bool success = lookup(&de, name);
 
 	if (success) {
-		auto attr = FatAttributeReadOnly;
+		auto attr      = FatAttributeReadOnly;
 		attr.directory = IS_DIR(FLAGS1);
 
 		stat_block->date = DOS_PackDate(1900 + de.dateYear,

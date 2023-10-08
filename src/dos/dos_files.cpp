@@ -1138,7 +1138,9 @@ bool DOS_FCBCreate(uint16_t seg, uint16_t offset)
 	if (!attr._data) {
 		attr.archive = true; // Better safe than sorry
 	}
-	if (!DOS_CreateFile(shortname,attr,&handle,true)) return false;
+	if (!DOS_CreateFile(shortname, attr, &handle, true)) {
+		return false;
+	}
 	fcb.FileOpen((uint8_t)handle);
 	return true;
 }
@@ -1146,7 +1148,8 @@ bool DOS_FCBCreate(uint16_t seg, uint16_t offset)
 bool DOS_FCBOpen(uint16_t seg, uint16_t offset)
 {
 	DOS_FCB fcb(seg, offset);
-	char shortname[DOS_FCBNAME];uint16_t handle;
+	char shortname[DOS_FCBNAME];
+	uint16_t handle;
 	fcb.GetName(shortname);
 
 	/* Search for file if name has wildcards */
@@ -1159,7 +1162,8 @@ bool DOS_FCBOpen(uint16_t seg, uint16_t offset)
 		DOS_DTA::Result search_result = {};
 		find_dta.GetResult(search_result);
 
-		const auto [file_name, ext] = DTAExtendName(search_result.name.c_str());
+		const auto [file_name,
+		            ext] = DTAExtendName(search_result.name.c_str());
 		find_fcb.SetName(fcb.GetDrive() + 1, file_name.c_str(), ext.c_str());
 		find_fcb.GetName(shortname);
 	}
@@ -1187,7 +1191,9 @@ bool DOS_FCBOpen(uint16_t seg, uint16_t offset)
 bool DOS_FCBClose(uint16_t seg, uint16_t offset)
 {
 	DOS_FCB fcb(seg, offset);
-	if(!fcb.Valid()) return false;
+	if (!fcb.Valid()) {
+		return false;
+	}
 	uint8_t fhandle;
 	fcb.FileClose(fhandle);
 	DOS_CloseFile(fhandle,true);
@@ -1197,7 +1203,8 @@ bool DOS_FCBClose(uint16_t seg, uint16_t offset)
 bool DOS_FCBFindFirst(uint16_t seg, uint16_t offset)
 {
 	DOS_FCB fcb(seg, offset);
-	RealPt old_dta=dos.dta();dos.dta(dos.tables.tempdta);
+	RealPt old_dta = dos.dta();
+	dos.dta(dos.tables.tempdta);
 	char name[DOS_FCBNAME];fcb.GetName(name);
 	auto attr = FatAttributeArchive;
 	fcb.GetAttr(attr); /* Gets search attributes if extended */
@@ -1210,7 +1217,8 @@ bool DOS_FCBFindFirst(uint16_t seg, uint16_t offset)
 bool DOS_FCBFindNext(uint16_t seg, uint16_t offset)
 {
 	DOS_FCB fcb(seg, offset);
-	RealPt old_dta=dos.dta();dos.dta(dos.tables.tempdta);
+	RealPt old_dta = dos.dta();
+	dos.dta(dos.tables.tempdta);
 	bool ret=DOS_FindNext();
 	dos.dta(old_dta);
 	if (ret) SaveFindResult(fcb);
@@ -1220,7 +1228,8 @@ bool DOS_FCBFindNext(uint16_t seg, uint16_t offset)
 uint8_t DOS_FCBRead(uint16_t seg, uint16_t offset, uint16_t recno)
 {
 	DOS_FCB fcb(seg, offset);
-	uint8_t fhandle,cur_rec;uint16_t cur_block,rec_size;
+	uint8_t fhandle, cur_rec;
+	uint16_t cur_block, rec_size;
 	fcb.GetSeqData(fhandle,rec_size);
 	if (fhandle==0xff && rec_size!=0) {
 		if (!DOS_FCBOpen(seg,offset)) return FCB_READ_NODATA;
@@ -1252,7 +1261,8 @@ uint8_t DOS_FCBRead(uint16_t seg, uint16_t offset, uint16_t recno)
 uint8_t DOS_FCBWrite(uint16_t seg, uint16_t offset, uint16_t recno)
 {
 	DOS_FCB fcb(seg, offset);
-	uint8_t fhandle,cur_rec;uint16_t cur_block,rec_size;
+	uint8_t fhandle, cur_rec;
+	uint16_t cur_block, rec_size;
 	fcb.GetSeqData(fhandle,rec_size);
 	if (fhandle==0xff && rec_size!=0) {
 		if (!DOS_FCBOpen(seg,offset)) return FCB_READ_NODATA;
@@ -1288,7 +1298,8 @@ uint8_t DOS_FCBWrite(uint16_t seg, uint16_t offset, uint16_t recno)
 uint8_t DOS_FCBIncreaseSize(uint16_t seg, uint16_t offset)
 {
 	DOS_FCB fcb(seg, offset);
-	uint8_t fhandle,cur_rec;uint16_t cur_block,rec_size;
+	uint8_t fhandle, cur_rec;
+	uint16_t cur_block, rec_size;
 	fcb.GetSeqData(fhandle,rec_size);
 	fcb.GetRecord(cur_block,cur_rec);
 	uint32_t pos=((cur_block*128)+cur_rec)*rec_size;
@@ -1321,7 +1332,7 @@ uint8_t DOS_FCBRandomRead(uint16_t seg, uint16_t offset, uint16_t* numRec, bool 
 	 * (user must do this) Random block read updates these fields to reflect
 	 * the state after the read!
 	 */
-	DOS_FCB fcb(seg,offset);
+	DOS_FCB fcb(seg, offset);
 	uint16_t old_block=0;
 	uint8_t old_rec=0;
 	uint8_t error=0;
@@ -1349,7 +1360,7 @@ uint8_t DOS_FCBRandomRead(uint16_t seg, uint16_t offset, uint16_t* numRec, bool 
 uint8_t DOS_FCBRandomWrite(uint16_t seg, uint16_t offset, uint16_t* numRec, bool restore)
 {
 	/* see FCB_RandomRead */
-	DOS_FCB fcb(seg,offset);
+	DOS_FCB fcb(seg, offset);
 	uint16_t old_block=0;
 	uint8_t old_rec=0;
 	uint8_t error=0;
@@ -1381,7 +1392,7 @@ bool DOS_FCBGetFileSize(uint16_t seg, uint16_t offset)
 {
 	char shortname[DOS_PATHLENGTH];
 	uint16_t entry;
-	DOS_FCB fcb(seg,offset);
+	DOS_FCB fcb(seg, offset);
 	fcb.GetName(shortname);
 	if (!DOS_OpenFile(shortname,OPEN_READ,&entry,true)) return false;
 	uint32_t size = 0;
@@ -1406,7 +1417,8 @@ bool DOS_FCBDeleteFile(uint16_t seg, uint16_t offset)
 	 * stored. This can not be the tempdta as that one is used by
 	 * fcbfindfirst
 	 */
-	RealPt old_dta=dos.dta();dos.dta(dos.tables.tempdta_fcbdelete);
+	RealPt old_dta = dos.dta();
+	dos.dta(dos.tables.tempdta_fcbdelete);
 	RealPt new_dta=dos.dta();
 	bool nextfile = false;
 	bool return_value = false;
@@ -1426,7 +1438,7 @@ bool DOS_FCBDeleteFile(uint16_t seg, uint16_t offset)
 bool DOS_FCBRenameFile(uint16_t seg, uint16_t offset)
 {
 	DOS_FCB fcbold(seg, offset);
-	DOS_FCB fcbnew(seg,offset+16);
+	DOS_FCB fcbnew(seg, offset + 16);
 	if(!fcbold.Valid()) return false;
 	char oldname[DOS_FCBNAME];
 	char newname[DOS_FCBNAME];
@@ -1458,7 +1470,8 @@ bool DOS_FCBRenameFile(uint16_t seg, uint16_t offset)
 void DOS_FCBSetRandomRecord(uint16_t seg, uint16_t offset)
 {
 	DOS_FCB fcb(seg, offset);
-	uint16_t block;uint8_t rec;
+	uint16_t block;
+	uint8_t rec;
 	fcb.GetRecord(block,rec);
 	fcb.SetRandom(block*128+rec);
 }
@@ -1475,8 +1488,9 @@ bool DOS_GetAllocationInfo(uint8_t drive, uint16_t* _bytes_sector,
 {
 	if (!drive) {
 		drive = DOS_GetDefaultDrive();
-	} else
+	} else {
 		drive--;
+	}
 	if (drive >= DOS_DRIVES || !Drives[drive]) {
 		DOS_SetError(DOSERR_INVALID_DRIVE);
 		return false;
@@ -1501,7 +1515,7 @@ bool DOS_SetDrive(uint8_t drive)
 bool DOS_GetFileDate(uint16_t entry, uint16_t* otime, uint16_t* odate)
 {
 	uint32_t handle = RealHandle(entry);
-	if (handle>=DOS_FILES) {
+	if (handle >= DOS_FILES) {
 		DOS_SetError(DOSERR_INVALID_HANDLE);
 		return false;
 	};

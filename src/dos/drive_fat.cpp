@@ -510,10 +510,10 @@ bool fatDrive::getFileDirEntry(const char* const filename, direntry* useEntry,
 
 	/* Search found directory for our file */
 	FatAttributeFlags attributes = {};
-	attributes.read_only = true;
-	attributes.hidden    = true;	
-	attributes.system    = true;	
-	attributes.directory = dir_ok;
+	attributes.read_only         = true;
+	attributes.hidden            = true;
+	attributes.system            = true;
+	attributes.directory         = dir_ok;
 
 	imgDTA->SetupSearch(0, attributes, findFile);
 	imgDTA->SetDirID(0);
@@ -1126,17 +1126,17 @@ bool fatDrive::FileOpen(DOS_File **file, char *name, uint32_t flags) {
 	}
 
 	const FatAttributeFlags entry_attributes = fileEntry.attrib;
-	const bool is_readonly = entry_attributes.read_only;
-	bool open_for_readonly = ((flags & 0xf) == OPEN_READ);
+	const bool is_readonly                   = entry_attributes.read_only;
+	bool open_for_readonly                   = ((flags & 0xf) == OPEN_READ);
 	if (is_readonly && !open_for_readonly) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
 		return false;
 	}
 
 	auto fat_file = new fatFile(name,
-                                    fileEntry.loFirstClust,
-                                    fileEntry.entrysize,
-                                    this);
+	                            fileEntry.loFirstClust,
+	                            fileEntry.entrysize,
+	                            this);
 
 	fat_file->flags      = flags;
 	fat_file->dirCluster = dirClust;
@@ -1305,8 +1305,8 @@ nextfile:
 	memcpy(extension,&sectbuf[entryoffset].entryname[8],3);
 	trimString(&find_name[0], sizeof(find_name));
 	trimString(&extension[0], sizeof(extension));
-	
-	//if(!(sectbuf[entryoffset].attrib & FatAttributeDirectory._data))
+
+	// if(!(sectbuf[entryoffset].attrib & FatAttributeDirectory._data))
 	if (extension[0]!=0) {
 		safe_strcat(find_name, ".");
 		safe_strcat(find_name, extension);
