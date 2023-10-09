@@ -1262,11 +1262,11 @@ bool fatDrive::FindNextInternal(uint32_t dirClustNumber, DOS_DTA& dta,
 	uint32_t tmpsector;
 	FatAttributeFlags attrs = {};
 	uint16_t dirPos;
-	char srch_pattern[DOS_NAMELENGTH_ASCII];
+	char search_pattern[DOS_NAMELENGTH_ASCII];
 	char find_name[DOS_NAMELENGTH_ASCII];
 	char extension[4];
 
-	dta.GetSearchParams(attrs, srch_pattern);
+	dta.GetSearchParams(attrs, search_pattern);
 	dirPos = dta.GetDirID();
 
 nextfile:
@@ -1336,7 +1336,7 @@ nextfile:
 	}
 
 	/* Compare name to search pattern */
-	if(!WildFileCmp(find_name,srch_pattern)) goto nextfile;
+	if(!WildFileCmp(find_name, search_pattern)) goto nextfile;
 
 	copyDirEntry(&sectbuf[entryoffset], foundEntry);
 
