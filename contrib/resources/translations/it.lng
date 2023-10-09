@@ -351,13 +351,13 @@ Nota: È possibile scorrere le tavolozze disponibili tramite i tasti di
 Imposta l'interpretazione dei colori CGA RGBI. Interessa tutti i tipi di
 macchine in grado di visualizzare CGA o grafica migliore. Preset integrati:
   default:       Tavolozza CGA emulata come negli adattatori VGA (predefinito).
-  tandy [BL]:    Emulazione di un monitor Tandy con livello del marrone
+  tandy <bl>:    Emulazione di un monitor Tandy con livello del marrone
                  regolabile. Il livello del marrone può essere fornito come
                  secondo parametro opzionale (0 - rosso, 50 - marrone,
                  100 - giallo scuro; predefinito 50), Es. tandy 100
   tandy-warm:    Emulazione dell'effettiva resa cromatica di un monitor Tandy
                  sconosciuto.
-  ibm5153 [C]:   Emulazione dell'effettiva resa cromatica di un monitor
+  ibm5153 <c>:   Emulazione dell'effettiva resa cromatica di un monitor
                  IBM 5153 con un esclusivo controllo del contrasto che attenua
                  solo i colori non luminosi. Il contrasto può essere fornito
                  come secondo parametro opzionale (da 0 a 100; predefinito 100)
@@ -379,7 +379,7 @@ I 16 colori sono ordinati come segue:
 I loro valori predefiniti, mostrati qui in formato codice esadecimale a 6 cifre
 sono rispettivamente:
   #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa
-  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff.
+  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff
 .
 :CONFIG_SCALER
 Gli scaler software sono deprecati a favore delle soluzioni con accelerazione
@@ -476,7 +476,7 @@ Numero di cicli di cui diminuire utilizzando i tasti di scelta rapida
 (predefinito 20). Un valore più basso di 100 indica una percentuale.
 .
 :CONFIG_VOODOO_MEMSIZE
-Dimensione della memoria (in MB) della scheda 3dfx Vodooo (predefinito 12 MB).
+Dimensione della memoria (in MB) della scheda 3dfx Voodoo (predefinito 12 MB).
 .
 :CONFIG_VOODOO_PERF
 Ottimizzazioni delle prestazioni da utilizzare durante l'emulazione della
@@ -954,7 +954,7 @@ Modello di chip da emulare nella scheda Innovation SSI-2001:
 .
 :CONFIG_SIDCLOCK
 Frequenza di clock del chip SID, modificabile tramite ponticello (o jumper)
-sulle schede di riproduzione.
+sulle schede originali.
   default: 0.895 MHz, secondo la scheda SSI-2001 originale (predefinito).
   c64ntsc: 1.023 MHz, secondo i PC Commodore e DuoSID NTSC.
   c64pal:  0.985 MHz, secondo i PC Commodore e DuoSID PAL.
@@ -1205,9 +1205,9 @@ di tastiera selezionato.
 Codice lingua del layout della tastiera, o 'auto' (predefinito 'auto').
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Abilita l'espansione delle variabili di ambiente come %PATH% nella shell
+Abilita l'espansione delle variabili di ambiente come %PATH% nell'interprete
 dei comandi DOS (predefinito 'auto', viene abilitato se la versione DOS >= 7.0)
-COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
+Il programma COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
 .
 :CONFIG_SHELL_HISTORY_FILE
 File contenente la cronologia dei comandi digitati dall'utente sulla riga di
@@ -1297,7 +1297,7 @@ La proprietà '%s' non è presente nella sezione [%s]
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Utilizzo: [color=light-green]config [/reset]-set [color=light-cyan][SEZIONE][/reset] [color=white]PROPRIETÀ[/reset][=][color=white]VALORE[/reset]
+Utilizzo: [color=light-green]config [reset]-set [color=light-cyan][SEZIONE][reset] [color=white]PROPRIETÀ[reset][=][color=white]VALORE[reset]
 
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -1337,17 +1337,18 @@ Utilizzo:
 
 Dove [color=white]COMANDO[reset] è uno dei seguenti:
   -writeconf
-  -wc               Scrive le opzioni di configurazione nel file `dosbox.conf`
-                    nella directory di lavoro corrente.
+  -wc               Scrive le opzioni di configurazione nel file locale
+                    `dosbox.conf` nella directory di lavoro corrente.
 
   -writeconf [color=white]PERCORSO[reset]
-  -wc [color=white]PERCORSO      [reset]Se [color=white]PERCORSO[reset] è il nome di un file, le opzioni
-                    di configurazione verranno scritte in un file con tale nome
-                    nella directory di lavoro corrente, altrimenti nel percorso
-                    assoluto o relativo specificato.
+  -wc [color=white]PERCORSO      [reset]Se [color=white]PERCORSO[reset] è il nome di un file, le opzioni di
+                    configurazione verranno scritte in quel file nella
+                    directory di lavoro corrente, altrimenti nel percorso
+                    relativo o assoluto specificato.
 
-  -wcd              Scrive le opzioni di configurazione nel file globale
-                    `dosbox-staging.conf` nella directory di configurazione.
+  -wcd              Scrive le opzioni di configurazione nel file primario
+                    (predefinito) `dosbox-staging.conf` nella directory di
+                    configurazione.
 
   -writelang [color=white]NOMEFILE[reset]
   -wl [color=white]NOMEFILE      [reset]Scrive le stringhe della lingua corrente in [color=white]NOMEFILE[reset] nella
@@ -1593,46 +1594,6 @@ Comandi della cartuccia PCjr disponibili: %s
 :PROGRAM_BOOT_CART_NO_CMDS
 Nessun comando della cartuccia PCjr trovato.
 .
-:PROGRAM_FMPDRV_HELP_LONG
-Carica o disabilita il driver integrato del lettore ReelMagic Full Motion.
-
-Utilizzo:
-  [color=light-green]fmpdrv[reset]    (carica il driver)
-  [color=light-green]fmpdrv[reset] /u (disabilita il driver)
-
-Note:
-  L'impostazione di configurazione "reelmagic = on" permette di caricare il
-  driver all'avvio e impedisce che venga disabilitato.
-
-.
-:PROGRAM_FMPDRV_TITLE
-Driver lettore ReelMagic Full Motion (integrato) %hhu.%hhu
-
-.
-:PROGRAM_FMPDRV_LOADED
-[reset][color=brown]Caricato all'interrupt %xh[reset]
-
-.
-:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
-[reset][color=brown]Già caricato all'interrupt %xh[reset]
-
-.
-:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
-[reset][color=light-red]Non caricato: Nessun interrupt disponibile![reset]
-
-.
-:PROGRAM_FMPDRV_UNLOADED
-[reset][color=brown]Driver disabilitato[reset]
-
-.
-:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
-[reset][color=brown]Il driver non è stato caricato[reset]
-
-.
-:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
-[reset][color=brown]Driver non disabilitato: configurato per rimanere residente[reset]
-
-.
 :MSCDEX_SUCCESS
 MSCDEX installato.
 
@@ -1766,7 +1727,7 @@ Il tipo '%s' non è supportato. Specifica 'floppy', 'hdd', 'cdrom', o 'iso'.
 
 .
 :PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED
-Il Formato "%s" non è supportato. Specifica "fat", "iso" o "none".
+Il Formato '%s' non è supportato. Specifica 'fat', 'iso' o 'none'.
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_FILE
@@ -1782,7 +1743,7 @@ Per montare le directory, usa il comando [color=light-blue]MOUNT[reset], non il 
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
-Unità già montata con quella lettera.
+Unità già montata con la stessa lettera.
 
 .
 :PROGRAM_IMGMOUNT_CANT_CREATE
@@ -2083,7 +2044,7 @@ Dove:
   Questo comando non ha parametri.
 
 Note:
-  Questo comando mostra lo stato della memoria DOS, inclusa la memoria 
+  Questo comando mostra lo stato della memoria DOS, inclusa la memoria
   convenzionale libera, la memoria superiore (UMB), la memoria estesa (XMS),
   e la memoria espansa (EMS).
 
@@ -2107,6 +2068,52 @@ Esempi:
 %10d kB di memoria superiore libera in %d blocchi (UMB più grande %d kB)
 
 .
+:SHELL_CMD_MIXER_HELP_LONG
+Visualizza o modifica le impostazioni del mixer audio.
+
+Utilizzo:
+  [color=light-green]mixer[reset] [color=light-cyan]CANALE[reset] [color=white]COMANDI[reset] [/noshow]
+  [color=light-green]mixer[reset] [/listmidi]
+
+Dove:
+  [color=light-cyan]CANALE[reset]  è il canale audio di cui modificare le impostazioni.
+  [color=white]COMANDI[reset] è uno o più dei seguenti comandi:
+    Volume:    da [color=white]0[reset] a [color=white]100[reset], o valore in decibel con prefisso [color=white]d[reset] (es. [color=white]d-7.5[reset])
+               utilizza [color=white]L:R[reset] per impostare il lato sinistro e destro (es. [color=white]10:20[reset])
+    Uscita:    [color=white]stereo[reset], [color=white]reverse[reset] (solo per canali stereo)
+    A.Incrociata: da [color=white]x0[reset] a [color=white]x100[reset]   Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]   Coro: da [color=white]c0[reset] a [color=white]c100[reset]
+
+Note:
+  - L'esecuzione di [color=light-green]mixer[reset] senza un argomento mostra le impostazioni attuali.
+  - È possibile modificare le impostazioni di più canali con un unico comando.
+  - Se il canale non è specificato, è possibile impostare alimentazione
+    incrociata, riverbero o coro a livello globale.
+  - Esegui [color=light-green]mixer[reset] /listmidi per elencare tutti i dispositivi MIDI disponibili.
+  - L'opzione /noshow applica le modifiche senza mostrare le impostazioni
+    del mixer.
+
+Esempi:
+  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]fm[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
+.
+:SHELL_CMD_MIXER_HEADER_LAYOUT
+%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-10s %10s %9s %9s
+.
+:SHELL_CMD_MIXER_HEADER_LABELS
+[color=white]Canale       Volume    Volume (dB)   Modalità  A.Incrociata  Riverbero  Coro[reset]
+.
+:SHELL_CMD_MIXER_CHANNEL_OFF
+spento
+.
+:SHELL_CMD_MIXER_CHANNEL_STEREO
+Stereo
+.
+:SHELL_CMD_MIXER_CHANNEL_REVERSE
+Inverso
+.
+:SHELL_CMD_MIXER_CHANNEL_MONO
+Mono
+.
 :PROGRAM_MORE_HELP_LONG
 Visualizza l'output una schermata alla volta.
 
@@ -2118,8 +2125,8 @@ Utilizzo:
 Dove:
   [color=light-cyan]COMANDO[reset] è il comando di cui visualizzare l'output.
   [color=light-cyan]FILE[reset]    è il nome del file da visualizzare, facoltativamente con un percorso.
-  [color=light-cyan]MODELLO[reset] è un percorso a un singolo file o con caratteri jolly,
-          cioè asterisco (*) e punto di domanda (?).
+  [color=light-cyan]MODELLO[reset] è un percorso a un singolo file o con caratteri jolly, cioè
+          asterisco (*) e punto di domanda (?).
   /c      cancella lo schermo prima di ogni file.
   /e      modalità estesa, con più tasti di scelta rapida disponibili.
   /p      espande i caratteri di avanzamento modulo / pagina.
@@ -2160,13 +2167,19 @@ Nessun file di input trovato.
 [reset][color=brown]--- dispositivo %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=brown]--- premere SPAZIO o INVIO per mostrare di più ---[reset]
+[reset][color=brown]--- SPAZIO per pagina seguente, INVIO per prossima riga, Q per uscire ---[reset]
 .
 :PROGRAM_MORE_PROMPT_PERCENT
-[reset][color=brown]--- (%d%%) premere SPAZIO o INVIO per mostrare di più ---[reset]
+[reset][color=brown]--- (%d%%) SPAZIO per pagina seguente, INVIO per prossima riga, Q per uscire ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=brown]--- premere SPAZIO o INVIO per mostrare di più, N per il file successivo ---[reset]
+[reset][color=brown]--- SPAZIO o INVIO per mostrare di più, N per file successivo, Q per uscire ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT
+[reset][color=brown]--- continua ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT_PERCENT
+[reset][color=brown]--- (%d%%) continua ---[reset]
 .
 :PROGRAM_MORE_PROMPT_LINE
 [reset][color=brown]--- riga %u ---[reset]
@@ -2435,58 +2448,13 @@ Esempi:
 Unità nuovamente scansionata.
 
 .
-:SHELL_CMD_MIXER_HELP_LONG
-Visualizza o modifica le impostazioni del mixer audio.
-
-Utilizzo:
-  [color=light-green]mixer[reset] [color=light-cyan]CANALE[reset] [color=white]COMANDI[reset] [/noshow]
-  [color=light-green]mixer[reset] [/listmidi]
-
-Dove:
-  [color=light-cyan]CANALE[reset]  è il canale audio di cui modificare le impostazioni.
-  [color=white]COMANDI[reset] è uno o più dei seguenti comandi:
-    Volume:    da [color=white]0[reset] a [color=white]100[reset], o valore in decibel con prefisso [color=white]d[reset] (es. [color=white]d-7.5[reset])
-               utilizza [color=white]L:R[reset] per impostare il lato sinistro e destro (es. [color=white]10:20[reset])
-    Uscita:    [color=white]stereo[reset], [color=white]reverse[reset] (solo per canali stereo)
-    A.Incrociata: da [color=white]x0[reset] a [color=white]x100[reset]   Riverbero: da [color=white]r0[reset] a [color=white]r100[reset]   Coro: da [color=white]c0[reset] a [color=white]c100[reset]
-Note:
-  - L'esecuzione di [color=light-green]mixer[reset] senza un argomento mostra le impostazioni attuali.
-  - È possibile modificare le impostazioni di più canali con un unico comando.
-  - Se il canale non è specificato, è possibile impostare alimentazione
-    incrociata, riverbero o coro a livello globale.
-  - Esegui [color=light-green]mixer[reset] /listmidi per elencare tutti i dispositivi MIDI disponibili.
-  - L'opzione /noshow applica le modifiche senza mostrare le impostazioni
-    del mixer.
-
-Esempi:
-  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]fm[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
-.
-:SHELL_CMD_MIXER_HEADER_LAYOUT
-%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-10s %10s %9s %9s
-.
-:SHELL_CMD_MIXER_HEADER_LABELS
-[color=white]Canale       Volume    Volume (dB)   Modalità  A.Incrociata  Riverbero  Coro[reset]
-.
-:SHELL_CMD_MIXER_CHANNEL_OFF
-spento
-.
-:SHELL_CMD_MIXER_CHANNEL_STEREO
-Stereo
-.
-:SHELL_CMD_MIXER_CHANNEL_REVERSE
-Inverso
-.
-:SHELL_CMD_MIXER_CHANNEL_MONO
-Mono
-.
 :PROGRAM_SERIAL_HELP_LONG
 Gestisce le porte seriali.
 
 Utilizzo:
   [color=light-green]serial[reset] [color=white][PORTA#][reset]     Elenca tutte le porte o quelle specificate ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], o [color=white]4[reset])
   [color=light-green]serial[reset] [color=white]PORTA#[reset] [color=light-cyan]DISPOSITIVO[reset] [impostazioni]  Collega il dispositivo alla porta
-					    specificata.
+                                            specificata.
 Dove:
   [color=light-cyan]DISPOSITIVO[reset] può essere: [color=light-cyan]MODEM[reset], [color=light-cyan]NULLMODEM[reset], [color=light-cyan]MOUSE[reset], [color=light-cyan]DIRECT[reset], [color=light-cyan]DUMMY[reset], o [color=light-cyan]DISABLED[reset]
 
@@ -2636,6 +2604,46 @@ Nessun file o sottodirectory da visualizzare.
 Troppi file o sottodirectory.
 
 .
+:PROGRAM_FMPDRV_HELP_LONG
+Carica o disabilita il driver integrato del lettore ReelMagic Full Motion.
+
+Utilizzo:
+  [color=light-green]fmpdrv[reset]    (carica il driver)
+  [color=light-green]fmpdrv[reset] /u (disabilita il driver)
+
+Note:
+  L'impostazione di configurazione "reelmagic = on" permette di caricare il
+  driver all'avvio e impedisce che venga disabilitato.
+
+.
+:PROGRAM_FMPDRV_TITLE
+Driver lettore ReelMagic Full Motion (integrato) %hhu.%hhu
+
+.
+:PROGRAM_FMPDRV_LOADED
+[reset][color=brown]Caricato all'interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
+[reset][color=brown]Già caricato all'interrupt %xh[reset]
+
+.
+:PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
+[reset][color=light-red]Non caricato: Nessun interrupt disponibile![reset]
+
+.
+:PROGRAM_FMPDRV_UNLOADED
+[reset][color=brown]Driver disabilitato[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
+[reset][color=brown]Il driver non è stato caricato[reset]
+
+.
+:PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
+[reset][color=brown]Driver non disabilitato: configurato per rimanere residente[reset]
+
+.
 :AUTOEXEC_BAT_GENERATED
 generato dal file di configurazione e dalla riga di comando
 .
@@ -2712,7 +2720,7 @@ Segue una breve lista dei comandi più comuni:
 
 .
 :SHELL_CMD_COMMAND_HELP_LONG
-Avvia la shell dei comandi di DOSBox Staging.
+Avvia una nuova istanza dell'interprete dei comandi DOS.
 
 Utilizzo:
   [color=light-green]command[reset]
@@ -2722,13 +2730,13 @@ Dove:
   [color=light-cyan]COMANDO[reset] è un comando, gioco o programma DOS da eseguire.
 
 Note:
-  DOSBox Staging avvia automaticamente una shell di comandi DOS richiamando
+  DOSBox Staging avvia automaticamente un interprete di comandi DOS richiamando
   questo comando con l'opzione /init all'avvio, che mostra la schermata di
-  benvenuto. 
-  Puoi caricare una nuova istanza della shell dei comandi eseguendo [color=light-green]command[reset].
+  benvenuto.
+  Puoi avviare una nuova istanza dell'interprete dei comandi eseguendo [color=light-green]command[reset].
   L'aggiunta dell'opzione /c insieme a un [color=light-cyan]COMANDO[reset] (facoltativamente con
-  parametri), consente di chiudere il programma automaticamente al concludersi
-  dell'esecuzione del comando specificato.
+  parametri), consente di chiudere la nuova istanza automaticamente al
+  concludersi dell'esecuzione del comando specificato.
 
 Esempi:
   [color=light-green]command[reset]
@@ -2749,7 +2757,7 @@ Impossibile spostarsi su: %s
 
 .
 :SHELL_CMD_CHDIR_HINT
-Suggerimento: Per spostarsi su un'altra unità, esegui [color=yellow]%c:[reset]
+Suggerimento: Per spostarti su un'altra unità, esegui [color=yellow]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
@@ -3020,7 +3028,7 @@ Esempi:
 
 .
 :SHELL_CMD_CLS_HELP
-Cancella lo schermo DOS.
+Cancella il contenuto dello schermo.
 
 .
 :SHELL_CMD_CLS_HELP_LONG
@@ -3098,7 +3106,7 @@ Esempi:
 
 .
 :SHELL_CMD_EXIT_HELP
-Permette l'uscita dalla shell DOS.
+Permette di uscire dall'interprete dei comandi DOS.
 
 .
 :SHELL_CMD_EXIT_HELP_LONG
@@ -3109,16 +3117,16 @@ Dove:
   Questo comando non ha parametri.
 
 Note:
-  Se avvii una shell DOS da un programma, l'esecuzione di [color=light-green]exit[reset] provocherà la
-  chiusura di tale shell e il ritorno al programma.
-  Se nessun programma DOS è in esecuzione, il comando chiuderà DOSBox Staging.
+  Se avvii un interprete dei comandi DOS da un programma, l'esecuzione di [color=light-green]exit[reset]
+  provocherà la chiusura dell'interprete dei comandi e il ritorno al programma.
+  Se nessun programma DOS è in esecuzione, il comando terminerà DOSBox Staging.
 
 Esempi:
   [color=light-green]exit[reset]
 
 .
 :SHELL_CMD_EXIT_TOO_SOON
-Impedisce ad una chiamata di uscita anticipata di terminare il programma.
+Interruzione del tentativo di eseguire una chiamata 'exit' prematura.
 
 .
 :SHELL_CMD_HELP_HELP
@@ -3147,7 +3155,7 @@ Esempi:
 
 .
 :SHELL_CMD_MKDIR_HELP
-Crea una directory.
+Crea una nuova directory.
 
 .
 :SHELL_CMD_MKDIR_HELP_LONG
@@ -3168,7 +3176,7 @@ Esempi:
 
 .
 :SHELL_CMD_RMDIR_HELP
-Rimuove una directory.
+Elimina (rimuove) dal disco una directory vuota.
 
 .
 :SHELL_CMD_RMDIR_HELP_LONG
@@ -3238,7 +3246,7 @@ Esempi:
 
 .
 :SHELL_CMD_GOTO_HELP
-Dirige ad una riga etichettata in un programma batch.
+Indirizza ad una riga etichettata di un programma batch.
 
 .
 :SHELL_CMD_GOTO_HELP_LONG
@@ -3417,7 +3425,7 @@ Esempi:
 
 .
 :SHELL_CMD_SUBST_HELP
-Associa un percorso ad una lettera di unità.
+Associa un percorso di ricerca ad una lettera di unità.
 
 .
 :SHELL_CMD_SUBST_HELP_LONG
@@ -3439,7 +3447,7 @@ Esempi:
 
 .
 :SHELL_CMD_LOADHIGH_HELP
-Carica un programma DOS nella memoria superiore.
+Carica un programma nell'area di memoria superiore.
 
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
