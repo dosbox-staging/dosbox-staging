@@ -823,10 +823,10 @@ bool Overlay_Drive::FindNext(DOS_DTA & dta) {
 	char full_name[CROSS_LEN];
 	char dir_entcopy[CROSS_LEN];
 
-	char srch_pattern[DOS_NAMELENGTH_ASCII];
-	FatAttributeFlags srch_attr = {};
+	char search_pattern[DOS_NAMELENGTH_ASCII];
+	FatAttributeFlags search_attr = {};
 
-	dta.GetSearchParams(srch_attr,srch_pattern);
+	dta.GetSearchParams(search_attr, search_pattern);
 	uint16_t id = dta.GetDirID();
 
 again:
@@ -834,7 +834,7 @@ again:
 		DOS_SetError(DOSERR_NO_MORE_FILES);
 		return false;
 	}
-	if(!WildFileCmp(dir_ent,srch_pattern)) goto again;
+	if(!WildFileCmp(dir_ent, search_pattern)) goto again;
 
 	safe_strcpy(full_name, srchInfo[id].srch_dir);
 	safe_strcat(full_name, dir_ent);
@@ -895,9 +895,9 @@ again:
 		find_attr.archive = true;
 	}
 
-	if ((find_attr.directory && !srch_attr.directory) ||
-	    (find_attr.hidden && !srch_attr.hidden) ||
-	    (find_attr.system && !srch_attr.system)) {
+	if ((find_attr.directory && !search_attr.directory) ||
+	    (find_attr.hidden && !search_attr.hidden) ||
+	    (find_attr.system && !search_attr.system)) {
 		goto again;
 	}
 

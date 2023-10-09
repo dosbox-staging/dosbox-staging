@@ -332,17 +332,17 @@ bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 	safe_strcpy(srchInfo[id].srch_dir, tempDir);
 	dta.SetDirID(id);
 
-	FatAttributeFlags sAttr = {};
-	dta.GetSearchParams(sAttr,tempDir);
+	FatAttributeFlags search_attr = {};
+	dta.GetSearchParams(search_attr, tempDir);
 
 	if (this->isRemote() && this->isRemovable()) {
 		// cdroms behave a bit different than regular drives
-		if (sAttr == FatAttributeFlags::Volume) {
+		if (search_attr == FatAttributeFlags::Volume) {
 			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
 			return true;
 		}
 	} else {
-		if (sAttr == FatAttributeFlags::Volume) {
+		if (search_attr == FatAttributeFlags::Volume) {
 			if (is_empty(dirCache.GetLabel())) {
 				// LOG(LOG_DOSMISC,LOG_ERROR)("DRIVELABEL REQUESTED: none present, returned  NOLABEL");
 				// dta.SetResult("NO_LABEL",0,0,0,FatAttributeFlags::Volume);
@@ -352,7 +352,7 @@ bool localDrive::FindFirst(char* _dir, DOS_DTA& dta, bool fcb_findfirst)
 			}
 			dta.SetResult(dirCache.GetLabel(), 0, 0, 0, FatAttributeFlags::Volume);
 			return true;
-		} else if (sAttr.volume && (*_dir == 0) && !fcb_findfirst) {
+		} else if (search_attr.volume && (*_dir == 0) && !fcb_findfirst) {
 			// should check for a valid leading directory instead of
 			// 0 exists==true if the volume label matches the
 			// searchmask and the path is valid
@@ -376,10 +376,10 @@ bool localDrive::FindNext(DOS_DTA& dta)
 	char full_name[CROSS_LEN];
 	char dir_entcopy[CROSS_LEN];
 
-	FatAttributeFlags srch_attr = {};
-	char srch_pattern[DOS_NAMELENGTH_ASCII];
+	FatAttributeFlags search_attr = {};
+	char search_pattern[DOS_NAMELENGTH_ASCII];
 
-	dta.GetSearchParams(srch_attr,srch_pattern);
+	dta.GetSearchParams(search_attr, search_pattern);
 	uint16_t id = dta.GetDirID();
 
 	while (true) {
@@ -387,7 +387,7 @@ bool localDrive::FindNext(DOS_DTA& dta)
 			DOS_SetError(DOSERR_NO_MORE_FILES);
 			return false;
 		}
-		if (!WildFileCmp(dir_ent, srch_pattern)) {
+		if (!WildFileCmp(dir_ent, search_pattern)) {
 			continue;
 		}
 
@@ -413,9 +413,9 @@ bool localDrive::FindNext(DOS_DTA& dta)
 			continue;
 		}
 
-		if ((find_attr.directory && !srch_attr.directory) ||
-		    (find_attr.hidden && !srch_attr.hidden) ||
-		    (find_attr.system && !srch_attr.system)) {
+		if ((find_attr.directory && !search_attr.directory) ||
+		    (find_attr.hidden && !search_attr.hidden) ||
+		    (find_attr.system && !search_attr.system)) {
 			continue;
 		}
 
