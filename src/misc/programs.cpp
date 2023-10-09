@@ -876,7 +876,7 @@ void PROGRAMS_Init(Section* sec)
 	        "Performs configuration management and other miscellaneous actions.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]config[reset] [color=white]COMMAND[reset] [color=cyan][PARAMETERS][reset]\n"
+	        "  [color=light-green]config[reset] [color=white]COMMAND[reset] [color=light-cyan][PARAMETERS][reset]\n"
 	        "\n"
 	        "Where [color=white]COMMAND[reset] is one of:\n"
 	        "  -writeconf\n"
@@ -896,7 +896,7 @@ void PROGRAMS_Init(Section* sec)
 	        "  -wl [color=white]FILENAME      [reset]Writes the current language strings to [color=white]FILENAME [reset]in the\n"
 	        "                    current working directory.\n"
 	        "\n"
-	        "  -r [color=cyan][PROPERTY1=VALUE1 [PROPERTY2=VALUE2 ...]][reset]\n"
+	        "  -r [color=light-cyan][PROPERTY1=VALUE1 [PROPERTY2=VALUE2 ...]][reset]\n"
 	        "                    Restarts DOSBox with the optionally supplied config\n"
 	        "                    properties.\n"
 	        "\n"
@@ -907,9 +907,9 @@ void PROGRAMS_Init(Section* sec)
 	        "  -h    [color=white]SECTION[reset]\n"
 	        "  -?    [color=white]SECTION     [reset]Lists the names of all properties in a config section.\n"
 	        "\n"
-	        "  -help [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
-	        "  -h    [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
-	        "  -?    [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "  -help [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "  -h    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "  -?    [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
 	        "                    Shows the description and the current value of a config\n"
 	        "                    property.\n"
 	        "\n"
@@ -922,15 +922,15 @@ void PROGRAMS_Init(Section* sec)
 	        "  -startmapper      Starts the keymapper.\n"
 	        "\n"
 	        "  -get [color=white]SECTION      [reset]Shows all properties and their values in a config section.\n"
-	        "  -get [color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
+	        "  -get [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n"
 	        "                    Shows the value of a single config property.\n"
 	        "\n"
-	        "  -set [color=cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
+	        "  -set [color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n"
 	        "                    Sets the value of a config property.");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
-	        "[color=white]Purpose of property [color=green]'%s'[color=white] "
-			"(contained in section [color=cyan][%s][color=white]):[reset]\n\n%s\n\n"
+	        "[color=white]Purpose of property [color=light-green]'%s'[color=white] "
+			"(contained in section [color=light-cyan][%s][color=white]):[reset]\n\n%s\n\n"
 	        "[color=white]Possible values:[reset]  %s\n"
 	        "[color=white]Default value:[reset]    %s\n"
 	        "[color=white]Current value:[reset]    %s\n");
@@ -945,7 +945,7 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_CONFIG_HLP_POSINT", "positive integer");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTHLP",
-	        "[color=white]Section [color=cyan][%s] [color=white]contains the following properties:[reset]\n");
+	        "[color=white]Section [color=light-cyan][%s] [color=white]contains the following properties:[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_SECTLIST",
 	        "[color=white]DOSBox configuration contains the following sections:[reset]\n");
@@ -961,8 +961,8 @@ void PROGRAMS_Init(Section* sec)
 	        "'%s' is not a valid value for property '%s'.\n");
 
 	MSG_Add("PROGRAM_CONFIG_GET_SYNTAX",
-	        "Usage: [color=green]config[reset] -get "
-	        "[color=cyan][SECTION][reset] [color=white]PROPERTY[reset]\n");
+	        "Usage: [color=light-green]config[reset] -get "
+	        "[color=light-cyan][SECTION][reset] [color=white]PROPERTY[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_PRINT_STARTUP",
 	        "\n[color=white]DOSBox was started with the following command line arguments:[reset]\n  %s\n");

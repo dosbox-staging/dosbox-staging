@@ -292,8 +292,8 @@ void DOS_Shell::CMD_DELETE(char * args) {
 
 void DOS_Shell::PrintHelpForCommands(MoreOutputStrings &output, HELP_Filter req_filter)
 {
-	static const auto format_header_str  = convert_ansi_markup("[color=blue]%s[reset]\n");
-	static const auto format_command_str = convert_ansi_markup("  [color=green]%-8s[reset] %s");
+	static const auto format_header_str  = convert_ansi_markup("[color=light-blue]%s[reset]\n");
+	static const auto format_command_str = convert_ansi_markup("  [color=light-green]%-8s[reset] %s");
 	static const auto format_header      = format_header_str.c_str();
 	static const auto format_command     = format_command_str.c_str();
 

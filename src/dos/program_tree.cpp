@@ -413,10 +413,10 @@ void TREE::AddMessages()
 	        "Displays directory tree in a graphical form.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \\[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]\n"
+	        "  [color=light-green]tree[reset] [color=light-cyan][DIRECTORY][reset] [/a] \\[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]\n"
 	        "\n"
 	        "Where:\n"
-	        "  [color=cyan]DIRECTORY[reset] is the name of the directory to display.\n"
+	        "  [color=light-cyan]DIRECTORY[reset] is the name of the directory to display.\n"
 	        "  [color=white]ORDER[reset]     is a listing order, one of:\n"
 	        "                [color=white]n[reset] (by name, alphabetic),\n"
 	        "                [color=white]s[reset] (by size, smallest first),\n"
@@ -433,11 +433,11 @@ void TREE::AddMessages()
 	        "  /o[color=white]ORDER[reset]   orders the list (see above)\n"
 	        "\n"
 	        "Notes:\n"
-	        "  If [color=cyan]DIRECTORY[reset] is omitted, the current directory is used.\n"
+	        "  If [color=light-cyan]DIRECTORY[reset] is omitted, the current directory is used.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]tree[reset]          ; displays directory tree starting from current directory\n"
-	        "  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; displays C: drive content recursively, with files\n");
+	        "  [color=light-green]tree[reset]          ; displays directory tree starting from current directory\n"
+	        "  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; displays C: drive content recursively, with files\n");
 
 	MSG_Add("PROGRAM_TREE_DIRECTORY", " Directory tree for volume %s");
 

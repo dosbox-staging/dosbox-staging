@@ -229,7 +229,7 @@ int Tag::ansi_num() const
  * The following is an example with group numbers:
  *               _____2_____
  *               |		   |
- * This color is [color=red] red
+ * This color is [color=light-red] red
  *                |_4_| |6|
  *                |_5_|
  *

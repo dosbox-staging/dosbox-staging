@@ -514,21 +514,21 @@ void BOOT::AddMessages()
 	        "Boots DOSBox Staging from a DOS drive or disk image.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]boot[reset] [color=white]DRIVE[reset]\n"
-	        "  [color=green]boot[reset] [color=cyan]IMAGEFILE[reset]\n"
+	        "  [color=light-green]boot[reset] [color=white]DRIVE[reset]\n"
+	        "  [color=light-green]boot[reset] [color=light-cyan]IMAGEFILE[reset]\n"
 	        "\n"
 	        "Where:\n"
 	        "  [color=white]DRIVE[reset] is a drive to boot from, must be [color=white]A:[reset], [color=white]C:[reset], or [color=white]D:[reset].\n"
-	        "  [color=cyan]IMAGEFILE[reset] is one or more floppy images, separated by spaces.\n"
+	        "  [color=light-cyan]IMAGEFILE[reset] is one or more floppy images, separated by spaces.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  A DOS drive letter must have been mounted previously with [color=green]imgmount[reset] command.\n"
+	        "  A DOS drive letter must have been mounted previously with [color=light-green]imgmount[reset] command.\n"
 	        "  The DOS drive or disk image must be bootable, containing DOS system files.\n"
 	        "  If more than one disk images are specified, you can swap them with a hotkey.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]boot[reset] [color=white]c:[reset]\n"
-	        "  [color=green]boot[reset] [color=cyan]disk1.ima disk2.ima[reset]\n");
+	        "  [color=light-green]boot[reset] [color=white]c:[reset]\n"
+	        "  [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]\n");
 	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
 	MSG_Add("PROGRAM_BOOT_WRITE_PROTECTED","Image file is read-only! Might create problems.\n");
@@ -539,8 +539,8 @@ void BOOT::AddMessages()
 	        "no drive letter is specified, this defaults to booting from the A drive.\n"
 	        "The only bootable drive letters are A, C, and D.  For booting from a hard\n"
 	        "drive (C or D), the image should have already been mounted using the\n"
-	        "[color=blue]IMGMOUNT[reset] command.\n\n"
-	        "Type [color=blue]BOOT /?[reset] for the syntax of this command.\n");
+	        "[color=light-blue]IMGMOUNT[reset] command.\n\n"
+	        "Type [color=light-blue]BOOT /?[reset] for the syntax of this command.\n");
 	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_MOUNTED","Floppy image(s) already mounted.\n");

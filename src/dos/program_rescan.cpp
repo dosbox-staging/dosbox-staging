@@ -66,19 +66,19 @@ void RESCAN::AddMessages() {
 	        "Scans for changes on mounted DOS drives.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]rescan[reset] [color=cyan]DRIVE[reset]\n"
-	        "  [color=green]rescan[reset] [/a]\n"
+	        "  [color=light-green]rescan[reset] [color=light-cyan]DRIVE[reset]\n"
+	        "  [color=light-green]rescan[reset] [/a]\n"
 	        "\n"
 	        "Where:\n"
-	        "  [color=cyan]DRIVE[reset] is the drive to scan for changes.\n"
+	        "  [color=light-cyan]DRIVE[reset] is the drive to scan for changes.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - Running [color=green]rescan[reset] without an argument scans for changes of the current drive.\n"
+	        "  - Running [color=light-green]rescan[reset] without an argument scans for changes of the current drive.\n"
 	        "  - Changes to this drive made on the host will then be reflected inside DOS.\n"
 	        "  - You can also scan for changes on all mounted drives with the /a option.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]rescan[reset] [color=cyan]c:[reset]\n"
-	        "  [color=green]rescan[reset] /a\n");
+	        "  [color=light-green]rescan[reset] [color=light-cyan]c:[reset]\n"
+	        "  [color=light-green]rescan[reset] /a\n");
 	MSG_Add("PROGRAM_RESCAN_SUCCESS","Drive re-scanned.\n");
 }

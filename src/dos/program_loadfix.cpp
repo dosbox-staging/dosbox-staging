@@ -90,22 +90,22 @@ void LOADFIX::AddMessages() {
 	        "Loads a program in the specific memory region and then runs it.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]loadfix[reset] [color=cyan]GAME[reset] [color=white][PARAMETERS][reset]\n"
-	        "  [color=green]loadfix[reset] [/d] (or [/f])[reset]\n"
+	        "  [color=light-green]loadfix[reset] [color=light-cyan]GAME[reset] [color=white][PARAMETERS][reset]\n"
+	        "  [color=light-green]loadfix[reset] [/d] (or [/f])[reset]\n"
 	        "\n"
 	        "Where:\n"
-	        "  [color=cyan]GAME[reset] is a game or program to be loaded, optionally with parameters.\n"
+	        "  [color=light-cyan]GAME[reset] is a game or program to be loaded, optionally with parameters.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  The most common use cases of this command are to fix DOS games or programs\n"
 	        "  which show either the \"[color=white]Packed File Corrupt[reset]\" or \"[color=white]Not enough memory\"[reset] (e.g.,\n"
 	        "  from some 1980's games such as California Games II) error message when run.\n"
-	        "  Running [color=green]loadfix[reset] without an argument simply allocates memory for your game\n"
+	        "  Running [color=light-green]loadfix[reset] without an argument simply allocates memory for your game\n"
 	        "  to run; you can free the memory with either /d or /f option when it finishes.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]args[reset]\n"
-	        "  [color=green]loadfix[reset] /d\n");
+	        "  [color=light-green]loadfix[reset] [color=light-cyan]mygame[reset] [color=white]args[reset]\n"
+	        "  [color=light-green]loadfix[reset] /d\n");
 	MSG_Add("PROGRAM_LOADFIX_ALLOC", "%d kB allocated.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOC", "%d kB freed.\n");
 	MSG_Add("PROGRAM_LOADFIX_DEALLOCALL","Used memory freed.\n");

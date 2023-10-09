@@ -2614,7 +2614,7 @@ Unable to set attributes: %s
 .
 :SHELL_CMD_CHOICE_EOF
 
-[color=red]Choice failed[reset]: the input stream ended without a valid choice.
+[color=light-red]Choice failed[reset]: the input stream ended without a valid choice.
 
 .
 :SHELL_CMD_CHOICE_ABORTED
