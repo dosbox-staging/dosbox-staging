@@ -1323,7 +1323,6 @@ nextfile:
 		dirCache.SetLabel(find_name, false, true);
 	} else {
 		// Compare attributes to search attributes
-		// Compare attributes to search attributes
 		const FatAttributeFlags attr_mask = {
 		        FatAttributeFlags::Directory |
 		        FatAttributeFlags::Volume |
