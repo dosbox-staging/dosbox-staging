@@ -1190,48 +1190,48 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 Geskriptete Tastatureingabe in ein laufendes DOS Programm.
 
 Verwendung:
-  [color=green]autotype[reset] -list
-  [color=green]autotype[reset] [-w [color=white]WAIT[reset]] [-p [color=white]PACE[reset]] [color=cyan]BUTTONS[reset]
+  [color=light-green]autotype[reset] -list
+  [color=light-green]autotype[reset] [-w [color=white]WAIT[reset]] [-p [color=white]PACE[reset]] [color=light-cyan]BUTTONS[reset]
 
 Wobei:
   [color=white]WAIT[reset]    Zeit in Sekunden, bevor die Eingabe beginnt (max. 30).
   [color=white]PACE[reset]    Zeit in Sekunden vor jedem Tastendruck (max. 10).
-  [color=cyan]BUTTONS[reset] sind ein oder mehrere durch Leerzeichen getrennte Zeichen.
+  [color=light-cyan]BUTTONS[reset] sind ein oder mehrere durch Leerzeichen getrennte Zeichen.
 
 Anmerkungen:
-  Die im Befehl angegebenen [color=cyan]BUTTONS[reset] werden automatisch in laufende
+  Die im Befehl angegebenen [color=light-cyan]BUTTONS[reset] werden automatisch in laufende
   DOS-Programme eingegeben nachdem sie gestartet wurden. Das Autotyping beginnt
-  nach [color=cyan]WAIT[reset] Sekunden, und jede Taste wird alle [color=white]PACE[reset] Sekunden
-  eingegeben. Das [color=cyan],[reset] Zeichen fügt eine zusätzliche [color=white]PACE[reset] Verzögerung ein. Die
+  nach [color=light-cyan]WAIT[reset] Sekunden, und jede Taste wird alle [color=white]PACE[reset] Sekunden
+  eingegeben. Das [color=light-cyan],[reset] Zeichen fügt eine zusätzliche [color=white]PACE[reset] Verzögerung ein. Die
   Standardwerte für [color=white]WAIT[reset] und [color=white]PACE[reset] sind 2 bzw. 0,5 Sekunden.
   Eine Liste aller verfügbaren Tastennamen erhältst du mit der Option -list.
 
 Beispiele:
-  [color=green]autotype[reset] -list
-  [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
-  [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
-  [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter[reset]
+  [color=light-green]autotype[reset] -list
+  [color=light-green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=light-cyan]up enter , right enter[reset]
+  [color=light-green]autotype[reset] -p [color=white]0.2[reset] [color=light-cyan]f1 kp_8 , , enter[reset]
+  [color=light-green]autotype[reset] -w [color=white]1.3[reset] [color=light-cyan]esc enter , p l a y e r enter[reset]
 .
 :PROGRAM_BOOT_HELP_LONG
 Startet DOSBox Staging von einem DOS-Laufwerk oder einem Disk-Image.
 
 Verwendung:
-  [color=green]boot[reset] [color=white]LAUFWERK[reset]
-  [color=green]boot[reset] [color=cyan]IMAGEDATEI[reset]
+  [color=light-green]boot[reset] [color=white]LAUFWERK[reset]
+  [color=light-green]boot[reset] [color=light-cyan]IMAGEDATEI[reset]
 
 Wobei:
   [color=white]LAUFWERK[reset] ist ein Laufwerk, von dem gebootet werden soll, z.B. [color=white]A:[reset] oder [color=white]C:[reset].
-  [color=cyan]IMAGEDATEI[reset] ist ein oder mehrere Disketten-Images, getrennt durch Leerzeichen.
+  [color=light-cyan]IMAGEDATEI[reset] ist ein oder mehrere Disketten-Images, getrennt durch Leerzeichen.
 
 Anmerkungen:
-  Ein Laufwerksbuchstabe muss zuvor mit dem Befehl [color=green]imgmount[reset] eingebunden
+  Ein Laufwerksbuchstabe muss zuvor mit dem Befehl [color=light-green]imgmount[reset] eingebunden
   worden sein. Das Laufwerk oder Disk-Image muss bootfähig sein und 
   DOS-Systemdateien enthalten. Wenn mehr als ein Disk-Image angegeben wird, 
   kannst du sie mit einem Hotkey austauschen.
 
 Beispiele:
-  [color=green]boot[reset] [color=white]c:[reset]
-  [color=green]boot[reset] [color=cyan]disk1.ima disk2.ima[reset]
+  [color=light-green]boot[reset] [color=white]c:[reset]
+  [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -1355,27 +1355,27 @@ Die aktuell eingebundenen Laufwerke sind:
 Mounted ein CD-, Disketten- oder ein Disk-Image als Laufwerk.
 
 Verwendung:
-  [color=green]imgmount[reset] [color=white]LAUFWERK[reset] [color=cyan]CD-ROM(S)[reset] [-fs iso] [-ide] -t cdrom|iso
-  [color=green]imgmount[reset] [color=white]LAUFWERK[reset] [color=cyan]IMAGE-DATEI[reset] [IMAGE-DATEI2 [..]] [-fs fat] -t hdd|floppy -ro
-  [color=green]imgmount[reset] [color=white]LAUFWERK[reset] [color=cyan]BOOT-IMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRIE -ro
-  [color=green]imgmount[reset] -u [color=white]LAUFWERK[reset]  (un-mounted [color=white]LAUFWERK[reset])
+  [color=light-green]imgmount[reset] [color=white]LAUFWERK[reset] [color=light-cyan]CD-ROM(S)[reset] [-fs iso] [-ide] -t cdrom|iso
+  [color=light-green]imgmount[reset] [color=white]LAUFWERK[reset] [color=light-cyan]IMAGE-DATEI[reset] [IMAGE-DATEI2 [..]] [-fs fat] -t hdd|floppy -ro
+  [color=light-green]imgmount[reset] [color=white]LAUFWERK[reset] [color=light-cyan]BOOT-IMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRIE -ro
+  [color=light-green]imgmount[reset] -u [color=white]LAUFWERK[reset]  (un-mounted [color=white]LAUFWERK[reset])
 
 Wobei:
   [color=white]LAUFWERK[reset]    Laufwerk, in den das Image gemountet werden soll: a, c, d, ...
-  [color=cyan]CD-ROMS(S)[reset]  ISO, CUE+BIN, CUE+ISO, CUE+ISO+FLAC/OPUS/OGG/MP3/WAV Dateien
-  [color=cyan]IMAGE-DATEI[reset] FAT16- oder FAT12 Festplatten- oder Disketten-Image
-  [color=cyan]BOOT-IMAGE[reset]  bootfähiges Disk-Image mit der angegebenen -size GEOMETRIE:
+  [color=light-cyan]CD-ROMS(S)[reset]  ISO, CUE+BIN, CUE+ISO, CUE+ISO+FLAC/OPUS/OGG/MP3/WAV Dateien
+  [color=light-cyan]IMAGE-DATEI[reset] FAT16- oder FAT12 Festplatten- oder Disketten-Image
+  [color=light-cyan]BOOT-IMAGE[reset]  bootfähiges Disk-Image mit der angegebenen -size GEOMETRIE:
               Bytes pro Sektor, Sektoren pro Kopf, Köpfe, Zylinder
 Anmerkungen:
-  - %s+F4 wechselt & mountet die nächste(n) [color=cyan]CD-ROM(S)[reset] oder [color=cyan]BOOT-IMAGE[reset].
+  - %s+F4 wechselt & mountet die nächste(n) [color=light-cyan]CD-ROM(S)[reset] oder [color=light-cyan]BOOT-IMAGE[reset].
   - Mit dem Flag -ro wird das Disk-Image schreibgeschützt gemountet.
   - Der Parameter -ide emuliert eine IDE CD-Laufwerk, nützlich für CD-basierte
     Programme, die ein echtes DOS über ein Boot-Image benötigen.
 Beispiele:
-  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/home/BENUTZERNAME/games/doom.iso[reset] -t cdrom
-  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom
-  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]Disk1.img Disk2.img Disk3.img[reset] -t floppy -ro
-  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootimage.img[reset] -t hdd -fs none -size 512,63,32,1023
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/BENUTZERNAME/games/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]Disk1.img Disk2.img Disk3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootimage.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
@@ -1551,13 +1551,13 @@ Außerdem kannst du imgmount verwenden, um ISO- oder CUE/BIN-Images zu mounten:
 
 .
 :PROGRAM_INTRO_SPECIAL
-[erases=entire][color=green]Sondertasten:[reset]
+[erases=entire][color=light-green]Sondertasten:[reset]
 Dies sind die voreingestellten Tastenbelegungen.
-Sie können im [color=light-yellow]keymapper[reset] geändert werden.
+Sie können im [color=brown]keymapper[reset] geändert werden.
 
 [color=yellow]%s+Enter[reset]  Umschalten zwischen Vollbild- und Fenstermodus.
 [color=yellow]%s+Pause[reset]  Pause/Unpause Emulator.
-[color=yellow]%s+F1[reset]   %s Starte den [color=light-yellow]keymapper[reset].
+[color=yellow]%s+F1[reset]   %s Starte den [color=brown]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Wechsle das eingebundene Disk Image, aktualisiere Verzeichnis-Cache.
 [color=yellow]%s+F5[reset]     Speichere einen Screenshot des dargestellten Bildes.
 [color=yellow]%s+F5[reset]   %s Speichere einen Screenshot in Originalauflösung.
@@ -1583,27 +1583,27 @@ Zeichentabelle %i wurde für Layout %s geladen
 Konfiguriert eine Tastatur für eine bestimmte Sprache.
 
 Verwendung:
-  [color=green]keyb[reset] [color=cyan][SPRACHENCODE][reset]
-  [color=green]keyb[reset] [color=cyan]SPRACHENCODE[reset] [color=white]ZEICHENTABELLE[reset] [ZEICHENTABELLENDATEI]
+  [color=light-green]keyb[reset] [color=light-cyan][SPRACHENCODE][reset]
+  [color=light-green]keyb[reset] [color=light-cyan]SPRACHENCODE[reset] [color=white]ZEICHENTABELLE[reset] [ZEICHENTABELLENDATEI]
 
 Wobei:
-  [color=cyan]SPRACHENCODE[reset]         Sprachencode oder eine Tastaturlayout-ID.
+  [color=light-cyan]SPRACHENCODE[reset]         Sprachencode oder eine Tastaturlayout-ID.
   [color=white]ZEICHENTABELLE[reset]       Zeichentabelle, wie zum Beispiel [color=white]437[reset] und [color=white]850[reset].
   ZEICHENTABELLENDATEI Datei mit Informationen für eine Zeichentabelle.
 
 Anmerkungen:
-  Wenn du [color=green]keyb[reset] ohne ein Argument ausführst, wird das aktuell geladene Tastatur-
-  layout und die Zeichentabelle angezeigt. Es wechselt zu [color=cyan]SPRACHENCODE[reset] falls
+  Wenn du [color=light-green]keyb[reset] ohne ein Argument ausführst, wird das aktuell geladene Tastatur-
+  layout und die Zeichentabelle angezeigt. Es wechselt zu [color=light-cyan]SPRACHENCODE[reset] falls
   angegeben, optional mit einer [color=white]ZEICHENTABELLE[reset] und einer zusätzlichen ZEICHEN-
   TABELLENDATEI. Dieser Befehl ist besonders nützlich, wenn du eine nicht-US-
   amerikanische Tastatur verwendest. Kann auch in der Konfigurations Datei mit 
-  "keyboardlayout = [color=cyan]SPRACHENCODE[reset]" eingestellt werden.
+  "keyboardlayout = [color=light-cyan]SPRACHENCODE[reset]" eingestellt werden.
 
 Beispiele:
-  [color=green]KEYB[reset]
-  [color=green]KEYB[reset] [color=cyan]uk[reset]
-  [color=green]KEYB[reset] [color=cyan]sp[reset] [color=white]850[reset]
-  [color=green]KEYB[reset] [color=cyan]de[reset] [color=white]858[reset] meinecp.cpi
+  [color=light-green]KEYB[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] meinecp.cpi
 
 .
 :PROGRAM_KEYB_NOERROR
@@ -1632,24 +1632,24 @@ Keine oder ungültige Zeichentabellendatei für Layout %s
 Lädt ein Programm in einen Speicherbereich und führt es dann aus.
 
 Verwendung:
-  [color=green]loadfix[reset] [color=cyan]PROGRAMM[reset] [color=white][PARAMETER][reset]
-  [color=green]loadfix[reset] [/d] (oder [/f])[reset]
+  [color=light-green]loadfix[reset] [color=light-cyan]PROGRAMM[reset] [color=white][PARAMETER][reset]
+  [color=light-green]loadfix[reset] [/d] (oder [/f])[reset]
 
 Wobei:
-  [color=cyan]PROGRAMM[reset] ist das zu ladende Programm, optional mit Parametern.
+  [color=light-cyan]PROGRAMM[reset] ist das zu ladende Programm, optional mit Parametern.
 
 Anmerkungen:
   Die häufigsten Anwendungsfälle für diesen Befehl sind DOS-Spiele oder
   Programme die entweder die Fehlermeldung "[color=white]Packed File Corrupt[reset]" oder
   "[color=white]Not enough memory"[reset] (z.B. von einigen Programmen aus den 1980er Jahren wie
-  California Games II), wenn sie ausgeführt werden. Wenn du [color=green]loadfix[reset] ohne ein
+  California Games II), wenn sie ausgeführt werden. Wenn du [color=light-green]loadfix[reset] ohne ein
   Argument ausführst, wird deinem Programm lediglich Speicher zugewiesen. Du
   kannst den Speicher mit der Option /d oder /f wieder freigeben, nach
   Programmende.
 
 Beispiele:
-  [color=green]loadfix[reset] [color=cyan]programm[reset] [color=white]parameter[reset]
-  [color=green]loadfix[reset] /d
+  [color=light-green]loadfix[reset] [color=light-cyan]programm[reset] [color=white]parameter[reset]
+  [color=light-green]loadfix[reset] /d
 
 .
 :PROGRAM_LOADFIX_ALLOC
@@ -1672,10 +1672,10 @@ Fehler bei der Speicherallokation.
 Lädt ein ROM-Abbild des Video-BIOS oder IBM BASIC.
 
 Verwendung:
-  [color=green]loadrom [color=cyan]IMAGEDATEI[reset]
+  [color=light-green]loadrom [color=light-cyan]IMAGEDATEI[reset]
 
 Wobei:
-  [color=cyan]IMAGEDATEI[reset] ein Video-BIOS oder ein IBM BASIC ROM-Image ist.
+  [color=light-cyan]IMAGEDATEI[reset] ein Video-BIOS oder ein IBM BASIC ROM-Image ist.
 
 Anmerkungen:
    Nachdem du ein IBM BASIC ROM-Image mit dem Befehl in das emulierte ROM
@@ -1683,7 +1683,7 @@ Anmerkungen:
    DOSBox Staging ausführen.
 
 Beispiel:
-  [color=green]loadrom[reset] [color=cyan]bios.rom[reset]
+  [color=light-green]loadrom[reset] [color=light-cyan]bios.rom[reset]
 
 .
 :PROGRAM_LOADROM_SPECIFY_FILE
@@ -1714,7 +1714,7 @@ BASIC ROM geladen.
 Zeigt die DOS-Speicherinformationen an.
 
 Verwendung:
-  [color=green]mem[reset]
+  [color=light-green]mem[reset]
 
 Wobei:
   Dieser Befehl hat keine Parameter.
@@ -1725,7 +1725,7 @@ Anmerkungen:
   und EMS (expanded) Speicher.
 
 Beispiel:
-  [color=green]mem[reset]
+  [color=light-green]mem[reset]
 
 .
 :PROGRAM_MEM_CONVEN
@@ -1752,13 +1752,13 @@ Ordnet physische Ordner oder Laufwerke einem virtuellen Laufwerk zu.
 Einbinden eines Verzeichnisses des Host-Betriebssystems als Laufwerk.
 
 Verwendung:
-  [color=green]mount[reset] [color=white]LAUFWERK[reset] [color=cyan]VERZEICHNIS[reset] [-t TYP] [-usecd #] [-freesize SIZE] [-label NAME]
-  [color=green]mount[reset] -listcd / -cd (listet erkannten CD-ROM-Laufwerke und ihre Nummern auf)
-  [color=green]mount[reset] -u [color=white]LAUFWERK[reset]  (Image des LAUFWERKs auswerfen)
+  [color=light-green]mount[reset] [color=white]LAUFWERK[reset] [color=light-cyan]VERZEICHNIS[reset] [-t TYP] [-usecd #] [-freesize SIZE] [-label NAME]
+  [color=light-green]mount[reset] -listcd / -cd (listet erkannten CD-ROM-Laufwerke und ihre Nummern auf)
+  [color=light-green]mount[reset] -u [color=white]LAUFWERK[reset]  (Image des LAUFWERKs auswerfen)
 
 Wobei:
   [color=white]LAUFWERK[reset]    der Laufwerksbuchstabe, auf dem das Verzeichnis eingebunden wird
-  [color=cyan]VERZEICHNIS[reset] Host-Verzeichnis, das eingebunden werden soll
+  [color=light-cyan]VERZEICHNIS[reset] Host-Verzeichnis, das eingebunden werden soll
   TYP         Typ des Verzeichnisses: dir, floppy, cdrom, oder overlay
   SIZE        freier Platz auf virt. Laufwerk, KiB für Floppies, sonst MiB.
   NAME        zu verwendendendes Laufwerkslabel
@@ -1768,9 +1768,9 @@ Anmerkungen:
   - Weitere Optionen sind im Handbuch beschrieben (README Datei, Kapitel 4).
 
 Beispiele:
-  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/spiele[reset]
-  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/medien/NAME/Spiele CD"[reset] -t cdrom
-  [color=green]mount[reset] [color=white]C[reset] [color=cyan]meine_savegames[reset] -t overlay
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/spiele[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/medien/NAME/Spiele CD"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]meine_savegames[reset] -t overlay
 
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
@@ -1855,14 +1855,14 @@ Kann Laufwerk Z nicht verschieben. Laufwerk %c ist bereits eingebunden.
 Sucht nach Änderungen auf eingebundenen DOS-Laufwerken.
 
 Verwendung:
-  [color=green]rescan[reset] [color=cyan]LAUFWERK[reset]
-  [color=green]rescan[reset] [/a]
+  [color=light-green]rescan[reset] [color=light-cyan]LAUFWERK[reset]
+  [color=light-green]rescan[reset] [/a]
 
 Wobei:
-  [color=cyan]LAUFWERK[reset] ist das Laufwerk, das nach Änderungen durchsucht wird.
+  [color=light-cyan]LAUFWERK[reset] ist das Laufwerk, das nach Änderungen durchsucht wird.
 
 Anmerkungen:
-  - Wenn du [color=green]rescan[reset] ohne Parameter ausführst, wird das aktuelle Laufwerk
+  - Wenn du [color=light-green]rescan[reset] ohne Parameter ausführst, wird das aktuelle Laufwerk
     nach Änderungen durchsucht.
   - Änderungen an diesem Laufwerk, die auf dem Host vorgenommen wurden, werden 
     dann in DOSBox angezeigt.
@@ -1870,8 +1870,8 @@ Anmerkungen:
     Laufwerken suchen.
 
 Beispiele:
-  [color=green]rescan[reset] [color=cyan]c:[reset]
-  [color=green]rescan[reset] /a
+  [color=light-green]rescan[reset] [color=light-cyan]c:[reset]
+  [color=light-green]rescan[reset] /a
 
 .
 :PROGRAM_RESCAN_SUCCESS
@@ -1882,11 +1882,11 @@ Laufwerks-Cache neu eingelesen.
 Zeigt die Sound-Mixer-Einstellungen an oder ändert sie.
 
 Verwendung:
-  [color=green]mixer[reset] [color=cyan][QUELLE][reset] [color=white]PARAMETER[reset] [/noshow]
-  [color=green]mixer[reset] [/listmidi]
+  [color=light-green]mixer[reset] [color=light-cyan][QUELLE][reset] [color=white]PARAMETER[reset] [/noshow]
+  [color=light-green]mixer[reset] [/listmidi]
 
 Wobei:
-  [color=cyan]QUELLE[reset]    ist die Quelle, für die du die Einstellungen ändern willst.
+  [color=light-cyan]QUELLE[reset]    ist die Quelle, für die du die Einstellungen ändern willst.
   [color=white]PARAMETER[reset] ist einer oder mehrere der folgenden Parameter:
     Lautstärke: [color=white]0[reset] bis [color=white]100[reset], oder dB-Wert mit vorangestelltem [color=white]d[reset] (z.B. [color=white]d-7.5[reset])
                 verwende [color=white]L:R[reset] um L und R separat einzustellen (z.B. [color=white]10:20[reset])
@@ -1894,15 +1894,15 @@ Wobei:
     Crossfeed:  [color=white]x0[reset] bis [color=white]x100[reset]    Reverb: [color=white]r0[reset] bis [color=white]r100[reset]    Chorus: [color=white]c0[reset] bis [color=white]c100[reset]
 
 Anmerkungen:
-  [color=green]mixer[reset] ohne Parameter zeigt die aktuellen Einstellungen an.
+  [color=light-green]mixer[reset] ohne Parameter zeigt die aktuellen Einstellungen an.
   Die Einstellungen mehrerer Quellen können mit einem Befehl geändert werden.
   Ohne angegebene Quelle wir Crossfeed, Reverb oder Chorus global eingestellt.
   Mit /listmidi kannst du die Liste der verfügbaren MIDI-Geräte anzeigen.
   Die Option /noshow wendet die Änderungen an, ohne Bildschirmausgabe.
 
 Beispiele:
-  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]fm[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+  [color=light-green]mixer[reset] [color=light-cyan]cdda[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]fm[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
 %-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
@@ -1923,27 +1923,27 @@ Mono
 Verwaltet die seriellen Schnittstellen.
 
 Verwendung:
-  [color=green]serial[reset] [color=white][PORT#][reset]                   Alle oder bestimmte Ports ([color=white]1[reset]-[color=white]4[reset]) auflisten.
-  [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]GERÄT[reset] [Einst.]      Verbinde das Gerät mit dem angegebenen Port.
+  [color=light-green]serial[reset] [color=white][PORT#][reset]                   Alle oder bestimmte Ports ([color=white]1[reset]-[color=white]4[reset]) auflisten.
+  [color=light-green]serial[reset] [color=white]PORT#[reset] [color=light-cyan]GERÄT[reset] [Einst.]      Verbinde das Gerät mit dem angegebenen Port.
 
 Wobei:
-  [color=cyan]GERÄT[reset]     Kann sein: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], [color=cyan]DISABLED[reset]
+  [color=light-cyan]GERÄT[reset]     Kann sein: [color=light-cyan]MODEM[reset], [color=light-cyan]NULLMODEM[reset], [color=light-cyan]MOUSE[reset], [color=light-cyan]DIRECT[reset], [color=light-cyan]DUMMY[reset], [color=light-cyan]DISABLED[reset]
 
-  Optionale Einstellungen für jedes [color=cyan]GERÄT[reset]:
-  Für [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
-  Für [color=cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
+  Optionale Einstellungen für jedes [color=light-cyan]GERÄT[reset]:
+  Für [color=light-cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
+  Für [color=light-cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
                    PORT, INHSOCKET, SOCK
-  Für [color=cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
+  Für [color=light-cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
                    2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)
-  Für [color=cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
-  Für [color=cyan]DUMMY[reset]      : IRQ
+  Für [color=light-cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
+  Für [color=light-cyan]DUMMY[reset]      : IRQ
 
 Beispiele:
-  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                 Warte auf TCP:1250 als Server
-  [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 Verbinde mit TCP:1250 als Client
-  [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        Warte auf UDP:5000 als Server
-  [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0             Phys. Port unter Linux verwenden
-  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                      Mouse Systems Maus
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]NULLMODEM[reset] PORT:1250                 Warte auf TCP:1250 als Server
+  [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 Verbinde mit TCP:1250 als Client
+  [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        Warte auf UDP:5000 als Server
+  [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             Phys. Port unter Linux verwenden
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      Mouse Systems Maus
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -2006,24 +2006,24 @@ Eine kurze Liste der am häufigsten verwendeten Befehle:
 :SHELL_CMD_COMMAND_HELP_LONG
 Startet die DOSBox Staging Befehlszeilen-Shell.
 Verwendung:
-  [color=green]command[reset]
-  [color=green]command[reset] /c (oder /init) [color=cyan]BEFEHL[reset]
+  [color=light-green]command[reset]
+  [color=light-green]command[reset] /c (oder /init) [color=light-cyan]BEFEHL[reset]
 
 Wobei:
-  [color=cyan]BEFEHL[reset] ist ein Befehl oder Programm, das du ausführen möchtest.
+  [color=light-cyan]BEFEHL[reset] ist ein Befehl oder Programm, das du ausführen möchtest.
 
 Anmerkungen:
   DOSBox Staging startet automatisch eine DOS-Befehlsshell, indem es diesen
   Befehl mit der Option /init aufruft, der das Willkommensbanner anzeigt.
-  Du kannst eine neue Instanz der Befehlsshell laden, indem du [color=green]command[reset]
-  aufrufst. Wenn du die Option /c zusammen mit [color=cyan]COMMAND[reset] verwendest, führt dies
+  Du kannst eine neue Instanz der Befehlsshell laden, indem du [color=light-green]command[reset]
+  aufrufst. Wenn du die Option /c zusammen mit [color=light-cyan]COMMAND[reset] verwendest, führt dies
   den angegebenen Befehl aus (optional mit Parametern) und beendet danach
   DOSBox.
 
 Beispiele:
-  [color=green]command[reset]
-  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hallo Welt![reset]
-  [color=green]command[reset] /init [color=cyan]dir[reset]
+  [color=light-green]command[reset]
+  [color=light-green]command[reset] /c [color=light-cyan]echo[reset] [color=white]Hallo Welt![reset]
+  [color=light-green]command[reset] /init [color=light-cyan]dir[reset]
 
 .
 :SHELL_CMD_ECHO_ON
@@ -2071,23 +2071,23 @@ Tippe "date MM-TT-JJJJ" um es zu ändern.
 .
 :SHELL_CMD_DATE_HELP_LONG
 Verwendung:
-  [color=green]date[reset] [/t]
-  [color=green]date[reset] /h
-  [color=green]date[reset] [color=cyan]DATUM[reset]
+  [color=light-green]date[reset] [/t]
+  [color=light-green]date[reset] /h
+  [color=light-green]date[reset] [color=light-cyan]DATUM[reset]
 
 Wobei:
-  [color=cyan]DATUM[reset] ist das neu zu setzende Datum, im Format [color=cyan]%s[reset].
+  [color=light-cyan]DATUM[reset] ist das neu zu setzende Datum, im Format [color=light-cyan]%s[reset].
 
 Anmerkungen:
-  Wenn du [color=green]date[reset] ohne Parameter ausführst, wird das aktuelle Datum angezeigt,
+  Wenn du [color=light-green]date[reset] ohne Parameter ausführst, wird das aktuelle Datum angezeigt,
   oder nur ein Datum mit der Option /t. Mit der Option /h kannst du eine
   Datumssynchronisation mit dem Host-System erzwingen oder manuell ein neues
   Datum angeben, das gesetzt werden soll.
 
 Beispiele:
-  [color=green]date[reset]
-  [color=green]date[reset] /h
-  [color=green]date[reset] [color=cyan]%s[reset]
+  [color=light-green]date[reset]
+  [color=light-green]date[reset] /h
+  [color=light-green]date[reset] [color=light-cyan]%s[reset]
 
 .
 :SHELL_CMD_TIME_HELP
@@ -2107,23 +2107,23 @@ Gib "time %s" ein, um eine neue Uhrzeit einzustellen.
 .
 :SHELL_CMD_TIME_HELP_LONG
 Verwendung:
-  [color=green]time[reset] [/t]
-  [color=green]time[reset] /h
-  [color=green]time[reset] [color=cyan]ZEIT[reset]
+  [color=light-green]time[reset] [/t]
+  [color=light-green]time[reset] /h
+  [color=light-green]time[reset] [color=light-cyan]ZEIT[reset]
 
 Wobei:
-  [color=cyan]ZEIT[reset] ist die neue Zeit, die eingestellt werden soll, im Format [color=cyan]%s[reset].
+  [color=light-cyan]ZEIT[reset] ist die neue Zeit, die eingestellt werden soll, im Format [color=light-cyan]%s[reset].
 
 Anmerkungen:
-  Wenn du [color=green]time[reset] ohne Argument ausführst, wird die aktuelle Zeit angezeigt, oder
+  Wenn du [color=light-green]time[reset] ohne Argument ausführst, wird die aktuelle Zeit angezeigt, oder
   eine einfache Zeit mit der Option /t. Mit der Option /h kannst du eine
   Zeitsynchronisation mit dem Host-System erzwingen oder manuell eine neue Zeit
   einstellen.
 
 Beispiele:
-  [color=green]time[reset]
-  [color=green]time[reset] /h
-  [color=green]time[reset] [color=cyan]%s[reset]
+  [color=light-green]time[reset]
+  [color=light-green]time[reset] /h
+  [color=light-green]time[reset] [color=light-cyan]%s[reset]
 
 .
 :SHELL_CMD_MKDIR_ERROR
@@ -2210,7 +2210,7 @@ Wartet auf einen Tastendruck, um fortzufahren.
 .
 :SHELL_CMD_PAUSE_HELP_LONG
 Verwendung:
-  [color=green]pause[reset]
+  [color=light-green]pause[reset]
 
 Wobei:
   Dieser Befehl hat keine Parameter.
@@ -2222,7 +2222,7 @@ Anmerkungen:
   (mit Ausnahme bestimmter Steuerungstasten), um fortzufahren.
 
 Beispiel:
-  [color=green]pause[reset]
+  [color=light-green]pause[reset]
 
 .
 :SHELL_CMD_COPY_FAILURE
@@ -2284,7 +2284,7 @@ auf lokalen Laufwerken zu verwenden.
 
 .
 :SHELL_STARTUP_SUB
-[color=green]dosbox-staging %s[reset]
+[color=light-green]dosbox-staging %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HELP
@@ -2293,20 +2293,20 @@ Zeigt das aktuelle Verzeichnis oder wechselt es.
 .
 :SHELL_CMD_CHDIR_HELP_LONG
 Verwendung:
-  [color=green]cd[reset] [color=cyan]VERZEICHNIS[reset]
-  [color=green]chdir[reset] [color=cyan]VERZEICHNIS[reset]
+  [color=light-green]cd[reset] [color=light-cyan]VERZEICHNIS[reset]
+  [color=light-green]chdir[reset] [color=light-cyan]VERZEICHNIS[reset]
 
 Wobei:
-  [color=cyan]VERZEICHNIS[reset] der Name des Verzeichnisses ist, in das gewechselt werden soll.
+  [color=light-cyan]VERZEICHNIS[reset] der Name des Verzeichnisses ist, in das gewechselt werden soll.
 
 Anmerkungen:
-  Wenn du [color=green]cd[reset] ohne Parameter ausführst, wird das aktuelle Verzeichnis angezeigt.
-  Mit [color=cyan]VERZEICHNIS[reset] ändert der Befehl nur das Verzeichnis, nicht das aktuelle 
+  Wenn du [color=light-green]cd[reset] ohne Parameter ausführst, wird das aktuelle Verzeichnis angezeigt.
+  Mit [color=light-cyan]VERZEICHNIS[reset] ändert der Befehl nur das Verzeichnis, nicht das aktuelle 
   Laufwerk.
 
 Beispiele:
-  [color=green]cd[reset]
-  [color=green]cd[reset] [color=cyan]spiele[reset]
+  [color=light-green]cd[reset]
+  [color=light-green]cd[reset] [color=light-cyan]spiele[reset]
 
 .
 :SHELL_CMD_CLS_HELP
@@ -2315,18 +2315,18 @@ Löscht den Bildschirm.
 .
 :SHELL_CMD_CLS_HELP_LONG
 Verwendung:
-  [color=green]cls[reset]
+  [color=light-green]cls[reset]
 
 Wobei:
   Dieser Befehl hat keine Parameter.
 
 Anmerkungen:
-  Wenn du [color=green]cls[reset] ausführst, werden alle Texte auf dem DOS-Bildschirm gelöscht,
+  Wenn du [color=light-green]cls[reset] ausführst, werden alle Texte auf dem DOS-Bildschirm gelöscht,
   außer der Eingabeaufforderung (z.B. [color=white]Z:\>[reset] oder [color=white]C:\GAMES>[reset]) in der linken oberen
   Ecke des Bildschirms.
 
 Beispiel:
-  [color=green]cls[reset]
+  [color=light-green]cls[reset]
 
 .
 :SHELL_CMD_DIR_HELP
@@ -2335,10 +2335,10 @@ Zeigt eine Liste der Dateien und Unterverzeichnisse an.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Verwendung:
-  [color=green]dir[reset] [color=cyan][SUCHMUSTER][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]REIHENFOLGE[reset]]
+  [color=light-green]dir[reset] [color=light-cyan][SUCHMUSTER][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]REIHENFOLGE[reset]]
 
 Wobei:
-  [color=cyan]SUCHMUSTER[reset] ist entweder ein exakter Dateiname oder ein ungenauer Dateiname
+  [color=light-cyan]SUCHMUSTER[reset] ist entweder ein exakter Dateiname oder ein ungenauer Dateiname
   mit Wildcards, wie (*) und (?). Ein Pfad kann im Suchmuster angegeben werden,
   um Inhalte im angegebenen Verzeichnis aufzulisten.
   [color=white]REIHENFOLGE[reset]   Auflistungsreihenfolge, [color=white]n[reset] (nach Name), [color=white]s[reset] (nach Größe),
@@ -2349,13 +2349,13 @@ Wobei:
   /ad    listet alle Verzeichnisse auf        /a-d   listet alle Dateien auf.
 
 Anmerkungen:
-  Wenn du [color=green]dir[reset] ohne ein Argument ausführst, werden alle Dateien und Unterver-
+  Wenn du [color=light-green]dir[reset] ohne ein Argument ausführst, werden alle Dateien und Unterver-
   zeichnisse im aktuellen Verzeichnis aufgelistet.
 
 Beispiele:
-  [color=green]dir[reset] [color=cyan][reset]
-  [color=green]dir[reset] [color=cyan]spiele.*[reset] /p
-  [color=green]dir[reset] [color=cyan]c:\spiele\*.exe[reset] /b /o[color=white]-d[reset]
+  [color=light-green]dir[reset] [color=light-cyan][reset]
+  [color=light-green]dir[reset] [color=light-cyan]spiele.*[reset] /p
+  [color=light-green]dir[reset] [color=light-cyan]c:\spiele\*.exe[reset] /b /o[color=white]-d[reset]
 
 .
 :SHELL_CMD_ECHO_HELP
@@ -2364,20 +2364,20 @@ Zeigt Meldungen und aktiviert/deaktiviert die Ausgabe von Befehlen.
 .
 :SHELL_CMD_ECHO_HELP_LONG
 Verwendung:
-  [color=green]echo[reset] [color=cyan][on|off][reset]
-  [color=green]echo[reset] [color=cyan][NACHRICHT][reset]
+  [color=light-green]echo[reset] [color=light-cyan][on|off][reset]
+  [color=light-green]echo[reset] [color=light-cyan][NACHRICHT][reset]
 
 Wobei:
-  [color=cyan]on|off[reset]      Schaltet das Befehlsecho ein/aus.
-  [color=cyan]NACHRICHT[reset]   Die Nachricht, die angezeigt werden soll.
+  [color=light-cyan]on|off[reset]      Schaltet das Befehlsecho ein/aus.
+  [color=light-cyan]NACHRICHT[reset]   Die Nachricht, die angezeigt werden soll.
 
 Anmerkungen:
-  - Wenn du [color=green]echo[reset] ohne Parameter ausführst, wird der aktuelle Status angezeigt.
+  - Wenn du [color=light-green]echo[reset] ohne Parameter ausführst, wird der aktuelle Status angezeigt.
   - Echo ist besonders nützlich beim Schreiben oder Debuggen von Batch-Dateien.
 
 Beispiele:
-  [color=green]echo[reset] [color=cyan]off[reset]
-  [color=green]echo[reset] [color=cyan]Hallo Welt![reset]
+  [color=light-green]echo[reset] [color=light-cyan]off[reset]
+  [color=light-green]echo[reset] [color=light-cyan]Hallo Welt![reset]
 
 .
 :SHELL_CMD_EXIT_HELP
@@ -2386,18 +2386,18 @@ Beendet die DOS Shell.
 .
 :SHELL_CMD_EXIT_HELP_LONG
 Verwendung:
-  [color=green]exit[reset]
+  [color=light-green]exit[reset]
 
 Wobei:
   Dieser Befehl hat keine Parameter.
 
 Anmerkungen:
   Wenn du eine DOS-Shell aus einem Programm heraus startest, kehrt der Befehl
-  [color=green]exit[reset] zum Programm zurück. Wenn kein DOS-Programm läuft, beendet der Befehl
+  [color=light-green]exit[reset] zum Programm zurück. Wenn kein DOS-Programm läuft, beendet der Befehl
   DOSBox Staging.
 
 Beispiel:
-  [color=green]exit[reset]
+  [color=light-green]exit[reset]
 
 .
 :SHELL_CMD_EXIT_TOO_SOON
@@ -2410,21 +2410,21 @@ Zeigt Hilfeinformationen zu DOS-Befehlen an.
 .
 :SHELL_CMD_HELP_HELP_LONG
 Verwendung:
-  [color=green]help[reset]
-  [color=green]help[reset] /a[ll]
-  [color=green]help[reset] [color=cyan]BEFEHL[reset]
+  [color=light-green]help[reset]
+  [color=light-green]help[reset] /a[ll]
+  [color=light-green]help[reset] [color=light-cyan]BEFEHL[reset]
 
 Wobei:
-  [color=cyan]BEFEHL[reset] ist der Name eines internen DOS-Befehls, z.B. [color=cyan]dir[reset].
+  [color=light-cyan]BEFEHL[reset] ist der Name eines internen DOS-Befehls, z.B. [color=light-cyan]dir[reset].
 
 Anmerkungen:
-  - Wenn du [color=green]help[reset] ohne ein Parameter ausführst, zeigt eine DOS-Befehlsliste an.
+  - Wenn du [color=light-green]help[reset] ohne ein Parameter ausführst, zeigt eine DOS-Befehlsliste an.
   - Eine Liste aller internen Befehle wird mit /a oder /all angezeigt.
-  - Statt [color=green]help[reset] [color=cyan]BEFEHL[reset] kannst du auch mit [color=cyan]COMMAND[reset] /? die Befehlshilfe aufrufen.
+  - Statt [color=light-green]help[reset] [color=light-cyan]BEFEHL[reset] kannst du auch mit [color=light-cyan]COMMAND[reset] /? die Befehlshilfe aufrufen.
 
 Beispiele:
-  [color=green]help[reset] [color=cyan]dir[reset]
-  [color=green]help[reset] /all
+  [color=light-green]help[reset] [color=light-cyan]dir[reset]
+  [color=light-green]help[reset] /all
 
 .
 :PROGRAM_INTRO_HELP
@@ -2433,22 +2433,22 @@ Zeigt eine bildschirmfüllende Einführung in DOSBox Staging an.
 .
 :PROGRAM_INTRO_HELP_LONG
 Verwendung:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]SEITE[reset]
+  [color=light-green]intro[reset]
+  [color=light-green]intro[reset] [color=white]SEITE[reset]
 
 Wobei:
   [color=white]SEITE[reset] der Name der Seite, die angezeigt werden soll,
   einschließlich [color=white]cdrom[reset], [color=white]mount[reset], und [color=white]special[reset].
 
 Anmerkungen:
-  Wenn du [color=green]intro[reset] ohne Parameter ausführst, werden nacheinander alle
+  Wenn du [color=light-green]intro[reset] ohne Parameter ausführst, werden nacheinander alle
   Informationsseiten angezeigt; drücke eine beliebige Taste, um zur nächsten 
   Seite zu gelangen. Wenn ein Seitenname angegeben wird, wird die angegebene 
   Seite direkt angezeigt.
 
 Beispiele:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]cdrom[reset]
+  [color=light-green]intro[reset]
+  [color=light-green]intro[reset] [color=white]cdrom[reset]
 
 .
 :SHELL_CMD_MKDIR_HELP
@@ -2457,19 +2457,19 @@ Erstellt ein Verzeichnis.
 .
 :SHELL_CMD_MKDIR_HELP_LONG
 Verwendung:
-  [color=green]md[reset] [color=cyan]VERZEICHNIS[reset]
-  [color=green]mkdir[reset] [color=cyan]VERZEICHNIS[reset]
+  [color=light-green]md[reset] [color=light-cyan]VERZEICHNIS[reset]
+  [color=light-green]mkdir[reset] [color=light-cyan]VERZEICHNIS[reset]
 
 Wobei:
-  [color=cyan]VERZEICHNIS[reset] ist der Name des zu erstellenden Verzeichnisses.
+  [color=light-cyan]VERZEICHNIS[reset] ist der Name des zu erstellenden Verzeichnisses.
 
 Anmerkungen:
   - Der Verzeichnisname muss eindeutig sein und darf noch nicht existieren.
   - Du kannst einen Pfad angeben, in dem das Verzeichnis erstellt werden soll.
 
 Beispiele:
-  [color=green]md[reset] [color=cyan]spiele[reset]
-  [color=green]md[reset] [color=cyan]c:\spiele\duke3d[reset]
+  [color=light-green]md[reset] [color=light-cyan]spiele[reset]
+  [color=light-green]md[reset] [color=light-cyan]c:\spiele\duke3d[reset]
 
 .
 :SHELL_CMD_RMDIR_HELP
@@ -2478,18 +2478,18 @@ Löscht ein Verzeichnis.
 .
 :SHELL_CMD_RMDIR_HELP_LONG
 Verwendung:
-  [color=green]rd[reset] [color=cyan]VERZEICHNIS[reset]
-  [color=green]rmdir[reset] [color=cyan]VERZEICHNIS[reset]
+  [color=light-green]rd[reset] [color=light-cyan]VERZEICHNIS[reset]
+  [color=light-green]rmdir[reset] [color=light-cyan]VERZEICHNIS[reset]
 
 Wobei:
-  [color=cyan]VERZEICHNIS[reset] ist der Name des zu löschenden Verzeichnisses.
+  [color=light-cyan]VERZEICHNIS[reset] ist der Name des zu löschenden Verzeichnisses.
 
 Anmerkungen:
   Das Verzeichnis muss leer sein und darf keine Dateien oder Unterverzeichnisse
   enthalten.
 
 Beispiel:
-  [color=green]rd[reset] [color=cyan]duke3d[reset]
+  [color=light-green]rd[reset] [color=light-cyan]duke3d[reset]
 
 .
 :SHELL_CMD_SET_HELP
@@ -2498,12 +2498,12 @@ Zeigt Umgebungsvariablen an oder ändert sie.
 .
 :SHELL_CMD_SET_HELP_LONG
 Verwendung:
-  [color=green]set[reset]
-  [color=green]set[reset] [color=white]VARIABLE[reset]=[color=cyan][ZEICHENFOLGE][reset]
+  [color=light-green]set[reset]
+  [color=light-green]set[reset] [color=white]VARIABLE[reset]=[color=light-cyan][ZEICHENFOLGE][reset]
 
 Wobei:
   [color=white]VARIABLE[reset]       Der Name der Umgebungsvariable.
-  [color=cyan]ZEICHENFOLGE[reset]   Eine Reihe von Zeichen, die der Variable zugewiesen werden.
+  [color=light-cyan]ZEICHENFOLGE[reset]   Eine Reihe von Zeichen, die der Variable zugewiesen werden.
 
 Anmerkungen:
   - Wenn du der Variable eine leere Zeichenfolge zuweist,
@@ -2511,8 +2511,8 @@ Anmerkungen:
   - Der Befehl ohne einen Parameter zeigt die aktuellen Umgebungsvariablen an.
 
 Beispiele:
-  [color=green]set[reset]
-  [color=green]set[reset] [color=white]name[reset]=[color=cyan]wert[reset]
+  [color=light-green]set[reset]
+  [color=light-green]set[reset] [color=white]name[reset]=[color=light-cyan]wert[reset]
 
 .
 :SHELL_CMD_IF_HELP
@@ -2521,9 +2521,9 @@ Führt bedingte Verarbeitung in Batch-Programmen durch.
 .
 :SHELL_CMD_IF_HELP_LONG
 Verwendung:
-  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]errorlevel[reset] [color=white]ZAHL[reset] BEFEHL
-  [color=green]if[reset] [color=magenta][not][reset] [color=white]STR1==STR2[reset] BEFEHL
-  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]exist[reset] [color=white]DATEI[reset] BEFEHL
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]errorlevel[reset] [color=white]ZAHL[reset] BEFEHL
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=white]STR1==STR2[reset] BEFEHL
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]exist[reset] [color=white]DATEI[reset] BEFEHL
 
 Wobei:
   [color=white]ZAHL[reset]       Zahl, die kleiner oder gleich dem gewünschten Wert ist.
@@ -2532,16 +2532,16 @@ Wobei:
   BEFEHL     ist ein Befehl oder Programm, das ausgeführt wird inkl. Parameter.
 
 Anmerkungen:
-  BEFEHL wird ausgeführt, wenn eine der drei Bedingungen erfüllt ist. Wenn [color=magenta]not[reset]
+  BEFEHL wird ausgeführt, wenn eine der drei Bedingungen erfüllt ist. Wenn [color=light-magenta]not[reset]
   angegeben ist, wird der Befehl nur bei falscher Bedingung ausgeführt. Die
-  Bedingung [color=cyan]errorlevel[reset] prüft, ob ein Programm korrekt ausgeführt wurde. Wenn
+  Bedingung [color=light-cyan]errorlevel[reset] prüft, ob ein Programm korrekt ausgeführt wurde. Wenn
   [color=white]STR1[reset] oder [color=white]STR2[reset] leer sein darf, kannst du sie in Anführungszeichen (")
   einschließen.
 
 Beispiele:
-  [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir
-  [color=green]if[reset] [color=white]"%%myvar%%"=="meinstring"[reset] echo Hallo Welt!
-  [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]datei.txt[reset] exit
+  [color=light-green]if[reset] [color=light-cyan]errorlevel[reset] [color=white]2[reset] dir
+  [color=light-green]if[reset] [color=white]"%%myvar%%"=="meinstring"[reset] echo Hallo Welt!
+  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]datei.txt[reset] exit
 
 .
 :SHELL_CMD_GOTO_HELP
@@ -2550,10 +2550,10 @@ Springt zu einer bestimmten Zeile in einem Batch-Programm.
 .
 :SHELL_CMD_GOTO_HELP_LONG
 Verwendung:
-  [color=green]goto[reset] [color=cyan]SPRUNGMARKE[reset]
+  [color=light-green]goto[reset] [color=light-cyan]SPRUNGMARKE[reset]
 
 Wobei:
-  [color=cyan]SPRUNGMARKE[reset] ist eine Zeichenkette, die im Batch-Programm als Sprungmarke
+  [color=light-cyan]SPRUNGMARKE[reset] ist eine Zeichenkette, die im Batch-Programm als Sprungmarke
   verwendet wird.
 
 Anmerkungen:
@@ -2562,7 +2562,7 @@ Anmerkungen:
   Stelle im Batch-Programm stehen.
 
 Beispiel:
-  [color=green]goto[reset] [color=cyan]ende[reset]
+  [color=light-green]goto[reset] [color=light-cyan]ende[reset]
 
 .
 :SHELL_CMD_SHIFT_HELP
@@ -2571,18 +2571,18 @@ Befehlszeilenparameter eines Batch-Programms nach links verschieben.
 .
 :SHELL_CMD_SHIFT_HELP_LONG
 Verwendung:
-  [color=green]shift[reset]
+  [color=light-green]shift[reset]
 
 Wobei:
   Dieser Befehl hat keine Parameter.
 
 Anmerkungen:
   Mit diesem Befehl kann ein Batch-Programm mehr als 9 Parameter akzeptieren.
-  Wenn du [color=green]shift[reset] ausführst, wird die Batch-Programmvariable
+  Wenn du [color=light-green]shift[reset] ausführst, wird die Batch-Programmvariable
   %%1 auf %%0, %%2 auf %%1, usw. verschoben.
 
 Beispiel:
-  [color=green]shift[reset]
+  [color=light-green]shift[reset]
 
 .
 :SHELL_CMD_TYPE_HELP
@@ -2591,18 +2591,18 @@ Zeigt den Inhalt einer Textdatei an.
 .
 :SHELL_CMD_TYPE_HELP_LONG
 Verwendung:
-  [color=green]type[reset] [color=cyan]DATEINAME[reset]
+  [color=light-green]type[reset] [color=light-cyan]DATEINAME[reset]
 
 Wobei:
-  [color=cyan]DATEINAME[reset] ist der Name der Datei, die angezeigt werden soll.
+  [color=light-cyan]DATEINAME[reset] ist der Name der Datei, die angezeigt werden soll.
 
 Anmerkungen:
   Die Datei muss ein eindeutiger Dateiname sein, optional mit Pfadangabe.
   Dieser Befehl dient nur zum Anzeigen von Textdateien, nicht von Binärdateien.
 
 Beispiele:
-  [color=green]type[reset] [color=cyan]text.txt[reset]
-  [color=green]type[reset] [color=cyan]c:\dos\liesmich.txt[reset]
+  [color=light-green]type[reset] [color=light-cyan]text.txt[reset]
+  [color=light-green]type[reset] [color=light-cyan]c:\dos\liesmich.txt[reset]
 
 .
 :SHELL_CMD_REM_HELP
@@ -2611,10 +2611,10 @@ Kommentare in eine Batchdatei einfügen.
 .
 :SHELL_CMD_REM_HELP_LONG
 Verwendung:
-  [color=green]rem[reset] [color=cyan]KOMMENTAR[reset]
+  [color=light-green]rem[reset] [color=light-cyan]KOMMENTAR[reset]
 
 Wobei:
-  [color=cyan]KOMMENTAR[reset] ist ein Kommentar, den du hinzufügen möchtest.
+  [color=light-cyan]KOMMENTAR[reset] ist ein Kommentar, den du hinzufügen möchtest.
 
 Anmerkungen:
   Das Hinzufügen von Kommentaren zu einem Batch-Programm kann es leichter
@@ -2622,7 +2622,7 @@ Anmerkungen:
   vorübergehend auskommentieren.
 
 Beispiele:
-  [color=green]rem[reset] [color=cyan]Dies ist mein Test-Batch-Programm.[reset]
+  [color=light-green]rem[reset] [color=light-cyan]Dies ist mein Test-Batch-Programm.[reset]
 
 .
 :SHELL_CMD_NO_WILD
@@ -2635,20 +2635,20 @@ Benennt eine oder mehrere Dateien um.
 .
 :SHELL_CMD_RENAME_HELP_LONG
 Verwendung:
-  [color=green]ren[reset] [color=white]QUELLE[reset] [color=cyan]ZIEL[reset]
-  [color=green]rename[reset] [color=white]QUELLE[reset] [color=cyan]ZIEL[reset]
+  [color=light-green]ren[reset] [color=white]QUELLE[reset] [color=light-cyan]ZIEL[reset]
+  [color=light-green]rename[reset] [color=white]QUELLE[reset] [color=light-cyan]ZIEL[reset]
 
 Wobei:
   [color=white]QUELLE[reset]      ist der Name der Datei, die umbenannt werden soll.
-  [color=cyan]ZIEL[reset]        ist der neue Name für die umbenannte Datei.
+  [color=light-cyan]ZIEL[reset]        ist der neue Name für die umbenannte Datei.
 
 Anmerkungen:
   - Der Quelldateiname muss eindeutig sein, optional mit Pfadangabe.
   - Der Zieldateiname muss eindeutig und ohne Pfadangabe sein.
 
 Beispiele:
-  [color=green]ren[reset] [color=white]namealt[reset] [color=cyan]nameneu[reset]
-  [color=green]ren[reset] [color=white]c:\dos\datei.txt[reset] [color=cyan]x.txt[reset]
+  [color=light-green]ren[reset] [color=white]namealt[reset] [color=light-cyan]nameneu[reset]
+  [color=light-green]ren[reset] [color=white]c:\dos\datei.txt[reset] [color=light-cyan]x.txt[reset]
 
 .
 :SHELL_CMD_DELETE_HELP
@@ -2657,24 +2657,24 @@ Löscht eine oder mehrere Dateien.
 .
 :SHELL_CMD_DELETE_HELP_LONG
 Verwendung:
-  [color=green]del[reset] [color=cyan]ZEICHENFOLGE[reset]
-  [color=green]erase[reset] [color=cyan]ZEICHENFOLGE[reset]
+  [color=light-green]del[reset] [color=light-cyan]ZEICHENFOLGE[reset]
+  [color=light-green]erase[reset] [color=light-cyan]ZEICHENFOLGE[reset]
 
 Wobei:
-  [color=cyan]ZEICHENFOLGE[reset] kann entweder ein exakter Dateiname sein (wie [color=cyan]file.txt[reset])
+  [color=light-cyan]ZEICHENFOLGE[reset] kann entweder ein exakter Dateiname sein (wie [color=light-cyan]file.txt[reset])
   oder ein ungenauer Dateiname sein, der einen oder mehrere Platzhalter
   verwendet, nämlich das Sternchen (*), das für eine beliebige Folge von einem
   oder mehreren Zeichen steht, und das Fragezeichen (?), das für ein einzelnes
-  Zeichen steht, wie z.B. [color=cyan]*.bat[reset] und [color=cyan]c?.txt[reset].
+  Zeichen steht, wie z.B. [color=light-cyan]*.bat[reset] und [color=light-cyan]c?.txt[reset].
 
 Warnung:
   Sei vorsichtig, wenn du ein Muster mit Platzhaltern verwendest, insbesondere
-  [color=cyan]*.*[reset], da alle Dateien die mit dem Muster übereinstimmen, gelöscht werden.
+  [color=light-cyan]*.*[reset], da alle Dateien die mit dem Muster übereinstimmen, gelöscht werden.
 
 Beispiele:
-  [color=green]del[reset] [color=cyan]test.bat[reset]
-  [color=green]del[reset] [color=cyan]c*.*[reset]
-  [color=green]del[reset] [color=cyan]a?b.c*[reset]
+  [color=light-green]del[reset] [color=light-cyan]test.bat[reset]
+  [color=light-green]del[reset] [color=light-cyan]c*.*[reset]
+  [color=light-green]del[reset] [color=light-cyan]a?b.c*[reset]
 
 .
 :SHELL_CMD_COPY_HELP
@@ -2683,13 +2683,13 @@ Kopiert eine oder mehrere Dateien.
 .
 :SHELL_CMD_COPY_HELP_LONG
 Verwendung:
-  [color=green]copy[reset] [color=white]QUELLE[reset] [color=cyan][ZIEL][reset]
-  [color=green]copy[reset] [color=white]QUELLE1+QUELLE2[+...][reset] [color=cyan][ZIEL][reset]
+  [color=light-green]copy[reset] [color=white]QUELLE[reset] [color=light-cyan][ZIEL][reset]
+  [color=light-green]copy[reset] [color=white]QUELLE1+QUELLE2[+...][reset] [color=light-cyan][ZIEL][reset]
 
 Wobei:
   [color=white]QUELLE[reset]      Kann entweder ein exakter Dateiname oder ein ungenauer Dateiname
               mit Wildcards, d.h. (*) und (?) sein.
-  [color=cyan]ZIEL[reset]        Ein exakter Dateiname oder ein Verzeichnis, ohne Wildcards.
+  [color=light-cyan]ZIEL[reset]        Ein exakter Dateiname oder ein Verzeichnis, ohne Wildcards.
 
 Anmerkungen:
   Der Operator [color=white]+[reset] kombiniert mehrere bereitgestellte Quelldateien zu
@@ -2697,9 +2697,9 @@ Anmerkungen:
   die Dateien in den aktuellen Pfad kopiert.
 
 Beispiele:
-  [color=green]copy[reset] [color=white]quelle.bat[reset] [color=cyan]neu.bat[reset]
-  [color=green]copy[reset] [color=white]datei1.txt+datei2.txt[reset] [color=cyan]datei3.txt[reset]
-  [color=green]copy[reset] [color=white]..\c*.*[reset]
+  [color=light-green]copy[reset] [color=white]quelle.bat[reset] [color=light-cyan]neu.bat[reset]
+  [color=light-green]copy[reset] [color=white]datei1.txt+datei2.txt[reset] [color=light-cyan]datei3.txt[reset]
+  [color=light-green]copy[reset] [color=white]..\c*.*[reset]
 
 .
 :SHELL_CMD_CALL_HELP
@@ -2708,19 +2708,19 @@ Starte eine Batchdatei aus einer anderen Batchdatei heraus.
 .
 :SHELL_CMD_CALL_HELP_LONG
 Verwendung:
-  [color=green]call[reset] [color=white]BATCH[reset] [color=cyan][PARAMETER][reset]
+  [color=light-green]call[reset] [color=white]BATCH[reset] [color=light-cyan][PARAMETER][reset]
 
 Wobei:
   [color=white]BATCH[reset]      ist ein Batch-Programm zum Starten.
-  [color=cyan]PARAMETER[reset]  sind optionale Parameter für das Batch-Programm.
+  [color=light-cyan]PARAMETER[reset]  sind optionale Parameter für das Batch-Programm.
 
 Anmerkungen:
   Nach dem Aufruf eines anderen Batch-Programms wird das ursprüngliche 
   Batch-Programm nach dem Ende des anderen Batch-Programms fortgesetzt.
 
 Beispiele:
-  [color=green]call[reset] [color=white]meinebatch.bat[reset]
-  [color=green]call[reset] [color=white]datei.bat[reset] [color=cyan]Hallo Welt![reset]
+  [color=light-green]call[reset] [color=white]meinebatch.bat[reset]
+  [color=light-green]call[reset] [color=white]datei.bat[reset] [color=light-cyan]Hallo Welt![reset]
 
 .
 :SHELL_CMD_SUBST_HELP
@@ -2729,21 +2729,21 @@ Einem Laufwerk ein internes Verzeichnis zuweisen.
 .
 :SHELL_CMD_SUBST_HELP_LONG
 Verwendung:
-  [color=green]subst[reset] [color=white]LAUFWERK[reset] [color=cyan]PFAD[reset]
-  [color=green]subst[reset] [color=white]LAUFWERK[reset] /d
+  [color=light-green]subst[reset] [color=white]LAUFWERK[reset] [color=light-cyan]PFAD[reset]
+  [color=light-green]subst[reset] [color=white]LAUFWERK[reset] /d
 
 Wobei:
   [color=white]LAUFWERK[reset] ist ein Laufwerk, dem du einen Pfad zuweisen möchtest.
-  [color=cyan]PFAD[reset]     ist ein eingebundener DOS-Pfad, den du zuweisen möchtest.
+  [color=light-cyan]PFAD[reset]     ist ein eingebundener DOS-Pfad, den du zuweisen möchtest.
 
 Anmerkungen:
-  Der Pfad muss sich auf einem Laufwerk befinden, das mit dem Befehl [color=green]mount[reset]
+  Der Pfad muss sich auf einem Laufwerk befinden, das mit dem Befehl [color=light-green]mount[reset]
   eingebunden wurde.
   Du kannst ein zugewiesenes Laufwerk mit der Option /d entfernen.
 
 Beispiele:
-  [color=green]subst[reset] [color=white]d:[reset] [color=cyan]c:\spiele[reset]
-  [color=green]subst[reset] [color=white]e:[reset] [color=cyan]/d[reset]
+  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\spiele[reset]
+  [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]
 
 .
 :SHELL_CMD_LOADHIGH_HELP
@@ -2752,11 +2752,11 @@ Lädt ein DOS-Programm in den oberen Speicher.
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
 Verwendung:
-  [color=green]lh[reset] [color=cyan]PROGRAMM[reset] [color=white][PARAMETER][reset]
-  [color=green]loadhigh[reset] [color=cyan]PROGRAMM[reset] [color=white][PARAMETER][reset]
+  [color=light-green]lh[reset] [color=light-cyan]PROGRAMM[reset] [color=white][PARAMETER][reset]
+  [color=light-green]loadhigh[reset] [color=light-cyan]PROGRAMM[reset] [color=white][PARAMETER][reset]
 
 Wobei:
-  [color=cyan]PROGRAMM[reset] ist ein DOS TSR-Programm, das geladen werden soll, optional
+  [color=light-cyan]PROGRAMM[reset] ist ein DOS TSR-Programm, das geladen werden soll, optional
   mit Parametern.
 
 Anmerkungen:
@@ -2767,7 +2767,7 @@ Anmerkungen:
   Nicht alle DOS TSR-Programme können in den oberen Speicher geladen werden.
 
 Beispiele:
-  [color=green]lh[reset] [color=cyan]tsrapp[reset] [color=white]parameter[reset]
+  [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]parameter[reset]
 
 .
 :SHELL_CMD_LS_HELP
@@ -2776,22 +2776,22 @@ Zeigt den Inhalt des Verzeichnisses im breiten Listenformat an.
 .
 :SHELL_CMD_LS_HELP_LONG
 Verwendung:
-  [color=green]ls[reset] [color=cyan]ZEICHENFOLGE[reset]
-  [color=green]ls[reset] [color=cyan]PFAD[reset]
+  [color=light-green]ls[reset] [color=light-cyan]ZEICHENFOLGE[reset]
+  [color=light-green]ls[reset] [color=light-cyan]PFAD[reset]
 
 Wobei:
-  [color=cyan]ZEICHENFOLGE[reset] kann entweder ein eindeutiger Dateiname sein oder ein ungenauer
+  [color=light-cyan]ZEICHENFOLGE[reset] kann entweder ein eindeutiger Dateiname sein oder ein ungenauer
   Dateiname mit Wildcards, d.h. dem Sternchen (*) und dem Fragezeichen (?).
-  [color=cyan]PFAD[reset]    ist ein eindeutiger Pfad in einem gemounteten DOS-Laufwerk, um den
+  [color=light-cyan]PFAD[reset]    ist ein eindeutiger Pfad in einem gemounteten DOS-Laufwerk, um den
   Inhalt aufzulisten.
 
 Anmerkungen:
-  Der Befehl listet Verzeichnisse in [color=blue]blau[reset], ausführbare DOS-Programme
-   (*.com, *.exe, *.bat) in [color=green]grün[reset], und andere Dateien in der normalen Farbe.
+  Der Befehl listet Verzeichnisse in [color=light-blue]blau[reset], ausführbare DOS-Programme
+   (*.com, *.exe, *.bat) in [color=light-green]grün[reset], und andere Dateien in der normalen Farbe.
 
 Beispiele:
-  [color=green]ls[reset] [color=cyan]datei.txt[reset]
-  [color=green]ls[reset] [color=cyan]c*.ba?[reset]
+  [color=light-green]ls[reset] [color=light-cyan]datei.txt[reset]
+  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
 
 .
 :SHELL_CMD_LS_PATH_ERR
@@ -2838,31 +2838,31 @@ Wartet auf einen Tastendruck und setzt ERRORLEVEL.
 .
 :SHELL_CMD_CHOICE_HELP_LONG
 Verwendung:
-  [color=green]choice[reset] [color=cyan][TEXT][reset]
-  [color=green]choice[reset] /c[:][color=white]TASTEN[reset] /n /s /t[:][color=white]c[reset],[color=magenta]nn[reset] [color=cyan][TEXT][reset]
+  [color=light-green]choice[reset] [color=light-cyan][TEXT][reset]
+  [color=light-green]choice[reset] /c[:][color=white]TASTEN[reset] /n /s /t[:][color=white]c[reset],[color=light-magenta]nn[reset] [color=light-cyan][TEXT][reset]
 
 Wobei:
-  [color=cyan]TEXT[reset]         ist der Text, der als Aufforderung angezeigt werden soll.
+  [color=light-cyan]TEXT[reset]         ist der Text, der als Aufforderung angezeigt werden soll.
   /c[:][color=white]TASTEN[reset]  Legt die zulässigen Tasten fest. Standardmäßig sind das [color=white]yn[reset].
   /n           Zeige Auswahlmöglichkeiten am Ende der Aufforderung nicht an.
   /s           Berücksichtigt Groß- und Kleinschreibung bei der Auswahl.
-  /t[:][color=white]c[reset],[color=magenta]nn[reset]    Standardmäßig wird [color=white]c[reset] nach [color=magenta]nn[reset] Sekunden ausgewählt.
+  /t[:][color=white]c[reset],[color=light-magenta]nn[reset]    Standardmäßig wird [color=white]c[reset] nach [color=light-magenta]nn[reset] Sekunden ausgewählt.
 
 Anmerkungen:
   Dieser Befehl setzt einen ERRORLEVEL-Wert, der bei 1 beginnt, entsprechend
   den zulässigen Tasten, die in der Option /c angegeben sind, und die Benutzer-
-  eingabe kann dann mit dem Befehl [color=green]if[reset] überprüft werden. Mit der Option /n wird
+  eingabe kann dann mit dem Befehl [color=light-green]if[reset] überprüft werden. Mit der Option /n wird
   nur der angegebene Text angezeigt, aber nicht die tatsächlichen Auswahl-
   möglichkeiten (wie z. B. der Standardwert [color=white][Y,N]?[reset]).
 
 Beispiele:
-  [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Fortfahren?[reset]
-  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Tippe den Buchstaben a, b, oder c ein[reset]
+  [color=light-green]choice[reset] /t:[color=white]y[reset],[color=light-magenta]2[reset] [color=light-cyan]Fortfahren?[reset]
+  [color=light-green]choice[reset] /c:[color=white]abc[reset] /s [color=light-cyan]Tippe den Buchstaben a, b, oder c ein[reset]
 
 .
 :SHELL_CMD_CHOICE_EOF
 
-[color=red]Auswahl fehlgeschlagen[reset]: Die Eingabe wurde ohne eine gültige Auswahl beendet.
+[color=light-red]Auswahl fehlgeschlagen[reset]: Die Eingabe wurde ohne eine gültige Auswahl beendet.
 
 .
 :SHELL_CMD_CHOICE_ABORTED
@@ -2876,21 +2876,21 @@ Zeigt einen Suchpfad für ausführbare Dateien an oder legt ihn fest.
 .
 :SHELL_CMD_PATH_HELP_LONG
 Verwendung:
-  [color=green]path[reset]
-  [color=green]path[reset] [color=cyan][[laufwerk:]pfad[;...][reset]
+  [color=light-green]path[reset]
+  [color=light-green]path[reset] [color=light-cyan][[laufwerk:]pfad[;...][reset]
 
 Wobei:
-  [color=cyan][[laufwerk:]pfad[;...][reset] ist ein Pfad, der ein Laufwerk und ein
+  [color=light-cyan][[laufwerk:]pfad[;...][reset] ist ein Pfad, der ein Laufwerk und ein
   Verzeichnis enthält. Es kann mehr als ein Pfad angegeben werden, getrennt
   durch ein Semikolon (;).
 
 Anmerkungen:
   Ein Parameter mit nur einem Semikolon (;) löscht alle Suchpfadeinstellungen.
-  Der Pfad kann auch mit dem Befehl [color=green]set[reset] gesetzt werden, z.B. [color=green]set[reset] [color=white]path[reset]=[color=cyan]Z:\[reset]
+  Der Pfad kann auch mit dem Befehl [color=light-green]set[reset] gesetzt werden, z.B. [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\[reset]
 
 Beispiele:
-  [color=green]path[reset]
-  [color=green]path[reset] [color=cyan]Z:\;C:\DOS[reset]
+  [color=light-green]path[reset]
+  [color=light-green]path[reset] [color=light-cyan]Z:\;C:\DOS[reset]
 
 .
 :SHELL_CMD_VER_HELP
@@ -2899,22 +2899,22 @@ Zeigt die gemeldete DOS-Version oder ändert sie.
 .
 :SHELL_CMD_VER_HELP_LONG
 Verwendung:
-  [color=green]ver[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSION[reset]
+  [color=light-green]ver[reset]
+  [color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]VERSION[reset]
 
 Wobei:
-  [color=cyan]VERSION[reset] kann eine ganze Zahl sein, wie z.B. [color=cyan]5[reset], oder eine zweistellige 
-          Dezimalzahl sein wie z.B.: [color=cyan]6.22[reset], [color=cyan]7.01[reset], oder [color=cyan]7.10[reset]. Die Dezimalstelle
+  [color=light-cyan]VERSION[reset] kann eine ganze Zahl sein, wie z.B. [color=light-cyan]5[reset], oder eine zweistellige 
+          Dezimalzahl sein wie z.B.: [color=light-cyan]6.22[reset], [color=light-cyan]7.01[reset], oder [color=light-cyan]7.10[reset]. Die Dezimalstelle
           kann alternativ durch Leerzeichen getrennt werden,
-          wie z.B.: [color=cyan]6 22[reset], [color=cyan]7 01[reset], oder [color=cyan]7 10[reset].
+          wie z.B.: [color=light-cyan]6 22[reset], [color=light-cyan]7 01[reset], oder [color=light-cyan]7 10[reset].
 
 Anmerkungen:
   Die DOS-Version kann auch in der Konfigurationsdatei unter dem [dos]
-  Abschnitt mit der Einstellung "ver = [color=cyan]VERSION[reset]" gesetzt werden.
+  Abschnitt mit der Einstellung "ver = [color=light-cyan]VERSION[reset]" gesetzt werden.
 
 Beispiele:
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]6.22[reset]
-  [color=green]ver[reset] [color=white]set[reset] [color=cyan]7 10[reset]
+  [color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]6.22[reset]
+  [color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]7 10[reset]
 
 .
 :SHELL_CMD_VER_VER
@@ -2945,8 +2945,8 @@ Unbekannter Befehl
 Lädt oder entfernt den integrierten ReelMagic Full Motion Player-Treiber.
 
 Verwendung:
-  [color=green]fmpdrv[reset]    (lädt den Treiber)
-  [color=green]fmpdrv[reset] /u (entfernt den Treiber)
+  [color=light-green]fmpdrv[reset]    (lädt den Treiber)
+  [color=light-green]fmpdrv[reset] /u (entfernt den Treiber)
 
 Anmerkungen:
   Die Konfigurationseinstellung "reelmagic = on" lädt den
@@ -2958,27 +2958,27 @@ ReelMagic Full Motion Player Treiber (integriert) %hhu.%hhu
 
 .
 :PROGRAM_FMPDRV_LOADED
-[reset][color=light-yellow]Geladen bei Interrupt %xh[reset]
+[reset][color=brown]Geladen bei Interrupt %xh[reset]
 
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
-[reset][color=light-yellow]Bereits bei Interrupt %xh geladen[reset]
+[reset][color=brown]Bereits bei Interrupt %xh geladen[reset]
 
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
-[reset][color=red]Nicht geladen: Keine freien Interrupts![reset]
+[reset][color=light-red]Nicht geladen: Keine freien Interrupts![reset]
 
 .
 :PROGRAM_FMPDRV_UNLOADED
-[reset][color=light-yellow]Treiber entfernt[reset]
+[reset][color=brown]Treiber entfernt[reset]
 
 .
 :PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
-[reset][color=light-yellow]Treiber wurde nicht geladen[reset]
+[reset][color=brown]Treiber wurde nicht geladen[reset]
 
 .
 :PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
-[reset][color=light-yellow]Treiber nicht entfernt: Er ist so konfiguriert,
+[reset][color=brown]Treiber nicht entfernt: Er ist so konfiguriert,
 dass er dauerhaft geladen bleibt[reset]
 
 .
@@ -2986,66 +2986,66 @@ dass er dauerhaft geladen bleibt[reset]
 Zeigt die Befehlsausgabe oder eine Textdatei bildschirmweise an.
 
 Verwendung:
-  [color=cyan]COMMAND[reset] | [color=green]more[reset] [/t[color=white]n[reset]]
-  [color=green]more[reset] [/t[color=white]n[reset]] < [color=cyan]DATEI[reset]
-  [color=green]more[reset] [/t[color=white]n[reset]] [color=cyan]ZEICHEN[reset] [[color=cyan]ZEICHEN[reset] ...]
+  [color=light-cyan]COMMAND[reset] | [color=light-green]more[reset] [/t[color=white]n[reset]]
+  [color=light-green]more[reset] [/t[color=white]n[reset]] < [color=light-cyan]DATEI[reset]
+  [color=light-green]more[reset] [/t[color=white]n[reset]] [color=light-cyan]ZEICHEN[reset] [[color=light-cyan]ZEICHEN[reset] ...]
 
 Wobei:
-  [color=cyan]COMMAND[reset]  der Befehl, dessen Ausgabe angezeigt werden soll.
-  [color=cyan]DATEI[reset]    eindeutiger Name der anzuzeigenden Datei.
-  [color=cyan]ZEICHEN[reset]  Pfad zu einer Datei, optional mit Wildcards.
+  [color=light-cyan]COMMAND[reset]  der Befehl, dessen Ausgabe angezeigt werden soll.
+  [color=light-cyan]DATEI[reset]    eindeutiger Name der anzuzeigenden Datei.
+  [color=light-cyan]ZEICHEN[reset]  Pfad zu einer Datei, optional mit Wildcards.
   [color=white]n[reset]        ist die Tabulatorgröße, 1-9, Standard ist 8.
 
 Anmerkungen:
   Dieser Befehl dient nur zum Anzeigen von Textdateien, nicht von Binärdateien.
 
 Beispiele:
-  [color=cyan]dir /on[reset] | [color=green]more[reset]            zeigt das sortierte Verzeichnis bildschirmweise an
-  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUAL.TXT[reset]  zeigt den Inhalt der Datei mit Tabulatorgröße 4
+  [color=light-cyan]dir /on[reset] | [color=light-green]more[reset]            zeigt das sortierte Verzeichnis bildschirmweise an
+  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\MANUAL.TXT[reset]  zeigt den Inhalt der Datei mit Tabulatorgröße 4
 
 .
 :PROGRAM_MORE_NO_FILE
 Keine Eingabedatei gefunden.
 .
 :PROGRAM_MORE_END
-[reset][color=light-yellow]--- Ende der Eingabe ---[reset]
+[reset][color=brown]--- Ende der Eingabe ---[reset]
 .
 :PROGRAM_MORE_NEW_FILE
-[reset][color=light-yellow]--- datei %s ---[reset]
+[reset][color=brown]--- datei %s ---[reset]
 .
 :PROGRAM_MORE_NEW_DEVICE
-[reset][color=light-yellow]--- gerät %s ---[reset]
+[reset][color=brown]--- gerät %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- Drücke die Leertaste für mehr ---[reset]
+[reset][color=brown]--- Drücke die Leertaste für mehr ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- Leertaste für mehr, N für nächste Datei ---[reset]
+[reset][color=brown]--- Leertaste für mehr, N für nächste Datei ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
-[reset][color=red]--- %s konnte nicht geöffnet werden ---[reset]
+[reset][color=light-red]--- %s konnte nicht geöffnet werden ---[reset]
 .
 :PROGRAM_MORE_TERMINATE
-[reset][color=light-yellow](abgebrochen)[reset]
+[reset][color=brown](abgebrochen)[reset]
 .
 :PROGRAM_MORE_NEXT_FILE
-[reset][color=light-yellow](nächste Datei)[reset]
+[reset][color=brown](nächste Datei)[reset]
 .
 :PROGRAM_MOUSECTL_HELP_LONG
 Verwaltet reale und logische Mäuse.
 
 Verwendung:
-  [color=green]mousectl[reset] [-all]
-  [color=green]mousectl[reset] [color=white]SCHNITTSTELLE[reset] -map [color=cyan]NAME[reset]
-  [color=green]mousectl[reset] [color=white]SCHNITTSTELLE[reset] [[color=white]SCHNITTSTELLE[reset] ...] -map
-  [color=green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -unmap | -on | -off | -reset
-  [color=green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -s | -sx | -sy [sensitivity]
-  [color=green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -s sensitivity_x sensitivity_y
-  [color=green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -r [min_rate]
+  [color=light-green]mousectl[reset] [-all]
+  [color=light-green]mousectl[reset] [color=white]SCHNITTSTELLE[reset] -map [color=light-cyan]NAME[reset]
+  [color=light-green]mousectl[reset] [color=white]SCHNITTSTELLE[reset] [[color=white]SCHNITTSTELLE[reset] ...] -map
+  [color=light-green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -unmap | -on | -off | -reset
+  [color=light-green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -s | -sx | -sy [sensitivity]
+  [color=light-green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -s sensitivity_x sensitivity_y
+  [color=light-green]mousectl[reset] [[color=white]SCHNITTSTELLE[reset] ...] -r [min_rate]
 
 Wobei:
   [color=white]SCHNITTSTELLE[reset]  entweder [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
-  -map -unmap    eine reale Maus zuordnen/entfernen [color=cyan]NAME[reset]
+  -map -unmap    eine reale Maus zuordnen/entfernen [color=light-cyan]NAME[reset]
   -s -sx -sy     Empfindlichkeit für die x-/y-Achse, von -999 bis +999
   -r             legt die minimale Abtastrate der Maus fest
   -on -off       angegebene Maus aktivieren/deaktivieren
@@ -3055,7 +3055,7 @@ Anmerkungen:
   Wird die Empfindlichkeit/Rate nicht angegeben, werden Standardwerte verwendet.
 
 Beispiele:
-  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map   Auswahl der Mäuse für Spiel mit 2 Spielern
+  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map   Auswahl der Mäuse für Spiel mit 2 Spielern
 .
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Falsche Syntax, nur ASCII-Zeichen erlaubt.
@@ -3098,13 +3098,13 @@ Es wurde keine Maus gefunden, die dem Suchkriterium entspricht.
 [color=white]Schnittstelle  Empfindlichkeit  Rate (Hz)     Status[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT1
-[color=cyan]%-4s[reset]           X:%+.3d Y:%+.3d  %1s %3s           %s
+[color=light-cyan]%-4s[reset]           X:%+.3d Y:%+.3d  %1s %3s           %s
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER2
 [color=white]Schnittstelle Maus-Bezeichnung[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2
-[color=cyan]%-4s[reset]          %s
+[color=light-cyan]%-4s[reset]          %s
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
 nicht zugeordnet %s
@@ -3116,13 +3116,13 @@ verwendet Systemzeiger
 zugeordnete reale Maus
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
-[color=red]zugeordnete Maus entfernt[reset]
+[color=light-red]zugeordnete Maus entfernt[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
 deaktiviert
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
-Die Abtastraten für Mäuse an [color=cyan]COM[reset]-Schnittstellen sind nur Schätzungen.
+Die Abtastraten für Mäuse an [color=light-cyan]COM[reset]-Schnittstellen sind nur Schätzungen.
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
 Abtastraten mit eingestelltem Mindestwert sind mit '*' markiert.

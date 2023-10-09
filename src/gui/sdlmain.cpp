@@ -4667,7 +4667,7 @@ int sdl_main(int argc, char* argv[])
 		        "There is no property '%s' in section [%s]\n");
 
 		MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-		        "Usage: [color=green]config [/reset]-set [color=cyan][SECTION][/reset] "
+		        "Usage: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] "
 		        "[color=white]PROPERTY[/reset][=][color=white]VALUE[/reset]\n");
 
 		for (auto line : arguments->set) {

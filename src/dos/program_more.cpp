@@ -183,14 +183,14 @@ void MORE::AddMessages()
 	        "Display command output or text file one screen at a time.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=cyan]COMMAND[reset] | [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]\n"
-	        "  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=cyan]FILE[reset]\n"
-	        "  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=cyan]PATTERN[reset] [[color=cyan]PATTERN[reset] ...]\n"
+	        "  [color=light-cyan]COMMAND[reset] | [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]\n"
+	        "  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=light-cyan]FILE[reset]\n"
+	        "  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=light-cyan]PATTERN[reset] [[color=light-cyan]PATTERN[reset] ...]\n"
 	        "\n"
 	        "Where:\n"
-	        "  [color=cyan]COMMAND[reset] is the command to display the output of.\n"
-	        "  [color=cyan]FILE[reset]    is an exact name of the file to display, optionally with a path.\n"
-	        "  [color=cyan]PATTERN[reset] is either a path to a single file or a path with wildcards,\n"
+	        "  [color=light-cyan]COMMAND[reset] is the command to display the output of.\n"
+	        "  [color=light-cyan]FILE[reset]    is an exact name of the file to display, optionally with a path.\n"
+	        "  [color=light-cyan]PATTERN[reset] is either a path to a single file or a path with wildcards,\n"
 	        "          which are the asterisk (*) and the question mark (?).\n"
 	        "  /c      clears the screen before each file.\n"
 	        "  /e      extended mode, with more hotkeys available.\n"
@@ -207,7 +207,7 @@ void MORE::AddMessages()
 	        "  [color=yellow]N[reset] or [color=yellow]F[reset]         to skip to the next file.\n"
 	        "  [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] to terminate the command.\n"
 	        "  Also, the [color=yellow]Ctrl+C[reset] can be used to terminate the command reading data from the\n"
-	        "  keyboard input, like when [color=green]more[reset] is executed without any arguments.\n"
+	        "  keyboard input, like when [color=light-green]more[reset] is executed without any arguments.\n"
 	        "  The following extra hotkeys are available in extended mode only:\n"
 	        "  [color=yellow]P[reset] [color=white]nnn[reset]          to display the next [color=white]nnn[reset] lines and prompt again.\n"
 	        "  [color=yellow]S[reset] [color=white]nnn[reset]          to skip the next [color=white]nnn[reset] lines.\n"
@@ -215,36 +215,36 @@ void MORE::AddMessages()
 	        "  Option /p disables certain incompatible hotkeys.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=cyan]dir /on[reset] | [color=green]more[reset]             ; displays sorted directory one screen at a time\n"
-	        "  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\\MANUAL.TXT[reset]   ; shows the file's content with tab size 4\n");
+	        "  [color=light-cyan]dir /on[reset] | [color=light-green]more[reset]             ; displays sorted directory one screen at a time\n"
+	        "  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\\MANUAL.TXT[reset]   ; shows the file's content with tab size 4\n");
 
 	MSG_Add("PROGRAM_MORE_NO_FILE", "No input file found.");
 	MSG_Add("PROGRAM_MORE_END",
-	        "[reset][color=light-yellow]--- end of input ---[reset]");
+	        "[reset][color=brown]--- end of input ---[reset]");
 	MSG_Add("PROGRAM_MORE_NEW_FILE",
-	        "[reset][color=light-yellow]--- file %s ---[reset]");
+	        "[reset][color=brown]--- file %s ---[reset]");
 	MSG_Add("PROGRAM_MORE_NEW_DEVICE",
-	        "[reset][color=light-yellow]--- device %s ---[reset]");
+	        "[reset][color=brown]--- device %s ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_SINGLE",
-	        "[reset][color=light-yellow]--- press SPACE for next page, ENTER for next line, Q to quit ---[reset]");
+	        "[reset][color=brown]--- press SPACE for next page, ENTER for next line, Q to quit ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_PERCENT",
-	        "[reset][color=light-yellow]--- (%d%%) press SPACE for next page, ENTER for next line, Q to quit ---[reset]");
+	        "[reset][color=brown]--- (%d%%) press SPACE for next page, ENTER for next line, Q to quit ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_MULTI",
-	        "[reset][color=light-yellow]--- press SPACE or ENTER for more, N for next file, Q to quit ---[reset]");
+	        "[reset][color=brown]--- press SPACE or ENTER for more, N for next file, Q to quit ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_SHORT",
-	        "[reset][color=light-yellow]--- more ---[reset]");
+	        "[reset][color=brown]--- more ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_SHORT_PERCENT",
-	        "[reset][color=light-yellow]--- (%d%%) more ---[reset]");
+	        "[reset][color=brown]--- (%d%%) more ---[reset]");
 	MSG_Add("PROGRAM_MORE_PROMPT_LINE",
-	        "[reset][color=light-yellow]--- line %u ---[reset]");
+	        "[reset][color=brown]--- line %u ---[reset]");
 	MSG_Add("PROGRAM_MORE_OPEN_ERROR",
-	        "[reset][color=red]--- could not open %s ---[reset]");
+	        "[reset][color=light-red]--- could not open %s ---[reset]");
 	MSG_Add("PROGRAM_MORE_TERMINATE",
-	        "[reset][color=light-yellow](terminated)[reset]");
+	        "[reset][color=brown](terminated)[reset]");
 	MSG_Add("PROGRAM_MORE_NEXT_FILE",
-	        "[reset][color=light-yellow](next file)[reset]");
+	        "[reset][color=brown](next file)[reset]");
 	MSG_Add("PROGRAM_MORE_SKIPPED",
-	        "[reset][color=light-yellow](skipped content)[reset]");
+	        "[reset][color=brown](skipped content)[reset]");
 	MSG_Add("PROGRAM_MORE_HOW_MANY_LINES",
-	        "[reset][color=light-yellow]how many lines?[reset]");
+	        "[reset][color=brown]how many lines?[reset]");
 }

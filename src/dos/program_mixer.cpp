@@ -256,27 +256,27 @@ void MIXER::AddMessages()
 	        "Displays or changes the sound mixer settings.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]mixer[reset] [color=cyan][CHANNEL][reset] [color=white]COMMANDS[reset] [/noshow]\n"
-	        "  [color=green]mixer[reset] [/listmidi]\n"
+	        "  [color=light-green]mixer[reset] [color=light-cyan][CHANNEL][reset] [color=white]COMMANDS[reset] [/noshow]\n"
+	        "  [color=light-green]mixer[reset] [/listmidi]\n"
 	        "\n"
 	        "Where:\n"
-	        "  [color=cyan]CHANNEL[reset]  is the sound channel to change the settings of.\n"
+	        "  [color=light-cyan]CHANNEL[reset]  is the sound channel to change the settings of.\n"
 	        "  [color=white]COMMANDS[reset] is one or more of the following commands:\n"
 	        "    Volume:    [color=white]0[reset] to [color=white]100[reset], or decibel value prefixed with [color=white]d[reset] (e.g. [color=white]d-7.5[reset])\n"
 	        "               use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])\n"
 	        "    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)\n"
 	        "    Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]\n"
 	        "Notes:\n"
-	        "  - Run [color=green]mixer[reset] without arguments to view the current settings.\n"
+	        "  - Run [color=light-green]mixer[reset] without arguments to view the current settings.\n"
 	        "  - You may change the settings of more than one channel in a single command.\n"
 	        "  - If channel is unspecified, you can set crossfeed, reverb, or chorus\n"
 	        "    globally for all channels.\n"
-	        "  - Run [color=green]mixer[reset] /listmidi to list all available MIDI devices.\n"
+	        "  - Run [color=light-green]mixer[reset] /listmidi to list all available MIDI devices.\n"
 	        "  - The /noshow option applies the changes without showing the mixer settings.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]mixer[reset] [color=cyan]cdaudio[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
-	        "  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]opl[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]");
+	        "  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow\n"
+	        "  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]");
 
 	MSG_Add("SHELL_CMD_MIXER_HEADER_LAYOUT",
 	        "%-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s");
@@ -323,7 +323,7 @@ void MIXER::ShowMixerStatus()
 
 	MIXER_LockAudioDevice();
 
-	constexpr auto master_channel_string = "[color=cyan]MASTER[reset]";
+	constexpr auto master_channel_string = "[color=light-cyan]MASTER[reset]";
 
 	show_channel(convert_ansi_markup(master_channel_string),
 	             MIXER_GetMasterVolume(),
@@ -363,7 +363,7 @@ void MIXER::ShowMixerStatus()
 			}
 		}
 
-		auto channel_name = std::string("[color=cyan]") + name +
+		auto channel_name = std::string("[color=light-cyan]") + name +
 		                    std::string("[reset]");
 
 		auto mode = chan->DescribeLineout();

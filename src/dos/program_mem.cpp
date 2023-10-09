@@ -114,7 +114,7 @@ void MEM::AddMessages()
 	        "Displays the DOS memory information.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]mem[reset]\n"
+	        "  [color=light-green]mem[reset]\n"
 	        "\n"
 	        "Where:\n"
 	        "  This command has no parameters.\n"
@@ -124,7 +124,7 @@ void MEM::AddMessages()
 	        "  memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.\n"
 	        "\n"
 	        "Examples:\n"
-	        "  [color=green]mem[reset]\n");
+	        "  [color=light-green]mem[reset]\n");
 	MSG_Add("PROGRAM_MEM_CONVEN", "%10d kB free conventional memory\n");
 	MSG_Add("PROGRAM_MEM_EXTEND", "%10d kB free extended memory\n");
 	MSG_Add("PROGRAM_MEM_EXPAND", "%10d kB free expanded memory\n");

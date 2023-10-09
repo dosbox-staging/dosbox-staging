@@ -1232,47 +1232,47 @@ https://github.com/dosbox-staging/dosbox-staging/wiki
 Performs scripted keyboard entry into a running DOS game.
 
 Usage:
-  [color=green]autotype[reset] -list
-  [color=green]autotype[reset] [-w [color=white]WAIT[reset]] [-p [color=white]PACE[reset]] [color=cyan]BUTTONS[reset]
+  [color=light-green]autotype[reset] -list
+  [color=light-green]autotype[reset] [-w [color=white]WAIT[reset]] [-p [color=white]PACE[reset]] [color=light-cyan]BUTTONS[reset]
 
 Where:
   [color=white]WAIT[reset]    is the number of seconds to wait before typing begins (max of 30).
   [color=white]PACE[reset]    is the number of seconds before each keystroke (max of 10).
-  [color=cyan]BUTTONS[reset] is one or more space-separated buttons.
+  [color=light-cyan]BUTTONS[reset] is one or more space-separated buttons.
 
 Notes:
-  The [color=cyan]BUTTONS[reset] supplied in the command will be autotyped into running DOS games
-  after they start. Autotyping begins after [color=cyan]WAIT[reset] seconds, and each button is
-  entered every [color=white]PACE[reset] seconds. The [color=cyan],[reset] character inserts an extra [color=white]PACE[reset] delay.
+  The [color=light-cyan]BUTTONS[reset] supplied in the command will be autotyped into running DOS games
+  after they start. Autotyping begins after [color=light-cyan]WAIT[reset] seconds, and each button is
+  entered every [color=white]PACE[reset] seconds. The [color=light-cyan],[reset] character inserts an extra [color=white]PACE[reset] delay.
   [color=white]WAIT[reset] and [color=white]PACE[reset] default to 2 and 0.5 seconds respectively if not specified.
   A list of all available button names can be obtained using the -list option.
 
 Examples:
-  [color=green]autotype[reset] -list
-  [color=green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=cyan]up enter , right enter[reset]
-  [color=green]autotype[reset] -p [color=white]0.2[reset] [color=cyan]f1 kp_8 , , enter[reset]
-  [color=green]autotype[reset] -w [color=white]1.3[reset] [color=cyan]esc enter , p l a y e r enter
+  [color=light-green]autotype[reset] -list
+  [color=light-green]autotype[reset] -w [color=white]1[reset] -p [color=white]0.3[reset] [color=light-cyan]up enter , right enter[reset]
+  [color=light-green]autotype[reset] -p [color=white]0.2[reset] [color=light-cyan]f1 kp_8 , , enter[reset]
+  [color=light-green]autotype[reset] -w [color=white]1.3[reset] [color=light-cyan]esc enter , p l a y e r enter
 [reset]
 .
 :PROGRAM_BOOT_HELP_LONG
 Boots DOSBox Staging from a DOS drive or disk image.
 
 Usage:
-  [color=green]boot[reset] [color=white]DRIVE[reset]
-  [color=green]boot[reset] [color=cyan]IMAGEFILE[reset]
+  [color=light-green]boot[reset] [color=white]DRIVE[reset]
+  [color=light-green]boot[reset] [color=light-cyan]IMAGEFILE[reset]
 
 Where:
   [color=white]DRIVE[reset] is a drive to boot from, must be [color=white]A:[reset], [color=white]C:[reset], or [color=white]D:[reset].
-  [color=cyan]IMAGEFILE[reset] is one or more floppy images, separated by spaces.
+  [color=light-cyan]IMAGEFILE[reset] is one or more floppy images, separated by spaces.
 
 Notes:
-  A DOS drive letter must have been mounted previously with [color=green]imgmount[reset] command.
+  A DOS drive letter must have been mounted previously with [color=light-green]imgmount[reset] command.
   The DOS drive or disk image must be bootable, containing DOS system files.
   If more than one disk images are specified, you can swap them with a hotkey.
 
 Examples:
-  [color=green]boot[reset] [color=white]c:[reset]
-  [color=green]boot[reset] [color=cyan]disk1.ima disk2.ima[reset]
+  [color=light-green]boot[reset] [color=white]c:[reset]
+  [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]
 
 .
 :PROGRAM_BOOT_NOT_EXIST
@@ -1295,9 +1295,9 @@ by pressing %s+F4, and -l specifies the mounted drive to boot from.  If
 no drive letter is specified, this defaults to booting from the A drive.
 The only bootable drive letters are A, C, and D.  For booting from a hard
 drive (C or D), the image should have already been mounted using the
-[color=blue]IMGMOUNT[reset] command.
+[color=light-blue]IMGMOUNT[reset] command.
 
-Type [color=blue]BOOT /?[reset] for the syntax of this command.
+Type [color=light-blue]BOOT /?[reset] for the syntax of this command.
 
 .
 :PROGRAM_BOOT_UNABLE
@@ -1331,8 +1331,8 @@ No PCjr cartridge commands found
 Load or unload the built-in ReelMagic Full Motion Player driver.
 
 Usage:
-  [color=green]fmpdrv[reset]    (loads the driver)
-  [color=green]fmpdrv[reset] /u (unloads the driver)
+  [color=light-green]fmpdrv[reset]    (loads the driver)
+  [color=light-green]fmpdrv[reset] /u (unloads the driver)
 
 Notes:
   The "reelmagic = on" configuration setting loads the
@@ -1344,27 +1344,27 @@ ReelMagic Full Motion Player Driver (built-in) %hhu.%hhu
 
 .
 :PROGRAM_FMPDRV_LOADED
-[reset][color=light-yellow]Loaded at interrupt %xh[reset]
+[reset][color=brown]Loaded at interrupt %xh[reset]
 
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED
-[reset][color=light-yellow]Already loaded at interrupt %xh[reset]
+[reset][color=brown]Already loaded at interrupt %xh[reset]
 
 .
 :PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT
-[reset][color=red]Not loaded: No free interrupts![reset]
+[reset][color=light-red]Not loaded: No free interrupts![reset]
 
 .
 :PROGRAM_FMPDRV_UNLOADED
-[reset][color=light-yellow]Driver unloaded[reset]
+[reset][color=brown]Driver unloaded[reset]
 
 .
 :PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED
-[reset][color=light-yellow]Driver was not loaded[reset]
+[reset][color=brown]Driver was not loaded[reset]
 
 .
 :PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED
-[reset][color=light-yellow]Driver not unloaded: configured to stay resident[reset]
+[reset][color=brown]Driver not unloaded: configured to stay resident[reset]
 
 .
 :MSCDEX_SUCCESS
@@ -1434,28 +1434,28 @@ The currently mounted drives are:
 Mount a CD-ROM, floppy, or disk image to a drive letter.
 
 Usage:
-  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso
-  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]IMAGEFILE[reset] [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro
-  [color=green]imgmount[reset] [color=white]DRIVE[reset] [color=cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRY -ro
-  [color=green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)
+  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso
+  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] [IMAGEFILE2 [..]] [-fs fat] -t hdd|floppy -ro
+  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRY -ro
+  [color=light-green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)
 
 Where:
   [color=white]DRIVE[reset]     is the drive letter where the image will be mounted: a, c, d, ...
-  [color=cyan]CDROM-SET[reset] is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
-  [color=cyan]IMAGEFILE[reset] is a hard drive or floppy image in FAT16 or FAT12 format
-  [color=cyan]BOOTIMAGE[reset] is a bootable disk image with specified -size GEOMETRY:
+  [color=light-cyan]CDROM-SET[reset] is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV
+  [color=light-cyan]IMAGEFILE[reset] is a hard drive or floppy image in FAT16 or FAT12 format
+  [color=light-cyan]BOOTIMAGE[reset] is a bootable disk image with specified -size GEOMETRY:
             bytes-per-sector,sectors-per-head,heads,cylinders
 Notes:
-  - %s+F4 swaps & mounts the next [color=cyan]CDROM-SET[reset] or [color=cyan]BOOTIMAGE[reset], if provided.
+  - %s+F4 swaps & mounts the next [color=light-cyan]CDROM-SET[reset] or [color=light-cyan]BOOTIMAGE[reset], if provided.
   - The -ro flag mounts the disk image in read-only (write-protected) mode.
   - The -ide flag emulates an IDE controller with attached IDE CD drive, useful
     for CD-based games that need a real DOS environment via bootable HDD image.
 
 Examples:
-  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]/Users/USERNAME/games/doom.iso[reset] -t cdrom
-  [color=green]imgmount[reset] [color=white]D[reset] [color=cyan]cd/quake1.cue[reset] -t cdrom
-  [color=green]imgmount[reset] [color=white]A[reset] [color=cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
-  [color=green]imgmount[reset] [color=white]C[reset] [color=cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USERNAME/games/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_DRIVE
@@ -1467,11 +1467,11 @@ Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-For [color=light-yellow]CD-ROM[reset] images:   [color=blue]IMGMOUNT drive-letter location-of-image -t iso[reset]
+For [color=brown]CD-ROM[reset] images:   [color=light-blue]IMGMOUNT drive-letter location-of-image -t iso[reset]
 
-For [color=light-yellow]hardrive[reset] images: Must specify drive geometry for hard drives:
+For [color=brown]hardrive[reset] images: Must specify drive geometry for hard drives:
 bytes-per-sector,sectors-per-head,heads,cylinders
-[color=blue]IMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[reset]
+[color=light-blue]IMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[reset]
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
@@ -1509,7 +1509,7 @@ Image file not found.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-To mount directories, use the [color=blue]MOUNT[reset] command, not the [color=blue]IMGMOUNT[reset] command.
+To mount directories, use the [color=light-blue]MOUNT[reset] command, not the [color=light-blue]IMGMOUNT[reset] command.
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -1538,37 +1538,37 @@ Displays a full-screen introduction to DOSBox Staging.
 .
 :PROGRAM_INTRO_HELP_LONG
 Usage:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]PAGE[reset]
+  [color=light-green]intro[reset]
+  [color=light-green]intro[reset] [color=white]PAGE[reset]
 
 Where:
   [color=white]PAGE[reset] is the page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset].
 
 Notes:
-  Running [color=green]intro[reset] without an argument displays one information page at a time;
+  Running [color=light-green]intro[reset] without an argument displays one information page at a time;
   press any key to move to the next page. If a page name is provided, then the
   specified page will be displayed directly.
 
 Examples:
-  [color=green]intro[reset]
-  [color=green]intro[reset] [color=white]cdrom[reset]
+  [color=light-green]intro[reset]
+  [color=light-green]intro[reset] [color=white]cdrom[reset]
 
 .
 :PROGRAM_INTRO
-[erases=entire][color=green]Welcome to DOSBox Staging[reset], an x86 emulator with sound and graphics.
+[erases=entire][color=light-green]Welcome to DOSBox Staging[reset], an x86 emulator with sound and graphics.
 DOSBox creates a shell for you which looks like old plain DOS.
 
-For information about basic mount type [color=blue]intro mount[reset]
-For information about CD-ROM support type [color=blue]intro cdrom[reset]
-For information about special keys type [color=blue]intro special[reset]
-For more information, visit DOSBox Staging wiki:[color=blue]
+For information about basic mount type [color=light-blue]intro mount[reset]
+For information about CD-ROM support type [color=light-blue]intro cdrom[reset]
+For information about special keys type [color=light-blue]intro special[reset]
+For more information, visit DOSBox Staging wiki:[color=light-blue]
 https://github.com/dosbox-staging/dosbox-staging/wiki[reset]
 
-[color=red]DOSBox will stop/exit without a warning if an error occurred![reset]
+[color=light-red]DOSBox will stop/exit without a warning if an error occurred![reset]
 
 .
 :PROGRAM_INTRO_MOUNT_START
-[erases=entire][color=green]Here are some commands to get you started:[reset]
+[erases=entire][color=light-green]Here are some commands to get you started:[reset]
 Before you can use the files located on your own filesystem,
 You have to mount the directory containing the files.
 
@@ -1576,80 +1576,80 @@ You have to mount the directory containing the files.
 .
 :PROGRAM_INTRO_MOUNT_WINDOWS
 [bgcolor=blue][color=white]╔═════════════════════════════════════════════════════════════════════════╗
-║ [color=green]mount c c:\dosgames\ [color=white]will create a C drive with c:\dosgames as contents.║
+║ [color=light-green]mount c c:\dosgames\ [color=white]will create a C drive with c:\dosgames as contents.║
 ║                                                                         ║
-║ [color=green]c:\dosgames\ [color=white]is an example. Replace it with your own games directory.   ║
+║ [color=light-green]c:\dosgames\ [color=white]is an example. Replace it with your own games directory.   ║
 ╚═════════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_OTHER
 [bgcolor=blue][color=white]╔══════════════════════════════════════════════════════════════════════╗
-║ [color=green]mount c ~/dosgames[color=white] will create a C drive with ~/dosgames as contents.║
+║ [color=light-green]mount c ~/dosgames[color=white] will create a C drive with ~/dosgames as contents.║
 ║                                                                      ║
-║ [color=green]~/dosgames[color=white] is an example. Replace it with your own games directory.  ║
+║ [color=light-green]~/dosgames[color=white] is an example. Replace it with your own games directory.  ║
 ╚══════════════════════════════════════════════════════════════════════╝[reset]
 
 .
 :PROGRAM_INTRO_MOUNT_END
-After successfully mounting the disk you can type [color=blue]c:[reset] to go to your freshly
-mounted C-drive. Typing [color=blue]dir[reset] there will show its contents. [color=blue]cd[reset] will allow you to
+After successfully mounting the disk you can type [color=light-blue]c:[reset] to go to your freshly
+mounted C-drive. Typing [color=light-blue]dir[reset] there will show its contents. [color=light-blue]cd[reset] will allow you to
 enter a directory (recognised by the [color=yellow][][reset] in a directory listing).
-You can run programs/files with extensions [color=light-red].exe .bat[reset] and [color=light-red].com[reset].
+You can run programs/files with extensions [color=red].exe .bat[reset] and [color=red].com[reset].
 
 .
 :PROGRAM_INTRO_CDROM_WINDOWS
-[erases=entire][color=green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
+[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
 DOSBox provides CD-ROM emulation on two levels.
 
-The [color=light-yellow]basic[reset] level works on all normal directories, which installs MSCDEX
+The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX
 and marks the files read-only. Usually this is enough for most games:
-[color=blue]mount D C:\example -t cdrom[reset]
+[color=light-blue]mount D C:\example -t cdrom[reset]
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-[color=blue]mount D C:\example -t cdrom -label CDLABEL[reset]
+[color=light-blue]mount D C:\example -t cdrom -label CDLABEL[reset]
 
-The [color=light-yellow]next[reset] level adds some low-level support.
+The [color=brown]next[reset] level adds some low-level support.
 Therefore only works on CD-ROM drives:
-[color=blue]mount d[reset] [color=light-red]D:\ [color=blue]-t cdrom -usecd [color=yellow]0[reset]
-Replace [color=light-red]D:\ [reset]with the location of your CD-ROM.
-Replace the [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:
-[color=blue]mount -listcd[reset]
+[color=light-blue]mount d[reset] [color=red]D:\ [color=light-blue]-t cdrom -usecd [color=yellow]0[reset]
+Replace [color=red]D:\ [reset]with the location of your CD-ROM.
+Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:
+[color=light-blue]mount -listcd[reset]
 
 Additionally, you can use imgmount to mount iso or cue/bin images:
-[color=blue]imgmount D C:\cd.iso -t cdrom[reset]
-[color=blue]imgmount D C:\cd.cue -t cdrom[reset]
+[color=light-blue]imgmount D C:\cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D C:\cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_CDROM_OTHER
-[erases=entire][color=green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
+[erases=entire][color=light-green]How to mount a real/virtual CD-ROM Drive in DOSBox:[reset]
 DOSBox provides CD-ROM emulation on two levels.
 
-The [color=light-yellow]basic[reset] level works on all normal directories, which installs MSCDEX
+The [color=brown]basic[reset] level works on all normal directories, which installs MSCDEX
 and marks the files read-only. Usually this is enough for most games:
-[color=blue]mount D ~/example -t cdrom[reset]
+[color=light-blue]mount D ~/example -t cdrom[reset]
 If it doesn't work you might have to tell DOSBox the label of the CD-ROM:
-[color=blue]mount D ~/example -t cdrom -label CDLABEL[reset]
+[color=light-blue]mount D ~/example -t cdrom -label CDLABEL[reset]
 
-The [color=light-yellow]next[reset] level adds some low-level support.
+The [color=brown]next[reset] level adds some low-level support.
 Therefore only works on CD-ROM drives:
-[color=blue]mount d[reset] [color=light-red]~/example[color=blue] -t cdrom -usecd [color=yellow]0[reset]
+[color=light-blue]mount d[reset] [color=red]~/example[color=light-blue] -t cdrom -usecd [color=yellow]0[reset]
 
-Replace [color=light-red]~/example[reset] with the location of your CD-ROM.
-Replace the [color=yellow]0[reset] in [color=blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:
-[color=blue]mount -listcd[reset]
+Replace [color=red]~/example[reset] with the location of your CD-ROM.
+Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:
+[color=light-blue]mount -listcd[reset]
 
 Additionally, you can use imgmount to mount iso or cue/bin images:
-[color=blue]imgmount D ~/cd.iso -t cdrom[reset]
-[color=blue]imgmount D ~/cd.cue -t cdrom[reset]
+[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]
+[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]
 
 .
 :PROGRAM_INTRO_SPECIAL
-[erases=entire][color=green]Special keys:[reset]
+[erases=entire][color=light-green]Special keys:[reset]
 These are the default keybindings.
-They can be changed in the [color=light-yellow]keymapper[reset].
+They can be changed in the [color=brown]keymapper[reset].
 
 [color=yellow]%s+Enter[reset]  Switch between fullscreen and window mode.
 [color=yellow]%s+Pause[reset]  Pause/Unpause emulator.
-[color=yellow]%s+F1[reset]   %s Start the [color=light-yellow]keymapper[reset].
+[color=yellow]%s+F1[reset]   %s Start the [color=brown]keymapper[reset].
 [color=yellow]%s+F4[reset]   %s Swap mounted disk image, scan for changes on all drives.
 [color=yellow]%s+F5[reset]     Save a screenshot of the rendered image.
 [color=yellow]%s+F5[reset]   %s Save a screenshot of the DOS pre-rendered image.
@@ -1675,27 +1675,27 @@ Codepage %i has been loaded for layout %s
 Configures a keyboard for a specific language.
 
 Usage:
-  [color=green]keyb[reset] [color=cyan][LANGCODE][reset]
-  [color=green]keyb[reset] [color=cyan]LANGCODE[reset] [color=white]CODEPAGE[reset] [CODEPAGEFILE]
+  [color=light-green]keyb[reset] [color=light-cyan][LANGCODE][reset]
+  [color=light-green]keyb[reset] [color=light-cyan]LANGCODE[reset] [color=white]CODEPAGE[reset] [CODEPAGEFILE]
 
 Where:
-  [color=cyan]LANGCODE[reset]     is a language code or keyboard layout ID.
+  [color=light-cyan]LANGCODE[reset]     is a language code or keyboard layout ID.
   [color=white]CODEPAGE[reset]     is a code page number, such as [color=white]437[reset] and [color=white]850[reset].
   CODEPAGEFILE is a file containing information for a code page.
 
 Notes:
-  Running [color=green]keyb[reset] without an argument shows the currently loaded keyboard layout
-  and code page. It will change to [color=cyan]LANGCODE[reset] if provided, optionally with a
+  Running [color=light-green]keyb[reset] without an argument shows the currently loaded keyboard layout
+  and code page. It will change to [color=light-cyan]LANGCODE[reset] if provided, optionally with a
   [color=white]CODEPAGE[reset] and an additional CODEPAGEFILE to load the specified code page
   number and code page file if provided. This command is especially useful if
-  you use a non-US keyboard, and [color=cyan]LANGCODE[reset] can also be set in the configuration
-  file under the [dos] section using the "keyboardlayout = [color=cyan]LANGCODE[reset]" setting.
+  you use a non-US keyboard, and [color=light-cyan]LANGCODE[reset] can also be set in the configuration
+  file under the [dos] section using the "keyboardlayout = [color=light-cyan]LANGCODE[reset]" setting.
 
 Examples:
-  [color=green]KEYB[reset]
-  [color=green]KEYB[reset] [color=cyan]uk[reset]
-  [color=green]KEYB[reset] [color=cyan]sp[reset] [color=white]850[reset]
-  [color=green]KEYB[reset] [color=cyan]de[reset] [color=white]858[reset] mycp.cpi
+  [color=light-green]KEYB[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]
+  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi
 
 .
 :PROGRAM_KEYB_NOERROR
@@ -1722,22 +1722,22 @@ None or invalid codepage file for layout %s
 Loads a program in the specific memory region and then runs it.
 
 Usage:
-  [color=green]loadfix[reset] [color=cyan]GAME[reset] [color=white][PARAMETERS][reset]
-  [color=green]loadfix[reset] [/d] (or [/f])[reset]
+  [color=light-green]loadfix[reset] [color=light-cyan]GAME[reset] [color=white][PARAMETERS][reset]
+  [color=light-green]loadfix[reset] [/d] (or [/f])[reset]
 
 Where:
-  [color=cyan]GAME[reset] is a game or program to be loaded, optionally with parameters.
+  [color=light-cyan]GAME[reset] is a game or program to be loaded, optionally with parameters.
 
 Notes:
   The most common use cases of this command are to fix DOS games or programs
   which show either the "[color=white]Packed File Corrupt[reset]" or "[color=white]Not enough memory"[reset] (e.g.,
   from some 1980's games such as California Games II) error message when run.
-  Running [color=green]loadfix[reset] without an argument simply allocates memory for your game
+  Running [color=light-green]loadfix[reset] without an argument simply allocates memory for your game
   to run; you can free the memory with either /d or /f option when it finishes.
 
 Examples:
-  [color=green]loadfix[reset] [color=cyan]mygame[reset] [color=white]args[reset]
-  [color=green]loadfix[reset] /d
+  [color=light-green]loadfix[reset] [color=light-cyan]mygame[reset] [color=white]args[reset]
+  [color=light-green]loadfix[reset] /d
 
 .
 :PROGRAM_LOADFIX_ALLOC
@@ -1760,17 +1760,17 @@ Memory allocation error.
 Loads a ROM image of the video BIOS or IBM BASIC.
 
 Usage:
-  [color=green]loadrom [color=cyan]IMAGEFILE[reset]
+  [color=light-green]loadrom [color=light-cyan]IMAGEFILE[reset]
 
 Where:
-  [color=cyan]IMAGEFILE[reset] is a video BIOS or IBM BASIC ROM image.
+  [color=light-cyan]IMAGEFILE[reset] is a video BIOS or IBM BASIC ROM image.
 
 Notes:
    After loading an IBM BASIC ROM image into the emulated ROM with the command,
    you can run the original IBM BASIC interpreter program in DOSBox Staging.
 
 Examples:
-  [color=green]loadrom[reset] [color=cyan]bios.rom[reset]
+  [color=light-green]loadrom[reset] [color=light-cyan]bios.rom[reset]
 
 .
 :PROGRAM_LOADROM_SPECIFY_FILE
@@ -1801,7 +1801,7 @@ BASIC ROM loaded.
 Displays the DOS memory information.
 
 Usage:
-  [color=green]mem[reset]
+  [color=light-green]mem[reset]
 
 Where:
   This command has no parameters.
@@ -1811,7 +1811,7 @@ Notes:
   memory, UMB (upper) memory, XMS (extended) memory, and EMS (expanded) memory.
 
 Examples:
-  [color=green]mem[reset]
+  [color=light-green]mem[reset]
 
 .
 :PROGRAM_MEM_CONVEN
@@ -1834,14 +1834,14 @@ Examples:
 Display command output or text file one screen at a time.
 
 Usage:
-  [color=cyan]COMMAND[reset] | [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
-  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=cyan]FILE[reset]
-  [color=green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=cyan]PATTERN[reset] [[color=cyan]PATTERN[reset] ...]
+  [color=light-cyan]COMMAND[reset] | [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]]
+  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] < [color=light-cyan]FILE[reset]
+  [color=light-green]more[reset] [/c] [/e] [/p] [[reset]/s] [/t[color=white]n[reset]] [+[color=white]nnn[reset]] [color=light-cyan]PATTERN[reset] [[color=light-cyan]PATTERN[reset] ...]
 
 Where:
-  [color=cyan]COMMAND[reset] is the command to display the output of.
-  [color=cyan]FILE[reset]    is an exact name of the file to display, optionally with a path.
-  [color=cyan]PATTERN[reset] is either a path to a single file or a path with wildcards,
+  [color=light-cyan]COMMAND[reset] is the command to display the output of.
+  [color=light-cyan]FILE[reset]    is an exact name of the file to display, optionally with a path.
+  [color=light-cyan]PATTERN[reset] is either a path to a single file or a path with wildcards,
           which are the asterisk (*) and the question mark (?).
   /c      clears the screen before each file.
   /e      extended mode, with more hotkeys available.
@@ -1858,7 +1858,7 @@ Notes:
   [color=yellow]N[reset] or [color=yellow]F[reset]         to skip to the next file.
   [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] to terminate the command.
   Also, the [color=yellow]Ctrl+C[reset] can be used to terminate the command reading data from the
-  keyboard input, like when [color=green]more[reset] is executed without any arguments.
+  keyboard input, like when [color=light-green]more[reset] is executed without any arguments.
   The following extra hotkeys are available in extended mode only:
   [color=yellow]P[reset] [color=white]nnn[reset]          to display the next [color=white]nnn[reset] lines and prompt again.
   [color=yellow]S[reset] [color=white]nnn[reset]          to skip the next [color=white]nnn[reset] lines.
@@ -1866,48 +1866,48 @@ Notes:
   Option /p disables certain incompatible hotkeys.
 
 Examples:
-  [color=cyan]dir /on[reset] | [color=green]more[reset]             ; displays sorted directory one screen at a time
-  [color=green]more[reset] /t[color=white]4[reset] < [color=cyan]A:\MANUAL.TXT[reset]   ; shows the file's content with tab size 4
+  [color=light-cyan]dir /on[reset] | [color=light-green]more[reset]             ; displays sorted directory one screen at a time
+  [color=light-green]more[reset] /t[color=white]4[reset] < [color=light-cyan]A:\MANUAL.TXT[reset]   ; shows the file's content with tab size 4
 
 .
 :PROGRAM_MORE_NO_FILE
 No input file found.
 .
 :PROGRAM_MORE_END
-[reset][color=light-yellow]--- end of input ---[reset]
+[reset][color=brown]--- end of input ---[reset]
 .
 :PROGRAM_MORE_NEW_FILE
-[reset][color=light-yellow]--- file %s ---[reset]
+[reset][color=brown]--- file %s ---[reset]
 .
 :PROGRAM_MORE_NEW_DEVICE
-[reset][color=light-yellow]--- device %s ---[reset]
+[reset][color=brown]--- device %s ---[reset]
 .
 :PROGRAM_MORE_PROMPT_SINGLE
-[reset][color=light-yellow]--- press SPACE or ENTER for more ---[reset]
+[reset][color=brown]--- press SPACE or ENTER for more ---[reset]
 .
 :PROGRAM_MORE_PROMPT_PERCENT
-[reset][color=light-yellow]--- (%d%%) press SPACE or ENTER for more ---[reset]
+[reset][color=brown]--- (%d%%) press SPACE or ENTER for more ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=light-yellow]--- press SPACE or ENTER for more, N for next file ---[reset]
+[reset][color=brown]--- press SPACE or ENTER for more, N for next file ---[reset]
 .
 :PROGRAM_MORE_PROMPT_LINE
-[reset][color=light-yellow]--- line %u ---[reset]
+[reset][color=brown]--- line %u ---[reset]
 .
 :PROGRAM_MORE_OPEN_ERROR
-[reset][color=red]--- could not open %s ---[reset]
+[reset][color=light-red]--- could not open %s ---[reset]
 .
 :PROGRAM_MORE_TERMINATE
-[reset][color=light-yellow](terminated)[reset]
+[reset][color=brown](terminated)[reset]
 .
 :PROGRAM_MORE_NEXT_FILE
-[reset][color=light-yellow](next file)[reset]
+[reset][color=brown](next file)[reset]
 .
 :PROGRAM_MORE_SKIPPED
-[reset][color=light-yellow](skipped content)[reset]
+[reset][color=brown](skipped content)[reset]
 .
 :PROGRAM_MORE_HOW_MANY_LINES
-[reset][color=light-yellow]how many lines?[reset]
+[reset][color=brown]how many lines?[reset]
 .
 :PROGRAM_MOUNT_HELP
 Maps physical folders or drives to a virtual drive letter.
@@ -1917,13 +1917,13 @@ Maps physical folders or drives to a virtual drive letter.
 Mount a directory from the host OS to a drive letter.
 
 Usage:
-  [color=green]mount[reset] [color=white]DRIVE[reset] [color=cyan]DIRECTORY[reset] [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]
-  [color=green]mount[reset] -listcd / -cd (lists all detected CD-ROM drives and their numbers)
-  [color=green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)
+  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]DIRECTORY[reset] [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]
+  [color=light-green]mount[reset] -listcd / -cd (lists all detected CD-ROM drives and their numbers)
+  [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)
 
 Where:
   [color=white]DRIVE[reset]     the drive letter where the directory will be mounted: A, C, D, ...
-  [color=cyan]DIRECTORY[reset] is the directory on the host OS to be mounted
+  [color=light-cyan]DIRECTORY[reset] is the directory on the host OS to be mounted
   TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay
   SIZE      free space for the virtual drive (KB for floppies, MB otherwise)
   LABEL     drive label name to be used
@@ -1933,9 +1933,9 @@ Notes:
   - Additional options are described in the manual (README file, chapter 4).
 
 Examples:
-  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]
-  [color=green]mount[reset] [color=white]D[reset] [color=cyan]"/Volumes/Game CD"[reset] -t cdrom
-  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/Game CD"[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay
 
 .
 :PROGRAM_MOUNT_CDROMS_FOUND
@@ -1975,11 +1975,11 @@ Virtual Drives can not be unMOUNTed.
 
 .
 :PROGRAM_MOUNT_WARNING_WIN
-[color=red]Mounting c:\ is NOT recommended. Please mount a (sub)directory next time.[reset]
+[color=light-red]Mounting c:\ is NOT recommended. Please mount a (sub)directory next time.[reset]
 
 .
 :PROGRAM_MOUNT_WARNING_OTHER
-[color=red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]
+[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]
 
 .
 :PROGRAM_MOUNT_NO_OPTION
@@ -2017,17 +2017,17 @@ Can't move drive Z. Drive %c is mounted already.
 Manages physical and logical mice.
 
 Usage:
-  [color=green]mousectl[reset] [-all]
-  [color=green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=cyan]NAME[reset]
-  [color=green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [sensitivity]
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s sensitivity_x sensitivity_y
-  [color=green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_rate]
+  [color=light-green]mousectl[reset] [-all]
+  [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] -map [color=light-cyan]NAME[reset]
+  [color=light-green]mousectl[reset] [color=white]INTERFACE[reset] [[color=white]INTERFACE[reset] ...] -map
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -unmap | -on | -off | -reset
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s | -sx | -sy [sensitivity]
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -s sensitivity_x sensitivity_y
+  [color=light-green]mousectl[reset] [[color=white]INTERFACE[reset] ...] -r [min_rate]
 
 Where:
   [color=white]INTERFACE[reset]      one of [color=white]DOS[reset], [color=white]PS/2[reset], [color=white]COM1[reset], [color=white]COM2[reset], [color=white]COM3[reset], [color=white]COM4[reset]
-  -map -unmap    maps/unmaps physical mouse, honors DOS wildcards in [color=cyan]NAME[reset]
+  -map -unmap    maps/unmaps physical mouse, honors DOS wildcards in [color=light-cyan]NAME[reset]
   -s -sx -sy     sets sensitivity / for x axis / for y axis, from -999 to +999
   -r             sets minimum mouse sampling rate
   -on -off       enables or disables mouse on the given interface
@@ -2037,7 +2037,7 @@ Notes:
   If sensitivity or rate is omitted, it is reset to default value.
 
 Examples:
-  [color=green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game
+  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game
 .
 :PROGRAM_MOUSECTL_SYNTAX_PATTERN
 Incorrect syntax, only ASCII characters allowed in pattern.
@@ -2080,13 +2080,13 @@ No available mouse found matching the pattern.
 [color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT1
-[color=cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
+[color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER2
 [color=white]Interface     Mouse Name[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2
-[color=cyan]%-4s[reset]          %s
+[color=light-cyan]%-4s[reset]          %s
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED
 not mapped    %s
@@ -2098,13 +2098,13 @@ uses system pointer
 mapped physical mouse
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED
-[color=red]mapped mouse disconnected[reset]
+[color=light-red]mapped mouse disconnected[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED
 disabled
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM
-Sampling rates for mice on [color=cyan]COM[reset] interfaces are estimations only.
+Sampling rates for mice on [color=light-cyan]COM[reset] interfaces are estimations only.
 .
 :PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN
 Sampling rates with minimum value set are marked with '*'.
@@ -2125,20 +2125,20 @@ and mapped mice always receive raw input events.
 Scans for changes on mounted DOS drives.
 
 Usage:
-  [color=green]rescan[reset] [color=cyan]DRIVE[reset]
-  [color=green]rescan[reset] [/a]
+  [color=light-green]rescan[reset] [color=light-cyan]DRIVE[reset]
+  [color=light-green]rescan[reset] [/a]
 
 Where:
-  [color=cyan]DRIVE[reset] is the drive to scan for changes.
+  [color=light-cyan]DRIVE[reset] is the drive to scan for changes.
 
 Notes:
-  - Running [color=green]rescan[reset] without an argument scans for changes of the current drive.
+  - Running [color=light-green]rescan[reset] without an argument scans for changes of the current drive.
   - Changes to this drive made on the host will then be reflected inside DOS.
   - You can also scan for changes on all mounted drives with the /a option.
 
 Examples:
-  [color=green]rescan[reset] [color=cyan]c:[reset]
-  [color=green]rescan[reset] /a
+  [color=light-green]rescan[reset] [color=light-cyan]c:[reset]
+  [color=light-green]rescan[reset] /a
 
 .
 :PROGRAM_RESCAN_SUCCESS
@@ -2149,26 +2149,26 @@ Drive re-scanned.
 Displays or changes the sound mixer settings.
 
 Usage:
-  [color=green]mixer[reset] [color=cyan][CHANNEL][reset] [color=white]COMMANDS[reset] [/noshow]
-  [color=green]mixer[reset] [/listmidi]
+  [color=light-green]mixer[reset] [color=light-cyan][CHANNEL][reset] [color=white]COMMANDS[reset] [/noshow]
+  [color=light-green]mixer[reset] [/listmidi]
 
 Where:
-  [color=cyan]CHANNEL[reset]  is the sound channel to change the settings of.
+  [color=light-cyan]CHANNEL[reset]  is the sound channel to change the settings of.
   [color=white]COMMANDS[reset] is one or more of the following commands:
     Volume:    [color=white]0[reset] to [color=white]100[reset], or decibel value prefixed with [color=white]d[reset] (e.g. [color=white]d-7.5[reset])
                use [color=white]L:R[reset] to set the left and right side separately (e.g. [color=white]10:20[reset])
     Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (for stereo channels only)
     Crossfeed: [color=white]x0[reset] to [color=white]x100[reset]    Reverb: [color=white]r0[reset] to [color=white]r100[reset]    Chorus: [color=white]c0[reset] to [color=white]c100[reset]
 Notes:
-  Running [color=green]mixer[reset] without an argument shows the current mixer settings.
+  Running [color=light-green]mixer[reset] without an argument shows the current mixer settings.
   You may change the settings of more than one channel in a single command.
   If channel is unspecified, you can set crossfeed, reverb or chorus globally.
   You can view the list of available MIDI devices with /listmidi.
   The /noshow option applies the changes without showing the mixer settings.
 
 Examples:
-  [color=green]mixer[reset] [color=cyan]cdda[reset] [color=white]50[reset] [color=cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=green]mixer[reset] [color=white]x30[reset] [color=cyan]opl[reset] [color=white]150 r50 c30[reset] [color=cyan]sb[reset] [color=white]x10[reset]
+  [color=light-green]mixer[reset] [color=light-cyan]cdda[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
 %-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
@@ -2192,27 +2192,27 @@ Mono
 Manages the serial ports.
 
 Usage:
-  [color=green]serial[reset] [color=white][PORT#][reset]                   List all or specified ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], or [color=white]4[reset]) ports.
-  [color=green]serial[reset] [color=white]PORT#[reset] [color=cyan]DEVICE[reset] [settings]   Attach specified device to the given port.
+  [color=light-green]serial[reset] [color=white][PORT#][reset]                   List all or specified ([color=white]1[reset], [color=white]2[reset], [color=white]3[reset], or [color=white]4[reset]) ports.
+  [color=light-green]serial[reset] [color=white]PORT#[reset] [color=light-cyan]DEVICE[reset] [settings]   Attach specified device to the given port.
 
 Where:
-  [color=cyan]DEVICE[reset]   One of: [color=cyan]MODEM[reset], [color=cyan]NULLMODEM[reset], [color=cyan]MOUSE[reset], [color=cyan]DIRECT[reset], [color=cyan]DUMMY[reset], or [color=cyan]DISABLED[reset]
+  [color=light-cyan]DEVICE[reset]   One of: [color=light-cyan]MODEM[reset], [color=light-cyan]NULLMODEM[reset], [color=light-cyan]MOUSE[reset], [color=light-cyan]DIRECT[reset], [color=light-cyan]DUMMY[reset], or [color=light-cyan]DISABLED[reset]
 
-  Optional settings for each [color=cyan]DEVICE[reset]:
-  For [color=cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
-  For [color=cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
+  Optional settings for each [color=light-cyan]DEVICE[reset]:
+  For [color=light-cyan]MODEM[reset]      : IRQ, LISTENPORT, SOCK
+  For [color=light-cyan]NULLMODEM[reset]  : IRQ, SERVER, RXDELAY, TXDELAY, TELNET, USEDTR, TRANSPARENT,
                    PORT, INHSOCKET, SOCK
-  For [color=cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
+  For [color=light-cyan]MOUSE[reset]      : IRQ, RATE (NORMAL or SMOOTH), TYPE (2BTN, 3BTN, WHEEL, MSM,
                    2BTN+MSM, 3BTN+MSM, or WHEEL+MSM)
-  For [color=cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
-  For [color=cyan]DUMMY[reset]      : IRQ
+  For [color=light-cyan]DIRECT[reset]     : IRQ, REALPORT (required), RXDELAY
+  For [color=light-cyan]DUMMY[reset]      : IRQ
 
 Examples:
-  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]NULLMODEM[reset] PORT:1250                 : Listen on TCP:1250 as server
-  [color=green]SERIAL[reset] [color=white]2[reset] [color=cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
-  [color=green]SERIAL[reset] [color=white]3[reset] [color=cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
-  [color=green]SERIAL[reset] [color=white]4[reset] [color=cyan]DIRECT[reset] REALPORT:ttyUSB0             : Use a physical port on Linux
-  [color=green]SERIAL[reset] [color=white]1[reset] [color=cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]NULLMODEM[reset] PORT:1250                 : Listen on TCP:1250 as server
+  [color=light-green]SERIAL[reset] [color=white]2[reset] [color=light-cyan]NULLMODEM[reset] SERVER:10.0.0.6 PORT:1250 : Connect to TCP:1250 as client
+  [color=light-green]SERIAL[reset] [color=white]3[reset] [color=light-cyan]MODEM[reset] LISTENPORT:5000 SOCK:1        : Listen on UDP:5000 as server
+  [color=light-green]SERIAL[reset] [color=white]4[reset] [color=light-cyan]DIRECT[reset] REALPORT:ttyUSB0             : Use a physical port on Linux
+  [color=light-green]SERIAL[reset] [color=white]1[reset] [color=light-cyan]MOUSE[reset] TYPE:MSM                      : Mouse Systems mouse
 
 .
 :PROGRAM_SERIAL_SHOW_PORT
@@ -2235,16 +2235,16 @@ Type must be one of the following:
 View or set the DOS version reported to applications.
 
 Usage:
-  [color=green]setver[reset] \[/b] [/p]
-  [color=green]setver[reset] [color=cyan]FILE[reset] [color=cyan]VERSION[reset] [/q]
-  [color=green]setver[reset] [color=cyan]FILE[reset] /d [/q]
-  [color=green]setver[reset] [color=cyan]VERSION[reset] /g [/q]
-  [color=green]setver[reset] /d /g [/q]
-  [color=green]setver[reset] /d /all [/q]
+  [color=light-green]setver[reset] \[/b] [/p]
+  [color=light-green]setver[reset] [color=light-cyan]FILE[reset] [color=light-cyan]VERSION[reset] [/q]
+  [color=light-green]setver[reset] [color=light-cyan]FILE[reset] /d [/q]
+  [color=light-green]setver[reset] [color=light-cyan]VERSION[reset] /g [/q]
+  [color=light-green]setver[reset] /d /g [/q]
+  [color=light-green]setver[reset] /d /all [/q]
 
 Where:
-  [color=cyan]FILE[reset]     is a file (optionally with path) to apply the settings to.
-  [color=cyan]VERSION[reset]  is a DOS version, in [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] or [color=white]n[reset] format.
+  [color=light-cyan]FILE[reset]     is a file (optionally with path) to apply the settings to.
+  [color=light-cyan]VERSION[reset]  is a DOS version, in [color=white]n[reset].[color=white]nn[reset], [color=white]n[reset].[color=white]n[reset] or [color=white]n[reset] format.
   /g       global setting, applied to all executables.
   /d       delete entry from version table.
   /all     together with /d clears the whole version table.
@@ -2255,12 +2255,12 @@ Where:
 
 Notes:
   For persistent version table, specify storage in the configuration file under
-  the [dos] section, using the 'setver_table_file = [color=cyan]STORAGE[reset]' setting.
+  the [dos] section, using the 'setver_table_file = [color=light-cyan]STORAGE[reset]' setting.
 
 Examples:
-  [color=green]setver[reset] /b              ; displays settings as a batch file
-  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; reports DOS version 6.22 for every RETRO.COM file
-  [color=green]setver[reset] [color=cyan]RETRO.COM[reset] /d    ; stop overriding DOS version reported
+  [color=light-green]setver[reset] /b              ; displays settings as a batch file
+  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] [color=white]6[reset].[color=white]22[reset]  ; reports DOS version 6.22 for every RETRO.COM file
+  [color=light-green]setver[reset] [color=light-cyan]RETRO.COM[reset] /d    ; stop overriding DOS version reported
 
 .
 :PROGRAM_SETVER_WRONG_TABLE
@@ -2303,10 +2303,10 @@ rules for matching by file name with path
 Displays directory tree in a graphical form.
 
 Usage:
-  [color=green]tree[reset] [color=cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]
+  [color=light-green]tree[reset] [color=light-cyan][DIRECTORY][reset] [/a] \[/b] [/f] [/p] [/da] [/df] [/dh] [/o[color=white]ORDER[reset]]
 
 Where:
-  [color=cyan]DIRECTORY[reset] is the name of the directory to display.
+  [color=light-cyan]DIRECTORY[reset] is the name of the directory to display.
   [color=white]ORDER[reset]     is a listing order, one of:
                 [color=white]n[reset] (by name, alphabetic),
                 [color=white]s[reset] (by size, smallest first),
@@ -2323,11 +2323,11 @@ Where:
   /o[color=white]ORDER[reset]   orders the list (see above)
 
 Notes:
-  If [color=cyan]DIRECTORY[reset] is omitted, the current directory is used.
+  If [color=light-cyan]DIRECTORY[reset] is omitted, the current directory is used.
 
 Examples:
-  [color=green]tree[reset]          ; displays directory tree starting from current directory
-  [color=green]tree[reset] [color=cyan]C:[reset] /f    ; displays C: drive content recursively, with files
+  [color=light-green]tree[reset]          ; displays directory tree starting from current directory
+  [color=light-green]tree[reset] [color=light-cyan]C:[reset] /f    ; displays C: drive content recursively, with files
 
 .
 :PROGRAM_TREE_DIRECTORY
@@ -2415,23 +2415,23 @@ A short list of the most often used commands:
 :SHELL_CMD_COMMAND_HELP_LONG
 Starts the DOSBox Staging command shell.
 Usage:
-  [color=green]command[reset]
-  [color=green]command[reset] /c (or /init) [color=cyan]COMMAND[reset]
+  [color=light-green]command[reset]
+  [color=light-green]command[reset] /c (or /init) [color=light-cyan]COMMAND[reset]
 
 Where:
-  [color=cyan]COMMAND[reset] is a DOS command, game, or program to run.
+  [color=light-cyan]COMMAND[reset] is a DOS command, game, or program to run.
 
 Notes:
   DOSBox Staging automatically starts a DOS command shell by invoking this
   command with /init option when it starts, which shows the welcome banner.
-  You can load a new instance of the command shell by running [color=green]command[reset].
-  Adding a /c option along with [color=cyan]COMMAND[reset] allows this command to run the
+  You can load a new instance of the command shell by running [color=light-green]command[reset].
+  Adding a /c option along with [color=light-cyan]COMMAND[reset] allows this command to run the
   specified command (optionally with parameters) and then exit automatically.
 
 Examples:
-  [color=green]command[reset]
-  [color=green]command[reset] /c [color=cyan]echo[reset] [color=white]Hello world![reset]
-  [color=green]command[reset] /init [color=cyan]dir[reset]
+  [color=light-green]command[reset]
+  [color=light-green]command[reset] /c [color=light-cyan]echo[reset] [color=white]Hello world![reset]
+  [color=light-green]command[reset] /init [color=light-cyan]dir[reset]
 
 .
 :SHELL_CMD_ECHO_ON
@@ -2447,16 +2447,16 @@ Unable to change to: %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Hint: To change to different drive type [color=light-red]%c:[reset]
+Hint: To change to different drive type [color=red]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
 directoryname is longer than 8 characters and/or contains spaces.
-Try [color=light-red]cd %s[reset]
+Try [color=red]cd %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-You are still on drive Z:, change to a mounted drive with [color=light-red]C:[reset].
+You are still on drive Z:, change to a mounted drive with [color=red]C:[reset].
 
 .
 :SHELL_CMD_DATE_HELP
@@ -2479,22 +2479,22 @@ Type 'date %s' to change.
 .
 :SHELL_CMD_DATE_HELP_LONG
 Usage:
-  [color=green]date[reset] [/t]
-  [color=green]date[reset] /h
-  [color=green]date[reset] [color=cyan]DATE[reset]
+  [color=light-green]date[reset] [/t]
+  [color=light-green]date[reset] /h
+  [color=light-green]date[reset] [color=light-cyan]DATE[reset]
 
 Where:
-  [color=cyan]DATE[reset] is the new date to set to, in the format of [color=cyan]%s[reset].
+  [color=light-cyan]DATE[reset] is the new date to set to, in the format of [color=light-cyan]%s[reset].
 
 Notes:
-  Running [color=green]date[reset] without an argument shows the current date, or only a date
+  Running [color=light-green]date[reset] without an argument shows the current date, or only a date
   with the /t option. You can force a date synchronization of with the host
   system with the /h option, or manually specify a new date to set to.
 
 Examples:
-  [color=green]date[reset]
-  [color=green]date[reset] /h
-  [color=green]date[reset] [color=cyan]%s[reset]
+  [color=light-green]date[reset]
+  [color=light-green]date[reset] /h
+  [color=light-green]date[reset] [color=light-cyan]%s[reset]
 
 .
 :SHELL_CMD_TIME_HELP
@@ -2514,22 +2514,22 @@ Type 'time %s' to change.
 .
 :SHELL_CMD_TIME_HELP_LONG
 Usage:
-  [color=green]time[reset] [/t]
-  [color=green]time[reset] /h
-  [color=green]time[reset] [color=cyan]TIME[reset]
+  [color=light-green]time[reset] [/t]
+  [color=light-green]time[reset] /h
+  [color=light-green]time[reset] [color=light-cyan]TIME[reset]
 
 Where:
-  [color=cyan]TIME[reset] is the new time to set to, in the format of [color=cyan]%s[reset].
+  [color=light-cyan]TIME[reset] is the new time to set to, in the format of [color=light-cyan]%s[reset].
 
 Notes:
-  Running [color=green]time[reset] without an argument shows the current time, or a simple time
+  Running [color=light-green]time[reset] without an argument shows the current time, or a simple time
   with the /t option. You can force a time synchronization of with the host
   system with the /h option, or manually specify a new time to set to.
 
 Examples:
-  [color=green]time[reset]
-  [color=green]time[reset] /h
-  [color=green]time[reset] [color=cyan]%s[reset]
+  [color=light-green]time[reset]
+  [color=light-green]time[reset] /h
+  [color=light-green]time[reset] [color=light-cyan]%s[reset]
 
 .
 :SHELL_CMD_MKDIR_ERROR
@@ -2599,7 +2599,7 @@ Failed to create/open a temporary file for piping. Check the %%TEMP%% variable.
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Drive %c does not exist!
-You must [color=light-red]mount[reset] it first. Type [color=yellow]intro[reset] or [color=yellow]intro mount[reset] for more information.
+You must [color=red]mount[reset] it first. Type [color=yellow]intro[reset] or [color=yellow]intro mount[reset] for more information.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
@@ -2615,7 +2615,7 @@ Waits for a keystroke to continue.
 .
 :SHELL_CMD_PAUSE_HELP_LONG
 Usage:
-  [color=green]pause[reset]
+  [color=light-green]pause[reset]
 
 Where:
   This command has no parameters.
@@ -2626,7 +2626,7 @@ Notes:
   any key on the keyboard (except for certain control keys) to continue.
 
 Examples:
-  [color=green]pause[reset]
+  [color=light-green]pause[reset]
 
 .
 :SHELL_CMD_COPY_FAILURE
@@ -2647,36 +2647,36 @@ It's only possible to use SUBST on Local drives
 .
 :SHELL_STARTUP_BEGIN
 [bgcolor=blue][color=white]╔════════════════════════════════════════════════════════════════════╗
-║ [color=green]Welcome to DOSBox Staging %-40s[color=white] ║
+║ [color=light-green]Welcome to DOSBox Staging %-40s[color=white] ║
 ║                                                                    ║
 ║ For a short introduction for new users type: [color=yellow]INTRO[color=white]                 ║
 ║ For supported shell commands type: [color=yellow]HELP[color=white]                            ║
 ║                                                                    ║
-║ To adjust the emulated CPU speed, use [color=red]%s+F11[color=white] and [color=red]%s+F12[color=white].%s%s       ║
-║ To activate the keymapper [color=red]%s+F1[color=white].%s                                 ║
-║ For more information read the [color=cyan]README[color=white] file in the DOSBox directory. ║
+║ To adjust the emulated CPU speed, use [color=light-red]%s+F11[color=white] and [color=light-red]%s+F12[color=white].%s%s       ║
+║ To activate the keymapper [color=light-red]%s+F1[color=white].%s                                 ║
+║ For more information read the [color=light-cyan]README[color=white] file in the DOSBox directory. ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA
 ║ DOSBox supports Composite CGA mode.                                ║
-║ Use [color=red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        ║
-║ [color=red]F10[color=white] selects the CGA settings to change and [color=red](%s+)F11[color=white] changes it.   ║
+║ Use [color=light-red]F12[color=white] to set composite output ON, OFF, or AUTO (default).        ║
+║ [color=light-red]F10[color=white] selects the CGA settings to change and [color=light-red](%s+)F11[color=white] changes it.   ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Use [color=red]F11[color=white] to cycle through green, amber, white and paper-white mode, ║
-║ and [color=red]%s+F11[color=white] to change contrast/brightness settings.                ║
+║ Use [color=light-red]F11[color=white] to cycle through green, amber, white and paper-white mode, ║
+║ and [color=light-red]%s+F11[color=white] to change contrast/brightness settings.                ║
 
 .
 :SHELL_STARTUP_HERC
-║ Use [color=red]F11[color=white] to cycle through white, amber, and green monochrome color. ║
+║ Use [color=light-red]F11[color=white] to cycle through white, amber, and green monochrome color. ║
 ║                                                                    ║
 
 .
 :SHELL_STARTUP_DEBUG
-║ Press [color=red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║
+║ Press [color=light-red]%s+Pause[color=white] to enter the debugger or start the exe with [color=yellow]DEBUG[color=white]. ║
 ║                                                                    ║
 
 .
@@ -2687,7 +2687,7 @@ It's only possible to use SUBST on Local drives
 
 .
 :SHELL_STARTUP_SUB
-[color=green]dosbox-staging %s[reset]
+[color=light-green]dosbox-staging %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HELP
@@ -2696,19 +2696,19 @@ Displays or changes the current directory.
 .
 :SHELL_CMD_CHDIR_HELP_LONG
 Usage:
-  [color=green]cd[reset] [color=cyan]DIRECTORY[reset]
-  [color=green]chdir[reset] [color=cyan]DIRECTORY[reset]
+  [color=light-green]cd[reset] [color=light-cyan]DIRECTORY[reset]
+  [color=light-green]chdir[reset] [color=light-cyan]DIRECTORY[reset]
 
 Where:
-  [color=cyan]DIRECTORY[reset] is the name of the directory to change to.
+  [color=light-cyan]DIRECTORY[reset] is the name of the directory to change to.
 
 Notes:
-  Running [color=green]cd[reset] without an argument displays the current directory.
-  With [color=cyan]DIRECTORY[reset] the command only changes the directory, not the current drive.
+  Running [color=light-green]cd[reset] without an argument displays the current directory.
+  With [color=light-cyan]DIRECTORY[reset] the command only changes the directory, not the current drive.
 
 Examples:
-  [color=green]cd[reset]
-  [color=green]cd[reset] [color=cyan]mydir[reset]
+  [color=light-green]cd[reset]
+  [color=light-green]cd[reset] [color=light-cyan]mydir[reset]
 
 .
 :SHELL_CMD_CLS_HELP
@@ -2717,17 +2717,17 @@ Clears the DOS screen.
 .
 :SHELL_CMD_CLS_HELP_LONG
 Usage:
-  [color=green]cls[reset]
+  [color=light-green]cls[reset]
 
 Where:
   This command has no parameters.
 
 Notes:
-  Running [color=green]cls[reset] clears all texts on the DOS screen, except for the command
+  Running [color=light-green]cls[reset] clears all texts on the DOS screen, except for the command
   prompt (e.g. [color=white]Z:\>[reset] or [color=white]C:\GAMES>[reset]) on the top-left corner of the screen.
 
 Examples:
-  [color=green]cls[reset]
+  [color=light-green]cls[reset]
 
 .
 :SHELL_CMD_DIR_HELP
@@ -2736,10 +2736,10 @@ Displays a list of files and subdirectories in a directory.
 .
 :SHELL_CMD_DIR_HELP_LONG
 Usage:
-  [color=green]dir[reset] [color=cyan][PATTERN][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]
+  [color=light-green]dir[reset] [color=light-cyan][PATTERN][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]
 
 Where:
-  [color=cyan]PATTERN[reset] is either an exact filename or an inexact filename with wildcards,
+  [color=light-cyan]PATTERN[reset] is either an exact filename or an inexact filename with wildcards,
           which are the asterisk (*) and the question mark (?). A path can be
           specified in the pattern to list contents in the specified directory.
   [color=white]ORDER[reset]   is a listing order, including [color=white]n[reset] (by name, alphabetic), [color=white]s[reset] (by size,
@@ -2750,13 +2750,13 @@ Where:
   /ad     lists all directories;              /a-d    lists all files.
 
 Notes:
-  Running [color=green]dir[reset] without an argument lists all files and subdirectories in the
-  current directory, which is the same as [color=green]dir[reset] [color=cyan]*.*[reset].
+  Running [color=light-green]dir[reset] without an argument lists all files and subdirectories in the
+  current directory, which is the same as [color=light-green]dir[reset] [color=light-cyan]*.*[reset].
 
 Examples:
-  [color=green]dir[reset] [color=cyan][reset]
-  [color=green]dir[reset] [color=cyan]games.*[reset] /p
-  [color=green]dir[reset] [color=cyan]c:\games\*.exe[reset] /b /o[color=white]-d[reset]
+  [color=light-green]dir[reset] [color=light-cyan][reset]
+  [color=light-green]dir[reset] [color=light-cyan]games.*[reset] /p
+  [color=light-green]dir[reset] [color=light-cyan]c:\games\*.exe[reset] /b /o[color=white]-d[reset]
 
 .
 :SHELL_CMD_ECHO_HELP
@@ -2765,20 +2765,20 @@ Displays messages and enables/disables command echoing.
 .
 :SHELL_CMD_ECHO_HELP_LONG
 Usage:
-  [color=green]echo[reset] [color=cyan][on|off][reset]
-  [color=green]echo[reset] [color=cyan][MESSAGE][reset]
+  [color=light-green]echo[reset] [color=light-cyan][on|off][reset]
+  [color=light-green]echo[reset] [color=light-cyan][MESSAGE][reset]
 
 Where:
-  [color=cyan]on|off[reset]  Turns on/off command echoing.
-  [color=cyan]MESSAGE[reset] The message to display.
+  [color=light-cyan]on|off[reset]  Turns on/off command echoing.
+  [color=light-cyan]MESSAGE[reset] The message to display.
 
 Notes:
-  - Running [color=green]echo[reset] without an argument shows the current on or off status.
+  - Running [color=light-green]echo[reset] without an argument shows the current on or off status.
   - Echo is especially useful when writing or debugging batch files.
 
 Examples:
-  [color=green]echo[reset] [color=cyan]off[reset]
-  [color=green]echo[reset] [color=cyan]Hello world![reset]
+  [color=light-green]echo[reset] [color=light-cyan]off[reset]
+  [color=light-green]echo[reset] [color=light-cyan]Hello world![reset]
 
 .
 :SHELL_CMD_EXIT_HELP
@@ -2787,17 +2787,17 @@ Exits from the DOS shell.
 .
 :SHELL_CMD_EXIT_HELP_LONG
 Usage:
-  [color=green]exit[reset]
+  [color=light-green]exit[reset]
 
 Where:
   This command has no parameters.
 
 Notes:
-  If you start a DOS shell from a program, running [color=green]exit[reset] returns to the program.
+  If you start a DOS shell from a program, running [color=light-green]exit[reset] returns to the program.
   If there is no DOS program running, the command quits from DOSBox Staging.
 
 Examples:
-  [color=green]exit[reset]
+  [color=light-green]exit[reset]
 
 .
 :SHELL_CMD_EXIT_TOO_SOON
@@ -2810,21 +2810,21 @@ Displays help information for DOS commands.
 .
 :SHELL_CMD_HELP_HELP_LONG
 Usage:
-  [color=green]help[reset]
-  [color=green]help[reset] /a[ll]
-  [color=green]help[reset] [color=cyan]COMMAND[reset]
+  [color=light-green]help[reset]
+  [color=light-green]help[reset] /a[ll]
+  [color=light-green]help[reset] [color=light-cyan]COMMAND[reset]
 
 Where:
-  [color=cyan]COMMAND[reset] is the name of an internal DOS command, such as [color=cyan]dir[reset].
+  [color=light-cyan]COMMAND[reset] is the name of an internal DOS command, such as [color=light-cyan]dir[reset].
 
 Notes:
-  - Running [color=green]echo[reset] without an argument displays a DOS command list.
+  - Running [color=light-green]echo[reset] without an argument displays a DOS command list.
   - You can view a full list of internal commands with the /a or /all option.
-  - Instead of [color=green]help[reset] [color=cyan]COMMAND[reset], you can also get command help with [color=cyan]COMMAND[reset] /?.
+  - Instead of [color=light-green]help[reset] [color=light-cyan]COMMAND[reset], you can also get command help with [color=light-cyan]COMMAND[reset] /?.
 
 Examples:
-  [color=green]help[reset] [color=cyan]dir[reset]
-  [color=green]help[reset] /all
+  [color=light-green]help[reset] [color=light-cyan]dir[reset]
+  [color=light-green]help[reset] /all
 
 .
 :SHELL_CMD_MKDIR_HELP
@@ -2833,19 +2833,19 @@ Creates a directory.
 .
 :SHELL_CMD_MKDIR_HELP_LONG
 Usage:
-  [color=green]md[reset] [color=cyan]DIRECTORY[reset]
-  [color=green]mkdir[reset] [color=cyan]DIRECTORY[reset]
+  [color=light-green]md[reset] [color=light-cyan]DIRECTORY[reset]
+  [color=light-green]mkdir[reset] [color=light-cyan]DIRECTORY[reset]
 
 Where:
-  [color=cyan]DIRECTORY[reset] is the name of the directory to create.
+  [color=light-cyan]DIRECTORY[reset] is the name of the directory to create.
 
 Notes:
   - The directory must be an exact name and does not yet exist.
   - You can specify a path where the directory will be created.
 
 Examples:
-  [color=green]md[reset] [color=cyan]newdir[reset]
-  [color=green]md[reset] [color=cyan]c:\games\dir[reset]
+  [color=light-green]md[reset] [color=light-cyan]newdir[reset]
+  [color=light-green]md[reset] [color=light-cyan]c:\games\dir[reset]
 
 .
 :SHELL_CMD_RMDIR_HELP
@@ -2854,17 +2854,17 @@ Removes a directory.
 .
 :SHELL_CMD_RMDIR_HELP_LONG
 Usage:
-  [color=green]rd[reset] [color=cyan]DIRECTORY[reset]
-  [color=green]rmdir[reset] [color=cyan]DIRECTORY[reset]
+  [color=light-green]rd[reset] [color=light-cyan]DIRECTORY[reset]
+  [color=light-green]rmdir[reset] [color=light-cyan]DIRECTORY[reset]
 
 Where:
-  [color=cyan]DIRECTORY[reset] is the name of the directory to remove.
+  [color=light-cyan]DIRECTORY[reset] is the name of the directory to remove.
 
 Notes:
   The directory must be empty with no files or subdirectories.
 
 Examples:
-  [color=green]rd[reset] [color=cyan]emptydir[reset]
+  [color=light-green]rd[reset] [color=light-cyan]emptydir[reset]
 
 .
 :SHELL_CMD_SET_HELP
@@ -2873,20 +2873,20 @@ Displays or changes environment variables.
 .
 :SHELL_CMD_SET_HELP_LONG
 Usage:
-  [color=green]set[reset]
-  [color=green]set[reset] [color=white]VARIABLE[reset]=[color=cyan][STRING][reset]
+  [color=light-green]set[reset]
+  [color=light-green]set[reset] [color=white]VARIABLE[reset]=[color=light-cyan][STRING][reset]
 
 Where:
   [color=white]VARIABLE[reset] The name of the environment variable.
-  [color=cyan]STRING[reset]   A series of characters to assign to the variable.
+  [color=light-cyan]STRING[reset]   A series of characters to assign to the variable.
 
 Notes:
   - Assigning an empty string to the variable removes the variable.
   - The command without a parameter displays current environment variables.
 
 Examples:
-  [color=green]set[reset]
-  [color=green]set[reset] [color=white]name[reset]=[color=cyan]value[reset]
+  [color=light-green]set[reset]
+  [color=light-green]set[reset] [color=white]name[reset]=[color=light-cyan]value[reset]
 
 .
 :SHELL_CMD_IF_HELP
@@ -2895,9 +2895,9 @@ Performs conditional processing in batch programs.
 .
 :SHELL_CMD_IF_HELP_LONG
 Usage:
-  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]errorlevel[reset] [color=white]NUMBER[reset] COMMAND
-  [color=green]if[reset] [color=magenta][not][reset] [color=white]STR1==STR2[reset] COMMAND
-  [color=green]if[reset] [color=magenta][not][reset] [color=cyan]exist[reset] [color=white]FILE[reset] COMMAND
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]errorlevel[reset] [color=white]NUMBER[reset] COMMAND
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=white]STR1==STR2[reset] COMMAND
+  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]exist[reset] [color=white]FILE[reset] COMMAND
 
 Where:
   [color=white]NUMBER[reset]     is a positive integer less or equal to the desired value.
@@ -2907,14 +2907,14 @@ Where:
 
 Notes:
   The COMMAND is run if any of the three conditions in the usage are met.
-  If [color=magenta]not[reset] is specified, then the command runs only with the false condition.
-  The [color=cyan]errorlevel[reset] condition is useful for checking if a programs ran correctly.
+  If [color=light-magenta]not[reset] is specified, then the command runs only with the false condition.
+  The [color=light-cyan]errorlevel[reset] condition is useful for checking if a programs ran correctly.
   If either [color=white]STR1[reset] or [color=white]STR2[reset] may be empty, you can enclose them in quotes (").
 
 Examples:
-  [color=green]if[reset] [color=cyan]errorlevel[reset] [color=white]2[reset] dir
-  [color=green]if[reset] [color=white]"%%myvar%%"=="mystring"[reset] echo Hello world!
-  [color=green]if[reset] [color=magenta]not[reset] [color=cyan]exist[reset] [color=white]file.txt[reset] exit
+  [color=light-green]if[reset] [color=light-cyan]errorlevel[reset] [color=white]2[reset] dir
+  [color=light-green]if[reset] [color=white]"%%myvar%%"=="mystring"[reset] echo Hello world!
+  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]file.txt[reset] exit
 
 .
 :SHELL_CMD_GOTO_HELP
@@ -2923,17 +2923,17 @@ Jumps to a labeled line in a batch program.
 .
 :SHELL_CMD_GOTO_HELP_LONG
 Usage:
-  [color=green]goto[reset] [color=cyan]LABEL[reset]
+  [color=light-green]goto[reset] [color=light-cyan]LABEL[reset]
 
 Where:
-  [color=cyan]LABEL[reset] is text string used in the batch program as a label.
+  [color=light-cyan]LABEL[reset] is text string used in the batch program as a label.
 
 Notes:
   A label is on a line by itself, beginning with a colon (:).
   The label must be unique, and can be anywhere within the batch program.
 
 Examples:
-  [color=green]goto[reset] [color=cyan]mylabel[reset]
+  [color=light-green]goto[reset] [color=light-cyan]mylabel[reset]
 
 .
 :SHELL_CMD_SHIFT_HELP
@@ -2942,17 +2942,17 @@ Left-shifts command-line parameters in a batch program.
 .
 :SHELL_CMD_SHIFT_HELP_LONG
 Usage:
-  [color=green]shift[reset]
+  [color=light-green]shift[reset]
 
 Where:
   This command has no parameters.
 
 Notes:
   This command allows a DOS batch program to accept more than 9 parameters.
-  Running [color=green]shift[reset] left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.
+  Running [color=light-green]shift[reset] left-shifts the batch program variable %%1 to %%0, %%2 to %%1, etc.
 
 Examples:
-  [color=green]shift[reset]
+  [color=light-green]shift[reset]
 
 .
 :SHELL_CMD_TYPE_HELP
@@ -2961,18 +2961,18 @@ Display the contents of a text file.
 .
 :SHELL_CMD_TYPE_HELP_LONG
 Usage:
-  [color=green]type[reset] [color=cyan]FILE[reset]
+  [color=light-green]type[reset] [color=light-cyan]FILE[reset]
 
 Where:
-  [color=cyan]FILE[reset] is the name of the file to display.
+  [color=light-cyan]FILE[reset] is the name of the file to display.
 
 Notes:
   The file must be an exact file name, optionally with a path.
   This command is only for viewing text files, not binary files.
 
 Examples:
-  [color=green]type[reset] [color=cyan]text.txt[reset]
-  [color=green]type[reset] [color=cyan]c:\dos\readme.txt[reset]
+  [color=light-green]type[reset] [color=light-cyan]text.txt[reset]
+  [color=light-green]type[reset] [color=light-cyan]c:\dos\readme.txt[reset]
 
 .
 :SHELL_CMD_REM_HELP
@@ -2981,17 +2981,17 @@ Adds comments in a batch program.
 .
 :SHELL_CMD_REM_HELP_LONG
 Usage:
-  [color=green]rem[reset] [color=cyan]COMMENT[reset]
+  [color=light-green]rem[reset] [color=light-cyan]COMMENT[reset]
 
 Where:
-  [color=cyan]COMMENT[reset] is any comment you want to add.
+  [color=light-cyan]COMMENT[reset] is any comment you want to add.
 
 Notes:
   Adding comments to a batch program can make it easier to understand.
   You can also temporarily comment out some commands with this command.
 
 Examples:
-  [color=green]rem[reset] [color=cyan]This is my test batch program.[reset]
+  [color=light-green]rem[reset] [color=light-cyan]This is my test batch program.[reset]
 
 .
 :SHELL_CMD_NO_WILD
@@ -3004,20 +3004,20 @@ Renames one or more files.
 .
 :SHELL_CMD_RENAME_HELP_LONG
 Usage:
-  [color=green]ren[reset] [color=white]SOURCE[reset] [color=cyan]DESTINATION[reset]
-  [color=green]rename[reset] [color=white]SOURCE[reset] [color=cyan]DESTINATION[reset]
+  [color=light-green]ren[reset] [color=white]SOURCE[reset] [color=light-cyan]DESTINATION[reset]
+  [color=light-green]rename[reset] [color=white]SOURCE[reset] [color=light-cyan]DESTINATION[reset]
 
 Where:
   [color=white]SOURCE[reset]      is the name of the file to rename.
-  [color=cyan]DESTINATION[reset] is the new name for the renamed file.
+  [color=light-cyan]DESTINATION[reset] is the new name for the renamed file.
 
 Notes:
   - The source file must be an exact file name, optionally with a path.
   - The destination file must be an exact file name without a path.
 
 Examples:
-  [color=green]ren[reset] [color=white]oldname[reset] [color=cyan]newname[reset]
-  [color=green]ren[reset] [color=white]c:\dos\file.txt[reset] [color=cyan]f.txt[reset]
+  [color=light-green]ren[reset] [color=white]oldname[reset] [color=light-cyan]newname[reset]
+  [color=light-green]ren[reset] [color=white]c:\dos\file.txt[reset] [color=light-cyan]f.txt[reset]
 
 .
 :SHELL_CMD_DELETE_HELP
@@ -3026,23 +3026,23 @@ Removes one or more files.
 .
 :SHELL_CMD_DELETE_HELP_LONG
 Usage:
-  [color=green]del[reset] [color=cyan]PATTERN[reset]
-  [color=green]erase[reset] [color=cyan]PATTERN[reset]
+  [color=light-green]del[reset] [color=light-cyan]PATTERN[reset]
+  [color=light-green]erase[reset] [color=light-cyan]PATTERN[reset]
 
 Where:
-  [color=cyan]PATTERN[reset] can be either an exact filename (such as [color=cyan]file.txt[reset]) or an inexact
+  [color=light-cyan]PATTERN[reset] can be either an exact filename (such as [color=light-cyan]file.txt[reset]) or an inexact
           filename using one or more wildcards, which are the asterisk (*)
           representing any sequence of one or more characters, and the question
-          mark (?) representing any single character, such as [color=cyan]*.bat[reset] and [color=cyan]c?.txt[reset].
+          mark (?) representing any single character, such as [color=light-cyan]*.bat[reset] and [color=light-cyan]c?.txt[reset].
 
 Warning:
-  Be careful when using a pattern with wildcards, especially [color=cyan]*.*[reset], as all files
+  Be careful when using a pattern with wildcards, especially [color=light-cyan]*.*[reset], as all files
   matching the pattern will be deleted.
 
 Examples:
-  [color=green]del[reset] [color=cyan]test.bat[reset]
-  [color=green]del[reset] [color=cyan]c*.*[reset]
-  [color=green]del[reset] [color=cyan]a?b.c*[reset]
+  [color=light-green]del[reset] [color=light-cyan]test.bat[reset]
+  [color=light-green]del[reset] [color=light-cyan]c*.*[reset]
+  [color=light-green]del[reset] [color=light-cyan]a?b.c*[reset]
 
 .
 :SHELL_CMD_COPY_HELP
@@ -3051,22 +3051,22 @@ Copies one or more files.
 .
 :SHELL_CMD_COPY_HELP_LONG
 Usage:
-  [color=green]copy[reset] [color=white]SOURCE[reset] [color=cyan][DESTINATION][reset]
-  [color=green]copy[reset] [color=white]SOURCE1+SOURCE2[+...][reset] [color=cyan][DESTINATION][reset]
+  [color=light-green]copy[reset] [color=white]SOURCE[reset] [color=light-cyan][DESTINATION][reset]
+  [color=light-green]copy[reset] [color=white]SOURCE1+SOURCE2[+...][reset] [color=light-cyan][DESTINATION][reset]
 
 Where:
   [color=white]SOURCE[reset]      Can be either an exact filename or an inexact filename with
               wildcards, which are the asterisk (*) and the question mark (?).
-  [color=cyan]DESTINATION[reset] An exact filename or directory, not containing any wildcards.
+  [color=light-cyan]DESTINATION[reset] An exact filename or directory, not containing any wildcards.
 
 Notes:
   The [color=white]+[reset] operator combines multiple source files provided to a single file.
   Destination is optional: if omitted, files are copied to the current path.
 
 Examples:
-  [color=green]copy[reset] [color=white]source.bat[reset] [color=cyan]new.bat[reset]
-  [color=green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=cyan]file3.txt[reset]
-  [color=green]copy[reset] [color=white]..\c*.*[reset]
+  [color=light-green]copy[reset] [color=white]source.bat[reset] [color=light-cyan]new.bat[reset]
+  [color=light-green]copy[reset] [color=white]file1.txt+file2.txt[reset] [color=light-cyan]file3.txt[reset]
+  [color=light-green]copy[reset] [color=white]..\c*.*[reset]
 
 .
 :SHELL_CMD_CALL_HELP
@@ -3075,19 +3075,19 @@ Starts a batch program from within another batch program.
 .
 :SHELL_CMD_CALL_HELP_LONG
 Usage:
-  [color=green]call[reset] [color=white]BATCH[reset] [color=cyan][PARAMETERS][reset]
+  [color=light-green]call[reset] [color=white]BATCH[reset] [color=light-cyan][PARAMETERS][reset]
 
 Where:
   [color=white]BATCH[reset]      is a batch program to launch.
-  [color=cyan]PARAMETERS[reset] are optional parameters for the batch program.
+  [color=light-cyan]PARAMETERS[reset] are optional parameters for the batch program.
 
 Notes:
   After calling another batch program, the original batch program will
   resume running after the other batch program ends.
 
 Examples:
-  [color=green]call[reset] [color=white]mybatch.bat[reset]
-  [color=green]call[reset] [color=white]file.bat[reset] [color=cyan]Hello world![reset]
+  [color=light-green]call[reset] [color=white]mybatch.bat[reset]
+  [color=light-green]call[reset] [color=white]file.bat[reset] [color=light-cyan]Hello world![reset]
 
 .
 :SHELL_CMD_SUBST_HELP
@@ -3096,20 +3096,20 @@ Assign an internal directory to a drive.
 .
 :SHELL_CMD_SUBST_HELP_LONG
 Usage:
-  [color=green]subst[reset] [color=white]DRIVE[reset] [color=cyan]PATH[reset]
-  [color=green]subst[reset] [color=white]DRIVE[reset] /d
+  [color=light-green]subst[reset] [color=white]DRIVE[reset] [color=light-cyan]PATH[reset]
+  [color=light-green]subst[reset] [color=white]DRIVE[reset] /d
 
 Where:
   [color=white]DRIVE[reset] is a drive to which you want to assign a path.
-  [color=cyan]PATH[reset]  is a mounted DOS path you want to assign to.
+  [color=light-cyan]PATH[reset]  is a mounted DOS path you want to assign to.
 
 Notes:
-  The path must be on a drive mounted by the [color=green]mount[reset] command.
+  The path must be on a drive mounted by the [color=light-green]mount[reset] command.
   You can remove an assigned drive with the /d option.
 
 Examples:
-  [color=green]subst[reset] [color=white]d:[reset] [color=cyan]c:\games[reset]
-  [color=green]subst[reset] [color=white]e:[reset] [color=cyan]/d[reset]
+  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\games[reset]
+  [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]
 
 .
 :SHELL_CMD_LOADHIGH_HELP
@@ -3118,11 +3118,11 @@ Loads a DOS program into upper memory.
 .
 :SHELL_CMD_LOADHIGH_HELP_LONG
 Usage:
-  [color=green]lh[reset] [color=cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]
-  [color=green]loadhigh[reset] [color=cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]
+  [color=light-green]lh[reset] [color=light-cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]
+  [color=light-green]loadhigh[reset] [color=light-cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]
 
 Where:
-  [color=cyan]PROGRAM[reset] is a DOS TSR program to be loaded, optionally with parameters.
+  [color=light-cyan]PROGRAM[reset] is a DOS TSR program to be loaded, optionally with parameters.
 
 Notes:
   This command intends to save the conventional memory by loading specified DOS
@@ -3131,7 +3131,7 @@ Notes:
   Not all DOS TSR programs can be loaded into upper memory with this command.
 
 Examples:
-  [color=green]lh[reset] [color=cyan]tsrapp[reset] [color=white]args[reset]
+  [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]
 
 .
 :SHELL_CMD_LS_HELP
@@ -3140,21 +3140,21 @@ Displays directory contents in the wide list format.
 .
 :SHELL_CMD_LS_HELP_LONG
 Usage:
-  [color=green]ls[reset] [color=cyan]PATTERN[reset]
-  [color=green]ls[reset] [color=cyan]PATH[reset]
+  [color=light-green]ls[reset] [color=light-cyan]PATTERN[reset]
+  [color=light-green]ls[reset] [color=light-cyan]PATH[reset]
 
 Where:
-  [color=cyan]PATTERN[reset] can be either an exact filename or an inexact filename with
+  [color=light-cyan]PATTERN[reset] can be either an exact filename or an inexact filename with
           wildcards, which are the asterisk (*) and the question mark (?).
-  [color=cyan]PATH[reset]    is an exact path in a mounted DOS drive to list contents.
+  [color=light-cyan]PATH[reset]    is an exact path in a mounted DOS drive to list contents.
 
 Notes:
-  The command will list directories in [color=blue]blue[reset], executable DOS programs
-   (*.com, *.exe, *.bat) in [color=green]green[reset], and other files in the normal color.
+  The command will list directories in [color=light-blue]blue[reset], executable DOS programs
+   (*.com, *.exe, *.bat) in [color=light-green]green[reset], and other files in the normal color.
 
 Examples:
-  [color=green]ls[reset] [color=cyan]file.txt[reset]
-  [color=green]ls[reset] [color=cyan]c*.ba?[reset]
+  [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]
+  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
 
 .
 :SHELL_CMD_LS_PATH_ERR
@@ -3167,13 +3167,13 @@ Displays or changes file attributes.
 .
 :SHELL_CMD_ATTRIB_HELP_LONG
 Usage:
-  [color=green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=cyan]PATTERN[reset] [/S]
+  [color=light-green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=light-cyan]PATTERN[reset] [/S]
 
 Where:
   [color=white]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:
              [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]
              Where: R = Read-only, A = Archive, S = System, H = Hidden
-  [color=cyan]PATTERN[reset]    can be either an exact filename or an inexact filename with
+  [color=light-cyan]PATTERN[reset]    can be either an exact filename or an inexact filename with
              wildcards, which are the asterisk (*) and the question mark (?),
              or an exact name of a directory.
 Notes:
@@ -3181,8 +3181,8 @@ Notes:
   If not specified, the command shows the current file/directory attributes.
 
 Examples:
-  [color=green]attrib[reset] [color=cyan]file.txt[reset]
-  [color=green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=cyan]*.txt[reset]
+  [color=light-green]attrib[reset] [color=light-cyan]file.txt[reset]
+  [color=light-green]attrib[reset] [color=white]+R[reset] [color=white]-A[reset] [color=light-cyan]*.txt[reset]
 
 .
 :SHELL_CMD_ATTRIB_GET_ERROR
@@ -3199,30 +3199,30 @@ Waits for a keypress and sets an ERRORLEVEL value.
 .
 :SHELL_CMD_CHOICE_HELP_LONG
 Usage:
-  [color=green]choice[reset] [color=cyan][TEXT][reset]
-  [color=green]choice[reset] /c[:][color=white]CHOICES[reset] /n /s /t[:][color=white]c[reset],[color=magenta]nn[reset] [color=cyan][TEXT][reset]
+  [color=light-green]choice[reset] [color=light-cyan][TEXT][reset]
+  [color=light-green]choice[reset] /c[:][color=white]CHOICES[reset] /n /s /t[:][color=white]c[reset],[color=light-magenta]nn[reset] [color=light-cyan][TEXT][reset]
 
 Where:
-  [color=cyan]TEXT[reset]         is the text to display as a prompt, or empty.
+  [color=light-cyan]TEXT[reset]         is the text to display as a prompt, or empty.
   /c[:][color=white]CHOICES[reset] Specifies allowable keys, which default to [color=white]yn[reset].
   /n           Do not display the choices at end of prompt.
   /s           Enables case-sensitive choices to be selected.
-  /t[:][color=white]c[reset],[color=magenta]nn[reset]    Default choice to [color=white]c[reset] after [color=magenta]nn[reset] seconds.
+  /t[:][color=white]c[reset],[color=light-magenta]nn[reset]    Default choice to [color=white]c[reset] after [color=light-magenta]nn[reset] seconds.
 
 Notes:
   This command sets an ERRORLEVEL value starting from 1 according to the
   allowable keys specified in /c option, and the user input can then be checked
-  with [color=green]if[reset] command. With /n option only the specified text will be displayed,
+  with [color=light-green]if[reset] command. With /n option only the specified text will be displayed,
   but not the actual choices (such as the default [color=white][Y,N]?[reset]) in the end.
 
 Examples:
-  [color=green]choice[reset] /t:[color=white]y[reset],[color=magenta]2[reset] [color=cyan]Continue?[reset]
-  [color=green]choice[reset] /c:[color=white]abc[reset] /s [color=cyan]Type the letter a, b, or c[reset]
+  [color=light-green]choice[reset] /t:[color=white]y[reset],[color=light-magenta]2[reset] [color=light-cyan]Continue?[reset]
+  [color=light-green]choice[reset] /c:[color=white]abc[reset] /s [color=light-cyan]Type the letter a, b, or c[reset]
 
 .
 :SHELL_CMD_CHOICE_EOF
 
-[color=red]Choice failed[reset]: the input stream ended without a valid choice.
+[color=light-red]Choice failed[reset]: the input stream ended without a valid choice.
 
 .
 :SHELL_CMD_CHOICE_ABORTED
@@ -3236,20 +3236,20 @@ Displays or sets a search path for executable files.
 .
 :SHELL_CMD_PATH_HELP_LONG
 Usage:
-  [color=green]path[reset]
-  [color=green]path[reset] [color=cyan][[drive:]path[;...][reset]
+  [color=light-green]path[reset]
+  [color=light-green]path[reset] [color=light-cyan][[drive:]path[;...][reset]
 
 Where:
-  [color=cyan][[drive:]path[;...][reset] is a path containing a drive and directory.
+  [color=light-cyan][[drive:]path[;...][reset] is a path containing a drive and directory.
   More than one path can be specified, separated by a semi-colon (;).
 
 Notes:
   Parameter with a semi-colon (;) only clears all search path settings.
-  The path can also be set using [color=green]set[reset] command, e.g. [color=green]set[reset] [color=white]path[reset]=[color=cyan]Z:\[reset]
+  The path can also be set using [color=light-green]set[reset] command, e.g. [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\[reset]
 
 Examples:
-  [color=green]path[reset]
-  [color=green]path[reset] [color=cyan]Z:\;C:\DOS[reset]
+  [color=light-green]path[reset]
+  [color=light-green]path[reset] [color=light-cyan]Z:\;C:\DOS[reset]
 
 .
 :SHELL_CMD_VER_HELP
@@ -3258,16 +3258,16 @@ View the DOS version.
 .
 :SHELL_CMD_VER_HELP_LONG
 Usage:
-  [color=green]ver[reset]
+  [color=light-green]ver[reset]
 
 Notes:
   The DOS version can be set in the configuration file under the [dos] section,
-  using the 'ver = [color=cyan]VERSION[reset]' setting.
-  The DOS version reported to applications can be changed using [color=green]setver[reset] command.
-  Old '[color=green]ver[reset] [color=white]set[reset] [color=cyan]VERSION[reset]' syntax to change DOS version is deprecated.
+  using the 'ver = [color=light-cyan]VERSION[reset]' setting.
+  The DOS version reported to applications can be changed using [color=light-green]setver[reset] command.
+  Old '[color=light-green]ver[reset] [color=white]set[reset] [color=light-cyan]VERSION[reset]' syntax to change DOS version is deprecated.
 
 Examples:
-  [color=green]ver[reset]
+  [color=light-green]ver[reset]
 
 .
 :SHELL_CMD_VER_VER

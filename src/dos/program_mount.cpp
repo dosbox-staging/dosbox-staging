@@ -455,13 +455,13 @@ void MOUNT::AddMessages() {
 	        "Mount a directory from the host OS to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=green]mount[reset] [color=white]DRIVE[reset] [color=cyan]DIRECTORY[reset] [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]\n"
-	        "  [color=green]mount[reset] -listcd / -cd (lists all detected CD-ROM drives and their numbers)\n"
-	        "  [color=green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]DIRECTORY[reset] [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]\n"
+	        "  [color=light-green]mount[reset] -listcd / -cd (lists all detected CD-ROM drives and their numbers)\n"
+	        "  [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)\n"
 	        "\n"
 	        "Where:\n"
 	        "  [color=white]DRIVE[reset]     the drive letter where the directory will be mounted: A, C, D, ...\n"
-	        "  [color=cyan]DIRECTORY[reset] is the directory on the host OS to be mounted\n"
+	        "  [color=light-cyan]DIRECTORY[reset] is the directory on the host OS to be mounted\n"
 	        "  TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay\n"
 	        "  SIZE      free space for the virtual drive (KB for floppies, MB otherwise)\n"
 	        "  LABEL     drive label name to be used\n"
@@ -475,17 +475,17 @@ void MOUNT::AddMessages() {
 	        "\n"
 	        "Examples:\n"
 #if defined(WIN32)
-	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]C:\\dosgames[reset]\n"
-	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]D:\\[reset] -t cdrom -usecd 0\n"
-	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay\n"
+	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgames[reset]\n"
+	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\[reset] -t cdrom -usecd 0\n"
+	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
 #elif defined(MACOSX)
-	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]\n"
-	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]\"/Volumes/Game CD\"[reset] -t cdrom -usecd 0\n"
-	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay\n"
+	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
+	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/Volumes/Game CD\"[reset] -t cdrom -usecd 0\n"
+	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
 #else
-	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]~/dosgames[reset]\n"
-	        "  [color=green]mount[reset] [color=white]D[reset] [color=cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom -usecd 0\n"
-	        "  [color=green]mount[reset] [color=white]C[reset] [color=cyan]my_savegame_files[reset] -t overlay\n"
+	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
+	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom -usecd 0\n"
+	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
 #endif
 	);
 
@@ -498,8 +498,8 @@ void MOUNT::AddMessages() {
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_SUCCESS","Drive %c has successfully been removed.\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL","Virtual Drives can not be unMOUNTed.\n");
 	MSG_Add("PROGRAM_MOUNT_DRIVEID_ERROR", "'%c' is not a valid drive identifier.\n");
-	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","[color=red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
-	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","[color=red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
+	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
+	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
 	MSG_Add("PROGRAM_MOUNT_NO_OPTION", "Warning: Ignoring unsupported option '%s'.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_NO_BASE","A normal directory needs to be MOUNTed first before an overlay can be added on top.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE","The overlay is NOT compatible with the drive that is specified.\n");
