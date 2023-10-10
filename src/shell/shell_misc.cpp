@@ -499,7 +499,7 @@ std::string DOS_Shell::Which(const std::string_view name) const
 
 	if (have_path_env && path_equals != std::string::npos) {
 		path_environment = path_environment.substr(path_equals + 1);
-		auto path_directories = split(path_environment, ';');
+		auto path_directories = split_with_empties(path_environment, ';');
 
 		remove_empties(path_directories);
 

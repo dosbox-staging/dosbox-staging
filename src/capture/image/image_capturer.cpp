@@ -53,7 +53,7 @@ void ImageCapturer::ConfigureGroupedMode(const std::string& prefs)
 	grouped_mode.wants_upscaled = false;
 	grouped_mode.wants_rendered = false;
 
-	const auto formats = split(prefs, ' ');
+	const auto formats = split_with_empties(prefs, ' ');
 	if (formats.size() == 0) {
 		LOG_WARNING("CAPTURE: 'default_image_capture_formats' not specified; "
 		            "defaulting to 'upscaled'");
