@@ -3406,7 +3406,7 @@ static void GUI_StartUp(Section *sec)
 		if (fullresolution != "original") {
 			sdl.desktop.full.fixed = true;
 			if (fullresolution != "desktop") { // desktop uses 0x0, below sets a custom WxH
-				std::vector<std::string> dimensions = split(fullresolution, 'x');
+				std::vector<std::string> dimensions = split_with_empties(fullresolution, 'x');
 				if (dimensions.size() == 2) {
 					sdl.desktop.full.width = parse_int(dimensions[0]).value_or(0);
 					sdl.desktop.full.height = parse_int(dimensions[1]).value_or(0);

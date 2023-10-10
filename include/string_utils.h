@@ -262,7 +262,7 @@ void strip_punctuation(std::string& str);
 //   split(":def", ':') returns {"", "def"}
 //   split(":", ':') returns {"", ""}
 //   split("::", ':') returns {"", "", ""}
-std::vector<std::string> split(std::string_view seq, char delim);
+std::vector<std::string> split_with_empties(std::string_view seq, char delim);
 
 // Split a string on any character found in delim.
 // Delim defaults to all whitespace characters:

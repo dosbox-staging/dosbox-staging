@@ -267,7 +267,7 @@ static std::variant<Error, Command> parse_volume_command(const std::string& s,
 		return std::clamp(*v, MinPercent, MaxPercent);
 	};
 
-	auto parts = split(s, ':');
+	auto parts = split_with_empties(s, ':');
 
 	if (parts.size() == 1) {
 		// Single volume value for both channels (e.g. 10)

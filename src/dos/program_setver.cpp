@@ -632,7 +632,7 @@ void SETVER::LoadTableFromFile()
 	std::string line = {};
 	while (std::getline(file, line)) {
 		// Parse line
-		auto tokens = split(line, '\t');
+		auto tokens = split_with_empties(line, '\t');
 		// Skip empty lines
 		if (tokens.empty()) {
 			continue;

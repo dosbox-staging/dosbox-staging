@@ -1093,7 +1093,7 @@ static std::pair<std::string, std::string> DTAExtendName(const char *fullname)
 	};
 
 	// Split the string on the dot (if it has one)
-	auto v = split(fullname, '.');
+	auto v = split_with_empties(fullname, '.');
 
 	// append placeholders until our vector has two chunks
 	while (v.size() < 2)
