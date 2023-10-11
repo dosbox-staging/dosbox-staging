@@ -91,7 +91,14 @@ public:
 
 		// Manage the write mask
 		void DeleteWriteMask();
+		inline void AddByteToWriteMaskAt(const size_t page_index);
+		inline void AddWordToWriteMaskAt(const size_t page_index);
+		inline void AddDwordToWriteMaskAt(const size_t page_index);
+
+	private:
 		inline void GrowWriteMask(const uint16_t new_mask_len);
+		size_t GrowMaskForTypeAt(const uint8_t type_size,
+		                         const size_t page_index);
 	} cache = {};
 
 	struct Hash {
@@ -589,6 +596,53 @@ inline void CacheBlock::Cache::GrowWriteMask(const uint16_t new_mask_len)
 	wmapmask = new_mask;
 
 	masklen = new_mask_len;
+}
+
+// Grow the mask to accomodate the given type size at the give page index.
+// Returns the offset into the write mask for incoming index.
+size_t CacheBlock::Cache::GrowMaskForTypeAt(const uint8_t type_size,
+                                            const size_t page_index)
+{
+	size_t map_offset = 0;
+
+	// Make the map mask if needed
+	if (GCC_UNLIKELY(!wmapmask)) {
+		constexpr uint8_t initial_mask_len = 64;
+		GrowWriteMask(initial_mask_len);
+		maskstart = check_cast<uint16_t>(page_index);
+	}
+	// Do we need a larger mask to accomodate the added type?
+	else {
+		map_offset = page_index - maskstart;
+		const size_t map_offset_end = map_offset + type_size;
+		if (GCC_UNLIKELY(map_offset_end >= masklen)) {
+			size_t new_mask_len = masklen * 4;
+			if (new_mask_len < map_offset_end) {
+				new_mask_len = ((map_offset_end) & ~3) * 2;
+			}
+			GrowWriteMask(check_cast<uint16_t>(new_mask_len));
+		}
+	}
+	assert(map_offset + type_size < masklen);
+	return map_offset;
+}
+
+inline void CacheBlock::Cache::AddByteToWriteMaskAt(const size_t page_index)
+{
+	const auto map_offset = GrowMaskForTypeAt(sizeof(uint8_t), page_index);
+	wmapmask[map_offset] += 0x01;
+}
+
+inline void CacheBlock::Cache::AddWordToWriteMaskAt(const size_t page_index)
+{
+	const auto map_offset = GrowMaskForTypeAt(sizeof(uint16_t), page_index);
+	add_to_unaligned_uint16(wmapmask + map_offset, 0x0101);
+}
+
+inline void CacheBlock::Cache::AddDwordToWriteMaskAt(const size_t page_index)
+{
+	const auto map_offset = GrowMaskForTypeAt(sizeof(uint32_t), page_index);
+	add_to_unaligned_uint32(wmapmask + map_offset, 0x01010101);
 }
 
 void CacheBlock::Clear()
