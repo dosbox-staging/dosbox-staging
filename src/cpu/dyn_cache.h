@@ -574,21 +574,20 @@ void CacheBlock::DeleteWriteMask() {
 
 void CacheBlock::GrowWriteMask(const uint16_t new_mask_len) {
 	// This function is only called to increase the mask
-	auto& curr_mask_len = cache.masklen;
-	assert(new_mask_len > curr_mask_len);
+	assert(new_mask_len > cache.masklen);
 
 	// Allocate the new mask
 	auto new_mask = new uint8_t[new_mask_len];
+	memset(new_mask, 0, new_mask_len);
 
 	// Copy the current into the new
-	auto& curr_mask = cache.wmapmask;
-	std::copy(curr_mask, curr_mask + curr_mask_len, new_mask);
+	std::copy(cache.wmapmask, cache.wmapmask + cache.masklen, new_mask);
 
 	// Update the current
-	delete[] curr_mask;
-	curr_mask = new_mask;
+	delete[] cache.wmapmask;
+	cache.wmapmask = new_mask;
 
-	curr_mask_len = new_mask_len;
+	cache.masklen = new_mask_len;
 }
 
 void CacheBlock::Clear()
