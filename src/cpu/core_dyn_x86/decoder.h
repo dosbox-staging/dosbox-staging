@@ -130,7 +130,7 @@ static uint8_t decode_fetchb(void) {
         /* Advance to the next page */
 		decode.active_block->page.end=4095;
 		/* trigger possible page fault here */
-		decode.page.first++;
+		++decode.page.first;
 		Bitu fetchaddr=decode.page.first << 12;
 		mem_readb(fetchaddr);
 		MakeCodePage(fetchaddr,decode.page.code);
@@ -145,8 +145,8 @@ static uint8_t decode_fetchb(void) {
 		decode.page.index=0;
 	}
 	decode.page.wmap[decode.page.index]+=0x01;
-	decode.page.index++;
-	decode.code+=1;
+	++decode.page.index;
+	++decode.code;
 	return mem_readb(decode.code-1);
 }
 static uint16_t decode_fetchw(void) {
@@ -243,7 +243,9 @@ static bool decode_fetchd_imm(Bitu & val) {
 
 static void dyn_reduce_cycles(void) {
 	gen_protectflags();
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	gen_dop_word_imm(DOP_SUB,true,DREG(CYCLES),decode.cycles);
 }
 
@@ -328,24 +330,28 @@ static void dyn_check_bool_exception(DynReg * check) {
 	gen_dop_byte(DOP_TEST,check,0,check,0);
 	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_NZ);
 	dyn_savestate(&save_info[used_save_info].state);
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info[used_save_info].cycles=decode.cycles;
 	save_info[used_save_info].eip_change=decode.op_start-decode.code_start;
 	if (!cpu.code.big) save_info[used_save_info].eip_change&=0xffff;
 	save_info[used_save_info].type=db_exception;
-	used_save_info++;
+	++used_save_info;
 }
 
 static void dyn_check_bool_exception_al(void) {
 	cache_addw(0xC084);     // test al,al
 	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_NZ);
 	dyn_savestate(&save_info[used_save_info].state);
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info[used_save_info].cycles=decode.cycles;
 	save_info[used_save_info].eip_change=decode.op_start-decode.code_start;
 	if (!cpu.code.big) save_info[used_save_info].eip_change&=0xffff;
 	save_info[used_save_info].type=db_exception;
-	used_save_info++;
+	++used_save_info;
 }
 
 #include "pic.h"
@@ -356,12 +362,14 @@ static void dyn_check_irqrequest(void) {
 	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_NZ);
 	gen_releasereg(DREG(TMPB));
 	dyn_savestate(&save_info[used_save_info].state);
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info[used_save_info].cycles=decode.cycles;
 	save_info[used_save_info].eip_change=decode.code-decode.code_start;
 	if (!cpu.code.big) save_info[used_save_info].eip_change&=0xffff;
 	save_info[used_save_info].type=normal;
-	used_save_info++;
+	++used_save_info;
 }
 
 static void dyn_fill_blocks(void) {
@@ -472,14 +480,15 @@ static void dyn_write_word_release(DynReg * addr,DynReg * val,bool dword) {
 static void dyn_check_bool_exception_ne(void) {
 	save_info[used_save_info].branch_pos = gen_create_branch_long(BR_Z);
 	dyn_savestate(&save_info[used_save_info].state);
-	if (!decode.cycles)
-		decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info[used_save_info].cycles = decode.cycles;
 	save_info[used_save_info].eip_change = decode.op_start - decode.code_start;
 	if (!cpu.code.big)
 		save_info[used_save_info].eip_change &= 0xffff;
 	save_info[used_save_info].type = db_exception;
-	used_save_info++;
+	++used_save_info;
 }
 
 static void dyn_read_intro(DynReg * addr,bool release_addr=true) {
@@ -2168,7 +2177,7 @@ static void dyn_larlsl(bool islar) {
 	dyn_savestate(&save_info[used_save_info].state);	\
 	save_info[used_save_info].return_pos=cache.pos;		\
 	save_info[used_save_info].type=fpu_restore;			\
-	used_save_info++;									\
+	++used_save_info;									\
 }
 #endif
 #include "dyn_fpu.h"
@@ -2203,7 +2212,7 @@ static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bit
 	gen_dop_word(DOP_TEST,true,DREG(CYCLES),DREG(CYCLES));
 	save_info[used_save_info].branch_pos=gen_create_branch_long(BR_LE);
 	save_info[used_save_info].type=cycle_check;
-	used_save_info++;
+	++used_save_info;
 	gen_releasereg(DREG(CYCLES));
 	decode.cycles=0;
 #ifdef X86_DYNFPU_DH_ENABLED
@@ -2215,7 +2224,7 @@ static CacheBlock * CreateCacheBlock(CodePageHandler * codepage,PhysPt start,Bit
 		decode.big_op=cpu.code.big;
 		decode.segprefix=nullptr;
 		decode.rep=REP_NONE;
-		decode.cycles++;
+		++decode.cycles;
 		decode.op_start=decode.code;
 restart_prefix:
 		Bitu opcode;
