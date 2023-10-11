@@ -196,7 +196,7 @@ static void decode_advancepage(void) {
 	// Advance to the next page
 	decode.active_block->page.end=4095;
 	// trigger possible page fault here
-	decode.page.first++;
+	++decode.page.first;
 	Bitu faddr=decode.page.first << 12;
 	mem_readb(faddr);
 	MakeCodePage(faddr,decode.page.code);
@@ -217,8 +217,8 @@ static uint8_t decode_fetchb(void) {
 		decode_advancepage();
 	}
 	decode.page.wmap[decode.page.index]+=0x01;
-	decode.page.index++;
-	decode.code+=1;
+	++decode.page.index;
+	++decode.code;
 	return mem_readb(decode.code-1);
 }
 // fetch the next word of the instruction stream
@@ -428,7 +428,9 @@ static void inline dyn_get_modrm(void) {
 
 // adjust CPU_Cycles value
 static void dyn_reduce_cycles(void) {
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	gen_sub_direct_word(&CPU_Cycles,decode.cycles,true);
 }
 
@@ -637,13 +639,15 @@ static void dyn_closeblock(void) {
 // add a check that can branch to the exception handling
 static void dyn_check_exception(HostReg reg) {
 	save_info_dynrec[used_save_info_dynrec].branch_pos=gen_create_branch_long_nonzero(reg,false);
-	if (!decode.cycles) decode.cycles++;
+	if (!decode.cycles) {
+		++decode.cycles;
+	}
 	save_info_dynrec[used_save_info_dynrec].cycles=decode.cycles;
 	// in case of an exception eip will point to the start of the current instruction
 	save_info_dynrec[used_save_info_dynrec].eip_change=decode.op_start-decode.code_start;
 	if (!cpu.code.big) save_info_dynrec[used_save_info_dynrec].eip_change&=0xffff;
 	save_info_dynrec[used_save_info_dynrec].type=db_exception;
-	used_save_info_dynrec++;
+	++used_save_info_dynrec;
 }
 
 bool DRC_CALL_CONV mem_readb_checked_drc(PhysPt address) DRC_FC;
@@ -1190,7 +1194,7 @@ static void InvalidateFlagsPartially(void* current_simple_function,Bitu flags_ty
 	mf_functions[mf_functions_num].pos=cache.pos;
 	mf_functions[mf_functions_num].fct_ptr=current_simple_function;
 	mf_functions[mf_functions_num].ftype=flags_type;
-	mf_functions_num++;
+	++mf_functions_num;
 #endif
 }
 
@@ -1202,7 +1206,7 @@ static void InvalidateFlagsPartially(void* current_simple_function,const uint8_t
 	mf_functions[mf_functions_num].pos=cpos;
 	mf_functions[mf_functions_num].fct_ptr=current_simple_function;
 	mf_functions[mf_functions_num].ftype=flags_type;
-	mf_functions_num++;
+	++mf_functions_num;
 #endif
 }
 
