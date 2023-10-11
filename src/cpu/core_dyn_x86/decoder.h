@@ -173,32 +173,6 @@ static uint32_t decode_fetchd(void) {
 	return mem_readd(decode.code-4);
 }
 
-#define START_WMMEM 64
-
-static inline void decode_increase_wmapmask(Bitu size) {
-	size_t mapidx        = 0;
-	CacheBlock* activecb = decode.active_block;
-	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
-		activecb->cache.GrowWriteMask(START_WMMEM);
-		activecb->cache.maskstart = decode.page.index;
-	} else {
-		mapidx = decode.page.index - activecb->cache.maskstart;
-		if (GCC_UNLIKELY(mapidx + size >= activecb->cache.masklen)) {
-			size_t new_mask_len = activecb->cache.masklen * 4;
-			if (new_mask_len < mapidx + size) {
-				new_mask_len = ((mapidx + size) & ~3) * 2;
-			}
-			activecb->cache.GrowWriteMask(check_cast<uint16_t>(new_mask_len));
-		}
-	}
-	// update mask entries
-	switch (size) {
-	case 1: activecb->cache.wmapmask[mapidx] += 0x01; break;
-	case 2: add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
-	case 4: add_to_unaligned_uint32(&activecb->cache.wmapmask[mapidx], 0x01010101); break;
-	}
-}
-
 static bool decode_fetchb_imm(Bitu & val) {
 	if (decode.page.index<4096) {
 		if (decode.page.invmap != nullptr) {
@@ -209,7 +183,7 @@ static bool decode_fetchb_imm(Bitu & val) {
 			HostPt tlb_addr=get_tlb_read(decode.code);
 			if (tlb_addr) {
 				val=(Bitu)(tlb_addr+decode.code);
-				decode_increase_wmapmask(1);
+				decode.active_block->cache.AddByteToWriteMaskAt(decode.page.index);
 				decode.code++;
 				decode.page.index++;
 				return true;
@@ -231,9 +205,9 @@ static bool decode_fetchw_imm(Bitu & val) {
 			HostPt tlb_addr=get_tlb_read(decode.code);
 			if (tlb_addr) {
 				val=(Bitu)(tlb_addr+decode.code);
-				decode_increase_wmapmask(2);
-				decode.code+=2;
-				decode.page.index+=2;
+				decode.active_block->cache.AddWordToWriteMaskAt(decode.page.index);
+				decode.code += 2;
+				decode.page.index += 2;
 				return true;
 			}
 		}
@@ -255,9 +229,9 @@ static bool decode_fetchd_imm(Bitu & val) {
 			HostPt tlb_addr=get_tlb_read(decode.code);
 			if (tlb_addr) {
 				val=(Bitu)(tlb_addr+decode.code);
-				decode_increase_wmapmask(4);
-				decode.code+=4;
-				decode.page.index+=4;
+				decode.active_block->cache.AddDwordToWriteMaskAt(decode.page.index);
+				decode.code += 4;
+				decode.page.index += 4;
 				return true;
 			}
 		}
