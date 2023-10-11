@@ -184,8 +184,8 @@ static bool decode_fetchb_imm(Bitu & val) {
 			if (tlb_addr) {
 				val=(Bitu)(tlb_addr+decode.code);
 				decode.active_block->cache.AddByteToWriteMaskAt(decode.page.index);
-				decode.code++;
-				decode.page.index++;
+				++decode.code;
+				++decode.page.index;
 				return true;
 			}
 		}
