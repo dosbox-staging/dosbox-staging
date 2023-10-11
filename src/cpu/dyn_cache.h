@@ -23,6 +23,7 @@
 #include <cerrno>
 #include <new>
 #include <type_traits>
+#include <vector>
 
 #include "mem_unaligned.h"
 #include "paging.h"
@@ -89,9 +90,8 @@ public:
 		CacheBlock* next = {};
 		// writemap masking maskpointer/start/length to allow holes in
 		// the writemap
-		uint8_t* wmapmask = {};
+		std::vector<uint8_t>* wmapmask = nullptr;
 		uint16_t maskstart = 0;
-		uint16_t masklen   = 0;
 	} cache = {};
 
 	struct Hash {
@@ -450,8 +450,9 @@ public:
 			     i++, maskct++) {
 				if (write_map[i]) {
 					// only adjust writemap if it isn't masked
-					if ((maskct >= block->cache.masklen) ||
-					    (!block->cache.wmapmask[maskct])) {
+					assert(block->cache.wmapmask);
+					if ((maskct >= block->cache.wmapmask->size()) ||
+					    (!(*block->cache.wmapmask)[maskct])) {
 						write_map[i]--;
 					}
 				}
@@ -566,28 +567,22 @@ CacheBlock::~CacheBlock() {
 }
 
 void CacheBlock::DeleteWriteMask() {
-	delete[] cache.wmapmask;
-	cache.wmapmask = {};
-
-	cache.masklen = 0;
+	if (cache.wmapmask) {
+		delete cache.wmapmask;
+		cache.wmapmask = nullptr;
+	}
 }
 
-void CacheBlock::GrowWriteMask(const uint16_t new_mask_len) {
+void CacheBlock::GrowWriteMask(const uint16_t new_mask_len)
+{
 	// This function is only called to increase the mask
-	assert(new_mask_len > cache.masklen);
-
-	// Allocate the new mask
-	auto new_mask = new uint8_t[new_mask_len];
-	memset(new_mask, 0, new_mask_len);
-
-	// Copy the current into the new
-	std::copy(cache.wmapmask, cache.wmapmask + cache.masklen, new_mask);
-
-	// Update the current
-	delete[] cache.wmapmask;
-	cache.wmapmask = new_mask;
-
-	cache.masklen = new_mask_len;
+	if (cache.wmapmask) {
+		assert(new_mask_len > cache.wmapmask->size());
+		cache.wmapmask->resize(new_mask_len);
+	} else {
+		// We don't have a mask yet, so make one
+		cache.wmapmask = new std::vector<uint8_t>(new_mask_len, 0);
+	}
 }
 
 void CacheBlock::Clear()

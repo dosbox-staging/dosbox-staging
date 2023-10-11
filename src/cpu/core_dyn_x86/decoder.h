@@ -183,19 +183,25 @@ static inline void decode_increase_wmapmask(Bitu size) {
 		activecb->cache.maskstart = decode.page.index;
 	} else {
 		mapidx = decode.page.index - activecb->cache.maskstart;
-		if (GCC_UNLIKELY(mapidx + size >= activecb->cache.masklen)) {
-			size_t new_mask_len = activecb->cache.masklen * 4;
+		assert(activecb->cache.wmapmask);
+		if (GCC_UNLIKELY(mapidx + size >= activecb->cache.wmapmask->size())) {
+			size_t new_mask_len = activecb->cache.wmapmask->size() * 4;
 			if (new_mask_len < mapidx + size) {
 				new_mask_len = ((mapidx + size) & ~3) * 2;
 			}
 			activecb->GrowWriteMask(check_cast<uint16_t>(new_mask_len));
 		}
 	}
+	// The mask is expected to exist and handle the index at this point
+	assert(activecb->cache.wmapmask);
+	assert(mapidx < activecb->cache.wmapmask->size());
+
 	// update mask entries
+	const auto mask_data = activecb->cache.wmapmask->data();
 	switch (size) {
-	case 1: activecb->cache.wmapmask[mapidx] += 0x01; break;
-	case 2: add_to_unaligned_uint16(&activecb->cache.wmapmask[mapidx], 0x0101); break;
-	case 4: add_to_unaligned_uint32(&activecb->cache.wmapmask[mapidx], 0x01010101); break;
+	case 1: mask_data[mapidx] += 0x01; break;
+	case 2: add_to_unaligned_uint16(mask_data + mapidx, 0x0101); break;
+	case 4: add_to_unaligned_uint32(mask_data + mapidx, 0x01010101); break;
 	}
 }
 
