@@ -179,7 +179,7 @@ static inline void decode_increase_wmapmask(Bitu size) {
 	size_t mapidx        = 0;
 	CacheBlock* activecb = decode.active_block;
 	if (GCC_UNLIKELY(!activecb->cache.wmapmask)) {
-		activecb->GrowWriteMask(START_WMMEM);
+		activecb->cache.GrowWriteMask(START_WMMEM);
 		activecb->cache.maskstart = decode.page.index;
 	} else {
 		mapidx = decode.page.index - activecb->cache.maskstart;
@@ -188,7 +188,7 @@ static inline void decode_increase_wmapmask(Bitu size) {
 			if (new_mask_len < mapidx + size) {
 				new_mask_len = ((mapidx + size) & ~3) * 2;
 			}
-			activecb->GrowWriteMask(check_cast<uint16_t>(new_mask_len));
+			activecb->cache.GrowWriteMask(check_cast<uint16_t>(new_mask_len));
 		}
 	}
 	// update mask entries

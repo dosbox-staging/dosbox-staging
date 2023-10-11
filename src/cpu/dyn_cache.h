@@ -61,10 +61,6 @@ public:
 
 	void Clear();
 
-	// Manage the write mask
-	void DeleteWriteMask();
-	void GrowWriteMask(const uint16_t new_mask_len);
-
 	// link this cache block to another block, index specifies the code
 	// path (always zero for unconditional links, 0/1 for conditional ones
 	void LinkTo(Bitu index, CacheBlock *toblock)
@@ -92,6 +88,10 @@ public:
 		uint8_t* wmapmask = {};
 		uint16_t maskstart = 0;
 		uint16_t masklen   = 0;
+
+		// Manage the write mask
+		void DeleteWriteMask();
+		inline void GrowWriteMask(const uint16_t new_mask_len);
 	} cache = {};
 
 	struct Hash {
@@ -456,7 +456,7 @@ public:
 					}
 				}
 			}
-			block->DeleteWriteMask();
+			block->cache.DeleteWriteMask();
 		} else {
 			for (Bitu i = block->page.start; i <= block->page.end; i++) {
 				if (write_map[i]) {
@@ -562,32 +562,33 @@ static CacheBlock *cache_getblock()
 }
 
 CacheBlock::~CacheBlock() {
-	DeleteWriteMask();
+	cache.DeleteWriteMask();
 }
 
-void CacheBlock::DeleteWriteMask() {
-	delete[] cache.wmapmask;
-	cache.wmapmask = {};
-
-	cache.masklen = 0;
+void CacheBlock::Cache::DeleteWriteMask()
+{
+	delete[] wmapmask;
+	wmapmask = {};
+	masklen  = 0;
 }
 
-void CacheBlock::GrowWriteMask(const uint16_t new_mask_len) {
+inline void CacheBlock::Cache::GrowWriteMask(const uint16_t new_mask_len)
+{
 	// This function is only called to increase the mask
-	assert(new_mask_len > cache.masklen);
+	assert(new_mask_len > masklen);
 
 	// Allocate the new mask
 	auto new_mask = new uint8_t[new_mask_len];
 	memset(new_mask, 0, new_mask_len);
 
 	// Copy the current into the new
-	std::copy(cache.wmapmask, cache.wmapmask + cache.masklen, new_mask);
+	std::copy(wmapmask, wmapmask + masklen, new_mask);
 
 	// Update the current
-	delete[] cache.wmapmask;
-	cache.wmapmask = new_mask;
+	delete[] wmapmask;
+	wmapmask = new_mask;
 
-	cache.masklen = new_mask_len;
+	masklen = new_mask_len;
 }
 
 void CacheBlock::Clear()
@@ -633,7 +634,7 @@ void CacheBlock::Clear()
 		page.handler->DelCacheBlock(this);
 		page.handler=nullptr;
 	}
-	DeleteWriteMask();
+	cache.DeleteWriteMask();
 }
 
 static CacheBlock *cache_openblock()
