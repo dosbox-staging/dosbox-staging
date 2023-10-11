@@ -1,12 +1,13 @@
 [wrap-file]
-directory = munt-libmt32emu_2_7_0
-source_url = https://github.com/munt/munt/archive/libmt32emu_2_7_0.tar.gz
-source_filename = libmt32emu_2_7_0.tar.gz
-source_hash = 5ede7c3d28a3bb0d9e637935b8b96484fadb409c9e5952a9e5432b3e05e5dbc1
-patch_filename = mt32emu_2.7.0-1_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/mt32emu_2.7.0-1/get_patch
-patch_hash = 58a3c7a74a7ef91ba60544a4ec4c3688474f7f6cb1a8b8a0ea81459f9eb92e01
-wrapdb_version = 2.7.0-1
+directory = munt-libmt32emu_2_7_1
+source_url = https://github.com/munt/munt/archive/libmt32emu_2_7_1.tar.gz
+source_filename = libmt32emu_2_7_1.tar.gz
+source_hash = e4524d52d6799a4e32a961a2e92074f14adcb2f110a4e7a06bede77050cfdaf4
+patch_filename = mt32emu_2.7.1-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/mt32emu_2.7.1-1/get_patch
+patch_hash = 2477830f61767670e90819457b65f9fc4e1dd915ebfddaf0d9607ebf260d67c0
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/mt32emu_2.7.1-1/libmt32emu_2_7_1.tar.gz
+wrapdb_version = 2.7.1-1
 
 [provide]
 mt32emu = mt32emu_dep
