@@ -457,10 +457,10 @@ bool localDrive::GetFileAttr(char* name, FatAttributeFlags* attr)
 	CROSS_FILENAME(newname);
 	dirCache.ExpandNameAndNormaliseCase(newname);
 
-	const auto result = local_drive_get_attributes(newname, *attr);
-	if (result != DOSERR_NONE) {
+	if (local_drive_get_attributes(newname, *attr) != DOSERR_NONE) {
+		// The caller is responsible to act accordingly, possibly
+		// it should set DOS error code (setting it here is not allowed)
 		*attr = 0;
-		DOS_SetError(result);
 		return false;
 	}
 
