@@ -37,6 +37,6 @@ std::string convert_ansi_markup(const char* str);
  * \param str 
  * \return std::string 
  */
-std::string convert_ansi_markup(std::string &str);
+std::string convert_ansi_markup(const std::string &str);
 
 #endif // DOSBOX_ANSI_CODE_MARKUP_H
