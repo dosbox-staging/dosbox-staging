@@ -3173,7 +3173,7 @@ void MAPPER_BindKeys(Section *sec)
 	const auto section = static_cast<const Section_prop *>(sec);
 	const auto mapperfile_value = section->Get_string("mapperfile");
 	const auto property = section->Get_path("mapperfile");
-	assert(property && !property->realpath.empty());
+	assert(property);
 	mapper.filename = property->realpath.string();
 
 	QueryJoysticks();
