@@ -2049,32 +2049,56 @@ void LogPages(char* selname) {
 			for (int i=0; i<0xfffff; i++) {
 				Bitu table_addr=(paging.base.page<<12)+(i >> 10)*4;
 				X86PageEntry table;
-				table.load=phys_readd(table_addr);
-				if (table.block.p) {
+				table.set(phys_readd(table_addr));
+				if (table.p) {
 					X86PageEntry entry;
-					Bitu entry_addr=(table.block.base<<12)+(i & 0x3ff)*4;
-					entry.load=phys_readd(entry_addr);
-					if (entry.block.p) {
-						sprintf(out1,"page %05Xxxx -> %04Xxxx  flags [uw] %x:%x::%x:%x [d=%x|a=%x]",
-							i,entry.block.base,entry.block.us,table.block.us,
-							entry.block.wr,table.block.wr,entry.block.d,entry.block.a);
-						LOG(LOG_MISC,LOG_ERROR)("%s",out1);
+					Bitu entry_addr = (table.base << 12) +
+					                  (i & 0x3ff) * 4;
+					entry.set(phys_readd(entry_addr));
+					if (entry.p) {
+						sprintf(out1,
+						        "page %05Xxxx -> %04Xxxx  flags [uw] %x:%x::%x:%x [d=%x|a=%x]",
+						        i,
+						        entry.base,
+						        entry.us,
+						        table.us,
+						        entry.wr,
+						        table.wr,
+						        entry.d,
+						        entry.a);
+						LOG(LOG_MISC, LOG_ERROR)
+						("%s", out1);
 					}
 				}
 			}
 		} else {
 			Bitu table_addr=(paging.base.page<<12)+(sel >> 10)*4;
 			X86PageEntry table;
-			table.load=phys_readd(table_addr);
-			if (table.block.p) {
+			table.set(phys_readd(table_addr));
+			if (table.p) {
 				X86PageEntry entry;
-				Bitu entry_addr=(table.block.base<<12)+(sel & 0x3ff)*4;
-				entry.load=phys_readd(entry_addr);
-				sprintf(out1,"page %05" sBitfs(X) "xxx -> %04Xxxx  flags [puw] %x:%x::%x:%x::%x:%x",sel,entry.block.base,entry.block.p,table.block.p,entry.block.us,table.block.us,entry.block.wr,table.block.wr);
-				LOG(LOG_MISC,LOG_ERROR)("%s",out1);
+				Bitu entry_addr = (table.base << 12) +
+				                  (sel & 0x3ff) * 4;
+				entry.set(phys_readd(entry_addr));
+				sprintf(out1,
+				        "page %05" sBitfs(X) "xxx -> %04Xxxx  flags [puw] %x:%x::%x:%x::%x:%x",
+				        sel,
+				        entry.base,
+				        entry.p,
+				        table.p,
+				        entry.us,
+				        table.us,
+				        entry.wr,
+				        table.wr);
+				LOG(LOG_MISC, LOG_ERROR)("%s", out1);
 			} else {
-				sprintf(out1,"pagetable %03" sBitfs(X) " not present, flags [puw] %x::%x::%x",(sel >> 10),table.block.p,table.block.us,table.block.wr);
-				LOG(LOG_MISC,LOG_ERROR)("%s",out1);
+				sprintf(out1,
+				        "pagetable %03" sBitfs(X) " not present, flags [puw] %x::%x::%x",
+				        (sel >> 10),
+				        table.p,
+				        table.us,
+				        table.wr);
+				LOG(LOG_MISC, LOG_ERROR)("%s", out1);
 			}
 		}
 	}
