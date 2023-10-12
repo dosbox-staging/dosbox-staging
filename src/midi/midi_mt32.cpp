@@ -37,6 +37,7 @@
 #include "fs_utils.h"
 #include "math_utils.h"
 #include "midi.h"
+#include "mpu401.h"
 #include "midi_lasynth_model.h"
 #include "mixer.h"
 #include "pic.h"

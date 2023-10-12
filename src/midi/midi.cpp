@@ -36,6 +36,7 @@
 #include "cross.h"
 #include "mapper.h"
 #include "midi_handler.h"
+#include "mpu401.h"
 #include "pic.h"
 #include "programs.h"
 #include "setup.h"
@@ -823,8 +824,6 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "the raw, unaltered MIDI output of a program, e.g. when working with music\n"
 	        "applications, or when debugging MIDI issues.");
 }
-
-void MPU401_Init(Section*);
 
 void MIDI_AddConfigSection(const config_ptr_t& conf)
 {
