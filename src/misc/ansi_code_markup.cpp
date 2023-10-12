@@ -309,7 +309,7 @@ static const char *get_ansi_code(const Tag &tag)
 	return ansi_code;
 }
 
-std::string convert_ansi_markup(std::string &str)
+std::string convert_ansi_markup(const std::string &str)
 {
 	return convert_ansi_markup(str.c_str());
 }
