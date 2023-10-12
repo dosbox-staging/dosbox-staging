@@ -30,6 +30,7 @@
 #include <tuple>
 
 #include "../ints/int10.h"
+#include "ansi_code_markup.h"
 #include "control.h"
 #include "cross.h"
 #include "fs_utils.h"
@@ -860,10 +861,16 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 	const size_t term_width = INT10_GetTextColumns();
 
 	auto write_line = [caller](bool do_highlight, const std::string& line) {
-		const char color[]   = "\033[32;1m";
-		const char nocolor[] = "\033[0m";
+		constexpr auto green = "[color=light-green]";
+		constexpr auto reset = "[reset]";
+
 		if (do_highlight) {
-			caller->WriteOut("* %s%s%s\n", color, line.c_str(), nocolor);
+			const auto output = format_string("%s* %s%s\n",
+			                                  green,
+			                                  line.c_str(),
+			                                  reset);
+
+			caller->WriteOut(convert_ansi_markup(output).c_str());
 		} else {
 			caller->WriteOut("  %s\n", line.c_str());
 		}
