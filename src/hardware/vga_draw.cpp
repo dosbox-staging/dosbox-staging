@@ -1840,8 +1840,8 @@ static Fraction calc_pixel_aspect_from_dimensions(const uint16_t width,
                                                   const bool double_width,
                                                   const bool double_height)
 {
-	const auto storage_aspect_ratio = Fraction(width * (double_width ? 2 : 1),
-	                                           height * (double_height ? 2 : 1));
+	const auto storage_aspect_ratio = Fraction(static_cast<int64_t>(width) * (double_width ? 2 : 1),
+	                                           static_cast<int64_t>(height) * (double_height ? 2 : 1));
 
 	return display_aspect_ratio / storage_aspect_ratio;
 }
