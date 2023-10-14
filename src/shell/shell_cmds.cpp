@@ -1309,7 +1309,7 @@ void DOS_Shell::CMD_COPY(char* args)
 
 			if (!search_result.IsDirectory()) {
 				safe_strcpy(nameSource, pathSource);
-				strcat(nameSource, search_result.name.c_str());
+				safe_strcat(nameSource, search_result.name.c_str());
 				// Open Source
 				if (DOS_OpenFile(nameSource,0,&sourceHandle)) {
 					// Create Target or open it if in concat mode
@@ -1506,8 +1506,7 @@ static bool attrib_recursive(DOS_Shell *shell,
 					                       std::string(1, '\\') +
 					                       get_filename(args);
 					found_dirs.push_back(fullname);
-					strcpy(path, fullname.c_str());
-					*(path + len) = 0;
+					safe_strcpy(path, fullname.c_str());
 				}
 			} while (DOS_FindNext());
 			all_dirs.insert(all_dirs.begin() + 1,
