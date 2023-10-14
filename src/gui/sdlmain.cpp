@@ -804,22 +804,6 @@ static std::optional<int> get_benchmarked_vsync_rate()
 	return (bench_rate != 0 ? std::optional<int>(bench_rate) : std::nullopt);
 }
 
-static void set_vfr_dupe_countdown_from_rate(const double dos_rate_hz)
-{
-	constexpr auto max_dupe_rate_hz = 10.0;
-
-	assert(dos_rate_hz >= max_dupe_rate_hz);
-	assert(dos_rate_hz <= RefreshRateMax);
-	const auto dos_to_dupe_frames = iround(dos_rate_hz / max_dupe_rate_hz);
-
-	sdl.frame.vfr_dupe_countdown = check_cast<int8_t>(dos_to_dupe_frames);
-
-#if 0
-	LOG_MSG("SDL: Setting VFR duplicate countdown to %d "
-	        "from a DOS rate of %.1f Hz ", dos_to_dupe_frames, dos_rate_hz);
-#endif
-}
-
 static void save_rate_to_frame_period(const double rate_hz)
 {
 	assert(rate_hz > 0);
@@ -1040,9 +1024,9 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 	VGA_SetHostRate(host_rate);
 	const auto dos_rate = VGA_GetPreferredRate();
 
-	// Update the VFR duplicate countdown based on the DOS rate to produce a
-	// fixed lower-bound dupe refresh rate.
-	set_vfr_dupe_countdown_from_rate(dos_rate);
+	// Calculate the maximum number of duplicate frames before presenting
+	constexpr uint16_t min_rate = 10;
+	sdl.frame.max_dupe_frames   = static_cast<float>(dos_rate) / min_rate;
 
 	// Consider any vsync state that isn't explicitly off as having some
 	// level of vsync enforcement as "on"
@@ -2352,19 +2336,29 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 		// capture modes.
 		sdl.frame.present();
 	} else {
-		const auto frame_is_new = sdl.updating;
+		// Helper lambda indicating whether the frame should be presented.
+		// Returns true if the frame has been updated or if the limit of
+		// sequentially skipped duplicate frames has been reached.
+		auto vfr_should_present = []() {
+			static uint16_t dupe_tally = 0;
+			if (sdl.updating || ++dupe_tally > sdl.frame.max_dupe_frames) {
+				dupe_tally = 0;
+				return true;
+			}
+			return false;
+		};
 
 		switch (sdl.frame.mode) {
 		case FrameMode::Cfr:
-			maybe_present_synced(frame_is_new);
+			maybe_present_synced(sdl.updating);
 			break;
 		case FrameMode::Vfr:
-			if (frame_is_new) {
+			if (vfr_should_present()) {
 				sdl.frame.present();
 			}
 			break;
 		case FrameMode::ThrottledVfr:
-			maybe_present_throttled(frame_is_new);
+			maybe_present_throttled(vfr_should_present());
 			break;
 		case FrameMode::Unset:
 			break;
