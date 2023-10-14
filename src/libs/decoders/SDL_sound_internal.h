@@ -47,9 +47,7 @@
 #define SNDDBG(x)
 #endif
 
-#if HAVE_ASSERT_H
-#  include <assert.h>
-#endif
+#include <assert.h>
 
 #ifdef _WIN32_WCE
     extern char *strrchr(const char *s, int c);
