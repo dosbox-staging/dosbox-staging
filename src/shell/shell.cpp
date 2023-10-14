@@ -309,8 +309,8 @@ void DOS_Shell::ParseLine(char *line)
 		if (out_file.length() && pipe_file.length())
 			WriteOut(MSG_Get("SHELL_CMD_DUPLICATE_REDIRECTION"),
 			         out_file.c_str());
-		LOG_MSG("SHELL: Redirecting output to %s",
-		        pipe_file.length() ? pipe_tempfile : out_file.c_str());
+		// LOG_MSG("SHELL: Redirecting output to %s",
+		//         pipe_file.length() ? pipe_tempfile : out_file.c_str());
 		close_stdout(normalstdout);
 		open_console_device(!normalstdin && !in_file.length());
 		if (!get_pipe_status(out_file.length() ? out_file.c_str() : nullptr,
