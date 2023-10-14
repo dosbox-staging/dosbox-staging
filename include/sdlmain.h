@@ -222,10 +222,10 @@ struct SDL_Block {
 		FrameMode desired_mode        = FrameMode::Unset;
 		FrameMode mode                = FrameMode::Unset;
 		double period_ms    = 0.0; // in ms, for use with PIC timers
+		float max_dupe_frames = 0.0f;
 		int period_us       = 0; // same but in us, for use with chrono
 		int period_us_early = 0;
-		int period_us_late  = 0;
-		int8_t vfr_dupe_countdown = 0;
+		int period_us_late    = 0;
 	} frame = {};
 
 	SDL_Rect updateRects[1024] = {};
