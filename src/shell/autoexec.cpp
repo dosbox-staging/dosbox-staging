@@ -34,6 +34,9 @@
 
 CHECK_NARROWING();
 
+// Uncomment line below to print the generated AUTOEXEC.BAT in the log output
+// #define DEBUG_AUTOEXEC
+
 // ***************************************************************************
 // Constants
 // ***************************************************************************
@@ -188,6 +191,10 @@ std::string create_autoexec_bat_utf8()
 			push_string(autoexec_line);
 		}
 	}
+
+#ifdef DEBUG_AUTOEXEC
+	LOG_INFO("AUTOEXEC: New file content\n\n%s", out.c_str());
+#endif // DEBUG_AUTOEXEC
 
 	return out;
 }
