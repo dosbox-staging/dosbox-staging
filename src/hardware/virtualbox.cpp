@@ -287,7 +287,7 @@ static void warn_unsupported_struct_version(const RequestHeader& header)
 		LOG_WARNING("VIRTUALBOX: unimplemented request #%d structure v%d.%02d",
 		            enum_val(header.request_type),
 		            header.struct_version >> 16,
-		            header.struct_version && 0xffff);
+		            header.struct_version & 0xffff);
 		already_warned_set.insert(header.struct_version);
 	}
 }
@@ -467,7 +467,7 @@ static void handle_report_guest_info(const RequestHeader& header,
 		if (payload.interface_version != ver_1_04) {
 			LOG_WARNING("VIRTUALBOX: unimplemented protocol v%d.%02d",
 			            payload.interface_version >> 16,
-			            payload.interface_version && 0xffff);
+			            payload.interface_version & 0xffff);
 			client_disconnect();
 			break;
 		}
