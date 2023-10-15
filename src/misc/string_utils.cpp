@@ -52,6 +52,10 @@ void strreplace(char *str, char o, char n)
 	}
 }
 
+void ltrim(std::string &str) {
+    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int c) {return !isspace(c);}));
+}
+
 char *ltrim(char *str)
 {
 	while (*str && isspace(*reinterpret_cast<unsigned char *>(str)))
@@ -237,7 +241,6 @@ bool natural_compare(const std::string& a_str, const std::string& b_str)
 	return a == a_end && b != b_end;
 }
 
-// TODO: Write a version of this that operates on a std::string
 char* strip_word(char*& line)
 {
 	char *scan = line;
@@ -259,6 +262,30 @@ char* strip_word(char*& line)
 	}
 	line = scan;
 	return begin;
+}
+
+std::string strip_word(std::string& line)
+{
+	ltrim(line);
+	if (line.empty()) {
+		return "";
+	}
+	if (line[0] == '"') {
+		size_t end_quote = line.find('"', 1);
+		if (end_quote != std::string::npos) {
+			std::string word = line.substr(1, end_quote - 1);
+			line.erase(0, end_quote + 1);
+			ltrim(line);
+			return word;
+		}
+	}
+	auto end_word = std::find_if(line.begin(), line.end(), [](int c) {return isspace(c);});
+	std::string word(line.begin(), end_word);
+	if (end_word != line.end()) {
+		++end_word;
+	}
+	line.erase(line.begin(), end_word);
+	return word;
 }
 
 void strip_punctuation(std::string &str)

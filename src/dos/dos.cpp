@@ -1611,12 +1611,8 @@ public:
 
 		const Section_prop* section = static_cast<Section_prop*>(configuration);
 		std::string args = section->Get_string("ver");
-
-		// TODO: Write a version of strip_word that operates on a std::string
-		// And remove this const_cast
-		char* args_cstr = const_cast<char *>(args.c_str());
-		const char* word = strip_word(args_cstr);
-		const auto new_version = DOS_ParseVersion(word, args_cstr);
+		std::string word = strip_word(args);
+		const auto new_version = DOS_ParseVersion(word.c_str(), args.c_str());
 		if (new_version.major || new_version.minor) {
 			dos.version.major = new_version.major;
 			dos.version.minor = new_version.minor;
