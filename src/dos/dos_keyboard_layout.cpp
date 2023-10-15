@@ -1677,28 +1677,28 @@ public:
 
 		loaded_layout = std::make_unique<KeyboardLayout>();
 
-		const char * layoutname=section->Get_string("keyboardlayout");
+		std::string layoutname = section->Get_string("keyboardlayout");
 
 		// If the use only provided a single value (language), then try using it
 		const auto layout_is_one_value = sv(layoutname).find(' ') == std::string::npos;
 		if (layout_is_one_value) {
-			if (!DOS_LoadKeyboardLayoutFromLanguage(layoutname)) {
+			if (!DOS_LoadKeyboardLayoutFromLanguage(layoutname.c_str())) {
 				return; // success
 			}
 		}
 		// Otherwise use the layout to get the codepage
-		const auto req_codepage = loaded_layout->ExtractCodePage(layoutname);
+		const auto req_codepage = loaded_layout->ExtractCodePage(layoutname.c_str());
 		loaded_layout->ReadCodePageFile("auto", req_codepage);
 
-		if (loaded_layout->ReadKeyboardFile(layoutname, dos.loaded_codepage)) {
-			if (strncmp(layoutname, "auto", 4)) {
+		if (loaded_layout->ReadKeyboardFile(layoutname.c_str(), dos.loaded_codepage)) {
+			if (strncmp(layoutname.c_str(), "auto", 4)) {
 				LOG_ERR("LAYOUT: Failed to load keyboard layout %s",
-				        layoutname);
+				        layoutname.c_str());
 			}
 		} else {
 			const char *lcode = loaded_layout->GetMainLanguageCode();
 			if (lcode) {
-				LOG_MSG("LAYOUT: DOS keyboard layout loaded with main language code %s for layout %s",lcode,layoutname);
+				LOG_MSG("LAYOUT: DOS keyboard layout loaded with main language code %s for layout %s",lcode,layoutname.c_str());
 			}
 		}
 

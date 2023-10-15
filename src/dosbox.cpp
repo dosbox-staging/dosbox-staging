@@ -361,7 +361,7 @@ static void DOSBOX_RealInit(Section * sec) {
 		                         arguments->machine);
 	}
 
-	std::string mtype(section->Get_string("machine"));
+	std::string mtype = section->Get_string("machine");
 	svgaCard = SVGA_None;
 	machine = MCH_VGA;
 	int10.vesa_nolfb = false;
@@ -397,10 +397,10 @@ static void DOSBOX_RealInit(Section * sec) {
 	       (machine != MCH_VGA && svgaCard == SVGA_None));
 
 	// Set the user's prefered MCB fault handling strategy
-	DOS_SetMcbFaultStrategy(section->Get_string("mcb_fault_strategy"));
+	DOS_SetMcbFaultStrategy(section->Get_string("mcb_fault_strategy").c_str());
 
 	// Convert the users video memory in either MB or KB to bytes
-	const auto vmemsize_string = std::string(section->Get_string("vmemsize"));
+	const std::string vmemsize_string = section->Get_string("vmemsize");
 
 	// If auto, then default to 0 and let the adapter's setup rountine set
 	// the size
@@ -410,7 +410,8 @@ static void DOSBOX_RealInit(Section * sec) {
 	vmemsize *= (vmemsize <= 8) ? 1024 * 1024 : 1024;
 	vga.vmemsize = check_cast<uint32_t>(vmemsize);
 
-	if (const auto pref = std::string_view(section->Get_string("vesa_modes")); pref == "compatible") {
+	const std::string pref = section->Get_string("vesa_modes");
+	if (pref == "compatible") {
 		int10.vesa_mode_preference = VesaModePref::Compatible;
 	} else if (pref == "halfline") {
 		int10.vesa_mode_preference = VesaModePref::Halfline;

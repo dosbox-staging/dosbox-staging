@@ -3247,7 +3247,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 	setup_viewport_resolution_from_conf(section->Get_string("viewport_resolution"));
 
-	setup_window_sizes_from_conf(section->Get_string("windowresolution"),
+	setup_window_sizes_from_conf(section->Get_string("windowresolution").c_str(),
 	                             sdl.interpolation_mode,
 	                             wants_aspect_ratio_correction);
 
@@ -3455,22 +3455,19 @@ static void GUI_StartUp(Section *sec)
 	                         sdl.pause_when_inactive;
 
 	ApplyActiveSettings(); // Assume focus on startup
-	sdl.desktop.full.fixed=false;
-	const char* fullresolution=section->Get_string("fullresolution");
+	sdl.desktop.full.fixed = false;
+	std::string fullresolution = section->Get_string("fullresolution");
 	sdl.desktop.full.width  = 0;
 	sdl.desktop.full.height = 0;
-	if(fullresolution && *fullresolution) {
-		char res[100];
-		safe_strcpy(res, fullresolution);
-		fullresolution = lowcase (res);//so x and X are allowed
-		if (strcmp(fullresolution,"original")) {
+	if(!fullresolution.empty()) {
+		lowcase(fullresolution); //so x and X are allowed
+		if (fullresolution != "original") {
 			sdl.desktop.full.fixed = true;
-			if (strcmp(fullresolution,"desktop")) { // desktop uses 0x0, below sets a custom WxH
-				char* height = const_cast<char*>(strchr(fullresolution,'x'));
-				if (height && * height) {
-					*height = 0;
-					sdl.desktop.full.height = atoi(height + 1);
-					sdl.desktop.full.width  = atoi(res);
+			if (fullresolution != "desktop") { // desktop uses 0x0, below sets a custom WxH
+				std::vector<std::string> dimensions = split(fullresolution, 'x');
+				if (dimensions.size() == 2) {
+					sdl.desktop.full.width = to_int(dimensions[0]).value_or(0);
+					sdl.desktop.full.height = to_int(dimensions[1]).value_or(0);
 					maybe_limit_requested_resolution(
 					        sdl.desktop.full.width,
 					        sdl.desktop.full.height,

@@ -1421,7 +1421,7 @@ static void composite_init(Section *sec)
 	assert(sec);
 	const auto conf = static_cast<Section_prop *>(sec);
 	assert(conf);
-	const std::string_view state = conf->Get_string("composite");
+	const std::string state = conf->Get_string("composite");
 
 	if (state == "auto") {
 		cga_comp = COMPOSITE_STATE::AUTO;
@@ -1437,7 +1437,7 @@ static void composite_init(Section *sec)
 		}
 	}
 
-	const auto era_choice = std::string(conf->Get_string("era"));
+	const std::string era_choice = conf->Get_string("era");
 	is_composite_new_era = era_choice == "new" ||
 	                       (machine == MCH_PCJR && era_choice == "auto");
 

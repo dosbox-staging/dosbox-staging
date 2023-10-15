@@ -392,7 +392,7 @@ void JOYSTICK_ParseConfiguredType()
 {
 	const auto conf = control->GetSection("joystick");
 	const auto section = static_cast<Section_prop *>(conf);
-	const auto type = std::string(section->Get_string("joysticktype"));
+	const auto type = section->Get_string("joysticktype");
 
 	if (type == "disabled")
 		joytype = JOY_DISABLED;

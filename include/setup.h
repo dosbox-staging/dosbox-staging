@@ -107,7 +107,7 @@ public:
 	operator Hex() const;
 	operator int() const;
 	operator double() const;
-	operator const char*() const;
+	operator std::string() const;
 
 	bool SetValue(const std::string& in, Etype _type = V_CURRENT);
 
@@ -399,7 +399,7 @@ public:
 
 	int Get_int(const std::string& _propname) const;
 
-	const char* Get_string(const std::string& _propname) const;
+	std::string Get_string(const std::string& _propname) const;
 
 	Prop_string* GetStringProp(const std::string& propname) const;
 

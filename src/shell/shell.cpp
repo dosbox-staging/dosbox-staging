@@ -570,7 +570,7 @@ std::tuple<std::string, std::string, std::string> parse_drive_conf(
 	const auto settings = static_cast<Section_prop *>(conf->GetSection("drive"));
 
 	// Construct the mount arguments
-	const auto override_drive = std::string(settings->Get_string("override_drive"));
+	const std::string override_drive = settings->Get_string("override_drive");
 	if (override_drive.length() == 1 && override_drive[0] >= 'a' && override_drive[0] <= 'y')
 		drive_letter = override_drive;
 	else if (override_drive.length()) {

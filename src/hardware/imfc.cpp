@@ -13391,7 +13391,7 @@ static void imfc_init(Section* sec)
 	// The filter parameters have been tweaked by analysing real hardware
 	// recordings. The results are virtually indistinguishable from the
 	// real thing by ear only.
-	const std::string_view filter_choice = conf->Get_string("imfc_filter");
+	const std::string filter_choice = conf->Get_string("imfc_filter");
 	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
 
 	if (filter_choice_has_bool && *filter_choice_has_bool == true) {

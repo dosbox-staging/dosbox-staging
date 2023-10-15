@@ -225,8 +225,8 @@ static void LOG_Destroy(Section*) {
 
 static void LOG_Init(Section * sec) {
 	Section_prop * sect = static_cast<Section_prop *>(sec);
-	const char * blah = sect->Get_string("logfile");
-	if(blah && blah[0] && (debuglog = fopen(blah,"wt+"))){
+	std::string blah = sect->Get_string("logfile");
+	if(!blah.empty() && (debuglog = fopen(blah.c_str(),"wt+"))){
 		;
 	} else {
 		debuglog = nullptr;

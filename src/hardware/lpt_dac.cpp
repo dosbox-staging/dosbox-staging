@@ -155,7 +155,7 @@ void LPT_DAC_Init(Section *section)
 	assert(section);
 	const auto prop = static_cast<Section_prop *>(section);
 
-	const std::string_view dac_choice = prop->Get_string("lpt_dac");
+	const std::string dac_choice = prop->Get_string("lpt_dac");
 
 	if (dac_choice == "disney")
 		lpt_dac = std::make_unique<Disney>();
@@ -174,7 +174,7 @@ void LPT_DAC_Init(Section *section)
 	}
 
 	// Let the DAC apply its own filter type
-	const std::string_view filter_choice = prop->Get_string("lpt_dac_filter");
+	const std::string filter_choice = prop->Get_string("lpt_dac_filter");
 	assert(lpt_dac);
 	if (!lpt_dac->TryParseAndSetCustomFilter(filter_choice)) {
 		auto filter_state = FilterState::Off;

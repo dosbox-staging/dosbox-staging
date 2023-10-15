@@ -262,7 +262,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	const bool has_option_no_autoexec = arguments->noautoexec;
 
 	// Should autoexec sections be joined or overwritten?
-	const std::string_view section_pref = sec->Get_string("autoexec_section");
+	const std::string section_pref = sec->Get_string("autoexec_section");
 	const bool should_join_autoexecs = (section_pref == "join");
 
 	// Check to see for extra command line options to be added
