@@ -203,6 +203,7 @@ bool is_hex_digits(const std::string_view s) noexcept;
 bool is_digits(const std::string_view s) noexcept;
 
 void strreplace(char* str, char o, char n);
+void ltrim(std::string& str);
 char* ltrim(char* str);
 char* rtrim(char* str);
 char* trim(char* str);
@@ -246,7 +247,8 @@ constexpr bool iequals(T1&& a, T2&& b)
 // - ("abc123", "abc123=") -> true, simply because the first is shorter.
 bool natural_compare(const std::string& a, const std::string& b);
 
-char* strip_word(char*& cmd);
+char* strip_word(char*& line);
+std::string strip_word(std::string& line);
 
 std::string replace(const std::string& str, char old_char, char new_char) noexcept;
 void trim(std::string& str, const char trim_chars[] = " \r\t\f\n");
