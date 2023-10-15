@@ -570,11 +570,6 @@ void Sound_FreeSample(Sound_Sample *sample)
     /* update the sample_list... */
     if (internal->prev != NULL)
     {
-        // We're not removing from the head.
-        // Assert that we're not touching sample_list (which should be the head of the linked list).
-        // This assert fixes a Coverity warning.
-        assert(sample_list != sample);
-
         Sound_SampleInternal *prevInternal;
         prevInternal = (Sound_SampleInternal *) internal->prev->opaque;
         prevInternal->next = internal->next;
