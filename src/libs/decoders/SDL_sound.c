@@ -148,12 +148,12 @@ int Sound_Quit(void)
 
     BAIL_IF_MACRO(!initialized, ERR_NOT_INITIALIZED, 0);
 
-    while (((volatile Sound_Sample *) sample_list) != NULL)
+    SDL_LockMutex(samplelist_mutex);
+    while (sample_list != NULL)
     {
-        Sound_Sample *sample = sample_list;
-        Sound_FreeSample(sample); /* Updates sample_list. */
-        sample = NULL;
+        Sound_FreeSample(sample_list); /* Updates sample_list. */
     }
+    SDL_UnlockMutex(samplelist_mutex);
 
     initialized = 0;
 
