@@ -74,10 +74,10 @@ Value::operator double() const
 	return _double;
 }
 
-Value::operator const char*() const
+Value::operator std::string() const
 {
 	assert(type == V_STRING);
-	return _string.c_str();
+	return _string;
 }
 
 bool Value::operator==(const Value& other) const
@@ -863,7 +863,7 @@ Property* Section_prop::Get_prop(int index)
 	return nullptr;
 }
 
-const char* Section_prop::Get_string(const std::string& _propname) const
+std::string Section_prop::Get_string(const std::string& _propname) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if ((*tel)->propname == _propname) {

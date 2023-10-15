@@ -653,7 +653,7 @@ void TANDYSOUND_Init(Section *section)
 {
 	assert(section);
 	const auto prop = static_cast<Section_prop*>(section);
-	const auto pref = std::string_view(prop->Get_string("tandy"));
+	const auto pref = prop->Get_string("tandy");
 	if (has_false(pref) || (!IS_TANDY_ARCH && pref == "auto")) {
 		set_tandy_sound_flag_in_bios(false);
 		return;

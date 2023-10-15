@@ -261,7 +261,7 @@ static void set_global_crossfeed(mixer_channel_t channel)
 	// Global crossfeed
 	auto crossfeed = 0.0f;
 
-	const std::string_view crossfeed_pref = sect->Get_string("crossfeed");
+	const std::string crossfeed_pref = sect->Get_string("crossfeed");
 	const auto crossfeed_pref_has_bool = parse_bool_setting(crossfeed_pref);
 
 	if (crossfeed_pref_has_bool) {

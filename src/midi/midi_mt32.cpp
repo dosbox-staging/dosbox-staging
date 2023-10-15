@@ -346,7 +346,7 @@ static std::deque<std_fs::path> get_selected_dirs()
 	return rom_dirs;
 }
 
-static const char *get_selected_model()
+static std::string get_selected_model()
 {
 	const auto section = static_cast<Section_prop *>(control->GetSection("mt32"));
 	assert(section);

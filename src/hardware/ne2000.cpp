@@ -1482,10 +1482,10 @@ public:
         LOG_MSG("NE2000: Initialised on port %xh and IRQ %u", base, irq);
 
 		// mac address
-		const char* macstring=section->Get_string("macaddr");
+		std::string macstring = section->Get_string("macaddr");
 		unsigned int macint[6];
 		uint8_t mac[6];
-		if(sscanf(macstring,"%02x:%02x:%02x:%02x:%02x:%02x",
+		if(sscanf(macstring.c_str(),"%02x:%02x:%02x:%02x:%02x:%02x",
 			&macint[0],&macint[1],&macint[2],&macint[3],&macint[4],&macint[5]) != 6) {
 			mac[0]=0xac;mac[1]=0xde;mac[2]=0x48;
 			mac[3]=0x88;mac[4]=0xbb;mac[5]=0xaa;

@@ -237,6 +237,7 @@ bool natural_compare(const std::string& a_str, const std::string& b_str)
 	return a == a_end && b != b_end;
 }
 
+// TODO: Write a version of this that operates on a std::string
 char* strip_word(char*& line)
 {
 	char *scan = line;

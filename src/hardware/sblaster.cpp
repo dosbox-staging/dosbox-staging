@@ -2054,7 +2054,7 @@ SB_TYPES find_sbtype()
 	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
 	assert(sect);
 
-	const std::string_view pref = sect->Get_string("sbtype");
+	const std::string pref = sect->Get_string("sbtype");
 
 	// Default
 	auto sbtype = SB_TYPES::SBT_NONE;
@@ -2081,7 +2081,7 @@ OplMode find_oplmode()
 	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
 	assert(sect);
 
-	const std::string_view pref = sect->Get_string("oplmode");
+	const std::string pref = sect->Get_string("oplmode");
 
 	// Default
 	auto opl_mode = OplMode::None;

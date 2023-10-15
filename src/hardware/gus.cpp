@@ -1650,12 +1650,12 @@ static void gus_init(Section *sec)
 	                       MIN_IRQ_ADDRESS,
 	                       MAX_IRQ_ADDRESS);
 
-	const auto ultradir = conf->Get_string("ultradir");
+	const std::string ultradir = conf->Get_string("ultradir");
 
 	const std::string filter_prefs = conf->Get_string("gus_filter");
 
 	// Instantiate the GUS with the settings
-	gus = std::make_unique<Gus>(port, dma, irq, ultradir, filter_prefs);
+	gus = std::make_unique<Gus>(port, dma, irq, ultradir.c_str(), filter_prefs);
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&gus_destroy, changeable_at_runtime);

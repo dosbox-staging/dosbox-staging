@@ -594,7 +594,7 @@ public:
 	{
 		Section_prop* section = static_cast<Section_prop*>(configuration);
 
-		const std::string_view device_choice = section->Get_string("mididevice");
+		const std::string device_choice = section->Get_string("mididevice");
 
 		midi = Midi{};
 
