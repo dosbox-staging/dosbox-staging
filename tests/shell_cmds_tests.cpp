@@ -42,8 +42,9 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "dosbox_test_fixture.h"
 #include "../src/shell/shell_cmds.cpp"
+#include "dosbox_test_fixture.h"
+#include "string_utils.h"
 
 namespace {
 
@@ -64,24 +65,25 @@ public:
 	 * 	// delegate call to the real object.
 	 * 	ON_CALL(*this, ExecuteShellCommand)
 	 * 	        .WillByDefault([this](char *name, char *arguments) {
-	 * 		        return real_.ExecuteShellCommand(name, arguments);
+	 * 		        return real_.ExecuteShellCommand(name,
+	 * arguments);
 	 * 	        });
 	 * }
 	 */
-	MOCK_METHOD(bool, ExecuteShellCommand, (const char * const name, char *arguments), (override));
-	MOCK_METHOD(void,
-	            WriteOut,
-	            (const char *format, const char *arguments),
+	MOCK_METHOD(bool, ExecuteShellCommand,
+	            (const char* const name, char* arguments), (override));
+	MOCK_METHOD(void, WriteOut, (const char* format, const char* arguments),
 	            (override));
 
 private:
 	DOS_Shell real_; // Keeps an instance of the real in the mock.
 };
 
-void assert_DoCommand(std::string input, std::string expected_name, std::string expected_args)
+void assert_DoCommand(std::string input, std::string expected_name,
+                      std::string expected_args)
 {
 	MockDOS_Shell shell;
-	char *input_c_str = const_cast<char *>(input.c_str());
+	char* input_c_str = const_cast<char*>(input.c_str());
 	EXPECT_CALL(shell,
 	            ExecuteShellCommand(StrEq(expected_name), StrEq(expected_args)))
 	        .Times(1)
@@ -101,8 +103,8 @@ TEST_F(DOS_Shell_CMDSTest, DoCommand_Separating_Chars)
 	};
 	for (auto end_chr : end_chars) {
 		MockDOS_Shell shell;
-		std::string name = "PATH";
-		std::string args = "";
+		std::string name  = "PATH";
+		std::string args  = "";
 		std::string input = name;
 		input += end_chr;
 		input += "ARG";
@@ -158,9 +160,9 @@ TEST_F(DOS_Shell_CMDSTest, CMD_ECHO_off_on)
 	MockDOS_Shell shell;
 	EXPECT_TRUE(shell.echo); // should be the default
 	EXPECT_CALL(shell, WriteOut(_, _)).Times(0);
-	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char *>("OFF")); });
+	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>("OFF")); });
 	EXPECT_FALSE(shell.echo);
-	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char *>("ON")); });
+	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>("ON")); });
 	EXPECT_TRUE(shell.echo);
 }
 
@@ -171,17 +173,17 @@ TEST_F(DOS_Shell_CMDSTest, CMD_ECHO_space_handling)
 	EXPECT_TRUE(shell.echo);
 	EXPECT_CALL(shell, WriteOut(_, StrEq("OFF "))).Times(1);
 	// this DOES NOT trigger ECHO OFF (trailing space causes it to not)
-	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char *>(" OFF ")); });
+	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>(" OFF ")); });
 	EXPECT_TRUE(shell.echo);
 
 	EXPECT_CALL(shell, WriteOut(_, StrEq("FF "))).Times(1);
 	// this DOES NOT trigger ECHO OFF (initial 'O' gets stripped)
-	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char *>("OFF ")); });
+	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>("OFF ")); });
 	EXPECT_TRUE(shell.echo);
 
 	// no trailing space, echo off should work
 	EXPECT_CALL(shell, WriteOut(_, _)).Times(0);
-	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char *>(" OFF")); });
+	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>(" OFF")); });
 	// check that OFF worked properly, despite spaces
 	EXPECT_FALSE(shell.echo);
 
@@ -189,7 +191,107 @@ TEST_F(DOS_Shell_CMDSTest, CMD_ECHO_space_handling)
 	// input to ECHO. the first char is stripped as it's assumed it will be
 	// a space, period or slash.
 	EXPECT_CALL(shell, WriteOut(_, StrEq("    HI "))).Times(1);
-	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char *>(".    HI ")); });
+	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>(".    HI ")); });
+}
+
+TEST_F(DOS_Shell_CMDSTest, CMD_FOR_basic)
+{
+	MockDOS_Shell shell = {};
+
+	EXPECT_CALL(shell, ExecuteShellCommand(StrEq("ECHO"), StrEq(" ONE")))
+	        .Times(1)
+	        .WillOnce(Return(true));
+	EXPECT_CALL(shell, ExecuteShellCommand(StrEq("ECHO"), StrEq(" TWO")))
+	        .Times(1)
+	        .WillOnce(Return(true));
+	EXPECT_NO_THROW({
+		shell.CMD_FOR(const_cast<char*>(" %C IN (ONE TWO) DO ECHO %C"));
+	});
+}
+
+TEST_F(DOS_Shell_CMDSTest, CMD_FOR_delimiters)
+{
+	MockDOS_Shell shell = {};
+
+	static constexpr auto delimeters = ",;= \t";
+	// TODO: C++20: Use std::format();
+	const auto input = format_string("%s%%C%sIN%s(%sONE%sTWO%s)%sDO%sECHO %%C",
+	                                 delimeters,
+	                                 delimeters,
+	                                 delimeters,
+	                                 delimeters,
+	                                 delimeters,
+	                                 delimeters,
+	                                 delimeters,
+	                                 delimeters); // ):
+
+	EXPECT_CALL(shell, ExecuteShellCommand(StrEq("ECHO"), StrEq(" ONE")))
+	        .Times(1)
+	        .WillOnce(Return(true));
+	EXPECT_CALL(shell, ExecuteShellCommand(StrEq("ECHO"), StrEq(" TWO")))
+	        .Times(1)
+	        .WillOnce(Return(true));
+	EXPECT_NO_THROW({ shell.CMD_FOR(const_cast<char*>(input.c_str())); });
+}
+
+TEST_F(DOS_Shell_CMDSTest, CMD_FOR_missing_do)
+{
+	MockDOS_Shell shell = {};
+
+	EXPECT_CALL(shell, ExecuteShellCommand(_, _)).Times(0);
+	EXPECT_NO_THROW({
+		shell.CMD_FOR(const_cast<char*>(" %C IN (ONE TWO) ECHO %C"));
+	});
+}
+
+TEST_F(DOS_Shell_CMDSTest, CMD_FOR_missing_in)
+{
+	MockDOS_Shell shell = {};
+
+	EXPECT_CALL(shell, ExecuteShellCommand(_, _)).Times(0);
+	EXPECT_NO_THROW({
+		shell.CMD_FOR(const_cast<char*>(" %C (ONE TWO) DO ECHO %C"));
+	});
+}
+
+TEST_F(DOS_Shell_CMDSTest, CMD_FOR_missing_var)
+{
+	MockDOS_Shell shell = {};
+
+	EXPECT_CALL(shell, ExecuteShellCommand(_, _)).Times(0);
+	EXPECT_NO_THROW({
+		shell.CMD_FOR(const_cast<char*>(" IN (ONE TWO) DO ECHO %C"));
+	});
+}
+
+TEST_F(DOS_Shell_CMDSTest, CMD_FOR_missing_parens)
+{
+	MockDOS_Shell shell = {};
+
+	EXPECT_CALL(shell, ExecuteShellCommand(_, _)).Times(0);
+	EXPECT_NO_THROW({
+		shell.CMD_FOR(const_cast<char*>(" %C IN ONE TWO DO ECHO %C"));
+	});
+}
+
+TEST_F(DOS_Shell_CMDSTest, CMD_FOR_missing_command)
+{
+	MockDOS_Shell shell = {};
+
+	EXPECT_CALL(shell, ExecuteShellCommand(_, _)).Times(0);
+	EXPECT_NO_THROW(
+	        { shell.CMD_FOR(const_cast<char*>(" %C IN (ONE TWO) DO")); });
+}
+
+TEST_F(DOS_Shell_CMDSTest, CMD_FOR_for_not_allowed)
+{
+	MockDOS_Shell shell = {};
+
+	EXPECT_CALL(shell, ExecuteShellCommand(_, _)).Times(0);
+	EXPECT_NO_THROW({
+		shell.CMD_FOR(const_cast<char*>(
+		        " %C IN (ONE TWO) DO FOR %D IN (THREE FOUR) DO ECHO %D"));
+	});
 }
 
 } // namespace
