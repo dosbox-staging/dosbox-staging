@@ -35,7 +35,6 @@
 #ifndef ENET_INCLUDE_H
 #define ENET_INCLUDE_H
 
-#include <assert.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -43,7 +42,7 @@
 
 #define ENET_VERSION_MAJOR 2
 #define ENET_VERSION_MINOR 3
-#define ENET_VERSION_PATCH 0
+#define ENET_VERSION_PATCH 6
 #define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
 #define ENET_VERSION_GET_MAJOR(version) (((version)>>16)&0xFF)
 #define ENET_VERSION_GET_MINOR(version) (((version)>>8)&0xFF)
@@ -84,9 +83,9 @@
     #endif
 
     #ifdef __GNUC__
-    #if (_WIN32_WINNT < 0x0501)
+    #if (_WIN32_WINNT < 0x0600)
     #undef _WIN32_WINNT
-    #define _WIN32_WINNT 0x0501
+    #define _WIN32_WINNT 0x0600
     #endif
     #endif
 
@@ -2641,8 +2640,7 @@ extern "C" {
                     goto commandError;
             }
 
-            assert(peer);
-            if ((command->header.command & ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE) != 0) {
+            if (peer != NULL && (command->header.command & ENET_PROTOCOL_COMMAND_FLAG_ACKNOWLEDGE) != 0) {
                 enet_uint16 sentTime;
 
                 if (!(flags & ENET_PROTOCOL_HEADER_FLAG_SENT_TIME)) {
@@ -3859,7 +3857,7 @@ extern "C" {
      *  @param pingInterval the interval at which to send pings; defaults to ENET_PEER_PING_INTERVAL if 0
      */
     void enet_peer_ping_interval(ENetPeer *peer, enet_uint32 pingInterval) {
-        peer->pingInterval = pingInterval ? pingInterval : static_cast<enet_uint32>(ENET_PEER_PING_INTERVAL);
+        peer->pingInterval = pingInterval ? pingInterval : (enet_uint32)ENET_PEER_PING_INTERVAL;
     }
 
     /** Sets the timeout parameters for a peer.
@@ -3880,9 +3878,9 @@ extern "C" {
      */
 
     void enet_peer_timeout(ENetPeer *peer, enet_uint32 timeoutLimit, enet_uint32 timeoutMinimum, enet_uint32 timeoutMaximum) {
-        peer->timeoutLimit   = timeoutLimit ? timeoutLimit :  static_cast<enet_uint32>(ENET_PEER_TIMEOUT_LIMIT);
-        peer->timeoutMinimum = timeoutMinimum ? timeoutMinimum :  static_cast<enet_uint32>(ENET_PEER_TIMEOUT_MINIMUM);
-        peer->timeoutMaximum = timeoutMaximum ? timeoutMaximum :  static_cast<enet_uint32>(ENET_PEER_TIMEOUT_MAXIMUM);
+        peer->timeoutLimit   = timeoutLimit ? timeoutLimit : (enet_uint32)ENET_PEER_TIMEOUT_LIMIT;
+        peer->timeoutMinimum = timeoutMinimum ? timeoutMinimum : (enet_uint32)ENET_PEER_TIMEOUT_MINIMUM;
+        peer->timeoutMaximum = timeoutMaximum ? timeoutMaximum : (enet_uint32)ENET_PEER_TIMEOUT_MAXIMUM;
     }
 
     /** Force an immediate disconnection from a peer.
@@ -4337,9 +4335,10 @@ extern "C" {
             memset(incomingCommand->fragments, 0, (fragmentCount + 31) / 32 * sizeof(enet_uint32));
         }
 
-        assert(packet != NULL);
-        ++packet->referenceCount;
-        peer->totalWaitingData += packet->dataLength;
+        if (packet != NULL) {
+            ++packet->referenceCount;
+            peer->totalWaitingData += packet->dataLength;
+        }
 
         enet_list_insert(enet_list_next(currentCommand), incomingCommand);
 
@@ -4903,7 +4902,8 @@ extern "C" {
             t.QuadPart |= f.dwLowDateTime;
             return (t);
         }
-        int clock_gettime(int /* X */, struct timespec *tv) {
+        int clock_gettime(int X, struct timespec *tv) {
+            (void)X;
             LARGE_INTEGER t;
             FILETIME f;
             double microseconds;
@@ -4941,14 +4941,9 @@ extern "C" {
             return (0);
         }
     #elif __APPLE__ && __MAC_OS_X_VERSION_MIN_REQUIRED < 101200
-
-        #ifdef CLOCK_MONOTONIC
-        #undef CLOCK_MONOTONIC
-        #endif
         #define CLOCK_MONOTONIC 0
 
         int clock_gettime(int X, struct timespec *ts) {
-            ENET_UNUSED(X);
             clock_serv_t cclock;
             mach_timespec_t mts;
 
@@ -5004,10 +4999,7 @@ extern "C" {
             // Set the value of the start_time_ns, such that the first timestamp
             // is at 1ms. This ensures 0 remains a special value.
             uint64_t want_value = current_time_ns - 1 * ns_in_ms;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
             uint64_t old_value = ENET_ATOMIC_CAS(&start_time_ns, 0, want_value);
-#pragma GCC diagnostic pop
             offset_ns = old_value == 0 ? want_value : old_value;
         }
 
@@ -5094,7 +5086,7 @@ extern "C" {
             }
         }
         else {
-            if (inet_ntop(AF_INET6, &address->host, name, nameLength) == NULL) {
+            if (inet_ntop(AF_INET6, (void*)&address->host, name, nameLength) == NULL) {
                 return -1;
             }
         }
