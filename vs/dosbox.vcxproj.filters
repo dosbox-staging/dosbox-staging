@@ -1443,9 +1443,6 @@
     <ClInclude Include="..\src\libs\mverb\MVerb.h">
       <Filter>src\libs\mverb</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\libs\fontstash\fontstash.h">
-      <Filter>src\libs\fontstash</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libs\stb_truetype\stb_truetype.h">
       <Filter>src\libs\stb_truetype</Filter>
     </ClInclude>
@@ -1530,9 +1527,6 @@
     </Filter>
     <Filter Include="src\libs\decoders">
       <UniqueIdentifier>{d49f3a50-e4ed-4da7-a530-eeefef580e9b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\libs\fontstash">
-      <UniqueIdentifier>{5f937800-dd4d-4ab6-8874-a12f1286102a}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\mverb">
       <UniqueIdentifier>{8804de8e-c30a-4d93-b2b4-1c1634fd97b7}</UniqueIdentifier>
