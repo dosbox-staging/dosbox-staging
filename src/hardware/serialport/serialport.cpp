@@ -1289,6 +1289,14 @@ bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeo
 	return true;
 }
 
+uint32_t CSerial::GetPortBaudRate() const {
+	if (baud_divider == 0) {
+		return 115200;
+	}
+
+	return 115200 / baud_divider;
+}
+
 class SERIALPORTS final : public Module_base {
 public:
 	SERIALPORTS (Section * configuration):Module_base (configuration) {
