@@ -190,7 +190,8 @@ public:
 	void AcceptIncomingCall();
 	uint32_t ScanNumber(char *&scan) const;
 	char GetChar(char * & scan) const;
-	uint32_t UpdateConnectString();
+	void SetModemSpeed(const uint32_t cfg_val);
+	void UpdateConnectString();
 
 	void DoCommand();
 
