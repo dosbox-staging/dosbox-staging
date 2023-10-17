@@ -25,7 +25,7 @@ _______________________________________________________________________________
 
 ## Engines
 
-The library provides chip emulation with three engines:
+The library provides chip emulation with the following engines:
 
 - **Fixed**: it should emulate an actual chip, using fixed point arithmetics.
     It features all the actual chip constraints, like sample rates, the

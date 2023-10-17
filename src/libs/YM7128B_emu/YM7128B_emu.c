@@ -1,7 +1,7 @@
 /*
 BSD 2-Clause License
 
-Copyright (c) 2020, Andrea Zoppi
+Copyright (c) 2020-2023, Andrea Zoppi
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -423,6 +423,8 @@ YM7128B_Fixed YM7128B_OversamplerFixed_Process(
     YM7128B_Fixed input
 )
 {
+    assert(self);
+
     YM7128B_Accumulator accum = 0;
 
     for (YM7128B_Oversampler_Index i = 0; i < YM7128B_Oversampler_Length; ++i) {
@@ -502,6 +504,8 @@ YM7128B_Float YM7128B_OversamplerFloat_Process(
     YM7128B_Float input
 )
 {
+    assert(self);
+
     YM7128B_Float accum = 0;
 
     for (YM7128B_Oversampler_Index i = 0; i < YM7128B_Oversampler_Length; ++i) {
@@ -521,22 +525,24 @@ YM7128B_Float YM7128B_OversamplerFloat_Process(
 
 void YM7128B_ChipFixed_Ctor(YM7128B_ChipFixed* self)
 {
-    (void)self;
+    assert(self);
 }
 
 // ----------------------------------------------------------------------------
 
 void YM7128B_ChipFixed_Dtor(YM7128B_ChipFixed* self)
 {
-    (void)self;
+    assert(self);
 }
 
 // ----------------------------------------------------------------------------
 
 void YM7128B_ChipFixed_Reset(YM7128B_ChipFixed* self)
 {
-    for (YM7128B_Address i = 0; i <= YM7128B_Address_Max; ++i) {
-        self->regs_[i] = 0;
+    assert(self);
+
+    for (YM7128B_Address i = YM7128B_Address_Min; i <= YM7128B_Address_Max; ++i) {
+        YM7128B_ChipFixed_Write(self, i, 0x00);
     }
 }
 
@@ -544,6 +550,8 @@ void YM7128B_ChipFixed_Reset(YM7128B_ChipFixed* self)
 
 void YM7128B_ChipFixed_Start(YM7128B_ChipFixed* self)
 {
+    assert(self);
+
     self->t0_d_ = 0;
 
     self->tail_ = 0;
@@ -561,7 +569,7 @@ void YM7128B_ChipFixed_Start(YM7128B_ChipFixed* self)
 
 void YM7128B_ChipFixed_Stop(YM7128B_ChipFixed* self)
 {
-    (void)self;
+    assert(self);
 }
 
 // ----------------------------------------------------------------------------
@@ -571,6 +579,9 @@ void YM7128B_ChipFixed_Process(
     YM7128B_ChipFixed_Process_Data* data
 )
 {
+    assert(self);
+    assert(data);
+
     YM7128B_Fixed input = data->inputs[YM7128B_InputChannel_Mono];
     YM7128B_Fixed sample = input & (YM7128B_Fixed)YM7128B_Signal_Mask;
 
@@ -624,6 +635,8 @@ YM7128B_Register YM7128B_ChipFixed_Read(
     YM7128B_Address address
 )
 {
+    assert(self);
+
     if (address < YM7128B_Reg_C0) {
         return self->regs_[address] & YM7128B_Gain_Data_Mask;
     }
@@ -644,6 +657,8 @@ void YM7128B_ChipFixed_Write(
     YM7128B_Register data
 )
 {
+    assert(self);
+
     if (address < YM7128B_Reg_C0) {
         self->regs_[address] = data & YM7128B_Gain_Data_Mask;
         self->gains_[address] = YM7128B_RegisterToGainFixed(data);
@@ -662,14 +677,14 @@ void YM7128B_ChipFixed_Write(
 
 void YM7128B_ChipFloat_Ctor(YM7128B_ChipFloat* self)
 {
-    YM7128B_ChipFloat_Reset(self);
+    assert(self);
 }
 
 // ----------------------------------------------------------------------------
 
 void YM7128B_ChipFloat_Dtor(YM7128B_ChipFloat* self)
 {
-    (void)self;
+    assert(self);
 }
 
 // ----------------------------------------------------------------------------
@@ -678,26 +693,17 @@ void YM7128B_ChipFloat_Reset(YM7128B_ChipFloat* self)
 {
     assert(self);
 
-    for (int i = 0; i < YM7128B_Reg_Count; ++i)
-        self->regs_[i] = 0;
-
-    for (int i = 0; i < YM7128B_Reg_T0; ++i)
-        self->gains_[i] = 0.0f;
-
-    self->t0_d_ = 0.0f;
-    self->tail_ = 0;
-
-    for (int i = 0; i < YM7128B_Buffer_Length; ++i)
-        self->buffer_[i] = 0.0f;
-
-    for (int i = 0; i < YM7128B_OutputChannel_Count; ++i)
-        YM7128B_OversamplerFloat_Clear(&self->oversampler_[i], 0.0f);
+    for (YM7128B_Address i = YM7128B_Address_Min; i <= YM7128B_Address_Max; ++i) {
+        YM7128B_ChipFloat_Write(self, i, 0x00);
+    }
 }
 
 // ----------------------------------------------------------------------------
 
 void YM7128B_ChipFloat_Start(YM7128B_ChipFloat* self)
 {
+    assert(self);
+
     self->t0_d_ = 0;
 
     self->tail_ = 0;
@@ -715,7 +721,7 @@ void YM7128B_ChipFloat_Start(YM7128B_ChipFloat* self)
 
 void YM7128B_ChipFloat_Stop(YM7128B_ChipFloat* self)
 {
-    (void)self;
+    assert(self);
 }
 
 // ----------------------------------------------------------------------------
@@ -725,6 +731,9 @@ void YM7128B_ChipFloat_Process(
     YM7128B_ChipFloat_Process_Data* data
 )
 {
+    assert(self);
+    assert(data);
+
     YM7128B_Float input = data->inputs[YM7128B_InputChannel_Mono];
     YM7128B_Float sample = input;
 
@@ -778,6 +787,8 @@ YM7128B_Register YM7128B_ChipFloat_Read(
     YM7128B_Address address
 )
 {
+    assert(self);
+
     if (address < YM7128B_Reg_C0) {
         return self->regs_[address] & YM7128B_Gain_Data_Mask;
     }
@@ -798,6 +809,8 @@ void YM7128B_ChipFloat_Write(
     YM7128B_Register data
 )
 {
+    assert(self);
+
     if (address < YM7128B_Reg_C0) {
         self->regs_[address] = data & YM7128B_Gain_Data_Mask;
         self->gains_[address] = YM7128B_RegisterToGainFloat(data);
@@ -817,17 +830,18 @@ void YM7128B_ChipFloat_Write(
 void YM7128B_ChipIdeal_Ctor(YM7128B_ChipIdeal* self)
 {
     assert(self);
+
     self->buffer_ = NULL;
     self->length_ = 0;
     self->sample_rate_ = 0;
-
-    YM7128B_ChipIdeal_Reset(self);
 }
 
 // ----------------------------------------------------------------------------
 
 void YM7128B_ChipIdeal_Dtor(YM7128B_ChipIdeal* self)
 {
+    assert(self);
+
     if (self->buffer_) {
         free(self->buffer_);
         self->buffer_ = NULL;
@@ -840,24 +854,8 @@ void YM7128B_ChipIdeal_Reset(YM7128B_ChipIdeal* self)
 {
     assert(self);
 
-    for (int i = 0; i < YM7128B_Reg_Count; ++i)
-        self->regs_[i] = 0;
-
-    for (int i = 0; i < YM7128B_Reg_T0; ++i)
-        self->gains_[i] = 0.0f;
-
-    // self->taps_[] are populated by YM7128B_ChipIdeal_Setup()
-    self->t0_d_ = 0.0f;
-    self->tail_ = 0;
-
-    // Only zero the buffer if we have one
-    if (self->buffer_ && self->length_) {
-        for (unsigned long i = 0; i < self->length_; ++i) {
-            self->buffer_[i] = 0.0f;
-        }
-
-        // if we have a buffer, then sample rate must be set
-        assert(self->sample_rate_ > 0);
+    for (YM7128B_Address i = YM7128B_Address_Min; i <= YM7128B_Address_Max; ++i) {
+        YM7128B_ChipIdeal_Write(self, i, 0x00);
     }
 }
 
@@ -865,6 +863,8 @@ void YM7128B_ChipIdeal_Reset(YM7128B_ChipIdeal* self)
 
 void YM7128B_ChipIdeal_Start(YM7128B_ChipIdeal* self)
 {
+    assert(self);
+
     self->t0_d_ = 0;
 
     self->tail_ = 0;
@@ -880,7 +880,7 @@ void YM7128B_ChipIdeal_Start(YM7128B_ChipIdeal* self)
 
 void YM7128B_ChipIdeal_Stop(YM7128B_ChipIdeal* self)
 {
-    (void)self;
+    assert(self);
 }
 
 // ----------------------------------------------------------------------------
@@ -890,7 +890,10 @@ void YM7128B_ChipIdeal_Process(
     YM7128B_ChipIdeal_Process_Data* data
 )
 {
-    if (self->buffer_ == NULL) {
+    assert(self);
+    assert(data);
+
+    if ((self->buffer_ == NULL) || (self->length_ == 0)) {
         return;
     }
 
@@ -942,6 +945,8 @@ YM7128B_Register YM7128B_ChipIdeal_Read(
     YM7128B_Address address
 )
 {
+    assert(self);
+
     if (address < YM7128B_Reg_C0) {
         return self->regs_[address] & YM7128B_Gain_Data_Mask;
     }
@@ -962,6 +967,8 @@ void YM7128B_ChipIdeal_Write(
     YM7128B_Register data
 )
 {
+    assert(self);
+
     if (address < YM7128B_Reg_C0) {
         self->regs_[address] = data & YM7128B_Gain_Data_Mask;
         self->gains_[address] = YM7128B_RegisterToGainFloat(data);
@@ -984,7 +991,7 @@ void YM7128B_ChipIdeal_Setup(
 {
     assert(self);
 
-    if (self->sample_rate_ != sample_rate) {
+    if ((self->sample_rate_ != sample_rate) || (self->buffer_ == NULL)) {
         self->sample_rate_ = sample_rate;
 
         if (self->buffer_) {
@@ -996,8 +1003,7 @@ void YM7128B_ChipIdeal_Setup(
             self->length_ = (sample_rate / 10) + 1;
             self->buffer_ = (YM7128B_Float*)calloc(self->length_, sizeof(YM7128B_Float));
 
-            for (YM7128B_Address i = 0; i < YM7128B_Tap_Count; ++i)
-            {
+            for (YM7128B_Address i = 0; i < YM7128B_Tap_Count; ++i) {
                 YM7128B_Register data = self->regs_[i + YM7128B_Reg_T0];
                 self->taps_[i] = YM7128B_RegisterToTapIdeal(data, self->sample_rate_);
             }
@@ -1012,6 +1018,8 @@ void YM7128B_ChipIdeal_Setup(
 
 void YM7128B_ChipShort_Ctor(YM7128B_ChipShort* self)
 {
+    assert(self);
+
     self->buffer_ = NULL;
     self->length_ = 0;
     self->sample_rate_ = 0;
@@ -1021,9 +1029,12 @@ void YM7128B_ChipShort_Ctor(YM7128B_ChipShort* self)
 
 void YM7128B_ChipShort_Dtor(YM7128B_ChipShort* self)
 {
+    assert(self);
+
     if (self->buffer_) {
         free(self->buffer_);
         self->buffer_ = NULL;
+        self->length_ = 0;
     }
 }
 
@@ -1031,8 +1042,10 @@ void YM7128B_ChipShort_Dtor(YM7128B_ChipShort* self)
 
 void YM7128B_ChipShort_Reset(YM7128B_ChipShort* self)
 {
-    for (YM7128B_Address i = 0; i <= YM7128B_Address_Max; ++i) {
-        self->regs_[i] = 0;
+    assert(self);
+
+    for (YM7128B_Address i = YM7128B_Address_Min; i <= YM7128B_Address_Max; ++i) {
+        YM7128B_ChipShort_Write(self, i, 0x00);
     }
 }
 
@@ -1040,6 +1053,8 @@ void YM7128B_ChipShort_Reset(YM7128B_ChipShort* self)
 
 void YM7128B_ChipShort_Start(YM7128B_ChipShort* self)
 {
+    assert(self);
+
     self->t0_d_ = 0;
 
     self->tail_ = 0;
@@ -1055,7 +1070,7 @@ void YM7128B_ChipShort_Start(YM7128B_ChipShort* self)
 
 void YM7128B_ChipShort_Stop(YM7128B_ChipShort* self)
 {
-    (void)self;
+    assert(self);
 }
 
 // ----------------------------------------------------------------------------
@@ -1065,7 +1080,10 @@ void YM7128B_ChipShort_Process(
     YM7128B_ChipShort_Process_Data* data
 )
 {
-    if (self->buffer_ == NULL) {
+    assert(self);
+    assert(data);
+
+    if ((self->buffer_ == NULL) || (self->length_ == 0)) {
         return;
     }
 
@@ -1116,6 +1134,8 @@ YM7128B_Register YM7128B_ChipShort_Read(
     YM7128B_Address address
 )
 {
+    assert(self);
+
     if (address < YM7128B_Reg_C0) {
         return self->regs_[address] & YM7128B_Gain_Data_Mask;
     }
@@ -1136,6 +1156,8 @@ void YM7128B_ChipShort_Write(
     YM7128B_Register data
 )
 {
+    assert(self);
+
     if (address < YM7128B_Reg_C0) {
         self->regs_[address] = data & YM7128B_Gain_Data_Mask;
         YM7128B_Fixed gain = YM7128B_RegisterToGainShort(data);
@@ -1160,7 +1182,9 @@ void YM7128B_ChipShort_Setup(
     YM7128B_TapIdeal sample_rate
 )
 {
-    if (self->sample_rate_ != sample_rate) {
+    assert(self);
+
+    if ((self->sample_rate_ != sample_rate) || (self->buffer_ == NULL)) {
         self->sample_rate_ = sample_rate;
 
         if (self->buffer_) {
@@ -1172,8 +1196,7 @@ void YM7128B_ChipShort_Setup(
             self->length_ = (sample_rate / 10) + 1;
             self->buffer_ = (YM7128B_Fixed*)calloc(self->length_, sizeof(YM7128B_Fixed));
 
-            for (YM7128B_Address i = 0; i < YM7128B_Tap_Count; ++i)
-            {
+            for (YM7128B_Address i = 0; i < YM7128B_Tap_Count; ++i) {
                 YM7128B_Register data = self->regs_[i + YM7128B_Reg_T0];
                 self->taps_[i] = YM7128B_RegisterToTapIdeal(data, self->sample_rate_);
             }
@@ -1183,4 +1206,3 @@ void YM7128B_ChipShort_Setup(
         }
     }
 }
-
