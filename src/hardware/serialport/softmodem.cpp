@@ -153,18 +153,14 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 	}
 
 	// Get the connect speed to report
+	uint32_t requested_bps = 0;
 	if (getUintFromString("bps:", val, cmd)) {
-		modem_bps_config = val;
+		requested_bps = val;
 	} else {
-		modem_bps_config = 57600;
+		requested_bps = 57600;
 	}
 
-	LOG_MSG("SERIAL: Port %" PRIu8 " modem will report connection speed "
-	        "of up to %d bits per second",
-	        GetPortNumber(),
-	        modem_bps_config);
-
-	UpdateConnectString();
+	SetModemSpeed(requested_bps);
 
 	InstallationSuccessful=true;
 }
@@ -354,7 +350,16 @@ char CSerialModem::GetChar(char * & scan) const {
 	return ch;
 }
 
-uint32_t CSerialModem::UpdateConnectString() {
+void CSerialModem::SetModemSpeed(const uint32_t cfg_val) {
+	modem_bps_config = cfg_val;
+	LOG_MSG("SERIAL: Port %" PRIu8 " modem will report connection speed "
+	        "of up to %d bits per second",
+	        GetPortNumber(),
+	        modem_bps_config);
+	UpdateConnectString();
+}
+
+void CSerialModem::UpdateConnectString() {
 	constexpr auto min_bps     = 300u;
 	constexpr auto max_bps     = 115200u;
 	const uint32_t connect_val = clamp(modem_bps_config,
@@ -363,7 +368,6 @@ uint32_t CSerialModem::UpdateConnectString() {
 
 	assert(connect_val >= min_bps && connect_val <= max_bps);
 	safe_sprintf(connect_string, "CONNECT %d", connect_val);
-	return connect_val;
 }
 
 void CSerialModem::Reset(){
@@ -525,6 +529,13 @@ void CSerialModem::DoCommand()
 					// Reset port state.
 					EnterIdleState();
 				}
+				break;
+			}
+			// Set reported connection speed.
+			if (is_next_token("BPS", scanbuf)) {
+				scanbuf += 3;
+				const auto requested_bps = ScanNumber(scanbuf);
+				SetModemSpeed(requested_bps);
 				break;
 			}
 			// If the command wasn't recognized then stop parsing
