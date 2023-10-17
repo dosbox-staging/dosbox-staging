@@ -367,9 +367,9 @@ struct isoDirEntry {
 #define ISO_MAX_FILENAME_LENGTH 37
 #define ISO_MAXPATHNAME		256
 #define ISO_FIRST_VD		16
-#define IS_ASSOC(fileFlags)	(fileFlags & ISO_ASSOCIATED)
-#define IS_DIR(fileFlags)	(fileFlags & ISO_DIRECTORY)
-#define IS_HIDDEN(fileFlags)	(fileFlags & ISO_HIDDEN)
+#define IS_ASSOC(fileFlags)	(!!(fileFlags & ISO_ASSOCIATED))
+#define IS_DIR(fileFlags)	(!!(fileFlags & ISO_DIRECTORY))
+#define IS_HIDDEN(fileFlags)	(!!(fileFlags & ISO_HIDDEN))
 #define ISO_MAX_HASH_TABLE_SIZE 	100
 
 class isoDrive final : public DOS_Drive {
