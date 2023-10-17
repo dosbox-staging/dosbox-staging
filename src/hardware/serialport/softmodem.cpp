@@ -153,21 +153,18 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 	}
 
 	// Get the connect speed to report
-	constexpr auto min_bps = 300u;
-	constexpr auto max_bps = 57600u;
 	if (getUintFromString("bps:", val, cmd)) {
-		val = clamp(val, min_bps, max_bps);
+		modem_bps_config = val;
 	} else {
-		val = max_bps;
+		modem_bps_config = 57600;
 	}
 
-	assert(val >= min_bps && val <= max_bps);
-	safe_sprintf(connect_string, "CONNECT %d", val);
-
-	LOG_MSG("SERIAL: Port %" PRIu8 " modem will report connection speed"
-	        "of %d bits per second",
+	LOG_MSG("SERIAL: Port %" PRIu8 " modem will report connection speed "
+	        "of up to %d bits per second",
 	        GetPortNumber(),
-	        val);
+	        modem_bps_config);
+
+	UpdateConnectString();
 
 	InstallationSuccessful=true;
 }
@@ -355,6 +352,18 @@ char CSerialModem::GetChar(char * & scan) const {
 	char ch = *scan;
 	scan++;
 	return ch;
+}
+
+uint32_t CSerialModem::UpdateConnectString() {
+	constexpr auto min_bps     = 300u;
+	constexpr auto max_bps     = 115200u;
+	const uint32_t connect_val = clamp(modem_bps_config,
+	                                   min_bps,
+	                                   GetPortBaudRate());
+
+	assert(connect_val >= min_bps && connect_val <= max_bps);
+	safe_sprintf(connect_string, "CONNECT %d", connect_val);
+	return connect_val;
 }
 
 void CSerialModem::Reset(){
@@ -1092,6 +1101,7 @@ void CSerialModem::transmitByte(uint8_t val, bool first)
 void CSerialModem::updatePortConfig(uint16_t, uint8_t lcr)
 {
 	(void)lcr; // deliberately unused but needed for API compliance
+	UpdateConnectString();
 }
 
 void CSerialModem::updateMSR() {

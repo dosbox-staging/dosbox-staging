@@ -291,6 +291,8 @@ public:
 	bool Getchar(uint8_t *data, uint8_t *lsr, bool wait_dsr, uint32_t timeout);
 	uint8_t GetPortNumber() const { return port_index + 1; }
 
+	uint32_t GetPortBaudRate() const;
+
 	// What type of port is this?
 	SERIAL_PORT_TYPE serialType = SERIAL_PORT_TYPE::DISABLED;
 

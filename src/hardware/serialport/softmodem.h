@@ -29,7 +29,6 @@
 #include "serialport.h"
 #include "misc_util.h"
 
-#define MODEMSPD 57600
 #define SREGS 100
 
 //If it's too high you overflow terminal clients buffers i think
@@ -191,6 +190,7 @@ public:
 	void AcceptIncomingCall();
 	uint32_t ScanNumber(char *&scan) const;
 	char GetChar(char * & scan) const;
+	uint32_t UpdateConnectString();
 
 	void DoCommand();
 
@@ -249,6 +249,7 @@ protected:
 	uint16_t listenport = 23; // 23 is the default telnet TCP/IP port
 	uint8_t reg[SREGS] = {0};
 	SocketType socketType = SocketType::Tcp;
+	uint32_t modem_bps_config = 0;
 	std::unique_ptr<NETServerSocket> serversocket = nullptr;
 	std::unique_ptr<NETClientSocket> clientsocket = nullptr;
 	std::unique_ptr<NETClientSocket> waitingclientsocket = nullptr;
