@@ -233,17 +233,47 @@ void DOS_Shell::CMD_CLS(char *args)
 {
 	HELP("CLS");
 
-	// Re-apply current video mode. This clears the console, resets the palette, etc.
-	if (CurMode->mode < 0x100) {
-		reg_ah = 0x00;
-		reg_al = static_cast<uint8_t>(CurMode->mode);
-		CALLBACK_RunRealInt(0x10);
-	} else {
-		reg_ah = 0x4f;
-		reg_al = 0x02;
-		reg_bx = CurMode->mode;
-		CALLBACK_RunRealInt(0x10);
-	}
+	// Thank you to FreeDOS
+	// Logic for this command taken from:
+	// https://github.com/FDOS/freecom/blob/master/cmd/cls.c
+
+	// Scroll screen
+	reg_ah = 0x06;
+
+	// Color (0x07 is light gray text on black)
+	// https://en.wikipedia.org/wiki/BIOS_color_attributes
+	// NOTE: FreeDOS sets this to 0x00 for certain video modes.
+	// They seem to be non-text modes and I was unable to find a way to get the console into them.
+	// Probably this isn't needed for our purposes so I've excluded the check for simplicity
+	reg_bh = 0x07;
+
+	// Copy 0 lines
+	reg_al = 0;
+
+	// Top left of the fill (0, 0)
+	reg_cx = 0;
+
+	// Fill to max
+	// Gets capped to screen dimensions in INT10_ScrollWindow
+	reg_dx = 0xffff;
+
+	CALLBACK_RunRealInt(0x10);
+
+	// Get video mode
+	// Sets reg_bh = page
+	reg_ah = 0x0f;
+	CALLBACK_RunRealInt(0x10);
+
+	// Set cursor position
+	reg_ah = 0x02;
+
+	// reg_bh = current video page
+	// Set by above interrupt
+
+	// Set to (0, 0)
+	reg_dx = 0;
+
+	CALLBACK_RunRealInt(0x10);
 }
 
 void DOS_Shell::CMD_DELETE(char * args) {
