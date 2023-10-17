@@ -153,19 +153,21 @@ CSerialModem::CSerialModem(const uint8_t port_idx, CommandLine *cmd)
 	}
 
 	// Get the connect speed to report
-	constexpr auto min_baudrate = 300u;
-	constexpr auto max_baudrate = 57600u;
-	if (getUintFromString("baudrate:", val, cmd)) {
-		val = clamp(val, min_baudrate, max_baudrate);
+	constexpr auto min_bps = 300u;
+	constexpr auto max_bps = 57600u;
+	if (getUintFromString("bps:", val, cmd)) {
+		val = clamp(val, min_bps, max_bps);
 	} else {
-		val = max_baudrate;
+		val = max_bps;
 	}
 
-	assert(val >= min_baudrate && val <= max_baudrate);
+	assert(val >= min_bps && val <= max_bps);
 	safe_sprintf(connect_string, "CONNECT %d", val);
 
-	LOG_MSG("SERIAL: Port %" PRIu8 " will report baud rate %d",
-			GetPortNumber(), val);
+	LOG_MSG("SERIAL: Port %" PRIu8 " modem will report connection speed"
+	        "of %d bits per second",
+	        GetPortNumber(),
+	        val);
 
 	InstallationSuccessful=true;
 }
