@@ -1061,7 +1061,7 @@ void DOSBOX_Init()
 	        "  - for 'mouse':      model, overrides setting from [mouse] section\n"
 	        "  - for 'direct':     realport (required), rxdelay (optional).\n"
 	        "                      (realport:COM1 realport:ttyS0).\n"
-	        "  - for 'modem':      listenport, sock, baudrate (all optional).\n"
+	        "  - for 'modem':      listenport, sock, bps (all optional).\n"
 	        "  - for 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,\n"
 	        "                      transparent, port, inhsocket, sock (all optional).\n"
 	        "SOCK parameter specifies the protocol to be used by both sides\n"
