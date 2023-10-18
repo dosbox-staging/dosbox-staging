@@ -2219,8 +2219,8 @@ Where:
   This command has no parameters.
 
 Notes:
-  Running [color=light-green]cls[reset] clears all texts on the DOS screen, except for the command
-  prompt (e.g. [color=white]Z:\>[reset] or [color=white]C:\GAMES>[reset]) on the top-left corner of the screen.
+  Running [color=light-green]cls[reset] clears all text on the DOS screen, except for the command
+  prompt (e.g., [color=white]Z:\>[reset] or [color=white]C:\GAMES>[reset]) on the top-left corner of the screen.
 
 Examples:
   [color=light-green]cls[reset]
