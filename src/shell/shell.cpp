@@ -847,8 +847,8 @@ void SHELL_Init() {
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  Running [color=light-green]cls[reset] clears all texts on the DOS screen, except for the command\n"
-	        "  prompt (e.g. [color=white]Z:\\>[reset] or [color=white]C:\\GAMES>[reset]) on the top-left corner of the screen.\n"
+	        "  Running [color=light-green]cls[reset] clears all text on the DOS screen, except for the command\n"
+	        "  prompt (e.g., [color=white]Z:\\>[reset] or [color=white]C:\\GAMES>[reset]) on the top-left corner of the screen.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]cls[reset]\n");
