@@ -479,6 +479,9 @@ static void initialize_vsync_settings()
 	if (has_true(user_pref)) {
 		sdl.vsync.when_windowed.requested   = VsyncState::On;
 		sdl.vsync.when_fullscreen.requested = VsyncState::On;
+	} else if (user_pref == "adaptive") {
+		sdl.vsync.when_windowed.requested   = VsyncState::Adaptive;
+		sdl.vsync.when_fullscreen.requested = VsyncState::Adaptive;
 	} else if (has_false(user_pref)) {
 		sdl.vsync.when_windowed.requested   = VsyncState::Off;
 		sdl.vsync.when_fullscreen.requested = VsyncState::Off;
@@ -4183,7 +4186,7 @@ static void config_add_sdl() {
 	        "  <custom>:  Specify a custom rate as an integer or decimal Hz value\n"
 	        "             (23.000 is the allowed minimum).");
 
-	const char* vsync_prefs[] = {"auto", "on", "off", "yield", nullptr};
+	const char* vsync_prefs[] = {"auto", "on", "adaptive", "off", "yield", nullptr};
 	pstring = sdl_sec->Add_string("vsync", always, "auto");
 
 	pstring->Set_help(
@@ -4193,6 +4196,10 @@ static void config_add_sdl() {
 	        "  on:        Enable vsync. This can prevent tearing in some games but will\n"
 	        "             impact performance or drop frames when the DOS rate exceeds the\n"
 	        "             host rate (e.g. 70 Hz DOS rate vs 60 Hz host rate).\n"
+	        "  adaptive:  Enables vsync when the frame rate is higher than the host rate,\n"
+	        "             but disables it when the frame rate drops below the host rate.\n"
+	        "             This is a reasonable alternative on macOS instead of 'on'.\n"
+	        "             Note: only valid in OpenGL output modes; otherwise treated as 'on'.\n"
 	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
 	        "             the risk of tearing in some games.\n"
 	        "  yield:     Let the host's video driver control video synchronization.");
