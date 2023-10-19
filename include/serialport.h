@@ -49,6 +49,9 @@
 #include "hardware.h"
 #endif
 
+constexpr uint32_t SerialMinBaudRate = 300u;
+constexpr uint32_t SerialMaxBaudRate = 115200u;
+
 // Serial port interface
 #define SERIAL_IO_HANDLERS 8
 #define SERIAL_MAX_FIFO_SIZE 256
