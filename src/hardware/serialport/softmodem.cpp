@@ -360,13 +360,12 @@ void CSerialModem::SetModemSpeed(const uint32_t cfg_val) {
 }
 
 void CSerialModem::UpdateConnectString() {
-	constexpr auto min_bps     = 300u;
-	constexpr auto max_bps     = 115200u;
 	const uint32_t connect_val = clamp(modem_bps_config,
-	                                   min_bps,
+	                                   SerialMinBaudRate,
 	                                   GetPortBaudRate());
 
-	assert(connect_val >= min_bps && connect_val <= max_bps);
+	assert(connect_val >= SerialMinBaudRate &&
+	       connect_val <= SerialMaxBaudRate);
 	safe_sprintf(connect_string, "CONNECT %d", connect_val);
 }
 

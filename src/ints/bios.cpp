@@ -542,7 +542,8 @@ static Bitu INT14_Handler(void) {
 		default: assert(false); return CBRET_NONE;
 		}
 
-		const auto baudresult = static_cast<uint16_t>(115200 / baudrate);
+		const auto baudresult = static_cast<uint16_t>(
+		        SerialMaxBaudRate / baudrate);
 
 		IO_WriteB(port+3, 0x80);	// enable divider access
 		IO_WriteB(port, (uint8_t)baudresult&0xff);

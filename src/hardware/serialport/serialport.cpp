@@ -1018,10 +1018,9 @@ static constexpr std::tuple<uint8_t, uint8_t> baud_to_regs(uint32_t baud_rate)
 	// Cap the lower-bound to 300 baud. Although the first 1950s modem
 	// offered 110 baud, by the time DOS was available 8-bit ISA modems
 	// offered at least 300 and even 1200 baud.
-	baud_rate = std::max(300u, baud_rate);
+	baud_rate = std::max(SerialMinBaudRate, baud_rate);
 
-	constexpr auto max_baud = 115200u;
-	const auto delay_ratio = static_cast<uint16_t>(max_baud / baud_rate);
+	const auto delay_ratio = static_cast<uint16_t>(SerialMaxBaudRate / baud_rate);
 
 	const uint8_t transmit_reg = delay_ratio & 0xff;  // bottom byte
 	const uint8_t interrupt_reg = delay_ratio >> 8;   // top byte
@@ -1291,10 +1290,10 @@ bool CSerial::Putchar(uint8_t data, bool wait_dsr, bool wait_cts, uint32_t timeo
 
 uint32_t CSerial::GetPortBaudRate() const {
 	if (baud_divider == 0) {
-		return 115200;
+		return SerialMaxBaudRate;
 	}
 
-	return 115200 / baud_divider;
+	return SerialMaxBaudRate / baud_divider;
 }
 
 class SERIALPORTS final : public Module_base {
