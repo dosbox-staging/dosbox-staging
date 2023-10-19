@@ -39,7 +39,7 @@ public:
 	        std::string_view file);
 
 	void Reset() final;
-	[[nodiscard]] std::optional<char> Read() final;
+	[[nodiscard]] std::optional<uint8_t> Read() final;
 
 	FileReader(std::string_view filename, PrivateOnly key);
 	~FileReader() final;

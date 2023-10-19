@@ -42,8 +42,8 @@ extern DOS_Shell* first_shell;
 
 class ByteReader {
 public:
-	virtual void Reset()               = 0;
-	virtual std::optional<char> Read() = 0;
+	virtual void Reset()                  = 0;
+	virtual std::optional<uint8_t> Read() = 0;
 
 	ByteReader()                             = default;
 	ByteReader(const ByteReader&)            = delete;
