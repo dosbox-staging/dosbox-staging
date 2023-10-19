@@ -29,7 +29,7 @@ public:
 	{
 		index = 0;
 	}
-	std::optional<char> Read() override
+	std::optional<uint8_t> Read() override
 	{
 		if (index >= contents.size()) {
 			return std::nullopt;

@@ -24,8 +24,8 @@
 #include "string_utils.h"
 
 // Permitted ASCII control characters in batch files
-constexpr char Esc           = 27;
-constexpr char UnitSeparator = 31;
+constexpr uint8_t Esc           = 27;
+constexpr uint8_t UnitSeparator = 31;
 
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 
@@ -66,7 +66,7 @@ bool BatchFile::ReadLine(char* lineout)
 
 std::string BatchFile::GetLine()
 {
-	char data        = 0;
+	uint8_t data     = 0;
 	std::string line = {};
 
 	while (data != '\n') {
