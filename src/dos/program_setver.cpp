@@ -183,9 +183,11 @@ void SETVER::Run()
 
 	// Handle per-file version set
 	if (has_arg_batch || has_arg_paged) {
-		WriteOut(MSG_Get("SHELL_WRONG_SYNTAX"));
+		WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 	} else if (params.size() > 2) {
 		WriteOut(MSG_Get("SHELL_TOO_MANY_PARAMETERS"));
+	} else if (params.size() < 2) {
+		WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 	} else {
 		CommandSet(params[0], params[1], has_arg_quiet);
 	}
