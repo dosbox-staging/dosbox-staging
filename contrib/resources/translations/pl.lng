@@ -543,16 +543,17 @@ Dźwięk jest emulowany, ale całkowicie wyciszony.
 Częstotliwość próbkowania miksera dźwięku (domyślnie 48000).
 .
 :CONFIG_BLOCKSIZE
-Rozmiar bloku miksera. Większe wartości mogą pomóc na problem przycinania
-dźwięku, ale zwiększają opóźnienie (lag).
+Rozmiar bloku miksera w ramkach. Większe wartości mogą pomóc zredukować
+przycinanie dźwięku, ale zwiększają opóźnienie (lag).
 .
 :CONFIG_PREBUFFER
-Ile milisekund dźwięku wyrenderować ponad 'blocksize'. Większe wartości mogą
-pomóc na problem przycinania dźwięku, ale zwiększają opóźnienie (lag).
+Ile milisekund dźwięku renderować ponad 'blocksize'. Większe wartości mogą
+pomóc redukować przycinanie dźwięku, ale zwiększają opóźnienie
+(lag).
 .
 :CONFIG_NEGOTIATE
-Negocjacja potencjalnie lepszych ustawień częstotliwości i rozmiaru bloku
-ze sterownikiem dźwięku.
+Czy próbować wynegocjować ze sterownikiem dźwięku potencjalnie lepsze
+ustawienia częstotliwości i rozmiaru bloku (domyślnie włączone).
 .
 :CONFIG_COMPRESSOR
 Włącza automatyczny kompresora dynamiki, zapobiega przesterowaniu dźwięku:
@@ -563,7 +564,7 @@ Włącza automatyczny kompresora dynamiki, zapobiega przesterowaniu dźwięku:
 Włącza (globalnie) efekt przenikania kanałów stereo, przydatne jeśli używasz
 słuchawek:
   off:         Bez efektu (domyślne).
-  on:          Włącza przenikania na poziomie 40.
+  on:          Włącza przenikanie na poziomie 40.
   <strength>:  Ustawienie siły efektu od 0 (wyłączone) do 100 (dźwięk mono).
 Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
 .
@@ -1577,7 +1578,7 @@ Podaj numer dysku (0 - 3), gdzie zamontowany będzie obraz (0=fda, 1=fdb, 2=hda,
 Dla obrazów [color=brown]CD-ROM[reset]:           [color=light-blue]IMGMOUNT dysk plikobraz -t iso[reset]
 
 Dla obrazów [color=brown]dysków twardych[reset]:  Geometria w formacie
-bajtów-na-sektor,sektorów-na-głowicę,głowice,cylindry
+bajtów-na-sektor,sektorów-na-głowicę,ilość-głowic,ilość-cylindrów
 [color=light-blue]IMGMOUNT dysk plikobraz -size bps,spc,hpc,cyl[reset]
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
@@ -1997,7 +1998,13 @@ Nie znaleziono żadnego pliku.
 [reset][color=brown]--- (%d%%) wciśnij SPACJĘ lub ENTER aby wyświetlić więcej ---[reset]
 .
 :PROGRAM_MORE_PROMPT_MULTI
-[reset][color=brown]--- wciśnij SPACJĘ lub ENTER aby wyświetlić więcej, N kolejny plik ---[reset]
+[reset][color=brown]--- wciśnij SPACJĘ lub ENTER aby wyświetlić więcej, N pokazuje kolejny plik ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT
+[reset][color=brown]--- więcej ---[reset]
+.
+:PROGRAM_MORE_PROMPT_SHORT_PERCENT
+[reset][color=brown]--- (%d%%) więcej ---[reset]
 .
 :PROGRAM_MORE_PROMPT_LINE
 [reset][color=brown]--- linia %u ---[reset]
