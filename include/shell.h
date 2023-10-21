@@ -191,6 +191,8 @@ public:
 std::tuple<std::string, std::string, std::string, bool> parse_drive_conf(
         std::string drive_letter, const std_fs::path& conf_path);
 
+std::string to_search_pattern(const char* arg);
+
 // Localized output
 
 char* format_date(const uint16_t year, const uint8_t month, const uint8_t day);

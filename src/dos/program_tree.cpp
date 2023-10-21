@@ -397,8 +397,8 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 	if (is_first_entry && !depth) {
 		output.AddString("\n");
 		output.AddString(MSG_Get(has_option_files
-		                                 ? "PROGRAM_TREE_NO_FILES_SUBDIRS"
-		                                 : "PROGRAM_TREE_NO_SUBDIRS"));
+		                                 ? "SHELL_NO_FILES_SUBDIRS_TO_DISPLAY"
+		                                 : "SHELL_NO_SUBDIRS_TO_DISPLAY"));
 	} else if (has_option_files) {
 		// If listing files, separate directories with empty lines
 		display_empty();
@@ -441,9 +441,6 @@ void TREE::AddMessages()
 
 	MSG_Add("PROGRAM_TREE_DIRECTORY", " Directory tree for volume %s");
 
-	MSG_Add("PROGRAM_TREE_NO_SUBDIRS", "No subdirectories to display.\n");
-	MSG_Add("PROGRAM_TREE_NO_FILES_SUBDIRS",
-	        "No files or subdirectories to display.\n");
 	MSG_Add("PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS",
 	        "Too many files or subdirectories.\n");
 }
