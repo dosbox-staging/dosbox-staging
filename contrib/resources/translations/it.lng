@@ -2592,14 +2592,6 @@ Esempi:
 :PROGRAM_TREE_DIRECTORY
  Struttura delle directory per il volume %s
 .
-:PROGRAM_TREE_NO_SUBDIRS
-Nessuna sottodirectory da visualizzare.
-
-.
-:PROGRAM_TREE_NO_FILES_SUBDIRS
-Nessun file o sottodirectory da visualizzare.
-
-.
 :PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
 Troppi file o sottodirectory.
 
@@ -2704,6 +2696,14 @@ Il file '%s' esiste già.
 .
 :SHELL_DIRECTORY_NOT_FOUND
 Directory non trovata - '%s'
+
+.
+:SHELL_NO_SUBDIRS_TO_DISPLAY
+Nessuna sottodirectory da visualizzare.
+
+.
+:SHELL_NO_FILES_SUBDIRS_TO_DISPLAY
+Nessun file o sottodirectory da visualizzare.
 
 .
 :SHELL_READ_ERROR

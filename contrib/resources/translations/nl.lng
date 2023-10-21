@@ -2446,14 +2446,6 @@ Voorbeelden:
 :PROGRAM_TREE_DIRECTORY
  Directorystructuur voor volume %s
 .
-:PROGRAM_TREE_NO_SUBDIRS
-Geen submappen om weer te geven.
-
-.
-:PROGRAM_TREE_NO_FILES_SUBDIRS
-Geen bestanden of submappen om weer te geven.
-
-.
 :PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
 Te veel bestanden of submappen.
 
@@ -2558,6 +2550,14 @@ Bestand '%s' bestaat al.
 .
 :SHELL_DIRECTORY_NOT_FOUND
 Map niet gevonden - '%s'
+
+.
+:SHELL_NO_SUBDIRS_TO_DISPLAY
+Geen submappen om weer te geven.
+
+.
+:SHELL_NO_FILES_SUBDIRS_TO_DISPLAY
+Geen bestanden of submappen om weer te geven.
 
 .
 :SHELL_READ_ERROR

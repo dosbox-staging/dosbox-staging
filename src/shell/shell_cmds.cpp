@@ -689,7 +689,7 @@ std::string shorten_path(const std::string& path, const size_t max_len)
 	return path_prefix + path_middle + path_suffix;
 }
 
-static std::string to_search_pattern(const char *arg)
+std::string to_search_pattern(const char* arg)
 {
 	std::string pattern = arg;
 	trim(pattern);
@@ -726,62 +726,6 @@ static std::string to_search_pattern(const char *arg)
 		pattern += ".*";
 
 	return pattern;
-}
-
-// Map a vector of dir contents to a vector of word widths.
-static std::vector<int> to_name_lengths(const std::vector<DOS_DTA::Result>& dir_contents,
-                                        int padding)
-{
-	std::vector<int> ret;
-	ret.reserve(dir_contents.size());
-	for (const auto &entry : dir_contents) {
-		const int len = static_cast<int>(entry.name.length());
-		ret.push_back(len + padding);
-	}
-	return ret;
-}
-
-static std::vector<int> calc_column_widths(const std::vector<int> &word_widths,
-                                           int min_col_width)
-{
-	assert(min_col_width > 0);
-
-	// Actual terminal width (number of text columns) using current text
-	// mode; in practice it's either 40, 80, or 132.
-	const int term_width = INT10_GetTextColumns();
-
-	// Use term_width-1 because we never want to print line up to the actual
-	// limit; this would cause unnecessary line wrapping
-	const size_t max_columns = (term_width - 1) / min_col_width;
-	std::vector<int> col_widths(max_columns);
-
-	// This function returns true when column number is too high to fit
-	// words into a terminal width.  If it returns false, then the first
-	// coln integers in col_widths vector describe the column widths.
-	auto too_many_columns = [&](size_t coln) -> bool {
-		std::fill(col_widths.begin(), col_widths.end(), 0);
-		if (coln <= 1)
-			return false;
-		int max_line_width = 0; // tally of the longest line
-		int c = 0;              // current columnt
-		for (const int width : word_widths) {
-			const int old_col_width = col_widths[c];
-			const int new_col_width = std::max(old_col_width, width);
-			col_widths[c] = new_col_width;
-			max_line_width += (new_col_width - old_col_width);
-			if (max_line_width >= term_width)
-				return true;
-			c = (c + 1) % coln;
-		}
-		return false;
-	};
-
-	size_t col_count = max_columns;
-	while (too_many_columns(col_count)) {
-		col_count--;
-		col_widths.pop_back();
-	}
-	return col_widths;
 }
 
 char *format_date(const uint16_t year, const uint8_t month, const uint8_t day)
@@ -1110,70 +1054,6 @@ void DOS_Shell::CMD_DIR(char* args)
 	}
 	dos.dta(save_dta);
 	output.Display();
-}
-
-void DOS_Shell::CMD_LS(char *args)
-{
-	using namespace std::string_literals;
-
-	HELP("LS");
-
-	const RealPt original_dta = dos.dta();
-	dos.dta(dos.tables.tempdta);
-	DOS_DTA dta(dos.dta());
-
-	const std::string pattern = to_search_pattern(args);
-	if (!DOS_FindFirst(pattern.c_str(), FatAttributeFlags::NotVolume)) {
-		WriteOut(MSG_Get("SHELL_CMD_LS_PATH_ERR"), trim(args));
-		dos.dta(original_dta);
-		return;
-	}
-
-	std::vector<DOS_DTA::Result> dir_contents;
-	do {
-		DOS_DTA::Result result;
-		dta.GetResult(result);
-		if (result.IsDummyDirectory()) {
-			continue;
-		}
-		dir_contents.push_back(result);
-	} while (DOS_FindNext());
-
-	const int column_sep = 2; // chars separating columns
-	const auto word_widths = to_name_lengths(dir_contents, column_sep);
-	const auto column_widths = calc_column_widths(word_widths, column_sep + 1);
-	const size_t cols = column_widths.size();
-
-	size_t w_count = 0;
-
-	constexpr int ansi_blue = 34;
-	constexpr int ansi_green = 32;
-	auto write_color = [&](int color, const std::string &txt, int width) {
-		const int padr = width - static_cast<int>(txt.size());
-		WriteOut("\033[%d;1m%s\033[0m%-*s", color, txt.c_str(), padr, "");
-	};
-
-	for (const auto &entry : dir_contents) {
-		std::string name = entry.name;
-		const size_t col = w_count % cols;
-		const int cw = column_widths[col];
-
-		if (entry.IsDirectory()) {
-			upcase(name);
-			write_color(ansi_blue, name, cw);
-		} else {
-			lowcase(name);
-			if (is_executable_filename(name))
-				write_color(ansi_green, name, cw);
-			else
-				WriteOut("%-*s", cw, name.c_str());
-		}
-
-		++w_count;
-		if (w_count % cols == 0)
-			WriteOut_NoParsing("\n");
-	}
-	dos.dta(original_dta);
 }
 
 struct copysource {

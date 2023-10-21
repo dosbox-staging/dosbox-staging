@@ -655,6 +655,8 @@ void SHELL_Init() {
 	MSG_Add("SHELL_FILE_NOT_FOUND", "File not found - '%s'\n");
 	MSG_Add("SHELL_FILE_EXISTS", "File '%s' already exists.\n");
 	MSG_Add("SHELL_DIRECTORY_NOT_FOUND", "Directory not found - '%s'\n");
+	MSG_Add("SHELL_NO_SUBDIRS_TO_DISPLAY", "No subdirectories to display.\n");
+	MSG_Add("SHELL_NO_FILES_SUBDIRS_TO_DISPLAY", "No files or subdirectories to display.\n");
 	MSG_Add("SHELL_READ_ERROR", "Error reading file - '%s'\n");
 	MSG_Add("SHELL_WRITE_ERROR", "Error writing file - '%s'\n");
 
@@ -1186,28 +1188,6 @@ void SHELL_Init() {
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]\n");
-
-	MSG_Add("SHELL_CMD_LS_HELP",
-	        "Displays directory contents in wide list format.\n");
-	MSG_Add("SHELL_CMD_LS_HELP_LONG",
-	        "Usage:\n"
-	        "  [color=light-green]ls[reset] [color=light-cyan]PATTERN[reset]\n"
-	        "  [color=light-green]ls[reset] [color=light-cyan]PATH[reset]\n"
-	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]PATTERN[reset] can be either an exact filename or an inexact filename with\n"
-	        "          wildcards, which are the asterisk (*) and the question mark (?).\n"
-	        "  [color=light-cyan]PATH[reset]    is an exact path in a mounted DOS drive to list contents.\n"
-	        "\n"
-	        "Notes:\n"
-	        "  The command will list directories in [color=light-blue]blue[reset], executable DOS programs\n"
-	        "   (*.com, *.exe, *.bat) in [color=light-green]green[reset], and other files in the normal color.\n"
-	        "\n"
-	        "Examples:\n"
-	        "  [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]\n"
-	        "  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]\n");
-	MSG_Add("SHELL_CMD_LS_PATH_ERR",
-	        "ls: cannot access '%s': No such file or directory\n");
 
 	MSG_Add("SHELL_CMD_ATTRIB_HELP",
 			"Displays or changes file attributes.\n");

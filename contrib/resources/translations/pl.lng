@@ -2454,14 +2454,6 @@ Przykłady:
 :PROGRAM_TREE_DIRECTORY
  Drzewo katalogów dla dysku %s
 .
-:PROGRAM_TREE_NO_SUBDIRS
-Brak podkatalogów do wyświetlenia.
-
-.
-:PROGRAM_TREE_NO_FILES_SUBDIRS
-Brak plików lub podkatalogów do wyświetlenia.
-
-.
 :PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS
 Zbyt wiele plików lub podkatalogów.
 
@@ -2526,6 +2518,14 @@ Plik '%s' już istnieje.
 .
 :SHELL_DIRECTORY_NOT_FOUND
 Nie odnaleziono katalogu - '%s'.
+
+.
+:SHELL_NO_SUBDIRS_TO_DISPLAY
+Brak podkatalogów do wyświetlenia.
+
+.
+:SHELL_NO_FILES_SUBDIRS_TO_DISPLAY
+Brak plików lub podkatalogów do wyświetlenia.
 
 .
 :SHELL_READ_ERROR
