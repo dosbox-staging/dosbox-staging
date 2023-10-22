@@ -188,7 +188,7 @@ public:
 	bool call                     = false;
 };
 
-std::tuple<std::string, std::string, std::string> parse_drive_conf(
+std::tuple<std::string, std::string, std::string, bool> parse_drive_conf(
         std::string drive_letter, const std_fs::path& conf_path);
 
 // Localized output
