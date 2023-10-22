@@ -550,22 +550,23 @@ static std::unique_ptr<Config> specify_drive_config()
 }
 
 // Parse a 'Drive' config file and return object with allowed key and value types
-std::tuple<std::string, std::string, std::string> parse_drive_conf(
+std::tuple<std::string, std::string, std::string, bool> parse_drive_conf(
         std::string drive_letter, const std_fs::path& conf_path)
 {
 	// Default return values
 	constexpr auto default_args = "";
 	constexpr auto default_path = "";
+	constexpr auto default_verbosity = false;
 
 	// If the conf path doesn't exist, at least return the default quiet arg
 	if (!path_exists(conf_path))
-		return {drive_letter, default_args, default_path};
+		return {drive_letter, default_args, default_path, default_verbosity};
 
 	// If we couldn't parse it, return the defaults
 	auto conf = specify_drive_config();
 	assert(conf);
 	if (!conf->ParseConfigFile("auto-mounted drive", conf_path.string()))
-		return {drive_letter, default_args, default_path};
+		return {drive_letter, default_args, default_path, default_verbosity};
 
 	const auto settings = static_cast<Section_prop *>(conf->GetSection("drive"));
 
@@ -588,13 +589,13 @@ std::tuple<std::string, std::string, std::string> parse_drive_conf(
 		drive_label.insert(0, " -label ");
 	}
 
-	const auto verbose_arg = settings->Get_bool("verbose") ? "" : " > NUL";
-
-	const auto mount_args = drive_type + drive_label + verbose_arg;
+	const auto mount_args = drive_type + drive_label;
 
 	const std::string path_val = settings->Get_string("path");
 
-	return {drive_letter, mount_args, path_val};
+	const auto is_verbose = settings->Get_bool("verbose");
+
+	return {drive_letter, mount_args, path_val, is_verbose};
 }
 
 static Bitu INT2E_Handler()
