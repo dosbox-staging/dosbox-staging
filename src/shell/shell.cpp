@@ -573,18 +573,20 @@ std::tuple<std::string, std::string, std::string> parse_drive_conf(
 	const std::string override_drive = settings->Get_string("override_drive");
 	if (override_drive.length() == 1 && override_drive[0] >= 'a' && override_drive[0] <= 'y')
 		drive_letter = override_drive;
-	else if (override_drive.length()) {
+	else if (!override_drive.empty()) {
 		LOG_ERR("AUTOMOUNT: %s: setting 'override_drive = %s' is invalid", conf_path.string().c_str(), override_drive.c_str());
 		LOG_ERR("AUTOMOUNT: The override_drive setting can be left empty or a drive letter from 'a' to 'y'");
 	}
 
 	std::string drive_type = settings->Get_string("type");
-	if (drive_type.length())
+	if (!drive_type.empty()) {
 		drive_type.insert(0, " -t ");
+	}
 
 	std::string drive_label = settings->Get_string("label");
-	if (drive_label.length())
+	if (!drive_label.empty()) {
 		drive_label.insert(0, " -label ");
+	}
 
 	const auto verbose_arg = settings->Get_bool("verbose") ? "" : " > NUL";
 
