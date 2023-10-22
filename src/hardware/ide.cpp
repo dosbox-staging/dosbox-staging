@@ -1038,14 +1038,12 @@ void IDEATAPICDROMDevice::on_atapi_busy_time()
 		uint32_t sec = (leadOut.min * 60u * 75u) + (leadOut.sec * 75u) + leadOut.fr - 150u;
 
 		prepare_read(0, std::min((uint32_t)8, host_maximum_byte_count));
-		sector[0] = sec >> 24u;
-		sector[1] = check_cast<uint8_t>(sec >> 16u);
-		sector[2] = check_cast<uint8_t>(sec >> 8u);
-		sector[3] = sec & 0xFF;
-		sector[4] = secsize >> 24u;
-		sector[5] = secsize >> 16u;
-		sector[6] = secsize >> 8u;
-		sector[7] = secsize & 0xFF;
+
+		// Write sec into the first four-byte block of sector
+		host_writed_at(sector, 0, sec);
+
+		// Write secsize into the second four-byte block of sector
+		host_writed_at(sector, 1, secsize);
 		//          LOG_MSG("sec=%lu secsize=%lu",sec,secsize);
 
 		feature = 0x00;
