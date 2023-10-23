@@ -13375,9 +13375,13 @@ static void imfc_init(Section* sec)
 	m_loggerMutex = SDL_CreateMutex();
 #endif
 
+	// The emulation requires playback at 44.1 KHz to match the pitch of
+	// original hardware.
+	constexpr uint16_t imfc_sampling_rate_hz = 44100;
+
 	// Register the Audio channel
 	auto channel = MIXER_AddChannel(IMFC_Mixer_Callback,
-	                                use_mixer_rate,
+	                                imfc_sampling_rate_hz,
 	                                "IMFC",
 	                                {ChannelFeature::Stereo,
 	                                 ChannelFeature::ReverbSend,
