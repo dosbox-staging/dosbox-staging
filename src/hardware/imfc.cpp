@@ -13450,7 +13450,7 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 	int_prop->Set_help(
 	        "The IRQ number of the IBM Music Feature Card (3 by default).");
 
-	const auto str_prop = secprop.Add_string("imfc_filter", when_idle, "off");
+	const auto str_prop = secprop.Add_string("imfc_filter", when_idle, "on");
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Filter for the IBM Music Feature Card output:\n"
