@@ -23,7 +23,7 @@
 
 #include "shell.h"
 
-class MockReader final : public ByteReader {
+class FakeReader final : public ByteReader {
 public:
 	void Reset() override
 	{
@@ -40,20 +40,20 @@ public:
 		return data;
 	}
 
-	explicit MockReader(std::string&& str) : contents(std::move(str)) {}
+	explicit FakeReader(std::string&& str) : contents(std::move(str)) {}
 
-	MockReader(const MockReader&)            = delete;
-	MockReader& operator=(const MockReader&) = delete;
-	MockReader(MockReader&&)                 = delete;
-	MockReader& operator=(MockReader&&)      = delete;
-	~MockReader() override                   = default;
+	FakeReader(const FakeReader&)            = delete;
+	FakeReader& operator=(const FakeReader&) = delete;
+	FakeReader(FakeReader&&)                 = delete;
+	FakeReader& operator=(FakeReader&&)      = delete;
+	~FakeReader() override                   = default;
 
 private:
 	std::string contents;
 	decltype(contents)::size_type index = 0;
 };
 
-class MockShell final : public Environment {
+class FakeShell final : public Environment {
 public:
 	std::optional<std::string> GetEnvironmentValue(std::string_view entry) const override
 	{
@@ -64,15 +64,15 @@ public:
 		return environment_variable->second;
 	}
 
-	explicit MockShell(std::unordered_map<std::string, std::string>&& map)
+	explicit FakeShell(std::unordered_map<std::string, std::string>&& map)
 	        : env(std::move(map))
 	{}
 
-	MockShell(const MockShell&)            = delete;
-	MockShell& operator=(const MockShell&) = delete;
-	MockShell(MockShell&&)                 = delete;
-	MockShell& operator=(MockShell&&)      = delete;
-	~MockShell() override                  = default;
+	FakeShell(const FakeShell&)            = delete;
+	FakeShell& operator=(const FakeShell&) = delete;
+	FakeShell(FakeShell&&)                 = delete;
+	FakeShell& operator=(FakeShell&&)      = delete;
+	~FakeShell() override                  = default;
 
 private:
 	std::unordered_map<std::string, std::string> env;
@@ -80,9 +80,9 @@ private:
 
 TEST(BatchFileRead, StopAtEndNoNewline)
 {
-	const auto shell = MockShell({});
+	const auto shell = FakeShell({});
 	auto batchfile   = BatchFile(
-                shell, std::make_unique<MockReader>("contents"), "", "", true);
+                shell, std::make_unique<FakeReader>("contents"), "", "", true);
 
 	char line[CMD_MAXLINE];
 
@@ -95,9 +95,9 @@ TEST(BatchFileRead, StopAtEndNoNewline)
 
 TEST(BatchFileRead, StopAtEndWithNewline)
 {
-	const auto shell = MockShell({});
+	const auto shell = FakeShell({});
 	auto batchfile   = BatchFile(
-                shell, std::make_unique<MockReader>("contents\n"), "", "", true);
+                shell, std::make_unique<FakeReader>("contents\n"), "", "", true);
 
 	char line[CMD_MAXLINE];
 
@@ -110,9 +110,9 @@ TEST(BatchFileRead, StopAtEndWithNewline)
 
 TEST(BatchFileParse, EmptySubstitutionsWhenNotFound)
 {
-	const auto shell = MockShell({});
+	const auto shell = FakeShell({});
 	auto batchfile   = BatchFile(shell,
-                                   std::make_unique<MockReader>("%0%1%NONEXISTENTVAR%%"),
+                                   std::make_unique<FakeReader>("%0%1%NONEXISTENTVAR%%"),
                                    "",
                                    "",
                                    true);
@@ -125,9 +125,9 @@ TEST(BatchFileParse, EmptySubstitutionsWhenNotFound)
 
 TEST(BatchFileParse, SubstituteFilename)
 {
-	const auto shell = MockShell({});
+	const auto shell = FakeShell({});
 	auto batchfile   = BatchFile(shell,
-                                   std::make_unique<MockReader>("%0"),
+                                   std::make_unique<FakeReader>("%0"),
                                    "filename.bat",
                                    "",
                                    true);
@@ -140,9 +140,9 @@ TEST(BatchFileParse, SubstituteFilename)
 
 TEST(BatchFileParse, SubstituteArgs)
 {
-	const auto shell = MockShell({});
+	const auto shell = FakeShell({});
 	auto batchfile   = BatchFile(shell,
-                                   std::make_unique<MockReader>("%1%2%3%4"),
+                                   std::make_unique<FakeReader>("%1%2%3%4"),
                                    "",
                                    "one two three",
                                    true);
@@ -155,10 +155,10 @@ TEST(BatchFileParse, SubstituteArgs)
 
 TEST(BatchFileParse, SubstituteEnvironmentVariable)
 {
-	const auto shell = MockShell(std::unordered_map<std::string, std::string>(
+	const auto shell = FakeShell(std::unordered_map<std::string, std::string>(
 	        {{"variable", "value"}}));
 	auto batchfile = BatchFile(
-	        shell, std::make_unique<MockReader>("%variable%"), "", "", true);
+	        shell, std::make_unique<FakeReader>("%variable%"), "", "", true);
 
 	char line[CMD_MAXLINE];
 
@@ -168,9 +168,9 @@ TEST(BatchFileParse, SubstituteEnvironmentVariable)
 
 TEST(BatchFileGoto, FindLabel)
 {
-	const auto shell = MockShell({});
+	const auto shell = FakeShell({});
 	auto batchfile   = BatchFile(
-                shell, std::make_unique<MockReader>(":label"), "", "", true);
+                shell, std::make_unique<FakeReader>(":label"), "", "", true);
 
 	const auto found_label = batchfile.Goto("label");
 	ASSERT_TRUE(found_label);
@@ -178,9 +178,9 @@ TEST(BatchFileGoto, FindLabel)
 
 TEST(BatchFileGoto, LabelNotFound)
 {
-	const auto shell = MockShell({});
+	const auto shell = FakeShell({});
 	auto batchfile   = BatchFile(
-                shell, std::make_unique<MockReader>(":label"), "", "", true);
+                shell, std::make_unique<FakeReader>(":label"), "", "", true);
 
 	const auto found_label = batchfile.Goto("nolabel");
 	ASSERT_FALSE(found_label);
@@ -188,9 +188,9 @@ TEST(BatchFileGoto, LabelNotFound)
 
 TEST(BatchFileGoto, LabelOnPreviousLine)
 {
-	const auto shell = MockShell({});
+	const auto shell = FakeShell({});
 	auto batchfile   = BatchFile(
-                shell, std::make_unique<MockReader>(":label\nline"), "", "", true);
+                shell, std::make_unique<FakeReader>(":label\nline"), "", "", true);
 	char line[CMD_MAXLINE];
 
 	batchfile.ReadLine(line);
@@ -202,9 +202,9 @@ TEST(BatchFileGoto, LabelOnPreviousLine)
 
 TEST(BatchFileGoto, SkipLines)
 {
-	const auto shell = MockShell({});
+	const auto shell = FakeShell({});
 	auto batchfile   = BatchFile(shell,
-                                   std::make_unique<MockReader>("before\n:label\nafter"),
+                                   std::make_unique<FakeReader>("before\n:label\nafter"),
                                    "",
                                    "",
                                    true);

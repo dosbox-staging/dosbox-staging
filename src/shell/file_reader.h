@@ -27,32 +27,23 @@
 #include "shell.h"
 
 class FileReader final : public ByteReader {
-private:
-	// Exists to effectively make the FileReader constructor private
-	// It still needs to be public for internal use with std::make_unique
-	struct PrivateOnly {
-		explicit PrivateOnly() = default;
-	};
-
 public:
-	[[nodiscard]] static std::optional<std::unique_ptr<FileReader>> GetFileReader(
-	        std::string_view file);
+	static std::optional<FileReader> GetFileReader(const std::string& file);
 
 	void Reset() final;
-	[[nodiscard]] std::optional<uint8_t> Read() final;
+	std::optional<uint8_t> Read() final;
 
-	FileReader(std::string_view filename, PrivateOnly key);
 	~FileReader() final;
 
 	FileReader(const FileReader&)            = delete;
 	FileReader& operator=(const FileReader&) = delete;
-	FileReader(FileReader&&)                 = delete;
-	FileReader& operator=(FileReader&&)      = delete;
+
+	FileReader(FileReader&& other) noexcept;
+	FileReader& operator=(FileReader&& other) noexcept;
 
 private:
-	std::string filename = {};
-	uint16_t handle      = 0;
-	bool valid;
+	explicit FileReader(uint16_t file_handle);
+	std::optional<uint16_t> handle;
 };
 
 #endif
