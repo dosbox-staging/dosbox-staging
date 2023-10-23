@@ -13384,8 +13384,9 @@ static void imfc_init(Section* sec)
 	                                 ChannelFeature::ChorusSend,
 	                                 ChannelFeature::Synthesizer});
 
-	// Bring up the volume to get it on-par with line recordings
-	constexpr auto volume_scalar = 4.0f;
+	// Default volume scalar adjusted to match hardware line-out levels
+	// recorded by Pierre: Ref: https://www.youtube.com/watch?v=WHVWDi15AIw
+	constexpr auto volume_scalar = 2.1f;
 	channel->Set0dbScalar(volume_scalar);
 
 	// The filter parameters have been tweaked by analysing real hardware
