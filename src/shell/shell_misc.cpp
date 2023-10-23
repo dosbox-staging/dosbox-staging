@@ -473,7 +473,12 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 
 		auto reader = FileReader::GetFileReader(fullname);
 		if (reader) {
-			batchfiles.emplace(*psp, std::move(*reader), name, args, echo);
+			batchfiles.emplace(*psp,
+			                   std::make_unique<FileReader>(
+			                           std::move(*reader)),
+			                   name,
+			                   args,
+			                   echo);
 		} else {
 			WriteOut("Could not open %s", fullname.c_str());
 		}

@@ -18,30 +18,51 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <cassert>
+#include <utility>
+
 #include "file_reader.h"
 
-std::optional<std::unique_ptr<FileReader>> FileReader::GetFileReader(std::string_view file)
+std::optional<FileReader> FileReader::GetFileReader(const std::string& filename)
 {
-	auto reader = std::make_unique<FileReader>(file, PrivateOnly());
-	if (!reader->valid) {
-		return std::nullopt;
+	std::uint16_t handle = {};
+	if (!DOS_OpenFile(filename.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &handle)) {
+		return {};
 	}
-	return reader;
+	return FileReader(handle);
 }
 
-FileReader::FileReader(std::string_view file, [[maybe_unused]] PrivateOnly key)
-        : filename(file),
-          valid(DOS_OpenFile(filename.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &handle))
+FileReader::FileReader(const uint16_t file_handle) : handle(file_handle) {}
+
+FileReader::FileReader(FileReader&& other) noexcept
+        : handle(std::exchange(other.handle, {}))
 {}
+
+FileReader& FileReader::operator=(FileReader&& other) noexcept
+{
+	if (this == &other) {
+		return *this;
+	}
+
+	if (handle) {
+		DOS_CloseFile(*handle);
+	}
+	handle = std::exchange(other.handle, {});
+	return *this;
+}
 
 std::optional<uint8_t> FileReader::Read()
 {
+	if (!handle) {
+		return {};
+	}
+
 	std::uint8_t data        = 0;
 	std::uint16_t bytes_read = 1;
 
-	bool result = DOS_ReadFile(handle, &data, &bytes_read);
+	const bool result = DOS_ReadFile(*handle, &data, &bytes_read);
 	if (!result || bytes_read == 0) {
-		return std::nullopt;
+		return {};
 	}
 
 	return data;
@@ -49,11 +70,17 @@ std::optional<uint8_t> FileReader::Read()
 
 void FileReader::Reset()
 {
+	if (!handle) {
+		return;
+	}
 	std::uint32_t cursor = 0;
-	DOS_SeekFile(handle, &cursor, DOS_SEEK_SET);
+	DOS_SeekFile(*handle, &cursor, DOS_SEEK_SET);
 }
 
 FileReader::~FileReader()
 {
-	DOS_CloseFile(handle);
+	if (!handle) {
+		return;
+	}
+	DOS_CloseFile(*handle);
 }
