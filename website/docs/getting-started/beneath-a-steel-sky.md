@@ -319,7 +319,7 @@ make the total audio output too quiet. Worse yet, the setting doesn't get
 saved, so you'd need to do this every single time when starting up the game.
 
 As we've [learned
-before](../passport-to-adventure/#sound-blaster-adlib-sound), games with Sound
+before](passport-to-adventure.md/#sound-blaster-adlib-sound), games with Sound
 Blaster support tend to use the sound card's OPL synthesiser for the music and
 its digital audio capabilities for the speech. As the OPL synth and the
 digital audio have their dedicated mixer channels, their volumes can be
@@ -798,7 +798,7 @@ appear vertically stretched on-screen. In fact, they appear exactly 20% taller
 than they should, which means the artwork was scanned using square pixels,
 then the stretching happens because of the 1:1.2 pixel aspect ratio of the
 320&times;200 VGA screen mode (you might want to revisit the
-[detailed explanation](../enhancing-prince-of-persia/#custom-viewport-resolution) to
+[detailed explanation](enhancing-prince-of-persia.md#custom-viewport-resolution) to
 refresh your memory).
 
 <figure markdown>

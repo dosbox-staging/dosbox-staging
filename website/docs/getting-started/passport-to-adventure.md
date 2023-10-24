@@ -459,7 +459,7 @@ Later VGA cards and monitors "dropped" this filter and were just displaying
 the "raw pixels" without any such effects.
 This perceptual difference is because of the line-doubling peculiarity of VGA
 adapters in all low-resolution screen modes, as [explained
-previously](../enhancing-prince-of-persia/#true-vga-emulation).
+previously](enhancing-prince-of-persia.md#true-vga-emulation).
 
 VGA-style line-doubling changes the feel of EGA graphics, and many prefer the
 original EGA look. After all, this is what the artists saw on their screens
@@ -468,7 +468,7 @@ example, you can easily emulate the "true EGA" look with shaders if that's
 your preference.
 
 It's also worth restricting the image size to mimic that of a period-correct
-14" or 15" monitor (see the detailed explanation [here](../enhancing-prince-of-persia/#custom-viewport-resolution)).
+14" or 15" monitor (see the detailed explanation [here](enhancing-prince-of-persia.md#custom-viewport-resolution)).
 
 ```ini
 [render]
@@ -602,7 +602,7 @@ C:\>
 ```
 
 We will discuss the CPU speed settings in more detail
-[in the next chapter](../beneath-a-steel-sky/#adjusting-the-emulated-cpu-speed),
+[in the next chapter](beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed),
 but it was worth mentioning this interesting quirk here.
 
 
