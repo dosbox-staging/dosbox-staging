@@ -4119,7 +4119,15 @@ static std::vector<std::string> get_sdl_texture_renderers()
 static void messages_add_sdl()
 {
 	MSG_Add("DOSBOX_HELP",
-	        "Usage: %s [OPTION]... [FILE]\n"
+	        "Usage: %s [OPTION]... [PATH]\n"
+	        "\n"
+	        "PATH                       If PATH is a directory, it's mounted as C:.\n"
+	        "                           If PATH is a bootable disk image (IMA/IMG), it's booted.\n"
+	        "                           If PATH is a CDROM image (CUE/ISO), it's mounted as D:.\n"
+	        "                           If PATH is a DOS executable (BAT/COM/EXE), it's parent\n"
+	        "                           path is mounted as C: and the executable is run. When\n"
+	        "                           the executable exits, DOSBox Staging quits.\n"
+	        "\n"
 	        "List of available options:\n"
 	        "\n"
 	        "  --conf <config_file>     Start with the options specified in <config_file>.\n"
