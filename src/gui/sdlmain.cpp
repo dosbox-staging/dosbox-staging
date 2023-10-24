@@ -4180,6 +4180,15 @@ static void messages_add_sdl()
 	        "\n"
 	        "  -v, --version            Print version information and exit.\n");
 
+	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
+
+	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
+	        "There is no property '%s' in section [%s]\n");
+
+	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
+	        "Usage: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] "
+	        "[color=white]PROPERTY[/reset][=][color=white]VALUE[/reset]\n");
+
 	MSG_Add("TITLEBAR_CYCLES_MS",    "cycles/ms");
 	MSG_Add("TITLEBAR_HINT_PAUSED",  "(PAUSED)");
 	MSG_Add("TITLEBAR_HINT_NOMOUSE", "no-mouse mode");
@@ -4745,16 +4754,6 @@ int sdl_main(int argc, char* argv[])
 		        SDL_GetCurrentAudioDriver());
 
 		ParseConfigFiles(GetConfigDir());
-
-		MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR",
-		        "No such section or property: %s\n");
-
-		MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
-		        "There is no property '%s' in section [%s]\n");
-
-		MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-		        "Usage: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] "
-		        "[color=white]PROPERTY[/reset][=][color=white]VALUE[/reset]\n");
 
 		for (auto line : arguments->set) {
 			trim(line);
