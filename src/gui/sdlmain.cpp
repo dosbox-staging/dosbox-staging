@@ -4118,6 +4118,68 @@ static std::vector<std::string> get_sdl_texture_renderers()
 
 static void messages_add_sdl()
 {
+	MSG_Add("DOSBOX_HELP",
+	        "Usage: %s [OPTION]... [FILE]\n"
+	        "List of available options:\n"
+	        "\n"
+	        "  --conf <config_file>     Start with the options specified in <config_file>.\n"
+	        "                           Multiple configuration files can be specified.\n"
+	        "                           Example: --conf conf1.conf --conf conf2.conf\n"
+	        "\n"
+	        "  --printconf              Print the location of the primary configuration file.\n"
+	        "\n"
+	        "  --editconf               Open the primary configuration file in a text editor.\n"
+	        "\n"
+	        "  --eraseconf              Delete the primary configuration file.\n"
+	        "\n"
+	        "  --noprimaryconf          Don't load or create the the primary configuration file.\n"
+	        "\n"
+	        "  --nolocalconf            Don't load the local 'dosbox.conf' configuration file\n"
+	        "                           if present in the current working directory.\n"
+	        "\n"
+	        "  --set <setting>=<value>  Set a configuration setting. Multiple configuration\n"
+	        "                           settings can be specified. Example:\n"
+	        "                           --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2\n"
+	        "\n"
+	        "  --working-dir <path>     Set working directory to <path>. DOSBox will act as if\n"
+	        "                           started from this directory.\n"
+	        "\n"
+	        "  --list-glshaders         List all available OpenGL shaders and their paths.\n"
+	        "                           Results are useable in the 'glshader = ' config setting.\n"
+	        "\n"
+	        "  --fullscreen             Start in fullscreen mode.\n"
+	        "\n"
+	        "  --lang <lang_file>       Start with the language specified in <lang_file>.\n"
+	        "\n"
+	        "  --machine <type>         Emulate a specific type of machine. The machine type has\n"
+	        "                           influence on both the emulated video and sound cards.\n"
+	        "                           Valid choices are: hercules, cga, cga_mono, tandy,\n"
+	        "                           pcjr, ega, svga_s3 (default), svga_et3000, svga_et4000,\n"
+	        "                           svga_paradise, vesa_nolfb, vesa_oldvbe.\n"
+	        "\n"
+	        "  -c <command>             Run the specified DOS command before running FILE.\n"
+	        "                           Multiple commands can be specified.\n"
+	        "\n"
+	        "  --noautoexec             Don't execute DOS commands from any [autoexec] sections.\n"
+	        "\n"
+	        "  --exit                   Exit after the DOS program specified by FILE has ended.\n"
+	        "                           If no FILE has been specified, execute [autoexec] and\n"
+	        "                           terminate.\n"
+	        "\n"
+	        "  --startmapper            Run the mapper GUI.\n"
+	        "\n"
+	        "  --erasemapper            Delete the default mapper file.\n"
+	        "\n"
+	        "  --securemode             Enable secure mode. The [config] and [autoexec] sections\n"
+	        "                           of the loaded configurations will be ignored, and\n"
+	        "                           commands such as MOUNT and IMGMOUNT are disabled.\n"
+	        "\n"
+	        "  --socket <num>           Run nullmodem on the specified socket number.\n"
+	        "\n"
+	        "  -h, --help               Print this help message and exit.\n"
+	        "\n"
+	        "  -v, --version            Print version information and exit.\n");
+
 	MSG_Add("TITLEBAR_CYCLES_MS",    "cycles/ms");
 	MSG_Add("TITLEBAR_HINT_PAUSED",  "(PAUSED)");
 	MSG_Add("TITLEBAR_HINT_NOMOUSE", "no-mouse mode");
@@ -4594,7 +4656,9 @@ int sdl_main(int argc, char* argv[])
 			return 0;
 		}
 		if (arguments->help) {
-			printf(help_msg);
+			assert(argv && argv[0]);
+			const auto program_name = argv[0];
+			printf(MSG_GetRaw("DOSBOX_HELP"), program_name);
 			return 0;
 		}
 		if (arguments->editconf) {
