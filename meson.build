@@ -815,7 +815,7 @@ endif
 
 # Determine if system is capable of using ManyMouse library
 conf_data.set10('C_MANYMOUSE', true)
-manymouse_summary_msg = 'Enabled'
+manymouse_summary_msg = 'True'
 
 # ManyMouse optionally supports the X Input 2.0 protocol (regardless of OS)
 xinput2_dep = optional_dep
