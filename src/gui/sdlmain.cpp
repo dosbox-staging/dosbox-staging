@@ -4629,10 +4629,11 @@ int sdl_main(int argc, char* argv[])
 		//
 		InitConfigDir();
 
-		// Init the configuration system and add default values
+		// Register sdlmain's messages and conf sections
 		messages_add_sdl();
 		config_add_sdl();
 
+		// Register DOSBox's (and all modules) messages and conf sections
 		DOSBOX_Init();
 
 		// Write the default primary config if it doesn't exist when:
