@@ -4636,6 +4636,11 @@ int sdl_main(int argc, char* argv[])
 		// Register DOSBox's (and all modules) messages and conf sections
 		DOSBOX_Init();
 
+		// After DOSBOX_Init() is done, all the conf sections have been
+		// registered, so we're ready to parse the conf files.
+		//
+		ParseConfigFiles(GetConfigDir());
+
 		// Write the default primary config if it doesn't exist when:
 		// - secure mode is NOT enabled with the '--securemode' option,
 		// - AND the primary config is NOT disabled with the
@@ -4753,8 +4758,6 @@ int sdl_main(int argc, char* argv[])
 		        sdl_version.patch,
 		        SDL_GetCurrentVideoDriver(),
 		        SDL_GetCurrentAudioDriver());
-
-		ParseConfigFiles(GetConfigDir());
 
 		for (auto line : arguments->set) {
 			trim(line);
