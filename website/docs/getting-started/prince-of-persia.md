@@ -109,7 +109,7 @@ accomplished slightly differently on each platform:
 
     After installing DOSBox Staging, it's highly recommended to open it once
     using the Start Menu shortcut of the desktop icon [as described
-    here](../../downloads/windows/#microsoft-defender-smartscreen), otherwise
+    here](../downloads/windows.md#microsoft-defender-smartscreen), otherwise
     the below instructions might not work.
 
 If you have used the installer with the default options to set up DOSBox
@@ -126,7 +126,7 @@ area inside it, then select *Open with DOSBox Staging* in the context menu.
 
     After installing DOSBox Staging, you *must* open it first using its
     application icon [as described
-    here](../../downloads/macos/#apple-gatekeeper), otherwise the below
+    here](../downloads/macos.md#apple-gatekeeper), otherwise the below
     instructions won't work.
 
 

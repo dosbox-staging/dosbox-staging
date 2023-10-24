@@ -43,25 +43,25 @@ your machine first, then proceed with the DOSBox Staging installation steps.
 <h3>Windows</h3>
 
 Download the latest installer from our [Windows
-downloads](../../downloads/windows) page, then proceed with the installation.
+downloads](../downloads/windows.md) page, then proceed with the installation.
 Just accept the default options, don't change anything.
 
-Make sure to read the section about dealing with [Microsoft Defender SmartScreen](../../downloads/windows/#microsoft-defender-smartscreen).
+Make sure to read the section about dealing with [Microsoft Defender SmartScreen](../downloads/windows.md#microsoft-defender-smartscreen).
 
 <h3>macOS</h3>
 
 Download the latest universal binary from our [macOS
-downloads](../../downloads/macos/) page, then simply drag the DOSBox Staging
+downloads](../downloads/macos.md) page, then simply drag the DOSBox Staging
 icon into your Applications folder. Both Intel and M1 Macs are supported.
 
 Don't delete the `.dmg` installer disk image just yet---we'll need it later.
 
-Make sure to read the section about dealing with [Apple Gatekeeper](../../downloads/macos/#apple-gatekeeper).
+Make sure to read the section about dealing with [Apple Gatekeeper](../downloads/macos.md#apple-gatekeeper).
 
 
 <h3>Linux</h3>
 
-Please check out our [Linux downloads](../../downloads/linux/) page and use
+Please check out our [Linux downloads](../downloads/linux.md) page and use
 the option that best suits your situation and needs.
 
 
