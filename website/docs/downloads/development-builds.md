@@ -204,7 +204,7 @@ dependencies installed via your package manager.
 Windows executables in snapshot packages are not signed, therefore Windows 10
 might prevent the program from starting.
 
-See [this guide](../windows/#microsoft-defender-smartscreen) to learn how to deal with this.
+See [this guide](windows.md#microsoft-defender-smartscreen) to learn how to deal with this.
 
 
 ### macOS
@@ -212,5 +212,5 @@ See [this guide](../windows/#microsoft-defender-smartscreen) to learn how to dea
 macOS app bundles are not notarized; Apple Gatekeeper will try to prevent
 the program from running.
 
-See [this guide](../macos/#apple-gatekeeper) to learn how to deal with
+See [this guide](macos.md#apple-gatekeeper) to learn how to deal with
 this.

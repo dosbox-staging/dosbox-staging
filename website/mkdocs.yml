@@ -42,8 +42,8 @@ markdown_extensions:
       user: dosbox-staging
       repo: dosbox-staging
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji 
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.keys
@@ -106,3 +106,6 @@ nav:
 
   - Wiki: https://github.com/dosbox-staging/dosbox-staging/wiki
 
+not_in_nav: |
+  # To silence the warning about the custom `index.md` front page
+  /index.md
