@@ -4176,7 +4176,7 @@ static void messages_add_sdl()
 	        "\n"
 	        "  --socket <num>           Run nullmodem on the specified socket number.\n"
 	        "\n"
-	        "  -h, --help               Print this help message and exit.\n"
+	        "  -h, -?, --help           Print help message and exit.\n"
 	        "\n"
 	        "  -v, --version            Print version information and exit.\n");
 
