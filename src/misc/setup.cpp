@@ -1790,7 +1790,8 @@ void Config::ParseArguments()
 	                        cmdline->FindRemoveBoolArgument("resetmapper");
 
 	arguments.version = cmdline->FindRemoveBoolArgument("version", 'v');
-	arguments.help    = cmdline->FindRemoveBoolArgument("help", 'h');
+	arguments.help    = (cmdline->FindRemoveBoolArgument("help", 'h') || 
+	                     cmdline->FindRemoveBoolArgument("help", '?'));
 
 	arguments.working_dir = cmdline->FindRemoveStringArgument("working-dir");
 	arguments.lang = cmdline->FindRemoveStringArgument("lang");
