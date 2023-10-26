@@ -168,6 +168,7 @@ private:
 class TandyPSG {
 public:
 	TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
+	         const std::string_view fadeout_choice,
 	         const std::string_view filter_choice);
 	~TandyPSG();
 
@@ -450,6 +451,7 @@ void TandyDAC::AudioCallback(uint16_t requested)
 }
 
 TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
+                   const std::string_view fadeout_choice,
                    const std::string_view filter_choice)
 {
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
@@ -479,9 +481,13 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	                           use_mixer_rate,
 	                           ChannelName::TandyPsg,
 	                           {ChannelFeature::Sleep,
+	                            ChannelFeature::FadeOut,
 	                            ChannelFeature::ReverbSend,
 	                            ChannelFeature::ChorusSend,
 	                            ChannelFeature::Synthesizer});
+
+	// Setup fadeout
+	channel->ConfigureFadeOut(fadeout_choice);
 
 	// Setup filters
 	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
@@ -678,6 +684,7 @@ void TANDYSOUND_Init(Section *section)
 	}
 	tandy_psg = std::make_unique<TandyPSG>(cfg,
 	                                       wants_dac,
+	                                       prop->Get_string("tandy_fadeout"),
 	                                       prop->Get_string("tandy_filter"));
 
 	set_tandy_sound_flag_in_bios(true);
