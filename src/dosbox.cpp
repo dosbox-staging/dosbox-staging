@@ -905,6 +905,13 @@ void DOSBOX_Init()
 	        "         without DAC to avoid conflicts with other cards using DMA 1.\n"
 	        "  off:   Disable Tandy/PCjr sound.");
 
+	pstring = secprop->Add_string("tandy_fadeout", when_idle, "off");
+	pstring->Set_help(
+	        "Fade out the Tandy synth output after the last IO port write:\n"
+	        "  off:       Don't fade out; residual output will play forever (default).\n"
+	        "  on:        Wait 0.5s before fading out over a 0.5s period.\n"
+	        "  <custom>:  Custom fade out definition; see 'opl_fadeout' for details.");
+
 	pstring = secprop->Add_string("tandy_filter", when_idle, "on");
 	pstring->Set_help(
 	        "Filter for the Tandy synth output:\n"
