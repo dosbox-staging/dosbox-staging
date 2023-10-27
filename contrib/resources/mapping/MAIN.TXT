@@ -1,4 +1,10 @@
 #
+# Note: when adding new code pages, avoid conflicts with currently supported
+# Microsoft code pages, the list can be found here:
+# - https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+# Otherwise please adapt 'utf8_to_host_console' function accordingly.
+#
+#
 # Fully supported code pages (92 code pages):
 #
 # 113   - Yugoslavian, Latin

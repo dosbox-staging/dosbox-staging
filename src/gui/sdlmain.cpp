@@ -4678,7 +4678,11 @@ int sdl_main(int argc, char* argv[])
 		if (arguments->help) {
 			assert(argv && argv[0]);
 			const auto program_name = argv[0];
-			printf(MSG_GetRaw("DOSBOX_HELP"), program_name);
+			const auto help_utf8 = format_string(MSG_GetRaw("DOSBOX_HELP"),
+			                                     program_name);
+			std::string help_str = {};
+			utf8_to_host_console(help_utf8, help_str);
+			printf(help_str.c_str());
 			return 0;
 		}
 		if (arguments->editconf) {
