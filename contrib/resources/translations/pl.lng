@@ -1152,7 +1152,7 @@ Brak parametru '%s' w sekcji [%s]
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Składnia: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] [color=white]PARAMETR[/reset][=][color=white]WARTOŚĆ[/reset]
+Składnia: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] [color=white]PARAMETR[reset][=][color=white]WARTOŚĆ[reset]
 
 .
 :PROGRAM_CONFIG_NOCONFIGFILE

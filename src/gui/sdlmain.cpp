@@ -4191,8 +4191,8 @@ static void messages_add_sdl()
 	        "There is no property '%s' in section [%s]\n");
 
 	MSG_Add("PROGRAM_CONFIG_SET_SYNTAX",
-	        "Usage: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] "
-	        "[color=white]PROPERTY[/reset][=][color=white]VALUE[/reset]\n");
+	        "Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] "
+	        "[color=white]PROPERTY[reset][=][color=white]VALUE[reset]\n");
 
 	MSG_Add("TITLEBAR_CYCLES_MS",    "cycles/ms");
 	MSG_Add("TITLEBAR_HINT_PAUSED",  "(PAUSED)");
