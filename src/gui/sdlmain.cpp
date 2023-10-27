@@ -4183,7 +4183,7 @@ static void messages_add_sdl()
 	        "\n"
 	        "  -h, -?, --help           Print help message and exit.\n"
 	        "\n"
-	        "  -v, --version            Print version information and exit.\n");
+	        "  -V, --version            Print version information and exit.\n");
 
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
 
