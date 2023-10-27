@@ -2857,10 +2857,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "  light:   Light crossfeed (strength 15).\n"
 	        "  normal:  Normal crossfeed (strength 40).\n"
 	        "  strong:  Strong crossfeed (strength 65).\n"
-	        "Notes:\n"
-			"  - The crossfeed strength of subsequently activated mixer channels will be\n"
-			"    set to the preset defaults.\n"
-			"  - You can fine-tune per-channel crossfeed strengths via mixer commands.");
+	        "Note: You can fine-tune each channel's crossfeed strength using the MIXER.");
 	string_prop->Set_values(crossfeed_presets);
 
 	const char* reverb_presets[] = {
@@ -2880,10 +2877,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "           channels for music and digital audio.\n"
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
-	        "Notes:\n"
-			"  - Reverb levels of subsequently activated mixer channels will be set to the\n"
-			"    preset defaults.\n"
-			"  - You can fine-tune per-channel reverb levels via mixer commands.");
+	        "Note: You can fine-tune each channel's reverb level using the MIXER.");
 	string_prop->Set_values(reverb_presets);
 
 	const char* chorus_presets[] = {"off", "on", "light", "normal", "strong", nullptr};
@@ -2896,10 +2890,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "           features lots of white noise.)\n"
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
 	        "  strong:  An obvious and upfront chorus effect.\n"
-	        "Notes:\n"
-			"  - Chorus levels of subsequently activated mixer channels will be set to the\n"
-			"    preset defaults.\n"
-			"  - You can fine-tune per-channel chorus levels via mixer commands.");
+	        "Note: You can fine-tune each channel's chorus level using the MIXER.");
 	string_prop->Set_values(chorus_presets);
 
 	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
