@@ -662,16 +662,6 @@ static void warn_code_page(const uint16_t code_page)
 	LOG_WARNING("UNICODE: Requested unknown code page %d", code_page);
 }
 
-static void warn_default_code_page()
-{
-	static bool already_warned = false;
-	if (already_warned) {
-		return;
-	}
-	already_warned = true;
-	LOG_WARNING("UNICODE: Unable to prepare default code page");
-}
-
 static bool wide_to_dos(const std::vector<uint16_t>& str_in, std::string& str_out,
                         const UnicodeFallback fallback, const uint16_t code_page)
 {
@@ -1977,18 +1967,6 @@ static void load_config_if_needed()
 	}
 }
 
-static uint16_t get_default_code_page()
-{
-	constexpr uint16_t default_code_page = 437; // United States
-
-	if (!prepare_code_page(default_code_page)) {
-		warn_default_code_page();
-		return 0;
-	}
-
-	return default_code_page;
-}
-
 static uint16_t get_custom_code_page(const uint16_t in_code_page)
 {
 	load_config_if_needed();
@@ -1999,7 +1977,7 @@ static uint16_t get_custom_code_page(const uint16_t in_code_page)
 
 	const uint16_t code_page = deduplicate_code_page(in_code_page);
 	if (!prepare_code_page(code_page)) {
-		return get_default_code_page();
+		return 0;
 	}
 
 	return code_page;
@@ -2013,19 +1991,19 @@ uint16_t get_utf8_code_page()
 {
 	load_config_if_needed();
 
-	if (!IS_EGAVGA_ARCH) {
-		// Below EGA it wasn't possible to change the character set
-		return get_default_code_page();
-	}
+	constexpr uint16_t rom_code_page = 437; // United States
 
-	const uint16_t code_page = deduplicate_code_page(dos.loaded_codepage);
+	// Below EGA it wasn't possible to change the character set
+	const uint16_t code_page = IS_EGAVGA_ARCH
+	                                 ? deduplicate_code_page(dos.loaded_codepage)
+	                                 : rom_code_page;
 
 	// For unsupported code pages revert to default one
 	if (prepare_code_page(code_page)) {
 		return code_page;
 	}
 
-	return get_default_code_page();
+	return 0;
 }
 
 static bool utf8_to_dos_common(const std::string& in_str, std::string& out_str,
@@ -2091,7 +2069,8 @@ bool utf8_to_host_console(const std::string& in_str, std::string& out_str)
 		return true;
 	}
 
-	// TODO: Once UTF-16 is supported, add handling here
+	// TODO: Once UTF-16 (or any other Unicode encoding) is supported,
+	// add special handling here
 
 	return utf8_to_dos(in_str, out_str, UnicodeFallback::Simple, console_code_page);
 #else
