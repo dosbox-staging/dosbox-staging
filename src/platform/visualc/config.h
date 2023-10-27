@@ -113,7 +113,7 @@
 // https://github.com/dosbox-staging/dosbox-staging/issues/1314)
 //
 // Because the recommendations in these warnings will not be acted
-// upon given the planned direction of the the project, they
+// upon given the planned direction of the project, they
 // therefore provide no value and are being silenced.
 
 #ifndef _CRT_SECURE_NO_WARNINGS

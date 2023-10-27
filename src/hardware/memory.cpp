@@ -654,7 +654,7 @@ public:
 		// Size the actual memory pages
 		memory.pages.resize(num_pages);
 
-		// The MemBase is address of the the first page's first byte
+		// The MemBase is address of the first page's first byte
 		MemBase = &(memory.pages[0].bytes[0]);
 
 		LOG_MSG("MEMORY: Using %d DOS memory pages (%u MB) at address: %p",

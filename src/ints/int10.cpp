@@ -739,7 +739,7 @@ void INT10_Init(Section* /*sec*/) {
 	call_10=CALLBACK_Allocate();	
 	CALLBACK_Setup(call_10,&INT10_Handler,CB_IRET,"Int 10 video");
 	RealSetVec(0x10,CALLBACK_RealPointer(call_10));
-	//Init the 0x40 segment and init the datastructures in the the video rom area
+	//Init the 0x40 segment and init the datastructures in the video rom area
 	INT10_SetupRomMemory();
 	INT10_Seg40Init();
 	INT10_SetVideoMode(0x3);

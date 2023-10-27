@@ -142,7 +142,7 @@ constexpr uint8_t SystemReset   = 0xff;
 constexpr uint8_t SystemExclusive = 0xf0;
 } // namespace MidiStatus
 
-// Channel Mode Messages are Control Change Messages that use the the reserved
+// Channel Mode Messages are Control Change Messages that use the reserved
 // 120-127 controller number range to set the Channel Mode.
 namespace MidiChannelMode {
 

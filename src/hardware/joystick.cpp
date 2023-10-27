@@ -268,7 +268,7 @@ static void write_p201(io_port_t, io_val_t, io_width_t)
 }
 static void write_p201_timed(io_port_t, io_val_t, io_width_t)
 {
-	// Convert the the joystick's instantaneous position to activation duration in ticks
+	// Convert the joystick's instantaneous position to activation duration in ticks
 
 	/*
 	// Original calculation

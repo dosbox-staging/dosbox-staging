@@ -4140,7 +4140,7 @@ static void messages_add_sdl()
 	        "\n"
 	        "  --eraseconf              Delete the primary configuration file.\n"
 	        "\n"
-	        "  --noprimaryconf          Don't load or create the the primary configuration file.\n"
+	        "  --noprimaryconf          Don't load or create the primary configuration file.\n"
 	        "\n"
 	        "  --nolocalconf            Don't load the local 'dosbox.conf' configuration file\n"
 	        "                           if present in the current working directory.\n"
