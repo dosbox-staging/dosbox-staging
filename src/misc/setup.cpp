@@ -1431,7 +1431,7 @@ parse_environ_result_t parse_environ(const char* const* envp) noexcept
 {
 	assert(envp);
 
-	// Filter envirnment variables in following format:
+	// Filter environment variables in following format:
 	// DOSBOX_SECTIONNAME_PROPNAME=VALUE (prefix, section, and property
 	// names are case-insensitive).
 	std::list<std::tuple<std::string, std::string>> props_to_set;
