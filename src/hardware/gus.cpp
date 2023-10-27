@@ -839,7 +839,7 @@ uint32_t Gus::GetDmaOffset() noexcept
 	return check_cast<uint32_t>(adjusted << 4) + dma_addr_nibble;
 }
 
-// Update the current 16-bit DMA position from the the given 20-bit RAM offset
+// Update the current 16-bit DMA position from the given 20-bit RAM offset
 void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 {
 	uint32_t adjusted;

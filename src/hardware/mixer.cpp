@@ -2246,7 +2246,7 @@ static void mix_samples(const int frames_requested)
 		                     reinterpret_cast<int16_t*>(out));
 	}
 
-	// Reset the the tick_add for constant speed
+	// Reset the tick_add for constant speed
 	if (is_mixer_irq_important()) {
 		mixer.tick_add = calc_tickadd(mixer.sample_rate);
 	}
