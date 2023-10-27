@@ -4165,7 +4165,7 @@ static void messages_add_sdl()
 	        "                           pcjr, ega, svga_s3 (default), svga_et3000, svga_et4000,\n"
 	        "                           svga_paradise, vesa_nolfb, vesa_oldvbe.\n"
 	        "\n"
-	        "  -c <command>             Run the specified DOS command before running FILE.\n"
+	        "  -c <command>             Run the specified DOS command before handling the PATH.\n"
 	        "                           Multiple commands can be specified.\n"
 	        "\n"
 	        "  --noautoexec             Don't run DOS commands from any [autoexec] sections.\n"
