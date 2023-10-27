@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Sep 2, 2023"
+.TH DOSBOX 1 "Oct 26, 2023"
 .\" Please adjust this date whenever revising the manpage.
 
 .SH NAME
@@ -19,7 +19,7 @@ dosbox \- DOSBox Staging, x86/DOS emulator, a modern continuation of DOSBox
 .BI "[\-\-socket " <num> ]
 .BI "[\-c " <command> ]
 .B [\-\-exit]
-.B [FILE]
+.B [PATH]
 .LP
 .B dosbox \-\-help
 .LP
@@ -48,10 +48,15 @@ dosbox \- DOSBox Staging, x86/DOS emulator, a modern continuation of DOSBox
 This manual page briefly documents
 .BR "DOSBox Staging" ", a modern continuation of DOSBox".
 .LP
-.RB "The optional " FILE " argument should be a DOS executable or a"
-directory. If it is a DOS executable (.COM, .EXE, or .BAT file extension),
-the program will run automatically. If it is a directory, a DOS session will
-run with the directory mounted as the C drive.
+.RB "If " PATH " is a directory, it's mounted as C:.
+.br
+.RB "If " PATH " is a bootable disk image (.IMA/.IMG), it's booted.
+.br
+.RB "If " PATH " is a CD-ROM disc image (.CUE/.ISO), it's mounted as D:.
+.br
+.RB "If " PATH " is a DOS executable (.BAT/.COM/.EXE), it's parent path
+is mounted as C: and the executable is run. When the executable exits,
+DOSBox Staging quits.
 .LP
 .RI "For an introduction, type " INTRO 
 .RB "inside " "DOSBox Staging" .
@@ -101,19 +106,15 @@ Legacy single dash abbrevations still work for backwards compatibility.
 -c <command>             Run the specified DOS command before running FILE.
                          Multiple commands can be specified.
 
---noautoexec             Don't execute any [autoexec] actions.
+--noautoexec             Don't run any [autoexec] actions.
 
---exit                   Exit after the DOS program specified by FILE has ended.
-                         If no FILE has been specified, execute [autoexcec] and
-                         terminate.
+--exit                   Exit after running '-c <command>'s and [autoexec] sections.
 
 --startmapper            Run the mapper GUI.
 
 --erasemapper            Delete the default mapper file.
 
---securemode             Enable secure mode. The [config] and [autoexec] sections
-                         of the loaded configuration file will be skipped,
-                         and commands such as MOUNT and IMGMOUNT are disabled.
+--securemode             Enable secure mode by disabling the MOUNT and IMGMOUNT commands.
 
 --socket <num>           Run nullmodem on the specified socket number.
 
@@ -212,7 +213,7 @@ These are the default keybindings. They can be changed in the keymapper. More bi
 Saved/recorded files can be found in current_directory/capture
 (can be changed in the configfile).
 .RB "The directory has to exist prior to starting " dosbox " else nothing"
-gets saved/recorded !
+gets saved/recorded!
 .PP
 .RB "Once you increase your " dosbox " cycles beyond your computer's maximum
 capacity, it will produce the same effect as slowing down the emulation.
