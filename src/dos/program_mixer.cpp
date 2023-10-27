@@ -817,8 +817,6 @@ void MIXER::AddMessages()
 	        "  - You may change the settings of more than one channel in a single command.\n"
 	        "  - If no channel is specified, you can set crossfeed, reverb, or chorus\n"
 	        "    of all channels globally.\n"
-	        "  - The reverb and chorus commands also enable the default reverb and chorus\n"
-	        "    presets, respectively, if those effects are not yet enabled.\n"
 	        "  - The /noshow option applies the changes without showing the mixer settings.\n"
 	        "\n"
 	        "Examples:\n"
