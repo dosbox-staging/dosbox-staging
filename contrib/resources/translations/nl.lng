@@ -1176,7 +1176,7 @@ Er is geen eigenschap "%s" in sectie "%s".
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Correcte syntaxis: [color=light-green]config [/reset]-set [color=light-cyan][SECTIE][/reset] [color=white]EIGENSCHAP[/reset][=][color=white]WAARDE[/reset]
+Correcte syntaxis: [color=light-green]config [reset]-set [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]
 
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
