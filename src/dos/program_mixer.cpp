@@ -528,11 +528,42 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 		auto arg = argument;
 		upcase(arg);
 
-		// The order of checking for the various error conditions
-		// matters. Things will still work if the order is altered, but
-		// the error messages will become slightly less meaningful.
+		// The order of checking for the various error conditions *does*
+		// matter. If the order is altered, some error messages will
+		// become slightly less meaningful and things may break in some
+		// edge cases. These cases are covered in the unit tests.
 
-		if (is_volume_command(arg)) {
+		if (!channel_infos.HasChannel(arg) && is_valid_channel_name(arg)) {
+			// Argument is a valid channel name, but the channel is
+			// inactive.
+
+			const auto message = format_string(
+			        MSG_Get("SHELL_CMD_MIXER_INACTIVE_CHANNEL"),
+			        arg.c_str());
+
+			return error(ErrorType::InactiveChannel, message);
+
+		} else if (const auto command = parse_select_channel_command(arg);
+		           command) {
+			// First try to find the channel in the list of
+			// channel infos which is generated from the
+			// currently active channels.
+
+			if (!is_global_channel(curr_channel_name) &&
+			    curr_channel_command_count == 0) {
+				const auto message = format_string(
+				        MSG_Get("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"),
+				        curr_channel_name.c_str());
+
+				return error(ErrorType::MissingChannelCommand,
+				             message);
+			}
+
+			curr_channel_name = command->channel_name;
+			commands.emplace(*command);
+			curr_channel_command_count = 0;
+
+		} else if (is_volume_command(arg)) {
 			// Set volume command
 
 			const auto result = parse_volume_command(arg, curr_channel_name);
@@ -613,37 +644,6 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 			} else {
 				return std::get<Error>(result);
 			}
-
-		} else if (const auto command = parse_select_channel_command(arg);
-		           command) {
-			// First try to find the channel in the list of channel
-			// infos which is generated from the currently active
-			// channels.
-
-			if (!is_global_channel(curr_channel_name) &&
-			    curr_channel_command_count == 0) {
-				const auto message = format_string(
-				        MSG_Get("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND"),
-				        curr_channel_name.c_str());
-
-				return error(ErrorType::MissingChannelCommand,
-				             message);
-			}
-
-			curr_channel_name = command->channel_name;
-			commands.emplace(*command);
-			curr_channel_command_count = 0;
-
-		} else if (is_valid_channel_name(arg)) {
-			// At this point we know the channel is not currently
-			// active. So if the channel name itself is active,
-			// raise an error.
-
-			const auto message = format_string(
-			        MSG_Get("SHELL_CMD_MIXER_INACTIVE_CHANNEL"),
-			        arg.c_str());
-
-			return error(ErrorType::InactiveChannel, message);
 
 		} else {
 			// Unknown command
