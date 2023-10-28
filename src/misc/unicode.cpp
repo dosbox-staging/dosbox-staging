@@ -332,6 +332,8 @@ static bool is_combining_mark(const uint32_t code_point)
 		// Note: Arabic Combining Marks start from 0x064b, but some are
 		// present as standalone characters in arabic code pages. To
 		// allow this, we do not recognize them as combining marks!
+		// Similarly for Spacing Modifier Letters.
+		{0x02b9, 0x02bf}, // Spacing Modifier Letters
 		{0x1ab0, 0x1aff}, // Combining Diacritical Marks Extended
 		{0x1dc0, 0x1dff}, // Combining Diacritical Marks Supplement
 		{0x20d0, 0x20ff}, // Combining Diacritical Marks for Symbols
