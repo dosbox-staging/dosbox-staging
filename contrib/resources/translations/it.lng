@@ -2225,9 +2225,6 @@ Note:
   - È possibile modificare le impostazioni di più canali con un unico comando.
   - Se non è specificato alcun canale, è possibile impostare l'alimentazione
     incrociata, il riverbero o il coro a livello globale su tutti i canali.
-  - I comandi di riverbero e coro applicano, rispettivamente, anche i valori
-    predefiniti di riverbero e coro nei canali in cui tali effetti non sono
-    ancora abilitati.
   - L'opzione /noshow applica le modifiche senza mostrare le impostazioni
     del mixer.
 
