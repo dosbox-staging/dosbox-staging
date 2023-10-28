@@ -28,7 +28,7 @@ using namespace MixerCommand;
 const auto Minus6Db = powf(10.0f, -6.0f / 20.0f); // ≈ 0.5012 ≈ 0.5
 const auto Plus12Db = powf(10.0f, 12.0f / 20.0f); // ≈ 3.9811 ≈ 2.0
 
-static ChannelInfos create_channel_infos()
+static ChannelInfosMap create_default_channel_infos_map()
 {
 	ChannelInfosMap infos = {};
 
@@ -45,15 +45,18 @@ static ChannelInfos create_channel_infos()
 	// Stereo channel with no reverb & chorus support
 	infos["MT32"] = {ChannelFeature::Stereo};
 
-	return ChannelInfos(infos);
+	return infos;
 }
 
-static ChannelInfos channel_infos = create_channel_infos();
+static ChannelInfosMap default_channel_infos_map = create_default_channel_infos_map();
 
 static void assert_success(const std::vector<std::string>& args,
-                           const std::queue<Command>& expected)
+                           const std::queue<Command>& expected,
+                           const ChannelInfosMap channel_infos_map = default_channel_infos_map)
 {
-	const auto result = ParseCommands(args, channel_infos, AllChannelNames);
+	const auto result = ParseCommands(args,
+	                                  ChannelInfos(channel_infos_map),
+	                                  AllChannelNames);
 
 	if (auto error = std::get_if<Error>(&result); error) {
 		printf("*** TEST FAILED: ");
@@ -67,9 +70,12 @@ static void assert_success(const std::vector<std::string>& args,
 }
 
 static void assert_failure(const std::vector<std::string>& args,
-                           const ErrorType expected_error_type)
+                           const ErrorType expected_error_type,
+                           const ChannelInfosMap channel_infos_map = default_channel_infos_map)
 {
-	const auto result = ParseCommands(args, channel_infos, AllChannelNames);
+	const auto result = ParseCommands(args,
+	                                  ChannelInfos(channel_infos_map),
+	                                  AllChannelNames);
 
 	if (auto error = std::get_if<Error>(&result); error) {
 		LOG_WARNING(error->message.c_str());
@@ -80,20 +86,22 @@ static void assert_failure(const std::vector<std::string>& args,
 	}
 }
 
-static std::queue<Command> select_sb_channel()
+static std::queue<Command> select_channel(const std::string& channel_name)
 {
 	std::queue<Command> cmd = {};
 	cmd.emplace(SelectChannel{GlobalVirtualChannelName});
-	cmd.emplace(SelectChannel{"SB"});
+	cmd.emplace(SelectChannel{channel_name});
 	return cmd;
+}
+
+static std::queue<Command> select_sb_channel()
+{
+	return select_channel("SB");
 }
 
 static std::queue<Command> select_pcspeaker_channel()
 {
-	std::queue<Command> cmd = {};
-	cmd.emplace(SelectChannel{GlobalVirtualChannelName});
-	cmd.emplace(SelectChannel{"PCSPEAKER"});
-	return cmd;
+	return select_channel("PCSPEAKER");
 }
 
 // ************************************************************************
@@ -276,6 +284,17 @@ TEST(ProgramMixer, Channel_SetVolumePercentDecibelStereo)
 	assert_success({"sb", "40:d12"}, expected);
 }
 
+TEST(ProgramMixer, Channel_SetVolumeChannelNameStartsWithLetterD)
+{
+	auto infos = create_default_channel_infos_map();
+	infos["DISNEY"] = {ChannelFeature::ReverbSend, ChannelFeature::ChorusSend};
+
+	auto expected = select_channel("DISNEY");
+	expected.emplace(SetVolume{AudioFrame(0.0f, 0.0f)});
+
+	assert_success({"disney", "0"}, expected, infos);
+}
+
 TEST(ProgramMixer, Channel_SetStereoModeStereo)
 {
 	auto expected = select_sb_channel();
@@ -405,6 +424,11 @@ TEST(ProgramMixer, Global_InvalidCommand)
 TEST(ProgramMixer, Global_InactiveChannel)
 {
 	assert_failure({"gus"}, ErrorType::InactiveChannel);
+}
+
+TEST(ProgramMixer, Global_InactiveChannelChannelNameStartsWithLetterD)
+{
+	assert_failure({"disney"}, ErrorType::InactiveChannel);
 }
 
 // Master commands
