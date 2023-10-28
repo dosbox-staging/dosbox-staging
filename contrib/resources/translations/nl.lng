@@ -1,3 +1,97 @@
+:DOSBOX_HELP
+Gebruik: %s [OPTIE]... [PAD]
+
+PAD                        Als PAD een map is, wordt deze aangekoppeld als C:.
+                           Als PAD een bootable disk image (IMA/IMG) is, wordt
+                           deze geboot.
+                           Als PAD een CDROM-bestand (CUE/ISO) is, wordt deze
+                           aangekoppeld als D:.
+                           Als PAD een DOS executable is (BAT/COM/EXE), dan
+                           wordt het parent pad aangekoppeld als C: en wordt
+                           het uitvoerbare bestand uitgevoerd. Wanneer het
+                           uitvoerbare bestand wordt afgesloten, stopt DOSBox
+                           Staging.
+
+Lijst van beschikbare opties:
+
+  --conf <config_bestand>  Start met de opties die zijn opgegeven in
+                           <config_bestand>. Er kunnen meerdere
+                           configuratiebestanden worden opgegeven.
+                           Voorbeeld: --conf conf1.conf --conf conf2.conf
+
+  --printconf              Geeft de locatie van het primaire
+                           configuratiebestand weer.
+
+  --editconf               Open het primaire configuratiebestand in een
+                           teksteditor.
+
+  --eraseconf              Verwijder het primaire configuratiebestand.
+
+  --noprimaryconf          Het primaire configuratiebestand niet laden of
+                           aanmaken.
+
+  --nolocalconf            Laadt het lokale 'dosbox.conf' configuratiebestand
+                           niet indien aanwezig in de huidige werkmap.
+
+  --set <instelling>=<waarde> Stel een configuratie-instelling in. Meerdere
+                           configuratie instellingen kunnen worden opgegeven.
+                           Voorbeeld:
+                           --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2
+
+  --working-dir <pad>      Stel de werkdirectory in op <pad>. DOSBox gedraagt
+                           zich alsof gestart vanuit deze directory.
+
+  --list-glshaders         Toont alle beschikbare OpenGL shaders en hun paden.
+                           Resultaten zijn bruikbaar in de 'glshader = '
+                           configuratie-instelling.
+
+  --fullscreen             Start in volledig scherm modus.
+
+  --lang <taal_bestand>    Start met de taal die is opgegeven in <taal_bestand>.
+
+  --machine <type>         Emuleer een specifiek type machine. Het machinetype
+                           heeft invloed op zowel de geëmuleerde video- als
+                           geluidskaarten.
+                           Geldige keuzes zijn: hercules, cga, cga_mono, tandy,
+                           pcjr, ega, svga_s3 (standaard), svga_et3000,
+                           svga_et4000, svga_paradise, vesa_nolfb, vesa_oldvbe.
+
+  -c <commando>            Voer het opgegeven DOS-commando uit voordat het PAD
+                           wordt bewerkt.
+                           Er kunnen meerdere commando's worden opgegeven.
+
+  --noautoexec             Geen DOS commando's uitvoeren vanuit [autoexec]
+                           secties.
+
+  --exit                   Afsluiten na het uitvoeren van '-c <commando>'s en
+                           [autoexec] secties.
+
+  --startmapper            Start de mapper GUI.
+
+  --erasemapper            Het standaard mapper-bestand verwijderen.
+
+  --securemode             Zet de veilige modus aan door de commando's MOUNT en
+                           IMGMOUNT uit te schakelen.
+
+  --socket <nummer>        Nullmodem uitvoeren op het opgegeven socketnummer.
+
+  -h, -?, --help           Helpbericht afdrukken en afsluiten.
+
+  -V, --version            Informatie over versie afdrukken en afsluiten.
+
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Geen dergelijke sectie of eigenschap: %s
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Er is geen eigenschap "%s" in sectie "%s".
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Correcte syntaxis: [color=light-green]config [reset]-set [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]
+
+.
 :TITLEBAR_CYCLES_MS
 cycli/ms
 .
@@ -366,11 +460,11 @@ Adaptieve CRT-shaderopties:
                      die is geconfigureerd via de 'machine'-instelling. CGA- en
                      EGA-games worden bijvoorbeeld dubbel gescand weergegeven
                      op een geëmuleerde VGA-adapter.
-  crt-auto-arcade:   Emulatie van een arcade- of homecomputermonitor die minder
-                     scherp is dan een typische pc-monitor met dikke scanlijnen
-                     in lage resolutiemodi. Deze fantasieoptie bestaat in het
-                     echte leven niet, maar kan erg leuk zijn, vooral met
-                     DOS-poorten van Amiga-spellen.
+  crt-auto-arcade:   Emulatie van een arcade- of thuiscomputermonitor die
+                     minder scherp is dan een typische pc-monitor met dikke
+                     scanlijnen in lage resolutiemodi. Deze fantasieoptie
+                     bestaat in het echte leven niet, maar kan erg leuk zijn,
+                     vooral met DOS-poorten van Amiga-spellen.
 Andere opties zijn onder meer 'sharp', 'none', een shader die wordt vermeld met
 het opdrachtregelargument --list-glshaders, of een absoluut of relatief pad
 naar een bestand. In alle gevallen kunt u de bestandsextensie '.glsl' van de
@@ -730,6 +824,12 @@ Geen ROM is momenteel geladen
 :MT32_INVENTORY_TABLE_AVAILABLE_LETTER
 j
 .
+:MT32_ROMS_LABEL
+MT-32  ROMs  
+.
+:CM32L_ROMS_LABEL
+CM-32L ROMs  
+.
 :MT32_ACTIVE_ROM_LABEL
 Actieve ROM : 
 .
@@ -859,7 +959,7 @@ Model van chip om te emuleren voor de Innovation SSI-2001-kaart:
 .
 :CONFIG_SIDCLOCK
 De SID-chip klokfrequentie, die op reproductiekaarten kan worden gekozen.
-  default: gebruikt 0.895 MHz, zoals de originele SSI-2001-kaart.
+  default: gebruikt 0.895 MHz, zoals de originele SSI-2001-kaart (standaard).
   c64ntsc: gebruikt 1.023 MHz, zoals NTSC Commodore PC's en de DuoSID.
   c64pal:  gebruikt 0.985 MHz, zoals PAL Commodore PCs en de DuoSID.
   hardsid: gebruikt 1.000 MHz, zoals beschikbaar op de DuoSID.
@@ -1167,18 +1267,6 @@ Mogelijke waarden
 :CONFIG_DEPRECATED_VALUES
 Verouderde waarden
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
-Geen dergelijke sectie of eigenschap: %s
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-Er is geen eigenschap "%s" in sectie "%s".
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Correcte syntaxis: [color=light-green]config [reset]-set [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]
-
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Geen configuratiebestand geladen!
 
@@ -1350,10 +1438,10 @@ Lokale map
 CD-ROM station
 .
 :MOUNT_TYPE_FAT
-FAT image
+FAT bestand
 .
 :MOUNT_TYPE_ISO
-ISO image
+ISO bestand
 .
 :MOUNT_TYPE_VIRTUAL
 Interne virtuele schijf
@@ -1898,6 +1986,31 @@ ROM-bestand niet herkend.
 BASIC-ROM geladen.
 
 .
+:PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN
+Niet afgehandeld wildcardpatroon - '%s'.
+
+.
+:PROGRAMMA_LS_HELP_LANG
+Geeft map-inhoud weer in de brede lijstindeling.
+
+Gebruik:
+  [color=light-green]ls[reset] [[color=light-cyan]PATROON[reset] [[color=light-cyan]PATROON[reset], ...]] [[color=light-cyan]PAD[reset] [[color=light-cyan]PAD[reset], ...]] [/a]
+
+Waar:
+  [color=light-cyan]PATROON[reset] kan een exacte bestandsnaam zijn of een niet-exacte bestandsnaam met
+          jokertekens, de asterisk (*) en het vraagteken (?).
+  [color=light-cyan]PAD[reset] is een exact pad in een aangekoppelde DOS-schijf om de inhoud te tonen.
+  /a geeft alle bestanden en mappen weer, inclusief verborgen en systeem.
+
+Opmerkingen:
+  Het commando geeft mappen weer in [color=light-blue]blauw[reset], uitvoerbare DOS-programma's
+   (*.com, *.exe, *.bat) in [color=light-green]groen[reset], en andere bestanden in de normale kleur.
+
+Voorbeelden:
+  [color=light-green]ls[reset] [color=light-cyan]bestand.txt[reset]
+  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
+
+.
 :PROGRAM_MEM_HELP_LONG
 Geeft de DOS-geheugeninformatie weer.
 
@@ -1945,6 +2058,7 @@ Waar:
                gebruik [color=white]L:R[reset] om stereo afzonderlijk in te stellen (bijv. [color=white]10:20[reset])
     Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (enkel voor stereo kanalen)
     Crossfeed: [color=white]x0[reset] tot [color=white]x100[reset]    Reverb: [color=white]r0[reset] tot [color=white]r100[reset]    Chorus: [color=white]c0[reset] tot [color=white]c100[reset]
+
 Opmerkingen:
   - [color=light-green]mixer[reset] zonder argument toont de huidige mixerinstellingen.
   - De instellingen van meer dan één kanaal kan in één opdracht wijzigen.
@@ -1954,8 +2068,8 @@ Opmerkingen:
   - De optie /noshow past de wijzigingen toe zonder mixer weergave.
 
 Voorbeelden:
-  [color=light-green]mixer[reset] [color=light-cyan]cdda[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]fm[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
+  [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
+  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
 %-22s %4.0f:%-4.0f %+6.2f:%-+6.2f  %-8s %5s %7s %7s
@@ -1974,6 +2088,65 @@ Omgekeerd
 .
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
+.
+:SHELL_CMD_MIXER_INACTIVE_CHANNEL
+Kanaal [color=light-cyan]%s[reset] is niet actief
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND
+Ongeldig globaal commando: [color=white]%s[reset]
+.
+:SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND
+Ongeldig volume voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset] (voer MIXER /? uit voor hulp)
+.
+:SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH
+Ongeldige crossfeed sterkte voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL
+Ongeldig chorus niveau voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_REVERB_LEVEL
+Ongeldig reverb niveau voor het [color=light-cyan]%s[reset] kanaal: [color=white]%s[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
+Ontbrekende crossfeed-sterkte na [color=white]X[reset] voor het [color=light-cyan]%s[reset]-kanaal
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
+Ontbrekend chorusniveau na [color=white]C[reset] voor het [color=light-cyan]%s[reset]-kanaal
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_REVERB_LEVEL
+Ontbrekend reverb niveau na [color=white]R[reset] voor het [color=light-cyan]%s[reset] kanaal
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
+Ongeldige globale crossfeed sterkte [color=white]%s[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
+Ongeldig globaal chorus niveau [color=white]%s[reset] (moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL
+Ongeldig global reverb level [color=white]%s[reset] (moet tussen 0 en 100 zijn)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
+Ontbrekende globale crossfeed sterkte na [color=white]X[reset]
+(moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
+Ontbrekend globaal chorusniveau na [color=white]C[reset] (moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
+Ontbrekend globaal reverb niveau na [color=white]R[reset] (moet tussen 0 en 100 liggen)
+.
+:SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
+Ontbrekend commando voor het [color=light-cyan]%s[reset]-kanaal
+.
+:SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
+Ongeldige opdracht voor het [color=light-cyan]%s[reset]-kanaal: [color=white]%s[reset]
 .
 :PROGRAM_MORE_HELP_LONG
 Geef opdrachtuitvoer of tekstbestand één scherm tegelijk weer.
@@ -3305,34 +3478,6 @@ Opmerkingen:
 
 Voorbeelden:
   [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]argument[reset]
-
-.
-:SHELL_CMD_LS_HELP
-Geeft map-inhoud weer in de brede lijstindeling.
-
-.
-:SHELL_CMD_LS_HELP_LONG
-Gebruik:
-  [color=light-green]ls[reset] [color=light-cyan]PATROON[reset]
-  [color=light-green]ls[reset] [color=light-cyan]PAD[reset]
-
-Waar:
-  [color=light-cyan]PATROON[reset] kan een exacte bestandsnaam zijn of een onnauwkeurige bestandsnaam
-          met jokertekens, de asterisk (*) en het vraagteken (?).
-  [color=light-cyan]PATH[reset]    is een exact pad in een aangekoppelde DOS-schijf om de inhoud weer
-          te geven.
-
-Opmerkingen:
-  Het commando zal mappen weergeven in [color=light-blue]blauw[reset], uitvoerbare DOS-programma's
-  (*.com, *.exe, *.bat) in [color=light-green]groen[reset] en andere bestanden in de normale kleur.
-
-Voorbeelden:
-  [color=light-green]ls[reset] [color=light-cyan]bestand.txt[reset]
-  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
-
-.
-:SHELL_CMD_LS_PATH_ERR
-ls: kan '%s' niet openen: geen dergelijk bestand of map
 
 .
 :SHELL_CMD_ATTRIB_HELP
