@@ -1,7 +1,7 @@
 /*
  * This file is part of libsidplayfp, a SID player engine.
  *
- * Copyright 2011-2022 Leandro Nini <drfiemost@users.sourceforge.net>
+ * Copyright 2011-2023 Leandro Nini <drfiemost@users.sourceforge.net>
  * Copyright 2007-2010 Antti Lankila
  * Copyright 2004,2010 Dag Lem <resid@nimrod.no>
  *
@@ -25,6 +25,13 @@
 
 #include "siddefs-fp.h"
 #include "array.h"
+
+// print SR debugging info
+//#define TRACE 1
+
+#ifdef TRACE
+#  include <iostream>
+#endif
 
 namespace reSIDfp
 {
@@ -95,6 +102,9 @@ private:
 
     unsigned int shift_register = 0;
 
+    /// Shift register is latched when transitioning to shift phase 1.
+    unsigned int shift_latch = 0;
+
     /// Emulation of pipeline causing bit 19 to clock the shift register.
     int shift_pipeline = 0;
 
@@ -134,14 +144,15 @@ private:
     bool sync = false;
     //@}
 
+    /// Test bit is latched at phi2 for the noise XOR.
+    bool test_or_reset = false;
+
     /// Tell whether the accumulator MSB was set high on this cycle.
     bool msb_rising = false;
 
     bool is6581 = false;
 private:
-    void clock_shift_register(unsigned int bit0);
-
-    unsigned int get_noise_writeback();
+    void shift_phase2(unsigned int waveform_old, unsigned int waveform_new);
 
     void write_shift_register();
 
@@ -297,11 +308,18 @@ void WaveformGenerator::clock()
     {
         if (unlikely(shift_register_reset != 0) && unlikely(--shift_register_reset == 0))
         {
+#ifdef TRACE
+            std::cout << "shiftregBitfade" << std::endl;
+#endif
             shiftregBitfade();
+            shift_latch = shift_register;
 
             // New noise waveform output.
             set_noise_output();
         }
+
+        // Latch the test bit value for shift phase 2.
+        test_or_reset = true;
 
         // The test bit sets pulse high.
         pulse_output = 0xfff;
@@ -325,10 +343,25 @@ void WaveformGenerator::clock()
             // Pipeline: Detect rising bit, shift phase 1, shift phase 2.
             shift_pipeline = 2;
         }
-        else if (unlikely(shift_pipeline != 0) && --shift_pipeline == 0)
+        else if (unlikely(shift_pipeline != 0))
         {
-            // bit0 = (bit22 | test) ^ bit17
-            clock_shift_register(((shift_register << 22) ^ (shift_register << 17)) & (1u << 22));
+            switch (--shift_pipeline)
+            {
+            case 0:
+#ifdef TRACE
+                std::cout << "shift phase 2" << std::endl;
+#endif
+                shift_phase2(waveform, waveform);
+                break;
+            case 1:
+#ifdef TRACE
+                std::cout << "shift phase 1" << std::endl;
+#endif
+                // Start shift phase 1.
+                test_or_reset = false;
+                shift_latch = shift_register;
+                break;
+            }
         }
     }
 }
