@@ -40,6 +40,7 @@
 #ifdef WIN32
 #include <process.h>
 #include <signal.h>
+#include <windows.h>
 #endif
 
 #include <SDL.h>
@@ -4680,9 +4681,18 @@ int sdl_main(int argc, char* argv[])
 			const auto program_name = argv[0];
 			const auto help_utf8 = format_string(MSG_GetRaw("DOSBOX_HELP"),
 			                                     program_name);
-			std::string help_str = {};
-			utf8_to_host_console(help_utf8, help_str);
-			printf(help_str.c_str());
+#ifdef WIN32
+			const auto old_code_page = GetConsoleOutputCP();
+
+			constexpr uint16_t CodePageUtf8 = 65001;
+			SetConsoleOutputCP(CodePageUtf8);
+			printf(help_utf8.c_str());
+			SetConsoleOutputCP(old_code_page);
+#else
+			// Assume any OS without special support uses UTF-8 as
+			// console encoding
+			printf(help_utf8.c_str());
+#endif
 			return 0;
 		}
 		if (arguments->editconf) {

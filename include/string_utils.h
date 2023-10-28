@@ -323,10 +323,6 @@ void dos_to_utf8(const std::string& in_str, std::string& out_str);
 void dos_to_utf8(const std::string& in_str, std::string& out_str,
                  const uint16_t code_page);
 
-// As above, but converts to encoding used by (or at least compatible to) host
-// OS command line console.
-bool utf8_to_host_console(const std::string& in_str, std::string& out_str);
-
 // Convert DOS code page string to lower/upper case; converters are aware of all
 // the national characters. Functions without 'code_page' parameter use current
 // DOS code page.

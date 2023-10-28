@@ -31,10 +31,6 @@
 #include "dos_inc.h"
 #include "string_utils.h"
 
-#if defined(WIN32)
-#include "windows.h"
-#endif
-
 CHECK_NARROWING();
 
 // ***************************************************************************
@@ -2054,30 +2050,6 @@ void dos_to_utf8(const std::string& in_str, std::string& out_str,
                  const uint16_t code_page)
 {
 	dos_to_utf8_common(in_str, out_str, get_custom_code_page(code_page));
-}
-
-bool utf8_to_host_console(const std::string& in_str, std::string& out_str)
-{
-#if defined(WIN32)
-	// Reference:
-	// - https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
-	constexpr uint16_t CodePageUtf8 = 65001;
-
-	const auto console_code_page = static_cast<uint16_t>(GetConsoleOutputCP());
-	if (console_code_page == CodePageUtf8) {
-		out_str = in_str;
-		return true;
-	}
-
-	// TODO: Once UTF-16 (or any other Unicode encoding) is supported,
-	// add special handling here
-
-	return utf8_to_dos(in_str, out_str, UnicodeFallback::Simple, console_code_page);
-#else
-	// Assume any OS without special support uses UTF-8 as console encoding
-	out_str = in_str;
-	return true;
-#endif
 }
 
 static void lowercase_dos_common(std::string& in_str, const uint16_t code_page)
