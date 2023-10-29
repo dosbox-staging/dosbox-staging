@@ -193,11 +193,12 @@ void ECBClass::getFragDesc(uint16_t descNum, fragmentDescriptor *fragDesc) {
 	fragDesc->size = real_readw(RealSegment(ECBAddr), memoff);
 }
 
-RealPt ECBClass::getESRAddr(void) {
-	return RealMake(real_readw(RealSegment(ECBAddr),
-		RealOffset(ECBAddr)+6),
-		real_readw(RealSegment(ECBAddr),
-		RealOffset(ECBAddr)+4));
+RealPt ECBClass::getESRAddr()
+{
+	const auto segment = RealSegment(ECBAddr);
+	const auto offset  = RealOffset(ECBAddr);
+	return RealMake(real_readw(segment, offset + 6),
+	                real_readw(segment, offset + 4));
 }
 
 void ECBClass::NotifyESR(void) {
