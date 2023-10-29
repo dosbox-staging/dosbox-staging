@@ -808,7 +808,7 @@ void MIXER::AddMessages()
 	        "                 volumes of stereo channels separately (e.g. [color=white]10:20[reset], [color=white]150:d6[reset])\n"
 	        "    Stereo mode: [color=white]stereo[reset], or [color=white]reverse[reset] (stereo channels only)\n"
 	        "    Crossfeed:   [color=white]x0[reset] to [color=white]x100[reset], sets crossfeed strength (stereo channels only)\n"
-	        "    Reverb:      [color=white]r0[reset] to [color=white]r100[reset]. sets reverb level\n"
+	        "    Reverb:      [color=white]r0[reset] to [color=white]r100[reset], sets reverb level\n"
 	        "    Chorus:      [color=white]c0[reset] to [color=white]c100[reset], sets chorus level\n"
 	        "\n"
 	        "Notes:\n"
@@ -857,15 +857,15 @@ void MIXER::AddMessages()
 	        "[color=white]%s[reset]\n(must be between 0 and 100)");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH",
-	        "Missing crossfeed strength after [color=white]X[reset] for the "
+	        "Missing crossfeed strength after [color=white]x[reset] for the "
 	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL",
-	        "Missing chorus level after [color=white]C[reset] for the "
+	        "Missing chorus level after [color=white]c[reset] for the "
 	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_REVERB_LEVEL",
-	        "Missing reverb level after [color=white]R[reset] for the "
+	        "Missing reverb level after [color=white]r[reset] for the "
 	        "[color=light-cyan]%s[reset] channel\n(must be between 0 and 100)");
 
 	MSG_Add("SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH",
@@ -881,15 +881,15 @@ void MIXER::AddMessages()
 	        "(must be between 0 and 100)");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH",
-	        "Missing global crossfeed strength after [color=white]X[reset] "
+	        "Missing global crossfeed strength after [color=white]x[reset] "
 	        "(must be between 0 and 100)");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL",
-	        "Missing global chorus level after [color=white]C[reset] "
+	        "Missing global chorus level after [color=white]c[reset] "
 	        "(must be between 0 and 100)");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL",
-	        "Missing global reverb level after [color=white]R[reset] "
+	        "Missing global reverb level after [color=white]r[reset] "
 	        "(must be between 0 and 100)");
 
 	MSG_Add("SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND",
