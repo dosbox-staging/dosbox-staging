@@ -4686,12 +4686,12 @@ int sdl_main(int argc, char* argv[])
 
 			constexpr uint16_t CodePageUtf8 = 65001;
 			SetConsoleOutputCP(CodePageUtf8);
-			printf(help_utf8.c_str());
+			printf("%s", help_utf8.c_str());
 			SetConsoleOutputCP(old_code_page);
 #else
 			// Assume any OS without special support uses UTF-8 as
 			// console encoding
-			printf(help_utf8.c_str());
+			printf("%s", help_utf8.c_str());
 #endif
 			return 0;
 		}
