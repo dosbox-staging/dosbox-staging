@@ -1,3 +1,69 @@
+:DOSBOX_HELP
+Składnia: %s [OPCJE]... [ŚCIEŻKA]
+
+ŚCIEŻKA                        Jeśli ŚCIEŻKA jest katalogiem, zostanie zamontowany jako dysk C:.
+                               Jeśli ŚCIEŻKA to obraz dysku (IMA/IMG), zostanie zabootowany.
+                               Jeśli ŚCIEŻKA to obraz CDROM (CUE/ISO), zostanie zamontowany jako dysk D:.
+                               Jeśli ŚCIEŻKA to plik wykonywalny DOS (BAT/COM/EXE), jego katalog
+                               zostanie zamontowany jako dysk C:, a plik zostanie uruchomiony. Gdy
+                               wykonywanie pliku dobiegnie końca, DOSBox Staging zakończy pracę.
+
+Lista dostępnych opcji:
+
+  --conf <plik_konfiguracyjny> Uruchom z ustawieniami z podanego pliku konfiguracyjnego.
+                               Można podać wiele plików konfiguracyjnych. Przykład:
+                               --conf conf1.conf --conf conf2.conf
+
+  --printconf                  Wyświetl lokację głównego pliku konfiguracyjnego.
+
+  --editconf                   Otwórz główny plik konfiguracyjny w edytorze tekstu.
+
+  --eraseconf                  Usuń główny plik konfiguracyjny.
+
+  --noprimaryconf              Nie ładuj i nie twórz głównego pliku konfiguracyjnego.
+
+  --nolocalconf                Nie ładuj lokalnego pliku konfiguracyjnego 'dosbox.conf', jeśli jest
+                               obecny w aktualnym katalogu
+
+  --set <parametr>=<wartość>   Ustaw parametr konfiguracyjny. Można podać wiele ustawień. Przykład:
+                               --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2
+
+  --working-dir <ścieżka>      Traktuj <ścieżka> jako katalog roboczy. DOSBox będzie działał tak, jakby
+                               został uruchomiony z tego katalogu.
+
+  --list-glshaders             Wyświetl dostępne shadery OpenGL wraz ze ścieżkami. Można podać jeden a
+                               rezultatów w ustawieniu 'glshader = ' w pliku konfiguracyjnym.
+
+  --fullscreen                 Uruchom na pełnym ekranie.
+
+  --lang <plik_języka>         Uruchom z językiem komunikatów z pliku <plik_języka>.
+
+  --machine <typ>              Emuluj dany typ maszyny. Ma on wpływ na emulowane karty graficzne i
+                               dźwiękowe. Dostępne type: hercules, cga, cga_mono, tandy, pcjr, ega,
+                               svga_s3 (domyślny), svga_et3000, svga_et4000, svga_paradise, vesa_nolfb,
+                               vesa_oldvbe.
+
+  -c <polecenie>               Wykonaj podane polecenie przed uwzględnieniem parametru ŚCIEŻKA.
+                               Można podać wiele poleceń.
+
+  --noautoexec                 Nie wykonuj poleceń z sekcji [autoexec].
+
+  --exit                       Zakończ pracę po wykonaniu poleceń z parametrów '-c <polecenie>' oraz
+                               sekcji [autoexec].
+
+  --startmapper                Uruchom narzędzie mapowania klawiszy.
+
+  --erasemapper                Usuń plik z mapowaniem klawiszy.
+
+  --securemode                 Włącz tryb bezpieczny poprzez zablokowanie poleceń MOUNT oraz IMGMOUNT.
+
+  --socket <numer>             Symuluj kabel nullmodem na podanym numerze gniazda.
+
+  -h, -?, --help               Wyświetl pomoc i zakończ pracę.
+
+  -V, --version                Wyświetl wersję programu i zakończ pracę.
+
+.
 :TITLEBAR_CYCLES_MS
 cykli/ms
 .
@@ -91,6 +157,11 @@ Tryb synchronizacji pionowej obrazu (vsync):
              jeśli częstotliwość odświeżania w DOSie przekroczy częstotliwość
              odświeżania w systemie gospodarza (np. 70 Hz w DOSie, a 60 Hz
              w systemie).
+  adaptive:  Włącza synchronizację jeśli częstotliwość odświeżania jest
+             większa od częstotliwości odświeżania monitora, ale wyłącza jeśli
+             jest poniżej tej wartości.
+             Działa tylko w trybach wyświetlania OpenGL, w innym wypadku
+             działa jak 'on'.
   off:       Próbuje wyłączyć synchronizację pionową, co przyspieszy
              wyświetlanie poszczególnych ramek obrazu, ale może spowodować
              smużenie w niektórych grach.
@@ -543,13 +614,13 @@ Dźwięk jest emulowany, ale całkowicie wyciszony.
 Częstotliwość próbkowania miksera dźwięku (domyślnie 48000).
 .
 :CONFIG_BLOCKSIZE
-Rozmiar bloku miksera w ramkach. Większe wartości mogą pomóc zredukować
-przycinanie dźwięku, ale zwiększają opóźnienie (lag).
+Rozmiar bloku miksera w ramkach (domyślnie 512). Większe wartości mogą pomóc
+zredukować przycinanie dźwięku, ale zwiększają opóźnienie (lag).
 .
 :CONFIG_PREBUFFER
-Ile milisekund dźwięku renderować ponad 'blocksize'. Większe wartości mogą
-pomóc redukować przycinanie dźwięku, ale zwiększają opóźnienie
-(lag).
+Ile milisekund dźwięku renderować ponad 'blocksize' (domyślnie 20). Większe
+wartości mogą pomóc redukować przycinanie dźwięku, ale zwiększają opóźnienie
+dźwięku (lag).
 .
 :CONFIG_NEGOTIATE
 Czy próbować wynegocjować ze sterownikiem dźwięku potencjalnie lepsze
@@ -563,10 +634,12 @@ Włącza automatyczny kompresora dynamiki, zapobiega przesterowaniu dźwięku:
 :CONFIG_CROSSFEED
 Włącza (globalnie) efekt przenikania kanałów stereo, przydatne jeśli używasz
 słuchawek:
-  off:         Bez efektu (domyślne).
-  on:          Włącza przenikanie na poziomie 40.
-  <strength>:  Ustawienie siły efektu od 0 (wyłączone) do 100 (dźwięk mono).
-Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
+  off:     Bez efektu (domyślne).
+  on:      Włącza przenikanie (normalne ustawienia).
+  light:   Słaby efekt (siła 15).
+  normal:  Normalny efekt (siła 40).
+  strong:  Silny efekt (siła 65).
+Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
 .
 :CONFIG_REVERB
 Włącza (globalnie) efekt 'reverb' (pogłos), dodaje dźwiękowi przestrzeni:
@@ -582,7 +655,7 @@ Włącza (globalnie) efekt 'reverb' (pogłos), dodaje dźwiękowi przestrzeni:
            kanałów dla muzyki i efektów dźwiękowych.
   huge:    Mocniejszy wariant dużej hali, odpowiedni do gier z atmosferyczną
            ścieżką dźwiękową.
-Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
+Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
 .
 :CONFIG_CHORUS
 Włącza (globalnie) efekt 'chorus', dodaje brzmienie głosu chóralnego:
@@ -592,7 +665,7 @@ Włącza (globalnie) efekt 'chorus', dodaje brzmienie głosu chóralnego:
            ilością białego szumu.
   normal:  Normalny efekt, odpowiedni dla wielu różnych gier.
   strong:  Silny efekt.
-Poleceniem DOSa 'MIXER' można zmienić ustawienie dla poszczególnych kanałów.
+Uwaga: Możesz dokładniej dostosować ustawienia poleceniem 'MIXER'.
 .
 :CONFIG_MIDIDEVICE
 Urządzenie, które otrzyma dane MIDI z emulowanego interfejsu MPU-401. Jedno z:
@@ -676,19 +749,26 @@ Filtrowanie dźwięku syntetyzera FluidSynth:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_MODEL
-Model emulowanego syntetyzatora MIDI:
-  auto:  pierwszy model z dostępnymi ROMami, w kolejności jak poniżej.
-  cm32l, mt32:         pierwszy model danego typu.
-  mt32_old, mt32_new:  wersje (odpowiednio) 1.07 oraz 2.04.
+Model emulowanego syntetyzatora MIDI Roland MT-32/CM-32ML.
+Musisz mieć pliki ROM dla odpowiedniego modelu (patrz 'romdir').
+Jeśli nie podasz wersji syntetyzatora, emulowany będzie model wybrany w
+kolejności poniżej.
+  auto:       Wybiera pierwszy dostępny model (domyślne).
+  cm32l:      Wybiera pierwszy dostępny model CM-32L model.
+  mt32_old:   Wybiera pierwszy dostępny model "starego" MT-32 (v1.0x).
+  mt32_new:   Wybiera pierwszy dostępny model "nowego" MT-32 (v2.0x).
+  mt32:       Wybiera pierwszy dostępny mode MT-32.
+  <version>:  Używa podanego modelu i wersji (np., 'mt32_204').
 .
 :CONFIG_ROMDIR
-Katalog zawierający ROMy syntetyzatora MT32. Ścieżka może być względna lub
-bezwzględna. Pusta wartość spowoduje sprawdzenie podkatalogu 'mt32-roms' z
-katalogu z konfiguracją i innych typowych lokacji w danym systemie.
-Obrazy ROMów mogą zawierać:
-  - MT32_CONTROL.ROM oraz MT32_PCM.ROM, dla modelu 'mt32'.
-  - CM32L_CONTROL.ROM oraz CM32L_PCM.ROM, dla modelu 'cm32l'.
-  - Rozpakowane ROMy MT-32 oraz CM-32L dla emulatora MAME.
+Katalog zawierający ROMy syntetyzatora Roland MT32/CM-32ML. Ścieżka może być
+względna lub bezwzględna. Pusta wartość spowoduje sprawdzenie podkatalogu
+'mt32-roms' z katalogu z konfiguracją i innych typowych lokacji w danym
+systemie.
+Uwagi:
+  - Nazwy plików nie mają znaczenia, ROMy są identyfikowane po sumach
+    kontrolnych.
+  - Obsługiwane są zarówno obrazy ROM z przeplotem, jak i bez.
 .
 :CONFIG_MT32_FILTER
 Filtrowanie dźwięku syntetyzera Roland MT-32/CM-32L:
@@ -696,7 +776,7 @@ Filtrowanie dźwięku syntetyzera Roland MT-32/CM-32L:
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :MT32_NO_SUPPORTED_MODELS
-Żaden obsługiwany model nie jest obecny.
+Żaden obsługiwany model nie jest obecny
 .
 :MT32_ROM_NOT_LOADED
 ROM nie został załadowany
@@ -707,11 +787,17 @@ ROM nie został załadowany
 :MT32_INVENTORY_TABLE_AVAILABLE_LETTER
 +
 .
+:MT32_ROMS_LABEL
+ROMy MT-32    
+.
+:CM32L_ROMS_LABEL
+ROMy CM-32L   
+.
 :MT32_ACTIVE_ROM_LABEL
-Aktywny ROM  : 
+Actywny ROM   
 .
 :MT32_SOURCE_DIR_LABEL
-Załadowano z : 
+Załadowany z  
 .
 :CONFIG_SBTYPE
 Model karty muzycznej Sound Blaster (domyślnie 'sb').
@@ -1012,7 +1098,7 @@ wszystkie w tej samej linii. Wspólnym parametrem dla wszystkich jest
       realport (wymagany), rxdelay (opcjonalny).
       Przykład: realport:COM1 realport:ttyS0.
   - Dla urządzenia 'modem':
-      listenport, sock, baudrate (wszystkie opcjonalne).
+      listenport, sock, bps (wszystkie opcjonalne).
   - Dla urządzenia 'nullmodem':
       server, rxdelay, txdelay, telnet, usedtr, transparent, port,
       inhsocket, sock (wszystkie opcjonalne).
@@ -1152,7 +1238,7 @@ Brak parametru '%s' w sekcji [%s]
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Składnia: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] [color=white]PARAMETR[reset][=][color=white]WARTOŚĆ[reset]
+Składnia: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] [color=white]PARAMETR[/reset][=][color=white]WARTOŚĆ[/reset]
 
 .
 :PROGRAM_CONFIG_NOCONFIGFILE
@@ -1311,10 +1397,10 @@ Nie znaleziono pliku wykonywalnego: '%s'
 i
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
-enumeracja nieobsługiwana
+Wykrywanie nieobsługiwane
 .
 :MIDI_DEVICE_NOT_CONFIGURED
-urządzenie nie zostało skonfigurowane
+Urządzenie nie zostało skonfigurowane
 .
 :PROGRAM_FMPDRV_HELP_LONG
 Ładuje lub usuwa wbudowany sterownik karty ReelMagic.
@@ -1907,6 +1993,31 @@ Nie można rozpoznać ROMu.
 Załadowano BASIC ROM.
 
 .
+:PROGRAM_LS_HELP_LONG
+Wyświetla zawartość katalogu w formie szerokiej listy.
+
+Składnia:
+  [color=light-green]ls[reset] [[color=light-cyan]WZORZEC[reset] [[color=light-cyan]WZORZEC[reset], ...]] [[color=light-cyan]ŚCIEŻKA[reset] [[color=light-cyan]ŚCIEŻKA[reset], ...]] [/a]
+
+Gdzie:
+  [color=light-cyan]WZORZEC[reset]  dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
+           którymi są asterisk ('*') i znak zapytania ('?').
+  [color=light-cyan]ŚCIEŻKA[reset]  dokładna ścieżka na zamontowanym dysku.
+  /a       wyświetla wszystkie pliki i katalogi, również ukryte i systemowe.
+
+Uwagi:
+  Polecenie wyświetla katalogi kolorem [color=light-blue]niebieskim[reset], pliki wykonywalne
+  (*.com, *.exe, *.bat) kolorem [color=light-green]zielonym[reset], a pozostałe aktualnym kolorem.
+
+Przykłady:
+  [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]
+  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
+
+.
+:PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN
+Nieobsługiwany wzorzec maski - '%s'
+
+.
 :PROGRAM_MEM_HELP_LONG
 Wyświetla informację o użyciu pamięci.
 
@@ -2268,27 +2379,31 @@ Sprawdzono zmiany na dysku.
 Zarządza ustawieniami miksera dźwięku.
 
 Składnia:
-  [color=light-green]mixer[reset] [color=light-cyan][KANAŁ][reset] [color=white]POLECENIE[reset] [/noshow]
-  [color=light-green]mixer[reset] [/listmidi]  (wyświetla dostępne urządzenia MIDI)
+  [color=light-green]mixer[reset] [color=light-cyan][KANAŁ][reset] [color=white]POLECENIA[reset] [/noshow]
+  [color=light-green]mixer[reset] [/listmidi]
 
 Gdzie:
   [color=light-cyan]KANAŁ[reset]      to nazwa kanału, którego dotyczyć będą zmiany.
-  [color=white]POLECENIE[reset]  jest jednym z poniższych:
-    Głośność:     od [color=white]0[reset] do [color=white]100[reset] lub w decybelach poprzedzona [color=white]d[reset] (np. [color=white]d-7.5[reset])
-                  [color=white]L:P[reset] osobne ustawienia Lewej/Prawej strony (np. [color=white]10:20[reset])
-    Wyjście:      [color=white]stereo[reset], [color=white]reverse[reset] (zamienione kanały stereo)
-    Przenikanie:  od [color=white]x0[reset] do [color=white]x100[reset]
-    Efekt 'reverb' / 'chorus':  od [color=white]r0[reset] do [color=white]r100[reset] / od [color=white]c0[reset] do [color=white]c100[reset]
+  [color=white]POLECENIA[reset]  to jedno lub więcej z poniższych:
+    Głośność:       Wartość w procentach od [color=white]0[reset] do [color=white]9999[reset], lub w decybelach
+                    poprzedzona [color=white]d[reset] (np. [color=white]d-7.5[reset]). Użyj [color=white]L:P[reset] aby ustawić oddzielnie
+                    głośność lewego i prawego kanału stereo (np. [color=white]10:20[reset], [color=white]150:d6[reset])
+    Tryb stereo:    [color=white]stereo[reset], lub [color=white]reverse[reset] (zamiana kanałów stereo)
+    Przenikanie:    wartość od [color=white]x0[reset] do [color=white]x100[reset] (tylko dla kanałów stereo)
+    Efekt 'reverb': wartość od [color=white]r0[reset] do [color=white]r100[reset]
+    Efekt 'chorus': wartość od [color=white]c0[reset] do [color=white]c100[reset]
 
 Uwagi:
   Uruchomienie bez argumentów wyświetli aktualne ustawienia.
-  Jednym poleceniem można zmienić ustawienia kilku kanałów; ustawienia
-  przenikania lub efektu 'reverb' można zmienić globalnie pomijając kanał.
-  Przełącznik /noshow pozwala zmienić ustawienia bez ich wyświetlenia.
+  Wykonaj [color=light-green]mixer[reset] /listmidi aby wyświetlić dostępne urządzenia MIDI.
+  Jednym poleceniem można zmienić ustawienia jednego lub kilku kanałów.
+  Jeśli żaden kanał nie zostanie podany, ustawienia przenikania oraz efektów
+  'reverb' i 'chorus' zostaną zastosowane globalnie.
+  Opcja /noshow wprowadza ustawienia bez wyświetlenia nowych wartości.
 
 Przykłady:
   [color=light-green]mixer[reset] [color=light-cyan]cdaudio[reset] [color=white]50[reset] [color=light-cyan]sb[reset] [color=white]reverse[reset] /noshow
-  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]opl[reset] [color=white]150[reset] [color=white]r50[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
+  [color=light-green]mixer[reset] [color=white]x30[reset] [color=light-cyan]master[reset] [color=white]40[reset] [color=light-cyan]opl[reset] [color=white]150 r50 c30[reset] [color=light-cyan]sb[reset] [color=white]x10[reset]
 .
 :SHELL_CMD_MIXER_HEADER_LAYOUT
 %-22s %4.0f:%-4.0f  %+6.2f:%-+6.2f    %-8s    %7s %7s %7s
@@ -2307,6 +2422,66 @@ Reverse
 .
 :SHELL_CMD_MIXER_CHANNEL_MONO
 Mono
+.
+:SHELL_CMD_MIXER_INACTIVE_CHANNEL
+Kanał [color=light-cyan]%s[reset] nieaktywny
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_COMMAND
+Nieprawidłowe globalne polecenie: [color=white]%s[reset]
+.
+:SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND
+Nieprawidłowa głośność kanału [color=light-cyan]%s[reset]: [color=white]%s[reset] (MIXER /? wyświetli pomoc)
+.
+:SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH
+Nieprawidłowy poziom przenikania kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL
+Nieprawidłowy poziom efektu 'chorus' kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_REVERB_LEVEL
+Nieprawidłowy poziom efektu 'reverb' kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
+Brakujący poziom przenikania po [color=white]x[reset] dla kanału [color=light-cyan]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
+Brakujący poziom efektu 'chorus' po [color=white]c[reset] dla kanału [color=light-cyan]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_REVERB_LEVEL
+Brakujący poziom efektu 'reverb' po [color=white]r[reset] dla kanału [color=light-cyan]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
+Nieprawidłowy poziom przenikania [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
+Nieprawidłowy poziom efektu 'chorus' [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL
+Nieprawidłowy poziom efektu 'reverb' [color=white]%s[reset]
+(musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
+Brakujący poziom przenikania po [color=white]x[reset] (musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
+Brakujący poziom efektu 'chorus' po [color=white]c[reset] (musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
+Brakujący poziom efektu 'reverb' po [color=white]r[reset] (musi być pomiędzy 0 a 100)
+.
+:SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
+Brakujące polecenie dla kanału [color=light-cyan]%s[reset]
+.
+:SHELL_CMD_MIXER_INVALID_CHANNEL_COMMAND
+Nieprawidłowe polecenie dla kanału [color=light-cyan]%s[reset]: [color=white]%s[reset]
 .
 :PROGRAM_SERIAL_HELP_LONG
 Zarządza portami szeregowymi.
@@ -3246,32 +3421,6 @@ Uwagi:
 
 Przykłady:
   [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]
-.
-:SHELL_CMD_LS_HELP
-Wyświetla zawartość katalogu w formie szerokiej listy.
-
-.
-:SHELL_CMD_LS_HELP_LONG
-Składnia:
-  [color=light-green]ls[reset] [color=light-cyan]WZORZEC[reset]
-  [color=light-green]ls[reset] [color=light-cyan]ŚCIEŻKA[reset]
-
-Gdzie:
-  [color=light-cyan]WZORZEC[reset]  dokładna nazwa lub nazwa z symbolami wieloznaczności (maskami),
-           którymi są asterisk ('*') i znak zapytania ('?').
-  [color=light-cyan]ŚCIEŻKA[reset]  dokładna ścieżka na zamontowanym dysku.
-
-Uwagi:
-  Polecenie wyświetla katalogi kolorem [color=light-blue]niebieskim[reset], pliki wykonywalne
-  (*.com, *.exe, *.bat) kolorem [color=light-green]zielonym[reset], a pozostałe aktualnym kolorem.
-
-Przykłady:
-  [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]
-  [color=light-green]ls[reset] [color=light-cyan]c*.ba?[reset]
-.
-:SHELL_CMD_LS_PATH_ERR
-Brak dostępu do '%s'.
-
 .
 :SHELL_CMD_ATTRIB_HELP
 Wyświetla lub zmienia atrybuty pliku.
