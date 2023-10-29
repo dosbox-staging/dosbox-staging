@@ -1012,7 +1012,7 @@ static Bitu Reboot_Handler(void) {
 		reg_al = static_cast<uint8_t>(c);
 		CALLBACK_RunRealInt(0x10);
 	}
-	LOG_MSG(text);
+	LOG_MSG("BIOS: Reboot requested, quitting");
 	const auto start = PIC_FullIndex();
 	while ((PIC_FullIndex() - start) < 3000.0)
 		CALLBACK_Idle();
