@@ -802,10 +802,9 @@ void CONFIG::Run(void)
 				        inputline.c_str());
 
 				if (!change_success) {
-					auto val = value;
-					trim(val);
+					trim(value);
 					WriteOut(MSG_Get("PROGRAM_CONFIG_VALUE_ERROR"),
-					         val.c_str(),
+					         value.c_str(),
 					         pvars[1].c_str());
 				}
 				tsec->ExecuteInit(false);
