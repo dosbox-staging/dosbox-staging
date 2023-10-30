@@ -194,11 +194,11 @@ static std::deque<std_fs::path> get_data_dirs()
 
 #endif
 
-static std::string find_sf_file(const std::string& name)
+static std_fs::path find_sf_file(const std::string& name)
 {
 	const std_fs::path sf_path = resolve_home(name);
 	if (path_exists(sf_path)) {
-		return sf_path.string();
+		return sf_path;
 	}
 	for (const auto& dir : get_data_dirs()) {
 		for (const auto& sf :
@@ -207,11 +207,11 @@ static std::string find_sf_file(const std::string& name)
 			LOG_MSG("FSYNTH: FluidSynth checking if '%s' exists", sf.c_str());
 #endif
 			if (path_exists(sf)) {
-				return sf.string();
+				return sf;
 			}
 		}
 	}
-	return "";
+	return {};
 }
 
 static void log_unknown_midi_message(const std::vector<uint8_t>& msg)
@@ -274,7 +274,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	auto [sf_filename, scale_by_percent] = parse_soundfont_pref(
 	        section->Get_string("soundfont"));
 
-	const auto soundfont = find_sf_file(sf_filename);
+	const std::string soundfont = find_sf_file(sf_filename).string();
 
 	if (!soundfont.empty() && fluid_synth_sfcount(fluid_synth.get()) == 0) {
 		constexpr auto reset_presets = true;
@@ -856,14 +856,22 @@ std::string format_sf2_line(size_t width, const std_fs::path& sf2_path)
 
 MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 {
+	// Find SoundFont from user config. FluidSynth may not be open so it
+	// must be done here.
 	auto* section = static_cast<Section_prop*>(control->GetSection("fluidsynth"));
 	const auto sf_spec = parse_soundfont_pref(section->Get_string("soundfont"));
-	const auto sf_name      = std::get<std::string>(sf_spec);
+	const std_fs::path found_soundfont = find_sf_file(
+	        std::get<std::string>(sf_spec));
+
 	const size_t term_width = INT10_GetTextColumns();
 
-	auto write_line = [caller](bool do_highlight, const std::string& line) {
+	auto write_line = [&](const std_fs::path& sf2_path) {
 		constexpr auto green = "[color=light-green]";
 		constexpr auto reset = "[reset]";
+
+		const auto line = format_sf2_line(term_width - 2, sf2_path);
+		const bool do_highlight = is_open &&
+		                          (selected_font == sf2_path.string());
 
 		if (do_highlight) {
 			const auto output = format_string("%s* %s%s\n",
@@ -877,12 +885,10 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 		}
 	};
 
-	// If selected SoundFont exists in the current working directory,
-	// then print it.
-	const std_fs::path sf_path = resolve_home(sf_name);
-	if (path_exists(sf_path)) {
-		write_line((sf_path == selected_font),
-		           format_sf2_line(term_width - 2, sf_name));
+	// Print SoundFont found from user config,
+	std::error_code ec = {};
+	if (std_fs::is_regular_file(found_soundfont, ec)) {
+		write_line(found_soundfont);
 	}
 
 	// Go through all SoundFont directories and list all .sf2 files.
@@ -899,19 +905,21 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 				continue;
 			}
 
+			const auto& sf2_path = entry.path();
+
+			if (sf2_path == found_soundfont) {
+				// Has already been printed.
+				continue;
+			}
+
 			// Is it an .sf2 file?
-			auto ext = entry.path().extension().string();
+			auto ext = sf2_path.extension().string();
 			lowcase(ext);
 			if (ext != SoundFontExtension) {
 				continue;
 			}
 
-			const auto& sf2_path = entry.path();
-			const auto line = format_sf2_line(term_width - 2, sf2_path);
-			const bool do_highlight = is_open && (selected_font ==
-			                                      sf2_path.string());
-
-			write_line(do_highlight, line);
+			write_line(sf2_path);
 		}
 	}
 
