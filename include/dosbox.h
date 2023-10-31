@@ -44,6 +44,7 @@ const char* MSG_GetRaw(const char*); // get messages (in UTF-8, without ANSI
 bool MSG_Exists(const char*);
 
 class Section;
+class Section_prop;
 
 typedef Bitu (LoopHandler)(void);
 
@@ -55,6 +56,8 @@ void DOSBOX_SetLoop(LoopHandler * handler);
 void DOSBOX_SetNormalLoop();
 
 void DOSBOX_Init(void);
+
+void DOSBOX_SetMachineTypeFromConfig(Section_prop* section);
 
 class Config;
 using config_ptr_t = std::unique_ptr<Config>;
