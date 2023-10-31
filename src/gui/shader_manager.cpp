@@ -532,6 +532,13 @@ std::string ShaderManager::FindShaderAutoMachine() const
 		return GetCompositeShader();
 	}
 
+	// DOSBOX_RealInit may have not been run yet.
+	// If not, go ahead and set the globals from the config.
+	if (machine == MCH_INVALID) {
+		DOSBOX_SetMachineTypeFromConfig(
+		        static_cast<Section_prop*>(control->GetSection("dosbox")));
+	}
+
 	switch (machine) {
 	case MCH_HERC: return GetHerculesShader();
 

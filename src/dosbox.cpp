@@ -343,17 +343,8 @@ static void DOSBOX_UnlockSpeed( bool pressed ) {
 	}
 }
 
-static void DOSBOX_RealInit(Section * sec) {
-	Section_prop * section=static_cast<Section_prop *>(sec);
-	/* Initialize some dosbox internals */
-	ticksRemain=0;
-	ticksLast=GetTicks();
-	ticksLocked = false;
-	DOSBOX_SetLoop(&Normal_Loop);
-
-	MAPPER_AddHandler(DOSBOX_UnlockSpeed, SDL_SCANCODE_F12, MMOD2,
-	                  "speedlock", "Speedlock");
-
+void DOSBOX_SetMachineTypeFromConfig(Section_prop* section)
+{
 	const auto arguments = &control->arguments;
 	if (!arguments->machine.empty()) {
 		//update value in config (else no matching against suggested values
@@ -395,6 +386,20 @@ static void DOSBOX_RealInit(Section * sec) {
 	// VGA-type machine needs an valid SVGA card and vice-versa
 	assert((machine == MCH_VGA && svgaCard != SVGA_None) ||
 	       (machine != MCH_VGA && svgaCard == SVGA_None));
+}
+
+static void DOSBOX_RealInit(Section* sec)
+{
+	Section_prop* section = static_cast<Section_prop*>(sec);
+	/* Initialize some dosbox internals */
+	ticksRemain = 0;
+	ticksLast   = GetTicks();
+	ticksLocked = false;
+	DOSBOX_SetLoop(&Normal_Loop);
+
+	MAPPER_AddHandler(DOSBOX_UnlockSpeed, SDL_SCANCODE_F12, MMOD2, "speedlock", "Speedlock");
+
+	DOSBOX_SetMachineTypeFromConfig(section);
 
 	// Set the user's prefered MCB fault handling strategy
 	DOS_SetMcbFaultStrategy(section->Get_string("mcb_fault_strategy").c_str());
