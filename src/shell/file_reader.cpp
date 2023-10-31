@@ -38,9 +38,9 @@ std::optional<uint8_t> FileReader::Read()
 {
 	std::uint8_t data        = 0;
 	std::uint16_t bytes_read = 1;
-	DOS_ReadFile(handle, &data, &bytes_read);
 
-	if (bytes_read == 0) {
+	bool result = DOS_ReadFile(handle, &data, &bytes_read);
+	if (!result || bytes_read == 0) {
 		return std::nullopt;
 	}
 
