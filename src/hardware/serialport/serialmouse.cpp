@@ -259,17 +259,21 @@ void CSerialMouse::NotifyMoved(const float x_rel, const float y_rel)
 		got_another_move = true;
 }
 
-void CSerialMouse::NotifyButton(const uint8_t new_buttons, const uint8_t idx)
+void CSerialMouse::NotifyButton(const uint8_t new_buttons, const MouseButtonId button_id)
 {
-	if (!has_3rd_button && idx > 1)
+	const auto is_middle_or_greater = (button_id >= MouseButtonId::Middle);
+
+	if (!has_3rd_button && is_middle_or_greater) {
 		return;
+	}
 
 	buttons = new_buttons;
 
-	if (xmit_idx >= packet_len)
-		StartPacketData(idx > 1);
-	else
+	if (xmit_idx >= packet_len) {
+		StartPacketData(is_middle_or_greater);
+	} else {
 		got_another_button = true;
+	}
 }
 
 void CSerialMouse::NotifyWheel(const int16_t w_rel)

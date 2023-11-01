@@ -415,7 +415,7 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 			// for X2, etc. - but I don't know yet if this
 			// is consistent across various platforms
 			break;
-		MOUSE_EventButton(static_cast<uint8_t>(event.item),
+		MOUSE_EventButton(static_cast<MouseButtonId>(event.item),
 		                  event.value,
 		                  interface_id);
 		break;
@@ -431,8 +431,11 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 	case MANYMOUSE_EVENT_DISCONNECT:
 		// LOG_INFO("MANYMOUSE #%u DISCONNECT", event.device);
 		physical_devices[event.device].disconnected = true;
-		for (uint8_t button = 0; button < max_buttons; button++)
-			MOUSE_EventButton(button, false, interface_id);
+
+		for (uint8_t button = 0; button < max_buttons; ++button) {
+			const auto button_id = static_cast<MouseButtonId>(button);
+			MOUSE_EventButton(button_id, false, interface_id);
+		}
 		MOUSE_NotifyDisconnect(interface_id);
 		break;
 

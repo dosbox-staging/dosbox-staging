@@ -103,7 +103,9 @@ private:
 	std::vector<int> rel_x = {}; // not yet reported accumulated movements
 	std::vector<int> rel_y = {};
 
-	static constexpr uint8_t max_buttons  = 3;
+	static constexpr uint8_t max_buttons = 3;
+	static_assert(max_buttons <= static_cast<uint8_t>(MouseButtonId::Last));
+
 	static constexpr uint8_t max_mice     = UINT8_MAX - 1;
 	static constexpr double tick_interval = 5.0;
 

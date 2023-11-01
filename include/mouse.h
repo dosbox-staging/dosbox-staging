@@ -65,6 +65,21 @@ enum class MouseMapStatus : uint8_t {
 	Disabled
 };
 
+// Each mouse button has a corresponding fixed identifying value, similar to
+// keyboard scan codes.
+enum class MouseButtonId : uint8_t {
+	Left   = 0,
+	Right  = 1,
+	Middle = 2,
+	Extra1 = 3,
+	Extra2 = 4,
+
+	// Aliases
+	First = Left,
+	Last  = Extra2,
+	None  = UINT8_MAX,
+};
+
 // ***************************************************************************
 // Notifications from external subsystems - all should go via these methods
 // ***************************************************************************
@@ -74,8 +89,8 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
                       const MouseInterfaceId device_id);
 
-void MOUSE_EventButton(const uint8_t idx, const bool pressed);
-void MOUSE_EventButton(const uint8_t idx, const bool pressed,
+void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed);
+void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed,
                        const MouseInterfaceId device_id);
 
 void MOUSE_EventWheel(const int16_t w_rel);

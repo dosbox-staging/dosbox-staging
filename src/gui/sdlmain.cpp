@@ -3605,15 +3605,17 @@ static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
 static void HandleMouseButton(SDL_MouseButtonEvent * button)
 {
 	auto notify_button = [](const uint8_t button, const bool pressed) {
+		// clang-format off
 		switch (button) {
-		case SDL_BUTTON_LEFT:   MOUSE_EventButton(0, pressed); break;
-		case SDL_BUTTON_RIGHT:  MOUSE_EventButton(1, pressed); break;
-		case SDL_BUTTON_MIDDLE: MOUSE_EventButton(2, pressed); break;
-		case SDL_BUTTON_X1:     MOUSE_EventButton(3, pressed); break;
-		case SDL_BUTTON_X2:     MOUSE_EventButton(4, pressed); break;
+		case SDL_BUTTON_LEFT:   MOUSE_EventButton(MouseButtonId::Left,   pressed); break;
+		case SDL_BUTTON_RIGHT:  MOUSE_EventButton(MouseButtonId::Right,  pressed); break;
+		case SDL_BUTTON_MIDDLE: MOUSE_EventButton(MouseButtonId::Middle, pressed); break;
+		case SDL_BUTTON_X1:     MOUSE_EventButton(MouseButtonId::Extra1, pressed); break;
+		case SDL_BUTTON_X2:     MOUSE_EventButton(MouseButtonId::Extra2, pressed); break;
 		}
+		// clang-format on
 	};
-
+	assert(button);
 	notify_button(button->button, button->state == SDL_PRESSED);
 }
 
