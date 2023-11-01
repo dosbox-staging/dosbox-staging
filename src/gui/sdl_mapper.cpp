@@ -1704,21 +1704,25 @@ public:
 
 	KBD_KEYS key;
 };
-/*
-class CMouseButtonEvent : public CTriggeredEvent {
+
+class CMouseButtonEvent final : public CTriggeredEvent {
 public:
-	CMouseButtonEvent(char const * const _entry,Bit8u _button) : CTriggeredEvent(_entry) {
-		button=_button;
+	CMouseButtonEvent() = delete;
+
+	CMouseButtonEvent(const char* const entry, const MouseButtonId id)
+	        : CTriggeredEvent(entry),
+	          button_id(id)
+	{}
+
+	void Active(const bool pressed) override
+	{
+		MOUSE_EventButton(button_id, pressed);
 	}
-	void Active(bool yesno) {
-		if (yesno)
-			Mouse_ButtonPressed(button);
-		else
-			Mouse_ButtonReleased(button);
-	}
-	Bit8u button;
+
+private:
+	const MouseButtonId button_id = MouseButtonId::None;
 };
-*/
+
 class CJAxisEvent final : public CContinuousEvent {
 public:
 	CJAxisEvent(const char* const entry, Bitu s, Bitu a, bool p,
@@ -2033,16 +2037,18 @@ static CKeyEvent* AddKeyButtonEvent(int32_t x, int32_t y, int32_t dx,
 	new CEventButton(x,y,dx,dy,title,event);
 	return event;
 }
-/*
-static CMouseButtonEvent * AddMouseButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,char const * const entry,Bit8u button) {
-	char buf[64];
-	strcpy(buf,"mouse_");
-	strcat(buf,entry);
-	CMouseButtonEvent * event=new CMouseButtonEvent(buf,button);
-	new CEventButton(x,y,dx,dy,title,event);
+
+static CMouseButtonEvent* AddMouseButtonEvent(const int32_t x, const int32_t y,
+                                              const int32_t dx, const int32_t dy,
+                                              const char* const title,
+                                              const char* const entry,
+                                              const MouseButtonId button_id)
+{
+	auto event = new CMouseButtonEvent(entry, button_id);
+	new CEventButton(x, y, dx, dy, title, event);
 	return event;
 }
-*/
+
 static CJAxisEvent* AddJAxisButton(int32_t x, int32_t y, int32_t dx, int32_t dy,
                                    const char* const title, Bitu stick, Bitu axis,
                                    bool positive, CJAxisEvent* opposite_axis)
@@ -2269,17 +2275,36 @@ static void CreateLayout() {
 #undef XO
 #undef YO
 
-#if 0
 #define XO 5
 #define YO 8
 	/* Mouse Buttons */
-	new CTextButton(PX(XO+0),PY(YO-1),3*BW,20,"Mouse");
-	AddMouseButtonEvent(PX(XO+0),PY(YO),BW,BH,"L","left",0);
-	AddMouseButtonEvent(PX(XO+1),PY(YO),BW,BH,"M","middle",2);
-	AddMouseButtonEvent(PX(XO+2),PY(YO),BW,BH,"R","right",1);
+	new CTextButton(pos_x(XO + 0), pos_y(YO - 1), 3 * button_width, 20, "Mouse");
+
+	AddMouseButtonEvent(pos_x(XO + 0),
+	                    pos_y(YO),
+	                    button_width,
+	                    button_height,
+	                    "L",
+	                    "mouse_left",
+	                    MouseButtonId::Left);
+
+	AddMouseButtonEvent(pos_x(XO + 1),
+	                    pos_y(YO),
+	                    button_width,
+	                    button_height,
+	                    "M",
+	                    "mouse_middle",
+	                    MouseButtonId::Middle);
+
+	AddMouseButtonEvent(pos_x(XO + 2),
+	                    pos_y(YO),
+	                    button_width,
+	                    button_height,
+	                    "R",
+	                    "mouse_right",
+	                    MouseButtonId::Right);
 #undef XO
 #undef YO
-#endif
 
 #define XO 10
 #define YO 8
