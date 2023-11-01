@@ -28,6 +28,7 @@
 #include "string_utils.h"
 
 #include <algorithm>
+#include <initializer_list>
 
 CHECK_NARROWING();
 
@@ -408,13 +409,14 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 		// LOG_INFO("MANYMOUSE #%u BUTTON %u %s", event.device,
 		// event.item, event.value ? "press" : "release");
 		if (no_interface || (critical_only && !event.value) ||
-		    (event.item >= max_buttons))
+		    (event.item > static_cast<uint8_t>(manymouse_max_button_id))) {
 			// TODO: Consider supporting extra mouse buttons
 			// in the future. On Linux event items 3-7 are for
 			// scroll wheel(s), 8 is for SDL button X1, 9 is
 			// for X2, etc. - but I don't know yet if this
 			// is consistent across various platforms
 			break;
+		}
 		MOUSE_EventButton(static_cast<MouseButtonId>(event.item),
 		                  event.value,
 		                  interface_id);
@@ -432,8 +434,9 @@ void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical
 		// LOG_INFO("MANYMOUSE #%u DISCONNECT", event.device);
 		physical_devices[event.device].disconnected = true;
 
-		for (uint8_t button = 0; button < max_buttons; ++button) {
-			const auto button_id = static_cast<MouseButtonId>(button);
+		for (const auto button_id : {MouseButtonId::Left,
+		                             MouseButtonId::Right,
+		                             MouseButtonId::Middle}) {
 			MOUSE_EventButton(button_id, false, interface_id);
 		}
 		MOUSE_NotifyDisconnect(interface_id);
