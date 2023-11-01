@@ -676,6 +676,8 @@ void INT10_SetCurMode(void) {
 			}
 			if (mode_changed && CurMode->type==M_TEXT) SetTextLines();
 			break;
+
+		default: assertm(false, "Invalid MachineType value");
 		}
 
 		if (mode_changed) {
@@ -820,6 +822,8 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		// handled in function INT10_SetVideoMode.
 		assert(false);
 		break;
+
+	default: assertm(false, "Invalid MachineType value");
 	}
 
 	//  Setup the VGA to the correct mode
@@ -979,6 +983,8 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		// handled in function INT10_SetVideoMode.
 		assert(false);
 		break;
+
+	default: assertm(false, "Invalid MachineType value");
 	}
 
 	RealPt vparams = RealGetVec(0x1d);
