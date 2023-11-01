@@ -91,6 +91,8 @@ void INT10_SetSinglePaletteRegister(uint8_t reg, uint8_t val)
 	case MCH_HERC:
 	case MCH_CGA:
 		break;
+
+	default: assertm(false, "Invalid MachineType value");
 	}
 }
 
@@ -115,6 +117,8 @@ void INT10_SetOverscanBorderColor(uint8_t val)
 	case MCH_HERC:
 	case MCH_CGA:
 		break;
+
+	default: assertm(false, "Invalid MachineType value");
 	}
 }
 
@@ -151,6 +155,8 @@ void INT10_SetAllPaletteRegisters(PhysPt data)
 	case MCH_HERC:
 	case MCH_CGA:
 		break;
+
+	default: assertm(false, "Invalid MachineType value");
 	}
 }
 
@@ -395,6 +401,8 @@ void INT10_SetBackgroundBorder(uint8_t val)
 
 	case MCH_HERC:
 		break;
+
+	default: assertm(false, "Invalid MachineType value");
 	}
 }
 

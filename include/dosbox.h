@@ -74,12 +74,13 @@ extern bool mono_cga;
 enum MachineType {
 	// In rough age-order: Hercules is the oldest and VGA is the newest
 	// (Tandy started out as a clone of the PCjr, so PCjr came first)
-	MCH_HERC  = 1 << 0,
-	MCH_CGA   = 1 << 1,
-	MCH_TANDY = 1 << 2,
-	MCH_PCJR  = 1 << 3,
-	MCH_EGA   = 1 << 4,
-	MCH_VGA   = 1 << 5,
+	MCH_INVALID = 0,
+	MCH_HERC    = 1 << 0,
+	MCH_CGA     = 1 << 1,
+	MCH_TANDY   = 1 << 2,
+	MCH_PCJR    = 1 << 3,
+	MCH_EGA     = 1 << 4,
+	MCH_VGA     = 1 << 5,
 };
 
 extern MachineType machine;

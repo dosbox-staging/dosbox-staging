@@ -641,6 +641,8 @@ void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bo
 			case MCH_HERC:
 			case MCH_TANDY:
 				break;
+
+			default: assertm(false, "Invalid MachineType value");
 		}
 	}
 
