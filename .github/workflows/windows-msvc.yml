@@ -20,10 +20,10 @@ jobs:
         conf:
           - name: MSVC 32-bit
             arch: x86
-            max_warnings: 20
+            max_warnings: 17
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 878
+            max_warnings: 875
 
     steps:
       - name: Checkout repository
