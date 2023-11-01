@@ -152,7 +152,7 @@ public:
 
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
-	void NotifyButton(const uint8_t idx, const bool pressed) override;
+	void NotifyButton(const MouseButtonId id, const bool pressed) override;
 	void NotifyWheel(const int16_t w_rel) override;
 	void NotifyBooting() override;
 
@@ -177,7 +177,7 @@ public:
 
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
-	void NotifyButton(const uint8_t idx, const bool pressed) override;
+	void NotifyButton(const MouseButtonId id, const bool pressed) override;
 	void NotifyWheel(const int16_t w_rel) override;
 	void NotifyBooting() override;
 
@@ -205,7 +205,7 @@ public:
 
 	void NotifyMoved(const float x_rel, const float y_rel,
 	                 const uint32_t x_abs, const uint32_t y_abs) override;
-	void NotifyButton(const uint8_t idx, const bool pressed) override;
+	void NotifyButton(const MouseButtonId id, const bool pressed) override;
 	void NotifyWheel(const int16_t w_rel) override;
 
 	void UpdateRate() override;
@@ -564,29 +564,21 @@ void MouseInterface::UpdateRate()
 	rate_hz = MOUSE_ClampRateHz(std::max(interface_rate_hz, min_rate_hz));
 }
 
-void MouseInterface::UpdateButtons(const uint8_t idx, const bool pressed)
+void MouseInterface::UpdateButtons(const MouseButtonId button_id, const bool pressed)
 {
 	old_buttons_12  = buttons_12;
 	old_buttons_345 = buttons_345;
 
-	switch (idx) {
-	case 0: // left button
-		buttons_12.left = pressed ? 1 : 0;
-		break;
-	case 1: // right button
-		buttons_12.right = pressed ? 1 : 0;
-		break;
-	case 2: // middle button
-		buttons_345.middle = pressed ? 1 : 0;
-		break;
-	case 3: // extra button #1
-		buttons_345.extra_1 = pressed ? 1 : 0;
-		break;
-	case 4: // extra button #2
-		buttons_345.extra_2 = pressed ? 1 : 0;
-		break;
-	default: // button not supported
-		return;
+	// clang-format off
+	switch (button_id) {
+	case MouseButtonId::Left:   buttons_12.left     = pressed; break;
+	case MouseButtonId::Right:  buttons_12.right    = pressed; break;
+	case MouseButtonId::Middle: buttons_345.middle  = pressed; break;
+	case MouseButtonId::Extra1: buttons_345.extra_1 = pressed; break;
+	case MouseButtonId::Extra2: buttons_345.extra_2 = pressed; break;
+	case MouseButtonId::None: // button not supported
+	// clang-format on
+	default: return;
 	}
 }
 
@@ -660,9 +652,9 @@ void InterfaceDos::NotifyMoved(const float x_rel, const float y_rel,
 	                     y_abs);
 }
 
-void InterfaceDos::NotifyButton(const uint8_t idx, const bool pressed)
+void InterfaceDos::NotifyButton(const MouseButtonId button_id, const bool pressed)
 {
-	UpdateButtons(idx, pressed);
+	UpdateButtons(button_id, pressed);
 	if (GCC_UNLIKELY(!ChangedButtonsSquished())) {
 		return;
 	}
@@ -729,9 +721,9 @@ void InterfacePS2::NotifyMoved(const float x_rel, const float y_rel,
 	MOUSEPS2_NotifyMoved(x_rel * sensitivity_coeff_x, y_rel * sensitivity_coeff_y);
 }
 
-void InterfacePS2::NotifyButton(const uint8_t idx, const bool pressed)
+void InterfacePS2::NotifyButton(const MouseButtonId button_id, const bool pressed)
 {
-	UpdateButtons(idx, pressed);
+	UpdateButtons(button_id, pressed);
 	if (GCC_UNLIKELY(!ChangedButtonsJoined())) {
 		return;
 	}
@@ -792,16 +784,16 @@ void InterfaceCOM::NotifyMoved(const float x_rel, const float y_rel,
 	                      y_rel * sensitivity_coeff_y);
 }
 
-void InterfaceCOM::NotifyButton(const uint8_t idx, const bool pressed)
+void InterfaceCOM::NotifyButton(const MouseButtonId button_id, const bool pressed)
 {
 	assert(listener);
 
-	UpdateButtons(idx, pressed);
+	UpdateButtons(button_id, pressed);
 	if (GCC_UNLIKELY(!ChangedButtonsSquished())) {
 		return;
 	}
 
-	listener->NotifyButton(GetButtonsSquished()._data, idx);
+	listener->NotifyButton(GetButtonsSquished()._data, button_id);
 }
 
 void InterfaceCOM::NotifyWheel(const int16_t w_rel)

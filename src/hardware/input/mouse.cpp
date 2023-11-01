@@ -561,7 +561,7 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	}
 }
 
-void MOUSE_EventButton(const uint8_t idx, const bool pressed)
+void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed)
 {
 	// Event from GFX
 
@@ -576,14 +576,15 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed)
 			return;
 		}
 
+		const auto is_middle = (button_id == MouseButtonId::Middle);
+
 		// Handle mouse capture toggle by middle click
-		constexpr uint8_t idx_middle = 2;
-		if (idx == idx_middle && state.should_capture_on_middle) {
+		if (is_middle && state.should_capture_on_middle) {
 			state.capture_was_requested = true;
 			MOUSE_UpdateGFX();
 			return;
 		}
-		if (idx == idx_middle && state.should_release_on_middle) {
+		if (is_middle && state.should_release_on_middle) {
 			state.capture_was_requested = false;
 			MOUSE_UpdateGFX();
 			return;
@@ -598,10 +599,10 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed)
 	// Notify mouse interfaces
 	for (auto &interface : mouse_interfaces)
 		if (interface->IsUsingHostPointer())
-			interface->NotifyButton(idx, pressed);
+			interface->NotifyButton(button_id, pressed);
 }
 
-void MOUSE_EventButton(const uint8_t idx, const bool pressed,
+void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed,
                        const MouseInterfaceId interface_id)
 {
 	// Event from ManyMouse
@@ -616,7 +617,7 @@ void MOUSE_EventButton(const uint8_t idx, const bool pressed,
 	// Notify mouse interface
 	auto interface = MouseInterface::Get(interface_id);
 	if (interface && interface->IsUsingEvents()) {
-		interface->NotifyButton(idx, pressed);
+		interface->NotifyButton(button_id, pressed);
 	}
 }
 

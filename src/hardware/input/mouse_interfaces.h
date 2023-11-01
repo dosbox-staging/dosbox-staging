@@ -127,7 +127,7 @@ public:
 
 	virtual void NotifyMoved(const float x_rel, const float y_rel,
 	                         const uint32_t x_abs, const uint32_t y_abs) = 0;
-	virtual void NotifyButton(const uint8_t idx, const bool pressed) = 0;
+	virtual void NotifyButton(const MouseButtonId id, const bool pressed) = 0;
 	virtual void NotifyWheel(const int16_t w_rel) = 0;
 
 	void NotifyInterfaceRate(const uint16_t rate_hz);
@@ -182,7 +182,7 @@ protected:
 	virtual void UpdateSensitivity();
 	virtual void UpdateMinRate();
 	virtual void UpdateRate();
-	void UpdateButtons(const uint8_t idx, const bool pressed);
+	void UpdateButtons(const MouseButtonId id, const bool pressed);
 	void ResetButtons();
 
 	bool ChangedButtonsJoined() const;
