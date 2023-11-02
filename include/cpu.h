@@ -61,7 +61,6 @@ extern int32_t CPU_CyclePercUsed;
 extern int32_t CPU_CycleLimit;
 extern int64_t CPU_IODelayRemoved;
 extern bool CPU_CycleAutoAdjust;
-extern bool CPU_SkipCycleAutoAdjust;
 extern Bitu CPU_AutoDetermineMode;
 
 extern ArchitectureType CPU_ArchitectureType;
@@ -90,8 +89,6 @@ Bits CPU_Core_Dynrec_Trap_Run() noexcept;
 Bits CPU_Core_Prefetch_Run() noexcept;
 Bits CPU_Core_Prefetch_Trap_Run() noexcept;
 
-void CPU_Enable_SkipAutoAdjust(void);
-void CPU_Disable_SkipAutoAdjust(void);
 void CPU_Reset_AutoAdjust(void);
 
 

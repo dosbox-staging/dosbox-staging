@@ -222,7 +222,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	ticksAdded = ticksRemain;
 
 	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
-	if (!CPU_CycleAutoAdjust || CPU_SkipCycleAutoAdjust) return;
+	if (!CPU_CycleAutoAdjust) return;
 
 	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero

@@ -60,7 +60,6 @@ int32_t CPU_CycleDown = 0;
 int64_t CPU_IODelayRemoved = 0;
 CPU_Decoder * cpudecoder;
 bool CPU_CycleAutoAdjust = false;
-bool CPU_SkipCycleAutoAdjust = false;
 Bitu CPU_AutoDetermineMode = 0;
 
 ArchitectureType CPU_ArchitectureType = ArchitectureType::Mixed;
@@ -2163,20 +2162,6 @@ static void CPU_CycleDecrease(bool pressed) {
 	}
 }
 
-void CPU_Enable_SkipAutoAdjust(void) {
-	if (CPU_CycleAutoAdjust) {
-		CPU_CycleMax /= 2;
-		if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT)
-			CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
-	}
-	CPU_SkipCycleAutoAdjust=true;
-}
-
-void CPU_Disable_SkipAutoAdjust(void) {
-	CPU_SkipCycleAutoAdjust=false;
-}
-
-
 extern int64_t ticksDone;
 extern int64_t ticksScheduled;
 
@@ -2260,7 +2245,6 @@ public:
 		CPU_AutoDetermineMode=CPU_AUTODETERMINE_NONE;
 		//CPU_CycleLeft=0;//needed ?
 		CPU_Cycles=0;
-		CPU_SkipCycleAutoAdjust=false;
 
 		// Sets the value if the string in within the min and max values
 		auto set_if_in_range = [](const std::string &str, int &value,

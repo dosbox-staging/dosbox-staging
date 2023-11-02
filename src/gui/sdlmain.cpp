@@ -2225,9 +2225,6 @@ void GFX_SetMouseVisibility(const bool requested_visible)
 
 static void FocusInput()
 {
-	// Ensure auto-cycles are enabled
-	CPU_Disable_SkipAutoAdjust();
-
 #if defined(WIN32)
 	sdl.focus_ticks = GetTicks();
 #endif
@@ -3857,7 +3854,6 @@ bool GFX_Events()
 #endif
 				ApplyInactiveSettings();
 				GFX_LosingFocus();
-				CPU_Enable_SkipAutoAdjust();
 				break;
 
 			case SDL_WINDOWEVENT_ENTER:
@@ -4006,7 +4002,6 @@ bool GFX_Events()
 										paused = false;
 										ApplyActiveSettings();
 									}
-									CPU_Disable_SkipAutoAdjust();
 								}
 
 								/* Now poke a "release ALT" command into the keyboard buffer
