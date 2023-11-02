@@ -65,7 +65,7 @@ static std::vector<comdata_t> internal_progs_comdata;
 static std::vector<PROGRAMS_Creator> internal_progs;
 
 static uint8_t last_written_character = '\n';
-constexpr int WriteOutBufSize         = 2048;
+constexpr int WriteOutBufSize         = 4096;
 
 static void write_to_stdout(std::string_view output)
 {
