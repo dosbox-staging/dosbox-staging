@@ -3403,6 +3403,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 	SDL_SetWindowOpacity(sdl.window, alpha);
+	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
+	SetIcon();
 
 	RENDER_Reinit();
 }
@@ -3553,9 +3555,6 @@ static void GUI_StartUp(Section *sec)
 	}
 
 	set_output(section, RENDER_IsAspectRatioCorrectionEnabled());
-
-	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
-	SetIcon();
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
