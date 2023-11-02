@@ -35,6 +35,7 @@ constexpr auto SharpShaderName    = "interpolation/sharp";
 constexpr auto AutoGraphicsStandardShaderName = "crt-auto";
 constexpr auto AutoMachineShaderName          = "crt-auto-machine";
 constexpr auto AutoArcadeShaderName           = "crt-auto-arcade";
+constexpr auto AutoArcadeSharpShaderName      = "crt-auto-arcade-sharp";
 
 enum class ShaderMode {
 	// No shader auto-switching; the 'glshader' setting always contains the
@@ -86,7 +87,11 @@ enum class ShaderMode {
 	// plus it allows you to play DOS ports of Amiga games or other 16-bit
 	// home computers with a single-scanned 15 kHz monitor look.
 	//
-	AutoArcade
+	AutoArcade,
+
+	// A sharper variant of the arcade shader. It's the exact same shader but
+	// with pixel-doubling enabled.
+	AutoArcadeSharp
 };
 
 struct ShaderSettings {
@@ -159,6 +164,7 @@ private:
 	std::string FindShaderAutoGraphicsStandard() const;
 	std::string FindShaderAutoMachine() const;
 	std::string FindShaderAutoArcade() const;
+	std::string FindShaderAutoArcadeSharp() const;
 
 	std::string GetHerculesShader() const;
 	std::string GetCgaShader() const;

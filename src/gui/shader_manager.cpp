@@ -61,7 +61,14 @@ void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
 			mode = ShaderMode::AutoArcade;
 
 			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
-			        "CRT shader");
+			        "CRT shader (normal variant)");
+		}
+	} else if (shader_name == AutoArcadeSharpShaderName) {
+		if (mode != ShaderMode::AutoArcadeSharp) {
+			mode = ShaderMode::AutoArcadeSharp;
+
+			LOG_MSG("RENDER: Using adaptive arcade monitor emulation "
+			        "CRT shader (sharp variant)");
 		}
 	} else {
 		mode = ShaderMode::Single;
@@ -384,6 +391,11 @@ void ShaderManager::MaybeAutoSwitchShader()
 			shader_changed = maybe_load_shader(FindShaderAutoArcade());
 			break;
 
+		case ShaderMode::AutoArcadeSharp:
+			shader_changed = maybe_load_shader(
+			        FindShaderAutoArcadeSharp());
+			break;
+
 		default: assertm(false, "Invalid ShaderMode value");
 		}
 
@@ -563,6 +575,20 @@ std::string ShaderManager::FindShaderAutoArcade() const
 	}
 	if (scale_y_force_single_scan >= 3.0) {
 		return "crt/arcade-1080p";
+	}
+	return SharpShaderName;
+}
+
+std::string ShaderManager::FindShaderAutoArcadeSharp() const
+{
+	if (scale_y_force_single_scan >= 8.0) {
+		return "crt/arcade-sharp-4k";
+	}
+	if (scale_y_force_single_scan >= 5.0) {
+		return "crt/arcade-sharp-1440p";
+	}
+	if (scale_y_force_single_scan >= 3.0) {
+		return "crt/arcade-sharp-1080p";
 	}
 	return SharpShaderName;
 }
