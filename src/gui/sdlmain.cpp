@@ -316,9 +316,9 @@ void GFX_SetTitle(const int32_t new_num_cycles, const bool is_paused = false)
 	char title_buf[200] = {0};
 
 #if !defined(NDEBUG)
-	#define APP_NAME_STR "DOSBox Staging (debug build)"
+	#define APP_NAME_STR DOSBOX_NAME " (debug build)"
 #else
-	#define APP_NAME_STR "DOSBox Staging"
+	#define APP_NAME_STR DOSBOX_NAME
 #endif
 
 	auto &num_cycles      = sdl.title_bar.num_cycles;
@@ -3403,7 +3403,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 	SDL_SetWindowOpacity(sdl.window, alpha);
-	SDL_SetWindowTitle(sdl.window, "DOSBox Staging");
+	SDL_SetWindowTitle(sdl.window, APP_NAME_STR);
 	SetIcon();
 
 	RENDER_Reinit();
