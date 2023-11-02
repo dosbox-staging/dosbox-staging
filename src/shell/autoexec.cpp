@@ -298,7 +298,7 @@ AutoExecModule::AutoExecModule(Section* configuration)
 	std::string argument = {};
 
 	bool exit_call_exists = false;
-	while (cmdline->FindString("-c", argument, true)) {
+	while (cmdline->FindRemoveString("-c", argument)) {
 #if defined(WIN32)
 		// Replace single with double quotes so that mount commands
 		// can contain spaces

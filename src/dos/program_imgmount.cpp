@@ -156,18 +156,18 @@ void IMGMOUNT::Run(void)
 	std::vector<std::string> paths;
 	std::string umount;
 	/* Check for unmounting */
-	if (cmd->FindString("-u", umount, false)) {
+	if (cmd->FindString("-u", umount)) {
 		WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
 		return;
 	}
 
 	std::string type   = "hdd";
 	std::string fstype = "fat";
-	cmd->FindString("-t", type, true);
-	cmd->FindString("-fs", fstype, true);
+	cmd->FindRemoveString("-t", type);
+	cmd->FindRemoveString("-fs", fstype);
 
 	bool roflag = false;
-	if (cmd->FindExist("-ro", true)) {
+	if (cmd->FindRemoveExist("-ro")) {
 		roflag = true;
 	}
 
@@ -194,8 +194,8 @@ void IMGMOUNT::Run(void)
 	std::string ide_value     = {};
 	int8_t ide_index          = -1;
 	bool is_second_cable_slot = false;
-	const bool wants_ide      = cmd->FindString("-ide", ide_value, true) ||
-	                       cmd->FindExist("-ide", true);
+	const bool wants_ide      = cmd->FindRemoveString("-ide", ide_value) ||
+	                       cmd->FindRemoveExist("-ide");
 
 	if (type == "iso") {
 		// str_size="2048,1,65535,0";	// ignored, see drive_iso.cpp
@@ -206,7 +206,7 @@ void IMGMOUNT::Run(void)
 		}
 	}
 
-	cmd->FindString("-size", str_size, true);
+	cmd->FindRemoveString("-size", str_size);
 	if ((type == "hdd") && (str_size.size() == 0)) {
 		imgsizedetect = true;
 	} else {

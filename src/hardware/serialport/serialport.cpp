@@ -186,21 +186,26 @@ static void SERIAL_Write(io_port_t port, io_val_t value, io_width_t)
 	        }
 }
 #if SERIAL_DEBUG
-void CSerial::log_ser(bool active, char const* format,...) {
-	if(active) {
-		// copied from DEBUG_SHOWMSG
-		char buf[512];
-		buf[0]=0;
-		sprintf(buf, "%12.3f [% 7d] ", PIC_FullIndex(), static_cast<int>(GetTicks()));
-		va_list msg;
-		va_start(msg,format);
-		vsprintf(buf+strlen(buf),format,msg);
-		va_end(msg);
-		// Add newline if not present
-		const uint32_t len = safe_strlen(buf);
-		if(buf[len-1]!='\n') strcat(buf,"\r\n");
-		fputs(buf,debugfp);
-	}
+void CSerial::log_ser(bool active, const char* format, ...)
+{
+	        if (active) {
+		        // copied from DEBUG_SHOWMSG
+		        char buf[512];
+		        buf[0] = 0;
+		        sprintf(buf,
+		                "%12.3f [% 7d] ",
+		                PIC_FullIndex(),
+		                static_cast<int>(GetTicks()));
+		        va_list msg;
+		        va_start(msg, format);
+		        vsprintf(buf + strlen(buf), format, msg);
+		        va_end(msg);
+		        // Add newline if not present
+		        const uint32_t len = safe_strlen(buf);
+		        if (buf[len - 1] != '\n')
+			        strcat(buf, "\r\n");
+		        fputs(buf, debugfp);
+	        }
 }
 #endif
 
@@ -1129,20 +1134,19 @@ CSerial::CSerial(const uint8_t port_idx, CommandLine *cmd)
 		irq = serial_defaultirq[port_index];
 
 #if SERIAL_DEBUG
-	dbg_serialtraffic = cmd->FindExist("dbgtr", false);
-	dbg_modemcontrol  = cmd->FindExist("dbgmd", false);
-	dbg_register      = cmd->FindExist("dbgreg", false);
-	dbg_interrupt     = cmd->FindExist("dbgirq", false);
-	dbg_aux			  = cmd->FindExist("dbgaux", false);
-	
-	if(cmd->FindExist("dbgall", false)) {
+	dbg_serialtraffic = cmd->FindExist("dbgtr");
+	dbg_modemcontrol  = cmd->FindExist("dbgmd");
+	dbg_register      = cmd->FindExist("dbgreg");
+	dbg_interrupt     = cmd->FindExist("dbgirq");
+	dbg_aux           = cmd->FindExist("dbgaux");
+
+	if (cmd->FindExist("dbgall")) {
 		dbg_serialtraffic= 
 		dbg_modemcontrol= 
 		dbg_register=
 		dbg_interrupt=
 		dbg_aux= true;
 	}
-
 
 	if(dbg_serialtraffic|dbg_modemcontrol|dbg_register|dbg_interrupt|dbg_aux)
 		debugfp=CAPTURE_CreateFile(CaptureType::SerialLog);
@@ -1190,8 +1194,9 @@ bool CSerial::getUintFromString(const char *name, uint32_t &data, CommandLine *c
 {
 	bool result = false;
 	std::string tmpstring;
-	if (cmd->FindStringBegin(name, tmpstring, false))
+	if (cmd->FindStringBegin(name, tmpstring)) {
 		result = (sscanf(tmpstring.c_str(), "%" PRIu32, &data) == 1);
+	}
 	return result;
 }
 

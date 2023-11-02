@@ -58,19 +58,15 @@ void MORE::Run()
 bool MORE::ParseCommandLine(MoreOutputFiles &output)
 {
 	// Check (and remove if found) all the simple arguments
-	auto has_arg = [&](const char* arg) {
-		constexpr bool remove_if_found = true;
-		return cmd->FindExist(arg, remove_if_found);
-	};
-	output.SetOptionClear(has_arg("/c"));
-	output.SetOptionExtendedMode(has_arg("/e"));
-	output.SetOptionExpandFormFeed(has_arg("/p"));
-	output.SetOptionSquish(has_arg("/s"));
+	output.SetOptionClear(cmd->FindRemoveExist("/c"));
+	output.SetOptionExtendedMode(cmd->FindRemoveExist("/e"));
+	output.SetOptionExpandFormFeed(cmd->FindRemoveExist("/p"));
+	output.SetOptionSquish(cmd->FindRemoveExist("/s"));
 
 	std::string tmp_str;
 
 	// Check if specified tabulation size
-	if (cmd->FindStringBegin("/t", tmp_str, true)) {
+	if (cmd->FindRemoveStringBegin("/t", tmp_str)) {
 		const auto value = parse_int(tmp_str);
 		if (!value || *value < 1 || *value > 9) {
 			std::string full_switch = std::string("/t") + tmp_str;
@@ -83,7 +79,7 @@ bool MORE::ParseCommandLine(MoreOutputFiles &output)
 	}
 
 	// Check if specified start line
-	if (cmd->FindStringBegin("+", tmp_str, true)) {
+	if (cmd->FindRemoveStringBegin("+", tmp_str)) {
 		const auto value = parse_int(tmp_str);
 		if (!value || *value < 0) {
 			std::string full_switch = std::string("+") + tmp_str;

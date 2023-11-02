@@ -77,7 +77,7 @@ void INTRO::Run(void) {
 	}
     /* Only run if called from the first shell (Xcom TFTD runs any intro file in the path) */
     if (DOS_PSP(dos.psp()).GetParent() != DOS_PSP(DOS_PSP(dos.psp()).GetParent()).GetParent()) return;
-    if (cmd->FindExist("cdrom",false)) {
+    if (cmd->FindExist("cdrom")) {
 #ifdef WIN32
         WriteOut(MSG_Get("PROGRAM_INTRO_CDROM_WINDOWS"));
 #else
@@ -85,13 +85,13 @@ void INTRO::Run(void) {
 #endif
         return;
     }
-    if (cmd->FindExist("mount",false)) {
-        WriteOut("\033[2J");//Clear screen before printing
+    if (cmd->FindExist("mount")) {
+	WriteOut("\033[2J");//Clear screen before printing
         DisplayMount();
         return;
     }
-    if (cmd->FindExist("special",false)) {
-        WriteOutProgramIntroSpecial();
+    if (cmd->FindExist("special")) {
+	WriteOutProgramIntroSpecial();
         return;
     }
     /* Default action is to show all pages */

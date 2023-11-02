@@ -2292,8 +2292,8 @@ public:
 
 	void Run() override
 	{
-		if(cmd->FindExist("/NOMOUSE",false)) {
-	        	real_writed(0,0x33<<2,0);
+		if (cmd->FindExist("/nomouse")) {
+			real_writed(0,0x33<<2,0);
 			return;
 		}
 

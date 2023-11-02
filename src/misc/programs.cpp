@@ -280,8 +280,7 @@ void Program::InjectMissingNewline()
 
 bool Program::HelpRequested()
 {
-	return cmd->FindExist("/?", false) || cmd->FindExist("-h", false) ||
-	       cmd->FindExist("--help", false);
+	return cmd->FindExist("/?", "-h", "--help");
 }
 
 void Program::AddToHelpList()

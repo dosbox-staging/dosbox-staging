@@ -47,14 +47,12 @@ void TREE::Run()
 	has_option_ascii = false;
 	has_option_files = false;
 
-	constexpr bool remove_if_found = true;
-
-	has_option_ascii = cmd->FindExist("/a", remove_if_found);
-	has_option_files = cmd->FindExist("/f", remove_if_found);
+	has_option_ascii = cmd->FindRemoveExist("/a");
+	has_option_files = cmd->FindRemoveExist("/f");
 	// DR-DOS
-	has_option_brief = cmd->FindExist("/b", remove_if_found);
+	has_option_brief = cmd->FindRemoveExist("/b");
 	// DR-DOS, pdTree
-	has_option_paging = cmd->FindExist("/p", remove_if_found);
+	has_option_paging = cmd->FindRemoveExist("/p");
 	// According to http://help.fdos.org/en/hhstndrd/tree.htm there were
 	// plans to implement the following options in FreeDOS:
 	// - /DF - display file sizes
@@ -62,38 +60,38 @@ void TREE::Run()
 	// - /DH - display hidden and system files (normally not shown)
 	// - /DR - display results (file and subdirectory count) after each one
 	// - /On - sort options, like with DIR command
-	has_option_attr   = cmd->FindExist("/da", remove_if_found);
-	has_option_size   = cmd->FindExist("/df", remove_if_found);
-	has_option_hidden = cmd->FindExist("/dh", remove_if_found);
-	if (cmd->FindExist("/on", remove_if_found)) {
+	has_option_attr   = cmd->FindRemoveExist("/da");
+	has_option_size   = cmd->FindRemoveExist("/df");
+	has_option_hidden = cmd->FindRemoveExist("/dh");
+	if (cmd->FindRemoveExist("/on")) {
 		option_sorting = ResultSorting::ByName;
 		option_reverse = false;
 	}
-	if (cmd->FindExist("/o-n", remove_if_found)) {
+	if (cmd->FindRemoveExist("/o-n")) {
 		option_sorting = ResultSorting::ByName;
 		option_reverse = true;
 	}
-	if (cmd->FindExist("/os", remove_if_found)) {
+	if (cmd->FindRemoveExist("/os")) {
 		option_sorting = ResultSorting::BySize;
 		option_reverse = false;
 	}
-	if (cmd->FindExist("/o-s", remove_if_found)) {
+	if (cmd->FindRemoveExist("/o-s")) {
 		option_sorting = ResultSorting::BySize;
 		option_reverse = true;
 	}
-	if (cmd->FindExist("/od", remove_if_found)) {
+	if (cmd->FindRemoveExist("/od")) {
 		option_sorting = ResultSorting::ByDateTime;
 		option_reverse = false;
 	}
-	if (cmd->FindExist("/o-d", remove_if_found)) {
+	if (cmd->FindRemoveExist("/o-d")) {
 		option_sorting = ResultSorting::ByDateTime;
 		option_reverse = true;
 	}
-	if (cmd->FindExist("/oe", remove_if_found)) {
+	if (cmd->FindRemoveExist("/oe")) {
 		option_sorting = ResultSorting::ByExtension;
 		option_reverse = false;
 	}
-	if (cmd->FindExist("/o-e", remove_if_found)) {
+	if (cmd->FindRemoveExist("/o-e")) {
 		option_sorting = ResultSorting::ByExtension;
 		option_reverse = true;
 	}

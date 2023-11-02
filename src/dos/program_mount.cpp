@@ -148,22 +148,24 @@ void MOUNT::Run(void) {
 		return;
 	}
 	bool path_relative_to_last_config = false;
-	if (cmd->FindExist("-pr",true)) path_relative_to_last_config = true;
+	if (cmd->FindRemoveExist("-pr")) {
+		path_relative_to_last_config = true;
+	}
 
 	/* Check for unmounting */
-	if (cmd->FindString("-u",umount,false)) {
+	if (cmd->FindString("-u", umount)) {
 		WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
 		return;
 	}
 
 	/* Check for moving Z: */
 	/* Only allowing moving it once. It is merely a convenience added for the wine team */
-	if (ZDRIVE_NUM == 25 && cmd->FindString("-z", newz,false)) {
+	if (ZDRIVE_NUM == 25 && cmd->FindString("-z", newz)) {
 		Move_Z(newz[0]);
 		return;
 	}
 
-	if (cmd->FindExist("-cd", false) || cmd->FindExist("-listcd", false)) {
+	if (cmd->FindExist("-cd", "-listcd")) {
 		int num = SDL_CDNumDrives();
 		WriteOut(MSG_Get("PROGRAM_MOUNT_CDROMS_FOUND"), num);
 		for (int i = 0; i < num; i++)
@@ -176,7 +178,7 @@ void MOUNT::Run(void) {
 	assert(section);
 
 	std::string type="dir";
-	cmd->FindString("-t",type,true);
+	cmd->FindRemoveString("-t", type);
 	bool iscdrom = (type =="cdrom"); //Used for mscdex bug cdrom label name emulation
 	if (type=="floppy" || type=="dir" || type=="cdrom" || type =="overlay") {
 		uint16_t sizes[4] ={0};
@@ -199,7 +201,7 @@ void MOUNT::Run(void) {
 		}
 		/* Parse the free space in mb's (kb's for floppies) */
 		std::string mb_size;
-		if (cmd->FindString("-freesize",mb_size,true)) {
+		if (cmd->FindRemoveString("-freesize", mb_size)) {
 			char teststr[1024];
 			uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
 			if (type=="floppy") {
@@ -216,7 +218,7 @@ void MOUNT::Run(void) {
 			str_size=teststr;
 		}
 
-		cmd->FindString("-size",str_size,true);
+		cmd->FindRemoveString("-size", str_size);
 		char number[21] = { 0 };const char * scan = str_size.c_str();
 		Bitu index = 0;Bitu count = 0;
 		/* Parse the str_size string */
@@ -319,11 +321,13 @@ void MOUNT::Run(void) {
 		if (type == "cdrom") {
 			// Following options were relevant only for physical CD-ROM support:
 			for (auto opt : {"-noioctl", "-ioctl", "-ioctl_dx", "-ioctl_mci", "-ioctl_dio"}) {
-				if (cmd->FindExist(opt, false))
-					WriteOut(MSG_Get("MSCDEX_WARNING_NO_OPTION"), opt);
+				if (cmd->FindExist(opt)) {
+					WriteOut(MSG_Get("MSCDEX_WARNING_NO_OPTION"),
+					         opt);
+				}
 			}
 			int num = -1;
-			cmd->FindInt("-usecd", num, true);
+			cmd->FindRemoveInt("-usecd", num);
 			MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
 
 			int error = 0;
@@ -424,7 +428,7 @@ void MOUNT::Run(void) {
 		         temp_line.c_str(),
 		         drive);
 	/* check if volume label is given and don't allow it to updated in the future */
-	if (cmd->FindString("-label", label, true)) {
+	if (cmd->FindRemoveString("-label", label)) {
 		drive_pointer->dirCache.SetLabel(label.c_str(), iscdrom, false);
 	}
 	/* For hard drives set the label to DRIVELETTER_Drive.

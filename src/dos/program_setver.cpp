@@ -62,17 +62,14 @@ void SETVER::Run()
 	}
 
 	// Retrieve all the switches
-	constexpr bool remove_if_found = true;
-	const bool has_arg_delete = cmd->FindExist("/d", remove_if_found) ||
-	                            cmd->FindExist("/delete", remove_if_found);
-	const bool has_arg_quiet = cmd->FindExist("/q", remove_if_found) ||
-	                           cmd->FindExist("/quiet", remove_if_found);
+	const bool has_arg_delete = cmd->FindRemoveExist("/d", "/delete");
+	const bool has_arg_quiet  = cmd->FindRemoveExist("/q", "/quiet");
 	// DR-DOS extensions
-	const bool has_arg_batch  = cmd->FindExist("/b", remove_if_found);
-	const bool has_arg_global = cmd->FindExist("/g", remove_if_found);
-	const bool has_arg_paged  = cmd->FindExist("/p", remove_if_found);
+	const bool has_arg_batch  = cmd->FindRemoveExist("/b");
+	const bool has_arg_global = cmd->FindRemoveExist("/g");
+	const bool has_arg_paged  = cmd->FindRemoveExist("/p");
 	// DOSBox Staging extensions
-	const bool has_arg_all = cmd->FindExist("/all", remove_if_found);
+	const bool has_arg_all = cmd->FindRemoveExist("/all");
 
 	// TODO: DR-DOS also provides /x switch to deal with BDOS versions - for
 	// now this is not implemented, it is unclear to me what it exactly does

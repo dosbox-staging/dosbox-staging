@@ -41,25 +41,58 @@ public:
 	CommandLine(int argc, const char* const argv[]);
 	CommandLine(std::string_view name, std::string_view cmdline);
 
-	const char* GetFileName() const
+	std::string GetFileName() const
 	{
-		return file_name.c_str();
+		return file_name;
 	}
 
-	bool FindExist(const char* const name, bool remove = false);
-	bool FindInt(const char* const name, int& value, bool remove = false);
+	// Checks if any of the supplier arguments (like "/?) exists on the
+	// command line argument list.
+	bool FindExist(const std::string& arg);
+	template <typename... T>
+	bool FindExist(const std::string& first, const T... others)
+	{
+		return FindExist(first) || FindExist(others...);
+	}
 
-	bool FindString(const char* const name, std::string& value,
-	                bool remove = false);
+	// Checks if any of the supplier arguments (like "/?) exists on the
+	// command line argument list.
+	// All the matching arguments are removed from the list.
+	bool FindRemoveExist(const std::string& arg);
+	template <typename... T>
+	bool FindRemoveExist(const std::string& first, const T... others)
+	{
+		// Make sure both are called
+		const auto result1 = FindRemoveExist(first);
+		const auto result2 = FindRemoveExist(others...);
+		return result1 || result2;
+	}
 
-	bool FindCommand(unsigned int which, std::string& value) const;
+	// Checks if any of the supplier arguments (like "-n") exists on the
+	// command line argument list, and that the next argument is a number.
+	// Number is parsed and returned.
+	bool FindInt(const std::string& arg, int& value);
+	// As above, but removes both arguments.
+	bool FindRemoveInt(const std::string& arg, int& value);
 
-	bool FindStringBegin(const char* const begin, std::string& value,
-	                     bool remove = false);
+	// Checks if any of the supplier arguments (like "-n") exists on the
+	// command line argument list, and that the next argument exists.
+	// The next argument is returned as a string.
+	bool FindString(const std::string& arg, std::string& value);
+	// As above, but removes both arguments.
+	bool FindRemoveString(const std::string& arg, std::string& value);
 
-	bool FindStringRemain(const char* const name, std::string& value);
+	bool FindCommand(const size_t, std::string& value) const;
 
-	bool FindStringRemainBegin(const char* const name, std::string& value);
+	bool FindStringBegin(const std::string& arg, std::string& value);
+	bool FindRemoveStringBegin(const std::string& arg, std::string& value);
+
+	bool FindStringRemain(const std::string& arg, std::string& value);
+
+	// Only used for parsing 'COMMAND.COM /C', allows '/C dir' and '/Cdir'.
+	// Restores quotes back into the commands so than commands like
+	// '/C mount d "/tmp/a b"'' work as intended.
+	bool FindStringRemainBegin(const std::string& arg, std::string& value);
 
 	bool GetStringRemain(std::string& value);
 
@@ -71,22 +104,24 @@ public:
 	bool HasDirectory() const;
 	bool HasExecutableName() const;
 
-	unsigned int GetCount(void);
+	size_t GetCount() const;
 
 	bool ExistsPriorTo(const std::list<std::string_view>& pre_args,
 	                   const std::list<std::string_view>& post_args) const;
 
-	void Shift(unsigned int amount = 1);
+	void Shift(const size_t amount = 1);
 	uint16_t Get_arglength();
 
-	bool FindRemoveBoolArgument(const std::string& name, char short_letter = 0);
+	bool FindBoolArgument(const std::string& arg, const char short_letter = 0);
+	bool FindRemoveBoolArgument(const std::string& name,
+	                            const char short_letter = 0);
 
 	std::string FindRemoveStringArgument(const std::string& name);
 
 	std::vector<std::string> FindRemoveVectorArgument(const std::string& name);
 
 	std::optional<std::vector<std::string>> FindRemoveOptionalArgument(
-	        const std::string& name);
+	        const std::string& arg);
 
 	std::optional<int> FindRemoveIntArgument(const std::string& name);
 
@@ -96,12 +131,10 @@ private:
 	std::list<std::string> cmds = {};
 	std::string file_name       = "";
 
-	bool FindEntry(const char* const name, cmd_it& it, bool neednext = false);
+	bool FindEntry(const std::string& arg, cmd_it& it,
+	               const bool needs_next = false);
 
-	std::string FindRemoveSingleString(const char* name);
-
-	bool FindBoolArgument(const std::string& name, bool remove,
-	                      char short_letter = 0);
+	std::string FindRemoveSingleString(const std::string& arg);
 };
 
 class Program {

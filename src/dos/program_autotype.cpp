@@ -87,7 +87,7 @@ bool AUTOTYPE::ReadDoubleArg(const std::string &name,
 	std::string str_value;
 
 	// Is the user trying to set this flag?
-	if (cmd->FindString(flag, str_value, true)) {
+	if (cmd->FindRemoveString(flag, str_value)) {
 		// Can the user's value be parsed?
 		const double user_value = to_finite<double>(str_value);
 		if (std::isfinite(user_value)) {
@@ -129,7 +129,7 @@ void AUTOTYPE::Run()
 	}
 
 	// Print available keys
-	if (cmd->FindExist("-list", false)) {
+	if (cmd->FindExist("-list")) {
 		PrintKeys();
 		return;
 	}

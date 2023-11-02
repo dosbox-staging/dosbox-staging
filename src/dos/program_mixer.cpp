@@ -740,13 +740,12 @@ void MIXER::Run()
 		output.Display();
 		return;
 	}
-	if (cmd->FindExist("/LISTMIDI")) {
+	if (cmd->FindExist("/listmidi")) {
 		MIDI_ListAll(this);
 		return;
 	}
 
-	constexpr auto remove = true;
-	auto show_status      = !cmd->FindExist("/NOSHOW", remove);
+	auto show_status = !cmd->FindRemoveExist("/noshow");
 
 	if (cmd->GetCount() == 0) {
 		if (show_status) {

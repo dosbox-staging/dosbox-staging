@@ -40,7 +40,9 @@ CDirectSerial::CDirectSerial(const uint8_t port_idx, CommandLine *cmd)
     rx_retry_max = 0;
 
 	std::string tmpstring;
-	if(!cmd->FindStringBegin("realport:",tmpstring,false)) return;
+	if (!cmd->FindStringBegin("realport:", tmpstring)) {
+		return;
+	}
 
 	LOG_MSG("SERIAL: Port %" PRIu8 " opening %s.", GetPortNumber(), tmpstring.c_str());
 	if(!SERIAL_open(tmpstring.c_str(), &comport)) {

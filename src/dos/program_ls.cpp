@@ -42,8 +42,7 @@ void LS::Run()
 		return;
 	}
 
-	constexpr bool remove_if_found = true;
-	const bool has_option_all = cmd->FindExist("/a", remove_if_found);
+	const bool has_option_all = cmd->FindRemoveExist("/a");
 
 	auto patterns = cmd->GetArguments();
 

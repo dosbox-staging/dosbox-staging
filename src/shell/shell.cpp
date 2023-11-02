@@ -410,7 +410,7 @@ void DOS_Shell::Run()
 		return;
 	}
 	/* Start a normal shell and check for a first command init */
-	if (cmd->FindString("/INIT",line,true)) {
+	if (cmd->FindRemoveString("/init", line)) {
 		const bool wants_welcome_banner = control->GetStartupVerbosity() >=
 		                                  Verbosity::High;
 		if (wants_welcome_banner) {

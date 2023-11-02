@@ -22,15 +22,25 @@
 #include "programs.h"
 #include "string_utils.h"
 
-bool CommandLine::FindExist(const char* name, bool remove)
+bool CommandLine::FindExist(const std::string& arg)
 {
 	cmd_it it;
-	if (!(FindEntry(name, it, false))) {
+
+	return FindEntry(arg, it, false);
+}
+
+bool CommandLine::FindRemoveExist(const std::string& arg)
+{
+	cmd_it it;
+
+	if (!FindEntry(arg, it, false)) {
 		return false;
 	}
-	if (remove) {
+
+	while (FindEntry(arg, it, false)) {
 		cmds.erase(it);
 	}
+
 	return true;
 }
 
@@ -61,29 +71,65 @@ bool CommandLine::ExistsPriorTo(const std::list<std::string_view>& pre_args,
 	return false;
 }
 
-bool CommandLine::FindInt(const char* name, int& value, bool remove)
+bool CommandLine::FindInt(const std::string& arg, int& value)
+{
+	cmd_it it;
+
+	if (!FindEntry(arg, it, true)) {
+		return false;
+	}
+
+	++it;
+
+	const auto result = parse_int(*it);
+	if (result) {
+		value = *result;
+		return true;
+	}
+
+	return false;
+}
+
+bool CommandLine::FindRemoveInt(const std::string& arg, int& value)
 {
 	cmd_it it, it_next;
 
-	if (!(FindEntry(name, it, true))) {
+	if (!FindEntry(arg, it, true)) {
 		return false;
 	}
 
 	it_next = it;
 	++it_next;
-	value = atoi((*it_next).c_str());
 
-	if (remove) {
+	const auto result = parse_int(*it_next);
+	if (result) {
+		value = *result;
 		cmds.erase(it, ++it_next);
+		return true;
 	}
+
+	return false;
+}
+
+bool CommandLine::FindString(const std::string& arg, std::string& value)
+{
+	cmd_it it;
+
+	if (!FindEntry(arg, it, true)) {
+		return false;
+	}
+
+	++it;
+	value = *it;
+
 	return true;
 }
 
-bool CommandLine::FindString(const char* name, std::string& value, bool remove)
+bool CommandLine::FindRemoveString(const std::string& arg, std::string& value)
 {
 	cmd_it it, it_next;
 
-	if (!(FindEntry(name, it, true))) {
+	if (!FindEntry(arg, it, true)) {
 		return false;
 	}
 
@@ -91,13 +137,11 @@ bool CommandLine::FindString(const char* name, std::string& value, bool remove)
 	++it_next;
 	value = *it_next;
 
-	if (remove) {
-		cmds.erase(it, ++it_next);
-	}
+	cmds.erase(it, ++it_next);
 	return true;
 }
 
-bool CommandLine::FindCommand(unsigned int which, std::string& value) const
+bool CommandLine::FindCommand(const size_t which, std::string& value) const
 {
 	if (which < 1) {
 		return false;
@@ -106,7 +150,7 @@ bool CommandLine::FindCommand(unsigned int which, std::string& value) const
 		return false;
 	}
 	auto it = cmds.begin();
-	for (; which > 1; --which) {
+	for (auto i = which; i > 1; --i) {
 		++it;
 	}
 	value = (*it);
@@ -130,13 +174,13 @@ bool CommandLine::HasExecutableName() const
 	return false;
 }
 
-bool CommandLine::FindEntry(const char* name, cmd_it& it, bool neednext)
+bool CommandLine::FindEntry(const std::string& arg, cmd_it& it, const bool needs_next)
 {
 	for (it = cmds.begin(); it != cmds.end(); ++it) {
-		if (!strcasecmp((*it).c_str(), name)) {
+		if (iequals(*it, arg)) {
 			cmd_it itnext = it;
 			++itnext;
-			if (neednext && (itnext == cmds.end())) {
+			if (needs_next && (itnext == cmds.end())) {
 				return false;
 			}
 			return true;
@@ -145,27 +189,36 @@ bool CommandLine::FindEntry(const char* name, cmd_it& it, bool neednext)
 	return false;
 }
 
-bool CommandLine::FindStringBegin(const char* const begin, std::string& value,
-                                  bool remove)
+bool CommandLine::FindStringBegin(const std::string& arg, std::string& value)
 {
-	size_t len = strlen(begin);
+	const size_t len = arg.size();
 	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
-		if (strncmp(begin, (*it).c_str(), len) == 0) {
-			value = ((*it).c_str() + len);
-			if (remove) {
-				cmds.erase(it);
-			}
+		if (strncmp(arg.c_str(), (*it).c_str(), len) == 0) {
+			value = it->substr(len);
 			return true;
 		}
 	}
 	return false;
 }
 
-bool CommandLine::FindStringRemain(const char* name, std::string& value)
+bool CommandLine::FindRemoveStringBegin(const std::string& arg, std::string& value)
+{
+	const size_t len = arg.size();
+	for (cmd_it it = cmds.begin(); it != cmds.end(); ++it) {
+		if (strncmp(arg.c_str(), (*it).c_str(), len) == 0) {
+			value = it->substr(len);
+			cmds.erase(it);
+			return true;
+		}
+	}
+	return false;
+}
+
+bool CommandLine::FindStringRemain(const std::string& arg, std::string& value)
 {
 	cmd_it it;
 	value.clear();
-	if (!FindEntry(name, it)) {
+	if (!FindEntry(arg, it)) {
 		return false;
 	}
 	++it;
@@ -176,20 +229,16 @@ bool CommandLine::FindStringRemain(const char* name, std::string& value)
 	return true;
 }
 
-// Only used for parsing command.com /C
-// Allowing /C dir and /Cdir
-// Restoring quotes back into the commands so command /C mount d "/tmp/a b"
-// works as intended
-bool CommandLine::FindStringRemainBegin(const char* name, std::string& value)
+bool CommandLine::FindStringRemainBegin(const std::string& arg, std::string& value)
 {
 	cmd_it it;
 	value.clear();
 
-	if (!FindEntry(name, it)) {
-		size_t len = strlen(name);
+	if (!FindEntry(arg, it)) {
+		const size_t len = arg.size();
 
 		for (it = cmds.begin(); it != cmds.end(); ++it) {
-			if (strncasecmp(name, (*it).c_str(), len) == 0) {
+			if (strncasecmp(arg.c_str(), (*it).c_str(), len) == 0) {
 				std::string temp = ((*it).c_str() + len);
 				// Restore quotes for correct parsing in later
 				// stages
@@ -237,9 +286,9 @@ bool CommandLine::GetStringRemain(std::string& value)
 	return true;
 }
 
-unsigned int CommandLine::GetCount(void)
+size_t CommandLine::GetCount() const
 {
-	return (unsigned int)cmds.size();
+	return cmds.size();
 }
 
 std::vector<std::string> CommandLine::GetArguments()
@@ -367,9 +416,10 @@ CommandLine::CommandLine(const std::string_view name, const std::string_view cmd
 	}
 }
 
-void CommandLine::Shift(unsigned int amount)
+void CommandLine::Shift(const size_t amount)
 {
-	while (amount--) {
+	auto counter = amount;
+	while (counter--) {
 		file_name = cmds.size() ? (*(cmds.begin())) : "";
 		if (cmds.size()) {
 			cmds.erase(cmds.begin());
@@ -377,30 +427,31 @@ void CommandLine::Shift(unsigned int amount)
 	}
 }
 
-bool CommandLine::FindBoolArgument(const std::string& name, bool remove,
-                                   char short_letter)
+bool CommandLine::FindBoolArgument(const std::string& name, char short_letter)
 {
 	const std::string double_dash = "--" + name;
-	const std::string dash        = '-' + name;
-	char short_name[3]            = {};
-	short_name[0]                 = '-';
-	short_name[1]                 = short_letter;
-	return FindExist(double_dash.c_str(), remove) ||
-	       FindExist(dash.c_str(), remove) ||
-	       (short_letter && FindExist(short_name, remove));
+	const std::string single_dash = '-' + name;
+	const std::string short_form  = std::string("-") + short_letter;
+
+	return FindExist(single_dash, double_dash) ||
+	       (short_letter && FindExist(short_form));
 }
 
 bool CommandLine::FindRemoveBoolArgument(const std::string& name, char short_letter)
 {
-	constexpr bool remove_arg = true;
-	return FindBoolArgument(name, remove_arg, short_letter);
+	const std::string double_dash = "--" + name;
+	const std::string single_dash = '-' + name;
+	const std::string short_form  = std::string("-") + short_letter;
+
+	return FindRemoveExist(single_dash, double_dash) ||
+	       (short_letter && FindRemoveExist(short_form));
 }
 
-std::string CommandLine::FindRemoveSingleString(const char* name)
+std::string CommandLine::FindRemoveSingleString(const std::string& arg)
 {
-	cmd_it it                    = {};
+	cmd_it it = {};
 	constexpr bool need_next_arg = true;
-	while (FindEntry(name, it, need_next_arg)) {
+	while (FindEntry(arg, it, need_next_arg)) {
 		cmd_it it_next = it;
 		++it_next;
 		std::string value = *it_next;
@@ -418,14 +469,14 @@ std::string CommandLine::FindRemoveSingleString(const char* name)
 
 std::string CommandLine::FindRemoveStringArgument(const std::string& name)
 {
+	const std::string single_dash = '-' + name;
 	const std::string double_dash = "--" + name;
-	const std::string dash        = '-' + name;
 
-	std::string ret = FindRemoveSingleString(double_dash.c_str());
+	const auto ret = FindRemoveSingleString(double_dash);
 	if (!ret.empty()) {
 		return ret;
 	}
-	return FindRemoveSingleString(dash.c_str());
+	return FindRemoveSingleString(single_dash);
 }
 
 std::vector<std::string> CommandLine::FindRemoveVectorArgument(const std::string& name)
@@ -442,13 +493,12 @@ std::vector<std::string> CommandLine::FindRemoveVectorArgument(const std::string
 }
 
 std::optional<std::vector<std::string>> CommandLine::FindRemoveOptionalArgument(
-        const std::string& name)
+        const std::string& arg)
 {
-	constexpr bool remove_arg = false;
-	if (!FindBoolArgument(name, remove_arg)) {
+	if (!FindBoolArgument(arg)) {
 		return {};
 	}
-	return FindRemoveVectorArgument(name);
+	return FindRemoveVectorArgument(arg);
 }
 
 std::optional<int> CommandLine::FindRemoveIntArgument(const std::string& name)

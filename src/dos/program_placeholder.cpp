@@ -26,14 +26,15 @@ extern unsigned int result_errorcode;
 
 void PLACEHOLDER::Run()
 {
-	const auto command = cmd->GetFileName();
+	const auto command_name = cmd->GetFileName();
+	const auto command_str  = command_name.c_str();
 
-	LOG_WARNING("%s: %s", command, MSG_Get("PROGRAM_PLACEHOLDER_HELP"));
-	LOG_WARNING("%s: %s", command, MSG_Get("VISIT_FOR_MORE_HELP"));
-	LOG_WARNING("%s: %s/%s", command, MSG_Get("WIKI_URL"), "Add-Utilities");
+	LOG_WARNING("%s: %s", command_str, MSG_Get("PROGRAM_PLACEHOLDER_HELP"));
+	LOG_WARNING("%s: %s", command_str, MSG_Get("VISIT_FOR_MORE_HELP"));
+	LOG_WARNING("%s: %s/%s", command_str, MSG_Get("WIKI_URL"), "Add-Utilities");
 
 	MoreOutputStrings output(*this);
-	output.AddString(MSG_Get("PROGRAM_PLACEHOLDER_HELP_LONG"), command);
+	output.AddString(MSG_Get("PROGRAM_PLACEHOLDER_HELP_LONG"), command_str);
 	output.Display();
 
 	WriteOut_NoParsing(MSG_Get("UTILITY_DRIVE_EXAMPLE_NO_TRANSLATE"));
