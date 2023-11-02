@@ -1051,9 +1051,15 @@ static void dyn_pop(DynReg * dynreg,bool checked=true) {
 		gen_mov_host(&core_dyn.readdata,dynreg,decode.big_op?4:2);
 	} else {
 		if (decode.big_op) {
-			gen_call_function((void *)&mem_readd,"%Rd%Drd",dynreg,DREG(STACK));
+			gen_call_function((void*)&mem_readd<MemOpMode::WithBreakpoints>,
+			                  "%Rd%Drd",
+			                  dynreg,
+			                  DREG(STACK));
 		} else {
-			gen_call_function((void *)&mem_readw,"%Rw%Drd",dynreg,DREG(STACK));
+			gen_call_function((void*)&mem_readw<MemOpMode::WithBreakpoints>,
+			                  "%Rw%Drd",
+			                  dynreg,
+			                  DREG(STACK));
 		}
 	}
 	if (dynreg!=DREG(ESP)) {
