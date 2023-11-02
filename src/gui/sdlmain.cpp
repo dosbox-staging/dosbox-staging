@@ -3989,7 +3989,7 @@ bool GFX_Events()
 						// flush event queue.
 //					}
 
-					while (paused) {
+					while (paused && !shutdown_requested) {
 						// WaitEvent waits for an event rather than polling, so CPU usage drops to zero
 						SDL_WaitEvent(&ev);
 
