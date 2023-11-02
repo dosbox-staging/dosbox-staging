@@ -337,24 +337,54 @@ static inline PhysPt PAGING_GetPhysicalAddress(PhysPt linAddr) {
 
 /* Special inlined memory reading/writing */
 
-static inline uint8_t mem_readb_inline(PhysPt address) {
-	HostPt tlb_addr=get_tlb_read(address);
-	if (tlb_addr) return host_readb(tlb_addr+address);
-	else
-		return (get_tlb_readhandler(address))->readb(address);
+template <typename T>
+#if C_DEBUG && C_HEAVY_DEBUG
+// forwarded from debug
+void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr);
+#else
+static void DEBUG_UpdateMemoryReadBreakpoints([[maybe_unused]] const PhysPt addr)
+{ /* no-op */
 }
+#endif
 
-static inline uint16_t mem_readw_inline(PhysPt address) {
-	if ((address & 0xfff)<0xfff) {
-		HostPt tlb_addr=get_tlb_read(address);
-		if (tlb_addr) return host_readw(tlb_addr+address);
-		else
-			return (get_tlb_readhandler(address))->readw(address);
-	} else return mem_unalignedreadw(address);
-}
-
-static inline uint32_t mem_readd_inline(PhysPt address)
+template <MemOpMode op_mode = MemOpMode::WithBreakpoints>
+static inline uint8_t mem_readb_inline(const PhysPt address)
 {
+	if constexpr (op_mode == MemOpMode::WithBreakpoints) {
+		DEBUG_UpdateMemoryReadBreakpoints<uint8_t>(address);
+	}
+	HostPt tlb_addr = get_tlb_read(address);
+	if (tlb_addr) {
+		return host_readb(tlb_addr + address);
+	} else {
+		return (get_tlb_readhandler(address))->readb(address);
+	}
+}
+
+template <MemOpMode op_mode = MemOpMode::WithBreakpoints>
+static inline uint16_t mem_readw_inline(const PhysPt address)
+{
+	if constexpr (op_mode == MemOpMode::WithBreakpoints) {
+		DEBUG_UpdateMemoryReadBreakpoints<uint16_t>(address);
+	}
+	if ((address & 0xfff) < 0xfff) {
+		HostPt tlb_addr = get_tlb_read(address);
+		if (tlb_addr) {
+			return host_readw(tlb_addr + address);
+		} else {
+			return (get_tlb_readhandler(address))->readw(address);
+		}
+	} else {
+		return mem_unalignedreadw(address);
+	}
+}
+
+template <MemOpMode op_mode = MemOpMode::WithBreakpoints>
+static inline uint32_t mem_readd_inline(const PhysPt address)
+{
+	if constexpr (op_mode == MemOpMode::WithBreakpoints) {
+		DEBUG_UpdateMemoryReadBreakpoints<uint32_t>(address);
+	}
 	if ((address & 0xfff) < 0xffd) {
 		HostPt tlb_addr = get_tlb_read(address);
 		if (tlb_addr)

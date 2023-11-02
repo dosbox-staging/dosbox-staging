@@ -468,8 +468,9 @@ static char *addr_to_hex(UINT32 addr, int splitup) {
 static PhysPt getbyte_mac;
 static PhysPt startPtr;
 
-static UINT8 getbyte(void) {
-	return mem_readb(getbyte_mac++);
+static UINT8 getbyte()
+{
+	return mem_readb<MemOpMode::SkipBreakpoints>(getbyte_mac++);
 }
 
 /*

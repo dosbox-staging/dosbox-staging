@@ -89,9 +89,19 @@ static inline uint32_t var_read(uint32_t *var)
 /* The Following six functions are slower but they recognize the paged memory
  * system */
 
-uint8_t mem_readb(PhysPt pt);
-uint16_t mem_readw(PhysPt pt);
-uint32_t mem_readd(PhysPt pt);
+enum class MemOpMode {
+	WithBreakpoints,
+	SkipBreakpoints,
+};
+
+template <MemOpMode op_mode = MemOpMode::WithBreakpoints>
+uint8_t mem_readb(const PhysPt pt);
+
+template <MemOpMode op_mode = MemOpMode::WithBreakpoints>
+uint16_t mem_readw(const PhysPt pt);
+
+template <MemOpMode op_mode = MemOpMode::WithBreakpoints>
+uint32_t mem_readd(const PhysPt pt);
 
 void mem_writeb(PhysPt pt, uint8_t val);
 void mem_writew(PhysPt pt, uint16_t val);

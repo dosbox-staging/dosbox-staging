@@ -561,19 +561,36 @@ bool mem_unalignedwrited_checked(PhysPt address, uint32_t val) {
 	return false;
 }
 
-uint8_t mem_readb(PhysPt address) {
-	return mem_readb_inline(address);
+template <MemOpMode op_mode>
+uint8_t mem_readb(const PhysPt address)
+{
+	return mem_readb_inline<op_mode>(address);
 }
 
-uint16_t mem_readw(PhysPt address) {
-	return mem_readw_inline(address);
+template <MemOpMode op_mode>
+uint16_t mem_readw(const PhysPt address)
+{
+	return mem_readw_inline<op_mode>(address);
 }
 
-uint32_t mem_readd(PhysPt address) {
-	return mem_readd_inline(address);
+template <MemOpMode op_mode>
+uint32_t mem_readd(const PhysPt address)
+{
+	return mem_readd_inline<op_mode>(address);
 }
 
-void mem_writeb(PhysPt address,uint8_t val) {
+// Explicit instantiations for mem_readb, mem_readw, and mem_readd
+template uint8_t mem_readb<MemOpMode::WithBreakpoints>(const PhysPt address);
+template uint8_t mem_readb<MemOpMode::SkipBreakpoints>(const PhysPt address);
+
+template uint16_t mem_readw<MemOpMode::WithBreakpoints>(const PhysPt address);
+template uint16_t mem_readw<MemOpMode::SkipBreakpoints>(const PhysPt address);
+
+template uint32_t mem_readd<MemOpMode::WithBreakpoints>(const PhysPt address);
+template uint32_t mem_readd<MemOpMode::SkipBreakpoints>(const PhysPt address);
+
+void mem_writeb(PhysPt address, uint8_t val)
+{
 	mem_writeb_inline(address,val);
 }
 
