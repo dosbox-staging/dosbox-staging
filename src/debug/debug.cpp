@@ -290,7 +290,15 @@ static std::vector<CDebugVar *> varList = {};
 
 bool skipFirstInstruction = false;
 
-enum EBreakpoint { BKPNT_UNKNOWN, BKPNT_PHYSICAL, BKPNT_INTERRUPT, BKPNT_MEMORY, BKPNT_MEMORY_PROT, BKPNT_MEMORY_LINEAR };
+enum EBreakpoint {
+	BKPNT_UNKNOWN,
+	BKPNT_PHYSICAL,
+	BKPNT_INTERRUPT,
+	BKPNT_MEMORY,
+	BKPNT_MEMORY_READ,
+	BKPNT_MEMORY_PROT,
+	BKPNT_MEMORY_LINEAR
+};
 
 #define BPINT_ALL 0x100
 
@@ -318,6 +326,22 @@ public:
 	uint8_t GetIntNr() const noexcept { return intNr; }
 	uint16_t GetValue() const noexcept { return ahValue; }
 	uint16_t GetOther() const noexcept { return alValue; }
+#if C_HEAVY_DEBUG
+	void FlagMemoryAsRead()
+	{
+		memory_was_read = true;
+	}
+
+	void FlagMemoryAsUnread()
+	{
+		memory_was_read = false;
+	}
+
+	bool WasMemoryRead() const
+	{
+		return memory_was_read;
+	}
+#endif
 
 	// statics
 	static CBreakpoint*		AddBreakpoint		(uint16_t seg, uint32_t off, bool once);
@@ -352,8 +376,9 @@ private:
 	// Shared
 	bool active = 0;
 	bool once   = 0;
+#if C_HEAVY_DEBUG
+	bool memory_was_read = false;
 
-#	if C_HEAVY_DEBUG
 	friend bool DEBUG_HeavyIsBreakpoint(void);
 #	endif
 };
@@ -406,6 +431,35 @@ void CBreakpoint::Activate(bool _active)
 
 // Statics
 static std::list<CBreakpoint *> BPoints = {};
+
+#if C_HEAVY_DEBUG
+template <typename T>
+void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr)
+{
+	static_assert(std::is_unsigned_v<T>);
+	static_assert(std::is_integral_v<T>);
+
+	for (CBreakpoint* bp : BPoints) {
+		if (bp->GetType() == BKPNT_MEMORY_READ) {
+			const PhysPt location_begin = bp->GetLocation();
+			const PhysPt location_end = location_begin + sizeof(T);
+			if ((addr >= location_begin) && (addr < location_end)) {
+				DEBUG_ShowMsg("bpmr hit: %04X:%04X, cs:ip = %04X:%04X",
+				              bp->GetSegment(),
+				              bp->GetOffset(),
+				              SegValue(cs),
+				              reg_eip);
+				bp->FlagMemoryAsRead();
+			}
+		}
+	}
+}
+// Explicit instantiations
+template void DEBUG_UpdateMemoryReadBreakpoints<uint8_t>(const PhysPt addr);
+template void DEBUG_UpdateMemoryReadBreakpoints<uint16_t>(const PhysPt addr);
+template void DEBUG_UpdateMemoryReadBreakpoints<uint32_t>(const PhysPt addr);
+template void DEBUG_UpdateMemoryReadBreakpoints<uint64_t>(const PhysPt addr);
+#endif
 
 CBreakpoint* CBreakpoint::AddBreakpoint(uint16_t seg, uint32_t off, bool once)
 {
@@ -514,6 +568,15 @@ bool CBreakpoint::CheckBreakpoint(Bitu seg, Bitu off)
 					// Yup, memory value changed
 					DEBUG_ShowMsg("DEBUG: Memory breakpoint %s: %04X:%04X - %02X -> %02X\n",(bp->GetType()==BKPNT_MEMORY_PROT)?"(Prot)":"",bp->GetSegment(),bp->GetOffset(),bp->GetValue(),value);
 					bp->SetValue(value);
+					return true;
+				}
+			} else if (bp->GetType() == BKPNT_MEMORY_READ) {
+				if (bp->WasMemoryRead()) {
+					// Yup, memory value was read
+					DEBUG_ShowMsg("DEBUG: Memory read breakpoint: %04X:%04X\n",
+					              bp->GetSegment(),
+					              bp->GetOffset());
+					bp->FlagMemoryAsUnread();
 					return true;
 				}
 			}
@@ -1125,6 +1188,19 @@ bool ParseCommand(char* str) {
 		return true;
 	}
 
+	if (command == "BPMR") { // Add new breakpoint
+		uint16_t seg = (uint16_t)GetHexValue(found, found);
+		found++; // skip ":"
+		uint32_t ofs    = GetHexValue(found, found);
+		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(seg, ofs);
+		bp->SetType(BKPNT_MEMORY_READ);
+		bp->FlagMemoryAsUnread();
+		DEBUG_ShowMsg("DEBUG: Set memory read breakpoint at %04X:%04X\n",
+		              seg,
+		              ofs);
+		return true;
+	}
+
 	if (command == "BPPM") { // Add new breakpoint
 		uint16_t seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
 		uint32_t ofs = GetHexValue(found,found);
@@ -1345,6 +1421,7 @@ bool ParseCommand(char* str) {
 		DEBUG_ShowMsg("BPINT  [intNr] [ah] [al]  - Set interrupt breakpoint with ah and al.\n");
 #if C_HEAVY_DEBUG
 		DEBUG_ShowMsg("BPM    [segment]:[offset] - Set memory breakpoint (memory change).\n");
+		DEBUG_ShowMsg("BPMR   [segment]:[offset] - Set memory breakpoint (memory read).\n");
 		DEBUG_ShowMsg("BPPM   [selector]:[offset]- Set pmode-memory breakpoint (memory change).\n");
 		DEBUG_ShowMsg("BPLM   [linear address]   - Set linear memory breakpoint (memory change).\n");
 #endif
@@ -1450,19 +1527,25 @@ char* AnalyzeInstruction(char* inst, bool saveSelector) {
 
 			if (cpu.pmode) outmask[6] = '8';
 				switch (DasmLastOperandSize()) {
-				case 8 : {	uint8_t val = mem_readb(address);
-							outmask[12] = '2';
-							sprintf(result,outmask,prefix,adr,val);
-						}	break;
-				case 16: {	uint16_t val = mem_readw(address);
-							outmask[12] = '4';
-							sprintf(result,outmask,prefix,adr,val);
-						}	break;
-				case 32: {	uint32_t val = mem_readd(address);
-							outmask[12] = '8';
-							sprintf(result,outmask,prefix,adr,val);
-						}	break;
-			}
+			        case 8: {
+				        uint8_t val = mem_readb<MemOpMode::SkipBreakpoints>(
+				                address);
+				        outmask[12] = '2';
+				        sprintf(result, outmask, prefix, adr, val);
+			        } break;
+			        case 16: {
+				        uint16_t val = mem_readw<MemOpMode::SkipBreakpoints>(
+				                address);
+				        outmask[12] = '4';
+				        sprintf(result, outmask, prefix, adr, val);
+			        } break;
+			        case 32: {
+				        uint32_t val = mem_readd<MemOpMode::SkipBreakpoints>(
+				                address);
+				        outmask[12] = '8';
+				        sprintf(result, outmask, prefix, adr, val);
+			        } break;
+			        }
 		} else {
 			sprintf(result,"[illegal]");
 		}

@@ -33,7 +33,7 @@ Bitu DEBUG_EnableDebugger(void);
 extern Bitu cycle_count;
 extern Bitu debugCallback;
 
-#ifdef C_HEAVY_DEBUG
+#if C_HEAVY_DEBUG
 bool DEBUG_HeavyIsBreakpoint(void);
 void DEBUG_HeavyWriteLogInstruction(void);
 #endif
