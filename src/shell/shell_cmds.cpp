@@ -50,40 +50,44 @@
 #include "support.h"
 #include "timer.h"
 
+// The 'overload' pattern for 'std::visit'
+template<class... T> struct overload : T... { using T::operator()...; };
+template<class... T> overload(T...) -> overload<T...>;
+
 // clang-format off
-static const std::map<std::string, SHELL_Cmd> shell_cmds = {
+const std::map<std::string, DOS_Shell::CommandEntry> DOS_Shell::ShellCommands = {
 	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::All,    HELP_Category::Batch } },
-	{ "CD",       {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::Common, HELP_Category::File } },
-	{ "CHDIR",    {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::All,    HELP_Category::File } },
-	{ "CLS",      {&DOS_Shell::CMD_CLS,      "CLS",      HELP_Filter::Common, HELP_Category::Misc} },
-	{ "COPY",     {&DOS_Shell::CMD_COPY,     "COPY",     HELP_Filter::Common, HELP_Category::File} },
-	{ "DATE",     {&DOS_Shell::CMD_DATE,     "DATE",     HELP_Filter::All,    HELP_Category::Misc } },
-	{ "DEL",      {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::Common, HELP_Category::File } },
-	{ "DELETE",   {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::All,    HELP_Category::File } },
-	{ "DIR",      {&DOS_Shell::CMD_DIR,      "DIR",      HELP_Filter::Common, HELP_Category::File } },
+	{ "CD",       {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::Common, HELP_Category::File  } },
+	{ "CHDIR",    {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::All,    HELP_Category::File  } },
+	{ "CLS",      {&DOS_Shell::CMD_CLS,      "CLS",      HELP_Filter::Common, HELP_Category::Misc  } },
+	{ "COPY",     {&DOS_Shell::CMD_COPY,     "COPY",     HELP_Filter::Common, HELP_Category::File  } },
+	{ "DATE",     {&DOS_Shell::CMD_DATE,     "DATE",     HELP_Filter::All,    HELP_Category::Misc  } },
+	{ "DEL",      {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::Common, HELP_Category::File  } },
+	{ "DELETE",   {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::All,    HELP_Category::File  } },
+	{ "DIR",      {&DOS_Shell::CMD_DIR,      "DIR",      HELP_Filter::Common, HELP_Category::File  } },
 	{ "ECHO",     {&DOS_Shell::CMD_ECHO,     "ECHO",     HELP_Filter::All,    HELP_Category::Batch } },
-	{ "ERASE",    {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::All,    HELP_Category::File } },
-	{ "EXIT",     {&DOS_Shell::CMD_EXIT,     "EXIT",     HELP_Filter::Common, HELP_Category::Misc } },
+	{ "ERASE",    {&DOS_Shell::CMD_DELETE,   "DELETE",   HELP_Filter::All,    HELP_Category::File  } },
+	{ "EXIT",     {&DOS_Shell::CMD_EXIT,     "EXIT",     HELP_Filter::Common, HELP_Category::Misc  } },
 	{ "FOR",      {&DOS_Shell::CMD_FOR,      "FOR",      HELP_Filter::All,    HELP_Category::Batch } },
 	{ "GOTO",     {&DOS_Shell::CMD_GOTO,     "GOTO",     HELP_Filter::All,    HELP_Category::Batch } },
 	{ "IF",       {&DOS_Shell::CMD_IF,       "IF",       HELP_Filter::All,    HELP_Category::Batch } },
-	{ "LH",       {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc } },
-	{ "LOADHIGH", {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc } },
-	{ "MD",       {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::Common, HELP_Category::File } },
-	{ "MKDIR",    {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::All,    HELP_Category::File } },
-	{ "PATH",     {&DOS_Shell::CMD_PATH,     "PATH",     HELP_Filter::All,    HELP_Category::Misc} },
+	{ "LH",       {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc  } },
+	{ "LOADHIGH", {&DOS_Shell::CMD_LOADHIGH, "LOADHIGH", HELP_Filter::All,    HELP_Category::Misc  } },
+	{ "MD",       {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::Common, HELP_Category::File  } },
+	{ "MKDIR",    {&DOS_Shell::CMD_MKDIR,    "MKDIR",    HELP_Filter::All,    HELP_Category::File  } },
+	{ "PATH",     {&DOS_Shell::CMD_PATH,     "PATH",     HELP_Filter::All,    HELP_Category::Misc  } },
 	{ "PAUSE",    {&DOS_Shell::CMD_PAUSE,    "PAUSE",    HELP_Filter::All,    HELP_Category::Batch } },
-	{ "RD",       {&DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Filter::Common, HELP_Category::File } },
+	{ "RD",       {&DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Filter::Common, HELP_Category::File  } },
 	{ "REM",      {&DOS_Shell::CMD_REM,      "REM",      HELP_Filter::All,    HELP_Category::Batch } },
-	{ "REN",      {&DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Filter::Common, HELP_Category::File } },
-	{ "RENAME",   {&DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Filter::All,    HELP_Category::File } },
-	{ "RMDIR",    {&DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Filter::All,    HELP_Category::File } },
-	{ "SET",      {&DOS_Shell::CMD_SET,      "SET",      HELP_Filter::All,    HELP_Category::Misc} },
+	{ "REN",      {&DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Filter::Common, HELP_Category::File  } },
+	{ "RENAME",   {&DOS_Shell::CMD_RENAME,   "RENAME",   HELP_Filter::All,    HELP_Category::File  } },
+	{ "RMDIR",    {&DOS_Shell::CMD_RMDIR,    "RMDIR",    HELP_Filter::All,    HELP_Category::File  } },
+	{ "SET",      {&DOS_Shell::CMD_SET,      "SET",      HELP_Filter::All,    HELP_Category::Misc  } },
 	{ "SHIFT",    {&DOS_Shell::CMD_SHIFT,    "SHIFT",    HELP_Filter::All,    HELP_Category::Batch } },
-	{ "TIME",     {&DOS_Shell::CMD_TIME,     "TIME",     HELP_Filter::All,    HELP_Category::Misc } },
-	{ "TYPE",     {&DOS_Shell::CMD_TYPE,     "TYPE",     HELP_Filter::Common, HELP_Category::Misc } },
-	{ "VER",      {&DOS_Shell::CMD_VER,      "VER",      HELP_Filter::All,    HELP_Category::Misc } },
-	{ "VOL",      {&DOS_Shell::CMD_VOL,      "VOL",      HELP_Filter::All,    HELP_Category::Misc } }
+	{ "TIME",     {&DOS_Shell::CMD_TIME,     "TIME",     HELP_Filter::All,    HELP_Category::Misc  } },
+	{ "TYPE",     {&DOS_Shell::CMD_TYPE,     "TYPE",     HELP_Filter::Common, HELP_Category::Misc  } },
+	{ "VER",      {&DOS_Shell::CMD_VER,      "VER",      HELP_Filter::All,    HELP_Category::Misc  } },
+	{ "VOL",      {&DOS_Shell::CMD_VOL,      "VOL",      HELP_Filter::All,    HELP_Category::Misc  } }
 };
 // clang-format on
 
@@ -119,17 +123,17 @@ static char *ExpandDot(const char *args, char *buffer, size_t bufsize)
 	return buffer;
 }
 
-bool lookup_shell_cmd(std::string name, SHELL_Cmd &shell_cmd)
+std::optional<DOS_Shell::CommandEntry> DOS_Shell::LookupCommand(const std::string& name)
 {
-	for (auto &c : name)
-		c = toupper(c);
+	auto name_upcase = name;
+	upcase(name_upcase);
 
-	const auto result = shell_cmds.find(name);
-	if (result == shell_cmds.end())
-		return false; // name isn't a shell command!
+	const auto result = ShellCommands.find(name_upcase);
+	if (result == ShellCommands.end()) {
+		return {}; // not a known shell command
+	}
 
-	shell_cmd = result->second;
-	return true;
+	return result->second;
 }
 
 bool DOS_Shell::ExecuteConfigChange(const char* const cmd_in, const char* const line)
@@ -163,13 +167,36 @@ bool DOS_Shell::ExecuteConfigChange(const char* const cmd_in, const char* const 
 	return true;
 }
 
+void DOS_Shell::CommandEntry::Execute(DOS_Shell *shell, const char* const name, char *arguments)
+{
+	std::visit(overload {
+	    [&](CommandHandler& handler) { 
+	    	if (shell->WriteHelp(help, arguments)) {
+			return;
+		}
+
+		auto old_cmd = shell->cmd;
+		shell->cmd = new CommandLine(name, arguments);
+
+	    	handler(shell);
+
+	    	delete shell->cmd;
+		shell->cmd = old_cmd;
+	    },
+	    [&](LegacyHandler& handler)  { 
+	    	handler(shell, arguments);
+	    }
+	}, handler);
+}
+
 bool DOS_Shell::ExecuteShellCommand(const char* const name, char* arguments)
 {
-	SHELL_Cmd shell_cmd = {};
-	if (!lookup_shell_cmd(name, shell_cmd)) {
-		return false; // name isn't a shell command!
+	auto command_entry = LookupCommand(name);
+	if (!command_entry) {
+		return false;
 	}
-	shell_cmd.handler(this, arguments);
+
+	command_entry->Execute(this, name, arguments);
 	return true;
 }
 
@@ -363,7 +390,7 @@ void DOS_Shell::AddShellCmdsToHelpList() {
 	if (DOS_Shell::help_list_populated) {
 		return;
 	}
-	for (const auto &c : shell_cmds) {
+	for (const auto& c : ShellCommands) {
 		HELP_AddToHelpList(c.first,
 		                   HELP_Detail{c.second.filter,
 		                               c.second.category,
@@ -378,15 +405,14 @@ void DOS_Shell::CMD_HELP(char * args){
 	HELP("HELP");
 
 	upcase(args);
-	SHELL_Cmd shell_cmd = {};
+	std::optional<CommandEntry> command_entry = {};
 	char help_arg[] = "/?";
 	const auto& hl = HELP_GetHelpList();
 	if (contains(hl, args) && hl.at(args).type == HELP_CmdType::Program) {
 		ExecuteProgram(args, help_arg);
-	} else if (lookup_shell_cmd(args, shell_cmd)) {
-		// Print help for the provided command by
-		// calling it with the '/?' arg
-		shell_cmd.handler(this, help_arg);
+	} else if ((command_entry = LookupCommand(args))) {
+		// Print help for the command by calling it with the '/?' arg
+		command_entry->Execute(this, command_entry->help, help_arg);
 	} else if (ScanCMDBool(args, "A") || ScanCMDBool(args, "ALL")) {
 		// Print help for all the commands
 		MoreOutputStrings output(*this);
@@ -443,9 +469,12 @@ void DOS_Shell::CMD_ECHO(char * args){
 	} else WriteOut("%s\r\n",args);
 }
 
-void DOS_Shell::CMD_EXIT(char *args)
+void DOS_Shell::CMD_EXIT()
 {
-	HELP("EXIT");
+	// Although MS-DOS 6.22 complains about invalid switches, Windows 11
+	// ignores all the parameters of 'EXIT' command - here the more
+	// forgiving version is implemented.
+	// Make sure no other switches are supplied
 
 	const bool wants_force_exit = control->arguments.exit;
 	const bool is_normal_launch = control->GetStartupVerbosity() !=

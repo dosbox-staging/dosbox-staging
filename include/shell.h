@@ -27,6 +27,7 @@
 #include <optional>
 #include <stack>
 #include <string>
+#include <variant>
 
 #include "callback.h"
 #include "programs.h"
@@ -96,15 +97,24 @@ private:
 class AutoexecEditor;
 class MoreOutputStrings;
 
-struct SHELL_Cmd {
-	std::function<void(DOS_Shell *, char *)> handler; // Handler for the command
-	const char* help       = ""; // String with command help
-	HELP_Filter filter     = HELP_Filter::Common;
-	HELP_Category category = HELP_Category::Misc;
-};
-
 class DOS_Shell : public Program, public HostShell {
 private:
+	struct CommandEntry {
+		void Execute(DOS_Shell *shell, const char* const name, char *arguments);
+		// Handler for the command
+		using CommandHandler = std::function<void(DOS_Shell*)>;
+		using LegacyHandler  = std::function<void(DOS_Shell*, char*)>;
+		std::variant<CommandHandler, LegacyHandler> handler = {};
+
+		const char* help       = ""; // String with command help
+		HELP_Filter filter     = HELP_Filter::Common;
+		HELP_Category category = HELP_Category::Misc;
+	};
+
+	static const std::map<std::string, CommandEntry> ShellCommands;
+
+	static std::optional<CommandEntry> LookupCommand(const std::string& name);
+
 	void PrintHelpForCommands(MoreOutputStrings& output, HELP_Filter req_filter);
 	void AddShellCmdsToHelpList();
 	bool WriteHelp(const std::string& command, char* args);
@@ -149,6 +159,14 @@ public:
 	[[nodiscard]] Bitu GetEnvCount() const;
 	bool SetEnv(const char* entry, const char* new_string);
 
+	void SyntaxError();
+
+	// NOTE: there are 2 separate APIs for the commands: legacy one, with
+	// 'char* args' argument, and the new one, where you do not need the
+	// 'HELP' macro inside and arguments are accessed in the same way as
+	// in 'program_*.cpp' files.
+	// TODO: migrate all the legacy commands to the new API
+
 	/* Commands */
 	void CMD_HELP(char* args);
 	void CMD_CLS(char* args);
@@ -158,7 +176,7 @@ public:
 	void CMD_DIR(char* args);
 	void CMD_DELETE(char* args);
 	void CMD_ECHO(char* args);
-	void CMD_EXIT(char* args);
+	void CMD_EXIT();
 	void CMD_FOR(char* args);
 	void CMD_MKDIR(char* args);
 	void CMD_CHDIR(char* args);
@@ -170,7 +188,6 @@ public:
 	void CMD_REM(char* args);
 	void CMD_RENAME(char* args);
 	void CMD_CALL(char* args);
-	void SyntaxError();
 	void CMD_PAUSE(char* args);
 	void CMD_SUBST(char* args);
 	void CMD_LOADHIGH(char* args);
