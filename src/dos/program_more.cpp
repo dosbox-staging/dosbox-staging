@@ -92,11 +92,8 @@ bool MORE::ParseCommandLine(MoreOutputFiles &output)
 	}
 
 	// Make sure no other switches are supplied
-	if (cmd->FindStringBegin("/", tmp_str)) {
-		tmp_str = std::string("/") + tmp_str;
-		result_errorcode = DOSERR_FUNCTION_NUMBER_INVALID;
-		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), tmp_str.c_str());
-		return false;
+	if (!CheckAllSwitchesHandled()) {
+		return false; // DOS error already printed by check routine
 	}
 
 	return true;

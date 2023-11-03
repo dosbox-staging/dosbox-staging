@@ -98,11 +98,8 @@ void TREE::Run()
 	// TODO: consider implementing /DR in some form
 
 	// Make sure no other switches are supplied
-	std::string tmp_str = {};
-	if (cmd->FindStringBegin("/", tmp_str)) {
-		tmp_str = std::string("/") + tmp_str;
-		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), tmp_str.c_str());
-		return;
+	if (!CheckAllSwitchesHandled()) {
+		return; // DOS error already printed by check routine
 	}
 
 	// Check if directory is provided
@@ -161,7 +158,7 @@ void TREE::Run()
 	PreRender();
 	MaybeDisplayInfoSpace(output);
 	const auto len_limit = max_columns - GetInfoSpaceSize();
-	tmp_str              = has_option_paging
+	std::string tmp_str  = has_option_paging
 	                             ? shorten_path(path, static_cast<uint16_t>(len_limit))
 	                             : path;
 	output.AddString("%s\n", tmp_str.c_str());

@@ -48,11 +48,8 @@ void LS::Run()
 
 	// Make sure no other switches are supplied
 
-	std::string tmp_str = {};
-	if (cmd->FindStringBegin("/", tmp_str)) {
-		tmp_str = std::string("/") + tmp_str;
-		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), tmp_str.c_str());
-		return;
+	if (!CheckAllSwitchesHandled()) {
+		return; // DOS error already printed by check routine
 	}
 
 	// Check for unsupported wildcard patterns

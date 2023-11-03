@@ -283,6 +283,17 @@ bool Program::HelpRequested()
 	return cmd->FindExist("/?", "-h", "--help");
 }
 
+bool Program::CheckAllSwitchesHandled()
+{
+	std::string tmp_str = {};
+	if (cmd->FindStringBegin("/", tmp_str)) {
+		tmp_str = std::string("/") + tmp_str;
+		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH"), tmp_str.c_str());
+		return false;
+	}
+	return true;
+}
+
 void Program::AddToHelpList()
 {
 	if (help_detail.name.size()) {

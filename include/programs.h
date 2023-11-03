@@ -169,6 +169,7 @@ public:
 	void InjectMissingNewline();
 	void ChangeToLongCmd();
 	bool HelpRequested();
+	bool CheckAllSwitchesHandled(); // also prints DOS error
 
 	static void ResetLastWrittenChar(char c);
 
