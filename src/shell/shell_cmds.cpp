@@ -166,9 +166,10 @@ bool DOS_Shell::ExecuteConfigChange(const char* const cmd_in, const char* const 
 bool DOS_Shell::ExecuteShellCommand(const char* const name, char* arguments)
 {
 	SHELL_Cmd shell_cmd = {};
-	if (!lookup_shell_cmd(name, shell_cmd))
+	if (!lookup_shell_cmd(name, shell_cmd)) {
 		return false; // name isn't a shell command!
-	(this->*(shell_cmd.handler))(arguments);
+	}
+	shell_cmd.handler(this, arguments);
 	return true;
 }
 
@@ -385,7 +386,7 @@ void DOS_Shell::CMD_HELP(char * args){
 	} else if (lookup_shell_cmd(args, shell_cmd)) {
 		// Print help for the provided command by
 		// calling it with the '/?' arg
-		(this->*(shell_cmd.handler))(help_arg);
+		shell_cmd.handler(this, help_arg);
 	} else if (ScanCMDBool(args, "A") || ScanCMDBool(args, "ALL")) {
 		// Print help for all the commands
 		MoreOutputStrings output(*this);

@@ -22,6 +22,7 @@
 
 #include "dosbox.h"
 
+#include <functional>
 #include <memory>
 #include <optional>
 #include <stack>
@@ -96,8 +97,7 @@ class AutoexecEditor;
 class MoreOutputStrings;
 
 struct SHELL_Cmd {
-	void (DOS_Shell::*handler)(char* args) = nullptr; // Handler for this
-	                                                  // command
+	std::function<void(DOS_Shell *, char *)> handler; // Handler for the command
 	const char* help       = ""; // String with command help
 	HELP_Filter filter     = HELP_Filter::Common;
 	HELP_Category category = HELP_Category::Misc;
