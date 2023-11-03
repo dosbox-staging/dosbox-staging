@@ -664,23 +664,23 @@ public:
 	uint16_t GetDirIDCluster() const { return SGET_WORD(sDTA, dirCluster); }
 };
 
-enum class ResultGrouping {
-	None,
-	FilesFirst,
-	NonFilesFirst,
-};
 
-enum class ResultSorting {
+enum class DirSortOrder {
 	None,
 	ByName,
+	ByNameReversed,
 	ByExtension,
+	ByExtensionReversed,
 	BySize,
+	BySizeReversed,
 	ByDateTime,
+	ByDateTimeReversed,
+	GroupFilesFirst,
+	GroupNonFilesFirst,
 };
 
-void DOS_Sort(std::vector<DOS_DTA::Result>& list, const ResultSorting sorting,
-              const bool reverse_order      = false,
-              const ResultGrouping grouping = ResultGrouping::None);
+void DOS_Sort(std::vector<DOS_DTA::Result>& dir_content,
+              const std::vector<DirSortOrder> &sort_order);
 
 /* File Control Block */
 

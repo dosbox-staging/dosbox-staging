@@ -129,11 +129,8 @@ void LS::Run()
 
 	// Sort directory contents
 
-	constexpr bool reverse_order = false;
-	DOS_Sort(dir_contents,
-	         ResultSorting::ByName,
-	         reverse_order,
-	         ResultGrouping::NonFilesFirst);
+	DOS_Sort(dir_contents, { DirSortOrder::ByName,
+	                         DirSortOrder::GroupNonFilesFirst });
 
 	// Remove duplicates (might arise from multiple patterns)
 

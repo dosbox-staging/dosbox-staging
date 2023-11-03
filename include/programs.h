@@ -41,6 +41,10 @@ public:
 	CommandLine(int argc, const char* const argv[]);
 	CommandLine(std::string_view name, std::string_view cmdline);
 
+	// Add arguments from given environment variable, input needs to have a
+	// 'VAR_NAME=...' format
+	void AddEnvArguments(const std::string_view variable);
+
 	std::string GetFileName() const
 	{
 		return file_name;
@@ -130,6 +134,8 @@ private:
 
 	std::list<std::string> cmds = {};
 	std::string file_name       = "";
+
+	void AddArguments(const std::string_view arguments);
 
 	bool FindEntry(const std::string& arg, cmd_it& it,
 	               const bool needs_next = false);

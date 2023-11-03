@@ -208,48 +208,119 @@ bool DOS_MakeName(const char* const name, char* const fullname, uint8_t* drive)
 	return true;
 }
 
-void DOS_Sort(std::vector<DOS_DTA::Result>& list, const ResultSorting sorting,
-              const bool reverse_order, const ResultGrouping grouping)
+void DOS_Sort(std::vector<DOS_DTA::Result>& dir_content,
+              const std::vector<DirSortOrder>& sort_order)
 {
-	auto compare = [&](const DOS_DTA::Result& result1,
-	                   const DOS_DTA::Result& result2) {
-		if (grouping == ResultGrouping::FilesFirst ||
-		    grouping == ResultGrouping::NonFilesFirst) {
-			if (!result1.IsFile() && result2.IsFile()) {
-				return (grouping == ResultGrouping::NonFilesFirst);
-			}
-			if (result1.IsFile() && !result2.IsFile()) {
-				return (grouping == ResultGrouping::FilesFirst);
-			}
-		}
-
-		auto& r1 = reverse_order ? result2 : result1;
-		auto& r2 = reverse_order ? result1 : result2;
-
-		switch (sorting) {
-		case ResultSorting::ByName:
-			return r1.name.compare(r2.name) < 0;
-		case ResultSorting::ByExtension:
-			return r1.GetExtension().compare(r2.GetExtension()) < 0;
-		case ResultSorting::BySize:
-			// Do not compare sizes of objects which are not files!
-			if (!r1.IsFile()) {
-				return true;
-			} else if (!r2.IsFile()) {
-				return false;
-			}
-			// Both are files - we can compare sizes
-			return r1.size < r2.size;
-		case ResultSorting::ByDateTime:
-			return r1.date < r2.date ||
-			       (r1.date == r2.date && r1.time < r2.time);
-		case ResultSorting::None:
-		default:
-			return false;
-		}
+	auto compare_by_name = [](const DOS_DTA::Result& entry1,
+	                          const DOS_DTA::Result& entry2) {
+		return entry1.name.compare(entry2.name) < 0;
 	};
 
-	std::stable_sort(list.begin(), list.end(), compare);
+	auto compare_by_name_reversed = [&](const DOS_DTA::Result& entry1,
+	                                    const DOS_DTA::Result& entry2) {
+		return compare_by_name(entry2, entry1);
+	};
+
+	auto compare_by_extension = [](const DOS_DTA::Result& entry1,
+	                               const DOS_DTA::Result& entry2) {
+		return entry1.GetExtension().compare(entry2.GetExtension()) < 0;
+	};
+
+	auto compare_by_extension_reversed = [&](const DOS_DTA::Result& entry1,
+	                                         const DOS_DTA::Result& entry2) {
+		return compare_by_extension(entry2, entry1);
+	};
+
+	auto compare_by_size = [](const DOS_DTA::Result& entry1,
+	                          const DOS_DTA::Result& entry2) {
+		// Do not compare sizes of objects which are not files!
+		if (!entry1.IsFile()) {
+			return true;
+		} else if (!entry2.IsFile()) {
+			return false;
+		}
+		// Both are files - we can compare sizes
+		return entry1.size < entry2.size;
+	};
+
+	auto compare_by_size_reversed = [&](const DOS_DTA::Result& entry1,
+	                                    const DOS_DTA::Result& entry2) {
+		return compare_by_size(entry2, entry1);
+	};
+
+	auto compare_by_date_time = [](const DOS_DTA::Result& entry1,
+	                               const DOS_DTA::Result& entry2) {
+		return entry1.date < entry2.date ||
+		       (entry1.date == entry2.date && entry1.time < entry2.time);
+	};
+
+	auto compare_by_date_time_reversed = [&](const DOS_DTA::Result& entry1,
+	                                         const DOS_DTA::Result& entry2) {
+		return compare_by_date_time(entry2, entry1);
+	};
+
+	for (const auto &order : sort_order) {
+		switch (order)
+		{
+		case DirSortOrder::ByName:
+			std::stable_sort(dir_content.begin(), dir_content.end(),
+			                 compare_by_name);
+			break;
+		case DirSortOrder::ByNameReversed:
+			std::stable_sort(dir_content.begin(), dir_content.end(),
+			                 compare_by_name_reversed);
+			break;
+		case DirSortOrder::ByExtension:
+			std::stable_sort(dir_content.begin(), dir_content.end(),
+			                 compare_by_extension);
+			break;
+		case DirSortOrder::ByExtensionReversed:
+			std::stable_sort(dir_content.begin(), dir_content.end(),
+			                 compare_by_extension_reversed);
+			break;
+		case DirSortOrder::BySize:
+			std::stable_sort(dir_content.begin(), dir_content.end(),
+			                 compare_by_size);
+			break;
+		case DirSortOrder::BySizeReversed:
+			std::stable_sort(dir_content.begin(), dir_content.end(),
+			                 compare_by_size_reversed);
+			break;
+		case DirSortOrder::ByDateTime:
+			std::stable_sort(dir_content.begin(), dir_content.end(),
+			                 compare_by_date_time);
+			break;
+		case DirSortOrder::ByDateTimeReversed:
+			std::stable_sort(dir_content.begin(), dir_content.end(),
+			                 compare_by_date_time_reversed);
+			break;
+		case DirSortOrder::GroupFilesFirst:
+		case DirSortOrder::GroupNonFilesFirst:
+		{
+			std::vector<DOS_DTA::Result> list1 = {};
+			std::vector<DOS_DTA::Result> list2 = {};
+			// Split the content into two lists,
+			// one for files, one for directories
+			const bool files_first = (order == DirSortOrder::GroupFilesFirst);
+			for (const auto &entry : dir_content) {
+				if ((entry.IsFile() && files_first) ||
+				    (!entry.IsFile() && !files_first)) {
+					list1.push_back(std::move(entry));
+				} else {
+					list2.push_back(std::move(entry));
+				}
+			}
+			// Concatenate and drop the lists
+			dir_content = std::move(list1);
+			dir_content.reserve(dir_content.size() + list2.size());
+			auto start_iter = std::make_move_iterator(list2.begin());
+			auto end_iter   = std::make_move_iterator(list2.end());
+			dir_content.insert(dir_content.end(), start_iter, end_iter);
+			break;
+		}
+		default: break;
+		}
+	}
 }
 
 bool DOS_GetCurrentDir(uint8_t drive, char* const buffer)

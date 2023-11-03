@@ -64,37 +64,31 @@ void TREE::Run()
 	has_option_size   = cmd->FindRemoveExist("/df");
 	has_option_hidden = cmd->FindRemoveExist("/dh");
 	if (cmd->FindRemoveExist("/on")) {
-		option_sorting = ResultSorting::ByName;
-		option_reverse = false;
+		option_sorting = { DirSortOrder::ByName };
 	}
 	if (cmd->FindRemoveExist("/o-n")) {
-		option_sorting = ResultSorting::ByName;
-		option_reverse = true;
+		option_sorting = { DirSortOrder::ByNameReversed };
 	}
 	if (cmd->FindRemoveExist("/os")) {
-		option_sorting = ResultSorting::BySize;
-		option_reverse = false;
+		option_sorting = { DirSortOrder::BySize };
 	}
 	if (cmd->FindRemoveExist("/o-s")) {
-		option_sorting = ResultSorting::BySize;
-		option_reverse = true;
+		option_sorting = { DirSortOrder::BySizeReversed };
 	}
 	if (cmd->FindRemoveExist("/od")) {
-		option_sorting = ResultSorting::ByDateTime;
-		option_reverse = false;
+		option_sorting = { DirSortOrder::ByDateTime };
 	}
 	if (cmd->FindRemoveExist("/o-d")) {
-		option_sorting = ResultSorting::ByDateTime;
-		option_reverse = true;
+		option_sorting = { DirSortOrder::ByDateTimeReversed };
 	}
 	if (cmd->FindRemoveExist("/oe")) {
-		option_sorting = ResultSorting::ByExtension;
-		option_reverse = false;
+		option_sorting = { DirSortOrder::ByExtension };
 	}
 	if (cmd->FindRemoveExist("/o-e")) {
-		option_sorting = ResultSorting::ByExtension;
-		option_reverse = true;
+		option_sorting = { DirSortOrder::ByExtensionReversed };
 	}
+	option_sorting.push_back(DirSortOrder::GroupFilesFirst);
+
 	// TODO: consider implementing /DR in some form
 
 	// Make sure no other switches are supplied
@@ -340,9 +334,9 @@ bool TREE::DisplayTree(MoreOutputStrings& output, const std::string& path,
 		return output.DisplayPartial();
 	}
 
-	// Sort the directory, files first
+	// Sort the directory contents
 
-	DOS_Sort(dir_contents, option_sorting, option_reverse, ResultGrouping::FilesFirst);
+	DOS_Sort(dir_contents, option_sorting);
 
 	// Display directory, dive into subdirectories
 

@@ -56,7 +56,7 @@ private:
 	bool has_option_size   = false;
 	bool has_option_hidden = false;
 
-	ResultSorting option_sorting = ResultSorting::None;
+	std::vector<DirSortOrder> option_sorting = {};
 	bool option_reverse = false;
 
 	bool skip_empty_line = false;

@@ -396,10 +396,23 @@ uint16_t CommandLine::Get_arglength()
 CommandLine::CommandLine(const std::string_view name, const std::string_view cmdline)
         : file_name(name)
 {
+	AddArguments(cmdline);
+}
+
+void CommandLine::AddEnvArguments(const std::string_view variable)
+{
+	auto idx = variable.find('=');
+	if (idx != std::string::npos) {
+		AddArguments(variable.substr(idx + 1));
+	}
+}
+
+void CommandLine::AddArguments(const std::string_view arguments)
+{
 	bool in_quotes = false;
 	cmds.emplace_back();
 
-	for (const auto& c : cmdline) {
+	for (const auto& c : arguments) {
 		if (c == ' ' && !in_quotes) {
 			if (!cmds.back().empty()) {
 				cmds.emplace_back();

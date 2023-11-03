@@ -523,6 +523,9 @@
     <ClCompile Include="..\src\shell\shell_cmds.cpp">
       <Filter>src\shell</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\shell\shell_command_dir.cpp">
+      <Filter>src\shell</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\shell\shell_misc.cpp">
       <Filter>src\shell</Filter>
     </ClCompile>

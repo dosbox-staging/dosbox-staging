@@ -741,6 +741,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\shell\shell.cpp" />
     <ClCompile Include="..\src\shell\shell_batch.cpp" />
     <ClCompile Include="..\src\shell\shell_cmds.cpp" />
+    <ClCompile Include="..\src\shell\shell_command_dir.cpp" />
     <ClCompile Include="..\src\shell\shell_misc.cpp" />
     <ClCompile Include="..\src\libs\ghc\fs_std_impl.cpp" />
     <ClCompile Include="..\src\libs\loguru\loguru.cpp" />
