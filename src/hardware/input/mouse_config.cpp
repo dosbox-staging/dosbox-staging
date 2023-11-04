@@ -239,12 +239,8 @@ static void config_read(Section *section)
 
 	// VMM PCI interfaces
 
-#ifdef EXPERIMENTAL_VIRTUALBOX_MOUSE
-
 	mouse_config.is_vmware_mouse_enabled = conf->Get_bool("vmware_mouse");
 	mouse_config.is_virtualbox_mouse_enabled = conf->Get_bool("virtualbox_mouse");
-
-#endif
 
 	// Start mouse emulation if everything is ready
 	mouse_shared.ready_config = true;
@@ -374,16 +370,12 @@ static void config_init(Section_prop &secprop)
 
 	// VMM interfaces
 
-#ifdef EXPERIMENTAL_VIRTUALBOX_MOUSE
-
 	prop_bool = secprop.Add_bool("vmware_mouse", only_at_start, true);
 	prop_bool->Set_help("VMware mouse interface (enabled by default).\n"
-	                    "Note: This requires PS/2 mouse to be enabled.\n");
+	                    "Note: This requires PS/2 mouse to be enabled.");
 	prop_bool = secprop.Add_bool("virtualbox_mouse", only_at_start, true);
 	prop_bool->Set_help("VirtualBox mouse interface (enabled by default).\n"
-	                    "Note: This requires PS/2 mouse to be enabled.\n");
-
-#endif
+	                    "Note: This requires PS/2 mouse to be enabled.");
 }
 
 void MOUSE_AddConfigSection(const config_ptr_t& conf)
