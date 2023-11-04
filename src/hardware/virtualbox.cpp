@@ -37,16 +37,6 @@ CHECK_NARROWING();
 // - https://git.javispedro.com/cgit/vbados.git
 // - https://git.javispedro.com/cgit/vbmouse.git
 
-// ----- IMPORTANT NOTE -----
-// This currently works with DOS VirtualBox driver (from VBADOS), but not with
-// Windows 3.1x VBMOUSE driver for VirtualBox. With the Windows 3.1x driver
-// the pointer we are getting in 'port_write_virtualbox' is wrong; mosy likely
-// we need to implement the VDS (Virtual DMA Services), as described in Q93469.
-// You can read the article for example here:
-// - https://jeffpar.github.io/kbarchive/kb/093/Q93469/
-// Thus for now the mouse support is disabled. It can be enabled in 'mouse.h' by
-// defining EXPERIMENTAL_VIRTUALBOX_MOUSE.
-
 // Static check if port number is valid
 static_assert((port_num_virtualbox & 0xfffc) == port_num_virtualbox);
 
@@ -172,9 +162,9 @@ bool RequestHeader::IsValid() const
 
 RequestHeader::RequestHeader(const PhysPt pointer)
 {
-	struct_size    = mem_readd(pointer);
-	struct_version = mem_readd(pointer + 4);
-	request_type   = static_cast<RequestType>(mem_readd(pointer + 8));
+	struct_size    = phys_readd(pointer);
+	struct_version = phys_readd(pointer + 4);
+	request_type   = static_cast<RequestType>(phys_readd(pointer + 8));
 	return_code_pt = pointer + 12;
 }
 
@@ -208,7 +198,7 @@ struct VirtualBox_GuestInfo_1_01 {
 	VirtualBox_GuestInfo_1_01() = delete;
 	VirtualBox_GuestInfo_1_01(const PhysPt pointer)
 	{
-		interface_version = mem_readd(pointer);
+		interface_version = phys_readd(pointer);
 	}
 
 	static uint32_t GetSize()
@@ -226,9 +216,9 @@ struct VirtualBox_MouseStatus_1_01 {
 	VirtualBox_MouseStatus_1_01() = delete;
 	VirtualBox_MouseStatus_1_01(const PhysPt pointer)
 	{
-		features._data = mem_readd(pointer);
-		pointer_x_pos  = static_cast<int32_t>(mem_readd(pointer + 4));
-		pointer_y_pos  = static_cast<int32_t>(mem_readd(pointer + 8));
+		features._data = phys_readd(pointer);
+		pointer_x_pos  = static_cast<int32_t>(phys_readd(pointer + 4));
+		pointer_y_pos  = static_cast<int32_t>(phys_readd(pointer + 8));
 	}
 
 	static uint32_t GetSize()
@@ -251,11 +241,11 @@ struct VirtualBox_MousePointer_1_01 {
 	VirtualBox_MousePointer_1_01() = delete;
 	VirtualBox_MousePointer_1_01(const PhysPt pointer)
 	{
-		flags._data   = mem_readd(pointer);
-		x_hot_spot    = mem_readd(pointer + 4);
-		y_hot_spot    = mem_readd(pointer + 8);
-		poiner_width  = mem_readd(pointer + 12);
-		poiner_height = mem_readd(pointer + 16);
+		flags._data   = phys_readd(pointer);
+		x_hot_spot    = phys_readd(pointer + 4);
+		y_hot_spot    = phys_readd(pointer + 8);
+		poiner_width  = phys_readd(pointer + 12);
+		poiner_height = phys_readd(pointer + 16);
 	}
 
 	static uint32_t GetSize()
@@ -343,7 +333,7 @@ static void client_disconnect()
 
 static void report_success(PhysPt return_code_pt)
 {
-	mem_writed(return_code_pt, 0);
+	phys_writed(return_code_pt, 0);
 }
 
 template <typename T>
@@ -367,9 +357,9 @@ static void handle_get_mouse_status(const RequestHeader& header,
 
 		MouseVirtualBoxPointerStatus status = {};
 		MOUSEVMM_GetPointerStatus(status);
-		mem_writed(struct_pointer, state.mouse_features._data);
-		mem_writed(struct_pointer + 4, status.absolute_x);
-		mem_writed(struct_pointer + 8, status.absolute_y);
+		phys_writed(struct_pointer, state.mouse_features._data);
+		phys_writed(struct_pointer + 4, status.absolute_x);
+		phys_writed(struct_pointer + 8, status.absolute_y);
 
 		report_success(header.return_code_pt);
 		break;
