@@ -46,7 +46,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 
 	// Create the two SAA1099 devices
 	for (auto &d : devices) {
-		d = std::make_unique<saa1099_device>(machine_config(), "", nullptr, chip_clock, render_divisor);
+		d = std::make_unique<saa1099_device>("", nullptr, chip_clock, render_divisor);
 		d->device_start();
 	}
 

@@ -147,9 +147,7 @@
 //When you go over this create sample
 #define RATE_MAX (1 << 10)
 
-sn76496_base_device::sn76496_base_device(const machine_config &mconfig,
-                                         device_type type,
-                                         const char *tag,
+sn76496_base_device::sn76496_base_device(const char *tag,
                                          int feedbackmask,
                                          int noisetap1,
                                          int noisetap2,
@@ -160,8 +158,8 @@ sn76496_base_device::sn76496_base_device(const machine_config &mconfig,
                                          bool sega,
                                          device_t *owner,
                                          uint32_t clock)
-        : device_t(mconfig, type, tag, owner, clock),
-          device_sound_interface(mconfig, *this),
+        : device_t(tag, owner, clock),
+          device_sound_interface(),
           m_ready_state(false),
           m_feedback_mask(feedbackmask),
           m_whitenoise_tap1(noisetap1),
@@ -181,58 +179,58 @@ sn76496_base_device::sn76496_base_device(const machine_config &mconfig,
           rate_counter(0)
 {}
 
-sn76496_device::sn76496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, SN76496, tag, 0x10000, 0x04, 0x08, false, false, 8, false, true, owner, clock)
+sn76496_device::sn76496_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x10000, 0x04, 0x08, false, false, 8, false, true, owner, clock)
 {
 }
 
-u8106_device::u8106_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, U8106, tag, 0x4000, 0x01, 0x02, true, false, 8, false, true, owner, clock)
+u8106_device::u8106_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x4000, 0x01, 0x02, true, false, 8, false, true, owner, clock)
 {
 }
 
-y2404_device::y2404_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, Y2404, tag, 0x10000, 0x04, 0x08, false, false, 8, false, true, owner, clock)
+y2404_device::y2404_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x10000, 0x04, 0x08, false, false, 8, false, true, owner, clock)
 {
 }
 
-sn76489_device::sn76489_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, SN76489, tag, 0x4000, 0x01, 0x02, true, false, 8, false, true, owner, clock)
+sn76489_device::sn76489_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x4000, 0x01, 0x02, true, false, 8, false, true, owner, clock)
 {
 }
 
-sn76489a_device::sn76489a_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, SN76489A, tag, 0x10000, 0x04, 0x08, false, false, 8, false, true, owner, clock)
+sn76489a_device::sn76489a_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x10000, 0x04, 0x08, false, false, 8, false, true, owner, clock)
 {
 }
 
-sn76494_device::sn76494_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, SN76494, tag, 0x10000, 0x04, 0x08, false, false, 1, false, true, owner, clock)
+sn76494_device::sn76494_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x10000, 0x04, 0x08, false, false, 1, false, true, owner, clock)
 {
 }
 
-sn94624_device::sn94624_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, SN94624, tag, 0x4000, 0x01, 0x02, true, false, 1, false, true, owner, clock)
+sn94624_device::sn94624_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x4000, 0x01, 0x02, true, false, 1, false, true, owner, clock)
 {
 }
 
-ncr8496_device::ncr8496_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, NCR8496, tag, 0x8000, 0x02, 0x20, true, false, 8, true, true, owner, clock)
+ncr8496_device::ncr8496_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x8000, 0x02, 0x20, true, false, 8, true, true, owner, clock)
 {
 }
 
-pssj3_device::pssj3_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, PSSJ3, tag, 0x8000, 0x02, 0x20, false, false, 8, true, true, owner, clock)
+pssj3_device::pssj3_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x8000, 0x02, 0x20, false, false, 8, true, true, owner, clock)
 {
 }
 
-gamegear_device::gamegear_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, GAMEGEAR, tag, 0x8000, 0x01, 0x08, true, true, 8, false, false, owner, clock)
+gamegear_device::gamegear_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x8000, 0x01, 0x08, true, true, 8, false, false, owner, clock)
 {
 }
 
-segapsg_device::segapsg_device(const machine_config &mconfig, const char *tag, device_t *owner, uint32_t clock)
-	: sn76496_base_device(mconfig, SEGAPSG, tag, 0x8000, 0x01, 0x08, true, false, 8, false, false, owner, clock)
+segapsg_device::segapsg_device(const char *tag, device_t *owner, uint32_t clock)
+	: sn76496_base_device(tag, 0x8000, 0x01, 0x08, true, false, 8, false, false, owner, clock)
 {
 }
 
@@ -520,16 +518,3 @@ void sn76496_base_device::register_for_save_states()
 	save_item(NAME(m_cycles_to_ready));
 //  save_item(NAME(m_sega_style_psg));
 }
-
-DEFINE_DEVICE_TYPE(SN76496,  sn76496_device,   "sn76496",      "SN76496")
-DEFINE_DEVICE_TYPE(U8106,    u8106_device,     "u8106",        "U8106")
-DEFINE_DEVICE_TYPE(Y2404,    y2404_device,     "y2404",        "Y2404")
-DEFINE_DEVICE_TYPE(SN76489,  sn76489_device,   "sn76489",      "SN76489")
-DEFINE_DEVICE_TYPE(SN76489A, sn76489a_device,  "sn76489a",     "SN76489A")
-DEFINE_DEVICE_TYPE(SN76494,  sn76494_device,   "sn76494",      "SN76494")
-DEFINE_DEVICE_TYPE(SN94624,  sn94624_device,   "sn94624",      "SN94624")
-DEFINE_DEVICE_TYPE(NCR8496,  ncr8496_device,   "ncr8496",      "NCR8496")
-DEFINE_DEVICE_TYPE(PSSJ3,    pssj3_device,     "pssj3",        "PSSJ-3")
-DEFINE_DEVICE_TYPE(GAMEGEAR, gamegear_device,  "gamegear_psg", "Game Gear PSG")
-DEFINE_DEVICE_TYPE(SEGAPSG,  segapsg_device,   "segapsg",      "Sega VDP PSG")
-

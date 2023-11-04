@@ -45,7 +45,6 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 
 class device_t;
-struct machine_config;
 
 #define NAME( _ASDF_ ) 0
 #define BIT( _INPUT_, _BIT_ ) ( ( _INPUT_) >> (_BIT_)) & 1
@@ -56,24 +55,13 @@ struct machine_config;
 #define READ8_MEMBER(name)              u8     name( int, int)
 #define WRITE8_MEMBER(name)				void   name([[maybe_unused]] int offset, [[maybe_unused]] int space, [[maybe_unused]] u8 data)
 
-#define DECLARE_DEVICE_TYPE(Type, Class) \
-		extern const device_type Type; \
-		class Class;
-
-#define DEFINE_DEVICE_TYPE(Type, Class, ShortName, FullName)		\
-	const device_type Type = 0;
-
 class device_sound_interface {
 public:
 	struct sound_stream {
 		void update() {}
 	};
 
-	sound_stream temp;
-
-	device_sound_interface(const machine_config & /* mconfig */, [[maybe_unused]] device_t &_device)
-	        : temp()
-	{}
+	sound_stream temp = {};
 
 	virtual ~device_sound_interface() = default;
 
@@ -94,9 +82,6 @@ struct attotime {
 	static attotime from_hz([[maybe_unused]] int hz) {
 		return attotime();
 	}
-};
-
-struct machine_config {
 };
 
 typedef int device_type;
@@ -142,9 +127,7 @@ public:
 	void save_item(int, [[maybe_unused]] int blah= 0) {
 	}
 
-	device_t(const machine_config & /* mconfig */,
-	         [[maybe_unused]] device_type type,
-	         const char *short_name,
+	device_t(const char *short_name,
 	         [[maybe_unused]] device_t *owner,
 	         u32 _clock)
 	        : clockRate(_clock),

@@ -411,7 +411,7 @@ private:
 };
 
 Ps1Synth::Ps1Synth(const std::string_view filter_choice)
-        : device(machine_config(), nullptr, nullptr, ps1_psg_clock_hz)
+        : device(nullptr, nullptr, ps1_psg_clock_hz)
 {
 	const auto callback = std::bind(&Ps1Synth::AudioCallback, this, _1);
 
