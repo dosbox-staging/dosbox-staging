@@ -457,12 +457,10 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	// Instantiate the MAME PSG device
 	constexpr auto rounded_psg_clock = render_rate_hz * render_divisor;
 	if (config_profile == ConfigProfile::PCjrSystem)
-		device = std::make_unique<sn76496_device>(machine_config(),
-		                                          "SN76489", nullptr,
+		device = std::make_unique<sn76496_device>("SN76489", nullptr,
 		                                          rounded_psg_clock);
 	else
-		device = std::make_unique<ncr8496_device>(machine_config(),
-		                                          "NCR 8496", nullptr,
+		device = std::make_unique<ncr8496_device>("NCR 8496", nullptr,
 		                                          rounded_psg_clock);
 	// Register the write ports
 	constexpr io_port_t base_addr = 0xc0;
