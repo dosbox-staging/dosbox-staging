@@ -624,6 +624,7 @@ bool DOS_Shell::GetEnvStr(const char* entry, std::string& result) const
 	if (!entry[0]) {
 		return false;
 	}
+	const auto entry_length = strlen(entry);
 	do {
 		MEM_StrCopy(env_read, env_string, 1024);
 		if (!env_string[0]) {
@@ -636,7 +637,7 @@ bool DOS_Shell::GetEnvStr(const char* entry, std::string& result) const
 		}
 		/* replace the = with \0 to get the length */
 		*equal = 0;
-		if (strlen(env_string) != strlen(entry)) {
+		if (strlen(env_string) != entry_length) {
 			continue;
 		}
 		if (strcasecmp(entry, env_string) != 0) {
