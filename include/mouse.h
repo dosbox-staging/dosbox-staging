@@ -26,12 +26,6 @@
 #include <string>
 #include <vector>
 
-// In many cases the VirtualBox mouse protocol does not work correctly yet, thus
-// it is disabled for now - if you want to enable it, read the  'IMPORTANT NOTE'
-// in 'virtualbox.cpp' and uncomment line below:
-
-// #define EXPERIMENTAL_VIRTUALBOX_MOUSE
-
 // ***************************************************************************
 // Initialization, configuration
 // ***************************************************************************
