@@ -247,6 +247,8 @@ public:
 	const std::vector<MousePhysicalInfoEntry> &GetInfoPhysical();
 
 	static bool IsNoMouseMode();
+	static bool IsMappingBlockedByDriver();
+	
 	static bool CheckInterfaces(const ListIDs &list_ids);
 	static bool PatternToRegex(const std::string &pattern, std::regex &regex);
 

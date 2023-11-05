@@ -74,6 +74,29 @@ constexpr float acceleration_multiplier = 0.02f;
 static MouseSpeedCalculator speed_xy(acceleration_multiplier *mouse_predefined.acceleration_vmm);
 
 // ***************************************************************************
+// Internal helper routines
+// ***************************************************************************
+
+static void maybe_check_remove_mappings()
+{
+	if (!mouse_shared.vmm_wants_pointer) {
+		return;
+	}
+
+	bool needs_warning = false;
+	for (const auto& interface : mouse_interfaces) {
+		if (interface->IsMapped()) {
+			needs_warning = true;
+			interface->ConfigUnMap();
+		}
+	}
+
+	if (needs_warning) {
+		LOG_WARNING("MOUSE (VMM): Mappings removed due to incompatible VirtualBox driver");
+	}
+}
+
+// ***************************************************************************
 // Requests from Virtual Machine Manager guest side drivers
 // ***************************************************************************
 
@@ -96,21 +119,21 @@ bool MOUSEVMM_IsSupported(const MouseVmmProtocol protocol)
 
 void MOUSEVMM_Activate(const MouseVmmProtocol protocol)
 {
-	bool is_activating    = false;
-	const bool was_active = mouse_shared.active_vmm;
+	bool is_activating = false;
 
 	if (protocol == MouseVmmProtocol::VirtualBox && !virtualbox.is_active) {
 		virtualbox.is_active = true;
 		is_activating        = true;
 		LOG_MSG("MOUSE (PS/2): VirtualBox protocol enabled");
 		mouse_shared.vmm_wants_pointer = virtualbox.wants_pointer;
+		maybe_check_remove_mappings();
 	} else if (protocol == MouseVmmProtocol::VmWare && !vmware.is_active) {
 		vmware.is_active = true;
 		is_activating    = true;
 		LOG_MSG("MOUSE (PS/2): VMware protocol enabled");
 	}
 
-	if (is_activating && !was_active) {
+	if (is_activating) {
 		mouse_shared.active_vmm = true;
 		MOUSEPS2_UpdateButtonSquish();
 		MOUSE_UpdateGFX();
@@ -181,6 +204,7 @@ void MOUSEVMM_SetPointerVisible_VirtualBox(const bool is_visible)
 		virtualbox.wants_pointer = is_visible;
 		if (virtualbox.is_active) {
 			mouse_shared.vmm_wants_pointer = is_visible;
+			maybe_check_remove_mappings();
 			MOUSE_UpdateGFX();
 		}
 	}

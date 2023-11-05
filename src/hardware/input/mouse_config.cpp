@@ -26,6 +26,7 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+#include "video.h"
 
 #include <cmath>
 
@@ -242,6 +243,19 @@ static void config_read(Section *section)
 	mouse_config.is_vmware_mouse_enabled = conf->Get_bool("vmware_mouse");
 	mouse_config.is_virtualbox_mouse_enabled = conf->Get_bool("virtualbox_mouse");
 
+	if (!GFX_HaveDesktopEnvironment() &&
+	    mouse_config.is_virtualbox_mouse_enabled) {
+	    	// VirtualBox guest side driver is able to request us to re-use
+	    	// host side cursor (at least the 3rd party DOS driver does so)
+	    	// and we have no way to refuse, there seems to be no easy way
+	    	// to handle the situation gracefully in a no-desktop
+	    	// environment unless we want to display our own mouse cursor.
+	    	// Therefore, it is best to block the VirtualBox mouse API - it
+	    	// wasn't designed for such a use case.
+		LOG_WARNING("MOUSE: VirtualBox interface cannot work in a no-desktop environment");
+		mouse_config.is_virtualbox_mouse_enabled = false;
+	}
+
 	// Start mouse emulation if everything is ready
 	mouse_shared.ready_config = true;
 	MOUSE_StartupIfReady();
@@ -372,10 +386,12 @@ static void config_init(Section_prop &secprop)
 
 	prop_bool = secprop.Add_bool("vmware_mouse", only_at_start, true);
 	prop_bool->Set_help("VMware mouse interface (enabled by default).\n"
-	                    "Note: This requires PS/2 mouse to be enabled.");
+	                    "Fully compatible only with experimental 3rd party Windows 3.1x driver.\n"
+	                    "Note: Requires PS/2 mouse to be enabled.");
 	prop_bool = secprop.Add_bool("virtualbox_mouse", only_at_start, true);
 	prop_bool->Set_help("VirtualBox mouse interface (enabled by default).\n"
-	                    "Note: This requires PS/2 mouse to be enabled.");
+	                    "Fully compatible only with 3rd party Windows 3.1x driver.\n"
+	                    "Note: Requires PS/2 mouse to be enabled.");
 }
 
 void MOUSE_AddConfigSection(const config_ptr_t& conf)
