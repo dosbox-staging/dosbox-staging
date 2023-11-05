@@ -43,6 +43,7 @@ private:
 	bool ParseSensitivity(const std::string &param, int16_t &value);
 	static bool ParseIntParam(const std::string &param, int &value);
 	bool CheckInterfaces();
+	bool CheckMappingPossible();
 	void FinalizeMapping();
 
 	static const char *GetMapStatusStr(const MouseMapStatus map_status);

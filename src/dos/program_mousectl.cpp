@@ -325,6 +325,21 @@ void MOUSECTL::FinalizeMapping()
 	WriteOut("\n\n");
 }
 
+bool MOUSECTL::CheckMappingPossible()
+{
+	if (MouseControlAPI::IsNoMouseMode()) {
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE"));
+		return false;
+	}
+
+	if (MouseControlAPI::IsMappingBlockedByDriver()) {
+		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER"));
+		return false;
+	}
+
+	return true;
+}
+
 bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pattern)
 {
 	std::regex regex;
@@ -333,8 +348,7 @@ bool MOUSECTL::CmdMap(const MouseInterfaceId interface_id, const std::string &pa
 		return false;
 	}
 
-	if (MouseControlAPI::IsNoMouseMode()) {
-		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE"));
+	if (!CheckMappingPossible()) {
 		return false;
 	}
 
@@ -352,8 +366,7 @@ bool MOUSECTL::CmdMap()
 {
 	assert(!list_ids.empty());
 
-	if (MouseControlAPI::IsNoMouseMode()) {
-		WriteOut(MSG_Get("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE"));
+	if (!CheckMappingPossible()) {
 		return false;
 	}
 
@@ -550,6 +563,8 @@ void MOUSECTL::AddMessages()
 
 	MSG_Add("PROGRAM_MOUSECTL_MAPPING_NO_MOUSE",
 	        "Mapping not available in no-mouse mode.\n");
+	MSG_Add("PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER",
+	        "Mapping not possible with current guest mouse driver.\n");
 	MSG_Add("PROGRAM_MOUSECTL_NO_INTERFACES",
 	        "No mouse interfaces available.\n");
 	MSG_Add("PROGRAM_MOUSECTL_MISSING_INTERFACES",

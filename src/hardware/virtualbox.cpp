@@ -134,6 +134,11 @@ enum class RequestType : uint32_t {
 	ReportGuestInfo = 50,
 };
 
+enum class ReturnCode : uint32_t {
+	ErrorNotImplemented = (UINT32_MAX + 1) - 12,
+	ErrorNotSupported   = (UINT32_MAX + 1) - 37,
+};
+
 constexpr uint32_t ver_1_01 = (1 << 16) + 1;
 constexpr uint32_t ver_1_04 = (1 << 16) + 4;
 
@@ -336,16 +341,37 @@ static void report_success(PhysPt return_code_pt)
 	phys_writed(return_code_pt, 0);
 }
 
+static void report_failure(PhysPt return_code_pt, const ReturnCode fail_code)
+{
+	phys_writed(return_code_pt, static_cast<uint32_t>(fail_code));
+}
+
 template <typename T>
 static bool check_size(const RequestHeader& header)
 {
 	return header.CheckStructSize(T::GetSize());
 }
 
+static void handle_error_unsupported_request(const RequestHeader& header)
+{
+	report_failure(header.return_code_pt,
+	               ReturnCode::ErrorNotImplemented);
+	warn_unsupported_request(header.request_type);
+}
+
+static void handle_error_unsupported_struct_version(const RequestHeader& header)
+{
+	report_failure(header.return_code_pt,
+	               ReturnCode::ErrorNotSupported);
+	warn_unsupported_struct_version(header);
+}
+
 static void handle_get_mouse_status(const RequestHeader& header,
                                     const PhysPt struct_pointer)
 {
 	if (!has_feature_mouse) {
+		report_failure(header.return_code_pt,
+			       ReturnCode::ErrorNotSupported);
 		return;
 	}
 
@@ -364,7 +390,7 @@ static void handle_get_mouse_status(const RequestHeader& header,
 		report_success(header.return_code_pt);
 		break;
 	}
-	default: warn_unsupported_struct_version(header); break;
+	default: handle_error_unsupported_struct_version(header); break;
 	}
 }
 
@@ -372,6 +398,8 @@ static void handle_set_mouse_status(const RequestHeader& header,
                                     const PhysPt struct_pointer)
 {
 	if (!has_feature_mouse) {
+		report_failure(header.return_code_pt,
+			       ReturnCode::ErrorNotSupported);
 		return;
 	}
 
@@ -404,7 +432,7 @@ static void handle_set_mouse_status(const RequestHeader& header,
 		report_success(header.return_code_pt);
 		break;
 	}
-	default: warn_unsupported_struct_version(header); break;
+	default: handle_error_unsupported_struct_version(header); break;
 	}
 }
 
@@ -412,6 +440,8 @@ static void handle_set_pointer_shape(const RequestHeader& header,
                                      const PhysPt struct_pointer)
 {
 	if (!has_feature_mouse) {
+		report_failure(header.return_code_pt,
+		               ReturnCode::ErrorNotSupported);
 		return;
 	}
 
@@ -439,7 +469,7 @@ static void handle_set_pointer_shape(const RequestHeader& header,
 		report_success(header.return_code_pt);
 		break;
 	}
-	default: warn_unsupported_struct_version(header); break;
+	default: handle_error_unsupported_struct_version(header); break;
 	}
 }
 
@@ -466,7 +496,7 @@ static void handle_report_guest_info(const RequestHeader& header,
 		report_success(header.return_code_pt);
 		break;
 	}
-	default: warn_unsupported_struct_version(header); break;
+	default: handle_error_unsupported_struct_version(header); break;
 	}
 }
 
@@ -507,7 +537,7 @@ static void port_write_virtualbox(io_port_t, io_val_t value, io_width_t width)
 	case RequestType::ReportGuestInfo:
 		handle_report_guest_info(header, struct_pointer);
 		break;
-	default: warn_unsupported_request(header.request_type); break;
+	default: handle_error_unsupported_request(header); break;
 	}
 }
 
