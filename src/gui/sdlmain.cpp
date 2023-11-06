@@ -103,12 +103,23 @@ typedef GLvoid* (APIENTRYP PFNGLMAPBUFFERARBPROC) (GLenum target, GLenum access)
 typedef GLboolean (APIENTRYP PFNGLUNMAPBUFFERARBPROC) (GLenum target);
 #endif
 
-PFNGLGENBUFFERSARBPROC glGenBuffersARB = nullptr;
-PFNGLBINDBUFFERARBPROC glBindBufferARB = nullptr;
+// Create function pointer variables inside a namespace to avoid clobbering
+// extenally defined function names with the same names. This fixes symbol type
+// mismatch warnings at link time.
+namespace gl1 {
+PFNGLGENBUFFERSARBPROC glGenBuffersARB       = nullptr;
+PFNGLBINDBUFFERARBPROC glBindBufferARB       = nullptr;
 PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = nullptr;
-PFNGLBUFFERDATAARBPROC glBufferDataARB = nullptr;
-PFNGLMAPBUFFERARBPROC glMapBufferARB = nullptr;
-PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = nullptr;
+PFNGLBUFFERDATAARBPROC glBufferDataARB       = nullptr;
+PFNGLMAPBUFFERARBPROC glMapBufferARB         = nullptr;
+PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB     = nullptr;
+} // namespace gl1
+#define glGenBuffersARB    gl1::glGenBuffersARB
+#define glBindBufferARB    gl1::glBindBufferARB
+#define glDeleteBuffersARB gl1::glDeleteBuffersARB
+#define glBufferDataARB    gl1::glBufferDataARB
+#define glMapBufferARB     gl1::glMapBufferARB
+#define glUnmapBufferARB   gl1::glUnmapBufferARB
 
 /* Don't guard these with GL_VERSION_2_0 - Apple defines it but not these typedefs.
  * If they're already defined they should match these definitions, so no conflicts.
