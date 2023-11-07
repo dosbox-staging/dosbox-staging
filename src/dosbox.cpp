@@ -704,23 +704,32 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&KEYBOARD_Init);
 	secprop->AddInitFunction(&PCI_Init); // PCI bus
 
-	secprop = control->AddSection_prop("voodoo", &VOODOO_Init, false);
+	secprop = control->AddSection_prop("voodoo", &VOODOO_Init);
 
-	const char* voodootypes[] = {"disabled", "4", "12", nullptr};
-	pstring = secprop->Add_string("voodoo_memsize", only_at_start, "12");
-	pstring->Set_values(voodootypes);
+	pbool = secprop->Add_bool("voodoo", when_idle, true);
+	pbool->Set_help("Enable 3dfx Voodoo emulation (enabled by default).");
+
+	const char* voodoo_memsizes[] = {"4", "12", nullptr};
+
+	pstring = secprop->Add_string("voodoo_memsize",
+	                              only_at_start,
+	                              voodoo_memsizes[0]);
+	pstring->Set_values(voodoo_memsizes);
 	pstring->Set_help(
-	        "Memory size (in MB) of the 3dfx Voodoo card (12 MB as default).");
+	        "Set the amount of video memory for 3dfx Voodoo graphics, either 4 or 12 megabytes.\n"
+	        "The memory is used by the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU)\n"
+	        "as follows:\n"
+	        "   4: 2 MB for the FBI and one TMU with 2 MB (default)\n"
+	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
 
-	pint = secprop->Add_int("voodoo_perf", only_at_start, 1);
-	pint->SetMinMax(0, 3);
-	pint->Set_help("Performance optimisations to use when emulating the 3dfx Voodoo card:\n"
-	               "   0:  No optimizations.\n"
-	               "   1:  Multi-threading (default).\n"
-	               "   2:  Disable bilinear filtering.\n"
-	               "   3:  All optimizations (both 1 and 2).\n"
-	               "Note: Voodoo emulation is software-based and does not use host-level\n"
-	               "      OpenGL calls.");
+	pbool = secprop->Add_bool("voodoo_multithreading", only_at_start, true);
+	pbool->Set_help("Use threads to improve 3dfx Voodoo performance (enabled by default).");
+
+	pbool = secprop->Add_bool("voodoo_bilinear_filtering", only_at_start, false);
+	pbool->Set_help(
+	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture\n"
+	        "smoothing effect. Only suggested if you have a fast desktop-class\n"
+	        "CPU, as it can impact frame rates on slower systems (disabled by default).");
 
 	// Configure capture
 	CAPTURE_AddConfigSection(control);

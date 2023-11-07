@@ -248,7 +248,7 @@ struct poly_vertex
  *************************************/
 
 /* enumeration specifying which model of Voodoo we are emulating */
-enum
+enum VoodooModel
 {
 	VOODOO_1,
 	VOODOO_1_DTMU,
@@ -3003,33 +3003,9 @@ iterated W    = 18.32 [48 bits]
 **************************************************************************/
 
 static voodoo_state* v = nullptr;
-static uint8_t vtype   = VOODOO_1;
-
-enum class PerformanceFlags : uint8_t {
-	None                = 0,
-	MultiThreading      = 1 << 0,
-	NoBilinearFiltering = 1 << 1,
-	All                 = (MultiThreading | NoBilinearFiltering),
-};
-
-static const char* describe_performance_flags(const PerformanceFlags flags)
-{
-	// Note: the descriptions are meant to be used as a status postfix
-	switch (flags) {
-	case PerformanceFlags::None:
-		return " and no optimizations";
-	case PerformanceFlags::MultiThreading:
-		return " and multi-threading";
-	case PerformanceFlags::NoBilinearFiltering:
-		return " and no bilinear filtering";
-	case PerformanceFlags::All:
-		return ", multi-threading, and no biliear filtering";
-	}
-	assert(false);
-	return "unknown performance flag";
-}
-
-static PerformanceFlags vperf = {};
+static auto vtype = VOODOO_1;
+static auto voodoo_multithreading     = true;
+static auto voodoo_bilinear_filtering = false;
 
 #define LOG_VOODOO LOG_PCI
 enum {
@@ -7739,24 +7715,12 @@ static void Voodoo_Startup() {
 	v->draw = {};
 	v->draw.vfreq = 1000.0 / 60.0;
 
-	v->tworker.use_threads = (vperf == PerformanceFlags::MultiThreading ||
-	                          vperf == PerformanceFlags::All);
-
-	v->tworker.disable_bilinear_filter = (vperf == PerformanceFlags::NoBilinearFiltering ||
-	                                      vperf == PerformanceFlags::All);
+	v->tworker.use_threads = voodoo_multithreading;
+	v->tworker.disable_bilinear_filter = (voodoo_bilinear_filtering == false);
 
 	// Switch the pagehandler now that v has been allocated and is in use
 	voodoo_pagehandler = &voodoo_real_pagehandler;
 	PAGING_InitTLB();
-
-	// Log the startup
-	const auto ram_size_mb = (vtype == VOODOO_1_DTMU ? 12 : 4);
-
-	const auto performance_msg = describe_performance_flags(vperf);
-
-	LOG_MSG("VOODOO: Initialized with %d MB of RAM%s",
-	        ram_size_mb,
-	        performance_msg);
 }
 
 PageHandler* VOODOO_PCI_GetLFBPageHandler(Bitu page) {
@@ -7771,17 +7735,17 @@ void VOODOO_Init(Section* sec)
 {
 	auto* section = dynamic_cast<Section_prop*>(sec);
 
-	// Only activate on SVGA machines
-	if (machine != MCH_VGA || svgaCard == SVGA_None || !section) {
+	// Only activate on SVGA machines and when requested
+	if (machine != MCH_VGA || svgaCard == SVGA_None || !section ||
+	    !section->Get_bool("voodoo")) {
 		return;
 	}
+	//
+	const std::string memsize_pref = section->Get_string("voodoo_memsize");
+	vtype = (memsize_pref == "4" ? VOODOO_1 : VOODOO_1_DTMU);
 
-	switch (section->Get_string("voodoo_memsize")[0])
-	{
-	case '1': vtype = VOODOO_1_DTMU; break; // 12 MB
-	case '4': vtype = VOODOO_1; break;      // 4 MB
-	default: return;                        // disabled
-	}
+	voodoo_multithreading = section->Get_bool("voodoo_multithreading");
+	voodoo_bilinear_filtering = section->Get_bool("voodoo_bilinear_filtering");
 
 	sec->AddDestroyFunction(&VOODOO_Destroy,false);
 
@@ -7791,7 +7755,11 @@ void VOODOO_Init(Section* sec)
 	voodoo_current_lfb = PciVoodooLfbBase;
 	voodoo_pagehandler = &voodoo_init_pagehandler;
 
-	vperf = static_cast<PerformanceFlags>(section->Get_int("voodoo_perf"));
-
 	PCI_AddDevice(new PCI_SSTDevice());
+
+	// Log the startup
+	LOG_MSG("VOODOO: Initialized with %s MB of RAM, %smultithreading, and %sbilinear filtering",
+	        memsize_pref.c_str(),
+	        (voodoo_multithreading ? "" : "no "),
+	        (voodoo_bilinear_filtering ? "" : "no "));
 }
