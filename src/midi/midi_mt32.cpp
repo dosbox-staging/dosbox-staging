@@ -527,11 +527,17 @@ static mt32emu_report_handler_i get_report_handler_interface()
 		}
 
 		static void printDebug([[maybe_unused]] void* instance_data,
-		                       const char* fmt, va_list list)
+		                       [[maybe_unused]] const char* fmt,
+		                       [[maybe_unused]] va_list list)
 		{
-			char msg[1024];
-			safe_sprintf(msg, fmt, list);
-			LOG_DEBUG("MT32: %s", msg);
+#if !defined(NDEBUG)
+			// Skip processing MT-32 debug output in release builds
+			// because it can be bursty
+			char msg[1024] = "MT32: ";
+			assert(fmt);
+			safe_strcat(msg, fmt);
+			LOG_DEBUG(msg, list);
+#endif
 		}
 
 		static void onErrorControlROM(void*)
