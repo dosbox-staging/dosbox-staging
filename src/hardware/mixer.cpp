@@ -1055,6 +1055,7 @@ void MixerChannel::Mix(const uint16_t frames_requested)
 
 		handler(static_cast<work_index_t>(frames_remaining));
 	}
+
 	if (do_sleep) {
 		sleeper.MaybeSleep();
 	}
@@ -1693,38 +1694,133 @@ AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame frame) const
 	return {a.left + b.left, a.right + b.right};
 }
 
-MixerChannel::Sleeper::Sleeper(MixerChannel& c) : channel(c) {}
-
-// Records if samples had a magnitude great than 1. This is a one-way street;
-// once "had_noise" is tripped, it can only be reset after waking up.
-void MixerChannel::Sleeper::Listen(const AudioFrame frame)
+// Returns true if configuration succeeded and false otherwise
+bool MixerChannel::ConfigureFadeOut(const std::string_view prefs)
 {
-	if (had_noise) {
-		return;
+	return sleeper.ConfigureFadeOut(prefs);
+}
+
+// Returns true if configuration succeeded and false otherwise
+bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string_view prefs)
+{
+	auto set_wait_and_fade = [&](const int wait_ms, const int fade_ms) {
+		fadeout_or_sleep_after_ms = check_cast<uint16_t>(wait_ms);
+
+		fadeout_decrement_per_ms = 1.0f / static_cast<uint16_t>(fade_ms);
+
+		LOG_MSG("%s: Fade-out enabled (wait %d ms then fade for %d ms)",
+		        channel.GetName().c_str(),
+		        wait_ms,
+		        fade_ms);
+	};
+	// Disable fade-out (default)
+	if (has_false(prefs)) {
+		wants_fadeout = false;
+		return true;
+	}
+	// Enable fade-out with defaults
+	if (has_true(prefs)) {
+		set_wait_and_fade(default_wait_ms, default_wait_ms);
+		wants_fadeout = true;
+		return true;
 	}
 
-	constexpr auto silence_threshold = 1.0f;
+	// Let the fade-out last between 10 ms and 3 seconds.
+	constexpr auto min_fade_ms = 10;
+	constexpr auto max_fade_ms = 3000;
 
-	had_noise = fabsf(frame.left) > silence_threshold ||
-	            fabsf(frame.right) > silence_threshold;
+	// Custom setting in 'WAIT FADE' syntax, where both are milliseconds.
+	if (auto prefs_vec = split(prefs); prefs_vec.size() == 2) {
+		const auto wait_ms = parse_int(prefs_vec[0]);
+		const auto fade_ms = parse_int(prefs_vec[1]);
+		if (wait_ms && fade_ms) {
+			const auto wait_is_valid = (*wait_ms >= min_wait_ms &&
+			                            *wait_ms <= max_wait_ms);
+
+			const auto fade_is_valid = (*fade_ms >= min_fade_ms &&
+			                            *fade_ms <= max_fade_ms);
+
+			if (wait_is_valid && fade_is_valid) {
+				set_wait_and_fade(*wait_ms, *fade_ms);
+				wants_fadeout = true;
+				return true;
+			}
+		}
+	}
+	// Otherwise inform the user and disable the fade
+	LOG_WARNING("%s: Invalid custom fade-out definition: '%s'. Must be "
+	            "specified in \"WAIT FADE\" format where WAIT is between "
+	            "%d and %d (in milliseconds) and FADE is between %d and "
+	            "%d (in milliseconds). Using 'off'",
+	            channel.GetName().c_str(),
+	            prefs.data(),
+	            min_wait_ms,
+	            max_wait_ms,
+	            min_fade_ms,
+	            max_fade_ms);
+
+	wants_fadeout = false;
+	return false;
+}
+
+void MixerChannel::Sleeper::DecrementFadeLevel(const int64_t awake_for_ms)
+{
+	assert(awake_for_ms >= fadeout_or_sleep_after_ms);
+	const auto elapsed_fade_ms = static_cast<float>(
+	        awake_for_ms - fadeout_or_sleep_after_ms);
+
+	const auto decrement = fadeout_decrement_per_ms * elapsed_fade_ms;
+
+	constexpr auto min_level = 0.0f;
+	constexpr auto max_level = 1.0f;
+	fadeout_level = std::clamp(max_level - decrement, min_level, max_level);
+}
+
+MixerChannel::Sleeper::Sleeper(MixerChannel& c, const uint16_t sleep_after_ms)
+        : channel(c),
+          fadeout_or_sleep_after_ms(sleep_after_ms)
+{
+	// The constructed sleep period is programmatically controlled (so assert)
+	assert(fadeout_or_sleep_after_ms >= min_wait_ms);
+	assert(fadeout_or_sleep_after_ms <= max_wait_ms);
+}
+
+// Either fades the frame or checks if the channel had any signal output.
+AudioFrame MixerChannel::Sleeper::MaybeFadeOrListen(const AudioFrame& frame)
+{
+	if (wants_fadeout) {
+		// When fading, we actively drive down the channel level
+		return {frame.left * fadeout_level, frame.right * fadeout_level};
+	}
+	if (!had_signal) {
+		// Otherwise, we simply passively listen for signal
+		constexpr auto silence_threshold = 1.0f;
+		had_signal = fabsf(frame.left) > silence_threshold ||
+		             fabsf(frame.right) > silence_threshold;
+	}
+	return frame;
 }
 
 void MixerChannel::Sleeper::MaybeSleep()
 {
-	constexpr auto consider_sleeping_after_ms = 250;
-
-	// Not enough time has passed.. try again later
-	if (GetTicksSince(woken_at_ms) < consider_sleeping_after_ms) {
+	const auto awake_for_ms = GetTicksSince(woken_at_ms);
+	// Not enough time has passed.. .. try to sleep later
+	if (awake_for_ms < fadeout_or_sleep_after_ms) {
 		return;
 	}
-
-	// Stay awake if it's been noisy, otherwise we can sleep
-	if (had_noise) {
+	if (wants_fadeout) {
+		// The channel is still fading out.. try to sleep later
+		if (fadeout_level > 0.0f) {
+			DecrementFadeLevel(awake_for_ms);
+			return;
+		}
+	} else if (had_signal) {
+		// The channel is still producing a signal.. so stay away
 		WakeUp();
-	} else {
-		channel.Enable(false);
-		// LOG_INFO("MIXER: %s fell asleep", channel.name.c_str());
+		return;
 	}
+	channel.Enable(false);
+	// LOG_INFO("MIXER: %s fell asleep", channel.name.c_str());
 }
 
 // Returns true when actually awoken otherwise false if already awake.
@@ -1732,7 +1828,8 @@ bool MixerChannel::Sleeper::WakeUp()
 {
 	// Always reset for another round of awakeness
 	woken_at_ms = GetTicks();
-	had_noise   = false;
+	fadeout_level = 1.0f;
+	had_signal    = false;
 
 	const auto was_sleeping = !channel.is_enabled;
 	if (was_sleeping) {
@@ -1883,7 +1980,7 @@ void MixerChannel::AddSamples(const uint16_t frames, const Type* data)
 		}
 
 		if (do_sleep) {
-			sleeper.Listen(frame);
+			frame = sleeper.MaybeFadeOrListen(frame);
 		}
 
 		// Mix samples to the master output
@@ -1938,15 +2035,14 @@ void MixerChannel::AddStretched(const uint16_t len, int16_t* data)
 		const auto diff_mul = index & FreqMask;
 		index += index_add;
 
-		const auto sample = prev_frame.left +
-		                    static_cast<float>((diff * diff_mul) >> FreqShift);
+		auto sample = prev_frame.left +
+		              static_cast<float>((diff * diff_mul) >> FreqShift);
 
-		const AudioFrame frame_with_gain = {
-		        sample * combined_volume_scalar.left,
-		        sample * combined_volume_scalar.right};
+		AudioFrame frame_with_gain = {sample * combined_volume_scalar.left,
+		                              sample * combined_volume_scalar.right};
 
 		if (do_sleep) {
-			sleeper.Listen(frame_with_gain);
+			frame_with_gain = sleeper.MaybeFadeOrListen(frame_with_gain);
 		}
 
 		mixer.work[mixpos][mapped_output_left] += frame_with_gain.left;

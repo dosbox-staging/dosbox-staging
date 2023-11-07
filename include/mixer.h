@@ -116,6 +116,7 @@ static constexpr StereoLine Reverse = {Right, Left};
 enum class ChannelFeature {
 	ChorusSend,
 	DigitalAudio,
+	FadeOut,
 	ReverbSend,
 	Sleep,
 	Stereo,
@@ -209,6 +210,8 @@ public:
 	void ConfigureHighPassFilter(const uint8_t order, const uint16_t cutoff_freq);
 	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq);
 	bool TryParseAndSetCustomFilter(const std::string_view filter_prefs);
+
+	bool ConfigureFadeOut(const std::string_view fadeout_prefs);
 
 	void SetResampleMethod(const ResampleMethod method);
 	void SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_freq);
@@ -402,15 +405,30 @@ private:
 	class Sleeper {
 	public:
 		Sleeper() = delete;
-		Sleeper(MixerChannel& c);
-		void Listen(const AudioFrame frame);
+		Sleeper(MixerChannel& c,
+		        const uint16_t sleep_after_ms = default_wait_ms);
+		bool ConfigureFadeOut(const std::string_view prefs);
+		AudioFrame MaybeFadeOrListen(const AudioFrame& frame);
 		void MaybeSleep();
 		bool WakeUp();
 
 	private:
+		void DecrementFadeLevel(const int64_t awake_for_ms);
+
 		MixerChannel& channel;
-		int64_t woken_at_ms = 0;
-		bool had_noise      = false;
+
+		// The wait before fading or sleeping is bound between:
+		static constexpr auto min_wait_ms     = 100;
+		static constexpr auto default_wait_ms = 500;
+		static constexpr auto max_wait_ms     = 5000;
+
+		int64_t woken_at_ms                = {};
+		float fadeout_level                = {};
+		float fadeout_decrement_per_ms     = {};
+		uint16_t fadeout_or_sleep_after_ms = {};
+
+		bool wants_fadeout = false;
+		bool had_signal    = false;
 	};
 	Sleeper sleeper;
 	const bool do_sleep = false;
