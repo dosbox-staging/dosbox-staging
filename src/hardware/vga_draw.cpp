@@ -2877,12 +2877,13 @@ void VGA_KillDrawing(void) {
 	if (!vga.draw.vga_override) RENDER_EndUpdate(true);
 }
 
-void VGA_SetOverride(bool vga_override) {
-	if (vga.draw.vga_override!=vga_override) {
-
+void VGA_SetOverride(const bool vga_override, const double override_refresh_hz)
+{
+	if (vga.draw.vga_override != vga_override) {
 		if (vga_override) {
 			VGA_KillDrawing();
 			vga.draw.vga_override=true;
+			vga.draw.override_refresh_hz = override_refresh_hz;
 		} else {
 			vga.draw.vga_override=false;
 			vga.draw.render.width=0; // change it so the output window gets updated

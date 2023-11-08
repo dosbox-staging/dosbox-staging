@@ -262,7 +262,9 @@ double VGA_GetPreferredRate()
 {
 	switch (vga.draw.dos_rate_mode) {
 	case VgaRateMode::Default:
-		return vga.draw.dos_refresh_hz;
+		// If another device is overriding our VGA card, then use its rate
+		return vga.draw.vga_override ? vga.draw.override_refresh_hz
+		                             : vga.draw.dos_refresh_hz;
 	case VgaRateMode::Host:
 		assert(vga.draw.host_refresh_hz > RefreshRateMin);
 		return vga.draw.host_refresh_hz;

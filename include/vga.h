@@ -274,6 +274,12 @@ struct VgaDraw {
 
 	double host_refresh_hz    = RefreshRateHostDefault;
 	double dos_refresh_hz     = RefreshRateDosDefault;
+
+	// The override rate corresponds to the override VGA mode where another
+	// device can take over video output in place of the VGA card, such as
+	// Voodoo.
+	double override_refresh_hz = RefreshRateDosDefault;
+
 	double custom_refresh_hz  = RefreshRateDosDefault;
 	VgaRateMode dos_rate_mode = VgaRateMode::Default;
 
@@ -1120,7 +1126,7 @@ void VGA_SetCGA4Table(uint8_t val0, uint8_t val1, uint8_t val2, uint8_t val3);
 PixelFormat VGA_ActivateHardwareCursor();
 void VGA_KillDrawing(void);
 
-void VGA_SetOverride(bool vga_override);
+void VGA_SetOverride(const bool vga_override, const double override_refresh_hz = 0);
 void VGA_LogInitialization(const char* adapter_name, const char* ram_type,
                            const size_t num_modes);
 
