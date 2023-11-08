@@ -1248,52 +1248,185 @@ static void dyn_iret(void) {
 }
 
 static void dyn_string(STRING_OP op) {
-	if (decode.rep) MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
-	else gen_mov_dword_to_reg_imm(FC_OP1,1);
-	gen_mov_word_to_reg(FC_OP2,&cpu.direction,true);
-	uint8_t di_base_addr=decode.seg_prefix_used ? decode.seg_prefix : DRC_SEG_DS;
-	switch (op) {
-		case R_MOVSB:
-			if (decode.big_addr) gen_call_function_mm((void*)&dynrec_movsb_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			else gen_call_function_mm((void*)&dynrec_movsb_word,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			break;
-		case R_MOVSW:
-			if (decode.big_addr) gen_call_function_mm((void*)&dynrec_movsw_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			else gen_call_function_mm((void*)&dynrec_movsw_word,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			break;
-		case R_MOVSD:
-			if (decode.big_addr) gen_call_function_mm((void*)&dynrec_movsd_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			else gen_call_function_mm((void*)&dynrec_movsd_word,(Bitu)DRCD_SEG_PHYS(di_base_addr),(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			break;
-
-		case R_LODSB:
-			if (decode.big_addr) gen_call_function_m((void*)&dynrec_lodsb_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr));
-			else gen_call_function_m((void*)&dynrec_lodsb_word,(Bitu)DRCD_SEG_PHYS(di_base_addr));
-			break;
-		case R_LODSW:
-			if (decode.big_addr) gen_call_function_m((void*)&dynrec_lodsw_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr));
-			else gen_call_function_m((void*)&dynrec_lodsw_word,(Bitu)DRCD_SEG_PHYS(di_base_addr));
-			break;
-		case R_LODSD:
-			if (decode.big_addr) gen_call_function_m((void*)&dynrec_lodsd_dword,(Bitu)DRCD_SEG_PHYS(di_base_addr));
-			else gen_call_function_m((void*)&dynrec_lodsd_word,(Bitu)DRCD_SEG_PHYS(di_base_addr));
-			break;
-
-		case R_STOSB:
-			if (decode.big_addr) gen_call_function_m((void*)&dynrec_stosb_dword,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			else gen_call_function_m((void*)&dynrec_stosb_word,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			break;
-		case R_STOSW:
-			if (decode.big_addr) gen_call_function_m((void*)&dynrec_stosw_dword,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			else gen_call_function_m((void*)&dynrec_stosw_word,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			break;
-		case R_STOSD:
-			if (decode.big_addr) gen_call_function_m((void*)&dynrec_stosd_dword,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			else gen_call_function_m((void*)&dynrec_stosd_word,(Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
-			break;
-		default: IllegalOptionDynrec("dyn_string");
+	if (decode.rep) {
+		MOV_REG_WORD_TO_HOST_REG(FC_OP1, DRC_REG_ECX, decode.big_addr);
+	} else {
+		gen_mov_dword_to_reg_imm(FC_OP1, 1);
 	}
-	if (decode.rep) MOV_REG_WORD_FROM_HOST_REG(FC_RETOP,DRC_REG_ECX,decode.big_addr);
+	gen_mov_word_to_reg(FC_OP2, &cpu.direction, true);
+	uint8_t di_base_addr = decode.seg_prefix_used ? decode.seg_prefix
+	                                              : DRC_SEG_DS;
+	switch (op) {
+	case R_MOVSB:
+		if (decode.big_addr) {
+			gen_call_function_mm((void*)&dynrec_movsb_dword,
+			                     (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_mm((void*)&dynrec_movsb_word,
+			                     (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+	case R_MOVSW:
+		if (decode.big_addr) {
+			gen_call_function_mm((void*)&dynrec_movsw_dword,
+			                     (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_mm((void*)&dynrec_movsw_word,
+			                     (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+	case R_MOVSD:
+		if (decode.big_addr) {
+			gen_call_function_mm((void*)&dynrec_movsd_dword,
+			                     (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_mm((void*)&dynrec_movsd_word,
+			                     (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+
+	case R_LODSB:
+		if (decode.big_addr) {
+			gen_call_function_m((void*)&dynrec_lodsb_dword,
+			                    (Bitu)DRCD_SEG_PHYS(di_base_addr));
+		} else {
+			gen_call_function_m((void*)&dynrec_lodsb_word,
+			                    (Bitu)DRCD_SEG_PHYS(di_base_addr));
+		}
+		break;
+	case R_LODSW:
+		if (decode.big_addr) {
+			gen_call_function_m((void*)&dynrec_lodsw_dword,
+			                    (Bitu)DRCD_SEG_PHYS(di_base_addr));
+		} else {
+			gen_call_function_m((void*)&dynrec_lodsw_word,
+			                    (Bitu)DRCD_SEG_PHYS(di_base_addr));
+		}
+		break;
+	case R_LODSD:
+		if (decode.big_addr) {
+			gen_call_function_m((void*)&dynrec_lodsd_dword,
+			                    (Bitu)DRCD_SEG_PHYS(di_base_addr));
+		} else {
+			gen_call_function_m((void*)&dynrec_lodsd_word,
+			                    (Bitu)DRCD_SEG_PHYS(di_base_addr));
+		}
+		break;
+
+	case R_CMPSB:
+		if (decode.big_addr) {
+			gen_call_function_Imm((void*)&dynrec_cmpsb_dword,
+			                      decode.rep,
+			                      (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                      (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_Imm((void*)&dynrec_cmpsb_word,
+			                      decode.rep,
+			                      (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                      (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+	case R_CMPSW:
+		if (decode.big_addr) {
+			gen_call_function_Imm((void*)&dynrec_cmpsw_dword,
+			                      decode.rep,
+			                      (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                      (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_Imm((void*)&dynrec_cmpsw_word,
+			                      decode.rep,
+			                      (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                      (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+	case R_CMPSD:
+		if (decode.big_addr) {
+			gen_call_function_Imm((void*)&dynrec_cmpsd_dword,
+			                      decode.rep,
+			                      (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                      (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_Imm((void*)&dynrec_cmpsd_word,
+			                      decode.rep,
+			                      (Bitu)DRCD_SEG_PHYS(di_base_addr),
+			                      (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+
+	case R_STOSB:
+		if (decode.big_addr) {
+			gen_call_function_m((void*)&dynrec_stosb_dword,
+			                    (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_m((void*)&dynrec_stosb_word,
+			                    (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+	case R_STOSW:
+		if (decode.big_addr) {
+			gen_call_function_m((void*)&dynrec_stosw_dword,
+			                    (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_m((void*)&dynrec_stosw_word,
+			                    (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+	case R_STOSD:
+		if (decode.big_addr) {
+			gen_call_function_m((void*)&dynrec_stosd_dword,
+			                    (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_m((void*)&dynrec_stosd_word,
+			                    (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+
+	case R_SCASB:
+		if (decode.big_addr) {
+			gen_call_function_Im((void*)&dynrec_scasb_dword,
+			                     decode.rep,
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_Im((void*)&dynrec_scasb_word,
+			                     decode.rep,
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+	case R_SCASW:
+		if (decode.big_addr) {
+			gen_call_function_Im((void*)&dynrec_scasw_dword,
+			                     decode.rep,
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_Im((void*)&dynrec_scasw_word,
+			                     decode.rep,
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+	case R_SCASD:
+		if (decode.big_addr) {
+			gen_call_function_Im((void*)&dynrec_scasd_dword,
+			                     decode.rep,
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		} else {
+			gen_call_function_Im((void*)&dynrec_scasd_word,
+			                     decode.rep,
+			                     (Bitu)DRCD_SEG_PHYS(DRC_SEG_ES));
+		}
+		break;
+
+	default: IllegalOptionDynrec("dyn_string");
+	}
+
+	if (decode.rep) {
+		MOV_REG_WORD_FROM_HOST_REG(FC_RETOP, DRC_REG_ECX, decode.big_addr);
+	}
 
 	if (op<R_SCASB) {
 		// those string operations are allowed for premature termination

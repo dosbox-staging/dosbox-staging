@@ -1959,6 +1959,441 @@ static uint32_t DRC_CALL_CONV dynrec_stosd_dword(uint32_t count,int32_t add_inde
 	return count_left;
 }
 
+static uint16_t DRC_CALL_CONV dynrec_scasb_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep,
+                                                PhysPt di_base) DRC_FC;
+static uint16_t DRC_CALL_CONV dynrec_scasb_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	uint8_t val = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val = mem_readb_inline(di_base + reg_di);
+
+		reg_di += add_index;
+
+		if ((decode_rep == REP_Z) != (val == reg_al)) {
+			break;
+		}
+	}
+
+	lf_var1b    = reg_al;
+	lf_var2b    = val;
+	lf_resb     = lf_var1b - lf_var2b;
+	lflags.type = t_CMPb;
+
+	return count;
+}
+
+static uint32_t DRC_CALL_CONV dynrec_scasb_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep,
+                                                 PhysPt di_base) DRC_FC;
+static uint32_t DRC_CALL_CONV dynrec_scasb_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	uint8_t val = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val = mem_readb_inline(di_base + reg_edi);
+
+		reg_edi += add_index;
+
+		if ((decode_rep == REP_Z) != (val == reg_al)) {
+			break;
+		}
+	}
+
+	lf_var1b    = reg_al;
+	lf_var2b    = val;
+	lf_resb     = lf_var1b - lf_var2b;
+	lflags.type = t_CMPb;
+
+	return count;
+}
+
+static uint16_t DRC_CALL_CONV dynrec_scasw_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep,
+                                                PhysPt di_base) DRC_FC;
+static uint16_t DRC_CALL_CONV dynrec_scasw_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	add_index = left_shift_signed(add_index, 1);
+
+	uint16_t val = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val = mem_readw_inline(di_base + reg_di);
+
+		reg_di += add_index;
+
+		if ((decode_rep == REP_Z) != (val == reg_ax)) {
+			break;
+		}
+	}
+
+	lf_var1w    = reg_ax;
+	lf_var2w    = val;
+	lf_resw     = lf_var1w - lf_var2w;
+	lflags.type = t_CMPw;
+
+	return count;
+}
+
+static uint32_t DRC_CALL_CONV dynrec_scasw_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep,
+                                                 PhysPt di_base) DRC_FC;
+static uint32_t DRC_CALL_CONV dynrec_scasw_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	add_index = left_shift_signed(add_index, 1);
+
+	uint16_t val = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val = mem_readw_inline(di_base + reg_edi);
+
+		reg_edi += add_index;
+
+		if ((decode_rep == REP_Z) != (val == reg_ax)) {
+			break;
+		}
+	}
+
+	lf_var1w    = reg_ax;
+	lf_var2w    = val;
+	lf_resw     = lf_var1w - lf_var2w;
+	lflags.type = t_CMPw;
+
+	return count;
+}
+
+static uint16_t DRC_CALL_CONV dynrec_scasd_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep,
+                                                PhysPt di_base) DRC_FC;
+static uint16_t DRC_CALL_CONV dynrec_scasd_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	add_index = left_shift_signed(add_index, 2);
+
+	uint32_t val = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val = mem_readd_inline(di_base + reg_di);
+
+		reg_di += add_index;
+
+		if ((decode_rep == REP_Z) != (val == reg_eax)) {
+			break;
+		}
+	}
+
+	lf_var1d    = reg_eax;
+	lf_var2d    = val;
+	lf_resd     = lf_var1d - lf_var2d;
+	lflags.type = t_CMPd;
+
+	return count;
+}
+
+static uint32_t DRC_CALL_CONV dynrec_scasd_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep,
+                                                 PhysPt di_base) DRC_FC;
+static uint32_t DRC_CALL_CONV dynrec_scasd_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	add_index = left_shift_signed(add_index, 2);
+
+	uint32_t val = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val = mem_readd_inline(di_base + reg_edi);
+
+		reg_edi += add_index;
+
+		if ((decode_rep == REP_Z) != (val == reg_eax)) {
+			break;
+		}
+	}
+
+	lf_var1d    = reg_eax;
+	lf_var2d    = val;
+	lf_resd     = lf_var1d - lf_var2d;
+	lflags.type = t_CMPd;
+
+	return count;
+}
+
+static uint16_t DRC_CALL_CONV dynrec_cmpsb_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep, PhysPt si_base,
+                                                PhysPt di_base) DRC_FC;
+static uint16_t DRC_CALL_CONV dynrec_cmpsb_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep,
+                                                PhysPt si_base, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	uint8_t val1 = 0;
+	uint8_t val2 = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val1 = mem_readb_inline(si_base + reg_si);
+		val2 = mem_readb_inline(di_base + reg_di);
+
+		reg_si += add_index;
+		reg_di += add_index;
+
+		if ((decode_rep == REP_Z) != (val1 == val2)) {
+			break;
+		}
+	}
+
+	lf_var1b    = val1;
+	lf_var2b    = val2;
+	lf_resb     = lf_var1b - lf_var2b;
+	lflags.type = t_CMPb;
+
+	return count;
+}
+
+static uint16_t DRC_CALL_CONV dynrec_cmpsb_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep, PhysPt si_base,
+                                                 PhysPt di_base) DRC_FC;
+static uint16_t DRC_CALL_CONV dynrec_cmpsb_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep,
+                                                 PhysPt si_base, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	uint8_t val1 = 0;
+	uint8_t val2 = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val1 = mem_readb_inline(si_base + reg_esi);
+		val2 = mem_readb_inline(di_base + reg_edi);
+
+		reg_esi += add_index;
+		reg_edi += add_index;
+
+		if ((decode_rep == REP_Z) != (val1 == val2)) {
+			break;
+		}
+	}
+
+	lf_var1b    = val1;
+	lf_var2b    = val2;
+	lf_resb     = lf_var1b - lf_var2b;
+	lflags.type = t_CMPb;
+
+	return count;
+}
+
+static uint16_t DRC_CALL_CONV dynrec_cmpsw_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep, PhysPt si_base,
+                                                PhysPt di_base) DRC_FC;
+static uint16_t DRC_CALL_CONV dynrec_cmpsw_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep,
+                                                PhysPt si_base, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	add_index = left_shift_signed(add_index, 1);
+
+	uint16_t val1 = 0;
+	uint16_t val2 = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val1 = mem_readw_inline(si_base + reg_si);
+		val2 = mem_readw_inline(di_base + reg_di);
+
+		reg_si += add_index;
+		reg_di += add_index;
+
+		if ((decode_rep == REP_Z) != (val1 == val2)) {
+			break;
+		}
+	}
+
+	lf_var1w    = val1;
+	lf_var2w    = val2;
+	lf_resw     = lf_var1w - lf_var2w;
+	lflags.type = t_CMPw;
+
+	return count;
+}
+
+static uint32_t DRC_CALL_CONV dynrec_cmpsw_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep, PhysPt si_base,
+                                                 PhysPt di_base) DRC_FC;
+static uint32_t DRC_CALL_CONV dynrec_cmpsw_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep,
+                                                 PhysPt si_base, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	add_index = left_shift_signed(add_index, 1);
+
+	uint16_t val1 = 0;
+	uint16_t val2 = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val1 = mem_readw_inline(si_base + reg_esi);
+		val2 = mem_readw_inline(di_base + reg_edi);
+
+		reg_esi += add_index;
+		reg_edi += add_index;
+
+		if ((decode_rep == REP_Z) != (val1 == val2)) {
+			break;
+		}
+	}
+
+	lf_var1w    = val1;
+	lf_var2w    = val2;
+	lf_resw     = lf_var1w - lf_var2w;
+	lflags.type = t_CMPw;
+
+	return count;
+}
+
+static uint16_t DRC_CALL_CONV dynrec_cmpsd_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep, PhysPt si_base,
+                                                PhysPt di_base) DRC_FC;
+static uint16_t DRC_CALL_CONV dynrec_cmpsd_word(uint16_t count, int16_t add_index,
+                                                int32_t decode_rep,
+                                                PhysPt si_base, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	add_index = left_shift_signed(add_index, 2);
+
+	uint32_t val1 = 0;
+	uint32_t val2 = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val1 = mem_readd_inline(si_base + reg_si);
+		val2 = mem_readd_inline(di_base + reg_di);
+
+		reg_si += add_index;
+		reg_di += add_index;
+
+		if ((decode_rep == REP_Z) != (val1 == val2)) {
+			break;
+		}
+	}
+
+	lf_var1d    = val1;
+	lf_var2d    = val2;
+	lf_resd     = lf_var1d - lf_var2d;
+	lflags.type = t_CMPd;
+
+	return count;
+}
+
+static uint32_t DRC_CALL_CONV dynrec_cmpsd_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep, PhysPt si_base,
+                                                 PhysPt di_base) DRC_FC;
+static uint32_t DRC_CALL_CONV dynrec_cmpsd_dword(uint32_t count, int32_t add_index,
+                                                 int32_t decode_rep,
+                                                 PhysPt si_base, PhysPt di_base)
+{
+	if (count == 0) {
+		return 0;
+	}
+
+	add_index = left_shift_signed(add_index, 2);
+
+	uint32_t val1 = 0;
+	uint32_t val2 = 0;
+
+	while (count > 0) {
+		--count;
+		--CPU_Cycles;
+
+		val1 = mem_readd_inline(si_base + reg_esi);
+		val2 = mem_readd_inline(di_base + reg_edi);
+
+		reg_esi += add_index;
+		reg_edi += add_index;
+
+		if ((decode_rep == REP_Z) != (val1 == val2)) {
+			break;
+		}
+	}
+
+	lf_var1d    = val1;
+	lf_var2d    = val2;
+	lf_resd     = lf_var1d - lf_var2d;
+	lflags.type = t_CMPd;
+
+	return count;
+}
 
 static void DRC_CALL_CONV dynrec_push_word(uint16_t value) DRC_FC;
 static void DRC_CALL_CONV dynrec_push_word(uint16_t value) {

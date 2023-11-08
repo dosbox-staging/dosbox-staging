@@ -546,7 +546,21 @@ static inline const uint8_t* gen_call_function_mm(void * func,Bitu op1,Bitu op2)
 	return gen_call_function_setup(func, 4, true);
 }
 
+static inline const uint8_t* gen_call_function_Im(void* func, Bitu op1, Bitu op2)
+{
+	gen_load_param_mem(op2, 3);
+	gen_load_param_imm(op1, 2);
+	return gen_call_function_setup(func, 4, true);
+}
 
+static inline const uint8_t* gen_call_function_Imm(void* func, Bitu op1,
+                                                   Bitu op2, Bitu op3)
+{
+	gen_load_param_mem(op3, 4);
+	gen_load_param_mem(op2, 3);
+	gen_load_param_imm(op1, 2);
+	return gen_call_function_setup(func, 5, true);
+}
 
 enum save_info_type {db_exception, cycle_check, string_break};
 

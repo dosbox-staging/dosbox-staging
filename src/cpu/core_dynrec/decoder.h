@@ -757,6 +757,10 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 		case 0xa4:dyn_string(R_MOVSB);break;
 		case 0xa5:dyn_string(decode.big_op ? R_MOVSD : R_MOVSW);break;
 
+		// cmpsb/w/d
+		case 0xa6: dyn_string(R_CMPSB); break;
+		case 0xa7: dyn_string(decode.big_op ? R_CMPSD : R_CMPSW); break;
+
 		// stosb/w/d
 		case 0xaa:dyn_string(R_STOSB);break;
 		case 0xab:dyn_string(decode.big_op ? R_STOSD : R_STOSW);break;
@@ -765,6 +769,9 @@ static CacheBlock *CreateCacheBlock(CodePageHandler *codepage, PhysPt start, Bit
 		case 0xac:dyn_string(R_LODSB);break;
 		case 0xad:dyn_string(decode.big_op ? R_LODSD : R_LODSW);break;
 
+		// scasb/w/d
+		case 0xae: dyn_string(R_SCASB); break;
+		case 0xaf: dyn_string(decode.big_op ? R_SCASD : R_SCASW); break;
 
 		// 'test reg8/16/32,imm8/16/32'
 		case 0xa8:dyn_dop_byte_imm(DOP_TEST,DRC_REG_EAX,0);break;
