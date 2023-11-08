@@ -879,10 +879,11 @@ struct raster_info
 };
 #endif
 
-struct draw_state
-{
+constexpr auto VoodooDefaultRefreshRateHz = 60.0;
+
+struct draw_state {
 	double frame_start           = 0.0;
-	double vfreq                 = 0.0;
+	double frame_period_ms       = 1000.0 / VoodooDefaultRefreshRateHz;
 	bool override_on             = false;
 	bool screen_update_requested = false;
 	bool screen_update_pending   = false;
@@ -7200,7 +7201,7 @@ static void voodoo_update_dimensions(void) {
 static void Voodoo_VerticalTimer(uint32_t /*val*/)
 {
 	v->draw.frame_start = PIC_FullIndex();
-	PIC_AddEvent(Voodoo_VerticalTimer, v->draw.vfreq);
+	PIC_AddEvent(Voodoo_VerticalTimer, v->draw.frame_period_ms);
 
 	if (v->fbi.vblank_flush_pending) {
 		voodoo_vblank_flush();
@@ -7246,16 +7247,16 @@ static void Voodoo_VerticalTimer(uint32_t /*val*/)
 static bool Voodoo_GetRetrace() {
 	// TODO proper implementation
 	const auto time_in_frame = PIC_FullIndex() - v->draw.frame_start;
-	const auto vfreq         = v->draw.vfreq;
-	if (vfreq <= 0) {
+	const auto frame_period_ms = v->draw.frame_period_ms;
+	if (frame_period_ms <= 0) {
 		return false;
 	}
 	if (v->clock_enabled && v->output_on) {
-		if ((time_in_frame / vfreq) > 0.95) {
+		if ((time_in_frame / frame_period_ms) > 0.95) {
 			return true;
 		}
 	} else if (v->output_on) {
-		auto rtime = time_in_frame / vfreq;
+		auto rtime = time_in_frame / frame_period_ms;
 		rtime = fmod(rtime, 1.0);
 		if (rtime > 0.95) {
 			return true;
@@ -7267,15 +7268,15 @@ static bool Voodoo_GetRetrace() {
 static double Voodoo_GetVRetracePosition() {
 	// TODO proper implementation
 	const auto time_in_frame = PIC_FullIndex() - v->draw.frame_start;
-	const auto vfreq         = v->draw.vfreq;
-	if (vfreq <= 0) {
+	const auto frame_period_ms = v->draw.frame_period_ms;
+	if (frame_period_ms <= 0) {
 		return 0.0;
 	}
 	if (v->clock_enabled && v->output_on) {
-		return time_in_frame/vfreq;
+		return time_in_frame / frame_period_ms;
 	}
 	if (v->output_on) {
-		auto rtime = time_in_frame / vfreq;
+		auto rtime = time_in_frame / frame_period_ms;
 		rtime = fmod(rtime, 1.0);
 		return rtime;
 	}
@@ -7286,7 +7287,7 @@ static double Voodoo_GetHRetracePosition() {
 	// TODO proper implementation
 	const auto time_in_frame = PIC_FullIndex() - v->draw.frame_start;
 
-	const auto hfreq = v->draw.vfreq * 100;
+	const auto hfreq = v->draw.frame_period_ms * 100;
 
 	if (hfreq <= 0) {
 		return 0.0;
@@ -7312,6 +7313,7 @@ static void Voodoo_UpdateScreen()
 		PIC_RemoveEvents(Voodoo_VerticalTimer);
 		voodoo_leave();
 
+		// Let the underlying VGA card resume rendering
 		VGA_SetOverride(false);
 		v->draw.override_on=false;
 	}
@@ -7319,11 +7321,20 @@ static void Voodoo_UpdateScreen()
 	if ((v->clock_enabled && v->output_on) && !v->draw.override_on) {
 		// switching on
 		PIC_RemoveEvents(Voodoo_VerticalTimer); // shouldn't be needed
-		
-		// TODO proper implementation of refresh rates and timings
-		v->draw.vfreq = 1000.0 / 60.0;
-		VGA_SetOverride(true);
-		v->draw.override_on=true;
+
+		// Indicate to the underlying VGA card that it should stop
+		// rendering. This is equivalent to when the Voodoo card
+		// switched from passive pass-thru mode to active output mode.
+		//
+		VGA_SetOverride(true, VoodooDefaultRefreshRateHz);
+
+		v->draw.frame_period_ms = 1000.0 / VGA_GetPreferredRate();
+		//
+		// The user's 'dos_rate' preference controls the preferred rate.
+		// When set to 'auto', we'll get back the Voodoo default rate.
+		// Otherwise we'll get the user's custom rate.
+
+		v->draw.override_on = true;
 
 		voodoo_activate();
 
@@ -7351,7 +7362,7 @@ static void Voodoo_UpdateScreen()
 			video_mode.is_custom_mode     = false;
 			video_mode.is_graphics_mode   = true;
 
-			const auto frames_per_second  = 1000.0f / v->draw.vfreq;
+			const auto frames_per_second = 1000.0 / v->draw.frame_period_ms;
 
 			RENDER_SetSize(width,
 			               height,
@@ -7359,7 +7370,7 @@ static void Voodoo_UpdateScreen()
 			               double_height,
 			               render_pixel_aspect_ratio,
 			               PixelFormat::RGB565_Packed16,
-			               frames_per_second,
+			               static_cast<float>(frames_per_second),
 			               video_mode);
 		}
 
@@ -7713,7 +7724,6 @@ static void Voodoo_Startup() {
 	voodoo_init();
 
 	v->draw = {};
-	v->draw.vfreq = 1000.0 / 60.0;
 
 	v->tworker.use_threads = voodoo_multithreading;
 	v->tworker.disable_bilinear_filter = (voodoo_bilinear_filtering == false);
