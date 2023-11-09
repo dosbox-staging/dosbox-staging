@@ -281,10 +281,19 @@ static void PlayDMATransfer(uint32_t size);
 typedef void (*process_dma_f)(uint32_t);
 static process_dma_f ProcessDMATransfer;
 
-static void DSP_SetSpeaker(bool requested_state) {
-	// Speaker-output is already in the requested state
-	if (sb.speaker == requested_state)
+static void DSP_SetSpeaker(bool requested_state)
+{
+	// The speaker-output is always enabled on the SB16; speaker enable/disable
+	// commands are simply ignored. Only the SB Pro and earlier models can
+	// toggle the speaker-output via speaker enable/disable commands.
+	if (sb.type == SBT_16) {
 		return;
+	}
+
+	// Speaker-output is already in the requested state
+	if (sb.speaker == requested_state) {
+		return;
+	}
 
 	// If the speaker's being turned on, then flush old
 	// content before releasing the channel for playback.
@@ -294,26 +303,33 @@ static void DSP_SetSpeaker(bool requested_state) {
 		// Speaker powered-on after cold-state, give it warmup time
 		sb.dsp.warmup_remaining_ms = sb.dsp.cold_warmup_ms;
 	}
+
 	sb.chan->Enable(requested_state);
 	sb.speaker = requested_state;
+
 	LOG_MSG("%s: Speaker-output has been toggled %s",
-	        CardType(), requested_state ? "on" : "off");
+	        CardType(),
+	        (requested_state ? "on" : "off"));
 }
 
 static void InitializeSpeakerState()
 {
-	// Real SBPro2 hardware starts with the card's speaker-output disabled
-	sb.speaker = false;
-
-	// The SB16's output channel starts active however subsequent
-	// requests to disable the speaker will be honored (see: SetSpeaker).
-	// Also, because the channel is active, we treat this as startup event.
 	if (sb.type == SBT_16) {
-		const bool is_cold_start = sb.dsp.reset_tally <= DSP_INITIAL_RESET_LIMIT;
+		// Speaker-output (DAC output) is only enabled by default on the SB16
+		// and it cannot be disabled. Because the channel is active, we treat
+		// this as a startup event.
+		const bool is_cold_start = sb.dsp.reset_tally <=
+		                           DSP_INITIAL_RESET_LIMIT;
+
 		sb.dsp.warmup_remaining_ms = is_cold_start ? sb.dsp.cold_warmup_ms
 		                                           : sb.dsp.hot_warmup_ms;
+		sb.speaker = true;
 		sb.chan->Enable(true);
+
 	} else {
+		// SB Pro and earlier models have the speaker-output disabled by
+		// default.
+		sb.speaker = false;
 		sb.chan->Enable(false);
 	}
 }
