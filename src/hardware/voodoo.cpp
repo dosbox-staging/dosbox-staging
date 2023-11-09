@@ -7087,7 +7087,7 @@ static void voodoo_init() {
 	}
 	// Sanity-check sizes
 	assert(fbmemsize > 0);
-	assert(tmumem0 > 0 && tmumem1 > 0);
+	assert(tmumem0 > 0);
 
 	if (tmumem1 != 0) {
 		v->tmu_config |= 0xc0;	// two TMUs
