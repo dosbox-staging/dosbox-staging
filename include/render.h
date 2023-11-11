@@ -157,7 +157,8 @@ void RENDER_Reinit();
 
 void RENDER_AddConfigSection(const config_ptr_t& conf);
 
-bool RENDER_IsAspectRatioCorrectionEnabled();
+AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode();
+
 const std::string RENDER_GetCgaColorsSetting();
 
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette);

@@ -365,11 +365,6 @@ void VGA_SetCGA4Table(uint8_t val0,uint8_t val1,uint8_t val2,uint8_t val3) {
 	}	
 }
 
-void VGA_ForceSquarePixels(const bool enable)
-{
-	vga.draw.force_square_pixels = enable;
-}
-
 void VGA_EnableVgaDoubleScanning(const bool enable)
 {
 	if (machine != MCH_VGA) {

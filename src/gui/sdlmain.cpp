@@ -1199,13 +1199,20 @@ static void NewMouseScreenParams()
 	MOUSE_NewScreenParams(params);
 }
 
+static bool is_aspect_ratio_correction_enabled()
+{
+	return (RENDER_GetAspectRatioCorrectionMode() ==
+	        AspectRatioCorrectionMode::On);
+}
+
 static void update_fallback_dimensions(const double dpi_scale)
 {
 	// TODO This only works for 320x200 games. We cannot make hardcoded
 	// assumptions about aspect ratios in general, e.g. the pixel aspect ratio
 	// is 1:1 for 640x480 games both with 'aspect = on` and 'aspect = off'.
-	const auto fallback_height =
-	        (RENDER_IsAspectRatioCorrectionEnabled() ? 480 : 400) / dpi_scale;
+	const auto fallback_height = (is_aspect_ratio_correction_enabled() ? 480
+	                                                                   : 400) /
+	                             dpi_scale;
 
 	assert(dpi_scale > 0);
 	const auto fallback_width = 640 / dpi_scale;
@@ -3600,7 +3607,7 @@ static void GUI_StartUp(Section* sec)
 		GFX_ObtainDisplayDimensions();
 	}
 
-	set_output(section, RENDER_IsAspectRatioCorrectionEnabled());
+	set_output(section, is_aspect_ratio_correction_enabled());
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
@@ -3686,7 +3693,7 @@ void GFX_RegenerateWindow(Section *sec) {
 		return;
 	}
 	remove_window();
-	set_output(sec, RENDER_IsAspectRatioCorrectionEnabled());
+	set_output(sec, is_aspect_ratio_correction_enabled());
 	GFX_ResetScreen();
 }
 
