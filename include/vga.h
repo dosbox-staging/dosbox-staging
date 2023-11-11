@@ -284,7 +284,6 @@ struct VgaDraw {
 	double custom_refresh_hz  = RefreshRateDosDefault;
 	VgaRateMode dos_rate_mode = VgaRateMode::Default;
 
-	bool force_square_pixels     = false;
 	bool double_scanning_enabled = false;
 	bool pixel_doubling_enabled  = false;
 
