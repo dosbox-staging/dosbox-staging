@@ -197,8 +197,8 @@ static bool first_window = true;
 static SDL_Point restrict_to_viewport_resolution(int width, int height);
 static SDL_Rect calc_viewport(const int width, const int height);
 
-static void CleanupSDLResources();
-static void HandleVideoResize(int width, int height);
+static void clean_up_sdl_resources();
+static void handle_video_resize(int width, int height);
 
 static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines);
 static bool present_frame_texture();
@@ -1234,7 +1234,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		return sdl.window;
 	}
 
-	CleanupSDLResources();
+	clean_up_sdl_resources();
 
 	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
 		remove_window();
@@ -2586,7 +2586,7 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 	}
 }
 
-static void CleanupSDLResources()
+static void clean_up_sdl_resources()
 {
 	if (sdl.texture.pixelFormat) {
 		SDL_FreeFormat(sdl.texture.pixelFormat);
@@ -2613,7 +2613,8 @@ static void GUI_ShutDown(Section *)
 	GFX_SetMouseCapture(false);
 	GFX_SetMouseVisibility(true);
 
-	CleanupSDLResources();
+	clean_up_sdl_resources();
+
 	if (sdl.renderer) {
 		SDL_DestroyRenderer(sdl.renderer);
 		sdl.renderer = nullptr;
@@ -2796,8 +2797,10 @@ static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 		return {w, h};
 	}
 
-	LOG_WARNING("DISPLAY: Requested windowresolution '%s' is not valid, falling back to '%dx%d' instead",
-	            pref.c_str(), FALLBACK_WINDOW_DIMENSIONS.x,
+	LOG_WARNING("DISPLAY: Requested window resolution '%s' is not valid, "
+	            "falling back to '%dx%d' instead",
+	            pref.c_str(),
+	            FALLBACK_WINDOW_DIMENSIONS.x,
 	            FALLBACK_WINDOW_DIMENSIONS.y);
 
 	return FALLBACK_WINDOW_DIMENSIONS;
@@ -2821,7 +2824,7 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 		} else if (pref == "desktop") {
 			return 100;
 		} else {
-			LOG_WARNING("DISPLAY: Requested windowresolution '%s' is invalid, "
+			LOG_WARNING("DISPLAY: Requested window resolution '%s' is invalid, "
 			            "using 'default' instead",
 			            pref.c_str());
 			return MediumPercent;
@@ -2844,39 +2847,42 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 // Takes in:
 //  - The 'viewport_resolution' config value: 'fit', 'WxH', 'N[.M]%', or an invalid setting.
 //
-// Except for SURFACE and TEXTURE rendering, the function populates the following struct members:
-//  - 'sdl.desktop.use_viewport_limits', true if the viewport_resolution feature is enabled.
+// The function populates the following struct members:
 //  - 'sdl.desktop.viewport_resolution', with the refined size.
 
-static void setup_viewport_resolution_from_conf(const std::string &viewport_resolution_val)
+static void setup_viewport_resolution_from_conf(const std::string& viewport_resolution_val)
 {
 	sdl.viewport_resolution = {};
 
 	constexpr auto default_val = "fit";
-	if (viewport_resolution_val == default_val)
+	if (viewport_resolution_val == default_val) {
 		return;
+	}
 
-	int w = 0;
-	int h = 0;
+	int w   = 0;
+	int h   = 0;
 	float p = 0.0f;
-	const auto was_parsed = sscanf(viewport_resolution_val.c_str(), "%dx%d", &w, &h) == 2 ||
-	                        sscanf(viewport_resolution_val.c_str(), "%f%%", &p) == 1;
+	const auto was_parsed =
+	        sscanf(viewport_resolution_val.c_str(), "%dx%d", &w, &h) == 2 ||
+	        sscanf(viewport_resolution_val.c_str(), "%f%%", &p) == 1;
 
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested viewport_resolution '%s' was not in WxH"
+		LOG_WARNING("DISPLAY: Requested viewport resolution '%s' was not in WxH"
 		            " or N%% format, using the default setting ('%s') instead",
-		            viewport_resolution_val.c_str(), default_val);
+		            viewport_resolution_val.c_str(),
+		            default_val);
 		return;
 	}
 
 	const auto desktop = get_desktop_resolution();
+
 	const bool is_out_of_bounds = (w <= 0 || w > desktop.w || h <= 0 ||
 	                               h > desktop.h) &&
 	                              (p <= 0.0f || p > 100.0f);
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested viewport_resolution of '%s' is outside"
-		            " the desktop '%dx%d' bounds or the 1-100%% range, "
-		            " using the default setting ('%s') instead",
+		LOG_WARNING("DISPLAY: Requested viewport resolution of '%s' is outside "
+		            "the desktop '%dx%d' bounds or the 1-100%% range, "
+		            "using the default setting ('%s') instead",
 		            viewport_resolution_val.c_str(),
 		            desktop.w,
 		            desktop.h,
@@ -2885,9 +2891,9 @@ static void setup_viewport_resolution_from_conf(const std::string &viewport_reso
 	}
 
 	if (p > 0.0f) {
-		sdl.viewport_resolution =
-		        {iround(desktop.w * static_cast<double>(p) / 100.0),
-		         iround(desktop.h * static_cast<double>(p) / 100.0)};
+		sdl.viewport_resolution = {
+		        iround(desktop.w * static_cast<double>(p) / 100.0),
+		        iround(desktop.h * static_cast<double>(p) / 100.0)};
 
 		LOG_MSG("DISPLAY: Limiting viewport resolution to %2.4g%% (%dx%d) of the desktop",
 		        static_cast<double>(p),
@@ -2902,29 +2908,37 @@ static void setup_viewport_resolution_from_conf(const std::string &viewport_reso
 	}
 }
 
-static void setup_initial_window_position_from_conf(const std::string &window_position_val)
+static void setup_initial_window_position_from_conf(const std::string& window_position_val)
 {
 	sdl.desktop.window.initial_x_pos = -1;
 	sdl.desktop.window.initial_y_pos = -1;
 
-	if (window_position_val == "auto")
+	if (window_position_val == "auto") {
 		return;
+	}
 
 	int x, y;
-	const auto was_parsed = sscanf(window_position_val.c_str(), "%d,%d", &x, &y) == 2;
+	const auto was_parsed = (sscanf(window_position_val.c_str(), "%d,%d", &x, &y) ==
+	                         2);
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested window_position '%s' was not in X,Y format, using 'auto' instead",
+		LOG_WARNING("DISPLAY: Requested window position '%s' was not in X,Y format, "
+		            "using 'auto' instead",
 		            window_position_val.c_str());
 		return;
 	}
 
 	const auto desktop = get_desktop_resolution();
+
 	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested window_position '%d,%d' is outside the bounds of the desktop '%dx%d', "
+		LOG_WARNING("DISPLAY: Requested window position '%d,%d' is outside the "
+		            "bounds of the desktop '%dx%d', "
 		            "using 'auto' instead",
-		            x, y, desktop.w, desktop.h);
+		            x,
+		            y,
+		            desktop.w,
+		            desktop.h);
 		return;
 	}
 
@@ -2957,8 +2971,8 @@ static void save_window_size(const int w, const int h)
 //  - The previously configured scaling mode: Bilinear or NearestNeighbour.
 //  - If aspect correction is requested.
 //
-// Except for SURFACE rendering, this function returns a refined size and
-// additionally populates the following struct members:
+// This function returns a refined size and additionally populates the
+// following struct members:
 //
 //  - 'sdl.desktop.requested_window_bounds', with the coarse bounds, which do
 //     not take into account scaling or aspect correction.
@@ -3207,7 +3221,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	if (sdl.render_driver != "auto") {
 		if (SDL_SetHint(SDL_HINT_RENDER_DRIVER,
 		                sdl.render_driver.c_str()) == SDL_FALSE) {
-			LOG_WARNING("SDL: Failed to set '%s' texture renderer driver; falling back to automatic selection",
+			LOG_WARNING("SDL: Failed to set '%s' texture renderer driver; "
+			            "falling back to automatic selection",
 			            sdl.render_driver.c_str());
 		}
 	}
@@ -3568,7 +3583,7 @@ void GFX_RegenerateWindow(Section *sec) {
 #define DB_POLLSKIP 1
 #endif
 
-static void HandleVideoResize(int width, int height)
+static void handle_video_resize(int width, int height)
 {
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
@@ -3576,12 +3591,14 @@ static void HandleVideoResize(int width, int height)
 		/* Note: We should not use GFX_ObtainDisplayDimensions
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
-		sdl.desktop.full.width = width;
+		sdl.desktop.full.width  = width;
 		sdl.desktop.full.height = height;
 	}
 
 	const auto canvas = get_canvas_size(sdl.rendering_backend);
-	sdl.clip          = calc_viewport(canvas.w, canvas.h);
+
+	sdl.clip = calc_viewport(canvas.w, canvas.h);
+
 	if (sdl.rendering_backend == RenderingBackend::Texture) {
 		SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
 	}
@@ -3854,7 +3871,7 @@ bool GFX_Events()
 				// The window size has changed either as a
 				// result of an API call or through the system
 				// or user changing the window size.
-				HandleVideoResize(event.window.data1, event.window.data2);
+				handle_video_resize(event.window.data1, event.window.data2);
 				FinalizeWindowState();
 				maybe_auto_switch_shader();
 				continue;
