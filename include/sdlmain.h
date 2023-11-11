@@ -21,6 +21,7 @@
 #ifndef DOSBOX_SDLMAIN_H
 #define DOSBOX_SDLMAIN_H
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <string.h>
@@ -229,9 +230,8 @@ struct SDL_Block {
 	SDL_Rect updateRects[1024] = {};
 
 	bool use_exact_window_resolution = false;
-	bool use_viewport_limits = false;
 
-	SDL_Point viewport_resolution = {-1, -1};
+	std::optional<SDL_Point> viewport_resolution = {};
 #if defined (WIN32)
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
 	int64_t focus_ticks = 0;
