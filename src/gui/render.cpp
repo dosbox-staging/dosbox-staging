@@ -765,9 +765,9 @@ static IntegerScalingMode get_integer_scaling_mode_setting()
 		return IntegerScalingMode::Vertical;
 
 	} else {
-		LOG_WARNING("RENDER: Unknown integer scaling mode '%s', defaulting to 'off'",
+		LOG_WARNING("RENDER: Unknown integer scaling mode '%s', defaulting to 'auto'",
 		            mode.c_str());
-		return IntegerScalingMode::Off;
+		return IntegerScalingMode::Auto;
 	}
 }
 
