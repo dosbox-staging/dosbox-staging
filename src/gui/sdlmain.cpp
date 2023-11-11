@@ -704,10 +704,10 @@ static void log_display_properties(const int width, const int height,
 	assert(width > 0 && height > 0);
 	assert(viewport_w > 0 && viewport_h > 0);
 
-	const auto scale_x = static_cast<double>(viewport_w) / width;
-	const auto scale_y = static_cast<double>(viewport_h) / height;
+	const Fraction scale_x = {viewport_w, width};
+	const Fraction scale_y = {viewport_h, height};
 
-	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
+//	const auto render_pixel_aspect_ratio = scale_x / scale_y;
 
 	const auto video_mode_desc = to_string(video_mode);
 
@@ -1158,13 +1158,20 @@ static void NewMouseScreenParams()
 	MOUSE_NewScreenParams(params);
 }
 
+static bool is_aspect_ratio_correction_enabled()
+{
+	return (RENDER_GetAspectRatioCorrectionMode() ==
+	        AspectRatioCorrectionMode::On);
+}
+
 static void update_fallback_dimensions(const double dpi_scale)
 {
 	// TODO This only works for 320x200 games. We cannot make hardcoded
 	// assumptions about aspect ratios in general, e.g. the pixel aspect ratio
 	// is 1:1 for 640x480 games both with 'aspect = on` and 'aspect = off'.
-	const auto fallback_height =
-	        (RENDER_IsAspectRatioCorrectionEnabled() ? 480 : 400) / dpi_scale;
+	const auto fallback_height = (is_aspect_ratio_correction_enabled() ? 480
+	                                                                   : 400) /
+	                             dpi_scale;
 
 	assert(dpi_scale > 0);
 	const auto fallback_width = 640 / dpi_scale;
@@ -3035,17 +3042,67 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 	assert(draw_width > 0);
 	assert(draw_height > 0);
 
-	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
-	        render_pixel_aspect_ratio);
+	// Limit the window to the user's desired viewport, if configured
+	const auto restricted_dims = restrict_to_viewport_resolution(canvas_width,
+	                                                             canvas_height);
+
+	const auto [draw_scale_x, draw_scale_y] = [&]() -> std::pair<double, double> {
+		switch (RENDER_GetAspectRatioCorrectionMode()) {
+		case AspectRatioCorrectionMode::On:
+		case AspectRatioCorrectionMode::Off:
+			// If aspect ratio correction is enabled (`aspect = on`)
+			// or square pixels are forced (`aspect = off`), the
+			// final render PAR has already been calculated and
+			// passed down by the VGA subsystem -- we only need to
+			// use it.
+			return get_scale_factors_from_pixel_aspect_ratio(
+			        render_pixel_aspect_ratio);
+
+		case AspectRatioCorrectionMode::Viewport: {
+			// In 'viewport' aspect ratio mode, we simply calculate
+			// the scale factors from the current viewport
+			// dimensions, overriding any passed-down PARs.
+			if (sdl.viewport_resolution) {
+				// Viewport resolution is retricted to a
+				// rectangle; calculate the scale factor from
+				// the configured viewport dimensions
+				const auto scale_x =
+				        static_cast<double>(
+				                sdl.viewport_resolution->x) /
+				        draw_width;
+
+				const auto scale_y =
+				        static_cast<double>(
+				                sdl.viewport_resolution->y) /
+				        draw_height;
+
+				return {scale_x, scale_y};
+			} else {
+				// Viewport resolution is not restricted
+				// (`viewport_resolution = fit`); simply stretch
+				// the output to the actual viewport
+				const auto scale_x = static_cast<double>(
+				                             restricted_dims.x) /
+				                     draw_width;
+
+				const auto scale_y = static_cast<double>(
+				                             restricted_dims.y) /
+				                     draw_height;
+
+				return {scale_x, scale_y};
+			}
+		}
+
+		default:
+			assertm(false, "Invalid pixel aspect ratio correction method");
+			return {};
+		}
+	}();
 
 	assert(draw_scale_x > 0.0);
 	assert(draw_scale_y > 0.0);
 	assert(std::isfinite(draw_scale_x));
 	assert(std::isfinite(draw_scale_y));
-
-	// Limit the window to the user's desired viewport, if configured
-	const auto restricted_dims = restrict_to_viewport_resolution(canvas_width,
-	                                                             canvas_height);
 
 	const auto bounds_w = restricted_dims.x;
 	const auto bounds_h = restricted_dims.y;
@@ -3069,6 +3126,23 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 		} else {
 			const auto w = bounds_w;
 			const auto h = iround(bounds_w / image_aspect_ratio);
+			return {w, h};
+		}
+	};
+
+	auto calculate_horizontal_integer_scaling_dims = [&]() -> std::pair<int, int> {
+		auto integer_scale_factor = std::min(
+		        bounds_w / draw_width,
+		        ifloor(bounds_h / (draw_width / image_aspect_ratio)));
+
+		if (integer_scale_factor < 1) {
+			// Revert to fit to viewport
+			return calculate_bounded_dims();
+		} else {
+			const auto w = draw_width * integer_scale_factor;
+			const auto h = iround(draw_width * integer_scale_factor /
+			                      image_aspect_ratio);
+
 			return {w, h};
 		}
 	};
@@ -3113,23 +3187,7 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 		break;
 
 	case IntegerScalingMode::Horizontal: {
-		// Calculate scaling multiplier that will allow to fit the whole
-		// image into the window or viewport bounds.
-		const auto pixel_aspect = round(draw_height * draw_scale_y) /
-		                          draw_height;
-		auto integer_scale_factor =
-		        std::min(bounds_w / draw_width,
-		                 ifloor(bounds_h / (draw_height * pixel_aspect)));
-
-		if (integer_scale_factor < 1) {
-			// Revert to fit to viewport
-			std::tie(view_w, view_h) = calculate_bounded_dims();
-		} else {
-			// Calculate the final viewport.
-			view_w = draw_width * integer_scale_factor;
-			view_h = iround(draw_height * integer_scale_factor *
-			                pixel_aspect);
-		}
+		std::tie(view_w, view_h) = calculate_horizontal_integer_scaling_dims();
 		break;
 	}
 	case IntegerScalingMode::Vertical:
@@ -3491,7 +3549,7 @@ static void GUI_StartUp(Section *sec)
 		GFX_ObtainDisplayDimensions();
 	}
 
-	set_output(section, RENDER_IsAspectRatioCorrectionEnabled());
+	set_output(section, is_aspect_ratio_correction_enabled());
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
@@ -3572,7 +3630,7 @@ void GFX_RegenerateWindow(Section *sec) {
 		return;
 	}
 	remove_window();
-	set_output(sec, RENDER_IsAspectRatioCorrectionEnabled());
+	set_output(sec, is_aspect_ratio_correction_enabled());
 	GFX_ResetScreen();
 }
 

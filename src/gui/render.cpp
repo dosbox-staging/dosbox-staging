@@ -545,7 +545,6 @@ void RENDER_SetSize(const uint16_t width, const uint16_t height,
 	render_reset();
 }
 
-static bool force_square_pixels     = false;
 static bool force_vga_single_scan   = false;
 static bool force_no_pixel_doubling = false;
 
@@ -722,23 +721,49 @@ static const char* to_string(const enum MonochromePalette palette)
 	}
 }
 
-bool RENDER_IsAspectRatioCorrectionEnabled()
+static AspectRatioCorrectionMode aspect_ratio_correction_mode = {};
+
+static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 {
-	return get_render_section()->Get_bool("aspect");
+	const std::string mode = get_render_section()->Get_string("aspect");
+
+	if (has_false(mode)) {
+		return AspectRatioCorrectionMode::Off;
+
+	} else if (has_true(mode)) {
+		return AspectRatioCorrectionMode::On;
+
+	} else if (mode == "viewport") {
+		return AspectRatioCorrectionMode::Viewport;
+
+	} else {
+		LOG_WARNING("RENDER: Unknown aspect ratio correction mode '%s', defaulting to 'on'",
+		            mode.c_str());
+		return AspectRatioCorrectionMode::On;
+	}
+}
+
+AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode()
+{
+	return aspect_ratio_correction_mode;
 }
 
 static IntegerScalingMode get_integer_scaling_mode_setting()
 {
 	const std::string mode = get_render_section()->Get_string("integer_scaling");
 
-	if (mode == "off") {
+	if (has_false(mode)) {
 		return IntegerScalingMode::Off;
+
 	} else if (mode == "auto") {
 		return IntegerScalingMode::Auto;
+
 	} else if (mode == "horizontal") {
 		return IntegerScalingMode::Horizontal;
+
 	} else if (mode == "vertical") {
 		return IntegerScalingMode::Vertical;
+
 	} else {
 		LOG_WARNING("RENDER: Unknown integer scaling mode '%s', defaulting to 'off'",
 		            mode.c_str());
@@ -761,16 +786,29 @@ static void init_render_settings(Section_prop& secprop)
 	int_prop->Set_help(
 	        "Consider capping frame-rates using the '[sdl] host_rate' setting.");
 
-	auto* bool_prop = secprop.Add_bool("aspect", always, true);
-	bool_prop->Set_help(
-	        "Apply aspect ratio correction for modern square-pixel flat-screen displays,\n"
-	        "so DOS resolutions with non-square pixels appear as they would on a 4:3 display\n"
-	        "aspect ratio CRT monitor the majority of DOS games were designed for (enabled\n"
-	        "by default). This setting only affects video modes that use non-square pixels,\n"
-	        "such as 320x200 or 640x400; square-pixel modes, such as 320x240, 640x480, and\n"
-	        "800x600 are displayed as-is.");
+	auto* string_prop = secprop.Add_string("aspect", always, "on");
+	string_prop->Set_help(
+	        "Set the aspect ratio correction mode (enabled by default).\n"
+	        "  on:        Apply aspect ratio correction for modern square-pixel flat-screen\n"
+	        "             displays, so DOS video modes with non-square pixels appear as they\n"
+	        "             would on a 4:3 display aspect ratio CRT monitor the majority of\n"
+	        "             DOS games were designed for. This setting only affects video\n"
+	        "             modes that use non-square pixels, such as 320x200 or 640x400;\n"
+	        "             square-pixel modes (e.g., 320x240, 640x480, and 800x600), are\n"
+	        "             displayed as-is.\n"
+	        "  off:       Don't apply aspect ratio correction; all DOS video modes will be\n"
+	        "             displayed with square pixels. Most 320x200 games will appear\n"
+	        "             squashed, but a minority of titles (e.g., DOS ports of PAL Amiga\n"
+	        "             games) need square pixels to appear as the artists intended.\n"
+	        "  viewport:  Calculate the aspect ratio from the extents of the viewport.\n"
+	        "             Combined with 'viewport_resolution', this mode is useful to\n"
+	        "             force arbitrary aspect ratios (e.g., stretching DOS games to\n"
+	        "             16:9 widescreen).");
 
-	auto* string_prop = secprop.Add_string("integer_scaling", always, "auto");
+	const char* aspect_values[] = {"on", "off", "viewport", nullptr};
+	string_prop->Set_values(aspect_values);
+
+	string_prop = secprop.Add_string("integer_scaling", always, "auto");
 	string_prop->Set_help(
 	        "Constrain the horizontal or vertical scaling factor to integer values.\n"
 	        "The correct aspect ratio is always maintained according to the 'aspect'\n"
@@ -945,18 +983,37 @@ void RENDER_Init(Section* sec)
 	// For restarting the renderer
 	static auto running = false;
 
+	// Store previous values of settings that should trigger a reinit
 	const auto prev_scale_size              = render.scale.size;
-	const auto prev_force_square_pixels     = force_square_pixels;
 	const auto prev_force_vga_single_scan   = force_vga_single_scan;
 	const auto prev_force_no_pixel_doubling = force_no_pixel_doubling;
 	const auto prev_integer_scaling_mode    = GFX_GetIntegerScalingMode();
+	const auto prev_aspect_ratio_correction_mode = aspect_ratio_correction_mode;
 
 	render.pal.first = 256;
 	render.pal.last  = 0;
 
-	force_square_pixels = !section->Get_bool("aspect");
+	// Get aspect ratio correction mode & force square pixels if requested
+	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting();
+
+	bool force_square_pixels = {};
+
+	switch (aspect_ratio_correction_mode) {
+	case AspectRatioCorrectionMode::On:
+		force_square_pixels = false;
+		break;
+	case AspectRatioCorrectionMode::Off:
+		force_square_pixels = true;
+		break;
+	case AspectRatioCorrectionMode::Viewport:
+		force_square_pixels = false;
+		break;
+	default: assertm(false, "Invalid pixel aspect ratio correction mode");
+	}
+
 	VGA_ForceSquarePixels(force_square_pixels);
 
+	// Set monochrome palette
 	const auto mono_palette = to_monochrome_palette_enum(
 	        section->Get_string("monochrome_palette").c_str());
 	VGA_SetMonochromePalette(mono_palette);
@@ -971,7 +1028,7 @@ void RENDER_Init(Section* sec)
 	setup_scan_and_pixel_doubling();
 
 	const auto needs_reinit =
-	        ((force_square_pixels != prev_force_square_pixels) ||
+	        ((aspect_ratio_correction_mode != prev_aspect_ratio_correction_mode) ||
 	         (render.scale.size != prev_scale_size) ||
 	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode) ||
 	         shader_changed ||
