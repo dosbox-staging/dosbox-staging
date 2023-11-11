@@ -1838,8 +1838,9 @@ static Fraction calc_pixel_aspect_from_dimensions(const uint16_t width,
                                                   const bool double_width,
                                                   const bool double_height)
 {
-	const auto storage_aspect_ratio = Fraction(static_cast<int64_t>(width) * (double_width ? 2 : 1),
-	                                           static_cast<int64_t>(height) * (double_height ? 2 : 1));
+	const auto storage_aspect_ratio =
+	        Fraction(static_cast<int64_t>(width) * (double_width ? 2 : 1),
+	                 static_cast<int64_t>(height) * (double_height ? 2 : 1));
 
 	return display_aspect_ratio / storage_aspect_ratio;
 }
@@ -2693,7 +2694,11 @@ ImageInfo setup_drawing()
 		vblank_skip /= 2;
 	}
 
-	// Derive video mode pixel aspect ratio from the render PAR
+	// 'render_pixel_aspect_ratio' has any post-render width/height-doubling
+	// already factored in, so we need to multiply it by
+	// 'render_per_video_mode_scale' to derive the video mode's pixel aspect
+	// ratio. It's just less redundant and error prone to derive the video
+	// mode PAR this way.
 	const auto final_render_width = (render_width * (double_width ? 2 : 1));
 	const auto final_render_height = (render_height * (double_height ? 2 : 1));
 
@@ -2701,13 +2706,40 @@ ImageInfo setup_drawing()
 	        Fraction(final_render_width / video_mode.width,
 	                 final_render_height / video_mode.height);
 
-	video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio *
-	                                render_per_video_mode_scale;
+	switch (RENDER_GetAspectRatioCorrectionMode()) {
+	case AspectRatioCorrectionMode::On:
+		// Derive video mode pixel aspect ratio from the render PAR
+		video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio *
+		                                render_per_video_mode_scale;
+		break;
 
-	// Override PARs if square pixels are forced ("no aspect ratio correction")
-	if (vga.draw.force_square_pixels) {
+	case AspectRatioCorrectionMode::Off:
+		// Override PARs if square pixels are forced in aspect ratio
+		// correction disabled mode
 		render_pixel_aspect_ratio = render_per_video_mode_scale.Inverse();
 		video_mode.pixel_aspect_ratio = {1};
+		break;
+
+	case AspectRatioCorrectionMode::Stretch: {
+		// Stretch image to the viewport and calculate the resulting PARs
+		const auto viewport_px = GFX_GetViewportSizeInPixels();
+
+		const Fraction viewport_aspect_ratio = {iroundf(viewport_px.w),
+		                                        iroundf(viewport_px.h)};
+
+		const Fraction final_render_aspect_ratio = {final_render_width,
+		                                            final_render_height};
+
+		render_pixel_aspect_ratio = viewport_aspect_ratio /
+		                            final_render_aspect_ratio;
+
+		video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio *
+		                                render_per_video_mode_scale;
+	} break;
+
+	default:
+		assertm(false, "Invalid AspectRatioCorrectionMode value");
+		return {};
 	}
 
 	// Try to determine if this is a custom mode
