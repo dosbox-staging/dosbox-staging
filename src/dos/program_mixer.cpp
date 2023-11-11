@@ -21,6 +21,7 @@
 #include "program_mixer.h"
 
 #include <cctype>
+#include <optional>
 
 #include "ansi_code_markup.h"
 #include "audio_frame.h"
@@ -148,9 +149,9 @@ void Executor::operator()(const SetChorusLevel cmd)
 	}
 }
 
-std::optional<float> parse_percentage(const std::string& s,
-                                      const float min_percent = 0.0f,
-                                      const float max_percent = 100.0f)
+static std::optional<float> parse_percentage(const std::string& s,
+                                             const float min_percent = 0.0f,
+                                             const float max_percent = 100.0f)
 {
 	if (const auto p = parse_float(s); p) {
 		if (*p >= min_percent && *p <= max_percent) {
