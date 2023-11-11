@@ -1408,14 +1408,14 @@ RenderingBackend GFX_GetRenderingBackend()
 
 static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 {
-	return sdl.use_viewport_limits
-	             ? SDL_Point{std::min(iround(sdl.viewport_resolution.x *
-	                                         sdl.desktop.dpi_scale),
-	                                  w),
-	                         std::min(iround(sdl.viewport_resolution.y *
-	                                         sdl.desktop.dpi_scale),
-	                                  h)}
-	             : SDL_Point{w, h};
+	if (sdl.viewport_resolution) {
+		return {std::min(iround(sdl.viewport_resolution->x * sdl.desktop.dpi_scale),
+		                 w),
+		        std::min(iround(sdl.viewport_resolution->y * sdl.desktop.dpi_scale),
+		                 h)};
+	} else {
+		return {w, h};
+	}
 }
 
 static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
@@ -2900,8 +2900,7 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 
 static void setup_viewport_resolution_from_conf(const std::string &viewport_resolution_val)
 {
-	sdl.use_viewport_limits = false;
-	sdl.viewport_resolution = {-1, -1};
+	sdl.viewport_resolution = {};
 
 	constexpr auto default_val = "fit";
 	if (viewport_resolution_val == default_val)
@@ -2928,22 +2927,28 @@ static void setup_viewport_resolution_from_conf(const std::string &viewport_reso
 		LOG_WARNING("DISPLAY: Requested viewport_resolution of '%s' is outside"
 		            " the desktop '%dx%d' bounds or the 1-100%% range, "
 		            " using the default setting ('%s') instead",
-		            viewport_resolution_val.c_str(), desktop.w,
-		            desktop.h, default_val);
+		            viewport_resolution_val.c_str(),
+		            desktop.w,
+		            desktop.h,
+		            default_val);
 		return;
 	}
 
-	sdl.use_viewport_limits = true;
 	if (p > 0.0f) {
-		sdl.viewport_resolution.x = iround(desktop.w * static_cast<double>(p) / 100.0);
-		sdl.viewport_resolution.y = iround(desktop.h * static_cast<double>(p) / 100.0);
+		sdl.viewport_resolution =
+		        {iround(desktop.w * static_cast<double>(p) / 100.0),
+		         iround(desktop.h * static_cast<double>(p) / 100.0)};
+
 		LOG_MSG("DISPLAY: Limiting viewport resolution to %2.4g%% (%dx%d) of the desktop",
-		        static_cast<double>(p), sdl.viewport_resolution.x, sdl.viewport_resolution.y);
+		        static_cast<double>(p),
+		        sdl.viewport_resolution->x,
+		        sdl.viewport_resolution->y);
 
 	} else {
 		sdl.viewport_resolution = {w, h};
 		LOG_MSG("DISPLAY: Limiting viewport resolution to %dx%d",
-		        sdl.viewport_resolution.x, sdl.viewport_resolution.y);
+		        sdl.viewport_resolution->x,
+		        sdl.viewport_resolution->y);
 	}
 }
 
