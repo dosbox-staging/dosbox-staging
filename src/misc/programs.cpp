@@ -563,13 +563,13 @@ void CONFIG::Run(void)
 					                pvars[1].c_str())) {
 						// found it; make the list of
 						// possible values
-						std::string propvalues;
+						std::string possible_values;
 						std::vector<Value> pv = p->GetValues();
 
 						if (p->Get_type() == Value::V_BOOL) {
 							// possible values for
 							// boolean are true, false
-							propvalues += "true, false";
+							possible_values += "true, false";
 						} else if (p->Get_type() ==
 						           Value::V_INT) {
 							// print min, max for
@@ -586,31 +586,40 @@ void CONFIG::Run(void)
 								oss << pint->GetMin();
 								oss << "..";
 								oss << pint->GetMax();
-								propvalues += oss.str();
+								possible_values += oss.str();
 							}
 						}
 						for (Bitu k = 0; k < pv.size(); k++) {
 							if (pv[k].ToString() == "%u") {
-								propvalues += MSG_Get(
+								possible_values += MSG_Get(
 								        "PROGRAM_CONFIG_HLP_POSINT");
 							} else {
-								propvalues += pv[k].ToString();
+								possible_values += pv[k].ToString();
 							}
 							if ((k + 1) < pv.size()) {
-								propvalues += ", ";
+								possible_values += ", ";
 							}
 						}
 
+						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
+						         p->propname.c_str(),
+						         sec->GetName(),
+						         p->GetHelp());
+
+						if (!possible_values.empty()) {
+							WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"),
+									 possible_values.c_str());
+						}
+
+						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE"),
+						         p->GetDefaultValue()
+						                 .ToString()
+						                 .c_str());
+
 						WriteOut(
-						        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
-						        p->propname.c_str(),
-						        sec->GetName(),
-						        p->GetHelp(),
-						        propvalues.c_str(),
-						        p->GetDefaultValue()
-						                .ToString()
-						                .c_str(),
+						        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE"),
 						        p->GetValue().ToString().c_str());
+
 						// print 'changability'
 						if (p->GetChange() ==
 						    Property::Changeable::OnlyAtStart) {
@@ -932,14 +941,20 @@ void PROGRAMS_Init(Section* sec)
 
 	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP",
 	        "[color=white]Purpose of property [color=light-green]'%s'[color=white] "
-			"(contained in section [color=light-cyan][%s][color=white]):[reset]\n\n%s\n\n"
-	        "[color=white]Possible values:[reset]  %s\n"
-	        "[color=white]Default value:[reset]    %s\n"
+	        "(contained in section [color=light-cyan][%s][color=white]):[reset]\n\n%s\n\n");
+
+	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES",
+	        "[color=white]Possible values:[reset]  %s\n");
+
+	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE",
+	        "[color=white]Default value:[reset]    %s\n");
+
+	MSG_Add("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE",
 	        "[color=white]Current value:[reset]    %s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_LINEHLP",
 	        "[color=white]Purpose of section [%s]:[reset]\n"
-			"%s\n[color=white]Current value:[reset]\n%s\n");
+	        "%s\n[color=white]Current value:[reset]\n%s\n");
 
 	MSG_Add("PROGRAM_CONFIG_HLP_NOCHANGE",
 	        "This property cannot be changed at runtime.\n");
