@@ -619,13 +619,17 @@ void GFX_DisengageRendering()
 	sdl.frame.present = present_frame_noop;
 }
 
-/* Reset the screen with current values in the sdl structure */
-void GFX_ResetScreen(void) {
+void GFX_ResetScreen(void)
+{
+	LOG_TRACE("GFX_ResetScreen");
 	GFX_Stop();
-	if (sdl.draw.callback)
-		(sdl.draw.callback)( GFX_CallBackReset );
+	if (sdl.draw.callback) {
+		(sdl.draw.callback)(GFX_CallBackReset);
+	}
 	GFX_Start();
 	CPU_Reset_AutoAdjust();
+
+	VGA_SetupDrawing(0);
 }
 
 void GFX_ForceFullscreenExit()
@@ -3732,17 +3736,19 @@ static void FinalizeWindowState()
 	GFX_ResetScreen();
 }
 
-static void maybe_auto_switch_shader()
+static bool maybe_auto_switch_shader()
 {
 #if C_OPENGL
 	if (sdl.rendering_backend != RenderingBackend::OpenGl) {
-		return;
+		return false;
 	}
 
 	const auto canvas = get_canvas_size(sdl.rendering_backend);
 
 	constexpr auto reinit_render = true;
-	RENDER_MaybeAutoSwitchShader(canvas.w, canvas.h, sdl.video_mode, reinit_render);
+	return RENDER_MaybeAutoSwitchShader(canvas.w, canvas.h, sdl.video_mode, reinit_render);
+#else
+	return false;
 #endif
 }
 
@@ -3873,10 +3879,14 @@ bool GFX_Events()
 				// LOG_DEBUG("SDL: Window has lost mouse focus");
 				continue;
 
-			case SDL_WINDOWEVENT_SHOWN:
+			case SDL_WINDOWEVENT_SHOWN: {
 				// LOG_DEBUG("SDL: Window has been shown");
-				maybe_auto_switch_shader();
+				const auto shader_switched = maybe_auto_switch_shader();
+				if (!shader_switched) {
+					GFX_ResetScreen();
+				}
 				continue;
+			}
 
 			case SDL_WINDOWEVENT_HIDDEN:
 				// LOG_DEBUG("SDL: Window has been hidden");
@@ -3926,23 +3936,34 @@ bool GFX_Events()
 					           sdl.clip_px.h);
 				}
 
-				maybe_auto_switch_shader();
+				const auto shader_switched = maybe_auto_switch_shader();
+				if (!shader_switched) {
+					GFX_ResetScreen();
+				}
 #	endif
 				NewMouseScreenParams();
 				continue;
 			}
 #endif
 
-			case SDL_WINDOWEVENT_SIZE_CHANGED:
+			case SDL_WINDOWEVENT_SIZE_CHANGED: {
 				// LOG_DEBUG("SDL: The window size has changed");
 
 				// The window size has changed either as a
 				// result of an API call or through the system
 				// or user changing the window size.
-				handle_video_resize(event.window.data1, event.window.data2);
+				const auto new_width  = event.window.data1;
+				const auto new_height = event.window.data2;
+				handle_video_resize(new_width, new_height);
+
 				FinalizeWindowState();
-				maybe_auto_switch_shader();
+
+				const auto shader_switched = maybe_auto_switch_shader();
+				if (!shader_switched) {
+					GFX_ResetScreen();
+				}
 				continue;
+			}
 
 			case SDL_WINDOWEVENT_MINIMIZED:
 				// LOG_DEBUG("SDL: Window has been minimized");
