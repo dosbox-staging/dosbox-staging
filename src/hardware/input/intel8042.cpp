@@ -46,16 +46,16 @@ CHECK_NARROWING();
 // - http://www.os2museum.com/wp/ibm-pcat-8042-keyboard-controller-commands/
 // - http://www.os2museum.com/wp/ibm-ps2-model-50-keyboard-controller/
 
-static constexpr uint8_t irq_num_kbd_pcjr  = 6;
-static constexpr uint8_t irq_num_kbd_ibmpc = 1;
-static constexpr uint8_t irq_num_mouse     = 12;
+static constexpr uint8_t IrqNumKbdPcjr  = 6;
+static constexpr uint8_t IrqNumKbdIbmPc = 1;
+static constexpr uint8_t IrqNumMouse    = 12;
 
-constexpr uint8_t        firmware_revision  = 0x00;
-static const std::string firmware_copyright = DOSBOX_COPYRIGHT;
+constexpr uint8_t        FirmwareRevision  = 0x00;
+static const std::string FirmwareCopyright = DOSBOX_COPYRIGHT;
 
-static constexpr uint8_t buffer_size = 64; // in bytes
+static constexpr uint8_t BufferSize = 64; // in bytes
 // delay appropriate for 20-30 kHz serial clock and 11 bits/byte
-static constexpr double port_delay_ms = 0.300;
+static constexpr double PortDelayMs = 0.300;
 
 enum class Command : uint8_t { // PS/2 mouse/keyboard controller commands
 	None = 0x00,
@@ -225,7 +225,7 @@ static struct {
 	bool is_from_kbd = false;
 	bool skip_delay  = false;
 
-} buffer[buffer_size];
+} buffer[BufferSize];
 
 static size_t buffer_start_idx = 0;
 static size_t buffer_num_used  = 0;
@@ -236,7 +236,7 @@ static size_t waiting_bytes_from_kbd = 0;
 // true = delay timer is in progress
 static bool delay_running = false;
 // true = delay timer expired, event can be sent immediately
-static bool delay_finished = true;
+static bool delay_expired = true;
 
 // Executing command, do not notify devices about readiness for accepting frame
 static bool should_skip_device_notify = false;
@@ -396,7 +396,7 @@ static bool kbd_disabled_timer_expired = true;
 
 // Make the delay a little longer than between two bytes of a scancode,
 // even lower values are enough
-constexpr double kbd_disabled_duration_ms = port_delay_ms * 1.5f;
+constexpr double KbdDisabledDurationMs = PortDelayMs * 1.5f;
 
 // Forward declaration
 static void restart_kbd_disabled_timer();
@@ -423,7 +423,7 @@ static void restart_kbd_disabled_timer()
 	if (kbd_disabled_timer_running) {
 		PIC_RemoveEvents(kbd_disabled_timer_handler);
 	}
-	PIC_AddEvent(kbd_disabled_timer_handler, kbd_disabled_duration_ms);
+	PIC_AddEvent(kbd_disabled_timer_handler, KbdDisabledDurationMs);
 	kbd_disabled_timer_running = true;
 	kbd_disabled_timer_expired = false;
 }
@@ -460,9 +460,9 @@ static void flush_buffer()
 
 static void enforce_buffer_space(const size_t num_bytes = 1)
 {
-	assert(num_bytes <= buffer_size);
+	assert(num_bytes <= BufferSize);
 
-	if (buffer_size < buffer_num_used + num_bytes) {
+	if (BufferSize < buffer_num_used + num_bytes) {
 		warn_buffer_full();
 		flush_buffer();
 	}
@@ -472,20 +472,20 @@ static void maybe_transfer_buffer(); // forward declaration
 
 static void delay_handler(uint32_t /*val*/)
 {
-	delay_running  = false;
-	delay_finished = true;
+	delay_running = false;
+	delay_expired = true;
 
 	maybe_transfer_buffer();
 }
 
-static void restart_delay_timer(const double time_ms = port_delay_ms)
+static void restart_delay_timer(const double time_ms = PortDelayMs)
 {
 	if (delay_running) {
 		PIC_RemoveEvents(delay_handler);
 	}
 	PIC_AddEvent(delay_handler, time_ms);
-	delay_running  = true;
-	delay_finished = false;
+	delay_running = true;
+	delay_expired = false;
 }
 
 static void maybe_transfer_buffer()
@@ -498,12 +498,12 @@ static void maybe_transfer_buffer()
 
 	// If not set to skip the delay, do not send byte until timer expires
 	const auto idx = buffer_start_idx;
-	if (!delay_finished && !buffer[idx].skip_delay) {
+	if (!delay_expired && !buffer[idx].skip_delay) {
 		return;
 	}
 
 	// Mark byte as consummed
-	buffer_start_idx = (buffer_start_idx + 1) % buffer_size;
+	buffer_start_idx = (buffer_start_idx + 1) % BufferSize;
 	--buffer_num_used;
 
 	// Transfer one byte of data from buffer to output port
@@ -515,13 +515,13 @@ static void maybe_transfer_buffer()
 
 	// If needed, activate interrupt
 	if (is_data_from_aux && is_irq_active_aux) {
-		PIC_ActivateIRQ(irq_num_mouse);
+		PIC_ActivateIRQ(IrqNumMouse);
 	}
 	if (is_data_from_kbd && is_irq_active_kbd) {
 		if (machine == MCH_PCJR) {
-			PIC_ActivateIRQ(irq_num_kbd_pcjr);
+			PIC_ActivateIRQ(IrqNumKbdPcjr);
 		} else {
-			PIC_ActivateIRQ(irq_num_kbd_ibmpc);
+			PIC_ActivateIRQ(IrqNumKbdIbmPc);
 		}
 	}
 }
@@ -536,13 +536,13 @@ static void buffer_add(const uint8_t byte,
 		return;
 	}
 
-	if (buffer_num_used >= buffer_size) {
+	if (buffer_num_used >= BufferSize) {
 		warn_buffer_full();
 		flush_buffer();
 		return;
 	}
 
-	const size_t idx = (buffer_start_idx + buffer_num_used++) % buffer_size;
+	const size_t idx = (buffer_start_idx + buffer_num_used++) % BufferSize;
 
 	if (is_from_kbd && uses_kbd_translation) {
 		buffer[idx].data = get_translated(byte);
@@ -723,7 +723,7 @@ static void execute_command(const Command command)
 		// Reads the keyboard controller firmware
 		// copyright string, terminated by NUL
 		flush_buffer();
-		for (auto byte : firmware_copyright) {
+		for (auto byte : FirmwareCopyright) {
 			buffer_add(static_cast<uint8_t>(byte));
 		}
 		buffer_add(0);
@@ -732,7 +732,7 @@ static void execute_command(const Command command)
 		// Reads the keybaord copntroller firmware
 		// revision, always one byte
 		flush_buffer();
-		buffer_add(firmware_revision);
+		buffer_add(FirmwareRevision);
 		break;
 	case Command::PasswordCheck: // 0xa4
 		// Check if password installed
@@ -787,7 +787,7 @@ static void execute_command(const Command command)
 		// Dump the whole controller internal RAM (16 bytes),
 		// output port, input port, test input, and status byte
 		warn_internal_ram_access();
-		static_assert(buffer_size >= 20 * 3,
+		static_assert(BufferSize >= 20 * 3,
 		              "Buffer has to hold 3 bytes for each byte of dump");
 		flush_buffer();
 		is_diagnostic_dump = true;
@@ -934,7 +934,7 @@ static void execute_command(const Command command, const uint8_t param)
 		// To prevent excessive inter-module communication,
 		// aux (mouse) part is implemented completely within
 		// the mouse module
-		restart_delay_timer(port_delay_ms * 2); // 'round trip' delay
+		restart_delay_timer(PortDelayMs * 2); // 'round trip' delay
 		is_transmit_timeout = !MOUSEPS2_PortWrite(param);
 		break;
 	default:
@@ -1050,7 +1050,7 @@ static void write_data_port(io_port_t, io_val_t value, io_width_t) // port 0x60
 		is_disabled_kbd     = false; // port auto-enable
 
 		flush_buffer();
-		restart_delay_timer(port_delay_ms * 2); // 'round trip' delay
+		restart_delay_timer(PortDelayMs * 2); // 'round trip' delay
 		KEYBOARD_PortWrite(byte);
 	}
 }
@@ -1175,7 +1175,7 @@ bool I8042_IsReadyForKbdFrame()
 
 void I8042_Init()
 {
-	assert(buffer_size >= firmware_copyright.size() + 16);
+	assert(BufferSize >= FirmwareCopyright.size() + 16);
 
 	IO_RegisterReadHandler(port_num_i8042_data,
 	                       read_data_port,
