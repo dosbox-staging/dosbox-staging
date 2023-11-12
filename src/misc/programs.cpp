@@ -452,7 +452,8 @@ void CONFIG::Run(void)
 				// write config to startup directory
 				WriteConfig(pvars[0]);
 			} else {
-				// -wc without parameter: write dosbox.conf to startup directory
+				// -wc without parameter: write dosbox.conf to
+				// startup directory
 				if (control->configfiles.size()) {
 					WriteConfig("dosbox.conf");
 				} else {
@@ -586,7 +587,8 @@ void CONFIG::Run(void)
 								oss << pint->GetMin();
 								oss << "..";
 								oss << pint->GetMax();
-								possible_values += oss.str();
+								possible_values +=
+								        oss.str();
 							}
 						}
 						for (Bitu k = 0; k < pv.size(); k++) {
@@ -594,7 +596,8 @@ void CONFIG::Run(void)
 								possible_values += MSG_Get(
 								        "PROGRAM_CONFIG_HLP_POSINT");
 							} else {
-								possible_values += pv[k].ToString();
+								possible_values +=
+								        pv[k].ToString();
 							}
 							if ((k + 1) < pv.size()) {
 								possible_values += ", ";
@@ -606,19 +609,23 @@ void CONFIG::Run(void)
 						         sec->GetName(),
 						         p->GetHelp());
 
-						if (!possible_values.empty()) {
-							WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"),
-									 possible_values.c_str());
+						if (!p->IsDeprecated()) {
+							if (!possible_values.empty()) {
+								WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES"),
+								         possible_values
+								                 .c_str());
+							}
+
+							WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE"),
+							         p->GetDefaultValue()
+							                 .ToString()
+							                 .c_str());
+
+							WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE"),
+							         p->GetValue()
+							                 .ToString()
+							                 .c_str());
 						}
-
-						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE"),
-						         p->GetDefaultValue()
-						                 .ToString()
-						                 .c_str());
-
-						WriteOut(
-						        MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE"),
-						        p->GetValue().ToString().c_str());
 
 						// print 'changability'
 						if (p->GetChange() ==
