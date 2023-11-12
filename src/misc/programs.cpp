@@ -550,6 +550,9 @@ void CONFIG::Run(void)
 					if (p == nullptr) {
 						break;
 					}
+					if (p->IsDeprecated()) {
+						continue;
+					}
 					WriteOut("  - %s\n", p->propname.c_str());
 				}
 			} else {
