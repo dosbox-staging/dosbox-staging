@@ -651,13 +651,16 @@ void GFX_DisengageRendering()
 	sdl.frame.present = present_frame_noop;
 }
 
-/* Reset the screen with current values in the sdl structure */
-void GFX_ResetScreen(void) {
+void GFX_ResetScreen(void)
+{
 	GFX_Stop();
-	if (sdl.draw.callback)
-		(sdl.draw.callback)( GFX_CallBackReset );
+	if (sdl.draw.callback) {
+		(sdl.draw.callback)(GFX_CallBackReset);
+	}
 	GFX_Start();
 	CPU_Reset_AutoAdjust();
+
+	VGA_SetupDrawing(0);
 }
 
 void GFX_ForceFullscreenExit()
@@ -3824,18 +3827,23 @@ static void finalise_window_state()
 	GFX_ResetScreen();
 }
 
-static void maybe_auto_switch_shader()
+static bool maybe_auto_switch_shader()
 {
 #if C_OPENGL
 	if (sdl.rendering_backend != RenderingBackend::OpenGl) {
-		return;
+		return false;
 	}
 
 	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
 	constexpr auto reinit_render = true;
 
-	RENDER_MaybeAutoSwitchShader(canvas_px.w, canvas_px.h, sdl.video_mode, reinit_render);
+	return RENDER_MaybeAutoSwitchShader(canvas_px.w,
+	                                    canvas_px.h,
+	                                    sdl.video_mode,
+	                                    reinit_render);
+#else
+	return false;
 #endif
 }
 
@@ -4030,16 +4038,24 @@ bool GFX_Events()
 			}
 #endif
 
-			case SDL_WINDOWEVENT_SIZE_CHANGED:
+			case SDL_WINDOWEVENT_SIZE_CHANGED: {
 				// LOG_DEBUG("SDL: The window size has changed");
 
 				// The window size has changed either as a
 				// result of an API call or through the system
 				// or user changing the window size.
-				handle_video_resize(event.window.data1, event.window.data2);
+				const auto new_width  = event.window.data1;
+				const auto new_height = event.window.data2;
+				handle_video_resize(new_width, new_height);
+
 				finalise_window_state();
-				maybe_auto_switch_shader();
+
+				const auto shader_switched = maybe_auto_switch_shader();
+				if (!shader_switched) {
+					GFX_ResetScreen();
+				}
 				continue;
+			}
 
 			case SDL_WINDOWEVENT_MINIMIZED:
 				// LOG_DEBUG("SDL: Window has been minimized");
