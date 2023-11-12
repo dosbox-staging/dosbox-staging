@@ -192,6 +192,10 @@ if get_option('asm')
     extra_flags += ['--save-temps', '/FAs']
 endif
 
+if get_option('time_trace')
+    extra_flags += ['-ftime-trace']
+endif
+
 # Don't flood us with hundreds of suggestions to use Microsoft-specific calls
 if host_machine.system() == 'windows'
     extra_flags += '-Wno-pedantic-ms-format'

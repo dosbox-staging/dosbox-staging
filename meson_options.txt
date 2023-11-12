@@ -178,3 +178,10 @@ option(
     value: false,
     description: 'Save intermediate assembly output',
 )
+
+option(
+    'time_trace',
+    type: 'boolean',
+    value: false,
+    description: 'Time build events, for use with the Clang Build Analyzer tool',
+)
