@@ -1418,6 +1418,16 @@ static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 	}
 }
 
+SDL_Rect GFX_GetViewportSize()
+{
+	const auto canvas = get_canvas_size(sdl.rendering_backend);
+
+	const auto restricted_dims = restrict_to_viewport_resolution(canvas.w,
+	                                                             canvas.h);
+
+	return {0, 0, restricted_dims.x, restricted_dims.y};
+}
+
 static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
         const Fraction& pixel_aspect_ratio)
 {

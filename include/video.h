@@ -362,6 +362,7 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
                           const Fraction& render_pixel_aspect_ratio);
 
 SDL_Rect GFX_GetCanvasSize();
+SDL_Rect GFX_GetViewportSize();
 
 RenderingBackend GFX_GetRenderingBackend();
 
