@@ -50,6 +50,8 @@ enum class IntegerScalingMode {
 
 enum class AspectRatioCorrectionMode { On, Off, Viewport };
 
+enum class ViewportMode { Fit, Overflow };
+
 // Graphics standards ordered by time of introduction (and roughly by
 // their capabilities)
 enum class GraphicsStandard { Hercules, Cga, Pcjr, Tga, Ega, Vga, Svga, Vesa };
