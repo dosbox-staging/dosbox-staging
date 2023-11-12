@@ -851,7 +851,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "    options instead.");
 
 #if C_OPENGL
-	string_prop = secprop.Add_path("glshader", always, "crt-auto");
+	string_prop = secprop.Add_string("glshader", always, "crt-auto");
 	string_prop->Set_help(
 	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL \n"
 	        "output modes.\n"
@@ -912,14 +912,16 @@ static bool handle_shader_changes()
 
 	auto& shader_manager = get_shader_manager();
 
+	constexpr auto glshader_setting_name = "glshader";
+
 	if (GFX_GetRenderingBackend() == RenderingBackend::OpenGl) {
 		const auto section     = get_render_section();
 		const auto shader_name = shader_manager.MapShaderName(
-		        section->Get_string("glshader"));
+		        section->Get_string(glshader_setting_name));
 
 		shader_manager.NotifyGlshaderSettingChanged(shader_name);
 
-		const auto string_prop = section->GetStringProp("glshader");
+		const auto string_prop = section->GetStringProp(glshader_setting_name);
 		string_prop->SetValue(shader_name);
 	}
 	const auto new_shader_name = shader_manager.GetCurrentShaderInfo().name;
