@@ -1427,6 +1427,16 @@ static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 	}
 }
 
+DosBox::Rect GFX_GetViewportSizeInPixels()
+{
+	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+
+	const auto restricted_dims_px =
+	        restrict_to_viewport_resolution(canvas_px.w, canvas_px.h);
+
+	return {restricted_dims_px.x, restricted_dims_px.y};
+}
+
 static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
         const Fraction& pixel_aspect_ratio)
 {

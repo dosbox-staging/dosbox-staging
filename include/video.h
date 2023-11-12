@@ -358,6 +358,7 @@ DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
                                       const Fraction& render_pixel_aspect_ratio);
 
 DosBox::Rect GFX_GetCanvasSizeInPixels();
+DosBox::Rect GFX_GetViewportSizeInPixels();
 
 RenderingBackend GFX_GetRenderingBackend();
 
