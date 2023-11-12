@@ -759,7 +759,7 @@ static void init_render_settings(Section_prop& secprop)
 
 	auto* int_prop = secprop.Add_int("frameskip", deprecated, 0);
 	int_prop->Set_help(
-	        "Consider capping frame-rates using the '[sdl] host_rate' setting.");
+	        "Consider capping frame rates using the 'host_rate' setting.");
 
 	auto* bool_prop = secprop.Add_bool("aspect", always, true);
 	bool_prop->Set_help(

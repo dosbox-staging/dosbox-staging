@@ -4189,8 +4189,11 @@ static void config_add_sdl() {
 	Pint->Set_help("Set the transparency of the DOSBox Staging screen (0 by default).\n"
 	               "From 0 (no transparency) to 90 (high transparency).");
 
-	pstring = sdl_sec->Add_string("max_resolution", deprecated, "");
-	pstring->Set_help("This setting has been renamed to viewport_resolution.");
+	pstring = sdl_sec->Add_path("max_resolution", deprecated, "");
+	pstring->Set_help("Renamed to 'viewport_resolution'.");
+
+	pstring = sdl_sec->Add_path("viewport_resolution", deprecated, "");
+	pstring->Set_help("Moved to [render] section.");
 
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
 	pstring->Set_help(
@@ -4270,13 +4273,13 @@ static void config_add_sdl() {
 	pstring->Set_values(get_sdl_texture_renderers());
 
 	Pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
-	Pmulti->Set_help("Moved to [mouse] section.");
+	Pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_capture'.");
 
 	Pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
-	Pmulti->Set_help("Moved to [mouse] section.");
+	Pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_sensitivity'.");
 
 	pbool = sdl_sec->Add_bool("raw_mouse_input", deprecated, false);
-	pbool->Set_help("Moved to [mouse] section.");
+	pbool->Set_help("Moved to [mouse] section and renamed to 'mouse_raw_input'.");
 
 	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
 	Pbool->Set_help("Keep the console open if an error has occurred (enabled by default).");
