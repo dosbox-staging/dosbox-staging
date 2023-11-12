@@ -101,7 +101,7 @@ static uint8_t delay_ms = 5;
 // true = delay timer is in progress
 static bool delay_running = false;
 // true = delay timer expired, event can be sent immediately
-static bool delay_finished = true;
+static bool delay_expired = true;
 
 static MouseButtonsAll buttons;     // currently visible button state
 static MouseButtonsAll buttons_all; // state of all 5 buttons as on the host side
@@ -343,8 +343,8 @@ static void maybe_transfer_frame(); // forward declaration
 
 static void delay_handler(uint32_t /*val*/)
 {
-	delay_running  = false;
-	delay_finished = true;
+	delay_running = false;
+	delay_expired = true;
 
 	maybe_transfer_frame();
 }
@@ -355,8 +355,8 @@ static void maybe_start_delay_timer(const uint8_t timer_delay_ms)
 		return;
 	}
 	PIC_AddEvent(delay_handler, timer_delay_ms);
-	delay_running  = true;
-	delay_finished = false;
+	delay_running = true;
+	delay_expired = false;
 }
 
 static bool should_report()
@@ -366,7 +366,7 @@ static bool should_report()
 
 static void maybe_transfer_frame()
 {
-	if (!delay_finished) {
+	if (!delay_expired) {
 		maybe_start_delay_timer(delay_ms);
 		return;
 	}
@@ -750,13 +750,13 @@ static RealPt ps2_callback   = 0;
 
 std::vector<uint8_t> bios_buffer = {};
 
-static bool bios_delay_running  = false;
-static bool bios_delay_finished = true;
+static bool bios_delay_running = false;
+static bool bios_delay_expired = true;
 
 static void bios_delay_handler(uint32_t /*val*/)
 {
-	bios_delay_running  = false;
-	bios_delay_finished = true;
+	bios_delay_running = false;
+	bios_delay_expired = true;
 
 	PIC_ActivateIRQ(mouse_predefined.IRQ_PS2);
 }
@@ -770,15 +770,15 @@ static void bios_maybe_start_delay_timer()
 	}
 
 	PIC_AddEvent(bios_delay_handler, timer_delay_ms);
-	bios_delay_running  = true;
-	bios_delay_finished = false;
+	bios_delay_running = true;
+	bios_delay_expired = false;
 }
 
 static void bios_cancel_delay_timer()
 {
 	PIC_RemoveEvents(bios_delay_handler);
-	bios_delay_running  = false;
-	bios_delay_finished = true;
+	bios_delay_running = false;
+	bios_delay_expired = true;
 }
 
 static bool bios_enable()
