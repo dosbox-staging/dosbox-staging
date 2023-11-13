@@ -18,6 +18,7 @@ categories:
     labels:
       - "documentation"
       - "translation"
+      - "website"
 
   - title: "Project Maintenance"
     labels:
