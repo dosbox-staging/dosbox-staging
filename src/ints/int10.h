@@ -236,12 +236,30 @@ void INT10_DisplayCombinationCode(uint16_t * dcc,bool set);
 void INT10_GetFuncStateInformation(PhysPt save);
 
 void INT10_SetCursorShape(uint8_t first,uint8_t last);
+
 void INT10_SetCursorPos(uint8_t row,uint8_t col,uint8_t page);
-void INT10_TeletypeOutput(uint8_t chr,uint8_t attr);
-void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr);
-void INT10_ReadCharAttr(uint16_t * result,uint8_t page);
-void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bool showattr);
-void INT10_WriteString(uint8_t row,uint8_t col,uint8_t flag,uint8_t attr,PhysPt string,uint16_t count,uint8_t page);
+void INT10_SetCursorPosViaInterrupt(const uint8_t row, const uint8_t col,
+                                    const uint8_t page);
+
+void INT10_TeletypeOutput(const uint8_t char_value, const uint8_t attribute);
+void INT10_TeletypeOutputViaInterrupt(const uint8_t char_value,
+                                      const uint8_t attribute);
+
+void INT10_TeletypeOutputAttr(const uint8_t char_value, const uint8_t attribute,
+                              const bool use_attribute);
+void INT10_TeletypeOutputAttrViaInterrupt(const uint8_t char_value,
+                                          const uint8_t attribute,
+                                          const bool use_attribute);
+
+void INT10_ReadCharAttr(uint16_t* result, uint8_t page);
+
+void INT10_WriteChar(const uint8_t char_value, const uint8_t attribute,
+                     uint8_t page, uint16_t count, bool use_attribute);
+void INT10_WriteCharViaInterrupt(const uint8_t char_value, const uint8_t attribute,
+                                 uint8_t page, uint16_t count, bool use_attribute);
+
+void INT10_WriteString(uint8_t row, uint8_t col, uint8_t flag, uint8_t attr,
+                       PhysPt string, uint16_t count, uint8_t page);
 
 /* Graphics Stuff */
 void INT10_PutPixel(uint16_t x,uint16_t y,uint8_t page,uint8_t color);

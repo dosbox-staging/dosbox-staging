@@ -666,7 +666,18 @@ static void write_char_via_interrupt(const uint8_t cur_col, const uint8_t cur_ro
 	reg_cx = old_cx;
 }
 
-void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bool showattr)
+// A template parameter to indicate if a function's actions should be
+// called immediately (the default) or if they should be made via the interrupt
+// handler and run just like any other DOS program.
+//
+enum class CallPlacement {
+	Immediate,
+	Interrupt,
+};
+
+template <CallPlacement call_placement = CallPlacement::Immediate>
+void write_char(const uint8_t chr, const uint8_t attr, uint8_t page,
+                uint16_t count, bool showattr)
 {
 	uint8_t pospage=page;
 	if (CurMode->type!=M_TEXT) {
@@ -704,7 +715,11 @@ void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bo
 	uint8_t cur_col=CURSOR_POS_COL(pospage);
 	BIOS_NCOLS;
 	while (count>0) {
-		WriteChar(cur_col,cur_row,page,chr,attr,showattr);
+		if constexpr (call_placement == CallPlacement::Immediate) {
+			WriteChar(cur_col, cur_row, page, chr, attr, showattr);
+		} else {
+			write_char_via_interrupt(cur_col, cur_row, page, chr, attr, showattr);
+		}
 		count--;
 		cur_col++;
 		if(cur_col==ncols) {
@@ -719,10 +734,26 @@ void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bo
 	}
 }
 
-static void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr,uint8_t page) {
-	BIOS_NCOLS;BIOS_NROWS;
-	uint8_t cur_row=CURSOR_POS_ROW(page);
-	uint8_t cur_col=CURSOR_POS_COL(page);
+void INT10_WriteChar(const uint8_t char_value, const uint8_t attribute,
+                     uint8_t page, uint16_t count, bool use_attribute)
+{
+	write_char<CallPlacement::Immediate>(char_value, attribute, page, count, use_attribute);
+}
+
+void INT10_WriteCharViaInterrupt(const uint8_t char_value, const uint8_t attribute,
+                                 uint8_t page, uint16_t count, bool use_attribute)
+{
+	write_char<CallPlacement::Interrupt>(char_value, attribute, page, count, use_attribute);
+}
+
+template <CallPlacement call_placement = CallPlacement::Immediate>
+static void teletype_output_attr(const uint8_t chr, const uint8_t attr,
+                                 const bool useattr, const uint8_t page)
+{
+	BIOS_NCOLS;
+	BIOS_NROWS;
+	uint8_t cur_row = CURSOR_POS_ROW(page);
+	uint8_t cur_col = CURSOR_POS_COL(page);
 	switch (chr) {
 	case 7: /* Beep */
 		// Prepare PIT counter 2 for ~900 Hz square wave
@@ -751,7 +782,11 @@ static void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr,uint8
 		break;
 	default:
 		/* Draw the actual Character */
-		WriteChar(cur_col,cur_row,page,chr,attr,useattr);
+		if constexpr (call_placement == CallPlacement::Immediate) {
+			WriteChar(cur_col, cur_row, page, chr, attr, useattr);
+		} else {
+			write_char_via_interrupt(cur_col, cur_row, page, chr, attr, useattr);
+		}
 		cur_col++;
 	}
 	if(cur_col==ncols) {
@@ -771,11 +806,34 @@ static void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr,uint8
 		cur_row--;
 	}
 	// Set the cursor for the page
-	INT10_SetCursorPos(cur_row,cur_col,page);
+	if constexpr (call_placement == CallPlacement::Immediate) {
+		INT10_SetCursorPos(cur_row, cur_col, page);
+	} else {
+		INT10_SetCursorPosViaInterrupt(cur_row, cur_col, page);
+	}
 }
 
-void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr) {
-	INT10_TeletypeOutputAttr(chr,attr,useattr,real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE));
+void INT10_TeletypeOutputAttr(const uint8_t char_value, const uint8_t attribute,
+                              const bool use_attribute)
+{
+	const auto page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
+
+	teletype_output_attr<CallPlacement::Immediate>(char_value,
+	                                               attribute,
+	                                               use_attribute,
+	                                               page);
+}
+
+void INT10_TeletypeOutputAttrViaInterrupt(const uint8_t char_value,
+                                          const uint8_t attribute,
+                                          const bool use_attribute)
+{
+	const auto page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
+
+	teletype_output_attr<CallPlacement::Interrupt>(char_value,
+	                                               attribute,
+	                                               use_attribute,
+	                                               page);
 }
 
 void INT10_TeletypeOutput(uint8_t chr,uint8_t attr) {
@@ -818,7 +876,8 @@ void INT10_WriteString(uint8_t row,uint8_t col,uint8_t flag,uint8_t attr,PhysPt 
 			attr=mem_readb(string);
 			string++;
 		};
-		INT10_TeletypeOutputAttr(chr,attr,true,page);
+		constexpr auto use_attribute = true;
+		teletype_output_attr(chr, attr, use_attribute, page);
 		count--;
 	}
 	if (!(flag&1)) {
