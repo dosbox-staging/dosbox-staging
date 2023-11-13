@@ -22,10 +22,11 @@
 #include "int10.h"
 
 #include "bios.h"
-#include "mem.h"
-#include "inout.h"
-#include "pic.h"
 #include "callback.h"
+#include "inout.h"
+#include "mem.h"
+#include "pic.h"
+#include "regs.h"
 
 static void CGA2_CopyRow(uint8_t cleft,uint8_t cright,uint8_t rold,uint8_t rnew,PhysPt base) {
 	BIOS_CHEIGHT;
@@ -413,6 +414,29 @@ void INT10_SetCursorPos(uint8_t row,uint8_t col,uint8_t page) {
 	}
 }
 
+void INT10_SetCursorPosViaInterrupt(const uint8_t row, const uint8_t col,
+                                    const uint8_t page)
+{
+	constexpr uint8_t position_cmd = 0x2;
+
+	// Save regs
+	const auto old_ax = reg_ax;
+	const auto old_bx = reg_bx;
+	const auto old_dx = reg_dx;
+
+	// Set the cursor position
+	reg_ah = position_cmd;
+	reg_bh = page;
+	reg_dh = row;
+	reg_dl = col;
+	CALLBACK_RunRealInt(0x10);
+
+	// Restore regs
+	reg_ax = old_ax;
+	reg_bx = old_bx;
+	reg_dx = old_dx;
+}
+
 void ReadCharAttr(uint16_t col,uint16_t row,uint8_t page,uint16_t * result) {
 	/* Externally used by the mouse routine */
 	RealPt fontdata;
@@ -612,6 +636,36 @@ void WriteChar(uint16_t col,uint16_t row,uint8_t page,uint8_t chr,uint8_t attr,b
 	}
 }
 
+static void write_char_via_interrupt(const uint8_t cur_col, const uint8_t cur_row,
+                                     const uint8_t page, const uint8_t char_value,
+                                     const uint8_t attribute, const bool use_attribute)
+{
+	constexpr uint8_t write_char_cmd        = 0x1;
+	constexpr uint8_t with_attribute_cmd    = 0x9;
+	constexpr uint8_t without_attribute_cmd = 0x0A;
+
+	// Position the cursor
+	INT10_SetCursorPosViaInterrupt(cur_row, cur_col, page);
+
+	// Save regs
+	const auto old_ax = reg_ax;
+	const auto old_bx = reg_bx;
+	const auto old_cx = reg_cx;
+
+	// Write the character
+	reg_ah = use_attribute ? with_attribute_cmd : without_attribute_cmd;
+	reg_al = char_value;
+	reg_bl = attribute;
+	reg_bh = page;
+	reg_cx = write_char_cmd;
+	CALLBACK_RunRealInt(0x10);
+
+	// Restore regs
+	reg_ax = old_ax;
+	reg_bx = old_bx;
+	reg_cx = old_cx;
+}
+
 void INT10_WriteChar(uint8_t chr, uint8_t attr, uint8_t page, uint16_t count, bool showattr)
 {
 	uint8_t pospage=page;
@@ -726,6 +780,25 @@ void INT10_TeletypeOutputAttr(uint8_t chr,uint8_t attr,bool useattr) {
 
 void INT10_TeletypeOutput(uint8_t chr,uint8_t attr) {
 	INT10_TeletypeOutputAttr(chr,attr,CurMode->type!=M_TEXT);
+}
+
+void INT10_TeletypeOutputViaInterrupt(const uint8_t char_value, const uint8_t attribute)
+{
+	constexpr uint8_t teletype_cmd = 0xE;
+
+	// Save regs
+	const auto old_ax = reg_ax;
+	const auto old_bx = reg_bx;
+
+	// Teletype the output
+	reg_ah = teletype_cmd;
+	reg_al = char_value;
+	reg_bl = attribute;
+	CALLBACK_RunRealInt(0x10);
+
+	// Restore regs
+	reg_ax = old_ax;
+	reg_bx = old_bx;
 }
 
 void INT10_WriteString(uint8_t row,uint8_t col,uint8_t flag,uint8_t attr,PhysPt string,uint16_t count,uint8_t page) {
