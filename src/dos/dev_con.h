@@ -79,7 +79,9 @@ bool device_CON::Read(uint8_t * data,uint16_t * size) {
 	INT10_SetCurMode();
 	if ((readcache) && (*size)) {
 		data[count++]=readcache;
-		if(dos.echo) INT10_TeletypeOutput(readcache,7);
+		if (dos.echo) {
+			INT10_TeletypeOutputViaInterrupt(readcache, 7);
+		}
 		readcache=0;
 	}
 	while (*size>count) {
@@ -91,9 +93,11 @@ bool device_CON::Read(uint8_t * data,uint16_t * size) {
 			if (*size>count) data[count++]=0x0A;    // it's only expanded if there is room for it. (NO cache)
 			*size=count;
 			reg_ax=oldax;
-			if(dos.echo) { 
-				INT10_TeletypeOutput(13,7); //maybe don't do this ( no need for it actually ) (but it's compatible)
-				INT10_TeletypeOutput(10,7);
+			if(dos.echo) {
+				// maybe don't do this ( no need for it actually
+				// ) (but it's compatible)
+				INT10_TeletypeOutputViaInterrupt(13, 7);
+				INT10_TeletypeOutputViaInterrupt(10, 7);
 			}
 			return true;
 			break;
@@ -101,8 +105,8 @@ bool device_CON::Read(uint8_t * data,uint16_t * size) {
 			if(*size==1) data[count++]=reg_al;  //one char at the time so give back that BS
 			else if(count) {                    //Remove data if it exists (extended keys don't go right)
 				data[count--]=0;
-				INT10_TeletypeOutput(8,7);
-				INT10_TeletypeOutput(' ',7);
+				INT10_TeletypeOutputViaInterrupt(8, 7);
+				INT10_TeletypeOutputViaInterrupt(' ', 7);
 			} else {
 				continue;                       //no data read yet so restart whileloop.
 			}
@@ -126,7 +130,7 @@ bool device_CON::Read(uint8_t * data,uint16_t * size) {
 			break;
 		}
 		if(dos.echo) { //what to do if *size==1 and character is BS ?????
-			INT10_TeletypeOutput(reg_al,7);
+			INT10_TeletypeOutputViaInterrupt(reg_al, 7);
 		}
 	}
 	*size=count;
@@ -305,7 +309,11 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 			if(ansi.data[1] == 0) ansi.data[1] = 1;
 			if(ansi.data[0] > nrows) ansi.data[0] = (uint8_t)nrows;
 			if(ansi.data[1] > ncols) ansi.data[1] = (uint8_t)ncols;
-			INT10_SetCursorPos(--(ansi.data[0]),--(ansi.data[1]),page); /*ansi=1 based, int10 is 0 based */
+
+			// ansi=1 based,  int10 is 0 based
+			INT10_SetCursorPosViaInterrupt(--(ansi.data[0]),
+			                               --(ansi.data[1]),
+			                               page);
 			ClearAnsi();
 			break;
 			/* cursor up down and forward and backward only change the row or the col not both */
@@ -315,7 +323,7 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 			tempdata = (ansi.data[0]? ansi.data[0] : 1);
 			if(tempdata > row) { row=0; } 
 			else { row-=tempdata;}
-			INT10_SetCursorPos(row,col,page);
+			INT10_SetCursorPosViaInterrupt(row, col, page);
 			ClearAnsi();
 			break;
 		case 'B': /*cursor Down */
@@ -326,7 +334,7 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 			if(tempdata + static_cast<Bitu>(row) >= nrows)
 				{ row = nrows - 1;}
 			else	{ row += tempdata; }
-			INT10_SetCursorPos(row,col,page);
+			INT10_SetCursorPosViaInterrupt(row, col, page);
 			ClearAnsi();
 			break;
 		case 'C': /*cursor forward */
@@ -337,7 +345,7 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 			if(tempdata + static_cast<Bitu>(col) >= ncols) 
 				{ col = ncols - 1;} 
 			else	{ col += tempdata;}
-			INT10_SetCursorPos(row,col,page);
+			INT10_SetCursorPosViaInterrupt(row, col, page);
 			ClearAnsi();
 			break;
 		case 'D': /*Cursor Backward  */
@@ -346,7 +354,7 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 			tempdata=(ansi.data[0]? ansi.data[0] : 1);
 			if(tempdata > col) {col = 0;}
 			else { col -= tempdata;}
-			INT10_SetCursorPos(row,col,page);
+			INT10_SetCursorPosViaInterrupt(row, col, page);
 			ClearAnsi();
 			break;
 		case 'J': /*erase screen and move cursor home*/
@@ -356,7 +364,7 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 			}
 			INT10_ScrollWindow(0,0,255,255,0,ansi.attr,page);
 			ClearAnsi();
-			INT10_SetCursorPos(0,0,page);
+			INT10_SetCursorPosViaInterrupt(0, 0, page);
 			break;
 		case 'h': /* SET   MODE (if code =7 enable linewrap) */
 		case 'I': /* RESET MODE */
@@ -364,7 +372,7 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 			ClearAnsi();
 			break;
 		case 'u': /* Restore Cursor Pos */
-			INT10_SetCursorPos(ansi.saverow,ansi.savecol,page);
+			INT10_SetCursorPosViaInterrupt(ansi.saverow, ansi.savecol, page);
 			ClearAnsi();
 			break;
 		case 's': /* SAVE CURSOR POS */
@@ -378,7 +386,7 @@ bool device_CON::Write(uint8_t * data,uint16_t * size) {
 			ncols = real_readw(BIOSMEM_SEG,BIOSMEM_NB_COLS);
 			INT10_WriteChar(' ',ansi.attr,page,ncols-col,true); //Use this one to prevent scrolling when end of screen is reached
 			//for(i = col;i<(Bitu) ncols; i++) INT10_TeletypeOutputAttr(' ',ansi.attr,true);
-			INT10_SetCursorPos(row,col,page);
+			INT10_SetCursorPosViaInterrupt(row, col, page);
 			ClearAnsi();
 			break;
 		case 'M': /* delete line (NANSI) */
@@ -437,9 +445,12 @@ void device_CON::Output(uint8_t chr) {
 			BIOS_NCOLS;BIOS_NROWS;
 			if (nrows==row+1 && (chr=='\n' || (ncols==col+1 && chr!='\r' && chr!=8 && chr!=7))) {
 				INT10_ScrollWindow(0,0,(uint8_t)(nrows-1),(uint8_t)(ncols-1),-1,ansi.attr,page);
-				INT10_SetCursorPos(row-1,col,page);
+				INT10_SetCursorPosViaInterrupt(row - 1, col, page);
 			}
 		}
-		INT10_TeletypeOutputAttr(chr,ansi.attr,true);
-	} else INT10_TeletypeOutput(chr,7);
- }
+		constexpr auto use_attribute = true;
+		INT10_TeletypeOutputAttrViaInterrupt(chr, ansi.attr, use_attribute);
+	} else {
+		INT10_TeletypeOutputViaInterrupt(chr, 7);
+	}
+}
