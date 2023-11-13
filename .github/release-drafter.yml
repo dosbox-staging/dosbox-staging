@@ -21,13 +21,13 @@ categories:
 
   - title: "Project Maintenance"
     labels:
-      - "buildsystem"
       - "CI"
+      - "build system"
       - "cleanup"
       - "packaging"
       - "plumbing"
-      - "refactor"
-      - "upstream_sync"
+      - "refactoring"
+      - "upstream sync"
 
 change-template: "- #$NUMBER: $TITLE"
 
