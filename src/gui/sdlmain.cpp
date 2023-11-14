@@ -1474,7 +1474,7 @@ static const char *safe_gl_get_string(const GLenum requested_name,
 static GLuint BuildShader(GLenum type, const std::string& source)
 {
 	GLuint shader = 0;
-	GLint compiled = 0;
+	GLint is_shader_compiled = 0;
 
 	assert(source.length());
 	const char *shaderSrc = source.c_str();
@@ -1509,23 +1509,32 @@ static GLuint BuildShader(GLenum type, const std::string& source)
 	glCompileShader(shader);
 
 	// Check the compile status
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &is_shader_compiled);
 
-	if (!compiled) {
-		GLint info_len = 0;
-		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
+	GLint info_len = 0;
+	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &info_len);
 
-		if (info_len > 1) {
-			std::vector<GLchar> info_log(info_len);
-			glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
-			LOG_ERR("Error compiling shader: %s", info_log.data());
+	// The info log might contain warnings and info messages even if the
+	// compilation was successful, so we'll always log it if it's non-empty.
+	if (info_len > 1) {
+		std::vector<GLchar> info_log(info_len);
+		glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
+
+		if (is_shader_compiled) {
+			LOG_WARNING("SDL:OPENGL: Shader info log: %s",
+			            info_log.data());
+		} else {
+			LOG_ERR("SDL:OPENGL: Error compiling shader: %s",
+			        info_log.data());
 		}
+	}
 
+	if (is_shader_compiled) {
+		return shader;
+	} else {
 		glDeleteShader(shader);
 		return 0;
 	}
-
-	return shader;
 }
 
 static bool LoadGLShaders(const std::string& source, GLuint *vertex,
@@ -1836,7 +1845,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 					if (!LoadGLShaders(sdl.opengl.shader_source,
 					                   &vertexShader,
 					                   &fragmentShader)) {
-						LOG_ERR("SDL:OPENGL: Failed to compile shader!");
+						LOG_ERR("SDL:OPENGL: Failed to compile shader");
 						goto fallback_texture;
 					}
 
@@ -1849,24 +1858,45 @@ uint8_t GFX_SetSize(const int width, const int height,
 					}
 					glAttachShader(sdl.opengl.program_object, vertexShader);
 					glAttachShader(sdl.opengl.program_object, fragmentShader);
+
 					// Link the program
 					glLinkProgram(sdl.opengl.program_object);
+
 					// Even if we *are* successful, we may delete the shader objects
 					glDeleteShader(vertexShader);
 					glDeleteShader(fragmentShader);
 
 					// Check the link status
-					GLint isProgramLinked;
-					glGetProgramiv(sdl.opengl.program_object, GL_LINK_STATUS, &isProgramLinked);
-					if (!isProgramLinked) {
-						GLint info_len = 0;
-						glGetProgramiv(sdl.opengl.program_object, GL_INFO_LOG_LENGTH, &info_len);
+					GLint is_program_linked = 0;
+					glGetProgramiv(sdl.opengl.program_object, GL_LINK_STATUS, &is_program_linked);
 
-						if (info_len > 1) {
-							std::vector<GLchar> info_log(info_len);
-							glGetProgramInfoLog(sdl.opengl.program_object, info_len, nullptr, info_log.data());
-							LOG_ERR("SDL:OPENGL: Error link program:\n %s", info_log.data());
+					// The info log might contain warnings and info messages
+					// even if the linking was successful, so we'll always log
+					// it if it's non-empty.
+					GLint info_len = 0;
+
+					glGetProgramiv(sdl.opengl.program_object,
+					               GL_INFO_LOG_LENGTH,
+					               &info_len);
+
+					if (info_len > 1) {
+						std::vector<GLchar> info_log(info_len);
+
+						glGetProgramInfoLog(sdl.opengl.program_object,
+						                    info_len,
+						                    nullptr,
+						                    info_log.data());
+
+						if (is_program_linked) {
+							LOG_WARNING("SDL:OPENGL: Program info log:\n %s",
+							            info_log.data());
+						} else {
+							LOG_ERR("SDL:OPENGL: Error linking program:\n %s",
+							        info_log.data());
 						}
+					}
+
+					if (!is_program_linked) {
 						glDeleteProgram(sdl.opengl.program_object);
 						sdl.opengl.program_object = 0;
 						goto fallback_texture;
