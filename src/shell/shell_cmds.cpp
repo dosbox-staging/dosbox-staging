@@ -2577,8 +2577,7 @@ void DOS_Shell::CMD_FOR(char* args)
 		}
 
 		const auto parameter_list_end = argsview.find_first_of(')');
-		if (parameter_list_end == std::string_view::npos &&
-		    parameter_list_start < parameter_list_end) {
+		if (parameter_list_end == std::string_view::npos) {
 			return {};
 		}
 
