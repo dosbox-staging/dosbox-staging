@@ -536,7 +536,9 @@ static void cmd_reset(bool is_startup = false)
 	set_protocol(MouseModelPS2::Standard);
 	frame.clear();
 
-	if (!is_startup) {
+	if (is_startup) {
+		PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false);
+	} else {
 		I8042_AddAuxByte(0xaa); // self-test passed
 		cmd_get_dev_id();
 	}
