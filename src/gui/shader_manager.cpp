@@ -105,11 +105,11 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width_px
 		const auto draw_height = video_mode.height *
 		                         (video_mode.is_double_scanned_mode ? 2 : 1);
 
-		const auto viewport = GFX_CalcViewport(canvas_width_px,
-		                                       canvas_height_px,
-		                                       draw_width,
-		                                       draw_height,
-		                                       video_mode.pixel_aspect_ratio);
+		const auto viewport = GFX_CalcViewportInPixels(canvas_width_px,
+		                                               canvas_height_px,
+		                                               draw_width,
+		                                               draw_height,
+		                                               video_mode.pixel_aspect_ratio);
 
 		return static_cast<double>(viewport.h) / draw_height;
 	}();
@@ -120,11 +120,11 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width_px
 		const auto draw_width  = video_mode.width;
 		const auto draw_height = video_mode.height;
 
-		const auto viewport = GFX_CalcViewport(canvas_width_px,
-		                                       canvas_height_px,
-		                                       draw_width,
-		                                       draw_height,
-		                                       video_mode.pixel_aspect_ratio);
+		const auto viewport = GFX_CalcViewportInPixels(canvas_width_px,
+		                                               canvas_height_px,
+		                                               draw_width,
+		                                               draw_height,
+		                                               video_mode.pixel_aspect_ratio);
 
 		scale_y_force_single_scan = static_cast<double>(viewport.h) /
 		                            draw_height;
