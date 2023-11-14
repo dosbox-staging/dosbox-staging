@@ -357,12 +357,13 @@ void MAPPER_UpdateJoysticks(void);
 
 struct SDL_Rect;
 
-SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
-                          const int draw_width, const int draw_height,
-                          const Fraction& render_pixel_aspect_ratio);
+SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
+                                  const int canvas_height_px,
+                                  const int draw_width, const int draw_height,
+                                  const Fraction& render_pixel_aspect_ratio);
 
-SDL_Rect GFX_GetCanvasSize();
-SDL_Rect GFX_GetViewportSize();
+SDL_Rect GFX_GetCanvasSizeInPixels();
+SDL_Rect GFX_GetViewportSizeInPixels();
 
 RenderingBackend GFX_GetRenderingBackend();
 

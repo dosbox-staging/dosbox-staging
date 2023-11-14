@@ -1400,7 +1400,7 @@ static SDL_Rect get_canvas_size([[maybe_unused]] const RenderingBackend renderin
 	return canvas;
 }
 
-SDL_Rect GFX_GetCanvasSize()
+SDL_Rect GFX_GetCanvasSizeInPixels()
 {
 	return get_canvas_size(sdl.rendering_backend);
 }
@@ -1422,7 +1422,7 @@ static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
 	}
 }
 
-SDL_Rect GFX_GetViewportSize()
+SDL_Rect GFX_GetViewportSizeInPixels()
 {
 	const auto canvas = get_canvas_size(sdl.rendering_backend);
 
@@ -3049,69 +3049,19 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	        sdl.display_number);
 }
 
-SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
-                          const int draw_width, const int draw_height,
-                          const Fraction& render_pixel_aspect_ratio)
+SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
+                                  const int canvas_height_px,
+                                  const int draw_width, const int draw_height,
+                                  const Fraction& render_pixel_aspect_ratio)
 {
 	assert(draw_width > 0);
 	assert(draw_height > 0);
 
 	// Limit the window to the user's desired viewport, if configured
-	const auto restricted_dims = restrict_to_viewport_resolution(canvas_width,
-	                                                             canvas_height);
-
-	const auto [draw_scale_x, draw_scale_y] = [&]() -> std::pair<double, double> {
-		switch (RENDER_GetAspectRatioCorrectionMode()) {
-		case AspectRatioCorrectionMode::On:
-		case AspectRatioCorrectionMode::Off:
-			// If aspect ratio correction is enabled (`aspect = on`)
-			// or square pixels are forced (`aspect = off`), the
-			// final render PAR has already been calculated and
-			// passed down by the VGA subsystem -- we only need to
-			// use it.
-			return get_scale_factors_from_pixel_aspect_ratio(
-			        render_pixel_aspect_ratio);
-
-		case AspectRatioCorrectionMode::Viewport: {
-			// In 'viewport' aspect ratio mode, we simply calculate
-			// the scale factors from the current viewport
-			// dimensions, overriding any passed-down PARs.
-			if (sdl.viewport_resolution) {
-				// Viewport resolution is retricted to a
-				// rectangle; calculate the scale factor from
-				// the configured viewport dimensions
-				const auto scale_x =
-				        static_cast<double>(
-				                sdl.viewport_resolution->x) /
-				        draw_width;
-
-				const auto scale_y =
-				        static_cast<double>(
-				                sdl.viewport_resolution->y) /
-				        draw_height;
-
-				return {scale_x, scale_y};
-			} else {
-				// Viewport resolution is not restricted
-				// (`viewport_resolution = fit`); simply stretch
-				// the output to the actual viewport
-				const auto scale_x = static_cast<double>(
-				                             restricted_dims.x) /
-				                     draw_width;
-
-				const auto scale_y = static_cast<double>(
-				                             restricted_dims.y) /
-				                     draw_height;
-
-				return {scale_x, scale_y};
-			}
-		}
-
-		default:
-			assertm(false, "Invalid pixel aspect ratio correction method");
-			return {};
-		}
-	}();
+	const auto restricted_dims = restrict_to_viewport_resolution(canvas_width_px,
+	                                                             canvas_height_px);
+	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
+			render_pixel_aspect_ratio);
 
 	assert(draw_scale_x > 0.0);
 	assert(draw_scale_y > 0.0);
@@ -3212,19 +3162,19 @@ SDL_Rect GFX_CalcViewport(const int canvas_width, const int canvas_height,
 	}
 
 	// Calculate centered viewport position.
-	const int view_x = (canvas_width - view_w) / 2;
-	const int view_y = (canvas_height - view_h) / 2;
+	const int view_x = (canvas_width_px - view_w) / 2;
+	const int view_y = (canvas_height_px - view_h) / 2;
 
 	return {view_x, view_y, view_w, view_h};
 }
 
 static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height)
 {
-	return GFX_CalcViewport(canvas_width,
-	                        canvas_height,
-	                        sdl.draw.width,
-	                        sdl.draw.height,
-	                        sdl.draw.render_pixel_aspect_ratio);
+	return GFX_CalcViewportInPixels(canvas_width,
+	                                canvas_height,
+	                                sdl.draw.width,
+	                                sdl.draw.height,
+	                                sdl.draw.render_pixel_aspect_ratio);
 }
 
 IntegerScalingMode GFX_GetIntegerScalingMode()
