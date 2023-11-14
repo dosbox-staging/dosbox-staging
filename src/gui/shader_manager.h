@@ -139,8 +139,8 @@ public:
 
 	void NotifyGlshaderSettingChanged(const std::string& shader_name);
 
-	void NotifyRenderParametersChanged(const uint16_t canvas_width,
-	                                   const uint16_t canvas_height,
+	void NotifyRenderParametersChanged(const uint16_t canvas_width_px,
+	                                   const uint16_t canvas_height_px,
 	                                   const VideoMode& video_mode);
 
 	const ShaderInfo& GetCurrentShaderInfo() const;

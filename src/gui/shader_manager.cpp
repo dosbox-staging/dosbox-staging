@@ -79,8 +79,8 @@ void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
 	MaybeAutoSwitchShader();
 }
 
-void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width,
-                                                  const uint16_t canvas_height,
+void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width_px,
+                                                  const uint16_t canvas_height_px,
                                                   const VideoMode& video_mode)
 {
 	// We need to calculate the scale factors for two eventualities: 1)
@@ -105,8 +105,8 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width,
 		const auto draw_height = video_mode.height *
 		                         (video_mode.is_double_scanned_mode ? 2 : 1);
 
-		const auto viewport = GFX_CalcViewport(canvas_width,
-		                                       canvas_height,
+		const auto viewport = GFX_CalcViewport(canvas_width_px,
+		                                       canvas_height_px,
 		                                       draw_width,
 		                                       draw_height,
 		                                       video_mode.pixel_aspect_ratio);
@@ -120,8 +120,8 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width,
 		const auto draw_width  = video_mode.width;
 		const auto draw_height = video_mode.height;
 
-		const auto viewport = GFX_CalcViewport(canvas_width,
-		                                       canvas_height,
+		const auto viewport = GFX_CalcViewport(canvas_width_px,
+		                                       canvas_height_px,
 		                                       draw_width,
 		                                       draw_height,
 		                                       video_mode.pixel_aspect_ratio);
