@@ -656,10 +656,13 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 		video_mode.has_vga_colors = true;
 
 		// We are potentially auto-switching to a VGA shader now.
-		const auto canvas = GFX_GetCanvasSize();
+		const auto canvas_px = GFX_GetCanvasSizeInPixels();
 
 		constexpr auto reinit_render = true;
-		RENDER_MaybeAutoSwitchShader(canvas.w, canvas.h, video_mode, reinit_render);
+		RENDER_MaybeAutoSwitchShader(canvas_px.w,
+		                             canvas_px.h,
+		                             video_mode,
+		                             reinit_render);
 	}
 }
 
