@@ -1125,8 +1125,8 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 
 static void NewMouseScreenParams()
 {
-	if (sdl.clip.w <= 0 || sdl.clip.h <= 0 ||
-	    sdl.clip.x < 0  || sdl.clip.y < 0) {
+	if (sdl.clip_px.w <= 0 || sdl.clip_px.h <= 0 ||
+	    sdl.clip_px.x < 0  || sdl.clip_px.y < 0) {
 		// Filter out unusual parameters, which can be the result
 		// of window minimized due to ALT+TAB, for example
 		return;
@@ -1140,10 +1140,10 @@ static void NewMouseScreenParams()
 		return lround(value / sdl.desktop.dpi_scale);
 	};
 
-	params.clip_x = check_cast<uint32_t>(adapt(sdl.clip.x));
-	params.clip_y = check_cast<uint32_t>(adapt(sdl.clip.y));
-	params.res_x  = check_cast<uint32_t>(adapt(sdl.clip.w));
-	params.res_y  = check_cast<uint32_t>(adapt(sdl.clip.h));
+	params.clip_x = check_cast<uint32_t>(adapt(sdl.clip_px.x));
+	params.clip_y = check_cast<uint32_t>(adapt(sdl.clip_px.y));
+	params.res_x  = check_cast<uint32_t>(adapt(sdl.clip_px.w));
+	params.res_y  = check_cast<uint32_t>(adapt(sdl.clip_px.h));
 
 	int abs_x = 0;
 	int abs_y = 0;
@@ -1734,8 +1734,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 		//         (canvas.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.clip = calc_viewport(canvas.w, canvas.h);
-		if (SDL_RenderSetViewport(sdl.renderer, &sdl.clip) != 0)
+		sdl.clip_px = calc_viewport(canvas.w, canvas.h);
+		if (SDL_RenderSetViewport(sdl.renderer, &sdl.clip_px) != 0)
 			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
 
 		sdl.frame.update = update_frame_texture;
@@ -1920,8 +1920,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 		//         (canvas.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.clip = calc_viewport(canvas.w, canvas.h);
-		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+		sdl.clip_px = calc_viewport(canvas.w, canvas.h);
+		glViewport(sdl.clip_px.x, sdl.clip_px.y, sdl.clip_px.w, sdl.clip_px.h);
 
 		if (sdl.opengl.texture > 0) {
 			glDeleteTextures(1,&sdl.opengl.texture);
@@ -2017,7 +2017,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 			glUniform2f(sdl.opengl.ruby.input_size,
 			            (GLfloat)width,
 			            (GLfloat)height);
-			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip.w, (GLfloat)sdl.clip.h);
+			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip_px.w, (GLfloat)sdl.clip_px.h);
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
 		} else {
@@ -2369,8 +2369,8 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	RenderedImage image = {};
 
 	auto allocate_image = [&]() {
-		image.params.width              = sdl.clip.w;
-		image.params.height             = sdl.clip.h;
+		image.params.width              = sdl.clip_px.w;
+		image.params.height             = sdl.clip_px.h;
 		image.params.double_width       = false;
 		image.params.double_height      = false;
 		image.params.pixel_aspect_ratio = {1};
@@ -2403,8 +2403,8 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 
 		allocate_image();
 
-		glReadPixels(sdl.clip.x,
-		             sdl.clip.y,
+		glReadPixels(sdl.clip_px.x,
+		             sdl.clip_px.y,
 		             image.params.width,
 		             image.params.height,
 		             GL_BGR,
@@ -2443,7 +2443,7 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	// More info: https://afrantzis.com/pixel-format-guide/sdl2.html
 	//
 	if (SDL_RenderReadPixels(renderer,
-	                         &sdl.clip,
+	                         &sdl.clip_px,
 	                         SDL_PIXELFORMAT_BGR24,
 	                         image.image_data,
 	                         image.pitch) != 0) {
@@ -3597,17 +3597,17 @@ static void handle_video_resize(int width, int height)
 
 	const auto canvas = get_canvas_size(sdl.rendering_backend);
 
-	sdl.clip = calc_viewport(canvas.w, canvas.h);
+	sdl.clip_px = calc_viewport(canvas.w, canvas.h);
 
 	if (sdl.rendering_backend == RenderingBackend::Texture) {
-		SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
+		SDL_RenderSetViewport(sdl.renderer, &sdl.clip_px);
 	}
 #if C_OPENGL
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-		glViewport(sdl.clip.x, sdl.clip.y, sdl.clip.w, sdl.clip.h);
+		glViewport(sdl.clip_px.x, sdl.clip_px.y, sdl.clip_px.w, sdl.clip_px.h);
 		glUniform2f(sdl.opengl.ruby.output_size,
-		            (GLfloat)sdl.clip.w,
-		            (GLfloat)sdl.clip.h);
+		            (GLfloat)sdl.clip_px.w,
+		            (GLfloat)sdl.clip_px.h);
 	}
 #endif // C_OPENGL
 
@@ -3737,10 +3737,10 @@ bool GFX_Events()
 				// LOG_DEBUG("SDL: Reset macOS's GL viewport
 				// after window-restore");
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.clip.x,
-					           sdl.clip.y,
-					           sdl.clip.w,
-					           sdl.clip.h);
+					glViewport(sdl.clip_px.x,
+					           sdl.clip_px.y,
+					           sdl.clip_px.w,
+					           sdl.clip_px.h);
 				}
 #endif
 				FocusInput();
@@ -3820,10 +3820,10 @@ bool GFX_Events()
 				//               event.window.data1,
 				//               event.window.data2);
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.clip.x,
-					           sdl.clip.y,
-					           sdl.clip.w,
-					           sdl.clip.h);
+					glViewport(sdl.clip_px.x,
+					           sdl.clip_px.y,
+					           sdl.clip_px.w,
+					           sdl.clip_px.h);
 				}
 				continue;
 #endif
@@ -3845,17 +3845,17 @@ bool GFX_Events()
 				sdl.display_number = event.window.data1;
 
 				const auto canvas = get_canvas_size(sdl.rendering_backend);
-				sdl.clip = calc_viewport(canvas.w, canvas.h);
+				sdl.clip_px = calc_viewport(canvas.w, canvas.h);
 				if (sdl.rendering_backend == RenderingBackend::Texture) {
 					SDL_RenderSetViewport(sdl.renderer,
-					                      &sdl.clip);
+					                      &sdl.clip_px);
 				}
 #	if C_OPENGL
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.clip.x,
-					           sdl.clip.y,
-					           sdl.clip.w,
-					           sdl.clip.h);
+					glViewport(sdl.clip_px.x,
+					           sdl.clip_px.y,
+					           sdl.clip_px.w,
+					           sdl.clip_px.h);
 				}
 
 				maybe_auto_switch_shader();
