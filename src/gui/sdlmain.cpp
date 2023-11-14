@@ -4558,13 +4558,11 @@ int sdl_main(int argc, char* argv[])
 		// Register DOSBox's (and all modules) messages and conf sections
 		DOSBOX_Init();
 
-		// After DOSBOX_Init() is done, all the conf sections have been
-		// registered, so we're ready to parse the conf files.
-		//
-		ParseConfigFiles(GetConfigDir());
-
-		// Write the default primary config if it doesn't exist when:
+		// Before loading any configs, write the default primary config if it
+		// doesn't exist when:
 		// - secure mode is NOT enabled with the '--securemode' option,
+		// - AND we're not in portable mode (portable mode is enabled when
+		//   'dosbox-staging.conf' exists in the executable directory)
 		// - AND the primary config is NOT disabled with the
 		//   '--noprimaryconf' option.
 		if (!arguments->securemode && !arguments->noprimaryconf) {
@@ -4583,6 +4581,11 @@ int sdl_main(int argc, char* argv[])
 				}
 			}
 		}
+
+		// After DOSBOX_Init() is done, all the conf sections have been
+		// registered, so we're ready to parse the conf files.
+		//
+		ParseConfigFiles(GetConfigDir());
 
 		// Handle command line options that don't start the emulator but only
 		// perform some actions and print the results to the console.
