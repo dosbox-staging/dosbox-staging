@@ -89,6 +89,25 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
+struct ViewportSettings {
+	ViewportMode mode = {};
+
+	// Either parameter can be set in Fit mode (but not both at the
+	// same time), or none
+	struct {
+		std::optional<SDL_Point> limit_rectangle = {};
+		std::optional<float> desktop_percent     = {};
+	} fit = {};
+
+	// At least 'height_percent' must be set in Overflow mode, or
+	// both 'width_percent' and 'height_percent'
+	struct {
+		float height_percent               = {};
+		std::optional<float> width_percent = {};
+	} overflow = {};
+};
+
+
 struct SDL_Block {
 	bool initialized = false;
 	bool active = false; // If this isn't set don't draw
@@ -231,7 +250,8 @@ struct SDL_Block {
 
 	bool use_exact_window_resolution = false;
 
-	std::optional<SDL_Point> viewport_resolution = {};
+	ViewportSettings viewport = {};
+
 #if defined (WIN32)
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
 	int64_t focus_ticks = 0;

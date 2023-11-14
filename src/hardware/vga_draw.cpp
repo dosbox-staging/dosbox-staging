@@ -40,7 +40,7 @@
 #include "vga.h"
 #include "video.h"
 
-// #define DEBUG_VGA_DRAW
+#define DEBUG_VGA_DRAW
 
 typedef uint8_t* (*VGA_Line_Handler)(Bitu vidstart, Bitu line);
 
@@ -2695,21 +2695,45 @@ ImageInfo setup_drawing()
 		vblank_skip /= 2;
 	}
 
-	// Derive video mode pixel aspect ratio from the render PAR
 	const auto final_render_width = (render_width * (double_width ? 2 : 1));
 	const auto final_render_height = (render_height * (double_height ? 2 : 1));
 
 	const auto render_per_video_mode_scale =
-	        Fraction(final_render_width / video_mode.width,
-	                 final_render_height / video_mode.height);
+			Fraction(final_render_width / video_mode.width,
+					 final_render_height / video_mode.height);
 
-	video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio *
-	                                render_per_video_mode_scale;
+	switch (RENDER_GetAspectRatioCorrectionMode()) {
+	case AspectRatioCorrectionMode::On:
+		// Derive video mode pixel aspect ratio from the render PAR
+		video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio *
+										render_per_video_mode_scale;
+		break;
 
-	// Override PARs if square pixels are forced ("no aspect ratio correction")
-	if (vga.draw.force_square_pixels) {
+	case AspectRatioCorrectionMode::Off:
+		// Override PARs if square pixels are forced in aspect ratio
+		// correction disabled mode
 		render_pixel_aspect_ratio = render_per_video_mode_scale.Inverse();
 		video_mode.pixel_aspect_ratio = {1};
+		break;
+
+	case AspectRatioCorrectionMode::Viewport: {
+		// Stretch image to the viewport
+		const auto viewport_size             = GFX_GetViewportSize();
+		const Fraction viewport_aspect_ratio = {viewport_size.w,
+		                                        viewport_size.h};
+
+		const Fraction final_render_aspect_ratio = {final_render_width,
+		                                            final_render_height};
+
+		render_pixel_aspect_ratio = viewport_aspect_ratio /
+		                            final_render_aspect_ratio;
+
+		video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio;
+	} break;
+
+	default:
+		assertm(false, "Invalid pixel aspect ratio correction method");
+		return {};
 	}
 
 	// Try to determine if this is a custom mode
@@ -2782,6 +2806,8 @@ ImageInfo setup_drawing()
 
 void VGA_SetupDrawing(uint32_t /*val*/)
 {
+	LOG_TRACE("VGA_SetupDrawing");
+
 	if (vga.mode == M_ERROR) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_PanningLatch);
