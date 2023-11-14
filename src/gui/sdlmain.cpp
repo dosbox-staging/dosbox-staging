@@ -194,8 +194,7 @@ static SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
 
 static bool first_window = true;
 
-static SDL_Point restrict_to_viewport_resolution(int width, int height);
-static SDL_Rect calc_viewport(const int width, const int height);
+static SDL_Rect calc_viewport_in_pixels(const int width, const int height);
 
 static void clean_up_sdl_resources();
 static void handle_video_resize(int width, int height);
@@ -679,26 +678,26 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
-static SDL_Rect get_canvas_size(const RenderingBackend rendering_backend);
+static SDL_Rect get_canvas_size_in_pixels(const RenderingBackend rendering_backend);
 
 // Logs the source and target resolution including describing scaling method
 // and pixel aspect ratio. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
 static void log_display_properties(const int width, const int height,
                                    const VideoMode& video_mode,
-                                   const std::optional<SDL_Rect>& viewport_size_override,
+                                   const std::optional<SDL_Rect>& viewport_size_override_px,
                                    const RenderingBackend rendering_backend)
 {
 	// Get the viewport dimensions, with consideration for possible override
 	// values
 	auto get_viewport_size = [&]() -> std::pair<int, int> {
-		if (viewport_size_override) {
-			const auto vp = calc_viewport(viewport_size_override->w,
-			                              viewport_size_override->h);
+		if (viewport_size_override_px) {
+			const auto vp = calc_viewport_in_pixels(viewport_size_override_px->w,
+			                              viewport_size_override_px->h);
 			return {vp.w, vp.h};
 		}
-		const auto canvas   = get_canvas_size(rendering_backend);
-		const auto viewport = calc_viewport(canvas.w, canvas.h);
+		const auto canvas_px = get_canvas_size_in_pixels(rendering_backend);
+		const auto viewport = calc_viewport_in_pixels(canvas_px.w, canvas_px.h);
 		return {viewport.w, viewport.h};
 	};
 
@@ -1218,11 +1217,11 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 		SDL_GetWindowSize(sdl_window, &width_in_logical_units, nullptr);
 	}
 
-	const auto canvas = get_canvas_size(rendering_backend);
-	const auto width_in_physical_pixels = static_cast<double>(canvas.w);
+	const auto canvas_px = get_canvas_size_in_pixels(rendering_backend);
+	const auto width_px  = static_cast<double>(canvas_px.w);
 
 	assert(width_in_logical_units > 0);
-	const auto new_dpi_scale = width_in_physical_pixels / width_in_logical_units;
+	const auto new_dpi_scale = width_px / width_in_logical_units;
 
 	if (std::abs(new_dpi_scale - sdl.desktop.dpi_scale) < DBL_EPSILON) {
 		// LOG_MSG("SDL: DPI scale hasn't changed (still %f)",
@@ -1371,10 +1370,10 @@ SDL_Window* GFX_GetWindow()
 	return sdl.window;
 }
 
-// Returns the actual output size in pixels, when possible.
+// Returns the actual output size in pixels.
 // Needed for DPI-scaled windows, when logical window and actual output sizes
 // might not match.
-static SDL_Rect get_canvas_size([[maybe_unused]] const RenderingBackend rendering_backend)
+static SDL_Rect get_canvas_size_in_pixels([[maybe_unused]] const RenderingBackend rendering_backend)
 {
 	SDL_Rect canvas = {};
 #if SDL_VERSION_ATLEAST(2, 26, 0)
@@ -1402,7 +1401,7 @@ static SDL_Rect get_canvas_size([[maybe_unused]] const RenderingBackend renderin
 
 SDL_Rect GFX_GetCanvasSizeInPixels()
 {
-	return get_canvas_size(sdl.rendering_backend);
+	return get_canvas_size_in_pixels(sdl.rendering_backend);
 }
 
 RenderingBackend GFX_GetRenderingBackend()
@@ -1410,26 +1409,107 @@ RenderingBackend GFX_GetRenderingBackend()
 	return sdl.rendering_backend;
 }
 
-static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
+static SDL_Point restrict_to_viewport_resolution(const int w, const int h);
+
+static SDL_Rect get_desktop_resolution()
 {
-	if (sdl.viewport_resolution) {
-		return {std::min(iround(sdl.viewport_resolution->x * sdl.desktop.dpi_scale),
-		                 w),
-		        std::min(iround(sdl.viewport_resolution->y * sdl.desktop.dpi_scale),
-		                 h)};
-	} else {
-		return {w, h};
+	SDL_Rect desktop = {};
+	assert(sdl.display_number >= 0);
+
+	SDL_GetDisplayBounds(sdl.display_number, &desktop);
+
+	// Deduct the border decorations from the desktop size
+	int top    = 0;
+	int left   = 0;
+	int bottom = 0;
+	int right  = 0;
+
+	(void)SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
+	                               &top,
+	                               &left,
+	                               &bottom,
+	                               &right);
+
+	// If SDL_GetWindowBordersSize fails, it populates the values with 0.
+	desktop.w -= (left + right);
+	desktop.h -= (top + bottom);
+
+	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
+	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
+	return desktop;
+}
+
+static SDL_Point calculate_viewport_size_in_pixels(const int canvas_width_px,
+                                                   const int canvas_height_px)
+{
+	switch (sdl.viewport.mode) {
+	case ViewportMode::Fit:
+		if (sdl.viewport.fit.limit_rectangle) {
+			const auto viewport_w_px =
+			        sdl.viewport.fit.limit_rectangle->x *
+			        sdl.desktop.dpi_scale;
+
+			const auto viewport_h_px =
+			        sdl.viewport.fit.limit_rectangle->y *
+			        sdl.desktop.dpi_scale;
+
+			//		return {iround(bounds_h * 1.5),
+			// iround(bounds_h * 1.5)}; 		return
+			// {iround(viewport_w), iround(viewport_h)};
+
+			if (viewport_w_px < canvas_width_px &&
+			    viewport_h_px < canvas_height_px) {
+				return {iround(viewport_w_px), iround(viewport_h_px)};
+			}
+
+			const auto bounds_aspect = static_cast<float>(canvas_width_px) /
+			                           canvas_height_px;
+
+			const auto viewport_aspect = viewport_w_px / viewport_h_px;
+
+			if (bounds_aspect > viewport_aspect) {
+				const auto w = iround(canvas_height_px *
+				                      viewport_aspect);
+				const auto h = canvas_height_px;
+				return {w, h};
+			} else {
+				const auto w = canvas_width_px;
+				const auto h = iround(canvas_width_px / viewport_aspect);
+				return {w, h};
+			}
+
+		} else if (sdl.viewport.fit.desktop_percent) {
+			const auto desktop = get_desktop_resolution();
+			LOG_TRACE("*** 2: desktop: %d x %d", desktop.w, desktop.h);
+			const auto p = *sdl.viewport.fit.desktop_percent;
+
+			const auto w = iround(desktop.w * static_cast<double>(p) /
+			                      100.0 * sdl.desktop.dpi_scale);
+
+			const auto h = iround(desktop.h * static_cast<double>(p) /
+			                      100.0 * sdl.desktop.dpi_scale);
+			return {w, h};
+
+		} else {
+			return {canvas_width_px, canvas_height_px};
+		}
+		break;
+
+	case ViewportMode::Overflow: return {};
+
+	default: assertm(false, "Invalid ViewportMode value"); return {};
 	}
 }
+>>>>>>> 4f4971cdc (Encode pixel units in some variable/function names in sdlmain)
 
 SDL_Rect GFX_GetViewportSizeInPixels()
 {
-	const auto canvas = get_canvas_size(sdl.rendering_backend);
+	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
-	const auto restricted_dims = restrict_to_viewport_resolution(canvas.w,
-	                                                             canvas.h);
+	const auto viewport_size_px =
+	        calculate_viewport_size_in_pixels(canvas_px.w, canvas_px.h);
 
-	return {0, 0, restricted_dims.x, restricted_dims.y};
+	return {0, 0, viewport_size_px.x, viewport_size_px.y};
 }
 
 static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
@@ -1749,7 +1829,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 			                            sdl.desktop.window.height});
 			sdl.desktop.window.adjusted_initial_size = true;
 		}
-		const auto canvas = get_canvas_size(sdl.want_rendering_backend);
+		const auto canvas_px = get_canvas_size_in_pixels(sdl.want_rendering_backend);
 		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
 		//         (canvas.w - sdl.clip.w) / 2,
 		//         (canvas.h - sdl.clip.h) / 2,
@@ -2170,10 +2250,10 @@ void GFX_CenterMouse()
 	int height = 0;
 
 #if defined(WIN32) && !SDL_VERSION_ATLEAST(2, 28, 1)
-	const auto window_canvas_size = get_canvas_size(sdl.rendering_backend);
+	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
-	width  = window_canvas_size.w;
-	height = window_canvas_size.h;
+	width  = canvas_px.w;
+	height = canvas_px.h;
 #else
 	SDL_GetWindowSize(sdl.window, &width, &height);
 #endif
@@ -2255,9 +2335,10 @@ void GFX_SwitchFullScreen()
 	sdl.desktop.switching_fullscreen = true;
 
 	// Record the window's current canvas size if we're departing window-mode
-	auto &window_canvas_size = sdl.desktop.window.canvas_size;
-	if (!sdl.desktop.fullscreen)
-		window_canvas_size = get_canvas_size(sdl.rendering_backend);
+	auto& canvas_size_px = sdl.desktop.window.canvas_size;
+	if (!sdl.desktop.fullscreen) {
+		canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	}
 
 #if defined(WIN32)
 	// We are about to switch to the opposite of our current mode
@@ -2273,14 +2354,14 @@ void GFX_SwitchFullScreen()
 
 	// After switching modes, get the current canvas size, which might be
 	// the windowed size or full screen size.
-	auto canvas_size = sdl.desktop.fullscreen
-	                         ? get_canvas_size(sdl.rendering_backend)
-	                         : window_canvas_size;
+	canvas_size_px = sdl.desktop.fullscreen
+	                       ? get_canvas_size_in_pixels(sdl.rendering_backend)
+	                       : canvas_size_px;
 
 	log_display_properties(sdl.draw.width,
 	                       sdl.draw.height,
 	                       sdl.video_mode,
-	                       canvas_size,
+	                       canvas_size_px,
 	                       sdl.rendering_backend);
 
 	sdl.desktop.switching_fullscreen = false;
@@ -3058,18 +3139,18 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 	assert(draw_height > 0);
 
 	// Limit the window to the user's desired viewport, if configured
-	const auto restricted_dims = restrict_to_viewport_resolution(canvas_width_px,
+	const auto restricted_dims_px = restrict_to_viewport_resolution(canvas_width_px,
 	                                                             canvas_height_px);
 	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
-			render_pixel_aspect_ratio);
+	        render_pixel_aspect_ratio);
 
 	assert(draw_scale_x > 0.0);
 	assert(draw_scale_y > 0.0);
 	assert(std::isfinite(draw_scale_x));
 	assert(std::isfinite(draw_scale_y));
 
-	const auto bounds_w = restricted_dims.x;
-	const auto bounds_h = restricted_dims.y;
+	const auto bounds_w_px = restricted_dims_px.x;
+	const auto bounds_h_px = restricted_dims_px.y;
 
 	// It is important to calculate the image aspect ratio like this because
 	// the aspect ratio of the *image* itself it not always 4:3, in which
@@ -3078,30 +3159,31 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 	const auto image_aspect_ratio = (draw_width * draw_scale_x) /
 	                                (draw_height * draw_scale_y);
 
-	auto calculate_bounded_dims = [&]() -> std::pair<int, int> {
+	auto calc_bounded_dims_in_pixels = [&]() -> std::pair<int, int> {
 		// Calculate the viewport contingent on the aspect ratio of the
 		// viewport bounds versus display mode.
-		const auto bounds_aspect = static_cast<double>(bounds_w) / bounds_h;
+		const auto bounds_aspect = static_cast<double>(bounds_w_px) /
+		                           bounds_h_px;
 
 		if (bounds_aspect > image_aspect_ratio) {
-			const auto w = iround(bounds_h * image_aspect_ratio);
-			const auto h = bounds_h;
+			const auto w = iround(bounds_h_px * image_aspect_ratio);
+			const auto h = bounds_h_px;
 			return {w, h};
 		} else {
-			const auto w = bounds_w;
-			const auto h = iround(bounds_w / image_aspect_ratio);
+			const auto w = bounds_w_px;
+			const auto h = iround(bounds_w_px / image_aspect_ratio);
 			return {w, h};
 		}
 	};
 
-	auto calculate_horizontal_integer_scaling_dims = [&]() -> std::pair<int, int> {
+	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
 		auto integer_scale_factor = std::min(
-		        bounds_w / draw_width,
-		        ifloor(bounds_h / (draw_width / image_aspect_ratio)));
+		        bounds_w_px / draw_width,
+		        ifloor(bounds_h_px / (draw_width / image_aspect_ratio)));
 
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
-			return calculate_bounded_dims();
+			return calc_bounded_dims_in_pixels();
 		} else {
 			const auto w = draw_width * integer_scale_factor;
 			const auto h = iround(draw_width * integer_scale_factor /
@@ -3111,14 +3193,14 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 		}
 	};
 
-	auto calculate_vertical_integer_scaling_dims = [&]() -> std::pair<int, int> {
+	auto calc_vert_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
 		auto integer_scale_factor = std::min(
-		        bounds_h / draw_height,
-		        ifloor(bounds_w / (draw_height * image_aspect_ratio)));
+		        bounds_h_px / draw_height,
+		        ifloor(bounds_w_px / (draw_height * image_aspect_ratio)));
 
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
-			return calculate_bounded_dims();
+			return calc_bounded_dims_in_pixels();
 		} else {
 			const auto w = iround(draw_height * integer_scale_factor *
 			                      image_aspect_ratio);
@@ -3128,47 +3210,50 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 		}
 	};
 
-	int view_w = 0;
-	int view_h = 0;
+	int view_w_px = 0;
+	int view_h_px = 0;
 
 	switch (sdl.integer_scaling_mode) {
 	case IntegerScalingMode::Off: {
-		std::tie(view_w, view_h) = calculate_bounded_dims();
+		std::tie(view_w_px, view_h_px) = calc_bounded_dims_in_pixels();
 		break;
 	}
 	case IntegerScalingMode::Auto:
 #if C_OPENGL
 		if (sdl.rendering_backend == RenderingBackend::OpenGl &&
 		    sdl.opengl.shader_info.is_adaptive) {
-			std::tie(view_w,
-			         view_h) = calculate_vertical_integer_scaling_dims();
+			std::tie(view_w_px, view_h_px) =
+			        calc_vert_integer_scaling_dims_in_pixels();
 		} else {
-			std::tie(view_w, view_h) = calculate_bounded_dims();
+			std::tie(view_w_px,
+			         view_h_px) = calc_bounded_dims_in_pixels();
 		}
 #else
-		std::tie(view_w, view_h) = calculate_bounded_dims();
+		std::tie(view_w_px, view_h_px) = calc_bounded_dims_in_pixels();
 #endif
 		break;
 
 	case IntegerScalingMode::Horizontal: {
-		std::tie(view_w, view_h) = calculate_horizontal_integer_scaling_dims();
+		std::tie(view_w_px,
+		         view_h_px) = calc_horiz_integer_scaling_dims_in_pixels();
 		break;
 	}
 	case IntegerScalingMode::Vertical:
-		std::tie(view_w, view_h) = calculate_vertical_integer_scaling_dims();
+		std::tie(view_w_px,
+		         view_h_px) = calc_vert_integer_scaling_dims_in_pixels();
 		break;
 
 	default: assertm(false, "Invalid IntegerScalingMode value");
 	}
 
 	// Calculate centered viewport position.
-	const int view_x = (canvas_width_px - view_w) / 2;
-	const int view_y = (canvas_height_px - view_h) / 2;
+	const int view_x_px = (canvas_width_px - view_w_px) / 2;
+	const int view_y_px = (canvas_height_px - view_h_px) / 2;
 
-	return {view_x, view_y, view_w, view_h};
+	return {view_x_px, view_y_px, view_w_px, view_h_px};
 }
 
-static SDL_Rect calc_viewport(const int canvas_width, const int canvas_height)
+static SDL_Rect calc_viewport_in_pixels(const int canvas_width, const int canvas_height)
 {
 	return GFX_CalcViewportInPixels(canvas_width,
 	                                canvas_height,
@@ -3617,7 +3702,7 @@ static void handle_video_resize(int width, int height)
 		sdl.desktop.full.height = height;
 	}
 
-	const auto canvas = get_canvas_size(sdl.rendering_backend);
+	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
 	sdl.clip_px = calc_viewport(canvas.w, canvas.h);
 
@@ -3693,10 +3778,13 @@ static bool maybe_auto_switch_shader()
 		return false;
 	}
 
-	const auto canvas = get_canvas_size(sdl.rendering_backend);
+	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
 	constexpr auto reinit_render = true;
-	return RENDER_MaybeAutoSwitchShader(canvas.w, canvas.h, sdl.video_mode, reinit_render);
+	return RENDER_MaybeAutoSwitchShader(canvas_px.w,
+	                                    canvas_px.h,
+	                                    sdl.video_mode,
+	                                    reinit_render);
 #else
 	return false;
 #endif
