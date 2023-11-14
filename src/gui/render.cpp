@@ -595,8 +595,8 @@ static void setup_scan_and_pixel_doubling()
 	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
 }
 
-bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
-                                  [[maybe_unused]] const uint16_t canvas_height,
+bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width_px,
+                                  [[maybe_unused]] const uint16_t canvas_height_px,
                                   [[maybe_unused]] const VideoMode& video_mode,
                                   [[maybe_unused]] const bool reinit_render)
 {
@@ -609,13 +609,13 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width,
 	// uninitialised VideoMode param with width and height set to 0 which
 	// results in a crash. The proper fix is to make the init sequence 100%
 	// identical on all platforms, but in the interim this workaround will do.
-	if (canvas_width == 0 || canvas_height == 0 || video_mode.width == 0 ||
-	    video_mode.height == 0) {
+	if (canvas_width_px == 0 || canvas_height_px == 0 ||
+	    video_mode.width == 0 || video_mode.height == 0) {
 		return false;
 	}
 
-	get_shader_manager().NotifyRenderParametersChanged(canvas_width,
-	                                                   canvas_height,
+	get_shader_manager().NotifyRenderParametersChanged(canvas_width_px,
+	                                                   canvas_height_px,
 	                                                   video_mode);
 
 	const auto new_shader_name = get_shader_manager().GetCurrentShaderInfo().name;
