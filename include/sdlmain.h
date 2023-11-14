@@ -203,7 +203,7 @@ struct SDL_Block {
 	bool mute_when_inactive  = false;
 	bool pause_when_inactive = false;
 
-	SDL_Rect clip = {0, 0, 0, 0};
+	SDL_Rect clip_px = {0, 0, 0, 0};
 	SDL_Window *window = nullptr;
 	SDL_Renderer *renderer = nullptr;
 	std::string render_driver = "";
