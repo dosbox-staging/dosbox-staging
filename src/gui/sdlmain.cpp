@@ -925,7 +925,7 @@ static void set_vsync(const VsyncState state)
 									: "0";
 	if (SDL_SetHint(SDL_HINT_RENDER_VSYNC, hint_str) == SDL_TRUE)
 		return;
-	LOG_WARNING("SDL: Failed setting SDL's vsync state to to %s (%s): %s",
+	LOG_WARNING("SDL: Failed setting vsync state to to %s (%s): %s",
 				vsync_state_as_string(state), hint_str, SDL_GetError());
 }
 
@@ -1325,7 +1325,10 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		displayMode.h = height;
 
 		if (SDL_SetWindowDisplayMode(sdl.window, &displayMode) != 0) {
-			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz", displayMode.w, displayMode.h, displayMode.refresh_rate);
+			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz",
+			            displayMode.w,
+			            displayMode.h,
+			            displayMode.refresh_rate);
 		}
 		SDL_SetWindowFullscreen(sdl.window,
 		                        sdl.desktop.full.display_res
@@ -1664,7 +1667,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 
 		if (!SetupWindowScaled(RenderingBackend::Texture)) {
 			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
-			E_Exit("SDL: Creating window failed");
+			E_Exit("SDL: Failed to create window");
 		}
 
 		/* Use renderer's default format */
@@ -2811,13 +2814,20 @@ static void maybe_limit_requested_resolution(int &w, int &h, const char *size_de
 		w = desktop.w;
 		h = desktop.h;
 		was_limited = true;
-		LOG_WARNING("DISPLAY: Limitting %s resolution to '%dx%d' to avoid kmsdrm issues",
-		            size_description, w, h);
+		LOG_WARNING("DISPLAY: Limiting %s resolution to '%dx%d' to avoid kmsdrm issues",
+		            size_description,
+		            w,
+		            h);
 	}
 
 	if (!was_limited)
-		LOG_INFO("DISPLAY: Accepted %s resolution %dx%d despite exceeding the %dx%d display",
-		         size_description, w, h, desktop.w, desktop.h);
+		LOG_INFO("DISPLAY: Accepted %s resolution %dx%d despite exceeding "
+		         "the %dx%d display",
+		         size_description,
+		         w,
+		         h,
+		         desktop.w,
+		         desktop.h);
 }
 
 static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
@@ -2834,8 +2844,10 @@ static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 		return {w, h};
 	}
 
-	LOG_WARNING("DISPLAY: Requested windowresolution '%s' is not valid, falling back to '%dx%d' instead",
-	            pref.c_str(), FALLBACK_WINDOW_DIMENSIONS.x,
+	LOG_WARNING("DISPLAY: Requested windowresolution '%s' is not valid, "
+	            "falling back to '%dx%d' instead",
+	            pref.c_str(),
+	            FALLBACK_WINDOW_DIMENSIONS.x,
 	            FALLBACK_WINDOW_DIMENSIONS.y);
 
 	return FALLBACK_WINDOW_DIMENSIONS;
@@ -2946,7 +2958,8 @@ static void setup_initial_window_position_from_conf(const std::string &window_po
 	int x, y;
 	const auto was_parsed = sscanf(window_position_val.c_str(), "%d,%d", &x, &y) == 2;
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested window_position '%s' was not in X,Y format, using 'auto' instead",
+		LOG_WARNING("DISPLAY: Requested window_position '%s' was not in X,Y format; "
+		            "using 'auto' instead",
 		            window_position_val.c_str());
 		return;
 	}
@@ -2955,9 +2968,13 @@ static void setup_initial_window_position_from_conf(const std::string &window_po
 	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested window_position '%d,%d' is outside the bounds of the desktop '%dx%d', "
+		LOG_WARNING("DISPLAY: Requested window_position '%d,%d' is outside "
+		            "the bounds of the desktop '%dx%d', "
 		            "using 'auto' instead",
-		            x, y, desktop.w, desktop.h);
+		            x,
+		            y,
+		            desktop.w,
+		            desktop.h);
 		return;
 	}
 
@@ -3224,7 +3241,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 #endif
 
 	} else {
-		LOG_WARNING("SDL: Unsupported output device %s, switching back to texture",
+		LOG_WARNING("SDL: Unsupported output device '%s', using 'texture' output mode",
 		            output.c_str());
 		sdl.want_rendering_backend = RenderingBackend::Texture;
 	}
@@ -3240,7 +3257,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	if (sdl.render_driver != "auto") {
 		if (SDL_SetHint(SDL_HINT_RENDER_DRIVER,
 		                sdl.render_driver.c_str()) == SDL_FALSE) {
-			LOG_WARNING("SDL: Failed to set '%s' texture renderer driver; falling back to automatic selection",
+			LOG_WARNING("SDL: Failed to set '%s' texture renderer driver; "
+			            "falling back to automatic selection",
 			            sdl.render_driver.c_str());
 		}
 	}
