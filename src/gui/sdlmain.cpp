@@ -64,6 +64,7 @@
 #include "mouse.h"
 #include "pacer.h"
 #include "pic.h"
+#include "rect.h"
 #include "render.h"
 #include "sdlmain.h"
 #include "setup.h"
@@ -193,6 +194,11 @@ static SDL_Point FallbackWindowSize = {640, 480};
 static bool first_window = true;
 
 static SDL_Rect calc_viewport_in_pixels(const int width, const int height);
+
+static DosBox::Rect to_rect(const SDL_Rect r)
+{
+	return {r.x, r.y, r.w, r.h};
+}
 
 static void clean_up_sdl_resources();
 static void handle_video_resize(int width, int height);
@@ -1395,9 +1401,10 @@ static SDL_Rect get_canvas_size_in_pixels([[maybe_unused]] const RenderingBacken
 	return canvas;
 }
 
-SDL_Rect GFX_GetCanvasSizeInPixels()
+DosBox::Rect GFX_GetCanvasSizeInPixels()
 {
-	return get_canvas_size_in_pixels(sdl.rendering_backend);
+	const auto size = get_canvas_size_in_pixels(sdl.rendering_backend);
+	return to_rect(size);
 }
 
 RenderingBackend GFX_GetRenderingBackend()
@@ -3093,10 +3100,11 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	        sdl.display_number);
 }
 
-SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
-                                  const int canvas_height_px,
-                                  const int draw_width_px, const int draw_height_px,
-                                  const Fraction& render_pixel_aspect_ratio)
+DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
+                                      const int canvas_height_px,
+                                      const int draw_width_px,
+                                      const int draw_height_px,
+                                      const Fraction& render_pixel_aspect_ratio)
 {
 	assert(draw_width_px > 0);
 	assert(draw_height_px > 0);
@@ -3217,13 +3225,16 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 	return {view_x_px, view_y_px, view_w_px, view_h_px};
 }
 
-static SDL_Rect calc_viewport_in_pixels(const int canvas_width, const int canvas_height)
+static SDL_Rect calc_viewport_in_pixels(const int canvas_width_px,
+                                        const int canvas_height_px)
 {
-	return GFX_CalcViewportInPixels(canvas_width,
-	                                canvas_height,
-	                                sdl.draw.width_px,
-	                                sdl.draw.height_px,
-	                                sdl.draw.render_pixel_aspect_ratio);
+	const auto r = GFX_CalcViewportInPixels(canvas_width_px,
+	                                        canvas_height_px,
+	                                        sdl.draw.width_px,
+	                                        sdl.draw.height_px,
+	                                        sdl.draw.render_pixel_aspect_ratio);
+
+	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
 
 IntegerScalingMode GFX_GetIntegerScalingMode()

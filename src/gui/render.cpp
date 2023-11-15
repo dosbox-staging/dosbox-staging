@@ -659,8 +659,8 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 		const auto canvas_px = GFX_GetCanvasSizeInPixels();
 
 		constexpr auto reinit_render = true;
-		RENDER_MaybeAutoSwitchShader(canvas_px.w,
-		                             canvas_px.h,
+		RENDER_MaybeAutoSwitchShader(iroundf(canvas_px.w),
+		                             iroundf(canvas_px.h),
 		                             video_mode,
 		                             reinit_render);
 	}

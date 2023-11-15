@@ -25,6 +25,7 @@
 #include <string>
 
 #include "fraction.h"
+#include "rect.h"
 #include "setup.h"
 #include "types.h"
 
@@ -351,14 +352,13 @@ bool GFX_HaveDesktopEnvironment();
 void MAPPER_UpdateJoysticks(void);
 #endif
 
-struct SDL_Rect;
+DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
+                                      const int canvas_height_px,
+                                      const int draw_width_px,
+                                      const int draw_height_px,
+                                      const Fraction& render_pixel_aspect_ratio);
 
-SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
-                                  const int canvas_height_px,
-                                  const int draw_width_px, const int draw_height_px,
-                                  const Fraction& render_pixel_aspect_ratio);
-
-SDL_Rect GFX_GetCanvasSizeInPixels();
+DosBox::Rect GFX_GetCanvasSizeInPixels();
 
 RenderingBackend GFX_GetRenderingBackend();
 
