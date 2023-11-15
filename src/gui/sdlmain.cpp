@@ -188,9 +188,7 @@ SDL_Block sdl;
 [[maybe_unused]] constexpr uint32_t AMASK = 0xff000000;
 #endif
 
-// Size and ratio constants
-// ------------------------
-static SDL_Point FALLBACK_WINDOW_DIMENSIONS = {640, 480};
+static SDL_Point FallbackWindowSize = {640, 480};
 
 static bool first_window = true;
 
@@ -1174,12 +1172,11 @@ static void update_fallback_dimensions(const double dpi_scale)
 	assert(dpi_scale > 0);
 	const auto fallback_width = 640 / dpi_scale;
 
-	FALLBACK_WINDOW_DIMENSIONS = {iround(fallback_width),
-	                              iround(fallback_height)};
+	FallbackWindowSize = {iround(fallback_width), iround(fallback_height)};
 
 	// LOG_INFO("SDL: Updated fallback dimensions to %dx%d",
-	//          FALLBACK_WINDOW_DIMENSIONS.x,
-	//          FALLBACK_WINDOW_DIMENSIONS.y);
+	//          FallbackWindowSize.x,
+	//          FallbackWindowSize.y);
 
 	// Keep the SDL minimum allowed window size in lock-step with the
 	// fallback dimensions. If these aren't linked, the window can obscure
@@ -1190,8 +1187,9 @@ static void update_fallback_dimensions(const double dpi_scale)
 		//             " but the SDL window is not available yet");
 	}
 	SDL_SetWindowMinimumSize(sdl.window,
-	                         FALLBACK_WINDOW_DIMENSIONS.x,
-	                         FALLBACK_WINDOW_DIMENSIONS.y);
+	                         FallbackWindowSize.x,
+	                         FallbackWindowSize.y);
+
 	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
 }
 
@@ -1735,15 +1733,16 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 		// texture-based window because SDL invalidates the prior bounds
 		// in the above changes.
 		SDL_SetWindowMinimumSize(sdl.window,
-		                         FALLBACK_WINDOW_DIMENSIONS.x,
-		                         FALLBACK_WINDOW_DIMENSIONS.y);
+		                         FallbackWindowSize.x,
+		                         FallbackWindowSize.y);
 
 		// One-time intialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
 			initialize_sdl_window_size(sdl.window,
-			                           FALLBACK_WINDOW_DIMENSIONS,
+			                           FallbackWindowSize,
 			                           {sdl.desktop.window.width,
 			                            sdl.desktop.window.height});
+
 			sdl.desktop.window.adjusted_initial_size = true;
 		}
 		const auto canvas_px = get_canvas_size_in_pixels(sdl.want_rendering_backend);
@@ -1820,8 +1819,8 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 		// window because SDL invalidates the prior bounds in the above
 		// window changes.
 		SDL_SetWindowMinimumSize(sdl.window,
-		                         FALLBACK_WINDOW_DIMENSIONS.x,
-		                         FALLBACK_WINDOW_DIMENSIONS.y);
+		                         FallbackWindowSize.x,
+		                         FallbackWindowSize.y);
 
 		SetupWindowScaled(RenderingBackend::OpenGl);
 
@@ -1952,9 +1951,10 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 		// One-time initialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
 			initialize_sdl_window_size(sdl.window,
-			                           FALLBACK_WINDOW_DIMENSIONS,
+			                           FallbackWindowSize,
 			                           {sdl.desktop.window.width,
 			                            sdl.desktop.window.height});
+
 			sdl.desktop.window.adjusted_initial_size = true;
 		}
 
@@ -2738,8 +2738,9 @@ static SDL_Window* set_default_window_mode()
 		return sdl.window;
 	}
 
-	sdl.draw.width_px = FALLBACK_WINDOW_DIMENSIONS.x;
-	sdl.draw.height_px = FALLBACK_WINDOW_DIMENSIONS.y;
+	// TODO: this cannot be correct; needs conversion to pixels
+	sdl.draw.width_px  = FallbackWindowSize.x;
+	sdl.draw.height_px = FallbackWindowSize.y;
 
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
@@ -2785,7 +2786,8 @@ static SDL_Point refine_window_size(const SDL_Point size,
 		const int y = ceil_sdivide(size.x * image_aspect.y, image_aspect.x);
 		return {size.x, y};
 	}
-	return FALLBACK_WINDOW_DIMENSIONS;
+
+	return FallbackWindowSize;
 }
 
 static SDL_Rect get_desktop_resolution()
@@ -2805,8 +2807,8 @@ static SDL_Rect get_desktop_resolution()
 	desktop.w -= (left + right);
 	desktop.h -= (top + bottom);
 
-	assert(desktop.w >= FALLBACK_WINDOW_DIMENSIONS.x);
-	assert(desktop.h >= FALLBACK_WINDOW_DIMENSIONS.y);
+	assert(desktop.w >= FallbackWindowSize.x);
+	assert(desktop.h >= FallbackWindowSize.y);
 	return desktop;
 }
 
@@ -2847,8 +2849,8 @@ static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 	int h = 0;
 	const bool was_parsed = sscanf(pref.c_str(), "%dx%d", &w, &h) == 2;
 
-	const bool is_valid = (w >= FALLBACK_WINDOW_DIMENSIONS.x &&
-	                       h >= FALLBACK_WINDOW_DIMENSIONS.y);
+	const bool is_valid = (w >= FallbackWindowSize.x &&
+	                       h >= FallbackWindowSize.y);
 
 	if (was_parsed && is_valid) {
 		maybe_limit_requested_resolution(w, h, "window");
@@ -2858,10 +2860,10 @@ static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 	LOG_WARNING("DISPLAY: Requested window resolution '%s' is not valid, "
 	            "falling back to '%dx%d' instead",
 	            pref.c_str(),
-	            FALLBACK_WINDOW_DIMENSIONS.x,
-	            FALLBACK_WINDOW_DIMENSIONS.y);
+	            FallbackWindowSize.x,
+	            FallbackWindowSize.y);
 
-	return FALLBACK_WINDOW_DIMENSIONS;
+	return FallbackWindowSize;
 }
 
 static SDL_Point window_bounds_from_label(const std::string& pref,
@@ -2897,8 +2899,8 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 
 static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 {
-	const auto w = std::max(size.x, FALLBACK_WINDOW_DIMENSIONS.x);
-	const auto h = std::max(size.y, FALLBACK_WINDOW_DIMENSIONS.y);
+	const auto w = std::max(size.x, FallbackWindowSize.x);
+	const auto h = std::max(size.y, FallbackWindowSize.y);
 	return {w, h};
 }
 
@@ -3044,7 +3046,7 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	// Get the coarse resolution from the users setting, and adjust
 	// refined scaling mode if an exact resolution is desired.
 	const std::string pref = windowresolution_val;
-	SDL_Point coarse_size  = FALLBACK_WINDOW_DIMENSIONS;
+	SDL_Point coarse_size  = FallbackWindowSize;
 
 	sdl.use_exact_window_resolution = pref.find('x') != std::string::npos;
 	if (sdl.use_exact_window_resolution) {
