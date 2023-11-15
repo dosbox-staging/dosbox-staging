@@ -2790,19 +2790,24 @@ static SDL_Point refine_window_size(const SDL_Point size,
 	return FallbackWindowSize;
 }
 
-static SDL_Rect get_desktop_resolution()
+static SDL_Rect get_desktop_size()
 {
 	SDL_Rect desktop;
 	assert(sdl.display_number >= 0);
 	SDL_GetDisplayBounds(sdl.display_number, &desktop);
 
 	// Deduct the border decorations from the desktop size
-	int top = 0;
-	int left = 0;
+	int top    = 0;
+	int left   = 0;
 	int bottom = 0;
-	int right = 0;
+	int right  = 0;
+
 	(void)SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
-	                               &top, &left, &bottom, &right);
+	                               &top,
+	                               &left,
+	                               &bottom,
+	                               &right);
+
 	// If SDL_GetWindowBordersSize fails, it populates the values with 0.
 	desktop.w -= (left + right);
 	desktop.h -= (top + bottom);
@@ -2814,7 +2819,7 @@ static SDL_Rect get_desktop_resolution()
 
 static void maybe_limit_requested_resolution(int &w, int &h, const char *size_description)
 {
-	const auto desktop = get_desktop_resolution();
+	const auto desktop = get_desktop_size();
 	if (w <= desktop.w && h <= desktop.h)
 		return;
 
@@ -2934,7 +2939,7 @@ static void setup_viewport_resolution_from_conf(const std::string& viewport_reso
 		return;
 	}
 
-	const auto desktop = get_desktop_resolution();
+	const auto desktop = get_desktop_size();
 
 	const bool is_out_of_bounds = (w <= 0 || w > desktop.w || h <= 0 ||
 	                               h > desktop.h) &&
@@ -2987,7 +2992,7 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 		return;
 	}
 
-	const auto desktop = get_desktop_resolution();
+	const auto desktop = get_desktop_size();
 
 	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
@@ -3052,7 +3057,7 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	if (sdl.use_exact_window_resolution) {
 		coarse_size = parse_window_resolution_from_conf(pref);
 	} else {
-		const auto desktop = get_desktop_resolution();
+		const auto desktop = get_desktop_size();
 
 		coarse_size = window_bounds_from_label(pref, desktop);
 	}
