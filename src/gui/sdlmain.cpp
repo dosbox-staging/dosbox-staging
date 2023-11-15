@@ -1664,7 +1664,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 
 		if (!SetupWindowScaled(RenderingBackend::Texture)) {
 			LOG_ERR("DISPLAY: Can't initialise 'texture' window");
-			E_Exit("Creating window failed");
+			E_Exit("SDL: Creating window failed");
 		}
 
 		/* Use renderer's default format */
@@ -3356,7 +3356,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 #endif    // OPENGL
 
 	if (!SetDefaultWindowMode())
-		E_Exit("Could not initialize video: %s", SDL_GetError());
+		E_Exit("SDL: Could not initialize video: %s", SDL_GetError());
 
 	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
@@ -4720,10 +4720,10 @@ int sdl_main(int argc, char* argv[])
 		}
 
 		if (SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) < 0) {
-			E_Exit("Can't init SDL %s", SDL_GetError());
+			E_Exit("SDL: Can't init SDL %s", SDL_GetError());
 		}
 		if (SDL_CDROMInit() < 0) {
-			LOG_WARNING("Failed to init CD-ROM support");
+			LOG_WARNING("SDL: Failed to init CD-ROM support");
 		}
 
 		sdl.initialized = true;
@@ -4754,7 +4754,7 @@ int sdl_main(int argc, char* argv[])
 			const char* result = SetProp(pvars);
 
 			if (strlen(result)) {
-				LOG_WARNING("%s", result);
+				LOG_WARNING("CONFIG: %s", result);
 			} else {
 				Section* tsec = control->GetSection(pvars[0]);
 				std::string value(pvars[2]);
@@ -4776,7 +4776,7 @@ int sdl_main(int argc, char* argv[])
 				        inputline.c_str());
 
 				if (!change_success && !value.empty()) {
-					LOG_WARNING("Cannot set \"%s\"\n",
+					LOG_WARNING("CONFIG: Cannot set '%s'",
 					            inputline.c_str());
 				}
 			}
