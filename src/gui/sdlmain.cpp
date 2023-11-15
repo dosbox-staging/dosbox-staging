@@ -682,7 +682,7 @@ static SDL_Rect get_canvas_size_in_pixels(const RenderingBackend rendering_backe
 // Logs the source and target resolution including describing scaling method
 // and pixel aspect ratio. Note that this function deliberately doesn't use
 // any global structs to disentangle it from the existing sdl-main design.
-static void log_display_properties(const int width, const int height,
+static void log_display_properties(const int width_px, const int height_px,
                                    const VideoMode& video_mode,
                                    const std::optional<SDL_Rect>& viewport_size_override_px,
                                    const RenderingBackend rendering_backend)
@@ -705,11 +705,11 @@ static void log_display_properties(const int width, const int height,
 	const auto [viewport_w, viewport_h] = get_viewport_size();
 
 	// Check expectations
-	assert(width > 0 && height > 0);
+	assert(width_px > 0 && height_px > 0);
 	assert(viewport_w > 0 && viewport_h > 0);
 
-	const auto scale_x = static_cast<double>(viewport_w) / width;
-	const auto scale_y = static_cast<double>(viewport_h) / height;
+	const auto scale_x = static_cast<double>(viewport_w) / width_px;
+	const auto scale_y = static_cast<double>(viewport_h) / height_px;
 
 	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
 
@@ -738,10 +738,10 @@ static void log_display_properties(const int width, const int height,
 	        static_cast<int32_t>(video_mode.pixel_aspect_ratio.Denom()));
 
 #if 0
-	LOG_MSG("DISPLAY: render width: %d, render height: %d, "
+	LOG_MSG("DISPLAY: render width_px: %d, render height_px: %d, "
 	        "render pixel aspect ratio: 1:%1.3g",
-	        width,
-	        height,
+	        width_px,
+	        height_px,
 	        one_per_render_pixel_aspect);
 #endif
 }
@@ -1451,8 +1451,8 @@ static SDL_Window* SetupWindowScaled(const RenderingBackend rendering_backend)
 	        sdl.draw.render_pixel_aspect_ratio);
 
 	if (window_width == 0 && window_height == 0) {
-		window_width  = iround(sdl.draw.width * draw_scale_x);
-		window_height = iround(sdl.draw.height * draw_scale_y);
+		window_width  = iround(sdl.draw.width_px * draw_scale_x);
+		window_height = iround(sdl.draw.height_px * draw_scale_y);
 	}
 
 	sdl.window = SetWindowMode(rendering_backend,
@@ -1622,7 +1622,7 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	}
 }
 
-uint8_t GFX_SetSize(const int width, const int height,
+uint8_t GFX_SetSize(const int width_px, const int height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_CallBack_t callback)
 {
@@ -1638,13 +1638,15 @@ uint8_t GFX_SetSize(const int width, const int height,
 	const bool double_height = flags & GFX_DBL_H;
 
 	sdl.draw.has_changed = (sdl.video_mode != video_mode ||
-	                        sdl.draw.width != width || sdl.draw.height != height ||
+	                        sdl.draw.width_px != width_px ||
+	                        sdl.draw.height_px != height_px ||
 	                        sdl.draw.width_was_doubled != double_width ||
 	                        sdl.draw.height_was_doubled != double_height ||
-	                        sdl.draw.render_pixel_aspect_ratio != render_pixel_aspect_ratio);
+	                        sdl.draw.render_pixel_aspect_ratio !=
+	                                render_pixel_aspect_ratio);
 
-	sdl.draw.width                     = width;
-	sdl.draw.height                    = height;
+	sdl.draw.width_px                  = width_px;
+	sdl.draw.height_px                 = height_px;
 	sdl.draw.width_was_doubled         = double_width;
 	sdl.draw.height_was_doubled        = double_height;
 	sdl.draw.render_pixel_aspect_ratio = render_pixel_aspect_ratio;
@@ -1679,8 +1681,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 		sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
 		                                        texture_format,
 		                                        SDL_TEXTUREACCESS_STREAMING,
-		                                        width,
-		                                        height);
+		                                        width_px,
+		                                        height_px);
 
 		if (!sdl.texture.texture) {
 			SDL_DestroyRenderer(sdl.renderer);
@@ -1696,7 +1698,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 		}
 		assert(texture_input_surface == nullptr); // ensure we don't leak
 		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
-		        0, width, height, 32, texture_format);
+		        0, width_px, height_px, 32, texture_format);
 		if (!texture_input_surface) {
 			E_Exit("SDL: Error while preparing texture input");
 		}
@@ -1767,7 +1769,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 			goto fallback_texture;
 		}
 
-		int texsize_w, texsize_h;
+		int texsize_w_px, texsize_h_px;
 
 		const auto use_npot_texture = sdl.opengl.npot_textures_supported &&
 		                              sdl.opengl.shader_info.settings.use_npot_texture;
@@ -1780,19 +1782,19 @@ uint8_t GFX_SetSize(const int width, const int height,
 #endif
 
 		if (use_npot_texture) {
-			texsize_w = width;
-			texsize_h = height;
+			texsize_w_px = width_px;
+			texsize_h_px = height_px;
 		} else {
-			texsize_w = 2 << int_log2(width);
-			texsize_h = 2 << int_log2(height);
+			texsize_w_px = 2 << int_log2(width_px);
+			texsize_h_px = 2 << int_log2(height_px);
 		}
 
-		if (texsize_w > sdl.opengl.max_texsize ||
-		    texsize_h > sdl.opengl.max_texsize) {
+		if (texsize_w_px > sdl.opengl.max_texsize ||
+		    texsize_h_px > sdl.opengl.max_texsize) {
 			LOG_WARNING("OPENGL: No support for texture size of %dx%d, "
 			            "falling back to texture",
-			            texsize_w,
-			            texsize_h);
+			            texsize_w_px,
+			            texsize_h_px);
 			goto fallback_texture;
 		}
 		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -1942,10 +1944,10 @@ uint8_t GFX_SetSize(const int width, const int height,
 		}
 
 		/* Create the texture and display list */
-		const auto framebuffer_bytes = static_cast<size_t>(width) *
-		                               height * MAX_BYTES_PER_PIXEL;
+		const auto framebuffer_bytes = static_cast<size_t>(width_px) *
+		                               height_px * MAX_BYTES_PER_PIXEL;
 		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
-		sdl.opengl.pitch = width * 4;
+		sdl.opengl.pitch = width_px * 4;
 
 		// One-time initialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
@@ -1986,8 +1988,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter);
 
-		const auto texture_area_bytes = static_cast<size_t>(texsize_w) *
-		                                texsize_h * MAX_BYTES_PER_PIXEL;
+		const auto texture_area_bytes = static_cast<size_t>(texsize_w_px) *
+		                                texsize_h_px * MAX_BYTES_PER_PIXEL;
 		uint8_t *emptytex = new uint8_t[texture_area_bytes];
 		assert(emptytex);
 
@@ -2025,8 +2027,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 		glTexImage2D(GL_TEXTURE_2D,
 		             0,
 		             texformat,
-		             texsize_w,
-		             texsize_h,
+		             texsize_w_px,
+		             texsize_h_px,
 		             0,
 		             GL_BGRA_EXT,
 		             GL_UNSIGNED_BYTE,
@@ -2056,16 +2058,16 @@ uint8_t GFX_SetSize(const int width, const int height,
 		if (sdl.opengl.program_object) {
 			// Set shader variables
 			glUniform2f(sdl.opengl.ruby.texture_size,
-			            (GLfloat)texsize_w, (GLfloat)texsize_h);
+			            (GLfloat)texsize_w_px, (GLfloat)texsize_h_px);
 			glUniform2f(sdl.opengl.ruby.input_size,
-			            (GLfloat)width,
-			            (GLfloat)height);
+			            (GLfloat)width_px,
+			            (GLfloat)height_px);
 			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip_px.w, (GLfloat)sdl.clip_px.h);
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
 		} else {
-			GLfloat tex_width = ((GLfloat)width / (GLfloat)texsize_w);
-			GLfloat tex_height = ((GLfloat)height / (GLfloat)texsize_h);
+			GLfloat tex_width = ((GLfloat)width_px / (GLfloat)texsize_w_px);
+			GLfloat tex_height = ((GLfloat)height_px / (GLfloat)texsize_h_px);
 
 			glShadeModel(GL_FLAT);
 			glMatrixMode(GL_MODELVIEW);
@@ -2103,8 +2105,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 	update_vsync_state();
 
 	if (sdl.draw.has_changed) {
-		log_display_properties(sdl.draw.width,
-		                       sdl.draw.height,
+		log_display_properties(sdl.draw.width_px,
+		                       sdl.draw.height_px,
 		                       sdl.video_mode,
 		                       {},
 		                       sdl.rendering_backend);
@@ -2300,8 +2302,8 @@ void GFX_SwitchFullScreen()
 	                  ? get_canvas_size_in_pixels(sdl.rendering_backend)
 	                  : canvas_px;
 
-	log_display_properties(sdl.draw.width,
-	                       sdl.draw.height,
+	log_display_properties(sdl.draw.width_px,
+	                       sdl.draw.height_px,
 	                       sdl.video_mode,
 	                       canvas_px,
 	                       sdl.rendering_backend);
@@ -2534,16 +2536,16 @@ static void update_frame_gl(const uint16_t* changedLines)
 		const auto pitch = sdl.opengl.pitch;
 		int y = 0;
 		size_t index = 0;
-		while (y < sdl.draw.height) {
+		while (y < sdl.draw.height_px) {
 			if (!(index & 1)) {
 				y += changedLines[index];
 			} else {
 				const uint8_t *pixels = framebuf + y * pitch;
-				const int height = changedLines[index];
+				const int height_px = changedLines[index];
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-				                sdl.draw.width, height, GL_BGRA_EXT,
+				                sdl.draw.width_px, height_px, GL_BGRA_EXT,
 				                GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
-				y += height;
+				y += height_px;
 			}
 			index++;
 		}
@@ -2736,8 +2738,8 @@ static SDL_Window* set_default_window_mode()
 		return sdl.window;
 	}
 
-	sdl.draw.width  = FALLBACK_WINDOW_DIMENSIONS.x;
-	sdl.draw.height = FALLBACK_WINDOW_DIMENSIONS.y;
+	sdl.draw.width_px = FALLBACK_WINDOW_DIMENSIONS.x;
+	sdl.draw.height_px = FALLBACK_WINDOW_DIMENSIONS.y;
 
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
@@ -3086,11 +3088,11 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 
 SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
                                   const int canvas_height_px,
-                                  const int draw_width, const int draw_height,
+                                  const int draw_width_px, const int draw_height_px,
                                   const Fraction& render_pixel_aspect_ratio)
 {
-	assert(draw_width > 0);
-	assert(draw_height > 0);
+	assert(draw_width_px > 0);
+	assert(draw_height_px > 0);
 
 	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
 	        render_pixel_aspect_ratio);
@@ -3101,8 +3103,8 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 	assert(std::isfinite(draw_scale_y));
 
 	// Limit the window to the user's desired viewport, if configured
-	const auto restricted_dims_px = restrict_to_viewport_resolution(canvas_width_px,
-	                                                             canvas_height_px);
+	const auto restricted_dims_px =
+	        restrict_to_viewport_resolution(canvas_width_px, canvas_height_px);
 
 	const auto bounds_w_px = restricted_dims_px.x;
 	const auto bounds_h_px = restricted_dims_px.y;
@@ -3111,8 +3113,8 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 	// the aspect ratio of the *image* itself it not always 4:3, in which
 	// case it would appear letter and/or pillarboxed on a real 4:3 display
 	// aspect ratio CRT monitor.
-	const auto image_aspect_ratio = (draw_width * draw_scale_x) /
-	                                (draw_height * draw_scale_y);
+	const auto image_aspect_ratio = (draw_width_px * draw_scale_x) /
+	                                (draw_height_px * draw_scale_y);
 
 	auto calc_bounded_dims_in_pixels = [&]() -> std::pair<int, int> {
 		// Calculate the viewport contingent on the aspect ratio of the
@@ -3133,15 +3135,15 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 
 	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
 		auto integer_scale_factor = std::min(
-		        bounds_w_px / draw_width,
-		        ifloor(bounds_h_px / (draw_width / image_aspect_ratio)));
+		        bounds_w_px / draw_width_px,
+		        ifloor(bounds_h_px / (draw_width_px / image_aspect_ratio)));
 
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			return calc_bounded_dims_in_pixels();
 		} else {
-			const auto w = draw_width * integer_scale_factor;
-			const auto h = iround(draw_width * integer_scale_factor /
+			const auto w = draw_width_px * integer_scale_factor;
+			const auto h = iround(draw_width_px * integer_scale_factor /
 			                      image_aspect_ratio);
 
 			return {w, h};
@@ -3150,16 +3152,16 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 
 	auto calc_vert_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
 		auto integer_scale_factor = std::min(
-		        bounds_h_px / draw_height,
-		        ifloor(bounds_w_px / (draw_height * image_aspect_ratio)));
+		        bounds_h_px / draw_height_px,
+		        ifloor(bounds_w_px / (draw_height_px * image_aspect_ratio)));
 
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			return calc_bounded_dims_in_pixels();
 		} else {
-			const auto w = iround(draw_height * integer_scale_factor *
+			const auto w = iround(draw_height_px * integer_scale_factor *
 			                      image_aspect_ratio);
-			const auto h = draw_height * integer_scale_factor;
+			const auto h = draw_height_px * integer_scale_factor;
 
 			return {w, h};
 		}
@@ -3212,8 +3214,8 @@ static SDL_Rect calc_viewport_in_pixels(const int canvas_width, const int canvas
 {
 	return GFX_CalcViewportInPixels(canvas_width,
 	                                canvas_height,
-	                                sdl.draw.width,
-	                                sdl.draw.height,
+	                                sdl.draw.width_px,
+	                                sdl.draw.height_px,
 	                                sdl.draw.render_pixel_aspect_ratio);
 }
 

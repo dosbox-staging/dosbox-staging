@@ -312,7 +312,7 @@ InterpolationMode GFX_GetInterpolationMode();
 struct VideoMode;
 class Fraction;
 
-uint8_t GFX_SetSize(const int width, const int height,
+uint8_t GFX_SetSize(const int width_px, const int height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_CallBack_t callback);
 
@@ -355,7 +355,7 @@ struct SDL_Rect;
 
 SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
                                   const int canvas_height_px,
-                                  const int draw_width, const int draw_height,
+                                  const int draw_width_px, const int draw_height_px,
                                   const Fraction& render_pixel_aspect_ratio);
 
 SDL_Rect GFX_GetCanvasSizeInPixels();
