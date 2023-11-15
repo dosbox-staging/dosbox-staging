@@ -816,21 +816,20 @@ static void init_render_settings(Section_prop& secprop)
 
 	string_prop = secprop.Add_string("integer_scaling", always, "auto");
 	string_prop->Set_help(
-	        "Constrain the horizontal or vertical scaling factor to integer values.\n"
-	        "The correct aspect ratio is always maintained according to the 'aspect'\n"
-	        "setting, which may result in a non-integer scaling factor in the other\n"
-	        "direction. If the image is larger than the viewport, the integer scaling\n"
-	        "constraint is auto-disabled (same as 'off'). Possible values:\n"
-	        "  auto:        'vertical' mode auto-enabled for adaptive CRT shaders only,\n"
-	        "               otherwise 'off' (default).\n"
-	        "  vertical:    Constrain the vertical scaling factor to integer values within\n"
-	        "               the viewport. This is the recommended setting when using CRT\n"
-	        "               shaders to avoid uneven scanlines and unwanted interference\n"
-	        "               artifacts.\n"
-	        "  horizontal:  Constrain the horizontal scaling factor to integer values within\n"
-	        "               the viewport.\n"
+	        "Constrain the horizontal or vertical scaling factor to the largest integer\n"
+	        "value so the image still fits into the viewport. The configured aspect ratio is\n"
+	        "always maintained according to the 'aspect' and 'viewport_resolution' settings,\n"
+	        "which may result in a non-integer scaling factor in the other dimension.\n"
+	        "If the image is larger than the viewport, the integer scaling constraint is\n"
+	        "auto-disabled (same as 'off'). Possible values:\n"
+	        "  auto:        'vertical' mode auto-enabled for adaptive CRT shaders only\n"
+	        "               (see 'glshader'), otherwise 'off' (default).\n"
+	        "  vertical:    Constrain the vertical scaling factor to integer values.\n"
+	        "               This is the recommended setting for CRT shaders to avoid uneven\n"
+	        "               scanlines and interference artifacts.\n"
+	        "  horizontal:  Constrain the horizontal scaling factor to integer values.\n"
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
-	        "               viewport according to the 'aspect' setting.");
+	        "               viewport while maintaining the configured aspect ratio.");
 
 	const char* integer_scaling_values[] = {
 	        "auto", "vertical", "horizontal", "off", nullptr};
