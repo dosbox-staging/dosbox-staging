@@ -2850,7 +2850,7 @@ static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 		return {w, h};
 	}
 
-	LOG_WARNING("DISPLAY: Requested windowresolution '%s' is not valid, "
+	LOG_WARNING("DISPLAY: Requested window resolution '%s' is not valid, "
 	            "falling back to '%dx%d' instead",
 	            pref.c_str(),
 	            FALLBACK_WINDOW_DIMENSIONS.x,
@@ -2877,7 +2877,7 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 		} else if (pref == "desktop") {
 			return 100;
 		} else {
-			LOG_WARNING("DISPLAY: Requested windowresolution '%s' is invalid, "
+			LOG_WARNING("DISPLAY: Requested window resolution '%s' is invalid, "
 			            "using 'default' instead",
 			            pref.c_str());
 			return MediumPercent;
@@ -2920,7 +2920,7 @@ static void setup_viewport_resolution_from_conf(const std::string& viewport_reso
 	        sscanf(viewport_resolution_val.c_str(), "%f%%", &p) == 1;
 
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested viewport_resolution '%s' was not in WxH"
+		LOG_WARNING("DISPLAY: Requested viewport resolution '%s' was not in WxH"
 		            " or N%% format, using the default setting ('%s') instead",
 		            viewport_resolution_val.c_str(),
 		            default_val);
@@ -2933,9 +2933,9 @@ static void setup_viewport_resolution_from_conf(const std::string& viewport_reso
 	                               h > desktop.h) &&
 	                              (p <= 0.0f || p > 100.0f);
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested viewport_resolution of '%s' is outside"
-		            " the desktop '%dx%d' bounds or the 1-100%% range, "
-		            " using the default setting ('%s') instead",
+		LOG_WARNING("DISPLAY: Requested viewport resolution of '%s' is outside "
+		            "the desktop '%dx%d' bounds or the 1-100%% range, "
+		            "using the default setting ('%s') instead",
 		            viewport_resolution_val.c_str(),
 		            desktop.w,
 		            desktop.h,
@@ -2974,7 +2974,7 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 	const auto was_parsed = (sscanf(window_position_val.c_str(), "%d,%d", &x, &y) ==
 	                         2);
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested window_position '%s' was not in X,Y format; "
+		LOG_WARNING("DISPLAY: Requested window position '%s' was not in X,Y format, "
 		            "using 'auto' instead",
 		            window_position_val.c_str());
 		return;
@@ -2985,8 +2985,8 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested window_position '%d,%d' is outside "
-		            "the bounds of the desktop '%dx%d', "
+		LOG_WARNING("DISPLAY: Requested window position '%d,%d' is outside the "
+		            "bounds of the desktop '%dx%d', "
 		            "using 'auto' instead",
 		            x,
 		            y,
@@ -3448,8 +3448,8 @@ static void set_priority_levels(const std::string& active_pref,
 		if (pref == "highest") {
 			return PRIORITY_LEVEL_HIGHEST;
 		}
-
-		LOG_WARNING("Invalid priority level: %s, using 'auto'", pref.data());
+		LOG_WARNING("SDL: Invalid priority level: '%s', using 'auto'",
+		            pref.data());
 
 		return PRIORITY_LEVEL_AUTO;
 	};
