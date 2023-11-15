@@ -193,8 +193,6 @@ static SDL_Point FallbackWindowSize = {640, 480};
 
 static bool first_window = true;
 
-static SDL_Rect calc_viewport_in_pixels(const int width, const int height);
-
 static DosBox::Rect to_rect(const SDL_Rect r)
 {
 	return {r.x, r.y, r.w, r.h};
@@ -681,7 +679,46 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
-static SDL_Rect get_canvas_size_in_pixels(const RenderingBackend rendering_backend);
+static SDL_Rect calc_viewport_in_pixels(const int canvas_width_px,
+                                        const int canvas_height_px)
+{
+	const auto r = GFX_CalcViewportInPixels(canvas_width_px,
+	                                        canvas_height_px,
+	                                        sdl.draw.width_px,
+	                                        sdl.draw.height_px,
+	                                        sdl.draw.render_pixel_aspect_ratio);
+
+	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
+}
+
+// Returns the actual output size in pixels.
+// Needed for DPI-scaled windows, when logical window and actual output sizes
+// might not match.
+static SDL_Rect get_canvas_size_in_pixels([[maybe_unused]] const RenderingBackend rendering_backend)
+{
+	SDL_Rect canvas = {};
+#if SDL_VERSION_ATLEAST(2, 26, 0)
+	SDL_GetWindowSizeInPixels(sdl.window, &canvas.w, &canvas.h);
+#else
+	switch (rendering_backend) {
+	case RenderingBackend::Texture:
+		if (SDL_GetRendererOutputSize(sdl.renderer, &canvas.w, &canvas.h) !=
+		    0) {
+			LOG_ERR("SDL: Failed to retrieve output size: %s",
+			        SDL_GetError());
+		}
+		break;
+#if C_OPENGL
+	case RenderingBackend::OpenGl:
+		SDL_GL_GetDrawableSize(sdl.window, &canvas.w, &canvas.h);
+		break;
+#endif
+	default: SDL_GetWindowSize(sdl.window, &canvas.w, &canvas.h);
+	}
+#endif
+	assert(canvas.w > 0 && canvas.h > 0);
+	return canvas;
+}
 
 // Logs the source and target resolution including describing scaling method
 // and pixel aspect ratio. Note that this function deliberately doesn't use
@@ -1370,35 +1407,6 @@ finish:
 SDL_Window* GFX_GetWindow()
 {
 	return sdl.window;
-}
-
-// Returns the actual output size in pixels.
-// Needed for DPI-scaled windows, when logical window and actual output sizes
-// might not match.
-static SDL_Rect get_canvas_size_in_pixels([[maybe_unused]] const RenderingBackend rendering_backend)
-{
-	SDL_Rect canvas = {};
-#if SDL_VERSION_ATLEAST(2, 26, 0)
-	SDL_GetWindowSizeInPixels(sdl.window, &canvas.w, &canvas.h);
-#else
-	switch (rendering_backend) {
-	case RenderingBackend::Texture:
-		if (SDL_GetRendererOutputSize(sdl.renderer, &canvas.w, &canvas.h) !=
-		    0) {
-			LOG_ERR("SDL: Failed to retrieve output size: %s",
-			        SDL_GetError());
-		}
-		break;
-#if C_OPENGL
-	case RenderingBackend::OpenGl:
-		SDL_GL_GetDrawableSize(sdl.window, &canvas.w, &canvas.h);
-		break;
-#endif
-	default: SDL_GetWindowSize(sdl.window, &canvas.w, &canvas.h);
-	}
-#endif
-	assert(canvas.w > 0 && canvas.h > 0);
-	return canvas;
 }
 
 DosBox::Rect GFX_GetCanvasSizeInPixels()
@@ -3223,18 +3231,6 @@ DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 	const int view_y_px = (canvas_height_px - view_h_px) / 2;
 
 	return {view_x_px, view_y_px, view_w_px, view_h_px};
-}
-
-static SDL_Rect calc_viewport_in_pixels(const int canvas_width_px,
-                                        const int canvas_height_px)
-{
-	const auto r = GFX_CalcViewportInPixels(canvas_width_px,
-	                                        canvas_height_px,
-	                                        sdl.draw.width_px,
-	                                        sdl.draw.height_px,
-	                                        sdl.draw.render_pixel_aspect_ratio);
-
-	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
 
 IntegerScalingMode GFX_GetIntegerScalingMode()
