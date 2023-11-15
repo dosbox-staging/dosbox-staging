@@ -253,13 +253,16 @@ constexpr uint8_t MAX_BYTES_PER_PIXEL = 4;
 
 
 #ifdef DB_OPENGL_ERROR
-void OPENGL_ERROR(const char* message) {
+void OPENGL_ERROR(const char* message)
+{
 	GLenum r = glGetError();
-	if (r == GL_NO_ERROR) return;
-	LOG_ERR("errors from %s",message);
+	if (r == GL_NO_ERROR) {
+		return;
+	}
+	LOG_ERR("OPENGL: Errors from %s", message);
 	do {
-		LOG_ERR("%X",r);
-	} while ( (r=glGetError()) != GL_NO_ERROR);
+		LOG_ERR("OPENGL: %X", r);
+	} while ((r = glGetError()) != GL_NO_ERROR);
 }
 #else
 void OPENGL_ERROR(const char*) {
@@ -897,7 +900,7 @@ static void set_vsync(const VsyncState state)
 			return;
 
 		// the requested interval is not supported
-		LOG_WARNING("SDL: Failed setting the OpenGL vsync state to %s (%d): %s",
+		LOG_WARNING("OPENGL: Failed setting the vsync state to %s (%d): %s",
 		            vsync_state_as_string(state), interval, SDL_GetError());
 
 		// Per SDL's recommendation: If an application requests adaptive
@@ -905,7 +908,8 @@ static void set_vsync(const VsyncState state)
 		// fail and return -1. In such a case, you should probably retry
 		// the call with 1 for the interval.
 		if (interval == -1 && SDL_GL_SetSwapInterval(1) != 0) {
-			LOG_WARNING("SDL: Tried enabling non-adaptive OpenGL vsync, but it still failed: %s",
+			LOG_WARNING("OPENGL: Tried enabling non-adaptive vsync, "
+			            "but it still failed: %s",
 			            SDL_GetError());
 		}
 		return;
@@ -1290,12 +1294,12 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 			assert(sdl.opengl.context == nullptr);
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 			if (sdl.opengl.context == nullptr) {
-				LOG_ERR("SDL: OPENGL: Can't create OpenGL context: %s",
+				LOG_ERR("OPENGL: Can't create context: %s",
 				        SDL_GetError());
 				return nullptr;
 			}
 			if (SDL_GL_MakeCurrent(sdl.window, sdl.opengl.context) < 0) {
-				LOG_ERR("SDL: OPENGL: Can't make OpenGL context current: %s",
+				LOG_ERR("OPENGL: Can't make context current: %s",
 				        SDL_GetError());
 				return nullptr;
 			}
@@ -1521,10 +1525,9 @@ static GLuint BuildShader(GLenum type, const std::string& source)
 		glGetShaderInfoLog(shader, info_len, nullptr, info_log.data());
 
 		if (is_shader_compiled) {
-			LOG_WARNING("SDL:OPENGL: Shader info log: %s",
-			            info_log.data());
+			LOG_WARNING("OPENGL: Shader info log: %s", info_log.data());
 		} else {
-			LOG_ERR("SDL:OPENGL: Error compiling shader: %s",
+			LOG_ERR("OPENGL: Error compiling shader: %s",
 			        info_log.data());
 		}
 	}
@@ -1782,7 +1785,8 @@ uint8_t GFX_SetSize(const int width, const int height,
 
 		if (texsize_w > sdl.opengl.max_texsize ||
 		    texsize_h > sdl.opengl.max_texsize) {
-			LOG_WARNING("SDL:OPENGL: No support for texture size of %dx%d, falling back to texture",
+			LOG_WARNING("OPENGL: No support for texture size of %dx%d, "
+			            "falling back to texture",
 			            texsize_w,
 			            texsize_h);
 			goto fallback_texture;
@@ -1797,11 +1801,12 @@ uint8_t GFX_SetSize(const int width, const int height,
 		constexpr auto is_vendors_srgb_unreliable = false;
 #	endif
 		if (is_vendors_srgb_unreliable) {
-			LOG_WARNING("SDL:OPENGL: Not requesting an sRGB framebuffer"
-			            " because %s's driver is unreliable",
+			LOG_WARNING("OPENGL: Not requesting an sRGB framebuffer "
+			            "because %s's driver is unreliable",
 			            gl_vendor.data());
+
 		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
-			LOG_ERR("SDL:OPENGL: Failed requesting an sRGB framebuffer: %s",
+			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
 			        SDL_GetError());
 		}
 
@@ -1816,8 +1821,9 @@ uint8_t GFX_SetSize(const int width, const int height,
 
 		/* We may simply use SDL_BYTESPERPIXEL
 		here rather than SDL_BITSPERPIXEL   */
-		if (!sdl.window || SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window))<2) {
-			LOG_WARNING("SDL:OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
+		if (!sdl.window ||
+		    SDL_BYTESPERPIXEL(SDL_GetWindowPixelFormat(sdl.window)) < 2) {
+			LOG_WARNING("OPENGL: Can't open drawing window, are you running in 16bpp (or higher) mode?");
 			goto fallback_texture;
 		}
 
@@ -1845,7 +1851,7 @@ uint8_t GFX_SetSize(const int width, const int height,
 					if (!LoadGLShaders(sdl.opengl.shader_source,
 					                   &vertexShader,
 					                   &fragmentShader)) {
-						LOG_ERR("SDL:OPENGL: Failed to compile shader");
+						LOG_ERR("OPENGL: Failed to compile shader");
 						goto fallback_texture;
 					}
 
@@ -1853,7 +1859,9 @@ uint8_t GFX_SetSize(const int width, const int height,
 					if (!sdl.opengl.program_object) {
 						glDeleteShader(vertexShader);
 						glDeleteShader(fragmentShader);
-						LOG_WARNING("SDL:OPENGL: Can't create program object, falling back to texture");
+
+						LOG_WARNING("OPENGL: Can't create program object, "
+						            "falling back to texture");
 						goto fallback_texture;
 					}
 					glAttachShader(sdl.opengl.program_object, vertexShader);
@@ -1888,10 +1896,10 @@ uint8_t GFX_SetSize(const int width, const int height,
 						                    info_log.data());
 
 						if (is_program_linked) {
-							LOG_WARNING("SDL:OPENGL: Program info log:\n %s",
+							LOG_WARNING("OPENGL: Program info log:\n %s",
 							            info_log.data());
 						} else {
-							LOG_ERR("SDL:OPENGL: Error linking program:\n %s",
+							LOG_ERR("OPENGL: Error linking program:\n %s",
 							        info_log.data());
 						}
 					}
@@ -3251,15 +3259,18 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 #if C_OPENGL
 	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) { /* OPENGL is requested */
 		if (!SetDefaultWindowMode()) {
-			LOG_WARNING("Could not create OpenGL window, switching back to texture");
+			LOG_WARNING("OPENGL: Could not create OpenGL window, "
+			            "using 'texture' output mode");
 			sdl.want_rendering_backend = RenderingBackend::Texture;
 		} else {
 			sdl.opengl.context = SDL_GL_CreateContext(sdl.window);
 			if (sdl.opengl.context == nullptr) {
-				LOG_WARNING("Could not create OpenGL context, switching back to texture");
+				LOG_WARNING("OPENGL: Could not create context, "
+				            "using 'texture' output mode");
 				sdl.want_rendering_backend = RenderingBackend::Texture;
 			}
 		}
+
 		if (sdl.want_rendering_backend == RenderingBackend::OpenGl) {
 			sdl.opengl.program_object = 0;
 			glAttachShader = (PFNGLATTACHSHADERPROC)SDL_GL_GetProcAddress(
