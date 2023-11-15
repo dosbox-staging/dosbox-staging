@@ -3131,6 +3131,23 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 		}
 	};
 
+	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
+		auto integer_scale_factor = std::min(
+		        bounds_w_px / draw_width,
+		        ifloor(bounds_h_px / (draw_width / image_aspect_ratio)));
+
+		if (integer_scale_factor < 1) {
+			// Revert to fit to viewport
+			return calc_bounded_dims_in_pixels();
+		} else {
+			const auto w = draw_width * integer_scale_factor;
+			const auto h = iround(draw_width * integer_scale_factor /
+			                      image_aspect_ratio);
+
+			return {w, h};
+		}
+	};
+
 	auto calc_vert_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
 		auto integer_scale_factor = std::min(
 		        bounds_h_px / draw_height,
@@ -3172,23 +3189,8 @@ SDL_Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 		break;
 
 	case IntegerScalingMode::Horizontal: {
-		// Calculate scaling multiplier that will allow to fit the whole
-		// image into the window or viewport bounds.
-		const auto pixel_aspect = round(draw_height * draw_scale_y) /
-		                          draw_height;
-		auto integer_scale_factor = std::min(
-		        bounds_w_px / draw_width,
-		        ifloor(bounds_h_px / (draw_height * pixel_aspect)));
-
-		if (integer_scale_factor < 1) {
-			// Revert to fit to viewport
-			std::tie(view_w_px, view_h_px) = calc_bounded_dims_in_pixels();
-		} else {
-			// Calculate the final viewport.
-			view_w_px = draw_width * integer_scale_factor;
-			view_h_px = iround(draw_height * integer_scale_factor *
-			                   pixel_aspect);
-		}
+		std::tie(view_w_px,
+		         view_h_px) = calc_horiz_integer_scaling_dims_in_pixels();
 		break;
 	}
 	case IntegerScalingMode::Vertical:
