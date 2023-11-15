@@ -693,7 +693,7 @@ static void log_display_properties(const int width_px, const int height_px,
 {
 	// Get the viewport dimensions, with consideration for possible override
 	// values
-	auto get_viewport_size = [&]() -> std::pair<int, int> {
+	auto get_viewport_size_in_pixels = [&]() -> std::pair<int, int> {
 		if (viewport_size_override_px) {
 			const auto vp = calc_viewport_in_pixels(
 			        viewport_size_override_px->w,
@@ -706,14 +706,14 @@ static void log_display_properties(const int width_px, const int height_px,
 		return {vp.w, vp.h};
 	};
 
-	const auto [viewport_w, viewport_h] = get_viewport_size();
+	const auto [viewport_w_px, viewport_h_px] = get_viewport_size_in_pixels();
 
 	// Check expectations
 	assert(width_px > 0 && height_px > 0);
-	assert(viewport_w > 0 && viewport_h > 0);
+	assert(viewport_w_px > 0 && viewport_h_px > 0);
 
-	const auto scale_x = static_cast<double>(viewport_w) / width_px;
-	const auto scale_y = static_cast<double>(viewport_h) / height_px;
+	const auto scale_x = static_cast<double>(viewport_w_px) / width_px;
+	const auto scale_y = static_cast<double>(viewport_h_px) / height_px;
 
 	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
 
@@ -735,8 +735,8 @@ static void log_display_properties(const int width_px, const int height_px,
 	        video_mode_desc.c_str(),
 	        refresh_rate,
 	        frame_mode,
-	        viewport_w,
-	        viewport_h,
+	        viewport_w_px,
+	        viewport_h_px,
 	        video_mode.pixel_aspect_ratio.Inverse().ToDouble(),
 	        static_cast<int32_t>(video_mode.pixel_aspect_ratio.Num()),
 	        static_cast<int32_t>(video_mode.pixel_aspect_ratio.Denom()));
