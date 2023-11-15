@@ -27,8 +27,6 @@
 #include <cstring>
 #include <utility>
 
-#include <SDL.h>
-
 #include "../gui/render_scalers.h"
 #include "../ints/int10.h"
 #include "bitops.h"
@@ -2819,8 +2817,12 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		const auto canvas_px = GFX_GetCanvasSizeInPixels();
 
 		constexpr auto reinit_render = false;
-		const auto shader_changed    = RENDER_MaybeAutoSwitchShader(
-                        canvas_px.w, canvas_px.h, render.video_mode, reinit_render);
+
+		const auto shader_changed =
+		        RENDER_MaybeAutoSwitchShader(iroundf(canvas_px.w),
+		                                     iroundf(canvas_px.h),
+		                                     render.video_mode,
+		                                     reinit_render);
 
 		if (shader_changed) {
 			render = setup_drawing();
