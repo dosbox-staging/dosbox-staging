@@ -197,8 +197,8 @@ static bool first_window = true;
 static SDL_Point restrict_to_viewport_resolution(int width, int height);
 static SDL_Rect calc_viewport(const int width, const int height);
 
-static void CleanupSDLResources();
-static void HandleVideoResize(int width, int height);
+static void clean_up_sdl_resources();
+static void handle_video_resize(int width, int height);
 
 static void update_frame_texture([[maybe_unused]] const uint16_t* changedLines);
 static bool present_frame_texture();
@@ -1238,7 +1238,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		return sdl.window;
 	}
 
-	CleanupSDLResources();
+	clean_up_sdl_resources();
 
 	if (!sdl.window || (sdl.rendering_backend != rendering_backend)) {
 		remove_window();
@@ -2229,7 +2229,7 @@ void GFX_SetMouseVisibility(const bool requested_visible)
 		       requested_visible ? "visible" : "invisible");
 }
 
-static void FocusInput()
+static void focus_input()
 {
 #if defined(WIN32)
 	sdl.focus_ticks = GetTicks();
@@ -2288,7 +2288,7 @@ void GFX_SwitchFullScreen()
 #endif
 	sdl.desktop.fullscreen = !sdl.desktop.fullscreen;
 	GFX_ResetScreen();
-	FocusInput();
+	focus_input();
 	setup_presentation_mode(sdl.frame.mode);
 
 	// After switching modes, get the current canvas size, which might be
@@ -2306,10 +2306,11 @@ void GFX_SwitchFullScreen()
 	sdl.desktop.switching_fullscreen = false;
 }
 
-static void SwitchFullScreen(bool pressed)
+static void switch_fullscreen(bool pressed)
 {
-	if (pressed)
+	if (pressed) {
 		GFX_SwitchFullScreen();
+	}
 }
 
 // This function returns write'able buffer for user to draw upon. Successful
@@ -2627,7 +2628,7 @@ void GFX_UpdateDisplayDimensions(int width, int height)
 	}
 }
 
-static void CleanupSDLResources()
+static void clean_up_sdl_resources()
 {
 	if (sdl.texture.pixelFormat) {
 		SDL_FreeFormat(sdl.texture.pixelFormat);
@@ -2654,7 +2655,8 @@ static void GUI_ShutDown(Section *)
 	GFX_SetMouseCapture(false);
 	GFX_SetMouseVisibility(true);
 
-	CleanupSDLResources();
+	clean_up_sdl_resources();
+
 	if (sdl.renderer) {
 		SDL_DestroyRenderer(sdl.renderer);
 		sdl.renderer = nullptr;
@@ -2669,7 +2671,7 @@ static void GUI_ShutDown(Section *)
 	remove_window();
 }
 
-static void SetPriority(PRIORITY_LEVELS level)
+static void set_priority(PRIORITY_LEVELS level)
 {
 	// Just let the OS scheduler manage priority
 	if (level == PRIORITY_LEVEL_AUTO)
@@ -2725,22 +2727,26 @@ static void SetPriority(PRIORITY_LEVELS level)
 	}
 }
 
-static SDL_Window *SetDefaultWindowMode()
+static SDL_Window* set_default_window_mode()
 {
-	if (sdl.window)
+	if (sdl.window) {
 		return sdl.window;
+	}
 
-	sdl.draw.width = FALLBACK_WINDOW_DIMENSIONS.x;
+	sdl.draw.width  = FALLBACK_WINDOW_DIMENSIONS.x;
 	sdl.draw.height = FALLBACK_WINDOW_DIMENSIONS.y;
 
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;
+
 		return SetWindowMode(sdl.want_rendering_backend,
 		                     sdl.desktop.full.width,
 		                     sdl.desktop.full.height,
 		                     sdl.desktop.fullscreen);
 	}
+
 	sdl.desktop.lazy_init_window_size = false;
+
 	return SetWindowMode(sdl.want_rendering_backend,
 	                     sdl.desktop.window.width,
 	                     sdl.desktop.window.height,
@@ -2894,32 +2900,35 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 // Takes in:
 //  - The 'viewport_resolution' config value: 'fit', 'WxH', 'N[.M]%', or an invalid setting.
 //
-// Except for SURFACE and TEXTURE rendering, the function populates the following struct members:
-//  - 'sdl.desktop.use_viewport_limits', true if the viewport_resolution feature is enabled.
+// The function populates the following struct members:
 //  - 'sdl.desktop.viewport_resolution', with the refined size.
 
-static void setup_viewport_resolution_from_conf(const std::string &viewport_resolution_val)
+static void setup_viewport_resolution_from_conf(const std::string& viewport_resolution_val)
 {
 	sdl.viewport_resolution = {};
 
 	constexpr auto default_val = "fit";
-	if (viewport_resolution_val == default_val)
+	if (viewport_resolution_val == default_val) {
 		return;
+	}
 
-	int w = 0;
-	int h = 0;
+	int w   = 0;
+	int h   = 0;
 	float p = 0.0f;
-	const auto was_parsed = sscanf(viewport_resolution_val.c_str(), "%dx%d", &w, &h) == 2 ||
-	                        sscanf(viewport_resolution_val.c_str(), "%f%%", &p) == 1;
+	const auto was_parsed =
+	        sscanf(viewport_resolution_val.c_str(), "%dx%d", &w, &h) == 2 ||
+	        sscanf(viewport_resolution_val.c_str(), "%f%%", &p) == 1;
 
 	if (!was_parsed) {
 		LOG_WARNING("DISPLAY: Requested viewport_resolution '%s' was not in WxH"
 		            " or N%% format, using the default setting ('%s') instead",
-		            viewport_resolution_val.c_str(), default_val);
+		            viewport_resolution_val.c_str(),
+		            default_val);
 		return;
 	}
 
 	const auto desktop = get_desktop_resolution();
+
 	const bool is_out_of_bounds = (w <= 0 || w > desktop.w || h <= 0 ||
 	                               h > desktop.h) &&
 	                              (p <= 0.0f || p > 100.0f);
@@ -2935,9 +2944,9 @@ static void setup_viewport_resolution_from_conf(const std::string &viewport_reso
 	}
 
 	if (p > 0.0f) {
-		sdl.viewport_resolution =
-		        {iround(desktop.w * static_cast<double>(p) / 100.0),
-		         iround(desktop.h * static_cast<double>(p) / 100.0)};
+		sdl.viewport_resolution = {
+		        iround(desktop.w * static_cast<double>(p) / 100.0),
+		        iround(desktop.h * static_cast<double>(p) / 100.0)};
 
 		LOG_MSG("DISPLAY: Limiting viewport resolution to %2.4g%% (%dx%d) of the desktop",
 		        static_cast<double>(p),
@@ -2952,16 +2961,18 @@ static void setup_viewport_resolution_from_conf(const std::string &viewport_reso
 	}
 }
 
-static void setup_initial_window_position_from_conf(const std::string &window_position_val)
+static void setup_initial_window_position_from_conf(const std::string& window_position_val)
 {
 	sdl.desktop.window.initial_x_pos = -1;
 	sdl.desktop.window.initial_y_pos = -1;
 
-	if (window_position_val == "auto")
+	if (window_position_val == "auto") {
 		return;
+	}
 
 	int x, y;
-	const auto was_parsed = sscanf(window_position_val.c_str(), "%d,%d", &x, &y) == 2;
+	const auto was_parsed = (sscanf(window_position_val.c_str(), "%d,%d", &x, &y) ==
+	                         2);
 	if (!was_parsed) {
 		LOG_WARNING("DISPLAY: Requested window_position '%s' was not in X,Y format; "
 		            "using 'auto' instead",
@@ -2970,6 +2981,7 @@ static void setup_initial_window_position_from_conf(const std::string &window_po
 	}
 
 	const auto desktop = get_desktop_resolution();
+
 	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
@@ -3012,8 +3024,8 @@ static void save_window_size(const int w, const int h)
 //  - The previously configured scaling mode: Bilinear or NearestNeighbour.
 //  - If aspect correction is requested.
 //
-// Except for SURFACE rendering, this function returns a refined size and
-// additionally populates the following struct members:
+// This function returns a refined size and additionally populates the
+// following struct members:
 //
 //  - 'sdl.desktop.requested_window_bounds', with the coarse bounds, which do
 //     not take into account scaling or aspect correction.
@@ -3281,7 +3293,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 #if C_OPENGL
 	if (sdl.want_rendering_backend == RenderingBackend::OpenGl) { /* OPENGL is requested */
-		if (!SetDefaultWindowMode()) {
+		if (!set_default_window_mode()) {
 			LOG_WARNING("OPENGL: Could not create OpenGL window, "
 			            "using 'texture' output mode");
 			sdl.want_rendering_backend = RenderingBackend::Texture;
@@ -3378,8 +3390,9 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	} /* OPENGL is requested end */
 #endif    // OPENGL
 
-	if (!SetDefaultWindowMode())
+	if (!set_default_window_mode()) {
 		E_Exit("SDL: Could not initialize video: %s", SDL_GetError());
+	}
 
 	const auto transparency = clamp(section->Get_int("transparency"), 0, 90);
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
@@ -3393,9 +3406,9 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 // extern void UI_Run(bool);
 void Restart(bool pressed);
 
-static void ApplyActiveSettings()
+static void apply_active_settings()
 {
-	SetPriority(sdl.priority.active);
+	set_priority(sdl.priority.active);
 	MOUSE_NotifyWindowActive(true);
 
 	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted()) {
@@ -3405,7 +3418,7 @@ static void ApplyActiveSettings()
 
 static void ApplyInactiveSettings()
 {
-	SetPriority(sdl.priority.inactive);
+	set_priority(sdl.priority.inactive);
 	MOUSE_NotifyWindowActive(false);
 
 	if (sdl.mute_when_inactive) {
@@ -3413,24 +3426,31 @@ static void ApplyInactiveSettings()
 	}
 }
 
-static void SetPriorityLevels(const std::string& active_pref,
-                              const std::string& inactive_pref)
+static void set_priority_levels(const std::string& active_pref,
+                                const std::string& inactive_pref)
 {
 	auto to_level = [](const std::string& pref) {
-		if (pref == "auto")
+		if (pref == "auto") {
 			return PRIORITY_LEVEL_AUTO;
-		if (pref == "lowest")
+		}
+		if (pref == "lowest") {
 			return PRIORITY_LEVEL_LOWEST;
-		if (pref == "lower")
+		}
+		if (pref == "lower") {
 			return PRIORITY_LEVEL_LOWER;
-		if (pref == "normal")
+		}
+		if (pref == "normal") {
 			return PRIORITY_LEVEL_NORMAL;
-		if (pref == "higher")
+		}
+		if (pref == "higher") {
 			return PRIORITY_LEVEL_HIGHER;
-		if (pref == "highest")
+		}
+		if (pref == "highest") {
 			return PRIORITY_LEVEL_HIGHEST;
+		}
 
 		LOG_WARNING("Invalid priority level: %s, using 'auto'", pref.data());
+
 		return PRIORITY_LEVEL_AUTO;
 	};
 
@@ -3438,33 +3458,37 @@ static void SetPriorityLevels(const std::string& active_pref,
 	sdl.priority.inactive = to_level(inactive_pref);
 }
 
-static void GUI_StartUp(Section *sec)
+static void GUI_StartUp(Section* sec)
 {
 	sec->AddDestroyFunction(&GUI_ShutDown);
-	Section_prop *section = static_cast<Section_prop *>(sec);
+	Section_prop* section = static_cast<Section_prop*>(sec);
 
-	sdl.active = false;
+	sdl.active          = false;
 	sdl.updating        = false;
 	sdl.resizing_window = false;
-	sdl.wait_on_error = section->Get_bool("waitonerror");
+	sdl.wait_on_error   = section->Get_bool("waitonerror");
 
 	sdl.desktop.fullscreen = control->arguments.fullscreen ||
 	                         section->Get_bool("fullscreen");
 
 	auto priority_conf = section->GetMultiVal("priority")->GetSection();
-	SetPriorityLevels(priority_conf->Get_string("active"),
-	                  priority_conf->Get_string("inactive"));
+	set_priority_levels(priority_conf->Get_string("active"),
+	                    priority_conf->Get_string("inactive"));
 
 	sdl.pause_when_inactive = section->Get_bool("pause_when_inactive");
 
 	sdl.mute_when_inactive = section->Get_bool("mute_when_inactive") ||
 	                         sdl.pause_when_inactive;
 
-	ApplyActiveSettings(); // Assume focus on startup
-	sdl.desktop.full.fixed = false;
+	// Assume focus on startup
+	apply_active_settings();
+
 	std::string fullresolution = section->Get_string("fullresolution");
+
+	sdl.desktop.full.fixed  = false;
 	sdl.desktop.full.width  = 0;
 	sdl.desktop.full.height = 0;
+
 	if(!fullresolution.empty()) {
 		lowcase(fullresolution); //so x and X are allowed
 		if (fullresolution != "original") {
@@ -3541,7 +3565,7 @@ static void GUI_StartUp(Section *sec)
 	MAPPER_AddHandler(GFX_RequestExit, SDL_SCANCODE_F9, PRIMARY_MOD,
 	                  "shutdown", "Shutdown");
 
-	MAPPER_AddHandler(SwitchFullScreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
+	MAPPER_AddHandler(switch_fullscreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
 	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2, "restart", "Restart");
 	MAPPER_AddHandler(MOUSE_ToggleUserCapture,
 	                  SDL_SCANCODE_F10,
@@ -3568,7 +3592,7 @@ static void GUI_StartUp(Section *sec)
 	MOUSE_NotifyReadyGFX();
 }
 
-static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
+static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
 	MOUSE_EventMoved(static_cast<float>(motion->xrel),
 	                 static_cast<float>(motion->yrel),
@@ -3576,13 +3600,13 @@ static void HandleMouseMotion(SDL_MouseMotionEvent *motion)
 	                 check_cast<int32_t>(motion->y));
 }
 
-static void HandleMouseWheel(SDL_MouseWheelEvent *wheel)
+static void handle_mouse_wheel(SDL_MouseWheelEvent* wheel)
 {
     const auto tmp = (wheel->direction == SDL_MOUSEWHEEL_NORMAL) ? -wheel->y : wheel->y;
 	MOUSE_EventWheel(check_cast<int16_t>(tmp));
 }
 
-static void HandleMouseButton(SDL_MouseButtonEvent * button)
+static void handle_mouse_button(SDL_MouseButtonEvent* button)
 {
 	auto notify_button = [](const uint8_t button, const bool pressed) {
 		// clang-format off
@@ -3627,7 +3651,7 @@ void GFX_RegenerateWindow(Section *sec) {
 #define DB_POLLSKIP 1
 #endif
 
-static void HandleVideoResize(int width, int height)
+static void handle_video_resize(int width, int height)
 {
 	/* Maybe a screen rotation has just occurred, so we simply resize.
 	There may be a different cause for a forced resized, though.    */
@@ -3635,12 +3659,14 @@ static void HandleVideoResize(int width, int height)
 		/* Note: We should not use GFX_ObtainDisplayDimensions
 		(SDL_GetDisplayBounds) on Android after a screen rotation:
 		The older values from application startup are returned. */
-		sdl.desktop.full.width = width;
+		sdl.desktop.full.width  = width;
 		sdl.desktop.full.height = height;
 	}
 
 	const auto canvas = get_canvas_size(sdl.rendering_backend);
-	sdl.clip          = calc_viewport(canvas.w, canvas.h);
+
+	sdl.clip = calc_viewport(canvas.w, canvas.h);
+
 	if (sdl.rendering_backend == RenderingBackend::Texture) {
 		SDL_RenderSetViewport(sdl.renderer, &sdl.clip);
 	}
@@ -3674,7 +3700,8 @@ static void HandleVideoResize(int width, int height)
  * users (e.g. placing window partially off-screen, or using fullscreen
  * resolution for window size).
  */
-static void FinalizeWindowState()
+
+static void finalise_window_state()
 {
 	assert(sdl.window);
 
@@ -3785,7 +3812,7 @@ bool GFX_Events()
 					           sdl.clip.h);
 				}
 #endif
-				FocusInput();
+				focus_input();
 				continue;
 
 			case SDL_WINDOWEVENT_RESIZED:
@@ -3803,7 +3830,7 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
-				ApplyActiveSettings();
+				apply_active_settings();
 				[[fallthrough]];
 			case SDL_WINDOWEVENT_EXPOSED:
 				// LOG_DEBUG("SDL: Window has been exposed "
@@ -3824,7 +3851,7 @@ bool GFX_Events()
 				// keyboard focus");
 				if (sdl.draw.callback)
 					sdl.draw.callback(GFX_CallBackRedraw);
-				FocusInput();
+				focus_input();
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
@@ -3913,8 +3940,8 @@ bool GFX_Events()
 				// The window size has changed either as a
 				// result of an API call or through the system
 				// or user changing the window size.
-				HandleVideoResize(event.window.data1, event.window.data2);
-				FinalizeWindowState();
+				handle_video_resize(event.window.data1, event.window.data2);
+				finalise_window_state();
 				maybe_auto_switch_shader();
 				continue;
 
@@ -3935,8 +3962,8 @@ bool GFX_Events()
 				break;
 
 			case SDL_WINDOWEVENT_TAKE_FOCUS:
-				FocusInput();
-				ApplyActiveSettings();
+				focus_input();
+				apply_active_settings();
 				continue;
 
 			case SDL_WINDOWEVENT_HIT_TEST:
@@ -3983,7 +4010,7 @@ bool GFX_Events()
 									GFX_RefreshTitle();
 									if (ev.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
 										paused = false;
-										ApplyActiveSettings();
+										apply_active_settings();
 									}
 								}
 
@@ -4005,10 +4032,10 @@ bool GFX_Events()
 			}
 			break; // end of SDL_WINDOWEVENT
 
-		case SDL_MOUSEMOTION: HandleMouseMotion(&event.motion); break;
-		case SDL_MOUSEWHEEL: HandleMouseWheel(&event.wheel); break;
+		case SDL_MOUSEMOTION: handle_mouse_motion(&event.motion); break;
+		case SDL_MOUSEWHEEL: handle_mouse_wheel(&event.wheel); break;
 		case SDL_MOUSEBUTTONDOWN:
-		case SDL_MOUSEBUTTONUP: HandleMouseButton(&event.button); break;
+		case SDL_MOUSEBUTTONUP: handle_mouse_button(&event.button); break;
 
 		case SDL_QUIT: GFX_RequestExit(true); break;
 #ifdef WIN32
