@@ -353,10 +353,8 @@ bool GFX_HaveDesktopEnvironment();
 void MAPPER_UpdateJoysticks(void);
 #endif
 
-DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
-                                      const int canvas_height_px,
-                                      const int draw_width_px,
-                                      const int draw_height_px,
+DosBox::Rect GFX_CalcViewportInPixels(const DosBox::Rect& canvas_px,
+                                      const DosBox::Rect& draw_area_px,
                                       const Fraction& render_pixel_aspect_ratio);
 
 DosBox::Rect GFX_GetCanvasSizeInPixels();
