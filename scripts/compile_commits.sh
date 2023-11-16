@@ -164,7 +164,8 @@ meson_setup_for_compiler() {
 	if ! run "$meson_setup"; then
 		echo "Reproduce with:"
 		echo "$meson_setup"
-		exit 1
+		echo ""
+		return 1
 	fi
 	return 0
 }
