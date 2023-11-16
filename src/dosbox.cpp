@@ -129,6 +129,7 @@ static LoopHandler * loop;
 // transformed into an adjustment to the current cycle count.
 //
 static constexpr int16_t AutoCycleRatioScalar = 1 << 10;
+static int16_t auto_cycle_adjusted_scalar = AutoCycleRatioScalar;
 
 static int64_t ticksRemain;
 static int64_t ticksLast;
@@ -233,7 +234,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
 		int32_t ratio = static_cast<int32_t>(
-		        (ticksScheduled * (CPU_CyclePercUsed * AutoCycleRatioScalar / 100)) /
+		        (ticksScheduled * (CPU_CyclePercUsed * auto_cycle_adjusted_scalar / 100)) /
 		        ticksDone);
 
 		int32_t new_cmax = CPU_CycleMax;
@@ -265,7 +266,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 					double r = (1.0 + ratio_not_removed) /(ratio_not_removed + AutoCycleRatioScalar / (static_cast<double>(ratio)));
 					new_cmax = 1 + static_cast<int32_t>(CPU_CycleMax * r);
 				} else {
-					int64_t ratio_with_removed = (int64_t) ((((double)ratio - AutoCycleRatioScalar) * ratio_not_removed) + AutoCycleRatioScalar);
+					int64_t ratio_with_removed = (int64_t) ((((double)ratio - AutoCycleRatioScalar) * ratio_not_removed) + auto_cycle_adjusted_scalar);
 					int64_t cmax_scaled = (int64_t)CPU_CycleMax * ratio_with_removed;
 					new_cmax = (int32_t)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (AutoCycleRatioScalar << 1));
 				}
