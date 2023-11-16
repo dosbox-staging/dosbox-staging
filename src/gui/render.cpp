@@ -29,6 +29,7 @@
 #include "control.h"
 #include "fraction.h"
 #include "mapper.h"
+#include "math_utils.h"
 #include "render.h"
 #include "setup.h"
 #include "shader_manager.h"
