@@ -414,6 +414,17 @@ static void DOSBOX_RealInit(Section* sec)
 	ticksRemain = 0;
 	ticksLast   = GetTicks();
 	ticksLocked = false;
+
+	// Our assumption is that the auto cycle adjustment will not cause
+	// regressions, however if it is suspected, users can disable speed_mods
+	// and see if it helps. The speed_mods description asks user to report
+	// cases to the team for further assessment. Like prior speed_mods,
+	// after a extended period without negative reports, the feature will be
+	// made permanent.
+	//
+	auto_cycle_adjusted_scalar = adjust_auto_cycle_scalar(
+	        section->Get_bool("speed_mods"));
+
 	DOSBOX_SetLoop(&Normal_Loop);
 
 	MAPPER_AddHandler(DOSBOX_UnlockSpeed, SDL_SCANCODE_F12, MMOD2, "speedlock", "Speedlock");
