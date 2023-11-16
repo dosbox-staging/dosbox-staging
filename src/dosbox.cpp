@@ -232,9 +232,8 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
-		/* ratio we are aiming for is around 90% usage*/
 		int32_t ratio = static_cast<int32_t>(
-		        (ticksScheduled * (CPU_CyclePercUsed * 90 * AutoCycleRatioScalar / 100 / 100)) /
+		        (ticksScheduled * (CPU_CyclePercUsed * AutoCycleRatioScalar / 100)) /
 		        ticksDone);
 
 		int32_t new_cmax = CPU_CycleMax;
