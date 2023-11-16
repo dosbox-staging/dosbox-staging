@@ -99,33 +99,32 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width_px
 	// 1) Calculate vertical scale factor for the standard output resolution
 	// (i.e., always double-scanning on VGA).
 	scale_y = [&] {
-		const auto draw_width_px = video_mode.width *
-		                           (video_mode.is_double_scanned_mode ? 2 : 1);
+		const auto double_scan = video_mode.is_double_scanned_mode ? 2 : 1;
 
-		const auto draw_height_px = video_mode.height *
-		                            (video_mode.is_double_scanned_mode ? 2 : 1);
+		const DosBox::Rect render_size_px = {video_mode.width * double_scan,
+		                                     video_mode.height * double_scan};
 
-		const auto viewport_px = GFX_CalcViewportInPixels(
+		const auto draw_size_px = GFX_CalcDrawSizeInPixels(
 		        {canvas_width_px, canvas_height_px},
-		        {draw_width_px, draw_height_px},
+		        render_size_px,
 		        video_mode.pixel_aspect_ratio);
 
-		return static_cast<double>(viewport_px.h) / draw_height_px;
+		return static_cast<double>(draw_size_px.h) / render_size_px.h;
 	}();
 
 	// 2) Calculate vertical scale factor for forced single-scanning on VGA
 	// for double-scanned modes.
 	if (video_mode.is_double_scanned_mode) {
-		const auto draw_width_px  = video_mode.width;
-		const auto draw_height_px = video_mode.height;
+		const DosBox::Rect render_size_px = {video_mode.width,
+		                                     video_mode.height};
 
-		const auto viewport_px = GFX_CalcViewportInPixels(
+		const auto draw_size_px = GFX_CalcDrawSizeInPixels(
 		        {canvas_width_px, canvas_height_px},
-		        {draw_width_px, draw_height_px},
+		        render_size_px,
 		        video_mode.pixel_aspect_ratio);
 
-		scale_y_force_single_scan = static_cast<double>(viewport_px.h) /
-		                            draw_height_px;
+		scale_y_force_single_scan = static_cast<double>(draw_size_px.h) /
+		                            render_size_px.h;
 	} else {
 		scale_y_force_single_scan = scale_y;
 	}
