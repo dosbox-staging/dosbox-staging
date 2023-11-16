@@ -227,8 +227,6 @@ struct SDL_Block {
 		int period_us_late    = 0;
 	} frame = {};
 
-	SDL_Rect updateRects[1024] = {};
-
 	bool use_exact_window_resolution = false;
 
 	std::optional<SDL_Point> viewport_resolution = {};
