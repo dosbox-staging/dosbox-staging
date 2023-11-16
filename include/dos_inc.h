@@ -184,8 +184,9 @@ bool DOS_UnlinkFile(const char* const name);
 bool DOS_FindFirst(const char* search, FatAttributeFlags attr,
                    bool fcb_findfirst = false);
 bool DOS_FindNext(void);
-bool DOS_Canonicalize(const char* const name, char* const big);
-bool DOS_CreateTempFile(char * const name,uint16_t * entry);
+bool DOS_Canonicalize(const char* const name, char* const canonicalized);
+std::string DOS_Canonicalize(const char* const name);
+bool DOS_CreateTempFile(char* const name, uint16_t* entry);
 bool DOS_FileExists(const char* const name);
 
 /* Helper Functions */
