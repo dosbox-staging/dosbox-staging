@@ -32,6 +32,7 @@
 #endif
 
 #include "fraction.h"
+#include "rect.h"
 #include "render.h"
 #include "shader_manager.h"
 #include "video.h"

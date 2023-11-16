@@ -99,35 +99,33 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width_px
 	// 1) Calculate vertical scale factor for the standard output resolution
 	// (i.e., always double-scanning on VGA).
 	scale_y = [&] {
-		const auto draw_width = video_mode.width *
-		                        (video_mode.is_double_scanned_mode ? 2 : 1);
+		const auto draw_width_px = video_mode.width *
+		                           (video_mode.is_double_scanned_mode ? 2 : 1);
 
-		const auto draw_height = video_mode.height *
-		                         (video_mode.is_double_scanned_mode ? 2 : 1);
+		const auto draw_height_px = video_mode.height *
+		                            (video_mode.is_double_scanned_mode ? 2 : 1);
 
-		const auto viewport = GFX_CalcViewportInPixels(canvas_width_px,
-		                                               canvas_height_px,
-		                                               draw_width,
-		                                               draw_height,
-		                                               video_mode.pixel_aspect_ratio);
+		const auto viewport_px = GFX_CalcViewportInPixels(
+		        {canvas_width_px, canvas_height_px},
+		        {draw_width_px, draw_height_px},
+		        video_mode.pixel_aspect_ratio);
 
-		return static_cast<double>(viewport.h) / draw_height;
+		return static_cast<double>(viewport_px.h) / draw_height_px;
 	}();
 
 	// 2) Calculate vertical scale factor for forced single-scanning on VGA
 	// for double-scanned modes.
 	if (video_mode.is_double_scanned_mode) {
-		const auto draw_width  = video_mode.width;
-		const auto draw_height = video_mode.height;
+		const auto draw_width_px  = video_mode.width;
+		const auto draw_height_px = video_mode.height;
 
-		const auto viewport = GFX_CalcViewportInPixels(canvas_width_px,
-		                                               canvas_height_px,
-		                                               draw_width,
-		                                               draw_height,
-		                                               video_mode.pixel_aspect_ratio);
+		const auto viewport_px = GFX_CalcViewportInPixels(
+		        {canvas_width_px, canvas_height_px},
+		        {draw_width_px, draw_height_px},
+		        video_mode.pixel_aspect_ratio);
 
-		scale_y_force_single_scan = static_cast<double>(viewport.h) /
-		                            draw_height;
+		scale_y_force_single_scan = static_cast<double>(viewport_px.h) /
+		                            draw_height_px;
 	} else {
 		scale_y_force_single_scan = scale_y;
 	}
