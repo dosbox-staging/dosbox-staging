@@ -198,6 +198,11 @@ static DosBox::Rect to_rect(const SDL_Rect r)
 	return {r.x, r.y, r.w, r.h};
 }
 
+static SDL_Rect to_sdl_rect(const DosBox::Rect& r)
+{
+	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
+}
+
 static void clean_up_sdl_resources();
 static void handle_video_resize(int width, int height);
 
@@ -710,13 +715,10 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
-static SDL_Rect calc_viewport_in_pixels(const int canvas_width_px,
-                                        const int canvas_height_px)
+static DosBox::Rect calc_viewport_in_pixels(const DosBox::Rect& canvas_px)
 {
-	const auto r = GFX_CalcViewportInPixels(canvas_width_px,
-	                                        canvas_height_px,
-	                                        sdl.draw.width_px,
-	                                        sdl.draw.height_px,
+	const auto r = GFX_CalcViewportInPixels(canvas_px,
+	                                        {sdl.draw.width_px, sdl.draw.height_px},
 	                                        sdl.draw.render_pixel_aspect_ratio);
 
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
@@ -725,30 +727,32 @@ static SDL_Rect calc_viewport_in_pixels(const int canvas_width_px,
 // Returns the actual output size in pixels.
 // Needed for DPI-scaled windows, when logical window and actual output sizes
 // might not match.
-static SDL_Rect get_canvas_size_in_pixels([[maybe_unused]] const RenderingBackend rendering_backend)
+static DosBox::Rect get_canvas_size_in_pixels(
+        [[maybe_unused]] const RenderingBackend rendering_backend)
 {
-	SDL_Rect canvas = {};
+	SDL_Rect canvas_px = {};
 #if SDL_VERSION_ATLEAST(2, 26, 0)
-	SDL_GetWindowSizeInPixels(sdl.window, &canvas.w, &canvas.h);
+	SDL_GetWindowSizeInPixels(sdl.window, &canvas_px.w, &canvas_px.h);
 #else
 	switch (rendering_backend) {
 	case RenderingBackend::Texture:
-		if (SDL_GetRendererOutputSize(sdl.renderer, &canvas.w, &canvas.h) !=
-		    0) {
+		if (SDL_GetRendererOutputSize(sdl.renderer,
+		                              &canvas_px.w,
+		                              &canvas_px.h) != 0) {
 			LOG_ERR("SDL: Failed to retrieve output size: %s",
 			        SDL_GetError());
 		}
 		break;
 #if C_OPENGL
 	case RenderingBackend::OpenGl:
-		SDL_GL_GetDrawableSize(sdl.window, &canvas.w, &canvas.h);
+		SDL_GL_GetDrawableSize(sdl.window, &canvas_px.w, &canvas_px.h);
 		break;
 #endif
-	default: SDL_GetWindowSize(sdl.window, &canvas.w, &canvas.h);
+	default: SDL_GetWindowSize(sdl.window, &canvas_px.w, &canvas_px.h);
 	}
 #endif
-	assert(canvas.w > 0 && canvas.h > 0);
-	return canvas;
+	assert(canvas_px.w > 0 && canvas_px.h > 0);
+	return to_rect(canvas_px);
 }
 
 // Logs the source and target resolution including describing scaling method
@@ -764,13 +768,13 @@ static void log_display_properties(const int width_px, const int height_px,
 	auto get_viewport_size_in_pixels = [&]() -> std::pair<int, int> {
 		if (viewport_size_override_px) {
 			const auto vp = calc_viewport_in_pixels(
-			        viewport_size_override_px->w,
-			        viewport_size_override_px->h);
+			        {viewport_size_override_px->w,
+			         viewport_size_override_px->h});
 
 			return {vp.w, vp.h};
 		}
 		const auto canvas_px = get_canvas_size_in_pixels(rendering_backend);
-		const auto vp = calc_viewport_in_pixels(canvas_px.w, canvas_px.h);
+		const auto vp = calc_viewport_in_pixels(canvas_px);
 		return {vp.w, vp.h};
 	};
 
@@ -1292,10 +1296,10 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	}
 
 	const auto canvas_px = get_canvas_size_in_pixels(rendering_backend);
-	const auto width_px  = static_cast<double>(canvas_px.w);
 
 	assert(width_in_logical_units > 0);
-	const auto new_dpi_scale = width_px / width_in_logical_units;
+	const auto new_dpi_scale = static_cast<double>(canvas_px.w) /
+	                           width_in_logical_units;
 
 	if (std::abs(new_dpi_scale - sdl.desktop.dpi_scale) < DBL_EPSILON) {
 		// LOG_MSG("SDL: DPI scale hasn't changed (still %f)",
@@ -1449,8 +1453,7 @@ SDL_Window* GFX_GetWindow()
 
 DosBox::Rect GFX_GetCanvasSizeInPixels()
 {
-	const auto size = get_canvas_size_in_pixels(sdl.rendering_backend);
-	return to_rect(size);
+	return get_canvas_size_in_pixels(sdl.rendering_backend);
 }
 
 RenderingBackend GFX_GetRenderingBackend()
@@ -1458,7 +1461,7 @@ RenderingBackend GFX_GetRenderingBackend()
 	return sdl.rendering_backend;
 }
 
-static DosBox::Rect calc_restricted_viewport_size_in_pixels(const DosBox::Rect canvas_px)
+static DosBox::Rect calc_restricted_viewport_size_in_pixels(const DosBox::Rect& canvas_px)
 {
 	if (sdl.viewport_resolution) {
 		DosBox::Rect viewport_px = {sdl.viewport_resolution->x,
@@ -1478,8 +1481,7 @@ static DosBox::Rect calc_restricted_viewport_size_in_pixels(const DosBox::Rect c
 
 DosBox::Rect GFX_GetViewportSizeInPixels()
 {
-	const auto canvas_px = to_rect(
-	        get_canvas_size_in_pixels(sdl.rendering_backend));
+	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
 	return calc_restricted_viewport_size_in_pixels(canvas_px);
 }
@@ -1818,7 +1820,8 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 		//         (canvas.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.clip_px = calc_viewport_in_pixels(canvas_px.w, canvas_px.h);
+		sdl.clip_px = to_sdl_rect(calc_viewport_in_pixels(canvas_px));
+
 		if (SDL_RenderSetViewport(sdl.renderer, &sdl.clip_px) != 0)
 			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
 
@@ -2032,7 +2035,7 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 		//         (canvas_px.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.clip_px = calc_viewport_in_pixels(canvas_px.w, canvas_px.h);
+		sdl.clip_px = to_sdl_rect(calc_viewport_in_pixels(canvas_px));
 		glViewport(sdl.clip_px.x, sdl.clip_px.y, sdl.clip_px.w, sdl.clip_px.h);
 
 		if (sdl.opengl.texture > 0) {
@@ -2348,7 +2351,8 @@ void GFX_SwitchFullScreen()
 	// Record the window's current canvas size if we're departing window-mode
 	auto& canvas_px = sdl.desktop.window.canvas_size;
 	if (!sdl.desktop.fullscreen) {
-		canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+		canvas_px = to_sdl_rect(
+		        get_canvas_size_in_pixels(sdl.rendering_backend));
 	}
 
 #if defined(WIN32)
@@ -2366,7 +2370,7 @@ void GFX_SwitchFullScreen()
 	// After switching modes, get the current canvas size, which might be
 	// the windowed size or full screen size.
 	canvas_px = sdl.desktop.fullscreen
-	                  ? get_canvas_size_in_pixels(sdl.rendering_backend)
+	                  ? to_sdl_rect(get_canvas_size_in_pixels(sdl.rendering_backend))
 	                  : canvas_px;
 
 	log_display_properties(sdl.draw.width_px,
@@ -3172,14 +3176,12 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	        sdl.display_number);
 }
 
-DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
-                                      const int canvas_height_px,
-                                      const int draw_width_px,
-                                      const int draw_height_px,
+DosBox::Rect GFX_CalcViewportInPixels(const DosBox::Rect& canvas_px,
+                                      const DosBox::Rect& draw_area_px,
                                       const Fraction& render_pixel_aspect_ratio)
 {
-	assert(draw_width_px > 0);
-	assert(draw_height_px > 0);
+	assert(draw_area_px.w > 0.0f);
+	assert(draw_area_px.h > 0.0f);
 
 	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
 	        render_pixel_aspect_ratio);
@@ -3190,47 +3192,44 @@ DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 	assert(std::isfinite(draw_scale_y));
 
 	// Limit the window to the user's desired viewport, if configured
-	const auto restricted_dims_px = calc_restricted_viewport_size_in_pixels(
-	        {canvas_width_px, canvas_height_px});
-
-	const auto bounds_w_px = iroundf(restricted_dims_px.w);
-	const auto bounds_h_px = iroundf(restricted_dims_px.h);
+	const auto bounds_px = calc_restricted_viewport_size_in_pixels(canvas_px);
 
 	// It is important to calculate the image aspect ratio like this because
 	// the aspect ratio of the *image* itself it not always 4:3, in which
 	// case it would appear letter and/or pillarboxed on a real 4:3 display
 	// aspect ratio CRT monitor.
-	const auto image_aspect_ratio = (draw_width_px * draw_scale_x) /
-	                                (draw_height_px * draw_scale_y);
+	const auto image_aspect_ratio = (draw_area_px.w * draw_scale_x) /
+	                                (draw_area_px.h * draw_scale_y);
 
 	auto calc_bounded_dims_in_pixels = [&]() -> std::pair<int, int> {
 		// Calculate the viewport contingent on the aspect ratio of the
 		// viewport bounds versus display mode.
-		const auto bounds_aspect = static_cast<double>(bounds_w_px) /
-		                           bounds_h_px;
+		const auto bounds_aspect = static_cast<double>(bounds_px.w) /
+		                           bounds_px.h;
 
+		// TODO
 		if (bounds_aspect > image_aspect_ratio) {
-			const auto w = iround(bounds_h_px * image_aspect_ratio);
-			const auto h = bounds_h_px;
+			const auto w = iround(bounds_px.h * image_aspect_ratio);
+			const auto h = bounds_px.h;
 			return {w, h};
 		} else {
-			const auto w = bounds_w_px;
-			const auto h = iround(bounds_w_px / image_aspect_ratio);
+			const auto w = bounds_px.w;
+			const auto h = iround(bounds_px.w / image_aspect_ratio);
 			return {w, h};
 		}
 	};
 
 	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
 		auto integer_scale_factor = std::min(
-		        bounds_w_px / draw_width_px,
-		        ifloor(bounds_h_px / (draw_width_px / image_aspect_ratio)));
+		        ifloor(bounds_px.w / draw_area_px.w),
+		        ifloor(bounds_px.h / (draw_area_px.w / image_aspect_ratio)));
 
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			return calc_bounded_dims_in_pixels();
 		} else {
-			const auto w = draw_width_px * integer_scale_factor;
-			const auto h = iround(draw_width_px * integer_scale_factor /
+			const auto w = draw_area_px.w * integer_scale_factor;
+			const auto h = iround(draw_area_px.w * integer_scale_factor /
 			                      image_aspect_ratio);
 
 			return {w, h};
@@ -3239,16 +3238,16 @@ DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 
 	auto calc_vert_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
 		auto integer_scale_factor = std::min(
-		        bounds_h_px / draw_height_px,
-		        ifloor(bounds_w_px / (draw_height_px * image_aspect_ratio)));
+		        ifloor(bounds_px.h / draw_area_px.h),
+		        ifloor(bounds_px.w / (draw_area_px.h * image_aspect_ratio)));
 
 		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			return calc_bounded_dims_in_pixels();
 		} else {
-			const auto w = iround(draw_height_px * integer_scale_factor *
+			const auto w = iround(draw_area_px.h * integer_scale_factor *
 			                      image_aspect_ratio);
-			const auto h = draw_height_px * integer_scale_factor;
+			const auto h = draw_area_px.h * integer_scale_factor;
 
 			return {w, h};
 		}
@@ -3291,8 +3290,8 @@ DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 	}
 
 	// Calculate centered viewport position.
-	const int view_x_px = (canvas_width_px - view_w_px) / 2;
-	const int view_y_px = (canvas_height_px - view_h_px) / 2;
+	const int view_x_px = iroundf((canvas_px.w - view_w_px) / 2);
+	const int view_y_px = iroundf((canvas_px.h - view_h_px) / 2);
 
 	return {view_x_px, view_y_px, view_w_px, view_h_px};
 }
@@ -3759,7 +3758,7 @@ static void handle_video_resize(int width, int height)
 
 	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
-	sdl.clip_px = calc_viewport_in_pixels(canvas_px.w, canvas_px.h);
+	sdl.clip_px = to_sdl_rect(calc_viewport_in_pixels(canvas_px));
 
 	if (sdl.rendering_backend == RenderingBackend::Texture) {
 		SDL_RenderSetViewport(sdl.renderer, &sdl.clip_px);
@@ -3838,8 +3837,8 @@ static bool maybe_auto_switch_shader()
 
 	constexpr auto reinit_render = true;
 
-	return RENDER_MaybeAutoSwitchShader(canvas_px.w,
-	                                    canvas_px.h,
+	return RENDER_MaybeAutoSwitchShader(iroundf(canvas_px.w),
+	                                    iroundf(canvas_px.h),
 	                                    sdl.video_mode,
 	                                    reinit_render);
 #else
@@ -4016,8 +4015,8 @@ bool GFX_Events()
 				const auto canvas_px = get_canvas_size_in_pixels(
 				        sdl.rendering_backend);
 
-				sdl.clip_px = calc_viewport_in_pixels(canvas_px.w,
-				                                      canvas_px.h);
+				sdl.clip_px = to_sdl_rect(
+				        calc_viewport_in_pixels(canvas_px));
 
 				if (sdl.rendering_backend == RenderingBackend::Texture) {
 					SDL_RenderSetViewport(sdl.renderer,
