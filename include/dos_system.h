@@ -93,6 +93,11 @@ struct FileStat_Block {
 
 class DOS_DTA;
 
+struct DosFilename {
+	std::string name = {};
+	std::string ext  = {};
+};
+
 class DOS_File {
 public:
 	DOS_File() = default;
