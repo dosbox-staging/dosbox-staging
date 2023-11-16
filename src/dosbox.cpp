@@ -124,6 +124,12 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
+// The CPU auto-cycle adjustment routine uses a 10-bit (1024) scalar to multiply
+// up the ratio of scheduled to completed ticks. The multiplied result is then
+// transformed into an adjustment to the current cycle count.
+//
+static constexpr int16_t AutoCycleRatioScalar = 1 << 10;
+
 static int64_t ticksRemain;
 static int64_t ticksLast;
 static int64_t ticksAdded;
@@ -228,7 +234,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
 		/* ratio we are aiming for is around 90% usage*/
 		int32_t ratio = static_cast<int32_t>(
-		        (ticksScheduled * (CPU_CyclePercUsed * 90 * 1024 / 100 / 100)) /
+		        (ticksScheduled * (CPU_CyclePercUsed * 90 * AutoCycleRatioScalar / 100 / 100)) /
 		        ticksDone);
 
 		int32_t new_cmax = CPU_CycleMax;
@@ -255,14 +261,14 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 				if (ticksAdded > 15 && ticksScheduled >= 5 && ticksScheduled <= 20 && ratio > 800)
 					ratio = 800;
 
-				if (ratio <= 1024) {
+				if (ratio <= AutoCycleRatioScalar) {
 					// ratio_not_removed = 1.0; //enabling this restores the old formula
-					double r = (1.0 + ratio_not_removed) /(ratio_not_removed + 1024.0/(static_cast<double>(ratio)));
+					double r = (1.0 + ratio_not_removed) /(ratio_not_removed + AutoCycleRatioScalar / (static_cast<double>(ratio)));
 					new_cmax = 1 + static_cast<int32_t>(CPU_CycleMax * r);
 				} else {
-					int64_t ratio_with_removed = (int64_t) ((((double)ratio - 1024.0) * ratio_not_removed) + 1024.0);
+					int64_t ratio_with_removed = (int64_t) ((((double)ratio - AutoCycleRatioScalar) * ratio_not_removed) + AutoCycleRatioScalar);
 					int64_t cmax_scaled = (int64_t)CPU_CycleMax * ratio_with_removed;
-					new_cmax = (int32_t)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (int64_t)2048);
+					new_cmax = (int32_t)(1 + (CPU_CycleMax >> 1) + cmax_scaled / (AutoCycleRatioScalar << 1));
 				}
 			}
 		}
