@@ -129,6 +129,14 @@ static LoopHandler * loop;
 // transformed into an adjustment to the current cycle count.
 //
 static constexpr int16_t AutoCycleRatioScalar = 1 << 10;
+
+// The adjustment helps the auto cycle logic converge faster on the specified
+// target (i.e.: "cycles=max", "max 75%", etc), while still being conservative
+// enough to avoid whipsawing cycles too high or low. This value has been tuned
+// on a Rasberry Pi 400, 800 Mhz x86-64, 4 Ghz 86-64, and Apple M1 system.
+//
+static constexpr int8_t AutoCycleRatioBoost = 24;
+
 static int16_t auto_cycle_adjusted_scalar = AutoCycleRatioScalar;
 
 static int64_t ticksRemain;
@@ -168,6 +176,11 @@ static Bitu Normal_Loop() {
 			} else {increaseticks();return 0;}
 		}
 	}
+}
+
+static int16_t adjust_auto_cycle_scalar(const bool wants_adjusted)
+{
+	return AutoCycleRatioScalar + (wants_adjusted ? AutoCycleRatioBoost : 0);
 }
 
 void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
