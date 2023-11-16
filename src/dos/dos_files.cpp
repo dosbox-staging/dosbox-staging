@@ -801,24 +801,43 @@ bool DOS_SetFileAttr(const char* const name, FatAttributeFlags attr)
 	return Drives.at(drive)->SetFileAttr(fullname, attr);
 }
 
-bool DOS_Canonicalize(const char* const name, char* const big)
+bool DOS_Canonicalize(const char* const name, char* const canonicalized)
 {
 	// TODO Add Better support for devices and shit but will it be needed i
-	// doubt it :) 
-	uint8_t drive;
-	char fullname[DOS_PATHLENGTH];
-	if (!DOS_MakeName(name,fullname,&drive)) return false;
-	big[0]=drive+'A';
-	big[1]=':';
-	big[2]='\\';
-	strcpy(&big[3],fullname);
+	// doubt it :)
+
+	// Initalize to invalid drive index so assert will fire if DOS_MakeName
+	// does not set this
+	uint8_t drive                 = 255;
+	char fullname[DOS_PATHLENGTH] = {};
+	if (!DOS_MakeName(name, fullname, &drive)) {
+		return false;
+	}
+	canonicalized[0] = drive_letter(drive);
+	canonicalized[1] = ':';
+	canonicalized[2] = '\\';
+	strcpy(&canonicalized[3], fullname);
 	return true;
 }
 
-bool DOS_GetFreeDiskSpace(uint8_t drive,uint16_t * bytes,uint8_t * sectors,uint16_t * clusters,uint16_t * free) {
-	if (drive==0) drive=DOS_GetDefaultDrive();
-	else drive--;
-	if ((drive>=DOS_DRIVES) || (!Drives[drive])) {
+std::string DOS_Canonicalize(const char* const name)
+{
+	char canonicalized[DOS_PATHLENGTH] = {};
+	if (!DOS_Canonicalize(name, canonicalized)) {
+		return {};
+	}
+	return std::string(canonicalized);
+}
+
+bool DOS_GetFreeDiskSpace(uint8_t drive, uint16_t* bytes, uint8_t* sectors,
+                          uint16_t* clusters, uint16_t* free)
+{
+	if (drive == 0) {
+		drive = DOS_GetDefaultDrive();
+	} else {
+		--drive;
+	}
+	if ((drive >= DOS_DRIVES) || (!Drives[drive])) {
 		DOS_SetError(DOSERR_INVALID_DRIVE);
 		return false;
 	}
