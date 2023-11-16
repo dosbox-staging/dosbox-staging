@@ -231,6 +231,17 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 		// host OS mouse acceleration applied
 		state.is_input_raw = false;
 
+	} else if (is_config_no_mouse) { // NoMouse is configured
+
+		// Capture mouse cursor if:
+		// - we are in fullscreen mode and not in multi-display mode
+		state.is_captured = !is_window_or_multi_display;
+
+		// Drop the user capture request, otherwise runtime mouse
+		// capture configuration change (for example to OnClick) could
+		// have caused the mouse cursor to suddenly disappear
+		state.capture_was_requested = false;
+
 	} else if (state.is_window_active) { // window has focus, no GUI running
 
 		// Capture mouse cursor if any of:
