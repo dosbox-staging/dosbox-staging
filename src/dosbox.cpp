@@ -271,9 +271,13 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 5120 && CPU_CycleMax > 50000)
 					ratio = 5120;
 
+				constexpr int16_t min_ratio = 800;
 				// When downscaling multiple times in a row, ensure a minimum amount of downscaling
-				if (ticksAdded > 15 && ticksScheduled >= 5 && ticksScheduled <= MaxScheduledTicks && ratio > 800)
-					ratio = 800;
+				if (ticksAdded > 15 && ticksScheduled >= 5 &&
+				    ticksScheduled <= MaxScheduledTicks &&
+				    ratio > min_ratio) {
+					ratio = min_ratio;
+				}
 
 				if (ratio <= AutoCycleRatioScalar) {
 					// ratio_not_removed = 1.0; //enabling this restores the old formula
