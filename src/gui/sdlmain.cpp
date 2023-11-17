@@ -717,7 +717,8 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 
 static DosBox::Rect calc_draw_size_in_pixels(const DosBox::Rect& canvas_size_px)
 {
-	const DosBox::Rect render_size_px = {sdl.draw.width_px, sdl.draw.height_px};
+	const DosBox::Rect render_size_px = {sdl.draw.render_width_px,
+	                                     sdl.draw.render_height_px};
 
 	const auto r = GFX_CalcDrawSizeInPixels(canvas_size_px,
 	                                        render_size_px,
@@ -1516,8 +1517,8 @@ static SDL_Window* SetupWindowScaled(const RenderingBackend rendering_backend)
 	        sdl.draw.render_pixel_aspect_ratio);
 
 	if (window_width == 0 && window_height == 0) {
-		window_width  = iround(sdl.draw.width_px * draw_scale_x);
-		window_height = iround(sdl.draw.height_px * draw_scale_y);
+		window_width  = iround(sdl.draw.render_width_px * draw_scale_x);
+		window_height = iround(sdl.draw.render_height_px * draw_scale_y);
 	}
 
 	sdl.window = SetWindowMode(rendering_backend,
@@ -1687,7 +1688,7 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	}
 }
 
-uint8_t GFX_SetSize(const int width_px, const int height_px,
+uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_CallBack_t callback)
 {
@@ -1703,15 +1704,15 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 	const bool double_height = flags & GFX_DBL_H;
 
 	sdl.draw.has_changed = (sdl.video_mode != video_mode ||
-	                        sdl.draw.width_px != width_px ||
-	                        sdl.draw.height_px != height_px ||
+	                        sdl.draw.render_width_px != render_width_px ||
+	                        sdl.draw.render_height_px != render_height_px ||
 	                        sdl.draw.width_was_doubled != double_width ||
 	                        sdl.draw.height_was_doubled != double_height ||
 	                        sdl.draw.render_pixel_aspect_ratio !=
 	                                render_pixel_aspect_ratio);
 
-	sdl.draw.width_px                  = width_px;
-	sdl.draw.height_px                 = height_px;
+	sdl.draw.render_width_px           = render_width_px;
+	sdl.draw.render_height_px          = render_height_px;
 	sdl.draw.width_was_doubled         = double_width;
 	sdl.draw.height_was_doubled        = double_height;
 	sdl.draw.render_pixel_aspect_ratio = render_pixel_aspect_ratio;
@@ -1746,8 +1747,8 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 		sdl.texture.texture = SDL_CreateTexture(sdl.renderer,
 		                                        texture_format,
 		                                        SDL_TEXTUREACCESS_STREAMING,
-		                                        width_px,
-		                                        height_px);
+		                                        render_width_px,
+		                                        render_height_px);
 
 		if (!sdl.texture.texture) {
 			SDL_DestroyRenderer(sdl.renderer);
@@ -1763,7 +1764,7 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 		}
 		assert(texture_input_surface == nullptr); // ensure we don't leak
 		texture_input_surface = SDL_CreateRGBSurfaceWithFormat(
-		        0, width_px, height_px, 32, texture_format);
+		        0, render_width_px, render_height_px, 32, texture_format);
 		if (!texture_input_surface) {
 			E_Exit("SDL: Error while preparing texture input");
 		}
@@ -1849,11 +1850,11 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 #endif
 
 		if (use_npot_texture) {
-			texsize_w_px = width_px;
-			texsize_h_px = height_px;
+			texsize_w_px = render_width_px;
+			texsize_h_px = render_height_px;
 		} else {
-			texsize_w_px = 2 << int_log2(width_px);
-			texsize_h_px = 2 << int_log2(height_px);
+			texsize_w_px = 2 << int_log2(render_width_px);
+			texsize_h_px = 2 << int_log2(render_height_px);
 		}
 
 		if (texsize_w_px > sdl.opengl.max_texsize ||
@@ -2011,10 +2012,10 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 		}
 
 		/* Create the texture and display list */
-		const auto framebuffer_bytes = static_cast<size_t>(width_px) *
-		                               height_px * MAX_BYTES_PER_PIXEL;
+		const auto framebuffer_bytes = static_cast<size_t>(render_width_px) *
+		                               render_height_px * MAX_BYTES_PER_PIXEL;
 		sdl.opengl.framebuf = malloc(framebuffer_bytes); // 32 bit colour
-		sdl.opengl.pitch = width_px * 4;
+		sdl.opengl.pitch = render_width_px * 4;
 
 		// One-time initialize the window size
 		if (!sdl.desktop.window.adjusted_initial_size) {
@@ -2128,14 +2129,14 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 			glUniform2f(sdl.opengl.ruby.texture_size,
 			            (GLfloat)texsize_w_px, (GLfloat)texsize_h_px);
 			glUniform2f(sdl.opengl.ruby.input_size,
-			            (GLfloat)width_px,
-			            (GLfloat)height_px);
+			            (GLfloat)render_width_px,
+			            (GLfloat)render_height_px);
 			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip_px.w, (GLfloat)sdl.clip_px.h);
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
 		} else {
-			GLfloat tex_width = ((GLfloat)width_px / (GLfloat)texsize_w_px);
-			GLfloat tex_height = ((GLfloat)height_px / (GLfloat)texsize_h_px);
+			GLfloat tex_width = ((GLfloat)render_width_px / (GLfloat)texsize_w_px);
+			GLfloat tex_height = ((GLfloat)render_height_px / (GLfloat)texsize_h_px);
 
 			glShadeModel(GL_FLAT);
 			glMatrixMode(GL_MODELVIEW);
@@ -2173,8 +2174,8 @@ uint8_t GFX_SetSize(const int width_px, const int height_px,
 	update_vsync_state();
 
 	if (sdl.draw.has_changed) {
-		log_display_properties(sdl.draw.width_px,
-		                       sdl.draw.height_px,
+		log_display_properties(sdl.draw.render_width_px,
+		                       sdl.draw.render_height_px,
 		                       sdl.video_mode,
 		                       {},
 		                       sdl.rendering_backend);
@@ -2371,8 +2372,8 @@ void GFX_SwitchFullScreen()
 	                  ? to_sdl_rect(get_canvas_size_in_pixels(sdl.rendering_backend))
 	                  : canvas_px;
 
-	log_display_properties(sdl.draw.width_px,
-	                       sdl.draw.height_px,
+	log_display_properties(sdl.draw.render_width_px,
+	                       sdl.draw.render_height_px,
 	                       sdl.video_mode,
 	                       canvas_px,
 	                       sdl.rendering_backend);
@@ -2620,14 +2621,14 @@ static void update_frame_gl(const uint16_t* changedLines)
 		const auto pitch = sdl.opengl.pitch;
 		int y = 0;
 		size_t index = 0;
-		while (y < sdl.draw.height_px) {
+		while (y < sdl.draw.render_height_px) {
 			if (!(index & 1)) {
 				y += changedLines[index];
 			} else {
 				const uint8_t *pixels = framebuf + y * pitch;
 				const int height_px = changedLines[index];
 				glTexSubImage2D(GL_TEXTURE_2D, 0, 0, y,
-				                sdl.draw.width_px, height_px, GL_BGRA_EXT,
+				                sdl.draw.render_width_px, height_px, GL_BGRA_EXT,
 				                GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
 				y += height_px;
 			}
@@ -2822,9 +2823,10 @@ static SDL_Window* set_default_window_mode()
 		return sdl.window;
 	}
 
-	// TODO: this cannot be correct; needs conversion to pixels
-	sdl.draw.width_px  = FallbackWindowSize.x;
-	sdl.draw.height_px = FallbackWindowSize.y;
+	// TODO: this cannot be correct; at least it would need conversion to
+	// pixels, and we can't correlate render and window dimensions like this
+	sdl.draw.render_width_px  = FallbackWindowSize.x;
+	sdl.draw.render_height_px = FallbackWindowSize.y;
 
 	if (sdl.desktop.fullscreen) {
 		sdl.desktop.lazy_init_window_size = true;

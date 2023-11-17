@@ -144,8 +144,8 @@ struct SDL_Block {
 	IntegerScalingMode integer_scaling_mode = IntegerScalingMode::Off;
 
 	struct {
-		int width_px = 0;
-		int height_px = 0;
+		int render_width_px = 0;
+		int render_height_px = 0;
 		Fraction render_pixel_aspect_ratio = {1};
 
 		bool has_changed = false;
