@@ -289,7 +289,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		if (new_cmax < CPU_CYCLES_LOWER_LIMIT)
 			new_cmax = CPU_CYCLES_LOWER_LIMIT;
 		/*
-		LOG_INFO("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03d   sched %03d Add %d rr %4.2f",
+		LOG_INFO("cyclelog: current %06d   cmax %06d   ratio  %05d  done %03" PRId64 "   sched %03" PRId64 " Add %" PRId64 " rr %4.2f",
 			CPU_CycleMax,
 			new_cmax,
 			ratio,
