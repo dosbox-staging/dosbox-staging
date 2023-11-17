@@ -279,6 +279,10 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 					ratio = min_ratio;
 				}
 
+				if (ratio < min_ratio) {
+					ratio = min_ratio;
+				}
+
 				if (ratio <= AutoCycleRatioScalar) {
 					// ratio_not_removed = 1.0; //enabling this restores the old formula
 					double r = (1.0 + ratio_not_removed) /(ratio_not_removed + AutoCycleRatioScalar / (static_cast<double>(ratio)));
