@@ -272,11 +272,18 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 					ratio = 5120;
 
 				constexpr int16_t min_ratio = 800;
-				// When downscaling multiple times in a row, ensure a minimum amount of downscaling
+
+				// When downscaling multiple times in a row,
+				// do so in proportion to the tick overage
+				// (ticksAdded) amount.
+				//
 				if (ticksAdded > 15 && ticksScheduled >= 5 &&
 				    ticksScheduled <= MaxScheduledTicks &&
 				    ratio > min_ratio) {
-					ratio = min_ratio;
+					ratio = min_ratio +
+					        AutoCycleRatioBoost *
+					                (MaxScheduledTicks -
+					                 static_cast<int32_t>(ticksAdded));
 				}
 
 				if (ratio < min_ratio) {
