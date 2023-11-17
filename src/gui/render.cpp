@@ -352,15 +352,15 @@ static void render_reset(void)
 	// driver operating in a different thread or process.
 	std::lock_guard<std::mutex> guard(render_reset_mutex);
 
-	uint16_t width     = render.src.width;
-	bool double_width  = render.src.double_width;
-	bool double_height = render.src.double_height;
+	uint16_t render_width_px = render.src.width;
+	bool double_width        = render.src.double_width;
+	bool double_height       = render.src.double_height;
 
 	uint8_t gfx_flags, xscale, yscale;
 	ScalerSimpleBlock_t* simpleBlock = &ScaleNormal1x;
 
 	// Don't do software scaler sizes larger than 4k
-	uint16_t maxsize_current_input = SCALER_MAXWIDTH / width;
+	uint16_t maxsize_current_input = SCALER_MAXWIDTH / render_width_px;
 	if (render.scale.size > maxsize_current_input) {
 		render.scale.size = maxsize_current_input;
 	}
@@ -375,7 +375,7 @@ static void render_reset(void)
 		simpleBlock = &ScaleNormal1x;
 	}
 
-	if ((width * simpleBlock->xscale > SCALER_MAXWIDTH) ||
+	if ((render_width_px * simpleBlock->xscale > SCALER_MAXWIDTH) ||
 	    (render.src.height * simpleBlock->yscale > SCALER_MAXHEIGHT)) {
 		simpleBlock = &ScaleNormal1x;
 	}
@@ -411,8 +411,10 @@ static void render_reset(void)
 			E_Exit("Failed to create a rendering output");
 		}
 	}
-	width *= xscale;
-	const auto height = make_aspect_table(render.src.height, yscale, yscale);
+	render_width_px *= xscale;
+	const auto render_height_px = make_aspect_table(render.src.height,
+	                                                yscale,
+	                                                yscale);
 
 	// Set up scaler variables
 	if (double_height) {
@@ -429,8 +431,8 @@ static void render_reset(void)
 
 	const auto render_pixel_aspect_ratio = render.src.pixel_aspect_ratio;
 
-	gfx_flags = GFX_SetSize(width,
-	                        height,
+	gfx_flags = GFX_SetSize(render_width_px,
+	                        render_height_px,
 	                        render_pixel_aspect_ratio,
 	                        gfx_flags,
 	                        render.src.video_mode,
