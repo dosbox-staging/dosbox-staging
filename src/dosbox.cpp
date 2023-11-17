@@ -139,6 +139,7 @@ static constexpr int8_t AutoCycleRatioBoost = 24;
 
 static int16_t auto_cycle_adjusted_scalar = AutoCycleRatioScalar;
 
+static constexpr int8_t MaxScheduledTicks = 20;
 static int64_t ticksRemain;
 static int64_t ticksLast;
 static int64_t ticksAdded;
@@ -235,9 +236,9 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	ticksRemain = GetTicksDiff(ticksNew, ticksLast);
 	ticksLast = ticksNew;
 	ticksDone += ticksRemain;
-	if ( ticksRemain > 20 ) {
+	if ( ticksRemain > MaxScheduledTicks ) {
 //		LOG(LOG_MISC,LOG_ERROR)("large remain %d",ticksRemain);
-		ticksRemain = 20;
+		ticksRemain = MaxScheduledTicks;
 	}
 	ticksAdded = ticksRemain;
 
@@ -271,7 +272,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 					ratio = 5120;
 
 				// When downscaling multiple times in a row, ensure a minimum amount of downscaling
-				if (ticksAdded > 15 && ticksScheduled >= 5 && ticksScheduled <= 20 && ratio > 800)
+				if (ticksAdded > 15 && ticksScheduled >= 5 && ticksScheduled <= MaxScheduledTicks && ratio > 800)
 					ratio = 800;
 
 				if (ratio <= AutoCycleRatioScalar) {
