@@ -3180,123 +3180,73 @@ DosBox::Rect GFX_CalcDrawSizeInPixels(const DosBox::Rect& canvas_size_px,
                                       const DosBox::Rect& render_size_px,
                                       const Fraction& render_pixel_aspect_ratio)
 {
-	assert(render_size_px.w > 0.0f);
-	assert(render_size_px.h > 0.0f);
-
-	const auto [draw_scale_x, draw_scale_y] = get_scale_factors_from_pixel_aspect_ratio(
-	        render_pixel_aspect_ratio);
-
-	assert(draw_scale_x > 0.0);
-	assert(draw_scale_y > 0.0);
-	assert(std::isfinite(draw_scale_x));
-	assert(std::isfinite(draw_scale_y));
-
-	// Limit the window to the user's desired viewport, if configured
 	const auto viewport_px = calc_restricted_viewport_size_in_pixels(canvas_size_px);
 
-	// It is important to calculate the image aspect ratio like this because
-	// the aspect ratio of the *image* itself it not always 4:3, in which
-	// case it would appear letter and/or pillarboxed on a real 4:3 display
-	// aspect ratio CRT monitor.
-	const auto image_aspect_ratio = (render_size_px.w * draw_scale_x) /
-	                                (render_size_px.h * draw_scale_y);
+	const auto draw_size_fit_px =
+	        render_size_px.Copy()
+	                .ScaleWidth(render_pixel_aspect_ratio.ToFloat())
+	                .ScaleSizeToFit(viewport_px);
 
-	auto calc_bounded_dims_in_pixels = [&]() -> std::pair<int, int> {
-		// Calculate the viewport contingent on the aspect ratio of the
-		// viewport bounds versus display mode.
-		const auto bounds_aspect = static_cast<double>(viewport_px.w) /
-		                           viewport_px.h;
-
-		// TODO
-		if (bounds_aspect > image_aspect_ratio) {
-			const auto w = iround(viewport_px.h * image_aspect_ratio);
-			const auto h = viewport_px.h;
-			return {w, h};
-		} else {
-			const auto w = viewport_px.w;
-			const auto h = iround(viewport_px.w / image_aspect_ratio);
-			return {w, h};
-		}
-	};
-
-	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
-		auto integer_scale_factor = std::min(
-		        ifloor(viewport_px.w / render_size_px.w),
-		        ifloor(viewport_px.h /
-		               (render_size_px.w / image_aspect_ratio)));
-
-		if (integer_scale_factor < 1) {
+	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() {
+		auto integer_scale_factor = floorf(draw_size_fit_px.w /
+		                                   render_size_px.w);
+		if (integer_scale_factor < 1.0f) {
 			// Revert to fit to viewport
-			return calc_bounded_dims_in_pixels();
+			return draw_size_fit_px;
 		} else {
-			const auto w = render_size_px.w * integer_scale_factor;
-			const auto h = iround(render_size_px.w *
-			                      integer_scale_factor /
-			                      image_aspect_ratio);
+			const auto vert_scale =
+			        render_pixel_aspect_ratio.Inverse().ToFloat();
 
-			return {w, h};
+			return render_size_px.Copy()
+			        .ScaleSize(integer_scale_factor)
+			        .ScaleHeight(vert_scale);
 		}
 	};
 
-	auto calc_vert_integer_scaling_dims_in_pixels = [&]() -> std::pair<int, int> {
-		auto integer_scale_factor =
-		        std::min(ifloor(viewport_px.h / render_size_px.h),
-		                 ifloor(viewport_px.w /
-		                        (render_size_px.h * image_aspect_ratio)));
-
-		if (integer_scale_factor < 1) {
+	auto calc_vert_integer_scaling_dims_in_pixels = [&]() {
+		auto integer_scale_factor = floorf(draw_size_fit_px.h /
+		                                   render_size_px.h);
+		if (integer_scale_factor < 1.0f) {
 			// Revert to fit to viewport
-			return calc_bounded_dims_in_pixels();
+			return draw_size_fit_px;
 		} else {
-			const auto w = iround(render_size_px.h * integer_scale_factor *
-			                      image_aspect_ratio);
-			const auto h = render_size_px.h * integer_scale_factor;
+			const auto horiz_scale = render_pixel_aspect_ratio.ToFloat();
 
-			return {w, h};
+			return render_size_px.Copy()
+			        .ScaleSize(integer_scale_factor)
+			        .ScaleWidth(horiz_scale);
 		}
 	};
 
-	int draw_w_px = 0;
-	int draw_h_px = 0;
+	auto draw_size_px = [&] {
+		switch (sdl.integer_scaling_mode) {
+		case IntegerScalingMode::Off: return draw_size_fit_px;
 
-	switch (sdl.integer_scaling_mode) {
-	case IntegerScalingMode::Off: {
-		std::tie(draw_w_px, draw_h_px) = calc_bounded_dims_in_pixels();
-		break;
-	}
-	case IntegerScalingMode::Auto:
+		case IntegerScalingMode::Auto:
 #if C_OPENGL
-		if (sdl.rendering_backend == RenderingBackend::OpenGl &&
-		    sdl.opengl.shader_info.is_adaptive) {
-			std::tie(draw_w_px, draw_h_px) =
-			        calc_vert_integer_scaling_dims_in_pixels();
-		} else {
-			std::tie(draw_w_px,
-			         draw_h_px) = calc_bounded_dims_in_pixels();
-		}
+			if (sdl.rendering_backend == RenderingBackend::OpenGl &&
+			    sdl.opengl.shader_info.is_adaptive) {
+				return calc_vert_integer_scaling_dims_in_pixels();
+			} else {
+				return draw_size_fit_px;
+			}
 #else
-		std::tie(draw_w_x, draw_h_x) = calc_bounded_dims_in_pixels();
+			return draw_size_fit_px;
 #endif
-		break;
 
-	case IntegerScalingMode::Horizontal: {
-		std::tie(draw_w_px,
-		         draw_h_px) = calc_horiz_integer_scaling_dims_in_pixels();
-		break;
-	}
-	case IntegerScalingMode::Vertical:
-		std::tie(draw_w_px,
-		         draw_h_px) = calc_vert_integer_scaling_dims_in_pixels();
-		break;
+		case IntegerScalingMode::Horizontal:
+			return calc_horiz_integer_scaling_dims_in_pixels();
 
-	default: assertm(false, "Invalid IntegerScalingMode value");
-	}
+		case IntegerScalingMode::Vertical:
+			return calc_vert_integer_scaling_dims_in_pixels();
 
-	// Calculate centered viewport position.
-	const int draw_x_px = iroundf((canvas_size_px.w - draw_w_px) / 2);
-	const int draw_y_px = iroundf((canvas_size_px.h - draw_h_px) / 2);
+		default:
+			assertm(false, "Invalid IntegerScalingMode value");
+			return DosBox::Rect{};
+		}
+	}();
 
-	return {draw_x_px, draw_y_px, draw_w_px, draw_h_px};
+	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
 }
 
 IntegerScalingMode GFX_GetIntegerScalingMode()
