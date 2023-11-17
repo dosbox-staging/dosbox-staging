@@ -354,7 +354,7 @@ InterpolationMode GFX_GetInterpolationMode();
 struct VideoMode;
 class Fraction;
 
-uint8_t GFX_SetSize(const int width_px, const int height_px,
+uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
                     const Fraction& render_pixel_aspect_ratio, const uint8_t flags,
                     const VideoMode& video_mode, GFX_CallBack_t callback);
 
