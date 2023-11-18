@@ -58,6 +58,7 @@ extern int32_t CPU_CycleLeft;
 extern int32_t CPU_CycleMax;
 extern int32_t CPU_OldCycleMax;
 extern int32_t CPU_CyclePercUsed;
+constexpr int32_t CPU_CycleProtectedModeDefault = 50000;
 extern int32_t CPU_CycleLimit;
 extern int64_t CPU_IODelayRemoved;
 extern bool CPU_CycleAutoAdjust;

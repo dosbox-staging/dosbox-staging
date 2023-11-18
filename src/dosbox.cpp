@@ -267,9 +267,13 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 16384)
 					ratio = 16384;
 
-				// Limit the ratio even more when the cycles are already way above the realmode default.
-				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 5120 && CPU_CycleMax > 50000)
+				// Limit the ratio even more when the cycles are
+				// already about the protected mode default
+				if (ticksScheduled >= 250 && ticksDone < 10 &&
+				    ratio > 5120 &&
+				    CPU_CycleMax > CPU_CycleProtectedModeDefault) {
 					ratio = 5120;
+				}
 
 				constexpr int16_t min_ratio = 800;
 
