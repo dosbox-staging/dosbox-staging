@@ -1422,26 +1422,30 @@ RenderingBackend GFX_GetRenderingBackend()
 	return sdl.rendering_backend;
 }
 
-static SDL_Point restrict_to_viewport_resolution(const int w, const int h)
+static DosBox::Rect calc_restricted_viewport_size_in_pixels(const DosBox::Rect canvas_px)
 {
 	if (sdl.viewport_resolution) {
-		return {std::min(iround(sdl.viewport_resolution->x * sdl.desktop.dpi_scale),
-		                 w),
-		        std::min(iround(sdl.viewport_resolution->y * sdl.desktop.dpi_scale),
-		                 h)};
+		DosBox::Rect viewport_px = {sdl.viewport_resolution->x,
+		                            sdl.viewport_resolution->y};
+
+		viewport_px.ScaleSize(sdl.desktop.dpi_scale);
+
+		if (canvas_px.Contains(viewport_px)) {
+			return viewport_px;
+		} else {
+			return viewport_px.Intersect(canvas_px);
+		}
 	} else {
-		return {w, h};
+		return canvas_px;
 	}
 }
 
 DosBox::Rect GFX_GetViewportSizeInPixels()
 {
-	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	const auto canvas_px = to_rect(
+	        get_canvas_size_in_pixels(sdl.rendering_backend));
 
-	const auto restricted_dims_px =
-	        restrict_to_viewport_resolution(canvas_px.w, canvas_px.h);
-
-	return {restricted_dims_px.x, restricted_dims_px.y};
+	return calc_restricted_viewport_size_in_pixels(canvas_px);
 }
 
 static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
@@ -3150,11 +3154,11 @@ DosBox::Rect GFX_CalcViewportInPixels(const int canvas_width_px,
 	assert(std::isfinite(draw_scale_y));
 
 	// Limit the window to the user's desired viewport, if configured
-	const auto restricted_dims_px =
-	        restrict_to_viewport_resolution(canvas_width_px, canvas_height_px);
+	const auto restricted_dims_px = calc_restricted_viewport_size_in_pixels(
+	        {canvas_width_px, canvas_height_px});
 
-	const auto bounds_w_px = restricted_dims_px.x;
-	const auto bounds_h_px = restricted_dims_px.y;
+	const auto bounds_w_px = iroundf(restricted_dims_px.w);
+	const auto bounds_h_px = iroundf(restricted_dims_px.h);
 
 	// It is important to calculate the image aspect ratio like this because
 	// the aspect ratio of the *image* itself it not always 4:3, in which
