@@ -149,6 +149,8 @@ static constexpr int8_t AutoCycleMinTicksScheduled  = 5;
 static constexpr int16_t AutoCycleMaxTicksDone = AutoCycleMaxTicksScheduled;
 static constexpr int8_t AutoCycleMinTicksDone  = 2 * AutoCycleMinTicksScheduled;
 
+static constexpr int8_t AutoCycleMinTicksAdded = 3 * AutoCycleMinTicksScheduled;
+
 // General CPU tick constants
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 static constexpr int8_t MaxScheduledTicks = 20;
@@ -259,12 +261,14 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 	if (ticksScheduled >= AutoCycleMaxTicksScheduled ||
 	    ticksDone >= AutoCycleMaxTicksDone ||
-	    (ticksAdded > 15 && ticksScheduled >= AutoCycleMinTicksScheduled)) {
+	    (ticksAdded > AutoCycleMinTicksAdded &&
+	     ticksScheduled >= AutoCycleMinTicksScheduled)) {
 		if (ticksDone < 1) {
 			ticksDone = 1; // Protect against div by zero
 		}
 		int32_t ratio = static_cast<int32_t>(
-		        (ticksScheduled * (CPU_CyclePercUsed * auto_cycle_adjusted_scalar / 100)) /
+		        (ticksScheduled *
+		         (CPU_CyclePercUsed * auto_cycle_adjusted_scalar / 100)) /
 		        ticksDone);
 
 		int32_t new_cmax = CPU_CycleMax;
@@ -300,7 +304,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 				// do so in proportion to the tick overage
 				// (ticksAdded) amount.
 				//
-				if (ticksAdded > 15 &&
+				if (ticksAdded > AutoCycleMinTicksAdded &&
 				    ticksScheduled >= AutoCycleMinTicksScheduled &&
 				    ticksScheduled <= MaxScheduledTicks &&
 				    ratio > min_ratio) {
@@ -357,15 +361,14 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		CPU_IODelayRemoved = 0;
 		ticksDone = 0;
 		ticksScheduled = 0;
-	} else if (ticksAdded > 15) {
+	} else if (ticksAdded > AutoCycleMinTicksAdded) {
 		/* ticksAdded > 15 but ticksScheduled < 5, lower the cycles
 		   but do not reset the scheduled/done ticks to take them into
 		   account during the next auto cycle adjustment */
 		CPU_CycleMax /= 3;
 		if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT)
 			CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
-	} // if (ticksScheduled >= AutoCycleMaxTicksScheduled || ticksDone >=
-	  // 250 || (ticksAdded > 15 && ticksScheduled >= 5) )
+	}
 }
 
 void DOSBOX_SetLoop(LoopHandler * handler) {
