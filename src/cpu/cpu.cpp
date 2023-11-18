@@ -1562,52 +1562,58 @@ Bitu CPU_SIDT_limit(void) {
 static bool printed_cycles_auto_info = false;
 void CPU_SET_CRX(Bitu cr,Bitu value) {
 	switch (cr) {
-	case 0:
-		{
-			value|=CR0_FPUPRESENT;
-			Bitu changed=cpu.cr0 ^ value;
-			if (!changed) return;
-			cpu.cr0=value;
-			if (value & CR0_PROTECTION) {
-				cpu.pmode=true;
-				LOG(LOG_CPU,LOG_NORMAL)("Protected mode");
-				PAGING_Enable((value & CR0_PAGING)>0);
-
-				if (!(CPU_AutoDetermineMode&CPU_AUTODETERMINE_MASK)) break;
-
-				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CYCLES) {
-					CPU_CycleAutoAdjust=true;
-					CPU_CycleLeft=0;
-					CPU_Cycles=0;
-					CPU_OldCycleMax=CPU_CycleMax;
-				        GFX_SetTitle(CPU_CyclePercUsed);
-				        if(!printed_cycles_auto_info) {
-						printed_cycles_auto_info = true;
-						LOG_MSG("DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
-					}
-				} else {
-				        GFX_RefreshTitle();
-			        }
-#if (C_DYNAMIC_X86)
-				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-					CPU_Core_Dyn_X86_Cache_Init(true);
-					cpudecoder=&CPU_Core_Dyn_X86_Run;
-				}
-#elif (C_DYNREC)
-				if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
-					CPU_Core_Dynrec_Cache_Init(true);
-					cpudecoder=&CPU_Core_Dynrec_Run;
-				}
-#endif
-				CPU_AutoDetermineMode<<=CPU_AUTODETERMINE_SHIFT;
-			} else {
-				cpu.pmode=false;
-				if (value & CR0_PAGING) LOG_MSG("Paging requested without PE=1");
-				PAGING_Enable(false);
-				LOG(LOG_CPU,LOG_NORMAL)("Real mode");
-			}
-			break;
+	case 0: {
+		value |= CR0_FPUPRESENT;
+		Bitu changed = cpu.cr0 ^ value;
+		if (!changed) {
+			return;
 		}
+		cpu.cr0 = value;
+		if (value & CR0_PROTECTION) {
+			cpu.pmode = true;
+			LOG(LOG_CPU, LOG_NORMAL)("Protected mode");
+			PAGING_Enable((value & CR0_PAGING) > 0);
+
+			if (!(CPU_AutoDetermineMode & CPU_AUTODETERMINE_MASK)) {
+				break;
+			}
+
+			if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CYCLES) {
+				CPU_CycleAutoAdjust = true;
+				CPU_CycleLeft       = 0;
+				CPU_Cycles          = 0;
+				CPU_OldCycleMax     = CPU_CycleMax;
+
+				GFX_SetTitle(CPU_CyclePercUsed);
+				if (!printed_cycles_auto_info) {
+					printed_cycles_auto_info = true;
+					LOG_MSG("DOSBox has switched to max cycles, because of the setting: cycles=auto.\nIf the game runs too fast, try a fixed cycles amount in DOSBox's options.");
+				}
+			} else {
+				GFX_RefreshTitle();
+			}
+#if (C_DYNAMIC_X86)
+			if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CORE) {
+				CPU_Core_Dyn_X86_Cache_Init(true);
+				cpudecoder = &CPU_Core_Dyn_X86_Run;
+			}
+#elif (C_DYNREC)
+			if (CPU_AutoDetermineMode & CPU_AUTODETERMINE_CORE) {
+				CPU_Core_Dynrec_Cache_Init(true);
+				cpudecoder = &CPU_Core_Dynrec_Run;
+			}
+#endif
+			CPU_AutoDetermineMode <<= CPU_AUTODETERMINE_SHIFT;
+		} else {
+			cpu.pmode = false;
+			if (value & CR0_PAGING) {
+				LOG_MSG("Paging requested without PE=1");
+			}
+			PAGING_Enable(false);
+			LOG(LOG_CPU, LOG_NORMAL)("Real mode");
+		}
+		break;
+	}
 	case 2:
 		paging.cr2=value;
 		break;
