@@ -146,6 +146,9 @@ static int16_t auto_cycle_adjusted_scalar = AutoCycleRatioScalar;
 static constexpr int16_t AutoCycleMaxTicksScheduled = 250;
 static constexpr int8_t AutoCycleMinTicksScheduled  = 5;
 
+static constexpr int16_t AutoCycleMaxTicksDone = AutoCycleMaxTicksScheduled;
+static constexpr int8_t AutoCycleMinTicksDone  = 2 * AutoCycleMinTicksScheduled;
+
 // General CPU tick constants
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~
 static constexpr int8_t MaxScheduledTicks = 20;
@@ -254,9 +257,12 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
 	if (!CPU_CycleAutoAdjust) return;
 
-	if (ticksScheduled >= AutoCycleMaxTicksScheduled || ticksDone >= 250 ||
+	if (ticksScheduled >= AutoCycleMaxTicksScheduled ||
+	    ticksDone >= AutoCycleMaxTicksDone ||
 	    (ticksAdded > 15 && ticksScheduled >= AutoCycleMinTicksScheduled)) {
-		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
+		if (ticksDone < 1) {
+			ticksDone = 1; // Protect against div by zero
+		}
 		int32_t ratio = static_cast<int32_t>(
 		        (ticksScheduled * (CPU_CyclePercUsed * auto_cycle_adjusted_scalar / 100)) /
 		        ticksDone);
@@ -275,14 +281,15 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 				/* Don't allow very high ratio which can cause us to lock as we don't scale down
 				 * for very low ratios. High ratio might result because of timing resolution */
 				if (ticksScheduled >= AutoCycleMaxTicksScheduled &&
-				    ticksDone < 10 && ratio > 16384) {
+				    ticksDone < AutoCycleMinTicksDone &&
+				    ratio > 16384) {
 					ratio = 16384;
 				}
 
 				// Limit the ratio even more when the cycles are
 				// already about the protected mode default
 				if (ticksScheduled >= AutoCycleMaxTicksScheduled &&
-				    ticksDone < 10 && ratio > 5120 &&
+				    ticksDone < AutoCycleMinTicksDone && ratio > 5120 &&
 				    CPU_CycleMax > CPU_CycleProtectedModeDefault) {
 					ratio = 5120;
 				}
