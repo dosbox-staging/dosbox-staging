@@ -172,6 +172,8 @@ static const CountryInfo& LookupCountryInfo(const uint16_t country_number) {
 		if (static_cast<uint16_t>(country.country_number) == country_number)
 			return country;
 	}
+
+	LOG_WARNING("DOS: No locale info for country %d", country_number);
 	return COUNTRY_INFO[0];
 }
 

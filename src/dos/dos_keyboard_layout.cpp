@@ -1354,14 +1354,6 @@ static const std::map<std::string, const char *> language_to_layout_exception_ma
         {"nl", "us"},
 };
 
-static bool country_number_exists(const int requested_number)
-{
-	for ([[maybe_unused]] const auto &[code, number] : country_code_map)
-		if (requested_number == static_cast<int>(number))
-			return true;
-	return false;
-}
-
 static bool lookup_country_from_code(const char *country_code, Country &country)
 {
 	if (country_code) {
@@ -1778,7 +1770,7 @@ static void set_country_from_pref(const int country_pref)
 	auto country_number = static_cast<uint16_t>(default_country);
 
 	// If the country preference is valid, use it
-	if (country_pref > 0 && country_number_exists(country_pref)) {
+	if (country_pref > 0) {
 		country_number = static_cast<uint16_t>(country_pref);
 	} else if (const auto country_code = DOS_GetLoadedLayout(); country_code) {
 		if (Country c; lookup_country_from_code(country_code, c)) {
@@ -1788,8 +1780,7 @@ static void set_country_from_pref(const int country_pref)
 			        country_code);
 		}
 	}
-	// At this point, the country number is expected to be valid
-	assert(country_number_exists(country_number));
+
 	DOS_SetCountry(country_number);
 }
 
