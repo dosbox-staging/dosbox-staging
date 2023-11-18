@@ -143,11 +143,12 @@ static constexpr int8_t AutoCycleRatioBoost = 24;
 // Either the auto-cycle ratio scalar or with added boost
 static int16_t auto_cycle_adjusted_scalar = AutoCycleRatioScalar;
 
+// The minimum ticks scheduled controls the rate of auto-cycle assessement
 static constexpr int8_t AutoCycleMinTicksScheduled = 5;
 static constexpr int8_t AutoCycleMinTicksDone  = 2 * AutoCycleMinTicksScheduled;
 static constexpr int8_t AutoCycleMinTicksAdded = 3 * AutoCycleMinTicksScheduled;
 
-static constexpr int16_t AutoCycleMaxTicksScheduled = 50 * AutoCycleMinTicksScheduled;
+static constexpr int16_t AutoCycleMaxTicksScheduled = 30 * AutoCycleMinTicksScheduled;
 static constexpr int16_t AutoCycleMaxTicksDone = AutoCycleMaxTicksScheduled;
 
 // General CPU tick constants
