@@ -124,6 +124,9 @@ void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
+// Auto-cycle constants
+// ~~~~~~~~~~~~~~~~~~~~
+//
 // The CPU auto-cycle adjustment routine uses a 10-bit (1024) scalar to multiply
 // up the ratio of scheduled to completed ticks. The multiplied result is then
 // transformed into an adjustment to the current cycle count.
@@ -137,8 +140,14 @@ static constexpr int16_t AutoCycleRatioScalar = 1 << 10;
 //
 static constexpr int8_t AutoCycleRatioBoost = 24;
 
+// Either the auto-cycle ratio scalar or with added boost
 static int16_t auto_cycle_adjusted_scalar = AutoCycleRatioScalar;
 
+static constexpr int16_t AutoCycleMaxTicksScheduled = 250;
+static constexpr int8_t AutoCycleMinTicksScheduled  = 5;
+
+// General CPU tick constants
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~
 static constexpr int8_t MaxScheduledTicks = 20;
 static int64_t ticksRemain;
 static int64_t ticksLast;
@@ -245,7 +254,8 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
 	if (!CPU_CycleAutoAdjust) return;
 
-	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
+	if (ticksScheduled >= AutoCycleMaxTicksScheduled || ticksDone >= 250 ||
+	    (ticksAdded > 15 && ticksScheduled >= AutoCycleMinTicksScheduled)) {
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
 		int32_t ratio = static_cast<int32_t>(
 		        (ticksScheduled * (CPU_CyclePercUsed * auto_cycle_adjusted_scalar / 100)) /
@@ -264,13 +274,15 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 				/* Don't allow very high ratio which can cause us to lock as we don't scale down
 				 * for very low ratios. High ratio might result because of timing resolution */
-				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 16384)
+				if (ticksScheduled >= AutoCycleMaxTicksScheduled &&
+				    ticksDone < 10 && ratio > 16384) {
 					ratio = 16384;
+				}
 
 				// Limit the ratio even more when the cycles are
 				// already about the protected mode default
-				if (ticksScheduled >= 250 && ticksDone < 10 &&
-				    ratio > 5120 &&
+				if (ticksScheduled >= AutoCycleMaxTicksScheduled &&
+				    ticksDone < 10 && ratio > 5120 &&
 				    CPU_CycleMax > CPU_CycleProtectedModeDefault) {
 					ratio = 5120;
 				}
@@ -281,7 +293,8 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 				// do so in proportion to the tick overage
 				// (ticksAdded) amount.
 				//
-				if (ticksAdded > 15 && ticksScheduled >= 5 &&
+				if (ticksAdded > 15 &&
+				    ticksScheduled >= AutoCycleMinTicksScheduled &&
 				    ticksScheduled <= MaxScheduledTicks &&
 				    ratio > min_ratio) {
 					ratio = min_ratio +
@@ -344,7 +357,8 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 		CPU_CycleMax /= 3;
 		if (CPU_CycleMax < CPU_CYCLES_LOWER_LIMIT)
 			CPU_CycleMax = CPU_CYCLES_LOWER_LIMIT;
-	} //if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) )
+	} // if (ticksScheduled >= AutoCycleMaxTicksScheduled || ticksDone >=
+	  // 250 || (ticksAdded > 15 && ticksScheduled >= 5) )
 }
 
 void DOSBOX_SetLoop(LoopHandler * handler) {

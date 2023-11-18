@@ -1584,7 +1584,7 @@ void CPU_SET_CRX(Bitu cr,Bitu value) {
 				CPU_Cycles          = 0;
 				CPU_OldCycleMax     = CPU_CycleMax;
 				CPU_CycleMax        = std::max(CPU_CycleMax,
-				                               CPU_CycleProtectedModeDefault);
+                                                        CPU_CycleProtectedModeDefault);
 
 				GFX_SetTitle(CPU_CyclePercUsed);
 				if (!printed_cycles_auto_info) {
