@@ -802,7 +802,7 @@ static void log_display_properties(const int render_width_px,
 	const auto refresh_rate = VGA_GetPreferredRate();
 
 	LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
-	        "scaled to %dx%d with 1:%1.6g (%d:%d) pixel aspect ratio",
+	        "scaled to %dx%d pixels with 1:%1.6g (%d:%d) pixel aspect ratio",
 	        video_mode_desc.c_str(),
 	        refresh_rate,
 	        frame_mode,
@@ -1258,6 +1258,7 @@ static void update_fallback_dimensions(const double dpi_scale)
 
 	FallbackWindowSize = {iround(fallback_width), iround(fallback_height)};
 
+	// TODO pixels or logical unit?
 	// LOG_INFO("SDL: Updated fallback dimensions to %dx%d",
 	//          FallbackWindowSize.x,
 	//          FallbackWindowSize.y);
@@ -1274,6 +1275,7 @@ static void update_fallback_dimensions(const double dpi_scale)
 	                         FallbackWindowSize.x,
 	                         FallbackWindowSize.y);
 
+	// TODO pixels or logical unit?
 	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
 }
 
@@ -1407,6 +1409,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		displayMode.w = width;
 		displayMode.h = height;
 
+		// TODO pixels or logical unit?
 		if (SDL_SetWindowDisplayMode(sdl.window, &displayMode) != 0) {
 			LOG_WARNING("SDL: Failed setting fullscreen mode to %dx%d at %d Hz",
 			            displayMode.w,
@@ -1726,6 +1729,7 @@ static void initialize_sdl_window_size(SDL_Window* sdl_window,
 	                          std::max(requested_size.y, requested_min_size.y)};
 	if (current_size != bounded_size) {
 		safe_set_window_size(bounded_size.x, bounded_size.y);
+		// TODO pixels or logical unit?
 		// LOG_MSG("SDL: Initialized the window size to %dx%d",
 		//         bounded_size.x,
 		//         bounded_size.y);
@@ -1903,7 +1907,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 		if (texsize_w_px > sdl.opengl.max_texsize ||
 		    texsize_h_px > sdl.opengl.max_texsize) {
-			LOG_WARNING("OPENGL: No support for texture size of %dx%d, "
+			LOG_WARNING("OPENGL: No support for texture size of %dx%d pixels, "
 			            "falling back to texture",
 			            texsize_w_px,
 			            texsize_h_px);
@@ -2935,14 +2939,16 @@ static void maybe_limit_requested_resolution(int &w, int &h, const char *size_de
 		w = desktop.w;
 		h = desktop.h;
 		was_limited = true;
-		LOG_WARNING("DISPLAY: Limiting %s resolution to '%dx%d' to avoid kmsdrm issues",
+		LOG_WARNING("DISPLAY: Limiting '%s' resolution to %dx%d to avoid kmsdrm issues",
 		            size_description,
 		            w,
 		            h);
 	}
 
 	if (!was_limited)
-		LOG_INFO("DISPLAY: Accepted %s resolution %dx%d despite exceeding "
+		// TODO shouldn't we log the display resolution in physical pixels
+		// instead?
+		LOG_INFO("DISPLAY: Accepted '%s' resolution %dx%d despite exceeding "
 		         "the %dx%d display",
 		         size_description,
 		         w,
@@ -3187,6 +3193,7 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	};
 
 	// Let the user know the resulting window properties
+	// TODO pixels or logical unit?
 	LOG_MSG("DISPLAY: Initialised %dx%d windowed mode using %s scaling on display-%d",
 	        refined_size.x,
 	        refined_size.y,
@@ -3887,6 +3894,7 @@ bool GFX_Events()
 				continue;
 
 			case SDL_WINDOWEVENT_RESIZED:
+				// TODO pixels or logical unit?
 				// LOG_DEBUG("SDL: Window has been resized to %dx%d",
 				//               event.window.data1,
 				//               event.window.data2);
