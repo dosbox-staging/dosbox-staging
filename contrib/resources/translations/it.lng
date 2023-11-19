@@ -167,7 +167,7 @@ Imposta la trasparenza della finestra di DOSBox Staging (predefinito 0).
 Da 0 (nessuna trasparenza) a 90 (trasparenza elevata).
 .
 :CONFIG_MAX_RESOLUTION
-Questa impostazione è stata rinominata in 'viewport_resolution'.
+Rinominato in 'viewport_resolution'.
 .
 :CONFIG_HOST_RATE
 Imposta la frequenza di aggiornamento dello schermo:
@@ -230,13 +230,13 @@ Driver di rendering da utilizzare nella modalità di uscita 'texture'
 Usa 'texture_renderer = auto' per una scelta automatica.
 .
 :CONFIG_CAPTURE_MOUSE
-Spostato nella sezione [mouse].
+Spostato nella sezione [mouse] e rinominato in 'mouse_capture'.
 .
 :CONFIG_SENSITIVITY
-Spostato nella sezione [mouse].
+Spostato nella sezione [mouse] e rinominato in 'mouse_sensitivity'.
 .
 :CONFIG_RAW_MOUSE_INPUT
-Spostato nella sezione [mouse].
+Spostato nella sezione [mouse] e rinominato in 'mouse_raw_input'.
 .
 :CONFIG_WAITONERROR
 Mantiene la console aperta se si verifica un errore (predefinito abilitato).
@@ -408,7 +408,7 @@ modo invece di 'config -get sbtype' è sufficiente eseguire il comando 'sbtype'.
 .
 :CONFIG_FRAMESKIP
 Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
-utilizzando l'impostazione '[sdl] host_rate'.
+utilizzando l'impostazione 'host_rate'.
 .
 :CONFIG_ASPECT
 Applica la correzione delle proporzioni per i moderni schermi piatti a pixel
@@ -491,32 +491,39 @@ hardware:
    delle opzioni 'glshader'.
 .
 :CONFIG_GLSHADER
-Imposta uno shader di emulazione del monitor CRT adattivo o un normale shader
-GLSL nelle modalità di uscita OpenGL.
+Imposta uno shader CRT adattivo, che cerca di simulare il modo in cui uno
+schermo a tubo catodico visualizza le immagini, o un normale shader GLSL nelle
+modalità di uscita OpenGL.
 Opzioni shader CRT adattivo:
-  crt-auto:         Shader CRT che dà priorità all'intento dello sviluppatore
-                    e al modo in cui le persone hanno sperimentato il gioco
-                    al momento del rilascio (predefinito). La variante di
-                    shader appropriata viene selezionata automaticamente in
-                    base allo standard grafico della modalità video corrente
-                    e alla risoluzione dell'area di visualizzazione,
-                    indipendentemente dall'impostazione di 'machine'.
-                    Ciò significa che anche su una scheda grafica VGA emulata,
-                    otterrai un'autentica emulazione di un monitor EGA a
-                    scansione singola con "linee di scansione spesse" visibili
-                    nei giochi EGA.                     
-  crt-auto-machine: Simile a 'crt-auto', ma viene selezionato un monitor CRT
-                    appropriato per l'adattatore video configurato tramite
-                    l'impostazione 'machine'. Ad esempio, i giochi CGA e EGA
-                    utilizzeranno la modalità di visualizzazione a doppia
-                    scansione su una scheda grafica VGA emulata.
-  crt-auto-arcade:  Emulazione di un monitor arcade o di un computer domestico
-                    (es. Commodore 64, Amiga), meno nitido rispetto ad un
-                    tipico monitor per PC, con linee di scansione spesse nelle
-                    modalità a bassa risoluzione. Questa opzione di fantasia
-                    non esiste nella vita reale, ma può essere molto
-                    divertente, specialmente con le conversioni DOS dei giochi
-                    Amiga.
+  crt-auto:              Shader CRT che dà priorità all'intento dello
+                         sviluppatore e al modo in cui le persone hanno
+                         sperimentato il gioco al momento del rilascio
+                         (predefinito). La variante di shader appropriata viene
+                         selezionata automaticamente in base allo standard
+                         grafico della modalità video corrente e alla
+                         risoluzione dell'area di visualizzazione,
+                         indipendentemente dall'impostazione 'machine'.
+                         Ciò significa che anche su una scheda grafica VGA
+                         emulata, otterrai un'autentica emulazione di un
+                         monitor EGA a scansione singola con "linee di
+                         scansione spesse" visibili nei giochi EGA.
+  crt-auto-machine:      Simile a 'crt-auto', ma viene selezionato il
+                         monitor CRT appropriato in base alla scheda grafica
+                         configurata tramite l'impostazione 'machine'.
+                         Ad esempio, i giochi CGA e EGA utilizzeranno la
+                         modalità di visualizzazione a doppia scansione su una
+                         scheda grafica VGA emulata.
+  crt-auto-arcade:       Emulazione di un monitor di un cabinato arcade o di un
+                         computer domestico (es. Commodore 64, Amiga), meno
+                         nitido rispetto ad un tipico monitor per PC, con linee
+                         di scansione spesse nelle modalità a bassa
+                         risoluzione. Questa opzione di fantasia non esiste
+                         nella vita reale, ma può essere molto divertente,
+                         specialmente con le conversioni DOS dei giochi Amiga.
+  crt-auto-arcade-sharp: Variante più nitida dello shader arcade per coloro che
+                         amano le linee di scansione spesse ma allo stesso
+                         tempo vogliono mantenere la nitidezza orizzonatale di
+                         un tipico monitor per PC.
 Altre opzioni includono 'sharp', 'none', uno shader elencato utilizzando
 l'argomento della riga di comando --list-glshaders, o un percorso relativo o
 assoluto che fa riferimento ad un file. In tutti i casi, l'estensione '.glsl'
@@ -575,18 +582,26 @@ Numero di cicli di cui aumentare utilizzando i tasti di scelta rapida
 Numero di cicli di cui diminuire utilizzando i tasti di scelta rapida
 (predefinito 20). Un valore più basso di 100 indica una percentuale.
 .
-:CONFIG_VOODOO_MEMSIZE
-Dimensione della memoria (in MB) della scheda 3dfx Voodoo (predefinito 12 MB).
+:CONFIG_VOODOO
+Abilita l'emulazione 3dfx Voodoo (predefinito abilitato).
 .
-:CONFIG_VOODOO_PERF
-Ottimizzazioni delle prestazioni da utilizzare durante l'emulazione della
-scheda 3dfx Voodoo:
-   0:  Nessuna ottimizzazione.
-   1:  Multi-threading (predefinito).
-   2:  Disabilita il filtro bilineare.
-   3:  Tutte le ottimizzazioni (abilita sia 1 che 2).
-Nota: L'emulazione Voodoo è basata su software e non utilizza chiamate OpenGL
-      a livello di sistema.
+:CONFIG_VOODOO_MEMSIZE
+Imposta la quantità di memoria video per la scheda grafica 3dfx Voodoo,
+4 o 12 megabyte. La memoria viene utilizzata dall'interfaccia del buffer dei
+fotogrammi o Frame Buffer Interface (FBI) e dall'unità di gestione delle
+texture o Texture Mapping Unit (TMU) come segue:
+   4: FBI con 2 MB e un TMU con 2 MB (predefinito)
+  12: FBI con 4 MB e due TMU, ciascuno con 4 MB.
+.
+:CONFIG_VOODOO_MULTITHREADING
+Utilizza i thread per migliorare le prestazioni dell'emulazione 3dfx Voodoo
+(predefinito abilitato).
+.
+:CONFIG_VOODOO_BILINEAR_FILTERING
+Utilizza il filtro bilineare per emulare l'effetto smussato delle texture
+delle schede 3dfx Voodoo. Consigliato solo se disponi di una CPU ad alte
+prestazioni, poiché può influire sulla frequenza dei fotogrammi sui sistemi
+più lenti (predefinito disabilitato).
 .
 :CONFIG_CAPTURE_DIR
 Directory in cui vengono salvate le acquisizioni audio, video, MIDI e
@@ -705,6 +720,16 @@ Modello mouse predefinito porta COM (seriale):
   3button+msm: Scelta automatica tra '3button' e 'msm'.
   wheel+msm:   Scelta automatica tra 'wheel' e 'msm' (predefinito).
 Nota: Abilita i mouse della porta COM nella sezione [serial].
+.
+:CONFIG_VMWARE_MOUSE
+Interfaccia del mouse VMware (predefinito abilitato).
+Pienamente compatibile solo con driver Windows 3.1x sperimentali di terze parti
+Nota: Richiede che il mouse PS/2 sia abilitato.
+.
+:CONFIG_VIRTUALBOX_MOUSE
+Interfaccia del mouse VirtualBox (predefinito abilitato).
+Pienamente compatibile solo con driver Windows 3.1x di terze parti.
+Nota: Richiede che il mouse PS/2 sia abilitato.
 .
 :CONFIG_NOSOUND
 Abilita la modalità silenziosa (predefinito disabilitato).
@@ -967,8 +992,28 @@ Tipo di emulazione OPL (predefinito 'auto').
 Se 'auto', la modalità è determinata da 'sbtype'.
 Tutte le modalità OPL sono compatibili con AdLib, eccetto per 'cms'.
 .
+:CONFIG_OPL_FADEOUT
+Dissolvenza in chiusura dell'uscita audio del sintetizzatore OPL dopo l'ultima
+scrittura della porta I/O:
+  off:              Non applica la dissolvenza; l'audio residuo verrà
+                    riprodotto per sempre (predefinito).
+  on:               Attende 0,5s prima di applicare la dissolvenza su un
+                    periodo di 0,5s.
+  <personalizzato>: Definizione di una dissolvenza personalizzata nel seguente
+                    formato:
+                      ATTESA DISSOLVENZA
+                    Dove ATTESA è il tempo trascorso tra l'ultima scrittura
+                    della porta I/O e l'inizio della dissolvenza, compreso tra
+                    100 e 5000 millisecondi, mentre DISSOLVENZA è il periodo
+                    di tempo in cui viene applicata la dissolvenza, compreso
+                    tra 10 e 3000 millisecondi. Esempi:
+                       300 200 (Attende 300ms prima di applicare la dissolvenza
+                                su un periodo di 200ms.)
+                       1000 3000 (Attende 1s prima di applicare la dissolvenza
+                                  su un periodo di 3s.)
+.
 :CONFIG_OPLEMU
-Ora è supportata solo l'emulazione OPL "nuked".
+Ora è supportata solo l'emulazione OPL 'nuked'.
 .
 :CONFIG_SB_FILTER
 Tipo di filtro da emulare per l'uscita audio digitale della scheda
@@ -987,8 +1032,8 @@ Sound Blaster:
                     basso), ORDINE è l'ordine del filtro da 1 a 16
                     (1° ordine = pendenza 6dB/ott, 2° ordine = 12dB/ott, ecc.)
                     e FREQ è la frequenza di taglio in Hz. Esempi:
-                      lpf 2 12000
-                      hpf 3 120 lfp 1 6500
+                       lpf 2 12000
+                       hpf 3 120 lfp 1 6500
 .
 :CONFIG_SB_FILTER_ALWAYS_ON
 Forza il filtro della scheda Sound Blaster ad essere sempre attivo
@@ -1123,6 +1168,16 @@ Configura l'emulazione del sistema audio Tandy/PCjr a 3 voci:
              scheda audio, senza DAC, per evitare conflitti con altre schede
              che utilizzano il DMA 1.
   off:       Disabilita il sistema audio Tandy/PCjr.
+.
+:CONFIG_TANDY_FADEOUT
+Dissolvenza in chiusura dell'uscita audio del sintetizzatore Tandy dopo
+l'ultima scrittura della porta I/O:
+  off:              Non applica la dissolvenza; l'audio residuo verrà
+                    riprodotto per sempre (predefinito).
+  on:               Attende 0,5s prima di applicare la dissolvenza su un
+                    periodo di 0,5s.
+  <personalizzato>: Definizione di una dissolvenza personalizzata;
+                    fare riferimento a 'opl_fadeout' per ulteriori dettagli.
 .
 :CONFIG_TANDY_FILTER
 Filtro per l'uscita audio del sintetizzatore Tandy:
@@ -1496,8 +1551,17 @@ Dove [color=white]COMANDO[reset] è uno dei seguenti:
 
 %s
 
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
 [color=white]Valori possibili:[reset]   %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE
 [color=white]Valore predefinito:[reset] %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE
 [color=white]Valore corrente:[reset]    %s
 
 .
@@ -2272,15 +2336,15 @@ Livello di riverbero non valido per il canale [color=light-cyan]%s[reset]: [colo
 (deve essere compreso tra 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
-Intensità alimentazione incrociata mancante dopo [color=white]X[reset] per il canale [color=light-cyan]%s[reset]
+Intensità alimentazione incrociata mancante dopo [color=white]x[reset] per il canale [color=light-cyan]%s[reset]
 (deve essere compresa tra 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
-Livello di coro mancante dopo [color=white]C[reset] per il canale [color=light-cyan]%s[reset]
+Livello di coro mancante dopo [color=white]c[reset] per il canale [color=light-cyan]%s[reset]
 (deve essere compreso tra 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_REVERB_LEVEL
-Livello di riverbero mancante dopo [color=white]R[reset] per il canale [color=light-cyan]%s[reset]
+Livello di riverbero mancante dopo [color=white]r[reset] per il canale [color=light-cyan]%s[reset]
 (deve essere compreso tra 0 e 100)
 .
 :SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
@@ -2296,15 +2360,15 @@ Livello di riverbero a livello globale non valido [color=white]%s[reset]
 (deve essere compreso tra 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
-Intensità alimentazione incrociata a livello globale mancante dopo [color=white]X[reset]
+Intensità alimentazione incrociata a livello globale mancante dopo [color=white]x[reset]
 (deve essere compresa tra 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
-Livello di coro a livello globale mancante dopo [color=white]C[reset]
+Livello di coro a livello globale mancante dopo [color=white]c[reset]
 (deve essere compreso tra 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
-Livello di riverbero a livello globale mancante dopo [color=white]R[reset]
+Livello di riverbero a livello globale mancante dopo [color=white]r[reset]
 (deve essere compreso tra 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
@@ -2555,6 +2619,10 @@ Sintassi errata, la frequenza di campionamento deve essere una delle seguenti:
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mappatura non disponibile in modalità senza mouse.
+
+.
+:PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER
+Impossibile effettuare la mappatura con il driver del mouse corrente.
 
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
@@ -3845,6 +3913,37 @@ Esempi:
 .
 :SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE
 Impossibile spostare più file in un singolo file.
+
+.
+:SHELL_CMD_FOR_HELP
+Esegue il comando specificato per ogni file o stringa di un gruppo.
+
+.
+:SHELL_CMD_FOR_HELP_LONG
+Utilizzo:
+  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](GRUPPO)[reset] [color=light-cyan]do[reset] [color=white]COMANDO[reset]
+
+Dove:
+  [color=white]%VAR[reset]     è una singola lettera che rappresenta una variabile, con
+           prefisso '%'.
+  [color=light-cyan]in[reset]       è parte del comando [color=light-green]for[reset], senza distinzione tra maiuscole e minuscole
+  [color=white](GRUPPO)[reset] è un gruppo di file o stringhe con cui sostituire le istanze [color=white]%VAR[reset]
+           nel [color=white]COMANDO[reset].
+  [color=light-cyan]do[reset]       è parte del comando [color=light-green]for[reset], senza distinzione tra maiuscole e minuscole
+  [color=white]COMANDO[reset]  è il comando da eseguire per ciascun file o stringa presente
+           in [color=white](GRUPPO)[reset].
+
+Note:
+  - In un programma batch, utilizzare la sintassi [color=white]%%VAR[reset] anzichè [color=white]%VAR[reset].
+  - I file o le stringhe presenti in [color=white](GRUPPO)[reset] possono essere separati da
+    qualsiasi separatore DOS valido.
+  - Qualsiasi file presente in [color=white](GRUPPO)[reset] contenente caratteri jolly (* o ?) si
+    espanderà nel gruppo di file corrispondenti nella directory corrente.
+  - Non è consentito l'utilizzo di un altro comando [color=light-green]for[reset] come [color=white]COMANDO[reset].
+
+Esempi:
+  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](UNO DUE)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
+  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
