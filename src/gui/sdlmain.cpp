@@ -558,6 +558,14 @@ void GFX_RequestExit(const bool pressed)
 	}
 }
 
+#if defined(MACOSX)
+static bool is_command_pressed(const SDL_Event event)
+{
+	return (event.key.keysym.mod == KMOD_RGUI ||
+	        event.key.keysym.mod == KMOD_LGUI);
+}
+#endif
+
 [[maybe_unused]] static void PauseDOSBox(bool pressed)
 {
 	if (!pressed)
@@ -584,8 +592,15 @@ void GFX_RequestExit(const bool pressed)
 				GFX_ResetScreen();
 			}
 			break;
-		case SDL_KEYDOWN: // Must use Pause/Break Key to resume.
+
+		case SDL_KEYDOWN:
+#if defined (MACOSX)
+			// Pause/unpause is hardcoded to Command+P on macOS
+			if (is_command_pressed(event) && event.key.keysym.sym == SDLK_p) {
+#else
+			// Pause/unpause is hardcoded to Alt+Pause on Window & Linux
 			if (event.key.keysym.sym == SDLK_PAUSE) {
+#endif
 				const uint16_t outkeymod = event.key.keysym.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
@@ -598,9 +613,9 @@ void GFX_RequestExit(const bool pressed)
 				GFX_RefreshTitle();
 				break;
 			}
+
 #if defined (MACOSX)
-			if (event.key.keysym.sym == SDLK_q &&
-			   (event.key.keysym.mod == KMOD_RGUI || event.key.keysym.mod == KMOD_LGUI)) {
+			if (is_command_pressed(event) && event.key.keysym.sym == SDLK_q) {
 				/* On macs, all aps exit when pressing cmd-q */
 				GFX_RequestExit(true);
 				break;
@@ -3600,7 +3615,12 @@ static void GUI_StartUp(Section* sec)
 
 #if C_DEBUG
 /* Pause binds with activate-debugger */
+#elif defined(MACOSX)
+	// Pause/unpause is hardcoded to Command+P on macOS
+	MAPPER_AddHandler(&PauseDOSBox, SDL_SCANCODE_P, PRIMARY_MOD,
+	                  "pause", "Pause Emu.");
 #else
+	// Pause/unpause is hardcoded to Alt+Pause on Window & Linux
 	MAPPER_AddHandler(&PauseDOSBox, SDL_SCANCODE_PAUSE, MMOD2,
 	                  "pause", "Pause Emu.");
 #endif
@@ -4090,9 +4110,9 @@ bool GFX_Events()
 #if defined (MACOSX)
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
-			/* On macs CMD-Q is the default key to close an application */
-			if (event.key.keysym.sym == SDLK_q &&
-			    (event.key.keysym.mod == KMOD_RGUI || event.key.keysym.mod == KMOD_LGUI)) {
+			// On macOS, Command+Q is the default key to close an
+			// application
+			if (is_command_pressed(event) && event.key.keysym.sym == SDLK_q) {
 				GFX_RequestExit(true);
 				break;
 			}
