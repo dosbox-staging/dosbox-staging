@@ -1460,21 +1460,65 @@ RenderingBackend GFX_GetRenderingBackend()
 	return sdl.rendering_backend;
 }
 
+static SDL_Rect get_desktop_size()
+{
+	SDL_Rect desktop;
+	assert(sdl.display_number >= 0);
+
+	SDL_GetDisplayBounds(sdl.display_number, &desktop);
+
+	// Deduct the border decorations from the desktop size
+	int top    = 0;
+	int left   = 0;
+	int bottom = 0;
+	int right  = 0;
+
+	(void)SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
+	                               &top,
+	                               &left,
+	                               &bottom,
+	                               &right);
+
+	// If SDL_GetWindowBordersSize fails, it populates the values with 0.
+	desktop.w -= (left + right);
+	desktop.h -= (top + bottom);
+
+	assert(desktop.w >= FallbackWindowSize.x);
+	assert(desktop.h >= FallbackWindowSize.y);
+	return desktop;
+}
+
 static DosBox::Rect calc_restricted_viewport_size_in_pixels(const DosBox::Rect& canvas_px)
 {
-	if (sdl.viewport_resolution) {
-		DosBox::Rect viewport_px = {sdl.viewport_resolution->x,
-		                            sdl.viewport_resolution->y};
+	switch (sdl.viewport.mode) {
+	case ViewportMode::Fit: {
+		auto viewport_px = [&] {
+			if (sdl.viewport.fit.limit_size) {
+				return sdl.viewport.fit.limit_size->Copy().ScaleSize(
+				        sdl.desktop.dpi_scale);
 
-		viewport_px.ScaleSize(sdl.desktop.dpi_scale);
+			} else if (sdl.viewport.fit.desktop_scale) {
+				auto desktop_px = to_rect(get_desktop_size())
+				                          .ScaleSize(sdl.desktop.dpi_scale);
+
+				return desktop_px.ScaleSize(
+				        *sdl.viewport.fit.desktop_scale);
+
+			} else {
+				// The viewport equals the canvas size in
+				// Fit mode without parameters
+				return canvas_px;
+			}
+		}();
 
 		if (canvas_px.Contains(viewport_px)) {
 			return viewport_px;
 		} else {
 			return viewport_px.Intersect(canvas_px);
 		}
-	} else {
-		return canvas_px;
+	}
+
+	default: assertm(false, "Invalid ViewportMode value"); return {};
 	}
 }
 
@@ -2876,33 +2920,6 @@ static SDL_Point refine_window_size(const SDL_Point size,
 	return FallbackWindowSize;
 }
 
-static SDL_Rect get_desktop_size()
-{
-	SDL_Rect desktop;
-	assert(sdl.display_number >= 0);
-	SDL_GetDisplayBounds(sdl.display_number, &desktop);
-
-	// Deduct the border decorations from the desktop size
-	int top    = 0;
-	int left   = 0;
-	int bottom = 0;
-	int right  = 0;
-
-	(void)SDL_GetWindowBordersSize(SDL_GetWindowFromID(sdl.display_number),
-	                               &top,
-	                               &left,
-	                               &bottom,
-	                               &right);
-
-	// If SDL_GetWindowBordersSize fails, it populates the values with 0.
-	desktop.w -= (left + right);
-	desktop.h -= (top + bottom);
-
-	assert(desktop.w >= FallbackWindowSize.x);
-	assert(desktop.h >= FallbackWindowSize.y);
-	return desktop;
-}
-
 static void maybe_limit_requested_resolution(int &w, int &h, const char *size_description)
 {
 	const auto desktop = get_desktop_size();
@@ -2993,34 +3010,30 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 	return {w, h};
 }
 
-// Takes in:
-//  - The 'viewport_resolution' config value: 'fit', 'WxH', 'N[.M]%', or an invalid setting.
-//
-// The function populates the following struct members:
-//  - 'sdl.desktop.viewport_resolution', with the refined size.
-
-static void setup_viewport_resolution_from_conf(const std::string& viewport_resolution_val)
+static ViewportSettings parse_viewport_settings(const std::string& viewport_resolution_pref)
 {
-	sdl.viewport_resolution = {};
+	ViewportSettings viewport = {};
 
-	constexpr auto default_val = "fit";
-	if (viewport_resolution_val == default_val) {
-		return;
+	viewport.mode = ViewportMode::Fit;
+
+	constexpr auto default_value = "fit";
+	if (viewport_resolution_pref == default_value) {
+		return viewport;
 	}
 
 	int w   = 0;
 	int h   = 0;
 	float p = 0.0f;
 	const auto was_parsed =
-	        sscanf(viewport_resolution_val.c_str(), "%dx%d", &w, &h) == 2 ||
-	        sscanf(viewport_resolution_val.c_str(), "%f%%", &p) == 1;
+	        sscanf(viewport_resolution_pref.c_str(), "%dx%d", &w, &h) == 2 ||
+	        sscanf(viewport_resolution_pref.c_str(), "%f%%", &p) == 1;
 
 	if (!was_parsed) {
 		LOG_WARNING("DISPLAY: Requested viewport resolution '%s' was not in WxH"
 		            " or N%% format, using the default setting ('%s') instead",
-		            viewport_resolution_val.c_str(),
-		            default_val);
-		return;
+		            viewport_resolution_pref.c_str(),
+		            default_value);
+		return viewport;
 	}
 
 	const auto desktop = get_desktop_size();
@@ -3032,28 +3045,33 @@ static void setup_viewport_resolution_from_conf(const std::string& viewport_reso
 		LOG_WARNING("DISPLAY: Requested viewport resolution of '%s' is outside "
 		            "the desktop '%dx%d' bounds or the 1-100%% range, "
 		            "using the default setting ('%s') instead",
-		            viewport_resolution_val.c_str(),
+		            viewport_resolution_pref.c_str(),
 		            desktop.w,
 		            desktop.h,
-		            default_val);
-		return;
+		            default_value);
+
+		return viewport;
 	}
 
 	if (p > 0.0f) {
-		sdl.viewport_resolution = {
-		        iround(desktop.w * static_cast<double>(p) / 100.0),
-		        iround(desktop.h * static_cast<double>(p) / 100.0)};
+		viewport.fit.desktop_scale = p / 100.0f;
 
-		LOG_MSG("DISPLAY: Limiting viewport resolution to %2.4g%% (%dx%d) of the desktop",
+		const auto limit_w = iround(desktop.w * *viewport.fit.desktop_scale);
+		const auto limit_h = iround(desktop.h * *viewport.fit.desktop_scale);
+
+		LOG_MSG("DISPLAY: Limiting viewport resolution to %2.4g%% of the desktop (%dx%d)",
 		        static_cast<double>(p),
-		        sdl.viewport_resolution->x,
-		        sdl.viewport_resolution->y);
+		        limit_w,
+		        limit_h);
+
+		return viewport;
 
 	} else {
-		sdl.viewport_resolution = {w, h};
-		LOG_MSG("DISPLAY: Limiting viewport resolution to %dx%d",
-		        sdl.viewport_resolution->x,
-		        sdl.viewport_resolution->y);
+		viewport.fit.limit_size = {w, h};
+
+		LOG_MSG("DISPLAY: Limiting viewport resolution to %dx%d", w, h);
+
+		return viewport;
 	}
 }
 
@@ -3326,7 +3344,8 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	setup_initial_window_position_from_conf(
 	        section->Get_string("window_position"));
 
-	setup_viewport_resolution_from_conf(section->Get_string("viewport_resolution"));
+	sdl.viewport = parse_viewport_settings(
+	        section->Get_string("viewport_resolution"));
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution").c_str(),
 	                             sdl.interpolation_mode,
