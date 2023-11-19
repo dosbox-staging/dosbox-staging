@@ -544,10 +544,12 @@ void MOUSECTL::AddMessages()
 	        "  -s -sx -sy     sets sensitivity / for x axis / for y axis, from -999 to +999\n"
 	        "  -r             sets minimum mouse sampling rate\n"
 	        "  -on -off       enables or disables mouse on the given interface\n"
-	        "  -reset         restores all mouse settings from the configuration file\n"
+	        "  -reset         restores default mouse settings\n"
 	        "\n"
 	        "Notes:\n"
 	        "  If sensitivity or rate is omitted, it is reset to default value.\n"
+	        "  Mouse sensitivity set in the configuration file acts as global scale factor,\n"
+	        "  per-interface sensitivity set by this commands works on top of that.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game");

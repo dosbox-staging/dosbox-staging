@@ -65,6 +65,8 @@ extern MouseShared mouse_shared; // shared internal information
 // Common helper calculations
 // ***************************************************************************
 
+float MOUSE_SensitivityCoefficient(const int16_t user_setting);
+
 float MOUSE_GetBallisticsCoeff(const float speed);
 uint8_t MOUSE_GetDelayFromRateHz(const uint16_t rate_hz);
 

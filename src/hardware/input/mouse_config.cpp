@@ -199,6 +199,12 @@ static void config_read(Section *section)
 	mouse_config.raw_input      = conf->Get_bool("mouse_raw_input");
 	mouse_config.dos_immediate  = conf->Get_bool("dos_mouse_immediate");
 
+	PropMultiVal* prop_multi = conf->GetMultiVal("mouse_sensitivity");
+	mouse_config.sensitivity_coeff_x =
+	        0.01f * static_cast<float>(prop_multi->GetSection()->Get_int("xsens"));
+	mouse_config.sensitivity_coeff_y =
+	        0.01f * static_cast<float>(prop_multi->GetSection()->Get_int("ysens"));
+
 	// Settings below should be read only once
 
 	if (mouse_shared.ready_config) {
@@ -213,14 +219,6 @@ static void config_read(Section *section)
 		MOUSE_UpdateGFX();
 		return;
 	}
-
-	// Default mouse sensitivity
-
-	PropMultiVal *prop_multi = conf->GetMultiVal("mouse_sensitivity");
-	mouse_config.sensitivity_x = static_cast<int16_t>(
-	        prop_multi->GetSection()->Get_int("xsens"));
-	mouse_config.sensitivity_y = static_cast<int16_t>(
-	        prop_multi->GetSection()->Get_int("ysens"));
 
 	// DOS driver configuration
 
@@ -302,13 +300,13 @@ static void config_init(Section_prop &secprop)
 	                    "      using mirrored display mode or using an AV receiver's HDMI input for\n"
 	                    "      audio-only listening.");
 
-	prop_multi = secprop.AddMultiVal("mouse_sensitivity", only_at_start, ",");
+	prop_multi = secprop.AddMultiVal("mouse_sensitivity", always, ",");
 	prop_multi->Set_help(
-	        "Mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
+	        "Global mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
 	        "(100,100 by default). Negative values invert the axis, zero disables it.\n"
 	        "Providing only one value sets sensitivity for both axes.\n"
-	        "The setting can be adjusted in runtime (also per mouse interface) using\n"
-	        "internal MOUSECTL.COM tool, available on drive Z.");
+	        "Sensitivity can be further fine-tuned per mouse interface using the internal\n"
+	        "MOUSECTL.COM tool available on the Z drive.");
 	prop_multi->SetValue("100");
 
 	prop_int = prop_multi->GetSection()->Add_int("xsens", only_at_start, 100);
