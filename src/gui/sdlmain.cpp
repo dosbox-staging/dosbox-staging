@@ -298,6 +298,7 @@ std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s
 {
 	const auto parts = split(s, "x");
 	if (parts.size() == 2) {
+
 		const auto w = parse_int(parts[0]);
 		const auto h = parse_int(parts[1]);
 		if (w && h) {
@@ -1509,6 +1510,14 @@ static DosBox::Rect calc_restricted_viewport_size_in_pixels(const DosBox::Rect& 
 		} else {
 			return viewport_px.Intersect(canvas_px);
 		}
+	}
+	case ViewportMode::Relative: {
+		const auto restricted_canvas_px = DosBox::Rect{4, 3}.ScaleSizeToFit(
+		        canvas_px);
+
+		return restricted_canvas_px.Copy()
+				.ScaleWidth(sdl.viewport.relative.width_scale)
+				.ScaleHeight(sdl.viewport.relative.height_scale);
 	}
 
 	default: assertm(false, "Invalid ViewportMode value"); return {};
@@ -3078,7 +3087,7 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		const auto limit = desktop.Copy().ScaleSize(*viewport.fit.desktop_scale);
 		const auto limit_px = limit.Copy().ScaleSize(sdl.desktop.dpi_scale);
 
-		LOG_MSG("DISPLAY: Limiting viewport size to %2.4g%% of the "
+		LOG_MSG("DISPLAY: Limiting viewport resolution to %2.4g%% of the "
 		        "desktop (%dx%d logical units, %dx%d pixels)",
 		        p,
 		        iroundf(limit.w),
@@ -3094,10 +3103,84 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 	}
 }
 
-static std::optional<ViewportSettings> parse_viewport_settings(
-        const std::string& pref)
+static constexpr auto MinRelativeScaleFactor = 0.2f; // 20%
+static constexpr auto MaxRelativeScaleFactor = 3.0f; // 300%
+
+static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::string& pref)
 {
-	return parse_fit_viewport_modes(pref);
+	const auto parts = split(pref);
+
+	if (parts.size() == 3 && parts[0] == "relative") {
+		const auto maybe_width_percentage =
+		        parse_percentage_with_optional_percent_sign(parts[1]);
+
+		const auto maybe_height_percentage =
+		        parse_percentage_with_optional_percent_sign(parts[2]);
+
+		if (!maybe_width_percentage) {
+			const auto extra_info = "Invalid horizontal scale";
+			log_invalid_viewport_resolution_warning(pref, extra_info);
+			return {};
+		}
+		if (!maybe_height_percentage) {
+			const auto extra_info = "Invalid vertical scale";
+			log_invalid_viewport_resolution_warning(pref, extra_info);
+			return {};
+		}
+
+		const auto width_scale  = *maybe_width_percentage / 100.f;
+		const auto height_scale = *maybe_height_percentage / 100.f;
+
+		auto is_within_bounds = [&](const float scale) {
+			return (scale >= MinRelativeScaleFactor &&
+			        scale <= MaxRelativeScaleFactor);
+		};
+
+		if (!is_within_bounds(width_scale)) {
+			const auto extra_info = format_string(
+			        "Horizontal scale must be within the %g-%g%% range",
+			        MinRelativeScaleFactor * 100.0f,
+			        MaxRelativeScaleFactor * 100.0f);
+
+			log_invalid_viewport_resolution_warning(pref, extra_info);
+			return {};
+		}
+		if (!is_within_bounds(height_scale)) {
+			LOG_TRACE("****1");
+			const auto extra_info = format_string(
+			        "Vertical scale must be within the %g-%g%% range",
+			        MinRelativeScaleFactor * 100.0f,
+			        MaxRelativeScaleFactor * 100.0f);
+
+			log_invalid_viewport_resolution_warning(pref, extra_info);
+			return {};
+		}
+
+		ViewportSettings viewport      = {};
+		viewport.mode                  = ViewportMode::Relative;
+		viewport.relative.width_scale  = width_scale;
+		viewport.relative.height_scale = height_scale;
+
+		LOG_MSG("DISPLAY: Scaling viewport by %2.4g%% horizontally "
+		        "and %2.4g%% vertically ",
+		        width_scale * 100.f,
+		        height_scale * 100.f);
+
+		return viewport;
+
+	} else {
+		log_invalid_viewport_resolution_warning(pref);
+		return {};
+	}
+}
+
+static std::optional<ViewportSettings> parse_viewport_settings(const std::string& pref)
+{
+	if (starts_with(pref, "relative")) {
+		return parse_relative_viewport_modes(pref);
+	} else {
+		return parse_fit_viewport_modes(pref);
+	}
 }
 
 static void setup_initial_window_position_from_conf(const std::string& window_position_val)
@@ -4382,12 +4465,28 @@ static void config_add_sdl() {
 	        "  WxH:       Specify window size in WxH format in logical units\n"
 	        "             (e.g., 1024x768).");
 
-	pstring = sdl_sec->Add_path("viewport_resolution", always, "fit");
+	pstring = sdl_sec->Add_string("viewport_resolution", always, "fit");
 	pstring->Set_help(
-	        "Set the viewport size (drawable area) within the window/screen:\n"
-	        "  fit:       Fit the viewport to the available window/screen (default).\n"
-	        "  <custom>:  Limit the viewport within to a custom resolution or percentage of\n"
-	        "             the desktop. Specified in WxH, N%, N.M%. Examples: 960x720 or 50%");
+	        "Set the viewport size (maximum drawable area). The video output is always\n"
+	        "contained within the viewport while taking the configured aspect ratio into\n"
+	        "account (see 'aspect'). Possible values:\n"
+	        "  fit:             Fit the viewport into the available window/screen (default).\n"
+	        "                   There might be padding (black areas) around the image with\n"
+	        "                   'integer_scaling' enabled.\n"
+	        "  WxH:             Set a fixed viewport size in WxH format in logical units\n"
+	        "                   (e.g., 960x720). The specified size must not be larger than\n"
+	        "                   the desktop. If it's larger than the window size, it's\n"
+	        "                   scaled to fit within the window.\n"
+	        "  N%:              Similar to 'WxH' but the size is specified as a percentage\n"
+	        "                   of the desktop size.\n"
+	        "  relative H% V%:  The viewport is set to a 4:3 aspect ratio rectangle fit into\n"
+	        "                   the available window/screen, then it's scaled by the H and V\n"
+	        "                   horizontal and vertical scaling factors (valid range is from\n"
+	        "                   20% to 300%). The resulting viewport is allowed to extend\n"
+	        "                   beyond the window/screen. Useful to force arbitrary display\n"
+	        "                   aspect ratios with 'aspect = stretch' and to zoom into the\n"
+	        "                   image. This effectively emulates the horizontal and vertical\n"
+	        "                   stretch controls of CRT monitors.");
 
 	pstring = sdl_sec->Add_string("window_position", always, "auto");
 	pstring->Set_help(

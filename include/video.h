@@ -91,8 +91,7 @@ enum class IntegerScalingMode {
 
 enum class AspectRatioCorrectionMode { On, Off, Stretch };
 
-//enum class ViewportMode { Fit, Relative };
-enum class ViewportMode { Fit };
+enum class ViewportMode { Fit, Relative };
 
 // Graphics standards ordered by time of introduction (and roughly by
 // their capabilities)
