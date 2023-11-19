@@ -105,78 +105,151 @@ static const std::vector<uint16_t> list_rates = {
         // issues.
 };
 
-bool MouseConfig::ParseCaptureType(const std::string_view capture_str,
-                                   MouseCapture& capture)
+const std::vector<uint16_t>& MouseConfig::GetValidMinRateList()
 {
-	if (capture_str == capture_type_seamless_str)
-		capture = MouseCapture::Seamless;
-	else if (capture_str == capture_type_onclick_str)
-		capture = MouseCapture::OnClick;
-	else if (capture_str == capture_type_onstart_str)
-		capture = MouseCapture::OnStart;
-	else if (capture_str == capture_type_nomouse_str)
-		capture = MouseCapture::NoMouse;
-	else
-		return false;
-	return true;
+	return list_rates;
 }
 
-bool MouseConfig::ParseCOMModel(const std::string_view model_str,
+bool MouseConfig::ParseComModel(const std::string_view model_str,
                                 MouseModelCOM& model, bool& auto_msm)
 {
 	if (model_str == model_com_2button_str) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = false;
-		return true;
 	} else if (model_str == model_com_3button_str) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = false;
-		return true;
 	} else if (model_str == model_com_wheel_str) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = false;
-		return true;
 	} else if (model_str == model_com_msm_str) {
 		model    = MouseModelCOM::MouseSystems;
 		auto_msm = false;
-		return true;
 	} else if (model_str == model_com_2button_msm_str) {
 		model    = MouseModelCOM::Microsoft;
 		auto_msm = true;
-		return true;
 	} else if (model_str == model_com_3button_msm_str) {
 		model    = MouseModelCOM::Logitech;
 		auto_msm = true;
-		return true;
 	} else if (model_str == model_com_wheel_msm_str) {
 		model    = MouseModelCOM::Wheel;
 		auto_msm = true;
-		return true;
-	}
-
-	return false;
-}
-
-bool MouseConfig::ParsePS2Model(const std::string_view model_str, MouseModelPS2& model)
-{
-	if (model_str == model_ps2_standard_str) {
-		model = MouseModelPS2::Standard;
-	} else if (model_str == model_ps2_intellimouse_str) {
-		model = MouseModelPS2::IntelliMouse;
-	} else if (model_str == model_ps2_explorer_str) {
-		model = MouseModelPS2::Explorer;
-	} else if (auto as_bool = parse_bool_setting(model_str);
-	           as_bool && *as_bool == false) {
-		model = MouseModelPS2::NoMouse;
 	} else {
 		return false;
 	}
+
 	return true;
 }
 
-const std::vector<uint16_t> &MouseConfig::GetValidMinRateList()
+static void SetCaptureType(const std::string_view capture_str)
 {
-	return list_rates;
+	if (capture_str == capture_type_seamless_str) {
+		mouse_config.capture = MouseCapture::Seamless;
+	} else if (capture_str == capture_type_onclick_str) {
+		mouse_config.capture = MouseCapture::OnClick;
+	} else if (capture_str == capture_type_onstart_str) {
+		mouse_config.capture = MouseCapture::OnStart;
+	} else if (capture_str == capture_type_nomouse_str) {
+		mouse_config.capture = MouseCapture::NoMouse;
+	} else {
+		assert(false);
+	}
+}
+
+static void SetPs2Model(const std::string_view model_str)
+{
+	if (model_str == model_ps2_standard_str) {
+		mouse_config.model_ps2 = MouseModelPS2::Standard;
+	} else if (model_str == model_ps2_intellimouse_str) {
+		mouse_config.model_ps2 = MouseModelPS2::IntelliMouse;
+	} else if (model_str == model_ps2_explorer_str) {
+		mouse_config.model_ps2 = MouseModelPS2::Explorer;
+	} else if (model_str == model_ps2_nomouse_str) {
+		mouse_config.model_ps2 = MouseModelPS2::NoMouse;
+	} else {
+		assert(false);
+	}
+}
+
+static void SetComModel(const std::string_view model_str)
+{
+	[[maybe_unused]] const auto result = MouseConfig::ParseComModel(
+	        model_str, mouse_config.model_com, mouse_config.model_com_auto_msm);
+	assert(result);
+}
+
+static void SetSensitivity(const std::string_view sensitivity_str)
+{
+	// Coefficient to convert percentage in integer to float
+	constexpr float coeff = 0.01f;
+
+	// Default sensitivity value
+	const auto& user_default = mouse_predefined.sensitivity_user_default;
+	const auto default_value = coeff * user_default;
+
+	// Split input string into values
+	auto values_str = split(sensitivity_str, " \t,;");
+	if (values_str.size() > 2) {
+		LOG_WARNING("MOUSE: Too many values in 'mouse_sensitivity', using '%d'",
+		            user_default);
+		mouse_config.sensitivity_coeff_x = default_value;
+		mouse_config.sensitivity_coeff_y = default_value;
+		return;
+	}
+
+	// If no values given, use defaults
+	if (values_str.empty()) {
+		mouse_config.sensitivity_coeff_x = default_value;
+		mouse_config.sensitivity_coeff_y = default_value;
+		return;
+	}
+
+	// Convert values to integers
+	std::vector<int> values_int = {};
+
+	bool out_of_range   = false;
+	const int value_min = -mouse_predefined.sensitivity_user_max;
+	const int value_max = mouse_predefined.sensitivity_user_max;
+	for (auto& value_str : values_str) {
+		// Remove trailing '%' signs, if present
+		if (ends_with(value_str, "%")) {
+			value_str.pop_back();
+		}
+
+		const auto value = parse_int(value_str);
+		if (!value) {
+			LOG_WARNING("MOUSE: Invalid 'mouse_sensitivity' setting: '%s', using '%d'",
+			            value_str.c_str(), user_default);
+			mouse_config.sensitivity_coeff_x = default_value;
+			mouse_config.sensitivity_coeff_y = default_value;
+			return;
+		}
+
+		const auto value_clamped = clamp(*value, value_min, value_max);
+		if (value_clamped != *value) {
+			out_of_range = true;
+		}
+		values_int.push_back(value_clamped);
+	}
+
+	if (out_of_range) {
+		LOG_WARNING("MOUSE: 'mouse_sensitivity' adjusted to range %+d - %+d",
+		            value_min,
+		            value_max);
+	}
+
+	// Set the actual values
+	assert(values_int.size() == 1 || values_int.size() == 2);
+	const auto value_float_0 = static_cast<float>(values_int[0]);
+	mouse_config.sensitivity_coeff_x = coeff * value_float_0;
+	if (values_int.size() == 2) {
+		const auto value_float_1 = static_cast<float>(values_int[1]);
+		mouse_config.sensitivity_coeff_y = coeff * value_float_1;
+	} else {
+		mouse_config.sensitivity_coeff_y = mouse_config.sensitivity_coeff_x;
+	}
+
+	return;
 }
 
 static void config_read(Section *section)
@@ -189,8 +262,8 @@ static void config_read(Section *section)
 
 	// Settings changeable during runtime
 
-	std::string prop_str = conf->Get_string("mouse_capture");
-	MouseConfig::ParseCaptureType(prop_str, mouse_config.capture);
+	SetCaptureType(conf->Get_string("mouse_capture"));
+	SetSensitivity(conf->Get_string("mouse_sensitivity"));
 
 	mouse_config.multi_display_aware =
 		conf->Get_bool("mouse_multi_display_aware");
@@ -198,12 +271,6 @@ static void config_read(Section *section)
 	mouse_config.middle_release = conf->Get_bool("mouse_middle_release");
 	mouse_config.raw_input      = conf->Get_bool("mouse_raw_input");
 	mouse_config.dos_immediate  = conf->Get_bool("dos_mouse_immediate");
-
-	PropMultiVal* prop_multi = conf->GetMultiVal("mouse_sensitivity");
-	mouse_config.sensitivity_coeff_x =
-	        0.01f * static_cast<float>(prop_multi->GetSection()->Get_int("xsens"));
-	mouse_config.sensitivity_coeff_y =
-	        0.01f * static_cast<float>(prop_multi->GetSection()->Get_int("ysens"));
 
 	// Settings below should be read only once
 
@@ -226,15 +293,11 @@ static void config_read(Section *section)
 
 	// PS/2 AUX port mouse configuration
 
-	prop_str = conf->Get_string("ps2_mouse_model");
-	MouseConfig::ParsePS2Model(prop_str, mouse_config.model_ps2);
+	SetPs2Model(conf->Get_string("ps2_mouse_model"));
 
 	// COM port mouse configuration
 
-	prop_str = conf->Get_string("com_mouse_model");
-	MouseConfig::ParseCOMModel(prop_str,
-	                           mouse_config.model_com,
-	                           mouse_config.model_com_auto_msm);
+	SetComModel(conf->Get_string("com_mouse_model"));
 
 	// VMM PCI interfaces
 
@@ -264,10 +327,8 @@ static void config_init(Section_prop &secprop)
 	constexpr auto always        = Property::Changeable::Always;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 
-	Prop_bool    *prop_bool  = nullptr;
-	Prop_int     *prop_int   = nullptr;
-	Prop_string  *prop_str   = nullptr;
-	PropMultiVal *prop_multi = nullptr;
+	Prop_bool* prop_bool  = nullptr;
+	Prop_string* prop_str = nullptr;
 
 	// General configuration
 
@@ -300,21 +361,14 @@ static void config_init(Section_prop &secprop)
 	                    "      using mirrored display mode or using an AV receiver's HDMI input for\n"
 	                    "      audio-only listening.");
 
-	prop_multi = secprop.AddMultiVal("mouse_sensitivity", always, ",");
-	prop_multi->Set_help(
+	prop_str = secprop.Add_string("mouse_sensitivity", always, "100");
+	prop_str->Set_help(
 	        "Global mouse sensitivity for the horizontal and vertical axes, as a percentage\n"
-	        "(100,100 by default). Negative values invert the axis, zero disables it.\n"
+	        "(100 by default). Values can be separated by spaces, commas, or semicolons\n"
+	        "(i.e. 100,150). Negative values invert the axis, zero disables it.\n"
 	        "Providing only one value sets sensitivity for both axes.\n"
 	        "Sensitivity can be further fine-tuned per mouse interface using the internal\n"
 	        "MOUSECTL.COM tool available on the Z drive.");
-	prop_multi->SetValue("100");
-
-	prop_int = prop_multi->GetSection()->Add_int("xsens", only_at_start, 100);
-	prop_int->SetMinMax(-mouse_predefined.sensitivity_user_max,
-	                    mouse_predefined.sensitivity_user_max);
-	prop_int = prop_multi->GetSection()->Add_int("ysens", only_at_start, 100);
-	prop_int->SetMinMax(-mouse_predefined.sensitivity_user_max,
-	                    mouse_predefined.sensitivity_user_max);
 
 	prop_bool = secprop.Add_bool("mouse_raw_input", always, true);
 	prop_bool->Set_help(

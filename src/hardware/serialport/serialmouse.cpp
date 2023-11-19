@@ -62,7 +62,7 @@ CSerialMouse::CSerialMouse(const uint8_t id, CommandLine *cmd)
 
 	std::string model_string;
 	if (cmd->FindStringBegin("model:", model_string, false) &&
-	    !MouseConfig::ParseCOMModel(model_string, param_model, param_auto_msm)) {
+	    !MouseConfig::ParseComModel(model_string, param_model, param_auto_msm)) {
 		LOG_ERR("MOUSE (COM%d): Invalid model '%s'",
 		        port_num,
 		        model_string.c_str());
