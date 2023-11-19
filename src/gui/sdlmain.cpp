@@ -2400,8 +2400,13 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 	return false;
 }
 
-void GFX_EndUpdate(const uint16_t *changedLines)
+extern int64_t ticksDone;
+
+void GFX_EndUpdate(const uint16_t* changedLines)
 {
+	static int64_t cumulative_time_rendered = 0;
+	const auto start                        = GetTicksUs();
+
 	sdl.frame.update(changedLines);
 
 	if (CAPTURE_IsCapturingPostRenderImage()) {
@@ -2440,6 +2445,16 @@ void GFX_EndUpdate(const uint16_t *changedLines)
 			break;
 		}
 	}
+
+	const auto elapsed = GetTicksUsSince(start);
+	cumulative_time_rendered += elapsed;
+	// Update ticksDone with the rendering time
+	if (cumulative_time_rendered >= 1000) {
+		const auto cumulative_ticks_rendered = cumulative_time_rendered / 1000;
+		ticksDone -= cumulative_ticks_rendered;
+		cumulative_time_rendered %= 1000;
+	}
+
 	sdl.updating = false;
 	FrameMark;
 }
