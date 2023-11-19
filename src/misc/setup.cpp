@@ -1804,3 +1804,28 @@ void Config::ParseArguments()
 
 	arguments.editconf = cmdline->FindRemoveOptionalArgument("editconf");
 }
+
+// Only checks if config file exists and is not empty
+bool ConfigFileIsValid(const std_fs::path& path)
+{
+	FILE* file = fopen(path.string().c_str(), "r");
+	if (!file) {
+		return false;
+	}
+
+	constexpr size_t BufferSize = 4096;
+	char buffer[BufferSize];
+	size_t bytes_read;
+	do {
+		bytes_read = fread(buffer, 1, BufferSize, file);
+		for (size_t i = 0; i < bytes_read; ++i) {
+			if (!isspace(buffer[i])) {
+				fclose(file);
+				return true;
+			}
+		}
+	} while (bytes_read == BufferSize);
+
+	fclose(file);
+	return false;
+}
