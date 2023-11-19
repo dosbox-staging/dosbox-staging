@@ -277,7 +277,7 @@ static void config_read(Section *section)
 	if (mouse_shared.ready_config) {
 
 		if (mouse_config.capture == MouseCapture::NoMouse) {
-			// If NoMouse got configured in runtime,
+			// If NoMouse got configured at runtime,
 			// immediately clear all the mapping
 			MouseControlAPI mouse_config_api;
 			mouse_config_api.UnMap(MouseControlAPI::ListIDs());
@@ -350,12 +350,12 @@ static void config_init(Section_prop &secprop)
 	        "For touch-screen control, use 'seamless'.");
 
 	prop_bool = secprop.Add_bool("mouse_middle_release", always, true);
-	prop_bool->Set_help("If enabled, middle-click will release the captured mouse, and also capture\n"
-	                    "when seamless (enabled by default).");
+	prop_bool->Set_help("Release the captured mouse by middle-clicking, and also capture it in\n"
+	                    "seamless mode (enabled by default).");
 
 	prop_bool = secprop.Add_bool("mouse_multi_display_aware", always, true);
-	prop_bool->Set_help("Allows mouse seamless behavior and mouse pointer release to work in fullscreen\n"
-	                    "mode for systems with more than one display. (enabled by default).\n"
+	prop_bool->Set_help("Allows seamless mouse behavior and mouse pointer release to work in fullscreen\n"
+	                    "mode on systems with more than one display (enabled by default).\n"
 	                    "Note: You should disable this if it incorrectly detects multiple displays\n"
 	                    "      when only one should actually be used. This might happen if you are\n"
 	                    "      using mirrored display mode or using an AV receiver's HDMI input for\n"
@@ -374,7 +374,7 @@ static void config_init(Section_prop &secprop)
 	prop_bool->Set_help(
 	        "Enable to bypass your operating system's mouse acceleration and sensitivity\n"
 	        "settings (enabled by default). Works in fullscreen or when the mouse is\n"
-	        "captured in window mode.");
+	        "captured in windowed mode.");
 
 	// DOS driver configuration
 
