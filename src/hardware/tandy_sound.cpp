@@ -82,6 +82,7 @@ centerline.
 #include <queue>
 #include <string_view>
 
+#include "bios.h"
 #include "channel_names.h"
 #include "dma.h"
 #include "hardware.h"
@@ -634,6 +635,7 @@ bool TS_Get_Address(Bitu &tsaddr, Bitu &tsirq, Bitu &tsdma)
 static void set_tandy_sound_flag_in_bios(const bool is_enabled)
 {
 	real_writeb(0x40, 0xd4, is_enabled ? 0xff : 0x00);
+	BIOS_SetupTandySbDacCallbacks();
 }
 
 static void shutdown_dac(Section*)
