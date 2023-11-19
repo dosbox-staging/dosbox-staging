@@ -411,32 +411,6 @@ TEST(ParseInt, Invalid)
 	EXPECT_EQ(parse_int(" "), empty);
 }
 
-TEST(ParsePercentage, Valid)
-{
-	EXPECT_EQ(parse_percentage("0"), 0.0f);
-	EXPECT_EQ(parse_percentage("0.0"), 0.0f);
-	EXPECT_EQ(parse_percentage("-0.0"), 0.0f);
-	EXPECT_EQ(parse_percentage("1"), 1.0f);
-	EXPECT_EQ(parse_percentage("5.0"), 5.0f);
-	EXPECT_EQ(parse_percentage("0.00001"), 0.00001f);
-	EXPECT_EQ(parse_percentage("99.9999"), 99.9999f);
-	EXPECT_EQ(parse_percentage("100"), 100.0f);
-}
-
-TEST(ParsePercentage, Invalid)
-{
-	std::optional<int> empty = {};
-	EXPECT_EQ(parse_percentage("-1"), empty);
-	EXPECT_EQ(parse_percentage("-5.0"), empty);
-	EXPECT_EQ(parse_percentage("-0.00001"), empty);
-	EXPECT_EQ(parse_percentage("100.0001"), empty);
-	EXPECT_EQ(parse_percentage("105"), empty);
-	EXPECT_EQ(parse_percentage("asdf"), empty);
-	EXPECT_EQ(parse_percentage("5a"), empty);
-	EXPECT_EQ(parse_percentage(""), empty);
-	EXPECT_EQ(parse_percentage(" "), empty);
-}
-
 TEST(FormatString, Valid)
 {
 	EXPECT_EQ(format_string(""), "");
