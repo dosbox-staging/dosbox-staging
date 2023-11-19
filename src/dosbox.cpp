@@ -224,7 +224,7 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	// Is the system in auto cycle mode guessing ? If not just exit. (It can be temporary disabled)
 	if (!CPU_CycleAutoAdjust) return;
 
-	if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
+	if (ticksScheduled >= 100 || ticksDone >= 100 || (ticksAdded > 15 && ticksScheduled >= 5) ) {
 		if(ticksDone < 1) ticksDone = 1; // Protect against div by zero
 		/* ratio we are aiming for is around 90% usage*/
 		int32_t ratio = static_cast<int32_t>(
@@ -244,11 +244,11 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 
 				/* Don't allow very high ratio which can cause us to lock as we don't scale down
 				 * for very low ratios. High ratio might result because of timing resolution */
-				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 16384)
+				if (ticksScheduled >= 100 && ticksDone < 10 && ratio > 16384)
 					ratio = 16384;
 
 				// Limit the ratio even more when the cycles are already way above the realmode default.
-				if (ticksScheduled >= 250 && ticksDone < 10 && ratio > 5120 && CPU_CycleMax > 50000)
+				if (ticksScheduled >= 100 && ticksDone < 10 && ratio > 5120 && CPU_CycleMax > 50000)
 					ratio = 5120;
 
 				// When downscaling multiple times in a row, ensure a minimum amount of downscaling
