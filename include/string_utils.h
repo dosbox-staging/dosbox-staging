@@ -358,6 +358,10 @@ std::optional<float> parse_float(const std::string& s);
 //
 std::optional<int> parse_int(const std::string& s, const int base = 10);
 
+// Returned percentage values are unscaled.
+std::optional<float> parse_percentage_with_percent_sign(const std::string_view s);
+std::optional<float> parse_percentage_with_optional_percent_sign(const std::string_view s);
+
 template <typename... Args>
 std::string format_string(const std::string& format, const Args&... args) noexcept
 {
