@@ -4740,7 +4740,7 @@ int sdl_main(int argc, char* argv[])
 		if (!arguments->securemode && !arguments->noprimaryconf) {
 			const auto primary_config_path = GetPrimaryConfigPath();
 
-			if (!path_exists(primary_config_path)) {
+			if (!ConfigFileIsValid(primary_config_path)) {
 				// No config is loaded at this point, so we're
 				// writing the default settings to the primary
 				// config.

@@ -514,4 +514,6 @@ const std::string& GetLanguage();
 
 const char* SetProp(std::vector<std::string>& pvars);
 
+bool ConfigFileIsValid(const std_fs::path& path);
+
 #endif
