@@ -378,3 +378,27 @@ std::optional<int> parse_int(const std::string& s, const int base)
 	}
 	return {};
 }
+
+std::optional<float> parse_percentage(const std::string_view s,
+                                      const bool is_percent_sign_optional)
+{
+	if (!is_percent_sign_optional) {
+		if (!ends_with(s, "%")) {
+			return {};
+		}
+	}
+	return {parse_float(strip_suffix(s, "%"))};
+}
+
+std::optional<float> parse_percentage_with_percent_sign(const std::string_view s)
+{
+	const auto is_percent_sign_optional = false;
+	return parse_percentage(s, is_percent_sign_optional);
+}
+
+std::optional<float> parse_percentage_with_optional_percent_sign(const std::string_view s)
+{
+	const auto is_percent_sign_optional = true;
+	return parse_percentage(s, is_percent_sign_optional);
+}
+
