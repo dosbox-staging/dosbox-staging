@@ -1034,7 +1034,7 @@ void BIOS_ZeroExtendedSize(bool in) {
 
 static void shutdown_tandy_sb_dac_callbacks()
 {
-	/* abort DAC playing */
+	// Abort DAC playing
 	if (tandy_sb.port) {
 		IO_Write(tandy_sb.port + 0xc, 0xd3);
 		IO_Write(tandy_sb.port + 0xc, 0xd0);
@@ -1043,7 +1043,7 @@ static void shutdown_tandy_sb_dac_callbacks()
 	if (tandy_DAC_callback[0]) {
 		uint32_t orig_vector = real_readd(0x40, 0xd6);
 		if (orig_vector == tandy_DAC_callback[0]->Get_RealPointer()) {
-			/* set IRQ vector to old value */
+			// Set IRQ vector to old value
 			uint8_t tandy_irq = 7;
 			if (tandy_sb.port) {
 				tandy_irq = tandy_sb.irq;
@@ -1065,20 +1065,19 @@ static void shutdown_tandy_sb_dac_callbacks()
 		tandy_DAC_callback[0] = nullptr;
 		tandy_DAC_callback[1] = nullptr;
 	}
-}
-
-void setup_tandy_sb_dac_callbacks()
-{
 	tandy_sb.port  = 0;
 	tandy_dac.port = 0;
+}
 
-	/* tandy DAC can be requested in tandy_sound.cpp by initializing this
-	 * field */
-	const bool use_tandyDAC = (real_readb(0x40, 0xd4) == 0xff);
+void BIOS_SetupTandySbDacCallbacks()
+{
+	// Tandy DAC can be requested in tandy_sound.cpp by initializing this field
+	const bool use_tandy_dac = (real_readb(0x40, 0xd4) == 0xff);
 
-	if (use_tandyDAC) {
-		/* tandy DAC sound requested, see if soundblaster device is
-		 * available */
+	shutdown_tandy_sb_dac_callbacks();
+
+	if (use_tandy_dac) {
+		// Tandy DAC sound requested, see if soundblaster device is available
 		Bitu tandy_dac_type = 0;
 		if (Tandy_InitializeSB()) {
 			tandy_dac_type = 1;
@@ -1088,9 +1087,9 @@ void setup_tandy_sb_dac_callbacks()
 		if (tandy_dac_type) {
 			real_writew(0x40, 0xd0, 0x0000);
 			real_writew(0x40, 0xd2, 0x0000);
-			real_writeb(0x40, 0xd4, 0xff); /* tandy DAC init value */
+			real_writeb(0x40, 0xd4, 0xff); // Tandy DAC init value
 			real_writed(0x40, 0xd6, 0x00000000);
-			/* install the DAC callback handler */
+			// Install the DAC callback handler
 			tandy_DAC_callback[0] = new CALLBACK_HandlerObject();
 			tandy_DAC_callback[1] = new CALLBACK_HandlerObject();
 			tandy_DAC_callback[0]->Install(&IRQ_TandyDAC,
@@ -1286,7 +1285,7 @@ public:
 		const uint8_t machine_signature = (machine == MCH_TANDY) ? 0xff : 0x55;
 		phys_writeb(machine_signature_location, machine_signature);
 
-		setup_tandy_sb_dac_callbacks();
+		BIOS_SetupTandySbDacCallbacks();
 
 		/* Setup some stuff in 0x40 bios segment */
 		
