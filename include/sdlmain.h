@@ -21,11 +21,11 @@
 #ifndef DOSBOX_SDLMAIN_H
 #define DOSBOX_SDLMAIN_H
 
+#include "SDL.h"
 #include <optional>
+#include <string.h>
 #include <string>
 #include <string_view>
-#include <string.h>
-#include "SDL.h"
 
 #if C_OPENGL
 #include <SDL_opengl.h>
@@ -80,22 +80,41 @@
 #define SDL_NOFRAME 0x00000020
 
 // Texture buffer and presentation functions and type-defines
-using update_frame_buffer_f = void(const uint16_t *);
-using present_frame_f = bool();
-constexpr void update_frame_noop([[maybe_unused]] const uint16_t *) { /* no-op */ }
-static inline bool present_frame_noop() { return true; }
+using update_frame_buffer_f = void(const uint16_t*);
+using present_frame_f       = bool();
+
+constexpr void update_frame_noop([[maybe_unused]] const uint16_t*)
+{
+	// no-op
+}
+
+static inline bool present_frame_noop()
+{
+	return true;
+}
 
 enum class FrameMode {
 	Unset,
-	Cfr,          // constant frame rate, as defined by the emulated system
-	Vfr,          // variable frame rate, as defined by the emulated system
-	ThrottledVfr, // variable frame rate, throttled to the display's rate
+
+	// Constant frame rate, as defined by the emulated system
+	Cfr,
+
+	// Variable frame rate, as defined by the emulated system
+	Vfr,
+
+	// Variable frame rate, throttled to the display's rate
+	ThrottledVfr,
 };
 
 enum class HostRateMode {
 	Auto,
-	Sdi, // serial digital interface
-	Vrr, // variable refresh rate
+
+	// Serial digital interface
+	Sdi,
+
+	// Variable refresh rate
+	Vrr,
+
 	Custom,
 };
 
@@ -141,13 +160,12 @@ struct ViewportSettings {
 	} fit = {};
 };
 
-
 struct SDL_Block {
-	bool initialized = false;
-	bool active = false; // If this isn't set don't draw
+	bool initialized     = false;
+	bool active          = false; // If this isn't set don't draw
 	bool updating        = false;
 	bool resizing_window = false;
-	bool wait_on_error = false;
+	bool wait_on_error   = false;
 
 	RenderingBackend rendering_backend      = RenderingBackend::Texture;
 	RenderingBackend want_rendering_backend = RenderingBackend::Texture;
@@ -156,13 +174,13 @@ struct SDL_Block {
 	IntegerScalingMode integer_scaling_mode = IntegerScalingMode::Off;
 
 	struct {
-		int render_width_px = 0;
-		int render_height_px = 0;
+		int render_width_px                = 0;
+		int render_height_px               = 0;
 		Fraction render_pixel_aspect_ratio = {1};
 
-		bool has_changed = false;
+		bool has_changed        = false;
 		GFX_CallBack_t callback = nullptr;
-		bool width_was_doubled = false;
+		bool width_was_doubled  = false;
 		bool height_was_doubled = false;
 	} draw = {};
 
@@ -170,46 +188,52 @@ struct SDL_Block {
 
 	struct {
 		struct {
-			int width = 0;
-			int height = 0;
-			bool fixed = false;
+			int width        = 0;
+			int height       = 0;
+			bool fixed       = false;
 			bool display_res = false;
 		} full = {};
+
 		struct {
-			// user-configured window size
-			int width = 0;
-			int height = 0;
-			bool show_decorations = true;
+			// User-configured window size
+			int width                  = 0;
+			int height                 = 0;
+			bool show_decorations      = true;
 			bool adjusted_initial_size = false;
-			int initial_x_pos = -1;
-			int initial_y_pos = -1;
-			// instantaneous canvas size of the window
+			int initial_x_pos          = -1;
+			int initial_y_pos          = -1;
+
+			// Instantaneous canvas size of the window
 			SDL_Rect canvas_size = {};
 		} window = {};
+
 		struct {
-			int width = 0;
+			int width  = 0;
 			int height = 0;
 		} requested_window_bounds = {};
 
 		PixelFormat pixel_format = {};
+
 		double dpi_scale = 1.0;
-		bool fullscreen = false;
+		bool fullscreen  = false;
 
 		// This flag indicates, that we are in the process of switching
 		// between fullscreen or window (as oppososed to changing
 		// rendering size due to rotating screen, emulation state, or
 		// user resizing the window).
 		bool switching_fullscreen = false;
+
 		// Lazy window size init triggers updating window size and
 		// position when leaving fullscreen for the first time.
 		// See FinalizeWindowState function for details.
-		bool lazy_init_window_size  = false;
+		bool lazy_init_window_size = false;
+
 		HostRateMode host_rate_mode = HostRateMode::Auto;
 		double preferred_host_rate  = 0.0;
 	} desktop = {};
 
 	struct {
-		int num_cycles = 0;
+		int num_cycles              = 0;
 		std::string hint_mouse_str  = {};
 		std::string hint_paused_str = {};
 		std::string cycles_ms_str   = {};
@@ -224,7 +248,7 @@ struct SDL_Block {
 #if C_OPENGL
 	struct {
 		SDL_GLContext context;
-		int pitch = 0;
+		int pitch      = 0;
 		void* framebuf = nullptr;
 		GLuint texture;
 		GLuint displaylist;
@@ -244,10 +268,12 @@ struct SDL_Block {
 			GLint output_size;
 			GLint frame_count;
 		} ruby = {};
+
 		GLuint actual_frame_count;
-		GLfloat vertex_data[2*3];
+		GLfloat vertex_data[2 * 3];
 	} opengl = {};
 #endif // C_OPENGL
+
 	struct {
 		PRIORITY_LEVELS active   = PRIORITY_LEVEL_AUTO;
 		PRIORITY_LEVELS inactive = PRIORITY_LEVEL_AUTO;
@@ -256,16 +282,16 @@ struct SDL_Block {
 	bool mute_when_inactive  = false;
 	bool pause_when_inactive = false;
 
-	SDL_Rect clip_px = {0, 0, 0, 0};
-	SDL_Window *window = nullptr;
-	SDL_Renderer *renderer = nullptr;
+	SDL_Rect clip_px          = {0, 0, 0, 0};
+	SDL_Window* window        = nullptr;
+	SDL_Renderer* renderer    = nullptr;
 	std::string render_driver = "";
-	int display_number = 0;
+	int display_number        = 0;
 
 	struct {
-		SDL_Surface *input_surface = nullptr;
-		SDL_Texture *texture = nullptr;
-		SDL_PixelFormat *pixelFormat = nullptr;
+		SDL_Surface* input_surface   = nullptr;
+		SDL_Texture* texture         = nullptr;
+		SDL_PixelFormat* pixelFormat = nullptr;
 	} texture = {};
 
 	struct {
@@ -273,21 +299,26 @@ struct SDL_Block {
 		update_frame_buffer_f* update = update_frame_noop;
 		FrameMode desired_mode        = FrameMode::Unset;
 		FrameMode mode                = FrameMode::Unset;
-		double period_ms    = 0.0; // in ms, for use with PIC timers
+
+		// in ms, for use with PIC timers
+		double period_ms      = 0.0;
 		float max_dupe_frames = 0.0f;
-		int period_us       = 0; // same but in us, for use with chrono
+
+		// same but in us, for use with chrono
+		int period_us       = 0;
 		int period_us_early = 0;
-		int period_us_late    = 0;
+		int period_us_late  = 0;
 	} frame = {};
 
 	bool use_exact_window_resolution = false;
 
 	ViewportSettings viewport = {};
 
-#if defined (WIN32)
+#if defined(WIN32)
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
 	int64_t focus_ticks = 0;
 #endif
+
 	// State of Alt keys for certain special handlings
 	SDL_EventType laltstate = SDL_KEYUP;
 	SDL_EventType raltstate = SDL_KEYUP;
