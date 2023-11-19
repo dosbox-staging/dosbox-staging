@@ -378,15 +378,3 @@ std::optional<int> parse_int(const std::string& s, const int base)
 	}
 	return {};
 }
-
-std::optional<float> parse_percentage(const std::string& s)
-{
-	constexpr auto min_percentage = 0.0f;
-	constexpr auto max_percentage = 100.0f;
-	if (const auto p = parse_float(s); p) {
-		if (*p >= min_percentage && *p <= max_percentage) {
-			return p;
-		}
-	}
-	return {};
-}
