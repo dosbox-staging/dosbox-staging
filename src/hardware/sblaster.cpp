@@ -27,6 +27,7 @@
 #include <tuple>
 
 #include "autoexec.h"
+#include "bios.h"
 #include "channel_names.h"
 #include "control.h"
 #include "dma.h"
@@ -2027,15 +2028,14 @@ static void adlib_gusforward(io_port_t, io_val_t value, io_width_t)
 bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
 {
 	sbaddr = 0;
-	sbirq =0;
-	sbdma =0;
-	if (sb.type == SBT_NONE) return false;
-	else {
-		sbaddr=sb.hw.base;
-		sbirq =sb.hw.irq;
-		sbdma = sb.hw.dma8;
-		return true;
+	sbirq  = 0;
+	sbdma  = 0;
+	if (sb.type != SBT_NONE) {
+		sbaddr = sb.hw.base;
+		sbirq  = sb.hw.irq;
+		sbdma  = sb.hw.dma8;
 	}
+	return (sbaddr != 0 && sbirq != 0 && sbdma != 0);
 }
 
 static void SBLASTER_CallBack(uint32_t len)
@@ -2232,10 +2232,23 @@ public:
 		} break;
 		}
 
-		if (sb.type == SBT_NONE || sb.type == SBT_GB)
-			return;
+		// The CMS/Adlib (sbtype=none) and GameBlaster don't have DACs
+		const auto has_dac = (sb.type != SBT_NONE && sb.type != SBT_GB);
 
-		sb.hw.dma8 = static_cast<uint8_t>(section->Get_int("dma"));
+		sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->Get_int("dma"))
+		                     : 0;
+
+		// Setup BIOS DAC callbacks as soon as the card's access ports (
+		// port, IRQ, and potential 8-bit DMA address) are defined.
+		//
+		BIOS_SetupTandySbDacCallbacks();
+
+		if (!has_dac) {
+			return;
+		}
+		// The code below here sets up the DAC and DMA channels on all
+		// "sbtype = sb*" SoundBlaster type cards.
+		//
 		auto dma_channel = DMA_GetChannel(sb.hw.dma8);
 		assert(dma_channel);
 		dma_channel->ReserveFor(CardType(), SBLASTER_ShutDown);
