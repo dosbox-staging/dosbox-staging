@@ -161,6 +161,16 @@ if get_option('buildtype') in ['release', 'minsize']
         '-fdata-sections',
     ]
     extra_link_flags += ['-Wl,--gc-sections']
+
+    # Apply Apple silicon-specific CPU tunings
+    if (os_family_name == 'MACOSX'
+        and host_machine.cpu_family() == 'aarch64')
+        extra_flags += [
+            '-mcpu=native',
+            '-mtune=native',
+        ]
+    endif
+
 endif
 
 # Let sanitizer builds recover and continue
