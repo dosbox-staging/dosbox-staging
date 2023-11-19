@@ -570,11 +570,16 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	// so it needs data in both formats.
 
 	// Notify mouse interfaces
-	for (auto &interface : mouse_interfaces)
-		if (interface->IsUsingHostPointer())
-			interface->NotifyMoved(x_rel, y_rel,
+	const float x_scaled = x_rel * mouse_config.sensitivity_coeff_x;
+	const float y_scaled = y_rel * mouse_config.sensitivity_coeff_y;
+	for (auto& interface : mouse_interfaces) {
+		if (interface->IsUsingHostPointer()) {
+			interface->NotifyMoved(x_scaled,
+			                       y_scaled,
 			                       state.cursor_x_abs,
 			                       state.cursor_y_abs);
+		}
+	}
 }
 
 void MOUSE_EventMoved(const float x_rel, const float y_rel,
@@ -590,7 +595,9 @@ void MOUSE_EventMoved(const float x_rel, const float y_rel,
 	// Notify mouse interface
 	auto interface = MouseInterface::Get(interface_id);
 	if (interface && interface->IsUsingEvents()) {
-		interface->NotifyMoved(x_rel, y_rel, 0, 0);
+		const float x_scaled = x_rel * mouse_config.sensitivity_coeff_x;
+		const float y_scaled = y_rel * mouse_config.sensitivity_coeff_y;
+		interface->NotifyMoved(x_scaled, y_scaled, 0, 0);
 	}
 }
 
@@ -630,9 +637,11 @@ void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed)
 	}
 
 	// Notify mouse interfaces
-	for (auto &interface : mouse_interfaces)
-		if (interface->IsUsingHostPointer())
+	for (auto& interface : mouse_interfaces) {
+		if (interface->IsUsingHostPointer()) {
 			interface->NotifyButton(button_id, pressed);
+		}
+	}
 }
 
 void MOUSE_EventButton(const MouseButtonId button_id, const bool pressed,
@@ -664,9 +673,11 @@ void MOUSE_EventWheel(const int16_t w_rel)
 	}
 
 	// Notify mouse interfaces
-	for (auto &interface : mouse_interfaces)
-		if (interface->IsUsingHostPointer())
+	for (auto& interface : mouse_interfaces) {
+		if (interface->IsUsingHostPointer()) {
 			interface->NotifyWheel(w_rel);
+		}
+	}
 }
 
 void MOUSE_EventWheel(const int16_t w_rel, const MouseInterfaceId interface_id)

@@ -42,8 +42,9 @@ struct MousePredefined {
 	// Larger values = higher mouse acceleration
 	const float acceleration_vmm = 1.0f;
 
-	// Maximum allowed user sensitivity value
-	const int16_t sensitivity_user_max = 999;
+	// Default and maximum allowed user sensitivity value
+	const int16_t sensitivity_user_default = 100;
+	const int16_t sensitivity_user_max     = 999;
 
 	// IRQ used by PS/2 mouse - do not change unless you really know
 	// what you are doing!
@@ -78,8 +79,9 @@ struct MouseConfig {
 	MouseCapture capture = MouseCapture::OnStart;
 	bool middle_release  = true;
 
-	int16_t sensitivity_x    = 50; // default sensitivity values
-	int16_t sensitivity_y    = 50;
+	float sensitivity_coeff_x = 1.0f;
+	float sensitivity_coeff_y = 1.0f;
+
 	bool raw_input           = false; // true = relative input is raw data
 	bool multi_display_aware = false;
 

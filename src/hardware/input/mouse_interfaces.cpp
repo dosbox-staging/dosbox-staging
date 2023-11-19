@@ -497,17 +497,18 @@ void MouseInterface::ConfigSetSensitivityY(const int16_t value)
 
 void MouseInterface::ConfigResetSensitivity()
 {
-	ConfigSetSensitivity(mouse_config.sensitivity_x, mouse_config.sensitivity_y);
+	ConfigSetSensitivity(mouse_predefined.sensitivity_user_default,
+	                     mouse_predefined.sensitivity_user_default);
 }
 
 void MouseInterface::ConfigResetSensitivityX()
 {
-	ConfigSetSensitivityX(mouse_config.sensitivity_x);
+	ConfigSetSensitivityX(mouse_predefined.sensitivity_user_default);
 }
 
 void MouseInterface::ConfigResetSensitivityY()
 {
-	ConfigSetSensitivityY(mouse_config.sensitivity_y);
+	ConfigSetSensitivityY(mouse_predefined.sensitivity_user_default);
 }
 
 void MouseInterface::ConfigSetMinRate(const uint16_t value_hz)
