@@ -314,20 +314,20 @@ bool ends_with(const std::string_view str, const std::string_view suffix) noexce
 	return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
 }
 
-std::string strip_prefix(const std::string& str, const std::string& prefix) noexcept
+std::string strip_prefix(const std::string_view str, const std::string_view prefix) noexcept
 {
 	if (starts_with(str, prefix)) {
-		return str.substr(prefix.size());
+		return std::string(str.substr(prefix.size()));
 	}
-	return str;
+	return std::string(str);
 }
 
-std::string strip_suffix(const std::string& str, const std::string& suffix) noexcept
+std::string strip_suffix(const std::string_view str, const std::string_view suffix) noexcept
 {
 	if (ends_with(str, suffix)) {
-		return str.substr(0, str.size() - suffix.size());
+		return std::string(str.substr(0, str.size() - suffix.size()));
 	}
-	return str;
+	return std::string(str);
 }
 
 void clear_language_if_default(std::string &l)
