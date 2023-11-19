@@ -130,6 +130,18 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
+struct ViewportSettings {
+	ViewportMode mode = {};
+
+	// Either parameter can be set in Fit mode (but not both at the
+	// same time), or none
+	struct {
+		std::optional<DosBox::Rect> limit_size = {};
+		std::optional<float> desktop_scale     = {};
+	} fit = {};
+};
+
+
 struct SDL_Block {
 	bool initialized = false;
 	bool active = false; // If this isn't set don't draw
@@ -270,7 +282,8 @@ struct SDL_Block {
 
 	bool use_exact_window_resolution = false;
 
-	std::optional<SDL_Point> viewport_resolution = {};
+	ViewportSettings viewport = {};
+
 #if defined (WIN32)
 	// Time when sdl regains focus (Alt+Tab) in windowed mode
 	int64_t focus_ticks = 0;
