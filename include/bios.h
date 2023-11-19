@@ -138,4 +138,6 @@ void INT10_ReloadRomFonts();
 
 void BIOS_SetComPorts (uint16_t baseaddr[]);
 
+void BIOS_SetupTandySbDacCallbacks();
+
 #endif
