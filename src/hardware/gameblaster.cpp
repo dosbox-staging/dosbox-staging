@@ -104,7 +104,7 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (!filter_choice_has_bool) {
-			LOG_WARNING("CMS: Invalid 'cms_filter' value: '%s', using 'off'",
+			LOG_WARNING("CMS: Invalid 'cms_filter' setting: '%s', using 'off'",
 			            filter_choice.c_str());
 		}
 

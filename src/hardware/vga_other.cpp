@@ -1431,7 +1431,7 @@ static void composite_init(Section *sec)
 			cga_comp = *state_has_bool ? COMPOSITE_STATE::ON
 			                           : COMPOSITE_STATE::OFF;
 		} else {
-			LOG_WARNING("COMPOSITE: Invalid 'composite' value: '%s', using 'off'",
+			LOG_WARNING("COMPOSITE: Invalid 'composite' setting: '%s', using 'off'",
 			            state.data());
 			cga_comp = COMPOSITE_STATE::OFF;
 		}

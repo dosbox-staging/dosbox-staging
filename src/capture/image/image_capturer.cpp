@@ -55,14 +55,14 @@ void ImageCapturer::ConfigureGroupedMode(const std::string& prefs)
 
 	const auto formats = split_with_empties(prefs, ' ');
 	if (formats.size() == 0) {
-		LOG_WARNING("CAPTURE: 'default_image_capture_formats' not specified; "
-		            "defaulting to 'upscaled'");
+		LOG_WARNING("CAPTURE: 'default_image_capture_formats' not specified, "
+		            "using 'upscaled'");
 		set_defaults();
 		return;
 	}
 	if (formats.size() > 3) {
 		LOG_WARNING("CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
-		            "Must not contain more than 3 formats; defaulting to 'upscaled'.",
+		            "Must not contain more than 3 formats, using 'upscaled'.",
 		            prefs.c_str());
 		set_defaults();
 		return;
@@ -76,10 +76,9 @@ void ImageCapturer::ConfigureGroupedMode(const std::string& prefs)
 		} else if (format == "rendered") {
 			grouped_mode.wants_rendered = true;
 		} else {
-			LOG_WARNING("CAPTURE: Invalid image capture format specified for "
-			            "'default_image_capture_formats': '%s'. "
+			LOG_WARNING("CAPTURE: Invalid 'default_image_capture_formats' setting: '%s'. "
 			            "Valid formats are 'raw', 'upscaled', and 'rendered'; "
-			            "defaulting to 'upscaled'.",
+			            "using 'upscaled'.",
 			            format.c_str());
 			set_defaults();
 			return;

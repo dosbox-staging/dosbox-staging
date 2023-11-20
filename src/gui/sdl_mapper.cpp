@@ -2747,7 +2747,7 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 	// Only report load failures for customized mapperfiles because by
 	// default, the mapperfile is not provided
 	if (!was_loaded && mapperfile_name != MAPPERFILE)
-		LOG_WARNING("MAPPER: Failed loading mapperfile '%s' directly and from resources",
+		LOG_WARNING("MAPPER: Failed loading mapperfile '%s' directly or from resources",
 		            mapperfile_name.data());
 
 	return was_loaded;

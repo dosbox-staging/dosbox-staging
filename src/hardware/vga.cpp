@@ -253,7 +253,7 @@ void VGA_SetRatePreference(const std::string &pref)
 
 	} else {
 		vga.draw.dos_rate_mode = VgaRateMode::Default;
-		LOG_WARNING("VIDEO: Unknown frame rate setting: %s, using default",
+		LOG_WARNING("VIDEO: Unknown frame rate setting: '%s', using 'default'",
 		            pref.c_str());
 	}
 }

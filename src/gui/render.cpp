@@ -743,7 +743,7 @@ static IntegerScalingMode get_integer_scaling_mode_setting()
 	} else if (mode == "vertical") {
 		return IntegerScalingMode::Vertical;
 	} else {
-		LOG_WARNING("RENDER: Invalid integer scaling mode '%s', using 'auto'",
+		LOG_WARNING("RENDER: Invalid 'integer_scaling' setting: '%s', using 'auto'",
 		            mode.c_str());
 		return IntegerScalingMode::Auto;
 	}

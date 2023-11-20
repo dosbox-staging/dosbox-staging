@@ -637,7 +637,7 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 
 	if (!audio_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off")
-			LOG_WARNING("GUS: Invalid 'gus_filter' value: '%s', using 'off'",
+			LOG_WARNING("GUS: Invalid 'gus_filter' setting: '%s', using 'off'",
 			            filter_prefs.c_str());
 
 		audio_channel->SetHighPassFilter(FilterState::Off);

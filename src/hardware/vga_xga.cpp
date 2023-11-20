@@ -1204,7 +1204,7 @@ void XGA_Write(io_port_t port, io_val_t val, io_width_t width)
 		if (width == io_width_t::byte)
 			vga_write_p3d4(0, val, io_width_t::byte);
 		else if (width == io_width_t::word) {
-			LOG_WARNING("XGA 16-bit write to vga_write_p3d4, vga_write_p3d5");
+			LOG_WARNING("XGA: 16-bit write to vga_write_p3d4, vga_write_p3d5");
 			vga_write_p3d4(0, val & 0xff, io_width_t::byte);
 			vga_write_p3d5(0, val >> 8, io_width_t::byte);
 		} else
