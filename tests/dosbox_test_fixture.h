@@ -28,7 +28,7 @@ public:
 		//
 		InitConfigDir();
 		const auto config_path = GetConfigDir();
-		ParseConfigFiles(config_path);
+		control->ParseConfigFiles(config_path);
 
 		Section *_sec;
 		// This will register all the init functions, but won't run them

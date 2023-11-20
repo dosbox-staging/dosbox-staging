@@ -4740,7 +4740,7 @@ int sdl_main(int argc, char* argv[])
 		if (!arguments->securemode && !arguments->noprimaryconf) {
 			const auto primary_config_path = GetPrimaryConfigPath();
 
-			if (!ConfigFileIsValid(primary_config_path)) {
+			if (!config_file_is_valid(primary_config_path)) {
 				// No config is loaded at this point, so we're
 				// writing the default settings to the primary
 				// config.
@@ -4757,7 +4757,7 @@ int sdl_main(int argc, char* argv[])
 		// After DOSBOX_Init() is done, all the conf sections have been
 		// registered, so we're ready to parse the conf files.
 		//
-		ParseConfigFiles(GetConfigDir());
+		control->ParseConfigFiles(GetConfigDir());
 
 		// Handle command line options that don't start the emulator but only
 		// perform some actions and print the results to the console.
@@ -4879,7 +4879,7 @@ int sdl_main(int argc, char* argv[])
 
 			std::vector<std::string> pvars(1, std::move(line));
 
-			const char* result = SetProp(pvars);
+			const char* result = control->SetProp(pvars);
 
 			if (strlen(result)) {
 				LOG_WARNING("CONFIG: %s", result);
