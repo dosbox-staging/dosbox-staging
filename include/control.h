@@ -45,6 +45,7 @@ struct CommandLineArguments {
 	bool noprimaryconf;
 	bool nolocalconf;
 	bool fullscreen;
+	bool list_countries;
 	bool list_glshaders;
 	bool version;
 	bool help;
