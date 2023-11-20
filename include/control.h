@@ -140,6 +140,9 @@ public:
 	                     const std::string& config_file_name);
 
 	void ParseEnv();
+	void ParseConfigFiles(const std_fs::path& config_path);
+	const std::string& GetLanguage();
+	const char* SetProp(std::vector<std::string>& pvars);
 
 	bool SecureMode() const
 	{

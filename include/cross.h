@@ -113,6 +113,7 @@ void InitConfigDir();
 
 std_fs::path GetConfigDir();
 std::string GetPrimaryConfigName();
+std_fs::path GetPrimaryConfigPath();
 
 std_fs::path resolve_home(const std::string &str) noexcept;
 

@@ -794,7 +794,7 @@ void CONFIG::Run(void)
 			if (cmd->GetStringRemain(rest)) {
 				pvars.push_back(rest);
 			}
-			const char* result = SetProp(pvars);
+			const char* result = control->SetProp(pvars);
 			if (strlen(result)) {
 				WriteOut(result);
 			} else {

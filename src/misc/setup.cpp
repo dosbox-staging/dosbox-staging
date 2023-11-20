@@ -1557,7 +1557,7 @@ Verbosity Config::GetStartupVerbosity() const
 	return Verbosity::High;
 }
 
-const std::string& GetLanguage()
+const std::string& Config::GetLanguage()
 {
 	static bool lang_is_cached = false;
 	static std::string lang    = {};
@@ -1567,11 +1567,11 @@ const std::string& GetLanguage()
 	}
 
 	// Has the user provided a language on the command line?
-	lang = control->arguments.lang;
+	lang = arguments.lang;
 
 	// Is a language provided in the conf file?
 	if (lang.empty()) {
-		const auto section = control->GetSection("dosbox");
+		const auto section = GetSection("dosbox");
 		assert(section);
 		lang = static_cast<const Section_prop*>(section)->Get_string("language");
 	}
@@ -1609,33 +1609,32 @@ void MSG_Init(Section_prop*);
 
 // Parse the user's configuration files starting with the primary, then custom
 // -conf's, and finally the local dosbox.conf
-void ParseConfigFiles(const std_fs::path& config_dir)
+void Config::ParseConfigFiles(const std_fs::path& config_dir)
 {
 	std::string config_file;
-	const auto arguments = &control->arguments;
 
 	// First: parse the user's primary 'dosbox-staging.conf' config file
-	const bool load_primary_config = !arguments->noprimaryconf;
+	const bool load_primary_config = !arguments.noprimaryconf;
 
 	if (load_primary_config) {
 		const auto config_path = config_dir / GetPrimaryConfigName();
-		control->ParseConfigFile("primary", config_path.string());
+		ParseConfigFile("primary", config_path.string());
 	}
 
 	// Second: parse the local 'dosbox.conf', if present
-	const bool load_local_config = !arguments->nolocalconf;
+	const bool load_local_config = !arguments.nolocalconf;
 
 	if (load_local_config) {
-		control->ParseConfigFile("local", "dosbox.conf");
+		ParseConfigFile("local", "dosbox.conf");
 	}
 
 	// Finally: layer on additional config files specified with the '-conf'
 	// switch
-	for (const auto& config_file : arguments->conf) {
-		if (!control->ParseConfigFile("custom", config_file)) {
+	for (const auto& config_file : arguments.conf) {
+		if (!ParseConfigFile("custom", config_file)) {
 			// Try to load it from the user directory
 			const auto cfg = config_dir / config_file;
-			if (!control->ParseConfigFile("custom", cfg.string())) {
+			if (!ParseConfigFile("custom", cfg.string())) {
 				LOG_WARNING("CONFIG: Can't open custom config file '%s'",
 				            config_file.c_str());
 			}
@@ -1646,18 +1645,13 @@ void ParseConfigFiles(const std_fs::path& config_dir)
 	// to discover the user's desired language. At this point, we can now
 	// initialise the messaging system which honours the language and loads
 	// those messages.
-	if (const auto sec = control->GetSection("dosbox"); sec) {
+	if (const auto sec = GetSection("dosbox"); sec) {
 		MSG_Init(static_cast<Section_prop*>(sec));
 	}
 }
 
-std_fs::path GetPrimaryConfigPath()
-{
-	return GetConfigDir() / GetPrimaryConfigName();
-}
-
 static char return_msg[200];
-const char* SetProp(std::vector<std::string>& pvars)
+const char* Config::SetProp(std::vector<std::string>& pvars)
 {
 	*return_msg = 0;
 
@@ -1672,7 +1666,7 @@ const char* SetProp(std::vector<std::string>& pvars)
 		pvars[0].erase(equpos);
 
 		// As we had a = the first thing must be a property now
-		Section* sec = control->GetSectionFromProperty(pvars[0].c_str());
+		Section* sec = GetSectionFromProperty(pvars[0].c_str());
 
 		if (sec) {
 			pvars.insert(pvars.begin(), std::string(sec->GetName()));
@@ -1692,11 +1686,11 @@ const char* SetProp(std::vector<std::string>& pvars)
 		}
 
 		// Check if the first parameter is a section or property
-		Section* sec = control->GetSection(pvars[0]);
+		Section* sec = GetSection(pvars[0]);
 
 		if (!sec) {
 			// Not a section: little duplicate from above
-			Section* sec = control->GetSectionFromProperty(
+			Section* sec = GetSectionFromProperty(
 			        pvars[0].c_str());
 
 			if (sec) {
@@ -1737,12 +1731,12 @@ const char* SetProp(std::vector<std::string>& pvars)
 			}
 
 			// Is this a property?
-			Section* sec2 = control->GetSectionFromProperty(
+			Section* sec2 = GetSectionFromProperty(
 			        pvars[1].c_str());
 
 			if (!sec2) {
 				// Not a property
-				Section* sec3 = control->GetSectionFromProperty(
+				Section* sec3 = GetSectionFromProperty(
 				        pvars[0].c_str());
 				if (sec3) {
 					// Section and property name are identical
@@ -1759,7 +1753,7 @@ const char* SetProp(std::vector<std::string>& pvars)
 	}
 
 	// Check if the property actually exists in the section
-	Section* sec2 = control->GetSectionFromProperty(pvars[1].c_str());
+	Section* sec2 = GetSectionFromProperty(pvars[1].c_str());
 	if (!sec2) {
 		safe_sprintf(return_msg,
 		             MSG_Get("PROGRAM_CONFIG_NO_PROPERTY"),
@@ -1806,7 +1800,7 @@ void Config::ParseArguments()
 }
 
 // Only checks if config file exists and is not empty
-bool ConfigFileIsValid(const std_fs::path& path)
+bool config_file_is_valid(const std_fs::path& path)
 {
 	FILE* file = fopen(path.string().c_str(), "r");
 	if (!file) {

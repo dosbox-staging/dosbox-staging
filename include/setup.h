@@ -507,13 +507,6 @@ public:
 	}
 };
 
-std_fs::path GetPrimaryConfigPath();
-void ParseConfigFiles(const std_fs::path& config_path);
-
-const std::string& GetLanguage();
-
-const char* SetProp(std::vector<std::string>& pvars);
-
-bool ConfigFileIsValid(const std_fs::path& path);
+bool config_file_is_valid(const std_fs::path& path);
 
 #endif

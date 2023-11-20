@@ -60,6 +60,11 @@ std::string GetPrimaryConfigName()
 	return CANONICAL_PROJECT_NAME ".conf";
 }
 
+std_fs::path GetPrimaryConfigPath()
+{
+	return GetConfigDir() / GetPrimaryConfigName();
+}
+
 #if defined(MACOSX)
 
 static std_fs::path get_or_create_config_dir()
