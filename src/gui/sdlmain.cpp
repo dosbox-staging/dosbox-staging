@@ -566,7 +566,7 @@ static bool is_command_pressed(const SDL_Event event)
 }
 #endif
 
-[[maybe_unused]] static void PauseDOSBox(bool pressed)
+[[maybe_unused]] static void pause_emulation(bool pressed)
 {
 	if (!pressed)
 		return;
@@ -3618,11 +3618,11 @@ static void GUI_StartUp(Section* sec)
 /* Pause binds with activate-debugger */
 #elif defined(MACOSX)
 	// Pause/unpause is hardcoded to Command+P on macOS
-	MAPPER_AddHandler(&PauseDOSBox, SDL_SCANCODE_P, PRIMARY_MOD,
+	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_P, PRIMARY_MOD,
 	                  "pause", "Pause Emu.");
 #else
 	// Pause/unpause is hardcoded to Alt+Pause on Window & Linux
-	MAPPER_AddHandler(&PauseDOSBox, SDL_SCANCODE_PAUSE, MMOD2,
+	MAPPER_AddHandler(&pause_emulation, SDL_SCANCODE_PAUSE, MMOD2,
 	                  "pause", "Pause Emu.");
 #endif
 	/* Get Keyboard state of numlock and capslock */
