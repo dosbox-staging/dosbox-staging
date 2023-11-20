@@ -2114,7 +2114,7 @@ static void CPU_CycleIncrease(bool pressed) {
 	if (!pressed) return;
 	if (CPU_CycleAutoAdjust) {
 		CPU_CyclePercUsed+=5;
-		if (CPU_CyclePercUsed>105) CPU_CyclePercUsed=105;
+		if (CPU_CyclePercUsed>100) CPU_CyclePercUsed=100;
 		LOG_MSG("CPU speed: max %d percent.",CPU_CyclePercUsed);
 		GFX_SetTitle(CPU_CyclePercUsed);
 	} else {
@@ -2265,7 +2265,7 @@ public:
 		CommandLine cmd("", p->GetSection()->Get_string("parameters"));
 
 		constexpr auto min_percent = 0;
-		constexpr auto max_percent = 105;
+		constexpr auto max_percent = 100;
 
 		if (type == "max") {
 			CPU_CycleMax = 0;
