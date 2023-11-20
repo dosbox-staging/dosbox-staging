@@ -568,8 +568,9 @@ static bool is_command_pressed(const SDL_Event event)
 
 [[maybe_unused]] static void pause_emulation(bool pressed)
 {
-	if (!pressed)
+	if (!pressed) {
 		return;
+	}
 	const auto inkeymod = static_cast<uint16_t>(SDL_GetModState());
 
 	bool is_paused = true;
@@ -577,13 +578,17 @@ static bool is_command_pressed(const SDL_Event event)
 
 	Delay(500);
 	SDL_Event event;
+
 	while (SDL_PollEvent(&event)) {
 		// flush event queue.
 	}
-	/* NOTE: This is one of the few places where we use SDL key codes
-	with SDL 2.0, rather than scan codes. Is that the correct behavior? */
+
+	// NOTE: This is one of the few places where we use SDL key codes with
+	// SDL 2.0, rather than scan codes. Is that the correct behavior?
 	while (is_paused && !shutdown_requested) {
-		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
+		// since we're not polling, CPU usage drops to 0.
+		SDL_WaitEvent(&event);
+
 		switch (event.type) {
 		case SDL_QUIT: GFX_RequestExit(true); break;
 
@@ -595,29 +600,36 @@ static bool is_command_pressed(const SDL_Event event)
 			break;
 
 		case SDL_KEYDOWN:
-#if defined (MACOSX)
+#if defined(MACOSX)
 			// Pause/unpause is hardcoded to Command+P on macOS
-			if (is_command_pressed(event) && event.key.keysym.sym == SDLK_p) {
+			if (is_command_pressed(event) &&
+			    event.key.keysym.sym == SDLK_p) {
 #else
-			// Pause/unpause is hardcoded to Alt+Pause on Window & Linux
+			// Pause/unpause is hardcoded to Alt+Pause on Window &
+			// Linux
 			if (event.key.keysym.sym == SDLK_PAUSE) {
 #endif
 				const uint16_t outkeymod = event.key.keysym.mod;
 				if (inkeymod != outkeymod) {
 					KEYBOARD_ClrBuffer();
 					MAPPER_LosingFocus();
-					//Not perfect if the pressed alt key is switched, but then we have to
-					//insert the keys into the mapper or create/rewrite the event and push it.
-					//Which is tricky due to possible use of scancodes.
+					// Not perfect if the pressed Alt key is
+					// switched, but then we have to insert
+					// the keys into the mapper or
+					// create/rewrite the event and push it.
+					// Which is tricky due to possible use
+					// of scancodes.
 				}
 				is_paused = false;
 				GFX_RefreshTitle(is_paused);
 				break;
 			}
 
-#if defined (MACOSX)
-			if (is_command_pressed(event) && event.key.keysym.sym == SDLK_q) {
-				/* On macs, all aps exit when pressing cmd-q */
+#if defined(MACOSX)
+			if (is_command_pressed(event) &&
+			    event.key.keysym.sym == SDLK_q) {
+				// On macOS, Command+Q is the default key to close an
+				// application
 				GFX_RequestExit(true);
 				break;
 			}
