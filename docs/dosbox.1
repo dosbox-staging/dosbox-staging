@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.TH DOSBOX 1 "Oct 27, 2023"
+.TH DOSBOX 1 "Dec 4, 2023"
 .\" Please adjust this date whenever revising the manpage.
 
 .SH NAME
@@ -38,6 +38,8 @@ dosbox \- DOSBox Staging, x86/DOS emulator, a modern continuation of DOSBox
 .B dosbox \-\-set <property>=<value>
 .LP
 .B dosbox \-\-working-dir <path>
+.LP
+.B dosbox \-\-list\-countries
 .LP
 .B dosbox \-\-list\-glshaders
 .LP
@@ -89,8 +91,11 @@ Legacy single dash abbrevations still work for backwards compatibility.
 --working-dir <path>     Set working directory to <path>. DOSBox will act as if
                          started from this directory.
 
+--list-countries         List all supported countries with their numeric codes.
+                         Codes are to be used in the 'country' config setting.
+
 --list-glshaders         List all available OpenGL shaders and their paths.
-                         Results are useable in the 'glshader = ' config setting.
+                         Shaders are to be used in the 'glshader' config setting.
 
 --fullscreen             Start in fullscreen mode.
 

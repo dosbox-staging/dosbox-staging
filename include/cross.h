@@ -159,4 +159,27 @@ bool get_expanded_files(const std::string &path,
 
 std::string get_language_from_os();
 
+// A printf variant outputting UTF-8 strings
+template <typename... Arguments>
+void printf_utf8(const char* format, Arguments... arguments)
+{
+#ifdef WIN32
+	constexpr uint16_t CodePageUtf8 = 65001;
+
+	const auto old_code_page = GetConsoleOutputCP();
+	SetConsoleOutputCP(CodePageUtf8);
+	try {
+		printf(format, arguments...);
+	} catch (...) {
+		SetConsoleOutputCP(old_code_page);
+		throw;
+	}
+
+	SetConsoleOutputCP(old_code_page);
+#else
+	// Assume any OS without special support uses UTF-8 as console encoding
+	printf(format, arguments...);
+#endif
+}
+
 #endif

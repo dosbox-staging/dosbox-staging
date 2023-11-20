@@ -878,127 +878,36 @@ static inline uint8_t RealHandle(uint16_t handle) {
 	return psp.GetFileHandle(handle);
 }
 
-#define DOS_DATE_FORMAT_OFS         0
-#define DOS_DATE_SEPARATOR_OFS      11
-#define DOS_TIME_FORMAT_OFS         17
-#define DOS_TIME_SEPARATOR_OFS      13
-#define DOS_THOUSANDS_SEPARATOR_OFS 7
-#define DOS_DECIMAL_SEPARATOR_OFS   9
+/* Locale information */
 
-// Sources of the country numbers:
-// - MS-DOS 6.22, COUNTRY.TXT file
-// - PC-DOS 2000, HELP COUNTRY command, information table
-// - DR-DOS 7.03, HELP, Table 9-2: Country Codes and Code Pages
-// - FreeDOS 1.3, country.asm (source code)
-// - Paragon PTS DOS 2000 Pro manual
-// - https://en.wikipedia.org/wiki/List_of_country_calling_codes
-//   (used for remaining countries, especially where we have keyboard layout)
-enum class Country : uint16_t {
-	United_States      = 1,   // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Canada_French      = 2,   // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Latin_America      = 3,   // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Canada_English     = 4,   // MS-DOS
-	Russia             = 7,   // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	South_Africa       = 27,  // MS-DOS
-	Greece             = 30,  // MS-DOS, PC-DOS,         FreeDOS
-	Netherlands        = 31,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Belgium            = 32,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	France             = 33,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Spain              = 34,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Hungary            = 36,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS
-	Yugoslavia         = 38,  // MS-DOS, PC-DOS,         FreeDOS
-	Italy              = 39,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Romania            = 40,  // MS-DOS, PC-DOS,         FreeDOS
-	Switzerland        = 41,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Czechia            = 42,  // MS-DOS                                   (*)
-	Austria            = 43,  // MS-DOS                  FreeDOS
-	United_Kingdom     = 44,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Denmark            = 45,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Sweden             = 46,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Norway             = 47,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Poland             = 48,  // MS-DOS, PC-DOS,         FreeDOS
-	Germany            = 49,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Mexico             = 52,  // MS-DOS
-	Argentina          = 54,  // MS-DOS,                 FreeDOS
-	Brazil             = 55,  // MS-DOS, PC-DOS,         FreeDOS
-	Chile              = 56,  // MS-DOS
-	Colombia           = 57,  // MS-DOS
-	Venezuela          = 58,  // MS-DOS
-	Malaysia           = 60,  // MS-DOS,                 FreeDOS
-	Australia          = 61,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS          (*)
-	Philippines        = 63,
-	New_Zealand        = 64,  // MS-DOS
-	Singapore          = 65,  // MS-DOS,                 FreeDOS
-	Kazakhstan         = 77,
-	Japan              = 81,  // MS-DOS, PC-DOS,         FreeDOS, Paragon
-	Korea              = 82,  // MS-DOS,                 FreeDOS, Paragon (*)
-	Vietnam            = 84,
-	China              = 86,  // MS-DOS,                 FreeDOS, Paragon
-	Turkey             = 90,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS
-	India              = 91,  // MS-DOS,                 FreeDOS
-	Niger              = 227,
-	Benin              = 229,
-	Nigeria            = 234,
-	Faroe_Islands      = 298,
-	Portugal           = 351, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Ireland            = 353, // MS-DOS
-	Iceland            = 354, // MS-DOS, PC-DOS
-	Albania            = 355, // MS-DOS, PC-DOS
-	Malta              = 356,
-	Finland            = 358, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Bulgaria           = 359, // MS-DOS, PC-DOS,         FreeDOS
-	Lithuania          = 370,
-	Latvia             = 371,
-	Estonia            = 372,
-	Armenia            = 374,
-	Belarus            = 375, //                         FreeDOS
-	Ukraine            = 380, //                         FreeDOS
-	Serbia             = 381, // MS-DOS, PC-DOS,         FreeDOS          (*)
-	Montenegro         = 382,
-	Croatia            = 384, // MS-DOS,                 FreeDOS          (*)
-	Slovenia           = 386, // MS-DOS, PC-DOS,         FreeDOS
-	Bosnia_Herzegovina = 387, //         PC-DOS,         FreeDOS
-	Macedonia          = 389, // MS-DOS, PC-DOS,         FreeDOS
-	Slovakia           = 421, // MS-DOS                                   (*)
-	Ecuador            = 593, // MS-DOS
-	Arabic             = 785, // MS-DOS,                 FreeDOS, Paragon (*)
-	Hong_Kong          = 852, // MS-DOS
-	Taiwan             = 886, // MS-DOS
-	Israel             = 972, // MS-DOS,                 FreeDOS, Paragon
-	Mongolia           = 976,
-	Tadjikistan        = 992,
-	Turkmenistan       = 993,
-	Azerbaijan         = 994,
-	Georgia            = 995,
-	Kyrgyzstan         = 996,
-	Uzbekistan         = 998,
-
-	// (*) Remarks:
-	// - MS-DOS and PC-DOS use country code 381 for both Serbia and Montenegro
-	// - MS-DOS and PC-DOS use country code 61 also for International English
-	// - PC-DOS uses country code 381 also for Yugoslavia Cyrillic
-	// - PC-DOS uses country code 385 (not 386) for Croatia
-	// - PC-DOS uses country code 388 for Bosna/Herzegovina Cyrillic
-	// - PC-DOS uses country code 421 for Czechia and 422 for Slovakia
-	// - FreeDOS uses country code 042 for Czechoslovakia
-	// - FreeDOS calls country code 785 Middle-East,
-	//   MS-DOS calls it Arabic South
-	// - Paragon PTS DOS uses country code 61 only for Australia
-	// - Paragon PTS DOS uses country code 88 for Taiwan
-	// - DOSes use country code 82 for Korea, despite country calling code
-	//   82 is assigned to South Korea
-
-	// FreeDOS also supports the following, not yet handled here:
-	// - Belgium/Dutch        40032
-	// - Belgium/French       41032
-	// - Belgium/German       42032
-	// - Spain/Spanish        40034
-	// - Spain/Catalan        41034
-	// - Spain/Gallegan       42034
-	// - Spain/Basque         43034
-	// - Switzerland/German   40041
-	// - Switzerland/French   41041
-	// - Switzerland/Italian  42041
+enum class DosDateFormat : uint8_t {
+	MonthDayYear = 0,
+	DayMonthYear = 1,
+	YearMonthDay = 2,
 };
+
+enum class DosTimeFormat : uint8_t {
+	Time12H = 0, // AM/PM
+	Time24H = 1,
+};
+
+enum class DosCurrencyFormat : uint8_t {
+	SymbolAmount      = 0,
+	AmountSymbol      = 1,
+	SymbolSpaceAmount = 2,
+	AmountSpaceSymbol = 3,
+
+	// Some sources claim that bit 2 set means currency symbol should
+	// replace decimal point; so far it is unknown which (if any)
+	// COUNTRY.SYS uses this bit, most likely no DOS software uses it.
+};
+
+DosDateFormat DOS_GetLocaleDateFormat();
+DosTimeFormat DOS_GetLocaleTimeFormat();
+char DOS_GetLocaleDateSeparator();
+char DOS_GetLocaleTimeSeparator();
+char DOS_GetLocaleThousandsSeparator();
+char DOS_GetLocaleDecimalSeparator();
+char DOS_GetLocaleListSeparator();
 
 #endif

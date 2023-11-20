@@ -49,6 +49,7 @@
 #endif
 
 #include "../capture/capture.h"
+#include "../dos/dos_locale.h"
 #include "../ints/int10.h"
 #include "control.h"
 #include "cpu.h"
@@ -4115,7 +4116,7 @@ static std::vector<std::string> get_sdl_texture_renderers()
 	return drivers;
 }
 
-static void messages_add_sdl()
+static void messages_add_command_line()
 {
 	MSG_Add("DOSBOX_HELP",
 	        "Usage: %s [OPTION]... [PATH]\n"
@@ -4151,8 +4152,11 @@ static void messages_add_sdl()
 	        "  --working-dir <path>     Set working directory to <path>. DOSBox will act as if\n"
 	        "                           started from this directory.\n"
 	        "\n"
+	        "  --list-countries         List all supported countries with their numeric codes.\n"
+	        "                           Codes are to be used in the 'country' config setting.\n"
+	        "\n"
 	        "  --list-glshaders         List all available OpenGL shaders and their paths.\n"
-	        "                           Results are useable in the 'glshader = ' config setting.\n"
+	        "                           Shaders are to be used in the 'glshader' config setting.\n"
 	        "\n"
 	        "  --fullscreen             Start in fullscreen mode.\n"
 	        "\n"
@@ -4183,7 +4187,10 @@ static void messages_add_sdl()
 	        "  -h, -?, --help           Print help message and exit.\n"
 	        "\n"
 	        "  -V, --version            Print version information and exit.\n");
+}
 
+static void messages_add_sdl()
+{
 	MSG_Add("PROGRAM_CONFIG_PROPERTY_ERROR", "No such section or property: %s\n");
 
 	MSG_Add("PROGRAM_CONFIG_NO_PROPERTY",
@@ -4484,20 +4491,23 @@ void Restart(bool pressed) { // mapper handler
 	restart_program(control->startup_params);
 }
 
-static int list_glshaders()
+static void list_glshaders()
 {
 #if C_OPENGL
 	for (const auto& line : RENDER_GenerateShaderInventoryMessage()) {
-		printf("%s\n", line.c_str());
+		printf_utf8("%s\n", line.c_str());
 	}
-	return 0;
 #else
 	fprintf(stderr,
 	        "OpenGL is not supported by this executable "
 	        "and is missing the functionality to list shaders.");
-
-	return 1;
 #endif
+}
+
+static void list_countries()
+{
+	const auto message_utf8 = DOS_GenerateListCountriesMessage();
+	printf_utf8("%s\n", message_utf8.c_str());
 }
 
 static int print_primary_config_location()
@@ -4591,7 +4601,7 @@ int sdl_main(int argc, char* argv[])
 	loguru::g_preamble_pipe    = true;
 
 	if (arguments->version || arguments->help || arguments->printconf ||
-	    arguments->editconf || arguments->eraseconf ||
+	    arguments->editconf || arguments->eraseconf || arguments->list_countries ||
 	    arguments->list_glshaders || arguments->erasemapper) {
 		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
 	}
@@ -4630,7 +4640,10 @@ int sdl_main(int argc, char* argv[])
 		//
 		InitConfigDir();
 
-		// Register sdlmain's messages and conf sections
+		// Register sdlmain's messages, conf sections, and essential
+		// DOS messages, needed by some command line switches
+		messages_add_command_line();
+		DOS_Locale_AddMessages();
 		messages_add_sdl();
 		config_add_sdl();
 
@@ -4679,18 +4692,7 @@ int sdl_main(int argc, char* argv[])
 			const auto program_name = argv[0];
 			const auto help_utf8 = format_string(MSG_GetRaw("DOSBOX_HELP"),
 			                                     program_name);
-#ifdef WIN32
-			const auto old_code_page = GetConsoleOutputCP();
-
-			constexpr uint16_t CodePageUtf8 = 65001;
-			SetConsoleOutputCP(CodePageUtf8);
-			printf("%s", help_utf8.c_str());
-			SetConsoleOutputCP(old_code_page);
-#else
-			// Assume any OS without special support uses UTF-8 as
-			// console encoding
-			printf("%s", help_utf8.c_str());
-#endif
+			printf_utf8("%s", help_utf8.c_str());
 			return 0;
 		}
 		if (arguments->editconf) {
@@ -4705,8 +4707,13 @@ int sdl_main(int argc, char* argv[])
 		if (arguments->printconf) {
 			return print_primary_config_location();
 		}
+		if (arguments->list_countries) {
+			list_countries();
+			return 0;
+		}
 		if (arguments->list_glshaders) {
-			return list_glshaders();
+			list_glshaders();
+			return 0;
 		}
 
 		// Can't disable the console with debugger enabled

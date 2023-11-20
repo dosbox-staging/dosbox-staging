@@ -1773,6 +1773,7 @@ void Config::ParseArguments()
 	arguments.noprimaryconf = cmdline->FindRemoveBoolArgument("noprimaryconf");
 	arguments.nolocalconf = cmdline->FindRemoveBoolArgument("nolocalconf");
 	arguments.fullscreen  = cmdline->FindRemoveBoolArgument("fullscreen");
+	arguments.list_countries = cmdline->FindRemoveBoolArgument("list-countries");
 	arguments.list_glshaders = cmdline->FindRemoveBoolArgument("list-glshaders");
 	arguments.noconsole   = cmdline->FindRemoveBoolArgument("noconsole");
 	arguments.startmapper = cmdline->FindRemoveBoolArgument("startmapper");

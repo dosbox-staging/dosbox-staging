@@ -36,6 +36,7 @@
 #include "cpu.h"
 #include "cross.h"
 #include "debug.h"
+#include "dos/dos_locale.h"
 #include "dos_inc.h"
 #include "hardware.h"
 #include "inout.h"
@@ -1154,11 +1155,22 @@ void DOSBOX_Init()
 
 	// DOS locale settings
 
-	pint = secprop->Add_int("country", when_idle, 0);
-	pint->Set_help("Set DOS country code (0 by default).\n"
-	               "This affects country-specific information such as date, time, and decimal\n"
-	               "formats. If set to 0, the country code corresponding to the selected keyboard\n"
-	               "layout will be used.");
+	secprop->AddInitFunction(&DOS_Locale_Init, changeable_at_runtime);
+	pstring = secprop->Add_string("locale_period", when_idle, "modern");
+	pstring->Set_help(
+	        "Set locale epoch ('modern' by default). Historic settings (if available\n"
+	        "for the given country) try to mimic old DOS behaviour when displaying\n"
+	        "information such as dates, time, or numbers, modern ones follow current day\n"
+	        "practices for user experience more consistent with typical host systems.");
+	pstring->Set_values({"historic", "modern"});
+
+	pstring = secprop->Add_string("country", when_idle, "auto");
+	pstring->Set_help(
+	        "Set DOS country code ('auto' by default).\n"
+	        "This affects country-specific information such as date, time, and decimal\n"
+	        "formats. The list of supported country codes can be displayed using\n"
+	        "'--list-countries' command-line argument. If set to 'auto', the country code\n"
+	        "corresponding to the selected keyboard layout will be used.");
 
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, changeable_at_runtime);
 	pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");

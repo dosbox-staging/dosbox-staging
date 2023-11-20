@@ -9,6 +9,7 @@ libdos_sources = files(
     'dos_files.cpp',
     'dos_ioctl.cpp',
     'dos_keyboard_layout.cpp',
+    'dos_locale.cpp',
     'dos_memory.cpp',
     'dos_misc.cpp',
     'dos_mscdex.cpp',
