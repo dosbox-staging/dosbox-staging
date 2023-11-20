@@ -167,7 +167,7 @@ void LPT_DAC_Init(Section *section)
 		// The remaining setting is to turn the LPT DAC off
 		const auto dac_choice_has_bool = parse_bool_setting(dac_choice);
 		if (!dac_choice_has_bool || *dac_choice_has_bool != false) {
-			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' choice: '%s', using 'none'",
+			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' setting: '%s', using 'none'",
 			            dac_choice.data());
 		}
 		return;
@@ -184,7 +184,7 @@ void LPT_DAC_Init(Section *section)
 			filter_state = *filter_choice_has_bool ? FilterState::On
 			                                       : FilterState::Off;
 		} else {
-			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac_filter' value: '%s', using 'off'",
+			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac_filter' setting: '%s', using 'off'",
 			            filter_choice.data());
 			assert(filter_state == FilterState::Off);
 		}

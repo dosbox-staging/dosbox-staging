@@ -348,7 +348,7 @@ static CrossfeedPreset crossfeed_pref_to_preset(const std::string_view pref)
 
 	// the conf system programmatically guarantees only the above prefs are
 	// used
-	LOG_WARNING("MIXER: Invalid crossfeed preset name: '%s'; crossfeed disabled",
+	LOG_WARNING("MIXER: Invalid 'crossfeed' setting: '%s', using 'off'",
 	            pref.data());
 	return CrossfeedPreset::None;
 }
@@ -435,7 +435,7 @@ static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 
 	// the conf system programmatically guarantees only the above prefs are
 	// used
-	LOG_WARNING("MIXER: Invalid reverb preset name: '%s'; reverb disabled",
+	LOG_WARNING("MIXER: Invalid 'reverb' setting: '%s', using 'off'",
 	            pref.data());
 	return ReverbPreset::None;
 }
@@ -527,7 +527,7 @@ static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 
 	// the conf system programmatically guarantees only the above prefs are
 	// used
-	LOG_WARNING("MIXER: Invalid chorus preset name: '%s'; chorus disabled",
+	LOG_WARNING("MIXER: Invalid 'chorus' setting: '%s', using ' off'",
 	            pref.data());
 	return ChorusPreset::None;
 }

@@ -71,7 +71,7 @@ void ImageSaver::QueueImage(const RenderedImage& image, const CapturedImageType 
                             const std::optional<std_fs::path>& path)
 {
 	if (!image_fifo.IsRunning()) {
-		LOG_WARNING("CAPTURE: Cannot create screenshots while image capturer"
+		LOG_WARNING("CAPTURE: Cannot capture image while image capturer "
 		            "is shutting down");
 		return;
 	}

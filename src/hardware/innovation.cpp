@@ -95,7 +95,7 @@ void Innovation::Open(const std::string_view model_choice,
 		        channel_filter_choice);
 
 		if (!filter_choice_has_bool) {
-			LOG_WARNING("INNOVATION: Invalid 'innovation_filter' value: '%s', using 'off'",
+			LOG_WARNING("INNOVATION: Invalid 'innovation_filter' setting: '%s', using 'off'",
 			            channel_filter_choice.data());
 		}
 

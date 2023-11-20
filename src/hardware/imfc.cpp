@@ -13410,7 +13410,7 @@ static void imfc_init(Section* sec)
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (!filter_choice_has_bool) {
-			LOG_WARNING("IMFC: Invalid 'imfc_filter' value: '%s', using 'off'",
+			LOG_WARNING("IMFC: Invalid 'imfc_filter' setting: '%s', using 'off'",
 			            filter_choice.data());
 		}
 

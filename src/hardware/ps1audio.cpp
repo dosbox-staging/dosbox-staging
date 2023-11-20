@@ -146,7 +146,7 @@ Ps1Dac::Ps1Dac(const std::string_view filter_choice)
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (!filter_choice_has_bool) {
-			LOG_WARNING("PS1DAC: Invalid 'ps1audio_dac_filter' value: '%s', using 'off'",
+			LOG_WARNING("PS1DAC: Invalid 'ps1audio_dac_filter' setting: '%s', using 'off'",
 			            filter_choice.data());
 		}
 

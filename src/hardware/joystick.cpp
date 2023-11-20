@@ -534,8 +534,8 @@ static void configure_calibration(const Section_prop &settings)
 			return parsed_rates;
 		}
 		if (pref != "auto" && pref.length() != 0)
-			LOG_WARNING("JOYSTICK: Invalid %c_calibration parameters: %s."
-			            " Must be auto or number,number.",
+			LOG_WARNING("JOYSTICK: Invalid '%c_calibration' setting: '%s', "
+			            "using 'auto'",
 			            default_rates.axis,
 			            pref.data());
 		return default_rates;

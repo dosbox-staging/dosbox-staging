@@ -2253,7 +2253,7 @@ void GFX_SetMouseRawInput(const bool requested_raw_input)
 	if (SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
 	                            requested_raw_input ? "0" : "1",
 	                            SDL_HINT_OVERRIDE) != SDL_TRUE)
-		LOG_WARNING("SDL: Mouse raw input %s failed",
+		LOG_WARNING("SDL: Failed to %s raw mouse input",
 		            requested_raw_input ? "enable" : "disable");
 }
 
@@ -2920,11 +2920,9 @@ static SDL_Point parse_window_resolution_from_conf(const std::string &pref)
 		return {w, h};
 	}
 
-	LOG_WARNING("DISPLAY: Requested window resolution '%s' is not valid, "
-	            "falling back to '%dx%d' instead",
-	            pref.c_str(),
-	            FallbackWindowSize.x,
-	            FallbackWindowSize.y);
+	LOG_WARNING("DISPLAY: Invalid 'windowresolution' setting: '%s', "
+	            "using 'default'",
+	            pref.c_str());
 
 	return FallbackWindowSize;
 }
@@ -2947,8 +2945,8 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 		} else if (pref == "desktop") {
 			return 100;
 		} else {
-			LOG_WARNING("DISPLAY: Requested window resolution '%s' is invalid, "
-			            "using 'default' instead",
+			LOG_WARNING("DISPLAY: Invalid 'windowresolution' setting: '%s', "
+			            "using 'default'",
 			            pref.c_str());
 			return MediumPercent;
 		}
@@ -3044,8 +3042,8 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 	const auto was_parsed = (sscanf(window_position_val.c_str(), "%d,%d", &x, &y) ==
 	                         2);
 	if (!was_parsed) {
-		LOG_WARNING("DISPLAY: Requested window position '%s' was not in X,Y format, "
-		            "using 'auto' instead",
+		LOG_WARNING("DISPLAY: Invalid 'window_position' setting: '%s'. "
+		            "Must be in X,Y format, using 'auto'.",
 		            window_position_val.c_str());
 		return;
 	}
@@ -3055,11 +3053,10 @@ static void setup_initial_window_position_from_conf(const std::string& window_po
 	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
 	                              y > desktop.h;
 	if (is_out_of_bounds) {
-		LOG_WARNING("DISPLAY: Requested window position '%d,%d' is outside the "
-		            "bounds of the desktop '%dx%d', "
-		            "using 'auto' instead",
-		            x,
-		            y,
+		LOG_WARNING("DISPLAY: Invalid 'window_position' setting: '%s'. "
+		            "Requested position is outside the bounds of the %dx%d "
+		            "desktop, using 'auto'.",
+		            window_position_val.c_str(),
 		            desktop.w,
 		            desktop.h);
 		return;
@@ -3516,7 +3513,7 @@ static void set_priority_levels(const std::string& active_pref,
 		if (pref == "highest") {
 			return PRIORITY_LEVEL_HIGHEST;
 		}
-		LOG_WARNING("SDL: Invalid priority level: '%s', using 'auto'",
+		LOG_WARNING("SDL: Invalid 'priority' setting: '%s', using 'auto'",
 		            pref.data());
 
 		return PRIORITY_LEVEL_AUTO;
@@ -3588,7 +3585,7 @@ static void GUI_StartUp(Section* sec)
 			sdl.desktop.host_rate_mode      = HostRateMode::Custom;
 			sdl.desktop.preferred_host_rate = rate;
 		} else {
-			LOG_WARNING("SDL: Invalid 'host_rate' value: '%s', using 'auto'",
+			LOG_WARNING("SDL: Invalid 'host_rate' setting: '%s', using 'auto'",
 			            host_rate_pref.c_str());
 			sdl.desktop.host_rate_mode = HostRateMode::Auto;
 		}
@@ -3618,7 +3615,7 @@ static void GUI_StartUp(Section* sec)
 		sdl.frame.desired_mode = FrameMode::Vfr;
 	else {
 		sdl.frame.desired_mode = FrameMode::Unset;
-		LOG_WARNING("SDL: Invalid 'presentation_mode' value: '%s'",
+		LOG_WARNING("SDL: Invalid 'presentation_mode' setting: '%s', using 'auto'",
 		            presentation_mode_pref.c_str());
 	}
 
@@ -4851,7 +4848,7 @@ int sdl_main(int argc, char* argv[])
 			E_Exit("SDL: Can't init SDL %s", SDL_GetError());
 		}
 		if (SDL_CDROMInit() < 0) {
-			LOG_WARNING("SDL: Failed to init CD-ROM support");
+			LOG_WARNING("SDL: Failed to initialise CD-ROM support");
 		}
 
 		sdl.initialized = true;

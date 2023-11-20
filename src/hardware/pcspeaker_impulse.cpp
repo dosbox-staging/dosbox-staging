@@ -290,7 +290,7 @@ void PcSpeakerImpulse::SetCounter(const int cntr, const PitMode pit_mode)
 
 	default:
 #ifdef SPKR_DEBUGGING
-		LOG_WARNING("Unhandled speaker PIT mode: %s at %f", pit_mode_to_string(pit_mode), PIC_FullIndex());
+		LOG_WARNING("PCSPEAKER: Unhandled speaker PIT mode: '%s' at %f", pit_mode_to_string(pit_mode), PIC_FullIndex());
 #endif
 		return;
 	}

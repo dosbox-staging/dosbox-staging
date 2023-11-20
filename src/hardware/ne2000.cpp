@@ -376,7 +376,7 @@ bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
     // have been initialised.
     //
     if (!s.remote_bytes) {
-	    LOG_WARNING("Empty ASIC read from port=0x%02x of length %u and %u remote_bytes",
+	    LOG_WARNING("NE2000: Empty ASIC read from port=0x%02x of length %u and %u remote_bytes",
 			offset, enum_val(io_len), s.remote_bytes);
 	    break;
     }
