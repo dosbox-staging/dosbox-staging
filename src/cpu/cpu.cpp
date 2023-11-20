@@ -32,8 +32,8 @@
 #include "lazyflags.h"
 #include "support.h"
 
-extern void GFX_RefreshTitle();
-extern void GFX_SetTitle(const int32_t cycles, const bool paused = false);
+extern void GFX_RefreshTitle(const bool is_paused = false);
+extern void GFX_SetTitle(const int32_t cycles, const bool is_paused = false);
 
 #if 1
 #undef LOG

@@ -324,10 +324,10 @@ void GFX_SetTitle(const int32_t new_num_cycles, const bool is_paused = false)
 	SDL_SetWindowTitle(sdl.window, title_buf);
 }
 
-void GFX_RefreshTitle()
+void GFX_RefreshTitle(const bool is_paused = false)
 {
 	constexpr int8_t refresh_cycle_count = -1;
-	GFX_SetTitle(refresh_cycle_count);
+	GFX_SetTitle(refresh_cycle_count, is_paused);
 }
 
 // Detects if we're running within a desktop environment (or window manager).
@@ -572,8 +572,9 @@ static bool is_command_pressed(const SDL_Event event)
 		return;
 	const auto inkeymod = static_cast<uint16_t>(SDL_GetModState());
 
-	GFX_RefreshTitle();
-	bool paused = true;
+	bool is_paused = true;
+	GFX_RefreshTitle(is_paused);
+
 	Delay(500);
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
@@ -581,7 +582,7 @@ static bool is_command_pressed(const SDL_Event event)
 	}
 	/* NOTE: This is one of the few places where we use SDL key codes
 	with SDL 2.0, rather than scan codes. Is that the correct behavior? */
-	while (paused && !shutdown_requested) {
+	while (is_paused && !shutdown_requested) {
 		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
 		switch (event.type) {
 		case SDL_QUIT: GFX_RequestExit(true); break;
@@ -609,8 +610,8 @@ static bool is_command_pressed(const SDL_Event event)
 					//insert the keys into the mapper or create/rewrite the event and push it.
 					//Which is tricky due to possible use of scancodes.
 				}
-				paused = false;
-				GFX_RefreshTitle();
+				is_paused = false;
+				GFX_RefreshTitle(is_paused);
 				break;
 			}
 
