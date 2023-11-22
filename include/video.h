@@ -89,7 +89,20 @@ enum class IntegerScalingMode {
 	Vertical,
 };
 
-enum class AspectRatioCorrectionMode { Auto, SquarePixels, Stretch };
+enum class AspectRatioCorrectionMode {
+	// Calculate the pixel aspect ratio from the display timings on VGA, and
+	// from heuristics & hardcoded values on all other adapters.
+	Auto,
+
+	// Always force square pixel aspect ratio.
+	SquarePixels,
+
+	// Use a 4:3 display aspect ratio viewport as the starting point, then
+	// apply user-defined horizontal and vertical scale factors to it. Stretch
+	// all video modes into the resulting viewport and derive the pixel aspect
+	// ratios from that.
+	Stretch
+};
 
 enum class ViewportMode { Fit, Relative };
 
