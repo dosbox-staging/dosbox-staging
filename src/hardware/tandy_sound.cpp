@@ -126,7 +126,7 @@ public:
 		bool is_done = false;
 	};
 	struct Registers {
-		uint16_t frequency = 0;
+		uint16_t clock_divider = 0;
 		uint8_t mode = 0;
 		uint8_t control = 0;
 		uint8_t amplitude = 0;
@@ -315,10 +315,14 @@ void TandyDAC::DmaCallback([[maybe_unused]] const DmaChannel*, DMAEvent event)
 
 void TandyDAC::ChangeMode()
 {
-	// Avoid under or overruning the mixer with invalid frequencies
-	// Typically frequencies are in the 8 to 22 Khz range
-	constexpr auto dac_min_freq_hz = 4900;
-	constexpr auto dac_max_freq_hz = 49000;
+	// Typical sample rates are 1.7. 5.5, 11, and rarely 22 KHz. Although
+	// several games (one being OutRun) set instantaneous rates above
+	// 100,000 Hz, we throw these out as they can cause garbage high
+	// frequency harmonics and also cause problems for the Speex Resampler.
+	// For example, a clock divider value of 8 (which is valid) produces a
+	// 450 KHz sampling rate, which is way beyond what Speex can handle.
+	//
+	constexpr auto dac_max_sample_rate_hz = 49000;
 
 	// LOG_MSG("TANDYDAC: Mode changed to %d", regs.mode);
 	switch (regs.mode & 3) {
@@ -327,13 +331,15 @@ void TandyDAC::ChangeMode()
 	case 2: // recording
 		break;
 	case 3: // playback
-		if (!regs.frequency)
+		// Prevent divide-by-zero
+		if (regs.clock_divider == 0) {
 			return;
-		if (const auto freq = tandy_psg_clock_hz / regs.frequency;
-		    freq > dac_min_freq_hz && freq < dac_max_freq_hz) {
+		}
+		if (const auto sample_rate = tandy_psg_clock_hz / regs.clock_divider;
+		    sample_rate < dac_max_sample_rate_hz) {
 			assert(channel);
-			channel->FillUp(); // using the prior frequency
-			channel->SetSampleRate(freq);
+			channel->FillUp(); // using the prior sample rate
+			channel->SetSampleRate(check_cast<uint16_t>(sample_rate));
 			const auto vol = static_cast<float>(regs.amplitude) / 7.0f;
 			channel->SetAppVolume({vol, vol});
 			if ((regs.mode & 0x0c) == 0x0c) {
@@ -345,7 +351,7 @@ void TandyDAC::ChangeMode()
 					                  this, _1, _2);
 					dma.channel->RegisterCallback(callback);
 					channel->Enable(true);
-					// LOG_MSG("TANDYDAC: playback started with freqency %f, volume %f", freq, vol);
+					// LOG_MSG("TANDYDAC: playback started with freqency %f, volume %f", sample_rate, vol);
 				}
 			}
 		}
@@ -359,9 +365,9 @@ uint8_t TandyDAC::ReadFromPort(io_port_t port, io_width_t)
 	switch (port) {
 	case 0xc4:
 		return (regs.mode & 0x77) | (regs.irq_activated ? 0x08 : 0x00);
-	case 0xc6: return static_cast<uint8_t>(regs.frequency & 0xff);
+	case 0xc6: return static_cast<uint8_t>(regs.clock_divider & 0xff);
 	case 0xc7:
-		return static_cast<uint8_t>(((regs.frequency >> 8) & 0xf) |
+		return static_cast<uint8_t>(((regs.clock_divider >> 8) & 0xf) |
 		                            (regs.amplitude << 5));
 	}
 	LOG_MSG("TANDYDAC: Read from unknown %x", port);
@@ -395,7 +401,7 @@ void TandyDAC::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 		}
 		break;
 	case 0xc6:
-		regs.frequency = (regs.frequency & 0xf00) | data;
+		regs.clock_divider = (regs.clock_divider & 0xf00) | data;
 		switch (regs.mode & 3) {
 		case 0: // joystick mode
 			break;
@@ -405,8 +411,8 @@ void TandyDAC::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 		}
 		break;
 	case 0xc7:
-		regs.frequency = static_cast<uint16_t>((regs.frequency & 0x00ff) |
-		                                       ((data & 0xf) << 8));
+		regs.clock_divider = static_cast<uint16_t>(
+		        (regs.clock_divider & 0x00ff) | ((data & 0xf) << 8));
 		regs.amplitude = data >> 5;
 		switch (regs.mode & 3) {
 		case 0:
@@ -419,8 +425,8 @@ void TandyDAC::WriteToPort(io_port_t port, io_val_t value, io_width_t)
 		break;
 	}
 	// LOG_MSG("TANDYDAC: Write %02x to port %04x", data, port);
-	// LOG_MSG("TANDYDAC: Mode %02x, Control %02x, Frequency %04x, Amplitude %02x",
-	//        regs.mode, regs.control, regs.frequency, regs.amplitude);
+	// LOG_MSG("TANDYDAC: Mode %02x, Control %02x, clock divider %04x, Amplitude %02x",
+	//         regs.mode, regs.control, regs.clock_divider, regs.amplitude);
 }
 
 void TandyDAC::AudioCallback(uint16_t requested)
