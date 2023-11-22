@@ -734,10 +734,10 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 	const std::string mode = get_render_section()->Get_string("aspect");
 
 	if (has_false(mode)) {
-		return AspectRatioCorrectionMode::Off;
+		return AspectRatioCorrectionMode::SquarePixels;
 
 	} else if (has_true(mode)) {
-		return AspectRatioCorrectionMode::On;
+		return AspectRatioCorrectionMode::Auto;
 
 	} else if (mode == "stretch") {
 		return AspectRatioCorrectionMode::Stretch;
@@ -745,7 +745,7 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 	} else {
 		LOG_WARNING("RENDER: Invalid 'aspect' setting '%s', using 'on'",
 		            mode.c_str());
-		return AspectRatioCorrectionMode::On;
+		return AspectRatioCorrectionMode::Auto;
 	}
 }
 

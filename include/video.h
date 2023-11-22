@@ -89,7 +89,7 @@ enum class IntegerScalingMode {
 	Vertical,
 };
 
-enum class AspectRatioCorrectionMode { On, Off, Stretch };
+enum class AspectRatioCorrectionMode { Auto, SquarePixels, Stretch };
 
 enum class ViewportMode { Fit, Relative };
 
