@@ -2709,13 +2709,13 @@ ImageInfo setup_drawing()
 	                 final_render_height / video_mode.height);
 
 	switch (RENDER_GetAspectRatioCorrectionMode()) {
-	case AspectRatioCorrectionMode::On:
+	case AspectRatioCorrectionMode::Auto:
 		// Derive video mode pixel aspect ratio from the render PAR
 		video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio *
 		                                render_per_video_mode_scale;
 		break;
 
-	case AspectRatioCorrectionMode::Off:
+	case AspectRatioCorrectionMode::SquarePixels:
 		// Override PARs if square pixels are forced in aspect ratio
 		// correction disabled mode
 		render_pixel_aspect_ratio = render_per_video_mode_scale.Inverse();
