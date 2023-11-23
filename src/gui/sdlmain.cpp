@@ -294,20 +294,6 @@ extern bool CPU_CycleAutoAdjust;
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s)
-{
-	const auto parts = split(s, "x");
-	if (parts.size() == 2) {
-
-		const auto w = parse_int(parts[0]);
-		const auto h = parse_int(parts[1]);
-		if (w && h) {
-			return {{*w, *h}};
-		}
-	}
-	return {};
-}
-
 void GFX_SetTitle(const int32_t new_num_cycles, const bool is_paused = false)
 {
 	char title_buf[200] = {0};
@@ -1515,53 +1501,21 @@ static SDL_Rect get_desktop_size()
 	return desktop;
 }
 
-static DosBox::Rect calc_restricted_viewport_size_in_pixels(const DosBox::Rect& canvas_px)
+DosBox::Rect GFX_GetDesktopSize()
 {
-	switch (sdl.viewport.mode) {
-	case ViewportMode::Fit: {
-		auto viewport_px = [&] {
-			if (sdl.viewport.fit.limit_size) {
-				return sdl.viewport.fit.limit_size->Copy().ScaleSize(
-				        sdl.desktop.dpi_scale);
-
-			} else if (sdl.viewport.fit.desktop_scale) {
-				auto desktop_px = to_rect(get_desktop_size())
-				                          .ScaleSize(sdl.desktop.dpi_scale);
-
-				return desktop_px.ScaleSize(
-				        *sdl.viewport.fit.desktop_scale);
-
-			} else {
-				// The viewport equals the canvas size in
-				// Fit mode without parameters
-				return canvas_px;
-			}
-		}();
-
-		if (canvas_px.Contains(viewport_px)) {
-			return viewport_px;
-		} else {
-			return viewport_px.Intersect(canvas_px);
-		}
-	}
-	case ViewportMode::Relative: {
-		const auto restricted_canvas_px = DosBox::Rect{4, 3}.ScaleSizeToFit(
-		        canvas_px);
-
-		return restricted_canvas_px.Copy()
-				.ScaleWidth(sdl.viewport.relative.width_scale)
-				.ScaleHeight(sdl.viewport.relative.height_scale);
-	}
-
-	default: assertm(false, "Invalid ViewportMode value"); return {};
-	}
+	return to_rect(get_desktop_size());
 }
 
 DosBox::Rect GFX_GetViewportSizeInPixels()
 {
 	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
-	return calc_restricted_viewport_size_in_pixels(canvas_px);
+	return RENDER_CalcRestrictedViewportSizeInPixels(canvas_px);
+}
+
+double GFX_GetDpiScaleFactor()
+{
+	return sdl.desktop.dpi_scale;
 }
 
 static std::pair<double, double> get_scale_factors_from_pixel_aspect_ratio(
@@ -3048,172 +3002,6 @@ static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
 	return {w, h};
 }
 
-static void log_invalid_viewport_resolution_warning(
-        const std::string& pref,
-        const std::optional<const std::string> extra_info = {})
-{
-	LOG_WARNING("DISPLAY: Invalid 'viewport_resolution' setting: '%s'"
-	            "%s%s, using 'fit'",
-	            pref.c_str(),
-	            (extra_info ? ". " : ""),
-	            (extra_info ? extra_info->c_str() : ""));
-}
-
-static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::string& pref)
-{
-	if (pref == "fit") {
-		ViewportSettings viewport = {};
-		viewport.mode             = ViewportMode::Fit;
-		return viewport;
-
-	} else if (const auto width_and_height = parse_int_dimensions(pref)) {
-		const auto [w, h] = *width_and_height;
-
-		const auto desktop = to_rect(get_desktop_size());
-
-		const bool is_out_of_bounds = (w <= 0 || w > desktop.w ||
-		                               h <= 0 || h > desktop.h);
-		if (is_out_of_bounds) {
-			const auto extra_info = format_string(
-			        "Viewport size is outside of the %dx%d desktop bounds",
-			        iroundf(desktop.w),
-			        iroundf(desktop.h));
-
-			log_invalid_viewport_resolution_warning(pref, extra_info);
-			return {};
-		}
-
-		ViewportSettings viewport = {};
-		viewport.mode             = ViewportMode::Fit;
-
-		const DosBox::Rect limit = {w, h};
-		viewport.fit.limit_size  = limit;
-
-		const auto limit_px = limit.Copy().ScaleSize(sdl.desktop.dpi_scale);
-
-		LOG_MSG("DISPLAY: Limiting viewport size to %dx%d logical units "
-		        "(%dx%d pixels)",
-		        iroundf(limit.w),
-		        iroundf(limit.h),
-		        iroundf(limit_px.w),
-		        iroundf(limit_px.h));
-
-		return viewport;
-
-	} else if (const auto percentage = parse_percentage_with_optional_percent_sign(
-	                   pref)) {
-		const auto desktop = to_rect(get_desktop_size());
-		const auto p       = *percentage;
-
-		const bool is_out_of_bounds = (p < 1.0f || p > 100.0f);
-		if (is_out_of_bounds) {
-			const auto extra_info = "Desktop percentage is outside of the 1-100%% range";
-
-			log_invalid_viewport_resolution_warning(pref, extra_info);
-			return {};
-		}
-
-		ViewportSettings viewport  = {};
-		viewport.mode              = ViewportMode::Fit;
-		viewport.fit.desktop_scale = p / 100.0f;
-
-		const auto limit = desktop.Copy().ScaleSize(*viewport.fit.desktop_scale);
-		const auto limit_px = limit.Copy().ScaleSize(sdl.desktop.dpi_scale);
-
-		LOG_MSG("DISPLAY: Limiting viewport resolution to %2.4g%% of the "
-		        "desktop (%dx%d logical units, %dx%d pixels)",
-		        p,
-		        iroundf(limit.w),
-		        iroundf(limit.h),
-		        iroundf(limit_px.w),
-		        iroundf(limit_px.h));
-
-		return viewport;
-
-	} else {
-		log_invalid_viewport_resolution_warning(pref);
-		return {};
-	}
-}
-
-static constexpr auto MinRelativeScaleFactor = 20.0f;
-static constexpr auto MaxRelativeScaleFactor = 300.0f;
-
-static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::string& pref)
-{
-	const auto parts = split(pref);
-
-	if (parts.size() == 3 && parts[0] == "relative") {
-		const auto width_scale_opt = parse_percentage_with_optional_percent_sign(
-		        parts[1]);
-
-		const auto height_scale_opt = parse_percentage_with_optional_percent_sign(
-		        parts[2]);
-
-		if (!width_scale_opt) {
-			const auto extra_info = "Invalid horizontal scale";
-			log_invalid_viewport_resolution_warning(pref, extra_info);
-			return {};
-		}
-		if (!height_scale_opt) {
-			const auto extra_info = "Invalid vertical scale";
-			log_invalid_viewport_resolution_warning(pref, extra_info);
-			return {};
-		}
-
-		const auto width_scale  = *width_scale_opt;
-		const auto height_scale = *height_scale_opt;
-
-		auto is_within_bounds = [&](const float scale) {
-			return (scale >= MinRelativeScaleFactor ||
-			        scale <= MaxRelativeScaleFactor);
-		};
-
-		if (!is_within_bounds(width_scale)) {
-			const auto extra_info = format_string(
-			        "Horizontal scale must be within the %.1f-%1.f%% range",
-			        MinRelativeScaleFactor,
-			        MaxRelativeScaleFactor);
-
-			log_invalid_viewport_resolution_warning(pref, extra_info);
-			return {};
-		}
-		if (!is_within_bounds(height_scale)) {
-			const auto extra_info = format_string(
-			        "Vertical scale must be within the %.1f-%1.f%% range",
-			        MinRelativeScaleFactor,
-			        MaxRelativeScaleFactor);
-
-			log_invalid_viewport_resolution_warning(pref, extra_info);
-			return {};
-		}
-
-		ViewportSettings viewport      = {};
-		viewport.mode                  = ViewportMode::Relative;
-		viewport.relative.width_scale  = width_scale / 100.f;
-		viewport.relative.height_scale = height_scale / 100.f;
-
-		LOG_MSG("DISPLAY: Scaling viewport by %2.4g%% horizontally and %2.4g%% vertically ",
-		        width_scale,
-		        height_scale);
-
-		return viewport;
-
-	} else {
-		log_invalid_viewport_resolution_warning(pref);
-		return {};
-	}
-}
-
-static std::optional<ViewportSettings> parse_viewport_settings(const std::string& pref)
-{
-	if (starts_with(pref, "relative")) {
-		return parse_relative_viewport_modes(pref);
-	} else {
-		return parse_fit_viewport_modes(pref);
-	}
-}
-
 static void setup_initial_window_position_from_conf(const std::string& window_position_val)
 {
 	sdl.desktop.window.initial_x_pos = -1;
@@ -3338,7 +3126,7 @@ DosBox::Rect GFX_CalcDrawSizeInPixels(const DosBox::Rect& canvas_size_px,
                                       const DosBox::Rect& render_size_px,
                                       const Fraction& render_pixel_aspect_ratio)
 {
-	const auto viewport_px = calc_restricted_viewport_size_in_pixels(canvas_size_px);
+	const auto viewport_px = RENDER_CalcRestrictedViewportSizeInPixels(canvas_size_px);
 
 	const auto draw_size_fit_px =
 	        render_size_px.Copy()
@@ -3422,15 +3210,6 @@ InterpolationMode GFX_GetInterpolationMode()
 	return sdl.interpolation_mode;
 }
 
-static void set_default_viewport_resolution_settings()
-{
-	sdl.viewport      = {};
-	sdl.viewport.mode = ViewportMode::Fit;
-
-	const auto string_prop = get_sdl_section()->GetStringProp("viewport_resolution");
-	string_prop->SetValue("fit");
-}
-
 static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 {
 	// Apply the user's mouse settings
@@ -3492,13 +3271,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 
 	setup_initial_window_position_from_conf(
 	        section->Get_string("window_position"));
-
-	if (const auto settings = parse_viewport_settings(
-	            section->Get_string("viewport_resolution"))) {
-		sdl.viewport = *settings;
-	} else {
-		set_default_viewport_resolution_settings();
-	}
 
 	setup_window_sizes_from_conf(section->Get_string("windowresolution").c_str(),
 	                             sdl.interpolation_mode,
@@ -4497,29 +4269,6 @@ static void config_add_sdl() {
 	        "  WxH:       Specify window size in WxH format in logical units\n"
 	        "             (e.g., 1024x768).");
 
-	pstring = sdl_sec->Add_string("viewport_resolution", always, "fit");
-	pstring->Set_help(
-	        "Set the viewport size (maximum drawable area). The video output is always\n"
-	        "contained within the viewport while taking the configured aspect ratio into\n"
-	        "account (see 'aspect'). Possible values:\n"
-	        "  fit:             Fit the viewport into the available window/screen (default).\n"
-	        "                   There might be padding (black areas) around the image with\n"
-	        "                   'integer_scaling' enabled.\n"
-	        "  WxH:             Set a fixed viewport size in WxH format in logical units\n"
-	        "                   (e.g., 960x720). The specified size must not be larger than\n"
-	        "                   the desktop. If it's larger than the window size, it's\n"
-	        "                   scaled to fit within the window.\n"
-	        "  N%:              Similar to 'WxH' but the size is specified as a percentage\n"
-	        "                   of the desktop size.\n"
-	        "  relative H% V%:  The viewport is set to a 4:3 aspect ratio rectangle fit into\n"
-	        "                   the available window/screen, then it's scaled by the H and V\n"
-	        "                   horizontal and vertical scaling factors (valid range is from\n"
-	        "                   20% to 300%). The resulting viewport is allowed to extend\n"
-	        "                   beyond the window/screen. Useful to force arbitrary display\n"
-	        "                   aspect ratios with 'aspect = stretch' and to zoom into the\n"
-	        "                   image. This effectively emulates the horizontal and vertical\n"
-	        "                   stretch controls of CRT monitors.");
-
 	pstring = sdl_sec->Add_string("window_position", always, "auto");
 	pstring->Set_help(
 	        "Set initial window position for windowed mode:\n"
@@ -4535,7 +4284,10 @@ static void config_add_sdl() {
 	               "From 0 (no transparency) to 90 (high transparency).");
 
 	pstring = sdl_sec->Add_path("max_resolution", deprecated, "");
-	pstring->Set_help("Renamed to 'viewport_resolution'.");
+	pstring->Set_help("Moved to [render] section and renamed to 'viewport'.");
+
+	pstring = sdl_sec->Add_path("viewport_resolution", deprecated, "");
+	pstring->Set_help("Moved to [render] section and renamed to 'viewport'.");
 
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
 	pstring->Set_help(

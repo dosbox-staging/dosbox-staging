@@ -104,8 +104,6 @@ enum class AspectRatioCorrectionMode {
 	Stretch
 };
 
-enum class ViewportMode { Fit, Relative };
-
 // Graphics standards ordered by time of introduction (and roughly by
 // their capabilities)
 enum class GraphicsStandard { Hercules, Cga, Pcjr, Tga, Ega, Vga, Svga, Vesa };
@@ -415,6 +413,9 @@ DosBox::Rect GFX_CalcDrawSizeInPixels(const DosBox::Rect& canvas_size_px,
 
 DosBox::Rect GFX_GetCanvasSizeInPixels();
 DosBox::Rect GFX_GetViewportSizeInPixels();
+DosBox::Rect GFX_GetDesktopSize();
+
+double GFX_GetDpiScaleFactor();
 
 RenderingBackend GFX_GetRenderingBackend();
 
