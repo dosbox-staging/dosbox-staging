@@ -2304,7 +2304,7 @@ static void CreateLayout() {
 #undef YO
 
 #define XO 10
-#define YO 8
+#define YO 7
 	/* Joystick Buttons/Texts */
 	/* Buttons 1+2 of 1st Joystick */
 	AddJButtonButton(pos_x(XO), pos_y(YO), button_width, button_height, "1", 0, 0);
@@ -2415,14 +2415,15 @@ static void CreateLayout() {
 	AddModButton(pos_x(4), pos_y(14), 50, 20, "Mod3", 3);
 
 	/* Create Handler buttons */
-	int32_t xpos = 3;
-	int32_t ypos = 11;
+	int32_t xpos = 0;
+	int32_t ypos = 10;
+	constexpr auto bw = button_width + 5;
 	for (const auto &handler_event : handlergroup) {
-		new CEventButton(pos_x(xpos * 3), pos_y(ypos), button_width * 3, button_height,
+		new CEventButton(200 + xpos * 3 * bw, pos_y(ypos), bw * 3, button_height,
 		                 handler_event->button_name.c_str(), handler_event);
 		xpos++;
-		if (xpos>6) {
-			xpos = 3;
+		if (xpos>3) {
+			xpos = 0;
 			ypos++;
 		}
 	}
