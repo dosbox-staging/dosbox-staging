@@ -777,6 +777,249 @@ static IntegerScalingMode get_integer_scaling_mode_setting()
 	}
 }
 
+static void set_default_viewport_setting()
+{
+	const auto string_prop = get_render_section()->GetStringProp("viewport");
+	string_prop->SetValue("fit");
+}
+
+static void log_invalid_viewport_setting_warning(
+        const std::string& pref,
+        const std::optional<const std::string> extra_info = {})
+{
+	LOG_WARNING("DISPLAY: Invalid 'viewport' setting: '%s'"
+	            "%s%s, using 'fit'",
+	            pref.c_str(),
+	            (extra_info ? ". " : ""),
+	            (extra_info ? extra_info->c_str() : ""));
+}
+
+std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s)
+{
+	const auto parts = split(s, "x");
+	if (parts.size() == 2) {
+		const auto w = parse_int(parts[0]);
+		const auto h = parse_int(parts[1]);
+		if (w && h) {
+			return {{*w, *h}};
+		}
+	}
+	return {};
+}
+
+static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::string& pref)
+{
+	if (pref == "fit") {
+		ViewportSettings viewport = {};
+		viewport.mode             = ViewportMode::Fit;
+		return viewport;
+
+	} else if (const auto width_and_height = parse_int_dimensions(pref)) {
+		const auto [w, h] = *width_and_height;
+
+		const auto desktop = GFX_GetDesktopSize();
+
+		const bool is_out_of_bounds = (w <= 0 || w > desktop.w ||
+		                               h <= 0 || h > desktop.h);
+		if (is_out_of_bounds) {
+			const auto extra_info = format_string(
+			        "Viewport size is outside of the %dx%d desktop bounds",
+			        iroundf(desktop.w),
+			        iroundf(desktop.h));
+
+			log_invalid_viewport_setting_warning(pref, extra_info);
+			return {};
+		}
+
+		ViewportSettings viewport = {};
+		viewport.mode             = ViewportMode::Fit;
+
+		const DosBox::Rect limit = {w, h};
+		viewport.fit.limit_size  = limit;
+
+		const auto limit_px = limit.Copy().ScaleSize(GFX_GetDpiScaleFactor());
+
+		LOG_MSG("DISPLAY: Limiting viewport size to %dx%d logical units "
+		        "(%dx%d pixels)",
+		        iroundf(limit.w),
+		        iroundf(limit.h),
+		        iroundf(limit_px.w),
+		        iroundf(limit_px.h));
+
+		return viewport;
+
+	} else if (const auto percentage = parse_percentage_with_optional_percent_sign(
+	                   pref)) {
+		const auto p = *percentage;
+
+		const auto desktop = GFX_GetDesktopSize();
+
+		const bool is_out_of_bounds = (p < 1.0f || p > 100.0f);
+		if (is_out_of_bounds) {
+			const auto extra_info = "Desktop percentage is outside of the 1-100%% range";
+
+			log_invalid_viewport_setting_warning(pref, extra_info);
+			return {};
+		}
+
+		ViewportSettings viewport  = {};
+		viewport.mode              = ViewportMode::Fit;
+		viewport.fit.desktop_scale = p / 100.0f;
+
+		const auto limit = desktop.Copy().ScaleSize(*viewport.fit.desktop_scale);
+		const auto limit_px = limit.Copy().ScaleSize(GFX_GetDpiScaleFactor());
+
+		LOG_MSG("DISPLAY: Limiting viewport size to %2.4g%% of the "
+		        "desktop (%dx%d logical units, %dx%d pixels)",
+		        p,
+		        iroundf(limit.w),
+		        iroundf(limit.h),
+		        iroundf(limit_px.w),
+		        iroundf(limit_px.h));
+
+		return viewport;
+
+	} else {
+		log_invalid_viewport_setting_warning(pref);
+		return {};
+	}
+}
+
+static constexpr auto MinRelativeScaleFactor = 0.2f; // 20%
+static constexpr auto MaxRelativeScaleFactor = 3.0f; // 300%
+
+static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::string& pref)
+{
+	const auto parts = split(pref);
+
+	if (parts.size() == 3 && parts[0] == "relative") {
+		const auto maybe_width_percentage =
+		        parse_percentage_with_optional_percent_sign(parts[1]);
+
+		const auto maybe_height_percentage =
+		        parse_percentage_with_optional_percent_sign(parts[2]);
+
+		if (!maybe_width_percentage) {
+			const auto extra_info = "Invalid horizontal scale";
+			log_invalid_viewport_setting_warning(pref, extra_info);
+			return {};
+		}
+		if (!maybe_height_percentage) {
+			const auto extra_info = "Invalid vertical scale";
+			log_invalid_viewport_setting_warning(pref, extra_info);
+			return {};
+		}
+
+		const auto width_scale  = *maybe_width_percentage / 100.f;
+		const auto height_scale = *maybe_height_percentage / 100.f;
+
+		auto is_within_bounds = [&](const float scale) {
+			return (scale >= MinRelativeScaleFactor &&
+			        scale <= MaxRelativeScaleFactor);
+		};
+
+		if (!is_within_bounds(width_scale)) {
+			const auto extra_info = format_string(
+			        "Horizontal scale must be within the %g-%g%% range",
+			        MinRelativeScaleFactor * 100.0f,
+			        MaxRelativeScaleFactor * 100.0f);
+
+			log_invalid_viewport_setting_warning(pref, extra_info);
+			return {};
+		}
+		if (!is_within_bounds(height_scale)) {
+			LOG_TRACE("****1");
+			const auto extra_info = format_string(
+			        "Vertical scale must be within the %g-%g%% range",
+			        MinRelativeScaleFactor * 100.0f,
+			        MaxRelativeScaleFactor * 100.0f);
+
+			log_invalid_viewport_setting_warning(pref, extra_info);
+			return {};
+		}
+
+		ViewportSettings viewport      = {};
+		viewport.mode                  = ViewportMode::Relative;
+		viewport.relative.width_scale  = width_scale;
+		viewport.relative.height_scale = height_scale;
+
+		LOG_MSG("DISPLAY: Scaling viewport by %2.4g%% horizontally "
+		        "and %2.4g%% vertically ",
+		        width_scale * 100.f,
+		        height_scale * 100.f);
+
+		return viewport;
+
+	} else {
+		log_invalid_viewport_setting_warning(pref);
+		return {};
+	}
+}
+
+static std::optional<ViewportSettings> parse_viewport_settings(const std::string& pref)
+{
+	if (starts_with(pref, "relative")) {
+		return parse_relative_viewport_modes(pref);
+	} else {
+		return parse_fit_viewport_modes(pref);
+	}
+}
+
+static ViewportSettings viewport_settings = {};
+
+static ViewportSettings get_default_viewport_settings()
+{
+	ViewportSettings viewport = {};
+
+	viewport      = {};
+	viewport.mode = ViewportMode::Fit;
+
+	return viewport;
+}
+
+DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_px)
+{
+	const auto dpi_scale = GFX_GetDpiScaleFactor();
+
+	switch (viewport_settings.mode) {
+	case ViewportMode::Fit: {
+		auto viewport_size_px = [&] {
+			if (viewport_settings.fit.limit_size) {
+				return viewport_settings.fit.limit_size->Copy().ScaleSize(
+				        dpi_scale);
+
+			} else if (viewport_settings.fit.desktop_scale) {
+				auto desktop_px = GFX_GetDesktopSize().ScaleSize(dpi_scale);
+
+				return desktop_px.ScaleSize(
+				        *viewport_settings.fit.desktop_scale);
+			} else {
+				// The viewport_settings equals the canvas size
+				// in Fit mode without parameters
+				return canvas_px;
+			}
+		}();
+
+		if (canvas_px.Contains(viewport_size_px)) {
+			return viewport_size_px;
+		} else {
+			return viewport_size_px.Intersect(canvas_px);
+		}
+	}
+
+	case ViewportMode::Relative: {
+		const auto restricted_canvas_px = DosBox::Rect{4, 3}.ScaleSizeToFit(
+		        canvas_px);
+
+		return restricted_canvas_px.Copy()
+		        .ScaleWidth(viewport_settings.relative.width_scale)
+		        .ScaleHeight(viewport_settings.relative.height_scale);
+	}
+
+	default: assertm(false, "Invalid ViewportMode value"); return {};
+	}
+}
+
 const std::string RENDER_GetCgaColorsSetting()
 {
 	return get_render_section()->Get_string("cga_colors");
@@ -805,8 +1048,8 @@ static void init_render_settings(Section_prop& secprop)
 	        "            displayed with square pixels. Most 320x200 games will appear\n"
 	        "            squashed, but a minority of titles (e.g., DOS ports of PAL Amiga\n"
 	        "            games) need square pixels to appear as the artists intended.\n"
-	        "  stretch:  Calculate the aspect ratio from the viewport's dimensions. Combined\n"
-	        "            with 'viewport_resolution', this mode is useful to force arbitrary\n"
+	        "  stretch:  Calculate the aspect ratio from the viewport's dimensions.\n"
+	        "            Combined with 'viewport', this mode is useful to force arbitrary\n"
 	        "            aspect ratios (e.g., stretching DOS games to fullscreen on 16:9\n"
 	        "            displays) and to emulate the horizontal and vertical stretch\n"
 	        "            controls of CRT monitors.\n");
@@ -818,10 +1061,10 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop->Set_help(
 	        "Constrain the horizontal or vertical scaling factor to the largest integer\n"
 	        "value so the image still fits into the viewport. The configured aspect ratio is\n"
-	        "always maintained according to the 'aspect' and 'viewport_resolution' settings,\n"
-	        "which may result in a non-integer scaling factor in the other dimension.\n"
-	        "If the image is larger than the viewport, the integer scaling constraint is\n"
-	        "auto-disabled (same as 'off'). Possible values:\n"
+	        "always maintained according to the 'aspect' and 'viewport' settings, which may\n"
+	        "result in a non-integer scaling factor in the other dimension. If the image is\n"
+	        "larger than the viewport, the integer scaling constraint is auto-disabled (same\n"
+	        "as 'off'). Possible values:\n"
 	        "  auto:        'vertical' mode auto-enabled for adaptive CRT shaders only\n"
 	        "               (see 'glshader'), otherwise 'off' (default).\n"
 	        "  vertical:    Constrain the vertical scaling factor to integer values.\n"
@@ -834,6 +1077,29 @@ static void init_render_settings(Section_prop& secprop)
 	const char* integer_scaling_values[] = {
 	        "auto", "vertical", "horizontal", "off", nullptr};
 	string_prop->Set_values(integer_scaling_values);
+
+	string_prop = secprop.Add_path("viewport", always, "fit");
+	string_prop->Set_help(
+	        "Set the viewport size (maximum drawable area). The video output is always\n"
+	        "contained within the viewport while taking the configured aspect ratio into\n"
+	        "account (see 'aspect'). Possible values:\n"
+	        "  fit:             Fit the viewport into the available window/screen (default).\n"
+	        "                   There might be padding (black areas) around the image with\n"
+	        "                   'integer_scaling' enabled.\n"
+	        "  WxH:             Set a fixed viewport size in WxH format in logical units\n"
+	        "                   (e.g., 960x720). The specified size must not be larger than\n"
+	        "                   the desktop. If it's larger than the window size, it's\n"
+	        "                   scaled to fit within the window.\n"
+	        "  N%:              Similar to 'WxH' but the size is specified as a percentage\n"
+	        "                   of the desktop size.\n"
+	        "  relative H% V%:  The viewport is set to a 4:3 aspect ratio rectangle fit into\n"
+	        "                   the available window/screen, then it's scaled by the H and V\n"
+	        "                   horizontal and vertical scaling factors (valid range is from\n"
+	        "                   20% to 300%). The resulting viewport is allowed to extend\n"
+	        "                   beyond the window/screen. Useful to force arbitrary display\n"
+	        "                   aspect ratios with 'aspect = stretch' and to zoom into the\n"
+	        "                   image. This effectively emulates the horizontal and vertical\n"
+	        "                   stretch controls of CRT monitors.");
 
 	string_prop = secprop.Add_string("monochrome_palette",
 	                                 always,
@@ -889,7 +1155,7 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop->Set_help(
 	        "Software scalers are deprecated in favour of hardware-accelerated options:\n"
 	        "  - If you used the normal2x/3x scalers, set the desired 'windowresolution'\n"
-	        "    or 'viewport_resolution' instead, or consider using 'integer_scaling'.\n"
+	        "    or 'viewport' instead, or consider using 'integer_scaling'.\n"
 	        "  - If you used an advanced scaler, consider one of the 'glshader'\n"
 	        "    options instead.");
 
@@ -902,7 +1168,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "                          people experienced the game at the time of release\n"
 	        "                          (default). The appropriate shader variant is\n"
 	        "                          automatically selected based the graphics standard of\n"
-	        "                          the current video mode and the viewport resolution,\n"
+	        "                          the current video mode and the viewport size,\n"
 	        "                          irrespective of the 'machine' setting. This means that\n"
 	        "                          even on an emulated VGA card you'll get authentic\n"
 	        "                          single-scanned EGA monitor emulation with visible\n"
@@ -994,6 +1260,7 @@ void RENDER_Init(Section* sec)
 	const auto prev_force_vga_single_scan   = force_vga_single_scan;
 	const auto prev_force_no_pixel_doubling = force_no_pixel_doubling;
 	const auto prev_integer_scaling_mode    = GFX_GetIntegerScalingMode();
+	const auto prev_viewport_settings       = viewport_settings;
 	const auto prev_aspect_ratio_correction_mode = aspect_ratio_correction_mode;
 
 	render.pal.first = 256;
@@ -1001,6 +1268,15 @@ void RENDER_Init(Section* sec)
 
 	// Get aspect ratio correction mode & force square pixels if requested
 	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting();
+
+	if (const auto& settings = parse_viewport_settings(
+	            section->Get_string("viewport").c_str());
+	    settings) {
+		viewport_settings = *settings;
+	} else {
+		viewport_settings = get_default_viewport_settings();
+		set_default_viewport_setting();
+	}
 
 	// Set monochrome palette
 	const auto mono_palette = to_monochrome_palette_enum(
@@ -1018,6 +1294,7 @@ void RENDER_Init(Section* sec)
 
 	const auto needs_reinit =
 	        ((aspect_ratio_correction_mode != prev_aspect_ratio_correction_mode) ||
+	         (viewport_settings != prev_viewport_settings) ||
 	         (render.scale.size != prev_scale_size) ||
 	         (GFX_GetIntegerScalingMode() != prev_integer_scaling_mode) ||
 	         shader_changed ||

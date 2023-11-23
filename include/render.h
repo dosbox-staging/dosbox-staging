@@ -21,11 +21,44 @@
 
 #include <cstring>
 #include <deque>
+#include <optional>
 #include <string>
 
 #include "../src/gui/render_scalers.h"
 #include "fraction.h"
+#include "rect.h"
 #include "vga.h"
+
+enum class ViewportMode { Fit, Relative };
+
+struct ViewportSettings {
+	ViewportMode mode = {};
+
+	// Either parameter can be set in Fit mode (but not both at the
+	// same time), or none
+	struct {
+		std::optional<DosBox::Rect> limit_size = {};
+		std::optional<float> desktop_scale     = {};
+	} fit = {};
+
+	struct {
+		float height_scale = 1.0f;
+		float width_scale  = 1.0f;
+	} relative = {};
+
+	constexpr bool operator==(const ViewportSettings& that) const
+	{
+		return (mode == that.mode && fit.limit_size == that.fit.limit_size &&
+		        fit.desktop_scale == that.fit.desktop_scale &&
+		        relative.height_scale == that.relative.height_scale &&
+		        relative.width_scale == that.relative.width_scale);
+	}
+
+	constexpr bool operator!=(const ViewportSettings& that) const
+	{
+		return !operator==(that);
+	}
+};
 
 struct RenderPal_t {
 	struct {
@@ -158,6 +191,8 @@ void RENDER_Reinit();
 void RENDER_AddConfigSection(const config_ptr_t& conf);
 
 AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode();
+
+DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_px);
 
 const std::string RENDER_GetCgaColorsSetting();
 
