@@ -1078,7 +1078,9 @@ static void shutdown_tandy_sb_dac_callbacks()
 // The BIOS callbacks are shutdown when the backing device is shutdown to avoid
 // advertizing the DAC's presence when none exists.
 //
-void BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac)
+// Returns true if a DAC was actually setup.
+//
+bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac)
 {
 	shutdown_tandy_sb_dac_callbacks();
 
@@ -1146,10 +1148,12 @@ void BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac
 			for (auto i = 0; i < 0x10; i++) {
 				phys_writeb(PhysicalMake(0xf000, 0xa084 + i), 0x80);
 			}
-		} else {
-			real_writeb(0x40, 0xd4, 0x00);
+			return true;
 		}
 	}
+	// Indicate that the Tandy DAC callbacks are unavailable
+	real_writeb(0x40, 0xd4, 0x00);
+	return false;
 }
 
 void BIOS_SetupKeyboard(void);
