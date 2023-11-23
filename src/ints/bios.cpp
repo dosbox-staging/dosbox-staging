@@ -1034,13 +1034,14 @@ void BIOS_ZeroExtendedSize(bool in) {
 
 static void shutdown_tandy_sb_dac_callbacks()
 {
-	// Abort DAC playing
+	// Abort DAC playing when via the Sound Blaster's DAC
 	if (tandy_sb.port) {
 		IO_Write(tandy_sb.port + 0xc, 0xd3);
 		IO_Write(tandy_sb.port + 0xc, 0xd0);
 	}
 	real_writeb(0x40, 0xd4, 0x00);
 	if (tandy_DAC_callback[0]) {
+		LOG_MSG("BIOS: Shutting down Tandy DAC interrupt callbacks");
 		uint32_t orig_vector = real_readd(0x40, 0xd6);
 		if (orig_vector == tandy_DAC_callback[0]->Get_RealPointer()) {
 			// Set IRQ vector to old value
@@ -1069,14 +1070,29 @@ static void shutdown_tandy_sb_dac_callbacks()
 	tandy_dac.port = 0;
 }
 
-void BIOS_SetupTandySbDacCallbacks()
+// The Tandy Sound card requests DAC support which the following configures via
+// BIOS-based interrupt callbacks using either a Sound Blaster or the 'actual'
+// Tandy DAC module, respectively. If neither are present then the BIOS
+// callbacks aren't setup.
+//
+// The BIOS callbacks are shutdown when the backing device is shutdown to avoid
+// advertizing the DAC's presence when none exists.
+//
+void BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac)
 {
-	// Tandy DAC can be requested in tandy_sound.cpp by initializing this field
-	const bool use_tandy_dac = (real_readb(0x40, 0xd4) == 0xff);
-
 	shutdown_tandy_sb_dac_callbacks();
 
-	if (use_tandy_dac) {
+	// Holds the Tandy Sound card's request based on the presence of the
+	// optional 'maybe_request_dac' argument. This allows other modules
+	// (like the Sound Blaster) to run this function without any arguments
+	// to re-assess if BIOS callback can potentially be setup)
+	//
+	static bool dac_requested = false;
+
+	if (maybe_request_dac) {
+		dac_requested = *maybe_request_dac;
+	}
+	if (dac_requested) {
 		// Tandy DAC sound requested, see if soundblaster device is available
 		Bitu tandy_dac_type = 0;
 		if (Tandy_InitializeSB()) {
@@ -1110,8 +1126,12 @@ void BIOS_SetupTandySbDacCallbacks()
 
 			uint8_t tandy_irq = 7;
 			if (tandy_dac_type == 1) {
+				LOG_MSG("BIOS: Tandy DAC interrupt linked to Sound Blaster on IRQ %u",
+				        tandy_sb.irq);
 				tandy_irq = tandy_sb.irq;
 			} else if (tandy_dac_type == 2) {
+				LOG_MSG("BIOS: Tandy DAC interrupt linked to Tandy Sound on IRQ %u",
+				        tandy_dac.irq);
 				tandy_irq = tandy_dac.irq;
 			}
 			uint8_t tandy_irq_vector = tandy_irq;
@@ -1285,10 +1305,11 @@ public:
 		const uint8_t machine_signature = (machine == MCH_TANDY) ? 0xff : 0x55;
 		phys_writeb(machine_signature_location, machine_signature);
 
-		BIOS_SetupTandySbDacCallbacks();
+		// Note: The BIOS 0x40 segment (Tandy DAC) callbacks are
+		// configured when the Tandy Sound card is initialized followed
+		// by state changes in either backing DAC modules (pre-SB16
+		// Sound Blaster or the Tandy DAC).
 
-		/* Setup some stuff in 0x40 bios segment */
-		
 		// port timeouts
 		// always 1 second even if the port does not exist
 		mem_writeb(BIOS_LPT1_TIMEOUT,1);

@@ -519,9 +519,8 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	base_device->device_start();
 	device->convert_samplerate(render_rate_hz);
 
-	LOG_MSG("TANDY: Initialised audio card with a TI %s PSG %s",
-	        base_device->shortName,
-	        is_dac_enabled ? "and 8-bit DAC" : "but without DAC");
+	LOG_MSG("TANDY: Initialised audio card with a TI %s PSG",
+	        base_device->shortName);
 }
 
 TandyPSG::~TandyPSG()
@@ -632,12 +631,6 @@ bool TS_Get_Address(Bitu &tsaddr, Bitu &tsirq, Bitu &tsdma)
 	return true;
 }
 
-static void set_tandy_sound_flag_in_bios(const bool is_enabled)
-{
-	real_writeb(0x40, 0xd4, is_enabled ? 0xff : 0x00);
-	BIOS_SetupTandySbDacCallbacks();
-}
-
 static void shutdown_dac(Section*)
 {
 	if (tandy_dac) {
@@ -649,8 +642,8 @@ static void shutdown_dac(Section*)
 void TANDYSOUND_ShutDown(Section*)
 {
 	if (tandy_psg || tandy_dac) {
+		BIOS_ConfigureTandyDacCallbacks(false);
 		LOG_MSG("TANDY: Shutting down");
-		set_tandy_sound_flag_in_bios(false);
 		tandy_dac.reset();
 		tandy_psg.reset();
 	}
@@ -662,7 +655,7 @@ void TANDYSOUND_Init(Section *section)
 	const auto prop = static_cast<Section_prop*>(section);
 	const auto pref = prop->Get_string("tandy");
 	if (has_false(pref) || (!IS_TANDY_ARCH && pref == "auto")) {
-		set_tandy_sound_flag_in_bios(false);
+		BIOS_ConfigureTandyDacCallbacks(false);
 		return;
 	}
 
@@ -684,12 +677,15 @@ void TANDYSOUND_Init(Section *section)
 		tandy_dac = std::make_unique<TandyDAC>(
 		        cfg, prop->Get_string("tandy_dac_filter"));
 	}
+
+	// Always request the DAC even if the card doesn't have one because the
+	// BIOS can be routed to the Sound Blaster's DAC if one exists.
+	BIOS_ConfigureTandyDacCallbacks(true);
+
 	tandy_psg = std::make_unique<TandyPSG>(cfg,
 	                                       wants_dac,
 	                                       prop->Get_string("tandy_fadeout"),
 	                                       prop->Get_string("tandy_filter"));
-
-	set_tandy_sound_flag_in_bios(true);
 
 	constexpr auto changeable_at_runtime = true;
 	section->AddDestroyFunction(&TANDYSOUND_ShutDown, changeable_at_runtime);

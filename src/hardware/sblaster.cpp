@@ -2238,10 +2238,10 @@ public:
 		sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->Get_int("dma"))
 		                     : 0;
 
-		// Setup BIOS DAC callbacks as soon as the card's access ports (
+		// Configure the BIOS DAC callbacks as soon as the card's access ports (
 		// port, IRQ, and potential 8-bit DMA address) are defined.
 		//
-		BIOS_SetupTandySbDacCallbacks();
+		BIOS_ConfigureTandyDacCallbacks();
 
 		if (!has_dac) {
 			return;
@@ -2338,6 +2338,12 @@ public:
 			        sb.hw.irq,
 			        sb.hw.dma8);
 		}
+
+		// If a Tandy Sound card is present, the following reconfigures
+		// the BIOS to direct the Tandy DAC interrupt callbacks to the
+		// Sound Blaster for handling.
+		//
+		BIOS_ConfigureTandyDacCallbacks();
 	}
 
 	~SBLASTER()
