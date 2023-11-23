@@ -4324,9 +4324,6 @@ static void config_add_sdl() {
 	pstring = sdl_sec->Add_path("max_resolution", deprecated, "");
 	pstring->Set_help("Renamed to 'viewport_resolution'.");
 
-	pstring = sdl_sec->Add_path("viewport_resolution", deprecated, "");
-	pstring->Set_help("Moved to [render] section.");
-
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
 	pstring->Set_help(
 	        "Set the host's refresh rate:\n"
