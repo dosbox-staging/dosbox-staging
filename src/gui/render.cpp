@@ -1192,6 +1192,83 @@ static void init_render_settings(Section_prop& secprop)
 #endif
 }
 
+enum { Horiz, Vert };
+
+static auto current_stretch_axis       = Horiz;
+static constexpr auto StretchIncrement = 0.01f;
+
+static void log_stretch_hotkeys_viewport_mode_warning()
+{
+	LOG_WARNING("RENDER: Viewport stretch hotkeys are only supported in 'relative' "
+	            "viewport mode");
+}
+
+static void toggle_stretch_axis(const bool pressed)
+{
+	if (!pressed) {
+		return;
+	}
+	if (viewport_settings.mode != ViewportMode::Relative) {
+		log_stretch_hotkeys_viewport_mode_warning();
+		return;
+	}
+
+	if (current_stretch_axis == Horiz) {
+		current_stretch_axis = Vert;
+		LOG_INFO("RENDER: Vertical viewport stretch axis selected");
+	} else {
+		current_stretch_axis = Horiz;
+		LOG_INFO("RENDER: Horizontal viewport stretch axis selected");
+	}
+}
+
+static void adjust_viewport_stretch(const float increment)
+{
+	if (viewport_settings.mode != ViewportMode::Relative) {
+		log_stretch_hotkeys_viewport_mode_warning();
+		return;
+	}
+
+	auto& r = viewport_settings.relative;
+
+	// Snap to whole percents when using the adjustment controls
+	r.width_scale = roundf(r.width_scale * 100.f) / 100.f;
+
+	if (current_stretch_axis == Horiz) {
+		r.width_scale += increment;
+
+		r.width_scale = clamp(r.width_scale,
+		                      MinRelativeScaleFactor,
+		                      MaxRelativeScaleFactor);
+	} else {
+		r.height_scale += increment;
+
+		r.height_scale = clamp(r.height_scale,
+		                       MinRelativeScaleFactor,
+		                       MaxRelativeScaleFactor);
+	}
+
+	LOG_INFO("RENDER: Current viewport setting: 'relative %d%% %d%%'",
+	         iroundf(r.width_scale * 100.0f),
+	         iroundf(r.height_scale * 100.0f));
+
+	VGA_SetupDrawing(0);
+}
+
+static void increase_viewport_stretch(const bool pressed)
+{
+	if (pressed) {
+		adjust_viewport_stretch(StretchIncrement);
+	}
+}
+
+static void decrease_viewport_stretch(const bool pressed)
+{
+	if (pressed) {
+		adjust_viewport_stretch(-StretchIncrement);
+	}
+}
+
 void RENDER_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
@@ -1201,6 +1278,25 @@ void RENDER_AddConfigSection(const config_ptr_t& conf)
 	Section_prop* sec = conf->AddSection_prop("render",
 	                                          &RENDER_Init,
 	                                          changeable_at_runtime);
+
+	MAPPER_AddHandler(toggle_stretch_axis,
+	                  SDL_SCANCODE_UNKNOWN,
+	                  0,
+	                  "stretchax",
+	                  "Stretch Axis");
+
+	MAPPER_AddHandler(increase_viewport_stretch,
+	                  SDL_SCANCODE_UNKNOWN,
+	                  0,
+	                  "incstretch",
+	                  "Inc Stretch");
+
+	MAPPER_AddHandler(decrease_viewport_stretch,
+	                  SDL_SCANCODE_UNKNOWN,
+	                  0,
+	                  "decstretch",
+	                  "Dec Stretch");
+
 	assert(sec);
 	init_render_settings(*sec);
 }
