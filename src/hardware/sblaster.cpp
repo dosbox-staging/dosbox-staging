@@ -2241,7 +2241,14 @@ public:
 		// Configure the BIOS DAC callbacks as soon as the card's access ports (
 		// port, IRQ, and potential 8-bit DMA address) are defined.
 		//
-		BIOS_ConfigureTandyDacCallbacks();
+		if (BIOS_ConfigureTandyDacCallbacks()) {
+			// Disable the hot warmup when the SB is being used as
+			// the Tandy's DAC because the BIOS toggles the SB's
+			// speaker on and off rapidly per-audio-sequence,
+			// resulting in "edge-to-edge" samples.
+			//
+			sb.dsp.hot_warmup_ms = 0;
+		}
 
 		if (!has_dac) {
 			return;
@@ -2338,12 +2345,6 @@ public:
 			        sb.hw.irq,
 			        sb.hw.dma8);
 		}
-
-		// If a Tandy Sound card is present, the following reconfigures
-		// the BIOS to direct the Tandy DAC interrupt callbacks to the
-		// Sound Blaster for handling.
-		//
-		BIOS_ConfigureTandyDacCallbacks();
 	}
 
 	~SBLASTER()

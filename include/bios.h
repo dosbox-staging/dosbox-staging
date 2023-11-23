@@ -140,6 +140,6 @@ void INT10_ReloadRomFonts();
 
 void BIOS_SetComPorts (uint16_t baseaddr[]);
 
-void BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac = {});
+bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac = {});
 
 #endif
