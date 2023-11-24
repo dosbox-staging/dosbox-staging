@@ -42,8 +42,12 @@
 #	endif
 #	include <shlobj.h>
 #else // other than Windows
-#	include <libgen.h>
-#include <sys/xattr.h>
+#	if defined(HAVE_LIBGEN_H)
+#		include <libgen.h>
+#	endif
+#	if defined(HAVE_SYS_XATTR_H)
+#		include <sys/xattr.h>
+#	endif
 #endif
 
 #if defined(HAVE_PWD_H)

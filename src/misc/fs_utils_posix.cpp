@@ -29,8 +29,11 @@
 #include <optional>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/xattr.h>
 #include <unistd.h>
+
+#if defined(HAVE_SYS_XATTR_H)
+#include <sys/xattr.h>
+#endif
 
 #include "cross.h"
 #include "dos_inc.h"
@@ -206,11 +209,15 @@ static std::optional<FatAttributeFlags> get_xattr(const std_fs::path& path)
 	                             XattrMaxLength,
 	                             offset,
 	                             options);
-#else
+#elif defined(HAVE_SYS_XATTR_H)
 	const auto length = getxattr(path.c_str(),
 	                             XattrName.c_str(),
 	                             xattr,
 	                             XattrMaxLength);
+#else
+	// Platform doesn't support extended attributes
+	// So we always set a failed return length.
+	constexpr ssize_t length = -1;
 #endif
 	if (length <= 0) {
 		// No extended attribute present
@@ -227,7 +234,8 @@ static std::optional<FatAttributeFlags> get_xattr(const std_fs::path& path)
 	return xattr_to_fat_attribs(std::string(xattr));
 }
 
-static bool set_xattr(const std_fs::path& path, const FatAttributeFlags attributes)
+static bool set_xattr([[maybe_unused]] const std_fs::path& path,
+                      const FatAttributeFlags attributes)
 {
 	const auto xattr = fat_attribs_to_xattr(attributes);
 
@@ -241,7 +249,7 @@ static bool set_xattr(const std_fs::path& path, const FatAttributeFlags attribut
 	                             xattr.size(),
 	                             offset,
 	                             options);
-#else
+#elif defined(HAVE_SYS_XATTR_H)
 	constexpr int flags = 0;
 
 	const auto result = setxattr(path.c_str(),
@@ -249,11 +257,16 @@ static bool set_xattr(const std_fs::path& path, const FatAttributeFlags attribut
                                      xattr.c_str(),
                                      xattr.size(),
                                      flags);
+#else
+	// Platform doesn't support extended attributes
+	// so we always have a failed result code.
+	constexpr int result = -1;
 #endif
 	return (result == 0);
 }
 
-static bool set_xattr(const int file_descriptor, const FatAttributeFlags attributes)
+static bool set_xattr([[maybe_unused]] const int file_descriptor,
+                      const FatAttributeFlags attributes)
 {
 	const auto xattr = fat_attribs_to_xattr(attributes);
 
@@ -267,7 +280,7 @@ static bool set_xattr(const int file_descriptor, const FatAttributeFlags attribu
 	                              xattr.size(),
 	                              offset,
 	                              options);
-#else
+#elif defined(HAVE_SYS_XATTR_H)
 	constexpr int flags = 0;
 
 	const auto result = fsetxattr(file_descriptor,
@@ -275,6 +288,10 @@ static bool set_xattr(const int file_descriptor, const FatAttributeFlags attribu
 	                              xattr.c_str(),
 	                              xattr.size(),
 	                              flags);
+#else
+	// Platform doesn't support extended attributes
+	// so we always have a failed result code.
+	constexpr int result = -1;
 #endif
 	return (result == 0);
 }
