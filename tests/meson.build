@@ -43,7 +43,7 @@ endforeach
 example = executable(
     'example',
     ['example_tests.cpp', 'stubs.cpp'],
-    dependencies: [gmock_dep, libmisc_stubs_dep, ghc_dep, libloguru_dep],
+    dependencies: [gmock_dep, libmisc_stubs_dep, libshell_stubs_dep, ghc_dep, libloguru_dep],
     include_directories: incdir,
     cpp_args: cpp_args,
 )
@@ -52,7 +52,7 @@ test('gtest example', example, should_fail: true)
 fs_utils = executable(
     'fs_utils',
     ['fs_utils_tests.cpp', 'stubs.cpp'],
-    dependencies: [gmock_dep, libmisc_stubs_dep, ghc_dep, libloguru_dep],
+    dependencies: [gmock_dep, libmisc_stubs_dep, libshell_stubs_dep, ghc_dep, libloguru_dep],
     include_directories: incdir,
     cpp_args: cpp_args,
 )
@@ -80,8 +80,8 @@ test(
 # other unit tests
 
 unit_tests = [
-    {'name': 'ansi_code_markup', 'deps': [libmisc_stubs_dep]},
-    {'name': 'batch_file', 'deps': [libmisc_stubs_dep, libshell_dep]},
+    {'name': 'ansi_code_markup', 'deps': [libmisc_stubs_dep, libshell_stubs_dep]},
+    {'name': 'batch_file', 'deps': [dosbox_dep]},
     {'name': 'bit_view', 'deps': []},
     {'name': 'bitops', 'deps': []},
     {'name': 'cmd_move', 'deps': [dosbox_dep], 'extra_cpp': []},
@@ -89,17 +89,17 @@ unit_tests = [
     {'name': 'drives', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'fraction', 'deps': []},
     {'name': 'int10_modes', 'deps': [dosbox_dep], 'extra_cpp': []},
-    {'name': 'iohandler_containers', 'deps': [libmisc_stubs_dep]},
-    {'name': 'math_utils', 'deps': [libmisc_stubs_dep]},
+    {'name': 'iohandler_containers', 'deps': [libmisc_stubs_dep, libshell_stubs_dep]},
+    {'name': 'math_utils', 'deps': [libmisc_stubs_dep, libshell_stubs_dep]},
     {'name': 'mixer', 'deps': [dosbox_dep, libiir_dep], 'extra_cpp': []},
     {'name': 'rgb', 'deps': []},
-    {'name': 'rwqueue', 'deps': [libmisc_stubs_dep]},
-    {'name': 'semaphore', 'deps': [libmisc_stubs_dep]},
-    {'name': 'setup', 'deps': [libmisc_stubs_dep, libshell_dep]},
+    {'name': 'rwqueue', 'deps': [libmisc_stubs_dep, libshell_stubs_dep]},
+    {'name': 'semaphore', 'deps': [dosbox_dep]},
+    {'name': 'setup', 'deps': [dosbox_dep]},
     {'name': 'shell_cmds', 'deps': [dosbox_dep], 'extra_cpp': []},
     {'name': 'shell_redirection', 'deps': [dosbox_dep], 'extra_cpp': []},
-    {'name': 'string_utils', 'deps': [libmisc_stubs_dep]},
-    {'name': 'support', 'deps': [libmisc_stubs_dep]},
+    {'name': 'string_utils', 'deps': [libmisc_stubs_dep, libshell_stubs_dep]},
+    {'name': 'support', 'deps': [libmisc_stubs_dep, libshell_stubs_dep]},
 ]
 
 extra_link_flags = []

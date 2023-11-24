@@ -25,13 +25,13 @@
 
 // During testing we never want to log to stdout/stderr, as it could
 // negatively affect test harness.
-void GFX_ShowMsg(const char *, ...) {}
+
 void DEBUG_ShowMsg(const char *, ...) {}
 
 void DEBUG_HeavyWriteLogInstruction() {}
 
 #if C_DEBUG
-void LOG::operator()([[maybe_unused]] char const *buf, ...)
+void LOG::operator()([[maybe_unused]] const char* buf, ...)
 {
 	(void)d_type;     // Deliberately unused.
 	(void)d_severity; // Deliberately unused.
