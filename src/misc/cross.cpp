@@ -82,7 +82,50 @@ static std_fs::path get_or_create_config_dir()
 	return conf_path;
 }
 
-#elif defined(LINUX)
+#elif defined(WIN32)
+
+static std_fs::path get_or_create_config_dir()
+{
+	char appdata_path[MAX_PATH] = {0};
+
+	const int create = 1;
+
+	// CSIDL_LOCAL_APPDATA - The file system directory that serves as a data
+	// repository for local (nonroaming) applications. A typical path is:
+	// C:\Documents and Settings\username\Local Settings\Application Data.
+	//
+	BOOL success = SHGetSpecialFolderPath(nullptr,
+	                                      appdata_path,
+	                                      CSIDL_LOCAL_APPDATA,
+	                                      create);
+
+	if (!success || appdata_path[0] == 0) {
+		// CSIDL_APPDATA - The file system directory that serves as a data
+		// repository for local (nonroaming) applications. A typical path is
+		// C:\Documents and Settings\username\Local Settings\Application Data.
+		//
+		success = SHGetSpecialFolderPath(nullptr,
+		                                 appdata_path,
+		                                 CSIDL_APPDATA,
+		                                 create);
+	}
+
+	const auto conf_path = std_fs::path(appdata_path) / "DOSBox";
+
+	constexpr auto success_result = 0;
+	if (create_dir(conf_path, 0700, OK_IF_EXISTS) != success_result) {
+		LOG_ERR("CONFIG: Can't create config directory '%s': %s",
+		        conf_path.string().c_str(),
+		        safe_strerror(errno).c_str());
+	}
+
+	return conf_path;
+}
+
+#else // Use generally compatible Linux, BSD, and *nix-compatible calls.
+
+// If an OS can't handle this (ie: Haiku, Android, etc..) then add a
+// new pre-processor block for it.
 
 static std_fs::path get_or_create_config_dir()
 {
@@ -147,46 +190,6 @@ static std_fs::path get_or_create_config_dir()
 		        conf_path.c_str());
 	}
 	return fallback_to_deprecated();
-}
-
-#elif defined(WIN32)
-
-static std_fs::path get_or_create_config_dir()
-{
-	char appdata_path[MAX_PATH] = {0};
-
-	const int create = 1;
-
-	// CSIDL_LOCAL_APPDATA - The file system directory that serves as a data
-	// repository for local (nonroaming) applications. A typical path is:
-	// C:\Documents and Settings\username\Local Settings\Application Data.
-	//
-	BOOL success = SHGetSpecialFolderPath(nullptr,
-	                                      appdata_path,
-	                                      CSIDL_LOCAL_APPDATA,
-	                                      create);
-
-	if (!success || appdata_path[0] == 0) {
-		// CSIDL_APPDATA - The file system directory that serves as a data
-		// repository for local (nonroaming) applications. A typical path is
-		// C:\Documents and Settings\username\Local Settings\Application Data.
-		//
-		success = SHGetSpecialFolderPath(nullptr,
-		                                 appdata_path,
-		                                 CSIDL_APPDATA,
-		                                 create);
-	}
-
-	const auto conf_path = std_fs::path(appdata_path) / "DOSBox";
-
-	constexpr auto success_result = 0;
-	if (create_dir(conf_path, 0700, OK_IF_EXISTS) != success_result) {
-		LOG_ERR("CONFIG: Can't create config directory '%s': %s",
-		        conf_path.string().c_str(),
-		        safe_strerror(errno).c_str());
-	}
-
-	return conf_path;
 }
 
 #endif // get_or_create_config_dir()
