@@ -23,57 +23,23 @@
 	Based of sn76496.c of the M.A.M.E. project
 */
 
-/*
-A note about accurately emulating the Tandy's digital to analog (DAC) behavior
-------------------------------------------------------------------------------
-The Tandy's DAC is responsible for converting digital audio samples into their
-analog equivalents in the form of voltage levels output to the line-out or
-speaker.
+// Interaction between the Tandy DAC and the Sound Blaster:
+//
+// Because the Tandy DAC operates on IRQ 7 and DMA 1, it often conflicts with
+// the Sound Blaster. Later models of Sound Blaster included an IRQ sharing
+// feature to avoid crashes, so such Tandy + SB machines were possible to run
+// without issues.
 
-After playing a sequence of samples, such as a sound effect, the last value fed
-into the DAC will correspond to the final voltage set in the line-out.
-
-Well behaved audio sequences end with zero amplitude and thus leave the speaker
-in the neutral position (without a positive or negative voltage); and this is
-what we see in practice.
-
-However, Price of Persia uniquely terminates most of its sound effects with a
-non-zero amplitude, leaving the DAC holding a non-zero voltage, which is also
-called a DC-offset.
-
-The Tandy controller mitigates DC-offset by incrementally stepping the DAC's
-output voltage back toward the neutral centerline. This DAC ramp-down behavior
-is audible as an artifact post-fixed onto every Prince of Persia sound effect,
-which sounds like a soft, short-lived shoe squeak.
-
-This hardware behavior can be emulated by tracking the last sample played,
-checking if it's at the centerline or not (centerline being 128, in the range of
-unisigned 8-bit values).  If it's not at the centerline, then steading generate
-new samples than trend this last-played value toward the centerline until it's
-reached.
-
-The DOSBox-X project has faithfully [*] replicated this hardware artifact using
-the following code-snippet:
-
-if (dma.last_sample != 128) {
-        for (Bitu ct=0; ct < length; ct++) {
-                channel->AddSamples_m8(1,&dma.last_sample);
-                if (dma.last_sample != 128)
-                        dma.last_sample =
-(uint8_t)(((((int)dma.last_sample - 128) * 63) / 64) + 128);
-        }
-}
-
-[*] As the author Jonathan Campbell explains, "I used a VGA capture card and an
-MCE2VGA to capture the output of a real Tandy 1000, and then tried to adjust the
-Tandy DAC code to match the artifact after each step."
-
-The implementation below prioritizes the game author's intended audio score
-ahead of deleterious artifacts caused by hardware defects or limitations.
-Because the sound caused by the Tandy's DAC is not part of the game's audio
-score, we deliberately omit this behavior and terminate sequences at the
-centerline.
-*/
+// How does this work in DOSBox? DOSBox Staging always shuts down conflicting
+// DMA devices (and the Tandy DAC vs. SB is no exception), however the Tandy DAC
+// is unique in that the machine's BIOS (yes, on real hardware, too) is
+// programmed with a callback that points to the DAC device.  In the case of
+// DOSBox, that BIOS routine either points to the Sound Blaster's DAC or Tandy
+// DAC, whichever is running.
+//
+// So using this BIOS callback, DOSBox (and Staging) is able to support a
+// Tandy+SB combo configuration as well. Note that the Tandy DAC BIOS routine
+// only exists if the Tandy Card is enabled (either 'tandy=on' or 'tandy=psg').
 
 #include "dosbox.h"
 
