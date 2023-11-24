@@ -22,4 +22,12 @@ libshell = static_library(
 
 libshell_dep = declare_dependency(link_with: libshell)
 
+libshell_stubs = static_library(
+    'shell_stubs',
+    ['command_line.cpp'],
+    include_directories: incdir,
+)
+
+libshell_stubs_dep = declare_dependency(link_with: libshell_stubs)
+
 internal_deps += libshell_dep
