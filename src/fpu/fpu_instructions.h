@@ -104,7 +104,20 @@ static double FROUND(double in){
 	case ROUND_Nearest: return std::nearbyint(in);
 	case ROUND_Down: return (floor(in));
 	case ROUND_Up: return (ceil(in));
-	case ROUND_Chop: [[fallthrough]]; // cast by the caller chops
+	case ROUND_Chop: 
+	{	
+		constexpr double tolerance = 1e-15;
+		const auto lower = std::floor(in);
+		const auto upper = std::ceil(in);
+
+		// Check if the value is within tolerance of the lower or upper integer
+		if ((in - lower) < tolerance) {
+			return lower;
+		} else if ((upper - in) < tolerance) {
+			return upper;
+		} 
+		return in;
+	}
 	default: return in;
 	}
 }
