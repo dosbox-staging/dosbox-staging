@@ -102,8 +102,8 @@ static void FPU_FPOP(void){
 static double FROUND(double in){
 	switch(fpu.round){
 	case ROUND_Nearest: return std::nearbyint(in);
-	case ROUND_Down: return (floor(in));
-	case ROUND_Up: return (ceil(in));
+	case ROUND_Down: return std::floor(in);
+	case ROUND_Up: return std::ceil(in);
 	case ROUND_Chop: 
 	{	
 		constexpr double tolerance = 1e-15;
@@ -116,7 +116,7 @@ static double FROUND(double in){
 		} else if ((upper - in) < tolerance) {
 			return upper;
 		} 
-		return in;
+		return std::trunc(in);
 	}
 	default: return in;
 	}
@@ -432,13 +432,12 @@ static void FPU_FUCOM(Bitu st, Bitu other){
 }
 
 static void FPU_FRNDINT(void){
-	int64_t temp  = static_cast<int64_t>(FROUND(fpu.regs[TOP].d));
-	double tempd = static_cast<double>(temp);
+	const auto rounded  = FROUND(fpu.regs[TOP].d);
 	if (fpu.cw&0x20) { //As we don't generate exceptions; only do it when masked
-		if (tempd != fpu.regs[TOP].d)
+		if (rounded != fpu.regs[TOP].d)
 			fpu.sw |= 0x20; //Set Precision Exception
 	}
-	fpu.regs[TOP].d = tempd;
+	fpu.regs[TOP].d = rounded;
 }
 
 static void FPU_FPREM(void){
