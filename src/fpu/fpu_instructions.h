@@ -107,6 +107,9 @@ static double FROUND(double in){
 	case ROUND_Up: return std::ceil(in);
 	case ROUND_Chop: 
 	{
+		// Most x32/x64 builds use fpu_instructions_x86.h.
+		// If we are here on x64, we don't need this fix.
+#if !defined(__x86_64__) && !defined(_M_X64)
 		// This is a fix for rounding to a close integer in
 		// extended precision mode, e.g. 7.999999999999994; an example
 		// can be seen in the Quake options screen size slider.
@@ -124,6 +127,7 @@ static double FROUND(double in){
 				return upper;
 			}
 		}
+#endif
 		return std::trunc(in);
 	}
 	default: return in;
