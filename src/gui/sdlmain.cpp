@@ -4327,14 +4327,14 @@ static void config_add_sdl() {
 	pstring = sdl_sec->Add_string("host_rate", on_start, "auto");
 	pstring->Set_help(
 	        "Set the host's refresh rate:\n"
-	        "  auto:      Use SDI rates, or VRR rates when fullscreen on a high-refresh\n"
-	        "             display (default).\n"
+	        "  auto:      Use SDI rates, or VRR rates when in fullscreen on a high-refresh\n"
+	        "             rate display (default).\n"
 	        "  sdi:       Use serial device interface (SDI) rates, without further\n"
 	        "             adjustment.\n"
 	        "  vrr:       Deduct 3 Hz from the reported rate (best practice for VRR\n"
 	        "             displays).\n"
-	        "  <custom>:  Specify a custom rate as an integer or decimal Hz value\n"
-	        "             (23.000 is the allowed minimum).");
+	        "  N:         Specify custom refresh rate in Hz (decimal values are allowed;\n"
+	        "             23.000 is the allowed minimum).");
 
 	const char* vsync_prefs[] = {"auto", "on", "adaptive", "off", "yield", nullptr};
 	pstring = sdl_sec->Add_string("vsync", always, "auto");
