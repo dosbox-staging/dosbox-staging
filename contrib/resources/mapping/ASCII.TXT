@@ -943,6 +943,7 @@
 0x0589 :   #ARMENIAN FULL STOP
 0x058a -   #ARMENIAN HYPHEN
 0x058e NNN #LEFT-FACING ARMENIAN ETERNITY SIGN
+0x058f NNN #ARMENIAN DRAM SIGN
 
 # ****************************************************************************
 # 0x0590 - 0x05ff     Hebrew
@@ -1711,7 +1712,7 @@
 0x207f NNN #SUPERSCRIPT LATIN SMALL LETTER N
 
 # ****************************************************************************
-# 0x20a0 - 0x20cf     Currency Symbols (full coverage)
+# 0x20a0 - 0x20cf     Currency Symbols
 # ****************************************************************************
 
 0x20a0 E   #EURO-CURRENCY SIGN
@@ -1746,6 +1747,8 @@
 0x20bd P   #RUBLE SIGN
 0x20be G   #LARI SIGN
 0x20bf B   #BITCOIN SIGN
+0x20c0 c   #SOM SIGN
+
 
 # ****************************************************************************
 # 0x2100 - 0x214f     Letterlike Symbols
@@ -1981,6 +1984,7 @@
 
 # Arabic scripts cannot be mapped to 7-bit ASCII at all
 
+0xfe73 NNN #ARABIC TAIL FRAGMENT
 0xfe7d NNN #ARABIC SHADDA MEDIAL FORM
 0xfe80 NNN #ARABIC LETTER HAMZA ISOLATED FORM
 0xfe81 NNN #ARABIC LETTER ALEF WITH MADDA ABOVE ISOLATED FORM
