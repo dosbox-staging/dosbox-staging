@@ -27,6 +27,7 @@
 #include <string>
 #include <utility>
 
+#include "bgrx8888.h"
 #include "bit_view.h"
 #include "control.h"
 #include "fraction.h"
@@ -941,7 +942,7 @@ using cga_colors_t = std::array<Rgb666, NumCgaColors>;
 
 struct VgaDac {
 	Rgb666 rgb[NumVgaColors]           = {};
-	uint32_t palette_map[NumVgaColors] = {};
+	Bgrx8888 palette_map[NumVgaColors] = {};
 
 	uint8_t combine[16] = {};
 
