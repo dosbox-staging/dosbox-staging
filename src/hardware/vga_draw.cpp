@@ -35,6 +35,7 @@
 #include "pic.h"
 #include "reelmagic.h"
 #include "render.h"
+#include "rgb565.h"
 #include "vga.h"
 #include "video.h"
 
@@ -904,14 +905,6 @@ static void VGA_ProcessSplit()
 	vga.draw.address_line = 0;
 }
 
-static uint16_t from_rgb_888_to_565(const uint32_t rgb888)
-{
-	const auto rgb565 = ((rgb888 & 0xf80000) >> 8) +
-	                    ((rgb888 & 0xfc00) >> 5) + ((rgb888 & 0xf8) >> 3);
-
-	return check_cast<uint16_t>(rgb565);
-}
-
 static uint8_t bg_color_index = 0; // screen-off black index
 static void VGA_DrawSingleLine(uint32_t /*blah*/)
 {
@@ -970,12 +963,18 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 			          templine_buffer.end(),
 			          bg_color_index);
 		} else if (vga.draw.render.pixel_format == PixelFormat::RGB565_Packed16) {
-			const auto background_color = from_rgb_888_to_565(
-			        vga.dac.palette_map[bg_color_index]);
-			const auto line_length = templine_buffer.size() / sizeof(uint16_t);
+			// convert the palette colour to a 16-bit value for writing
+			const auto bg_pal_color = vga.dac.palette_map[bg_color_index];
+			const auto bg_565_pixel = Rgb565(bg_pal_color.Red8(),
+			                                 bg_pal_color.Green8(),
+			                                 bg_pal_color.Blue8())
+			                                  .pixel;
+
+			const auto line_length = templine_buffer.size() /
+			                         sizeof(uint16_t);
 			size_t i = 0;
 			while (i < line_length) {
-				write_unaligned_uint16_at(TempLine, i++, background_color);
+				write_unaligned_uint16_at(TempLine, i++, bg_565_pixel);
 			}
 		} else if (vga.draw.render.pixel_format ==
 		           PixelFormat::BGRX32_ByteArray) {
