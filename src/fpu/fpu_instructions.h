@@ -106,7 +106,7 @@ static double FROUND(double in){
 	case ROUND_Up: return std::ceil(in);
 	case ROUND_Chop: 
 	{	
-		constexpr double tolerance = 1e-15;
+		constexpr double tolerance = 1e-14;
 		const auto lower = std::floor(in);
 		const auto upper = std::ceil(in);
 
