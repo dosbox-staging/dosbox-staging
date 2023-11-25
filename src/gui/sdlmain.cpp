@@ -4326,13 +4326,14 @@ static void config_add_sdl() {
 
 	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
 	pstring->Set_help(
-	        "Set window size when running in windowed mode:\n"
-	        "  default:   Select the best option based on your environment and\n"
-	        "             other settings.\n"
+	        "Set intial window size for windowed mode. You can still resize the window\n"
+	        "after startup.\n"
+	        "  default:   Select the best option based on your environment and other\n"
+	        "             settings (such as whether aspect ratio correction is enabled).\n"
 	        "  small, medium, large (s, m, l):\n"
 	        "             Size the window relative to the desktop.\n"
-	        "  <custom>:  Scale the window to the given dimensions in WxH format.\n"
-	        "             For example: 1024x768.");
+	        "  WxH:       Specify window size in WxH format in logical units\n"
+	        "             (e.g., 1024x768).");
 
 	pstring = sdl_sec->Add_path("viewport_resolution", always, "fit");
 	pstring->Set_help(
@@ -4343,9 +4344,9 @@ static void config_add_sdl() {
 
 	pstring = sdl_sec->Add_string("window_position", always, "auto");
 	pstring->Set_help(
-	        "Set initial window position when running in windowed mode:\n"
+	        "Set initial window position for windowed mode:\n"
 	        "  auto:      Let the window manager decide the position (default).\n"
-	        "  <custom>:  Set window position in X,Y format. For example: 250,100\n"
+	        "  X,Y:       Set window position in X,Y format (e.g., 250,100).\n"
 	        "             0,0 is the top-left corner of the screen.");
 
 	Pbool = sdl_sec->Add_bool("window_decorations", always, true);
