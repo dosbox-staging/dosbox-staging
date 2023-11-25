@@ -20,6 +20,7 @@
 #include "fpu.h"
 #endif
 
+static constexpr uint16_t ExtendedPrecisionModeMask = 0x0300;
 
 static void FPU_FINIT(void) {
 	FPU_SetCW(0x37F);
@@ -105,17 +106,24 @@ static double FROUND(double in){
 	case ROUND_Down: return std::floor(in);
 	case ROUND_Up: return std::ceil(in);
 	case ROUND_Chop: 
-	{	
-		constexpr double tolerance = 1e-14;
-		const auto lower = std::floor(in);
-		const auto upper = std::ceil(in);
+	{
+		// This is a fix for rounding to a close integer in
+		// extended precision mode, e.g. 7.999999999999994; an example
+		// can be seen in the Quake options screen size slider.
+		// In this case, what is almost certainly wanted is 8.0,
+		// so return the closer integer within the tolerance instead
+		// of chopping to the lower value.
+		if (fpu.cw & ExtendedPrecisionModeMask) {
+			constexpr double tolerance = 1e-14;
 
-		// Check if the value is within tolerance of the lower or upper integer
-		if ((in - lower) < tolerance) {
-			return lower;
-		} else if ((upper - in) < tolerance) {
-			return upper;
-		} 
+			if (const auto lower = std::floor(in);
+			    (in - lower) < tolerance) {
+				return lower;
+			} else if (const auto upper = std::ceil(in);
+			           (upper - in) < tolerance) {
+				return upper;
+			}
+		}
 		return std::trunc(in);
 	}
 	default: return in;
