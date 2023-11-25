@@ -7,7 +7,7 @@
 # ID    - description                                            [ID usage originator]
 #
 #
-# Fully supported code pages (92 code pages):
+# Fully supported code pages (93 code pages):
 #
 # 113   - Yugoslavian, Latin                                     [AST Premium Exec DOS]
 # 437   - United States                                          [IBM, Microsoft]
@@ -33,12 +33,13 @@
 # 855   - South Slavic, Cyrillic                                 [IBM, Microsoft]
 # 856   - Hebrew-2, with EUR                                     [IBM, Microsoft; FreeDOS adds EUR sign]
 # 857   - Latin-5 (Turkish), with EUR                            [IBM, Microsoft; FreeDOS adds EUR sign]
-# 858   - Latin-1 (Western European), with EUR                   [IBM, Microsoft; FreeDOS adds EUR sign]
+# 858   - Latin-1 (Western European), with EUR                   [IBM, Microsoft]
 # 859   - Latin-9 (Western European), with EUR                   [IBM, Microsoft]
 # 860   - Portuguese                                             [IBM, Microsoft]
 # 861   - Icelandic                                              [IBM, Microsoft]
 # 862   - Hebrew-2                                               [IBM, Microsoft]
 # 863   - Canadian French                                        [IBM, Microsoft]
+# 864   - Arabic                                                 [IBM, Microsoft; IBM and FreeDOS add more characters]
 # 865   - Nordic                                                 [IBM, Microsoft]
 # 866   - Russian, Cyrillic                                      [IBM, Microsoft]
 # 867   - Czech and Slovak, Kamenicky encoding                   [NEC printers]
@@ -169,10 +170,8 @@
 # 28606 - South-Eastern European, with EUR, ISO 8859-16 encoding [Microsoft]
 #
 #
-# Code pages mostly supported (2 code pages), but with unidentified characters still left (TODO):
+# Code pages mostly supported (1 code page), but with unidentified characters still left (TODO):
 #
-# 864   - Arabic                                                 [IBM, Microsoft; FreeDOS adds more characters]
-#       - 1 character still unidentified (FreeDOS CP specific code page extension)
 # 59829 - Georgian                                               [FreeDOS]
 #       - 1 character still unidentified
 #
@@ -968,10 +967,10 @@ CODEPAGE 863 # Canadian French
 EXTENDS FILE mapping-unicode.org CP_863.TXT
 
 CODEPAGE 864 # Arabic
-# FreeDOS specific code page extensions
+# FreeDOS and IBM specific code page extensions
 0x9b 0xfef9        #ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW ISOLATED FORM
 0x9c 0xfefa        #ARABIC LIGATURE LAM WITH ALEF WITH HAMZA BELOW FINAL FORM
-# 0x9f TODO: unidentified character - FreeDOS specific
+0x9f 0xfe73        #ARABIC TAIL FRAGMENT
 0xa6 0xfe87        #ARABIC LETTER ALEF WITH HAMZA BELOW ISOLATED FORM
 0xa7 0xfe88        #ARABIC LETTER ALEF WITH HAMZA BELOW FINAL FORM
 EXTENDS FILE mapping-unicode.org CP_864.TXT
