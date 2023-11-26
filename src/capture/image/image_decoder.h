@@ -106,7 +106,7 @@ private:
 
 		switch (image.params.pixel_format) {
 		case PixelFormat::RGB555_Packed16: {
-			const auto p = read_unaligned_uint16(pos);
+			const auto p = host_readw(pos);
 			pixel = Rgb555(p).ToRgb888();
 		} break;
 
