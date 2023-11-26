@@ -144,7 +144,6 @@ struct VideoMode {
 
 std::string to_string(const VideoMode& video_mode);
 
-
 enum class PixelFormat : uint8_t {
 	// Up to 256 colours, paletted;
 	// stored as packed uint8 data
@@ -177,9 +176,9 @@ enum class PixelFormat : uint8_t {
 	RGB565_Packed16 = 16,
 
 	// 16.7M (24-bit) true colour, 8 bits per red/blue/green component;
-	// stored as packed 24-bit data
+	// stored as a sequence of three packed uint8_t values in BGR byte
+	// order, also known as memory order. This format is endian-agnostic.
 	//
-	// Stored as array of uint8_t in BGR memory order (endian agnostic)
 	// Example:
 	// uint8_t *pixels = image.image_data;
 	// pixels[0] = blue; pixels[1] = green; pixels[2] = red;
@@ -188,18 +187,18 @@ enum class PixelFormat : uint8_t {
 	// FFmpeg Equivalent: AV_PIX_FMT_BGR24
 	BGR24_ByteArray = 24,
 
-	// 16.7M (32-bit) true colour; 8 bits per red/blue/green component;
-	// stored as packed uint32 data with highest 8 bits unused
+	// Same as BGR24_ByteArray but padded to 32-bits. 16.7M true colour,
+	// 8 bits per red/blue/green/empty component; stored as a sequence of
+	// four packed uint8_t values in BGRX byte order, also known as
+	// memory order. This format is endian-agnostic.
 	//
-	// Stored as array of uint32_t in host native endianess.
-	// Each uint32_t is layed out as follows:
-	// (msb)8X 8R 8G 8B(lsb)
 	// Example:
-	// uint32_t pixel = (unused << 24) | (red << 16) | (green << 8) | (blue << 0)
+	// uint8_t *pixels = image.image_data;
+	// pixels[0] = blue; pixels[1] = green; pixels[2] = red; pixels[3] = empty;
 	//
-	// SDL Equivalent: SDL_PIXELFORMAT_XRGB8888
-	// FFmpeg Equivalent: AV_PIX_FMT_0RGB32
-	XRGB8888_Packed32 = 32
+	// SDL has has no equivalent.
+	// FFmpeg Equivalent: BGRX32_ByteArray
+	BGRX32_ByteArray = 32,
 };
 
 const char* to_string(const PixelFormat pf);
