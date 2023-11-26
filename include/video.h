@@ -415,7 +415,7 @@ DosBox::Rect GFX_GetCanvasSizeInPixels();
 DosBox::Rect GFX_GetViewportSizeInPixels();
 DosBox::Rect GFX_GetDesktopSize();
 
-double GFX_GetDpiScaleFactor();
+float GFX_GetDpiScaleFactor();
 
 RenderingBackend GFX_GetRenderingBackend();
 

@@ -203,7 +203,7 @@ struct SDL_Block {
 
 		PixelFormat pixel_format = {};
 
-		double dpi_scale = 1.0;
+		float dpi_scale = 1.0;
 		bool fullscreen  = false;
 
 		// This flag indicates, that we are in the process of switching

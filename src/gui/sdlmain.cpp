@@ -1309,8 +1309,7 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 	const auto canvas_px = get_canvas_size_in_pixels(rendering_backend);
 
 	assert(width_in_logical_units > 0);
-	const auto new_dpi_scale = static_cast<double>(canvas_px.w) /
-	                           width_in_logical_units;
+	const auto new_dpi_scale = canvas_px.w / width_in_logical_units;
 
 	if (std::abs(new_dpi_scale - sdl.desktop.dpi_scale) < DBL_EPSILON) {
 		// LOG_MSG("SDL: DPI scale hasn't changed (still %f)",
@@ -1513,7 +1512,7 @@ DosBox::Rect GFX_GetViewportSizeInPixels()
 	return RENDER_CalcRestrictedViewportSizeInPixels(canvas_px);
 }
 
-double GFX_GetDpiScaleFactor()
+float GFX_GetDpiScaleFactor()
 {
 	return sdl.desktop.dpi_scale;
 }
