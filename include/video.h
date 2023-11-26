@@ -94,7 +94,7 @@ enum class AspectRatioCorrectionMode {
 	// from heuristics & hardcoded values on all other adapters.
 	Auto,
 
-	// Always force square pixel aspect ratio.
+	// Always force square pixels (1:1 pixel aspect ratio).
 	SquarePixels,
 
 	// Use a 4:3 display aspect ratio viewport as the starting point, then

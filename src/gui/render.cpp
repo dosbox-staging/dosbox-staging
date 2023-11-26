@@ -733,17 +733,17 @@ static AspectRatioCorrectionMode get_aspect_ratio_correction_mode_setting()
 {
 	const std::string mode = get_render_section()->Get_string("aspect");
 
-	if (has_false(mode)) {
-		return AspectRatioCorrectionMode::SquarePixels;
-
-	} else if (has_true(mode)) {
+	if (has_true(mode) || mode == "auto") {
 		return AspectRatioCorrectionMode::Auto;
+
+	} else if (has_false(mode) || mode == "square-pixels") {
+		return AspectRatioCorrectionMode::SquarePixels;
 
 	} else if (mode == "stretch") {
 		return AspectRatioCorrectionMode::Stretch;
 
 	} else {
-		LOG_WARNING("RENDER: Invalid 'aspect' setting '%s', using 'on'",
+		LOG_WARNING("RENDER: Invalid 'aspect' setting '%s', using 'auto'",
 		            mode.c_str());
 		return AspectRatioCorrectionMode::Auto;
 	}
@@ -1035,26 +1035,31 @@ static void init_render_settings(Section_prop& secprop)
 	int_prop->Set_help(
 	        "Consider capping frame rates using the 'host_rate' setting.");
 
-	auto* string_prop = secprop.Add_string("aspect", always, "on");
+	auto* string_prop = secprop.Add_string("aspect", always, "auto");
 	string_prop->Set_help(
-	        "Set the aspect ratio correction mode (enabled by default).\n"
-	        "  on:       Apply aspect ratio correction for modern square-pixel flat-screen\n"
-	        "            displays, so DOS video modes with non-square pixels appear as they\n"
-	        "            would on a 4:3 display aspect ratio CRT monitor the majority of DOS\n"
-	        "            games were designed for. This setting only affects video modes that\n"
-	        "            use non-square pixels, such as 320x200 or 640x400; square-pixel\n"
-	        "            modes (e.g., 320x240, 640x480, and 800x600), are displayed as-is.\n"
-	        "  off:      Don't apply aspect ratio correction; all DOS video modes will be\n"
-	        "            displayed with square pixels. Most 320x200 games will appear\n"
-	        "            squashed, but a minority of titles (e.g., DOS ports of PAL Amiga\n"
-	        "            games) need square pixels to appear as the artists intended.\n"
-	        "  stretch:  Calculate the aspect ratio from the viewport's dimensions.\n"
-	        "            Combined with 'viewport', this mode is useful to force arbitrary\n"
-	        "            aspect ratios (e.g., stretching DOS games to fullscreen on 16:9\n"
-	        "            displays) and to emulate the horizontal and vertical stretch\n"
-	        "            controls of CRT monitors.\n");
+	        "Set the aspect ratio correction mode (enabled by default):\n"
+	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
+	        "                       flat-screen displays, so DOS video modes with non-square\n"
+	        "                       pixels appear as they would on a 4:3 display aspect\n"
+	        "                       ratio CRT monitor the majority of DOS games were\n"
+	        "                       designed for. This setting only affects video modes that\n"
+	        "                       use non-square pixels, such as 320x200 or 640x400;.\n"
+	        "                       square-pixelmodes (e.g., 320x240, 640x480, and 800x600),\n"
+	        "                       are displayed as-is.\n"
+	        "  square-pixels, off:  Don't apply aspect ratio correction; all DOS video modes\n"
+	        "                       are displayed with square pixels. Most 320x200 games\n"
+	        "                       will appear squashed, but a minority of titles (e.g.,\n"
+	        "                       DOS ports of PAL Amiga games) need square pixels to\n"
+	        "                       appear as the artists intended.\n"
+	        "  stretch:             Calculate the aspect ratio from the viewport's\n"
+	        "                       dimensions. Combined with 'viewport', this mode is\n"
+	        "                       useful to force arbitrary aspect ratios (e.g.,\n"
+	        "                       stretching DOS games to fullscreen on 16:9 displays) and\n"
+	        "                       to emulate the horizontal and vertical stretch controls\n"
+	        "                       of CRT monitors.");
 
-	const char* aspect_values[] = {"on", "off", "stretch", nullptr};
+	const char* aspect_values[] = {
+	        "auto", "on", "square-pixels", "off", "stretch", nullptr};
 	string_prop->Set_values(aspect_values);
 
 	string_prop = secprop.Add_string("integer_scaling", always, "auto");
