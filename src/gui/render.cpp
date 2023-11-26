@@ -857,8 +857,7 @@ static void init_render_settings(Section_prop& secprop)
 	string_prop = secprop.Add_string("glshader", always, "crt-auto");
 	string_prop->Set_help(
 	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL \n"
-	        "output modes.\n"
-	        "Adaptive CRT shader options:\n"
+	        "output modes. Adaptive CRT shader options:\n"
 	        "  crt-auto:               A CRT shader that prioritises developer intent and how\n"
 	        "                          people experienced the game at the time of release\n"
 	        "                          (default). The appropriate shader variant is\n"
