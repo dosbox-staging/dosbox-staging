@@ -347,7 +347,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	// it. I this case we tell ZMBV the data is 32-bit and let the
 	// rgb24's int() cast operator up-convert.
 	case PixelFormat::BGR24_ByteArray: format = ZMBV_FORMAT::BPP_32; break;
-	case PixelFormat::XRGB8888_Packed32: format = ZMBV_FORMAT::BPP_32; break;
+	case PixelFormat::BGRX32_ByteArray: format = ZMBV_FORMAT::BPP_32; break;
 	default: assertm(false, "Invalid pixel_format value"); return;
 	}
 
@@ -413,7 +413,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 				}
 				break;
 
-			case PixelFormat::XRGB8888_Packed32:
+			case PixelFormat::BGRX32_ByteArray:
 				for (auto x = 0; x < src.width; ++x) {
 					const auto pixel = ((uint32_t*)src_row)[x];
 

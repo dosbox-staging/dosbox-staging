@@ -82,7 +82,7 @@ private:
 		case PixelFormat::RGB555_Packed16:
 		case PixelFormat::RGB565_Packed16: pos += 2; break;
 		case PixelFormat::BGR24_ByteArray: pos += 3; break;
-		case PixelFormat::XRGB8888_Packed32: pos += 4; break;
+		case PixelFormat::BGRX32_ByteArray: pos += 4; break;
 		default: assertm(false, "Invalid pixel_format value");
 		}
 	}
@@ -115,19 +115,11 @@ private:
 			pixel = Rgb565(p).ToRgb888();
 		} break;
 
-		case PixelFormat::BGR24_ByteArray: {
+		case PixelFormat::BGR24_ByteArray:
+		case PixelFormat::BGRX32_ByteArray: {
 			const auto b = *(pos + 0);
 			const auto g = *(pos + 1);
 			const auto r = *(pos + 2);
-
-			pixel = {r, g, b};
-		} break;
-
-		case PixelFormat::XRGB8888_Packed32: {
-			const auto p = read_unaligned_uint32(pos);
-			const uint8_t r = (p >> 16) & 0XFF;
-			const uint8_t g = (p >> 8) & 0xFF;
-			const uint8_t b = p & 0xFF;
 
 			pixel = {r, g, b};
 		} break;

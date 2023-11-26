@@ -54,7 +54,7 @@ const char* to_string(const PixelFormat pf)
 	case PixelFormat::RGB555_Packed16: return "RGB555_Packed16";
 	case PixelFormat::RGB565_Packed16: return "RGB565_Packed16";
 	case PixelFormat::BGR24_ByteArray: return "BGR24_ByteArray";
-	case PixelFormat::XRGB8888_Packed32: return "XRGB8888_Packed32";
+	case PixelFormat::BGRX32_ByteArray: return "BGRX32_ByteArray";
 	default: assertm(false, "Invalid pixel format"); return {};
 	}
 }
@@ -397,7 +397,7 @@ static void render_reset(void)
 		render.src_start = (render.src.width * 3) / src_pixel_bytes;
 		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
-	case PixelFormat::XRGB8888_Packed32:
+	case PixelFormat::BGRX32_ByteArray:
 		render.src_start = (render.src.width * 4) / src_pixel_bytes;
 		gfx_flags        = (gfx_flags & ~GFX_CAN_8);
 		break;
@@ -474,7 +474,7 @@ static void render_reset(void)
 		render.scale.inMode         = scalerMode32;
 		render.scale.cachePitch     = render.src.width * 3;
 		break;
-	case PixelFormat::XRGB8888_Packed32:
+	case PixelFormat::BGRX32_ByteArray:
 		render.scale.lineHandler = (*lineBlock)[4][render.scale.outMode];
 		render.scale.linePalHandler = nullptr;
 		render.scale.inMode         = scalerMode32;
