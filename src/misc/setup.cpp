@@ -1554,7 +1554,7 @@ Verbosity Config::GetStartupVerbosity() const
 		             : Verbosity::High;
 	}
 
-	LOG_WARNING("SETUP: Unknown verbosity mode '%s', defaulting to 'high'",
+	LOG_WARNING("SETUP: Invalid 'startup_verbosity' setting: '%s', using 'high'",
 	            user_choice.c_str());
 	return Verbosity::High;
 }
