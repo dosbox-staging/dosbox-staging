@@ -294,7 +294,7 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	const char* sid_clocks[] = {"default", "c64ntsc", "c64pal", "hardsid", nullptr};
 	str_prop->Set_values(sid_clocks);
 	str_prop->Set_help(
-	        "The SID chip's clock frequency, which is jumperable on reproduction cards.\n"
+	        "The SID chip's clock frequency, which is jumperable on reproduction cards:\n"
 	        "  default:  0.895 MHz, per the original SSI-2001 card (default).\n"
 	        "  c64ntsc:  1.023 MHz, per NTSC Commodore PCs and the DuoSID.\n"
 	        "  c64pal:   0.985 MHz, per PAL Commodore PCs and the DuoSID.\n"
@@ -311,13 +311,13 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	auto* int_prop = sec_prop.Add_int("6581filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
 	int_prop->Set_help(
-	        "Adjusts the 6581's filtering strength as a percent from 0 to 100\n"
+	        "Adjusts the 6581's filtering strength as a percentage from 0 to 100\n"
 	        "(50 by default). The SID's analog filtering meant that each chip was\n"
 	        "physically unique.");
 
 	int_prop = sec_prop.Add_int("8580filter", when_idle, 50);
 	int_prop->SetMinMax(0, 100);
-	int_prop->Set_help("Adjusts the 8580's filtering strength as a percent from 0 to 100\n"
+	int_prop->Set_help("Adjusts the 8580's filtering strength as a percentage from 0 to 100\n"
 	                   "(50 by default).");
 
 	str_prop = sec_prop.Add_string("innovation_filter", when_idle, "off");
