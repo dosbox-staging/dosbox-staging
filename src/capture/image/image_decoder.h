@@ -111,7 +111,7 @@ private:
 		} break;
 
 		case PixelFormat::RGB565_Packed16: {
-			const auto p = read_unaligned_uint16(pos);
+			const auto p = host_readw(pos);
 			pixel = Rgb565(p).ToRgb888();
 		} break;
 
