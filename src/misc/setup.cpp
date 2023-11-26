@@ -229,9 +229,9 @@ bool Property::IsValidValue(const Value& in)
 		}
 	}
 
-	LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
-	            in.ToString().c_str(),
+	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
 	            propname.c_str(),
+	            in.ToString().c_str(),
 	            default_value.ToString().c_str());
 
 	return false;
@@ -241,7 +241,7 @@ bool Property::IsValueDeprecated(const Value& val) const
 {
 	const auto is_deprecated = contains(deprecated_and_alternate_values, val);
 	if (is_deprecated) {
-		LOG_WARNING("CONFIG: '%s = %s' is deprecated, "
+		LOG_WARNING("CONFIG: Setting '%s = %s' is deprecated, "
 		            "falling back to the alternate: '%s = %s'",
 		            propname.c_str(),
 		            val.ToString().c_str(),
@@ -325,11 +325,12 @@ bool Prop_int::ValidateValue(const Value& in)
 		va = mi;
 	}
 
-	LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', limiting it to %d",
+	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s'. "
+	            "Value outside of the valid range %s-%s, using '%d'",
+	            propname.c_str(),
 	            in.ToString().c_str(),
 	            min_value.ToString().c_str(),
 	            max_value.ToString().c_str(),
-	            propname.c_str(),
 	            va);
 
 	value = va;
@@ -354,11 +355,12 @@ bool Prop_int::IsValidValue(const Value& in)
 		return true;
 	}
 
-	LOG_WARNING("CONFIG: %s lies outside the range %s-%s for config '%s', using the default value %s",
+	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s'. "
+	            "Value outside of the valid %s-%s range, using '%s'",
+	            propname.c_str(),
 	            in.ToString().c_str(),
 	            min_value.ToString().c_str(),
 	            max_value.ToString().c_str(),
-	            propname.c_str(),
 	            default_value.ToString().c_str());
 
 	return false;
@@ -425,9 +427,9 @@ bool Prop_string::IsValidValue(const Value& in)
 		}
 	}
 
-	LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
-	            in.ToString().c_str(),
+	LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
 	            propname.c_str(),
+	            in.ToString().c_str(),
 	            default_value.ToString().c_str());
 
 	return false;
@@ -467,9 +469,9 @@ bool Prop_bool::SetValue(const std::string& input)
 	if (!is_valid) {
 		SetValue(default_value.ToString());
 
-		LOG_WARNING("CONFIG: '%s' is an invalid value for '%s', using the default: '%s'",
-		            input.c_str(),
+		LOG_WARNING("CONFIG: Invalid '%s' setting: '%s', using '%s'",
 		            propname.c_str(),
+		            input.c_str(),
 		            default_value.ToString().c_str());
 	}
 	return is_valid;
@@ -941,7 +943,7 @@ bool Section_prop::HandleInputline(const std::string& line)
 		return p->SetValue(val);
 	}
 
-	LOG_WARNING("CONFIG: Unknown option '%s'", name.c_str());
+	LOG_WARNING("CONFIG: Invalid option '%s'", name.c_str());
 	return false;
 }
 
