@@ -1104,7 +1104,13 @@ static void init_render_settings(Section_prop& secprop)
 	        "                   beyond the window/screen. Useful to force arbitrary display\n"
 	        "                   aspect ratios with 'aspect = stretch' and to zoom into the\n"
 	        "                   image. This effectively emulates the horizontal and vertical\n"
-	        "                   stretch controls of CRT monitors.");
+	        "                   stretch controls of CRT monitors.\n"
+	        "\n"
+	        "Notes:\n"
+	        " - Using 'relative' mode with 'integer_scaling' enabled could lead to\n"
+	        "   surprising (but correct) results.\n"
+	        " - You can use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey\n"
+	        "   actions to set the stretch in 'relative' mode in real-time.");
 
 	string_prop = secprop.Add_string("monochrome_palette",
 	                                 always,
