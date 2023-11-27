@@ -960,7 +960,7 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 	case 0x09: // 320x200, 16 colors    (PCjr)
 	case 0x0a: // 640x200, 4 colors     (PCjr)
 	case 0x0e: // 640x200, 16 colors    (EGA, VGA)
-		// Note: Setting true horixontal resolution for <640 modes
+		// Note: Setting true horizontal resolution for <640 modes
 		// can break some games, like 'Life & Death' - be careful here!
 		state.maxpos_x = 639;
 		state.maxpos_y = 199;

@@ -48,12 +48,16 @@ static struct {
 	bool is_fullscreen    = false; // if full screen mode is active
 	bool is_multi_display = false; // if host system has more than 1 display
 
-	uint32_t clip_x = 0; // clipping = size of black border (one side)
-	uint32_t clip_y = 0;
+	// Clipping = size of black border (one side) in logical units
+	int32_t clip_x = 0;
+	int32_t clip_y = 0;
 
-	uint32_t cursor_x_abs  = 0;     // absolute position from start of drawing area
+	// Absolute position from start of drawing area in logical units
+	uint32_t cursor_x_abs  = 0;
 	uint32_t cursor_y_abs  = 0;
-	bool cursor_is_outside = false; // if mouse cursor is outside of drawing area
+
+	// If mouse cursor is outside of drawing area
+	bool cursor_is_outside = false;
 
 	bool is_window_active       = false; // if our window is active (has focus)
 	bool gui_has_taken_over     = false; // if a GUI requested to take over the mouse
@@ -86,30 +90,32 @@ static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y
 {
 	state.cursor_is_outside = false;
 
-	auto calculate = [&](const int32_t absolute,
-	                     const uint32_t clipping,
-	                     const uint32_t resolution) -> uint32_t {
-		assert(resolution > 1u);
+	auto calc_pos = [&](const int32_t abs_pos,
+	                    const int32_t clip_pos,
+	                    const int32_t max_pos) -> uint32_t {
+		assert(max_pos > 1);
+		constexpr int32_t min_pos = 0;
 
-		if (absolute < 0 || static_cast<uint32_t>(absolute) < clipping) {
+		if (abs_pos < min_pos || abs_pos < clip_pos) {
 			// cursor is over the top or left black bar
 			state.cursor_is_outside = !state.is_captured;
-			return 0;
-		} else if (static_cast<uint32_t>(absolute) >= resolution + clipping) {
+			return check_cast<uint32_t>(min_pos);
+
+		} else if (abs_pos >= max_pos + clip_pos) {
 			// cursor is over the bottom or right black bar
 			state.cursor_is_outside = !state.is_captured;
-			return check_cast<uint32_t>(resolution - 1);
-		}
+			return check_cast<uint32_t>(max_pos - 1);
 
-		const auto result = static_cast<uint32_t>(absolute) - clipping;
-		return static_cast<uint32_t>(result);
+		} else {
+			return check_cast<uint32_t>(abs_pos - clip_pos);
+		}
 	};
 
-	auto &x = state.cursor_x_abs;
-	auto &y = state.cursor_y_abs;
+	const auto x_max = check_cast<int32_t>(mouse_shared.resolution_x);
+	const auto y_max = check_cast<int32_t>(mouse_shared.resolution_y);
 
-	x = calculate(x_abs, state.clip_x, mouse_shared.resolution_x);
-	y = calculate(y_abs, state.clip_y, mouse_shared.resolution_y);
+	state.cursor_x_abs = calc_pos(x_abs, state.clip_x, x_max);
+	state.cursor_y_abs = calc_pos(y_abs, state.clip_y, y_max);
 }
 
 static void update_cursor_visibility()
@@ -432,7 +438,7 @@ static Bitu int74_handler()
 	if (MOUSEBIOS_CheckCallback()) {
 		CPU_Push16(RealSegment(CALLBACK_RealPointer(int74_ret_callback)));
 		CPU_Push16(RealOffset(CALLBACK_RealPointer(int74_ret_callback)));
-		MOUSEBIOS_DoCallback();		
+		MOUSEBIOS_DoCallback();
 		// TODO: Handle both BIOS and DOS callback within
 		// in a single interrupt
 		return CBRET_NONE;
@@ -486,6 +492,7 @@ void MOUSE_NewScreenParams(const MouseScreenParams &params)
 	// Protection against strange window sizes,
 	// to prevent division by 0 in some places
 	constexpr uint32_t min = 2;
+
 	mouse_shared.resolution_x = std::max(params.res_x, min);
 	mouse_shared.resolution_y = std::max(params.res_y, min);
 
