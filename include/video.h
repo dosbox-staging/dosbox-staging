@@ -406,7 +406,7 @@ bool GFX_HaveDesktopEnvironment();
 void MAPPER_UpdateJoysticks(void);
 #endif
 
-DosBox::Rect GFX_CalcDrawSizeInPixels(const DosBox::Rect& canvas_size_px,
+DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
                                       const DosBox::Rect& render_size_px,
                                       const Fraction& render_pixel_aspect_ratio);
 
