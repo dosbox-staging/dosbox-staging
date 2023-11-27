@@ -1,96 +1,107 @@
-This directory contains resources to re-build icon files for various operating
-systems.
+# Icon guide
 
-# Install
+## Overview
 
-Run `make help` to see usage examples.
+This directory contains the source and the derived icon files used by the
+application and the installer for our supported platforms (Windows, macOS, and
+Linux. The derived files are also checked in, so they should only be
+regenerated with the `make` command when making changes to the source icon's
+design (more on that below).
 
-# Base design
+The subfolders contain the following files:
 
-Base icon source file is `dosbox-staging.svg`. It contains scalable icon of
-size 128x128 (recommended default size for most Linux desktop environments).
-This icon looks good in most contexts, but for very small sizes (16px up to
-32px) it's better to render icon based on one of files in `small-svg/`
-directory.
+- `macos` -- The 1024px source PNG file and the derived `.icns` file to be
+   used in the macOS app bundle.
 
-# Rendering bitmap font
+- `old` -- The old DOSBox icons (unused in our packages, just for archival
+   purposes).
 
-Use bundled Makefile for that.  It includes targets for rendering .png files
-in a number of sizes using `rsvg-convert` command - it generates greatly
-optimised small files with correctly set alpha channel (unlike `convert`
-command from ImageMagick suite, which is traditionally used for this purpose,
-but it's more suited for raster formats).
+- `png` -- Small PNG icons derived from the SVG source files. These are used
+   directly for Linux, and to derive the Windows `.ico` icon file.
 
-`rsvg-convert` program is available in most Linux repos and in macOS brew repo.
+- `svg` -- SVG source files; the PNG bitmap icons in `png` are derived from
+  these files. The `*-16.svg`, `*-24.svg`, etc. files contain SVG files
+  optimised for 16x16, 24x24, etc. icons. The `dosbox-staging-no-border.svg`
+  is not used in the packaging process, it's just included for convenience.
 
-Run:
+- `windows` -- This contains the `.ico` file derived from the small PNG files
+  that gets compiled into the Windows executable as a resource, and two BMP
+  files used in the Windows installer.
 
-    make help
 
-To learn about available targets.
+## Prerequisites
 
-# Small icon variants
+To regenerate the derived icon files, you need the following Linux & macOS
+tools:
 
-Files in `small-svg/` directory are vector icons optimized for rendering in
-small sizes; using vector format allows for easy adjustments with live
-preview, and partly controlling sub-pixel rendering by carefully placing the
-shape edges.
+- `rsvg-convert` to create the small PNG icons from the SVG sources (from the
+   `librsvg` package).
+- `icotool` to regenerate the Windows `.ico` file (from the `icoutils`
+   package; there's no good Windows native CLI tool for this)
+- `sips` & `iconutil` to regenerate the macOS `.icns` file (included with
+   macOS out-of-the-box).
 
-It's recommended to use Inkscape's "icon preview" feature when modifying these
-files.
 
-# OS-specific instructions
+## Regenerating the icons
 
-## Linux
+You need to update the following files at minimum to change the icon's design:
 
-Base design icon follows size and colour recommendations of GNOME HIG, so you
-can use it directly, no pre-processing is needed.
+- `svg/dosbox-staging.svg` -- The source SVG file.
 
-When packaging for Linux, copy and rename `dosbox-staging.svg` icon to distro
+- `svg/dosbox-staging-XY.svg` -- SVG variants optimised for small derived
+   icons to have greater control over subpixel rendering
+   (`dosbox-staging-16.svg` is used to derive the 16x16px icon, and so on).
+   Use the "Icon Preview" feature of Inkscape to modify these special SVG
+   files.
+
+- `macos/dosbox-staging-1024.png` -- The 1024px source PNG for the macOS icon.
+
+After you've made changes to one or more of these, run `make all` and check in
+the resulting derived files (run `make help` to see detailed info about all
+possible targets).
+
+
+## Platform-specific notes
+
+### Windows
+
+Windows does not support vector icons either. The `.ico` file contains bitmap
+icons at various sizes; its built using the small PNG icons.
+
+The 16px icon is used in the window's title bar, the 24px one is the taskbar
+icon. If the 24px icon is missing, Windows will pick the wrong icon for the
+window's titlebar as well (it will scale down the biggest icon it can find, so
+the result will be blurry).
+
+The icon file stored in the repo is packaged into the final executable via
+Visual Studio, so make sure to update `src/winres.rc` if you change the name
+or path of the `.ico` file.
+
+
+### macOS
+
+macOS does not support vector icons, so we generate the `.icns`
+file from `macos/dosbox-staging-macos-1024.png` source file.
+
+When building the app bundle, the `.icns` file must be placed in
+`Contents/SharedSupport/Resources/`. The `Info.plist` files contains the name
+of the icon file.
+
+Please refer to Apple's documentation for further details.
+
+
+### Linux
+
+`svg/dosbox-staging.svg` is a scalable icon of size 128x128, which is the
+recommended default size for most Linux desktop environments. This base SVG
+icon follows the size and colour recommendations of GNOME HIG. This icon looks
+good in most contexts, but for very small sizes (e.g., 16px to 32px), it's
+better to use the PNG icons from the `png` directory.
+
+When packaging for Linux, copy `svg/dosbox-staging.svg` into the distro
 specific directory (usually `/usr/share/icons/hicolor/scalable/apps/`).
 
-You will need additional
+You will need an additional
 [.desktop](https://specifications.freedesktop.org/desktop-entry-spec/latest/)
-file entry to correlate icon file to the application.
+file to correlate the icon file with the application.
 
-Use Makefile to render small icons if necessary (some desktop environments use
-them).
-
-## macOS
-
-macOS does not support scalable icons, so you'll need to generate .icns
-file, which bundles raster icons in various sizes:
-
-    make dosbox-staging.icns
-
-When building App bundle, the .icns file should be placed in directory:
-`Contents/SharedSupport/Resources/` and then you'll need to update information
-in `Info.plist` file.
-
-Refer to Apple documentation for details.
-
-## Windows
-
-Windows does not support vector icons and does not provide good programs for
-rendering/bundling files in .ico format - developers are expected to edit
-icons using raster editor provided by Visual Studio.
-
-For this reason, preprocessed .ico file is bundled inside the repo.
-
-**When changing icon, update the generated .ico file only after the design is
-finalized.**
-
-To rebuild .ico file, boot to Linux, install `icotool` program and run:
-
-    make dosbox-staging.ico
-
-When changing design, take extra steps for sizes:
-
-- 16x16 - used next to window title
-- 24x24 - taskbar icon; if missing, Windows will pick wrong icon for
-          window titlebar as well (it will scale down biggest icon, so
-          the result will be blurry).
-
-Icon file stored in the repo is bundled via Visual Studio inside Windows
-executable file; when changing file name or directory, update the file
-`src/winres.rc`.
