@@ -31,6 +31,7 @@
 #include "callback.h"
 #include "checks.h"
 #include "cpu.h"
+#include "math_utils.h"
 #include "pic.h"
 #include "video.h"
 
@@ -48,9 +49,11 @@ static struct {
 	bool is_fullscreen    = false; // if full screen mode is active
 	bool is_multi_display = false; // if host system has more than 1 display
 
-	// Clipping = size of black border (one side) in logical units
-	int32_t clip_x = 0;
-	int32_t clip_y = 0;
+	// The draw rectangle in logical units. Note the (x1,y1) upper-left
+	// coordinates can be negative if we're "zooming into" the DOS content
+	// (e.g., in 'relative' viewport mode), in which case the draw rect
+	// extends beyond the dimensions of the screen/window.
+	DosBox::Rect draw_rect = {};
 
 	// Absolute position from start of drawing area in logical units
 	uint32_t cursor_x_abs  = 0;
@@ -90,32 +93,34 @@ static void update_cursor_absolute_position(const int32_t x_abs, const int32_t y
 {
 	state.cursor_is_outside = false;
 
-	auto calc_pos = [&](const int32_t abs_pos,
-	                    const int32_t clip_pos,
-	                    const int32_t max_pos) -> uint32_t {
-		assert(max_pos > 1);
-		constexpr int32_t min_pos = 0;
+	auto calc_pos = [&](const int pos,
+	                    const int draw_start_pos,
+	                    const int draw_end_pos) -> uint32_t {
+		assert(draw_end_pos - draw_start_pos > 1);
+		constexpr int min_pos = 0;
 
-		if (abs_pos < min_pos || abs_pos < clip_pos) {
-			// cursor is over the top or left black bar
+		if (pos < min_pos || pos < draw_start_pos) {
+			// Cursor is before the top or left of the draw area
 			state.cursor_is_outside = !state.is_captured;
 			return check_cast<uint32_t>(min_pos);
 
-		} else if (abs_pos >= max_pos + clip_pos) {
-			// cursor is over the bottom or right black bar
+		} else if (pos >= draw_end_pos) {
+			// Cursor is after the bottom or right of the draw area
 			state.cursor_is_outside = !state.is_captured;
-			return check_cast<uint32_t>(max_pos - 1);
+			return check_cast<uint32_t>(draw_end_pos - draw_start_pos - 1);
 
 		} else {
-			return check_cast<uint32_t>(abs_pos - clip_pos);
+			return check_cast<uint32_t>(pos - draw_start_pos);
 		}
 	};
 
-	const auto x_max = check_cast<int32_t>(mouse_shared.resolution_x);
-	const auto y_max = check_cast<int32_t>(mouse_shared.resolution_y);
+	const auto x1 = iroundf(state.draw_rect.x1());
+	const auto y1 = iroundf(state.draw_rect.y1());
+	const auto x2 = x1 + check_cast<int>(mouse_shared.resolution_x);
+	const auto y2 = y1 + check_cast<int>(mouse_shared.resolution_y);
 
-	state.cursor_x_abs = calc_pos(x_abs, state.clip_x, x_max);
-	state.cursor_y_abs = calc_pos(y_abs, state.clip_y, y_max);
+	state.cursor_x_abs = calc_pos(check_cast<int>(x_abs), x1, x2);
+	state.cursor_y_abs = calc_pos(check_cast<int>(y_abs), y1, y2);
 }
 
 static void update_cursor_visibility()
@@ -475,26 +480,17 @@ Bitu int74_ret_handler()
 
 void MOUSE_NewScreenParams(const MouseScreenParams &params)
 {
-	// clip_x, clip_y = black border (one side), in logical units
-	// res_x, res_y   = used display area, in logical units
-	//
-	// res_x + 2 * clip_x, res_y + 2 * clip_y = screen resolution or window
-	// size, in logical units
-
-	assert(params.clip_x <= INT32_MAX);
-	assert(params.clip_y <= INT32_MAX);
-	assert(params.res_x <= INT32_MAX);
-	assert(params.res_y <= INT32_MAX);
-
-	state.clip_x = params.clip_x;
-	state.clip_y = params.clip_y;
+	state.draw_rect = params.draw_rect;
 
 	// Protection against strange window sizes,
 	// to prevent division by 0 in some places
-	constexpr uint32_t min = 2;
+	constexpr auto min = 2;
 
-	mouse_shared.resolution_x = std::max(params.res_x, min);
-	mouse_shared.resolution_y = std::max(params.res_y, min);
+	mouse_shared.resolution_x = check_cast<uint32_t>(
+	        std::max(iroundf(params.draw_rect.w), min));
+
+	mouse_shared.resolution_y = check_cast<uint32_t>(
+	        std::max(iroundf(params.draw_rect.h), min));
 
 	// If we are switching back from fullscreen,
 	// clear the user capture request
