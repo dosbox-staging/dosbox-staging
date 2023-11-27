@@ -1226,14 +1226,10 @@ static void notify_new_mouse_screen_params()
 
 	MouseScreenParams params = {};
 
-	auto to_logical_units = [](const int value) {
-		return check_cast<int32_t>(lround(value / sdl.desktop.dpi_scale));
-	};
-
-	params.clip_x = to_logical_units(sdl.draw_rect_px.x);
-	params.clip_y = to_logical_units(sdl.draw_rect_px.y);
-	params.res_x  = to_logical_units(sdl.draw_rect_px.w);
-	params.res_y  = to_logical_units(sdl.draw_rect_px.h);
+	// It is important to scale not just the size of the rectangle but also
+	// its starting point by the inverse of the DPI scale factor.
+	params.draw_rect =
+	        to_rect(sdl.draw_rect_px).Copy().Scale(1.0f / sdl.desktop.dpi_scale);
 
 	int abs_x = 0;
 	int abs_y = 0;
