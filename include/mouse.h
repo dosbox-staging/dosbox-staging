@@ -109,18 +109,22 @@ void MOUSE_NotifyWindowActive(const bool is_active);
 void MOUSE_NotifyTakeOver(const bool gui_has_taken_over);
 
 struct MouseScreenParams {
-	// size of the black bars around screen area
+	// Size of the black bars around screen area in logical units
 	uint32_t clip_x = 0;
 	uint32_t clip_y = 0;
-	// size of drawing area (in hot OS pixels)
+
+	// Size of drawing area in logical units
 	uint32_t res_x = 0;
 	uint32_t res_y = 0;
-	// new absolute mouse cursor position
+
+	// New absolute mouse cursor position in logical units
 	int32_t x_abs = 0;
 	int32_t y_abs = 0;
-	// whether the new mode is fullscreen or windowed
+
+	// Whether the new mode is fullscreen or windowed
 	bool is_fullscreen = false;
-	// whether more than one display was detected
+
+	// Whether more than one display was detected
 	bool is_multi_display = false;
 };
 
