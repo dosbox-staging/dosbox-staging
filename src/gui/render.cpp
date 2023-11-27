@@ -598,8 +598,7 @@ static void setup_scan_and_pixel_doubling()
 	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
 }
 
-bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width_px,
-                                  [[maybe_unused]] const uint16_t canvas_height_px,
+bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
                                   [[maybe_unused]] const VideoMode& video_mode,
                                   [[maybe_unused]] const bool reinit_render)
 {
@@ -612,14 +611,12 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width_p
 	// uninitialised VideoMode param with width and height set to 0 which
 	// results in a crash. The proper fix is to make the init sequence 100%
 	// identical on all platforms, but in the interim this workaround will do.
-	if (canvas_width_px == 0 || canvas_height_px == 0 ||
+	if (canvas_size_px.w == 0 || canvas_size_px.h == 0 ||
 	    video_mode.width == 0 || video_mode.height == 0) {
 		return false;
 	}
 
-	get_shader_manager().NotifyRenderParametersChanged(canvas_width_px,
-	                                                   canvas_height_px,
-	                                                   video_mode);
+	get_shader_manager().NotifyRenderParametersChanged(canvas_size_px, video_mode);
 
 	const auto new_shader_name = get_shader_manager().GetCurrentShaderInfo().name;
 
@@ -658,11 +655,9 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 		video_mode.has_vga_colors = true;
 
 		// We are potentially auto-switching to a VGA shader now.
-		const auto canvas_size_px = GFX_GetCanvasSizeInPixels();
-
 		constexpr auto reinit_render = true;
-		RENDER_MaybeAutoSwitchShader(iroundf(canvas_size_px.w),
-		                             iroundf(canvas_size_px.h),
+
+		RENDER_MaybeAutoSwitchShader(GFX_GetCanvasSizeInPixels(),
 		                             video_mode,
 		                             reinit_render);
 	}

@@ -79,8 +79,7 @@ void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
 	MaybeAutoSwitchShader();
 }
 
-void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width_px,
-                                                  const uint16_t canvas_height_px,
+void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect canvas_size_px,
                                                   const VideoMode& video_mode)
 {
 	// We need to calculate the scale factors for two eventualities: 1)
@@ -99,8 +98,6 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width_px
 	// 1) Calculate vertical scale factor for the standard output resolution
 	// (i.e., always double-scanning on VGA).
 	//
-	const DosBox::Rect canvas_size_px = {canvas_width_px, canvas_height_px};
-
 	scale_y = [&] {
 		const auto double_scan = video_mode.is_double_scanned_mode ? 2 : 1;
 
