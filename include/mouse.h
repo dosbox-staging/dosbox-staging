@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include "rect.h"
+
 // ***************************************************************************
 // Initialization, configuration
 // ***************************************************************************
@@ -109,13 +111,11 @@ void MOUSE_NotifyWindowActive(const bool is_active);
 void MOUSE_NotifyTakeOver(const bool gui_has_taken_over);
 
 struct MouseScreenParams {
-	// Size of the black bars around screen area in logical units
-	int32_t clip_x = 0;
-	int32_t clip_y = 0;
-
-	// Size of drawing area in logical units
-	uint32_t res_x = 0;
-	uint32_t res_y = 0;
+	// The draw rectangle in logical units. Note the (x1,y1) upper-left
+	// coordinates can be negative if we're "zooming into" the DOS content
+	// (e.g., in 'relative' viewport mode), in which case the draw rect
+	// extends beyond the dimensions of the screen/window.
+	DosBox::Rect draw_rect = {};
 
 	// New absolute mouse cursor position in logical units
 	int32_t x_abs = 0;
