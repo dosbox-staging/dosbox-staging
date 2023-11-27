@@ -710,29 +710,32 @@ static DosBox::Rect calc_draw_rect_in_pixels(const DosBox::Rect& canvas_size_px)
 static DosBox::Rect get_canvas_size_in_pixels(
         [[maybe_unused]] const RenderingBackend rendering_backend)
 {
-	SDL_Rect canvas_px = {};
+	SDL_Rect canvas_size_px = {};
 #if SDL_VERSION_ATLEAST(2, 26, 0)
-	SDL_GetWindowSizeInPixels(sdl.window, &canvas_px.w, &canvas_px.h);
+	SDL_GetWindowSizeInPixels(sdl.window, &canvas_size_px.w, &canvas_size_px.h);
 #else
 	switch (rendering_backend) {
 	case RenderingBackend::Texture:
 		if (SDL_GetRendererOutputSize(sdl.renderer,
-		                              &canvas_px.w,
-		                              &canvas_px.h) != 0) {
+		                              &canvas_size_px.w,
+		                              &canvas_size_px.h) != 0) {
 			LOG_ERR("SDL: Failed to retrieve output size: %s",
 			        SDL_GetError());
 		}
 		break;
 #if C_OPENGL
 	case RenderingBackend::OpenGl:
-		SDL_GL_GetDrawableSize(sdl.window, &canvas_px.w, &canvas_px.h);
+		SDL_GL_GetDrawableSize(sdl.window,
+		                       &canvas_size_px.w,
+		                       &canvas_size_px.h);
 		break;
 #endif
-	default: SDL_GetWindowSize(sdl.window, &canvas_px.w, &canvas_px.h);
+	default:
+		SDL_GetWindowSize(sdl.window, &canvas_size_px.w, &canvas_size_px.h);
 	}
 #endif
-	assert(canvas_px.w > 0 && canvas_px.h > 0);
-	return to_rect(canvas_px);
+	assert(canvas_size_px.w > 0 && canvas_size_px.h > 0);
+	return to_rect(canvas_size_px);
 }
 
 // Logs the source and target resolution including describing scaling method
@@ -750,10 +753,10 @@ static void log_display_properties(const int render_width_px,
 			        {canvas_size_override_px->w,
 			         canvas_size_override_px->h});
 		} else {
-			const auto canvas_px = get_canvas_size_in_pixels(
+			const auto canvas_size_px = get_canvas_size_in_pixels(
 			        rendering_backend);
 
-			return calc_draw_rect_in_pixels(canvas_px);
+			return calc_draw_rect_in_pixels(canvas_size_px);
 		}
 	}();
 
@@ -1271,10 +1274,10 @@ static void check_and_handle_dpi_change(SDL_Window* sdl_window,
 		SDL_GetWindowSize(sdl_window, &width_in_logical_units, nullptr);
 	}
 
-	const auto canvas_px = get_canvas_size_in_pixels(rendering_backend);
+	const auto canvas_size_px = get_canvas_size_in_pixels(rendering_backend);
 
 	assert(width_in_logical_units > 0);
-	const auto new_dpi_scale = canvas_px.w / width_in_logical_units;
+	const auto new_dpi_scale = canvas_size_px.w / width_in_logical_units;
 
 	if (std::abs(new_dpi_scale - sdl.desktop.dpi_scale) < DBL_EPSILON) {
 		// LOG_MSG("SDL: DPI scale hasn't changed (still %f)",
@@ -1472,9 +1475,9 @@ DosBox::Rect GFX_GetDesktopSize()
 
 DosBox::Rect GFX_GetViewportSizeInPixels()
 {
-	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
-	return RENDER_CalcRestrictedViewportSizeInPixels(canvas_px);
+	return RENDER_CalcRestrictedViewportSizeInPixels(canvas_size_px);
 }
 
 float GFX_GetDpiScaleFactor()
@@ -1811,13 +1814,15 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 			sdl.desktop.window.adjusted_initial_size = true;
 		}
-		const auto canvas_px = get_canvas_size_in_pixels(sdl.want_rendering_backend);
+		const auto canvas_size_px = get_canvas_size_in_pixels(
+		        sdl.want_rendering_backend);
 		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
 		//         (canvas.w - sdl.clip.w) / 2,
 		//         (canvas.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_px));
+		sdl.draw_rect_px = to_sdl_rect(
+		        calc_draw_rect_in_pixels(canvas_size_px));
 
 		if (SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px) != 0) {
 			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
@@ -2026,14 +2031,17 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			sdl.desktop.window.adjusted_initial_size = true;
 		}
 
-		const auto canvas_px = get_canvas_size_in_pixels(
+		const auto canvas_size_px = get_canvas_size_in_pixels(
 		        sdl.want_rendering_backend);
+
 		// LOG_MSG("Attempting to fix the centering to %d %d %d %d",
-		//         (canvas_px.w - sdl.clip.w) / 2,
-		//         (canvas_px.h - sdl.clip.h) / 2,
+		//         (canvas_size_px.w - sdl.clip.w) / 2,
+		//         (canvas_size_px.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_px));
+	
+		sdl.draw_rect_px = to_sdl_rect(
+		        calc_draw_rect_in_pixels(canvas_size_px));
 
 		glViewport(sdl.draw_rect_px.x,
 		           sdl.draw_rect_px.y,
@@ -2271,10 +2279,10 @@ void GFX_CenterMouse()
 	int height = 0;
 
 #if defined(WIN32) && !SDL_VERSION_ATLEAST(2, 28, 1)
-	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
-	width  = canvas_px.w;
-	height = canvas_px.h;
+	width  = canvas_size_px.w;
+	height = canvas_size_px.h;
 #else
 	SDL_GetWindowSize(sdl.window, &width, &height);
 #endif
@@ -2356,9 +2364,9 @@ void GFX_SwitchFullScreen()
 	sdl.desktop.switching_fullscreen = true;
 
 	// Record the window's current canvas size if we're departing window-mode
-	auto& canvas_px = sdl.desktop.window.canvas_size;
+	auto& canvas_size_px = sdl.desktop.window.canvas_size;
 	if (!sdl.desktop.fullscreen) {
-		canvas_px = to_sdl_rect(
+		canvas_size_px = to_sdl_rect(
 		        get_canvas_size_in_pixels(sdl.rendering_backend));
 	}
 
@@ -2376,14 +2384,15 @@ void GFX_SwitchFullScreen()
 
 	// After switching modes, get the current canvas size, which might be
 	// the windowed size or full screen size.
-	canvas_px = sdl.desktop.fullscreen
-	                  ? to_sdl_rect(get_canvas_size_in_pixels(sdl.rendering_backend))
-	                  : canvas_px;
+	canvas_size_px = sdl.desktop.fullscreen
+	                       ? to_sdl_rect(get_canvas_size_in_pixels(
+	                                 sdl.rendering_backend))
+	                       : canvas_size_px;
 
 	log_display_properties(sdl.draw.render_width_px,
 	                       sdl.draw.render_height_px,
 	                       sdl.video_mode,
-	                       canvas_px,
+	                       canvas_size_px,
 	                       sdl.rendering_backend);
 
 	sdl.desktop.switching_fullscreen = false;
@@ -3628,9 +3637,9 @@ static void handle_video_resize(int width, int height)
 		sdl.desktop.full.height = height;
 	}
 
-	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
-	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_px));
+	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_size_px));
 
 	if (sdl.rendering_backend == RenderingBackend::Texture) {
 		SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px);
@@ -3709,12 +3718,11 @@ static bool maybe_auto_switch_shader()
 		return false;
 	}
 
-	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
-
+	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 	constexpr auto reinit_render = true;
 
-	return RENDER_MaybeAutoSwitchShader(iroundf(canvas_px.w),
-	                                    iroundf(canvas_px.h),
+	return RENDER_MaybeAutoSwitchShader(iroundf(canvas_size_px.w),
+	                                    iroundf(canvas_size_px.h),
 	                                    sdl.video_mode,
 	                                    reinit_render);
 #else
@@ -3889,11 +3897,11 @@ bool GFX_Events()
 
 				sdl.display_number = event.window.data1;
 
-				const auto canvas_px = get_canvas_size_in_pixels(
+				const auto canvas_size_px = get_canvas_size_in_pixels(
 				        sdl.rendering_backend);
 
 				sdl.draw_rect_px = to_sdl_rect(
-				        calc_draw_rect_in_pixels(canvas_px));
+				        calc_draw_rect_in_pixels(canvas_size_px));
 
 				if (sdl.rendering_backend == RenderingBackend::Texture) {
 					SDL_RenderSetViewport(sdl.renderer,
