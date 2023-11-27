@@ -116,7 +116,7 @@ static double FROUND(double in){
 		// In this case, what is almost certainly wanted is 8.0,
 		// so return the closer integer within the tolerance instead
 		// of chopping to the lower value.
-		if (fpu.cw & ExtendedPrecisionModeMask) {
+		if ((fpu.cw & ExtendedPrecisionModeMask) == ExtendedPrecisionModeMask) {
 			constexpr double tolerance = 1e-14;
 
 			if (const auto lower = std::floor(in);
