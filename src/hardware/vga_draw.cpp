@@ -2848,15 +2848,10 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	    vga.draw.render != render || fps_changed) {
 		VGA_KillDrawing();
 
-		const auto canvas_px = GFX_GetCanvasSizeInPixels();
-
 		constexpr auto reinit_render = false;
 
-		const auto shader_changed =
-		        RENDER_MaybeAutoSwitchShader(iroundf(canvas_px.w),
-		                                     iroundf(canvas_px.h),
-		                                     render.video_mode,
-		                                     reinit_render);
+		const auto shader_changed = RENDER_MaybeAutoSwitchShader(
+		        GFX_GetCanvasSizeInPixels(), render.video_mode, reinit_render);
 
 		if (shader_changed) {
 			render = setup_drawing();
