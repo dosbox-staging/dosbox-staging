@@ -973,33 +973,32 @@ static ViewportSettings get_default_viewport_settings()
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
 {
-	const auto& viewport = viewport_settings;
 	const auto dpi_scale = GFX_GetDpiScaleFactor();
 
-	switch (viewport.mode) {
+	switch (viewport_settings.mode) {
 	case ViewportMode::Fit: {
-		auto viewport_px = [&] {
-			if (viewport.fit.limit_size) {
-				return viewport.fit.limit_size->Copy().ScaleSize(
+		auto viewport_size_px = [&] {
+			if (viewport_settings.fit.limit_size) {
+				return viewport_settings.fit.limit_size->Copy().ScaleSize(
 				        dpi_scale);
 
-			} else if (viewport.fit.desktop_scale) {
+			} else if (viewport_settings.fit.desktop_scale) {
 				auto desktop_px = GFX_GetDesktopSize().ScaleSize(
 				        dpi_scale);
 
-				return desktop_px.ScaleSize(*viewport.fit.desktop_scale);
-
+				return desktop_px.ScaleSize(
+				        *viewport_settings.fit.desktop_scale);
 			} else {
-				// The viewport equals the canvas size in
-				// Fit mode without parameters
+				// The viewport_settings equals the canvas size
+				// in Fit mode without parameters
 				return canvas_size_px;
 			}
 		}();
 
-		if (canvas_size_px.Contains(viewport_px)) {
-			return viewport_px;
+		if (canvas_size_px.Contains(viewport_size_px)) {
+			return viewport_size_px;
 		} else {
-			return viewport_px.Intersect(canvas_size_px);
+			return viewport_size_px.Intersect(canvas_size_px);
 		}
 	}
 
@@ -1008,8 +1007,8 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 		        canvas_size_px);
 
 		return restricted_canvas_px.Copy()
-		        .ScaleWidth(viewport.relative.width_scale)
-		        .ScaleHeight(viewport.relative.height_scale);
+		        .ScaleWidth(viewport_settings.relative.width_scale)
+		        .ScaleHeight(viewport_settings.relative.height_scale);
 	}
 
 	default: assertm(false, "Invalid ViewportMode value"); return {};
