@@ -1224,16 +1224,14 @@ static void NewMouseScreenParams()
 
 	MouseScreenParams params = {};
 
-	// When DPI scaling is enabled, mouse coordinates are reported on
-	// "client points" grid, not physical pixels.
-	auto adapt = [](const int value) {
-		return lround(value / sdl.desktop.dpi_scale);
+	auto to_logical_units = [](const int value) {
+		return check_cast<uint32_t>(lround(value / sdl.desktop.dpi_scale));
 	};
 
-	params.clip_x = check_cast<uint32_t>(adapt(sdl.clip_px.x));
-	params.clip_y = check_cast<uint32_t>(adapt(sdl.clip_px.y));
-	params.res_x  = check_cast<uint32_t>(adapt(sdl.clip_px.w));
-	params.res_y  = check_cast<uint32_t>(adapt(sdl.clip_px.h));
+	params.clip_x = to_logical_units(sdl.clip_px.x);
+	params.clip_y = to_logical_units(sdl.clip_px.y);
+	params.res_x  = to_logical_units(sdl.clip_px.w);
+	params.res_y  = to_logical_units(sdl.clip_px.h);
 
 	int abs_x = 0;
 	int abs_y = 0;

@@ -469,9 +469,11 @@ Bitu int74_ret_handler()
 
 void MOUSE_NewScreenParams(const MouseScreenParams &params)
 {
-	// clip_x, clip_y = black border (one side), in pixels
-	// res_x, res_y   = used display area, in pixels
-	// res_x + 2 * clip_x, res_y + 2 * clip_y = screen resolution or window size
+	// clip_x, clip_y = black border (one side), in logical units
+	// res_x, res_y   = used display area, in logical units
+	//
+	// res_x + 2 * clip_x, res_y + 2 * clip_y = screen resolution or window
+	// size, in logical units
 
 	assert(params.clip_x <= INT32_MAX);
 	assert(params.clip_y <= INT32_MAX);
