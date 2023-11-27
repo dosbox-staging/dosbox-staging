@@ -1185,8 +1185,7 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 
 static void notify_new_mouse_screen_params()
 {
-	if (sdl.draw_rect_px.w <= 0 || sdl.draw_rect_px.h <= 0 ||
-	    sdl.draw_rect_px.x < 0 || sdl.draw_rect_px.y < 0) {
+	if (sdl.draw_rect_px.w <= 0 || sdl.draw_rect_px.h <= 0) {
 		// Filter out unusual parameters, which can be the result
 		// of window minimized due to ALT+TAB, for example
 		return;
@@ -1195,7 +1194,7 @@ static void notify_new_mouse_screen_params()
 	MouseScreenParams params = {};
 
 	auto to_logical_units = [](const int value) {
-		return check_cast<uint32_t>(lround(value / sdl.desktop.dpi_scale));
+		return check_cast<int32_t>(lround(value / sdl.desktop.dpi_scale));
 	};
 
 	params.clip_x = to_logical_units(sdl.draw_rect_px.x);

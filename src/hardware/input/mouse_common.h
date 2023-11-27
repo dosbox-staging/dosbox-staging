@@ -47,9 +47,10 @@ public:
 
 	bool started = false;
 
-	// Screen size
-	uint32_t resolution_x = 640; // resolution to which guest image is scaled,
-	uint32_t resolution_y = 400; // excluding black borders
+	// Resolution (screen size) in logical units to which guest image is
+	// scaled, excluding black borders.
+	uint32_t resolution_x = 640;
+	uint32_t resolution_y = 400;
 };
 
 class MouseInfo {
