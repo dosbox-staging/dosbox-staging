@@ -658,11 +658,11 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 		video_mode.has_vga_colors = true;
 
 		// We are potentially auto-switching to a VGA shader now.
-		const auto canvas_px = GFX_GetCanvasSizeInPixels();
+		const auto canvas_size_px = GFX_GetCanvasSizeInPixels();
 
 		constexpr auto reinit_render = true;
-		RENDER_MaybeAutoSwitchShader(iroundf(canvas_px.w),
-		                             iroundf(canvas_px.h),
+		RENDER_MaybeAutoSwitchShader(iroundf(canvas_size_px.w),
+		                             iroundf(canvas_size_px.h),
 		                             video_mode,
 		                             reinit_render);
 	}
@@ -976,7 +976,7 @@ static ViewportSettings get_default_viewport_settings()
 	return viewport;
 }
 
-DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_px)
+DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
 {
 	const auto& viewport = viewport_settings;
 	const auto dpi_scale = GFX_GetDpiScaleFactor();
@@ -989,27 +989,28 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 				        dpi_scale);
 
 			} else if (viewport.fit.desktop_scale) {
-				auto desktop_px = GFX_GetDesktopSize().ScaleSize(dpi_scale);
+				auto desktop_px = GFX_GetDesktopSize().ScaleSize(
+				        dpi_scale);
 
 				return desktop_px.ScaleSize(*viewport.fit.desktop_scale);
 
 			} else {
 				// The viewport equals the canvas size in
 				// Fit mode without parameters
-				return canvas_px;
+				return canvas_size_px;
 			}
 		}();
 
-		if (canvas_px.Contains(viewport_px)) {
+		if (canvas_size_px.Contains(viewport_px)) {
 			return viewport_px;
 		} else {
-			return viewport_px.Intersect(canvas_px);
+			return viewport_px.Intersect(canvas_size_px);
 		}
 	}
 
 	case ViewportMode::Relative: {
 		const auto restricted_canvas_px = DosBox::Rect{4, 3}.ScaleSizeToFit(
-		        canvas_px);
+		        canvas_size_px);
 
 		return restricted_canvas_px.Copy()
 		        .ScaleWidth(viewport.relative.width_scale)

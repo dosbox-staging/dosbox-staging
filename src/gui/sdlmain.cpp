@@ -725,12 +725,12 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
-static DosBox::Rect calc_draw_size_in_pixels(const DosBox::Rect& canvas_size_px)
+static DosBox::Rect calc_draw_rect_in_pixels(const DosBox::Rect& canvas_size_px)
 {
 	const DosBox::Rect render_size_px = {sdl.draw.render_width_px,
 	                                     sdl.draw.render_height_px};
 
-	const auto r = GFX_CalcDrawSizeInPixels(canvas_size_px,
+	const auto r = GFX_CalcDrawRectInPixels(canvas_size_px,
 	                                        render_size_px,
 	                                        sdl.draw.render_pixel_aspect_ratio);
 
@@ -779,14 +779,14 @@ static void log_display_properties(const int render_width_px,
 {
 	const auto draw_size_px = [&]() -> DosBox::Rect {
 		if (canvas_size_override_px) {
-			return calc_draw_size_in_pixels(
+			return calc_draw_rect_in_pixels(
 			        {canvas_size_override_px->w,
 			         canvas_size_override_px->h});
 		} else {
 			const auto canvas_px = get_canvas_size_in_pixels(
 			        rendering_backend);
 
-			return calc_draw_size_in_pixels(canvas_px);
+			return calc_draw_rect_in_pixels(canvas_px);
 		}
 	}();
 
@@ -1215,8 +1215,8 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 
 static void NewMouseScreenParams()
 {
-	if (sdl.clip_px.w <= 0 || sdl.clip_px.h <= 0 ||
-	    sdl.clip_px.x < 0  || sdl.clip_px.y < 0) {
+	if (sdl.draw_rect_px.w <= 0 || sdl.draw_rect_px.h <= 0 ||
+	    sdl.draw_rect_px.x < 0 || sdl.draw_rect_px.y < 0) {
 		// Filter out unusual parameters, which can be the result
 		// of window minimized due to ALT+TAB, for example
 		return;
@@ -1228,10 +1228,10 @@ static void NewMouseScreenParams()
 		return check_cast<uint32_t>(lround(value / sdl.desktop.dpi_scale));
 	};
 
-	params.clip_x = to_logical_units(sdl.clip_px.x);
-	params.clip_y = to_logical_units(sdl.clip_px.y);
-	params.res_x  = to_logical_units(sdl.clip_px.w);
-	params.res_y  = to_logical_units(sdl.clip_px.h);
+	params.clip_x = to_logical_units(sdl.draw_rect_px.x);
+	params.clip_y = to_logical_units(sdl.draw_rect_px.y);
+	params.res_x  = to_logical_units(sdl.draw_rect_px.w);
+	params.res_y  = to_logical_units(sdl.draw_rect_px.h);
 
 	int abs_x = 0;
 	int abs_y = 0;
@@ -1850,10 +1850,11 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		//         (canvas.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.clip_px = to_sdl_rect(calc_draw_size_in_pixels(canvas_px));
+		sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_px));
 
-		if (SDL_RenderSetViewport(sdl.renderer, &sdl.clip_px) != 0)
+		if (SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px) != 0) {
 			LOG_ERR("SDL: Failed to set viewport: %s", SDL_GetError());
+		}
 
 		sdl.frame.update = update_frame_texture;
 		sdl.frame.present = present_frame_texture;
@@ -2065,8 +2066,12 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		//         (canvas_px.h - sdl.clip.h) / 2,
 		//         sdl.clip.w,
 		//         sdl.clip.h);
-		sdl.clip_px = to_sdl_rect(calc_draw_size_in_pixels(canvas_px));
-		glViewport(sdl.clip_px.x, sdl.clip_px.y, sdl.clip_px.w, sdl.clip_px.h);
+		sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_px));
+
+		glViewport(sdl.draw_rect_px.x,
+		           sdl.draw_rect_px.y,
+		           sdl.draw_rect_px.w,
+		           sdl.draw_rect_px.h);
 
 		if (sdl.opengl.texture > 0) {
 			glDeleteTextures(1,&sdl.opengl.texture);
@@ -2159,10 +2164,15 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			// Set shader variables
 			glUniform2f(sdl.opengl.ruby.texture_size,
 			            (GLfloat)texsize_w_px, (GLfloat)texsize_h_px);
+
 			glUniform2f(sdl.opengl.ruby.input_size,
 			            (GLfloat)render_width_px,
 			            (GLfloat)render_height_px);
-			glUniform2f(sdl.opengl.ruby.output_size, (GLfloat)sdl.clip_px.w, (GLfloat)sdl.clip_px.h);
+
+			glUniform2f(sdl.opengl.ruby.output_size,
+			            (GLfloat)sdl.draw_rect_px.w,
+			            (GLfloat)sdl.draw_rect_px.h);
+
 			// The following uniform is *not* set right now
 			sdl.opengl.actual_frame_count = 0;
 		} else {
@@ -2532,8 +2542,8 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	RenderedImage image = {};
 
 	auto allocate_image = [&]() {
-		image.params.width              = sdl.clip_px.w;
-		image.params.height             = sdl.clip_px.h;
+		image.params.width              = sdl.draw_rect_px.w;
+		image.params.height             = sdl.draw_rect_px.h;
 		image.params.double_width       = false;
 		image.params.double_height      = false;
 		image.params.pixel_aspect_ratio = {1};
@@ -2566,8 +2576,8 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 
 		allocate_image();
 
-		glReadPixels(sdl.clip_px.x,
-		             sdl.clip_px.y,
+		glReadPixels(sdl.draw_rect_px.x,
+		             sdl.draw_rect_px.y,
 		             image.params.width,
 		             image.params.height,
 		             GL_BGR,
@@ -2606,12 +2616,14 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	// More info: https://afrantzis.com/pixel-format-guide/sdl2.html
 	//
 	if (SDL_RenderReadPixels(renderer,
-	                         &sdl.clip_px,
+	                         &sdl.draw_rect_px,
 	                         SDL_PIXELFORMAT_BGR24,
 	                         image.image_data,
 	                         image.pitch) != 0) {
+
 		LOG_WARNING("SDL: Failed reading pixels from the texture renderer: %s",
 		            SDL_GetError());
+
 		delete[] image.image_data;
 		return {};
 	}
@@ -3119,7 +3131,7 @@ static void setup_window_sizes_from_conf(const char* windowresolution_val,
 	        sdl.display_number);
 }
 
-DosBox::Rect GFX_CalcDrawSizeInPixels(const DosBox::Rect& canvas_size_px,
+DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
                                       const DosBox::Rect& render_size_px,
                                       const Fraction& render_pixel_aspect_ratio)
 {
@@ -3652,17 +3664,21 @@ static void handle_video_resize(int width, int height)
 
 	const auto canvas_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 
-	sdl.clip_px = to_sdl_rect(calc_draw_size_in_pixels(canvas_px));
+	sdl.draw_rect_px = to_sdl_rect(calc_draw_rect_in_pixels(canvas_px));
 
 	if (sdl.rendering_backend == RenderingBackend::Texture) {
-		SDL_RenderSetViewport(sdl.renderer, &sdl.clip_px);
+		SDL_RenderSetViewport(sdl.renderer, &sdl.draw_rect_px);
 	}
 #if C_OPENGL
 	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-		glViewport(sdl.clip_px.x, sdl.clip_px.y, sdl.clip_px.w, sdl.clip_px.h);
+		glViewport(sdl.draw_rect_px.x,
+		           sdl.draw_rect_px.y,
+		           sdl.draw_rect_px.w,
+		           sdl.draw_rect_px.h);
+
 		glUniform2f(sdl.opengl.ruby.output_size,
-		            (GLfloat)sdl.clip_px.w,
-		            (GLfloat)sdl.clip_px.h);
+		            (GLfloat)sdl.draw_rect_px.w,
+		            (GLfloat)sdl.draw_rect_px.h);
 	}
 #endif // C_OPENGL
 
@@ -3799,10 +3815,10 @@ bool GFX_Events()
 				// LOG_DEBUG("SDL: Reset macOS's GL viewport
 				// after window-restore");
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.clip_px.x,
-					           sdl.clip_px.y,
-					           sdl.clip_px.w,
-					           sdl.clip_px.h);
+					glViewport(sdl.draw_rect_px.x,
+					           sdl.draw_rect_px.y,
+					           sdl.draw_rect_px.w,
+					           sdl.draw_rect_px.h);
 				}
 #endif
 				focus_input();
@@ -3883,10 +3899,10 @@ bool GFX_Events()
 				//               event.window.data1,
 				//               event.window.data2);
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.clip_px.x,
-					           sdl.clip_px.y,
-					           sdl.clip_px.w,
-					           sdl.clip_px.h);
+					glViewport(sdl.draw_rect_px.x,
+					           sdl.draw_rect_px.y,
+					           sdl.draw_rect_px.w,
+					           sdl.draw_rect_px.h);
 				}
 				continue;
 #endif
@@ -3910,19 +3926,19 @@ bool GFX_Events()
 				const auto canvas_px = get_canvas_size_in_pixels(
 				        sdl.rendering_backend);
 
-				sdl.clip_px = to_sdl_rect(
-				        calc_draw_size_in_pixels(canvas_px));
+				sdl.draw_rect_px = to_sdl_rect(
+				        calc_draw_rect_in_pixels(canvas_px));
 
 				if (sdl.rendering_backend == RenderingBackend::Texture) {
 					SDL_RenderSetViewport(sdl.renderer,
-					                      &sdl.clip_px);
+					                      &sdl.draw_rect_px);
 				}
 #	if C_OPENGL
 				if (sdl.rendering_backend == RenderingBackend::OpenGl) {
-					glViewport(sdl.clip_px.x,
-					           sdl.clip_px.y,
-					           sdl.clip_px.w,
-					           sdl.clip_px.h);
+					glViewport(sdl.draw_rect_px.x,
+					           sdl.draw_rect_px.y,
+					           sdl.draw_rect_px.w,
+					           sdl.draw_rect_px.h);
 				}
 
 				maybe_auto_switch_shader();

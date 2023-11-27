@@ -98,18 +98,21 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width_px
 
 	// 1) Calculate vertical scale factor for the standard output resolution
 	// (i.e., always double-scanning on VGA).
+	//
+	const DosBox::Rect canvas_size_px = {canvas_width_px, canvas_height_px};
+
 	scale_y = [&] {
 		const auto double_scan = video_mode.is_double_scanned_mode ? 2 : 1;
 
 		const DosBox::Rect render_size_px = {video_mode.width * double_scan,
 		                                     video_mode.height * double_scan};
 
-		const auto draw_size_px = GFX_CalcDrawSizeInPixels(
-		        {canvas_width_px, canvas_height_px},
+		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
+		        canvas_size_px,
 		        render_size_px,
 		        video_mode.pixel_aspect_ratio);
 
-		return static_cast<double>(draw_size_px.h) / render_size_px.h;
+		return static_cast<double>(draw_rect_px.h) / render_size_px.h;
 	}();
 
 	// 2) Calculate vertical scale factor for forced single-scanning on VGA
@@ -118,12 +121,12 @@ void ShaderManager::NotifyRenderParametersChanged(const uint16_t canvas_width_px
 		const DosBox::Rect render_size_px = {video_mode.width,
 		                                     video_mode.height};
 
-		const auto draw_size_px = GFX_CalcDrawSizeInPixels(
-		        {canvas_width_px, canvas_height_px},
+		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
+		        canvas_size_px,
 		        render_size_px,
 		        video_mode.pixel_aspect_ratio);
 
-		scale_y_force_single_scan = static_cast<double>(draw_size_px.h) /
+		scale_y_force_single_scan = static_cast<double>(draw_rect_px.h) /
 		                            render_size_px.h;
 	} else {
 		scale_y_force_single_scan = scale_y;

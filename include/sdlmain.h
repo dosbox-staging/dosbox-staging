@@ -43,11 +43,13 @@
 // in these various stages and to apply them consistently. To understand
 // the difference between logical units and pixels, please see `video.h`.
 //
-// Video mode dimensions:
+// Video mode dimensions
+// ---------------------
 //   The dimensions of the DOS video mode in raw pixels as stored on disk or
 //   in the emulated video card's framebuffer (e.g., 320x200 = 64000 pixels).
 //
-// Rendered image size:
+// Rendered image size
+// -------------------
 //   Size of the final rendered image in pixels *after* width and height
 //   doubling has been applied (e.g. 320x200 VGA is width and height doubled
 //   (scan-doubled) to 640x400; 320x200 CGA composite output is quadrupled in
@@ -55,26 +57,41 @@
 //   analogous to the actual video signal the CRT monitor "sees" (e.g., a
 //   monitor cannot differentiate between 320x200 double-scanned to 640x400,
 //   or an actual 640x400 video mode, as they're identical at the analog VGA
-//   signal level). In OpenGL output mode, this is the size of the input image
-//   in pixels sent to GLSL shaders.
+//   signal level). In OpenGL mode, this is the size of the input image in
+//   pixels sent to GLSL shaders.
 //
-// Canvas size:
+// Canvas size
+// -----------
 //   The unrestricted total available drawing area of the emulator window or
 //   the screen in fullscreen. This is reported by SDL as logical units.
 //
-// Viewport size:
+// Viewport rectangle
+// ------------------
 //   The maximum area we can *potentially* draw into in logical units.
 //   Normally, it's smaller than the canvas, but it can also be larger in
 //   certain viewport modes where we "zoom into" the image, or when we
 //   simulate the horiz/vert stretch controls of CRT monitors. In these cases,
-//   the canvas effectively acts as our "window" into the oversized viewport.
+//   the canvas effectively acts as our "window" into the oversized viewport,
+//   and one or both coordinates of the viewport rectangle's start point are
+//   negative.
 //
-// Draw size:
-//   The actual draw size in pixels after applying all rendering constraints
-//   such as integer scaling. The draw size is always equal to or smaller than
-//   the extents of the viewport. In OpenGL output mode, this is the size of
-//   the final output image coming out of the shaders, which is the image that
-//   is displayed on the host monitor with 1:1 physical pixel mapping.
+//   IMPORTANT: Note that this viewport concept is different to what SDL &
+//   OpenGL calls the "viewport". Technically, we set the SDL/OpenGL viewport
+//   to the draw rectangle described below.
+//
+// Draw rectangle
+// --------------
+//   The actual draw rectangle in pixels after applying all rendering
+//   constraints such as integer scaling. It's always 100% filled with the
+//   final output image, so its ratio is equal to the output display aspect
+//   ratio. The draw rectangle is always equal to or is contained within the
+//   viewport rectangle.
+//
+//   We set the SDL/OpenGL viewport (which is different to our *our* viewport
+//   concept) to the draw rectangle without any further transforms. In OpenGL
+//   mode, this is the size of the final output image coming out of the
+//   shaders, which is the image that is displayed on the host monitor with
+//   1:1 physical pixel mapping.
 //
 
 #define SDL_NOFRAME 0x00000020
@@ -271,7 +288,7 @@ struct SDL_Block {
 	bool mute_when_inactive  = false;
 	bool pause_when_inactive = false;
 
-	SDL_Rect clip_px          = {0, 0, 0, 0};
+	SDL_Rect draw_rect_px     = {};
 	SDL_Window* window        = nullptr;
 	SDL_Renderer* renderer    = nullptr;
 	std::string render_driver = "";
