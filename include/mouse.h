@@ -110,8 +110,8 @@ void MOUSE_NotifyTakeOver(const bool gui_has_taken_over);
 
 struct MouseScreenParams {
 	// Size of the black bars around screen area in logical units
-	uint32_t clip_x = 0;
-	uint32_t clip_y = 0;
+	int32_t clip_x = 0;
+	int32_t clip_y = 0;
 
 	// Size of drawing area in logical units
 	uint32_t res_x = 0;
