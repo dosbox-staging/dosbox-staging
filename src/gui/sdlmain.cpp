@@ -3721,8 +3721,7 @@ static bool maybe_auto_switch_shader()
 	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
 	constexpr auto reinit_render = true;
 
-	return RENDER_MaybeAutoSwitchShader(iroundf(canvas_size_px.w),
-	                                    iroundf(canvas_size_px.h),
+	return RENDER_MaybeAutoSwitchShader(canvas_size_px,
 	                                    sdl.video_mode,
 	                                    reinit_render);
 #else

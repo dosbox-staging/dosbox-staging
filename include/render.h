@@ -212,8 +212,7 @@ void RENDER_EndUpdate(bool abort);
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
 
-bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const uint16_t canvas_width_px,
-                                  [[maybe_unused]] const uint16_t canvas_height_px,
+bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,
                                   [[maybe_unused]] const VideoMode& video_mode,
                                   [[maybe_unused]] const bool reinit_render);
 
