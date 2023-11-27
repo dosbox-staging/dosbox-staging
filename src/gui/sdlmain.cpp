@@ -1183,7 +1183,7 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 	previous_mode = mode;
 }
 
-static void NewMouseScreenParams()
+static void notify_new_mouse_screen_params()
 {
 	if (sdl.draw_rect_px.w <= 0 || sdl.draw_rect_px.h <= 0 ||
 	    sdl.draw_rect_px.x < 0 || sdl.draw_rect_px.y < 0) {
@@ -2186,7 +2186,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 #endif // C_OPENGL
 	}
 	// Ensure mouse emulation knows the current parameters
-	NewMouseScreenParams();
+	notify_new_mouse_screen_params();
 	update_vsync_state();
 
 	if (sdl.draw.has_changed) {
@@ -3665,7 +3665,7 @@ static void handle_video_resize(int width, int height)
 	}
 
 	// Ensure mouse emulation knows the current parameters
-	NewMouseScreenParams();
+	notify_new_mouse_screen_params();
 }
 
 /* TODO: Properly set window parameters and remove this routine.
@@ -3768,7 +3768,7 @@ bool GFX_Events()
 			// Events added in SDL 2.0.14
 			case SDL_DISPLAYEVENT_CONNECTED:
 			case SDL_DISPLAYEVENT_DISCONNECTED:
-				NewMouseScreenParams();
+				notify_new_mouse_screen_params();
 				break;
 #endif
 			default:
@@ -3916,7 +3916,7 @@ bool GFX_Events()
 
 				maybe_auto_switch_shader();
 #	endif
-				NewMouseScreenParams();
+				notify_new_mouse_screen_params();
 				continue;
 			}
 #endif
