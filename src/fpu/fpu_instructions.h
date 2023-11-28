@@ -149,8 +149,7 @@ static Real64 FPU_FLD80(PhysPt addr) {
 		FPU_Reg eind  = {};
 	} test = {};
 
-	test.eind.l.lower = mem_readd(addr);
-	test.eind.l.upper = mem_readd(addr+4);
+	test.eind.ll = mem_readq(addr);
 	test.begin = mem_readw(addr+8);
    
 	int64_t exp64 = (((test.begin&0x7fff) - BIAS80));
@@ -191,8 +190,7 @@ static void FPU_ST80(PhysPt addr,Bitu reg) {
 	}
 	test.begin = (static_cast<int16_t>(sign80)<<15)| static_cast<int16_t>(exp80final);
 	test.eind.ll = mant80final;
-	mem_writed(addr,test.eind.l.lower);
-	mem_writed(addr+4,test.eind.l.upper);
+	mem_writeq(addr, test.eind.ll);
 	mem_writew(addr+8,test.begin);
 }
 
@@ -207,8 +205,7 @@ static void FPU_FLD_F32(PhysPt addr,Bitu store_to) {
 }
 
 static void FPU_FLD_F64(PhysPt addr,Bitu store_to) {
-	fpu.regs[store_to].l.lower = mem_readd(addr);
-	fpu.regs[store_to].l.upper = mem_readd(addr+4);
+	fpu.regs[store_to].ll = mem_readq(addr);
 }
 
 static void FPU_FLD_F80(PhysPt addr) {
@@ -230,8 +227,7 @@ static void FPU_FLD_I64(PhysPt addr,Bitu store_to) {
 	constexpr int64_t int53_max = (1LL << 53) - 1;
 
 	FPU_Reg temp_reg;
-	temp_reg.l.lower = mem_readd(addr);
-	temp_reg.l.upper = mem_readd(addr + 4);
+	temp_reg.ll = mem_readq(addr);
 
 	fpu.regs[store_to].d = static_cast<Real64>(temp_reg.ll);
 	// This is a fix for vertical bars that appear in some games that
@@ -295,8 +291,7 @@ static void FPU_FST_F32(PhysPt addr) {
 }
 
 static void FPU_FST_F64(PhysPt addr) {
-	mem_writed(addr,fpu.regs[TOP].l.lower);
-	mem_writed(addr+4,fpu.regs[TOP].l.upper);
+	mem_writeq(addr, fpu.regs[TOP].ll);
 }
 
 static void FPU_FST_F80(PhysPt addr) {
@@ -321,15 +316,14 @@ static void FPU_FST_I64(PhysPt addr)
 	if (fpu.use_regs_memcpy[TOP]) {
 		temp_reg.ll = fpu.regs_memcpy[TOP];
 	} else {
-		double val = FROUND(fpu.regs[TOP].d);
+		double val  = FROUND(fpu.regs[TOP].d);
 		temp_reg.ll = (val <= static_cast<double>(INT64_MAX) &&
 		               val >= static_cast<double>(INT64_MIN))
 		                    ? static_cast<int64_t>(val)
 		                    : LONGTYPE(0x8000000000000000);
 	}
 
-	mem_writed(addr, temp_reg.l.lower);
-	mem_writed(addr + 4, temp_reg.l.upper);
+	mem_writeq(addr, temp_reg.ll);
 }
 
 static void FPU_FBST(PhysPt addr) {
