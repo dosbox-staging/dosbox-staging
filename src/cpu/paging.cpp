@@ -57,6 +57,13 @@ uint32_t PageHandler::readd(PhysPt addr)
 	ret     |= (readb(addr+3) << 24);
 	return ret;
 }
+uint64_t PageHandler::readq(PhysPt addr) {
+    uint64_t ret = 0;
+    for (int i = 0; i < 8; ++i) {
+        ret |= static_cast<uint64_t>(readb(addr + i)) << (i * 8);
+    }
+    return ret;
+}
 
 void PageHandler::writeb(PhysPt addr, uint8_t /*val*/)
 {
@@ -74,6 +81,11 @@ void PageHandler::writed(PhysPt addr, uint32_t val)
 	writeb(addr+1,(uint8_t) (val >> 8));
 	writeb(addr+2,(uint8_t) (val >> 16));
 	writeb(addr+3,(uint8_t) (val >> 24));
+}
+void PageHandler::writeq(PhysPt addr, uint64_t val) {
+    for (int i = 0; i < 8; ++i) {
+        writeb(addr + i, static_cast<uint8_t>(val >> (i * 8)));
+    }
 }
 
 HostPt PageHandler::GetHostReadPt(Bitu /*phys_page*/) {
@@ -99,6 +111,12 @@ bool PageHandler::readd_checked(PhysPt addr, uint32_t *val)
 	*val = readd(addr);
 	return false;
 }
+bool PageHandler::readq_checked(PhysPt addr, uint64_t* val)
+{
+	*val = readq(addr);
+	return false;
+}
+
 bool PageHandler::writeb_checked(PhysPt addr, uint8_t val)
 {
 	writeb(addr,val);	return false;
@@ -110,6 +128,11 @@ bool PageHandler::writew_checked(PhysPt addr, uint16_t val)
 bool PageHandler::writed_checked(PhysPt addr, uint32_t val)
 {
 	writed(addr,val);	return false;
+}
+bool PageHandler::writeq_checked(PhysPt addr, uint64_t val)
+{
+	writeq(addr, val);
+	return false;
 }
 
 struct PF_Entry {
@@ -276,6 +299,13 @@ public:
 		InitPageUpdateLink(needs_reset, addr);
 		return val;
 	}
+	uint64_t readq(PhysPt addr) override
+	{
+		const auto needs_reset = InitPage(addr, false);
+		const auto val         = mem_readq(addr);
+		InitPageUpdateLink(needs_reset, addr);
+		return val;
+	}
 	void writeb(PhysPt addr, uint8_t val) override
 	{
 		const auto needs_reset = InitPage(addr, true);
@@ -294,7 +324,13 @@ public:
 		mem_writed(addr, val);
 		InitPageUpdateLink(needs_reset,addr);
 	}
-	bool readb_checked(PhysPt addr, uint8_t *val) override
+	void writeq(PhysPt addr, uint64_t val) override
+	{
+		const auto needs_reset = InitPage(addr, true);
+		mem_writeq(addr, val);
+		InitPageUpdateLink(needs_reset, addr);
+	}
+	bool readb_checked(PhysPt addr, uint8_t* val) override
 	{
 		if (InitPageCheckOnly(addr,false)) {
 			*val=mem_readb(addr);
@@ -314,6 +350,15 @@ public:
 			*val=mem_readd(addr);
 			return false;
 		} else return true;
+	}
+	bool readq_checked(PhysPt addr, uint64_t* val) override
+	{
+		if (InitPageCheckOnly(addr, false)) {
+			*val = mem_readq(addr);
+			return false;
+		} else {
+			return true;
+		}
 	}
 	bool writeb_checked(PhysPt addr, uint8_t val) override
 	{
@@ -336,8 +381,18 @@ public:
 			return false;
 		} else return true;
 	}
-	uint32_t InitPage(uint32_t lin_addr,bool writing) {
-		const auto lin_page=lin_addr >> 12;
+	bool writeq_checked(PhysPt addr, uint64_t val) override
+	{
+		if (InitPageCheckOnly(addr, true)) {
+			mem_writeq(addr, val);
+			return false;
+		} else {
+			return true;
+		}
+	}
+	uint32_t InitPage(uint32_t lin_addr, bool writing)
+	{
+		const auto lin_page = lin_addr >> 12;
 		uint32_t phys_page;
 		if (paging.enabled) {
 			X86PageEntry table;

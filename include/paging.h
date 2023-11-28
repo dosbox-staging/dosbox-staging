@@ -64,17 +64,21 @@ public:
 	virtual uint8_t readb(PhysPt addr);
 	virtual uint16_t readw(PhysPt addr);
 	virtual uint32_t readd(PhysPt addr);
+	virtual uint64_t readq(PhysPt addr);
 	virtual void writeb(PhysPt addr, uint8_t val);
 	virtual void writew(PhysPt addr, uint16_t val);
 	virtual void writed(PhysPt addr, uint32_t val);
+	virtual void writeq(PhysPt addr, uint64_t val);
 	virtual HostPt GetHostReadPt(Bitu phys_page);
 	virtual HostPt GetHostWritePt(Bitu phys_page);
 	virtual bool readb_checked(PhysPt addr,uint8_t * val);
 	virtual bool readw_checked(PhysPt addr,uint16_t * val);
 	virtual bool readd_checked(PhysPt addr,uint32_t * val);
+	virtual bool readq_checked(PhysPt addr, uint64_t* val);
 	virtual bool writeb_checked(PhysPt addr, uint8_t val);
 	virtual bool writew_checked(PhysPt addr, uint16_t val);
 	virtual bool writed_checked(PhysPt addr, uint32_t val);
+	virtual bool writeq_checked(PhysPt addr, uint64_t val);
 
 	uint_fast8_t flags = 0x0;
 };
@@ -240,13 +244,17 @@ PageHandler * MEM_GetPageHandler(Bitu phys_page);
 /* Unaligned address handlers */
 uint16_t mem_unalignedreadw(PhysPt address);
 uint32_t mem_unalignedreadd(PhysPt address);
+uint64_t mem_unalignedreadq(PhysPt address);
 void mem_unalignedwritew(PhysPt address,uint16_t val);
 void mem_unalignedwrited(PhysPt address,uint32_t val);
+void mem_unalignedwriteq(PhysPt address, uint64_t val);
 
 bool mem_unalignedreadw_checked(PhysPt address,uint16_t * val);
 bool mem_unalignedreadd_checked(PhysPt address,uint32_t * val);
+bool mem_unalignedreadq_checked(PhysPt address, uint64_t* val);
 bool mem_unalignedwritew_checked(PhysPt address,uint16_t val);
 bool mem_unalignedwrited_checked(PhysPt address,uint32_t val);
+bool mem_unalignedwriteq_checked(PhysPt address, uint64_t val);
 
 #if defined(USE_FULL_TLB)
 
@@ -366,8 +374,23 @@ static inline uint32_t mem_readd_inline(PhysPt address)
 	}
 }
 
-static inline void mem_writeb_inline(PhysPt address,uint8_t val) {
-	HostPt tlb_addr=get_tlb_write(address);
+static inline uint64_t mem_readq_inline(PhysPt address)
+{
+	if ((address & 0xfff) < 0xff9) {
+		HostPt tlb_addr = get_tlb_read(address);
+		if (tlb_addr) {
+			return host_readq(tlb_addr + address);
+		} else {
+			return get_tlb_readhandler(address)->readq(address);
+		}
+	} else {
+		return mem_unalignedreadq(address);
+	}
+}
+
+static inline void mem_writeb_inline(PhysPt address, uint8_t val)
+{
+	HostPt tlb_addr = get_tlb_write(address);
 	if (tlb_addr) host_writeb(tlb_addr+address,val);
 	else (get_tlb_writehandler(address))->writeb(address,val);
 }
@@ -388,6 +411,19 @@ static inline void mem_writed_inline(PhysPt address,uint32_t val) {
 	} else mem_unalignedwrited(address,val);
 }
 
+static inline void mem_writeq_inline(PhysPt address, uint64_t val)
+{
+	if ((address & 0xfff) < 0xff9) {
+		HostPt tlb_addr = get_tlb_write(address);
+		if (tlb_addr) {
+			host_writeq(tlb_addr + address, val);
+		} else {
+			(get_tlb_writehandler(address))->writeq(address, val);
+		}
+	} else {
+		mem_unalignedwriteq(address, val);
+	}
+}
 
 static inline bool mem_readb_checked(PhysPt address, uint8_t * val) {
 	HostPt tlb_addr=get_tlb_read(address);
@@ -417,8 +453,24 @@ static inline bool mem_readd_checked(PhysPt address, uint32_t * val) {
 	} else return mem_unalignedreadd_checked(address, val);
 }
 
-static inline bool mem_writeb_checked(PhysPt address,uint8_t val) {
-	HostPt tlb_addr=get_tlb_write(address);
+static inline bool mem_readq_checked(PhysPt address, uint64_t* val)
+{
+	if ((address & 0xfff) < 0xff9) {
+		HostPt tlb_addr = get_tlb_read(address);
+		if (tlb_addr) {
+			*val = host_readq(tlb_addr + address);
+			return false;
+		} else {
+			return (get_tlb_readhandler(address))->readq_checked(address, val);
+		}
+	} else {
+		return mem_unalignedreadq_checked(address, val);
+	}
+}
+
+static inline bool mem_writeb_checked(PhysPt address, uint8_t val)
+{
+	HostPt tlb_addr = get_tlb_write(address);
 	if (tlb_addr) {
 		host_writeb(tlb_addr+address,val);
 		return false;
@@ -445,5 +497,19 @@ static inline bool mem_writed_checked(PhysPt address,uint32_t val) {
 	} else return mem_unalignedwrited_checked(address,val);
 }
 
+static inline bool mem_writeq_checked(PhysPt address, uint64_t val)
+{
+	if ((address & 0xfff) < 0xff9) {
+		HostPt tlb_addr = get_tlb_write(address);
+		if (tlb_addr) {
+			host_writeq(tlb_addr + address, val);
+			return false;
+		} else {
+			return (get_tlb_writehandler(address))->writeq_checked(address, val);
+		}
+	} else {
+		return mem_unalignedwriteq_checked(address, val);
+	}
+}
 
 #endif
