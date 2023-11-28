@@ -35,6 +35,10 @@ static void FPU_FINIT(void) {
 	fpu.tags[6] = TAG_Empty;
 	fpu.tags[7] = TAG_Empty;
 	fpu.tags[8] = TAG_Valid; // is only used by us
+
+	for (auto& use_regs_memcpy : fpu.use_regs_memcpy) {
+		use_regs_memcpy = false;
+	}
 }
 
 static void FPU_FCLEX(void){
@@ -65,6 +69,7 @@ static void FPU_PREP_PUSH(void){
 	}
 #endif
 	fpu.tags[TOP] = TAG_Valid;
+	fpu.use_regs_memcpy[TOP] = false;
 }
 
 static void FPU_PUSH(double in){
@@ -94,6 +99,7 @@ static void FPU_FPOP(void){
 	}
 #endif
 	fpu.tags[TOP]=TAG_Empty;
+	fpu.use_regs_memcpy[TOP] = false;
 	//maybe set zero in it as well
 	TOP = ((TOP+1)&7);
 //	LOG(LOG_FPU,LOG_ERROR)("popped from %d  %g off the stack",top,fpu.regs[top].d);
@@ -220,10 +226,26 @@ static void FPU_FLD_I32(PhysPt addr,Bitu store_to) {
 }
 
 static void FPU_FLD_I64(PhysPt addr,Bitu store_to) {
-	FPU_Reg blah;
-	blah.l.lower = mem_readd(addr);
-	blah.l.upper = mem_readd(addr+4);
-	fpu.regs[store_to].d = static_cast<Real64>(blah.ll);
+	constexpr int64_t int53_min = -(1LL << 53);
+	constexpr int64_t int53_max = (1LL << 53) - 1;
+
+	FPU_Reg temp_reg;
+	temp_reg.l.lower = mem_readd(addr);
+	temp_reg.l.upper = mem_readd(addr + 4);
+
+	fpu.regs[store_to].d = static_cast<Real64>(temp_reg.ll);
+	// This is a fix for vertical bars that appear in some games that
+	// use FILD/FIST as a fast 64-bit integer memcpy, such as Carmageddon,
+	// Motor Mash, and demos like Sunflower and Multikolor.
+
+	// If the value won't fit in the 53-bit mantissa of a double, save the
+	// value into the regs_memcpy register and set the corresponding bool in
+	// use_regs_memcpy to indicate that the integer value should be read out
+	// by the FPU_FST_I64 function instead.
+	if (temp_reg.ll > int53_max || temp_reg.ll < int53_min) {
+		fpu.regs_memcpy[store_to]     = temp_reg.ll;
+		fpu.use_regs_memcpy[store_to] = true;
+	}
 }
 
 static void FPU_FBLD(PhysPt addr,Bitu store_to) {
@@ -291,13 +313,23 @@ static void FPU_FST_I32(PhysPt addr) {
 	mem_writed(addr,(val < 2147483648.0 && val >= -2147483648.0)?static_cast<int32_t>(val):0x80000000);
 }
 
-static void FPU_FST_I64(PhysPt addr) {
-	double val = FROUND(fpu.regs[TOP].d);
-	FPU_Reg blah;
-	blah.ll = (val < 9223372036854775808.0 && val >= -9223372036854775808.0)?static_cast<int64_t>(val):LONGTYPE(0x8000000000000000);
+static void FPU_FST_I64(PhysPt addr)
+{
+	FPU_Reg temp_reg;
+	// If the value was loaded with the FILD/FIST 64-bit memcpy trick,
+	// read the 64-bit integer value instead.
+	if (fpu.use_regs_memcpy[TOP]) {
+		temp_reg.ll = fpu.regs_memcpy[TOP];
+	} else {
+		double val = FROUND(fpu.regs[TOP].d);
+		temp_reg.ll = (val <= static_cast<double>(INT64_MAX) &&
+		               val >= static_cast<double>(INT64_MIN))
+		                    ? static_cast<int64_t>(val)
+		                    : LONGTYPE(0x8000000000000000);
+	}
 
-	mem_writed(addr,blah.l.lower);
-	mem_writed(addr+4,blah.l.upper);
+	mem_writed(addr, temp_reg.l.lower);
+	mem_writed(addr + 4, temp_reg.l.upper);
 }
 
 static void FPU_FBST(PhysPt addr) {
@@ -409,19 +441,26 @@ static void FPU_FSUBR(Bitu st, Bitu other){
 }
 
 static void FPU_FXCH(Bitu st, Bitu other){
-	FPU_Tag tag = fpu.tags[other];
-	FPU_Reg reg = fpu.regs[other];
-	fpu.tags[other] = fpu.tags[st];
-	fpu.regs[other] = fpu.regs[st];
-	fpu.tags[st] = tag;
-	fpu.regs[st] = reg;
+	const auto tag             = fpu.tags[other];
+	const auto use_reg_memcpy  = fpu.use_regs_memcpy[other];
+	const auto reg             = fpu.regs[other];
+	const auto reg_memcpy      = fpu.regs_memcpy[other];
+	fpu.tags[other]            = fpu.tags[st];
+	fpu.use_regs_memcpy[other] = fpu.use_regs_memcpy[st];
+	fpu.regs[other]            = fpu.regs[st];
+	fpu.regs_memcpy[other]     = fpu.regs_memcpy[st];
+	fpu.tags[st]               = tag;
+	fpu.use_regs_memcpy[st]    = use_reg_memcpy;
+	fpu.regs[st]               = reg;
+	fpu.regs_memcpy[st]        = reg_memcpy;
 }
 
 static void FPU_FST(Bitu st, Bitu other){
-	fpu.tags[other] = fpu.tags[st];
-	fpu.regs[other] = fpu.regs[st];
+	fpu.tags[other]            = fpu.tags[st];
+	fpu.use_regs_memcpy[other] = fpu.use_regs_memcpy[st];
+	fpu.regs[other]            = fpu.regs[st];
+	fpu.regs_memcpy[other]     = fpu.regs_memcpy[st];
 }
-
 
 static void FPU_FCOM(Bitu st, Bitu other){
 	if(((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) || 
@@ -643,6 +682,7 @@ static void FPU_FLDZ(void){
 	FPU_PREP_PUSH();
 	fpu.regs[TOP].d = 0.0;
 	fpu.tags[TOP] = TAG_Zero;
+	fpu.use_regs_memcpy[TOP] = false;
 }
 
 

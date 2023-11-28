@@ -83,14 +83,16 @@ enum FPU_Round : uint8_t {
 };
 
 struct FPU_rec {
-	FPU_Reg regs[9]      = {};
-	FPU_P_Reg p_regs[9]  = {};
-	FPU_Tag tags[9]      = {};
-	uint16_t cw          = 0;
-	uint16_t cw_mask_all = 0;
-	uint16_t sw          = 0;
-	uint32_t top         = 0;
-	FPU_Round round      = {};
+	FPU_Reg regs[9]         = {};
+	int64_t regs_memcpy[9]  = {}; // for FILD/FIST 64-bit memcpy fix
+	bool use_regs_memcpy[9] = {};
+	FPU_P_Reg p_regs[9]     = {};
+	FPU_Tag tags[9]         = {};
+	uint16_t cw             = 0;
+	uint16_t cw_mask_all    = 0;
+	uint16_t sw             = 0;
+	uint32_t top            = 0;
+	FPU_Round round         = {};
 };
 
 extern FPU_rec fpu;
