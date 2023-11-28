@@ -1,4 +1,7 @@
-.PHONY: help clean favicons
+.PHONY: help clean dosbox-staging.iconset favicons
+
+MACOS_ICON_1024 = dosbox-staging-macos-1024.png
+MACOS_ICONSET_DIR = dosbox-staging.iconset
 
 help:
 	@echo "Re-generate icons in platform specific formats or install pre-rendered png icons"
@@ -45,33 +48,33 @@ favicons: \
 		favicon-96x96.png
 
 ##
-#  Create an icon using macOS .icns format.
+#  Create macOS app icon in .icns format.
 #
-#  iconutil is avaliable on macOS out of the box.
-#  Uses librsvg for rendering vectors (package available via brew).
+#  iconutil is available on macOS out of the box.
 #
 dosbox-staging.icns: dosbox-staging.iconset
-	iconutil -c icns dosbox-staging.iconset
+	iconutil -c icns $(MACOS_ICONSET_DIR)
 
-dosbox-staging.iconset: \
-		icon_1024.png \
-		icon_512.png \
-		icon_256.png \
-		icon_128.png \
-		icon_64.png \
-		icon_32.png \
-		icon_16.png
-	mkdir -p "$@"
-	cp icon_16.png   $@/icon_16x16.png
-	cp icon_32.png   $@/icon_16x16@2x.png
-	cp icon_32.png   $@/icon_32x32.png
-	cp icon_64.png   $@/icon_32x32@2x.png
-	cp icon_128.png  $@/icon_128x128.png
-	cp icon_256.png  $@/icon_128x128@2x.png
-	cp icon_256.png  $@/icon_256x256.png
-	cp icon_512.png  $@/icon_256x256@2x.png
-	cp icon_512.png  $@/icon_512x512.png
-	cp icon_1024.png $@/icon_512x512@2x.png
+##
+#  Create the full macOS iconset from the 1024x1024 source icon.
+#
+#  sips is available on macOS out of the box.
+#
+dosbox-staging.iconset:
+	mkdir -p $(MACOS_ICONSET_DIR)
+
+	sips -z 16 16   $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_16x16.png"
+	sips -z 32 32   $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_16x16@2x.png"
+	sips -z 32 32   $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_32x32.png"
+	sips -z 64 64   $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_32x32@2x.png"
+	sips -z 128 128 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_128x128.png"
+	sips -z 256 256 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_128x128@2x.png"
+	sips -z 256 256 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_256x256.png"
+	sips -z 512 512 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_256x256@2x.png"
+	sips -z 512 512 $(MACOS_ICON_1024) --out "$(MACOS_ICONSET_DIR)/icon_512x512.png"
+
+	cp $(MACOS_ICON_1024) $(MACOS_ICONSET_DIR)/icon_512x512@2x.png
+	cp $(MACOS_ICON_1024) $(MACOS_ICONSET_DIR)/icon_1024x1024.png
 
 ##
 # Freedesktop icons (for Linux or other OSes) often are placed in 'hicolor'
@@ -148,7 +151,7 @@ install:
 	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/scalable/apps" dosbox-staging.svg
 
 clean:
-	rm -rf dosbox-staging.iconset
+	rm -rf $(MACOS_ICONSET_DIR)
 	rm -rf hicolor
 	rm -f icon_*.png
 	rm -f favicon*
