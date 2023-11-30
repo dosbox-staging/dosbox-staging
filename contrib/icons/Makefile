@@ -1,7 +1,8 @@
 .PHONY: help clean dosbox-staging.iconset favicons
 
-MACOS_ICON_1024 = dosbox-staging-macos-1024.png
-MACOS_ICONSET_DIR = dosbox-staging.iconset
+MACOS_DIR = macos
+MACOS_ICON_1024 = $(MACOS_DIR)/dosbox-staging-1024.png
+MACOS_ICONSET_DIR = $(MACOS_DIR)/dosbox-staging.iconset
 
 help:
 	@echo "Re-generate icons in platform specific formats or install pre-rendered png icons"

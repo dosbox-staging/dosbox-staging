@@ -161,10 +161,10 @@ pkg_macos()
     make -C contrib/icons/ dosbox-staging.icns
 
     install -d   "${macos_content_dir}/MacOS/"
-    install      dosbox-universal/dosbox           "${macos_content_dir}/MacOS/"
-    install_file contrib/macos/Info.plist.template "${macos_content_dir}/Info.plist"
-    install_file contrib/macos/PkgInfo             "${macos_content_dir}/PkgInfo"
-    install_file contrib/icons/dosbox-staging.icns "${macos_content_dir}/Resources/"
+    install      dosbox-universal/dosbox                 "${macos_content_dir}/MacOS/"
+    install_file contrib/macos/Info.plist.template       "${macos_content_dir}/Info.plist"
+    install_file contrib/macos/PkgInfo                   "${macos_content_dir}/PkgInfo"
+    install_file contrib/icons/macos/dosbox-staging.icns "${macos_content_dir}/Resources/"
 
     sed -i -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
 
