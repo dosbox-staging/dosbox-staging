@@ -160,6 +160,14 @@ TEST(iroundf, invalid)
 	EXPECT_DEBUG_DEATH({ iroundf(-80000000000.0f); }, "");
 }
 
+TEST(are_almost_equal_relative, QuakeValues)
+{
+	// Numbers taken from Quake startup
+	EXPECT_TRUE(are_almost_equal_relative(239.999999999999972, 240.0));
+	EXPECT_TRUE(are_almost_equal_relative(23.999999999999996, 24.0));
+	EXPECT_TRUE(are_almost_equal_relative(7.999999999999999, 8.0));
+}
+
 TEST(clamp_to_int8, signed_negatives)
 {
 	EXPECT_EQ(clamp_to_int8(INT16_MIN), INT8_MIN);
