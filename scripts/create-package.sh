@@ -138,6 +138,7 @@ pkg_linux()
     install -DT "${build_dir}/dosbox" "${pkg_dir}/dosbox"
 
     install -DT contrib/linux/dosbox-staging.desktop "${pkg_dir}/desktop/dosbox-staging.desktop"
+
     DESTDIR="$(realpath "$pkg_dir")" make -C contrib/icons/ install datadir=
 }
 
@@ -156,9 +157,6 @@ pkg_macos()
     # Create universal binary from both architectures
     mkdir dosbox-universal
     lipo dosbox-x86_64/dosbox dosbox-arm64/dosbox -create -output dosbox-universal/dosbox
-
-    # Generate icon
-    make -C contrib/icons/ dosbox-staging.icns
 
     install -d   "${macos_content_dir}/MacOS/"
     install      dosbox-universal/dosbox                 "${macos_content_dir}/MacOS/"
