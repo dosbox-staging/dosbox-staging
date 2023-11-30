@@ -4,6 +4,10 @@ MACOS_DIR = macos
 MACOS_ICON_1024 = $(MACOS_DIR)/dosbox-staging-1024.png
 MACOS_ICONSET_DIR = $(MACOS_DIR)/dosbox-staging.iconset
 
+WINDOWS_DIR = windows
+
+SMALL_PNG_DIR = small-png
+
 help:
 	@echo "Re-generate icons in platform specific formats or install pre-rendered png icons"
 	@echo ""
@@ -34,7 +38,7 @@ dosbox-staging.ico: \
 		icon_32.png \
 		icon_24.png \
 		icon_16.png
-	icotool -c $^ -o $@
+	icotool -c $^ -o $(WINDOWS_DIR)/$@
 
 ##
 # Favicons for a web page. Usage:
@@ -145,10 +149,10 @@ favicon-96x96.png: icon_96.png
 prefix = /usr/local
 datadir = $(prefix)/share
 install:
-	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/16x16/apps" small-png/16x16/dosbox-staging.png
-	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/22x22/apps" small-png/22x22/dosbox-staging.png
-	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/24x24/apps" small-png/24x24/dosbox-staging.png
-	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/32x32/apps" small-png/32x32/dosbox-staging.png
+	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/16x16/apps" $(SMALL_PNG_DIR)/16x16/dosbox-staging.png
+	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/22x22/apps" $(SMALL_PNG_DIR)/22x22/dosbox-staging.png
+	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/24x24/apps" $(SMALL_PNG_DIR)/24x24/dosbox-staging.png
+	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/32x32/apps" $(SMALL_PNG_DIR)/32x32/dosbox-staging.png
 	install -p -m 0644 -Dt "$(DESTDIR)$(datadir)/icons/hicolor/scalable/apps" dosbox-staging.svg
 
 clean:
