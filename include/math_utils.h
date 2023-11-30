@@ -104,6 +104,20 @@ inline int ifloor(const float x)
 	return static_cast<int>(floorf(x));
 }
 
+// Determine if two numbers are equal "enough" based on an epsilon value.
+// Uses a dynamic adjustment based on the magnitude of the numbers.
+// Based on ideas from Bruce Dawson's blog post:
+// https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+inline bool are_almost_equal_relative(
+        const double a, const double b,
+        const double epsilon = std::numeric_limits<double>::epsilon())
+{
+	const auto diff    = std::fabs(a - b);
+	const auto largest = std::max(std::fabs(a), std::fabs(b));
+
+	return diff <= largest * epsilon;
+}
+
 // Left-shifts a signed value by a given amount, with overflow detection
 template <typename T1, typename T2>
 constexpr T1 left_shift_signed(T1 value, T2 amount)

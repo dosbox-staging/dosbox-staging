@@ -20,6 +20,8 @@
 #include "fpu.h"
 #endif
 
+#include "math_utils.h"
+
 static constexpr uint16_t ExtendedPrecisionModeMask = 0x0300;
 
 static void FPU_FINIT(void) {
@@ -106,8 +108,9 @@ static void FPU_FPOP(void){
 	return;
 }
 
-static double FROUND(double in){
-	switch(fpu.round){
+static double FROUND(double in)
+{
+	switch (fpu.round) {
 	case ROUND_Nearest: return std::nearbyint(in);
 	case ROUND_Down: return std::floor(in);
 	case ROUND_Up: return std::ceil(in);
@@ -116,20 +119,17 @@ static double FROUND(double in){
 		// Most x32/x64 builds use fpu_instructions_x86.h.
 		// If we are here on x64, we don't need this fix.
 #if !defined(__x86_64__) && !defined(_M_X64)
-		// This is a fix for rounding to a close integer in
-		// extended precision mode, e.g. 7.999999999999994; an example
-		// can be seen in the Quake options screen size slider.
-		// In this case, what is almost certainly wanted is 8.0,
-		// so return the closer integer within the tolerance instead
-		// of chopping to the lower value.
+		// This is a fix for rounding to a close integer in extended
+		// precision mode, e.g. 7.999999999999994; an example can be
+		// seen in the Quake options screen size slider. In this case,
+		// what is almost certainly wanted is 8.0, so return the closer
+		// integer instead of chopping to the lower value.
 		if ((fpu.cw & ExtendedPrecisionModeMask) == ExtendedPrecisionModeMask) {
-			constexpr double tolerance = 1e-14;
-
 			if (const auto lower = std::floor(in);
-			    (in - lower) < tolerance) {
+			    are_almost_equal_relative(in, lower)) {
 				return lower;
 			} else if (const auto upper = std::ceil(in);
-			           (upper - in) < tolerance) {
+			           are_almost_equal_relative(upper, in)) {
 				return upper;
 			}
 		}
