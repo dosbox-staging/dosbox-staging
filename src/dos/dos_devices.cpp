@@ -238,7 +238,7 @@ RealPt DOS_CheckExtDevice(const std::string_view name, const bool skip_existing_
 	// start walking the device chain of real pointers
 	auto rp = dos_infoblock.GetDeviceChain();
 
-	while (!DOS_IsLastDevice(rp)) {
+	while (!DOS_IsEndPointer(rp)) {
 		if (!is_a_driver(rp) || !DOS_DeviceHasName(rp, name)) {
 			rp = DOS_GetNextDevice(rp);
 			continue;
@@ -486,8 +486,8 @@ constexpr uint8_t name_offset = 0x0a;       // 8 bytes, device name padded with
 constexpr size_t name_length = 8;
 } // namespace DeviceDriverInfo
 
-// Indicates if the device at the given real pointer is the last in DOS's chain
-bool DOS_IsLastDevice(const RealPt rp)
+// Special pointer value indicating the end of the DOS device linked list
+bool DOS_IsEndPointer(const RealPt rp)
 {
 	constexpr uint16_t last_offset_marker = 0xffff;
 	return RealOffset(rp) == last_offset_marker;
@@ -503,12 +503,15 @@ RealPt DOS_GetNextDevice(const RealPt rp)
 // Get the tail real pointer from the DOS device driver linked list
 RealPt DOS_GetLastDevice()
 {
-	auto rp = dos_infoblock.GetDeviceChain();
+	RealPt current = dos_infoblock.GetDeviceChain();
+	RealPt next = current;
 
-	while (!DOS_IsLastDevice(rp)) {
-		rp = DOS_GetNextDevice(rp);
+	while (!DOS_IsEndPointer(next)) {
+		current = next;
+		next = DOS_GetNextDevice(current);
 	}
-	return rp;
+
+	return current;
 }
 
 // Append the device at the given address to the end of the DOS device linked list
