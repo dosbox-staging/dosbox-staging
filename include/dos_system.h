@@ -437,7 +437,7 @@ void DOS_DelDevice(DOS_Device * dev);
 RealPt DOS_GetNextDevice(const RealPt rp);
 RealPt DOS_GetLastDevice();
 void DOS_AppendDevice(const uint16_t segment, const uint16_t offset = 0);
-bool DOS_IsLastDevice(const RealPt rp);
+bool DOS_IsEndPointer(const RealPt rp);
 bool DOS_DeviceHasName(const RealPt rp, const std::string_view req_name);
 bool DOS_DeviceHasAttributes(const RealPt rp, const uint16_t attributes);
 uint16_t DOS_GetDeviceStrategy(const RealPt rp);
