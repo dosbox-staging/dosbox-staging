@@ -1,17 +1,31 @@
 icons_hicolor = data_dir / 'icons' / 'hicolor'
 
-# small pre-rendered raster icons
+# small bitmap icons
 #
-foreach size : ['16x16', '22x22', '24x24', '32x32']
-    install_data(
-        'small-png' / size / 'dosbox-staging.png',
-        install_dir: icons_hicolor / size / 'apps',
-    )
-endforeach
+install_data(
+    'png' / 'icon_16.png',
+    rename: 'dosbox-staging.png',
+    install_dir: icons_hicolor / '16x16' / 'apps',
+)
+install_data(
+    'png' / 'icon_22.png',
+    rename: 'dosbox-staging.png',
+    install_dir: icons_hicolor / '22x22' / 'apps',
+)
+install_data(
+    'png' / 'icon_24.png',
+    rename: 'dosbox-staging.png',
+    install_dir: icons_hicolor / '24x24' / 'apps',
+)
+install_data(
+    'png' / 'icon_32.png',
+    rename: 'dosbox-staging.png',
+    install_dir: icons_hicolor / '32x32' / 'apps',
+)
 
 # scalable vector icon
 #
 install_data(
-    'dosbox-staging.svg',
+    'svg' / 'dosbox-staging.svg',
     install_dir: icons_hicolor / 'scalable' / 'apps',
 )
