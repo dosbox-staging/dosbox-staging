@@ -32,15 +32,12 @@ function set_build_version(gh_api_artifacts, os_name) {
 }
 
 // Fetch build status using GitHub API and update HTML
-function set_ci_status(workflow_file, os_name, description, page = 1) {
+function set_ci_status(workflow_file, os_name, description) {
 
     // GitHub has strict rate-limits for anonymous users: 60 requests per hour;
-    // We request 100 results per page (max allowed); main builds are very
-    // likely to be included in the first page anyway.
-    if (page > 10) {
-        return;
-    }
+    // We are requesting only one page, with a limit of 1, with the filter query params.
 
+    let page = 1;
     let per_page = 1;
     let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/";
 
