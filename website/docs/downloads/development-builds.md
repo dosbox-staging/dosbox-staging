@@ -31,6 +31,17 @@ function set_build_version(gh_api_artifacts, os_name) {
         });
 }
 
+function handle_error(error_message, os_name) {
+  let build_link_tr_el = document.getElementById(os_name + "-build-link");
+  build_link_tr_el.innerHTML = error_message;
+
+  let version_el = document.getElementById(os_name + "-build-version");
+  version_el.textContent = '';
+
+  let date_el = document.getElementById(os_name + "-build-date");
+  date_el.textContent = '';
+}
+
 // Fetch build status using GitHub API and update HTML
 function set_ci_status(workflow_file, os_name, description) {
 
@@ -60,6 +71,7 @@ function set_ci_status(workflow_file, os_name, description) {
             if (response.status !== 200) {
                 console.log("Looks like there was a problem." +
                             "Status Code: " + response.status);
+                handle_error(`HTTP Error Code ${response.status}`, os_name);
                 return;
             }
 
@@ -71,7 +83,9 @@ function set_ci_status(workflow_file, os_name, description) {
 
                 // If result not found, query the next page
                 if (status == undefined) {
-                    console.warn(`No records found for ${workflow_file}`);
+                    const error_message = `No builds found for ${workflow_file}`;
+                    console.warn(error_message);
+                    handle_error(error_message, os_name);
                     return;
                 }
 
