@@ -358,6 +358,42 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 	video.audio.bytes_written   = 0;
 }
 
+// Reads the image's pixels from the emulated DOS video RAM (which is always
+// little-endian) and passes them in the same byte-order to the encoder.
+//
+// Ideally this could just be one memcpy, but many DOS video modes need their
+// pixels either doubled horizontally and/or vertically to produce the correct
+// on-screen size. So extra copies are needed in both these cases.
+//
+static void compress_frame(const RenderedImage& image)
+{
+	const auto& src = image.params;
+
+	auto src_row = image.image_data;
+	uint8_t tgt_row[SCALER_MAXWIDTH * 4] = {};
+
+	const auto pixel_multiple = (src.double_width ? 2 : 1);
+	const auto row_multiple   = (src.double_height ? 2 : 1);
+
+	const auto src_bpp = to_bytes_per_pixel(src.pixel_format);
+	const auto tgt_bpp = to_bytes_per_pixel(to_zmbv_format(src.pixel_format));
+
+	// Arrange the source bytes into a target row before compressing
+	for (auto i = 0; i < src.height; ++i, src_row += image.pitch) {
+		auto src_pixel = src_row;
+		auto tgt_pixel = tgt_row;
+		for (auto j = 0; j < src.width; ++j, src_pixel += src_bpp) {
+			for (auto k = 0; k < pixel_multiple; ++k, tgt_pixel += tgt_bpp) {
+				std::memcpy(tgt_pixel, src_pixel, src_bpp);
+			}
+		}
+		for (auto j = 0; j < row_multiple; ++j) {
+			const uint8_t* row_pointer = tgt_row;
+			video.codec->CompressLines(1, &row_pointer);
+		}
+	}
+}
+
 void capture_video_add_frame(const RenderedImage& image, const float frames_per_second)
 {
 	const auto& src = image.params;
