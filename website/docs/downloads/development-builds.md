@@ -43,8 +43,13 @@ function set_ci_status(workflow_file, os_name, description, page = 1) {
 
     let per_page = 100;
     let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/";
-    fetch(gh_api_url + "actions/workflows/" + workflow_file + "/runs" +
-          "?page=" + page + "&per_page=" + per_page)
+
+    const queryParams = new URLSearchParams();
+    queryParams.set("page", page);
+    queryParams.set("per_page", per_page);
+
+    fetch(gh_api_url + "actions/workflows/" + workflow_file + "/runs?" +
+          queryParams.toString())
         .then(response => {
 
             // Handle HTTP error
