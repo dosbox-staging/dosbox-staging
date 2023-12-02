@@ -26,7 +26,6 @@
 
 #include "mem.h"
 #include "render.h"
-#include "rgb888.h"
 #include "support.h"
 
 #include "zmbv/zmbv.h"
@@ -432,80 +431,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 		return;
 	}
 
-	alignas(uint32_t) uint8_t row_buffer[SCALER_MAXWIDTH * 4];
-
-	auto src_row = image.image_data;
-
-	for (auto i = 0; i < src.height; ++i) {
-		const uint8_t* row_pointer = row_buffer;
-
-		// TODO This all assumes little-endian byte order; should be
-		// made endianness-aware like capture_image.cpp
-		if (src.double_width) {
-			switch (src.pixel_format) {
-			case PixelFormat::Indexed8:
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel      = src_row[x];
-					row_buffer[x * 2 + 0] = pixel;
-					row_buffer[x * 2 + 1] = pixel;
-				}
-				break;
-
-			case PixelFormat::RGB555_Packed16:
-			case PixelFormat::RGB565_Packed16:
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel = ((uint16_t*)src_row)[x];
-
-					((uint16_t*)row_buffer)[x * 2 + 0] = pixel;
-					((uint16_t*)row_buffer)[x * 2 + 1] = pixel;
-				}
-				break;
-
-			case PixelFormat::BGR24_ByteArray:
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel = reinterpret_cast<const Rgb888*>(
-					        src_row)[x];
-
-					reinterpret_cast<uint32_t*>(
-					        row_buffer)[x * 2 + 0] = pixel;
-					reinterpret_cast<uint32_t*>(
-					        row_buffer)[x * 2 + 1] = pixel;
-				}
-				break;
-
-			case PixelFormat::BGRX32_ByteArray:
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel = ((uint32_t*)src_row)[x];
-
-					((uint32_t*)row_buffer)[x * 2 + 0] = pixel;
-					((uint32_t*)row_buffer)[x * 2 + 1] = pixel;
-				}
-				break;
-			}
-			row_pointer = row_buffer;
-
-		} else {
-			if (src.pixel_format == PixelFormat::BGR24_ByteArray) {
-				for (auto x = 0; x < src.width; ++x) {
-					const auto pixel = reinterpret_cast<const Rgb888*>(
-					        src_row)[x];
-
-					reinterpret_cast<uint32_t*>(
-					        row_buffer)[x] = pixel;
-				}
-				row_pointer = row_buffer;
-			} else {
-				row_pointer = src_row;
-			}
-		}
-
-		auto lines_to_write = src.double_height ? 2 : 1;
-		while (lines_to_write--) {
-			video.codec->CompressLines(1, &row_pointer);
-		}
-
-		src_row += image.pitch;
-	}
+	compress_frame(image);
 
 	const auto written = video.codec->FinishCompressFrame();
 	if (written < 0) {
