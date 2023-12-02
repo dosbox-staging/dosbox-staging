@@ -22,7 +22,11 @@
 
 #include "math_utils.h"
 
-static constexpr uint16_t ExtendedPrecisionModeMask = 0x0300;
+static constexpr uint16_t PrecisionModeMask = 0x0300;
+
+static constexpr uint16_t SinglePrecisionMode   = 0x0000;
+static constexpr uint16_t DoublePrecisionMode   = 0x0200;
+static constexpr uint16_t ExtendedPrecisionMode = 0x0300;
 
 static void FPU_FINIT(void) {
 	FPU_SetCW(0x37F);
@@ -116,6 +120,14 @@ static double FROUND(double in)
 	case ROUND_Up: return std::ceil(in);
 	case ROUND_Chop: 
 	{
+		switch (fpu.cw & PrecisionModeMask) {
+		// This case properly handles "in" values beyond the precision
+		// of a float, e.g. 5.99999999367, by correctly rounding to 6.0
+		// via the cast, then performing the truncation, instead of
+		// returning 5.0. Quake, for example, does many calculations in
+		// single precision mode.
+		case SinglePrecisionMode:
+			return std::trunc(static_cast<float>(in));
 		// Most x32/x64 builds use fpu_instructions_x86.h.
 		// If we are here on x64, we don't need this fix.
 #if !defined(__x86_64__) && !defined(_M_X64)
@@ -124,7 +136,7 @@ static double FROUND(double in)
 		// seen in the Quake options screen size slider. In this case,
 		// what is almost certainly wanted is 8.0, so return the closer
 		// integer instead of chopping to the lower value.
-		if ((fpu.cw & ExtendedPrecisionModeMask) == ExtendedPrecisionModeMask) {
+		case ExtendedPrecisionMode: {
 			if (const auto lower = std::floor(in);
 			    are_almost_equal_relative(in, lower)) {
 				return lower;
@@ -134,6 +146,8 @@ static double FROUND(double in)
 			}
 		}
 #endif
+		default: break;
+		}
 		return std::trunc(in);
 	}
 	default: return in;
