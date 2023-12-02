@@ -70,14 +70,11 @@ function set_ci_status(workflow_file, os_name, description, page = 1) {
 
                 console.log(data.workflow_runs);
 
-                let status = data.workflow_runs
-                    .filter(run => run.head_branch == "main")
-                    .filter(run => run.event == "push")
-                    .find(run => run.conclusion == "success");
+                const status = data.workflow_runs.length && data.workflow_runs[0];
 
                 // If result not found, query the next page
                 if (status == undefined) {
-                    set_ci_status(workflow_file, os_name, description, page + 1);
+                    console.warn(`No records found for ${workflow_file}`);
                     return;
                 }
 
