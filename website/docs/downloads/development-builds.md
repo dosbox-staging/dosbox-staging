@@ -65,7 +65,7 @@ function set_ci_status(workflow_file, os_name, description, page = 1) {
 
                 // If result not found, query the next page
                 if (status == undefined) {
-                    set_ci_status(workflow_file, os_name, page + 1);
+                    set_ci_status(workflow_file, os_name, description, page + 1);
                     return;
                 }
 
