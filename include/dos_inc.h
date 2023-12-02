@@ -586,6 +586,27 @@ public:
  * Some documents refer to it also as Data Transfer Address or Disk Transfer Area.
  */
 
+#ifdef _MSC_VER
+#pragma pack(1)
+#endif
+struct sDTA {
+	uint8_t sdrive;						/* The Drive the search is taking place */
+	uint8_t sname[8];						/* The Search pattern for the filename */
+	uint8_t sext[3];						/* The Search pattern for the extension */
+	uint8_t sattr;						/* The Attributes that need to be found */
+	uint16_t dirID;						/* custom: dir-search ID for multiple searches at the same time */
+	uint16_t dirCluster;					/* custom (drive_fat only): cluster number for multiple searches at the same time */
+	uint8_t fill[4];
+	uint8_t attr;
+	uint16_t time;
+	uint16_t date;
+	uint32_t size;
+	char name[DOS_NAMELENGTH_ASCII];
+} GCC_ATTRIBUTE(packed);
+#ifdef _MSC_VER
+#pragma pack()
+#endif
+
 class DOS_DTA final : public MemStruct {
 public:
 	DOS_DTA(RealPt addr) : MemStruct(addr) {}
@@ -641,28 +662,6 @@ public:
 
 	void SetDirIDCluster(uint16_t cl) { SSET_WORD(sDTA, dirCluster, cl); }
 	uint16_t GetDirIDCluster() const { return SGET_WORD(sDTA, dirCluster); }
-
-private:
-	#ifdef _MSC_VER
-	#pragma pack(1)
-	#endif
-	struct sDTA {
-		uint8_t sdrive;						/* The Drive the search is taking place */
-		uint8_t sname[8];						/* The Search pattern for the filename */
-		uint8_t sext[3];						/* The Search pattern for the extension */
-		uint8_t sattr;						/* The Attributes that need to be found */
-		uint16_t dirID;						/* custom: dir-search ID for multiple searches at the same time */
-		uint16_t dirCluster;					/* custom (drive_fat only): cluster number for multiple searches at the same time */
-		uint8_t fill[4];
-		uint8_t attr;
-		uint16_t time;
-		uint16_t date;
-		uint32_t size;
-		char name[DOS_NAMELENGTH_ASCII];
-	} GCC_ATTRIBUTE(packed);
-	#ifdef _MSC_VER
-	#pragma pack()
-	#endif
 };
 
 enum class ResultGrouping {
