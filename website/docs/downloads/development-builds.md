@@ -41,12 +41,19 @@ function set_ci_status(workflow_file, os_name, description, page = 1) {
         return;
     }
 
-    let per_page = 100;
+    let per_page = 1;
     let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/";
+
+    let filter_branch = "main";
+    let filter_event = "push";
+    let filter_status = "success";
 
     const queryParams = new URLSearchParams();
     queryParams.set("page", page);
     queryParams.set("per_page", per_page);
+    queryParams.set("branch", filter_branch);
+    queryParams.set("event", filter_event);
+    queryParams.set("status", filter_status);
 
     fetch(gh_api_url + "actions/workflows/" + workflow_file + "/runs?" +
           queryParams.toString())
