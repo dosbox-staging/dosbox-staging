@@ -136,4 +136,6 @@ public:
 	void Output_UpsideDown_24(uint8_t *output);
 };
 
+uint8_t ZMBV_ToBytesPerPixel(const ZMBV_FORMAT format);
+
 #endif
