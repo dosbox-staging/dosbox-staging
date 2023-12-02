@@ -22,6 +22,7 @@
 #include "capture.h"
 
 #include <cassert>
+#include <cmath>
 
 #include "mem.h"
 #include "render.h"
@@ -61,6 +62,44 @@ static struct {
 		uint32_t bytes_written   = 0;
 	} audio = {};
 } video = {};
+
+static ZMBV_FORMAT to_zmbv_format(const PixelFormat format)
+{
+	switch (format) {
+	case PixelFormat::Indexed8: return ZMBV_FORMAT::BPP_8;
+	case PixelFormat::RGB555_Packed16: return ZMBV_FORMAT::BPP_15;
+	case PixelFormat::RGB565_Packed16: return ZMBV_FORMAT::BPP_16;
+
+	// ZMBV is "the DOSBox capture format" supported by external tools such
+	// as VLC, MPV, and ffmpeg. Because DOSBox originally didn't have 24-bit
+	// colour, the format itself doesn't support it and treats 4-byte
+	// formats as byte-ordered BGR colour values.
+	//
+	case PixelFormat::BGR24_ByteArray: return ZMBV_FORMAT::BPP_32;
+	case PixelFormat::BGRX32_ByteArray: return ZMBV_FORMAT::BPP_32;
+	default: assertm(false, "Invalid pixel_format value"); break;
+	}
+	return ZMBV_FORMAT::NONE;
+}
+
+// Returns number of bytes needed to represent the given PixelFormat
+static uint8_t to_bytes_per_pixel(const PixelFormat format)
+{
+	// PixelFormat's underly value is colour depth in number of bits
+	const float num_bits = static_cast<uint8_t>(format);
+
+	// Use float-ceil to handle non-power-of-two bit quantities
+	constexpr uint8_t bits_per_byte = 8;
+	const auto num_bytes = iround(ceilf(num_bits / bits_per_byte));
+
+	assert(num_bytes >= 1 && num_bytes <= 4);
+	return static_cast<uint8_t>(num_bytes);
+}
+
+static uint8_t to_bytes_per_pixel(const ZMBV_FORMAT format)
+{
+	return ZMBV_ToBytesPerPixel(format);
+}
 
 static void add_avi_chunk(const char* tag, const uint32_t size,
                           const void* data, const uint32_t flags)
@@ -334,22 +373,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 		capture_video_finalise();
 	}
 
-	ZMBV_FORMAT format;
-
-	switch (src.pixel_format) {
-	case PixelFormat::Indexed8: format = ZMBV_FORMAT::BPP_8; break;
-	case PixelFormat::RGB555_Packed16: format = ZMBV_FORMAT::BPP_15; break;
-	case PixelFormat::RGB565_Packed16: format = ZMBV_FORMAT::BPP_16; break;
-
-	// ZMBV is "the DOSBox capture format" supported by external
-	// tools such as VLC, MPV, and ffmpeg. Because DOSBox originally
-	// didn't have 24-bit color, the format itself doesn't support
-	// it. I this case we tell ZMBV the data is 32-bit and let the
-	// rgb24's int() cast operator up-convert.
-	case PixelFormat::BGR24_ByteArray: format = ZMBV_FORMAT::BPP_32; break;
-	case PixelFormat::BGRX32_ByteArray: format = ZMBV_FORMAT::BPP_32; break;
-	default: assertm(false, "Invalid pixel_format value"); return;
-	}
+	const auto format = to_zmbv_format(src.pixel_format);
 
 	if (!video.handle) {
 		create_avi_file(video_width,
