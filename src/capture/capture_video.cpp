@@ -367,17 +367,35 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 static void compress_frame(const RenderedImage& image)
 {
 	const auto& src = image.params;
-
 	auto src_row = image.image_data;
-	uint8_t tgt_row[SCALER_MAXWIDTH * 4] = {};
 
 	const auto pixel_multiple = (src.double_width ? 2 : 1);
 	const auto row_multiple   = (src.double_height ? 2 : 1);
 
+	auto compress_row = [&](const uint8_t* row_buffer) {
+		for (auto i = 0; i < row_multiple; ++i) {
+			video.codec->CompressLines(1, &row_buffer);
+		}
+	};
+
 	const auto src_bpp = to_bytes_per_pixel(src.pixel_format);
 	const auto tgt_bpp = to_bytes_per_pixel(to_zmbv_format(src.pixel_format));
 
-	// Arrange the source bytes into a target row before compressing
+	// Maybe compress the source rows straight away without copying. Note
+	// that this is a shortcut scenario; hard-code it to false to exercise
+	// the rote version below.
+	const auto can_use_src_directly = (src_bpp == tgt_bpp) && !src.double_width;
+	if (can_use_src_directly) {
+		for (auto i = 0; i < src.height; ++i, src_row += image.pitch) {
+			compress_row(src_row);
+		}
+		return;
+	}
+
+	// Otherwise we need to arrange the source bytes before compressing
+	assert(!can_use_src_directly);
+	uint8_t tgt_row[SCALER_MAXWIDTH * 4] = {};
+
 	for (auto i = 0; i < src.height; ++i, src_row += image.pitch) {
 		auto src_pixel = src_row;
 		auto tgt_pixel = tgt_row;
@@ -386,10 +404,7 @@ static void compress_frame(const RenderedImage& image)
 				std::memcpy(tgt_pixel, src_pixel, src_bpp);
 			}
 		}
-		for (auto j = 0; j < row_multiple; ++j) {
-			const uint8_t* row_pointer = tgt_row;
-			video.codec->CompressLines(1, &row_pointer);
-		}
+		compress_row(tgt_row);
 	}
 }
 
