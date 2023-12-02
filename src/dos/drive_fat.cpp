@@ -764,6 +764,16 @@ bool fatDrive::allocateCluster(uint32_t useCluster, uint32_t prevCluster) {
 	return true;
 }
 
+constexpr uint16_t dta_pages()
+{
+	constexpr auto BytesPerPage = 16;
+	uint16_t pages = sizeof(struct sDTA) / BytesPerPage;
+	if ((sizeof(struct sDTA) % BytesPerPage) != 0) {
+		++pages;
+	}
+	return pages;
+}
+
 fatDrive::fatDrive(const char *sysFilename,
                    uint32_t bytesector,
                    uint32_t cylsector,
@@ -791,7 +801,7 @@ fatDrive::fatDrive(const char *sysFilename,
 	struct partTable mbrData;
 	
 	if(imgDTASeg == 0) {
-		imgDTASeg = DOS_GetMemory(2);
+		imgDTASeg = DOS_GetMemory(dta_pages());
 		imgDTAPtr = RealMake(imgDTASeg, 0);
 		imgDTA    = new DOS_DTA(imgDTAPtr);
 	}
