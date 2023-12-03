@@ -517,39 +517,6 @@ static void initialize_vsync_settings()
 	}
 }
 
-/* On macOS, as we use a nicer external icon packaged in App bundle.
- *
- * Visual Studio bundles .ico file specified in winres.rc into the
- * dosbox.exe file.
- *
- * Other OSes will either use svg icon bundled in the native package, or
- * the window uploaded via SDL_SetWindowIcon below.
- */
-#if defined(MACOSX) || defined(_MSC_VER)
-static void SetIcon() {}
-#else
-
-#include "icon.c"
-
-static void SetIcon()
-{
-	constexpr int src_w = icon_data.width;
-	constexpr int src_h = icon_data.height;
-	constexpr int src_bpp = icon_data.bytes_per_pixel;
-	static_assert(src_bpp == 4, "Source image expected in RGBA format.");
-	std::array<uint8_t, (src_w * src_h * src_bpp)> icon;
-	ICON_DATA_RUN_LENGTH_DECODE(icon.data(), icon_data.rle_pixel_data,
-	                            src_w * src_h, src_bpp);
-	SDL_Surface *s = SDL_CreateRGBSurfaceFrom(icon.data(), src_w, src_h,
-	                                          src_bpp * 8, src_w * src_bpp,
-	                                          RMASK, GMASK, BMASK, AMASK);
-	assert(s);
-	SDL_SetWindowIcon(sdl.window, s);
-	SDL_FreeSurface(s);
-}
-
-#endif
-
 void GFX_RequestExit(const bool pressed)
 {
 	shutdown_requested = pressed;
@@ -3463,7 +3430,6 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 	const auto alpha = static_cast<float>(100 - transparency) / 100.0f;
 	SDL_SetWindowOpacity(sdl.window, alpha);
 	SDL_SetWindowTitle(sdl.window, APP_NAME_STR);
-	SetIcon();
 
 	RENDER_Reinit();
 }
