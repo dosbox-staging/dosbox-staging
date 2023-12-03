@@ -279,9 +279,6 @@ conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
 
-# Default page size is 4K, but not on all platforms.
-pagesize = 4096
-
 if get_option('enable_debugger') != 'none'
     conf_data.set10('C_DEBUG', true)
 endif
@@ -386,24 +383,37 @@ if host_machine.endian() == 'big'
     conf_data.set10('WORDS_BIGENDIAN', true)
 endif
 
-# 64-bit Power ISA can run with either 4K or 64K page size.
-# (32-bit Power ISA and PowerPC are always 4K.)
-if host_machine.cpu_family() in ['ppc64', 'ppc64le', 'powerpc64le']
-    pagesize_cmd = run_command('getconf', 'PAGESIZE', check: true)
-    if pagesize_cmd.returncode() != 0
-        error('''error executing getconf: unable to determine host architecture page size for ppc64 dynamic core''')
-    else
+
+# Get host page size
+# ~~~~~~~~~~~~~~~~~~
+# When detecting the page size, we use Meson's configured
+# compiler to make a system call because Meson will build and run
+# it via the cross compiler (if one is in use), which is
+# particularly important we get the destiantion machine's page
+# size as opposed to the local build machine's page size.
+#
+pagesize = 4096
+pagesize_option = get_option('pagesize')
+if pagesize_option > 0
+    # User has provided the page size
+    pagesize = pagesize_option
+else
+    # Detect the page size using a syscall via the cross compiler
+    pagesize_api = os_family_name == 'WIN32' ? 'windows' : 'posix'
+    pagesize_src = files('contrib/pagesize' / pagesize_api + '_pagesize.c')
+    pagesize_cmd = cc.run(
+        pagesize_src,
+        name: 'Query host page size',
+    )
+    if pagesize_cmd.returncode() == 0
         pagesize = pagesize_cmd.stdout().strip().to_int()
-        if pagesize < 4096
-            # unexpected; did getconf return an empty or bogus string?
-            error('''need at least 4096-byte pages, getconf PAGESIZE returned '''+pagesize_cmd.stdout())
-        else
-            if pagesize != 4096
-                conf_data.set('PAGESIZE', pagesize)
-            endif
-        endif
+    else
+        error('''Unable to detect the host's page size''')
     endif
 endif
+conf_data.set('PAGESIZE', pagesize)
+summary('Host page size (bytes)', pagesize.to_string())
+
 
 set_prio_code = '''
 #include <sys/resource.h>
@@ -802,17 +812,6 @@ if host_machine.system() == 'darwin'
         warning('''Core Services disabled because Frameworks is missing''')
     endif
     summary('CoreServices support', coreservices_dep.found())
-
-    # Apple Silicon has 16k pages
-    pagesize_cmd = run_command('pagesize', check: true)
-    if pagesize_cmd.returncode() != 0
-        error('''error executing pagesize''')
-    else
-        pagesize = pagesize_cmd.stdout().strip().to_int()
-        if pagesize != 4096
-            conf_data.set('PAGESIZE', pagesize)
-        endif
-    endif
 endif
 
 # Determine if system is capable of using ManyMouse library
@@ -871,10 +870,6 @@ if host_machine.system() in ['windows', 'cygwin']
     winmm_dep = cxx.find_library('winmm', required: true)
     summary('Windows Multimedia support', winmm_dep.found())
 endif
-
-# Display page size in use (and to alert the user this may be salient).
-summary('Host page size (bytes)', pagesize.to_string())
-
 
 # Setup include directories
 incdir = [
