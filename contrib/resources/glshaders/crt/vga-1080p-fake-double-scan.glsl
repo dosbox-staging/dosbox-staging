@@ -29,7 +29,7 @@ varying vec2 prescale;
 attribute vec4 a_position;
 
 void main() {
-	gl_Position = a_position;
+    gl_Position = a_position;
 
     v_texCoord_lores = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize;
 
@@ -45,7 +45,7 @@ uniform sampler2D rubyTexture;
 
 // Macro for weights computing
 #define WEIGHT(w) \
-	if (w > 1.0) w = 1.0; \
+    if (w > 1.0) w = 1.0; \
   w = 1.0 - w * w; \
   w = w * w;
 
@@ -61,7 +61,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout){
    vec3 aperture_weights = mix(magenta, green, floor(mod(coord.x, 2.0)));
 
    if (phosphor_layout == 0) {
-	   return weights;
+       return weights;
 
    } else if (phosphor_layout == 1) {
       // classic aperture for RGB panels; good for 1080p, too small for 4K+
@@ -77,7 +77,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout){
       return weights;
 
    } else {
-	   return weights;
+       return weights;
    }
 }
 
@@ -111,25 +111,25 @@ vec4 add_vga_overlay(vec4 color, float scanlineStrengthMin, float scanlineStreng
 
 vec4 tex2D_linear(in sampler2D sampler, in vec2 uv) {
 
-	// subtract 0.5 here and add it again after the floor to centre the texel
-	vec2 texCoord = uv * rubyTextureSize - vec2(0.5);
-	vec2 s0t0 = floor(texCoord) + vec2(0.5);
-	vec2 s0t1 = s0t0 + vec2(0.0, 1.0);
-	vec2 s1t0 = s0t0 + vec2(1.0, 0.0);
-	vec2 s1t1 = s0t0 + vec2(1.0);
+    // subtract 0.5 here and add it again after the floor to centre the texel
+    vec2 texCoord = uv * rubyTextureSize - vec2(0.5);
+    vec2 s0t0 = floor(texCoord) + vec2(0.5);
+    vec2 s0t1 = s0t0 + vec2(0.0, 1.0);
+    vec2 s1t0 = s0t0 + vec2(1.0, 0.0);
+    vec2 s1t1 = s0t0 + vec2(1.0);
 
-	vec2 invTexSize = 1.0 / rubyTextureSize;
-	vec4 c_s0t0 = GAMMA_IN(texture2D(sampler, s0t0 * invTexSize));
-	vec4 c_s0t1 = GAMMA_IN(texture2D(sampler, s0t1 * invTexSize));
-	vec4 c_s1t0 = GAMMA_IN(texture2D(sampler, s1t0 * invTexSize));
-	vec4 c_s1t1 = GAMMA_IN(texture2D(sampler, s1t1 * invTexSize));
+    vec2 invTexSize = 1.0 / rubyTextureSize;
+    vec4 c_s0t0 = GAMMA_IN(texture2D(sampler, s0t0 * invTexSize));
+    vec4 c_s0t1 = GAMMA_IN(texture2D(sampler, s0t1 * invTexSize));
+    vec4 c_s1t0 = GAMMA_IN(texture2D(sampler, s1t0 * invTexSize));
+    vec4 c_s1t1 = GAMMA_IN(texture2D(sampler, s1t1 * invTexSize));
 
-	vec2 weight = fract(texCoord);
+    vec2 weight = fract(texCoord);
 
-	vec4 c0 = c_s0t0 + (c_s1t0 - c_s0t0) * weight.x;
-	vec4 c1 = c_s0t1 + (c_s1t1 - c_s0t1) * weight.x;
+    vec4 c0 = c_s0t0 + (c_s1t0 - c_s0t0) * weight.x;
+    vec4 c1 = c_s0t1 + (c_s1t1 - c_s0t1) * weight.x;
 
-	return (c0 + (c1 - c0) * weight.y);
+    return (c0 + (c1 - c0) * weight.y);
 }
 
 void main()
