@@ -734,8 +734,9 @@ static DosBox::Rect get_canvas_size_in_pixels(
 		SDL_GetWindowSize(sdl.window, &canvas_size_px.w, &canvas_size_px.h);
 	}
 #endif
-	assert(canvas_size_px.w > 0 && canvas_size_px.h > 0);
-	return to_rect(canvas_size_px);
+	const auto r = to_rect(canvas_size_px);
+	assert(r.HasPositiveSize());
+	return r;
 }
 
 // Logs the source and target resolution including describing scaling method
@@ -761,7 +762,7 @@ static void log_display_properties(const int render_width_px,
 	}();
 
 	assert(render_width_px > 0 && render_height_px > 0);
-	assert(draw_size_px.w > 0.0f && draw_size_px.h > 0.0f);
+	assert(draw_size_px.HasPositiveSize());
 
 	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
 	const auto scale_y = static_cast<double>(draw_size_px.h) / render_height_px;
