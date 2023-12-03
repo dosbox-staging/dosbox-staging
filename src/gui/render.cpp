@@ -611,8 +611,8 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_siz
 	// uninitialised VideoMode param with width and height set to 0 which
 	// results in a crash. The proper fix is to make the init sequence 100%
 	// identical on all platforms, but in the interim this workaround will do.
-	if (canvas_size_px.w == 0 || canvas_size_px.h == 0 ||
-	    video_mode.width == 0 || video_mode.height == 0) {
+	if (canvas_size_px.IsEmpty() || video_mode.width == 0 ||
+	    video_mode.height == 0) {
 		return false;
 	}
 
