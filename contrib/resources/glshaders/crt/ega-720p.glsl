@@ -272,10 +272,10 @@ vec3 YxytoXYZ(vec3 Yxy) {
     Many of these mask arrays are adapted from cgwg's crt-geom-deluxe LUTs, and
     those have their filenames included for easy identification
 
-	NOTE: Having too many branches result in a black screen (but no
-	compilation errors) on some older GPUs such as the Intel HD 4000 iGPU. So
-	we're commenting out the branches that are not used by the adaptive CRT
-	shaders.
+    NOTE: Having too many branches result in a black screen (but no
+    compilation errors) on some older GPUs such as the Intel HD 4000 iGPU. So
+    we're commenting out the branches that are not used by the adaptive CRT
+    shaders.
 */
 vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
     vec3 weights = vec3(1.,1.,1.);
@@ -299,14 +299,14 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
     if (phosphor_layout == 0) {
         return weights;
-	}
+    }
 
     else if (phosphor_layout == 1) {
-    	// classic aperture for RGB panels; good for 1080p, too small for 4K+
+        // classic aperture for RGB panels; good for 1080p, too small for 4K+
         // aka aperture_1_2_bgr
         weights  = aperture_weights;
         return weights;
-	}
+    }
 
     else if (phosphor_layout == 2) {
         // 2x2 shadow mask for RGB panels; good for 1080p, too small for 4K+
@@ -314,7 +314,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
         vec3 inverse_aperture = mix(green, magenta, floor(mod(coord.x, 2.0)));
         weights               = mix(aperture_weights, inverse_aperture, floor(mod(coord.y, 2.0)));
         return weights;
-	}
+    }
 
 /*
     else if (phosphor_layout == 3) {
@@ -337,14 +337,14 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         // do a big, dumb comparison in place of a 2D array
         weights = (w == 1) ? slotmask_x1[z] : (w == 2) ? slotmask_x2[z] :  slotmask_x3[z];
-		return weights;
+        return weights;
     }
 */
     else if (phosphor_layout == 4) {
         // classic aperture for RBG panels; good for 1080p, too small for 4K+
         weights  = mix(yellow, blue, floor(mod(coord.x, 2.0)));
         return weights;
-	}
+    }
 /*
     else if (phosphor_layout == 5) {
         // 2x2 shadow mask for RBG panels; good for 1080p, too small for 4K+
@@ -356,7 +356,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
             floor(mod(coord.y, 2.0))
         );
         return weights;
-	}
+    }
 */
 /*
     else if (phosphor_layout == 6) {
@@ -367,7 +367,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = ap4[z];
         return weights;
-	}
+    }
 */
 /*
     else if (phosphor_layout == 7) {
@@ -388,7 +388,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = big_ap[w];
         return weights;
-	}
+    }
 */
     else if (phosphor_layout == 9) {
         // reduced TVL aperture for RGB panels
@@ -399,7 +399,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = big_ap_rgb[w];
         return weights;
-	}
+    }
 /*
     else if (phosphor_layout == 10) {
         // reduced TVL aperture for RBG panels
@@ -409,7 +409,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = big_ap_rbg[w];
         return weights;
-	}
+    }
 */
     else if(phosphor_layout == 11) {
         // delta_1_4x1_rgb; dunno why this is called 4x1 when it's obviously 4x2 /shrug
@@ -432,7 +432,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = (w == 1) ? delta_2_1[z] : delta_2_2[z];
         return weights;
-	}
+    }
 */
 /*
     else if (phosphor_layout == 13) {
@@ -484,10 +484,10 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = (w == 1) ? slotmask_RBG_x1[z] : (w == 2) ? slotmask_RBG_x2[z] : (w == 3) ? slotmask_RBG_x3[z] : slotmask_RBG_x4[z];
         return weights;
-	}
+    }
 */
 /*
-	else if(phosphor_layout == 16) {
+    else if(phosphor_layout == 16) {
         // slot mask for RBG panels; too low-pitch for 1080p, looks okay at 4K, but wants 8K+
         // {yellow, blue,  black,  black},
         // {yellow, blue,  yellow, blue},
@@ -503,7 +503,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
         return weights;
     }
 */
-	else if (phosphor_layout == 17) {
+    else if (phosphor_layout == 17) {
         // slot_2_5x4_bgr
         // {red,   magenta, blue,  green, green, red,   magenta, blue,  green, green},
         // {black, blue,    blue,  green, green, red,   red,     black, black, black},
@@ -563,7 +563,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
         return weights;
      }
 */
-	else {
+    else {
         return weights;
     }
 }

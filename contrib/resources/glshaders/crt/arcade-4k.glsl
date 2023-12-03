@@ -169,10 +169,10 @@ uniform PRECISION float BLUE_SHIFT;
 
 #define WP_ADJUST           0.00
 #define TEMPERATURE      9300.00
-#define LUMA_PRESERVE 		1.00
-#define RED_SHIFT 			0.00
-#define GREEN_SHIFT 		0.00
-#define BLUE_SHIFT 			0.00
+#define LUMA_PRESERVE       1.00
+#define RED_SHIFT           0.00
+#define GREEN_SHIFT         0.00
+#define BLUE_SHIFT          0.00
 #endif
 // END PARAMETERS //
 
@@ -275,10 +275,10 @@ vec3 YxytoXYZ(vec3 Yxy) {
     Many of these mask arrays are adapted from cgwg's crt-geom-deluxe LUTs, and
     those have their filenames included for easy identification
 
-	NOTE: Having too many branches result in a black screen (but no
-	compilation errors) on some older GPUs such as the Intel HD 4000 iGPU. So
-	we're commenting out the branches that are not used by the adaptive CRT
-	shaders.
+    NOTE: Having too many branches result in a black screen (but no
+    compilation errors) on some older GPUs such as the Intel HD 4000 iGPU. So
+    we're commenting out the branches that are not used by the adaptive CRT
+    shaders.
 */
 vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
     vec3 weights = vec3(1.,1.,1.);
@@ -302,14 +302,14 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
     if (phosphor_layout == 0) {
         return weights;
-	}
+    }
 
     else if (phosphor_layout == 1) {
-    	// classic aperture for RGB panels; good for 1080p, too small for 4K+
+        // classic aperture for RGB panels; good for 1080p, too small for 4K+
         // aka aperture_1_2_bgr
         weights  = aperture_weights;
         return weights;
-	}
+    }
 
     else if (phosphor_layout == 2) {
         // 2x2 shadow mask for RGB panels; good for 1080p, too small for 4K+
@@ -317,7 +317,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
         vec3 inverse_aperture = mix(green, magenta, floor(mod(coord.x, 2.0)));
         weights               = mix(aperture_weights, inverse_aperture, floor(mod(coord.y, 2.0)));
         return weights;
-	}
+    }
 
 /*
     else if (phosphor_layout == 3) {
@@ -340,14 +340,14 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         // do a big, dumb comparison in place of a 2D array
         weights = (w == 1) ? slotmask_x1[z] : (w == 2) ? slotmask_x2[z] :  slotmask_x3[z];
-		return weights;
+        return weights;
     }
 */
     else if (phosphor_layout == 4) {
         // classic aperture for RBG panels; good for 1080p, too small for 4K+
         weights  = mix(yellow, blue, floor(mod(coord.x, 2.0)));
         return weights;
-	}
+    }
 /*
     else if (phosphor_layout == 5) {
         // 2x2 shadow mask for RBG panels; good for 1080p, too small for 4K+
@@ -359,7 +359,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
             floor(mod(coord.y, 2.0))
         );
         return weights;
-	}
+    }
 */
 /*
     else if (phosphor_layout == 6) {
@@ -370,7 +370,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = ap4[z];
         return weights;
-	}
+    }
 */
 /*
     else if (phosphor_layout == 7) {
@@ -391,7 +391,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = big_ap[w];
         return weights;
-	}
+    }
 */
     else if (phosphor_layout == 9) {
         // reduced TVL aperture for RGB panels
@@ -402,7 +402,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = big_ap_rgb[w];
         return weights;
-	}
+    }
 /*
     else if (phosphor_layout == 10) {
         // reduced TVL aperture for RBG panels
@@ -412,7 +412,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = big_ap_rbg[w];
         return weights;
-	}
+    }
 */
     else if(phosphor_layout == 11) {
         // delta_1_4x1_rgb; dunno why this is called 4x1 when it's obviously 4x2 /shrug
@@ -435,7 +435,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = (w == 1) ? delta_2_1[z] : delta_2_2[z];
         return weights;
-	}
+    }
 */
 /*
     else if (phosphor_layout == 13) {
@@ -487,10 +487,10 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 
         weights = (w == 1) ? slotmask_RBG_x1[z] : (w == 2) ? slotmask_RBG_x2[z] : (w == 3) ? slotmask_RBG_x3[z] : slotmask_RBG_x4[z];
         return weights;
-	}
+    }
 */
 /*
-	else if(phosphor_layout == 16) {
+    else if(phosphor_layout == 16) {
         // slot mask for RBG panels; too low-pitch for 1080p, looks okay at 4K, but wants 8K+
         // {yellow, blue,  black,  black},
         // {yellow, blue,  yellow, blue},
@@ -506,7 +506,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
         return weights;
     }
 */
-	else if (phosphor_layout == 17) {
+    else if (phosphor_layout == 17) {
         // slot_2_5x4_bgr
         // {red,   magenta, blue,  green, green, red,   magenta, blue,  green, green},
         // {black, blue,    blue,  green, green, red,   red,     black, black, black},
@@ -566,7 +566,7 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
         return weights;
      }
 */
-	else {
+    else {
         return weights;
     }
 }
@@ -586,10 +586,10 @@ vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout) {
 // For more info, see: http://www.imagemagick.org/Usage/img_diagrams/cubic_survey.gif
 mat4x4 get_hfilter_profile()
 {
-	float bf = 0.0;
-	float cf = 0.0;
+    float bf = 0.0;
+    float cf = 0.0;
 
-	if (HFILTER_PROFILE == 1) {
+    if (HFILTER_PROFILE == 1) {
         bf = 0.0;
         cf = 0.5;
     }
@@ -691,14 +691,14 @@ void main()
     mask_coords = mix(mask_coords.xy, mask_coords.yx, VSCANLINES);
     color.rgb *= mask_weights(mask_coords, MASK_INTENSITY, int(PHOSPHOR_LAYOUT));
 
-	// Colour temperature
-	if (WP_ADJUST == 1.0) {
-		vec3 wp_adjusted = wp_adjust(color.rgb);
-		vec3 base_luma = XYZtoYxy(sRGB_to_XYZ(color.rgb));
-		vec3 adjusted_luma = XYZtoYxy(sRGB_to_XYZ(wp_adjusted));
-		wp_adjusted = (LUMA_PRESERVE == 1.0) ? adjusted_luma + (vec3(base_luma.r,0.,0.) - vec3(adjusted_luma.r,0.,0.)) : adjusted_luma;
-		color = vec4(XYZ_to_sRGB(YxytoXYZ(wp_adjusted)), 1.0);
-	}
+    // Colour temperature
+    if (WP_ADJUST == 1.0) {
+        vec3 wp_adjusted = wp_adjust(color.rgb);
+        vec3 base_luma = XYZtoYxy(sRGB_to_XYZ(color.rgb));
+        vec3 adjusted_luma = XYZtoYxy(sRGB_to_XYZ(wp_adjusted));
+        wp_adjusted = (LUMA_PRESERVE == 1.0) ? adjusted_luma + (vec3(base_luma.r,0.,0.) - vec3(adjusted_luma.r,0.,0.)) : adjusted_luma;
+        color = vec4(XYZ_to_sRGB(YxytoXYZ(wp_adjusted)), 1.0);
+    }
 
     // Output gamma
     color = clamp(GAMMA_OUT(color), 0.0, 1.0);
