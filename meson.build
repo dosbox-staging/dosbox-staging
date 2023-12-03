@@ -39,14 +39,16 @@ doc_dir = data_dir / 'doc' / meson.project_name()
 install_man('docs/dosbox.1')
 # Bundle licenses, but skip the ones that are not relevant for
 # binary distribution or allow us to not distribute the license text.
-install_data('LICENSE',
-             'licenses/BSD-2-Clause.txt',
-             'licenses/BSD-3-Clause.txt',
-             'licenses/GPL-2.0.txt',
-             'licenses/LGPL-2.1.txt',
-             'licenses/MIT.txt',
-             'licenses/Zlib.txt',
-             install_dir: licenses_dir)
+install_data(
+    'LICENSE',
+    'licenses/BSD-2-Clause.txt',
+    'licenses/BSD-3-Clause.txt',
+    'licenses/GPL-2.0.txt',
+    'licenses/LGPL-2.1.txt',
+    'licenses/MIT.txt',
+    'licenses/Zlib.txt',
+    install_dir: licenses_dir,
+)
 install_data('AUTHORS', 'README', 'THANKS', install_dir: doc_dir)
 
 subdir('contrib/linux')
@@ -107,16 +109,14 @@ foreach flag : [
     '-Wzero-as-null-pointer-constant',
 ]
     if cxx.has_argument(flag)
-       warnings += flag
+        warnings += flag
     endif
 endforeach
 
 # Ignore some warnings enabled by default
-foreach flag : [
-    '-Wno-format-security'
-]
+foreach flag : ['-Wno-format-security']
     if cxx.has_argument(flag)
-       warnings += flag
+        warnings += flag
     endif
 endforeach
 
@@ -165,9 +165,7 @@ endif
 
 # Let sanitizer builds recover and continue
 if get_option('b_sanitize') != 'none'
-    extra_flags += [
-        '-fsanitize-recover=all'
-    ]
+    extra_flags += ['-fsanitize-recover=all']
 endif
 
 # Add Debug-specific flags here
@@ -202,7 +200,7 @@ if host_machine.system() == 'windows'
 endif
 
 # Don't flood us with hundreds of suggestions to use snprintf on Apple + Clang
-if host_machine.system() == 'darwin' and  cxx.get_id() == 'clang'
+if host_machine.system() == 'darwin' and cxx.get_id() == 'clang'
     extra_flags += '-Wno-deprecated-declarations'
 endif
 
@@ -881,7 +879,7 @@ summary('Host page size (bytes)', pagesize.to_string())
 # Setup include directories
 incdir = [
     include_directories('include', '.'),
-    include_directories('src/libs', is_system: true)
+    include_directories('src/libs', is_system: true),
 ]
 
 
