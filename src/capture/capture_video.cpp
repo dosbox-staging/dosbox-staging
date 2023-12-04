@@ -394,17 +394,24 @@ static void compress_frame(const RenderedImage& image)
 
 	// Otherwise we need to arrange the source bytes before compressing
 	assert(!can_use_src_directly);
-	uint8_t tgt_row[SCALER_MAXWIDTH * 4] = {};
+
+	// Grow the target row buffer if needed
+	const auto tgt_row_bytes = check_cast<uint16_t>(src.width * tgt_bpp *
+	                                                pixel_multiple);
+	static std::vector<uint8_t> tgt_row = {};
+	if (tgt_row.size() < tgt_row_bytes) {
+		tgt_row.resize(tgt_row_bytes, 0);
+	}
 
 	for (auto i = 0; i < src.height; ++i, src_row += image.pitch) {
 		auto src_pixel = src_row;
-		auto tgt_pixel = tgt_row;
+		auto tgt_pixel = tgt_row.data();
 		for (auto j = 0; j < src.width; ++j, src_pixel += src_bpp) {
 			for (auto k = 0; k < pixel_multiple; ++k, tgt_pixel += tgt_bpp) {
 				std::memcpy(tgt_pixel, src_pixel, src_bpp);
 			}
 		}
-		compress_row(tgt_row);
+		compress_row(tgt_row.data());
 	}
 }
 
