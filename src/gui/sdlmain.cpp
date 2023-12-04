@@ -212,6 +212,8 @@ static bool present_frame_texture();
 #if C_OPENGL
 static void update_frame_gl(const uint16_t *changedLines);
 static bool present_frame_gl();
+static const char* safe_gl_get_string(const GLenum requested_name,
+                                      const char* default_result);
 #endif
 
 static const char* vsync_state_as_string(const VsyncState state)
@@ -1308,6 +1310,40 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		if (rendering_backend == RenderingBackend::OpenGl) {
 			flags |= SDL_WINDOW_OPENGL;
 		}
+
+		// We need a context to query the vendor string.
+		const auto temp_window = SDL_CreateWindow(
+		        "", 0, 0, 200, 200, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+		if (temp_window == nullptr) {
+			LOG_ERR("SDL: Failed to create temporary window: %s",
+			        SDL_GetError());
+			return nullptr;
+		}
+		const auto temp_context = SDL_GL_CreateContext(temp_window);
+		if (temp_context == nullptr) {
+			LOG_ERR("OPENGL: Failed to create temporary context: %s",
+			        SDL_GetError());
+			return nullptr;
+		}
+
+		const std::string gl_vendor = safe_gl_get_string(GL_VENDOR,
+		                                                 "unknown vendor");
+
+		SDL_GL_DeleteContext(temp_context);
+		SDL_DestroyWindow(temp_window);
+#if WIN32
+		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
+#else
+		constexpr auto is_vendors_srgb_unreliable = false;
+#endif
+		if (is_vendors_srgb_unreliable) {
+			LOG_WARNING("OPENGL: Not requesting an sRGB framebuffer"
+			            " because %s's driver is unreliable",
+			            gl_vendor.data());
+		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
+			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
+			        SDL_GetError());
+		}
 #endif
 		if (!sdl.desktop.window.show_decorations) {
 			flags |= SDL_WINDOW_BORDERLESS;
@@ -1866,24 +1902,6 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 			            texsize_h_px);
 			goto fallback_texture;
 		}
-		SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-		const std::string gl_vendor = safe_gl_get_string(GL_VENDOR,
-		                                                 "unknown vendor");
-#	if WIN32
-		const auto is_vendors_srgb_unreliable = (gl_vendor == "Intel");
-#	else
-		constexpr auto is_vendors_srgb_unreliable = false;
-#	endif
-		if (is_vendors_srgb_unreliable) {
-			LOG_WARNING("OPENGL: Not requesting an sRGB framebuffer "
-			            "because %s's driver is unreliable",
-			            gl_vendor.data());
-
-		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
-			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
-			        SDL_GetError());
-		}
 
 		// Re-apply the minimum bounds prior to clipping the OpenGL
 		// window because SDL invalidates the prior bounds in the above
@@ -2071,6 +2089,17 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		assert(emptytex);
 
 		memset(emptytex, 0, texture_area_bytes);
+
+		int is_double_buffering_enabled = 0;
+		if (SDL_GL_GetAttribute(SDL_GL_DOUBLEBUFFER,
+		                        &is_double_buffering_enabled)) {
+			LOG_WARNING("OPENGL: Failed getting double buffering status: %s",
+			            SDL_GetError());
+		} else {
+			if (!is_double_buffering_enabled) {
+				LOG_WARNING("OPENGL: Double buffering not enabled");
+			}
+		}
 
 		int is_framebuffer_srgb_capable = 0;
 		if (SDL_GL_GetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
