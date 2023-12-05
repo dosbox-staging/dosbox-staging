@@ -196,10 +196,8 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 {
 	std::deque<std::string> inventory;
 	inventory.emplace_back("");
-	inventory.emplace_back("List of available GLSL shaders");
-	inventory.emplace_back("------------------------------");
+	inventory.emplace_back(MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_1"));
 
-	const std::string dir_prefix  = "Path '";
 	const std::string file_prefix = "        ";
 
 	std::error_code ec = {};
@@ -207,29 +205,44 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		const auto dir_exists      = std_fs::is_directory(dir, ec);
 		auto shader                = shaders.begin();
 		const auto dir_has_shaders = shader != shaders.end();
-		const auto dir_postfix     = dir_exists
-		                                   ? (dir_has_shaders ? "' has:"
-		                                                      : "' has no shaders")
-		                                   : "' does not exist";
 
-		inventory.emplace_back(dir_prefix + dir.string() + dir_postfix);
+		const char *pattern = nullptr;
+		if (!dir_exists) {
+			pattern = MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS");
+		} else if (!dir_has_shaders) {
+			pattern = MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS");
+		} else {
+			pattern = MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_LIST");
+		}
+		inventory.emplace_back(format_string(pattern, dir.u8string().c_str()));
 
 		while (shader != shaders.end()) {
 			shader->replace_extension("");
 			const auto is_last = (shader + 1 == shaders.end());
 			inventory.emplace_back(file_prefix +
 			                       (is_last ? "`- " : "|- ") +
-			                       shader->string());
+			                       shader->u8string());
 			++shader;
 		}
 		inventory.emplace_back("");
 	}
-	inventory.emplace_back(
-	        "The above shaders can be used exactly as listed in the 'glshader'");
-	inventory.emplace_back(
-	        "conf setting, without the need for the resource path or .glsl extension.");
+	inventory.emplace_back(MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_2"));
 
 	return inventory;
+}
+
+void ShaderManager::AddMessages()
+{
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_1",
+	        "List of available GLSL shaders\n"
+	        "------------------------------");
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_2",
+	        "The above shaders can be used exactly as listed in the 'glshader'\n"
+	        "config setting, without the need for the resource path or .glsl extension.");
+
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS", "Path '%s' does not exist");
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS", "Path '%s' has no shaders");
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_LIST",       "Path '%s' has:");
 }
 
 std::string ShaderManager::MapShaderName(const std::string& name) const

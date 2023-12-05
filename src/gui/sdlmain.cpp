@@ -4673,6 +4673,7 @@ int sdl_main(int argc, char* argv[])
 		// DOS messages, needed by some command line switches
 		messages_add_command_line();
 		DOS_Locale_AddMessages();
+		RENDER_AddMessages();
 		messages_add_sdl();
 		config_add_sdl();
 
