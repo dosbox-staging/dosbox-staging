@@ -135,6 +135,7 @@ public:
 	// Generate a human-readable shader inventory message (one list element
 	// per line).
 	std::deque<std::string> GenerateShaderInventoryMessage() const;
+	static void AddMessages();
 
 	std::string MapShaderName(const std::string& name) const;
 

@@ -668,6 +668,11 @@ std::deque<std::string> RENDER_GenerateShaderInventoryMessage()
 	return get_shader_manager().GenerateShaderInventoryMessage();
 }
 
+void RENDER_AddMessages()
+{
+	ShaderManager::AddMessages();
+}
+
 static void reload_shader([[maybe_unused]] const bool pressed)
 {
 	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
