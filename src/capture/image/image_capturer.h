@@ -105,6 +105,4 @@ private:
 	ImageSaver& GetNextImageSaver();
 };
 
-uint8_t get_double_scan_row_skip_count(const RenderedImage& image);
-
 #endif // DOSBOX_IMAGE_CAPTURER_H

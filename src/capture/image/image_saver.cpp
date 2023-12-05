@@ -149,14 +149,13 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
 	}
 }
 
-// to avoid circular dependency
-uint8_t get_double_scan_row_skip_count(const RenderedImage&);
-
 void ImageSaver::SaveRawImage(const RenderedImage& image)
 {
 	PngWriter png_writer = {};
 
-	auto row_skip_count = get_double_scan_row_skip_count(image);
+	// To reconstruct the raw image, we must skip every second row if we're
+	// dealing with "baked in" double-scanning.
+	const uint8_t row_skip_count = (image.params.rendered_double_scan ? 1 : 0);
 	image_decoder.Init(image, row_skip_count);
 
 	const auto& src = image.params;
