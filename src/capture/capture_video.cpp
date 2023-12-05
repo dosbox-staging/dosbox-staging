@@ -355,36 +355,63 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 	video.audio.bytes_written   = 0;
 }
 
-// Reads the image's pixels from the emulated DOS video RAM (which is always
-// little-endian) and passes them in the same byte-order to the encoder.
+// Performs some transforms on the passed down rendered image to make sure
+// we're capturing the raw output, then passes the result in the same
+// byte-order to the encoder. Endianness varies per pixel format (see
+// PixelFormat in video.h for details); the ZMBV encoder handles all that
+// detail.
 //
-// Ideally this could just be one memcpy, but many DOS video modes need their
-// pixels either doubled horizontally and/or vertically to produce the correct
-// on-screen size. So extra copies are needed in both these cases.
+// We always write non-double-scanned and non-pixel-doubled frames in raw
+// video capture mode :
 //
-static void compress_frame(const RenderedImage& image)
+// - Pixel-doubling is not a problem as that's always performed as a
+//   post-processing step; it's never "baked-into" the rendered image.
+//   We just need to completely ignore the `double_width` flag.
+//
+// - Double-scanning can be either "baked-in" or performed in post-processing.
+//   Ignoring the `double_height` flag takes care of the post-processing
+//   variety, but for "baked-in" double-scanning, we need to skip every second
+//   row.
+//
+// So, for example, the 320x200 13h VGA mode is always written as 320x200 in
+// raw capture mode regardless of the state of the width & height doubling
+// flags, and irrespective of whether the passed down image is 320x200 or
+// 320x400 with "baked-in" double scanning.
+//
+// Composite modes are special because they're rendered at 2x the width of the
+// video mode to allow enough vertical resolution to represent composite
+// artifacts (so 320x200 is rendered as 640x200, and 640x200 as 1280x200).
+// These are written as-is, otherwise we'd be losing information.
+//
+static void compress_raw_frame(const RenderedImage& image)
 {
 	const auto& src = image.params;
-	auto src_row = image.image_data;
+	auto src_row    = image.image_data;
 
-	const auto pixel_multiple = (src.double_width ? 2 : 1);
-	const auto row_multiple   = (src.double_height ? 2 : 1);
+	// We always write non-double-scanned frames in raw video capture mode.
+	// Therefore, to reconstruct the raw image, we must skip every second
+	// row if we're dealing with "baked in" double scanning.
+
+	const auto raw_height = (src.height /
+	                         (image.params.rendered_double_scan ? 2 : 1));
+
+	const auto src_pitch = (image.pitch *
+	                        (image.params.rendered_double_scan ? 2 : 1));
 
 	auto compress_row = [&](const uint8_t* row_buffer) {
-		for (auto i = 0; i < row_multiple; ++i) {
-			video.codec->CompressLines(1, &row_buffer);
-		}
+		video.codec->CompressLines(1, &row_buffer);
 	};
 
 	const auto src_bpp = to_bytes_per_pixel(src.pixel_format);
-	const auto tgt_bpp = to_bytes_per_pixel(to_zmbv_format(src.pixel_format));
+	const auto dest_bpp = to_bytes_per_pixel(to_zmbv_format(src.pixel_format));
 
 	// Maybe compress the source rows straight away without copying. Note
 	// that this is a shortcut scenario; hard-code it to false to exercise
 	// the rote version below.
-	const auto can_use_src_directly = (src_bpp == tgt_bpp) && !src.double_width;
+
+	const auto can_use_src_directly = (src_bpp == dest_bpp);
 	if (can_use_src_directly) {
-		for (auto i = 0; i < src.height; ++i, src_row += image.pitch) {
+		for (auto i = 0; i < raw_height; ++i, src_row += src_pitch) {
 			compress_row(src_row);
 		}
 		return;
@@ -394,22 +421,20 @@ static void compress_frame(const RenderedImage& image)
 	assert(!can_use_src_directly);
 
 	// Grow the target row buffer if needed
-	const auto tgt_row_bytes = check_cast<uint16_t>(src.width * tgt_bpp *
-	                                                pixel_multiple);
-	static std::vector<uint8_t> tgt_row = {};
-	if (tgt_row.size() < tgt_row_bytes) {
-		tgt_row.resize(tgt_row_bytes, 0);
+	const auto dest_row_bytes = check_cast<uint16_t>(src.width * dest_bpp);
+	static std::vector<uint8_t> dest_row = {};
+	if (dest_row.size() < dest_row_bytes) {
+		dest_row.resize(dest_row_bytes, 0);
 	}
 
-	for (auto i = 0; i < src.height; ++i, src_row += image.pitch) {
-		auto src_pixel = src_row;
-		auto tgt_pixel = tgt_row.data();
+	for (auto i = 0; i < raw_height; ++i, src_row += src_pitch) {
+		auto src_pixel  = src_row;
+		auto dest_pixel = dest_row.data();
 		for (auto j = 0; j < src.width; ++j, src_pixel += src_bpp) {
-			for (auto k = 0; k < pixel_multiple; ++k, tgt_pixel += tgt_bpp) {
-				std::memcpy(tgt_pixel, src_pixel, src_bpp);
-			}
+			std::memcpy(dest_pixel, src_pixel, src_bpp);
+			dest_pixel += dest_bpp;
 		}
-		compress_row(tgt_row.data());
+		compress_row(dest_row.data());
 	}
 }
 
@@ -418,8 +443,14 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	const auto& src = image.params;
 	assert(src.width <= SCALER_MAXWIDTH);
 
-	const auto video_width = src.double_width ? src.width * 2 : src.width;
-	const auto video_height = src.double_height ? src.height * 2 : src.height;
+	// Pixel-doubling is never "baked-in", so we always write the frames
+	// non-pixel-doubled. The only exception is composite modes; these are
+	// rendered at 2x width and we want to write them as such (we need enough
+	// horizontal resolution to properly represent the composite artifacts).
+	const auto video_width = src.width;
+
+	// We always write non-double-scanned frames in raw video capture mode
+	const auto video_height = src.video_mode.height;
 
 	// Disable capturing if any of the test fails
 	if (video.handle && (video.width != video_width || video.height != video_height ||
@@ -451,7 +482,7 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 		return;
 	}
 
-	compress_frame(image);
+	compress_raw_frame(image);
 
 	const auto written = video.codec->FinishCompressFrame();
 	if (written < 0) {
