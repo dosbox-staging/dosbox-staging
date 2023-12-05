@@ -31,8 +31,9 @@ Lista dostępnych opcji:
   --working-dir <ścieżka>      Traktuj <ścieżka> jako katalog roboczy. DOSBox będzie działał tak, jakby
                                został uruchomiony z tego katalogu.
 
-  --list-glshaders             Wyświetl dostępne shadery OpenGL wraz ze ścieżkami. Można podać jeden a
-                               rezultatów w ustawieniu 'glshader = ' w pliku konfiguracyjnym.
+  --list-countries             Wyświetl obsługiwane kraje wraz z ich kodami, do ustawienia 'country'.
+
+  --list-glshaders             Wyświetl dostępne shadery wraz ze ścieżkami, do ustawienia 'glshader'.
 
   --fullscreen                 Uruchom na pełnym ekranie.
 
@@ -62,6 +63,269 @@ Lista dostępnych opcji:
   -h, -?, --help               Wyświetl pomoc i zakończ pracę.
 
   -V, --version                Wyświetl wersję programu i zakończ pracę.
+
+.
+:DOSBOX_HELP_LIST_COUNTRIES_1
+Kody krajów, często takie same jak telefoniczny numer kierunkowy
+----------------------------------------------------------------
+.
+:DOSBOX_HELP_LIST_COUNTRIES_2
+Powyższych kodów numerycznych należy użyć w ustawieniu 'country'
+w pliku konfiguracyjnym.
+.
+:COUNTRY_NAME_XXA
+Międzynarodowy (angielski)
+.
+:COUNTRY_NAME_USA
+Stany Zjednoczone
+.
+:COUNTRY_NAME_CAN_FR
+Kanada (francuski)
+.
+:COUNTRY_NAME_XLA
+Ameryka Łacińska
+.
+:COUNTRY_NAME_CAN_EN
+Kanada (angielski)
+.
+:COUNTRY_NAME_RUS
+Rosja
+.
+:COUNTRY_NAME_ZAF
+Afryka Południowa
+.
+:COUNTRY_NAME_GRC
+Grecja
+.
+:COUNTRY_NAME_NLD
+Holandia
+.
+:COUNTRY_NAME_BEL
+Belgia
+.
+:COUNTRY_NAME_FRA
+Francja
+.
+:COUNTRY_NAME_ESP
+Hiszpania
+.
+:COUNTRY_NAME_HUN
+Węgry
+.
+:COUNTRY_NAME_YUG
+Jugosławia
+.
+:COUNTRY_NAME_ITA
+Włochy
+.
+:COUNTRY_NAME_ROU
+Rumunia
+.
+:COUNTRY_NAME_CHE
+Szwajcaria
+.
+:COUNTRY_NAME_CZE
+Czechy
+.
+:COUNTRY_NAME_AUT
+Austria
+.
+:COUNTRY_NAME_GBR
+Wielka Brytania
+.
+:COUNTRY_NAME_DNK
+Dania
+.
+:COUNTRY_NAME_SWE
+Szwecja
+.
+:COUNTRY_NAME_NOR
+Norwegia
+.
+:COUNTRY_NAME_POL
+Polska
+.
+:COUNTRY_NAME_DEU
+Niemcy
+.
+:COUNTRY_NAME_MEX
+Meksyk
+.
+:COUNTRY_NAME_ARG
+Argentyna
+.
+:COUNTRY_NAME_BRA
+Brazylia
+.
+:COUNTRY_NAME_CHL
+Chile
+.
+:COUNTRY_NAME_COL
+Kolumbia
+.
+:COUNTRY_NAME_VEN
+Wenezuela
+.
+:COUNTRY_NAME_MYS
+Malezja
+.
+:COUNTRY_NAME_AUS
+Australia
+.
+:COUNTRY_NAME_PHL
+Filipiny
+.
+:COUNTRY_NAME_NZL
+Nowa Zelandia
+.
+:COUNTRY_NAME_SGP
+Singapur
+.
+:COUNTRY_NAME_THA
+Tajlandia
+.
+:COUNTRY_NAME_KAZ
+Kazachstan
+.
+:COUNTRY_NAME_JPN
+Japonia
+.
+:COUNTRY_NAME_KOR
+Korea Południowa
+.
+:COUNTRY_NAME_VNM
+Wietnam
+.
+:COUNTRY_NAME_CHN
+Chiny
+.
+:COUNTRY_NAME_TUR
+Turcja
+.
+:COUNTRY_NAME_IND
+Indie
+.
+:COUNTRY_NAME_NER
+Niger
+.
+:COUNTRY_NAME_BEN
+Benin
+.
+:COUNTRY_NAME_NGA
+Nigeria
+.
+:COUNTRY_NAME_FRO
+Wyspy Owcze
+.
+:COUNTRY_NAME_PRT
+Portugalia
+.
+:COUNTRY_NAME_IRL
+Irlandia
+.
+:COUNTRY_NAME_ISL
+Islandia
+.
+:COUNTRY_NAME_ALB
+Albania
+.
+:COUNTRY_NAME_MLT
+Malta
+.
+:COUNTRY_NAME_FIN
+Finlandia
+.
+:COUNTRY_NAME_BGR
+Bułgaria
+.
+:COUNTRY_NAME_LTU
+Litwa
+.
+:COUNTRY_NAME_LVA
+Łotwa
+.
+:COUNTRY_NAME_EST
+Estonia
+.
+:COUNTRY_NAME_ARM
+Armenia
+.
+:COUNTRY_NAME_BLR
+Białoruś
+.
+:COUNTRY_NAME_UKR
+Ukraina
+.
+:COUNTRY_NAME_SRB
+Serbia
+.
+:COUNTRY_NAME_MNE
+Czarnogóra
+.
+:COUNTRY_NAME_HRV
+Chorwacja
+.
+:COUNTRY_NAME_SVN
+Słowenia
+.
+:COUNTRY_NAME_BIH_LAT
+Bośnia i Hercegowina (łaciński)
+.
+:COUNTRY_NAME_BIH_CYR
+Bośnia i Hercegowina (cyrylica)
+.
+:COUNTRY_NAME_MKD
+Macedonia Północna
+.
+:COUNTRY_NAME_SVK
+Słowacja
+.
+:COUNTRY_NAME_ECU
+Ekwador
+.
+:COUNTRY_NAME_XME
+Azja Zachodnia
+.
+:COUNTRY_NAME_HKG
+Hongkong
+.
+:COUNTRY_NAME_TWN
+Tajwan
+.
+:COUNTRY_NAME_ISR
+Izrael
+.
+:COUNTRY_NAME_MNG
+Mongolia
+.
+:COUNTRY_NAME_TJK
+Tadżykistan
+.
+:COUNTRY_NAME_TKM
+Turkmenistan
+.
+:COUNTRY_NAME_AZE
+Azerbejdżan
+.
+:COUNTRY_NAME_GEO
+Gruzja
+.
+:COUNTRY_NAME_KGZ
+Kirgistan
+.
+:COUNTRY_NAME_UZB
+Uzbekistan
+.
+:PROGRAM_CONFIG_PROPERTY_ERROR
+Brak sekcji lub parametru: '%s'
+
+.
+:PROGRAM_CONFIG_NO_PROPERTY
+Brak parametru '%s' w sekcji [%s]
+
+.
+:PROGRAM_CONFIG_SET_SYNTAX
+Składnia: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] [color=white]PARAMETR[/reset][=][color=white]WARTOŚĆ[/reset]
 
 .
 :TITLEBAR_CYCLES_MS
@@ -107,25 +371,18 @@ Rozdzielczość pełnego ekranu: 'original', 'desktop' (domyślne) lub konkretna
 rozdzielczość, np. 1024x768.
 .
 :CONFIG_WINDOWRESOLUTION
-Rozmiar okna w trybie okienkowym:
+Rozmiar okna w trybie okienkowym. Można go zmienić po starcie.
   default:   Wybiera najlepszy na podstawie ustawień systemu.
   small, medium lub large (albo s, m, l):
              Rozmiar względem pulpitu (mały, średni, duży).
-  <custom>:  Skalowanie okna do danej rozdzielczości podanej jako XxY.
-             Przykład: 1024x768.
-.
-:CONFIG_VIEWPORT_RESOLUTION
-Rozmiar obszaru wyświetlania w oknie lub na pełnym ekranie:
-  fit:       Dopasowanie do rozmiaru okna/ekranu (domyślne).
-  <custom>:  Ograniczenie obszaru wyświetlania do podanej rozdzielczości lub
-             procentu rozmiaru pulpitu. W formacie XxY, N%, N.M%.
-             Przykłady: 960x720 lub 50%
+  <custom>:  Skalowanie okna do danej rozdzielczości podanej jako XxY
+             (np. 1024x768).
 .
 :CONFIG_WINDOW_POSITION
 Początkowe współrzędne okna w trybie okienkowym:
-  auto:      Pozwala zdecydować systemowi gospodarza (domyślne).
-  <custom>:  Pozycja w formacie X,Y. Przykład: '250,100'.
-             '0,0' oznacza lewy górny róg ekranu.
+  auto:  Pozwala zdecydować systemowi gospodarza (domyślne).
+  X,Y:   Pozycja w formacie X,Y (np. 250,100), gdzie 0,0 oznacza
+         lewy górny róg ekranu.
 .
 :CONFIG_WINDOW_DECORATIONS
 Czy wyświetlać dekoracje okna w trybie okienkowym (domyślnie włączone).
@@ -134,18 +391,21 @@ Czy wyświetlać dekoracje okna w trybie okienkowym (domyślnie włączone).
 Przezroczystość obrazu. Od 0 (brak, domyślne) do 90 (znaczna przezroczystość).
 .
 :CONFIG_MAX_RESOLUTION
-Nazwa parametru zmieniona na 'viewport_resolution'.
+Przeniesione do sekcji [render], nazwa zmieniona na 'viewport'.
+.
+:CONFIG_VIEWPORT_RESOLUTION
+Przeniesione do sekcji [render], nazwa zmieniona na 'viewport'.
 .
 :CONFIG_HOST_RATE
 Częstotliwość odświeżania obrazu w systemie gospodarza:
-  auto:      Używa 'sdi'; 'vrr' tylko na pełnym ekranie, na monitorze
-             o wysokiej częstotliwości odświeżania (domyślne).
-  sdi:       Używa częstotliwości SDI (Serial Device Interface), bez
-             żadnego korygowania wartości.
-  vrr:       Odejmuje 3 Hz od raportowanej wartości (dobra strategia dla
-             monitorów o zmiennej częstotliwości odświeżania).
-  <custom>:  Używa podanej wartości, całkowitej lub dziesiętnej, wartość
-             musi być co najmniej 23.000.
+  auto:  Używa SDI; VRR tylko na pełnym ekranie, na monitorze o wysokiej
+         częstotliwości odświeżania (domyślne).
+  sdi:   Używa częstotliwości SDI (Serial Device Interface), bez żadnego
+         dodatkowego korygowania wartości.
+  vrr:   Odejmuje 3 Hz od raportowanej wartości (dobra strategia dla monitorów
+         o zmiennej częstotliwości odświeżania).
+  N:     Używa podanej wartości, całkowitej lub dziesiętnej, wartość musi być
+         nie mniejsza niż 23.000.
 .
 :CONFIG_VSYNC
 Tryb synchronizacji pionowej obrazu (vsync):
@@ -192,13 +452,13 @@ Wybór renderera dla 'output = texture'.
 Wartość 'auto' (domyślnie) wybiera automatycznie.
 .
 :CONFIG_CAPTURE_MOUSE
-Przeniesione do sekcji [mouse].
+Przeniesione do sekcji [mouse], nazwa zmieniona na 'mouse_capture'.
 .
 :CONFIG_SENSITIVITY
-Przeniesione do sekcji [mouse].
+Przeniesione do sekcji [mouse], nazwa zmieniona na 'mouse_sensitivity'.
 .
 :CONFIG_RAW_MOUSE_INPUT
-Przeniesione do sekcji [mouse].
+Przeniesione do sekcji [mouse], nazwa zmieniona na 'mouse_raw_input'.
 .
 :CONFIG_WAITONERROR
 Czeka przed zamknięciem konsoli po wystąpieniu błędu (domyślnie włączone).
@@ -348,15 +608,29 @@ zamiast 'config -set sbtype sb16' wystarczy wykonać 'sbtype sb16', a zamiast
 'config -get sbtype' wystarczy wykonać polecenie 'sbtype'.
 .
 :CONFIG_FRAMESKIP
-Użyj ustawienia 'host_rate' z sekcji [sdl].
+Użyj ustawienia 'host_rate'.
 .
 :CONFIG_ASPECT
-Koryguje proporcje obrazu dla współczesnych płaskich monitorów o kwadratowych
-pikselach, żeby obraz wyglądał tak jak na monitorze CRT o proporcjach 4:3, dla
-których napisano znaczącą większość gier DOSowych (domyślnie włączone).
-Dotyczy tylko trybów graficznych z prostokątnymi pikselami (np. 320x200,
-640x400); nie ma wpływu na tryby graficzne z kwadratowymi pikselami
-(np. 640x480, 800x600).
+Korekcja proporcji obrazu (domyślnie włączone):
+  auto, on:            Koryguje proporcje obrazu dla współczesnych płaskich
+                       monitorów o kwadratowych pikselach, żeby obraz wyglądał
+                       tak jak na monitorze CRT o proporcjach 4:3, dla których
+                       napisano znaczącą większość gier DOSowych. Dotyczy
+                       tylko trybów graficznych z prostokątnymi pikselami
+                       (np. 320x200, 640x400); nie ma wpływu na tryby
+                       graficzne z kwadratowymi pikselami (np. 640x480,
+                       800x600).
+  square-pixels, off:  Nie koryguj proporcji, wszystkie tryby graficzne są
+                       wyświetlane kwadratowymi pikselami. Większość gier
+                       pracujących w rozdzielczości 320x200 będzie wyglądała
+                       nienaturalnie, ale niektóre (np. porty gier z Amigi)
+                       wymagają tego ustawienia aby wyglądać zgodnie z
+                       intencjami artystów.
+  stretch:             Rozciąga obraz do obszaru wyświetlania. Razem z
+                       ustawieniem 'viewport' pozwala na wymuszenie dowolnych
+                       proporcji obrazu (np. rozciągnięcie gry do proporcji
+                       16:9) i symulowanie ustawień rozciągnięcia obrazu
+                       znanych z monitorów kineskopowych (CRT).
 .
 :CONFIG_INTEGER_SCALING
 Ogranicza współczynnik poziomego lub pionowego skalowania obrazu do wartości
@@ -372,6 +646,30 @@ obrazu jest mniejsza od wielkości obszaru wyświetlania (jak dla 'off').
   horizontal:  Ogranicza skalowanie obrazu w poziomie do wartości całkowitych.
   off:         Brak ograniczeń we współczynniku skalowania obrazu, obraz
                wypełnia cały obszar wyświetlania.
+.
+:CONFIG_VIEWPORT
+Rozmiar obszaru wyświetlania (maksymalny obszar rysowania):
+  fit:             Dopasowuje obszar wyświetlania do rozmiaru okna lub ekranu
+                   (domyślne). Może utworzyć czarne pasy wokół obszaru
+                   wyświetlania (wypełnienie), jeśli włączone jest
+                   'integer_scaling'.
+  WxH:             Ustawia stały obszar określony w formacie WxH w jednostkach
+                   logicznych (np., 960x720). Rozmiar nie może być większy od
+                   pulpitu. Jeśli zostanie podany większy, niż rozmiar okna,
+                   zostanie przeskalowany żeby się zmieścił.
+  N%:              Podobnie jak 'WxH', ale określa rozmiar jako procent
+                   rozmiaru pulpitu.
+  relative H% V%:  Ustawia obszar wyświetlania o proporcjach 4:3, dopasowany
+                   do rozmiaru okna/ekranu, następnie skaluje poziomo/pionowo
+                   według parametrów H i V (dozwolony zakres od 20% do 300%).
+                   Powstały w ten sposób obszar wyświetlania może rozciągać
+                   się poza okno/ekran, pozwala to na powiększenie części
+                   obrazu, zwłaszcza w połączeniu z ustawieniem 'aspect'.
+Uwagi:
+ - Użycie 'relative' w połączeniu z 'integer_scaling' może prowadzić do
+   zaskakujących (ale poprawnych) rezultatów.
+ - Można uzywać skrótów klawiszowych 'Stretch Axis', 'Inc Stretch', oraz
+   'Dec Stretch' aby dostosować ustawienia 'relative' w czasie rzeczywistym.
 .
 :CONFIG_MONOCHROME_PALETTE
 Barwa obrazu monochromatycznego (domyślnie 'amber'). Działa tylko z systemami
@@ -411,27 +709,33 @@ Ich domyślne wartości, jako 6-cyfrowe liczby szesnastkowe, to odpowiednio:
 :CONFIG_SCALER
 Skalery programowe zostały usunięte, musisz użyć skalowania sprzętowego:
   - Zamiast normal2x/3x, użyj ustawień 'windowresolution' oraz
-    'viewport_resolution', rozważ użycie 'integer_scaling'.
+    'viewport', rozważ użycie 'integer_scaling'.
   - W innym przypadku spróbuj użyj opcji 'glshader'.
 .
 :CONFIG_GLSHADER
 Wybór shadera w trybach OpenGL. Lista dostępnych shaderów adaptacyjnych,
 symulujących obraz monitora kineskopowego (CRT):
-  crt-auto:          Shader symulujący obraz monitora z okresu wypuszczenia
-                     danej gry (domyślnie). Odpowiedni shader jest wybierany
-                     bazując na trybie graficznym i rozdzielczości, bez
-                     uwzględniania opcji 'machine' - zatem nawet podczas
-                     emulowania systemu z kartą VGA, w przypadku uruchomienia
-                     gry korzystającej z trybu EGA wyświetlone zostaną wyraźne
-                     linie skanowania charakterystyczne dla monitora EGA.
-  crt-auto-machine:  Podobne do 'crt-auto', ale wybiera monitor na podstawie
-                     opcji 'machine', np. gry korzystające z trybu CGA lub EGA
-                     zostaną wyświetlone jak na monitorze VGA.
-  crt-auto-arcade:   Symuluje monitor maszyny arcade lub domowy monitor,
-                     typowo mniej ostry od monitora PC, z grubymi liniami
-                     skanowania w trybach graficznych niższej rozdzielczości.
-                     Może być użyteczne np. dla gier przeniesionych do systemu
-                     DOS z komputerów typu Amiga.
+  crt-auto:               Shader symulujący obraz monitora z okresu wydania
+                          danej gry (domyślnie). Odpowiedni shader jest
+                          wybierany bazując na trybie graficznym
+                          i rozdzielczości, bez uwzględniania opcji
+                          'machine' - zatem nawet podczas emulowania systemu
+                          z kartą VGA, w przypadku uruchomienia gry
+                          korzystającej z trybu EGA wyświetlone zostaną
+                          wyraźne linie skanowania charakterystyczne
+                          dla monitora EGA.
+  crt-auto-machine:       Podobne do 'crt-auto', ale wybiera monitor
+                          na podstawie opcji 'machine', np. gry korzystające
+                          z trybu CGA lub EGA zostaną wyświetlone
+                          jak na monitorze VGA.
+  crt-auto-arcade:        Symuluje monitor maszyny arcade lub domowy monitor,
+                          typowo mniej ostry od monitora PC, z grubymi liniami
+                          skanowania w trybach graficznych niższej
+                          rozdzielczości. Może być użyteczne np. dla gier
+                          przeniesionych do systemu DOS z komputerów Amiga.
+  crt-auto-arcade-sharp:  Ostrzejszy wariant shadera arcade, dla lubiących
+                          grube linie skanowania, ale zachowuje ostrość typową
+                          dla monitorów PC.
 Oprócz tego dostępne są opcje 'sharp' oraz 'none' , albo ścieżka względna lub
 bezwzględna do pliku z shaderem GLSL, albo jeden z shaderów z listy
 wyświetlanej opcją wiersza poleceń '--list-glshaders'.
@@ -490,16 +794,24 @@ Ilość cykli na milisekundę, która zostanie odjęta po naciśnięciu skrótu
 klawiszowego. Ustawienie mniejsze niż 100 jest traktowane jak wartość w
 procentach (domyślnie 20).
 .
-:CONFIG_VOODOO_MEMSIZE
-Wielkość pamięci (w megabajtach) emulowanej karty 3dfx Vodooo (domyślnie 12).
+:CONFIG_VOODOO
+Włącza emulację karty 3dfx Voodoo emulation (domyślnie włączone).
 .
-:CONFIG_VOODOO_PERF
-Optymalizacje wydajności emulowania karty 3dfx Voodoo:
-   0:  Bez optymalizacji.
-   1:  Renderowanie wielowątkowe (domyślne).
-   2:  Wyłączenie filtrowania bilinearnego.
-   3:  Obydwie optymalizacje (zarówno z punktu 1, jak i 2).
-Uwaga: Emulacja jest wyłącznie programowa, nie używa OpenGL.
+:CONFIG_VOODOO_MEMSIZE
+Wielkość pamięci (w megabajtach) emulowanej karty 3dfx Voodooo, 4 lub 12
+megabajtów. Pamięć jest dzielona na Frame Buffer Interface (FBI) oraz
+Texture Mapping Unit (TMU) w naastępujący sposób:
+   4: 2 MB dla FBI, jeden TMU z 2 MB pamięci (domyślne)
+  12: 4 MB dla FBI, dwa TMUs, każdy z 4 MB pamięci.
+.
+:CONFIG_VOODOO_MULTITHREADING
+Używa wielowątkowości aby polepszyć wydajność emulacji 3dfx Voodoo
+(domyślnie włączone).
+.
+:CONFIG_VOODOO_BILINEAR_FILTERING
+Używa filtrowania bilinearnego żeby zasymulować efekt wygładzania tekstur.
+Zalecane jedynie dla szybkich komputerów, na wolniejszych maszynach może
+doprowadzić do spadku ilości ramek na sekundę (domyślnie wyłączone).
 .
 :CONFIG_CAPTURE_DIR
 Katalog do zapisywania przechwyconego dźwięku, muzyki w formacie MIDI, zrzutów
@@ -552,13 +864,13 @@ Uwaga: Wyłącz, jeśli niepoprawnie wykrywa więcej niż jeden monitor, gdy w
        amplituner przez HDMI, a używasz go tylko do dźwięku.
 .
 :CONFIG_MOUSE_SENSITIVITY
-Domyślna czułość myszy (domyślnie 100,100). 100 to wartość bazowa, 150 to 150%
-czułości, itd. Wartości ujemne odwracają kierunki ruchu, 0 wyłącza ruch
-kursora całkowicie.
-Opcjonalna druga wartość określa oddzielnie czułość pionową.
-Ustawienie może być zmienione w trakcie pracy (również dla każdego interfejsu
-myszy osobno) przy pomocy narzędzia MOUSECTL.COM, dostępnego na dysku Z.
-Przykład: 100,-50.
+Globalna czułość myszy, odpowiednio dla osi poziomej i pionowej, w procentach
+(domyślnie 100). Wartości można oddzielać spacją, przecinkiem, lub średnikiem
+(np. 100,150). Wartości negatywne odwracają kierunki ruchu, o wyłącza ruch
+w danej osi.
+Podanie tylko jednej wartości ustawia taką samą czułość w obydwu osiach,
+Czułość może być zmieniona dla każdego interfejsu myszy osobno przy pomocy
+wewnętrznego narzędzia MOUSECTL.COM, dostępnego na dysku Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Pomija ustawienia systemu operacyjnego gospodarza dotyczących czułości oraz
@@ -605,6 +917,17 @@ Domyślny model myszy podłączonej do portu COM (serial):
   wheel+msm:      Automatyczna selekcja pomiędzy 'wheel' oraz 'msm'.
 Domyślnie 'wheel+msm'.
 Uwaga: Ten rodzaj myszy należy włączyć w sekcji [serial].
+.
+:CONFIG_VMWARE_MOUSE
+Interfejs myszy VMware (domyślnie włączone).
+W pełni kompatybilny jedynie z nioficjalnym, eksperymentalnym sterownikiem
+dla Windows 3.1x.
+Uwaga: Wymaga włączonej emulacji myszy PS/2.
+.
+:CONFIG_VIRTUALBOX_MOUSE
+Interfejs myszy VirtualBox (domyślnie włączone).
+W pełni kompatybilny jedynie z nieoficjalnym sterownikiem dla Windows 3.1x.
+Uwaga: Wymaga włączonej emulacji myszy PS/2.
 .
 :CONFIG_NOSOUND
 Włącza tryb cichy (domyślnie wyłączony).
@@ -832,6 +1155,18 @@ częstotliwość miksowania, dzięki czemu nie jest potrzebny resampling.
 Typ emulowanego układu OPL. 'auto' (domyślne) wybiera typ w zależności od
 'sbtype'. Wszystkie z wyjątkiem 'cms' są kompatybilne z kartami AdLib.
 .
+:CONFIG_OPL_FADEOUT
+Wycisz dźwięk układu OPL po ostatnim zapisie do portu IO:
+  off:       Niewyciszony dźwięk będzie słyszalny bez końca (domyślne).
+  on:        Zaczekaj 0.5s, wyciszaj dźwięk przez kolejne 0.5s.
+  <custom>:  Ustawienie użytkownika w formacie:
+               WAIT FADE
+             gdzie WAIT oznacza czas nieaktywności IO, po którym zacznie się
+             wyciszanie, od 100 do 5000 milisekund; a FADE to długość okresu
+             wyciszania, od 10 do 3000 milisekund. Przykłady:
+                300 200 (czekaj 300ms, po czym wyciszaj przez 200ms)
+                1000 3000 (czekaj 1s, po czym wyciszaj przez 3s)
+.
 :CONFIG_OPLEMU
 Jedynie emulacja 'nuked' jest aktualnie obsługiwana.
 .
@@ -969,6 +1304,12 @@ Emulacja urządzenia dźwiękowego Tandy/PCjr 3 Voice:
   psg:   Włącza jedynie 3-kanałowy generator, bez obsługi DAC, aby uniknąć
          konfliktów z innymi urządzeniami wykorzystujący kanał DMA numer 1.
   off:   Wyłącza urządzenie dźwiękowe Tandy/PCjr.
+.
+:CONFIG_TANDY_FADEOUT
+Wycisz dźwięk układu dźwiękowego Tandy po ostatnim zapisie do portu IO:
+  off:       Niewyciszony dźwięk będzie słyszalny bez końca (domyślne).
+  on:        Zaczekaj 0.5s, wyciszaj dźwięk przez kolejne 0.5s.
+  <custom>:  Ustawienie użytkownika; patrz 'opl_fadeout'.
 .
 :CONFIG_TANDY_FILTER
 Filtrowanie dźwięku syntetyzowanego urządzenia Tandy:
@@ -1135,11 +1476,18 @@ Wersja systemu DOS raportowana oprogramowanie (domyślnie 5.0). Format to
 'major.minor', pojedyncza liczba będzie traktowana jako główny numer wersji.
 Typowe wartości to: 3.3, 5.0, 6.22, oraz 7.1.
 .
+:CONFIG_LOCALE_PERIOD
+Wybiera epokę ustawień regionalnych (domyślnie 'modern'). Ustawienie
+'historic' (jeśli dostępne) naśladuje rzeczywiste systemy DOS podczas
+wyświetlania dat, czasu, liczb, itd. Ustawienie 'modern' używa stylu typowego
+dla współczesnych systemów.
+.
 :CONFIG_COUNTRY
-Kod kraju DOS (tożsamy z telefonicznym kodem kraju), np. '48' dla Polski.
+Kod kraju DOS (domyślnie 'auto').
 Zostanie użyty do określenia formatu daty, czasu, liczb dziesiętnych, itp.
-Wartość domyślna 0 spowoduje ustawienie kraju odpowiadającemu wybranemu
-układowi klawiatury.
+Listę obsługiwanych kodów krajów można wyświetlić używając opcji wiersza
+poleceń '--list-countries'. Ustawienie 'auto' wybiera kraj odpowiadający
+wybranemu układowi klawiatury.
 .
 :CONFIG_KEYBOARDLAYOUT
 Kod języka klawiatury (domyślnie 'auto') - np. 'pl' (polski układ
@@ -1229,18 +1577,6 @@ Możliwe wartości
 :CONFIG_DEPRECATED_VALUES
 Przestarzałe wartości
 .
-:PROGRAM_CONFIG_PROPERTY_ERROR
-Brak sekcji lub parametru: '%s'
-
-.
-:PROGRAM_CONFIG_NO_PROPERTY
-Brak parametru '%s' w sekcji [%s]
-
-.
-:PROGRAM_CONFIG_SET_SYNTAX
-Składnia: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/reset] [color=white]PARAMETR[/reset][=][color=white]WARTOŚĆ[/reset]
-
-.
 :PROGRAM_CONFIG_NOCONFIGFILE
 Nie został załadowany żaden plik konfiguracyjny
 
@@ -1328,9 +1664,18 @@ Gdzie [color=white]POLECENIE[reset] jest jednym z:
 [color=white]Informacja o parametrze [color=light-green]'%s'[color=white] (zawartym w sekcji [color=light-cyan][%s][color=white]):[reset]
 %s
 
-[color=white]Możliwe wartości:[reset] %s
-[color=white]Domyślna wartość:[reset] %s
-[color=white]Aktualna wartość:[reset] %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
+[color=white]Możliwe wartości:[reset]  %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE
+[color=white]Domyślna wartość:[reset]  %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE
+[color=white]Aktualna wartość:[reset]  %s
 
 .
 :PROGRAM_CONFIG_HLP_LINEHLP
@@ -2266,6 +2611,8 @@ Gdzie:
 
 Uwagi:
   Pominięcie wartości czułości lub częstotliwości przywraca wartość domyślną.
+  Czułość ustawiona w pliku konfiguracyjnym działa jak wartość globalna,
+  ustawienia dla poszczególnych interfejsów działają na jej bazie.
 
 Przykłady:
   [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; prosi o wybór fizycznych myszy dla dwóch graczy
@@ -2289,6 +2636,10 @@ Nieprawidłowa składnia, częstotliwość próbkowania musi być jedną z:
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
 Mapowanie niedostępne w trybie pracy bez użycia myszy ('nomouse').
+
+.
+:PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER
+Mapowanie niedostępne przy obecnym sterowniku myszy w systemie gościa.
 
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
@@ -3594,6 +3945,34 @@ Przykłady:
 .
 :SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE
 Nie można przenieść wielu plików do jednego.
+
+.
+:SHELL_CMD_FOR_HELP
+Wykonuje polecenie dla każdego z podanych łańcuchów.
+
+.
+:SHELL_CMD_FOR_HELP_LONG
+Składnia:
+  [color=light-green]for[reset] [color=white]%ZMIENNA[reset] [color=light-cyan]in[reset] [color=white](ŁAŃCUCHY)[reset] [color=light-cyan]do[reset] [color=white]POLECENIE[reset]
+
+Gdzie:
+  [color=white]%ZMIENNA[reset]    Pojedynczy znak będący nazwą zmiennej, poprzedzony '%'.
+  [color=light-cyan]in[reset]          Słowo kluczowe, wielkość liter nie ma znaczenia.
+  [color=white](ŁAŃCUCHY)[reset]  Łańcuchy, które zostaną podstawione pod [color=white]%ZMIENNĄ[reset] w [color=white]POLECENIU[reset].
+  [color=light-cyan]do[reset]          Słowo kluczowe, wielkość liter nie ma znaczenia.
+  [color=white]POLECENIE[reset]   Polecenie, które zostanie wykonane dla każdego z łańcuchów.
+
+Uwagi:
+  W plikach wsadowych [color=white]%ZMIENNA[reset] musi zostać zapisana jako [color=white]%%ZMIENNA[reset] (musi być
+  poprzedzona dwoma znakami procentu).
+  [color=white](ŁAŃCUCHY)[reset] można rozdzielić dowolnym separatorem.
+  [color=white](ŁAŃCUCHY)[reset] zawierające symbole wieloznaczności (* lub ?) zostaną zastąpione
+  pasującymi nazwami plików z aktualnego katalogu.
+  Użycie kolejnego [color=light-green]for[reset] jako [color=white]POLECENIA[reset] jest niedozwolone.
+
+Przykłady:
+  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](RAZ DWA)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
+  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
