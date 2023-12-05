@@ -301,6 +301,13 @@ struct ImageInfo {
 	// such video mode transitions happen.
 	bool force_single_scan = false;
 
+	// If true, we're dealing with "baked-in" double scanning, i.e., when
+	// 320x200 is rendered as 320x400. This can happen for non-VESA VGA modes
+	// and for EGA modes on VGA. Every other double-scanned mode on VGA (all
+	// CGA modes and all double-scanned VESA modes) are "fake-double scanned"
+	// (doubled post-render by setting `double_height` to true).
+	bool rendered_double_scan = false;
+
 	// Pixel aspect ratio to be applied to the final image, *after*
 	// optional width and height doubling, so it appears as intended.
 	// (`video_mode.pixel_aspect_ratio` holds the "nominal" pixel

@@ -1961,10 +1961,14 @@ ImageInfo setup_drawing()
 	// double-scanned VESA modes).
 	bool double_height = false;
 
-	// True only if we're rendering a double scanned VGA mode as single
-	// scanned (so rendering half the lines only, e.g., only 200 lines for
-	// the double-scanned 320x200 13h VGA mode).
+	// If true, we're rendering a double-scanned VGA mode as single-scanned
+	// (so rendering half the lines only, e.g., only 200 lines for the
+	// double-scanned 320x200 13h VGA mode).
 	bool force_single_scan = false;
+
+	// If true, we're dealing with "baked-in" double scanning, i.e., when
+	// 320x200 is rendered as 320x400.
+	bool rendered_double_scan = false;
 
 	Fraction render_pixel_aspect_ratio = {1};
 
@@ -2133,22 +2137,24 @@ ImageInfo setup_drawing()
 		video_mode.width = horiz_end * 4;
 		render_width     = video_mode.width;
 
-		// We only render "baked-in" double-scanning (when we literally
-		// render twice as many rows) for the M_EGA and M_VGA modes; for
-		// everything else we "fake double-scan" (render single-scanned,
-		// then double the image vertically with a scaler).
+		// We only render "baked-in" double-scanning (when we literally render
+		// twice as many rows) for the M_VGA modes and M_EGA modes on emulated
+		// VGA adapters only; for everything else, we "fake double-scan" on
+		// VGA (render single-scanned, then double the image vertically with a
+		// scaler).
 		if (is_double_scanning) {
 			video_mode.height = vert_end / 2;
 			force_single_scan = !vga.draw.double_scanning_enabled;
 
 			if (vga.draw.double_scanning_enabled) {
 				render_height = video_mode.height * 2;
+				rendered_double_scan = true;
 			} else {
 				vga.draw.address_line_total /= 2;
 				render_height = video_mode.height;
 				render_pixel_aspect_ratio /= 2;
 			}
-		} else { // single-scan
+		} else { // single scan
 			video_mode.height = vert_end;
 			render_height     = video_mode.height;
 		}
@@ -2225,10 +2231,10 @@ ImageInfo setup_drawing()
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
 			        vga_timings);
 
-			// We only render "baked-in" double-scanning (when we
-			// literally render twice as many rows) for the M_EGA
-			// and M_VGA modes; for everything else we "fake
-			// double-scan" (render single-scanned, then double the
+			// We only render "baked-in" double-scanning (when we literally
+			// render twice as many rows) for the M_VGA modes and M_EGA modes
+			// on emulated VGA adapters only; for everything else, we "fake
+			// double-scan" on VGA (render single-scanned, then double the
 			// image vertically with a scaler).
 			if (is_vga_scan_doubling()) {
 				video_mode.is_double_scanned_mode = true;
@@ -2237,12 +2243,13 @@ ImageInfo setup_drawing()
 
 				if (vga.draw.double_scanning_enabled) {
 					render_height = video_mode.height * 2;
+					rendered_double_scan = true;
 				} else {
 					vga.draw.address_line_total /= 2;
 					render_height = video_mode.height;
 					render_pixel_aspect_ratio /= 2;
 				}
-			} else { // single-scan
+			} else { // single scan
 				video_mode.height = vert_end;
 				render_height     = video_mode.height;
 			}
@@ -2800,14 +2807,15 @@ ImageInfo setup_drawing()
 
 	ImageInfo render = {};
 
-	render.width              = render_width;
-	render.height             = render_height;
-	render.double_width       = double_width;
-	render.double_height      = double_height;
-	render.force_single_scan  = force_single_scan;
-	render.pixel_aspect_ratio = render_pixel_aspect_ratio;
-	render.pixel_format       = pixel_format;
-	render.video_mode         = video_mode;
+	render.width                = render_width;
+	render.height               = render_height;
+	render.double_width         = double_width;
+	render.double_height        = double_height;
+	render.force_single_scan    = force_single_scan;
+	render.rendered_double_scan = rendered_double_scan;
+	render.pixel_aspect_ratio   = render_pixel_aspect_ratio;
+	render.pixel_format         = pixel_format;
+	render.video_mode           = video_mode;
 
 	return render;
 }
