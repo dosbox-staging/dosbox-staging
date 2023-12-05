@@ -105,9 +105,7 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect canvas_size
 		                                     video_mode.height * double_scan};
 
 		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
-		        canvas_size_px,
-		        render_size_px,
-		        video_mode.pixel_aspect_ratio);
+		        canvas_size_px, render_size_px, video_mode.pixel_aspect_ratio);
 
 		return static_cast<double>(draw_rect_px.h) / render_size_px.h;
 	}();
@@ -119,9 +117,7 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect canvas_size
 		                                     video_mode.height};
 
 		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
-		        canvas_size_px,
-		        render_size_px,
-		        video_mode.pixel_aspect_ratio);
+		        canvas_size_px, render_size_px, video_mode.pixel_aspect_ratio);
 
 		scale_y_force_single_scan = static_cast<double>(draw_rect_px.h) /
 		                            render_size_px.h;
@@ -497,10 +493,10 @@ std::string ShaderManager::GetVgaShader() const
 		// would be auto-scaled to 1067x800 in fullscreen, which is too
 		// small and would not please most users.
 		//
-		const auto max_fake_double_scan_video_mode_height = 1080 / 5;
+		constexpr auto MaxFakeDoubleScanVideoModeHeight = 1080 / 5;
 
 		if (video_mode.is_double_scanned_mode &&
-		    video_mode.height <= max_fake_double_scan_video_mode_height) {
+		    video_mode.height <= MaxFakeDoubleScanVideoModeHeight) {
 			return "crt/vga-1080p-fake-double-scan";
 		} else {
 			// This shader works correctly only with exact 2x

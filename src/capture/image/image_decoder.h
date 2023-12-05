@@ -83,7 +83,7 @@ private:
 		case PixelFormat::RGB565_Packed16: pos += 2; break;
 		case PixelFormat::BGR24_ByteArray: pos += 3; break;
 		case PixelFormat::BGRX32_ByteArray: pos += 4; break;
-		default: assertm(false, "Invalid pixel_format value");
+		default: assertm(false, "Invalid PixelFormat value");
 		}
 	}
 
@@ -124,7 +124,7 @@ private:
 			pixel = {r, g, b};
 		} break;
 
-		default: assertm(false, "Invalid pixel_format value");
+		default: assertm(false, "Invalid PixelFormat value");
 		}
 
 		IncrementPos();
