@@ -30,14 +30,13 @@
 
 CHECK_NARROWING();
 
-// to avoid circular dependency
-uint8_t get_double_scan_row_skip_count(const RenderedImage&);
-
 void ImageScaler::Init(const RenderedImage& image)
 {
 	input = image;
 
-	auto row_skip_count = get_double_scan_row_skip_count(image);
+	// To reconstruct the raw image, we must skip every second row if we're
+	// dealing with "baked in" double-scanning.
+	const uint8_t row_skip_count = (image.params.rendered_double_scan ? 1 : 0);
 	input_decoder.Init(image, row_skip_count);
 
 	UpdateOutputParamsUpscale();
@@ -61,7 +60,7 @@ void ImageScaler::UpdateOutputParamsUpscale()
 {
 	constexpr auto target_output_height = 1200;
 
-	auto video_mode = input.params.video_mode;
+	const auto& video_mode = input.params.video_mode;
 
 	// Calculate initial integer vertical scaling factor so the resulting
 	// output image height is roughly around 1200px.
