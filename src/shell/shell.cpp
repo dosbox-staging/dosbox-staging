@@ -359,7 +359,10 @@ void DOS_Shell::ParseLine(char *line)
 			LOG_MSG("SHELL: Failed to write pipe content to temporary file");
 		}
 		if (DOS_FindFirst(pipe_tempfile, FatAttributeFlags::NotVolume)) {
-			DOS_UnlinkFile(pipe_tempfile);
+			if (!DOS_UnlinkFile(pipe_tempfile)) {
+				LOG_WARNING("SHELL: Failed to delete the pipe's temporary file, '%s'",
+				            pipe_tempfile);
+			}
 		}
 	}
 }
