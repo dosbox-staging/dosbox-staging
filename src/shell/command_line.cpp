@@ -408,7 +408,7 @@ std::string CommandLine::FindRemoveSingleString(const char* name)
 		if (is_valid) {
 			++it_next;
 		}
-		cmds.erase(it, it_next);
+		it = cmds.erase(it, it_next);
 		if (is_valid) {
 			return value;
 		}
