@@ -94,7 +94,7 @@ static CaptureType to_capture_type(const CapturedImageType type)
 	case CapturedImageType::Raw: return CaptureType::RawImage;
 	case CapturedImageType::Upscaled: return CaptureType::UpscaledImage;
 	case CapturedImageType::Rendered: return CaptureType::RenderedImage;
-	default: assertm(false, "Invalid CaptureImageType"); return {};
+	default: assertm(false, "Invalid CaptureImageType value"); return {};
 	}
 }
 

@@ -97,7 +97,10 @@ void ImageScaler::UpdateOutputParamsUpscale()
 		if (is_integer(output.horiz_scale)) {
 			// Ensure the upscaled image is at least 1000px high for
 			// 1:1 pixel aspect ratio images.
-			if (output.height < 1000) {
+
+			constexpr auto MinUpscaledHeight = 1000;
+
+			if (output.height < MinUpscaledHeight) {
 				++output.vert_scale;
 			} else {
 				break;
@@ -106,7 +109,10 @@ void ImageScaler::UpdateOutputParamsUpscale()
 			// Ensure fractional horizontal scale factors are
 			// above 2.0, otherwise we'd get bad looking horizontal
 			// blur.
-			if (output.horiz_scale < 2.0f) {
+
+			constexpr auto MinHorizScaleFactor = 2.0f;
+
+			if (output.horiz_scale < MinHorizScaleFactor) {
 				++output.vert_scale;
 			} else {
 				break;

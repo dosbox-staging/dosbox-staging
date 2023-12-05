@@ -249,8 +249,9 @@ uint8_t get_double_scan_row_skip_count(const RenderedImage& image)
 	// and scaling operations, so we must skip every second row if we're
 	// dealing with "baked in" double-scanning.
 	//
-	// This function returns `0` for case 1 images (faked double-scan), and
-	// `1` for case 2 images (baked-in double-scan).
+	// The function returns `0` for case 1 images (faked double-scan) and
+	// non-double-scanned images, and `1` for case 2 images (baked-in
+	// double-scan).
 	//
 	const auto& src = image.params;
 
