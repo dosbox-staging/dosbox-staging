@@ -292,6 +292,13 @@ struct ImageInfo {
 
 	// If true, we're dealing with a double-scanned VGA mode that was
 	// force-rendered as single-scanned.
+	//
+	// We need to store this flag so we can include it in the video mode
+	// equality criteria. E.g., the render dimensions of the double-scanned
+	// 320x200 VGA mode (mode 13h) and 320x400 (non-VESA Mode X variant) are
+	// both 320x400, so they would be considered equal if this flag was not
+	// included. This would throw off the adaptive shader switching logic when
+	// such video mode transitions happen.
 	bool force_single_scan = false;
 
 	// Pixel aspect ratio to be applied to the final image, *after*
