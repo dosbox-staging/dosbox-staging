@@ -284,7 +284,8 @@ void PcSpeakerDiscrete::SetCounter(int count, const PitMode mode)
 		return;
 	}
 	// Activate the channel after queuing new speaker entries
-	channel->WakeUp();
+	// We don't care about the return-code, so explicitly ignore it.
+	(void)channel->WakeUp();
 }
 
 // Returns the amp_neutral voltage if the speaker's  fully faded,
@@ -334,8 +335,8 @@ void PcSpeakerDiscrete::SetType(const PpiPortB &b)
 		AddDelayEntry(newindex, NeutralLastPitOr(amp_positive));
 		break;
 	};
-
-	channel->WakeUp();
+	// We don't care about the return-code, so explicitly ignore it.
+	(void)channel->WakeUp();
 }
 
 void PcSpeakerDiscrete::ChannelCallback(const uint16_t frames)
