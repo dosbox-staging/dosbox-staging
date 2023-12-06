@@ -22,7 +22,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cerrno>
 #include <chrono>
+#include <cstring>
 #include <fstream>
 
 #include "checks.h"
@@ -31,6 +33,30 @@
 #include "std_filesystem.h"
 
 CHECK_NARROWING();
+
+bool check_fseek(const char* module_name, const char* file_description,
+                 const char* filename, FILE*& stream, const long long offset,
+                 const int whence)
+{
+	assert(stream);
+	if (cross_fseeko(stream, offset, whence) == 0) {
+		return true;
+	}
+
+	assert(module_name);
+	assert(file_description);
+	assert(filename);
+	LOG_ERR("%s: Failed seeking to byte %lld in %s file '%s': %s",
+	        module_name,
+	        offset,
+	        file_description,
+	        filename,
+	        strerror(errno));
+
+	fclose(stream);
+	stream = nullptr;
+	return false;
+}
 
 bool is_directory(const std::string& candidate)
 {
