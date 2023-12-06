@@ -41,6 +41,9 @@ Lijst van beschikbare opties:
   --working-dir <pad>      Stel de werkdirectory in op <pad>. DOSBox gedraagt
                            zich alsof gestart vanuit deze directory.
 
+  --list-countries         Vermeld alle ondersteunde landen met hun numerieke codes.
+                           Codes moeten worden gebruikt in de configuratie-instelling 'country'.
+
   --list-glshaders         Toont alle beschikbare OpenGL shaders en hun paden.
                            Resultaten zijn bruikbaar in de 'glshader = '
                            configuratie-instelling.
@@ -80,6 +83,273 @@ Lijst van beschikbare opties:
   -V, --version            Informatie over versie afdrukken en afsluiten.
 
 .
+:DOSBOX_HELP_LIST_COUNTRIES_1
+Lijst met landcodes (merendeels hetzelfde als telefooncodes)
+.
+:DOSBOX_HELP_LIST_COUNTRIES_2
+De bovenstaande numerieke landcodes kunnen gebruikt worden
+met de configuratie-instelling 'country'.
+.
+:COUNTRY_NAME_XXA
+Internationaal (Engels)
+.
+:COUNTRY_NAME_USA
+Verenigde Staten
+.
+:COUNTRY_NAME_CAN_FR
+Canada (Frans)
+.
+:COUNTRY_NAME_XLA
+Latijns Amerika
+.
+:COUNTRY_NAME_CAN_EN
+Canada (Engels)
+.
+:COUNTRY_NAME_RUS
+Rusland
+.
+:COUNTRY_NAME_ZAF
+Zuid-Afrika
+.
+:COUNTRY_NAME_GRC
+Griekenland
+.
+:COUNTRY_NAME_NLD
+Nederland
+.
+:COUNTRY_NAME_BEL
+België
+.
+:COUNTRY_NAME_FRA
+Frankrijk
+.
+:COUNTRY_NAME_ESP
+Spanje
+.
+:COUNTRY_NAME_HUN
+Hongarije
+.
+:COUNTRY_NAME_YUG
+Joegoslavië
+.
+:COUNTRY_NAME_ITA
+Italië
+.
+:COUNTRY_NAME_ROU
+Roemenië
+.
+:COUNTRY_NAME_CHE
+Zwitserland
+.
+:COUNTRY_NAME_CZE
+Tsjechië
+.
+:COUNTRY_NAME_AUT
+Oostenrijk
+.
+:COUNTRY_NAME_GBR
+Verenigd Koninkrijk
+.
+:COUNTRY_NAME_DNK
+Denemarken
+.
+:COUNTRY_NAME_SWE
+Zweden
+.
+:COUNTRY_NAME_NOR
+Noorwegen
+.
+:COUNTRY_NAME_POL
+Polen
+.
+:COUNTRY_NAME_DEU
+Duitsland
+.
+:COUNTRY_NAME_MEX
+Mexico
+.
+:COUNTRY_NAME_ARG
+Argentinië
+.
+:COUNTRY_NAME_BRA
+Brazilië
+.
+:COUNTRY_NAME_CHL
+Chili
+.
+:COUNTRY_NAME_COL
+Colombia
+.
+:COUNTRY_NAME_VEN
+Venezuela
+.
+:COUNTRY_NAME_MYS
+Maleisië
+.
+:COUNTRY_NAME_AUS
+Australië
+.
+:COUNTRY_NAME_PHL
+Filippijnen
+.
+:COUNTRY_NAME_NZL
+Nieuw-Zeeland
+.
+:COUNTRY_NAME_SGP
+Singapore
+.
+:COUNTRY_NAME_THA
+Thailand
+.
+:COUNTRY_NAME_KAZ
+Kazachstan
+.
+:COUNTRY_NAME_JPN
+Japan
+.
+:COUNTRY_NAME_KOR
+Zuid-Korea
+.
+:COUNTRY_NAME_VNM
+Vietnam
+.
+:COUNTRY_NAME_CHN
+China
+.
+:COUNTRY_NAME_TUR
+Turkije
+.
+:COUNTRY_NAME_IND
+Indië
+.
+:COUNTRY_NAME_NER
+Niger
+.
+:COUNTRY_NAME_BEN
+Benin
+.
+:COUNTRY_NAME_NGA
+Nigeria
+.
+:COUNTRY_NAME_FRO
+Faeröer eilanden
+.
+:COUNTRY_NAME_PRT
+Portugal
+.
+:COUNTRY_NAME_IRL
+Ierland
+.
+:COUNTRY_NAME_ISL
+IJsland
+.
+:COUNTRY_NAME_ALB
+Albanië
+.
+:COUNTRY_NAME_MLT
+Malta
+.
+:COUNTRY_NAME_FIN
+Finland
+.
+:COUNTRY_NAME_BGR
+Bulgarije
+.
+:COUNTRY_NAME_LTU
+Litouwen
+.
+:COUNTRY_NAME_LVA
+Letland
+.
+:COUNTRY_NAME_EST
+Estland
+.
+:COUNTRY_NAME_ARM
+Armenië
+.
+:COUNTRY_NAME_BLR
+Wit-Rusland
+.
+:COUNTRY_NAME_UKR
+Oekraïne
+.
+:COUNTRY_NAME_SRB
+Servië
+.
+:COUNTRY_NAME_MNE
+Montenegro
+.
+:COUNTRY_NAME_HRV
+Kroatië
+.
+:COUNTRY_NAME_SVN
+Slovenië
+.
+:COUNTRY_NAME_BIH_LAT
+Bosnië en Herzegovina (Latijn)
+.
+:COUNTRY_NAME_BIH_CYR
+Bosnië en Herzegovina (Cyrillisch)
+.
+:COUNTRY_NAME_MKD
+Noord-Macedonië
+.
+:COUNTRY_NAME_SVK
+Slowakije
+.
+:COUNTRY_NAME_ECU
+Ecuador
+.
+:COUNTRY_NAME_XME
+Arabisch (Midden-Oosten)
+.
+:COUNTRY_NAME_HKG
+Hongkong
+.
+:COUNTRY_NAME_TWN
+Taiwan
+.
+:COUNTRY_NAME_ISR
+Israël
+.
+:COUNTRY_NAME_MNG
+Mongolië
+.
+:COUNTRY_NAME_TJK
+Tadzjikistan
+.
+:COUNTRY_NAME_TKM
+Turkmenistan
+.
+:COUNTRY_NAME_AZE
+Azerbeidzjan
+.
+:COUNTRY_NAME_GEO
+Georgië
+.
+:COUNTRY_NAME_KGZ
+Kirgizië
+.
+:COUNTRY_NAME_UZB
+Oezbekistan
+.
+:DOSBOX_HELP_LIST_GLSHADERS_1
+Lijst met beschikbare GLSL-shaders
+.
+:DOSBOX_HELP_LIST_GLSHADERS_2
+Bovenstaande shaders kunnen precies worden gebruikt zoals vermeld in de
+'glshader' config-instelling, zonder dat het bronpad of de .glsl-extensie
+nodig is.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
+Pad '%s' bestaat niet
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS
+Pad '%s' heeft geen shaders
+.
+:DOSBOX_HELP_LIST_GLSHADERS_LIST
+Pad '%s' heeft:
+.
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Geen dergelijke sectie of eigenschap: %s
 
@@ -89,7 +359,7 @@ Er is geen eigenschap "%s" in sectie "%s".
 
 .
 :PROGRAM_CONFIG_SET_SYNTAX
-Correcte syntaxis: [color=light-green]config [reset]-set [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]
+Gebruik: [color=light-green]config [reset]-set [color=light-cyan][SECTIE][reset] [color=white]EIGENSCHAP[reset][=][color=white]WAARDE[reset]
 
 .
 :TITLEBAR_CYCLES_MS
@@ -142,11 +412,6 @@ Stelt de venster grootte in om te gebruiken:
   <op-maat>:  Schaal het venster naar de opgegeven afmetingen in
               BxH-formaat. Bijvoorbeeld: 1024x768.
 .
-:CONFIG_VIEWPORT_RESOLUTION
-Stel de viewport-grootte (tekengebied) in het venster/scherm in:
-  fit:       Pas de viewport aan op het beschikbare venster/scherm (standaard).
-  <op-maat>: beperk de viewport tot een aangepaste resolutie of percentage van
-             het bureaublad. Als BxH, N%, N.M%. Bijv.: 960x720 of 50%
 .
 :CONFIG_WINDOW_POSITION
 Stel de initiële vensterpositie in bij gebruik in de venstermodus:
@@ -162,7 +427,10 @@ Stel de transparantie van het DOSBox Staging-scherm in (standaard 0).
 Van 0 (geen transparantie) tot 90 (hoge transparantie).
 .
 :CONFIG_MAX_RESOLUTION
-Deze instelling is hernoemd naar viewport_resolution.
+Verplaatst naar de [render] sectie en hernoemd naar 'viewport'.
+.
+:CONFIG_VIEWPORT_RESOLUTION
+Verplaatst naar de [render] sectie en hernoemd naar 'viewport'.
 .
 :CONFIG_HOST_RATE
 Stel de verversingssnelheid van de host in:
@@ -183,6 +451,10 @@ Stel de verticale synchronisatie (vsync) van het hostvideostuurprogramma in:
              maar heeft invloed op de prestaties of laat frames wegvallen
              wanneer de DOS-snelheid de hostsnelheid overschrijdt (bijvoorbeeld
              70 Hz DOS-snelheid versus 60 Hz hostsnelheid).
+  adaptive:  Schakelt vsync in wanneer de framesnelheid hoger is dan de
+             hostsnelheid, maar schakelt deze uit wanneer de framesnelheid
+             onder de hostsnelheid daalt. Let op: alleen geldig in
+             OpenGL-uitvoermodi; anders behandeld als 'aan'.
   off:       Probeer vsync uit te schakelen om een snellere framepresentatie
              mogelijk te maken, met het risico op scheuren in sommige games.
   yield:     laat het videostuurprogramma van de host de vsync regelen.
@@ -211,21 +483,21 @@ Kies een rendererstuurprogramma wanneer u een textuuruitvoermodus gebruikt.
 Gebruik `texture_renderer=auto` (standaard) voor een automatische keuze.
 .
 :CONFIG_CAPTURE_MOUSE
-Verplaatst naar de [mouse] sectie.
+Verplaatst naar de [mouse] sectie en hernoemd naar 'mouse_capture'.
 .
 :CONFIG_SENSITIVITY
-Verplaatst naar de [mouse] sectie.
+Verplaatst naar de [mouse] sectie en hernoemd naar 'mouse_sensitivity'.
 .
 :CONFIG_RAW_MOUSE_INPUT
-Verplaatst naar de [mouse] sectie.
+Verplaatst naar de [mouse] sectie en hernoemd naar 'mouse_raw_input'.
 .
 :CONFIG_WAITONERROR
-Wacht voordat de console sluit als dosbox een fout heeft (standaard aan).
+Houd de console open als er een fout is opgetreden (standaard aan).
 .
 :CONFIG_PRIORITY
 Respectieve prioriteitsniveaus om toe te passen bij actief en inactief.
-   auto:  Laat het hostbesturingssysteem de prioriteit beheren.
-Standaard is: 'auto auto'
+(standaard: 'auto auto')
+'auto' laat het hostbesturingssysteem de prioriteit beheren.
 .
 :CONFIG_MUTE_WHEN_INACTIVE
 Demp het geluid wanneer het venster inactief is (standaard uit).
@@ -245,15 +517,16 @@ te overschrijven die gewoonlijk de OS-screensaver blokkeert terwijl de
 emulator actief is (standaard 'auto').
 .
 :CONFIG_LANGUAGE
-Selecteer een te gebruiken taal: de, en, es, fr, it, nl, pl, and ru
-(standaard niet gezet).
-Opmerkingen: Dit overschrijft de 'LANG'-omgevingsvariabele, indien ingesteld.
-             De map 'resources/translations' gebundeld met het uitvoerbare
-             bestand bevat deze bestanden. Bewaar het naast het uitvoerbare
-             bestand om deze functie te ondersteunen.
+Selecteer een taal: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', of ru'
+(standaard niet gezet; dit is standaard Engels).
+Opmerkingen:
+  - Deze instelling overschrijft de 'LANG'-omgevingsvariabele, indien gezet.
+  - De map 'resources/translations' gebundeld met het uitvoerbare bestand
+    bevat deze bestanden. Bewaar het naast het uitvoerbare bestand om deze
+    functie te ondersteunen.
 .
 :CONFIG_MACHINE
-Het type machine dat DOSBox zal emuleren.
+Zet de video kaart of machine type om te emuleren.
   hercules:       Hercules Grafische Kaart (HGC) (zie 'monochrome_palette').
   cga_mono:       CGA-adapter aangesloten op een monochrome monitor (zie
                   'monochrome_palette').
@@ -370,12 +643,31 @@ voldoende om de opdracht 'sbtype' uit te voeren .
 Overweeg om framesnelheden te beperken met de instelling '[sdl] host_rate'.
 .
 :CONFIG_ASPECT
-Schaalt de verticale resolutie om een beeldverhouding van 4:3 te produceren,
-die overeenkomt met die van de originele standaarddefinitiemonitoren waarvoor
-de meeste DOS-spelen zijn ontworpen.
-Deze instelling is alleen van invloed op videomodi die niet-vierkante pixels
-gebruiken, zoals 320x200 of 640x400; waar als vierkante-pixelmodi, zoals
-640x480 en 800x600, worden weergegeven zoals ze zijn.
+Set the aspect ratio correction mode (enabled by default):
+  auto, on:            Pas beeldverhoudingscorrectie toe voor moderne LCD
+                       beeldschermen met vierkante pixels, zodat DOS-videomodi
+                       met niet-vierkante pixels verschijnen zoals ze zouden
+                       verschijnen op een CRT-monitor met een beeldverhouding
+                       van 4:3 waarvoor de meeste DOS-spellen zijn ontworpen.
+                       Deze instelling heeft alleen invloed op videomodi die
+                       niet-vierkante pixels gebruiken, zoals 320x200 of
+                       640x400;.
+                       vierkante-pixelmodi (bijv. 320x240, 640x480 en 800x600)
+                       worden weergegeven zoals ze zijn.
+  square-pixels, off:  Pas geen beeldverhoudingcorrectie toe; alle DOS-
+                       videomodi worden weergegeven met vierkante pixels. De
+                       meeste 320x200-spellen zullen er platgedrukt uitzien,
+                       maar een minderheid van de titels (bijvoorbeeld DOS-
+                       poorten van PAL Amiga-spellen) heeft vierkante pixels
+                       nodig om te verschijnen zoals de artiesten het bedoeld
+                       hebben.
+  stretch:             Bereken de beeldverhouding op basis van de afmetingen
+                       van het venster. Gecombineerd met 'viewport' is deze
+                       modus handig om willekeurige beeldverhoudingen te
+                       forceren (bijvoorbeeld het uitrekken van DOS-games naar
+                       volledig scherm op 16:9-schermen) en om de horizontale
+                       en verticale uitrekbedieningen van CRT-monitoren te
+                       emuleren.
 .
 :CONFIG_INTEGER_SCALING
 Beperk de horizontale of verticale schaalfactor tot gehele waarden.
@@ -395,6 +687,36 @@ Mogelijke waarden:
   off:         Er wordt geen beperking voor het schalen van gehele getallen
                toegepast; de afbeelding vult de viewport volgens de
                'aspect'-instelling.
+:CONFIG_VIEWPORT
+Stel de viewportgrootte in (maximaal tekenbaar gebied). De video-uitvoer
+bevindt zich altijd binnen de viewport, waarbij rekening wordt gehouden met de
+geconfigureerde beeldverhouding (zie 'aspect'). Mogelijke waarden:
+  fit:             Pas de viewport in het beschikbare venster/scherm
+                   (standaard). Er kan sprake zijn van opvulling (zwarte
+                   gebieden) rond de afbeelding wanneer 'integer_scaling' is
+                   ingeschakeld.
+  BxH:             Stel een vaste viewportgrootte in BxH-formaat in in logische
+                   eenheden (bijvoorbeeld 960x720). De opgegeven grootte mag
+                   niet groter zijn dan de desktop. Als het groter is dan de
+                   desktopgrootte, wordt het geschaald zodat het binnen het
+                   venster past.
+  N%:              Vergelijkbaar met 'BxH', maar de grootte wordt
+                   gespecificeerd als een percentage van de desktopgrootte.
+  relative H% V%:  De viewport is ingesteld op een rechthoek met een beeld-
+                   verhouding van 4:3 die in het beschikbare venster/scherm
+                   past, en wordt vervolgens geschaald met de horizontale en
+                   verticale schaalfactoren H en V (geldig bereik is van 20%
+                   tot 300%). Het resulterende zichtvenster mag zich buiten
+                   het venster/scherm uitstrekken. Handig om willekeurige
+                   weergaveverhoudingen te forceren met 'aspect = stretch' en
+                   om in te zoomen op het beeld. Dit emuleert effectief de
+                   horizontale en verticale rekbedieningen van CRT-monitoren.
+
+Opmerkingen:
+ - Het gebruik van de 'relative' modus met 'integer_scaling' ingeschakeld kan
+   tot verrassende (maar correcte) resultaten leiden.
+ - U kunt de sneltoetsacties 'Stretch Axis', 'Inc Stretch' en 'Dec Stretch'
+   gebruiken om de stretch in realtime in de 'relatieve' modus in te stellen.
 .
 :CONFIG_MONOCHROME_PALETTE
 Selecteer standaardpalet voor monochrome weergave (standaard 'amber').
@@ -446,25 +768,31 @@ Software scalers zijn verouderd ten gunste van hardware-versnelde opties:
 Stel een adaptieve CRT-monitoremulatie-shader of een gewone GLSL-shader in in
 OpenGL-uitvoermodi.
 Adaptieve CRT-shaderopties:
-  crt-auto:          Een CRT-shader die prioriteit geeft aan de intentie van de
-                     ontwikkelaar en hoe mensen de game hebben ervaren op het
-                     moment van uitgave (standaard). De juiste shader-variant
-                     wordt automatisch geselecteerd op basis van de grafische
-                     standaard van de huidige videomodus en de viewport-
-                     resolutie, ongeacht de 'machine'-instelling. Dit betekent
-                     dat u zelfs op een geëmuleerde VGA-kaart authentieke,
-                     enkelgescande EGA-monitoremulatie krijgt met zichtbare
-                     "dikke scanlijnen" in EGA-games.
-  crt-auto-machine:  Vergelijkbaar met 'crt-auto', maar hierbij wordt een vaste
-                     CRT-monitor gekozen die geschikt is voor de videoadapter
-                     die is geconfigureerd via de 'machine'-instelling. CGA- en
-                     EGA-games worden bijvoorbeeld dubbel gescand weergegeven
-                     op een geëmuleerde VGA-adapter.
-  crt-auto-arcade:   Emulatie van een arcade- of thuiscomputermonitor die
-                     minder scherp is dan een typische pc-monitor met dikke
-                     scanlijnen in lage resolutiemodi. Deze fantasieoptie
-                     bestaat in het echte leven niet, maar kan erg leuk zijn,
-                     vooral met DOS-poorten van Amiga-spellen.
+  crt-auto:               Een CRT-shader die prioriteit geeft aan de intentie
+                          van de ontwikkelaar en hoe mensen de game hebben
+                          ervaren op het moment van uitgave (standaard). De
+                          juiste shader-variant wordt automatisch geselecteerd
+                          op basis van de grafische standaard van de huidige
+                          videomodus en de viewport-resolutie, ongeacht de
+                          'machine'-instelling. Dit betekent dat u zelfs op een
+                          geëmuleerde VGA-kaart authentieke, enkelgescande EGA-
+                          monitoremulatie krijgt met zichtbare "dikke
+                          scanlijnen" in EGA-games.
+  crt-auto-machine:       Vergelijkbaar met 'crt-auto', maar hierbij wordt een
+                          vaste CRT-monitor gekozen die geschikt is voor de
+                          videoadapter die is geconfigureerd via de 'machine'-
+                          instelling. CGA- en EGA-games worden bijvoorbeeld
+                          dubbel gescand weergegeven op een geëmuleerde
+                          VGA-adapter.
+  crt-auto-arcade:        Emulatie van een arcade- of thuiscomputermonitor die
+                          minder scherp is dan een typische pc-monitor met
+                          dikke scanlijnen in lage resolutiemodi. Deze
+                          fantasieoptie bestaat in het echte leven niet, maar
+                          kan erg leuk zijn, vooral met DOS-poorten van Amiga-
+                          spellen.
+  crt-auto-arcade-sharp:  Een scherpere variant van de arcade shader voor wie
+                          van dikke scanlijnen houdt maar de horizontale
+                          scherpte van een typische pc-monitor wil behouden.
 Andere opties zijn onder meer 'sharp', 'none', een shader die wordt vermeld met
 het opdrachtregelargument --list-glshaders, of een absoluut of relatief pad
 naar een bestand. In alle gevallen kunt u de bestandsextensie '.glsl' van de
@@ -520,17 +848,24 @@ Aantal cycli toegevoegd of afgetrokken met sneltoetsen voor snelheidsregeling
 :CONFIG_CYCLEDOWN
 Als u deze lager instelt dan 100, is dit een percentage (standaard 20).
 .
-:CONFIG_VOODOO_MEMSIZE
-Geheugengrootte (in MB) van de 3dfx Vodooo-kaart (standaard 12 MB).
+:CONFIG_VOODOO
+Schakel 3dfx Voodoo-emulatie in (standaard aan).
 .
-:CONFIG_VOODOO_PERF
-Optimalisaties om te gebruiken bij het emuleren van de 3dfx Voodoo-kaart:
-   0: Geen optimalisaties.
-   1: Multi-threading (standaard).
-   2: Bilineaire filtering uitschakelen.
-   3: Alle optimalisaties (zowel 1 als 2).
-Opmerking: Voodo-emulatie is softwaregebaseerd en maakt geen gebruik van
-      OpenGL-oproepen op hostniveau.
+:CONFIG_VOODOO_MEMSIZE
+Stel de hoeveelheid videogeheugen in voor 3dfx Voodoo-graphics, 4 of 12 MB.
+Het geheugen wordt als volgt gebruikt door de Frame Buffer Interface (FBI)
+en Texture Mapping Unit (TMU):
+   4: 2 MB voor de FBI en één TMU met 2 MB (standaard)
+  12: 4 MB voor de FBI en twee TMU's van elk 4 MB.
+.
+:CONFIG_VOODOO_MULTITHREADING
+Gebruik threads om de prestaties van 3dfx Voodoo te verbeteren (standaard aan).
+.
+:CONFIG_VOODOO_BILINEAR_FILTERING
+Gebruik bilineaire filtering om het textuurverzachtende effect van 3dfx Voodoo
+te emuleren. Alleen aanbevolen als U een snelle CPU van desktopklasse heeft,
+omdat dit de framesnelheden op langzamere systemen kan beïnvloeden
+(standaard uit).
 .
 :CONFIG_CAPTURE_DIR
 Directory waar de verschillende opnames worden opgeslagen, zoals audio-,
@@ -585,11 +920,13 @@ Opmerkingen: u moet dit uitzetten als het ten onrechte meerdere beeldschermen
              alleen naar audio te luisteren.
 .
 :CONFIG_MOUSE_SENSITIVITY
-Muisgevoeligheid voor de horizontale en verticale assen, als percentage
-(standaard 100,100). Negatieve waarden keren de as om, nul schakelt deze uit.
-Bij slechts één waarde, wordt de gevoeligheid voor beide assen ingesteld.
-De instelling kan tijdens runtime worden aangepast (ook per muisinterface) met
-behulp van de interne MOUSECTL.COM-tool, beschikbaar op schijf Z.
+Globale muisgevoeligheid voor de horizontale en verticale assen, als percentage
+(standaard 100). Waarden kunnen worden gescheiden door spaties, komma's of
+puntkomma's (d.w.z. 100,150). Negatieve waarden keren de as om, nul schakelt
+deze uit.
+Als u slechts één waarde opgeeft, wordt de gevoeligheid voor beide assen
+ingesteld. De gevoeligheid kan per muisinterface verder worden verfijnd met
+behulp van de interne MOUSECTL.COM-tool die beschikbaar is op de Z-schijf.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Schakel dit in om de instellingen voor muisversnelling en gevoeligheid van uw
@@ -634,6 +971,16 @@ COM (seriële) poort standaard muismodel:
   wheel+msm:    Automatische keuze tussen wiel en msm (standaard).
 Opmerkingen: Activeer COM-poort muis in de [serial] sectie.
 .
+:CONFIG_VMWARE_MOUSE
+VMware-muisinterface (standaard ingeschakeld).
+Alleen volledig compatibel met experimentele Windows 3.1x-drivers van derden.
+Opmerking: vereist dat de PS/2-muis is ingeschakeld.
+.
+:CONFIG_VIRTUALBOX_MOUSE
+VirtualBox-muisinterface (standaard ingeschakeld).
+Alleen volledig compatibel met het Windows 3.1x-stuurprogramma van derden.
+Opmerking: vereist dat de PS/2-muis is ingeschakeld.
+.
 :CONFIG_NOSOUND
 Schakel de stille modus in (standaard uitgeschakeld).
 Geluid wordt echter nog steeds geëmuleerd, maar DOSBox maakt geen geluid.
@@ -642,13 +989,13 @@ Geluid wordt echter nog steeds geëmuleerd, maar DOSBox maakt geen geluid.
 Samplesnelheid van de mixer (48000 standaard).
 .
 :CONFIG_BLOCKSIZE
-Grootte mixerblok; grotere waarden kunnen helpen bij haperend geluid, maar het
-geluid zal ook meer vertraagd zijn.
+Grootte mixerblok in sample frames (standaard 512). Grotere waarden kunnen
+helpen bij haperend geluid, maar het geluid zal ook meer vertraagd zijn.
 .
 :CONFIG_PREBUFFER
-Hoeveel milliseconden geluid om bovenop de blokgrootte te renderen; grotere
-waarden kunnen helpen bij haperend geluid, maar het geluid zal ook meer
-vertraagd zijn.
+Hoeveel milliseconden geluid om bovenop de blokgrootte te renderen
+(standaard 20). Grotere waarden kunnen helpen bij haperend geluid, maar het
+geluid zal ook meer vertraagd zijn.
 .
 :CONFIG_NEGOTIATE
 Laat het audiostuurprogramma van de host onderhandelen over (mogelijk) betere
@@ -663,11 +1010,11 @@ clipping van de audio-uitvoer te voorkomen:
 :CONFIG_CROSSFEED
 Stel crossfeed globaal in op alle stereokanalen voor luisteren met een
 hoofdtelefoon:
-  off:       Geen crossfeed (standaard).
-  on:        Schakel crossfeed in (sterkte 40).
-  <sterkte>: Stel de crossfeed-sterkte in van 0 tot 100, waarbij 0 betekent
-             geen crossfeed (uit) en 100 volledige crossfeed (waarbij
-             stereo-inhoud effectief wordt omgezet in mono).
+  off:     Geen crossfeed (standaard).
+  on:      Schakel crossfeed in (normale preset).
+  light:   lichte crossfeed (sterkte 15)
+  normal:  normale crossfeed (sterkte 40)
+  strong:  sterke crossfeed (sterkte 65)
 Opmerking: U kunt crossfeed per kanaal instellen via mixercommando's.
 .
 :CONFIG_REVERB
@@ -790,22 +1137,27 @@ Filter voor de FluidSynth-audio-uitgang:
   <op-maat>: Aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_MODEL
-MT-32 model om te gebruiken.
-  auto:  kies het eerste beschikbare model, in de aangegeven volgorde.
-  mt32:  kies het eerste beschikbare MT-32-model, in de aangegeven volgorde.
-  cm32l: kies het eerste beschikbare CM-32L-model, in de aangegeven volgorde.
-  mt32_old: alias voor MT-32 v1.07.
-  mt32_new: alias voor MT-32 v2.04.
+Het Roland MT-32/CM-32ML-model dat u kunt gebruiken.
+De ROM-bestanden voor het geselecteerde model moeten beschikbaar zijn
+(zie 'romdir').
+De opzoekvolgorde voor modellen die geen versie in hun naam specificeren,
+wordt uitgevoerd in de aangegeven volgorde.
+  auto:       Kies het eerste beschikbare model (standaard).
+  cm32l:      Kies het eerste beschikbare CM-32L-model.
+  mt32_old:   Kies het eerste beschikbare "oude" MT-32-model (v1.0x).
+  mt32_new:   Kies het eerste beschikbare "nieuwe" MT-32-model (v2.0x).
+  mt32:       Kies het eerste beschikbare MT-32-model.
+  <versie>:   Gebruik de exact opgegeven modelversie (bijv. 'mt32_204').
 .
 :CONFIG_ROMDIR
-De map met ROM's voor een of meer modellen.
-De map kan absoluut of relatief zijn, of laat het leeg om de
-'mt32-roms'-map in uw DOSBox-configuratiemap te gebruiken.
-Andere veelvoorkomende systeemlocaties worden ook gecontroleerd.
-ROM bestanden in deze map kunnen een van de volgende bevatten:
-  - MT32_CONTROL.ROM en MT32_PCM.ROM, voor het 'mt32' model.
-  - CM32L_CONTROL.ROM en CM32L_PCM.ROM, voor het 'cm32l' model.
-  - Uitgepakte MAME MT-32 en CM-32L ROM's, voor de versiemodellen.
+De map met de Roland MT-32/CM-32ML ROM's.
+De map kan absoluut of relatief zijn, of laat deze leeg om de map 'mt32-roms'
+in uw DOSBox-configuratiemap te gebruiken. Andere veel voorkomende
+systeemlocaties worden ook gecontroleerd.
+Opmerkingen:
+  - De bestandsnamen van de ROM-bestanden doen er niet toe; de ROMS worden
+    geïdentificeerd door hun controlesommen.
+  - Zowel interleaved als niet-interlaved ROM-bestanden worden ondersteund.
 .
 :CONFIG_MT32_FILTER
 Filter voor de Roland MT-32/CM-32L audio-uitgang:
@@ -831,10 +1183,10 @@ MT-32  ROMs
 CM-32L ROMs  
 .
 :MT32_ACTIVE_ROM_LABEL
-Actieve ROM : 
+Actieve ROM    
 .
 :MT32_SOURCE_DIR_LABEL
-Geladen van : 
+Geladen van    
 .
 :CONFIG_SBTYPE
 Type Sound Blaster om te emuleren (standaard 'sb16').
@@ -853,7 +1205,7 @@ Het DMA-nummer van de Sound Blaster (standaard 1).
 Het hoge DMA-nummer van de Sound Blaster (standaard 5).
 .
 :CONFIG_SBMIXER
-Laat de Sound Blaster-mixer de DOSBox-mixer aanpassen (standaard ingeschakeld)
+Laat de Sound Blaster-mixer de DOSBox-mixer aanpassen (standaard aan)
 .
 :CONFIG_SBWARMUP
 Stil initiële DMA-audio nadat de kaart is ingeschakeld, in milliseconden.
@@ -868,6 +1220,23 @@ hersamplen te voorkomen.
 Type OPL-emulatie (standaard 'auto').
 Op 'auto' wordt de modus bepaald door 'sbtype'.
 Alle OPL-modi zijn AdLib-compatibel, behalve 'cms'.
+.
+:CONFIG_OPL_FADEOUT
+Fade de OPL-synthuitvoer uit nadat naar de laatste IO-poort is geschreven:
+  off:       Vervaag niet; de resterende uitvoer wordt voor altijd afgespeeld
+             (standaard).
+  on:        Wacht 0,5 seconde voordat u over een periode van 0,5 seconde
+             uitfadt.
+  <op-maat>: Een aangepaste fade-outdefinitie in de volgende indeling:
+               WACHT FADE
+             Waar WAIT is hoe lang nadat de laatste schrijffading van de IO-
+             poort begint, variërend tussen 100 en 5000 milliseconden; en FADE
+             is de fade-outperiode, variërend tussen 10 en 3000 milliseconden.
+             Voorbeelden:
+                300 200 (Wacht 300 ms voordat het uitfaden over een periode
+                        van 200 ms)
+                1000 3000 (Wacht 1 seconde voordat het uitfaden over een
+                          periode van 3 seconden)
 .
 :CONFIG_OPLEMU
 Alleen 'nuked' OPL-emulatie wordt nog ondersteund.
@@ -1010,6 +1379,13 @@ Stel de Tandy/PCjr 3 Voice-geluidemulatie in:
          de kaart in zonder DAC om conflicten met andere kaarten die DMA 1
          gebruiken te voorkomen.
   off:   Tandy/PCjr-geluid uitschakelen.
+.
+:CONFIG_TANDY_FADEOUT
+Fade de Tandy-synthuitvoer uit nadat de laatste IO-poort heeft geschreven:
+  off:       Niet faden; de resterende uitvoer zal blijven afgespeeld
+             (standaard).
+  on:        Wacht 0,5 sec. voordat het faden over een periode van 0,5 sec.
+  <op-maat>: Aangepaste fade-outdefinitie; zie 'opl_fadeout' voor details.
 .
 :CONFIG_TANDY_FILTER
 Filter voor de Tandy synth-uitgang:
@@ -1176,18 +1552,26 @@ Stel DOS-versie in (standaard 5.0). Specificeer als hoofdversie.minor formaat.
 Een enkel nummer wordt behandeld als de hoofdversie.
 Gebruikelijke instellingen zijn 3.3, 5.0, 6.22 en 7.1.
 .
+:CONFIG_LOCALE_PERIOD
+Stel het locale-tijdperk in (standaard 'modern'). Historische instellingen
+(indien beschikbaar voor het betreffende land) proberen oud DOS-gedrag na te
+bootsen bij het weergeven van informatie zoals datums, tijd of cijfers,
+moderne instellingen volgen hedendaagse praktijken voor gebruikerservaring die
+consistenter zijn met typische hostsystemen.
+.
 :CONFIG_COUNTRY
-Stel de DOS-landcode in (standaard 0). Dit heeft invloed op landspecifieke
-informatie, zoals datum, tijd en decimale notaties.
-Indien ingesteld op 0, wordt de landcode gebruikt die overeenkomt met de
-geselecteerde toetsenbordindeling.
+Stel de DOS-landcode in (standaard 'auto'). Dit heeft invloed op landspecifieke
+informatie, zoals datum, tijd en decimale notaties. De lijst met ondersteunde
+landcodes kan worden weergegeven met de '--list-countries'
+opdrachtregelargument. Indien ingesteld op 'auto', wordt de landcode gebruikt
+die overeenkomt met de geselecteerde toetsenbordindeling.
 .
 :CONFIG_KEYBOARDLAYOUT
 Taalcode van de toetsenbordindeling, of 'auto' (standaard 'auto').
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Schakel uitbreidende omgevingsvariabelen zoals %PATH% in in de
-DOS-opdrachtshell (standaard uitgeschakeld).
+Schakel het uitbreiden van omgevingsvariabelen zoals %PATH% in de DOS-
+opdrachtshell in (standaard 'auto', ingeschakeld als DOS-versie >= 7.0).
 FreeDOS en MS-DOS 7/8 COMMAND.COM ondersteunen dit gedrag.
 .
 :CONFIG_SHELL_HISTORY_FILE
@@ -1354,11 +1738,21 @@ Waar [color=white]COMMANDO[reset] een van de volgende is:
                     Stelt de waarde in van een configuratie-eigenschap.
 .
 :PROGRAM_CONFIG_HLP_PROPHLP
-[color=white]Doel van eigenschap [color=light-green]'%s'[color=white] (opgenomen in sectie [color=light-cyan][%s][color=white])[reset]:
+[color=white]Doel van eigenschap [color=light-green]'%s'[color=white] (opgenomen in sectie [color=light-cyan][%s][color=white]):[reset]
+
 %s
 
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_POSSIBLE_VALUES
 [color=white]Mogelijke waarden:[reset]  %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_DEFAULT_VALUE
 [color=white]Standaard waarde:[reset]   %s
+
+.
+:PROGRAM_CONFIG_HLP_PROPHLP_CURRENT_VALUE
 [color=white]Huidige waarde:[reset]     %s
 
 .
@@ -1382,7 +1776,6 @@ positief geheel getal
 .
 :PROGRAM_CONFIG_HLP_SECTLIST
 [color=white]DOSBox-configuratie bevat de volgende secties:[reset]
-
 
 .
 :PROGRAM_CONFIG_SECURE_ON
@@ -1416,11 +1809,12 @@ Ontbrekende parameter.
 
 .
 :PROGRAM_PATH_TOO_LONG
-Het pad "%s" overschrijdt de DOS maximale lengte van %d karakters
+Het pad '%s' overschrijdt de DOS maximale lengte van %d karakters
 
 .
 :PROGRAM_EXECUTABLE_MISSING
 Uitvoerbaar bestand niet gevonden: '%s'
+
 .
 :CONJUNCTION_AND
 en
@@ -1639,6 +2033,7 @@ Opmerkingen:
   - De vlag -ro koppelt de schijfkopie in alleen-lezen modus.
   - De vlag -ide emuleert een IDE-controller, handig voor op cd's gebaseerde
     spelen die een echte DOS-omgeving nodig hebben.
+
 Voorbeelden:
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
@@ -1987,7 +2382,7 @@ BASIC-ROM geladen.
 
 .
 :PROGRAM_LS_UNHANDLED_WILDCARD_PATTERN
-Niet afgehandeld wildcardpatroon - '%s'.
+Niet afgehandeld wildcardpatroon - '%s'
 
 .
 :PROGRAMMA_LS_HELP_LANG
@@ -2054,10 +2449,13 @@ Gebruik:
 Waar:
   [color=light-cyan]KANAAL[reset]   is het geluidskanaal om te wijzigen.
   [color=white]COMMANDO[reset] is een of meer van de volgende opdrachten:
-    Volume:    [color=white]0[reset] tot [color=white]100[reset], of decibelwaarde voorafgegaan door [color=white]d[reset] (bijv. [color=white]d-7.5[reset])
-               gebruik [color=white]L:R[reset] om stereo afzonderlijk in te stellen (bijv. [color=white]10:20[reset])
-    Lineout:   [color=white]stereo[reset], [color=white]reverse[reset] (enkel voor stereo kanalen)
-    Crossfeed: [color=white]x0[reset] tot [color=white]x100[reset]    Reverb: [color=white]r0[reset] tot [color=white]r100[reset]    Chorus: [color=white]c0[reset] tot [color=white]c100[reset]
+    Volume:      [color=white]0[reset] tot [color=white]999[reset], of decibelwaarde voorafgegaan
+                 door [color=white]d[reset] (bijv. [color=white]d-7.5[reset]).
+                 Gebruik [color=white]L:R[reset] om stereo afzonderlijk in te stellen (bijv. [color=white]10:20[reset])
+    Stereo mode: [color=white]stereo[reset] of [color=white]reverse[reset] (enkel voor stereo kanalen)
+    Crossfeed:   [color=white]x0[reset] tot [color=white]x100[reset]
+    Reverb:      [color=white]r0[reset] tot [color=white]r100[reset]
+    Chorus:      [color=white]c0[reset] tot [color=white]c100[reset]
 
 Opmerkingen:
   - [color=light-green]mixer[reset] zonder argument toont de huidige mixerinstellingen.
@@ -2166,7 +2564,7 @@ Waar:
   /p      breidt het nieuwe pagina-/formulierfeed-teken uit.
   /s      drukt meerdere lege regels samen tot één.
   /t[color=white]n[reset]     is de tabgrootte, 1-9, standaard is 8.
-  +[color=white]nnn[reset]   slaat de eerste [kleur=white]nnn[reset] regels van het eerste bestand over.
+  +[color=white]nnn[reset]   slaat de eerste [color=white]nnn[reset] regels van het eerste bestand over.
 
 Opmerkingen:
   Deze opdracht is alleen voor tekstbestanden, niet voor binaire bestanden.
@@ -2363,7 +2761,11 @@ Waar:
   -reset         herstelt alle muisinstellingen uit het configuratiebestand
 
 Opmerkingen:
-  - standaardwaarde wordt gebruikt, als gevoeligheid of snelheid is weggelaten
+  - Als de gevoeligheid of snelheid wordt weggelaten, wordt deze teruggezet
+    naar de standaardwaarde.
+  - De muisgevoeligheid die in het configuratiebestand is ingesteld, fungeert
+    als globale schaalfactor. De gevoeligheid per interface, ingesteld door
+    deze opdrachten, werkt daarbovenop.
 
 Voorbeelden:
   [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; selecteer muizen voor een twee speler spel
@@ -2386,7 +2788,11 @@ Verkeerde syntaxis, bemonsteringsfrequentie moet een van zijn:
 
 .
 :PROGRAM_MOUSECTL_MAPPING_NO_MOUSE
-Mapping niet beschikbaar in NoMouse-modus.
+Mapping niet beschikbaar in geen-muis-modus.
+
+.
+:PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER
+Mapping is niet mogelijk met het huidige gastmuisstuurprogramma.
 
 .
 :PROGRAM_MOUSECTL_NO_INTERFACES
@@ -2781,16 +3187,16 @@ Kan niet wijzigen naar: %s.
 
 .
 :SHELL_CMD_CHDIR_HINT
-Hint: Om naar een andere schijf te gaan typ [color=red]%c:[reset]
+Hint: Om naar een andere schijf te gaan, typ [color=yellow]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
 Mapnaam is langer dan 8 tekens en/of bevat spaties.
-Probeer [color=red]cd %s[reset]
+Probeer [color=yellow]cd %s[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_3
-U bent nog steeds op schijf Z:, verander naar een gekoppelde schijf met [color=red]C:[reset].
+U bent nog steeds op schijf Z:, verander naar een gekoppelde schijf met [color=yellow]C:[reset].
 
 .
 :SHELL_CMD_DATE_HELP
@@ -2808,7 +3214,7 @@ De opgegeven datum is niet correct.
 Huidige datum: 
 .
 :SHELL_CMD_DATE_SETHLP
-Typ 'datum %s' om te wijzigen.
+Typ [color=yellow]datum %s[reset] om te wijzigen.
 
 .
 :SHELL_CMD_DATE_HELP_LONG
@@ -2843,7 +3249,7 @@ De opgegeven tijd is niet correct.
 Huidige tijd: 
 .
 :SHELL_CMD_TIME_SETHLP
-Typ 'tijd %s' om te wijzigen.
+Typ [color=yellow]time %s[reset] om te tijd te wijzigen.
 
 .
 :SHELL_CMD_TIME_HELP_LONG
@@ -3656,6 +4062,35 @@ Voorbeelden:
 .
 :SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE
 Kan niet meerdere bestanden naar één bestand verplaatsen.
+
+.
+:SHELL_CMD_FOR_HELP
+Voert een opgegeven opdracht uit voor elke string in een set.
+
+.
+:SHELL_CMD_FOR_HELP_LONG
+Gebruik:
+  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMANDO[reset]
+
+Waar:
+  [color=white]%VAR[reset]    Een enkel teken dat een variabele vertegenwoordigt, voorafgegaan door een '%'.
+  [color=light-cyan]in[reset]      Een hoofdletterongevoelig trefwoord.
+  [color=white](SET)[reset]   De set strings die [color=white]%VAR[reset] instanties in [color=white]COMMANDO[reset] moeten vervangen.
+  [color=light-cyan]do[reset]      Een hoofdletterongevoelig trefwoord.
+  [color=white]COMMAND[reset] Het commando dat moet worden herhaald voor elke string in [color=white](SET)[reset].
+
+Opmerkingen:
+  - In batchbestanden moet [color=white]%VAR[reset] worden geschreven als [color=white]%%VAR[reset]
+    (twee procenttekens).
+  - Strings in [color=white](SET)[reset] mogen worden gescheiden door elk geldig
+    DOS-scheidingsteken.
+  - Elke string in [color=white](SET)[reset] die jokertekens (* of ?) bevat, wordt uitgebreid naar
+    de set overeenkomende bestanden in de huidige map.
+  - Het gebruik van een ander [color=light-green]for[reset] commando als [color=white]COMMANDO[reset] is niet toegestaan.
+
+Voorbeelden:
+  [color=light-green]for[reset] [color=white]%C[reset] [color=light-cyan]in[reset] [color=white](EEN TWEE)[reset] [color=light-cyan]do[reset] [color=white]MKDIR[reset] [color=white]%C[reset]
+  [color=light-green]for[reset] [color=white]%D[reset] [color=light-cyan]in[reset] [color=white](*.TXT)[reset] [color=light-cyan]do[reset] [color=white]ECHO[reset] [color=white]%D[reset]
 
 .
 :HELP_UTIL_CATEGORY_DOSBOX
