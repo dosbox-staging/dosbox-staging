@@ -35,6 +35,7 @@
 #include "../../gui/render_scalers.h" //SCALER_MAXWIDTH SCALER_MAXHEIGHT
 #include "rgb565.h"
 #include "setup.h"
+#include "video.h"
 
 namespace {
 // XXX currently duplicating this in realmagic_*.cpp files to avoid header pollution... TDB if this
@@ -187,18 +188,8 @@ VGA32bppPixel VGAPalettePixel::_vgaPalette32bpp[256] = {};
 VGA16bppPixel VGAPalettePixel::_vgaPalette16bpp[256] = {};
 uint8_t VGAOverPalettePixel::_alphaChannelIndex      = 0;
 
-static uint16_t _vgaWidth  = 0;
-static uint16_t _vgaHeight = 0;
-
-static bool _vgaDoubleWidth  = false;
-static bool _vgaDoubleHeight = false;
-
-static VideoMode _videoMode = {};
-
-static PixelFormat _vgaPixelFormat = {};
-
-static double _vgaFramesPerSecond    = 0.0;
-static Fraction _vgaRenderPixelAspectRatio = {};
+static ImageInfo _vgaImageInfo    = {};
+static double _vgaFramesPerSecond = 0.0;
 
 // state captured from current/active MPEG player
 static PlayerPicturePixel _mpegPictureBuffer[SCALER_MAXWIDTH * SCALER_MAXHEIGHT];
@@ -369,10 +360,14 @@ static void RMR_DrawLine_MixerError([[maybe_unused]] const void* src)
 template <typename T>
 static inline void RMR_DrawLine_VGAOnly(const T* src)
 {
-	const Bitu lineWidth         = _vgaWidth;
+	const Bitu lineWidth = _vgaImageInfo.width;
+
 	RenderOutputPixel* const out = _finalMixedRenderLineBuffer;
-	for (Bitu i = 0; i < lineWidth; ++i)
+
+	for (Bitu i = 0; i < lineWidth; ++i) {
 		MixPixel(out[i], src[i]);
+	}
+
 	RENDER_DrawLine(_finalMixedRenderLineBuffer);
 }
 CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VGAOnly)
@@ -380,11 +375,16 @@ CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VGAOnly)
 template <typename T>
 static inline void RMR_DrawLine_VGAMPEGSameSize(const T* src)
 {
-	const Bitu lineWidth         = _vgaWidth;
+	const Bitu lineWidth = _vgaImageInfo.width;
+
 	RenderOutputPixel* const out = _finalMixedRenderLineBuffer;
-	for (Bitu i = 0; i < lineWidth; ++i)
+
+	for (Bitu i = 0; i < lineWidth; ++i) {
 		MixPixel(out[i], src[i], _mpegPictureBufferPtr[i]);
+	}
+
 	_mpegPictureBufferPtr += _mpegPictureWidth;
+
 	RENDER_DrawLine(_finalMixedRenderLineBuffer);
 }
 CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VGAMPEGSameSize)
@@ -393,7 +393,7 @@ CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VGAMPEGSameSize)
 template <typename T>
 static inline void RMR_DrawLine_VSO_MPEGDoubleVGASize(const T* src)
 {
-	const Bitu lineWidth         = _vgaWidth;
+	const Bitu lineWidth         = _vgaImageInfo.width;
 	RenderOutputPixel* const out = _finalMixedRenderLineBuffer;
 	_mpegPictureBufferPtr -= _mpegPictureWidth * (_currentRenderLineNumber++ & 1);
 	for (Bitu i = 0; i < lineWidth; ++i) {
@@ -407,7 +407,7 @@ CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VSO_MPEGDoubleVGASize)
 template <typename T>
 static inline void RMR_DrawLine_VSO_VGAMPEGSameWidthSkip6Vertical(const T* src)
 {
-	const Bitu lineWidth         = _vgaWidth;
+	const Bitu lineWidth         = _vgaImageInfo.width;
 	RenderOutputPixel* const out = _finalMixedRenderLineBuffer;
 	for (Bitu i = 0; i < lineWidth; ++i)
 		MixPixel(out[i], src[i], _mpegPictureBufferPtr[i]);
@@ -423,7 +423,7 @@ CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VSO_VGAMPEGSameWidthSkip6Vertical)
 template <typename T>
 static inline void RMR_DrawLine_VSO_VGAMPEGDoubleSameWidthSkip6Vertical(const T* src)
 {
-	const Bitu lineWidth         = _vgaWidth;
+	const Bitu lineWidth         = _vgaImageInfo.width;
 	RenderOutputPixel* const out = _finalMixedRenderLineBuffer;
 	_mpegPictureBufferPtr -= _mpegPictureWidth * (_currentRenderLineNumber & 1);
 	for (Bitu i = 0; i < lineWidth; ++i)
@@ -456,7 +456,7 @@ static void Initialize_RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_Dimensions()
 template <typename T>
 static inline void RMR_DrawLine_VSO_GeneralResizeMPEGToVGA(const T* src)
 {
-	const Bitu lineWidth         = _vgaWidth;
+	const Bitu lineWidth         = _vgaImageInfo.width;
 	RenderOutputPixel* const out = _finalMixedRenderLineBuffer;
 	for (Bitu i = 0; i < lineWidth; ++i)
 		MixPixel(out[i],
@@ -470,7 +470,7 @@ static inline void RMR_DrawLine_VSO_GeneralResizeMPEGToVGA(const T* src)
 }
 CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VSO_GeneralResizeMPEGToVGA)
 
-static void SetupVideoMixer(const bool updateRenderMode)
+static void setup_video_mixer(const bool update_render_mode)
 {
 	// the "_activeMpegProvider" variable serves a few purposes:
 	//  1. Tells the "ReelMagic_RENDER_StartUpdate()" function which player to call
@@ -485,14 +485,7 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		// video mixer is disabled... VGA mode dictates RENDER mode just like "normal dosbox"
 		ReelMagic_RENDER_DrawLine = &RMR_DrawLine_Passthrough;
 
-		RENDER_SetSize(_vgaWidth,
-		               _vgaHeight,
-		               _vgaDoubleWidth,
-		               _vgaDoubleHeight,
-		               _vgaRenderPixelAspectRatio,
-		               _vgaPixelFormat,
-		               _vgaFramesPerSecond,
-		               _videoMode);
+		RENDER_SetSize(_vgaImageInfo, _vgaFramesPerSecond);
 
 		LOG(LOG_REELMAGIC, LOG_NORMAL)
 		("Video Mixer is Disabled. Passed through VGA RENDER_SetSize()");
@@ -506,41 +499,26 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		_mpegPictureHeight = mpeg->GetAttrs().PictureSize.Height;
 	}
 
-	_renderWidth  = _vgaWidth;
-	_renderHeight = _vgaHeight;
+	_renderWidth  = _vgaImageInfo.width;
+	_renderHeight = _vgaImageInfo.height;
 
-	// check to make sure we have enough horizontal line buffer for the current VGA mode...
-	const Bitu maxRenderWidth = sizeof(_finalMixedRenderLineBuffer) /
-	                            sizeof(_finalMixedRenderLineBuffer[0]);
-	if (_renderWidth > maxRenderWidth) {
-		LOG(LOG_REELMAGIC, LOG_ERROR)
-		("Video Mixing Buffers Too Small for VGA Mode -- Can't output video!");
-		ReelMagic_RENDER_DrawLine = &RMR_DrawLine_MixerError;
+	// check to make sure we have enough horizontal line buffer for the
+	// current VGA mode...
+	[[maybe_unused]] const Bitu maxRenderWidth =
+	        sizeof(_finalMixedRenderLineBuffer) /
+	        sizeof(_finalMixedRenderLineBuffer[0]);
 
-		_renderWidth  = 320;
-		_renderHeight = 240;
-
-		RENDER_SetSize(_renderWidth,
-		               _renderHeight,
-		               _vgaDoubleWidth,
-		               _vgaDoubleHeight,
-		               _vgaRenderPixelAspectRatio,
-		               VideoMixerPixelFormat,
-		               _vgaFramesPerSecond,
-		               _videoMode);
-		return;
-	}
+	assert(_vgaImageInfo.width <= maxRenderWidth);
 
 	// set the RENDER mode only if requested...
-	if (updateRenderMode) {
-		RENDER_SetSize(_renderWidth,
-		               _renderHeight,
-		               _vgaDoubleWidth,
-		               _vgaDoubleHeight,
-		               _vgaRenderPixelAspectRatio,
-		               VideoMixerPixelFormat,
-		               _vgaFramesPerSecond,
-		               _videoMode);
+	if (update_render_mode) {
+		// Setting the pixelformat in _vgaImageInfo and passing it directly
+		// will result in garbled graphics due to the weird and wonderful ways
+		// how the video mixer interacts with the VGA renderer. Don't ask...
+		ImageInfo info = _vgaImageInfo;
+		info.pixel_format = VideoMixerPixelFormat;
+
+		RENDER_SetSize(info, _vgaFramesPerSecond);
 	}
 
 	// if no active player, set the VGA only function... the difference between this and
@@ -548,15 +526,15 @@ static void SetupVideoMixer(const bool updateRenderMode)
 	// color depth of 32 bits to eliminate any flickering associated with the RENDER_SetSize()
 	// call when starting/stopping a video to give the user that smooth hardware decoder feel :-)
 	if ((!mpeg) || (!mpeg->GetConfig().VideoOutputVisible)) {
-		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAOnly, _vgaPixelFormat, true);
+		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAOnly,
+		                             _vgaImageInfo.pixel_format,
+		                             true);
 
 		_activeMpegProvider = mpeg;
 		LOG(LOG_REELMAGIC, LOG_NORMAL)
-		("Video Mixer Mode VGA Only (vga=%ux%u mpeg=off render=%ux%u)",
-		 _vgaWidth,
-		 _vgaHeight,
-		 _renderWidth,
-		 _renderHeight);
+		("Video Mixer Mode VGA Only (vga=%ux%u mpeg=off)",
+		 _vgaImageInfo.width,
+		 _vgaImageInfo.height);
 		return;
 	}
 
@@ -564,45 +542,56 @@ static void SetupVideoMixer(const bool updateRenderMode)
 	const bool vgaOver  = mpeg->GetConfig().UnderVga;
 	const char* modeStr = "UNKNOWN";
 
-	if ((_vgaWidth == _mpegPictureWidth) && (_vgaHeight == _mpegPictureHeight)) {
+	if ((_vgaImageInfo.width == _mpegPictureWidth) &&
+	    (_vgaImageInfo.height == _mpegPictureHeight)) {
 		modeStr = "Matching Sized MPEG to VGA Pictures";
-		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAMPEGSameSize, _vgaPixelFormat, vgaOver);
-	} else if ((_vgaWidth == (_mpegPictureWidth * 2)) &&
-			   (_vgaHeight == ((_mpegPictureHeight * 2)))) {
+		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAMPEGSameSize,
+		                             _vgaImageInfo.pixel_format,
+		                             vgaOver);
+
+	} else if ((_vgaImageInfo.width == (_mpegPictureWidth * 2)) &&
+	           (_vgaImageInfo.height == ((_mpegPictureHeight * 2)))) {
 		modeStr = "Double Sized MPEG to VGA Pictures";
 		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_MPEGDoubleVGASize,
-									 _vgaPixelFormat,
-									 vgaOver);
-	} else if ((_vgaWidth == _mpegPictureWidth) &&
-			   ((_mpegPictureHeight / (_mpegPictureHeight - _vgaHeight)) == 6)) {
+		                             _vgaImageInfo.pixel_format,
+		                             vgaOver);
+
+	} else if ((_vgaImageInfo.width == _mpegPictureWidth) &&
+	           ((_mpegPictureHeight /
+	             (_mpegPictureHeight - _vgaImageInfo.height)) == 6)) {
 		modeStr = "Matching Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
 		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_VGAMPEGSameWidthSkip6Vertical,
-									 _vgaPixelFormat,
-									 vgaOver);
-	} else if ((_vgaWidth == (_mpegPictureWidth * 2)) &&
-			   (((_mpegPictureHeight * 2) / ((_mpegPictureHeight * 2) - _vgaHeight)) == 6)) {
+		                             _vgaImageInfo.pixel_format,
+		                             vgaOver);
+
+	} else if ((_vgaImageInfo.width == (_mpegPictureWidth * 2)) &&
+	           (((_mpegPictureHeight * 2) /
+	             ((_mpegPictureHeight * 2) - _vgaImageInfo.height)) == 6)) {
 		modeStr = "Double Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
 		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_VGAMPEGDoubleSameWidthSkip6Vertical,
-									 _vgaPixelFormat,
-									 vgaOver);
+		                             _vgaImageInfo.pixel_format,
+		                             vgaOver);
+
 	} else {
 		modeStr = "Generic Unoptimized MPEG Resize";
 		Initialize_RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_Dimensions();
 		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_GeneralResizeMPEGToVGA,
-									 _vgaPixelFormat,
-									 vgaOver);
+		                             _vgaImageInfo.pixel_format,
+		                             vgaOver);
 	}
 
 	// log the mode we are now in
-	if (ReelMagic_RENDER_DrawLine == &RMR_DrawLine_MixerError)
+	if (ReelMagic_RENDER_DrawLine == &RMR_DrawLine_MixerError) {
 		modeStr = "Error";
-	else
+	} else {
 		_activeMpegProvider = mpeg;
+	}
+
 	LOG(LOG_REELMAGIC, LOG_NORMAL)
 	("Video Mixer Mode %s (vga=%ux%u mpeg=%ux%u render=%ux%u)",
 	 modeStr,
-	 _vgaWidth,
-	 _vgaHeight,
+	 _vgaImageInfo.width,
+	 _vgaImageInfo.height,
 	 _mpegPictureWidth,
 	 _mpegPictureHeight,
 	 _renderWidth,
@@ -626,23 +615,14 @@ void ReelMagic_RENDER_SetPalette(const uint8_t entry, const uint8_t red,
 	RENDER_SetPalette(entry, red, green, blue);
 }
 
-void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
-                              const bool double_width, const bool double_height,
-                              const Fraction& render_pixel_aspect_ratio,
-                              const PixelFormat pixel_format,
-                              const double frames_per_second,
-                              const VideoMode& video_mode)
+void ReelMagic_RENDER_SetSize(const ImageInfo& image_info,
+                              const double frames_per_second)
 {
-	_vgaWidth                  = width;
-	_vgaHeight                 = height;
-	_vgaDoubleWidth            = double_width;
-	_vgaDoubleHeight           = double_height;
-	_vgaRenderPixelAspectRatio = render_pixel_aspect_ratio;
-	_vgaPixelFormat            = pixel_format;
-	_vgaFramesPerSecond        = frames_per_second;
-	_videoMode                 = video_mode;
+	_vgaImageInfo       = image_info;
+	_vgaFramesPerSecond = frames_per_second;
 
-	SetupVideoMixer(true);
+	constexpr auto update_render_mode = true;
+	setup_video_mixer(update_render_mode);
 }
 
 bool ReelMagic_RENDER_StartUpdate(void)
@@ -676,7 +656,9 @@ void ReelMagic_SetVideoMixerEnabled(const bool enabled)
 		return;
 	_videoMixerEnabled = enabled;
 	LOG(LOG_REELMAGIC, LOG_NORMAL)("%s Video Mixer", enabled ? "Enabling" : "Disabling");
-	SetupVideoMixer(true);
+
+	constexpr auto update_render_mode = true;
+	setup_video_mixer(update_render_mode);
 }
 
 ReelMagic_VideoMixerMPEGProvider* ReelMagic_GetVideoMixerMPEGProvider()
@@ -687,7 +669,9 @@ ReelMagic_VideoMixerMPEGProvider* ReelMagic_GetVideoMixerMPEGProvider()
 void ReelMagic_ClearVideoMixerMPEGProvider()
 {
 	_requestedMpegProvider = nullptr;
-	SetupVideoMixer(false);
+
+	constexpr auto update_render_mode = false;
+	setup_video_mixer(update_render_mode);
 }
 
 void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const provider)
@@ -710,8 +694,8 @@ void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const
 	// set the new requested provider
 	_requestedMpegProvider = provider;
 
-	// update the video rendering mode if necessary...
-	SetupVideoMixer(false);
+	constexpr auto update_render_mode = false;
+	setup_video_mixer(update_render_mode);
 }
 
 void ReelMagic_InitVideoMixer([[maybe_unused]] Section* sec)

@@ -201,11 +201,7 @@ void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette);
 std::deque<std::string> RENDER_GenerateShaderInventoryMessage();
 void RENDER_AddMessages();
 
-void RENDER_SetSize(const uint16_t width, const uint16_t height,
-                    const bool double_width, const bool double_height,
-                    const Fraction& render_pixel_aspect_ratio,
-                    const PixelFormat pixel_format,
-                    const double frames_per_second, const VideoMode& video_mode);
+void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second);
 
 bool RENDER_StartUpdate(void);
 void RENDER_EndUpdate(bool abort);

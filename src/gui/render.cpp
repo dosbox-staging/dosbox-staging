@@ -523,26 +523,17 @@ static void render_callback(GFX_CallBackFunctions_t function)
 	}
 }
 
-void RENDER_SetSize(const uint16_t width, const uint16_t height,
-                    const bool double_width, const bool double_height,
-                    const Fraction& render_pixel_aspect_ratio,
-                    const PixelFormat pixel_format,
-                    const double frames_per_second, const VideoMode& video_mode)
+void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 {
 	halt_render();
 
-	if (!width || !height || width > SCALER_MAXWIDTH || height > SCALER_MAXHEIGHT) {
+	if (image_info.width == 0 || image_info.height == 0 ||
+	    image_info.width > SCALER_MAXWIDTH ||
+	    image_info.height > SCALER_MAXHEIGHT) {
 		return;
 	}
 
-	render.src.width              = width;
-	render.src.height             = height;
-	render.src.double_width       = double_width;
-	render.src.double_height      = double_height;
-	render.src.pixel_aspect_ratio = render_pixel_aspect_ratio;
-	render.src.pixel_format       = pixel_format;
-	render.src.video_mode         = video_mode;
-
+	render.src = image_info;
 	render.fps = frames_per_second;
 
 	render_reset();

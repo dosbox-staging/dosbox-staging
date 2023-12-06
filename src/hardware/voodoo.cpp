@@ -7344,34 +7344,39 @@ static void Voodoo_UpdateScreen()
 		} else
 #endif
 		{
-			const auto width  = v->fbi.width;
-			const auto height = v->fbi.height;
+			ImageInfo image_info = {};
 
-			constexpr auto double_width  = false;
-			constexpr auto double_height = false;
+			const auto width  = check_cast<uint16_t>(v->fbi.width);
+			const auto height = check_cast<uint16_t>(v->fbi.height);
 
-			constexpr Fraction render_pixel_aspect_ratio = {1};
+			image_info.width                = width;
+			image_info.height               = height;
+			image_info.double_width         = false;
+			image_info.double_height        = false;
+			image_info.force_single_scan    = false;
+			image_info.rendered_double_scan = false;
+			image_info.pixel_aspect_ratio   = {1};
+			image_info.pixel_format = PixelFormat::RGB565_Packed16;
 
-			VideoMode video_mode        = {};
-			video_mode.bios_mode_number = 0;
-			video_mode.width  = check_cast<uint16_t>(width);
-			video_mode.height = check_cast<uint16_t>(height);
-			video_mode.pixel_aspect_ratio = render_pixel_aspect_ratio;
-			video_mode.graphics_standard  = GraphicsStandard::Svga;
-			video_mode.color_depth        = ColorDepth::HighColor16Bit;
+			VideoMode video_mode = {};
+
+			video_mode.bios_mode_number   = 0;
 			video_mode.is_custom_mode     = false;
 			video_mode.is_graphics_mode   = true;
+			video_mode.width              = width;
+			video_mode.height             = height;
+			video_mode.pixel_aspect_ratio = {1};
+			video_mode.graphics_standard  = GraphicsStandard::Svga;
+			video_mode.color_depth = ColorDepth::HighColor16Bit;
+			video_mode.is_double_scanned_mode = false;
+			video_mode.has_vga_colors         = false;
 
-			const auto frames_per_second = 1000.0 / v->draw.frame_period_ms;
+			image_info.video_mode = video_mode;
 
-			RENDER_SetSize(width,
-			               height,
-			               double_width,
-			               double_height,
-			               render_pixel_aspect_ratio,
-			               PixelFormat::RGB565_Packed16,
-			               static_cast<float>(frames_per_second),
-			               video_mode);
+			const auto frames_per_second = static_cast<float>(
+			        1000.0 / v->draw.frame_period_ms);
+
+			RENDER_SetSize(image_info, frames_per_second);
 		}
 
 		Voodoo_VerticalTimer(0);
