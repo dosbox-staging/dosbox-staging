@@ -40,9 +40,12 @@ png:
 	# Rendering this from the SVG optimised for 24x24px looks good enough.
 	rsvg-convert -h  22 svg/dosbox-staging-24.svg > $(PNG_DIR)/icon_22.png
 
-	rsvg-convert -h  48 svg/dosbox-staging.svg    > $(PNG_DIR)/icon_48.png
-	rsvg-convert -h  96 svg/dosbox-staging.svg    > $(PNG_DIR)/icon_96.png
-	rsvg-convert -h 256 svg/dosbox-staging.svg    > $(PNG_DIR)/icon_256.png
+	rsvg-convert -h   48 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_48.png
+	rsvg-convert -h   96 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_96.png
+	rsvg-convert -h  128 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_128.png
+	rsvg-convert -h  256 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_256.png
+	rsvg-convert -h  512 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_512.png
+	rsvg-convert -h 1024 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_1024.png
 
 ##
 #  Re-generate Window .ico file from the PNG icons.
