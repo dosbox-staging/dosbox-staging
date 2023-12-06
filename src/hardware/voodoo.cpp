@@ -7353,7 +7353,7 @@ static void Voodoo_UpdateScreen()
 			image_info.height               = height;
 			image_info.double_width         = false;
 			image_info.double_height        = false;
-			image_info.force_single_scan    = false;
+			image_info.forced_single_scan   = false;
 			image_info.rendered_double_scan = false;
 			image_info.pixel_aspect_ratio   = {1};
 			image_info.pixel_format = PixelFormat::RGB565_Packed16;

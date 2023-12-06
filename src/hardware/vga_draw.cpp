@@ -1983,7 +1983,7 @@ ImageInfo setup_drawing()
 	// If true, we're rendering a double-scanned VGA mode as single-scanned
 	// (so rendering half the lines only, e.g., only 200 lines for the
 	// double-scanned 320x200 13h VGA mode).
-	bool force_single_scan = false;
+	bool forced_single_scan = false;
 
 	// If true, we're dealing with "baked-in" double scanning, i.e., when
 	// 320x200 is rendered as 320x400.
@@ -2106,9 +2106,9 @@ ImageInfo setup_drawing()
 			video_mode.is_double_scanned_mode = true;
 
 			vga.draw.address_line_total /= 2;
-			video_mode.height = vert_end / 2;
-			double_height     = vga.draw.double_scanning_enabled;
-			force_single_scan = !vga.draw.double_scanning_enabled;
+			video_mode.height  = vert_end / 2;
+			double_height      = vga.draw.double_scanning_enabled;
+			forced_single_scan = !vga.draw.double_scanning_enabled;
 		} else {
 			video_mode.height = vert_end;
 		}
@@ -2162,8 +2162,8 @@ ImageInfo setup_drawing()
 		// VGA (render single-scanned, then double the image vertically with a
 		// scaler).
 		if (is_double_scanning) {
-			video_mode.height = vert_end / 2;
-			force_single_scan = !vga.draw.double_scanning_enabled;
+			video_mode.height  = vert_end / 2;
+			forced_single_scan = !vga.draw.double_scanning_enabled;
 
 			if (vga.draw.double_scanning_enabled) {
 				render_height = video_mode.height * 2;
@@ -2258,7 +2258,7 @@ ImageInfo setup_drawing()
 			if (is_vga_scan_doubling()) {
 				video_mode.is_double_scanned_mode = true;
 				video_mode.height = vert_end / 2;
-				force_single_scan = !vga.draw.double_scanning_enabled;
+				forced_single_scan = !vga.draw.double_scanning_enabled;
 
 				if (vga.draw.double_scanning_enabled) {
 					render_height = video_mode.height * 2;
@@ -2460,7 +2460,7 @@ ImageInfo setup_drawing()
 
 			// We never render true double-scanned CGA modes; we
 			// always fake it even if double scanning is requested
-			force_single_scan = true;
+			forced_single_scan = true;
 
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
 			        vga_timings);
@@ -2800,8 +2800,8 @@ ImageInfo setup_drawing()
 	          render_pixel_aspect_ratio.Denom(),
 	          render_pixel_aspect_ratio.Inverse().ToDouble());
 
-	LOG_DEBUG("VGA: force_single_scan: %d, rendered_double_scan: %d",
-	          force_single_scan,
+	LOG_DEBUG("VGA: forced_single_scan: %d, rendered_double_scan: %d",
+	          forced_single_scan,
 	          rendered_double_scan);
 
 	LOG_DEBUG("VGA: VIDEO_MODE: width: %d, height: %d, PAR: %lld:%lld (1:%g)",
@@ -2834,7 +2834,7 @@ ImageInfo setup_drawing()
 	render.height               = render_height;
 	render.double_width         = double_width;
 	render.double_height        = double_height;
-	render.force_single_scan    = force_single_scan;
+	render.forced_single_scan   = forced_single_scan;
 	render.rendered_double_scan = rendered_double_scan;
 	render.pixel_aspect_ratio   = render_pixel_aspect_ratio;
 	render.pixel_format         = pixel_format;
@@ -2910,7 +2910,7 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 			                                          SCALER_MAXHEIGHT));
 		}
 
-		vga.draw.lines_scaled = image_info.force_single_scan ? 2 : 1;
+		vga.draw.lines_scaled = image_info.forced_single_scan ? 2 : 1;
 
 		if (!vga.draw.vga_override) {
 			ReelMagic_RENDER_SetSize(image_info, fps);

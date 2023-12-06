@@ -299,7 +299,7 @@ struct ImageInfo {
 	// both 320x400, so they would be considered equal if this flag was not
 	// included. This would throw off the adaptive shader switching logic when
 	// such video mode transitions happen.
-	bool force_single_scan = false;
+	bool forced_single_scan = false;
 
 	// If true, we're dealing with "baked-in" double scanning, i.e., when
 	// 320x200 is rendered as 320x400. This can happen for non-VESA VGA modes
@@ -333,7 +333,7 @@ struct ImageInfo {
 		return (width == that.width && height == that.height &&
 		        double_width == that.double_width &&
 		        double_height == that.double_height &&
-		        force_single_scan == that.force_single_scan &&
+		        forced_single_scan == that.forced_single_scan &&
 		        pixel_aspect_ratio == that.pixel_aspect_ratio &&
 		        pixel_format == that.pixel_format &&
 		        video_mode == that.video_mode);
