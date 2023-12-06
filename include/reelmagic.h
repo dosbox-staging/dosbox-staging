@@ -40,12 +40,11 @@ struct ReelMagic_VideoMixerMPEGProvider {
 void ReelMagic_RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                                  const uint8_t green, const uint8_t blue);
 
-void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
-                              const bool double_width, const bool double_height,
-                              const Fraction& render_pixel_aspect_ratio,
-                              const PixelFormat pixel_format,
-                              const double frames_per_second,
-                              const VideoMode& video_mode);
+// forward declaration
+struct ImageInfo;
+
+void ReelMagic_RENDER_SetSize(const ImageInfo& image_info,
+                              const double frames_per_second);
 
 bool ReelMagic_RENDER_StartUpdate(void);
 
