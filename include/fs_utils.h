@@ -89,6 +89,39 @@ constexpr uint32_t OK_IF_EXISTS = 0x1;
 
 int create_dir(const std_fs::path& path, uint32_t mode, uint32_t flags = 0x0) noexcept;
 
+// Behaves like fseek, but logs an error stating the module, byte offset, file
+// description, filename, and strerror on failure. Returns true on success and
+// false on failure. On failure, it closes the file as it's no longer in a good
+// state.
+//
+bool check_fseek(const char* module_name, const char* file_description,
+                 const char* filename, FILE*& stream, const long long offset,
+                 const int whence);
+
+// Returns a 'check_fseek' function object that behaves like the above. This can
+// be used when lots of sequential seeks are needed.
+//
+inline auto make_check_fseek_func(const std::string& module_name,
+                                  const std::string& file_description,
+                                  const std_fs::path& filepath)
+{
+	// Use the lambda copy-operator to keep copies of the arguments inside
+	// the lambda, as these arguments would normally go out of scope with
+	// respect to the lifetime of the lamda.
+	//
+	auto check_fseek_lambda = [=](FILE*& stream,
+	                              const long long offset,
+	                              const int whence) -> bool {
+		return check_fseek(module_name.c_str(),
+		                   file_description.c_str(),
+		                   filepath.string().c_str(),
+		                   stream,
+		                   offset,
+		                   whence);
+	};
+	return check_fseek_lambda;
+}
+
 // Convert a filesystem time to a raw time_t value
 std::time_t to_time_t(const std_fs::file_time_type &fs_time);
 
