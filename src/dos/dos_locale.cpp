@@ -54,18 +54,16 @@ CHECK_NARROWING();
 // - DR-DOS 7.03, HELP, Table 9-2: Country Codes and Code Pages
 // - FreeDOS 1.3, country.asm (source code)
 // - Paragon PTS DOS 2000 Pro manual
+// - OS/2 Warp 4.52, keyboard.pdf file
 // - https://en.wikipedia.org/wiki/List_of_country_calling_codes
 //   (used for remaining countries, especially where we have keyboard layout)
 
 // TODO: 'Ralph Brown Interrupt List' also mentions countries listed below.
 //       Moreover, OS/2 Warp 4.52 contains definitions which can be used for
 //       historic settings for several countries.
-// 20  = Egypt                         51  = Peru
-// 53  = Cuba                          92  = Pakistan
+// 51  = Peru                          53  = Cuba
 // 93  = Afghanistan                   94  = Sri Lanka
-// 98  = Iran                          99  = Asia (English)
-// 112 = Belarus                       212 = Morocco
-// 213 = Algeria                       216 = Tunisia
+// 98  = Iran                          112 = Belarus
 // 218 = Libya                         220 = Gambia
 // 221 = Senegal                       222 = Maruitania
 // 223 = Mali                          224 = African Guinea
@@ -92,17 +90,12 @@ CHECK_NARROWING();
 // 269 = Comoros                       270 = Mayotte
 // 290 = St. Helena                    297 = Aruba
 // 299 = Greenland                     350 = Gibraltar
-// 352 = Luxembourg                    357 = Cyprus
-// 373 = Moldova                       500 = Falkland Islands
-// 501 = Belize                        502 = Guatemala
-// 503 = El Salvador                   504 = Honduras
-// 505 = Nicaragua                     506 = Costa Rica
-// 507 = Panama                        508 = St. Pierre and Miquelon
-// 509 = Haiti                         590 = Guadeloupe
-// 591 = Bolivia                       592 = Guyana
-// 594 = French Guiana                 595 = Paraguay
-// 596 = Martinique / French Antilles  597 = Suriname
-// 598 = Uruguay                       599 = Netherland Antilles
+// 357 = Cyprus                        373 = Moldova
+// 500 = Falkland Islands              501 = Belize
+// 508 = St. Pierre and Miquelon       509 = Haiti
+// 590 = Guadeloupe                    592 = Guyana
+// 594 = French Guiana                 596 = Martinique / French Antilles
+// 597 = Suriname                      599 = Netherland Antilles
 // 670 = Saipan / N. Mariana Island    671 = Guam
 // 672 = Norfolk Island (Australia) / Christmas Island/Cocos Islands / Antarctica
 // 673 = Brunei Darussalam             674 = Nauru
@@ -123,93 +116,116 @@ CHECK_NARROWING();
 // 850 = North Korea                   853 = Macao
 // 855 = Cambodia                      856 = Laos
 // 880 = Bangladesh                    960 = Maldives
-// 961 = Lebanon                       962 = Jordan
-// 963 = Syria                         964 = Iraq
-// 965 = Kuwait                        966 = Saudi Arabia
-// 967 = Yemen                         968 = Oman
-// 969 = Yemen                         971 = United Arab Emirates
-// 973 = Bahrain                       974 = Qatar
-// 975 = Bhutan                        977 = Nepal
-// 995 = Myanmar (Burma)
+// 964 = Iraq                          969 = Yemen
+// 971 = United Arab Emirates          975 = Bhutan
+// 977 = Nepal                         995 = Myanmar (Burma)
 
 enum class Country : uint16_t {
-	International   = 0,  // internal, not used by any DOS
-	UnitedStates    = 1,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	CanadaFrench    = 2,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	LatinAmerica    = 3,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	CanadaEnglish   = 4,  // MS-DOS
-	Russia          = 7,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	SouthAfrica     = 27, // MS-DOS
-	Greece          = 30, // MS-DOS, PC-DOS,         FreeDOS
-	Netherlands     = 31, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Belgium         = 32, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	France          = 33, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Spain           = 34, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
+	International   = 0,   // internal, not used by any DOS
+	UnitedStates    = 1,   // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2 (*)
+	CanadaFrench    = 2,   // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	LatinAmerica    = 3,   // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	CanadaEnglish   = 4,   // MS-DOS,                                   OS/2 (*)
+	Russia          = 7,   // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Egypt           = 20,  //                                           OS/2
+	SouthAfrica     = 27,  // MS-DOS,                                   OS/2
+	Greece          = 30,  // MS-DOS, PC-DOS,         FreeDOS,          OS/2
+	Netherlands     = 31,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Belgium         = 32,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	France          = 33,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Spain           = 34,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2 (*)
 	// 35 - unofficial duplicate of Bulgaria
-	Hungary         = 36, // MS-DOS, PC-DOS, DR-DOS, FreeDOS
-	Yugoslavia      = 38, // MS-DOS, PC-DOS,         FreeDOS
-	Italy           = 39, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Romania         = 40, // MS-DOS, PC-DOS,         FreeDOS
-	Switzerland     = 41, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Czechia         = 42, // MS-DOS                                   (*)
-	Austria         = 43, // MS-DOS                  FreeDOS
-	UnitedKingdom   = 44, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Denmark         = 45, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Sweden          = 46, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Norway          = 47, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Poland          = 48, // MS-DOS, PC-DOS,         FreeDOS
-	Germany         = 49, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Mexico          = 52, // MS-DOS
-	Argentina       = 54, // MS-DOS,                 FreeDOS
-	Brazil          = 55, // MS-DOS, PC-DOS,         FreeDOS
-	Chile           = 56, // MS-DOS
-	Colombia        = 57, // MS-DOS
-	Venezuela       = 58, // MS-DOS
-	Malaysia        = 60, // MS-DOS,                 FreeDOS
-	Australia       = 61, // MS-DOS, PC-DOS, DR-DOS, FreeDOS          (*)
+	Hungary         = 36,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS,          OS/2
+	Yugoslavia      = 38,  // MS-DOS, PC-DOS,         FreeDOS,          OS/2
+	Italy           = 39,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Romania         = 40,  // MS-DOS, PC-DOS,         FreeDOS,          OS/2
+	Switzerland     = 41,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Czechia         = 42,  // MS-DOS, PC-DOS,                           OS/2 (*)
+	Austria         = 43,  // MS-DOS                  FreeDOS,          OS/2
+	UnitedKingdom   = 44,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Denmark         = 45,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Sweden          = 46,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Norway          = 47,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Poland          = 48,  // MS-DOS, PC-DOS,         FreeDOS,          OS/2
+	Germany         = 49,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Mexico          = 52,  // MS-DOS,                                   OS/2
+	Argentina       = 54,  // MS-DOS,                 FreeDOS,          OS/2
+	Brazil          = 55,  // MS-DOS, PC-DOS,         FreeDOS,          OS/2
+	Chile           = 56,  // MS-DOS
+	Colombia        = 57,  // MS-DOS,                                   OS/2
+	Venezuela       = 58,  // MS-DOS,                                   OS/2
+	Malaysia        = 60,  // MS-DOS,                 FreeDOS
+	Australia       = 61,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS,          OS/2 (*)
+	Indonesia       = 62,  //                                           OS/2
 	Philippines     = 63,
-	NewZealand      = 64, // MS-DOS
-	Singapore       = 65, // MS-DOS,                 FreeDOS
-	Thailand        = 66, // WIN-ME
+	NewZealand      = 64,  // MS-DOS,                                   OS/2
+	Singapore       = 65,  // MS-DOS,                 FreeDOS,          OS/2
+	Thailand        = 66,  // WIN-ME,                                   OS/2
 	Kazakhstan      = 77,
-	Japan           = 81, // MS-DOS, PC-DOS,         FreeDOS, Paragon
-	SouthKorea      = 82, // MS-DOS,                 FreeDOS, Paragon
+	Japan           = 81,  // MS-DOS, PC-DOS,         FreeDOS, Paragon, OS/2
+	SouthKorea      = 82,  // MS-DOS,                 FreeDOS, Paragon, OS/2
 	Vietnam         = 84,
-	China           = 86, // MS-DOS,                 FreeDOS, Paragon
+	China           = 86,  // MS-DOS,                 FreeDOS, Paragon, OS/2
 	// 88 - duplicate of Taiwan
-	Turkey          = 90, // MS-DOS, PC-DOS, DR-DOS, FreeDOS
-	India           = 91, // MS-DOS,                 FreeDOS
+	Turkey          = 90,  // MS-DOS, PC-DOS, DR-DOS, FreeDOS,          OS/2
+	India           = 91,  // MS-DOS,                 FreeDOS,          OS/2
+	Pakistan        = 92,  //                                           OS/2
+	AsiaEnglish     = 99,  //                                           OS/2
+	Morocco         = 212, //                                           OS/2
+	Algeria         = 213, //                                           OS/2
+	Tunisia         = 216, //                                           OS/2
 	Niger           = 227,
 	Benin           = 229,
 	Nigeria         = 234,
 	FaroeIslands    = 298,
-	Portugal        = 351, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Ireland         = 353, // MS-DOS
-	Iceland         = 354, // MS-DOS, PC-DOS
-	Albania         = 355, // MS-DOS, PC-DOS
+	Portugal        = 351, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Luxembourg      = 352, //                                           OS/2
+	Ireland         = 353, // MS-DOS,                                   OS/2
+	Iceland         = 354, // MS-DOS, PC-DOS,                           OS/2
+	Albania         = 355, // MS-DOS, PC-DOS,                           OS/2
 	Malta           = 356,
-	Finland         = 358, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon
-	Bulgaria        = 359, // MS-DOS, PC-DOS,         FreeDOS
-	Lithuania       = 370,
-	Latvia          = 371,
-	Estonia         = 372, // WIN-ME
+	Finland         = 358, // MS-DOS, PC-DOS, DR-DOS, FreeDOS, Paragon, OS/2
+	Bulgaria        = 359, // MS-DOS, PC-DOS,         FreeDOS,          OS/2
+	Lithuania       = 370, //                                           OS/2
+	Latvia          = 371, //                                           OS/2
+	Estonia         = 372, // WIN-ME,                                   OS/2
 	Armenia         = 374,
-	Belarus         = 375, // WIN-ME                  FreeDOS
-	Ukraine         = 380, // WIN-ME                  FreeDOS
-	Serbia          = 381, // MS-DOS, PC-DOS,         FreeDOS          (*)
+	Belarus         = 375, // WIN-ME                  FreeDOS,          OS/2
+	Ukraine         = 380, // WIN-ME                  FreeDOS,          OS/2
+	Serbia          = 381, // MS-DOS, PC-DOS,         FreeDOS,          OS/2 (*)
 	Montenegro      = 382,
 	// 384 - duplicate of Croatia
-	Croatia         = 385, // MS-DOS, PC-DOS,         FreeDOS          (*)
-	Slovenia        = 386, // MS-DOS, PC-DOS,         FreeDOS
-	BosniaLatin     = 387, // MS-DOS, PC-DOS,         FreeDOS
+	Croatia         = 385, // MS-DOS, PC-DOS,         FreeDOS,          OS/2 (*)
+	Slovenia        = 386, // MS-DOS, PC-DOS,         FreeDOS,          OS/2
+	BosniaLatin     = 387, // MS-DOS, PC-DOS,         FreeDOS,          OS/2
 	BosniaCyrillic  = 388, //         PC-DOS,
-	NorthMacedonia  = 389, // MS-DOS, PC-DOS,         FreeDOS
-	Slovakia        = 421, // MS-DOS                                   (*)
-	Ecuador         = 593, // MS-DOS
-	Arabic          = 785, // MS-DOS,                 FreeDOS, Paragon (*)
+	NorthMacedonia  = 389, // MS-DOS, PC-DOS,         FreeDOS,          OS/2
+	Slovakia        = 421, // MS-DOS, PC-DOS,                           OS/2 (*)
+	// 422 - used for Slovakia by CP-DOS and OS/2
+        Guatemala       = 502, //                                           OS/2
+        ElSalvador      = 503, //                                           OS/2
+        Honduras        = 504, //                                           OS/2
+        Nicaragua       = 505, //                                           OS/2
+        CostaRica       = 506, //                                           OS/2
+        Panama          = 507, //                                           OS/2
+        Bolivia         = 591, //                                           OS/2
+	Ecuador         = 593, // MS-DOS,                                   OS/2
+        Paraguay        = 595, //                                           OS/2
+        Uruguay         = 598, //                                           OS/2
+	Arabic          = 785, // MS-DOS,                 FreeDOS, Paragon, OS/2
 	HongKong        = 852, // MS-DOS
-	Taiwan          = 886, // MS-DOS
-	Israel          = 972, // MS-DOS,                 FreeDOS, Paragon
+	Taiwan          = 886, // MS-DOS,                                   OS/2 (*)
+	Lebanon         = 961, //                                           OS/2
+	Jordan          = 962, //                                           OS/2
+	Syria           = 963, //                                           OS/2
+	Kuwait          = 965, //                                           OS/2
+	SaudiArabia     = 966, //                                           OS/2
+	Yemen           = 967, //                                           OS/2
+	Oman            = 968, //                                           OS/2
+	Emirates        = 971, //                                           OS/2
+	Israel          = 972, // MS-DOS,                 FreeDOS, Paragon, OS/2	
+	Bahrain         = 973, //                                           OS/2
+	Qatar           = 974, //                                           OS/2
 	Mongolia        = 976,
 	Tajikistan      = 992,
 	Turkmenistan    = 993,
@@ -219,19 +235,20 @@ enum class Country : uint16_t {
 	Uzbekistan      = 998,
 
 	// (*) Remarks:
-	// - MS-DOS and PC-DOS use country code 381 for both Serbia and Montenegro
+	// - MS-DOS, PC-DOS, and OS/2 use country code 381 for both Serbia and Montenegro
 	// - MS-DOS and PC-DOS use country code 61 also for International English
 	// - PC-DOS uses country code 381 also for Yugoslavia Cyrillic
 	// - MS-DOS (contrary to PC-DOS or Windows ME) uses code 384 (not 385)
 	//   for Croatia, FreeDOS follows MS-DOS standard - this was most likely
 	//   a bug in the OS, Croatia calling code is 385
-	// - PC-DOS uses country code 421 for Czechia and 422 for Slovakia
+	// - PC-DOS and OS/2 use country code 421 for Czechia and 422 for Slovakia
 	// - FreeDOS uses country code 042 for Czechoslovakia
-	// - FreeDOS calls country code 785 Middle-East,
-	//   MS-DOS calls it Arabic South
+	// - FreeDOS calls country code 785 Middle-East, MS-DOS calls it Arabic South
 	// - Paragon PTS DOS uses country code 61 only for Australia
-	// - Paragon PTS DOS uses country code 88 for Taiwan, DOS 6.22 uses
+	// - Paragon PTS DOS and OS/2 use country code 88 for Taiwan, DOS 6.22 uses
 	//   this code as a duplicate of 886, probably for compatibility
+	// - OS/2 uses country code 1 also for Canada, English, it does not use 4
+	// - OS/2 uses country 34 also for Catalunya
 
 	// FreeDOS also supports the following, not yet handled here:
 	// - Belgium/Dutch        40032
@@ -408,9 +425,29 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Comma          // list separator
 		} }
 	} } },
+	{ Country::Algeria, { "Algeria", "DZA", {
+		{ LocalePeriod::Modern, {
+			// fr_DZ
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﺟ.", "DA" }, "DZD", 2,
+			DosCurrencyFormat::AmountSpaceSymbol,
+			Separator::Space,         // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 213
+			DosDateFormat::YearMonthDay, Separator::Dash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﺟ.", "DA" }, "DZD", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
 	{ Country::Arabic, { "Arabic (Middle East)", "XME", { // custom country code
 		{ LocalePeriod::Modern, {
-			// ar_*
+			// (common/representative values for Arabic languages)
 			DosDateFormat::DayMonthYear, Separator::Period,
 			DosTimeFormat::Time12H,      Separator::Colon,
 			{ "¤", "$" }, "USD", 2,
@@ -457,6 +494,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			DosCurrencyFormat::AmountSpaceSymbol,
 			Separator::Space,         // thousands separator
 			Separator::Comma,         // decimal separator
+		} }
+	} } },
+	{ Country::AsiaEnglish, { "Asia (English)", "XAE", { // custom country code
+		{ LocalePeriod::Modern, {
+			// en_HK, en_MO, en_IN, en_PK
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "¤", "$" }, "USD", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.51; country 99
+			DosDateFormat::YearMonthDay, Separator::Dash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "$" }, "USD", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+			Separator::Comma          // list separator
 		} }
 	} } },
 	{ Country::Australia, { "Australia", "AUS", {
@@ -510,6 +567,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Comma,         // decimal separator
 		} }
 	} } },
+	{ Country::Bahrain, { "Bahrain", "BHR", {
+		{ LocalePeriod::Modern, {
+			// (taken from the common Arabic, adapted the currency)
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﺑ.", "BD" }, "BHD", 3,
+			DosCurrencyFormat::AmountSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 973
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﺑ.", "BD" }, "BHD", 3,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
 	{ Country::Belarus, { "Belarus", "BLR", {
 		{ LocalePeriod::Modern, {
 			// be_BY
@@ -561,6 +638,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			DosCurrencyFormat::AmountSpaceSymbol,
 			Separator::Space,         // thousands separator
 			Separator::Comma,         // decimal separator
+		} }
+	} } },
+	{ Country::Bolivia, { "Bolivia", "BOL", {
+		{ LocalePeriod::Modern, {
+			// es_BO
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "Bs" }, "BOB", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 591
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "Bs" }, "BOB", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+			Separator::Comma          // list separator
 		} }
 	} } },
 	{ Country::BosniaLatin, { "Bosnia and Herzegovina (Latin)", "BIH_LAT", {
@@ -730,7 +827,7 @@ static const std::map<Country, CountryInfo> CountryData = {
 			// es_CO
 			DosDateFormat::DayMonthYear, Separator::Slash,
 			DosTimeFormat::Time12H,      Separator::Colon,
-			{ "$" }, "COP", 2,
+			{ "Col$", "$" }, "COP", 2,
 			DosCurrencyFormat::SymbolAmount,
 			Separator::Period,        // thousands separator
 			Separator::Comma,         // decimal separator
@@ -738,10 +835,30 @@ static const std::map<Country, CountryInfo> CountryData = {
 			// MS-DOS 6.22; country 57
 			DosDateFormat::DayMonthYear, Separator::Slash,
 			DosTimeFormat::Time12H,      Separator::Colon,
-			{ "$" }, "COP", 2,
+			{ "C$", "$" }, "COP", 2,
 			DosCurrencyFormat::SymbolAmount,
 			Separator::Period,        // thousands separator
 			Separator::Comma,         // decimal separator
+			Separator::Comma          // list separator
+		} }
+	} } },
+	{ Country::CostaRica, { "Costa Rica", "CRI", {
+		{ LocalePeriod::Modern, {
+			// es_CR
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "₡", "C" }, "CRC", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Space,         // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 506
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "₡", "C" }, "CRC", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
 			Separator::Comma          // list separator
 		} }
 	} } },
@@ -824,6 +941,66 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Period,        // thousands separator
 			Separator::Comma,         // decimal separator
 			Separator::Comma          // list separator
+		} }
+	} } },
+	{ Country::Egypt, { "Egypt", "EGY", {
+		{ LocalePeriod::Modern, {
+			// (taken from the common Arabic, adapted the currency)
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺟ.ﻣ.", "£E", "LE" }, "EGP", 2,
+			DosCurrencyFormat::AmountSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 20
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺟ.ﻣ.", "£E", "LE" }, "EGP", 3,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
+	{ Country::ElSalvador, { "El Salvador", "SLV", {
+		{ LocalePeriod::Modern, {
+			// es_SV
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "$" }, "USD", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 503
+			DosDateFormat::MonthDayYear, Separator::Dash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "₡", "C" }, "SVC", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+			Separator::Semicolon          // list separator
+		} }
+	} } },
+	{ Country::Emirates, { "United Arab Emirates", "ARE", {
+		{ LocalePeriod::Modern, {
+			// en_AE
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.", "DH" }, "AED", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 971
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.", "DH" }, "AED", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
 		} }
 	} } },
 	{ Country::Estonia, { "Estonia", "EST", {
@@ -950,6 +1127,46 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Comma          // list separator
 		} }
 	} } },
+	{ Country::Guatemala, { "Guatemala", "GTM", {
+		{ LocalePeriod::Modern, {
+			// es_GT
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "Q" }, "GTQ", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 502
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "Q" }, "GTQ", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+			Separator::Comma          // list separator
+		} }
+	} } },
+	{ Country::Honduras, { "Honduras", "HND", {
+		{ LocalePeriod::Modern, {
+			// es_HN
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "L" }, "HNL", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 504
+			DosDateFormat::MonthDayYear, Separator::Dash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "L" }, "HNL", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
 	{ Country::HongKong, { "Hong Kong", "HKG", {
 		{ LocalePeriod::Modern, {
 			// en_HK, zh_HK
@@ -1028,6 +1245,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Period,        // thousands separator
 			Separator::Comma,         // decimal separator
 			Separator::Comma          // list separator
+		} }
+	} } },
+	{ Country::Indonesia, { "Indonesia", "IDN", {
+		{ LocalePeriod::Modern, {
+			// id_ID
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "Rp" }, "IDR", 0,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 62
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "Rp" }, "IDR", 0,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
 		} }
 	} } },
 	{ Country::Ireland, { "Ireland", "IRL", {
@@ -1110,6 +1347,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Comma          // list separator
 		} }
 	} } },
+	{ Country::Jordan, { "Jordan", "JOR", {
+		{ LocalePeriod::Modern, {
+			// (taken from the common Arabic, adapted the currency)
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﺍ.", "JD" }, "JOD", 2,
+			DosCurrencyFormat::AmountSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 962
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﺍ.", "JD" }, "JOD", 3,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
 	{ Country::Kazakhstan, { "Kazakhstan", "KAZ", {
 		{ LocalePeriod::Modern, {
 			// kk_KZ
@@ -1119,6 +1376,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			DosCurrencyFormat::AmountSpaceSymbol,
 			Separator::Space,         // thousands separator
 			Separator::Comma,         // decimal separator
+		} }
+	} } },
+	{ Country::Kuwait, { "Kuwait", "KWT", {
+		{ LocalePeriod::Modern, {
+			// (taken from the common Arabic, adapted the currency)
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﻛ.", "KD" }, "KWD", 2,
+			DosCurrencyFormat::AmountSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 965
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﻛ.", "KD" }, "KWD", 3,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
 		} }
 	} } },
 	{ Country::Kyrgyzstan, { "Kyrgyzstan", "KGZ", {
@@ -1161,6 +1438,35 @@ static const std::map<Country, CountryInfo> CountryData = {
 			DosCurrencyFormat::AmountSpaceSymbol,
 			Separator::Space,         // thousands separator
 			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 371
+			DosDateFormat::YearMonthDay, Separator::Period,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "Ls" }, "LVL", 2,
+			DosCurrencyFormat::AmountSpaceSymbol,
+			Separator::Space,         // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
+	{ Country::Lebanon, { "Lebanon", "LBN", {
+		{ LocalePeriod::Modern, {
+			// (taken from the common Arabic, adapted the currency)
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﻛ.", "LL" }, "LBP", 2,
+			DosCurrencyFormat::AmountSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 961
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﻛ.", "LL" }, "LBP", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
 		} }
 	} } },
 	{ Country::Lithuania, { "Lithuania", "LTU", {
@@ -1172,6 +1478,35 @@ static const std::map<Country, CountryInfo> CountryData = {
 			DosCurrencyFormat::AmountSpaceSymbol,
 			Separator::Space,         // thousands separator
 			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 370
+			DosDateFormat::YearMonthDay, Separator::Period,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "Lt" }, "LTL", 2,
+			DosCurrencyFormat::AmountSpaceSymbol,
+			Separator::Period,       // thousands separator
+			Separator::Comma,        // decimal separator
+			Separator::Semicolon     // list separator
+		} }
+	} } },
+	{ Country::Luxembourg, { "Luxembourg", "LUX", {
+		{ LocalePeriod::Modern, {
+			// de_DE
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "€" }, "EUR", 2,
+			DosCurrencyFormat::AmountSpaceSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 352
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "F" }, "LUF", 2,
+			DosCurrencyFormat::AmountSpaceSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
 		} }
 	} } },
 	{ Country::Malaysia, { "Malaysia", "MYS", {
@@ -1245,6 +1580,35 @@ static const std::map<Country, CountryInfo> CountryData = {
 			DosCurrencyFormat::AmountSpaceSymbol,
 			Separator::Period,        // thousands separator
 			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// MS-DOS 6.22; country 381, but with DM currency
+			DosDateFormat::YearMonthDay, Separator::Dash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "DM" }, "DEM", 2,
+			DosCurrencyFormat::AmountSpaceSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Comma          // list separator
+		} }
+	} } },
+	{ Country::Morocco, { "Morocco", "MAR", {
+		{ LocalePeriod::Modern, {
+			// fr_MA
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "ﺩ.ﻣ.", "DH" }, "MAD", 2,
+			DosCurrencyFormat::AmountSpaceSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 212
+			DosDateFormat::YearMonthDay, Separator::Dash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "ﺩ.ﻣ.", "DH" }, "MAD", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
 		} }
 	} } },
 	{ Country::Netherlands, { "Netherlands", "NLD", {
@@ -1284,6 +1648,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Comma,         // thousands separator
 			Separator::Period,        // decimal separator
 			Separator::Comma          // list separator
+		} }
+	} } },
+	{ Country::Nicaragua, { "Nicaragua", "NIC", {
+		{ LocalePeriod::Modern, {
+			// es_NI
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "C$" }, "NIO", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 505
+			DosDateFormat::MonthDayYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "$C" }, "NIO", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+			Separator::Semicolon      // list separator
 		} }
 	} } },
 	{ Country::Niger, { "Niger", "NER", {
@@ -1348,6 +1732,86 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Semicolon      // list separator
 		} }
 	} } },
+	{ Country::Oman, { "Oman", "OMN", {
+		{ LocalePeriod::Modern, {
+			// (taken from the common Arabic, adapted the currency)
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺭ.ﻋ.", "R.O" }, "OMR", 3,
+			DosCurrencyFormat::AmountSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 968
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺭ.ﻋ.", "R.O" }, "OMR", 3,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
+	{ Country::Pakistan, { "Pakistan", "PAK", {
+		{ LocalePeriod::Modern, {
+			// en_PK
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "Rs" }, "PKR", 0,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 92
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "Rs" }, "PKR", 0,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
+	{ Country::Panama, { "Panama", "PAN", {
+		{ LocalePeriod::Modern, {
+			// es_PA
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "B/." }, "PAB", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 507
+			DosDateFormat::MonthDayYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "B" }, "PAB", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Comma,         // thousands separator
+			Separator::Period,        // decimal separator
+			Separator::Comma          // list separator
+		} }
+	} } },
+	{ Country::Paraguay, { "Paraguay", "PRY", {
+		{ LocalePeriod::Modern, {
+			// es_PY
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "₲", "Gs." }, "PYG", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 595
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "₲", "G" }, "PYG", 2,
+			DosCurrencyFormat::SymbolAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Comma          // list separator
+		} }
+	} } },
 	{ Country::Philippines, { "Philippines", "PHL", {
 		{ LocalePeriod::Modern, {
 			// fil_PH
@@ -1400,6 +1864,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Semicolon      // list separator
 		} }
 	} } },
+	{ Country::Qatar, { "Qatar", "QAT", {
+		{ LocalePeriod::Modern, {
+			// (taken from the common Arabic, adapted the currency)
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺭ.ﻗ.", "QR" }, "QAR", 2,
+			DosCurrencyFormat::AmountSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 974
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺭ.ﻗ.", "QR" }, "QAR", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
 	{ Country::Romania, { "Romania", "ROU", {
 		{ LocalePeriod::Modern, {
 			// ro_RO
@@ -1439,6 +1923,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			DosCurrencyFormat::AmountSpaceSymbol,
 			Separator::Space,         // thousands separator
 			Separator::Period,        // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
+	{ Country::SaudiArabia, { "Saudi Arabia", "SAU", {
+		{ LocalePeriod::Modern, {
+			// (taken from the common Arabic, adapted the currency)
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺭ.ﺳ.", "SR" }, "SAR", 2,
+			DosCurrencyFormat::AmountSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 966
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺭ.ﺳ.", "SR" }, "SAR", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
 			Separator::Semicolon      // list separator
 		} }
 	} } },
@@ -1627,6 +2131,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Semicolon      // list separator
 		} }
 	} } },
+	{ Country::Syria, { "Syria", "SYR", {
+		{ LocalePeriod::Modern, {
+			// fr_SY
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﻟ.ﺳ.", "LS" }, "SYP", 0,
+			DosCurrencyFormat::AmountSpaceSymbol,
+			Separator::Space,         // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 963
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﻟ.ﺳ.", "LS" }, "SYP", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
+		} }
+	} } },
 	{ Country::Tajikistan, { "Tajikistan", "TJK", {
 		{ LocalePeriod::Modern, {
 			// tg_TJ
@@ -1679,6 +2203,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Comma,         // thousands separator
 			Separator::Period,        // decimal separator
 			Separator::Comma          // list separator
+		} }
+	} } },
+	{ Country::Tunisia, { "Tunisia", "TUN", {
+		{ LocalePeriod::Modern, {
+			// fr_TN
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺩ.ﺗ.", "DT" }, "TND", 2,
+			DosCurrencyFormat::AmountSpaceSymbol,
+			Separator::Space,         // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 216
+			DosDateFormat::YearMonthDay, Separator::Dash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "ﺩ.ﺗ.", "DT" }, "TND", 3,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Slash          // list separator
 		} }
 	} } },
 	{ Country::Turkey, { "Turkey", "TUR", {
@@ -1776,6 +2320,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Comma          // list separator
 		} }
 	} } },
+	{ Country::Uruguay, { "Uruguay", "URY", {
+		{ LocalePeriod::Modern, {
+			// es_UY
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time24H,      Separator::Colon,
+			{ "$U", "$" }, "UYU", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 598
+			DosDateFormat::DayMonthYear, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "NU$", "$" }, "UYU", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Comma          // list separator
+		} }
+	} } },
 	{ Country::Uzbekistan, { "Uzbekistan", "UZB", {
 		{ LocalePeriod::Modern, {
 			// uz_UZ
@@ -1816,6 +2380,26 @@ static const std::map<Country, CountryInfo> CountryData = {
 			DosCurrencyFormat::AmountSymbol,
 			Separator::Period,        // thousands separator
 			Separator::Comma,         // decimal separator
+		} }
+	} } },
+	{ Country::Yemen, { "Yemen", "YEM", {
+		{ LocalePeriod::Modern, {
+			// (taken from the common Arabic, adapted the currency)
+			DosDateFormat::DayMonthYear, Separator::Period,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺭ.ﻱ.", "YRI" }, "YER", 2,
+			DosCurrencyFormat::AmountSymbol,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+		} }, { LocalePeriod::Historic, {
+			// OS/2 Warp 4.52; country 967
+			DosDateFormat::YearMonthDay, Separator::Slash,
+			DosTimeFormat::Time12H,      Separator::Colon,
+			{ "ﺭ.ﻱ.", "YRI" }, "YER", 2,
+			DosCurrencyFormat::SymbolSpaceAmount,
+			Separator::Period,        // thousands separator
+			Separator::Comma,         // decimal separator
+			Separator::Semicolon      // list separator
 		} }
 	} } },
 	{ Country::Yugoslavia, { "Yugoslavia", "YUG", { // obsolete country code
@@ -2351,10 +2935,12 @@ uint16_t DOS_GetCodePageFromCountry(const uint16_t country)
 
 	// Countries grouped in ascending order by code_page value
 	switch (country_id) {
+	case Country::AsiaEnglish:
 	case Country::Australia:
 	case Country::China:
 	case Country::HongKong:
 	case Country::India:
+	case Country::Indonesia:
 	case Country::International:
 	case Country::Ireland:
 	case Country::Japan:
@@ -2376,15 +2962,24 @@ uint16_t DOS_GetCodePageFromCountry(const uint16_t country)
 	case Country::Lithuania: return assert_code_page(774);
 
 	case Country::Argentina:
+	case Country::Bolivia:
 	case Country::CanadaEnglish:
 	case Country::Chile:
 	case Country::Colombia:
+	case Country::CostaRica:
 	case Country::Ecuador:
+	case Country::ElSalvador:
+	case Country::Guatemala:
+	case Country::Honduras:
 	case Country::LatinAmerica:
 	case Country::Mexico:
+	case Country::Nicaragua:
+	case Country::Panama:
+	case Country::Paraguay:
 	case Country::Philippines:
 	case Country::Sweden:
 	case Country::Switzerland:
+	case Country::Uruguay:
 	case Country::Venezuela: return assert_code_page(850);
 
 	case Country::Austria:
@@ -2393,6 +2988,7 @@ uint16_t DOS_GetCodePageFromCountry(const uint16_t country)
 	case Country::France:
 	case Country::Germany:
 	case Country::Italy:
+	case Country::Luxembourg:
 	case Country::Netherlands:
 	case Country::Spain:
 		if (config.locale_period == LocalePeriod::Modern) {
@@ -2429,7 +3025,22 @@ uint16_t DOS_GetCodePageFromCountry(const uint16_t country)
 
 	case Country::CanadaFrench: return assert_code_page(863);
 
-	case Country::Arabic: return assert_code_page(864);
+	case Country::Algeria:
+	case Country::Arabic:
+	case Country::Bahrain:
+	case Country::Egypt:
+	case Country::Emirates:
+	case Country::Jordan:
+	case Country::Kuwait:
+	case Country::Lebanon:
+	case Country::Morocco:
+	case Country::Oman:
+	case Country::SaudiArabia:
+	case Country::Syria:
+	case Country::Tunisia:
+	case Country::Pakistan:
+	case Country::Qatar:
+	case Country::Yemen: return assert_code_page(864);
 
 	case Country::Denmark:
 	case Country::Norway: return assert_code_page(865);
