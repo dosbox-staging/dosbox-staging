@@ -89,14 +89,14 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect canvas_size
 	//
 	// We need to derive the potentially double-scanned dimensions from the
 	// video mode, *not* the current render dimensions! That's because we
-	// might be in forced single-scanning and/or no pixel-doubling mode
+	// might be in forced single scanning and/or no pixel doubling mode
 	// already in the renderer, but that's actually irrelevant for the
 	// shader auto-switching algorithm. All in all, it's easiest to start
 	// from a fixed, unchanging starting point, which is the "nominal"
 	// dimensions of the current video made.
 
 	// 1) Calculate vertical scale factor for the standard output resolution
-	// (i.e., always double-scanning on VGA).
+	// (i.e., always double scanning on VGA).
 	//
 	scale_y = [&] {
 		const auto double_scan = video_mode.is_double_scanned_mode ? 2 : 1;
@@ -110,7 +110,7 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect canvas_size
 		return static_cast<double>(draw_rect_px.h) / render_size_px.h;
 	}();
 
-	// 2) Calculate vertical scale factor for forced single-scanning on VGA
+	// 2) Calculate vertical scale factor for forced single scanning on VGA
 	// for double-scanned modes.
 	if (video_mode.is_double_scanned_mode) {
 		const DosBox::Rect render_size_px = {video_mode.width,
@@ -483,9 +483,9 @@ std::string ShaderManager::GetVgaShader() const
 	if (scale_y >= 2.0) {
 		// Up to 1080/5 = 216-line double-scanned VGA modes can be
 		// displayed with 5x vertical scaling on 1080p screens in
-		// fullscreen with forced single-scanning and a "fake
-		// double-scanning" shader that gives the *impression* of
-		// double-scanning (clearly, our options at 1080p are limited as
+		// fullscreen with forced single scanning and a "fake
+		// double scanning" shader that gives the *impression* of
+		// double scanning (clearly, our options at 1080p are limited as
 		// we'd need 3 pixels per emulated scanline at the very minimum
 		// for a somewhat convincing scanline emulation).
 		//

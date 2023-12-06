@@ -39,7 +39,7 @@ public:
 	~ImageDecoder() = default;
 
 	// Set `row_skip_count` to 1 to de-double-scan an image with "baked in"
-	// double-scanning.
+	// double scanning.
 	void Init(const RenderedImage& image, const uint8_t row_skip_count);
 
 	inline uint8_t GetNextIndexed8Pixel()

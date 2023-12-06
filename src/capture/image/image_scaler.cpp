@@ -35,7 +35,7 @@ void ImageScaler::Init(const RenderedImage& image)
 	input = image;
 
 	// To reconstruct the raw image, we must skip every second row if we're
-	// dealing with "baked in" double-scanning.
+	// dealing with "baked in" double scanning.
 	const uint8_t row_skip_count = (image.params.rendered_double_scan ? 1 : 0);
 	input_decoder.Init(image, row_skip_count);
 
