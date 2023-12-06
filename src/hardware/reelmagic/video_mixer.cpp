@@ -182,10 +182,6 @@ struct PlayerPicturePixel {
 // everything is passthrough if this is false
 static bool _videoMixerEnabled = false;
 
-// false if VGA dimensions set the output size, true if MPEG picture dimensions are the output size
-static bool _mpegDictatesOutputSize = false;
-static bool _vgaDup5Enabled         = false;
-
 // state captured from VGA
 VGA32bppPixel VGAPalettePixel::_vgaPalette32bpp[256] = {};
 VGA16bppPixel VGAPalettePixel::_vgaPalette16bpp[256] = {};
@@ -441,41 +437,6 @@ static inline void RMR_DrawLine_VSO_VGAMPEGDoubleSameWidthSkip6Vertical(const T*
 }
 CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VSO_VGAMPEGDoubleSameWidthSkip6Vertical)
 
-// VGA "Dup 5" functions
-
-template <typename T>
-static inline void RMR_DrawLine_VGAOnlyDup5Vertical(const T* src)
-{
-	const Bitu lineWidth         = _vgaWidth;
-	RenderOutputPixel* const out = _finalMixedRenderLineBuffer;
-	for (Bitu i = 0; i < lineWidth; ++i)
-		MixPixel(out[i], src[i]);
-	if (++_currentRenderLineNumber >= 5) {
-		_currentRenderLineNumber = 0;
-		RENDER_DrawLine(_finalMixedRenderLineBuffer);
-	}
-	RENDER_DrawLine(_finalMixedRenderLineBuffer);
-}
-CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VGAOnlyDup5Vertical)
-
-template <typename T>
-static inline void RMR_DrawLine_VGADup5VerticalMPEGSameSize(const T* src)
-{
-	const Bitu lineWidth         = _vgaWidth;
-	RenderOutputPixel* const out = _finalMixedRenderLineBuffer;
-	for (Bitu i = 0; i < lineWidth; ++i)
-		MixPixel(out[i], src[i], _mpegPictureBufferPtr[i]);
-	_mpegPictureBufferPtr += _mpegPictureWidth;
-	RENDER_DrawLine(_finalMixedRenderLineBuffer);
-
-	if (++_currentRenderLineNumber >= 5) {
-		_currentRenderLineNumber = 0;
-		RMR_DrawLine_VGADup5VerticalMPEGSameSize(src);
-		_currentRenderLineNumber = 0;
-	}
-}
-CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VGADup5VerticalMPEGSameSize)
-
 //
 // the catch-all un-optimized MPEG scaling function...
 //
@@ -485,7 +446,6 @@ CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VGADup5VerticalMPEGSameSize)
 //
 static Bitu _RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_WidthRatio     = 0;
 static Bitu _RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_HeightRatio    = 0;
-static Bitu _RMR_DrawLine_VSO_GeneralResizeMPEGToVGADup5LineCounter = 0;
 static void Initialize_RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_Dimensions()
 {
 	_RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_WidthRatio = _mpegPictureWidth << 12;
@@ -509,29 +469,6 @@ static inline void RMR_DrawLine_VSO_GeneralResizeMPEGToVGA(const T* src)
 	RENDER_DrawLine(_finalMixedRenderLineBuffer);
 }
 CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VSO_GeneralResizeMPEGToVGA)
-
-template <typename T>
-static inline void RMR_DrawLine_VSO_GeneralResizeMPEGToVGADup5(const T* src)
-{
-	const Bitu lineWidth         = _vgaWidth;
-	RenderOutputPixel* const out = _finalMixedRenderLineBuffer;
-	for (Bitu i = 0; i < lineWidth; ++i)
-		MixPixel(out[i],
-		         src[i],
-		         _mpegPictureBufferPtr[(i * _RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_WidthRatio) >> 12]);
-	_mpegPictureBufferPtr =
-	        &_mpegPictureBuffer[_mpegPictureWidth * ((++_currentRenderLineNumber *
-	                                                  _RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_HeightRatio) >>
-	                                                 12)];
-	RENDER_DrawLine(_finalMixedRenderLineBuffer);
-
-	if (++_RMR_DrawLine_VSO_GeneralResizeMPEGToVGADup5LineCounter >= 5) {
-		_RMR_DrawLine_VSO_GeneralResizeMPEGToVGADup5LineCounter = 0;
-		RMR_DrawLine_VSO_GeneralResizeMPEGToVGADup5(src);
-		_RMR_DrawLine_VSO_GeneralResizeMPEGToVGADup5LineCounter = 0;
-	}
-}
-CREATE_RMR_VGA_TYPED_FUNCTIONS(RMR_DrawLine_VSO_GeneralResizeMPEGToVGADup5)
 
 static void SetupVideoMixer(const bool updateRenderMode)
 {
@@ -569,18 +506,8 @@ static void SetupVideoMixer(const bool updateRenderMode)
 		_mpegPictureHeight = mpeg->GetAttrs().PictureSize.Height;
 	}
 
-	// video mixer is enabled... figure out the operational mode of this thing based on
-	// a miserable combination of variables...
-	if (_mpegDictatesOutputSize && mpeg) {
-		_renderWidth  = _mpegPictureWidth;
-		_renderHeight = _mpegPictureWidth;
-	} else if (_vgaDup5Enabled) {
-		_renderWidth  = _vgaWidth;
-		_renderHeight = (_vgaHeight / 5) * 6;
-	} else {
-		_renderWidth  = _vgaWidth;
-		_renderHeight = _vgaHeight;
-	}
+	_renderWidth  = _vgaWidth;
+	_renderHeight = _vgaHeight;
 
 	// check to make sure we have enough horizontal line buffer for the current VGA mode...
 	const Bitu maxRenderWidth = sizeof(_finalMixedRenderLineBuffer) /
@@ -621,13 +548,8 @@ static void SetupVideoMixer(const bool updateRenderMode)
 	// color depth of 32 bits to eliminate any flickering associated with the RENDER_SetSize()
 	// call when starting/stopping a video to give the user that smooth hardware decoder feel :-)
 	if ((!mpeg) || (!mpeg->GetConfig().VideoOutputVisible)) {
-		if (_vgaDup5Enabled) {
-			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAOnlyDup5Vertical,
-			                             _vgaPixelFormat,
-			                             true);
-		} else {
-			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAOnly, _vgaPixelFormat, true);
-		}
+		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAOnly, _vgaPixelFormat, true);
+
 		_activeMpegProvider = mpeg;
 		LOG(LOG_REELMAGIC, LOG_NORMAL)
 		("Video Mixer Mode VGA Only (vga=%ux%u mpeg=off render=%ux%u)",
@@ -641,50 +563,34 @@ static void SetupVideoMixer(const bool updateRenderMode)
 	// choose a RENDER draw function...
 	const bool vgaOver  = mpeg->GetConfig().UnderVga;
 	const char* modeStr = "UNKNOWN";
-	if (_mpegDictatesOutputSize) {
-		E_Exit("MPEG output size not yet implemented!");
+
+	if ((_vgaWidth == _mpegPictureWidth) && (_vgaHeight == _mpegPictureHeight)) {
+		modeStr = "Matching Sized MPEG to VGA Pictures";
+		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAMPEGSameSize, _vgaPixelFormat, vgaOver);
+	} else if ((_vgaWidth == (_mpegPictureWidth * 2)) &&
+			   (_vgaHeight == ((_mpegPictureHeight * 2)))) {
+		modeStr = "Double Sized MPEG to VGA Pictures";
+		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_MPEGDoubleVGASize,
+									 _vgaPixelFormat,
+									 vgaOver);
+	} else if ((_vgaWidth == _mpegPictureWidth) &&
+			   ((_mpegPictureHeight / (_mpegPictureHeight - _vgaHeight)) == 6)) {
+		modeStr = "Matching Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
+		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_VGAMPEGSameWidthSkip6Vertical,
+									 _vgaPixelFormat,
+									 vgaOver);
+	} else if ((_vgaWidth == (_mpegPictureWidth * 2)) &&
+			   (((_mpegPictureHeight * 2) / ((_mpegPictureHeight * 2) - _vgaHeight)) == 6)) {
+		modeStr = "Double Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
+		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_VGAMPEGDoubleSameWidthSkip6Vertical,
+									 _vgaPixelFormat,
+									 vgaOver);
 	} else {
-		if (_vgaDup5Enabled) {
-			if ((_renderWidth != _mpegPictureWidth) || (_renderHeight != _mpegPictureHeight)) {
-				modeStr = "Generic Unoptimized MPEG Resize to DUP5 VGA Pictures";
-				Initialize_RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_Dimensions();
-				ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_GeneralResizeMPEGToVGADup5,
-				                             _vgaPixelFormat,
-				                             vgaOver);
-			} else {
-				modeStr = "Matching Sized MPEG to DUP5 VGA Pictures";
-				ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGADup5VerticalMPEGSameSize,
-				                             _vgaPixelFormat,
-				                             vgaOver);
-			}
-		} else if ((_vgaWidth == _mpegPictureWidth) && (_vgaHeight == _mpegPictureHeight)) {
-			modeStr = "Matching Sized MPEG to VGA Pictures";
-			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VGAMPEGSameSize, _vgaPixelFormat, vgaOver);
-		} else if ((_vgaWidth == (_mpegPictureWidth * 2)) &&
-		           (_vgaHeight == ((_mpegPictureHeight * 2)))) {
-			modeStr = "Double Sized MPEG to VGA Pictures";
-			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_MPEGDoubleVGASize,
-			                             _vgaPixelFormat,
-			                             vgaOver);
-		} else if ((_vgaWidth == _mpegPictureWidth) &&
-		           ((_mpegPictureHeight / (_mpegPictureHeight - _vgaHeight)) == 6)) {
-			modeStr = "Matching Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
-			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_VGAMPEGSameWidthSkip6Vertical,
-			                             _vgaPixelFormat,
-			                             vgaOver);
-		} else if ((_vgaWidth == (_mpegPictureWidth * 2)) &&
-		           (((_mpegPictureHeight * 2) / ((_mpegPictureHeight * 2) - _vgaHeight)) == 6)) {
-			modeStr = "Double Sized MPEG to VGA Pictures, skipping every 6th MPEG line";
-			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_VGAMPEGDoubleSameWidthSkip6Vertical,
-			                             _vgaPixelFormat,
-			                             vgaOver);
-		} else {
-			modeStr = "Generic Unoptimized MPEG Resize";
-			Initialize_RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_Dimensions();
-			ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_GeneralResizeMPEGToVGA,
-			                             _vgaPixelFormat,
-			                             vgaOver);
-		}
+		modeStr = "Generic Unoptimized MPEG Resize";
+		Initialize_RMR_DrawLine_VSO_GeneralResizeMPEGToVGA_Dimensions();
+		ASSIGN_RMR_DRAWLINE_FUNCTION(RMR_DrawLine_VSO_GeneralResizeMPEGToVGA,
+									 _vgaPixelFormat,
+									 vgaOver);
 	}
 
 	// log the mode we are now in
@@ -736,7 +642,7 @@ void ReelMagic_RENDER_SetSize(const uint16_t width, const uint16_t height,
 	_vgaFramesPerSecond        = frames_per_second;
 	_videoMode                 = video_mode;
 
-	SetupVideoMixer(!_mpegDictatesOutputSize);
+	SetupVideoMixer(true);
 }
 
 bool ReelMagic_RENDER_StartUpdate(void)
@@ -781,7 +687,7 @@ ReelMagic_VideoMixerMPEGProvider* ReelMagic_GetVideoMixerMPEGProvider()
 void ReelMagic_ClearVideoMixerMPEGProvider()
 {
 	_requestedMpegProvider = nullptr;
-	SetupVideoMixer(_mpegDictatesOutputSize);
+	SetupVideoMixer(false);
 }
 
 void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const provider)
@@ -805,7 +711,7 @@ void ReelMagic_SetVideoMixerMPEGProvider(ReelMagic_VideoMixerMPEGProvider* const
 	_requestedMpegProvider = provider;
 
 	// update the video rendering mode if necessary...
-	SetupVideoMixer(_mpegDictatesOutputSize);
+	SetupVideoMixer(false);
 }
 
 void ReelMagic_InitVideoMixer([[maybe_unused]] Section* sec)
