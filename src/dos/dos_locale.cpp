@@ -1902,8 +1902,11 @@ static std::string get_country_name(const Country country)
 
 std::string DOS_GenerateListCountriesMessage()
 {
+	const std::string heading = MSG_GetRaw("DOSBOX_HELP_LIST_COUNTRIES_1");
 	std::string message = "\n";
-	message += MSG_GetRaw("DOSBOX_HELP_LIST_COUNTRIES_1");
+	message += heading;
+	message += "\n";
+	message += std::string(heading.size(), '-');
 	message += "\n\n";
 
 	for (auto it = CountryData.begin(); it != CountryData.end(); ++it) {
@@ -2894,8 +2897,7 @@ void DOS_Locale_Init(Section* sec)
 void DOS_Locale_AddMessages()
 {
 	MSG_Add("DOSBOX_HELP_LIST_COUNTRIES_1",
-	        "List of country codes (mostly same as telephone call codes)\n"
-	        "-----------------------------------------------------------");
+	        "List of country codes (mostly same as telephone call codes)");
 	MSG_Add("DOSBOX_HELP_LIST_COUNTRIES_2",
 	        "The above numeric country codes can be used exactly as listed\n"
 	        "in the 'country' config setting.");
