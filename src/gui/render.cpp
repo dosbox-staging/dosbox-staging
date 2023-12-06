@@ -544,13 +544,13 @@ static bool force_no_pixel_doubling = false;
 
 // Double-scan VGA modes and pixel-double all video modes by default unless:
 //
-//  1) Single-scanning or no pixel-doubling is requested by the OpenGL shader.
+//  1) Single scanning or no pixel doubling is requested by the OpenGL shader.
 //  2) The interpolation mode is nearest-neighbour in texture output mode.
 //
-// The default `interpolation/sharp.glsl` shader requests both single-scanning
-// and no pixel-doubling because it scales pixels as flat adjacent rectangles.
-// This not only produces identical output versus double-scanning and
-// pixel-doubling, but also provides finer integer scaling steps (especially
+// The default `interpolation/sharp.glsl` shader requests both single scanning
+// and no pixel doubling because it scales pixels as flat adjacent rectangles.
+// This not only produces identical output versus double scanning and
+// pixel doubling, but also provides finer integer scaling steps (especially
 // important on sub-4K screens), plus improves performance on low-end systems
 // like the Raspberry Pi.
 //

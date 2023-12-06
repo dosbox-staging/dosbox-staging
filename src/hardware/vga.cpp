@@ -371,10 +371,10 @@ void VGA_EnableVgaDoubleScanning(const bool enable)
 		return;
 	}
 	if (enable && !vga.draw.double_scanning_enabled) {
-		LOG_MSG("VGA: Double-scanning VGA video modes enabled");
+		LOG_MSG("VGA: Double scanning VGA video modes enabled");
 	}
 	if (!enable && vga.draw.double_scanning_enabled) {
-		LOG_MSG("VGA: Forcing single-scanning of double-scanned VGA video modes");
+		LOG_MSG("VGA: Forcing single scanning of double-scanned VGA video modes");
 	}
 	vga.draw.double_scanning_enabled = enable;
 }
@@ -382,10 +382,10 @@ void VGA_EnableVgaDoubleScanning(const bool enable)
 void VGA_EnablePixelDoubling(const bool enable)
 {
 	if (enable && !vga.draw.pixel_doubling_enabled) {
-		LOG_MSG("VGA: Pixel-doubling enabled");
+		LOG_MSG("VGA: Pixel doubling enabled");
 	}
 	if (!enable && vga.draw.pixel_doubling_enabled) {
-		LOG_MSG("VGA: Forcing no pixel-doubling");
+		LOG_MSG("VGA: Forcing no pixel doubling");
 	}
 	vga.draw.pixel_doubling_enabled = enable;
 }

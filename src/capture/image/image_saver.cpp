@@ -154,7 +154,7 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 	PngWriter png_writer = {};
 
 	// To reconstruct the raw image, we must skip every second row if we're
-	// dealing with "baked in" double-scanning.
+	// dealing with "baked in" double scanning.
 	const uint8_t row_skip_count = (image.params.rendered_double_scan ? 1 : 0);
 	image_decoder.Init(image, row_skip_count);
 

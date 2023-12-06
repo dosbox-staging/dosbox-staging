@@ -368,9 +368,9 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 //   post-processing step; it's never "baked-into" the rendered image.
 //   We just need to completely ignore the `double_width` flag.
 //
-// - Double-scanning can be either "baked-in" or performed in post-processing.
+// - Double scanning can be either "baked-in" or performed in post-processing.
 //   Ignoring the `double_height` flag takes care of the post-processing
-//   variety, but for "baked-in" double-scanning, we need to skip every second
+//   variety, but for "baked-in" double scanning, we need to skip every second
 //   row.
 //
 // So, for example, the 320x200 13h VGA mode is always written as 320x200 in

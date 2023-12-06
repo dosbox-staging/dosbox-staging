@@ -80,8 +80,8 @@ enum class ShaderMode {
 	// 15 kHz arcade / home computer monitor adaptive CRT shader mode.
 	// Enabled via the 'crt-machine-arcade' magic 'glshader' setting.
 	//
-	// This basically forces single-scanning of all double-scanned VGA modes
-	// and no pixel-doubling in all modes to achieve a somewhat less sharp
+	// This basically forces single scanning of all double-scanned VGA modes
+	// and no pixel doubling in all modes to achieve a somewhat less sharp
 	// look with more blending and "rounder" pixels than what you'd get on a
 	// typical sharp EGA/VGA PC monitor.
 	//
@@ -92,7 +92,7 @@ enum class ShaderMode {
 	AutoArcade,
 
 	// A sharper variant of the arcade shader. It's the exact same shader but
-	// with pixel-doubling enabled.
+	// with pixel doubling enabled.
 	AutoArcadeSharp
 };
 

@@ -1647,7 +1647,7 @@ static VgaTimings calculate_vga_timings()
 		               ? PixelsPerChar::Eight
 		               : PixelsPerChar::Nine;
 
-		// Adjust the horizontal frequency if in pixel-doubling mode
+		// Adjust the horizontal frequency if in pixel doubling mode
 		// (clock/2)
 		if (vga.seq.clocking_mode.is_pixel_doubling) {
 			horiz.total *= 2;
@@ -1821,7 +1821,7 @@ static UpdatedTimings update_vga_timings(const VgaTimings& timings)
 
 static bool is_vga_scan_doubling()
 {
-	// Scan-doubling on VGA is generally achieved in one of two ways,
+	// Scan doubling on VGA is generally achieved in one of two ways,
 	// depending on the video mode:
 	//
 	// 1) The 16-colour VGA mode, and all CGA, EGA and VESA modes set the
@@ -1904,10 +1904,10 @@ ImageInfo setup_drawing()
 	default: vga.draw.mode = PART; break;
 	}
 
-	// We need to set the address_line_total according to the scan-doubling
+	// We need to set the address_line_total according to the scan doubling
 	// state on VGA before calling calculate_vga_timings(). Then we can
 	// divide address_line_total later if we decide to do "fake"
-	// scan-doubling only.
+	// scan doubling only.
 	if (IS_EGAVGA_ARCH) {
 		vga.draw.address_line_total = vga.crtc.maximum_scan_line.maximum_scan_line +
 		                              1;
@@ -2156,7 +2156,7 @@ ImageInfo setup_drawing()
 		video_mode.width = horiz_end * 4;
 		render_width     = video_mode.width;
 
-		// We only render "baked-in" double-scanning (when we literally render
+		// We only render "baked-in" double scanning (when we literally render
 		// twice as many rows) for the M_VGA modes and M_EGA modes on emulated
 		// VGA adapters only; for everything else, we "fake double-scan" on
 		// VGA (render single-scanned, then double the image vertically with a
@@ -2178,11 +2178,11 @@ ImageInfo setup_drawing()
 			render_height     = video_mode.height;
 		}
 
-		// Mode 13h and practically all tweak-modes use pixel-doubling.
+		// Mode 13h and practically all tweak-modes use pixel doubling.
 		// Note this is not accomplished via dividing the memory address
 		// clock by 2 like in other SVGA/VESA modes, but by some complex
 		// interaction between various VGA registers that is specific to
-		// mode 13h. So we'll just assume that pixel-doubling is always
+		// mode 13h. So we'll just assume that pixel doubling is always
 		// on for M_VGA.
 		//
 		// More information here:
@@ -2250,7 +2250,7 @@ ImageInfo setup_drawing()
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
 			        vga_timings);
 
-			// We only render "baked-in" double-scanning (when we literally
+			// We only render "baked-in" double scanning (when we literally
 			// render twice as many rows) for the M_VGA modes and M_EGA modes
 			// on emulated VGA adapters only; for everything else, we "fake
 			// double-scan" on VGA (render single-scanned, then double the
@@ -2350,7 +2350,7 @@ ImageInfo setup_drawing()
 		/*
 		        TODO This bit is not set for the 640x200
 		        Tandy mode; this cannot be correct. This would
-		        result in width-doubling the 640x200 mode. A
+		        result in width doubling the 640x200 mode. A
 		        simple 'width < 640' check will suffice instead
 		        until someone investigates this...
 
@@ -2722,7 +2722,7 @@ ImageInfo setup_drawing()
 		vblank_skip /= 2;
 	}
 
-	// 'render_pixel_aspect_ratio' has any post-render width/height-doubling
+	// 'render_pixel_aspect_ratio' has any post-render width/height doubling
 	// already factored in, so we need to multiply it by
 	// 'render_per_video_mode_scale' to derive the video mode's pixel aspect
 	// ratio. It's just less redundant and error prone to derive the video
