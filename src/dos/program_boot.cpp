@@ -30,6 +30,7 @@
 #include "cross.h"
 #include "dma.h"
 #include "drives.h"
+#include "fs_utils.h"
 #include "mapper.h"
 #include "program_more_output.h"
 #include "regs.h"
@@ -62,7 +63,10 @@ FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
 		}
 
 		// get file size
-		fseek(tmpfile, 0L, SEEK_END);
+		if (!check_fseek("BOOT", "image", filename, tmpfile, 0L, SEEK_END)) {
+			return nullptr;
+		}
+
 		*ksize = (ftell(tmpfile) / 1024);
 		*bsize = ftell(tmpfile);
 		fclose(tmpfile);
@@ -96,6 +100,9 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 	// File not found on mounted filesystem. Try regular filesystem
 	const auto filename_s = resolve_home(filename).string();
 	tmpfile = fopen_wrap(filename_s.c_str(), "rb+");
+
+	auto fseek_in_tmpfile = make_check_fseek_func("BOOT", "image", filename);
+
 	if (!tmpfile) {
 		if ((tmpfile = fopen_wrap(filename_s.c_str(), "rb"))) {
 			// File exists; So can't be opened in correct mode =>
@@ -103,7 +110,9 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 			//				fclose(tmpfile);
 			//				if (tryload) error = 2;
 			WriteOut(MSG_Get("PROGRAM_BOOT_WRITE_PROTECTED"));
-			fseek(tmpfile, 0L, SEEK_END);
+			if (!fseek_in_tmpfile(tmpfile, 0L, SEEK_END)) {
+				return nullptr;
+			}
 			*ksize = (ftell(tmpfile) / 1024);
 			*bsize = ftell(tmpfile);
 			return tmpfile;
@@ -116,7 +125,9 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 			WriteOut(MSG_Get("PROGRAM_BOOT_NOT_OPEN"));
 		return nullptr;
 	}
-	fseek(tmpfile, 0L, SEEK_END);
+	if (!fseek_in_tmpfile(tmpfile, 0L, SEEK_END)) {
+		return nullptr;
+	}
 	*ksize = (ftell(tmpfile) / 1024);
 	*bsize = ftell(tmpfile);
 	return tmpfile;
@@ -274,6 +285,10 @@ void BOOT::Run(void)
 		} else {
 			uint8_t rombuf[65536];
 			Bits cfound_at = -1;
+
+			auto fseek_in_usefile = make_check_fseek_func(
+			        "BOOT", "cartridge", temp_line.c_str());
+
 			if (!cart_cmd.empty()) {
 				if (!usefile_1) {
 					WriteOut(MSG_Get("PROGRAM_BOOT_IMAGE_NOT_OPEN"), temp_line.c_str());
@@ -281,9 +296,7 @@ void BOOT::Run(void)
 				}
 				/* read cartridge data into buffer */
 				constexpr auto seek_pos = 0x200;
-				if (fseek(usefile_1, seek_pos, SEEK_SET) != 0) {
-					LOG_ERR("BOOT: Failed seeking to %d in cartridge data file '%s': %s",
-					        seek_pos, temp_line.c_str(), strerror(errno));
+				if (!fseek_in_usefile(usefile_1, seek_pos, SEEK_SET)) {
 					return;
 				}
 				const auto rom_bytes_expected = rombytesize_1 - 0x200;
@@ -374,9 +387,14 @@ void BOOT::Run(void)
 				return;
 
 			uint32_t sz1, sz2;
-			FILE *tfile = getFSFile("system.rom", &sz1, &sz2, true);
+			constexpr auto rom_filename = "system.rom";
+			FILE* tfile = getFSFile(rom_filename, &sz1, &sz2, true);
 			if (tfile != nullptr) {
-				fseek(tfile, 0x3000L, SEEK_SET);
+				auto fseek_in_rom = make_check_fseek_func(
+				        "BOOT", "system ROM", rom_filename);
+				if (!fseek_in_rom(tfile, 0x3000L, SEEK_SET)) {
+					return;
+				}
 				uint32_t drd = (uint32_t)fread(rombuf, 1, 0xb000, tfile);
 				if (drd == 0xb000) {
 					for (i = 0; i < 0xb000; i++)
@@ -386,7 +404,9 @@ void BOOT::Run(void)
 			}
 
 			if (usefile_2 != nullptr) {
-				fseek(usefile_2, 0x0L, SEEK_SET);
+				if (!fseek_in_usefile(usefile_2, 0x0L, SEEK_SET)) {
+					return;
+				}
 				if (fread(rombuf, 1, 0x200, usefile_2) < 0x200) {
 					LOG_MSG("Failed to read sufficient ROM data");
 					fclose(usefile_2);
@@ -396,9 +416,11 @@ void BOOT::Run(void)
 				PhysPt romseg_pt = host_readw(&rombuf[0x1ce]) << 4;
 
 				/* read cartridge data into buffer */
-				fseek(usefile_2, 0x200L, SEEK_SET);
-				if (fread(rombuf, 1, rombytesize_2 - 0x200,
-				          usefile_2) < rombytesize_2 - 0x200) {
+				if (!fseek_in_usefile(usefile_2, 0x200L, SEEK_SET)) {
+					return;
+				}
+				if (fread(rombuf, 1, rombytesize_2 - 0x200, usefile_2) <
+				    rombytesize_2 - 0x200) {
 					LOG_MSG("Failed to read sufficient ROM data");
 					fclose(usefile_2);
 					return;
@@ -413,7 +435,9 @@ void BOOT::Run(void)
 					phys_writeb(romseg_pt + i, rombuf[i]);
 			}
 
-			fseek(usefile_1, 0x0L, SEEK_SET);
+			if (!fseek_in_usefile(usefile_1, 0x0L, SEEK_SET)) {
+				return;
+			}
 			if (fread(rombuf, 1, 0x200, usefile_1) < 0x200) {
 				LOG_MSG("Failed to read sufficient cartridge data");
 				fclose(usefile_1);
@@ -423,7 +447,9 @@ void BOOT::Run(void)
 			uint16_t romseg = host_readw(&rombuf[0x1ce]);
 
 			/* read cartridge data into buffer */
-			fseek(usefile_1, 0x200L, SEEK_SET);
+			if (!fseek_in_usefile(usefile_1, 0x200L, SEEK_SET)) {
+				return;
+			}
 			if (fread(rombuf, 1, rombytesize_1 - 0x200, usefile_1) <
 			    rombytesize_1 - 0x200) {
 				LOG_MSG("Failed to read sufficient cartridge data");
