@@ -193,7 +193,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 	std::deque<std::string> inventory;
 	inventory.emplace_back("");
 	inventory.emplace_back(MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_1"));
-	inventory.emplace_back(inventory.back().size(), '-');
+	inventory.emplace_back("");
 
 	const std::string file_prefix = "        ";
 
@@ -231,7 +231,8 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 void ShaderManager::AddMessages()
 {
 	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_1",
-	        "List of available GLSL shaders");
+	        "List of available GLSL shaders\n"
+	        "------------------------------");
 	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_2",
 	        "The above shaders can be used exactly as listed in the 'glshader'\n"
 	        "config setting, without the need for the resource path or .glsl extension.");
