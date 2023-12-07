@@ -269,6 +269,26 @@ jobs:
 
       - run:  sudo apt-get update
 
+      - name: Create PLATFORM variable for caches
+        run: |
+          PLATFORM="$(uname -s)-$(uname -m)"
+          echo PLATFORM="$PLATFORM" >> $GITHUB_ENV
+
+      - name: Restore zlib-ng cache
+        id:   cache-zlib-ng
+        uses: actions/cache@v3.3.2
+        with:
+          path: |
+            contrib/static-zlib-ng/zlib-ng.tar.gz
+            contrib/static-zlib-ng/${{ env.PLATFORM }}
+          key: zlib-ng-${{ env.PLATFORM }}-${{ hashFiles('contrib/static-zlib-ng/Makefile') }}
+
+      - name: Build zlib-ng static lib
+        if:   steps.cache-zlib-ng.outputs.cache-hit != 'true'
+        run: |
+          make -C contrib/static-zlib-ng
+          echo PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}:$PWD/contrib/static-zlib-ng/${{ env.PLATFORM }}/lib/pkgconfig" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: |
           sudo apt-get install -y tree \
@@ -319,8 +339,9 @@ jobs:
           meson setup \
             -Duse_xinput2=false \
             -Ddefault_library=static \
-            --wrap-mode=forcefallback \
             -Db_lto=true -Db_lto_threads=$(nproc) \
+            -Dtry_static_libs=zlib \
+            --force-fallback-for=fluidsynth,glib,iir,libjpeg-turbo,libpng,mt32emu,slirp,speexdsp \
             --native-file=.github/meson/native-gcc-9.ini \
             build \
           || ( cat build/meson-logs/meson-log.txt ; exit 1 )

@@ -214,6 +214,26 @@ jobs:
           key:  ccache-macos-release-${{ matrix.runner.arch }}-${{ steps.prep-caches.outputs.today }}-2
           restore-keys: ccache-macos-release-${{ matrix.runner.arch }}-
 
+      - name: Create PLATFORM variable for caches
+        run: |
+          PLATFORM="$(arch -arch=${{ matrix.runner.arch }} uname -s)-$(arch -arch=${{ matrix.runner.arch }} uname -m)"
+          echo PLATFORM="$PLATFORM" >> $GITHUB_ENV
+
+      - name: Restore zlib-ng cache
+        id:   cache-zlib-ng
+        uses: actions/cache@v3.3.2
+        with:
+          path: |
+            contrib/static-zlib-ng/zlib-ng.tar.gz
+            contrib/static-zlib-ng/${{ env.PLATFORM }}
+          key: zlib-ng-${{ env.PLATFORM }}-${{ hashFiles('contrib/static-zlib-ng/Makefile') }}
+
+      - name: Build zlib-ng static lib
+        if:   steps.cache-zlib-ng.outputs.cache-hit != 'true'
+        run: |
+          make -C contrib/static-zlib-ng
+          echo PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}:$PWD/contrib/static-zlib-ng/${{ env.PLATFORM }}/lib/pkgconfig" >> $GITHUB_ENV
+
       - name: Cache subprojects
         id: cache-subprojects
         uses: actions/cache@v3.3.2
@@ -243,7 +263,11 @@ jobs:
         run: |
           set -x
           eval "$(${{ matrix.runner.brew_path }}/bin/brew shellenv)"
-          meson setup ${{ matrix.runner.build_flags }} -Ddefault_library=static -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
+          meson setup ${{ matrix.runner.build_flags }} \
+                -Ddefault_library=static \
+                --force-fallback-for=fluidsynth,glib,iir,libjpeg-turbo,libpng,mt32emu,slirp,speexdsp \
+                -Dtry_static_libs=sdl2,sdl2_net,zlib \
+                build
           meson compile -C build
 
       - name: Upload binary

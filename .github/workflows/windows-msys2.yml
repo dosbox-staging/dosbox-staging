@@ -206,6 +206,7 @@ jobs:
           update: true
           install: |
             git
+            make
             mingw-w64-clang-${{matrix.conf.arch}}-clang
             mingw-w64-clang-${{matrix.conf.arch}}-meson
             mingw-w64-clang-${{matrix.conf.arch}}-ccache
@@ -219,7 +220,6 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-libslirp
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
-            mingw-w64-clang-${{matrix.conf.arch}}-zlib
             mingw-w64-clang-${{matrix.conf.arch}}-speexdsp
             mingw-w64-clang-${{matrix.conf.arch}}-python-pip
             mingw-w64-clang-${{matrix.conf.arch}}-fluidsynth
@@ -270,6 +270,27 @@ jobs:
         # directory permission to files, after which it returns a failure code.
         # This is a work-around until tar is fixed.
 
+      - name: Create PLATFORM variable for caches
+        run: |
+          PLATFORM="$(uname -s)-$(uname -m)"
+          echo PLATFORM="$PLATFORM" >> $GITHUB_ENV
+
+      - name: Restore zlib-ng cache
+        id:   cache-zlib-ng
+        uses: actions/cache@v3.3.2
+        with:
+          path: |
+            contrib/static-zlib-ng/zlib-ng.tar.gz
+            contrib/static-zlib-ng/${{ env.PLATFORM }}
+          key: zlib-ng-${{ env.PLATFORM }}-${{ hashFiles('contrib/static-zlib-ng/Makefile') }}
+
+      - name: Build zlib-ng static lib
+        shell: bash
+        if:   steps.cache-zlib-ng.outputs.cache-hit != 'true'
+        run: |
+          make -C contrib/static-zlib-ng
+          echo PKG_CONFIG_PATH="$PWD/contrib/static-zlib-ng/${{ env.PLATFORM }}/lib/pkgconfig" >> $GITHUB_ENV
+
       - name: Log environment
         run:  ./scripts/log-env.sh
 
@@ -288,10 +309,10 @@ jobs:
 
       - name: Setup release build
         run: |
-          meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Dtry_static_libs=mt32emu $BUILD_RELEASE_DIR
+          meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Dtry_static_libs=mt32emu,zlib $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
-        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal -Dtry_static_libs=mt32emu $BUILD_DEBUGGER_DIR
+        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal -Dtry_static_libs=mt32emu,zlib $BUILD_DEBUGGER_DIR
 
       - name: Build release
         run: |
