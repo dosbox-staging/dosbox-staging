@@ -134,6 +134,7 @@ static void write_upscaled_png(FILE* outfile, PngWriter& png_writer,
 			return;
 		}
 		break;
+
 	case OutputPixelFormat::Rgb888:
 		if (!png_writer.InitRgb888(
 		            outfile, width, height, pixel_aspect_ratio, video_mode)) {
@@ -153,23 +154,32 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 {
 	PngWriter png_writer = {};
 
-	// To reconstruct the raw image, we must skip every second row if we're
-	// dealing with "baked in" double scanning.
+	// To reconstruct the raw image, we must skip every second row when
+	// dealing with "baked-in" double scanning.
 	const uint8_t row_skip_count = (image.params.rendered_double_scan ? 1 : 0);
-	image_decoder.Init(image, row_skip_count);
+
+	// To reconstruct the raw image, we must skip every second pixel when
+	// dealing with "baked-in" pixel doubling.
+	const uint8_t pixel_skip_count = (image.params.rendered_pixel_doubling ? 1 : 0);
 
 	const auto& src = image.params;
 
-	const auto raw_image_height = src.video_mode.height;
+	const auto output_width = check_cast<uint16_t>(src.width /
+	                                               (pixel_skip_count + 1));
+
+	const auto output_height = check_cast<uint16_t>(src.height /
+	                                                (row_skip_count + 1));
+
+	image_decoder.Init(image, row_skip_count, pixel_skip_count);
 
 	// Write the pixel aspect ratio of the video mode into the PNG pHYs
-	// chunk for raw images
+	// chunk for raw images.
 	const auto pixel_aspect_ratio = src.video_mode.pixel_aspect_ratio;
 
 	if (image.is_paletted()) {
 		if (!png_writer.InitIndexed8(outfile,
-		                             src.width,
-		                             raw_image_height,
+		                             output_width,
+		                             output_height,
 		                             pixel_aspect_ratio,
 		                             src.video_mode,
 		                             image.palette_data)) {
@@ -177,8 +187,8 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 		};
 	} else {
 		if (!png_writer.InitRgb888(outfile,
-		                           src.width,
-		                           raw_image_height,
+		                           output_width,
+		                           output_height,
 		                           pixel_aspect_ratio,
 		                           src.video_mode)) {
 			return;
@@ -186,14 +196,14 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 	}
 
 	constexpr uint8_t MaxBytesPerPixel = 3;
-	row_buf.resize(static_cast<size_t>(src.width) *
+	row_buf.resize(static_cast<size_t>(output_width) *
 	               static_cast<size_t>(MaxBytesPerPixel));
 
-	auto rows_to_write = raw_image_height;
+	auto rows_to_write = output_height;
 	while (rows_to_write--) {
 		auto out = row_buf.begin();
 
-		auto pixels_to_write = src.width;
+		auto pixels_to_write = output_width;
 		if (image.is_paletted()) {
 			while (pixels_to_write--) {
 				const auto pixel = image_decoder.GetNextIndexed8Pixel();
@@ -252,8 +262,11 @@ void ImageSaver::SaveRenderedImage(const RenderedImage& image)
 		return;
 	};
 
-	const auto row_skip_count = 0;
-	image_decoder.Init(image, row_skip_count);
+	// We always write the final rendered image displayed on the host monitor
+	// as-is.
+	const auto row_skip_count   = 0;
+	const auto pixel_skip_count = 0;
+	image_decoder.Init(image, row_skip_count, pixel_skip_count);
 
 	constexpr uint8_t BytesPerPixel = 3;
 	row_buf.resize(static_cast<size_t>(src.width) *

@@ -24,7 +24,8 @@
 
 CHECK_NARROWING();
 
-void ImageDecoder::Init(const RenderedImage& image, const uint8_t row_skip_count)
+void ImageDecoder::Init(const RenderedImage& image, const uint8_t row_skip_count,
+                        const uint8_t pixel_skip_count)
 {
 	assert(image.params.width > 0);
 	assert(image.params.height > 0);
@@ -45,8 +46,9 @@ void ImageDecoder::Init(const RenderedImage& image, const uint8_t row_skip_count
 	}
 	pos = curr_row_start;
 
-	this->image          = image;
-	this->row_skip_count = row_skip_count;
+	this->image            = image;
+	this->row_skip_count   = row_skip_count;
+	this->pixel_skip_count = pixel_skip_count;
 }
 
 void ImageDecoder::AdvanceRow()

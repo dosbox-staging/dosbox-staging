@@ -34,10 +34,18 @@ void ImageScaler::Init(const RenderedImage& image)
 {
 	input = image;
 
-	// To reconstruct the raw image, we must skip every second row if we're
-	// dealing with "baked in" double scanning.
+	// To reconstruct the raw image, we must skip every second row when
+	// dealing with "baked-in" double scanning. "De-double-scanning" VGA
+	// images has the beneficial side effect that we can use finer vertical
+	// integer scaling steps, so it's worthwhile doing it.
 	const uint8_t row_skip_count = (image.params.rendered_double_scan ? 1 : 0);
-	input_decoder.Init(image, row_skip_count);
+
+	// "Baked-in" pixel doubling is only used for the 160x200 16-colour
+	// Tandy/PCjr modes. We wouldn't gain anything by reconstructing the raw
+	// 160-pixel-wide image when upscaling, so we'll just leave it be.
+	const uint8_t pixel_skip_count = 0;
+
+	input_decoder.Init(image, row_skip_count, pixel_skip_count);
 
 	UpdateOutputParamsUpscale();
 
