@@ -506,7 +506,7 @@ static const std::map<Country, CountryInfo> CountryData = {
 			Separator::Comma,         // thousands separator
 			Separator::Period,        // decimal separator
 		} }, { LocalePeriod::Historic, {
-			// OS/2 Warp 4.51; country 99
+			// OS/2 Warp 4.52; country 99
 			DosDateFormat::YearMonthDay, Separator::Dash,
 			DosTimeFormat::Time24H,      Separator::Colon,
 			{ "$" }, "USD", 2,
@@ -1491,7 +1491,7 @@ static const std::map<Country, CountryInfo> CountryData = {
 	} } },
 	{ Country::Luxembourg, { "Luxembourg", "LUX", {
 		{ LocalePeriod::Modern, {
-			// de_DE
+			// lb_LU
 			DosDateFormat::DayMonthYear, Separator::Period,
 			DosTimeFormat::Time24H,      Separator::Colon,
 			{ "€" }, "EUR", 2,
