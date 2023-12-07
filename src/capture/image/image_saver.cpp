@@ -154,15 +154,15 @@ void ImageSaver::SaveRawImage(const RenderedImage& image)
 {
 	PngWriter png_writer = {};
 
+	const auto& src = image.params;
+
 	// To reconstruct the raw image, we must skip every second row when
 	// dealing with "baked-in" double scanning.
-	const uint8_t row_skip_count = (image.params.rendered_double_scan ? 1 : 0);
+	const uint8_t row_skip_count = (src.rendered_double_scan ? 1 : 0);
 
 	// To reconstruct the raw image, we must skip every second pixel when
 	// dealing with "baked-in" pixel doubling.
-	const uint8_t pixel_skip_count = (image.params.rendered_pixel_doubling ? 1 : 0);
-
-	const auto& src = image.params;
+	const uint8_t pixel_skip_count = (src.rendered_pixel_doubling ? 1 : 0);
 
 	const auto output_width = check_cast<uint16_t>(src.width /
 	                                               (pixel_skip_count + 1));
