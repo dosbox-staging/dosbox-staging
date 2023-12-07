@@ -528,6 +528,7 @@ sdl2_dep = dependency(
 
 zlib_dep = dependency(
     'zlib',
+    fallback: ['zlib-ng', 'zlib'],
     version: ['>= 1.2.11', '< 2'],
     default_options: default_wrap_options,
     static: ('zlib' in static_libs_list or prefers_static_libs),
