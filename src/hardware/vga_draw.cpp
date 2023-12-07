@@ -1989,6 +1989,10 @@ ImageInfo setup_drawing()
 	// 320x200 is rendered as 320x400.
 	bool rendered_double_scan = false;
 
+	// If true, we're dealing with "baked-in" pixel doubling, i.e. when 
+	// 160x200 is rendered as 320x200.
+	bool rendered_pixel_doubling = false;
+
 	Fraction render_pixel_aspect_ratio = {1};
 
 	VideoMode video_mode = {};
@@ -2322,6 +2326,7 @@ ImageInfo setup_drawing()
 			double_width     = vga.draw.pixel_doubling_enabled;
 			video_mode.width = horiz_end * 4;
 			render_width     = video_mode.width * 2;
+			rendered_pixel_doubling = true;
 
 			VGA_DrawLine = VGA_Draw_4BPP_Line_Double;
 		}
@@ -2800,9 +2805,10 @@ ImageInfo setup_drawing()
 	          render_pixel_aspect_ratio.Denom(),
 	          render_pixel_aspect_ratio.Inverse().ToDouble());
 
-	LOG_DEBUG("VGA: forced_single_scan: %d, rendered_double_scan: %d",
+	LOG_DEBUG("VGA: forced_single_scan: %d, rendered_double_scan: %d, rendered_pixel_doubling: %d",
 	          forced_single_scan,
-	          rendered_double_scan);
+	          rendered_double_scan,
+	          rendered_pixel_doubling);
 
 	LOG_DEBUG("VGA: VIDEO_MODE: width: %d, height: %d, PAR: %lld:%lld (1:%g)",
 	          video_mode.width,
@@ -2830,15 +2836,16 @@ ImageInfo setup_drawing()
 
 	ImageInfo render = {};
 
-	render.width                = render_width;
-	render.height               = render_height;
-	render.double_width         = double_width;
-	render.double_height        = double_height;
-	render.forced_single_scan   = forced_single_scan;
-	render.rendered_double_scan = rendered_double_scan;
-	render.pixel_aspect_ratio   = render_pixel_aspect_ratio;
-	render.pixel_format         = pixel_format;
-	render.video_mode           = video_mode;
+	render.width                   = render_width;
+	render.height                  = render_height;
+	render.double_width            = double_width;
+	render.double_height           = double_height;
+	render.forced_single_scan      = forced_single_scan;
+	render.rendered_double_scan    = rendered_double_scan;
+	render.rendered_pixel_doubling = rendered_pixel_doubling;
+	render.pixel_aspect_ratio      = render_pixel_aspect_ratio;
+	render.pixel_format            = pixel_format;
+	render.video_mode              = video_mode;
 
 	return render;
 }
