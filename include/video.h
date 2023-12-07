@@ -308,6 +308,12 @@ struct ImageInfo {
 	// (doubled post-render by setting `double_height` to true).
 	bool rendered_double_scan = false;
 
+	// If true, the image has been rendered doubled horizontally. This is only
+	// used to "normalise" the 160x200 16-colour Tandy and PCjr modes to
+	// 320-pixel-wide rendered output (it simplifies rendering the host video
+	// output downstream, but slightly complicates raw captures).
+	bool rendered_pixel_doubling = false;
+
 	// Pixel aspect ratio to be applied to the final image, *after*
 	// optional width and height doubling, so it appears as intended.
 	// (`video_mode.pixel_aspect_ratio` holds the "nominal" pixel
