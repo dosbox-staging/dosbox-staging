@@ -66,8 +66,8 @@ Lista dostępnych opcji:
 
 .
 :DOSBOX_HELP_LIST_COUNTRIES_1
-Kody krajów, często takie same jak telefoniczny numer kierunkowy
-----------------------------------------------------------------
+Kody krajów; zazwyczaj takie same, jak telefoniczny numer kierunkowy
+--------------------------------------------------------------------
 .
 :DOSBOX_HELP_LIST_COUNTRIES_2
 Powyższych kodów numerycznych należy użyć w ustawieniu 'country'
@@ -90,6 +90,9 @@ Kanada (angielski)
 .
 :COUNTRY_NAME_RUS
 Rosja
+.
+:COUNTRY_NAME_EGY
+Egipt
 .
 :COUNTRY_NAME_ZAF
 Afryka Południowa
@@ -172,6 +175,9 @@ Malezja
 :COUNTRY_NAME_AUS
 Australia
 .
+:COUNTRY_NAME_IDN
+Indonezja
+.
 :COUNTRY_NAME_PHL
 Filipiny
 .
@@ -205,6 +211,21 @@ Turcja
 :COUNTRY_NAME_IND
 Indie
 .
+:COUNTRY_NAME_PAK
+Pakistan
+.
+:COUNTRY_NAME_XAE
+Azja (angielski)
+.
+:COUNTRY_NAME_MAR
+Maroko
+.
+:COUNTRY_NAME_DZA
+Algieria
+.
+:COUNTRY_NAME_TUN
+Tunezja
+.
 :COUNTRY_NAME_NER
 Niger
 .
@@ -219,6 +240,9 @@ Wyspy Owcze
 .
 :COUNTRY_NAME_PRT
 Portugalia
+.
+:COUNTRY_NAME_LUX
+Luksemburg
 .
 :COUNTRY_NAME_IRL
 Irlandia
@@ -280,11 +304,38 @@ Macedonia Północna
 :COUNTRY_NAME_SVK
 Słowacja
 .
+:COUNTRY_NAME_GTM
+Gwatemala
+.
+:COUNTRY_NAME_SLV
+Salwador
+.
+:COUNTRY_NAME_HND
+Honduras
+.
+:COUNTRY_NAME_NIC
+Nikaragua
+.
+:COUNTRY_NAME_CRI
+Kostaryka
+.
+:COUNTRY_NAME_PAN
+Panama
+.
+:COUNTRY_NAME_BOL
+Boliwia
+.
 :COUNTRY_NAME_ECU
 Ekwador
 .
+:COUNTRY_NAME_PRY
+Paragwaj
+.
+:COUNTRY_NAME_URY
+Urugwaj
+.
 :COUNTRY_NAME_XME
-Azja Zachodnia
+Azja Zachodnia (arabski)
 .
 :COUNTRY_NAME_HKG
 Hongkong
@@ -292,8 +343,38 @@ Hongkong
 :COUNTRY_NAME_TWN
 Tajwan
 .
+:COUNTRY_NAME_LBN
+Liban
+.
+:COUNTRY_NAME_JOR
+Jordania
+.
+:COUNTRY_NAME_SYR
+Syria
+.
+:COUNTRY_NAME_KWT
+Kuwejt
+.
+:COUNTRY_NAME_SAU
+Arabia Saudyjska
+.
+:COUNTRY_NAME_YEM
+Jemen
+.
+:COUNTRY_NAME_OMN
+Oman
+.
+:COUNTRY_NAME_ARE
+Zjednoczone Emiraty Arabskie
+.
 :COUNTRY_NAME_ISR
 Izrael
+.
+:COUNTRY_NAME_BHR
+Bahrajn
+.
+:COUNTRY_NAME_QAT
+Katar
 .
 :COUNTRY_NAME_MNG
 Mongolia
@@ -315,6 +396,24 @@ Kirgistan
 .
 :COUNTRY_NAME_UZB
 Uzbekistan
+.
+:DOSBOX_HELP_LIST_GLSHADERS_1
+Lista dostępnych shaderów GLSL
+------------------------------
+.
+:DOSBOX_HELP_LIST_GLSHADERS_2
+Powyższych shaderów należy użyć w ustawieniu 'glshader' w pliku konfiguracyjnym,
+w dokładnie takiej postaci, w jakiej zostały wypisane. Nie ma potrzeby dodawania
+ścieżki lub rozszerzenia .glsl.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
+Ścieżka '%s' nie istnieje
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS
+Ścieżka '%s' nie zawiera shaderów
+.
+:DOSBOX_HELP_LIST_GLSHADERS_LIST
+Ścieżka '%s' zawiera:
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Brak sekcji lub parametru: '%s'
