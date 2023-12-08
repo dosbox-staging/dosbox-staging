@@ -135,7 +135,12 @@ constexpr auto RefreshRateMin            = 23;
 constexpr auto RefreshRateHostVrrLfc     = 48;
 constexpr auto RefreshRateHostDefault    = 60;
 constexpr auto RefreshRateDosDefault     = 70;
+#if defined(MACOSX)
+// MacBook Pro models with ProMotion support 120Hz VRR
+constexpr auto InterpolatingVrrMinRateHz = 120;
+#else
 constexpr auto InterpolatingVrrMinRateHz = 140;
+#endif
 constexpr auto RefreshRateMax            = 1000;
 
 // Ref: https://en.wikipedia.org/wiki/Crystal_oscillator_frequencies
