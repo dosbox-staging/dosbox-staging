@@ -17,7 +17,6 @@
  */
 
 {
-	Bitu di_index;
 	Bitu count, count_left = 0;
 	Bits	add_index;
 
@@ -29,12 +28,10 @@
 
 	const uint32_t add_mask = is_32bit_addr ? 0xFFFFFFFF : 0xFFFF;
 	uint32_t si_index       = is_32bit_addr ? reg_esi : reg_si;
-
+	uint32_t di_index       = is_32bit_addr ? reg_edi : reg_di;
 	if (is_32bit_addr) {
-		di_index=reg_edi;
 		count=reg_ecx;
 	} else {
-		di_index=reg_di;
 		count=reg_cx;
 	}
 	if (!(inst.prefix & PREFIX_REP)) {
