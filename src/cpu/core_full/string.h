@@ -17,15 +17,16 @@
  */
 
 {
-	EAPoint si_base,di_base;
+	EAPoint di_base;
 	Bitu	si_index,di_index;
 	Bitu	add_mask;
 	Bitu count, count_left = 0;
 	Bits	add_index;
-	
-	if (inst.prefix & PREFIX_SEG) si_base=inst.seg.base;
-	else si_base=SegBase(ds);
-	di_base=SegBase(es);
+
+	const auto si_base = (inst.prefix & PREFIX_SEG) ? inst.seg.base
+	                                                : SegBase(ds);
+
+	di_base = SegBase(es);
 	if (inst.prefix & PREFIX_ADDR) {
 		add_mask=0xFFFFFFFF;
 		si_index=reg_esi;
