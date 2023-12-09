@@ -24,45 +24,45 @@ switch (inst.code.save) {
 		[[fallthrough]];
 	case S_Eb:
 		if (inst.rm<0xc0) SaveMb(inst.rm_eaa,inst_op1_b);
-		else reg_8(inst.rm_eai)=inst_op1_b;
+		else reg_8(static_cast<uint8_t>(inst.rm_eai))=inst_op1_b;
 		break;
 	case S_Gb:
-		reg_8(inst.rm_index)=inst_op1_b;
+		reg_8(static_cast<uint8_t>(inst.rm_index))=inst_op1_b;
 		break;
 	case S_EbGb:
 		if (inst.rm<0xc0) SaveMb(inst.rm_eaa,inst_op1_b);
-		else reg_8(inst.rm_eai)=inst_op1_b;
-		reg_8(inst.rm_index)=inst_op2_b;
+		else reg_8(static_cast<uint8_t>(inst.rm_eai))=inst_op1_b;
+		reg_8(static_cast<uint8_t>(inst.rm_index))=inst_op2_b;
 		break;
 /* Word */
 	case S_Ew:
 		if (inst.rm<0xc0) SaveMw(inst.rm_eaa,inst_op1_w);
-		else reg_16(inst.rm_eai)=inst_op1_w;
+		else reg_16(static_cast<uint8_t>(inst.rm_eai))=inst_op1_w;
 		break;
 	case S_Gw:
-		reg_16(inst.rm_index)=inst_op1_w;
+		reg_16(static_cast<uint8_t>(inst.rm_index))=inst_op1_w;
 		break;
 	case S_EwGw:
 		if (inst.rm<0xc0) SaveMw(inst.rm_eaa,inst_op1_w);
-		else reg_16(inst.rm_eai)=inst_op1_w;
-		reg_16(inst.rm_index)=inst_op2_w;
+		else reg_16(static_cast<uint8_t>(inst.rm_eai))=inst_op1_w;
+		reg_16(static_cast<uint8_t>(inst.rm_index))=inst_op2_w;
 		break;
 /* Dword */
 	case S_Ed:
 		if (inst.rm<0xc0) SaveMd(inst.rm_eaa,inst_op1_d);
-		else reg_32(inst.rm_eai)=inst_op1_d;
+		else reg_32(static_cast<uint8_t>(inst.rm_eai))=inst_op1_d;
 		break;
 	case S_EdMw:		/* Special one 16 to memory, 32 zero extend to reg */
 		if (inst.rm<0xc0) SaveMw(inst.rm_eaa,inst_op1_w);
-		else reg_32(inst.rm_eai)=inst_op1_d;
+		else reg_32(static_cast<uint8_t>(inst.rm_eai))=inst_op1_d;
 		break;
 	case S_Gd:
-		reg_32(inst.rm_index)=inst_op1_d;
+		reg_32(static_cast<uint8_t>(inst.rm_index))=inst_op1_d;
 		break;
 	case S_EdGd:
 		if (inst.rm<0xc0) SaveMd(inst.rm_eaa,inst_op1_d);
-		else reg_32(inst.rm_eai)=inst_op1_d;
-		reg_32(inst.rm_index)=inst_op2_d;
+		else reg_32(static_cast<uint8_t>(inst.rm_eai))=inst_op1_d;
+		reg_32(static_cast<uint8_t>(inst.rm_index))=inst_op2_d;
 		break;
 
 	case S_REGb:
@@ -79,11 +79,11 @@ switch (inst.code.save) {
 		break;
 	case S_SEGGw:
 		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst_op2_w)) RunException();
-		reg_16(inst.rm_index)=inst_op1_w;
+		reg_16(static_cast<uint8_t>(inst.rm_index))=inst_op1_w;
 		break;
 	case S_SEGGd:
 		if (CPU_SetSegGeneral((SegNames)inst.code.extra,inst_op2_w)) RunException();
-		reg_32(inst.rm_index)=inst_op1_d;
+		reg_32(static_cast<uint8_t>(inst.rm_index))=inst_op1_d;
 		break;
 	case S_PUSHw:
 		Push_16(inst_op1_w);
