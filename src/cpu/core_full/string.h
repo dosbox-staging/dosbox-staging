@@ -17,7 +17,6 @@
  */
 
 {
-	EAPoint di_base;
 	Bitu	si_index,di_index;
 	Bitu	add_mask;
 	Bitu count, count_left = 0;
@@ -25,8 +24,7 @@
 
 	const auto si_base = (inst.prefix & PREFIX_SEG) ? inst.seg.base
 	                                                : SegBase(ds);
-
-	di_base = SegBase(es);
+	const auto di_base = SegBase(es);
 	if (inst.prefix & PREFIX_ADDR) {
 		add_mask=0xFFFFFFFF;
 		si_index=reg_esi;
