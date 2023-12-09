@@ -169,10 +169,12 @@ bool CPU_SetSegGeneral(SegNames seg,Bitu value);
 bool CPU_PopSeg(SegNames seg,bool use32);
 
 bool CPU_CPUID(void);
-Bitu CPU_Pop16(void);
-Bitu CPU_Pop32(void);
-void CPU_Push16(Bitu value);
-void CPU_Push32(Bitu value);
+
+uint16_t CPU_Pop16();
+uint32_t CPU_Pop32();
+
+void CPU_Push16(const uint16_t value);
+void CPU_Push32(const uint32_t value);
 
 #define EXCEPTION_DB			1
 #define EXCEPTION_UD			6
