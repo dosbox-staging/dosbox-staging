@@ -25,7 +25,9 @@
 	const auto si_base = (inst.prefix & PREFIX_SEG) ? inst.seg.base
 	                                                : SegBase(ds);
 	const auto di_base = SegBase(es);
-	if (inst.prefix & PREFIX_ADDR) {
+
+	const auto is_32bit_addr = (inst.prefix & PREFIX_ADDR) != 0;
+	if (is_32bit_addr) {
 		add_mask=0xFFFFFFFF;
 		si_index=reg_esi;
 		di_index=reg_edi;
