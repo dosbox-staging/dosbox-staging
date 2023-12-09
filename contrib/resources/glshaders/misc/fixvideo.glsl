@@ -46,6 +46,12 @@
 #define SAMPLE_POINT_3 0.75
 #define SAMPLE_POINT_4 1.00
 
+//   Intensity of the deinterlaced odd & even scanlines.
+//   Use values above 1.0 for extra brightness boost.
+//   1.00 = full intensity, 0.0 = zero intensity (black)
+#define ODD_LINE_INTENSITY  1.10
+#define EVEN_LINE_INTENSITY 0.90
+
 
 #define texCoord v_texCoord
 
@@ -134,12 +140,28 @@ void main() {
         vec4 c31 = tex2D(s_p, vec2(SAMPLE_POINT_3, tex_center.y));
         vec4 c41 = tex2D(s_p, vec2(SAMPLE_POINT_4, tex_center.y));
 
-        vec4 sum = c01 + c11 + c21 + c31 + c41;
-        color = c01;
+        vec4 sum1 = c01 + c11 + c21 + c31 + c41;
 
-        if (sum.rgb == vec3(0.0, 0.0, 0.0)) {
-            color = c00;
-        }
+        vec4 c12 = tex2D(s_p, vec2(SAMPLE_POINT_1, (tex_center + dy).y));
+        vec4 c22 = tex2D(s_p, vec2(SAMPLE_POINT_2, (tex_center + dy).y));
+        vec4 c32 = tex2D(s_p, vec2(SAMPLE_POINT_3, (tex_center + dy).y));
+        vec4 c42 = tex2D(s_p, vec2(SAMPLE_POINT_4, (tex_center + dy).y));
+
+        vec4 sum2 = c02 + c12 + c22 + c32 + c42;
+
+        vec4 odd_color  = c01 * ODD_LINE_INTENSITY;
+        vec4 even_color = c00 * EVEN_LINE_INTENSITY;
+
+        color = mix(
+            mix(
+                c01,
+                even_color,
+                vec4(step(1.0, 1.0 - (sum1.r + sum1.g + sum1.b)))
+            ),
+            odd_color,
+            vec4(step(1.0, 1.0 - (sum2.r + sum2.g + sum2.b)))
+        );
+
     }
 
     FragColor = vec4(color.rgb, 1.0);
