@@ -17,7 +17,6 @@
  */
 
 {
-	Bitu count, count_left = 0;
 	Bits	add_index;
 
 	const auto si_base = (inst.prefix & PREFIX_SEG) ? inst.seg.base
@@ -29,17 +28,16 @@
 	const uint32_t add_mask = is_32bit_addr ? 0xFFFFFFFF : 0xFFFF;
 	uint32_t si_index       = is_32bit_addr ? reg_esi : reg_si;
 	uint32_t di_index       = is_32bit_addr ? reg_edi : reg_di;
-	if (is_32bit_addr) {
-		count=reg_ecx;
-	} else {
-		count=reg_cx;
-	}
+
+	int32_t count = check_cast<int32_t>(is_32bit_addr ? reg_ecx : reg_cx);
+	int32_t count_left = 0;
+
 	if (!(inst.prefix & PREFIX_REP)) {
 		count=1;
 	} else {
 		/* Calculate amount of ops to do before cycles run out */
 		CPU_Cycles++;
-		if ((count>(Bitu)CPU_Cycles) && (inst.code.op<R_SCASB)) {
+		if ((count > CPU_Cycles) && (inst.code.op < R_SCASB)) {
 			count_left=count-CPU_Cycles;
 			count=CPU_Cycles;
 			CPU_Cycles=0;
