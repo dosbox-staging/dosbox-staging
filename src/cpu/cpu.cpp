@@ -133,28 +133,43 @@ void Descriptor:: Save(PhysPt address) {
 	cpu.mpl=03;
 }
 
+void CPU_Push16(const uint16_t value)
+{
+	const uint32_t new_esp = (reg_esp & cpu.stack.notmask) |
+	                         ((reg_esp - 2) & cpu.stack.mask);
 
-void CPU_Push16(Bitu value) {
-	uint32_t new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-2)&cpu.stack.mask);
-	mem_writew(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
-	reg_esp=new_esp;
+	mem_writew(SegPhys(ss) + (new_esp & cpu.stack.mask), value);
+
+	reg_esp = new_esp;
 }
 
-void CPU_Push32(Bitu value) {
-	uint32_t new_esp=(reg_esp&cpu.stack.notmask)|((reg_esp-4)&cpu.stack.mask);
-	mem_writed(SegPhys(ss) + (new_esp & cpu.stack.mask) ,value);
-	reg_esp=new_esp;
+void CPU_Push32(const uint32_t value)
+{
+	const uint32_t new_esp = (reg_esp & cpu.stack.notmask) |
+	                         ((reg_esp - 4) & cpu.stack.mask);
+
+	mem_writed(SegPhys(ss) + (new_esp & cpu.stack.mask), value);
+
+	reg_esp = new_esp;
 }
 
-Bitu CPU_Pop16(void) {
-	Bitu val=mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask));
-	reg_esp=(reg_esp&cpu.stack.notmask)|((reg_esp+2)&cpu.stack.mask);
+uint16_t CPU_Pop16()
+{
+	const auto val = check_cast<uint16_t>(
+	        mem_readw(SegPhys(ss) + (reg_esp & cpu.stack.mask)));
+
+	reg_esp = (reg_esp & cpu.stack.notmask) | ((reg_esp + 2) & cpu.stack.mask);
+
 	return val;
 }
 
-Bitu CPU_Pop32(void) {
-	Bitu val=mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask));
-	reg_esp=(reg_esp&cpu.stack.notmask)|((reg_esp+4)&cpu.stack.mask);
+uint32_t CPU_Pop32()
+{
+	const auto val = check_cast<uint32_t>(
+	        mem_readd(SegPhys(ss) + (reg_esp & cpu.stack.mask)));
+
+	reg_esp = (reg_esp & cpu.stack.notmask) | ((reg_esp + 4) & cpu.stack.mask);
+
 	return val;
 }
 
