@@ -17,8 +17,7 @@
  */
 
 {
-	Bitu	si_index,di_index;
-	Bitu	add_mask;
+	Bitu si_index, di_index;
 	Bitu count, count_left = 0;
 	Bits	add_index;
 
@@ -27,13 +26,14 @@
 	const auto di_base = SegBase(es);
 
 	const auto is_32bit_addr = (inst.prefix & PREFIX_ADDR) != 0;
+
+	const uint32_t add_mask = is_32bit_addr ? 0xFFFFFFFF : 0xFFFF;
+
 	if (is_32bit_addr) {
-		add_mask=0xFFFFFFFF;
-		si_index=reg_esi;
+		si_index = reg_esi;
 		di_index=reg_edi;
 		count=reg_ecx;
 	} else {
-		add_mask=0xFFFF;
 		si_index=reg_si;
 		di_index=reg_di;
 		count=reg_cx;
