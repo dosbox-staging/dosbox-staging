@@ -20,7 +20,7 @@
 #define DOSBOX_PAGING_H
 
 #include "dosbox.h"
-
+#include "debug.h"
 #include <vector>
 
 #include "mem.h"
@@ -291,7 +291,7 @@ static inline PhysPt PAGING_GetPhysicalAddress(PhysPt linAddr) {
 	return (paging.tlb.phys_page[linAddr>>12]<<12)|(linAddr&0xfff);
 }
 
-#else
+#else  // not USE_FULL_TLB
 
 void PAGING_InitTLBBank(tlb_entry **bank);
 
@@ -341,19 +341,7 @@ static inline PhysPt PAGING_GetPhysicalAddress(PhysPt linAddr) {
 	tlb_entry *entry = get_tlb_entry(linAddr);
 	return (entry->phys_page<<12)|(linAddr&0xfff);
 }
-#endif
-
-/* Special inlined memory reading/writing */
-
-template <typename T>
-#if C_DEBUG && C_HEAVY_DEBUG
-// forwarded from debug
-void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr);
-#else
-static void DEBUG_UpdateMemoryReadBreakpoints([[maybe_unused]] const PhysPt addr)
-{ /* no-op */
-}
-#endif
+#endif // USE_FULL_TLB
 
 template <MemOpMode op_mode = MemOpMode::WithBreakpoints>
 static inline uint8_t mem_readb_inline(const PhysPt address)
