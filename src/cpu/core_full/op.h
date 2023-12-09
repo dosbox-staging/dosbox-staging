@@ -615,7 +615,7 @@ switch (inst.code.op) {
 		if (CPU_ArchitectureType<ArchitectureType::Intel486NewSlow) goto illegalopcode;
 		FillFlags();
 		if (inst_op1_d==reg_eax) {
-			inst_op1_d=reg_32(inst.rm_index);
+			inst_op1_d=reg_32(static_cast<uint8_t>(inst.rm_index));
 			if (inst.rm<0xc0) SaveMd(inst.rm_eaa,inst_op1_d);	// early write-pf
 			SETFLAGBIT(ZF,1);
 		} else {
