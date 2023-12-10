@@ -138,6 +138,7 @@ pkg_linux()
     install -DT "${build_dir}/dosbox" "${pkg_dir}/dosbox"
 
     install -DT contrib/linux/dosbox-staging.desktop "${pkg_dir}/desktop/dosbox-staging.desktop"
+    install -DT contrib/linux/install-icons.sh "${pkg_dir}/install-icons.sh"
 
     DESTDIR="$(realpath "$pkg_dir")" make -C contrib/icons/ install datadir=
 }
