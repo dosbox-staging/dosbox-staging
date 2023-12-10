@@ -93,6 +93,11 @@
 //   shaders, which is the image that is displayed on the host monitor with
 //   1:1 physical pixel mapping.
 //
+//   Because the viewport can be larger than the canvas, the draw area can be
+//   larger too. In other words, the draw rectangle can extend beyond the
+//   edges of the window or the screen in fullscreen mode, in which case the
+//   image is centered and the overhanging areas are clipped.
+//
 
 #define SDL_NOFRAME 0x00000020
 
