@@ -2543,9 +2543,24 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 {
 	RenderedImage image = {};
 
+	// The draw rect can extends beyond the bounds of the window or the screen
+	// in fullscreen when we're "zooming into" the DOS content in `relative`
+	// viewport mode. But rendered captures should always capture what we see
+	// on the screen, so only the visible part of the enlarged image.
+	// Therefore, we need to clip the draw rect to the bounds of the canvas
+	// (the total visible area of the window or screen), and only capture the
+	// resulting output rectangle.
+	
+	auto canvas_rect_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+	canvas_rect_px.x = 0.0f;
+	canvas_rect_px.y = 0.0f;
+
+	const auto output_rect_px = canvas_rect_px.Copy().Intersect(
+	        to_rect(sdl.draw_rect_px));
+
 	auto allocate_image = [&]() {
-		image.params.width              = sdl.draw_rect_px.w;
-		image.params.height             = sdl.draw_rect_px.h;
+		image.params.width              = iroundf(output_rect_px.w);
+		image.params.height             = iroundf(output_rect_px.h);
 		image.params.double_width       = false;
 		image.params.double_height      = false;
 		image.params.pixel_aspect_ratio = {1};
@@ -2578,8 +2593,8 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 
 		allocate_image();
 
-		glReadPixels(sdl.draw_rect_px.x,
-		             sdl.draw_rect_px.y,
+		glReadPixels(iroundf(output_rect_px.x),
+		             iroundf(output_rect_px.y),
 		             image.params.width,
 		             image.params.height,
 		             GL_BGR,
@@ -2617,8 +2632,10 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 	//
 	// More info: https://afrantzis.com/pixel-format-guide/sdl2.html
 	//
+	const SDL_Rect read_rect_px = to_sdl_rect(output_rect_px);
+
 	if (SDL_RenderReadPixels(renderer,
-	                         &sdl.draw_rect_px,
+	                         &read_rect_px,
 	                         SDL_PIXELFORMAT_BGR24,
 	                         image.image_data,
 	                         image.pitch) != 0) {
