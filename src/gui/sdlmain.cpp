@@ -2453,8 +2453,8 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 		pitch = sdl.texture.input_surface->pitch;
 		sdl.updating = true;
 		return true;
-#if C_OPENGL
 	case RenderingBackend::OpenGl:
+#if C_OPENGL
 		pixels = static_cast<uint8_t*>(sdl.opengl.framebuf);
 		OPENGL_ERROR("end of start update");
 		if (pixels == nullptr) {
@@ -2465,7 +2465,10 @@ bool GFX_StartUpdate(uint8_t * &pixels, int &pitch)
 		pitch        = sdl.opengl.pitch;
 		sdl.updating = true;
 		return true;
-#endif
+#else
+		// Should never occur
+		E_Exit("SDL: OpenGL is not supported by this executable");
+#endif // C_OPENGL
 	}
 	return false;
 }
