@@ -4,23 +4,41 @@ tag-template: "v$NEXT_MINOR_VERSION"
 
 prerelease: true
 
+exclude-labels:
+  - "website"
+
+sort-by:
+  - "title"
+
 categories:
-  - title: "New Features"
+  - title: "Graphics"
     labels:
-      - "enhancement"
+      - "video"
+      - "voodoo"
+      - "shaders"
 
-  - title: "Bug and Regression Fixes"
+  - title: "Sound"
     labels:
-      - "bug"
-      - "regression"
+      - "audio"
+      - "midi"
 
-  - title: "Documentation and Translations"
+  - title: "Input"
+    labels:
+      - "input handling"
+
+  - title: "DOS integration"
+    labels:
+      - "DOS"
+
+  - title: "Localisation and translations"
+      - "localisation"
+      - "translation"
+
+  - title: "Documentation"
     labels:
       - "documentation"
-      - "translation"
-      - "website"
 
-  - title: "Project Maintenance"
+  - title: "Project maintenance"
     labels:
       - "CI"
       - "build system"
@@ -29,6 +47,16 @@ categories:
       - "plumbing"
       - "refactoring"
       - "upstream sync"
+
+  - title: "Misc new features"
+    labels:
+      - "enhancement"
+
+  - title: "Misc bug and regression fixes"
+    labels:
+      - "bug"
+      - "regression"
+
 
 change-template: "- #$NUMBER: $TITLE"
 
