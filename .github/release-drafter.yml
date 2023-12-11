@@ -31,6 +31,7 @@ categories:
       - "DOS"
 
   - title: "Localisation and translations"
+    labels:
       - "localisation"
       - "translation"
 
