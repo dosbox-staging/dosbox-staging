@@ -46,15 +46,6 @@ categories:
       - "refactoring"
       - "upstream sync"
 
-  - title: "Misc new features"
-    labels:
-      - "enhancement"
-
-  - title: "Misc bug and regression fixes"
-    labels:
-      - "bug"
-      - "regression"
-
 
 change-template: "- #$NUMBER: $TITLE"
 
