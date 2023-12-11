@@ -7,9 +7,6 @@ prerelease: true
 exclude-labels:
   - "website"
 
-sort-by:
-  - "title"
-
 categories:
   - title: "Graphics"
     labels:
