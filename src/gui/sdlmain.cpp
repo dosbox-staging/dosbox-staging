@@ -2738,10 +2738,8 @@ uint32_t GFX_GetRGB(const uint8_t red, const uint8_t green, const uint8_t blue)
 	case RenderingBackend::Texture:
 		assert(sdl.texture.pixelFormat);
 		return SDL_MapRGB(sdl.texture.pixelFormat, red, green, blue);
-#if C_OPENGL
 	case RenderingBackend::OpenGl:
 		return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
-#endif
 	}
 	return 0;
 }
