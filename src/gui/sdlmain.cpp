@@ -1866,8 +1866,8 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 
 		break; // RenderingBackend::Texture
 	}
-#if C_OPENGL
 	case RenderingBackend::OpenGl: {
+#if C_OPENGL
 		free(sdl.opengl.framebuf);
 		sdl.opengl.framebuf = nullptr;
 		if (!(flags & GFX_CAN_32)) {
@@ -2207,9 +2207,16 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		retFlags          = GFX_CAN_32 | GFX_CAN_RANDOM;
 		sdl.frame.update  = update_frame_gl;
 		sdl.frame.present = present_frame_gl;
+#else
+		// Should never occur, but fallback to texture in release builds
+		assertm(false, "OpenGL is not supported by this executable");
+		LOG_ERR("SDL: OpenGL is not supported by this executable, "
+		        "falling back to texture output");
+		goto fallback_texture;
+
+#endif // C_OPENGL
 		break; // RenderingBackend::OpenGl
 	}
-#endif // C_OPENGL
 	}
 	// Ensure mouse emulation knows the current parameters
 	notify_new_mouse_screen_params();
