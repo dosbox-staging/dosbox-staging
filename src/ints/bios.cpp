@@ -32,6 +32,8 @@
 #include "regs.h"
 #include "serialport.h"
 #include "setup.h"
+
+#include <memory>
 #include <time.h>
 
 // Constants
@@ -81,7 +83,7 @@ static Bitu INT70_Handler(void) {
 	return 0;
 }
 
-CALLBACK_HandlerObject* tandy_dac_callback[2] = {};
+std::unique_ptr<CALLBACK_HandlerObject> tandy_dac_callback[2] = {};
 
 static struct {
 	uint16_t port = 0;
@@ -1067,10 +1069,8 @@ static void shutdown_tandy_sb_dac_callbacks()
 			RealSetVec(tandy_irq_vector, real_readd(0x40, 0xd6));
 			real_writed(0x40, 0xd6, 0x00000000);
 		}
-		delete tandy_dac_callback[0];
-		delete tandy_dac_callback[1];
-		tandy_dac_callback[0] = nullptr;
-		tandy_dac_callback[1] = nullptr;
+		tandy_dac_callback[0] = {};
+		tandy_dac_callback[1] = {};
 	}
 	tandy_sb.port  = 0;
 	tandy_dac.port = 0;
@@ -1123,8 +1123,10 @@ bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac
 			real_writeb(0x40, 0xd4, 0xff); // Tandy DAC init value
 			real_writed(0x40, 0xd6, 0x00000000);
 			// Install the DAC callback handler
-			tandy_dac_callback[0] = new CALLBACK_HandlerObject();
-			tandy_dac_callback[1] = new CALLBACK_HandlerObject();
+			tandy_dac_callback[0] = std::make_unique<CALLBACK_HandlerObject>(
+			        CALLBACK_HandlerObject());
+			tandy_dac_callback[1] = std::make_unique<CALLBACK_HandlerObject>(
+			        CALLBACK_HandlerObject());
 			tandy_dac_callback[0]->Install(&IRQ_TandyDAC,
 			                               CB_IRET,
 			                               "Tandy DAC IRQ");
