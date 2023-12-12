@@ -81,7 +81,8 @@ static Bitu INT70_Handler(void) {
 	return 0;
 }
 
-CALLBACK_HandlerObject* tandy_DAC_callback[2];
+CALLBACK_HandlerObject* tandy_dac_callback[2] = {};
+
 static struct {
 	uint16_t port = 0;
 	uint8_t irq   = 0;
@@ -161,9 +162,10 @@ static void Tandy_SetupTransfer(PhysPt bufpt,bool isplayback) {
 
 	/* revector IRQ-handler if necessary */
 	RealPt current_irq=RealGetVec(tandy_irq_vector);
-	if (current_irq!=tandy_DAC_callback[0]->Get_RealPointer()) {
+	if (current_irq != tandy_dac_callback[0]->Get_RealPointer()) {
 		real_writed(0x40,0xd6,current_irq);
-		RealSetVec(tandy_irq_vector,tandy_DAC_callback[0]->Get_RealPointer());
+		RealSetVec(tandy_irq_vector,
+		           tandy_dac_callback[0]->Get_RealPointer());
 	}
 
 	uint8_t tandy_dma = 1;
@@ -275,8 +277,8 @@ static Bitu IRQ_TandyDAC(void) {
 		}
 
 		/* issue BIOS tandy sound device busy callout */
-		SegSet16(cs, RealSegment(tandy_DAC_callback[1]->Get_RealPointer()));
-		reg_ip = RealOffset(tandy_DAC_callback[1]->Get_RealPointer());
+		SegSet16(cs, RealSegment(tandy_dac_callback[1]->Get_RealPointer()));
+		reg_ip = RealOffset(tandy_dac_callback[1]->Get_RealPointer());
 	}
 	return CBRET_NONE;
 }
@@ -1044,10 +1046,10 @@ static void shutdown_tandy_sb_dac_callbacks()
 		IO_Write(tandy_sb.port + 0xc, 0xd0);
 	}
 	real_writeb(0x40, 0xd4, 0x00);
-	if (tandy_DAC_callback[0]) {
+	if (tandy_dac_callback[0]) {
 		LOG_MSG("BIOS: Shutting down Tandy DAC interrupt callbacks");
 		uint32_t orig_vector = real_readd(0x40, 0xd6);
-		if (orig_vector == tandy_DAC_callback[0]->Get_RealPointer()) {
+		if (orig_vector == tandy_dac_callback[0]->Get_RealPointer()) {
 			// Set IRQ vector to old value
 			uint8_t tandy_irq = 7;
 			if (tandy_sb.port) {
@@ -1065,10 +1067,10 @@ static void shutdown_tandy_sb_dac_callbacks()
 			RealSetVec(tandy_irq_vector, real_readd(0x40, 0xd6));
 			real_writed(0x40, 0xd6, 0x00000000);
 		}
-		delete tandy_DAC_callback[0];
-		delete tandy_DAC_callback[1];
-		tandy_DAC_callback[0] = nullptr;
-		tandy_DAC_callback[1] = nullptr;
+		delete tandy_dac_callback[0];
+		delete tandy_dac_callback[1];
+		tandy_dac_callback[0] = nullptr;
+		tandy_dac_callback[1] = nullptr;
 	}
 	tandy_sb.port  = 0;
 	tandy_dac.port = 0;
@@ -1121,12 +1123,12 @@ bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac
 			real_writeb(0x40, 0xd4, 0xff); // Tandy DAC init value
 			real_writed(0x40, 0xd6, 0x00000000);
 			// Install the DAC callback handler
-			tandy_DAC_callback[0] = new CALLBACK_HandlerObject();
-			tandy_DAC_callback[1] = new CALLBACK_HandlerObject();
-			tandy_DAC_callback[0]->Install(&IRQ_TandyDAC,
+			tandy_dac_callback[0] = new CALLBACK_HandlerObject();
+			tandy_dac_callback[1] = new CALLBACK_HandlerObject();
+			tandy_dac_callback[0]->Install(&IRQ_TandyDAC,
 			                               CB_IRET,
 			                               "Tandy DAC IRQ");
-			tandy_DAC_callback[1]->Install(nullptr,
+			tandy_dac_callback[1]->Install(nullptr,
 			                               CB_TDE_IRET,
 			                               "Tandy DAC end transfer");
 			// pseudocode for CB_TDE_IRET:
