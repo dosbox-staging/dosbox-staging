@@ -83,15 +83,16 @@ static Bitu INT70_Handler(void) {
 
 CALLBACK_HandlerObject* tandy_DAC_callback[2];
 static struct {
-	uint16_t port;
-	uint8_t irq;
-	uint8_t dma;
-} tandy_sb;
+	uint16_t port = 0;
+	uint8_t irq   = 0;
+	uint8_t dma   = 0;
+} tandy_sb = {};
+
 static struct {
-	uint16_t port;
-	uint8_t irq;
-	uint8_t dma;
-} tandy_dac;
+	uint16_t port = 0;
+	uint8_t irq   = 0;
+	uint8_t dma   = 0;
+} tandy_dac = {};
 
 static bool Tandy_InitializeSB() {
 	/* see if soundblaster module available and at what port/IRQ/DMA */
