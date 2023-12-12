@@ -1085,18 +1085,27 @@ static void shutdown_tandy_sb_dac_callbacks()
 //
 bool BIOS_ConfigureTandyDacCallbacks(const std::optional<bool> maybe_request_dac)
 {
-	shutdown_tandy_sb_dac_callbacks();
-
 	// Holds the Tandy Sound card's request based on the presence of the
 	// optional 'maybe_request_dac' argument. This allows other modules
 	// (like the Sound Blaster) to run this function without any arguments
-	// to re-assess if BIOS callback can potentially be setup)
+	// to re-assess if BIOS callback can potentially be setup.
 	//
 	static bool dac_requested = false;
 
 	if (maybe_request_dac) {
 		dac_requested = *maybe_request_dac;
 	}
+
+	// The BIOS DAC handling depends on the BIOS IRQ vectors being setup, so
+	// we only proceed once those are in place. We use the presence of the
+	// machine signature (either Tandy or PC) to indicate this.
+	//
+	if (mem_readb(BiosMachineSignatureAddress) == 0) {
+		return false;
+	}
+
+	shutdown_tandy_sb_dac_callbacks();
+
 	if (dac_requested) {
 		// Tandy DAC sound requested, see if soundblaster device is available
 		Bitu tandy_dac_type = 0;
@@ -1311,10 +1320,12 @@ public:
 		const uint8_t machine_signature = (machine == MCH_TANDY) ? 0xff : 0x55;
 		phys_writeb(BiosMachineSignatureAddress, machine_signature);
 
-		// Note: The BIOS 0x40 segment (Tandy DAC) callbacks are
-		// configured when the Tandy Sound card is initialized followed
-		// by state changes in either backing DAC modules (pre-SB16
-		// Sound Blaster or the Tandy DAC).
+		// Note: The BIOS 0x40 segment (Tandy DAC) callbacks can also be
+		// re-configured when the Tandy Sound card is initialized
+		// followed by state changes in either backing DAC modules
+		// (pre-SB16 Sound Blaster or the Tandy DAC).
+		//
+		BIOS_ConfigureTandyDacCallbacks();
 
 		// port timeouts
 		// always 1 second even if the port does not exist
