@@ -34,6 +34,9 @@
 #include "setup.h"
 #include <time.h>
 
+// Constants
+constexpr uint32_t BiosMachineSignatureAddress = 0xfffff;
+
 #if defined(HAVE_CLOCK_GETTIME) && !defined(WIN32)
 // time.h is already included
 #else
@@ -1303,11 +1306,10 @@ public:
 		i = 0;
 		for (const auto c : "01/01/92")
 			phys_writeb(0xffff5 + i++, static_cast<uint8_t>(c));
-		
+
 		// write machine signature
-		constexpr uint32_t machine_signature_location = 0xfffff;
 		const uint8_t machine_signature = (machine == MCH_TANDY) ? 0xff : 0x55;
-		phys_writeb(machine_signature_location, machine_signature);
+		phys_writeb(BiosMachineSignatureAddress, machine_signature);
 
 		// Note: The BIOS 0x40 segment (Tandy DAC) callbacks are
 		// configured when the Tandy Sound card is initialized followed
