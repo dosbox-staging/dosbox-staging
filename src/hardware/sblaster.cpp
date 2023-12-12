@@ -308,9 +308,12 @@ static void DSP_SetSpeaker(bool requested_state)
 	sb.chan->Enable(requested_state);
 	sb.speaker = requested_state;
 
+#if 0
+	// This can be very noisy as some games toggle the speaker for every effect
 	LOG_MSG("%s: Speaker-output has been toggled %s",
 	        CardType(),
 	        (requested_state ? "on" : "off"));
+#endif
 }
 
 static void InitializeSpeakerState()
