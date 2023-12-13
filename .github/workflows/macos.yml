@@ -243,7 +243,13 @@ jobs:
         run: |
           set -x
           eval "$(${{ matrix.runner.brew_path }}/bin/brew shellenv)"
-          meson setup ${{ matrix.runner.build_flags }} -Ddefault_library=static -Dwrap_mode=forcefallback -Dtry_static_libs=sdl2,sdl2_net build
+          meson setup \
+            ${{ matrix.runner.build_flags }} \
+            -Ddefault_library=static \
+            -Dwrap_mode=forcefallback \
+            -Dtry_static_libs=sdl2,sdl2_net \
+            -Duse_zlib_ng=built-in,sse2,ssse3,neon \
+            build
           meson compile -C build
 
       - name: Upload binary
