@@ -64,7 +64,99 @@ option(
     type: 'combo',
     choices: ['auto', 'true', 'false'],
     value: 'auto',
-    description: 'Let ManyMouse use the X Input 2.0 protocol.'
+    description: 'Let ManyMouse use the X Input 2.0 protocol.',
+)
+
+# The built-in zlib-ng is available when compiling with optimizations
+# such as when -Dbuildtype is set to 'release','minsize', or
+# 'debugoptimized'.
+#
+# You will need CMake(*) and Meson 1.3.0. If your package manager's
+# version of Meson is too old, you can install it using pip.
+#
+# If you're compiling from sources just for your own local system,
+# then you can leave this setting as-is for excellent performance.
+#
+# If you're compiling a package targeting a range of hardware
+# and you have no qualms with built-ins, then set this to the
+# most conservative set of SIMD instructions for your supported
+# range of hardware. For example, if your binary needs to run on
+# Intel's Core 2 Duo (and newer), then:
+#  meson setup -Duse_zlib_ng=built-in,sse2,ssse3
+#
+# If you're a repo packager that dislikes built-ins or are
+# working under a policy that prohibits them, then use:
+#  meson setup -Duse_zlib_ng=false
+#
+# Note: As zlib-ng is, itself, an optimization that adds time
+# and complexity to the build process, we therefore only use it
+# for optimized build types. Maintainers, developers, and CI
+# jobs compiling debug builds aren't burdened with this as
+# these builds aren't concerned with maximizing performance.
+#
+# (*) A Meson project that depends on CMake!? Well, zlib-ng
+#     is a CMake project and thankfully Meson has a module
+#     that can both configure it build it. To eliminate this
+#     dependency on CMake, feel free to contribute a wrap
+#     for zlib-ng here: https://github.com/mesonbuild/wrapdb
+#
+option(
+    'use_zlib_ng',
+    type: 'array',
+    choices: [
+        # Auto (default) try zlib-ng from the system
+        # and then built-in, in that order.
+        'auto',
+
+        # Only try using zlib-ng from the system.
+        'system',
+
+        # Only try using zlib-ng from built-in.
+        'built-in',
+
+        # Disable zlib-ng; use good old zlib.
+        'false',
+        
+        # Native (default) enables those instruction sets supported
+        # by Meson's build-target machine, which is often the local
+        # system (unless you're cross-compiling).
+        # Only guaranteed when the built-in is used.
+        'native',
+
+        # Enable x86 and x86-64 instruction sets.
+        # Only guaranteed when the built-in is used.
+        'avx2',
+        'avx512',
+        'avx512vnni',
+        'sse2',
+        'ssse3',
+        'sse42',
+        'pclmulqdq',
+        'vpclmulqdq',
+
+        # Enable Arm instruction sets.
+        # Only guaranteed when the built-in is used.
+        'acle',
+        'neon',
+        'armv6',
+
+        # Enable POWER and PowerPC instruction sets.
+        # Only guaranteed when the built-in is used.
+        'altivec',
+        'power8',
+
+        # Enable the RISC-V "V" (vector) instruction set.
+        # Only guaranteed when the built-in is used.
+        'rvv',
+
+        # Enable the IBM Z instruction sets.
+        # Only guaranteed when the built-in is used.
+        'crc32_vx',
+        'dfltcc_deflate',
+        'dfltcc_inflate',
+    ],
+    value: ['auto', 'native'],
+    description: 'Enable zlib-ng either from the system or built-in',
 )
 
 option(
@@ -84,9 +176,10 @@ option(
 )
 
 option(
-    'pagesize', type : 'integer',
-    value : 0,
-    description: 'Set host memory pagesize in bytes (skip detection)'
+    'pagesize',
+    type: 'integer',
+    value: 0,
+    description: 'Set host memory pagesize in bytes (skip detection)',
 )
 
 # Per-page write-or-execute (W^X) permissions
@@ -124,7 +217,7 @@ option(
     'per_page_w_or_x',
     type: 'feature',
     value: 'auto',
-    description: 'Flag dynamic core memory write-or-execute (W^X) per-page.'
+    description: 'Flag dynamic core memory write-or-execute (W^X) per-page.',
 )
 
 # Use this option for selectively switching dependencies to look for static
