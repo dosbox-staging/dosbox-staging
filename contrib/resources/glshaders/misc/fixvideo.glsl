@@ -7,7 +7,7 @@
  *
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023 The DOSBox Team
+ *  Copyright (C) 2020-2023  The DOSBox Staging Team
  *  Copyright (C) 2015 Ove Kaaven
  *
  *  This program is free software; you can redistribute it and/or modify
