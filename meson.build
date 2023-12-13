@@ -4,7 +4,7 @@ project(
     'cpp',
     version: '0.81.0-alpha',
     license: 'GPL-2.0-or-later',
-    meson_version: '>= 0.57.0',
+    meson_version: '>= 0.59.0',
     default_options: [
         'cpp_std=c++17',
         'buildtype=release',
@@ -25,6 +25,7 @@ project(
         'gtest:warning_level=0',
         'libjpeg-turbo:b_staticpic=true',
         'libpng:b_staticpic=true',
+        'zlib-ng:c_std=c11',
     ],
 )
 
@@ -139,8 +140,11 @@ else
     )
 endif
 
-if get_option('buildtype') in ['release', 'minsize']
-    # For release and small build types, we're not anticipating
+is_optimized_buildtype = (
+    get_option('buildtype') in ['release', 'minsize', 'debugoptimized']
+)
+if is_optimized_buildtype
+    # For optimized build types, we're not anticipating
     # needing debuggable floating point signals.
     # These safety measures are still enabled in debug builds,
     # so if an issue is reported where these happen help, then
@@ -526,13 +530,102 @@ sdl2_dep = dependency(
     include_type: 'system',
 )
 
-zlib_dep = dependency(
-    'zlib',
-    version: ['>= 1.2.11', '< 2'],
-    default_options: default_wrap_options,
-    static: ('zlib' in static_libs_list or prefers_static_libs),
-    include_type: 'system',
+# zlib
+# ~~~~
+zlib_dep = disabler()
+zlib_ng_options = get_option('use_zlib_ng')
+zlib_is_static = 'zlib' in static_libs_list or prefers_static_libs
+
+try_system_zlib_ng = 'auto' in zlib_ng_options or 'system' in zlib_ng_options
+try_builtin_zlib_ng = 'auto' in zlib_ng_options or 'built-in' in zlib_ng_options
+
+system_zlib_ng_dep = disabler()
+if try_system_zlib_ng
+    system_zlib_ng_dep = dependency(
+        'zlib-ng',
+        required: false,
+        fallback: [],
+        static: zlib_is_static,
+        include_type: 'system',
+    )
+endif
+if (system_zlib_ng_dep.found())
+    summary('zlib-ng provider', 'system library')
+    conf_data.set10('C_SYSTEM_ZLIB_NG', system_zlib_ng_dep.found())
+elif (
+    # Otherwise consider the built-in, which is a whole-sale replacement for zlib
+    try_builtin_zlib_ng
+    and is_optimized_buildtype
+    and meson.version() >= '1.3.0'
 )
+    cmake_bin = find_program('cmake', required: false)
+    cmake_module = import('cmake', required: false)
+    if cmake_bin.found() and cmake_module.found()
+        cmake_options = cmake_module.subproject_options()
+        zlib_ng_is_native = zlib_ng_options.contains('native')
+
+        zlib_ng_defines = {
+            'ZLIB_COMPAT': true,
+            'WITH_OPTIM': true,
+            'ZLIB_BUILD_STATIC': true,
+            'PIC': get_option('b_staticpic'),
+            'BUILD_SHARED_LIBS': false,
+            'WITH_GTEST': false,
+            'ZLIB_ENABLE_TESTS': false,
+            'WITH_NATIVE_INSTRUCTIONS': zlib_ng_is_native,
+            'WITH_SANITIZER': get_option('b_sanitize'),
+        }
+
+        foreach instruction_set : [
+            'avx2',
+            'avx512',
+            'avx512vnni',
+            'sse2',
+            'ssse3',
+            'sse42',
+            'pclmulqdq',
+            'vpclmulqdq',
+            'acle',
+            'neon',
+            'armv6',
+            'altivec',
+            'power8',
+            'rvv',
+            'crc32_vx',
+            'dfltcc_deflate',
+            'dfltcc_inflate',
+        ]
+            cmake_define_key = 'WITH_' + instruction_set.to_upper()
+            cmake_define_value = (
+                zlib_ng_is_native
+                or zlib_ng_options.contains(instruction_set)
+            )
+            zlib_ng_defines += {cmake_define_key: cmake_define_value}
+        endforeach
+
+        cmake_options.add_cmake_defines(zlib_ng_defines)
+
+        zlib_ng_subproject = cmake_module.subproject(
+            'zlib-ng',
+            options: cmake_options,
+        )
+        zlib_dep = zlib_ng_subproject.get_variable('zlib_dep')
+        summary('zlib provider', 'built-in (zlib-ng)')
+    endif
+endif
+
+# Otherwise Use the system's zlib or fallback
+if not zlib_dep.found()
+    zlib_dep = dependency(
+        'zlib',
+        version: ['>= 1.2.11', '< 2'],
+        required: true,
+        fallback: [],
+        static: zlib_is_static,
+        include_type: 'system',
+    )
+    summary('zlib provider', 'system library')
+endif
 
 # SpeexDSP
 # ~~~~~~~~

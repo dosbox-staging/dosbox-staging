@@ -22,7 +22,21 @@
 #include <cstdint>
 #include <vector>
 
+#include "config.h"
+
+#if defined(C_SYSTEM_ZLIB_NG)
+#include <zlib-ng.h>
+#define deflateInit2 zng_deflateInit2
+#define deflateReset zng_deflateReset
+#define deflate zng_deflate
+#define deflateEnd zng_deflateEnd
+#define inflateInit zng_inflateInit
+#define inflateReset zng_inflateReset
+#define inflate zng_inflate
+#define z_stream zng_stream
+#else
 #include <zlib.h>
+#endif
 
 #define CODEC_4CC "ZMBV"
 

@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/zlib-ng/zlib-ng.git
+revision = 2.1.5
+method = cmake
+
+[provide]
+zlib-ng = zlib_dep
