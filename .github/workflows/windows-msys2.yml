@@ -219,7 +219,6 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-libslirp
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
-            mingw-w64-clang-${{matrix.conf.arch}}-zlib
             mingw-w64-clang-${{matrix.conf.arch}}-speexdsp
             mingw-w64-clang-${{matrix.conf.arch}}-python-pip
             mingw-w64-clang-${{matrix.conf.arch}}-fluidsynth
@@ -288,10 +287,22 @@ jobs:
 
       - name: Setup release build
         run: |
-          meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Dtry_static_libs=mt32emu $BUILD_RELEASE_DIR
+          meson setup \
+            -Db_lto=true \
+            -Db_lto_threads=$(nproc) \
+            -Dtry_static_libs=mt32emu \
+            -Duse_zlib_ng=built-in,sse2,ssse3 \
+            $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
-        run: meson setup -Db_lto=true -Db_lto_threads=$(nproc) -Denable_debugger=normal -Dtry_static_libs=mt32emu $BUILD_DEBUGGER_DIR
+        run: |
+          meson setup \
+            -Db_lto=true \
+            -Db_lto_threads=$(nproc) \
+            -Denable_debugger=normal \
+            -Dtry_static_libs=mt32emu \
+            -Duse_zlib_ng=built-in,sse2,ssse3 \
+            $BUILD_DEBUGGER_DIR
 
       - name: Build release
         run: |

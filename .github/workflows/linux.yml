@@ -320,6 +320,7 @@ jobs:
         run: |
           meson setup \
             -Duse_xinput2=false \
+            -Duse_zlib_ng=built-in,sse2,ssse3,neon \
             -Ddefault_library=static \
             --wrap-mode=forcefallback \
             -Db_lto=true -Db_lto_threads=$(nproc) \
