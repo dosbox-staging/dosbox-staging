@@ -516,13 +516,6 @@ opus_dep = dependency(
     include_type: 'system',
 )
 
-png_dep = dependency(
-    'libpng',
-    version: ['>= 1.2', '< 2'],
-    static: ('png' in static_libs_list or prefers_static_libs),
-    include_type: 'system',
-)
-
 sdl2_dep = dependency(
     'sdl2',
     version: ['>= 2.0.5', '< 3'],
@@ -626,6 +619,29 @@ if not zlib_dep.found()
     )
     summary('zlib provider', 'system library')
 endif
+
+# PNG
+# ~~~
+png_has_internal_dep = zlib_dep.type_name() == 'internal'
+if png_has_internal_dep
+    png_dep = subproject(
+        'libpng',
+        default_options: default_wrap_options,
+    ).get_variable('png_dep')
+else
+    png_dep = dependency(
+        'libpng',
+        version: ['>= 1.2', '< 2'],
+        required: true,
+        fallback: [],
+        static: 'png' in static_libs_list or prefers_static_libs,
+        include_type: 'system',
+    )
+endif
+summary(
+    'PNG provider',
+    png_dep.type_name() == 'internal' ? 'built-in' : 'system library',
+)
 
 # SpeexDSP
 # ~~~~~~~~
