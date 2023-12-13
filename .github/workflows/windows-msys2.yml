@@ -120,7 +120,7 @@ jobs:
         uses: actions/cache@v3.3.2
         with:
           path: subprojects.tar
-          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
           enableCrossOsArchive: true
 
       - name: Update SSL certificates
@@ -245,7 +245,7 @@ jobs:
         uses: actions/cache@v3.3.2
         with:
           path: subprojects.tar
-          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
           enableCrossOsArchive: true
 
       - name: Update SSL certificates
