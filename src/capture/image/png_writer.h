@@ -31,7 +31,6 @@
 #include "render.h"
 
 #include <png.h>
-#include <zlib.h>
 
 // A row-based PNG writer that also writes the pixel aspect ratio of the image
 // into the standard pHYs PNG chunk.

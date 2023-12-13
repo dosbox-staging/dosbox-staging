@@ -95,7 +95,6 @@ libhardware = static_library(
         speexdsp_dep,
         tracy_dep,
         winsock2_dep,
-        zlib_dep,
     ],
     cpp_args: warnings,
 )
