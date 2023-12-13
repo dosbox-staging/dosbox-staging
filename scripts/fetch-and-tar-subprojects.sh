@@ -52,19 +52,31 @@ tar_non_repo_subprojects_dirs()
 	test -f "$tarfile"
 }
 
+clean_repo()
+{
+	"$GIT" clean -ffdx
+}
+
 fetch_subprojects()
 {
 	test -d subprojects
 
 	"$MESON" subprojects download
+
 	"$MESON" subprojects update --reset
-	"$MESON" subprojects foreach meson subprojects download
+
+	"$MESON" subprojects foreach \
+	  --types file \
+	  --num-processes 2 \
+	  meson subprojects download
 
 	while read -r dir; do
 		(
 			set -eu
 			cd "$(dirname "$dir")"
-			"$MESON" subprojects download
+			if [[ -f meson.build ]]; then
+				"$MESON" subprojects download
+			fi
 		)
 	done < <(find . -type d -name subprojects)
 }
@@ -109,9 +121,11 @@ main()
 		local tarfile="$1"
 	fi
 
-	create_dirs_for "$tarfile"
-
 	setup_binaries
+
+	clean_repo
+
+	create_dirs_for "$tarfile"
 
 	fetch_subprojects
 

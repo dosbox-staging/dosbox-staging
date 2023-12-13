@@ -46,15 +46,17 @@ jobs:
 
       - name: Install Meson
         run:  |
+          export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y meson
+          sudo apt-get install -y python3-setuptools
+          sudo pip3 install --upgrade meson
 
       - name: Cache subprojects
         id:   cache-subprojects
         uses: actions/cache@v3.3.2
         with:
           path: subprojects.tar
-          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
           enableCrossOsArchive: true
 
       - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
@@ -228,7 +230,7 @@ jobs:
         uses: actions/cache@v3.3.2
         with:
           path: subprojects.tar
-          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
           enableCrossOsArchive: true
 
       - name: Extract subprojects cache
@@ -280,7 +282,7 @@ jobs:
         uses: actions/cache@v3.3.2
         with:
           path: subprojects.tar
-          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-4
+          key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
           enableCrossOsArchive: true
 
       - name: Extract subprojects cache
