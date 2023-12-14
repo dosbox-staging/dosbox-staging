@@ -1097,7 +1097,6 @@ static void init_render_settings(Section_prop& secprop)
 	        "                   aspect ratios with 'aspect = stretch' and to zoom into the\n"
 	        "                   image. This effectively emulates the horizontal and vertical\n"
 	        "                   stretch controls of CRT monitors.\n"
-	        "\n"
 	        "Notes:\n"
 	        " - Using 'relative' mode with 'integer_scaling' enabled could lead to\n"
 	        "   surprising (but correct) results.\n"
