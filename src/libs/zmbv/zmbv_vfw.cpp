@@ -34,7 +34,7 @@
 TCHAR szDescription[] = TEXT("Zipped Motion Block Video v0.1a");
 TCHAR szName[]        = TEXT(CODEC_4CC);
 
-#define VERSION         0x00000002      // newer version
+#define ZMBV_CODEC_VERSION 0x00000002 // newer version
 
 /********************************************************************
 ********************************************************************/
@@ -164,7 +164,7 @@ DWORD CodecInst::GetInfo(ICINFO* icinfo, DWORD dwSize) {
   memcpy(&icinfo->fccHandler,CODEC_4CC, 4);
   icinfo->dwFlags           = VIDCF_FASTTEMPORALC | VIDCF_FASTTEMPORALD | VIDCF_TEMPORAL;
 
-  icinfo->dwVersion         = VERSION;
+  icinfo->dwVersion         = ZMBV_CODEC_VERSION;
   icinfo->dwVersionICM      = ICVERSION;
   MultiByteToWideChar(CP_ACP, 0, szDescription, -1, icinfo->szDescription, sizeof(icinfo->szDescription)/sizeof(WCHAR));
   MultiByteToWideChar(CP_ACP, 0, szName, -1, icinfo->szName, sizeof(icinfo->szName)/sizeof(WCHAR));
