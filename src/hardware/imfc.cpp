@@ -13455,8 +13455,8 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 	assert(str_prop);
 	str_prop->Set_help(
 	        "Filter for the IBM Music Feature Card output:\n"
-	        "  on:        Filter the output.\n"
-	        "  off:       Don't filter the output (default).\n"
+	        "  on:        Filter the output (default).\n"
+	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
