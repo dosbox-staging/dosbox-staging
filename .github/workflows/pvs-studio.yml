@@ -103,10 +103,18 @@ jobs:
           mv -f "${reportdir}/pvs-report.fullhtml"/* "${reportdir}/"
           rm -rf "${reportdir}/pvs-report.fullhtml"
 
+      - name: Inject version string
+        run: |
+          set -x
+          git fetch --prune --unshallow
+          git fetch --all --tags --force
+          export VERSION=$(git describe --abbrev=5)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
-          name: pvs-analysis-report
+          name: pvs-analysis-report-${{ env.VERSION }}
           path: pvs-report
 
       - name: Summarize report

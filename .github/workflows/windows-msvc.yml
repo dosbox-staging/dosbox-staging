@@ -218,12 +218,12 @@ jobs:
         with:
           name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
           path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
-      
+
       - name: Upload debugger artifact
         if:   ${{ matrix.conf.debugger }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
+          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}-debugger
           path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
 
   # This job exists only to publish an artifact with version info when building
