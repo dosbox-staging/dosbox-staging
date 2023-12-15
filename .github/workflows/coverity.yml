@@ -75,10 +75,14 @@ jobs:
           zstd --long=31 -dc "${PACKAGE}" | tar -C "${BASE_DIR}" -x
 
       - name: Build and instrument the project
+        # Note: a non-debug buildtype is deliberately used to
+        # prevent Coverity from reporting hundreds of warnings
+        # against STL internals that we have no control over.
         run: |
           set -xeu
           CC="clang" CXX="clang++" meson setup \
-          -Dbuildtype=debug \
+          -Dbuildtype=minsize \
+          -Db_ndebug=false \
           -Dunit_tests=disabled \
           -Duse_alsa=false \
           -Duse_fluidsynth=false \
