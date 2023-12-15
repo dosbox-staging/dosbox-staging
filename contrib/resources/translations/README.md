@@ -1,10 +1,10 @@
 
 # General translation workflow
 
-## Preparing file with English strings
+## Preparing a file with English strings
 
-Be sure you have the latest English messages file, `en.lng` (the one present in this
-directory is likely outdated), by running:
+Be sure you have the latest English messages file, `en.lng` (the one present
+in this directory is likely outdated), by running:
 
 ```
 dosbox -lang en -c "config -wl en.lng" -c "exit"
@@ -12,26 +12,28 @@ dosbox -lang en -c "config -wl en.lng" -c "exit"
 
 or do the following:
 
-1. In the configuration file, go to the `[dosbox]` section and set`language = en`.
+1. In the configuration file, go to the `[dosbox]` section and set `language = en`.
 2. Run the most current version of DOSBox Staging.
 3. Inside DOSBox execute the command `config -wl en.lng` (you can supply a host OS
   path, instead of simply `en.lng`).
 
-This will produce a file with the current strings to translate, use it as a
+This will produce a file with the current strings to translate; use it as a
 reference.
 
 ## Updating the translation
 
-Update a given translation by editing the corresponding `*.lng` file with a text editor
-and saving it with UTF-8 encoding and Unix line endings.
+Update a given translation by editing the corresponding `*.lng` file with a text
+editor and saving it with UTF-8 encoding and Unix line endings.
 
 Suitable editors are often called ASCII editors, code editors, etc. - Microsoft Word
-is not suitable, but Notepad (Windows), Notepad++ (Windows), or Kate (Linux) will do.
+is not suitable, but Notepad (Windows), Notepad++ (Windows), TextMate (macOS),
+or Kate (Linux) will do.
 
-Tools exists (often called diff tools) that can help you to compare two `en.lng` files
-generated from different versions of DOSBox, they make it easy to figure out what has
-changed in the English strings and has to be reflected in your updated translations.
-These include Meld (cross-platform), WinMerge (Windows), and Kompare (Linux).
+Tools exist (often called diff tools) that can help you to compare two `en.lng`
+files generated from different versions of DOSBox, they make it easy to figure out
+what has changed in the English strings and what needs to be addressed in your
+updated translations. These include Meld (cross-platform), WinMerge (Windows),
+and Kompare (Linux).
 
 Depending on your host OS, use the correct script to normalize the output. Although
 DOSBox Staging should be able to handle non-normalized translation files, and
@@ -59,7 +61,7 @@ to learn more about it, here are a few links:
 
 For example `CONFIG_FULLSCREEN`.
 
-Do not exceed 79 character on a line, or commands such as `config -h fullscreen`
+Do not exceed 79 characters on a line, or commands such as `config -h fullscreen`
 won't be able to display the help properly, and might wrap the text or display blank
 lines. The limit might be increased to 80 characters in the future, but
 the implementation is not there yet.
@@ -67,12 +69,12 @@ the implementation is not there yet.
 ### Command or program help
 
 For example `PROGRAM_MOUNT_HELP_LONG` or `SHELL_CMD_CLS_HELP_LONG`. Sometimes
-the first line of the help message is extracted to a separate string,
+the first line of the help message is extracted into a separate string,
 like `SHELL_CMD_CLS_HELP`.
 
-Do not exceed 80 character in a line, or commands like `cls /?` won't be able to
-display the help properly. Also test that that the `help /all` command properly
-extracts and displays the shortened command descriptions.
+Do not exceed 80 characters in a line, or commands like `cls /?` won't be able to
+display the help properly. Also test that the `help /all` command properly extracts
+and displays the shortened command descriptions.
 
 ### Startup screen strings
 
@@ -82,14 +84,24 @@ If you modify these strings, test the startup screen with `startup_verbosity = h
 for all the relevant `machine = (...)` settings. It is really easy to make a mistake
 here.
 
+### Country names
+
+For example `COUNTRY_NAME_USA` or `COUNTRY_NAME_BIH_LAT`. Usually the country code
+is taken from the _ISO 3166-1 alpha-3_ norm, but sometimes they can contain
+an additional suffix specifying a language or alphabet, or a single 'country'
+can describe the whole geographic region, like on real MS-DOS.
+
+After translating the country names, check them by running DOSBox with
+`--list-countries` command line argument.
+
 # Scripts
 
 ## `normalize.sh` (Linux, macOS) or `normalize.bat` (Windows)
 
 UTF-8 can store the same exact text in several different ways. There are some standard
 ones, however, called _normalized forms_. These scripts convert the translation files
-to the NFC-normalized form (recommended by DOSBox Staging and used by default by most
-UTF-8 capable text editors), with Unix line ending.
+to the NFC-normalized form (recommended by DOSBox Staging and used by default
+by most UTF-8 capable text editors), with Unix line endings.
 
 ## `update-sources.sh` (Linux, macOS)
 
