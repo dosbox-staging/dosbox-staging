@@ -343,13 +343,13 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 
 	str_prop = sec_prop.Add_string("romdir", when_idle, "");
 	str_prop->Set_help(
-	        "The directory containing the Roland MT-32/CM-32ML ROMs.\n"
-	        "The directory can be absolute or relative, or leave it blank to\n"
-	        "use the 'mt32-roms' directory in your DOSBox configuration\n"
-	        "directory. Other common system locations will be checked as well.\n"
+	        "The directory containing the Roland MT-32/CM-32ML ROMs (unset by default).\n"
+	        "The directory can be absolute or relative, or leave it unset to use the\n"
+	        "'mt32-roms' directory in your DOSBox configuration directory. Other common\n"
+	        "system locations will be checked as well.\n"
 	        "Notes:\n"
-	        "  - The file names of the ROM files do not matter; the ROMS are identified by\n"
-	        "    their checksums.\n"
+	        "  - The file names of the ROM files do not matter; the ROMS are identified\n"
+	        "    by their checksums.\n"
 	        "  - Both interleaved and non-interlaved ROM files are supported.");
 
 	str_prop = sec_prop.Add_string("mt32_filter", when_idle, "off");
