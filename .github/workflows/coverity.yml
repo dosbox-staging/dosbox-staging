@@ -78,8 +78,7 @@ jobs:
         run: |
           set -xeu
           CC="clang" CXX="clang++" meson setup \
-          -Dbuildtype=minsize \
-          -Db_ndebug=false \
+          -Dbuildtype=debug \
           -Dunit_tests=disabled \
           -Duse_alsa=false \
           -Duse_fluidsynth=false \
@@ -88,6 +87,7 @@ jobs:
           -Duse_sdl2_net=false \
           -Duse_slirp=false \
           -Duse_xinput2=false \
+          -Duse_zlib_ng=false \
           build
           PATH="${BASE_DIR}/cov-analysis-linux64-${PACKAGE_VERSION}/bin:${PATH}"
           cov-build --dir cov-int meson compile -C build
