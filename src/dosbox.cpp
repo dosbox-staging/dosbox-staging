@@ -640,9 +640,10 @@ void DOSBOX_Init()
 
 	pbool = secprop->Add_bool("shell_config_shortcuts", when_idle, true);
 	pbool->Set_help(
-	        "Allow shortcuts for direct configuration management (enabled by default), i.e.\n"
-	        "instead of 'config -set sbtype sb16' it is enough to execute 'sbtype sb16', \n"
-	        "and instead of 'config -get sbtype' it is enough to execute 'sbtype' command.");
+	        "Allow shortcuts for simpler configuration management (enabled by default).\n"
+	        "E.g., instead of 'config -set sbtype sb16', it is enough to execute\n"
+	        "'sbtype sb16', and instead of 'config -get sbtype', you can just execute\n"
+	        "the 'sbtype' command.");
 
 	// Configure render settings
 	RENDER_AddConfigSection(control);
