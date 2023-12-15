@@ -3984,10 +3984,7 @@ bool GFX_Events()
 
 				finalise_window_state();
 
-				const auto shader_switched = maybe_auto_switch_shader();
-				if (!shader_switched) {
-					GFX_ResetScreen();
-				}
+				maybe_auto_switch_shader();
 				continue;
 			}
 
