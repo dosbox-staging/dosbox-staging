@@ -114,10 +114,18 @@ jobs:
           ninja -C build scan-build
           mv build/meson-logs/scanbuild report
 
+      - name: Inject version string
+        run: |
+          set -x
+          git fetch --prune --unshallow
+          git fetch --all --tags --force
+          export VERSION=$(git describe --abbrev=5)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
-          name: clang-analysis-report
+          name: clang-analysis-report-${{ env.VERSION }}
           path: report
 
       - name: Summarize report

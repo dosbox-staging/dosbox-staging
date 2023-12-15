@@ -415,8 +415,9 @@ jobs:
       - name: Upload installer
         uses: actions/upload-artifact@v4
         with:
-          name: dosbox-staging-${{ env.version_number }}-setup.exe
+          name: dosbox-staging-windows-${{ env.version_number }}-setup.exe
           path: ${{ github.workspace }}\out\dosbox-staging-${{ env.version_number }}-setup.exe
+          compression-level: 0
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:

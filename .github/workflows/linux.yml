@@ -337,10 +337,10 @@ jobs:
           ./scripts/create-package.sh \
             -p linux \
             build \
-            "dosbox-staging-linux-$VERSION"
+            "dosbox-staging-linux-x86_64-$VERSION"
 
       - name: Create tarball
-        run: tar -cJf "dosbox-staging-linux-$VERSION.tar.xz" "dosbox-staging-linux-$VERSION"
+        run: tar -cJf "dosbox-staging-linux-x86_64-$VERSION.tar.xz" "dosbox-staging-linux-x86_64-$VERSION"
 
       - name:  Prepare Clam AV DB cache
         id:    prep-clamdb
@@ -373,8 +373,9 @@ jobs:
         # a tarball), and it removes all executable flags while zipping.
         # Letting it zip a tarball preserves flags in the compressed files.
         with:
-          name: dosbox-staging-linux-x86_64
-          path: dosbox-staging-linux-${{ env.VERSION }}.tar.xz
+          name: dosbox-staging-linux-x86_64-${{ env.VERSION }}
+          path: dosbox-staging-linux-x86_64-${{ env.VERSION }}.tar.xz
+          compression-level: 0
 
 
   # This job exists only to publish an artifact with version info when building
