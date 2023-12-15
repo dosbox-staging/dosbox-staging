@@ -42,6 +42,31 @@ static data_array_t generate_easy_data_in()
 	return data;
 }
 
+static data_array_t generate_hard_data_in()
+{
+	data_array_t data = {};
+
+	constexpr size_t block_size = 1024;    // size of a block of same color
+	constexpr uint8_t pattern_repeat = 10; // repeat a pattern every few bytes
+
+	for (size_t i = 0; i < data.size(); ++i) {
+		// Generate blocks of same color
+		if ((i / block_size) % 2 == 0) {
+			data[i] = 45;
+		}
+		// Generate repeating patterns
+		else if ((i % pattern_repeat) == 0) {
+			data[i] = 255;
+		}
+		// Fill remaining bytes with random data
+		else {
+			data[i] = static_cast<Bytef>(rand() % 256);
+		}
+	}
+
+	return data;
+}
+
 static void print_results(const size_t num_bytes, const microseconds elapsed_us_us)
 {
 	// Calculate and print compression speed in MB/s
@@ -104,6 +129,9 @@ static void compress_data(data_array_t data_in)
 int main()
 {
 	setvbuf(stdout, nullptr, _IONBF, 0);
+
+	printf("hard data:");
+	compress_data(generate_hard_data_in());
 
 	printf("easy data:");
 	compress_data(generate_easy_data_in());
