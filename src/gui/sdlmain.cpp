@@ -312,22 +312,41 @@ void GFX_SetTitle(const int32_t new_num_cycles, const bool is_paused = false)
 	auto &hint_mouse_str  = sdl.title_bar.hint_mouse_str;
 	auto &hint_paused_str = sdl.title_bar.hint_paused_str;
 
-	if (new_num_cycles != -1)
+	if (new_num_cycles != -1) {
 		num_cycles = new_num_cycles;
+	}
 
 	if (cycles_ms_str.empty()) {
 		cycles_ms_str   = MSG_GetRaw("TITLEBAR_CYCLES_MS");
 		hint_paused_str = std::string(" ") + MSG_GetRaw("TITLEBAR_HINT_PAUSED");
 	}
 
-	if (CPU_CycleAutoAdjust)
-		safe_sprintf(title_buf, "%8s - max %d%% - " APP_NAME_STR "%s",
-		             RunningProgram, num_cycles,
-		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
-	else
-		safe_sprintf(title_buf, "%8s - %d %s - " APP_NAME_STR "%s",
-		             RunningProgram, num_cycles, cycles_ms_str.c_str(),
-		             is_paused ? hint_paused_str.c_str() : hint_mouse_str.c_str());
+	const auto& hint_str = is_paused ? hint_paused_str : hint_mouse_str;
+	if (CPU_CycleAutoAdjust) {
+		if (CPU_CycleLimit > 0) {
+			safe_sprintf(title_buf,
+			             "%8s - max %d%% limit %d %s - " APP_NAME_STR "%s",
+			             RunningProgram,
+			             num_cycles,
+			             CPU_CycleLimit,
+			             cycles_ms_str.c_str(),
+			             hint_str.c_str());
+		} else {
+			safe_sprintf(title_buf,
+			             "%8s - max %d%% %s - " APP_NAME_STR "%s",
+			             RunningProgram,
+			             num_cycles,
+			             cycles_ms_str.c_str(),
+			             hint_str.c_str());
+		}
+	} else {
+		safe_sprintf(title_buf,
+		             "%8s - %d %s - " APP_NAME_STR "%s",
+		             RunningProgram,
+		             num_cycles,
+		             cycles_ms_str.c_str(),
+		             hint_str.c_str());
+	}
 
 	SDL_SetWindowTitle(sdl.window, title_buf);
 }
