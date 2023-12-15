@@ -1109,21 +1109,21 @@ void DOSBOX_Init()
 	pmulti_remain->SetValue("dummy");
 	pstring->Set_values(serials);
 	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	pmulti_remain->Set_help("See 'serial1'");
+	pmulti_remain->Set_help("See 'serial1' ('dummy' by default).");
 
 	pmulti_remain = secprop->AddMultiValRemain("serial3", when_idle, " ");
 	pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
 	pmulti_remain->SetValue("disabled");
 	pstring->Set_values(serials);
 	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	pmulti_remain->Set_help("See 'serial1'");
+	pmulti_remain->Set_help("See 'serial1' ('disabled' by default).");
 
 	pmulti_remain = secprop->AddMultiValRemain("serial4", when_idle, " ");
 	pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "disabled");
 	pmulti_remain->SetValue("disabled");
 	pstring->Set_values(serials);
 	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
-	pmulti_remain->Set_help("See 'serial1'");
+	pmulti_remain->Set_help("See 'serial1' ('disabled' by default).");
 
 	pstring = secprop->Add_path("phonebookfile", only_at_start, "phonebook.txt");
 	pstring->Set_help("File used to map fake phone numbers to addresses\n"
