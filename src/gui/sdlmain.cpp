@@ -4447,10 +4447,11 @@ static void config_add_sdl() {
 
 	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
 	pstring->Set_help(
-	        "File used to load/save the key/event mappings.\n"
-	        "Pre-configured maps are bundled in the 'resources/mapperfiles' directory.\n"
-	        "They can be loaded by name, for example: mapperfile = xbox/xenon2.map\n"
-	        "Note: The --resetmapper command line flag only deletes the default mapperfile.");
+	        "Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the\n"
+	        "current version). Pre-configured maps are bundled in 'resources/mapperfiles'.\n"
+	        "These can be loaded by name, e.g., with 'mapperfile = xbox/xenon2.map'.\n"
+	        "Note: The --resetmapper command line option only deletes the default mapper\n"
+	        "      file.");
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");
 	pstring->Set_help(
