@@ -38,6 +38,7 @@
 #include "reelmagic.h"
 #include "render.h"
 #include "rgb888.h"
+#include "string_utils.h"
 #include "vga.h"
 
 // CHECK_NARROWING();
@@ -1455,7 +1456,7 @@ static void composite_init(Section *sec)
 	}
 }
 
-static void composite_settings(Section_prop &secprop)
+static void composite_settings(Section_prop& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
@@ -1463,10 +1464,10 @@ static void composite_settings(Section_prop &secprop)
 	auto str_prop = secprop.Add_string("composite", when_idle, "auto");
 	str_prop->Set_values(states);
 	str_prop->Set_help(
-	        "Enable composite mode on start ('auto' by default).\n"
-	        "'auto' lets the program decide.\n"
-	        "Note: Fine-tune the settings below (i.e., hue) using the composite hotkeys,\n"
-	        "      then read the new settings from your console and enter them here.");
+	        "Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine\n"
+	        "types; 'auto' by default). 'auto' lets the program decide.\n"
+	        "Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,\n"
+	        "      then copy the new settings from the logs into your config.");
 
 	const char* eras[] = {"auto", "old", "new", nullptr};
 	str_prop           = secprop.Add_string("era", when_idle, "auto");
@@ -1476,23 +1477,29 @@ static void composite_settings(Section_prop &secprop)
 
 	auto int_prop = secprop.Add_int("hue", when_idle, hue.get_default());
 	int_prop->SetMinMax(hue.get_min(), hue.get_max());
-	int_prop->Set_help("Appearance of RGB palette. For example, adjust until the sky is blue.");
+	int_prop->Set_help(format_string("Appearance of RGB palette (%d by default).\n"
+	                                 "For example, adjust until the sky is blue.",
+	                                 hue.get_default()));
 
 	int_prop = secprop.Add_int("saturation", when_idle, saturation.get_default());
 	int_prop->SetMinMax(saturation.get_min(), saturation.get_max());
-	int_prop->Set_help("Intensity of colors, from washed out to vivid.");
+	int_prop->Set_help(format_string("Intensity of colors, from washed out to vivid (%d by default).",
+	                                 saturation.get_default()));
 
 	int_prop = secprop.Add_int("contrast", when_idle, contrast.get_default());
 	int_prop->SetMinMax(contrast.get_min(), contrast.get_max());
-	int_prop->Set_help("Ratio between the dark and light area.");
+	int_prop->Set_help(format_string("Ratio between the dark and light area (%d by default).",
+	                                 contrast.get_default()));
 
 	int_prop = secprop.Add_int("brightness", when_idle, brightness.get_default());
 	int_prop->SetMinMax(brightness.get_min(), brightness.get_max());
-	int_prop->Set_help("Luminosity of the image, from dark to light.");
+	int_prop->Set_help(format_string("Luminosity of the image, from dark to light (%d by default).",
+	                                 brightness.get_default()));
 
 	int_prop = secprop.Add_int("convergence", when_idle, convergence.get_default());
 	int_prop->SetMinMax(convergence.get_min(), convergence.get_max());
-	int_prop->Set_help("Convergence of subpixel elements, from blurry to sharp (CGA and Tandy-only).");
+	int_prop->Set_help(format_string("Convergence of subpixel elements, from blurry to sharp (%d by default).",
+	                                 convergence.get_default()));
 }
 
 static void turn_crt_knob(bool pressed, const int amount)
