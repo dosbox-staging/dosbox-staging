@@ -338,7 +338,7 @@ static void config_init(Section_prop &secprop)
 	prop_str->Set_values(list_capture_types);
 	prop_str->Set_help(
 	        "Set the mouse capture behaviour:\n"
-	        "  onclick:   Capture the mouse when clicking any mouse button in the window \n"
+	        "  onclick:   Capture the mouse when clicking any mouse button in the window\n"
 	        "             (default).\n"
 	        "  onstart:   Capture the mouse immediately on start. Might not work correctly\n"
 	        "             on some host operating systems.\n"
