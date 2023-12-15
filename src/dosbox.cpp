@@ -632,16 +632,17 @@ void DOSBOX_Init()
 
 	pbool = secprop->Add_bool("allow_write_protected_files", only_at_start, true);
 	pbool->Set_help(
-		"Many games open all their files with writable permissions; even files that they\n"
-		"never modify. This setting lets you write-protect those files while still\n"
-		"allowing the game to read them. A second use-case: if you're using a\n"
-		"copy-on-write or network-based filesystem, this setting avoids triggering\n"
-		"write-operations for these write-protected files.");
+	        "Many games open all their files with writable permissions; even files that they\n"
+	        "never modify. This setting lets you write-protect those files while still\n"
+	        "allowing the game to read them (enabled by default). A second use-case: if\n"
+	        "you're using a copy-on-write or network-based filesystem, this setting avoids\n"
+	        "triggering write operations for these write-protected files.");
 
 	pbool = secprop->Add_bool("shell_config_shortcuts", when_idle, true);
-	pbool->Set_help("Allow shortcuts for direct configuration management (enabled by default), i.e.\n"
-	                "instead of 'config -set sbtype sb16' it is enough to execute 'sbtype sb16', \n"
-	                "and instead of 'config -get sbtype' it is enough to execute 'sbtype' command.");
+	pbool->Set_help(
+	        "Allow shortcuts for direct configuration management (enabled by default), i.e.\n"
+	        "instead of 'config -set sbtype sb16' it is enough to execute 'sbtype sb16', \n"
+	        "and instead of 'config -get sbtype' it is enough to execute 'sbtype' command.");
 
 	// Configure render settings
 	RENDER_AddConfigSection(control);
