@@ -1091,18 +1091,18 @@ void DOSBOX_Init()
 	pstring->Set_values(serials);
 	pmulti_remain->GetSection()->Add_string("parameters", when_idle, "");
 	pmulti_remain->Set_help(
-	        "Set type of device connected to COM port.\n"
+	        "Set type of device connected to the COM1 port.\n"
 	        "Can be disabled, dummy, mouse, modem, nullmodem, direct ('dummy' by default).\n"
 	        "Additional parameters must be on the same line in the form of\n"
-	        "parameter:value. Parameter for all types is irq (optional).\n"
-	        "  - for 'mouse':      model, overrides setting from [mouse] section\n"
+	        "parameter:value. The optional 'irq' parameter is common for all types.\n"
+	        "  - for 'mouse':      model (overrides the setting from the [mouse] section)\n"
 	        "  - for 'direct':     realport (required), rxdelay (optional).\n"
-	        "                      (realport:COM1 realport:ttyS0).\n"
+	        "                      (e.g., realport:COM1, realport:ttyS0).\n"
 	        "  - for 'modem':      listenport, sock, bps (all optional).\n"
 	        "  - for 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,\n"
 	        "                      transparent, port, inhsocket, sock (all optional).\n"
-	        "SOCK parameter specifies the protocol to be used by both sides\n"
-	        "of the conection. 0 for TCP and 1 for ENet reliable UDP.\n"
+	        "The 'sock' parameter specifies the protocol to use at both sides of the\n"
+	        "connection. Valid values are 0 for TCP, and 1 for ENet reliable UDP.\n"
 	        "Example: serial1=modem listenport:5000 sock:1");
 
 	pmulti_remain = secprop->AddMultiValRemain("serial2", when_idle, " ");
