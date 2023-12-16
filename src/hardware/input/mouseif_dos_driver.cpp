@@ -142,7 +142,7 @@ static struct { // DOS driver state
 	// be used by malicious code to escape from emulation!
 
 	bool enabled   = false; // TODO: make use of this
-	bool wheel_api = false; // CuteMouse compatible wheel extension
+	bool wheel_api = true; // CuteMouse compatible wheel extension
 
 	uint16_t times_pressed[num_buttons]   = {0};
 	uint16_t times_released[num_buttons]  = {0};
@@ -826,7 +826,7 @@ static void reset_hardware()
 	// Resetting the wheel API status in reset() might seem to be a more
 	// logical approach, but this is clearly not what CuteMouse does;
 	// if this is done in reset(), the DN2 is unable to use mouse wheel
-	state.wheel_api = false;
+	state.wheel_api = true;
 	counter_w       = 0;
 
 	PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false); // lower IRQ line
