@@ -289,7 +289,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Install brew depedencies
-        run: brew install --overwrite librsvg
+        run: HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --overwrite librsvg
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
