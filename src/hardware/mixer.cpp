@@ -219,16 +219,6 @@ StereoLine MixerChannel::GetLineoutMap() const
 	return output_map;
 }
 
-// TODO Once the mixer code is thorougly refactored, revisit whether this is
-// still necessary (i.e., we might be able to be more precise with our
-// 'frames_needed' calculation so we never under or overshoot).
-static int clamp_frames_needed(const int frames_needed)
-{
-	return clamp(frames_needed,
-	             mixer.min_frames_needed.load(),
-	             mixer.max_frames_needed.load());
-}
-
 static Section_prop* get_mixer_section()
 {
 	assert(control);
@@ -1037,7 +1027,7 @@ void MixerChannel::Mix(const uint16_t frames_requested)
 		return;
 	}
 
-	frames_needed = clamp_frames_needed(frames_requested);
+	frames_needed = frames_requested;
 
 	while (frames_needed > frames_done) {
 		auto frames_remaining = frames_needed - frames_done;
@@ -2359,7 +2349,7 @@ static void handle_mix_samples()
 
 	const auto frames_needed = mixer.frames_needed +
 	                           (mixer.tick_counter >> TickShift);
-	mixer.frames_needed = clamp_frames_needed(frames_needed);
+	mixer.frames_needed = frames_needed;
 
 	mixer.tick_counter &= TickMask;
 
@@ -2391,7 +2381,7 @@ static void handle_mix_no_sound()
 
 	/* Set values for next tick */
 	mixer.tick_counter += mixer.tick_add;
-	mixer.frames_needed = clamp_frames_needed(mixer.tick_counter >> TickShift);
+	mixer.frames_needed = mixer.tick_counter >> TickShift;
 	mixer.tick_counter &= TickMask;
 	mixer.frames_done = 0;
 
@@ -2523,7 +2513,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	mixer.frames_done -= reduce_frames;
 
 	const auto frames_needed = mixer.frames_needed - reduce_frames;
-	mixer.frames_needed      = clamp_frames_needed(frames_needed);
+	mixer.frames_needed      = frames_needed;
 
 	pos       = mixer.pos;
 	mixer.pos = check_cast<work_index_t>((mixer.pos + reduce_frames) &
@@ -2803,7 +2793,7 @@ void MIXER_Init(Section* sec)
 
 	mixer.pos           = 0;
 	mixer.frames_done   = 0;
-	mixer.frames_needed = clamp_frames_needed(mixer.min_frames_needed + 1);
+	mixer.frames_needed = mixer.min_frames_needed + 1;
 	mixer.min_frames_needed = 0;
 	mixer.max_frames_needed = mixer.blocksize * 2 + 2 * prebuffer_frames;
 
