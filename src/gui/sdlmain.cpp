@@ -2411,12 +2411,6 @@ void GFX_SwitchFullScreen()
 	                                 sdl.rendering_backend))
 	                       : canvas_size_px;
 
-	log_display_properties(sdl.draw.render_width_px,
-	                       sdl.draw.render_height_px,
-	                       sdl.video_mode,
-	                       canvas_size_px,
-	                       sdl.rendering_backend);
-
 	sdl.desktop.switching_fullscreen = false;
 }
 
@@ -3839,10 +3833,11 @@ bool GFX_Events()
 
 			case SDL_WINDOWEVENT_RESIZED:
 				// TODO pixels or logical unit?
-				// LOG_DEBUG("SDL: Window has been resized to %dx%d",
-				//               event.window.data1,
-				//               event.window.data2);
-				//
+				// LOG_DEBUG("SDL: Window has been resized to
+				// %dx%d",
+				//           event.window.data1,
+				//           event.window.data2);
+
 				// When going from an initial fullscreen to
 				// windowed state, this event will be called
 				// moments before SDL's windowed mode is
@@ -3850,6 +3845,12 @@ bool GFX_Events()
 				// already been established:
 				assert(sdl.desktop.window.width > 0 &&
 				       sdl.desktop.window.height > 0);
+
+				log_display_properties(sdl.draw.render_width_px,
+				                       sdl.draw.render_height_px,
+				                       sdl.video_mode,
+				                       {},
+				                       sdl.rendering_backend);
 				continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
