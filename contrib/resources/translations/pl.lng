@@ -437,10 +437,10 @@ cykli/ms
 tryb bez użycia myszy
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
-mysz przejęta, %s+F10 aby zwolnić
+mysz przejęta, wciśnij %s+F10 aby zwolnić
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
-mysz przejęta, %s+F10 lub środkowy przycisk aby zwolnić
+mysz przejęta, wciśnij %s+F10 lub środkowy przycisk aby zwolnić
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY
 aby przejąć mysz wciśnij %s+F10
@@ -452,10 +452,10 @@ aby przejąć mysz wciśnij %s+F10 lub środkowy przycisk
 aby przejąć mysz wciśnij %s+F10 lub dowolny przycisk
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY
-płynna integracja myszy, wciśnij %s+F10 aby przejąć
+zintegrowana mysz, wciśnij %s+F10 aby przejąć
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
-płynna integracja myszy, wciśnij %s+F10 lub środkowy przycisk aby przejąć
+zintegrowana mysz, wciśnij %s+F10 lub środkowy przycisk aby przejąć
 .
 :CONFIG_FULLSCREEN
 Uruchom na pełnym ekranie (domyślnie wyłączone).
@@ -518,7 +518,8 @@ Tryb synchronizacji pionowej obrazu (vsync):
              w systemie).
   adaptive:  Włącza synchronizację jeśli częstotliwość odświeżania jest
              większa od częstotliwości odświeżania monitora, ale wyłącza jeśli
-             jest poniżej tej wartości.
+             jest poniżej tej wartości. W systemie macOS Jest to dobra
+             alternatywa dla 'on'
              Działa tylko w trybach wyświetlania OpenGL, w innym wypadku
              działa jak 'on'.
   off:       Próbuje wyłączyć synchronizację pionową, co przyspieszy
@@ -573,7 +574,8 @@ Wycisza dźwięk, kiedy okno emulatora traci fokus (domyślnie wyłączone).
 Zatrzymanie emulacji, kiedy okno emulatora traci fokus  (domyślnie wyłączone).
 .
 :CONFIG_MAPPERFILE
-Plik używany do wczytania/zapisania mapowania klawiszy/zdarzeń.
+Plik używany do wczytania/zapisania mapowania klawiszy/zdarzeń (domyślnie
+'mapper-sdl2-XYZ.map', gdzie XYZ to aktualna wersja emulatora).
 Pre-konfigurowane pliki są dostępne w katalogu 'resources/mapperfiles'. Można
 je załadować podając nazwę, np.: 'mapperfile = xbox/xenon2.map'
 Uwaga: Opcja wiersza poleceń '-resetmapper' tylko usuwa domyślny plik.
@@ -697,7 +699,7 @@ Rodzaj informacji wyświetlanych po uruchomieniu emulatora (domyślnie 'auto'):
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
 Wiele gier otwiera swoje pliki z uprawnieniami do zapisu; nawet te, których
 nigdy nie modyfikuje. To ustawienie pozwala zabezpieczyć te pliki przed
-zapisem, wciąż pozwalając tym grom na ich otwieranie.
+zapisem, wciąż pozwalając tym grom na ich otwieranie (domyślne).
 Drugie zastosowanie: jeśli używasz systemu plików z funkcją copy-on-write,
 lub sieciowego systemu plików, to ustawienie pozwala pominąć operację zapisu.
 .
@@ -841,7 +843,8 @@ wyświetlanej opcją wiersza poleceń '--list-glshaders'.
 Rozszerzenie '.glsl' można w każdym przypadku pominąć.
 .
 :CONFIG_COMPOSITE
-Włącza trybu sygnału kompozytowego (domyślnie 'auto').
+Włącza trybu sygnału kompozytowego (tylko dla maszyn 'cga', 'pcjr', oraz
+'tandy', domyślnie 'auto'); 'auto' pozwala zdecydować oprogramowaniu.
 Porada: Dopasuj ustawienia poniżej przy pomocy skrótów klawiszowych, następnie
         odczytaj ustawienia z konsoli tekstowej i wpisz je do pliku
         konfiguracyjnego.
@@ -851,20 +854,20 @@ Epoka sygnału kompozytowego. Wartość 'auto' (domyślne) wybiera 'new' dla PCj
 a 'old' dla maszyn CGA oraz Tandy.
 .
 :CONFIG_HUE
-Odcień. Pozwala na wyregulowanie obrazu tak, żeby np. niebo było niebieskie.
+Odcień (domyślnie 0).
+Pozwala na wyregulowanie kolorów tak, żeby np. niebo było niebieskie.
 .
 :CONFIG_SATURATION
-Nasycenie kolorów, od wyblakłych po żywe.
+Nasycenie kolorów, od wyblakłych po żywe (domyślnie 100).
 .
 :CONFIG_CONTRAST
-Kontrast pomiędzy jasnym a ciemnym obszarem obrazu.
+Kontrast pomiędzy jasnym a ciemnym obszarem obrazu (domyślnie 100).
 .
 :CONFIG_BRIGHTNESS
-Jasność obrazu, od ciemnej do jasnej.
+Jasność obrazu, od ciemnej do jasnej (domyślnie 0).
 .
 :CONFIG_CONVERGENCE
-Zbieżność subpikseli, od obrazu rozmytego po ostry (tylko dla maszyn 'cga'
-oraz 'tandy').
+Zbieżność subpikseli, od obrazu rozmytego po ostry (domyślnie 0).
 .
 :CONFIG_CORE
 Sposób emulacji procesora. Wartość 'auto' (domyślne) przełącza na 'dynamic'
@@ -1183,10 +1186,10 @@ kolejności poniżej.
   <version>:  Używa podanego modelu i wersji (np., 'mt32_204').
 .
 :CONFIG_ROMDIR
-Katalog zawierający ROMy syntetyzatora Roland MT32/CM-32ML. Ścieżka może być
-względna lub bezwzględna. Pusta wartość spowoduje sprawdzenie podkatalogu
-'mt32-roms' z katalogu z konfiguracją i innych typowych lokacji w danym
-systemie.
+Katalog zawierający ROMy syntetyzatora Roland MT32/CM-32ML (domyślnie
+nieustawiony). Ścieżka może być względna lub bezwzględna. Pusta wartość
+spowoduje sprawdzenie podkatalogu 'mt32-roms' z katalogu z konfiguracją
+i innych typowych lokacji w danym systemie.
 Uwagi:
   - Nazwy plików nie mają znaczenia, ROMy są identyfikowane po sumach
     kontrolnych.
@@ -1216,7 +1219,7 @@ ROMy MT-32
 ROMy CM-32L   
 .
 :MT32_ACTIVE_ROM_LABEL
-Actywny ROM   
+Aktywny ROM   
 .
 :MT32_SOURCE_DIR_LABEL
 Załadowany z  
@@ -1340,8 +1343,8 @@ Numer przerwania (IRQ) karty muzycznej IBM Music Feature Card (domyślnie 3).
 .
 :CONFIG_IMFC_FILTER
 Filtrowanie dźwięku karty IBM Music Feature Card:
-  on:        Filtrowanie włączone.
-  off:       Filtrowanie wyłączone (domyślne).
+  on:        Filtrowanie włączone (domyślne).
+  off:       Filtrowanie wyłączone.
   <custom>:  Ustawienia użytkownika, patrz 'sb_filter'.
 .
 :CONFIG_SIDMODEL
@@ -1527,7 +1530,7 @@ Użyj kalibracji osi X ustawianej skrótami klawiszowymi (domyślnie 'auto').
 Użyj kalibracji osi Y ustawianej skrótami klawiszowymi (domyślnie 'auto').
 .
 :CONFIG_SERIAL1
-Wybór urządzenia podłączonego do portu COM (domyślnie 'dummy').
+Wybór urządzenia podłączonego do portu COM1 (domyślnie 'dummy').
 Jedno z: disabled, dummy, mouse, modem, nullmodem, direct.
 Można podać dodatkowe parametry w formie parametr:wartość, muszą być
 wszystkie w tej samej linii. Wspólnym parametrem dla wszystkich jest
@@ -1547,13 +1550,13 @@ SOCK określa protokół uzywany przez obydwie strony połączenia, 0 dla TCP,
 Przykład: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-Patrz 'serial1'
+Patrz 'serial1' (domyślnie 'dummy').
 .
 :CONFIG_SERIAL3
-Patrz 'serial1'
+Patrz 'serial1' (domyślnie 'disabled').
 .
 :CONFIG_SERIAL4
-Patrz 'serial1'
+Patrz 'serial1' (domyślnie 'disabled').
 .
 :CONFIG_PHONEBOOKFILE
 Plik z informacją o mapowaniu wirtualnych numerów telefonicznych na adresy
@@ -1688,7 +1691,7 @@ Nie został załadowany żaden plik konfiguracyjny
 :PROGRAM_CONFIG_ADDITIONAL_CONF
 
 [color=white]Dodatkowe pliki konfiguracyjne:[reset]
-  
+
 .
 :PROGRAM_CONFIG_CONFDIR
 [color=white]Katalog z konfiguracją programu DOSBox Staging %s:[reset]
@@ -3775,7 +3778,7 @@ Gdzie:
            którymi są asterisk ('*' - reprezentuje dowolną liczbę znaków)
            oraz znak zapytania ('?' - reprezentuje jeden znak)
 
-[color=light-red]Ostrzeżenie:[reset] 
+[color=light-red]Ostrzeżenie:[reset]
   Bądź bardzo ostrożny używając symboli wieloznaczności, zwłaszcza [color=light-cyan]*.*[reset],
   ponieważ usunięte zostaną wszystkie pliki pasujące do wzorca!
 
