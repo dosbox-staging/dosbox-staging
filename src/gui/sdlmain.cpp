@@ -291,19 +291,21 @@ static void QuitSDL()
 	}
 }
 
+extern const char* RunningProgram;
+extern bool CPU_CycleAutoAdjust;
 //Globals for keyboard initialisation
 bool startup_state_numlock=false;
 bool startup_state_capslock=false;
 
-#if !defined(NDEBUG)
-#define APP_NAME_STR DOSBOX_NAME " (debug build)"
-#else
-#define APP_NAME_STR DOSBOX_NAME
-#endif
-
 void GFX_SetTitle(const int32_t new_num_cycles, const bool is_paused = false)
 {
 	char title_buf[200] = {0};
+
+#if !defined(NDEBUG)
+	#define APP_NAME_STR DOSBOX_NAME " (debug build)"
+#else
+	#define APP_NAME_STR DOSBOX_NAME
+#endif
 
 	auto &num_cycles      = sdl.title_bar.num_cycles;
 	auto &cycles_ms_str   = sdl.title_bar.cycles_ms_str;
@@ -316,28 +318,31 @@ void GFX_SetTitle(const int32_t new_num_cycles, const bool is_paused = false)
 
 	if (cycles_ms_str.empty()) {
 		cycles_ms_str   = MSG_GetRaw("TITLEBAR_CYCLES_MS");
-		hint_paused_str = MSG_GetRaw("TITLEBAR_HINT_PAUSED");
+		hint_paused_str = std::string(" ") + MSG_GetRaw("TITLEBAR_HINT_PAUSED");
 	}
 
 	const auto& hint_str = is_paused ? hint_paused_str : hint_mouse_str;
 	if (CPU_CycleAutoAdjust) {
 		if (CPU_CycleLimit > 0) {
 			safe_sprintf(title_buf,
-			             APP_NAME_STR " - max %d%% limit %d %s %s",
+			             "%8s - max %d%% limit %d %s - " APP_NAME_STR "%s",
+			             RunningProgram,
 			             num_cycles,
 			             CPU_CycleLimit,
 			             cycles_ms_str.c_str(),
 			             hint_str.c_str());
 		} else {
 			safe_sprintf(title_buf,
-			             APP_NAME_STR " - max %d%% %s %s",
+			             "%8s - max %d%% %s - " APP_NAME_STR "%s",
+			             RunningProgram,
 			             num_cycles,
 			             cycles_ms_str.c_str(),
 			             hint_str.c_str());
 		}
 	} else {
 		safe_sprintf(title_buf,
-		             APP_NAME_STR " - %d %s %s",
+		             "%8s - %d %s - " APP_NAME_STR "%s",
+		             RunningProgram,
 		             num_cycles,
 		             cycles_ms_str.c_str(),
 		             hint_str.c_str());
@@ -2233,7 +2238,7 @@ void GFX_SetShader([[maybe_unused]] const ShaderInfo& shader_info,
 
 void GFX_SetMouseHint(const MouseHint hint_id)
 {
-	static const std::string prexix = "- ";
+	static const std::string prexix = " - ";
 
 	auto create_hint_str = [](const char *requested_name) {
 		char hint_buffer[200] = {0};

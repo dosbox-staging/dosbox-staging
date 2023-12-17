@@ -32,6 +32,8 @@
 #include "regs.h"
 #include "string_utils.h"
 
+const char * RunningProgram="DOSBOX";
+
 #ifdef _MSC_VER
 #pragma pack(1)
 #endif
@@ -63,7 +65,23 @@ struct EXE_Header {
 #define LOAD    1
 #define OVERLAY 3
 
+
+extern void GFX_RefreshTitle(const bool is_paused = false);
 extern void GFX_SetTitle(const int32_t cycles, const bool is_paused = false);
+
+void DOS_UpdatePSPName(void) {
+	DOS_MCB mcb(dos.psp()-1);
+	static char name[9];
+	mcb.GetFileName(name);
+	name[8] = 0;
+	if (!strlen(name)) strcpy(name,"DOSBOX");
+	for(Bitu i = 0;i < 8;i++) { //Don't put garbage in the title bar. Mac OS X doesn't like it
+		if (name[i] == 0) break;
+		if ( !isprint(*reinterpret_cast<unsigned char*>(&name[i])) ) name[i] = '?';
+	}
+	RunningProgram = name;
+	GFX_RefreshTitle();
+}
 
 void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode) {
 
@@ -105,6 +123,7 @@ void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode) {
 	real_writew(SegValue(ss),reg_sp+4,0x7202);
 	// Free memory owned by process
 	if (!tsr) DOS_FreeProcessMemory(pspseg);
+	DOS_UpdatePSPName();
 
 	if ((!(CPU_AutoDetermineMode>>CPU_AUTODETERMINE_SHIFT)) || (cpu.pmode)) return;
 
@@ -115,6 +134,8 @@ void DOS_Terminate(uint16_t pspseg,bool tsr,uint8_t exitcode) {
 		CPU_Cycles=0;
 		CPU_CycleMax=CPU_OldCycleMax;
 		GFX_SetTitle(CPU_OldCycleMax);
+	} else {
+		GFX_RefreshTitle();
 	}
 #if (C_DYNAMIC_X86) || (C_DYNREC)
 	if (CPU_AutoDetermineMode&CPU_AUTODETERMINE_CORE) {
@@ -445,6 +466,7 @@ bool DOS_Execute(char * name,PhysPt block_pt,uint8_t flags) {
 		memset(&stripname[index],0,8-index);
 		DOS_MCB pspmcb(dos.psp()-1);
 		pspmcb.SetFileName(stripname);
+		DOS_UpdatePSPName();
 	}
 
 	if (flags==LOAD) {
