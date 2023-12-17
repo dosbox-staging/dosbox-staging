@@ -3,14 +3,13 @@ Gebruik: %s [OPTIE]... [PAD]
 
 PAD                        Als PAD een map is, wordt deze aangekoppeld als C:.
                            Als PAD een bootable disk image (IMA/IMG) is, wordt
-                           deze geboot.
+                           deze opgestart.
                            Als PAD een CDROM-bestand (CUE/ISO) is, wordt deze
                            aangekoppeld als D:.
                            Als PAD een DOS executable is (BAT/COM/EXE), dan
                            wordt het parent pad aangekoppeld als C: en wordt
-                           het uitvoerbare bestand uitgevoerd. Wanneer het
-                           uitvoerbare bestand wordt afgesloten, stopt DOSBox
-                           Staging.
+                           het bestand uitgevoerd. Wanneer het bestand wordt
+                           afgesloten, stopt DOSBox Staging.
 
 Lijst van beschikbare opties:
 
@@ -473,7 +472,7 @@ om de muis te vangen, druk op %s+F10 of klik op een muisknop
 naadloze muis, %s+F10 om te vangen
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
-naadloze muis, %s+F10 of middenklik om te langen
+naadloze muis, %s+F10 of middenklik om te vangen
 .
 :CONFIG_FULLSCREEN
 DOSBox rechtstreeks op volledig scherm starten (standaard uit).
@@ -536,8 +535,9 @@ Stel de verticale synchronisatie (vsync) van het hostvideostuurprogramma in:
              70 Hz DOS-snelheid versus 60 Hz hostsnelheid).
   adaptive:  Schakelt vsync in wanneer de framesnelheid hoger is dan de
              hostsnelheid, maar schakelt deze uit wanneer de framesnelheid
-             onder de hostsnelheid daalt. Let op: alleen geldig in
-             OpenGL-uitvoermodi; anders behandeld als 'aan'.
+             onder de hostsnelheid daalt. Dit is een redelijk alternatief op
+             macOS in plaats van 'aan'.Let op: alleen geldig in OpenGL-
+             uitvoermodi; anders behandeld als 'aan'.
   off:       Probeer vsync uit te schakelen om een snellere framepresentatie
              mogelijk te maken, met het risico op scheuren in sommige games.
   yield:     laat het videostuurprogramma van de host de vsync regelen.
@@ -589,8 +589,9 @@ Demp het geluid wanneer het venster inactief is (standaard uit).
 Pauzeer emulatie wanneer het venster inactief is (standaard uit).
 .
 :CONFIG_MAPPERFILE
-Bestand om toets-/gebeurtenistoewijzingen te laden/op te slaan.
-Voorgeconfigureerde toewijzingen staan in de 'resources/mapperfiles' map.
+Pad naar het mapper-bestand (standaard 'mapper-sdl2-XYZ.map', waarbij XYZ de
+huidige versie is). Voorgeconfigureerde toewijzingen staan in 
+'resources/mapperfiles'.
 Ze kunnen op naam worden geladen, bijvoorbeeld: mapperfile = xbox/xenon2.map
 Opmerking: de -resetmapper optie verwijdert alleen het standaard mapperbestand.
 .
@@ -709,12 +710,12 @@ Bepaalt hoe verbose de opstart is voordat het programma wordt weergegeven:
                       anders 'high'
 .
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
-Veel spelen openen al hun bestanden met beschrijfbare rechten; zelfs bestanden
-die ze nooit wijzigen. Met deze instelling kunt U die bestanden tegen schrijven
-beveiligen terwijl het spel ze nog steeds kan lezen. Een tweede use-case: als u
-een copy-on-write of netwerkgebaseerd bestandssysteem gebruikt, vermijdt deze
-instelling het activeren van schrijfbewerkingen voor deze tegen schrijven
-beveiligde bestanden.
+Veel spelen openen al hun bestanden met schrijfrechten; zelfs bestanden die
+ze nooit wijzigen. Met deze instelling kunt U die bestanden tegen schrijven
+beveiligen terwijl het spel ze nog steeds kan lezen (standaard aan). Een
+tweede use-case: als u een copy-on-write of netwerkgebaseerd bestandssysteem
+gebruikt, vermijdt deze instelling het activeren van schrijfbewerkingen voor
+deze tegen schrijven beveiligde bestanden.
 .
 :CONFIG_SHELL_CONFIG_SHORTCUTS
 Laat snelkoppelingen toe voor direct configuratiebeheer (standaard aan),
@@ -882,9 +883,9 @@ naar een bestand. In alle gevallen kunt u de bestandsextensie '.glsl' van de
 shader weglaten.
 .
 :CONFIG_COMPOSITE
-Schakel de composietmodus in bij het starten. (standaard 'auto').
-'auto' laat het programma beslissen.
-Opmerking: verfijn de onderstaande instellingen (dwz: tint) met behulp van de
+Activeer de composietmodus bij het starten. (enkel voor 'cga', 'pcjr', en
+'tandy' machine types; standaard 'auto'). 'auto' laat het programma beslissen.
+Opmerking: verfijn de onderstaande instellingen (dwz: 'hue') met behulp van de
            samengestelde sneltoetsen.
            Lees dan de nieuwe instellingen van u console en voer ze hier in.
 .
@@ -893,19 +894,20 @@ Tijdperk van composiettechnologie (standaard 'auto').
 Bij 'auto' gebruikt PCjr 'new' en CGA/Tandy 'old'.
 .
 :CONFIG_HUE
-Uiterlijk van RGB-palet. Pas bijvoorbeeld aan totdat de lucht blauw is.
+Uiterlijk van RGB-palet (standaard 0).
+Pas bij bijvoorbeeld de waarde aan totdat de lucht blauw is.
 .
 :CONFIG_SATURATION
-Intensiteit van kleuren, van vervaagd tot levendig.
+Intensiteit van kleuren, van vervaagd tot levendig (standaard 100).
 .
 :CONFIG_CONTRAST
-Verhouding tussen het donkere en lichte gebied.
+Verhouding tussen het donkere en lichte gebied (standaard 100).
 .
 :CONFIG_BRIGHTNESS
-Helderheid van het beeld, van donker naar licht.
+Helderheid van het beeld, van donker naar licht (standaard 0).
 .
 :CONFIG_CONVERGENCE
-Convergentie van subpixelelementen, van wazig tot scherp (alleen CGA en Tandy).
+Convergentie van subpixelelementen, van wazig tot scherp (standaard 0).
 .
 :CONFIG_CORE
 CPU Core gebruikt in emulatie (standaard 'auto'). 'auto' zal, indien
@@ -1233,7 +1235,7 @@ wordt uitgevoerd in de aangegeven volgorde.
   <versie>:   Gebruik de exact opgegeven modelversie (bijv. 'mt32_204').
 .
 :CONFIG_ROMDIR
-De map met de Roland MT-32/CM-32ML ROM's.
+De map met de Roland MT-32/CM-32ML ROM's (standaard niet ingesteld).
 De map kan absoluut of relatief zijn, of laat deze leeg om de map 'mt32-roms'
 in uw DOSBox-configuratiemap te gebruiken. Andere veel voorkomende
 systeemlocaties worden ook gecontroleerd.
@@ -1396,8 +1398,8 @@ Het IRQ-nummer van de IBM Music Feature Card (standaard 3).
 .
 :CONFIG_IMFC_FILTER
 Filter voor de uitvoer van de IBM Music Feature Card:
-  on:          filter de uitvoer.
-  off:         de uitvoer niet filteren (standaard).
+  on:          filter de uitvoer (standaard).
+  off:         de uitvoer niet filteren.
   <aangepast>: aangepaste filterdefinitie; zie 'sb_filter' voor details.
 .
 :CONFIG_SIDMODEL
@@ -1591,7 +1593,7 @@ Pas de kalibratieparameters van de Y-as toe via de sneltoetsen
 (standaard 'auto').
 .
 :CONFIG_SERIAL1
-Stel het type apparaat in dat is aangesloten op de com-poort.
+Stel het type apparaat in dat is aangesloten op de COM1 poort.
 Opties: disabled, dummy, mouse, modem, nullmodem, direct (standaard 'dummy').
 Aanvullende parameters moeten op dezelfde regel staan in de vorm van
 parameter:waarde. Parameter voor alle typen is irq (optioneel).
@@ -1606,13 +1608,13 @@ verbinding moet worden gebruikt. 0 voor TCP en 1 voor ENet betrouwbaar UDP.
 Bijvoorbeeld: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-Zie 'serial1'
+Zie 'serial1' (standaard 'dummy')
 .
 :CONFIG_SERIAL3
-Zie 'serial1'
+Zie 'serial1' (standaard 'disabled')
 .
 :CONFIG_SERIAL4
-Zie 'serial1'
+Zie 'serial1' (standaard 'disabled')
 .
 :CONFIG_PHONEBOOKFILE
 Bestand dat wordt gebruikt om valse telefoonnummers aan adressen toe te wijzen
@@ -3983,7 +3985,7 @@ Waar:
                Waar: R = Alleen-lezen, A = Archief, S = Systeem, H = Verborgen
   [color=light-cyan]PATROON[reset]      kan een exacte bestandsnaam zijn of een onnauwkeurige
                bestandsnaam met jokertekens (de asterisk (*) en het vraagteken
-               (?)), of een exacte naam van een map.
+               (?), of een exacte naam van een map.
 Opmerkingen:
   Meerdere attributen worden opgegeven, gescheiden door spaties.
   Indien niet opgegeven, toont de opdracht de huidige bestands-/mapkenmerken.
