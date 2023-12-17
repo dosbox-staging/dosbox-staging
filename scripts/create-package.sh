@@ -1,10 +1,14 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-set -e
+# Note: Although this script is POSIX-sh compatible, we use Bash's more robust
+# error detection features because this script often runs in a CI environment,
+# which are hard to debug.
+#
+set -euo pipefail
 
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Copyright (C) 2020-2022  Sherman Perry and the DOSBox Staging Team
+# Copyright (C) 2020-2023  Sherman Perry and the DOSBox Staging Team
 
 usage()
 {
