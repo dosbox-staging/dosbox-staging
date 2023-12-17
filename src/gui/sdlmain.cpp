@@ -1116,24 +1116,6 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 		const auto display_might_be_interpolating = (host_rate >=
 		                                             InterpolatingVrrMinRateHz);
 
-		const auto conditions_demand_constant_host_rate = (
-#if defined(MACOSX)
-		        // Normally OpenGL drivers with a swap-interval of 1
-		        // only block for the gap in time after the application
-		        // requests a buffer swap through to presentation of the
-		        // current frame.
-		        //
-		        // However, circa-2023 macOS OpenGL drivers impose
-		        // additional per-frame block penalities if frames
-		        // /aren't/ presented. Therefore, this condition demands
-		        // we present at a constant host rate.
-		        //
-		        sdl.rendering_backend == RenderingBackend::OpenGl &&
-		        get_vsync_settings().requested == VsyncState::On);
-#else
-		        false);
-#endif
-
 		// If we're fullscreen, vsynced, and using a VRR display that
 		// performs frame interpolation, then we prefer to use a
 		// constant rate.
@@ -1152,22 +1134,15 @@ static void setup_presentation_mode(FrameMode &previous_mode)
 		        supported_rate >= dos_rate
 		                ? "Host can handle the full DOS rate"
 		                : "Host cannot handle the DOS rate");
-		if (conditions_demand_constant_host_rate) {
-			LOG_MSG("SDL:   - CFR selected because we're on macOS using"
-			        " OpenGL with vsync on");
-		} else {
-			LOG_MSG("SDL:   - %s",
-					conditions_prefer_constant_rate
-							? "CFR selected because we're fullscreen, "
-							"vsync'd, and display is 140+Hz"
-							: "VFR selected because we're not "
-							"fullscreen, nor vsync'd, nor < 140Hz");
-		}
+		LOG_MSG("SDL:   - %s",
+		        conditions_prefer_constant_rate
+		                ? "CFR selected because we're fullscreen, "
+		                  "vsync'd, and display is 140+Hz"
+		                : "VFR selected because we're not "
+		                  "fullscreen, nor vsync'd, nor < 140Hz");
 #endif
-		if (conditions_demand_constant_host_rate) {
-			mode = FrameMode::Cfr;
-			save_rate_to_frame_period(host_rate);
-		} else if (supported_rate >= dos_rate) {
+
+		if (supported_rate >= dos_rate) {
 			mode = conditions_prefer_constant_rate ? FrameMode::Cfr
 			                                       : FrameMode::Vfr;
 			save_rate_to_frame_period(dos_rate);
@@ -4353,6 +4328,7 @@ static void config_add_sdl() {
 	        "             host rate (e.g. 70 Hz DOS rate vs 60 Hz host rate).\n"
 	        "  adaptive:  Enables vsync when the frame rate is higher than the host rate,\n"
 	        "             but disables it when the frame rate drops below the host rate.\n"
+	        "             This is a reasonable alternative on macOS instead of 'on'.\n"
 	        "             Note: only valid in OpenGL output modes; otherwise treated as 'on'.\n"
 	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
 	        "             the risk of tearing in some games.\n"
