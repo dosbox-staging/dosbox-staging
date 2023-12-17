@@ -242,8 +242,17 @@ done
 
 shift "$((OPTIND - 1))"
 
-build_dir=$1
-pkg_dir=$2
+# After parsing the flagged options, we need:
+# - The platform variable set
+# - Two arguments, the build_dir and pkg_dir
+# Both are validated later
+#
+if [ -n "${platform:-}" ] && [ "$#" -eq 2 ]; then
+    build_dir=$1
+    pkg_dir=$2
+else
+    print_usage="true"
+fi
 
 if [ "$print_usage" = "true" ]; then
     usage
