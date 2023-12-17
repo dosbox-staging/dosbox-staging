@@ -93,10 +93,10 @@ install_doc()
     esac
     # Fill template variables in README.template
     if [[ "$git_branch" == "refs/tags/"* ]] && [[ "$git_branch" != *"-"* ]]; then
-        version_tag=`echo $git_branch | awk '{print substr($0,11);exit}'`
+        version_tag=$(echo "$git_branch" | awk '{print substr($0,11);exit}')
         package_information="release $version_tag"
     elif [[ "$git_branch" == "release/"* ]]; then
-        version_tag=`git describe --tags | cut -f1 -d"-"`
+        version_tag=$(git describe --tags | cut -f1 -d"-")
         package_information="release $version_tag"
     elif [ -n "$git_branch" ] && [ -n "$git_commit" ]; then
         package_information="a development branch named $git_branch with commit $git_commit"
@@ -124,7 +124,7 @@ install_resources()
         ;;
     esac
 
-    find $src_dir -type f |
+    find "$src_dir" -type f |
         while IFS= read -r src; do
             install_file "$src" "$dest_dir/${src#*$src_dir/}"
         done
@@ -216,7 +216,7 @@ pkg_msvc()
 # Get GitHub CI environment variables if available. The CLI options
 # '-c', '-b', '-r' will override these if set.
 if [ -n "${GITHUB_REPOSITORY:-}" ]; then
-    git_commit=`echo ${GITHUB_SHA} | awk '{print substr($0,1,9);exit}'`
+    git_commit=$(echo "${GITHUB_SHA}" | awk '{print substr($0,1,9);exit}')
     git_branch=${GITHUB_REF#refs/heads/}
     git_repo=${GITHUB_REPOSITORY}
 else
