@@ -3817,7 +3817,7 @@ bool GFX_Events()
 				focus_input();
 				continue;
 
-			case SDL_WINDOWEVENT_RESIZED:
+			case SDL_WINDOWEVENT_RESIZED: {
 				// TODO pixels or logical unit?
 				// LOG_DEBUG("SDL: Window has been resized to
 				// %dx%d",
@@ -3832,11 +3832,27 @@ bool GFX_Events()
 				assert(sdl.desktop.window.width > 0 &&
 				       sdl.desktop.window.height > 0);
 
-				log_display_properties(sdl.draw.render_width_px,
-				                       sdl.draw.render_height_px,
-				                       sdl.video_mode,
-				                       sdl.rendering_backend);
-				continue;
+				// SDL_WINDOWEVENT_RESIZED events are sent twice on macOS when
+				// resizing the window, so we're only logging the display
+				// settings if there is a change since the last window resized
+				// event.
+				static int prev_width  = 0;
+				static int prev_height = 0;
+
+				const auto new_width  = event.window.data1;
+				const auto new_height = event.window.data2;
+
+				if (prev_width != new_width ||
+				    prev_height != new_height) {
+					log_display_properties(sdl.draw.render_width_px,
+					                       sdl.draw.render_height_px,
+					                       sdl.video_mode,
+					                       sdl.rendering_backend);
+				}
+
+				prev_width  = new_width;
+				prev_height = new_height;
+			}	continue;
 
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
 				apply_active_settings();
