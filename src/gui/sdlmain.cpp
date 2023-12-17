@@ -767,23 +767,13 @@ static DosBox::Rect get_canvas_size_in_pixels(
 static void log_display_properties(const int render_width_px,
                                    const int render_height_px,
                                    const VideoMode& video_mode,
-                                   const std::optional<SDL_Rect>& canvas_size_override_px,
                                    const RenderingBackend rendering_backend)
 {
-	const auto draw_size_px = [&]() -> DosBox::Rect {
-		if (canvas_size_override_px) {
-			return calc_draw_rect_in_pixels(
-			        {canvas_size_override_px->w,
-			         canvas_size_override_px->h});
-		} else {
-			const auto canvas_size_px = get_canvas_size_in_pixels(
-			        rendering_backend);
-
-			return calc_draw_rect_in_pixels(canvas_size_px);
-		}
-	}();
-
 	assert(render_width_px > 0 && render_height_px > 0);
+
+	const auto canvas_size_px = get_canvas_size_in_pixels(rendering_backend);
+	const auto draw_size_px = calc_draw_rect_in_pixels(canvas_size_px);
+
 	assert(draw_size_px.HasPositiveSize());
 
 	const auto scale_x = static_cast<double>(draw_size_px.w) / render_width_px;
@@ -2220,7 +2210,6 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		log_display_properties(sdl.draw.render_width_px,
 		                       sdl.draw.render_height_px,
 		                       sdl.video_mode,
-		                       {},
 		                       sdl.rendering_backend);
 	}
 
@@ -2391,9 +2380,8 @@ void GFX_SwitchFullScreen()
 	sdl.desktop.switching_fullscreen = true;
 
 	// Record the window's current canvas size if we're departing window-mode
-	auto& canvas_size_px = sdl.desktop.window.canvas_size;
 	if (!sdl.desktop.fullscreen) {
-		canvas_size_px = to_sdl_rect(
+		sdl.desktop.window.canvas_size = to_sdl_rect(
 		        get_canvas_size_in_pixels(sdl.rendering_backend));
 	}
 
@@ -2408,13 +2396,6 @@ void GFX_SwitchFullScreen()
 	GFX_ResetScreen();
 	focus_input();
 	setup_presentation_mode(sdl.frame.mode);
-
-	// After switching modes, get the current canvas size, which might be
-	// the windowed size or full screen size.
-	canvas_size_px = sdl.desktop.fullscreen
-	                       ? to_sdl_rect(get_canvas_size_in_pixels(
-	                                 sdl.rendering_backend))
-	                       : canvas_size_px;
 
 	sdl.desktop.switching_fullscreen = false;
 }
@@ -3854,7 +3835,6 @@ bool GFX_Events()
 				log_display_properties(sdl.draw.render_width_px,
 				                       sdl.draw.render_height_px,
 				                       sdl.video_mode,
-				                       {},
 				                       sdl.rendering_backend);
 				continue;
 
