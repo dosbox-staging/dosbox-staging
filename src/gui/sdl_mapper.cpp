@@ -2870,7 +2870,7 @@ static void QueryJoysticks()
 
 	// The user doesn't want to use joysticks at all (not even for mapping)
 	if (joytype == JOY_DISABLED) {
-		LOG_INFO("MAPPER: joystick subsystem disabled");
+		LOG_INFO("MAPPER: Joystick subsystem disabled");
 		return;
 	}
 
