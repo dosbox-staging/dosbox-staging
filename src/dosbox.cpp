@@ -1189,10 +1189,12 @@ void DOSBOX_Init()
 	        "(auto by default, enabled if DOS version >= 7.0).\n"
 	        "FreeDOS and MS-DOS 7/8 COMMAND.COM supports this behavior.");
 
-	pstring = secprop->Add_path("shell_history_file", only_at_start, "shell_history.txt");
+	pstring = secprop->Add_path("shell_history_file",
+	                            only_at_start,
+	                            "shell_history.txt");
 	pstring->Set_help(
-		"File containing persistent command line history ('shell_history.txt'\n"
-		"by default).");
+	        "File containing persistent command line history ('shell_history.txt'\n"
+	        "by default). Setting it to empty disables persistent shell history.");
 
 	// Misc DOS command settings
 
