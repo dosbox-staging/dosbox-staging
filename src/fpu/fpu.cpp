@@ -651,6 +651,9 @@ void FPU_ESC7_Normal(Bitu rm) {
 
 
 void FPU_Init(Section*) {
+#if !C_FPU_X86
+	LOG_WARNING("FPU: Using reduced-precision floating-point emulation");
+#endif
 	FPU_FINIT();
 }
 
