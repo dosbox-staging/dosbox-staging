@@ -191,6 +191,19 @@ pkg_msys2()
 {
     install -DT "${build_dir}/dosbox.exe" "${pkg_dir}/dosbox.exe"
 
+    # Something is CI is breaking: 
+    #  + ntldd -R dosbox-staging-windows-msys2-x86_64-v0.81.0-alpha-2215-gc6a18/dosbox.exe
+    #  + sed -e 's/^[[:blank:]]*//g'
+    #  + cut -d ' ' -f 3
+    # + grep -E -i '(mingw|clang)(32|64)'
+    # + sed -e 's|\\|/|g'
+    # + xargs cp --target-directory=dosbox-staging-windows-msys2-x86_64-v0.81.0-alpha-2215-gc6a18/
+    # D:\a\_temp\f223e865-ceb6-48de-a81a-a56343838add: line 11: unexpected EOF while looking for matching ``'
+    # Error: Process completed with exit code 2.
+
+    # Allow pipe failures
+    set +o pipefail
+
     # Discover and copy required dll files
     ntldd -R "${pkg_dir}/dosbox.exe" \
         | sed -e 's/^[[:blank:]]*//g' \
@@ -198,6 +211,9 @@ pkg_msys2()
         | grep -E -i '(mingw|clang)(32|64)' \
         | sed -e 's|\\|/|g' \
         | xargs cp --target-directory="${pkg_dir}/"
+ 
+    # Reactivate
+    set -o pipefail
 }
 
 pkg_msvc()
