@@ -182,7 +182,7 @@ jobs:
         id:    set_pkg_dir
         shell: bash
         run: |
-          echo "pkg_dir=dosbox-staging-windows-${{ matrix.conf.arch }}-${{ env.VERSION }}" >> $GITHUB_OUTPUT
+          echo "pkg_dir=dosbox-staging-windows-${{ matrix.conf.arch }}" >> $GITHUB_OUTPUT
 
       - name: Package standard build
         if: ${{ !matrix.conf.debugger }}
@@ -200,31 +200,29 @@ jobs:
             -p msvc \
             vs/${{ matrix.conf.vs-release-dirname }}/Release \
             "${{ steps.set_pkg_dir.outputs.pkg_dir }}"
-      
-      - name:  Package the debugger
-        if:    ${{ matrix.conf.debugger }}
-        shell: bash
-        run: |
-          set -x
-          mkdir -p ${{ steps.set_pkg_dir.outputs.pkg_dir }}
-          # Move the debugger build into the release area
-          readonly RELEASE_DIR=${{ matrix.conf.vs-release-dirname }}/Release
-          ls "vs/$RELEASE_DIR"
-          cp vs/$RELEASE_DIR/dosbox.exe   ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
 
-      - name: Upload package
+      - name: Upload ${{ matrix.conf.arch }} package
         if:   ${{ !matrix.conf.debugger }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
           path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
 
-      - name: Upload debugger artifact
+      - name: Upload ${{ matrix.conf.arch }} debugger executable
         if:   ${{ matrix.conf.debugger }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}-debugger
-          path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
+          name: dosbox-staging-windows-addon-debugger-${{ matrix.conf.arch }}
+          path: vs/${{ matrix.conf.vs-release-dirname }}/Release/dosbox.exe
+
+  msvc_release_done:
+    name: Windows MSVC release builds done
+    needs: build_windows_vs_release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - run: true
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:

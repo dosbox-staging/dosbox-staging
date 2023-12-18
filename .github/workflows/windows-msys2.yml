@@ -329,9 +329,16 @@ jobs:
             "$PKG_RELEASE"
           mv "${PKG_RELEASE}/dosbox.exe" "${PKG_RELEASE}/dosbox_with_debugger.exe"
           install -DT "${BUILD_RELEASE_DIR}/dosbox.exe" "${PKG_RELEASE}/dosbox.exe"
-          echo "artifact_name=dosbox-staging-windows-x64-`git describe --abbrev=4`" >> $GITHUB_ENV
-          echo "artifact_path=${{ github.workspace }}\msvc" >> $GITHUB_ENV
 
+          # Generate the MSVC package name matching the MSVC workflow's package upload name.
+          # This let us download that artifact in this workflow so we can add it to the installer.
+          echo "msvc_artifact_package_name=dosbox-staging-windows-x64`" >> $GITHUB_ENV
+          echo "msvc_artifact_package_path=${{ github.workspace }}\msvc" >> $GITHUB_ENV
+
+          # Generate the MSVC debugger name matching the MSVC workflow's addon debugger upload name.
+          # This let us download that artifact in this workflow so we can add it to the installer.
+          echo "msvc_debugger_binary_name=dosbox-staging-windows-addon-debugger-x64" >> $GITHUB_ENV
+          echo "msvc_debugger_binary_path=${{ github.workspace }}\msvc-debugger" >> $GITHUB_ENV
       - name: Windows Defender AV Scan
         shell: powershell
         run: |
@@ -347,21 +354,37 @@ jobs:
         uses: fountainhead/action-wait-for-check@v1.1.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: Publish additional Windows artifacts
+          checkName: Windows MSVC release builds done
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Download MSVC artifact
+      - name: Download MSVC package
         uses: dawidd6/action-download-artifact@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: windows-msvc.yml
-          name: ${{ env.artifact_name }}
-          path: ${{ env.artifact_path }}
+          workflow_conclusion: ""
+          commit: ${{ github.event.pull_request.head.sha || github.sha }}
+          name: ${{ env.msvc_artifact_package_name }}
+          path: ${{ env.msvc_artifact_package_path }}
+          check_artifacts: true
+          if_no_artifact_found: warn
+
+      - name: Download MSVC debugger binary
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: windows-msvc.yml
+          workflow_conclusion: ""
+          commit: ${{ github.event.pull_request.head.sha || github.sha }}
+          name: ${{ env.msvc_debugger_binary_name }}
+          path: ${{ env.msvc_debugger_binary_path }}
+          check_artifacts: true
           if_no_artifact_found: warn
 
       - name: Prepare Windows installer
         shell: bash
         run: |
+          set -euo pipefail
           if [[ "${{ github.ref }}" == "refs/tags/"* ]] && [[ "${{ github.ref }}" != *"-"* ]]; then
             version_tag=`echo ${{ github.ref }} | sed -r 's/([^\/]*\/){2}//'`
             packageinfo="release $version_tag"
@@ -382,13 +405,15 @@ jobs:
           echo @echo off >out/dosbox_with_console.bat
           echo \"%~dp0\\dosbox.exe\" %* >>out/dosbox_with_console.bat
           echo if errorlevel 1 pause >>out/dosbox_with_console.bat
-          if [ -d msvc ]; then
-            cp msvc/dosbox*.exe out
-            mv out/dosbox.exe out/dosbox_msvc.exe
-            mv out/dosbox_with_debugger.exe out/dosbox_msvc_with_debugger.exe
+
+          # Include the MSVC executables in the installer
+          if [ -f msvc/dosbox.exe ] && [ msvc-debugger/dosbox.exe ]; then
+              cp msvc/dosbox.exe out/dosbox_msvc.exe
+              cp  out/dosbox_msvc_with_debugger.exe
           else
-            echo Note: MSVC build will not be included in the Windows installer.
-            sed -i -e 's|^\(Name: \"defaultmsvc\"\)|;\1|;s|^\(Source: \"{#DOSBoxAppExeMSVC\)|;\1|;s|; Tasks: not defaultmsvc$||' contrib/windows_installer/DOSBox-Staging-setup.iss
+
+              echo Note: MSVC build will not be included in the Windows installer.
+              sed -i -e 's|^\(Name: \"defaultmsvc\"\)|;\1|;s|^\(Source: \"{#DOSBoxAppExeMSVC\)|;\1|;s|; Tasks: not defaultmsvc$||' contrib/windows_installer/DOSBox-Staging-setup.iss
           fi
 
       - name: Build Windows installer
