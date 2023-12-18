@@ -1079,7 +1079,9 @@ bool DOS_LayoutKey(const uint8_t key, const uint8_t flags1,
 		return false;
 }
 
-KeyboardErrorCode DOS_LoadKeyboardLayout(const char *layoutname, const int32_t codepage, const char *codepagefile)
+static KeyboardErrorCode load_keyboard_layout(const char* layoutname,
+                                              const int32_t codepage,
+                                              const char* codepagefile)
 {
 	auto temp_layout = std::make_unique<KeyboardLayout>();
 
@@ -1098,7 +1100,19 @@ KeyboardErrorCode DOS_LoadKeyboardLayout(const char *layoutname, const int32_t c
 	return KEYB_NOERROR;
 }
 
-KeyboardErrorCode DOS_SwitchKeyboardLayout(const char *new_layout, int32_t &tried_cp)
+KeyboardErrorCode DOS_LoadKeyboardLayout(const char* layoutname,
+                                         const int32_t codepage,
+                                         const char* codepagefile)
+{
+	const auto result = load_keyboard_layout(layoutname, codepage, codepagefile);
+	if (!result) {
+		LOG_MSG("DOS: Loaded codepage %d", codepage); // success!
+	}
+
+	return result;
+}
+
+KeyboardErrorCode DOS_SwitchKeyboardLayout(const char* new_layout, int32_t& tried_cp)
 {
 	if (loaded_layout) {
 		KeyboardLayout *changed_layout = nullptr;
@@ -1154,7 +1168,7 @@ KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
 	// Regardless of the above, carry on with setting up the layout
 	const auto codepage = DOS_GetCodePageFromCountry(country);
 	const auto layout   = DOS_CheckLanguageToLayoutException(language);
-	const auto result = DOS_LoadKeyboardLayout(layout.c_str(), codepage, "auto");
+	const auto result   = load_keyboard_layout(layout.c_str(), codepage, "auto");
 
 	if (result == KEYB_NOERROR) {
 		LOG_MSG("DOS: Loaded codepage %d for detected language '%s'",
