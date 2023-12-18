@@ -110,10 +110,10 @@ function set_ci_status(workflow_file, os_name, description) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    set_ci_status("linux.yml", "linux", "Linux");
-    set_ci_status("macos.yml", "macos", "macOS");
-    set_ci_status("windows-msys2.yml", "msys2", "Windows MSYS2 builds ¹");
-    set_ci_status("windows-msvc.yml", "windows", "Windows MSVC builds ²");
+    set_ci_status("linux.yml", "linux", "Linux x86-64");
+    set_ci_status("macos.yml", "macos", "macOS ¹");
+    set_ci_status("windows-msys2.yml", "msys2", "Windows MSYS2 builds ²");
+    set_ci_status("windows-msvc.yml", "windows", "Windows MSVC builds ³");
 });
 
 </script>
@@ -180,10 +180,13 @@ document.addEventListener("DOMContentLoaded", () => {
 </table>
 </div>
 
-¹ Windows MSYS2 builds include 64-bit ZIP and Installer with both 64-bit MSYS2
+¹ macOS builds include Intel, Apple silicon, and universal binaries.
+
+² Windows MSYS2 builds include 64-bit ZIP and Installer with both 64-bit MSYS2
 (default) and 64-bit MSVC (optional).
 
-² Windows MSVC builds include 32-bit ZIP and 64-bit ZIP.
+³ Windows MSVC builds include 32-bit ZIP and 64-bit ZIP.
+
 
 ## Installation notes
 
@@ -204,7 +207,7 @@ file.  DOSBox Staging builds use a configuration file named
 
 ### Linux
 
-The tarball contains a dynamically-linked x86_64 build; you'll need additional
+The tarball contains a dynamically-linked x86-64 build; you'll need additional
 dependencies installed via your package manager.
 
 #### Fedora
