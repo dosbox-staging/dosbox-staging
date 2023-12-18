@@ -253,22 +253,16 @@ jobs:
           meson compile -C build
 
       - name: Upload binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: dosbox-staging-macOS-${{ matrix.runner.arch }}-${{ env.VERSION }}
+          name: dosbox-${{ matrix.runner.arch }}
           path: build/dosbox
 
-      - name: Zip resources
-        run: |
-          tar -c Resources \
-          | zstd --adapt -T0 --long -v --force -o Resources.tar.zst
-
       - name: Upload resources
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: Resources-macOS-${{ matrix.runner.arch }}-${{ env.VERSION }}
-          path: Resources.tar.zst
-          compression-level: 0
+          name: Resources
+          path: Resources
 
   publish_universal_build:
     name: Publish universal build
@@ -291,23 +285,8 @@ jobs:
       - name: Install brew depedencies
         run: HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK=1 brew install --overwrite librsvg
 
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-
-      - name: List local files resources
-        run: |
-
-      - name: Unpack and normalize the resources and executable paths
-        # The create-package.sh script expects to find a 'Resources/' directory and
-        # the 'dosbox' executables sitting in 'dosbox-arm64/' and 'dosbox-x86_64/'
-        # directories. So we need to eliminate the unique version wrapping.
-        run: |
-          ls -1la
-          ls Resources*/*
-          ls dosbox-staging-macOS*/*
-          zstd -dc Resources-macOS-arm64-${{ env.VERSION }}/Resources.tar.zst | tar x
-          mv dosbox-staging-macOS-arm64-${{ env.VERSION }} dosbox-arm64
-          mv dosbox-staging-macOS-x86_64-${{ env.VERSION }} dosbox-x86_64
+      - name: Download binaries
+        uses: actions/download-artifact@v3
 
       - name: Package
         run: |
@@ -339,13 +318,12 @@ jobs:
           clamscan --heuristic-scan-precedence=yes --recursive --infected dist || true
 
       - name: Upload disk image
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
-          name: dosbox-staging-macOS-universal-${{ env.VERSION }}
+          name: dosbox-staging-macOS-universal
           path: dosbox-staging-macOS-${{ env.VERSION }}.dmg
-          compression-level: 0
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:
@@ -370,10 +348,9 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API
           name: changelog-${{ env.VERSION }}.txt
           path: changelog-${{ env.VERSION }}.txt
-          compression-level: 1
