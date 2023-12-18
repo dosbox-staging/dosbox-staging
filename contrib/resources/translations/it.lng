@@ -37,9 +37,13 @@ Elenco delle opzioni disponibili:
   --working-dir <percorso>  Imposta la directory di lavoro su <percorso>. DOSBox si
                             comporterà come se avviato da questa directory.
 
+  --list-countries          Elenca tutti i paesi supportati con i relativi codici
+                            numerici. I codici possono essere utilizzati
+                            nell'impostazione di configurazione 'country'.
+
   --list-glshaders          Elenca tutti gli shader OpenGL disponibili e i relativi
-                            percorsi. I risultati possono essere utilizzati
-                            nell'impostazione di configurazione 'glshader = '.
+                            percorsi. Gli shader possono essere utilizzati
+                            nell'impostazione di configurazione 'glshader'.
 
   --fullscreen              Avvia in modalità a schermo intero.
 
@@ -73,6 +77,356 @@ Elenco delle opzioni disponibili:
 
   -V, --version             Mostra le informazioni sulla versione.
 
+.
+:DOSBOX_HELP_LIST_COUNTRIES_1
+Elenco dei codici paese (per lo più uguali ai prefissi telefonici)
+------------------------------------------------------------------
+.
+:DOSBOX_HELP_LIST_COUNTRIES_2
+I codici paese riportati sopra possono essere utilizzati, esattamente come
+elencati, nell'impostazione di configurazione 'country'.
+.
+:COUNTRY_NAME_XXA
+Internazionale (inglese)
+.
+:COUNTRY_NAME_USA
+Stati Uniti
+.
+:COUNTRY_NAME_CAN_FR
+Canada (francese)
+.
+:COUNTRY_NAME_XLA
+America Latina
+.
+:COUNTRY_NAME_CAN_EN
+Canada (inglese)
+.
+:COUNTRY_NAME_RUS
+Russia
+.
+:COUNTRY_NAME_EGY
+Egitto
+.
+:COUNTRY_NAME_ZAF
+Sud Africa
+.
+:COUNTRY_NAME_GRC
+Grecia
+.
+:COUNTRY_NAME_NLD
+Paesi Bassi
+.
+:COUNTRY_NAME_BEL
+Belgio
+.
+:COUNTRY_NAME_FRA
+Francia
+.
+:COUNTRY_NAME_ESP
+Spagna
+.
+:COUNTRY_NAME_HUN
+Ungheria
+.
+:COUNTRY_NAME_YUG
+Jugoslavia
+.
+:COUNTRY_NAME_ITA
+Italia
+.
+:COUNTRY_NAME_ROU
+Romania
+.
+:COUNTRY_NAME_CHE
+Svizzera
+.
+:COUNTRY_NAME_CZE
+Repubblica Ceca
+.
+:COUNTRY_NAME_AUT
+Austria
+.
+:COUNTRY_NAME_GBR
+Regno Unito
+.
+:COUNTRY_NAME_DNK
+Danimarca
+.
+:COUNTRY_NAME_SWE
+Svezia
+.
+:COUNTRY_NAME_NOR
+Norvegia
+.
+:COUNTRY_NAME_POL
+Polonia
+.
+:COUNTRY_NAME_DEU
+Germania
+.
+:COUNTRY_NAME_MEX
+Messico
+.
+:COUNTRY_NAME_ARG
+Argentina
+.
+:COUNTRY_NAME_BRA
+Brasile
+.
+:COUNTRY_NAME_CHL
+Cile
+.
+:COUNTRY_NAME_COL
+Colombia
+.
+:COUNTRY_NAME_VEN
+Venezuela
+.
+:COUNTRY_NAME_MYS
+Malaysia
+.
+:COUNTRY_NAME_AUS
+Australia
+.
+:COUNTRY_NAME_IDN
+Indonesia
+.
+:COUNTRY_NAME_PHL
+Filippine
+.
+:COUNTRY_NAME_NZL
+Nuova Zelanda
+.
+:COUNTRY_NAME_SGP
+Singapore
+.
+:COUNTRY_NAME_THA
+Tailandia
+.
+:COUNTRY_NAME_KAZ
+Kazakistan
+.
+:COUNTRY_NAME_JPN
+Giappone
+.
+:COUNTRY_NAME_KOR
+Corea del Sud
+.
+:COUNTRY_NAME_VNM
+Vietnam
+.
+:COUNTRY_NAME_CHN
+Cina
+.
+:COUNTRY_NAME_TUR
+Turchia
+.
+:COUNTRY_NAME_IND
+India
+.
+:COUNTRY_NAME_PAK
+Pakistan
+.
+:COUNTRY_NAME_XAE
+Asia (inglese)
+.
+:COUNTRY_NAME_MAR
+Marocco
+.
+:COUNTRY_NAME_DZA
+Algeria
+.
+:COUNTRY_NAME_TUN
+Tunisia
+.
+:COUNTRY_NAME_NER
+Niger
+.
+:COUNTRY_NAME_BEN
+Benin
+.
+:COUNTRY_NAME_NGA
+Nigeria
+.
+:COUNTRY_NAME_FRO
+Isole Faroe
+.
+:COUNTRY_NAME_PRT
+Portogallo
+.
+:COUNTRY_NAME_LUX
+Lussemburgo
+.
+:COUNTRY_NAME_IRL
+Irlanda
+.
+:COUNTRY_NAME_ISL
+Islanda
+.
+:COUNTRY_NAME_ALB
+Albania
+.
+:COUNTRY_NAME_MLT
+Malta
+.
+:COUNTRY_NAME_FIN
+Finlandia
+.
+:COUNTRY_NAME_BGR
+Bulgaria
+.
+:COUNTRY_NAME_LTU
+Lituania
+.
+:COUNTRY_NAME_LVA
+Lettonia
+.
+:COUNTRY_NAME_EST
+Estonia
+.
+:COUNTRY_NAME_ARM
+Armenia
+.
+:COUNTRY_NAME_BLR
+Bielorussia
+.
+:COUNTRY_NAME_UKR
+Ucraina
+.
+:COUNTRY_NAME_SRB
+Serbia
+.
+:COUNTRY_NAME_MNE
+Montenegro
+.
+:COUNTRY_NAME_HRV
+Croazia
+.
+:COUNTRY_NAME_SVN
+Slovenia
+.
+:COUNTRY_NAME_BIH_LAT
+Bosnia ed Erzegovina (latino)
+.
+:COUNTRY_NAME_BIH_CYR
+Bosnia ed Erzegovina (cirillico)
+.
+:COUNTRY_NAME_MKD
+Macedonia del Nord
+.
+:COUNTRY_NAME_SVK
+Slovacchia
+.
+:COUNTRY_NAME_GTM
+Guatemala
+.
+:COUNTRY_NAME_SLV
+El Salvador
+.
+:COUNTRY_NAME_HND
+Honduras
+.
+:COUNTRY_NAME_NIC
+Nicaragua
+.
+:COUNTRY_NAME_CRI
+Costa Rica
+.
+:COUNTRY_NAME_PAN
+Panama
+.
+:COUNTRY_NAME_BOL
+Bolivia
+.
+:COUNTRY_NAME_ECU
+Ecuador
+.
+:COUNTRY_NAME_PRY
+Paraguay
+.
+:COUNTRY_NAME_URY
+Uruguay
+.
+:COUNTRY_NAME_XME
+Medio Oriente (arabo)
+.
+:COUNTRY_NAME_HKG
+Hong Kong
+.
+:COUNTRY_NAME_TWN
+Taiwan
+.
+:COUNTRY_NAME_LBN
+Libano
+.
+:COUNTRY_NAME_JOR
+Giordania
+.
+:COUNTRY_NAME_SYR
+Siria
+.
+:COUNTRY_NAME_KWT
+Kuwait
+.
+:COUNTRY_NAME_SAU
+Arabia Saudita
+.
+:COUNTRY_NAME_YEM
+Yemen
+.
+:COUNTRY_NAME_OMN
+Oman
+.
+:COUNTRY_NAME_ARE
+Emirati Arabi Uniti
+.
+:COUNTRY_NAME_ISR
+Israele
+.
+:COUNTRY_NAME_BHR
+Bahrein
+.
+:COUNTRY_NAME_QAT
+Qatar
+.
+:COUNTRY_NAME_MNG
+Mongolia
+.
+:COUNTRY_NAME_TJK
+Tagikistan
+.
+:COUNTRY_NAME_TKM
+Turkmenistan
+.
+:COUNTRY_NAME_AZE
+Azerbaigian
+.
+:COUNTRY_NAME_GEO
+Georgia
+.
+:COUNTRY_NAME_KGZ
+Kirghizistan
+.
+:COUNTRY_NAME_UZB
+Uzbekistan
+.
+:DOSBOX_HELP_LIST_GLSHADERS_1
+Elenco degli shader GLSL disponibili
+------------------------------------
+.
+:DOSBOX_HELP_LIST_GLSHADERS_2
+Gli shader di cui sopra possono essere utilizzati, esattamente come elencati,
+nell'impostazione di configurazione 'glshader', senza la necessità di
+specificare il percorso o l'estensione .glsl.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
+Il percorso '%s' non esiste
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS
+Il percorso '%s' non contiene shader
+.
+:DOSBOX_HELP_LIST_GLSHADERS_LIST
+Il percorso '%s' contiene:
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Sezione o proprietà non trovata: %s
@@ -130,33 +484,23 @@ Risoluzione da utilizzare in modalità schermo intero: 'original', 'desktop' o
 dimensione fissa, es. 1024x768 (predefinito 'desktop').
 .
 :CONFIG_WINDOWRESOLUTION
-Imposta le dimensioni della finestra da utilizzare durante l'esecuzione
-in modalità finestra:
-  default:          Seleziona l'opzione migliore in base al tuo sistema e ad
-                    altre impostazioni.
+Imposta le dimensioni iniziali della finestra per la modalità finestra.
+Inoltre è possibile ridimensionare la finestra dopo l'avvio dell'emulatore.
+  default:   Seleziona l'opzione migliore in base al tuo sistema e ad altre
+             impostazioni (ad esempio se la correzione delle proporzioni è
+             abilitata).
   small, medium, large (s, m, l):
-                    Ridimensiona la finestra in base alla risoluzione del
-                    desktop.
-  <personalizzato>: Ridimensiona la finestra in base alle dimensioni indicate
-                    nel formato LxA. Per esempio: 1024x768.
-.
-:CONFIG_VIEWPORT_RESOLUTION
-Imposta le dimensioni dell'area di visualizzazione all'interno della
-finestra/schermo:
-  fit:              Adatta l'area di visualizzazione alla finestra/schermo
-                    disponibile (predefinito).
-  <personalizzato>: Limita l'area di visualizzazione in base alla risoluzione o
-                    percentuale personalizzata. Specificato in LxA, N%, N.M%.
-                    Esempi: 960x720 o 50%
+             Ridimensiona la finestra in base alla risoluzione del desktop.            
+  LxA:       Specifica le dimensioni della finestra nel formato LxA
+             (ad esempio 1024x768).
 .
 :CONFIG_WINDOW_POSITION
-Imposta la posizione iniziale della finestra durante l'esecuzione in modalità
-finestra:
-  auto:             Lascia che sia il gestore delle finestre a decidere la
-                    posizione (predefinito).
-  <personalizzato>: Imposta la posizione della finestra nel formato X,Y.
-                    Per esempio: 250,100
-                    0,0 è l'angolo in alto a sinistra dello schermo.
+Imposta la posizione iniziale della finestra per la modalità finestra:
+  auto:      Lascia che sia il gestore delle finestre a decidere la posizione
+             (predefinito).
+  X,Y:       Imposta la posizione della finestra nel formato X,Y
+             (ad esempio 250,100).
+             0,0 è l'angolo in alto a sinistra dello schermo.
 .
 :CONFIG_WINDOW_DECORATIONS
 Abilita le decorazioni delle finestre in modalità finestra
@@ -167,19 +511,22 @@ Imposta la trasparenza della finestra di DOSBox Staging (predefinito 0).
 Da 0 (nessuna trasparenza) a 90 (trasparenza elevata).
 .
 :CONFIG_MAX_RESOLUTION
-Rinominato in 'viewport_resolution'.
+Spostato nella sezione [render] e rinominato in 'viewport'.
+.
+:CONFIG_VIEWPORT_RESOLUTION
+Spostato nella sezione [render] e rinominato in 'viewport'.
 .
 :CONFIG_HOST_RATE
 Imposta la frequenza di aggiornamento dello schermo:
-  auto:             Utilizza le frequenze SDI oppure, su uno schermo ad alta
-                    frequenza di aggiornamento, le frequenze VRR quando si è
-                    in modalità schermo intero (predefinito).
-  sdi:              Utilizza le frequenze dell'interfaccia del dispositivo 
-                    seriale (SDI), senza ulteriori regolazioni.
-  vrr:              Sottrae 3 Hz dalla frequenza riportata (consigliato per i
-                    schermi VRR)
-  <personalizzato>: Specifica una frequenza personalizzata come valore intero o
-                    decimale espresso in Hz (23.000 è il minimo consentito).
+  auto:      Utilizza le frequenze SDI oppure, su uno schermo ad alta frequenza
+             di aggiornamento, le frequenze VRR quando si è in modalità
+             schermo intero (predefinito).
+  sdi:       Utilizza le frequenze dell'interfaccia del dispositivo seriale
+             (SDI), senza ulteriori regolazioni.
+  vrr:       Sottrae 3 Hz dalla frequenza riportata (consigliato per gli
+             schermi con frequenza di aggiornamento variabile, cosiddetti VRR).
+  N:         Specifica una frequenza di aggiornamento personalizzata in Hz
+             (sono ammessi valori decimali; 23.000 è il minimo consentito).
 .
 :CONFIG_VSYNC
 Imposta la modalità di sincronizzazione verticale (vsync) del driver video:
@@ -254,10 +601,10 @@ Mette in pausa l'emulazione quando la finestra è inattiva
 (predefinito disabilitato).
 .
 :CONFIG_MAPPERFILE
-File utilizzato per caricare/salvare le corrispondenze tasto/evento.
-Sono inclusi dei file di mappatura preconfigurati nella directory
-'resources/mapperfiles'. Possono essere caricati per nome, ad esempio: 
-mapperfile = xbox/xenon2.map
+Percorso del file di mappatura (predefinito 'mapper-sdl2-XYZ.map', dove XYZ è
+la versione corrente). Sono inclusi dei file di mappatura preconfigurati nella
+directory 'resources/mapperfiles'. Questi possono essere caricati per nome,
+ad esempio 'mapperfile = xbox/xenon2.map'.
 Nota: L'argomento della riga di comando --resetmapper elimina solo il file di
       mappatura predefinito.
 .
@@ -346,7 +693,7 @@ Controlla la selezione delle modalità VESA 1.2 e 2.0 offerte:
               È consigliato insieme a 4 o 8 MB di memoria video (predefinito).
   halfline:   Supporta la modalità VESA 2.0 a mezza linea a bassa risoluzione
               utilizzata da Extreme Assault. Utilizzare solo se necessario,
-              in quanto non è compatibile con S3.
+              in quanto non è compatibile con le schede grafiche S3.
   all:        Offre tutte le modalità per una data dimensione della memoria
               video, tuttavia alcuni giochi potrebbero non utilizzarle
               correttamente (sfarfallio) o potrebbe essere necessaria più
@@ -396,14 +743,15 @@ auto        | 'low' se viene fornito un'eseguibile, un batch o una directory,
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
 Molti giochi aprono tutti i loro file con permessi di scrittura, anche quelli
 che non modificheranno mai. Questa impostazione ti consente di proteggere
-dalla scrittura quei file pur consentendo al gioco di leggerli.
-Un secondo caso d'uso: se stai utilizzando un filesystem copy-on-write 
-o di rete, questa impostazione consente di ignorare le operazioni di scrittura.
+dalla scrittura quei file pur consentendo al gioco di leggerli
+(predefinito abilitato). Un secondo caso d'uso: se stai utilizzando un
+filesystem copy-on-write o di rete, questa impostazione consente di ignorare
+le operazioni di scrittura.
 .
 :CONFIG_SHELL_CONFIG_SHORTCUTS
-Consente la gestione diretta delle opzioni di configurazione tramite comandi
-in formato abbreviato (predefinito abilitato), cioè invece di
-'config -set sbtype sb16' è sufficiente eseguire 'sbtype sb16', allo stesso
+Consente una gestione semplificata delle opzioni di configurazione tramite
+comandi in formato abbreviato (predefinito abilitato). Ad esempio invece di
+'config -set sbtype sb16', è sufficiente eseguire 'sbtype sb16'; allo stesso
 modo invece di 'config -get sbtype' è sufficiente eseguire il comando 'sbtype'.
 .
 :CONFIG_FRAMESKIP
@@ -411,31 +759,83 @@ Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
 utilizzando l'impostazione 'host_rate'.
 .
 :CONFIG_ASPECT
-Applica la correzione delle proporzioni per i moderni schermi piatti a pixel
-quadrati, in modo tale che le risoluzioni DOS con pixel non quadrati appaiano
-come sui monitor CRT con rapporto d'aspetto 4:3, per i quali sono stati
-progettati la maggior parte dei giochi DOS (predefinito abilitato).
-Questa impostazione ha effetto solo sulle modalità video che utilizzano pixel
-non quadrati, come 320x200 o 640x400; Le modalità video a pixel quadrati,
-come 320x240, 640x480 e 800x600 verranno visualizzate così come sono.
+Imposta la modalità di correzione delle proporzioni (predefinito abilitato):             
+  auto, on:           Applica la correzione delle proporzioni per i moderni
+                      schermi piatti a pixel quadrati, in modo tale che le
+                      modalità video DOS con pixel non quadrati appaiano come
+                      sui monitor CRT con rapporto d'aspetto 4:3, per i quali
+                      sono stati progettati la maggior parte dei giochi DOS.
+                      Questa impostazione ha effetto solo sulle modalità video
+                      che utilizzano pixel non quadrati, come 320x200 o
+                      640x400; Le modalità video a pixel quadrati (ad esempio
+                      320x240, 640x480 e 800x600) verranno visualizzate
+                      così come sono.
+  square-pixels, off: Non applica la correzione delle proporzioni; tutte le
+                      modalità video DOS vengono visualizzate con pixel
+                      quadrati. La maggior parte dei giochi 320x200 appariranno
+                      allungati orizzontalmente, ma alcuni titoli (ad esempio
+                      le conversioni DOS dei giochi PAL Amiga) necessitano di
+                      pixel quadrati per apparire come previsto dagli artisti.
+  stretch:            Calcola le proporzioni in base alle dimensioni dell'area
+                      di visualizzazione. Combinata con l'opzione 'viewport',
+                      questa modalità è utile per forzare determinati rapporti
+                      d'aspetto (ad esempio visualizzando i giochi DOS a
+                      schermo intero su uno schermo con rapporto
+                      d'aspetto 16:9) e per emulare i controlli per la
+                      dimensione orizzontale e verticale dell'immagine dei
+                      monitor CRT.
 .
 :CONFIG_INTEGER_SCALING
-Vincola il fattore di scala orizzontale o verticale a valori interi.
-Saranno mantenute sempre le proporzioni corrette in base all'impostazione
-'aspect', il che può comportare un fattore di scala non intero nell'altra
-direzione. Se l'immagine è più grande dell'area di visualizzazione, il
-ridimensionamento dei numeri interi viene disabilitato automaticamente
-(equivalente ad 'off'). Valori possibili:
-  auto:       Modalità 'vertical' abilitata automaticamente solo per shader CRT
-              adattivi, altrimenti 'off' (predefinito).
-  vertical:   Vincola il fattore di scala verticale a valori interi all'interno
-              dell'area di visualizzazione. Questa è l'impostazione consigliata
-              quando si utilizzano gli shader CRT per evitare linee di
-              scansione irregolari e artefatti.              
-  horizontal: Vincola il fattore di scala orizzontale a valori interi
-              all'interno dell'area di visualizzazione.
+Vincola il fattore di scala orizzontale o verticale al valore intero più grande
+in modo che l'immagine possa adattarsi all'area di visualizzazione.
+Sarà mantenuto sempre il rapporto d'aspetto specificato in base alle
+impostazioni 'aspect' e 'viewport', il che può comportare un fattore di scala
+non intero nell'altra dimensione. Se l'immagine è più grande dell'area di
+visualizzazione, il ridimensionamento dei numeri interi viene disabilitato
+automaticamente (equivalente ad 'off'). Valori possibili:
+  auto:       Modalità 'vertical' abilitata automaticamente solo per gli shader
+              CRT adattivi (vedi impostazione 'glshader'), altrimenti 'off'
+              (predefinito).
+  vertical:   Vincola il fattore di scala verticale a valori interi. 
+              Questa è l'impostazione consigliata per gli shader CRT per
+              evitare linee di scansione irregolari e artefatti.              
+  horizontal: Vincola il fattore di scala orizzontale a valori interi.
   off:        Nessun ridimensionamento dei numeri interi; l'immagine riempie
-              l'area di visualizzazione in base all'impostazione 'aspect'.
+              l'area di visualizzazione mantenendo le proporzioni specificate.
+.
+:CONFIG_VIEWPORT
+Imposta le dimensioni dell'area di visualizzazione (l'area massima disegnabile)
+L'immagine è sempre contenuta all'interno dell'area di visualizzazione, tenendo
+conto delle proporzioni specificate (vedi impostazione 'aspect').
+Valori possibili:
+  fit:            Adatta l'area di visualizzazione alla finestra/schermo
+                  disponibile (predefinito). Con l'impostazione
+                  'integer_scaling' abilitata, potrebbero essere visualizzate
+                  delle barre nere orizzontali e/o verticali attorno
+                  all'immmagine.
+  LxA:            Imposta le dimensioni dell'area di visualizzazione nel
+                  formato LxA (ad esempio 960x720). La dimensione specificata
+                  non deve essere maggiore della risoluzione del desktop.
+                  Se più grande della finestra, l'immagine viene ridimensionata
+                  per adattarsi alla finestra.
+  N%:             Simile a 'LxA' ma la dimensione è specificata come
+                  percentuale della risoluzione del desktop.
+  relative O% V%: L'area di visualizzazione è impostata su un rettangolo con
+                  rapporto d'aspetto 4:3, adattato alla finestra/schermo
+                  disponibile, e quindi ridimensionato in base ai fattori di
+                  scala orizzontale e verticale O e V (l'intervallo valido va
+                  dal 20% al 300%). L'area di visualizzazione risultante può
+                  estendersi oltre la finestra/schermo. Questo è utile per
+                  forzare determinati rapporti d'aspetto con 'aspect = stretch'
+                  o per ingrandire l'immagine. Ciò emula efficacemente i
+                  controlli per la dimensione orizzontale e verticale
+                  dell'immagine dei monitor CRT.
+Note:
+ - L'uso della modalità 'relative' in combinazione con 'integer_scaling',
+   potrebbe portare a risultati sorprendenti (ma corretti).
+ - In modalità 'relative', è possibile utilizzare i tasti di scelta rapida
+   'Stretch Axis', 'Inc Stretch' e 'Dec Stretch' per impostare in tempo reale
+   la dimensione orizzontale e verticale dell'immagine.
 .
 :CONFIG_MONOCHROME_PALETTE
 Imposta la tavolozza per l'emulazione dello schermo monocromatico
@@ -485,8 +885,8 @@ sono rispettivamente:
 Gli scaler software sono deprecati a favore delle soluzioni con accelerazione
 hardware:
  - Se hai utilizzato in passato gli scaler normal2x/3x, imposta invece
-   le opzioni 'windowresolution' o 'viewport_resolution', oppure considera
-   l'utilizzo dell'opzione 'integer_scaling'.
+   le opzioni 'windowresolution' o 'viewport', oppure considera l'utilizzo
+   dell'opzione 'integer_scaling'.
  - Se hai utilizzato in passato uno scaler avanzato, considera invece una
    delle opzioni 'glshader'.
 .
@@ -501,7 +901,7 @@ Opzioni shader CRT adattivo:
                          (predefinito). La variante di shader appropriata viene
                          selezionata automaticamente in base allo standard
                          grafico della modalità video corrente e alla
-                         risoluzione dell'area di visualizzazione,
+                         dimensione dell'area di visualizzazione,
                          indipendentemente dall'impostazione 'machine'.
                          Ciò significa che anche su una scheda grafica VGA
                          emulata, otterrai un'autentica emulazione di un
@@ -541,19 +941,20 @@ Era della tecnologia composita (predefinito 'auto').
 Quando impostato su 'auto', PCjr usa 'new' e CGA/Tandy usa 'old'.
 .
 :CONFIG_HUE
-Aspetto della tavolozza RGB. Ad esempio, regola finché il cielo non diventa blu
+Aspetto della tavolozza RGB (predefinito 0).
+Ad esempio, regola finché il cielo non diventa blu.
 .
 :CONFIG_SATURATION
-Intensità dei colori, da sbiaditi a vividi.
+Intensità dei colori, da sbiaditi a vividi (predefinito 100).
 .
 :CONFIG_CONTRAST
-Rapporto tra l'area scura e quella chiara.
+Rapporto tra area scura e chiara (predefinito 100).
 .
 :CONFIG_BRIGHTNESS
-Luminosità dell'immagine, da scura a chiara.
+Luminosità dell'immagine, da scura a chiara (predefinito 0).
 .
 :CONFIG_CONVERGENCE
-Convergenza degli elementi del subpixel, da sfocati a nitidi (solo CGA e Tandy)
+Convergenza degli elementi del subpixel, da sfocati a nitidi (predefinito 0).
 .
 :CONFIG_CORE
 Core della CPU usato nell'emulazione (predefinito 'auto'). 
@@ -651,7 +1052,7 @@ Per gli schermi tattili, utilizzare la modalità di controllo senza soluzione
 di continuità 'seamless'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
-Se abilitato, il pulsante centrale rilascerà il mouse. Se è stata impostata
+Rilascia il mouse facendo clic con il pulsante centrale. Se è stata impostata
 la modalità di controllo senza soluzione di continuità 'seamless', esso si
 occuperà anche di catturarlo (predefinito abilitato).
 .
@@ -665,13 +1066,13 @@ Nota: Dovresti disabilitarlo nel caso in cui vengano rilevati erroneamente
       l'ingresso HDMI di un ricevitore AV per l'ascolto dell'audio.
 .
 :CONFIG_MOUSE_SENSITIVITY
-Sensibilità del mouse per gli assi orizzontale e verticale, in percentuale
-(predefinito 100,100).
+Sensibilità del mouse a livello globale per gli assi orizzontale e verticale,
+in percentuale (predefinito 100). I valori possono essere separati da spazi,
+virgole o punto e virgola (ad esempio 100,150).
 Valori negativi invertono gli assi, zero disabilita il mouse. 
 Fornendo un solo valore, si imposta la sensibilità per entrambi gli assi.
-Questa impostazione può essere regolata durante l'esecuzione dell'emulatore
-(per ogni interfaccia del mouse) utilizzando lo strumento interno MOUSECTL.COM,
-disponibile sull'unità Z.
+La sensibilità può essere ulteriormente regolata per ogni interfaccia del mouse
+utilizzando lo strumento interno MOUSECTL.COM disponibile sull'unità Z.
 .
 :CONFIG_MOUSE_RAW_INPUT
 Abilita questa impostazione per bypassare le impostazioni di sensibilità
@@ -918,10 +1319,11 @@ specificata la versione nel nome, è stabilito nell'ordine seguente:
   <versione>: Utilizza la versione del modello specificata (es. 'mt32_204').
 .
 :CONFIG_ROMDIR
-Directory contenente le ROM del Roland MT-32/CM-32ML.
-Il percorso può essere assoluto o relativo, o lasciato vuoto per utilizzare
-la cartella 'mt32-roms' nella directory di configurazione di DOSBox.
-Verranno verificate anche altre posizioni di sistema comuni.
+Directory contenente le ROM del Roland MT-32/CM-32ML
+(predefinito non impostato). Il percorso può essere assoluto o relativo,
+o non specificato per utilizzare la cartella 'mt32-roms' nella directory di
+configurazione di DOSBox. Verranno verificate anche altre posizioni di
+sistema comuni.
 Note:
   - I nomi dei file ROM non hanno importanza; le ROM sono identificate
     dalle loro somme di controllo (checksum).
@@ -1095,8 +1497,8 @@ Numero IRQ della scheda IBM Music Feature (predefinito 3).
 .
 :CONFIG_IMFC_FILTER
 Filtro per l'uscita audio della scheda IBM Music Feature:
-  on:               Filtra l'uscita audio.
-  off:              Non filtra l'uscita audio (predefinito).
+  on:               Filtra l'uscita audio (predefinito).
+  off:              Non filtra l'uscita audio.
   <personalizzato>: Definizione di filtri personalizzati; 
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
@@ -1112,7 +1514,7 @@ Modello di chip da emulare nella scheda Innovation SSI-2001:
 .
 :CONFIG_SIDCLOCK
 Frequenza di clock del chip SID, modificabile tramite ponticello (o jumper)
-sulle schede originali.
+sulle schede originali:
   default:   0.895 MHz, secondo la scheda SSI-2001 originale (predefinito).
   c64ntsc:   1.023 MHz, secondo i PC Commodore e DuoSID NTSC.
   c64pal:    0.985 MHz, secondo i PC Commodore e DuoSID PAL.
@@ -1319,29 +1721,29 @@ Applica i parametri di calibrazione dell'asse Y precedentemente acquisiti
 (predefinito 'auto').
 .
 :CONFIG_SERIAL1
-Imposta il tipo di dispositivo connesso alla porta COM.
+Imposta il tipo di dispositivo collegato alla porta COM1.
 Può essere disabled, dummy, mouse, modem, nullmodem, direct 
 (predefinito 'dummy').
 Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
-parametro:valore. Un parametro per tutti i tipi è 'irq' (facoltativo).
-  - per 'mouse':      model, sovrascrive l'impostazione dalla sezione [mouse].
+parametro:valore. Il parametro 'irq' è valido per tutti i tipi di dispositivi.
+  - per 'mouse':      model (sovrascrive l'impostazione della sezione [mouse]).
   - per 'direct':     realport (richiesto), rxdelay (facoltativo).
-                      (realport:COM1 realport:ttyS0).
+                      (es. realport:COM1, realport:ttyS0).
   - per 'modem':      listenport, sock, bps (tutti facoltativi).
   - per 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,
                       transparent, port, inhsocket, sock (tutti facoltativi).
-Il parametro SOCK specifica il protocollo da utilizzare da entrambi i lati
-della connessione. 0 per TCP e 1 per UDP affidabile ENet.
+Il parametro 'sock' specifica il protocollo da utilizzare da entrambi i lati
+della connessione. I valori validi sono 0 per TCP e 1 per UDP affidabile ENet.
 Esempio: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-Fare riferimento a 'serial1'.
+Fare riferimento a 'serial1' (predefinito 'dummy').
 .
 :CONFIG_SERIAL3
-Fare riferimento a 'serial1'.
+Fare riferimento a 'serial1' (predefinito 'disabled').
 .
 :CONFIG_SERIAL4
-Fare riferimento a 'serial1'.
+Fare riferimento a 'serial1' (predefinito 'disabled').
 .
 :CONFIG_PHONEBOOKFILE
 File utilizzato per mappare numeri di telefono falsi su indirizzi
@@ -1364,10 +1766,20 @@ Specificare come formato principale.minore.
 Un singolo numero viene considerato come la versione principale.
 Le impostazioni comuni sono 3.3, 5.0, 6.22, e 7.1.
 .
+:CONFIG_LOCALE_PERIOD
+Seleziona il periodo della localizzazione (predefinito 'modern').
+L'impostazione 'historic' (se disponibile per il paese specificato) cerca di
+imitare i vecchi sistemi DOS per la visualizzazione di informazioni come data,
+ora o numeri, mentre con l'impostazione 'modern' tali informazioni saranno
+visualizzate seguendo le linee guida dei sistemi operativi moderni per
+un'esperienza utente più coerente.
+.
 :CONFIG_COUNTRY
-Imposta il codice paese DOS (predefinito 0).
+Imposta il codice paese DOS (predefinito 'auto').
 Ciò influisce su informazioni come data, ora e formati decimali.
-Se impostato a 0, verrà utilizzato il codice paese corrispondente alla
+L'elenco dei codici paese supportati può essere visualizzato utilizzando
+l'argomento della riga di comando '--list-countries'.
+Se impostato su 'auto', verrà utilizzato il codice paese corrispondente alla
 disposizione della tastiera selezionata.
 .
 :CONFIG_KEYBOARDLAYOUT
@@ -2592,10 +3004,13 @@ Dove:
   -s -sx -sy  imposta la sensibilità per l'asse x / asse y, da -999 a +999.
   -r          imposta la frequenza di campionamento minima del mouse.
   -on -off    abilita o disabilita il mouse sull'interfaccia specificata.
-  -reset      ripristina tutte le impostazioni dal file di configurazione.
+  -reset      ripristina le impostazioni predefinite del mouse.
 
 Note:
   Se sensibilità o frequenza sono omessi, verranno usati i valori predefiniti.
+  La sensibilità del mouse impostata nel file di configurazione è valida a
+  livello globale per tutte le interfacce, mentre la sensibilità impostata con
+  questo comando per una determinata interfaccia sostituirà quella globale.
 
 Esempi:
   [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; chiede all'utente di selezionare i mouse da usare
