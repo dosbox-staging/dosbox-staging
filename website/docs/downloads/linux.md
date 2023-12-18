@@ -34,6 +34,10 @@ Ubuntu 18.04 or newer, and Debian 9 or newer is required.
     sudo pacman -S sdl2 sdl2_image sdl2_net opusfile
 
 
+Please run the `install-icons.sh` script included with the release to install
+the application icons.
+
+
 ## External repository packages
 
 DOSBox Staging is also packaged by external teams, as listed below.
@@ -48,6 +52,7 @@ project-released tarball.
 The DOSBox Staging team does not track or document these differences.
 For issues specific to these packages, please contact the respective
 repository owners.
+
 
 ### Containerised packages
 
@@ -105,7 +110,8 @@ You can easily configure your DOS games on
 
 ## Hardware requirements
 
-From the x86 family of processors, all x86-64 processors are supported.
+From the x86 family of processors, a processor with SSSE3 (Supplemental
+Streaming SIMD Extensions 3) is required.
 
 ## Development snapshot builds
 
