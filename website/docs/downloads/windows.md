@@ -54,7 +54,8 @@ for further details.
 
 ## Hardware requirements
 
-From the x86 family of processors, all x86-64 processors are supported.
+An x86 processor with SSSE3 (Supplemental Streaming SIMD Extensions 3) is
+required.
 
 ## Development snapshot builds
 

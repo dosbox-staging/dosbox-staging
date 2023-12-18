@@ -351,7 +351,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Download MSVC artifact
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           workflow: windows-msvc.yml
@@ -407,17 +407,16 @@ jobs:
           C:\PROGRA~2\INNOSE~1\ISCC.exe DOSBox-Staging-setup.iss
 
       - name: Upload package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ env.PKG_RELEASE }}
           path: ${{ env.PKG_RELEASE }}
 
       - name: Upload installer
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
-          name: dosbox-staging-windows-${{ env.version_number }}-setup.exe
+          name: dosbox-staging-${{ env.version_number }}-setup.exe
           path: ${{ github.workspace }}\out\dosbox-staging-${{ env.version_number }}-setup.exe
-          compression-level: 0
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:
@@ -443,7 +442,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API
