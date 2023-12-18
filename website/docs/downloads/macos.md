@@ -52,8 +52,8 @@ to reproduce some issues).
 
 ## Hardware requirements
 
-This package is compatible with macOS 10.15 (Catalina) or newer and supports
-both 64-bit Intel and Apple silicon Macs.
+The latest release is compatible with macOS 10.15 (Catalina) or newer and
+supports both 64-bit Intel and Apple silicon Macs.
 
 ## Development snapshot builds
 
