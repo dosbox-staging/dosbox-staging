@@ -15,8 +15,8 @@ So what's next? Try setting up a few more games yourself; peruse the various
 configuration options in the default configuration; look around on [our
 wiki](https://github.com/dosbox-staging/dosbox-staging/wiki); familiarise
 yourself with our [feature highlights](https://dosbox-staging.github.io/);
-read the release notes on our [downloads
-page](https://dosbox-staging.github.io/downloads/windows/)---there are plenty
+read the release notes on our [releases
+page](https://dosbox-staging.github.io/releases/windows/)---there are plenty
 of learning opportunities if you wish to delve deeper!
 
 If you're stuck with something, you can always ask questions from the DOSBox

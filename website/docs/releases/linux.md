@@ -3,9 +3,11 @@ hide:
   - footer
 ---
 
-# Linux builds
+# Linux releases
 
 ## Project-released tarball
+
+### Current stable version
 
 [Download DOSBox Staging 0.80.1 (tar.xz)][0_80_1]
 <br>
@@ -14,10 +16,29 @@ sha256: 12582a6496b1a276cd239e6b3d21ddfc<wbr>d51fd8f9e40a1ebbc0a3800e0636190a
 </small>
 
 Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn
-about the changes and improvements introduced by this release.
+about the changes and improvements introduced in this release.
 
 Our pre-compiled builds run on most Linux distributions (x86\_64 only
 for now). They depend on the following packages:
+
+### 0.81.0 release candidate
+
+!!! warning "Release candidate warning"
+
+    Release candidates are intended for experienced early adopters willing to
+    help us stabilise the next DOSBox Staging version for the final release.
+    Regular users should download the [current stable version](#current-stable-version)
+    instead.
+
+    - [Download DOSBox Staging 0.81.0-RC1 (tar.xz)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-RC1/dosbox-staging-linux-v0.81.0-RC1.tar.xz)
+      <br>
+      <small>
+      sha256: 12582a6496b1a276cd239e6b3d21ddfc<wbr>d51fd8f9e40a1ebbc0a3800e0636190a
+      </small>
+
+    Check out the [0.81.0-RC release notes](release-notes/0.81.0-rc.md) to learn
+    about the changes and improvements introduced in this release.
+
 
 ### Install dependencies on Fedora
 
@@ -121,7 +142,7 @@ These [snapshot builds](development-builds.md) might be slow or unstable as they
 are designed with developers and testers in mind.
 
 
-## Older builds
+## Older releases
 
 - [DOSBox Staging 0.80.0 (tar.xz)][0_80_0]
   <br>
