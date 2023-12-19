@@ -21,7 +21,7 @@ so-called *default configuration* file in a standard location with the name
 `dosbox-staging.conf`. This file contains the full list of available settings
 with their default values, plus a short explanatory text for each.
 
-For example, this is the description of the `viewport_resolution` setting:
+For example, this is the description of the `viewport` setting:
 
     Set the viewport size (drawable area) within the window/screen:
       fit:       Fit the viewport to the available window/screen (default).
@@ -472,19 +472,16 @@ It's also worth restricting the image size to mimic that of a period-correct
 
 ```ini
 [render]
-glshader = crt/aperture
-
-[sdl]
-viewport_resolution = 1120x840
+viewport = 1120x840
 ```
 
 <div class="image-grid" markdown>
 
 <figure markdown>
-  ![Indiana Jones and the Last Crusade -- EGA (as displayed by VGA monitors)](https://archive.org/download/dosbox-staging-v0.82.0-indy3-ega/indy-ega.png){ loading=lazy }
+  ![Indiana Jones and the Last Crusade -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.82.0-indy3-ega/indy-ega.png){ loading=lazy }
 
   <figcaption markdown>
-  Indiana Jones and the Last Crusade ---<br>EGA (as displayed by VGA monitors)
+  Indiana Jones and the Last Crusade ---<br>EGA as displayed on VGA monitors
   </figcaption>
 </figure>
 
@@ -501,10 +498,10 @@ viewport_resolution = 1120x840
 <div class="image-grid" markdown>
 
 <figure markdown>
-  ![The Secret of Monkey Island -- EGA (as displayed by VGA monitors)](https://archive.org/download/dosbox-staging-v0.82.0-monkey-ega/monkey-ega.png){ loading=lazy }
+  ![The Secret of Monkey Island -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.82.0-monkey-ega/monkey-ega.png){ loading=lazy }
 
   <figcaption markdown>
-  The Secret of Monkey Island ---<br>EGA (as displayed by VGA monitors)
+  The Secret of Monkey Island ---<br>EGA as displayed on VGA monitors
   </figcaption>
 </figure>
 
@@ -521,10 +518,10 @@ viewport_resolution = 1120x840
 <div class="image-grid" markdown>
 
 <figure markdown>
-  ![Loom -- EGA (as displayed by VGA monitors)](https://archive.org/download/dosbox-staging-v0.82.0-loom-ega/loom-ega.png){ loading=lazy }
+  ![Loom -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.82.0-loom-ega/loom-ega.png){ loading=lazy }
 
   <figcaption markdown>
-  Loom --- EGA (as displayed by VGA monitors)
+  Loom --- EGA as displayed on VGA monitors
   </figcaption>
 </figure>
 
@@ -618,14 +615,11 @@ fullscreen = on
 # uncomment for Tandy sound
 #machine = tandy
 
-[sdl]
-viewport_resolution = 1120x840
-
 [mouse]
 mouse_capture = onstart
 
 [render]
-glshader = crt/aperture
+viewport = 1120x840
 
 [sblaster]
 # uncomment for Game Blaster audio
