@@ -3,9 +3,11 @@ hide:
   - footer
 ---
 
-# Windows builds
+# Windows releases
 
-## Windows 8.x or newer
+## Current stable version
+
+### Windows 8.x or newer
 
 [Download DOSBox Staging 0.80.1 64-bit (Installer)][0_80_1_x64_INSTALLER]
 <br>
@@ -26,14 +28,14 @@ sha256: 63a8c5b084231364961f7c8b6415e446<wbr>22c5ab9822e49839c2aca1bddd3a9459
 </small>
 
 Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
-the changes and improvements introduced by this release.
+the changes and improvements introduced in this release.
 
 !!! important
 
     If Windows 8.x or Windows 10 prevents you from running DOSBox Staging via
     Microsoft Defender SmartScreen, see the [section below](#microsoft-defender-smartscreen).
 
-## Windows 7
+### Windows 7
 
 For 64-bit Windows 7, use the 64-bit MSVC build. It can be optionally selected
 in the [installer][0_80_1_x64_INSTALLER] and is also available as a [portable
@@ -41,7 +43,7 @@ ZIP archive][0_80_1_x64_ZIP].
 
 For 32-bit Windows 7, use the 32-bit MSVC build [portable ZIP archive][0_80_1_x32_ZIP]
 
-## Windows Vista
+### Windows Vista
 
 The official distribution packages only support Windows Vista up to version
 0.78.1.
@@ -51,6 +53,37 @@ Slirp support. Please see the [Windows MSYS2 build instructions][win-build]
 for further details.
 
 [win-build]: https://github.com/dosbox-staging/dosbox-staging/blob/main/docs/build-windows.md#build-using-msys2
+
+## 0.81.0 release candidate
+
+!!! warning "Release candidate warning"
+
+    Release candidates are intended for experienced early adopters willing to
+    help us stabilise the next DOSBox Staging version for the final release.
+    Regular users should download the [current stable version](#current-stable-version)
+    instead.
+
+    - [Download DOSBox Staging 0.81.0-RC1 64-bit (Installer)]()
+      <br>
+      <small>
+      sha256: 94b961f397f3b70a13daf3b573857b52<wbr>62515e75d490bfc19f019479fe1694f8
+      </small>
+
+    - [Download DOSBox Staging 0.81.0-RC1 64-bit (zip)]()
+      <br>
+      <small>
+      sha256: e7ab98013b55f6fd6db1f529574b8f29<wbr>05d374225f532ce0905666281cbe32af
+      </small>
+
+    - [Download DOSBox Staging 0.81.0-RC1 32-bit (zip)]()
+      <br>
+      <small>
+      sha256: 63a8c5b084231364961f7c8b6415e446<wbr>22c5ab9822e49839c2aca1bddd3a9459
+      </small>
+
+    Check out the [0.81.0-RC release notes](release-notes/0.81.0-rc.md) to learn
+    about the changes and improvements introduced in this release.
+
 
 ## Hardware requirements
 
@@ -113,7 +146,7 @@ The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php). For
 command-line install parameters, please see [Inno's documentation page](https://jrsoftware.org/ishelp/index.php?topic=setupcmdline).
 
 
-## Older builds
+## Older releases
 
 - [DOSBox Staging 0.80.0 64-bit (Installer)][0_80_0_x64_INSTALLER] (Windows 7 or newer)
   <br>

@@ -56,8 +56,31 @@ small {
   margin-bottom: 0.1rem;
 }
 
+/* Dev site banner */
+.dev-site {
+  display: none;
+}
+.show {
+  display: block !important;
+}
+.banner.dev-site {
+  background: #cc3010;
+  text-align: center;
+  padding: 0.8rem;
+  position: sticky;
+}
+.banner.dev-site p {
+  color: #ff9;
+  font-size: 0.80rem;
+  margin: 0.1rem;
+}
+.banner.dev-site a {
+  font-weight: bold;
+  text-decoration: underline;
+}
+
 /* Header */
-@media screen and (min-width: 76.25em){
+@media screen and (min-width: 76.25em) {
   .md-header__title {
     padding-left: 4.2rem;
   }
