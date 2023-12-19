@@ -1602,7 +1602,8 @@ Obsługiwane przez COMMAND.COM z systemów MS-DOS 7/8 oraz FreeDOS.
 .
 :CONFIG_SHELL_HISTORY_FILE
 Nazwa pliku przechowującego historię wiersza poleceń pomiędzy sesjami
-(domyślnie 'shell_history.txt').
+(domyślnie 'shell_history.txt'). Wartość pusta wyłącza przechowywanie
+historii.
 .
 :CONFIG_SETVER_TABLE_FILE
 Plik z tabelą programów i przypisanych do nich wersji systemu DOS, w formacie
