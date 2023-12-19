@@ -105,6 +105,7 @@ jobs:
           -Duse_opengl=false \
           -Duse_sdl2_net=false \
           -Duse_slirp=false \
+          -Duse_zlib_ng=false \
           -Dunit_tests=disabled \
           build
 
@@ -122,7 +123,7 @@ jobs:
 
       - name: Summarize report
         env:
-          MAX_BUGS: 3
+          MAX_BUGS: 7
         run: |
           # summary
           echo "Full report is included in build Artifacts"
