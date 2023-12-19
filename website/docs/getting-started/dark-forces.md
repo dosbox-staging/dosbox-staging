@@ -606,7 +606,9 @@ Here's the full config of Dark Forces set up for General MIDI sound:
 ```ini
 [sdl]
 fullscreen = on
-viewport_resolution = 1120x840
+
+[render]
+viewport = 1120x840
 
 [cpu]
 # to emulate a Pentium 90

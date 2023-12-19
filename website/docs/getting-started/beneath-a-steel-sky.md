@@ -826,7 +826,7 @@ fullscreen:
 ```ini
 [render]
 aspect = off
-viewport_resolution = 1280x800
+viewport = 1280x800
 ```
 
 <figure markdown>
@@ -955,12 +955,10 @@ cycles = 12000
 
 [sdl]
 fullscreen = on
-viewport_resolution = 1280x800
 
 [render]
 aspect = off
-# uncomment for VGA CRT emulation on a 4K display
-#glshader = crt/aperture
+viewport = 1280x800
 
 [sblaster]
 sbmixer = off

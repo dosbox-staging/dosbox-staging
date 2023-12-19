@@ -5,11 +5,17 @@
 Welcome to the DOSBox Staging getting started guide!
 
 This guide will gently introduce you to the wonderful world of DOSBox by
-setting up a few example games from scratch. It's written in the spirit of
-"teaching a man how to fish"---the games are only vehicles to teach you the
-basics that you can apply to any DOS game you wish to play later.
-Consequently, the choice of games doesn't matter that much (although we tried
-to pick from the all-time classics).
+setting up a few example games from scratch. Although it's primarily intended
+for newcomers unfamiliar with DOSBox and DOS emulation in general, it's a
+recommended read for people already comfortable with other DOSBox variants but
+not DOSBox Staging. And even if you're a [long-time Staging
+user](#a-note-for-existing-dosbox-staging-users), we're quite certain you will
+learn a few new useful things and techniques from it.
+
+The guide has been written in the spirit of "teaching a man how to fish"---the
+games are only vehicles to teach you the basics that you can apply to any DOS
+game you wish to play later. Consequently, the choice of games doesn't matter
+that much (although we tried to pick from the all-time classics).
 
 To get the most out of this guide, don't just *read* the instructions but
 *perform* all the steps yourself! Later chapters build on concepts introduced
@@ -20,7 +26,7 @@ issues is what this is all about. All necessary files will be provided and no
 familiarity with IBM PCs and the MS-DOS environment is required---everything
 you need to know will be explained as we go. The only assumption is that you
 can perform basic everyday computer tasks, such as copying files, unpacking
-ZIP archives, and editing text files. 
+ZIP archives, and editing text files.
 
 The guide has been written so that everyone can follow it with ease,
 regardless of their operating system of choice (e.g., Windows users probably
@@ -33,12 +39,13 @@ much joy as we're having developing it!
 
 ## Installing DOSBox Staging
 
-If you already have other versions of DOSBox on your computer, installing
-DOSBox Staging won't interfere with them at all. Experienced users can
-certainly use multiple DOSBox variants on the same machine without problems,
-but if you're a beginner, we recommend starting with a clean slate to avoid
-confusing yourself. Make sure you've removed all other DOSBox versions from
-your machine first, then proceed with the DOSBox Staging installation steps.
+You must use the latest stable version of DOSBox Staging for this guide. If
+you already have other versions of DOSBox on your computer, installing DOSBox
+Staging won't interfere with them at all. Experienced users can certainly use
+multiple DOSBox variants on the same machine without problems, but if you're a
+beginner, we recommend starting with a clean slate to avoid confusing
+yourself. Make sure you've removed all other DOSBox versions from your machine
+first, then proceed with the DOSBox Staging installation steps.
 
 <h3>Windows</h3>
 
@@ -52,7 +59,8 @@ Make sure to read the section about dealing with [Microsoft Defender SmartScreen
 
 Download the latest universal binary from our [macOS
 downloads](../downloads/macos.md) page, then simply drag the DOSBox Staging
-icon into your Applications folder. Both Intel and M1 Macs are supported.
+icon into your Applications folder. Both Intel and Apple silicon are
+supported.
 
 Don't delete the `.dmg` installer disk image just yet---we'll need it later.
 
@@ -96,7 +104,7 @@ for macOS which is perfect for the job.
     When editing DOSBox configuration files in TextMate, it's best to set
     syntax highlighting to the *Properties* file format as shown in the below
     screenshot (it's the combo-box to the left of the *Tab Size* combo-box in
-    the footer).
+    the status bar).
 
 <figure markdown>
   ![Editing a DOSBox configuration file in TextMate](https://archive.org/download/dosbox-staging-getting-started-guide-assets/textmate.png){ loading=lazy }
@@ -106,6 +114,46 @@ for macOS which is perfect for the job.
 <h3>Linux</h3>
 
 We're pretty sure Linux users don't need any help and have their favourite
-text editors already. And, of course, everyone knows **vim** is the best!
-:sunglasses:
+text editors at hand already. And, of course, everybody knows **vim** is the
+best! :sunglasses:
 
+
+## A note for existing DOSBox Staging users
+
+If you already have DOSBox Staging installed on your computer, or if you have
+used it in the past but have uninstalled it, most likely you have a primary
+configuration file named `dosbox-staging.conf` somewhere on your drive (this
+is also referred to as the global configuration).
+
+The guide assumes the default settings of the latest stable release, so it's
+highly recommended to remove any existing primary configuration files first
+(but make sure to back them up). If the primary config does not exist, DOSBox
+Staging will create it on the first launch. If it exists, it will be used, but
+the defaults of some settings might have changed between releases, or
+you might have tweaked some settings yourself. These differences may render
+the instructions in the guide invalid as the defaults are assumed.
+
+This is where the primary config is located on each platform:
+
+<div class="compact" markdown>
+
+| <!-- --> | <!-- -->
+|----------|----------
+| **Windows**  | `C:\Users\%USERNAME%\AppData\Local\DOSBox\dosbox-staging.conf`
+| **macOS**    | `~/Library/Preferences/DOSBox/dosbox-staging.conf`
+| **Linux**    | `~/.config/dosbox/dosbox-staging.conf`
+
+</div>
+
+You can simply change the extension of `dosbox-staging.conf` from `.conf` to
+`.bak`. DOSBox Staging will write a brand new default config the next time you
+start it.
+
+### Portable mode notes
+
+If you've been using DOSBox Staging in portable mode, `dosbox-staging.conf` is
+located in the same folder as your DOSBox Staging executable. In that case,
+it's recommended to back up your existing primary config, then create a new
+empty `dosbox-staging.conf` file in the executable folder. DOSBox Staging will
+write the new defaults to the empty `dosbox-staging.conf` file on the first
+launch.

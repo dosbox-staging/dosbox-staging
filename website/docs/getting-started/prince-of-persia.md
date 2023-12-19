@@ -33,20 +33,20 @@ executable). Let's open `pop1.txt` in our text editor!
 I'm not quite sold on the "heart-stopping" part, but otherwise sounds
 intriguing! As indicated by the second paragraph, this is a fully playable
 demo version that includes only the first two levels of the game. That's more
-than enough for our purposes here, and you can always get the full game later.
+than enough for our purposes here; you can always get the full game later.
 
 But there are no further instructions, so what should we do next? Well,
 setting up old DOS games is not all that dissimilar to solving adventure game
 puzzles. Getting past these puzzles requires some logical thinking, a little
 bit of background knowledge, and an element of trial and error is occasionally
 involved as well. Well, the user manual often helps too if you happen to own
-the original, or can procure a [scanned copy][pop-manual] online (most often
+the original or can procure a [scanned copy][pop-manual] online (most often
 you can).
 
 [pop-manual]: https://ia600809.us.archive.org/29/items/princeofpersia_201708_201708/prince-of-persia_dos_04ra.pdf
 
 Luckily, this is an easy one: executable files (programs or scripts you can
-start) under MS-DOS have the `.EXE`, `.COM` or `.BAT` file extension, so looking
+start) under MS-DOS have the `.EXE`, `.COM` or `.BAT` file extension. Looking
 at `pop1demo.exe` the solution is quite obvious: we'll need to run this
 executable file in DOSBox!
 
@@ -67,8 +67,8 @@ inside your game folder. This `drives` folder is a "magic" folder with a
 special purpose: all its subfolders having single-letter names are
 automatically mounted as DOS drives with the same letter. In our case, we only
 need a single C drive, so we'll create a `c` subfolder inside our `drives`
-folder (technically, it does not make a difference if you use uppercase or
-lowercase `C` on Windows and macOS; Linux people should use lowercase `c`).
+folder (technically, it does not make a difference whether you use uppercase or
+lowercase `C` on Windows and macOS but it does in Linux).
 We'll then copy the files from the `pop1.zip` archive into `drives/c` to end
 up with the following folder structure:
 
@@ -198,9 +198,9 @@ The first line is pretty straightforward---it tells us that DOSBox mounted
 The second line is the DOS prompt. DOS has a command line interface that
 predates graphical user interfaces we're accustomed to from modern operating
 systems. We get DOS to do things by typing in commands, and if manage to do
-this correctly, DOS will follow our instructions to the letter (pun intended!)
-DOS is *not* a multitasking operating system; you can only do a single
-thing in it at any given point in time.
+this correctly, DOS will follow our instructions to the letter (pun intended).
+DOS is *not* a multitasking operating system; you can only do a single thing
+in it at any given point in time.
 
 Let's analyse the prompt a little bit. It always starts with a letter followed
 by a semicolon which denotes the current drive. Right after startup, this is
@@ -304,11 +304,12 @@ C:\>_
 
 !!! note "FAT filesystem"
 
-    MS-DOS uses the *FAT filesystem* that allows up to 8-character filenames,
-    followed optionally by a file extension consisting of a dot and at most
-    three further characters. Filenames can only contain uppercase letters,
-    digits, and certain special characters, such as the dash (`-`), underscore
-    (`_`), and the exclamation mark (`!`).
+    MS-DOS uses the *FAT filesystem* (nothing to do with body weight) that
+    allows up to 8-character filenames, followed optionally by a file
+    extension consisting of a dot and at most three further characters.
+    Filenames can only contain uppercase letters, digits, and certain special
+    characters, such as the dash (`-`), underscore (`_`), and the exclamation
+    mark (`!`).
 
     The two files we originally copied to our `drives/c` folder had all
     lowercase filenames (`pop1.txt` and `pop1demo.exe`). This does not matter
@@ -349,13 +350,13 @@ If you keep watching, the game will enter demo mode, where the protagonist
 will soon meet his untimely death... Surely, we can do better than that! Press
 any key to start the game!
 
-You control the prince with the cursor keys, and you can walk carefully by
-holding the ++shift++ key. It's not that hard to figure out the various
-movement combinations on your own, but reading the *Controlling Your
-Movements* section of the [user
+You can control the prince with the cursor keys. Hold down the ++shift++ key
+to walk carefully. It's not that hard to figure out the various movement
+combinations on your own, but reading the *Controlling Your Movements* section
+of the [user
 manual](https://ia600809.us.archive.org/29/items/princeofpersia_201708_201708/prince-of-persia_dos_04ra.pdf)
-should definitely help. The manual also contains helpful hints and a full list
-of keyboard shortcuts you can use during the game.
+should definitely help. The manual also contains helpful hints and the full
+list of available keyboard shortcuts.
 
 <figure markdown>
   ![This is where the adventure starts!](https://archive.org/download/dosbox-staging-v0.82.0-prince-of-persia-vga/pop-vga.png){ loading=lazy width=88%  }
@@ -372,7 +373,7 @@ maybe even attempt to complete the first level.
 You can quit the game by pressing ++ctrl+q++ which will return you to the DOS
 prompt. There you can use the `exit` command to close DOSBox. Of course, you
 can quit DOSBox any time by pressing ++alt+f4++ on Windows and Linux, or
-++cmd+q++ on macOS.
+++cmd+q++ on macOS. 
 
 !!! note
 
@@ -397,18 +398,64 @@ can quit DOSBox any time by pressing ++alt+f4++ on Windows and Linux, or
     such difficult games have few parallels in the modern gaming landscape.
 
 
+## Authentic CRT monitor emulation
+
+DOSBox Staging includes a cathode-ray tube (CRT) monitor emulation feature
+which is enabled by default. It strives to achieve authentic, period-correct
+results; the look of PC CRT monitors from the 1980s and 1990s have been
+painstakingly recreated via shaders as accurately as current technology
+allows. These monitors exhibit certain characteristic peculiarities when
+displaying low-resolution graphics; you can think of them as "built-in
+filters" that can never be disabled. Artists of the era had to embrace and
+work with these peculiarities, and people playing DOS games on their CRTs
+saw the art through the same "filters" as the artists.
+
+For this reason, many people who grew up with CRTs think that once these
+filters are "digitally removed" by drawing the pixels as sharp little
+rectangles on modern flat screens, the art looks bland, sterile, and loses its
+"analog magic". That's the main reason behind enabling the CRT emulation by
+default, to give people a chance to see the art of DOS games in their full
+glory as the developers intended.
+
+The remarkable thing about the feature is that it's "zero config"---it
+automatically adapts to the changing circumstances to always produce the
+correct CRT look based on the emulated graphics adapter, the current DOS video
+mode, the window size, and the native resolution of your monitor. You don't
+need to think about it or tinker with it, **It Just Works(tm)** :sunglasses:
+
+We'll showcase the authentic CRT emulation throughout the guide, but if you
+prefer sharp pixels, we'll explain how to achieve that in the next chapter.
+
+
+!!! warning
+
+    Screenshots of CRT shaders in action *need* to be viewed at 100%
+    magnification; otherwise, you might see strange wavy interference patterns
+    caused by the browser rescaling the images. These unwanted
+    artifacts can sometimes
+    resemble repeating rainbow-like patterns, and rest assured, that's *not*
+    how CRT emulation is supposed to look in DOSBox Staging!
+
+    To view a screenshot featuring a CRT shader properly, click on the image
+    to enlarge it, then if your mouse cursor looks like a magnifying glass,
+    click on the image again to display it at 100% magnification.
+
+
+
+
 ## Auto-executing commands at startup
 
 Every time we want to play the game, we need to type in DOS commands to switch
 to the C drive and run `PRINCE.EXE` from there. Isn't there a way to
-automate this?
+automate that?
 
 There certainly is! We need to create a so-called
 *configuration file* that can contain various settings to customise the
 behaviour of DOSBox, along with a list of commands to auto-execute at startup.
 
-Launch your text editor of choice and create a new plain text file called
-`dosbox.conf` inside the `Prince of Persia` folder with the following content:
+Launch your [text editor of choice](introduction.md#other-stuff-well-need) and
+create a new plain text file called `dosbox.conf` inside the `Prince of
+Persia` folder with the following content:
 
 ```ini
 [autoexec]
@@ -426,7 +473,8 @@ brackets; everything that follows belongs to that section.
     Some text editors insist on appending the `.txt` extension after the
     filename you enter in their save dialog. This might result in creating a
     file called `dosbox.conf.txt` which won't work. Get to know your text
-    editor and make sure you save the configuration file as `dosbox.conf`
+    editor and make sure you save the configuration file with the `.conf`
+    extension only as `dosbox.conf`
 
 When DOSBox starts, it looks for this special `dosbox.conf` file in the folder
 it was started from, and if it finds it, it configures the DOS environment and
@@ -456,17 +504,17 @@ DOSBox Staging to our advantage!
     As explained on our [about page](../about/index.md), DOSBox Staging is a
     modern continuation of the original DOSBox project. Technically, DOSBox
     Staging is an open-source fork of and separate project from the
-    SourceForge-hosted DOSBox project.
+    [SourceForge-hosted DOSBox project](https://sourceforge.net/projects/dosbox/).
 
     Generally, we use "DOSBox Staging" when we discuss features specific to
     Staging, or when we talk about the DOSBox Staging application, installer,
     or process itself. But when mentioning base functionality present in the
-    original DOSBox and pretty much all other DOSBox variants, we simply write
+    original DOSBox and pretty much all other DOSBox variants, we simply say
     "DOSBox". Admittedly, sometimes the distinction gets rather blurry, and
     seeing "DOSBox Staging" fully typed out everywhere would get old rather
     quickly!
 
     Using the term "DOSBox" is also a nod to the original DOSBox developers to
     whom we are grateful for starting this awesome open-source project in the
-    first place!
+    first place.
 
