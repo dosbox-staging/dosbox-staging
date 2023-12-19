@@ -5,7 +5,7 @@ hide:
 
 # About
 
-[![DOSBox Staging](../assets/images/dosbox-staging.svg){ align=right width=40% }](https://dosbox-staging.github.io/)
+[![DOSBox Staging](../assets/images/dosbox-staging-no-border.svg){ align=right width=33% .about-logo }](https://dosbox-staging.github.io/)
 
 **DOSBox Staging** is a modern continuation of DOSBox with advanced features
 and current development practices.

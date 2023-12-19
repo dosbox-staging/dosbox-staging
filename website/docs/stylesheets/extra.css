@@ -150,126 +150,152 @@ small {
   box-shadow: none;
 }
 
-
+/* Admonition - Note */
 .md-typeset .admonition.note,
 .md-typeset details.note {
   background: #448aff1a;
 }
-.md-typeset .admonition.note .admonition-title,
-.md-typeset details.note summary {
-  background: #448aff30 !important;
+.md-typeset .note > .admonition-title,
+.md-typeset .note > summary {
+    background-color: #448aff30;
 }
 
+/* Admonition - Abstract */
 .md-typeset .admonition.abstract,
 .md-typeset details.abstract {
   background: #00b0ff1a;
 }
-.md-typeset .admonition.abstract .admonition-title,
-.md-typeset details.abstract summary {
-  background: #00b0ff30 !important;
+.md-typeset .abstract > .admonition-title,
+.md-typeset .abstract > summary {
+    background-color: #00b0ff30;
 }
 
+/* Admonition - Info */
 .md-typeset .admonition.info,
 .md-typeset details.info {
   background: #00b8d41a;
 }
-.md-typeset .admonition.info .admonition-title,
-.md-typeset details.info summary {
-  background: #00b8d430 !important;
+.md-typeset .info > .admonition-title,
+.md-typeset .info > summary {
+    background-color: #00b8d430;
 }
 
+/* Admonition - Important */
 .md-typeset .admonition.important,
-.md-typeset details.important,
+.md-typeset details.important {
+  background: #00bfa51a;
+}
+.md-typeset .important > .admonition-title,
+.md-typeset .important > summary {
+    background-color: #00bfa530 ;
+}
+.md-typeset .important > .admonition-title:before,
+.md-typeset .important > summary:before {
+    background-color: #00bfa5;
+}
+
+/* Admonition - Tip */
 .md-typeset .admonition.tip,
 .md-typeset details.tip {
   background: #00bfa51a;
 }
-.md-typeset .admonition.important .admonition-title,
-.md-typeset details.important summary,
-.md-typeset .admonition.tip .admonition-title,
-.md-typeset details.tip summary {
-  background: #00bfa530 !important;
+.md-typeset .tip > .admonition-title,
+.md-typeset .tip > summary {
+    background-color: #00bfa530 ;
 }
 
+/* Admonition - Success */
 .md-typeset .admonition.success,
 .md-typeset details.success {
   background: #00c8531a;
 }
-.md-typeset .admonition.success .admonition-title,
-.md-typeset details.success summary {
-  background: #00c85330 !important;
+.md-typeset .success > .admonition-title,
+.md-typeset .success > summary {
+    background-color: #00c85330 ;
 }
 
+/* Admonition - Question */
 .md-typeset .admonition.question,
 .md-typeset details.question {
   background: #00b07020;
 }
-.md-typeset .admonition.question .admonition-title,
-.md-typeset details.question summary {
-  background: #00b07040 !important;
+.md-typeset .question > .admonition-title,
+.md-typeset .question > summary {
+    background-color: #00b07040;
 }
 
+/* Admonition - Warning */
 .md-typeset .admonition.warning,
 .md-typeset details.warning {
   background: #ff91001a;
 }
-.md-typeset .admonition.warning .admonition-title,
-.md-typeset details.warning summary {
-  background: #ff910030 !important;
+.md-typeset .warning > .admonition-title,
+.md-typeset .warning > summary {
+    background-color: #ff910030;
 }
 
+/* Admonition - Danger */
 .md-typeset .admonition.danger,
 .md-typeset details.danger {
   background: #f017341a;
 }
-.md-typeset .admonition.danger .admonition-title,
-.md-typeset details.danger summary {
-  background: #f0173430 !important;
+.md-typeset .danger > .admonition-title,
+.md-typeset .danger > summary {
+    background-color: #f0173430;
+}
+.md-typeset .danger > .admonition-title:before,
+.md-typeset .danger > summary:before {
+    background-color: #ff1744;
 }
 
+/* Admonition - Failure */
 .md-typeset .admonition.failure,
 .md-typeset details.failure {
   background: #ff52521a;
 }
-.md-typeset .admonition.failure .admonition-title,
-.md-typeset details.failure summary {
-  background: #ff525230 !important;
+.md-typeset .failure > .admonition-title,
+.md-typeset .failure > summary {
+    background-color: #ff525230;
 }
 
+/* Admonition - Bug */
 .md-typeset .admonition.bug,
 .md-typeset details.bug {
   background: #f500571a;
 }
-.md-typeset .admonition.bug .admonition-title,
-.md-typeset details.bug summary {
-  background: #f5005730 !important;
+.md-typeset .bug > .admonition-title,
+.md-typeset .bug > summary {
+    background-color: #f5005730;
 }
 
+/* Admonition - Example */
 .md-typeset .admonition.example,
 .md-typeset details.example {
   background: #3c10f016;
 }
-.md-typeset .admonition.example .admonition-title,
-.md-typeset details.example summary {
-  background: #3c10f030 !important;
+.md-typeset .example > .admonition-title,
+.md-typeset .example > summary {
+    background-color: #3c10f030;
 }
 
+/* Admonition - Quote */
 .md-typeset .admonition.quote,
 .md-typeset details.quote {
   background: #9e9e9e20;
 }
-.md-typeset .admonition.quote .admonition-title,
-.md-typeset details.quote summary {
-  background: #9e9e9e40 !important;
+.md-typeset .quote > .admonition-title,
+.md-typeset .quote > summary {
+    background-color: #9e9e9e40;
 }
 
-.md-typeset :-webkit-any(.question,.help,.faq)>:-webkit-any(.admonition-title,summary):before{
+/* Admonition - Question, Help, FAQ */
+.md-typeset :-webkit-any(.question,.help,.faq)>:-webkit-any(.admonition-title,summary):before {
   background-color: #00b070;
 }
-.md-typeset :-moz-any(.question,.help,.faq)>:-moz-any(.admonition-title,summary):before{
+.md-typeset :-moz-any(.question,.help,.faq)>:-moz-any(.admonition-title,summary):before {
   background-color: #00b070;
 }
-.md-typeset :is(.question,.help,.faq)>:is(.admonition-title, summary):before{
+.md-typeset :is(.question,.help,.faq)>:is(.admonition-title, summary):before {
   background-color: #00b070;
 }
 
@@ -335,7 +361,7 @@ img.linux-badge {
   max-width: 260px !important;
 }
 
-@media screen and (min-width: 30em){
+@media screen and (min-width: 30em) {
   .md-typeset .image-grid {
     display: flex;
     gap: 0.7rem;
@@ -424,6 +450,7 @@ img.linux-badge {
   --md-accent-fg-color--transparent: #f500561a;
   --md-accent-bg-color: #fff;
   --md-accent-bg-color--light: #ffffffb3;
+  --md-typeset-kbd-color: #fffffff0;
 }
 :root, [data-md-color-scheme=default] {
   --md-default-fg-color: #333;
@@ -454,7 +481,7 @@ figcaption {
 /* Front page                                                               */
 /*--------------------------------------------------------------------------*/
 .front-page {
-  background: linear-gradient(#d2d2d2, #fff);
+  background: linear-gradient(#c6c6c6, #fff);
 }
 .front-page-inner {
   max-width: 56rem;
@@ -470,8 +497,11 @@ figcaption {
   text-align: center;
 }
 .front-page .header .logo img {
-  width: 50%;
-  max-width: 16rem;
+  margin-top: 0.8rem;
+  margin-bottom: 0.5rem;
+  width: 32%;
+  max-width: 11rem;
+  filter: drop-shadow(#00000020 0.3rem 0.4rem 1.0rem);
 }
 .front-page .header .blurb {
   width: 100%;
@@ -493,6 +523,7 @@ figcaption {
   margin: 2.0rem auto 0 auto;
   background: #eee;
   border-radius: 0.3rem;
+  filter: drop-shadow(#00000012 0.0rem 0.3rem 0.6rem);
 }
 .front-page .header .get-it {
   margin: 0 0 1.0rem 0;
@@ -625,16 +656,26 @@ figcaption {
 @media screen and (min-width: 60em) {
   .front-page .header {
     display: flex;
-    margin-top: 1rem;
-    gap: 0.8rem;
+    margin-left: 2rem;
+    gap: 1.8rem;
   }
   .front-page .header .logo img {
-    width: 17rem;
+    width: 14rem;
+    margin-top: 1.1rem;
     max-width: none;
   }
   .front-page .features {
     flex-basis: calc((100% - (1.2rem * 2)) / 3);
   }
+}
+
+/*--------------------------------------------------------------------------*/
+/* About page                                                               */
+/*--------------------------------------------------------------------------*/
+
+.about-logo {
+  padding: 0 1rem 1rem 1rem;
+  filter: drop-shadow(#00000052 0.2rem 0.3rem 0.6rem);
 }
 
 /*--------------------------------------------------------------------------*/
