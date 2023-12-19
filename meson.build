@@ -243,6 +243,118 @@ if os_family_name == 'BSD'
     extra_link_flags += ['-Wl,-z,wxneeded']
 endif
 
+# SIMD assessment for optimized builds with zlib-ng
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# If the user asked for 'native' SIMD flags then we check if
+# their compiler supports the native arch type. If it doesn't,
+# we try to enable NEON (on Arm) and SSE2 and/or SSSE3 (on x86).
+#
+# Currently zlib-ng is the driving force behind these checks as
+# it provides a meaningful speedup in video and frame capture.
+#
+# Note that these build flags needs to be defined before adding
+# subpackages because the flags are used when compiling them.
+
+simd_summary = 'none'
+
+zlib_ng_options = get_option('use_zlib_ng')
+zlib_ng_wants_native = zlib_ng_options.contains('native')
+zlib_ng_is_native = zlib_ng_wants_native and cc.has_argument('-march=native')
+
+if is_optimized_buildtype and zlib_ng_is_native
+    extra_flags += '-march=native'
+    simd_summary = 'native'
+    message('Enabling native SIMD optimizations')
+
+elif is_optimized_buildtype and zlib_ng_wants_native
+    # Wanted native SIMD but couldn't get it, so
+    # lets test and enable some basic ones for them.
+    #
+    # NEON
+    # ~~~~~
+    neon_cflag = '-mfpu=neon-vfpv4'
+    if target_machine.cpu_family() == 'aarch64'
+        # aarch64 always supports NEON:
+        # ref: https://developer.arm.com/documentation/den0024/a/AArch64-Floating-point-and-NEON
+        zlib_ng_options += ['neon']
+        extra_flags += neon_cflag
+        simd_summary = 'NEON'
+        message('Host supports ARM NEON instruction set')
+
+    elif host_machine.cpu_family() == 'arm'
+        neon_test_code = '''
+            #include <arm_neon.h>
+            int main() {
+            uint8x16_t a = vdupq_n_u8(0);
+            uint8x16_t b = vdupq_n_u8(0);
+            uint8x16_t result = vaddq_u8(a, b);
+            return 0;
+            }
+        '''
+        neon_test = cc.run(
+            neon_test_code,
+            args: neon_cflag,
+            name: 'ARM NEON instruction set test',
+        )
+        if (neon_test.compiled() and neon_test.returncode() == 0)
+            zlib_ng_options += ['neon']
+            extra_flags += neon_cflag
+            simd_summary = 'NEON'
+            message('Enabling the ARM NEON instruction set')
+        endif
+
+    elif target_machine.cpu_family().startswith('x86')
+        # SSE2
+        # ~~~~
+        sse2_test_code = '''
+            #include <emmintrin.h>
+            int main() {
+            __m128i a = _mm_setzero_si128();
+            __m128i b = _mm_setzero_si128();
+            __m128i result = _mm_add_epi32(a, b);
+            return 0;
+            }
+        '''
+        sse2_cflag = '-msse2'
+        sse2_test = cc.run(
+            sse2_test_code,
+            args: sse2_cflag,
+            name: 'SSE2 instruction set test',
+        )
+        if (sse2_test.compiled() and sse2_test.returncode() == 0)
+            zlib_ng_options += ['sse2']
+            extra_flags += sse2_cflag
+            simd_summary = 'SSE2'
+            message('Enabling the SSE2 instruction set')
+        endif
+
+        # SSSE3
+        # ~~~~~
+        ssse3_test_code = '''
+            #include <tmmintrin.h>
+            int main() {
+            __m128i a = _mm_setzero_si128();
+            __m128i b = _mm_setzero_si128();
+            __m128i result = _mm_hadd_epi16(a, b);
+            return 0;
+            }
+        '''
+        ssse3_cflag = '-mssse3'
+        ssse3_test = cc.run(
+            ssse3_test_code,
+            args: ssse3_cflag,
+            name: 'SSSE3 instruction set test',
+        )
+        if (ssse3_test.compiled() and ssse3_test.returncode() == 0)
+            zlib_ng_options += ['ssse3']
+            extra_flags += ssse3_cflag
+            simd_summary = 'SSE2 and SSSE3'
+            message('Enabling the SSSE3 instruction set')
+        endif
+    endif
+endif
+summary('SIMD instruction set', simd_summary, section: 'Build Summary')
+
 # Allow-list the flags against the compiler, and add them to the project
 foreach flag : extra_flags
     if cc.has_argument(flag)
@@ -416,7 +528,7 @@ else
     endif
 endif
 conf_data.set('PAGESIZE', pagesize)
-summary('Host page size (bytes)', pagesize.to_string())
+summary('Host page size (bytes)', pagesize.to_string(), section: 'Build Summary')
 
 
 set_prio_code = '''
@@ -526,7 +638,6 @@ sdl2_dep = dependency(
 # zlib
 # ~~~~
 zlib_dep = disabler()
-zlib_ng_options = get_option('use_zlib_ng')
 zlib_is_static = 'zlib' in static_libs_list or prefers_static_libs
 
 try_system_zlib_ng = 'auto' in zlib_ng_options or 'system' in zlib_ng_options
@@ -555,7 +666,6 @@ elif (
     cmake_module = import('cmake', required: false)
     if cmake_bin.found() and cmake_module.found()
         cmake_options = cmake_module.subproject_options()
-        zlib_ng_is_native = zlib_ng_options.contains('native')
 
         zlib_ng_defines = {
             'ZLIB_COMPAT': true,
