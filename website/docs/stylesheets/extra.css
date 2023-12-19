@@ -113,6 +113,7 @@ small {
   font-size: 0.704rem;
   letter-spacing: 0;
   clear: both;
+  background-color: rgba(0, 0, 0, 0.04);
 }
 
 /* Navigation */
@@ -148,6 +149,9 @@ small {
   font-size: 90%;
   border: none;
   box-shadow: none;
+}
+.md-typeset .admonition code {
+  background-color: rgba(0, 0, 0, 0.055);
 }
 
 /* Admonition - Note */
