@@ -1412,8 +1412,8 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		}
 		SDL_SetWindowFullscreen(sdl.window,
 		                        sdl.desktop.full.display_res
-		                                ? SDL_WINDOW_FULLSCREEN_DESKTOP
-		                                : SDL_WINDOW_FULLSCREEN);
+		                                ? enum_val(SDL_WINDOW_FULLSCREEN_DESKTOP)
+		                                : enum_val(SDL_WINDOW_FULLSCREEN));
 	} else {
 		// we're switching down from fullscreen, so let SDL use the
 		// previously-set window size
