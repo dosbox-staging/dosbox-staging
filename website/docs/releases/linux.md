@@ -30,10 +30,10 @@ for now). They depend on the following packages:
     Regular users should download the [current stable version](#current-stable-version)
     instead.
 
-    - [Download DOSBox Staging 0.81.0-RC1 (tar.xz)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-RC1/dosbox-staging-linux-v0.81.0-RC1.tar.xz)
+    - [Download DOSBox Staging 0.81.0-RC1 (tar.xz)](TODO)
       <br>
       <small>
-      sha256: 12582a6496b1a276cd239e6b3d21ddfc<wbr>d51fd8f9e40a1ebbc0a3800e0636190a
+      sha256: TODO<wbr>
       </small>
 
     Check out the [0.81.0-RC release notes](release-notes/0.81.0-rc.md) to learn

@@ -28,7 +28,7 @@ the changes and improvements introduced by this release.
     [1]:https://github.com/dosbox-staging/dosbox-staging
 
 
-### 0.81.0 release candidate
+## 0.81.0 release candidate
 
 !!! warning "Release candidate warning"
 
@@ -37,10 +37,10 @@ the changes and improvements introduced by this release.
     Regular users should download the [current stable version](#current-stable-version)
     instead.
 
-    - [Download DOSBox Staging 0.81.0-RC Universal Binary (dmg)]()
+    - [Download DOSBox Staging 0.81.0-RC1 Universal Binary (dmg)](TODO)
       <br>
       <small>
-      sha256: 46a256645255e8345981ea357f1416b8<wbr>ce4bc60a2aba9a86b5122d5075aa7fa9
+      sha256: TODO<wbr>
       </small>
 
     Check out the [0.81.0-RC release notes](release-notes/0.81.0-rc.md) to learn
