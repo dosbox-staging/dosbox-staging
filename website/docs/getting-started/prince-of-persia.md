@@ -245,6 +245,14 @@ Press ++tab++ a few more times and observe how it alternates between
 `POP1.TXT` and `POP1DEMO.EXE`; this makes sense as these are the only two
 files in the current directory that start with `pop`.
 
+!!! important "DOS filenames"
+
+    DOS filenames are always uppercase and are limited to 8 characters, plus
+    an optional 3-character file extension. It does not matter whether you
+    type in lowercase or uppercase letters because DOS will always convert
+    them to uppercase before dealing with your input. Tab completion always
+    uses uppercase because... I guess it just looks nice?
+
 Okay, let's make sure `POP1DEMO.EXE` is displayed in the prompt then press
 ++enter++ to run this executable file. It turns out this is a
 self-extracting archive that unpacks its contents into the current directory
@@ -278,7 +286,8 @@ But instead of typing in `dir *.exe`, press ++up++ a few times until `dir`
 appears in the command line, then type in the rest (++space++ character
 followed by `*.exe`). This handy feature is called *command history*---you can
 move forward and backward in the list of previously executed commands with the ++down++
-and ++up++ keys, respectively.
+and ++up++ keys, respectively. Best of all, the command history is preserved
+across DOSBox Staging restarts.
 
 Okay, so here's how the output looks like:
 
@@ -325,6 +334,14 @@ After a short loading, the title screen will appear and you'll hear the
 classic Prince of Persia intro music playing! Don't press any key yet, just
 wait and watch the intro sequence until the end to learn about the game's
 backstory.
+
+!!! tip "Running DOS programs"
+
+    To run executable files (files with the `.EXE`, `.COM` or `.BAT` file
+    extension) it's enough to type in the filename only, without the
+    extension. So you could have started the game with the `prince` command as
+    well.
+
 
 <div class="image-grid" markdown>
 

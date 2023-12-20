@@ -12,7 +12,7 @@ questions from the more experienced members of the community when seeking
 help.
 
 So what's next? Try setting up a few more games yourself; peruse the various
-configuration options in the default configuration; look around on [our
+configuration options in the primary configuration file; look around on [our
 wiki](https://github.com/dosbox-staging/dosbox-staging/wiki); familiarise
 yourself with our [feature highlights](https://dosbox-staging.github.io/);
 read the release notes on our [releases

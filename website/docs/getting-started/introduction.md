@@ -123,15 +123,16 @@ best! :sunglasses:
 If you already have DOSBox Staging installed on your computer, or if you have
 used it in the past but have uninstalled it, most likely you have a primary
 configuration file named `dosbox-staging.conf` somewhere on your drive (this
-is also referred to as the global configuration).
+is sometimes also referred to as the default or global configuration).
 
 The guide assumes the default settings of the latest stable release, so it's
 highly recommended to remove any existing primary configuration files first
-(but make sure to back them up). If the primary config does not exist, DOSBox
-Staging will create it on the first launch. If it exists, it will be used, but
-the defaults of some settings might have changed between releases, or
-you might have tweaked some settings yourself. These differences may render
-the instructions in the guide invalid as the defaults are assumed.
+(but make sure to back them up). If the primary config file does not exist in
+an platform-specific location, DOSBox Staging will create it on the first
+launch. If it exists, it will be used, but the defaults of some settings might
+have changed between releases, or you might have tweaked some settings
+yourself. These differences may render the instructions in the guide invalid
+as the default setttings are assumed.
 
 This is where the primary config is located on each platform:
 
@@ -145,8 +146,12 @@ This is where the primary config is located on each platform:
 
 </div>
 
-You can simply change the extension of `dosbox-staging.conf` from `.conf` to
-`.bak`. DOSBox Staging will write a brand new default config the next time you
+You can also execute DOSBox Staging with the `--printconf` option to have the
+location of the primary config printed to your console.
+
+To back up your existing primary config, you can simply change the extension
+of `dosbox-staging.conf` from `.conf` to `.bak`. DOSBox Staging will write a
+brand new primary config containing the current defaults the next time you
 start it.
 
 ### Portable mode notes
