@@ -236,6 +236,7 @@ jobs:
         run: |
           set -x
           git fetch --prune --unshallow
+          git fetch --all --tags --force
           export VERSION=$(git describe --abbrev=5)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
