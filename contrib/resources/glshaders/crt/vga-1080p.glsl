@@ -104,9 +104,9 @@ vec4 add_vga_overlay(vec4 color, float scanlineStrengthMin, float scanlineStreng
 
   float saturation = mix(1.2, 1.03, even_odd);
   float l = length(color);
-  color.r = pow(color.r + 1e-5, saturation);
-  color.g = pow(color.g + 1e-5, saturation);
-  color.b = pow(color.b + 1e-5, saturation);
+  color.r = pow(color.r + 1e-7, saturation);
+  color.g = pow(color.g + 1e-7, saturation);
+  color.b = pow(color.b + 1e-7, saturation);
   color = normalize(color)*l;
 
   // mask
