@@ -193,8 +193,8 @@ brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
 
     Your binary is: `build/dosbox`
 
-	The binary depends on local resources relative to it, so we suggest
-	symlinking to the binary from your `PATH`, such as into `~/.local/bin/`.
+    The binary depends on local resources relative to it, so we suggest
+    symlinking to the binary from your `PATH`, such as into `~/.local/bin/`.
 
     Have fun!
 
