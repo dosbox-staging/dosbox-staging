@@ -7,6 +7,7 @@ This repository attempts to modernize the DOSBox codebase by using current
 development practices and tools, fixing issues, and adding features that better
 support today's systems.
 
+
 ## Build status
 
 [![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
@@ -15,13 +16,13 @@ support today's systems.
 [![Windows (MSYS2) build status][build-win-msys2-badge]][build-win-msys2-ci]
 [![macOS build status][build-mac-badge]][build-mac-ci]
 
+
 ## Code quality status
 
 [![Coverity status][coverity-badge]][3]
 
-## Summary of features
 
-### For developers
+## Key features for developers
 
 | **Feature**                    | **Status**                   |
 |--------------------------------|------------------------------|
@@ -46,15 +47,17 @@ support today's systems.
 [6]: https://github.com/dosbox-staging/dosbox-staging/tree/main/tests
 [Development builds]: https://dosbox-staging.github.io/releases/development-builds/
 
+
 ## Stable release builds
 
 [Linux](https://dosbox-staging.github.io/releases/linux/),
 [Windows](https://dosbox-staging.github.io/releases/windows/),
 [macOS](https://dosbox-staging.github.io/releases/macos/)
 
-## Test builds / development snapshots
+## Test builds & development snapshots
 
 [Development builds].
+
 
 ## Dependencies
 
@@ -74,18 +77,18 @@ DOSBox Staging has the following library dependencies:
 | [SpeexDSP](https://github.com/xiph/speexdsp)                       | speexdsp      | Audio resampling                                        | Mandatory   | yes          | yes     | common              |
 | [Tracy Profiler](https://github.com/wolfpld/tracy)                 | tracy         | Event profile (development)                             | Optional    | yes          | yes     | rare                |
 | [zlib](http://www.zlib.net/)                                       | zlib          | ZMBV video capture                                      | Optional    | **no** 🔴    | yes     | very common         |
-| [zlib-ng](https://github.com/zlib-ng/zlib-ng)                      | zlib-ng       | ZMBV video capture (more performant zlib replacement)   | Optional    | yes          | yes     | common              | 
+| [zlib-ng](https://github.com/zlib-ng/zlib-ng)                      | zlib-ng       | ZMBV video capture (more performant zlib replacement)   | Optional    | yes          | yes     | common              |
 
 See the Meson wrap files in [subprojects](/subprojects) the current library versions we use.
 
-## Get the source
+## Get the sources
 
-- Clone the repository (one-time step):
+Clone the repository (one-time step):
 
-    ``` shell
-    git clone https://github.com/dosbox-staging/dosbox-staging.git
-    ```
-    
+``` shell
+git clone https://github.com/dosbox-staging/dosbox-staging.git
+```
+
 ## Build instructions
 
 Read [BUILD.md] for the comprehensive compilation guide.
@@ -139,14 +142,14 @@ sudo xbps-install -S SDL2-devel SDL2_net-devel alsa-lib-devel \
 ```
 
 ``` shell
-# NixOS 
+# NixOS
 # With Home Manager on home.nix (Recommended Permanent Installation)
-home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_net \ 
-                  fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg \ 
+home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_net \
+                  fluidsynth glib gtest libGL libGLU libjack2 libmt32emu libogg \
                   libpng libpulseaudio libslirp libsndfile meson ninja opusfile \
                   libselinux speexdsp stdenv alsa-lib xorg.libXi irr1 ]
 
-# Note: the same package list will work with environment.systemPackages 
+# Note: the same package list will work with environment.systemPackages
 # on configuration.nix
 ```
 
@@ -159,20 +162,20 @@ brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
 
 ### Build and stay up-to-date with the latest sources
 
-- Checkout the main branch:
+1. Check out the main branch:
 
     ``` shell
     # commit or stash any personal code changes
     git checkout main -f
     ```
 
-- Pull the latest updates. This is necessary every time you want a new build:
+2. Pull the latest updates. This is necessary every time you want a new build:
 
     ``` shell
     git pull
     ```
 
-- Setup the build. This is a one-time step either after cloning the repo or
+3. Set up the build. This is a one-time step either after cloning the repo or
     cleaning your working directories:
 
     ``` shell
@@ -180,9 +183,9 @@ brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
     ```
 
     The above enables all of DOSBox Staging's functional features. If you're
-    interested in seeing all of Meson's setup options, run: `meson configure`.
+    interested in seeing all of Meson's setup options, run `meson configure`.
 
-- Compile the sources. This is necessary every time you want a new build:
+4. Compile the sources. This is necessary every time you want a new build:
 
     ``` shell
     meson compile -C build
@@ -190,11 +193,13 @@ brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
 
     Your binary is: `build/dosbox`
 
-    The binary depends on local resources relative to it, so we suggest
-    symlinking to the binary from your PATH, such as into ~/.local/bin/
-    -- Have fun!
+	The binary depends on local resources relative to it, so we suggest
+	symlinking to the binary from your `PATH`, such as into `~/.local/bin/`.
 
-### Windows - Visual Studio (2022 or newer)
+    Have fun!
+
+
+### Windows – Visual Studio (2022 or newer)
 
 First, you need to setup [vcpkg] to install build dependencies. Once vcpkg
 is bootstrapped, open PowerShell and run:
@@ -206,8 +211,9 @@ PS:\> .\vcpkg integrate install
 This step will ensure that MSVC can use vcpkg to build, find and links all
 dependencies.
 
-Start Visual Studio and open file: `vs\dosbox.sln`. Make sure you have `x64`
-selected as the solution platform.  Use Ctrl+Shift+B to build all projects.
+Start Visual Studio and open the file `vs\dosbox.sln`. Make sure you have
+`x64` selected as the solution platform.  Use **Ctrl+Shift+B** to build all
+projects.
 
 Note, the first time you build a configuration, dependencies will be built
 automatically and stored in the `vcpkg_installed` directory. This can take
@@ -215,17 +221,20 @@ a significant length of time.
 
 [vcpkg]: https://github.com/microsoft/vcpkg
 
+
 ### Windows (MSYS2), macOS (MacPorts), Haiku, Nix0S, others
 
 Instructions for other build systems and operating systems are documented
-in [BUILD.md]. Links to OS-specific instructions: [MSYS2], [MacPorts],
-[Haiku], [NixOS].
+in [BUILD.md].
+
+Links to OS-specific instructions: [MSYS2], [MacPorts], [Haiku], [NixOS].
 
 [BUILD.md]: BUILD.md
 [MSYS2]:    docs/build-windows.md
 [MacPorts]: docs/build-macos.md
 [Haiku]:    docs/build-haiku.md
 [NixOS]:    docs/build-nix.md
+
 
 ## Imported branches, community patches, old forks
 
