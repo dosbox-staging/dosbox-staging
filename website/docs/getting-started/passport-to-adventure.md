@@ -13,21 +13,27 @@ intriguing storylines.
 But before we begin, let's discuss something fundamental to DOSBox Staging!
 
 
-## Default configuration
+## Primary configuration
 
 Have you wondered how do you learn about all the available configuration
 settings? When you start DOSBox Staging for the very first time, it creates a
-so-called *default configuration* file in a standard location with the name
+so-called *primary configuration* file in a standard location with the name
 `dosbox-staging.conf`. This file contains the full list of available settings
-with their default values, plus a short explanatory text for each.
+with their default values and a short description for each.
 
-For example, this is the description of the `viewport` setting:
+For example, this is the start of the description of the `viewport` setting:
 
-    Set the viewport size (drawable area) within the window/screen:
-      fit:       Fit the viewport to the available window/screen (default).
-      <custom>:  Limit the viewport within to a custom resolution or percentage
-                 of the desktop. Specified in WxH, N%, N.M%.
-                 Examples: 960x720 or 50%
+    Set the viewport size (maximum drawable area). The video output is always
+    contained within the viewport while taking the configured aspect ratio into
+    account (see 'aspect'). Possible values:
+      fit:          Fit the viewport into the available window/screen (default).
+                    There might be padding (black areas) around the image with
+                    'integer_scaling' enabled.
+      WxH:          Set a fixed viewport size in WxH format in logical units
+                    (e.g., 960x720). The specified size must not be larger than
+                    the desktop. If it's larger than the window size, it's
+                    scaled to fit within the window.
+      ...
 
 Here are the locations of `dosbox-staging.conf` on each platform:
 
@@ -47,11 +53,20 @@ Here are the locations of `dosbox-staging.conf` on each platform:
      visible, go to your home folder in Finder, press ++cmd+j++ to bring up
      the view options dialog, and then check *Show Library Folder*.
 
+## Online help
+
 If you know the exact name of a configuration setting, you can display its
 explanatory text using the built-in `config` command. The invocation is
-`config -h` followed by a space and the setting's name. For example:
+`config -h <setting_name> | more`. Appending `| more` at the end of the
+command will paginate the output for you; this is necessary for long
+descriptions spanning more than a single page. For example:
+
+TODO update screenshot
 
 ![Displaying the description of a config setting using the 'config' command](https://archive.org/download/dosbox-staging-getting-started-guide-assets/config-help.png){ loading=lazy style="margin: 0.9rem 0;" }
+
+You can press ++space++ to go to the next page, ++enter++ to advance to the
+next line, or ++q++ to quit the viewer, as the bottom line indicates.
 
 It is highly recommended to look up the descriptions of the various settings
 as you encounter them in this guide. That's a good way to get gradually
@@ -61,31 +76,37 @@ acquainted with them and further your knowledge about the available options.
 ## Layered configurations
 
 In our Prince of Persia example, we created a `dosbox.conf` configuration file
-in the game's folder, then started DOSBox Staging from that folder. In such a
-scenario, DOSBox loads the default configuration first, then applies
-the `dosbox.conf` configuration found in the folder it was started from (the
-game's folder), overriding certain default settings.
+in the game's folder, then we started DOSBox Staging from that folder. In such
+a scenario, DOSBox loads the default _primary configuration_ first, then
+applies the _local_ `dosbox.conf` _configuration_ found in the folder it was started
+from (the game's folder), overriding certain default settings.
 
 This *layered configuration* approach is very useful; you can apply broad,
-general settings in your default *global configuration* that will apply to all
-games, then fine-tune these defaults on a per-game basis via *local
-`dosbox.conf` configurations* in the individual game folders.
+general settings in your primary configuration that will apply to all games,
+then fine-tune these defaults on a per-game basis via local `dosbox.conf`
+configs in the individual game folders. Because of this, the primary
+configuration is sometimes also referred to as the _default_ or _global
+configuration_.
 
 As DOSBox Staging comes with sensible defaults, you can keep these local
-configurations quite minimal, as we've already seen. There's absolutely no
-need to specify every single setting in your local game-specific config---that
-would make configurations very cumbersome to manage, plus it would be
-difficult to see what settings have been changed from their defaults for a
-particular game.
+configs quite minimal, as we've already seen. There's absolutely no need to
+specify every single setting in your local game-specific config---that would
+make configurations very cumbersome to manage, plus it would be very difficult
+to see what settings have been changed from their defaults for a particular
+game.
 
-!!! tip "A word of advice"
+!!! tip "Walk before you run"
 
-    It's best not to change the default configuration while you're still a
+    It's best not to change the primary configuration while you're still a
     beginner. Even more experienced DOSBox users are generally better off
-    changing the defaults very sparingly as those settings will affect all
-    games. A few things that you might consider changing globally are perhaps
-    always enabling fullscreen, auto-pausing, and certain audio-related
-    settings (e.g., sample rate and buffer sizes). We'll examine these later.
+    changing the primary configuration very sparingly as those settings will
+    affect all games.
+
+    A few things that you might want to consider setting globally in the
+    primary config include enabling fullscreen, turning on auto-pausing,
+    integer scaling and shader defaults, and certain MIDI and audio-related
+    settings (e.g., sample rate, buffer sizes, volume levels, default
+    SoundFont file to use, etc.) We'll examine these later.
 
 
 ## Installing the game
