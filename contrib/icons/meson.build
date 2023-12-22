@@ -7,7 +7,7 @@ png_files = {
     'icon_32.png': '32x32',
     'icon_48.png': '48x48',
     'icon_96.png': '96x96',
-    'icon_128.png': '128X128',
+    'icon_128.png': '128x128',
     'icon_256.png': '256x256',
     'icon_512.png': '512x512',
     'icon_1024.png': '1024x1024',
