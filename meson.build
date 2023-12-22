@@ -265,92 +265,102 @@ if is_optimized_buildtype and zlib_ng_is_native
     extra_flags += '-march=native'
     simd_summary = 'native'
     message('Enabling native SIMD optimizations')
+endif
 
-elif is_optimized_buildtype and zlib_ng_wants_native
-    # Wanted native SIMD but couldn't get it, so
-    # lets test and enable some basic ones for them.
-    #
-    # NEON
-    # ~~~~~
+# NEON on Aarch64
+# ~~~~~~~~~~~~~~~
+if target_machine.cpu_family() == 'aarch64'
+    # aarch64 always supports NEON:
+    # ref: https://developer.arm.com/documentation/den0024/a/AArch64-Floating-point-and-NEON
+    zlib_ng_options += ['neon']
+    simd_summary = 'NEON'
+    message('Using the ARM NEON instruction set')
+endif
+
+# NEON on Aarch32
+# ~~~~~~~~~~~~~~~
+if (
+    target_machine.cpu_family() == 'arm'
+    and (zlib_ng_is_native
+    or zlib_ng_wants_native
+    or 'neon' in zlib_ng_options)
+)
+    neon_test_code = '''
+                #include <arm_neon.h>
+                int main() {
+                uint8x16_t a = vdupq_n_u8(0);
+                uint8x16_t b = vdupq_n_u8(0);
+                uint8x16_t result = vaddq_u8(a, b);
+                return 0;
+                }
+            '''
     neon_cflag = '-mfpu=neon-vfpv4'
-    if target_machine.cpu_family() == 'aarch64'
-        # aarch64 always supports NEON:
-        # ref: https://developer.arm.com/documentation/den0024/a/AArch64-Floating-point-and-NEON
-        zlib_ng_options += ['neon']
+    neon_test = cc.run(
+        neon_test_code,
+        args: neon_cflag,
+        name: 'ARM NEON instruction set test',
+    )
+    if (neon_test.compiled() and neon_test.returncode() == 0)
+        zlib_ng_options += 'neon'
         extra_flags += neon_cflag
         simd_summary = 'NEON'
-        message('Host supports ARM NEON instruction set')
+        message('Enabling the ARM NEON instruction set')
+    endif
+endif
 
-    elif host_machine.cpu_family() == 'arm'
-        neon_test_code = '''
-            #include <arm_neon.h>
-            int main() {
-            uint8x16_t a = vdupq_n_u8(0);
-            uint8x16_t b = vdupq_n_u8(0);
-            uint8x16_t result = vaddq_u8(a, b);
-            return 0;
-            }
-        '''
-        neon_test = cc.run(
-            neon_test_code,
-            args: neon_cflag,
-            name: 'ARM NEON instruction set test',
-        )
-        if (neon_test.compiled() and neon_test.returncode() == 0)
-            zlib_ng_options += ['neon']
-            extra_flags += neon_cflag
-            simd_summary = 'NEON'
-            message('Enabling the ARM NEON instruction set')
-        endif
+# SSE2 and SSSE3 on x86
+# ~~~~~~~~~~~~~~~~~~~~~
+if (
+    target_machine.cpu_family().startswith('x86')
+    and (
+        zlib_ng_is_native
+        or zlib_ng_wants_native
+        or 'sse2' in zlib_ng_options
+        or 'ssse3' in zlib_ng_options
+    )
+)
+    sse2_test_code = '''
+                #include <emmintrin.h>
+                int main() {
+                __m128i a = _mm_setzero_si128();
+                __m128i b = _mm_setzero_si128();
+                __m128i result = _mm_add_epi32(a, b);
+                return 0;
+                }
+            '''
+    sse2_cflags = '-msse2'
+    sse2_test = cc.run(
+        sse2_test_code,
+        args: sse2_cflags,
+        name: 'SSE2 instruction set test',
+    )
+    if (sse2_test.compiled() and sse2_test.returncode() == 0)
+        zlib_ng_options += 'sse2'
+        extra_flags += sse2_cflags
+        simd_summary = 'SSE2'
+        message('Enabling the SSE2 instruction set')
+    endif
 
-    elif target_machine.cpu_family().startswith('x86')
-        # SSE2
-        # ~~~~
-        sse2_test_code = '''
-            #include <emmintrin.h>
-            int main() {
-            __m128i a = _mm_setzero_si128();
-            __m128i b = _mm_setzero_si128();
-            __m128i result = _mm_add_epi32(a, b);
-            return 0;
-            }
-        '''
-        sse2_cflag = '-msse2'
-        sse2_test = cc.run(
-            sse2_test_code,
-            args: sse2_cflag,
-            name: 'SSE2 instruction set test',
-        )
-        if (sse2_test.compiled() and sse2_test.returncode() == 0)
-            zlib_ng_options += ['sse2']
-            extra_flags += sse2_cflag
-            simd_summary = 'SSE2'
-            message('Enabling the SSE2 instruction set')
-        endif
-
-        # SSSE3
-        # ~~~~~
-        ssse3_test_code = '''
-            #include <tmmintrin.h>
-            int main() {
-            __m128i a = _mm_setzero_si128();
-            __m128i b = _mm_setzero_si128();
-            __m128i result = _mm_hadd_epi16(a, b);
-            return 0;
-            }
-        '''
-        ssse3_cflag = '-mssse3'
-        ssse3_test = cc.run(
-            ssse3_test_code,
-            args: ssse3_cflag,
-            name: 'SSSE3 instruction set test',
-        )
-        if (ssse3_test.compiled() and ssse3_test.returncode() == 0)
-            zlib_ng_options += ['ssse3']
-            extra_flags += ssse3_cflag
-            simd_summary = 'SSE2 and SSSE3'
-            message('Enabling the SSSE3 instruction set')
-        endif
+    ssse3_test_code = '''
+                #include <tmmintrin.h>
+                int main() {
+                __m128i a = _mm_setzero_si128();
+                __m128i b = _mm_setzero_si128();
+                __m128i result = _mm_hadd_epi16(a, b);
+                return 0;
+                }
+            '''
+    ssse3_cflag = '-mssse3'
+    ssse3_test = cc.run(
+        ssse3_test_code,
+        args: ssse3_cflag,
+        name: 'SSSE3 instruction set test',
+    )
+    if (ssse3_test.compiled() and ssse3_test.returncode() == 0)
+        zlib_ng_options += 'ssse3'
+        extra_flags += ssse3_cflag
+        simd_summary = 'SSE2 and SSSE3'
+        message('Enabling the SSSE3 instruction set')
     endif
 endif
 summary('SIMD instruction set', simd_summary, section: 'Build Summary')
