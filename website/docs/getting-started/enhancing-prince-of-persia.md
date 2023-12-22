@@ -3,7 +3,7 @@
 
 ## Fullscreen mode
 
-You can toggle between windowed and fullscreen mode any time by pressing
+You can toggle between windowed and fullscreen mode at any time by pressing
 ++alt+enter++. But what if you always want to play the game in fullscreen?
 Wouldn't it be nice to make DOSBox start in fullscreen right away?
 
@@ -35,17 +35,17 @@ game by pressing ++ctrl+q++. Not strictly necessary, but a nice touch.
 
 !!! important "Making configuration changes"
 
-    Every time you modify `dosbox.conf`, you need to restart DOSBox Staging 
+    Every time you modify `dosbox.conf`, you need to restart DOSBox Staging
     for the changes to take effect. We will not mention this every single time
     from now on.
 
-    You can do this by closing the DOSBox Staging application then starting it
-    again. But there is a better way: simply press ++ctrl+alt+home++! This is
-    a homage to the Ctrl+Alt+Del "three-finger salute" way of soft-rebooting
-    IBM PCs. :sunglasses:
+    You can do this by closing the DOSBox Staging application and then
+    starting it again. But there is a better way: simply press
+    ++ctrl+alt+home++! This is a homage to the Ctrl+Alt+Del "three-finger
+    salute" way of soft-rebooting IBM PCs. :sunglasses:
 
     If you're on macOS,  you'll need to press ++cmd+opt+home++ instead, and if
-    Apple has decided it for you that your MacBook doesn't need a Home key,
+    Apple has decided for you that your MacBook doesn't need a Home key,
     ++cmd+opt+fn+left++ should do the trick.
 
 
@@ -74,47 +74,60 @@ colours to be displayed simultaneously on the screen from a total palette of
 16 million colours.
 
 This is how the start of the game looks with the [authentic CRT emulation
-feature](prince-of-persia#authentic-crt-monitor-emulation) which is enabled by
+feature](setting-up-prince-of-persia.md#authentic-crt-monitor-emulation) which is enabled by
 default. As mentioned previously, make sure to view all screenshots at 100%
 magnification to avoid weird artifacts caused by the browser rescaling the
 image.
 
 <figure markdown>
-  ![Prince of Persia in VGA mode with the default settings](https://archive.org/download/dosbox-staging-v0.82.0-prince-of-persia-vga/pop-vga.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-vga.jpg" >
+    ![Prince of Persia in VGA mode with the default settings](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-vga-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Prince of Persia in VGA mode with the default settings
   </figcaption>
 </figure>
 
-
 But wait a minute, this doesn't look like anything I'm used to from console
 emulators. Where are those visible thick scanlines?
 
-VGA display adapters have a peculiarity that they display not one but *two*
+VGA display adapters have a peculiarity in that they display not one but *two*
 scanlines per pixel in low-resolution video modes having less than about 350
 lines of vertical resolution. This means the 320&times;200 VGA mode is really
 640&times;400, just pixel and line-doubled. In fact, the vast majority of VGA
-monitors from the 80s and 90s are incapable of displaying "true" 200-line
+monitors from the 1980s and '90s are incapable of displaying "true" 200-line
 graphics, so it's physically impossible to get the "thick scanline" arcade and
 home computer monitor look on a real VGA CRT.
 
-Here's a comparison of the authentic VGA CRT emulation and the "raw sharp pixels"
-look at 4K resolution (zoom in to appreciate the differences):
+Double-scanned VGA emulation looks stellar on a 4K monitor and even on 1440p,
+but on 1080p, there is simply not enough vertical resolution to accurately
+represent all those 400 tightly-packed scanlines. Therefore, the best thing
+the CRT emulation can do on 1080p and lower is to fake that double-scanned
+look so it looks approximately similar to the real thing.
 
-<figure markdown>
-  !["True VGA" emulation vs "raw sharp pixels"](https://archive.org/download/dosbox-staging-v0.82.0-prince-of-persia-vga/pop-true-vga.png){ loading=lazy }
+!!! tip "Aspect ratio correction"
 
-  <figcaption markdown>
-  Left: authentic double-scanned VGA CRT emulation<br>Right: "raw sharp pixels" look
-  </figcaption>
-</figure>
+    Computer monitors were originally not widescreen but had a 4:3 display
+    aspect ratio, just like old television sets. DOS games were normally
+    designed to completely fill a 4:3 CRT screen. DOSBox Staging displays the
+    emulated image in the correct aspect ratio by default, which means you'll
+    see *pillarboxing* (vertical black bars) at the two sides in fullscreen on
+    modern widescreen displays. This is normal.
 
-Double-scanned VGA emulation looks stellar on a 4K monitor and even
-on 1440p, but on 1080p, there is simply not enough vertical resolution to
-accurately represent all those 400 tightly-packed scanlines. Therefore, the
-best thing the CRT emulation can do on 1080p and lower is to fake that
-double-scanned look so it looks approximately similar to the real thing.
+    However, there is also *letterboxing* (horizontal black bars) above and
+    below the image. We'll explain why that's necessary in the last [advanced
+    graphics options](advanced-graphics-options.md) chapter. Feel free to take
+    a detour if you wish to gain an understanding of these details now.
+
+    Alternatively, if you're on a 4K (UHD, 3840x2160) or better screen, you
+    can put this into your `[render]` section to get rid of pillarboxing
+    altogether:
+
+    ```ini
+    [render]
+    integer_scaling = off
+    ```
 
 
 ### EGA
@@ -134,12 +147,14 @@ following configuration snippet:
 machine = ega
 ```
 
-This is how the game looks with the fixed 16-colour EGA palette. Unlike VGA ,
+This is how the game looks with the fixed 16-colour EGA palette. Unlike VGA,
 EGA monitors can display true 320&times;200 resolution with the well-known
 thick scanline look.
 
 <figure markdown>
-  ![Prince of Persia in EGA mode](https://archive.org/download/dosbox-staging-v0.82.0-prince-of-persia-ega/pop-ega.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-ega.jpg" >
+    ![Prince of Persia in EGA mode](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-ega-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Prince of Persia in EGA mode---EGA monitors can display 200-line modes
@@ -169,24 +184,26 @@ Ready? Behold the formidable 4-colour CGA graphics---and what 4 colours those
 are! Similarly to EGA, CGA is capable of displaying true 200-line modes.
 
 <figure markdown>
-  ![Prince of Persia in CGA mode using the 'crt/aperture' shader](https://archive.org/download/dosbox-staging-v0.82.0-prince-of-persia-cga/pop-cga-crt.jpg){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-cga.jpg" >
+    ![Prince of Persia in CGA mode. Yeah, it's not pretty...](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-cga-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
-  Prince of Persia in CGA mode using. Yeah, it's not pretty...
+  Prince of Persia in CGA mode. Yeah, it's not pretty...
   </figcaption>
 </figure>
 
 !!! tip
 
     To compare how the game looks on different graphics adapters, click on one
-    of screenshots to enlarge it, then use the ++left++ and ++right++ arrow
-    keys to switch between the images.
+    of the screenshots to enlarge it, then use the ++left++ and ++right++
+    arrow keys to switch between the images.
 
 
 ### Hercules
 
 The Hercules display adapter was released in 1982 to expand the text-only IBM
-PCs with basic graphical capabilities. It only supports monochrome graphics,
+PCs with basic graphical capabilities. It only supports monochrome graphics
 but at a higher 720&times;348 resolution. Can you guess how you can enable it?
 
 ```ini
@@ -197,10 +214,12 @@ machine = hercules
 Here's how it looks. Oldschool! The slightly squashed aspect ratio is correct
 in this case; this is exactly how the game would look on a PC equipped with a
 Hercules card connected to a period-accurate monochrome monitor (but we'll
-examine some advanced techniques how to [fix that](#custom-aspect-ratios)).
+examine some advanced techniques on [how to fix that](advanced-graphics-options.md#custom-aspect-ratios)).
 
 <figure markdown>
-  ![Prince of Persia in Hercules mode using the default 'amber' palette](../assets/images/pop-hercules-amber.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-amber.png" >
+    ![Prince of Persia in Hercules mode using the default 'amber' palette](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-amber.png){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Prince of Persia in Hercules mode using the default `amber` palette
@@ -208,7 +227,7 @@ examine some advanced techniques how to [fix that](#custom-aspect-ratios)).
 </figure>
 
 
-Monochrome monitors came in different colours and DOSBox Staging can emulate
+Monochrome monitors come in different colours and DOSBox Staging can emulate
 all these variations via the `monochrome_palette` setting. The available
 options are `amber` (the default), `green`, `white`, and `paperwhite`.
 
@@ -223,7 +242,9 @@ key.
 <div class="image-grid" markdown>
 
 <figure markdown>
-  ![Hercules mode using the 'green' palette](../assets/images/pop-hercules-green.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-green.png" >
+    ![Hercules mode using the 'green' palette](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-green.png){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Hercules mode using the `green` palette
@@ -231,7 +252,9 @@ key.
 </figure>
 
 <figure markdown>
-  ![Hercules mode using the 'white' palette](../assets/images/pop-hercules-white.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-white.png" >
+    ![Hercules mode using the 'white' palette](https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-hercules-white.png){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Hercules mode using the `white` palette
@@ -250,8 +273,8 @@ key.
     *any* graphics surely beat no game at all!
 
     Although we've shown how to emulate these earlier graphics standards for
-    completeness' sake, there's generally little reason for *not* playing a
-    DOS game with the best graphics. The list of possible reasons include: a)
+    completeness' sake, there's generally little reason *not* to play a
+    DOS game with the best graphics. The list of possible reasons includes a)
     nostalgic feelings towards a particular display adapter; b) research
     purposes; c) you like your games to look like the user interface of an
     industrial CNC machine; d) a strong preference for pain. But hey, who are
@@ -264,6 +287,21 @@ key.
 
 ### Sharp pixels
 
+If you _really_ prefer sharp pixels over authentic CRT emulation, you only
+need to add a single line to the `[render]` config section:
+
+```ini
+[render]
+glshader = sharp
+```
+
+That's it! Switching to the `sharp` shader will also make the image fill the screen
+vertically, so no more letterboxing. The reason for this (and a lot more) will
+be explained in the [advanced graphics options](advanced-graphics-options.md)
+chapter.
+
+Keep in mind, though, that the rest of the guide assumes you're using the CRT
+emulation.
 
 
 ## Chorus & reverb
@@ -316,7 +354,7 @@ pause_when_inactive = yes
 ```
 
 Restart the game and switch to a different window---DOSBox will pause itself.
-Switch back to DOSBox---the game will resume. Nifty, isn't it? 
+Switch back to DOSBox---the game will resume. Nifty, isn't it?
 
 !!! warning "Pause gotchas"
 
@@ -363,7 +401,8 @@ fullscreen = on
 pause_when_inactive = yes
 
 [render]
-#glshader = sharp
+# for 4K+ monitors only
+#integer_scaling = off
 
 [mixer]
 reverb = large
@@ -385,14 +424,14 @@ What if you used a wrong value in your config, made a typo, or misremembered
 the name of a setting? How would you know about it? Having to triple-check
 every single character of the config when something goes wrong is not a good
 prospect... Fortunately, you don't have to do that because DOSBox Staging can
-inform you if something went wrong. It does that via the *logs*, which is just
+inform you if something goes wrong. It does that via the *logs*, which are just
 a continuous stream of timestamped messages in a separate window.
 
 The behaviour of the log window is different on each platform:
 
 <h3>Windows</h3>
 
-The log window is opened by default when you start DOSBox Staging . You can
+The log window is opened by default when you start DOSBox Staging. You can
 hide the log window by passing the `-noconsole` argument to the DOSBox
 Staging executable.
 
@@ -420,9 +459,9 @@ game on macOS:
 
 ![Example DOSBox logs](https://archive.org/download/dosbox-staging-v0.82.0-logging/pop-logs1.png){ loading=lazy }
 
-That's all good and well, but what's even better, if an invalid configuration
-setting has been detected, or something went wrong when running the game,
-DOSBox Staging will inform us about it in the logs!
+That's all good and well, but what's even better is if an invalid
+configuration setting has been detected, or something went wrong when running
+the game, DOSBox Staging will inform us about it in the logs!
 
 Let's now intentionally screw a few things up in the config to trigger some
 errors:

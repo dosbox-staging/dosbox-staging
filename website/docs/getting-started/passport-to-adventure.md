@@ -57,29 +57,43 @@ Here are the locations of `dosbox-staging.conf` on each platform:
 
 If you know the exact name of a configuration setting, you can display its
 explanatory text using the built-in `config` command. The invocation is
-`config -h <setting_name> | more`. Appending `| more` at the end of the
-command will paginate the output for you; this is necessary for long
-descriptions spanning more than a single page. For example:
+`config -h <setting_name>`. 
 
-TODO update screenshot
+However, if the description is longer than what can fit into a single screen,
+this is not too fruitful as the `config` command will effectively only display
+the last page. In such cases, we can "pipe" the output of the `config` command
+through the `more` command that will paginate the preceding command's output.
+For example, this is how to display the description of the `viewport` setting
+which is rather long:
+
+    config -h viewport | more
+
+The `|` is called the "pipe" character---how fitting! You can type it by
+pressing ++shift+backslash++, which is located above the ++enter++ key on the
+standard US keyboard.
+
+This is how the output of the command looks like:
 
 ![Displaying the description of a config setting using the 'config' command](https://archive.org/download/dosbox-staging-getting-started-guide-assets/config-help.png){ loading=lazy style="margin: 0.9rem 0;" }
 
-You can press ++space++ to go to the next page, ++enter++ to advance to the
-next line, or ++q++ to quit the viewer, as the bottom line indicates.
+When piping the output through `more`, you can press ++space++ to go to the
+next page, ++enter++ to advance to the next line, or ++q++ to quit the viewer,
+as the bottom line indicates. The viewer will also automatically quit once
+we've reached the end of the output.
 
 It is highly recommended to look up the descriptions of the various settings
 as you encounter them in this guide. That's a good way to get gradually
-acquainted with them and further your knowledge about the available options.
+acquainted with the available options.
 
 
 ## Layered configurations
 
 In our Prince of Persia example, we created a `dosbox.conf` configuration file
 in the game's folder, then we started DOSBox Staging from that folder. In such
-a scenario, DOSBox loads the default _primary configuration_ first, then
+a scenario, DOSBox loads the _primary configuration_ first, then
 applies the _local_ `dosbox.conf` _configuration_ found in the folder it was started
-from (the game's folder), overriding certain default settings.
+from (the game's folder). Because of this loading order, you can override
+any primary config setting in your local config.
 
 This *layered configuration* approach is very useful; you can apply broad,
 general settings in your primary configuration that will apply to all games,
@@ -95,7 +109,7 @@ make configurations very cumbersome to manage, plus it would be very difficult
 to see what settings have been changed from their defaults for a particular
 game.
 
-!!! tip "Walk before you run"
+!!! tip "A word of advice"
 
     It's best not to change the primary configuration while you're still a
     beginner. Even more experienced DOSBox users are generally better off
@@ -103,10 +117,10 @@ game.
     affect all games.
 
     A few things that you might want to consider setting globally in the
-    primary config include enabling fullscreen, turning on auto-pausing,
+    primary config include enabling fullscreen mode, turning on auto-pausing,
     integer scaling and shader defaults, and certain MIDI and audio-related
-    settings (e.g., sample rate, buffer sizes, volume levels, default
-    SoundFont file to use, etc.) We'll examine these later.
+    settings (e.g., sample rate, buffer sizes, volume levels, etc.) We'll
+    examine these later.
 
 
 ## Installing the game
@@ -135,27 +149,20 @@ quickly realise we only have two executables: `INSTALL.BAT` and `SAMPLER.EXE`.
 But there's also a `README.TXT`, so let's check that one out first!
 
 We can try displaying its contents with the `type README.TXT` command
-(remember, use tab-completion), but that's not too fruitful as the text is
-longer than a single screen, so the `type` command will effectively only
-display the last page. In such cases, we can "pipe" the output of the `type`
-command through the `more` command that will paginate the preceding command's
-output. This is done by executing the following:
+(remember, use tab-completion), but we'll only see the end of the file that
+way because it's longer than a single page. Good thing we've just learned
+about the `more` command, so let's put it to good use by executing the
+following:
 
     type README.TXT | more
 
-The `|` is called the "pipe" character---how fitting! You can type it by
-pressing ++shift+backslash++, which is located above the ++enter++ key on the
-standard US keyboard.
-
-But there's an easier way to accomplish the same thing: we can simply execute
-`more README.TXT`. You can think of the `more` command as a more advanced,
+Now we can read the whole file, starting from the beginning. But there's an
+easier way to accomplish the same thing: we can simply execute `more
+README.TXT`. You can think of the `more` command as a more advanced,
 paginating version of the `type` command.
 
-Now we can press ++enter++ to advance the text one line at a time, or
-++space++ to go to the next page. The command will exit once we've reached the
-end of the file, or we can quit earlier with the ++q++ key. Of course, you can
-always cheat and read such text files outside of DOSBox, but we wanted to
-teach you something useful about DOS here.
+Of course, you can always cheat and read such text files outside of DOSBox,
+but we wanted to teach you something useful about DOS here.
 
 The file contains important instructions about installing and playing the
 game, including the list of available keyboard shortcuts, so read it
@@ -183,19 +190,19 @@ mouse_capture = onstart
 
 ## Playing the game
 
-This is a really user-friendly program; you can press ++f1++ at the main
+This is a really user-friendly program; you can press ++f1++ on the main
 screen to read the general instructions, then start a game demo by clicking on
 one of the three game icons on the left. Pressing ++f1++ during the game
 displays further game-specific help; make sure you read them if you actually
 want to play these demos. They're worth playing even if you intend to play the
-full games later, as the demos contain slightly different scenes, puzzles, and
-dialogs, plus some fun easter-eggs.
+full games later as the demos contain slightly different scenes, puzzles, and
+dialogues, plus some fun easter-eggs.
 
 For people who really don't like to read: ++f5++ brings up the save/load/quit
 dialog, and you can pause/unpause the game with the ++space++ key.
 
-Let's start with the first demo called "Indy" (Indiana Jones and the Last
-Crusade), mainly because it plays a nice long version of the famous Indiana
+Let's start with the first demo called "Indy" (**Indiana Jones and the Last
+Crusade**), mainly because it plays a nice long version of the famous Indiana
 Jones theme during the intro, and we're going to investigate the various sound
 options next!
 
@@ -203,7 +210,9 @@ options next!
 <div class="image-grid" markdown>
 
 <figure markdown>
-  ![Indiana Jones and the Last Crusade -- Title screen](https://archive.org/download/dosbox-staging-v0.82.0-indy3-vga/indy-title.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-title.png" >
+    ![Indiana Jones and the Last Crusade -- Title screen](https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-title-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Indiana Jones and the Last Crusade --- Title screen
@@ -211,7 +220,9 @@ options next!
 </figure>
 
 <figure markdown>
-  ![Indiana Jones and the Last Crusade -- Opening scene](https://archive.org/download/dosbox-staging-v0.82.0-indy3-vga/indy-start.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-start.png" >
+    ![Indiana Jones and the Last Crusade -- Opening scene](https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-start-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Indiana Jones and the Last Crusade --- Opening scene
@@ -247,15 +258,16 @@ Blaster cards support at least two sound generation mechanisms:
 
 Storing music as a list of instructions for a synthesiser takes *very* little
 disk space (think of sheet music), whereas storing digital audio eats disk
-space for breakfast (think of uncompressed audio files). Consequently, the
-vast majority of DOS games use some kind of synthesiser for music, and digital
-audio is generally reserved for sound effects and speech only.
+space for breakfast (think of uncompressed or even lossless audio files).
+Consequently, the vast majority of DOS games use some kind of synthesiser for
+music, and digital audio is generally reserved for sound effects and speech
+only.
 
 These game demos don't have any digital sound effects; they all just use the
 OPL chip of the Sound Blaster for both music and some limited sound effects.
 The game is clever enough to auto-detect our OPL-equipped Sound Blaster 16
 (the default sound card emulated by DOSBox), so we'll get OPL sound by simply
-just starting `SAMPLER.EXE`.
+starting `SAMPLER.EXE`.
 
 Of course, we can enhance the OPL music by adding reverb and chorus effects to
 it, just as we've done with Prince of Persia. Unless you're an absolute
@@ -283,15 +295,18 @@ chorus = normal
     - **OPL** is just the name of the Yamaha OPL sound synthesiser chip present
         on most Sound Blaster cards.
 
+    - **FM** refers to the type of sound synthesis the OPL chip is doing, which
+        is Frequency Modulation synthesis (or FM synthesis, in short).
+
     - **AdLib** was an early sound card predating Sound Blasters that featured
         the same OPL chip. Perfect AdLib compatibility was one of the Sound
         Blasters' main selling points, therefore in games that support both
         AdLib and Sound Blaster for synthesised sound, both options will
-        usually yield the exact same results.
+        usually yield the exact same result.
 
         The AdLib card, however, had no support for digital audio, so it's
         preferable to pick the Sound Blaster option if the game offers both---
-        you might also get digital speech and sound effects that way.
+        you might also get digital speech and sound effects by doing so.
 
     - **Sound Blaster MIDI** is a weird thing. Most later games after 1992
         supported much higher quality MIDI sound modules that used sampled
@@ -299,15 +314,16 @@ chorus = normal
         fallback option to play the same MIDI music via the OPL chip, using
         synthesised approximations of the same instruments.
 
-    - **FM** refers to the type of sound synthesis the OPL chip is doing, which
-        is Frequency Modulation synthesis (or FM synthesis, in short).
+    All in all, the terms **OPL**, **AdLib**, and **FM** are used
+    interchangeably in practice, and usually they refer to the exact same
+    thing.
 
 
 ### PC speaker sound
 
 The observant among you might have spotted the list of graphics and sound
 configuration options in `README.TXT`. Playing with the graphics options is an
-exercise for the reader; it should be easy to apply what we've learned during
+exercise for the reader; it should be easy to apply what we've learned while
 setting up Prince of Persia.
 
 The sound settings, however, are quite interesting. We can get the executable
@@ -350,11 +366,11 @@ Well, it does sound a lot worse, doesn't it?
 
 DOSBox emulates the little *internal speaker* (also known as *PC speaker*)
 that was a standard accessory of all PCs for a long time. It was designed to
-only produce rather primitive bleeps and bloops, but certain games can make it
-play digitised sound by employing some cunning tricks. In any case, this a
-bleepy-bloopy type of game...
+only produce rather primitive bleeps and bloops, but certain games can coerce
+it to play digitised sound by employing some cunning tricks. In any case, this
+a bleepy-bloopy type of game...
 
-It's hard to envision anyone *willingly* subject themselves to the internal
+It's hard to envision anyone *willingly* subjecting themselves to the internal
 speaker experience when a game supports much better quality sound (even
 nostalgia can't be that strong!) But in most games released before about 1988,
 that's the only sound option you have.
@@ -381,16 +397,16 @@ C:\>SAMPLER.EXE ts
 
 Aaaaand, now there's no sound at all. Why is that?
 
-Tandy Corporation was an IBM PC clone manufacturer in the 80s; they produced
-the Tandy line of home computers that were mostly compatible with the standard
-PCs but also offered improved sound and graphics capabilities. Developers had
-to specifically support the Tandy to take advantage of these features. There
-are relatively few such games, but they are worth seeking out as they provide
+Tandy Corporation was an IBM PC clone manufacturer in the 1980s; they produced
+the Tandy line of home computers that were mostly compatible with standard PCs
+but also offered improved sound and graphics capabilities. Developers had to
+specifically support the Tandy to take advantage of these features. There are
+relatively few such games, but they are worth seeking out as they provide
 a better experience, especially in the sound department. The
-[games with Tandy & PCjr exclusive graphics and sound](https://github.com/dosbox-staging/dosbox-staging/wiki/Games-with-Tandy-&-PCjr-exclusive-graphics-and-sound)
-list on our wiki should help you find these pre-1990 Tandy specials.
+[Games with enhanced Tandy & PCjr graphics and sound](https://github.com/dosbox-staging/dosbox-staging/wiki/Games-with-enhanced-Tandy-&-PCjr-graphics-and-sound)
+page on our wiki should help you find these pre-1990 Tandy specials.
 
-DOSBox can emulate a Tandy machine; we only need to instruct it to do so in
+DOSBox can emulate a Tandy machine---we only need to instruct it to do so in
 our config:
 
 ```ini
@@ -399,12 +415,12 @@ machine = tandy
 ```
 
 Emulating the Tandy will cause the standard DOS font to be a bit different;
-this is normal, don't be alarmed by it.
+this is normal, so don't be alarmed by it.
 
 After a restart, we're finally hearing different synthesised music which
 sounds definitely better than the PC speaker rendition, but not as good as the
 OPL music. Interestingly, the Tandy music plays a little bit faster than the
-other options.
+other sound options.
 
 !!! note
 
@@ -453,9 +469,10 @@ channel into the right, and vice versa:
 crossfeed = on
 ```
 
-Naturally, you can combine crossfeed with chorus and reverb, and you can also
-specify a custom crossfeed amount if you're not happy with the default value
-of 40%:
+Naturally, you can combine crossfeed with chorus and reverb. You can also set
+`crossfeed` to `light`, `normal`, or `strong` according to your preference, or
+specify a custom crossfeed amount as a percentage from 0% (no crossfeed) to
+100% (collapse the stereo image to mono):
 
 ```ini
 crossfeed = 50
@@ -476,30 +493,40 @@ whereas later VGA monitors displayed EGA graphics without strong scanlines,
 and the pixels appeared as little sharp rectangles. It's as if EGA monitors
 had a "built-in filter" that smoothed the image somewhat while adding a subtle
 texture to it as well, making it more interesting and pleasant to look at.
-Later VGA cards and monitors "dropped" this filter and were just displaying
-the "raw pixels" without any such effects.
-This perceptual difference is because of the line-doubling peculiarity of VGA
-adapters in all low-resolution screen modes, as [explained
-previously](enhancing-prince-of-persia.md#true-vga-emulation).
+Later VGA cards and monitors offered backward compatibility with EGA graphics,
+although this was not full compatibility but a kind of emulation: 320&times;200 EGA
+graphics were simply line and pixel-doubled to 640&times;400.
 
 VGA-style line-doubling changes the feel of EGA graphics, and many prefer the
 original EGA look. After all, this is what the artists saw on their screens
-when creating the artwork. Fortunately, as we've seen in our Prince of Persia
-example, you can easily emulate the "true EGA" look with shaders if that's
-your preference.
+when creating the artwork. Because of this, the authentic CRT emulation
+feature displays EGA graphics with the "true EGA look" out of the box with the
+`glshader = crt-auto` setting.
 
-It's also worth restricting the image size to mimic that of a period-correct
-14" or 15" monitor (see the detailed explanation [here](enhancing-prince-of-persia.md#custom-viewport-resolution)).
+However, if you grew up with a VGA-equipped PC, then you only ever saw EGA
+games double-scanned. To appease such people, you can instruct DOSBox Staging
+to emulate a double-scanning VGA card in all screen modes with the
+`crt-auto-machine` setting:
 
 ```ini
 [render]
-viewport = 1120x840
+glshader = crt-auto-machine
 ```
+
+Technically, this setting instructs DOSBox Staging to always emulate a CRT
+monitor appropriate for the configured `machine` type which is VGA by
+default.
+
+The below screenshots illustrate the difference between the "true EGA" and
+"EGA as displayed on VGA" look:
+
 
 <div class="image-grid" markdown>
 
 <figure markdown>
-  ![Indiana Jones and the Last Crusade -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.82.0-indy3-ega/indy-ega.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-ingame-vga.png" >
+    ![Indiana Jones and the Last Crusade -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-ingame-vga-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Indiana Jones and the Last Crusade ---<br>EGA as displayed on VGA monitors
@@ -507,7 +534,9 @@ viewport = 1120x840
 </figure>
 
 <figure markdown>
-  ![Indiana Jones and the Last Crusade -- "True EGA" emulation](https://archive.org/download/dosbox-staging-v0.82.0-indy3-ega/indy-ega-crt.jpg){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-ingame-ega.jpg" >
+    ![Indiana Jones and the Last Crusade -- "True EGA" emulation](https://archive.org/download/dosbox-staging-v0.81.0-indy3/indy3-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Indiana Jones and the Last Crusade ---<br>"True EGA" emulation
@@ -519,7 +548,9 @@ viewport = 1120x840
 <div class="image-grid" markdown>
 
 <figure markdown>
-  ![The Secret of Monkey Island -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.82.0-monkey-ega/monkey-ega.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-monkey-island/monkey-ingame-vga.jpg" >
+    ![The Secret of Monkey Island -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.81.0-monkey-island/monkey-ingame-vga-small.jpeg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   The Secret of Monkey Island ---<br>EGA as displayed on VGA monitors
@@ -527,7 +558,9 @@ viewport = 1120x840
 </figure>
 
 <figure markdown>
-  ![The Secret of Monkey Island -- "True EGA" emulation](https://archive.org/download/dosbox-staging-v0.82.0-monkey-ega/monkey-ega-crt.jpg){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-monkey-island/monkey-ingame-ega.jpg" >
+    ![The Secret of Monkey Island -- "True EGA" emulation](https://archive.org/download/dosbox-staging-v0.81.0-monkey-island/monkey-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   The Secret of Monkey Island ---<br>"True EGA" emulation
@@ -539,7 +572,9 @@ viewport = 1120x840
 <div class="image-grid" markdown>
 
 <figure markdown>
-  ![Loom -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.82.0-loom-ega/loom-ega.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-loom/loom-ingame-vga.jpg" >
+    ![Loom -- EGA as displayed on VGA monitors](https://archive.org/download/dosbox-staging-v0.81.0-loom/loom-ingame-vga-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Loom --- EGA as displayed on VGA monitors
@@ -547,7 +582,9 @@ viewport = 1120x840
 </figure>
 
 <figure markdown>
-  ![Loom -- "True EGA" emulation](https://archive.org/download/dosbox-staging-v0.82.0-loom-ega/loom-ega-crt.jpg){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-loom/loom-ingame-ega.jpg" >
+    ![Loom -- "True EGA" emulation](https://archive.org/download/dosbox-staging-v0.81.0-loom/loom-ingame-ega-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Loom --- "True EGA" emulation
@@ -565,11 +602,11 @@ viewport = 1120x840
     don't have the exact same gameplay either. This is especially true for the
     three classic LucasArts games included in this demo collection. You can
     check out the comparison and analysis of the EGA versus VGA versions of
-    *Indiana Jones and the Last Crusade* and *Loom*
+    **Indiana Jones and the Last Crusade** and **Loom**
     [here](https://www.superrune.com/tutorials/lucasfilm_ega.php).
 
     In [another article](https://www.arcadeattack.co.uk/brian-moriarty/),
-    Brian Moriatry, the creator of *Loom*, shares his opinion about the VGA
+    Brian Moriatry, the creator of **Loom**, shares his opinion about the VGA
     remake of the game (he calls it "an abomination", so apparently he's quite
     unimpressed...)
 
@@ -577,6 +614,30 @@ viewport = 1120x840
     the original EGA experiences, thinking they are "inferior" somehow. Even
     if you might prefer the VGA remakes in the end, you should at least give
     the EGA originals a chance.
+
+
+## Authentic image size
+
+DOS games appear overly blocky at fullscreen on 24" or larger modern monitors.
+This is not how people experienced these games back in the day. Typical
+monitor sizes were 14-15" throughout the 320&times;200 VGA era, and 17-19" for
+the brief 640&times;480 SVGA period at the end of the DOS days.
+
+We can make the image a bit smaller with the following setting:
+
+```ini
+[render]
+viewport = 89%
+```
+
+This will result in an image size that is the best compromise between "modern
+sensibilities" and the authentic original experience. It's still on the large
+end of the spectrum, but not overly so. If you go higher than this, the
+graphics will start looking overly blocky from a normal viewing distance.
+
+The rationale behind the "magic 89% value" is explained in detail in the last
+[advanced graphics options](advanced-graphics-options.md#custom-viewport-resolution) chapter.
+
 
 
 ## CPU sensitive games
@@ -640,7 +701,9 @@ fullscreen = on
 mouse_capture = onstart
 
 [render]
-viewport = 1120x840
+viewport = 89%
+# uncomment for double-scanned VGA CRT emulation
+#glshader = crt-auto-machine
 
 [sblaster]
 # uncomment for Game Blaster audio

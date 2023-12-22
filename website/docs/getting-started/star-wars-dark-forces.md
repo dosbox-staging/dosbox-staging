@@ -53,7 +53,9 @@ After the setup has been completed, start the game by running `demo` again
 and then pressing the ++1++ key.
 
 <figure markdown>
-  ![Star Wars: Dark Forces -- Opening scene](https://archive.org/download/dosbox-staging-v0.82.0-dark-forces-ingame/dark-forces-ingame.png){ loading=lazy }
+  <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-dark-forces/dark-forces-ingame.jpg" >
+    ![Star Wars: Dark Forces -- Opening scene](https://archive.org/download/dosbox-staging-v0.81.0-dark-forces/dark-forces-ingame-small.jpg){ loading=lazy .skip-lightbox }
+  </a>
 
   <figcaption markdown>
   Star Wars: Dark Forces --- Opening scene
@@ -64,10 +66,10 @@ and then pressing the ++1++ key.
 ## Autotype
 
 Having to press the ++1++ key every time we start the game is not the end of
-the world, but it's not great either. Luckily, there's a way to automate that;
-the handy `autotype` DOSBox Staging command can simulate keypresses as implied
-by its name. This is what we need to put into our `[autoexec]` section to
-start the game without manual intervention:
+the world, but it's not great either. Luckily, there's a way to automate
+that; the handy `autotype` DOSBox Staging command can simulate keypresses as
+implied by its name. This is what we need to put into our `[autoexec]` section
+to start the game without manual intervention:
 
 ```ini
 [autoexec]
@@ -77,9 +79,9 @@ demo
 exit
 ```
 
-The first `-w 0.5` argument of the `autotype` command specifies an initial 0.5
-second wait time before the "auto-typing" begins. This is followed by the `1`
-argument which will simulate pressing the ++1++ key.
+The first `-w 0.5` argument of the `autotype` command specifies an initial
+half-second wait time before the "auto-typing" begins. This is followed by the
+`1` argument which will simulate pressing the ++1++ key.
 
 That's it! It's a simple but very useful feature. Run `autotype /?` to see the
 full list of available options and check out the list of [AUTOTYPE
@@ -89,16 +91,17 @@ on our wiki for assorted real-life examples.
 
 ## Display refresh rate
 
-Dark Forces uses the 320&times;200 / 256-colour VGA screen mode, just like the
-majority of DOS games from the 90s. This mode uses a fixed 70 Hz screen
+Dark Forces uses the 320&times;200 256-colour VGA screen mode, just like the
+majority of DOS games from the 1990s. This mode uses a fixed 70 Hz screen
 refresh rate, so if your emulated CPU is fast enough, you can get 70 FPS out
 of the game.
 
 But there's a problem: most modern non-variable refresh rate flat screens work
-at fixed 60 Hz. Luckily, DOSBox Staging intelligently times and drops frames
-if there's a mismatch between the refresh rate of the *emulated* graphics
-card and the *actual* refresh rate of your physical monitor. In most cases,
-this works fine out of the box without you needing to configure anything.
+at a fixed 60 Hz rate. Luckily, DOSBox Staging intelligently times and drops
+frames if there's a mismatch between the refresh rate of the *emulated*
+graphics card and the *actual* refresh rate of your physical monitor. In most
+cases, this works fine out of the box without you needing to configure
+anything.
 
 However, even though DOSBox Staging is trying to do its best in such
 situations, refresh rates will always result in some visible unevenness of
@@ -117,7 +120,7 @@ To achieve smoother motion, we have two options:
 - Using **specific fixed refresh rates** on non-VRR monitors --- Even if
   you're not a lucky owner of a VRR display, your monitor might support a
   fixed 70 Hz refresh rate if you create a custom screen mode for it. This
-  is highly monitor dependent, but there's no harm in trying it out.
+  is highly monitor-dependent, but there's no harm in trying it out.
 
 
 Note, however, that depending on the type of game, the 60/70 Hz mismatch might
@@ -130,9 +133,10 @@ Another important consideration is that most pre-VGA games don't feature
 smooth movement in their graphics, so the general unevenness of motion masks
 the slight judder resulting from the 60/70 Hz mismatch.
 
-For reference, these are the refresh rates of all emulated graphics cards:
+For reference, these are the refresh rates of the graphics standards emulated
+by DOSBox Staging:
 
-| Graphics adapter      | Refresh rate                                                                     |
+| Graphics standard     | Refresh rate                                                                     |
 |-----------------------|----------------------------------------------------------------------------------|
 | SVGA and VESA         | 70 Hz or higher --- 640&times;480 or higher extended and VESA modes              |
 | VGA                   | 60 Hz --- 640&times;480 standard mode only<br>70 Hz --- all other standard modes |
@@ -159,7 +163,7 @@ For reference, these are the refresh rates of all emulated graphics cards:
     can only work 100% correctly either on a true VRR display or a real
     old-school CRT monitor. However, most games only use a single fixed
     refresh rate, which is usually the standard 70 Hz VGA rate, so this
-    technique is still very practical.
+    technique still has a lot of practical utility.
 
 
 ## Vertical syncing
@@ -168,18 +172,19 @@ Dark Forces synchronises its screen updates to the refresh rate of the
 emulated VGA card, which is always 70 Hz. This is hardcoded behaviour that
 cannot be disabled in the game's configuration.
 
-DOSBox Staging itself also uses vertical syncing by default to synchronise
-updating the emulated image to the vertical refresh rate of your physical
-monitor. Without DOSBox-level vsync, fast-paced games such as this one would
-exhibit a lot of tearing. This is important to understand: to get zero
-tearing, vertical syncing *must* be happening both in the game *and* at the
-DOSBox level!
+DOSBox Staging tries to automatically detect the conditions where enabling
+vertical syncing is beneficial to synchronise updating the emulated image to
+the vertical refresh rate of your physical monitor. Without DOSBox-level
+vsync, fast-paced games such as this one would exhibit a lot of tearing. This
+is important to understand: to get zero tearing, vertical syncing *must* be
+happening both in the game *and* at the DOSBox level!
 
 Conversely, DOSBox-level vsync only means that the *emulated* image is output
 to your physical monitor without flickering and tearing; the emulated DOS game
 *itself* might or might not use vertical syncing, and thus might or might not
 produce tearing artifacts of its own (these artifacts are present when running
-the game on real hardware too---there's nothing we can do about them).
+the game on real hardware too, so there's nothing we can do about them at the
+emulator level).
 
 You don't have control over the vertical syncing behaviour in most DOS games.
 For example, Commander Keen 4--6, Doom, and many other FPS games have
@@ -195,7 +200,7 @@ To recap, the following variations are possible when it comes to vsync:
 | Game uses vsync? | DOSBox-level vsync enabled? | Result
 |-----|-----|---------------------
 | yes | yes | no tearing
-| no  | yes | some tearing; also present on real hardware
+| no  | yes | some tearing also present on real hardware
 | yes | no  | bad tearing (in fast-paced games)
 | no  | no  | very bad double-tearing (in fast-paced games)
 
@@ -207,17 +212,26 @@ To recap, the following variations are possible when it comes to vsync:
 }
 </style>
 
-As you can see, there is no point in disabling vsync in DOSBox itself, and
-even with DOSBox vsync enabled you might still get tearing in some games, but
-that's just how the games were coded. We can't "fix" that at the emulator
-level; that would require making changes to the games' code. On the other
-hand, that's the "authentic DOS experience" for you! :sunglasses:
+As you can see, even with DOSBox-level vsync enabled, you might still get
+tearing in some games, but that's just how the games were coded. We can't
+"fix" that at the emulator level, that would require making changes to the
+games' code.  Many pre-rendered cutscenes and FMV games tear really badly on
+real hardware too on CRTs---that's the "authentic DOS experience" for you!
+:sunglasses:
+
+Manually configuring vsync is a complex advanced topic for power users only,
+so it's beyond the scope of this beginner's guide. If you're feeling brave,
+look into the `presentation_mode`, `vsync`, `vsync_skip`, `host_rate`, and
+`dos_rate` settings for further details, but it's unlikely you'll be able to
+improve the automatically chosen settings unless you _really_ know what you're
+doing (and it's really easy to make the situation a lot worse by
+misconfiguring things).
 
 
 ## Setting the emulated CPU speed
 
 Hardware-accelerated 3D graphics only became widespread in the second half of
-the 90s after the end of the DOS era, so most DOS games only use software
+the 1990s after the end of the DOS era, so most DOS games only use software
 rendering. Dark Forces is no exception, which means your emulated CPU needs to
 be fast enough to reach the 70 FPS maximum the game supports.
 
@@ -235,13 +249,13 @@ power. While this will most likely help achieve a stable 70 FPS (if your
 computer is powerful enough), running the CPU at maximum speed could starve
 the audio emulation, leading to audible glitches, clicks, and pops.
 
-To avoid such issues, it's much preferable to emulate a CPU that is
-powerful enough to handle 70 FPS but not more. One way to come up with a good
-cycles number is to start the game with a relatively low cycles setting, say
-10&thinsp;000, then keep increasing it with the ++ctrl+f12++ shortcut
-(++cmd+f12++ on the Mac) while playing to arrive at the lowest value that
-results in adequate performance. As a reminder, you can decrease the current
-cycles value too with the ++ctrl+f11++ (++cmd+f11++) shortcut.
+To avoid such issues, it's much preferable to emulate a CPU that is _just
+powerful enough_ to handle 70 FPS but not _more_ powerful. One way to come up
+with a good cycles number is to start the game with a relatively low cycles
+setting, say 10&thinsp;000, then keep increasing it with the ++ctrl+f12++
+shortcut (++cmd+f12++ on the Mac) while playing to arrive at the lowest value
+that results in adequate performance. As a reminder, you can decrease the
+current cycles value too with the ++ctrl+f11++ (++cmd+f11++) shortcut.
 
 So let's add the following to our config:
 
@@ -254,9 +268,8 @@ Start the game and hold the ++left++ or ++right++ key to keep turning around,
 then increase the cycles value until the motion becomes smooth (again, unless
 you're using a VRR monitor or a fixed 70 Hz refresh rate, it will never become
 completely smooth). Somewhere around 50&thinsp;000 cycles seems to do the
-trick, which roughly corresponds to a Pentium 90 based on our [table of
-common
-processors](beneath-a-steel-sky.md#finding-the-correct-speed-for-a-game).
+trick, which roughly corresponds to a Pentium 90 based on our [table of common
+CPU speeds](beneath-a-steel-sky.md#finding-the-correct-speed-for-a-game).
 
 So we'll go with that setting. You might need to increase this if later levels
 are more demanding on the CPU, but this is a good starting point:
@@ -272,25 +285,26 @@ cycles = 50000
     breaking up, and the motion will become very stuttery after a certain
     point. This means you're trying to emulate a faster CPU than your computer
     can handle. If you're on a less powerful machine, this unfortunately can
-    happen before reaching the minimum cycles value necessary for a smooth and
-    stable 70 FPS.
+    happen before reaching the minimum cycles value necessary for achieving
+    a smooth and stable 70 FPS rate.
 
-    You have only two options in this situation: live with a lower cycles
+    You have only two options in that situation: live with a lower cycles
     setting that results in less than 70 FPS, or buy a more powerful computer
     with a faster processor that can handle higher cycles values.
 
     Also, make sure you're not running any other CPU-intensive programs at the
     same time in the background. Virus scanners, backup software, copying
     large files to USB storage, heavy network traffic, and even ordinary web
-    browsers with many tabs open can chew up a significant part of your total
+    browsers with many tabs open can chew up a significant chunk of your total
     CPU power. Certain popular chat programs can be very demanding on the CPU
     too, and, surprisingly, even innocent-looking stuff such as automatic
-    wallpaper changers can have negative effects on the performance of DOSBox.
+    wallpaper switchers can have negative effects on the performance of DOSBox.
 
     As a general rule, it's best to close all other programs if you're
     encountering performance issues with DOSBox and try again. Just apply
     common sense and treat DOSBox as any other performance-intensive modern
-    game.
+    game. This might seem counterintuitive as we're running decades-old
+    software here, but emulation can be very demanding on your computer.
 
 
 ## Setting up General MIDI sound
@@ -311,8 +325,8 @@ it; these contain the instrument definitions and the sound data.
 You can read more about the history of MIDI in DOS gaming at the end of this
 section, but the short practical summary is as follows:
 
-- The Roland Sound Canvas SC-55 was the de-facto standard General MIDI sound
-  module until the very end of the DOS years (around 1997).
+- The **Roland Sound Canvas SC-55** was the de-facto standard General MIDI
+  sound module until the very end of the DOS years (around 1997).
 
 - DOSBox Staging does not emulate the SC-55 directly, but there are SoundFonts
   you can load into FluidSynth that approximate the sound of the SC-55.
@@ -324,8 +338,8 @@ games use these extra features, and while General MIDI compatible SoundFonts
 will work with them, for the best results it's recommended to use GS standard
 compatible ones.
 
-One such SoundFont is [GeneralUser GS](https://schristiancollins.com/generaluser.php);
-download the latest version, then copy the SoundFont file with the `.sf2`
+One such SoundFont is [GeneralUser GS](https://schristiancollins.com/generaluser.php).
+Download the latest version, then copy the SoundFont file with the `.sf2`
 extension into its designated folder:
 
 <div class="compact" markdown>
@@ -411,7 +425,8 @@ sounds on the original Roland SC-55 hardware versus a few different
 SoundFonts. As mentioned, GeneralUser GS and Creative 4GMGSMT are the closest
 in terms of overall balance and character, the rest are rather hit-and-miss.
 My advice: just pick one that gives you good overall results and stick with
-it.
+it. It's best to do this in your primary config, then you never need to think
+about it again.
 
 Further comparison recordings can be found on [our wiki](https://github.com/dosbox-staging/dosbox-staging/wiki/MIDI#comparison-recordings).
 
@@ -431,78 +446,84 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 !!! tip "Turn it down, please!"
 
     Some SoundFonts are *way* too loud; if you encounter such a SoundFont,
-    you'll most likely want to lower the output level of FluidSynth. For
-    example, to scale back the volume to 40%, use the `mixer fsynth 40`
-    command. A few SoundFonts are _extremely loud_---you need to turn the
-    FluidSynth volume down to 10-20% to get usable levels. It's a mystery what
-    the authors were thinking...
+    you'll most likely want to lower its output level. The best way to do so
+    is by including an additional percentage volume value after the
+    SoundFont's name in the config, e.g.:
+
+    ```
+    [fluidsynth]
+    soundfont = Arachno.sf2 40
+    ```
+
+    This will scale back the volume to 40%. A few SoundFonts are _extremely
+    loud_---you need to turn the volume down to 10-20% to get usable levels.
+    It's a mystery what the authors were thinking...
 
 
 !!! warning "Roland MT-32 is not General MIDI"
 
     Do not confuse the Roland MT-32 family of MIDI sound modules with General
-    MIDI modules! Music composed for the MT-32 sounds *utterly wrong* on a
-    General MIDI module, and vice versa. Yes, they both have "MIDI" in their
+    MIDI modules! Music composed for the MT-32 often sounds *utterly wrong* on a
+    General MIDI device, and vice versa. Yes, they both have “MIDI” in their
     names, but that only refers to the communication protocol. The MT-32 range
-    of devices are fully programmable synthesisers and most games take
-    advantage of their sound-shaping capabilities, while the General MIDI
-    modules have much more modest synthesis capabilities, but feature more
-    realistic-sounding real-world instruments (the soundtrack of Dark Forces
-    showcases this very well---you just can't get such realistic orchestral
-    music out of an MT-32).
+    of devices are programmable synthesisers and most MT-32 supporting games
+    take advantage of that to create custom sounds. In contrast, General MIDI
+    modules are generally weaker in the synthesis front but feature more
+    realistic-sounding real-world instruments. The soundtrack of Dark Forces
+    showcases this very well---you can’t get such realistic orchestral music
+    out of an MT-32.
 
-    Whenever you want to configure a new game for MIDI sound, you should
-    consult the [list of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
-    to see if the game was originally composed for the MT-32 or a General MIDI
-    device (typically the SC-55). The original game manuals very rarely give
-    you this info, so you *absolutely* need this list that contains the
-    hard-earned knowledge of many decades of research and testing.
+    Whenever you configure a game for MIDI sound, you should consult the [List of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
+    first. This contains the hard-earned
+    knowledge of many decades of research and tells you which MIDI module to
+    use for a particular game. The original game manuals very rarely give you
+    this info, and even if they do, the information is often wrong. So you
+    *absolutely* need this list.
 
-    Quite confusingly, there's an alarmingly large list of games that falsely
-    claim MT-32 compatibility in their setup utility, but they in fact require
-    a General MIDI module to sound correct. Before you configure any game for
-    MT-32 sound, you should definitely check the [list of games that falsely
-    claim MT-32 compatibility](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games#Games_that_falsely_claim_MT-32_compatibility)
-    too, no matter what the game's manual says (quite often, the information
-    contained therein is simply wrong).
+    Quite confusingly, there’s a large list of games that claim MT-32
+    compatibility but only sound correct on a General MIDI module. Make sure
+    to check the [List of games that falsely claim MT-32
+    compatibility](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games#Games_that_falsely_claim_MT-32_compatibility)
+    as well before configuring any game for MT-32 sound.
 
 
 !!! info "A brief history of MIDI in DOS gaming"
 
-    In the beginning, the iconic Roland MT-32 family of devices were the only
-    MIDI sound modules available for DOS games that made realistic-sounding
-    music a possibility. The original MT-32 was released in 1987, and its
-    hegemony ended in 1991 with Roland unleashing its successor, the similarly
-    iconic Roland Sound Canvas SC-55.
+    The iconic **Roland MT-32** released in 1987 was the first sound module that
+    made realistic-sounding music in DOS games a possibility. In 1991, Roland
+    released its successor, the iconic **Roland Sound Canvas SC-55**.
 
-    The SC-55 was another pioneering effort that shaped DOS gaming history in
-    significant ways: it was the world's first device to support the *General
-    MIDI* standard and the *GS standard* (the latter being Roland's
-    vendor-specific General MIDI extensions). MIDI in the broadest sense only
+    The SC-55 shaped DOS gaming history in significant ways: it was the
+    world’s first device to support the **General MIDI standard**. MIDI only
     defines a communication mechanism between MIDI-capable devices (e.g., a
-    sound module and your computer), but remains silent on how the different
-    instruments should *sound*. General MIDI (GM) remedied this with its 128
-    standard instrument definitions; for example, you can be sure that on any
-    GM-compliant module instrument \#1 is the Acoustic Grand Piano and
-    instrument \#36 is the Fretless Bass.
+    sound module and your computer). But it remains silent on how the
+    different instruments should sound. General MIDI (GM) remedied this with
+    its 128 standard instrument definitions. For example, on any GM-compliant
+    module, instrument \#1 is always the Acoustic Grand Piano and instrument
+    \#36 is the Fretless Bass.
 
-    This made interoperation between GM-compliant devices possible. In theory,
-    you could use any General MIDI sound module with any GM-compliant game,
-    and you would get music, and it would sound *mostly* correct. In practice,
-    that "mostly" part is highly variable and it depends on the musical
-    composition and the particular sound module in use. The thing is, most
-    composers and gamers had the SC-55, establishing it as a de-facto standard
-    (understandably, because it was the very first GM module). Other GM sound
-    modules can render musical compositions written for the SC-55 unbalanced
-    and weird-sounding, depending on how different their instruments sound
-    compared to the "standard" SC-55.
+    This made interoperation between GM-compliant devices possible. You could
+    use any General MIDI sound module with any GM-compliant game, and you
+    would get music. The music would sound *mostly* correct, but this depends on
+    the musical composition and the particular sound module. Most composers
+    and gamers had the SC-55, establishing it as a de facto standard. This
+    means music could sound unbalanced and weird on other GM sound modules if
+    they deviated too much from the “gold standard” SC-55 sound.
 
-    Another thing that makes compatibility difficult to achieve is that the
-    SC-55 supports not just the GM but also the GS standard, and many games
-    make good use of certain GS-only features. This means that any other
-    General MIDI module that claims "Sound Canvas compatibility" also has to
-    implement the GS standard in a manner that sounds very close to the SC-55,
-    which is not always the case.
+    Additionally, the SC-55 also supports the **General Standard** (**Roland
+    GS**, or only **GS** in short), which is Roland’s vendor-specific General
+    MIDI extension. Many games make good use of these extra features and sound
+    wrong in their absence. This means that alternative MIDI modules need to
+    support both the GM *and* the GS standards to sound correct with DOS
+    games.
+
+    The **Yamaha DB50XG** and **MU-series** (e.g., MU50, MU80, MU100, etc.) are such
+    MIDI modules. They can be viewed as more modern-sounding and
+    higher-quality takes on the original SC-55. They offer excellent SC-55
+    compatibility but with a more polished and punchy  sonic character. In
+    fact, many prefer them to the SC-55 in certain DOS games. If you are
+    curious about how these Yamaha modules stack up against the SC-55, [this
+    article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/) might be of interest.
 
 
 
@@ -513,7 +534,7 @@ If a game has loud music and you set the output level of your soundcard too
 high, you'll get rather unpleasant-sounding distortion and crackling on real
 hardware. DOSBox Staging has a dynamic range compressor on the master channel
 that automatically pulls the volume back on loud sounds to prevent such
-distortion from happening.
+distortions.
 
 You can test this by playing the game for a minute with the GeneralUser GS
 SoundFont. You might notice a slight "pumping" as the compressor pulls the
@@ -569,14 +590,17 @@ needs to be reversed.
 But what about games that don't have such a handy "reverse stereo" option in
 their setup utility? For those games, you can simply reverse the left and
 right channels of the `SB` mixer channel with the `mixer sb reverse` command.
-(Remember, use `mixer /?` to list all available commands and options.)
+This will only reverse the digital sound output of the Sound Blaster.
+
+(Remember, you can use `mixer /?` or `help mixer` to view the mixer command's
+help.)
 
 
 ## Minimising audio glitches
 
 Even after setting the optimal cycles value for the game to limit the emulated
 CPU speed, you might still hear occasional audio glitches. Why this can happen
-depends on a lot of factors, but mainly it comes down to the particular
+depends on a lot of factors, but it mainly comes down to the particular
 hardware, driver, and operating system combination you're using.
 
 As a last resort, you can try setting larger audio buffers sizes; this usually
@@ -584,12 +608,12 @@ helps eliminate the occasional clicks and pops. The downside of this is that
 it will also increase audio latency, meaning that you'll hear the audio in
 response to some action with a longer delay (e.g., when shooting with a gun).
 
-The default `blocksize` value is 1024 on Windows and 512 on macOS and Linux.
-The default `prebuffer` size is 25 on Windows and 20 on the other platforms (this
-is specified in milliseconds). You can experiment with increasing these
-settings---doubling them is a good start. Generally, `prebuffer` can be
-anything, and `blocksize` should be one of the following values: 256, 512,
-1024, 2048, 4096, or 8192. 
+The default `blocksize` value is 1024 on Windows and 512 on macOS and
+Linux. The default `prebuffer` size is 25 on Windows and 20 on the other
+platforms (this is specified in milliseconds). You can experiment with
+increasing these settings---doubling them is a good start. Generally,
+`prebuffer` can be anything but `blocksize` must be one of the following
+values: 256, 512, 1024, 2048, 4096, or 8192.
 
 
 ```ini
@@ -607,17 +631,18 @@ Here's the full config of Dark Forces set up for General MIDI sound:
 [sdl]
 fullscreen = on
 
-[render]
-viewport = 1120x840
-
 [cpu]
 # to emulate a Pentium 90
 cycles = 50000
+
+[mixer]
+compressor = off
 
 [midi]
 mididevice = fluidsynth
 
 [fluidsynth]
+# not needed if you set this in the primary config
 soundfont = "GeneralUser GS v1.471.sf2"
 
 [autoexec]

@@ -4,12 +4,12 @@
 
 All good things must come to an end, and this guide is no different!
 
-Congratulations---now you should be able to use DOSBox fairly confidently at a
-basic level, and we've actually touched on quite a few intermediate topics as
-well. Armed with the basics, now you have a much greater chance to figure
-things out on your own, and you'll be able  to ask more specific, directed
-questions from the more experienced members of the community when seeking
-help.
+Congratulations---now you should be able to use DOSBox Staging fairly
+confidently at a basic level, and we've actually touched on quite a few
+intermediate topics as well. Armed with the basics, now you have a much
+greater chance to figure things out on your own, and you'll be able  to ask
+more specific, directed questions from the more experienced members of the
+community when seeking help.
 
 So what's next? Try setting up a few more games yourself; peruse the various
 configuration options in the primary configuration file; look around on [our
@@ -20,7 +20,7 @@ page](https://dosbox-staging.github.io/releases/windows/)---there are plenty
 of learning opportunities if you wish to delve deeper!
 
 If you're stuck with something, you can always ask questions from the DOSBox
-Staging team directly on [Discord](https://discord.gg/WwAg3Xf).
+Staging community directly on [Discord](https://discord.gg/WwAg3Xf).
 
 Most importantly, experiment, enjoy what classic PC gaming has to offer,
 and have fun! :sunglasses:
@@ -83,10 +83,10 @@ or work around them.
 
 [VOGONS](https://www.vogons.org/)
 
-: An acronym for Very Old Games On New Systems, this forum is an oasis for all
-retro-hardware and retro-gaming enthusiasts, mainly focusing on PC compatibles
-and DOSBox-related things. The combined knowledge of the community on all
-things DOS and retro-PC is next to none---try asking any obscure question, and
-there's a good chance you'll get a very detailed (and correct!) answer within
-a few hours.
+: An acronym for **Very Old Games On New Systems**, this forum is an oasis for
+all retro-hardware and retro-gaming enthusiasts, mainly focusing on PC
+compatibles and DOSBox-related things. The combined knowledge of the community
+on all things DOS and retro-PC is next to none---try asking any obscure
+question, and there's a good chance you'll get a very detailed (and correct!)
+answer within a few hours.
 
