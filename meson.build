@@ -217,9 +217,9 @@ else
     extra_flags += [
         '-shared-libstdc++',
         '-shared-libgcc',
-        '-lstdc++_s',
         '-fPIC',
     ]
+    extra_link_flags += '-lstdc++_s'
 endif
 
 if get_option('narrowing_warnings')
