@@ -356,20 +356,14 @@ endif
 summary('SIMD instruction set', simd_summary, section: 'Build Summary')
 
 # Allow-list the flags against the compiler, and add them to the project
-foreach flag : extra_flags
-    if cc.has_argument(flag)
-        add_project_arguments(flag, language: 'c')
-    endif
-    if cxx.has_argument(flag)
-        add_project_arguments(flag, language: 'cpp')
-    endif
-endforeach
-foreach flag : extra_link_flags
-    if cxx.has_link_argument(flag)
-        add_project_link_arguments(flag, language: 'cpp')
-    endif
-endforeach
+cc_supported_arguments = cc.get_supported_arguments(extra_flags)
+add_project_arguments(cc_supported_arguments, language: 'c')
 
+cxx_supported_arguments = cxx.get_supported_arguments(extra_flags)
+add_project_arguments(cxx_supported_arguments, language: 'cpp')
+
+link_supported_arguments = cxx.get_supported_link_arguments(extra_link_flags)
+add_project_link_arguments(link_supported_arguments, language: 'cpp')
 
 # Gather data to populate config.h
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -677,6 +671,7 @@ elif (
             'ZLIB_ENABLE_TESTS': false,
             'WITH_NATIVE_INSTRUCTIONS': zlib_ng_is_native,
             'WITH_SANITIZER': get_option('b_sanitize'),
+            'CMAKE_C_FLAGS': ' '.join(cc_supported_arguments),
         }
 
         foreach instruction_set : [
