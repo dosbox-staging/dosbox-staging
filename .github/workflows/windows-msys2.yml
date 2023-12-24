@@ -207,6 +207,7 @@ jobs:
           install: |
             git
             mingw-w64-clang-${{matrix.conf.arch}}-clang
+            mingw-w64-clang-${{matrix.conf.arch}}-cmake
             mingw-w64-clang-${{matrix.conf.arch}}-meson
             mingw-w64-clang-${{matrix.conf.arch}}-ccache
             mingw-w64-clang-${{matrix.conf.arch}}-pkgconf
@@ -291,7 +292,7 @@ jobs:
             -Db_lto=true \
             -Db_lto_threads=$(nproc) \
             -Dtry_static_libs=mt32emu \
-            -Duse_zlib_ng=built-in,sse2,ssse3 \
+            -Duse_zlib_ng=sse2,ssse3 \
             $BUILD_RELEASE_DIR
 
       - name: Setup debugger build
@@ -299,9 +300,9 @@ jobs:
           meson setup \
             -Db_lto=true \
             -Db_lto_threads=$(nproc) \
-            -Denable_debugger=normal \
+            -Denable_debugger=heavy \
             -Dtry_static_libs=mt32emu \
-            -Duse_zlib_ng=built-in,sse2,ssse3 \
+            -Duse_zlib_ng=sse2,ssse3 \
             $BUILD_DEBUGGER_DIR
 
       - name: Build release

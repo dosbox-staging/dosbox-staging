@@ -67,53 +67,22 @@ option(
     description: 'Let ManyMouse use the X Input 2.0 protocol.',
 )
 
-# The built-in zlib-ng is available when compiling with optimizations
-# such as when -Dbuildtype is set to 'release','minsize', or
-# 'debugoptimized'.
+# The meson.build either uses zlib-ng if its found as a system library or
+# compiles it as a built-in (provided CMake is available and Meson is at
+# least version 1.3.0), in that order.
 #
-# You will need CMake(*) and Meson 1.3.0. If your package manager's
-# version of Meson is too old, you can install it using pip.
+# The built-in will use native SIMD instructions by default, however if you're
+# targeting a range of hardware then set this to the most conservative set of
+# SIMD instructions for your needs. For example, if you want to be sure your
+# binary runs on Intel's Core 2 Duo, set: meson setup -Duse_zlib_ng=sse2,ssse3
 #
-# If you're compiling from sources just for your own local system,
-# then you can leave this setting as-is for excellent performance.
-#
-# If you're compiling a package targeting a range of hardware
-# and you have no qualms with built-ins, then set this to the
-# most conservative set of SIMD instructions for your supported
-# range of hardware. For example, if your binary needs to run on
-# Intel's Core 2 Duo (and newer), then:
-#  meson setup -Duse_zlib_ng=built-in,sse2,ssse3
-#
-# If you're a repo packager that dislikes built-ins or are
-# working under a policy that prohibits them, then use:
-#  meson setup -Duse_zlib_ng=false
-#
-# Note: As zlib-ng is, itself, an optimization that adds time
-# and complexity to the build process, we therefore only use it
-# for optimized build types. Maintainers, developers, and CI
-# jobs compiling debug builds aren't burdened with this as
-# these builds aren't concerned with maximizing performance.
-#
-# (*) A Meson project that depends on CMake!? Well, zlib-ng
-#     is a CMake project and thankfully Meson has a module
-#     that can both configure it build it. To eliminate this
-#     dependency on CMake, feel free to contribute a wrap
-#     for zlib-ng here: https://github.com/mesonbuild/wrapdb
+# To disable zlib-ng use -Duse_zlib_ng=false
+# To only use the built-in: --wrap-mode=forcefallback or --force-fallback-for=zlib-ng
 #
 option(
     'use_zlib_ng',
     type: 'array',
     choices: [
-        # Auto (default) try zlib-ng from the system
-        # and then built-in, in that order.
-        'auto',
-
-        # Only try using zlib-ng from the system.
-        'system',
-
-        # Only try using zlib-ng from built-in.
-        'built-in',
-
         # Disable zlib-ng; use good old zlib.
         'false',
         
@@ -155,8 +124,8 @@ option(
         'dfltcc_deflate',
         'dfltcc_inflate',
     ],
-    value: ['auto', 'native'],
-    description: 'Enable zlib-ng either from the system or built-in',
+    value: ['native'],
+    description: 'Enable zlib-ng with SIMD optimizations',
 )
 
 option(
