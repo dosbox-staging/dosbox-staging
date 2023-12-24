@@ -470,9 +470,6 @@ static std_fs::path get_shell_history_path()
 
 void DOS_Shell::ReadShellHistory()
 {
-	if (control->SecureMode()) {
-		return;
-	}
 	const auto history_path = get_shell_history_path();
 	if (history_path.empty()) {
 		return;
@@ -492,9 +489,6 @@ void DOS_Shell::ReadShellHistory()
 
 void DOS_Shell::WriteShellHistory()
 {
-	if (control->SecureMode()) {
-		return;
-	}
 	const auto history_path = get_shell_history_path();
 	if (history_path.empty()) {
 		return;
@@ -1447,9 +1441,19 @@ void SHELL_Init() {
 	// first_shell is only setup here, so may as well invoke
 	// it's constructor directly
 	first_shell = new DOS_Shell;
-	first_shell->ReadShellHistory();
+
+	// Must check arguments directly as control->SwitchToSecureMode()
+	// will not be called until the first shell is run
+	if (!control->arguments.securemode) {
+		first_shell->ReadShellHistory();
+	}
 	first_shell->Run();
-	first_shell->WriteShellHistory();
+
+	// Secure mode can be enabled from the shell during runtime.
+	// On exit, we must check this value instead.
+	if (!control->SecureMode()) {
+		first_shell->WriteShellHistory();
+	}
 	delete first_shell;
 	first_shell = nullptr; // Make clear that it shouldn't be used anymore
 }
