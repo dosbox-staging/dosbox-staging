@@ -1067,8 +1067,8 @@ Nota: Dovresti disabilitarlo nel caso in cui vengano rilevati erroneamente
 .
 :CONFIG_MOUSE_SENSITIVITY
 Sensibilità del mouse a livello globale per gli assi orizzontale e verticale,
-in percentuale (predefinito 100). I valori possono essere separati da spazi,
-virgole o punto e virgola (ad esempio 100,150).
+in percentuale (predefinito 100). I valori possono essere separati da uno
+spazio, virgola o punto e virgola (ad esempio 100,150).
 Valori negativi invertono gli assi, zero disabilita il mouse.
 Fornendo un solo valore, si imposta la sensibilità per entrambi gli assi.
 La sensibilità può essere ulteriormente regolata per ogni interfaccia del mouse
@@ -1793,8 +1793,8 @@ Il programma COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
 .
 :CONFIG_SHELL_HISTORY_FILE
 File contenente la cronologia dei comandi digitati dall'utente sulla riga di
-comando (predefinito 'shell_history.txt'). Se impostato a stringa vuota, la
-cronologia dei comandi non sarà salvata.
+comando (predefinito 'shell_history.txt'). Se non è specificato alcun nome
+di file, la cronologia dei comandi non sarà salvata.
 .
 :CONFIG_SETVER_TABLE_FILE
 File contenente l'elenco dei programmi e le versioni DOS loro assegnate,
