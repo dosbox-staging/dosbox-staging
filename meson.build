@@ -601,6 +601,8 @@ optional_dep = dependency('', required: false)
 msg = 'You can disable this dependency with: -D@0@=false'
 
 default_wrap_options = ['default_library=static', 'warning_level=0']
+wraps_forced = get_option('wrap_mode') == 'forcefallback'
+wraps_disabled = get_option('wrap_mode') in ['nodownload', 'nofallback']
 
 dl_dep = cc.find_library('dl', required: false)
 stdcppfs_dep = cxx.find_library('stdc++fs', required: false)
@@ -644,8 +646,14 @@ sdl2_dep = dependency(
 zlib_dep = disabler()
 zlib_is_static = 'zlib' in static_libs_list or prefers_static_libs
 
-try_system_zlib_ng = 'auto' in zlib_ng_options or 'system' in zlib_ng_options
-try_builtin_zlib_ng = 'auto' in zlib_ng_options or 'built-in' in zlib_ng_options
+try_system_zlib_ng = (
+    not wraps_forced
+    and 'zlib-ng' not in get_option('force_fallback_for')
+)
+try_builtin_zlib_ng = (
+    not wraps_disabled
+    or 'zlib-ng' in get_option('force_fallback_for')
+)
 
 system_zlib_ng_dep = disabler()
 if try_system_zlib_ng
