@@ -89,9 +89,9 @@ mode?
 Again, we need a little history lesson to understand what's going on. CRT
 monitors did not have a fixed pixel grid like modern flat panels; they were a
 lot more flexible and could display *any* resolution within the physical
-limits of the monitor. In fact, they did not even have discrete "pixels" in
-the sense as modern flat panels do---the image was literally projected onto
-the screen, similarly to how movie a projector works.
+limits of the monitor. They did not even have discrete "pixels" in the sense
+that modern flat panels do---the image was literally projected onto the
+screen, similarly to how a movie projector works.
 
 Modern flat screens, however, do have a fixed native resolution. The scanlines
 of the emulated CRT image need to “line up” with this fixed pixel grid
@@ -178,12 +178,12 @@ actual visible area was about 1.5 to 2 inches smaller!
 
 To emulate the physical image size you'd get on a typical 14" VGA monitor,
 you'd need to restrict the output to about 960&times;720 on a modern 24"
-widescreen display with 16:9 aspect ratio (assuming the same normal viewing
-distance). Basically, you want the resulting image to measure about 12 inches (30
-cm) diagonally for the most authentic results. But alas, that would be a tad too
-small for most people. 960&times;720 would result in a non-integer vertical
-scale factor, anyway, which is to be avoided. It's best to bump it
-up to 1067&times;800 then:
+widescreen display with a 16:9 aspect ratio (assuming the same normal viewing
+distance). You want the resulting image to measure about 12 inches
+(30 cm) diagonally for the most authentic results. But alas, that would be a
+tad too small for most people. 960&times;720 would result in a non-integer
+vertical scale factor, anyway, which is to be avoided. It's best to bump it up
+to 1067&times;800 then:
 
 
 ```ini
@@ -263,9 +263,6 @@ start looking overly blocky from a normal viewing distance.
       4K. The image should measure about 14.4" diagonally (about 35 cm) on
       your monitor, which is a little bit above the viewable size of a
       typical **15" CRT**.
-
-    - With integer scaling _enabled_ and assuming a **320&times;200 VGA**
-      resolution double-scanned to 640&times;400, dividing 961 by 400 gives us
 
     - For the **640&times;480 VGA** mode, 961 / 480 ≈ 2.0021, so a 2x vertical
       integer scaling factor will be used again. The resulting image will be
