@@ -25,7 +25,7 @@ ColumnLimit: 80
 # C/C++ Language specifics
 #
 Language: Cpp
-Standard: c++17
+Standard: c++20
 
 # Align qualifiers with the type instead of the variable name
 # int* var; // 'var' is a pointer-to-int

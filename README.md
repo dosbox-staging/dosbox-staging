@@ -27,7 +27,7 @@ support today's systems.
 | **Feature**                    | **Status**                   |
 |--------------------------------|------------------------------|
 | **Version control**            | Git                          |
-| **Language**                   | C++17                        |
+| **Language**                   | C++20                        |
 | **SDL**                        | >= 2.0.5                     |
 | **Logging**                    | Loguru for C++<sup>[5]</sup> |
 | **Buildsystem**                | Meson or Visual Studio 2022  |

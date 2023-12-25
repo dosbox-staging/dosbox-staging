@@ -6,7 +6,7 @@ project(
     license: 'GPL-2.0-or-later',
     meson_version: '>= 0.59.0',
     default_options: [
-        'cpp_std=c++17',
+        'cpp_std=c++20',
         'buildtype=release',
         'b_ndebug=if-release',
         'b_staticpic=false',
