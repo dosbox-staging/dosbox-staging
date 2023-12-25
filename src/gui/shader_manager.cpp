@@ -224,7 +224,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 			const auto is_last = (shader + 1 == shaders.end());
 			inventory.emplace_back(file_prefix +
 			                       (is_last ? "`- " : "|- ") +
-			                       shader->u8string());
+			                       shader->string());
 			++shader;
 		}
 		inventory.emplace_back("");

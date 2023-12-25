@@ -82,7 +82,7 @@ Do not do mass reformatting or renaming of existing code.
 
 #### Language
 
-We use C-like C++17. To clarify:
+We use C-like C++20. To clarify:
 
 - Avoid designing your code in complex object-oriented style.
   This does not mean "don't use classes", it means "don't use stuff like

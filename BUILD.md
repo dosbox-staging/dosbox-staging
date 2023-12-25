@@ -6,7 +6,7 @@ Install dependencies listed in [README.md](README.md).  Although `ccache` is
 optional, we recommend installing it because Meson will use it to greatly speed
 up builds. The minimum set of dependencies is:
 
-- C/C++ compiler with support for C++17
+- C/C++ compiler with support for C++20
 - SDL >= 2.0.5
 - Opusfile
 - Meson >= 0.56, or Visual Studio Community Edition 2022
