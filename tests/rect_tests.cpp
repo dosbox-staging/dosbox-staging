@@ -500,7 +500,7 @@ TEST(Rect, CenterTo_zero_size)
 		const DosBox::Rect a = {1.1f, 5.5f, 0.0f, 0.0f};
 		a.Copy().CenterTo(10.0f, -12.0f);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 TEST(Rect, CenterTo_positive_size)
@@ -520,7 +520,7 @@ TEST(Rect, CenterTo_negative_size)
 		const DosBox::Rect a = {1.1f, 5.5f, 4.6f, -8.4f};
 		a.Copy().CenterTo(10.0f, -12.0f);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 // Contains()
@@ -592,7 +592,7 @@ TEST(Rect, Contains_source_negative_size)
 		const DosBox::Rect b = {1.1f, 5.5f};
 		a.Contains(b);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 TEST(Rect, Contains_target_negative_size)
@@ -602,7 +602,7 @@ TEST(Rect, Contains_target_negative_size)
 		const DosBox::Rect b = {1.1f, -5.5f};
 		a.Contains(b);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 // Overlaps()
@@ -662,7 +662,7 @@ TEST(Rect, Overlaps_source_negative_size)
 		const DosBox::Rect b = {1.1f, 5.5f};
 		a.Overlaps(b);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 TEST(Rect, Overlaps_target_negative_size)
@@ -672,7 +672,7 @@ TEST(Rect, Overlaps_target_negative_size)
 		const DosBox::Rect b = {1.1f, -5.5f};
 		a.Overlaps(b);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 // Intersect()
@@ -739,7 +739,7 @@ TEST(Rect, Intersect_source_negative_size)
 		DosBox::Rect a = {-1.0f, -2.0f};
 		a.Intersect(b);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 TEST(Rect, Intersect_target_negative_size)
@@ -750,7 +750,7 @@ TEST(Rect, Intersect_target_negative_size)
 		DosBox::Rect a = {1.0f, 2.0f};
 		a.Intersect(b);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 // ScaleSizeToFit()
@@ -789,7 +789,7 @@ TEST(Rect, ScaleSizeToFit_source_zero_size)
 		DosBox::Rect src = {};
 		src.ScaleSizeToFit(dest);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 TEST(Rect, ScaleSizeToFit_target_zero_size)
@@ -800,7 +800,7 @@ TEST(Rect, ScaleSizeToFit_target_zero_size)
 		DosBox::Rect src = {1.0f, 2.0f};
 		src.ScaleSizeToFit(dest);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 TEST(Rect, ScaleSizeToFit_source_negative_size)
@@ -811,7 +811,7 @@ TEST(Rect, ScaleSizeToFit_source_negative_size)
 		DosBox::Rect src = {-1.0f, -2.0f};
 		src.ScaleSizeToFit(dest);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 TEST(Rect, ScaleSizeToFit_target_negative_size)
@@ -822,7 +822,7 @@ TEST(Rect, ScaleSizeToFit_target_negative_size)
 		DosBox::Rect src = {1.0f, 2.0f};
 		src.ScaleSizeToFit(dest);
 	};
-	EXPECT_DEATH(test(), "");
+	EXPECT_DEBUG_DEATH(test(), "");
 }
 
 // ToString()
