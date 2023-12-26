@@ -55,8 +55,6 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 		return false;
 	}
 
-	const bool file_exists = FileExists(name);
-
 	char newname[CROSS_LEN];
 	safe_strcpy(newname, basedir);
 	safe_strcat(newname, name);
@@ -67,6 +65,8 @@ bool localDrive::FileCreate(DOS_File** file, char* name, FatAttributeFlags attri
 	// calls.
 	char expanded_name[CROSS_LEN];
 	safe_strcpy(expanded_name, dirCache.GetExpandNameAndNormaliseCase(newname));
+
+	const bool file_exists = FileExists(expanded_name);
 
 	attributes.archive = true;
 	FILE* file_pointer = local_drive_create_file(expanded_name, attributes);
