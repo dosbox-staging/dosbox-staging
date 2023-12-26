@@ -136,6 +136,44 @@ nav:
       - getting-started/advanced-graphics-options.md
       - getting-started/next-steps.md
 
+  - Documentation:
+      - documentation/introduction.md
+      - documentation/dos-primer.md
+
+      - documentation/configuration.md
+      - documentation/command-line.md
+
+      - Video:
+        - documentation/video/index.md
+
+      - Sound:
+        - documentation/sound/overview.md
+        - documentation/sound/on-subjectivity.md
+        - documentation/sound/dosbox-mixer.md
+        - documentation/sound/mixer-effects.md
+        - documentation/sound/analog-output-filters.md
+        - documentation/sound/midi.md
+        - Sound devices:
+          - documentation/sound/sound-devices/adlib-cms-sound-blaster.md
+          - documentation/sound/sound-devices/roland-mt-32.md
+          - documentation/sound/sound-devices/general-midi.md
+          - documentation/sound/sound-devices/pc-speaker.md
+          - documentation/sound/sound-devices/tandy.md
+          - documentation/sound/sound-devices/gravis-ultrasound.md
+          - documentation/sound/sound-devices/ibm-ps1audio.md
+          - documentation/sound/sound-devices/covox-variants.md
+          - documentation/sound/sound-devices/innovation.md
+        - documentation/sound/capture.md
+
+      - Input:
+        - documentation/input/overview.md
+        - documentation/input/keyboard.md
+        - documentation/input/mouse.md
+        - documentation/input/joystick.md
+
+      - documentation/regional.md
+      - documentation/shortcuts.md
+
   - Get involved:
       - get-involved/index.md
       - get-involved/code-of-conduct.md
