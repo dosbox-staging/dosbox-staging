@@ -252,7 +252,7 @@ endif
 # Note that these build flags needs to be defined before adding
 # subpackages because the flags are used when compiling them.
 
-simd_summary = 'none'
+simd_instruction_sets = []
 
 zlib_ng_options = get_option('use_zlib_ng')
 zlib_ng_wants_native = zlib_ng_options.contains('native')
@@ -260,7 +260,7 @@ zlib_ng_is_native = zlib_ng_wants_native and cc.has_argument('-march=native')
 
 if is_optimized_buildtype and zlib_ng_is_native
     extra_flags += '-march=native'
-    simd_summary = 'native'
+    simd_instruction_sets += 'native'
     message('Enabling native SIMD optimizations')
 endif
 
@@ -269,8 +269,8 @@ endif
 if target_machine.cpu_family() == 'aarch64'
     # aarch64 always supports NEON:
     # ref: https://developer.arm.com/documentation/den0024/a/AArch64-Floating-point-and-NEON
-    zlib_ng_options += ['neon']
-    simd_summary = 'NEON'
+    zlib_ng_options += 'neon'
+    simd_instruction_sets += 'NEON'
     message('Using the ARM NEON instruction set')
 endif
 
@@ -300,7 +300,7 @@ if (
     if (neon_test.compiled() and neon_test.returncode() == 0)
         zlib_ng_options += 'neon'
         extra_flags += neon_cflag
-        simd_summary = 'NEON'
+        simd_instruction_sets += 'NEON'
         message('Enabling the ARM NEON instruction set')
     endif
 endif
@@ -334,7 +334,7 @@ if (
     if (sse2_test.compiled() and sse2_test.returncode() == 0)
         zlib_ng_options += 'sse2'
         extra_flags += sse2_cflags
-        simd_summary = 'SSE2'
+        simd_instruction_sets += 'SSE2'
         message('Enabling the SSE2 instruction set')
     endif
 
@@ -356,11 +356,20 @@ if (
     if (ssse3_test.compiled() and ssse3_test.returncode() == 0)
         zlib_ng_options += 'ssse3'
         extra_flags += ssse3_cflag
-        simd_summary = 'SSE2 and SSSE3'
+        simd_instruction_sets += 'SSSE3'
         message('Enabling the SSSE3 instruction set')
     endif
 endif
-summary('SIMD instruction set', simd_summary, section: 'Build Summary')
+
+if simd_instruction_sets.length() == 0
+    simd_instruction_sets = ['none']
+endif
+
+summary(
+    'SIMD instruction sets',
+    ', '.join(simd_instruction_sets),
+    section: 'Build Summary',
+)
 
 # Allow-list the flags against the compiler, and add them to the project
 cc_supported_arguments = cc.get_supported_arguments(extra_flags)
