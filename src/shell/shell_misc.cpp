@@ -78,7 +78,7 @@ void DOS_Shell::InputCommand(char* line)
 {
 	std::string command = ReadCommand();
 	trim(command);
-	if (!command.empty()) {
+	if (!command.empty() && (history.empty() || command != history.back())) {
 		history.emplace_back(command);
 	}
 
