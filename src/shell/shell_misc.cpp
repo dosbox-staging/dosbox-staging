@@ -78,8 +78,10 @@ void DOS_Shell::InputCommand(char* line)
 {
 	std::string command = ReadCommand();
 	trim(command);
-	if (!command.empty() && (history.empty() || command != history.back())) {
-		history.emplace_back(command);
+	std::string utf8_command = {};
+	dos_to_utf8(command, utf8_command);
+	if (!utf8_command.empty() && (utf8_history.empty() || utf8_command != utf8_history.back())) {
+		utf8_history.emplace_back(std::move(utf8_command));
 	}
 
 	const auto* const dos_section = dynamic_cast<Section_prop*>(
@@ -106,7 +108,13 @@ void DOS_Shell::InputCommand(char* line)
 
 std::string DOS_Shell::ReadCommand()
 {
-	std::vector<std::string> history_clone = history;
+	std::vector<std::string> history_clone = {};
+	history_clone.reserve(utf8_history.size() + 1);
+	for (const std::string &utf8_str : utf8_history) {
+		std::string dos_str = {};
+		utf8_to_dos(utf8_str, dos_str, UnicodeFallback::Simple);
+		history_clone.emplace_back(std::move(dos_str));
+	}
 	history_clone.emplace_back("");
 	auto history_index = history_clone.size() - 1;
 
@@ -150,11 +158,12 @@ std::string DOS_Shell::ReadCommand()
 			DOS_ReadFile(input_handle, &data, &byte_count);
 			switch (static_cast<ScanCode>(data)) {
 			case ScanCode::F3: {
-				if (history.empty()) {
+				if (utf8_history.empty()) {
 					break;
 				}
 
-				std::string_view last_command = history.back();
+				std::string last_command = {};
+				utf8_to_dos(utf8_history.back(), last_command, UnicodeFallback::Simple);
 				if (last_command.size() <= command.size()) {
 					break;
 				}
