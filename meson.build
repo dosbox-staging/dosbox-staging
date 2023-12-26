@@ -469,7 +469,13 @@ if cc.has_member('struct dirent', 'd_type', prefix: '#include <dirent.h>')
     conf_data.set10('HAVE_STRUCT_DIRENT_D_TYPE', true)
 endif
 
-foreach header : ['libgen.h', 'pwd.h', 'strings.h', 'sys/xattr.h', 'netinet/in.h']
+foreach header : [
+    'libgen.h',
+    'pwd.h',
+    'strings.h',
+    'sys/xattr.h',
+    'netinet/in.h',
+]
     if cc.has_header(header)
         conf_data.set10('HAVE_' + header.underscorify().to_upper(), true)
     endif
@@ -529,7 +535,11 @@ else
     endif
 endif
 conf_data.set('PAGESIZE', pagesize)
-summary('Host page size (bytes)', pagesize.to_string(), section: 'Build Summary')
+summary(
+    'Host page size (bytes)',
+    pagesize.to_string(),
+    section: 'Build Summary',
+)
 
 
 set_prio_code = '''
