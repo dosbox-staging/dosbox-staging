@@ -484,7 +484,7 @@ void DOS_Shell::ReadShellHistory()
 			trim(line);
 			auto len = line.length();
 			if (len > 0 && len <= HistoryMaxLineSize) {
-				history.emplace_back(std::move(line));
+				utf8_history.emplace_back(std::move(line));
 			}
 		}
 	}
@@ -506,8 +506,8 @@ void DOS_Shell::WriteShellHistory()
 		return;
 	}
 	std::vector<std::string> trimmed_history;
-	trimmed_history.reserve(history.size());
-	for (std::string str : history) {
+	trimmed_history.reserve(utf8_history.size());
+	for (std::string str : utf8_history) {
 		trim(str);
 		auto len = str.length();
 		if (len > 0 && len <= HistoryMaxLineSize) {
