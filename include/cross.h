@@ -146,7 +146,9 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory);
 void close_directory(dir_information* dirp);
 
-FILE *fopen_wrap(const char *path, const char *mode);
+bool is_path_allowed(const std_fs::path& path);
+
+FILE* fopen_wrap(const char* path, const char* mode);
 FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly);
 
 bool wild_match(const char *haystack, const char *needle);
