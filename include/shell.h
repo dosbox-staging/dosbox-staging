@@ -113,7 +113,7 @@ private:
 	[[nodiscard]] std::string Which(std::string_view name) const;
 
 	friend class AutoexecEditor;
-	std::vector<std::string> history{};
+	std::vector<std::string> utf8_history{};
 	std::stack<BatchFile> batchfiles{};
 
 	bool exit_cmd_called                   = false;

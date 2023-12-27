@@ -755,7 +755,7 @@ void filter_s3_modes_to_oem_only()
 		}
 
 		// Does the S3 OEM list have this mode for the given DRAM size?
-		const auto it = oem_modes.find(hash(m.swidth, m.sheight, m.type));
+		const auto it = oem_modes.find(hash(m.swidth, m.sheight, enum_val(m.type)));
 		const bool is_an_oem_mode = (it != oem_modes.end()) && (it->second & dram_size);
 
 		// LOG_MSG("S3: %x: %ux%u - m.type=%d is_vesa_mode=%d is_an_oem_mode=%d",

@@ -2,7 +2,7 @@
 Utilizzo: %s [OPZIONE]... [PERCORSO]
 
 PERCORSO                    Se PERCORSO è una directory, verrà montata come unità C.
-                            Se PERCORSO è un'immagine disco avviabile (IMA/IMG), 
+                            Se PERCORSO è un'immagine disco avviabile (IMA/IMG),
                             questa verrà avviata.
                             Se PERCORSO è un'immagine CDROM (CUE/ISO), verrà montata
                             come unità D.
@@ -490,7 +490,7 @@ Inoltre è possibile ridimensionare la finestra dopo l'avvio dell'emulatore.
              impostazioni (ad esempio se la correzione delle proporzioni è
              abilitata).
   small, medium, large (s, m, l):
-             Ridimensiona la finestra in base alla risoluzione del desktop.            
+             Ridimensiona la finestra in base alla risoluzione del desktop.
   LxA:       Specifica le dimensioni della finestra nel formato LxA
              (ad esempio 1024x768).
 .
@@ -664,7 +664,7 @@ giochi, anche se altri potrebbero richiedere un valore più alto.
 Di solito non vi è nessun guadagno in velocità aumentando questo valore.
 .
 :CONFIG_MCB_FAULT_STRATEGY
-Gestisce i blocchi della catena di memoria software corrotti:             
+Gestisce i blocchi della catena di memoria software corrotti:
   repair:    Segnala gli errori e li ripara con blocchi adiacenti (predefinito)
   report:    Segnala solo gli errori.
   allow:     Gli errori non vengono segnalati (comportamento hardware).
@@ -711,7 +711,7 @@ segnala il bug sul sito del progetto, in modo tale da poterlo elencare qui.
 .
 :CONFIG_AUTOEXEC_SECTION
 Indica come vengono gestite le sezioni autoexec da più file di configurazione.
-  join:      Le combina in un'unica grande sezione 
+  join:      Le combina in un'unica grande sezione
              (comportamento legacy; predefinito).
   overwrite: Utilizza l'ultima incontrata, come per le altre impostazioni di
              configurazione.
@@ -759,7 +759,7 @@ Prendi in considerazione l'idea di limitare la frequenza dei fotogrammi
 utilizzando l'impostazione 'host_rate'.
 .
 :CONFIG_ASPECT
-Imposta la modalità di correzione delle proporzioni (predefinito abilitato):             
+Imposta la modalità di correzione delle proporzioni (predefinito abilitato):
   auto, on:           Applica la correzione delle proporzioni per i moderni
                       schermi piatti a pixel quadrati, in modo tale che le
                       modalità video DOS con pixel non quadrati appaiano come
@@ -796,9 +796,9 @@ automaticamente (equivalente ad 'off'). Valori possibili:
   auto:       Modalità 'vertical' abilitata automaticamente solo per gli shader
               CRT adattivi (vedi impostazione 'glshader'), altrimenti 'off'
               (predefinito).
-  vertical:   Vincola il fattore di scala verticale a valori interi. 
+  vertical:   Vincola il fattore di scala verticale a valori interi.
               Questa è l'impostazione consigliata per gli shader CRT per
-              evitare linee di scansione irregolari e artefatti.              
+              evitare linee di scansione irregolari e artefatti.
   horizontal: Vincola il fattore di scala orizzontale a valori interi.
   off:        Nessun ridimensionamento dei numeri interi; l'immagine riempie
               l'area di visualizzazione mantenendo le proporzioni specificate.
@@ -930,7 +930,7 @@ assoluto che fa riferimento ad un file. In tutti i casi, l'estensione '.glsl'
 dello shader può essere omessa.
 .
 :CONFIG_COMPOSITE
-Abilita la modalità composita all'avvio (predefinito 'auto'). 
+Abilita la modalità composita all'avvio (predefinito 'auto').
 'auto' lascia decidere al programma.
 Nota: Regola le impostazioni di seguito (es. tonalità) usando gli appositi
       tasti di scelta rapida, quindi leggi le nuove impostazioni dalla
@@ -957,7 +957,7 @@ Luminosità dell'immagine, da scura a chiara (predefinito 0).
 Convergenza degli elementi del subpixel, da sfocati a nitidi (predefinito 0).
 .
 :CONFIG_CORE
-Core della CPU usato nell'emulazione (predefinito 'auto'). 
+Core della CPU usato nell'emulazione (predefinito 'auto').
 'auto' passerà a 'dynamic' se disponibile e appropriato.
 .
 :CONFIG_CPUTYPE
@@ -968,7 +968,7 @@ Tipo di CPU usata nell'emulazione (predefinito 'auto').
 Numero di istruzioni che DOSBox tenta di emulare ogni millisecondo
 (predefinito 'auto'). Un valore troppo alto può causare perdite nell'audio
 e ritardi.
-  auto:           Prova a indovinare le necessità del gioco. 
+  auto:           Prova a indovinare le necessità del gioco.
                   Di solito funziona, ma può fallire con alcuni giochi.
   fixed <numero>: Imposta un numero fisso di cicli. Questo è ciò di cui hai
                   bisogno di solito se 'auto' fallisce (es. 'fixed 4000').
@@ -1012,7 +1012,7 @@ corrente).
 :CONFIG_DEFAULT_IMAGE_CAPTURE_FORMATS
 Imposta il formato di acquisizione delle istantanee dello schermo
 (predefinito 'upscaled'):
-  upscaled:  L'immagine viene ridimensionata utilizzando il metodo di 
+  upscaled:  L'immagine viene ridimensionata utilizzando il metodo di
              ricampionamento Bilineare Più Nitido, mantenendo le proporzioni
              corrette a seconda dell'impostazione 'aspect'. Il fattore di
              scala verticale è sempre un numero intero. Ad esempio, i contenuti
@@ -1067,9 +1067,9 @@ Nota: Dovresti disabilitarlo nel caso in cui vengano rilevati erroneamente
 .
 :CONFIG_MOUSE_SENSITIVITY
 Sensibilità del mouse a livello globale per gli assi orizzontale e verticale,
-in percentuale (predefinito 100). I valori possono essere separati da spazi,
-virgole o punto e virgola (ad esempio 100,150).
-Valori negativi invertono gli assi, zero disabilita il mouse. 
+in percentuale (predefinito 100). I valori possono essere separati da uno
+spazio, virgola o punto e virgola (ad esempio 100,150).
+Valori negativi invertono gli assi, zero disabilita il mouse.
 Fornendo un solo valore, si imposta la sensibilità per entrambi gli assi.
 La sensibilità può essere ulteriormente regolata per ogni interfaccia del mouse
 utilizzando lo strumento interno MOUSECTL.COM disponibile sull'unità Z.
@@ -1082,7 +1082,7 @@ in modalità finestra.
 .
 :CONFIG_DOS_MOUSE_DRIVER
 Abilita il driver del mouse DOS integrato (predefinito abilitato).
-Note: 
+Note:
   - Disabilitalo se intendi utilizzare il driver MOUSE.COM originale.
   - Quando un sistema operativo guest viene avviato, il driver integrato viene
     disabilitato automaticamente.
@@ -1157,13 +1157,13 @@ impostazioni di frequenza di campionamento e dimensione dei blocchi
 .
 :CONFIG_COMPRESSOR
 Abilita il compressore di livellamento automatico sul canale master per evitare
-il ritaglio (clipping) dell'uscita audio:             
+il ritaglio (clipping) dell'uscita audio:
   off:       Disabilita il compressore.
   on:        Abilita il compressore (predefinito).
 .
 :CONFIG_CROSSFEED
 Abilita l'alimentazione incrociata a livello globale su tutti i canali stereo
-per l'ascolto in cuffia:             
+per l'ascolto in cuffia:
   off:       Alimentazione incrociata disabilitata (predefinito).
   on:        Abilita l'alimentazione incrociata (preimpostazione 'normal').
   light:     Alimentazione incrociata minima (intensità 15).
@@ -1280,7 +1280,7 @@ Quando si utilizzano valori personalizzati:
     - modulazione-onda è 'sine' o 'triangle'
   Per esempio: chorus = 3 1.2 0.3 8.0 sine
 Nota: È possibile disabilitare l'effetto coro di FluidSynth e abilitare invece
-      il coro a livello del mixer sul canale FluidSynth, oppure abilitare 
+      il coro a livello del mixer sul canale FluidSynth, oppure abilitare
       entrambi gli effetti contemporaneamente. Il modo in cui il suono verrà
       riprodotto dipende dal SoundFont e dalle impostazioni del coro utilizzate
 .
@@ -1303,7 +1303,7 @@ Nota: È possibile disabilitare l'effetto riverbero di FluidSynth e abilitare
 :CONFIG_FSYNTH_FILTER
 Filtro per l'uscita audio di FluidSynth:
   off:              Non filtra l'uscita audio (predefinito).
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_MODEL
@@ -1332,7 +1332,7 @@ Note:
 :CONFIG_MT32_FILTER
 Filtro per l'uscita audio Roland MT-32/CM-32L:
   off:              Non filtra l'uscita audio (predefinito).
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :MT32_NO_SUPPORTED_MODELS
@@ -1348,16 +1348,16 @@ Nessuna ROM è attualmente caricata
 s
 .
 :MT32_ROMS_LABEL
-ROM  MT-32  
+ROM  MT-32
 .
 :CM32L_ROMS_LABEL
-ROM CM-32L  
+ROM CM-32L
 .
 :MT32_ACTIVE_ROM_LABEL
-ROM attiva   
+ROM attiva
 .
 :MT32_SOURCE_DIR_LABEL
-Caricata da  
+Caricata da
 .
 :CONFIG_SBTYPE
 Tipo di Sound Blaster da emulare (predefinito 'sb16').
@@ -1390,7 +1390,7 @@ La forma d'onda OPL viene ora campionata alla frequenza di riproduzione
 del mixer per evitare il ricampionamento.
 .
 :CONFIG_OPLMODE
-Tipo di emulazione OPL (predefinito 'auto'). 
+Tipo di emulazione OPL (predefinito 'auto').
 Se 'auto', la modalità è determinata da 'sbtype'.
 Tutte le modalità OPL sono compatibili con AdLib, eccetto per 'cms'.
 .
@@ -1448,14 +1448,14 @@ Tipo di filtro da emulare per l'uscita OPL della scheda Sound Blaster:
   sb1, sb2, sbpro1, sbpro2, sb16:
                     Utilizza il filtro di questo modello di Sound Blaster.
   off:              Non filtra l'uscita audio.
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_CMS_FILTER
 Filtro per l'uscita audio CMS della scheda Sound Blaster:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_GUS
@@ -1476,14 +1476,14 @@ Numero IRQ della scheda Gravis UltraSound (predefinito 5).
 Canale DMA della scheda Gravis UltraSound (predefinito 3).
 .
 :CONFIG_ULTRADIR
-Percorso per la directory UltraSound (predefinito 'C:\ULTRASND'). 
+Percorso per la directory UltraSound (predefinito 'C:\ULTRASND').
 In essa dovrebbe essere presente una directory 'MIDI' con al suo interno
 i campioni audio Gravis Ultrasound per la riproduzione MIDI.
 .
 :CONFIG_GUS_FILTER
 Filtro per l'uscita audio della scheda Gravis UltraSound:
   off:              Non filtra l'uscita audio (predefinito).
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_IMFC
@@ -1499,7 +1499,7 @@ Numero IRQ della scheda IBM Music Feature (predefinito 3).
 Filtro per l'uscita audio della scheda IBM Music Feature:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_SIDMODEL
@@ -1535,7 +1535,7 @@ Regola l'intensità del filtro del chip 8580 come percentuale da 0 a 100
 :CONFIG_INNOVATION_FILTER
 Filtro per l'uscita audio della scheda Innovation:
   off:              Non filtra l'uscita audio (predefinito).
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_PCSPEAKER
@@ -1553,7 +1553,7 @@ Modello di emulazione dell'altoparlante interno del PC (PC Speaker):
 Filtro per l'uscita audio dell'altoparlante interno del PC (PC Speaker):
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_ZERO_OFFSET
@@ -1585,14 +1585,14 @@ l'ultima scrittura della porta I/O:
 Filtro per l'uscita audio del sintetizzatore Tandy:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_TANDY_DAC_FILTER
 Filtro per l'uscita audio del DAC Tandy:
   on:                Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_LPT_DAC
@@ -1606,7 +1606,7 @@ Tipo di DAC collegato alla porta parallela:
 Filtro per i dispositivi audio DAC LPT:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_DISNEY
@@ -1619,14 +1619,14 @@ Abilita l'emulazione audio IBM PS/1 (predefinito disabilitato).
 Filtro per l'uscita audio del sintetizzatore PS/1:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_PS1AUDIO_DAC_FILTER
 Filtro per l'uscita audio del DAC PS/1:
   on:               Filtra l'uscita audio (predefinito).
   off:              Non filtra l'uscita audio.
-  <personalizzato>: Definizione di filtri personalizzati; 
+  <personalizzato>: Definizione di filtri personalizzati;
                     fare riferimento a 'sb_filter' per ulteriori dettagli.
 .
 :CONFIG_REELMAGIC
@@ -1674,7 +1674,7 @@ Sperimenta con questa opzione se hai problemi di deriva (drift) dei controlli.
 Continua a fare fuoco finché tieni il tasto premuto (predefinito disabilitato).
 .
 :CONFIG_SWAP34
-Scambia il 3° e il 4° asse (predefinito disabilitato). 
+Scambia il 3° e il 4° asse (predefinito disabilitato).
 Può essere utile per alcuni joystick.
 .
 :CONFIG_BUTTONWRAP
@@ -1722,7 +1722,7 @@ Applica i parametri di calibrazione dell'asse Y precedentemente acquisiti
 .
 :CONFIG_SERIAL1
 Imposta il tipo di dispositivo collegato alla porta COM1.
-Può essere disabled, dummy, mouse, modem, nullmodem, direct 
+Può essere disabled, dummy, mouse, modem, nullmodem, direct
 (predefinito 'dummy').
 Eventuali parametri aggiuntivi devono essere sulla stessa riga nella forma di
 parametro:valore. Il parametro 'irq' è valido per tutti i tipi di dispositivi.
@@ -1747,7 +1747,7 @@ Fare riferimento a 'serial1' (predefinito 'disabled').
 .
 :CONFIG_PHONEBOOKFILE
 File utilizzato per mappare numeri di telefono falsi su indirizzi
-(predefinito 'phonebook.txt'). 
+(predefinito 'phonebook.txt').
 .
 :CONFIG_XMS
 Abilita il supporto alla memoria estesa XMS (predefinito abilitato).
@@ -1793,7 +1793,8 @@ Il programma COMMAND.COM di FreeDOS e MS-DOS 7/8 supporta questa funzione.
 .
 :CONFIG_SHELL_HISTORY_FILE
 File contenente la cronologia dei comandi digitati dall'utente sulla riga di
-comando (predefinito 'shell_history.txt').
+comando (predefinito 'shell_history.txt'). Se non è specificato alcun nome
+di file, la cronologia dei comandi non sarà salvata.
 .
 :CONFIG_SETVER_TABLE_FILE
 File contenente l'elenco dei programmi e le versioni DOS loro assegnate,
@@ -1885,7 +1886,7 @@ Nessun file di configurazione caricato
 
 .
 :PROGRAM_CONFIG_CONFDIR
-[color=white]Directory di configurazione di DOSBox Staging %s:[reset] 
+[color=white]Directory di configurazione di DOSBox Staging %s:[reset]
   %s
 
 
@@ -2465,7 +2466,7 @@ Possono essere modificate nel [color=brown]mappatore dei tasti[reset].
 [color=yellow]%s+Pausa[reset]  Mette in Pausa/Riprende l'emulazione.
 [color=yellow]%s+F1[reset]   %s Avvia il [color=brown]mappatore dei tasti[reset].
 [color=yellow]%s+F4[reset]   %s Passa tra le immagini disco montate, scansiona tutte le unità per
-           rilevare modifiche.               
+           rilevare modifiche.
 [color=yellow]%s+F5[reset]     Scatta un'istantanea dello schermo (immagine renderizzata).
 [color=yellow]%s+F5[reset]   %s Scatta un'istantanea dello schermo (risoluzione originale).
 [color=yellow]%s+F6[reset]   %s Avvia/Ferma la registrazione dell'uscita audio in un file wave.
@@ -2549,7 +2550,7 @@ Note:
   "[color=white]Not enough memory[reset]" (ad esempio alcuni giochi degli anni '80 come California
   Games II) durante l'esecuzione.
   L'esecuzione di [color=light-green]loadfix[reset] senza un argomento, alloca semplicemente memoria per
-  l'esecuzione del gioco; 
+  l'esecuzione del gioco;
   Puoi liberare la memoria con l'opzione /d o /f al termine.
 
 Esempi:
@@ -2631,7 +2632,7 @@ Dove:
   [color=light-cyan]PERCORSO[reset] è un percorso in un'unità DOS montata di cui elencare il contenuto.
   /a       elenca tutti i file e le directory, inclusi quelli nascosti e di
            sistema.
-  
+
 Note:
   Il comando elencherà le directory in [color=light-blue]blu[reset], i programmi eseguibili DOS
   (*.com, *.exe, *.bat) in [color=light-green]verde[reset], e altri file nel colore normale.
@@ -3092,7 +3093,7 @@ con '*'.
 .
 :PROGRAM_MOUSECTL_MAP_ADVICE
 Fare clic sul pulsante [color=white]sinistro[reset] del mouse per mappare il mouse fisico
-sull'interfaccia. Facendo clic su qualsiasi altro pulsante, si annulla la 
+sull'interfaccia. Facendo clic su qualsiasi altro pulsante, si annulla la
 mappatura e si assegna il puntatore di sistema a tutte le interfacce del mouse.
 .
 :PROGRAM_MOUSECTL_MAP_CANCEL
@@ -3462,7 +3463,7 @@ La data specificata non è corretta.
 3DomLunMarMerGioVenSab
 .
 :SHELL_CMD_DATE_NOW
-Data corrente: 
+Data corrente:
 .
 :SHELL_CMD_DATE_SETHLP
 Esegui [color=yellow]date %s[reset] per cambiare la data corrente.
@@ -3498,7 +3499,7 @@ L'ora specificata non è corretta.
 
 .
 :SHELL_CMD_TIME_NOW
-Ora attuale: 
+Ora attuale:
 .
 :SHELL_CMD_TIME_SETHLP
 Esegui [color=yellow]time %s[reset] per cambiare l'orario corrente.
@@ -3602,7 +3603,7 @@ Comando non valido: %s
 
 .
 :SHELL_CMD_PAUSE
-Premere un tasto per continuare . . . 
+Premere un tasto per continuare . . .
 .
 :SHELL_CMD_PAUSE_HELP
 Attende la pressione di un tasto per continuare.
@@ -3722,7 +3723,7 @@ Dove:
 Note:
   L'esecuzione di [color=light-green]cls[reset] cancella tutto il testo sullo schermo DOS, ad eccezione
   del prompt dei comandi (es. [color=white]Z:\>[reset] o [color=white]C:\GIOCHI>[reset]) nell'angolo in alto a sinistra
-  dello schermo. 
+  dello schermo.
 
 Esempi:
   [color=light-green]cls[reset]
@@ -4236,7 +4237,7 @@ Dove:
 
 Note:
   Il parametro con solo un punto e virgola (;) cancella tutte le impostazioni
-  del percorso di ricerca. 
+  del percorso di ricerca.
   La variabile d'ambiente path può anche essere impostata utilizzando il
   comando [color=light-green]set[reset], per esempio [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\ [reset]
 
@@ -4317,7 +4318,7 @@ Dove:
 
 Note:
   Se vengono specificati più file di origine, la destinazione deve essere una
-  directory. Se questa non esiste, ne verrà creata una. 
+  directory. Se questa non esiste, ne verrà creata una.
   Se viene specificato un singolo file di origine, un eventuale file con lo
   stesso nome nel percorso di destinazione sarà sovrascritto.
 

@@ -1,12 +1,22 @@
 # Introduction
 
+!!! important 
+
+    You need to use the [0.81.0 release
+    candidate](../releases/release-notes/0.81.0-rc.md)
+    to follow along this guide.
+
+    A significant part of the instructions are invalid for earlier DOSBox
+    Staging versions.
+
+
 ## Foreword
 
-Welcome to the DOSBox Staging getting started guide!
+Welcome to the DOSBox Staging Getting Started guide!
 
 This guide will gently introduce you to the wonderful world of DOSBox by
 setting up a few example games from scratch. Although it's primarily intended
-for newcomers unfamiliar with DOSBox and DOS emulation in general, it's a
+for newcomers unfamiliar with DOSBox and DOS emulation, it's a
 recommended read for people already comfortable with other DOSBox variants but
 not DOSBox Staging. And even if you're a [long-time Staging
 user](#a-note-for-existing-dosbox-staging-users), we're quite certain you will
@@ -17,7 +27,7 @@ games are only vehicles to teach you the basics that you can apply to any DOS
 game you wish to play later. Consequently, the choice of games doesn't matter
 that much (although we tried to pick from the all-time classics).
 
-To get the most out of this guide, don't just *read* the instructions but
+To get the most out of this guide, don't just *read* the instructions, but
 *perform* all the steps yourself! Later chapters build on concepts introduced
 in previous ones, so *do not skip a chapter* just because you're not
 interested in a particular game! You don't have to play it if you don't want
@@ -29,11 +39,12 @@ can perform basic everyday computer tasks, such as copying files, unpacking
 ZIP archives, and editing text files.
 
 The guide has been written so that everyone can follow it with ease,
-regardless of their operating system of choice (e.g., Windows users probably
-know what the "C drive" is, and most Linux people are comfortable with using
-the command line, but these things need to be explained to the Mac folks).
+regardless of their operating system of choice. For example. Windows users
+probably know what the "C drive" is, and most Linux people are comfortable
+using the command line, but these things need to be explained to the Mac
+folks.
 
-We wish you a pleasant journey and we hope DOSBos Staging will bring you as
+We wish you a pleasant journey and we hope DOSBox Staging will bring you as
 much joy as we're having developing it!
 
 
@@ -41,8 +52,8 @@ much joy as we're having developing it!
 
 You must use the latest stable version of DOSBox Staging for this guide. If
 you already have other versions of DOSBox on your computer, installing DOSBox
-Staging won't interfere with them at all. Experienced users can certainly use
-multiple DOSBox variants on the same machine without problems, but if you're a
+Staging won't interfere with them at all. Experienced users can use multiple
+DOSBox variants on the same machine without problems, but if you're a
 beginner, we recommend starting with a clean slate to avoid confusing
 yourself. Make sure you've removed all other DOSBox versions from your machine
 first, then proceed with the DOSBox Staging installation steps.
@@ -83,7 +94,7 @@ the task.
 
 <h3>Windows</h3>
 
-Windows users are recommended to install the free and open-source
+We recommend Windows users install the free and open-source
 [Notepad++](https://notepad-plus-plus.org/) editor.
 
 Accept the default installer options; this will give you a handy *Open with
@@ -123,17 +134,18 @@ best! :sunglasses:
 If you already have DOSBox Staging installed on your computer, or if you have
 used it in the past but have uninstalled it, most likely you have a primary
 configuration file named `dosbox-staging.conf` somewhere on your drive (this
-is also referred to as the global configuration).
+is sometimes also referred to as the default or global configuration).
 
 The guide assumes the default settings of the latest stable release, so it's
 highly recommended to remove any existing primary configuration files first
-(but make sure to back them up). If the primary config does not exist, DOSBox
-Staging will create it on the first launch. If it exists, it will be used, but
-the defaults of some settings might have changed between releases, or
-you might have tweaked some settings yourself. These differences may render
-the instructions in the guide invalid as the defaults are assumed.
+(but make sure to back them up). If the primary config file does not exist in
+an platform-specific location, DOSBox Staging will create it on the first
+launch. If it exists, it will be used, but the defaults of some settings might
+have changed between releases, or you might have tweaked some settings
+yourself. These differences may render the instructions in the guide invalid
+as the default settings are assumed.
 
-This is where the primary config is located on each platform:
+This is where the primary config is located per platform:
 
 <div class="compact" markdown>
 
@@ -145,15 +157,19 @@ This is where the primary config is located on each platform:
 
 </div>
 
-You can simply change the extension of `dosbox-staging.conf` from `.conf` to
-`.bak`. DOSBox Staging will write a brand new default config the next time you
+You can also execute DOSBox Staging with the `--printconf` option to have the
+location of the primary config printed to your console.
+
+To back up your existing primary config, you can simply change the extension
+of `dosbox-staging.conf` from `.conf` to `.bak`. DOSBox Staging will write a
+brand new primary config containing the current defaults the next time you
 start it.
 
 ### Portable mode notes
 
 If you've been using DOSBox Staging in portable mode, `dosbox-staging.conf` is
 located in the same folder as your DOSBox Staging executable. In that case,
-it's recommended to back up your existing primary config, then create a new
-empty `dosbox-staging.conf` file in the executable folder. DOSBox Staging will
-write the new defaults to the empty `dosbox-staging.conf` file on the first
-launch.
+it's recommended to back up your existing primary config, and then create a
+new empty `dosbox-staging.conf` file in the executable folder. DOSBox Staging
+will write the new defaults to the empty `dosbox-staging.conf` file on the
+first launch.

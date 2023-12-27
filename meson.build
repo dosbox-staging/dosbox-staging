@@ -2,7 +2,7 @@ project(
     'dosbox-staging',
     'c',
     'cpp',
-    version: '0.81.0-alpha',
+    version: '0.82.0-alpha',
     license: 'GPL-2.0-or-later',
     meson_version: '>= 0.59.0',
     default_options: [
@@ -157,9 +157,6 @@ if is_optimized_buildtype
         '-fno-math-errno',
         '-fno-signed-zeros',
         '-fno-trapping-math',
-        '-fassociative-math',
-        '-freciprocal-math',
-        '-ffinite-math-only',
         '-frename-registers',
         '-ffunction-sections',
         '-fdata-sections',
@@ -217,9 +214,9 @@ else
     extra_flags += [
         '-shared-libstdc++',
         '-shared-libgcc',
-        '-lstdc++_s',
         '-fPIC',
     ]
+    extra_link_flags += '-lstdc++_s'
 endif
 
 if get_option('narrowing_warnings')
@@ -255,7 +252,7 @@ endif
 # Note that these build flags needs to be defined before adding
 # subpackages because the flags are used when compiling them.
 
-simd_summary = 'none'
+simd_instruction_sets = []
 
 zlib_ng_options = get_option('use_zlib_ng')
 zlib_ng_wants_native = zlib_ng_options.contains('native')
@@ -263,113 +260,126 @@ zlib_ng_is_native = zlib_ng_wants_native and cc.has_argument('-march=native')
 
 if is_optimized_buildtype and zlib_ng_is_native
     extra_flags += '-march=native'
-    simd_summary = 'native'
+    simd_instruction_sets += 'native'
     message('Enabling native SIMD optimizations')
+endif
 
-elif is_optimized_buildtype and zlib_ng_wants_native
-    # Wanted native SIMD but couldn't get it, so
-    # lets test and enable some basic ones for them.
-    #
-    # NEON
-    # ~~~~~
+# NEON on Aarch64
+# ~~~~~~~~~~~~~~~
+if target_machine.cpu_family() == 'aarch64'
+    # aarch64 always supports NEON:
+    # ref: https://developer.arm.com/documentation/den0024/a/AArch64-Floating-point-and-NEON
+    zlib_ng_options += 'neon'
+    simd_instruction_sets += 'NEON'
+    message('Using the ARM NEON instruction set')
+endif
+
+# NEON on Aarch32
+# ~~~~~~~~~~~~~~~
+if (
+    target_machine.cpu_family() == 'arm'
+    and (zlib_ng_is_native
+    or zlib_ng_wants_native
+    or 'neon' in zlib_ng_options)
+)
+    neon_test_code = '''
+                #include <arm_neon.h>
+                int main() {
+                uint8x16_t a = vdupq_n_u8(0);
+                uint8x16_t b = vdupq_n_u8(0);
+                uint8x16_t result = vaddq_u8(a, b);
+                return 0;
+                }
+            '''
     neon_cflag = '-mfpu=neon-vfpv4'
-    if target_machine.cpu_family() == 'aarch64'
-        # aarch64 always supports NEON:
-        # ref: https://developer.arm.com/documentation/den0024/a/AArch64-Floating-point-and-NEON
-        zlib_ng_options += ['neon']
+    neon_test = cc.run(
+        neon_test_code,
+        args: neon_cflag,
+        name: 'ARM NEON instruction set test',
+    )
+    if (neon_test.compiled() and neon_test.returncode() == 0)
+        zlib_ng_options += 'neon'
         extra_flags += neon_cflag
-        simd_summary = 'NEON'
-        message('Host supports ARM NEON instruction set')
-
-    elif host_machine.cpu_family() == 'arm'
-        neon_test_code = '''
-            #include <arm_neon.h>
-            int main() {
-            uint8x16_t a = vdupq_n_u8(0);
-            uint8x16_t b = vdupq_n_u8(0);
-            uint8x16_t result = vaddq_u8(a, b);
-            return 0;
-            }
-        '''
-        neon_test = cc.run(
-            neon_test_code,
-            args: neon_cflag,
-            name: 'ARM NEON instruction set test',
-        )
-        if (neon_test.compiled() and neon_test.returncode() == 0)
-            zlib_ng_options += ['neon']
-            extra_flags += neon_cflag
-            simd_summary = 'NEON'
-            message('Enabling the ARM NEON instruction set')
-        endif
-
-    elif target_machine.cpu_family().startswith('x86')
-        # SSE2
-        # ~~~~
-        sse2_test_code = '''
-            #include <emmintrin.h>
-            int main() {
-            __m128i a = _mm_setzero_si128();
-            __m128i b = _mm_setzero_si128();
-            __m128i result = _mm_add_epi32(a, b);
-            return 0;
-            }
-        '''
-        sse2_cflag = '-msse2'
-        sse2_test = cc.run(
-            sse2_test_code,
-            args: sse2_cflag,
-            name: 'SSE2 instruction set test',
-        )
-        if (sse2_test.compiled() and sse2_test.returncode() == 0)
-            zlib_ng_options += ['sse2']
-            extra_flags += sse2_cflag
-            simd_summary = 'SSE2'
-            message('Enabling the SSE2 instruction set')
-        endif
-
-        # SSSE3
-        # ~~~~~
-        ssse3_test_code = '''
-            #include <tmmintrin.h>
-            int main() {
-            __m128i a = _mm_setzero_si128();
-            __m128i b = _mm_setzero_si128();
-            __m128i result = _mm_hadd_epi16(a, b);
-            return 0;
-            }
-        '''
-        ssse3_cflag = '-mssse3'
-        ssse3_test = cc.run(
-            ssse3_test_code,
-            args: ssse3_cflag,
-            name: 'SSSE3 instruction set test',
-        )
-        if (ssse3_test.compiled() and ssse3_test.returncode() == 0)
-            zlib_ng_options += ['ssse3']
-            extra_flags += ssse3_cflag
-            simd_summary = 'SSE2 and SSSE3'
-            message('Enabling the SSSE3 instruction set')
-        endif
+        simd_instruction_sets += 'NEON'
+        message('Enabling the ARM NEON instruction set')
     endif
 endif
-summary('SIMD instruction set', simd_summary, section: 'Build Summary')
+
+# SSE2 and SSSE3 on x86
+# ~~~~~~~~~~~~~~~~~~~~~
+if (
+    target_machine.cpu_family().startswith('x86')
+    and (
+        zlib_ng_is_native
+        or zlib_ng_wants_native
+        or 'sse2' in zlib_ng_options
+        or 'ssse3' in zlib_ng_options
+    )
+)
+    sse2_test_code = '''
+                #include <emmintrin.h>
+                int main() {
+                __m128i a = _mm_setzero_si128();
+                __m128i b = _mm_setzero_si128();
+                __m128i result = _mm_add_epi32(a, b);
+                return 0;
+                }
+            '''
+    sse2_cflags = '-msse2'
+    sse2_test = cc.run(
+        sse2_test_code,
+        args: sse2_cflags,
+        name: 'SSE2 instruction set test',
+    )
+    if (sse2_test.compiled() and sse2_test.returncode() == 0)
+        zlib_ng_options += 'sse2'
+        extra_flags += sse2_cflags
+        simd_instruction_sets += 'SSE2'
+        message('Enabling the SSE2 instruction set')
+    endif
+
+    ssse3_test_code = '''
+                #include <tmmintrin.h>
+                int main() {
+                __m128i a = _mm_setzero_si128();
+                __m128i b = _mm_setzero_si128();
+                __m128i result = _mm_hadd_epi16(a, b);
+                return 0;
+                }
+            '''
+    ssse3_cflag = '-mssse3'
+    ssse3_test = cc.run(
+        ssse3_test_code,
+        args: ssse3_cflag,
+        name: 'SSSE3 instruction set test',
+    )
+    if (ssse3_test.compiled() and ssse3_test.returncode() == 0)
+        zlib_ng_options += 'ssse3'
+        extra_flags += ssse3_cflag
+        simd_instruction_sets += 'SSSE3'
+        message('Enabling the SSSE3 instruction set')
+    endif
+endif
+
+if simd_instruction_sets.length() == 0
+    simd_instruction_sets = ['none']
+endif
+
+summary(
+    'SIMD instruction sets',
+    ', '.join(simd_instruction_sets),
+    section: 'Build Summary',
+)
 
 # Allow-list the flags against the compiler, and add them to the project
-foreach flag : extra_flags
-    if cc.has_argument(flag)
-        add_project_arguments(flag, language: 'c')
-    endif
-    if cxx.has_argument(flag)
-        add_project_arguments(flag, language: 'cpp')
-    endif
-endforeach
-foreach flag : extra_link_flags
-    if cxx.has_link_argument(flag)
-        add_project_link_arguments(flag, language: 'cpp')
-    endif
-endforeach
+cc_supported_arguments = cc.get_supported_arguments(extra_flags)
+add_project_arguments(cc_supported_arguments, language: 'c')
 
+cxx_supported_arguments = cxx.get_supported_arguments(extra_flags)
+add_project_arguments(cxx_supported_arguments, language: 'cpp')
+
+link_supported_arguments = cxx.get_supported_link_arguments(extra_link_flags)
+add_project_link_arguments(link_supported_arguments, language: 'cpp')
 
 # Gather data to populate config.h
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -468,7 +478,13 @@ if cc.has_member('struct dirent', 'd_type', prefix: '#include <dirent.h>')
     conf_data.set10('HAVE_STRUCT_DIRENT_D_TYPE', true)
 endif
 
-foreach header : ['libgen.h', 'pwd.h', 'strings.h', 'sys/xattr.h', 'netinet/in.h']
+foreach header : [
+    'libgen.h',
+    'pwd.h',
+    'strings.h',
+    'sys/xattr.h',
+    'netinet/in.h',
+]
     if cc.has_header(header)
         conf_data.set10('HAVE_' + header.underscorify().to_upper(), true)
     endif
@@ -528,7 +544,11 @@ else
     endif
 endif
 conf_data.set('PAGESIZE', pagesize)
-summary('Host page size (bytes)', pagesize.to_string(), section: 'Build Summary')
+summary(
+    'Host page size (bytes)',
+    pagesize.to_string(),
+    section: 'Build Summary',
+)
 
 
 set_prio_code = '''
@@ -597,6 +617,8 @@ optional_dep = dependency('', required: false)
 msg = 'You can disable this dependency with: -D@0@=false'
 
 default_wrap_options = ['default_library=static', 'warning_level=0']
+wraps_forced = get_option('wrap_mode') == 'forcefallback'
+wraps_disabled = get_option('wrap_mode') in ['nodownload', 'nofallback']
 
 dl_dep = cc.find_library('dl', required: false)
 stdcppfs_dep = cxx.find_library('stdc++fs', required: false)
@@ -637,11 +659,38 @@ sdl2_dep = dependency(
 
 # zlib
 # ~~~~
+zlib_provider = 'none'
+zlib_ng_provider = 'none'
+
 zlib_dep = disabler()
 zlib_is_static = 'zlib' in static_libs_list or prefers_static_libs
 
-try_system_zlib_ng = 'auto' in zlib_ng_options or 'system' in zlib_ng_options
-try_builtin_zlib_ng = 'auto' in zlib_ng_options or 'built-in' in zlib_ng_options
+zlib_ng_is_allowed = 'false' not in zlib_ng_options
+if not zlib_ng_is_allowed
+    zlib_ng_provider = 'disabled'
+endif
+
+# Try using the system-provided zlib-ng library so long as the wrap isn't
+# forced. Using the system-provided library is a free upgrade for all the build
+# types, so we always prefer this first if the user allows it.
+#
+try_system_zlib_ng = (
+    zlib_ng_is_allowed
+    and not wraps_forced
+    and 'zlib-ng' not in get_option('force_fallback_for')
+)
+
+# The zlib-ng wrap, on the other hand, is a costly endeavour because it
+# single-handedly quadruples the 'meson setup' time for the entire project (6.1s
+# to 25.8s) due to the use of the much slower CMake build system, therefore we
+# only expend this effort (to optimize zlib) for commensurate optimized builds.
+# This nuance is also explained in meson_options.txt for packagers.
+#
+try_builtin_zlib_ng = (
+    zlib_ng_is_allowed
+    and (not wraps_disabled
+    or 'zlib-ng' in get_option('force_fallback_for'))
+)
 
 system_zlib_ng_dep = disabler()
 if try_system_zlib_ng
@@ -652,72 +701,108 @@ if try_system_zlib_ng
         static: zlib_is_static,
         include_type: 'system',
     )
-endif
-if (system_zlib_ng_dep.found())
-    summary('zlib-ng provider', 'system library')
-    conf_data.set10('C_SYSTEM_ZLIB_NG', system_zlib_ng_dep.found())
-elif (
-    # Otherwise consider the built-in, which is a whole-sale replacement for zlib
-    try_builtin_zlib_ng
-    and is_optimized_buildtype
-    and meson.version() >= '1.3.0'
-)
-    cmake_bin = find_program('cmake', required: false)
-    cmake_module = import('cmake', required: false)
-    if cmake_bin.found() and cmake_module.found()
-        cmake_options = cmake_module.subproject_options()
-
-        zlib_ng_defines = {
-            'ZLIB_COMPAT': true,
-            'WITH_OPTIM': true,
-            'ZLIB_BUILD_STATIC': true,
-            'PIC': get_option('b_staticpic'),
-            'BUILD_SHARED_LIBS': false,
-            'WITH_GTEST': false,
-            'ZLIB_ENABLE_TESTS': false,
-            'WITH_NATIVE_INSTRUCTIONS': zlib_ng_is_native,
-            'WITH_SANITIZER': get_option('b_sanitize'),
-        }
-
-        foreach instruction_set : [
-            'avx2',
-            'avx512',
-            'avx512vnni',
-            'sse2',
-            'ssse3',
-            'sse42',
-            'pclmulqdq',
-            'vpclmulqdq',
-            'acle',
-            'neon',
-            'armv6',
-            'altivec',
-            'power8',
-            'rvv',
-            'crc32_vx',
-            'dfltcc_deflate',
-            'dfltcc_inflate',
-        ]
-            cmake_define_key = 'WITH_' + instruction_set.to_upper()
-            cmake_define_value = (
-                zlib_ng_is_native
-                or zlib_ng_options.contains(instruction_set)
-            )
-            zlib_ng_defines += {cmake_define_key: cmake_define_value}
-        endforeach
-
-        cmake_options.add_cmake_defines(zlib_ng_defines)
-
-        zlib_ng_subproject = cmake_module.subproject(
-            'zlib-ng',
-            options: cmake_options,
-        )
-        zlib_dep = zlib_ng_subproject.get_variable('zlib_dep')
-        summary('zlib provider', 'built-in (zlib-ng)')
+    if (system_zlib_ng_dep.found())
+        zlib_ng_provider = 'system library'
+        conf_data.set10('C_SYSTEM_ZLIB_NG', true)
+        try_builtin_zlib_ng = false
+    else
+        zlib_ng_provider = 'skipped (system library not found)'
     endif
 endif
 
-# Otherwise Use the system's zlib or fallback
+# We only justify the extra time to setup zlib-ng (using CMake) if
+# the user wants an optimized build, so check if we can skip it:
+#
+if try_builtin_zlib_ng and not is_optimized_buildtype
+    zlib_ng_provider = 'skipped (non-optimized build)'
+    try_builtin_zlib_ng = false
+endif
+
+# Meson needs to be new enough to setup the zlib-ng CMake project, so
+# check if Meson is too old:
+#
+if try_builtin_zlib_ng and meson.version() < '1.3.0'
+    zlib_ng_provider = 'skipped (meson is < 1.3.0)'
+    try_builtin_zlib_ng = false
+endif
+
+# CMake needs to be available both on the host and in Meson as a module to
+# setup the zlib-ng CMake project, so check if we're missing either:
+#
+cmake_module = disabler()
+if try_builtin_zlib_ng
+    cmake_bin = find_program('cmake', required: false)
+    cmake_module = import('cmake', required: false)
+    if not cmake_bin.found()
+        zlib_ng_provider = 'skipped (CMake not found)'
+        try_builtin_zlib_ng = false
+
+    elif not cmake_module.found()
+        zlib_ng_provider = 'skipped (Meson\'s CMake module not found)'
+        try_builtin_zlib_ng = false
+    endif
+endif
+
+# If we passed all the above checks, everything is in place to use the wrap!
+if try_builtin_zlib_ng
+    cmake_options = cmake_module.subproject_options()
+
+    zlib_ng_defines = {
+        'ZLIB_COMPAT': true,
+        'WITH_OPTIM': true,
+        'ZLIB_BUILD_STATIC': true,
+        'PIC': get_option('b_staticpic'),
+        'BUILD_SHARED_LIBS': false,
+        'WITH_GTEST': false,
+        'ZLIB_ENABLE_TESTS': false,
+        'WITH_NATIVE_INSTRUCTIONS': zlib_ng_is_native,
+        'WITH_SANITIZER': get_option('b_sanitize'),
+        'CMAKE_C_FLAGS': ' '.join(cc_supported_arguments),
+    }
+
+    foreach instruction_set : [
+        'avx2',
+        'avx512',
+        'avx512vnni',
+        'sse2',
+        'ssse3',
+        'sse42',
+        'pclmulqdq',
+        'vpclmulqdq',
+        'acle',
+        'neon',
+        'armv6',
+        'altivec',
+        'power8',
+        'rvv',
+        'crc32_vx',
+        'dfltcc_deflate',
+        'dfltcc_inflate',
+    ]
+        cmake_define_key = 'WITH_' + instruction_set.to_upper()
+        cmake_define_value = (
+            zlib_ng_is_native
+            or zlib_ng_options.contains(instruction_set)
+        )
+        zlib_ng_defines += {cmake_define_key: cmake_define_value}
+    endforeach
+
+    cmake_options.add_cmake_defines(zlib_ng_defines)
+
+    zlib_ng_subproject = cmake_module.subproject(
+        'zlib-ng',
+        options: cmake_options,
+    )
+    zlib_ng_provider = 'built-in'
+
+    # We configure zlib-ng to be a drop in replacement for zlib, so we
+    # can directly assign the zlib_dep from the zlib-ng subproject:
+    #
+    zlib_dep = zlib_ng_subproject.get_variable('zlib_dep')
+    zlib_provider = 'built-in (zlib-ng)'
+endif
+
+# Otherwise use the system's zlib
 if not zlib_dep.found()
     zlib_dep = dependency(
         'zlib',
@@ -727,8 +812,11 @@ if not zlib_dep.found()
         static: zlib_is_static,
         include_type: 'system',
     )
-    summary('zlib provider', 'system library')
+    zlib_provider = 'system library'
 endif
+
+summary('zlib-ng provider', zlib_ng_provider)
+summary('zlib provider', zlib_provider)
 
 # PNG
 # ~~~
