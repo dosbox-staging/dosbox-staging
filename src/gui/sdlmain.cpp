@@ -3139,9 +3139,9 @@ DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 	                .ScaleSizeToFit(viewport_px);
 
 	auto calc_horiz_integer_scaling_dims_in_pixels = [&]() {
-		auto integer_scale_factor = floorf(draw_size_fit_px.w /
-		                                   render_size_px.w);
-		if (integer_scale_factor < 1.0f) {
+		auto integer_scale_factor = iroundf(draw_size_fit_px.w) /
+		                            iroundf(render_size_px.w);
+		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			return draw_size_fit_px;
 		} else {
@@ -3155,9 +3155,9 @@ DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 	};
 
 	auto calc_vert_integer_scaling_dims_in_pixels = [&]() {
-		auto integer_scale_factor = floorf(draw_size_fit_px.h /
-		                                   render_size_px.h);
-		if (integer_scale_factor < 1.0f) {
+		auto integer_scale_factor = iroundf(draw_size_fit_px.h) /
+		                            iroundf(render_size_px.h);
+		if (integer_scale_factor < 1) {
 			// Revert to fit to viewport
 			return draw_size_fit_px;
 		} else {
