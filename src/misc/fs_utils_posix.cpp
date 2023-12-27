@@ -299,13 +299,16 @@ static bool set_xattr([[maybe_unused]] const int file_descriptor,
 FILE* local_drive_create_file(const std_fs::path& path,
                               const FatAttributeFlags attributes)
 {
-	FILE* file_pointer         = nullptr;
-	const auto file_descriptor = open(path.c_str(),
-	                                  O_CREAT | O_RDWR | O_TRUNC,
-	                                  PermissionsRW);
-	if (file_descriptor != -1) {
-		set_xattr(file_descriptor, attributes);
-		file_pointer = fdopen(file_descriptor, "wb+");
+	FILE* file_pointer = nullptr;
+
+	if (is_path_allowed(path)) {
+		const auto file_descriptor = open(path.c_str(),
+		                                  O_CREAT | O_RDWR | O_TRUNC,
+		                                  PermissionsRW);
+		if (file_descriptor != -1) {
+			set_xattr(file_descriptor, attributes);
+			file_pointer = fdopen(file_descriptor, "wb+");
+		}
 	}
 
 	return file_pointer;
