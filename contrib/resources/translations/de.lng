@@ -35,9 +35,13 @@ Liste der verfügbaren Optionen:
                            sich dann so, als ob es aus diesem Verzeichnis
                            gestartet wurde.
 
-  --list-glshaders         Listet alle verfügbaren OpenGL-Shader und ihre Pfade
-                           auf. Die Ergebnisse sind in der Konfig-Einstellung
-                           'glshader = ' verwendbar.
+  --list-countries         Liste aller unterstützten Länder mit ihren
+                           numerischen Codes. Die Codes werden in der
+                           Konfigurationseinstellung 'country' verwendet.
+
+  --list-glshaders         Listet alle verfügbaren OpenGL-Shader und ihre
+                           Pfade auf. Die Shader werden in der Konfigurations-
+                           einstellung 'glshader' verwendet.
 
   --fullscreen             Start im Vollbildmodus.
 
@@ -74,6 +78,356 @@ Liste der verfügbaren Optionen:
 
   -V, --version            Versionsinformationen ausgeben und beenden.
 
+.
+:DOSBOX_HELP_LIST_COUNTRIES_1
+Liste der Ländervorwahlen (meist identisch mit den Telefonvorwahlen)
+-----------------------------------------------------------
+.
+:DOSBOX_HELP_LIST_COUNTRIES_2
+Die oben genannten numerischen Ländercodes können genau so verwendet werden,
+wie in der Konfigurationseinstellung 'country' dargestellt.
+.
+:COUNTRY_NAME_XXA
+International (Englisch)
+.
+:COUNTRY_NAME_USA
+Vereinigte Staaten
+.
+:COUNTRY_NAME_CAN_FR
+Kanada (Französich)
+.
+:COUNTRY_NAME_XLA
+Lateinamerika
+.
+:COUNTRY_NAME_CAN_EN
+Kanada (Englisch)
+.
+:COUNTRY_NAME_RUS
+Russland
+.
+:COUNTRY_NAME_EGY
+Ägypten
+.
+:COUNTRY_NAME_ZAF
+Südafrika
+.
+:COUNTRY_NAME_GRC
+Griechenland
+.
+:COUNTRY_NAME_NLD
+Niederlande
+.
+:COUNTRY_NAME_BEL
+Belgien
+.
+:COUNTRY_NAME_FRA
+Frankreich
+.
+:COUNTRY_NAME_ESP
+Spanien
+.
+:COUNTRY_NAME_HUN
+Ungarn
+.
+:COUNTRY_NAME_YUG
+Jugoslawien
+.
+:COUNTRY_NAME_ITA
+Italien
+.
+:COUNTRY_NAME_ROU
+Rumänien
+.
+:COUNTRY_NAME_CHE
+Schweiz
+.
+:COUNTRY_NAME_CZE
+Tschechien
+.
+:COUNTRY_NAME_AUT
+Österreich
+.
+:COUNTRY_NAME_GBR
+Vereinigtes Königreich
+.
+:COUNTRY_NAME_DNK
+Dänemark
+.
+:COUNTRY_NAME_SWE
+Schweden
+.
+:COUNTRY_NAME_NOR
+Norwegen
+.
+:COUNTRY_NAME_POL
+Polen
+.
+:COUNTRY_NAME_DEU
+Deutschland
+.
+:COUNTRY_NAME_MEX
+Mexiko
+.
+:COUNTRY_NAME_ARG
+Argentinien
+.
+:COUNTRY_NAME_BRA
+Brasilien
+.
+:COUNTRY_NAME_CHL
+Chile
+.
+:COUNTRY_NAME_COL
+Kolumbien
+.
+:COUNTRY_NAME_VEN
+Venezuela
+.
+:COUNTRY_NAME_MYS
+Malaysia
+.
+:COUNTRY_NAME_AUS
+Australien
+.
+:COUNTRY_NAME_IDN
+Indonesien
+.
+:COUNTRY_NAME_PHL
+Philippinen
+.
+:COUNTRY_NAME_NZL
+Neuseeland
+.
+:COUNTRY_NAME_SGP
+Singapur
+.
+:COUNTRY_NAME_THA
+Thailand
+.
+:COUNTRY_NAME_KAZ
+Kasachstan
+.
+:COUNTRY_NAME_JPN
+Japan
+.
+:COUNTRY_NAME_KOR
+Südkorea
+.
+:COUNTRY_NAME_VNM
+Vietnam
+.
+:COUNTRY_NAME_CHN
+China
+.
+:COUNTRY_NAME_TUR
+Türkei
+.
+:COUNTRY_NAME_IND
+Indien
+.
+:COUNTRY_NAME_PAK
+Pakistan
+.
+:COUNTRY_NAME_XAE
+Asien (Englisch)
+.
+:COUNTRY_NAME_MAR
+Marokko
+.
+:COUNTRY_NAME_DZA
+Algerien
+.
+:COUNTRY_NAME_TUN
+Tunesien
+.
+:COUNTRY_NAME_NER
+Niger
+.
+:COUNTRY_NAME_BEN
+Benin
+.
+:COUNTRY_NAME_NGA
+Nigeria
+.
+:COUNTRY_NAME_FRO
+Färöer Inseln
+.
+:COUNTRY_NAME_PRT
+Portugal
+.
+:COUNTRY_NAME_LUX
+Luxemburg
+.
+:COUNTRY_NAME_IRL
+Irland
+.
+:COUNTRY_NAME_ISL
+Island
+.
+:COUNTRY_NAME_ALB
+Albanien
+.
+:COUNTRY_NAME_MLT
+Malta
+.
+:COUNTRY_NAME_FIN
+Finnland
+.
+:COUNTRY_NAME_BGR
+Bulgarien
+.
+:COUNTRY_NAME_LTU
+Litauen
+.
+:COUNTRY_NAME_LVA
+Lettland
+.
+:COUNTRY_NAME_EST
+Estland
+.
+:COUNTRY_NAME_ARM
+Armenien
+.
+:COUNTRY_NAME_BLR
+Weißrussland
+.
+:COUNTRY_NAME_UKR
+Ukraine
+.
+:COUNTRY_NAME_SRB
+Serbien
+.
+:COUNTRY_NAME_MNE
+Montenegro
+.
+:COUNTRY_NAME_HRV
+Kroatien
+.
+:COUNTRY_NAME_SVN
+Slowenien
+.
+:COUNTRY_NAME_BIH_LAT
+Bosnien und Herzegowina (Latein)
+.
+:COUNTRY_NAME_BIH_CYR
+Bosnien und Herzegowina (kyrillisch)
+.
+:COUNTRY_NAME_MKD
+Nordmazedonien
+.
+:COUNTRY_NAME_SVK
+Slowakei
+.
+:COUNTRY_NAME_GTM
+Guatemala
+.
+:COUNTRY_NAME_SLV
+El Salvador
+.
+:COUNTRY_NAME_HND
+Honduras
+.
+:COUNTRY_NAME_NIC
+Nicaragua
+.
+:COUNTRY_NAME_CRI
+Costa Rica
+.
+:COUNTRY_NAME_PAN
+Panama
+.
+:COUNTRY_NAME_BOL
+Bolivien
+.
+:COUNTRY_NAME_ECU
+Ecuador
+.
+:COUNTRY_NAME_PRY
+Paraguay
+.
+:COUNTRY_NAME_URY
+Uruguay
+.
+:COUNTRY_NAME_XME
+Arabisch (Mittlerer Osten)
+.
+:COUNTRY_NAME_HKG
+Hongkong
+.
+:COUNTRY_NAME_TWN
+Taiwan
+.
+:COUNTRY_NAME_LBN
+Libanon
+.
+:COUNTRY_NAME_JOR
+Jordanien
+.
+:COUNTRY_NAME_SYR
+Syrien
+.
+:COUNTRY_NAME_KWT
+Kuwait
+.
+:COUNTRY_NAME_SAU
+Saudi-Arabien
+.
+:COUNTRY_NAME_YEM
+Jemen
+.
+:COUNTRY_NAME_OMN
+Oman
+.
+:COUNTRY_NAME_ARE
+Vereinigte Arabische Emirate
+.
+:COUNTRY_NAME_ISR
+Israel
+.
+:COUNTRY_NAME_BHR
+Bahrain
+.
+:COUNTRY_NAME_QAT
+Katar
+.
+:COUNTRY_NAME_MNG
+Mongolei
+.
+:COUNTRY_NAME_TJK
+Tadschikistan
+.
+:COUNTRY_NAME_TKM
+Turkmenistan
+.
+:COUNTRY_NAME_AZE
+Aserbaidschan
+.
+:COUNTRY_NAME_GEO
+Georgien
+.
+:COUNTRY_NAME_KGZ
+Kirgisistan
+.
+:COUNTRY_NAME_UZB
+Uzbekistan
+.
+:DOSBOX_HELP_LIST_GLSHADERS_1
+Liste der verfügbaren GLSL-Shader
+------------------------------
+.
+:DOSBOX_HELP_LIST_GLSHADERS_2
+Die oben genannten Shader können genau so wie in der 'glshader'-Einstellung
+aufgelistet verwendet werden, ohne dass der Ressourcenpfad oder die
+.glsl-Erweiterung angegeben werden müssen.
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS
+Pfad '%s' existiert nicht
+.
+:DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS
+Pfad '%s' enthält keine Shader
+.
+:DOSBOX_HELP_LIST_GLSHADERS_LIST
+Pfad '%s' enthält:
 .
 :PROGRAM_CONFIG_PROPERTY_ERROR
 Kein solcher Abschnitt oder Eigenschaft: %s
@@ -131,26 +485,18 @@ Welche Auflösung für den Vollbildmodus verwendet werden soll: 'original',
 'desktop' oder eine feste Größe, z.B. 1024x768 (Standardwert 'desktop').
 .
 :CONFIG_WINDOWRESOLUTION
-Bestimmt die Fenstergröße, die verwendet werden soll:
-  default:   Wähle die beste Option basierend auf deinem
-             System und anderen Einstellungen.
-  small, medium, oder large (oder s, m, l):
-             Größe des Fensters relativ zum Desktop.
-  <custom>:  Skaliere den Fensterinhalt auf die angegebenen
-             Abmessungen, im Format BxH. Zum Beispiel: 1024x768.
-.
-:CONFIG_VIEWPORT_RESOLUTION
-Legt die Größe des Darstellungsbereichs innerhalb des Fensters/Bildschirms fest:
-  fit:       Das Ansichtsfenster an das verfügbare Fenster/Bildschirm
-             anpassen (Standard).
-  <custom>:  Beschränke das Ansichtsfenster auf eine benutzerdefinierte Auflösung
-             oder einen Prozentsatz der Desktopgröße. Angegeben in BxH, N%, N.M%.
-             Beispiele: 960x720 oder 50%
+Legt die Fenstergröße fest, wenn das Programm im Fenstermodus läuft:
+  default:    Wählt die beste Option auf der Grundlage Ihrer Umgebung und
+              anderen Einstellungen.
+  small, medium, large (s, m, l):
+              Größe des Fensters relativ zum Desktop.
+  WxH:        Skaliert das Fenster auf die angegebenen Abmessungen im Format
+              BxH. Zum Beispiel: 1024x768.
 .
 :CONFIG_WINDOW_POSITION
-Lege die anfängliche Fensterposition fest, wenn du im Fenster-Modus arbeitest:
+Lege die anfängliche Fensterposition des Fenstermodus fest:
   auto:      Lass den Fenstermanager die Position bestimmen (Standard).
-  <custom>:  Lege die Fensterposition im Format X,Y fest. Zum Beispiel: 250,100
+  X,Y:       Lege die Fensterposition im Format X,Y fest (z.B. 250,100).
              0,0 ist die obere linke Ecke des Bildschirms.
 .
 :CONFIG_WINDOW_DECORATIONS
@@ -162,7 +508,10 @@ Stelle die Transparenz des DOSBox Staging-Bildschirms ein (standardmäßig '0').
 Von 0 (keine Transparenz) bis 90 (hohe Transparenz).
 .
 :CONFIG_MAX_RESOLUTION
-Diese Einstellung wurde in 'viewport_resolution' umbenannt.
+In den Abschnitt [render] verschoben und in 'viewport' umbenannt.
+.
+:CONFIG_VIEWPORT_RESOLUTION
+In den Abschnitt [render] verschoben und in 'viewport' umbenannt.
 .
 :CONFIG_HOST_RATE
 Lege die Bildwiederholrate des Hosts fest:
@@ -172,8 +521,8 @@ Lege die Bildwiederholrate des Hosts fest:
              ohne weitere Anpassung.
   vrr:       Ziehe 3 Hz von der gemeldeten Rate ab
              (Bester Modus für VRR-Monitore).
-  <custom>:  Gib eine benutzerdefinierte Rate als ganzen oder dezimalen Wert
-             an (niedrigster erlaubter Wert ist 23.000).
+  N:         Gib eine benutzerdefinierte Bildwiederholrate in Hz (als
+             dezimalwert an; niedrigster erlaubter Wert ist 23.000.
 .
 :CONFIG_VSYNC
 Legt den vertikalen Synchronisationsmodus (vsync) des Host-Grafikkartentreibers
@@ -186,8 +535,10 @@ fest:
              gegenüber 60 Hz Host-Rate).
   adaptiv:   Aktiviert vsync, wenn die Bildwiederholrate höher ist als die
              Host-Rate, deaktiviert es aber, wenn die Bildrate unter die Host-
-             Rate fällt. Hinweis: nur gültig in OpenGL-Ausgabemodi; ansonsten
-             als 'on' behandelt.
+             Rate fällt.
+             Dies ist unter macOS eine sinnvolle Alternative zu 'on'.
+             Hinweis: nur gültig in OpenGL-Ausgabemodi; ansonsten als 'on'
+             behandelt.
   aus:       Versucht, vsync zu deaktivieren, um eine schnellere Bild-
              darstellung zu erreichen mit dem Risiko des Tearings in einigen
              Spielen.
@@ -245,12 +596,12 @@ Schalte den Ton stumm, wenn das Fenster inaktiv ist
 Emulation anhalten, wenn das Fenster inaktiv ist. (Standardmäßig deaktiviert).
 .
 :CONFIG_MAPPERFILE
-Datei, aus der die Key/Event-Mappings geladen/gespeichert werden.
-Vorkonfigurierte Mappings liegen im Verzeichnis 'resources/mapperfiles' bereit.
-Sie können über deren Namen geladen werden, zum Beispiel:
-mapperfile = xbox/xenon2.map
-Hinweis: Die Befehlszeilenoption --resetmapper löscht nur die
-Standard-Mapperdatei.
+Pfad zur Mapper-Datei (standardmäßig "mapper-sdl2-XYZ.map", wobei XYZ für die
+aktuelle Version steht). Vorkonfigurierte Mappings befinden sich in
+'resources/mapperfiles'. Diese können mit Angabe ihres Dateinamen geladen
+werden, z.B. mit 'mapperfile = xbox/xenon2.map'.
+Hinweis: Die Kommandozeilenoption --resetmapper löscht nur die Standard-Mapper
+         Datei.
 .
 :CONFIG_SCREENSAVER
 Verwende 'allow' oder 'block' um die SDL_VIDEO_ALLOW_SCREENSAVER
@@ -388,49 +739,101 @@ auto        | 'low' wenn Dateiname oder Verzeichnis übergeben werden,
 :CONFIG_ALLOW_WRITE_PROTECTED_FILES
 Viele Spiele öffnen alle ihre Dateien mit Schreibberechtigung, auch solche, die
 sie nie ändern. Mit dieser Einstellung kann man diese Dateien mit einem
-Schreibschutz versehen und trotzdem ermöglichen, dass das Spiel sie lesen kann.
-Ein zweiter Anwendungsfall: Wenn man ein kopieren-beim-schreiben oder ein
-netzwerkbasiertes Dateisystem verwenden, vermeidet diese Einstellung die
-Verwendung von Schreiboperationen für diese schreibgeschützten Dateien.
+Schreibschutz versehen und trotzdem ermöglichen, dass das Spiel sie lesen kann
+(standardmäßig aktiviert). Ein zweiter Anwendungsfall: Wenn man ein Copy-On-
+Write oder ein netzwerkbasiertes Dateisystem verwendet, vermeidet diese
+Einstellung die Verwendung von Schreiboperationen für diese schreibgeschützten
+Dateien.
 .
 :CONFIG_SHELL_CONFIG_SHORTCUTS
-Abkürzungen für die direkte Konfigurationsverwaltung zulassen (standardmäßig
-aktiviert), d.h. anstelle von 'config -set sbtype sb16' genügt die Ausführung
-von 'sbtype sb16', und anstelle von 'config -get sbtype' genügt die Ausführung
-des Befehls 'sbtype'.
+Abkürzungen für die einfachere Konfigurationsverwaltung zulassen (standardmäßig
+aktiviert). D.h. anstelle von 'config -set sbtype sb16' genügt die Ausführung
+von 'sbtype sb16', und anstelle von 'config -get sbtype' kannst du einfach
+'sbtype' eingeben.
 .
 :CONFIG_FRAMESKIP
 Überlege dir, ob du die Bildwiederholrate mit der Einstellung 'host_rate'
 begrenzen willst.
 .
 :CONFIG_ASPECT
-Umrechnung des Seitenverhältnisses für moderne Flachbildschirme mit
-quadratischen Pixeln, damit DOS-Auflösungen mit nicht-quadratischen Pixeln wie
-auf einem 4:3 CRT-Monitor, für den die meisten DOS-Spiele entwickelt wurden,
-dargestellt werden (standardmäßig aktiviert). Diese Einstellung betrifft nur
-Videomodi, die nicht-quadratische Pixel verwenden, wie 320x200 oder 640x400;
-während Modi mit quadratischen Pixeln, wie 640x480 und 800x600, unverändert
-angezeigt werden.
+Legt den Modus der Seitenverhältniskorrektur fest (standardmäßig aktiviert):
+  auto, on:            Umrechnung des Seitenverhältnisses für moderne
+                       Flachbildschirme mit quadratischen Pixeln, damit DOS-
+                       Auflösungen mit nicht-quadratischen Pixeln wie auf einem
+                       4:3 CRT-Monitor, für den die meisten DOS-Spiele
+                       entwickelt wurden, dargestellt werden (standardmäßig
+                       aktiviert). Diese Einstellung betrifft nur Videomodi,
+                       die nicht-quadratische Pixel verwenden, wie 320x200 oder
+                       640x400; während Modi mit quadratischen Pixeln, wie
+                       640x480 und 800x600, unverändert angezeigt werden.
+  square pixels, off:  Wendet keine Seitenverhältniskorrektur an; alle DOS-
+                       Videomodi werden mit quadratischen Pixeln angezeigt. Die
+                       meisten 320x200 Spiele werden gequetscht dargestellt,
+                       aber eine Minderheit von Titeln (z.B. DOS-Portierungen
+                       von PAL-Amiga-Spielen) brauchen quadratische Pixel, um
+                       um so zu erscheinen, wie es die Künstler beabsichtigt
+                       haben.
+  stretch:             Berechnet das Seitenverhältnis aus den Abmessungen des
+                       Bildausschnitts.
+                       Kombiniert mit 'viewport', ist dieser Modus
+                       nützlich, um beliebige Seitenverhältnisse zu erzwingen
+                       (z.B. um DOS-Spiele auf 16:9-Displays auf Vollbild zu
+                       strecken) und um die horizontalen und vertikalen
+                       Größeneinstellungsmöglichkeiten von CRT-Monitoren zu
+                       emulieren.
 .
 :CONFIG_INTEGER_SCALING
-Beschränkt den horizontalen oder vertikalen Skalierungsfaktor auf ganzzahlige
-Werte. Das korrekte Seitenverhältnis wird immer gemäß der 'aspect' Einstellung
-beibehalten, was zu einem nicht-ganzzahligen Skalierungsfaktor in der anderen
+Beschränkt den horizontalen oder vertikalen Skalierungsfaktor auf den größten
+ganzzahligen Werte, damit das dargestellte Bild in das Fenster passt.
+Das korrekte Seitenverhältnis wird immer gemäß der 'aspect' und 'viewport'-
+Einstellung beibehalten, was zu einem nicht-ganzzahligen Skalierungsfaktor in der anderen
 Richtung führen kann. Wenn das Bild größer als das Ansichtsfenster ist, wird
 die ganzzahlige Skalierung automatisch deaktiviert (wie bei 'off').
 Mögliche Werte:
   auto:        'vertical' wird nur für adaptive CRT-Shader automatisch
-               aktiviert, sonst 'aus' (Standard).
+               aktiviert (siehe 'glshader'), sonst 'aus' (Standard).
   vertical:    Beschränkt den vertikalen Skalierungsfaktor auf ganzzahlige
-               Werte innerhalb des Ansichtsfenster. Dies ist die empfohlene
-               Einstellung bei der Verwendung von CRT Shadern, um
-               ungleichmäßige Scanlinien und unerwünschte Interferenz-Artefakte
-               zu vermeiden.
+               Werte. Dies ist die empfohlene Einstellung bei der Verwendung
+               von CRT-Shadern, um ungleichmäßige Scanlinien und unerwünschte
+               Interferenzartefakte zu vermeiden.
   horizontal:  Beschränkt den horizontalen Skalierungsfaktor auf ganzzahlige
-               Werte innerhalb des Ansichtsfensters.
+               Werte.
   off:         Es wird keine ganzzahlige Skalierungsbeschränkung angewendet;
-               das Bild füllt das Ansichtsfenster entsprechend der Einstellung
-               'aspect' aus.
+               das Bild füllt das Ansichtsfenster und behält dabei das
+               konfigurierte Seitenverhältnis bei.
+.
+:CONFIG_VIEWPORT
+Legt die Größe des Ansichtsfensters (maximal darstellbare Fläche) fest. Die
+Videoausgabe wird immer innerhalb des Ansichtsfensters unter Berücksichtigung
+des konfigurierten Seitenverhältnisses durchgeführt (siehe 'aspect').
+Mögliche Werte:
+  fit:             Passt das Ansichtsfenster in das verfügbare Fenster bzw. die
+                   verfügbare Bildschirmgröße ein (Standard).
+                   Bei aktivierter 'integer_scaling'-Funktion können um das
+                   Bild herum schwarze Bereiche (Balken) dargestellt werden.
+  WxH:             Legt eine feste Größe des Ansichtsfensters im Format WxH in
+                   logischen Einheiten fest (z.B. 960x720). Die angegebene
+                   Größe darf nicht größer sein als der Desktop. Wenn sie
+                   größer als die Fenstergröße ist, wird sie skaliert, um in
+                   das Fenster zu passen.
+  N%:              Ähnlich wie 'WxH', aber die Größe wird als Prozentsatz
+                   der Desktopgröße angegeben.
+  relative H% V%:  Das Ansichtsfenster wird auf ein Rechteck im Seiten-
+                   verhältnis 4:3 eingestellt, das in das verfügbare Fenster/
+                   Bildschirm passt, dann wird es mit den horizontalen und
+                   vertikalen Skalierungsfaktoren (der gültige Bereich reicht von
+                   20% bis 300%) skaliert. Das resultierende Ansichtsfenster
+                   darf sich über das Fenster/den Bildschirm hinaus erstrecken.
+                   Nützlich, um beliebige Seitenverhältnisse mit
+                   'aspect = stretch'zu erzwingen und in das Bild zu zoomen.
+                   Dies emuliert effektiv die horizontalen und vertikalen
+                   Größeneinstellungsmöglichkeiten von CRT-Monitoren.
+Anmerkungen:
+ - Die Verwendung des 'relativen' Modus mit aktiviertem 'integer_scaling'
+   könnte zu überraschenden (aber korrekten) Ergebnissen führen.
+ - Du kannst die Hotkey-Aktionen 'Stretch Axis', 'Inc Stretch' und
+   'Dec Stretch' verwenden, um die Streckung im 'relativen' Modus in Echtzeit
+   einzustellen.
 .
 :CONFIG_MONOCHROME_PALETTE
 Wähle die Standard-Palette für die monochrome Darstellung (standardmäßig
@@ -481,7 +884,7 @@ sind:
 Die Software-Skalierer werden zugunsten von Hardware-beschleunigten Optionen
 nicht mehr unterstützt:
  - Wenn du die normalen2x/3x Skalierer benutzt hast, setze die gewünschte 
-    'windowresolution' oder 'viewport_resolution' ein, oder erwäge die
+    'windowresolution' oder 'viewport' ein, oder erwäge die
     Verwendung von 'integer_scaling'.
  - Wenn du einen 'advanced' Skalierer benutzt hast, solltest du stattdessen
    eine der 'glshader'-Optionen in Betracht ziehen.
@@ -495,7 +898,7 @@ Optionen für adaptive CRT-Shader:
                           lichung erlebt haben berücksichtigt (Voreinstellung).
                           Die passende Shader-Variante wird automatisch ausge-
                           wählt, basierend auf dem Grafikstandard des aktuellen
-                          Videomodus und der Auflösung des Ansichtsfensters,
+                          Videomodus und der Größe des Ansichtsfensters,
                           unabhängig von der Einstellung 'machine'.
                           Das bedeutet, dass du selbst auf einer emulierten
                           VGA-Karte eine authentische EGA-Monitor-Emulation mit
@@ -517,31 +920,32 @@ Optionen für adaptive CRT-Shader:
                           beibehalten wollen.
 .
 :CONFIG_COMPOSITE
-Aktiviere den Composite-Modus beim Start (Standardmäßig 'auto').
-Die Einstellung 'auto' lässt das ausgeführte Programm entscheiden.
-Hinweis: Stelle die Einstellungen unten (z.B. Farbton) mit den Composite-
-         Hotkeys ein. Lies dann die neuen Einstellungen aus der Konsole ab
-         und gib sie hier ein.
+Aktiviert den Composite-Modus beim Start (nur für die Maschinentypen 'cga',
+'pcjr' und 'tandy'); Standard ist 'auto'). 'auto' lässt das Programm
+entscheiden.
+Hinweis: Nimm die Feinabstimmung der folgenden Einstellungen (z. B. 'hue')
+         mit den Composite-Hotkeys vor, kopiere dann die neuen Einstellungen
+         aus dem Log in die Konfigurationsdatei.
 .
 :CONFIG_ERA
 Die Ära der Composite-Technologie (Standardmäßig 'auto').
 Bei 'auto' verwendet PCjr 'new' und CGA/Tandy verwenden 'old'.
 .
 :CONFIG_HUE
-Erscheinungsbild der RGB-Palette. Beispiel: Verändere den Wert, bis der
-Himmel blau ist.
+Erscheinungsbild der RGB-Palette (standardmäßig 0). Beispiel: Verändere den
+Wert, bis der Himmel blau ist.
 .
 :CONFIG_SATURATION
-Intensität der Farben, von blass bis leuchtend.
+Intensität der Farben, von blass bis leuchtend (standardmäßig 100).
 .
 :CONFIG_CONTRAST
-Verhältnis zwischen dunklen und hellen Bereichen.
+Verhältnis zwischen dunklen und hellen Bereichen (standardmäßig 100).
 .
 :CONFIG_BRIGHTNESS
-Helligkeit des Bildes, von dunkel bis hell.
+Helligkeit des Bildes, von dunkel bis hell (standardmäßig 0).
 .
 :CONFIG_CONVERGENCE
-Konvergenz der Subpixel-Elemente, von unscharf bis scharf (nur CGA und Tandy).
+Konvergenz der Subpixel-Elemente, von unscharf bis scharf (standardmäßig 0).
 .
 :CONFIG_CORE
 CPU-Kern, der für die Emulation verwendet wird (Standardmäßig 'auto').
@@ -633,9 +1037,8 @@ Wählt eine Methode zum Umschalten der Maus:
 Für die Steuerung über einen Touchscreen wähle  'nahtlos'.
 .
 :CONFIG_MOUSE_MIDDLE_RELEASE
-Wenn diese Option aktiviert ist, wird die Maus durch einen Mittelklick
-freigegeben oder umgeschaltet, wenn sie übergangslos ist
-(Standarmäßig aktiviert).
+Die Maus durch einen Mittelklick freigeben oder umschalten, wenn sie
+übergangslos ist (standarmäßig aktiviert).
 .
 :CONFIG_MOUSE_MULTI_DISPLAY_AWARE
 Ermöglicht das übergangslose Verhalten der Maus und die Freigabe des Maus-
@@ -779,10 +1182,11 @@ Hinweis: Du kannst die Chorus-Pegel der einzelnen Quellen über Mixer-
          Befehle anpassen.
 .
 :CONFIG_MIDIDEVICE
-Gerät, das die MIDI-Daten empfangen wird (von der emulierten MIDI
-Schnittstelle - MPU-401) (Standardmäßig 'auto').
-  oss:         Verwendet das Linux OSS MIDI Playback Interface.
-  alsa:        Verwendet das Linux ALSA MIDI Playback Interface.
+Legt fest, wohin die MIDI-Daten von der emulierten MPU-401 MIDI-Schnittstelle
+gesendet werden (standardmäßig 'auto').
+  coremidi:    Das Gerät, das in den macOS Audio-MIDI-Einstellungen
+               konfiguriert wurde.
+  coreaudio:   Verwendet den in macOS integrierten MIDI-Synthesizer.
   fluidsynth:  Verwendet den eingebauten FluidSynth MIDI-Synthesizer. Siehe
                Abschnitt [fluidsynth] für Konfigurationsdetails.
   mt32:        Verwendet den eingebauten Roland MT-32 Synthesizer.
@@ -800,9 +1204,7 @@ Befehl 'MIXER /LISTMIDI').
 Hinweise:
   - Diese Option hat keinen Effekt, wenn du die eingebauten Synthesizer benutzt
     ('mididevice = fluidsynth' oder 'mididevice = mt32').
-  - Wenn du ALSA benutzt, benutze den Linux-Befehl 'aconnect -l', um alle
-    geöffneten MIDI Ports aufzulisten und einen auszuwählen (zum Beispiel
-    'midiconfig=14:0' für Sequenzer-Client 14, Port 0).
+  - Wenn 'coreaudio' verwendet wird, kann hier ein SoundFont angegeben werden.
   - Wenn du einen realen Roland MT-32 mit Revision 0 PCB verwendest,
     kann es sein, dass die Hardware eine Verzögerung benötigt, um den
     Puffer nicht überläuft. In diesem Fall musst du 'delaysysex' hinzufügen.
@@ -887,8 +1289,8 @@ in der Reihenfolge der Auflistung durchgeführt.
   <version>:  Verwendet exakt das angegebene Modell (z.B. 'mt32_204').
 .
 :CONFIG_ROMDIR
-Das Verzeichnis mit den Roland MT-32/CM-32L ROMs.
-Das Verzeichnis kann absolut oder relativ sein, oder du lässt es leer, um
+Das Verzeichnis mit den Roland MT-32/CM-32L ROMs (standardmäßig nicht gesetzt).
+Das Verzeichnis kann absolut oder relativ sein, oder du lässt es ungesetzt, um
 das Verzeichnis 'mt32-roms' in deinem DOSBox-Konfigurations-
 verzeichnis zu verwenden. Andere gängige Systemverzeichnisse werden ebenfalls
 überprüft.
@@ -1053,8 +1455,8 @@ Die IRQ-Nummer der IBM Music Feature Card (standardmäßig 3).
 .
 :CONFIG_IMFC_FILTER
 Filter für die Ausgabe der IBM Music Feature Card:
-  ein:        Filtert die Ausgabe.
-  aus:       Die Ausgabe nicht filtern (Standard).
+  ein:       Filtert die Ausgabe (Standard).
+  aus:       Die Ausgabe nicht filtern.
   <custom>:  Benutzerdefinierte Filterdefinition; siehe 'sb_filter' für
              Details.
 .
@@ -1079,12 +1481,12 @@ Die Taktfrequenz des SID-Chips, die auf Nachbaukarten jumperbar ist.
 Die IO Port Adresse des Innovation SSI-2001 (Standard '280').
 .
 :CONFIG_6581FILTER
-Stellt die Filterstärke des 6581 als Prozentwert von 0 bis 100 ein
+Stellt die Filterstärke des 6581 prozentual von 0 bis 100 ein
 (Standard '50'). Die analoge Filterung des SID bedeutete, dass jeder Chip
 physikalisch einzigartig war.
 .
 :CONFIG_8580FILTER
-Passt die Filterstärke des 8580 als Prozentwert von 0 bis 100 an
+Passt die Filterstärke des 8580 prozentual von 0 bis 100 an
 (Standard '50').
 .
 :CONFIG_INNOVATION_FILTER
@@ -1266,29 +1668,31 @@ Wende die Parameter für die Kalibrierung der y-Achse über die Hotkeys an
 (Standard 'auto').
 .
 :CONFIG_SERIAL1
-Typ des Gerätes, das mit dem COM-Port verbunden ist.
+Typ des Gerätes, das mit dem COM1-Port verbunden ist.
 Kann disabled, dummy, mouse, modem, nullmodem, direct sein (Standard 'dummy').
 Zusätzliche Parameter müssen in der gleichen Zeile in der Form von
-parameter:wert angegeben werden. Parameter für alle Typen ist irq (optional).
-  - für 'mouse':      Modell, überschreibt die Einstellung aus dem Abschnitt
-                      [Maus]
+parameter:wert angegeben werden. Der optionale Parameter 'irq' ist für alle
+Typen gleich..
+  - für 'mouse':      Modell (überschreibt die Einstellung aus dem Abschnitt
+                      [Maus])
   - für 'direct':     realport (benötigt), rxdelay (optional).
-                      (realport:COM1 realport:ttyS0).
+                      (z.B. realport:COM1 realport:ttyS0).
   - für 'modem':      listenport, sock, bps (alle optional).
   - für 'nullmodem':  server, rxdelay, txdelay, telnet, usedtr,
                       transparent, port, inhsocket, sock (alle optional).
 Der SOCK-Parameter legt das Protokoll fest, das von beiden Seiten
-der Verbindung verwendet wird. 0 für TCP und 1 für ENet reliable UDP.
+der Verbindung verwendet wird. Gültige Werte sind0 für TCP und 1 für ENet
+reliable UDP.
 Beispiel: serial1=modem listenport:5000 sock:1
 .
 :CONFIG_SERIAL2
-siehe 'serial1'
+siehe 'serial1' (Standard 'dummy').
 .
 :CONFIG_SERIAL3
-siehe 'serial1'
+siehe 'serial1' (Standard 'disabled').
 .
 :CONFIG_SERIAL4
-siehe 'serial1'
+siehe 'serial1' (Standard 'disabled').
 .
 :CONFIG_PHONEBOOKFILE
 Datei, die benutzt wird, um Fake-Telefonnummern auf Adressen zu mappen
@@ -1311,11 +1715,21 @@ Setzt die DOS Version (5.0 als Standard). Anzugeben als major.minor Format.
 Eine einzelne Zahl wird als die Hauptversion behandelt.
 Übliche Einstellungen sind 3.3, 5.0, 6.22, und 7.1.
 .
+:CONFIG_LOCALE_PERIOD
+Lokale Epoche einstellen (standardmäßig 'modern'). Historische Einstellungen
+(falls vorhanden für das jeweilige Land) versuchen, das alte DOS-Verhalten bei
+der Anzeige von Informationen wie Datum, Uhrzeit oder Zahlen, während die
+'modern' Einstellung der heutigen Praxis folgt, damit die Benutzererfahrung mit
+typischen Hostsystemen übereinstimmt.
+.
 :CONFIG_COUNTRY
-Lege den DOS-Ländercode fest (Standard '0').
-Die beeinflusst länderspezifische Informationen wie Datum, Uhrzeit und
-Dezimalformate. Wenn er auf '0' gesetzt ist, wird der
-Ländercode verwendet, der dem ausgewählte Tastaturlayout entspricht.
+Lege den DOS-Ländercode fest (Standard 'auto').
+Dies beeinflusst länderspezifische Informationen wie Datum, Uhrzeit und
+Dezimalformate. Die Liste der unterstützten Ländercodes kann mit dem
+Befehlszeilenargument '--list-countries' angezeigt werden. Wenn er auf 'auto'
+gesetzt ist, wird der Ländercode der dem ausgewählten Tastaturlayout
+entspricht, verwendet.
+
 .
 :CONFIG_KEYBOARDLAYOUT
 Sprachcode des Tastaturlayouts oder 'auto' (Standard 'auto').
@@ -1328,7 +1742,8 @@ FreeDOS und MS-DOS 7/8 COMMAND.COM unterstützt dieses Verhalten.
 .
 :CONFIG_SHELL_HISTORY_FILE
 Datei mit dem persistenten Befehlszeilenverlauf (standardmäßig
-'shell_history.txt').
+'shell_history.txt'). Wenn kein Dateiname angegeben wird, wird der persistente
+Shellverlauf deaktiviert.
 .
 :CONFIG_SETVER_TABLE_FILE
 Datei, die die Liste der Anwendungen und der zugewiesenen DOS-Versionen
@@ -1796,7 +2211,7 @@ Anmerkungen:
   - Der Parameter -ide emuliert eine IDE CD-Laufwerk, nützlich für CD-basierte
     Programme, die ein echtes DOS über ein Boot-Image benötigen.
 Beispiele:
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/BENUTZERNAME/games/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Benutzer/NAME/games/doom.iso[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]Disk1.img Disk2.img Disk3.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootimage.img[reset] -t hdd -fs none -size 512,63,32,1023
@@ -2437,7 +2852,7 @@ Anmerkungen:
 
 Beispiele:
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/spiele[reset]
-  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]'/medien/NAME/Spiele CD'[reset] -t cdrom
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]'/Volumes/Spiele CD'[reset] -t cdrom
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]meine_savegames[reset] -t overlay
 
 .
@@ -3190,7 +3605,7 @@ auf lokalen Laufwerken zu verwenden.
 :SHELL_STARTUP_CGA
 ║ DOSBox unterstützt den Composite CGA Modus.                         ║
 ║ Verwende [color=light-red]F12[color=white], um Composite-Ausgabe auf ON, OFF oder AUTO zu setzen. ║
-║ [color=light-red]F10[color=white] wählt eine CGA Einstellung [color=light-red](%s+)F11[color=white] ändert sie.       ║
+║ [color=light-red]F10[color=white] wählt eine CGA Einstellung [color=light-red](%s+)F11[color=white] ändert sie.                ║
 ║                                                                     ║
 
 .
@@ -3210,7 +3625,7 @@ auf lokalen Laufwerken zu verwenden.
 
 .
 :SHELL_STARTUP_END
-║ [color=yellow]https://dosbox-staging.github.io[color=white]                     de.txt 0.81 v1 ║
+║ [color=yellow]https://dosbox-staging.github.io[color=white]                     de.lng 0.81 v2 ║
 ╚═════════════════════════════════════════════════════════════════════╝[reset]
 
 
