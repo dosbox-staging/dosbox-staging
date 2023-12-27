@@ -183,9 +183,10 @@ private:
 
 	std::string shader_name_from_config = {};
 
-	double scale_y                   = 1.0;
-	double scale_y_force_single_scan = 1.0;
-	VideoMode video_mode             = {};
+	int pixels_per_scanline                   = 1;
+	int pixels_per_scanline_force_single_scan = 1;
+
+	VideoMode video_mode = {};
 };
 
 #endif // DOSBOX_SHADER_MANAGER_H
