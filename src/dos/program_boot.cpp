@@ -27,7 +27,6 @@
 #include "bios_disk.h"
 #include "callback.h"
 #include "control.h"
-#include "cross.h"
 #include "dma.h"
 #include "drives.h"
 #include "fs_utils.h"
@@ -99,12 +98,12 @@ FILE* BOOT::getFSFile(const char* filename, uint32_t* ksize, uint32_t* bsize,
 		return tmpfile;
 	// File not found on mounted filesystem. Try regular filesystem
 	const auto filename_s = resolve_home(filename).string();
-	tmpfile = fopen_wrap(filename_s.c_str(), "rb+");
+	tmpfile = fopen(filename_s.c_str(), "rb+");
 
 	auto fseek_in_tmpfile = make_check_fseek_func("BOOT", "image", filename);
 
 	if (!tmpfile) {
-		if ((tmpfile = fopen_wrap(filename_s.c_str(), "rb"))) {
+		if ((tmpfile = fopen(filename_s.c_str(), "rb"))) {
 			// File exists; So can't be opened in correct mode =>
 			// error 2
 			//				fclose(tmpfile);

@@ -72,7 +72,7 @@ FILE* local_drive_create_file(const std_fs::path& path,
 	// game was producing FILE ERROR - see the issue:
 	// https://github.com/dosbox-staging/dosbox-staging/issues/3262
 
-	FILE* file_pointer = fopen_wrap(path.string().c_str(), "wb+");
+	FILE* file_pointer = fopen(path.string().c_str(), "wb+");
 	if (file_pointer) {
 		if (!SetFileAttributesW(path.c_str(), attributes._data)) {
 			fclose(file_pointer);
