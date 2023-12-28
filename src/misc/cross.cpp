@@ -368,75 +368,20 @@ void close_directory(dir_information* dirp) {
 
 #endif
 
-static bool is_path_allowed([[maybe_unused]] const char* path)
-{
-#if defined(WIN32)
-	;
-#elif defined(MACOSX)
-	;
-#else  
-#if defined(HAVE_REALPATH)
-	char work[CROSS_LEN] = {0};
-	strncpy(work,path,CROSS_LEN-1);
-	char* last = strrchr(work,'/');
-	
-	if (last) {
-		if (last != work) {
-			*last = 0;
-			//If this compare fails, then we are dealing with files in / 
-			//Which is outside the scope, but test anyway. 
-			//However as realpath only works for exising files. The testing is 
-			//in that case not done against new files.
-		}
-		char* check = realpath(work,nullptr);
-		if (check) {
-			if ( ( strlen(check) == 5 && strcmp(check,"/proc") == 0) || strncmp(check,"/proc/",6) == 0) {
-//				LOG_MSG("lst hit %s blocking!",path);
-				free(check);
-				return false;
-			}
-			free(check);
-		}
-	}
-
-#endif //HAVE_REALPATH
-#endif
-	return true;
-}
-
-bool is_path_allowed(const std_fs::path& path)
-{
-#if defined(WIN32)
-	// path.c_str() would be UTF-16 encoded
-	return is_path_allowed(path.string().c_str());
-#else
-	return is_path_allowed(path.c_str());
-#endif
-}
-
-FILE* fopen_wrap(const char* path, const char* mode)
-{
-	if (!is_path_allowed(path)) {
-		return nullptr;
-	}
-
-	return fopen(path, mode);
-}
-
-// A helper for fopen_wrap that will fallback to read-only if read-write isn't possible.
+// A helper for fopen that will fallback to read-only if read-write isn't possible.
 // In the fallback case, is_readonly argument is toggled to true.
 // In all cases, a pointer to the file is returned (or nullptr on failure).
 FILE *fopen_wrap_ro_fallback(const std::string &filename, bool &is_readonly)
 {
 	// Try with the requested permissions
 	const auto requested_perms = is_readonly ? "rb" : "rb+";
-	FILE *fp = fopen_wrap(filename.c_str(), requested_perms);
+	FILE *fp = fopen(filename.c_str(), requested_perms);
 	if (fp || is_readonly) {
 		return fp;
 	}
 	// Fallback to read-only
 	assert(!fp && !is_readonly);
-	fp = fopen_wrap(filename.c_str(), "rb");
+	fp = fopen(filename.c_str(), "rb");
 	if (fp) {
 		is_readonly = true;
 		LOG_INFO("FILESYSTEM: Opened %s read-only per host filesystem permissions",

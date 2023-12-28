@@ -488,10 +488,6 @@ if cxx.has_function(
     conf_data.set10('HAVE_PTHREAD_SETNAME_NP', true)
 endif
 
-if cc.has_function('realpath', prefix: '#include <stdlib.h>')
-    conf_data.set10('HAVE_REALPATH', true)
-endif
-
 # strnlen was originally a Linux-only function
 if cc.has_function('strnlen', prefix: '#include <string.h>')
     conf_data.set10('HAVE_STRNLEN', true)

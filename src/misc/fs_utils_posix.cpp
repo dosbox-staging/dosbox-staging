@@ -35,7 +35,6 @@
 #include <sys/xattr.h>
 #endif
 
-#include "cross.h"
 #include "dos_inc.h"
 #include "logging.h"
 #include "string_utils.h"
@@ -301,14 +300,12 @@ FILE* local_drive_create_file(const std_fs::path& path,
 {
 	FILE* file_pointer = nullptr;
 
-	if (is_path_allowed(path)) {
-		const auto file_descriptor = open(path.c_str(),
-		                                  O_CREAT | O_RDWR | O_TRUNC,
-		                                  PermissionsRW);
-		if (file_descriptor != -1) {
-			set_xattr(file_descriptor, attributes);
-			file_pointer = fdopen(file_descriptor, "wb+");
-		}
+	const auto file_descriptor = open(path.c_str(),
+	                                  O_CREAT | O_RDWR | O_TRUNC,
+	                                  PermissionsRW);
+	if (file_descriptor != -1) {
+		set_xattr(file_descriptor, attributes);
+		file_pointer = fdopen(file_descriptor, "wb+");
 	}
 
 	return file_pointer;
