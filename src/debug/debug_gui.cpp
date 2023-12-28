@@ -37,11 +37,6 @@
 #if !PDCURSES
 #error SYSTEM CURSES INCLUDED, SHOULD BE PDCURSES
 #endif
-
-struct _LogGroup {
-	const char* front = nullptr;
-	bool enabled = false;
-};
 #include <list>
 #include <string>
 using namespace std;
@@ -49,9 +44,6 @@ using namespace std;
 #define MAX_LOG_BUFFER 500
 static list<string> logBuff = {};
 static list<string>::iterator logBuffPos = logBuff.end();
-
-static _LogGroup loggrp[LOG_MAX]={{"",true},{nullptr,false}};
-static FILE *debuglog = nullptr;
 
 extern int old_cursor_state;
 
@@ -72,11 +64,6 @@ void DEBUG_ShowMsg(const char* format, ...)
 	/* Add newline if not present */
 	size_t len = safe_strlen(buf);
 	if(buf[len - 1] != '\n' && len + 1 < sizeof(buf) ) strcat(buf,"\n");
-
-	if (debuglog) {
-		fprintf(debuglog,"%s",buf);
-		fflush(debuglog);
-	}
 
 	if (logBuffPos != logBuff.end()) {
 		logBuffPos=logBuff.end();
@@ -118,19 +105,6 @@ void DEBUG_RefreshPage(int scroll) {
 	}
 	mvwprintw(dbg.win_out,maxy-1, 0, "");
 	wrefresh(dbg.win_out);
-}
-
-void LOG::operator()(const char* format, ...)
-{
-	char buf[512];
-	va_list msg;
-	va_start(msg,format);
-	vsprintf(buf,format,msg);
-	va_end(msg);
-
-	if (d_type>=LOG_MAX) return;
-	if ((d_severity!=LOG_ERROR) && (!loggrp[d_type].enabled)) return;
-	DEBUG_ShowMsg("%10u: %s:%s\n",static_cast<uint32_t>(cycle_count),loggrp[d_type].front,buf);
 }
 
 static void Draw_RegisterLayout(void) {
@@ -218,78 +192,6 @@ static void MakePairs() {
 	init_pair(PAIR_BLACK_GREY, COLOR_BLACK /*| FOREGROUND_INTENSITY */, COLOR_WHITE);
 	init_pair(PAIR_GREY_RED, COLOR_WHITE/*| FOREGROUND_INTENSITY */, COLOR_RED);
 }
-static void LOG_Destroy(Section*) {
-	if(debuglog) fclose(debuglog);
-	debuglog = nullptr;
-}
-
-static void LOG_Init(Section * sec) {
-	Section_prop * sect = static_cast<Section_prop *>(sec);
-	std::string blah = sect->Get_string("logfile");
-	if(!blah.empty() && (debuglog = fopen(blah.c_str(),"wt+"))){
-		;
-	} else {
-		debuglog = nullptr;
-	}
-	sect->AddDestroyFunction(&LOG_Destroy);
-	char buf[64];
-	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) { //Skip LOG_ALL, it is always enabled
-		safe_strcpy(buf, loggrp[i].front);
-		lowcase(buf);
-		loggrp[i].enabled=sect->Get_bool(buf);
-	}
-}
-
-
-void LOG_StartUp(void) {
-	/* Setup logging groups */
-	loggrp[LOG_ALL].front="ALL";
-	loggrp[LOG_VGA].front="VGA";
-	loggrp[LOG_VGAGFX].front="VGAGFX";
-	loggrp[LOG_VGAMISC].front="VGAMISC";
-	loggrp[LOG_INT10].front="INT10";
-	loggrp[LOG_SB].front="SBLASTER";
-	loggrp[LOG_DMACONTROL].front="DMA_CONTROL";
-	
-	loggrp[LOG_FPU].front="FPU";
-	loggrp[LOG_CPU].front="CPU";
-	loggrp[LOG_PAGING].front="PAGING";
-
-	loggrp[LOG_FCB].front="FCB";
-	loggrp[LOG_FILES].front="FILES";
-	loggrp[LOG_IOCTL].front="IOCTL";
-	loggrp[LOG_EXEC].front="EXEC";
-	loggrp[LOG_DOSMISC].front="DOSMISC";
-
-	loggrp[LOG_PIT].front="PIT";
-	loggrp[LOG_KEYBOARD].front="KEYBOARD";
-	loggrp[LOG_PIC].front="PIC";
-
-	loggrp[LOG_MOUSE].front="MOUSE";
-	loggrp[LOG_BIOS].front="BIOS";
-	loggrp[LOG_GUI].front="GUI";
-	loggrp[LOG_MISC].front="MISC";
-
-	loggrp[LOG_IO].front="IO";
-	loggrp[LOG_PCI].front="PCI";
-	loggrp[LOG_REELMAGIC].front="REELMAGIC";
-	
-	/* Register the log section */
-	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
-	Prop_string* Pstring = sect->Add_string("logfile",Property::Changeable::Always,"");
-	Pstring->Set_help("File where the log messages will be saved to");
-	char buf[64];
-	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) {
-		safe_strcpy(buf, loggrp[i].front);
-		lowcase(buf);
-		Prop_bool* Pbool = sect->Add_bool(buf,Property::Changeable::Always,true);
-		Pbool->Set_help("Enable/disable logging of this type.");
-	}
-//	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
-}
-
-
-
 
 void DBGUI_StartUp(void) {
 	/* Start the main window */

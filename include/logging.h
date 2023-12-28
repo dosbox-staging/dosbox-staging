@@ -46,40 +46,48 @@ enum LOG_SEVERITIES {
 	LOG_ERROR
 };
 
-#if C_DEBUG
-class LOG 
-{ 
-	LOG_TYPES       d_type;
-	LOG_SEVERITIES  d_severity;
+// A class that implements a logger that can handle log messages generated during
+// the execution of dosbox. Uses the loguru library to do the actual logging.
+class Logger {
 public:
+	// Adds logger to the list of loggers that will be used to log messages.
+	// The id can be used to remove the logger.
+	static void AddLogger(const char* id, std::unique_ptr<Logger> logger,
+	                      LOG_SEVERITIES severity = LOG_NORMAL);
 
-	LOG (LOG_TYPES type , LOG_SEVERITIES severity):
-		d_type(type),
-		d_severity(severity)
-		{}
-	        void operator()(const char* buf, ...)
-	                GCC_ATTRIBUTE(__format__(__printf__, 2, 3)); //../src/debug/debug_gui.cpp
+	// Removes the logger that was added with the given ID.
+	static void RemoveLogger(const char* id);
+
+	virtual ~Logger() = default;
+
+	virtual void Log(const char* log_group_name,
+	                 const loguru::Message& message) = 0;
+	virtual void Flush() {}
 };
 
-void DEBUG_ShowMsg(const char* format, ...)
-        GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
-#define LOG_MSG DEBUG_ShowMsg
+// A class used to help with the LOG() macro. Use that macro instead of using
+// this class directly.
+class LogHelper {
+	LOG_TYPES       d_type;
+	LOG_SEVERITIES  d_severity;
+	const char* file;
+	int line;
 
-#define LOG_INFO(...)    LOG(LOG_ALL, LOG_NORMAL)(__VA_ARGS__)
-#define LOG_WARNING(...) LOG(LOG_ALL, LOG_WARN)(__VA_ARGS__)
-#define LOG_ERR(...)     LOG(LOG_ALL, LOG_ERROR)(__VA_ARGS__)
+public:
+	LogHelper(LOG_TYPES type, LOG_SEVERITIES severity, const char* file, int line)
+	        : d_type(type),
+	          d_severity(severity),
+	          file(file),
+	          line(line)
+	{}
 
-#else // C_DEBUG
+	void operator()(const char* buf, ...)
+		GCC_ATTRIBUTE(__format__(__printf__, 2, 3)); //../src/debug/debug_gui.cpp
+};
 
-struct LOG
-{
-	inline LOG(LOG_TYPES, LOG_SEVERITIES){ }
-	inline void operator()(const char*, ...) {}
-}; //add missing operators to here
+void LOG_StartUp();
 
-	//try to avoid anything smaller than bit32...
-void GFX_ShowMsg(const char* format, ...)
-        GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
+#define LOG(type, severity) LogHelper(type, severity, __FILE__, __LINE__)
 
 // Keep for compatibility
 #define LOG_MSG(...)	LOG_F(INFO, __VA_ARGS__)
@@ -87,8 +95,6 @@ void GFX_ShowMsg(const char* format, ...)
 #define LOG_INFO(...)		LOG_F(INFO, __VA_ARGS__)
 #define LOG_WARNING(...)	LOG_F(WARNING, __VA_ARGS__)
 #define LOG_ERR(...)		LOG_F(ERROR, __VA_ARGS__)
-
-#endif // C_DEBUG
 
 #ifdef NDEBUG
 // LOG_DEBUG exists only for messages useful during development, and not to

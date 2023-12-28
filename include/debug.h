@@ -31,6 +31,8 @@ void DEBUG_CheckExecuteBreakpoint(uint16_t seg, uint32_t off);
 bool DEBUG_ExitLoop(void);
 void DEBUG_RefreshPage(int scroll);
 Bitu DEBUG_EnableDebugger();
+void DEBUG_ShowMsg(const char* format, ...)
+        GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 
 extern Bitu cycle_count;
 extern Bitu debugCallback;

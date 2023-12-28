@@ -250,6 +250,20 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 	return false;
 }
 
+static const char* const LOGURU_DEBUGGER_LOGGER_ID = "dosbox_debugger_logger";
+
+class DebuggerLogger : public Logger {
+public:
+	void Log(const char* log_group_name, const loguru::Message& message) override
+	{
+		DEBUG_ShowMsg("%10u: %s%s:%s\n",
+		              static_cast<uint32_t>(cycle_count),
+		              message.preamble,
+		              log_group_name,
+		              message.message);
+	}
+};
+
 /********************/
 /* DebugVar   stuff */
 /********************/
@@ -2356,6 +2370,7 @@ Bitu DEBUG_EnableDebugger()
 void DEBUG_ShutDown(Section * /*sec*/) {
 	CBreakpoint::DeleteAll();
 	CDebugVar::DeleteAll();
+	Logger::RemoveLogger(LOGURU_DEBUGGER_LOGGER_ID);
 	curs_set(old_cursor_state);
 
 	if (pdc_window)
@@ -2379,6 +2394,7 @@ void DEBUG_Init(Section* sec) {
 	/* Setup callback */
 	debugCallback=CALLBACK_Allocate();
 	CALLBACK_Setup(debugCallback,DEBUG_EnableDebugger,CB_RETF,"debugger");
+	Logger::AddLogger(LOGURU_DEBUGGER_LOGGER_ID, std::make_unique<DebuggerLogger>(), LOG_WARN);
 	/* shutdown function */
 	sec->AddDestroyFunction(&DEBUG_ShutDown);
 }

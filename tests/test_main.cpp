@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2023  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,22 +18,20 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "dosbox.h"
+// A custom test main that allows us to initialize the tests with any common
+// global state that we need.
 
-#include "control.h"
-#include "logging.h"
+#include "../src/libs/loguru/loguru.hpp"
+#include <gmock/gmock.h>
 
-// During testing we never want to log to stdout/stderr, as it could
-// negatively affect test harness.
-
-void DEBUG_ShowMsg(const char *, ...) {}
-
-void DEBUG_HeavyWriteLogInstruction() {}
-
-#if C_DEBUG
-void LOG::operator()([[maybe_unused]] const char* buf, ...)
+int main(int argc, char **argv)
 {
-	(void)d_type;     // Deliberately unused.
-	(void)d_severity; // Deliberately unused.
+    testing::InitGoogleMock(&argc, argv);
+
+    // Turn off logging to stderr, to avoid interfering with the test output
+    loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
+    // Init loguru to still allow logging to be enabled by command line.
+    loguru::init(argc, argv);
+
+    return RUN_ALL_TESTS();
 }
-#endif

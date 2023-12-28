@@ -510,9 +510,7 @@ void DOSBOX_Init()
 	pstring = secprop->Add_path("captures", deprecated, "capture");
 	pstring->Set_help("Moved to [capture] section and renamed to 'capture_dir'.");
 
-#if C_DEBUG
 	LOG_StartUp();
-#endif
 
 	secprop->AddInitFunction(&IO_Init);
 	secprop->AddInitFunction(&PAGING_Init);

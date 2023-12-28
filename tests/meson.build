@@ -14,11 +14,10 @@
 # to set up gtest and gmock in mixed wrap/system-installed edge-cases.
 gmock_dep = dependency(
     'gmock',
-    main: true,
     version: ['> 1.8.0', '< 2'],
     disabler: true,
     required: get_option('unit_tests'),
-    fallback: ['gtest', 'gmock_main_dep'],
+    fallback: ['gtest'],
 )
 summary('Unit tests', gmock_dep.found())
 
@@ -42,7 +41,7 @@ endforeach
 #
 example = executable(
     'example',
-    ['example_tests.cpp', 'stubs.cpp'],
+    ['test_main.cpp', 'example_tests.cpp'],
     dependencies: [gmock_dep, libmisc_stubs_dep, libshell_stubs_dep, ghc_dep, libloguru_dep],
     include_directories: incdir,
     cpp_args: cpp_args,
@@ -51,7 +50,7 @@ test('gtest example', example, should_fail: true)
 
 fs_utils = executable(
     'fs_utils',
-    ['fs_utils_tests.cpp', 'stubs.cpp'],
+    ['test_main.cpp', 'fs_utils_tests.cpp'],
     dependencies: [gmock_dep, libmisc_stubs_dep, libshell_stubs_dep, ghc_dep, libloguru_dep],
     include_directories: incdir,
     cpp_args: cpp_args,
@@ -65,7 +64,7 @@ test(
 
 program_mixer = executable(
     'program_mixer',
-    ['program_mixer_tests.cpp'],
+    ['test_main.cpp', 'program_mixer_tests.cpp'],
     dependencies: [gmock_dep, dosbox_dep, libiir_dep],
     include_directories: incdir,
     cpp_args: cpp_args,
@@ -113,10 +112,10 @@ endif
 
 foreach ut : unit_tests
     name = ut.get('name')
-    extra_cpp = ut.get('extra_cpp', ['stubs.cpp'])
+    extra_cpp = ut.get('extra_cpp', [])
     exe = executable(
         name,
-        [name + '_tests.cpp'] + extra_cpp,
+        ['test_main.cpp', name + '_tests.cpp'] + extra_cpp,
         dependencies: [gmock_dep, ghc_dep, libloguru_dep] + ut.get('deps'),
         link_args: extra_link_flags,
         include_directories: incdir,

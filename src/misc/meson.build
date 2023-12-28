@@ -8,6 +8,7 @@ libmisc_nomsg_sources = [
     'fs_utils_posix.cpp',
     'fs_utils_win32.cpp',
     'help_util.cpp',
+    'logging.cpp',
     'pacer.cpp',
     'programs.cpp',
     'rwqueue.cpp',
