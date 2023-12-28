@@ -1915,6 +1915,9 @@ ImageInfo setup_drawing()
 		vga.draw.address_line_total = vga.other.max_scanline + 1;
 	}
 
+	// We always start from disabled then set the flag to true later if needed
+	vga.draw.is_double_scanning = false;
+
 	const auto vga_timings = calculate_vga_timings();
 
 	if (is_vga_scan_doubling() && !(vga.mode == M_CGA2 || vga.mode == M_CGA4)) {
@@ -2109,7 +2112,9 @@ ImageInfo setup_drawing()
 		if (is_vga_scan_doubling()) {
 			video_mode.is_double_scanned_mode = true;
 
+			vga.draw.is_double_scanning = true;
 			vga.draw.address_line_total /= 2;
+
 			video_mode.height  = vert_end / 2;
 			double_height      = vga.draw.double_scanning_enabled;
 			forced_single_scan = !vga.draw.double_scanning_enabled;
@@ -2170,7 +2175,8 @@ ImageInfo setup_drawing()
 			forced_single_scan = !vga.draw.double_scanning_enabled;
 
 			if (vga.draw.double_scanning_enabled) {
-				render_height = video_mode.height * 2;
+				vga.draw.is_double_scanning = true;
+				render_height        = video_mode.height * 2;
 				rendered_double_scan = true;
 			} else {
 				vga.draw.address_line_total /= 2;
@@ -2265,6 +2271,7 @@ ImageInfo setup_drawing()
 				forced_single_scan = !vga.draw.double_scanning_enabled;
 
 				if (vga.draw.double_scanning_enabled) {
+					vga.draw.is_double_scanning = true;
 					render_height = video_mode.height * 2;
 					rendered_double_scan = true;
 				} else {
