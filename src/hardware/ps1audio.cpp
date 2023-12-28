@@ -23,9 +23,9 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstring>
 #include <memory>
 #include <queue>
-#include <string.h>
 
 #include "channel_names.h"
 #include "control.h"

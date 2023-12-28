@@ -27,10 +27,10 @@
 #include <cerrno>
 #include <climits>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <ctime>
 #include <limits>
-#include <stdlib.h>
-#include <string.h>
 #include <sys/types.h>
 
 #ifdef _MSC_VER

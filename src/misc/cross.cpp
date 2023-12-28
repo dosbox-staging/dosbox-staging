@@ -22,9 +22,9 @@
 #include "cross.h"
 
 #include <cerrno>
+#include <climits>
 #include <clocale>
-#include <limits.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 #include <sys/types.h>
 #include <unistd.h>

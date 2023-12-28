@@ -19,7 +19,7 @@
 
 #include "dos_system.h"
 
-#include <string.h>
+#include <cstring>
 
 #include "dosbox.h"
 #include "callback.h"

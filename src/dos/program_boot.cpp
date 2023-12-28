@@ -21,8 +21,8 @@
 
 #include "program_boot.h"
 
+#include <cstdio>
 #include <limits>
-#include <stdio.h>
 
 #include "bios_disk.h"
 #include "callback.h"

@@ -18,7 +18,7 @@
 
 #include "dosbox.h"
 
-#include <string.h>
+#include <cstring>
 
 #include "cpu.h"
 #include "inout.h"

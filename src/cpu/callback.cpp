@@ -17,9 +17,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include <cstdlib>
+#include <cstring>
 #include <limits>
-#include <stdlib.h>
-#include <string.h>
 #include <string>
 
 #include "dosbox.h"

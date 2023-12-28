@@ -19,8 +19,8 @@
 
 #include "dosbox.h"
 
-#include <string.h>
-#include <ctype.h>
+#include <cctype>
+#include <cstring>
 
 #include "callback.h"
 #include "cpu.h"

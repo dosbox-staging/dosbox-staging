@@ -22,9 +22,9 @@
 #include "dosbox.h"
 
 #include <cassert>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
+#include <cmath>
+#include <cstdio>
+#include <cstring>
 
 #include "bitops.h"
 #include "callback.h"

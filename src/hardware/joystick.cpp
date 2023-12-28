@@ -19,8 +19,8 @@
 #include "joystick.h"
 
 #include <cfloat>
-#include <string.h>
-#include <math.h>
+#include <cmath>
+#include <cstring>
 
 #include "control.h"
 #include "inout.h"

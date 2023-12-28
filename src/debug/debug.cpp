@@ -21,14 +21,14 @@
 
 #if C_DEBUG
 
-#include <string.h>
-#include <list>
-#include <vector>
-#include <ctype.h>
+#include <cctype>
+#include <cstring>
 #include <fstream>
 #include <iomanip>
-#include <string>
+#include <list>
 #include <sstream>
+#include <string>
+#include <vector>
 using namespace std;
 
 #include "debug.h"

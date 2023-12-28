@@ -19,7 +19,7 @@
 
 #include "mem.h"
 
-#include <string.h>
+#include <cstring>
 
 #include "inout.h"
 #include "paging.h"

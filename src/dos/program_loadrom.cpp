@@ -23,7 +23,7 @@
 
 #include "dosbox.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 #include "callback.h"
 #include "drives.h"

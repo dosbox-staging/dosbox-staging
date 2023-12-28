@@ -39,7 +39,7 @@
 #if defined(HAVE_MPROTECT) || defined(HAVE_MMAP)
 #include <sys/mman.h>
 
-#include <limits.h>
+#include <climits>
 
 #endif // HAVE_MPROTECT
 

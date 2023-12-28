@@ -20,11 +20,11 @@
 #include "dos_inc.h"
 
 #include <array>
+#include <cctype>
 #include <climits>
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 
 #include "dosbox.h"
 #include "bios.h"

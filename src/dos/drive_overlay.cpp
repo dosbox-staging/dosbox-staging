@@ -19,14 +19,14 @@
 #include "drives.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cinttypes>
-#include <vector>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <string>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <errno.h>
+#include <vector>
 
 #include "dos_inc.h"
 #include "string_utils.h"

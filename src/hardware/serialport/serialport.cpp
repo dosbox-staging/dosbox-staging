@@ -20,9 +20,9 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdarg>
-#include <ctype.h>
-#include <string.h>
+#include <cstring>
 #include <tuple>
 
 #include "../../capture/capture.h"

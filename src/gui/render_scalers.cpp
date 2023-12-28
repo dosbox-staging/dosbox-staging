@@ -24,7 +24,7 @@
 
 #include "dosbox.h"
 #include "render.h"
-#include <string.h>
+#include <cstring>
 
 uint8_t Scaler_Aspect[SCALER_MAXHEIGHT]        = {};
 uint16_t Scaler_ChangedLines[SCALER_MAXHEIGHT] = {};
