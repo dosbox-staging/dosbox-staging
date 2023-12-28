@@ -314,8 +314,6 @@ public:
 		assert(hostFilepath);
 		_fileName = std::string("HOST:") + hostFilepath;
 
-		// not using fopen_wrap() as this class is really intended for
-		// debug...
 		_fp = fopen(hostFilepath, "rb");
 		if (!_fp) {
 			throw RMException("Host File: fopen(\"%s\")failed: %s",

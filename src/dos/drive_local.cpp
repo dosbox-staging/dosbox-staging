@@ -177,7 +177,7 @@ bool localDrive::FileOpen(DOS_File **file, char *name, uint32_t flags)
 	// RW access.  So check if this is the case:
 	if (!fhandle && flags & (OPEN_READWRITE | OPEN_WRITE)) {
 		// If yes, check if the file can be opened with Read-only access:
-		fhandle = fopen_wrap(newname, "rb");
+		fhandle = fopen(newname, "rb");
 		if (fhandle) {
 			if (!always_open_ro_files) {
 				fclose(fhandle);
@@ -243,7 +243,7 @@ FILE* localDrive::GetSystemFilePtr(const char* const name, const char* const typ
 	CROSS_FILENAME(newname);
 	dirCache.ExpandNameAndNormaliseCase(newname);
 
-	return fopen_wrap(newname,type);
+	return fopen(newname,type);
 }
 
 bool localDrive::GetSystemFilename(char* sysName, const char* const dosName)

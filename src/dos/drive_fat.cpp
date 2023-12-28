@@ -25,7 +25,6 @@
 
 #include "bios.h"
 #include "bios_disk.h"
-#include "cross.h"
 #include "dos_inc.h"
 #include "string_utils.h"
 #include "support.h"

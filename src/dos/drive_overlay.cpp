@@ -254,7 +254,7 @@ std::pair<FILE*, std_fs::path> Overlay_Drive::create_file_in_overlay(
 	                                    // Linux TODO
 	CROSS_FILENAME(newname);
 
-	FILE* f = fopen_wrap(newname,mode);
+	FILE* f = fopen(newname,mode);
 	//Check if a directories are part of the name:
 	const char *dir = strrchr(dos_filename, '\\');
 
@@ -263,7 +263,7 @@ std::pair<FILE*, std_fs::path> Overlay_Drive::create_file_in_overlay(
 		//ensure they exist, else make them in the overlay if they exist in the original....
 		Sync_leading_dirs(dos_filename);
 		//try again
-		f = fopen_wrap(newname,mode);
+		f = fopen(newname,mode);
 	}
 
 	return {f, newname};
@@ -496,7 +496,7 @@ bool Overlay_Drive::FileOpen(DOS_File * * file,char * name,uint32_t flags) {
 	safe_strcat(newname, name);
 	CROSS_FILENAME(newname);
 
-	FILE * hand = fopen_wrap(newname,type);
+	FILE * hand = fopen(newname,type);
 	bool fileopened = false;
 	if (hand) {
 		if (logoverlay) LOG_MSG("overlay file opened %s",newname);
@@ -967,7 +967,7 @@ bool Overlay_Drive::FileUnlink(char * name) {
 		}
 
 		//Do we have access?
-		FILE* file_writable = fopen_wrap(overlayname,"rb+");
+		FILE* file_writable = fopen(overlayname,"rb+");
 		if(!file_writable) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			return false;
@@ -1089,10 +1089,10 @@ void Overlay_Drive::add_special_file_to_disk(const char* dosname, const char* op
 	safe_strcpy(overlayname, overlaydir);
 	safe_strcat(overlayname, name.c_str());
 	CROSS_FILENAME(overlayname);
-	FILE* f = fopen_wrap(overlayname,"wb+");
+	FILE* f = fopen(overlayname,"wb+");
 	if (!f) {
 		Sync_leading_dirs(dosname);
-		f = fopen_wrap(overlayname,"wb+");
+		f = fopen(overlayname,"wb+");
 	}
 	if (!f) E_Exit("Failed creation of %s",overlayname);
 	char buf[5] = {'e','m','p','t','y'};
@@ -1284,7 +1284,7 @@ bool Overlay_Drive::Rename(char * oldname,char * newname) {
 		safe_strcat(newold, oldname);
 		CROSS_FILENAME(newold);
 		dirCache.ExpandNameAndNormaliseCase(newold);
-		FILE* o = fopen_wrap(newold,"rb");
+		FILE* o = fopen(newold,"rb");
 		if (!o) return false;
 		auto [n, path] = create_file_in_overlay(newname, "wb+");
 		if (!n) {
