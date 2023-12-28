@@ -140,6 +140,27 @@ else
     )
 endif
 
+# As of commit e73aaa57, overriding CXXFLAGS with -Os produces a binary that hangs
+# when using a relase build with GCC.
+#
+# CXXFLAGS="-Os" meson setup --buildtype=release --native-file=.github/meson/native-gcc.ini build
+#
+# This is most likely a GCC bug because the optimization level should not change
+# functionality. All other -O-levels work. Clang also handles this (replace
+# native-gcc.ini with native-clang.ini to test it).
+#
+if get_option('buildtype') == 'release' and cxx.get_id() == 'gcc'
+    cxxflags_env = run_command('sh', '-c', 'echo "$CXXFLAGS"', check: false)
+    if cxxflags_env.returncode() == 0 and cxxflags_env.stdout().contains('-Os')
+        error(
+            '\n\n',
+            'Overriding CXXFLAGS with the size-optimization flag, "-Os", when\n',
+            'performing a release build with GCC produces a binary that hangs.\n',
+            'Use the "minsize" buildtype instead.',
+        )
+    endif
+endif
+
 is_optimized_buildtype = (
     get_option('buildtype') in ['release', 'minsize', 'debugoptimized']
 )
