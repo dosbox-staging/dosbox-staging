@@ -20,13 +20,11 @@
 
 #if C_FPU
 
-#include <math.h>
-#include <float.h>
-#include "cross.h"
-#include "mem.h"
-#include "fpu.h"
 #include "cpu.h"
-
+#include "cross.h"
+#include "fpu.h"
+#include "mem.h"
+#include <cmath>
 
 static void FPU_FDECSTP(){
 	TOP = (TOP - 1) & 7;
@@ -41,9 +39,11 @@ static void FPU_FNSTCW(PhysPt addr){
 }
 
 static void FPU_FFREE(Bitu st) {
-	fpu.tags[st]=TAG_Empty;
+	fpu.tags[st] = TAG_Empty;
+#if !C_FPU_X86
+	fpu.use_regs_memcpy[st] = false;
+#endif
 }
-
 
 #if C_FPU_X86
 #include "../../fpu/fpu_instructions_x86.h"
