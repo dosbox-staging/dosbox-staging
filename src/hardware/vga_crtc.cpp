@@ -19,15 +19,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <stdlib.h>
-#include "dosbox.h"
-#include "inout.h"
-#include "vga.h"
-#include "debug.h"
-#include "cpu.h"
-#include "video.h"
-#include "pic.h"
+#include <cstdlib>
 
+#include "cpu.h"
+#include "debug.h"
+#include "pic.h"
+#include "vga.h"
 
 void VGA_MapMMIO(void);
 void VGA_UnmapMMIO(void);
