@@ -279,7 +279,7 @@ run_block:
 
 		switch (ret) {
 		case BR_Iret:
-#if C_DEBUG
+#if C_DEBUGGER
 #if C_HEAVY_DEBUG
 			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
@@ -297,7 +297,7 @@ run_block:
 			// modifying instruction (like ret) or some nontrivial cpu state
 			// changing instruction (for example switch to/from pmode),
 			// or the maximum number of instructions to translate was reached
-#if C_DEBUG
+#if C_DEBUGGER
 #if C_HEAVY_DEBUG
 			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
@@ -307,7 +307,7 @@ run_block:
 		case BR_Cycles:
 			// cycles went negative, return from the core to handle
 			// external events, schedule the pic...
-#if C_DEBUG
+#if C_DEBUGGER
 #if C_HEAVY_DEBUG
 			if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif

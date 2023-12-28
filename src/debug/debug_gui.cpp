@@ -19,7 +19,6 @@
 
 #include "dosbox.h"
 
-#if C_DEBUG
 #include "control.h"
 #include <stdlib.h>
 #include <stdarg.h>
@@ -55,7 +54,7 @@ static FILE *debuglog = nullptr;
 
 extern int old_cursor_state;
 
-void DEBUG_ShowMsg(const char* format, ...)
+void DEBUG_ShowMsgImpl(const char* format, ...)
 {
 	// Quit early if the window hasn't been created yet
 	if (!dbg.win_out)
@@ -120,7 +119,7 @@ void DEBUG_RefreshPage(int scroll) {
 	wrefresh(dbg.win_out);
 }
 
-void LOG::operator()(const char* format, ...)
+void Logger::operator()(const char* format, ...)
 {
 	char buf[512];
 	va_list msg;
@@ -307,5 +306,3 @@ void DBGUI_StartUp(void) {
 	MakeSubWindows();
 
 }
-
-#endif

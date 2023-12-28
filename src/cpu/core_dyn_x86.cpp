@@ -324,7 +324,7 @@ Bits CPU_Core_Dyn_X86_Run() noexcept
 	/* Determine the linear address of CS:EIP */
 restart_core:
 	PhysPt ip_point=SegPhys(cs)+reg_eip;
-#if C_DEBUG
+#if C_DEBUGGER
 #if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
@@ -359,12 +359,12 @@ restart_core:
 run_block:
 	cache.block.running=nullptr;
 	const auto ret = sync_normal_fpu_and_run_dyn_code(block->cache.start);
-#	if C_DEBUG
+#	if C_DEBUGGER
 	cycle_count += 32;
 #endif
 	switch (ret) {
 	case BR_Iret:
-#if C_DEBUG
+#if C_DEBUGGER
 #if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) {
 			return debugCallback;
@@ -381,14 +381,14 @@ run_block:
 		return CBRET_NONE;
 	case BR_Normal:
 		/* Maybe check if we staying in the same page? */
-#if C_DEBUG
+#if C_DEBUGGER
 #if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif
 #endif
 		goto restart_core;
 	case BR_Cycles:
-#if C_DEBUG
+#if C_DEBUGGER
 #if C_HEAVY_DEBUG			
 		if (DEBUG_HeavyIsBreakpoint()) return debugCallback;
 #endif

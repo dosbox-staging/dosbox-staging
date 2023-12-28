@@ -22,7 +22,6 @@
 #include "dosbox.h"
 #include "mem.h"
 
-#if C_DEBUG
 void DEBUG_DrawScreen();
 bool DEBUG_Breakpoint();
 bool DEBUG_IntBreakpoint(uint8_t intNum);
@@ -31,22 +30,23 @@ void DEBUG_CheckExecuteBreakpoint(uint16_t seg, uint32_t off);
 bool DEBUG_ExitLoop(void);
 void DEBUG_RefreshPage(int scroll);
 Bitu DEBUG_EnableDebugger();
+void UpdateMemoryReadBreakpointsImpl(const PhysPt addr, std::size_t read_size);
 
 extern Bitu cycle_count;
 extern Bitu debugCallback;
-#else  // Empty debugging replacements
-#endif // C_DEBUG
 
-#if C_DEBUG && C_HEAVY_DEBUG
+#if C_HEAVY_DEBUG
 bool DEBUG_HeavyIsBreakpoint();
 void DEBUG_HeavyWriteLogInstruction();
-template <typename T>
-void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr);
-#else  // Empty heavy debugging replacements
-template <typename T>
-constexpr void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt)
-{ /* no-op */
-}
-#endif // C_DEBUG && C_HEAVY_DEBUG
+#endif // C_HEAVY_DEBUG
 
-#endif // DOSBOX_DEBUG_H
+template <typename T>
+inline void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr)
+{
+	static_assert(std::is_unsigned_v<T>);
+	static_assert(std::is_integral_v<T>);
+
+	UpdateMemoryReadBreakpointsImpl(addr, sizeof(T));
+}
+
+#endif

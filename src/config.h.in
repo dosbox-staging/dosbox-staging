@@ -126,6 +126,9 @@
 #mesondefine C_TRACY
 
 // Define to 1 to enable internal debugger (using ncurses or pdcurses)
+#mesondefine C_DEBUGGER
+
+// Define to 1 to run dosbox debug checks and logging
 #mesondefine C_DEBUG
 
 // Define to 1 to enable heavy debugging (requires C_DEBUG)

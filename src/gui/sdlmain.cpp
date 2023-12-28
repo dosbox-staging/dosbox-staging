@@ -32,10 +32,7 @@
 #include <sys/types.h>
 #include <tuple>
 #include <unistd.h>
-
-#if C_DEBUG
 #include <queue>
-#endif
 
 #ifdef WIN32
 #include <process.h>
@@ -227,7 +224,6 @@ static const char* vsync_state_as_string(const VsyncState state)
 	}
 }
 
-#if C_DEBUG
 extern SDL_Window *pdc_window;
 extern std::queue<SDL_Event> pdc_event_queue;
 
@@ -253,7 +249,6 @@ SDL_Window *GFX_GetSDLWindow(void)
 {
 	return sdl.window;
 }
-#endif
 
 #if C_OPENGL
 
@@ -3562,7 +3557,7 @@ static void GUI_StartUp(Section* sec)
 	                  "capmouse",
 	                  "Cap Mouse");
 
-#if C_DEBUG
+#if C_DEBUGGER
 /* Pause binds with activate-debugger */
 #elif defined(MACOSX)
 	// Pause/unpause is hardcoded to Command+P on macOS
@@ -3775,7 +3770,7 @@ bool GFX_Events()
 	}
 #endif
 	while (SDL_PollEvent(&event)) {
-#if C_DEBUG
+#if C_DEBUGGER
 		if (is_debugger_event(event)) {
 			pdc_event_queue.push(event);
 			continue;
@@ -4493,7 +4488,7 @@ static int edit_primary_config()
 	return 1;
 }
 
-#if C_DEBUG
+#if C_DEBUGGER
 extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
 
@@ -4511,7 +4506,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	MIXER_CloseAudioDevice();
 	Delay(50);
 	QuitSDL();
-#if C_DEBUG
+#if C_DEBUGGER
 	// shutdown curses
 	DEBUG_ShutDown(nullptr);
 #endif

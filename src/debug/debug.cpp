@@ -19,8 +19,6 @@
 
 #include "dosbox.h"
 
-#if C_DEBUG
-
 #include <string.h>
 #include <list>
 #include <vector>
@@ -432,17 +430,12 @@ void CBreakpoint::Activate(bool _active)
 // Statics
 static std::list<CBreakpoint *> BPoints = {};
 
+void UpdateMemoryReadBreakpointsImpl(const PhysPt addr, std::size_t read_size) {
 #if C_HEAVY_DEBUG
-template <typename T>
-void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr)
-{
-	static_assert(std::is_unsigned_v<T>);
-	static_assert(std::is_integral_v<T>);
-
 	for (CBreakpoint* bp : BPoints) {
 		if (bp->GetType() == BKPNT_MEMORY_READ) {
 			const PhysPt location_begin = bp->GetLocation();
-			const PhysPt location_end = location_begin + sizeof(T);
+			const PhysPt location_end = location_begin + read_size;
 			if ((addr >= location_begin) && (addr < location_end)) {
 				DEBUG_ShowMsg("bpmr hit: %04X:%04X, cs:ip = %04X:%04X",
 				              bp->GetSegment(),
@@ -453,13 +446,8 @@ void DEBUG_UpdateMemoryReadBreakpoints(const PhysPt addr)
 			}
 		}
 	}
-}
-// Explicit instantiations
-template void DEBUG_UpdateMemoryReadBreakpoints<uint8_t>(const PhysPt addr);
-template void DEBUG_UpdateMemoryReadBreakpoints<uint16_t>(const PhysPt addr);
-template void DEBUG_UpdateMemoryReadBreakpoints<uint32_t>(const PhysPt addr);
-template void DEBUG_UpdateMemoryReadBreakpoints<uint64_t>(const PhysPt addr);
 #endif
+}
 
 CBreakpoint* CBreakpoint::AddBreakpoint(uint16_t seg, uint32_t off, bool once)
 {
@@ -2764,5 +2752,3 @@ bool DEBUG_HeavyIsBreakpoint(void) {
 }
 
 #endif // HEAVY DEBUG
-
-#endif // DEBUG

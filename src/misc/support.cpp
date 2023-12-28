@@ -141,7 +141,7 @@ static char e_exit_buf[1024]; // greater scope as else it doesn't always gets
                               // thrown right
 void E_Exit(const char *format, ...)
 {
-#if C_DEBUG && C_HEAVY_DEBUG
+#if C_DEBUGGER && C_HEAVY_DEBUG
 	DEBUG_HeavyWriteLogInstruction();
 #endif
 	va_list msg;

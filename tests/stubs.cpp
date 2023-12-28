@@ -30,10 +30,8 @@ void DEBUG_ShowMsg(const char *, ...) {}
 
 void DEBUG_HeavyWriteLogInstruction() {}
 
-#if C_DEBUG
-void LOG::operator()([[maybe_unused]] const char* buf, ...)
+void Logger::operator()([[maybe_unused]] const char* buf, ...)
 {
 	(void)d_type;     // Deliberately unused.
 	(void)d_severity; // Deliberately unused.
 }
-#endif

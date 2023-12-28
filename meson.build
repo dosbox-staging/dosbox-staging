@@ -404,14 +404,9 @@ conf_data.set10('C_MT32EMU', get_option('use_mt32emu'))
 conf_data.set10('C_TRACY', get_option('tracy'))
 conf_data.set10('C_FPU', true)
 conf_data.set10('C_FPU_X86', host_machine.cpu_family() in ['x86', 'x86_64'])
-
-if get_option('enable_debugger') != 'none'
-    conf_data.set10('C_DEBUG', true)
-endif
-
-if get_option('enable_debugger') == 'heavy'
-    conf_data.set10('C_HEAVY_DEBUG', true)
-endif
+conf_data.set10('C_DEBUGGER', get_option('enable_debugger') != 'none')
+conf_data.set10('C_HEAVY_DEBUG', get_option('enable_debugger') == 'heavy')
+conf_data.set10('C_DEBUG', get_option('debug'))
 
 foreach osdef : ['LINUX', 'WIN32', 'MACOSX', 'BSD']
     if conf_data.has(osdef)
@@ -1239,13 +1234,9 @@ subdir('src/hardware')
 subdir('src/ints')
 subdir('src/midi')
 subdir('src/shell')
-
-# debugger-specific libs
-if get_option('enable_debugger') != 'none'
-    subdir('src/libs/PDCurses')
-    subdir('src/debug')
-    third_party_deps += libpdcurses_dep
-endif
+subdir('src/libs/PDCurses')
+subdir('src/debug')
+third_party_deps += libpdcurses_dep
 
 # generate config.h
 configure_file(

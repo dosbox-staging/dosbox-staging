@@ -455,7 +455,7 @@ restart_prefix:
 		case 0xcb:dyn_ret_far(0);goto finish_block;
 
 		// int/iret
-#if !(C_DEBUG)
+#if !(C_DEBUG) // Why is this behind a C_DEBUG?
 		case 0xcd:dyn_interrupt(decode_fetchb());goto finish_block;
 #endif
 		case 0xcf:dyn_iret();goto finish_block;

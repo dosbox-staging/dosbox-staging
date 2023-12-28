@@ -150,7 +150,7 @@ static Bitu Normal_Loop() {
 				Bitu blah = (*CallBack_Handlers[ret])();
 				if (GCC_UNLIKELY(blah)) return blah;
 			}
-#if C_DEBUG
+#if C_DEBUGGER
 			if (DEBUG_ExitLoop()) return 0;
 #endif
 		} else {
@@ -754,7 +754,7 @@ void DOSBOX_Init()
 	MT32_AddConfigSection(control);
 #endif
 
-#if C_DEBUG
+#if C_DEBUGGER
 	secprop = control->AddSection_prop("debug", &DEBUG_Init);
 #endif
 

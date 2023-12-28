@@ -744,7 +744,7 @@
 		CPU_RET(false,0,GETIP);
 		continue;
 	CASE_B(0xcc)												/* INT3 */
-#if C_DEBUG	
+#if C_DEBUGGER	
 		FillFlags();
 		if (DEBUG_Breakpoint())
 			return debugCallback;
@@ -757,7 +757,7 @@
 	CASE_B(0xcd)												/* INT Ib */	
 		{
 			uint8_t num=Fetchb();
-#if C_DEBUG
+#if C_DEBUGGER
 			FillFlags();
 			if (DEBUG_IntBreakpoint(num)) {
 				return debugCallback;

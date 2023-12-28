@@ -23,6 +23,9 @@
 #define DOSBOX_COPYRIGHT "(C) " DOSBOX_TEAM
 
 /* Define to 1 to enable internal debugger, requires libcurses */
+#define C_DEBUGGER 0
+
+/* Define to 1 to run dosbox debug checks and logging */
 #define C_DEBUG 0
 
 /* Define to 1 to use opengl display output support */

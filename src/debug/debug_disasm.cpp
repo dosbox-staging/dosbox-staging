@@ -63,7 +63,6 @@ Any comments/updates/bug reports to:
 
 */
 #include "dosbox.h"
-#if C_DEBUG
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -1121,5 +1120,3 @@ int DasmLastOperandSize()
 {
 	return opsize;
 }
-
-#endif

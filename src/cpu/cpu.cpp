@@ -572,7 +572,7 @@ void CPU_Interrupt(Bitu num,Bitu type,Bitu oldeip) {
 	}
 	lastint=num;
 	FillFlags();
-#if C_DEBUG
+#if C_DEBUGGER
 	switch (num) {
 	case 0xcd:
 #if C_HEAVY_DEBUG

@@ -46,23 +46,37 @@ enum LOG_SEVERITIES {
 	LOG_ERROR
 };
 
-#if C_DEBUG
-class LOG 
-{ 
-	LOG_TYPES       d_type;
-	LOG_SEVERITIES  d_severity;
-public:
+void DEBUG_ShowMsgImpl(const char* format, ...)
+        GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
 
-	LOG (LOG_TYPES type , LOG_SEVERITIES severity):
-		d_type(type),
-		d_severity(severity)
-		{}
-	        void operator()(const char* buf, ...)
-	                GCC_ATTRIBUTE(__format__(__printf__, 2, 3)); //../src/debug/debug_gui.cpp
+class Logger {
+	LOG_TYPES d_type;
+	LOG_SEVERITIES d_severity;
+
+public:
+	Logger(LOG_TYPES type, LOG_SEVERITIES severity)
+	        : d_type(type),
+	          d_severity(severity)
+	{}
+	void operator()(const char* buf, ...)
+	        GCC_ATTRIBUTE(__format__(__printf__, 2, 3)); //../src/debug/debug_gui.cpp
 };
 
-void DEBUG_ShowMsg(const char* format, ...)
-        GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
+
+#if C_DEBUGGER
+
+#define DEBUG_ShowMsg DEBUG_ShowMsgImpl
+
+#else // C_DEBUGGER
+
+#define DEBUG_ShowMsg(...) do {} while (0)
+
+#endif // C_DEBUGGER
+
+#if C_DEBUG
+
+#define LOG(type, severity) Logger(type, severity)
+
 #define LOG_MSG DEBUG_ShowMsg
 
 #define LOG_INFO(...)    LOG(LOG_ALL, LOG_NORMAL)(__VA_ARGS__)
@@ -71,15 +85,14 @@ void DEBUG_ShowMsg(const char* format, ...)
 
 #else // C_DEBUG
 
-struct LOG
-{
-	inline LOG(LOG_TYPES, LOG_SEVERITIES){ }
-	inline void operator()(const char*, ...) {}
-}; //add missing operators to here
-
 	//try to avoid anything smaller than bit32...
 void GFX_ShowMsg(const char* format, ...)
         GCC_ATTRIBUTE(__format__(__printf__, 1, 2));
+
+// Make sure the syntax LOG(type, severity)(...) is still valid, even if
+// logging is disabled.
+#define __DUMMY_LOG(...) do {} while (0)
+#define LOG(type, severity) __DUMMY_LOG
 
 // Keep for compatibility
 #define LOG_MSG(...)	LOG_F(INFO, __VA_ARGS__)

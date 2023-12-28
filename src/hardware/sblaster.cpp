@@ -1083,7 +1083,6 @@ static void DSP_RaiseIRQEvent(uint32_t /*val*/)
 	SB_RaiseIRQ(SB_IRQ_8);
 }
 
-#if (C_DEBUG)
 static const char *DmaModeName()
 {
 	switch (sb.dma.mode) {
@@ -1097,7 +1096,6 @@ static const char *DmaModeName()
 	};
 	return "Unknown DMA-mode";
 }
-#endif
 
 static void DSP_DoDMATransfer(const DMA_MODES mode, uint32_t freq, bool autoinit, bool stereo)
 {

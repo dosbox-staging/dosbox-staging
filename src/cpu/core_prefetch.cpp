@@ -21,6 +21,7 @@
 
 #include "dosbox.h"
 #include "mem.h"
+#include "debug.h"
 #include "cpu.h"
 #include "lazyflags.h"
 #include "inout.h"
@@ -28,10 +29,6 @@
 #include "pic.h"
 #include "fpu.h"
 #include "paging.h"
-
-#if C_DEBUG
-#include "debug.h"
-#endif
 
 #if (!C_CORE_INLINE)
 #define LoadMb(off) mem_readb(off)
@@ -222,7 +219,7 @@ Bits CPU_Core_Prefetch_Run() noexcept
 		BaseDS=SegBase(ds);
 		BaseSS=SegBase(ss);
 		core.base_val_ds=ds;
-#if C_DEBUG
+#if C_DEBUGGER
 #if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) {
 			FillFlags();

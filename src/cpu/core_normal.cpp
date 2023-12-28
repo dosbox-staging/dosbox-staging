@@ -19,6 +19,7 @@
 
 #include "callback.h"
 #include "cpu.h"
+#include "debug.h"
 #include "fpu.h"
 #include "inout.h"
 #include "lazyflags.h"
@@ -26,10 +27,6 @@
 #include "paging.h"
 #include "pic.h"
 #include "tracy.h"
-
-#if C_DEBUG
-#include "debug.h"
-#endif
 
 #if (!C_CORE_INLINE)
 #define LoadMb(off) mem_readb(off)
@@ -148,7 +145,7 @@ Bits CPU_Core_Normal_Run() noexcept
 		BaseDS=SegBase(ds);
 		BaseSS=SegBase(ss);
 		core.base_val_ds=ds;
-#if C_DEBUG
+#if C_DEBUGGER
 #if C_HEAVY_DEBUG
 		if (DEBUG_HeavyIsBreakpoint()) {
 			FillFlags();
