@@ -84,8 +84,10 @@ enum FPU_Round : uint8_t {
 
 struct FPU_rec {
 	FPU_Reg regs[9]         = {};
+#if !C_FPU_X86
 	int64_t regs_memcpy[9]  = {}; // for FILD/FIST 64-bit memcpy fix
 	bool use_regs_memcpy[9] = {};
+#endif
 	FPU_P_Reg p_regs[9]     = {};
 	FPU_Tag tags[9]         = {};
 	uint16_t cw             = 0;
