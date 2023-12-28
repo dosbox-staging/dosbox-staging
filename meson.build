@@ -183,6 +183,8 @@ if get_option('buildtype').startswith('debug')
             '-D_GLIBCXX_DEBUG_PEDANTIC=1',
             '-D_GLIBCXX_SANITIZE_VECTOR=1',
             '-D_LIBCPP_DEBUG=1',
+            '-D_LIBCPP_ENABLE_THREAD_SAFETY_ANNOTATIONS=1',
+            '-D_LIBCPP_ENABLE_HARDENED_MODE=1',
         ]
     endif
 endif
