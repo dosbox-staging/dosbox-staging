@@ -257,6 +257,8 @@ struct VgaDraw {
 	Bitu lines_scaled           = 0;
 	Bitu split_line             = 0;
 
+	bool is_double_scanning = false;
+
 	// When drawing in parts, how many many 'chunks' should we draw at a
 	// time? A value of 1 is the entire frame where as a value of 2 will
 	// draw the top then the bottom, 4 will draw in quarters, and so on.
