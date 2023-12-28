@@ -19,9 +19,9 @@
 
 #include "cpu.h"
 
-#include <assert.h>
+#include <cassert>
+#include <cstddef>
 #include <sstream>
-#include <stddef.h>
 
 #include "memory.h"
 #include "debug.h"

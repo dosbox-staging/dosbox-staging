@@ -20,12 +20,12 @@
 
 #if C_MODEM
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <utility>
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <sstream>
+#include <utility>
 
 #include "string_utils.h"
 #include "serialport.h"

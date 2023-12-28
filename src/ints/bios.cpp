@@ -33,8 +33,8 @@
 #include "serialport.h"
 #include "setup.h"
 
+#include <ctime>
 #include <memory>
-#include <time.h>
 
 // Constants
 constexpr uint32_t BiosMachineSignatureAddress = 0xfffff;

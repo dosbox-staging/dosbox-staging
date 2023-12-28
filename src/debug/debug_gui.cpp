@@ -21,11 +21,11 @@
 
 #if C_DEBUG
 #include "control.h"
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <curses.h>
-#include <string.h>
 
 #include "cross.h"
 #include "string_utils.h"

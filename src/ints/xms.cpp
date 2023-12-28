@@ -32,9 +32,9 @@
 #include "setup.h"
 #include "support.h"
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
 
 CHECK_NARROWING();
 

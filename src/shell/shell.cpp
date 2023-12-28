@@ -19,12 +19,12 @@
 
 #include "shell.h"
 
+#include <cstdarg>
+#include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <list>
 #include <memory>
-#include <stdarg.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "../dos/program_more_output.h"
 #include "../dos/program_setver.h"

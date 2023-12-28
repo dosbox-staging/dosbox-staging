@@ -23,7 +23,7 @@
 #include "inout.h"
 #include "pic.h"
 #include "vga.h"
-#include <math.h>
+#include <cmath>
 
 void vga_write_p3d4(io_port_t port, io_val_t value, io_width_t);
 uint8_t vga_read_p3d4(io_port_t port, io_width_t);

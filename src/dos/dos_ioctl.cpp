@@ -17,13 +17,12 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
-#include <string.h>
-#include "dosbox.h"
 #include "callback.h"
+#include "dos_inc.h"
+#include "dosbox.h"
 #include "mem.h"
 #include "regs.h"
-#include "dos_inc.h"
+#include <cstring>
 
 bool DOS_IOCTL(void) {
 //	LOG(LOG_IOCTL,LOG_WARN)("%X %X %X %X",reg_ax,reg_bx,reg_cx,reg_dx);

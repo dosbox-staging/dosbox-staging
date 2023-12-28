@@ -20,7 +20,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
-#include <string.h>
+#include <cstring>
 #include <memory>
 
 #include "dma.h"

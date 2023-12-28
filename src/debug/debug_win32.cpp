@@ -20,9 +20,9 @@
 #if C_DEBUG
 #ifdef WIN32
 
+#include <cstdarg>
+#include <cstdio>
 #include <windows.h>
-#include <stdio.h>
-#include <stdarg.h>
 
 #ifndef min
 #define min(a,b) ((a)<(b)?(a):(b))

@@ -19,8 +19,8 @@
 
 #include "int10.h"
 
-#include <string.h>
-#include <stddef.h>
+#include <cstddef>
+#include <cstring>
 
 #include "callback.h"
 #include "dos_inc.h"
