@@ -178,14 +178,55 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 		// 		Register (3C0h index 13h).
 		break;
 
-	case 0x09:
+	case 0x09: {
 		if (IS_VGA_ARCH) {
 			vga.config.line_compare = (vga.config.line_compare & 0x5ff) |
 			                          (val & 0x40) << 3;
 		}
+
+		const auto old_val = vga.crtc.maximum_scan_line;
+		const auto new_val = MaximumScanLineRegister{val};
+
 		vga.crtc.maximum_scan_line.data = val;
-		VGA_StartResize();
-		break;
+
+		if (vga.draw.is_double_scanning) {
+			auto flipped = new_val;
+			flipped.start_vertical_blanking_bit9.flip();
+
+			// Only true if only `start_vertical_blanking_bit9` has
+			// been changed and all other bits are unchanged.
+			if (old_val.data == flipped.data) {
+				VGA_StartResize();
+			}
+		} else {
+			auto flipped = new_val;
+			flipped.maximum_scan_line = new_val.maximum_scan_line ^ 1;
+			flipped.start_vertical_blanking_bit9.flip();
+			flipped.is_scan_doubling_enabled.flip();
+
+			// Only true if ALL of the following three bits have
+			// been changed:
+			//   - LSB of `maximum_scan_line`
+			//   - `start_vertical_blanking_bit9`
+			//   - `is_scan_doubling_enabled`
+			// and all other bits are unchanged.
+			//
+			// This revised criteria was taken from DOSBox X. The
+			// old DOSBox criteria was "if ALL bits have been
+			// changed EXCEPT for `line_compare_bit9`"; I can't see
+			// how could that possibly work.
+			//
+			if (old_val.data == flipped.data) {
+				VGA_StartResize();
+			}
+		}
+
+		vga.draw.address_line_total = new_val.maximum_scan_line + 1;
+
+		if (new_val.is_scan_doubling_enabled) {
+			vga.draw.address_line_total *= 2;
+		}
+	} break;
 
 	case 0x0a: // Cursor Start Register
 		vga.crtc.cursor_start    = val;
