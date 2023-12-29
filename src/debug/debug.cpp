@@ -1004,6 +1004,14 @@ static bool ConsumePrefixNoCase(char*& str, std::string_view prefix)
 	return true;
 }
 
+static void StringToUpper(std::string& str)
+{
+	for (auto& ch : str) {
+		ch = toupper(ch);
+	}
+
+}
+
 static uint32_t GetHexValue(char*& hex)
 {
 	uint32_t	value = 0;
@@ -1090,8 +1098,6 @@ bool ChangeRegister(char* str)
 
 bool ParseCommand(char* str) {
 	char* found = str;
-	for(char* idx = found;*idx != 0; idx++)
-		*idx = toupper(*idx);
 
 	found = trim(found);
 	string s_found(found);
@@ -1102,6 +1108,8 @@ bool ParseCommand(char* str) {
 	if(next == string::npos) next = command.size();
 	(s_found.erase)(0,next);
 	found = const_cast<char*>(s_found.c_str());
+
+	StringToUpper(command);
 
 	if (command == "MEMDUMP") { // Dump memory to file
 		uint16_t seg = (uint16_t)GetHexValue(found); found++;
