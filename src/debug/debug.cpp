@@ -72,7 +72,7 @@ static void OutputVecTable(char* filename);
 static void DrawVariables(void);
 
 char* AnalyzeInstruction(char* inst, bool saveSelector);
-uint32_t GetHexValue(char* str, char*& hex);
+static uint32_t GetHexValue(char*& str);
 
 #if 0
 class DebugPageHandler final : public PageHandler {
@@ -210,7 +210,7 @@ bool GetDescriptorInfo(char* selname, char* out1, char* out2)
 	else if (strstr(selname,"gs") || strstr(selname,"GS")) sel = SegValue(gs);
 	else if (strstr(selname,"ss") || strstr(selname,"SS")) sel = SegValue(ss);
 	else {
-		sel = GetHexValue(selname,selname);
+		sel = GetHexValue(selname);
 		if (*selname==0) selname=empty_sel;
 	}
 	if (cpu.gdt.GetDescriptor(sel,desc)) {
@@ -988,11 +988,10 @@ static void SetCodeWinStart()
 /*    User input    */
 /********************/
 
-uint32_t GetHexValue(char* str, char*& hex)
+static uint32_t GetHexValue(char*& hex)
 {
 	uint32_t	value = 0;
 	uint32_t regval = 0;
-	hex = str;
 	while (*hex == ' ') hex++;
 	if (strncmp(hex,"EAX",3) == 0) { hex+=3; regval = reg_eax; } else
 	if (strncmp(hex,"EBX",3) == 0) { hex+=3; regval = reg_ebx; } else
@@ -1023,8 +1022,8 @@ uint32_t GetHexValue(char* str, char*& hex)
 		if      ((*hex >= '0') && (*hex <= '9')) value = (value<<4) + *hex - '0';
 		else if ((*hex >= 'A') && (*hex <= 'F')) value = (value<<4) + *hex - 'A' + 10;
 		else {
-			if (*hex == '+') {hex++;return regval + value + GetHexValue(hex,hex); } else
-			if (*hex == '-') {hex++;return regval + value - GetHexValue(hex,hex); }
+			if (*hex == '+') {hex++;return regval + value + GetHexValue(hex); } else
+			if (*hex == '-') {hex++;return regval + value - GetHexValue(hex); }
 			else break; // No valid char
 		}
 		hex++;
@@ -1036,38 +1035,38 @@ bool ChangeRegister(char* str)
 {
 	char* hex = str;
 	while (*hex==' ') hex++;
-	if (strncmp(hex,"EAX",3) == 0) { hex+=3; reg_eax = GetHexValue(hex,hex); } else
-	if (strncmp(hex,"EBX",3) == 0) { hex+=3; reg_ebx = GetHexValue(hex,hex); } else
-	if (strncmp(hex,"ECX",3) == 0) { hex+=3; reg_ecx = GetHexValue(hex,hex); } else
-	if (strncmp(hex,"EDX",3) == 0) { hex+=3; reg_edx = GetHexValue(hex,hex); } else
-	if (strncmp(hex,"ESI",3) == 0) { hex+=3; reg_esi = GetHexValue(hex,hex); } else
-	if (strncmp(hex,"EDI",3) == 0) { hex+=3; reg_edi = GetHexValue(hex,hex); } else
-	if (strncmp(hex,"EBP",3) == 0) { hex+=3; reg_ebp = GetHexValue(hex,hex); } else
-	if (strncmp(hex,"ESP",3) == 0) { hex+=3; reg_esp = GetHexValue(hex,hex); } else
-	if (strncmp(hex,"EIP",3) == 0) { hex+=3; reg_eip = GetHexValue(hex,hex); } else
-	if (strncmp(hex,"AX",2) == 0)  { hex+=2; reg_ax = (uint16_t)GetHexValue(hex,hex); } else
-	if (strncmp(hex,"BX",2) == 0)  { hex+=2; reg_bx = (uint16_t)GetHexValue(hex,hex); } else
-	if (strncmp(hex,"CX",2) == 0)  { hex+=2; reg_cx = (uint16_t)GetHexValue(hex,hex); } else
-	if (strncmp(hex,"DX",2) == 0)  { hex+=2; reg_dx = (uint16_t)GetHexValue(hex,hex); } else
-	if (strncmp(hex,"SI",2) == 0)  { hex+=2; reg_si = (uint16_t)GetHexValue(hex,hex); } else
-	if (strncmp(hex,"DI",2) == 0)  { hex+=2; reg_di = (uint16_t)GetHexValue(hex,hex); } else
-	if (strncmp(hex,"BP",2) == 0)  { hex+=2; reg_bp = (uint16_t)GetHexValue(hex,hex); } else
-	if (strncmp(hex,"SP",2) == 0)  { hex+=2; reg_sp = (uint16_t)GetHexValue(hex,hex); } else
-	if (strncmp(hex,"IP",2) == 0)  { hex+=2; reg_ip = (uint16_t)GetHexValue(hex,hex); } else
-	if (strncmp(hex,"CS",2) == 0)  { hex+=2; SegSet16(cs,(uint16_t)GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"DS",2) == 0)  { hex+=2; SegSet16(ds,(uint16_t)GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"ES",2) == 0)  { hex+=2; SegSet16(es,(uint16_t)GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"FS",2) == 0)  { hex+=2; SegSet16(fs,(uint16_t)GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"GS",2) == 0)  { hex+=2; SegSet16(gs,(uint16_t)GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"SS",2) == 0)  { hex+=2; SegSet16(ss,(uint16_t)GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"AF",2) == 0)  { hex+=2; SETFLAGBIT(AF,GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"CF",2) == 0)  { hex+=2; SETFLAGBIT(CF,GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"DF",2) == 0)  { hex+=2; SETFLAGBIT(DF,GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"IF",2) == 0)  { hex+=2; SETFLAGBIT(IF,GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"OF",2) == 0)  { hex+=2; SETFLAGBIT(OF,GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"ZF",2) == 0)  { hex+=2; SETFLAGBIT(ZF,GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"PF",2) == 0)  { hex+=2; SETFLAGBIT(PF,GetHexValue(hex,hex)); } else
-	if (strncmp(hex,"SF",2) == 0)  { hex+=2; SETFLAGBIT(SF,GetHexValue(hex,hex)); } else
+	if (strncmp(hex,"EAX",3) == 0) { hex+=3; reg_eax = GetHexValue(hex); } else
+	if (strncmp(hex,"EBX",3) == 0) { hex+=3; reg_ebx = GetHexValue(hex); } else
+	if (strncmp(hex,"ECX",3) == 0) { hex+=3; reg_ecx = GetHexValue(hex); } else
+	if (strncmp(hex,"EDX",3) == 0) { hex+=3; reg_edx = GetHexValue(hex); } else
+	if (strncmp(hex,"ESI",3) == 0) { hex+=3; reg_esi = GetHexValue(hex); } else
+	if (strncmp(hex,"EDI",3) == 0) { hex+=3; reg_edi = GetHexValue(hex); } else
+	if (strncmp(hex,"EBP",3) == 0) { hex+=3; reg_ebp = GetHexValue(hex); } else
+	if (strncmp(hex,"ESP",3) == 0) { hex+=3; reg_esp = GetHexValue(hex); } else
+	if (strncmp(hex,"EIP",3) == 0) { hex+=3; reg_eip = GetHexValue(hex); } else
+	if (strncmp(hex,"AX",2) == 0)  { hex+=2; reg_ax = (uint16_t)GetHexValue(hex); } else
+	if (strncmp(hex,"BX",2) == 0)  { hex+=2; reg_bx = (uint16_t)GetHexValue(hex); } else
+	if (strncmp(hex,"CX",2) == 0)  { hex+=2; reg_cx = (uint16_t)GetHexValue(hex); } else
+	if (strncmp(hex,"DX",2) == 0)  { hex+=2; reg_dx = (uint16_t)GetHexValue(hex); } else
+	if (strncmp(hex,"SI",2) == 0)  { hex+=2; reg_si = (uint16_t)GetHexValue(hex); } else
+	if (strncmp(hex,"DI",2) == 0)  { hex+=2; reg_di = (uint16_t)GetHexValue(hex); } else
+	if (strncmp(hex,"BP",2) == 0)  { hex+=2; reg_bp = (uint16_t)GetHexValue(hex); } else
+	if (strncmp(hex,"SP",2) == 0)  { hex+=2; reg_sp = (uint16_t)GetHexValue(hex); } else
+	if (strncmp(hex,"IP",2) == 0)  { hex+=2; reg_ip = (uint16_t)GetHexValue(hex); } else
+	if (strncmp(hex,"CS",2) == 0)  { hex+=2; SegSet16(cs,(uint16_t)GetHexValue(hex)); } else
+	if (strncmp(hex,"DS",2) == 0)  { hex+=2; SegSet16(ds,(uint16_t)GetHexValue(hex)); } else
+	if (strncmp(hex,"ES",2) == 0)  { hex+=2; SegSet16(es,(uint16_t)GetHexValue(hex)); } else
+	if (strncmp(hex,"FS",2) == 0)  { hex+=2; SegSet16(fs,(uint16_t)GetHexValue(hex)); } else
+	if (strncmp(hex,"GS",2) == 0)  { hex+=2; SegSet16(gs,(uint16_t)GetHexValue(hex)); } else
+	if (strncmp(hex,"SS",2) == 0)  { hex+=2; SegSet16(ss,(uint16_t)GetHexValue(hex)); } else
+	if (strncmp(hex,"AF",2) == 0)  { hex+=2; SETFLAGBIT(AF,GetHexValue(hex)); } else
+	if (strncmp(hex,"CF",2) == 0)  { hex+=2; SETFLAGBIT(CF,GetHexValue(hex)); } else
+	if (strncmp(hex,"DF",2) == 0)  { hex+=2; SETFLAGBIT(DF,GetHexValue(hex)); } else
+	if (strncmp(hex,"IF",2) == 0)  { hex+=2; SETFLAGBIT(IF,GetHexValue(hex)); } else
+	if (strncmp(hex,"OF",2) == 0)  { hex+=2; SETFLAGBIT(OF,GetHexValue(hex)); } else
+	if (strncmp(hex,"ZF",2) == 0)  { hex+=2; SETFLAGBIT(ZF,GetHexValue(hex)); } else
+	if (strncmp(hex,"PF",2) == 0)  { hex+=2; SETFLAGBIT(PF,GetHexValue(hex)); } else
+	if (strncmp(hex,"SF",2) == 0)  { hex+=2; SETFLAGBIT(SF,GetHexValue(hex)); } else
 	{ return false; }
 	return true;
 }
@@ -1088,24 +1087,24 @@ bool ParseCommand(char* str) {
 	found = const_cast<char*>(s_found.c_str());
 
 	if (command == "MEMDUMP") { // Dump memory to file
-		uint16_t seg = (uint16_t)GetHexValue(found,found); found++;
-		uint32_t ofs = GetHexValue(found,found); found++;
-		uint32_t num = GetHexValue(found,found); found++;
+		uint16_t seg = (uint16_t)GetHexValue(found); found++;
+		uint32_t ofs = GetHexValue(found); found++;
+		uint32_t num = GetHexValue(found); found++;
 		SaveMemory(seg,ofs,num);
 		return true;
 	}
 
 	if (command == "MEMDUMPBIN") { // Dump memory to file binary
-		uint16_t seg = (uint16_t)GetHexValue(found,found); found++;
-		uint32_t ofs = GetHexValue(found,found); found++;
-		uint32_t num = GetHexValue(found,found); found++;
+		uint16_t seg = (uint16_t)GetHexValue(found); found++;
+		uint32_t ofs = GetHexValue(found); found++;
+		uint32_t num = GetHexValue(found); found++;
 		SaveMemoryBin(seg,ofs,num);
 		return true;
 	}
 
 	if (command == "IV") { // Insert variable
-		uint16_t seg = (uint16_t)GetHexValue(found,found); found++;
-		uint32_t ofs = (uint16_t)GetHexValue(found,found); found++;
+		uint16_t seg = (uint16_t)GetHexValue(found); found++;
+		uint32_t ofs = (uint16_t)GetHexValue(found); found++;
 		char name[16];
 		for (int i=0; i<16; i++) {
 			if (found[i] && (found[i]!=' ')) name[i] = found[i];
@@ -1154,13 +1153,13 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "SM") { // Set memory with following values
-		uint16_t seg = (uint16_t)GetHexValue(found,found); found++;
-		uint32_t ofs = GetHexValue(found,found); found++;
+		uint16_t seg = (uint16_t)GetHexValue(found); found++;
+		uint32_t ofs = GetHexValue(found); found++;
 		uint16_t count = 0;
 		while (*found) {
 			while (*found==' ') found++;
 			if (*found) {
-				uint8_t value = (uint8_t)GetHexValue(found,found);
+				uint8_t value = (uint8_t)GetHexValue(found);
 				if(*found) found++;
 				mem_writeb_checked(GetAddress(seg,ofs+count),value);
 				count++;
@@ -1171,8 +1170,8 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "BP") { // Add new breakpoint
-		uint16_t seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
-		uint32_t ofs = GetHexValue(found,found);
+		uint16_t seg = (uint16_t)GetHexValue(found);found++; // skip ":"
+		uint32_t ofs = GetHexValue(found);
 		CBreakpoint::AddBreakpoint(seg,ofs,false);
 		DEBUG_ShowMsg("DEBUG: Set breakpoint at %04X:%04X\n",seg,ofs);
 		return true;
@@ -1181,17 +1180,17 @@ bool ParseCommand(char* str) {
 #if C_HEAVY_DEBUG
 
 	if (command == "BPM") { // Add new breakpoint
-		uint16_t seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
-		uint32_t ofs = GetHexValue(found,found);
+		uint16_t seg = (uint16_t)GetHexValue(found);found++; // skip ":"
+		uint32_t ofs = GetHexValue(found);
 		CBreakpoint::AddMemBreakpoint(seg,ofs);
 		DEBUG_ShowMsg("DEBUG: Set memory breakpoint at %04X:%04X\n",seg,ofs);
 		return true;
 	}
 
 	if (command == "BPMR") { // Add new breakpoint
-		uint16_t seg = (uint16_t)GetHexValue(found, found);
+		uint16_t seg = (uint16_t)GetHexValue(found);
 		found++; // skip ":"
-		uint32_t ofs    = GetHexValue(found, found);
+		uint32_t ofs    = GetHexValue(found);
 		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(seg, ofs);
 		bp->SetType(BKPNT_MEMORY_READ);
 		bp->FlagMemoryAsUnread();
@@ -1202,8 +1201,8 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "BPPM") { // Add new breakpoint
-		uint16_t seg = (uint16_t)GetHexValue(found,found);found++; // skip ":"
-		uint32_t ofs = GetHexValue(found,found);
+		uint16_t seg = (uint16_t)GetHexValue(found);found++; // skip ":"
+		uint32_t ofs = GetHexValue(found);
 		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(seg,ofs);
 		if (bp)	{
 			bp->SetType(BKPNT_MEMORY_PROT);
@@ -1213,7 +1212,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "BPLM") { // Add new breakpoint
-		uint32_t ofs = GetHexValue(found,found);
+		uint32_t ofs = GetHexValue(found);
 		CBreakpoint* bp = CBreakpoint::AddMemBreakpoint(0,ofs);
 		if (bp) bp->SetType(BKPNT_MEMORY_LINEAR);
 		DEBUG_ShowMsg("DEBUG: Set linear memory breakpoint at %08X\n",ofs);
@@ -1223,15 +1222,15 @@ bool ParseCommand(char* str) {
 #endif
 
 	if (command == "BPINT") { // Add Interrupt Breakpoint
-		uint8_t intNr	= (uint8_t)GetHexValue(found,found);
+		uint8_t intNr	= (uint8_t)GetHexValue(found);
 		bool all = !(*found);
-		uint8_t valAH = (uint8_t)GetHexValue(found,found);
+		uint8_t valAH = (uint8_t)GetHexValue(found);
 		if ((valAH==0x00) && (*found=='*' || all)) {
 			CBreakpoint::AddIntBreakpoint(intNr,BPINT_ALL,BPINT_ALL,false);
 			DEBUG_ShowMsg("DEBUG: Set interrupt breakpoint at INT %02X\n",intNr);
 		} else {
 			all = !(*found);
-			uint8_t valAL = (uint8_t)GetHexValue(found,found);
+			uint8_t valAL = (uint8_t)GetHexValue(found);
 			if ((valAL==0x00) && (*found=='*' || all)) {
 				CBreakpoint::AddIntBreakpoint(intNr,valAH,BPINT_ALL,false);
 				DEBUG_ShowMsg("DEBUG: Set interrupt breakpoint at INT %02X AH=%02X\n",intNr,valAH);
@@ -1251,7 +1250,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "BPDEL") { // Delete Breakpoints
-		uint8_t bpNr	= (uint8_t)GetHexValue(found,found);
+		uint8_t bpNr	= (uint8_t)GetHexValue(found);
 		if ((bpNr==0x00) && (*found=='*')) { // Delete all
 			CBreakpoint::DeleteAll();
 			DEBUG_ShowMsg("DEBUG: Breakpoints deleted.\n");
@@ -1263,8 +1262,8 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "C") { // Set code overview
-		uint16_t codeSeg = (uint16_t)GetHexValue(found,found); found++;
-		uint32_t codeOfs = GetHexValue(found,found);
+		uint16_t codeSeg = (uint16_t)GetHexValue(found); found++;
+		uint32_t codeOfs = GetHexValue(found);
 		DEBUG_ShowMsg("DEBUG: Set code overview to %04X:%04X\n",codeSeg,codeOfs);
 		codeViewData.useCS	= codeSeg;
 		codeViewData.useEIP = codeOfs;
@@ -1273,8 +1272,8 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "D") { // Set data overview
-		dataSeg = (uint16_t)GetHexValue(found,found); found++;
-		dataOfs = GetHexValue(found,found);
+		dataSeg = (uint16_t)GetHexValue(found); found++;
+		dataOfs = GetHexValue(found);
 		DEBUG_ShowMsg("DEBUG: Set data overview to %04X:%04X\n",dataSeg,dataOfs);
 		return true;
 	}
@@ -1314,7 +1313,7 @@ bool ParseCommand(char* str) {
 		//Initialize log object
 		cpuLogFile << hex << noshowbase << setfill('0') << uppercase;
 		cpuLog = true;
-		cpuLogCounter = GetHexValue(found,found);
+		cpuLogCounter = GetHexValue(found);
 
 		debugging = false;
 		CBreakpoint::ActivateBreakpointsExceptAt(SegPhys(cs)+reg_eip);
@@ -1325,7 +1324,7 @@ bool ParseCommand(char* str) {
 #endif
 
 	if (command == "INTT") { //trace int.
-		uint8_t intNr = (uint8_t)GetHexValue(found,found);
+		uint8_t intNr = (uint8_t)GetHexValue(found);
 		DEBUG_ShowMsg("DEBUG: Tracing INT %02X\n",intNr);
 		CPU_HW_Interrupt(intNr);
 		SetCodeWinStart();
@@ -1333,7 +1332,7 @@ bool ParseCommand(char* str) {
 	}
 
 	if (command == "INT") { // start int.
-		uint8_t intNr = (uint8_t)GetHexValue(found,found);
+		uint8_t intNr = (uint8_t)GetHexValue(found);
 		DEBUG_ShowMsg("DEBUG: Starting INT %02X\n",intNr);
 		CBreakpoint::AddBreakpoint(SegValue(cs),reg_eip, true);
 		CBreakpoint::ActivateBreakpointsExceptAt(SegPhys(cs)+reg_eip-1);
@@ -1377,7 +1376,7 @@ bool ParseCommand(char* str) {
 
 	if (command == "INTHAND") {
 		if (found[0] != 0) {
-			uint8_t intNr = (uint8_t)GetHexValue(found,found);
+			uint8_t intNr = (uint8_t)GetHexValue(found);
 			DEBUG_ShowMsg("DEBUG: Set code overview to interrupt handler %X\n",intNr);
 			codeViewData.useCS	= mem_readw(intNr*4+2);
 			codeViewData.useEIP = mem_readw(intNr*4);
@@ -1498,7 +1497,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector) {
 			prefix[0] = tolower(*segpos);
 			prefix[1] = tolower(*(segpos+1));
 			prefix[2] = 0;
-			seg = (uint16_t)GetHexValue(segpos,segpos);
+			seg = (uint16_t)GetHexValue(segpos);
 		} else {
 			if (strstr(pos,"SP") || strstr(pos,"BP")) {
 				seg = SegValue(ss);
@@ -1510,14 +1509,14 @@ char* AnalyzeInstruction(char* inst, bool saveSelector) {
 		}
 
 		pos++;
-		uint32_t adr = GetHexValue(pos,pos);
+		uint32_t adr = GetHexValue(pos);
 		while (*pos!=']') {
 			if (*pos=='+') {
 				pos++;
-				adr += GetHexValue(pos,pos);
+				adr += GetHexValue(pos);
 			} else if (*pos=='-') {
 				pos++;
-				adr -= GetHexValue(pos,pos);
+				adr -= GetHexValue(pos);
 			} else
 				pos++;
 		}
@@ -1572,7 +1571,7 @@ char* AnalyzeInstruction(char* inst, bool saveSelector) {
 	pos = strstr(inst,"callback");
 	if (pos) {
 		pos += 9;
-		Bitu nr = GetHexValue(pos,pos);
+		Bitu nr = GetHexValue(pos);
 		const char* descr = CALLBACK_GetDescription(nr);
 		if (descr) {
 			strcat(inst,"  ("); strcat(inst,descr); strcat(inst,")");
@@ -2127,7 +2126,7 @@ static void LogIDT(void) {
 void LogPages(char* selname) {
 	char out1[512];
 	if (paging.enabled) {
-		Bitu sel = GetHexValue(selname,selname);
+		Bitu sel = GetHexValue(selname);
 		if ((sel==0x00) && ((*selname==0) || (*selname=='*'))) {
 			for (int i=0; i<0xfffff; i++) {
 				Bitu table_addr=(paging.base.page<<12)+(i >> 10)*4;
