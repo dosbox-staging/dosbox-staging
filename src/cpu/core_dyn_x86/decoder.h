@@ -1805,7 +1805,7 @@ static void dyn_load_seg(SegNames seg,DynReg * src) {
 	gen_call_function((void *)&CPU_SetSegGeneral,"%Rd%Id%Drw",DREG(TMPB),seg,src);
 	dyn_check_bool_exception(DREG(TMPB));
 	gen_releasereg(DREG(TMPB));
-	gen_releasereg(&DynRegs[G_ES+seg]);
+	gen_releasereg(&DynRegs[static_cast<int>(G_ES)+seg]);
 }
 
 static void dyn_load_seg_off_ea(SegNames seg) {
@@ -1847,7 +1847,7 @@ static void dyn_pop_seg(SegNames seg) {
 	gen_call_function((void *)&CPU_PopSeg,"%Rd%Id%Id",DREG(TMPB),seg,decode.big_op);
 	dyn_check_bool_exception(DREG(TMPB));
 	gen_releasereg(DREG(TMPB));
-	gen_releasereg(&DynRegs[G_ES+seg]);
+	gen_releasereg(&DynRegs[static_cast<int>(G_ES)+seg]);
 	gen_releasereg(DREG(ESP));
 }
 
@@ -1887,7 +1887,7 @@ static void dyn_leave(void) {
 
 static void dyn_segprefix(SegNames seg) {
 //	if (GCC_UNLIKELY((Bitu)(decode.segprefix))) IllegalOption("dyn_segprefix");
-	decode.segprefix=&DynRegs[G_ES+seg];
+	decode.segprefix=&DynRegs[static_cast<int>(G_ES)+seg];
 }
 
 static void dyn_closeblock(void) {
