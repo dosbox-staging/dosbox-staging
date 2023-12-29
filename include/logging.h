@@ -20,6 +20,7 @@
 #define DOSBOX_LOGGING_H
 
 #include <cstdio>
+#include <memory>
 #include <string>
 
 #include "compiler.h"
