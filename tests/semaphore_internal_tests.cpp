@@ -20,7 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <thread>
-#include "semaphore.h"  // assuming the semaphore class is defined in this header
+#include "semaphore_internal.h"
 
 class SemaphoreTest : public ::testing::Test {
 protected:
