@@ -52,6 +52,7 @@ using namespace std;
 #include "keyboard.h"
 #include "setup.h"
 #include "std_filesystem.h"
+#include "debug_lua.h"
 
 SDL_Window *GFX_GetSDLWindow(void);
 
@@ -174,6 +175,9 @@ static void ClearInputLine(void) {
 #define MAX_HIST_BUFFER 50
 static list<string> histBuff = {};
 static auto histBuffPos = histBuff.end();
+
+// Global lua interpreter
+std::unique_ptr<LuaInterpreter> lua_interpreter;
 
 /***********/
 /* Helpers */
@@ -1073,6 +1077,7 @@ bool ChangeRegister(char* str)
 }
 
 bool ParseCommand(char* str) {
+	lua_interpreter->RunCommand("print(\"Hello World\\n\")");
 	char* found = str;
 	for(char* idx = found;*idx != 0; idx++)
 		*idx = toupper(*idx);
@@ -1395,6 +1400,18 @@ bool ParseCommand(char* str) {
 		DEBUG_RaiseTimerIrq(); 
 		DEBUG_ShowMsg("Debug: Timer Int started.\n");
 		return true;
+	}
+
+	if(command == "EVAL") { //Run a lua script
+		if (found[0] != 0) {
+			if (!lua_interpreter) {
+				DEBUG_ShowMsg("Debug: Lua interpreter not initialized.\n");
+			} else {
+				DEBUG_ShowMsg("Debug: Running lua interpreter.\n");
+				lua_interpreter->RunCommand("print(\"Hello World\\n\")");
+			}
+			return true;
+		}
 	}
 
 
@@ -2353,9 +2370,20 @@ Bitu DEBUG_EnableDebugger()
 	return 0;
 }
 
+// Lua Interpreter State
+class LuaDebugInterfaceImpl : public LuaDebugInterface {
+public:
+    void WriteToConsole(std::string_view text) override {
+		DEBUG_ShowMsg("%s", std::string(text).c_str());
+	}
+};
+
+std::unique_ptr<LuaDebugInterface> lua_debug_interface = std::make_unique<LuaDebugInterfaceImpl>();
+
 void DEBUG_ShutDown(Section * /*sec*/) {
 	CBreakpoint::DeleteAll();
 	CDebugVar::DeleteAll();
+	lua_interpreter.reset();
 	curs_set(old_cursor_state);
 
 	if (pdc_window)
@@ -2379,6 +2407,7 @@ void DEBUG_Init(Section* sec) {
 	/* Setup callback */
 	debugCallback=CALLBACK_Allocate();
 	CALLBACK_Setup(debugCallback,DEBUG_EnableDebugger,CB_RETF,"debugger");
+	lua_interpreter = LuaInterpreter::Create(lua_debug_interface.get());
 	/* shutdown function */
 	sec->AddDestroyFunction(&DEBUG_ShutDown);
 }

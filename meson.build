@@ -992,6 +992,15 @@ if get_option('use_fluidsynth')
 endif
 summary('FluidSynth support', fluid_dep.found())
 
+# lua
+lua_dep = dependency(
+    'lua',
+    version: ['>= 5.4.6', '< 5.5'],
+    default_options: default_wrap_options,
+    static: true,
+    include_type: 'system',
+)
+
 # mt32emu
 mt32emu_dep = optional_dep
 if get_option('use_mt32emu')
@@ -1246,6 +1255,7 @@ third_party_deps = [
     tracy_dep,
     libwhereami_dep,
     libtalchorus_dep,
+    lua_dep,
 ]
 
 if conf_data.get('C_MANYMOUSE') != 0

@@ -2,6 +2,7 @@ libdebug_sources = files(
     'debug.cpp',
     'debug_disasm.cpp',
     'debug_gui.cpp',
+    'debug_lua.cpp',
 )
 
 libdebug = static_library(
@@ -14,6 +15,7 @@ libdebug = static_library(
         ghc_dep,
         libiir_dep,
         libloguru_dep,
+        lua_dep,
     ],
     cpp_args: warnings,
 )

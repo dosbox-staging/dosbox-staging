@@ -9,6 +9,7 @@
         "iir1",
         "libmt32emu",
         "libpng",
+        "lua",
         "opusfile",
         "sdl2",
         "sdl2-image",
