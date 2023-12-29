@@ -18,9 +18,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include "logging.h"
+#include <memory>
+
 #include "control.h"
 #include "dosbox.h"
+#include "logging.h"
 #include "setup.h"
 #include "string_utils.h"
 
@@ -28,10 +30,11 @@ static loguru::Verbosity ConvertSeverityToVerbosity(LOG_SEVERITIES severity)
 {
 	switch (severity) {
 	case LOG_NORMAL: return loguru::Verbosity_INFO;
-
 	case LOG_WARN: return loguru::Verbosity_WARNING;
-
 	case LOG_ERROR: return loguru::Verbosity_ERROR;
+	// This should never happen, but if it does, we'll set the verbosity to
+	// be as low as possible.
+	default: return loguru::Verbosity_9;
 	}
 }
 
@@ -91,6 +94,9 @@ public:
 	{
 		fclose(file_ptr_);
 	}
+
+	FileLogger(const FileLogger&)            = delete;
+	FileLogger& operator=(const FileLogger&) = delete;
 
 	void Log(const char* log_group_name, const loguru::Message& message) override
 	{

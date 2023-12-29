@@ -64,7 +64,6 @@ MachineType machine;
 SVGACards svgaCard;
 
 /* The whole load of startups for all the subfunctions */
-void LOG_StartUp();
 void MEM_Init(Section *);
 void PAGING_Init(Section *);
 void IO_Init(Section * );
