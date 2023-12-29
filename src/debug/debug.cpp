@@ -988,42 +988,59 @@ static void SetCodeWinStart()
 /*    User input    */
 /********************/
 
+// Looks for the prefix string at the start of the initial string,
+// doing a case-insensitive compare. If it is found, consumes the
+// matching prefix and returns true. Otherwise, returns false and
+// leaves the string unchanged.
+static bool ConsumePrefixNoCase(char*& str, std::string_view prefix)
+{
+	for (size_t i = 0; i < prefix.size(); i++) {
+		if (!str[i]) return false;
+		if (tolower(str[i]) != tolower(prefix[i]))
+			return false;
+	}
+
+	str = &str[prefix.size()];
+	return true;
+}
+
 static uint32_t GetHexValue(char*& hex)
 {
 	uint32_t	value = 0;
 	uint32_t regval = 0;
 	while (*hex == ' ') hex++;
-	if (strncmp(hex,"EAX",3) == 0) { hex+=3; regval = reg_eax; } else
-	if (strncmp(hex,"EBX",3) == 0) { hex+=3; regval = reg_ebx; } else
-	if (strncmp(hex,"ECX",3) == 0) { hex+=3; regval = reg_ecx; } else
-	if (strncmp(hex,"EDX",3) == 0) { hex+=3; regval = reg_edx; } else
-	if (strncmp(hex,"ESI",3) == 0) { hex+=3; regval = reg_esi; } else
-	if (strncmp(hex,"EDI",3) == 0) { hex+=3; regval = reg_edi; } else
-	if (strncmp(hex,"EBP",3) == 0) { hex+=3; regval = reg_ebp; } else
-	if (strncmp(hex,"ESP",3) == 0) { hex+=3; regval = reg_esp; } else
-	if (strncmp(hex,"EIP",3) == 0) { hex+=3; regval = reg_eip; } else
-	if (strncmp(hex,"AX",2) == 0)  { hex+=2; regval = reg_ax; } else
-	if (strncmp(hex,"BX",2) == 0)  { hex+=2; regval = reg_bx; } else
-	if (strncmp(hex,"CX",2) == 0)  { hex+=2; regval = reg_cx; } else
-	if (strncmp(hex,"DX",2) == 0)  { hex+=2; regval = reg_dx; } else
-	if (strncmp(hex,"SI",2) == 0)  { hex+=2; regval = reg_si; } else
-	if (strncmp(hex,"DI",2) == 0)  { hex+=2; regval = reg_di; } else
-	if (strncmp(hex,"BP",2) == 0)  { hex+=2; regval = reg_bp; } else
-	if (strncmp(hex,"SP",2) == 0)  { hex+=2; regval = reg_sp; } else
-	if (strncmp(hex,"IP",2) == 0)  { hex+=2; regval = reg_ip; } else
-	if (strncmp(hex,"CS",2) == 0)  { hex+=2; regval = SegValue(cs); } else
-	if (strncmp(hex,"DS",2) == 0)  { hex+=2; regval = SegValue(ds); } else
-	if (strncmp(hex,"ES",2) == 0)  { hex+=2; regval = SegValue(es); } else
-	if (strncmp(hex,"FS",2) == 0)  { hex+=2; regval = SegValue(fs); } else
-	if (strncmp(hex,"GS",2) == 0)  { hex+=2; regval = SegValue(gs); } else
-	if (strncmp(hex,"SS",2) == 0)  { hex+=2; regval = SegValue(ss); }
+	if (ConsumePrefixNoCase(hex,"EAX")) { regval = reg_eax; } else
+	if (ConsumePrefixNoCase(hex,"EBX")) { regval = reg_ebx; } else
+	if (ConsumePrefixNoCase(hex,"ECX")) { regval = reg_ecx; } else
+	if (ConsumePrefixNoCase(hex,"EDX")) { regval = reg_edx; } else
+	if (ConsumePrefixNoCase(hex,"ESI")) { regval = reg_esi; } else
+	if (ConsumePrefixNoCase(hex,"EDI")) { regval = reg_edi; } else
+	if (ConsumePrefixNoCase(hex,"EBP")) { regval = reg_ebp; } else
+	if (ConsumePrefixNoCase(hex,"ESP")) { regval = reg_esp; } else
+	if (ConsumePrefixNoCase(hex,"EIP")) { regval = reg_eip; } else
+	if (ConsumePrefixNoCase(hex,"AX"))  { regval = reg_ax; } else
+	if (ConsumePrefixNoCase(hex,"BX"))  { regval = reg_bx; } else
+	if (ConsumePrefixNoCase(hex,"CX"))  { regval = reg_cx; } else
+	if (ConsumePrefixNoCase(hex,"DX"))  { regval = reg_dx; } else
+	if (ConsumePrefixNoCase(hex,"SI"))  { regval = reg_si; } else
+	if (ConsumePrefixNoCase(hex,"DI"))  { regval = reg_di; } else
+	if (ConsumePrefixNoCase(hex,"BP"))  { regval = reg_bp; } else
+	if (ConsumePrefixNoCase(hex,"SP"))  { regval = reg_sp; } else
+	if (ConsumePrefixNoCase(hex,"IP"))  { regval = reg_ip; } else
+	if (ConsumePrefixNoCase(hex,"CS"))  { regval = SegValue(cs); } else
+	if (ConsumePrefixNoCase(hex,"DS"))  { regval = SegValue(ds); } else
+	if (ConsumePrefixNoCase(hex,"ES"))  { regval = SegValue(es); } else
+	if (ConsumePrefixNoCase(hex,"FS"))  { regval = SegValue(fs); } else
+	if (ConsumePrefixNoCase(hex,"GS"))  { regval = SegValue(gs); } else
+	if (ConsumePrefixNoCase(hex,"SS"))  { regval = SegValue(ss); }
 
 	while (*hex) {
-		if      ((*hex >= '0') && (*hex <= '9')) value = (value<<4) + *hex - '0';
-		else if ((*hex >= 'A') && (*hex <= 'F')) value = (value<<4) + *hex - 'A' + 10;
+		char hexch = toupper(*hex);
+		if      ((hexch >= '0') && (hexch <= '9')) value = (value<<4) + hexch - '0';
+		else if ((hexch >= 'A') && (hexch <= 'F')) value = (value<<4) + hexch - 'A' + 10;
 		else {
-			if (*hex == '+') {hex++;return regval + value + GetHexValue(hex); } else
-			if (*hex == '-') {hex++;return regval + value - GetHexValue(hex); }
+			if (hexch == '+') {hex++;return regval + value + GetHexValue(hex); } else
+			if (hexch == '-') {hex++;return regval + value - GetHexValue(hex); }
 			else break; // No valid char
 		}
 		hex++;
@@ -1035,38 +1052,38 @@ bool ChangeRegister(char* str)
 {
 	char* hex = str;
 	while (*hex==' ') hex++;
-	if (strncmp(hex,"EAX",3) == 0) { hex+=3; reg_eax = GetHexValue(hex); } else
-	if (strncmp(hex,"EBX",3) == 0) { hex+=3; reg_ebx = GetHexValue(hex); } else
-	if (strncmp(hex,"ECX",3) == 0) { hex+=3; reg_ecx = GetHexValue(hex); } else
-	if (strncmp(hex,"EDX",3) == 0) { hex+=3; reg_edx = GetHexValue(hex); } else
-	if (strncmp(hex,"ESI",3) == 0) { hex+=3; reg_esi = GetHexValue(hex); } else
-	if (strncmp(hex,"EDI",3) == 0) { hex+=3; reg_edi = GetHexValue(hex); } else
-	if (strncmp(hex,"EBP",3) == 0) { hex+=3; reg_ebp = GetHexValue(hex); } else
-	if (strncmp(hex,"ESP",3) == 0) { hex+=3; reg_esp = GetHexValue(hex); } else
-	if (strncmp(hex,"EIP",3) == 0) { hex+=3; reg_eip = GetHexValue(hex); } else
-	if (strncmp(hex,"AX",2) == 0)  { hex+=2; reg_ax = (uint16_t)GetHexValue(hex); } else
-	if (strncmp(hex,"BX",2) == 0)  { hex+=2; reg_bx = (uint16_t)GetHexValue(hex); } else
-	if (strncmp(hex,"CX",2) == 0)  { hex+=2; reg_cx = (uint16_t)GetHexValue(hex); } else
-	if (strncmp(hex,"DX",2) == 0)  { hex+=2; reg_dx = (uint16_t)GetHexValue(hex); } else
-	if (strncmp(hex,"SI",2) == 0)  { hex+=2; reg_si = (uint16_t)GetHexValue(hex); } else
-	if (strncmp(hex,"DI",2) == 0)  { hex+=2; reg_di = (uint16_t)GetHexValue(hex); } else
-	if (strncmp(hex,"BP",2) == 0)  { hex+=2; reg_bp = (uint16_t)GetHexValue(hex); } else
-	if (strncmp(hex,"SP",2) == 0)  { hex+=2; reg_sp = (uint16_t)GetHexValue(hex); } else
-	if (strncmp(hex,"IP",2) == 0)  { hex+=2; reg_ip = (uint16_t)GetHexValue(hex); } else
-	if (strncmp(hex,"CS",2) == 0)  { hex+=2; SegSet16(cs,(uint16_t)GetHexValue(hex)); } else
-	if (strncmp(hex,"DS",2) == 0)  { hex+=2; SegSet16(ds,(uint16_t)GetHexValue(hex)); } else
-	if (strncmp(hex,"ES",2) == 0)  { hex+=2; SegSet16(es,(uint16_t)GetHexValue(hex)); } else
-	if (strncmp(hex,"FS",2) == 0)  { hex+=2; SegSet16(fs,(uint16_t)GetHexValue(hex)); } else
-	if (strncmp(hex,"GS",2) == 0)  { hex+=2; SegSet16(gs,(uint16_t)GetHexValue(hex)); } else
-	if (strncmp(hex,"SS",2) == 0)  { hex+=2; SegSet16(ss,(uint16_t)GetHexValue(hex)); } else
-	if (strncmp(hex,"AF",2) == 0)  { hex+=2; SETFLAGBIT(AF,GetHexValue(hex)); } else
-	if (strncmp(hex,"CF",2) == 0)  { hex+=2; SETFLAGBIT(CF,GetHexValue(hex)); } else
-	if (strncmp(hex,"DF",2) == 0)  { hex+=2; SETFLAGBIT(DF,GetHexValue(hex)); } else
-	if (strncmp(hex,"IF",2) == 0)  { hex+=2; SETFLAGBIT(IF,GetHexValue(hex)); } else
-	if (strncmp(hex,"OF",2) == 0)  { hex+=2; SETFLAGBIT(OF,GetHexValue(hex)); } else
-	if (strncmp(hex,"ZF",2) == 0)  { hex+=2; SETFLAGBIT(ZF,GetHexValue(hex)); } else
-	if (strncmp(hex,"PF",2) == 0)  { hex+=2; SETFLAGBIT(PF,GetHexValue(hex)); } else
-	if (strncmp(hex,"SF",2) == 0)  { hex+=2; SETFLAGBIT(SF,GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"EAX")) { reg_eax = GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"EBX")) { reg_ebx = GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"ECX")) { reg_ecx = GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"EDX")) { reg_edx = GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"ESI")) { reg_esi = GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"EDI")) { reg_edi = GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"EBP")) { reg_ebp = GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"ESP")) { reg_esp = GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"EIP")) { reg_eip = GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"AX"))  { reg_ax = (uint16_t)GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"BX"))  { reg_bx = (uint16_t)GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"CX"))  { reg_cx = (uint16_t)GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"DX"))  { reg_dx = (uint16_t)GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"SI"))  { reg_si = (uint16_t)GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"DI"))  { reg_di = (uint16_t)GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"BP"))  { reg_bp = (uint16_t)GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"SP"))  { reg_sp = (uint16_t)GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"IP"))  { reg_ip = (uint16_t)GetHexValue(hex); } else
+	if (ConsumePrefixNoCase(hex,"CS"))  { SegSet16(cs,(uint16_t)GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"DS"))  { SegSet16(ds,(uint16_t)GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"ES"))  { SegSet16(es,(uint16_t)GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"FS"))  { SegSet16(fs,(uint16_t)GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"GS"))  { SegSet16(gs,(uint16_t)GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"SS"))  { SegSet16(ss,(uint16_t)GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"AF"))  { SETFLAGBIT(AF,GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"CF"))  { SETFLAGBIT(CF,GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"DF"))  { SETFLAGBIT(DF,GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"IF"))  { SETFLAGBIT(IF,GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"OF"))  { SETFLAGBIT(OF,GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"ZF"))  { SETFLAGBIT(ZF,GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"PF"))  { SETFLAGBIT(PF,GetHexValue(hex)); } else
+	if (ConsumePrefixNoCase(hex,"SF"))  { SETFLAGBIT(SF,GetHexValue(hex)); } else
 	{ return false; }
 	return true;
 }
