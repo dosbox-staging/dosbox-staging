@@ -80,10 +80,10 @@ jobs:
             needs_all_deps: true
             run_tests: true
 
-          - name: Clang 12, Ubuntu 22.04
+          - name: Clang 15, Ubuntu 22.04
             os: ubuntu-22.04
-            packages: clang-14
-            build_flags: -Dbuildtype=debug --native-file=.github/meson/native-clang-14.ini
+            packages: clang-15
+            build_flags: -Dbuildtype=debug --native-file=.github/meson/native-clang-15.ini
             max_warnings: 0
             needs_all_deps: true
             run_tests: true
