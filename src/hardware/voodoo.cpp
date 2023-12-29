@@ -103,7 +103,7 @@
 #include "pci_bus.h"
 #include "pic.h"
 #include "render.h"
-#include "semaphore.h"
+#include "semaphore_internal.h"
 #include "setup.h"
 #include "support.h"
 #include "vga.h"
