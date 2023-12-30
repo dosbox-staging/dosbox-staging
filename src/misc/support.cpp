@@ -419,22 +419,23 @@ std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
 }
 
 // Get resource lines from a text file
-std::vector<std::string> GetResourceLines(const std_fs::path &name,
+std::vector<std::string> GetResourceLines(const std_fs::path& name,
                                           const ResourceImportance importance)
 {
-	auto lines = get_lines(name);
-	if (lines)
-		return std::move(*lines);
-
+	const auto resource_path = GetResourcePath(name);
+	if (auto maybe_lines = get_lines(resource_path); maybe_lines) {
+		return std::move(*maybe_lines);
+	}
 	// the resource didn't exist but it's optional
-	if (importance == ResourceImportance::Optional)
+	if (importance == ResourceImportance::Optional) {
 		return {};
+	}
 
 	// the resource didn't exist and it was mandatory, so verbosely quit
 	assert(importance == ResourceImportance::Mandatory);
 	LOG_ERR("RESOURCE: Could not open mandatory resource '%s', tried:",
 	        name.string().c_str());
-	for (const auto &path : GetResourceParentPaths()) {
+	for (const auto& path : GetResourceParentPaths()) {
 		LOG_WARNING("RESOURCE:  - '%s'", (path / name).string().c_str());
 	}
 	E_Exit("RESOURCE: Mandatory resource failure (see detailed message)");
