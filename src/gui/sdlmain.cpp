@@ -4801,6 +4801,9 @@ int sdl_main(int argc, char* argv[])
 		}
 #endif
 #endif // WIN32
+		// Seamless mouse integration feels more 'seamless' if mouse
+		// clicks on out-of-focus window are passed to the guest
+		SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
 
 		if (const auto err = check_kmsdrm_setting(); err != 0) {
 			return err;
