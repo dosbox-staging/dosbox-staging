@@ -335,6 +335,66 @@ the `light` and `strong` chorus settings as well.
     AWE32 and AWE64 models too with the standard drivers.
 
 
+## Joystick support
+
+Okay, so if we want to play the game with the keyboard, we need to press
+++ctrl+k++ to enter keyboard mode every single time we start the game. As
+mentioned, that's because by default DOSBox Staging either lets you use your
+gamepad as the joystick, or it emulates a PC joystick even if you don't have a
+physical game controller plugged in. Either way, the game will always "see" a
+joystick at startup and will therefore auto-switch to joystick mode.
+
+From this follows that if we disable the joystick in the config, the game
+will have no other choice than to default to keyboard mode:
+
+```ini
+[joystick]
+joysticktype = disabled
+```
+
+But if you want to play the game with your gamepad instead, you can do that
+too! DOSBox Staging auto-maps most common game controllers, so you can control
+the game with the left analog stick and the **X** button out-of-the-box with most
+gamepads.
+
+You'll need to hit diagonals often to jump and crouch. If your left stick can
+only move in a circle, the following setting might make this easier:
+
+```ini
+[joystick]
+circularinput = on
+```
+
+You can also adjust the deadzone of your stick if you experience controller
+drift. It's 10% by default, so let's increase it to 15% instead:
+
+```ini
+[joystick]
+deadzone = 15
+```
+
+!!! warning  "The PC is not a console"
+
+    Note that Prince of Persia requires a lot of precise control, so playing it
+    with the analog stick makes the game quite a bit harder and somewhat
+    frustrating. This is a common theme with many DOS games; most of them were
+    really optimised for keyboard controls, or require you to use the keyboard
+    anyway to perform some essential actions.
+
+    While playing DOS games from the couch with a controller in your hand
+    might be cool, for the best results, just stick with the keyboard
+    controls. Apart from some space and flight simulators, joystick support
+    was often an afterthought in DOS games.
+
+
+!!! danger "Issues with multiple controllers"
+
+    You might get some weird behaviour or even crashes if you have multiple
+    game controllers plugged in. If that's the case, please disconnect all
+    game controllers except the one you want to use and restart DOSBox
+    Staging. We're aiming to improve multi-controller support in the future.
+
+
 ## Pausing the game
 
 Prince of Persia can be paused by pressing the ++esc++ key during the game.
@@ -399,6 +459,14 @@ disable it without actually removing the line.
 [sdl]
 fullscreen = on
 pause_when_inactive = yes
+
+[joystick]
+# if you prefer the keyboard; remove it if you want to play with your gamepad
+joysticktype = disabled
+
+# optional gamepad adjustments
+#circularinput = on
+#deadzone = 15
 
 [render]
 # for 4K+ monitors only
