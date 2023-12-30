@@ -18,6 +18,9 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#ifndef DOSBOX_SEMAPHORE_H
+#define DOSBOX_SEMAPHORE_H
+
 #include <condition_variable>
 #include <mutex>
 
@@ -65,3 +68,5 @@ private:
     std::condition_variable cv = {};    // Condition variable for the count.
     int count                  = 0;     // Current count.
 };
+
+#endif // DOSBOX_SEMAPHORE_H
