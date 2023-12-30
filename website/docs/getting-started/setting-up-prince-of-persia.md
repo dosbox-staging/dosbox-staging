@@ -373,13 +373,19 @@ If you keep watching, the game will enter demo mode, where the protagonist
 will soon meet his untimely death... Surely, we can do better than that! Press
 any key to start the game!
 
+This particular game supports both the keyboard and the joystick. DOSBox
+Staging emulates a joystick by default, even if you don't have a physical game
+controller plugged in. The game is clever enough to auto-detect that and
+switches to joystick mode at the start. Okay, so let's switch to keyboard mode
+instead by pressing ++ctrl+k++!
+
 You can control the prince with the cursor keys. Hold down the ++shift++ key
 to walk carefully. It's not that hard to figure out the various movement
 combinations on your own, but reading the *Controlling Your Movements* section
 of the [user
 manual](https://ia600809.us.archive.org/29/items/princeofpersia_201708_201708/prince-of-persia_dos_04ra.pdf)
-should definitely help. The manual also contains helpful hints and a full
-list of available keyboard shortcuts.
+should definitely help. The manual also contains helpful hints and a full list
+of available keyboard shortcuts.
 
 <figure markdown>
   <a class="glightbox" href="https://archive.org/download/dosbox-staging-v0.81.0-prince-of-persia/pop-vga.jpg" >
