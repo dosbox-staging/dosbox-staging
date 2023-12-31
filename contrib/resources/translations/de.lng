@@ -3594,7 +3594,7 @@ auf lokalen Laufwerken zu verwenden.
 ║ [color=light-green]Willkommen zu DOSBox Staging %-39s[color=white]║
 ║                                                                     ║
 ║ Für eine kurze Einführung für neue Benutzer tippe: [color=yellow]INTRO[color=white]            ║
-║ For supported shell commands type: [color=yellow]HELP[color=white]                             ║
+║ Für unterstützte Shell-Befehle tippe: [color=yellow]HELP[color=white]                          ║
 ║                                                                     ║
 ║ Emulierte CPU-Geschwindigkeit anpassen mit [color=light-red]%s+F11[color=white] und [color=light-red]%s+F12[color=white].%s%s   ║
 ║ Aktiviere den Keymapper mit [color=light-red]%s+F1[color=white].%s                                ║
@@ -3625,7 +3625,7 @@ auf lokalen Laufwerken zu verwenden.
 
 .
 :SHELL_STARTUP_END
-║ [color=yellow]https://dosbox-staging.github.io[color=white]                     de.lng 0.81 v2 ║
+║ [color=yellow]https://dosbox-staging.github.io[color=white]                                    ║
 ╚═════════════════════════════════════════════════════════════════════╝[reset]
 
 
