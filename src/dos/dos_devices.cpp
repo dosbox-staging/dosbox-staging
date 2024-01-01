@@ -471,7 +471,7 @@ void DOS_DelDevice(DOS_Device * dev) {
 // interrupt  08h     Word      Device interrupt routine offset.
 // name       0Ah     8 Bytes   Device name padded with spaces.
 //
-// Ref: https://www.infradeaorg/devload/DOSTables.html, Appendix 2
+// Ref: https://www.infradead.org/devload/DOSTables.html, Appendix 2
 //
 namespace DeviceDriverInfo {
 constexpr uint8_t next_rpt_offset = 0x00;   // DWORD, points to next driver in
@@ -547,21 +547,20 @@ bool DOS_DeviceHasName(const RealPt rp, const std::string_view req_name)
 	const auto segment    = RealSegment(rp);
 	const auto offset     = RealOffset(rp) + DeviceDriverInfo::name_offset;
 
-	const auto search_len = std::min(req_name.length(),
-	                                 DeviceDriverInfo::name_length);
+	std::string device_name = {};
+	for (size_t i = 0; i < DeviceDriverInfo::name_length; ++i) {
+		const char c = static_cast<char>(real_readb(segment, check_cast<uint16_t>(offset + i)));
 
-	for (uint8_t i = 0; i < search_len; ++i) {
-		// source and requested characters
-		const auto s = real_readb(segment, check_cast<uint16_t>(offset + i));
-		const auto r = req_name[i];
-		if (r == '\0') {
+		// Device name should be padded with spaces if it is less than name length (8 characters)
+		// Also stop reading upon encountering a null termination or control codes to be safe
+		if (c <= 0x20) {
 			break;
 		}
-		if (r != static_cast<char>(s)) {
-			return false;
-		}
+
+		device_name.push_back(c);
 	}
-	return true;
+
+	return device_name == req_name;
 }
 
 void DOS_SetupDevices() {
