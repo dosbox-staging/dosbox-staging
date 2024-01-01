@@ -27,7 +27,14 @@
 	uint32_t si_index       = is_32bit_addr ? reg_esi : reg_si;
 	uint32_t di_index       = is_32bit_addr ? reg_edi : reg_di;
 
-	int32_t count = check_cast<int32_t>(is_32bit_addr ? reg_ecx : reg_cx);
+	// Count has to be large enough to both hold an unsigned 32-bit
+	// value and also be used as a signed counter. To test the
+	// maximum, press enter during Frontier First Encounter's intro
+	// sequence on an arm64 or PPC platform, in which case all bits
+	// of ECX will be set.
+	//
+	int64_t count = is_32bit_addr ? reg_ecx : reg_cx;
+
 	int32_t count_left = 0;
 
 	if (!(inst.prefix & PREFIX_REP)) {
