@@ -36,6 +36,8 @@
 void MOUSE_Init(Section *);
 void MOUSE_AddConfigSection(const ConfigPtr &);
 
+void DOS_StartMouseDriver();
+
 // ***************************************************************************
 // Data types
 // ***************************************************************************

@@ -30,6 +30,7 @@
 #include "dos_locale.h"
 #include "drives.h"
 #include "mem.h"
+#include "mouse.h"
 #include "program_mount_common.h"
 #include "regs.h"
 #include "serialport.h"
@@ -1533,6 +1534,8 @@ public:
 			dos.version.major = new_version.major;
 			dos.version.minor = new_version.minor;
 		}
+
+		DOS_StartMouseDriver();
 	}
 
 	// Shutdown the DOS OS constructs leaving only the BIOS and hardware

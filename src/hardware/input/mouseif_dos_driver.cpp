@@ -20,6 +20,7 @@
 #include "mouse.h"
 #include "mouse_config.h"
 #include "mouse_interfaces.h"
+#include "mouseif_dos_driver_state.h"
 
 #include <algorithm>
 
@@ -54,13 +55,8 @@ CHECK_NARROWING();
 static constexpr uint8_t driver_version_major = 0x08;
 static constexpr uint8_t driver_version_minor = 0x05;
 
-static constexpr uint8_t  cursor_size_x  = 16;
-static constexpr uint8_t  cursor_size_y  = 16;
-static constexpr uint16_t cursor_size_xy = cursor_size_x * cursor_size_y;
-
-static constexpr uint8_t num_buttons = 3;
-
-enum class MouseCursor : uint8_t { Software = 0, Hardware = 1, Text = 2 };
+// XXX add comment
+using Instance = MouseDriverState;
 
 // This enum has to be compatible with mask in DOS driver function 0x0c
 enum class MouseEventId : uint8_t {
@@ -94,19 +90,17 @@ static MouseButtons12S pending_button_state = 0;
 // These values represent 'hardware' state, not driver state
 
 static MouseButtons12S buttons = 0;
-static float pos_x             = 0.0f;
-static float pos_y             = 0.0f;
-static int8_t counter_w        = 0; // wheel counter
+static int8_t counter_w        = 0; // wheel counter // XXX this should go to driver state
 
-static bool use_relative    = true; // true = ignore absolute mouse position, use relative
-static bool is_input_raw    = true; // true = no host mouse acceleration pre-applied
+static bool use_relative = true; // true = ignore absolute mouse position, use relative
+static bool is_input_raw = true; // true = no host mouse acceleration pre-applied
 
 static bool rate_is_set     = false; // true = rate was set by DOS application
 static uint16_t rate_hz     = 0;
 static uint16_t min_rate_hz = 0;
 
 // Data from mouse events which were already received,
-// but not necessary visible to the application
+// but not necessary visible on the guest side
 
 static struct {
 	// Mouse movement
@@ -126,109 +120,28 @@ static struct {
 	}
 } pending;
 
-static struct { // DOS driver state
+static struct {
 
-	// Structure containing (only!) data which should be
-	// saved/restored during task switching
-
-	// DANGER, WILL ROBINSON!
-	//
-	// This whole structure can be read or written from the guest side
-	// via virtual DOS driver, functions 0x15 / 0x16 / 0x17.
-	// Do not put here any array indices, pointers, or anything that
-	// can crash the emulator if filled-in incorrectly, or that can
-	// be used by malicious code to escape from emulation!
-
-	bool enabled   = false; // TODO: make use of this
-	bool wheel_api = false; // CuteMouse compatible wheel extension
-
-	uint16_t times_pressed[num_buttons]   = {0};
-	uint16_t times_released[num_buttons]  = {0};
-	uint16_t last_released_x[num_buttons] = {0};
-	uint16_t last_released_y[num_buttons] = {0};
-	uint16_t last_pressed_x[num_buttons]  = {0};
-	uint16_t last_pressed_y[num_buttons]  = {0};
-	uint16_t last_wheel_moved_x           = 0;
-	uint16_t last_wheel_moved_y           = 0;
-
-	float mickey_counter_x = 0.0f;
-	float mickey_counter_y = 0.0f;
-
-	float mickeys_per_pixel_x = 0.0f;
-	float mickeys_per_pixel_y = 0.0f;
-	float pixels_per_mickey_x = 0.0f;
-	float pixels_per_mickey_y = 0.0f;
-
-	uint16_t double_speed_threshold = 0; // in mickeys/s
-	                                     // TODO: should affect movement
-
-	uint16_t granularity_x = 0; // mask
-	uint16_t granularity_y = 0;
-
-	int16_t update_region_x[2] = {0};
-	int16_t update_region_y[2] = {0};
-
-	uint16_t language = 0; // language for driver messages, unused
-	uint8_t bios_screen_mode = 0;
-
-	// sensitivity
-	uint8_t sensitivity_x = 0;
-	uint8_t sensitivity_y = 0;
-	// TODO: find out what it is for (acceleration?), for now
-	// just set it to default value on startup
-	uint8_t unknown_01 = 50;
-
-	float sensitivity_coeff_x = 0;
-	float sensitivity_coeff_y = 0;
-
-	// mouse position allowed range
-	int16_t minpos_x = 0;
-	int16_t maxpos_x = 0;
-	int16_t minpos_y = 0;
-	int16_t maxpos_y = 0;
-
-	// mouse cursor
-	uint8_t page       = 0; // cursor display page number
-	bool inhibit_draw  = false;
-	uint16_t hidden    = 0;
-	uint16_t oldhidden = 0;
-	int16_t clipx      = 0;
-	int16_t clipy      = 0;
-	int16_t hot_x      = 0; // cursor hot spot, horizontal
-	int16_t hot_y      = 0; // cursor hot spot, vertical
-
-	struct {
-		bool enabled                 = false;
-		uint16_t pos_x               = 0;
-		uint16_t pos_y               = 0;
-		uint8_t data[cursor_size_xy] = {0};
-
-	} background = {};
-
-	MouseCursor cursor_type = MouseCursor::Software;
-
-	// cursor shape definition
-	uint16_t text_and_mask                       = 0;
-	uint16_t text_xor_mask                       = 0;
-	bool user_screen_mask                        = false;
-	bool user_cursor_mask                        = false;
-	uint16_t user_def_screen_mask[cursor_size_x] = {0};
-	uint16_t user_def_cursor_mask[cursor_size_y] = {0};
-
-	// user callback
-	uint16_t user_callback_mask    = 0;
-	uint16_t user_callback_segment = 0;
-	uint16_t user_callback_offset  = 0;
+	bool xxx; // XXX get rid of this structure, fix data storage/restoration INT33 calls
 
 } state;
+
+// XXX add explanation
+static struct
+{
+	// XXX cleanup variable names, synchronize naming with BIOS
+	callback_number_t win386_callout  = 0;
+	callback_number_t call_int33      = 0;
+	callback_number_t call_mouse_bd   = 0;
+	callback_number_t callback_return = 0;
+
+} callback_id;
 
 // Guest-side pointers to various driver information
 static uint16_t info_segment          = 0;
 static uint16_t info_offset_ini_file  = 0;
 static uint16_t info_offset_version   = 0;
 static uint16_t info_offset_copyright = 0;
-
-static RealPt user_callback;
 
 // ***************************************************************************
 // Delayed event support
@@ -308,12 +221,18 @@ static int16_t reg_to_signed16(const uint16_t x)
 
 static uint16_t get_pos_x()
 {
-	return static_cast<uint16_t>(std::lround(pos_x)) & state.granularity_x;
+	const auto absolute_x    = Instance::GetAbsoluteX();
+	const auto granularity_x = Instance::GetGranularityX();
+
+	return static_cast<uint16_t>(std::lround(absolute_x)) & granularity_x;
 }
 
 static uint16_t get_pos_y()
 {
-	return static_cast<uint16_t>(std::lround(pos_y)) & state.granularity_y;
+	const auto absolute_y    = Instance::GetAbsoluteY();
+	const auto granularity_y = Instance::GetGranularityY();
+
+	return static_cast<uint16_t>(std::lround(absolute_y)) & granularity_y;
 }
 
 static uint16_t mickey_counter_to_reg16(const float x)
@@ -325,17 +244,17 @@ static uint16_t mickey_counter_to_reg16(const float x)
 // Data - default cursor/mask
 // ***************************************************************************
 
-static constexpr uint16_t default_text_and_mask = 0x77ff;
-static constexpr uint16_t default_text_xor_mask = 0x7700;
+static constexpr uint16_t default_text_mask_and = 0x77ff;
+static constexpr uint16_t default_text_mask_xor = 0x7700;
 
 // clang-format off
 
-static uint16_t default_screen_mask[cursor_size_y] = {
+static const std::array<uint16_t, cursor_size> default_screen_mask = {
 	0x3fff, 0x1fff, 0x0fff, 0x07ff, 0x03ff, 0x01ff, 0x00ff, 0x007f,
 	0x003f, 0x001f, 0x01ff, 0x00ff, 0x30ff, 0xf87f, 0xf87f, 0xfcff
 };
 
-static uint16_t default_cursor_mask[cursor_size_y] = {
+static const std::array<uint16_t, cursor_size> default_cursor_mask = {
 	0x0000, 0x4000, 0x6000, 0x7000, 0x7800, 0x7c00, 0x7e00, 0x7f00,
 	0x7f80, 0x7c00, 0x6c00, 0x4600, 0x0600, 0x0300, 0x0300, 0x0000
 };
@@ -353,17 +272,18 @@ extern void ReadCharAttr(uint16_t col, uint16_t row, uint8_t page, uint16_t *res
 
 static void restore_cursor_background_text()
 {
-	if (state.hidden || state.inhibit_draw)
+	if (Instance::GetHidden() || Instance::IsInhibitDraw()) {
 		return;
+	}
 
-	if (state.background.enabled) {
-		WriteChar(state.background.pos_x,
-		          state.background.pos_y,
+	if (Instance::IsBackgroundEnabled()) {
+		WriteChar(Instance::GetBackgroundX(),
+		          Instance::GetBackgroundY(),
 		          real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE),
-		          state.background.data[0],
-		          state.background.data[1],
+		          Instance::GetBackgroundData(0),
+		          Instance::GetBackgroundData(1),
 		          true);
-		state.background.enabled = false;
+		Instance::SetBackgroundEnabled(false);
 	}
 }
 
@@ -375,38 +295,44 @@ static void draw_cursor_text()
 	// Check if cursor in update region
 	auto x = get_pos_x();
 	auto y = get_pos_y();
-	if ((y <= state.update_region_y[1]) && (y >= state.update_region_y[0]) &&
-	    (x <= state.update_region_x[1]) && (x >= state.update_region_x[0])) {
+	if ((x >= Instance::GetUpdateRegionX1()) &&
+	    (x <= Instance::GetUpdateRegionX2()) &&
+	    (y >= Instance::GetUpdateRegionY1()) &&
+	    (y <= Instance::GetUpdateRegionY2())) {
 		return;
 	}
 
 	// Save Background
-	state.background.pos_x = static_cast<uint16_t>(x / 8);
-	state.background.pos_y = static_cast<uint16_t>(y / 8);
-	if (state.bios_screen_mode < 2) {
-		state.background.pos_x = state.background.pos_x / 2;
+	auto background_x = static_cast<uint16_t>(x / 8); // XXX rename variables, maybe background_start_x?
+	auto background_y = static_cast<uint16_t>(y / 8);
+	if (Instance::GetBiosScreenMode() < 2) {
+		background_x = background_x / 2;
 	}
+
+	Instance::SetBackgroundX(background_x);
+	Instance::SetBackgroundY(background_y);
 
 	// use current page (CV program)
 	const uint8_t page = real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_PAGE);
 
-	if (state.cursor_type == MouseCursor::Software ||
-	    state.cursor_type == MouseCursor::Text) { // needed by MS Word 5.5
+	const auto cursor_type = Instance::GetCursorType();
+	if (cursor_type == MouseCursorType::Software ||
+	    cursor_type == MouseCursorType::Text) { // needed by MS Word 5.5
 		uint16_t result = 0;
-		ReadCharAttr(state.background.pos_x,
-		             state.background.pos_y,
+		ReadCharAttr(background_x,
+		             background_y,
 		             page,
 		             &result); // result is in native/host-endian format
-		state.background.data[0] = read_low_byte(result);
-		state.background.data[1] = read_high_byte(result);
-		state.background.enabled = true;
+		Instance::SetBackgroundData(0, read_low_byte(result));
+		Instance::SetBackgroundData(1, read_high_byte(result));
+		Instance::SetBackgroundEnabled(true);
 
 		// Write Cursor
-		result = result & state.text_and_mask;
-		result = result ^ state.text_xor_mask;
+		result = result & Instance::GetTextMaskAnd();
+		result = result ^ Instance::GetTextMaskXor();
 
-		WriteChar(state.background.pos_x,
-		          state.background.pos_y,
+		WriteChar(background_x,
+		          background_y,
 		          page,
 		          read_low_byte(result),
 		          read_high_byte(result),
@@ -414,11 +340,7 @@ static void draw_cursor_text()
 	} else {
 		uint16_t address = static_cast<uint16_t>(
 		        page * real_readw(BIOSMEM_SEG, BIOSMEM_PAGE_SIZE));
-		address = static_cast<uint16_t>(
-		        address + (state.background.pos_y *
-		                           real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS) +
-		                   state.background.pos_x) *
-		                          2);
+		address = static_cast<uint16_t>(address + (background_x * real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS) + background_y) * 2);
 		address /= 2;
 		const uint16_t cr = real_readw(BIOSMEM_SEG, BIOSMEM_CRTC_ADDRESS);
 		IO_Write(cr, 0xe);
@@ -485,6 +407,9 @@ static void restore_vga_registers()
 static void clip_cursor_area(int16_t &x1, int16_t &x2, int16_t &y1, int16_t &y2,
                              uint16_t &addx1, uint16_t &addx2, uint16_t &addy)
 {
+	const auto clipx = Instance::GetClipX();
+	const auto clipy = Instance::GetClipY();
+
 	addx1 = 0;
 	addx2 = 0;
 	addy  = 0;
@@ -494,8 +419,8 @@ static void clip_cursor_area(int16_t &x1, int16_t &x2, int16_t &y1, int16_t &y2,
 		y1   = 0;
 	}
 	// Clip down
-	if (y2 > state.clipy) {
-		y2 = state.clipy;
+	if (y2 > clipy) {
+		y2 = clipy;
 	};
 	// Clip left
 	if (x1 < 0) {
@@ -503,49 +428,52 @@ static void clip_cursor_area(int16_t &x1, int16_t &x2, int16_t &y1, int16_t &y2,
 		x1    = 0;
 	};
 	// Clip right
-	if (x2 > state.clipx) {
-		addx2 = static_cast<uint16_t>(x2 - state.clipx);
-		x2    = state.clipx;
+	if (x2 > clipx) {
+		addx2 = static_cast<uint16_t>(x2 - clipx);
+		x2    = clipx;
 	};
 }
 
 static void restore_cursor_background()
 {
-	if (state.hidden || state.inhibit_draw || !state.background.enabled) {
+	if (Instance::GetHidden() || Instance::IsInhibitDraw() || !Instance::IsBackgroundEnabled()) {
 		return;
 	}
 
 	save_vga_registers();
 
+	const auto page = Instance::GetPage();
+
 	// Restore background
 	uint16_t addx1, addx2, addy;
 	uint16_t data_pos = 0;
-	int16_t x1        = static_cast<int16_t>(state.background.pos_x);
-	int16_t y1        = static_cast<int16_t>(state.background.pos_y);
-	int16_t x2        = static_cast<int16_t>(x1 + cursor_size_x - 1);
-	int16_t y2        = static_cast<int16_t>(y1 + cursor_size_y - 1);
+
+	int16_t x1 = static_cast<int16_t>(Instance::GetBackgroundX());
+	int16_t y1 = static_cast<int16_t>(Instance::GetBackgroundY());
+	int16_t x2 = static_cast<int16_t>(x1 + cursor_size - 1);
+	int16_t y2 = static_cast<int16_t>(y1 + cursor_size - 1);
 
 	clip_cursor_area(x1, x2, y1, y2, addx1, addx2, addy);
 
-	data_pos = static_cast<uint16_t>(addy * cursor_size_x);
+	data_pos = static_cast<uint16_t>(addy * cursor_size);
 	for (int16_t y = y1; y <= y2; y++) {
 		data_pos = static_cast<uint16_t>(data_pos + addx1);
 		for (int16_t x = x1; x <= x2; x++) {
 			INT10_PutPixel(static_cast<uint16_t>(x),
 			               static_cast<uint16_t>(y),
-			               state.page,
-			               state.background.data[data_pos++]);
+			               page,
+			               Instance::GetBackgroundData(data_pos++));
 		};
 		data_pos = static_cast<uint16_t>(data_pos + addx2);
 	};
-	state.background.enabled = false;
+	Instance::SetBackgroundEnabled(false);
 
 	restore_vga_registers();
 }
 
 static void draw_cursor()
 {
-	if (state.hidden || state.inhibit_draw) {
+	if (Instance::GetHidden() || Instance::IsInhibitDraw()) {
 		return;
 	}
 
@@ -561,83 +489,78 @@ static void draw_cursor()
 	// hence the text mode handled above this
 	// >>> removed because BIOS page is not actual page in some cases, e.g.
 	// QQP games
-	//    if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE) != state.page)
+	//    if (real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_PAGE) != Instance::GetPage())
 	//    return;
 
-	// Check if cursor in update region
-	/*    if ((get_pos_x() >= state.update_region_x[0]) && (get_pos_y() <=
-	   state.update_region_x[1]) && (get_pos_y() >= state.update_region_y[0])
-	   && (GETPOS_Y <= state.update_region_y[1])) { if
-	   (CurMode->type==M_TEXT16) restore_cursor_background_text(); else
-	            restore_cursor_background();
-	        --mouse.shown;
-	        return;
-	    }
-	   */ /*Not sure yet what to do update region should be set to ??? */
-
 	// Get Clipping ranges
-
-	state.clipx = static_cast<int16_t>((Bits)CurMode->swidth - 1); // Get from
-	                                                               // BIOS?
-	state.clipy = static_cast<int16_t>((Bits)CurMode->sheight - 1);
+	Instance::SetClipX(static_cast<int16_t>((Bits)CurMode->swidth - 1)); // Get from BIOS?
+	Instance::SetClipY(static_cast<int16_t>((Bits)CurMode->sheight - 1));
 
 	// might be vidmode == 0x13?2:1
 	int16_t xratio = 640;
-	if (CurMode->swidth > 0)
+	if (CurMode->swidth > 0) {
 		xratio = static_cast<int16_t>(xratio / CurMode->swidth);
-	if (xratio == 0)
+	}
+	if (xratio == 0) {
 		xratio = 1;
+	}
 
 	restore_cursor_background();
 
 	save_vga_registers();
 
+	const auto hotx = Instance::GetHotX();
+	const auto hoty = Instance::GetHotY();
+	const auto page = Instance::GetPage();
+
 	// Save Background
 	uint16_t addx1, addx2, addy;
 	uint16_t data_pos = 0;
-	int16_t x1 = static_cast<int16_t>(get_pos_x() / xratio - state.hot_x);
-	int16_t y1 = static_cast<int16_t>(get_pos_y() - state.hot_y);
-	int16_t x2 = static_cast<int16_t>(x1 + cursor_size_x - 1);
-	int16_t y2 = static_cast<int16_t>(y1 + cursor_size_y - 1);
+	int16_t x1 = static_cast<int16_t>(get_pos_x() / xratio - hotx);
+	int16_t y1 = static_cast<int16_t>(get_pos_y() - hoty);
+	int16_t x2 = static_cast<int16_t>(x1 + cursor_size - 1);
+	int16_t y2 = static_cast<int16_t>(y1 + cursor_size - 1);
 
 	clip_cursor_area(x1, x2, y1, y2, addx1, addx2, addy);
 
-	data_pos = static_cast<uint16_t>(addy * cursor_size_x);
+	data_pos = static_cast<uint16_t>(addy * cursor_size);
 	for (int16_t y = y1; y <= y2; y++) {
 		data_pos = static_cast<uint16_t>(data_pos + addx1);
 		for (int16_t x = x1; x <= x2; x++) {
+			uint8_t value = 0;
 			INT10_GetPixel(static_cast<uint16_t>(x),
 			               static_cast<uint16_t>(y),
-			               state.page,
-			               &state.background.data[data_pos++]);
+			               page,
+			               &value);
+			Instance::SetBackgroundData(data_pos++, value);
 		};
 		data_pos = static_cast<uint16_t>(data_pos + addx2);
 	};
-	state.background.enabled = true;
-	state.background.pos_x   = static_cast<uint16_t>(get_pos_x() / xratio -
-                                                       state.hot_x);
-	state.background.pos_y = static_cast<uint16_t>(get_pos_y() - state.hot_y);
+
+	Instance::SetBackgroundEnabled(true);
+	Instance::SetBackgroundX(static_cast<uint16_t>(get_pos_x() / xratio - hotx));
+	Instance::SetBackgroundY(static_cast<uint16_t>(get_pos_y() - hoty));
 
 	// Draw Mousecursor
-	data_pos               = static_cast<uint16_t>(addy * cursor_size_x);
-	const auto screen_mask = state.user_screen_mask ? state.user_def_screen_mask
-	                                                : default_screen_mask;
-	const auto cursor_mask = state.user_cursor_mask ? state.user_def_cursor_mask
-	                                                : default_cursor_mask;
+	data_pos               = static_cast<uint16_t>(addy * cursor_size);
+	const auto screen_mask = Instance::IsUserScreenMask() ? Instance::GetUserScreenMaskData()
+	                                                      : default_screen_mask;
+	const auto cursor_mask = Instance::IsUserCursorMask() ? Instance::GetUserCursorMaskData()
+	                                                      : default_cursor_mask;
 	for (int16_t y = y1; y <= y2; y++) {
-		uint16_t sc_mask = screen_mask[addy + y - y1];
-		uint16_t cu_mask = cursor_mask[addy + y - y1];
+		uint16_t sc_mask = screen_mask[check_cast<uint8_t>(addy + y - y1)];
+		uint16_t cu_mask = cursor_mask[check_cast<uint8_t>(addy + y - y1)];
 		if (addx1 > 0) {
 			sc_mask  = static_cast<uint16_t>(sc_mask << addx1);
 			cu_mask  = static_cast<uint16_t>(cu_mask << addx1);
 			data_pos = static_cast<uint16_t>(data_pos + addx1);
 		};
 		for (int16_t x = x1; x <= x2; x++) {
-			constexpr auto highest_bit = (1 << (cursor_size_x - 1));
+			constexpr auto highest_bit = (1 << (cursor_size - 1));
 			uint8_t pixel              = 0;
 			// ScreenMask
 			if (sc_mask & highest_bit)
-				pixel = state.background.data[data_pos];
+				pixel = Instance::GetBackgroundData(data_pos);
 			// CursorMask
 			if (cu_mask & highest_bit)
 				pixel = pixel ^ 0x0f;
@@ -646,7 +569,7 @@ static void draw_cursor()
 			// Set Pixel
 			INT10_PutPixel(static_cast<uint16_t>(x),
 			               static_cast<uint16_t>(y),
-			               state.page,
+			               page,
 			               pixel);
 			++data_pos;
 		};
@@ -660,16 +583,11 @@ static void draw_cursor()
 // DOS driver interface implementation
 // ***************************************************************************
 
-static void update_driver_active()
-{
-	mouse_shared.active_dos = (state.user_callback_mask != 0);
-	MOUSE_UpdateGFX();
-}
-
 static uint8_t get_reset_wheel_8bit()
 {
-	if (!state.wheel_api)
+	if (!Instance::IsWheelApi()) {
 		return 0;
+	}
 
 	const auto tmp = counter_w;
 	counter_w      = 0; // reading always clears the counter
@@ -680,8 +598,9 @@ static uint8_t get_reset_wheel_8bit()
 
 static uint16_t get_reset_wheel_16bit()
 {
-	if (!state.wheel_api)
+	if (!Instance::IsWheelApi()) {
 		return 0;
+	}
 
 	const int16_t tmp = counter_w;
 	counter_w         = 0; // reading always clears the counter
@@ -697,19 +616,20 @@ static void set_mickey_pixel_rate(const int16_t ratio_x, const int16_t ratio_y)
 	if ((ratio_x > 0) && (ratio_y > 0)) {
 		// ratio = number of mickeys per 8 pixels
 		constexpr auto pixels     = 8.0f;
-		state.mickeys_per_pixel_x = static_cast<float>(ratio_x) / pixels;
-		state.mickeys_per_pixel_y = static_cast<float>(ratio_y) / pixels;
-		state.pixels_per_mickey_x = pixels / static_cast<float>(ratio_x);
-		state.pixels_per_mickey_y = pixels / static_cast<float>(ratio_y);
+		Instance::SetMickeysPerPixelX(static_cast<float>(ratio_x) / pixels);
+		Instance::SetMickeysPerPixelY(static_cast<float>(ratio_y) / pixels);
+		Instance::SetPixelsPerMickeyX(pixels / static_cast<float>(ratio_x));
+		Instance::SetPixelsPerMickeyY(pixels / static_cast<float>(ratio_y));
 	}
 }
 
 static void set_double_speed_threshold(const uint16_t threshold)
 {
-	if (threshold)
-		state.double_speed_threshold = threshold;
-	else
-		state.double_speed_threshold = 64; // default value
+	if (threshold) {
+		Instance::SetDoubleSpeedThreshold(threshold);
+	} else {
+		Instance::SetDoubleSpeedThreshold(64); // default value XXX dedicated set default
+	}
 }
 
 static void set_sensitivity(const uint16_t sensitivity_x,
@@ -719,9 +639,9 @@ static void set_sensitivity(const uint16_t sensitivity_x,
 	const auto tmp_y = std::min(static_cast<uint16_t>(100), sensitivity_y);
 	const auto tmp_u = std::min(static_cast<uint16_t>(100), unknown);
 
-	state.sensitivity_x = static_cast<uint8_t>(tmp_x);
-	state.sensitivity_y = static_cast<uint8_t>(tmp_y);
-	state.unknown_01    = static_cast<uint8_t>(tmp_u);
+	Instance::SetSensitivityX(static_cast<uint8_t>(tmp_x));
+	Instance::SetSensitivityY(static_cast<uint8_t>(tmp_y));
+	Instance::SetUnknown01(static_cast<uint8_t>(tmp_u));
 
 	// Inspired by CuteMouse, although their cursor
 	// update routine is far more complex then ours
@@ -736,8 +656,8 @@ static void set_sensitivity(const uint16_t sensitivity_x,
 		return (tmp * tmp) / 3600.0f + 1.0f / 3.0f;
 	};
 
-	state.sensitivity_coeff_x = calculate_coeff(tmp_x);
-	state.sensitivity_coeff_y = calculate_coeff(tmp_y);
+	Instance::SetSensitivityCoeffX(calculate_coeff(tmp_x));
+	Instance::SetSensitivityCoeffY(calculate_coeff(tmp_y));
 }
 
 static void notify_interface_rate()
@@ -824,8 +744,8 @@ static void reset_hardware()
 	// Resetting the wheel API status in reset() might seem to be a more
 	// logical approach, but this is clearly not what CuteMouse does;
 	// if this is done in reset(), the DN2 is unable to use mouse wheel
-	state.wheel_api = false;
-	counter_w       = 0;
+	counter_w = 0;
+	Instance::SetWheelApi(false);
 
 	PIC_SetIRQMask(mouse_predefined.IRQ_PS2, false); // lower IRQ line
 
@@ -854,9 +774,9 @@ void MOUSEDOS_BeforeNewVideoMode()
 		restore_cursor_background();
 	}
 
-	state.hidden             = 1;
-	state.oldhidden          = 1;
-	state.background.enabled = false;
+	Instance::SetHidden(1);
+	Instance::SetOldHidden(1);
+	Instance::SetBackgroundEnabled(false);
 }
 
 void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
@@ -875,20 +795,21 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 
 	clear_pending_events();
 
-	state.bios_screen_mode   = bios_screen_mode;
-	state.granularity_x      = 0xffff;
-	state.granularity_y      = 0xffff;
-	state.hot_x              = 0;
-	state.hot_y              = 0;
-	state.user_screen_mask   = false;
-	state.user_cursor_mask   = false;
-	state.text_and_mask      = default_text_and_mask;
-	state.text_xor_mask      = default_text_xor_mask;
-	state.page               = 0;
-	state.update_region_y[1] = -1; // offscreen
-	state.cursor_type        = MouseCursor::Software;
-	state.enabled            = true;
-	state.inhibit_draw       = false;
+	// XXX provide functions to set the defaults
+	Instance::SetBiosScreenMode(bios_screen_mode);
+	Instance::SetGranularityX(0xffff);
+	Instance::SetGranularityY(0xffff);
+	Instance::SetHotX(0);
+	Instance::SetHotY(0);
+	Instance::SetUserScreenMask(false);
+	Instance::SetUserCursorMask(false);
+	Instance::SetTextMaskAnd(default_text_mask_and);
+	Instance::SetTextMaskXor(default_text_mask_xor);
+	Instance::SetPage(0);
+	Instance::SetUpdateRegionY2(-1); // offscreen
+	Instance::SetCursorType(MouseCursorType::Software);
+	Instance::SetEnabled(true);
+	Instance::SetInhibitDraw(false);
 
 	// Some software (like 'Down by the Laituri' game) is known to first set
 	// the min/max mouse cursor position and then set VESA mode, therefore
@@ -918,38 +839,38 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 			columns = default_columns;
 		}
 
-		state.maxpos_x = static_cast<int16_t>(8 * columns - 1);
-		state.maxpos_y = static_cast<int16_t>(8 * rows - 1);
+		Instance::SetMaxPosX(static_cast<int16_t>(8 * columns - 1));
+		Instance::SetMaxPosY(static_cast<int16_t>(8 * rows - 1));
 	};
 
 	// Set min/max position - same for all the video modes
 
-	state.minpos_x = 0;
-	state.minpos_y = 0;
+	Instance::SetMinPosX(0);
+	Instance::SetMinPosY(0);
 
 	// Apply settings depending on video mode
 
 	switch (bios_screen_mode) {
 	case 0x00: // text, 40x25, black/white        (CGA, EGA, MCGA, VGA)
 	case 0x01: // text, 40x25, 16 colors          (CGA, EGA, MCGA, VGA)
-		state.granularity_x = 0xfff0;
-		state.granularity_y = 0xfff8;
+		Instance::SetGranularityX(0xfff0);
+		Instance::SetGranularityY(0xfff8);
 		set_maxpos_text();
 		// Apply correction due to different x axis granularity
-		state.maxpos_x = static_cast<int16_t>(state.maxpos_x * 2 + 1);
+		Instance::SetMaxPosX(static_cast<int16_t>(Instance::GetMaxPosX() * 2 + 1));
 		break;
 	case 0x02: // text, 80x25, 16 shades of gray  (CGA, EGA, MCGA, VGA)
 	case 0x03: // text, 80x25, 16 colors          (CGA, EGA, MCGA, VGA)
 	case 0x07: // text, 80x25, monochrome         (MDA, HERC, EGA, VGA)
-		state.granularity_x = 0xfff8;
-		state.granularity_y = 0xfff8;
+		Instance::SetGranularityX(0xfff8);
+		Instance::SetGranularityY(0xfff8);
 		set_maxpos_text();
 		break;
 	case 0x0d: // 320x200, 16 colors    (EGA, VGA)
 	case 0x13: // 320x200, 256 colors   (MCGA, VGA)
-		state.granularity_x = 0xfffe;
-		state.maxpos_x = 639;
-		state.maxpos_y = 199;
+		Instance::SetGranularityX(0xfffe);
+		Instance::SetMaxPosX(639);
+		Instance::SetMaxPosY(199);
 		break;
 	case 0x04: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
 	case 0x05: // 320x200, 4 colors     (CGA, EGA, MCGA, VGA)
@@ -960,19 +881,19 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 	case 0x0e: // 640x200, 16 colors    (EGA, VGA)
 		// Note: Setting true horizontal resolution for <640 modes
 		// can break some games, like 'Life & Death' - be careful here!
-		state.maxpos_x = 639;
-		state.maxpos_y = 199;
+		Instance::SetMaxPosX(639);
+		Instance::SetMaxPosY(199);
 		break;
 	case 0x0f: // 640x350, monochrome   (EGA, VGA)
 	case 0x10: // 640x350, 16 colors    (EGA 128K, VGA)
 	           // 640x350, 4 colors     (EGA 64K)
-		state.maxpos_x = 639;
-		state.maxpos_y = 349;
+		Instance::SetMaxPosX(639);
+		Instance::SetMaxPosY(349);
 		break;
 	case 0x11: // 640x480, black/white  (MCGA, VGA)
 	case 0x12: // 640x480, 16 colors    (VGA)
-		state.maxpos_x = 639;
-		state.maxpos_y = 479;
+		Instance::SetMaxPosX(639);
+		Instance::SetMaxPosY(479);
 		break;
 	default: // other modes, most likely SVGA
 		if (!is_svga_mode) {
@@ -980,24 +901,24 @@ void MOUSEDOS_AfterNewVideoMode(const bool is_mode_changing)
 			LOG_WARNING("MOUSE (DOS): Unknown video mode 0x%02x",
 			            bios_screen_mode);
 			// Try to set some sane parameters, do not draw cursor
-			state.inhibit_draw = true;
-			state.maxpos_x = 639;
-			state.maxpos_y = 479;
+			Instance::SetInhibitDraw(true);
+			Instance::SetMaxPosX(639);
+			Instance::SetMaxPosY(479);
 		} else if (is_svga_text) {
 			// SVGA text mode
-			state.granularity_x = 0xfff8;
-			state.granularity_y = 0xfff8;
+			Instance::SetGranularityX(0xfff8);
+			Instance::SetGranularityY(0xfff8);
 			set_maxpos_text();
 		} else {
 			// SVGA graphic mode
-			state.maxpos_x = static_cast<int16_t>(CurMode->swidth - 1);
-			state.maxpos_y = static_cast<int16_t>(CurMode->sheight - 1);
+			Instance::SetMaxPosX(static_cast<int16_t>(CurMode->swidth - 1));
+			Instance::SetMaxPosY(static_cast<int16_t>(CurMode->sheight - 1));
 		}
 		break;
 	}
 }
 
-static void reset()
+static void reset_driver()
 {
 	// Although these do not belong to the driver state,
 	// reset them too to avoid any possible problems
@@ -1011,31 +932,29 @@ static void reset()
 	set_mickey_pixel_rate(8, 16);
 	set_double_speed_threshold(0); // set default value
 
-	state.enabled = true;
+	Instance::SetEnabled(true);
 
-	pos_x = static_cast<float>((state.maxpos_x + 1) / 2);
-	pos_y = static_cast<float>((state.maxpos_y + 1) / 2);
+	Instance::SetAbsoluteX(static_cast<float>((Instance::GetMaxPosX() + 1) / 2));
+	Instance::SetAbsoluteY(static_cast<float>((Instance::GetMaxPosY() + 1) / 2));
 
-	state.mickey_counter_x = 0.0f;
-	state.mickey_counter_y = 0.0f;
+	Instance::SetMickeyCounterX(0.0f); // XXX provide functions to set default values
+	Instance::SetMickeyCounterY(0.0f);
 
-	state.last_wheel_moved_x = 0;
-	state.last_wheel_moved_y = 0;
-
-	for (uint16_t idx = 0; idx < num_buttons; idx++) {
-		state.times_pressed[idx]   = 0;
-		state.times_released[idx]  = 0;
-		state.last_pressed_x[idx]  = 0;
-		state.last_pressed_y[idx]  = 0;
-		state.last_released_x[idx] = 0;
-		state.last_released_y[idx] = 0;
+	for (uint8_t idx = 0; idx < num_buttons; idx++) {
+		Instance::SetTimesPressed(idx, 0);
+		Instance::SetTimesReleased(idx, 0);
+		Instance::SetLastPressedX(idx, 0);
+		Instance::SetLastPressedY(idx, 0);
+		Instance::SetLastReleasedX(idx, 0);
+		Instance::SetLastReleasedY(idx, 0);
 	}
+	Instance::SetLastWheelMovedX(0);
+	Instance::SetLastWheelMovedY(0);
 
-	state.user_callback_mask    = 0;
-	mouse_shared.dos_cb_running = false;
+	Instance::SetUserCallbackMask(0); // XXX this should probably be avoided...
 
-	update_driver_active();
-	clear_pending_events();
+	mouse_shared.dos_cb_running = false; // XXX dangerous! move this to driver data?
+	clear_pending_events(); // XXX dangerous!
 }
 
 static void limit_coordinates()
@@ -1047,8 +966,14 @@ static void limit_coordinates()
 		pos = std::clamp(pos, min, max);
 	};
 
-	limit(pos_x, state.minpos_x, state.maxpos_x);
-	limit(pos_y, state.minpos_y, state.maxpos_y);
+	auto absolute_x = Instance::GetAbsoluteX();
+	auto absolute_y = Instance::GetAbsoluteY();
+
+	limit(absolute_x, Instance::GetMinPosX(), Instance::GetMaxPosX());
+	limit(absolute_y, Instance::GetMinPosY(), Instance::GetMaxPosY());
+
+	Instance::SetAbsoluteX(absolute_x);
+	Instance::SetAbsoluteY(absolute_y);
 }
 
 static void update_mickeys_on_move(float& dx, float& dy,
@@ -1074,19 +999,24 @@ static void update_mickeys_on_move(float& dx, float& dy,
 
 	auto update_mickey = [](float& mickey, const float d,
 	                        const float mickeys_per_pixel) {
-        mickey += d * mickeys_per_pixel;
-        if (mickey > 32767.5f || mickey < -32768.5f) {
-		    mickey -= std::copysign(65536.0f, mickey);
+		mickey += d * mickeys_per_pixel;
+		if (mickey > 32767.5f || mickey < -32768.5f) {
+			mickey -= std::copysign(65536.0f, mickey);
 		}
-    };
+	};
 
 	// Calculate cursor displacement
-	dx = calculate_d(x_rel, state.pixels_per_mickey_x, state.sensitivity_coeff_x);
-	dy = calculate_d(y_rel, state.pixels_per_mickey_y, state.sensitivity_coeff_y);
+	dx = calculate_d(x_rel, Instance::GetPixelsPerMickeyX(), Instance::GetSensitivityCoeffX());
+	dy = calculate_d(y_rel, Instance::GetPixelsPerMickeyY(), Instance::GetSensitivityCoeffY());
 
 	// Update mickey counters
-	update_mickey(state.mickey_counter_x, dx, state.mickeys_per_pixel_x);
-	update_mickey(state.mickey_counter_y, dy, state.mickeys_per_pixel_y);
+
+	auto mickey_counter_x = Instance::GetMickeyCounterX();
+	auto mickey_counter_y = Instance::GetMickeyCounterY();
+	update_mickey(mickey_counter_x, dx, Instance::GetMickeysPerPixelX());
+	update_mickey(mickey_counter_y, dy, Instance::GetMickeysPerPixelY());
+	Instance::SetMickeyCounterX(mickey_counter_x);
+	Instance::SetMickeyCounterY(mickey_counter_y);
 }
 
 static void move_cursor_captured(const float x_rel, const float y_rel)
@@ -1097,8 +1027,8 @@ static void move_cursor_captured(const float x_rel, const float y_rel)
 	update_mickeys_on_move(dx, dy, x_rel, y_rel);
 
 	// Apply mouse movement according to our acceleration model
-	pos_x += dx;
-	pos_y += dy;
+	Instance::SetAbsoluteX(Instance::GetAbsoluteX() + dx);
+	Instance::SetAbsoluteY(Instance::GetAbsoluteY() + dy);
 }
 
 static void move_cursor_seamless(const float x_rel, const float y_rel,
@@ -1122,25 +1052,27 @@ static void move_cursor_seamless(const float x_rel, const float y_rel,
 
 	// TODO: this is probably overcomplicated, especially
 	// the usage of relative movement - to be investigated
+	auto absolute_x  = Instance::GetAbsoluteX();
+	auto absolute_y  = Instance::GetAbsoluteY();
+	const auto max_x = Instance::GetMaxPosX();
+	const auto max_y = Instance::GetMaxPosY();
 	if (INT10_IsTextMode(*CurMode)) {
-		pos_x = x * 8;
-		pos_x *= INT10_GetTextColumns();
-		pos_y = y * 8;
-		pos_y *= INT10_GetTextRows();
-	} else if ((state.maxpos_x < 2048) || (state.maxpos_y < 2048) ||
-	           (state.maxpos_x != state.maxpos_y)) {
-		if ((state.maxpos_x > 0) && (state.maxpos_y > 0)) {
-			pos_x = x * state.maxpos_x;
-			pos_y = y * state.maxpos_y;
+		absolute_x = x * 8 * INT10_GetTextColumns();
+		absolute_y = y * 8 * INT10_GetTextRows();
+	} else if ((max_x < 2048) || (max_y < 2048) || (max_x != max_y)) {
+		if ((max_x > 0) && (max_y > 0)) {
+			absolute_x = x * max_x;
+			absolute_y = y * max_y;
 		} else {
-			pos_x += x_rel;
-			pos_y += y_rel;
+			absolute_x += x_rel;
+			absolute_y += y_rel;
 		}
 	} else {
-		// Fake relative movement through absolute coordinates
-		pos_x += x_rel;
-		pos_y += y_rel;
+		absolute_x += x_rel;
+		absolute_y += y_rel;
 	}
+	Instance::SetAbsoluteX(absolute_x);
+	Instance::SetAbsoluteY(absolute_y);
 }
 
 static uint8_t move_cursor()
@@ -1148,18 +1080,19 @@ static uint8_t move_cursor()
 	const auto old_pos_x = get_pos_x();
 	const auto old_pos_y = get_pos_y();
 
-	const auto old_mickey_x = static_cast<int16_t>(state.mickey_counter_x);
-	const auto old_mickey_y = static_cast<int16_t>(state.mickey_counter_y);
+	// XXX this cast-detect is possibly too imprecise
+	const auto old_mickey_x = static_cast<int16_t>(Instance::GetMickeyCounterX());
+	const auto old_mickey_y = static_cast<int16_t>(Instance::GetMickeyCounterY());
 
 	if (use_relative) {
 		move_cursor_captured(MOUSE_ClampRelativeMovement(pending.x_rel),
 		                     MOUSE_ClampRelativeMovement(pending.y_rel));
-
-	} else
+	} else {
 		move_cursor_seamless(pending.x_rel,
 		                     pending.y_rel,
 		                     pending.x_abs,
 		                     pending.y_abs);
+	}
 
 	// Pending relative movement is now consummed
 	pending.x_rel = 0.0f;
@@ -1172,8 +1105,8 @@ static uint8_t move_cursor()
 	// which won't change guest side mouse state)
 	const bool abs_changed = (old_pos_x != get_pos_x()) ||
 	                         (old_pos_y != get_pos_y());
-	const bool rel_changed = (old_mickey_x != state.mickey_counter_x) ||
-	                         (old_mickey_y != state.mickey_counter_y);
+	const bool rel_changed = (old_mickey_x != Instance::GetMickeyCounterX()) ||
+	                         (old_mickey_y != Instance::GetMickeyCounterY());
 
 	if (abs_changed || rel_changed) {
 		return static_cast<uint8_t>(MouseEventId::MouseHasMoved);
@@ -1198,15 +1131,17 @@ static uint8_t update_buttons(const MouseButtons12S new_buttons_12S)
 	}
 
 	auto mark_pressed = [](const uint8_t idx) {
-		state.last_pressed_x[idx] = get_pos_x();
-		state.last_pressed_y[idx] = get_pos_y();
-		++state.times_pressed[idx];
+		Instance::SetLastPressedX(idx, get_pos_x());
+		Instance::SetLastPressedY(idx, get_pos_y());
+		const auto times_pressed = Instance::GetTimesPressed(idx);
+		Instance::SetTimesPressed(idx, times_pressed + 1);
 	};
 
 	auto mark_released = [](const uint8_t idx) {
-		state.last_released_x[idx] = get_pos_x();
-		state.last_released_y[idx] = get_pos_y();
-		++state.times_released[idx];
+		Instance::SetLastReleasedX(idx, get_pos_x());
+		Instance::SetLastReleasedY(idx, get_pos_y());
+		const auto times_released = Instance::GetTimesReleased(idx);
+		Instance::SetTimesReleased(idx, times_released + 1);
 	};
 
 	uint8_t mask = 0;
@@ -1245,21 +1180,23 @@ static uint8_t move_wheel()
 	// Pending wheel scroll is now consummed
 	pending.w_rel = 0;
 
-	state.last_wheel_moved_x = get_pos_x();
-	state.last_wheel_moved_y = get_pos_y();
+	Instance::SetLastWheelMovedX(get_pos_x());
+	Instance::SetLastWheelMovedY(get_pos_y());
 
-	if (counter_w != 0)
+	if (counter_w != 0) {
 		return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
-	else
+	} else {
 		return 0;
+	}
 }
 
 static uint8_t update_wheel()
 {
-	if (mouse_config.dos_immediate)
+	if (mouse_config.dos_immediate) {
 		return static_cast<uint8_t>(MouseEventId::WheelHasMoved);
-	else
+	} else {
 		return move_wheel();
+	}
 }
 
 void MOUSEDOS_NotifyMoved(const float x_rel, const float y_rel,
@@ -1315,7 +1252,7 @@ void MOUSEDOS_NotifyButton(const MouseButtons12S new_buttons_12S)
 
 void MOUSEDOS_NotifyWheel(const int16_t w_rel)
 {
-	if (!state.wheel_api) {
+	if (!Instance::IsWheelApi()) { // XXX is it safe to skip?
 		return;
 	}
 
@@ -1336,6 +1273,92 @@ void MOUSEDOS_NotifyWheel(const int16_t w_rel)
 	}
 }
 
+static bool int2f_handler()
+{
+	// XXX check if interface is emulated?
+	constexpr uint16_t vmd_mouse_device_id = 0x0c;
+	// Returning false prevents further multiplex handlers from being called
+
+	// XXX check https://git.javispedro.com/cgit/vbados.git/tree/mousetsr.c?id=4091173cceea8f2c3b0cdbc19a1adb6bd87c0a94#n1413
+	switch (reg_ax) {
+	case 0x1605: // Windows startup
+	{
+		const uint8_t major = static_cast<uint8_t>(reg_di >> 8);
+		const uint8_t minor = static_cast<uint8_t>(reg_di & 0xff);
+		LOG_INFO("MOUSE (DOS): Starting Windows %d.%d", major, minor);
+		const auto link_ptr = Instance::SetupWindowsStruct(RealMake(SegValue(es), reg_bx));
+		SegSet16(es, RealSegment(link_ptr));
+		reg_bx = RealOffset(link_ptr);
+		Instance::SetWin386Running(true);
+		Instance::SetWin386DrawingCursor(false); // XXX call set default
+		break;
+	}
+	case 0x1606: // Windows shutdown
+		LOG_INFO("MOUSE (DOS): Shutting down Windows");
+		Instance::ClearWindowsStruct();
+		Instance::SetWin386Running(false);
+		Instance::SetWin386DrawingCursor(false); // XXX call set default
+		// XXX refresh cursor
+		break;
+	case 0x1607: // Windows device callout
+		if (reg_bx == vmd_mouse_device_id) {
+			LOG_ERR("XXX device callout, 0x%04x", reg_cx);
+			switch (reg_cx) {
+			case 0x00: // callout test
+				reg_cx = 1; // we are available
+				break;
+			case 0x01: // mouse callout address request
+			{
+				const auto farptr = CALLBACK_RealPointer(callback_id.win386_callout);
+				SegSet16(ds, RealSegment(farptr));
+				reg_si = RealOffset(farptr);
+				reg_ax = 0; // we are available
+				break;
+			}
+			default:
+				// XXX warning log
+				break;
+			}
+		}
+		break;
+	case 0x4001: // switch task to background
+	case 0x4002: // switch task to foreground
+		break;
+	default:
+		break;
+	}
+
+	return true;
+}
+
+static Bitu win386_callout_handler()
+{
+	reg_bp = reg_sp;
+
+	switch (reg_ax) {
+	case 1:
+		LOG_ERR("XXX mouse event");
+		// XXX bx = x, cx = y, dx = buttons, si = events
+		break;
+	case 2:
+		Instance::SetWin386DrawingCursor(true);
+		LOG_ERR("XXX hide cursor");
+		// XXX refresh cursor
+		break;
+	case 3:
+		Instance::SetWin386DrawingCursor(false);
+		LOG_ERR("XXX show cursor");
+		// XXX refresh cursor
+		break;
+	default:
+		LOG_WARNING("MOUSE (DOS): Windows callout function 0x%04x not implemented",
+		            reg_ax);
+		break;
+	}
+
+	return CBRET_NONE;
+}
+
 static Bitu int33_handler()
 {
 	using namespace bit::literals;
@@ -1344,26 +1367,32 @@ static Bitu int33_handler()
 	case 0x00: // MS MOUSE - reset driver and read status
 		reset_hardware();
 		[[fallthrough]];
-	case 0x21:               // MS MOUSE v6.0+ - software reset
+	case 0x21: // MS MOUSE v6.0+ - software reset
 		reg_ax = 0xffff; // mouse driver installed
 		reg_bx = 3;      // for 2 buttons return 0xffff
-		reset();
+		reset_driver();
 		break;
 	case 0x01: // MS MOUSE v1.0+ - show mouse cursor
-		if (state.hidden) {
-			--state.hidden;
+	{
+		const auto hidden = Instance::GetHidden();
+		if (hidden) {
+			Instance::SetHidden(hidden - 1);
 		}
-		state.update_region_y[1] = -1; // offscreen
+		Instance::SetUpdateRegionY2(-1); // offscreen
 		draw_cursor();
 		break;
+	}
 	case 0x02: // MS MOUSE v1.0+ - hide mouse cursor
+	{
 		if (INT10_IsTextMode(*CurMode)) {
 			restore_cursor_background_text();
 		} else {
 			restore_cursor_background();
 		}
-		++state.hidden;
+		const auto hidden = Instance::GetHidden();
+		Instance::SetHidden(hidden + 1);
 		break;
+	}
 	case 0x03: // MS MOUSE v1.0+ / WheelAPI v1.0+ - get position and button
 	           // status
 		reg_bl = buttons._data;
@@ -1378,10 +1407,10 @@ static Bitu int33_handler()
 		// change it. (position is rounded so numbers get lost when the
 		// rounded number is set) (arena/simulation Wolf)
 		if (reg_to_signed16(reg_cx) != get_pos_x()) {
-			pos_x = static_cast<float>(reg_cx);
+			Instance::SetAbsoluteX(static_cast<float>(reg_cx));
 		}
 		if (reg_to_signed16(reg_dx) != get_pos_y()) {
-			pos_y = static_cast<float>(reg_dx);
+			Instance::SetAbsoluteY(static_cast<float>(reg_dx));
 		}
 		limit_coordinates();
 		draw_cursor();
@@ -1391,17 +1420,17 @@ static Bitu int33_handler()
 	           // data
 	{
 		const uint16_t idx = reg_bx; // button index
-		if (idx == 0xffff && state.wheel_api) {
+		if (idx == 0xffff && Instance::IsWheelApi()) {
 			// 'magic' index for checking wheel instead of button
 			reg_bx = get_reset_wheel_16bit();
-			reg_cx = state.last_wheel_moved_x;
-			reg_dx = state.last_wheel_moved_y;
+			reg_cx = Instance::GetLastWheelMovedX();
+			reg_dx = Instance::GetLastWheelMovedY();
 		} else if (idx < num_buttons) {
-			reg_ax                   = buttons._data;
-			reg_bx                   = state.times_pressed[idx];
-			reg_cx                   = state.last_pressed_x[idx];
-			reg_dx                   = state.last_pressed_y[idx];
-			state.times_pressed[idx] = 0;
+			reg_ax = buttons._data;
+			reg_bx = Instance::GetTimesPressed(idx);
+			reg_cx = Instance::GetLastPressedX(idx);
+			reg_dx = Instance::GetLastPressedY(idx);
+			Instance::SetTimesPressed(idx, 0);
 		} else {
 			// unsupported - try to do something same
 			reg_ax = buttons._data;
@@ -1415,18 +1444,17 @@ static Bitu int33_handler()
 	           // / mouse wheel data
 	{
 		const uint16_t idx = reg_bx; // button index
-		if (idx == 0xffff && state.wheel_api) {
+		if (idx == 0xffff && Instance::IsWheelApi()) {
 			// 'magic' index for checking wheel instead of button
 			reg_bx = get_reset_wheel_16bit();
-			reg_cx = state.last_wheel_moved_x;
-			reg_dx = state.last_wheel_moved_y;
+			reg_cx = Instance::GetLastWheelMovedX();
+			reg_dx = Instance::GetLastWheelMovedY();
 		} else if (idx < num_buttons) {
 			reg_ax = buttons._data;
-			reg_bx = state.times_released[idx];
-			reg_cx = state.last_released_x[idx];
-			reg_dx = state.last_released_y[idx];
-
-			state.times_released[idx] = 0;
+			reg_bx = Instance::GetTimesReleased(idx);
+			reg_cx = Instance::GetLastReleasedX(idx);
+			reg_dx = Instance::GetLastReleasedY(idx);
+			Instance::SetTimesReleased(idx, 0);
 		} else {
 			// unsupported - try to do something same
 			reg_ax = buttons._data;
@@ -1437,35 +1465,41 @@ static Bitu int33_handler()
 		break;
 	}
 	case 0x07: // MS MOUSE v1.0+ - define horizontal cursor range
+	{
 		// Lemmings set 1-640 and wants that. Iron Seed set 0-640. but
 		// doesn't like 640. Iron Seed works if newvideo mode with mode
 		// 13 sets 0-639. Larry 6 actually wants newvideo mode with mode
 		// 13 to set it to 0-319.
-		state.minpos_x = std::min(reg_to_signed16(reg_cx), reg_to_signed16(reg_dx));
-		state.maxpos_x = std::max(reg_to_signed16(reg_cx), reg_to_signed16(reg_dx));
+		const auto min = std::min(reg_to_signed16(reg_cx), reg_to_signed16(reg_dx));
+		const auto max = std::max(reg_to_signed16(reg_cx), reg_to_signed16(reg_dx));
+		Instance::SetMinPosX(min);
+		Instance::SetMaxPosX(max);
 		// Battle Chess wants this
-		pos_x = std::clamp(pos_x,
-		                   static_cast<float>(state.minpos_x),
-		                   static_cast<float>(state.maxpos_x));
+		auto absolute = Instance::GetAbsoluteX();
+		absolute = std::clamp(absolute, static_cast<float>(min), static_cast<float>(max));
+		Instance::SetAbsoluteX(absolute);
 		// Or alternatively this:
-		// pos_x = (state.maxpos_x - state.minpos_x + 1) / 2;
+		// (Instance::GetMaxPosX() - Instance::GetMinPosX() + 1) / 2;
 		break;
+	}
 	case 0x08: // MS MOUSE v1.0+ - define vertical cursor range
+	{
 		// not sure what to take instead of the CurMode (see case 0x07
 		// as well) especially the cases where sheight= 400 and we set
 		// it with the mouse_reset to 200 disabled it at the moment.
 		// Seems to break syndicate who want 400 in mode 13
-		state.minpos_y = std::min(reg_to_signed16(reg_cx),
-		                          reg_to_signed16(reg_dx));
-		state.maxpos_y = std::max(reg_to_signed16(reg_cx),
-		                          reg_to_signed16(reg_dx));
+		const auto min = std::min(reg_to_signed16(reg_cx), reg_to_signed16(reg_dx));
+		const auto max = std::max(reg_to_signed16(reg_cx), reg_to_signed16(reg_dx));
+		Instance::SetMinPosY(min);
+		Instance::SetMaxPosY(max);
 		// Battle Chess wants this
-		pos_y = std::clamp(pos_y,
-		                   static_cast<float>(state.minpos_y),
-		                   static_cast<float>(state.maxpos_y));
+		auto absolute = Instance::GetAbsoluteY();
+		absolute = std::clamp(absolute, static_cast<float>(min), static_cast<float>(max));
+		Instance::SetAbsoluteY(absolute);
 		// Or alternatively this:
-		// pos_y = (state.maxpos_y - state.minpos_y + 1) / 2;
+		// (Instance::GetMaxPosY() - Instance::GetMinPosY() + 1) / 2;
 		break;
+	}
 	case 0x09: // MS MOUSE v3.0+ - define GFX cursor
 	{
 		auto clamp_hot = [](const uint16_t reg, const int cursor_size) {
@@ -1475,44 +1509,46 @@ static Bitu int33_handler()
 		};
 
 		PhysPt src = SegPhys(es) + reg_dx;
-		MEM_BlockRead(src, state.user_def_screen_mask, cursor_size_y * 2);
-		src += cursor_size_y * 2;
-		MEM_BlockRead(src, state.user_def_cursor_mask, cursor_size_y * 2);
-		state.user_screen_mask = true;
-		state.user_cursor_mask = true;
-		state.hot_x            = clamp_hot(reg_bx, cursor_size_x);
-		state.hot_y            = clamp_hot(reg_cx, cursor_size_y);
-		state.cursor_type      = MouseCursor::Text;
+		std::array<uint16_t, cursor_size> screen_mask_data = {0};
+		std::array<uint16_t, cursor_size> cursor_mask_data = {0};
+		MEM_BlockRead(src, screen_mask_data.data(), cursor_size * 2);
+		src += cursor_size * 2;
+		MEM_BlockRead(src, cursor_mask_data.data(), cursor_size * 2);
+		Instance::SetUserScreenMaskData(screen_mask_data);
+		Instance::SetUserCursorMaskData(screen_mask_data);
+		Instance::SetUserScreenMask(true);
+		Instance::SetUserCursorMask(true);
+		Instance::SetHotX(clamp_hot(reg_bx, cursor_size));
+		Instance::SetHotY(clamp_hot(reg_cx, cursor_size));
+		Instance::SetCursorType(MouseCursorType::Text);
 		draw_cursor();
 		break;
 	}
 	case 0x0a: // MS MOUSE v3.0+ - define text cursor
-		// TODO: shouldn't we use MouseCursor::Text, not
-		// MouseCursor::Software?
-		state.cursor_type   = (reg_bx ? MouseCursor::Hardware
-		                              : MouseCursor::Software);
-		state.text_and_mask = reg_cx;
-		state.text_xor_mask = reg_dx;
+		// TODO: shouldn't we use MouseCursorType::Text, not
+		// MouseCursorType::Software?
+		Instance::SetCursorType(reg_bx ? MouseCursorType::Hardware
+		                               : MouseCursorType::Software);
+		Instance::SetTextMaskAnd(reg_cx);
+		Instance::SetTextMaskXor(reg_dx);
 		if (reg_bx) {
 			INT10_SetCursorShape(reg_cl, reg_dl);
 		}
 		draw_cursor();
 		break;
 	case 0x27: // MS MOUSE v7.01+ - get screen/cursor masks and mickey counts
-		reg_ax = state.text_and_mask;
-		reg_bx = state.text_xor_mask;
+		reg_ax = Instance::GetTextMaskAnd();
+		reg_bx = Instance::GetTextMaskXor();
 		[[fallthrough]];
 	case 0x0b: // MS MOUSE v1.0+ - read motion data
-		reg_cx = mickey_counter_to_reg16(state.mickey_counter_x);
-		reg_dx = mickey_counter_to_reg16(state.mickey_counter_y);
-		state.mickey_counter_x = 0;
-		state.mickey_counter_y = 0;
+		reg_cx = mickey_counter_to_reg16(Instance::GetMickeyCounterX());
+		reg_dx = mickey_counter_to_reg16(Instance::GetMickeyCounterY());
+		Instance::SetMickeyCounterX(0.0f);
+		Instance::SetMickeyCounterY(0.0f);
 		break;
 	case 0x0c: // MS MOUSE v1.0+ - define user callback parameters
-		state.user_callback_mask    = reg_cx;
-		state.user_callback_segment = SegValue(es);
-		state.user_callback_offset  = reg_dx;
-		update_driver_active();
+		Instance::SetUserCallbackMask(reg_cx);
+		Instance::SetUserCallback(SegValue(es), reg_dx);
 		break;
 	case 0x0d: // MS MOUSE v1.0+ - light pen emulation on
 		// Both buttons down = pen pressed, otherwise pen considered
@@ -1530,18 +1566,19 @@ static Bitu int33_handler()
 		                      reg_to_signed16(reg_dx));
 		break;
 	case 0x10: // MS MOUSE v1.0+ - define screen region for updating
-		state.update_region_x[0] = reg_to_signed16(reg_cx);
-		state.update_region_y[0] = reg_to_signed16(reg_dx);
-		state.update_region_x[1] = reg_to_signed16(reg_si);
-		state.update_region_y[1] = reg_to_signed16(reg_di);
+		Instance::SetUpdateRegionX1(reg_to_signed16(reg_cx));
+		Instance::SetUpdateRegionY1(reg_to_signed16(reg_dx));
+		Instance::SetUpdateRegionX2(reg_to_signed16(reg_si));
+		Instance::SetUpdateRegionY2(reg_to_signed16(reg_di));
 		draw_cursor();
 		break;
 	case 0x11: // WheelAPI v1.0+ - get mouse capabilities
-		reg_ax          = 0x574d; // Identifier for detection purposes
-		reg_bx          = 0;      // Reserved capabilities flags
-		reg_cx          = 1;      // Wheel is supported
-		state.wheel_api = true; // This call enables WheelAPI extensions
-		counter_w       = 0;
+		reg_ax    = 0x574d; // Identifier for detection purposes
+		reg_bx    = 0;      // Reserved capabilities flags
+		reg_cx    = 1;      // Wheel is supported
+		counter_w = 0;
+		Instance::SetWheelApi(true); // Enable mouse wheel API
+
 		// Previous implementation provided Genius Mouse 9.06 function
 		// to get number of buttons
 		// (https://sourceforge.net/p/dosbox/patches/32/), it was
@@ -1556,14 +1593,12 @@ static Bitu int33_handler()
 		break;
 	case 0x14: // MS MOUSE v3.0+ - exchange event-handler
 	{
-		const auto old_segment = state.user_callback_segment;
-		const auto old_offset  = state.user_callback_offset;
-		const auto old_mask    = state.user_callback_mask;
+		const auto old_mask    = Instance::GetUserCallbackMask();
+		const auto old_segment = Instance::GetUserCallbackSegment();
+		const auto old_offset  = Instance::GetUserCallbackOffset();
 		// Set new values
-		state.user_callback_mask    = reg_cx;
-		state.user_callback_segment = SegValue(es);
-		state.user_callback_offset  = reg_dx;
-		update_driver_active();
+		Instance::SetUserCallbackMask(reg_cx);
+		Instance::SetUserCallback(SegValue(es), reg_dx);
 		// Return old values
 		reg_cx = old_mask;
 		reg_dx = old_offset;
@@ -1579,10 +1614,9 @@ static Bitu int33_handler()
 	case 0x17: // MS MOUSE v6.0+ - load driver state
 		MEM_BlockRead(SegPhys(es) + reg_dx, &state, sizeof(state));
 		pending.Reset();
-		update_driver_active();
-		set_sensitivity(state.sensitivity_x,
-		                state.sensitivity_y,
-		                state.unknown_01);
+		set_sensitivity(Instance::GetSensitivityX(),
+		                Instance::GetSensitivityY(),
+		                Instance::GetUnknown01());
 		// TODO: we should probably also fake an event for mouse
 		// movement, redraw cursor, etc.
 		break;
@@ -1598,43 +1632,43 @@ static Bitu int33_handler()
 		set_sensitivity(reg_bx, reg_cx, reg_dx);
 		break;
 	case 0x1b: //  MS MOUSE v6.0+ - get mouse sensitivity
-		reg_bx = state.sensitivity_x;
-		reg_cx = state.sensitivity_y;
-		reg_dx = state.unknown_01;
+		reg_bx = Instance::GetSensitivityX();
+		reg_cx = Instance::GetSensitivityY();
+		reg_dx = Instance::GetUnknown01();
 		break;
 	case 0x1c: // MS MOUSE v6.0+ - set interrupt rate
 		set_interrupt_rate(reg_bx);
 		break;
 	case 0x1d: // MS MOUSE v6.0+ - set display page number
-		state.page = reg_bl;
+		Instance::SetPage(reg_bl);
 		break;
 	case 0x1e: // MS MOUSE v6.0+ - get display page number
-		reg_bx = state.page;
+		reg_bx = Instance::GetPage();
 		break;
 	case 0x1f: // MS MOUSE v6.0+ - disable mouse driver
 		// ES:BX old mouse driver Zero at the moment TODO
 		reg_bx = 0;
 		SegSet16(es, 0);
-		state.enabled   = false;
-		state.oldhidden = state.hidden;
-		state.hidden    = 1;
+		Instance::SetEnabled(false);
+		Instance::SetOldHidden(Instance::GetHidden());
+		Instance::SetHidden(1);
 		// According to Ralf Brown Interrupt List it returns 0x20 if
 		// success,  but CuteMouse source code claims the code for
 		// success if 0x1f. Both agree that 0xffff means failure.
 		// Since reg_ax is 0x1f here, no need to change anything.
 		break;
 	case 0x20: // MS MOUSE v6.0+ - enable mouse driver
-		state.enabled = true;
-		state.hidden  = state.oldhidden;
+		Instance::SetEnabled(true);
+		Instance::SetHidden(Instance::GetOldHidden());
 		break;
 	case 0x22: // MS MOUSE v6.0+ - set language for messages
 		// 00h = English, 01h = French, 02h = Dutch, 03h = German, 04h =
 		// Swedish 05h = Finnish, 06h = Spanish, 07h = Portugese, 08h =
 		// Italian
-		state.language = reg_bx;
+		Instance::SetLanguage(reg_bx);
 		break;
 	case 0x23: // MS MOUSE v6.0+ - get language for messages
-		reg_bx = state.language;
+		Instance::GetLanguage();
 		break;
 	case 0x24: // MS MOUSE v6.26+ - get Software version, mouse type, and
 	           // IRQ number
@@ -1654,7 +1688,7 @@ static Bitu int33_handler()
 		//    - bit 6: 1 = driver is newer integrated type
 		//    - bit 7: 1 = loaded as device driver rather than TSR
 		constexpr auto integrated_driver = (1 << 6);
-		const auto cursor_type = static_cast<uint8_t>(state.cursor_type) << 4;
+		const auto cursor_type = static_cast<uint8_t>(Instance::GetCursorType()) << 4;
 		reg_ah = static_cast<uint8_t>(integrated_driver | cursor_type |
 		                              get_interrupt_rate());
 		// BX - cursor lock flag for OS/2 to prevent reentrancy problems
@@ -1666,9 +1700,9 @@ static Bitu int33_handler()
 		break;
 	}
 	case 0x26: // MS MOUSE v6.26+ - get maximum virtual coordinates
-		reg_bx = (state.enabled ? 0x0000 : 0xffff);
-		reg_cx = signed_to_reg16(state.maxpos_x);
-		reg_dx = signed_to_reg16(state.maxpos_y);
+		reg_bx = (Instance::IsEnabled() ? 0x0000 : 0xffff);
+		reg_cx = signed_to_reg16(Instance::GetMaxPosX());
+		reg_dx = signed_to_reg16(Instance::GetMaxPosY());
 		break;
 	case 0x28: // MS MOUSE v7.0+ - set video mode
 		// TODO: According to PC sourcebook
@@ -1693,9 +1727,9 @@ static Bitu int33_handler()
 	case 0x2a: // MS MOUSE v7.01+ - get cursor hot spot
 		// Microsoft uses a negative byte counter
 		// for cursor visibility
-		reg_al = static_cast<uint8_t>(-state.hidden);
-		reg_bx = signed_to_reg16(state.hot_x);
-		reg_cx = signed_to_reg16(state.hot_y);
+		reg_al = static_cast<uint8_t>(-Instance::GetHidden());
+		reg_bx = signed_to_reg16(Instance::GetHotX());
+		reg_cx = signed_to_reg16(Instance::GetHotY());
 		reg_dx = 0x04; // PS/2 mouse type
 		break;
 	case 0x2b: // MS MOUSE v7.0+ - load acceleration profiles
@@ -1733,10 +1767,10 @@ static Bitu int33_handler()
 		// TODO: once implemented, update function 0x32
 		break;
 	case 0x31: // MS MOUSE v7.05+ - get current min/max virtual coordinates
-		reg_ax = signed_to_reg16(state.minpos_x);
-		reg_bx = signed_to_reg16(state.minpos_y);
-		reg_cx = signed_to_reg16(state.maxpos_x);
-		reg_dx = signed_to_reg16(state.maxpos_y);
+		reg_ax = signed_to_reg16(Instance::GetMinPosX());
+		reg_bx = signed_to_reg16(Instance::GetMinPosY());
+		reg_cx = signed_to_reg16(Instance::GetMaxPosX());
+		reg_dx = signed_to_reg16(Instance::GetMaxPosY());
 		break;
 	case 0x32: // MS MOUSE v7.05+ - get active advanced functions
 		reg_ax = 0;
@@ -1789,7 +1823,8 @@ static Bitu int33_handler()
 		// we completely ignore the call
 		break;
 	default:
-		LOG_WARNING("MOUSE (DOS): Function 0x%04x not implemented", reg_ax);
+		LOG_WARNING("MOUSE (DOS): Driver function 0x%04x not implemented",
+		            reg_ax);
 		break;
 	}
 	return CBRET_NONE;
@@ -1819,10 +1854,11 @@ static Bitu mouse_bd_handler()
 		break;
 	case 0x0c: // Define interrupt subroutine parameters
 	case 0x14: // Exchange event-handler
-		if (reg_bx != 0)
+		if (reg_bx != 0) {
 			SegSet16(es, reg_bx);
-		else
+		} else {
 			SegSet16(es, SegValue(ds));
+		}
 		break;
 	case 0x10: // Define screen region for updating
 		reg_cx = real_readw(SegValue(ds), rdxpt);
@@ -1853,7 +1889,7 @@ static Bitu mouse_bd_handler()
 	return CBRET_NONE;
 }
 
-static Bitu user_callback_handler()
+static Bitu callback_return_handler()
 {
 	mouse_shared.dos_cb_running = false;
 	return CBRET_NONE;
@@ -1962,7 +1998,7 @@ uint8_t MOUSEDOS_DoInterrupt()
 	// If DOS driver's client is not interested in this particular
 	// type of event - skip it
 
-	if (!(state.user_callback_mask & mask)) {
+	if (!(Instance::GetUserCallbackMask() & mask)) {
 		return 0x00;
 	}
 
@@ -1990,13 +2026,13 @@ void MOUSEDOS_DoCallback(const uint8_t mask)
 	reg_bh = wheel_moved ? get_reset_wheel_8bit() : 0;
 	reg_cx = get_pos_x();
 	reg_dx = get_pos_y();
-	reg_si = mickey_counter_to_reg16(state.mickey_counter_x);
-	reg_di = mickey_counter_to_reg16(state.mickey_counter_y);
+	reg_si = mickey_counter_to_reg16(Instance::GetMickeyCounterX());
+	reg_di = mickey_counter_to_reg16(Instance::GetMickeyCounterY());
 
-	CPU_Push16(RealSegment(user_callback));
-	CPU_Push16(RealOffset(user_callback));
-	CPU_Push16(state.user_callback_segment);
-	CPU_Push16(state.user_callback_offset);
+	CPU_Push16(Instance::GetCallbackReturnSegment());
+	CPU_Push16(Instance::GetCallbackReturnOffset());
+	CPU_Push16(Instance::GetUserCallbackSegment());
+	CPU_Push16(Instance::GetUserCallbackOffset());
 }
 
 void MOUSEDOS_FinalizeInterrupt()
@@ -2021,15 +2057,27 @@ void MOUSEDOS_SetDelay(const uint8_t new_delay_ms)
 	delay_ms = new_delay_ms;
 }
 
-void MOUSEDOS_Init()
+void DOS_StartMouseDriver()
 {
-	prepare_driver_info();
+	if (!MouseInterface::GetDOS()->IsEmulated()) {
+		return; // DOS driver not emulated, nothing to do
+	}
+
+	prepare_driver_info(); // XXX move to DOS_StartMouseDriver
+
+	// Initialize driver instance data
+	if (!Instance::Initialize()) {  // XXX move to DOS_StartMouseDriver
+		assert(false);
+		return;
+	}
+
+	// Windows mouse callout
+	CALLBACK_Setup(callback_id.win386_callout, win386_callout_handler, CB_RETF, "Windows mouse callout");
 
 	// Callback for mouse interrupt 0x33
-	const auto call_int33 = CALLBACK_Allocate();
 	const auto tmp_pt = static_cast<uint16_t>(DOS_GetMemory(0x1) - 1);
 	const auto int33_location = RealMake(tmp_pt, 0x10);
-	CALLBACK_Setup(call_int33,
+	CALLBACK_Setup(callback_id.call_int33,
 	               &int33_handler,
 	               CB_MOUSE,
 	               RealToPhysical(int33_location),
@@ -2037,31 +2085,40 @@ void MOUSEDOS_Init()
 	// Wasteland needs low(seg(int33))!=0 and low(ofs(int33))!=0
 	real_writed(0, 0x33 << 2, int33_location);
 
-	const auto call_mouse_bd = CALLBACK_Allocate();
 	const auto tmp_offs = static_cast<uint16_t>(RealOffset(int33_location) + 2);
-	CALLBACK_Setup(call_mouse_bd,
+	CALLBACK_Setup(callback_id.call_mouse_bd,
 	               &mouse_bd_handler,
 	               CB_RETF8,
 	               PhysicalMake(RealSegment(int33_location), tmp_offs),
 	               "MouseBD");
-	// pseudocode for CB_MOUSE (including the special backdoor entry point):
-	//    jump near i33hd
-	//    callback mouse_bd_handler
-	//    retf 8
-	//  label i33hd:
-	//    callback int33_handler
-	//    iret
 
 	// Callback for mouse user routine return
-	const auto call_user = CALLBACK_Allocate();
-	CALLBACK_Setup(call_user, &user_callback_handler, CB_RETF_CLI, "mouse user ret");
-	user_callback = CALLBACK_RealPointer(call_user);
+	CALLBACK_Setup(callback_id.callback_return, &callback_return_handler, CB_RETF_CLI, "mouse user ret");
 
-	state.user_callback_segment = 0x6362;    // magic value
-	state.hidden                = 1;         // hide cursor on startup
-	state.bios_screen_mode      = UINT8_MAX; // non-existing mode
+	const auto callback_return_farptr = CALLBACK_RealPointer(callback_id.callback_return);
+	Instance::SetCallbackReturn(RealSegment(callback_return_farptr),
+	                            RealOffset(callback_return_farptr));
+	Instance::SetUserCallback(0x6362, 0x00); // magic value
+
+	// XXX these should probably be the defaults
+	Instance::SetHidden(1); // hide cursor on startup
+	Instance::SetBiosScreenMode(UINT8_MAX); // non-existing mode
 
 	set_sensitivity(50, 50, 50);
 	reset_hardware();
-	reset();
+	reset_driver();
+
+	MOUSEDOS_NotifyMinRate(MouseInterface::GetDOS()->GetMinRate());
+}
+
+void MOUSEDOS_Init()
+{
+	// Allocate callback IDs
+	callback_id.win386_callout  = CALLBACK_Allocate();
+	callback_id.call_int33      = CALLBACK_Allocate();
+	callback_id.call_mouse_bd   = CALLBACK_Allocate();
+	callback_id.callback_return = CALLBACK_Allocate();
+
+	// Mouse part of interrupt 0x2f
+	DOS_AddMultiplexHandler(int2f_handler);
 }

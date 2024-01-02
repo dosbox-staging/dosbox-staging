@@ -223,6 +223,9 @@
     <ClCompile Include="..\src\hardware\input\mouseif_dos_driver.cpp">
       <Filter>src\hardware\input</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\hardware\input\mouseif_dos_driver_state.cpp">
+      <Filter>src\hardware\input</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\hardware\input\mouseif_ps2_bios.cpp">
       <Filter>src\hardware\input</Filter>
     </ClCompile>
@@ -1285,6 +1288,9 @@
       <Filter>src\hardware\input</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\input\mouse_manymouse.h">
+      <Filter>src\hardware\input</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\input\mouseif_dos_driver_state.h">
       <Filter>src\hardware\input</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\mame\emu.h">

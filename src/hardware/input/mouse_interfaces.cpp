@@ -641,7 +641,6 @@ void InterfaceDos::Init()
 		emulated = true;
 		MOUSEDOS_Init();
 	}
-	MOUSEDOS_NotifyMinRate(min_rate_hz);
 }
 
 void InterfaceDos::NotifyMoved(const float x_rel, const float y_rel,
