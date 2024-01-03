@@ -159,7 +159,7 @@ struct SB_INFO {
 			uint8_t used = 0; // number of entries in the fifo
 		} in = {}, out = {};
 		uint8_t test_register = 0;
-		uint32_t write_busy = 0;
+		uint8_t write_status_counter = 0;
 		uint32_t reset_tally = 0;
 		uint8_t cold_warmup_ms = 0;
 		uint8_t hot_warmup_ms = 0;
@@ -1225,7 +1225,7 @@ static void DSP_Reset() {
 	sb.dsp.cmd=DSP_NO_COMMAND;
 	sb.dsp.cmd_len=0;
 	sb.dsp.in.pos=0;
-	sb.dsp.write_busy=0;
+	sb.dsp.write_status_counter = 0;
 	sb.dsp.reset_tally++;
 	PIC_RemoveEvents(DSP_FinishReset);
 
@@ -1981,11 +1981,30 @@ static bool write_buffer_at_capacity()
 	if (sb.dsp.state != DSP_S_NORMAL) {
 		return true;
 	}
-	// Use a counter to report the buffer is unable to accept data for eight
-	// consecutive calls followed by reporting we *are* able receive data
-	// for another eight calls (flip-flop every 8 calls).
-	sb.dsp.write_busy++;
-	return (sb.dsp.write_busy & 8) != 0;
+	// Report the buffer as having some room every 8th call, as the buffer
+	// will have run down by some amount after sequential calls.
+	if ((++sb.dsp.write_status_counter % 8) == 0) {
+		return false;
+	}
+	// If DMA isn't running then the buffer's definitely not at capacity.
+	if (sb.dma.mode == DSP_DMA_NONE) {
+		return false;
+	}
+	// Finally, the DMA buffer is considered full until it's able to accept
+	// a full (64 KB) write; which is once we've hit the minimum threshold.
+	//
+	// Notes:
+	// 86Box and DOSBox-X both calculate the playback rate of the current
+	// DMA transfer and then steadily draining down that time until it nears
+	// completion. One of the nuances is that games can change the playback
+	// rate as well as switch from mono to stereo; so the drain down rate
+	// can vary: and indeed, 86Box does this extra bookkeeping.
+	//
+	// In our case, these rate changes are already taken care of by the
+	// existing code, and it just happens that this threshold (dma.left vs
+	// dma.min) will happen sooner if the rates are faster.
+	//
+	return (sb.dma.left > sb.dma.min);
 }
 
 static uint8_t read_sb(io_port_t port, io_width_t)
