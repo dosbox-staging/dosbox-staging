@@ -28,6 +28,7 @@
 
 #include "autoexec.h"
 #include "bios.h"
+#include "bit_view.h"
 #include "channel_names.h"
 #include "control.h"
 #include "dma.h"
@@ -2007,25 +2008,53 @@ static bool write_buffer_at_capacity()
 	return (sb.dma.left > sb.dma.min);
 }
 
+// Sound Blaster DSP status byte
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Ref: http://archive.gamedev.net/archive/reference/articles/article443.html
+//
+// Read from 02x0Ch (DSP Write Buffer Status): Bit 7, when 0, indicates that the
+// DSP is ready to receive data through the DSP Write Data or Command port
+// (02x0Ch write).
+//
+// Read from 02x0Eh (DSP Data Available Status): Bit 7, when 1, indicates that
+// the DSP has pending data to be read through the DSP Read Data port (02x0Ah
+// read).
+//
+union BufferStatus {
+	// Default to all bits high
+	uint8_t data = 0b1111'1111;
+
+	// Unused bits. They appear to be set to 1 when reading the status
+	// register.
+	bit_view<0, 7> reserved;
+
+	// when 1, the buffer has data and is ready to send
+	// when 0, the buffer doesn't have data and is ready to receive
+	bit_view<7, 1> has_data;
+};
+
 static uint8_t read_sb(io_port_t port, io_width_t)
 {
 	switch (port - sb.hw.base) {
 	case MIXER_INDEX: return sb.mixer.index;
 	case MIXER_DATA: return CTMIXER_Read();
 	case DSP_READ_DATA: return DSP_ReadData();
-	case DSP_READ_STATUS:
+	case DSP_READ_STATUS: {
 		// TODO See for high speed dma :)
 		if (sb.irq.pending_8bit) {
 			sb.irq.pending_8bit = false;
 			PIC_DeActivateIRQ(sb.hw.irq);
 		}
-		if (sb.dsp.out.used) {
-			return 0xff;
-		} else {
-			return 0x7f;
-		}
+		BufferStatus read_status = {};
+		read_status.has_data = (sb.dsp.out.used != 0);
+		return read_status.data;
+	}
 	case DSP_ACK_16BIT: sb.irq.pending_16bit = false; break;
-	case DSP_WRITE_STATUS: return write_buffer_at_capacity() ? 0xff : 0x7f;
+	case DSP_WRITE_STATUS: {
+		BufferStatus write_status = {};
+		write_status.has_data = write_buffer_at_capacity();
+		return write_status.data;
+	}
 	case DSP_RESET: return 0xff;
 	default:
 		LOG(LOG_SB, LOG_NORMAL)("Unhandled read from SB Port %4X", port);
