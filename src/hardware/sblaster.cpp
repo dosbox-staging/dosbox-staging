@@ -1973,6 +1973,21 @@ static uint8_t CTMIXER_Read() {
 	return ret;
 }
 
+// Called by DSP_WRITE_STATUS to check if the write buffer is at capacity.
+static bool write_buffer_at_capacity()
+{
+	// Is the DSP in an abnormal state and therefore we should consider the
+	// buffer at capacity and unable to receive data?
+	if (sb.dsp.state != DSP_S_NORMAL) {
+		return true;
+	}
+	// Use a counter to report the buffer is unable to accept data for eight
+	// consecutive calls followed by reporting we *are* able receive data
+	// for another eight calls (flip-flop every 8 calls).
+	sb.dsp.write_busy++;
+	return (sb.dsp.write_busy & 8) != 0;
+}
+
 static uint8_t read_sb(io_port_t port, io_width_t)
 {
 	switch (port - sb.hw.base) {
@@ -1991,18 +2006,7 @@ static uint8_t read_sb(io_port_t port, io_width_t)
 			return 0x7f;
 		}
 	case DSP_ACK_16BIT: sb.irq.pending_16bit = false; break;
-	case DSP_WRITE_STATUS:
-		switch (sb.dsp.state) {
-		case DSP_S_NORMAL:
-			sb.dsp.write_busy++;
-			if (sb.dsp.write_busy & 8) {
-				return 0xff;
-			}
-			return 0x7f;
-		case DSP_S_RESET:
-		case DSP_S_RESET_WAIT: return 0xff;
-		}
-		return 0xff;
+	case DSP_WRITE_STATUS: return write_buffer_at_capacity() ? 0xff : 0x7f;
 	case DSP_RESET: return 0xff;
 	default:
 		LOG(LOG_SB, LOG_NORMAL)("Unhandled read from SB Port %4X", port);
