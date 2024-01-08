@@ -1,14 +1,39 @@
 #version 120
 
 /*
-	Ported from https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
-	Based on Tyrell Sassen's template from https://github.com/tyrells/dosbox-svn-shaders
+ *	SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *	Copyright (C) 2020-2024  The DOSBox Staging Team
+ *
+ *	This program is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	This program is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License along
+ *	with this program; if not, write to the Free Software Foundation, Inc.,
+ *	51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
 
-	The following code is licensed under the MIT license: https://gist.github.com/TheRealMJP/bc503b0b87b643d3505d41eab8b332ae
-
-	Samples a texture with Catmull-Rom filtering, using 9 texture fetches instead of 16.
-	See http://vec3.ca/bicubic-filtering-in-fewer-taps/ for more details
-*/
+/*
+ *	Ported from:
+ *	https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
+ *
+ *	Based on Tyrell Sassen's template from
+ *	https://github.com/tyrells/dosbox-svn-shaders
+ *
+ *	The following code is licensed under the MIT license:
+ *	https://gist.github.com/TheRealMJP/bc503b0b87b643d3505d41eab8b332ae
+ *
+ *	Samples a texture with Catmull-Rom filtering, using 9 texture fetches
+ *	instead of 16. See http://vec3.ca/bicubic-filtering-in-fewer-taps/ for
+ *	more details
+ */
 
 #pragma use_npot_texture
 #pragma use_srgb_texture
