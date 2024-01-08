@@ -130,6 +130,7 @@ private:
 
 		bool active = false;
 		bool mixer  = false;
+		bool wants_dc_bias_removed = false;
 	} ctrl = {};
 
 	void Init(const uint16_t sample_rate);

@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <queue>
 #include <sys/types.h>
 
 #include "../capture/capture.h"
@@ -511,10 +512,39 @@ io_port_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
 	return addr;
 }
 
+template <LineIndex line_index>
+int16_t remove_running_average(const int16_t sample)
+{
+	// Calculate the number of samples we need average across to maintain
+	// the lowest frequency given an assumed playback rate.
+	constexpr int16_t PcmPlaybackRateHz      = 16000;
+	constexpr int16_t LowestFreqToMaintainHz = 200;
+	constexpr int16_t NumToAverage = PcmPlaybackRateHz / LowestFreqToMaintainHz;
+
+	static int32_t sum = 0;
+	static std::queue<int16_t> samples = {};
+
+	sum += sample;
+	samples.push(sample);
+
+	int16_t average = 0;
+	if (samples.size() == NumToAverage) {
+		average = static_cast<int16_t>(sum / NumToAverage);
+		sum -= samples.front();
+		samples.pop();
+	}
+	return static_cast<int16_t>(sample - average);
+}
+
 AudioFrame OPL::RenderFrame()
 {
 	static int16_t buf[2] = {};
 	OPL3_GenerateStream(&oplchip, buf, 1);
+
+	if (ctrl.wants_dc_bias_removed) {
+		buf[0] = remove_running_average<Left>(buf[0]);
+		buf[1] = remove_running_average<Right>(buf[1]);
+	}
 
 	AudioFrame frame = {};
 	if (adlib_gold) {
@@ -922,6 +952,11 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 
 	// Setup fadeout
 	channel->ConfigureFadeOut(section->Get_string("opl_fadeout"));
+
+	ctrl.wants_dc_bias_removed = section->Get_bool("opl_remove_dc_bias");
+	if (ctrl.wants_dc_bias_removed) {
+		LOG_MSG("%s: DC bias removal enabled", channel->GetName().c_str());
+	}
 
 	Init(check_cast<uint16_t>(channel->GetSampleRate()));
 
