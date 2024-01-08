@@ -3,6 +3,8 @@
 /*
    Hyllian's CRT Shader
 
+   Copyright (C) 2020-2024  The DOSBox Staging Team
+
    Copyright (C) 2011-2020 Hyllian - sergiogdb@gmail.com
 
    Copyright (C) 2020, this file ported from Libretro's GLSL

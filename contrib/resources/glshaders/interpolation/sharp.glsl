@@ -3,9 +3,10 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2020  The DOSBox Team
  *
- * Contributors:
+ *  Contributors:
  *   - 2020, jmarsh <jmarsh@vogons.org>: authored.
  *           https://svn.code.sf.net/p/dosbox/code-0/dosbox/trunk@4319
  *
