@@ -1,5 +1,28 @@
 #version 120
 
+/*
+ *  SPDX-License-Identifier: GPL-2.0-or-later
+ *
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
+ *
+ *  Based on parts of the Caligari shader plus bits and pieces from Hyllian,
+ *  Easymode, and probably a few others.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ */
+
 #pragma use_npot_texture
 
 #define SPOT_WIDTH             0.85
@@ -50,9 +73,9 @@ uniform sampler2D rubyTexture;
 
 // Macro for weights computing
 #define WEIGHT(w) \
-    if (w > 1.0) w = 1.0; \
-  w = 1.0 - w * w; \
-  w = w * w;
+   if (w > 1.0) w = 1.0; \
+   w = 1.0 - w * w; \
+   w = w * w;
 
 
 vec3 mask_weights(vec2 coord, float mask_intensity, int phosphor_layout){
