@@ -821,6 +821,14 @@ void DOSBOX_Init()
 	        "                300 200 (Wait 300ms before fading out over a 200ms period)\n"
 	        "                1000 3000 (Wait 1s before fading out over a 3s period)");
 
+	pbool = secprop->Add_bool("opl_remove_dc_bias", when_idle, false);
+	pbool->Set_help(
+	        "Remove DC bias from the OPL output. This should only be used as a last resort\n"
+	        "to fix popping in games that play PCM audio using the OPL synthesiser on a\n"
+	        "Sound Blaster or AdLib card, such as in: Golden Eagle (1991), Wizardry 6\n"
+	        "(1990), and Wizardry 7 (1992). Please open an issue ticket if you find other\n"
+	        "affected games.");
+
 	pstring = secprop->Add_string("oplemu", deprecated, "");
 	pstring->Set_help("Only 'nuked' OPL emulation is supported now.");
 
