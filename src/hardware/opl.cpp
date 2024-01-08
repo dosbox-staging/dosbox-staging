@@ -513,7 +513,7 @@ io_port_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
 }
 
 template <LineIndex line_index>
-int16_t remove_running_average(const int16_t sample)
+int16_t remove_dc_bias(const int16_t back_sample)
 {
 	// Calculate the number of samples we need average across to maintain
 	// the lowest frequency given an assumed playback rate.
@@ -524,16 +524,28 @@ int16_t remove_running_average(const int16_t sample)
 	static int32_t sum = 0;
 	static std::queue<int16_t> samples = {};
 
-	sum += sample;
-	samples.push(sample);
+	// Clear the queue if the stream isn't biased
+	constexpr int16_t BiasThreshold = 5;
+	if (back_sample < BiasThreshold) {
+		sum = 0;
+		samples = {};
+		return back_sample;
+	}
 
-	int16_t average = 0;
+	// Keep a running sum and push the sample to the back of the queue
+	sum += back_sample;
+	samples.push(back_sample);
+
+	int16_t average      = 0;
+	int16_t front_sample = 0;
 	if (samples.size() == NumToAverage) {
+		// Compute the average and deduct it from the front sample
 		average = static_cast<int16_t>(sum / NumToAverage);
-		sum -= samples.front();
+		front_sample = samples.front();
+		sum -= front_sample;
 		samples.pop();
 	}
-	return static_cast<int16_t>(sample - average);
+	return static_cast<int16_t>(front_sample - average);
 }
 
 AudioFrame OPL::RenderFrame()
@@ -542,8 +554,8 @@ AudioFrame OPL::RenderFrame()
 	OPL3_GenerateStream(&oplchip, buf, 1);
 
 	if (ctrl.wants_dc_bias_removed) {
-		buf[0] = remove_running_average<Left>(buf[0]);
-		buf[1] = remove_running_average<Right>(buf[1]);
+		buf[0] = remove_dc_bias<Left>(buf[0]);
+		buf[1] = remove_dc_bias<Right>(buf[1]);
 	}
 
 	AudioFrame frame = {};
