@@ -1477,7 +1477,7 @@ static void composite_settings(Section_prop& secprop)
 
 	auto int_prop = secprop.Add_int("hue", when_idle, hue.get_default());
 	int_prop->SetMinMax(hue.get_min(), hue.get_max());
-	int_prop->Set_help(format_string("Appearance of RGB palette (%d by default).\n"
+	int_prop->Set_help(format_string("Hue of the RGB palette (%d by default).\n"
 	                                 "For example, adjust until the sky is blue.",
 	                                 hue.get_default()));
 

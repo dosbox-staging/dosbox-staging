@@ -1092,7 +1092,7 @@ public:
 		        "\n"
 		        "Notes:\n"
 		        "  The \"reelmagic = on\" configuration setting loads the\n"
-		        "  driver on start-up and prevents it from being unloaded.\n");
+		        "  driver on startup and prevents it from being unloaded.\n");
 
 		MSG_Add("PROGRAM_FMPDRV_TITLE",
 		        "ReelMagic Full Motion Player Driver (built-in) %hhu.%hhu\n");

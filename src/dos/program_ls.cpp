@@ -282,7 +282,7 @@ void LS::AddMessages()
 	        "\n"
 	        "Notes:\n"
 	        "  The command will list directories in [color=light-blue]blue[reset], executable DOS programs\n"
-	        "   (*.com, *.exe, *.bat) in [color=light-green]green[reset], and other files in the normal color.\n"
+	        "  (*.com, *.exe, *.bat) in [color=light-green]green[reset], and other files in the normal color.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]ls[reset] [color=light-cyan]file.txt[reset]\n"

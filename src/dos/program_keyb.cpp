@@ -96,24 +96,24 @@ void KEYB::Run(void) {
 }
 
 void KEYB::AddMessages() {
-	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded\n");
-	MSG_Add("PROGRAM_KEYB_INFO_LAYOUT","Codepage %i has been loaded for layout %s\n");
+	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded.\n");
+	MSG_Add("PROGRAM_KEYB_INFO_LAYOUT","Codepage %i has been loaded for layout %s.\n");
 	MSG_Add("PROGRAM_KEYB_HELP_LONG",
 	        "Configures a keyboard for a specific language.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]keyb[reset] [color=light-cyan][LANGCODE][reset]\n"
-	        "  [color=light-green]keyb[reset] [color=light-cyan]LANGCODE[reset] [color=white]CODEPAGE[reset] [CODEPAGEFILE]\n"
+	        "  [color=light-green]keyb[reset] [color=light-cyan]LANGCODE[reset] [color=white]CODEPAGE[reset] [color=white][CODEPAGEFILE][reset]\n"
 	        "\n"
 	        "Where:\n"
 	        "  [color=light-cyan]LANGCODE[reset]     is a language code or keyboard layout ID.\n"
 	        "  [color=white]CODEPAGE[reset]     is a code page number, such as [color=white]437[reset] and [color=white]850[reset].\n"
-	        "  CODEPAGEFILE is a file containing information for a code page.\n"
+	        "  [color=white]CODEPAGEFILE[reset] is a file containing information for a code page.\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running [color=light-green]keyb[reset] without an argument shows the currently loaded keyboard layout\n"
 	        "  and code page. It will change to [color=light-cyan]LANGCODE[reset] if provided, optionally with a\n"
-	        "  [color=white]CODEPAGE[reset] and an additional CODEPAGEFILE to load the specified code page\n"
+	        "  [color=white]CODEPAGE[reset] and an additional [color=white]CODEPAGEFILE[reset] to load the specified code page\n"
 	        "  number and code page file if provided. This command is especially useful if\n"
 	        "  you use a non-US keyboard, and [color=light-cyan]LANGCODE[reset] can also be set in the configuration\n"
 	        "  file under the [dos] section using the \"keyboardlayout = [color=light-cyan]LANGCODE[reset]\" setting.\n"
@@ -123,9 +123,9 @@ void KEYB::AddMessages() {
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi\n");
-	MSG_Add("PROGRAM_KEYB_NOERROR","Keyboard layout %s loaded for codepage %i\n");
-	MSG_Add("PROGRAM_KEYB_FILENOTFOUND","Keyboard file %s not found\n");
-	MSG_Add("PROGRAM_KEYB_INVALIDFILE","Keyboard file %s invalid\n");
-	MSG_Add("PROGRAM_KEYB_LAYOUTNOTFOUND","No layout in %s for codepage %i\n");
-	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s\n");
+	MSG_Add("PROGRAM_KEYB_NOERROR","Keyboard layout %s loaded for codepage %i.\n");
+	MSG_Add("PROGRAM_KEYB_FILENOTFOUND","Keyboard file %s not found.\n");
+	MSG_Add("PROGRAM_KEYB_INVALIDFILE","Keyboard file %s invalid.\n");
+	MSG_Add("PROGRAM_KEYB_LAYOUTNOTFOUND","No layout in %s for codepage %i.\n");
+	MSG_Add("PROGRAM_KEYB_INVCPFILE","None or invalid codepage file for layout %s.\n");
 }

@@ -122,8 +122,8 @@ void LOADROM::AddMessages()
 	        "  [color=light-cyan]IMAGEFILE[reset] is a video BIOS or IBM BASIC ROM image.\n"
 	        "\n"
 	        "Notes:\n"
-	        "   After loading an IBM BASIC ROM image into the emulated ROM with the command,\n"
-	        "   you can run the original IBM BASIC interpreter program in DOSBox Staging.\n"
+	        "  After loading an IBM BASIC ROM image into the emulated ROM with the command,\n"
+	        "  you can run the original IBM BASIC interpreter program in DOSBox Staging.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]loadrom[reset] [color=light-cyan]bios.rom[reset]\n");

@@ -238,8 +238,8 @@ void ShaderManager::AddMessages()
 	        "The above shaders can be used exactly as listed in the 'glshader'\n"
 	        "config setting, without the need for the resource path or .glsl extension.");
 
-	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS", "Path '%s' does not exist");
-	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS", "Path '%s' has no shaders");
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_NOT_EXISTS", "Path '%s' does not exist.");
+	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_NO_SHADERS", "Path '%s' has no shaders.");
 	MSG_Add("DOSBOX_HELP_LIST_GLSHADERS_LIST", "Path '%s' has:");
 }
 

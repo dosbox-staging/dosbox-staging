@@ -4189,7 +4189,7 @@ static void messages_add_command_line()
 	        "\n"
 	        "PATH                       If PATH is a directory, it's mounted as C:.\n"
 	        "                           If PATH is a bootable disk image (IMA/IMG), it's booted.\n"
-	        "                           If PATH is a CDROM image (CUE/ISO), it's mounted as D:.\n"
+	        "                           If PATH is a CD-ROM image (CUE/ISO), it's mounted as D:.\n"
 	        "                           If PATH is a DOS executable (BAT/COM/EXE), it's parent\n"
 	        "                           path is mounted as C: and the executable is run. When\n"
 	        "                           the executable exits, DOSBox Staging quits.\n"
@@ -4466,7 +4466,7 @@ static void config_add_sdl() {
 	        "Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the\n"
 	        "current version). Pre-configured maps are bundled in 'resources/mapperfiles'.\n"
 	        "These can be loaded by name, e.g., with 'mapperfile = xbox/xenon2.map'.\n"
-	        "Note: The --resetmapper command line option only deletes the default mapper\n"
+	        "Note: The '--resetmapper' command line option only deletes the default mapper\n"
 	        "      file.");
 
 	pstring = sdl_sec->Add_string("screensaver", on_start, "auto");

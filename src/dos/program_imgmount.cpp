@@ -618,7 +618,7 @@ void IMGMOUNT::AddMessages()
 	        "  [color=light-green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)\n"
 	        "\n"
 	        "Where:\n"
-	        "  [color=white]DRIVE[reset]     is the drive letter where the image will be mounted: a, c, d, ...\n"
+	        "  [color=white]DRIVE[reset]     is the drive letter where the image will be mounted: A, C, D, ...\n"
 	        "  [color=light-cyan]CDROM-SET[reset] is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
 	        "  [color=light-cyan]IMAGEFILE[reset] is a hard drive or floppy image in FAT16 or FAT12 format\n"
 	        "  [color=light-cyan]BOOTIMAGE[reset] is a bootable disk image with specified -size GEOMETRY:\n"
@@ -670,7 +670,7 @@ void IMGMOUNT::AddMessages()
 	MSG_Add("PROGRAM_IMGMOUNT_TYPE_UNSUPPORTED",
 	        "Type '%s' is unsupported. Specify 'floppy', 'hdd', 'cdrom', or 'iso'.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FORMAT_UNSUPPORTED",
-	        "Format \"%s\" is unsupported. Specify \"fat\" or \"iso\" or \"none\".\n");
+	        "Format '%s' is unsupported. Specify 'fat', 'iso', or 'none'.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_FILE",
 	        "Must specify file-image to mount.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_FILE_NOT_FOUND", "Image file not found.\n");
@@ -683,5 +683,5 @@ void IMGMOUNT::AddMessages()
 	MSG_Add("PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE",
 	        "The image must be on a host or local drive.\n");
 	MSG_Add("PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES",
-	        "Using multiple files is only supported for cue/iso images.\n");
+	        "Using multiple files is only supported for CUE/ISO images.\n");
 }

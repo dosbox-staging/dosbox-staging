@@ -1092,10 +1092,10 @@ static void init_render_settings(Section_prop& secprop)
 	        "                   image. This effectively emulates the horizontal and vertical\n"
 	        "                   stretch controls of CRT monitors.\n"
 	        "Notes:\n"
-	        " - Using 'relative' mode with 'integer_scaling' enabled could lead to\n"
-	        "   surprising (but correct) results.\n"
-	        " - You can use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey\n"
-	        "   actions to set the stretch in 'relative' mode in real-time.");
+	        "  - Using 'relative' mode with 'integer_scaling' enabled could lead to\n"
+	        "    surprising (but correct) results.\n"
+	        "  - You can use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey\n"
+	        "    actions to set the stretch in 'relative' mode in real-time.");
 
 	string_prop = secprop.Add_string("monochrome_palette",
 	                                 always,
@@ -1139,7 +1139,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "                 contrast.\n"
 	        "You can also set custom colours by specifying 16 space or comma separated\n"
 	        "colour values, either as 3 or 6-digit hex codes (e.g. #f00 or #ff0000 for full\n"
-	        "red), or decimal RGB triplets (e.g. (255, 0, 255) for magenta). The 16 colours\n"
+	        "red), or decimal RGB triplets (e.g. '(255, 0, 255)' for magenta). The 16 colours\n"
 	        "are ordered as follows:\n"
 	        "  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,\n"
 	        "  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.\n"
@@ -1183,7 +1183,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "                          like the thick scanlines but want to retain the\n"
 	        "                          horizontal sharpness of a typical PC monitor.\n"
 	        "Other options include 'sharp', 'none', a shader listed using the\n"
-	        "--list-glshaders command-line argument, or an absolute or relative path\n"
+	        "'--list-glshaders' command-line argument, or an absolute or relative path\n"
 	        "to a file. In all cases, you may omit the shader's '.glsl' file extension.");
 #endif
 }

@@ -554,24 +554,23 @@ void BOOT::AddMessages()
 	        "Examples:\n"
 	        "  [color=light-green]boot[reset] [color=white]c:[reset]\n"
 	        "  [color=light-green]boot[reset] [color=light-cyan]disk1.ima disk2.ima[reset]\n");
-	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist.  Failing.\n");
-	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file.  Failing.\n");
+	MSG_Add("PROGRAM_BOOT_NOT_EXIST","Bootdisk file does not exist. Failing.\n");
+	MSG_Add("PROGRAM_BOOT_NOT_OPEN","Cannot open bootdisk file. Failing.\n");
 	MSG_Add("PROGRAM_BOOT_WRITE_PROTECTED","Image file is read-only! Might create problems.\n");
 	MSG_Add("PROGRAM_BOOT_PRINT_ERROR",
 	        "This command boots DOSBox Staging from either a floppy or hard disk image.\n\n"
-	        "For this command, one can specify a succession of floppy disks swappable\n"
-	        "by pressing %s+F4, and -l specifies the mounted drive to boot from.  If\n"
-	        "no drive letter is specified, this defaults to booting from the A drive.\n"
-	        "The only bootable drive letters are A, C, and D.  For booting from a hard\n"
-	        "drive (C or D), the image should have already been mounted using the\n"
-	        "[color=light-blue]IMGMOUNT[reset] command.\n\n"
+	        "For this command, one can specify a succession of floppy disks swappable by\n"
+	        "pressing %s+F4, and -l specifies the mounted drive to boot from. If no drive\n"
+	        "letter is specified, this defaults to booting from the A drive. The only\n"
+	        "bootable drive letters are A, C, and D. For booting from a hard drive (C or D),\n"
+	        "the image should have already been mounted using the [color=light-blue]IMGMOUNT[reset] command.\n\n"
 	        "Type [color=light-blue]BOOT /?[reset] for the syntax of this command.\n");
-	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c");
+	MSG_Add("PROGRAM_BOOT_UNABLE","Unable to boot off of drive %c.\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_OPEN","Opening image file: %s\n");
 	MSG_Add("PROGRAM_BOOT_IMAGE_MOUNTED","Floppy image(s) already mounted.\n");
-	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s");
+	MSG_Add("PROGRAM_BOOT_IMAGE_NOT_OPEN","Cannot open %s\n");
 	MSG_Add("PROGRAM_BOOT_BOOT","Booting from drive %c...\n");
-	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCjr cartridge found, but machine is not PCjr");
-	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS", "Available PCjr cartridge commands: %s");
-	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS", "No PCjr cartridge commands found");
+	MSG_Add("PROGRAM_BOOT_CART_WO_PCJR","PCjr cartridge found, but machine is not PCjr.\n");
+	MSG_Add("PROGRAM_BOOT_CART_LIST_CMDS", "Available PCjr cartridge commands: %s\n");
+	MSG_Add("PROGRAM_BOOT_CART_NO_CMDS", "No PCjr cartridge commands found.\n");
 }
