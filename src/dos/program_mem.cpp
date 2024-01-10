@@ -125,9 +125,9 @@ void MEM::AddMessages()
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]mem[reset]\n");
-	MSG_Add("PROGRAM_MEM_CONVEN", "%10d kB free conventional memory\n");
-	MSG_Add("PROGRAM_MEM_EXTEND", "%10d kB free extended memory\n");
-	MSG_Add("PROGRAM_MEM_EXPAND", "%10d kB free expanded memory\n");
+	MSG_Add("PROGRAM_MEM_CONVEN", "%10d KB free conventional memory\n");
+	MSG_Add("PROGRAM_MEM_EXTEND", "%10d KB free extended memory\n");
+	MSG_Add("PROGRAM_MEM_EXPAND", "%10d KB free expanded memory\n");
 	MSG_Add("PROGRAM_MEM_UPPER",
-	        "%10d kB free upper memory in %d blocks (largest UMB %d kB)\n");
+	        "%10d KB free upper memory in %d blocks (largest UMB %d KB)\n");
 }

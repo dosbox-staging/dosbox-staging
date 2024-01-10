@@ -2973,7 +2973,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "  off:     No chorus (default).\n"
 	        "  on:      Enable chorus (normal preset).\n"
 	        "  light:   A light chorus effect (especially suited for synth music that\n"
-	        "           features lots of white noise.)\n"
+	        "           features lots of white noise).\n"
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
 	        "  strong:  An obvious and upfront chorus effect.\n"
 	        "Note: You can fine-tune each channel's chorus level using the MIXER.");

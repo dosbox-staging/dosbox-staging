@@ -411,9 +411,8 @@ static void config_init(Section_prop &secprop)
 	        "PS/2 AUX port mouse model:\n"
 	        "  standard:      3 buttons, standard PS/2 mouse.\n"
 	        "  intellimouse:  3 buttons + wheel, Microsoft IntelliMouse.\n"
-	        "  explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer.\n"
-	        "  none:          no PS/2 mouse emulated.\n"
-	        "Default: explorer");
+	        "  explorer:      5 buttons + wheel, Microsoft IntelliMouse Explorer (default).\n"
+	        "  none:          no PS/2 mouse emulated.");
 
 	prop_str = secprop.Add_string("com_mouse_model",
 	                              only_at_start,

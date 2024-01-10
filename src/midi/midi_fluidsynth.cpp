@@ -68,7 +68,7 @@ static void init_fluid_dosbox_settings(Section_prop& secprop)
 	        "When using custom values:\n"
 	        "  All five must be provided in-order and space-separated.\n"
 	        "  They are: voice-count level speed depth modulation-wave, where:\n"
-	        "    - voice-count is an integer from 0 to 99.\n"
+	        "    - voice-count is an integer from 0 to 99\n"
 	        "    - level is a decimal from 0.0 to 10.0\n"
 	        "    - speed is a decimal, measured in Hz, from 0.1 to 5.0\n"
 	        "    - depth is a decimal from 0.0 to 21.0\n"
