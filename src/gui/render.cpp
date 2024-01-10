@@ -593,17 +593,11 @@ bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_siz
                                   [[maybe_unused]] const VideoMode& video_mode,
                                   [[maybe_unused]] const bool reinit_render)
 {
-	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
-		return false;
-	}
+	// We always expect a valid canvas and DOS video mode
+	assert(!canvas_size_px.IsEmpty());
+	assert(video_mode.width > 0 && video_mode.height > 0);
 
-	// Currently, the init sequence is slightly different on Windows, macOS,
-	// and Linux. The first call to this function on Windows receives an
-	// uninitialised VideoMode param with width and height set to 0 which
-	// results in a crash. The proper fix is to make the init sequence 100%
-	// identical on all platforms, but in the interim this workaround will do.
-	if (canvas_size_px.IsEmpty() || video_mode.width == 0 ||
-	    video_mode.height == 0) {
+	if (GFX_GetRenderingBackend() != RenderingBackend::OpenGl) {
 		return false;
 	}
 

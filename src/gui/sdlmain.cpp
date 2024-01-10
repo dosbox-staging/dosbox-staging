@@ -766,7 +766,7 @@ static DosBox::Rect get_canvas_size_in_pixels(
 // any global structs to disentangle it from the existing sdl-main design.
 static void log_display_properties(const int render_width_px,
                                    const int render_height_px,
-                                   const VideoMode& video_mode,
+                                   const std::optional<VideoMode>& maybe_video_mode,
                                    const RenderingBackend rendering_backend)
 {
 	assert(render_width_px > 0 && render_height_px > 0);
@@ -781,8 +781,6 @@ static void log_display_properties(const int render_width_px,
 
 	[[maybe_unused]] const auto one_per_render_pixel_aspect = scale_y / scale_x;
 
-	const auto video_mode_desc = to_string(video_mode);
-
 	const char* frame_mode = nullptr;
 	switch (sdl.frame.mode) {
 	case FrameMode::Cfr: frame_mode = "CFR"; break;
@@ -794,16 +792,25 @@ static void log_display_properties(const int render_width_px,
 
 	const auto refresh_rate = VGA_GetPreferredRate();
 
-	LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
-	        "scaled to %dx%d pixels with 1:%1.6g (%d:%d) pixel aspect ratio",
-	        video_mode_desc.c_str(),
-	        refresh_rate,
-	        frame_mode,
-	        iroundf(draw_size_px.w),
-	        iroundf(draw_size_px.h),
-	        video_mode.pixel_aspect_ratio.Inverse().ToDouble(),
-	        static_cast<int32_t>(video_mode.pixel_aspect_ratio.Num()),
-	        static_cast<int32_t>(video_mode.pixel_aspect_ratio.Denom()));
+	if (maybe_video_mode) {
+		const auto video_mode_desc = to_string(*maybe_video_mode);
+		const auto& pixel_aspect_ratio = maybe_video_mode->pixel_aspect_ratio;
+
+		LOG_MSG("DISPLAY: %s at %2.5g Hz %s, "
+		        "scaled to %dx%d pixels with 1:%1.6g (%d:%d) pixel aspect ratio",
+		        video_mode_desc.c_str(),
+		        refresh_rate,
+		        frame_mode,
+		        iroundf(draw_size_px.w),
+		        iroundf(draw_size_px.h),
+		        pixel_aspect_ratio.Inverse().ToDouble(),
+		        static_cast<int32_t>(pixel_aspect_ratio.Num()),
+		        static_cast<int32_t>(pixel_aspect_ratio.Denom()));
+	} else {
+		LOG_MSG("SDL: Window size initialized to %dx%d pixels",
+		        iroundf(draw_size_px.w),
+		        iroundf(draw_size_px.h));
+	}
 
 #if 0
 	LOG_MSG("DISPLAY: render_width_px: %d, render_height_px: %d, "
@@ -1721,7 +1728,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	const bool double_width  = flags & GFX_DBL_W;
 	const bool double_height = flags & GFX_DBL_H;
 
-	sdl.draw.has_changed = (sdl.video_mode != video_mode ||
+	sdl.draw.has_changed = (sdl.maybe_video_mode != video_mode ||
 	                        sdl.draw.render_width_px != render_width_px ||
 	                        sdl.draw.render_height_px != render_height_px ||
 	                        sdl.draw.width_was_doubled != double_width ||
@@ -1735,7 +1742,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	sdl.draw.height_was_doubled        = double_height;
 	sdl.draw.render_pixel_aspect_ratio = render_pixel_aspect_ratio;
 
-	sdl.video_mode = video_mode;
+	sdl.maybe_video_mode = video_mode;
 
 	sdl.draw.callback = callback;
 
@@ -2209,7 +2216,7 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 	if (sdl.draw.has_changed) {
 		log_display_properties(sdl.draw.render_width_px,
 		                       sdl.draw.render_height_px,
-		                       sdl.video_mode,
+		                       sdl.maybe_video_mode,
 		                       sdl.rendering_backend);
 	}
 
@@ -2520,6 +2527,14 @@ static void update_frame_texture([[maybe_unused]] const uint16_t *changedLines)
 
 static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 {
+	// This should be impossible, but maybe the user is hitting the screen
+	// capture hotkey on startup even before DOS comes alive.
+	if (!sdl.maybe_video_mode) {
+		LOG_WARNING("SDL: The DOS video mode needs to be set "
+		            "before we can get the rendered image");
+		return {};
+	}
+
 	RenderedImage image = {};
 
 	// The draw rect can extends beyond the bounds of the window or the screen
@@ -2544,7 +2559,9 @@ static std::optional<RenderedImage> get_rendered_output_from_backbuffer()
 		image.params.double_height      = false;
 		image.params.pixel_aspect_ratio = {1};
 		image.params.pixel_format       = PixelFormat::BGR24_ByteArray;
-		image.params.video_mode         = sdl.video_mode;
+
+		assert(sdl.maybe_video_mode);
+		image.params.video_mode = *sdl.maybe_video_mode;
 
 		image.is_flipped_vertically = false;
 
@@ -3733,20 +3750,26 @@ static void finalise_window_state()
 
 static bool maybe_auto_switch_shader()
 {
-#if C_OPENGL
-	if (sdl.rendering_backend != RenderingBackend::OpenGl) {
+	// The shaders need the OpenGL backend
+	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
 		return false;
 	}
 
+	// The shaders need a canvas size as their target resolution
 	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
-	constexpr auto reinit_render = true;
+	if (canvas_size_px.IsEmpty()) {
+		return false;
+	}
 
+	// The shaders need the DOS mode to be set as their source resolution
+	if (!sdl.maybe_video_mode) {
+		return false;
+	}
+
+	constexpr auto reinit_render = true;
 	return RENDER_MaybeAutoSwitchShader(canvas_size_px,
-	                                    sdl.video_mode,
+	                                    *sdl.maybe_video_mode,
 	                                    reinit_render);
-#else
-	return false;
-#endif
 }
 
 bool GFX_Events()
@@ -3844,10 +3867,11 @@ bool GFX_Events()
 
 				if (prev_width != new_width ||
 				    prev_height != new_height) {
-					log_display_properties(sdl.draw.render_width_px,
-					                       sdl.draw.render_height_px,
-					                       sdl.video_mode,
-					                       sdl.rendering_backend);
+					log_display_properties(
+					        sdl.draw.render_width_px,
+					        sdl.draw.render_height_px,
+					        sdl.maybe_video_mode,
+					        sdl.rendering_backend);
 				}
 
 				prev_width  = new_width;
