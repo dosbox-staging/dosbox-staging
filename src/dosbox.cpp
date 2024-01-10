@@ -720,9 +720,9 @@ void DOSBOX_Init()
 	                              voodoo_memsizes[0]);
 	pstring->Set_values(voodoo_memsizes);
 	pstring->Set_help(
-	        "Set the amount of video memory for 3dfx Voodoo graphics, either 4 or 12 megabytes.\n"
-	        "The memory is used by the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU)\n"
-	        "as follows:\n"
+	        "Set the amount of video memory for 3dfx Voodoo graphics, either 4 or 12 MB.\n"
+	        "The memory is used by the Frame Buffer Interface (FBI) and Texture Mapping Unit\n"
+	        "(TMU) as follows:\n"
 	        "   4: 2 MB for the FBI and one TMU with 2 MB (default).\n"
 	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
 
@@ -817,8 +817,9 @@ void DOSBOX_Init()
 	        "  <custom>:  A custom fade-out definition in the following format:\n"
 	        "               WAIT FADE\n"
 	        "             Where WAIT is how long after the last IO port write fading begins,\n"
-	        "             ranging between 100 and 5000 milliseconds; and FADE is the fade-out\n"
-	        "             period, ranging between 10 and 3000 milliseconds. Examples:\n"
+	        "             ranging between 100 and 5000 milliseconds; and FADE is the\n"
+	        "             fade-out period, ranging between 10 and 3000 milliseconds.\n"
+		"             Examples:\n"
 	        "                300 200 (Wait 300ms before fading out over a 200ms period)\n"
 	        "                1000 3000 (Wait 1s before fading out over a 3s period)");
 
