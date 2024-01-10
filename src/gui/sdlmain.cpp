@@ -4369,7 +4369,8 @@ static void config_add_sdl() {
 	        "  adaptive:  Enables vsync when the frame rate is higher than the host rate,\n"
 	        "             but disables it when the frame rate drops below the host rate.\n"
 	        "             This is a reasonable alternative on macOS instead of 'on'.\n"
-	        "             Note: only valid in OpenGL output modes; otherwise treated as 'on'.\n"
+	        "             Note: only valid in OpenGL output modes; otherwise treated as\n"
+	        "             'on'.\n"
 	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
 	        "             the risk of tearing in some games.\n"
 	        "  yield:     Let the host's video driver control video synchronization.");
