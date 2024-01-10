@@ -878,8 +878,9 @@ de mostrar gráficos CGA o superiores. Configuraciones preestablecidas:
                  reducido.
 También puede establecer colores personalizados especificando 16 valores de
 color separados por espacios o comas, con códigos hexadecimales ya sea de 3 o 6
-dígitos (por ejemplo, '#f00' o '#ff0000' para un rojo puro), o triplas decimales
-RGB (por ejemplo '(255, 0, 255)' para magenta). Los 16 colores se ordenan así:
+dígitos (por ejemplo, '#f00' o '#ff0000' para un rojo puro), o triplas
+decimales RGB (por ejemplo '(255, 0, 255)' para magenta). Los 16 colores se
+ordenan así:
   negro, azul, verde, cian, rojo, magenta, marrón, gris claro, gris oscuro,
   azul claro, verde claro, cian claro, rojo claro, magenta claro, amarillo,
   blanco.
@@ -1092,7 +1093,7 @@ Puede mejorar la jugabilidad, especialmente en juegos rápidos (de recreativas,
 de disparos en primera persona, etc.), ya que para algunos juegos efectivamente
 incrementa la frecuencia de muestreo del ratón a 1000 Hz, sin incrementar la
 sobrecarga de las interrupciones.
-Puede causar problemas de compatibilidad. Lista de algunos juegos incompatibles:
+Puede causar problemas de compatibilidad. Algunos juegos incompatibles:
   - Ultima Underworld: The Stygian Abyss
   - Ultima Underworld II: Labyrinth of Worlds
 Por favor, reporte si encuentra otro juego incompatible, para que podamos
