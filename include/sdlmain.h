@@ -195,7 +195,8 @@ struct SDL_Block {
 		bool height_was_doubled = false;
 	} draw = {};
 
-	VideoMode video_mode = {};
+	// The DOS video mode is populated after we set up the SDL window.
+	std::optional<VideoMode> maybe_video_mode = {};
 
 	struct {
 		struct {
