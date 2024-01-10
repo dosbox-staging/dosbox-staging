@@ -132,6 +132,8 @@ void capture_midi_finalise()
 	if (fseek(midi.handle, midi_header_size_offset, SEEK_SET) != 0) {
 		LOG_WARNING("CAPTURE: Failed to seek in captured MIDI file '%s'",
 		            safe_strerror(errno).c_str());
+		fclose(midi.handle);
+		midi = {};
 		return;
 	}
 
