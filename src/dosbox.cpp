@@ -472,7 +472,7 @@ void DOSBOX_Init()
 	pstring = secprop->Add_string("language", always, "");
 	pstring->Set_help(
 	        "Select a language to use: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', or 'ru'\n"
-	        "(unset by default; this defaults to English)\n"
+	        "(unset by default; this defaults to English).\n"
 	        "Notes:\n"
 	        "  - This setting will override the 'LANG' environment variable, if set.\n"
 	        "  - The bundled 'resources/translations' directory with the executable holds\n"
@@ -692,12 +692,13 @@ void DOSBOX_Init()
 
 	pint = secprop->Add_int("cycleup", always, 10);
 	pint->SetMinMax(1, 1000000);
-	pint->Set_help("Number of cycles added or subtracted with speed control hotkeys\n"
-	               "(10 by default).");
+	pint->Set_help("Number of cycles added with the speed up hotkey (10 by default).\n"
+	               "Setting it lower than 100 will be a percentage.");
 
 	pint = secprop->Add_int("cycledown", always, 20);
 	pint->SetMinMax(1, 1000000);
-	pint->Set_help("Setting it lower than 100 will be a percentage (20 by default).");
+	pint->Set_help("Number of cycles subtracted with the slow down hotkey (20 by default).\n"
+	               "Setting it lower than 100 will be a percentage.");
 
 #if C_FPU
 	secprop->AddInitFunction(&FPU_Init);
@@ -722,7 +723,7 @@ void DOSBOX_Init()
 	        "Set the amount of video memory for 3dfx Voodoo graphics, either 4 or 12 megabytes.\n"
 	        "The memory is used by the Frame Buffer Interface (FBI) and Texture Mapping Unit (TMU)\n"
 	        "as follows:\n"
-	        "   4: 2 MB for the FBI and one TMU with 2 MB (default)\n"
+	        "   4: 2 MB for the FBI and one TMU with 2 MB (default).\n"
 	        "  12: 4 MB for the FBI and two TMUs, each with 4 MB.");
 
 	pbool = secprop->Add_bool("voodoo_multithreading", only_at_start, true);
@@ -730,9 +731,9 @@ void DOSBOX_Init()
 
 	pbool = secprop->Add_bool("voodoo_bilinear_filtering", only_at_start, false);
 	pbool->Set_help(
-	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture\n"
-	        "smoothing effect. Only suggested if you have a fast desktop-class\n"
-	        "CPU, as it can impact frame rates on slower systems (disabled by default).");
+	        "Use bilinear filtering to emulate the 3dfx Voodoo's texture smoothing effect\n"
+	        "(disabled by default). Only suggested if you have a fast desktop-class CPU, as\n"
+	        "it can impact frame rates on slower systems.");
 
 	// Configure capture
 	CAPTURE_AddConfigSection(control);
@@ -990,7 +991,7 @@ void DOSBOX_Init()
 	        "ReelMagic (aka REALmagic) MPEG playback support:\n"
 	        "  off:       Disable support (default).\n"
 	        "  cardonly:  Initialize the card without loading the FMPDRV.EXE driver.\n"
-	        "  on:        Initialize the card and load the FMPDRV.EXE on start-up.");
+	        "  on:        Initialize the card and load the FMPDRV.EXE on startup.");
 
 	pstring = secprop->Add_string("reelmagic_key", when_idle, "auto");
 	pstring->Set_help(
@@ -1020,7 +1021,7 @@ void DOSBOX_Init()
 	pstring->Set_help(
 	        "Type of joystick to emulate:\n"
 	        "  auto:      Detect and use any joystick(s), if possible (default).\n"
-	        "  2axis:     Support up to two joysticks, each with 2 axis\n"
+	        "  2axis:     Support up to two joysticks, each with 2 axis.\n"
 	        "  4axis:     Support the first joystick only, as a 4-axis type.\n"
 	        "  4axis_2:   Support the second joystick only, as a 4-axis type.\n"
 	        "  fcs:       Emulate joystick as an original Thrustmaster FCS.\n"
@@ -1032,7 +1033,7 @@ void DOSBOX_Init()
 	        "Remember to reset DOSBox's mapperfile if you saved it earlier.");
 
 	pbool = secprop->Add_bool("timed", when_idle, true);
-	pbool->Set_help("Enable timed intervals for axis (disabled by default).\n"
+	pbool->Set_help("Enable timed intervals for axis (enabled by default).\n"
 	                "Experiment with this option, if your joystick drifts away.");
 
 	pbool = secprop->Add_bool("autofire", when_idle, false);
@@ -1259,13 +1260,13 @@ void DOSBOX_Init()
 	        "  This will forward FTP, HTTP, and HTTPS into the DOS guest.\n"
 	        "If the ports are privileged on the host, a mapping can be used\n"
 	        "  host:guest  ..., (e.g., 8021:21 8080:80)\n"
-	        "  This will forward ports 8021 and 8080 to FTP and HTTP in the guest\n"
+	        "  This will forward ports 8021 and 8080 to FTP and HTTP in the guest.\n"
 	        "A range of adjacent ports can be abbreviated with a dash:\n"
 	        "  start-end ... (e.g., 27910-27960)\n"
 	        "  This will forward ports 27910 to 27960 into the DOS guest.\n"
 	        "Mappings and ranges can be combined, too:\n"
 	        "  hstart-hend:gstart-gend ..., (e.g, 8040-8080:20-60)\n"
-	        "  This forwards ports 8040 to 8080 into 20 to 60 in the guest\n"
+	        "  This forwards ports 8040 to 8080 into 20 to 60 in the guest.\n"
 	        "Notes:\n"
 	        "  - If mapped ranges differ, the shorter range is extended to fit.\n"
 	        "  - If conflicting host ports are given, only the first one is setup.\n"

@@ -142,7 +142,7 @@ void INTRO::AddMessages() {
 	MSG_Add("PROGRAM_INTRO_MOUNT_START",
 		"[erases=entire][color=light-green]Here are some commands to get you started:[reset]\n"
 		"Before you can use the files located on your own filesystem,\n"
-		"You have to mount the directory containing the files.\n"
+		"you have to mount the directory containing the files.\n"
 		"\n"
 		);
 	MSG_Add("PROGRAM_INTRO_MOUNT_WINDOWS",
@@ -183,7 +183,7 @@ void INTRO::AddMessages() {
 	        "Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:\n"
 	        "[color=light-blue]mount -listcd[reset]\n"
 	        "\n"
-	        "Additionally, you can use imgmount to mount iso or cue/bin images:\n"
+	        "Additionally, you can use imgmount to mount ISO or CUE/BIN images:\n"
 	        "[color=light-blue]imgmount D C:\\cd.iso -t cdrom[reset]\n"
 	        "[color=light-blue]imgmount D C:\\cd.cue -t cdrom[reset]\n");
 	MSG_Add("PROGRAM_INTRO_CDROM_OTHER",
@@ -204,7 +204,7 @@ void INTRO::AddMessages() {
 	        "Replace the [color=yellow]0[reset] in [color=light-blue]-usecd [color=yellow]0[reset] with the number reported for your CD-ROM if you type:\n"
 	        "[color=light-blue]mount -listcd[reset]\n"
 	        "\n"
-	        "Additionally, you can use imgmount to mount iso or cue/bin images:\n"
+	        "Additionally, you can use imgmount to mount ISO or CUE/BIN images:\n"
 	        "[color=light-blue]imgmount D ~/cd.iso -t cdrom[reset]\n"
 	        "[color=light-blue]imgmount D ~/cd.cue -t cdrom[reset]\n");
 	MSG_Add("PROGRAM_INTRO_SPECIAL",

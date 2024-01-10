@@ -547,9 +547,9 @@ void MOUSECTL::AddMessages()
 	        "  -reset         restores default mouse settings\n"
 	        "\n"
 	        "Notes:\n"
-	        "  If sensitivity or rate is omitted, it is reset to default value.\n"
-	        "  Mouse sensitivity set in the configuration file acts as global scale factor,\n"
-	        "  per-interface sensitivity set by this commands works on top of that.\n"
+	        "  - If sensitivity or rate is omitted, it is reset to default value.\n"
+	        "  - Mouse sensitivity set in the configuration file acts as global scale factor,\n"
+	        "    per-interface sensitivity set by this commands works on top of that.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map    ; asks user to select mice for a two player game");

@@ -489,9 +489,9 @@ void MOUNT::AddMessages() {
 #endif
 	);
 
-	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CDROMs found: %d\n");
+	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CD-ROMs found: %d\n");
 	MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
-	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory\n");
+	MSG_Add("PROGRAM_MOUNT_ERROR_2","%s isn't a directory.\n");
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE","Illegal type %s\n");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED","Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED","Drive %c isn't mounted.\n");
@@ -501,9 +501,13 @@ void MOUNT::AddMessages() {
 	MSG_Add("PROGRAM_MOUNT_WARNING_WIN","[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
 	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER","[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
 	MSG_Add("PROGRAM_MOUNT_NO_OPTION", "Warning: Ignoring unsupported option '%s'.\n");
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_NO_BASE","A normal directory needs to be MOUNTed first before an overlay can be added on top.\n");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_NO_BASE",
+	        "A normal directory needs to be MOUNTed first before an overlay can be added on\n"
+	        "top.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE","The overlay is NOT compatible with the drive that is specified.\n");
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_MIXED_BASE","The overlay needs to be specified using the same addressing as the underlying drive. No mixing of relative and absolute paths.");
+	MSG_Add("PROGRAM_MOUNT_OVERLAY_MIXED_BASE",
+	        "The overlay needs to be specified using the same addressing as the underlying\n"
+	        "drive. No mixing of relative and absolute paths.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE","The overlay directory can not be the same as underlying drive.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR","Something went wrong.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS","Overlay %s on drive %c mounted.\n");
