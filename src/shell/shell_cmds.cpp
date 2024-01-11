@@ -2179,7 +2179,7 @@ static std::vector<std::string> cmd_move_parse_sources(const char*& args)
 	std::string source;
 	std::vector<std::string> sources;
 
-	// Sources are seperated by commas and terminated by a trailing space
+	// Sources are separated by commas and terminated by a trailing space
 	while (parsing) {
 		const auto ch = *args;
 		switch (ch) {
