@@ -113,13 +113,13 @@ void LOADROM::Run(void)
 void LOADROM::AddMessages()
 {
 	MSG_Add("PROGRAM_LOADROM_HELP_LONG",
-	        "Loads a ROM image of the video BIOS or IBM BASIC.\n"
+	        "Load a ROM image of the video BIOS or IBM BASIC.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]loadrom [color=light-cyan]IMAGEFILE[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]IMAGEFILE[reset] is a video BIOS or IBM BASIC ROM image.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]IMAGEFILE[reset]  video BIOS or IBM BASIC ROM image\n"
 	        "\n"
 	        "Notes:\n"
 	        "  After loading an IBM BASIC ROM image into the emulated ROM with the command,\n"

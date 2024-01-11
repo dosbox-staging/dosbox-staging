@@ -269,16 +269,16 @@ void LS::AddMessages()
 	        "Unhandled wildcard pattern - '%s'\n");
 
 	MSG_Add("PROGRAM_LS_HELP_LONG",
-	        "Displays directory contents in wide list format.\n"
+	        "Display directory contents in wide list format.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]ls[reset] [[color=light-cyan]PATTERN[reset] [[color=light-cyan]PATTERN[reset], ...]] [[color=light-cyan]PATH[reset] [[color=light-cyan]PATH[reset], ...]] [/a]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]PATTERN[reset] can be either an exact filename or an inexact filename with\n"
-	        "          wildcards, which are the asterisk (*) and the question mark (?).\n"
-	        "  [color=light-cyan]PATH[reset]    is an exact path in a mounted DOS drive to list contents.\n"
-	        "  /a      lists all files and directories, including hidden and system.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]PATTERN[reset]  either an exact filename or an inexact filename with wildcards, which\n"
+	        "           are the asterisk (*) and the question mark (?)\n"
+	        "  [color=light-cyan]PATH[reset]     exact path in a mounted DOS drive to list contents\n"
+	        "  /a       list all files and directories, including hidden and system\n"
 	        "\n"
 	        "Notes:\n"
 	        "  The command will list directories in [color=light-blue]blue[reset], executable DOS programs\n"

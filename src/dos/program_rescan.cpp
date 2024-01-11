@@ -63,14 +63,14 @@ void RESCAN::Run(void)
 
 void RESCAN::AddMessages() {
 	MSG_Add("PROGRAM_RESCAN_HELP_LONG",
-	        "Scans for changes on mounted DOS drives.\n"
+	        "Scan for changes on mounted DOS drives.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]rescan[reset] [color=light-cyan]DRIVE[reset]\n"
 	        "  [color=light-green]rescan[reset] [/a]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]DRIVE[reset] is the drive to scan for changes.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]DRIVE[reset]  drive to scan for changes\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - Running [color=light-green]rescan[reset] without an argument scans for changes of the current drive.\n"

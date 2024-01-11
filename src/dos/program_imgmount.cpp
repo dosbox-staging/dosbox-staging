@@ -609,7 +609,7 @@ void IMGMOUNT::AddMessages()
 {
 	AddCommonMountMessages();
 	MSG_Add("PROGRAM_IMGMOUNT_HELP_LONG",
-	        "Mounts a CD-ROM, floppy, or disk image to a drive letter.\n"
+	        "Mount a CD-ROM, floppy, or disk image to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]CDROM-SET[reset] [-fs iso] [-ide] -t cdrom|iso\n"
@@ -617,12 +617,13 @@ void IMGMOUNT::AddMessages()
 	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]BOOTIMAGE[reset] [-fs fat|none] -t hdd -size GEOMETRY -ro\n"
 	        "  [color=light-green]imgmount[reset] -u [color=white]DRIVE[reset]  (unmounts the [color=white]DRIVE[reset]'s image)\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]DRIVE[reset]     is the drive letter where the image will be mounted: A, C, D, ...\n"
-	        "  [color=light-cyan]CDROM-SET[reset] is an ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
-	        "  [color=light-cyan]IMAGEFILE[reset] is a hard drive or floppy image in FAT16 or FAT12 format\n"
-	        "  [color=light-cyan]BOOTIMAGE[reset] is a bootable disk image with specified -size GEOMETRY:\n"
-	        "            bytes-per-sector,sectors-per-head,heads,cylinders\n"
+	        "Parameters:\n"
+	        "  [color=white]DRIVE[reset]      drive letter where the image will be mounted: A, C, D, ...\n"
+	        "  [color=light-cyan]CDROM-SET[reset]  ISO, CUE+BIN, CUE+ISO, or CUE+ISO+FLAC/OPUS/OGG/MP3/WAV\n"
+	        "  [color=light-cyan]IMAGEFILE[reset]  hard drive or floppy image in FAT16 or FAT12 format\n"
+	        "  [color=light-cyan]BOOTIMAGE[reset]  bootable disk image with specified -size GEOMETRY:\n"
+	        "             bytes-per-sector,sectors-per-head,heads,cylinders\n"
+	        "\n"
 	        "Notes:\n"
 	        "  - %s+F4 swaps & mounts the next [color=light-cyan]CDROM-SET[reset] or [color=light-cyan]BOOTIMAGE[reset], if provided.\n"
 	        "  - The -ro flag mounts the disk image in read-only (write-protected) mode.\n"

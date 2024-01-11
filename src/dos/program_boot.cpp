@@ -536,15 +536,15 @@ void BOOT::NotifyBooting()
 void BOOT::AddMessages()
 {
 	MSG_Add("PROGRAM_BOOT_HELP_LONG",
-	        "Boots DOSBox Staging from a DOS drive or disk image.\n"
+	        "Boot DOSBox Staging from a DOS drive or disk image.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]boot[reset] [color=white]DRIVE[reset]\n"
 	        "  [color=light-green]boot[reset] [color=light-cyan]IMAGEFILE[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]DRIVE[reset] is a drive to boot from, must be [color=white]A:[reset], [color=white]C:[reset], or [color=white]D:[reset].\n"
-	        "  [color=light-cyan]IMAGEFILE[reset] is one or more floppy images, separated by spaces.\n"
+	        "Parameters:\n"
+	        "  [color=white]DRIVE[reset]      drive to boot from, must be [color=white]A:[reset], [color=white]C:[reset], or [color=white]D:[reset]\n"
+	        "  [color=light-cyan]IMAGEFILE[reset]  one or more floppy images, separated by spaces\n"
 	        "\n"
 	        "Notes:\n"
 	        "  A DOS drive letter must have been mounted previously with [color=light-green]imgmount[reset] command.\n"

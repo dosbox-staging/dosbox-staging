@@ -164,16 +164,16 @@ void AUTOTYPE::Run()
 
 void AUTOTYPE::AddMessages() {
 	MSG_Add("PROGRAM_AUTOTYPE_HELP_LONG",
-	        "Performs scripted keyboard entry into a running DOS game.\n"
+	        "Perform scripted keyboard entry into a running DOS game.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]autotype[reset] -list\n"
 	        "  [color=light-green]autotype[reset] [-w [color=white]WAIT[reset]] [-p [color=white]PACE[reset]] [color=light-cyan]BUTTONS[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]WAIT[reset]    is the number of seconds to wait before typing begins (max of 30).\n"
-	        "  [color=white]PACE[reset]    is the number of seconds before each keystroke (max of 10).\n"
-	        "  [color=light-cyan]BUTTONS[reset] is one or more space-separated buttons.\n"
+	        "Parameters:\n"
+	        "  [color=white]WAIT[reset]     number of seconds to wait before typing begins (max of 30)\n"
+	        "  [color=white]PACE[reset]     number of seconds before each keystroke (max of 10)\n"
+	        "  [color=light-cyan]BUTTONS[reset]  one or more space-separated buttons\n"
 	        "\n"
 	        "Notes:\n"
 	        "  The [color=light-cyan]BUTTONS[reset] supplied in the command will be autotyped into running DOS games\n"

@@ -87,14 +87,14 @@ void LOADFIX::Run(void)
 
 void LOADFIX::AddMessages() {
 	MSG_Add("PROGRAM_LOADFIX_HELP_LONG",
-	        "Loads a program in the specific memory region and then runs it.\n"
+	        "Load a program in the specific memory region and then run it.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]loadfix[reset] [color=light-cyan]GAME[reset] [color=white][PARAMETERS][reset]\n"
 	        "  [color=light-green]loadfix[reset] [/d] (or [/f])[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]GAME[reset] is a game or program to be loaded, optionally with parameters.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]GAME[reset]  game or program to be loaded, optionally with parameters\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The most common use cases of this command are to fix DOS games or programs\n"

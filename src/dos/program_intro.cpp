@@ -111,14 +111,14 @@ void INTRO::Run(void) {
 
 void INTRO::AddMessages() {
 	MSG_Add("PROGRAM_INTRO_HELP",
-	        "Displays a full-screen introduction to DOSBox Staging.\n");
+	        "Display a full-screen introduction to DOSBox Staging.\n");
 	MSG_Add("PROGRAM_INTRO_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]intro[reset]\n"
 	        "  [color=light-green]intro[reset] [color=white]PAGE[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]PAGE[reset] is the page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset].\n"
+	        "Parameters:\n"
+	        "  [color=white]PAGE[reset]  page name to display, including [color=white]cdrom[reset], [color=white]mount[reset], and [color=white]special[reset]\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running [color=light-green]intro[reset] without an argument displays one information page at a time;\n"

@@ -449,7 +449,7 @@ showusage:
 void MOUNT::AddMessages() {
 	AddCommonMountMessages();
 	MSG_Add("PROGRAM_MOUNT_HELP",
-	        "Maps physical folders or drives to a virtual drive letter.\n");
+	        "Map physical folders or drives to a virtual drive letter.\n");
 
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG",
 	        "Mount a directory from the host OS to a drive letter.\n"
@@ -459,12 +459,12 @@ void MOUNT::AddMessages() {
 	        "  [color=light-green]mount[reset] -listcd / -cd (lists all detected CD-ROM drives and their numbers)\n"
 	        "  [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]DRIVE[reset]     the drive letter where the directory will be mounted: A, C, D, ...\n"
-	        "  [color=light-cyan]DIRECTORY[reset] is the directory on the host OS to be mounted\n"
-	        "  TYPE      type of the directory to mount: dir, floppy, cdrom, or overlay\n"
-	        "  SIZE      free space for the virtual drive (KB for floppies, MB otherwise)\n"
-	        "  LABEL     drive label name to be used\n"
+	        "Parameters:\n"
+	        "  [color=white]DRIVE[reset]      drive letter where the directory will be mounted: A, C, D, ...\n"
+	        "  [color=light-cyan]DIRECTORY[reset]  directory on the host OS to be mounted\n"
+	        "  TYPE       type of the directory to mount: dir, floppy, cdrom, or overlay\n"
+	        "  SIZE       free space for the virtual drive (KB for floppies, MB otherwise)\n"
+	        "  LABEL      drive label name to be used\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - '-t overlay' redirects writes for mounted drive to another directory.\n"
