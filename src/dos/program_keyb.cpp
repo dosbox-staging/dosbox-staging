@@ -99,16 +99,16 @@ void KEYB::AddMessages() {
 	MSG_Add("PROGRAM_KEYB_INFO","Codepage %i has been loaded.\n");
 	MSG_Add("PROGRAM_KEYB_INFO_LAYOUT","Codepage %i has been loaded for layout %s.\n");
 	MSG_Add("PROGRAM_KEYB_HELP_LONG",
-	        "Configures a keyboard for a specific language.\n"
+	        "Configure a keyboard for a specific language.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]keyb[reset] [color=light-cyan][LANGCODE][reset]\n"
 	        "  [color=light-green]keyb[reset] [color=light-cyan]LANGCODE[reset] [color=white]CODEPAGE[reset] [color=white][CODEPAGEFILE][reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]LANGCODE[reset]     is a language code or keyboard layout ID.\n"
-	        "  [color=white]CODEPAGE[reset]     is a code page number, such as [color=white]437[reset] and [color=white]850[reset].\n"
-	        "  [color=white]CODEPAGEFILE[reset] is a file containing information for a code page.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]LANGCODE[reset]      language code or keyboard layout ID\n"
+	        "  [color=white]CODEPAGE[reset]      code page number, such as [color=white]437[reset] and [color=white]850[reset]\n"
+	        "  [color=white]CODEPAGEFILE[reset]  file containing information for a code page\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running [color=light-green]keyb[reset] without an argument shows the currently loaded keyboard layout\n"

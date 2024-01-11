@@ -354,7 +354,7 @@ static void config_init(Section_prop &secprop)
 	                    "seamless mode (enabled by default).");
 
 	prop_bool = secprop.Add_bool("mouse_multi_display_aware", always, true);
-	prop_bool->Set_help("Allows seamless mouse behavior and mouse pointer release to work in fullscreen\n"
+	prop_bool->Set_help("Allow seamless mouse behavior and mouse pointer release to work in fullscreen\n"
 	                    "mode on systems with more than one display (enabled by default).\n"
 	                    "Note: You should disable this if it incorrectly detects multiple displays\n"
 	                    "      when only one should actually be used. This might happen if you are\n"
