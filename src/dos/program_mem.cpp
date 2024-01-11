@@ -111,12 +111,12 @@ void MEM::Run(void)
 void MEM::AddMessages()
 {
 	MSG_Add("PROGRAM_MEM_HELP_LONG",
-	        "Displays the DOS memory information.\n"
+	        "Display the DOS memory information.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]mem[reset]\n"
 	        "\n"
-	        "Where:\n"
+	        "Parameters:\n"
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"

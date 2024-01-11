@@ -661,14 +661,14 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_HELP", "If you want a list of all supported commands, run [color=yellow]help /all[reset]\n"
 			"A short list of the most often used commands:\n");
 	MSG_Add("SHELL_CMD_COMMAND_HELP_LONG",
-	        "Starts the DOSBox Staging command shell.\n"
+	        "Start the DOSBox Staging command shell.\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]command[reset]\n"
 	        "  [color=light-green]command[reset] /c (or /init) [color=light-cyan]COMMAND[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]COMMAND[reset] is a DOS command, game, or program to run.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]COMMAND[reset]  DOS command, game, or program to run\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - DOSBox Staging automatically starts a DOS command shell by invoking this\n"
@@ -693,7 +693,7 @@ void SHELL_Init() {
 	        "Try [color=yellow]cd %s[reset]\n");
 	MSG_Add("SHELL_CMD_CHDIR_HINT_3", "You are still on drive Z:; change to a mounted drive with [color=yellow]C:[reset].\n");
 
-	MSG_Add("SHELL_CMD_DATE_HELP", "Displays or changes the internal date.\n");
+	MSG_Add("SHELL_CMD_DATE_HELP", "Display or change the internal date.\n");
 	MSG_Add("SHELL_CMD_DATE_ERROR", "The specified date is not correct.\n");
 	MSG_Add("SHELL_CMD_DATE_DAYS", "3SunMonTueWedThuFriSat"); // "2SoMoDiMiDoFrSa"
 	MSG_Add("SHELL_CMD_DATE_NOW", "Current date: ");
@@ -705,8 +705,8 @@ void SHELL_Init() {
 	        "  [color=light-green]date[reset] /h\n"
 	        "  [color=light-green]date[reset] [color=light-cyan]DATE[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]DATE[reset] is the new date to set to, in the format of [color=light-cyan]%s[reset].\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]DATE[reset]  new date to set to, in the format of [color=light-cyan]%s[reset]\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running [color=light-green]date[reset] without an argument shows the current date, or a simple date\n"
@@ -718,7 +718,7 @@ void SHELL_Init() {
 	        "  [color=light-green]date[reset] /h\n"
 	        "  [color=light-green]date[reset] [color=light-cyan]%s[reset]\n");
 
-	MSG_Add("SHELL_CMD_TIME_HELP", "Displays or changes the internal time.\n");
+	MSG_Add("SHELL_CMD_TIME_HELP", "Display or change the internal time.\n");
 	MSG_Add("SHELL_CMD_TIME_ERROR", "The specified time is not correct.\n");
 	MSG_Add("SHELL_CMD_TIME_NOW", "Current time: ");
 	MSG_Add("SHELL_CMD_TIME_SETHLP", "Run [color=yellow]time %s[reset] to change the current time.\n");
@@ -728,8 +728,8 @@ void SHELL_Init() {
 	        "  [color=light-green]time[reset] /h\n"
 	        "  [color=light-green]time[reset] [color=light-cyan]TIME[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]TIME[reset] is the new time to set to, in the format of [color=light-cyan]%s[reset].\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]TIME[reset]  new time to set to, in the format of [color=light-cyan]%s[reset]\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running [color=light-green]time[reset] without an argument shows the current time, or a simple time\n"
@@ -770,13 +770,13 @@ void SHELL_Init() {
 
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND", "Illegal command: %s\n");
 	MSG_Add("SHELL_CMD_PAUSE", "Press any key to continue...");
-	MSG_Add("SHELL_CMD_PAUSE_HELP", "Waits for a keystroke to continue.\n");
+	MSG_Add("SHELL_CMD_PAUSE_HELP", "Wait for a keystroke to continue.\n");
 
 	MSG_Add("SHELL_CMD_PAUSE_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]pause[reset]\n"
 	        "\n"
-	        "Where:\n"
+	        "Parameters:\n"
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"
@@ -825,14 +825,14 @@ void SHELL_Init() {
 
 	MSG_Add("SHELL_STARTUP_SUB", "[color=light-green]" CANONICAL_PROJECT_NAME " %s[reset]\n");
 
-	MSG_Add("SHELL_CMD_CHDIR_HELP", "Displays or changes the current directory.\n");
+	MSG_Add("SHELL_CMD_CHDIR_HELP", "Display or change the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]cd[reset] [color=light-cyan]DIRECTORY[reset]\n"
 	        "  [color=light-green]chdir[reset] [color=light-cyan]DIRECTORY[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]DIRECTORY[reset] is the name of the directory to change to.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]DIRECTORY[reset]  name of the directory to change to\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running [color=light-green]cd[reset] without an argument displays the current directory.\n"
@@ -842,12 +842,12 @@ void SHELL_Init() {
 	        "  [color=light-green]cd[reset]\n"
 	        "  [color=light-green]cd[reset] [color=light-cyan]mydir[reset]\n");
 
-	MSG_Add("SHELL_CMD_CLS_HELP", "Clears the DOS screen.\n");
+	MSG_Add("SHELL_CMD_CLS_HELP", "Clear the DOS screen.\n");
 	MSG_Add("SHELL_CMD_CLS_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]cls[reset]\n"
 	        "\n"
-	        "Where:\n"
+	        "Parameters:\n"
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"
@@ -858,21 +858,21 @@ void SHELL_Init() {
 	        "  [color=light-green]cls[reset]\n");
 
 	MSG_Add("SHELL_CMD_DIR_HELP",
-	        "Displays a list of files and subdirectories in a directory.\n");
+	        "Display a list of files and subdirectories in a directory.\n");
 	MSG_Add("SHELL_CMD_DIR_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]dir[reset] [color=light-cyan][PATTERN][reset] [/w] \\[/b] [/p] [ad] [a-d] [/o[color=white]ORDER[reset]]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]PATTERN[reset] is either an exact filename or an inexact filename with wildcards,\n"
-	        "          which are the asterisk (*) and the question mark (?). A path can be\n"
-	        "          specified in the pattern to list contents in the specified directory.\n"
-	        "  [color=white]ORDER[reset]   is a listing order, including [color=white]n[reset] (by name, alphabetic), [color=white]s[reset] (by size,\n"
-	        "          smallest first), [color=white]e[reset] (by extension, alphabetic), [color=white]d[reset] (by date/time,\n"
-	        "          oldest first), with an optional [color=white]-[reset] prefix to reverse order.\n"
-	        "  /w      lists 5 files/directories in a row; /b      lists the names only.\n"
-	        "  /o[color=white]ORDER[reset] orders the list (see above)         /p      pauses after each screen.\n"
-	        "  /ad     lists all directories;              /a-d    lists all files.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]PATTERN[reset]  either an exact filename or an inexact filename with wildcards, which\n"
+	        "           are the asterisk (*) and the question mark (?); a path can be\n"
+	        "           specified in the pattern to list contents in the specified directory\n"
+	        "  [color=white]ORDER[reset]    listing order, including [color=white]n[reset] (by name, alphabetic), [color=white]s[reset] (by size,\n"
+	        "           smallest first), [color=white]e[reset] (by extension, alphabetic), and [color=white]d[reset] (by date/time,\n"
+	        "           oldest first), with an optional [color=white]-[reset] prefix to reverse order\n"
+	        "  /w       list 5 files/directories in a row;  /b       list the names only\n"
+	        "  /o[color=white]ORDER[reset]  order the list (see above);         /p       pause after each screen\n"
+	        "  /ad      list all directories;               /a-d     list all files\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running [color=light-green]dir[reset] without an argument lists all files and subdirectories in the\n"
@@ -884,15 +884,15 @@ void SHELL_Init() {
 	        "  [color=light-green]dir[reset] [color=light-cyan]c:\\games\\*.exe[reset] /b /o[color=white]-d[reset]\n");
 
 	MSG_Add("SHELL_CMD_ECHO_HELP",
-	        "Displays messages and enables/disables command echoing.\n");
+	        "Display messages and enable/disable command echoing.\n");
 	MSG_Add("SHELL_CMD_ECHO_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]echo[reset] [color=light-cyan][on|off][reset]\n"
 	        "  [color=light-green]echo[reset] [color=light-cyan][MESSAGE][reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]on|off[reset]  turns on/off command echoing.\n"
-	        "  [color=light-cyan]MESSAGE[reset] is the message to display.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]on|off[reset]   turn on/off command echoing\n"
+	        "  [color=light-cyan]MESSAGE[reset]  message to display\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - Running [color=light-green]echo[reset] without an argument shows the current on or off status.\n"
@@ -902,12 +902,12 @@ void SHELL_Init() {
 	        "  [color=light-green]echo[reset] [color=light-cyan]off[reset]\n"
 	        "  [color=light-green]echo[reset] [color=light-cyan]Hello world![reset]\n");
 
-	MSG_Add("SHELL_CMD_EXIT_HELP", "Exits from the DOS shell.\n");
+	MSG_Add("SHELL_CMD_EXIT_HELP", "Exit from the DOS shell.\n");
 	MSG_Add("SHELL_CMD_EXIT_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]exit[reset]\n"
 	        "\n"
-	        "Where:\n"
+	        "Parameters:\n"
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"
@@ -919,15 +919,15 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_EXIT_TOO_SOON", "Preventing an early 'exit' call from terminating.\n");
 
 	MSG_Add("SHELL_CMD_HELP_HELP",
-	        "Displays help information for DOS commands.\n");
+	        "Display help information for DOS commands.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]help[reset]\n"
 	        "  [color=light-green]help[reset] /a[ll]\n"
 	        "  [color=light-green]help[reset] [color=light-cyan]COMMAND[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]COMMAND[reset] is the name of an internal DOS command, such as [color=light-cyan]dir[reset].\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]COMMAND[reset]  name of an internal DOS command, such as [color=light-cyan]dir[reset]\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - Running [color=light-green]help[reset] without an argument displays a DOS command list.\n"
@@ -938,14 +938,14 @@ void SHELL_Init() {
 	        "  [color=light-green]help[reset] [color=light-cyan]dir[reset]\n"
 	        "  [color=light-green]help[reset] /all\n");
 
-	MSG_Add("SHELL_CMD_MKDIR_HELP", "Creates a directory.\n");
+	MSG_Add("SHELL_CMD_MKDIR_HELP", "Create a directory.\n");
 	MSG_Add("SHELL_CMD_MKDIR_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]md[reset] [color=light-cyan]DIRECTORY[reset]\n"
 	        "  [color=light-green]mkdir[reset] [color=light-cyan]DIRECTORY[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]DIRECTORY[reset] is the exact name of the directory to create.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]DIRECTORY[reset]  exact name of the directory to create\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The directory must not exist yet.\n"
@@ -955,14 +955,14 @@ void SHELL_Init() {
 	        "  [color=light-green]md[reset] [color=light-cyan]newdir[reset]\n"
 	        "  [color=light-green]md[reset] [color=light-cyan]c:\\games\\dir[reset]\n");
 
-	MSG_Add("SHELL_CMD_RMDIR_HELP", "Removes a directory.\n");
+	MSG_Add("SHELL_CMD_RMDIR_HELP", "Remove a directory.\n");
 	MSG_Add("SHELL_CMD_RMDIR_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]rd[reset] [color=light-cyan]DIRECTORY[reset]\n"
 	        "  [color=light-green]rmdir[reset] [color=light-cyan]DIRECTORY[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]DIRECTORY[reset] is the name of the directory to remove.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]DIRECTORY[reset]  name of the directory to remove\n"
 	        "\n"
 	        "Notes:\n"
 	        "  The directory must be empty, with no files or subdirectories.\n"
@@ -970,15 +970,15 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]rd[reset] [color=light-cyan]emptydir[reset]\n");
 
-	MSG_Add("SHELL_CMD_SET_HELP", "Displays or changes environment variables.\n");
+	MSG_Add("SHELL_CMD_SET_HELP", "Display or change environment variables.\n");
 	MSG_Add("SHELL_CMD_SET_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]set[reset]\n"
 	        "  [color=light-green]set[reset] [color=white]VARIABLE[reset]=[color=light-cyan][STRING][reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]VARIABLE[reset] is the name of the environment variable.\n"
-	        "  [color=light-cyan]STRING[reset]   is a series of characters to assign to the variable.\n"
+	        "Parameters:\n"
+	        "  [color=white]VARIABLE[reset]  name of the environment variable\n"
+	        "  [color=light-cyan]STRING[reset]    series of characters to assign to the variable\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - Assigning an empty string to the variable removes the variable.\n"
@@ -989,18 +989,18 @@ void SHELL_Init() {
 	        "  [color=light-green]set[reset] [color=white]name[reset]=[color=light-cyan]value[reset]\n");
 
 	MSG_Add("SHELL_CMD_IF_HELP",
-	        "Performs conditional processing in batch programs.\n");
+	        "Perform conditional processing in batch programs.\n");
 	MSG_Add("SHELL_CMD_IF_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]errorlevel[reset] [color=white]NUMBER[reset] COMMAND\n"
 	        "  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=white]STR1==STR2[reset] COMMAND\n"
 	        "  [color=light-green]if[reset] [color=light-magenta][not][reset] [color=light-cyan]exist[reset] [color=white]FILE[reset] COMMAND\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]NUMBER[reset]     is a positive integer less or equal to the desired value.\n"
-	        "  [color=white]STR1==STR2[reset] compares two text strings (case-sensitive).\n"
-	        "  [color=white]FILE[reset]       is an exact filename to check for existence.\n"
-	        "  COMMAND    is a DOS command or program to run, optionally with parameters.\n"
+	        "Parameters:\n"
+	        "  [color=white]NUMBER[reset]      positive integer less or equal to the desired value\n"
+	        "  [color=white]STR1==STR2[reset]  compare two text strings (case-sensitive)\n"
+	        "  [color=white]FILE[reset]        exact filename to check for existence\n"
+	        "  COMMAND     DOS command or program to run, optionally with parameters\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The COMMAND is run if any of the three conditions in the usage are met.\n"
@@ -1014,13 +1014,13 @@ void SHELL_Init() {
 	        "  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]file.txt[reset] exit\n");
 
 	MSG_Add("SHELL_CMD_GOTO_HELP",
-	        "Jumps to a labeled line in a batch program.\n");
+	        "Jump to a labeled line in a batch program.\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]goto[reset] [color=light-cyan]LABEL[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]LABEL[reset] is text string used in the batch program as a label.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]LABEL[reset]  text string used in the batch program as a label\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - A label is on a line by itself, beginning with a colon (:).\n"
@@ -1029,12 +1029,12 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]goto[reset] [color=light-cyan]mylabel[reset]\n");
 
-	MSG_Add("SHELL_CMD_SHIFT_HELP", "Left-shifts command-line parameters in a batch program.\n");
+	MSG_Add("SHELL_CMD_SHIFT_HELP", "Left-shift command-line parameters in a batch program.\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]shift[reset]\n"
 	        "\n"
-	        "Where:\n"
+	        "Parameters:\n"
 	        "  This command has no parameters.\n"
 	        "\n"
 	        "Notes:\n"
@@ -1044,13 +1044,13 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]shift[reset]\n");
 
-	MSG_Add("SHELL_CMD_TYPE_HELP", "Displays the contents of a text file.\n");
+	MSG_Add("SHELL_CMD_TYPE_HELP", "Display the contents of a text file.\n");
 	MSG_Add("SHELL_CMD_TYPE_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]type[reset] [color=light-cyan]FILE[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]FILE[reset] is the name of the file to display.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]FILE[reset]  name of the file to display\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The filename must be exact, optionally with a path.\n"
@@ -1060,13 +1060,13 @@ void SHELL_Init() {
 	        "  [color=light-green]type[reset] [color=light-cyan]text.txt[reset]\n"
 	        "  [color=light-green]type[reset] [color=light-cyan]c:\\dos\\readme.txt[reset]\n");
 
-	MSG_Add("SHELL_CMD_REM_HELP", "Adds comments in a batch program.\n");
+	MSG_Add("SHELL_CMD_REM_HELP", "Add comments in a batch program.\n");
 	MSG_Add("SHELL_CMD_REM_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]rem[reset] [color=light-cyan]COMMENT[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]COMMENT[reset] is any comment you want to add.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]COMMENT[reset]  any comment you want to add\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - Adding comments to a batch program can make it easier to understand.\n"
@@ -1077,15 +1077,15 @@ void SHELL_Init() {
 
 	MSG_Add("SHELL_CMD_NO_WILD", "This is a simple version of the command, no wildcards allowed!\n");
 
-	MSG_Add("SHELL_CMD_RENAME_HELP", "Renames one or more files.\n");
+	MSG_Add("SHELL_CMD_RENAME_HELP", "Rename one or more files.\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]ren[reset] [color=white]SOURCE[reset] [color=light-cyan]DESTINATION[reset]\n"
 	        "  [color=light-green]rename[reset] [color=white]SOURCE[reset] [color=light-cyan]DESTINATION[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]SOURCE[reset]      is the name of the file to rename.\n"
-	        "  [color=light-cyan]DESTINATION[reset] is the new name for the renamed file.\n"
+	        "Parameters:\n"
+	        "  [color=white]SOURCE[reset]       name of the file to rename\n"
+	        "  [color=light-cyan]DESTINATION[reset]  new name for the renamed file\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The source filename must be exact, optionally with a path.\n"
@@ -1095,16 +1095,17 @@ void SHELL_Init() {
 	        "  [color=light-green]ren[reset] [color=white]oldname[reset] [color=light-cyan]newname[reset]\n"
 	        "  [color=light-green]ren[reset] [color=white]c:\\dos\\file.txt[reset] [color=light-cyan]f.txt[reset]\n");
 
-	MSG_Add("SHELL_CMD_DELETE_HELP", "Removes one or more files.\n");
-	MSG_Add("SHELL_CMD_DELETE_HELP_LONG", "Usage:\n"
+	MSG_Add("SHELL_CMD_DELETE_HELP", "Remove one or more files.\n");
+	MSG_Add("SHELL_CMD_DELETE_HELP_LONG",
+	        "Usage:\n"
 	        "  [color=light-green]del[reset] [color=light-cyan]PATTERN[reset]\n"
 	        "  [color=light-green]erase[reset] [color=light-cyan]PATTERN[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]PATTERN[reset] can be either an exact filename (such as [color=light-cyan]file.txt[reset]) or an inexact\n"
-	        "          filename using one or more wildcards, which are the asterisk (*)\n"
-	        "          representing any sequence of one or more characters, and the question\n"
-	        "          mark (?) representing any single character, such as [color=light-cyan]*.bat[reset] and [color=light-cyan]c?.txt[reset].\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]PATTERN[reset]  either an exact filename (such as [color=light-cyan]file.txt[reset]) or an inexact filename\n"
+	        "           using one or more wildcards, which are the asterisk (*) representing\n"
+	        "           any sequence of one or more characters, and the question mark (?)\n"
+	        "           representing any single character, such as [color=light-cyan]*.bat[reset] and [color=light-cyan]c?.txt[reset].\n"
 	        "\n"
 	        "Warning:\n"
 	        "  Be careful when using a pattern with wildcards, especially [color=light-cyan]*.*[reset], as all files\n"
@@ -1115,16 +1116,16 @@ void SHELL_Init() {
 	        "  [color=light-green]del[reset] [color=light-cyan]c*.*[reset]\n"
 	        "  [color=light-green]del[reset] [color=light-cyan]a?b.c*[reset]\n");
 
-	MSG_Add("SHELL_CMD_COPY_HELP", "Copies one or more files.\n");
+	MSG_Add("SHELL_CMD_COPY_HELP", "Copy one or more files.\n");
 	MSG_Add("SHELL_CMD_COPY_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]copy[reset] [color=white]SOURCE[reset] [color=light-cyan][DESTINATION][reset]\n"
 	        "  [color=light-green]copy[reset] [color=white]SOURCE1+SOURCE2[+...][reset] [color=light-cyan][DESTINATION][reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]SOURCE[reset]      can be either an exact filename or an inexact filename with\n"
-	        "              wildcards, which are the asterisk (*) and the question mark (?).\n"
-	        "  [color=light-cyan]DESTINATION[reset] is an exact filename or directory, not containing any wildcards.\n"
+	        "Parameters:\n"
+	        "  [color=white]SOURCE[reset]       either an exact filename or an inexact filename with wildcards,\n"
+	        "               which are the asterisk (*) and the question mark (?)\n"
+	        "  [color=light-cyan]DESTINATION[reset]  exact filename or directory, not containing any wildcards\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The [color=white]+[reset] operator combines multiple source files provided to a single file.\n"
@@ -1136,14 +1137,14 @@ void SHELL_Init() {
 	        "  [color=light-green]copy[reset] [color=white]..\\c*.*[reset]\n");
 
 	MSG_Add("SHELL_CMD_CALL_HELP",
-	        "Starts a batch program from within another batch program.\n");
+	        "Start a batch program from within another batch program.\n");
 	MSG_Add("SHELL_CMD_CALL_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]call[reset] [color=white]BATCH[reset] [color=light-cyan][PARAMETERS][reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]BATCH[reset]      is a batch program to launch.\n"
-	        "  [color=light-cyan]PARAMETERS[reset] are optional parameters for the batch program.\n"
+	        "Parameters:\n"
+	        "  [color=white]BATCH[reset]       batch program to launch\n"
+	        "  [color=light-cyan]PARAMETERS[reset]  optional parameters for the batch program\n"
 	        "\n"
 	        "Notes:\n"
 	        "  After calling another batch program, the original batch program will resume\n"
@@ -1152,15 +1153,15 @@ void SHELL_Init() {
 	        "Examples:\n"
 	        "  [color=light-green]call[reset] [color=white]mybatch.bat[reset]\n"
 	        "  [color=light-green]call[reset] [color=white]file.bat[reset] [color=light-cyan]Hello world![reset]\n");
-	MSG_Add("SHELL_CMD_SUBST_HELP", "Assigns an internal directory to a drive.\n");
+	MSG_Add("SHELL_CMD_SUBST_HELP", "Assign an internal directory to a drive.\n");
 	MSG_Add("SHELL_CMD_SUBST_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]subst[reset] [color=white]DRIVE[reset] [color=light-cyan]PATH[reset]\n"
 	        "  [color=light-green]subst[reset] [color=white]DRIVE[reset] /d\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]DRIVE[reset] is a drive to which you want to assign a path.\n"
-	        "  [color=light-cyan]PATH[reset]  is a mounted DOS path you want to assign to.\n"
+	        "Parameters:\n"
+	        "  [color=white]DRIVE[reset]  drive to which you want to assign a path\n"
+	        "  [color=light-cyan]PATH[reset]   mounted DOS path you want to assign to\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The path must be on a drive mounted by the [color=light-green]mount[reset] command.\n"
@@ -1170,14 +1171,14 @@ void SHELL_Init() {
 	        "  [color=light-green]subst[reset] [color=white]d:[reset] [color=light-cyan]c:\\games[reset]\n"
 	        "  [color=light-green]subst[reset] [color=white]e:[reset] [color=light-cyan]/d[reset]\n");
 
-	MSG_Add("SHELL_CMD_LOADHIGH_HELP", "Loads a DOS program into upper memory.\n");
+	MSG_Add("SHELL_CMD_LOADHIGH_HELP", "Load a DOS program into upper memory.\n");
 	MSG_Add("SHELL_CMD_LOADHIGH_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]lh[reset] [color=light-cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]\n"
 	        "  [color=light-green]loadhigh[reset] [color=light-cyan]PROGRAM[reset] [color=white][PARAMETERS][reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]PROGRAM[reset] is a DOS TSR program to be loaded, optionally with parameters.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]PROGRAM[reset]  DOS TSR program to be loaded, optionally with parameters\n"
 	        "\n"
 	        "Notes:\n"
 	        "  This command intends to save the conventional memory by loading specified DOS\n"
@@ -1189,18 +1190,18 @@ void SHELL_Init() {
 	        "  [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]\n");
 
 	MSG_Add("SHELL_CMD_ATTRIB_HELP",
-			"Displays or changes file attributes.\n");
+			"Display or change file attributes.\n");
 	MSG_Add("SHELL_CMD_ATTRIB_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=light-cyan]PATTERN[reset] [/S]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]ATTRIBUTES[reset] are attributes to apply, including one or more of the following:\n"
-	        "             [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]\n"
-	        "             Where: R = Read-only, A = Archive, S = System, H = Hidden\n"
-	        "  [color=light-cyan]PATTERN[reset]    can be either an exact filename or an inexact filename with\n"
-	        "             wildcards, which are the asterisk (*) and the question mark (?),\n"
-	        "             or an exact name of a directory.\n"
+	        "Parameters:\n"
+	        "  [color=white]ATTRIBUTES[reset]  attributes to apply, including one or more of the following:\n"
+	        "              [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset]\n"
+	        "              where: R = Read-only, A = Archive, S = System, H = Hidden\n"
+	        "  [color=light-cyan]PATTERN[reset]     either an exact filename or an inexact filename with wildcards,\n"
+	        "              which are the asterisk (*) and the question mark (?), or an exact\n"
+	        "              name of a directory\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - Multiple attributes can be specified in the command, separated by spaces.\n"
@@ -1213,18 +1214,18 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_ATTRIB_SET_ERROR", "Unable to set attributes: %s\n");
 
 	MSG_Add("SHELL_CMD_CHOICE_HELP",
-	        "Waits for a keypress and sets an ERRORLEVEL value.\n");
+	        "Wait for a keypress and set an ERRORLEVEL value.\n");
 	MSG_Add("SHELL_CMD_CHOICE_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]choice[reset] [color=light-cyan][TEXT][reset]\n"
 	        "  [color=light-green]choice[reset] /c[:][color=white]CHOICES[reset] /n /s /t[:][color=white]c[reset],[color=light-magenta]nn[reset] [color=light-cyan][TEXT][reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]TEXT[reset]         is the text to display as a prompt, or empty.\n"
-	          "  /c[:][color=white]CHOICES[reset] specifies allowable keys, which default to [color=white]yn[reset].\n"
-	          "  /n           does not display the choices at end of prompt.\n"
-	          "  /s           enables case-sensitive choices to be selected.\n"
-	          "  /t[:][color=white]c[reset],[color=light-magenta]nn[reset]    chooses [color=white]c[reset] by default after [color=light-magenta]nn[reset] seconds.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]TEXT[reset]          text to display as a prompt, or empty\n"
+	        "  /c[:][color=white]CHOICES[reset]  specify allowable keys, which default to [color=white]yn[reset]\n"
+	        "  /n            do not display the choices at end of prompt\n"
+	        "  /s            enable case-sensitive choices to be selected\n"
+	        "  /t[:][color=white]c[reset],[color=light-magenta]nn[reset]     choose [color=white]c[reset] by default after [color=light-magenta]nn[reset] seconds\n"
 	        "\n"
 	        "Notes:\n"
 	        "  This command sets an ERRORLEVEL value starting from 1 according to the\n"
@@ -1239,25 +1240,25 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_CHOICE_ABORTED", "\n[color=yellow]Choice aborted.[reset]\n");
 
 	MSG_Add("SHELL_CMD_PATH_HELP",
-	        "Displays or sets a search path for executable files.\n");
+	        "Display or set a search path for executable files.\n");
 	MSG_Add("SHELL_CMD_PATH_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]path[reset]\n"
-	        "  [color=light-green]path[reset] [color=light-cyan][[DRIVE:]PATH[;...][reset]\n"
+	        "  [color=light-green]path[reset] [color=light-cyan][[DRIVE:]PATH[;...]][reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan][[DRIVE:]PATH[;...][reset] is a path containing a drive and directory.\n"
-	        "  More than one path can be specified, separated by a semi-colon (;).\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan][[DRIVE:]PATH[;...]][reset]  path(s) containing a drive and directory\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - Parameter with a semi-colon (;) only clears all search path settings.\n"
+	        "  - More than one path can be specified, separated by a semi-colon (;).\n"
+	        "  - Parameter with only a semi-colon (;) clears all search path settings.\n"
 	        "  - The path can also be set using the [color=light-green]set[reset] command, e.g. [color=light-green]set[reset] [color=white]path[reset]=[color=light-cyan]Z:\\[reset]\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]path[reset]\n"
 	        "  [color=light-green]path[reset] [color=light-cyan]Z:\\;C:\\DOS[reset]\n");
 
-	MSG_Add("SHELL_CMD_VER_HELP", "Displays the DOS version.\n");
+	MSG_Add("SHELL_CMD_VER_HELP", "Display the DOS version.\n");
 	MSG_Add("SHELL_CMD_VER_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]ver[reset]\n"
@@ -1276,13 +1277,13 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n");
 
 	MSG_Add("SHELL_CMD_VOL_HELP",
-	        "Displays the disk volume and serial number, if they exist.\n");
+	        "Display the disk volume and serial number, if they exist.\n");
 	MSG_Add("SHELL_CMD_VOL_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]vol[reset] [color=light-cyan][DRIVE:][reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=light-cyan]DRIVE[reset] is a drive letter followed by a colon.\n"
+	        "Parameters:\n"
+	        "  [color=light-cyan]DRIVE[reset]  drive letter followed by a colon\n"
 	        "\n"
 	        "Notes:\n"
 	        "  Running [color=light-green]vol[reset] without an argument uses the current drive.\n"
@@ -1297,18 +1298,18 @@ void SHELL_Init() {
 	        "\n");
 
 	MSG_Add("SHELL_CMD_MOVE_HELP",
-	        "Moves files and renames files and directories.\n");
+	        "Move files and rename files and directories.\n");
 	MSG_Add("SHELL_CMD_MOVE_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]move[reset] [color=white]FILENAME1[,FILENAME2,...][reset] [color=light-cyan]DESTINATION[reset]\n"
 	        "  [color=light-green]move[reset] [color=white]DIRECTORY1[reset] [color=light-cyan]DIRECTORY2[reset]\n"
 	        "\n"
-	        "Where:\n"
-	        "  [color=white]FILENAME[reset]    can be either an exact filename or an inexact filename with\n"
-	        "              wildcards, which are the asterisk (*) and the question mark (?).\n"
-	        "              Multiple, comma-seperated, filenames can be provided.\n"
-	        "  [color=white]DIRECTORY[reset]   is an exact directory name, not containing any wildcards.\n"
-	        "  [color=light-cyan]DESTINATION[reset] is an exact filename or directory, not containing any wildcards.\n"
+	        "Parameters:\n"
+	        "  [color=white]FILENAME[reset]     either an exact filename or an inexact filename with wildcards,\n"
+	        "               which are the asterisk (*) and the question mark (?);\n"
+	        "               multiple, comma-separated, filenames can be provided\n"
+	        "  [color=white]DIRECTORY[reset]    exact directory name, not containing any wildcards\n"
+	        "  [color=light-cyan]DESTINATION[reset]  exact filename or directory, not containing any wildcards\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - If multiple source files are specified, [color=light-cyan]DESTINATION[reset] must be a directory.\n"
@@ -1321,17 +1322,17 @@ void SHELL_Init() {
 	MSG_Add("SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE",
 	        "Cannot move multiple files to a single file.\n");
 	MSG_Add("SHELL_CMD_FOR_HELP",
-	        "Runs a specified command for each string in a set.\n");
+	        "Run a specified command for each string in a set.\n");
 	MSG_Add("SHELL_CMD_FOR_HELP_LONG",
 		"Usage:\n"
 		"  [color=light-green]for[reset] [color=white]%VAR[reset] [color=light-cyan]in[reset] [color=white](SET)[reset] [color=light-cyan]do[reset] [color=white]COMMAND[reset]\n"
 		"\n"
-		"Where:\n"
-		"  [color=white]%VAR[reset]    is a single character representing a variable, prefixed by a '%'.\n"
-		"  [color=light-cyan]in[reset]      is a case-insensitive keyword.\n"
-		"  [color=white](SET)[reset]   is the set of strings to replace [color=white]%VAR[reset] instances in [color=white]COMMAND[reset].\n"
-		"  [color=light-cyan]do[reset]      is a case-insensitive keyword.\n"
-		"  [color=white]COMMAND[reset] is the command to be repeated for each string in [color=white](SET)[reset].\n"
+		"Parameters:\n"
+		"  [color=white]%VAR[reset]     single character representing a variable, prefixed by a '%'\n"
+		"  [color=light-cyan]in[reset]       case-insensitive keyword\n"
+		"  [color=white](SET)[reset]    set of strings to replace [color=white]%VAR[reset] instances in [color=white]COMMAND[reset]\n"
+		"  [color=light-cyan]do[reset]       case-insensitive keyword\n"
+		"  [color=white]COMMAND[reset]  command to be repeated for each string in [color=white](SET)[reset]\n"
 		"\n"
 		"Notes:\n"
 		"  - In batch files, [color=white]%VAR[reset] must be written as [color=white]%%VAR[reset] (two percent signs) instead.\n"
