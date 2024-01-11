@@ -692,12 +692,12 @@ void DOSBOX_Init()
 
 	pint = secprop->Add_int("cycleup", always, 10);
 	pint->SetMinMax(1, 1000000);
-	pint->Set_help("Number of cycles added with the speed up hotkey (10 by default).\n"
+	pint->Set_help("Number of cycles added with the increase cycles hotkey (10 by default).\n"
 	               "Setting it lower than 100 will be a percentage.");
 
 	pint = secprop->Add_int("cycledown", always, 20);
 	pint->SetMinMax(1, 1000000);
-	pint->Set_help("Number of cycles subtracted with the slow down hotkey (20 by default).\n"
+	pint->Set_help("Number of cycles subtracted with the decrease cycles hotkey (20 by default).\n"
 	               "Setting it lower than 100 will be a percentage.");
 
 #if C_FPU
