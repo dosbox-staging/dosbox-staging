@@ -94,7 +94,7 @@ void LOADFIX::AddMessages() {
 	        "  [color=light-green]loadfix[reset] [/d] (or [/f])[reset]\n"
 	        "\n"
 	        "Parameters:\n"
-	        "  [color=light-cyan]GAME[reset]  game or program to be loaded, optionally with parameters\n"
+	        "  [color=light-cyan]GAME[reset]  game or program to load, optionally with parameters\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - The most common use cases of this command are to fix DOS games or programs\n"
