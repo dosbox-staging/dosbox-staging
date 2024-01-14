@@ -2877,11 +2877,16 @@ static void QueryJoysticks()
 	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK)
 		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 
+	const bool wants_auto_config = joytype & (JOY_AUTO | JOY_ONLY_FOR_MAPPING);
+
 	// Record how many joysticks are present and set our desired minimum axis
 	const auto num_joysticks = SDL_NumJoysticks();
 	if (num_joysticks < 0) {
 		LOG_WARNING("MAPPER: SDL_NumJoysticks() failed: %s", SDL_GetError());
 		LOG_WARNING("MAPPER: Skipping further joystick checks");
+		if (wants_auto_config) {
+			joytype = JOY_NONE_FOUND;
+		}
 		return;
 	}
 
@@ -2890,10 +2895,12 @@ static void QueryJoysticks()
 	mapper.sticks.num = static_cast<unsigned int>(num_joysticks);
 	if (num_joysticks == 0) {
 		LOG_MSG("MAPPER: No joysticks found");
+		if (wants_auto_config) {
+			joytype = JOY_NONE_FOUND;
+		}
 		return;
 	}
 
-	const bool wants_auto_config = joytype & (JOY_AUTO | JOY_ONLY_FOR_MAPPING);
 	if (!wants_auto_config)
 		return;
 
