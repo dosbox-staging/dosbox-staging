@@ -1487,6 +1487,7 @@ Override the frame rate code used during video playback:
 :CONFIG_JOYSTICKTYPE
 Type of joystick to emulate:
   auto:      Detect and use any joystick(s), if possible (default).
+             Joystick emulation is disabled if no joystick is found.
   2axis:     Support up to two joysticks, each with 2 axis.
   4axis:     Support the first joystick only, as a 4-axis type.
   4axis_2:   Support the second joystick only, as a 4-axis type.

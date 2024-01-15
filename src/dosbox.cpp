@@ -1022,6 +1022,7 @@ void DOSBOX_Init()
 	pstring->Set_help(
 	        "Type of joystick to emulate:\n"
 	        "  auto:      Detect and use any joystick(s), if possible (default).\n"
+	        "             Joystick emulation is disabled if no joystick is found.\n"
 	        "  2axis:     Support up to two joysticks, each with 2 axis.\n"
 	        "  4axis:     Support the first joystick only, as a 4-axis type.\n"
 	        "  4axis_2:   Support the second joystick only, as a 4-axis type.\n"
