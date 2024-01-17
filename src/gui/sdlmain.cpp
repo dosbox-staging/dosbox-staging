@@ -3751,7 +3751,7 @@ static void finalise_window_state()
 static bool maybe_auto_switch_shader()
 {
 	// The shaders need the OpenGL backend
-	if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+	if (sdl.rendering_backend != RenderingBackend::OpenGl) {
 		return false;
 	}
 
