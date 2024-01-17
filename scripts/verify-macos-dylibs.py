@@ -25,6 +25,7 @@ if __name__ == "__main__":
         "/System/Library/Frameworks/AudioToolbox.framework/",
         "/System/Library/Frameworks/AudioUnit.framework/",
         "/System/Library/Frameworks/Carbon.framework/",
+        "/System/Library/Frameworks/Cocoa.framework/",
         "/System/Library/Frameworks/CoreAudio.framework/",
         "/System/Library/Frameworks/CoreFoundation.framework/",
         "/System/Library/Frameworks/CoreGraphics.framework/",
@@ -38,6 +39,7 @@ if __name__ == "__main__":
         "/System/Library/Frameworks/IOKit.framework/",
         "/System/Library/Frameworks/Metal.framework/",
         "/System/Library/Frameworks/OpenGL.framework/",
+        "/System/Library/Frameworks/QuartzCore.framework/",
         "/usr/lib/",
     ]
 
