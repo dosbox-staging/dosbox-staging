@@ -150,7 +150,7 @@ jobs:
         runner:
           - host: [self-hosted, macOS, X64, release-builds]
             arch: x86_64
-            build_flags: -Db_lto=true -Db_lto_threads=4 --native-file=.github/meson/macos-arm64-to-x86_64-10.15-deployment-target.ini
+            # build_flags: -Db_lto=true -Db_lto_threads=4 --native-file=.github/meson/macos-arm64-to-x86_64-10.15-deployment-target.ini
             brew_path: /usr/local/homebrew
             minimum_deployment: '10.15'
             needs_deps: false
@@ -204,8 +204,7 @@ jobs:
       - name: Install C++ compiler and libraries
         if:   matrix.runner.needs_deps
         run: >-
-          arch -arch=${{ matrix.runner.arch }} brew install --overwrite librsvg tree
-          ccache libpng meson opusfile sdl2 sdl2_net speexdsp
+          brew install --overwrite librsvg tree ccache libpng meson opusfile sdl2 sdl2_net speexdsp
 
       - uses:  actions/cache@v3.3.2
         if:    matrix.runner.needs_deps
