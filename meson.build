@@ -1029,6 +1029,12 @@ if host_machine.system() == 'darwin'
         add_project_arguments('-lobjc', language: 'cpp')
     endif
 
+    # use SDL2 wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
+    sdl2_dep = subproject(
+        'sdl2',
+        default_options: default_wrap_options,
+    ).get_variable('sdl2_dep')
+
     # Core Audio
     coreaudio_dep = dependency(
         'appleframeworks',

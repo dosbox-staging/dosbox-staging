@@ -1,0 +1,15 @@
+[wrap-file]
+directory = SDL2-2.28.5
+source_url = https://github.com/libsdl-org/SDL/releases/download/release-2.28.5/SDL2-2.28.5.tar.gz
+source_filename = SDL2-2.28.5.tar.gz
+source_hash = 332cb37d0be20cb9541739c61f79bae5a477427d79ae85e352089afdaf6666e4
+patch_filename = sdl2_2.28.5-1_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/sdl2_2.28.5-1/get_patch
+patch_hash = 5d5f23359a841111e9b72060686a3ad8c4bf1eb4b338a36bdcdd4d37129d596c
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/sdl2_2.28.5-1/SDL2-2.28.5.tar.gz
+wrapdb_version = 2.28.5-1
+
+[provide]
+sdl2 = sdl2_dep
+sdl2main = sdl2main_dep
+sdl2_test = sdl2_test_dep
