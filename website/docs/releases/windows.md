@@ -63,6 +63,22 @@ for further details.
     Regular users should download the [current stable version](#current-stable-version)
     instead.
 
+    **0.81.0-RC2**
+
+    - [Download DOSBox Staging 0.81.0-RC2 64-bit (Installer)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-rc2/dosbox-staging-v0.81.0-rc2-setup.exe)
+      <br>
+      <small>
+      sha256: 93d13f8104b5a6a81a7e864ddb40f1b3<wbr>4f217e40966c5a7fd53ebf3cec3abe46
+      </small>
+
+    - [Download DOSBox Staging 0.81.0-RC2 64-bit (zip)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-rc2/dosbox-staging-windows-msys2-x86_64-v0.81.0-rc2.zip)
+      <br>
+      <small>
+      sha256: a3cbc1b65096476981b31a1c50fb4f27<wbr>42332015dfb912e5c8a4998066b22ac5
+      </small>
+
+    **0.81.0-RC1**
+
     - [Download DOSBox Staging 0.81.0-RC1 64-bit (Installer)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-rc1/dosbox-staging-v0.81.0-rc1-setup.exe)
       <br>
       <small>
