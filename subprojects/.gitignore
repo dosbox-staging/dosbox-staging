@@ -13,6 +13,7 @@ pcre*
 proxy-libintl*
 SDL2-*
 SDL2_image-*
+SDL2_net-*
 speexdsp-*
 tracy-*
 zlib*
