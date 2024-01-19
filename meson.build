@@ -669,12 +669,20 @@ opus_dep = dependency(
     include_type: 'system',
 )
 
-sdl2_dep = dependency(
-    'sdl2',
-    version: ['>= 2.0.5', '< 3'],
-    static: ('sdl2' in static_libs_list),
-    include_type: 'system',
-)
+if host_machine.system() == 'darwin'
+    # use SDL2 wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
+    sdl2_dep = subproject(
+        'sdl2',
+        default_options: default_wrap_options,
+    ).get_variable('sdl2_dep')
+else
+    sdl2_dep = dependency(
+        'sdl2',
+        version: ['>= 2.0.5', '< 3'],
+        static: ('sdl2' in static_libs_list),
+        include_type: 'system',
+    )
+endif
 
 # zlib
 # ~~~~
@@ -917,13 +925,21 @@ have_fd_zero = (
 sdl2_net_dep = optional_dep
 sdl2_net_summary_msg = 'Disabled'
 if get_option('use_sdl2_net')
-    sdl2_net_dep = dependency(
-        'SDL2_net',
-        version: ['>= 2.0.0', '< 3'],
-        static: ('sdl2_net' in static_libs_list),
-        not_found_message: msg.format('use_sdl2_net'),
-        include_type: 'system',
-    )
+    if host_machine.system() == 'darwin'
+        # use wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
+        sdl2_net_dep = subproject(
+            'sdl2_net',
+            default_options: default_wrap_options,
+        ).get_variable('sdl2_net_dep')
+    else
+        sdl2_net_dep = dependency(
+            'SDL2_net',
+            version: ['>= 2.0.0', '< 3'],
+            static: ('sdl2_net' in static_libs_list),
+            not_found_message: msg.format('use_sdl2_net'),
+            include_type: 'system',
+        )
+    endif
     sdl2_net_summary_msg = sdl2_net_dep.found()
 
     if sdl2_net_dep.found() and not have_fd_zero
@@ -1028,12 +1044,6 @@ if host_machine.system() == 'darwin'
     if cxx.has_argument('-lobjc')
         add_project_arguments('-lobjc', language: 'cpp')
     endif
-
-    # use SDL2 wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
-    sdl2_dep = subproject(
-        'sdl2',
-        default_options: default_wrap_options,
-    ).get_variable('sdl2_dep')
 
     # Core Audio
     coreaudio_dep = dependency(
