@@ -112,8 +112,7 @@ function set_ci_status(workflow_file, os_name, description) {
 document.addEventListener("DOMContentLoaded", () => {
     set_ci_status("linux.yml", "linux", "Linux x86-64");
     set_ci_status("macos.yml", "macos", "macOS ¹");
-    set_ci_status("windows-msys2.yml", "msys2", "Windows MSYS2 builds ²");
-    set_ci_status("windows-msvc.yml", "windows", "Windows MSVC builds ³");
+    set_ci_status("windows-msys2.yml", "windows", "Windows builds ²");
 });
 
 </script>
@@ -156,17 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
     </td>
   </tr>
   <tr>
-    <td id="msys2-build-link">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
-    </td>
-    <td id="msys2-build-version">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
-    </td>
-    <td id="msys2-build-date">
-      <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
-    </td>
-  </tr>
-  <tr>
     <td id="windows-build-link">
       <img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
     </td>
@@ -182,10 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 ¹ macOS builds include Intel, Apple silicon, and universal binaries.
 
-² Windows MSYS2 builds include 64-bit ZIP and Installer with both 64-bit MSYS2
-(default) and 64-bit MSVC (optional).
-
-³ Windows MSVC builds include 32-bit ZIP and 64-bit ZIP.
+² Windows builds are 64-bit and include portable ZIP and installer variants.
 
 
 ## Installation notes
