@@ -680,6 +680,7 @@ else
         'sdl2',
         version: ['>= 2.0.5', '< 3'],
         static: ('sdl2' in static_libs_list),
+        fallback: [],
         include_type: 'system',
     )
 endif
@@ -936,6 +937,7 @@ if get_option('use_sdl2_net')
             'SDL2_net',
             version: ['>= 2.0.0', '< 3'],
             static: ('sdl2_net' in static_libs_list),
+            fallback: [],
             not_found_message: msg.format('use_sdl2_net'),
             include_type: 'system',
         )
