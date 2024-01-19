@@ -37,6 +37,9 @@ the changes and improvements introduced in this release.
 
 ### Windows 7
 
+The official distribution packages only support Windows 7 up to version
+0.80.1.
+
 For 64-bit Windows 7, use the 64-bit MSVC build. It can be optionally selected
 in the [installer][0_80_1_x64_INSTALLER] and is also available as a [portable
 ZIP archive][0_80_1_x64_ZIP].
