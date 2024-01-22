@@ -42,7 +42,7 @@ the changes and improvements introduced by this release.
     - [Download DOSBox Staging 0.81.0-RC2 Universal Binary (dmg)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-rc2/dosbox-staging-macOS-v0.81.0-rc2.dmg)
       <br>
       <small>
-      sha256: 701f0ffa7920d782aeacca17a45b8b5f<wbr>164b6d8dbe083e3dd46526e13683d569
+      sha256: 2a425ea28b0b5e69edd743bcf219f124<wbr>03b3b696f55afc0f714c2b93fa2b3764
       </small>
 
     **0.81.0-RC1**
