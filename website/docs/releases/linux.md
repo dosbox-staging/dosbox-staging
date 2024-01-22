@@ -35,7 +35,7 @@ for now). They depend on the following packages:
     - [Download DOSBox Staging 0.81.0-RC2 (tar.xz)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-rc2/dosbox-staging-linux-v0.81.0-rc2.tar.xz)
       <br>
       <small>
-      sha256: 64c45b8bc6bb1f2e1d2969bd803bb81f<wbr>d4a728e2745576faf5c521a890d0cd32
+      sha256: da46e685d58494a585f3a9c70238ab58<wbr>2ded9a262383bf8872d8f394fb4a3dda
       </small>
 
     **0.81.0-RC1**
