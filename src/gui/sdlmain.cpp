@@ -4525,6 +4525,17 @@ extern void DEBUG_ShutDown(Section * /*sec*/);
 void MIXER_CloseAudioDevice(void);
 
 void restart_program(std::vector<std::string> & parameters) {
+#ifdef WIN32
+	std::string command_line = {};
+	bool first = true;
+	for (const auto &arg : parameters) {
+		if (!first) {
+			command_line.push_back(' ');
+		}
+		command_line.append(arg);
+		first = false;
+	}
+#else
 	char** newargs = new char* [parameters.size() + 1];
 	// parameter 0 is the executable path
 	// contents of the vector follow
@@ -4533,28 +4544,68 @@ void restart_program(std::vector<std::string> & parameters) {
 		newargs[i] = parameters[i].data();
 	}
 	newargs[parameters.size()] = nullptr;
+#endif // WIN32
+
 	MIXER_CloseAudioDevice();
 	Delay(50);
 	QuitSDL();
+
 #if C_DEBUG
 	// shutdown curses
 	DEBUG_ShutDown(nullptr);
-#endif
+#endif // C_DEBUG
 
-	if(execvp(newargs[0], newargs) == -1) {
 #ifdef WIN32
-		if(newargs[0][0] == '\"') {
-			//everything specifies quotes around it if it contains a space, however my system disagrees
-			std::string edit = parameters[0];
-			edit.erase(0,1);edit.erase(edit.length() - 1,1);
-			//However keep the first argument of the passed argv (newargs) with quotes, as else repeated restarts go wrong.
-			if(execvp(edit.c_str(), newargs) == -1) E_Exit("Restarting failed");
-		}
-#endif
+	// nullptr to parse from command line
+	const LPCSTR application_name = nullptr;
+
+	// nullptr for default
+	const LPSECURITY_ATTRIBUTES process_attributes = nullptr;
+
+	// nullptr for default
+	const LPSECURITY_ATTRIBUTES thread_attributes = nullptr;
+
+	const WINBOOL inherit_handles = FALSE;
+
+	// DETACHED_PROCESS fixes https://github.com/dosbox-staging/dosbox-staging/issues/3346
+	const DWORD creation_flags = DETACHED_PROCESS;
+
+	// nullptr to use parent's environment
+	const LPVOID environment_variables = nullptr;
+
+	// nullptr to use parent's current directory
+	const LPCSTR current_directory = nullptr;
+
+	// Input structure with a bunch of stuff we probably don't care about.
+	// Zero it out to use defaults save for the size field.
+	STARTUPINFO startup_info = {};
+	startup_info.cb = sizeof(startup_info);
+
+	// Output structure we also don't care about.
+	PROCESS_INFORMATION process_information = {};
+
+	if (!CreateProcess(
+			application_name,
+			const_cast<char *>(command_line.c_str()),
+			process_attributes,
+			thread_attributes,
+			inherit_handles,
+			creation_flags,
+			environment_variables,
+			current_directory,
+			&startup_info,
+			&process_information)) {
+		E_Exit("Restarting failed");
+	}
+	ExitProcess(ERROR_SUCCESS);
+#else
+	if (execvp(newargs[0], newargs) == -1) {
 		E_Exit("Restarting failed");
 	}
 	delete [] newargs;
+#endif // WIN32
 }
+
 void Restart(bool pressed) { // mapper handler
 	(void) pressed; // deliberately unused but required for API compliance
 	restart_program(control->startup_params);
