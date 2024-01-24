@@ -3572,7 +3572,7 @@ static void GUI_StartUp(Section* sec)
 	                  "shutdown", "Shutdown");
 
 	MAPPER_AddHandler(switch_fullscreen, SDL_SCANCODE_RETURN, MMOD2, "fullscr", "Fullscreen");
-	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, MMOD1 | MMOD2, "restart", "Restart");
+	MAPPER_AddHandler(Restart, SDL_SCANCODE_HOME, PRIMARY_MOD | MMOD2, "restart", "Restart");
 	MAPPER_AddHandler(MOUSE_ToggleUserCapture,
 	                  SDL_SCANCODE_F10,
 	                  PRIMARY_MOD,
