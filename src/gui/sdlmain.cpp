@@ -4567,8 +4567,10 @@ void restart_program(std::vector<std::string> & parameters) {
 
 	const WINBOOL inherit_handles = FALSE;
 
-	// DETACHED_PROCESS fixes https://github.com/dosbox-staging/dosbox-staging/issues/3346
-	const DWORD creation_flags = DETACHED_PROCESS;
+	// CREATE_NEW_CONSOLE fixes a bug where the parent process exiting kills the child process.
+	// This can manifest when you use the "restart" hotkey action to restart DOSBox.
+	// https://github.com/dosbox-staging/dosbox-staging/issues/3346
+	const DWORD creation_flags = CREATE_NEW_CONSOLE;
 
 	// nullptr to use parent's environment
 	const LPVOID environment_variables = nullptr;
