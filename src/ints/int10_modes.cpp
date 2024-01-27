@@ -608,6 +608,12 @@ static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mo
 				// at the end of the mode change process.
 				vga.mode_change_in_progress = true;
 
+				// Clear flag when setting up a new mode. This
+				// will only be set to true when the first
+				// non-EGA DAC palette colour is set in an EGA
+				// mode on a VGA adapter.
+				vga.ega_mode_with_vga_colors = false;
+
 				return true;
 			}
 			return false;

@@ -60,31 +60,80 @@ Note:  Each read or write of this register will cycle through first the
 
 enum { DacRead, DacWrite };
 
+static bool is_cga_color(const Rgb666 color)
+{
+	return std::find(palette.cga16.cbegin(), palette.cga16.cend(), color) !=
+	       palette.cga16.cend();
+}
+
+static bool is_ega_color(const Rgb666 color)
+{
+	return std::find(palette.ega.cbegin(), palette.ega.cend(), color) !=
+	       palette.ega.cend();
+}
+
 static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_idx)
 {
 	const auto rgb666 = vga.dac.rgb[color_idx];
 
+	// We might be in the middle of a mode change, so we can't use
+	// VGA_GetCurrentVideoMode() here. That's because the INT 10H mode
+	// change BIOS routine needs to set up the Palette and Color Registers
+	// which will trigger this function.
+	const auto bios_mode_number = CurMode->mode;
+
+	// In the automatic "video mode specific" CRT emulation mode, we want
+	// "true EGA" games (EGA modes with the default EGA palette on VGA) to
+	// use the single-scanline EGA shader. But VGA games that just happen to
+	// use EGA modes but with a 18-bit VGA palette should be rendered with
+	// the double-scanned VGA shader.
+	//
+	// This is accomplished by setting the `ega_mode_with_vga_colors` flag
+	// to true when the first non-EGA palette colour is set after a mode
+	// switch.
+	//
+	// Note that custom CGA colours (via the `cga_colors` setting) are
+	// handled correctly as well.
+	//
+	if (machine == MCH_VGA && !vga.ega_mode_with_vga_colors &&
+	    bios_mode_number <= MaxEgaBiosModeNumber) {
+		bool non_ega_color = false;
+
+		const auto is_640x350_16color_mode = (bios_mode_number == 0x10);
+
+		if (is_640x350_16color_mode) {
+			// The 640x350 16-colour EGA mode (mode 10h) is special:
+			// the 16 colors can be freely chosen from a gamut of 64
+			// colours (6-bit RGB).
+			non_ega_color = !is_ega_color(rgb666);
+		} else {
+			// In all other EGA modes, the fixed "canonical
+			// 16-element CGA palette" (as emulated by VGA cards) is
+			// used.
+			non_ega_color = !is_cga_color(rgb666);
+		}
+
+		if (non_ega_color) {
+			vga.ega_mode_with_vga_colors = true;
+
+			// If we're inside a mode change, the
+			// `ega_mode_with_vga_color` will be taken into account
+			// in VGA_GetCurrentVideoMode() which concludes the mode
+			// change process.
+			//
+			// But if a palette entry was set to a non-EGA colour
+			// after the mode change was completed, we need to
+			// notify the renderer so it can re-init itself and
+			// potentially switch the current shader.
+			if (!vga.mode_change_in_progress) {
+				RENDER_NotifyEgaModeWithVgaPalette();
+			}
+		}
+	}
+
 	const auto r8 = rgb6_to_8_lut(rgb666.red);
 	const auto g8 = rgb6_to_8_lut(rgb666.green);
 	const auto b8 = rgb6_to_8_lut(rgb666.blue);
-
-	const auto& video_mode = VGA_GetCurrentVideoMode();
-
-	constexpr auto mode_640x350_2color  = 0x0f;
-	constexpr auto mode_640x350_16color = 0x10;
-
-	if (machine == MCH_VGA && !vga.ega_mode_with_vga_colors &&
-	    video_mode.graphics_standard == GraphicsStandard::Ega &&
-	    (video_mode.bios_mode_number != mode_640x350_2color &&
-	     video_mode.bios_mode_number != mode_640x350_16color)) {
-
-		const auto default_color = palette.cga64[color_idx];
-
-		if (rgb666 != default_color) {
-			vga.ega_mode_with_vga_colors = true;
-			RENDER_NotifyEgaModeWithVgaPalette();
-		}
-	}
 
 	// Map the source color into palette's requested index
 	vga.dac.palette_map[palette_idx].Set(b8, g8, r8);

@@ -147,7 +147,7 @@ static void write_p3c0(io_port_t, io_val_t value, io_width_t)
 		case 0x0f:
 			// Index into the 256 color DAC table.
 			// May be modified by 3C0h index 10h and 14h.
-			if (vga.attr.disabled & 0x1) {
+			if (vga.attr.disabled) {
 				const auto index = vga.attr.index;
 				VGA_ATTR_SetPalette(index, PaletteRegister{val});
 			}

@@ -1887,7 +1887,6 @@ constexpr auto pixel_aspect_1280x1024 = Fraction(4, 3) / Fraction(1280, 1024);
 //   vga.draw.uses_vga_palette
 //   vga.draw.vblank_skip
 //   vga.draw.vret_triggered
-//   vga.ega_mode_with_vga_colors
 //
 ImageInfo setup_drawing()
 {
@@ -2942,11 +2941,6 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		}
 
 		previous_video_mode = image_info.video_mode;
-
-		// We always assume a "true EGA mode" first when switching to a
-		// new video mode, then set this flag to true once the first
-		// non-EGA palette colour has been set.
-		vga.ega_mode_with_vga_colors = false;
 	}
 
 	finalise_mode_change();
