@@ -79,8 +79,8 @@ void ShaderManager::NotifyGlshaderSettingChanged(const std::string& shader_name)
 	MaybeAutoSwitchShader();
 }
 
-void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect canvas_size_px,
-                                                  const VideoMode& video_mode)
+void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect new_canvas_size_px,
+                                                  const VideoMode& new_video_mode)
 {
 	// We need to calculate the scale factors for two eventualities: 1)
 	// potentially double-scanned, and 2) forced single-scanned output. Then
@@ -99,25 +99,30 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect canvas_size
 	// (i.e., always double scanning on VGA).
 	//
 	pixels_per_scanline = [&] {
-		const auto double_scan = video_mode.is_double_scanned_mode ? 2 : 1;
+		const auto double_scan = new_video_mode.is_double_scanned_mode ? 2 : 1;
 
-		const DosBox::Rect render_size_px = {video_mode.width * double_scan,
-		                                     video_mode.height * double_scan};
+		const DosBox::Rect render_size_px = {new_video_mode.width * double_scan,
+		                                     new_video_mode.height *
+		                                             double_scan};
 
 		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
-		        canvas_size_px, render_size_px, video_mode.pixel_aspect_ratio);
+		        new_canvas_size_px,
+		        render_size_px,
+		        new_video_mode.pixel_aspect_ratio);
 
 		return iroundf(draw_rect_px.h) / iroundf(render_size_px.h);
 	}();
 
 	// 2) Calculate vertical scale factor for forced single scanning on VGA
 	// for double-scanned modes.
-	if (video_mode.is_double_scanned_mode) {
-		const DosBox::Rect render_size_px = {video_mode.width,
-		                                     video_mode.height};
+	if (new_video_mode.is_double_scanned_mode) {
+		const DosBox::Rect render_size_px = {new_video_mode.width,
+		                                     new_video_mode.height};
 
 		const auto draw_rect_px = GFX_CalcDrawRectInPixels(
-		        canvas_size_px, render_size_px, video_mode.pixel_aspect_ratio);
+		        new_canvas_size_px,
+		        render_size_px,
+		        new_video_mode.pixel_aspect_ratio);
 
 		pixels_per_scanline_force_single_scan = iroundf(draw_rect_px.h) /
 		                                        iroundf(render_size_px.h);
@@ -125,7 +130,7 @@ void ShaderManager::NotifyRenderParametersChanged(const DosBox::Rect canvas_size
 		pixels_per_scanline_force_single_scan = pixels_per_scanline;
 	}
 
-	this->video_mode = video_mode;
+	video_mode = new_video_mode;
 
 	MaybeAutoSwitchShader();
 }

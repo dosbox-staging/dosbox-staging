@@ -32,8 +32,8 @@
 // A macro to simplify error handling a bit.
 #define RequireNoErr(error)                                         \
 do {                                                                \
-	err = error;                                                    \
-	if (err != noErr)                                               \
+	status = error;                                                 \
+	if (status != noErr)                                            \
 		goto bail;                                                  \
 } while (false)
 
@@ -88,7 +88,7 @@ public:
 
 	bool Open(const char *conf) override
 	{
-		OSStatus err = 0;
+		OSStatus status = 0;
 
 		if (m_auGraph)
 			return false;

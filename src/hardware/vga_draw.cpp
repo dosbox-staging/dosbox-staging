@@ -2841,20 +2841,20 @@ ImageInfo setup_drawing()
 	          vga.draw.delay.vrend);
 #endif
 
-	ImageInfo render = {};
+	ImageInfo img_info = {};
 
-	render.width                   = render_width;
-	render.height                  = render_height;
-	render.double_width            = double_width;
-	render.double_height           = double_height;
-	render.forced_single_scan      = forced_single_scan;
-	render.rendered_double_scan    = rendered_double_scan;
-	render.rendered_pixel_doubling = rendered_pixel_doubling;
-	render.pixel_aspect_ratio      = render_pixel_aspect_ratio;
-	render.pixel_format            = pixel_format;
-	render.video_mode              = video_mode;
+	img_info.width                   = render_width;
+	img_info.height                  = render_height;
+	img_info.double_width            = double_width;
+	img_info.double_height           = double_height;
+	img_info.forced_single_scan      = forced_single_scan;
+	img_info.rendered_double_scan    = rendered_double_scan;
+	img_info.rendered_pixel_doubling = rendered_pixel_doubling;
+	img_info.pixel_aspect_ratio      = render_pixel_aspect_ratio;
+	img_info.pixel_format            = pixel_format;
+	img_info.video_mode              = video_mode;
 
-	return render;
+	return img_info;
 }
 
 void VGA_SetupDrawing(uint32_t /*val*/)
