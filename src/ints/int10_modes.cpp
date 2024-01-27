@@ -603,6 +603,11 @@ static bool SetCurMode(const std::vector<VideoModeBlock>& modeblock, uint16_t mo
 			if (!int10.vesa_oldvbe ||
 			    ModeList_VGA[i].mode < vesa_2_0_modes_start) {
 				CurMode = modeblock.begin() + i;
+
+				// The flag will be reset by VGA_SetupDrawing()
+				// at the end of the mode change process.
+				vga.mode_change_in_progress = true;
+
 				return true;
 			}
 			return false;

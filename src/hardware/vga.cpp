@@ -480,7 +480,12 @@ void SVGA_Setup_Driver(void) {
 	}
 }
 
-const VideoMode& VGA_GetCurrentVideoMode() {
+const VideoMode& VGA_GetCurrentVideoMode()
+{
+	// This function would most likely return the previous video mode if
+	// called in the middle of a mode change.
+	assert(!vga.mode_change_in_progress);
+
 	return vga.draw.image_info.video_mode;
 }
 
