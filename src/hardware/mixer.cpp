@@ -2283,19 +2283,21 @@ static void mix_samples(const int frames_requested)
 	}
 
 	// Apply high-pass filter to the master output
-	auto pos = start_pos;
+	{
+		auto pos = start_pos;
 
-	for (work_index_t i = 0; i < frames_added; ++i) {
-		for (size_t ch = 0; ch < 2; ++ch) {
-			mixer.work[pos][ch] = mixer.highpass_filter[ch].filter(
-			        mixer.work[pos][ch]);
+		for (work_index_t i = 0; i < frames_added; ++i) {
+			for (size_t ch = 0; ch < 2; ++ch) {
+				mixer.work[pos][ch] = mixer.highpass_filter[ch].filter(
+						mixer.work[pos][ch]);
+			}
+			pos = (pos + 1) & MixerBufferMask;
 		}
-		pos = (pos + 1) & MixerBufferMask;
 	}
 
 	if (mixer.do_compressor) {
 		// Apply compressor to the master output as the very last step
-		pos = start_pos;
+		auto pos = start_pos;
 
 		for (work_index_t i = 0; i < frames_added; ++i) {
 			AudioFrame frame = {mixer.work[pos][0], mixer.work[pos][1]};

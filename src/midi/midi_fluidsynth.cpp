@@ -495,29 +495,29 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	                                      this,
 	                                      std::placeholders::_1);
 
-	auto mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                      audio_frame_rate_hz,
-	                                      ChannelName::FluidSynth,
-	                                      {ChannelFeature::Sleep,
-	                                       ChannelFeature::Stereo,
-	                                       ChannelFeature::ReverbSend,
-	                                       ChannelFeature::ChorusSend,
-	                                       ChannelFeature::Synthesizer});
+	auto fluidsynth_channel = MIXER_AddChannel(mixer_callback,
+	                                           audio_frame_rate_hz,
+	                                           ChannelName::FluidSynth,
+	                                           {ChannelFeature::Sleep,
+	                                            ChannelFeature::Stereo,
+	                                            ChannelFeature::ReverbSend,
+	                                            ChannelFeature::ChorusSend,
+	                                            ChannelFeature::Synthesizer});
 
 	// FluidSynth renders float audio frames between -1.0f and +1.0f, so we
 	// ask the channel to scale all the samples up to its 0db level.
-	mixer_channel->Set0dbScalar(Max16BitSampleValue);
+	fluidsynth_channel->Set0dbScalar(Max16BitSampleValue);
 
 	const std::string filter_prefs = section->Get_string("fsynth_filter");
 
-	if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
+	if (!fluidsynth_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (filter_prefs != "off") {
 			LOG_WARNING("FSYNTH: Invalid 'fsynth_filter' value: '%s', using 'off'",
 			            filter_prefs.c_str());
 		}
 
-		mixer_channel->SetHighPassFilter(FilterState::Off);
-		mixer_channel->SetLowPassFilter(FilterState::Off);
+		fluidsynth_channel->SetHighPassFilter(FilterState::Off);
+		fluidsynth_channel->SetLowPassFilter(FilterState::Off);
 	}
 
 	// Double the baseline PCM prebuffer because MIDI is demanding and
@@ -551,7 +551,7 @@ bool MidiHandlerFluidsynth::Open([[maybe_unused]] const char* conf)
 	// objects into the member variables.
 	settings      = std::move(fluid_settings);
 	synth         = std::move(fluid_synth);
-	channel       = std::move(mixer_channel);
+	mixer_channel = std::move(fluidsynth_channel);
 	selected_font = soundfont;
 
 	// Start rendering audio
@@ -584,8 +584,8 @@ void MidiHandlerFluidsynth::Close()
 	}
 
 	// Stop playback
-	if (channel) {
-		channel->Enable(false);
+	if (mixer_channel) {
+		mixer_channel->Enable(false);
 	}
 
 	// Stop queueing new MIDI work and audio frames
@@ -603,9 +603,9 @@ void MidiHandlerFluidsynth::Close()
 	selected_font.clear();
 
 	// Deregister the mixer channel and remove it
-	assert(channel);
-	MIXER_DeregisterChannel(channel);
-	channel.reset();
+	assert(mixer_channel);
+	MIXER_DeregisterChannel(mixer_channel);
+	mixer_channel.reset();
 
 	last_rendered_ms   = 0.0;
 	ms_per_audio_frame = 0.0;
@@ -618,8 +618,8 @@ uint16_t MidiHandlerFluidsynth::GetNumPendingAudioFrames()
 	const auto now_ms = PIC_FullIndex();
 
 	// Wake up the channel and update the last rendered time datum.
-	assert(channel);
-	if (channel->WakeUp()) {
+	assert(mixer_channel);
+	if (mixer_channel->WakeUp()) {
 		last_rendered_ms = now_ms;
 		return 0;
 	}
@@ -737,7 +737,7 @@ void MidiHandlerFluidsynth::ApplySysexMessage(const std::vector<uint8_t>& msg)
 // the mixer until the requested numbers of audio frames is met.
 void MidiHandlerFluidsynth::MixerCallBack(const uint16_t requested_audio_frames)
 {
-	assert(channel);
+	assert(mixer_channel);
 
 	// Report buffer underruns
 	constexpr auto warning_percent = 5.0f;
@@ -758,12 +758,12 @@ void MidiHandlerFluidsynth::MixerCallBack(const uint16_t requested_audio_frames)
 
 	if (has_dequeued) {
 		assert(audio_frames.size() == requested_audio_frames);
-		channel->AddSamples_sfloat(requested_audio_frames,
-		                           &audio_frames[0][0]);
+		mixer_channel->AddSamples_sfloat(requested_audio_frames,
+		                                 &audio_frames[0][0]);
 		last_rendered_ms = PIC_FullIndex();
 	} else {
 		assert(!audio_frame_fifo.IsRunning());
-		channel->AddSilence();
+		mixer_channel->AddSilence();
 	}
 }
 
@@ -885,22 +885,22 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 		}
 	};
 
-	// Print SoundFont found from user config,
-	std::error_code ec = {};
-	if (std_fs::is_regular_file(found_soundfont, ec)) {
+	// Print SoundFont found from user config.
+	std::error_code err = {};
+
+	if (std_fs::is_regular_file(found_soundfont, err)) {
 		write_line(found_soundfont);
 	}
 
 	// Go through all SoundFont directories and list all .sf2 files.
 	for (const auto& dir_path : get_data_dirs()) {
-		std::error_code ec = {};
-		for (const auto& entry : std_fs::directory_iterator(dir_path, ec)) {
-			if (ec) {
+		for (const auto& entry : std_fs::directory_iterator(dir_path, err)) {
+			if (err) {
 				// Problem iterating, so skip the directory
 				break;
 			}
 
-			if (!entry.is_regular_file(ec)) {
+			if (!entry.is_regular_file(err)) {
 				// Problem with entry, move onto the next one
 				continue;
 			}

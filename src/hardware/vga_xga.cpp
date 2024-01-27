@@ -624,12 +624,15 @@ static void DrawWaitSub(uint32_t mixmode, Bitu srcval)
 
 void XGA_DrawWait(uint32_t val, io_width_t width)
 {
-	if (!xga.waitcmd.wait)
+	if (!xga.waitcmd.wait) {
 		return;
+	}
+
 	uint32_t mixmode = (xga.pix_cntl >> 6) & 0x3;
+
 	Bitu srcval;
 	Bitu chunksize = 0;
-	Bitu chunks = 0;
+	Bitu chunks    = 0;
 
 	const uint8_t len = (width == io_width_t::dword  ? 4
 	                     : width == io_width_t::word ? 2
@@ -752,9 +755,9 @@ void XGA_DrawWait(uint32_t val, io_width_t width)
 					                     1) + chunksize * k;
 					const auto mask = static_cast<uint64_t>(1) << lshift;
 
-					const uint32_t mixmode = (val & mask)
-					                                 ? xga.foremix
-					                                 : xga.backmix;
+					mixmode = (val & mask) ? xga.foremix
+					                       : xga.backmix;
+
 					switch ((mixmode >> 5) & 0x03) {
 					case 0x00: // Src is background color
 						srcval = xga.backcolor;

@@ -1141,21 +1141,21 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
-void VGA_SetMonochromePalette(const enum MonochromePalette palette)
+void VGA_SetMonochromePalette(const enum MonochromePalette _palette)
 {
 	if (machine == MCH_HERC) {
-		hercules_palette = palette;
+		hercules_palette = _palette;
 		VGA_SetHerculesPalette();
 
 	} else if (machine == MCH_CGA && mono_cga) {
-		mono_cga_palette = palette;
+		mono_cga_palette = _palette;
 		VGA_SetMonochromeCgaPalette();
 	}
 }
 
-static MonochromePalette cycle_forward(const MonochromePalette palette)
+static MonochromePalette cycle_forward(const MonochromePalette _palette)
 {
-	auto value = (enum_val(palette) + 1) % NumMonochromePalettes;
+	auto value = (enum_val(_palette) + 1) % NumMonochromePalettes;
 	return static_cast<MonochromePalette>(value);
 }
 
