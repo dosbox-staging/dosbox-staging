@@ -2857,12 +2857,23 @@ ImageInfo setup_drawing()
 	return img_info;
 }
 
+static void finalise_mode_change()
+{
+	// The assumption is that all mode changes eventually call
+	// VGA_SetupDrawing() which concludes the mode change process.
+	// If this assumption turns out to be false, we'll need to
+	// revisit the logic that resets this flag.
+	vga.mode_change_in_progress = false;
+}
+
 void VGA_SetupDrawing(uint32_t /*val*/)
 {
 	if (vga.mode == M_ERROR) {
 		PIC_RemoveEvents(VGA_VerticalTimer);
 		PIC_RemoveEvents(VGA_PanningLatch);
 		PIC_RemoveEvents(VGA_DisplayStartLatch);
+
+		finalise_mode_change();
 		return;
 	}
 
@@ -2937,6 +2948,8 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		// non-EGA palette colour has been set.
 		vga.ega_mode_with_vga_colors = false;
 	}
+
+	finalise_mode_change();
 }
 
 void VGA_KillDrawing(void) {
