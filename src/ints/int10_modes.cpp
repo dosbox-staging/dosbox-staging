@@ -1673,16 +1673,11 @@ att_text16:
 		break;
 	}
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
+
 	if ((modeset_ctl & 8)==0) {
-		for (uint8_t ct=0;ct<ATT_REGS;ct++) {
-			IO_Write(0x3c0,ct);
-			IO_Write(0x3c0,att_data[ct]);
-		}
-		vga.config.pel_panning = 0;
-		IO_Write(0x3c0,0x20); IO_Write(0x3c0,0x00); //Disable palette access
-		IO_Write(0x3c6,0xff); //Reset Pelmask
-		//  Setup the DAC
-		IO_Write(0x3c8,0);
+		// Set up Color Registers (DAC colours)
+		IO_Write(0x3c8, 0);
+
 		switch (CurMode->type) {
 		case M_EGA:
 			if (CurMode->mode > 0xf)
@@ -1740,6 +1735,22 @@ dac_text16:
 			assert(false);
 			break;
 		}
+
+		// Set up Palette Registers
+		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
+			IO_Write(0x3c0, ct);
+			IO_Write(0x3c0, att_data[ct]);
+		}
+
+		vga.config.pel_panning = 0;
+
+		// Disable palette access
+		IO_Write(0x3c0, 0x20);
+		IO_Write(0x3c0, 0x00);
+
+		// Reset PEL mask
+		IO_Write(0x3c6, 0xff);
+
 		if (IS_VGA_ARCH) {
 			//  check if gray scale summing is enabled
 			if (real_readb(BIOSMEM_SEG,BIOSMEM_MODESET_CTL) & 2) {
@@ -1884,13 +1895,17 @@ dac_text16:
 
 	//  Set vga attrib register into defined state
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
-	IO_Write(0x3c0,0x20);
+
+	// Disable palette access
+	IO_Write(0x3c0, 0x20);
+
 	IO_Read(mono_mode ? 0x3ba : 0x3da); // Kukoo2 demo
 
 	//  Load text mode font
 	if (CurMode->type==M_TEXT) {
 		INT10_ReloadFont();
 	}
+
 	return true;
 }
 
