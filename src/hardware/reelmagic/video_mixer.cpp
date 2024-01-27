@@ -227,19 +227,21 @@ static uint32_t _renderHeight        = 0;
 //      also, as i'm carrying around an alpha channel, i should probably put that to good use...
 //
 template <typename VGAPixelT, typename MPEGPixelT>
-static inline void MixPixel(RenderOutputPixel& out, const VGAPixelT& vga, const MPEGPixelT& mpeg)
+static inline void MixPixel(RenderOutputPixel& out, const VGAPixelT& vga_pixel,
+                            const MPEGPixelT& mpeg)
 {
-	if (vga.IsTransparent())
+	if (vga_pixel.IsTransparent()) {
 		mpeg.CopyRGBTo(out);
-	else
-		vga.CopyRGBTo(out);
+	} else {
+		vga_pixel.CopyRGBTo(out);
+	}
 	out.alpha = 0;
 }
 
 template <typename VGAPixelT>
-static inline void MixPixel(RenderOutputPixel& out, const VGAPixelT& vga)
+static inline void MixPixel(RenderOutputPixel& out, const VGAPixelT& vga_pixel)
 {
-	vga.CopyRGBTo(out);
+	vga_pixel.CopyRGBTo(out);
 	out.alpha = 0;
 }
 

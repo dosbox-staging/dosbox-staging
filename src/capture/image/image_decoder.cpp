@@ -24,31 +24,31 @@
 
 CHECK_NARROWING();
 
-void ImageDecoder::Init(const RenderedImage& image, const uint8_t row_skip_count,
-                        const uint8_t pixel_skip_count)
+void ImageDecoder::Init(const RenderedImage& _image, const uint8_t _row_skip_count,
+                        const uint8_t _pixel_skip_count)
 {
-	assert(image.params.width > 0);
-	assert(image.params.height > 0);
+	assert(_image.params.width > 0);
+	assert(_image.params.height > 0);
 
-	assert(image.pitch >= image.params.width);
-	assert(image.params.pixel_aspect_ratio.ToDouble() >= 0.0);
-	assert(image.image_data);
+	assert(_image.pitch >= _image.params.width);
+	assert(_image.params.pixel_aspect_ratio.ToDouble() >= 0.0);
+	assert(_image.image_data);
 
-	if (image.is_paletted()) {
-		assert(image.palette_data);
+	if (_image.is_paletted()) {
+		assert(_image.palette_data);
 	}
 
-	if (image.is_flipped_vertically) {
-		curr_row_start = image.image_data +
-		                 (image.params.height - 1) * image.pitch;
+	if (_image.is_flipped_vertically) {
+		curr_row_start = _image.image_data +
+		                 (_image.params.height - 1) * _image.pitch;
 	} else {
-		curr_row_start = image.image_data;
+		curr_row_start = _image.image_data;
 	}
 	pos = curr_row_start;
 
-	this->image            = image;
-	this->row_skip_count   = row_skip_count;
-	this->pixel_skip_count = pixel_skip_count;
+	image            = _image;
+	row_skip_count   = _row_skip_count;
+	pixel_skip_count = _pixel_skip_count;
 }
 
 void ImageDecoder::AdvanceRow()

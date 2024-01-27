@@ -308,19 +308,25 @@ void DOS_Shell::CMD_DELETE(char * args) {
 	}
 	//end can't be 0, but if it is we'll get a nice crash, who cares :)
 	char * end=strrchr(full,'\\')+1;*end=0;
-	DOS_DTA::Result search_result       = {};
+
+	DOS_DTA::Result search_result = {};
 
 	DOS_DTA dta(dos.dta());
+
 	while (res) {
-		DOS_DTA::Result search_result = {};
+		search_result = {};
 		dta.GetResult(search_result);
 		strcpy(end, search_result.name.c_str());
+
 		if (search_result.IsReadOnly()) {
 			WriteOut(MSG_Get("SHELL_ACCESS_DENIED"), full);
+
 		} else if (!search_result.IsDirectory()) {
-			if (!DOS_UnlinkFile(full)) WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"),full);
+			if (!DOS_UnlinkFile(full)) {
+				WriteOut(MSG_Get("SHELL_CMD_DEL_ERROR"), full);
+			}
 		}
-		res=DOS_FindNext();
+		res = DOS_FindNext();
 	}
 	dos.dta(save_dta);
 }

@@ -806,9 +806,9 @@ void MoreOutputFiles::DisplayInputFiles()
 		// If input from a device, CTRL+C shall quit
 		should_end_on_ctrl_c = input_file.is_device;
 
-		const auto decision = DisplaySingleStream();
+		const auto d = DisplaySingleStream();
 		DOS_CloseFile(input_handle);
-		if (decision == UserDecision::Cancel) {
+		if (d == UserDecision::Cancel) {
 			break;
 		}
 	}

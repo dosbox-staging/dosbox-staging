@@ -2126,18 +2126,18 @@ std::optional<Rgb888> parse_color_token(const std::string& token,
 		}
 
 		if (is_hex3_token) {
-			auto r4 = static_cast<uint8_t>(value >> 8 & 0xf);
-			auto g4 = static_cast<uint8_t>(value >> 4 & 0xf);
-			auto b4 = static_cast<uint8_t>(value      & 0xf);
+			auto red4   = static_cast<uint8_t>(value >> 8 & 0xf);
+			auto green4 = static_cast<uint8_t>(value >> 4 & 0xf);
+			auto blue4  = static_cast<uint8_t>(value      & 0xf);
 
-			return Rgb888::FromRgb444(r4, g4, b4);
+			return Rgb888::FromRgb444(red4, green4, blue4);
 
 		} else { // hex6 token
-			const auto r8 = static_cast<uint8_t>(value >> 16 & 0xff);
-			const auto g8 = static_cast<uint8_t>(value >>  8 & 0xff);
-			const auto b8 = static_cast<uint8_t>(value       & 0xff);
+			const auto red8   = static_cast<uint8_t>(value >> 16 & 0xff);
+			const auto green8 = static_cast<uint8_t>(value >>  8 & 0xff);
+			const auto blue8  = static_cast<uint8_t>(value       & 0xff);
 
-			return Rgb888(r8, g8, b8);
+			return Rgb888(red8, green8, blue8);
 		}
 	}
 	case '(': {
@@ -2175,14 +2175,14 @@ std::optional<Rgb888> parse_color_token(const std::string& token,
 			return value;
 		};
 
-		const auto r8 = parse_component(r_string);
-		const auto g8 = parse_component(g_string);
-		const auto b8 = parse_component(b_string);
+		const auto red8   = parse_component(r_string);
+		const auto green8 = parse_component(g_string);
+		const auto blue8  = parse_component(b_string);
 
-		if (r8 && g8 && b8) {
-			return Rgb888(static_cast<uint8_t>(*r8),
-			              static_cast<uint8_t>(*g8),
-			              static_cast<uint8_t>(*b8));
+		if (red8 && green8 && blue8) {
+			return Rgb888(static_cast<uint8_t>(*red8),
+			              static_cast<uint8_t>(*green8),
+			              static_cast<uint8_t>(*blue8));
 		} else {
 			return {};
 		}
