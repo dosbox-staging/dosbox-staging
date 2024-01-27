@@ -156,17 +156,17 @@ uniform PRECISION float BLUE_SHIFT;
 #define BEAM_PROFILE        0.00
 #define HFILTER_PROFILE     0.00
 #define BEAM_MIN_WIDTH      1.00
-#define BEAM_MAX_WIDTH      1.30
-#define SCANLINES_STRENGTH  0.78
-#define COLOR_BOOST         2.20
+#define BEAM_MAX_WIDTH      1.20
+#define SCANLINES_STRENGTH  0.75
+#define COLOR_BOOST         2.00
 #define SHARPNESS_HACK      1.00
-#define PHOSPHOR_LAYOUT     4.00
-#define MASK_INTENSITY      0.50
+#define PHOSPHOR_LAYOUT    11.00
+#define MASK_INTENSITY      0.30
 #define CRT_ANTI_RINGING    1.00
 #define INPUT_GAMMA         2.40
-#define OUTPUT_GAMMA        2.37
+#define OUTPUT_GAMMA        2.25
 #define VSCANLINES          0.00
-#define BLACK_LEVEL         0.0000
+#define BLACK_LEVEL         0.000
 
 #define WP_ADJUST           0.00
 #define TEMPERATURE      9300.00
