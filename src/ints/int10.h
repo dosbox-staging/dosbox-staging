@@ -51,6 +51,8 @@ class Rgb666;
 #define BIOSMEM_CRTCPU_PAGE   0x8A
 #define BIOSMEM_VS_POINTER    0xA8
 
+constexpr uint16_t MaxEgaBiosModeNumber = 0x10;
+
 constexpr uint16_t MinVesaBiosModeNumber = 0x100;
 constexpr uint16_t MaxVesaBiosModeNumber = 0x7ff;
 
