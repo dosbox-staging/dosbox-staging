@@ -634,7 +634,6 @@ void RENDER_NotifyEgaModeWithVgaPalette()
 	assert(machine == MCH_VGA);
 
 	auto video_mode = VGA_GetCurrentVideoMode();
-	assert(video_mode.graphics_standard == GraphicsStandard::Ega);
 
 	if (!video_mode.has_vga_colors) {
 		video_mode.has_vga_colors = true;
