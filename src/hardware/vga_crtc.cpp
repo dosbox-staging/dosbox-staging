@@ -198,6 +198,12 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 			if (old_val.data == flipped.data) {
 				VGA_StartResize();
 			}
+
+			vga.draw.address_line_total = new_val.maximum_scan_line + 1;
+
+			if (new_val.is_scan_doubling_enabled) {
+				vga.draw.address_line_total *= 2;
+			}
 		} else {
 			auto flipped = new_val;
 			flipped.maximum_scan_line = new_val.maximum_scan_line ^ 1;
@@ -219,12 +225,6 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 			if (old_val.data == flipped.data) {
 				VGA_StartResize();
 			}
-		}
-
-		vga.draw.address_line_total = new_val.maximum_scan_line + 1;
-
-		if (new_val.is_scan_doubling_enabled) {
-			vga.draw.address_line_total *= 2;
 		}
 	} break;
 
