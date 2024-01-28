@@ -1644,7 +1644,8 @@ video:
 :CONFIG_JOYSTICKTYPE
 Tipo de joystick a emular:
   auto:      Detectar y usar cualquier joystick(s), si es posible
-             (por defecto).
+             (por defecto). La emulación de joystick se deshabilita si no se
+             encuentra ninguno.
   2axis:     Suportar hasta dos joysticks, cada uno con 2 ejes.
   4axis:     Suportar sólo el primer joystick, como uno de 4 ejes.
   4axis_2:   Suportar sólo el segundo joystick, como uno de 4 ejes.
