@@ -1439,6 +1439,8 @@ finish:
 	if (sdl.draw.callback)
 		sdl.draw.callback(GFX_CallBackRedraw);
 
+	SDL_RaiseWindow(sdl.window);
+
 	// Ensure the time to change window modes isn't counted against
 	// our paced timing. This is a rare event that depends on host
 	// latency (and not the rendering pipeline).
