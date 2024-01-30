@@ -15,6 +15,10 @@
         "sdl2-net",
         "speexdsp",
         "tracy",
-        "zlib"
+        "zlib",
+        {
+            "name": "pkgconf",
+            "host": true
+        }
     ]
 }

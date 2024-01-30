@@ -4565,7 +4565,7 @@ void restart_program(std::vector<std::string> & parameters) {
 	// nullptr for default
 	const LPSECURITY_ATTRIBUTES thread_attributes = nullptr;
 
-	const WINBOOL inherit_handles = FALSE;
+	const BOOL inherit_handles = FALSE;
 
 	// CREATE_NEW_CONSOLE fixes a bug where the parent process exiting kills the child process.
 	// This can manifest when you use the "restart" hotkey action to restart DOSBox.
