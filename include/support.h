@@ -47,13 +47,13 @@
 #include "std_filesystem.h"
 
 #ifdef _MSC_VER
-#define strcasecmp(a, b) _stricmp(a, b)
+#define strcasecmp(a, b)     _stricmp(a, b)
 #define strncasecmp(a, b, n) _strnicmp(a, b, n)
 #endif
 
 #ifdef PAGESIZE
 // Some platforms like ppc64 have page sizes of 64K, so uint16_t isn't enough.
-constexpr uint32_t host_pagesize = { PAGESIZE };
+constexpr uint32_t host_pagesize = {PAGESIZE};
 #else
 constexpr uint16_t host_pagesize = 4096;
 #endif
@@ -88,15 +88,17 @@ char drive_letter(uint8_t index);
  *  This function does not attempt to capture exceptions that may
  *  be thrown from std::stod(...)
  */
-template<typename T>
-T to_finite(const std::string& input) {
+template <typename T>
+T to_finite(const std::string& input)
+{
 	// Defensively set NaN from the get-go
-	T result = std::numeric_limits<T>::quiet_NaN();
+	T result          = std::numeric_limits<T>::quiet_NaN();
 	size_t bytes_read = 0;
 	try {
 		const double interim = std::stod(input, &bytes_read);
-		if (!input.empty() && bytes_read == input.size())
+		if (!input.empty() && bytes_read == input.size()) {
 			result = static_cast<T>(interim);
+		}
 	}
 	// Capture expected exceptions stod may throw
 	catch (...) {
@@ -112,25 +114,23 @@ std::string get_basename(const std::string& filename);
 
 // Select the nearest unsigned integer capable of holding the given bits
 template <int n_bits>
-using nearest_uint_t = \
-        std::conditional_t<n_bits <= std::numeric_limits<uint8_t>::digits, uint8_t,
+using nearest_uint_t = std::conditional_t<
+        n_bits <= std::numeric_limits<uint8_t>::digits, uint8_t,
         std::conditional_t<n_bits <= std::numeric_limits<uint16_t>::digits, uint16_t,
-        std::conditional_t<n_bits <= std::numeric_limits<uint32_t>::digits, uint32_t,
-        std::conditional_t<n_bits <= std::numeric_limits<uint64_t>::digits, uint64_t,
-        uintmax_t>>>>;
+                           std::conditional_t<n_bits <= std::numeric_limits<uint32_t>::digits, uint32_t,
+                                              std::conditional_t<n_bits <= std::numeric_limits<uint64_t>::digits,
+                                                                 uint64_t, uintmax_t>>>>;
 
 // Select the next larger signed integer type
 template <typename T>
 using next_int_t = typename std::conditional<
-        sizeof(T) == sizeof(int8_t),
-        int16_t,
+        sizeof(T) == sizeof(int8_t), int16_t,
         typename std::conditional<sizeof(T) == sizeof(int16_t), int32_t, int64_t>::type>::type;
 
 // Select the next large unsigned integer type
 template <typename T>
 using next_uint_t = typename std::conditional<
-        sizeof(T) == sizeof(uint8_t),
-        uint16_t,
+        sizeof(T) == sizeof(uint8_t), uint16_t,
         typename std::conditional<sizeof(T) == sizeof(uint16_t), uint32_t, uint64_t>::type>::type;
 
 template <typename cast_t, typename check_t>
@@ -165,7 +165,11 @@ std::function<T()> CreateRandomizer(const T min_value, const T max_value);
 // https://en.cppreference.com/w/cpp/error/assert
 
 // TODO review all remaining uses of this macro
-#define safe_strncpy(a,b,n) do { strncpy((a),(b),(n)-1); (a)[(n)-1] = 0; } while (0)
+#define safe_strncpy(a, b, n) \
+	do { \
+		strncpy((a), (b), (n)-1); \
+		(a)[(n)-1] = 0; \
+	} while (0)
 
 #ifndef HAVE_STRNLEN
 constexpr size_t strnlen(const char* str, const size_t max_len)
@@ -182,15 +186,15 @@ constexpr size_t strnlen(const char* str, const size_t max_len)
 #endif
 
 #ifdef HAVE_STRINGS_H
-#	include <strings.h>
+#include <strings.h>
 #endif
 
 // Scans the provided command-line string for the '/'flag and removes it from
 // the string, returning if the flag was found and removed.
-bool ScanCMDBool(char *cmd, const char * flag);
-char * ScanCMDRemain(char * cmd);
+bool ScanCMDBool(char* cmd, const char* flag);
+char* ScanCMDRemain(char* cmd);
 
-bool is_executable_filename(const std::string &filename) noexcept;
+bool is_executable_filename(const std::string& filename) noexcept;
 
 // Use ARRAY_LEN macro to safely calculate number of elements in a C-array.
 // This macro can be used in a constant expressions, even if array is a
@@ -205,25 +209,24 @@ constexpr size_t static_if_array_then_zero()
 	return 0;
 }
 
-#define ARRAY_LEN(arr)                                                         \
-	(static_if_array_then_zero<decltype(arr)>() +                          \
+#define ARRAY_LEN(arr) \
+	(static_if_array_then_zero<decltype(arr)>() + \
 	 (sizeof(arr) / sizeof(arr[0])))
 
 // Thread-safe replacement for strerror.
 //
 std::string safe_strerror(int err) noexcept;
 
-void set_thread_name(std::thread &thread, const char *name);
+void set_thread_name(std::thread& thread, const char* name);
 
-constexpr uint8_t DOS_DATE_months[] = {0,  31, 28, 31, 30, 31, 30,
-                                       31, 31, 30, 31, 30, 31};
+constexpr uint8_t DOS_DATE_months[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 bool is_date_valid(const uint32_t year, const uint32_t month, const uint32_t day);
 
 bool is_time_valid(const uint32_t hour, const uint32_t minute, const uint32_t second);
 
 struct FILE_closer {
-	void operator()(FILE *f) noexcept;
+	void operator()(FILE* f) noexcept;
 };
 using FILE_unique_ptr = std::unique_ptr<FILE, FILE_closer>;
 
@@ -231,51 +234,52 @@ FILE* open_file(const char* filename, const char* mode);
 
 // Opens and returns a std::unique_ptr to a FILE, which automatically closes
 // itself when it goes out of scope
-FILE_unique_ptr make_fopen(const char *fname, const char *mode);
+FILE_unique_ptr make_fopen(const char* fname, const char* mode);
 
 int64_t stdio_size_bytes(FILE* f);
 int64_t stdio_size_kb(FILE* f);
 int64_t stdio_num_sectors(FILE* f);
 
-const std_fs::path &GetExecutablePath();
-std_fs::path GetResourcePath(const std_fs::path &name);
-std_fs::path GetResourcePath(const std_fs::path &subdir, const std_fs::path &name);
+const std_fs::path& GetExecutablePath();
+std_fs::path GetResourcePath(const std_fs::path& name);
+std_fs::path GetResourcePath(const std_fs::path& subdir, const std_fs::path& name);
 
 std::map<std_fs::path, std::vector<std_fs::path>> GetFilesInResource(
-        const std_fs::path &res_name, const std::string_view files_ext);
+        const std_fs::path& res_name, const std::string_view files_ext);
 
 enum class ResourceImportance { Mandatory, Optional };
 
-std::vector<uint8_t> LoadResourceBlob(const std_fs::path &subdir,
-                                      const std_fs::path &name,
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path& subdir,
+                                      const std_fs::path& name,
                                       const ResourceImportance importance);
-std::vector<uint8_t> LoadResourceBlob(const std_fs::path &name,
+std::vector<uint8_t> LoadResourceBlob(const std_fs::path& name,
                                       const ResourceImportance importance);
 
-std::vector<std::string> GetResourceLines(const std_fs::path &subdir,
-                                          const std_fs::path &name,
+std::vector<std::string> GetResourceLines(const std_fs::path& subdir,
+                                          const std_fs::path& name,
                                           const ResourceImportance importance);
-std::vector<std::string> GetResourceLines(const std_fs::path &name,
+std::vector<std::string> GetResourceLines(const std_fs::path& name,
                                           const ResourceImportance importance);
 
-bool path_exists(const std_fs::path &path);
+bool path_exists(const std_fs::path& path);
 
-bool is_writable(const std_fs::path &path);
-bool is_readable(const std_fs::path &path);
-bool is_readonly(const std_fs::path &path);
+bool is_writable(const std_fs::path& path);
+bool is_readable(const std_fs::path& path);
+bool is_readonly(const std_fs::path& path);
 
-bool make_writable(const std_fs::path &path);
-bool make_readonly(const std_fs::path &path);
+bool make_writable(const std_fs::path& path);
+bool make_readonly(const std_fs::path& path);
 
 template <typename container_t>
-bool contains(const container_t &container,
-              const typename container_t::value_type &value)
+bool contains(const container_t& container,
+              const typename container_t::value_type& value)
 {
-	return std::find(container.begin(), container.end(), value) != container.end();
+	return std::find(container.begin(), container.end(), value) !=
+	       container.end();
 }
 
 template <typename container_t>
-bool contains(const container_t &container, const typename container_t::key_type &key)
+bool contains(const container_t& container, const typename container_t::key_type& key)
 {
 	return container.find(key) != container.end();
 }
@@ -288,10 +292,10 @@ bool contains(const container_t &container, const typename container_t::key_type
 // call (minimizing memory thrashing).
 
 template <typename container_t, typename value_t = typename container_t::value_type>
-void remove_duplicates(container_t &c)
+void remove_duplicates(container_t& c)
 {
 	std::unordered_set<value_t> s;
-	auto val_is_duplicate = [&s](const value_t &value) {
+	auto val_is_duplicate = [&s](const value_t& value) {
 		return s.insert(value).second == false;
 	};
 	const auto end = std::remove_if(c.begin(), c.end(), val_is_duplicate);
@@ -329,5 +333,24 @@ constexpr auto enum_val(enum_t e)
 template <typename T>
 std::pair<std::unique_ptr<T[]>, T*> make_unique_aligned_array(
         const size_t byte_alignment, const size_t req_elems, const T& init_val = {});
+
+// Allow for overload resolition for use with std::visit in combination with an
+// std::variant. A list of functors for each type must be specified.
+//
+// Example:
+//
+// std::variant<bool, int> data = true;
+// std::string typename = std::visit(Overload{
+//     [](bool) { return "bool"; },
+//     [](int)  { return "int"; },
+// }, data);
+//
+// typename now contains the value "bool".
+template <typename... Ts>
+struct Overload : Ts... {
+	using Ts::operator()...;
+};
+template <class... Ts>
+Overload(Ts...) -> Overload<Ts...>;
 
 #endif

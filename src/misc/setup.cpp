@@ -121,7 +121,6 @@ bool Value::SetValue(const std::string& in, const Etype _type)
 	case V_DOUBLE: is_valid = SetDouble(in); break;
 
 	case V_NONE:
-	case V_CURRENT:
 	default:
 		LOG_ERR("SETUP: Unhandled type when setting value: '%s'",
 		        in.c_str());
@@ -200,7 +199,6 @@ string Value::ToString() const
 		oss << fixed << _double;
 		break;
 	case V_NONE:
-	case V_CURRENT:
 	default: E_Exit("ToString messed up ?"); break;
 	}
 	return oss.str();

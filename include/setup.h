@@ -80,7 +80,6 @@ public:
 		V_INT,
 		V_STRING,
 		V_DOUBLE,
-		V_CURRENT
 	} type = V_NONE;
 
 	// Constructors
@@ -109,7 +108,7 @@ public:
 	operator double() const;
 	operator std::string() const;
 
-	bool SetValue(const std::string& in, Etype _type = V_CURRENT);
+	bool SetValue(const std::string& in, Etype _type);
 
 	std::string ToString() const;
 
@@ -190,8 +189,8 @@ protected:
 	bool is_positive_bool_valid                            = false;
 	bool is_negative_bool_valid                            = false;
 
-	Value default_value                                    = {};
-	const Changeable::Value change                         = {};
+	Value default_value            = {};
+	const Changeable::Value change = {};
 	typedef std::vector<Value>::const_iterator const_iter;
 
 private:
