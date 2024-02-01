@@ -22,6 +22,7 @@
 
 #include <gtest/gtest.h>
 
+#include "support.h"
 #include <string>
 
 namespace {
@@ -96,6 +97,98 @@ TEST(ParseEnv, FilterOutEmptyPropname)
 	};
 
 	EXPECT_EQ(expected_empty, parse_environ(test_environ));
+}
+
+TEST(Value, None)
+{
+	Value test_value{};
+	Value check_value("", Value::V_NONE);
+	EXPECT_EQ(test_value.type, check_value.type);
+	EXPECT_EQ(test_value.type, Value::V_NONE);
+}
+
+TEST(Value, Hex)
+{
+	Value test_value{Hex(0x42)};
+	Value check_value("42", Value::V_HEX);
+	EXPECT_EQ(test_value.type, check_value.type);
+	EXPECT_EQ(test_value.type, Value::V_HEX);
+	EXPECT_TRUE(test_value == check_value);
+	EXPECT_FALSE(test_value < check_value);
+	EXPECT_FALSE(check_value < test_value);
+	EXPECT_EQ(test_value.ToString(), check_value.ToString());
+	EXPECT_EQ(test_value.ToString(), "42");
+	EXPECT_EQ(test_value, Hex(0x42));
+}
+
+TEST(Value, Bool)
+{
+	Value test_value{true};
+	Value check_value("true", Value::V_BOOL);
+	EXPECT_EQ(test_value.type, check_value.type);
+	EXPECT_EQ(test_value.type, Value::V_BOOL);
+	EXPECT_TRUE(test_value == check_value);
+	EXPECT_FALSE(test_value < check_value);
+	EXPECT_FALSE(check_value < test_value);
+	EXPECT_EQ(test_value.ToString(), check_value.ToString());
+	EXPECT_EQ(test_value.ToString(), "true");
+	EXPECT_TRUE(test_value);
+}
+
+TEST(Value, Int)
+{
+	Value test_value{42};
+	Value check_value("42", Value::V_INT);
+	EXPECT_EQ(test_value.type, check_value.type);
+	EXPECT_EQ(test_value.type, Value::V_INT);
+	EXPECT_TRUE(test_value == check_value);
+	EXPECT_FALSE(test_value < check_value);
+	EXPECT_FALSE(check_value < test_value);
+	EXPECT_EQ(test_value.ToString(), check_value.ToString());
+	EXPECT_EQ(test_value.ToString(), "42");
+	EXPECT_EQ(static_cast<int>(test_value), 42);
+}
+
+TEST(Value, CString)
+{
+	Value test_value{"abc"};
+	Value check_value("abc", Value::V_STRING);
+	EXPECT_EQ(test_value.type, check_value.type);
+	EXPECT_EQ(test_value.type, Value::V_STRING);
+	EXPECT_TRUE(test_value == check_value);
+	EXPECT_FALSE(test_value < check_value);
+	EXPECT_FALSE(check_value < test_value);
+	EXPECT_EQ(test_value.ToString(), check_value.ToString());
+	EXPECT_EQ(test_value.ToString(), "abc");
+	EXPECT_EQ(test_value, "abc");
+}
+
+TEST(Value, StdString)
+{
+	Value test_value{std::string("cde")};
+	Value check_value("cde", Value::V_STRING);
+	EXPECT_EQ(test_value.type, check_value.type);
+	EXPECT_EQ(test_value.type, Value::V_STRING);
+	EXPECT_TRUE(test_value == check_value);
+	EXPECT_FALSE(test_value < check_value);
+	EXPECT_FALSE(check_value < test_value);
+	EXPECT_EQ(test_value.ToString(), check_value.ToString());
+	EXPECT_EQ(test_value.ToString(), "cde");
+	EXPECT_EQ(test_value, "cde");
+}
+
+TEST(Value, Double)
+{
+	Value test_value{42.0};
+	Value check_value("42", Value::V_DOUBLE);
+	EXPECT_EQ(test_value.type, check_value.type);
+	EXPECT_EQ(test_value.type, Value::V_DOUBLE);
+	EXPECT_TRUE(test_value == check_value);
+	EXPECT_FALSE(test_value < check_value);
+	EXPECT_FALSE(check_value < test_value);
+	EXPECT_EQ(test_value.ToString(), check_value.ToString());
+	EXPECT_EQ(test_value.ToString(), "42.00");
+	EXPECT_DOUBLE_EQ(test_value, 42.0);
 }
 
 } // namespace
