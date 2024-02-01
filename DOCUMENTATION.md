@@ -229,3 +229,32 @@ automatically regenerated, and the page in your browser will be refreshed.
 [deploy-website]: https://github.com/dosbox-staging/dosbox-staging/actions/workflows/deploy-website.yml
 [main-branch]: https://github.com/dosbox-staging/dosbox-staging/tree/main
 
+## Deploy website action
+
+The [Deploy website][deploy-website] GitHub Action needs to push the generated files to our [organisation-level GitHub Pages repo](dosbox-github-pages). Such cross-repository access is a bit tricky; the deploy action achieves it via a personal access token. We use tokens with an expiry for security reasons, so at some point the "Commit & publish new release" step of the deploy action will start to fail. You'll need to generate a new token when this happens as described below.
+
+### Generate a new classic personal access token
+
+1. When logged in to GitHub as the administrator of the DOSBox Staging organisation, click on your user profile picture in the top right corner, then on the **Settings** menu (cog icon).
+
+2. Go to the **Developer settings** page (bottom-most item in the left menu pane).
+
+3. Go to the **Personalised access tokens / Tokens (classic)** page.
+
+4. Click on the **Generate new token** button, then select **Generate new token (classic)**.
+
+5. Give your new token a name and an expiry date (say a year from now), then enable all repo privileges by checking the **repo** item.
+ 
+6. Press **Generate token** at the bottom of the page, then copy the generated token (you won't be able to retrieve it later; you'll need to generate a new one if you lose it).
+
+### Set up the secret access token
+
+1. Go to the **Settings** page of the [dosbox-staging](https://github.com/dosbox-staging/dosbox-staging/settings) repo.
+
+2. Open the **Secrets and variables** menu in the left pane, then select **Actions**.
+
+3. Edit the `ACCESS_TOKEN_REPO` item in **Repository secrets** (or add it if it doesn't exist), paste in the new token, then click the **Update secret** button.
+
+After these steps, the deploy website action should run without errors.
+
+
