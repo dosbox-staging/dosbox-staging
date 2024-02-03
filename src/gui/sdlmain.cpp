@@ -580,7 +580,6 @@ static bool is_command_pressed(const SDL_Event event)
 	bool is_paused = true;
 	GFX_RefreshTitle(is_paused);
 
-	Delay(500);
 	SDL_Event event;
 
 	while (SDL_PollEvent(&event)) {
