@@ -31,19 +31,17 @@ const parse_environ_result_t expected_empty{};
 
 TEST(ParseEnv, NoRelevantEnvVariables)
 {
-	const char *test_environ[] = {"FOO=foo", "BAR=bar", "BAZ=baz", nullptr};
+	const char* test_environ[] = {"FOO=foo", "BAR=bar", "BAZ=baz", nullptr};
 
 	EXPECT_EQ(expected_empty, parse_environ(test_environ));
 }
 
 TEST(ParseEnv, SingleValueInEnv)
 {
-	const char *test_environ[] = {
-		"SOME_NAME=value",
-		"DOSBOX_SECTIONNAME_PROPNAME=value",
-		"OTHER_NAME=other_value",
-		nullptr
-	};
+	const char* test_environ[] = {"SOME_NAME=value",
+	                              "DOSBOX_SECTIONNAME_PROPNAME=value",
+	                              "OTHER_NAME=other_value",
+	                              nullptr};
 	parse_environ_result_t expected{{"SECTIONNAME", "PROPNAME=value"}};
 
 	EXPECT_EQ(expected, parse_environ(test_environ));
@@ -51,11 +49,9 @@ TEST(ParseEnv, SingleValueInEnv)
 
 TEST(ParseEnv, PropertyOrValueCanHaveUnderscores)
 {
-	const char *test_environ[] = {
-		"DOSBOX_sec_prop_name=value",
-		"DOSBOX_sec_prop=value_name",
-		nullptr
-	};
+	const char* test_environ[] = {"DOSBOX_sec_prop_name=value",
+	                              "DOSBOX_sec_prop=value_name",
+	                              nullptr};
 	parse_environ_result_t expected{{"sec", "prop_name=value"},
 	                                {"sec", "prop=value_name"}};
 
@@ -64,37 +60,29 @@ TEST(ParseEnv, PropertyOrValueCanHaveUnderscores)
 
 TEST(ParseEnv, SelectVarsBasedOnPrefix)
 {
-	const char *test_environ[] = {
-		"DOSBOX_sec_prop1=value1",
-		"dosbox_sec_prop2=value2",
-		"DOSBox_sec_prop3=value3",
-		"dOsBoX_sec_prop4=value4",
-		"non_dosbox_sec_prop=val",
-		nullptr
-	};
+	const char* test_environ[] = {"DOSBOX_sec_prop1=value1",
+	                              "dosbox_sec_prop2=value2",
+	                              "DOSBox_sec_prop3=value3",
+	                              "dOsBoX_sec_prop4=value4",
+	                              "non_dosbox_sec_prop=val",
+	                              nullptr};
 
 	EXPECT_EQ(4, parse_environ(test_environ).size());
 }
 
 TEST(ParseEnv, FilterOutEmptySection)
 {
-	const char *test_environ[] = {
-		"DOSBOX=value",
-		"DOSBOX_=value",
-		"DOSBOX__prop=value",
-		nullptr
-	};
+	const char* test_environ[] = {"DOSBOX=value",
+	                              "DOSBOX_=value",
+	                              "DOSBOX__prop=value",
+	                              nullptr};
 
 	EXPECT_EQ(expected_empty, parse_environ(test_environ));
 }
 
 TEST(ParseEnv, FilterOutEmptyPropname)
 {
-	const char *test_environ[] = {
-		"DOSBOX_sec=value",
-		"DOSBOX_sec_=value",
-		nullptr
-	};
+	const char* test_environ[] = {"DOSBOX_sec=value", "DOSBOX_sec_=value", nullptr};
 
 	EXPECT_EQ(expected_empty, parse_environ(test_environ));
 }
