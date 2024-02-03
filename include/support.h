@@ -330,4 +330,23 @@ template <typename T>
 std::pair<std::unique_ptr<T[]>, T*> make_unique_aligned_array(
         const size_t byte_alignment, const size_t req_elems, const T& init_val = {});
 
+// This struct can be used in combination with std::visit and std::variant to
+// define code for each type specified in the variant.
+//
+// Example:
+//
+// std::variant<bool, int> data = true;
+// std::string typename = std::visit(Overload{
+//     [](bool) { return "bool"; },
+//     [](int)  { return "int"; },
+// }, data);
+//
+// typename now contains the value "bool".
+template <typename... Ts>
+struct Overload : Ts... {
+	using Ts::operator()...;
+};
+template <class... Ts>
+Overload(Ts...) -> Overload<Ts...>;
+
 #endif
