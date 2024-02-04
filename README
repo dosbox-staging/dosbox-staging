@@ -1201,9 +1201,11 @@ Alt+Pause     Pause/Unpause emulator.*
 Ctrl+F1       Start the keymapper*.
 Ctrl+F4       Change between mounted floppy/CD images. Update directory cache
               for all drives*.
-Ctrl+F5       Save a screenshot*. (PNG format)
+Alt+F5        Save a screenshot of the rendered image*. (PNG format)
+Ctrl+F5       Save a screenshot of the pre-rendered image*. (PNG format)
 Ctrl+F6       Start/Stop recording sound output to a wave file*.
 Ctrl+F7       Start/Stop recording video output to a zmbv file*.
+Ctrl+F8       Mute/Unmute the audio*.
 Ctrl+F9       Shutdown emulator*.
 Ctrl+F10      Capture/Release the mouse*.
 Ctrl+F11      Slow down emulation (Decrease DOSBox Cycles)*.
