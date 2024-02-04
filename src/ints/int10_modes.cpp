@@ -587,7 +587,7 @@ static void init_all_palettes(const cga_colors_t& cga_colors)
 	// clang-format on
 }
 
-video_mode_block_iterator_t CurMode = std::prev(ModeList_VGA.end());
+video_mode_block_iterator_t CurMode = {};
 
 static void log_invalid_video_mode_error(const uint16_t mode) {
 	LOG_ERR("INT10H: Trying to set invalid video mode: %02Xh", mode);
@@ -2322,4 +2322,3 @@ void INT10_SetupPalette()
 	auto cga_colors = configure_cga_colors();
 	init_all_palettes(cga_colors);
 }
-
