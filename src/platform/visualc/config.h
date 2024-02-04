@@ -34,6 +34,12 @@
 /* Define to 1 to enable IPX networking support, requires SDL_net */
 #define C_IPX 1
 
+/* Define to 1 to enable NE2000 emulation */
+#define C_NE2000 1
+
+/* Define to 1 to enable slirp networking support, requires libslirp */
+#define C_SLIRP 1
+
 /* Enable some heavy debugging options */
 #define C_HEAVY_DEBUG 0
 
@@ -68,14 +74,8 @@
 /* Enable the FPU module, still only for beta testing */
 #define C_FPU 1
 
-/* Define to 1 to use a x86 assembly fpu core */
-#ifdef _M_X64
-//No support for inline asm with visual studio in x64 bit mode.
-//This means that non-dynamic cores can't use the better fpu emulation.
-#define C_FPU_X86 0
-#else // _M_IX86
+/* Define to 1 to use x86 assembly fpu core. Requires Clang toolchain for x64 */
 #define C_FPU_X86 1
-#endif
 
 /* Define to 1 to use a unaligned memory access */
 #define C_UNALIGNED_MEMORY 1
