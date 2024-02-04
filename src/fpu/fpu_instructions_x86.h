@@ -23,8 +23,7 @@
 // #define WEAK_EXCEPTIONS
 
 
-#if defined (_MSC_VER)
-
+#if defined(_MSC_VER) && defined(_M_IX86)
 #ifdef WEAK_EXCEPTIONS
 #define clx
 #else
@@ -503,7 +502,9 @@
 #else
 
 // !defined _MSC_VER
-
+#if defined(_MSC_VER) && !defined(__clang__)
+#error "Requires Clang under Visual Studio"
+#endif
 #ifdef WEAK_EXCEPTIONS
 #define clx
 #else

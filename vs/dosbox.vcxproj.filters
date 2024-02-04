@@ -181,9 +181,6 @@
     <ClCompile Include="..\src\hardware\gus.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hardware\hardware.cpp">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\hardware\ide.cpp">
       <Filter>src\hardware</Filter>
     </ClCompile>
@@ -471,9 +468,6 @@
     </ClCompile>
     <ClCompile Include="..\src\libs\nuked\opl3.c">
       <Filter>src\libs\nuked</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\ppscale\ppscale.c">
-      <Filter>src\libs\ppscale</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\cross.cpp">
       <Filter>src\misc</Filter>
@@ -867,9 +861,6 @@
     <ClInclude Include="..\include\audio_frame.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClCompile Include="..\include\autoexec.h">
-      <Filter>src\shell</Filter>
-    </ClCompile>
     <ClInclude Include="..\include\bios.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -1032,12 +1023,6 @@
     <ClInclude Include="..\src\capture\image\image_decoder.h">
       <Filter>src\capture\image</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\capture\image\image_saver.h">
-      <Filter>src\capture\image</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\capture\image\image_scaler.h">
-      <Filter>src\capture\image</Filter>
-    </ClCompile>
     <ClInclude Include="..\src\capture\image\png_writer.h">
       <Filter>src\capture\image</Filter>
     </ClInclude>
@@ -1170,39 +1155,15 @@
     <ClInclude Include="..\src\hardware\adlib_gold.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\hardware\compressor.h">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\covox.h">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\disney.h">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
     <ClInclude Include="..\src\hardware\gameblaster.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
     <ClInclude Include="..\src\hardware\innovation.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\hardware\lpt_dac.h">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
     <ClInclude Include="..\src\hardware\opl.h">
       <Filter>src\hardware</Filter>
     </ClInclude>
-    <ClCompile Include="..\src\hardware\pcspeaker.h">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\pcspeaker_discrete.h">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\pcspeaker_impulse.h">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\hardware\ston1_dac.h">
-      <Filter>src\hardware</Filter>
-    </ClCompile>
     <ClInclude Include="..\src\hardware\input\intel8042.h">
       <Filter>src\hardware\input</Filter>
     </ClInclude>
@@ -1295,9 +1256,6 @@
     </ClInclude>
     <ClInclude Include="..\src\libs\nuked\opl3.h">
       <Filter>src\libs\nuked</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\libs\ppscale\ppscale.h">
-      <Filter>src\libs\ppscale</Filter>
     </ClInclude>
     <ClInclude Include="..\src\platform\visualc\config.h">
       <Filter>src\platform\visualc</Filter>
@@ -1428,9 +1386,6 @@
     <ClInclude Include="..\src\dos\program_serial.h">
       <Filter>src\dos</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\dos\program_tree.h">
-      <Filter>src\dos</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libs\loguru\loguru.hpp">
       <Filter>src\libs\loguru</Filter>
     </ClInclude>
@@ -1453,6 +1408,18 @@
     <ClInclude Include="..\src\libs\zmbv\zmbv.h">
       <Filter>src\libs\zmbv</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\autoexec.h" />
+    <ClInclude Include="..\src\capture\image\image_saver.h" />
+    <ClInclude Include="..\src\capture\image\image_scaler.h" />
+    <ClInclude Include="..\src\dos\dos_locale.h" />
+    <ClInclude Include="..\src\hardware\compressor.h" />
+    <ClInclude Include="..\src\hardware\covox.h" />
+    <ClInclude Include="..\src\hardware\disney.h" />
+    <ClInclude Include="..\src\hardware\lpt_dac.h" />
+    <ClInclude Include="..\src\hardware\pcspeaker.h" />
+    <ClInclude Include="..\src\hardware\pcspeaker_discrete.h" />
+    <ClInclude Include="..\src\hardware\pcspeaker_impulse.h" />
+    <ClInclude Include="..\src\hardware\ston1_dac.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">

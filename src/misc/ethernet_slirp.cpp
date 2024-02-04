@@ -40,7 +40,7 @@
  * object. The user data is provided inside the 'opaque' pointer.
  */
 
-ssize_t slirp_receive_packet(const void *buf, size_t len, void *opaque)
+db_ssize_t slirp_receive_packet(const void *buf, size_t len, void *opaque)
 {
 	// sentinels
 	if (!len)
