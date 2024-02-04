@@ -27,34 +27,34 @@ jobs:
           - name: GCC (MinGW) x86 +tests
             toolchain: ""
             arch: i686
-            sys: MINGW32
+            sys: mingw32
             cc: gcc
-            max_warnings: 0
+            max_warnings: 2
             run_tests: true
             build_flags: -Dbuildtype=debug -Dfluidsynth:tests=false
 
           - name: GCC (UCRT) x86_64 +debugger
             toolchain: ucrt-
             arch: x86_64
-            sys: UCRT64
+            sys: ucrt64
             cc: gcc
-            max_warnings: 0
+            max_warnings: 2
             build_flags: -Denable_debugger=normal
 
           - name: Clang x86_64 +debugger
             toolchain: clang-
             arch: x86_64
-            sys: CLANG64
+            sys: clang64
             cc: clang
-            max_warnings: 0
+            max_warnings: 2
             build_flags: -Denable_debugger=normal
 
           - name: Clang x86_64 +tests
             toolchain: clang-
             arch: x86_64
-            sys: CLANG64
+            sys: clang64
             cc: clang
-            max_warnings: 0
+            max_warnings: 2
             run_tests: true
             build_flags: -Dbuildtype=debug -Dfluidsynth:tests=false
 
@@ -78,7 +78,7 @@ jobs:
         uses: msys2/setup-msys2@v2
         with:
           msystem: ${{matrix.conf.sys}}
-          update: true
+          update: false
           install: >-
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-${{matrix.conf.cc}}
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-meson
@@ -91,12 +91,15 @@ jobs:
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libpng
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-opusfile
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-libslirp
-            mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2_net
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-zlib
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-speexdsp
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-python-pip
             mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-fluidsynth
+
+      - shell: msys2 {0}
+        run: |
+            pacman --noconfirm -U https://repo.msys2.org/mingw/${{matrix.conf.sys}}/mingw-w64-${{matrix.conf.toolchain}}${{matrix.conf.arch}}-SDL2-2.26.5-1-any.pkg.tar.zst
 
       - name:  Prepare compiler cache
         id:    prep-ccache
@@ -181,7 +184,7 @@ jobs:
         conf:
           - name: Clang x86_64
             arch: x86_64
-            sys: CLANG64
+            sys: clang64
 
     defaults:
       run:
@@ -218,11 +221,14 @@ jobs:
             mingw-w64-clang-${{matrix.conf.arch}}-libpng
             mingw-w64-clang-${{matrix.conf.arch}}-opusfile
             mingw-w64-clang-${{matrix.conf.arch}}-libslirp
-            mingw-w64-clang-${{matrix.conf.arch}}-SDL2
             mingw-w64-clang-${{matrix.conf.arch}}-SDL2_net
             mingw-w64-clang-${{matrix.conf.arch}}-speexdsp
             mingw-w64-clang-${{matrix.conf.arch}}-python-pip
             mingw-w64-clang-${{matrix.conf.arch}}-fluidsynth
+
+      - shell: msys2 {0}
+        run: |
+            pacman --noconfirm -U https://repo.msys2.org/mingw/${{matrix.conf.sys}}/mingw-w64-clang-${{matrix.conf.arch}}-SDL2-2.26.5-1-any.pkg.tar.zst
 
       - name:  Prepare compiler cache
         id:    prep-ccache
