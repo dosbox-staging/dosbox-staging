@@ -732,6 +732,7 @@ static void SetupTandyBios(void) {
 }
 
 void INT10_Init(Section* /*sec*/) {
+	CurMode = std::prev(ModeList_VGA.end());
 	INT10_SetupPalette();
 	INT10_InitVGA();
 	if (IS_TANDY_ARCH) SetupTandyBios();
