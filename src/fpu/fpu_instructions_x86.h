@@ -23,7 +23,7 @@
 // #define WEAK_EXCEPTIONS
 
 
-#if defined(_MSC_VER) && defined(_M_IX86)
+#if defined(_MSC_VER) && defined(_M_IX86) && !defined(__clang__)
 #ifdef WEAK_EXCEPTIONS
 #define clx
 #else
