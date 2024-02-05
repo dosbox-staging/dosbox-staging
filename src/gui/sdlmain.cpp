@@ -2302,11 +2302,17 @@ void GFX_CenterMouse()
 	int width  = 0;
 	int height = 0;
 
-#if defined(WIN32) && !SDL_VERSION_ATLEAST(2, 28, 1)
-	const auto canvas_size_px = get_canvas_size_in_pixels(sdl.rendering_backend);
+#if defined(WIN32)
+	if (is_runtime_sdl_version_at_least({2, 28, 1})) {
+		SDL_GetWindowSize(sdl.window, &width, &height);
 
-	width  = canvas_size_px.w;
-	height = canvas_size_px.h;
+	} else {
+		const auto canvas_size_px = get_canvas_size_in_pixels(
+		        sdl.rendering_backend);
+
+		width  = iroundf(canvas_size_px.w);
+		height = iroundf(canvas_size_px.h);
+	}
 #else
 	SDL_GetWindowSize(sdl.window, &width, &height);
 #endif
@@ -4900,7 +4906,7 @@ int sdl_main(int argc, char* argv[])
 		// Once initialised, ensure we clean up SDL for all exit conditions
 		atexit(QuitSDL);
 
-		SDL_version sdl_version;
+		SDL_version sdl_version = {};
 		SDL_GetVersion(&sdl_version);
 
 		LOG_MSG("SDL: version %d.%d.%d initialised (%s video and %s audio)",
