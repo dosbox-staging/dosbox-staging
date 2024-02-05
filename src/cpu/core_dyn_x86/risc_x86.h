@@ -85,7 +85,7 @@ public:
 
 static BlockReturn gen_runcode(const uint8_t * code) {
 	BlockReturn retval;
-#if defined (_MSC_VER)
+#if defined (_MSC_VER) && !defined(__clang__)
 	__asm {
 /* Prepare the flags */
 		mov		eax,[code]
