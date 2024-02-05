@@ -166,11 +166,9 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <MinimalRebuild>false</MinimalRebuild>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
@@ -211,10 +209,8 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <OmitFramePointers>false</OmitFramePointers>
       <MinimalRebuild>false</MinimalRebuild>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
@@ -256,11 +252,9 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
@@ -310,13 +304,11 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
@@ -368,11 +360,9 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
@@ -423,13 +413,11 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
       <DebugInformationFormat>None</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <BufferSecurityCheck>false</BufferSecurityCheck>
-      <AdditionalOptions>/Zc:lambda %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ObjectFileName>$(IntDir)\$(ProjectName)\$(ConfigurationName)\%(RelativeDir)</ObjectFileName>
     </ClCompile>
