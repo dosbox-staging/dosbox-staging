@@ -20,10 +20,10 @@ jobs:
         conf:
           - name: MSVC 32-bit
             arch: x86
-            max_warnings: 24
+            max_warnings: 174
           - name: MSVC 64-bit
             arch: x64
-            max_warnings: 687
+            max_warnings: 174
 
     steps:
       - name: Checkout repository
@@ -83,7 +83,7 @@ jobs:
         shell: pwsh
         env:
           MAX_WARNINGS: ${{ matrix.conf.max_warnings }}
-        run: python scripts\count-warnings.py -f --msvc vs\build.log
+        run: python scripts\count-warnings.py -f --msclang vs\build.log
 
   build_windows_vs_release:
     name: ${{ matrix.conf.name }}
