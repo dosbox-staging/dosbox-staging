@@ -38,7 +38,8 @@ extern void GFX_SetTitle(const int32_t cycles, const bool is_paused = false);
 #if 1
 #undef LOG
 #if defined (_MSC_VER)
-#define LOG(X,Y)
+#define LOG_CONSUME(...) (void)sizeof(__VA_ARGS__)
+#define LOG(X, Y) LOG_CONSUME
 #else
 #define LOG(X,Y) CPU_LOG
 #define CPU_LOG(...)
