@@ -10,5 +10,6 @@
 	XSTR(SDL_MAJOR_VERSION) "." XSTR(SDL_MINOR_VERSION) "." XSTR(SDL_PATCHLEVEL)
 #endif
 
+#include <assert.h>
 static_assert(SDL_VERSION_ATLEAST(2, 0, 5),
               "SDL >= 2.0.5 required (using " SDL_CONSTEXPR_VERSION ")");
