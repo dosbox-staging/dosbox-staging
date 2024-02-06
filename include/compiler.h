@@ -70,8 +70,8 @@
 #define GCC_LIKELY(x)   __builtin_expect(!!(x), 1)
 #define GCC_UNLIKELY(x) __builtin_expect(!!(x), 0)
 #else
-#define GCC_LIKELY
-#define GCC_UNLIKELY
+#define GCC_LIKELY(x)   (x)
+#define GCC_UNLIKELY(x) (x)
 #endif
 
 // XSTR and STR macros can be used for turning defines into string literals:
