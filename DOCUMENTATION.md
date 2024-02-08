@@ -162,6 +162,24 @@ your changes.
 > renaming or moving files, changing the directory structure, etc.)
 
 
+### Changing the stylesheet
+
+The `docs/stylesheets/extra.css` CSS file is generated from the
+`docs/extra-scss/extra.scss` [SASS](https://sass-lang.com/) source file.
+
+To live preview editing the SASS source, you'll need to run the below command
+from the `website` directory _in addition to_ running `mkdocs server`:
+
+```
+sass --watch extra-scss/extra.scss:docs/stylesheets/extra.css
+```
+
+To generate the CSS file once without live preview, drop the `--watch` option.
+
+Make sure to always regenerate the CSS file after changing the SASS source,
+then check in both the `.css` and the `.scss` files.
+
+
 ## General documenetation writing guidelines
 
 ### Content 
