@@ -135,26 +135,31 @@ pip install -r contrib/documentation/mkdocs-package-requirements.txt
 
 ### Generating the documentation
 
-To simply generate the documentation (without live preview), execute the
-`mkdocs build` command. The output will be written to `site` subdirectory
-under the [`website`](/website) directory.
+To generate the documentation (without live preview), run the `mkdocs build`
+command from the [`website`](/website) directory. The output will be written
+to `website/site`.
 
 
 ### Live preview
 
-To use the convenient live preview feature of MkDocs, run `mkdocs serve`
-from the [`website`](/website) folder of the checked-out repo. You can view the
-generated documentation at <http://127.0.0.1:8000/dosbox-staging.github.io/>
-in your browser when this command is running.
+To use the convenient live preview feature of MkDocs, run `mkdocs serve` from
+the [`website`](/website) directory. You can view the generated documentation
+at <http://127.0.0.1:8000/dosbox-staging.github.io/> in your browser when this
+command is running.
 
-Whenever you make changes to the Markdown files, the website will be
-automatically regenerated, and the page in your browser will be refreshed.
+Whenever you make changes to the source files under `docs`, the website will
+be automatically regenerated and the page in your browser will be refreshed.
+
+The live preview doesn't work when editing to the front page
+(`overrides/home.html`), which makes sense as it's not located under the
+`docs` directory. You'll need to restart the `mkdocs server` command to view
+your changes.
 
 > **Warning**
-> Sometimes, the local web server gets stuck when you click on a link that
-> takes you to a different page; in this case, restart the `mkdocs serve`
+> Sometimes, the local web server "gets stuck" when you click on a link that
+> takes you to a different page. If this happens, restart the `mkdocs serve`
 > command. A restart might also be needed after more extensive changes (e.g.,
-> renaming files, changing the directory structure, etc.)
+> renaming or moving files, changing the directory structure, etc.)
 
 
 ## General documenetation writing guidelines
