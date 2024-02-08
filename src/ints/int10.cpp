@@ -731,16 +731,23 @@ static void SetupTandyBios(void) {
 	}
 }
 
-void INT10_Init(Section* /*sec*/) {
+void INT10_Init(Section*)
+{
 	CurMode = std::prev(ModeList_VGA.end());
+
 	INT10_SetupPalette();
 	INT10_InitVGA();
-	if (IS_TANDY_ARCH) SetupTandyBios();
-	/* Setup the INT 10 vector */
-	call_10=CALLBACK_Allocate();	
-	CALLBACK_Setup(call_10,&INT10_Handler,CB_IRET,"Int 10 video");
-	RealSetVec(0x10,CALLBACK_RealPointer(call_10));
-	//Init the 0x40 segment and init the datastructures in the video rom area
+
+	if (IS_TANDY_ARCH) {
+		SetupTandyBios();
+	}
+
+	// Set up the INT 10h vector
+	call_10 = CALLBACK_Allocate();
+	CALLBACK_Setup(call_10, &INT10_Handler, CB_IRET, "Int 10 video");
+	RealSetVec(0x10, CALLBACK_RealPointer(call_10));
+
+	// Init the 0x40 segment and init the data structures in the video ROM area
 	INT10_SetupRomMemory();
 	INT10_Seg40Init();
 	INT10_SetVideoMode(0x3);
