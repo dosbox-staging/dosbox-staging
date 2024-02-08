@@ -1375,11 +1375,6 @@ void RENDER_Init(Section* sec)
 		set_default_viewport_setting();
 	}
 
-	// Set monochrome palette
-	const auto mono_palette = to_monochrome_palette_enum(
-	        section->Get_string("monochrome_palette").c_str());
-	VGA_SetMonochromePalette(mono_palette);
-
 	// Only use the default 1x rendering scaler
 	render.scale.size = 1;
 

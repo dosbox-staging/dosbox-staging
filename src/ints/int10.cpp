@@ -17,14 +17,14 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-
 #include "dosbox.h"
-#include "mem.h"
-#include "callback.h"
-#include "regs.h"
-#include "inout.h"
+
 #include "int10.h"
+#include "callback.h"
+#include "inout.h"
+#include "mem.h"
 #include "mouse.h"
+#include "regs.h"
 #include "setup.h"
 
 Int10Data int10;
@@ -731,6 +731,9 @@ static void SetupTandyBios(void) {
 	}
 }
 
+// forward declaration
+MonochromePalette RENDER_GetMonochromePalette();
+
 void INT10_Init(Section*)
 {
 	CurMode = std::prev(ModeList_VGA.end());
@@ -747,8 +750,11 @@ void INT10_Init(Section*)
 	CALLBACK_Setup(call_10, &INT10_Handler, CB_IRET, "Int 10 video");
 	RealSetVec(0x10, CALLBACK_RealPointer(call_10));
 
-	// Init the 0x40 segment and init the data structures in the video ROM area
+	// Init the 0x40 segment and the data structures in the video ROM area
 	INT10_SetupRomMemory();
 	INT10_Seg40Init();
 	INT10_SetVideoMode(0x3);
+
+	// Init monochrome palette from the config for Hercules and CGA mono
+	VGA_SetMonochromePalette(RENDER_GetMonochromePalette());
 }
