@@ -196,6 +196,7 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 
 const std::string RENDER_GetCgaColorsSetting();
 
+MonochromePalette RENDER_GetMonochromePalette();
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette);
 
 std::deque<std::string> RENDER_GenerateShaderInventoryMessage();

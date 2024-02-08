@@ -1296,6 +1296,12 @@ void RENDER_AddConfigSection(const config_ptr_t& conf)
 	init_render_settings(*sec);
 }
 
+MonochromePalette RENDER_GetMonochromePalette()
+{
+	return to_monochrome_palette_enum(
+	        get_render_section()->Get_string("monochrome_palette").c_str());
+}
+
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
 {
 	const auto string_prop = get_render_section()->GetStringProp(
