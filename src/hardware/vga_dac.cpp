@@ -76,6 +76,12 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 {
 	const auto rgb666 = vga.dac.rgb[color_idx];
 
+	// We might be in the middle of a mode change, so we can't use
+	// VGA_GetCurrentVideoMode() here. That's because the INT 10H mode
+	// change BIOS routine needs to set up the Palette and Color Registers
+	// which will trigger this function.
+	const auto bios_mode_number = CurMode->mode;
+
 	// In the automatic "video mode specific" CRT emulation mode, we want
 	// "true EGA" games (EGA modes with the default EGA palette on VGA) to
 	// use the single-scanline EGA shader. But VGA games that just happen to
@@ -89,46 +95,38 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 	// Note that custom CGA colours (via the `cga_colors` setting) are
 	// handled correctly as well.
 	//
-	if (machine == MCH_VGA && !vga.ega_mode_with_vga_colors) {
-		// We might be in the middle of a mode change, so we can't use
-		// VGA_GetCurrentVideoMode() here. That's because the INT 10H
-		// mode change BIOS routine needs to set up the Palette and
-		// Color Registers which will trigger this function.
-		const auto bios_mode_number = CurMode->mode;
+	if (machine == MCH_VGA && !vga.ega_mode_with_vga_colors &&
+	    bios_mode_number <= MaxEgaBiosModeNumber) {
+		bool non_ega_color = false;
 
-		if (bios_mode_number <= MaxEgaBiosModeNumber) {
-			bool non_ega_color = false;
+		const auto is_640x350_16color_mode = (bios_mode_number == 0x10);
 
-			const auto is_640x350_16color_mode = (bios_mode_number == 0x10);
+		if (is_640x350_16color_mode) {
+			// The 640x350 16-colour EGA mode (mode 10h) is special:
+			// the 16 colors can be freely chosen from a gamut of 64
+			// colours (6-bit RGB).
+			non_ega_color = !is_ega_color(rgb666);
+		} else {
+			// In all other EGA modes, the fixed "canonical
+			// 16-element CGA palette" (as emulated by VGA cards) is
+			// used.
+			non_ega_color = !is_cga_color(rgb666);
+		}
 
-			if (is_640x350_16color_mode) {
-				// The 640x350 16-colour EGA mode (mode 10h) is
-				// special: the 16 colors can be freely chosen
-				// from a gamut of 64 colours (6-bit RGB).
-				non_ega_color = !is_ega_color(rgb666);
-			} else {
-				// In all other EGA modes, the fixed "canonical
-				// 16-element CGA palette" (as emulated by VGA
-				// cards) is used.
-				non_ega_color = !is_cga_color(rgb666);
-			}
+		if (non_ega_color) {
+			vga.ega_mode_with_vga_colors = true;
 
-			if (non_ega_color) {
-				vga.ega_mode_with_vga_colors = true;
-
-				// If we're inside a mode change, the
-				// `ega_mode_with_vga_color` will be taken into
-				// account in VGA_GetCurrentVideoMode() which
-				// concludes the mode change process.
-				//
-				// But if a palette entry was set to a non-EGA
-				// colour after the mode change was completed,
-				// we need to notify the renderer so it can
-				// re-init itself and potentially switch the
-				// current shader.
-				if (!vga.mode_change_in_progress) {
-					RENDER_NotifyEgaModeWithVgaPalette();
-				}
+			// If we're inside a mode change, the
+			// `ega_mode_with_vga_color` will be taken into account
+			// in VGA_GetCurrentVideoMode() which concludes the mode
+			// change process.
+			//
+			// But if a palette entry was set to a non-EGA colour
+			// after the mode change was completed, we need to
+			// notify the renderer so it can re-init itself and
+			// potentially switch the current shader.
+			if (!vga.mode_change_in_progress) {
+				RENDER_NotifyEgaModeWithVgaPalette();
 			}
 		}
 	}
