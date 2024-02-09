@@ -731,6 +731,13 @@ static void SetupTandyBios(void) {
 	}
 }
 
+static bool is_module_initialised = false;
+
+bool INT10_IsInitialised()
+{
+	return is_module_initialised;
+}
+
 // forward declaration
 MonochromePalette RENDER_GetMonochromePalette();
 
@@ -757,4 +764,6 @@ void INT10_Init(Section*)
 
 	// Init monochrome palette from the config for Hercules and CGA mono
 	VGA_SetMonochromePalette(RENDER_GetMonochromePalette());
+
+	is_module_initialised = true;
 }

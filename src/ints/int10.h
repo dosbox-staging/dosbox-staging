@@ -224,6 +224,9 @@ inline uint8_t CURSOR_POS_ROW(const uint8_t page)
 	return real_readb(BIOSMEM_SEG, BIOSMEM_CURSOR_POS + cursor_offset);
 }
 
+void INT10_Init(Section*);
+bool INT10_IsInitialised();
+
 void INT10_SetupPalette();
 
 bool INT10_SetVideoMode(uint16_t mode);

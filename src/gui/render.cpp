@@ -26,6 +26,7 @@
 #include <mutex>
 
 #include "../capture/capture.h"
+#include "../ints/int10.h"
 #include "control.h"
 #include "fraction.h"
 #include "mapper.h"
@@ -912,7 +913,6 @@ static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::
 			return {};
 		}
 		if (!is_within_bounds(height_scale)) {
-			LOG_TRACE("****1");
 			const auto extra_info = format_string(
 			        "Vertical scale must be within the %g-%g%% range",
 			        MinRelativeScaleFactor * 100.0f,
@@ -1362,6 +1362,10 @@ void RENDER_Init(Section* sec)
 
 	render.pal.first = 256;
 	render.pal.last  = 0;
+
+	if (INT10_IsInitialised()) {
+		VGA_SetMonochromePalette(RENDER_GetMonochromePalette());
+	}
 
 	// Get aspect ratio correction mode & force square pixels if requested
 	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting();

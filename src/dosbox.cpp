@@ -121,8 +121,6 @@ void XMS_Init(Section*);
 void AUTOEXEC_Init(Section*);
 void SHELL_Init();
 
-void INT10_Init(Section*);
-
 static LoopHandler * loop;
 
 static int64_t ticksRemain;
