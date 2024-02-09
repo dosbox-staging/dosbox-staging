@@ -701,9 +701,9 @@ static MonochromePalette to_monochrome_palette_enum(const char* setting)
 	return {};
 }
 
-static const char* to_string(const enum MonochromePalette palette)
+static const char* to_string(const enum MonochromePalette mono_palette)
 {
-	switch (palette) {
+	switch (mono_palette) {
 	case MonochromePalette::Amber: return MonochromePaletteAmber;
 	case MonochromePalette::Green: return MonochromePaletteGreen;
 	case MonochromePalette::White: return MonochromePaletteWhite;
@@ -1302,11 +1302,11 @@ MonochromePalette RENDER_GetMonochromePalette()
 	        get_render_section()->Get_string("monochrome_palette").c_str());
 }
 
-void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette)
+void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette mono_palette)
 {
 	const auto string_prop = get_render_section()->GetStringProp(
 	        "monochrome_palette");
-	string_prop->SetValue(to_string(palette));
+	string_prop->SetValue(to_string(mono_palette));
 }
 
 static bool handle_shader_changes()
