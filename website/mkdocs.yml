@@ -66,10 +66,12 @@ plugins:
         - skip-lightbox
   - redirects:
         redirect_maps:
+          # Redirects for the old "downloads" pages
           'downloads/windows.md': 'releases/windows.md'
           'downloads/macos.md': 'releases/macos.md'
           'downloads/linux.md': 'releases/linux.md'
           'downloads/development-builds.md': 'releases/development-builds.md'
+
           'downloads/release-notes/0.80.1.md': 'releases/release-notes/0.80.1.md'
           'downloads/release-notes/0.80.0.md': 'releases/release-notes/0.80.0.md'
           'downloads/release-notes/0.79.1.md': 'releases/release-notes/0.79.1.md'
@@ -84,6 +86,9 @@ plugins:
           'downloads/release-notes/0.75.0.md': 'releases/release-notes/0.75.0.md'
           'downloads/release-notes/0.75.0-rc1.md': 'releases/release-notes/0.75.0-rc1.md'
 
+          # Redirect RC release notes to the final
+          'releases/release-notes/0.81.0-rc.md': 'releases/release-notes/0.81.0.md'
+
 # Page tree
 nav:
   - Releases:
@@ -92,7 +97,7 @@ nav:
     - Linux: releases/linux.md
 
     - Release notes:
-      - 0.81.0-RC: releases/release-notes/0.81.0-rc.md
+      - 0.81.0: releases/release-notes/0.81.0.md
       - 0.80.1: releases/release-notes/0.80.1.md
       - 0.80.0: releases/release-notes/0.80.0.md
       - 0.79.1: releases/release-notes/0.79.1.md
@@ -131,3 +136,4 @@ nav:
 not_in_nav: |
   # To silence the warning about the custom `index.md` front page
   /index.md
+
