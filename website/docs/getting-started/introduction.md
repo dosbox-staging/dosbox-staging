@@ -1,15 +1,5 @@
 # Introduction
 
-!!! important 
-
-    You need to use the [0.81.0 release
-    candidate](../releases/release-notes/0.81.0-rc.md)
-    to follow along this guide.
-
-    A significant part of the instructions are invalid for earlier DOSBox
-    Staging versions.
-
-
 ## Foreword
 
 Welcome to the DOSBox Staging Getting Started guide!
@@ -50,7 +40,7 @@ much joy as we're having developing it!
 
 ## Installing DOSBox Staging
 
-You must use the latest stable version of DOSBox Staging for this guide. If
+You must use the _latest stable version_ of DOSBox Staging for this guide. If
 you already have other versions of DOSBox on your computer, installing DOSBox
 Staging won't interfere with them at all. Experienced users can use multiple
 DOSBox variants on the same machine without problems, but if you're a
@@ -74,8 +64,6 @@ icon into your Applications folder. Both Intel and Apple silicon are
 supported.
 
 Don't delete the `.dmg` installer disk image just yet---we'll need it later.
-
-Make sure to read the section about dealing with [Apple Gatekeeper](../releases/macos.md#apple-gatekeeper).
 
 
 <h3>Linux</h3>
