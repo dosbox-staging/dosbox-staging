@@ -41,8 +41,11 @@ are available if you wish to dwelve deeper.
 - Focus on supporting up-to-date, current operating systems and modern
  hardware.
 
-A summary of technical and feature differences is
-[here](https://github.com/dosbox-staging/dosbox-staging#summary-of-features).
+Please refer to the [Feature highlights](../index.md#feature-highlights) section of our
+front page to learn about the advanced features DOSBox Staging offers.
+
+The key features for developers are summarised
+[here](https://github.com/dosbox-staging/dosbox-staging?tab=readme-ov-file#key-features-for-developers).
 
 We plan to add the features listed in [the
 backlog](https://github.com/dosbox-staging/dosbox-staging/projects/3).
@@ -105,3 +108,4 @@ Content on this site is licensed under a
 [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 DOSBox Staging is licensed under a [GNU GPL version 2 or later](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
+
