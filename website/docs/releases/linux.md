@@ -9,60 +9,31 @@ hide:
 
 ### Current stable version
 
-[Download DOSBox Staging 0.80.1 (tar.xz)][0_80_1]
+[Download DOSBox Staging 0.81.0 (tar.xz)][0_81_0]
 <br>
 <small>
-sha256: 12582a6496b1a276cd239e6b3d21ddfc<wbr>d51fd8f9e40a1ebbc0a3800e0636190a
+sha256: TODO
 </small>
 
-Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn
+Check out the [0.81.0 release notes](release-notes/0.81.0.md) to learn
 about the changes and improvements introduced in this release.
 
 Our pre-compiled builds run on most Linux distributions (x86\_64 only
 for now). They depend on the following packages:
 
-### 0.81.0 release candidate
-
-!!! warning "Release candidate warning"
-
-    Release candidates are intended for experienced early adopters willing to
-    help us stabilise the next DOSBox Staging version for the final release.
-    Regular users should download the [current stable version](#current-stable-version)
-    instead.
-
-    **0.81.0-RC2**
-
-    - [Download DOSBox Staging 0.81.0-RC2 (tar.xz)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-rc2/dosbox-staging-linux-v0.81.0-rc2.tar.xz)
-      <br>
-      <small>
-      sha256: da46e685d58494a585f3a9c70238ab58<wbr>2ded9a262383bf8872d8f394fb4a3dda
-      </small>
-
-    **0.81.0-RC1**
-
-    - [Download DOSBox Staging 0.81.0-RC1 (tar.xz)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-rc1/dosbox-staging-linux-v0.81.0-rc1.tar.xz)
-      <br>
-      <small>
-      sha256: 38a9e26a68f8ae8c3f6ddb369383de7b<wbr>1eddf9c751a26a8fffac2079f5de2594
-      </small>
-
-    Check out the [0.81.0-RC release notes](release-notes/0.81.0-rc.md) to learn
-    about the changes and improvements introduced in this release.
-
-
 ### Install dependencies on Fedora
 
-    sudo dnf install SDL2 SDL2_image SDL2_net opusfile
+    sudo dnf install SDL2 SDL2_net opusfile
 
 ### Install dependencies on Ubuntu and Debian
 
 Ubuntu 18.04 or newer, and Debian 9 or newer is required.
 
-    sudo apt install libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-net-2.0-0 libopusfile0
+    sudo apt install libsdl2-2.0-0 libsdl2-net-2.0-0 libopusfile0
 
 ### Install dependencies on Arch and Manjaro
 
-    sudo pacman -S sdl2 sdl2_image sdl2_net opusfile
+    sudo pacman -S sdl2 sdl2_net opusfile
 
 
 Please run the `install-icons.sh` script included with the release to install
@@ -154,6 +125,12 @@ are designed with developers and testers in mind.
 
 ## Older releases
 
+- [DOSBox Staging 0.80.1 (tar.xz)][0_80_1]
+  <br>
+  <small>
+  sha256: 12582a6496b1a276cd239e6b3d21ddfc<wbr>d51fd8f9e40a1ebbc0a3800e0636190a
+  </small>
+
 - [DOSBox Staging 0.80.0 (tar.xz)][0_80_0]
   <br>
   <small>
@@ -220,6 +197,7 @@ are designed with developers and testers in mind.
   sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
   </small>
 
+[0_81_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0/dosbox-staging-linux-v0.81.0.tar.xz
 [0_80_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.1/dosbox-staging-linux-v0.80.1.tar.xz
 [0_80_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-linux-v0.80.0.tar.xz
 [0_79_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.1/dosbox-staging-linux-v0.79.1.tar.xz
@@ -232,6 +210,7 @@ are designed with developers and testers in mind.
 [0_75_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.1/dosbox-staging-linux-v0.75.1.tar.xz
 [0_75_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0/dosbox-staging-linux-v0.75.0.tar.xz
 [0_75_0_rc1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0-rc1/dosbox-staging-linux-v0.75.0-rc1.tar.xz
+
 
 ## Building from source
 

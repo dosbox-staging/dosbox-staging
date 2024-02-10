@@ -7,54 +7,17 @@ hide:
 
 ## Current stable version
 
-**[Download DOSBox Staging 0.80.1 Universal Binary (dmg)][0_80_1]**
+**[Download DOSBox Staging 0.81.0 Universal Binary (dmg)][0_81_0]**
 <br>
 <small>
-sha256: 46a256645255e8345981ea357f1416b8<wbr>ce4bc60a2aba9a86b5122d5075aa7fa9
+sha256: TODO
 </small>
 
 This package is compatible with macOS 10.15 (Catalina) or newer and supports both
 Intel and Apple silicon Macs.
 
-Check out the [0.80.1 release notes](release-notes/0.80.1.md) to learn about
+Check out the [0.81.0 release notes](release-notes/0.81.0.md) to learn about
 the changes and improvements introduced by this release.
-
-!!! important
-
-    macOS uses its Gatekeeper feature to prevent users from running
-    externally-hosted 3rd party software, such as DOSBox Staging. See [the section
-    below](#apple-gatekeeper) to learn how to fix it.
-
-    [1]:https://github.com/dosbox-staging/dosbox-staging
-
-
-## 0.81.0 release candidate
-
-!!! warning "Release candidate warning"
-
-    Release candidates are intended for experienced early adopters willing to
-    help us stabilise the next DOSBox Staging version for the final release.
-    Regular users should download the [current stable version](#current-stable-version)
-    instead.
-
-    **0.81.0-RC2**
-
-    - [Download DOSBox Staging 0.81.0-RC2 Universal Binary (dmg)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-rc2/dosbox-staging-macOS-v0.81.0-rc2.dmg)
-      <br>
-      <small>
-      sha256: 2a425ea28b0b5e69edd743bcf219f124<wbr>03b3b696f55afc0f714c2b93fa2b3764
-      </small>
-
-    **0.81.0-RC1**
-
-    - [Download DOSBox Staging 0.81.0-RC1 Universal Binary (dmg)](https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0-rc1/dosbox-staging-macOS-v0.81.0-rc1.dmg)
-      <br>
-      <small>
-      sha256: 7f1ca6b5d2aedc63a2027f1ed467a9d3<wbr>f9bf3e27a4c7fcd0310515c2d9a12a27
-      </small>
-
-    Check out the [0.81.0-RC release notes](release-notes/0.81.0-rc.md) to learn
-    about the changes and improvements introduced in this release.
 
 
 ## Homebrew
@@ -96,9 +59,8 @@ are designed with developers and testers in mind.
 
 ## Apple Gatekeeper
 
-You'll need to do the following when launching DOSBox Staging for the first
-time (you'll need to repeat these steps every time after having upgraded to a
-newer version):
+For releases before 0.81.0, you'll need to do the following when launching
+DOSBox Staging for the first time:
 
 - ++ctrl++ click (or right-click) on the **DOSBox Staging** app, and click **Open**. 
 - Click **OK** to close the resulting message.
@@ -115,11 +77,18 @@ newer version):
 Apple's Gatekeeper feature only permits the running of notarized software, one
 aspect of which involves developers making yearly payments to Apple.
 
-As DOSBox Staging is a volunteer effort, we are not in a position to make such
-payments and therefore ask users to bypass Apple's Gatekeeper manually.
+As DOSBox Staging is a volunteer effort, we were not in a position to make
+such payments prior to version 0.81.0 and therefore asked users to bypass
+Apple's Gatekeeper manually.
 
 
 ## Older releases
+
+- [Download DOSBox Staging 0.80.1 Universal Binary (dmg)][0_80_1] (macOS 10.15 or newer)
+  <br>
+  <small>
+  sha256: 46a256645255e8345981ea357f1416b8<wbr>ce4bc60a2aba9a86b5122d5075aa7fa9
+  </small>
 
 - [DOSBox Staging 0.80.0 Universal binary (dmg)][0_80_0] (macOS 10.15 or newer)
   <br>
@@ -201,10 +170,11 @@ payments and therefore ask users to bypass Apple's Gatekeeper manually.
 
 - [DOSBox Staging 0.75.0-rc1 (dmg)][0_75_0_rc1] (macOS 10.15 or newer)
   <br/>
-  <span style="font-size:0.7em">
+  <span>
   sha256: 8a5c12d1b6567d6e981acd76e30dec41<wbr>a73a699963b714f4f1dcf0fc853fc9f6
   </span>
 
+[0_81_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.81.0/dosbox-staging-macOS-v0.81.0.dmg
 [0_80_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.1/dosbox-staging-macOS-v0.80.1.dmg
 [0_80_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.80.0/dosbox-staging-macOS-v0.80.0.dmg
 [0_79_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.79.1/dosbox-staging-macOS-v0.79.1.dmg
@@ -229,3 +199,4 @@ Of course, you can always [build DOSBox Staging straight from the source][1].
 Send us patches if you improve something! :smile:
 
 [1]:https://github.com/dosbox-staging/dosbox-staging
+
