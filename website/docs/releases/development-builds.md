@@ -197,28 +197,30 @@ dependencies installed via your package manager.
 
 #### Fedora
 
-    sudo dnf install SDL2 SDL2_image SDL2_net opusfile
+    sudo dnf install SDL2 SDL2_net opusfile
 
 #### Debian, Ubuntu
 
-    sudo apt install libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-net-2.0-0 libopusfile0
+    sudo apt install libsdl2-2.0-0 libsdl2-net-2.0-0 libopusfile0
 
 #### Arch, Manjaro
 
-    sudo pacman -S sdl2 sdl2_image sdl2_net opusfile
+    sudo pacman -S sdl2 sdl2_net opusfile
 
 ### Windows
 
 Windows executables in snapshot packages are not signed, therefore Windows 10
 might prevent the program from starting.
 
-See [this guide](windows.md#microsoft-defender-smartscreen) to learn how to deal with this.
+See [this guide](windows.md#microsoft-defender-smartscreen) to learn how to
+deal with this.
 
 
 ### macOS
 
-macOS app bundles are not notarized; Apple Gatekeeper will try to prevent
-the program from running.
+macOS development builds are not notarized (but the public releases are);
+Apple Gatekeeper will try to prevent the program from running.
 
 See [this guide](macos.md#apple-gatekeeper) to learn how to deal with
 this.
+
