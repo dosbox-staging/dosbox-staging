@@ -3,7 +3,16 @@ name: PVS-Studio analysis
 # If the CI job fails with 404-not-found, then PVS studio has updated the release.
 # Get the new DEB version from: https://pvs-studio.com/en/pvs-studio/download-all/
 
-on: push
+on:
+  push:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
+      - 'scripts/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

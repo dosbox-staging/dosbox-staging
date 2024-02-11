@@ -1,6 +1,23 @@
 name: Windows MSYS2 builds
 
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
+
+  pull_request:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
