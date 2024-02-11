@@ -696,6 +696,9 @@ small {
   }
 }
 .front-page .image-grid figure img {
+  max-width: 100%;
+  height: auto;
+  background: rgba(0, 0, 0, 0.1);
   filter: drop-shadow(rgba(0, 0, 0, 0.2509803922) 0rem 0.3rem 0.6rem);
 }
 .front-page .image-grid figure figcaption {
