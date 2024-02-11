@@ -14,7 +14,6 @@ pcre
 pkg-config
 readline
 sdl2
-sdl2_image
 sdl2_net
 speexdsp
 wget
