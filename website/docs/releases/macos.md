@@ -84,7 +84,7 @@ Apple's Gatekeeper manually.
 
 ## Older releases
 
-- [Download DOSBox Staging 0.80.1 Universal Binary (dmg)][0_80_1] (macOS 10.15 or newer)
+- [DOSBox Staging 0.80.1 Universal Binary (dmg)][0_80_1] (macOS 10.15 or newer)
   <br>
   <small>
   sha256: 46a256645255e8345981ea357f1416b8<wbr>ce4bc60a2aba9a86b5122d5075aa7fa9
