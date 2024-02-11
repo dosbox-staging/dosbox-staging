@@ -30,7 +30,6 @@ BuildRequires: meson >= 0.54.2
 BuildRequires: mt32emu-devel >= 2.5.3
 BuildRequires: opusfile-devel
 BuildRequires: SDL2-devel >= 2.0.5
-BuildRequires: SDL2_image-devel
 BuildRequires: SDL2_net-devel
 BuildRequires: speexdsp-devel > 1.1.9
 

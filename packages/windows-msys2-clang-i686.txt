@@ -12,7 +12,6 @@ mingw-w64-clang-i686-libpng
 mingw-w64-clang-i686-libslirp
 mingw-w64-clang-i686-opusfile
 mingw-w64-clang-i686-SDL2
-mingw-w64-clang-i686-SDL2_image
 mingw-w64-clang-i686-SDL2_net
 mingw-w64-clang-i686-zlib
 mingw-w64-clang-i686-speexdsp
