@@ -123,14 +123,6 @@ menu.
 
 <h3>macOS</h3>
 
-!!! warning First things first
-
-    After installing DOSBox Staging, you *must* open it first using its
-    application icon [as described
-    here](../releases/macos.md#apple-gatekeeper), otherwise, the below
-    instructions won't work.
-
-
 1. Mount the DOSBox Staging installer `.dmg` image file.
 2. Copy the *Start DOSBox Staging* icon from the appearing window into the
    `Prince of Persia` folder.

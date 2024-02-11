@@ -514,6 +514,14 @@ _Start DOSBox Staging (logging)_, which you can copy into your game folder
 from the same `.dmg` archive (note the word "logging" in the name of the
 icon).
 
+!!! note
+
+    Remember, for the first time you'll need to right-click or ++ctrl++-click
+    on this icon, select the topmost *Open* menu item, then press the
+    *Open* button in the appearing dialog. After the first start, you can simply
+    double-click on it.
+
+
 <h3>Linux</h3>
 
 Start DOSBox Staging from the terminal, and the logs will appear there.
