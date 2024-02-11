@@ -5,7 +5,6 @@ libmt32emu
 libpng
 opusfile
 sdl2
-sdl2-image
 sdl2-net
 speexdsp
 tracy

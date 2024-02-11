@@ -1,4 +1,4 @@
-meson ninja gcc_multi cmake ccache SDL2 SDL2_image SDL2_net gtest 
+meson ninja gcc_multi cmake ccache SDL2 SDL2_net gtest 
 fluidsynth glib libGL libGLU libjack2 libmt32emu libogg libpng libpulseaudio 
 libslirp libsndfile opusfile libselinux speexdsp stdenv alsa-lib xorg.libXi 
 iir1 pkg-config ffmpeg

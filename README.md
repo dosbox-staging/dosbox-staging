@@ -108,7 +108,7 @@ sudo dnf install ccache gcc-c++ meson alsa-lib-devel libatomic libpng-devel \
 ``` shell
 # Debian, Ubuntu
 sudo apt install ccache build-essential libasound2-dev libatomic1 libpng-dev \
-                 libsdl2-dev libsdl2-image-dev libsdl2-net-dev libopusfile-dev \
+                 libsdl2-dev libsdl2-net-dev libopusfile-dev \
                  libfluidsynth-dev libslirp-dev libspeexdsp-dev libxi-dev
 
 # Install Meson on Debian-10 "Buster" or Ubuntu-20.04 and older
@@ -121,7 +121,7 @@ sudo apt install meson
 
 ``` shell
 # Arch, Manjaro
-sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_image sdl2_net \
+sudo pacman -S ccache gcc meson alsa-lib libpng sdl2 sdl2_net \
                opusfile fluidsynth libslirp speexdsp libxi pkgconf
 ```
 
@@ -156,7 +156,7 @@ home.packages = [ pkg-config gcc_multi cmake ccache SDL2 SDL2_net \
 ``` shell
 # macOS
 xcode-select --install
-brew install cmake ccache meson libpng sdl2 sdl2_image sdl2_net opusfile \
+brew install cmake ccache meson libpng sdl2 sdl2_net opusfile \
      fluid-synth libslirp pkg-config python3 speexdsp
 ```
 
