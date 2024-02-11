@@ -118,19 +118,19 @@ command-line install parameters, please see [Inno's documentation page](https://
 
 ## Older releases
 
-- [Download DOSBox Staging 0.80.1 64-bit (Installer)][0_80_1_x64_INSTALLER]
+- [DOSBox Staging 0.80.1 64-bit (Installer)][0_80_1_x64_INSTALLER]
   <br>
   <small>
   sha256: 94b961f397f3b70a13daf3b573857b52<wbr>62515e75d490bfc19f019479fe1694f8
   </small>
 
-- [Download DOSBox Staging 0.80.1 64-bit (zip)][0_80_1_x64_ZIP]
+- [DOSBox Staging 0.80.1 64-bit (zip)][0_80_1_x64_ZIP]
   <br>
   <small>
   sha256: e7ab98013b55f6fd6db1f529574b8f29<wbr>05d374225f532ce0905666281cbe32af
   </small>
 
-- [Download DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
+- [DOSBox Staging 0.80.1 32-bit (zip)][0_80_1_x32_ZIP]
   <br>
   <small>
   sha256: 63a8c5b084231364961f7c8b6415e446<wbr>22c5ab9822e49839c2aca1bddd3a9459
