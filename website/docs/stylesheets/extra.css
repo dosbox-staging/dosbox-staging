@@ -531,10 +531,9 @@ small {
 }
 .front-page .header .blurb {
   width: 100%;
-  max-width: 29rem;
-  margin: 2.5rem auto auto auto;
-  font-size: 1.19rem;
-  font-weight: 300;
+  max-width: 28rem;
+  margin: 2rem auto auto auto;
+  font-size: 1.1rem;
   text-align: center;
   color: #333;
 }
@@ -543,15 +542,15 @@ small {
   font-weight: bold;
 }
 .front-page .header .download {
-  max-width: 20rem;
-  margin: 1.6rem auto 0 auto;
+  max-width: 19.3rem;
+  margin: 1.3rem auto 0 auto;
   background: #eee;
   border-radius: 0.3rem;
   filter: drop-shadow(rgba(0, 0, 0, 0.0705882353) 0rem 0.3rem 0.6rem);
 }
 .front-page .header .get-it {
   margin: 0 0 1rem 0;
-  padding: 0.2rem 0;
+  padding: 0.1rem 0;
   border-radius: 0.3rem 0.3rem 0 0;
   text-align: center;
   font-size: 0.9rem;
@@ -664,8 +663,9 @@ small {
   color: #eee;
 }
 .front-page .features ul li {
-  font-size: 0.8rem;
-  padding-bottom: 0.5rem;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  padding-bottom: 0.45rem;
   padding-left: 0.3rem;
   color: #333;
   margin: 0;
@@ -780,13 +780,12 @@ small {
 @media screen and (min-width: 60em) {
   .front-page .header {
     display: flex;
-    margin: 0 0 3rem 2rem;
-    justify-content: center;
+    margin: 0 0 3rem 3rem;
     gap: 1.8rem;
   }
   .front-page .header .logo img {
-    width: 15rem;
-    margin-top: 2.3rem;
+    width: 14rem;
+    margin-top: 1.9rem;
     max-width: none;
   }
   .front-page .features {
