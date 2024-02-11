@@ -838,6 +838,9 @@ small {
       }
 
       img {
+        max-width: 100%;
+        height: auto;
+        background: rgba(0,0,0, 0.10);
         filter: drop-shadow(#00000040 0.0rem 0.3rem 0.6rem);
       }
       figcaption {
