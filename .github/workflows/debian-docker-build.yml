@@ -1,4 +1,4 @@
-name: Debian docker image builder
+name: Debian Docker image builder
 
 on:
   push:
