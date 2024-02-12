@@ -1,4 +1,4 @@
-name: Code analysis
+name: Clang analysis
 
 on: [push, pull_request]
 
@@ -13,37 +13,6 @@ env:
   CCACHE_SLOPPINESS: "pch_defines,time_macros"
 
 jobs:
-  run_linters:
-    name: Script linters
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - run:  sudo apt-get update
-      - name: Run shellcheck
-        run:  ./scripts/verify-bash.sh
-      - name: Install pylint
-        run: |
-          sudo apt-get install python3-setuptools
-          sudo pip3 install pylint beautifulsoup4 html5lib
-      - name: Run pylint
-        run:  ./scripts/verify-python.sh
-      - name: Install markdownlint
-        run: |
-          sudo apt-get install ruby-full
-          ruby --version
-          sudo gem install mdl
-      - name: Run markdownlint
-        run:  ./scripts/verify-markdown.sh
-      - name: Install appstream-util
-        run:  sudo apt-get install appstream-util
-      - name: Verify metainfo.xml
-        run:  appstream-util validate-relax --nonet contrib/linux/dosbox-staging.metainfo.xml
-
   build_clang_static_analyser:
     name: Clang static analyzer
     runs-on: ubuntu-20.04
@@ -54,7 +23,8 @@ jobs:
         with:
           submodules: false
 
-      - run:  sudo apt-get update
+      - name: Update packages
+        run:  sudo apt-get update
 
       - name: Install dependencies
         run: |
@@ -96,7 +66,8 @@ jobs:
       - name: Log environment
         run:  ./scripts/log-env.sh
 
-      - run: |
+      - name: Meson setup
+        run: |
           meson setup \
           -Dbuildtype=debug \
           -Duse_alsa=false \
@@ -126,6 +97,7 @@ jobs:
           MAX_BUGS: 3
         run: |
           # summary
-          echo "Full report is included in build Artifacts"
+          echo "Full report is included in build artifacts"
           echo
           ./scripts/count-clang-bugs.py report/*/index.html
+
