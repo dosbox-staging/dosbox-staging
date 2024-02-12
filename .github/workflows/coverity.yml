@@ -1,4 +1,4 @@
-name: Coverity Scan analysis
+name: Coverity analysis
 
 on:
   push:
@@ -31,7 +31,8 @@ jobs:
         with:
           submodules: false
 
-      - run:  sudo apt-get update
+      - name: Update packages
+        run:  sudo apt-get update
 
       - name: Log and setup environment
         run: |
@@ -64,6 +65,7 @@ jobs:
         with:
           path: ${{ env.PACKAGE_DIR }}
           key: coverity-${{ env.PACKAGE_VERSION }}
+
       - name:  Fetch the Coverity package
         if:    steps.cache-coverity.outputs.cache-hit != 'true'
         run:   curl -L "${TARBALL_URL}" > "${PACKAGE}"
@@ -106,3 +108,4 @@ jobs:
           --form version="${GITHUB_REF}" \
           --form description="${GITHUB_REPOSITORY}" \
           "https://scan.coverity.com/builds?project=dosbox-staging"
+
