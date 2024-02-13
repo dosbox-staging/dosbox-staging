@@ -703,9 +703,14 @@ void CBreakpoint::ShowList(void)
 			else DEBUG_ShowMsg("%02X. BPINT %02X AH=%02X AL=%02X\n",nr,bp->GetIntNr(),bp->GetValue(),bp->GetOther());
 		} else if (bp->GetType()==BKPNT_MEMORY) {
 			DEBUG_ShowMsg("%02X. BPMEM %04X:%04X (%02X)\n",nr,bp->GetSegment(),bp->GetOffset(),bp->GetValue());
-		} else if (bp->GetType()==BKPNT_MEMORY_PROT) {
+		} else if (bp->GetType() == BKPNT_MEMORY_READ) {
+			DEBUG_ShowMsg("%02X. BPMR %04X:%04X\n",
+			              nr,
+			              bp->GetSegment(),
+			              bp->GetOffset());
+		} else if (bp->GetType() == BKPNT_MEMORY_PROT) {
 			DEBUG_ShowMsg("%02X. BPPM %04X:%08X (%02X)\n",nr,bp->GetSegment(),bp->GetOffset(),bp->GetValue());
-		} else if (bp->GetType()==BKPNT_MEMORY_LINEAR ) {
+		} else if (bp->GetType() == BKPNT_MEMORY_LINEAR) {
 			DEBUG_ShowMsg("%02X. BPLM %08X (%02X)\n",nr,bp->GetOffset(),bp->GetValue());
 		}
 		nr++;
