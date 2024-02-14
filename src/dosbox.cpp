@@ -1214,7 +1214,7 @@ void DOSBOX_Init()
 #if C_IPX
 	secprop = control->AddSection_prop("ipx", &IPX_Init, changeable_at_runtime);
 	pbool = secprop->Add_bool("ipx", when_idle, false);
-	pbool->Set_help("Enable IPX over UDP/IP emulation (enabled by default).");
+	pbool->Set_help("Enable IPX over UDP/IP emulation (disabled by default).");
 #endif
 
 #if C_SLIRP
