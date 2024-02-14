@@ -103,11 +103,21 @@ install_doc()
     else
         package_information="a development branch"
     fi
+
     if [ -n "$package_information" ]; then
-        sed -i -e "s|%PACKAGE_INFORMATION%|$package_information|" "$readme_tmpl"
+        if [ "$(uname)" = "Darwin" ]; then
+            sed -i '' -e "s|%PACKAGE_INFORMATION%|$package_information|" "$readme_tmpl"
+        else
+            sed -i -e "s|%PACKAGE_INFORMATION%|$package_information|" "$readme_tmpl"
+        fi
     fi
+
     if [ -n "$git_repo" ]; then
-        sed -i -e "s|%GITHUB_REPO%|$git_repo|"  "$readme_tmpl"
+        if [ "$(uname)" = "Darwin" ]; then
+            sed -i '' -e "s|%GITHUB_REPO%|$git_repo|" "$readme_tmpl"
+        else
+            sed -i -e "s|%GITHUB_REPO%|$git_repo|" "$readme_tmpl"
+        fi
     fi
 }
 
@@ -165,7 +175,7 @@ pkg_macos()
     install_file contrib/macos/PkgInfo                   "${macos_content_dir}/PkgInfo"
     install_file contrib/icons/macos/dosbox-staging.icns "${macos_content_dir}/Resources/"
 
-    sed -i -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
+    sed -i '' -e "s|%VERSION%|${dbox_version}|"       "${macos_content_dir}/Info.plist"
 
 	# Install start commands
 	start_command="Start DOSBox Staging.command"
