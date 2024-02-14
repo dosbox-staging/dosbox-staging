@@ -593,10 +593,9 @@ static void set_joystick_led([[maybe_unused]] SDL_Joystick *joystick,
 
 class CStickBindGroup : public CBindGroup {
 public:
-	CStickBindGroup(int _stick, uint8_t _emustick, bool _dummy = false)
+	CStickBindGroup(int _stick_index, uint8_t _emustick, bool _dummy = false)
 	        : CBindGroup(),
-	          stick(_stick),       // the number of the physical device (SDL
-	                               // numbering)
+	          stick_index(_stick_index), // the number of the device in the system
 	          emustick(_emustick), // the number of the emulated device
 	          is_dummy(_dummy)
 	{
@@ -616,7 +615,21 @@ public:
 		emulated_hats=0;
 		JOYSTICK_Enable(emustick,true);
 
-		sdl_joystick=SDL_JoystickOpen(_stick);
+		// From the SDL doco
+		// (https://wiki.libsdl.org/SDL2/SDL_JoystickOpen):
+
+		// The device_index argument refers to the N'th joystick presently
+		// recognized by SDL on the system. It is NOT the same as the
+		// instance ID used to identify the joystick in future events.
+
+		// Also see: https://wiki.libsdl.org/SDL2/SDL_JoystickInstanceID
+
+		// We refer to the device index as `stick_index`, and to the
+		// instance ID as `stick_id`.
+
+		sdl_joystick = SDL_JoystickOpen(stick_index);
+		stick_id = SDL_JoystickInstanceID(sdl_joystick);
+
 		set_joystick_led(sdl_joystick, on_color);
 		if (sdl_joystick==nullptr) {
 			button_wrap=emulated_buttons;
@@ -645,7 +658,7 @@ public:
 			button_wrap = MAXBUTTON;
 
 		LOG_MSG("MAPPER: Initialised %s with %d axes, %d buttons, and %d hat(s)",
-		        SDL_JoystickNameForIndex(stick), axes, buttons, hats);
+		        SDL_JoystickNameForIndex(stick_index), axes, buttons, hats);
 	}
 
 	~CStickBindGroup() override
@@ -696,7 +709,7 @@ public:
 			const int axis_id = event->jaxis.axis;
 			const auto axis_position = event->jaxis.value;
 
-			if (event->jaxis.which != stick)
+			if (event->jaxis.which != stick_id)
 				return nullptr;
 #if defined(REDUCE_JOYSTICK_POLLING)
 			if (axis_id >= axes)
@@ -711,7 +724,7 @@ public:
 			return CreateAxisBind(axis_id, toggled);
 
 		} else if (event->type == SDL_JOYBUTTONDOWN) {
-			if (event->jbutton.which != stick)
+			if (event->jbutton.which != stick_id)
 				return nullptr;
 #if defined (REDUCE_JOYSTICK_POLLING)
 			return CreateButtonBind(event->jbutton.button%button_wrap);
@@ -719,8 +732,8 @@ public:
 			return CreateButtonBind(event->jbutton.button);
 #endif
 		} else if (event->type==SDL_JOYHATMOTION) {
-			if (event->jhat.which!=stick) return nullptr;
-			if (event->jhat.value==0) return nullptr;
+			if (event->jhat.which != stick_id) return nullptr;
+			if (event->jhat.value == 0) return nullptr;
 			if (event->jhat.value>(SDL_HAT_UP|SDL_HAT_RIGHT|SDL_HAT_DOWN|SDL_HAT_LEFT)) return nullptr;
 			return CreateHatBind(event->jhat.hat, event->jhat.value);
 		} else return nullptr;
@@ -733,7 +746,7 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick) {
+				if(jaxis->which == stick_id) {
 					if(jaxis->axis == 0)
 						JOYSTICK_Move_X(emustick, jaxis->value);
 					else if (jaxis->axis == 1)
@@ -746,7 +759,7 @@ public:
 				bool state;
 				state = jbutton->type == SDL_JOYBUTTONDOWN;
 				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
-				if (jbutton->which == stick) {
+				if (jbutton->which == stick_id) {
 					JOYSTICK_Button(emustick, but, state);
 				}
 				break;
@@ -901,7 +914,7 @@ private:
 	const char * BindStart() override
 	{
 		if (sdl_joystick)
-			return SDL_JoystickNameForIndex(stick);
+			return SDL_JoystickNameForIndex(stick_index);
 		else
 			return "[missing joystick]";
 	}
@@ -919,7 +932,10 @@ protected:
 	uint8_t emulated_buttons = 0;
 	int hats = 0;
 	int emulated_hats = 0;
-	int stick;
+    // Instance ID of the joystick as it appears in SDL events
+	int stick_id{-1};
+	// Index of the joystick in the system
+	int stick_index{-1};
 	uint8_t emustick;
 	SDL_Joystick *sdl_joystick = nullptr;
 	char configname[10];
@@ -951,7 +967,7 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick && jaxis->axis < 4) {
+				if(jaxis->which == stick_id && jaxis->axis < 4) {
 					if(jaxis->axis & 1)
 						JOYSTICK_Move_Y(jaxis->axis >> 1 & 1, jaxis->value);
 					else
@@ -964,7 +980,7 @@ public:
 				bool state;
 				state = jbutton->type == SDL_JOYBUTTONDOWN;
 				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
-				if (jbutton->which == stick) {
+				if (jbutton->which == stick_id) {
 					JOYSTICK_Button((but >> 1), (but & 1), state);
 				}
 				break;
@@ -1016,7 +1032,7 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick) {
+				if(jaxis->which == stick_id) {
 					if(jaxis->axis == 0)
 						JOYSTICK_Move_X(0, jaxis->value);
 					else if (jaxis->axis == 1)
@@ -1027,7 +1043,7 @@ public:
 				break;
 			case SDL_JOYHATMOTION:
 				jhat = &event->jhat;
-				if (jhat->which == stick)
+				if (jhat->which == stick_id)
 					DecodeHatPosition(jhat->value);
 				break;
 			case SDL_JOYBUTTONDOWN:
@@ -1036,7 +1052,7 @@ public:
 			bool state;
 			state=jbutton->type==SDL_JOYBUTTONDOWN;
 				const auto but = check_cast<uint8_t>(jbutton->button % emulated_buttons);
-				if (jbutton->which == stick) {
+				if (jbutton->which == stick_id) {
 					JOYSTICK_Button((but >> 1), (but & 1), state);
 				}
 				break;
@@ -1147,7 +1163,7 @@ public:
 		switch(event->type) {
 			case SDL_JOYAXISMOTION:
 				jaxis = &event->jaxis;
-				if(jaxis->which == stick && jaxis->axis < 4) {
+				if(jaxis->which == stick_id && jaxis->axis < 4) {
 					if(jaxis->axis & 1)
 						JOYSTICK_Move_Y(jaxis->axis >> 1 & 1, jaxis->value);
 					else
@@ -1156,7 +1172,7 @@ public:
 				break;
 			case SDL_JOYHATMOTION:
 				jhat = &event->jhat;
-				if (jhat->which == stick && jhat->hat < 2) {
+				if (jhat->which == stick_id && jhat->hat < 2) {
 					if (jhat->value == SDL_HAT_CENTERED)
 						button_state &= ~hat_magic[jhat->hat][0];
 					if (jhat->value & SDL_HAT_UP)
@@ -1172,13 +1188,13 @@ public:
 			case SDL_JOYBUTTONDOWN:
 				jbutton = &event->jbutton;
 				but = jbutton->button % emulated_buttons;
-				if (jbutton->which == stick)
+				if (jbutton->which == stick_id)
 					button_state|=button_magic[but];
 				break;
 			case SDL_JOYBUTTONUP:
 				jbutton = &event->jbutton;
 				but = jbutton->button % emulated_buttons;
-				if (jbutton->which == stick)
+				if (jbutton->which == stick_id)
 					button_state&=~button_magic[but];
 				break;
 		}
