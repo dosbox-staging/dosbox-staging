@@ -28,9 +28,9 @@ function strip {
 	echo "${STRING%$"$2"}"
 }
 
-VERSION=$(strip "$IN_ZIP" $IN_ZIP_PREFIX)
+VERSION=$(strip "$(strip "$IN_ZIP" $IN_ZIP_PREFIX)" ".zip")
 ROOT_DIR=dosbox-staging-$VERSION
-OUT_ZIP=dosbox-staging-windows-$VERSION
+OUT_ZIP=dosbox-staging-windows-$VERSION.zip
 
 RMDIR_CMD="rm -rf $ROOT_DIR"
 MKDIR_CMD="mkdir $ROOT_DIR"
