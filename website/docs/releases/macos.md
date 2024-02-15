@@ -10,7 +10,7 @@ hide:
 **[Download DOSBox Staging 0.81.0 Universal Binary (dmg)][0_81_0]**
 <br>
 <small>
-sha256: a77c8ad4682e3bf19c03900ec6a69678<wbr>2e7a922ecbab232aaf9863fa02d3fd90
+sha256: 5d3cec60552b2a34caa70702b35bdf9c<wbr>e591cf0b03143802351725a7c729d9fe
 </small>
 
 This package is compatible with macOS 10.15 (Catalina) or newer and supports both
