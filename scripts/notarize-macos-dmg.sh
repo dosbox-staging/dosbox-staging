@@ -40,20 +40,25 @@ if [ -z "$ATTACHED_VOLUME_NAME" ]; then
     exit 1
 fi
 
-SRC_DIR="$TEMP_DIR/$ATTACHED_VOLUME_NAME"
+ditto "$ATTACHED_VOLUME_PATH" "$TEMP_DIR"
 
-cp -a "$ATTACHED_VOLUME_PATH" "$TEMP_DIR"
+cd "$TEMP_DIR" || { echo "Failed to change to $TEMP_DIR"; exit 1; }
 
-cd "$TEMP_DIR/$ATTACHED_VOLUME_NAME" || { echo "Failed to change to $TEMP_DIR/$ATTACHED_VOLUME_NAME"; exit 1; }
+# Remove accidental sed backup files from older DMGs. These will cause
+# verification failures, e.g.:
+# spctl -a -vvv -t install "/Volumes/DOSBox Staging/DOSBox Staging.app"
+rm "DOSBox Staging.app/Contents/Info.plist-e"
+rm "DOSBox Staging.app/Contents/SharedSupport/README-e"
 
-codesign -s "$DEVELOPER_IDENTITY" -fv "DOSBox Staging.app" --entitlements "${SCRIPT_DIR}/contrib/macos/Entitlements.plist" --options runtime
+codesign -s "$DEVELOPER_IDENTITY" -fv --timestamp -o runtime --entitlements "${SCRIPT_DIR}/contrib/macos/Entitlements.plist" "DOSBox Staging.app"
 
-hdiutil create -volname "$ATTACHED_VOLUME_NAME" -srcfolder "$SRC_DIR" -ov -format UDZO "$OUTPUT_DMG"
+hdiutil create -volname "$ATTACHED_VOLUME_NAME" -srcfolder "$TEMP_DIR" -ov -format UDZO "$OUTPUT_DMG"
 
-codesign -s "$DEVELOPER_IDENTITY" -fv "$OUTPUT_DMG"
+codesign -s "$DEVELOPER_IDENTITY" -fv --timestamp "$OUTPUT_DMG"
 
 xcrun notarytool submit "$OUTPUT_DMG" --keychain-profile "$KEYCHAIN_PROFILE" --wait
 xcrun stapler staple "$OUTPUT_DMG"
 
 hdiutil detach "$ATTACHED_VOLUME_PATH"
 rm -rf "$TEMP_DIR"
+
