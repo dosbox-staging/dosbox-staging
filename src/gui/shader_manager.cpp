@@ -217,7 +217,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 			pattern = MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_LIST");
 		}
 		inventory.emplace_back(
-		        format_string(pattern, dir.u8string().c_str()));
+		        format_str(pattern, dir.u8string().c_str()));
 
 		while (shader != shaders.end()) {
 			shader->replace_extension("");

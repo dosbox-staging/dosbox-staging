@@ -148,10 +148,10 @@ std::string to_string(const VideoMode& video_mode)
 
 	const auto mode_number = (video_mode.is_custom_mode
 	                                  ? ""
-	                                  : format_string(" %02Xh",
+	                                  : format_str(" %02Xh",
 	                                                  video_mode.bios_mode_number));
 
-	return format_string("%s %dx%d %s %s%s",
+	return format_str("%s %dx%d %s %s%s",
 	                     to_string(video_mode.graphics_standard),
 	                     video_mode.width,
 	                     video_mode.height,

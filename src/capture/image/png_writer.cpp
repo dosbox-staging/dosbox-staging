@@ -218,7 +218,7 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 	char source_keyword[] = "Source";
 	static_assert(sizeof(source_keyword) < 80, "libpng limit");
 
-	const auto source_value = format_string(
+	const auto source_value = format_str(
 	        "source resolution: %dx%d; source pixel aspect ratio: %d:%d (1:%1.6f)",
 	        video_mode.width,
 	        video_mode.height,

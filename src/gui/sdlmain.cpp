@@ -4820,7 +4820,7 @@ int sdl_main(int argc, char* argv[])
 		if (arguments->help) {
 			assert(argv && argv[0]);
 			const auto program_name = argv[0];
-			const auto help_utf8 = format_string(MSG_GetRaw("DOSBOX_HELP"),
+			const auto help_utf8 = format_str(MSG_GetRaw("DOSBOX_HELP"),
 			                                     program_name);
 			printf_utf8("%s", help_utf8.c_str());
 			return 0;

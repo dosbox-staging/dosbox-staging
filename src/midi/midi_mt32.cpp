@@ -677,7 +677,7 @@ MIDI_RC MidiHandler_mt32::ListAll(Program* caller)
 		                               : (is_active ? green : reset));
 
 		const auto active_prefix = (is_active ? "*" : " ");
-		const auto model_string  = format_string(
+		const auto model_string  = format_str(
                         "%s%s%s%s", color, active_prefix, display_name, reset);
 
 		return convert_ansi_markup(model_string.c_str());

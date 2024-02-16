@@ -24,9 +24,9 @@
 #include "dosbox.h"
 
 #include <cassert>
+#include <climits>
 #include <cstdarg>
 #include <cstring>
-#include <limits.h>
 #include <optional>
 #include <string>
 #include <vector>
@@ -363,7 +363,7 @@ std::optional<float> parse_percentage_with_percent_sign(const std::string_view s
 std::optional<float> parse_percentage_with_optional_percent_sign(const std::string_view s);
 
 template <typename... Args>
-std::string format_string(const std::string& format, const Args&... args) noexcept
+std::string format_str(const std::string& format, const Args&... args) noexcept
 {
 	// Perform a non-writing format to determine the size
 	const auto required_size = std::snprintf(nullptr, 0, format.c_str(), args...);

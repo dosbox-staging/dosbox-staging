@@ -2491,7 +2491,7 @@ std::string DOS_GenerateListCountriesMessage()
 	message += "\n\n";
 
 	for (auto it = CountryData.begin(); it != CountryData.end(); ++it) {
-		message += format_string("  %5d - %s\n",
+		message += format_str("  %5d - %s\n",
 		                         enum_val(it->first),
 		                         MSG_GetRaw(it->second.GetMsgName().c_str()));
 	}

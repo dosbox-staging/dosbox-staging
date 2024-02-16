@@ -467,11 +467,11 @@ TEST(ParsePercentageWithOptionalPercentSign, Invalid)
 
 TEST(FormatString, Valid)
 {
-	EXPECT_EQ(format_string(""), "");
- 	EXPECT_EQ(format_string("abcd"), "abcd");
-	EXPECT_EQ(format_string("%d", 42), "42");
-	EXPECT_EQ(format_string("%d\0", 42), "42\0");
-	EXPECT_EQ(format_string("%s%d%s", "abcd", 42, "xyz"), "abcd42xyz");
+	EXPECT_EQ(format_str(""), "");
+ 	EXPECT_EQ(format_str("abcd"), "abcd");
+	EXPECT_EQ(format_str("%d", 42), "42");
+	EXPECT_EQ(format_str("%d\0", 42), "42\0");
+	EXPECT_EQ(format_str("%s%d%s", "abcd", 42, "xyz"), "abcd42xyz");
 }
 
 } // namespace

@@ -316,7 +316,7 @@ int32_t get_next_capture_index(const CaptureType type)
 
 std_fs::path generate_capture_filename(const CaptureType type, const int32_t index)
 {
-	const auto filename = format_string("%s%04d%s%s",
+	const auto filename = format_str("%s%04d%s%s",
 	                                    capture_type_to_basename(type),
 	                                    index,
 	                                    capture_type_to_postfix(type),

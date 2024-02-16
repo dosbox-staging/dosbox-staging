@@ -2911,21 +2911,21 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_blocksize);
 	int_prop->Set_values(blocksizes);
-	int_prop->Set_help(format_string(
+	int_prop->Set_help(format_str(
 	        "Mixer block size in sample frames (%d by default). Larger values might help\n"
 	        "with sound stuttering but the sound will also be more lagged.",
 	        default_blocksize));
 
 	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_prebuffer_ms);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
-	int_prop->Set_help(format_string("How many milliseconds of sound to render on top of the blocksize\n"
+	int_prop->Set_help(format_str("How many milliseconds of sound to render on top of the blocksize\n"
 	                                 "(%d by default). Larger values might help with sound stuttering but the sound\n"
 	                                 "will also be more lagged.",
 	                                 default_prebuffer_ms));
 
 	bool_prop = sec_prop.Add_bool("negotiate", only_at_start, default_allow_negotiate);
 	bool_prop->Set_help(
-	        format_string("Let the system audio driver negotiate possibly better sample rate and blocksize\n"
+	        format_str("Let the system audio driver negotiate possibly better sample rate and blocksize\n"
 	                      "settings (%s by default).",
 	                      default_allow_negotiate ? "enabled" : "disabled"));
 
