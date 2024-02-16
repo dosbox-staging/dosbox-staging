@@ -1180,7 +1180,8 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, changeable_at_runtime);
 	pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");
 	pstring->Set_help(
-	        "Language code of the keyboard layout, or 'auto' ('auto' by default).");
+	        "Keyboard layout code ('auto' by default), i.e. 'us' for US English layout.\n"
+	        "Other possible values are the same as accepted by FreeDOS.");
 
 	// COMMAND.COM settings
 
