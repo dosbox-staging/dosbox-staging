@@ -722,8 +722,8 @@ Defina o modo de correção de proporção de tela (habilitado por padrão):
                        aparecer como os artistas pretendiam.
   stretch:             Calcula a proporção de tela a partir das dimensões da área de
                        visualização. Combinado com 'viewport', este modo é útil para
-		       forçar proporções de tela arbitrárias (por exemplo, esticar
-		       jogos DOS para tela cheia em monitores 16:9) e para emular os
+                       forçar proporções de tela arbitrárias (por exemplo, esticar
+                       jogos DOS para tela cheia em monitores 16:9) e para emular os
                        controles de esticamento horizontal e vertical de monitores CRT.
 .
 :CONFIG_INTEGER_SCALING
@@ -1137,14 +1137,14 @@ Modo MPU-401 a emular ('intelligent' por padrão).
 .
 :CONFIG_RAW_MIDI_OUTPUT
 Ativa a saída MIDI bruta, não alterada (desativada por padrão).
-Os drivers MIDI de muitos jogos não estão totalmente em conformidade com o padrão MIDI,
-o que torna a edição das gravações MIDI desses jogos muito propensa a erros e
-complicada em sequenciadores MIDI, muitas vezes resultando em notas faltando ou presas.
-O DOSBox corrige a saída MIDI de tais jogos por padrão. Isso resulta em nenhuma
-diferença audível; afeta apenas a representação dos dados MIDI. Você só deve ativar
-'raw_midi_output' se realmente precisar capturar a saída MIDI bruta e não alterada de
-um programa, por exemplo, ao trabalhar com aplicativos de música ou ao depurar
-problemas MIDI.
+Os drivers MIDI de muitos jogos não estão totalmente em conformidade com o
+padrão MIDI, o que torna a edição das gravações MIDI desses jogos muito propensa
+a erros e complicada em sequenciadores MIDI, muitas vezes resultando em notas
+faltando ou presas. O DOSBox corrige a saída MIDI de tais jogos por padrão.
+Isso resulta em nenhuma diferença audível; afeta apenas a representação dos
+dados MIDI. Você só deve ativar 'raw_midi_output' se realmente precisar capturar
+a saída MIDI bruta e não alterada de um programa, por exemplo, ao trabalhar
+com aplicativos de música ou ao depurar problemas MIDI.
 .
 :CONFIG_SOUNDFONT
 Caminho para um arquivo SoundFont no formato .sf2 ('default.sf2' por padrão).
@@ -1181,15 +1181,16 @@ Ao usar valores personalizados:
     - largura é um decimal de 0.0 a 100.0
     - nível é um decimal de 0.0 a 1.0
   Por exemplo: reverb = 0.61 0.23 0.76 0.56
-Nota: Você pode desativar a reverberação do FluidSynth e ativar a reverberação do nível
-      do mixer no canal do FluidSynth, ou ativar ambos os efeitos de reverberação ao
-      mesmo tempo. Se isso soará bem ou não depende do SoundFont e das configurações de
-      reverberação usadas.
+Nota: Você pode desativar a reverberação do FluidSynth e ativar a reverberação
+      do nível do mixer no canal do FluidSynth, ou ativar ambos os efeitos
+      dereverberação ao mesmo tempo. Se isso soará bem ou não depende do
+      SoundFont e das configurações de reverberação usadas.
 .
 :CONFIG_FSYNTH_FILTER
 Filtro para a saída de áudio do FluidSynth:
-  off:       Não filtra a saída (padrão).
-  <personalizado>:  Definição de filtro personalizada; veja 'sb_filter' para detalhes.
+  off:              Não filtra a saída (padrão).
+  <personalizado>:  Definição de filtro personalizada;
+                    veja 'sb_filter' para detalhes.
 .
 :CONFIG_MODEL
 O modelo Roland MT-32/CM-32ML a ser usado.
@@ -1215,8 +1216,9 @@ Notas:
 .
 :CONFIG_MT32_FILTER
 Filtro para a saída de áudio do Roland MT-32/CM-32L:
-  off:       Não filtra a saída (padrão).
-  <personalizado>:  Definição de filtro personalizada; veja 'sb_filter' para detalhes.
+  off:              Não filtra a saída (padrão).
+  <personalizado>:  Definição de filtro personalizada;
+                    veja 'sb_filter' para detalhes.
 .
 :MT32_NO_SUPPORTED_MODELS
 Nenhum modelo suportado presente
@@ -1263,9 +1265,8 @@ Permitir que o mixer da Sound Blaster modifique o mixer do DOSBox (ativado por p
 .
 :CONFIG_SBWARMUP
 Silencie o áudio DMA inicial após ligar a placa, em milissegundos
-(100 por padrão). Isso mitiga os estalos ouvidos ao iniciar muitos
-jogos baseados em SB. Reduza isso se perceber que a reprodução inicial
-está sem áudio.
+(100 por padrão). Isso mitiga os estalos ouvidos ao iniciar muitos jogos
+baseados em SB. Reduza isso se perceber que a reprodução inicial está sem áudio.
 .
 :CONFIG_OPLRATE
 A forma de onda OPL agora é amostrada na taxa de reprodução do mixer para
@@ -1365,7 +1366,7 @@ para reprodução da GUS.
 Filtro para a saída de áudio da Gravis UltraSound:
   off:              Não filtra a saída (padrão).
   <personalizado>:  Definição de filtro personalizado;
-                    'sb_filter' para detalhes.
+                    veja 'sb_filter' para detalhes.
 .
 :CONFIG_IMFC
 Ativar o IBM Music Feature Card (desativado por padrão).
@@ -1720,7 +1721,7 @@ Notas:
 .
 :CONFIG_UDP_PORT_FORWARDS
 Encaminha uma ou mais portas UDP do anfitrião para o convidado DOS
-(não definido por padrão). O formato é o mesmo dos encaminhamentos de porta TCP
+(não definido por padrão). O formato é o mesmo dos encaminhamentos de porta TCP.
 .
 :AUTOEXEC_CONFIGFILE_HELP
 As linhas desta seção serão executadas na inicialização.
@@ -2999,7 +3000,7 @@ Exemplos:
 
 .
 :PROGRAM_RESCAN_SUCCESS
-Unidade verificada.
+Unidade verificada novamente.
 
 .
 :PROGRAM_SERIAL_HELP_LONG
