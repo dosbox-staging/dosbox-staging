@@ -7,4 +7,5 @@ resource_files = [
     'nl.lng',
     'pl.lng',
     'ru.lng',
+    'br.lng',
 ]
