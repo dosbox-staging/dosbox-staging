@@ -778,8 +778,8 @@ Nota: Você também pode alternar entre as paletas disponíveis por meio de
       teclas de atalho.
 .
 :CONFIG_CGA_COLORS
-Define a interpretação das cores RGBI CGA. Afeta todos os tipos de máquina
-capazes de exibir gráficos CGA ou melhores. Presets embutidos:
+Define a interpretação das cores RGBI CGA. Afeta todos os tipos de máquinas
+capazes de exibir gráficos CGA ou superiores. Predefinições integradas:
   default:       A paleta CGA canônica, emulada por adaptadores VGA
                  (padrão).
   tandy <bl>:    Emulação de um monitor Tandy idealizado com nível de marrom
@@ -861,12 +861,12 @@ Habilita o modo composto na inicialização (apenas para os tipos de máquina
 'cga', 'pcjr' e 'tandy'; 'auto' por padrão). 'auto' permite ao programa
 decidir.
 Nota: Ajuste finamente as configurações abaixo (ou seja, 'hue') usando os
-      atalhos compostos, em seguida, copie as novas configurações dos logs
-      para o seu config.
+      atalhos compostos, em seguida, copie as novas configurações dos
+	  registros para a sua configuração.
 .
 :CONFIG_ERA
 Era da tecnologia composta ('auto' por padrão).
-Quando 'auto', PCjr usa 'nova' e CGA/Tandy usam 'velha'.
+Quando 'auto', PCjr usa 'new' e CGA/Tandy usam 'old'.
 .
 :CONFIG_HUE
 Matiz da paleta RGB (0 por padrão).
@@ -920,10 +920,10 @@ Mapeamento de Textura (TMU) da seguinte forma:
   12: 4 MB para o FBI e duas TMUs, cada uma com 4 MB.
 .
 :CONFIG_VOODOO_MULTITHREADING
-Usa threads para melhorar o desempenho do 3dfx Voodoo (ativado por padrão).
+Usa threads para melhorar o desempenho da 3dfx Voodoo (ativado por padrão).
 .
 :CONFIG_VOODOO_BILINEAR_FILTERING
-Usa filtragem bilinear para emular o efeito de suavização de textura do 3dfx Voodoo
+Usa filtragem bilinear para emular o efeito de suavização de textura da 3dfx Voodoo
 (desativado por padrão). Só é sugerido se você tiver uma CPU de desktop rápida,
 pois pode afetar as taxas de quadros em sistemas mais lentos.
 .
@@ -1070,7 +1070,7 @@ distorção da saída de áudio:
 :CONFIG_CROSSFEED
 Ativa o crossfeed globalmente em todos os canais estéreo para audição com fones de ouvido:
   off:     Sem crossfeed (padrão).
-  on:      Ativar crossfeed (preset normal).
+  on:      Ativar crossfeed (predefinição normal).
   light:   Efeito de crossfeed leve (especialmente adequado para música de sintetizador
            que possui muito ruído branco).
   normal:  Crossfeed normal que funciona bem com uma grande variedade de jogos.
@@ -1080,23 +1080,23 @@ Nota: Você pode ajustar finamente o nível de crossfeed de cada canal usando o 
 :CONFIG_REVERB
 Ativa a reverberação globalmente para adicionar uma sensação de espaço ao som:
   off:     Sem reverberação (padrão).
-  on:      Ativar reverberação (preset médio).
+  on:      Ativar reverberação (predefinição média).
   tiny:    Simula o som de um pequeno alto-falante integrado em uma sala;
            especificamente projetado para sistemas de áudio de alto-falante pequeno
            (PC Speaker, Tandy, PS/1 Audio e dispositivos LPT DAC).
   small:   Adiciona uma sutil sensação de espaço; bom para jogos que usam um único
            canal sintetizador (tipicamente OPL) para música e efeitos sonoros.
-  medium:  Preset de sala média que funciona bem com uma grande variedade de jogos.
-  large:   Preset de grande salão recomendado para jogos que usam canais separados para
-           música e áudio digital.
-  huge:    Uma variante mais forte do preset de grande salão; funciona muito bem
+  medium:  Predefinição de sala média que funciona bem com uma grande variedade de jogos.
+  large:   Predefinição de grande salão recomendada para jogos que usam canais separados
+           para música e áudio digital.
+  huge:    Uma variante mais intensa da predefinição de grande salão; funciona muito bem
            em alguns jogos com trilhas sonoras mais atmosféricas.
 Nota: Você pode ajustar finamente o nível de reverberação de cada canal usando o MIXER.
 .
 :CONFIG_CHORUS
 Ativa o coro globalmente para adicionar uma sensação de movimento estéreo ao som:
   off:     Sem coro (padrão).
-  on:      Ativar coro (preset normal).
+  on:      Ativar coro (predefinição normal).
   light:   Um e feito de coro leve (especialmente adequado para música de sintetizador que
            apresenta muito ruído branco).
   normal:  Coro normal que funciona bem com uma grande variedade de jogos.
