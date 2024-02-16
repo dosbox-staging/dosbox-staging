@@ -160,8 +160,9 @@
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <CompileAs>CompileAsCpp</CompileAs>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <OmitFramePointers>false</OmitFramePointers>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;odbc32.lib;odbccp32.lib;zlib-ngd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -192,8 +193,9 @@
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <CompileAs>CompileAsCpp</CompileAs>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <OmitFramePointers>false</OmitFramePointers>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;odbc32.lib;odbccp32.lib;zlib-ngd.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -224,7 +226,8 @@
       <AssemblerOutput>NoListing</AssemblerOutput>
       <CompileAs>CompileAsCpp</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;odbc32.lib;odbccp32.lib;zlib-ng.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -258,7 +261,8 @@
       <AssemblerOutput>NoListing</AssemblerOutput>
       <CompileAs>CompileAsCpp</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;odbc32.lib;odbccp32.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -293,7 +297,8 @@
       <AssemblerOutput>NoListing</AssemblerOutput>
       <CompileAs>CompileAsCpp</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;odbc32.lib;odbccp32.lib;zlib-ng.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -327,7 +332,8 @@
       <AssemblerOutput>NoListing</AssemblerOutput>
       <CompileAs>CompileAsCpp</CompileAs>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;odbc32.lib;odbccp32.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>

@@ -149,13 +149,13 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <OmitFramePointers>false</OmitFramePointers>
     </ClCompile>
     <Link>
@@ -177,7 +177,7 @@ $(TargetPath)</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
@@ -186,7 +186,7 @@ $(TargetPath)</Command>
       <OmitFramePointers>true</OmitFramePointers>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -210,7 +210,7 @@ $(TargetPath)</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
@@ -219,7 +219,7 @@ $(TargetPath)</Command>
       <OmitFramePointers>true</OmitFramePointers>
       <AssemblerOutput>NoListing</AssemblerOutput>
       <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -241,14 +241,14 @@ $(TargetPath)</Command>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <FloatingPointExceptions>true</FloatingPointExceptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>false</OmitFramePointers>
       <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -269,7 +269,7 @@ $(TargetPath)</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
@@ -277,7 +277,7 @@ $(TargetPath)</Command>
       <OmitFramePointers>true</OmitFramePointers>
       <ConformanceMode>Default</ConformanceMode>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -302,7 +302,7 @@ $(TargetPath)</Command>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FloatingPointExceptions>false</FloatingPointExceptions>
@@ -310,7 +310,7 @@ $(TargetPath)</Command>
       <OmitFramePointers>true</OmitFramePointers>
       <ConformanceMode>Default</ConformanceMode>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>..\..\src\libs\ghc;..\..\src\libs\loguru;..\..\src\libs\whereami</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
