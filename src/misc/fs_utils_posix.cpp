@@ -176,7 +176,7 @@ constexpr size_t XattrMaxLength = 4;
 
 static std::string fat_attribs_to_xattr(const FatAttributeFlags fat_attribs)
 {
-	return format_string("0x%x", fat_attribs._data & XattrWriteMask);
+	return format_str("0x%x", fat_attribs._data & XattrWriteMask);
 }
 
 static std::optional<FatAttributeFlags> xattr_to_fat_attribs(const std::string& xattr)

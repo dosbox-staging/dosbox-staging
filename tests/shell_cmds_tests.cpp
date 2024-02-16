@@ -215,15 +215,15 @@ TEST_F(DOS_Shell_CMDSTest, CMD_FOR_delimiters)
 
 	static constexpr auto delimeters = ",;= \t";
 	// TODO: C++20: Use std::format();
-	const auto input = format_string("%s%%C%sIN%s(%sONE%sTWO%s)%sDO%sECHO %%C",
-	                                 delimeters,
-	                                 delimeters,
-	                                 delimeters,
-	                                 delimeters,
-	                                 delimeters,
-	                                 delimeters,
-	                                 delimeters,
-	                                 delimeters); // ):
+	const auto input = format_str("%s%%C%sIN%s(%sONE%sTWO%s)%sDO%sECHO %%C",
+	                              delimeters,
+	                              delimeters,
+	                              delimeters,
+	                              delimeters,
+	                              delimeters,
+	                              delimeters,
+	                              delimeters,
+	                              delimeters); // ):
 
 	EXPECT_CALL(shell, ExecuteShellCommand(StrEq("ECHO"), StrEq(" ONE")))
 	        .Times(1)

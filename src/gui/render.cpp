@@ -806,7 +806,7 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		const bool is_out_of_bounds = (w <= 0 || w > desktop.w ||
 		                               h <= 0 || h > desktop.h);
 		if (is_out_of_bounds) {
-			const auto extra_info = format_string(
+			const auto extra_info = format_str(
 			        "Viewport size is outside of the %dx%d desktop bounds",
 			        iroundf(desktop.w),
 			        iroundf(desktop.h));
@@ -903,7 +903,7 @@ static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::
 		};
 
 		if (!is_within_bounds(width_scale)) {
-			const auto extra_info = format_string(
+			const auto extra_info = format_str(
 			        "Horizontal scale must be within the %g-%g%% range",
 			        MinRelativeScaleFactor * 100.0f,
 			        MaxRelativeScaleFactor * 100.0f);
@@ -913,7 +913,7 @@ static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::
 		}
 		if (!is_within_bounds(height_scale)) {
 			LOG_TRACE("****1");
-			const auto extra_info = format_string(
+			const auto extra_info = format_str(
 			        "Vertical scale must be within the %g-%g%% range",
 			        MinRelativeScaleFactor * 100.0f,
 			        MaxRelativeScaleFactor * 100.0f);

@@ -874,7 +874,7 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 		                          (selected_font == sf2_path.string());
 
 		if (do_highlight) {
-			const auto output = format_string("%s* %s%s\n",
+			const auto output = format_str("%s* %s%s\n",
 			                                  green,
 			                                  line.c_str(),
 			                                  reset);

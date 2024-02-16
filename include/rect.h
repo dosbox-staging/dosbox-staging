@@ -359,7 +359,7 @@ struct Rect {
 	// `{x: 0, y: -3, w: 5.5, h: 1.57143}` format.
 	std::string ToString() const
 	{
-		return format_string("{x: %g, y: %g, w: %g, h: %g}", x, y, w, h);
+		return format_str("{x: %g, y: %g, w: %g, h: %g}", x, y, w, h);
 	}
 };
 
