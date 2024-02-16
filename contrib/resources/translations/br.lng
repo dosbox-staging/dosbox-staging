@@ -2228,9 +2228,10 @@ Parâmetros:
   [color=white]PÁGINA[reset]  nome da página a ser exibida, incluindo [color=white]cdrom[reset], [color=white]mount[reset] e [color=white]special[reset]
 
 Notas:
-  Rodar [color=light-green]intro[reset] sem argumentos exibe uma página de informação por vez;
-  pressione qualquer tecla para avançar para a próxima página. Se um nome de página for fornecido, então a
-  página especificada será exibida diretamente.
+  Digite [color=light-green]intro[reset] sem parâmetros para exibir uma página de informação por vez;
+  pressione qualquer tecla para avançar para a próxima página. Se um
+  nome de página for fornecido, então a página especificada será
+  exibida diretamente.
 
 Exemplos:
   [color=light-green]intro[reset]
