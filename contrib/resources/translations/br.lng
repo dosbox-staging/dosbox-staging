@@ -2933,7 +2933,7 @@ Nenhum mouse disponível corresponde ao padrão.
 
 .
 :PROGRAM_MOUSECTL_TABLE_HEADER1
-[color=white]Interface      Sensibilidade      Taxa (Hz)     Status[reset]
+[color=white]Interface     Sensibilidade      Taxa (Hz)    Status[reset]
 .
 :PROGRAM_MOUSECTL_TABLE_LAYOUT1
 [color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s
@@ -2966,9 +2966,9 @@ As taxas de amostragem para mouses em interfaces [color=light-cyan]COM[reset] s�
 As taxas de amostragem com valor mínimo definido são marcadas com '*'.
 .
 :PROGRAM_MOUSECTL_MAP_ADVICE
-Clique no botão [color=white]esquerdo[reset] do mouse para mapear o mouse físico para a interface. Clicar em
-qualquer outro botão cancela o mapeamento e atribui o ponteiro do sistema a todas as
-interfaces de mouse.
+Clique no botão [color=white]esquerdo[reset] do mouse para mapear o mouse físico para a interface.
+Clicar em qualquer outro botão cancela o mapeamento e atribui o ponteiro
+do sistema a todas as interfaces de mouse.
 .
 :PROGRAM_MOUSECTL_MAP_CANCEL
 (mapeamento cancelado)
