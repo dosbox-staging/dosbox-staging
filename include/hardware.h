@@ -24,7 +24,7 @@
 
 #include "dosbox.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 
 class Section;

@@ -21,9 +21,9 @@
 
 #include "dosbox.h"
 
-#include <memory>
-#include <stdio.h>
+#include <cstdio>
 #include <array>
+#include <memory>
 
 #include "bios.h"
 #include "dos_inc.h"
