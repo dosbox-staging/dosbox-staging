@@ -22,8 +22,9 @@
 #define DOSBOX_SDLMAIN_H
 
 #include "SDL.h"
+
+#include <cstring>
 #include <optional>
-#include <string.h>
 #include <string>
 #include <string_view>
 
