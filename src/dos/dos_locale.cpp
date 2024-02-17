@@ -3283,93 +3283,93 @@ std::string DOS_GetBundledCodePageFileName(const uint16_t code_page)
 	case 852:
 	case 853:
 	case 857:
-	case 858: return "EGA.CPX";
+	case 858: return "EGA.CPI";
 	case 775:
 	case 859:
 	case 1116:
 	case 1117:
 	case 1118:
-	case 1119: return "EGA2.CPX";
+	case 1119: return "EGA2.CPI";
 	case 771:
 	case 772:
 	case 808:
 	case 855:
 	case 866:
-	case 872: return "EGA3.CPX";
+	case 872: return "EGA3.CPI";
 	case 848:
 	case 849:
 	case 1125:
 	case 1131:
 	case 3012:
-	case 30010: return "EGA4.CPX";
+	case 30010: return "EGA4.CPI";
 	case 113:
 	case 737:
 	case 851:
-	case 869: return "EGA5.CPX";
+	case 869: return "EGA5.CPI";
 	case 899:
 	case 30008:
 	case 58210:
 	case 59829:
 	case 60258:
-	case 60853: return "EGA6.CPX";
+	case 60853: return "EGA6.CPI";
 	case 30011:
 	case 30013:
 	case 30014:
 	case 30017:
 	case 30018:
-	case 30019: return "EGA7.CPX";
+	case 30019: return "EGA7.CPI";
 	case 770:
 	case 773:
 	case 774:
 	case 777:
-	case 778: return "EGA8.CPX";
+	case 778: return "EGA8.CPI";
 	case 860:
 	case 861:
 	case 863:
 	case 865:
-	case 867: return "EGA9.CPX";
+	case 867: return "EGA9.CPI";
 	case 667:
 	case 668:
 	case 790:
 	case 991:
-	case 3845: return "EGA10.CPX";
+	case 3845: return "EGA10.CPI";
 	case 30000:
 	case 30001:
 	case 30004:
 	case 30007:
-	case 30009: return "EGA11.CPX";
+	case 30009: return "EGA11.CPI";
 	case 30003:
 	case 30029:
 	case 30030:
-	case 58335: return "EGA12.CPX";
+	case 58335: return "EGA12.CPI";
 	case 895:
 	case 30002:
 	case 58152:
 	case 59234:
-	case 62306: return "EGA13.CPX";
+	case 62306: return "EGA13.CPI";
 	case 30006:
 	case 30012:
 	case 30015:
 	case 30016:
 	case 30020:
-	case 30021: return "EGA14.CPX";
+	case 30021: return "EGA14.CPI";
 	case 30023:
 	case 30024:
 	case 30025:
 	case 30026:
 	case 30027:
-	case 30028: return "EGA15.CPX";
+	case 30028: return "EGA15.CPI";
 	case 3021:
 	case 30005:
 	case 30022:
 	case 30031:
-	case 30032: return "EGA16.CPX";
+	case 30032: return "EGA16.CPI";
 	case 862:
 	case 864:
 	case 30034:
 	case 30033:
 	case 30039:
-	case 30040: return "EGA17.CPX";
+	case 30040: return "EGA17.CPI";
 	case 856:
 	case 3846:
 	case 3848: return "EGA18.CPI";
