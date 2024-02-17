@@ -20,26 +20,28 @@
 
 #if C_IPX
 
+#include <atomic>
+#include <thread>
+
 #include "ipx.h"
 #include "ipxserver.h"
 #include "timer.h"
-#include <cstdlib>
-#include <cstring>
 
-constexpr int UDP_UNICAST = -1; // SDLNet magic number
+static constexpr int UDP_UNICAST = -1; // SDLNet magic number
 
-IPaddress ipxServerIp;  // IPAddress for server's listening port
-UDPsocket ipxServerSocket;  // Listening server socket
+static IPaddress ipxServerIp;     // IPAddress for server's listening port
+static UDPsocket ipxServerSocket; // Listening server socket
 
-packetBuffer connBuffer[SOCKETTABLESIZE];
+static packetBuffer connBuffer[SOCKETTABLESIZE];
 
-uint8_t inBuffer[IPXBUFFERSIZE];
-IPaddress ipconn[SOCKETTABLESIZE];  // Active TCP/IP connection
-UDPsocket tcpconn[SOCKETTABLESIZE]; // Active TCP/IP connections
-SDLNet_SocketSet serverSocketSet;
-TIMER_TickHandler* serverTimer;
+static uint8_t inBuffer[IPXBUFFERSIZE];
+static IPaddress ipconn[SOCKETTABLESIZE]; // Active TCP/IP connection
 
-uint8_t packetCRC(uint8_t *buffer, uint16_t bufSize) {
+static std::thread ipx_server_thread;
+static std::atomic_bool ipx_server_running = false;
+
+uint8_t packetCRC(uint8_t* buffer, uint16_t bufSize)
+{
 	uint8_t tmpCRC = 0;
 	uint16_t i;
 	for(i=0;i<bufSize;i++) {
@@ -120,7 +122,7 @@ bool IPX_isConnectedToServer(Bits tableNum, IPaddress ** ptrAddr) {
 }
 
 static void ackClient(IPaddress clientAddr) {
-	IPXHeader regHeader;
+	IPXHeader regHeader = {};
 	UDPpacket regPacket;
 
 	SDLNet_Write16(0xffff, regHeader.checkSum);
@@ -196,12 +198,18 @@ static void IPX_ServerLoop() {
 		}
 
 		// IPX packet is complete.  Now interpret IPX header and send to respective IP address
-		sendIPXPacket((uint8_t *)inPacket.data, inPacket.len);
+		sendIPXPacket((uint8_t*)inPacket.data,
+		              static_cast<int16_t>(inPacket.len));
 	}
 }
 
 void IPX_StopServer() {
-	TIMER_DelTickHandler(&IPX_ServerLoop);
+	ipx_server_running = false;
+
+	if (ipx_server_thread.joinable()) {
+		ipx_server_thread.join();
+	}
+
 	SDLNet_UDP_Close(ipxServerSocket);
 }
 
@@ -212,10 +220,18 @@ bool IPX_StartServer(uint16_t portnum)
 		ipxServerSocket = SDLNet_UDP_Open(portnum);
 		if(!ipxServerSocket) return false;
 
-		for (uint16_t i = 0; i < SOCKETTABLESIZE; ++i)
-			connBuffer[i].connected = false;
+		for (auto& i : connBuffer) {
+			i.connected = false;
+		}
 
-		TIMER_AddTickHandler(&IPX_ServerLoop);
+		ipx_server_running = true;
+		ipx_server_thread  = std::thread([]() {
+                        while (ipx_server_running) {
+                                IPX_ServerLoop();
+                                std::this_thread::sleep_for(
+                                        std::chrono::milliseconds(1));
+                        }
+                });
 		return true;
 	}
 	return false;
