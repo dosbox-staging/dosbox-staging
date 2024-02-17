@@ -3547,14 +3547,16 @@ Observe que só é possível usar SUBST em unidades locais.
 
 .
 :SHELL_STARTUP_CGA_MONO
-║ Use [color=light-red]F11[color=white] para alternar entre os modos verde, âmbar, branco e branco-papel, ║
-║ e [color=light-red]%s+F11[color=white] para alterar as configurações de contraste/brilho.                ║
-║                                                                    ║
+║ Use [color=light-red]F11[color=white] para alternar entre os modos verde, âmbar, branco e          ║
+║ branco-papel, e [color=light-red]%s+F11[color=white] para alterar as configurações                ║
+║ de contraste/brilho.                                                 ║
+║                                                                      ║
 
 .
 :SHELL_STARTUP_HERC
-║ Use [color=light-red]F11[color=white] para alternar entre as cores monocromáticas branco, âmbar e verde. ║
-║                                                                    ║
+║ Use [color=light-red]F11[color=white] para alternar entre as cores monocromáticas branco, âmbar    ║
+║ e verde.                                                             ║
+║                                                                      ║
 
 .
 :SHELL_STARTUP_DEBUG
