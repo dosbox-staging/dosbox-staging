@@ -1184,7 +1184,7 @@ Ao usar valores personalizados:
   Por exemplo: reverb = 0.61 0.23 0.76 0.56
 Nota: Você pode desativar a reverberação do FluidSynth e ativar a reverberação
       do nível do mixer no canal do FluidSynth, ou ativar ambos os efeitos
-      dereverberação ao mesmo tempo. Se isso soará bem ou não depende do
+      de reverberação ao mesmo tempo. Se isso soará bem ou não depende do
       SoundFont e das configurações de reverberação usadas.
 .
 :CONFIG_FSYNTH_FILTER
@@ -3477,8 +3477,8 @@ Falha ao criar/abrir um arquivo temporário para redirecionamento. Verifique a v
 
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
-Unidade %c não existe!
-Você deve [color=yellow]montá-lo[reset] primeiro. Digite [color=yellow]intro[reset] ou [color=yellow]intro mount[reset] para mais informações.
+A unidade %c não existe!
+Você deve [color=yellow]montá-la[reset] primeiro. Digite [color=yellow]intro[reset] ou [color=yellow]intro mount[reset] para mais informações.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
