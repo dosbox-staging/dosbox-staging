@@ -460,7 +460,7 @@ mouse contínuo, aperte %s+F10 ou o botão do meio do mouse para restringi-lo
 .
 :CONFIG_FULLSCREEN
 Inicie diretamente em tela cheia (desabilitado por padrão).
-Execute INTRO e veja Teclas Especiais para teclas de controle da janela.
+Digite INTRO e veja Teclas Especiais para teclas de controle da janela.
 .
 :CONFIG_DISPLAY
 Número do monitor a ser usado; os valores dependem do sistema operacional
@@ -1068,14 +1068,15 @@ distorção da saída de áudio:
   on:   Ativar compressor (padrão).
 .
 :CONFIG_CROSSFEED
-Ativa o crossfeed globalmente em todos os canais estéreo para audição com fones de ouvido:
-  off:     Sem crossfeed (padrão).
-  on:      Ativar crossfeed (predefinição normal).
-  light:   Efeito de crossfeed leve (especialmente adequado para música de sintetizador
+Ativa o cruzamento de canais globalmente em todos os canais estéreo para audição
+com fones de ouvido:
+  off:     Sem cruzamento de canais (padrão).
+  on:      Ativar cruzamento de canais (predefinição normal).
+  light:   Efeito de cruzamento de canais leve (especialmente adequado para música de sintetizador
            que possui muito ruído branco).
-  normal:  Crossfeed normal que funciona bem com uma grande variedade de jogos.
-  strong:  Um efeito de crossfeed óbvio e direto.
-Nota: Você pode ajustar finamente o nível de crossfeed de cada canal usando o MIXER.
+  normal:  Cruzamento de canais normal que funciona bem com uma grande variedade de jogos.
+  strong:  Um efeito de cruzamento de canais óbvio e direto.
+Nota: Você pode ajustar finamente o nível de cruzamento de canais de cada canal usando o MIXER.
 .
 :CONFIG_REVERB
 Ativa a reverberação globalmente para adicionar uma sensação de espaço ao som:
@@ -1425,7 +1426,7 @@ Modelo de emulação do alto-falante do PC:
              Funciona bem para jogos que usam efeitos do tipo RealSound.
   impulse:   A forma de onda é criada usando impulsos sincronizados.
              Recomendado para jogos de onda quadrada, como Commander Keen.
-             Embora melhore a precisão, é mais intensivo em CPU.
+             Embora melhore a precisão, exige mais do processador.
   none/off:  Não use o Alto-falante do PC.
 .
 :CONFIG_PCSPEAKER_FILTER
@@ -2562,20 +2563,20 @@ Uso:
 Parâmetros:
   [color=light-cyan]CANAL[reset]     canal do mixer para alterar as configurações
   [color=white]COMANDOS[reset]  um ou mais dos seguintes comandos:
-    Volume:      Volume percentual de [color=white]0[reset] a [color=white]9999[reset], ou volume em decibéis prefixado
-                 com [color=white]d[reset] (por exemplo, [color=white]d-7.5[reset]). Use [color=white]L:R[reset] para definir os volumes
-		 esquerdo e direito separadamente (por exemplo, [color=white]10:20[reset], [color=white]150:d6[reset]).
+    Volume:       Volume percentual de [color=white]0[reset] a [color=white]9999[reset], ou volume em decibéis prefixado
+                  com [color=white]d[reset] (por exemplo, [color=white]d-7.5[reset]). Use [color=white]L:R[reset] para definir os volumes
+		  esquerdo e direito separadamente (por exemplo, [color=white]10:20[reset], [color=white]150:d6[reset]).
     Modo estéreo: [color=white]stereo[reset] ou [color=white]reverse[reset] (apenas canais estéreo).
-    Crossfeed:   [color=white]x0[reset] a [color=white]x100[reset], define a intensidade do crossfeed
-    (apenas canais estéreo).
-    Reverb:      [color=white]r0[reset] a [color=white]r100[reset], define o nível de reverberação.
-    Chorus:      [color=white]c0[reset] a [color=white]c100[reset], define o nível de coro.
+    Cruz. canais: de [color=white]x0[reset] a [color=white]x100[reset], define a intensidade do cruzamento de canais
+                  (apenas canais estéreo).
+    Reverberação: [color=white]r0[reset] a [color=white]r100[reset], define o nível de reverberação.
+    Coro:         [color=white]c0[reset] a [color=white]c100[reset], define o nível de coro.
 
 Notas:
-  - Execute [color=light-green]mixer[reset] sem argumentos para visualizar as configurações atuais.
-  - Execute [color=light-green]mixer[reset] /listmidi para listar todos os dispositivos MIDI disponíveis.
+  - Digite [color=light-green]mixer[reset] sem parâmetros para visualizar as configurações atuais.
+  - Digite [color=light-green]mixer[reset] /listmidi para listar todos os dispositivos MIDI disponíveis.
   - Você pode alterar as configurações de mais de um canal em um único comando.
-  - Se nenhum canal for especificado, você pode definir o crossfeed,
+  - Se nenhum canal for especificado, você pode definir o cruzamento de canais,
     reverberação ou coro de todos os canais globalmente.
   - A opção /noshow aplica as alterações sem mostrar as configurações do mixer.
 
@@ -2608,10 +2609,10 @@ O canal [color=light-cyan]%s[reset] não está ativo
 Comando global inválido: [color=white]%s[reset]
 .
 :SHELL_CMD_MIXER_INVALID_VOLUME_COMMAND
-Volume inválido para o canal [color=light-cyan]%s[reset]: [color=white]%s[reset] (execute MIXER /? para obter ajuda)
+Volume inválido para o canal [color=light-cyan]%s[reset]: [color=white]%s[reset] (digite MIXER /? para obter ajuda)
 .
 :SHELL_CMD_MIXER_INVALID_CROSSFEED_STRENGTH
-Intensidade de crossfeed inválida para o canal [color=light-cyan]%s[reset]: [color=white]%s[reset]
+Intensidade de cruzamento de canais inválida para o canal [color=light-cyan]%s[reset]: [color=white]%s[reset]
 (deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_INVALID_CHORUS_LEVEL
@@ -2623,7 +2624,7 @@ Nível de reverberação inválido para o canal [color=light-cyan]%s[reset]: [co
 (deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_CROSSFEED_STRENGTH
-Intensidade de crossfeed ausente após [color=white]x[reset] para o canal [color=light-cyan]%s[reset]
+Intensidade de cruzamento de canais ausente após [color=white]x[reset] para o canal [color=light-cyan]%s[reset]
 (deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_CHORUS_LEVEL
@@ -2635,7 +2636,7 @@ Nível de reverberação ausente após [color=white]r[reset] para o canal [color
 (deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
-Intensidade global de crossfeed inválida [color=white]%s[reset] (deve estar entre 0 e 100)
+Intensidade global de cruzamento de canais inválida [color=white]%s[reset] (deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
 Nível global de coro inválido [color=white]%s[reset] (deve estar entre 0 e 100)
@@ -2644,7 +2645,7 @@ Nível global de coro inválido [color=white]%s[reset] (deve estar entre 0 e 100
 Nível global de reverberação inválido [color=white]%s[reset] (deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
-Intensidade global de crossfeed ausente após [color=white]x[reset] (deve estar entre 0 e 100)
+Intensidade global de cruzamento de canais ausente após [color=white]x[reset] (deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
 Nível global de coro ausente após [color=white]c[reset] (deve estar entre 0 e 100)
@@ -2675,7 +2676,7 @@ Parâmetros:
   /e       modo estendido, com mais teclas de atalho disponíveis
   /p       expande o caractere de nova página / formulário
   /s       condensa várias linhas em branco em uma
-  /t[color=white]n[reset]      especifica o tamanho do tab, de 1 a 9, o padrão é 8
+  /t[color=white]n[reset]      especifica o tamanho da tabulação, de 1 a 9, o padrão é 8
   +[color=white]nnn[reset]     pula as primeiras [color=white]nnn[reset] linhas do primeiro arquivo
 
 Notas:
@@ -2771,7 +2772,7 @@ Notas:
   - '-t overlay' redireciona gravações para a unidade montada para outra pasta.
   - '-usecd ID' fornece acesso direto a uma unidade de CD-ROM.
     Isso é necessário para áudio de CD (apenas suportado no Windows e Linux).
-    Execute 'mount -cd' para descobrir a lista de IDs válidos.
+    Digite 'mount -cd' para descobrir a lista de IDs válidos.
   - Opções adicionais são descritas no manual (arquivo README, capítulo 4).
 
 Exemplos:
@@ -3280,7 +3281,7 @@ Erro ao escrever arquivo - '%s'
 
 .
 :SHELL_CMD_HELP
-Se você deseja uma lista de todos os comandos suportados, execute [color=yellow]help /all[reset]
+Se você deseja uma lista de todos os comandos suportados, digite [color=yellow]help /all[reset]
 Uma lista curta dos comandos mais frequentemente usados:
 
 .
@@ -3323,7 +3324,7 @@ Não foi possível mudar para: %s
 
 .
 :SHELL_CMD_CHDIR_HINT
-Dica: Para mudar para uma unidade diferente, execute [color=yellow]%c:[reset]
+Dica: Para mudar para uma unidade diferente, digite [color=yellow]%c:[reset]
 
 .
 :SHELL_CMD_CHDIR_HINT_2
@@ -3350,7 +3351,7 @@ A data especificada não está correta.
 Data atual: 
 .
 :SHELL_CMD_DATE_SETHLP
-Execute [color=yellow]date %s[reset] para mudar a data atual.
+Digite [color=yellow]date %s[reset] para mudar a data atual.
 
 .
 :SHELL_CMD_DATE_HELP_LONG
@@ -3386,7 +3387,7 @@ A hora especificada não está correta.
 Hora atual: 
 .
 :SHELL_CMD_TIME_SETHLP
-Execute [color=yellow]time %s[reset] para mudar a hora atual.
+Digite [color=yellow]time %s[reset] para mudar a hora atual.
 
 .
 :SHELL_CMD_TIME_HELP_LONG
@@ -3477,7 +3478,7 @@ Falha ao criar/abrir um arquivo temporário para redirecionamento. Verifique a v
 .
 :SHELL_EXECUTE_DRIVE_NOT_FOUND
 Unidade %c não existe!
-Você deve [color=yellow]montá-lo[reset] primeiro. Execute [color=yellow]intro[reset] ou [color=yellow]intro mount[reset] para mais informações.
+Você deve [color=yellow]montá-lo[reset] primeiro. Digite [color=yellow]intro[reset] ou [color=yellow]intro mount[reset] para mais informações.
 
 .
 :SHELL_EXECUTE_ILLEGAL_COMMAND
