@@ -31,6 +31,7 @@ static constexpr int UDP_UNICAST = -1; // SDLNet magic number
 
 static IPaddress ipxServerIp;     // IPAddress for server's listening port
 static UDPsocket ipxServerSocket; // Listening server socket
+static SDLNet_SocketSet socket_set = nullptr;
 
 static packetBuffer connBuffer[SOCKETTABLESIZE];
 
@@ -210,7 +211,9 @@ void IPX_StopServer() {
 		ipx_server_thread.join();
 	}
 
+	SDLNet_FreeSocketSet(socket_set);
 	SDLNet_UDP_Close(ipxServerSocket);
+	socket_set = nullptr;
 }
 
 bool IPX_StartServer(uint16_t portnum)
@@ -224,14 +227,35 @@ bool IPX_StartServer(uint16_t portnum)
 			i.connected = false;
 		}
 
-		ipx_server_running = true;
-		ipx_server_thread  = std::thread([]() {
-                        while (ipx_server_running) {
-                                IPX_ServerLoop();
-                                std::this_thread::sleep_for(
-                                        std::chrono::milliseconds(1));
-                        }
-                });
+		if (!socket_set) {
+			socket_set = SDLNet_AllocSocketSet(1);
+			if (!socket_set) {
+				LOG_ERR("IPXServer: %s", SDLNet_GetError());
+				return false;
+			}
+			if (SDLNet_UDP_AddSocket(socket_set, ipxServerSocket) == -1) {
+				LOG_ERR("IPXServer: %s", SDLNet_GetError());
+				return false;
+			}
+		}
+
+		if (!ipx_server_running) {
+			ipx_server_running = true;
+			ipx_server_thread  = std::thread([]() {
+                                while (ipx_server_running) {
+                                        const int num_ready = SDLNet_CheckSockets(
+                                                socket_set, 100);
+                                        if (num_ready == -1) {
+                                                LOG_ERR("IPXServer: %s",
+                                                        SDLNet_GetError());
+                                                continue;
+                                        }
+                                        if (num_ready > 0) {
+                                                IPX_ServerLoop();
+                                        }
+                                }
+                        });
+		}
 		return true;
 	}
 	return false;
