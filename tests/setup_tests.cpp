@@ -107,6 +107,7 @@ TEST(Value, Hex)
 	EXPECT_EQ(test_value.ToString(), check_value.ToString());
 	EXPECT_EQ(test_value.ToString(), "42");
 	EXPECT_EQ(test_value, Hex(0x42));
+	EXPECT_EQ(Hex(0x42), test_value);
 }
 
 TEST(Value, Bool)

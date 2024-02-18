@@ -101,6 +101,7 @@ public:
 	Value(const char* const in) : _string(in), type(V_STRING) {}
 
 	bool operator==(const Value& other) const;
+	bool operator==(const Hex& other) const;
 	bool operator<(const Value& other) const;
 
 	operator bool() const;
