@@ -40,7 +40,7 @@ jobs:
 
       - name: Install C++ compiler and dependencies
         run: |
-          sudo apt-get install curl zstd clang $(cat packages/ubuntu-22.04-apt.txt)
+          sudo apt-get install curl zstd $(cat packages/ubuntu-22.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name: Cache subprojects
@@ -80,7 +80,7 @@ jobs:
         # against STL internals that we have no control over.
         run: |
           set -xeu
-          CC="clang" CXX="clang++" meson setup \
+          CC="clang-15" CXX="clang++-15" meson setup \
           -Dbuildtype=minsize \
           -Db_ndebug=false \
           -Dunit_tests=disabled \
