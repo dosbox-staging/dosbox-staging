@@ -230,11 +230,11 @@ bool IPX_StartServer(uint16_t portnum)
 		if (!socket_set) {
 			socket_set = SDLNet_AllocSocketSet(1);
 			if (!socket_set) {
-				LOG_ERR("IPXServer: %s", SDLNet_GetError());
+				LOG_ERR("IPXSERVER: %s", SDLNet_GetError());
 				return false;
 			}
 			if (SDLNet_UDP_AddSocket(socket_set, ipxServerSocket) == -1) {
-				LOG_ERR("IPXServer: %s", SDLNet_GetError());
+				LOG_ERR("IPXSERVER: %s", SDLNet_GetError());
 				return false;
 			}
 		}
@@ -246,7 +246,7 @@ bool IPX_StartServer(uint16_t portnum)
                                         const int num_ready = SDLNet_CheckSockets(
                                                 socket_set, 100);
                                         if (num_ready == -1) {
-                                                LOG_ERR("IPXServer: %s",
+                                                LOG_ERR("IPXSERVER: %s",
                                                         SDLNet_GetError());
                                                 continue;
                                         }
