@@ -1344,7 +1344,7 @@ static bool RMDEV_SYS_int2fHandler()
 // static void write_rm(Bitu port, Bitu val, Bitu /*iolen*/) {
 //   LOG(LOG_REELMAGIC, LOG_WARN)("Caught port I/O write @ addr %04X", (unsigned)port);
 // }
-static void reelmagic_destroy([[maybe_unused]] Section* sec)
+void ReelMagic_Destroy([[maybe_unused]] Section* sec)
 {
 	// Assess the state prior to destruction
 	bool card_is_shutdown   = _dosboxCallbackNumber == 0;
@@ -1459,7 +1459,4 @@ void ReelMagic_Init(Section* sec)
 	_a204debug = true;
 	_a206debug = true;
 #endif
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&reelmagic_destroy, changeable_at_runtime);
 }

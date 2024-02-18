@@ -31,6 +31,7 @@
 #include "regs.h"
 #include "setup.h"
 #include "support.h"
+#include "xms.h"
 
 #include <cstddef>
 #include <cstdlib>
@@ -838,7 +839,7 @@ XMS::~XMS()
 
 static std::unique_ptr<XMS> instance = {};
 
-static void XMS_ShutDown(Section* /* sec */)
+void XMS_ShutDown(Section* /* sec */)
 {
 	instance = {};
 }
@@ -850,7 +851,4 @@ void XMS_Init(Section* sec)
 	if (!instance) {
 		instance = std::make_unique<XMS>(sec);
 	}
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&XMS_ShutDown, changeable_at_runtime);
 }

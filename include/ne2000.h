@@ -247,6 +247,7 @@ public:
 };
 
 void NE2K_Init(Section* sec);
+void NE2K_ShutDown(Section* sec);
 
 #endif // C_NE2000
 

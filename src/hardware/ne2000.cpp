@@ -1540,9 +1540,6 @@ void NE2K_Init(Section* sec)
 
 	instance = new NE2K(sec);
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&NE2K_ShutDown, changeable_at_runtime);
-
 	if (!instance->load_success) {
 		delete instance;
 		instance = nullptr;

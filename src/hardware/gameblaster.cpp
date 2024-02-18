@@ -288,7 +288,7 @@ void GameBlaster::Close()
 
 GameBlaster gameblaster;
 
-void CMS_ShutDown([[maybe_unused]] Section* conf)
+void CMS_ShutDown()
 {
 	gameblaster.Close();
 }
@@ -301,7 +301,4 @@ void CMS_Init(Section* conf)
 	gameblaster.Open(section->Get_hex("sbbase"),
 	                 section->Get_string("sbtype"),
 	                 section->Get_string("cms_filter"));
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&CMS_ShutDown, changeable_at_runtime);
 }

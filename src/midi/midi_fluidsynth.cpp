@@ -926,12 +926,10 @@ MIDI_RC MidiHandlerFluidsynth::ListAll(Program* caller)
 	return MIDI_RC::OK;
 }
 
-static void fluid_init([[maybe_unused]] Section* sec) {}
-
 void FLUID_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
-	Section_prop* sec = conf->AddSection_prop("fluidsynth", &fluid_init);
+	Section_prop* sec = conf->AddSection_prop("fluidsynth");
 	assert(sec);
 	init_fluid_dosbox_settings(*sec);
 }

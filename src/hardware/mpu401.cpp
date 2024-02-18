@@ -855,7 +855,4 @@ void MPU401_Init(Section* sec)
 	assert(sec);
 
 	mpu401 = std::make_unique<MPU401>(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&MPU401_Destroy, changeable_at_runtime);
 }

@@ -21,6 +21,9 @@
 
 #include "dosbox.h"
 
+void JOYSTICK_Init(Section* sec);
+void JOYSTICK_Destroy(Section *sec);
+
 void JOYSTICK_Enable(uint8_t which, bool enabled);
 
 void JOYSTICK_Button(uint8_t which, int num, bool pressed);

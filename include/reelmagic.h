@@ -149,6 +149,7 @@ ReelMagic_PlayerConfiguration& ReelMagic_GlobalDefaultPlayerConfig();
 //
 // driver and general stuff
 //
-void ReelMagic_Init(Section* /*sec*/);
+void ReelMagic_Init(Section* sec);
+void ReelMagic_Destroy(Section* sec);
 
 #endif /* #ifndef DOSBOX_REELMAGIC_H */

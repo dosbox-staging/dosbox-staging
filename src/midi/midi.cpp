@@ -246,11 +246,6 @@ private:
 
 static MidiState midi_state = {};
 
-void init_midi_state(Section*)
-{
-	midi_state.Reset();
-}
-
 /* When using a physical Roland MT-32 rev. 0 as MIDI output device,
  * some games may require a delay in order to prevent buffer overflow
  * issues.
@@ -714,10 +709,9 @@ void MIDI_Init(Section* sec)
 
 	test = new MIDI(sec);
 
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&MIDI_Destroy, changeable_at_runtime);
-
 	register_midi_text_messages();
+
+	midi_state.Reset();
 }
 
 void init_midi_dosbox_settings(Section_prop& secprop)
@@ -826,20 +820,27 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "applications, or when debugging MIDI issues.");
 }
 
+constexpr SectionFunctions MIDISectionFuncs = {
+	MIDI_Init,
+	MIDI_Destroy,
+	true
+};
+
+constexpr SectionFunctions MPU401SectionFuncs = {
+	MPU401_Init,
+	MPU401_Destroy,
+	true
+};
+
 void MIDI_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
-
 	Section_prop* sec = conf->AddSection_prop("midi",
-	                                          &MIDI_Init,
-	                                          changeable_at_runtime);
+	                                          &MIDISectionFuncs);
 	assert(sec);
 
-	sec->AddInitFunction(&init_midi_state, changeable_at_runtime);
-	sec->AddInitFunction(&MPU401_Init, changeable_at_runtime);
+	sec->AddFunctions(&MPU401SectionFuncs);
 
 	init_midi_dosbox_settings(*sec);
 }
-

@@ -74,9 +74,6 @@ void PCSPEAKER_Init(Section *section)
 			pc_speaker->SetFilterState(FilterState::Off);
 		}
 	}
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&PCSPEAKER_ShutDown, changeable_at_runtime);
 }
 
 // PC Speaker external API, used by the PIT timer and keyboard

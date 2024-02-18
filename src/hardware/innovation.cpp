@@ -267,9 +267,6 @@ static void innovation_init(Section *sec)
 	                filter_strength_8580,
 	                port_choice,
 	                channel_filter_choice);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&innovation_destroy, changeable_at_runtime);
 }
 
 static void init_innovation_dosbox_settings(Section_prop& sec_prop)
@@ -328,14 +325,18 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
+constexpr SectionFunctions InnovationSectionFuncs = {
+	innovation_init,
+	innovation_destroy,
+	true
+};
+
 void INNOVATION_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
 	Section_prop* sec = conf->AddSection_prop("innovation",
-	                                          &innovation_init,
-	                                          changeable_at_runtime);
+	                                          &InnovationSectionFuncs);
 	assert(sec);
 	init_innovation_dosbox_settings(*sec);
 }

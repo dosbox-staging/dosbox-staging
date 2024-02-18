@@ -75,4 +75,7 @@ protected:
 	LptControlRegister control_reg = {};
 };
 
+void LPT_DAC_Init(Section *sec);
+void LPT_DAC_ShutDown(Section *sec);
+
 #endif

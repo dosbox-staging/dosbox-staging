@@ -31,10 +31,19 @@ class Section;
 
 enum class OplMode { None, Cms, Opl2, DualOpl2, Opl3, Opl3Gold };
 
+void PS1AUDIO_Init(Section* sec);
+void PS1AUDIO_ShutDown(Section* sec);
+
+void SBLASTER_Init(Section* sec);
+void SBLASTER_ShutDown(Section* sec);
+
+void TANDYSOUND_Init(Section* sec);
+void TANDYSOUND_ShutDown(Section* sec);
+
 void OPL_Init(Section *sec, OplMode mode);
 void CMS_Init(Section *sec);
-void OPL_ShutDown(Section* sec = nullptr);
-void CMS_ShutDown(Section* sec = nullptr);
+void OPL_ShutDown();
+void CMS_ShutDown();
 
 bool PS1AUDIO_IsEnabled();
 bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);

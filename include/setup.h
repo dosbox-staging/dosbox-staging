@@ -304,23 +304,16 @@ public:
 
 typedef void (*SectionFunction)(Section*);
 
+struct SectionFunctions {
+	SectionFunction init = nullptr;
+	SectionFunction destroy = nullptr;
+	bool execute_on_config_change = false;
+};
+
 class Section {
 private:
-	// Wrapper class around startup and shutdown functions. the variable
-	// changeable_at_runtime indicates it can be called on configuration
-	// changes
-	struct Function_wrapper {
-		SectionFunction function;
-		bool changeable_at_runtime;
 
-		Function_wrapper(const SectionFunction fn, bool ch)
-		        : function(fn),
-		          changeable_at_runtime(ch)
-		{}
-	};
-
-	std::deque<Function_wrapper> init_functions   = {};
-	std::deque<Function_wrapper> destroyfunctions = {};
+	std::vector<SectionFunctions> section_functions = {};
 	std::string sectionname                       = {};
 
 public:
@@ -334,11 +327,7 @@ public:
 	// Children must call executedestroy!
 	virtual ~Section() = default;
 
-	void AddInitFunction(SectionFunction func, bool changeable_at_runtime = false);
-
-	void AddDestroyFunction(SectionFunction func,
-	                        bool changeable_at_runtime = false);
-
+	void AddFunctions(const SectionFunctions *funcs);
 	void ExecuteInit(bool initall = true);
 	void ExecuteDestroy(bool destroyall = true);
 

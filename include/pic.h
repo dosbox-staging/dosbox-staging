@@ -19,6 +19,8 @@
 #ifndef DOSBOX_PIC_H
 #define DOSBOX_PIC_H
 
+#include "setup.h"
+
 #include <cassert>
 #include <cmath>
 #include <cstdint>
@@ -61,6 +63,9 @@ static inline double PIC_FullIndex()
 {
 	return static_cast<double>(PIC_Ticks) + PIC_TickIndex();
 }
+
+void PIC_Init(Section* sec);
+void PIC_Destroy(Section* sec);
 
 void PIC_ActivateIRQ(uint8_t irq);
 void PIC_DeActivateIRQ(uint8_t irq);

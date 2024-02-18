@@ -72,6 +72,7 @@ void MAPPER_AddHandler(MAPPER_Handler *handler,
 
 void MAPPER_BindKeys(Section *sec);
 void MAPPER_StartUp(Section *sec);
+void MAPPER_Destroy(Section *sec);
 void MAPPER_Run(bool pressed);
 void MAPPER_DisplayUI();
 void MAPPER_LosingFocus();

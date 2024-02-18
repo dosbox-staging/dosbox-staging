@@ -412,5 +412,4 @@ void IO_Destroy(Section*) {
 
 void IO_Init(Section * sect) {
 	test = new IO(sect);
-	sect->AddDestroyFunction(&IO_Destroy);
 }

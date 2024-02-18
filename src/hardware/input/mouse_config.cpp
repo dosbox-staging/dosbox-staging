@@ -445,15 +445,18 @@ static void config_init(Section_prop &secprop)
 	                    "Note: Requires PS/2 mouse to be enabled.");
 }
 
+constexpr SectionFunctions MouseSectionFuncs = {
+	config_read,
+	nullptr,
+	true
+};
+
 void MOUSE_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
-
 	Section_prop* sec = conf->AddSection_prop("mouse",
-	                                          &config_read,
-	                                          changeable_at_runtime);
+	                                          &MouseSectionFuncs);
 	assert(sec);
 	config_init(*sec);
 }

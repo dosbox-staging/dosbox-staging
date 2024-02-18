@@ -20,6 +20,7 @@
 #include "bios.h"
 
 #include "callback.h"
+#include "cmos.h"
 #include "cpu.h"
 #include "dosbox.h"
 #include "hardware.h"
@@ -57,7 +58,6 @@ void INT1AB1_Handler(); // PCI BIOS calls
  * counter using the BIOS_ZeroExtendedSize call */
 static uint16_t size_extended;
 static Bits other_memsystems=0;
-void CMOS_SetRegister(Bitu regNr, uint8_t val); //For setting equipment word
 
 static Bitu INT70_Handler(void) {
 	/* Acknowledge irq with cmos */
@@ -1462,7 +1462,4 @@ void BIOS_Init(Section* sec)
 	assert(sec);
 
 	test = new BIOS(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&BIOS_Destroy, changeable_at_runtime);
 }

@@ -189,6 +189,8 @@ public:
 	bool call                     = false;
 };
 
+void SHELL_Init();
+
 std::tuple<std::string, std::string, std::string, bool> parse_drive_conf(
         std::string drive_letter, const std_fs::path& conf_path);
 

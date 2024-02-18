@@ -522,6 +522,9 @@ struct CPUBlock {
 
 extern CPUBlock cpu;
 
+void CPU_Init(Section* sec);
+void CPU_ShutDown(Section* sec);
+
 void CPU_SetFlags(const uint32_t word, uint32_t mask);
 void CPU_SetFlagsd(const uint32_t word);
 void CPU_SetFlagsw(const uint32_t word);

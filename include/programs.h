@@ -147,6 +147,7 @@ protected:
 
 using PROGRAMS_Creator = std::function<std::unique_ptr<Program>()>;
 
+void PROGRAMS_Init(Section* sec);
 void PROGRAMS_Destroy([[maybe_unused]] Section* sec);
 void PROGRAMS_MakeFile(const char* const name, PROGRAMS_Creator creator);
 

@@ -1023,7 +1023,7 @@ OPL::~OPL()
 	MIXER_DeregisterChannel(channel);
 }
 
-void OPL_ShutDown([[maybe_unused]] Section* sec)
+void OPL_ShutDown()
 {
 	opl = {};
 }
@@ -1032,7 +1032,4 @@ void OPL_Init(Section* sec, const OplMode oplmode)
 {
 	assert(sec);
 	opl = std::make_unique<OPL>(sec, oplmode);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&OPL_ShutDown, changeable_at_runtime);
 }

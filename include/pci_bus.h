@@ -111,6 +111,10 @@ public:
 	virtual Bits ParseWriteRegister(uint8_t regnum, uint8_t value) = 0;
 };
 
+void PCI_Init(Section* sec);
+
+void PCI_ShutDown(Section* sec);
+
 bool PCI_IsInitialized();
 
 RealPt PCI_GetPModeInterface();

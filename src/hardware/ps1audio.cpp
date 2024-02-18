@@ -544,7 +544,7 @@ Ps1Synth::~Ps1Synth()
 static std::unique_ptr<Ps1Dac> ps1_dac = {};
 static std::unique_ptr<Ps1Synth> ps1_synth = {};
 
-static void PS1AUDIO_ShutDown([[maybe_unused]] Section *sec)
+void PS1AUDIO_ShutDown([[maybe_unused]] Section *sec)
 {
 	LOG_MSG("PS1: Shutting down IBM PS/1 Audio card");
 	ps1_dac.reset();
@@ -573,7 +573,4 @@ void PS1AUDIO_Init(Section *section)
 	        prop->Get_string("ps1audio_filter"));
 
 	LOG_MSG("PS1: Initialised IBM PS/1 Audio card");
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&PS1AUDIO_ShutDown, changeable_at_runtime);
 }

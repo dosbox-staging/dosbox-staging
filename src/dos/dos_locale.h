@@ -50,6 +50,7 @@ std::string DOS_GetLayoutFromHost();
 // Lifecycle
 
 void DOS_Locale_Init(Section* sec);
+void DOS_Locale_ShutDown(Section* sec);
 
 // We need a separate function to support '--list-countries' command line switch
 // (and possibly others in the future) - it needs translated strings, but does

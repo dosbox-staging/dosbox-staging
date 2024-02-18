@@ -2187,8 +2187,6 @@ OplMode find_oplmode()
 	return opl_mode;
 }
 
-void SBLASTER_ShutDown(Section*);
-
 class SBLASTER final {
 private:
 	/* Data */
@@ -2463,8 +2461,5 @@ void SBLASTER_Init(Section* sec)
 {
 	assert(sec);
 
-	sblaster = std::make_unique<SBLASTER>(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&SBLASTER_ShutDown, changeable_at_runtime);
+	sblaster = std::make_unique<SBLASTER>(sec);;
 }

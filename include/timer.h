@@ -96,6 +96,9 @@ void PCSPEAKER_SetPITControl(const PitMode pit_mode);
 
 typedef void (*TIMER_TickHandler)(void);
 
+void TIMER_Init(Section* sec);
+void TIMER_Destroy(Section* sec);
+
 /* Register a function that gets called every time if 1 or more ticks pass */
 void TIMER_AddTickHandler(TIMER_TickHandler handler);
 void TIMER_DelTickHandler(TIMER_TickHandler handler);

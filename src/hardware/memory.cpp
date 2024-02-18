@@ -779,7 +779,7 @@ public:
 
 static MEMORY* test;
 
-static void MEM_ShutDown([[maybe_unused]] Section *sec)
+void MEM_ShutDown([[maybe_unused]] Section *sec)
 {
 	delete test;
 }
@@ -790,5 +790,4 @@ void MEM_Init(Section* sec)
 
 	/* shutdown function */
 	test = new MEMORY(sec);
-	sec->AddDestroyFunction(&MEM_ShutDown);
 }

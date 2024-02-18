@@ -29,6 +29,8 @@
 using io_port_t = uint16_t; // DOS only supports 16-bit port addresses
 using io_val_t  = uint32_t; // Handling exists up to a dword (or less)
 
+void IO_Init(Section * sect);
+void IO_Destroy(Section*);
 void IO_WriteB(io_port_t port, uint8_t val);
 void IO_WriteW(io_port_t port, uint16_t val);
 void IO_WriteD(io_port_t port, uint32_t val);

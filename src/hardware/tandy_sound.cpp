@@ -658,7 +658,4 @@ void TANDYSOUND_Init(Section *section)
 	                                       wants_dac,
 	                                       prop->Get_string("tandy_fadeout"),
 	                                       prop->Get_string("tandy_filter"));
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&TANDYSOUND_ShutDown, changeable_at_runtime);
 }

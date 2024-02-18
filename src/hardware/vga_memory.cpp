@@ -1059,13 +1059,13 @@ void VGA_StartUpdateLFB(void) {
 	MEM_SetLFB(vga.lfb.page, vga.vmemsize / 4096, vga.lfb.handler, &vgaph.mmio);
 }
 
-static void VGA_Memory_ShutDown(Section * /*sec*/) {
 #ifdef VGA_KEEP_CHANGES
+void VGA_Memory_ShutDown(Section * /*sec*/) {
 	delete[] vga.changes.map;
 	vga.mem.linear = {};
 	vga.fastmem    = {};
-#endif
 }
+#endif
 
 void VGA_SetupMemory(Section* sec)
 {
@@ -1114,8 +1114,6 @@ void VGA_SetupMemory(Section* sec)
 	vga.svga.bank_read = vga.svga.bank_write = 0;
 	vga.svga.bank_read_full = vga.svga.bank_write_full = 0;
 	vga.svga.bank_size = 0x10000; /* most common bank size is 64K */
-
-	sec->AddDestroyFunction(&VGA_Memory_ShutDown);
 
 	if (machine==MCH_PCJR) {
 		/* PCJr does not have dedicated graphics memory but uses

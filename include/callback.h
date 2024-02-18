@@ -69,6 +69,8 @@ enum {
 
 extern uint8_t lastint;
 
+void CALLBACK_Init(Section* sec);
+
 static inline RealPt CALLBACK_RealPointer(callback_number_t cb_number)
 {
 	const auto offset = CB_SOFFSET + cb_number * CB_SIZE;

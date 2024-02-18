@@ -22,6 +22,9 @@
 #include "dosbox.h"
 #include "cdrom.h"
 
+void MSCDEX_Init(Section* sec);
+void MSCDEX_ShutDown(Section* sec);
+
 int   MSCDEX_AddDrive(char driveLetter, const char *physicalPath, uint8_t &subUnit);
 int   MSCDEX_RemoveDrive(char driveLetter);
 bool  MSCDEX_HasDrive(char driveLetter);

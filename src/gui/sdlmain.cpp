@@ -3473,7 +3473,6 @@ static void set_priority_levels(const std::string& active_pref,
 
 static void GUI_StartUp(Section* sec)
 {
-	sec->AddDestroyFunction(&GUI_ShutDown);
 	Section_prop* section = static_cast<Section_prop*>(sec);
 
 	sdl.active          = false;
@@ -4292,9 +4291,24 @@ static void messages_add_sdl()
 	        "seamless mouse, %s+F10 or middle-click to capture");
 }
 
+constexpr SectionFunctions SDLSectionFuncs = {
+	GUI_StartUp,
+	GUI_ShutDown,
+	false
+};
+
+// TODO: This stupid mapper is a special case.
+// It wants exectute on config change but it only wants Destroy to run on once at application shutdown.
+// Don't do anything on config change for now to prevent a potential nuclear explosion.
+constexpr SectionFunctions MapperSectionFuncs = {
+	MAPPER_StartUp,
+	MAPPER_Destroy,
+	false
+};
+
 static void config_add_sdl() {
-	Section_prop *sdl_sec=control->AddSection_prop("sdl", &GUI_StartUp);
-	sdl_sec->AddInitFunction(&MAPPER_StartUp);
+	Section_prop *sdl_sec=control->AddSection_prop("sdl", &SDLSectionFuncs);
+	sdl_sec->AddFunctions(&MapperSectionFuncs);
 	Prop_bool *Pbool; // use pbool for new properties
 	Prop_bool *pbool;
 	Prop_string *Pstring; // use pstring for new properties
@@ -4524,10 +4538,6 @@ static int edit_primary_config()
 
 	return 1;
 }
-
-#if C_DEBUG
-extern void DEBUG_ShutDown(Section * /*sec*/);
-#endif
 
 void MIXER_CloseAudioDevice(void);
 

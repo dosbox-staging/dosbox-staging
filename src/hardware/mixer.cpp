@@ -2570,8 +2570,6 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	}
 }
 
-static void stop_mixer([[maybe_unused]] Section* sec) {}
-
 [[maybe_unused]] static const char* MixerStateToString(const MixerState s)
 {
 	switch (s) {
@@ -2758,8 +2756,6 @@ static void init_master_highpass_filter()
 void MIXER_Init(Section* sec)
 {
 	MIXER_CloseAudioDevice();
-
-	sec->AddDestroyFunction(&stop_mixer);
 
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
@@ -2984,15 +2980,18 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }
 
+constexpr SectionFunctions MixerSectionFuncs = {
+	MIXER_Init,
+	nullptr,
+	true
+};
+
 void MIXER_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
-
 	Section_prop* sec = conf->AddSection_prop("mixer",
-	                                          &MIXER_Init,
-	                                          changeable_at_runtime);
+	                                          &MixerSectionFuncs);
 	assert(sec);
 	init_mixer_dosbox_settings(*sec);
 }

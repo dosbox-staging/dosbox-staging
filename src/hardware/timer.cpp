@@ -695,5 +695,4 @@ void TIMER_Destroy(Section*){
 }
 void TIMER_Init(Section* sec) {
 	test = new TIMER(sec);
-	sec->AddDestroyFunction(&TIMER_Destroy);
 }

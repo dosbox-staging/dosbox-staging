@@ -1128,14 +1128,13 @@ bool Config::WriteConfig(const std_fs::path& path) const
 	return true;
 }
 
-Section_prop* Config::AddSection_prop(const char* section_name, SectionFunction func,
-                                      bool changeable_at_runtime)
+Section_prop* Config::AddSection_prop(const char* section_name, const SectionFunctions *funcs)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
 
 	Section_prop* s = new Section_prop(section_name);
-	s->AddInitFunction(func, changeable_at_runtime);
+	s->AddFunctions(funcs);
 	sectionlist.push_back(s);
 	return s;
 }
@@ -1152,13 +1151,13 @@ Section_prop::~Section_prop()
 	}
 }
 
-Section_line* Config::AddSection_line(const char* section_name, SectionFunction func)
+Section_line* Config::AddSection_line(const char* section_name, const SectionFunctions *funcs)
 {
 	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
 	        "Only letters and digits are allowed in section name");
 
 	Section_line* blah = new Section_line(section_name);
-	blah->AddInitFunction(func);
+	blah->AddFunctions(funcs);
 	sectionlist.push_back(blah);
 
 	return blah;
@@ -1209,61 +1208,45 @@ void Config::Init() const
 	}
 }
 
-void Section::AddInitFunction(SectionFunction func, bool changeable_at_runtime)
+void Section::AddFunctions(const SectionFunctions *funcs)
 {
-	if (func) {
-		init_functions.emplace_back(func, changeable_at_runtime);
+	if (funcs && (funcs->init || funcs->destroy)) {
+		section_functions.push_back(*funcs);
 	}
-}
-
-void Section::AddDestroyFunction(SectionFunction func, bool changeable_at_runtime)
-{
-	destroyfunctions.emplace_front(func, changeable_at_runtime);
 }
 
 void Section::ExecuteInit(const bool init_all)
 {
-	for (size_t i = 0; i < init_functions.size(); ++i) {
+	for (const auto &funcs : section_functions) {
 		// Can we skip calling this function?
-		if (!(init_all || init_functions[i].changeable_at_runtime)) {
+		if (!funcs.init) {
+			continue;
+		}
+		if (!(init_all || funcs.execute_on_config_change)) {
 			continue;
 		}
 
 		// Track the size of our container because it might grow.
-		const auto size_on_entry = init_functions.size();
+		const auto size_on_entry = section_functions.size();
 
-		assert(init_functions[i].function);
-		init_functions[i].function(this);
+		funcs.init(this);
 
-		const auto size_on_exit = init_functions.size();
+		const auto size_on_exit = section_functions.size();
 
-		if (size_on_exit > size_on_entry) {
-			//
-			// If the above function call appended items then we
-			// need to avoid calling them immediately in this
-			// current pass by advancing our index across them. The
-			// setup class will call the added function itself.
-			//
-			const auto num_appended = size_on_exit - size_on_entry;
-			i += num_appended;
-			assert(i < init_functions.size());
-		}
+		assert(size_on_entry == size_on_exit);
 	}
 }
 
 void Section::ExecuteDestroy(bool destroyall)
 {
-	typedef std::deque<Function_wrapper>::iterator func_it;
-
-	for (func_it tel = destroyfunctions.begin(); tel != destroyfunctions.end();) {
-		if (destroyall || (*tel).changeable_at_runtime) {
-			(*tel).function(this);
-
-			// Remove destroyfunctions once used
-			tel = destroyfunctions.erase(tel);
-		} else {
-			++tel;
+	for (const auto &funcs : section_functions) {
+		if (!funcs.destroy) {
+			continue;
 		}
+		if (!(destroyall || funcs.execute_on_config_change)) {
+			continue;
+		}
+		funcs.destroy(this);
 	}
 }
 

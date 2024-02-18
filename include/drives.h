@@ -29,6 +29,8 @@
 #include "dos_inc.h"
 #include "dos_system.h"
 
+void DRIVES_Init(Section* sec);
+
 void Set_Label(const char* const input, char* const output, bool cdrom);
 std::string To_Label(const char* name);
 std::string generate_8x3(const char *lfn, const unsigned int num, const bool start = false);

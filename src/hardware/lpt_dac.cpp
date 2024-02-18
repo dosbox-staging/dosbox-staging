@@ -23,6 +23,7 @@
 
 #include "dosbox.h"
 
+#include "lpt_dac.h"
 #include "pic.h"
 #include "setup.h"
 #include "support.h"
@@ -193,7 +194,4 @@ void LPT_DAC_Init(Section *section)
 	}
 
 	lpt_dac->BindToPort(Lpt1Port);
-
-	constexpr auto changeable_at_runtime = true;
-	section->AddDestroyFunction(&LPT_DAC_ShutDown, changeable_at_runtime);
 }

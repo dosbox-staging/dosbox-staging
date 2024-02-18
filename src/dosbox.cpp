@@ -30,98 +30,56 @@
 #include <thread>
 #include <unistd.h>
 
+#include "autoexec.h"
+#include "bios.h"
 #include "callback.h"
 #include "capture/capture.h"
+#include "cmos.h"
 #include "control.h"
 #include "cpu.h"
 #include "cross.h"
 #include "debug.h"
+#include "drives.h"
+#include "dma.h"
 #include "dos/dos_locale.h"
+#include "dos/dos_mscdex.h"
 #include "dos_inc.h"
+#include "ems.h"
 #include "hardware.h"
+#include "hardware/lpt_dac.h"
+#include "hardware/pcspeaker.h"
 #include "inout.h"
 #include "ints/int10.h"
+#include "ipx.h"
+#include "joystick.h"
+#include "keyboard.h"
 #include "mapper.h"
 #include "memory.h"
 #include "midi.h"
 #include "mixer.h"
 #include "mouse.h"
 #include "ne2000.h"
+#include "paging.h"
 #include "pci_bus.h"
 #include "pic.h"
 #include "programs.h"
 #include "reelmagic.h"
 #include "render.h"
+#include "serialport.h"
 #include "setup.h"
 #include "shell.h"
 #include "support.h"
 #include "timer.h"
 #include "tracy.h"
 #include "video.h"
+#include "virtualbox.h"
+#include "vmware.h"
+#include "voodoo.h"
+#include "xms.h"
 
 bool shutdown_requested = false;
 MachineType machine;
 SVGACards svgaCard;
-
-/* The whole load of startups for all the subfunctions */
-void LOG_StartUp();
-void MEM_Init(Section *);
-void PAGING_Init(Section *);
-void IO_Init(Section * );
-void CALLBACK_Init(Section*);
-void PROGRAMS_Init(Section*);
-//void CREDITS_Init(Section*);
-void VGA_Init(Section*);
-
-void DOS_Init(Section*);
-
-
-void CPU_Init(Section*);
-
-#if C_FPU
-void FPU_Init(Section*);
-#endif
-
-void DMA_Init(Section*);
-
-void PCI_Init(Section*);
-void VOODOO_Init(Section*);
-void VIRTUALBOX_Init(Section*);
-void VMWARE_Init(Section*);
-
-void KEYBOARD_Init(Section*);	//TODO This should setup INT 16 too but ok ;)
-void JOYSTICK_Init(Section*);
-void SBLASTER_Init(Section*);
-void PCSPEAKER_Init(Section*);
-void TANDYSOUND_Init(Section*);
-void LPT_DAC_Init(Section *);
-void PS1AUDIO_Init(Section *);
-void SERIAL_Init(Section*);
-
-#if C_IPX
-void IPX_Init(Section*);
-#endif
-
-void SID_Init(Section* sec);
-
-void PIC_Init(Section*);
-void TIMER_Init(Section*);
-void BIOS_Init(Section*);
-void DEBUG_Init(Section*);
-void CMOS_Init(Section*);
-
-void MSCDEX_Init(Section*);
-void DRIVES_Init(Section*);
-void CDROM_Image_Init(Section*);
-
-/* Dos Internal mostly */
-void EMS_Init(Section*);
-void XMS_Init(Section*);
-
-void AUTOEXEC_Init(Section*);
-void SHELL_Init();
-
-void INT10_Init(Section*);
 
 static LoopHandler * loop;
 
@@ -436,6 +394,265 @@ double DOSBOX_GetUptime()
 	return GetTicksSince(start_ms) / millis_in_second;
 }
 
+constexpr SectionFunctions DosboxSectionFuncs = {
+	DOSBOX_RealInit,
+	nullptr,
+	false
+};
+
+constexpr SectionFunctions ProgramsSectionFuncs = {
+	PROGRAMS_Init,
+	PROGRAMS_Destroy,
+	false
+};
+
+constexpr SectionFunctions IoSectionFuncs = {
+	IO_Init,
+	IO_Destroy,
+	false
+};
+
+constexpr SectionFunctions PagingSectionFuncs = {
+	PAGING_Init,
+	nullptr,
+	false
+};
+
+constexpr SectionFunctions MemSectionFuncs = {
+	MEM_Init,
+	MEM_ShutDown,
+	false
+};
+
+constexpr SectionFunctions CallbackSectionFuncs = {
+	CALLBACK_Init,
+	nullptr,
+	false
+};
+
+constexpr SectionFunctions PICSectionFuncs = {
+	PIC_Init,
+	PIC_Destroy,
+	false
+};
+
+constexpr SectionFunctions TimerSectionFuncs = {
+	TIMER_Init,
+	TIMER_Destroy,
+	false
+};
+
+constexpr SectionFunctions CMOSSectionFuncs = {
+	CMOS_Init,
+	CMOS_Destroy,
+	false
+};
+
+constexpr SectionFunctions CPUSectionFuncs = {
+	CPU_Init,
+	CPU_ShutDown,
+	true
+};
+
+#if C_FPU
+#include "fpu.h"
+constexpr SectionFunctions FPUSectionFuncs = {
+	FPU_Init,
+	nullptr,
+	false
+};
+#endif
+
+constexpr SectionFunctions DMASectionFuncs = {
+	DMA_Init,
+	DMA_Destroy,
+	false
+};
+
+constexpr SectionFunctions VGASectionFuncs = {
+	VGA_Init,
+	#ifdef VGA_KEEP_CHANGES
+	VGA_Memory_ShutDown,
+	#else
+	nullptr,
+	#endif
+	false
+};
+
+constexpr SectionFunctions KeyboardSectionFuncs = {
+	KEYBOARD_Init,
+	nullptr,
+	false
+};
+
+constexpr SectionFunctions PCISectionFuncs = {
+	PCI_Init,
+	PCI_ShutDown,
+	false
+};
+
+constexpr SectionFunctions VoodooSectionFuncs = {
+	VOODOO_Init,
+	VOODOO_Destroy,
+	false
+};
+
+constexpr SectionFunctions SoundBlasterSectionFuncs = {
+	SBLASTER_Init,
+	SBLASTER_ShutDown,
+	true
+};
+
+constexpr SectionFunctions PCSpeakerSectionFuncs = {
+	PCSPEAKER_Init,
+	PCSPEAKER_ShutDown,
+	true
+};
+
+constexpr SectionFunctions TandySoundSectionFuncs = {
+	TANDYSOUND_Init,
+	TANDYSOUND_ShutDown,
+	true
+};
+
+constexpr SectionFunctions LptDacSectionFuncs = {
+	LPT_DAC_Init,
+	LPT_DAC_ShutDown,
+	true
+};
+
+constexpr SectionFunctions PS1AudioSectionFuncs = {
+	PS1AUDIO_Init,
+	PS1AUDIO_ShutDown,
+	true
+};
+
+constexpr SectionFunctions ReelMagicSectionFuncs = {
+	ReelMagic_Init,
+	ReelMagic_Destroy,
+	true
+};
+
+constexpr SectionFunctions BIOSSectionFuncs = {
+	BIOS_Init,
+	BIOS_Destroy,
+	false
+};
+
+constexpr SectionFunctions INT10SectionFuncs = {
+	INT10_Init,
+	nullptr,
+	false
+};
+
+constexpr SectionFunctions MouseSectionFuncs = {
+	MOUSE_Init,
+	nullptr,
+	false
+};
+
+constexpr SectionFunctions JoystickSectionFuncs = {
+	JOYSTICK_Init,
+	JOYSTICK_Destroy,
+	true
+};
+
+constexpr SectionFunctions SerialSectionFuncs = {
+	SERIAL_Init,
+	SERIAL_Destroy,
+	true
+};
+
+constexpr SectionFunctions DOSSectionFuncs = {
+	DOS_Init,
+	DOS_ShutDown,
+	false
+};
+
+constexpr SectionFunctions XMSSectionFuncs = {
+	XMS_Init,
+	XMS_ShutDown,
+	true
+};
+
+constexpr SectionFunctions EMSSectionFuncs = {
+	EMS_Init,
+	EMS_ShutDown,
+	true
+};
+
+constexpr SectionFunctions DOSLocaleSectionFuncs = {
+	DOS_Locale_Init,
+	DOS_Locale_ShutDown,
+	true
+};
+
+constexpr SectionFunctions DOSKeyboardSectionFuncs = {
+	DOS_KeyboardLayout_Init,
+	DOS_KeyboardLayout_ShutDown,
+	true
+};
+
+constexpr SectionFunctions MSCDEXSectionFuncs = {
+	MSCDEX_Init,
+	MSCDEX_ShutDown,
+	false
+};
+
+constexpr SectionFunctions DrivesSectionFuncs = {
+	DRIVES_Init,
+	nullptr,
+	false
+};
+
+constexpr SectionFunctions CDROMImageSectionFuncs = {
+	CDROM_Image_Init,
+	CDROM_Image_Destroy,
+	false
+};
+
+#if C_IPX
+constexpr SectionFunctions IPXSectionFuncs = {
+	IPX_Init,
+	IPX_ShutDown,
+	true
+};
+#endif
+
+#if C_SLIRP
+constexpr SectionFunctions NE2KSectionFuncs = {
+	NE2K_Init,
+	NE2K_ShutDown,
+	true
+};
+#endif
+
+constexpr SectionFunctions VirtualBoxSectionFuncs = {
+	VIRTUALBOX_Init,
+	VIRTUALBOX_Destroy,
+	false
+};
+
+constexpr SectionFunctions VMWareSectionFuncs = {
+	VMWARE_Init,
+	VMWARE_Destroy,
+	false
+};
+
+constexpr SectionFunctions AutoExecSectionFuncs = {
+	AUTOEXEC_Init,
+	nullptr,
+	false
+};
+
+#if C_DEBUG
+constexpr SectionFunctions DebugSectionFuncs = {
+	DEBUG_Init,
+	DEBUG_ShutDown,
+	false
+};
+#endif
+
 void DOSBOX_Init()
 {
 	Section_prop* secprop             = nullptr;
@@ -450,8 +667,6 @@ void DOSBOX_Init()
 	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto only_at_start = Property::Changeable::OnlyAtStart;
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
-
-	constexpr auto changeable_at_runtime = true;
 
 	/* Setup all the different modules making up DOSBox */
 	const char* machines[] = {"hercules",
@@ -468,7 +683,7 @@ void DOSBOX_Init()
 	                          "vesa_oldvbe",
 	                          nullptr};
 
-	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
+	secprop = control->AddSection_prop("dosbox", &DosboxSectionFuncs);
 	pstring = secprop->Add_string("language", always, "");
 	pstring->Set_help(
 	        "Select a language to use: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', or 'ru'\n"
@@ -514,9 +729,9 @@ void DOSBOX_Init()
 	LOG_StartUp();
 #endif
 
-	secprop->AddInitFunction(&IO_Init);
-	secprop->AddInitFunction(&PAGING_Init);
-	secprop->AddInitFunction(&MEM_Init);
+	secprop->AddFunctions(&IoSectionFuncs);
+	secprop->AddFunctions(&PagingSectionFuncs);
+	secprop->AddFunctions(&MemSectionFuncs);
 	pint = secprop->Add_int("memsize", when_idle, 16);
 	pint->SetMinMax(MEM_GetMinMegabytes(), MEM_GetMaxMegabytes());
 	pint->Set_help(
@@ -585,11 +800,11 @@ void DOSBOX_Init()
 	        "Please file a bug with the project if you find a game that fails\n"
 	        "when this is enabled so we will list them here.");
 
-	secprop->AddInitFunction(&CALLBACK_Init);
-	secprop->AddInitFunction(&PIC_Init);
-	secprop->AddInitFunction(&PROGRAMS_Init);
-	secprop->AddInitFunction(&TIMER_Init);
-	secprop->AddInitFunction(&CMOS_Init);
+	secprop->AddFunctions(&CallbackSectionFuncs);
+	secprop->AddFunctions(&PICSectionFuncs);
+	secprop->AddFunctions(&ProgramsSectionFuncs);
+	secprop->AddFunctions(&TimerSectionFuncs);
+	secprop->AddFunctions(&CMOSSectionFuncs);
 
 	const char *autoexec_section_choices[] = {
 	        "join",
@@ -652,7 +867,7 @@ void DOSBOX_Init()
 	VGA_AddCompositeSettings(*control);
 
 	// Configure CPU settings
-	secprop = control->AddSection_prop("cpu", &CPU_Init, changeable_at_runtime);
+	secprop = control->AddSection_prop("cpu", &CPUSectionFuncs);
 	const char* cores[] =
 	{ "auto",
 #if (C_DYNAMIC_X86) || (C_DYNREC)
@@ -701,14 +916,14 @@ void DOSBOX_Init()
 	               "Setting it lower than 100 will be a percentage.");
 
 #if C_FPU
-	secprop->AddInitFunction(&FPU_Init);
+	secprop->AddFunctions(&FPUSectionFuncs);
 #endif
-	secprop->AddInitFunction(&DMA_Init);
-	secprop->AddInitFunction(&VGA_Init);
-	secprop->AddInitFunction(&KEYBOARD_Init);
-	secprop->AddInitFunction(&PCI_Init); // PCI bus
+	secprop->AddFunctions(&DMASectionFuncs);
+	secprop->AddFunctions(&VGASectionFuncs);
+	secprop->AddFunctions(&KeyboardSectionFuncs);
+	secprop->AddFunctions(&PCISectionFuncs); // PCI bus
 
-	secprop = control->AddSection_prop("voodoo", &VOODOO_Init);
+	secprop = control->AddSection_prop("voodoo", &VoodooSectionFuncs);
 
 	pbool = secprop->Add_bool("voodoo", when_idle, true);
 	pbool->Set_help("Enable 3dfx Voodoo emulation (enabled by default).");
@@ -756,12 +971,11 @@ void DOSBOX_Init()
 #endif
 
 #if C_DEBUG
-	secprop = control->AddSection_prop("debug", &DEBUG_Init);
+	secprop = control->AddSection_prop("debug", &DebugSectionFuncs);
 #endif
 
 	secprop = control->AddSection_prop("sblaster",
-	                                   &SBLASTER_Init,
-	                                   changeable_at_runtime);
+	                                   &SoundBlasterSectionFuncs);
 
 	const char* sbtypes[] = {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", nullptr};
 	pstring = secprop->Add_string("sbtype", when_idle, "sb16");
@@ -884,8 +1098,7 @@ void DOSBOX_Init()
 
 	// PC speaker emulation
 	secprop = control->AddSection_prop("speaker",
-	                                   &PCSPEAKER_Init,
-	                                   changeable_at_runtime);
+	                                   &PCSpeakerSectionFuncs);
 
 	const char *pcspeaker_models[] = {"discrete", "impulse", "none", "off", nullptr};
 	pstring = secprop->Add_string("pcspeaker", when_idle, pcspeaker_models[0]);
@@ -911,7 +1124,7 @@ void DOSBOX_Init()
 	        "DC-offset is now eliminated globally from the master mixer output.");
 
 	// Tandy audio emulation
-	secprop->AddInitFunction(&TANDYSOUND_Init, changeable_at_runtime);
+	secprop->AddFunctions(&TandySoundSectionFuncs);
 
 	const char* tandys[] = {"auto", "on", "psg", "off", nullptr};
 
@@ -949,7 +1162,7 @@ void DOSBOX_Init()
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 
 	// LPT DAC device emulation
-	secprop->AddInitFunction(&LPT_DAC_Init, changeable_at_runtime);
+	secprop->AddFunctions(&LptDacSectionFuncs);
 	const char *lpt_dac_types[] = {"none", "disney", "covox", "ston1", "off", nullptr};
 	pstring = secprop->Add_string("lpt_dac", when_idle, lpt_dac_types[0]);
 	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
@@ -971,7 +1184,7 @@ void DOSBOX_Init()
 	pbool->Set_help("Use 'lpt_dac=disney' to enable the Disney Sound Source.");
 
 	// IBM PS/1 Audio emulation
-	secprop->AddInitFunction(&PS1AUDIO_Init, changeable_at_runtime);
+	secprop->AddFunctions(&PS1AudioSectionFuncs);
 
 	pbool = secprop->Add_bool("ps1audio", when_idle, false);
 	pbool->Set_help("Enable IBM PS/1 Audio emulation (disabled by default).");
@@ -992,8 +1205,7 @@ void DOSBOX_Init()
 
 	// ReelMagic Emulator
 	secprop = control->AddSection_prop("reelmagic",
-	                                   &ReelMagic_Init,
-	                                   changeable_at_runtime);
+	                                   &ReelMagicSectionFuncs);
 
 	pstring = secprop->Add_string("reelmagic", when_idle, "off");
 	pstring->Set_help(
@@ -1018,11 +1230,11 @@ void DOSBOX_Init()
 	        "           1=23.976, 2=24, 3=25, 4=29.97, 5=30, 6=50, or 7=59.94 FPS.");
 
 	// Joystick emulation
-	secprop=control->AddSection_prop("joystick", &BIOS_Init);
+	secprop=control->AddSection_prop("joystick", &BIOSSectionFuncs);
 
-	secprop->AddInitFunction(&INT10_Init);
-	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses CurMode
-	secprop->AddInitFunction(&JOYSTICK_Init, changeable_at_runtime);
+	secprop->AddFunctions(&INT10SectionFuncs);
+	secprop->AddFunctions(&MouseSectionFuncs); // Must be after int10 as it uses CurMode
+	secprop->AddFunctions(&JoystickSectionFuncs);
 	const char *joytypes[] = {"auto", "2axis", "4axis",    "4axis_2", "fcs",
 	                          "ch",   "hidden",  "disabled", nullptr};
 	pstring = secprop->Add_string("joysticktype", when_idle, "auto");
@@ -1092,7 +1304,7 @@ void DOSBOX_Init()
 	pstring->Set_help(
 	        "Apply Y-axis calibration parameters from the hotkeys ('auto' by default).");
 
-	secprop = control->AddSection_prop("serial", &SERIAL_Init, changeable_at_runtime);
+	secprop = control->AddSection_prop("serial", &SerialSectionFuncs);
 	const char* serials[] = {
 	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct", nullptr};
 
@@ -1144,12 +1356,12 @@ void DOSBOX_Init()
 	// All the general DOS Related stuff, on real machines mostly located in
 	// CONFIG.SYS
 
-	secprop = control->AddSection_prop("dos", &DOS_Init);
-	secprop->AddInitFunction(&XMS_Init, changeable_at_runtime);
+	secprop = control->AddSection_prop("dos", &DOSSectionFuncs);
+	secprop->AddFunctions(&XMSSectionFuncs);
 	pbool = secprop->Add_bool("xms", when_idle, true);
 	pbool->Set_help("Enable XMS support (enabled by default).");
 
-	secprop->AddInitFunction(&EMS_Init, changeable_at_runtime);
+	secprop->AddFunctions(&EMSSectionFuncs);
 	const char* ems_settings[] = {"true", "emsboard", "emm386", "false", nullptr};
 	pstring = secprop->Add_string("ems", when_idle, "true");
 	pstring->Set_values(ems_settings);
@@ -1168,7 +1380,7 @@ void DOSBOX_Init()
 
 	// DOS locale settings
 
-	secprop->AddInitFunction(&DOS_Locale_Init, changeable_at_runtime);
+	secprop->AddFunctions(&DOSLocaleSectionFuncs);
 	pstring = secprop->Add_string("locale_period", when_idle, "modern");
 	pstring->Set_help(
 	        "Set locale epoch ('modern' by default). Historic settings (if available\n"
@@ -1185,7 +1397,7 @@ void DOSBOX_Init()
 	        "'--list-countries' command-line argument. If set to 'auto', the country code\n"
 	        "corresponding to the selected keyboard layout will be used.");
 
-	secprop->AddInitFunction(&DOS_KeyboardLayout_Init, changeable_at_runtime);
+	secprop->AddFunctions(&DOSKeyboardSectionFuncs);
 	pstring = secprop->Add_string("keyboardlayout", when_idle, "auto");
 	pstring->Set_help(
 	        "Keyboard layout code ('auto' by default), i.e. 'us' for US English layout.\n"
@@ -1217,17 +1429,17 @@ void DOSBOX_Init()
 	        "(empty by default).");
 
 	// Mscdex
-	secprop->AddInitFunction(&MSCDEX_Init);
-	secprop->AddInitFunction(&DRIVES_Init);
-	secprop->AddInitFunction(&CDROM_Image_Init);
+	secprop->AddFunctions(&MSCDEXSectionFuncs);
+	secprop->AddFunctions(&DrivesSectionFuncs);
+	secprop->AddFunctions(&CDROMImageSectionFuncs);
 #if C_IPX
-	secprop = control->AddSection_prop("ipx", &IPX_Init, changeable_at_runtime);
+	secprop = control->AddSection_prop("ipx", &IPXSectionFuncs);
 	pbool = secprop->Add_bool("ipx", when_idle, false);
 	pbool->Set_help("Enable IPX over UDP/IP emulation (disabled by default).");
 #endif
 
 #if C_SLIRP
-	secprop = control->AddSection_prop("ethernet", &NE2K_Init, changeable_at_runtime);
+	secprop = control->AddSection_prop("ethernet", &NE2KSectionFuncs);
 
 	pbool = secprop->Add_bool("ne2000", when_idle, true);
 	pbool->Set_help(
@@ -1292,11 +1504,11 @@ void DOSBOX_Init()
 	//	secprop->AddInitFunction(&CREDITS_Init);
 
 	// VMM interfaces
-	secprop->AddInitFunction(&VIRTUALBOX_Init);
-	secprop->AddInitFunction(&VMWARE_Init);
+	secprop->AddFunctions(&VirtualBoxSectionFuncs);
+	secprop->AddFunctions(&VMWareSectionFuncs);
 
 	//TODO ?
-	control->AddSection_line("autoexec", &AUTOEXEC_Init);
+	control->AddSection_line("autoexec", &AutoExecSectionFuncs);
 	MSG_Add("AUTOEXEC_CONFIGFILE_HELP",
 		"Lines in this section will be run at startup.\n"
 		"You can put your MOUNT lines here.\n"

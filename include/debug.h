@@ -23,6 +23,9 @@
 #include "mem.h"
 
 #if C_DEBUG
+void DEBUG_Init(Section* sec);
+void DEBUG_ShutDown(Section* sec);
+
 void DEBUG_DrawScreen();
 bool DEBUG_Breakpoint();
 bool DEBUG_IntBreakpoint(uint8_t intNum);
@@ -31,6 +34,8 @@ void DEBUG_CheckExecuteBreakpoint(uint16_t seg, uint32_t off);
 bool DEBUG_ExitLoop(void);
 void DEBUG_RefreshPage(int scroll);
 Bitu DEBUG_EnableDebugger();
+
+void LOG_StartUp(void);
 
 extern Bitu cycle_count;
 extern Bitu debugCallback;

@@ -16,6 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+#include "cmos.h"
 #include "dosbox.h"
 
 #include <cmath>
@@ -386,7 +387,4 @@ void CMOS_Init(Section* sec)
 	assert(sec);
 
 	test = new CMOS(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&CMOS_Destroy, changeable_at_runtime);
 }

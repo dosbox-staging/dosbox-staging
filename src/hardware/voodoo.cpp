@@ -107,6 +107,7 @@
 #include "setup.h"
 #include "support.h"
 #include "vga.h"
+#include "voodoo.h"
 
 #ifndef DOSBOX_VOODOO_TYPES_H
 #define DOSBOX_VOODOO_TYPES_H
@@ -7761,8 +7762,6 @@ void VOODOO_Init(Section* sec)
 
 	voodoo_multithreading = section->Get_bool("voodoo_multithreading");
 	voodoo_bilinear_filtering = section->Get_bool("voodoo_bilinear_filtering");
-
-	sec->AddDestroyFunction(&VOODOO_Destroy,false);
 
 	// Check 64 KB alignment of LFB base
 	static_assert((PciVoodooLfbBase & 0xffff) == 0);

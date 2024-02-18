@@ -61,6 +61,9 @@ constexpr uint32_t SerialMaxBaudRate = 115200u;
  *       controller cards allowed up to 64-bytes and later 256-bytes.
  */
 
+ void SERIAL_Init(Section* sec);
+ void SERIAL_Destroy(Section *sec);
+
 class MyFifo {
 public:
 	MyFifo(const MyFifo &) = delete;            // prevent copying

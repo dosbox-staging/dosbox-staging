@@ -13423,10 +13423,7 @@ static void imfc_init(Section* sec)
 	                       MinIrqAddress,
 	                       MaxIrqAddress);
 
-	imfc = std::make_unique<MusicFeatureCard>(std::move(channel), port, irq);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&imfc_destroy, changeable_at_runtime);
+	imfc = std::make_unique<MusicFeatureCard>(std::move(channel), port, irq);;
 }
 
 void init_imfc_dosbox_settings(Section_prop& secprop)
@@ -13460,15 +13457,18 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
+constexpr SectionFunctions IMFCSectionFuncs = {
+	imfc_init,
+	imfc_destroy,
+	true
+};
+
 void IMFC_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
-
 	Section_prop* sec = conf->AddSection_prop("imfc",
-	                                          &imfc_init,
-	                                          changeable_at_runtime);
+	                                          &IMFCSectionFuncs);
 	assert(sec);
 	init_imfc_dosbox_settings(*sec);
 }

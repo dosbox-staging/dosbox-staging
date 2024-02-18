@@ -2441,9 +2441,6 @@ void CPU_Init(Section* sec)
 	assert(sec);
 
 	test = new (std::nothrow) CPU(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&CPU_ShutDown, changeable_at_runtime);
 }
 
 //initialize static members

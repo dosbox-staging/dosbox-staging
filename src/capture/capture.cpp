@@ -600,9 +600,6 @@ static void capture_init(Section* sec)
 	const std::string prefs = secprop->Get_string("default_image_capture_formats");
 
 	image_capturer = std::make_unique<ImageCapturer>(prefs);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&capture_destroy, changeable_at_runtime);
 }
 
 static void init_key_mappings()
@@ -688,17 +685,19 @@ static void init_capture_dosbox_settings(Section_prop& secprop)
 	assert(str_prop);
 }
 
+constexpr SectionFunctions CaptureSectionFuncs = {
+	capture_init,
+	capture_destroy,
+	true
+};
+
 void CAPTURE_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
-
 	Section_prop* sec = conf->AddSection_prop("capture",
-	                                          &capture_init,
-	                                          changeable_at_runtime);
+	                                          &CaptureSectionFuncs);
 	assert(sec);
 	init_capture_dosbox_settings(*sec);
 	init_key_mappings();
 }
-

@@ -1397,13 +1397,10 @@ void SERIAL_Destroy(Section *sec)
 	testSerialPortsBaseclass = nullptr;
 }
 
-void SERIAL_Init (Section* sec)
+void SERIAL_Init(Section* sec)
 {
 	assert(sec);
 
 	delete testSerialPortsBaseclass;
 	testSerialPortsBaseclass = new SERIALPORTS(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&SERIAL_Destroy, changeable_at_runtime);
 }

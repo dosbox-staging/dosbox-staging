@@ -1074,6 +1074,11 @@ enum class MonochromePalette : uint8_t {
 
 constexpr auto NumMonochromePalettes = enum_val(MonochromePalette::Paperwhite) + 1;
 
+void VGA_Init(Section* sec);
+#ifdef VGA_KEEP_CHANGES
+void VGA_Memory_ShutDown(Section* sec);
+#endif
+
 void VGA_SetMonochromePalette(const enum MonochromePalette);
 void VGA_SetHerculesPalette();
 void VGA_SetMonochromeCgaPalette();

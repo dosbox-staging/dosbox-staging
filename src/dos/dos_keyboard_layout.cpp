@@ -1254,7 +1254,4 @@ void DOS_KeyboardLayout_Init(Section *sec)
 {
 	assert(sec);
 	KeyboardLayout = std::make_unique<DOS_KeyboardLayout>(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&DOS_KeyboardLayout_ShutDown, changeable_at_runtime);
 }

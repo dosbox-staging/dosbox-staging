@@ -107,13 +107,11 @@ public:
 
 	~Config();
 
-	Section_prop* AddEarlySectionProp(const char* name, SectionFunction func,
-	                                  bool changeable_at_runtime = false);
+	Section_prop* AddEarlySectionProp(const char* name, const SectionFunctions *funcs = nullptr);
 
-	Section_line* AddSection_line(const char* section_name, SectionFunction func);
+	Section_line* AddSection_line(const char* section_name, const SectionFunctions *funcs = nullptr);
 
-	Section_prop* AddSection_prop(const char* section_name, SectionFunction func,
-	                              bool changeable_at_runtime = false);
+	Section_prop* AddSection_prop(const char* section_name, const SectionFunctions *funcs = nullptr);
 
 	auto begin()
 	{

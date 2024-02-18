@@ -3497,9 +3497,6 @@ void DOS_Locale_Init(Section* sec)
 {
 	assert(sec);
 	Locale = std::make_unique<DOS_Locale>(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&DOS_Locale_ShutDown, changeable_at_runtime);
 }
 
 void DOS_Locale_AddMessages()

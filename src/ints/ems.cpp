@@ -24,6 +24,7 @@
 #include <cstdlib>
 
 #include "callback.h"
+#include "ems.h"
 #include "mem.h"
 #include "paging.h"
 #include "bios.h"
@@ -1562,7 +1563,4 @@ void EMS_Init(Section* sec)
 	assert(sec);
 
 	test = new EMS(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&EMS_ShutDown, changeable_at_runtime);
 }

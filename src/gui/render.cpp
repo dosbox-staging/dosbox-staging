@@ -1264,15 +1264,18 @@ static void decrease_viewport_stretch(const bool pressed)
 	}
 }
 
+constexpr SectionFunctions RenderSectionFuncs = {
+	RENDER_Init,
+	nullptr,
+	true
+};
+
 void RENDER_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
-
 	Section_prop* sec = conf->AddSection_prop("render",
-	                                          &RENDER_Init,
-	                                          changeable_at_runtime);
+	                                          &RenderSectionFuncs);
 
 	MAPPER_AddHandler(toggle_stretch_axis,
 	                  SDL_SCANCODE_UNKNOWN,

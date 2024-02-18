@@ -106,6 +106,8 @@ extern DOS_Device * Devices[DOS_DEVICES];
 
 extern uint8_t dos_copybuf[0x10000];
 
+void DOS_Init(Section* sec);
+void DOS_ShutDown(Section* sec);
 
 void DOS_SetError(uint16_t code);
 
@@ -260,6 +262,7 @@ void DOS_SetupPrograms(void);
 
 /* Initialize Keyboard Layout */
 void DOS_KeyboardLayout_Init(Section* sec);
+void DOS_KeyboardLayout_ShutDown(Section * sec);
 
 bool DOS_LayoutKey(const uint8_t key, const uint8_t flags1,
                    const uint8_t flags2, const uint8_t flags3);

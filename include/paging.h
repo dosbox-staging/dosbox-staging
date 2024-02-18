@@ -83,6 +83,8 @@ public:
 	uint_fast8_t flags = 0x0;
 };
 
+void PAGING_Init(Section *sec);
+
 /* Some other functions */
 void PAGING_Enable(bool enabled);
 bool PAGING_Enabled();

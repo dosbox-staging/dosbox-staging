@@ -28,6 +28,8 @@
 #include "mem.h"
 #endif
 
+void FPU_Init(Section* sec);
+
 void FPU_ESC0_Normal(Bitu rm);
 void FPU_ESC0_EA(Bitu func,PhysPt ea);
 void FPU_ESC1_Normal(Bitu rm);

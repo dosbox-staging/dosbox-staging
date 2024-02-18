@@ -231,7 +231,6 @@ static void LOG_Init(Section * sec) {
 	} else {
 		debuglog = nullptr;
 	}
-	sect->AddDestroyFunction(&LOG_Destroy);
 	char buf[64];
 	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) { //Skip LOG_ALL, it is always enabled
 		safe_strcpy(buf, loggrp[i].front);
@@ -240,6 +239,11 @@ static void LOG_Init(Section * sec) {
 	}
 }
 
+constexpr SectionFunctions LogSectionFuncs = {
+	LOG_Init,
+	LOG_Destroy,
+	false
+};
 
 void LOG_StartUp(void) {
 	/* Setup logging groups */
@@ -275,7 +279,7 @@ void LOG_StartUp(void) {
 	loggrp[LOG_REELMAGIC].front="REELMAGIC";
 	
 	/* Register the log section */
-	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
+	Section_prop * sect=control->AddSection_prop("log", &LogSectionFuncs);
 	Prop_string* Pstring = sect->Add_string("logfile",Property::Changeable::Always,"");
 	Pstring->Set_help("File where the log messages will be saved to");
 	char buf[64];

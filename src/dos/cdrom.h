@@ -444,6 +444,9 @@ private:
 
 #endif /* LINUX */
 
+void CDROM_Image_Init(Section* sec);
+void CDROM_Image_Destroy(Section* sec);
+
 extern "C" SDL_CD *SDL_CDOpen(int drive);
 extern "C" void SDL_CDClose(SDL_CD *cdrom);
 extern "C" CDstatus SDL_CDStatus(SDL_CD *cdrom);

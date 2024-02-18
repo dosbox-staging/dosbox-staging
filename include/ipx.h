@@ -149,6 +149,9 @@ public:
 	~ECBClass();
 };
 
+void IPX_Init(Section* sec);
+void IPX_ShutDown(Section* sec);
+
 // The following routines may not be needed on all systems.  On my build of SDL the IPaddress structure is 8 octects 
 // and therefore screws up my IPXheader structure since it needs to be packed.
 

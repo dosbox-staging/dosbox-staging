@@ -878,7 +878,6 @@ void PROGRAMS_Init(Section* sec)
 	CALLBACK_Setup(call_program, &PROGRAMS_Handler, CB_RETF, "internal program");
 
 	// TODO Cleanup -- allows unit tests to run indefinitely & cleanly
-	sec->AddDestroyFunction(&PROGRAMS_Destroy);
 
 	// List config
 	MSG_Add("PROGRAM_CONFIG_NOCONFIGFILE", "No config file loaded\n");

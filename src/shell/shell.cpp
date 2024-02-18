@@ -531,8 +531,7 @@ static std::unique_ptr<Config> specify_drive_config()
 	auto conf = std::make_unique<Config>();
 
 	// Define the [drive] section
-	constexpr auto changeable_at_runtime = false;
-	auto prop = conf->AddSection_prop("drive", nullptr, changeable_at_runtime);
+	auto prop = conf->AddSection_prop("drive");
 
 	// Define the allowed keys and types
 	constexpr auto on_startup = Property::Changeable::OnlyAtStart;

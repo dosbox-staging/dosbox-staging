@@ -1657,9 +1657,6 @@ static void gus_init(Section *sec)
 
 	// Instantiate the GUS with the settings
 	gus = std::make_unique<Gus>(port, dma, irq, ultradir.c_str(), filter_prefs);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&gus_destroy, changeable_at_runtime);
 }
 
 void init_gus_dosbox_settings(Section_prop &secprop)
@@ -1710,13 +1707,17 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
 
+constexpr SectionFunctions GUSSectionFuncs = {
+	gus_init,
+	gus_destroy,
+	false
+};
+
 void GUS_AddConfigSection(const config_ptr_t& conf)
 {
 	assert(conf);
 
-	constexpr auto changeable_at_runtime = true;
-
-	Section_prop* sec = conf->AddSection_prop("gus", &gus_init, changeable_at_runtime);
+	Section_prop* sec = conf->AddSection_prop("gus", &GUSSectionFuncs);
 	assert(sec);
 	init_gus_dosbox_settings(*sec);
 }

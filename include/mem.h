@@ -38,6 +38,9 @@ typedef int32_t MemHandle;
 extern HostPt MemBase;
 HostPt GetMemBase();
 
+void MEM_ShutDown(Section *sec);
+void MEM_Init(Section* sec);
+
 uint16_t MEM_GetMinMegabytes();
 uint16_t MEM_GetMaxMegabytes();
 

@@ -623,7 +623,4 @@ void JOYSTICK_Init(Section* sec)
 	assert(sec);
 
 	test = new JOYSTICK(sec);
-
-	constexpr auto changeable_at_runtime = true;
-	sec->AddDestroyFunction(&JOYSTICK_Destroy, changeable_at_runtime); 
 }
