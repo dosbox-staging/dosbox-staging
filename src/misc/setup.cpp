@@ -101,6 +101,10 @@ bool Value::operator==(const Value& other) const
 	return false;
 }
 
+bool Value::operator==(const Hex& other) const {
+    return this->_hex == other;
+}
+
 bool Value::operator<(const Value& other) const
 {
 	return std::tie(_hex, _bool, _int, _string, _double) <
