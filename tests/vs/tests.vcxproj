@@ -357,9 +357,6 @@ $(TargetPath)</Command>
     <ClCompile Include="..\stubs.cpp" />
     <ClCompile Include="..\support_tests.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\meson.build" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
