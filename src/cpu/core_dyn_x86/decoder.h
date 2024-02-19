@@ -58,8 +58,9 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 	const Bitu cflag = cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16;
 	//Ensure page contains memory:
 	const auto lin_addr_as_physpt = check_cast<PhysPt>(lin_addr);
-	if (GCC_UNLIKELY(mem_readb_checked(lin_addr_as_physpt, &rdval)))
+	if (mem_readb_checked(lin_addr_as_physpt, &rdval)) {
 		return true;
+	}
 	PageHandler *handler = get_tlb_readhandler(lin_addr_as_physpt);
 	if (handler->flags & PFLAG_HASCODE) {
 		cph=( CodePageHandler *)handler;
@@ -126,9 +127,9 @@ static bool MakeCodePage(Bitu lin_addr,CodePageHandler * &cph) {
 }
 
 static uint8_t decode_fetchb(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4096)) {
-        /* Advance to the next page */
-		decode.active_block->page.end=4095;
+	if (decode.page.index >= 4096) {
+		/* Advance to the next page */
+		decode.active_block->page.end = 4095;
 		/* trigger possible page fault here */
 		++decode.page.first;
 		Bitu fetchaddr=decode.page.first << 12;
@@ -150,9 +151,9 @@ static uint8_t decode_fetchb(void) {
 	return mem_readb(decode.code-1);
 }
 static uint16_t decode_fetchw(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4095)) {
-   		uint16_t val=decode_fetchb();
-		val|=decode_fetchb() << 8;
+	if (decode.page.index >= 4095) {
+		uint16_t val = decode_fetchb();
+		val |= decode_fetchb() << 8;
 		return val;
 	}
 	add_to_unaligned_uint16(&decode.page.wmap[decode.page.index], 0x0101);
@@ -160,10 +161,10 @@ static uint16_t decode_fetchw(void) {
 	return mem_readw(decode.code-2);
 }
 static uint32_t decode_fetchd(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4093)) {
-   		uint32_t val=decode_fetchb();
-		val|=decode_fetchb() << 8;
-		val|=decode_fetchb() << 16;
+	if (decode.page.index >= 4093) {
+		uint32_t val = decode_fetchb();
+		val |= decode_fetchb() << 8;
+		val |= decode_fetchb() << 16;
 		val|=decode_fetchb() << 24;
 		return val;
         /* Advance to the next page */
@@ -685,10 +686,14 @@ static void dyn_write_byte(DynReg * addr,DynReg * val,bool high,bool release=fal
 	gen_fill_branch(je_loc);
 
 	cache_addb(0x52);	// push edx
-	if (GCC_UNLIKELY(high)) cache_addw(0xe086+((genreg->index+(genreg->index<<3))<<8));
-	cache_addb(0x50+genreg->index);
-	cache_addb(0x50);	// push eax
-	if (GCC_UNLIKELY(high)) cache_addw(0xe086+((genreg->index+(genreg->index<<3))<<8));
+	if (high) {
+		cache_addw(0xe086 + ((genreg->index + (genreg->index << 3)) << 8));
+	}
+	cache_addb(0x50 + genreg->index);
+	cache_addb(0x50); // push eax
+	if (high) {
+		cache_addw(0xe086 + ((genreg->index + (genreg->index << 3)) << 8));
+	}
 	cache_addb(0xe8);
 	cache_addd(((uint32_t)&mem_writeb_checked) - (uint32_t)cache.pos-4);
 	cache_addw(0xc483);		// add esp,8
@@ -1825,8 +1830,10 @@ static void dyn_load_seg_off_ea(SegNames seg) {
 static void dyn_mov_seg_ev(void) {
 	dyn_get_modrm();
 	SegNames seg=(SegNames)decode.modrm.reg;
-	if (GCC_UNLIKELY(seg==cs)) IllegalOption("dyn_mov_seg_ev");
-	if (decode.modrm.mod<3) {
+	if (seg == cs) {
+		IllegalOption("dyn_mov_seg_ev");
+	}
+	if (decode.modrm.mod < 3) {
 		dyn_fill_ea();
 		dyn_read_word(DREG(EA),DREG(EA),false);
 		dyn_load_seg(seg,DREG(EA));
@@ -1886,7 +1893,7 @@ static void dyn_leave(void) {
 }
 
 static void dyn_segprefix(SegNames seg) {
-//	if (GCC_UNLIKELY((Bitu)(decode.segprefix))) IllegalOption("dyn_segprefix");
+	//	if ((Bitu)(decode.segprefix)) IllegalOption("dyn_segprefix");
 	decode.segprefix=&DynRegs[static_cast<int>(G_ES)+seg];
 }
 
@@ -2237,12 +2244,16 @@ restart_prefix:
 		if (!decode.page.invmap) opcode=decode_fetchb();
 		else {
 			if (decode.page.index<4096) {
-				if (GCC_UNLIKELY(decode.page.invmap[decode.page.index]>=4)) goto illegalopcode;
-				opcode=decode_fetchb();
+				if (decode.page.invmap[decode.page.index] >= 4) {
+					goto illegalopcode;
+				}
+				opcode = decode_fetchb();
 			} else {
 				opcode=decode_fetchb();
-				if (GCC_UNLIKELY(decode.page.invmap && 
-					(decode.page.invmap[decode.page.index-1]>=4))) goto illegalopcode;
+				if (decode.page.invmap &&
+				    (decode.page.invmap[decode.page.index - 1] >= 4)) {
+					goto illegalopcode;
+				}
 			}
 		}
 		switch (opcode) {
@@ -2298,12 +2309,16 @@ restart_prefix:
 			/* LFS,LGS */
 			case 0xb4:
 				dyn_get_modrm();
-				if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+				if (decode.modrm.mod == 3) {
+					goto illegalopcode;
+				}
 				dyn_load_seg_off_ea(fs);
 				break;
 			case 0xb5:
 				dyn_get_modrm();
-				if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+				if (decode.modrm.mod == 3) {
+					goto illegalopcode;
+				}
 				dyn_load_seg_off_ea(gs);
 				break;
 			/* MOVZX Gv,Eb/Ew */
@@ -2450,7 +2465,9 @@ restart_prefix:
 		/* LEA Gv */
 		case 0x8d:
 			dyn_get_modrm();
-			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			if (decode.modrm.mod == 3) {
+				goto illegalopcode;
+			}
 			if (decode.big_op) {
 				dyn_fill_ea(false,&DynRegs[decode.modrm.reg]);
 			} else {
@@ -2563,13 +2580,17 @@ restart_prefix:
 		//LES
 		case 0xc4:
 			dyn_get_modrm();
-			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			if (decode.modrm.mod == 3) {
+				goto illegalopcode;
+			}
 			dyn_load_seg_off_ea(es);
 			break;
 		//LDS
 		case 0xc5:
 			dyn_get_modrm();
-			if (GCC_UNLIKELY(decode.modrm.mod==3)) goto illegalopcode;
+			if (decode.modrm.mod == 3) {
+				goto illegalopcode;
+			}
 			dyn_load_seg_off_ea(ds);
 			break;
 		// MOV Eb/Ev,Ib/Iv

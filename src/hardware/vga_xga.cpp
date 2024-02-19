@@ -157,23 +157,30 @@ void XGA_DrawPoint(Bitu x, Bitu y, Bitu c) {
 	   during windows dragging. */
 	switch(XGA_COLOR_MODE) {
 		case M_LIN8:
-			if (GCC_UNLIKELY(memaddr >= vga.vmemsize)) break;
-			vga.mem.linear[memaddr] = c;
-			break;
-		case M_LIN15:
-			if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
-			((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c&0x7fff);
-			break;
-		case M_LIN16:
-			if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
-			((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c&0xffff);
-			break;
-		case M_LIN32:
-			if (GCC_UNLIKELY(memaddr*4 >= vga.vmemsize)) break;
-			((uint32_t*)(vga.mem.linear))[memaddr] = c;
-			break;
-		default:
-			break;
+		        if (memaddr >= vga.vmemsize) {
+			        break;
+		        }
+		        vga.mem.linear[memaddr] = c;
+		        break;
+	        case M_LIN15:
+		        if (memaddr * 2 >= vga.vmemsize) {
+			        break;
+		        }
+		        ((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c & 0x7fff);
+		        break;
+	        case M_LIN16:
+		        if (memaddr * 2 >= vga.vmemsize) {
+			        break;
+		        }
+		        ((uint16_t*)(vga.mem.linear))[memaddr] = (uint16_t)(c & 0xffff);
+		        break;
+	        case M_LIN32:
+		        if (memaddr * 4 >= vga.vmemsize) {
+			        break;
+		        }
+		        ((uint32_t*)(vga.mem.linear))[memaddr] = c;
+		        break;
+	        default: break;
 	}
 
 }
@@ -183,14 +190,20 @@ Bitu XGA_GetPoint(Bitu x, Bitu y) {
 
 	switch(XGA_COLOR_MODE) {
 	case M_LIN8:
-		if (GCC_UNLIKELY(memaddr >= vga.vmemsize)) break;
+		if (memaddr >= vga.vmemsize) {
+			break;
+		}
 		return vga.mem.linear[memaddr];
 	case M_LIN15:
 	case M_LIN16:
-		if (GCC_UNLIKELY(memaddr*2 >= vga.vmemsize)) break;
+		if (memaddr * 2 >= vga.vmemsize) {
+			break;
+		}
 		return ((uint16_t*)(vga.mem.linear))[memaddr];
 	case M_LIN32:
-		if (GCC_UNLIKELY(memaddr*4 >= vga.vmemsize)) break;
+		if (memaddr * 4 >= vga.vmemsize) {
+			break;
+		}
 		return ((uint32_t*)(vga.mem.linear))[memaddr];
 	default:
 		break;
@@ -1244,8 +1257,9 @@ uint32_t XGA_Read(io_port_t port, io_width_t width)
 		break;
 	case 0x83da: {
 		Bits delaycyc = CPU_CycleMax / 5000;
-		if (GCC_UNLIKELY(CPU_Cycles < 3 * delaycyc))
+		if (CPU_Cycles < 3 * delaycyc) {
 			delaycyc = 0;
+		}
 		CPU_Cycles -= delaycyc;
 		CPU_IODelayRemoved += delaycyc;
 		return vga_read_p3da(0, io_width_t::byte);

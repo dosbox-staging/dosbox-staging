@@ -597,7 +597,7 @@ bool MouseInterface::ChangedButtonsJoined() const
 
 bool MouseInterface::ChangedButtonsSquished() const
 {
-	if (GCC_LIKELY(old_buttons_12._data != buttons_12._data)) {
+	if (old_buttons_12._data != buttons_12._data) {
 		return true;
 	}
 
@@ -656,7 +656,7 @@ void InterfaceDos::NotifyMoved(const float x_rel, const float y_rel,
 void InterfaceDos::NotifyButton(const MouseButtonId button_id, const bool pressed)
 {
 	UpdateButtons(button_id, pressed);
-	if (GCC_UNLIKELY(!ChangedButtonsSquished())) {
+	if (!ChangedButtonsSquished()) {
 		return;
 	}
 
@@ -725,7 +725,7 @@ void InterfacePS2::NotifyMoved(const float x_rel, const float y_rel,
 void InterfacePS2::NotifyButton(const MouseButtonId button_id, const bool pressed)
 {
 	UpdateButtons(button_id, pressed);
-	if (GCC_UNLIKELY(!ChangedButtonsJoined())) {
+	if (!ChangedButtonsJoined()) {
 		return;
 	}
 
@@ -790,7 +790,7 @@ void InterfaceCOM::NotifyButton(const MouseButtonId button_id, const bool presse
 	assert(listener);
 
 	UpdateButtons(button_id, pressed);
-	if (GCC_UNLIKELY(!ChangedButtonsSquished())) {
+	if (!ChangedButtonsSquished()) {
 		return;
 	}
 

@@ -204,7 +204,7 @@ static void gen_mov_regs(HostReg reg_dst,HostReg reg_src) {
 static bool val_is_operand2(uint32_t value, uint32_t *val_shift) {
 	uint32_t shift;
 
-	if (GCC_UNLIKELY(value == 0)) {
+	if (value == 0) {
 		*val_shift = 0;
 		return true;
 	}

@@ -369,11 +369,13 @@ bool ManyMouseGlue::IsMappingInEffect() const
 
 void ManyMouseGlue::HandleEvent(const ManyMouseEvent &event, const bool critical_only)
 {
-	if (GCC_UNLIKELY(event.device >= mouse_info.physical.size()))
+	if (event.device >= mouse_info.physical.size()) {
 		return; // device ID out of supported range
-	if (GCC_UNLIKELY(mouse_config.capture == MouseCapture::NoMouse &&
-	                 event.type != MANYMOUSE_EVENT_DISCONNECT))
+	}
+	if (mouse_config.capture == MouseCapture::NoMouse &&
+	    event.type != MANYMOUSE_EVENT_DISCONNECT) {
 		return; // mouse control disabled in GUI
+	}
 
 	const auto device_idx = static_cast<uint8_t>(event.device);
 	const auto interface_id = physical_devices[device_idx].GetMappedInterfaceId();

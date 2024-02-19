@@ -121,7 +121,9 @@ static bool MakeCodePage(Bitu lin_addr, CodePageHandler *&cph)
 	uint8_t rdval;
 	const Bitu cflag = cpu.code.big ? PFLAG_HASCODE32:PFLAG_HASCODE16;
 	//Ensure page contains memory:
-	if (GCC_UNLIKELY(mem_readb_checked(lin_addr,&rdval))) return true;
+	if (mem_readb_checked(lin_addr, &rdval)) {
+		return true;
+	}
 
 	PageHandler * handler=get_tlb_readhandler(lin_addr);
 	if (handler->flags & PFLAG_HASCODE) {
@@ -213,7 +215,7 @@ static void decode_advancepage(void) {
 
 // fetch the next byte of the instruction stream
 static uint8_t decode_fetchb(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4096)) {
+	if (decode.page.index >= 4096) {
 		decode_advancepage();
 	}
 	decode.page.wmap[decode.page.index]+=0x01;
@@ -223,9 +225,9 @@ static uint8_t decode_fetchb(void) {
 }
 // fetch the next word of the instruction stream
 static uint16_t decode_fetchw(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4095)) {
-   		uint16_t val=decode_fetchb();
-		val|=decode_fetchb() << 8;
+	if (decode.page.index >= 4095) {
+		uint16_t val = decode_fetchb();
+		val |= decode_fetchb() << 8;
 		return val;
 	}
 	add_to_unaligned_uint16(&decode.page.wmap[decode.page.index], 0x0101);
@@ -234,10 +236,10 @@ static uint16_t decode_fetchw(void) {
 }
 // fetch the next dword of the instruction stream
 static uint32_t decode_fetchd(void) {
-	if (GCC_UNLIKELY(decode.page.index>=4093)) {
-   		uint32_t val=decode_fetchb();
-		val|=decode_fetchb() << 8;
-		val|=decode_fetchb() << 16;
+	if (decode.page.index >= 4093) {
+		uint32_t val = decode_fetchb();
+		val |= decode_fetchb() << 8;
+		val |= decode_fetchb() << 16;
 		val|=decode_fetchb() << 24;
 		return val;
         /* Advance to the next page */
@@ -250,7 +252,7 @@ static uint32_t decode_fetchd(void) {
 // fetch a byte, val points to the code location if possible,
 // otherwise val contains the current value read from the position
 static bool decode_fetchb_imm(Bitu & val) {
-	if (GCC_UNLIKELY(decode.page.index>=4096)) {
+	if (decode.page.index >= 4096) {
 		decode_advancepage();
 	}
 	// see if position is directly accessible

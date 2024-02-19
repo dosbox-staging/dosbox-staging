@@ -641,7 +641,7 @@ static void SetTextLines(void) {
 
 void INT10_SetCurMode(void) {
 	uint16_t bios_mode=(uint16_t)real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE);
-	if (GCC_UNLIKELY(CurMode->mode!=bios_mode)) {
+	if (CurMode->mode != bios_mode) {
 		bool mode_changed=false;
 
 		switch (machine) {

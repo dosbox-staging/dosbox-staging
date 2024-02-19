@@ -226,7 +226,7 @@ static void write_p3c9(io_port_t, io_val_t value, io_width_t)
 		case M_LIN8:
 			vga_dac_update_color(vga.dac.write_index);
 
-			if (GCC_UNLIKELY(vga.dac.pel_mask != 0xff)) {
+			if (vga.dac.pel_mask != 0xff) {
 				const auto index = vga.dac.write_index;
 
 				if ((index & vga.dac.pel_mask) == index) {

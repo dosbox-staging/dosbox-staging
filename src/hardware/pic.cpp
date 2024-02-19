@@ -138,7 +138,7 @@ uint32_t PIC_Ticks = 0;
 uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
 
 void PIC_Controller::set_imr(uint8_t val) {
-	if (GCC_UNLIKELY(machine == MCH_PCJR)) {
+	if (machine == MCH_PCJR) {
 		//irq 6 is a NMI on the PCJR
 		if (this == &primary_controller)
 			val &= ~(1 << (6));
@@ -184,7 +184,7 @@ void PIC_Controller::start_irq(uint8_t val) {
 		active_irq = val;
 		isr |= 1<<(val);
 		isrr = ~isr;
-	} else if (GCC_UNLIKELY(rotate_on_auto_eoi)) {
+	} else if (rotate_on_auto_eoi) {
 		E_Exit("rotate on auto EOI not handled");
 	}
 }
@@ -208,8 +208,7 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 	const auto val = check_cast<uint8_t>(value);
 	PIC_Controller *pic = &pics[port == 0x20 ? 0 : 1];
 
-
-	if (GCC_UNLIKELY(val&0x10)) {		// ICW1 issued
+	if (val & 0x10) { // ICW1 issued
 		if (val&0x04) E_Exit("PIC: 4 byte interval not handled");
 		if (val&0x08) E_Exit("PIC: level triggered mode not handled");
 		if (val&0xe0) E_Exit("PIC: 8080/8085 mode not handled");
@@ -217,7 +216,7 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 		pic->single=(val&0x02)==0x02;
 		pic->icw_index=1;			// next is ICW2
 		pic->icw_words=2 + (val&0x01);	// =3 if ICW4 needed
-	} else if (GCC_UNLIKELY(val&0x08)) {	// OCW3 issued
+	} else if (val & 0x08) {                // OCW3 issued
 		if (val&0x04) E_Exit("PIC: poll command not handled");
 		if (val&0x02) {		// function select
 			if (val&0x01) pic->request_issr=true;	/* select read interrupt in-service register */
@@ -230,15 +229,17 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 			pic->check_for_irq();
 			LOG(LOG_PIC, LOG_NORMAL)("port %#x : special mask %s", port,(pic->special) ? "ON" : "OFF");
 		}
-	} else {	// OCW2 issued
+	} else {                        // OCW2 issued
 		if (val&0x20) {		// EOI commands
-			if (GCC_UNLIKELY(val&0x80)) E_Exit("rotate mode not supported");
-			if (val&0x40) {		// specific EOI
-				pic->isr &= ~(1<< ((val-0x60)));
+			if (val & 0x80) {
+				E_Exit("rotate mode not supported");
+			}
+			if (val & 0x40) { // specific EOI
+				pic->isr &= ~(1 << ((val - 0x60)));
 				pic->isrr = ~pic->isr;
 				pic->check_after_EOI();
 //				if (val&0x80);	// perform rotation
-			} else {		// nonspecific EOI
+			} else { // nonspecific EOI
 				if (pic->active_irq != 8) { 
 					//If there is no irq in service, ignore the call, some games send an eoi to both pics when a sound irq happens (regardless of the irq).
 					pic->isr &= ~(1 << (pic->active_irq));
@@ -255,7 +256,7 @@ static void write_command(io_port_t port, io_val_t value, io_width_t)
 				LOG(LOG_PIC,LOG_NORMAL)("set priority command not handled");
 			}	// else NOP command
 		}
-	}	// end OCW2
+	} // end OCW2
 }
 
 static void write_data(io_port_t port, io_val_t value, io_width_t)
@@ -326,7 +327,7 @@ void PIC_ActivateIRQ(const uint8_t irq)
 	int32_t OldCycles = CPU_Cycles;
 	pic->raise_irq(t); //Will set the CPU_Cycles to zero if this IRQ will be handled directly
 
-	if (GCC_UNLIKELY(OldCycles != CPU_Cycles)) {
+	if (OldCycles != CPU_Cycles) {
 		// if CPU_Cycles have changed, this means that the interrupt was triggered by an I/O
 		// register write rather than an event.
 		// Real hardware executes 0 to ~13 NOPs or comparable instructions
@@ -366,8 +367,9 @@ static void secondary_startIRQ()
 		}
 	}
 	// Maybe change the E_Exit to a return
-	if (GCC_UNLIKELY(pic1_irq == 8))
+	if (pic1_irq == 8) {
 		E_Exit("PIC: IRQ 2 is active, but IRQ is not active on the secondary controller.");
+	}
 
 	secondary_controller.start_irq(pic1_irq);
 	primary_controller.start_irq(2);
@@ -382,8 +384,12 @@ static void inline primary_startIRQ(uint8_t i)
 
 void PIC_runIRQs(void) {
 	if (!GETFLAG(IF)) return;
-	if (GCC_UNLIKELY(!PIC_IRQCheck)) return;
-	if (GCC_UNLIKELY(cpudecoder==CPU_Core_Normal_Trap_Run)) return;
+	if (!PIC_IRQCheck) {
+		return;
+	}
+	if (cpudecoder == CPU_Core_Normal_Trap_Run) {
+		return;
+	}
 
 	const uint8_t p = (primary_controller.irr & primary_controller.imrr) &
 	                  primary_controller.isrr;
@@ -418,26 +424,29 @@ void PIC_SetIRQMask(uint32_t irq, bool masked)
 
 static void AddEntry(PICEntry * entry) {
 	PICEntry * find_entry=pic_queue.next_entry;
-	if (GCC_UNLIKELY(find_entry ==nullptr)) {
+	if (find_entry == nullptr) {
 		entry->next=nullptr;
 		pic_queue.next_entry=entry;
-	} else if (find_entry->index>entry->index) {
+	} else if (find_entry->index > entry->index) {
 		pic_queue.next_entry=entry;
 		entry->next=find_entry;
-	} else while (find_entry) {
-		if (find_entry->next) {
-			/* See if the next index comes later than this one */
-			if (find_entry->next->index > entry->index) {
-				entry->next=find_entry->next;
-				find_entry->next=entry;
-				break;
+	} else {
+		while (find_entry) {
+			if (find_entry->next) {
+				/* See if the next index comes later than this
+				 * one */
+				if (find_entry->next->index > entry->index) {
+					entry->next      = find_entry->next;
+					find_entry->next = entry;
+					break;
+				} else {
+					find_entry = find_entry->next;
+				}
 			} else {
-				find_entry=find_entry->next;
+				entry->next      = find_entry->next;
+				find_entry->next = entry;
+				break;
 			}
-		} else {
-			entry->next=find_entry->next;
-			find_entry->next=entry;
-			break;
 		}
 	}
 	Bits cycles=PIC_MakeCycles(pic_queue.next_entry->index-PIC_TickIndex());
@@ -451,7 +460,7 @@ static double srv_lag = 0.0;
 
 void PIC_AddEvent(PIC_EventHandler handler, double delay, uint32_t val)
 {
-	if (GCC_UNLIKELY(!pic_queue.free_entry)) {
+	if (!pic_queue.free_entry) {
 		LOG(LOG_PIC,LOG_ERROR)("Event queue full");
 		return;
 	}
@@ -471,7 +480,7 @@ void PIC_RemoveSpecificEvents(PIC_EventHandler handler, uint32_t val)
 	PICEntry *prev_entry;
 	prev_entry = nullptr;
 	while (entry) {
-		if (GCC_UNLIKELY((entry->pic_event == handler)) && (entry->value == val)) {
+		if ((entry->pic_event == handler) && (entry->value == val)) {
 			if (prev_entry) {
 				prev_entry->next=entry->next;
 				entry->next=pic_queue.free_entry;
@@ -496,7 +505,7 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 	PICEntry * prev_entry;
 	prev_entry=nullptr;
 	while (entry) {
-		if (GCC_UNLIKELY(entry->pic_event==handler)) {
+		if (entry->pic_event == handler) {
 			if (prev_entry) {
 				prev_entry->next=entry->next;
 				entry->next=pic_queue.free_entry;
@@ -548,8 +557,9 @@ bool PIC_RunQueue(void) {
 		auto cycles = static_cast<int32_t>(
 		        pic_queue.next_entry->index * static_cast<double>(CPU_CycleMax) -
 		        index_nd_f);
-		if (GCC_UNLIKELY(!cycles))
+		if (!cycles) {
 			cycles = 1;
+		}
 		if (cycles < CPU_CycleLeft) {
 			CPU_Cycles = cycles;
 		} else {

@@ -788,8 +788,9 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	// roughly half a micro (as we already do 1 micro on each port read and
 	// some tests revealed it taking 1.5 micros to read an adlib port)
 	auto delaycyc = (CPU_CycleMax / 2048);
-	if (GCC_UNLIKELY(delaycyc > CPU_Cycles))
+	if (delaycyc > CPU_Cycles) {
 		delaycyc = CPU_Cycles;
+	}
 
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;

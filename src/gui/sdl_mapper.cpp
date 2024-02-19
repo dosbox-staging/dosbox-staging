@@ -790,7 +790,9 @@ public:
 	}
 
 	void ActivateJoystickBoundEvents() {
-		if (GCC_UNLIKELY(sdl_joystick==nullptr)) return;
+		if (sdl_joystick == nullptr) {
+			return;
+		}
 
 		bool button_pressed[MAXBUTTON];
 		std::fill_n(button_pressed, MAXBUTTON, false);

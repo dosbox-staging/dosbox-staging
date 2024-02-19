@@ -320,7 +320,7 @@ static uint8_t * VGA_Draw_Changes_Line(Bitu vidstart, Bitu line) {
 				memcpy(vga.draw.linear_base+vga.draw.linear_mask+1, vga.draw.linear_base, vga.draw.line_length);
 			uint8_t *ret = &vga.draw.linear_base[ offset ];
 #if !defined(C_UNALIGNED_MEMORY)
-			if (GCC_UNLIKELY( ((Bitu)ret) & (sizeof(Bitu)-1)) ) {
+			if (((Bitu)ret) & (sizeof(Bitu) - 1)) {
 				memcpy( TempLine, ret, vga.draw.line_length );
 				return TempLine;
 			}
@@ -341,7 +341,7 @@ static uint8_t * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 
 	// in case (vga.draw.line_length + offset) has bits set that
 	// are not set in the mask: ((x|y)!=y) equals (x&~y)
-	if (GCC_UNLIKELY((vga.draw.line_length + offset)& ~vga.draw.linear_mask)) {
+	if ((vga.draw.line_length + offset) & ~vga.draw.linear_mask) {
 		// this happens, if at all, only once per frame (1 of 480 lines)
 		// in some obscure games
 		Bitu end = (offset + vga.draw.line_length) & vga.draw.linear_mask;
@@ -359,7 +359,7 @@ static uint8_t * VGA_Draw_Linear_Line(Bitu vidstart, Bitu /*line*/) {
 	}
 
 #if !defined(C_UNALIGNED_MEMORY)
-	if (GCC_UNLIKELY( ((Bitu)ret) & (sizeof(Bitu)-1)) ) {
+	if (((Bitu)ret) & (sizeof(Bitu) - 1)) {
 		memcpy( TempLine, ret, vga.draw.line_length );
 		return TempLine;
 	}
@@ -428,13 +428,13 @@ static uint8_t* draw_linear_line_from_dac_palette(Bitu vidstart, Bitu /*line*/)
 
 	// If the screen is disabled, just paint black. This fixes screen
 	// fades in titles like Alien Carnage.
-	if (GCC_UNLIKELY(vga.seq.clocking_mode.is_screen_disabled)) {
+	if (vga.seq.clocking_mode.is_screen_disabled) {
 		memset(line_addr, 0, vga.draw.line_length);
 		return TempLine;
 	}
 
 	// see VGA_Draw_Linear_Line
-	if (GCC_UNLIKELY((vga.draw.line_length + offset) & ~vga.draw.linear_mask)) {
+	if ((vga.draw.line_length + offset) & ~vga.draw.linear_mask) {
 		// Note: To exercise these wrapped scenarios, run:
 		// 1. Dangerous Dave: jump on the tree at the start.
 		// 2. Commander Keen 4: move to left of the first hill on stage 1.
@@ -686,7 +686,7 @@ static uint8_t * VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/) {
 static const uint8_t* VGA_Text_Memwrap(Bitu vidstart) {
 	vidstart = vidstart & vga.draw.linear_mask;
 	Bitu line_end = 2 * vga.draw.blocks;
-	if (GCC_UNLIKELY((vidstart + line_end) > vga.draw.linear_mask)) {
+	if ((vidstart + line_end) > vga.draw.linear_mask) {
 		// wrapping in this line
 		Bitu break_pos = (vga.draw.linear_mask - vidstart) + 1;
 		// need a temporary storage - TempLine/2 is ok for a bit more than 132 columns
@@ -763,10 +763,12 @@ static uint8_t *VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 				else fg = TXT_FG_Table[0x7];
 			}
 			uint32_t mask1, mask2;
-			if (GCC_UNLIKELY(underline)) mask1 = mask2 = FontMask[attrib >> 7];
-			else {
-				Bitu font=vga.draw.font_tables[0][chr*32+line];
-				mask1=TXT_Font_Table[font>>4] & FontMask[attrib >> 7]; // blinking
+			if (underline) {
+				mask1 = mask2 = FontMask[attrib >> 7];
+			} else {
+				Bitu font = vga.draw.font_tables[0][chr * 32 + line];
+				mask1 = TXT_Font_Table[font >> 4] &
+				        FontMask[attrib >> 7]; // blinking
 				mask2=TXT_Font_Table[font&0xf] & FontMask[attrib >> 7];
 			}
 			write_unaligned_uint32_at(TempLine, i++, (fg & mask1) | (bg & ~mask1));
@@ -831,9 +833,10 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 		                                     : bg_palette_idx;
 
 		// underline: all foreground [freevga: 0x77, previous 0x7]
-		if (GCC_UNLIKELY(((attr&0x77) == 0x01) &&
-			(vga.crtc.underline_location&0x1f)==line))
+		if (((attr & 0x77) == 0x01) &&
+		    (vga.crtc.underline_location & 0x1f) == line) {
 			bg_palette_idx = fg_palette_idx;
+		}
 
 		// The font's bits will indicate which color is used per pixel
 		const auto fg_colour = palette_map[fg_palette_idx];
@@ -928,7 +931,7 @@ static void VGA_ProcessSplit()
 static uint8_t bg_color_index = 0; // screen-off black index
 static void VGA_DrawSingleLine(uint32_t /*blah*/)
 {
-	if (GCC_UNLIKELY(vga.attr.disabled)) {
+	if (vga.attr.disabled) {
 		switch(machine) {
 		case MCH_PCJR:
 			// Displays the border color when screen is disabled
@@ -1026,7 +1029,7 @@ static void VGA_DrawSingleLine(uint32_t /*blah*/)
 
 static void VGA_DrawEGASingleLine(uint32_t /*blah*/)
 {
-	if (GCC_UNLIKELY(vga.attr.disabled)) {
+	if (vga.attr.disabled) {
 		std::fill(templine_buffer.begin(), templine_buffer.end(), 0);
 		ReelMagic_RENDER_DrawLine(TempLine);
 	} else {
@@ -1129,7 +1132,9 @@ static void VGA_VertInterrupt(uint32_t /*val*/)
 	if ((!vga.draw.vret_triggered) &&
 	    ((vga.crtc.vertical_retrace_end & 0x30) == 0x10)) {
 		vga.draw.vret_triggered=true;
-		if (GCC_UNLIKELY(machine==MCH_EGA)) PIC_ActivateIRQ(9);
+		if (machine == MCH_EGA) {
+			PIC_ActivateIRQ(9);
+		}
 	}
 }
 
@@ -1288,14 +1293,16 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	default:
 		break;
 	}
-	if (GCC_UNLIKELY(vga.draw.split_line==0)) VGA_ProcessSplit();
+	if (vga.draw.split_line == 0) {
+		VGA_ProcessSplit();
+	}
 #ifdef VGA_KEEP_CHANGES
 	if (startaddr_changed) VGA_ChangesStart();
 #endif
 
 	// check if some lines at the top off the screen are blanked
 	double draw_skip = 0.0;
-	if (GCC_UNLIKELY(vga.draw.vblank_skip)) {
+	if (vga.draw.vblank_skip) {
 		draw_skip = vga.draw.delay.htotal * static_cast<double>(vga.draw.vblank_skip);
 		vga.draw.address += vga.draw.address_add * vga.draw.vblank_skip / vga.draw.address_line_total;
 	}
@@ -1303,7 +1310,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 	// add the draw event
 	switch (vga.draw.mode) {
 	case PART:
-		if (GCC_UNLIKELY(vga.draw.parts_left)) {
+		if (vga.draw.parts_left) {
 			LOG(LOG_VGAMISC, LOG_NORMAL)("Parts left: %u", vga.draw.parts_left);
 			PIC_RemoveEvents(VGA_DrawPart);
 			RENDER_EndUpdate(true);
@@ -1314,7 +1321,7 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		break;
 	case DRAWLINE:
 	case EGALINE:
-		if (GCC_UNLIKELY(vga.draw.lines_done < vga.draw.lines_total)) {
+		if (vga.draw.lines_done < vga.draw.lines_total) {
 			LOG(LOG_VGAMISC, LOG_NORMAL)("Lines left: %d",
 			                             static_cast<int>(vga.draw.lines_total - vga.draw.lines_done));
 			if (vga.draw.mode == EGALINE)

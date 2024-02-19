@@ -292,7 +292,7 @@ void MOUSEVMM_NotifyMoved(const float x_rel, const float y_rel,
 
 	// Filter out unneeded events (like sub-pixel mouse movements,
 	// which won't change guest side mouse state)
-	if (GCC_UNLIKELY(old_scaled_x == scaled_x && old_scaled_y == scaled_y)) {
+	if (old_scaled_x == scaled_x && old_scaled_y == scaled_y) {
 		return;
 	}
 
@@ -314,7 +314,7 @@ void MOUSEVMM_NotifyButton(const MouseButtons12S buttons_12S)
 	vmware.buttons.right  = static_cast<bool>(buttons_12S.right);
 	vmware.buttons.middle = static_cast<bool>(buttons_12S.middle);
 
-	if (GCC_UNLIKELY(old_buttons._data == vmware.buttons._data)) {
+	if (old_buttons._data == vmware.buttons._data) {
 		return;
 	}
 
@@ -332,7 +332,7 @@ void MOUSEVMM_NotifyWheel(const int16_t w_rel)
 	const auto new_counter_w = vmware.counter_w + w_rel;
 	vmware.counter_w = clamp_to_int8(static_cast<int32_t>(new_counter_w));
 
-	if (GCC_UNLIKELY(old_counter_w == vmware.counter_w)) {
+	if (old_counter_w == vmware.counter_w) {
 		return;
 	}
 

@@ -544,16 +544,16 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 		// symbols, etc. More bytes are needed mainly for historic
 		// scripts, emoji, etc.
 
-		if (GCC_UNLIKELY(byte_1 >= decode_threshold_6_bytes)) {
+		if (byte_1 >= decode_threshold_6_bytes) {
 			// 6-byte code point (>= 31 bits), no support
 			advance(5);
-		} else if (GCC_UNLIKELY(byte_1 >= decode_threshold_5_bytes)) {
+		} else if (byte_1 >= decode_threshold_5_bytes) {
 			// 5-byte code point (>= 26 bits), no support
 			advance(4);
-		} else if (GCC_UNLIKELY(byte_1 >= decode_threshold_4_bytes)) {
+		} else if (byte_1 >= decode_threshold_4_bytes) {
 			// 4-byte code point (>= 21 bits), no support
 			advance(3);
-		} else if (GCC_UNLIKELY(byte_1 >= decode_threshold_3_bytes)) {
+		} else if (byte_1 >= decode_threshold_3_bytes) {
 			// 3-byte code point - decode 1st byte
 			code_point = static_cast<uint8_t>(
 			        byte_1 - decode_threshold_3_bytes);
@@ -579,7 +579,7 @@ static bool utf8_to_wide(const std::string& str_in, std::vector<uint16_t>& str_o
 			} else {
 				status = false; // code point encoding too short
 			}
-		} else if (GCC_UNLIKELY(byte_1 >= decode_threshold_2_bytes)) {
+		} else if (byte_1 >= decode_threshold_2_bytes) {
 			// 2-byte code point - decode 1st byte
 			code_point = static_cast<uint8_t>(
 			        byte_1 - decode_threshold_2_bytes);
@@ -866,7 +866,7 @@ static void dos_to_wide(const std::string& str_in,
 
 	for (const auto character : str_in) {
 		const auto byte = static_cast<uint8_t>(character);
-		if (GCC_UNLIKELY(byte >= decode_threshold_non_ascii)) {
+		if (byte >= decode_threshold_non_ascii) {
 			// Character above 0x07f - take from code page mapping
 			auto& mappings = per_code_page_mappings[code_page];
 
@@ -878,7 +878,7 @@ static void dos_to_wide(const std::string& str_in,
 			}
 
 		} else {
-			if (GCC_UNLIKELY(byte == 0x7f)) {
+			if (byte == 0x7f) {
 				str_out.push_back(codepoint_7f);
 			} else if (byte >= 0x20) {
 				str_out.push_back(byte);
@@ -1000,9 +1000,9 @@ static bool get_ascii(const std::string& token, uint8_t& out)
 {
 	if (token.length() == 1) {
 		out = static_cast<uint8_t>(token[0]);
-	} else if (GCC_UNLIKELY(token == "SPC")) {
+	} else if (token == "SPC") {
 		out = ' ';
-	} else if (GCC_UNLIKELY(token == "HSH")) {
+	} else if (token == "HSH") {
 		out = '#';
 	} else if (token == "NNN") {
 		out = unknown_character;
@@ -1015,18 +1015,18 @@ static bool get_ascii(const std::string& token, uint8_t& out)
 
 static bool get_code_page(const std::string& token, uint16_t& code_page)
 {
-	if (GCC_UNLIKELY(token.empty() || token.length() > 5)) {
+	if (token.empty() || token.length() > 5) {
 		return false;
 	}
 
 	for (const auto character : token) {
-		if (GCC_UNLIKELY(character < '0' || character > '9')) {
+		if (character < '0' || character > '9') {
 			return false;
 		}
 	}
 
 	const auto tmp = std::atoi(token.c_str());
-	if (GCC_UNLIKELY(tmp < 1 || tmp > UINT16_MAX)) {
+	if (tmp < 1 || tmp > UINT16_MAX) {
 		return false;
 	}
 
@@ -1174,7 +1174,7 @@ static bool import_mapping_code_page(const std_fs::path& path_root,
 			return false;
 		}
 
-		if (GCC_UNLIKELY(tokens.size() == 1)) {
+		if (tokens.size() == 1) {
 			// Handle undefined character entry, ignore 7-bit ASCII
 			// codes
 			if (character_code >= decode_threshold_non_ascii) {
@@ -1255,7 +1255,7 @@ static void import_config_main(const std_fs::path& path_root)
 			continue; // empty line
 		uint8_t character_code = 0;
 
-		if (GCC_UNLIKELY(tokens[0] == "ALIAS")) {
+		if (tokens[0] == "ALIAS") {
 			if ((tokens.size() != 3 && tokens.size() != 4) ||
 			    (tokens.size() == 4 && tokens[3] != "BIDIRECTIONAL")) {
 				error_parsing(file_name, line_num);
@@ -1279,7 +1279,7 @@ static void import_config_main(const std_fs::path& path_root)
 
 			curent_code_page = 0;
 
-		} else if (GCC_UNLIKELY(tokens[0] == "CODEPAGE")) {
+		} else if (tokens[0] == "CODEPAGE") {
 			auto check_no_code_page = [&](const uint16_t code_page) {
 				if ((new_config_mappings.find(code_page) != new_config_mappings.end() && new_config_mappings[code_page].valid) ||
 				    new_config_duplicates.find(code_page) != new_config_duplicates.end()) {
@@ -1323,7 +1323,7 @@ static void import_config_main(const std_fs::path& path_root)
 				curent_code_page = code_page;
 			}
 
-		} else if (GCC_UNLIKELY(tokens[0] == "EXTENDS")) {
+		} else if (tokens[0] == "EXTENDS") {
 			if (!curent_code_page) {
 				error_code_page_none(file_name, line_num);
 				return;

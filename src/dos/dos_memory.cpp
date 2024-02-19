@@ -310,7 +310,7 @@ bool DOS_ResizeMemory(uint16_t segment,uint16_t * blocks) {
 	uint16_t total=mcb.GetSize();
 	DOS_MCB	mcb_next(segment+total);
 	if (*blocks<=total) {
-		if (GCC_UNLIKELY(*blocks==total)) {
+		if (*blocks == total) {
 			/* Nothing to do */
 			return true;
 		}

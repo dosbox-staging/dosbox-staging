@@ -144,11 +144,17 @@ static Bitu Normal_Loop() {
 	while (1) {
 		if (PIC_RunQueue()) {
 			ret = (*cpudecoder)();
-			if (GCC_UNLIKELY(ret<0)) return 1;
-			if (ret>0) {
-				if (GCC_UNLIKELY(ret >= CB_MAX)) return 0;
+			if (ret < 0) {
+				return 1;
+			}
+			if (ret > 0) {
+				if (ret >= CB_MAX) {
+					return 0;
+				}
 				Bitu blah = (*CallBack_Handlers[ret])();
-				if (GCC_UNLIKELY(blah)) return blah;
+				if (blah) {
+					return blah;
+				}
 			}
 #if C_DEBUG
 			if (DEBUG_ExitLoop()) return 0;
@@ -166,7 +172,7 @@ static Bitu Normal_Loop() {
 
 void increaseticks() { //Make it return ticksRemain and set it in the function above to remove the global variable.
 	ZoneScoped;
-	if (GCC_UNLIKELY(ticksLocked)) { // For Fast Forward Mode
+	if (ticksLocked) { // For Fast Forward Mode
 		ticksRemain=5;
 		/* Reset any auto cycle guessing for this frame */
 		ticksLast = GetTicks();

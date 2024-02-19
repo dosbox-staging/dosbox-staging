@@ -142,7 +142,7 @@ static void start_line_handler(const void* s)
 		for (Bits x = render.src_start; x > 0;) {
 			const auto src_ptr = reinterpret_cast<const uint8_t*>(src);
 			const auto src_val = read_unaligned_size_t(src_ptr);
-			if (GCC_UNLIKELY(src_val != cache[0])) {
+			if (src_val != cache[0]) {
 				if (!GFX_StartUpdate(render.scale.outWrite,
 				                     render.scale.outPitch)) {
 					RENDER_DrawLine = empty_line_handler;
@@ -195,10 +195,10 @@ static void clear_cache_handler(const void* src)
 
 bool RENDER_StartUpdate(void)
 {
-	if (GCC_UNLIKELY(render.updating)) {
+	if (render.updating) {
 		return false;
 	}
-	if (GCC_UNLIKELY(!render.active)) {
+	if (!render.active) {
 		return false;
 	}
 	if (render.scale.inMode == scalerMode8) {
@@ -214,13 +214,12 @@ bool RENDER_StartUpdate(void)
 
 	// Clearing the cache will first process the line to make sure it's
 	// never the same
-	if (GCC_UNLIKELY(render.scale.clearCache)) {
+	if (render.scale.clearCache) {
 		// LOG_MSG("Clearing cache");
 
 		// Will always have to update the screen with this one anyway,
 		// so let's update already
-		if (GCC_UNLIKELY(!GFX_StartUpdate(render.scale.outWrite,
-		                                  render.scale.outPitch))) {
+		if (!GFX_StartUpdate(render.scale.outWrite, render.scale.outPitch)) {
 			return false;
 		}
 		render.fullFrame        = true;
@@ -230,16 +229,16 @@ bool RENDER_StartUpdate(void)
 		if (render.pal.changed) {
 			// Assume pal changes always do a full screen update
 			// anyway
-			if (GCC_UNLIKELY(!GFX_StartUpdate(render.scale.outWrite,
-			                                  render.scale.outPitch))) {
+			if (!GFX_StartUpdate(render.scale.outWrite,
+			                     render.scale.outPitch)) {
 				return false;
 			}
 			RENDER_DrawLine  = render.scale.linePalHandler;
 			render.fullFrame = true;
 		} else {
 			RENDER_DrawLine = start_line_handler;
-			if (GCC_UNLIKELY(CAPTURE_IsCapturingImage() ||
-			                 CAPTURE_IsCapturingVideo())) {
+			if (CAPTURE_IsCapturingImage() ||
+			    CAPTURE_IsCapturingVideo()) {
 				render.fullFrame = true;
 			} else {
 				render.fullFrame = false;
@@ -262,13 +261,13 @@ extern uint32_t PIC_Ticks;
 
 void RENDER_EndUpdate(bool abort)
 {
-	if (GCC_UNLIKELY(!render.updating)) {
+	if (!render.updating) {
 		return;
 	}
 
 	RENDER_DrawLine = empty_line_handler;
 
-	if (GCC_UNLIKELY((CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()))) {
+	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
 		bool double_width  = false;
 		bool double_height = false;
 		if (render.src.double_width != render.src.double_height) {
