@@ -386,8 +386,9 @@ bool DOS_Drive_Cache::GetShortName(const char* fullname, char* shortname) {
 		return false;
 
 	std::vector<CFileInfo*>::size_type filelist_size = curDir->longNameList.size();
-	if (GCC_UNLIKELY(filelist_size<=0))
+	if (filelist_size <= 0) {
 		return false;
+	}
 
 	// The orgname part of the list is not sorted (shortname is)! So we can only walk through it.
 	for(Bitu i = 0; i < filelist_size; i++) {
@@ -558,7 +559,9 @@ static Bits wine_hash_short_file_name( char* name, char* buffer )
 
 Bits DOS_Drive_Cache::GetLongName(CFileInfo* curDir, char* shortName, const size_t shortName_len) {
 	std::vector<CFileInfo*>::size_type filelist_size = curDir->fileList.size();
-	if (GCC_UNLIKELY(filelist_size<=0)) return -1;
+	if (filelist_size <= 0) {
+		return -1;
+	}
 
 	// Remove dot, if no extension...
 	RemoveTrailingDot(shortName);
@@ -654,7 +657,9 @@ void DOS_Drive_Cache::CreateShortName(CFileInfo* curDir, CFileInfo* info) {
 		// TODO: modify MOUNT/IMGMOUNT to exit with an error when encountering
 		// a directory having more than 65534 files, which is FAT32's limit.
 		char short_nr[8] = {'\0'};
-		if (GCC_UNLIKELY(info->shortNr > 9999999)) E_Exit("~9999999 same name files overflow");
+		if (info->shortNr > 9999999) {
+			E_Exit("~9999999 same name files overflow");
+		}
 		safe_sprintf(short_nr, "%u", info->shortNr);
 
 		// Copy first letters

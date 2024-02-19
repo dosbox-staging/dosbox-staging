@@ -269,7 +269,7 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 
 		if (IS_EGAVGA_ARCH && !(val & 0x10)) {
 			vga.draw.vret_triggered = false;
-			if (GCC_UNLIKELY(machine == MCH_EGA)) {
+			if (machine == MCH_EGA) {
 				PIC_DeActivateIRQ(9);
 			}
 		}

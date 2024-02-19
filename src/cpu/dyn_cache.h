@@ -227,8 +227,9 @@ public:
 	{
 		constexpr size_t map_size = 4096;
 		uint8_t *map = new (std::nothrow) uint8_t[map_size];
-		if (GCC_UNLIKELY(!map))
+		if (!map) {
 			E_Exit("failed to allocate invalidation_map");
+		}
 		memset(map, 0, map_size);
 		return map;
 	}
@@ -238,8 +239,10 @@ public:
 
 	void writeb(PhysPt addr, const uint8_t val) override
 	{
-		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
-		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+		if (old_pagehandler->flags & PFLAG_HASROM) {
+			return;
+		}
+		if ((old_pagehandler->flags & PFLAG_READABLE) != PFLAG_READABLE) {
 			E_Exit("wb:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
@@ -264,8 +267,10 @@ public:
 
 	void writew(PhysPt addr, const uint16_t val) override
 	{
-		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
-		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+		if (old_pagehandler->flags & PFLAG_HASROM) {
+			return;
+		}
+		if ((old_pagehandler->flags & PFLAG_READABLE) != PFLAG_READABLE) {
 			E_Exit("ww:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
@@ -290,8 +295,10 @@ public:
 
 	void writed(PhysPt addr, const uint32_t val) override
 	{
-		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return;
-		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+		if (old_pagehandler->flags & PFLAG_HASROM) {
+			return;
+		}
+		if ((old_pagehandler->flags & PFLAG_READABLE) != PFLAG_READABLE) {
 			E_Exit("wd:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
@@ -316,8 +323,10 @@ public:
 
 	bool writeb_checked(PhysPt addr, const uint8_t val) override
 	{
-		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
-		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+		if (old_pagehandler->flags & PFLAG_HASROM) {
+			return false;
+		}
+		if ((old_pagehandler->flags & PFLAG_READABLE) != PFLAG_READABLE) {
 			E_Exit("cb:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
@@ -347,8 +356,10 @@ public:
 
 	bool writew_checked(PhysPt addr, const uint16_t val) override
 	{
-		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
-		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+		if (old_pagehandler->flags & PFLAG_HASROM) {
+			return false;
+		}
+		if ((old_pagehandler->flags & PFLAG_READABLE) != PFLAG_READABLE) {
 			E_Exit("cw:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
@@ -378,8 +389,10 @@ public:
 
 	bool writed_checked(PhysPt addr, const uint32_t val) override
 	{
-		if (GCC_UNLIKELY(old_pagehandler->flags&PFLAG_HASROM)) return false;
-		if (GCC_UNLIKELY((old_pagehandler->flags&PFLAG_READABLE)!=PFLAG_READABLE)) {
+		if (old_pagehandler->flags & PFLAG_HASROM) {
+			return false;
+		}
+		if ((old_pagehandler->flags & PFLAG_READABLE) != PFLAG_READABLE) {
 			E_Exit("cd:non-readable code page found that is no ROM page");
 		}
 		addr&=4095;
@@ -443,7 +456,7 @@ public:
 		*where = block->hash.next;
 
 		// remove the cleared block from the write map
-		if (GCC_UNLIKELY(block->cache.wmapmask)) {
+		if (block->cache.wmapmask) {
 			// first part is not influenced by the mask
 			for (Bitu i = block->page.start; i < block->cache.maskstart;
 			     i++) {
@@ -606,7 +619,7 @@ size_t CacheBlock::Cache::GrowMaskForTypeAt(const uint8_t type_size,
 	size_t map_offset = 0;
 
 	// Make the map mask if needed
-	if (GCC_UNLIKELY(!wmapmask)) {
+	if (!wmapmask) {
 		constexpr uint8_t initial_mask_len = 64;
 		GrowWriteMask(initial_mask_len);
 		maskstart = check_cast<uint16_t>(page_index);
@@ -615,7 +628,7 @@ size_t CacheBlock::Cache::GrowMaskForTypeAt(const uint8_t type_size,
 	else {
 		map_offset = page_index - maskstart;
 		const size_t map_offset_end = map_offset + type_size;
-		if (GCC_UNLIKELY(map_offset_end >= masklen)) {
+		if (map_offset_end >= masklen) {
 			size_t new_mask_len = masklen * 4;
 			if (new_mask_len < map_offset_end) {
 				new_mask_len = ((map_offset_end) & ~3) * 2;
@@ -1062,7 +1075,7 @@ static void cache_init(bool enable) {
 		// setup the code pages
 		for (int i=0;i<CACHE_PAGES;i++) {
 			auto newpage = new (std::nothrow) CodePageHandler();
-			if (GCC_UNLIKELY(!newpage)) {
+			if (!newpage) {
 				E_Exit("DYN_CACHE: Failed to allocate code-page handler");
 			}
 			newpage->next = cache.free_pages;

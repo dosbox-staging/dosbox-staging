@@ -57,23 +57,6 @@
 #define GCC_ATTRIBUTE(x) /* attribute not supported */
 #endif
 
-// GCC_LIKELY macro is incorrectly named, because other compilers support
-// this feature as well (e.g. Clang, Intel); leave it be for now, at
-// least until full support for C++20 [[likely]] attribute will start arriving
-// in new compilers.
-//
-// Note: '!!' trick is used, to convert non-boolean values to 1 or 0
-// to prevent accidental incorrect usage (e.g. when user wraps macro
-// around a pointer or an integer, expecting usual C semantics).
-
-#if C_HAS_BUILTIN_EXPECT
-#define GCC_LIKELY(x)   __builtin_expect(!!(x), 1)
-#define GCC_UNLIKELY(x) __builtin_expect(!!(x), 0)
-#else
-#define GCC_LIKELY(x)   (x)
-#define GCC_UNLIKELY(x) (x)
-#endif
-
 // XSTR and STR macros can be used for turning defines into string literals:
 //
 // #define FOO 4

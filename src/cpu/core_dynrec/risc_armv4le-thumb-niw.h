@@ -234,7 +234,7 @@ static void cache_checkinstr(uint32_t size) {
 // returns address of item
 static const uint8_t * cache_reservedata(void) {
 	// if data pool not yet initialized, then initialize data pool
-	if (GCC_UNLIKELY(cache_datapos == NULL)) {
+	if (cache_datapos == NULL) {
 		if (cache.pos + CACHE_DATA_MIN + CACHE_DATA_ALIGN < cache.block.active->cache.start + CACHE_DATA_MAX) {
 			cache_datapos = (const uint8_t *) (((Bitu)cache.block.active->cache.start + CACHE_DATA_MAX) & ~(CACHE_DATA_ALIGN - 1));
 		}
@@ -300,7 +300,7 @@ static void gen_mov_regs(HostReg reg_dst,HostReg reg_src) {
 static bool val_single_shift(uint32_t value, uint32_t *val_shift) {
 	uint32_t shift;
 
-	if (GCC_UNLIKELY(value == 0)) {
+	if (value == 0) {
 		*val_shift = 0;
 		return true;
 	}

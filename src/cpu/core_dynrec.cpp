@@ -240,14 +240,16 @@ Bits CPU_Core_Dynrec_Run() noexcept
 
 		CodePageHandler *chandler = nullptr;
 		// see if the current page is present and contains code
-		if (GCC_UNLIKELY(MakeCodePage(ip_point,chandler))) {
+		if (MakeCodePage(ip_point, chandler)) {
 			// page not present, throw the exception
 			CPU_Exception(cpu.exception.which,cpu.exception.error);
 			continue;
 		}
 
 		// page doesn't contain code or is special
-		if (GCC_UNLIKELY(!chandler)) return CPU_Core_Normal_Run();
+		if (!chandler) {
+			return CPU_Core_Normal_Run();
+		}
 
 		// find correct Dynamic Block to run
 		CacheBlock *block = chandler->FindCacheBlock(ip_point & 4095);

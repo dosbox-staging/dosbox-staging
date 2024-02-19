@@ -217,7 +217,7 @@ static inline void InitPageCheckPresence(PhysPt lin_addr,bool writing,X86PageEnt
 		PAGING_PageFault(lin_addr,table_addr,
 			(writing?0x02:0x00) | (((cpu.cpl&cpu.mpl)==0)?0x00:0x04));
 		table.set(phys_readd(table_addr));
-		if (GCC_UNLIKELY(!table.p)) {
+		if (!table.p) {
 			E_Exit("Pagefault didn't correct table");
 		}
 	}
@@ -228,7 +228,7 @@ static inline void InitPageCheckPresence(PhysPt lin_addr,bool writing,X86PageEnt
 		PAGING_PageFault(lin_addr,entry_addr,
 			(writing?0x02:0x00) | (((cpu.cpl&cpu.mpl)==0)?0x00:0x04));
 		entry.set(phys_readd(entry_addr));
-		if (GCC_UNLIKELY(!entry.p)) {
+		if (!entry.p) {
 			E_Exit("Pagefault didn't correct page");
 		}
 	}
@@ -992,10 +992,11 @@ void PAGING_Enable(bool enabled) {
 	if (paging.enabled==enabled) return;
 	paging.enabled=enabled;
 	if (enabled) {
-		if (GCC_UNLIKELY(cpudecoder==CPU_Core_Simple_Run)) {
-//			LOG_MSG("CPU core simple won't run this game,switching to normal");
-			cpudecoder=CPU_Core_Normal_Run;
-			CPU_CycleLeft+=CPU_Cycles;
+		if (cpudecoder == CPU_Core_Simple_Run) {
+			// LOG_MSG("CPU core simple won't
+			// run this game,switching to normal");
+			cpudecoder = CPU_Core_Normal_Run;
+			CPU_CycleLeft += CPU_Cycles;
 			CPU_Cycles=0;
 		}
 //		LOG(LOG_PAGING,LOG_NORMAL)("Enabled");

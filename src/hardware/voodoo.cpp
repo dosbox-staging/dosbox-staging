@@ -1067,8 +1067,7 @@ inline int64_t fast_reciplog(int64_t value, int32_t* log_2)
 	}
 
 	/* if the resulting value is 0, the reciprocal is infinite */
-	if (GCC_UNLIKELY(temp == 0))
-	{
+	if (temp == 0) {
 		*log_2 = 1000 << LOG_OUTPUT_PREC;
 		return neg ? 0x80000000 : 0x7fffffff;
 	}

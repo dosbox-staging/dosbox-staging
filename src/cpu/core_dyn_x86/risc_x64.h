@@ -247,9 +247,11 @@ public:
 	bool notusable;
 	void Load(DynReg * _dynreg,bool stale=false) {
 		if (!_dynreg) return;
-		if (GCC_UNLIKELY((Bitu)dynreg)) Clear();
-		dynreg=_dynreg;
-		last_used=x64gen.last_used;
+		if ((Bitu)dynreg) {
+			Clear();
+		}
+		dynreg    = _dynreg;
+		last_used = x64gen.last_used;
 		dynreg->flags&=~DYNFLG_CHANGED;
 		dynreg->genreg=this;
 		if ((!stale) && (dynreg->flags & (DYNFLG_LOAD|DYNFLG_ACTIVE))) {
@@ -258,13 +260,17 @@ public:
 		dynreg->flags|=DYNFLG_ACTIVE;
 	}
 	void Save(void) {
-		if (GCC_UNLIKELY(!((Bitu)dynreg))) IllegalOption("GenReg->Save");
-		dynreg->flags&=~DYNFLG_CHANGED;
+		if (!((Bitu)dynreg)) {
+			IllegalOption("GenReg->Save");
+		}
+		dynreg->flags &= ~DYNFLG_CHANGED;
 		opcode(index).setabsaddr(dynreg->data).Emit8(0x89); // mov [], r32
 	}
 	void Release(void) {
-		if (GCC_UNLIKELY(!((Bitu)dynreg))) return;
-		if (dynreg->flags&DYNFLG_CHANGED && dynreg->flags&DYNFLG_SAVE) {
+		if (!((Bitu)dynreg)) {
+			return;
+		}
+		if (dynreg->flags & DYNFLG_CHANGED && dynreg->flags & DYNFLG_SAVE) {
 			Save();
 		}
 		dynreg->flags&=~(DYNFLG_CHANGED|DYNFLG_ACTIVE);
@@ -466,8 +472,9 @@ static void gen_synchreg(DynReg * dnew,DynReg * dsynch) {
 	if ((dnew->flags ^ dsynch->flags) & DYNFLG_CHANGED) {
 		/* Ensure the changed value gets saved */	
 		if (dnew->flags & DYNFLG_CHANGED) {
-			if (GCC_LIKELY(dnew->genreg != nullptr))
+			if (dnew->genreg != nullptr) {
 				dnew->genreg->Save();
+			}
 		} else dnew->flags|=DYNFLG_CHANGED;
 	}
 }
@@ -1075,9 +1082,13 @@ static void gen_call_function(void * func,const char* ops,...) {
 	char rettype='\0';
 
 	/* Save the flags */
-	if (GCC_LIKELY(!skip_flags)) gen_protectflags();
-	if (ops==nullptr) IllegalOption("gen_call_function NULL format");
-	va_start(params,ops);
+	if (!skip_flags) {
+		gen_protectflags();
+	}
+	if (ops == nullptr) {
+		IllegalOption("gen_call_function NULL format");
+	}
+	va_start(params, ops);
 	while (*ops) {
 		if (*ops++=='%') {
 			GenReg *gen;
@@ -1218,14 +1229,18 @@ static void gen_jmp_ptr(void * _ptr,int32_t imm=0) {
 }
 
 static void gen_save_flags(DynReg * dynreg) {
-	if (GCC_UNLIKELY(x64gen.flagsactive)) IllegalOption("gen_save_flags");
-	opcode(FindDynReg(dynreg)->index).setea(4,-1,0,CALLSTACK).Emit8(0x8B); // mov reg32, [rsp+8/40]
-	dynreg->flags|=DYNFLG_CHANGED;
+	if (x64gen.flagsactive) {
+		IllegalOption("gen_save_flags");
+	}
+	opcode(FindDynReg(dynreg)->index).setea(4, -1, 0, CALLSTACK).Emit8(0x8B); // mov reg32, [rsp+8/40]
+	dynreg->flags |= DYNFLG_CHANGED;
 }
 
 static void gen_load_flags(DynReg * dynreg) {
-	if (GCC_UNLIKELY(x64gen.flagsactive)) IllegalOption("gen_load_flags");
-	opcode(FindDynReg(dynreg)->index).setea(4,-1,0,CALLSTACK).Emit8(0x89); // mov [rsp+8/40],reg32
+	if (x64gen.flagsactive) {
+		IllegalOption("gen_load_flags");
+	}
+	opcode(FindDynReg(dynreg)->index).setea(4, -1, 0, CALLSTACK).Emit8(0x89); // mov [rsp+8/40],reg32
 }
 
 static void gen_save_host_direct(void *data,Bitu imm) {
@@ -1249,7 +1264,9 @@ static void gen_return(BlockReturn retcode) {
 }
 
 static void gen_return_fast(BlockReturn retcode,bool ret_exception=false) {
-	if (GCC_UNLIKELY(x64gen.flagsactive)) IllegalOption("gen_return_fast");
+	if (x64gen.flagsactive) {
+		IllegalOption("gen_return_fast");
+	}
 	opcode(1).setabsaddr(&reg_flags).Emit8(0x8B); // mov ECX, [cpu_regs.flags]
 	if (!ret_exception) {
 		opcode(0).set64().setrm(4).setimm(CALLSTACK+8,1).Emit8(0x83); // add rsp,16/48
