@@ -1,0 +1,10 @@
+Checks: '-*,readability-identifier-naming'
+CheckOptions:
+  readability-identifier-naming.VariableCase: lower_case
+  readability-identifier-naming.EnumCase: CamelCase
+  readability-identifier-naming.EnumConstantCase: CamelCase
+  readability-identifier-naming.GlobalFunctionCase: aNy_CasE
+  readability-identifier-naming.FunctionCase: lower_case
+  readability-identifier-naming.ClassCase: CamelCase
+  readability-identifier-naming.StructCase: CamelCase
+  readability-identifier-naming.ConstexprVariableCase: CamelCase
