@@ -672,7 +672,11 @@ void DOSBOX_Init()
 	pstring->Set_help("CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic\n"
 	                  "if available and appropriate.");
 
-	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow", "386_prefetch", nullptr};
+	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow",
+#if C_MMX
+	                                  "pentium_mmx_slow",
+#endif
+	                                  "386_prefetch", nullptr};
 	pstring = secprop->Add_string("cputype", always, "auto");
 	pstring->Set_values(cputype_values);
 	pstring->Set_help(

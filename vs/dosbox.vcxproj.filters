@@ -55,6 +55,9 @@
     <ClCompile Include="..\src\cpu\flags.cpp">
       <Filter>src\cpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\cpu\mmx.cpp">
+      <Filter>src\cpu</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\cpu\modrm.cpp">
       <Filter>src\cpu</Filter>
     </ClCompile>
@@ -934,6 +937,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\mem_unaligned.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\mmx.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\midi.h">

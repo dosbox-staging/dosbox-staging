@@ -40,6 +40,13 @@ option(
     description: 'Enable profiling using Tracy',
 )
 
+option(
+    'experimental_mmx',
+    type: 'boolean',
+    value: false,
+    description: 'Enable experimental Pentium MMX CPU emulation',
+)
+
 # This option exists only for rare situations when Linux developer cannot
 # install ALSA library headers on their machine.
 #

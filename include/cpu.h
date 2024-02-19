@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -49,6 +49,7 @@ enum class ArchitectureType {
 	Intel486OldSlow = 0x40,
 	Intel486NewSlow = 0x45,
 	PentiumSlow     = 0x50,
+	PentiumMmxSlow  = 0x55,
 	Mixed           = 0xff,
 };
 

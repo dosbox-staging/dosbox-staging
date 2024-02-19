@@ -1,4 +1,5 @@
 /*
+ *  Copyright (C) 2024-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -27,6 +28,8 @@
 #ifndef DOSBOX_MEM_H
 #include "mem.h"
 #endif
+
+#include "mmx.h"
 
 void FPU_ESC0_Normal(Bitu rm);
 void FPU_ESC0_EA(Bitu func,PhysPt ea);
@@ -57,11 +60,26 @@ union FPU_Reg {
 #endif
 	} l;
 	int64_t ll;
+
+#if C_MMX
+	MMX_reg reg_mmx;
+#endif
 };
 
 struct FPU_P_Reg {
-	uint32_t m1 = 0;
-	uint32_t m2 = 0;
+#if C_MMX
+	union {
+		struct {
+#endif
+			uint32_t m1;
+			uint32_t m2;
+#if C_MMX
+		};
+
+		MMX_reg reg_mmx;
+	};
+#endif
+
 	uint16_t m3 = 0;
 
 	uint16_t d1 = 0;

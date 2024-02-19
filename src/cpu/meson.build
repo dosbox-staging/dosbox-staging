@@ -78,6 +78,7 @@ libcpu_sources = files(
     'core_simple.cpp',
     'cpu.cpp',
     'flags.cpp',
+    'mmx.cpp',
     'modrm.cpp',
     'paging.cpp',
 )

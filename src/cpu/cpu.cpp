@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -2057,6 +2057,13 @@ bool CPU_CPUID(void) {
 #endif
 			reg_ebx = 0;     // Not supported
 			reg_ecx = 0;     // No features
+#if C_MMX
+		} else if (CPU_ArchitectureType == ArchitectureType::PentiumMmxSlow) {
+			reg_eax = 0x543;      // Intel Pentium MMX
+			reg_ebx = 0;          // Not supported
+			reg_ecx = 0;          // No features
+			reg_edx = 0x00800011; // FPU + Time Stamp Counter (RDTSC) + MMX
+#endif
 		} else {
 			return false;
 		}
@@ -2229,7 +2236,7 @@ public:
 			cpu.drx[i]=0;
 			cpu.trx[i]=0;
 		}
-		if (CPU_ArchitectureType==ArchitectureType::PentiumSlow) {
+		if (CPU_ArchitectureType>=ArchitectureType::PentiumSlow) {
 			cpu.drx[6]=0xffff0ff0;
 		} else {
 			cpu.drx[6]=0xffff1ff0;
@@ -2406,6 +2413,9 @@ public:
 			}
 		} else if (cputype == "pentium_slow") {
 			CPU_ArchitectureType = ArchitectureType::PentiumSlow;
+		} else if (cputype == "pentium_mmx_slow") {
+			LOG_WARNING("CPU: MMX emulation is experimental, currently it does not work with 'dyn-86' dynamic core");
+			CPU_ArchitectureType = ArchitectureType::PentiumMmxSlow;
 		}
 
 		if (CPU_ArchitectureType>=ArchitectureType::Intel486NewSlow) CPU_extflags_toggle=(FLAG_ID|FLAG_AC);
