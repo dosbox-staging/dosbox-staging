@@ -1463,6 +1463,6 @@ void BIOS_Init(Section* sec)
 
 	test = new BIOS(sec);
 
-	constexpr auto changeable_at_runtime = true;
+	constexpr auto changeable_at_runtime = false;
 	sec->AddDestroyFunction(&BIOS_Destroy, changeable_at_runtime);
 }
