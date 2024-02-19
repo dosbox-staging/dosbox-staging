@@ -91,6 +91,9 @@
 // Define to 1 to use  fpu core implemented in x86 assembler
 #mesondefine C_FPU_X86
 
+// Define to 1 to enable MMX emulation
+#mesondefine C_MMX
+
 // TODO Define to 1 to use inlined memory functions in cpu core
 #define C_CORE_INLINE 1
 

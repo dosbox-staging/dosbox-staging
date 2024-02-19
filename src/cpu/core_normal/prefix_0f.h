@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -621,4 +621,9 @@
 	CASE_0F_W(0xcf)												/* BSWAP DI */
 		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_di);break;
-		
+
+#if C_MMX
+#define CASE_0F_MMX(x) CASE_0F_W(x)
+#include "prefix_0f_mmx.h"
+#undef CASE_0F_MMX
+#endif	
