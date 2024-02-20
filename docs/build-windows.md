@@ -2,16 +2,27 @@
 
 Windows builds can be created using:
 
-- MSVC compiler, Visual Studio 2022 IDE suite, and vcpkg to provide dependencies
-  *(recommended)*.
+- Visual Studio 2022 IDE suite with Clang/LLVM compiler, and vcpkg to provide
+  dependencies. This is the fully-supported toolchain used to create release
+  builds.
 - The Clang or GCC compilers using the Meson buildsystem running within the
   MSYS2 environment to provide dependencies.
 
-
 ## Build using Visual Studio
 
-1. Install Visual Studio Community 2022: <https://visualstudio.microsoft.com/>.
-2. Install vcpkg: <https://github.com/Microsoft/vcpkg#quick-start-windows>.
+1. Install Visual Studio Community 2022: <https://visualstudio.microsoft.com/vs/community/>.
+    - Select "C++ Clang tools for Windows" in the Visual Studio installer
+2. Install/configure vcpkg.
+    - Recent versions of Visual Studio already include it[^1], but it needs to
+      be initialized. Open a Visual Studio Developer Command Prompt and run the
+      following command:
+
+        ``` shell
+        vcpkg integrate install
+        ```
+
+    - Existing [standalone versions](<https://github.com/Microsoft/vcpkg#quick-start-windows>) should work as well.
+
 3. Follow instructions in [README.md](/README.md).
 
 ### Create a Debugger build using Visual Studio
@@ -84,7 +95,7 @@ you build a binary optimized for gaming.
 
    ``` shell
    meson setup -Duse_fluidsynth=false -Duse_slirp=false build/release-clang --native-file=.github/meson/native-clang.ini
-   ```   
+   ```
 
 9. Compile:
 
@@ -101,3 +112,5 @@ you build a binary optimized for gaming.
    # or
    ./scripts/create-package.sh -p msys2 build/release-clang ../dosbox-staging-clang-pkg
    ```
+
+[^1]: <https://devblogs.microsoft.com/cppblog/vcpkg-is-now-included-with-visual-studio/>.
