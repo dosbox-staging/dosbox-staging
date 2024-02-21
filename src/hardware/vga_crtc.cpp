@@ -189,31 +189,14 @@ void vga_write_p3d5(io_port_t, io_val_t value, io_width_t)
 
 		vga.crtc.maximum_scan_line.data = new_val.data;
 
-		if (vga.draw.is_double_scanning) {
-			auto flipped = new_val;
-			flipped.start_vertical_blanking_bit9.flip();
-
-			// Only true if only `start_vertical_blanking_bit9` has
-			// been changed and all other bits are unchanged.
-			if (old_val.data == flipped.data) {
-				VGA_StartResize();
-			}
-
-			vga.draw.address_line_total = new_val.maximum_scan_line + 1;
-
-			if (new_val.is_scan_doubling_enabled) {
-				vga.draw.address_line_total *= 2;
-			}
-		} else {
-			// Start resize if any bit except `line_compare_bit9` has been
-			// changed.
-			if ((old_val.maximum_scan_line != new_val.maximum_scan_line) ||
-			    (old_val.start_vertical_blanking_bit9 !=
-			     new_val.start_vertical_blanking_bit9) ||
-			    (old_val.is_scan_doubling_enabled !=
-			     new_val.is_scan_doubling_enabled)) {
-				VGA_StartResize();
-			}
+		// Start resize if any bit except `line_compare_bit9` has been
+		// changed.
+		if ((old_val.maximum_scan_line != new_val.maximum_scan_line) ||
+		    (old_val.start_vertical_blanking_bit9 !=
+		     new_val.start_vertical_blanking_bit9) ||
+		    (old_val.is_scan_doubling_enabled !=
+		     new_val.is_scan_doubling_enabled)) {
+			VGA_StartResize();
 		}
 	} break;
 
