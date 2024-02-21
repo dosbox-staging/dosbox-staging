@@ -22,9 +22,9 @@
 extern uint32_t * lookupRMEAregd[256];
 
 #define LoadMd(off) mem_readd_inline(off)
-#define LoadMq(off) ((uint64_t)((uint64_t)mem_readd_inline(off+4)<<32 | (uint64_t)mem_readd_inline(off)))
+#define LoadMq(off) mem_readq_inline(off)
 #define SaveMd(off,val)	mem_writed_inline(off,val)
-#define SaveMq(off,val) {mem_writed_inline(off,val&0xffffffff);mem_writed_inline(off+4,(val>>32)&0xffffffff);}
+#define SaveMq(off,val) mem_writeq_inline(off,val)
 
 #define CASE_0F_MMX(opcode) case(opcode):
 #define GetRM 
