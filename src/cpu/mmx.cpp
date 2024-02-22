@@ -31,14 +31,14 @@
 #endif
 
 MMX_reg* reg_mmx[8] = {
-        &fpu.p_regs[0].reg_mmx,
-        &fpu.p_regs[1].reg_mmx,
-        &fpu.p_regs[2].reg_mmx,
-        &fpu.p_regs[3].reg_mmx,
-        &fpu.p_regs[4].reg_mmx,
-        &fpu.p_regs[5].reg_mmx,
-        &fpu.p_regs[6].reg_mmx,
-        &fpu.p_regs[7].reg_mmx,
+        &fpu.mmx_regs[0],
+        &fpu.mmx_regs[1],
+        &fpu.mmx_regs[2],
+        &fpu.mmx_regs[3],
+        &fpu.mmx_regs[4],
+        &fpu.mmx_regs[5],
+        &fpu.mmx_regs[6],
+        &fpu.mmx_regs[7],
 };
 
 MMX_reg* lookupRMregMM[256] = {

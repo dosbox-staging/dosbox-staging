@@ -63,18 +63,8 @@ union FPU_Reg {
 };
 
 struct FPU_P_Reg {
-#if C_MMX
-	union {
-		struct {
-#endif
-			uint32_t m1;
-			uint32_t m2;
-#if C_MMX
-		};
-
-		MMX_reg reg_mmx;
-	};
-#endif
+	uint32_t m1 = 0;
+	uint32_t m2 = 0;
 
 	uint16_t m3 = 0;
 
@@ -103,6 +93,9 @@ struct FPU_rec {
 	bool use_regs_memcpy[9] = {};
 #endif
 	FPU_P_Reg p_regs[9]     = {};
+#if C_MMX
+	MMX_reg mmx_regs[8]     = {};
+#endif
 	FPU_Tag tags[9]         = {};
 	uint16_t cw             = 0;
 	uint16_t cw_mask_all    = 0;
