@@ -41,10 +41,10 @@ option(
 )
 
 option(
-    'experimental_mmx',
+    'emulate_mmx',
     type: 'boolean',
-    value: false,
-    description: 'Enable experimental Pentium MMX CPU emulation',
+    value: true,
+    description: 'Enable Pentium MMX CPU emulation',
 )
 
 # This option exists only for rare situations when Linux developer cannot
