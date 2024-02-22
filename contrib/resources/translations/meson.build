@@ -1,4 +1,5 @@
 resource_files = [
+    'br.lng',
     'de.lng',
     'en.lng',
     'es.lng',

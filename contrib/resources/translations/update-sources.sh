@@ -93,6 +93,7 @@ update en
 # any missing messages into them in English, so translators can easily
 # find and update those new messages.
 #
+update br
 update de
 update es
 update fr
