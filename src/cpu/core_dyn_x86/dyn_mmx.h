@@ -33,14 +33,12 @@ static void MMX_STORE_32(PhysPt addr)
 
 static void MMX_LOAD_64(PhysPt addr)
 {
-	mmxtmp.ud.d0 = mem_readd(addr);
-	mmxtmp.ud.d1 = mem_readd(addr + 4);
+	mmxtmp.q = mem_readq(addr);
 }
 
 static void MMX_STORE_64(PhysPt addr)
 {
-	mem_writed(addr, mmxtmp.ud.d0);
-	mem_writed(addr + 4, mmxtmp.ud.d1);
+	mem_writeq(addr, mmxtmp.q);
 }
 
 // add simple instruction (that operates only with mm regs)
