@@ -238,7 +238,7 @@ Benin
 Nigéria
 .
 :COUNTRY_NAME_FRO
-Ilhas Feroé
+Ilhas Faroé
 .
 :COUNTRY_NAME_PRT
 Portugal
@@ -659,8 +659,8 @@ Usar fontes de 8 pixels de largura nos adaptadores VGA (desabilitado por padrão
 :CONFIG_SPEED_MODS
 Permitir alterações conhecidas por melhorar o desempenho (habilitado por padrão).
 Atualmente, nenhum jogo é conhecido por ser afetado negativamente por isso.
-Por favor, informe um bug ao projeto se você encontrar um jogo que falha
-quando isso estiver ativado para que possamos listá-los aqui.
+Se você encontrar um jogo que tenha problemas quando essa configuração estiver
+habilitada, informe o erro no site do projeto para que ele possa ser listado aqui.
 .
 :CONFIG_AUTOEXEC_SECTION
 Como as seções autoexec são tratadas a partir de vários arquivos de configuração:
@@ -2338,7 +2338,7 @@ Essas são as combinações de teclas padrão.
 Elas podem ser alteradas no [color=brown]mapeador de teclas[reset].
 
 [color=yellow]%s+Enter[reset]  Alterna entre modo de tela cheia e janela.
-[color=yellow]%s+Pause[reset]  Pausaou despausa o emulador.
+[color=yellow]%s+Pause[reset]  Pausa ou despausa o emulador.
 [color=yellow]%s+F1[reset]   %s Inicia o [color=brown]mapeador de teclas[reset].
 [color=yellow]%s+F4[reset]   %s Troca a imagem de disco montada e verifica alterações
            em todas as unidades.
@@ -2432,7 +2432,7 @@ Notas:
     quando ele terminar.
 
 Exemplos:
-  [color=light-green]loadfix[reset] [color=light-cyan]meujogo[reset] [color=white]parêmetros[reset]
+  [color=light-green]loadfix[reset] [color=light-cyan]meujogo[reset] [color=white]parâmetros[reset]
   [color=light-green]loadfix[reset] /d
 
 .
@@ -3316,7 +3316,7 @@ ECHO está ativado.
 
 .
 :SHELL_CMD_ECHO_OFF
-ECHO está dasativado.
+ECHO está desativado.
 
 .
 :SHELL_CMD_CHDIR_ERROR
@@ -3623,7 +3623,7 @@ Uso:
   [color=light-green]dir[reset] [color=light-cyan][PADRÃO][reset] [/w] \[/b] [/p] [ad] [a-d] [/o[color=white]ORDEM[reset]]
 
 Parâmetros:
-  [color=light-cyan]PADRÃO[reset]   nome exato de um arquivo ou nome de arquivo inexacto com caracteres
+  [color=light-cyan]PADRÃO[reset]   nome exato de um arquivo ou nome de arquivo inexato com caracteres
            curinga, como o asterisco (*) e o ponto de interrogação (?); um
            caminho pode ser especificado no padrão para listar o conteúdo na
            pasta especificada
