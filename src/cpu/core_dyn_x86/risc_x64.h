@@ -1254,7 +1254,9 @@ static void gen_load_flags(DynReg * dynreg) {
 		op.setreg(idx, di1);
 		tmp = 0x88; // mov [], r8
 		break;
-	case 2: op.setword(); // mov [], r16
+	case 2:
+		op.setword(); // mov [], r16
+		[[fallthrough]];
 	case 4:
 		op.setreg(idx);
 		tmp = 0x89; // mov [], r32
