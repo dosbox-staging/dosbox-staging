@@ -60,10 +60,6 @@ union FPU_Reg {
 #endif
 	} l;
 	int64_t ll;
-
-#if C_MMX
-	MMX_reg reg_mmx;
-#endif
 };
 
 struct FPU_P_Reg {
