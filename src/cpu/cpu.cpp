@@ -2414,7 +2414,6 @@ public:
 		} else if (cputype == "pentium_slow") {
 			CPU_ArchitectureType = ArchitectureType::PentiumSlow;
 		} else if (cputype == "pentium_mmx_slow") {
-			LOG_WARNING("CPU: MMX emulation is experimental, currently it does not work with 'dyn-86' dynamic core");
 			CPU_ArchitectureType = ArchitectureType::PentiumMmxSlow;
 		}
 
