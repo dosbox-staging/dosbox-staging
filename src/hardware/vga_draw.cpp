@@ -2164,23 +2164,35 @@ ImageInfo setup_drawing()
 		video_mode.width = horiz_end * 4;
 		render_width     = video_mode.width;
 
-		// We only render "baked-in" double scanning (when we literally render
-		// twice as many rows) for the M_VGA modes and M_EGA modes on emulated
-		// VGA adapters only; for everything else, we "fake double-scan" on
-		// VGA (render single-scanned, then double the image vertically with a
-		// scaler).
+		// We only render "baked-in" double scanning (when we literally
+		// render twice as many rows) for the M_VGA modes and M_EGA
+		// modes on emulated VGA adapters only; for everything else, we
+		// "fake double-scan" on VGA (render single-scanned, then double
+		// the image vertically with a scaler).
+		//
 		if (is_double_scanning) {
 			video_mode.height  = vert_end / 2;
-			forced_single_scan = !vga.draw.double_scanning_enabled;
 
-			if (vga.draw.double_scanning_enabled) {
+			// Some rare demos set up odd Maximum Scan Line CRTC register
+			// values; for example, Show by Majic 12 uses the value 4 during
+			// the zoom-rotator part in the intro to set up "scanline
+			// quintupling". That's right, every scanline is repeated 4 times,
+			// resulting in a total number of 5 scanlines per "logical pixel"!
+			//
+			// We're forcing such scanline repeating even in forced single
+			// scan mode to yield correct results.
+			const auto is_odd_address_line_total = vga.draw.address_line_total & 1;
+
+			if (vga.draw.double_scanning_enabled || is_odd_address_line_total) {
 				vga.draw.is_double_scanning = true;
 				render_height        = video_mode.height * 2;
 				rendered_double_scan = true;
+				forced_single_scan   = false;
 			} else {
 				vga.draw.address_line_total /= 2;
 				render_height = video_mode.height;
 				render_pixel_aspect_ratio /= 2;
+				forced_single_scan = true;
 			}
 		} else { // single scan
 			video_mode.height = vert_end;
