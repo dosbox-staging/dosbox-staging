@@ -20,7 +20,7 @@
 /* State Management */
 	CASE_0F_MMX(0x77) // EMMS
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		setFPUTagEmpty();
 		break;
 	}
@@ -28,7 +28,7 @@
 /* Data Movement */
 	CASE_0F_MMX(0x6e) // MOVD Pq,Ed
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* rmrq = lookupRMregMM[rm];
 		if (rm >= 0xc0) {
@@ -44,7 +44,7 @@
 	}
 	CASE_0F_MMX(0x7e) // MOVD Ed,Pq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* rmrq = lookupRMregMM[rm];
 		if (rm >= 0xc0) {
@@ -58,7 +58,7 @@
 	}
 	CASE_0F_MMX(0x6f) // MOVQ Pq,Qq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		if (rm >= 0xc0) {
@@ -72,7 +72,7 @@
 	}
 	CASE_0F_MMX(0x7f) // MOVQ Qq,Pq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		if (rm >= 0xc0) {
@@ -88,7 +88,7 @@
 /* Boolean Logic */
 	CASE_0F_MMX(0xef) // PXOR Pq,Qq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		if (rm >= 0xc0) {
@@ -103,7 +103,7 @@
 
 	CASE_0F_MMX(0xeb) // POR Pq,Qq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		if (rm >= 0xc0) {
@@ -117,7 +117,7 @@
 	}
 	CASE_0F_MMX(0xdb) // PAND Pq,Qq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		if (rm >= 0xc0) {
@@ -131,7 +131,7 @@
 	}
 	CASE_0F_MMX(0xdf) // PANDN Pq,Qq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		if (rm >= 0xc0) {
@@ -147,7 +147,7 @@
 /* Shift */
 	CASE_0F_MMX(0xf1) // PSLLW Pq,Qq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		MMX_reg src;
@@ -165,7 +165,7 @@
         }
         CASE_0F_MMX(0xd1) // PSRLW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -185,7 +185,7 @@
         }
         CASE_0F_MMX(0xe1) // PSRAW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -205,7 +205,7 @@
         }
         CASE_0F_MMX(0x71) // PSLLW/PSRLW/PSRAW Pq,Ib
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -238,7 +238,7 @@
         }
         CASE_0F_MMX(0xf2) // PSLLD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -258,7 +258,7 @@
         }
         CASE_0F_MMX(0xd2) // PSRLD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -278,7 +278,7 @@
         }
         CASE_0F_MMX(0xe2) // PSRAD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -298,7 +298,7 @@
         }
         CASE_0F_MMX(0x72) // PSLLD/PSRLD/PSRAD Pq,Ib
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -332,7 +332,7 @@
         }
         CASE_0F_MMX(0xf3) // PSLLQ Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -352,7 +352,7 @@
         }
         CASE_0F_MMX(0xd3) // PSRLQ Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -372,7 +372,7 @@
         }
         CASE_0F_MMX(0x73) // PSLLQ/PSRLQ Pq,Ib
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -394,7 +394,7 @@
 /* Math */
 	CASE_0F_MMX(0xFC) // PADDB Pq,Qq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		MMX_reg src;
@@ -412,7 +412,7 @@
         }
         CASE_0F_MMX(0xFD) // PADDW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -432,7 +432,7 @@
         }
         CASE_0F_MMX(0xFE) // PADDD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -452,7 +452,7 @@
         }
         CASE_0F_MMX(0xEC) // PADDSB Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -472,7 +472,7 @@
         }
         CASE_0F_MMX(0xED) // PADDSW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -492,7 +492,7 @@
         }
         CASE_0F_MMX(0xDC) // PADDUSB Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -512,7 +512,7 @@
         }
         CASE_0F_MMX(0xDD) // PADDUSW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -532,7 +532,7 @@
         }
         CASE_0F_MMX(0xF8) // PSUBB Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -552,7 +552,7 @@
         }
         CASE_0F_MMX(0xF9) // PSUBW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -572,7 +572,7 @@
         }
         CASE_0F_MMX(0xFA) // PSUBD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -592,7 +592,7 @@
         }
         CASE_0F_MMX(0xE8) // PSUBSB Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -612,7 +612,7 @@
         }
         CASE_0F_MMX(0xE9) // PSUBSW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -632,7 +632,7 @@
         }
         CASE_0F_MMX(0xD8) // PSUBUSB Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -652,7 +652,7 @@
         }
         CASE_0F_MMX(0xD9) // PSUBUSW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -673,7 +673,7 @@
         }
         CASE_0F_MMX(0xE5) // PMULHW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -693,7 +693,7 @@
         }
         CASE_0F_MMX(0xD5) // PMULLW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -713,7 +713,7 @@
         }
         CASE_0F_MMX(0xF5) // PMADDWD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -735,7 +735,7 @@
 /* Comparison */
 	CASE_0F_MMX(0x74) // PCMPEQB Pq,Qq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		MMX_reg src;
@@ -753,7 +753,7 @@
         }
         CASE_0F_MMX(0x75) // PCMPEQW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -773,7 +773,7 @@
         }
         CASE_0F_MMX(0x76) // PCMPEQD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -793,7 +793,7 @@
         }
         CASE_0F_MMX(0x64) // PCMPGTB Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -813,7 +813,7 @@
         }
         CASE_0F_MMX(0x65) // PCMPGTW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -833,7 +833,7 @@
         }
         CASE_0F_MMX(0x66) // PCMPGTD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -855,7 +855,7 @@
 /* Data Packing */
 	CASE_0F_MMX(0x63) // PACKSSWB Pq,Qq
 	{
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) goto illegal_opcode;
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) goto illegal_opcode;
 		GetRM;
 		MMX_reg* dest = lookupRMregMM[rm];
 		MMX_reg src;
@@ -873,7 +873,7 @@
         }
         CASE_0F_MMX(0x6B) // PACKSSDW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -893,7 +893,7 @@
         }
         CASE_0F_MMX(0x67) // PACKUSWB Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -913,7 +913,7 @@
         }
         CASE_0F_MMX(0x68) // PUNPCKHBW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -933,7 +933,7 @@
         }
         CASE_0F_MMX(0x69) // PUNPCKHWD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -953,7 +953,7 @@
         }
         CASE_0F_MMX(0x6A) // PUNPCKHDQ Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -973,7 +973,7 @@
         }
         CASE_0F_MMX(0x60) // PUNPCKLBW Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -993,7 +993,7 @@
         }
         CASE_0F_MMX(0x61) // PUNPCKLWD Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;
@@ -1013,7 +1013,7 @@
         }
         CASE_0F_MMX(0x62) // PUNPCKLDQ Pq,Qq
         {
-	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmxSlow) {
+	        if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
 		        goto illegal_opcode;
 	        }
 	        GetRM;

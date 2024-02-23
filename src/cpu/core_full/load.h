@@ -542,7 +542,7 @@ l_M_Ed:
 		CPU_SW_Interrupt_NoIOPLCheck(1,GetIP());
 		continue;
 	case D_RDTSC: {
-		if (CPU_ArchitectureType<ArchitectureType::PentiumSlow)
+		if (CPU_ArchitectureType < ArchitectureType::Pentium)
 			goto illegalopcode;
 	        int64_t tsc = (int64_t)(PIC_FullIndex() *
 	                              static_cast<double>(
