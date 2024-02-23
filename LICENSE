@@ -35,6 +35,7 @@ GPL-2.0-or-later terms, however there are some exceptions:
    - loguru: Public Domain
    - ManyMouse: Zlib
    - PDcurses: Public Domain
+   - simde: MIT
    - stb_truetype: MIT or Public Domain
    - whereami: MIT or WTFPL
    - YM7128B_emu: BSD 2-Clause
