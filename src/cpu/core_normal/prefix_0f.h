@@ -226,7 +226,7 @@
 		break;
 	CASE_0F_B(0x31)												/* RDTSC */
 		{
-			if (CPU_ArchitectureType<ArchitectureType::PentiumSlow)
+			if (CPU_ArchitectureType < ArchitectureType::Pentium)
 				goto illegal_opcode;
 			/* Use a fixed number when in auto cycles mode as else the reported value changes constantly */
 	                int64_t tsc = (int64_t)(PIC_FullIndex() *

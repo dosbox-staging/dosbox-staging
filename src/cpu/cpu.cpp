@@ -1650,7 +1650,7 @@ bool CPU_WRITE_CRX(Bitu cr,Bitu value) {
 Bitu CPU_GET_CRX(Bitu cr) {
 	switch (cr) {
 	case 0:
-		if (CPU_ArchitectureType>=ArchitectureType::PentiumSlow) return cpu.cr0;
+		if (CPU_ArchitectureType>=ArchitectureType::Pentium) return cpu.cr0;
 		else if (CPU_ArchitectureType>=ArchitectureType::Intel486OldSlow) return (cpu.cr0 & 0xe005003f);
 		else return (cpu.cr0 | 0x7ffffff0);
 	case 2:
@@ -1689,7 +1689,7 @@ bool CPU_WRITE_DRX(Bitu dr,Bitu value) {
 		break;
 	case 5:
 	case 7:
-		if (CPU_ArchitectureType<ArchitectureType::PentiumSlow) {
+		if (CPU_ArchitectureType<ArchitectureType::Pentium) {
 			cpu.drx[7]=(value|0x400) & 0xffff2fff;
 		} else {
 			cpu.drx[7]=(value|0x400);
@@ -2044,7 +2044,7 @@ bool CPU_CPUID(void) {
 #endif
 			reg_ebx = 0;     // Not supported
 			reg_ecx = 0;     // No features
-		} else if (CPU_ArchitectureType == ArchitectureType::PentiumSlow) {
+		} else if (CPU_ArchitectureType == ArchitectureType::Pentium) {
 #if (C_FPU)
 			reg_eax = 0x517; // Intel Pentium P5 60/66 MHz D1-step
 			reg_edx = 0x11;  // FPU + Time Stamp Counter (RDTSC)
@@ -2058,7 +2058,7 @@ bool CPU_CPUID(void) {
 			reg_ebx = 0;     // Not supported
 			reg_ecx = 0;     // No features
 #if C_MMX
-		} else if (CPU_ArchitectureType == ArchitectureType::PentiumMmxSlow) {
+		} else if (CPU_ArchitectureType == ArchitectureType::PentiumMmx) {
 			reg_eax = 0x543;      // Intel Pentium MMX
 			reg_ebx = 0;          // Not supported
 			reg_ecx = 0;          // No features
@@ -2236,7 +2236,7 @@ public:
 			cpu.drx[i]=0;
 			cpu.trx[i]=0;
 		}
-		if (CPU_ArchitectureType>=ArchitectureType::PentiumSlow) {
+		if (CPU_ArchitectureType>=ArchitectureType::Pentium) {
 			cpu.drx[6]=0xffff0ff0;
 		} else {
 			cpu.drx[6]=0xffff1ff0;
@@ -2412,9 +2412,9 @@ public:
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
 		} else if (cputype == "pentium_slow") {
-			CPU_ArchitectureType = ArchitectureType::PentiumSlow;
-		} else if (cputype == "pentium_mmx_slow") {
-			CPU_ArchitectureType = ArchitectureType::PentiumMmxSlow;
+			CPU_ArchitectureType = ArchitectureType::Pentium;
+		} else if (cputype == "pentium_mmx") {
+			CPU_ArchitectureType = ArchitectureType::PentiumMmx;
 		}
 
 		if (CPU_ArchitectureType>=ArchitectureType::Intel486NewSlow) CPU_extflags_toggle=(FLAG_ID|FLAG_AC);

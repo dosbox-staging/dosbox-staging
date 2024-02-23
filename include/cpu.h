@@ -48,8 +48,8 @@ enum class ArchitectureType {
 	Intel386Fast    = 0x35,
 	Intel486OldSlow = 0x40,
 	Intel486NewSlow = 0x45,
-	PentiumSlow     = 0x50,
-	PentiumMmxSlow  = 0x55,
+	Pentium         = 0x50,
+	PentiumMmx      = 0x55,
 	Mixed           = 0xff,
 };
 

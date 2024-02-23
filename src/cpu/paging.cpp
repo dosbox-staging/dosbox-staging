@@ -267,8 +267,8 @@ static inline bool InitPage_CheckUseraccess(uint32_t u1,uint32_t u2) {
 		return ((u1)==0) && ((u2)==0);
 	case ArchitectureType::Intel486OldSlow:
 	case ArchitectureType::Intel486NewSlow:
-	case ArchitectureType::PentiumSlow:
-	case ArchitectureType::PentiumMmxSlow:
+	case ArchitectureType::Pentium:
+	case ArchitectureType::PentiumMmx:
 		return ((u1)==0) || ((u2)==0);
 	}
 }
@@ -417,8 +417,8 @@ public:
 					case ArchitectureType::Intel386Slow:
 					case ArchitectureType::Intel486OldSlow:
 					case ArchitectureType::Intel486NewSlow:
-					case ArchitectureType::PentiumSlow:
-					case ArchitectureType::PentiumMmxSlow:
+					case ArchitectureType::Pentium:
+					case ArchitectureType::PentiumMmx:
 						priv_check=1;
 						break;
 					}
@@ -436,8 +436,8 @@ public:
 					case ArchitectureType::Intel386Slow:
 					case ArchitectureType::Intel486OldSlow:
 					case ArchitectureType::Intel486NewSlow:
-					case ArchitectureType::PentiumSlow:
-					case ArchitectureType::PentiumMmxSlow:
+					case ArchitectureType::Pentium:
+					case ArchitectureType::PentiumMmx:
 						priv_check=2;
 						break;
 					}

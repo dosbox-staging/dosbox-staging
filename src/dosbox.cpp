@@ -674,7 +674,7 @@ void DOSBOX_Init()
 
 	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow",
 #if C_MMX
-	                                  "pentium_mmx_slow",
+	                                  "pentium_mmx",
 #endif
 	                                  "386_prefetch", nullptr};
 	pstring = secprop->Add_string("cputype", always, "auto");

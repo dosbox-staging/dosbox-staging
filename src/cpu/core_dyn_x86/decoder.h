@@ -2354,7 +2354,7 @@ restart_prefix:
 			case 0xf8:case 0xf9:case 0xfa:case 0xfc:case 0xfd:
 			case 0xfe:
 				if (CPU_ArchitectureType <
-				    ArchitectureType::PentiumMmxSlow) {
+				    ArchitectureType::PentiumMmx) {
 					goto illegalopcode;
 				}
 				dyn_mmx_check();
@@ -2364,7 +2364,7 @@ restart_prefix:
 			case 0x71:case 0x72:
 			case 0x73:
 				if (CPU_ArchitectureType <
-				    ArchitectureType::PentiumMmxSlow) {
+				    ArchitectureType::PentiumMmx) {
 					goto illegalopcode;
 				}
 				dyn_mmx_check();
@@ -2373,7 +2373,7 @@ restart_prefix:
 			/* MOVD mm, r/m32 */
 			case 0x6e:
 				if (CPU_ArchitectureType <
-				    ArchitectureType::PentiumMmxSlow) {
+				    ArchitectureType::PentiumMmx) {
 					goto illegalopcode;
 				}
 				dyn_mmx_check();
@@ -2382,7 +2382,7 @@ restart_prefix:
 			/* MOVQ mm, mm/m64 */
 			case 0x6f:
 				if (CPU_ArchitectureType <
-				    ArchitectureType::PentiumMmxSlow) {
+				    ArchitectureType::PentiumMmx) {
 					goto illegalopcode;
 				}
 				dyn_mmx_check();
@@ -2391,7 +2391,7 @@ restart_prefix:
 			/* MOVD r/m32, mm */
 			case 0x7e:
 				if (CPU_ArchitectureType <
-				    ArchitectureType::PentiumMmxSlow) {
+				    ArchitectureType::PentiumMmx) {
 					goto illegalopcode;
 				}
 				dyn_mmx_check();
@@ -2400,7 +2400,7 @@ restart_prefix:
 			/* MOVQ mm/m64, mm */
 			case 0x7f:
 				if (CPU_ArchitectureType <
-				    ArchitectureType::PentiumMmxSlow) {
+				    ArchitectureType::PentiumMmx) {
 					goto illegalopcode;
 				}
 				dyn_mmx_check();
@@ -2409,7 +2409,7 @@ restart_prefix:
 			/* EMMS */
 			case 0x77:
 				if (CPU_ArchitectureType <
-				    ArchitectureType::PentiumMmxSlow) {
+				    ArchitectureType::PentiumMmx) {
 					goto illegalopcode;
 				}
 				dyn_mmx_check();
