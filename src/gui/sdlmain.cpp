@@ -1394,6 +1394,8 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 
 		GFX_RefreshTitle();
 
+		SDL_RaiseWindow(sdl.window);
+
 		if (!fullscreen) {
 			goto finish;
 		}
@@ -1437,8 +1439,6 @@ finish:
 	// Force redraw after changing the window
 	if (sdl.draw.callback)
 		sdl.draw.callback(GFX_CallBackRedraw);
-
-	SDL_RaiseWindow(sdl.window);
 
 	// Ensure the time to change window modes isn't counted against
 	// our paced timing. This is a rare event that depends on host
