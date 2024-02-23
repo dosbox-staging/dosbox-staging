@@ -26,6 +26,7 @@ CHECK_NARROWING();
 void StereoOn1::BindToPort(const io_port_t lpt_port)
 {
 	using namespace std::placeholders;
+
 	const auto write_data = std::bind(&StereoOn1::WriteData, this, _1, _2, _3);
 	const auto read_status = std::bind(&StereoOn1::ReadStatus, this, _1, _2);
 	const auto write_control = std::bind(&StereoOn1::WriteControl, this, _1, _2, _3);

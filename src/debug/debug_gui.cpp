@@ -44,11 +44,10 @@ struct _LogGroup {
 };
 #include <list>
 #include <string>
-using namespace std;
 
 #define MAX_LOG_BUFFER 500
-static list<string> logBuff = {};
-static list<string>::iterator logBuffPos = logBuff.end();
+static std::list<std::string> logBuff    = {};
+static std::list<std::string>::iterator logBuffPos = logBuff.end();
 
 static _LogGroup loggrp[LOG_MAX]={{"",true},{nullptr,false}};
 static FILE *debuglog = nullptr;
@@ -102,7 +101,7 @@ void DEBUG_RefreshPage(int scroll) {
 	else if (scroll == 1 && logBuffPos != logBuff.end())
 		++logBuffPos;
 
-	list<string>::iterator i = logBuffPos;
+	std::list<std::string>::iterator i = logBuffPos;
 	int maxy, maxx; getmaxyx(dbg.win_out,maxy,maxx);
 	int rem_lines = maxy;
 	if(rem_lines == -1) return;
@@ -111,8 +110,11 @@ void DEBUG_RefreshPage(int scroll) {
 
 	while (rem_lines > 0 && i!=logBuff.begin()) {
 		--i;
-		for (string::size_type posf=0, posl; (posl=(*i).find('\n',posf)) != string::npos ;posf=posl+1)
-			rem_lines -= (int) ((posl-posf) / maxx) + 1; // len=(posl+1)-posf-1
+		for (std::string::size_type posf = 0, posl;
+		     (posl = (*i).find('\n', posf)) != std::string::npos;
+		     posf = posl + 1) {
+			rem_lines -= (int)((posl - posf) / maxx) + 1; // len=(posl+1)-posf-1
+		}
 		/* Const cast is needed for pdcurses which has no const char in mvwprintw (bug maybe) */
 		mvwprintw(dbg.win_out,rem_lines-1, 0, const_cast<char*>((*i).c_str()));
 	}

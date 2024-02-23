@@ -335,8 +335,6 @@ private:
 	bool should_change_irq_dma      = false;
 };
 
-using namespace std::placeholders;
-
 // External Tie-in for OPL FM-audio
 uint8_t adlib_commandreg = ADLIB_CMD_DEFAULT;
 
@@ -1249,6 +1247,8 @@ uint16_t Gus::ReadFromRegister()
 
 void Gus::RegisterIoHandlers()
 {
+	using namespace std::placeholders;
+	
 	// Register the IO read addresses
 	assert(read_handlers.size() > 7);
 	const auto read_from = std::bind(&Gus::ReadFromPort, this, _1, _2);
@@ -1320,6 +1320,8 @@ static void gus_destroy(Section*);
 
 void Gus::UpdateDmaAddress(const uint8_t new_address)
 {
+	using namespace std::placeholders;
+
 	// Has it changed?
 	if (new_address == dma1) {
 		return;

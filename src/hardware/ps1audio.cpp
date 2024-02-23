@@ -42,8 +42,6 @@
 
 #include "residfp/resample/TwoPassSincResampler.h"
 
-using namespace std::placeholders;
-
 struct Ps1Registers {
 	uint8_t status = 0;     // Read via port 0x202 control status
 	uint8_t command = 0;    // Written via port 0x202 for control, read via 0x200 for DAC
@@ -124,6 +122,8 @@ static void setup_filter(mixer_channel_t &channel)
 
 Ps1Dac::Ps1Dac(const std::string_view filter_choice)
 {
+	using namespace std::placeholders;
+
 	const auto callback = std::bind(&Ps1Dac::Update, this, _1);
 
 	channel = MIXER_AddChannel(callback,
@@ -413,6 +413,8 @@ private:
 Ps1Synth::Ps1Synth(const std::string_view filter_choice)
         : device(nullptr, nullptr, ps1_psg_clock_hz)
 {
+	using namespace std::placeholders;
+
 	const auto callback = std::bind(&Ps1Synth::AudioCallback, this, _1);
 
 	channel = MIXER_AddChannel(callback,

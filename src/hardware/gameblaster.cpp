@@ -30,6 +30,8 @@
 void GameBlaster::Open(const int port_choice, const std::string &card_choice,
                        const std::string &filter_choice)
 {
+	using namespace std::placeholders;
+
 	Close();
 	assert(!is_open);
 
@@ -54,7 +56,6 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	// compatibility, and the Sound Blaster 2.0 had sockets for them as
 	// optional add-ons. Therefore, we always set up these handlers, even if
 	// the card type isn't a Game Blaster.
-	using namespace std::placeholders;
 	const auto data_to_left = std::bind(&GameBlaster::WriteDataToLeftDevice, this, _1, _2, _3);
 	const auto control_to_left = std::bind(&GameBlaster::WriteControlToLeftDevice, this, _1, _2, _3);
 	const auto data_to_right = std::bind(&GameBlaster::WriteDataToRightDevice, this, _1, _2, _3);

@@ -6754,6 +6754,8 @@ static int32_t texture_w(uint32_t offset, uint32_t data) {
  *************************************/
 static uint32_t register_r(const uint32_t offset)
 {
+	using namespace bit::literals;
+
 	const auto regnum = static_cast<uint8_t>((offset) & 0xff);
 
 	//LOG(LOG_VOODOO,LOG_WARN)("Voodoo:read chip %x reg %x (%s)", chips, regnum<<2, voodoo_reg_name[regnum]);
@@ -6786,7 +6788,6 @@ static uint32_t register_r(const uint32_t offset)
 				// bit 7 is FBI graphics engine busy
 				// bit 8 is TREX busy
 				// bit 9 is overall busy
-				using namespace bit::literals;
 				result |= (b7 | b8 | b9);
 			}
 

@@ -43,9 +43,6 @@
 
 // CHECK_NARROWING();
 
-using namespace bit;
-using namespace bit::literals;
-
 static void write_crtc_index_other(io_port_t, io_val_t value, io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
@@ -834,6 +831,8 @@ static void toggle_cga_composite_mode(bool pressed)
 }
 
 static void tandy_update_palette() {
+	using namespace bit::literals;
+
 	// TODO mask off bits if needed
 	if (machine == MCH_TANDY) {
 		switch (vga.mode) {
@@ -849,15 +848,15 @@ static void tandy_update_palette() {
 			} else {
 				uint8_t color_set = 0;
 				uint8_t r_mask = 0xf;
-				if (is(vga.tandy.color_select, b4)) {
-					set(color_set, b3); // intensity
+				if (bit::is(vga.tandy.color_select, b4)) {
+					bit::set(color_set, b3); // intensity
 				}
-				if (is(vga.tandy.color_select, b5)) {
-					set(color_set, b0); // Cyan Mag. White
+				if (bit::is(vga.tandy.color_select, b5)) {
+					bit::set(color_set, b0); // Cyan Mag. White
 				}
 				if (vga.tandy.mode.is_black_and_white_mode) { // Cyan Red White
-					set(color_set, b0);
-					clear(r_mask, b0);
+					bit::set(color_set, b0);
+					bit::clear(r_mask, b0);
 				}
 				VGA_SetCGA4Table(
 					vga.attr.palette[vga.tandy.color_select&0xf],
@@ -970,10 +969,12 @@ static void PCJr_FindMode()
 }
 
 static void TandyCheckLineMask(void ) {
+	using namespace bit::literals;
+
 	if ( vga.tandy.extended_ram & 1 ) {
 		vga.tandy.line_mask = 0;
 	} else if (vga.tandy.mode.is_graphics_enabled) {
-		set(vga.tandy.line_mask, b0);
+		bit::set(vga.tandy.line_mask, b0);
 	}
 	if ( vga.tandy.line_mask ) {
 		vga.tandy.line_shift = 13;
@@ -986,6 +987,8 @@ static void TandyCheckLineMask(void ) {
 
 static void write_tandy_reg(uint8_t val)
 {
+	using namespace bit::literals;
+
 	// only receives 8-bit data per its IO port registration
 	switch (vga.tandy.reg_index) {
 	case 0x0:
@@ -993,12 +996,13 @@ static void write_tandy_reg(uint8_t val)
 			vga.tandy.mode.data = val;
 			VGA_SetBlinking(val & 0x20);
 			PCJr_FindMode();
-			if (is(val, b3))
-				clear(vga.attr.disabled, b0);
-			else
-				set(vga.attr.disabled, b0);
+			if (bit::is(val, b3)) {
+				bit::clear(vga.attr.disabled, b0);
+			} else {
+				bit::set(vga.attr.disabled, b0);
+			}
 		} else {
-			LOG(LOG_VGAMISC,LOG_NORMAL)("Unhandled Write %2X to tandy reg %X",val,vga.tandy.reg_index);
+			LOG(LOG_VGAMISC, LOG_NORMAL)("Unhandled Write %2X to tandy reg %X", val, vga.tandy.reg_index);
 		}
 		break;
 	case 0x1:	/* Palette mask */
@@ -1032,17 +1036,20 @@ static void write_tandy_reg(uint8_t val)
 
 static void write_tandy(io_port_t port, io_val_t value, io_width_t)
 {
+	using namespace bit::literals;
+
 	auto val = check_cast<uint8_t>(value);
 	// only receives 8-bit data per its IO port registration
 	switch (port) {
 	case 0x3d8:
-		clear(val, b7 | b6); // only bits 0-5 are used
+		bit::clear(val, b7 | b6); // only bits 0-5 are used
 		if (vga.tandy.mode.data ^ val) {
 			vga.tandy.mode.data = val;
-			if (is(val, b3))
-				clear(vga.attr.disabled, b0);
-			else
-				set(vga.attr.disabled, b0);
+			if (bit::is(val, b3)) {
+				bit::clear(vga.attr.disabled, b0);
+			} else {
+				bit::set(vga.attr.disabled, b0);
+			}
 			TandyCheckLineMask();
 			VGA_SetBlinking(val & 0x20);
 			TANDY_FindMode();
@@ -1085,6 +1092,8 @@ static void write_tandy(io_port_t port, io_val_t value, io_width_t)
 
 static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 {
+	using namespace bit::literals;
+
 	// only receives 8-bit data per its IO port registration
 	const auto val = check_cast<uint8_t>(value);
 	switch (port) {
@@ -1093,10 +1102,11 @@ static void write_pcjr(io_port_t port, io_val_t value, io_width_t)
 			write_tandy_reg(val);
 		else {
 			vga.tandy.reg_index = val;
-			if (is(vga.tandy.reg_index, b4))
-				set(vga.attr.disabled, b1);
-			else
-				clear(vga.attr.disabled, b1);
+			if (bit::is(vga.tandy.reg_index, b4)) {
+				bit::set(vga.attr.disabled, b1);
+			} else {
+				bit::clear(vga.attr.disabled, b1);
+			}
 		}
 		vga.tandy.pcjr_flipflop=!vga.tandy.pcjr_flipflop;
 		break;
@@ -1228,38 +1238,40 @@ void VGA_SetHerculesPalette()
 
 static void write_hercules(io_port_t port, io_val_t value, io_width_t)
 {
+	using namespace bit::literals;
+
 	const auto val = check_cast<uint8_t>(value);
 	switch (port) {
 	case 0x3b8: {
-		// the protected bits can always be cleared but only be set if the
-		// protection bits are set
-		if (is(vga.herc.mode_control, b1)) {
+		// the protected bits can always be cleared but only be set if
+		// the protection bits are set
+		if (bit::is(vga.herc.mode_control, b1)) {
 			// already set
-			if (cleared(val, b1)) {
-				clear(vga.herc.mode_control, b1);
+			if (bit::cleared(val, b1)) {
+				bit::clear(vga.herc.mode_control, b1);
 				VGA_SetMode(M_HERC_TEXT);
 			}
 		} else {
 			// not set, can only set if protection bit is set
-			if (is(val, b1) && is(vga.herc.enable_bits, b0)) {
-				set(vga.herc.mode_control, b1);
+			if (bit::is(val, b1) && bit::is(vga.herc.enable_bits, b0)) {
+				bit::set(vga.herc.mode_control, b1);
 				VGA_SetMode(M_HERC_GFX);
 			}
 		}
-		if (is(vga.herc.mode_control, b7)) {
-			if (cleared(val, b7)) {
-				clear(vga.herc.mode_control, b7);
+		if (bit::is(vga.herc.mode_control, b7)) {
+			if (bit::cleared(val, b7)) {
+				bit::clear(vga.herc.mode_control, b7);
 				vga.tandy.draw_base = &vga.mem.linear[0];
 			}
 		} else {
-			if (is(val, b7) && is(vga.herc.enable_bits, b1)) {
-				set(vga.herc.mode_control, b7);
+			if (bit::is(val, b7) && bit::is(vga.herc.enable_bits, b1)) {
+				bit::set(vga.herc.mode_control, b7);
 				vga.tandy.draw_base = &vga.mem.linear[32 * 1024];
 			}
 		}
-		vga.draw.blinking = is(val, b5);
-		retain(vga.herc.mode_control, b7 | b1);
-		set(vga.herc.mode_control, mask_off(val, b7 | b1));
+		vga.draw.blinking = bit::is(val, b5);
+		bit::retain(vga.herc.mode_control, b7 | b1);
+		bit::set(vga.herc.mode_control, bit::mask_off(val, b7 | b1));
 		break;
 	}
 	case 0x3bf:

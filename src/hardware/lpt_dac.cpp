@@ -35,8 +35,9 @@ LptDac::LptDac(const std::string_view name, const uint16_t channel_rate_hz,
                std::set<ChannelFeature> extra_features)
         : dac_name(name)
 {
-	assert(!dac_name.empty());
 	using namespace std::placeholders;
+
+	assert(!dac_name.empty());
 	const auto audio_callback = std::bind(&LptDac::AudioCallback, this, _1);
 
 	std::set<ChannelFeature> features = {ChannelFeature::Sleep,

@@ -37,8 +37,6 @@
 
 #include "../../ints/int10.h"
 
-using namespace bit::literals;
-
 CHECK_NARROWING();
 
 // This file implements the DOS mouse driver interface,
@@ -1340,6 +1338,8 @@ void MOUSEDOS_NotifyWheel(const int16_t w_rel)
 
 static Bitu int33_handler()
 {
+	using namespace bit::literals;
+
 	switch (reg_ax) {
 	case 0x00: // MS MOUSE - reset driver and read status
 		reset_hardware();

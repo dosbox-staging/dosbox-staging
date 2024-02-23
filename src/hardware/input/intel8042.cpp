@@ -30,8 +30,6 @@
 #include "mem.h"
 #include "pic.h"
 
-using namespace bit::literals;
-
 CHECK_NARROWING();
 
 // Emulates the Intel 8042 keyboard/mouse controller.
@@ -895,6 +893,7 @@ static void execute_command(const Command command, const uint8_t param)
 	// LOG_INFO("I8042: Command 0x%02x, parameter 0x%02x",
 	//          static_cast<int>(command), param);
 
+	using namespace bit::literals;
 	switch (command) {
 	case Command::WriteByteConfig: // 0x60
 		// Writes the keyboard controller configuration byte
