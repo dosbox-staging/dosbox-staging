@@ -19,16 +19,25 @@
 
 #include <cstdio>
 
-#include "dosbox.h"
-#include "mem.h"
-#include "cpu.h"
-#include "lazyflags.h"
-#include "inout.h"
+#if C_MMX
+// Needed for std::isnan in simde
+#include <cmath>
+#endif
+
 #include "callback.h"
-#include "pic.h"
+#include "cpu.h"
+#include "dosbox.h"
 #include "fpu.h"
+#include "inout.h"
+#include "lazyflags.h"
+#include "mem.h"
 #include "mmx.h"
 #include "paging.h"
+#include "pic.h"
+
+#if C_MMX
+#include "simde/x86/mmx.h"
+#endif
 
 #if C_DEBUG
 #include "debug.h"

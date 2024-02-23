@@ -111,50 +111,6 @@ MMX_reg* lookupRMregMM[256] = {
         reg_mmx[7], reg_mmx[7], reg_mmx[7], reg_mmx[7],
 };
 
-int8_t SaturateWordSToByteS(int16_t value)
-{
-	if (value < -128) {
-		return -128;
-	}
-	if (value > 127) {
-		return 127;
-	}
-	return static_cast<int8_t>(value);
-}
-
-int16_t SaturateDwordSToWordS(int32_t value)
-{
-	if (value < -32768) {
-		return -32768;
-	}
-	if (value > 32767) {
-		return 32767;
-	}
-	return static_cast<int16_t>(value);
-}
-
-uint8_t SaturateWordSToByteU(int16_t value)
-{
-	if (value < 0) {
-		return 0;
-	}
-	if (value > 255) {
-		return 255;
-	}
-	return static_cast<uint8_t>(value);
-}
-
-uint16_t SaturateDwordSToWordU(int32_t value)
-{
-	if (value < 0) {
-		return 0;
-	}
-	if (value > 65535) {
-		return 65535;
-	}
-	return static_cast<uint16_t>(value);
-}
-
 void setFPUTagEmpty()
 {
 	FPU_SetCW(0x37F);
