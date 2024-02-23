@@ -41,9 +41,6 @@
 #define GFX_REGS 0x09
 #define ATT_REGS 0x15
 
-using namespace bit;
-using namespace bit::literals;
-
 // clang-format off
 std::vector<VideoModeBlock> ModeList_VGA = {
   //     mode     type     sw    sh    tw  th  cw ch  pt pstart    plength htot  vtot  hde  vde    special flags
@@ -1033,11 +1030,13 @@ static void write_palette_dac_data(const std::vector<Rgb666>& colors)
 
 bool INT10_SetVideoMode(uint16_t mode)
 {
+	using namespace bit::literals;
+
 	bool clearmem = true;
 	Bitu i;
 
-	const auto UseLinearFramebuffer    = is(mode, b14);
-	const auto DoNotClearDisplayMemory = is(mode, b15);
+	const auto UseLinearFramebuffer    = bit::is(mode, b14);
+	const auto DoNotClearDisplayMemory = bit::is(mode, b15);
 
 	if (mode >= MinVesaBiosModeNumber) {
 		if (UseLinearFramebuffer && int10.vesa_nolfb) {

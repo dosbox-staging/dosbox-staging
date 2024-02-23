@@ -28,8 +28,6 @@
 #include "mixer.h"
 #include "timer.h"
 
-using namespace bit::literals;
-
 CHECK_NARROWING();
 
 // ***************************************************************************
@@ -137,6 +135,8 @@ static uint8_t read_p61(io_port_t, io_width_t)
 
 static uint8_t read_p62(io_port_t, io_width_t)
 {
+	using namespace bit::literals;
+
 	auto ret = bit::all<uint8_t>();
 
 	if (!TIMER_GetOutput2()) {

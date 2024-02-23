@@ -35,6 +35,8 @@ void Innovation::Open(const std::string_view model_choice,
                       const int filter_strength_8580, const int port_choice,
                       const std::string_view channel_filter_choice)
 {
+	using namespace std::placeholders;
+
 	Close();
 
 	// Sentinel
@@ -79,7 +81,6 @@ void Innovation::Open(const std::string_view model_choice,
 	ms_per_clock = millis_in_second / chip_clock;
 
 	// Setup the mixer and get it's sampling rate
-	using namespace std::placeholders;
 	const auto mixer_callback = std::bind(&Innovation::AudioCallback, this, _1);
 
 	auto mixer_channel = MIXER_AddChannel(mixer_callback,

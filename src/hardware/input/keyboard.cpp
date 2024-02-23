@@ -34,8 +34,6 @@
 #include "support.h"
 #include "timer.h"
 
-using namespace bit::literals;
-
 CHECK_NARROWING();
 
 // Emulates the PS/2 keybaord, as seen by the Intel 8042 microcontroller.
@@ -631,6 +629,8 @@ void KEYBOARD_WaitForSecureMode()
 
 void KEYBOARD_PortWrite(const uint8_t byte)
 {
+	using namespace bit::literals;
+
 	// Highest bit set usuaally means a command
 	const bool is_command = bit::is(byte, b7) &&
 	                        current_command != Command::Set3KeyTypematic &&

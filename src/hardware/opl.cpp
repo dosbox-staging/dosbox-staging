@@ -914,6 +914,8 @@ static std::string opl_mode_to_string(const Mode mode)
 
 OPL::OPL(Section *configuration, const OplMode oplmode)
 {
+	using namespace std::placeholders;
+
 	assert(oplmode != OplMode::Cms);
 	assert(oplmode != OplMode::None);
 
@@ -971,8 +973,6 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 	}
 
 	Init(check_cast<uint16_t>(channel->GetSampleRate()));
-
-	using namespace std::placeholders;
 
 	const auto read_from = std::bind(&OPL::PortRead, this, _1, _2);
 	const auto write_to  = std::bind(&OPL::PortWrite, this, _1, _2, _3);

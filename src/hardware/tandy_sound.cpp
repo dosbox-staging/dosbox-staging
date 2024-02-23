@@ -64,8 +64,6 @@
 
 #include "residfp/resample/TwoPassSincResampler.h"
 
-using namespace std::placeholders;
-
 // Constants used by the DAC and PSG
 constexpr uint16_t card_base_offset = 288;
 constexpr auto tandy_psg_clock_hz   = 14318180 / 4;
@@ -187,6 +185,8 @@ static void setup_filters(mixer_channel_t &channel) {
 TandyDAC::TandyDAC(const ConfigProfile config_profile,
                    const std::string_view filter_choice)
 {
+	using namespace std::placeholders;
+
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
 
 	// Run the audio channel at the mixer's native rate
@@ -281,6 +281,8 @@ void TandyDAC::DmaCallback([[maybe_unused]] const DmaChannel*, DMAEvent event)
 
 void TandyDAC::ChangeMode()
 {
+	using namespace std::placeholders;
+
 	// Typical sample rates are 1.7. 5.5, 11, and rarely 22 KHz. Although
 	// several games (one being OutRun) set instantaneous rates above
 	// 100,000 Hz, we throw these out as they can cause garbage high
@@ -312,9 +314,8 @@ void TandyDAC::ChangeMode()
 				dma.is_done = false;
 				dma.channel = DMA_GetChannel(io.dma);
 				if (dma.channel) {
-					const auto callback =
-					        std::bind(&TandyDAC::DmaCallback,
-					                  this, _1, _2);
+					const auto callback = std::bind(
+					        &TandyDAC::DmaCallback, this, _1, _2);
 					dma.channel->RegisterCallback(callback);
 					channel->Enable(true);
 					// LOG_MSG("TANDYDAC: playback started with freqency %f, volume %f", sample_rate, vol);
@@ -427,6 +428,8 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
                    const std::string_view fadeout_choice,
                    const std::string_view filter_choice)
 {
+	using namespace std::placeholders;
+
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
 
 	// Instantiate the MAME PSG device

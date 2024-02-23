@@ -42,8 +42,6 @@ _CRTIMP extern char** _environ;
 extern char** environ;
 #endif
 
-using namespace std;
-
 // Commonly accessed global that holds configuration records
 std::unique_ptr<Config> control = {};
 
@@ -137,8 +135,8 @@ bool Value::SetValue(const std::string& in, const Etype _type)
 
 bool Value::SetHex(const std::string& in)
 {
-	istringstream input(in);
-	input.flags(ios::hex);
+	std::istringstream input(in);
+	input.flags(std::ios::hex);
 	int result = INT_MIN;
 	input >> result;
 	if (result == INT_MIN) {
@@ -150,7 +148,7 @@ bool Value::SetHex(const std::string& in)
 
 bool Value::SetInt(const std::string& in)
 {
-	istringstream input(in);
+	std::istringstream input(in);
 	int result = INT_MIN;
 	input >> result;
 	if (result == INT_MIN) {
@@ -162,7 +160,7 @@ bool Value::SetInt(const std::string& in)
 
 bool Value::SetDouble(const std::string& in)
 {
-	istringstream input(in);
+	std::istringstream input(in);
 	double result = std::numeric_limits<double>::infinity();
 	input >> result;
 	if (result == std::numeric_limits<double>::infinity()) {
@@ -188,20 +186,20 @@ void Value::SetString(const std::string& in)
 	_string = in;
 }
 
-string Value::ToString() const
+std::string Value::ToString() const
 {
-	ostringstream oss;
+	std::ostringstream oss;
 	switch (type) {
 	case V_HEX:
-		oss.flags(ios::hex);
+		oss.flags(std::ios::hex);
 		oss << _hex;
 		break;
 	case V_INT: oss << _int; break;
-	case V_BOOL: oss << boolalpha << _bool; break;
+	case V_BOOL: oss << std::boolalpha << _bool; break;
 	case V_STRING: oss << _string; break;
 	case V_DOUBLE:
 		oss.precision(2);
-		oss << fixed << _double;
+		oss << std::fixed << _double;
 		break;
 	case V_NONE:
 	case V_CURRENT:
@@ -271,7 +269,7 @@ bool Property::ValidateValue(const Value& in)
 
 void Property::Set_help(const std::string& in)
 {
-	string result = string("CONFIG_") + propname;
+	std::string result = std::string("CONFIG_") + propname;
 	upcase(result);
 	MSG_Add(result.c_str(), in.c_str());
 }
@@ -529,20 +527,20 @@ bool PropMultiValRemain::SetValue(const std::string& input)
 		number_of_properties++;
 	}
 
-	string::size_type loc = string::npos;
+	std::string::size_type loc = std::string::npos;
 
 	while ((p = section->Get_prop(i++))) {
 		// trim leading separators
 		loc = local.find_first_not_of(separator);
-		if (loc != string::npos) {
+		if (loc != std::string::npos) {
 			local.erase(0, loc);
 		}
-		loc       = local.find_first_of(separator);
-		string in = "";
+		loc            = local.find_first_of(separator);
+		std::string in = "";
 
 		// When i == number_of_properties add the total line. (makes
 		// more then one string argument possible for parameters of cpu)
-		if (loc != string::npos && i < number_of_properties) {
+		if (loc != std::string::npos && i < number_of_properties) {
 			// Separator found
 			in = local.substr(0, loc);
 			local.erase(0, loc + 1);
@@ -577,21 +575,21 @@ bool PropMultiVal::SetValue(const std::string& input)
 	}
 
 	Value::Etype prevtype = Value::V_NONE;
-	string prevargument   = "";
+	std::string prevargument = "";
 
-	string::size_type loc = string::npos;
+	std::string::size_type loc = std::string::npos;
 	while ((p = section->Get_prop(i++))) {
 		// Trim leading separators
 		loc = local.find_first_not_of(separator);
-		if (loc != string::npos) {
+		if (loc != std::string::npos) {
 			local.erase(0, loc);
 		}
 
 		loc = local.find_first_of(separator);
 
-		string in = "";
+		std::string in = "";
 
-		if (loc != string::npos) {
+		if (loc != std::string::npos) {
 			// Separator found
 			in = local.substr(0, loc);
 			local.erase(0, loc + 1);
@@ -912,18 +910,18 @@ Hex Section_prop::Get_hex(const std::string& _propname) const
 
 bool Section_prop::HandleInputline(const std::string& line)
 {
-	string::size_type loc = line.find('=');
+	std::string::size_type loc = line.find('=');
 
-	if (loc == string::npos) {
+	if (loc == std::string::npos) {
 		return false;
 	}
 
-	string name = line.substr(0, loc);
-	string val  = line.substr(loc + 1);
+	std::string name = line.substr(0, loc);
+	std::string val  = line.substr(loc + 1);
 
 	// Strip quotes around the value
 	trim(val);
-	string::size_type length = val.length();
+	std::string::size_type length = val.length();
 	if (length > 1 && ((val[0] == '\"' && val[length - 1] == '\"') ||
 	                   (val[0] == '\'' && val[length - 1] == '\''))) {
 		val = val.substr(1, length - 2);
@@ -975,7 +973,7 @@ void Section_prop::PrintData(FILE* outfile) const
 	}
 }
 
-string Section_prop::GetPropValue(const std::string& _property) const
+std::string Section_prop::GetPropValue(const std::string& _property) const
 {
 	for (const_it tel = properties.begin(); tel != properties.end(); ++tel) {
 		if (!strcasecmp((*tel)->propname.c_str(), _property.c_str())) {
@@ -1336,7 +1334,7 @@ bool Config::ParseConfigFile(const std::string& type,
 		return true;
 	}
 
-	ifstream in(canonical_path);
+	std::ifstream in(canonical_path);
 	if (!in) {
 		return false;
 	}
@@ -1409,7 +1407,7 @@ bool Config::ParseConfigFile(const std::string& type,
 		if (is_section_start(line)) {
 			// New section
 			const auto bracket_pos = line.find(']');
-			if (bracket_pos == string::npos) {
+			if (bracket_pos == std::string::npos) {
 				continue;
 			}
 			line.erase(bracket_pos);
@@ -1450,7 +1448,7 @@ parse_environ_result_t parse_environ(const char* const* envp) noexcept
 
 		const std::string rest       = (env_var + 7);
 		const auto section_delimiter = rest.find('_');
-		if (section_delimiter == string::npos) {
+		if (section_delimiter == std::string::npos) {
 			continue;
 		}
 

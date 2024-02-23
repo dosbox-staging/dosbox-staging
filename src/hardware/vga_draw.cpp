@@ -491,6 +491,8 @@ enum CursorOp : uint8_t {
 
 static uint8_t* draw_unwrapped_line_from_dac_palette_with_hwcursor(Bitu vidstart, Bitu /*line*/)
 {
+	using namespace bit::literals;
+
 	// Draw the underlying line without the cursor
 	const auto line_addr = reinterpret_cast<uint32_t*>(
 	        draw_unwrapped_line_from_dac_palette(vidstart));
@@ -519,12 +521,11 @@ static uint8_t* draw_unwrapped_line_from_dac_palette_with_hwcursor(Bitu vidstart
 		return reinterpret_cast<uint8_t*>(line_addr);
 	}
 
-	using namespace bit;
 	// the index of the bit inside the cursor bitmap we start at:
 	const auto source_start_bit = ((line_at_y - cursor.originy) + cursor.posy) *
 	                                      bitmap_width_bits + cursor.posx;
 	const auto cursor_start_bit = source_start_bit & 0x7;
-	uint8_t cursor_bit = literals::b7 >> cursor_start_bit;
+	uint8_t cursor_bit          = b7 >> cursor_start_bit;
 
 	// Convert to video memory addr and bit index
 	// start adjusted to the pattern structure (thus shift address by 2
@@ -554,19 +555,21 @@ static uint8_t* draw_unwrapped_line_from_dac_palette_with_hwcursor(Bitu vidstart
 
 		while (cursor_bit != 0) {
 			uint8_t op = {};
-			set_to(op, literals::b0, is(bits_a, cursor_bit));
-			set_to(op, literals::b1, is(bits_b, cursor_bit));
+			bit::set_to(op, b0, bit::is(bits_a, cursor_bit));
+			bit::set_to(op, b1, bit::is(bits_b, cursor_bit));
 
 			switch (static_cast<CursorOp>(op)) {
 			case CursorOp::Foreground: *cursor_addr = fg_colour; break;
 			case CursorOp::Background: *cursor_addr = bg_colour; break;
-			case CursorOp::Invert: flip_all(*cursor_addr); break;
+			case CursorOp::Invert:
+				bit::flip_all(*cursor_addr);
+				break;
 			case CursorOp::Transparent: break;
 			};
 			cursor_addr++;
 			cursor_bit >>= 1;
 		}
-		cursor_bit = literals::b7;
+		cursor_bit = b7;
 	}
 	return reinterpret_cast<uint8_t*>(line_addr);
 }

@@ -5722,6 +5722,8 @@ private:
 	// and 0xE5 (reboot command). This value will be sent to the system.
 	void softReboot(uint8_t commandThatRequestedTheSoftReboot)
 	{
+		using namespace std::chrono_literals;
+
 		disableInterrupts();
 		// reset the stack pointer :)
 		m_cardMode = MUSIC_MODE;
@@ -5759,7 +5761,6 @@ private:
 			// reenable
 			MUSIC_MODE_LOOP_read_System_And_Dispatch();
 			logSuccess();
-			using namespace std::chrono_literals;
 			std::this_thread::sleep_for(1ms);
 		}
 	}
@@ -12926,6 +12927,8 @@ public:
 	          m_bufferFromSystemState("bufferFromSystemState", 0x2000),
 	          m_bufferToSystemState("bufferToSystemState", 256)
 	{
+		using namespace std::chrono_literals;
+
 		// now wire everything up (see Figure "2-1 Music Card Interrupt
 		// System" in the Techniucal Reference Manual)
 
@@ -13035,7 +13038,6 @@ public:
 		// wait until we're ready to receive data... it's a workaround
 		// for now, but well....
 		while (!m_finishedBootupSequence) {
-			using namespace std::chrono_literals;
 			std::this_thread::sleep_for(1ms);
 		}
 
@@ -13229,6 +13231,8 @@ public:
 
 	~MusicFeatureCard()
 	{
+		using namespace std::chrono_literals;
+
 		LOG_MSG("IMFC: Shutting down");
 
 		keepRunning = false;
@@ -13240,7 +13244,6 @@ public:
 			wh.Uninstall();
 
 		// Give the threads a small bit of time to gracefully complete
-		using namespace std::chrono_literals;
 		std::this_thread::sleep_for(20ms);
 
 		SDL_WaitThread(m_mainThread, nullptr);
@@ -13250,6 +13253,8 @@ public:
 
 void MusicFeatureCard::RegisterIoHandlers(const io_port_t port)
 {
+	using namespace std::placeholders;
+
 	const io_port_t port_piu0  = port + 0x0;
 	const io_port_t port_piu1  = port + 0x1;
 	const io_port_t port_piu2  = port + 0x2;
@@ -13264,7 +13269,6 @@ void MusicFeatureCard::RegisterIoHandlers(const io_port_t port)
 	// Consistency check
 	assert(readHandlers.size() == NumIoHandlers);
 	assert(writeHandlers.size() == NumIoHandlers);
-	using namespace std::placeholders;
 
 	auto read_piu0 = std::bind(&MusicFeatureCard::readPortPIU0, this, _1, _2);
 	readHandlers.at(0).Install(port_piu0, read_piu0, io_width_t::byte);

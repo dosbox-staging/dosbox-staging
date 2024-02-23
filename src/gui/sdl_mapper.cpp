@@ -1921,6 +1921,8 @@ static std::string humanize_key_name(const CBindList &binds, const std::string &
 
 static void update_active_bind_ui()
 {
+	using namespace std::string_literals;
+
 	if (mapper.abind == nullptr) {
 		bind_but.bind_title->Enable(false);
 		bind_but.del->Enable(false);
@@ -1953,8 +1955,6 @@ static void update_active_bind_ui()
 	// Correlate mod event bindlists to button labels and prepare
 	// human-readable mod key names.
 	for (auto &event : events) {
-		using namespace std::string_literals;
-
 		assert(event);
 		const auto bindlist = event->bindlist;
 

@@ -37,8 +37,6 @@
 
 #include "../../ints/int10.h"
 
-using namespace bit::literals;
-
 CHECK_NARROWING();
 
 // This file implements both BIOS interface and PS/2 direct mouse access.
@@ -261,6 +259,8 @@ static void reset_counters()
 
 static void build_protocol_frame(const bool is_polling = false)
 {
+	using namespace bit::literals;
+
 	union {
 		uint8_t _data = 0x08;
 
@@ -327,6 +327,7 @@ static void build_protocol_frame(const bool is_polling = false)
 	} else if (protocol == MouseModelPS2::Explorer) {
 		frame.resize(4);
 		frame[3] = get_reset_wheel_4bit();
+
 		if (buttons.extra_1) {
 			bit::set(frame[3], b4);
 		}
@@ -805,6 +806,8 @@ static bool bios_disable()
 
 static bool bios_is_aux_byte_waiting()
 {
+	using namespace bit::literals;
+
 	const auto byte = IO_ReadB(0x64);
 	return bit::is(byte, b0) && bit::is(byte, b5);
 }

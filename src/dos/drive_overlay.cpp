@@ -38,7 +38,6 @@
 
 #define OVERLAY_DIR 1
 bool logoverlay = false;
-using namespace std;
 
 #if defined (WIN32)
 #define CROSS_DOSFILENAME(blah)
@@ -715,11 +714,14 @@ void Overlay_Drive::update_cache(bool read_directory_contents) {
 				    strncmp(dir_name,
 				            special_prefix.c_str(),
 				            prefix_lengh) == 0) {
-					specials.emplace_back(string(dirpush) + dir_name);
+					specials.emplace_back(
+					        std::string(dirpush) + dir_name);
 				} else if (is_directory) {
-					dirnames.emplace_back(string(dirpush) + dir_name);
+					dirnames.emplace_back(
+					        std::string(dirpush) + dir_name);
 				} else {
-					filenames.emplace_back(string(dirpush) + dir_name);
+					filenames.emplace_back(
+					        std::string(dirpush) + dir_name);
 				}
 			};
 			// Read complete directory

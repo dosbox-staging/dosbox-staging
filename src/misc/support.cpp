@@ -525,13 +525,14 @@ bool is_readonly(const std_fs::path &p)
 
 bool make_writable(const std_fs::path &p)
 {
+	using namespace std_fs;
+
 	// Check
 	if (is_writable(p))
 		return true;
 
 	// Apply
 	std::error_code ec;
-	using namespace std_fs;
 	permissions(p, perms::owner_write, perm_options::add, ec);
 
 	// Result and verification
@@ -546,12 +547,13 @@ bool make_writable(const std_fs::path &p)
 
 bool make_readonly(const std_fs::path &p)
 {
+	using namespace std_fs;
+
 	// Check
 	if (is_readonly(p))
 		return true;
 
 	// Apply
-	using namespace std_fs;
 	constexpr auto write_perms = (perms::owner_write |
 	                              perms::group_write |
 	                              perms::others_write);
