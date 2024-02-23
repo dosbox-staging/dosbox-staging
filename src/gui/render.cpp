@@ -585,8 +585,8 @@ static void setup_scan_and_pixel_doubling()
 	default: assertm(false, "Invalid RenderindBackend value");
 	}
 
-	VGA_EnableVgaDoubleScanning(!force_vga_single_scan);
-	VGA_EnablePixelDoubling(!force_no_pixel_doubling);
+	VGA_AllowVgaScanDoubling(!force_vga_single_scan);
+	VGA_AllowPixelDoubling(!force_no_pixel_doubling);
 }
 
 bool RENDER_MaybeAutoSwitchShader([[maybe_unused]] const DosBox::Rect canvas_size_px,

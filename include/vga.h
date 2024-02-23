@@ -291,8 +291,35 @@ struct VgaDraw {
 	double custom_refresh_hz  = RefreshRateDosDefault;
 	VgaRateMode dos_rate_mode = VgaRateMode::Default;
 
-	bool double_scanning_enabled = false;
-	bool pixel_doubling_enabled  = false;
+	// If true, double-scanned VGA modes are allowed to be drawn as
+	// double-scanned. For example, the 13h 320x200 mode is drawn as 640x400
+	// (assuming pixel doubling is also allowed).
+	//
+	// If false, double-scanned VGA modes are forced to be drawn as
+	// single-scanned. In other words, video modes are drawn at their "nominal
+	// height". E.g., the 13h 320x200 mode is drawn as 640x200 (assuming pixel
+	// doubling is allowed). The exception to this are the special custom
+	// VGA modes used in some demos that use odd number of scanline repeats
+	// (e.g., 3 or 5); these are always drawn as scan-tripled, quintupled,
+	// etc. even if this flag is false.
+	//
+	// Single scanning is forced by the arcade shaders to achieve the
+	// single-scanned 15 kHz CRT look for double-scanned VGA modes, or by
+	// shaders that treat pixels as flat adjacent rectangles (e.g., the
+	// "sharp" shader and the "no-bilinear" output modes; the double-scanned
+	// and force single-scanned output is exactly identical in these cases,
+	// but single scanning is more performant which matter on low-powered
+	// devices).
+	bool scan_doubling_allowed   = false;
+
+	// If true, less than 640-pixel wide modes are allowed to be draw
+	// pixel-doubled. Used in conjunction with bilinear interpolation or shaders,
+	// this emulates the low dot pitch of PC monitors. For example, 320x200 is
+	// drawn as 640x400 (assuming scan doubling is also enabled).
+	//
+	// If false, no pixel doubling is performed; the content is always drawn
+	// at the "nomimal width" of the video mode.
+	bool pixel_doubling_allowed  = false;
 
 	uint8_t font[64 * 1024] = {};
 	uint8_t* font_tables[2] = {nullptr, nullptr};
@@ -1141,8 +1168,8 @@ void VGA_LogInitialization(const char* adapter_name, const char* ram_type,
                            const size_t num_modes);
 
 void VGA_ForceSquarePixels(const bool enabled);
-void VGA_EnableVgaDoubleScanning(const bool enabled);
-void VGA_EnablePixelDoubling(const bool enabled);
+void VGA_AllowVgaScanDoubling(const bool allow);
+void VGA_AllowPixelDoubling(const bool allow);
 
 extern VgaType vga;
 
