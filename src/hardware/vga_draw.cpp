@@ -2103,7 +2103,7 @@ ImageInfo setup_drawing()
 		default: assert(false);
 		}
 
-		double_width = is_pixel_doubling && vga.draw.pixel_doubling_enabled;
+		double_width = is_pixel_doubling && vga.draw.pixel_doubling_allowed;
 
 		// No need to actually render double-scanned for VGA modes other
 		// than 13h (and its tweak-mode variants; we'll just fake it with
@@ -2115,8 +2115,8 @@ ImageInfo setup_drawing()
 			vga.draw.address_line_total /= 2;
 
 			video_mode.height  = vert_end / 2;
-			double_height      = vga.draw.double_scanning_enabled;
-			forced_single_scan = !vga.draw.double_scanning_enabled;
+			double_height      = vga.draw.scan_doubling_allowed;
+			forced_single_scan = !vga.draw.scan_doubling_allowed;
 		} else {
 			video_mode.height = vert_end;
 		}
@@ -2183,7 +2183,7 @@ ImageInfo setup_drawing()
 			// scan mode to yield correct results.
 			const auto is_odd_address_line_total = vga.draw.address_line_total & 1;
 
-			if (vga.draw.double_scanning_enabled || is_odd_address_line_total) {
+			if (vga.draw.scan_doubling_allowed || is_odd_address_line_total) {
 				vga.draw.is_double_scanning = true;
 				render_height        = video_mode.height * 2;
 				rendered_double_scan = true;
@@ -2209,7 +2209,7 @@ ImageInfo setup_drawing()
 		// More information here:
 		// https://github.com/joncampbell123/dosbox-x/issues/951
 		//
-		if (vga.draw.pixel_doubling_enabled) {
+		if (vga.draw.pixel_doubling_allowed) {
 			double_width = true;
 		} else {
 			render_pixel_aspect_ratio *= 2;
@@ -2265,7 +2265,7 @@ ImageInfo setup_drawing()
 		render_width     = video_mode.width;
 
 		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
-		               vga.draw.pixel_doubling_enabled;
+		               vga.draw.pixel_doubling_allowed;
 
 		if (IS_VGA_ARCH) {
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
@@ -2279,9 +2279,9 @@ ImageInfo setup_drawing()
 			if (is_vga_scan_doubling()) {
 				video_mode.is_double_scanned_mode = true;
 				video_mode.height = vert_end / 2;
-				forced_single_scan = !vga.draw.double_scanning_enabled;
+				forced_single_scan = !vga.draw.scan_doubling_allowed;
 
-				if (vga.draw.double_scanning_enabled) {
+				if (vga.draw.scan_doubling_allowed) {
 					vga.draw.is_double_scanning = true;
 					render_height = video_mode.height * 2;
 					rendered_double_scan = true;
@@ -2296,7 +2296,7 @@ ImageInfo setup_drawing()
 			}
 
 			if (vga.seq.clocking_mode.is_pixel_doubling &&
-			    !vga.draw.pixel_doubling_enabled) {
+			    !vga.draw.pixel_doubling_allowed) {
 				render_pixel_aspect_ratio *= 2;
 			}
 
@@ -2334,14 +2334,14 @@ ImageInfo setup_drawing()
 				video_mode.width = horiz_end * 8;
 				render_width     = video_mode.width;
 			} else {
-				double_width = vga.draw.pixel_doubling_enabled;
+				double_width = vga.draw.pixel_doubling_allowed;
 				video_mode.width = horiz_end * 4;
 				render_width     = video_mode.width;
 			}
 			VGA_DrawLine = VGA_Draw_4BPP_Line;
 
 		} else { // low-bandwidth
-			double_width     = vga.draw.pixel_doubling_enabled;
+			double_width     = vga.draw.pixel_doubling_allowed;
 			video_mode.width = horiz_end * 4;
 			render_width     = video_mode.width * 2;
 			rendered_pixel_doubling = true;
@@ -2385,7 +2385,7 @@ ImageInfo setup_drawing()
 		*/
 
 		double_width = (video_mode.width < 640) &&
-		               vga.draw.pixel_doubling_enabled;
+		               vga.draw.pixel_doubling_allowed;
 
 		render_width  = video_mode.width;
 		render_height = video_mode.height;
@@ -2423,7 +2423,7 @@ ImageInfo setup_drawing()
 			video_mode.width = vga.draw.blocks * 2;
 
 			double_width = !vga.tandy.mode_control.is_pcjr_640x200_2_color_graphics &&
-			               vga.draw.pixel_doubling_enabled;
+			               vga.draw.pixel_doubling_allowed;
 
 		} else { // Tandy
 			vga.draw.blocks = horiz_end * (vga.tandy.mode.is_tandy_640_dot_graphics
@@ -2432,7 +2432,7 @@ ImageInfo setup_drawing()
 			video_mode.width = vga.draw.blocks * 8;
 
 			double_width = !vga.tandy.mode.is_tandy_640_dot_graphics &&
-			               vga.draw.pixel_doubling_enabled;
+			               vga.draw.pixel_doubling_allowed;
 		}
 
 		video_mode.height = vert_end;
@@ -2471,7 +2471,7 @@ ImageInfo setup_drawing()
 		render_width     = video_mode.width;
 
 		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
-		               vga.draw.pixel_doubling_enabled;
+		               vga.draw.pixel_doubling_allowed;
 
 		if (IS_VGA_ARCH) {
 			video_mode.is_double_scanned_mode = true;
@@ -2479,7 +2479,7 @@ ImageInfo setup_drawing()
 			video_mode.height = vert_end / 2;
 			render_height     = video_mode.height;
 
-			double_height = vga.draw.double_scanning_enabled;
+			double_height = vga.draw.scan_doubling_allowed;
 
 			// We never render true double-scanned CGA modes; we
 			// always fake it even if double scanning is requested
@@ -2488,11 +2488,11 @@ ImageInfo setup_drawing()
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
 			        vga_timings);
 
-			if (!vga.draw.double_scanning_enabled) {
+			if (!vga.draw.scan_doubling_allowed) {
 				render_pixel_aspect_ratio /= 2;
 			}
 			if (vga.seq.clocking_mode.is_pixel_doubling &&
-			    !vga.draw.pixel_doubling_enabled) {
+			    !vga.draw.pixel_doubling_allowed) {
 				render_pixel_aspect_ratio *= 2;
 			}
 
@@ -2523,7 +2523,7 @@ ImageInfo setup_drawing()
 		video_mode.width  = horiz_end * 8;
 		video_mode.height = vert_end;
 
-		double_width = vga.draw.pixel_doubling_enabled;
+		double_width = vga.draw.pixel_doubling_allowed;
 
 		// Composite emulation is rendered at 2x the horizontal resolution
 		render_width  = video_mode.width * 2;
@@ -2645,7 +2645,7 @@ ImageInfo setup_drawing()
 		render_height = video_mode.height;
 
 		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
-		               vga.draw.pixel_doubling_enabled;
+		               vga.draw.pixel_doubling_allowed;
 
 		if (IS_VGA_ARCH) {
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
@@ -2676,7 +2676,7 @@ ImageInfo setup_drawing()
 		render_height = video_mode.height;
 
 		double_width = !vga.tandy.mode.is_high_bandwidth &&
-		               vga.draw.pixel_doubling_enabled;
+		               vga.draw.pixel_doubling_allowed;
 
 		render_pixel_aspect_ratio = calc_pixel_aspect_from_dimensions(
 		        render_width, render_height, double_width, double_height);
