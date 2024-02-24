@@ -90,7 +90,9 @@ static void write_crtc_data_other(io_port_t, io_val_t value, io_width_t)
 		vga.other.vadjust = val;
 		break;
 	case 0x06:		//Vertical rows
-		if (vga.other.vdend ^ val) VGA_StartResize();
+		// Impossible Mission II sets this to zero briefly
+		// This leads to a divide by zero crash if VGA resize code is run
+		if ((val > 0) && (vga.other.vdend ^ val)) VGA_StartResize();
 		vga.other.vdend = val;
 		break;
 	case 0x07:		//Vertical sync position
