@@ -2155,8 +2155,10 @@ ImageInfo setup_drawing()
 		video_mode.graphics_standard = GraphicsStandard::Vga;
 		video_mode.color_depth       = ColorDepth::IndexedColor256;
 
-		video_mode.is_double_scanned_mode =
-		        (vga.crtc.maximum_scan_line.maximum_scan_line > 0);
+		const bool num_scanline_repeats = vga.crtc.maximum_scan_line.maximum_scan_line;
+
+		video_mode.is_double_scanned_mode = (num_scanline_repeats > 0 ||
+		                                     is_scan_doubling_bit_set());
 
 		render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(vga_timings);
 
@@ -2275,8 +2277,15 @@ ImageInfo setup_drawing()
 			// on emulated VGA adapters only; for everything else, we "fake
 			// double-scan" on VGA (render single-scanned, then double the
 			// image vertically with a scaler).
-			if (is_scan_doubling_bit_set()) {
-				video_mode.is_double_scanned_mode = true;
+			//
+			const bool num_scanline_repeats =
+			        vga.crtc.maximum_scan_line.maximum_scan_line;
+
+			video_mode.is_double_scanned_mode =
+			        (num_scanline_repeats > 0 ||
+			         is_scan_doubling_bit_set());
+
+			if (video_mode.is_double_scanned_mode) {
 				video_mode.height = vert_end / 2;
 				forced_single_scan = !vga.draw.scan_doubling_allowed;
 
