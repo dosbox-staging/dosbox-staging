@@ -1819,7 +1819,7 @@ static UpdatedTimings update_vga_timings(const VgaTimings& timings)
 	return {horiz_display_end, vert_display_end, vblank_skip};
 }
 
-static bool is_vga_scan_doubling()
+static bool is_scan_doubling_bit_set()
 {
 	// Scan doubling on VGA is generally achieved in one of two ways,
 	// depending on the video mode:
@@ -1919,7 +1919,8 @@ ImageInfo setup_drawing()
 
 	const auto vga_timings = calculate_vga_timings();
 
-	if (is_vga_scan_doubling() && !(vga.mode == M_CGA2 || vga.mode == M_CGA4)) {
+	if (is_scan_doubling_bit_set() &&
+	    !(vga.mode == M_CGA2 || vga.mode == M_CGA4)) {
 		vga.draw.address_line_total *= 2;
 	}
 
@@ -2108,7 +2109,7 @@ ImageInfo setup_drawing()
 		// No need to actually render double-scanned for VGA modes other
 		// than 13h (and its tweak-mode variants; we'll just fake it with
 		// `double_height`.
-		if (is_vga_scan_doubling()) {
+		if (is_scan_doubling_bit_set()) {
 			video_mode.is_double_scanned_mode = true;
 
 			vga.draw.is_double_scanning = true;
@@ -2154,10 +2155,8 @@ ImageInfo setup_drawing()
 		video_mode.graphics_standard = GraphicsStandard::Vga;
 		video_mode.color_depth       = ColorDepth::IndexedColor256;
 
-		const auto is_double_scanning =
+		video_mode.is_double_scanned_mode =
 		        (vga.crtc.maximum_scan_line.maximum_scan_line > 0);
-
-		video_mode.is_double_scanned_mode = is_double_scanning;
 
 		render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(vga_timings);
 
@@ -2170,7 +2169,7 @@ ImageInfo setup_drawing()
 		// "fake double-scan" on VGA (render single-scanned, then double
 		// the image vertically with a scaler).
 		//
-		if (is_double_scanning) {
+		if (video_mode.is_double_scanned_mode) {
 			video_mode.height  = vert_end / 2;
 
 			// Some rare demos set up odd Maximum Scan Line CRTC register
@@ -2276,7 +2275,7 @@ ImageInfo setup_drawing()
 			// on emulated VGA adapters only; for everything else, we "fake
 			// double-scan" on VGA (render single-scanned, then double the
 			// image vertically with a scaler).
-			if (is_vga_scan_doubling()) {
+			if (is_scan_doubling_bit_set()) {
 				video_mode.is_double_scanned_mode = true;
 				video_mode.height = vert_end / 2;
 				forced_single_scan = !vga.draw.scan_doubling_allowed;
