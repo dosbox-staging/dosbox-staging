@@ -25,6 +25,7 @@
 #include <array>
 #include <cmath>
 #include <cstring>
+#include <optional>
 #include <utility>
 
 #include "../gui/render_scalers.h"
@@ -1857,6 +1858,8 @@ static Fraction calc_pixel_aspect_from_dimensions(const uint16_t width,
                                                   const bool double_width,
                                                   const bool double_height)
 {
+	assert(height > 0);
+
 	const auto storage_aspect_ratio =
 	        Fraction(static_cast<int64_t>(width) * (double_width ? 2 : 1),
 	                 static_cast<int64_t>(height) * (double_height ? 2 : 1));
@@ -1888,7 +1891,7 @@ constexpr auto pixel_aspect_1280x1024 = Fraction(4, 3) / Fraction(1280, 1024);
 //   vga.draw.vblank_skip
 //   vga.draw.vret_triggered
 //
-ImageInfo setup_drawing()
+std::optional<ImageInfo> setup_drawing()
 {
 	// Set the drawing mode
 	switch (machine) {
@@ -1965,6 +1968,15 @@ ImageInfo setup_drawing()
 
 	const auto horiz_end = updated_timings.horiz_display_end;
 	const auto vert_end  = updated_timings.vert_display_end;
+
+	// Some games set up weird custom modes temporarily that result in a
+	// zero-height video mode (e.g., Impossible Mission II on Tandy). These
+	// are probably some tricks that work on hardware, but in software we need
+	// to guard against divide-by-zero exceptions downstream when calculating
+	// the aspect ratios.
+	if (vert_end == 0) {
+		return {};
+	}
 
 	// Determine video mode info, render dimensions, and source & render
 	// pixel aspect ratios
@@ -2876,7 +2888,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		return;
 	}
 
-	auto image_info = setup_drawing();
+	const auto maybe_image_info = setup_drawing();
+	if (!maybe_image_info) {
+		return;
+	}
+	auto image_info = *maybe_image_info;
 
 	// need to change the vertical timing?
 	bool fps_changed = false;
@@ -2911,7 +2927,9 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		                                     reinit_render);
 
 		if (shader_changed) {
-			image_info = setup_drawing();
+			const auto img = setup_drawing();
+			assert(img);
+			image_info = *img;
 		}
 
 		vga.draw.image_info = image_info;
