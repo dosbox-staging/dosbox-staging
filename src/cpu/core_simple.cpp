@@ -18,10 +18,8 @@
  */
 #include "dosbox.h"
 
-#if C_MMX
 // Needed for std::isnan in simde
 #include <cmath>
-#endif
 
 #include "callback.h"
 #include "cpu.h"
@@ -34,9 +32,7 @@
 #include "pic.h"
 #include "tracy.h"
 
-#if C_MMX
 #include "simde/x86/mmx.h"
-#endif
 
 #if C_DEBUG
 #include "debug.h"

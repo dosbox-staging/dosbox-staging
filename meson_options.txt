@@ -40,13 +40,6 @@ option(
     description: 'Enable profiling using Tracy',
 )
 
-option(
-    'emulate_mmx',
-    type: 'boolean',
-    value: true,
-    description: 'Enable Pentium MMX CPU emulation',
-)
-
 # This option exists only for rare situations when Linux developer cannot
 # install ALSA library headers on their machine.
 #

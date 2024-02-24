@@ -2057,13 +2057,11 @@ bool CPU_CPUID(void) {
 #endif
 			reg_ebx = 0;     // Not supported
 			reg_ecx = 0;     // No features
-#if C_MMX
 		} else if (CPU_ArchitectureType == ArchitectureType::PentiumMmx) {
 			reg_eax = 0x543;      // Intel Pentium MMX
 			reg_ebx = 0;          // Not supported
 			reg_ecx = 0;          // No features
 			reg_edx = 0x00800011; // FPU + Time Stamp Counter (RDTSC) + MMX
-#endif
 		} else {
 			return false;
 		}
@@ -2381,7 +2379,7 @@ public:
 		std::string cputype(section->Get_string("cputype"));
 		if (cputype == "auto") {
 			CPU_ArchitectureType = ArchitectureType::Mixed;
-		} else if (cputype == "386") {
+		} else if (cputype == "386_fast") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
 		} else if (cputype == "386_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Fast;
@@ -2395,9 +2393,9 @@ public:
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
-		} else if (cputype == "386_slow") {
+		} else if (cputype == "386") {
 			CPU_ArchitectureType = ArchitectureType::Intel386Slow;
-		} else if (cputype == "486_slow") {
+		} else if (cputype == "486") {
 			CPU_ArchitectureType = ArchitectureType::Intel486OldSlow;
 		} else if (cputype == "486_prefetch") {
 			CPU_ArchitectureType = ArchitectureType::Intel486NewSlow;
@@ -2411,7 +2409,7 @@ public:
 			} else {
 				E_Exit("prefetch queue emulation requires the normal core setting.");
 			}
-		} else if (cputype == "pentium_slow") {
+		} else if (cputype == "pentium") {
 			CPU_ArchitectureType = ArchitectureType::Pentium;
 		} else if (cputype == "pentium_mmx") {
 			CPU_ArchitectureType = ArchitectureType::PentiumMmx;
