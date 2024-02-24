@@ -622,8 +622,6 @@
 		if (CPU_ArchitectureType<ArchitectureType::Intel486OldSlow) goto illegal_opcode;
 		BSWAPW(reg_di);break;
 
-#if C_MMX
 #define CASE_0F_MMX(x) CASE_0F_W(x)
 #include "prefix_0f_mmx.h"
 #undef CASE_0F_MMX
-#endif	

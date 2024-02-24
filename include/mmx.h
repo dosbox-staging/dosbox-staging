@@ -20,8 +20,6 @@
 #ifndef DOSBOX_MMX_H
 #define DOSBOX_MMX_H
 
-#if C_MMX
-
 typedef union {
 	uint64_t q;
 
@@ -81,7 +79,5 @@ extern MMX_reg* reg_mmx[8];
 extern MMX_reg* lookupRMregMM[256];
 
 void setFPUTagEmpty();
-
-#endif
 
 #endif

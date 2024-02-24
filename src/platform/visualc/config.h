@@ -80,9 +80,6 @@
 /* Define to 1 to use x86 assembly fpu core. Requires Clang toolchain for x64 */
 #define C_FPU_X86 1
 
-// Define to 1 to enable MMX emulation
-#define C_MMX 1
-
 /* Define to 1 to use a unaligned memory access */
 #define C_UNALIGNED_MEMORY 1
 

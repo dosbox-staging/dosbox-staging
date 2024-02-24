@@ -93,9 +93,7 @@ struct FPU_rec {
 	bool use_regs_memcpy[9] = {};
 #endif
 	FPU_P_Reg p_regs[9]     = {};
-#if C_MMX
 	MMX_reg mmx_regs[8]     = {};
-#endif
 	FPU_Tag tags[9]         = {};
 	uint16_t cw             = 0;
 	uint16_t cw_mask_all    = 0;

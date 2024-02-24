@@ -672,15 +672,18 @@ void DOSBOX_Init()
 	pstring->Set_help("CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic\n"
 	                  "if available and appropriate.");
 
-	const char* cputype_values[] = { "auto", "386", "386_slow", "486_slow", "pentium_slow",
-#if C_MMX
-	                                  "pentium_mmx",
-#endif
-	                                  "386_prefetch", nullptr};
+	const char* cputype_values[] = { "auto", "386", "386_fast", "386_prefetch",
+	                                 "486", "pentium", "pentium_mmx",
+	                                 nullptr };
 	pstring = secprop->Add_string("cputype", always, "auto");
 	pstring->Set_values(cputype_values);
 	pstring->Set_help(
-	        "CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.");
+	        "CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.\n"
+	        "Prefetch variant emulates the prefetch queue and requires the 'normal' core.");
+	pstring->SetDeprecatedWithAlternateValue("386_slow", "386");
+	pstring->SetDeprecatedWithAlternateValue("486_slow", "486");
+	pstring->SetDeprecatedWithAlternateValue("486_prefetch", "486");
+	pstring->SetDeprecatedWithAlternateValue("pentium_slow", "pentium");
 
 	pmulti_remain = secprop->AddMultiValRemain("cycles", always, " ");
 	pmulti_remain->Set_help(

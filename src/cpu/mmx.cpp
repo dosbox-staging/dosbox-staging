@@ -24,12 +24,6 @@
 #include "mem.h"
 #include "mmx.h"
 
-#if C_MMX
-
-#ifndef C_FPU
-#error "MMX emulation requires FPU!"
-#endif
-
 MMX_reg* reg_mmx[8] = {
         &fpu.mmx_regs[0],
         &fpu.mmx_regs[1],
@@ -126,5 +120,3 @@ void setFPUTagEmpty()
 	fpu.tags[7] = TAG_Empty;
 	fpu.tags[8] = TAG_Valid; // is only used by us
 }
-
-#endif

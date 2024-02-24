@@ -22,10 +22,7 @@
 #include "inout.h"
 
 #define X86_INLINED_MEMACCESS
-
-#if C_MMX
 #define X86_DYNREC_MMX_ENABLED
-#endif
 
 enum REP_Type {
 	REP_NONE=0,REP_NZ,REP_Z
