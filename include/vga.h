@@ -1167,7 +1167,6 @@ void VGA_SetOverride(const bool vga_override, const double override_refresh_hz =
 void VGA_LogInitialization(const char* adapter_name, const char* ram_type,
                            const size_t num_modes);
 
-void VGA_ForceSquarePixels(const bool enabled);
 void VGA_AllowVgaScanDoubling(const bool allow);
 void VGA_AllowPixelDoubling(const bool allow);
 
