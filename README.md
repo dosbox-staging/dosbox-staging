@@ -21,6 +21,15 @@ support today's systems.
 
 [![Coverity status][coverity-badge]][3]
 
+## Stable release builds
+
+[Linux](https://dosbox-staging.github.io/releases/linux/),
+[Windows](https://dosbox-staging.github.io/releases/windows/),
+[macOS](https://dosbox-staging.github.io/releases/macos/)
+
+## Test builds & development snapshots
+
+[Development builds].
 
 ## Key features for developers
 
@@ -47,17 +56,14 @@ support today's systems.
 [6]: https://github.com/dosbox-staging/dosbox-staging/tree/main/tests
 [Development builds]: https://dosbox-staging.github.io/releases/development-builds/
 
+## Source code analysis tools
 
-## Stable release builds
-
-[Linux](https://dosbox-staging.github.io/releases/linux/),
-[Windows](https://dosbox-staging.github.io/releases/windows/),
-[macOS](https://dosbox-staging.github.io/releases/macos/)
-
-## Test builds & development snapshots
-
-[Development builds].
-
+- [PVS-Studio](https://pvs-studio.com/pvs-studio/?utm_source=website&utm_medium=github&utm_campaign=open_source) — C++ static analyser
+- [Coverity](https://scan.coverity.com/) — C++ static analyser
+- [Clang Static Analyzer](https://clang-analyzer.llvm.org/) — C++ static analyser
+- [Pylint](https://pypi.org/project/pylint/) — Python static analyser
+- [markdownlint](https://github.com/DavidAnson/markdownlint) — style checker and linter for Markdown
+- [ShellCheck](https://www.shellcheck.net/) — shell script analysis tool
 
 ## Dependencies
 
