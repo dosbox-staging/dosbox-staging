@@ -83,8 +83,7 @@ jobs:
             -e subprojects \
             -s .pvs-suppress \
             -j "$(nproc)" \
-            -o "${log}" \
-            --disableLicenseExpirationCheck
+            -o "${log}"
 
           plog-converter \
             -p dosbox-staging \
@@ -98,7 +97,6 @@ jobs:
           pvs-studio-analyzer suppress \
             -a "${general_criteria}" \
             -o "${reportdir}/supressible-list.json" \
-            --disableLicenseExpirationCheck \
             "${log}"
 
           ln -sf "${reportdir}/pvs-report.csv" .
