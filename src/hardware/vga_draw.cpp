@@ -2051,6 +2051,12 @@ ImageInfo setup_drawing()
 		return pcjr_or_tga();
 	};
 
+	// All Tandy modes have a height of 200.
+	// Some games (ex. Impossible Mission II) fiddle with vga.other.vdend
+	// The result of this should be rendering a short (by height) image in the horizonal center with black on the top/bottom.
+	// Use this hard-coded value when calculating pixel aspect ratio so this effect looks correct.
+	constexpr uint16_t CgaTandyAspectHeight = 200;
+
 	switch (vga.mode) {
 	case M_LIN4:
 	case M_LIN8:
@@ -2361,7 +2367,7 @@ ImageInfo setup_drawing()
 		render_height     = video_mode.height;
 
 		render_pixel_aspect_ratio = calc_pixel_aspect_from_dimensions(
-		        render_width, render_height, double_width, double_height);
+		        render_width, CgaTandyAspectHeight, double_width, double_height);
 		break;
 
 	case M_TANDY4:
@@ -2399,7 +2405,7 @@ ImageInfo setup_drawing()
 		render_height = video_mode.height;
 
 		render_pixel_aspect_ratio = calc_pixel_aspect_from_dimensions(
-		        render_width, render_height, double_width, double_height);
+		        render_width, CgaTandyAspectHeight, double_width, double_height);
 
 		// TODO this seems like overkill; could be probably simplified a
 		// lot
@@ -2449,7 +2455,7 @@ ImageInfo setup_drawing()
 		render_height = video_mode.height;
 
 		render_pixel_aspect_ratio = calc_pixel_aspect_from_dimensions(
-		        render_width, render_height, double_width, double_height);
+		        render_width, CgaTandyAspectHeight, double_width, double_height);
 
 		VGA_DrawLine = VGA_Draw_1BPP_Line;
 		break;
@@ -2560,7 +2566,7 @@ ImageInfo setup_drawing()
 		render_height = video_mode.height;
 
 		render_pixel_aspect_ratio = calc_pixel_aspect_from_dimensions(
-		        render_width, render_height, double_width, double_height);
+		        render_width, CgaTandyAspectHeight, double_width, double_height);
 
 		VGA_DrawLine = VGA_Draw_CGA4_Composite_Line;
 		break;
@@ -2581,7 +2587,7 @@ ImageInfo setup_drawing()
 		render_height = video_mode.height;
 
 		render_pixel_aspect_ratio = calc_pixel_aspect_from_dimensions(
-		        render_width, render_height, double_width, double_height);
+		        render_width, CgaTandyAspectHeight, double_width, double_height);
 
 		VGA_DrawLine = VGA_Draw_CGA2_Composite_Line;
 		break;
