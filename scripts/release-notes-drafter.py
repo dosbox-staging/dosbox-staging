@@ -109,6 +109,11 @@ publish
 
     query_args = parser.add_argument_group(title="query arguments")
     query_args.add_argument(
+        "-s",
+        "--start_time",
+        help="include pull requests after this datetime"
+    )
+    query_args.add_argument(
         "-p",
         "--pull_requests_csv",
         help="output CSV file containing the pull requests"
@@ -426,12 +431,12 @@ def process_pull_requests_markdown(items, markdown_fname):
         f.write(markdown)
 
 
-def query_pull_requests(csv_fname):
-    latest_release = get_latest_public_release()
+def query_pull_requests(csv_fname, start_time):
+#    latest_release = get_latest_public_release()
 
-    latest_release_name = latest_release["name"]
-    start_time = latest_release["publishedAt"]
-    print(f"Latest release name: {latest_release_name}, published at: {start_time}")
+#    latest_release_name = latest_release["name"]
+#    start_time = latest_release["publishedAt"]
+#    print(f"Latest release name: {latest_release_name}, published at: {start_time}")
 
     items = fetch_all_pull_requests_since(start_time)
     write_csv(items, csv_fname)
@@ -510,9 +515,13 @@ def main():
 
     match args.ACTION:
         case "query":
+            if not args.start_time:
+                parser.error("start time must be specified with -s")
+
             if not args.pull_requests_csv:
                 parser.error("output CSV file must be specified with -p")
-            query_pull_requests(args.pull_requests_csv)
+
+            query_pull_requests(args.pull_requests_csv, args.start_time)
 
         case "process":
             if not args.input_csv:
