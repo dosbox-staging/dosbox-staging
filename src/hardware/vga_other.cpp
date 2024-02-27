@@ -92,8 +92,11 @@ static void write_crtc_data_other(io_port_t, io_val_t value, io_width_t)
 	case 0x06:		//Vertical rows
 		// Impossible Mission II sets this to zero briefly
 		// This leads to a divide by zero crash if VGA resize code is run
-		if ((val > 0) && (vga.other.vdend ^ val)) VGA_StartResize();
-		vga.other.vdend = val;
+		if (val > 0 && val != vga.other.vdend) {
+			vga.other.vdend = val;
+			// The default half-frame period delay leads to flickering in the level start zoom effect of Impossible Mission II on Tandy
+			VGA_StartResizeAfter(50);
+		}
 		break;
 	case 0x07:		//Vertical sync position
 		vga.other.vsyncp = val;
