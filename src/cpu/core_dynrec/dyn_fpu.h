@@ -101,7 +101,7 @@ static void dyn_eatree() {
 }
 
 static void dyn_fpu_esc0(){
-	dyn_get_modrm(); 
+	dyn_get_modrm();
 //	if (decode.modrm.val >= 0xc0) {
 	if (decode.modrm.mod == 3) { 
 		dyn_fpu_top();

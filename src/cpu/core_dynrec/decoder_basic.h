@@ -109,7 +109,7 @@ static struct DynDecode {
 
 	// modrm state of the current instruction (if used)
 	struct {
-//		Bitu val;
+		uint_fast8_t val;
 		uint_fast8_t mod;
 		uint_fast8_t rm;
 		uint_fast8_t reg;
@@ -336,13 +336,13 @@ static bool decode_fetchd_imm(Bitu & val) {
 }
 
 // modrm decoding helper
-static void inline dyn_get_modrm(void) {
-	const auto val=decode_fetchb();
-	decode.modrm.mod=(val >> 6) & 3;
-	decode.modrm.reg=(val >> 3) & 7;
-	decode.modrm.rm=(val & 7);
+static inline void dyn_get_modrm()
+{
+	decode.modrm.val = decode_fetchb();
+	decode.modrm.mod = (decode.modrm.val >> 6) & 3;
+	decode.modrm.reg = (decode.modrm.val >> 3) & 7;
+	decode.modrm.rm  = (decode.modrm.val & 7);
 }
-
 
 #ifdef DRC_USE_SEGS_ADDR
 
