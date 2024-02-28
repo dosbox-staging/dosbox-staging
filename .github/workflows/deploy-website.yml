@@ -14,7 +14,11 @@ on:
         type: string
 
 jobs:
+  linting:
+    uses: ./.github/workflows/linting.yml
+
   build_and_deploy_website:
+    needs: linting
     runs-on: ubuntu-latest
     steps:
       - name: Check out MkDocs sources
