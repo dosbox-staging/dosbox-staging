@@ -15,7 +15,7 @@ env:
 jobs:
   build_clang_static_analyser:
     name: Clang static analyzer
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: run_linters
     steps:
       - name: Checkout repository
@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get install clang-tools python3-bs4 $(cat packages/ubuntu-20.04-apt.txt)
+          sudo apt-get install clang-tools python3-bs4 $(cat packages/ubuntu-22.04-apt.txt)
           sudo pip3 install --upgrade meson ninja
 
       - name:  Prepare compiler cache
@@ -56,8 +56,8 @@ jobs:
           key: subprojects-${{ hashFiles('subprojects/*.wrap') }}-1
           enableCrossOsArchive: true
 
-      - if:   steps.cache-subprojects.outputs.cache-hit != 'true'
-        name: Generate subprojects cache
+      - name: Generate subprojects cache
+        if:   steps.cache-subprojects.outputs.cache-hit != 'true'
         run:  scripts/fetch-and-tar-subprojects.sh
 
       - name: Extract subprojects cache
