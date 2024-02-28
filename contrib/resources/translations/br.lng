@@ -1793,7 +1793,7 @@ Onde [color=white]COMANDO[reset] pode ser:
   -wl [color=white]NOME_ARQUIVO  [reset]escreve as strings de idioma atuais em [color=white]NOME_ARQUIVO [reset]na
                     pasta de trabalho atual
 
-  -r [color=light-cyan][PROPRIEDADE1=VALOR1 [PROP2=VAL2 ...]][reset]
+  -r [color=light-cyan][PROPRIEDADE1=VALOR1 [PROPRIEDADE2=VALOR2 ...]][reset]
                     reinicia o DOSBox com as propriedades de configuração
                     opcionalmente fornecidas
 
@@ -1935,7 +1935,7 @@ Unidade virtual interna
 unidade desconhecida
 .
 :WIKI_ADD_UTILITIES_ARTICLE
-https://github.com/dosbox-staging/dosbox-staging/wiki/Add-Utilities
+https://github.com/dosbox-staging/dosbox-staging/wiki/Adding-utilities
 .
 :WIKI_URL
 https://github.com/dosbox-staging/dosbox-staging/wiki
@@ -2100,7 +2100,7 @@ Rótulo
 Nome da imagem
 .
 :PROGRAM_MOUNT_STATUS_SLOT
-Slot de troca
+Trocar slot
 .
 :PROGRAM_MOUNT_STATUS_2
 %s montado como unidade %c
@@ -2148,7 +2148,8 @@ Deve especificar uma letra de unidade para montar a imagem.
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY2
-Deve especificar o número da unidade (0 ou 3) para montar a imagem (0,1=fda,fdb;2,3=hda,hdb).
+Deve especificar o número da unidade (0 ou 3) para montar a imagem
+(0,1=fda,fdb; 2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
@@ -2459,7 +2460,7 @@ Uso:
   [color=light-green]loadrom [color=light-cyan]ARQUIVODEIMAGEM[reset]
 
 Parâmetros:
-  [color=light-cyan]ARQUIVODEIMAGEM[reset]  imagem da BIOS de vídeo ou do BASIC da IBM
+  [color=light-cyan]ARQUIVODEIMAGEM[reset]  é uma imagem da BIOS de vídeo ou do BASIC da IBM
 
 Notas:
   Após carregar uma imagem ROM do BASIC da IBM na ROM emulada com o comando,
@@ -2636,22 +2637,28 @@ Nível de reverberação ausente após [color=white]r[reset] para o canal [color
 (deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_INVALID_GLOBAL_CROSSFEED_STRENGTH
-Intensidade global de cruzamento de canais inválida [color=white]%s[reset] (deve estar entre 0 e 100)
+Intensidade global de cruzamento de canais inválida [color=white]%s[reset]
+(deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_INVALID_GLOBAL_CHORUS_LEVEL
-Nível global de coro inválido [color=white]%s[reset] (deve estar entre 0 e 100)
+Nível global de coro inválido [color=white]%s[reset]
+(deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_INVALID_GLOBAL_REVERB_LEVEL
-Nível global de reverberação inválido [color=white]%s[reset] (deve estar entre 0 e 100)
+Nível global de reverberação inválido [color=white]%s[reset]
+(deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CROSSFEED_STRENGTH
-Intensidade global de cruzamento de canais ausente após [color=white]x[reset] (deve estar entre 0 e 100)
+Intensidade global de cruzamento de canais ausente após [color=white]x[reset]
+(deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_CHORUS_LEVEL
-Nível global de coro ausente após [color=white]c[reset] (deve estar entre 0 e 100)
+Nível global de coro ausente após [color=white]c[reset]
+(deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_GLOBAL_REVERB_LEVEL
-Nível global de reverberação ausente após [color=white]r[reset] (deve estar entre 0 e 100)
+Nível global de reverberação ausente após [color=white]r[reset]
+(deve estar entre 0 e 100)
 .
 :SHELL_CMD_MIXER_MISSING_CHANNEL_COMMAND
 Comando ausente para o canal [color=light-cyan]%s[reset]
@@ -2683,16 +2690,16 @@ Notas:
   - Este comando é apenas para visualizar arquivos de texto, não
     arquivos binários.
   - Os seguintes atalhos estão disponíveis:
-    [color=yellow]Espaço[reset]                para mostrar a próxima tela.
-    [color=yellow]Enter[reset]                 para mostrar a próxima linha.
-    [color=yellow]N[reset] ou [color=yellow]F[reset]                para pular para o próximo arquivo.
-    [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset]        para encerrar o comando.
-  - Além disso, o [color=yellow]Ctrl+C[reset]  pode ser usado para encerrar o comando que lê
+    [color=yellow]Espaço[reset]         para mostrar a próxima tela.
+    [color=yellow]Enter[reset]          para mostrar a próxima linha.
+    [color=yellow]N[reset] ou [color=yellow]F[reset]         para pular para o próximo arquivo.
+    [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] para encerrar o comando.
+  - Além disso, o [color=yellow]Ctrl+C[reset] pode ser usado para encerrar o comando que lê
     dados do teclado, como quando [color=light-green]more[reset] é executado sem argumentos.
   - Os seguintes atalhos extras estão disponíveis apenas no modo estendido:
-    [color=yellow]P[reset] [color=white]nnn[reset]                 para exibir as próximas [color=white]nnn[reset] linhas e solicitar novamente.
-    [color=yellow]S[reset] [color=white]nnn[reset]                 para pular as próximas [color=white]nnn[reset] linhas.
-    [color=yellow]=[reset]                     para exibir o número da linha atual.
+    [color=yellow]P[reset] [color=white]nnn[reset]          para exibir as próximas [color=white]nnn[reset] linhas e solicitar novamente.
+    [color=yellow]S[reset] [color=white]nnn[reset]          para pular as próximas [color=white]nnn[reset] linhas.
+    [color=yellow]=[reset]              para exibir o número da linha atual.
   - A opção /p desabilita alguns atalhos incompatíveis.
 
 Exemplos:
@@ -2966,16 +2973,16 @@ As taxas de amostragem para mouses em interfaces [color=light-cyan]COM[reset] s�
 As taxas de amostragem com valor mínimo definido são marcadas com '*'.
 .
 :PROGRAM_MOUSECTL_MAP_ADVICE
-Clique no botão [color=white]esquerdo[reset] do mouse para mapear o mouse físico para a interface.
-Clicar em qualquer outro botão cancela o mapeamento e atribui o ponteiro
-do sistema a todas as interfaces de mouse.
+Clique no botão [color=white]esquerdo[reset] do mouse para mapear o mouse físico
+para a interface. Clicar em qualquer outro botão cancela o mapeamento e
+atribui o ponteiro do sistema a todas as interfaces de mouse.
 .
 :PROGRAM_MOUSECTL_MAP_CANCEL
 (mapeamento cancelado)
 .
 :PROGRAM_MOUSECTL_MAP_HINT
-A integração contínua do mouse é sempre desativada enquanto o mapeamento está em vigor
-e os mouses mapeados sempre recebem eventos de entrada brutos.
+A integração contínua do mouse é sempre desativada enquanto o mapeamento está
+em vigor e os mouses mapeados sempre recebem eventos de entrada brutos.
 .
 :PROGRAM_RESCAN_HELP_LONG
 Verifica as mudanças nas unidades DOS montadas.
@@ -3457,7 +3464,8 @@ Redirecionamento duplicado: %s
 .
 :SHELL_CMD_FAILED_PIPE
 
-Falha ao criar/abrir um arquivo temporário para redirecionamento. Verifique a variável %%TEMP%%.
+Falha ao criar/abrir um arquivo temporário para redirecionamento.
+Verifique a variável %%TEMP%%.
 
 .
 :SHELL_CMD_DIR_VOLUME
@@ -3735,7 +3743,7 @@ Notas:
   - Você pode especificar um caminho onde a pasta será criada.
 
 Exemplos:
-  [color=light-green]md[reset] [color=light-cyan]novodir[reset]
+  [color=light-green]md[reset] [color=light-cyan]novapasta[reset]
   [color=light-green]md[reset] [color=light-cyan]c:\jogos\dir[reset]
 
 .
@@ -3979,10 +3987,10 @@ Inicia um programa em lote de dentro de outro programa em lote.
 .
 :SHELL_CMD_CALL_HELP_LONG
 Uso:
-  [color=light-green]call[reset] [color=white]LOTE[reset] [color=light-cyan][PARÂMETROS][reset]
+  [color=light-green]call[reset] [color=white]BATCH[reset] [color=light-cyan][PARÂMETROS][reset]
 
 Parâmetros:
-  [color=white]LOTE[reset]        programa em lote a ser iniciado
+  [color=white]BATCH[reset]        programa em lote a ser iniciado
   [color=light-cyan]PARÂMETROS[reset]  parâmetros opcionais para o programa em lote
 
 Notas:
@@ -3990,7 +3998,7 @@ Notas:
   a execução após o término do outro programa em lote.
 
 Exemplos:
-  [color=light-green]call[reset] [color=white]meulote.bat[reset]
+  [color=light-green]call[reset] [color=white]meubatch.bat[reset]
   [color=light-green]call[reset] [color=white]arquivo.bat[reset] [color=light-cyan]Olá mundo![reset]
 
 .
