@@ -112,7 +112,7 @@ function set_ci_status(workflow_file, os_name, description) {
 document.addEventListener("DOMContentLoaded", () => {
     set_ci_status("linux.yml", "linux", "Linux");
     set_ci_status("macos.yml", "macos", "macOS ¹");
-    set_ci_status("windows-msys2.yml", "windows", "Windows ²");
+    set_ci_status("windows-msvc.yml", "windows", "Windows ²");
 });
 
 </script>
@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 ¹ macOS builds include Intel, Apple silicon, and universal binaries.
 
-² Windows builds are 64-bit and include portable ZIP and installer variants.
+² Windows builds include 32 and 64-bit and portable ZIP variants.
 
 
 ## Installation notes
