@@ -52,7 +52,7 @@ jobs:
             -source "$source_url"
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.3
+        uses: microsoft/setup-msbuild@v2
         with:
             vs-prerelease: true
             msbuild-architecture: ${{ matrix.conf.arch }}
@@ -200,7 +200,7 @@ jobs:
             -p msvc \
             vs/${{ matrix.conf.vs-release-dirname }}/Release \
             "${{ steps.set_pkg_dir.outputs.pkg_dir }}"
-      
+
       - name:  Package the debugger
         if:    ${{ matrix.conf.debugger }}
         shell: bash
@@ -214,17 +214,19 @@ jobs:
 
       - name: Upload package
         if:   ${{ !matrix.conf.debugger }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
           path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
-      
+          overwrite: true
+
       - name: Upload debugger artifact
         if:   ${{ matrix.conf.debugger }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4.3.1
         with:
           name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
           path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
+          overwrite: true
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:
@@ -250,9 +252,11 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-      - uses: actions/upload-artifact@v3
+
+      - uses: actions/upload-artifact@v4.3.1
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API
           name: changelog-${{ env.VERSION }}.txt
           path: changelog-${{ env.VERSION }}.txt
+          overwrite: true
