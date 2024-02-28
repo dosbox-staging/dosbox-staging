@@ -12,7 +12,15 @@ on:
       - 'docs/**'
       - 'licenses/**'
       - 'website/**'
-      - 'scripts/**'
+
+  pull_request:
+    paths-ignore:
+      - '.clang-format'
+      - '.mdl-styles'
+      - '*.md'
+      - 'docs/**'
+      - 'licenses/**'
+      - 'website/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
