@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 ¹ macOS builds include Intel, Apple silicon, and universal binaries.
 
-² Windows builds include 32 and 64-bit and portable ZIP variants.
+² Windows builds include 32 and 64-bit portable ZIP variants.
 
 
 ## Installation notes
