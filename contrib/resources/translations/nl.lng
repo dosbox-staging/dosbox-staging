@@ -601,7 +601,7 @@ te overschrijven die gewoonlijk de OS-screensaver blokkeert terwijl de
 emulator actief is (standaard 'auto').
 .
 :CONFIG_LANGUAGE
-Selecteer een taal: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', of ru'
+Selecteer een taal: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', of 'ru'
 (standaard niet gezet; dit is standaard Engels).
 Opmerkingen:
   - Deze instelling overschrijft de 'LANG'-omgevingsvariabele, indien gezet.
@@ -915,6 +915,8 @@ beschikbaar en van toepassing, overschakelen naar `dynamic`.
 .
 :CONFIG_CPUTYPE
 CPU-type gebruikt in emulatie (standaard 'auto'). `auto` is de snelste keuze.
+De "prefetch" variant emuleert ook de "prefetch queue" en heeft de 'normal' core
+nodig.
 .
 :CONFIG_CYCLES
 Aantal instructies DOSBox probeert elke milliseconde te emuleren.
@@ -1323,6 +1325,14 @@ Fade de OPL-synthuitvoer uit nadat naar de laatste IO-poort is geschreven:
                 1000 3000 (Wacht 1 seconde voordat het uitfaden over een
                           periode van 3 seconden)
 .
+:CONFIG_OPL_REMOVE_DC_BIAS
+Verwijder de DC-bias van de OPL uitvoer. Dit mag alleen als laatste redmiddel
+worden gebruikt om ploppen en tikken op te lossen in games die PCM-audio
+afspelen met behulp van de OPL-synthesizer op een Sound Blaster- of
+AdLib-kaart, zoals in: Golden Eagle (1991), Wizardry 6 (1990) en
+Wizardry 7 (1992). Als u andere getroffen spellen vindt, open dan een Bug
+Report.
+.
 :CONFIG_OPLEMU
 Alleen 'nuked' OPL-emulatie wordt nog ondersteund.
 .
@@ -1652,7 +1662,9 @@ opdrachtregelargument. Indien ingesteld op 'auto', wordt de landcode gebruikt
 die overeenkomt met de geselecteerde toetsenbordindeling.
 .
 :CONFIG_KEYBOARDLAYOUT
-Taalcode van de toetsenbordindeling, of 'auto' (standaard 'auto').
+Taalcode van de toetsenbordindeling (standaard 'auto'), of bijvoorbeeld 'en' voor
+de US English indeling. Andere mogelijke waarden zijn dezelfde zoals die ook door
+FreeDOS geaccepteerd worden.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Schakel het uitbreiden van omgevingsvariabelen zoals %PATH% in de DOS-
@@ -1669,7 +1681,7 @@ tabs gescheiden indeling, gebruikt door SETVER.EXE als permanente opslag
 (standaard leeg).
 .
 :CONFIG_IPX
-Schakel IPX over UDP/IP-emulatie in (standaard aan).
+Schakel IPX over UDP/IP-emulatie in (standaard uit).
 .
 :CONFIG_NE2000
 Activeer emulatie van een Novell NE2000-netwerkkaart op een softwaregebaseerd
@@ -2390,22 +2402,27 @@ Geen of ongeldig codetabelbestand voor lay-out %s
 Laadt een programma in een specifiek geheugengebied en voert het uit.
 
 Gebruik:
-  [color=light-green]loadfix[reset] [color=light-cyan]SPEL[reset] [color=white][PARAMETERS][reset]
+  [color=light-green]loadfix[reset] [color=white][-SIZE][reset] [color=light-cyan]SPEL[reset] [color=white][PARAMETERS][reset]
   [color=light-green]loadfix[reset] [/d] (of [/f])[reset]
 
 Waar:
-  [color=light-cyan]SPEL[reset] is een spel of programma om te laden, optioneel met parameters.
+  [color=light-cyan]SPEL[reset]        is een spel of programma om te laden, optioneel met parameters.
+  [color=white]-SIZE[reset]       SIZE geeft het aantal kilobytes geheugen aan dat gealloceerd moet
+              worden.
+  /d (of /f)  Geeft eerder gealloceerd geheugen weer vrij.
 
 Opmerkingen:
   De meest voorkomende gevallen van gebruik van dit commando is het repareren
-  van DOS-spellen of programma's die ofwel de "[color=white]Packed File Corrupt[reset]" of "[color=white]Not
-  enough memory"[reset] foutmelding tonen (bijv. van sommige spellen uit de jaren 80,
-  zoals California Games II) wanneer ze worden uitgevoerd. Als u [color=light-green]loadfix[reset]
-  uitvoert zonder een argument, wijst u eenvoudigweg geheugen toe zodat uw spel
-  kan worden uitgevoerd; het geheugen vrijmaken kan met de optie /d of /f.
+  van DOS-spellen of programma's zoals California Games II en Wing Commander 2
+  die een foutmelding zoals "[color=white]Packed File Corrupt[reset]" of "[color=white]Not enough memory[reset]" tonen.
+  Als u [color=light-green]loadfix[reset] uitvoert zonder argument, wijst u eenvoudigweg geheugen toe
+  zodat uw spel kan worden uitgevoerd; het geheugen vrijmaken kan met de optie
+  /d of /f.
 
 Voorbeelden:
-  [color=light-green]loadfix[reset] [color=light-cyan]mygame[reset] [color=white]argumenten[reset]
+  [color=light-green]loadfix[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-32[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-128[reset]
   [color=light-green]loadfix[reset] /d
 
 .
