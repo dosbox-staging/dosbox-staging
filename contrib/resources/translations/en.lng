@@ -585,8 +585,8 @@ variable which usually blocks the OS screensaver while the emulator is
 running ('auto' by default).
 .
 :CONFIG_LANGUAGE
-Select a language to use: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', or 'ru'
-(unset by default; this defaults to English).
+Select a language to use: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl',
+or 'ru' (unset by default; this defaults to English).
 Notes:
   - This setting will override the 'LANG' environment variable, if set.
   - The bundled 'resources/translations' directory with the executable holds
@@ -880,6 +880,7 @@ if available and appropriate.
 .
 :CONFIG_CPUTYPE
 CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.
+Prefetch variant emulates the prefetch queue and requires the 'normal' core.
 .
 :CONFIG_CYCLES
 Number of instructions DOSBox tries to emulate per millisecond
@@ -1276,6 +1277,13 @@ Fade out the OPL synth output after the last IO port write:
                 300 200 (Wait 300ms before fading out over a 200ms period)
                 1000 3000 (Wait 1s before fading out over a 3s period)
 .
+:CONFIG_OPL_REMOVE_DC_BIAS
+Remove DC bias from the OPL output. This should only be used as a last resort
+to fix popping in games that play PCM audio using the OPL synthesiser on a
+Sound Blaster or AdLib card, such as in: Golden Eagle (1991), Wizardry 6
+(1990), and Wizardry 7 (1992). Please open an issue ticket if you find other
+affected games.
+.
 :CONFIG_OPLEMU
 Only 'nuked' OPL emulation is supported now.
 .
@@ -1602,7 +1610,8 @@ formats. The list of supported country codes can be displayed using
 corresponding to the selected keyboard layout will be used.
 .
 :CONFIG_KEYBOARDLAYOUT
-Language code of the keyboard layout, or 'auto' ('auto' by default).
+Keyboard layout code ('auto' by default), i.e. 'us' for US English layout.
+Other possible values are the same as accepted by FreeDOS.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Enable expanding environment variables such as %PATH% in the DOS command shell
@@ -1619,7 +1628,7 @@ tab-separated format, used by SETVER.EXE as a persistent storage
 (empty by default).
 .
 :CONFIG_IPX
-Enable IPX over UDP/IP emulation (enabled by default).
+Enable IPX over UDP/IP emulation (disabled by default).
 .
 :CONFIG_NE2000
 Enable emulation of a Novell NE2000 network card on a software-based
@@ -2342,22 +2351,26 @@ None or invalid codepage file for layout %s.
 Load a program in the specific memory region and then run it.
 
 Usage:
-  [color=light-green]loadfix[reset] [color=light-cyan]GAME[reset] [color=white][PARAMETERS][reset]
+  [color=light-green]loadfix[reset] [color=white][-SIZE][reset] [color=light-cyan]GAME[reset] [color=white][PARAMETERS][reset]
   [color=light-green]loadfix[reset] [/d] (or [/f])[reset]
 
 Parameters:
-  [color=light-cyan]GAME[reset]  game or program to load, optionally with parameters
+  [color=light-cyan]GAME[reset]        game or program to load, optionally with parameters
+  [color=white]-SIZE[reset]       SIZE indicates the number of kilobytes to be allocated
+  /d (or /f)  Frees the previously allocated memory.
 
 Notes:
-  - The most common use cases of this command are to fix DOS games or programs
-    which show either the "[color=white]Packed File Corrupt[reset]" or [color=white]"Not enough memory"[reset] (e.g.,
-    from some 1980's games such as California Games II) error message when run.
+  - The most common use case of this command is to fix games such as
+    California Games II and Wing Commander 2 that show [color=white]"Packed File Corrupt"[reset]
+    or [color=white]"Not enough memory"[reset] error messages.
   - Running [color=light-green]loadfix[reset] without an argument simply allocates memory for your game
     to run; you can free the memory with either /d or /f option when it
     finishes.
 
 Examples:
-  [color=light-green]loadfix[reset] [color=light-cyan]mygame[reset] [color=white]args[reset]
+  [color=light-green]loadfix[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-32[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-128[reset]
   [color=light-green]loadfix[reset] /d
 
 .
