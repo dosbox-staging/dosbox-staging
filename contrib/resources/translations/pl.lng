@@ -588,7 +588,7 @@ SDL_VIDEO_ALLOW_SCREENSAVER:
 Domyślnie 'auto'.
 .
 :CONFIG_LANGUAGE
-Język interfejsu: de, en, es, fr, it, nl, pl lub ru
+Język interfejsu: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', lub 'ru'
 (domyślnie nieustawiony - wybiera język angielski).
 Uwagi:
   - Ustawienie ma pierwszeństwo przed zmienną środowiskową 'LANG'.
@@ -875,7 +875,8 @@ Sposób emulacji procesora. Wartość 'auto' (domyślne) przełącza na 'dynamic
 .
 :CONFIG_CPUTYPE
 Typ emulowanego procesora. Wartość 'auto' (domyślne) wybiera ten model, który
-da się emulować najszybciej.
+da się emulować najszybciej. Wariant emulujący kolejka prefetch wymaga
+ustawienia 'core' na wartość 'normal'.
 .
 :CONFIG_CYCLES
 Ilość instrukcji, którą DOSBox będzie próbował emulować każdej milisekundy.
@@ -1269,6 +1270,13 @@ Wycisz dźwięk układu OPL po ostatnim zapisie do portu IO:
                 300 200 (czekaj 300ms, po czym wyciszaj przez 200ms)
                 1000 3000 (czekaj 1s, po czym wyciszaj przez 3s)
 .
+:CONFIG_OPL_REMOVE_DC_BIAS
+Usuwa bias DC z wyjścia układu OPL. Należy używać jedynie jako ostatniej deski
+ratunku w przypadku trzasków podczas odgrywania dźwięku PCM na układzie OPL
+kart SoundBlaster lub Adlib w grach Golden Eagle (1991), Wizardry 6 (1990),
+oraz Wizardry 7 (1992). W przypadku znalezienia innych tego typu gier, prosimy
+o wystawienie nam (po angielsku) 'issue' w serwisie GitHub.
+.
 :CONFIG_OPLEMU
 Jedynie emulacja 'nuked' jest aktualnie obsługiwana.
 .
@@ -1593,8 +1601,9 @@ poleceń '--list-countries'. Ustawienie 'auto' wybiera kraj odpowiadający
 wybranemu układowi klawiatury.
 .
 :CONFIG_KEYBOARDLAYOUT
-Kod języka klawiatury (domyślnie 'auto') - np. 'pl' (polski układ
-programisty), 'pl214' (polski układ maszynistki).
+Kod języka klawiatury (domyślnie 'auto') - np. 'us' (układ amerykański), 'pl'
+(polski układ programisty), 'pl214' (polski układ maszynistki). Akceptowane
+są takie same wartości, jakich używa system FreeDOS.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
 Rozwija zmienne środowiskowe, np. %PATH%, w wierszu poleceń.
@@ -1612,7 +1621,7 @@ wartości rozdzielonych tabulatorami, używany przez polecenie SETVER.EXE do
 trwałego zapamiętania ustawień (domyślnie wartość pusta).
 .
 :CONFIG_IPX
-Włącza emulację protokołu IPX po UDP/IP (domyślnie włączone).
+Włącza emulację protokołu IPX po UDP/IP (domyślnie wyłączone).
 .
 :CONFIG_NE2000
 Włącza emulację karty sieciowej Novell NE2000 podłączonej do wirtualnej
@@ -2373,21 +2382,25 @@ Brak lub nieprawidłowy plik strony kodowej dla układu klawiatury '%s'.
 Załaduj program w określone miejsce pamięci i uruchom go.
 
 Składnia:
-  [color=light-green]loadfix[reset] [color=light-cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
+  [color=light-green]loadfix[reset] [color=white][-ROZMIAR][reset] [color=light-cyan]PROGRAM[reset] [color=white][ARGUMENTY][reset]
   [color=light-green]loadfix[reset] [/d] (lub [/f])
 
 Gdzie:
-  [color=light-cyan]PROGRAM[reset]  program lub gra do załadowania, opcjonalnie z argumentami
+  [color=light-cyan]PROGRAM[reset]      program lub gra do załadowania, opcjonalnie z argumentami
+  [color=white]ROZMIAR[reset]      rozmiar w kilobajtach pamięci do zaalokowania
+  /d (lub /f)  zwalnia uprzednio zarezerwowaną pamięć
 
 Uwagi:
-  Typowy przykład użycia to uruchomienie gry lub programu, który normalnie
-  zgłasza błąd '[color=white]Packed File Corrupt[reset]' lub '[color=white]Not enough memory[reset]', jak
-  niektóre gry z lat 1980-tych (California Games II, itd.).
+  Typowy przykład użycia to uruchomienie gry, jak California Games II lub
+  Wing Commander 2, która normalnie zgłasza błąd '[color=white]Packed File Corrupt[reset]'
+  lub '[color=white]Not enough memory[reset]'.
   Uruchomienie bez argumentów tylko alokuje pamięć na grę; pamięć można później
   zwolnić przełącznikiem /d lub /f.
 
 Przykłady:
-  [color=light-green]loadfix[reset] [color=light-cyan]mygame[reset] [color=white]args[reset]
+  [color=light-green]loadfix[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-32[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-128[reset]
   [color=light-green]loadfix[reset] /d
 .
 :PROGRAM_LOADFIX_ALLOC
