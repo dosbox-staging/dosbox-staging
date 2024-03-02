@@ -20,8 +20,10 @@
 #include "bios.h"
 
 #include "callback.h"
+#include "control.h"
 #include "cpu.h"
 #include "dosbox.h"
+#include "dos_memory.h"
 #include "hardware.h"
 #include "inout.h"
 #include "joystick.h"
@@ -1211,14 +1213,27 @@ public:
 		/* INT 12 Memory Size default at 640 kb */
 		callback[2].Install(&INT12_Handler,CB_IRET,"Int 12 Memory");
 		callback[2].Set_RealVec(0x12);
-		if (IS_TANDY_ARCH) {
+		if (machine == MCH_TANDY) {
 			/* reduce reported memory size for the Tandy (32k graphics memory
 			   at the end of the conventional 640k) */
-			if (machine==MCH_TANDY) mem_writew(BIOS_MEMORY_SIZE,624);
-			else mem_writew(BIOS_MEMORY_SIZE,640);
-			mem_writew(BIOS_TRUE_MEMORY_SIZE,640);
-		} else mem_writew(BIOS_MEMORY_SIZE,640);
-		
+			mem_writew(BIOS_MEMORY_SIZE, 624);
+			mem_writew(BIOS_TRUE_MEMORY_SIZE, ConventionalMemorySizeKb);
+		} else if (machine == MCH_PCJR) {
+			const Section_prop* section = static_cast<Section_prop*>(control->GetSection("dos"));
+			assert(section);
+			const std::string pcjr_memory_config = section->Get_string("pcjr_memory_config");
+			if (pcjr_memory_config == "expanded") {
+				mem_writew(BIOS_MEMORY_SIZE, ConventionalMemorySizeKb);
+				mem_writew(BIOS_TRUE_MEMORY_SIZE, ConventionalMemorySizeKb);
+			} else {
+				assert(pcjr_memory_config == "standard");
+				mem_writew(BIOS_MEMORY_SIZE, PcjrStandardMemorySizeKb - PcjrVideoMemorySizeKb);
+				mem_writew(BIOS_TRUE_MEMORY_SIZE, PcjrStandardMemorySizeKb);
+			}
+		} else {
+			mem_writew(BIOS_MEMORY_SIZE, ConventionalMemorySizeKb);
+		}
+
 		/* INT 13 Bios Disk Support */
 		BIOS_SetupDisks();
 
