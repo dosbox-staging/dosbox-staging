@@ -1214,6 +1214,17 @@ void DOSBOX_Init()
 	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
 	        "(empty by default).");
 
+	const char* pcjr_memory_configurations[] = {"expanded", "standard", nullptr};
+	pstring = secprop->Add_string("pcjr_memory_config", only_at_start, "expanded");
+	pstring->Set_values(pcjr_memory_configurations);
+	pstring->Set_help(
+		"PCjr memory layout ('expanded' by default).\n"
+		"  expanded:  640 KB total memory with applications residing above 128 KB.\n"
+		"             Compatible with most games.\n"
+		"  standard:  128 KB total memory with applications residing below 96 KB.\n"
+		"             Required for some older games (e.g., Jumpman, Troll)."
+	);
+
 	// Mscdex
 	secprop->AddInitFunction(&MSCDEX_Init);
 	secprop->AddInitFunction(&DRIVES_Init);
