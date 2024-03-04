@@ -171,6 +171,8 @@ bool CPU_PopSeg(SegNames seg,bool use32);
 
 bool CPU_CPUID(void);
 
+void CPU_ReadTSC();
+
 uint16_t CPU_Pop16();
 uint32_t CPU_Pop32();
 

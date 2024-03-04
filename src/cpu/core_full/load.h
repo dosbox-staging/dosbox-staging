@@ -542,15 +542,12 @@ l_M_Ed:
 		CPU_SW_Interrupt_NoIOPLCheck(1,GetIP());
 		continue;
 	case D_RDTSC: {
-		if (CPU_ArchitectureType < ArchitectureType::Pentium)
-			goto illegalopcode;
-	        int64_t tsc = (int64_t)(PIC_FullIndex() *
-	                              static_cast<double>(
-	                                      CPU_CycleAutoAdjust ? 70000 : CPU_CycleMax));
-	        reg_edx = (uint32_t)(tsc >> 32);
-		reg_eax = (uint32_t)(tsc & 0xffffffff);
-		break;
-	}
+	        if (CPU_ArchitectureType < ArchitectureType::Pentium) {
+		        goto illegalopcode;
+	        }
+	        CPU_ReadTSC();
+	        break;
+        }
 	default:
 		LOG(LOG_CPU, LOG_ERROR)("LOAD:Unhandled code %d opcode %X", inst.code.load, static_cast<uint32_t>(inst.entry));
 		goto illegalopcode;

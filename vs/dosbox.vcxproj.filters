@@ -64,6 +64,9 @@
     <ClCompile Include="..\src\cpu\paging.cpp">
       <Filter>src\cpu</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\cpu\tsc.cpp">
+      <Filter>src\cpu</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\debug\debug.cpp">
       <Filter>src\debug</Filter>
     </ClCompile>
