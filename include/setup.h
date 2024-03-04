@@ -397,6 +397,7 @@ public:
 	                                      const std::string& sep);
 
 	Property* Get_prop(int index);
+	Property* Get_prop(const std::string& propname);
 
 	int Get_int(const std::string& _propname) const;
 

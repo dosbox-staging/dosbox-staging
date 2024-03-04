@@ -798,7 +798,20 @@ void CONFIG::Run(void)
 			if (strlen(result)) {
 				WriteOut(result);
 			} else {
-				Section* tsec = control->GetSection(pvars[0]);
+				auto* tsec = dynamic_cast<Section_prop *>(control->GetSection(pvars[0]));
+				if (!tsec) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[0].c_str());
+					return;
+				}
+				const auto* property = tsec->Get_prop(pvars[1]);
+				if (!property) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"), pvars[1].c_str());
+					return;
+				}
+				if (property->GetChange() == Property::Changeable::OnlyAtStart) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"), pvars[1].c_str());
+					return;
+				}
 				// Input has been parsed (pvar[0]=section,
 				// [1]=property, [2]=value) now execute
 				std::string value(pvars[2]);
@@ -1002,4 +1015,6 @@ void PROGRAMS_Init(Section* sec)
 	MSG_Add("PROGRAM_EXECUTABLE_MISSING", "Executable file not found: '%s'\n");
 
 	MSG_Add("CONJUNCTION_AND", "and");
+
+	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE", "Property '%s' is not changeable at runtime.");
 }
