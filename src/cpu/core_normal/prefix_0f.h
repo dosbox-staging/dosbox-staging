@@ -226,17 +226,12 @@
 		break;
 	CASE_0F_B(0x31)												/* RDTSC */
 		{
-			if (CPU_ArchitectureType < ArchitectureType::Pentium)
-				goto illegal_opcode;
-			/* Use a fixed number when in auto cycles mode as else the reported value changes constantly */
-	                int64_t tsc = (int64_t)(PIC_FullIndex() *
-	                                      static_cast<double>(CPU_CycleAutoAdjust
-	                                                                  ? 70000
-	                                                                  : CPU_CycleMax));
-	                reg_edx = (uint32_t)(tsc >> 32);
-			reg_eax = (uint32_t)(tsc & 0xffffffff);
-		}
-		break;
+	                if (CPU_ArchitectureType < ArchitectureType::Pentium) {
+		                goto illegal_opcode;
+	                }
+	                CPU_ReadTSC();
+                }
+                break;
 	CASE_0F_W(0x80) /* JO */
 		JumpCond16_w(TFLG_O);
 		break;
