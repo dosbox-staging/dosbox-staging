@@ -438,10 +438,10 @@ ciclos/ms
 modo sem mouse
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
-mouse restringido, pressione %s+F10 para solta-lo
+mouse restringido, pressione %s+F10 para liberá-lo
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
-mouse restringido, pressione %s+F10 ou o botão do meio do mouse para solta-lo
+mouse restringido, pressione %s+F10 ou o botão do meio do mouse para liberá-lo
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY
 para restringir o mouse pressione %s+F10
@@ -583,8 +583,8 @@ que normalmente bloqueia o protetor de tela do sistema operacional enquanto o em
 está em execução ('auto' por padrão).
 .
 :CONFIG_LANGUAGE
-Selecione um idioma para usar: 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'ru' ou 'br'
-(não definido por padrão; o padrão é o inglês).
+Selecione um idioma para usar: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl',
+ou 'ru' (não definido por padrão; o padrão é o inglês).
 Notas:
   - Esta configuração substituirá a variável de ambiente 'LANG', se definida.
   - A pasta 'resources/translations' incluída com o executável contém
@@ -853,7 +853,7 @@ regular em modos de saída OpenGL. Opções de shader CRT adaptativo:
                           desejam manter a nitidez horizontal de um monitor
                           PC típico.
 Outras opções incluem 'sharp', 'none', um shader listado usando o
-argumento de linha de comando '--list-glshaders', ou um caminho absoluto ou
+parâmetro de linha de comando '--list-glshaders', ou um caminho absoluto ou
 relativo para um arquivo. Em todos os casos, você pode omitir a extensão
 '.glsl' do shader.
 .
@@ -891,6 +891,7 @@ dinâmico se disponível e apropriado.
 .
 :CONFIG_CPUTYPE
 Tipo de CPU usado na emulação ('auto' por padrão). 'auto' é a escolha mais rápida.
+A variante de pré-busca (prefetch) emula a fila de pré-busca e requer o núcleo 'normal'.
 .
 :CONFIG_CYCLES
 Número de instruções que o DOSBox tenta emular por milissegundo
@@ -1297,6 +1298,13 @@ Desvaneça a saída do sintetizador OPL após a última gravação na porta IO:
                        1000 3000 (Aguarde 1s antes de desvanecer
                                 ao longo de um período de 3s)
 .
+:CONFIG_OPL_REMOVE_DC_BIAS
+Remove a polarização da corrente contínua da saída OPL. Isso deve ser
+usado apenas como último recurso para corrigir estalos em jogos que
+reproduzem áudio PCM usando o sintetizador OPL em uma Placa Sound Blaster ou
+AdLib, como em: Golden Eagle (1991), Wizardry 6 (1990), e Wizardry 7 (1992).
+Por favor, abra um registro de problema se encontrar outros jogos afetados.
+.
 :CONFIG_OPLEMU
 Apenas a emulação 'nuked' OPL é suportada agora.
 .
@@ -1651,15 +1659,16 @@ para uma experiência do usuário mais consistente com sistemas típicos de hosp
 Define o código de país do DOS ('auto' por padrão).
 Isso afeta informações específicas do país, como data, hora e formato decimal.
 A lista de códigos de país suportados pode ser exibida usando
-o argumento de linha de comando '--list-countries'. Se definido como 'auto',
+o parâmetro de linha de comando '--list-countries'. Se definido como 'auto',
 o código do país correspondente ao esquema do teclado selecionado será usado.
 .
 :CONFIG_KEYBOARDLAYOUT
-Código de idioma do esquema do teclado ou 'auto' ('auto' por padrão).
+Código do esquema de idioma do teclado ('auto' por padrão), ou seja, 'us' para o
+esquema inglês americano. Outros valores possíveis são os mesmos aceitos pelo FreeDOS.
 .
 :CONFIG_EXPAND_SHELL_VARIABLE
-Ativa a expansão de variáveis de ambiente como %PATH% no interpretador de comandos do DOS
-(ativado por padrão, habilitado se a versão do DOS >= 7.0).
+Ativa a expansão de variáveis de ambiente como %PATH% no interpretador de comandos
+do DOS (ativado por padrão, habilitado se a versão do DOS >= 7.0).
 FreeDOS e MS-DOS 7/8 COMMAND.COM suportam esse comportamento.
 .
 :CONFIG_SHELL_HISTORY_FILE
@@ -1673,7 +1682,7 @@ formato separado por tabulação, usado pelo SETVER.EXE como armazenamento persi
 (vazio por padrão).
 .
 :CONFIG_IPX
-Ativa a emulação de IPX sobre UDP/IP (ativado por padrão).
+Ativa a emulação de IPX sobre UDP/IP (desativado por padrão).
 .
 :CONFIG_NE2000
 Ativa a emulação de uma placa de rede Novell NE2000 em uma rede baseada em software
@@ -1798,7 +1807,7 @@ Onde [color=white]COMANDO[reset] pode ser:
                     opcionalmente fornecidas
 
   -l                mostra os arquivos de configuração carregados atualmente e
-                    os argumentos de linha de comando fornecidos na
+                    os parâmetros de linha de comando fornecidos na
 					inicialização
 
   -help [color=white]SEÇÃO[reset]
@@ -1891,7 +1900,7 @@ Uso: [color=light-green]config[reset] -get [color=light-cyan][SEÇÃO][reset] [c
 .
 :PROGRAM_CONFIG_PRINT_STARTUP
 
-[color=white]O DOSBox foi iniciado com os seguintes argumentos de linha de comando:[reset]
+[color=white]O DOSBox foi iniciado com os seguintes parâmetros de linha de comando:[reset]
   %s
 
 .
@@ -2417,23 +2426,26 @@ Arquivo de página de códigos ausente ou inválido para o esquema %s.
 Carrega um programa na região de memória específica e o executa.
 
 Uso:
-  [color=light-green]loadfix[reset] [color=light-cyan]JOGO[reset] [color=white][PARÂMETROS][reset]
+  [color=light-green]loadfix[reset] [color=white][-TAMANHO][reset] [color=light-cyan]JOGO[reset] [color=white][PARÂMETROS][reset]
   [color=light-green]loadfix[reset] [/d] (ou [/f])[reset]
 
 Parâmetros:
-  [color=light-cyan]JOGO[reset]  jogo ou programa para carregar, opcionalmente com parâmetros
+  [color=light-cyan]JOGO[reset]        jogo ou programa para carregar, opcionalmente com parâmetros
+  [color=white]-TAMANHO[reset]    TAMANHO indica a quantidade de kilobytes a ser alocada
+  /d (ou /f)  Libera a memória previamente alocada.
 
 Notas:
-  - Os casos de uso mais comuns deste comando são corrigir jogos ou
-    programas DOS que mostram mensagens de erro "[color=white]Packed File Corrupt[reset]" ou
-    [color=white]"Not enough memory"[reset] (por exemplo, de alguns jogos dos anos 1980, como
-    California Games II) ao serem executados.
+  - O caso de uso mais comum deste comando é corrigir jogos como
+    California Games II e Wing Commander 2 que exibem mensagens
+    de erro [color=white]"Packed File Corrupt"[reset] ou [color=white]"Not enough memory"[reset].
   - Digite [color=light-green]loadfix[reset] sem parâmetros para simplesmente alocar memória para
-    o seu jogo rodar; você pode liberar a memória com a opção /d ou /f
-    quando ele terminar.
+    o seu jogo ser executado; você pode liberar a memória com a opção
+    /d ou /f quando ele terminar.
 
 Exemplos:
-  [color=light-green]loadfix[reset] [color=light-cyan]meujogo[reset] [color=white]parâmetros[reset]
+  [color=light-green]loadfix[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-32[reset] [color=light-cyan]wc2[reset]
+  [color=light-green]loadfix[reset] [color=white]-128[reset]
   [color=light-green]loadfix[reset] /d
 
 .
@@ -2695,7 +2707,7 @@ Notas:
     [color=yellow]N[reset] ou [color=yellow]F[reset]         para pular para o próximo arquivo.
     [color=yellow]Q[reset], [color=yellow]Esc[reset], [color=yellow]Ctrl+C[reset] para encerrar o comando.
   - Além disso, o [color=yellow]Ctrl+C[reset] pode ser usado para encerrar o comando que lê
-    dados do teclado, como quando [color=light-green]more[reset] é executado sem argumentos.
+    dados do teclado, como quando [color=light-green]more[reset] é executado sem parâmetros.
   - Os seguintes atalhos extras estão disponíveis apenas no modo estendido:
     [color=yellow]P[reset] [color=white]nnn[reset]          para exibir as próximas [color=white]nnn[reset] linhas e solicitar novamente.
     [color=yellow]S[reset] [color=white]nnn[reset]          para pular as próximas [color=white]nnn[reset] linhas.
