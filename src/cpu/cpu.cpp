@@ -2137,64 +2137,20 @@ static double get_estimated_cpu_mhz(const int32_t cycles)
 {
 	assert(CPU_ArchitectureType >= ArchitectureType::Pentium);
 
-	// Maps of emulated CPU cycles to CPU frequency in MHz;
-	// if not stated otherwise, values were taken from DOSBox-X wiki:
+	// These will result Pentium 100 needing around the same cycles as
+	// estimated by the DOSBox X team on their wiki:
 	// https://dosbox-x.com/wiki/Guide%3ACPU-settings-in-DOSBox%E2%80%90X#_cycles
+	// and assumes Pentium MMX has roughly 16% better IPC, as stated here:
+	// https://www.tomshardware.com/reviews/pentium-mmx-live-expectations,19.html
 
-	using CyclesMhzMap = std::map<int32_t, double>;
+	constexpr double DivisorPentium    = 575.0;
+	constexpr double DivisorPentiumMmx = DivisorPentium * 1.16;	
 
-	static const CyclesMhzMap IntelPentium_Map = {{31545, 60},
-	                                              {35620, 66},
-	                                              {43500, 75},
-	                                              {52000, 90},
-	                                              {60000, 100},
-	                                              {74000, 120},
-	                                              {80000, 133}};
-
-	static const CyclesMhzMap IntelPentiumMmx_Map = {{97240, 166}};
-
-	// Select CPU performance (cycles to MHz) map
-	auto getCyclesMhzMap = []() -> const CyclesMhzMap& {
-		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
-			return IntelPentium_Map;
-		} else {
-			return IntelPentiumMmx_Map;
-		}
-	};
-
-	double coeff = {};
-
-	const auto& cycles_mhz_map = getCyclesMhzMap();
-	assert(!cycles_mhz_map.empty());
-
-	// Calculate the coefficient to be used to convert cycles to MHz
-
-	const auto iter_upper = cycles_mhz_map.upper_bound(cycles);
-	if (iter_upper == cycles_mhz_map.end()) {
-		const auto iter_lower = std::prev(cycles_mhz_map.end());
-		coeff = iter_lower->second / iter_lower->first;
-	} else if (iter_upper == cycles_mhz_map.begin()) {
-		coeff = iter_upper->second / iter_upper->first;
+	if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
+		return cycles / DivisorPentium;
 	} else {
-		// Calculate weighted average of two known values
-
-		const auto iter_lower = std::prev(iter_upper);
-
-		const auto weight_upper = cycles - iter_lower->first;
-		const auto weight_lower = iter_upper->first - cycles;
-
-		assert(weight_upper >= 0);
-		assert(weight_lower >= 0);
-		assert(weight_upper > 0 || weight_lower > 0);
-
-		const double coeff_lower = iter_lower->second / iter_lower->first;
-		const double coeff_upper = iter_lower->second / iter_upper->first;
-
-		coeff = (coeff_lower * weight_lower + coeff_upper * weight_upper) /
-		        (weight_lower + weight_upper);
+		return cycles / DivisorPentiumMmx;
 	}
-
-	return cycles * coeff;
 }
 
 static double get_estimated_cpu_mhz()
