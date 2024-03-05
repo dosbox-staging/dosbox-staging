@@ -529,7 +529,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 
 bool CDROM_Interface_Image::SetDevice(const char* path, [[maybe_unused]] const int cd_number)
 {
-	const bool result = LoadCueSheet((char *)path) || LoadIsoFile((char *)path);
+	const bool result = LoadCueSheet(path) || LoadIsoFile(path);
 	if (!result) {
 		// print error message on dosbox console
 		char buf[MAX_LINE_LENGTH];
@@ -1062,7 +1062,7 @@ void CDROM_Interface_Image::CDAudioCallBack(uint16_t desired_track_frames)
 	}
 }
 
-bool CDROM_Interface_Image::LoadIsoFile(char* filename)
+bool CDROM_Interface_Image::LoadIsoFile(const char* filename)
 {
 	tracks.clear();
 
@@ -1153,7 +1153,7 @@ static std::string dirname(char* file)
 }
 #endif
 
-bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
+bool CDROM_Interface_Image::LoadCueSheet(const char *cuefile)
 {
 	tracks.clear();
 

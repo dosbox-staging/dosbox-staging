@@ -375,7 +375,7 @@ private:
 	} player;
 
 	// Private utility functions
-	bool  LoadIsoFile(char *filename);
+	bool  LoadIsoFile(const char *filename);
 	bool  CanReadPVD(TrackFile *file,
 	                 const uint16_t sectorSize,
 	                 const bool mode2);
@@ -383,7 +383,7 @@ private:
 	void CDAudioCallBack(uint16_t desired_frames);
 
 	// Private functions for cue sheet processing
-	bool  LoadCueSheet(char *cuefile);
+	bool  LoadCueSheet(const char *cuefile);
 	bool  GetRealFileName(std::string& filename, std::string& pathname);
 	bool  GetCueKeyword(std::string &keyword, std::istream &in);
 	bool  GetCueFrame(uint32_t &frames, std::istream &in);
