@@ -1445,7 +1445,7 @@ bool CDROM_Interface_Image::GetCueString(std::string& str, std::istream& in)
 	in >> str;
 	if (str[0] == '\"') {
 		if (str[str.size() - 1] == '\"') {
-			str.assign(str, 1, str.size() - 2);
+			str = str.substr(1, str.size() - 2);
 		} else {
 			in.seekg(pos, std::ios::beg);
 			char buffer[MAX_FILENAME_LENGTH];
