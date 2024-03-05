@@ -18,10 +18,7 @@ jobs:
     strategy:
       matrix:
         conf:
-          - name: MSVC 32-bit
-            arch: x86
-            max_warnings: 30
-          - name: MSVC 64-bit
+          - name: MS Clang/LLVM 64-bit
             arch: x64
             max_warnings: 30
 
@@ -88,22 +85,17 @@ jobs:
   build_windows_vs_release:
     name: ${{ matrix.conf.name }}
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    outputs:
+      dosbox_version: ${{ steps.set_dosbox_vers.outputs.dosbox_vers }}
+
     runs-on: windows-2022
     strategy:
       matrix:
         conf:
-          - name: Release build (32-bit)
-            arch: x86
-            vs-release-dirname: Win32
-            debugger: false
           - name: Release build (64-bit)
             arch: x64
             vs-release-dirname: x64
             debugger: false
-          - name: Release build w/ debugger (32-bit)
-            arch: x86
-            vs-release-dirname: Win32
-            debugger: true
           - name: Release build w/ debugger (64-bit)
             arch: x64
             vs-release-dirname: x64
@@ -214,19 +206,30 @@ jobs:
 
       - name: Upload package
         if:   ${{ !matrix.conf.debugger }}
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
+          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}-without-debugger
           path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
           overwrite: true
 
       - name: Upload debugger artifact
         if:   ${{ matrix.conf.debugger }}
-        uses: actions/upload-artifact@v4.3.1
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}
+          name: ${{ steps.set_pkg_dir.outputs.pkg_dir }}-with-debugger
           path: ${{ steps.set_pkg_dir.outputs.pkg_dir }}/dosbox_with_debugger.exe
           overwrite: true
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: build_windows_vs_release
+    steps:
+      - name: Merge x64 artifacts
+        uses: actions/upload-artifact/merge@v4
+        with:
+          name: dosbox-staging-windows-x64-${{ needs.build_windows_vs_release.outputs.dosbox_version }}
+          pattern: dosbox-staging-windows-x64-*
+          delete-merged: 'true'
 
   # This job exists only to publish an artifact with version info when building
   # from main branch, so snapshot build version will be visible on:
@@ -253,7 +256,7 @@ jobs:
           NEWEST_TAG=$(git describe --abbrev=0)
           git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
 
-      - uses: actions/upload-artifact@v4.3.1
+      - uses: actions/upload-artifact@v4
         with:
           # Keep exactly this artifact name; it's being used to propagate
           # version info via GitHub REST API
