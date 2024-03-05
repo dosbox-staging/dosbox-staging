@@ -521,7 +521,6 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
     <ClCompile Include="..\src\cpu\mmx.cpp" />
     <ClCompile Include="..\src\cpu\modrm.cpp" />
     <ClCompile Include="..\src\cpu\paging.cpp" />
-    <ClCompile Include="..\src\cpu\tsc.cpp" />
     <ClCompile Include="..\src\debug\debug.cpp" />
     <ClCompile Include="..\src\debug\debug_disasm.cpp" />
     <ClCompile Include="..\src\debug\debug_gui.cpp" />

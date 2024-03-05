@@ -29,6 +29,7 @@
 #include "setup.h"
 #include "programs.h"
 #include "paging.h"
+#include "pic.h"
 #include "lazyflags.h"
 #include "support.h"
 
@@ -2129,6 +2130,105 @@ void CPU_ENTER(bool use32,Bitu bytes,Bitu level) {
 	}
 	sp_index-=bytes;
 	reg_esp=(reg_esp&cpu.stack.notmask)|((sp_index)&cpu.stack.mask);
+}
+
+// Estimate the CPU speed in MHz given the amount of cycles emulated
+static double get_estimated_cpu_mhz(const int32_t cycles)
+{
+	assert(CPU_ArchitectureType >= ArchitectureType::Pentium);
+
+	// Maps of emulated CPU cycles to CPU frequency in MHz;
+	// if not stated otherwise, values were taken from DOSBox-X wiki:
+	// https://dosbox-x.com/wiki/Guide%3ACPU-settings-in-DOSBox%E2%80%90X#_cycles
+
+	using CyclesMhzMap = std::map<int32_t, double>;
+
+	static const CyclesMhzMap IntelPentium_Map = {{31545, 60},
+	                                              {35620, 66},
+	                                              {43500, 75},
+	                                              {52000, 90},
+	                                              {60000, 100},
+	                                              {74000, 120},
+	                                              {80000, 133}};
+
+	static const CyclesMhzMap IntelPentiumMmx_Map = {{97240, 166}};
+
+	// Select CPU performance (cycles to MHz) map
+	auto getCyclesMhzMap = []() -> const CyclesMhzMap& {
+		if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
+			return IntelPentium_Map;
+		} else {
+			return IntelPentiumMmx_Map;
+		}
+	};
+
+	double coeff = {};
+
+	const auto& cycles_mhz_map = getCyclesMhzMap();
+	assert(!cycles_mhz_map.empty());
+
+	// Calculate the coefficient to be used to convert cycles to MHz
+
+	const auto iter_upper = cycles_mhz_map.upper_bound(cycles);
+	if (iter_upper == cycles_mhz_map.end()) {
+		const auto iter_lower = std::prev(cycles_mhz_map.end());
+		coeff = iter_lower->second / iter_lower->first;
+	} else if (iter_upper == cycles_mhz_map.begin()) {
+		coeff = iter_upper->second / iter_upper->first;
+	} else {
+		// Calculate weighted average of two known values
+
+		const auto iter_lower = std::prev(iter_upper);
+
+		const auto weight_upper = cycles - iter_lower->first;
+		const auto weight_lower = iter_upper->first - cycles;
+
+		assert(weight_upper >= 0);
+		assert(weight_lower >= 0);
+		assert(weight_upper > 0 || weight_lower > 0);
+
+		const double coeff_lower = iter_lower->second / iter_lower->first;
+		const double coeff_upper = iter_lower->second / iter_upper->first;
+
+		coeff = (coeff_lower * weight_lower + coeff_upper * weight_upper) /
+		        (weight_lower + weight_upper);
+	}
+
+	return cycles * coeff;
+}
+
+static double get_estimated_cpu_mhz()
+{
+	// Although the Pentium was max 200 Mhz, but it was a very rare CPU,
+	// 166 Mhz was much more common. Pentium MMX was probably max 266 MHz
+	// for the desktop.
+	constexpr double DefaultPentiumMhz    = 166.0;
+	constexpr double DefaultPentiumMmxMhz = 266.0;
+
+	if (CPU_CycleAutoAdjust) {
+		if (CPU_CycleLimit > 0) {
+			return get_estimated_cpu_mhz(CPU_CycleLimit);
+		} else {
+			if (CPU_ArchitectureType < ArchitectureType::PentiumMmx) {
+				return DefaultPentiumMhz;
+			} else {
+				return DefaultPentiumMmxMhz;
+			}
+		}
+	} else {
+		return get_estimated_cpu_mhz(CPU_CycleMax);
+	}
+}
+
+void CPU_ReadTSC()
+{
+	const auto cpu_mhz = get_estimated_cpu_mhz();
+
+	const auto tsc_precise = PIC_FullIndex() * cpu_mhz * 1000;
+	const auto tsc_rounded = static_cast<int64_t>(std::round(tsc_precise));
+
+	reg_edx = static_cast<uint32_t>(tsc_rounded >> 32);
+	reg_eax = static_cast<uint32_t>(tsc_rounded & 0xffffffff);
 }
 
 static void CPU_CycleIncrease(bool pressed) {

@@ -81,7 +81,6 @@ libcpu_sources = files(
     'mmx.cpp',
     'modrm.cpp',
     'paging.cpp',
-    'tsc.cpp',
 )
 
 libcpu = static_library(
