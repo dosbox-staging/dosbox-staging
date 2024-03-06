@@ -4,6 +4,7 @@ libgui_sources = files(
     'sdl_mapper.cpp',
     'sdlmain.cpp',
     'shader_manager.cpp',
+    'titlebar.cpp',
 )
 
 libgui = static_library(

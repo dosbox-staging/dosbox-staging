@@ -345,10 +345,9 @@ static void update_state() // updates whole 'state' structure, except cursor vis
 
 	// Select hint to be displayed on a title bar
 	if (!state.have_desktop_environment || !is_window_or_multi_display ||
-	    state.gui_has_taken_over || !state.is_window_active) {
+	    state.gui_has_taken_over || !state.is_window_active ||
+	    is_config_no_mouse) {
 		state.hint_id = MouseHint::None;
-	} else if (is_config_no_mouse) {
-		state.hint_id = MouseHint::NoMouse;
 	} else if (state.is_captured && state.should_release_on_middle) {
 		state.hint_id = MouseHint::CapturedHotkeyMiddle;
 	} else if (state.is_captured) {

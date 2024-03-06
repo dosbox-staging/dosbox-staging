@@ -447,11 +447,8 @@ Gebruik: [color=light-green]config [reset]-set [color=light-cyan][SECTIE][reset]
 :TITLEBAR_CYCLES_MS
 cycli/ms
 .
-:TITLEBAR_HINT_PAUSED
-(PAUZE)
-.
-:TITLEBAR_HINT_NOMOUSE
-geen-muis-modus
+:TITLEBAR_PAUSED
+PAUZE
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 muis gevangen, %s+F10 om los te laten

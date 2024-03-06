@@ -38,6 +38,16 @@ using sv = std::string_view;
 #include "setup.h"
 #include "string_utils.h"
 
+extern void DOS_UpdateCurrentProgramName();
+
+static void notify_code_page_changed(const bool keyboard_layout_changed = false)
+{
+	// Re-create various information to match new code page
+	DOS_UpdateCurrentProgramName();
+	DOS_RefreshCountryInfo(keyboard_layout_changed);
+	AUTOEXEC_NotifyNewCodePage();
+}
+
 // A common pattern in the keyboard layout file is to try opening the requested
 // file first within DOS, then from the local path, and finally from builtin
 // resources. This function performs those in order and returns the first hit.
@@ -960,11 +970,7 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_file
 			}
 			INT10_SetupRomMemoryChecksum();
 
-			// re-create country information and [autoexec] section
-			// to match new code page
-			DOS_RefreshCountryInfo();
-			AUTOEXEC_NotifyNewCodePage();
-
+			notify_code_page_changed();
 			return KEYB_NOERROR;
 		}
 
@@ -1225,10 +1231,8 @@ public:
 			}
 		}
 
-		// Re-create country information and [autoexec] section
-		// to match new code page and keyboard layout
-		DOS_RefreshCountryInfo(reason_keyboard_layout);
-		AUTOEXEC_NotifyNewCodePage();
+		constexpr bool keyboard_layout_changed = true;
+		notify_code_page_changed(keyboard_layout_changed);
 	}
 
 	~DOS_KeyboardLayout()

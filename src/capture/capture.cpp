@@ -357,6 +357,7 @@ void CAPTURE_StartVideoCapture()
 	switch (capture.state.video) {
 	case CaptureState::Off:
 		capture.state.video = CaptureState::Pending;
+		GFX_NotifyVideoCaptureStatus(true);
 		break;
 	case CaptureState::Pending:
 	case CaptureState::InProgress:
@@ -376,10 +377,12 @@ void CAPTURE_StopVideoCapture()
 		// completeness only
 		LOG_MSG("CAPTURE: Cancelling pending video output capture");
 		capture.state.video = CaptureState::Off;
+		GFX_NotifyVideoCaptureStatus(false);
 		break;
 	case CaptureState::InProgress:
 		capture_video_finalise();
 		capture.state.video = CaptureState::Off;
+		GFX_NotifyVideoCaptureStatus(false);
 		LOG_MSG("CAPTURE: Stopped capturing video output");
 	}
 }

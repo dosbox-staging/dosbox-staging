@@ -33,7 +33,7 @@ std::string DOS_GenerateListCountriesMessage();
 
 bool DOS_SetCountry(const uint16_t country_id);
 uint16_t DOS_GetCountry();
-void DOS_RefreshCountryInfo(const bool reason_keyboard_layout = false);
+void DOS_RefreshCountryInfo(const bool keyboard_layout_changed = false);
 
 std::string DOS_GetBundledCodePageFileName(const uint16_t code_page);
 

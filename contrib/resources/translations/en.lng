@@ -433,11 +433,8 @@ Usage: [color=light-green]config [reset]-set [color=light-cyan][SECTION][reset] 
 :TITLEBAR_CYCLES_MS
 cycles/ms
 .
-:TITLEBAR_HINT_PAUSED
-(PAUSED)
-.
-:TITLEBAR_HINT_NOMOUSE
-no-mouse mode
+:TITLEBAR_PAUSED
+PAUSED
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 mouse captured, %s+F10 to release
