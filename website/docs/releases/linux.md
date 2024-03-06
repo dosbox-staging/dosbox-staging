@@ -83,6 +83,24 @@ Available via [Personal Package Archive](https://launchpad.net/~feignint/+archiv
 
 Available via [Arch User Repository](https://aur.archlinux.org/packages/dosbox-staging).
 
+### NixOS repository package
+
+Available via NixOS or Home Manager. Add the following to your `configuration.nix` file:
+
+For NixOS:
+
+    environment.systemPackages = with pkgs; [
+      dosbox-staging
+    ];
+
+For Home Manager:
+
+    home.packages = with pkgs; [
+      dosbox-staging
+    ];
+
+Then rebuild your system with: `nixos-rebuild switch`
+
 ### Other repository packages
 
 [![Packaging status](https://repology.org/badge/vertical-allrepos/dosbox-staging.svg){ width=230 }][other-repos]
