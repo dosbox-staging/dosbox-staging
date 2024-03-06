@@ -881,7 +881,7 @@ localFile::localFile(const char* _name, const std_fs::path& path, FILE* handle,
           basedir(_basedir)
 {
 	open = true;
-	UpdateDateTimeFromHost();
+	localFile::UpdateDateTimeFromHost();
 	attr = FatAttributeFlags::Archive;
 
 	SetName(_name);
