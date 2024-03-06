@@ -42,7 +42,7 @@ CDROM_Interface_SDL::CDROM_Interface_SDL()
 
 CDROM_Interface_SDL::~CDROM_Interface_SDL()
 {
-	StopAudio();
+	CDROM_Interface_SDL::StopAudio();
 	SDL_CDClose(cd);
 	cd = nullptr;
 }
