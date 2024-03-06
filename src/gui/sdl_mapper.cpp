@@ -3247,13 +3247,23 @@ static void MAPPER_Destroy(Section *sec) {
 
 void MAPPER_BindKeys(Section *sec)
 {
-	// Release any keys pressed, or else they'll get stuck
-	GFX_LosingFocus();
-
 	// Get the mapper file set by the user
 	const auto section = static_cast<const Section_prop *>(sec);
 	const auto mapperfile_value = section->Get_string("mapperfile");
 	const auto property = section->Get_path("mapperfile");
+	
+	// Filter out unneeded calls
+	static bool first_time = true;
+	static std::string old_mapperfile_value = {};
+	if (!first_time && mapperfile_value == old_mapperfile_value) {
+		return;
+	}
+	first_time = false;
+	old_mapperfile_value = mapperfile_value;
+
+	// Release any keys pressed, or else they'll get stuck
+	GFX_LosingFocus();
+
 	assert(property);
 	mapper.filename = property->realpath.string();
 

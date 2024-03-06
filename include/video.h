@@ -401,16 +401,25 @@ void GFX_EndUpdate( const uint16_t *changedLines );
 void GFX_LosingFocus();
 void GFX_RegenerateWindow(Section *sec);
 
+void GFX_RefreshTitle();
+void GFX_RefreshAnimatedTitle();
+void GFX_NotifyBooting();
+void GFX_NotifyAudioCaptureStatus(const bool is_capturing);
+void GFX_NotifyVideoCaptureStatus(const bool is_capturing);
+void GFX_NotifyAudioMutedStatus(const bool is_muted);
+void GFX_NotifyProgramName(const std::string& segment_name,
+                           const std::string& canonical_name);
+void GFX_NotifyCyclesChanged(const int32_t cycles);
+
 enum class MouseHint {
-    None,                    // no hint to display
-    NoMouse,                 // no mouse mode
-    CapturedHotkey,          // mouse captured, use hotkey to release
-    CapturedHotkeyMiddle,    // mouse captured, use hotkey or middle-click to release
-    ReleasedHotkey,          // mouse released, use hotkey to capture
-    ReleasedHotkeyMiddle,    // mouse released, use hotkey or middle-click to capture
-    ReleasedHotkeyAnyButton, // mouse released, use hotkey or any click to capture
-    SeamlessHotkey,          // seamless mouse, use hotkey to capture
-    SeamlessHotkeyMiddle,    // seamless mouse, use hotkey or middle-click to capture
+	None,                    // no hint to display
+	CapturedHotkey,          // captured, hotkey to release
+	CapturedHotkeyMiddle,    // captured, hotkey or middle-click release
+	ReleasedHotkey,          // released, hotkey to capture
+	ReleasedHotkeyMiddle,    // released, hotkey or middle-click to capture
+	ReleasedHotkeyAnyButton, // released, hotkey or any click to capture
+	SeamlessHotkey,          // seamless, hotkey to capture
+	SeamlessHotkeyMiddle,    // seamless, hotkey or middle-click to capture
 };
 
 void GFX_CenterMouse();

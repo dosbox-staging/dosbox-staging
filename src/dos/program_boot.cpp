@@ -34,6 +34,7 @@
 #include "program_more_output.h"
 #include "regs.h"
 #include "string_utils.h"
+#include "video.h"
 
 FILE* BOOT::getFSFile_mounted(const char* filename, uint32_t* ksize,
                               uint32_t* bsize, uint8_t* error)
@@ -529,6 +530,8 @@ void VIRTUALBOX_NotifyBooting();
 
 void BOOT::NotifyBooting()
 {
+	DOS_NotifyBooting();
+	GFX_NotifyBooting();
 	MOUSE_NotifyBooting();
 	VIRTUALBOX_NotifyBooting();
 }

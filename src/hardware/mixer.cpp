@@ -49,6 +49,7 @@
 #include "string_utils.h"
 #include "timer.h"
 #include "tracy.h"
+#include "video.h"
 
 #include "mverb/MVerb.h"
 #include "tal-chorus/ChorusEngine.h"
@@ -2830,6 +2831,7 @@ void MIXER_Mute()
 	if (mixer.state == MixerState::On) {
 		set_mixer_state(MixerState::Muted);
 		MIDI_Mute();
+		GFX_NotifyAudioMutedStatus(true);
 		LOG_MSG("MIXER: Muted audio output");
 	}
 }
@@ -2839,6 +2841,7 @@ void MIXER_Unmute()
 	if (mixer.state == MixerState::Muted) {
 		set_mixer_state(MixerState::On);
 		MIDI_Unmute();
+		GFX_NotifyAudioMutedStatus(false);
 		LOG_MSG("MIXER: Unmuted audio output");
 	}
 }

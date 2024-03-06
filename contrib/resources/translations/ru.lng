@@ -1,11 +1,8 @@
 :TITLEBAR_CYCLES_MS
 циклов/мс
 .
-:TITLEBAR_HINT_PAUSED
-(ПАУЗА)
-.
-:TITLEBAR_HINT_NOMOUSE
-режим без мыши
+:TITLEBAR_PAUSED
+ПАУЗА
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 мышь захвачена, %s+F10 для высвобождения

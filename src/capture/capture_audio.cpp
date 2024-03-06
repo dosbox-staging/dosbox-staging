@@ -26,6 +26,7 @@
 
 #include "mem.h"
 #include "setup.h"
+#include "video.h"
 
 static constexpr auto SampleFrameSize   = 4;
 static constexpr auto NumFramesInBuffer = 16 * 1024;
@@ -91,9 +92,11 @@ void capture_audio_add_data(const uint32_t sample_rate,
                             const int16_t* sample_frames)
 {
 	if (!wave.handle) {
+		GFX_NotifyAudioCaptureStatus(true);
 		create_wave_file(sample_rate);
 	}
 	if (!wave.handle) {
+		GFX_NotifyAudioCaptureStatus(false);
 		return;
 	}
 
@@ -160,5 +163,6 @@ void capture_audio_finalise()
 	fclose(wave.handle);
 
 	wave = {};
-}
 
+	GFX_NotifyAudioCaptureStatus(false);
+}

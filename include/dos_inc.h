@@ -110,12 +110,16 @@ extern uint8_t dos_copybuf[0x10000];
 
 void DOS_SetError(uint16_t code);
 
-/* File Handling Routines */
+// Guest OS booting routines
+
+void DOS_NotifyBooting();
+bool DOS_IsGuestOsBooted();
+
+// File handling routines
 
 enum { STDIN=0,STDOUT=1,STDERR=2,STDAUX=3,STDPRN=4};
 enum { HAND_NONE=0,HAND_FILE,HAND_DEVICE};
 
-/* Routines for File Class */
 void DOS_SetupFiles (void);
 bool DOS_ReadFile(uint16_t handle,uint8_t * data,uint16_t * amount, bool fcb = false);
 bool DOS_WriteFile(uint16_t handle,uint8_t * data,uint16_t * amount,bool fcb = false);
@@ -131,6 +135,7 @@ uint16_t DOS_GetBiosTimePacked();
 uint16_t DOS_GetBiosDatePacked();
 
 // Date and Time Conversion
+
 constexpr uint16_t DOS_PackTime(const uint16_t hour,
                                 const uint16_t min,
                                 const uint16_t sec) noexcept

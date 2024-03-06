@@ -172,12 +172,21 @@ enum PRIORITY_LEVELS {
 	PRIORITY_LEVEL_HIGHEST
 };
 
+enum class SDL_DosBoxEvents : uint8_t {
+	RefreshAnimatedTitle,
+	NumEvents // dummy, keep last, do not use
+};
+
 struct SDL_Block {
 	bool initialized     = false;
 	bool active          = false; // If this isn't set don't draw
 	bool updating        = false;
 	bool resizing_window = false;
 	bool wait_on_error   = false;
+
+	uint32_t start_event_id = UINT32_MAX;
+
+	bool is_paused = false;
 
 	RenderingBackend rendering_backend      = RenderingBackend::Texture;
 	RenderingBackend want_rendering_backend = RenderingBackend::Texture;
@@ -245,13 +254,6 @@ struct SDL_Block {
 		HostRateMode host_rate_mode = HostRateMode::Auto;
 		double preferred_host_rate  = 0.0;
 	} desktop = {};
-
-	struct {
-		int num_cycles              = 0;
-		std::string hint_mouse_str  = {};
-		std::string hint_paused_str = {};
-		std::string cycles_ms_str   = {};
-	} title_bar = {};
 
 	struct {
 		VsyncSettings when_windowed   = {};

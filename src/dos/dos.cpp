@@ -46,6 +46,21 @@ DOS_InfoBlock dos_infoblock;
 uint16_t countryNo = 0;
 unsigned int result_errorcode = 0;
 
+static bool is_guest_booted = false;
+
+extern void DOS_ClearLaunchedProgramNames();
+
+void DOS_NotifyBooting()
+{
+	is_guest_booted = true;
+	DOS_ClearLaunchedProgramNames();
+}
+
+bool DOS_IsGuestOsBooted()
+{
+	return is_guest_booted;
+}
+
 #define DOS_COPYBUFSIZE 0x10000
 uint8_t dos_copybuf[DOS_COPYBUFSIZE];
 

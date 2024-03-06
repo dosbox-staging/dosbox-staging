@@ -2660,14 +2660,14 @@ static void refresh_currency_format(const LocaleInfoEntry &source)
 	destination[offset] = source.currency_precision;
 }
 
-void DOS_RefreshCountryInfo(const bool reason_keyboard_layout)
+void DOS_RefreshCountryInfo(const bool keyboard_layout_changed)
 {
 	if (!config.is_config_loaded) {
 		return;
 	}
 
 	if (config.auto_detect_country && !config.is_locale_generated &&
-	    !reason_keyboard_layout) {
+	    !keyboard_layout_changed) {
 		return;
 	}
 

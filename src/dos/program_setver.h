@@ -40,7 +40,7 @@ public:
 	static void LoadTableFromFile();
 	static void SaveTableToFile();
 
-	static void OverrideVersion(const char* name, DOS_PSP& psp);
+	static void OverrideVersion(const std::string& canonical_name, DOS_PSP& psp);
 
 	struct FakeVersion {
 		uint8_t major = 0;

@@ -494,25 +494,14 @@ bool SETVER::IsTableEmpty()
 	       setver_table.by_file_path.empty();
 }
 
-void SETVER::OverrideVersion(const char* name, DOS_PSP& psp)
+void SETVER::OverrideVersion(const std::string& canonical_name, DOS_PSP& psp)
 {
-	assert(name);
-
 	// Check for global version override
 
 	if (setver_table.is_global_version_set) {
 		const auto& version = setver_table.version_global;
 		psp.SetVersion(version.major, version.minor);
 	}
-
-	// Get canonical file name
-
-	char buffer[DOS_PATHLENGTH];
-	if (!DOS_Canonicalize(name, buffer)) {
-		assert(false);
-		return;
-	}
-	std::string name_str = buffer;
 
 	// Check for version override - first by name with path
 
@@ -527,7 +516,7 @@ void SETVER::OverrideVersion(const char* name, DOS_PSP& psp)
 		return true;
 	};
 
-	if (try_override(name_str, setver_table.by_file_path)) {
+	if (try_override(canonical_name, setver_table.by_file_path)) {
 		return;
 	}
 
@@ -537,13 +526,13 @@ void SETVER::OverrideVersion(const char* name, DOS_PSP& psp)
 		return;
 	}
 
-	const auto position = name_str.rfind('\\');
-	if (position + 1 >= name_str.size()) {
+	const auto position = canonical_name.rfind('\\');
+	if (position + 1 >= canonical_name.size()) {
 		assert(false);
 		return;
 	}
-	name_str = name_str.substr(position + 1);
-	try_override(name_str, setver_table.by_file_name);
+
+	try_override(canonical_name.substr(position + 1), setver_table.by_file_name);
 }
 
 std_fs::path SETVER::GetTableFilePath()
