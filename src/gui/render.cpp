@@ -1004,7 +1004,7 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 	}
 }
 
-const std::string RENDER_GetCgaColorsSetting()
+std::string RENDER_GetCgaColorsSetting()
 {
 	return get_render_section()->Get_string("cga_colors");
 }
