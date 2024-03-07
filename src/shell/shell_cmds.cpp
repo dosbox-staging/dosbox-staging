@@ -1457,7 +1457,6 @@ void DOS_Shell::CMD_ATTRIB(char *args)
 void DOS_Shell::CMD_SET(char * args) {
 	HELP("SET");
 	StripSpaces(args);
-	std::string line;
 	if (!*args) {
 		/* No command line show all environment lines */
 		for (const auto& entry : psp->GetAllRawEnvironmentStrings()) {
