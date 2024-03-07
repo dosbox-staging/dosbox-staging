@@ -736,7 +736,7 @@ void FinishSetMode_ET3K(io_port_t crtc_base, VGA_ModeExtraData *modeData)
 
 	// Select SVGA clock to get close to 60Hz (not particularly clean implementation)
 	if (modeData->modeNo > 0x13) {
-		Bits target = static_cast<Bits>(modeData->vtotal * 8 * modeData->htotal * 60);
+		Bits target = modeData->vtotal * 8 * modeData->htotal * 60;
 		Bitu best = 1;
 		int dist = 100000000;
 		for (Bitu i = 0; i < 8; i++) {
