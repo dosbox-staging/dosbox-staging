@@ -44,7 +44,7 @@ void LOADROM::Run(void)
 	}
 	uint8_t drive;
 	char fullname[DOS_PATHLENGTH];
-	if (!DOS_MakeName((char*)temp_line.c_str(), fullname, &drive)) {
+	if (!DOS_MakeName(temp_line.c_str(), fullname, &drive)) {
 		return;
 	}
 
