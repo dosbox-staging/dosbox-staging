@@ -194,7 +194,7 @@ AspectRatioCorrectionMode RENDER_GetAspectRatioCorrectionMode();
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_px);
 
-const std::string RENDER_GetCgaColorsSetting();
+std::string RENDER_GetCgaColorsSetting();
 
 void RENDER_SyncMonochromePaletteSetting(const enum MonochromePalette palette);
 
