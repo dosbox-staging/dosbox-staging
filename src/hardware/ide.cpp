@@ -2429,8 +2429,7 @@ void IDE_Hard_Disk_Detach(uint8_t bios_disk_index)
 	}
 }
 
-char idepos[4];
-char *GetIDEPosition(uint8_t bios_disk_index)
+std::string GetIDEPosition(uint8_t bios_disk_index)
 {
 	for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
 		IDEController *c = GetIDEController(index);
@@ -2438,12 +2437,11 @@ char *GetIDEPosition(uint8_t bios_disk_index)
 			for (int slave = 0; slave < 2; slave++) {
 				IDEATADevice *dev = dynamic_cast<IDEATADevice *>(c->device[slave]);
 				if (dev && dev->bios_disk_index == bios_disk_index) {
-					safe_sprintf(idepos, "%d%c", index + 1, slave ? 's' : 'm');
-					return idepos;
+					return std::to_string(index + 1) + (slave ? 's' : 'm');
 				}
 			}
 	}
-	return (char *)("");
+	return "";
 }
 
 std::string GetIDEInfo()
