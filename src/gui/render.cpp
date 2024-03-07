@@ -1360,7 +1360,7 @@ void RENDER_Init(Section* sec)
 	aspect_ratio_correction_mode = get_aspect_ratio_correction_mode_setting();
 
 	if (const auto& settings = parse_viewport_settings(
-	            section->Get_string("viewport").c_str());
+	            section->Get_string("viewport"));
 	    settings) {
 		viewport_settings = *settings;
 	} else {
