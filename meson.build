@@ -669,7 +669,7 @@ opus_dep = dependency(
     include_type: 'system',
 )
 
-if host_machine.system() == 'darwin'
+if host_machine.system() == 'darwin' and not wraps_disabled
     # use SDL2 wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
     sdl2_dep = subproject(
         'sdl2',
@@ -926,7 +926,7 @@ have_fd_zero = (
 sdl2_net_dep = optional_dep
 sdl2_net_summary_msg = 'Disabled'
 if get_option('use_sdl2_net')
-    if host_machine.system() == 'darwin'
+    if host_machine.system() == 'darwin' and not wraps_disabled
         # use wrap so we can control MACOSX_DEPLOYMENT_TARGET during the build
         sdl2_net_dep = subproject(
             'sdl2_net',
