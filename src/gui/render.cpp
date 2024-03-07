@@ -182,12 +182,10 @@ static void finish_line_handler(const void* s)
 
 static void clear_cache_handler(const void* src)
 {
-	Bitu x, width;
-	uint32_t *srcLine, *cacheLine;
-	srcLine   = (uint32_t*)src;
-	cacheLine = (uint32_t*)render.scale.cacheRead;
-	width     = render.scale.cachePitch / 4;
-	for (x = 0; x < width; x++) {
+	const uint32_t* srcLine = (const uint32_t*)src;
+	uint32_t* cacheLine     = (uint32_t*)render.scale.cacheRead;
+	Bitu width              = render.scale.cachePitch / 4;
+	for (Bitu x = 0; x < width; x++) {
 		cacheLine[x] = ~srcLine[x];
 	}
 	render.scale.lineHandler(src);
