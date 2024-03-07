@@ -140,7 +140,7 @@ static bool command_is_exit(std::string_view command)
 	static constexpr auto Exit       = std::string_view("exit");
 
 	auto command_start = command.find_first_not_of(Delimiters);
-	if (command_start > command.size() ||
+	if (command_start >= command.size() ||
 	    !ciequals(command[command_start], Exit.front())) {
 		return false;
 	}
