@@ -96,7 +96,7 @@ public:
 		used++;
 	}
 
-	void adds(uint8_t *str, size_t len)
+	void adds(const uint8_t *str, size_t len)
 	{
 		if ((used + len) > size) {
 			static uint16_t lcount = 0;
