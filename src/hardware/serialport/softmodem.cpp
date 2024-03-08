@@ -223,7 +223,7 @@ void CSerialModem::handleUpperEvent(uint16_t type)
 void CSerialModem::SendLine(const char *line) {
 	rqueue->addb(reg[MREG_CR_CHAR]);
 	rqueue->addb(reg[MREG_LF_CHAR]);
-	rqueue->adds((uint8_t *)line, strlen(line));
+	rqueue->adds((const uint8_t *)line, strlen(line));
 	rqueue->addb(reg[MREG_CR_CHAR]);
 	rqueue->addb(reg[MREG_LF_CHAR]);
 }
