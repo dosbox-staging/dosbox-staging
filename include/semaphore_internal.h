@@ -47,9 +47,7 @@ public:
 	void wait()
 	{
 		std::unique_lock lock(mtx);
-		while (count == 0) {
-			cv.wait(lock);
-		}
+		cv.wait(lock, [&]{ return count != 0; });
 		--count;
     }
 
