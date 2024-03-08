@@ -29,7 +29,7 @@
 CHECK_NARROWING();
 
 static constexpr int HistoryMaxLineLength = 256;
-static constexpr int HistoryMaxNumLines = 500;
+static constexpr int HistoryMaxNumLines   = 500;
 
 static std_fs::path get_shell_history_path();
 static bool command_is_exit(std::string_view command);
@@ -41,9 +41,9 @@ void ShellHistory::Append(std::string command, uint16_t code_page)
 		dos_to_utf8(dos_str, utf8_str, code_page);
 		return utf8_str;
 	};
-	
+
 	trim(command);
-	
+
 	auto utf8_command = to_utf8_str(command);
 
 	if (!command_is_exit(command) && !command.empty() &&
@@ -81,7 +81,11 @@ ShellHistory::ShellHistory() : path(get_shell_history_path())
 	}
 	auto history_file = std::ifstream(path);
 	if (!history_file) {
-		path.clear();
+		if (std::filesystem::exists(path)) {
+			LOG_WARNING("SHELL: Unable to read history file: '%s'",
+		            path.string().c_str());
+			path.clear();
+		}
 		return;
 	}
 
