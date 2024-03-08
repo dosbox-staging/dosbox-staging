@@ -13,10 +13,13 @@ env:
   CCACHE_SLOPPINESS: "pch_defines,time_macros"
 
 jobs:
+  linting:
+    uses: ./.github/workflows/linting.yml
+
   build_clang_static_analyser:
     name: Clang static analyzer
     runs-on: ubuntu-22.04
-    needs: run_linters
+    needs: linting
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
