@@ -602,7 +602,7 @@ TCPClientSocket::TCPClientSocket(const char *destination, uint16_t port)
 
 	IPaddress openip;
 	//Ancient versions of SDL_net had this as char*. People still appear to be using this one.
-	if (!SDLNet_ResolveHost(&openip,const_cast<char*>(destination),port)) {
+	if (!SDLNet_ResolveHost(&openip, destination, port)) {
 		listensocketset = SDLNet_AllocSocketSet(1);
 		if(!listensocketset) return;
 		mysock = SDLNet_TCP_Open(&openip);
