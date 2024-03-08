@@ -2,9 +2,9 @@ name: Clang analysis
 
 on: [push, pull_request]
 
-#concurrency:
-# group: ${{ github.workflow }}-${{ github.ref }}
-# cancel-in-progress: true
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CCACHE_DIR:        "/dev/shm/.ccache"
@@ -13,13 +13,9 @@ env:
   CCACHE_SLOPPINESS: "pch_defines,time_macros"
 
 jobs:
-  linting:
-    uses: ./.github/workflows/linting.yml
-
   build_clang_static_analyser:
     name: Clang static analyzer
     runs-on: ubuntu-22.04
-    needs: linting
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
