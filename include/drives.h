@@ -197,7 +197,7 @@ class fatDrive final : public DOS_Drive {
 public:
 	fatDrive(const char* sysFilename, uint32_t bytesector,
 	         uint32_t cylsector, uint32_t headscyl, uint32_t cylinders,
-	         uint32_t startSector, bool roflag);
+	         bool roflag);
 	fatDrive(const fatDrive&)            = delete; // prevent copying
 	fatDrive& operator=(const fatDrive&) = delete; // prevent assignment
 	bool FileOpen(DOS_File** file, char* name, uint32_t flags) override;

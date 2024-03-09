@@ -432,7 +432,6 @@ void IMGMOUNT::Run(void)
 			                                            sizes[1],
 			                                            sizes[2],
 			                                            sizes[3],
-			                                            0,
 			                                            roflag);
 			if (fat_image->created_successfully) {
 				fat_images.emplace_back(std::move(fat_image));
