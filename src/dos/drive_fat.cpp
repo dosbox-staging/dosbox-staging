@@ -778,7 +778,6 @@ fatDrive::fatDrive(const char *sysFilename,
                    uint32_t cylsector,
                    uint32_t headscyl,
                    uint32_t cylinders,
-                   uint32_t startSector,
                    bool roflag)
 	: loadedDisk(nullptr),
 	  created_successfully(true),
@@ -828,7 +827,7 @@ fatDrive::fatDrive(const char *sysFilename,
 
 		if(mbrData.magic1!= 0x55 ||	mbrData.magic2!= 0xaa) LOG_MSG("Possibly invalid partition table in disk image.");
 
-		startSector = 63;
+		uint32_t startSector = 63;
 		int m;
 		for(m=0;m<4;m++) {
 			/* Pick the first available partition */
