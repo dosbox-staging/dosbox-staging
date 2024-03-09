@@ -304,7 +304,7 @@ std::vector<VideoModeBlock> ModeList_EGA = {
         { 0x00E,   M_EGA, 640, 200, 80, 25, 8,  8, 4, 0xA0000, 0x4000, 117, 262, 80, 200,                                0},
         { 0x00F,   M_EGA, 640, 350, 80, 25, 8, 14, 2, 0xA0000, 0x8000, 101, 370, 80, 350,                                0}, // was EGA_2
         { 0x010,   M_EGA, 640, 350, 80, 25, 8, 14, 2, 0xA0000, 0x8000,  96, 366, 80, 350,                                0},
-}
+};
 
 std::vector<VideoModeBlock> ModeList_OTHER = {
   //     mode       type    sw   sh   tw th  cw ch  pt pstart   plength htot vtot hde vde  special flags
