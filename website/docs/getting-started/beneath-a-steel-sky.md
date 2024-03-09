@@ -611,7 +611,7 @@ in the 1990s for gaming. This is what
 The following table gives you reasonable rough cycles values for the most
 popular processors:
 
-<div class="compact" markdown>
+<div class="compact center-table" markdown>
 
 | Emulated CPU      |    MHz |   MIPS | Approx. cycles
 |-------------------|-------:|-------:|-----------------:
