@@ -2,13 +2,24 @@
 
 ## Overview
 
-The website and documentation at the
-[https://dosbox-staging.github.io/][website] project website are generated
+The website and documentation at
+[https://dosbox-staging.github.io/][website] are generated
 from the [MkDocs][mkdocs] sources in the [`website`](/website) directory of
 this repository. We use a customised version of the [Material for
 MkDocs]([mkdocs-material]) theme.
 
-Both the website and documentation sources live in this single MkDocs source tree.
+The [Deploy website][deploy-website] GitHub workflow publishes the
+generated website to our organisation-level GitHub Pages repository at
+[https://github.com/dosbox-staging/dosbox-staging.github.io/][dosbox-github-pages].
+
+The website and documentation sources live in a single MkDocs source tree,
+including a minimal amount of small image files. Large binary files (e.g.,
+images, audio and video files) are checked in directly to the
+[static](https://github.com/dosbox-staging/dosbox-staging.github.io/tree/master/static)
+directory of the [GitHub Pages repo][dosbox-github-pages]. This is necessary
+to keep the size of the [main DOSBox Staging repo][dosbox-staging] to a
+minimum. The [Deploy website workflow][deploy-website] leaves the `static`
+directory alone; its contents are managed entirely manually.
 
 If you're unfamiliar with MkDocs, here are a few pointers to get you started:
 
@@ -20,8 +31,13 @@ If you're unfamiliar with MkDocs, here are a few pointers to get you started:
 > or documentation—*do not* attempt to push any manual changes to our
 > organisation-level GitHub Pages repo directly at
 > [https://github.com/dosbox-staging/dosbox-staging.github.io/][dosbox-github-pages].
-> If you do so, your manual changes will be overwritten by the next proper
-> website deployment action.
+> If you do so, your manual changes will be overwritten by the next run of the
+> deploy website workflow.
+>
+> As noted above, the only exception to this is managing large binary
+> files in the
+> [static](https://github.com/dosbox-staging/dosbox-staging.github.io/tree/master/static)
+> directory.
 
 
 ## Branching strategy
@@ -90,7 +106,7 @@ There are two common scenarios when making website/documentation changes:
 ## Deploying the website & documentation
 
 The website and documentation are deployed via the  [Deploy
-website][deploy-website] GitHub Action. This will generate the website from
+website][deploy-website] GitHub workflow. This will generate the website from
 the MkDocs sources and push the generated content into our [organisation-level
 GitHub Pages repo][dosbox-github-pages]. The changes should automatically
 appear on the [https://dosbox-staging.github.io/][website] project website
@@ -120,9 +136,8 @@ management tool to install MkDocs and its dependencies. Please refer to
 [pip installation instructions](https://pip.pypa.io/en/stable/installation/)
 for details.
 
-Our [Deploy website][deploy-website] GitHub Action that builds and deploys the
-documentation uses the [Ubuntu
-22.04](https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md)
+Our [Deploy website][deploy-website] GitHub workflow that builds and deploys the
+documentation uses the [Ubuntu 22.04](https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md)
 image, which comes with Python 3.10.6 and pip3 22.0.2, so these are the
 recommended minimum versions.
 
@@ -196,7 +211,8 @@ then check in both the `.css` and the `.scss` files.
 
 - We generally recommend following Google's
   [developer documentation style guide](https://developers.google.com/style).
-  At the very least, familiarise yourself with the [key points](https://developers.google.com/style/highlights);
+  At the very least, familiarise yourself with the
+  [key points](https://developers.google.com/style/highlights);
   it will greatly improve your style and consistency.
 
 - We use International English as opposed to American English in our
@@ -225,8 +241,8 @@ then check in both the `.css` and the `.scss` files.
   writer! Just as you would not publish your very first working draft of a
   piece of code without cleaning it up first (at least we *really* hope you
   wouldn't! 😎), very few people are able to churn out perfect prose without
-  iteratively revising it a few times. Even the greatest literary authors
-  need a team of editors, or self-edit and refine their work themselves over long
+  iteratively revising it a few times. Even the greatest literary authors need
+  a team of editors, or self-edit and refine their work themselves over long
   periods of time!
 
 
@@ -248,36 +264,52 @@ then check in both the `.css` and the `.scss` files.
 [mkdocs-material]: https://squidfunk.github.io/mkdocs-material/
 
 [website]: https://dosbox-staging.github.io/
+[dosbox-staging]: https://github.com/dosbox-staging/dosbox-staging/
 [dosbox-github-pages]: https://github.com/dosbox-staging/dosbox-staging.github.io/
 [deploy-website]: https://github.com/dosbox-staging/dosbox-staging/actions/workflows/deploy-website.yml
 [main-branch]: https://github.com/dosbox-staging/dosbox-staging/tree/main
 
 ## Deploy website action
 
-The [Deploy website][deploy-website] GitHub Action needs to push the generated files to our [organisation-level GitHub Pages repo](dosbox-github-pages). Such cross-repository access is a bit tricky; the deploy action achieves it via a personal access token. We use tokens with an expiry for security reasons, so at some point the "Commit & publish new release" step of the deploy action will start to fail. You'll need to generate a new token when this happens as described below.
+The [Deploy website][deploy-website] GitHub workflow needs to push the
+generated files to our [organisation-level GitHub Pages
+repo](dosbox-github-pages). Such cross-repository access is a bit tricky; the
+deploy action achieves it via a personal access token. We use tokens with an
+expiry for security reasons, so at some point the "Commit & publish new
+release" step of the deploy action will start to fail. You'll need to generate
+a new token when this happens as described below.
 
 ### Generate a new classic personal access token
 
-1. When logged in to GitHub as the administrator of the DOSBox Staging organisation, click on your user profile picture in the top right corner, then on the **Settings** menu (cog icon).
+1. When logged in to GitHub as the administrator of the DOSBox Staging
+   organisation, click on your user profile picture in the top right corner,
+   then on the **Settings** menu (cog icon).
 
 2. Go to the **Developer settings** page (bottom-most item in the left menu pane).
 
 3. Go to the **Personalised access tokens / Tokens (classic)** page.
 
-4. Click on the **Generate new token** button, then select **Generate new token (classic)**.
+4. Click on the **Generate new token** button, then select **Generate new
+   token (classic)**.
 
-5. Give your new token a name and an expiry date (say a year from now), then enable all repo privileges by checking the **repo** item.
+5. Give your new token a name and an expiry date (say a year from now), then
+   enable all repo privileges by checking the **repo** item.
  
-6. Press **Generate token** at the bottom of the page, then copy the generated token (you won't be able to retrieve it later; you'll need to generate a new one if you lose it).
+6. Press **Generate token** at the bottom of the page, then copy the generated
+   token (you won't be able to retrieve it later; you'll need to generate a
+   new one if you lose it).
 
 ### Set up the secret access token
 
-1. Go to the **Settings** page of the [dosbox-staging](https://github.com/dosbox-staging/dosbox-staging/settings) repo.
+1. Go to the [Settings page](https://github.com/dosbox-staging/dosbox-staging/settings) of the
+   [dosbox-staging][dosbox-staging]  repo.
 
-2. Open the **Secrets and variables** menu in the left pane, then select **Actions**.
+2. Open the **Secrets and variables** menu in the left pane, then select
+   **Actions**.
 
-3. Edit the `ACCESS_TOKEN_REPO` item in **Repository secrets** (or add it if it doesn't exist), paste in the new token, then click the **Update secret** button.
+3. Edit the `ACCESS_TOKEN_REPO` item in **Repository secrets** (or add it if
+   it doesn't exist), paste in the new token, then click the **Update secret**
+   button.
 
 After these steps, the deploy website action should run without errors.
-
 
