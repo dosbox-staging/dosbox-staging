@@ -322,24 +322,9 @@ std::vector<VideoModeBlock> ModeList_OTHER = {
         {0xFFFF,   M_ERROR,   0,   0,  0,  0, 0, 0, 0, 0x00000, 0x0000,   0,   0,  0,   0, 0},
 };
 
-std::vector<VideoModeBlock> ModeList_OTHER = {
-/* mode  ,type     ,sw  ,sh  ,tw ,th ,cw,ch ,pt,pstart  ,plength,htot,vtot,hde,vde ,special flags */
-{ 0x000  ,M_TEXT   ,320 ,400 ,40 ,25 ,8 ,8  ,8 ,0xB8000 ,0x0800 ,56  ,31  ,40 ,25  ,0   },
-{ 0x001  ,M_TEXT   ,320 ,400 ,40 ,25 ,8 ,8  ,8 ,0xB8000 ,0x0800 ,56  ,31  ,40 ,25  ,0	},
-{ 0x002  ,M_TEXT   ,640 ,400 ,80 ,25 ,8 ,8  ,4 ,0xB8000 ,0x1000 ,113 ,31  ,80 ,25  ,0	},
-{ 0x003  ,M_TEXT   ,640 ,400 ,80 ,25 ,8 ,8  ,4 ,0xB8000 ,0x1000 ,113 ,31  ,80 ,25  ,0	},
-{ 0x004  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,56  ,127 ,40 ,100 ,0   },
-{ 0x005  ,M_CGA4   ,320 ,200 ,40 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,56  ,127 ,40 ,100 ,0   },
-{ 0x006  ,M_CGA2   ,640 ,200 ,80 ,25 ,8 ,8  ,1 ,0xB8000 ,0x4000 ,56  ,127 ,40 ,100 ,0   },
-{ 0x008  ,M_TANDY16,160 ,200 ,20 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,56  ,127 ,40 ,100 ,0   },
-{ 0x009  ,M_TANDY16,320 ,200 ,40 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,113 ,63  ,80 ,50  ,0   },
-{ 0x00A  ,M_CGA4   ,640 ,200 ,80 ,25 ,8 ,8  ,8 ,0xB8000 ,0x2000 ,113 ,63  ,80 ,50  ,0   },
-//{ 0x00E  ,M_TANDY16,640 ,200 ,80 ,25 ,8 ,8  ,8 ,0xA0000 ,0x10000 ,113 ,256 ,80 ,200 ,0   },
-{0xFFFF  ,M_ERROR  ,0   ,0   ,0  ,0  ,0 ,0  ,0 ,0x00000 ,0x0000 ,0   ,0   ,0  ,0   ,0 	},
+std::vector<VideoModeBlock> Hercules_Mode = {
+{ 0x007  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,1 ,0xB0000 ,0x1000 ,97 ,25  ,80 ,25  ,0	}
 };
-
-VideoModeBlock Hercules_Mode=
-{ 0x007  ,M_TEXT   ,640 ,350 ,80 ,25 ,8 ,14 ,1 ,0xB0000 ,0x1000 ,97 ,25  ,80 ,25  ,0	};
 
 // The canonical CGA palette as emulated by VGA cards.
 constexpr cga_colors_t cga_colors_default = { Rgb666
@@ -395,7 +380,6 @@ constexpr cga_colors_t cga_colors_agi_amigaish = { Rgb666
 		{0x15, 0x15, 0x15}, {0x00, 0x2f, 0x3f}, {0x00, 0x33, 0x15}, {0x15, 0x3f, 0x3f},
 		{0x3f, 0x27, 0x23}, {0x3f, 0x15, 0x3f}, {0x3b, 0x3b, 0x00}, {0x3f, 0x3f, 0x3f},
 };
-VideoModeBlock * CurMode;
 
 // C64-like colors based on the Colodore C64 palette by pepto.
 // (brightness=50, contrast=50, saturation=50; custom dark cyan and bright
@@ -423,6 +407,8 @@ constexpr cga_colors_t cga_colors_tandy_warm = { Rgb666
 		{0x14, 0x14, 0x14}, {0x16, 0x1a, 0x3c}, {0x11, 0x2f, 0x14}, {0x10, 0x37, 0x3e},
 		{0x3f, 0x1c, 0x14}, {0x3f, 0x21, 0x3d}, {0x3d, 0x38, 0x12}, {0x3c, 0x3c, 0x3e},
 };
+
+palette_t palette;
 
 // A modern take on the canonical CGA palette with dialed back contrast.
 // https://lospec.com/palette-list/aap-dga16
@@ -646,7 +632,7 @@ static void SetTextLines(void)
 }
 
 void INT10_SetCurMode(void) {
-	Bit16u bios_mode=(Bit16u)real_readb(BIOSMEM_SEG,BIOSMEM_CURRENT_MODE);
+	uint16_t bios_mode = (uint16_t)real_readb(BIOSMEM_SEG, BIOSMEM_CURRENT_MODE);
 	if (GCC_UNLIKELY(CurMode->mode!=bios_mode)) {
 		bool mode_changed=false;
 
@@ -916,9 +902,9 @@ static bool INT10_SetVideoMode_OTHER(uint16_t mode, bool clearmem)
 		VGA_DAC_SetEntry(ct, entry.red, entry.green, entry.blue);
 	}
 	//Setup the tandy palette
-	for (Bit8u ct=0;ct<16;ct++) VGA_DAC_CombineColor(ct,ct);
+	for (uint8_t ct=0;ct<16;ct++) VGA_DAC_CombineColor(ct,ct);
 	//Setup the special registers for each machine type
-	Bit8u mode_control_list[0xa+1]={
+	uint8_t mode_control_list[0xa+1]={
 		0x2c,0x28,0x2d,0x29,	//0-3
 		0x2a,0x2e,0x1e,0x29,	//4-7
 		0x2a,0x2b,0x3b			//8-a
@@ -1293,7 +1279,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 
 	//  End Horizontal Retrace
 	Bitu ret_end;
-	if (CurMode->special & _EGA_HALF_CLOCK) {
+	if (CurMode->special & EGA_HALF_CLOCK) {
 		if (CurMode->type==M_CGA2) ret_end=0;	// mode 6
 		else if (CurMode->special & EGA_LINE_DOUBLE)
 			ret_end = (CurMode->htotal - 18) & 0x1f;
@@ -1706,7 +1692,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 	case M_LIN16:
 	case M_LIN24:
 	case M_LIN32:
-		for (Bit8u ct=0;ct<16;ct++) att_data[ct]=ct;
+		for (uint8_t ct=0;ct<16;ct++) att_data[ct]=ct;
 		att_data[0x10]=0x41;		//Color Graphics 8-bit
 		break;
 	case M_CGA16:
@@ -1770,11 +1756,7 @@ bool INT10_SetVideoMode(uint16_t mode)
 			// IBM and clones use 248 default colors in the palette for 256-color mode.
 			// The last 8 colors of the palette are only initialized to 0 at BIOS init.
 			// Palette index is left at 0xf8 as on most clones, IBM leaves it at 0x10.
-			for (i=0;i<248;i++) {
-				IO_Write(0x3c9,vga_palette[i][0]);
-				IO_Write(0x3c9,vga_palette[i][1]);
-				IO_Write(0x3c9,vga_palette[i][2]);
-			}
+			write_palette_dac_data(palette.vga);
 			break;
 		case M_CGA16:
 		case M_CGA2_COMPOSITE:
@@ -1981,29 +1963,26 @@ uint32_t VideoModeMemSize(uint16_t mode)
 	if (!IS_VGA_ARCH)
 		return 0;
 
-	VideoModeBlock* modelist = NULL;
+	// lanmda function to return a reference to the modelist based on the
+	// svgaCard switch
+	auto get_mode_list = [](SVGACards card) -> const std::vector<VideoModeBlock>& {
+		switch (card) {
+		case SVGA_TsengET4K:
+		case SVGA_TsengET3K: return ModeList_VGA_Tseng;
+		case SVGA_ParadisePVGA1A: return ModeList_VGA_Paradise;
+		default: return ModeList_VGA;
+		}
+	};
+	const auto& modelist = get_mode_list(svgaCard);
+	auto vmodeBlock      = modelist.end();
 
-	switch (svgaCard) {
-	case SVGA_TsengET4K:
-	case SVGA_TsengET3K:
-		modelist = ModeList_VGA_Tseng;
-		break;
-	case SVGA_ParadisePVGA1A:
-		modelist = ModeList_VGA_Paradise;
-		break;
-	default:
-		modelist = ModeList_VGA;
-		break;
-	}
-
-	VideoModeBlock* vmodeBlock = NULL;
-	Bitu i=0;
-	while (modelist[i].mode!=0xffff) {
-		if (modelist[i].mode==mode) {
-			vmodeBlock = &modelist[i];
+	for (auto it = modelist.begin(); it != modelist.end(); ++it) {
+		if (it->mode == mode) {
+			vmodeBlock = it;
 			break;
 		}
 	}
+
 	if (vmodeBlock == modelist.end())
 		return 0;
 
