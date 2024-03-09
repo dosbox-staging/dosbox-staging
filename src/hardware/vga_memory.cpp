@@ -178,14 +178,15 @@ public:
 		uint8_t * write_pixels=&vga.fastmem[start<<3];
 
 		uint32_t colors0_3, colors4_7;
-		VgaLatch temp;temp.d=(pixels.d>>4) & 0x0f0f0f0f;
+		VgaLatch temp;
+		temp.d=(pixels.d>>4) & 0x0f0f0f0f;
 		colors0_3 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
 			Expand16Table[2][temp.b[2]] |
 			Expand16Table[3][temp.b[3]];
 		*(uint32_t *)write_pixels=colors0_3;
-		temp.d=pixels.d & 0x0f0f0f0f;
+		temp.d=pixels.d & 0x0f0f0f0f; //-V519
 		colors4_7 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
@@ -271,14 +272,15 @@ public:
 		uint8_t * write_pixels=&vga.fastmem[start<<3];
 
 		uint32_t colors0_3, colors4_7;
-		VgaLatch temp;temp.d=(pixels.d>>4) & 0x0f0f0f0f;
+		VgaLatch temp;
+		temp.d=(pixels.d>>4) & 0x0f0f0f0f;
 			colors0_3 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
 			Expand16Table[2][temp.b[2]] |
 			Expand16Table[3][temp.b[3]];
 		*(uint32_t *)write_pixels=colors0_3;
-		temp.d=pixels.d & 0x0f0f0f0f;
+		temp.d=pixels.d & 0x0f0f0f0f; //-V519
 		colors4_7 = 
 			Expand16Table[0][temp.b[0]] |
 			Expand16Table[1][temp.b[1]] |
