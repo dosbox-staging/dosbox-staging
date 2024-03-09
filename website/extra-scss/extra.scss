@@ -425,6 +425,15 @@ small {
   /*------------------------------------------------------------------------*/
   /* Tables                                                                 */
   /*------------------------------------------------------------------------*/
+  .center-table {
+    text-align: center;
+
+    :is(td,th):not([align]) {
+      // Reset alignment for table cells */
+      text-align: initial;
+    }
+  }
+
   table:not([class]) {
     font-size: 0.78rem;
     border: none;

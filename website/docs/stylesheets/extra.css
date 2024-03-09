@@ -394,6 +394,12 @@ small {
 .md-typeset :is(.question, .help, .faq) > :is(.admonition-title, summary):before {
   background-color: #00b070;
 }
+.md-typeset .center-table {
+  text-align: center;
+}
+.md-typeset .center-table :is(td, th):not([align]) {
+  text-align: initial;
+}
 .md-typeset table:not([class]) {
   font-size: 0.78rem;
   border: none;
