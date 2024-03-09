@@ -419,12 +419,13 @@ small {
 }
 .md-typeset figure {
   max-width: 756px;
+  margin: 0.5rem auto 1rem auto;
 }
 .md-typeset figure p {
   margin: 0;
 }
 .md-typeset figure img {
-  margin: auto;
+  margin: 0.5rem auto;
 }
 .md-typeset figure audio {
   width: 17rem;
@@ -523,6 +524,14 @@ small {
   padding: 0 1.2rem;
   font-size: 0.76rem;
 }
+.front-page .headerlink {
+  display: none;
+}
+@media screen and (min-width: 45em) {
+  .front-page .headerlink {
+    display: inline;
+  }
+}
 .front-page .header {
   margin-top: 1.5rem;
 }
@@ -618,23 +627,30 @@ small {
   vertical-align: -0.3rem;
 }
 .front-page section {
+  margin-top: 3rem;
   text-align: center;
-  margin-top: 4rem;
 }
 .front-page section > h1 {
-  margin-bottom: 1.4rem;
+  margin: 0 1rem 1.4rem 1rem;
   font: 400 1.75rem/1.2 Titillium Web;
   text-align: center;
   color: #333;
-  margin-left: 1.2rem;
 }
 .front-page section > p {
-  margin: 0 auto 1.4rem auto;
+  margin: 0 auto 0.7rem auto;
   text-align: center;
   font-size: 0.95rem;
   line-height: 1.55rem;
   max-width: 34rem;
   color: #333;
+}
+@media screen and (min-width: 45em) {
+  .front-page section {
+    margin-top: 4rem;
+  }
+  .front-page section > p {
+    margin-bottom: 1.4rem;
+  }
 }
 .front-page .features-grid {
   width: 100%;
@@ -691,6 +707,9 @@ small {
   justify-content: center;
   gap: 0 1.2rem;
 }
+.front-page .image-grid figure {
+  margin-bottom: 0;
+}
 @media screen and (min-width: 45em) {
   .front-page .image-grid figure {
     flex-basis: calc((100% - 1.2rem) / 2);
@@ -700,6 +719,9 @@ small {
   .front-page .image-grid figure {
     flex-basis: calc((100% - 2.4rem) / 3);
   }
+}
+.front-page .image-grid figure:last-child {
+  margin-bottom: 0.8rem;
 }
 .front-page .image-grid figure img {
   max-width: 100%;
@@ -711,13 +733,26 @@ small {
   color: rgba(0, 0, 0, 0.5);
   font-style: normal;
 }
+.front-page .image-grid figure figcaption p {
+  margin: 0;
+}
+@media screen and (min-width: 30rem) {
+  .front-page .image-grid figure figcaption p {
+    margin-bottom: 0.8rem;
+  }
+}
 .front-page .screenshots h2 {
   width: 100%;
   margin: 0;
-  padding: 1.4rem 0;
+  padding: 1.4rem 0 0.4rem 0;
   text-align: center;
   font: 600 1.4rem/1.2 Titillium Web;
   color: rgba(0, 0, 0, 0.66);
+}
+@media screen and (min-width: 45em) {
+  .front-page .screenshots h2 {
+    padding-bottom: 1rem;
+  }
 }
 .front-page .screenshots :is(h2):target {
   --md-scroll-offset: 1.4rem;
@@ -748,7 +783,7 @@ small {
 }
 .front-page .screenshots .arcade {
   background: #444;
-  padding-bottom: 3.5rem;
+  padding-bottom: 2rem;
 }
 @media screen and (min-width: 60em) {
   .front-page .screenshots .arcade {
