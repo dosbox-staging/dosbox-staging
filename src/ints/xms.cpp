@@ -99,12 +99,12 @@ struct XMS_MemMove {
 	union {
 		RealPt realpt;
 		uint32_t offset;
-	} src;
+	} src = {};
 	uint16_t dest_handle = 0;
 	union {
 		RealPt realpt;
 		uint32_t offset;
-	} dest;
+	} dest = {};
 
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
