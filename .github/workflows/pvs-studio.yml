@@ -14,12 +14,12 @@ on:
       - 'website/**'
 
   # Same as 'pull_request', except for forked PRs where it uses the last
-  # commit of the workflow from the *target branch*, plus gives read/write
-  # token permissions and access to secrets.
-  # 
+  # commit of the *target branch*, plus gives read/write token permissions and
+  # access to secrets.
+  #
   # Access to secrets is the important bit here; with regular 'pull_request',
   # forked PRs could not access the PVS-Studio license stored as a secret and
-  # this workflow would just fail.
+  # this workflow would fail.
   pull_request_target:
     paths-ignore:
       - '.clang-format'
@@ -39,13 +39,30 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       debfile: pvs-studio-7.29.79138.387-amd64.deb
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          submodules: false
 
-      - run:  sudo apt-get update
+    steps:
+      - name: Checkout PR branch and all PR commits
+        uses: actions/checkout@v3
+        with:
+          # `pull_request_target` checks out the target branch by default due
+          # to security reasons. We explicitly override that here to check out
+          # the code from the PR instead. This way, we can run the code from
+          # the PR while still having access to the secrets (the PVS-Studio
+          # license is stored as a secret).
+          #
+          # This is potentially dangerous, as any random contributor could
+          # modify any of the referenced scripts in the PVS workflow to dump
+          # the secrets into the logs or upload them somewhere. Therefore, we
+          # enforce in the repository settings that workflow runs must always
+          # be manually approved on all forked PRs from external contributors.
+          #
+          # The important bit is ALWAYS REVIEW PRs from unknowns external
+          # contributors first and look out for malicious code before
+          # approving the workflow runs!
+          #
+          #
+          ref: ${{  github.event.pull_request.head.sha }}
+          submodules: false
 
       - name: Log and setup environment
         run: |
