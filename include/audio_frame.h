@@ -18,6 +18,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
+
 #ifndef DOSBOX_AUDIO_FRAME_H
 #define DOSBOX_AUDIO_FRAME_H
 
