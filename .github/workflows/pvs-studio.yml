@@ -13,15 +13,6 @@ on:
       - 'licenses/**'
       - 'website/**'
 
-  pull_request:
-    paths-ignore:
-      - '.clang-format'
-      - '.mdl-styles'
-      - '*.md'
-      - 'docs/**'
-      - 'licenses/**'
-      - 'website/**'
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
