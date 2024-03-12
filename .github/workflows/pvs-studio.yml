@@ -13,14 +13,7 @@ on:
       - 'licenses/**'
       - 'website/**'
 
-  # Same as 'pull_request', except for forked PRs where it uses the last
-  # commit of the workflow from the *target branch*, plus gives read/write
-  # token permissions and access to secrets.
-  # 
-  # Access to secrets is the important bit here; with regular 'pull_request',
-  # forked PRs could not access the PVS-Studio license stored as a secret and
-  # this workflow would just fail.
-  pull_request_target:
+  pull_request:
     paths-ignore:
       - '.clang-format'
       - '.mdl-styles'
