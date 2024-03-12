@@ -14,9 +14,9 @@ on:
       - 'website/**'
 
   # Same as 'pull_request', except for forked PRs where it uses the last
-  # commit of the *target branch*, plus gives read/write token permissions and
-  # access to secrets.
-  #
+  # commit of the workflow from the *target branch*, plus gives read/write
+  # token permissions and access to secrets.
+  # 
   # Access to secrets is the important bit here; with regular 'pull_request',
   # forked PRs could not access the PVS-Studio license stored as a secret and
   # this workflow would just fail.
@@ -43,25 +43,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # `pull_request_target` checks out the target branch by default due
-          # to security reasons. We explicitly override that here to check out
-          # the code from the PR. This way we can run the code from the PR
-          # while having access to the secrets (the PVS-Studio license is
-          # stored as a secret).
-          #
-          # This is potentially dangerous as any random contributor could
-          # modify any of the referenced scripts in this workflow to dump the
-          # secrets into the logs or upload them somewhere. Therefore, we
-          # enforce it in the repository settings that workflow runs must be
-          # always manually approved on all forked PRs from external
-          # contributors.
-          #
-          # The important bit is to ALWAYS REVIEW PRs from unknowns external
-          # contributors first and look out for malicious code before
-          # approving the workflow runs!
-          #
-          ref: ${{ github.event.pull_request.head.sha }}
           submodules: false
+
+      - run:  sudo apt-get update
 
       - name: Log and setup environment
         run: |
