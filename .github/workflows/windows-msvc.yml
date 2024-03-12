@@ -25,7 +25,7 @@ concurrency:
 
 env:
   VCPKG_ROOT: C:\vcpkg
-  VCPKG_BINARY_SOURCES: 'clear;nuget,GitHub,readwrite'
+  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
 
 jobs:
   build_windows_vs:
@@ -45,25 +45,12 @@ jobs:
         with:
           submodules: false
 
-      - name:  Setup vcpkg and NuGet
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd "${{ env.VCPKG_ROOT }}"
-          git checkout master -f
-          git pull
-          ./bootstrap-vcpkg.sh -disableMetrics
-          nuget=$(./vcpkg.exe fetch nuget | tail -n 1)
-          owner="${GITHUB_REPOSITORY%/*}"
-          source_url="https://nuget.pkg.github.com/$owner/index.json"
-          "$nuget" sources add \
-            -source "$source_url" \
-            -storepasswordincleartext \
-            -name "GitHub" \
-            -username "$owner" \
-            -password "${{ secrets.GITHUB_TOKEN }}"
-          "$nuget" setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -source "$source_url"
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -124,25 +111,12 @@ jobs:
         with:
           submodules: false
 
-      - name:  Setup vcpkg and NuGet
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd "${{ env.VCPKG_ROOT }}"
-          git checkout master -f
-          git pull
-          ./bootstrap-vcpkg.sh -disableMetrics
-          nuget=$(./vcpkg.exe fetch nuget | tail -n 1)
-          owner="${GITHUB_REPOSITORY%/*}"
-          source_url="https://nuget.pkg.github.com/$owner/index.json"
-          "$nuget" sources add \
-            -source "$source_url" \
-            -storepasswordincleartext \
-            -name "GitHub" \
-            -username "$owner" \
-            -password "${{ secrets.GITHUB_TOKEN }}"
-          "$nuget" setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -source "$source_url"
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
