@@ -1442,7 +1442,20 @@ PixelFormat VGA_ActivateHardwareCursor()
 // A single point to set total drawn lines and update affected delay values
 static void setup_line_drawing_delays(const uint32_t total_lines)
 {
-	vga.draw.parts_total = total_lines;
+	const auto conf    = control->GetSection("dosbox");
+	const auto section = static_cast<Section_prop*>(conf);
+	assert(section);
+
+	if (vga.draw.mode == PART && !section->Get_bool("vga_render_per_scanline")) {
+		// Render the screen in 4 parts; this was the legacy DOSBox behaviour.
+		// A few games needs this (e.g., Deus, Ishar 3, Robinson's Requiem,
+		// Time Travelers) and would crash at startup with per-scanline
+		// rendering enabled. This is most likely due to some VGA emulation
+		// deficiency.
+		vga.draw.parts_total = 4;
+	} else {
+		vga.draw.parts_total = total_lines;
+	}
 
 	vga.draw.delay.parts = vga.draw.delay.vdend / vga.draw.parts_total;
 
