@@ -1452,7 +1452,7 @@ PixelFormat VGA_ActivateHardwareCursor()
 // A single point to set total drawn lines and update affected delay values
 static void setup_line_drawing_delays(const uint32_t total_lines)
 {
-	vga.draw.parts_total = total_lines;
+	vga.draw.parts_total = 4;
 
 	vga.draw.delay.parts = vga.draw.delay.vdend / vga.draw.parts_total;
 
