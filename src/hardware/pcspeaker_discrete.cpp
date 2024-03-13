@@ -486,12 +486,12 @@ PcSpeakerDiscrete::PcSpeakerDiscrete()
 
 	channel->SetPeakAmplitude(static_cast<uint32_t>(amp_positive));
 
-	LOG_MSG("%s: Initialised %s model", device_name, model_name);
+	LOG_INFO("%s: Initialised %s model", device_name, model_name);
 }
 
 PcSpeakerDiscrete::~PcSpeakerDiscrete()
 {
-	LOG_MSG("%s: Shutting down %s model", device_name, model_name);
+	LOG_INFO("%s: Shutting down %s model", device_name, model_name);
 
 	// Deregister the mixer channel, after which it's cleaned up
 	assert(channel);
