@@ -7,7 +7,6 @@
 #define DOSBoxAppExeDebuggerName "dosbox_with_debugger.exe"
 #define DOSBoxAppExeMSVCName "dosbox_msvc.exe"
 #define DOSBoxAppExeMSVCDebuggerName "dosbox_msvc_with_debugger.exe"
-#define DOSBoxAppExeConsoleName "dosbox_with_console.bat"
 #define DOSBoxAppBuildDate GetDateTimeString('yyyymmdd_hhnnss', '', '')
 
 [Setup]
@@ -80,13 +79,12 @@ Source: "{#DOSBoxAppExeName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeName}"
 Source: "{#DOSBoxAppExeDebuggerName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeDebuggerName}"; Flags: ignoreversion; Tasks: not defaultmsvc
 Source: "{#DOSBoxAppExeMSVCName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeName}"; Flags: ignoreversion; Tasks: defaultmsvc
 Source: "{#DOSBoxAppExeMSVCDebuggerName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeDebuggerName}"; Flags: ignoreversion; Tasks: defaultmsvc
-Source: "{#DOSBoxAppExeConsoleName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeConsoleName}"; Flags: ignoreversion
 Source: "{#DOSBoxAppInternal}.ico"; DestDir: "{app}"; DestName: "{#DOSBoxAppInternal}.ico"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#DOSBoxAppName}"; Filename: "{app}\{#DOSBoxAppExeName}"
-Name: "{group}\{#DOSBoxAppName} with console"; Filename: "{app}\{#DOSBoxAppExeConsoleName}"; IconFilename: "{app}\{#DOSBoxAppInternal}.ico"
-Name: "{group}\{#DOSBoxAppName} with debugger"; Filename: "{app}\{#DOSBoxAppExeDebuggerName}"
+Name: "{group}\{#DOSBoxAppName} - no console window"; Filename: "{app}\{#DOSBoxAppExeName} --noconsole"
+Name: "{group}\{#DOSBoxAppName} - with debugger"; Filename: "{app}\{#DOSBoxAppExeDebuggerName}"
 Name: "{group}\Visit {#DOSBoxAppName} website"; Filename: "{#DOSBoxAppURL}"
 Name: "{autodesktop}\{#DOSBoxAppName}"; Filename: "{app}\{#DOSBoxAppExeName}"; Tasks: desktopicon
 
