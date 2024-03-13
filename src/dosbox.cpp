@@ -584,6 +584,12 @@ void DOSBOX_Init()
 	pbool = secprop->Add_bool("vga_8dot_font", only_at_start, false);
 	pbool->Set_help("Use 8-pixel-wide fonts on VGA adapters (disabled by default).");
 
+	pbool = secprop->Add_bool("vga_render_per_scanline", only_at_start, true);
+	pbool->Set_help(
+	        "Emulate accurate per-scanline VGA rendering (enabled by default).\n"
+	        "Currently, you need to disable this for a few games, otherwise they will crash\n"
+	        "at startup (e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).");
+
 	pbool = secprop->Add_bool("speed_mods", only_at_start, true);
 	pbool->Set_help(
 	        "Permit changes known to improve performance (enabled by default).\n"
