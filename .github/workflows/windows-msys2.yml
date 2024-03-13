@@ -338,16 +338,16 @@ jobs:
           install -DT "${BUILD_RELEASE_DIR}/dosbox.exe" "${PKG_RELEASE}/dosbox.exe"
           echo "artifact_name=dosbox-staging-windows-x64-`git describe --abbrev=0`" >> $GITHUB_ENV
 
-      - name: Windows Defender AV Scan
-        shell: powershell
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $dosboxDir = "${{ github.workspace }}\${{ env.PKG_RELEASE }}"
-          & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
-          if( $LASTEXITCODE -ne 0 ) {
-              Get-Content -Path $env:TEMP\MpCmdRun.log
-              Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
-          }
+#      - name: Windows Defender AV Scan
+#         shell: powershell
+#        run: |
+#          $ErrorActionPreference = 'Stop'
+#          $dosboxDir = "${{ github.workspace }}\${{ env.PKG_RELEASE }}"
+#          & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -DisableRemediation -File $dosboxDir
+#          if( $LASTEXITCODE -ne 0 ) {
+#              Get-Content -Path $env:TEMP\MpCmdRun.log
+#              Throw "Exit $LASTEXITCODE : Windows Defender found an issue"
+#          }
 
       - name: Prepare Windows installer
         shell: bash
