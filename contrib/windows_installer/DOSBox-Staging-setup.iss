@@ -72,7 +72,7 @@ Name: "defaultmsvc"; Description: "Run MSVC release binary (instead of MSYS2 bin
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Run]
-Filename: "{app}\{#DOSBoxAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(DOSBoxAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#DOSBoxAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(DOSBoxAppName, '&', '&&')}}"; Flags: postinstall skipifsilent
 
 [Files]
 Source: "program\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
