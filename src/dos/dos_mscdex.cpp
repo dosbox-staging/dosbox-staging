@@ -189,6 +189,7 @@ public:
 	bool		LoadUnloadMedia		(uint8_t subUnit, bool unload);
 	bool		ResumeAudio		(uint8_t subUnit);
 	bool		GetMediaStatus		(uint8_t subUnit, bool& media, bool& changed, bool& trayOpen);
+	bool		Seek		(uint8_t subUnit, uint32_t sector);
 
 private:
 
@@ -805,6 +806,10 @@ bool CMscdex::GetDirectoryEntry(uint16_t drive, bool copyFlag, PhysPt pathname, 
 
 bool CMscdex::GetCurrentPos(uint8_t subUnit, TMSF& pos) {
 	if (subUnit>=numDrives) return false;
+	if (!dinfo[subUnit].audioPlay) {
+		pos = frames_to_msf(dinfo[subUnit].audioStart + REDBOOK_FRAME_PADDING);
+		return true;
+	}
 	TMSF rel;
 	uint8_t attr,track,index;
 	dinfo[subUnit].lastResult = GetSubChannelData(subUnit, attr, track, index, rel, pos);
@@ -915,7 +920,22 @@ bool CMscdex::GetChannelControl(uint8_t subUnit, TCtrl& ctrl) {
 	return true;
 }
 
-static CMscdex* mscdex = nullptr;
+bool CMscdex::Seek(uint8_t subUnit, uint32_t sector)
+{
+	if (subUnit >= numDrives) {
+		return false;
+	}
+	dinfo[subUnit].lastResult = cdrom[subUnit]->StopAudio();
+	if (dinfo[subUnit].lastResult) {
+		dinfo[subUnit].audioPlay   = false;
+		dinfo[subUnit].audioPaused = false;
+		dinfo[subUnit].audioStart  = sector;
+		dinfo[subUnit].audioEnd    = 0;
+	}
+	return dinfo[subUnit].lastResult;
+}
+
+static CMscdex* mscdex        = nullptr;
 static PhysPt curReqheaderPtr = 0;
 
 bool GetMSCDEXDrive(unsigned char drive_letter,CDROM_Interface **_cdrom) {
@@ -1137,6 +1157,7 @@ static Bitu MSCDEX_Strategy_Handler(void) {
 	return CBRET_NONE;
 }
 
+// MSCDEX interrupt documentation: https://makbit.com/articles/mscdex.txt
 static Bitu MSCDEX_Interrupt_Handler(void) {
 	if (curReqheaderPtr==0) {
 		MSCDEX_LOG("MSCDEX: invalid call to interrupt handler");						
@@ -1178,8 +1199,25 @@ static Bitu MSCDEX_Interrupt_Handler(void) {
 							mscdex->ReadSectorsMSF(subUnit,raw,start,len,buffer);
 						break;
 					  };
-		case 0x83	:	// Seek - dont care :)
+		case 0x83	: { // Seek
+						uint8_t addressing_mode = mem_readb(curReqheaderPtr + 0x0D);
+						uint32_t sector = mem_readd(curReqheaderPtr + 0x14);
+						if (addressing_mode != 0) {
+							TMSF msf = {};
+							msf.min = (sector >> 16) & 0xFF;
+							msf.sec = (sector >> 8) & 0xFF;
+							msf.fr = (sector >> 0) & 0xFF;
+							sector = msf_to_frames(msf);
+							if (sector < REDBOOK_FRAME_PADDING) {
+								MSCDEX_LOG("MSCDEX: Seek: invalid position %d:%d:%d", msf.min, msf.sec, msf.fr);
+								sector = 0;
+							} else {
+								sector -= REDBOOK_FRAME_PADDING;
+							}
+						}
+						mscdex->Seek(subUnit, sector);
 						break;
+					  };
 		case 0x84	: {	/* Play Audio Sectors */
 						uint32_t start = mem_readd(curReqheaderPtr+0x0E);
 						uint32_t len	 = mem_readd(curReqheaderPtr+0x12);
