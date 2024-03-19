@@ -660,6 +660,11 @@ Controls the selection of VESA 1.2 and 2.0 modes offered:
 :CONFIG_VGA_8DOT_FONT
 Use 8-pixel-wide fonts on VGA adapters (disabled by default).
 .
+:CONFIG_VGA_RENDER_PER_SCANLINE
+Emulate accurate per-scanline VGA rendering (enabled by default).
+Currently, you need to disable this for a few games, otherwise they will crash
+at startup (e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).
+.
 :CONFIG_SPEED_MODS
 Permit changes known to improve performance (enabled by default).
 Currently, no games are known to be negatively affected by this.
@@ -1095,8 +1100,9 @@ Note: You can fine-tune each channel's chorus level using the MIXER.
 :CONFIG_MIDIDEVICE
 Set where MIDI data from the emulated MPU-401 MIDI interface is sent
 ('auto' by default):
-  oss:         Use the Linux OSS MIDI playback interface.
-  alsa:        Use the Linux ALSA MIDI playback interface.
+  coremidi:    Any device that has been configured in the macOS
+               Audio MIDI Setup.
+  coreaudio:   Use the built-in macOS MIDI synthesiser.
   fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).
                See the [fluidsynth] section for detailed configuration.
   mt32:        The built-in Roland MT-32 synthesizer.
@@ -1114,9 +1120,7 @@ to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').
 Notes:
   - This option has no effect when using the built-in synthesizers
     ('mididevice = fluidsynth' or 'mididevice = mt32').
-  - When using ALSA, use the Linux command 'aconnect -l' to list all open
-    MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer
-    client 14, port 0).
+  - When using 'coreaudio', you can specify a SoundFont here.
   - If you're using a physical Roland MT-32 with revision 0 PCB, the hardware
     may require a delay in order to prevent its buffer from overflowing.
     In that case, add 'delaysysex' (e.g. 'midiconfig = 2 delaysysex').
@@ -1627,6 +1631,13 @@ File containing the list of applications and assigned DOS versions, in a
 tab-separated format, used by SETVER.EXE as a persistent storage
 (empty by default).
 .
+:CONFIG_PCJR_MEMORY_CONFIG
+PCjr memory layout ('expanded' by default).
+  expanded:  640 KB total memory with applications residing above 128 KB.
+             Compatible with most games.
+  standard:  128 KB total memory with applications residing below 96 KB.
+             Required for some older games (e.g., Jumpman, Troll).
+.
 :CONFIG_IPX
 Enable IPX over UDP/IP emulation (disabled by default).
 .
@@ -1862,6 +1873,9 @@ Executable file not found: '%s'
 :CONJUNCTION_AND
 and
 .
+:PROGRAM_CONFIG_NOT_CHANGEABLE
+Property '%s' is not changeable at runtime.
+.
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
 Listing not supported
 .
@@ -2081,7 +2095,7 @@ Notes:
     for CD-based games that need a real DOS environment via bootable HDD image.
 
 Examples:
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USERNAME/games/doom.iso[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
@@ -2707,7 +2721,7 @@ Notes:
 
 Examples:
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]
-  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USERNAME/Game CD"[reset] -t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/Game CD"[reset] -t cdrom -usecd 0
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay
 
 .
