@@ -1623,6 +1623,13 @@ File containing the list of applications and assigned DOS versions, in a
 tab-separated format, used by SETVER.EXE as a persistent storage
 (empty by default).
 .
+:CONFIG_PCJR_MEMORY_CONFIG
+PCjr memory layout ('expanded' by default).
+  expanded:  640 KB total memory with applications residing above 128 KB.
+             Compatible with most games.
+  standard:  128 KB total memory with applications residing below 96 KB.
+             Required for some older games (e.g., Jumpman, Troll).
+.
 :CONFIG_IPX
 Enable IPX over UDP/IP emulation (disabled by default).
 .
