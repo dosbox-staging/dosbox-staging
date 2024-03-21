@@ -103,6 +103,18 @@
     <ClCompile Include="..\src\dos\dos_locale.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\dos_locale_data.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dos\dos_locale_macosx.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dos\dos_locale_posix.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\dos\dos_locale_win32.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\dos\dos_memory.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
