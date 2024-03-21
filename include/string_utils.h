@@ -285,9 +285,6 @@ std::string join_with_commas(const std::vector<std::string>& items,
                              const std::string_view and_conjunction = "and",
                              const std::string_view end_punctuation = ".");
 
-// Clear the language if it's set to the POSIX default
-void clear_language_if_default(std::string& language);
-
 // Get recommended DOS code page to render the UTF-8 strings to. This
 // might not be the code page set using KEYB command, for example due
 // to emulated hardware limitations, or duplicated code page numbers

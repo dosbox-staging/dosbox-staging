@@ -730,6 +730,20 @@ uint16_t KeyboardLayout::ExtractCodePage(const char *keyboard_file_name)
 	return DefaultCodePage437;
 }
 
+static std::string get_bundled_code_page_file(const uint16_t code_page)
+{
+	for (const auto &file_content : LocaleData::BundledCpiContent) {
+		for (const auto entry : file_content.second) {
+			if (code_page == entry) {
+				// CPI file found
+				return file_content.first;
+			}
+		}
+	}
+
+	return {}; // not found
+}
+
 KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_filename, const int32_t codepage_id)
 {
 	assert(requested_cp_filename);
@@ -739,7 +753,7 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_file
 		return KEYB_NOERROR;
 
 	if (cp_filename == "auto") {
-		cp_filename = DOS_GetBundledCodePageFileName(codepage_id);
+		cp_filename = get_bundled_code_page_file(codepage_id);
 		if (cp_filename.empty()) {
 			LOG_WARNING("CODEPAGE: Could not find a file for codepage ID %d", codepage_id);
 			return KEYB_INVALIDCPFILE;
@@ -1140,45 +1154,52 @@ const char* DOS_GetLoadedLayout()
 	return nullptr;
 }
 
+static uint16_t get_code_page_from_layout(const std::string &layout_code) // XXX this is probably not needed
+{
+	auto assert_code_page = [](const uint16_t code_page) {
+		assert(!get_bundled_code_page_file(code_page).empty());
+		return code_page;
+	};
+
+	// XXX If locale period is modern, and country uses EUR currency,
+	//  try to replace: 850->858, 855->872, 866->808
+
+	for (const auto &entry : LocaleData::KeyboardLayoutInfo) {
+		for (const auto &entry_layout_code : entry.layout_codes) {
+			if (layout_code == entry_layout_code) {
+				return assert_code_page(entry.default_code_page);
+			}
+		}
+	}
+
+	LOG_WARNING("DOS: No default code page for keybaord layout '%s'",
+	            layout_code.c_str());
+	return assert_code_page(DefaultCodePage437);
+}
+
 // A helper that loads a layout given only a language
-KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref)
+KeyboardErrorCode DOS_LoadKeyboardLayoutFromLanguage(const char * language_pref) // XXX to be removed
 {
 	assert(language_pref);
 
 	// If a specific language wasn't provided, get it from setup
 	std::string language = language_pref;
 	if (language == "auto") {
-		language = control->GetLanguage();
+		language = "en"; // XXX was control->GetLanguage();
 	}
 
-	// TODO: This code mixes language code with keyboard layout; this should
-	//       be cleaned up eventually, possibly we should use
-	//       'use get_language_from_os()' from 'cross.h'
-
-	// Does the language have a country associate with it?
-	auto country       = DOS_GetDefaultCountry();
-	bool found_country = DOS_GetCountryFromLayout(language, country);
-
-	// If we can't find a country for the language, try from the host
-	if (!found_country) {
-		language      = DOS_GetLayoutFromHost();
-		found_country = DOS_GetCountryFromLayout(language, country);
-	}
-	// Inform the user if we couldn't find a valid country
-	if (!language.empty() && !found_country) {
-		LOG_WARNING("DOS: A country could not be found for the language: %s",
-		            language.c_str());
-	}
+	// XXX temporary, we need a detection code
+	auto country  = DOS_GetDefaultCountry();
 
 	// Regardless of the above, carry on with setting up the layout
-	const auto codepage = DOS_GetCodePageFromCountry(country);
-	const auto layout   = DOS_CheckLanguageToLayoutException(language);
+	const auto layout   = language;
+	const auto codepage = get_code_page_from_layout(layout);
 	const auto result   = load_keyboard_layout(layout.c_str(), codepage, "auto");
 
 	if (result == KEYB_NOERROR) {
-		LOG_MSG("DOS: Loaded codepage %d for detected language '%s'",
+		LOG_MSG("DOS: Loaded codepage %d for detected layout '%s'",
 		        codepage,
-		        language.c_str());
+		        layout.c_str());
 	} else if (country != DOS_GetDefaultCountry()) {
 		LOG_WARNING("DOS: Failed loading codepage %d for detected language '%s'",
 		            codepage,
@@ -1212,6 +1233,7 @@ public:
 				return;
 			}
 		}
+
 		// Otherwise use the layout to get the codepage
 		const auto req_codepage = loaded_layout->ExtractCodePage(layoutname.c_str());
 		loaded_layout->ReadCodePageFile("auto", req_codepage);

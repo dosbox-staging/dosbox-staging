@@ -180,6 +180,86 @@
 #
 # 60258 - Russian Cyrillic and Latin Azeri                       [FreeDOS]
 #       - dotted capital I not handled due to engine limitation
+#
+#
+# EGA?ISO.CPX files (ISO font code pages) to be added (7 code pages) (TODO):
+#
+#   813 - ISO-8859-7, Greek
+#   819 - ISO-8859-1, Latin-1
+#   901 - ISO-8859-13, Latin-7 with Euro
+#   902 - ISO Estonian with Euro
+#   912 - ISO-8859-2, Latin-2
+#   913 - ISO-8859-3, Latin-3
+#   914 - ISO-8859-4, Latin-4
+#   915 - ISO-8859-5, Cyrillic
+#   919 - ISO-8859-10, Latin-6
+#   920 - ISO-8859-9, Latin-5
+#   921 - ISO-8859-13, Latin-7 (Baltic)
+#   922 - ISO Estonian
+#   923 - ISO-8859-15, Latin-9
+#  1124 - ISO Ukrainian
+# 58163 - ISO-8859-14, Latin-8
+# 59283 - ISO Cyrillic Uralic (ISO-IR-200)
+# 58258 - ISO-8859-4, Latin-4 with Euro
+# 58259 - ISO Cyrillic Volgaic (ISO-IR-201)
+# 59187 - ISO Saami (ISO-IR-197)
+# 60211 - ISO Saami with Finnish Romani (ISO-IR-209)
+# 61235 - ISO-8859-1, Latin-1 with Euro
+# 63283 - ISO Lithuanian
+# 65500 - ISO-8859-16, Latin-10
+# 65501 - ISO Canada (ISO-IR-123)
+# 65502 - ISO Technical Set (ISO-IR-143)
+# 65503 - ISO Electrotechnical Set (ISO-IR-181)
+# 65504 - ISO Africa (ISO-IR-39)
+#
+#
+# EGA?KOI.CPX files (KOI Cyrillic code pages) to be added (7 code pages) (TODO):
+#
+#   878 - KOI8-R (Russian)
+# 58222 - KOI8-U (Russian and Ukrainian)
+# 59246 - KOI8-RU (Russian, Belarusian and Ukrainian)
+# 60270 - KOI8-F (Full Slavic)
+# 61294 - KOI8-CA (Full Slavic and non-slavic)
+# 62318 - KOI8-T (Russian and Tajik)
+# 63342 - KOI8-C (Russian and Old Russian)
+#
+#
+# EGA?MAC.CPX files (Macintosh code pages) to be added (11 code pages) (TODO):
+#
+#  1275 - Apple Latin-1
+#  1280 - Apple Greek
+#  1281 - Apple Latin-5 (Turkish)
+#  1282 - Apple Central European (and Baltic)
+#  1283 - Apple Cyrillic
+#  1284 - Apple Croatian
+#  1285 - Apple Romanian
+#  1286 - Apple Icelandic
+# 58619 - Apple Gaelic (Old Orthography)
+# 58627 - Apple Cyrillic (Ukrainian)
+# 58630 - Apple Saami
+#
+#
+# EGA?WIN.CPX files (Windows code pages) to be added (18 code pages) (TODO):
+#
+#  1250 - Windows Latin-2
+#  1251 - Windows Cyrillic
+#  1252 - Windows Latin-1
+#  1253 - Windows Greek
+#  1254 - Windows Latin-5 (Turkish)
+#  1257 - Windows Latin-7 (Baltic)
+#  1270 - Windows Saami
+#  1361 - Windows Latin-3
+# 65506 - Windows Armenian
+# 58595 - Windows Cyrillic (Kazakh)
+# 58596 - Windows Georgian
+# 58598 - Windows Latin-5 (Azeri)
+# 58601 - Windows Accented Lithuanian
+# 59619 - Windows Cyrillic (Central Asia)
+# 59620 - Windows Gaelic (Old Orthography)
+# 60643 - Windows Cyrillic (Northeastern Iranian languages)
+# 61667 - Windows Cyrillic (Eskimo-Aleut languages)
+# 62691 - Windows Cyrillic (Tungus-Manchu languages)
+
 
 # ****************************************************************************
 # Mapping aliases to accomodate characters missing in code pages

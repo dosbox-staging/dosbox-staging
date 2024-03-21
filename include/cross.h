@@ -156,8 +156,6 @@ bool get_expanded_files(const std::string &path,
                         bool files_only,
                         bool skip_native_path = false) noexcept;
 
-std::string get_language_from_os();
-
 // A printf variant outputting UTF-8 strings
 template <typename... Arguments>
 void printf_utf8(const char* format, Arguments... arguments)
