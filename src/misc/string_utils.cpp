@@ -294,27 +294,9 @@ void strip_punctuation(std::string &str)
 	          str.end());
 }
 
-// TODO in C++20: replace with str.starts_with(prefix)
-bool starts_with(const std::string_view str, const std::string_view prefix) noexcept
-{
-	if (prefix.length() > str.length()) {
-		return false;
-	}
-	return std::equal(prefix.begin(), prefix.end(), str.begin());
-}
-
-// TODO in C++20: replace with str.ends_with(suffix)
-bool ends_with(const std::string_view str, const std::string_view suffix) noexcept
-{
-	if (suffix.length() > str.length()) {
-		return false;
-	}
-	return std::equal(suffix.rbegin(), suffix.rend(), str.rbegin());
-}
-
 std::string strip_prefix(const std::string_view str, const std::string_view prefix) noexcept
 {
-	if (starts_with(str, prefix)) {
+	if (str.starts_with(prefix)) {
 		return std::string(str.substr(prefix.size()));
 	}
 	return std::string(str);
@@ -322,7 +304,7 @@ std::string strip_prefix(const std::string_view str, const std::string_view pref
 
 std::string strip_suffix(const std::string_view str, const std::string_view suffix) noexcept
 {
-	if (ends_with(str, suffix)) {
+	if (str.ends_with(suffix)) {
 		return std::string(str.substr(0, str.size() - suffix.size()));
 	}
 	return std::string(str);
@@ -331,7 +313,7 @@ std::string strip_suffix(const std::string_view str, const std::string_view suff
 void clear_language_if_default(std::string &l)
 {
 	lowcase(l);
-	if (l.size() < 2 || starts_with(l, "c.") || l == "posix") {
+	if (l.size() < 2 || l.starts_with("c.") || l == "posix") {
 		l.clear();
 	}
 }
@@ -381,7 +363,7 @@ std::optional<float> parse_percentage(const std::string_view s,
                                       const bool is_percent_sign_optional)
 {
 	if (!is_percent_sign_optional) {
-		if (!ends_with(s, "%")) {
+		if (!s.ends_with('%')) {
 			return {};
 		}
 	}

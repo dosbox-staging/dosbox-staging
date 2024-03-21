@@ -629,7 +629,7 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 		return 0;
 	}
 
-	if (starts_with(sdl.render_driver, "opengl")) {
+	if (sdl.render_driver.starts_with("opengl")) {
 		return SDL_WINDOW_OPENGL;
 	}
 
@@ -648,7 +648,7 @@ static uint32_t opengl_driver_crash_workaround(const RenderingBackend rendering_
 		if (info.flags & SDL_RENDERER_TARGETTEXTURE)
 			break;
 	}
-	default_driver_is_opengl = starts_with(info.name, "opengl");
+	default_driver_is_opengl = std::string_view(info.name).starts_with("opengl");
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
 
@@ -2888,12 +2888,12 @@ static SDL_Point window_bounds_from_label(const std::string& pref,
 	constexpr int LargePercent  = 90;
 
 	const int percent = [&] {
-		if (starts_with(pref, "s")) {
+		if (pref.starts_with('s')) {
 			return SmallPercent;
-		} else if (starts_with(pref, "m") || pref == "default" ||
+		} else if (pref.starts_with('m') || pref == "default" ||
 		           pref.empty()) {
 			return MediumPercent;
-		} else if (starts_with(pref, "l")) {
+		} else if (pref.starts_with('l')) {
 			return LargePercent;
 		} else if (pref == "desktop") {
 			return 100;
@@ -3146,7 +3146,7 @@ static void set_output(Section* sec, const bool wants_aspect_ratio_correction)
 		SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
 
 #if C_OPENGL
-	} else if (starts_with(output, "opengl")) {
+	} else if (output.starts_with("opengl")) {
 		if (output == "opengl") {
 			sdl.want_rendering_backend = RenderingBackend::OpenGl;
 			sdl.interpolation_mode = InterpolationMode::Bilinear;

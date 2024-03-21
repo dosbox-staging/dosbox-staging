@@ -256,13 +256,13 @@ void MSG_Init([[maybe_unused]] Section_prop *section)
 	const auto lang = control->GetLanguage();
 
 	// If the language is english, then use the internal message
-	if (lang.empty() || starts_with(lang, "en")) {
+	if (lang.empty() || lang.starts_with("en")) {
 		LOG_MSG("LANG: Using internal English language messages");
 		return;
 	}
 
 	bool result = false;
-	if (ends_with(lang, ".lng"))
+	if (lang.ends_with(".lng"))
 		result = load_message_file(GetResourcePath(subdir, lang));
 	else
 		// If a short-hand name was provided then add the file extension
