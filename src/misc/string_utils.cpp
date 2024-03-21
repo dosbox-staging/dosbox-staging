@@ -27,21 +27,12 @@
 
 bool is_hex_digits(const std::string_view s) noexcept
 {
-	for (const auto ch : s) {
-		if (!isxdigit(ch)) {
-			return false;
-		}
-	}
-	return true;
+	return std::ranges::all_of(s, &isxdigit);
 }
 
 bool is_digits(const std::string_view s) noexcept
 {
-	for (const auto ch : s) {
-		if (!isdigit(ch))
-			return false;
-	}
-	return true;
+	return std::ranges::all_of(s, &isdigit);
 }
 
 void strreplace(char *str, char o, char n)
@@ -54,7 +45,7 @@ void strreplace(char *str, char o, char n)
 }
 
 void ltrim(std::string &str) {
-    str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int c) {return !isspace(c);}));
+    str.erase(str.begin(), std::ranges::find_if(str, [](int c) {return !isspace(c);}));
 }
 
 char *ltrim(char *str)
@@ -96,13 +87,13 @@ char *lowcase(char *str)
 void upcase(std::string &str)
 {
 	int (*tf)(int) = std::toupper;
-	std::transform(str.begin(), str.end(), str.begin(), tf);
+	std::ranges::transform(str, str.begin(), tf);
 }
 
 void lowcase(std::string &str)
 {
 	int (*tf)(int) = std::tolower;
-	std::transform(str.begin(), str.end(), str.begin(), tf);
+	std::ranges::transform(str, str.begin(), tf);
 }
 
 std::string replace(const std::string &str, char old_char, char new_char) noexcept
@@ -114,7 +105,7 @@ std::string replace(const std::string &str, char old_char, char new_char) noexce
 	return str;
 }
 
-void trim(std::string &str, const char trim_chars[])
+void trim(std::string &str, const std::string_view trim_chars)
 {
 	const auto empty_pfx = str.find_first_not_of(trim_chars);
 	if (empty_pfx == std::string::npos) {
@@ -273,14 +264,14 @@ std::string strip_word(std::string& line)
 	if (line[0] == '"') {
 		size_t end_quote = line.find('"', 1);
 		if (end_quote != std::string::npos) {
-			std::string word = line.substr(1, end_quote - 1);
+			const std::string word = line.substr(1, end_quote - 1);
 			line.erase(0, end_quote + 1);
 			ltrim(line);
 			return word;
 		}
 	}
-	auto end_word = std::find_if(line.begin(), line.end(), [](int c) {return isspace(c);});
-	std::string word(line.begin(), end_word);
+	auto end_word = std::ranges::find_if(line, [](int c) {return isspace(c);});
+	const std::string word(line.begin(), end_word);
 	if (end_word != line.end()) {
 		++end_word;
 	}
