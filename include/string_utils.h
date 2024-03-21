@@ -250,7 +250,7 @@ char* strip_word(char*& line);
 std::string strip_word(std::string& line);
 
 std::string replace(const std::string& str, char old_char, char new_char) noexcept;
-void trim(std::string& str, const char trim_chars[] = " \r\t\f\n");
+void trim(std::string& str, const std::string_view trim_chars = " \r\t\f\n");
 void upcase(std::string& str);
 void lowcase(std::string& str);
 void strip_punctuation(std::string& str);
