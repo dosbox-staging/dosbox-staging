@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2021-2023  The DOSBox Staging Team
+ *  Copyright (C) 2021-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,8 +34,15 @@ public:
 		               HELP_CmdType::Program,
 		               "KEYB"};
 	}
+
 	void Run(void) override;
+
 private:
+	void WriteOutFailure(const KeyboardErrorCode error_code,
+		             const std::string &layout,
+		             const int code_page);
+	void WriteOutSuccess();
+
 	static void AddMessages();
 
 };

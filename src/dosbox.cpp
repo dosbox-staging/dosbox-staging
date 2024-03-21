@@ -589,15 +589,16 @@ void DOSBOX_Init()
 	/* Setup all the different modules making up DOSBox */
 
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
-	pstring = secprop->Add_string("language", always, "");
+	pstring = secprop->Add_string("language", only_at_start, "");
 	pstring->Set_help(
-	        "Select a language to use: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl',\n"
-	        "or 'ru' (unset by default; this defaults to English).\n"
+	        "Select the DOS messages language (unset by default; this results in 'auto'):\n"
+	        "  auto:     Tries to detect the language from the host OS (default).\n"
+	        "  <value>:  Loads a translation from the given file.\n"
 	        "Notes:\n"
-	        "  - This setting will override the 'LANG' environment variable, if set.\n"
-	        "  - The bundled 'resources/translations' directory with the executable holds\n"
-	        "    these files. Please keep it along-side the executable to support this\n"
-	        "    feature.");
+	        "  - Currently the following language files are available:\n"
+	        "    'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl' and 'ru'.\n"
+	        "  - The English is built-in, remaining ones are stored in the\n"
+	        "    bundled 'resources/translations' directory.\n");
 
 	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
 	pstring->Set_values({"hercules",
