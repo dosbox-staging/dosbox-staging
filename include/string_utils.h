@@ -91,10 +91,6 @@ size_t safe_strlen(char (&str)[N]) noexcept
 	return strnlen(str, N - 1);
 }
 
-bool starts_with(const std::string_view str, const std::string_view prefix) noexcept;
-
-bool ends_with(const std::string_view str, const std::string_view suffix) noexcept;
-
 std::string strip_prefix(const std::string_view str,
                          const std::string_view prefix) noexcept;
 
