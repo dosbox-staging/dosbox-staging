@@ -242,7 +242,7 @@ constexpr bool iequals(T1&& a, T2&& b)
 
 // Performs a "natural" comparison between A and B, which is case-insensitive
 // and treats number sequenences as whole numbers. Returns true if A < B. This
-// function can be used with higher order sort rountines, like std::sort.
+// function can be used with higher order sort routines, like std::sort.
 //
 // Examples:
 // - ("abc_2", "ABC_10") -> true, because abc_ matches and 2 < 10.
