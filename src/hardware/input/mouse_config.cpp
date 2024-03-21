@@ -212,7 +212,7 @@ static void SetSensitivity(const std::string_view sensitivity_str)
 	const int value_max = mouse_predefined.sensitivity_user_max;
 	for (auto& value_str : values_str) {
 		// Remove trailing '%' signs, if present
-		if (ends_with(value_str, "%")) {
+		if (value_str.ends_with('%')) {
 			value_str.pop_back();
 		}
 

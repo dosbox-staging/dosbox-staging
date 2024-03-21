@@ -939,7 +939,7 @@ static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::
 
 static std::optional<ViewportSettings> parse_viewport_settings(const std::string& pref)
 {
-	if (starts_with(pref, "relative")) {
+	if (pref.starts_with("relative")) {
 		return parse_relative_viewport_modes(pref);
 	} else {
 		return parse_fit_viewport_modes(pref);

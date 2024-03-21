@@ -203,7 +203,7 @@ static std::optional<int32_t> find_highest_capture_index(const CaptureType type)
 		auto stem = entry.path().stem().string();
 		lowcase(stem);
 
-		if (starts_with(stem, filename_start)) {
+		if (stem.starts_with(filename_start)) {
 			auto index_str = strip_prefix(stem, filename_start);
 
 			// Strip "-raw" or "-rendered" postfix if it's there
