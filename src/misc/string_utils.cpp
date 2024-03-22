@@ -21,6 +21,7 @@
 #include "string_utils.h"
 
 #include <algorithm>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <vector>
