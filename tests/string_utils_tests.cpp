@@ -244,7 +244,7 @@ TEST(SafeStrlen, FixedSize)
 	EXPECT_EQ(N - 1, safe_strlen(buffer));
 }
 
-TEST(Split_delit, NoBoundingDelims)
+TEST(Split_delim, NoBoundingDelims)
 {
 	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
 	EXPECT_EQ(split_with_empties("a:/b:/c/d:/e/f/", ':'), expected);
@@ -472,6 +472,66 @@ TEST(FormatString, Valid)
 	EXPECT_EQ(format_str("%d", 42), "42");
 	EXPECT_EQ(format_str("%d\0", 42), "42\0");
 	EXPECT_EQ(format_str("%s%d%s", "abcd", 42, "xyz"), "abcd42xyz");
+}
+
+TEST(IsHexDigits, Valid)
+{
+	EXPECT_TRUE(is_hex_digits("0123456789ABCDEF"));
+	EXPECT_TRUE(is_hex_digits("0123456789abcdef"));
+	EXPECT_TRUE(is_hex_digits(""));
+}
+
+TEST(IsHexDigits, Invalid)
+{
+	EXPECT_FALSE(is_hex_digits("0123456789ABCDEFG"));
+	EXPECT_FALSE(is_hex_digits("0123456789abcdefg"));
+}
+
+TEST(IsDigits, Valid)
+{
+	EXPECT_TRUE(is_digits("0123456789"));
+	EXPECT_TRUE(is_digits(""));
+}
+
+TEST(IsDigits, Invalid)
+{
+	EXPECT_FALSE(is_digits("01234567890ABCDEFG"));
+	EXPECT_FALSE(is_digits("01234567890abcdefg"));
+}
+
+TEST(LTrim, Valid) 
+{
+	auto perform_ltrim = [](const std::string& input) {
+		std::string output = input;
+		ltrim(output);
+		return output;
+	};
+	EXPECT_EQ(perform_ltrim("  ABC"), "ABC");
+	EXPECT_EQ(perform_ltrim("ABC"), "ABC");
+	EXPECT_EQ(perform_ltrim("ABC   "), "ABC   ");
+}
+
+TEST(Upcase, Valid) {
+	auto perform_upcase = [](const std::string& input) {
+		std::string output = input;
+		upcase(output);
+		return output;
+	};
+	EXPECT_EQ(perform_upcase("abc"), "ABC");
+	EXPECT_EQ(perform_upcase("ABC"), "ABC");
+	EXPECT_EQ(perform_upcase("aBc"), "ABC");
+}
+
+TEST(Lowcase, Valid)
+{
+	auto perform_lowcase = [](const std::string& input) {
+		std::string output = input;
+		lowcase(output);
+		return output;
+	};
+	EXPECT_EQ(perform_lowcase("abc"), "abc");
+	EXPECT_EQ(perform_lowcase("ABC"), "abc");
+	EXPECT_EQ(perform_lowcase("aBc"), "abc");
 }
 
 } // namespace
