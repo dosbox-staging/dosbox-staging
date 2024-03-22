@@ -430,8 +430,11 @@ Składnia: [color=light-green]config [/reset]-set [color=light-cyan][SECTION][/r
 :TITLEBAR_CYCLES_MS
 cykli/ms
 .
-:TITLEBAR_PAUSED
-PAUZA
+:TITLEBAR_HINT_PAUSED
+(PAUZA)
+.
+:TITLEBAR_HINT_NOMOUSE
+tryb bez użycia myszy
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 mysz przejęta, wciśnij %s+F10 aby zwolnić
@@ -659,6 +662,11 @@ Domyślnie 'compatible'.
 .
 :CONFIG_VGA_8DOT_FONT
 Zawsze używa czcionki 8 pikseli dla obrazu VGA (domyślnie wyłączone).
+.
+:CONFIG_VGA_RENDER_PER_SCANLINE
+Dokładna emulacja karty VGA linia po linii (domyślnie wyłączone).
+Potrzebna do działania kilku gier, które bez tego ustawienia zawieszą się
+przy starcie (np., Deus, Ishar 3, Robinson's Requiem, Time Warriors).
 .
 :CONFIG_SPEED_MODS
 Zezwala na zachowania emulatora, które poprawiają wydajność (domyślnie
@@ -1616,6 +1624,13 @@ historii.
 Plik z tabelą programów i przypisanych do nich wersji systemu DOS, w formacie
 wartości rozdzielonych tabulatorami, używany przez polecenie SETVER.EXE do
 trwałego zapamiętania ustawień (domyślnie wartość pusta).
+.
+:CONFIG_PCJR_MEMORY_CONFIG
+Pamięć komputera PCjr (domyślnie 'expanded').
+  expanded:  640 KB pamięci, aplikacje rezydują powyżej 128 KB.
+             Kompatybilne z większością gier.
+  standard:  128 KB pamięci, aplikacje rezydują poniżej 96 KB.
+             Wymagane dla kilu starszych gier (np., Jumpman, Troll).
 .
 :CONFIG_IPX
 Włącza emulację protokołu IPX po UDP/IP (domyślnie wyłączone).
