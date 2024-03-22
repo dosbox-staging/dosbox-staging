@@ -55,11 +55,11 @@ namespace {
 
 class DOS_FilesTest : public DOSBoxTestFixture {};
 
-void assert_DTAExtendName(const std::string_view input_fullname,
+void assert_DTAExtendName(const std::string& input_fullname,
                           const std::string_view expected_name,
                           const std::string_view expected_ext)
 {
-	const auto [output_name, output_ext] = DTAExtendName(input_fullname.data());
+	const auto [output_name, output_ext] = DTAExtendName(input_fullname.c_str());
 
 	// mutates input up to dot
 	EXPECT_EQ(output_name, expected_name);

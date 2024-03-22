@@ -625,7 +625,7 @@ public:
 				midi.is_available = true;
 				midi.handler      = handler;
 				LOG_MSG("MIDI: Opened device: %s",
-				        handler->GetName().data());
+				        handler->GetName().c_str());
 			}
 			return opened;
 		};
@@ -677,7 +677,7 @@ void MIDI_ListAll(Program* caller)
 		const auto device_name = convert_ansi_markup(
 		        "[color=white]%s:[reset]\n");
 
-		caller->WriteOut(device_name.c_str(), handler->GetName().data());
+		caller->WriteOut(device_name.c_str(), handler->GetName().c_str());
 
 		const auto err = handler->ListAll(caller);
 		if (err == MIDI_RC::ERR_DEVICE_NOT_CONFIGURED) {

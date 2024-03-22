@@ -33,7 +33,7 @@ void Innovation::Open(const std::string_view model_choice,
                       const std::string_view clock_choice,
                       const int filter_strength_6581,
                       const int filter_strength_8580, const int port_choice,
-                      const std::string_view channel_filter_choice)
+                      const std::string& channel_filter_choice)
 {
 	using namespace std::placeholders;
 
@@ -45,13 +45,11 @@ void Innovation::Open(const std::string_view model_choice,
 		return;
 	}
 
-	std::string_view model_name = "";
 	int filter_strength = 0;
 	auto sid_service    = std::make_unique<reSIDfp::SID>();
 
 	// Setup the model and filter
 	if (model_choice == "8580") {
-		model_name = "8580";
 		sid_service->setChipModel(reSIDfp::MOS8580);
 		filter_strength = filter_strength_8580;
 		if (filter_strength > 0) {
@@ -59,7 +57,6 @@ void Innovation::Open(const std::string_view model_choice,
 			sid_service->setFilter8580Curve(filter_strength / 100.0);
 		}
 	} else {
-		model_name = "6581";
 		sid_service->setChipModel(reSIDfp::MOS6581);
 		filter_strength = filter_strength_6581;
 		if (filter_strength > 0) {
@@ -97,7 +94,7 @@ void Innovation::Open(const std::string_view model_choice,
 
 		if (!filter_choice_has_bool) {
 			LOG_WARNING("INNOVATION: Invalid 'innovation_filter' setting: '%s', using 'off'",
-			            channel_filter_choice.data());
+			            channel_filter_choice.c_str());
 		}
 
 		mixer_channel->SetHighPassFilter(FilterState::Off);
@@ -129,16 +126,18 @@ void Innovation::Open(const std::string_view model_choice,
 	// Ready state-values for rendering
 	last_rendered_ms = 0.0;
 
+	// Variable model_name is only used for logging, so use a const char* here
+	const char* model_name = model_choice == "8580" ? "8580" : "6581";
 	constexpr auto us_per_s = 1'000'000.0;
 	if (filter_strength == 0)
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz",
 		        base_port,
-		        model_name.data(),
+		        model_name,
 		        chip_clock / us_per_s);
 	else
 		LOG_MSG("INNOVATION: Running on port %xh with a SID %s at %0.3f MHz filtering at %d%%",
 		        base_port,
-		        model_name.data(),
+		        model_name,
 		        chip_clock / us_per_s,
 		        filter_strength);
 

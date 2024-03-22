@@ -2735,7 +2735,7 @@ static void MAPPER_SaveBinds() {
 }
 
 static bool load_binds_from_file(const std::string_view mapperfile_path,
-                                 const std::string_view mapperfile_name)
+                                 const std::string& mapperfile_name)
 {
 	// If the filename is empty the user wants defaults
 	if (mapperfile_name == "")
@@ -2767,7 +2767,7 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 	// default, the mapperfile is not provided
 	if (!was_loaded && mapperfile_name != MAPPERFILE)
 		LOG_WARNING("MAPPER: Failed loading mapperfile '%s' directly or from resources",
-		            mapperfile_name.data());
+		            mapperfile_name.c_str());
 
 	return was_loaded;
 }

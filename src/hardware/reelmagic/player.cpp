@@ -804,7 +804,7 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 	mixer_channel->Set0dbScalar(mpeg1_db0_volume_scalar);
 }
 
-static void set_magic_key(const std::string_view key_choice)
+static void set_magic_key(const std::string& key_choice)
 {
 	if (key_choice == "auto") {
 		_initialMagicKey = common_magic_key;
@@ -815,12 +815,12 @@ static void set_magic_key(const std::string_view key_choice)
 	} else if (key_choice == "thehorde") {
 		_initialMagicKey = thehorde_magic_key;
 		LOG_MSG("REELMAGIC: Using The Horde's key: 0x%x", thehorde_magic_key);
-	} else if (unsigned int k; sscanf(key_choice.data(), "%x", &k) == 1) {
+	} else if (unsigned int k; sscanf(key_choice.c_str(), "%x", &k) == 1) {
 		_initialMagicKey = k;
 		LOG_MSG("REELMAGIC: Using custom key: 0x%x", k);
 	} else {
 		LOG_WARNING("REELMAGIC: Failed parsing key choice '%s', using built-in routines",
-		            key_choice.data());
+		            key_choice.c_str());
 		_initialMagicKey = common_magic_key;
 	}
 }

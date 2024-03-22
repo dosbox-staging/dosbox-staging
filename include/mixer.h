@@ -209,9 +209,9 @@ public:
 	void SetLowPassFilter(const FilterState state);
 	void ConfigureHighPassFilter(const uint8_t order, const uint16_t cutoff_freq);
 	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq);
-	bool TryParseAndSetCustomFilter(const std::string_view filter_prefs);
+	bool TryParseAndSetCustomFilter(const std::string& filter_prefs);
 
-	bool ConfigureFadeOut(const std::string_view fadeout_prefs);
+	bool ConfigureFadeOut(const std::string& fadeout_prefs);
 
 	void SetResampleMethod(const ResampleMethod method);
 	void SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_freq);
@@ -407,7 +407,7 @@ private:
 		Sleeper() = delete;
 		Sleeper(MixerChannel& c,
 		        const uint16_t sleep_after_ms = default_wait_ms);
-		bool ConfigureFadeOut(const std::string_view prefs);
+		bool ConfigureFadeOut(const std::string& prefs);
 		AudioFrame MaybeFadeOrListen(const AudioFrame& frame);
 		void MaybeSleep();
 		bool WakeUp();

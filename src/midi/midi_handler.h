@@ -42,7 +42,7 @@ public:
 
 	virtual ~MidiHandler() = default;
 
-	virtual std::string_view GetName() const = 0;
+	virtual std::string GetName() const = 0;
 
 	virtual MidiDeviceType GetDeviceType() const
 	{

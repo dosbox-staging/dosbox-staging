@@ -51,7 +51,7 @@ struct Ps1Registers {
 
 class Ps1Dac {
 public:
-	Ps1Dac(const std::string_view filter_choice);
+	Ps1Dac(const std::string& filter_choice);
 	~Ps1Dac();
 
 private:
@@ -120,7 +120,7 @@ static void setup_filter(mixer_channel_t &channel)
 	channel->SetLowPassFilter(FilterState::On);
 }
 
-Ps1Dac::Ps1Dac(const std::string_view filter_choice)
+Ps1Dac::Ps1Dac(const std::string& filter_choice)
 {
 	using namespace std::placeholders;
 
@@ -147,7 +147,7 @@ Ps1Dac::Ps1Dac(const std::string_view filter_choice)
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (!filter_choice_has_bool) {
 			LOG_WARNING("PS1DAC: Invalid 'ps1audio_dac_filter' setting: '%s', using 'off'",
-			            filter_choice.data());
+			            filter_choice.c_str());
 		}
 
 		channel->SetHighPassFilter(FilterState::Off);
@@ -376,7 +376,7 @@ Ps1Dac::~Ps1Dac()
 
 class Ps1Synth {
 public:
-	Ps1Synth(const std::string_view filter_choice);
+	Ps1Synth(const std::string& filter_choice);
 	~Ps1Synth();
 
 private:
@@ -410,7 +410,7 @@ private:
 	double last_rendered_ms     = 0.0;
 };
 
-Ps1Synth::Ps1Synth(const std::string_view filter_choice)
+Ps1Synth::Ps1Synth(const std::string& filter_choice)
         : device(nullptr, nullptr, ps1_psg_clock_hz)
 {
 	using namespace std::placeholders;
@@ -437,7 +437,7 @@ Ps1Synth::Ps1Synth(const std::string_view filter_choice)
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (!filter_choice_has_bool) {
 			LOG_WARNING("PS1: Invalid 'ps1audio_filter' setting: '%s', using 'off'",
-			            filter_choice.data());
+			            filter_choice.c_str());
 		}
 
 		channel->SetHighPassFilter(FilterState::Off);
