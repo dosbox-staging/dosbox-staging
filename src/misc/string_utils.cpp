@@ -21,19 +21,18 @@
 #include "string_utils.h"
 
 #include <algorithm>
-#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
 bool is_hex_digits(const std::string_view s) noexcept
 {
-	return std::ranges::all_of(s, &isxdigit);
+	return std::all_of(s.begin(), s.end(), &isxdigit);
 }
 
 bool is_digits(const std::string_view s) noexcept
 {
-	return std::ranges::all_of(s, &isdigit);
+	return std::all_of(s.begin(), s.end(), &isdigit);
 }
 
 void strreplace(char *str, char o, char n)
@@ -46,7 +45,9 @@ void strreplace(char *str, char o, char n)
 }
 
 void ltrim(std::string &str) {
-    str.erase(str.begin(), std::ranges::find_if(str, [](int c) {return !isspace(c);}));
+	str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int c) {
+		          return !isspace(c);
+	          }));
 }
 
 char *ltrim(char *str)
@@ -88,19 +89,19 @@ char *lowcase(char *str)
 void upcase(std::string &str)
 {
 	int (*tf)(int) = std::toupper;
-	std::ranges::transform(str, str.begin(), tf);
+	std::transform(str.begin(), str.end(), str.begin(), tf);
 }
 
 void lowcase(std::string &str)
 {
 	int (*tf)(int) = std::tolower;
-	std::ranges::transform(str, str.begin(), tf);
+	std::transform(str.begin(), str.end(), str.begin(), tf);
 }
 
 std::string replace(const std::string &str, char old_char, char new_char) noexcept
 {
 	std::string new_str = str;
-	std::ranges::replace(new_str, old_char, new_char);
+	std::replace(new_str.begin(), new_str.end(), old_char, new_char);
 	return new_str;
 }
 
@@ -269,7 +270,7 @@ std::string strip_word(std::string& line)
 			return word;
 		}
 	}
-	auto end_word = std::ranges::find_if(line, [](int c) {return isspace(c);});
+	auto end_word = std::find_if(line.begin(), line.end(), [](int c) {return isspace(c);});
 	const std::string word(line.begin(), end_word);
 	if (end_word != line.end()) {
 		++end_word;
