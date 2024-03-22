@@ -36,7 +36,7 @@ public:
 	~PcSpeakerDiscrete() final;
 
 	void SetFilterState(const FilterState filter_state) final;
-	bool TryParseAndSetCustomFilter(const std::string_view filter_choice) final;
+	bool TryParseAndSetCustomFilter(const std::string& filter_choice) final;
 	void SetCounter(const int cntr, const PitMode m) final;
 	void SetPITControl(const PitMode) final {}
 	void SetType(const PpiPortB& b) final;

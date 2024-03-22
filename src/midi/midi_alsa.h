@@ -48,7 +48,7 @@ public:
 	MidiHandler_alsa(const MidiHandler_alsa &) = delete; // prevent copying
 	MidiHandler_alsa &operator=(const MidiHandler_alsa &) = delete; // prevent assignment
 
-	std::string_view GetName() const override
+	std::string GetName() const override
 	{
 		return "alsa";
 	}

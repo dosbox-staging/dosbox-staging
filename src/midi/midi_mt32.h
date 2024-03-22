@@ -58,7 +58,7 @@ public:
 	~MidiHandler_mt32() override;
 	void Close() override;
 
-	std::string_view GetName() const override
+	std::string GetName() const override
 	{
 		return "mt32";
 	}

@@ -321,7 +321,7 @@ static void set_global_chorus(const mixer_channel_t& channel)
 	}
 }
 
-static CrossfeedPreset crossfeed_pref_to_preset(const std::string_view pref)
+static CrossfeedPreset crossfeed_pref_to_preset(const std::string& pref)
 {
 	const auto pref_has_bool = parse_bool_setting(pref);
 	if (pref_has_bool) {
@@ -340,7 +340,7 @@ static CrossfeedPreset crossfeed_pref_to_preset(const std::string_view pref)
 	// the conf system programmatically guarantees only the above prefs are
 	// used
 	LOG_WARNING("MIXER: Invalid 'crossfeed' setting: '%s', using 'off'",
-	            pref.data());
+	            pref.c_str());
 	return CrossfeedPreset::None;
 }
 
@@ -402,7 +402,7 @@ void MIXER_SetCrossfeedPreset(const CrossfeedPreset new_preset)
 	}
 }
 
-static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
+static ReverbPreset reverb_pref_to_preset(const std::string& pref)
 {
 	const auto pref_has_bool = parse_bool_setting(pref);
 	if (pref_has_bool) {
@@ -427,7 +427,7 @@ static ReverbPreset reverb_pref_to_preset(const std::string_view pref)
 	// the conf system programmatically guarantees only the above prefs are
 	// used
 	LOG_WARNING("MIXER: Invalid 'reverb' setting: '%s', using 'off'",
-	            pref.data());
+	            pref.c_str());
 	return ReverbPreset::None;
 }
 
@@ -500,7 +500,7 @@ void MIXER_SetReverbPreset(const ReverbPreset new_preset)
 	}
 }
 
-static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
+static ChorusPreset chorus_pref_to_preset(const std::string& pref)
 {
 	const auto pref_has_bool = parse_bool_setting(pref);
 	if (pref_has_bool) {
@@ -519,7 +519,7 @@ static ChorusPreset chorus_pref_to_preset(const std::string_view pref)
 	// the conf system programmatically guarantees only the above prefs are
 	// used
 	LOG_WARNING("MIXER: Invalid 'chorus' setting: '%s', using ' off'",
-	            pref.data());
+	            pref.c_str());
 	return ChorusPreset::None;
 }
 
@@ -1112,7 +1112,7 @@ void MixerChannel::AddSilence()
 }
 
 static void log_filter_settings(const std::string& channel_name,
-                                const std::string_view filter_name,
+                                const std::string& filter_name,
                                 const FilterState state, const uint8_t order,
                                 const uint16_t cutoff_freq)
 {
@@ -1124,7 +1124,7 @@ static void log_filter_settings(const std::string& channel_name,
 
 	LOG_MSG("%s: %s filter enabled%s (%d dB/oct at %u Hz)",
 	        channel_name.c_str(),
-	        filter_name.data(),
+	        filter_name.c_str(),
 	        state == FilterState::ForcedOn ? " (forced)" : "",
 	        order * db_per_order,
 	        cutoff_freq);
@@ -1183,7 +1183,7 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
 // Tries to set custom filter settings from the passed in filter preferences.
 // Returns true if the custom filters could be successfully set, false
 // otherwise and disables all filters for the channel.
-bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_prefs)
+bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 {
 	SetLowPassFilter(FilterState::Off);
 	SetHighPassFilter(FilterState::Off);
@@ -1201,7 +1201,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_pref
 		LOG_WARNING("%s: Invalid custom filter definition: '%s'. Must be "
 		            "specified in \"lfp|hpf ORDER CUTOFF_FREQUENCY\" format",
 		            name.c_str(),
-		            filter_prefs.data());
+		            filter_prefs.c_str());
 		return false;
 	}
 
@@ -1283,7 +1283,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string_view filter_pref
 			LOG_WARNING("%s: Invalid custom filter definition: '%s'. "
 			            "The two filters must be of different types.",
 			            name.c_str(),
-			            filter_prefs.data());
+			            filter_prefs.c_str());
 			return false;
 		}
 
@@ -1686,13 +1686,13 @@ AudioFrame MixerChannel::ApplyCrossfeed(const AudioFrame frame) const
 }
 
 // Returns true if configuration succeeded and false otherwise
-bool MixerChannel::ConfigureFadeOut(const std::string_view prefs)
+bool MixerChannel::ConfigureFadeOut(const std::string& prefs)
 {
 	return sleeper.ConfigureFadeOut(prefs);
 }
 
 // Returns true if configuration succeeded and false otherwise
-bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string_view prefs)
+bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 {
 	auto set_wait_and_fade = [&](const int wait_ms, const int fade_ms) {
 		fadeout_or_sleep_after_ms = check_cast<uint16_t>(wait_ms);
@@ -1744,7 +1744,7 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string_view prefs)
 	            "%d and %d (in milliseconds) and FADE is between %d and "
 	            "%d (in milliseconds). Using 'off'",
 	            channel.GetName().c_str(),
-	            prefs.data(),
+	            prefs.c_str(),
 	            min_wait_ms,
 	            max_wait_ms,
 	            min_fade_ms,

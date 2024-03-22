@@ -726,7 +726,7 @@ MIDI_RC MidiHandler_mt32::ListAll(Program* caller)
 		                 rom_info.control_rom_description);
 
 		// Print the loaded ROM's directory
-		const std::string_view dir_label = MSG_Get("MT32_SOURCE_DIR_LABEL");
+		const std::string dir_label = MSG_Get("MT32_SOURCE_DIR_LABEL");
 
 		const auto dir_max_length = INT10_GetTextColumns() -
 		                            (dir_label.length() +
@@ -737,7 +737,7 @@ MIDI_RC MidiHandler_mt32::ListAll(Program* caller)
 
 		caller->WriteOut("%s%s%s\n",
 		                 indent,
-		                 dir_label.data(),
+		                 dir_label.c_str(),
 		                 truncated_dir.c_str());
 	} else {
 		caller->WriteOut("%s%s\n", indent, MSG_Get("MT32_ROM_NOT_LOADED"));

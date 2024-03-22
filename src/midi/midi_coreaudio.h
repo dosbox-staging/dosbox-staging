@@ -76,7 +76,7 @@ public:
 	          soundfont(nullptr)
 	{}
 
-	std::string_view GetName() const override
+	std::string GetName() const override
 	{
 		return "coreaudio";
 	}

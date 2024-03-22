@@ -523,10 +523,10 @@ static void configure_calibration(const Section_prop &settings)
 	if (settings.Get_bool("use_joy_calibration_hotkeys"))
 		activate_calibration_hotkeys();
 
-	auto axis_rates_from_pref = [](const std::string_view pref,
+	auto axis_rates_from_pref = [](const std::string& pref,
 	                               const AxisRateConstants &default_rates) {
 		if (AxisRateConstants parsed_rates = {};
-		    sscanf(pref.data(), "%lf,%lf", &parsed_rates.scalar, &parsed_rates.offset) == 2) {
+		    sscanf(pref.c_str(), "%lf,%lf", &parsed_rates.scalar, &parsed_rates.offset) == 2) {
 			LOG_MSG("JOYSTICK: Loaded custom %c-axis calibration parameters (%.6g,%.6g)",
 			        default_rates.axis,
 			        parsed_rates.scalar,
@@ -537,7 +537,7 @@ static void configure_calibration(const Section_prop &settings)
 			LOG_WARNING("JOYSTICK: Invalid '%c_calibration' setting: '%s', "
 			            "using 'auto'",
 			            default_rates.axis,
-			            pref.data());
+			            pref.c_str());
 		return default_rates;
 	};
 	const auto x_cal_pref   = settings.Get_string("joy_x_calibration");

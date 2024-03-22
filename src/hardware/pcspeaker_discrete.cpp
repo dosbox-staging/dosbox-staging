@@ -457,7 +457,7 @@ void PcSpeakerDiscrete::SetFilterState(const FilterState filter_state)
 	}
 }
 
-bool PcSpeakerDiscrete::TryParseAndSetCustomFilter(const std::string_view filter_choice)
+bool PcSpeakerDiscrete::TryParseAndSetCustomFilter(const std::string& filter_choice)
 {
 	assert(channel);
 	return channel->TryParseAndSetCustomFilter(filter_choice);

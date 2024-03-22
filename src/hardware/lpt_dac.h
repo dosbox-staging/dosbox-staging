@@ -42,7 +42,7 @@ public:
 	virtual void ConfigureFilters(const FilterState state) = 0;
 	virtual void BindToPort(const io_port_t lpt_port)      = 0;
 
-	bool TryParseAndSetCustomFilter(const std::string_view filter_choice);
+	bool TryParseAndSetCustomFilter(const std::string& filter_choice);
 
 protected:
 	LptDac()                          = delete;
@@ -59,7 +59,7 @@ protected:
 	double last_rendered_ms = 0.0;
 	double ms_per_frame     = 0.0;
 
-	std::string_view dac_name = {};
+	std::string dac_name = {};
 
 	// All LPT devices support data write, status read, and control write
 	void BindHandlers(const io_port_t lpt_port, const io_write_f write_data,

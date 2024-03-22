@@ -50,7 +50,7 @@ LptDac::LptDac(const std::string_view name, const uint16_t channel_rate_hz,
 	// Setup the mixer callback
 	channel = MIXER_AddChannel(audio_callback,
 	                           channel_rate_hz,
-	                           dac_name.data(),
+	                           dac_name.c_str(),
 	                           features);
 
 	ms_per_frame = millis_in_second / channel->GetSampleRate();
@@ -60,7 +60,7 @@ LptDac::LptDac(const std::string_view name, const uint16_t channel_rate_hz,
 	status_reg.busy  = false;
 }
 
-bool LptDac::TryParseAndSetCustomFilter(const std::string_view filter_choice)
+bool LptDac::TryParseAndSetCustomFilter(const std::string& filter_choice)
 {
 	assert(channel);
 	return channel->TryParseAndSetCustomFilter(filter_choice);
@@ -120,7 +120,7 @@ void LptDac::AudioCallback(const uint16_t requested_frames)
 
 LptDac::~LptDac()
 {
-	LOG_MSG("%s: Shutting down DAC", dac_name.data());
+	LOG_MSG("%s: Shutting down DAC", dac_name.c_str());
 
 	// Update our status to indicate we're no longer ready
 	status_reg.error = true;

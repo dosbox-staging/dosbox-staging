@@ -101,7 +101,7 @@ public:
 	static constexpr IOConfig io = {0xc4, 7, 1};
 
 	TandyDAC(const ConfigProfile config_profile,
-	         const std::string_view filter_choice);
+	         const std::string& filter_choice);
 	~TandyDAC();
 
 	bool IsEnabled() const
@@ -133,8 +133,8 @@ private:
 class TandyPSG {
 public:
 	TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
-	         const std::string_view fadeout_choice,
-	         const std::string_view filter_choice);
+	         const std::string& fadeout_choice,
+	         const std::string& filter_choice);
 	~TandyPSG();
 
 private:
@@ -183,7 +183,7 @@ static void setup_filters(mixer_channel_t &channel) {
 }
 
 TandyDAC::TandyDAC(const ConfigProfile config_profile,
-                   const std::string_view filter_choice)
+                   const std::string& filter_choice)
 {
 	using namespace std::placeholders;
 
@@ -217,7 +217,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (!filter_choice_has_bool) {
 			LOG_WARNING("TANDYDAC: Invalid 'tandy_dac_filter' setting: '%s', using 'off'",
-			            filter_choice.data());
+			            filter_choice.c_str());
 		}
 
 		channel->SetHighPassFilter(FilterState::Off);
@@ -425,8 +425,8 @@ void TandyDAC::AudioCallback(uint16_t requested)
 }
 
 TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
-                   const std::string_view fadeout_choice,
-                   const std::string_view filter_choice)
+                   const std::string& fadeout_choice,
+                   const std::string& filter_choice)
 {
 	using namespace std::placeholders;
 
@@ -474,7 +474,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
 		if (!filter_choice_has_bool) {
 			LOG_WARNING("TANDY: Invalid 'tandy_filter' value: '%s', using 'off'",
-			            filter_choice.data());
+			            filter_choice.c_str());
 		}
 
 		channel->SetHighPassFilter(FilterState::Off);

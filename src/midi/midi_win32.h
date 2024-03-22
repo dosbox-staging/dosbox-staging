@@ -50,7 +50,7 @@ public:
 	MidiHandler_win32(const MidiHandler_win32&) = delete;
 	MidiHandler_win32& operator=(const MidiHandler_win32&) = delete;
 
-	std::string_view GetName() const override
+	std::string GetName() const override
 	{
 		return "win32";
 	}
