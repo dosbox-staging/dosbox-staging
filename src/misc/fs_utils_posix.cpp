@@ -183,7 +183,7 @@ static std::optional<FatAttributeFlags> xattr_to_fat_attribs(const std::string& 
 {
 	constexpr uint8_t HexBase = 16;
 
-	if (xattr.size() <= XattrMaxLength && starts_with(xattr, "0x") &&
+	if (xattr.size() <= XattrMaxLength && xattr.starts_with("0x") &&
 	    xattr.size() >= XattrMinLength) {
 		const auto value = parse_int(xattr.substr(2), HexBase);
 		if (value) {
