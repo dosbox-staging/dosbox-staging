@@ -169,7 +169,7 @@ void LPT_DAC_Init(Section *section)
 		const auto dac_choice_has_bool = parse_bool_setting(dac_choice);
 		if (!dac_choice_has_bool || *dac_choice_has_bool != false) {
 			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' setting: '%s', using 'none'",
-			            dac_choice.data());
+			            dac_choice.c_str());
 		}
 		return;
 	}
@@ -186,7 +186,7 @@ void LPT_DAC_Init(Section *section)
 			                                       : FilterState::Off;
 		} else {
 			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac_filter' setting: '%s', using 'off'",
-			            filter_choice.data());
+			            filter_choice.c_str());
 			assert(filter_state == FilterState::Off);
 		}
 

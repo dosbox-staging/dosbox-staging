@@ -231,7 +231,7 @@ bool MSG_Write(const char * location) {
 		return false;
 
 	for (const auto &name : messages_order)
-		fprintf(out, ":%s\n%s\n.\n", name.data(), messages.at(name).GetRaw());
+		fprintf(out, ":%s\n%s\n.\n", name.c_str(), messages.at(name).GetRaw());
 
 	fclose(out);
 	return true;

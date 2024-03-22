@@ -153,7 +153,7 @@ bool LASynthModel::Load(const service_t& service, const std_fs::path& dir) const
 const char *LASynthModel::GetVersion() const
 {
 	assert(version_pos != std::string::npos);
-	return name.data() + version_pos;
+	return name.c_str() + version_pos;
 }
 
 bool LASynthModel::Matches(const std::string &model_name) const

@@ -1268,7 +1268,7 @@ static SDL_Window* SetWindowMode(const RenderingBackend rendering_backend,
 		if (is_vendors_srgb_unreliable) {
 			LOG_WARNING("OPENGL: Not requesting an sRGB framebuffer"
 			            " because %s's driver is unreliable",
-			            gl_vendor.data());
+			            gl_vendor.c_str());
 		} else if (SDL_GL_SetAttribute(SDL_GL_FRAMEBUFFER_SRGB_CAPABLE, 1)) {
 			LOG_ERR("OPENGL: Failed requesting an sRGB framebuffer: %s",
 			        SDL_GetError());
@@ -3348,7 +3348,7 @@ static void set_priority_levels(const std::string& active_pref,
 			return PRIORITY_LEVEL_HIGHEST;
 		}
 		LOG_WARNING("SDL: Invalid 'priority' setting: '%s', using 'auto'",
-		            pref.data());
+		            pref.c_str());
 
 		return PRIORITY_LEVEL_AUTO;
 	};

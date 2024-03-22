@@ -649,7 +649,7 @@ public:
 
 		if (!midi.is_available) {
 			LOG_MSG("MIDI: Can't find device: '%s', MIDI is not available",
-			        device_choice.data());
+			        device_choice.c_str());
 		}
 	}
 

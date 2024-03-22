@@ -53,7 +53,7 @@ void PCSPEAKER_Init(Section *section)
 		pc_speaker = std::make_unique<PcSpeakerImpulse>();
 	} else {
 		LOG_ERR("PCSPEAKER: Invalid PC Speaker model: %s",
-		        model_choice.data());
+		        model_choice.c_str());
 		return;
 	}
 
@@ -70,7 +70,7 @@ void PCSPEAKER_Init(Section *section)
 			}
 		} else {
 			LOG_WARNING("PCSPEAKER: Invalid 'pcspeaker_filter' setting: '%s', using 'off'",
-			            filter_choice.data());
+			            filter_choice.c_str());
 			pc_speaker->SetFilterState(FilterState::Off);
 		}
 	}
