@@ -534,4 +534,11 @@ TEST(Lowcase, Valid)
 	EXPECT_EQ(perform_lowcase("aBc"), "abc");
 }
 
+TEST(Replace, Valid)
+{
+	EXPECT_EQ(replace("abc", 'c', 'D'), "abD");
+	EXPECT_EQ(replace("abc", 'd', 'D'), "abc");
+	EXPECT_EQ(replace("", 'd', 'D'), "");
+}
+
 } // namespace

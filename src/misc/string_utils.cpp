@@ -108,10 +108,8 @@ void lowcase(std::string &str)
 std::string replace(const std::string &str, char old_char, char new_char) noexcept
 {
 	std::string new_str = str;
-	for (char &c : new_str)
-		if (c == old_char)
-			c = new_char;
-	return str;
+	std::replace(new_str.begin(), new_str.end(), old_char, new_char);
+	return new_str;
 }
 
 void trim(std::string &str, const char trim_chars[])
