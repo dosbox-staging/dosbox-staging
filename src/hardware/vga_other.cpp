@@ -1450,7 +1450,7 @@ static void composite_init(Section *sec)
 			                           : COMPOSITE_STATE::OFF;
 		} else {
 			LOG_WARNING("COMPOSITE: Invalid 'composite' setting: '%s', using 'off'",
-			            state.data());
+			            state.c_str());
 			cga_comp = COMPOSITE_STATE::OFF;
 		}
 	}

@@ -228,7 +228,7 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 
 	texts[1].compression = PNG_TEXT_COMPRESSION_NONE;
 	texts[1].key         = static_cast<png_charp>(source_keyword);
-	texts[1].text        = const_cast<png_charp>(source_value.data());
+	texts[1].text        = const_cast<png_charp>(source_value.c_str());
 	texts[1].text_length = source_value.size();
 
 	++num_text;

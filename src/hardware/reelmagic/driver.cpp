@@ -1407,7 +1407,7 @@ void ReelMagic_Init(Section* sec)
 	if (!wants_card_only && !wants_card_and_driver) {
 		if (!reelmagic_choice_has_bool) {
 			LOG_WARNING("REELMAGIC: Invalid 'reelmagic' value: '%s', shutting down.",
-			            reelmagic_choice.data());
+			            reelmagic_choice.c_str());
 		}
 		return;
 	}
