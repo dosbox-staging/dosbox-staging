@@ -18,18 +18,15 @@
 
 #include "shell.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "logging.h"
 #include "string_utils.h"
 
-// Permitted ASCII control characters in batch files
-constexpr uint8_t Esc           = 27;
-constexpr uint8_t UnitSeparator = 31;
-
 [[nodiscard]] static bool found_label(std::string_view line, std::string_view label);
 
-BatchFile::BatchFile(const Environment& host, std::unique_ptr<ByteReader> input_reader,
+BatchFile::BatchFile(const Environment& host, std::unique_ptr<LineReader> input_reader,
                      const std::string_view entered_name,
                      const std::string_view cmd_line, const bool echo_on)
         : shell(host),
@@ -66,34 +63,29 @@ bool BatchFile::ReadLine(char* lineout)
 
 std::string BatchFile::GetLine()
 {
-	uint8_t data     = 0;
-	std::string line = {};
-
-	while (data != '\n') {
-		const auto result = reader->Read();
-
-		// EOF
-		if (!result) {
-			break;
-		}
-
-		data = *result;
+	auto invalid_character = [](char c) {
+		const auto data = static_cast<uint8_t>(c);
 
 		/* Inclusion criteria:
 		 *  - backspace for alien odyssey
 		 *  - tab for batch files
 		 *  - escape for ANSI
 		 */
+		constexpr uint8_t Esc           = 27;
+		constexpr uint8_t UnitSeparator = 31;
 		if (data <= UnitSeparator && data != '\t' && data != '\b' &&
 		    data != Esc && data != '\n' && data != '\r') {
 			LOG_DEBUG("Encountered non-standard character: Dec %03u and Hex %#04x",
 			          data,
 			          data);
-		} else {
-			line += data;
+			return true;
 		}
-	}
+		return false;
+	};
 
+	auto line = reader->Read();
+	line.erase(std::remove_if(line.begin(), line.end(), invalid_character),
+	           line.end());
 	return line;
 }
 

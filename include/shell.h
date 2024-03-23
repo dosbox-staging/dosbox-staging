@@ -40,22 +40,17 @@ extern callback_number_t call_shellstop;
  * by "external" programs. (config) */
 extern DOS_Shell* first_shell;
 
-class ByteReader {
+class LineReader {
 public:
-	virtual void Reset()                  = 0;
-	virtual std::optional<uint8_t> Read() = 0;
+	virtual void Reset()       = 0;
+	virtual std::string Read() = 0;
 
-	ByteReader()                             = default;
-	ByteReader(const ByteReader&)            = delete;
-	ByteReader& operator=(const ByteReader&) = delete;
-	ByteReader(ByteReader&&)                 = delete;
-	ByteReader& operator=(ByteReader&&)      = delete;
-	virtual ~ByteReader()                    = default;
+	virtual ~LineReader() = default;
 };
 
 class BatchFile {
 public:
-	BatchFile(const Environment& host, std::unique_ptr<ByteReader> input_reader,
+	BatchFile(const Environment& host, std::unique_ptr<LineReader> input_reader,
 	          std::string_view entered_name, std::string_view cmd_line,
 	          bool echo_on);
 	BatchFile(const BatchFile&)            = delete;
@@ -76,7 +71,7 @@ private:
 
 	const Environment& shell;
 	CommandLine cmd;
-	std::unique_ptr<ByteReader> reader;
+	std::unique_ptr<LineReader> reader;
 	bool echo;
 };
 
