@@ -27,7 +27,7 @@ for now). They depend on the following packages:
 
 ### Install dependencies on Ubuntu and Debian
 
-Ubuntu 18.04 or newer, and Debian 9 or newer is required.
+Ubuntu 20.04 or newer, and Debian 11 or newer is required.
 
     sudo apt install libsdl2-2.0-0 libsdl2-net-2.0-0 libopusfile0
 
