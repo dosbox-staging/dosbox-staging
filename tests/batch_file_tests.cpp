@@ -22,17 +22,18 @@
 #include <unordered_map>
 
 #include "shell.h"
+#include "string_utils.h"
 
-class FakeReader final : public ByteReader {
+class FakeReader final : public LineReader {
 public:
 	void Reset() override
 	{
 		index = 0;
 	}
-	std::optional<uint8_t> Read() override
+	std::string Read() override
 	{
 		if (index >= contents.size()) {
-			return std::nullopt;
+			return "";
 		}
 
 		const auto data = contents[index];
@@ -40,7 +41,7 @@ public:
 		return data;
 	}
 
-	explicit FakeReader(std::string&& str) : contents(std::move(str)) {}
+	explicit FakeReader(std::string&& str) : contents(split(std::move(str))) {}
 
 	FakeReader(const FakeReader&)            = delete;
 	FakeReader& operator=(const FakeReader&) = delete;
@@ -49,7 +50,7 @@ public:
 	~FakeReader() override                   = default;
 
 private:
-	std::string contents;
+	std::vector<std::string> contents;
 	decltype(contents)::size_type index = 0;
 };
 

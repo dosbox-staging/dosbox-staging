@@ -18,69 +18,52 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
-#include <cassert>
-#include <utility>
-
 #include "file_reader.h"
 
 std::optional<FileReader> FileReader::GetFileReader(const std::string& filename)
 {
+	auto fullname = DOS_Canonicalize(filename.c_str());
+	
 	std::uint16_t handle = {};
-	if (!DOS_OpenFile(filename.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &handle)) {
+	if (!DOS_OpenFile(fullname.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &handle)) {
 		return {};
 	}
-	return FileReader(handle);
+	return FileReader(std::move(fullname));
 }
 
-FileReader::FileReader(const uint16_t file_handle) : handle(file_handle) {}
-
-FileReader::FileReader(FileReader&& other) noexcept
-        : handle(std::exchange(other.handle, {}))
+FileReader::FileReader(std::string filename)
+        : filename(std::move(filename)),
+          cursor(0)
 {}
 
-FileReader& FileReader::operator=(FileReader&& other) noexcept
+std::string FileReader::Read()
 {
-	if (this == &other) {
-		return *this;
+	uint16_t entry = {};
+	if (!DOS_OpenFile(filename.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &entry)) {
+		return "";
+	}
+	DOS_SeekFile(entry, &cursor, DOS_SEEK_SET);
+
+	uint8_t data           = 0;
+	uint16_t bytes_to_read = 1;
+	std::string line       = {};
+
+	while (data != '\n') {
+		bool result = DOS_ReadFile(entry, &data, &bytes_to_read);
+		if (!result || bytes_to_read == 0) {
+			break;
+		}
+		line += static_cast<char>(data);
 	}
 
-	if (handle) {
-		DOS_CloseFile(*handle);
-	}
-	handle = std::exchange(other.handle, {});
-	return *this;
-}
+	cursor = 0;
+	DOS_SeekFile(entry, &cursor, DOS_SEEK_CUR);
+	DOS_CloseFile(entry);
 
-std::optional<uint8_t> FileReader::Read()
-{
-	if (!handle) {
-		return {};
-	}
-
-	std::uint8_t data        = 0;
-	std::uint16_t bytes_read = 1;
-
-	const bool result = DOS_ReadFile(*handle, &data, &bytes_read);
-	if (!result || bytes_read == 0) {
-		return {};
-	}
-
-	return data;
+	return line;
 }
 
 void FileReader::Reset()
 {
-	if (!handle) {
-		return;
-	}
-	std::uint32_t cursor = 0;
-	DOS_SeekFile(*handle, &cursor, DOS_SEEK_SET);
-}
-
-FileReader::~FileReader()
-{
-	if (!handle) {
-		return;
-	}
-	DOS_CloseFile(*handle);
+	cursor = 0;
 }

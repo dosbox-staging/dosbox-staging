@@ -26,24 +26,24 @@
 
 #include "shell.h"
 
-class FileReader final : public ByteReader {
+class FileReader final : public LineReader {
 public:
 	static std::optional<FileReader> GetFileReader(const std::string& file);
 
 	void Reset() final;
-	std::optional<uint8_t> Read() final;
-
-	~FileReader() final;
+	std::string Read() final;
 
 	FileReader(const FileReader&)            = delete;
 	FileReader& operator=(const FileReader&) = delete;
-
-	FileReader(FileReader&& other) noexcept;
-	FileReader& operator=(FileReader&& other) noexcept;
+	FileReader(FileReader&&)                 = default;
+	FileReader& operator=(FileReader&&)      = default;
+	~FileReader() final                      = default;
 
 private:
-	explicit FileReader(uint16_t file_handle);
-	std::optional<uint16_t> handle;
+	explicit FileReader(std::string filename);
+
+	std::string filename;
+	uint32_t cursor;
 };
 
 #endif
