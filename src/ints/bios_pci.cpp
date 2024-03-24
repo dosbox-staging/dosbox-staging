@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,7 @@ CHECK_NARROWING();
 constexpr uint16_t max_device_index = 0x100;
 constexpr uint32_t enable_bit       = static_cast<uint32_t>(1 << 31);
 
-enum class ReturnCode : uint8_t {
+enum class PciReturnCode : uint8_t {
 	Successful        = 0x00,
 	FuncNotSupported  = 0x81,
 	BadVendorId       = 0x83,
@@ -71,9 +71,9 @@ static void warn_no_pci_present()
 
 void INT1AB1_Handler()
 {
-	auto set_return_code = [](const ReturnCode code) {
+	auto set_return_code = [](const PciReturnCode code) {
 		reg_ah = enum_val(code);
-		CALLBACK_SCF(code != ReturnCode::Successful);
+		CALLBACK_SCF(code != PciReturnCode::Successful);
 	};
 
 	auto select_read_write_address = []() {
@@ -91,7 +91,7 @@ void INT1AB1_Handler()
 			warn_no_pci_present();
 		}
 
-		set_return_code(ReturnCode::FuncNotSupported);
+		set_return_code(PciReturnCode::FuncNotSupported);
 		return;
 	}
 
@@ -110,13 +110,13 @@ void INT1AB1_Handler()
 		// (either bit 4 or 5 can be set, must match the supported
 		// configuration mechanism)
 		reg_al = 0x01;
-		set_return_code(ReturnCode::Successful);
+		set_return_code(PciReturnCode::Successful);
 		return;
 	case 0x02: // Find PCI Device
 	{
 		// Check if vendor ID is valid
 		if (reg_dx == 0xffff) {
-			set_return_code(ReturnCode::BadVendorId);
+			set_return_code(PciReturnCode::BadVendorId);
 			return;
 		}
 
@@ -138,7 +138,7 @@ void INT1AB1_Handler()
 				// Found!
 				reg_bl = static_cast<uint8_t>(i & 0xff);
 				reg_bh = 0x00; // bus 0
-				set_return_code(ReturnCode::Successful);
+				set_return_code(PciReturnCode::Successful);
 				return;
 			}
 
@@ -147,7 +147,7 @@ void INT1AB1_Handler()
 		}
 
 		// Device not found
-		set_return_code(ReturnCode::DeviceNotFound);
+		set_return_code(PciReturnCode::DeviceNotFound);
 		return;
 	}
 	case 0x03: { // Find PCI Class Code
@@ -174,7 +174,7 @@ void INT1AB1_Handler()
 				// Found!
 				reg_bl = static_cast<uint8_t>(i & 0xff);
 				reg_bh = 0x00; // bus 0
-				set_return_code(ReturnCode::Successful);
+				set_return_code(PciReturnCode::Successful);
 				return;
 			}
 
@@ -183,7 +183,7 @@ void INT1AB1_Handler()
 		}
 
 		// Device not found
-		set_return_code(ReturnCode::DeviceNotFound);
+		set_return_code(PciReturnCode::DeviceNotFound);
 		return;
 	}
 	case 0x08: // Read Configuration Byte
@@ -191,33 +191,33 @@ void INT1AB1_Handler()
 		select_read_write_address();
 		const auto port = port_num_pci_config_data + (reg_di & 3);
 		reg_cl = IO_ReadB(static_cast<io_port_t>(port));
-		set_return_code(ReturnCode::Successful);
+		set_return_code(PciReturnCode::Successful);
 		return;
 	}
 	case 0x09: // Read Configuration Word
 	{
 		if ((reg_di % 2) != 0) {
 			// Not a multiple of 2
-			set_return_code(ReturnCode::BadRegisterNumber);
+			set_return_code(PciReturnCode::BadRegisterNumber);
 			return;
 		}
 		select_read_write_address();
 		const auto port = port_num_pci_config_data + (reg_di & 2);
 		reg_cx = IO_ReadW(static_cast<io_port_t>(port));
-		set_return_code(ReturnCode::Successful);
+		set_return_code(PciReturnCode::Successful);
 		return;
 	}
 	case 0x0a: // Read Configuration Dword
 	{
 		if ((reg_di % 4) != 0) {
 			// Not a multiple of 4
-			set_return_code(ReturnCode::BadRegisterNumber);
+			set_return_code(PciReturnCode::BadRegisterNumber);
 			return;
 		}
 		select_read_write_address();
 		const auto port = port_num_pci_config_data + (reg_di & 3);
 		reg_ecx = IO_ReadD(static_cast<io_port_t>(port));
-		set_return_code(ReturnCode::Successful);
+		set_return_code(PciReturnCode::Successful);
 		return;
 	}
 	case 0x0b: // Write Configuration Byte
@@ -225,42 +225,42 @@ void INT1AB1_Handler()
 		select_read_write_address();
 		const auto port = port_num_pci_config_data + (reg_di & 3);
 		IO_WriteB(static_cast<io_port_t>(port), reg_cl);
-		set_return_code(ReturnCode::Successful);
+		set_return_code(PciReturnCode::Successful);
 		return;
 	}
 	case 0x0c: // Write Configuration Word
 	{
 		if ((reg_di % 2) != 0) {
 			// Not a multiple of 2
-			set_return_code(ReturnCode::BadRegisterNumber);
+			set_return_code(PciReturnCode::BadRegisterNumber);
 			return;
 		}
 		select_read_write_address();
 		const auto port = port_num_pci_config_data + (reg_di & 2);
 		IO_WriteW(static_cast<io_port_t>(port), reg_cx);
-		set_return_code(ReturnCode::Successful);
+		set_return_code(PciReturnCode::Successful);
 		return;
 	}
 	case 0x0d: // Write Configuration Dword
 	{
 		if ((reg_di % 4) != 0) {
 			// Not a multiple of 4
-			set_return_code(ReturnCode::BadRegisterNumber);
+			set_return_code(PciReturnCode::BadRegisterNumber);
 			return;
 		}
 		select_read_write_address();
 		const auto port = port_num_pci_config_data + (reg_di & 3);
 		IO_WriteD(static_cast<io_port_t>(port), reg_ecx);
-		set_return_code(ReturnCode::Successful);
+		set_return_code(PciReturnCode::Successful);
 		return;
 	}
 	case 0x06: // Generate Special Cycle
 	case 0x0e: // Get PCI Interrupt Routing Options
 	case 0x0f: // Set PCI Hardware Interrupt
-		set_return_code(ReturnCode::FuncNotSupported);
+		set_return_code(PciReturnCode::FuncNotSupported);
 		return;
 	default:
 		warn_unknown_function(reg_al);
-		set_return_code(ReturnCode::FuncNotSupported);
+		set_return_code(PciReturnCode::FuncNotSupported);
 	}
 }
