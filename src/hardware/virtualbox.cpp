@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -126,7 +126,7 @@ static struct {
 // Request Header constants and structures
 // ***************************************************************************
 
-enum class RequestType : uint32_t {
+enum class VBoxRequestType : uint32_t {
 	InvalidRequest  = 0,
 	GetMouseStatus  = 1,
 	SetMouseStatus  = 2,
@@ -134,7 +134,7 @@ enum class RequestType : uint32_t {
 	ReportGuestInfo = 50,
 };
 
-enum class ReturnCode : uint32_t {
+enum class VBoxReturnCode : uint32_t {
 	ErrorNotImplemented = (UINT32_MAX + 1) - 12,
 	ErrorNotSupported   = (UINT32_MAX + 1) - 37,
 };
@@ -150,10 +150,10 @@ struct RequestHeader {
 	bool IsValid() const;
 	bool CheckStructSize(const uint32_t needed_sise) const;
 
-	uint32_t struct_size     = 0;
-	uint32_t struct_version  = 0;
-	RequestType request_type = RequestType::InvalidRequest;
-	PhysPt return_code_pt    = 0;
+	uint32_t struct_size    = 0;
+	uint32_t struct_version = 0;
+	VBoxRequestType request_type = VBoxRequestType::InvalidRequest;
+	PhysPt return_code_pt   = 0;
 
 	// These values are not used by DOSBox:
 	// - uint32_t reserved
@@ -169,7 +169,7 @@ RequestHeader::RequestHeader(const PhysPt pointer)
 {
 	struct_size    = phys_readd(pointer);
 	struct_version = phys_readd(pointer + 4);
-	request_type   = static_cast<RequestType>(phys_readd(pointer + 8));
+	request_type   = static_cast<VBoxRequestType>(phys_readd(pointer + 8));
 	return_code_pt = pointer + 12;
 }
 
@@ -263,9 +263,9 @@ struct VirtualBox_MousePointer_1_01 {
 // Helper code to print out warnings
 // ***************************************************************************
 
-static void warn_unsupported_request(const RequestType request_type)
+static void warn_unsupported_request(const VBoxRequestType request_type)
 {
-	static std::set<RequestType> already_warned = {};
+	static std::set<VBoxRequestType> already_warned = {};
 	if (already_warned.find(request_type) != already_warned.end()) {
 		LOG_WARNING("VIRTUALBOX: unimplemented request #%d",
 		            enum_val(request_type));
@@ -275,7 +275,7 @@ static void warn_unsupported_request(const RequestType request_type)
 
 static void warn_unsupported_struct_version(const RequestHeader& header)
 {
-	static std::map<RequestType, std::set<uint32_t>> already_warned = {};
+	static std::map<VBoxRequestType, std::set<uint32_t>> already_warned = {};
 	auto& already_warned_set = already_warned[header.request_type];
 	if (already_warned_set.find(header.struct_version) !=
 	    already_warned_set.end()) {
@@ -341,7 +341,7 @@ static void report_success(PhysPt return_code_pt)
 	phys_writed(return_code_pt, 0);
 }
 
-static void report_failure(PhysPt return_code_pt, const ReturnCode fail_code)
+static void report_failure(PhysPt return_code_pt, const VBoxReturnCode fail_code)
 {
 	phys_writed(return_code_pt, static_cast<uint32_t>(fail_code));
 }
@@ -355,14 +355,14 @@ static bool check_size(const RequestHeader& header)
 static void handle_error_unsupported_request(const RequestHeader& header)
 {
 	report_failure(header.return_code_pt,
-	               ReturnCode::ErrorNotImplemented);
+	               VBoxReturnCode::ErrorNotImplemented);
 	warn_unsupported_request(header.request_type);
 }
 
 static void handle_error_unsupported_struct_version(const RequestHeader& header)
 {
 	report_failure(header.return_code_pt,
-	               ReturnCode::ErrorNotSupported);
+	               VBoxReturnCode::ErrorNotSupported);
 	warn_unsupported_struct_version(header);
 }
 
@@ -371,7 +371,7 @@ static void handle_get_mouse_status(const RequestHeader& header,
 {
 	if (!has_feature_mouse) {
 		report_failure(header.return_code_pt,
-			       ReturnCode::ErrorNotSupported);
+			       VBoxReturnCode::ErrorNotSupported);
 		return;
 	}
 
@@ -399,7 +399,7 @@ static void handle_set_mouse_status(const RequestHeader& header,
 {
 	if (!has_feature_mouse) {
 		report_failure(header.return_code_pt,
-			       ReturnCode::ErrorNotSupported);
+			       VBoxReturnCode::ErrorNotSupported);
 		return;
 	}
 
@@ -441,7 +441,7 @@ static void handle_set_pointer_shape(const RequestHeader& header,
 {
 	if (!has_feature_mouse) {
 		report_failure(header.return_code_pt,
-		               ReturnCode::ErrorNotSupported);
+		               VBoxReturnCode::ErrorNotSupported);
 		return;
 	}
 
@@ -515,7 +515,7 @@ static void port_write_virtualbox(io_port_t, io_val_t value, io_width_t width)
 	RequestHeader header(header_pointer);
 
 	if (!state.is_client_connected &&
-	    header.request_type != RequestType::ReportGuestInfo) {
+	    header.request_type != VBoxRequestType::ReportGuestInfo) {
 		return; // not a proper VirtualBox client
 	}
 
@@ -525,16 +525,16 @@ static void port_write_virtualbox(io_port_t, io_val_t value, io_width_t width)
 	}
 
 	switch (header.request_type) {
-	case RequestType::GetMouseStatus:
+	case VBoxRequestType::GetMouseStatus:
 		handle_get_mouse_status(header, struct_pointer);
 		break;
-	case RequestType::SetMouseStatus:
+	case VBoxRequestType::SetMouseStatus:
 		handle_set_mouse_status(header, struct_pointer);
 		break;
-	case RequestType::SetPointerShape:
+	case VBoxRequestType::SetPointerShape:
 		handle_set_pointer_shape(header, struct_pointer);
 		break;
-	case RequestType::ReportGuestInfo:
+	case VBoxRequestType::ReportGuestInfo:
 		handle_report_guest_info(header, struct_pointer);
 		break;
 	default: handle_error_unsupported_request(header); break;
