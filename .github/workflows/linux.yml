@@ -112,16 +112,6 @@ jobs:
             max_warnings: 0
             needs_all_deps: true
 
-          - name: GCC, Debian 10, ARMv7
-            os: ubuntu-20.04
-            build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
-            max_warnings: 21
-            run_tests: true
-            cross: true
-            arch: armhf
-            deb_vers: 10
-            needs_min_deps: false
-
           - name: GCC, Debian 11, ARMv7
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
