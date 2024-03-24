@@ -34,58 +34,6 @@
 #include "shell.h"
 #include "string_utils.h"
 
-void MOUNT::Move_Z(char new_z)
-{
-	const char new_drive_z = toupper(new_z);
-
-	if (new_drive_z < 'A' || new_drive_z > 'Z') {
-		WriteOut(MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR"), new_drive_z);
-		return;
-	}
-
-	const uint8_t new_idx = drive_index(new_drive_z);
-
-	if (Drives[new_idx]) {
-		WriteOut(MSG_Get("PROGRAM_MOUNT_MOVE_Z_ERROR_1"), new_drive_z);
-		return;
-	}
-
-	if (new_idx < DOS_DRIVES - 1) {
-		ZDRIVE_NUM = new_idx;
-		/* remap drives */
-		Drives[new_idx] = Drives[25];
-		Drives[25]      = nullptr;
-		if (!first_shell) {
-			return; // Should not be possible
-		}
-		/* Update environment */
-		std::string value   = {};
-		std::string tempenv = {new_drive_z, ':', '\\'};
-		if (const auto result = psp->GetEnvironmentValue("PATH")) {
-			value = *result;
-			std::string::size_type idx = {};
-			while ((idx = value.find("Z:\\")) != std::string::npos ||
-			       (idx = value.find("z:\\")) != std::string::npos) {
-				value.replace(idx, 3, tempenv);
-			}
-		} else {
-			value = tempenv;
-		}
-
-		tempenv += "COMMAND.COM";
-
-		auto psp_copy = DOS_PSP(psp->GetSegment());
-		while (psp_copy.GetSegment() != DOS_PSP::rootpsp) {
-			psp_copy = DOS_PSP(psp_copy.GetParent());
-			psp_copy.SetEnvironmentValue("PATH", value);
-			psp_copy.SetEnvironmentValue("COMSPEC", tempenv);
-		}
-
-		/* Change the active drive */
-		if (DOS_GetDefaultDrive() == 25)
-			DOS_SetDrive(new_idx);
-	}
-}
 
 void MOUNT::ListMounts()
 {
@@ -130,7 +78,6 @@ void MOUNT::Run(void) {
 	char drive                          = '\0';
 	std::string label                   = {};
 	std::string umount                  = {};
-	std::string newz                    = {};
 
 	//Hack To allow long commandlines
 	ChangeToLongCmd();
@@ -162,13 +109,6 @@ void MOUNT::Run(void) {
 	/* Check for unmounting */
 	if (cmd->FindString("-u",umount,false)) {
 		WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
-		return;
-	}
-
-	/* Check for moving Z: */
-	/* Only allowing moving it once. It is merely a convenience added for the wine team */
-	if (ZDRIVE_NUM == 25 && cmd->FindString("-z", newz,false)) {
-		Move_Z(newz[0]);
 		return;
 	}
 
@@ -520,5 +460,4 @@ void MOUNT::AddMessages() {
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE","The overlay directory can not be the same as underlying drive.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR","Something went wrong.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS","Overlay %s on drive %c mounted.\n");
-	MSG_Add("PROGRAM_MOUNT_MOVE_Z_ERROR_1", "Can't move drive Z. Drive %c is mounted already.\n");
 }
