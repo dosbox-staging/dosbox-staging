@@ -23,7 +23,7 @@
 std::optional<FileReader> FileReader::GetFileReader(const std::string& filename)
 {
 	auto fullname = DOS_Canonicalize(filename.c_str());
-	
+
 	std::uint16_t handle = {};
 	if (!DOS_OpenFile(fullname.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &handle)) {
 		return {};
@@ -36,11 +36,11 @@ FileReader::FileReader(std::string filename)
           cursor(0)
 {}
 
-std::string FileReader::Read()
+std::optional<std::string> FileReader::Read()
 {
 	uint16_t entry = {};
 	if (!DOS_OpenFile(filename.c_str(), (DOS_NOT_INHERIT | OPEN_READ), &entry)) {
-		return "";
+		return {};
 	}
 	DOS_SeekFile(entry, &cursor, DOS_SEEK_SET);
 
@@ -59,6 +59,10 @@ std::string FileReader::Read()
 	cursor = 0;
 	DOS_SeekFile(entry, &cursor, DOS_SEEK_CUR);
 	DOS_CloseFile(entry);
+
+	if (line.empty()) {
+		return {};
+	}
 
 	return line;
 }
