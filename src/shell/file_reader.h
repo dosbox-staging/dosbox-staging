@@ -31,7 +31,7 @@ public:
 	static std::optional<FileReader> GetFileReader(const std::string& file);
 
 	void Reset() final;
-	std::string Read() final;
+	std::optional<std::string> Read() final;
 
 	FileReader(const FileReader&)            = delete;
 	FileReader& operator=(const FileReader&) = delete;

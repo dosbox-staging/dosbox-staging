@@ -30,10 +30,10 @@ public:
 	{
 		index = 0;
 	}
-	std::string Read() override
+	std::optional<std::string> Read() override
 	{
 		if (index >= contents.size()) {
-			return "";
+			return {};
 		}
 
 		const auto data = contents[index];

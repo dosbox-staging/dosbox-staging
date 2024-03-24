@@ -37,31 +37,31 @@ BatchFile::BatchFile(const Environment& host, std::unique_ptr<LineReader> input_
 
 bool BatchFile::ReadLine(char* lineout)
 {
-	std::string line = {};
-	while (line.empty()) {
-		line = GetLine();
-
-		if (line.empty()) {
-			return false;
-		}
-
+	auto is_comment_or_label = [](const std::string& line) {
 		const auto colon_index = line.find_first_of(':');
 		if (colon_index != std::string::npos &&
 		    colon_index == line.find_first_not_of("=\t ")) {
-			// Line is a comment or label, so ignore it
-			line.clear();
+			return true;
 		}
+		return false;
+	};
 
-		trim(line);
+	auto line = GetLine();
+	while (line && (line->empty() || is_comment_or_label(*line))) {
+		line = GetLine();
 	}
 
-	line = ExpandedBatchLine(line);
-	strncpy(lineout, line.c_str(), CMD_MAXLINE);
+	if (!line) {
+		return false;
+	}
+
+	*line = ExpandedBatchLine(*line);
+	strncpy(lineout, line->c_str(), CMD_MAXLINE);
 	lineout[CMD_MAXLINE - 1] = '\0';
 	return true;
 }
 
-std::string BatchFile::GetLine()
+std::optional<std::string> BatchFile::GetLine()
 {
 	auto invalid_character = [](char c) {
 		const auto data = static_cast<uint8_t>(c);
@@ -84,9 +84,13 @@ std::string BatchFile::GetLine()
 	};
 
 	auto line = reader->Read();
-	line.erase(std::remove_if(line.begin(), line.end(), invalid_character),
-	           line.end());
-	return line;
+	if (!line) {
+		return {};
+	}
+	line->erase(std::remove_if(line->begin(), line->end(), invalid_character),
+	            line->end());
+	trim(*line);
+	return *line;
 }
 
 std::string BatchFile::ExpandedBatchLine(std::string_view line) const
@@ -131,12 +135,10 @@ std::string BatchFile::ExpandedBatchLine(std::string_view line) const
 
 bool BatchFile::Goto(const std::string_view label)
 {
-	std::string line = " ";
 	reader->Reset();
 
-	while (!line.empty()) {
-		line = GetLine();
-		if (found_label(line, label)) {
+	while (auto line = GetLine()) {
+		if (found_label(*line, label)) {
 			return true;
 		}
 	}

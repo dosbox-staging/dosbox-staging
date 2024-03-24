@@ -43,7 +43,7 @@ extern DOS_Shell* first_shell;
 class LineReader {
 public:
 	virtual void Reset()       = 0;
-	virtual std::string Read() = 0;
+	virtual std::optional<std::string> Read() = 0;
 
 	virtual ~LineReader() = default;
 };
@@ -67,7 +67,7 @@ public:
 
 private:
 	[[nodiscard]] std::string ExpandedBatchLine(std::string_view line) const;
-	[[nodiscard]] std::string GetLine();
+	[[nodiscard]] std::optional<std::string> GetLine();
 
 	const Environment& shell;
 	CommandLine cmd;
