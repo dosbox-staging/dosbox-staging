@@ -3,8 +3,9 @@
  *
  * In reverse chronological order:
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *    - Applied C++ modernization adjustments.
+ *    - Fixed struct naming conflict with DOSBox generic type 'Fraction'
  *
  *  Copyright (C) 2017-2020  Loris Chiocca
  *    - Authored the IBM Music Feature card (IMFC) emulator, as follows:
@@ -517,28 +518,28 @@ constexpr bool operator==(const Note& a, const Note& b)
 }
 
 #pragma pack(push, 1)
-struct Fraction {
+struct ImfcFraction {
 	uint8_t value = 0;
 
-	constexpr Fraction() = default;
-	constexpr Fraction(const uint8_t v) : value(v) {}
+	constexpr ImfcFraction() = default;
+	constexpr ImfcFraction(const uint8_t v) : value(v) {}
 };
 #pragma pack(pop)
-static_assert(sizeof(Fraction) == 1, "Fraction needs to be 1 in size!");
+static_assert(sizeof(ImfcFraction) == 1, "Fraction needs to be 1 in size!");
 
-constexpr bool operator==(const Fraction& a, const Fraction& b)
+constexpr bool operator==(const ImfcFraction& a, const ImfcFraction& b)
 {
 	return a.value == b.value;
 }
-static Fraction ZERO_FRACTION(0);
+static ImfcFraction ZERO_FRACTION(0);
 
 #pragma pack(push, 1)
 struct FractionalNote {
-	Fraction fraction = {};
-	Note note         = {};
+	ImfcFraction fraction = {};
+	Note note             = {};
 
 	constexpr FractionalNote() = default;
-	constexpr FractionalNote(const Note& nn, const Fraction& nf)
+	constexpr FractionalNote(const Note& nn, const ImfcFraction& nf)
 	        : fraction(nf),
 	          note(nn)
 	{}
@@ -560,7 +561,7 @@ constexpr std::pair<uint8_t, uint8_t> split_uint16_t(const uint16_t value) noexc
 static constexpr FractionalNote to_fractional_note(const uint16_t value) noexcept
 {
 	const auto [note, fraction] = split_uint16_t(value);
-	return {Note(note), Fraction(fraction)};
+	return {Note(note), ImfcFraction(fraction)};
 }
 
 
@@ -10153,11 +10154,11 @@ private:
 	                               YmChannelData* ymChannelData)
 	{
 		ymChannelData->currentlyPlaying = FractionalNote(Note(0),
-		                                                 Fraction(0));
+		                                                 ImfcFraction(0));
 		ymChannelData->portamentoTarget = FractionalNote(Note(0),
-		                                                 Fraction(0));
+		                                                 ImfcFraction(0));
 		ymChannelData->originalFractionAndNoteNumber =
-		        FractionalNote(Note(0), Fraction(0));
+		        FractionalNote(Note(0), ImfcFraction(0));
 		instr->ymChannelData = ymChannelData;
 	}
 
@@ -10445,7 +10446,7 @@ private:
 	// ROM Address: 0x24E1
 	void executeMidiCommand_NoteONOFF_internal_guard(InstrumentParameters* instr,
 	                                                 Note noteNumber,
-	                                                 Fraction fraction,
+	                                                 ImfcFraction fraction,
 	                                                 KeyVelocity velocity,
 	                                                 Duration duration)
 	{
@@ -10457,7 +10458,7 @@ private:
 
 	// ROM Address: 0x24EA
 	void executeMidiCommand_NoteONOFF_internal(InstrumentParameters* instr,
-	                                           Note noteNumber, Fraction fraction,
+	                                           Note noteNumber, ImfcFraction fraction,
 	                                           KeyVelocity velocity,
 	                                           Duration duration)
 	{
@@ -10802,7 +10803,7 @@ private:
 		ymChannelData->portamentoTarget = cropToPlayableRange(
 		        m_lastMidiOnOff_FractionAndNoteNumber,
 		        FractionalNote(Note(instr->voiceDefinition.getTranspose()),
-		                       Fraction(0)));
+		                       ImfcFraction(0)));
 	}
 
 	// ROM Address: 0x273A
@@ -11002,7 +11003,7 @@ private:
 			executeMidiCommand_NoteONOFF_internal_guard(
 			        instr,
 			        Note(m_sp_MidiDataOfMidiCommandInProgress[1]) /* note number */,
-			        Fraction(m_sp_MidiDataOfMidiCommandInProgress[2]) /* fraction */,
+			        ImfcFraction(m_sp_MidiDataOfMidiCommandInProgress[2]) /* fraction */,
 			        KeyVelocity(m_sp_MidiDataOfMidiCommandInProgress[3]) /* velocity */,
 			        Duration(check_cast<uint16_t>(
 			                m_sp_MidiDataOfMidiCommandInProgress[5] * 128 +
