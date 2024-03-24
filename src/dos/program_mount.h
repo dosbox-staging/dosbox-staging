@@ -34,7 +34,6 @@ class MOUNT final : public Program {
 		                   HELP_CmdType::Program,
 		                   "MOUNT"};
 	    }
-	    void Move_Z(char new_z);
 	    void ListMounts();
 	    void Run() override;
     private:
