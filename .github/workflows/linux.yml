@@ -89,7 +89,16 @@ jobs:
       matrix:
         conf:
 
-          - name: GCC 10, Ubuntu 22.04
+          - name: GCC 13, LTO, Ubuntu 22.04
+            os: ubuntu-22.04
+            packages: g++-13
+            build_flags: -Dbuildtype=debug -Db_lto=true --native-file=.github/meson/native-gcc-13.ini
+            compile_flags: -Werror=odr -Werror=lto-type-mismatch -Werror=strict-aliasing
+            max_warnings: 0
+            needs_all_deps: true
+            run_tests: true
+
+          - name: GCC 12, debug, Ubuntu 22.04
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Dbuildtype=debug --native-file=.github/meson/native-gcc-12.ini
@@ -97,7 +106,7 @@ jobs:
             needs_all_deps: true
             run_tests: true
 
-          - name: Clang 15, Ubuntu 22.04
+          - name: Clang 15, debug, Ubuntu 22.04
             os: ubuntu-22.04
             packages: clang-15
             build_flags: -Dbuildtype=debug --native-file=.github/meson/native-clang-15.ini
@@ -105,14 +114,14 @@ jobs:
             needs_all_deps: true
             run_tests: true
 
-          - name: GCC 12, +debugger
+          - name: GCC 12, heavy debug, Ubuntu 22.04
             os: ubuntu-22.04
             packages: g++-12
             build_flags: -Denable_debugger=heavy --native-file=.github/meson/native-gcc-12.ini
             max_warnings: 0
             needs_all_deps: true
 
-          - name: GCC, Debian 11, ARMv7
+          - name: GCC, debug, ARMv7, Ubuntu 20.04
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug -Duse_zlib_ng=false --cross-file dosbox-cross
             max_warnings: 0
@@ -122,7 +131,7 @@ jobs:
             deb_vers: 11
             needs_min_deps: false
 
-          - name: GCC, Debian 11, aarch64
+          - name: GCC, debug, AArch64, Ubuntu 20.04
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
             max_warnings: 0
@@ -132,7 +141,7 @@ jobs:
             deb_vers: 11
             needs_min_deps: false
 
-          - name: GCC, Debian 11, ppc64le
+          - name: GCC, debug, PPC64le, Ubuntu 20.04
             os: ubuntu-20.04
             build_flags: -Dbuildtype=debug --cross-file dosbox-cross
             max_warnings: 21
@@ -142,9 +151,9 @@ jobs:
             deb_vers: 11
             needs_min_deps: false
 
-          - name: GCC 9, minimum build
+          - name: GCC 10, minimum build, Ubuntu 20.04
             os: ubuntu-20.04
-            packages: g++-9
+            packages: g++-10
             build_flags: >-
               -Dbuildtype=minsize
               -Dunit_tests=disabled
@@ -154,7 +163,7 @@ jobs:
               -Duse_opengl=false
               -Duse_sdl2_net=false
               -Duse_slirp=false
-              --native-file=.github/meson/native-gcc-9.ini
+              --native-file=.github/meson/native-gcc-10.ini
             needs_min_deps: true
             max_warnings: -1
 
@@ -245,6 +254,7 @@ jobs:
 
       - name: Meson setup
         run:  |
+          CFLAGS="${{matrix.conf.compile_flags}}" CXXFLAGS="${{matrix.conf.compile_flags}}" \
           ${{steps.bins.outputs.MESON_BIN}} setup ${{ matrix.conf.build_flags }} build \
           || ( cat build/meson-logs/meson-log.txt ; exit 1 )
 
