@@ -183,8 +183,9 @@ std::string join_with_commas(const std::vector<std::string>& items,
 
 	std::string result = {};
 
-	const auto and_pair = std::string(" ") + and_conjunction.data() + " ";
-	const auto and_multi = std::string(", ") + and_conjunction.data() + " ";
+	// C++26 should add the missing operator+(std::string, std::string_view)
+	const auto and_pair = std::string(" ").append(and_conjunction) + " ";
+	const auto and_multi = std::string(", ").append(and_conjunction) + " ";
 
 	std::string separator = (num_items == 2u) ? and_pair : ", ";
 
