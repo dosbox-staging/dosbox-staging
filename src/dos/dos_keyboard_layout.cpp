@@ -22,7 +22,6 @@
 #include <map>
 #include <memory>
 #include <string_view>
-using sv = std::string_view;
 
 #include "../ints/int10.h"
 #include "autoexec.h"
@@ -810,8 +809,8 @@ KeyboardErrorCode KeyboardLayout::ReadCodePageFile(const char *requested_cp_file
 			return KEYB_INVALIDCPFILE;
 		}
 		// Scan for the UPX identifier
-		const auto upx_id     = sv{"UPX!"};
-		const auto scan_buf   = sv{reinterpret_cast<char *>(cpi_buf.data()), scan_size};
+		const auto upx_id     = std::string_view{"UPX!"};
+		const auto scan_buf   = std::string_view{reinterpret_cast<char*>(cpi_buf.data()), scan_size};
 		const auto upx_id_pos = scan_buf.find(upx_id);
 
 		// did we find the UPX identifier?
@@ -1204,7 +1203,7 @@ public:
 
 		// If the use only provided a single value (language), then try using it
 		constexpr bool reason_keyboard_layout = true;
-		const auto layout_is_one_value = sv(layoutname).find(' ') == std::string::npos;
+		const auto layout_is_one_value = layoutname.find(' ') == std::string::npos;
 		if (layout_is_one_value) {
 			if (!DOS_LoadKeyboardLayoutFromLanguage(layoutname.c_str())) {
 				// Success - re-create country information to
