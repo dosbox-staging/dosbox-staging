@@ -225,10 +225,10 @@ def get_draft_release_id_by_tag(tag):
 
     releases = execute_query(query)
 
-    for edge in releases['data']['repository']['releases']['edges']:
-        item = edge['node']
-        if item['isDraft'] and item['tagName'] == tag:
-            return item['databaseId']
+    for edge in releases["data"]["repository"]["releases"]["edges"]:
+        item = edge["node"]
+        if item["isDraft"] and item["tagName"] == tag:
+            return item["databaseId"]
 
     return None
 
@@ -399,11 +399,11 @@ def process_pull_requests_csv(items, csv_fname):
         [filtered, remaining] = filter_category(remaining, filter_def)
 
         for item in filtered:
-            item['category'] = filter_def['category']
+            item["category"] = filter_def["category"]
             result.append(item)
 
     for item in remaining:
-        item['category'] = 'other'
+        item["category"] = "other"
         result.append(item)
 
     write_csv(result, csv_fname)
