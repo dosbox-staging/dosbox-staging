@@ -2736,8 +2736,9 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
                                  const std::string_view mapperfile_name)
 {
 	// If the filename is empty the user wants defaults
-	if (mapperfile_name == "")
+	if (mapperfile_name.empty()) {
 		return false;
+	}
 
 	auto try_loading = [](const std_fs::path &mapper_path) -> bool {
 		constexpr auto optional = ResourceImportance::Optional;

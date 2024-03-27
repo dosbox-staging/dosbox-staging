@@ -176,7 +176,8 @@ void SERIAL::Run()
 		}
 		if (serialports[port_index] != nullptr) {
 			serialports[port_index]->serialType = desired_type;
-			serialports[port_index]->commandLineString = commandLineString;
+			serialports[port_index]->commandLineString = std::move(
+			        commandLineString);
 		}
 		delete commandLine;
 		showPort(port_index);
