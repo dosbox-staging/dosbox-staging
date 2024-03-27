@@ -413,7 +413,11 @@ def append_category_markdown(markdown, items, category_name):
     markdown = f"{markdown}## Full PR list of {category_name}\n\n"
 
     for i in items:
-        markdown = f"{markdown}  - {i['title']} (#{i['number']})\n"
+        item_md = f"  - {i['title']} (#{i['number']})"
+        if "backport" in i["labels"]:
+            item_md += " _[backport]_"
+
+        markdown += item_md + "\n"
 
     return f"{markdown}\n\n"
 
