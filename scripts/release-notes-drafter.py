@@ -38,7 +38,7 @@ HTTP_TIMEOUT_SEC = 10
 #
 # - If at least one of the PR's labels matches against the filter's
 #   labels, the PR belongs to that category and is removed from the
-#   bucket.
+#   bucket (except if "remove" is False; it defaults to True).
 #
 # - The bucket of remaining items is passed down to the next
 #   filter, and this process is repeated until there are no more filters
@@ -49,6 +49,11 @@ HTTP_TIMEOUT_SEC = 10
 #
 FILTERS = [
     {
+        "category": "game-compatibility",
+        "title":    "game compatibility improvements",
+        "labels":   ["game compatibility"],
+        "remove":   False
+    }, {
         "category": "graphics",
         "title":    "graphics-related changes",
         "labels":   ["video", "voodoo", "shaders"]
@@ -351,6 +356,7 @@ def filter_category(items, filter_def):
 
         i["title"] = i["title"].strip()
 
+        remove = i["remove"] if "remove" in i else True
         include = False
 
         if "labels" in filter_def:
@@ -359,7 +365,8 @@ def filter_category(items, filter_def):
 
         if include:
             filtered.append(i)
-        else:
+
+        if not include or not remove:
             remaining.append(i)
 
     filtered.sort(key=lambda x: (x["title"].lower()))
