@@ -2800,10 +2800,9 @@ static void clean_up_sdl_resources()
 static void GUI_ShutDown(Section *)
 {
 	GFX_Stop();
+
 	if (sdl.draw.callback)
 		(sdl.draw.callback)( GFX_CallBackStop );
-	if (sdl.desktop.fullscreen)
-		GFX_SwitchFullScreen();
 
 	GFX_SetMouseCapture(false);
 	GFX_SetMouseVisibility(true);
