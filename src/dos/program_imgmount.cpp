@@ -627,7 +627,7 @@ void IMGMOUNT::AddMessages()
 	        "Notes:\n"
 			"  - You can use wildcards to mount multiple images, e.g.:\n"
 			"      [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy\n"
-	        "  - %s+F4 swaps & mounts the next [color=light-cyan]CDROM-SET[reset] or [color=light-cyan]BOOTIMAGE[reset], if provided.\n"
+	        "  - [color=yellow]%s+F4[reset] swaps & mounts the next [color=light-cyan]CDROM-SET[reset] or [color=light-cyan]BOOTIMAGE[reset], if provided.\n"
 	        "  - The -ro flag mounts the disk image in read-only (write-protected) mode.\n"
 	        "  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful\n"
 	        "    for CD-based games that need a real DOS environment via bootable HDD image.\n"
