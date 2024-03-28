@@ -563,7 +563,7 @@ void BOOT::AddMessages()
 	MSG_Add("PROGRAM_BOOT_PRINT_ERROR",
 	        "This command boots DOSBox Staging from either a floppy or hard disk image.\n\n"
 	        "For this command, one can specify a succession of floppy disks swappable by\n"
-	        "pressing %s+F4, and -l specifies the mounted drive to boot from. If no drive\n"
+	        "pressing [color=yellow]%s+F4[reset], and -l specifies the mounted drive to boot from. If no drive\n"
 	        "letter is specified, this defaults to booting from the A drive. The only\n"
 	        "bootable drive letters are A, C, and D. For booting from a hard drive (C or D),\n"
 	        "the image should have already been mounted using the [color=light-blue]IMGMOUNT[reset] command.\n\n"
