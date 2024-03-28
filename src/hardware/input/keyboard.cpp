@@ -524,6 +524,9 @@ static void execute_command(const KbdCommand command)
 		// errors - not implemented, as the emulation can
 		// also send whole multi-byte scancode at once
 		warn_resend();
+		// We have to respond, or else the 'In Extremis' game intro
+		// (sends 0xfe and 0xaa commands) hangs with a black screen
+		I8042_AddKbdByte(0xfa); // acknowledge
 		break;
 	case KbdCommand::Reset: // 0xff
 		// Full keyboard reset and self test
