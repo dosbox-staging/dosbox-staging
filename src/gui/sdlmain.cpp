@@ -2221,6 +2221,18 @@ uint8_t GFX_SetSize(const int render_width_px, const int render_height_px,
 		                       sdl.rendering_backend);
 	}
 
+#if C_OPENGL
+    if (sdl.rendering_backend == RenderingBackend::OpenGl) {
+        static auto last_vsync_state = VsyncState::Unset;
+        const auto vsync_state = static_cast<VsyncState>(SDL_GL_GetSwapInterval());
+        if (last_vsync_state != vsync_state) {
+            last_vsync_state = vsync_state;
+            const auto vsync_state_str = vsync_state_as_string(vsync_state);
+            LOG_INFO("OPENGL: VSync state: %s", vsync_state_str);
+        }
+    }
+#endif
+
 	if (retFlags) {
 		GFX_Start();
 	}
