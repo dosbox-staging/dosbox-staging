@@ -356,7 +356,7 @@ def filter_category(items, filter_def):
 
         i["title"] = i["title"].strip()
 
-        remove = i["remove"] if "remove" in i else True
+        remove = filter_def["remove"] if "remove" in filter_def else True
         include = False
 
         if "labels" in filter_def:
