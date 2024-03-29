@@ -124,14 +124,6 @@ void MOUNT::Run(void) {
 		return;
 	}
 
-	if (cmd->FindExist("-cd", false) || cmd->FindExist("-listcd", false)) {
-		int num = SDL_CDNumDrives();
-		WriteOut(MSG_Get("PROGRAM_MOUNT_CDROMS_FOUND"), num);
-		for (int i = 0; i < num; i++)
-			WriteOut("%2d. %s\n", i, SDL_CDName(i));
-		return;
-	}
-
 	const Section_prop* section = static_cast<Section_prop*>(
 	        control->GetSection("dosbox"));
 	assert(section);
@@ -290,9 +282,6 @@ void MOUNT::Run(void) {
 				if (cmd->FindExist(opt, false))
 					WriteOut(MSG_Get("MSCDEX_WARNING_NO_OPTION"), opt);
 			}
-			int num = -1;
-			cmd->FindInt("-usecd", num, true);
-			MSCDEX_SetCDInterface(CDROM_USE_SDL, num);
 
 			int error = 0;
 			newdrive  = std::make_unique<cdromDrive>(
@@ -421,8 +410,7 @@ void MOUNT::AddMessages() {
 	        "Mount a directory from the host OS to a drive letter.\n"
 	        "\n"
 	        "Usage:\n"
-	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]DIRECTORY[reset] [-t TYPE] [-usecd #] [-freesize SIZE] [-label LABEL]\n"
-	        "  [color=light-green]mount[reset] -listcd / -cd (lists all detected CD-ROM drives and their numbers)\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]DIRECTORY[reset] [-t TYPE] [-freesize SIZE] [-label LABEL]\n"
 	        "  [color=light-green]mount[reset] -u [color=white]DRIVE[reset]  (unmounts the DRIVE's directory)\n"
 	        "\n"
 	        "Parameters:\n"
@@ -434,23 +422,20 @@ void MOUNT::AddMessages() {
 	        "\n"
 	        "Notes:\n"
 	        "  - '-t overlay' redirects writes for mounted drive to another directory.\n"
-	        "  - '-usecd ID' gives direct access to a CD-ROM drive.\n"
-	        "    This is needed for CD audio (only supported on Windows and Linux).\n"
-	        "    Run 'mount -cd' to find out the list of valid IDs.\n"
 	        "  - Additional options are described in the manual (README file, chapter 4).\n"
 	        "\n"
 	        "Examples:\n");
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_WIN32",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgames[reset]\n"
-	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\ [reset]-t cdrom -usecd 0\n"
+	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\ [reset]-t cdrom\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_MACOSX",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
-	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/Volumes/Game CD\"[reset] -t cdrom -usecd 0\n"
+	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/Volumes/Game CD\"[reset] -t cdrom\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
 	MSG_Add("PROGRAM_MOUNT_HELP_LONG_OTHER",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
-	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom -usecd 0\n"
+	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom\n"
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
 
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CD-ROMs found: %d\n");

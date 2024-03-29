@@ -500,7 +500,6 @@ void IMGMOUNT::Run(void)
 			return;
 		}
 
-		MSCDEX_SetCDInterface(CDROM_USE_SDL, -1);
 		// create new drives for all images
 		DriveManager::filesystem_images_t iso_images = {};
 		for (const auto& iso_path : paths) {

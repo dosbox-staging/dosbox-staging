@@ -307,7 +307,7 @@ bool CDROM_Interface_Ioctl::Open(const char* device_name)
 	return true;
 }
 
-bool CDROM_Interface_Ioctl::SetDevice(const char* path, [[maybe_unused]]const int cd_number)
+bool CDROM_Interface_Ioctl::SetDevice(const char* path)
 {
 	assert(path != nullptr);
 	assert(*path);

@@ -527,7 +527,7 @@ CDROM_Interface_Image::~CDROM_Interface_Image()
 	}
 }
 
-bool CDROM_Interface_Image::SetDevice(const char* path, [[maybe_unused]] const int cd_number)
+bool CDROM_Interface_Image::SetDevice(const char* path)
 {
 	const bool result = LoadCueSheet(path) || LoadIsoFile(path);
 	if (!result) {
