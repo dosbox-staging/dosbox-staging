@@ -426,7 +426,7 @@ public:
 
 private:
 	void CdAudioCallback(const uint16_t requested_frames);
-	void InitAudio(const int device_number);
+	void InitAudio();
 	bool IsOpen() const;
 	bool Open(const char* device_name);
 
