@@ -27,6 +27,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <linux/cdrom.h>
+#include <mntent.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -291,6 +292,14 @@ bool CDROM_Interface_Ioctl::Open(const char* device_name)
 	if (fd == -1) {
 		return false;
 	}
+
+	// Test to make sure this device is a CDROM drive
+	cdrom_tochdr toc = {};
+	if (ioctl(fd, CDROMREADTOCHDR, &toc) != 0) {
+		close(fd);
+		return false;
+	}
+
 	if (IsOpen()) {
 		close(cdrom_fd);
 	}
@@ -298,32 +307,31 @@ bool CDROM_Interface_Ioctl::Open(const char* device_name)
 	return true;
 }
 
-bool CDROM_Interface_Ioctl::SetDevice(const char* path, const int cd_number)
+bool CDROM_Interface_Ioctl::SetDevice(const char* path, [[maybe_unused]]const int cd_number)
 {
 	assert(path != nullptr);
 	assert(*path);
 
-	int num = SDL_CDNumDrives();
-	if ((cd_number >= 0) && (cd_number < num)) {
-		auto cd_name = SDL_CDName(cd_number);
-		if (cd_name && Open(cd_name)) {
-			InitAudio(cd_number);
-			return true;
+	// Search mounts file to get the device name (ex. /dev/sr0) from the mounted path name (ex. /mnt/cdrom)
+	FILE *mounts = setmntent("/proc/mounts", "r");
+	if (!mounts) {
+		return false;
+	}
+
+	std_fs::path cannonical_path = std_fs::canonical(path);
+
+	while (mntent *entry = getmntent(mounts)) {
+		// Don't try to open names that aren't a full path. Ex: "tmpfs" "sysfs"
+		if (entry->mnt_fsname[0] == '/' && entry->mnt_dir == cannonical_path) {
+			if (Open(entry->mnt_fsname)) {
+				InitAudio();
+				endmntent(mounts);
+				return true;
+			}
 		}
 	}
 
-	for (auto i = 0; i < num; ++i) {
-		auto cd_name = SDL_CDName(i);
-		if (cd_name && strcmp(cd_name, path) == 0 && Open(cd_name)) {
-			InitAudio(i);
-			return true;
-		}
-	}
-
-	LOG_WARNING("CDROM: SetDevice failed to find device for path '%s' and device number %d",
-	            path,
-	            cd_number);
-
+	endmntent(mounts);
 	return false;
 }
 
@@ -335,14 +343,29 @@ bool CDROM_Interface_Ioctl::ReadSectorsHost([[maybe_unused]] void *buffer,
 	return false; /*TODO*/
 }
 
-void CDROM_Interface_Ioctl::InitAudio(const int device_number)
+void CDROM_Interface_Ioctl::InitAudio()
 {
 	if (mixer_channel) {
 		return;
 	}
 
-	std::string name = std::string(ChannelName::CdAudio) + "_" +
-	                   std::to_string(device_number);
+	// Each audio channel must have a unique name.
+	// Append a number after the CDAUDIO name.
+	// This way we don't conflict with CDROM_Interface_Image or multiple drives.
+	bool found_unique_name = false;
+	std::string name;
+	for (int i = 0; i < ChannelName::MaxCdAudioChannel; ++i) {
+		name = std::string(ChannelName::CdAudio) + "_" + std::to_string(i);
+		if (!MIXER_FindChannel(name.c_str())) {
+			found_unique_name = true;
+			break;
+		}
+	}
+
+	if (!found_unique_name) {
+		LOG_ERR("CDROM_IOCTL: Too many mixer channels");
+		return;
+	}
 
 	// Input buffer is used as a C-style buffer passed to an ioctl.
 	// Its size must always be 1 second of data.
