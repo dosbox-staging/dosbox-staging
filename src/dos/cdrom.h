@@ -64,8 +64,6 @@
 #define MAX_REDBOOK_DURATION_MS (99 * 60 * 1000) // 99 minute CDROM in milliseconds
 #define AUDIO_DECODE_BUFFER_SIZE 16512u
 
-enum { CDROM_USE_SDL };
-
 struct TMSF
 {
 	unsigned char min;
@@ -102,7 +100,7 @@ class CDROM_Interface
 {
 public:
 	virtual ~CDROM_Interface        () = default;
-	virtual bool SetDevice          (const char *path, const int cd_number) = 0;
+	virtual bool SetDevice          (const char *path) = 0;
 	virtual bool GetUPC             (unsigned char& attr, char* upc) = 0;
 	virtual bool GetAudioTracks     (uint8_t& stTrack, uint8_t& end, TMSF& leadOut) = 0;
 	virtual bool GetAudioTrackInfo  (uint8_t track, TMSF& start, unsigned char& attr) = 0;
@@ -117,6 +115,7 @@ public:
 	virtual bool ReadSectorsHost    (void* buffer, bool raw, unsigned long sector, unsigned long num) = 0;
 	virtual bool LoadUnloadMedia    (bool unload) = 0;
 	virtual void InitNewMedia       () {}
+	virtual bool HasFullMscdexSupport() = 0;
 
 protected:
 	void LagDriveResponse() const;
@@ -129,7 +128,7 @@ public:
 	CDROM_Interface_SDL(const CDROM_Interface_SDL&);
 	CDROM_Interface_SDL& operator=(const CDROM_Interface_SDL&);
 	~CDROM_Interface_SDL() override;
-	bool SetDevice(const char* path, int cd_number) override;
+	bool SetDevice(const char* path) override;
 	bool GetUPC(unsigned char& attr, char* upc) override
 	{
 		attr = '\0';
@@ -164,6 +163,10 @@ public:
 		return true;
 	}
 	bool LoadUnloadMedia(bool unload) override;
+	bool HasFullMscdexSupport() override
+	{
+		return true;
+	}
 
 private:
 	bool Open();
@@ -176,8 +179,7 @@ private:
 
 class CDROM_Interface_Fake final : public CDROM_Interface {
 public:
-	bool SetDevice([[maybe_unused]] const char* path,
-	               [[maybe_unused]] const int cd_number) override
+	bool SetDevice([[maybe_unused]] const char* path) override
 	{
 		return true;
 	}
@@ -225,6 +227,10 @@ public:
 	bool LoadUnloadMedia(bool /*unload*/) override
 	{
 		return true;
+	}
+	bool HasFullMscdexSupport() override
+	{
+		return false;
 	}
 };
 
@@ -336,7 +342,7 @@ public:
 
 	~CDROM_Interface_Image() override;
 	void InitNewMedia() override {}
-	bool SetDevice(const char* path, const int cd_number) override;
+	bool SetDevice(const char* path) override;
 	bool GetUPC(unsigned char& attr, char* upc) override;
 	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
 	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
@@ -356,6 +362,10 @@ public:
 	bool LoadUnloadMedia(bool unload) override;
 	bool ReadSector(uint8_t* buffer, const bool raw, const uint32_t sector);
 	bool HasDataTrack();
+	bool HasFullMscdexSupport() override
+	{
+		return true;
+	}
 	static CDROM_Interface_Image* images[26];
 
 private:
@@ -405,7 +415,7 @@ class CDROM_Interface_Ioctl : public CDROM_Interface {
 public:
 	~CDROM_Interface_Ioctl() override;
 
-	bool SetDevice(const char* path, const int cd_number) override;
+	bool SetDevice(const char* path) override;
 	bool GetUPC(unsigned char& attr, char* upc) override;
 	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
 	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
@@ -423,6 +433,10 @@ public:
 	bool StopAudio() override;
 	void ChannelControl(TCtrl ctrl) override;
 	bool LoadUnloadMedia(bool unload) override;
+	bool HasFullMscdexSupport() override
+	{
+		return true;
+	}
 
 private:
 	void CdAudioCallback(const uint16_t requested_frames);
@@ -456,6 +470,5 @@ extern "C" const char *SDL_CDName(int drive);
 extern "C" int SDL_CDNumDrives();
 extern "C" int SDL_CDROMInit();
 extern "C" void SDL_CDROMQuit();
-void MSCDEX_SetCDInterface(int int_nr, int num_cd);
 
 #endif

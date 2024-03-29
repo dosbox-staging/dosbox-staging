@@ -31,6 +31,7 @@
 #include "callback.h"
 #include "dos_system.h"
 #include "dos_inc.h"
+#include "fs_utils.h"
 #include "setup.h"
 #include "support.h"
 #include "bios_disk.h"
@@ -55,19 +56,8 @@
 #define	REQUEST_STATUS_DONE		0x0100
 #define	REQUEST_STATUS_ERROR	0x8000
 
-// Use cdrom Interface
-int useCdromInterface = CDROM_USE_SDL;
-int forceCD = -1;
-
-enum class MountType {
-	PHYSICAL,
-	ISO_IMAGE,
-	DIRECTORY,
-};
-
 static Bitu MSCDEX_Strategy_Handler(void); 
 static Bitu MSCDEX_Interrupt_Handler(void);
-static MountType MSCDEX_GetMountType(const char *path);
 
 class DOS_DeviceHeader final : public MemStruct {
 public:
@@ -299,6 +289,46 @@ int CMscdex::RemoveDrive(uint16_t _drive)
 	return 1;
 }
 
+static CDROM_Interface *create_cdrom_interface(const char *path, uint16_t num_drives)
+{
+	CDROM_Interface *cdrom_interface = nullptr;
+	if (!path_exists(path)) {
+		return nullptr;
+	}
+
+	if (!is_directory(path)) {
+		cdrom_interface = new CDROM_Interface_Image(num_drives);
+		if (cdrom_interface->SetDevice(path)) {
+			return cdrom_interface;
+		}
+		delete cdrom_interface;
+		return nullptr;
+	}
+
+#if defined(LINUX)
+	cdrom_interface = new CDROM_Interface_Ioctl();
+	if (cdrom_interface->SetDevice(path)) {
+		return cdrom_interface;
+	}
+	delete cdrom_interface;
+	cdrom_interface = nullptr;
+#elif defined(WIN32)
+	cdrom_interface = new CDROM_Interface_SDL();
+	if (cdrom_interface->SetDevice(path)) {
+		return cdrom_interface;
+	}
+	delete cdrom_interface;
+	cdrom_interface = nullptr;
+#endif
+
+	cdrom_interface = new CDROM_Interface_Fake();
+	if (cdrom_interface->SetDevice(path)) {
+		return cdrom_interface;
+	}
+	delete cdrom_interface;
+	return nullptr;
+}
+
 int CMscdex::AddDrive(uint16_t _drive, const char* physicalPath, uint8_t& subUnit)
 {
 	subUnit = 0;
@@ -310,33 +340,13 @@ int CMscdex::AddDrive(uint16_t _drive, const char* physicalPath, uint8_t& subUni
 	}
 	// Set return type to ok
 	int result = 0;
-	// Get Mounttype and init needed cdrom interface
-	switch (MSCDEX_GetMountType(physicalPath)) {
-	case MountType::PHYSICAL:
-		LOG(LOG_MISC, LOG_NORMAL)("MSCDEX: Mounting physical cdrom: %s", physicalPath);
-#if defined (LINUX)
-		cdrom[numDrives] = new CDROM_Interface_Ioctl();
-#else
-		cdrom[numDrives] = new CDROM_Interface_SDL();
-#endif
-		break;
-	case MountType::ISO_IMAGE:
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting iso file as cdrom: %s", physicalPath);
-		cdrom[numDrives] = new CDROM_Interface_Image((uint8_t)numDrives);
-		break;
-	case MountType::DIRECTORY:
-		LOG(LOG_MISC,LOG_NORMAL)("MSCDEX: Mounting directory as cdrom: %s", physicalPath);
-		LOG(LOG_MISC, LOG_NORMAL)("MSCDEX: You won't have full MSCDEX support!");
-		cdrom[numDrives] = new CDROM_Interface_Fake;
-		result = 5;
-		break;
-	};
-
-	if (!cdrom[numDrives]->SetDevice(physicalPath, forceCD)) {
-//		delete cdrom[numDrives] ; mount seems to delete it
+	cdrom[numDrives] = create_cdrom_interface(physicalPath, numDrives);
+	if (!cdrom[numDrives]) {
 		return 3;
 	}
-
+	if (!cdrom[numDrives]->HasFullMscdexSupport()) {
+		result = 5;
+	}
 
 	if (rootDriverHeaderSeg==0) {
 		
@@ -1123,34 +1133,6 @@ static uint16_t MSCDEX_IOCTL_Optput(PhysPt buffer,uint8_t drive_unit) {
 	return 0x00;	// success
 }
 
-static MountType MSCDEX_GetMountType(const char *path)
-{
-	assert(path != nullptr);
-	std::string path_string = path;
-	upcase(path_string);
-
-	const char *cdName;
-	int num = SDL_CDNumDrives();
-	// If cd drive is forced then check if its in range and return 0
-	if ((forceCD >= 0) && (forceCD < num)) {
-		LOG(LOG_ALL, LOG_ERROR)("CDROM: Using drive %d", forceCD);
-		return MountType::PHYSICAL;
-	}
-
-	// compare names
-	for (int i = 0; i < num; i++) {
-		cdName = SDL_CDName(i);
-		if (path_string == cdName)
-			return MountType::PHYSICAL;
-	};
-
-	struct stat file_stat;
-	if ((stat(path, &file_stat) == 0) && (file_stat.st_mode & S_IFREG))
-		return MountType::ISO_IMAGE;
-	else
-		return MountType::DIRECTORY;
-}
-
 static Bitu MSCDEX_Strategy_Handler(void) {
 	curReqheaderPtr = PhysicalMake(SegValue(es),reg_bx);
 //	MSCDEX_LOG("MSCDEX: Device Strategy Routine called, request header at %x",curReqheaderPtr);
@@ -1471,11 +1453,6 @@ bool MSCDEX_HasMediaChanged(uint8_t subUnit)
 		leadOut[subUnit].fr	 = 0;
 	}
 	return has_changed;
-}
-
-void MSCDEX_SetCDInterface(int int_nr, int num_cd) {
-	useCdromInterface = int_nr;
-	forceCD	= num_cd;
 }
 
 void MSCDEX_ShutDown(Section* /*sec*/) {

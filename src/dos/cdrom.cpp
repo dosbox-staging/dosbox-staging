@@ -47,20 +47,13 @@ CDROM_Interface_SDL::~CDROM_Interface_SDL()
 	cd = nullptr;
 }
 
-bool CDROM_Interface_SDL::SetDevice(const char *path, const int cd_number)
+bool CDROM_Interface_SDL::SetDevice(const char *path)
 {
 	assert(path != nullptr);
 	std::string path_string = path;
 	upcase(path_string);
 
 	int num = SDL_CDNumDrives();
-	if ((cd_number >= 0) && (cd_number < num)) {
-		driveID = cd_number;
-		cd = SDL_CDOpen(driveID);
-		SDL_CDStatus(cd);
-		return true;
-	};
-
 	const char *cdname = nullptr;
 	for (int i = 0; i < num; i++) {
 		cdname = SDL_CDName(i);
