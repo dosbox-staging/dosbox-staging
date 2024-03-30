@@ -1958,7 +1958,7 @@ Image file is read-only! Might create problems.
 This command boots DOSBox Staging from either a floppy or hard disk image.
 
 For this command, one can specify a succession of floppy disks swappable by
-pressing %s+F4, and -l specifies the mounted drive to boot from. If no drive
+pressing [color=yellow]%s+F4[reset], and -l specifies the mounted drive to boot from. If no drive
 letter is specified, this defaults to booting from the A drive. The only
 bootable drive letters are A, C, and D. For booting from a hard drive (C or D),
 the image should have already been mounted using the [color=light-blue]IMGMOUNT[reset] command.
@@ -2078,15 +2078,18 @@ Parameters:
              bytes-per-sector,sectors-per-head,heads,cylinders
 
 Notes:
-  - %s+F4 swaps & mounts the next [color=light-cyan]CDROM-SET[reset] or [color=light-cyan]BOOTIMAGE[reset], if provided.
+  - You can use wildcards to mount multiple images, e.g.:
+      [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy
+  - [color=yellow]%s+F4[reset] swaps & mounts the next [color=light-cyan]CDROM-SET[reset] or [color=light-cyan]BOOTIMAGE[reset], if provided.
   - The -ro flag mounts the disk image in read-only (write-protected) mode.
   - The -ide flag emulates an IDE controller with attached IDE CD drive, useful
     for CD-based games that need a real DOS environment via bootable HDD image.
 
 Examples:
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USERNAME/games/doom.iso[reset] -t cdrom
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USERNAME/Games/doom.iso[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
@@ -2095,19 +2098,19 @@ Must specify drive letter to mount image at.
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY2
-Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb;2,3=hda,hdb).
+Must specify drive number (0 or 3) to mount image at (0,1=fda,fdb; 2,3=hda,hdb).
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-For [color=brown]CD-ROM[reset] images:   [color=light-blue]IMGMOUNT drive-letter location-of-image -t iso[reset]
-
-For [color=brown]hardrive[reset] images: Must specify drive geometry for hard drives:
-bytes-per-sector,sectors-per-head,heads,cylinders
-[color=light-blue]IMGMOUNT drive-letter location-of-image -size bps,spc,hpc,cyl[reset]
+For CD-ROM images:
+  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -t iso
+For hard drive images, must specify drive geometry:
+  bytes-per-sector,sectors-per-head,heads,cylinders
+  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size bps,spc,hpc,cyl
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
-No drive available
+No drive available.
 
 .
 :PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
@@ -2141,7 +2144,7 @@ Image file not found.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-To mount directories, use the [color=light-blue]MOUNT[reset] command, not the [color=light-blue]IMGMOUNT[reset] command.
+To mount directories, use the [color=light-green]MOUNT[reset] command, not the [color=green-blue]IMGMOUNT[reset] command.
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -2153,15 +2156,11 @@ Can't create drive from file.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT_NUMBER
-Drive number %d mounted as %s
+Drive number %d mounted as %s.
 
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
 The image must be on a host or local drive.
-
-.
-:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-Using multiple files is only supported for CUE/ISO images.
 
 .
 :PROGRAM_INTRO_HELP
