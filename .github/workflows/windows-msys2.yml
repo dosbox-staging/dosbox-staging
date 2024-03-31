@@ -1,6 +1,6 @@
 name: Windows MSYS2 builds
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
