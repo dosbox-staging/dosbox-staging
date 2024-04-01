@@ -54,6 +54,8 @@ constexpr uint32_t MMOD3 = 0x4;
 
 typedef void(MAPPER_Handler)(bool pressed);
 
+std::string MAPPER_GetDefaultMapperfileName();
+
 /* Associate function handler with a key combination
  *
  * handler     - function to be triggered
