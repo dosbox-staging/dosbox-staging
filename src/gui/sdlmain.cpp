@@ -4480,7 +4480,7 @@ static void config_add_sdl() {
 	pbool = sdl_sec->Add_bool("pause_when_inactive", on_start, false);
 	pbool->Set_help("Pause emulation when the window is inactive (disabled by default).");
 
-	pstring = sdl_sec->Add_path("mapperfile", always, MAPPERFILE);
+	pstring = sdl_sec->Add_path("mapperfile", always, MAPPER_GetDefaultMapperfileName().c_str());
 	pstring->Set_help(
 	        "Path to the mapper file ('mapper-sdl2-XYZ.map' by default, where XYZ is the\n"
 	        "current version). Pre-configured maps are bundled in 'resources/mapperfiles'.\n"
@@ -4688,7 +4688,7 @@ static int erase_primary_config_file()
 
 static int erase_mapper_file()
 {
-	const auto path = GetConfigDir() / MAPPERFILE;
+	const auto path = GetConfigDir() / MAPPER_GetDefaultMapperfileName();
 
 	if (!path_exists(path)) {
 		printf("Default mapper file does not exist at path '%s'\n",
