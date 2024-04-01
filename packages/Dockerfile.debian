@@ -34,3 +34,4 @@ RUN export DPKG_TRIPLET=$(dpkg-architecture -A ${DPKG_ARCH} -q DEB_TARGET_MULTIA
     # Fix opusfile pkgconfig
     && sed 's@libdir=\${exec_prefix}/lib@libdir=\${prefix}/lib/'"${DPKG_TRIPLET}@g" \
         /usr/lib/pkgconfig/opusfile.pc > /usr/lib/${DPKG_TRIPLET}/pkgconfig/opusfile.pc
+
