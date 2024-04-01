@@ -1264,6 +1264,10 @@ protected:
 	uint16_t button_state = 0;
 };
 
+std::string MAPPER_GetDefaultMapperfileName()
+{
+	return std::string("mapper-sdl2-") + DOSBOX_GetDetailedVersion() + ".map";
+}
 
 void MAPPER_TriggerEvent(const CEvent *event, const bool deactivation_state) {
 	assert(event);
