@@ -398,9 +398,11 @@ void CONFIG::Run(void)
 		case P_LISTCONF: {
 			Bitu size = control->configfiles.size();
 			const std_fs::path config_path = GetConfigDir();
+
 			WriteOut(MSG_Get("PROGRAM_CONFIG_CONFDIR"),
-			         VERSION,
+			         DOSBOX_GetDetailedVersion(),
 			         config_path.c_str());
+
 			if (size == 0) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_NOCONFIGFILE"));
 			} else {
