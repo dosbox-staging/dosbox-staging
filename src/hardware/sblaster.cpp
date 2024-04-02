@@ -2169,7 +2169,7 @@ OplMode find_oplmode()
 	} else if (pref == "opl2") {
 		opl_mode = OplMode::Opl2;
 	} else if (pref == "cms") {
-		opl_mode = OplMode::Cms;
+		// Skip for backward compatibility with existing configurations
 	}
 
 	// Else assume auto
@@ -2180,11 +2180,59 @@ OplMode find_oplmode()
 		case SBT_PRO1: opl_mode = OplMode::DualOpl2; break;
 		case SBT_2:
 		case SBT_1: opl_mode = OplMode::Opl2; break;
-		case SBT_GB: opl_mode = OplMode::Cms; break;
+		case SBT_GB: opl_mode = OplMode::None; break;
 		case SBT_NONE: opl_mode = OplMode::None; break;
 		}
 	}
 	return opl_mode;
+}
+
+bool is_cms_enabled()
+{
+	const auto* sect = static_cast<Section_prop*>(control->GetSection("sblaster"));
+	assert(sect);
+
+	const auto sbtype      = find_sbtype();
+	const bool cms_enabled = [sect, sbtype]() {
+		// Backward compatibility with existing configurations
+		if (sect->Get_string("oplmode") == "cms") {
+			LOG_WARNING("%s: The 'cms' setting for 'oplmode' is deprecated; use 'cms = on' instead.",
+			            CardType());
+			return true;
+		} else {
+			const auto cms_str = sect->Get_string("cms");
+			const auto cms_enabled_opt = parse_bool_setting(cms_str);
+			if (cms_enabled_opt) {
+				return *cms_enabled_opt;
+			} else if (cms_str == "auto") {
+				return sbtype == SBT_1 || sbtype == SBT_GB;
+			}
+			return false;
+		}
+	}();
+
+	switch (sbtype) {
+	case SBT_2: // CMS is optional for Sound Blaster 1 and 2
+	case SBT_1: return cms_enabled;
+	case SBT_GB:
+		if (!cms_enabled) {
+			LOG_WARNING("%s: 'cms' setting is 'off', but is forced to 'auto' on the Game Blaster.",
+			            CardType());
+			auto* sect_updater = static_cast<Section_prop*>(control->GetSection("sblaster"));
+			sect_updater->Get_prop("cms")->SetValue("auto");
+		}
+		return true; // Game Blaster is CMS
+	default: 
+		if (cms_enabled) {
+			LOG_WARNING("%s: 'cms' setting 'on' not supported on this card, forcing 'auto'.",
+			            CardType());
+			auto* sect_updater = static_cast<Section_prop*>(control->GetSection("sblaster"));
+			sect_updater->Get_prop("cms")->SetValue("auto");
+		}
+		return false;
+	}
+
+	return false;
 }
 
 void SBLASTER_ShutDown(Section*);
@@ -2196,7 +2244,9 @@ private:
 	IO_WriteHandleObject write_handlers[0x10] = {};
 
 	static constexpr auto blaster_env_name = "BLASTER";
+
 	OplMode oplmode = OplMode::None;
+	bool cms        = false;
 
 	void SetupEnvironment()
 	{
@@ -2263,18 +2313,7 @@ public:
 			                          adlib_gusforward,
 			                          io_width_t::byte);
 			break;
-
-		case OplMode::Cms:
-			write_handlers[0].Install(0x388,
-			                          adlib_gusforward,
-			                          io_width_t::byte);
-			CMS_Init(section);
-			break;
-
 		case OplMode::Opl2:
-			CMS_Init(section);
-			[[fallthrough]];
-
 		case OplMode::DualOpl2:
 		case OplMode::Opl3:
 		case OplMode::Opl3Gold: {
@@ -2288,7 +2327,12 @@ public:
 		} break;
 		}
 
-		// The CMS/Adlib (sbtype=none) and GameBlaster don't have DACs
+		cms = is_cms_enabled();
+		if (cms) {
+			CMS_Init(section);
+		}
+
+		// The CMS/Adlib (sbtype=none) and Game Blaster don't have DACs
 		const auto has_dac = (sb.type != SBT_NONE && sb.type != SBT_GB);
 
 		sb.hw.dma8 = has_dac ? static_cast<uint8_t>(section->Get_int("dma"))
@@ -2310,7 +2354,7 @@ public:
 			return;
 		}
 		// The code below here sets up the DAC and DMA channels on all
-		// "sbtype = sb*" SoundBlaster type cards.
+		// "sbtype = sb*" Sound Blaster type cards.
 		//
 		auto dma_channel = DMA_GetChannel(sb.hw.dma8);
 		assert(dma_channel);
@@ -2357,7 +2401,7 @@ public:
 		for (uint8_t i = 4; i <= 0xf; ++i) {
 			if (i == 8 || i == 9)
 				continue;
-			// Disable mixer ports for lower soundblaster
+			// Disable mixer ports for lower Sound Blaster
 			if ((sb.type == SBT_1 || sb.type == SBT_2) && (i == 4 || i == 5))
 				continue;
 			read_handlers[i].Install(sb.hw.base + i,
@@ -2380,7 +2424,7 @@ public:
 
 		SetupEnvironment();
 
-		// Soundblaster midi interface
+		// Sound Blaster midi interface
 		if (!MIDI_Available()) {
 			sb.midi = false;
 		} else {
@@ -2411,11 +2455,13 @@ public:
 		// Shutdown any FM Synth devices
 		switch (oplmode) {
 		case OplMode::None: break;
-		case OplMode::Cms: CMS_ShutDown(); break;
-		case OplMode::Opl2: CMS_ShutDown(); [[fallthrough]];
+		case OplMode::Opl2:
 		case OplMode::DualOpl2:
 		case OplMode::Opl3:
 		case OplMode::Opl3Gold: OPL_ShutDown(); break;
+		}
+		if (cms) {
+			CMS_ShutDown();
 		}
 		if (sb.type == SBT_NONE || sb.type == SBT_GB) {
 			return;

@@ -821,12 +821,21 @@ void DOSBOX_Init()
 	pint->Set_help("The OPL waveform is now sampled at the mixer's playback rate to avoid\n"
 	               "resampling.");
 
-	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", nullptr};
+	pstring = secprop->Add_string("cms", when_idle, "auto");
+	pstring->Set_values({"on", "off", "auto"});
+	pstring->Set_help(
+	        "Enable CMS emulation ('auto' by default).\n"
+	        "  off:   Disable CMS emulation (except when the Game Blaster is selected).\n"
+	        "  on:    Enable CMS emulation on Sound Blaster 1 and 2.\n"
+	        "  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.");
+
+	const char* oplmodes[] = {
+	        "auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", nullptr};
 	pstring = secprop->Add_string("oplmode", when_idle, "auto");
 	pstring->Set_values(oplmodes);
 	pstring->Set_help("Type of OPL emulation ('auto' by default).\n"
 	                  "On 'auto' the mode is determined by 'sbtype'.\n"
-	                  "All OPL modes are AdLib-compatible, except for 'cms'.");
+	                  "All OPL modes are AdLib-compatible.");
 
 	pstring = secprop->Add_string("opl_fadeout", when_idle, "off");
 	pstring->Set_help(
@@ -838,7 +847,7 @@ void DOSBOX_Init()
 	        "             Where WAIT is how long after the last IO port write fading begins,\n"
 	        "             ranging between 100 and 5000 milliseconds; and FADE is the\n"
 	        "             fade-out period, ranging between 10 and 3000 milliseconds.\n"
-		"             Examples:\n"
+	        "             Examples:\n"
 	        "                300 200 (Wait 300ms before fading out over a 200ms period)\n"
 	        "                1000 3000 (Wait 1s before fading out over a 3s period)");
 

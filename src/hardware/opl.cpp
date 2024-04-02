@@ -917,7 +917,6 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 {
 	using namespace std::placeholders;
 
-	assert(oplmode != OplMode::Cms);
 	assert(oplmode != OplMode::None);
 
 	switch (oplmode) {
