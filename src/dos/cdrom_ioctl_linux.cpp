@@ -21,6 +21,7 @@
 
 #include "cdrom.h"
 #include "channel_names.h"
+#include "string_utils.h"
 #include "support.h"
 
 #if defined(LINUX)
@@ -54,21 +55,21 @@ bool CDROM_Interface_Ioctl::IsOpen() const
 	return cdrom_fd != -1;
 }
 
-bool CDROM_Interface_Ioctl::GetUPC(unsigned char &attr, char *upc)
+bool CDROM_Interface_Ioctl::GetUPC(unsigned char &attr, std::string& upc)
 {
 	if (!IsOpen()) {
 		return false;
 	}
 
-	struct cdrom_mcn cdrom_mcn;
-	int ret = ioctl(cdrom_fd, CDROM_GET_MCN, &cdrom_mcn);
+	struct cdrom_mcn cdrom_mcn = {};
 
-	if (ret > 0) {
+	if (ioctl(cdrom_fd, CDROM_GET_MCN, &cdrom_mcn) == 0) {
 		attr = 0;
-		safe_strncpy(upc, (char *)cdrom_mcn.medium_catalog_number, 14);
+		upc = safe_tostring((const char *)cdrom_mcn.medium_catalog_number, sizeof(cdrom_mcn.medium_catalog_number));
+		return true;
 	}
 
-	return (ret > 0);
+	return false;
 }
 
 bool CDROM_Interface_Ioctl::GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut)

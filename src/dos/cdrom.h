@@ -101,7 +101,7 @@ class CDROM_Interface
 public:
 	virtual ~CDROM_Interface        () = default;
 	virtual bool SetDevice          (const char *path) = 0;
-	virtual bool GetUPC             (unsigned char& attr, char* upc) = 0;
+	virtual bool GetUPC             (unsigned char& attr, std::string& upc) = 0;
 	virtual bool GetAudioTracks     (uint8_t& stTrack, uint8_t& end, TMSF& leadOut) = 0;
 	virtual bool GetAudioTrackInfo  (uint8_t track, TMSF& start, unsigned char& attr) = 0;
 	virtual bool GetAudioSub        (unsigned char& attr, unsigned char& track, unsigned char& index, TMSF& relPos, TMSF& absPos) = 0;
@@ -129,10 +129,10 @@ public:
 	CDROM_Interface_SDL& operator=(const CDROM_Interface_SDL&);
 	~CDROM_Interface_SDL() override;
 	bool SetDevice(const char* path) override;
-	bool GetUPC(unsigned char& attr, char* upc) override
+	bool GetUPC(unsigned char& attr, std::string& upc) override
 	{
-		attr = '\0';
-		strcpy(upc, "UPC");
+		attr = 0;
+		upc = {};
 		return true;
 	}
 	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
@@ -183,10 +183,10 @@ public:
 	{
 		return true;
 	}
-	bool GetUPC(unsigned char& attr, char* upc) override
+	bool GetUPC(unsigned char& attr, std::string& upc) override
 	{
 		attr = 0;
-		strcpy(upc, "UPC");
+		upc = {};
 		return true;
 	}
 	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
@@ -343,7 +343,7 @@ public:
 	~CDROM_Interface_Image() override;
 	void InitNewMedia() override {}
 	bool SetDevice(const char* path) override;
-	bool GetUPC(unsigned char& attr, char* upc) override;
+	bool GetUPC(unsigned char& attr, std::string& upc) override;
 	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
 	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
 	bool GetAudioSub(unsigned char& attr, unsigned char& track,
@@ -416,7 +416,7 @@ public:
 	~CDROM_Interface_Ioctl() override;
 
 	bool SetDevice(const char* path) override;
-	bool GetUPC(unsigned char& attr, char* upc) override;
+	bool GetUPC(unsigned char& attr, std::string& upc) override;
 	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
 	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
 	bool GetAudioSub(unsigned char& attr, unsigned char& track,

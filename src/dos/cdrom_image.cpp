@@ -540,10 +540,10 @@ bool CDROM_Interface_Image::SetDevice(const char* path)
 	return result;
 }
 
-bool CDROM_Interface_Image::GetUPC(unsigned char& attr, char* upc)
+bool CDROM_Interface_Image::GetUPC(unsigned char& attr, std::string& upc)
 {
 	attr = 0;
-	strcpy(upc, this->mcn.c_str());
+	upc = mcn;
 #ifdef DEBUG
 	LOG_MSG("CDROM: GetUPC => returned %s", upc);
 #endif
