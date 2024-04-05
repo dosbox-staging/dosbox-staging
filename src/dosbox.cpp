@@ -757,10 +757,21 @@ void DOSBOX_Init()
 	                                   changeable_at_runtime);
 
 	pstring = secprop->Add_string("sbtype", when_idle, "sb16");
-	pstring->Set_values(
-	        {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none"});
+	pstring->Set_values({"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "none"});
 	pstring->Set_help("Type of Sound Blaster to emulate ('sb16' by default).\n"
 	                  "'gb' is Game Blaster.");
+	pstring->Set_help(
+	        "Sound Blaster model to emulate ('sb16' by default).\n"
+	        "The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.\n"
+	        "  gb:        Game Blaster        - CMS\n"
+	        "  sb1:       Sound Blaster 1.0   - OPL2, CMS\n"
+	        "  sb2:       Sound Blaster 2.0   - OPL2\n"
+	        "  sbpro1:    Sound Blaster Pro   - Dual OPL2\n"
+	        "  sbpro2:    Sound Blaster Pro 2 - OPL3\n"
+	        "  sb16:      Sound Blaster 16    - OPL3 (default)\n"
+	        "  none/off:  Disable Sound Blaster emulation.\n"
+	        "Note: Creative Music System was later rebranded to Game Blaster; they are the\n"
+	        "      same card.");
 
 	phex = secprop->Add_hex("sbbase", when_idle, 0x220);
 	phex->Set_values(
