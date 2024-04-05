@@ -62,7 +62,7 @@ private:
 	void WriteDataToRightDevice(io_port_t port, io_val_t value, io_width_t width);
 	void WriteControlToRightDevice(io_port_t port, io_val_t value, io_width_t width);
 
-	// IO callbacks to the GameBlaster detection chip
+	// IO callbacks to the Game Blaster detection chip
 	void WriteToDetectionPort(io_port_t port, io_val_t value, io_width_t width);
 	uint8_t ReadFromDetectionPort(io_port_t port, io_width_t width) const;
 
