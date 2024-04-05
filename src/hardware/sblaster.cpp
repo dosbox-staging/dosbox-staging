@@ -2581,7 +2581,7 @@ static void adlib_gusforward(io_port_t, io_val_t value, io_width_t)
 	adlib_commandreg = (uint8_t)(val & 0xff);
 }
 
-bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
+bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
 {
 	sbaddr = 0;
 	sbirq  = 0;
