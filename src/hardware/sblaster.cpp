@@ -281,16 +281,19 @@ static int e2_incr_table[4][9] = {
 };
 // clang-format on
 
-static const char* CardType()
+static const char* log_prefix()
 {
-	constexpr std::array<const char*, 8> CardTypes = {
-	        "NONE", "SB1", "SBPRO1", "SB2", "SBPRO2", "UNASSIGNED", "SB16", "GB"};
-
-	const size_t type_id = static_cast<size_t>(sb.type);
-	assertm(type_id != 5 && type_id < CardTypes.size(),
-	        "sb.type does not match a known Sound Blaster type ID");
-
-	return CardTypes[type_id];
+	switch (sb.type) {
+	case SBType::SB1: return "SB1";
+	case SBType::SB2: return "SB2";
+	case SBType::SBPro1: return "SBPRO1";
+	case SBType::SBPro2: return "SBPRO2";
+	case SBType::SB16: return "SB16";
+	case SBType::GameBlaster: return "GB";
+	case SBType::None:
+		assertm(false, "Should not use SBType::None as a log prefix");
+		return "SB";
+	}
 }
 
 static void DSP_ChangeMode(DspMode mode);
@@ -332,7 +335,7 @@ static void DSP_SetSpeaker(bool requested_state)
 #if 0
 	// This can be very noisy as some games toggle the speaker for every effect
 	LOG_MSG("%s: Speaker-output has been toggled %s",
-	        CardType(),
+	        log_prefix(),
 	        (requested_state ? "on" : "off"));
 #endif
 }
@@ -371,14 +374,14 @@ static void log_filter_config(const char* output_type, const FilterType filter)
 	};
 
 	if (filter == FilterType::None) {
-		LOG_MSG("%s: %s filter disabled", CardType(), output_type);
+		LOG_MSG("%s: %s filter disabled", log_prefix(), output_type);
 	} else {
 		auto it = filter_name_map.find(filter);
 		if (it != filter_name_map.end()) {
 			auto filter_type = it->second;
 
 			LOG_MSG("%s: %s %s output filter enabled",
-			        CardType(),
+			        log_prefix(),
 			        filter_type.c_str(),
 			        output_type);
 		}
@@ -500,7 +503,7 @@ static void configure_sb_filter(mixer_channel_t channel,
 
 	if (!filter_type) {
 		LOG_WARNING("%s: Invalid 'sb_filter' setting: '%s', using 'off'",
-		            CardType(),
+		            log_prefix(),
 		            filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);
@@ -575,7 +578,7 @@ static void configure_opl_filter(mixer_channel_t channel,
 	if (!filter_type) {
 		if (filter_choice != "off") {
 			LOG_WARNING("%s: Invalid 'opl_filter' setting: '%s', using 'off'",
-			            CardType(),
+			            log_prefix(),
 			            filter_choice.c_str());
 		}
 
@@ -1047,7 +1050,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 		break;
 
 	default:
-		LOG_MSG("%s: Unhandled dma mode %d", CardType(), sb.dma.mode);
+		LOG_MSG("%s: Unhandled dma mode %d", log_prefix(), sb.dma.mode);
 		sb.mode = DspMode::None;
 		return;
 	}
@@ -1094,7 +1097,7 @@ static void PlayDMATransfer(uint32_t bytes_requested)
 	/*
 	LOG_MSG("%s: sb.dma.mode=%d, stereo=%d, signed=%d, bytes_requested=%u,"
 	        "bytes_to_read=%u, bytes_read = %u, samples = %u, frames = %u,
-	dma.left = %u", CardType(), sb.dma.mode, sb.dma.stereo, sb.dma.sign,
+	dma.left = %u", log_prefix(), sb.dma.mode, sb.dma.stereo, sb.dma.sign,
 	bytes_requested, bytes_to_read, bytes_read, samples, frames,
 	sb.dma.left);
 	*/
@@ -1148,7 +1151,7 @@ static void FlushRemainingDMATransfer()
 
 		LOG(LOG_SB, LOG_NORMAL)
 		("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds",
-		 CardType(),
+		 log_prefix(),
 		 delay);
 
 	} else if (sb.dma.left < sb.dma.min) {
@@ -1156,7 +1159,7 @@ static void FlushRemainingDMATransfer()
 
 		LOG(LOG_SB, LOG_NORMAL)
 		("%s: Short transfer scheduling IRQ in %.3f milliseconds",
-		 CardType(),
+		 log_prefix(),
 		 delay);
 
 		PIC_AddEvent(ProcessDMATransfer, delay, sb.dma.left);
@@ -1430,7 +1433,7 @@ static void DSP_DoReset(uint8_t val)
 		// 20 microseconds
 		PIC_AddEvent(DSP_FinishReset, 20.0 / 1000.0, 0);
 
-		LOG_MSG("%s: DSP was reset", CardType());
+		LOG_MSG("%s: DSP was reset", log_prefix());
 	}
 }
 
@@ -2782,7 +2785,7 @@ private:
 
 		// Update AUTOEXEC.BAT line
 		LOG_MSG("%s: Setting '%s' environment variable to '%s'",
-		        CardType(),
+		        log_prefix(),
 		        BlasterEnvVar,
 		        blaster_env_val);
 		AUTOEXEC_SetVariable(BlasterEnvVar, blaster_env_val);
@@ -2900,7 +2903,7 @@ public:
 		//
 		auto dma_channel = DMA_GetChannel(sb.hw.dma8);
 		assert(dma_channel);
-		dma_channel->ReserveFor(CardType(), SBLASTER_ShutDown);
+		dma_channel->ReserveFor(log_prefix(), SBLASTER_ShutDown);
 
 		// Only Sound Blaster 16 uses a 16-bit DMA channel.
 		if (sb.type == SBType::SB16) {
@@ -2910,7 +2913,7 @@ public:
 			if (sb.hw.dma16 != sb.hw.dma8) {
 				        dma_channel = DMA_GetChannel(sb.hw.dma16);
 				        assert(dma_channel);
-				        dma_channel->ReserveFor(CardType(),
+				        dma_channel->ReserveFor(log_prefix(),
 				                                SBLASTER_ShutDown);
 			}
 		}
@@ -2983,14 +2986,14 @@ public:
 
 		if (sb.type == SBType::SB16) {
 			LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
-			        CardType(),
+			        log_prefix(),
 			        sb.hw.base,
 			        sb.hw.irq,
 			        sb.hw.dma8,
 			        sb.hw.dma16);
 		} else {
 			LOG_MSG("%s: Running on port %xh, IRQ %d, and DMA %d",
-			        CardType(),
+			        log_prefix(),
 			        sb.hw.base,
 			        sb.hw.irq,
 			        sb.hw.dma8);
@@ -3018,7 +3021,7 @@ public:
 			return;
 		}
 
-		LOG_MSG("%s: Shutting down", CardType());
+		LOG_MSG("%s: Shutting down", log_prefix());
 
 		// Stop playback
 		if (sb.chan) {
