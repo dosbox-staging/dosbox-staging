@@ -2122,77 +2122,77 @@ static void SBLASTER_CallBack(uint32_t len)
 	}
 }
 
-SB_TYPES find_sbtype()
+static std::optional<SB_TYPES> parse_sbtype_pref(const std::string& pref)
 {
-	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
-	assert(sect);
+	if (pref == "gb") {
+		return SBT_GB;
 
-	const std::string pref = sect->Get_string("sbtype");
-
-	// Default
-	auto sbtype = SB_TYPES::SBT_NONE;
-
-	// Newest to oldest
-	if (pref == "sb16") {
-		sbtype = SBT_16;
-	} else if (pref == "sbpro2") {
-		sbtype = SBT_PRO2;
-	} else if (pref == "sbpro1") {
-		sbtype = SBT_PRO1;
-	} else if (pref == "sb2") {
-		sbtype = SBT_2;
 	} else if (pref == "sb1") {
-		sbtype = SBT_1;
-	} else if (pref == "gb") {
-		sbtype = SBT_GB;
-	}
-	return sbtype;
-}
+		return SBT_1;
 
-OplMode find_oplmode()
-{
-	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
-	assert(sect);
+	} else if (pref == "sb2") {
+		return SBT_2;
 
-	const std::string pref = sect->Get_string("oplmode");
+	} else if (pref == "sbpro1") {
+		return SBT_PRO1;
 
-	// Default
-	auto opl_mode = OplMode::None;
+	} else if (pref == "sbpro2") {
+		return SBT_PRO2;
 
-	// Newest to oldest
-	if (pref == "opl3gold") {
-		opl_mode = OplMode::Opl3Gold;
-	} else if (pref == "opl3") {
-		opl_mode = OplMode::Opl3;
-	} else if (pref == "dualopl2") {
-		opl_mode = OplMode::DualOpl2;
-	} else if (pref == "opl2") {
-		opl_mode = OplMode::Opl2;
-	} else if (pref == "cms") {
-		// Skip for backward compatibility with existing configurations
-	}
+	} else if (pref == "sb16") {
+		return SBT_16;
 
-	// Else assume auto
-	else {
-		switch (find_sbtype()) {
-		case SBT_16:
-		case SBT_PRO2: opl_mode = OplMode::Opl3; break;
-		case SBT_PRO1: opl_mode = OplMode::DualOpl2; break;
-		case SBT_2:
-		case SBT_1: opl_mode = OplMode::Opl2; break;
-		case SBT_GB: opl_mode = OplMode::None; break;
-		case SBT_NONE: opl_mode = OplMode::None; break;
+	} else if (const auto maybe_bool = parse_bool_setting(pref); maybe_bool) {
+		if (!*maybe_bool) {
+			return SBT_NONE;
 		}
 	}
-	return opl_mode;
+	return {};
 }
 
-bool is_cms_enabled()
+static std::optional<OplMode> parse_oplmode_pref(const std::string& pref,
+                                                 const SB_TYPES sb_type)
+{
+	if (pref == "cms") {
+		// Skip for backward compatibility with existing configurations
+		return OplMode::None;
+
+	} else if (pref == "opl2") {
+		return OplMode::Opl2;
+
+	} else if (pref == "dualopl2") {
+		return OplMode::DualOpl2;
+
+	} else if (pref == "opl3") {
+		return OplMode::Opl3;
+
+	} else if (pref == "opl3gold") {
+		return OplMode::Opl3Gold;
+
+	} else if (pref == "auto") {
+		switch (sb_type) {
+		case SBT_GB: return OplMode::None;
+		case SBT_1: return OplMode::Opl2;
+		case SBT_2: return OplMode::Opl2;
+		case SBT_PRO1: return OplMode::DualOpl2;
+		case SBT_PRO2: return OplMode::Opl3;
+		case SBT_16: return OplMode::Opl3;
+		case SBT_NONE: return OplMode::None;
+		}
+	} else if (const auto maybe_bool = parse_bool_setting(pref); maybe_bool) {
+		if (!*maybe_bool) {
+			return OplMode::None;
+		}
+	}
+
+	return {};
+}
+
+static bool is_cms_enabled(const SB_TYPES sbtype)
 {
 	const auto* sect = static_cast<Section_prop*>(control->GetSection("sblaster"));
 	assert(sect);
 
-	const auto sbtype      = find_sbtype();
 	const bool cms_enabled = [sect, sbtype]() {
 		// Backward compatibility with existing configurations
 		if (sect->Get_string("oplmode") == "cms") {
@@ -2304,9 +2304,41 @@ public:
 		sb.mixer.enabled=section->Get_bool("sbmixer");
 		sb.mixer.stereo=false;
 
-		sb.type = find_sbtype();
-		oplmode = find_oplmode();
 
+		// Determine Sound Blaster model
+		sb.type = [&] {
+			const std::string pref = section->Get_string("sbtype");
+
+			if (const auto maybe_sbtype = parse_sbtype_pref(pref);
+			    maybe_sbtype) {
+				return *maybe_sbtype;
+			} else {
+				LOG_WARNING("SB: Invalid 'sbtype' setting: '%s', using 'sb16'",
+				            pref.c_str());
+				return SBT_16;
+			}
+		}();
+
+		// Determine OPL model
+		oplmode = [&] {
+			const std::string pref = section->Get_string("oplmode");
+
+			if (const auto maybe_oplmode = parse_oplmode_pref(pref, sb.type);
+			    maybe_oplmode) {
+				return *maybe_oplmode;
+			} else {
+				LOG_WARNING("OPL: Invalid 'oplmode' setting: '%s', using 'auto'",
+				            pref.c_str());
+
+				// Now it's guaranteed to succeed
+				const auto auto_oplmode = parse_oplmode_pref("auto",
+				                                             sb.type);
+				assert(auto_oplmode);
+				return *auto_oplmode;
+			}
+		}();
+
+		// Init OPL
 		switch (oplmode) {
 		case OplMode::None:
 			write_handlers[0].Install(0x388,
@@ -2321,13 +2353,13 @@ public:
 			auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
 			assert(opl_channel);
 
-			const std::string opl_filter_prefs = section->Get_string(
+			const std::string opl_filter_str = section->Get_string(
 			        "opl_filter");
-			configure_opl_filter(opl_channel, opl_filter_prefs, sb.type);
+			configure_opl_filter(opl_channel, opl_filter_str, sb.type);
 		} break;
 		}
 
-		cms = is_cms_enabled();
+		cms = is_cms_enabled(sb.type);
 		if (cms) {
 			CMS_Init(section);
 		}
