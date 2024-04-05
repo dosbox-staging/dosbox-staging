@@ -219,9 +219,10 @@ public:
 		return true;
 	}
 
-	Capture(RegisterCache *_cache) : header(), cache(_cache)
+	Capture(RegisterCache* _cache) : header(), cache(_cache)
 	{
-		LOG_MSG("CAPTURE: Preparing to capture raw OPL output; capturing will start when OPL output starts");
+		LOG_MSG("CAPTURE: Preparing to capture raw OPL output; "
+		        "capturing will start when OPL output starts");
 		MakeTables();
 	}
 
@@ -589,8 +590,11 @@ void OPL::AudioCallback(const uint16_t requested_frames)
 {
 	assert(channel);
 
-	//if (fifo.size())
-	//	LOG_MSG("OPL: Queued %2lu cycle-accurate frames", fifo.size());
+	// if (fifo.size()) {
+	// 	LOG_MSG("%s: Queued %2lu cycle-accurate frames",
+	// 	        channel->GetName().c_str(),
+	// 	        fifo.size());
+	// }
 
 	auto frames_remaining = requested_frames;
 
@@ -888,7 +892,8 @@ static void OPL_SaveRawEvent(const bool pressed)
 	//	SaveRad();return;
 
 	if (!opl) {
-		LOG_WARNING("OPL: Can't capture the OPL stream because the OPL device is unavailable");
+		LOG_WARNING("OPL: Can't capture the OPL stream because "
+		            "the OPL device is unavailable");
 		return;
 	}
 
@@ -995,7 +1000,8 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 
 	MAPPER_AddHandler(OPL_SaveRawEvent, SDL_SCANCODE_UNKNOWN, 0, "caprawopl", "Rec. OPL");
 
-	LOG_MSG("OPL: Running %s on ports %xh and %xh",
+	LOG_MSG("%s: Running %s on ports %xh and %xh",
+	        channel->GetName().c_str(),
 	        opl_mode_to_string(mode).c_str(),
 	        base,
 	        port_0x388);
@@ -1003,7 +1009,9 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 
 OPL::~OPL()
 {
-	LOG_MSG("OPL: Shutting down %s", opl_mode_to_string(mode).c_str());
+	LOG_MSG("%s: Shutting down %s",
+	        channel->GetName().c_str(),
+	        opl_mode_to_string(mode).c_str());
 
 	// Stop playback
 	if (channel) {
