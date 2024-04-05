@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2023-2023  The DOSBox Staging Team
+ *  Copyright (C) 2023-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -38,8 +38,9 @@ void CMS_Init(Section *sec);
 void CMS_ShutDown(Section* sec = nullptr);
 
 bool PS1AUDIO_IsEnabled();
-bool SB_Get_Address(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
-bool TS_Get_Address(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
+bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma);
+
+bool TANDYSOUND_GetAddress(Bitu& tsaddr, Bitu& tsirq, Bitu& tsdma);
 
 extern uint8_t adlib_commandreg;
 

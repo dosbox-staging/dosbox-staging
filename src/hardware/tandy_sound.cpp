@@ -590,7 +590,7 @@ void TandyPSG::AudioCallback(const uint16_t requested_frames)
 std::unique_ptr<TandyDAC> tandy_dac = {};
 std::unique_ptr<TandyPSG> tandy_psg = {};
 
-bool TS_Get_Address(Bitu &tsaddr, Bitu &tsirq, Bitu &tsdma)
+bool TANDYSOUND_GetAddress(Bitu &tsaddr, Bitu &tsirq, Bitu &tsdma)
 {
 	if (!tandy_dac || !tandy_dac->IsEnabled()) {
 		tsaddr = 0;
