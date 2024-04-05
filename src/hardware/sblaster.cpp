@@ -105,10 +105,12 @@ struct SBInfo {
 	uint32_t freq = 0;
 
 	struct {
-		bool stereo         = false;
-		bool sign           = false;
-		bool autoinit       = false;
-		DmaMode mode      = {};
+		bool stereo   = false;
+		bool sign     = false;
+		bool autoinit = false;
+
+		DmaMode mode = {};
+
 		uint32_t rate       = 0; // sample rate
 		uint32_t mul        = 0; // samples-per-millisecond multipler
 		uint32_t singlesize = 0; // size for single cycle transfers
@@ -144,15 +146,15 @@ struct SBInfo {
 	} irq = {};
 
 	struct {
-		DspState state              = {};
-		uint8_t cmd                 = 0;
-		uint8_t cmd_len             = 0;
-		uint8_t cmd_in_pos          = 0;
+		DspState state             = {};
+		uint8_t cmd                = 0;
+		uint8_t cmd_len            = 0;
+		uint8_t cmd_in_pos         = 0;
 		uint8_t cmd_in[DspBufSize] = {};
 
 		struct {
 			// Last values added to the fifo
-			uint8_t lastval           = 0;
+			uint8_t lastval          = 0;
 			uint8_t data[DspBufSize] = {};
 
 			// Index of current entry
@@ -177,7 +179,7 @@ struct SBInfo {
 		uint16_t used = 0;
 
 		// Index of current entry
-		int16_t last  = 0;
+		int16_t last = 0;
 	} dac = {};
 
 	struct {
@@ -296,16 +298,16 @@ static const char* log_prefix()
 	}
 }
 
-static void dsp_change_mode(DspMode mode);
+static void dsp_change_mode(const DspMode mode);
 
 static void flush_remainig_dma_transfer();
 static void suppress_dma_transfer(const uint32_t size);
-static void play_dma_transfer(uint32_t size);
+static void play_dma_transfer(const uint32_t size);
 
 typedef void (*process_dma_f)(uint32_t);
 static process_dma_f ProcessDMATransfer;
 
-static void dsp_set_speaker(bool requested_state)
+static void dsp_set_speaker(const bool requested_state)
 {
 	// The speaker-output is always enabled on the SB16; speaker
 	// enable/disable commands are simply ignored. Only the SB Pro and
@@ -606,7 +608,7 @@ static void configure_opl_filter(mixer_channel_t channel,
 	set_filter(channel, config);
 }
 
-static void sb_raise_irq(SBIrq irq_type)
+static void sb_raise_irq(const SBIrq irq_type)
 {
 	LOG(LOG_SB, LOG_NORMAL)("Raising IRQ");
 
@@ -641,7 +643,7 @@ static void dsp_flush_data()
 
 static double last_dma_callback = 0.0;
 
-static void dsp_dma_callback(const DmaChannel* chan, DMAEvent event)
+static void dsp_dma_callback(const DmaChannel* chan, const DMAEvent event)
 {
 	if (chan != sb.dma.chan || event == DMA_REACHED_TC) {
 		return;
@@ -821,7 +823,7 @@ static const T* maybe_silence(const uint32_t num_samples, const T* buffer)
 	return quiet_buffer.data();
 }
 
-static uint32_t read_dma_8bit(uint32_t bytes_to_read, uint32_t i = 0)
+static uint32_t read_dma_8bit(const uint32_t bytes_to_read, const uint32_t i = 0)
 {
 	const auto bytes_read = sb.dma.chan->Read(bytes_to_read, sb.dma.buf.b8 + i);
 	assert(bytes_read <= DmaBufSize * sizeof(sb.dma.buf.b8[0]));
@@ -829,7 +831,7 @@ static uint32_t read_dma_8bit(uint32_t bytes_to_read, uint32_t i = 0)
 	return check_cast<uint32_t>(bytes_read);
 }
 
-static uint32_t read_dma_16bit(uint32_t bytes_to_read, uint32_t i = 0)
+static uint32_t read_dma_16bit(const uint32_t bytes_to_read, const uint32_t i = 0)
 {
 	const auto unsigned_buf = reinterpret_cast<uint8_t*>(sb.dma.buf.b16 + i);
 	const auto bytes_read = sb.dma.chan->Read(bytes_to_read, unsigned_buf);
@@ -838,7 +840,7 @@ static uint32_t read_dma_16bit(uint32_t bytes_to_read, uint32_t i = 0)
 	return check_cast<uint32_t>(bytes_read);
 }
 
-static void play_dma_transfer(uint32_t bytes_requested)
+static void play_dma_transfer(const uint32_t bytes_requested)
 {
 	// How many bytes should we read from DMA?
 	const auto lower_bound = sb.dma.autoinit ? bytes_requested : sb.dma.min;
@@ -1060,6 +1062,7 @@ static void play_dma_transfer(uint32_t bytes_requested)
 
 	// Deduct the DMA bytes read from the remaining to still read
 	sb.dma.left -= bytes_read;
+
 	if (!sb.dma.left) {
 		PIC_RemoveEvents(ProcessDMATransfer);
 
@@ -1103,13 +1106,14 @@ static void play_dma_transfer(uint32_t bytes_requested)
 	*/
 }
 
-static void suppress_dma_transfer(uint32_t bytes_to_read)
+static void suppress_dma_transfer(const uint32_t bytes_to_read)
 {
-	if (sb.dma.left < bytes_to_read) {
-		bytes_to_read = sb.dma.left;
+	auto num_bytes = bytes_to_read;
+	if (sb.dma.left < num_bytes) {
+		num_bytes = sb.dma.left;
 	}
 
-	const auto read = read_dma_8bit(bytes_to_read);
+	const auto read = read_dma_8bit(num_bytes);
 
 	sb.dma.left -= read;
 	if (!sb.dma.left) {
@@ -1205,7 +1209,7 @@ static void dsp_change_mode(const DspMode mode)
 	}
 }
 
-static void dsp_raise_irq_event(uint32_t /*val*/)
+static void dsp_raise_irq_event(const uint32_t /*val*/)
 {
 	sb_raise_irq(SBIrq::Irq8);
 }
@@ -1226,8 +1230,8 @@ static const char* get_dma_mode_name()
 }
 #endif
 
-static void dsp_do_dma_transfer(const DmaMode mode, uint32_t freq,
-                                bool autoinit, bool stereo)
+static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq,
+                                const bool autoinit, const bool stereo)
 {
 	// Fill up before changing state?
 	sb.chan->FillUp();
@@ -1292,7 +1296,8 @@ static void dsp_do_dma_transfer(const DmaMode mode, uint32_t freq,
 #endif
 }
 
-static void dsp_prepare_dma_old(DmaMode mode, bool autoinit, bool sign)
+static void dsp_prepare_dma_old(const DmaMode mode, const bool autoinit,
+                                const bool sign)
 {
 	sb.dma.sign = sign;
 	if (!autoinit) {
@@ -1306,28 +1311,31 @@ static void dsp_prepare_dma_old(DmaMode mode, bool autoinit, bool sign)
 	                    sb.mixer.stereo);
 }
 
-static void dsp_prepare_dma_new(DmaMode mode, uint32_t length, bool autoinit,
-                                bool stereo)
+static void dsp_prepare_dma_new(const DmaMode mode, const uint32_t length,
+                                const bool autoinit, const bool stereo)
 {
 	const auto freq = sb.freq;
 
-	// equal length if data format and dma channel are both 16-bit or 8-bit
+	DmaMode new_mode    = mode;
+	uint32_t new_length = length;
+
+	// Equal length if data format and dma channel are both 16-bit or 8-bit
 	if (mode == DmaMode::Pcm16Bit) {
 		if (sb.hw.dma16 != 0xff) {
 			sb.dma.chan = DMA_GetChannel(sb.hw.dma16);
 			if (sb.dma.chan == nullptr) {
 				sb.dma.chan = DMA_GetChannel(sb.hw.dma8);
-				mode        = DmaMode::Pcm16BitAliased;
-				length *= 2;
+				new_mode    = DmaMode::Pcm16BitAliased;
+				new_length *= 2;
 			}
 		} else {
 			sb.dma.chan = DMA_GetChannel(sb.hw.dma8);
-			mode        = DmaMode::Pcm16BitAliased;
+			new_mode    = DmaMode::Pcm16BitAliased;
 			// UNDOCUMENTED:
 			// In aliased mode sample length is written to DSP as
 			// number of 16-bit samples so we need double 8-bit DMA
 			// buffer length
-			length *= 2;
+			new_length *= 2;
 		}
 	} else {
 		sb.dma.chan = DMA_GetChannel(sb.hw.dma8);
@@ -1335,15 +1343,15 @@ static void dsp_prepare_dma_new(DmaMode mode, uint32_t length, bool autoinit,
 
 	// Set the length to the correct register depending on mode
 	if (autoinit) {
-		sb.dma.autosize = length;
+		sb.dma.autosize = new_length;
 	} else {
-		sb.dma.singlesize = length;
+		sb.dma.singlesize = new_length;
 	}
 
-	dsp_do_dma_transfer(mode, freq, autoinit, stereo);
+	dsp_do_dma_transfer(new_mode, freq, autoinit, stereo);
 }
 
-static void dsp_add_data(uint8_t val)
+static void dsp_add_data(const uint8_t val)
 {
 	if (sb.dsp.out.used < DspBufSize) {
 		auto start = sb.dsp.out.used + sb.dsp.out.pos;
@@ -1357,7 +1365,7 @@ static void dsp_add_data(uint8_t val)
 	}
 }
 
-static void dsp_finish_reset(uint32_t /*val*/)
+static void dsp_finish_reset(const uint32_t /*val*/)
 {
 	dsp_flush_data();
 	dsp_add_data(0xaa);
@@ -1413,7 +1421,7 @@ static void dsp_reset()
 	PIC_RemoveEvents(ProcessDMATransfer);
 }
 
-static void dsp_do_reset(uint8_t val)
+static void dsp_do_reset(const uint8_t val)
 {
 	if (((val & 1) != 0) && (sb.dsp.state != DspState::Reset)) {
 		// TODO Get out of highspeed mode
@@ -1437,7 +1445,7 @@ static void dsp_do_reset(uint8_t val)
 	}
 }
 
-static void dsp_e2_dma_callback(const DmaChannel* /*chan*/, DMAEvent event)
+static void dsp_e2_dma_callback(const DmaChannel* /*chan*/, const DMAEvent event)
 {
 	if (event == DMA_UNMASKED) {
 		uint8_t val = (uint8_t)(sb.e2.value & 0xff);
@@ -1449,7 +1457,7 @@ static void dsp_e2_dma_callback(const DmaChannel* /*chan*/, DMAEvent event)
 	}
 }
 
-static void dsp_adc_callback(const DmaChannel* /*chan*/, DMAEvent event)
+static void dsp_adc_callback(const DmaChannel* /*chan*/, const DMAEvent event)
 {
 	if (event != DMA_UNMASKED) {
 		return;
@@ -1466,7 +1474,7 @@ static void dsp_adc_callback(const DmaChannel* /*chan*/, DMAEvent event)
 	ch->RegisterCallback(nullptr);
 }
 
-static void dsp_change_rate(uint32_t freq)
+static void dsp_change_rate(const uint32_t freq)
 {
 	if (sb.freq != freq && sb.dma.mode != DmaMode::None) {
 		sb.chan->FillUp();
@@ -1965,7 +1973,7 @@ static void dsp_do_command()
 	sb.dsp.in.pos  = 0;
 }
 
-static void dsp_do_write(uint8_t val)
+static void dsp_do_write(const uint8_t val)
 {
 	switch (sb.dsp.cmd) {
 	case DspNoCommand:
@@ -2003,7 +2011,7 @@ static uint8_t dsp_read_data()
 	return sb.dsp.out.lastval;
 }
 
-static float calc_vol(uint8_t amount)
+static float calc_vol(const uint8_t amount)
 {
 	uint8_t count = 31 - amount;
 
@@ -2094,7 +2102,7 @@ static uint8_t make_sb_pro_volume(const uint8_t* src)
 	        ((sb.type == SBType::SBPro1 || sb.type == SBType::SBPro2) ? 0x11 : 0));
 }
 
-static void dsp_change_stereo(bool stereo)
+static void dsp_change_stereo(const bool stereo)
 {
 	if (!sb.dma.stereo && stereo) {
 		set_channel_rate_hz(sb.freq / 2);
@@ -2112,7 +2120,7 @@ static void dsp_change_stereo(bool stereo)
 	sb.dma.stereo = stereo;
 }
 
-static void ctmixer_write(uint8_t val)
+static void ctmixer_write(const uint8_t val)
 {
 	switch (sb.mixer.index) {
 	case 0x00: // Reset
@@ -2549,7 +2557,7 @@ union BufferStatus {
 	bit_view<7, 1> has_data;
 };
 
-static uint8_t read_sb(io_port_t port, io_width_t)
+static uint8_t read_sb(const io_port_t port, const io_width_t)
 {
 	switch (port - sb.hw.base) {
 	case MixerIndex: return sb.mixer.index;
@@ -2587,7 +2595,7 @@ static uint8_t read_sb(io_port_t port, io_width_t)
 	return 0xff;
 }
 
-static void write_sb(io_port_t port, io_val_t value, io_width_t)
+static void write_sb(const io_port_t port, const io_val_t value, const io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
 
@@ -2606,7 +2614,7 @@ static void write_sb(io_port_t port, io_val_t value, io_width_t)
 	}
 }
 
-static void adlib_gusforward(io_port_t, io_val_t value, io_width_t)
+static void adlib_gus_forward(const io_port_t, const io_val_t value, const io_width_t)
 {
 	const auto val = check_cast<uint8_t>(value);
 	adlib_commandreg = (uint8_t)(val & 0xff);
@@ -2627,8 +2635,10 @@ bool SB_GetAddress(uint16_t &sbaddr, uint8_t &sbirq, uint8_t &sbdma)
 	return (sbaddr != 0 && sbirq != 0 && sbdma != 0);
 }
 
-static void sblaster_callback(uint32_t len)
+static void sblaster_callback(const uint32_t length)
 {
+	auto len = length;
+
 	switch (sb.mode) {
 	case DspMode::None:
 	case DspMode::DmaPause:
@@ -2887,7 +2897,7 @@ public:
 		switch (oplmode) {
 		case OplMode::None:
 			write_handlers[0].Install(0x388,
-			                          adlib_gusforward,
+			                          adlib_gus_forward,
 			                          io_width_t::byte);
 			break;
 		case OplMode::Opl2:
