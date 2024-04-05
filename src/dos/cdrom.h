@@ -39,6 +39,7 @@
 #include "support.h"
 #include "mem.h"
 #include "mixer.h"
+#include "rwqueue.h"
 
 #include "decoders/SDL_sound.h"
 #include "sdlcd/SDL_cdrom.h"
@@ -63,6 +64,7 @@
 #define MAX_REDBOOK_BYTES (MAX_REDBOOK_FRAMES * BYTES_PER_RAW_REDBOOK_FRAME) // length of a CDROM in bytes
 #define MAX_REDBOOK_DURATION_MS (99 * 60 * 1000) // 99 minute CDROM in milliseconds
 #define AUDIO_DECODE_BUFFER_SIZE 16512u
+#define SAMPLES_PER_REDBOOK_FRAME (BYTES_PER_RAW_REDBOOK_FRAME / REDBOOK_BPS)
 
 struct TMSF
 {
@@ -410,8 +412,37 @@ private:
 	static int           refCount;
 };
 
+class CDROM_Interface_Physical : public CDROM_Interface {
+public:
+	~CDROM_Interface_Physical() override;
+
+	bool GetAudioStatus(bool& playing, bool& pause) override;
+	bool PlayAudioSector(const uint32_t start, uint32_t len) override;
+	bool PauseAudio(bool resume) override;
+	bool StopAudio() override;
+	void ChannelControl(TCtrl ctrl) override;
+
+protected:
+	void InitAudio();
+
+private:
+	virtual std::vector<int16_t> ReadAudio(const uint32_t sector, const uint32_t frames_requested) = 0;
+	void CdAudioCallback(const uint16_t requested_frames);
+	void CdReaderLoop();
+
+	mixer_channel_t mixer_channel  = {};
+	std::thread thread             = {};
+	std::mutex mutex               = {};
+	std::condition_variable waiter = {};
+	RWQueue<AudioFrame> queue        {REDBOOK_PCM_FRAMES_PER_SECOND * 5};
+	uint32_t current_sector        = 0;
+	uint32_t sectors_remaining     = 0;
+	bool should_exit               = false;
+	bool is_paused                 = false;
+};
+
 #if defined (LINUX)
-class CDROM_Interface_Ioctl : public CDROM_Interface {
+class CDROM_Interface_Ioctl : public CDROM_Interface_Physical {
 public:
 	~CDROM_Interface_Ioctl() override;
 
@@ -421,17 +452,12 @@ public:
 	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
 	bool GetAudioSub(unsigned char& attr, unsigned char& track,
 	                 unsigned char& index, TMSF& relPos, TMSF& absPos) override;
-	bool GetAudioStatus(bool& playing, bool& pause) override;
 	bool GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged,
 	                        bool& trayOpen) override;
 	bool ReadSectors(PhysPt buffer, const bool raw, const uint32_t sector,
 	                 const uint16_t num) override;
 	bool ReadSectorsHost(void* buffer, bool raw, unsigned long sector,
 	                     unsigned long num) override;
-	bool PlayAudioSector(const uint32_t start, uint32_t len) override;
-	bool PauseAudio(bool resume) override;
-	bool StopAudio() override;
-	void ChannelControl(TCtrl ctrl) override;
 	bool LoadUnloadMedia(bool unload) override;
 	bool HasFullMscdexSupport() override
 	{
@@ -439,21 +465,11 @@ public:
 	}
 
 private:
-	void CdAudioCallback(const uint16_t requested_frames);
-	void InitAudio();
 	bool IsOpen() const;
 	bool Open(const char* device_name);
+	std::vector<int16_t> ReadAudio(const uint32_t sector, const uint32_t frames_requested) override;
 
-	int cdrom_fd                          = -1;
-	mixer_channel_t mixer_channel         = nullptr;
-	std::vector<int16_t> input_buffer     = {};
-	std::vector<AudioFrame> output_buffer = {};
-	size_t input_buffer_position          = 0;
-	size_t input_buffer_samples           = 0;
-	int current_sector                    = 0;
-	int sectors_remaining                 = 0;
-	bool is_playing                       = false;
-	bool is_paused                        = false;
+	int cdrom_fd = -1;
 };
 
 #endif /* LINUX */

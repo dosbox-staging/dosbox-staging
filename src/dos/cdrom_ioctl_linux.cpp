@@ -20,7 +20,6 @@
 #include <cstring>
 
 #include "cdrom.h"
-#include "channel_names.h"
 #include "string_utils.h"
 #include "support.h"
 
@@ -34,20 +33,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-// ioctl cannot be read more than 75 redbook frames at a time (one second of audio)
-constexpr int InputBufferMaxRedbookFrames = 25;
-constexpr size_t PcmSamplesPerRedbookFrame = BYTES_PER_RAW_REDBOOK_FRAME / REDBOOK_BPS;
-constexpr size_t InputBufferMaxSamples = InputBufferMaxRedbookFrames *
-                                         PcmSamplesPerRedbookFrame;
-
 CDROM_Interface_Ioctl::~CDROM_Interface_Ioctl()
 {
-	if (mixer_channel) {
-		MIXER_DeregisterChannel(mixer_channel);
-	}
 	if (IsOpen()) {
 		close(cdrom_fd);
 	}
+	cdrom_fd = -1;
 }
 
 bool CDROM_Interface_Ioctl::IsOpen() const
@@ -203,20 +194,6 @@ bool CDROM_Interface_Ioctl::GetAudioSub(unsigned char& attr, unsigned char& trac
 	return true;
 }
 
-bool CDROM_Interface_Ioctl::GetAudioStatus(bool& playing, bool& pause)
-{
-	playing = is_playing;
-	pause   = is_paused;
-
-#ifdef DEBUG_IOCTL
-	LOG_INFO("CDROM_IOCTL: GetAudioStatus => %s and %s",
-	         playing ? "is playing" : "stopped",
-	         pause ? "paused" : "not paused");
-#endif
-
-	return true;
-}
-
 // Called from CMscdex::GetDeviceStatus - dos_mscdex.cpp line 821
 // Function doesn't check return value or initialize variables so just set some
 // defaults and never fail.
@@ -344,166 +321,6 @@ bool CDROM_Interface_Ioctl::ReadSectorsHost([[maybe_unused]] void *buffer,
 	return false; /*TODO*/
 }
 
-void CDROM_Interface_Ioctl::InitAudio()
-{
-	if (mixer_channel) {
-		return;
-	}
-
-	// Each audio channel must have a unique name.
-	// Append a number after the CDAUDIO name.
-	// This way we don't conflict with CDROM_Interface_Image or multiple drives.
-	bool found_unique_name = false;
-	std::string name;
-	for (int i = 0; i < ChannelName::MaxCdAudioChannel; ++i) {
-		name = std::string(ChannelName::CdAudio) + "_" + std::to_string(i);
-		if (!MIXER_FindChannel(name.c_str())) {
-			found_unique_name = true;
-			break;
-		}
-	}
-
-	if (!found_unique_name) {
-		LOG_ERR("CDROM_IOCTL: Too many mixer channels");
-		return;
-	}
-
-	// Input buffer is used as a C-style buffer passed to an ioctl.
-	// Its size must always be 1 second of data.
-	// Stored in int16_t samples.
-	input_buffer.resize(InputBufferMaxSamples);
-
-	auto callback = std::bind(&CDROM_Interface_Ioctl::CdAudioCallback,
-	                          this,
-	                          std::placeholders::_1);
-	mixer_channel = MIXER_AddChannel(callback,
-	                                 REDBOOK_PCM_FRAMES_PER_SECOND,
-	                                 name.c_str(),
-	                                 {ChannelFeature::Stereo,
-	                                  ChannelFeature::DigitalAudio});
-}
-
-void CDROM_Interface_Ioctl::CdAudioCallback(const uint16_t requested_frames)
-{
-	if (input_buffer_position == 0) {
-		if (sectors_remaining < 1) {
-			StopAudio();
-			return;
-		}
-		cdrom_read_audio cd = {};
-		cd.addr.lba         = current_sector;
-		cd.addr_format      = CDROM_LBA;
-		cd.buf = reinterpret_cast<uint8_t*>(input_buffer.data());
-
-		// Maximum this ioctl can read in a single call is 1 second (75
-		// redbook frames)
-		cd.nframes = std::min(sectors_remaining, InputBufferMaxRedbookFrames);
-		input_buffer_samples = cd.nframes * PcmSamplesPerRedbookFrame;
-		current_sector += cd.nframes;
-		sectors_remaining -= cd.nframes;
-
-		if (ioctl(cdrom_fd, CDROMREADAUDIO, &cd) != 0) {
-			// Write out silence if something goes wrong
-			std::fill(input_buffer.begin(), input_buffer.end(), 0);
-
-#ifdef DEBUG_IOCTL
-			LOG_WARNING("CDROM_IOCTL: CdAudioCallback: CDROMREADAUDIO ioctl failed");
-#endif
-		}
-	}
-
-	size_t end = input_buffer_position + (requested_frames * REDBOOK_CHANNELS);
-	end = std::min(end, input_buffer_samples);
-
-	output_buffer.clear();
-	while (input_buffer_position < end) {
-		const int16_t left = host_to_le16(
-		        input_buffer[input_buffer_position++]);
-		const int16_t right = host_to_le16(
-		        input_buffer[input_buffer_position++]);
-		output_buffer.emplace_back(left, right);
-	}
-
-	mixer_channel->AddSamples_sfloat(output_buffer.size(), &output_buffer[0][0]);
-
-	if (input_buffer_position >= input_buffer_samples) {
-		input_buffer_position = 0;
-	}
-}
-
-bool CDROM_Interface_Ioctl::PlayAudioSector(const uint32_t start, uint32_t len)
-{
-	if (!mixer_channel) {
-		return false;
-	}
-	input_buffer_position = 0;
-	current_sector        = start;
-	sectors_remaining     = len;
-	is_playing            = true;
-	is_paused             = false;
-	mixer_channel->Enable(true);
-#ifdef DEBUG_IOCTL
-	LOG_INFO("CDROM_IOCTL: PlayAudioSector: start: %u len: %u", start, len);
-#endif
-	return true;
-}
-
-bool CDROM_Interface_Ioctl::PauseAudio(bool resume)
-{
-	if (mixer_channel) {
-		mixer_channel->Enable(resume);
-	}
-	is_paused = !resume;
-#ifdef DEBUG_IOCTL
-	LOG_INFO("CDROM: PauseAudio => audio is now %s",
-	         resume ? "unpaused" : "paused");
-#endif
-	return true;
-}
-
-bool CDROM_Interface_Ioctl::StopAudio()
-{
-	if (mixer_channel) {
-		mixer_channel->Enable(false);
-	}
-	is_playing            = false;
-	is_paused             = false;
-	current_sector        = 0;
-	sectors_remaining     = 0;
-	input_buffer_position = 0;
-#ifdef DEBUG_IOCTL
-	LOG_INFO("CDROM_IOCTL: StopAudio => stopped playback and halted the mixer");
-#endif
-	return true;
-}
-
-// Taken from CDROM_Interface_Image
-void CDROM_Interface_Ioctl::ChannelControl(TCtrl ctrl)
-{
-	if (!mixer_channel) {
-		return;
-	}
-
-	constexpr float MaxVolume = 255.0f;
-	// Adjust the volume of our mixer channel as defined by the application
-	mixer_channel->SetAppVolume(
-	        {ctrl.vol[0] / MaxVolume, ctrl.vol[1] / MaxVolume});
-
-	// Map the audio channels in our mixer channel as defined by the
-	// application
-	const auto left_mapped  = static_cast<LineIndex>(ctrl.out[0]);
-	const auto right_mapped = static_cast<LineIndex>(ctrl.out[1]);
-	mixer_channel->SetChannelMap({left_mapped, right_mapped});
-#ifdef DEBUG_IOCTL
-	LOG_INFO("CDROM_IOCTL: ChannelControl => volumes %d/255 and %d/255, "
-	         "and left-right map %d, %d",
-	         ctrl.vol[0],
-	         ctrl.vol[1],
-	         ctrl.out[0],
-	         ctrl.out[1]);
-#endif
-}
-
 bool CDROM_Interface_Ioctl::LoadUnloadMedia(bool unload)
 {
 	if (!IsOpen()) {
@@ -516,4 +333,28 @@ bool CDROM_Interface_Ioctl::LoadUnloadMedia(bool unload)
 	}
 }
 
+std::vector<int16_t> CDROM_Interface_Ioctl::ReadAudio(const uint32_t sector, const uint32_t frames_requested)
+{
+	// Hard limit of 75 frames on the Linux kernel
+	constexpr uint32_t MaximumFramesPerCall = 75;
+
+	const uint32_t num_frames = std::min(frames_requested, MaximumFramesPerCall);
+
+	std::vector<int16_t> audio_samples(num_frames * SAMPLES_PER_REDBOOK_FRAME);
+
+	cdrom_read_audio cd = {};
+	cd.addr.lba         = sector;
+	cd.addr_format      = CDROM_LBA;
+	cd.nframes          = num_frames;
+	cd.buf              = reinterpret_cast<__u8 *>(audio_samples.data());
+
+	if (ioctl(cdrom_fd, CDROMREADAUDIO, &cd) != 0) {
+#ifdef DEBUG_IOCTL
+		LOG_WARNING("CDROM_IOCTL: ReadAudio: CDROMREADAUDIO ioctl failed");
 #endif
+	}
+
+	return audio_samples;
+}
+
+#endif // Linux
