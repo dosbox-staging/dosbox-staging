@@ -303,22 +303,30 @@ void TandyDAC::ChangeMode()
 		if (regs.clock_divider == 0) {
 			return;
 		}
-		if (const auto sample_rate = tandy_psg_clock_hz / regs.clock_divider;
-		    sample_rate < dac_max_sample_rate_hz) {
+
+		if (const auto new_sample_rate = tandy_psg_clock_hz / regs.clock_divider;
+		    new_sample_rate < dac_max_sample_rate_hz) {
 			assert(channel);
 			channel->FillUp(); // using the prior sample rate
-			channel->SetSampleRate(check_cast<uint16_t>(sample_rate));
+			channel->SetSampleRate(check_cast<uint16_t>(new_sample_rate));
+
 			const auto vol = static_cast<float>(regs.amplitude) / 7.0f;
+
 			channel->SetAppVolume({vol, vol});
+
 			if ((regs.mode & 0x0c) == 0x0c) {
 				dma.is_done = false;
 				dma.channel = DMA_GetChannel(io.dma);
+
 				if (dma.channel) {
 					const auto callback = std::bind(
 					        &TandyDAC::DmaCallback, this, _1, _2);
 					dma.channel->RegisterCallback(callback);
+
 					channel->Enable(true);
-					// LOG_MSG("TANDYDAC: playback started with freqency %f, volume %f", sample_rate, vol);
+					// LOG_MSG("TANDYDAC: playback started
+					// with freqency %f, volume %f",
+					// sample_rate, vol);
 				}
 			}
 		}
