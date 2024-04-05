@@ -290,7 +290,7 @@ void TandyDAC::ChangeMode()
 	// For example, a clock divider value of 8 (which is valid) produces a
 	// 450 KHz sampling rate, which is way beyond what Speex can handle.
 	//
-	constexpr auto dac_max_sample_rate_hz = 49000;
+	constexpr auto DacMaxSampleRateHz = 49000;
 
 	// LOG_MSG("TANDYDAC: Mode changed to %d", regs.mode);
 	switch (regs.mode & 3) {
@@ -305,9 +305,12 @@ void TandyDAC::ChangeMode()
 		}
 
 		if (const auto new_sample_rate = tandy_psg_clock_hz / regs.clock_divider;
-		    new_sample_rate < dac_max_sample_rate_hz) {
+		    new_sample_rate < DacMaxSampleRateHz) {
 			assert(channel);
-			channel->FillUp(); // using the prior sample rate
+
+			// Fill using the prior sample rate
+			channel->FillUp();
+
 			channel->SetSampleRate(check_cast<uint16_t>(new_sample_rate));
 
 			const auto vol = static_cast<float>(regs.amplitude) / 7.0f;
@@ -324,9 +327,11 @@ void TandyDAC::ChangeMode()
 					dma.channel->RegisterCallback(callback);
 
 					channel->Enable(true);
-					// LOG_MSG("TANDYDAC: playback started
-					// with freqency %f, volume %f",
-					// sample_rate, vol);
+#if 0
+					LOG_MSG("TANDYDAC: playback started with freqency %i, volume %f",
+					        sample_rate,
+					        vol);
+#endif
 				}
 			}
 		}

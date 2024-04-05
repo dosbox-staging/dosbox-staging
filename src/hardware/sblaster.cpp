@@ -274,14 +274,12 @@ static uint8_t dsp_cmd_len_sb16[256] = {
 static uint8_t asp_regs[256];
 static bool asp_init_in_progress = false;
 
-// clang-format off
 static int e2_incr_table[4][9] = {
-  {  0x01, -0x02, -0x04,  0x08, -0x10,  0x20,  0x40, -0x80, -106 },
-  { -0x01,  0x02, -0x04,  0x08,  0x10, -0x20,  0x40, -0x80,  165 },
-  { -0x01,  0x02,  0x04, -0x08,  0x10, -0x20, -0x40,  0x80, -151 },
-  {  0x01, -0x02,  0x04, -0x08, -0x10,  0x20, -0x40,  0x80,   90 }
+        { 0x01, -0x02, -0x04,  0x08, -0x10,  0x20,  0x40, -0x80, -106},
+        {-0x01,  0x02, -0x04,  0x08,  0x10, -0x20,  0x40, -0x80,  165},
+        {-0x01,  0x02,  0x04, -0x08,  0x10, -0x20, -0x40,  0x80, -151},
+        { 0x01, -0x02,  0x04, -0x08, -0x10,  0x20, -0x40,  0x80,   90}
 };
-// clang-format on
 
 static const char* log_prefix()
 {
@@ -295,6 +293,11 @@ static const char* log_prefix()
 	case SBType::None:
 		assertm(false, "Should not use SBType::None as a log prefix");
 		return "SB";
+	default:
+		assertm(false,
+		        format_str("Invalid SBType value: %d",
+		                   static_cast<int>(sb.type)));
+		return "";
 	}
 }
 
@@ -734,16 +737,15 @@ static std::array<uint8_t, 4> decode_adpcm_2bit(const uint8_t data)
 		252, 4, 252, 4, 252, 4, 252, 4,
 		252, 0, 252, 0
 	};
+	// clang-format on
 
 	static_assert(ARRAY_LEN(ScaleMap) == ARRAY_LEN(AdjustMap));
-	constexpr auto LastIndex = static_cast<uint8_t>(sizeof(ScaleMap) - 1);;
+	constexpr auto LastIndex = static_cast<uint8_t>(sizeof(ScaleMap) - 1);
 
 	return {decode_adpcm_portion((data >> 6) & 0x3, AdjustMap, ScaleMap, LastIndex),
 	        decode_adpcm_portion((data >> 4) & 0x3, AdjustMap, ScaleMap, LastIndex),
 	        decode_adpcm_portion((data >> 2) & 0x3, AdjustMap, ScaleMap, LastIndex),
 	        decode_adpcm_portion((data >> 0) & 0x3, AdjustMap, ScaleMap, LastIndex)};
-
-	// clang-format on
 }
 
 static std::array<uint8_t, 3> decode_adpcm_3bit(const uint8_t data)
@@ -764,15 +766,14 @@ static std::array<uint8_t, 3> decode_adpcm_3bit(const uint8_t data)
 		248, 0, 0, 8, 248, 0, 0, 8,
 		248, 0, 0, 0, 248, 0, 0, 0
 	};
+	// clang-format on
 
 	static_assert(ARRAY_LEN(ScaleMap) == ARRAY_LEN(AdjustMap));
-	constexpr auto LastIndex = static_cast<uint8_t>(sizeof(ScaleMap) - 1);;
+	constexpr auto LastIndex = static_cast<uint8_t>(sizeof(ScaleMap) - 1);
 
 	return {decode_adpcm_portion((data >> 5) & 0x7, AdjustMap, ScaleMap, LastIndex),
 	        decode_adpcm_portion((data >> 2) & 0x7, AdjustMap, ScaleMap, LastIndex),
 	        decode_adpcm_portion((data & 0x3) << 1, AdjustMap, ScaleMap, LastIndex)};
-
-	// clang-format on
 }
 
 static std::array<uint8_t, 2> decode_adpcm_4bit(const uint8_t data)
@@ -795,14 +796,13 @@ static std::array<uint8_t, 2> decode_adpcm_4bit(const uint8_t data)
 		240, 0, 0, 0, 0,  0,  0,  0,
 		240, 0, 0, 0, 0,  0,  0,  0
 	};
+	// clang-format on
 
 	static_assert(ARRAY_LEN(ScaleMap) == ARRAY_LEN(AdjustMap));
-	constexpr auto LastIndex = static_cast<uint8_t>(sizeof(ScaleMap) - 1);;
+	constexpr auto LastIndex = static_cast<uint8_t>(sizeof(ScaleMap) - 1);
 
-	return {decode_adpcm_portion(data >> 4,  AdjustMap, ScaleMap, LastIndex),
+	return {decode_adpcm_portion(data >> 4, AdjustMap, ScaleMap, LastIndex),
 	        decode_adpcm_portion(data & 0xf, AdjustMap, ScaleMap, LastIndex)};
-
-	// clang-format on
 }
 
 template <typename T>
@@ -904,15 +904,18 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 	// Read the actual data, process it and send it off to the mixer
 	switch (sb.dma.mode) {
 	case DmaMode::Adpcm2Bit:
-		std::tie(bytes_read, samples, frames) = decode_adpcm_dma(decode_adpcm_2bit);
+		std::tie(bytes_read, samples, frames) = decode_adpcm_dma(
+		        decode_adpcm_2bit);
 		break;
 
 	case DmaMode::Adpcm3Bit:
-		std::tie(bytes_read, samples, frames) = decode_adpcm_dma(decode_adpcm_3bit);
+		std::tie(bytes_read, samples, frames) = decode_adpcm_dma(
+		        decode_adpcm_3bit);
 		break;
 
 	case DmaMode::Adpcm4Bit:
-		std::tie(bytes_read, samples, frames) = decode_adpcm_dma(decode_adpcm_4bit);
+		std::tie(bytes_read, samples, frames) = decode_adpcm_dma(
+		        decode_adpcm_4bit);
 		break;
 
 	case DmaMode::Pcm8Bit:
@@ -1052,7 +1055,7 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 		break;
 
 	default:
-		LOG_MSG("%s: Unhandled dma mode %d", log_prefix(), sb.dma.mode);
+		LOG_MSG("%s: Unhandled DMA mode %d", log_prefix(), static_cast<int>(sb.dma.mode));
 		sb.mode = DspMode::None;
 		return;
 	}
@@ -1097,13 +1100,20 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 			sb.dma.left = sb.dma.autosize;
 		}
 	}
-	/*
+#if 0
 	LOG_MSG("%s: sb.dma.mode=%d, stereo=%d, signed=%d, bytes_requested=%u,"
-	        "bytes_to_read=%u, bytes_read = %u, samples = %u, frames = %u,
-	dma.left = %u", log_prefix(), sb.dma.mode, sb.dma.stereo, sb.dma.sign,
-	bytes_requested, bytes_to_read, bytes_read, samples, frames,
-	sb.dma.left);
-	*/
+	        "bytes_to_read=%u, bytes_read = %u, samples = %u, frames = %u, dma.left = %u",
+	        log_prefix(),
+	        sb.dma.mode,
+	        sb.dma.stereo,
+	        sb.dma.sign,
+	        bytes_requested,
+	        bytes_to_read,
+	        bytes_read,
+	        samples,
+	        frames,
+	        sb.dma.left);
+#endif
 }
 
 static void suppress_dma_transfer(const uint32_t bytes_to_read)
@@ -1249,7 +1259,7 @@ static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq,
 	case DmaMode::Pcm16Bit: sb.dma.mul = (1 << SbShift); break;
 	case DmaMode::Pcm16BitAliased: sb.dma.mul = (1 << SbShift) * 2; break;
 	default:
-		LOG(LOG_SB, LOG_ERROR)("DSP:Illegal transfer mode %d", mode);
+		LOG(LOG_SB, LOG_ERROR)("DSP:Illegal transfer mode %d", static_cast<int>(mode));
 		return;
 	}
 
@@ -1574,8 +1584,12 @@ static void dsp_do_command()
 
 	case 0x0e: // SB16 ASP set register
 		if (sb.type == SBType::SB16) {
-			// LOG(LOG_SB,LOG_NORMAL)("SB16 ASP set
-			// register %X := %X",sb.dsp.in.data[0],sb.dsp.in.data[1]);
+#if 0
+			LOG(LOG_SB, LOG_NORMAL)
+			("SB16 ASP set register %X := %X",
+			 sb.dsp.in.data[0],
+			 sb.dsp.in.data[1]);
+#endif
 			asp_regs[sb.dsp.in.data[0]] = sb.dsp.in.data[1];
 		} else {
 			LOG(LOG_SB, LOG_NORMAL)
@@ -1589,9 +1603,12 @@ static void dsp_do_command()
 			if ((asp_init_in_progress) && (sb.dsp.in.data[0] == 0x83)) {
 				asp_regs[0x83] = ~asp_regs[0x83];
 			}
-			//			LOG(LOG_SB,LOG_NORMAL)("SB16 ASP
-			//get register %X ==
-			//%X",sb.dsp.in.data[0],asp_regs[sb.dsp.in.data[0]]);
+#if 0
+			LOG(LOG_SB, LOG_NORMAL)
+			("SB16 ASP get register %X == X",
+			 sb.dsp.in.data[0],
+			 asp_regs[sb.dsp.in.data[0]]);
+#endif
 			dsp_add_data(asp_regs[sb.dsp.in.data[0]]);
 		} else {
 			LOG(LOG_SB, LOG_NORMAL)
@@ -2138,8 +2155,8 @@ static void ctmixer_write(const uint8_t val)
 		ctmixer_update_volumes();
 		break;
 
-	case 0x06: // FM output selection
-	           // Somewhat obsolete with dual OPL SBpro + FM volume (SB2 Only)
+	case 0x06: { // FM output selection
+		// Somewhat obsolete with dual OPL SBpro + FM volume (SB2 Only)
 		// volume controls both channels
 		set_sb_pro_volume(sb.mixer.fm, (val & 0xf) | (val << 4));
 
@@ -2150,7 +2167,7 @@ static void ctmixer_write(const uint8_t val)
 			("Turned FM one channel off. not implemented %X", val);
 		}
 		// TODO Change FM Mode if only 1 fm channel is selected
-		break;
+	} break;
 
 	case 0x08: // CDA Volume (SB2 Only)
 		set_sb_pro_volume(sb.mixer.cda, (val & 0xf) | (val << 4));
