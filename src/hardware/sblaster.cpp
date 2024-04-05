@@ -1477,18 +1477,25 @@ static void dsp_change_rate(uint32_t freq)
 	sb.freq = freq;
 }
 
-#define DSP_SB16_ONLY \
-	if (sb.type != SBType::SB16) { \
-		LOG(LOG_SB, LOG_ERROR) \
-		("DSP:Command %2X requires SB16", sb.dsp.cmd); \
-		break; \
+static bool check_sb16_only()
+{
+	if (sb.type != SBType::SB16) {
+		LOG(LOG_SB, LOG_ERROR)
+		("DSP:Command %2X requires SB16", sb.dsp.cmd);
+		return false;
 	}
-#define DSP_SB2_ABOVE \
-	if (sb.type <= SBType::SB1) { \
-		LOG(LOG_SB, LOG_ERROR) \
-		("DSP:Command %2X requires SB2 or above", sb.dsp.cmd); \
-		break; \
+	return true;
+}
+
+static bool check_sb2_or_above()
+{
+	if (sb.type <= SBType::SB1) {
+		LOG(LOG_SB, LOG_ERROR)
+		("DSP:Command %2X requires SB2 or above", sb.dsp.cmd);
+		return false;
 	}
+	return true;
+}
 
 static void dsp_do_command()
 {
@@ -1624,8 +1631,9 @@ static void dsp_do_command()
 	case 0x1c: // Auto Init 8-bit DMA
 	           // Note: 0x90 is documented only for DSP ver.2.x and 3.x,
 	           // not 4.x
-		DSP_SB2_ABOVE;
-		dsp_prepare_dma_old(DmaMode::Pcm8Bit, true, false);
+		if (check_sb2_or_above()) {
+			dsp_prepare_dma_old(DmaMode::Pcm8Bit, true, false);
+		}
 		break;
 
 	case 0x38: // Write to SB MIDI Output
@@ -1643,13 +1651,15 @@ static void dsp_do_command()
 
 	case 0x42: // Set Input Samplerate
 		// Note: 0x42 is handled like 0x41, needed by Fasttracker II
-		DSP_SB16_ONLY;
-		dsp_change_rate((sb.dsp.in.data[0] << 8) | sb.dsp.in.data[1]);
+		if (check_sb16_only()) {
+			dsp_change_rate((sb.dsp.in.data[0] << 8) | sb.dsp.in.data[1]);
+		}
 		break;
 
 	case 0x48: // Set DMA Block Size
-		DSP_SB2_ABOVE;
-		sb.dma.autosize = 1 + sb.dsp.in.data[0] + (sb.dsp.in.data[1] << 8);
+		if (check_sb2_or_above()) {
+			sb.dma.autosize = 1 + sb.dsp.in.data[0] + (sb.dsp.in.data[1] << 8);
+		}
 		break;
 
 	case 0x75: // 075h : Single Cycle 4-bit ADPCM Reference
@@ -1669,9 +1679,10 @@ static void dsp_do_command()
 		break;
 
 	case 0x7d: // Auto Init 4-bit ADPCM Reference
-		DSP_SB2_ABOVE;
-		sb.adpcm.haveref = true;
-		dsp_prepare_dma_old(DmaMode::Adpcm4Bit, true, false);
+		if (check_sb2_or_above()) {
+			sb.adpcm.haveref = true;
+			dsp_prepare_dma_old(DmaMode::Adpcm4Bit, true, false);
+		}
 		break;
 
 	case 0x17: // 017h : Single Cycle 2-bit ADPCM Reference
@@ -1702,8 +1713,11 @@ static void dsp_do_command()
 	case 0xc8: case 0xc9: case 0xca: case 0xcb:
 	case 0xcc: case 0xcd: case 0xce: case 0xcf:
 		// clang-format on
-		DSP_SB16_ONLY;
-		/* Generic 8/16 bit DMA */
+
+		// Generic 8/16-bit DMA
+		if (!check_sb16_only()) {
+			break;
+		}
 		sb.dma.sign = (sb.dsp.in.data[0] & 0x10) > 0;
 
 		dsp_prepare_dma_new((sb.dsp.cmd & 0x10) ? DmaMode::Pcm16Bit
@@ -1714,7 +1728,9 @@ static void dsp_do_command()
 		break;
 
 	case 0xd5: // Halt 16-bit DMA
-		DSP_SB16_ONLY;
+		if (!check_sb16_only()) {
+			break;
+		}
 		[[fallthrough]];
 
 	case 0xd0: // Halt 8-bit DMA
@@ -1739,8 +1755,12 @@ static void dsp_do_command()
 		break;
 
 	case 0xd8: // Speaker status
-		DSP_SB2_ABOVE;
+		if (!check_sb2_or_above()) {
+			break;
+		}
+
 		dsp_flush_data();
+
 		if (sb.speaker) {
 			dsp_add_data(0xff);
 			// If the game is courteous enough to ask if the speaker
@@ -1754,7 +1774,9 @@ static void dsp_do_command()
 		break;
 
 	case 0xd6: // Continue DMA 16-bit
-		DSP_SB16_ONLY;
+		if (!check_sb16_only()) {
+			break;
+		}
 		[[fallthrough]];
 
 	case 0xd4: // Continue DMA 8-bit
@@ -1769,14 +1791,18 @@ static void dsp_do_command()
 		break;
 
 	case 0xd9: // Exit Autoinitialize 16-bit
-		DSP_SB16_ONLY;
+		if (!check_sb16_only()) {
+			break;
+		}
 		[[fallthrough]];
 
 	case 0xda: // Exit Autoinitialize 8-bit
-		DSP_SB2_ABOVE;
-		LOG(LOG_SB, LOG_NORMAL)("Exit Autoinit command");
+		if (check_sb2_or_above()) {
+			LOG(LOG_SB, LOG_NORMAL)("Exit Autoinit command");
 
-		sb.dma.autoinit = false; // Should stop itself
+			// Should stop itself
+			sb.dma.autoinit = false;
+		}
 		break;
 
 	case 0xe0: // DSP Identification - SB2.0+
@@ -1855,10 +1881,11 @@ static void dsp_do_command()
 		break;
 
 	case 0xf3: // Trigger 16bit IRQ
-		DSP_SB16_ONLY;
-		sb_raise_irq(SBIrq::Irq16);
+		if (check_sb16_only()) {
+			sb_raise_irq(SBIrq::Irq16);
 
-		LOG(LOG_SB, LOG_NORMAL)("Trigger 16bit IRQ command");
+			LOG(LOG_SB, LOG_NORMAL)("Trigger 16bit IRQ command");
+		}
 		break;
 
 	case 0xf8: // Undocumented, pre-SB16 only
@@ -1876,18 +1903,18 @@ static void dsp_do_command()
 	case 0x35:
 	case 0x36:
 	case 0x37:
-		DSP_SB2_ABOVE;
-
-		LOG(LOG_SB, LOG_ERROR)
-		("DSP:Unimplemented MIDI UART command %2X", sb.dsp.cmd);
+		if (check_sb2_or_above()) {
+			LOG(LOG_SB, LOG_ERROR)
+			("DSP:Unimplemented MIDI UART command %2X", sb.dsp.cmd);
+		}
 		break;
 
 	case 0x7f:
 	case 0x1f:
-		DSP_SB2_ABOVE;
-
-		LOG(LOG_SB, LOG_ERROR)
-		("DSP:Unimplemented auto-init DMA ADPCM command %2X", sb.dsp.cmd);
+		if (check_sb2_or_above()) {
+			LOG(LOG_SB, LOG_ERROR)
+			("DSP:Unimplemented auto-init DMA ADPCM command %2X", sb.dsp.cmd);
+		}
 		break;
 
 	case 0x20:
@@ -2055,13 +2082,17 @@ static void ctmixer_reset()
 	ctmixer_update_volumes();
 }
 
-#define SETPROVOL(_WHICH_, _VAL_) \
-	_WHICH_[0] = ((((_VAL_)&0xf0) >> 3) | (sb.type == SBType::SB16 ? 1 : 3)); \
-	_WHICH_[1] = ((((_VAL_)&0x0f) << 1) | (sb.type == SBType::SB16 ? 1 : 3));
+static void set_sb_pro_volume(uint8_t* dest, const uint8_t value)
+{
+	dest[0] = ((((value)&0xf0) >> 3) | (sb.type == SBType::SB16 ? 1 : 3));
+	dest[1] = ((((value)&0x0f) << 1) | (sb.type == SBType::SB16 ? 1 : 3));
+}
 
-#define MAKEPROVOL(_WHICH_) \
-	((((_WHICH_[0] & 0x1e) << 3) | ((_WHICH_[1] & 0x1e) >> 1)) | \
-	 ((sb.type == SBType::SBPro1 || sb.type == SBType::SBPro2) ? 0x11 : 0))
+static uint8_t make_sb_pro_volume(const uint8_t* src)
+{
+	return ((((src[0] & 0x1e) << 3) | ((src[1] & 0x1e) >> 1)) |
+	        ((sb.type == SBType::SBPro1 || sb.type == SBType::SBPro2) ? 0x11 : 0));
+}
 
 static void dsp_change_stereo(bool stereo)
 {
@@ -2090,19 +2121,19 @@ static void ctmixer_write(uint8_t val)
 		break;
 
 	case 0x02: // Master Volume (SB2 Only)
-		SETPROVOL(sb.mixer.master, (val & 0xf) | (val << 4));
+		set_sb_pro_volume(sb.mixer.master, (val & 0xf) | (val << 4));
 		ctmixer_update_volumes();
 		break;
 
 	case 0x04: // DAC Volume (SBPRO)
-		SETPROVOL(sb.mixer.dac, val);
+		set_sb_pro_volume(sb.mixer.dac, val);
 		ctmixer_update_volumes();
 		break;
 
 	case 0x06: // FM output selection
 	           // Somewhat obsolete with dual OPL SBpro + FM volume (SB2 Only)
 		// volume controls both channels
-		SETPROVOL(sb.mixer.fm, (val & 0xf) | (val << 4));
+		set_sb_pro_volume(sb.mixer.fm, (val & 0xf) | (val << 4));
 
 		ctmixer_update_volumes();
 
@@ -2114,7 +2145,7 @@ static void ctmixer_write(uint8_t val)
 		break;
 
 	case 0x08: // CDA Volume (SB2 Only)
-		SETPROVOL(sb.mixer.cda, (val & 0xf) | (val << 4));
+		set_sb_pro_volume(sb.mixer.cda, (val & 0xf) | (val << 4));
 		ctmixer_update_volumes();
 		break;
 
@@ -2146,22 +2177,22 @@ static void ctmixer_write(uint8_t val)
 		break;
 
 	case 0x22: // Master Volume (SBPRO)
-		SETPROVOL(sb.mixer.master, val);
+		set_sb_pro_volume(sb.mixer.master, val);
 		ctmixer_update_volumes();
 		break;
 
 	case 0x26: // FM Volume (SBPRO)
-		SETPROVOL(sb.mixer.fm, val);
+		set_sb_pro_volume(sb.mixer.fm, val);
 		ctmixer_update_volumes();
 		break;
 
 	case 0x28: // CD Audio Volume (SBPRO)
-		SETPROVOL(sb.mixer.cda, val);
+		set_sb_pro_volume(sb.mixer.cda, val);
 		ctmixer_update_volumes();
 		break;
 
 	case 0x2e: // Line-in Volume (SBPRO)
-		SETPROVOL(sb.mixer.lin, val);
+		set_sb_pro_volume(sb.mixer.lin, val);
 		break;
 
 	// case 0x20: // Master Volume Left (SBPRO) ?
@@ -2304,10 +2335,10 @@ static uint8_t ctmixer_read()
 		return ((sb.mixer.master[1] >> 1) & 0xe);
 
 	case 0x22: // Master Volume (SBPRO)
-		return MAKEPROVOL(sb.mixer.master);
+		return make_sb_pro_volume(sb.mixer.master);
 
 	case 0x04: // DAC Volume (SBPRO)
-		return MAKEPROVOL(sb.mixer.dac);
+		return make_sb_pro_volume(sb.mixer.dac);
 
 	case 0x06: // FM Volume (SB2 Only) + FM output selection
 		return ((sb.mixer.fm[1] >> 1) & 0xe);
@@ -2327,13 +2358,13 @@ static uint8_t ctmixer_read()
 		       (sb.mixer.filtered ? 0x20 : 0x00);
 
 	case 0x26: // FM Volume (SBPRO)
-		return MAKEPROVOL(sb.mixer.fm);
+		return make_sb_pro_volume(sb.mixer.fm);
 
 	case 0x28: // CD Audio Volume (SBPRO)
-		return MAKEPROVOL(sb.mixer.cda);
+		return make_sb_pro_volume(sb.mixer.cda);
 
 	case 0x2e: // Line-IN Volume (SBPRO)
-		return MAKEPROVOL(sb.mixer.lin);
+		return make_sb_pro_volume(sb.mixer.lin);
 
 	case 0x30: // Master Volume Left (SB16)
 		if (sb.type == SBType::SB16) {
@@ -2706,7 +2737,7 @@ static bool is_cms_enabled(const SBType sbtype)
 		// Backward compatibility with existing configurations
 		if (sect->Get_string("oplmode") == "cms") {
 			LOG_WARNING("%s: The 'cms' setting for 'oplmode' is deprecated; use 'cms = on' instead.",
-			            CardType());
+			            log_prefix());
 			return true;
 		} else {
 			const auto cms_str = sect->Get_string("cms");
@@ -2726,7 +2757,7 @@ static bool is_cms_enabled(const SBType sbtype)
 	case SBType::GameBlaster:
 		if (!cms_enabled) {
 			LOG_WARNING("%s: 'cms' setting is 'off', but is forced to 'auto' on the Game Blaster.",
-			            CardType());
+			            log_prefix());
 			auto* sect_updater = static_cast<Section_prop*>(
 			        control->GetSection("sblaster"));
 			sect_updater->Get_prop("cms")->SetValue("auto");
@@ -2735,7 +2766,7 @@ static bool is_cms_enabled(const SBType sbtype)
 	default: 
 		if (cms_enabled) {
 			LOG_WARNING("%s: 'cms' setting 'on' not supported on this card, forcing 'auto'.",
-			            CardType());
+			            log_prefix());
 			auto* sect_updater = static_cast<Section_prop*>(control->GetSection("sblaster"));
 			sect_updater->Get_prop("cms")->SetValue("auto");
 		}
