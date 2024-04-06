@@ -2689,7 +2689,7 @@ static void sblaster_callback(const uint32_t length)
 	}
 }
 
-static std::optional<SBType> parse_sbtype_pref(const std::string& pref)
+static SBType determine_sbtype(const std::string& pref)
 {
 	if (pref == "gb") {
 		return SBType::GameBlaster;
@@ -2707,18 +2707,15 @@ static std::optional<SBType> parse_sbtype_pref(const std::string& pref)
 		return SBType::SBPro2;
 
 	} else if (pref == "sb16") {
+		// Invalid settings result in defaulting to 'sb16'
 		return SBType::SB16;
 
-	} else if (const auto maybe_bool = parse_bool_setting(pref); maybe_bool) {
-		if (!*maybe_bool) {
-			return SBType::None;
-		}
 	}
-	return {};
+	// "falsey" setting ("off", "none", "false", etc.)
+	return SBType::None;
 }
 
-static std::optional<OplMode> parse_oplmode_pref(const std::string& pref,
-                                                 const SBType sb_type)
+static OplMode determine_oplmode(const std::string& pref, const SBType sb_type)
 {
 	if (pref == "cms") {
 		// Skip for backward compatibility with existing configurations
@@ -2737,6 +2734,7 @@ static std::optional<OplMode> parse_oplmode_pref(const std::string& pref,
 		return OplMode::Opl3Gold;
 
 	} else if (pref == "auto") {
+		// Invalid settings result in defaulting to 'auto'
 		switch (sb_type) {
 		case SBType::GameBlaster: return OplMode::None;
 		case SBType::SB1: return OplMode::Opl2;
@@ -2746,13 +2744,10 @@ static std::optional<OplMode> parse_oplmode_pref(const std::string& pref,
 		case SBType::SB16: return OplMode::Opl3;
 		case SBType::None: return OplMode::None;
 		}
-	} else if (const auto maybe_bool = parse_bool_setting(pref); maybe_bool) {
-		if (!*maybe_bool) {
-			return OplMode::None;
-		}
-	}
 
-	return {};
+	}
+	// "falsey" setting ("off", "none", "false", etc.)
+	return OplMode::None;
 }
 
 static bool is_cms_enabled(const SBType sbtype)
@@ -2876,39 +2871,8 @@ public:
 		sb.mixer.enabled = section->Get_bool("sbmixer");
 		sb.mixer.stereo  = false;
 
-
-		// Determine Sound Blaster model
-		sb.type = [&] {
-			const std::string pref = section->Get_string("sbtype");
-
-			if (const auto maybe_sbtype = parse_sbtype_pref(pref);
-			    maybe_sbtype) {
-				return *maybe_sbtype;
-			} else {
-				LOG_WARNING("SB: Invalid 'sbtype' setting: '%s', using 'sb16'",
-				            pref.c_str());
-				return SBType::SB16;
-			}
-		}();
-
-		// Determine OPL model
-		oplmode = [&] {
-			const std::string pref = section->Get_string("oplmode");
-
-			if (const auto maybe_oplmode = parse_oplmode_pref(pref, sb.type);
-			    maybe_oplmode) {
-				return *maybe_oplmode;
-			} else {
-				LOG_WARNING("OPL: Invalid 'oplmode' setting: '%s', using 'auto'",
-				            pref.c_str());
-
-				// Now it's guaranteed to succeed
-				const auto auto_oplmode = parse_oplmode_pref("auto",
-				                                             sb.type);
-				assert(auto_oplmode);
-				return *auto_oplmode;
-			}
-		}();
+		sb.type = determine_sbtype(section->Get_string("sbtype"));
+		oplmode = determine_oplmode(section->Get_string("oplmode"), sb.type);
 
 		// Init OPL
 		switch (oplmode) {
