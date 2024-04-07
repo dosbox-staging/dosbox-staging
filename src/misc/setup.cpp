@@ -1630,13 +1630,13 @@ void Config::ParseConfigFiles(const std_fs::path& config_dir)
 
 	// Finally: layer on additional config files specified with the '-conf'
 	// switch
-	for (const auto& config_file : arguments.conf) {
-		if (!ParseConfigFile("custom", config_file)) {
+	for (const auto& conf_file : arguments.conf) {
+		if (!ParseConfigFile("custom", conf_file)) {
 			// Try to load it from the user directory
-			const auto cfg = config_dir / config_file;
+			const auto cfg = config_dir / conf_file;
 			if (!ParseConfigFile("custom", cfg.string())) {
 				LOG_WARNING("CONFIG: Can't open custom config file '%s'",
-				            config_file.c_str());
+				            conf_file.c_str());
 			}
 		}
 	}
@@ -1690,12 +1690,12 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 
 		if (!sec) {
 			// Not a section: little duplicate from above
-			Section* sec = GetSectionFromProperty(
+			Section* secprop = GetSectionFromProperty(
 			        pvars[0].c_str());
 
-			if (sec) {
+			if (secprop) {
 				pvars.insert(pvars.begin(),
-				             std::string(sec->GetName()));
+				             std::string(secprop->GetName()));
 			} else {
 				safe_sprintf(return_msg,
 				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
