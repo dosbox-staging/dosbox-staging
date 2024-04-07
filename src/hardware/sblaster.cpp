@@ -1640,13 +1640,13 @@ static void dsp_do_command()
 
 	case 0x15:
 		// Wari hack. Waru uses this one instead of 0x14, but some
-		// weird stuff going on there anyway */
+		// weird stuff going on there anyway
 		[[fallthrough]];
 
 	case 0x91:
-		// Singe Cycle 8-Bit DMA High speed DAC */
+		// Singe Cycle 8-Bit DMA High speed DAC
 		// Note: 0x91 is documented only for DSP ver.2.x and 3.x,
-		// not 4.x */
+		// not 4.x
 		dsp_prepare_dma_old(DmaMode::Pcm8Bit, false, false);
 		break;
 
@@ -2499,9 +2499,9 @@ static uint8_t ctmixer_read()
 
 	default:
 		if (((sb.type == SBType::SBPro1 || sb.type == SBType::SBPro2) &&
-		     sb.mixer.index == 0x0c) || // Input control on SBPro */
+		     sb.mixer.index == 0x0c) || // Input control on SBPro
 		    (sb.type == SBType::SB16 && sb.mixer.index >= 0x3b &&
-		     sb.mixer.index <= 0x47)) { // New SB16 registers */
+		     sb.mixer.index <= 0x47)) { // New SB16 registers
 			ret = sb.mixer.unhandled[sb.mixer.index];
 		} else {
 			ret = 0xa;
