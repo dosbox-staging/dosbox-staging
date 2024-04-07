@@ -1040,9 +1040,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "                       to emulate the horizontal and vertical stretch controls\n"
 	        "                       of CRT monitors.");
 
-	const char* aspect_values[] = {
-	        "auto", "on", "square-pixels", "off", "stretch", nullptr};
-	string_prop->Set_values(aspect_values);
+	string_prop->Set_values({"auto", "on", "square-pixels", "off", "stretch"});
 
 	string_prop = secprop.Add_string("integer_scaling", always, "auto");
 	string_prop->Set_help(
@@ -1061,9 +1059,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
 	        "               viewport while maintaining the configured aspect ratio.");
 
-	const char* integer_scaling_values[] = {
-	        "auto", "vertical", "horizontal", "off", nullptr};
-	string_prop->Set_values(integer_scaling_values);
+	string_prop->Set_values({"auto", "vertical", "horizontal", "off"});
 
 	string_prop = secprop.Add_path("viewport", always, "fit");
 	string_prop->Set_help(
@@ -1101,12 +1097,10 @@ static void init_render_settings(Section_prop& secprop)
 	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
 
-	const char* mono_pal[] = {MonochromePaletteAmber,
-	                          MonochromePaletteGreen,
-	                          MonochromePaletteWhite,
-	                          MonochromePalettePaperwhite,
-	                          nullptr};
-	string_prop->Set_values(mono_pal);
+	string_prop->Set_values({MonochromePaletteAmber,
+	                         MonochromePaletteGreen,
+	                         MonochromePaletteWhite,
+	                         MonochromePalettePaperwhite});
 
 	string_prop = secprop.Add_string("cga_colors", only_at_start, "default");
 	string_prop->Set_help(

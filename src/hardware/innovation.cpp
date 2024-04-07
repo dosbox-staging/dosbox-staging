@@ -278,8 +278,7 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 
 	// Chip type
 	auto* str_prop = sec_prop.Add_string("sidmodel", when_idle, "none");
-	const char* sid_models[] = {"auto", "6581", "8580", "none", nullptr};
-	str_prop->Set_values(sid_models);
+	str_prop->Set_values({"auto", "6581", "8580", "none"});
 	str_prop->Set_help(
 	        "Model of chip to emulate in the Innovation SSI-2001 card:\n"
 	        "  auto:  Use the 6581 chip.\n"
@@ -291,8 +290,7 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 
 	// Chip clock frequency
 	str_prop = sec_prop.Add_string("sidclock", when_idle, "default");
-	const char* sid_clocks[] = {"default", "c64ntsc", "c64pal", "hardsid", nullptr};
-	str_prop->Set_values(sid_clocks);
+	str_prop->Set_values({"default", "c64ntsc", "c64pal", "hardsid"});
 	str_prop->Set_help(
 	        "The SID chip's clock frequency, which is jumperable on reproduction cards:\n"
 	        "  default:  0.895 MHz, per the original SSI-2001 card (default).\n"
@@ -302,8 +300,7 @@ static void init_innovation_dosbox_settings(Section_prop& sec_prop)
 
 	// IO Address
 	auto* hex_prop          = sec_prop.Add_hex("sidport", when_idle, 0x280);
-	const char* sid_ports[] = {"240", "260", "280", "2a0", "2c0", nullptr};
-	hex_prop->Set_values(sid_ports);
+	hex_prop->Set_values({"240", "260", "280", "2a0", "2c0"});
 	hex_prop->Set_help(
 	        "The IO port address of the Innovation SSI-2001 (280 by default).");
 

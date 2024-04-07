@@ -4289,9 +4289,7 @@ static void config_add_sdl()
 	        "  N:         Specify custom refresh rate in Hz (decimal values are allowed;\n"
 	        "             23.000 is the allowed minimum).");
 
-	const char* vsync_prefs[] = {"auto", "on", "adaptive", "off", "yield", nullptr};
 	pstring = sdl_sec->Add_string("vsync", always, "auto");
-
 	pstring->Set_help(
 	        "Set the host video driver's vertical synchronization (vsync) mode:\n"
 	        "  auto:      Limit vsync to beneficial cases, such as when using an\n"
@@ -4307,7 +4305,7 @@ static void config_add_sdl()
 	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
 	        "             the risk of tearing in some games.\n"
 	        "  yield:     Let the host's video driver control video synchronization.");
-	pstring->Set_values(vsync_prefs);
+	pstring->Set_values({"auto", "on", "adaptive", "off", "yield"});
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 0);
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
@@ -4315,7 +4313,6 @@ static void config_add_sdl()
 	               "at 70 Hz. 0 disables this and will always render (default).");
 	pint->SetMinMax(0, 14000);
 
-	const char *presentation_modes[] = {"auto", "cfr", "vfr", nullptr};
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
 	pstring->Set_help(
 	        "Select the frame presentation mode:\n"
@@ -4323,16 +4320,7 @@ static void config_add_sdl()
 	        "         based on host and DOS frame rates (default).\n"
 	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
 	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
-	pstring->Set_values(presentation_modes);
-
-	const char* outputs[] =
-	{ "texture",
-	  "texturenb",
-#if C_OPENGL
-	  "opengl",
-	  "openglnb",
-#endif
-	  nullptr };
+	pstring->Set_values({"auto", "cfr", "vfr"});
 
 #if C_OPENGL
 	Pstring = sdl_sec->Add_string("output", always, "opengl");
@@ -4349,7 +4337,12 @@ static void config_add_sdl()
 	Pstring->SetDeprecatedWithAlternateValue("surface", "texture");
 #endif
 	Pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
-	Pstring->Set_values(outputs);
+	Pstring->Set_values({
+		"texture", "texturenb",
+#if C_OPENGL
+		"opengl", "openglnb",
+#endif
+	});
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
 	pstring->Set_help("Render driver to use in 'texture' output mode ('auto' by default).\n"
@@ -4374,20 +4367,11 @@ static void config_add_sdl()
 	                 "('auto auto' by default)\n"
 	                 "'auto' lets the host operating system manage the priority.");
 
-	const char *priority_level_choices[] = {
-	        "auto",
-	        "lowest",
-	        "lower",
-	        "normal",
-	        "higher",
-	        "highest",
-	        nullptr,
-	};
 	psection = Pmulti->GetSection();
-	psection->Add_string("active", always, priority_level_choices[0])
-	        ->Set_values(priority_level_choices);
-	psection->Add_string("inactive", always, priority_level_choices[0])
-	        ->Set_values(priority_level_choices);
+	psection->Add_string("active", always, "auto")
+	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
+	psection->Add_string("inactive", always, "auto")
+	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
 
 	pbool = sdl_sec->Add_bool("mute_when_inactive", on_start, false);
 	pbool->Set_help("Mute the sound when the window is inactive (disabled by default).");
@@ -4408,8 +4392,7 @@ static void config_add_sdl()
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
 	        "running ('auto' by default).");
-	const char *ssopts[] = {"auto", "allow", "block", nullptr};
-	pstring->Set_values(ssopts);
+	pstring->Set_values({"auto", "allow", "block"});
 
 	TITLEBAR_AddConfig(*sdl_sec);
 }

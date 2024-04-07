@@ -690,20 +690,6 @@ void Property::MaybeSetBoolValid(const std::string_view valid_value)
 	}
 }
 
-void Property::Set_values(const char* const* in)
-{
-	Value::Etype type = default_value.type;
-
-	int i = 0;
-
-	while (in[i]) {
-		MaybeSetBoolValid(in[i]);
-		Value val(in[i], type);
-		valid_values.push_back(val);
-		i++;
-	}
-}
-
 void Property::SetDeprecatedWithAlternateValue(const char* deprecated_value,
                                                const char* alternate_value)
 {

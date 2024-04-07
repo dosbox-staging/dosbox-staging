@@ -13444,15 +13444,13 @@ void init_imfc_dosbox_settings(Section_prop& secprop)
 
 	const auto hex_prop = secprop.Add_hex("imfc_base", when_idle, 0x2A20);
 	assert(hex_prop);
-	const char* const bases[] = {"2A20", "2A30", nullptr};
-	hex_prop->Set_values(bases);
+	hex_prop->Set_values({"2A20", "2A30"});
 	hex_prop->Set_help(
 	        "The IO base address of the IBM Music Feature Card (2A20 by default).");
 
 	const auto int_prop = secprop.Add_int("imfc_irq", when_idle, 3);
 	assert(int_prop);
-	const char* const irqs[] = {"2", "3", "4", "5", "6", "7", nullptr};
-	int_prop->Set_values(irqs);
+	int_prop->Set_values({"2", "3", "4", "5", "6", "7"});
 	int_prop->Set_help(
 	        "The IRQ number of the IBM Music Feature Card (3 by default).");
 
