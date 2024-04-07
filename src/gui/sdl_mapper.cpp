@@ -3246,43 +3246,27 @@ static void MAPPER_Destroy(Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-static bool should_skip_bind_keys(const Section_prop* section)
+static bool should_skip_unchanged_titlebar(const Section_prop* section)
 {
-	// Filter out unneeded calls - we only need to execute MAPPER_BindKeys
-	// when one of the values have changed; we do not want it to be executed
-	// if 'window_titlebar' was set (even to the same value as it had) to
-	// avoid screen flicker
+	// Filter out unneeded calls - do not execute MAPPER_BindKeys if only
+	// window titlebar setting has changed, to avoid flicker
 
-	const std::vector<std::string> values = {
-	        section->Get_string("mapperfile"),
-	        section->Get_string("fullscreen"),
-	        section->Get_string("fullresolution"),
-	        section->Get_string("window_position"),
-	        std::to_string(section->Get_bool("window_decorations")),
-	        std::to_string(section->Get_int("transparency")),
-	        section->Get_string("vsync"),
-	        section->Get_string("presentation_mode"),
-	        section->Get_string("output"),
-	        section->Get_string("priority"),
-	};
+	const std::string curr_titlebar = section->Get_string("window_titlebar");
 
-	static bool first_time = true;
-	static std::vector<std::string> old_values = {};
-
-	if (!first_time && values == old_values) {
+	static std::optional<std::string> prev_titlebar = {};
+	if (prev_titlebar && curr_titlebar != *prev_titlebar) {
+		prev_titlebar = curr_titlebar;
 		return true;
 	}
 
-	first_time = false;
-	old_values = values;
-
+	prev_titlebar = curr_titlebar;
 	return false;
 }
 
 void MAPPER_BindKeys(Section* sec)
 {
 	const auto section = static_cast<const Section_prop*>(sec);
-	if (should_skip_bind_keys(section)) {
+	if (should_skip_unchanged_titlebar(section)) {
 		return;
 	}
 
