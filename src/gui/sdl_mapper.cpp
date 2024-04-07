@@ -3246,21 +3246,49 @@ static void MAPPER_Destroy(Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-void MAPPER_BindKeys(Section *sec)
+static bool should_skip_bind_keys(const Section_prop* section)
 {
-	// Get the mapper file set by the user
-	const auto section = static_cast<const Section_prop *>(sec);
-	const auto mapperfile_value = section->Get_string("mapperfile");
-	const auto property = section->Get_path("mapperfile");
-	
-	// Filter out unneeded calls
+	// Filter out unneeded calls - we only need to execute MAPPER_BindKeys
+	// when one of the values have changed; we do not want it to be executed
+	// if 'window_titlebar' was set (even to the same value as it had) to
+	// avoid screen flicker
+
+	const std::vector<std::string> values = {
+	        section->Get_string("mapperfile"),
+	        section->Get_string("fullscreen"),
+	        section->Get_string("fullresolution"),
+	        section->Get_string("window_position"),
+	        std::to_string(section->Get_bool("window_decorations")),
+	        std::to_string(section->Get_int("transparency")),
+	        section->Get_string("vsync"),
+	        section->Get_string("presentation_mode"),
+	        section->Get_string("output"),
+	        section->Get_string("priority"),
+	};
+
 	static bool first_time = true;
-	static std::string old_mapperfile_value = {};
-	if (!first_time && mapperfile_value == old_mapperfile_value) {
+	static std::vector<std::string> old_values = {};
+
+	if (!first_time && values == old_values) {
+		return true;
+	}
+
+	first_time = false;
+	old_values = values;
+
+	return false;
+}
+
+void MAPPER_BindKeys(Section* sec)
+{
+	const auto section = static_cast<const Section_prop*>(sec);
+	if (should_skip_bind_keys(section)) {
 		return;
 	}
-	first_time = false;
-	old_mapperfile_value = mapperfile_value;
+
+	// Get the mapper file set by the user
+	const auto mapperfile_value = section->Get_string("mapperfile");
+	const auto property         = section->Get_path("mapperfile");
 
 	// Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus();
