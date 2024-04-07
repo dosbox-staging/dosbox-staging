@@ -306,29 +306,26 @@ static void init_mt32_dosbox_settings(Section_prop& sec_prop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	const char* models[] = {"auto",
-	                        Cm32lModelName,
-	                        cm32l_102_model.GetName(),
-	                        cm32l_100_model.GetName(),
-	                        cm32ln_100_model.GetName(),
-
-	                        Mt32ModelName,
-	                        Mt32OldModelName,
-	                        mt32_107_model.GetName(),
-	                        mt32_106_model.GetName(),
-	                        mt32_105_model.GetName(),
-	                        mt32_104_model.GetName(),
-	                        mt32_bluer_model.GetName(),
-
-	                        Mt32NewModelName,
-	                        mt32_207_model.GetName(),
-	                        mt32_206_model.GetName(),
-	                        mt32_204_model.GetName(),
-	                        mt32_203_model.GetName(),
-	                        nullptr};
-
 	auto* str_prop = sec_prop.Add_string("model", when_idle, "auto");
-	str_prop->Set_values(models);
+	str_prop->Set_values({"auto",
+	                      Cm32lModelName,
+	                      cm32l_102_model.GetName(),
+	                      cm32l_100_model.GetName(),
+	                      cm32ln_100_model.GetName(),
+
+	                      Mt32ModelName,
+	                      Mt32OldModelName,
+	                      mt32_107_model.GetName(),
+	                      mt32_106_model.GetName(),
+	                      mt32_105_model.GetName(),
+	                      mt32_104_model.GetName(),
+	                      mt32_bluer_model.GetName(),
+
+	                      Mt32NewModelName,
+	                      mt32_207_model.GetName(),
+	                      mt32_206_model.GetName(),
+	                      mt32_204_model.GetName(),
+	                      mt32_203_model.GetName()});
 	str_prop->Set_help(
 	        "The Roland MT-32/CM-32ML model to use.\n"
 	        "You must have the ROM files for the selected model available (see 'romdir').\n"

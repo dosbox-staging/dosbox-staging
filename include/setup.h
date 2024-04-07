@@ -134,7 +134,6 @@ public:
 
 	virtual ~Property() = default;
 
-	void Set_values(const char* const* in);
 	void Set_values(const std::vector<std::string>& in);
 	void SetDeprecatedWithAlternateValue(const char* deprecated_value,
 	                                     const char* alternate_value);

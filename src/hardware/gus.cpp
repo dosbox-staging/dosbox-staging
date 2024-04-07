@@ -1679,22 +1679,18 @@ void init_gus_dosbox_settings(Section_prop &secprop)
 
 	auto *hex_prop = secprop.Add_hex("gusbase", when_idle, 0x240);
 	assert(hex_prop);
-	const char *const bases[] = {"240", "220", "260", "280",  "2a0",
-	                             "2c0", "2e0", "300", nullptr};
-	hex_prop->Set_values(bases);
+	hex_prop->Set_values(
+	        {"240", "220", "260", "280", "2a0", "2c0", "2e0", "300"});
 	hex_prop->Set_help("The IO base address of the Gravis UltraSound (240 by default).");
 
 	auto *int_prop = secprop.Add_int("gusirq", when_idle, 5);
 	assert(int_prop);
-	const char *const irqs[] = {"3",  "5",  "7",  "9",
-	                            "10", "11", "12", nullptr};
-	int_prop->Set_values(irqs);
+	int_prop->Set_values({"3", "5", "7", "9", "10", "11", "12"});
 	int_prop->Set_help("The IRQ number of the Gravis UltraSound (5 by default).");
 
 	int_prop = secprop.Add_int("gusdma", when_idle, 3);
 	assert(int_prop);
-	const char *const dmas[] = {"0", "1", "3", "5", "6", "7", nullptr};
-	int_prop->Set_values(dmas);
+	int_prop->Set_values({"0", "1", "3", "5", "6", "7"});
 	int_prop->Set_help("The DMA channel of the Gravis UltraSound (3 by default).");
 
 	auto* str_prop = secprop.Add_string("ultradir", when_idle, "C:\\ULTRASND");

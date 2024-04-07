@@ -53,33 +53,6 @@ constexpr auto model_com_2button_msm_str  = "2button+msm";
 constexpr auto model_com_3button_msm_str  = "3button+msm";
 constexpr auto model_com_wheel_msm_str    = "wheel+msm";
 
-static const char *list_capture_types[] = {
-	capture_type_seamless_str,
-	capture_type_onclick_str,
-	capture_type_onstart_str,
-	capture_type_nomouse_str,
-	nullptr
-};
-
-static const char* list_models_ps2[] = {
-	model_ps2_standard_str,
-        model_ps2_intellimouse_str,
-        model_ps2_explorer_str,
-        model_ps2_nomouse_str,
-        nullptr
-};
-
-static const char *list_models_com[] = {
-	model_com_2button_str,
-	model_com_3button_str,
-	model_com_wheel_str,
-	model_com_msm_str,
-	model_com_2button_msm_str,
-	model_com_3button_msm_str,
-	model_com_wheel_msm_str,
-	nullptr
-};
-
 static const std::vector<uint16_t> list_rates = {
         // Commented out values are probably not interesting
         // for the end user as "boosted" sampling rate
@@ -335,7 +308,10 @@ static void config_init(Section_prop &secprop)
 	prop_str = secprop.Add_string("mouse_capture", always,
 	                              capture_type_onclick_str);
 	assert(prop_str);
-	prop_str->Set_values(list_capture_types);
+	prop_str->Set_values({capture_type_seamless_str,
+	                      capture_type_onclick_str,
+	                      capture_type_onstart_str,
+	                      capture_type_nomouse_str});
 	prop_str->Set_help(
 	        "Set the mouse capture behaviour:\n"
 	        "  onclick:   Capture the mouse when clicking any mouse button in the window\n"
@@ -406,7 +382,10 @@ static void config_init(Section_prop &secprop)
 	                              only_at_start,
 	                              model_ps2_explorer_str);
 	assert(prop_str);
-	prop_str->Set_values(list_models_ps2);
+	prop_str->Set_values({model_ps2_standard_str,
+	                      model_ps2_intellimouse_str,
+	                      model_ps2_explorer_str,
+	                      model_ps2_nomouse_str});
 	prop_str->Set_help(
 	        "PS/2 AUX port mouse model:\n"
 	        "  standard:      3 buttons, standard PS/2 mouse.\n"
@@ -418,7 +397,13 @@ static void config_init(Section_prop &secprop)
 	                              only_at_start,
 	                              model_com_wheel_msm_str);
 	assert(prop_str);
-	prop_str->Set_values(list_models_com);
+	prop_str->Set_values({model_com_2button_str,
+	                      model_com_3button_str,
+	                      model_com_wheel_str,
+	                      model_com_msm_str,
+	                      model_com_2button_msm_str,
+	                      model_com_3button_msm_str,
+	                      model_com_wheel_msm_str});
 	prop_str->Set_help(
 	        "COM (serial) port default mouse model:\n"
 	        "  2button:      2 buttons, Microsoft mouse.\n"

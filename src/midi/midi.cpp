@@ -725,7 +725,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	auto* str_prop = secprop.Add_string("mididevice", when_idle, "auto");
-	const char* midi_devices[] =
+	const std::vector<std::string> midi_devices =
 	{ "auto",
 #if defined(MACOSX)
 #if C_COREMIDI
@@ -748,8 +748,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 #if C_MT32EMU
 	  "mt32",
 #endif
-	  "none",
-	  nullptr };
+	  "none"};
 
 	str_prop->Set_values(midi_devices);
 	str_prop->Set_help(
@@ -808,8 +807,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "    In that case, add 'delaysysex' (e.g. 'midiconfig = 2 delaysysex').");
 
 	str_prop = secprop.Add_string("mpu401", when_idle, "intelligent");
-	const char* mputypes[] = {"intelligent", "uart", "none", nullptr};
-	str_prop->Set_values(mputypes);
+	str_prop->Set_values({"intelligent", "uart", "none"});
 	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
 
 	auto* bool_prop = secprop.Add_bool("raw_midi_output", when_idle, false);
