@@ -610,7 +610,7 @@ void CONFIG::Run(void)
 						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
 						         p->propname.c_str(),
 						         sec->GetName(),
-						         p->GetHelp());
+						         p->GetHelp().c_str());
 
 						if (!p->IsDeprecated()) {
 							if (!possible_values.empty()) {
