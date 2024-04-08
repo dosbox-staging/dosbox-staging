@@ -725,93 +725,98 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	auto* str_prop = secprop.Add_string("mididevice", when_idle, "auto");
-	const std::vector<std::string> midi_devices =
-	{ "auto",
-#if defined(MACOSX)
-#if C_COREMIDI
-	  "coremidi",
-#endif
-#if C_COREAUDIO
-	  "coreaudio",
-#endif
-#elif defined(WIN32)
-	  "win32",
-#else
-	  "oss",
-#endif
-#if C_ALSA
-	  "alsa",
-#endif
-#if C_FLUIDSYNTH
-	  "fluidsynth",
-#endif
-#if C_MT32EMU
-	  "mt32",
-#endif
-	  "none"};
-
-	str_prop->Set_values(midi_devices);
-	str_prop->Set_help(
-	        "Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
-	        "('auto' by default):\n"
-#if defined(MACOSX)
-#if C_COREMIDI
-	        "  coremidi:    Any device that has been configured in the macOS\n"
-	        "               Audio MIDI Setup.\n"
-#endif
-#if C_COREAUDIO
-	        "  coreaudio:   Use the built-in macOS MIDI synthesiser.\n"
-#endif
-#elif defined(WIN32)
-	        "  win32:       Use the Win32 MIDI playback interface.\n"
-#else
-	        "  oss:         Use the Linux OSS MIDI playback interface.\n"
-#endif
-#if C_ALSA
-	        "  alsa:        Use the Linux ALSA MIDI playback interface.\n"
-#endif
-#if C_FLUIDSYNTH
+	str_prop->Set_help("Set where MIDI data from the emulated MPU-401 MIDI interface is sent\n"
+	                   "('auto' by default):");
+	str_prop->SetOptionHelp("coremidi",
+	                        "  coremidi:    Any device that has been configured in the macOS\n"
+	                        "               Audio MIDI Setup.");
+	str_prop->SetOptionHelp("coreaudio",
+	                        "  coreaudio:   Use the built-in macOS MIDI synthesiser.");
+	str_prop->SetOptionHelp("win32",
+	                        "  win32:       Use the Win32 MIDI playback interface.");
+	str_prop->SetOptionHelp(
+	        "oss",
+	                        "  oss:         Use the Linux OSS MIDI playback interface.");
+	str_prop->SetOptionHelp(
+	        "alsa",
+	                        "  alsa:        Use the Linux ALSA MIDI playback interface.");
+	str_prop->SetOptionHelp(
+	        "fluidsynth",
 	        "  fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).\n"
-	        "               See the [fluidsynth] section for detailed configuration.\n"
-#endif
-#if C_MT32EMU
+	        "               See the [fluidsynth] section for detailed configuration.");
+	str_prop->SetOptionHelp(
+	        "mt32",
 	        "  mt32:        The built-in Roland MT-32 synthesizer.\n"
-	        "               See the [mt32] section for detailed configuration.\n"
-#endif
+	        "               See the [mt32] section for detailed configuration.");
+	str_prop->SetOptionHelp(
+	        "auto",
 	        "  auto:        Either one of the built-in MIDI synthesisers (if `midiconfig` is\n"
 	        "               set to 'fluidsynth' or 'mt32'), or a MIDI device external to\n"
 	        "               DOSBox (any other 'midiconfig' value). This might be a software\n"
-	        "               synthesizer or physical device. This is the default behaviour.\n"
-	        "  none:        Disable MIDI output.");
+	        "               synthesizer or physical device. This is the default behaviour.");
+	str_prop->SetOptionHelp("none", "  none:        Disable MIDI output.");
+	str_prop->Set_values({
+		"auto",
+#if defined(MACOSX)
+	#if C_COREMIDI
+		        "coremidi",
+	#endif
+	#if C_COREAUDIO
+		        "coreaudio",
+	#endif
+#elif defined(WIN32)
+		        "win32",
+#else
+		        "oss",
+#endif
+#if C_ALSA
+		        "alsa",
+#endif
+#if C_FLUIDSYNTH
+		        "fluidsynth",
+#endif
+		        "mt32",
+		        "none"
+	});
 
 	str_prop = secprop.Add_string("midiconfig", when_idle, "");
 	str_prop->Set_help(
 	        "Configuration options for the selected MIDI interface (unset by default).\n"
 	        "This is usually the ID or name of the MIDI synthesizer you want\n"
 	        "to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').\n"
-#if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
-	        "Notes:\n"
-	        "  - This option has no effect when using the built-in synthesizers\n"
-	        "    ('mididevice = fluidsynth' or 'mididevice = mt32').\n"
-#endif
-#if C_COREAUDIO
-	        "  - When using 'coreaudio', you can specify a SoundFont here.\n"
-#endif
-#if C_ALSA
-	        "  - When using ALSA, use the Linux command 'aconnect -l' to list all open\n"
-	        "    MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer\n"
-	        "    client 14, port 0).\n"
-#endif
+	        "Notes:\n");
+	str_prop->SetOptionHelp("fluidsynth_or_mt32emu",
+	                        "  - This option has no effect when using the built-in synthesizers\n"
+	                        "    ('mididevice = fluidsynth' or 'mididevice = mt32').");
+	str_prop->SetOptionHelp("coreaudio",
+	                        "  - When using 'coreaudio', you can specify a SoundFont here.");
+	str_prop->SetOptionHelp("alsa",
+	                        "  - When using ALSA, use the Linux command 'aconnect -l' to list all open\n"
+	                        "    MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer\n"
+	                        "    client 14, port 0).");
+	str_prop->SetOptionHelp(
+	        "mt32",
 	        "  - If you're using a physical Roland MT-32 with revision 0 PCB, the hardware\n"
 	        "    may require a delay in order to prevent its buffer from overflowing.\n"
 	        "    In that case, add 'delaysysex' (e.g. 'midiconfig = 2 delaysysex').");
+	str_prop->SetEnabledOptions({
+#if (C_FLUIDSYNTH == 1 || C_MT32EMU == 1)
+		"fluidsynth_or_mt32emu",
+#endif
+#if C_COREAUDIO
+		"coreaudio",
+#endif
+#if C_ALSA
+		"alsa",
+#endif
+		"mt32",
+	});
 
 	str_prop = secprop.Add_string("mpu401", when_idle, "intelligent");
 	str_prop->Set_values({"intelligent", "uart", "none"});
 	str_prop->Set_help("MPU-401 mode to emulate ('intelligent' by default).");
 
 	auto* bool_prop = secprop.Add_bool("raw_midi_output", when_idle, false);
-	assert(bool_prop);
 	bool_prop->Set_help(
 	        "Enable raw, unaltered MIDI output (disabled by default).\n"
 	        "The MIDI drivers of many games don't fully conform to the MIDI standard,\n"
