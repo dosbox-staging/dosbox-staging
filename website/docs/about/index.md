@@ -18,58 +18,56 @@ Because **DOSBox Staging** comes with sensible defaults, you'll need to write
 a lot less configuration than with older DOSBox versions. Most games and
 application software require no tweaking and will work fine with the stock
 settings. However, the extensive configuration options and advanced features
-are available if you wish to dwelve deeper.
+are available if you wish to delve deeper. Please refer to the [Feature
+highlights](../index.md#feature-highlights) on our front page to learn more
+about these.
+
+The key features for developers are summarised [here](https://github.com/dosbox-staging/dosbox-staging?tab=readme-ov-file#key-features-for-developers).
 
 
 ## Goals
 
-- Improve the **out-of-the-box** experience for new users.
+- Faithfully emulate the **DOS operating environment** running on IBM PC
+  compatibles and the IBM PCjr with the primary goal of running **all PC
+  Booter, DOS and Windows 3.x games** released in the 1981--2000 period. Running
+  applications and demoscene productions or more recent DOS software is a
+  secondary objective.
+- Improve the **out-of-the-box experience**.
+- Focus on supporting up-to-date, **current operating systems** and **modern
+ hardware**.
+- Implement **new features** and **quality-of-life** improvements.
+- Deliver a consistent **cross-platform experience**.
+- Leverage **upstream** and **community developments** in DOSBox.
 - Encourage **new contributors** by removing barriers to entry.
-- Implement **new features** and quality-of-life improvements.
-- Fix, clean up, and integrate notable **community-developed patches** that
-  fill valuable general-purpose and/or gaming-focused emulation holes
-  (provided they don't impact broader compatibility, performance, stability,
-  or code maintainability).
-- Prioritize the **quality** of newly written code to minimize technical
-  debt and ease future maintenance, which generally means following the
-  [Staging Coding Style
-  Guide](https://github.com/dosbox-staging/dosbox-staging/blob/main/CONTRIBUTING.md#coding-style)
-  and being aware of best practices, like the [C++ Core
-  Guidelines](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
-- Deliver a consistent cross-platform experience.
-- Leverage upstream and community developments in DOSBox.
-- Focus on supporting up-to-date, current operating systems and modern
- hardware.
-
-Please refer to the [Feature highlights](../index.md#feature-highlights) section of our
-front page to learn about the advanced features DOSBox Staging offers.
-
-The key features for developers are summarised
-[here](https://github.com/dosbox-staging/dosbox-staging?tab=readme-ov-file#key-features-for-developers).
-
-We plan to add the features listed in [the
-backlog](https://github.com/dosbox-staging/dosbox-staging/projects/3).
+- Fix, clean up, and integrate notable **community-developed patches**.
+- Prioritise **code quality** to minimise technical
+  debt and ease maintenance. This generally means following the
+  [Staging Coding Style Guide](https://github.com/dosbox-staging/dosbox-staging/blob/main/CONTRIBUTING.md#coding-style)
+  and best practices such as the [C++ Core Guidelines](http://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
 
 
 ## Non-goals
 
-- Support old operating systems (Windows 9x/Me/XP, OS/2, and Mac OS X 10.5)
-  and limited CPU/memory hardware, which are constraints
-  [DOSBox](https://www.dosbox.com/) continues to support.
+- Support old, end-of-life operating systems (e.g., Windows 7 or older, OS/2,
+  or Mac OS X 10.5 or older) and limited CPU/memory hardware, which are
+  constraints the original [DOSBox](https://www.dosbox.com/) continues to
+  support.
 
 - Support the use of Windows 9x/Me in the emulator. Windows 9x/Me emulation
-  is supported by projects such as [QEMU](https://www.qemu.org) and
-  [VirtualBox](https://www.virtualbox.org/), although DOSBox forks like
-  [DOSBox-X](https://www.dosbox-x.com/) and [DOSBox
-  Pure](https://github.com/schellingb/dosbox-pure) also support this. This
-  may change if wanted by the DOSBox Staging community in general.
+  is supported by projects such as [QEMU](https://www.qemu.org),
+  [VirtualBox](https://www.virtualbox.org/) and the
+  [DOSBox-X](https://www.dosbox-x.com/) and
+  [DOSBox Pure](https://github.com/schellingb/dosbox-pure) forks.
+  This may change if the DOSBox Staging community wants it in general.
 
-- Pursue hardware accuracy when it impacts the above goals or detracts
-  from the source material, although config options may be added in case of
-  issues. If you need perfect emulation in terms of accuracy, you may look at
-  [PCem](https://pcem-emulator.co.uk/) and its derivatives like
-  [86Box](https://86box.net) and [PCBox](https://pcbox.github.io/), which
-  are examples of cycle-accurate emulators.
+- Pursue hardware accuracy above all else. If you’re after a more faithful
+  emulation of an entire PC, look into
+  [MartyPC](https://github.com/dbalsom/martypc),
+  [PCem](https://pcem-emulator.co.uk/), [86Box](https://86box.net),
+  [PCBox](https://pcbox.github.io/), [QEMU](https://www.qemu.org/)
+  or [VirtualBox](https://www.virtualbox.org/)
+  (although DOSBox Staging often matches or surpasses the graphics and
+  especially audio emulation fidelity of these other emulators).
 
 - Be the fastest DOS emulator on x86 hardware. Linux users interested in
   emulation speed should look at [dosemu2](https://github.com/dosemu2/dosemu2).
@@ -78,7 +76,7 @@ backlog](https://github.com/dosbox-staging/dosbox-staging/projects/3).
   [FreeDOS](https://www.freedos.org/).
 
 
-## Relationship to DOSBox
+## Relationship to the original DOSBox project
 
 **DOSBox Staging** is separate from and not supported by the
 SourceForge-hosted [DOSBox](https://www.dosbox.com/) project or its
@@ -108,4 +106,3 @@ Content on this site is licensed under a
 [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 DOSBox Staging is licensed under a [GNU GPL version 2 or later](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
-
