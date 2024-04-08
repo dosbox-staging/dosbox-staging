@@ -277,17 +277,21 @@ void LOG_StartUp(void) {
 	loggrp[LOG_REELMAGIC].front="REELMAGIC";
 	
 	/* Register the log section */
-	Section_prop * sect=control->AddSection_prop("log",LOG_Init);
-	Prop_string* Pstring = sect->Add_string("logfile",Property::Changeable::Always,"");
-	Pstring->Set_help("File where the log messages will be saved to");
+	Section_prop* sect   = control->AddSection_prop("log", LOG_Init);
+	Prop_string* pstring = sect->Add_string("logfile",
+	                                        Property::Changeable::Always,
+	                                        "");
+	pstring->Set_help("Path of the log file.");
 	char buf[64];
-	for (Bitu i = LOG_ALL + 1;i < LOG_MAX;i++) {
+	for (Bitu i = LOG_ALL + 1; i < LOG_MAX; i++) {
 		safe_strcpy(buf, loggrp[i].front);
 		lowcase(buf);
-		Prop_bool* Pbool = sect->Add_bool(buf,Property::Changeable::Always,true);
-		Pbool->Set_help("Enable/disable logging of this type.");
+		Prop_bool* pbool = sect->Add_bool(buf,
+		                                  Property::Changeable::Always,
+		                                  true);
+		pbool->Set_help("Enable/disable logging of this type.");
 	}
-//	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
+	//	MSG_Add("LOG_CONFIGFILE_HELP","Logging related options for the debugger.\n");
 }
 
 
