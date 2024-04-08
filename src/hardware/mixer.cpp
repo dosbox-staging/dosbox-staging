@@ -2906,28 +2906,26 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	assert(int_prop);
 	int_prop->Set_values(
 	        {"8000", "11025", "16000", "22050", "32000", "44100", "48000"});
-	int_prop->Set_help("Mixer sample rate (48000 by default).");
+	int_prop->Set_help("Mixer sample rate (%s by default).");
 
 	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_blocksize);
 	int_prop->Set_values(
 	        {"128", "256", "512", "1024", "2048", "4096", "8192"});
-	int_prop->Set_help(format_str(
-	        "Mixer block size in sample frames (%d by default). Larger values might help\n"
-	        "with sound stuttering but the sound will also be more lagged.",
-	        default_blocksize));
+	int_prop->Set_help(
+	        "Mixer block size in sample frames (%s by default). Larger values might help\n"
+	        "with sound stuttering but the sound will also be more lagged.");
 
 	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_prebuffer_ms);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
-	int_prop->Set_help(format_str("How many milliseconds of sound to render on top of the blocksize\n"
-	                                 "(%d by default). Larger values might help with sound stuttering but the sound\n"
-	                                 "will also be more lagged.",
-	                                 default_prebuffer_ms));
+	int_prop->Set_help(
+	        "How many milliseconds of sound to render on top of the blocksize\n"
+	        "(%s by default). Larger values might help with sound stuttering but the sound\n"
+	        "will also be more lagged.");
 
 	bool_prop = sec_prop.Add_bool("negotiate", only_at_start, default_allow_negotiate);
 	bool_prop->Set_help(
-	        format_str("Let the system audio driver negotiate possibly better sample rate and blocksize\n"
-	                      "settings (%s by default).",
-	                      default_allow_negotiate ? "enabled" : "disabled"));
+	        "Let the system audio driver negotiate possibly better sample rate and blocksize\n"
+	        "settings (%s by default).");
 
 	const auto default_on = true;
 	bool_prop = sec_prop.Add_bool("compressor", when_idle, default_on);

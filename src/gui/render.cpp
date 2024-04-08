@@ -1019,7 +1019,7 @@ static void init_render_settings(Section_prop& secprop)
 
 	auto* string_prop = secprop.Add_string("aspect", always, "auto");
 	string_prop->Set_help(
-	        "Set the aspect ratio correction mode (enabled by default):\n"
+	        "Set the aspect ratio correction mode (auto by default):\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
 	        "                       flat-screen displays, so DOS video modes with non-square\n"
 	        "                       pixels appear as they would on a 4:3 display aspect\n"
@@ -1145,9 +1145,8 @@ static void init_render_settings(Section_prop& secprop)
 	        "  - If you used an advanced scaler, consider one of the 'glshader'\n"
 	        "    options instead.");
 
-#if C_OPENGL
 	string_prop = secprop.Add_string("glshader", always, "crt-auto");
-	string_prop->Set_help(
+	string_prop->SetOptionHelp(
 	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
 	        "output modes. Adaptive CRT shader options:\n"
 	        "  crt-auto:               A CRT shader that prioritises developer intent and\n"
@@ -1175,7 +1174,11 @@ static void init_render_settings(Section_prop& secprop)
 	        "Other options include 'sharp', 'none', a shader listed using the\n"
 	        "'--list-glshaders' command-line argument, or an absolute or relative path\n"
 	        "to a file. In all cases, you may omit the shader's '.glsl' file extension.");
+	string_prop->SetEnabledOptions({
+#if C_OPENGL
+		"glshader",
 #endif
+	});
 }
 
 enum { Horiz, Vert };

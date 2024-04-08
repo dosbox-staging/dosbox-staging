@@ -1240,17 +1240,19 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&MSCDEX_Init);
 	secprop->AddInitFunction(&DRIVES_Init);
 	secprop->AddInitFunction(&CDROM_Image_Init);
-#if C_IPX
+
 	secprop = control->AddSection_prop("ipx", &IPX_Init, changeable_at_runtime);
 	pbool = secprop->Add_bool("ipx", when_idle, false);
-	pbool->Set_help("Enable IPX over UDP/IP emulation (disabled by default).");
+	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation (disabled by default).");
+#if C_IPX
+	pbool->SetEnabledOptions({"ipx"});
 #endif
 
-#if C_SLIRP
 	secprop = control->AddSection_prop("ethernet", &NE2K_Init, changeable_at_runtime);
 
 	pbool = secprop->Add_bool("ne2000", when_idle, true);
-	pbool->Set_help(
+	pbool->SetOptionHelp(
+	        "SLIRP",
 	        "Enable emulation of a Novell NE2000 network card on a software-based\n"
 	        "network (using libslirp) with properties as follows (enabled by default):\n"
 	        "  - 255.255.255.0:  Subnet mask of the 10.0.2.0 virtual LAN.\n"
@@ -1261,26 +1263,40 @@ void DOSBOX_Init()
 	        "      client, and TCP/IP stack. You might need port-forwarding from the host\n"
 	        "      into the DOS guest, and from your router to your host when acting as the\n"
 	        "      server for multiplayer games.");
+#if C_SLIRP
+	pbool->SetEnabledOptions({"SLIRP"});
+#endif
 
 	phex = secprop->Add_hex("nicbase", when_idle, 0x300);
 	phex->Set_values(
 	        {"200", "220", "240", "260", "280", "2c0", "300", "320", "340", "360"});
-	phex->Set_help("Base address of the NE2000 card (300 by default).\n"
-	               "Note: Addresses 220 and 240 might not be available as they're assigned to the\n"
-	               "      Sound Blaster and Gravis UltraSound by default.");
+	phex->SetOptionHelp("SLIRP",
+	                    "Base address of the NE2000 card (300 by default).\n"
+	                    "Note: Addresses 220 and 240 might not be available as they're assigned to the\n"
+	                    "      Sound Blaster and Gravis UltraSound by default.");
+#if C_SLIRP
+	phex->SetEnabledOptions({"SLIRP"});
+#endif
 
 	pint = secprop->Add_int("nicirq", when_idle, 3);
 	pint->Set_values({"3", "4", "5", "9", "10", "11", "12", "14", "15"});
-	pint->Set_help("The interrupt used by the NE2000 card (3 by default).\n"
-	               "Note: IRQs 3 and 5 might not be available as they're assigned to\n"
-	               "      'serial2' and the Gravis UltraSound by default.");
+	pint->SetOptionHelp("SLIRP",
+	                    "The interrupt used by the NE2000 card (3 by default).\n"
+	                    "Note: IRQs 3 and 5 might not be available as they're assigned to\n"
+	                    "      'serial2' and the Gravis UltraSound by default.");
+#if C_SLIRP
+	pint->SetEnabledOptions({"SLIRP"});
+#endif
 
 	pstring = secprop->Add_string("macaddr", when_idle, "AC:DE:48:88:99:AA");
-	pstring->Set_help(
-	        "The MAC address of the NE2000 card ('AC:DE:48:88:99:AA' by default).");
+	pstring->SetOptionHelp("SLIRP",
+	                       "The MAC address of the NE2000 card ('AC:DE:48:88:99:AA' by default).");
+#if C_SLIRP
+	pstring->SetEnabledOptions({"SLIRP"});
+#endif
 
 	pstring = secprop->Add_string("tcp_port_forwards", when_idle, "");
-	pstring->Set_help(
+	pstring->SetOptionHelp("SLIRP",
 	        "Forward one or more TCP ports from the host into the DOS guest\n"
 	        "(unset by default).\n"
 	        "The format is:\n"
@@ -1299,11 +1315,16 @@ void DOSBOX_Init()
 	        "  - If mapped ranges differ, the shorter range is extended to fit.\n"
 	        "  - If conflicting host ports are given, only the first one is setup.\n"
 	        "  - If conflicting guest ports are given, the latter rule takes precedent.");
+#if C_SLIRP
+	pstring->SetEnabledOptions({"SLIRP"});
+#endif
 
 	pstring = secprop->Add_string("udp_port_forwards", when_idle, "");
-	pstring->Set_help(
+	pstring->SetOptionHelp("SLIRP",
 	        "Forward one or more UDP ports from the host into the DOS guest\n"
 	        "(unset by default). The format is the same as for TCP port forwards.");
+#if C_SLIRP
+	pstring->SetEnabledOptions({"SLIRP"});
 #endif
 
 	//	secprop->AddInitFunction(&CREDITS_Init);

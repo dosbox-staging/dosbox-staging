@@ -4320,21 +4320,35 @@ static void config_add_sdl()
 	pstring->Set_values({"auto", "cfr", "vfr"});
 
 #if C_OPENGL
-	pstring = sdl_sec->Add_string("output", always, "opengl");
-	pstring->Set_help(
-	        "Video system to use for output ('opengl' by default).\n"
-	        "'texture' and 'opengl' use bilinear interpolation, 'texturenb' and\n"
-	        "'openglnb' use nearest-neighbour (no-bilinear). Some shaders require\n"
-	        "bilinear interpolation, making that the safest choice.");
-	pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
-	pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
+	const std::string default_output = "opengl";
 #else
-	pstring = sdl_sec->Add_string("output", always, "texture");
-	pstring->Set_help("Video system to use for output ('texture' by default).");
+	const std::string default_output = "texture";
+#endif
+	pstring = sdl_sec->Add_string("output", always, default_output.c_str());
+	pstring->SetOptionHelp("opengl_default",
+	        "Video system to use for output ('opengl' by default).\n"
+	        "Some shaders require bilinear interpolation, making that the safest choice.");
+	pstring->SetOptionHelp(
+	        "texture_default",
+	        "Video system to use for output ('texture' by default).\n"
+	        "Some shaders require bilinear interpolation, making that the safest choice.");
+	pstring->SetOptionHelp("opengl", "  opengl:     Uses bilinear interpolation.");
+	pstring->SetOptionHelp("texture",   "  texture:    Uses bilinear interpolation.");
+	pstring->SetOptionHelp("openglnb",  "  openglnb:   Uses nearest-neighbour interpolation (no bilinear).");
+	pstring->SetOptionHelp("texturenb", "  texturenb:  Uses nearest-neighbour interpolation (no bilinear).");
+#if C_OPENGL
+	pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
+	pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
+#else
 	pstring->SetDeprecatedWithAlternateValue("surface", "texture");
 #endif
 	pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
 	pstring->Set_values({
+#if C_OPENGL
+		"opengl_default",
+#else
+		"texture_default",
+#endif
 		"texture", "texturenb",
 #if C_OPENGL
 		"opengl", "openglnb",
