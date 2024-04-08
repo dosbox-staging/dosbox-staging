@@ -106,3 +106,40 @@ Content on this site is licensed under a
 [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 DOSBox Staging is licensed under a [GNU GPL version 2 or later](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
+
+
+## Disclaimer
+
+!!! warning "Free for personal use, but no warranties!"
+
+    Although we do our best to emulate the DOS environment and legacy IBM PC
+    hardware as accurately as we can, **we cannot guarantee** DOSBox Staging has
+    zero bugs or can run every single DOS software ever written 100%
+    correctly.
+
+    **Under no circumstances** should DOSBox Staging be used for professional
+    applications, especially where DOS software malfunctioning due to
+    emulation bugs or inaccuracies could result in significant financial loss,
+    data loss, or putting living beings at risk.
+
+    Neither the members of the DOSBox Staging team nor our contributors can be
+    held responsible for such unfortunate accidents resulting from the misuse
+    of our software. DOSBox Staging is intended for **personal use only** in
+    low-stakes scenarios, such as playing DOS games, watching demoscene
+    productions, or researching the history of IBM PC compatibles and the DOS
+    software catalogue.
+
+    If you disregard this and get into trouble, **you're on your own!**
+
+
+!!! danger "IEEE 754 80-bit extended precision floating point emulation"
+
+    One particularly risky area is engineering software that requires accurate
+    80-bit extended precision x87 FPU emulation to function correctly. Support
+    for 80-bit floats is not available on all platforms that DOSBox Staging
+    runs on. The logs will warn you about this at startup:
+
+        FPU: Using reduced-precision floating-point
+
+    Do note, however, that the lack of such log messages **does not** imply or
+    guarantee bug-free operation!
