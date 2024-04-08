@@ -2122,69 +2122,64 @@ static void SBLASTER_CallBack(uint32_t len)
 	}
 }
 
-SB_TYPES find_sbtype()
+static SB_TYPES determine_sbtype(const std::string& pref)
 {
-	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
-	assert(sect);
+	if (pref == "gb") {
+		return SBT_GB;
 
-	const std::string pref = sect->Get_string("sbtype");
-
-	// Default
-	auto sbtype = SB_TYPES::SBT_NONE;
-
-	// Newest to oldest
-	if (pref == "sb16") {
-		sbtype = SBT_16;
-	} else if (pref == "sbpro2") {
-		sbtype = SBT_PRO2;
-	} else if (pref == "sbpro1") {
-		sbtype = SBT_PRO1;
-	} else if (pref == "sb2") {
-		sbtype = SBT_2;
 	} else if (pref == "sb1") {
-		sbtype = SBT_1;
-	} else if (pref == "gb") {
-		sbtype = SBT_GB;
+		return SBT_1;
+
+	} else if (pref == "sb2") {
+		return SBT_2;
+
+	} else if (pref == "sbpro1") {
+		return SBT_PRO1;
+
+	} else if (pref == "sbpro2") {
+		return SBT_PRO2;
+
+	} else if (pref == "sb16") {
+		// Invalid settings result in defaulting to 'sb16'
+		return SBT_16;
+
 	}
-	return sbtype;
+	// "falsey" setting ("off", "none", "false", etc.)
+	return SBT_NONE;
 }
 
-OplMode find_oplmode()
+static OplMode determine_oplmode(const std::string& pref, const SB_TYPES sb_type)
 {
-	const auto sect = static_cast<Section_prop *>(control->GetSection("sblaster"));
-	assert(sect);
+	if (pref == "cms") {
+		// Skip for backward compatibility with existing configurations
+		return OplMode::None;
 
-	const std::string pref = sect->Get_string("oplmode");
-
-	// Default
-	auto opl_mode = OplMode::None;
-
-	// Newest to oldest
-	if (pref == "opl3gold") {
-		opl_mode = OplMode::Opl3Gold;
-	} else if (pref == "opl3") {
-		opl_mode = OplMode::Opl3;
-	} else if (pref == "dualopl2") {
-		opl_mode = OplMode::DualOpl2;
 	} else if (pref == "opl2") {
-		opl_mode = OplMode::Opl2;
-	} else if (pref == "cms") {
-		opl_mode = OplMode::Cms;
-	}
+		return OplMode::Opl2;
 
-	// Else assume auto
-	else {
-		switch (find_sbtype()) {
-		case SBT_16:
-		case SBT_PRO2: opl_mode = OplMode::Opl3; break;
-		case SBT_PRO1: opl_mode = OplMode::DualOpl2; break;
-		case SBT_2:
-		case SBT_1: opl_mode = OplMode::Opl2; break;
-		case SBT_GB: opl_mode = OplMode::Cms; break;
-		case SBT_NONE: opl_mode = OplMode::None; break;
+	} else if (pref == "dualopl2") {
+		return OplMode::DualOpl2;
+
+	} else if (pref == "opl3") {
+		return OplMode::Opl3;
+
+	} else if (pref == "opl3gold") {
+		return OplMode::Opl3Gold;
+
+	} else if (pref == "auto") {
+		// Invalid settings result in defaulting to 'auto'
+		switch (sb_type) {
+		case SBT_GB: return OplMode::None;
+		case SBT_1: return OplMode::Opl2;
+		case SBT_2: return OplMode::Opl2;
+		case SBT_PRO1: return OplMode::DualOpl2;
+		case SBT_PRO2: return OplMode::Opl3;
+		case SBT_16: return OplMode::Opl3;
+		case SBT_NONE: return OplMode::None;
 		}
 	}
-	return opl_mode;
+	// "falsey" setting ("off", "none", "false", etc.)
+	return OplMode::None;
 }
 
 void SBLASTER_ShutDown(Section*);
@@ -2254,8 +2249,8 @@ public:
 		sb.mixer.enabled=section->Get_bool("sbmixer");
 		sb.mixer.stereo=false;
 
-		sb.type = find_sbtype();
-		oplmode = find_oplmode();
+		sb.type = determine_sbtype(section->Get_string("sbtype"));
+		oplmode = determine_oplmode(section->Get_string("oplmode"), sb.type);
 
 		switch (oplmode) {
 		case OplMode::None:
