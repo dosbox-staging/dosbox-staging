@@ -70,8 +70,14 @@ public:
 	// non-blocking call
 	size_t Size();
 
-	// non-blocking calls
+	// non-blocking call
+	void Start();
+
+	// non-blocking call
 	void Stop();
+
+	// non-blocking call
+	void Clear();
 
 	// non-blocking call
 	size_t MaxCapacity() const;
