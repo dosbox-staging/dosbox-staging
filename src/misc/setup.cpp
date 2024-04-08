@@ -267,25 +267,94 @@ bool Property::ValidateValue(const Value& in)
 	}
 }
 
+static std::string create_config_name(const std::string& propname) 
+{
+	std::string result = "CONFIG_" + propname;
+	upcase(result);
+	return result;
+}
+
 void Property::Set_help(const std::string& in)
 {
-	std::string result = std::string("CONFIG_") + propname;
-	upcase(result);
-	MSG_Add(result.c_str(), in.c_str());
+	MSG_Add(create_config_name(propname).c_str(), in.c_str());
 }
 
-const char* Property::GetHelp() const
+static std::string create_config_item_name(const std::string& propname,
+                                           const std::string& item)
 {
-	std::string result = "CONFIG_" + propname;
+	std::string result = "CONFIGITEM_" + propname;
+	if (!item.empty()) {
+		result += '_' + item;
+	}
 	upcase(result);
-	return MSG_Get(result.c_str());
+	return result;
 }
 
-const char* Property::GetHelpUtf8() const
+void Property::SetOptionHelp(const std::string& option, const std::string& in)
 {
-	std::string result = "CONFIG_" + propname;
-	upcase(result);
-	return MSG_GetRaw(result.c_str());
+	MSG_Add(create_config_item_name(propname, option).c_str(), in.c_str());
+}
+
+void Property::SetOptionHelp(const std::string& in)
+{
+	MSG_Add(create_config_item_name(propname, {}).c_str(), in.c_str());
+}
+
+std::string Property::GetHelp() const
+{
+	std::string result = MSG_Get(create_config_name(propname).c_str());
+
+	const auto configitem_has_message = [this](const auto& value) {
+		return MSG_Exists(create_config_item_name(propname, value).c_str()) ||
+		       (iequals(value, propname) &&
+		        MSG_Exists(create_config_item_name(propname, {}).c_str()));
+	};
+	if (std::any_of(enabled_options.begin(),
+	                enabled_options.end(),
+	                configitem_has_message)) {
+		for (const auto& value : enabled_options) {
+			if (iequals(value, propname) &&
+			    MSG_Exists(create_config_item_name(propname, {}).c_str())) {
+				result.append(MSG_Get(
+				        create_config_item_name(propname, {}).c_str()));
+			} else {
+				result.append(MSG_Get(
+				        create_config_item_name(propname, value).c_str()));
+			}
+			result.append("\n");
+		}
+	}
+	return result;
+}
+
+std::string Property::GetHelpUtf8() const
+{
+	std::string result = MSG_GetRaw(create_config_name(propname).c_str());
+
+	const auto configitem_has_message = [this](const auto& value) {
+		return MSG_Exists(create_config_item_name(propname, value).c_str()) ||
+		       (iequals(value, propname) &&
+		        MSG_Exists(create_config_item_name(propname, {}).c_str()));
+	};
+	if (std::any_of(enabled_options.begin(),
+	                enabled_options.end(),
+	                configitem_has_message)) {
+		for (const auto& value : enabled_options) {
+			if (iequals(value, propname) &&
+			    MSG_Exists(create_config_item_name(propname, {}).c_str())) {
+				result.append(MSG_GetRaw(
+				        create_config_item_name(propname, {}).c_str()));
+			} else {
+				result.append(MSG_GetRaw(
+				        create_config_item_name(propname, value).c_str()));
+			}
+			result.append("\n");
+		}
+	}
+	if (result.empty()) {
+		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+	}
+	return result;
 }
 
 bool Prop_int::ValidateValue(const Value& in)
@@ -706,6 +775,12 @@ void Property::Set_values(const std::vector<std::string>& in)
 		Value val(str, type);
 		valid_values.push_back(val);
 	}
+	SetEnabledOptions(in);
+}
+
+void Property::SetEnabledOptions(const std::vector<std::string>& in)
+{
+	enabled_options = in;
 }
 
 Prop_int* Section_prop::Add_int(const std::string& _propname,
@@ -934,7 +1009,7 @@ bool Section_prop::HandleInputline(const std::string& line)
 
 		if (p->IsDeprecated()) {
 			LOG_WARNING("CONFIG: Deprecated option '%s'", name.c_str());
-			LOG_WARNING("CONFIG: %s", p->GetHelp());
+			LOG_WARNING("CONFIG: %s", p->GetHelp().c_str());
 			return false;
 		}
 

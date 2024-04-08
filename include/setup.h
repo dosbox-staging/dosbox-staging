@@ -135,13 +135,16 @@ public:
 	virtual ~Property() = default;
 
 	void Set_values(const std::vector<std::string>& in);
+	void SetEnabledOptions(const std::vector<std::string>& in);
 	void SetDeprecatedWithAlternateValue(const char* deprecated_value,
 	                                     const char* alternate_value);
 
 	void Set_help(const std::string& str);
+	void SetOptionHelp(const std::string& option, const std::string& in);
+	void SetOptionHelp(const std::string& in);
 
-	const char* GetHelp() const;
-	const char* GetHelpUtf8() const;
+	std::string GetHelp() const;
+	std::string GetHelpUtf8() const;
 
 	virtual bool SetValue(const std::string& str) = 0;
 
@@ -186,6 +189,7 @@ protected:
 
 	Value value                                            = {};
 	std::vector<Value> valid_values                        = {};
+	std::vector<std::string> enabled_options               = {};
 	std::map<Value, Value> deprecated_and_alternate_values = {};
 	bool is_positive_bool_valid                            = false;
 	bool is_negative_bool_valid                            = false;
