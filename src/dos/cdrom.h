@@ -472,7 +472,41 @@ private:
 	int cdrom_fd = -1;
 };
 
-#endif /* LINUX */
+#elif defined(WIN32)
+
+#include <windows.h>
+
+class CDROM_Interface_Win32 : public CDROM_Interface_Physical {
+public:
+	~CDROM_Interface_Win32() override;
+
+	bool SetDevice(const char* path) override;
+	bool GetUPC(unsigned char& attr, std::string& upc) override;
+	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
+	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
+	bool GetAudioSub(unsigned char& attr, unsigned char& track,
+	                 unsigned char& index, TMSF& relPos, TMSF& absPos) override;
+	bool GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged,
+	                        bool& trayOpen) override;
+	bool ReadSectors(PhysPt buffer, const bool raw, const uint32_t sector,
+	                 const uint16_t num) override;
+	bool ReadSectorsHost(void* buffer, bool raw, unsigned long sector,
+	                     unsigned long num) override;
+	bool LoadUnloadMedia(bool unload) override;
+	bool HasFullMscdexSupport() override
+	{
+		return true;
+	}
+
+private:
+	std::vector<int16_t> ReadAudio(const uint32_t sector, const uint32_t frames_requested) override;
+	bool IsOpen() const;
+	bool Open(const char drive_letter);
+
+	HANDLE cdrom_handle                   = INVALID_HANDLE_VALUE;
+};
+
+#endif // Linux / WIN32
 
 extern "C" SDL_CD *SDL_CDOpen(int drive);
 extern "C" void SDL_CDClose(SDL_CD *cdrom);
