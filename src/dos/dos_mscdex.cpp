@@ -314,7 +314,7 @@ static CDROM_Interface *create_cdrom_interface(const char *path, uint16_t num_dr
 	delete cdrom_interface;
 	cdrom_interface = nullptr;
 #elif defined(WIN32)
-	cdrom_interface = new CDROM_Interface_SDL();
+	cdrom_interface = new CDROM_Interface_Win32();
 	if (cdrom_interface->SetDevice(path)) {
 		return cdrom_interface;
 	}

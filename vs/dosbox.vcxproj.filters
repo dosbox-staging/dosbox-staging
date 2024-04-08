@@ -865,6 +865,9 @@
     <ClCompile Include="..\src\libs\zmbv\zmbv_vfw.cpp">
       <Filter>src\libs\zmbv</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\cdrom_win32.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\audio_frame.h">

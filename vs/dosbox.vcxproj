@@ -452,6 +452,7 @@ IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\dosbox.cpp" />
+    <ClCompile Include="..\src\dos\cdrom_win32.cpp" />
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\addch.c" />
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\addchstr.c" />
     <ClCompile Include="..\src\libs\PDCurses\pdcurses\addstr.c" />

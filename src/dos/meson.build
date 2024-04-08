@@ -2,6 +2,7 @@ libdos_sources = files(
     'cdrom.cpp',
     'cdrom_image.cpp',
     'cdrom_ioctl_linux.cpp',
+    'cdrom_win32.cpp',
     'dos.cpp',
     'dos_classes.cpp',
     'dos_devices.cpp',
