@@ -108,6 +108,14 @@ Content on this site is licensed under a
 DOSBox Staging is licensed under a [GNU GPL version 2 or later](https://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
 
 
+## Data privacy policy
+
+DOSBox Staging never collects any personal information about you or your
+computer, and it never connects to the Internet or any network without you
+asking it to do so in the first place (e.g., by running BBS software or
+playing multiplayer DOS games over Ethernet).
+
+
 ## Disclaimer
 
 !!! warning "Free for personal use, but no warranties!"
