@@ -542,11 +542,25 @@ Select the frame presentation mode:
   cfr:   Always present DOS frames at a constant frame rate.
   vfr:   Always present changed DOS frames at a variable frame rate.
 .
-:CONFIG_OUTPUT
+:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
 Video system to use for output ('opengl' by default).
-'texture' and 'opengl' use bilinear interpolation, 'texturenb' and
-'openglnb' use nearest-neighbour (no-bilinear). Some shaders require
-bilinear interpolation, making that the safest choice.
+Some shaders require bilinear interpolation, making that the safest choice.
+.
+:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
+Video system to use for output ('texture' by default).
+Some shaders require bilinear interpolation, making that the safest choice.
+.
+:CONFIGITEM_OUTPUT_OPENGL
+  opengl:     Uses bilinear interpolation.
+.
+:CONFIGITEM_OUTPUT_TEXTURE
+  texture:    Uses bilinear interpolation.
+.
+:CONFIGITEM_OUTPUT_OPENGLNB
+  openglnb:   Uses nearest-neighbour interpolation (no bilinear).
+.
+:CONFIGITEM_OUTPUT_TEXTURENB
+  texturenb:  Uses nearest-neighbour interpolation (no bilinear).
 .
 :CONFIG_TEXTURE_RENDERER
 Render driver to use in 'texture' output mode ('auto' by default).
@@ -754,7 +768,7 @@ the 'sbtype' command.
 Consider capping frame rates using the 'host_rate' setting.
 .
 :CONFIG_ASPECT
-Set the aspect ratio correction mode (enabled by default):
+Set the aspect ratio correction mode (auto by default):
   auto, on:            Apply aspect ratio correction for modern square-pixel
                        flat-screen displays, so DOS video modes with non-square
                        pixels appear as they would on a 4:3 display aspect
@@ -864,7 +878,7 @@ Software scalers are deprecated in favour of hardware-accelerated options:
   - If you used an advanced scaler, consider one of the 'glshader'
     options instead.
 .
-:CONFIG_GLSHADER
+:CONFIGITEM_GLSHADER
 Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL
 output modes. Adaptive CRT shader options:
   crt-auto:               A CRT shader that prioritises developer intent and
@@ -1081,20 +1095,20 @@ Enable silent mode (disabled by default).
 Sound is still fully emulated in silent mode, but DOSBox outputs silence.
 .
 :CONFIG_RATE
-Mixer sample rate (48000 by default).
+Mixer sample rate (%s by default).
 .
 :CONFIG_BLOCKSIZE
-Mixer block size in sample frames (512 by default). Larger values might help
+Mixer block size in sample frames (%s by default). Larger values might help
 with sound stuttering but the sound will also be more lagged.
 .
 :CONFIG_PREBUFFER
 How many milliseconds of sound to render on top of the blocksize
-(20 by default). Larger values might help with sound stuttering but the sound
+(%s by default). Larger values might help with sound stuttering but the sound
 will also be more lagged.
 .
 :CONFIG_NEGOTIATE
 Let the system audio driver negotiate possibly better sample rate and blocksize
-settings (enabled by default).
+settings (%s by default).
 .
 :CONFIG_COMPRESSOR
 Enable the auto-leveling compressor on the master channel to prevent clipping
@@ -1140,17 +1154,38 @@ Note: You can fine-tune each channel's chorus level using the MIXER.
 :CONFIG_MIDIDEVICE
 Set where MIDI data from the emulated MPU-401 MIDI interface is sent
 ('auto' by default):
+.
+:CONFIGITEM_MIDIDEVICE_COREMIDI
   coremidi:    Any device that has been configured in the macOS
                Audio MIDI Setup.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
   coreaudio:   Use the built-in macOS MIDI synthesiser.
+.
+:CONFIGITEM_MIDIDEVICE_WIN32
+  win32:       Use the Win32 MIDI playback interface.
+.
+:CONFIGITEM_MIDIDEVICE_OSS
+  oss:         Use the Linux OSS MIDI playback interface.
+.
+:CONFIGITEM_MIDIDEVICE_ALSA
+  alsa:        Use the Linux ALSA MIDI playback interface.
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
   fluidsynth:  The built-in FluidSynth MIDI synthesizer (SoundFont player).
                See the [fluidsynth] section for detailed configuration.
+.
+:CONFIGITEM_MIDIDEVICE_MT32
   mt32:        The built-in Roland MT-32 synthesizer.
                See the [mt32] section for detailed configuration.
+.
+:CONFIGITEM_MIDIDEVICE_AUTO
   auto:        Either one of the built-in MIDI synthesisers (if `midiconfig` is
                set to 'fluidsynth' or 'mt32'), or a MIDI device external to
                DOSBox (any other 'midiconfig' value). This might be a software
                synthesizer or physical device. This is the default behaviour.
+.
+:CONFIGITEM_MIDIDEVICE_NONE
   none:        Disable MIDI output.
 .
 :CONFIG_MIDICONFIG
@@ -1158,9 +1193,21 @@ Configuration options for the selected MIDI interface (unset by default).
 This is usually the ID or name of the MIDI synthesizer you want
 to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').
 Notes:
+
+.
+:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
   - This option has no effect when using the built-in synthesizers
     ('mididevice = fluidsynth' or 'mididevice = mt32').
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
   - When using 'coreaudio', you can specify a SoundFont here.
+.
+:CONFIGITEM_MIDICONFIG_ALSA
+  - When using ALSA, use the Linux command 'aconnect -l' to list all open
+    MIDI ports and select one (e.g. 'midiconfig = 14:0' for sequencer
+    client 14, port 0).
+.
+:CONFIGITEM_MIDICONFIG_MT32
   - If you're using a physical Roland MT-32 with revision 0 PCB, the hardware
     may require a delay in order to prevent its buffer from overflowing.
     In that case, add 'delaysysex' (e.g. 'midiconfig = 2 delaysysex').
@@ -1276,8 +1323,17 @@ Active ROM
 Loaded from   
 .
 :CONFIG_SBTYPE
-Type of Sound Blaster to emulate ('sb16' by default).
-'gb' is Game Blaster.
+Sound Blaster model to emulate ('sb16' by default).
+The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.
+  gb:        Game Blaster        - CMS
+  sb1:       Sound Blaster 1.0   - OPL2, CMS
+  sb2:       Sound Blaster 2.0   - OPL2
+  sbpro1:    Sound Blaster Pro   - Dual OPL2
+  sbpro2:    Sound Blaster Pro 2 - OPL3
+  sb16:      Sound Blaster 16    - OPL3 (default)
+  none/off:  Disable Sound Blaster emulation.
+Note: Creative Music System was later rebranded to Game Blaster; they are the
+      same card.
 .
 :CONFIG_SBBASE
 The IO address of the Sound Blaster (220 by default).
@@ -1303,10 +1359,22 @@ Reduce this if you notice intial playback is missing audio.
 The OPL waveform is now sampled at the mixer's playback rate to avoid
 resampling.
 .
+:CONFIG_CMS
+Enable CMS emulation ('auto' by default).
+  off:   Disable CMS emulation (except when the Game Blaster is selected).
+  on:    Enable CMS emulation on Sound Blaster 1 and 2.
+  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.
+.
 :CONFIG_OPLMODE
-Type of OPL emulation ('auto' by default).
-On 'auto' the mode is determined by 'sbtype'.
-All OPL modes are AdLib-compatible, except for 'cms'.
+OPL model to emulate ('auto' by default).
+  auto:      Use the appropriate model determined by 'sbtype'.
+  opl2:      OPL2 (mono).
+  dualopl2:  Dual OPL2 (stereo).
+  opl3:      OPL3 (stereo).
+  opl3gold:  OPL3 (stereo) and the optional AdLib Gold Surround module.
+             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.
+  none/off:  Disable OPL emulation.
+Note: 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.
 .
 :CONFIG_OPL_FADEOUT
 Fade out the OPL synth output after the last IO port write:
@@ -1678,10 +1746,10 @@ PCjr memory layout ('expanded' by default).
   standard:  128 KB total memory with applications residing below 96 KB.
              Required for some older games (e.g., Jumpman, Troll).
 .
-:CONFIG_IPX
+:CONFIGITEM_IPX
 Enable IPX over UDP/IP emulation (disabled by default).
 .
-:CONFIG_NE2000
+:CONFIGITEM_NE2000_SLIRP
 Enable emulation of a Novell NE2000 network card on a software-based
 network (using libslirp) with properties as follows (enabled by default):
   - 255.255.255.0:  Subnet mask of the 10.0.2.0 virtual LAN.
@@ -1693,20 +1761,20 @@ Note: Inside DOS, setting this up requires an NE2000 packet driver, DHCP
       into the DOS guest, and from your router to your host when acting as the
       server for multiplayer games.
 .
-:CONFIG_NICBASE
+:CONFIGITEM_NICBASE_SLIRP
 Base address of the NE2000 card (300 by default).
 Note: Addresses 220 and 240 might not be available as they're assigned to the
       Sound Blaster and Gravis UltraSound by default.
 .
-:CONFIG_NICIRQ
+:CONFIGITEM_NICIRQ_SLIRP
 The interrupt used by the NE2000 card (3 by default).
 Note: IRQs 3 and 5 might not be available as they're assigned to
       'serial2' and the Gravis UltraSound by default.
 .
-:CONFIG_MACADDR
+:CONFIGITEM_MACADDR_SLIRP
 The MAC address of the NE2000 card ('AC:DE:48:88:99:AA' by default).
 .
-:CONFIG_TCP_PORT_FORWARDS
+:CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
 Forward one or more TCP ports from the host into the DOS guest
 (unset by default).
 The format is:
@@ -1726,7 +1794,7 @@ Notes:
   - If conflicting host ports are given, only the first one is setup.
   - If conflicting guest ports are given, the latter rule takes precedent.
 .
-:CONFIG_UDP_PORT_FORWARDS
+:CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
 Forward one or more UDP ports from the host into the DOS guest
 (unset by default). The format is the same as for TCP port forwards.
 .
@@ -2137,7 +2205,21 @@ Notes:
     for CD-based games that need a real DOS environment via bootable HDD image.
 
 Examples:
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_WIN32
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Games\doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USERNAME/Games/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_OTHER
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_GENERIC
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro
@@ -2759,8 +2841,23 @@ Notes:
   - Additional options are described in the manual (README file, chapter 4).
 
 Examples:
+
+.
+:PROGRAM_MOUNT_HELP_LONG_WIN32
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\dosgames[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_MACOSX
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]
   [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/Game CD"[reset] -t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_OTHER
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USERNAME/Game CD"[reset] -t cdrom -usecd 0
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay
 
 .
