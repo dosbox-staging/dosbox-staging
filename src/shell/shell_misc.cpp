@@ -475,13 +475,16 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 	auto extension = fullname.substr(fullname.size() - extension_size);
 
 	if (iequals(extension, ".BAT")) {
+		const auto current_echo = batchfiles.empty()
+		                             ? echo
+		                             : batchfiles.top().Echo();
 		if (!batchfiles.empty() && !call) {
 			batchfiles.pop();
 		}
 
 		auto reader = FileReader::GetFileReader(fullname);
 		if (reader) {
-			batchfiles.emplace(*this, std::move(*reader), name, args, echo);
+			batchfiles.emplace(*this, std::move(*reader), name, args, current_echo);
 		} else {
 			WriteOut("Could not open %s", fullname.c_str());
 		}
