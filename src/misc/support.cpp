@@ -318,14 +318,14 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 
 	// Third priority is a potentially customized --datadir specified at
 	// compile time.
-	add_if_exists(std_fs::path(CUSTOM_DATADIR) / CANONICAL_PROJECT_NAME);
+	add_if_exists(std_fs::path(CUSTOM_DATADIR) / DOSBOX_PROJECT_NAME);
 
 	// Fourth priority is the user and system XDG data specification
 #if !defined(WIN32) && !defined(MACOSX)
-	add_if_exists(get_xdg_data_home() / CANONICAL_PROJECT_NAME);
+	add_if_exists(get_xdg_data_home() / DOSBOX_PROJECT_NAME);
 
 	for (const auto& data_dir : get_xdg_data_dirs()) {
-		add_if_exists(data_dir / CANONICAL_PROJECT_NAME);
+		add_if_exists(data_dir / DOSBOX_PROJECT_NAME);
 	}
 #endif
 
@@ -335,7 +335,7 @@ static const std::deque<std_fs::path> &GetResourceParentPaths()
 	// portability of the install tree (do not replace this with --prefix,
 	// which would destroy this portable aspect).
 	//
-	add_if_exists(GetExecutablePath() / "../share" / CANONICAL_PROJECT_NAME);
+	add_if_exists(GetExecutablePath() / "../share" / DOSBOX_PROJECT_NAME);
 
 	// Last priority is the user's configuration directory
 	add_if_exists(GetConfigDir());

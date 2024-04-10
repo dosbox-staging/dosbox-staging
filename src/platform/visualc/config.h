@@ -1,26 +1,7 @@
-/* Project name, lower-case and without spaces */
-#define CANONICAL_PROJECT_NAME "dosbox-staging"
-
-// Emulator Semantic Version (MAJOR.MINOR.PATCH), incremented as follows:
-//  - MAJOR version when you make incompatible API changes
-//  - MINOR version when you add functionality in a backwards compatible manner
-//  - PATCH version when you make backwards compatible bug fixes
-// Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
-// Ref: https://semver.org/
-
-#define VERSION "0.82.0-alpha"
-
 /* This macro is going to be overriden via CI */
-#define DOSBOX_DETAILED_VERSION "git"
+#define BUILD_GIT_HASH "git"
 
 /* Strings to be returned by virtual drivers, etc. */
-
-// Name of the emulator
-#define DOSBOX_NAME "DOSBox Staging"
-// Development team name
-#define DOSBOX_TEAM "The " DOSBOX_NAME " Team"
-// Copyright string
-#define DOSBOX_COPYRIGHT "(C) " DOSBOX_TEAM
 
 /* Define to 1 to enable internal debugger, requires libcurses */
 #define C_DEBUG 0

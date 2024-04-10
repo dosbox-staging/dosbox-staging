@@ -26,6 +26,7 @@
 #include "checks.h"
 #include "string_utils.h"
 #include "support.h"
+#include "version.h"
 
 #include <zlib.h>
 
@@ -206,7 +207,7 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 
 	char software_keyword[] = "Software";
 	static_assert(sizeof(software_keyword) < 80, "libpng limit");
-	char software_value[] = CANONICAL_PROJECT_NAME " " VERSION;
+	char software_value[] = DOSBOX_PROJECT_NAME " " DOSBOX_VERSION;
 
 	texts[0].compression = PNG_TEXT_COMPRESSION_NONE;
 	texts[0].key         = static_cast<png_charp>(software_keyword);

@@ -4626,7 +4626,7 @@ static void override_wm_class()
 {
 #if !defined(WIN32)
 	constexpr int overwrite = 0; // don't overwrite
-	setenv("SDL_VIDEO_X11_WMCLASS", CANONICAL_PROJECT_NAME, overwrite);
+	setenv("SDL_VIDEO_X11_WMCLASS", DOSBOX_PROJECT_NAME, overwrite);
 #endif
 }
 
@@ -4655,7 +4655,7 @@ int sdl_main(int argc, char* argv[])
 
 	loguru::init(argc, argv);
 
-	LOG_MSG("%s version %s", CANONICAL_PROJECT_NAME, DOSBOX_GetDetailedVersion());
+	LOG_MSG("%s version %s", DOSBOX_PROJECT_NAME, DOSBOX_GetDetailedVersion());
 	LOG_MSG("---");
 
 	LOG_MSG("LOG: Loguru version %d.%d.%d initialised",
@@ -4731,7 +4731,7 @@ int sdl_main(int argc, char* argv[])
 		// perform some actions and print the results to the console.
 		if (arguments->version) {
 			printf(version_msg,
-			       CANONICAL_PROJECT_NAME,
+			       DOSBOX_PROJECT_NAME,
 			       DOSBOX_GetDetailedVersion());
 			return 0;
 		}
@@ -4739,7 +4739,7 @@ int sdl_main(int argc, char* argv[])
 			assert(argv && argv[0]);
 			const auto program_name = argv[0];
 			const auto help_utf8 = format_str(MSG_GetRaw("DOSBOX_HELP"),
-			                                     program_name);
+			                                  program_name);
 			printf_utf8("%s", help_utf8.c_str());
 			return 0;
 		}

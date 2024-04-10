@@ -61,7 +61,7 @@
 
 std::string GetPrimaryConfigName()
 {
-	return CANONICAL_PROJECT_NAME ".conf";
+	return DOSBOX_PROJECT_NAME ".conf";
 }
 
 std_fs::path GetPrimaryConfigPath()

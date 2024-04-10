@@ -215,7 +215,7 @@ static std::string get_dosbox_version()
 	case TitlebarConfig::VersionDisplay::None:
 		return result;
 	case TitlebarConfig::VersionDisplay::Simple:
-		result += VERSION;
+		result += DOSBOX_GetVersion();
 		break;
 	case TitlebarConfig::VersionDisplay::Detailed:
 		result += DOSBOX_GetDetailedVersion();

@@ -1,8 +1,10 @@
 project(
-    'dosbox-staging',
-    'c',
-    'cpp',
-    version: '0.82.0-alpha',
+    'dosbox-staging', 'c', 'cpp',
+
+    version: run_command(
+      './scripts/get-version.sh', 'version', check: true,
+    ).stdout().strip(),
+
     license: 'GPL-2.0-or-later',
     meson_version: '>= 0.59.0',
     default_options: [
@@ -409,9 +411,14 @@ add_project_link_arguments(link_supported_arguments, language: 'cpp')
 # The actual config.h file will be generated after interpreting
 # all the build files in all the subdirs.
 #
+git_hash = run_command(
+  './scripts/get-version.sh', 'hash', check: true,
+).stdout().strip()
+
 conf_data = configuration_data()
 conf_data.set('version', meson.project_version())
 conf_data.set('project_name', meson.project_name())
+conf_data.set('git_hash', git_hash)
 conf_data.set_quoted(
     'CUSTOM_DATADIR',
     get_option('prefix') / get_option('datadir'),
@@ -1293,8 +1300,7 @@ configure_file(
 # Setup the executable and libraries
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
-version_file = vcs_tag(input: 'src/version.cpp.in', output: 'version.cpp')
-dosbox_sources = ['src/main.cpp', 'src/dosbox.cpp', version_file]
+dosbox_sources = ['src/main.cpp', 'src/dosbox.cpp']
 
 # Add Windows resources file if building on Windows
 if host_machine.system() == 'windows'
@@ -1315,7 +1321,7 @@ executable(
 # create a library so we can test things inside DOSBOX dep path
 libdosbox = static_library(
     'dosbox',
-    ['src/dosbox.cpp', version_file],
+    ['src/dosbox.cpp'],
     include_directories: incdir,
     dependencies: internal_deps + third_party_deps,
 )
