@@ -29,6 +29,8 @@
 
 #include <SDL.h>
 
+#define MAPPERFILE "mapper-sdl2-" VERSION ".map"
+
 constexpr uint32_t MMOD1 = 0x1;
 #define MMOD1_NAME "Ctrl"
 constexpr uint32_t MMOD2 = 0x2;
