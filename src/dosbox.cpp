@@ -315,6 +315,18 @@ void increaseticks() { //Make it return ticksRemain and set it in the function a
 	} //if (ticksScheduled >= 250 || ticksDone >= 250 || (ticksAdded > 15 && ticksScheduled >= 5) )
 }
 
+const char* DOSBOX_GetVersion() noexcept
+{
+	static constexpr char version[] = DOSBOX_VERSION;
+	return version;
+}
+
+const char* DOSBOX_GetDetailedVersion() noexcept
+{
+	static constexpr char version[] = DOSBOX_VERSION " (" BUILD_GIT_HASH ")";
+	return version;
+}
+
 void DOSBOX_SetLoop(LoopHandler * handler) {
 	loop=handler;
 }
@@ -1362,7 +1374,8 @@ void DOSBOX_Init()
 		"You can put your MOUNT lines here.\n"
 	);
 	MSG_Add("CONFIGFILE_INTRO",
-	        "# This is the configuration file for " CANONICAL_PROJECT_NAME " (%s).\n"
+	        "# This is the configuration file for " DOSBOX_PROJECT_NAME
+	        " (%s).\n"
 	        "# Lines starting with a '#' character are comments.\n");
 	MSG_Add("CONFIG_VALID_VALUES", "Possible values");
 	MSG_Add("CONFIG_DEPRECATED_VALUES", "Deprecated values");

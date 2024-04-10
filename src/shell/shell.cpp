@@ -747,7 +747,8 @@ void SHELL_Init() {
 	        "╚════════════════════════════════════════════════════════════════════╝[reset]\n"
 	        "\n");
 
-	MSG_Add("SHELL_STARTUP_SUB", "[color=light-green]" CANONICAL_PROJECT_NAME " %s[reset]\n");
+	MSG_Add("SHELL_STARTUP_SUB",
+	        "[color=light-green]" DOSBOX_PROJECT_NAME " %s[reset]\n");
 
 	MSG_Add("SHELL_CMD_CHDIR_HELP", "Display or change the current directory.\n");
 	MSG_Add("SHELL_CMD_CHDIR_HELP_LONG",
