@@ -32,6 +32,7 @@
 #include <optional>
 #include <string>
 #include <tuple>
+#include <variant>
 #include <vector>
 
 #include "std_filesystem.h"
@@ -47,10 +48,10 @@ bool has_false(const std::string_view setting);
 
 class Hex {
 private:
-	int value;
+	int value = 0;
 
 public:
-	Hex() : value(0) {}
+	Hex() = default;
 	Hex(int in) : value(in) {}
 
 	bool operator==(const Hex& other) const
@@ -64,13 +65,11 @@ public:
 	}
 };
 
-class Value {
+
+class Value final {
 private:
-	Hex _hex            = 0;
-	bool _bool          = false;
-	int _int            = 0;
-	std::string _string = {};
-	double _double      = 0;
+	using ValueType = std::variant<std::monostate, Hex, bool, int, std::string, double>;
+	ValueType _value = std::monostate();
 
 public:
 	enum Etype {
@@ -80,25 +79,31 @@ public:
 		V_INT,
 		V_STRING,
 		V_DOUBLE,
-		V_CURRENT
-	} type = V_NONE;
+	};
+
+	static_assert(
+	        (std::variant_size_v<ValueType> == 6) &&
+	                std::is_same_v<std::monostate, std::variant_alternative_t<V_NONE, ValueType>> &&
+	                std::is_same_v<Hex, std::variant_alternative_t<V_HEX, ValueType>> &&
+	                std::is_same_v<bool, std::variant_alternative_t<V_BOOL, ValueType>> &&
+	                std::is_same_v<int, std::variant_alternative_t<V_INT, ValueType>> &&
+	                std::is_same_v<std::string, std::variant_alternative_t<V_STRING, ValueType>> &&
+	                std::is_same_v<double, std::variant_alternative_t<V_DOUBLE, ValueType>>,
+	        "Enum Etype doesn't match the indexes of ValueType");
 
 	// Constructors
 	Value() = default;
 
-	Value(const Hex& in) : _hex(in), type(V_HEX) {}
-	Value(int in) : _int(in), type(V_INT) {}
-	Value(bool in) : _bool(in), type(V_BOOL) {}
-	Value(double in) : _double(in), type(V_DOUBLE) {}
+	template <typename T>
+	Value(T in) : _value(in)
+	{}
+
+	Value(const char* const in) : _value(std::string(in)) {}
 
 	Value(const std::string& in, Etype t)
 	{
 		SetValue(in, t);
 	}
-
-	Value(const std::string& in) : _string(in), type(V_STRING) {}
-
-	Value(const char* const in) : _string(in), type(V_STRING) {}
 
 	bool operator==(const Value& other) const;
 	bool operator==(const Hex& other) const;
@@ -110,16 +115,18 @@ public:
 	operator double() const;
 	operator std::string() const;
 
-	bool SetValue(const std::string& in, Etype _type = V_CURRENT);
+	bool SetValue(const std::string& in, Etype _type);
+
+	Etype GetType() const
+	{
+		return static_cast<Etype>(_value.index());
+	}
 
 	std::string ToString() const;
 
 private:
-	bool SetHex(const std::string& in);
-	bool SetInt(const std::string& in);
-	bool SetBool(const std::string& in);
-	void SetString(const std::string& in);
-	bool SetDouble(const std::string& in);
+	template <typename T>
+	bool SetFromString(const std::string& in);
 };
 
 class Property {
@@ -178,7 +185,7 @@ public:
 
 	Value::Etype Get_type()
 	{
-		return default_value.type;
+		return default_value.GetType();
 	}
 
 protected:
@@ -190,8 +197,8 @@ protected:
 	bool is_positive_bool_valid                            = false;
 	bool is_negative_bool_valid                            = false;
 
-	Value default_value                                    = {};
-	const Changeable::Value change                         = {};
+	Value default_value            = {};
+	const Changeable::Value change = {};
 	typedef std::vector<Value>::const_iterator const_iter;
 
 private:

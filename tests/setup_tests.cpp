@@ -91,16 +91,16 @@ TEST(Value, None)
 {
 	Value test_value{};
 	Value check_value("", Value::V_NONE);
-	EXPECT_EQ(test_value.type, check_value.type);
-	EXPECT_EQ(test_value.type, Value::V_NONE);
+	EXPECT_EQ(test_value.GetType(), check_value.GetType());
+	EXPECT_EQ(test_value.GetType(), Value::V_NONE);
 }
 
 TEST(Value, Hex)
 {
 	Value test_value{Hex(0x42)};
 	Value check_value("42", Value::V_HEX);
-	EXPECT_EQ(test_value.type, check_value.type);
-	EXPECT_EQ(test_value.type, Value::V_HEX);
+	EXPECT_EQ(test_value.GetType(), check_value.GetType());
+	EXPECT_EQ(test_value.GetType(), Value::V_HEX);
 	EXPECT_TRUE(test_value == check_value);
 	EXPECT_FALSE(test_value < check_value);
 	EXPECT_FALSE(check_value < test_value);
@@ -114,8 +114,8 @@ TEST(Value, Bool)
 {
 	Value test_value{true};
 	Value check_value("true", Value::V_BOOL);
-	EXPECT_EQ(test_value.type, check_value.type);
-	EXPECT_EQ(test_value.type, Value::V_BOOL);
+	EXPECT_EQ(test_value.GetType(), check_value.GetType());
+	EXPECT_EQ(test_value.GetType(), Value::V_BOOL);
 	EXPECT_TRUE(test_value == check_value);
 	EXPECT_FALSE(test_value < check_value);
 	EXPECT_FALSE(check_value < test_value);
@@ -128,8 +128,8 @@ TEST(Value, Int)
 {
 	Value test_value{42};
 	Value check_value("42", Value::V_INT);
-	EXPECT_EQ(test_value.type, check_value.type);
-	EXPECT_EQ(test_value.type, Value::V_INT);
+	EXPECT_EQ(test_value.GetType(), check_value.GetType());
+	EXPECT_EQ(test_value.GetType(), Value::V_INT);
 	EXPECT_TRUE(test_value == check_value);
 	EXPECT_FALSE(test_value < check_value);
 	EXPECT_FALSE(check_value < test_value);
@@ -142,8 +142,8 @@ TEST(Value, CString)
 {
 	Value test_value{"abc"};
 	Value check_value("abc", Value::V_STRING);
-	EXPECT_EQ(test_value.type, check_value.type);
-	EXPECT_EQ(test_value.type, Value::V_STRING);
+	EXPECT_EQ(test_value.GetType(), check_value.GetType());
+	EXPECT_EQ(test_value.GetType(), Value::V_STRING);
 	EXPECT_TRUE(test_value == check_value);
 	EXPECT_FALSE(test_value < check_value);
 	EXPECT_FALSE(check_value < test_value);
@@ -156,8 +156,8 @@ TEST(Value, StdString)
 {
 	Value test_value{std::string("cde")};
 	Value check_value("cde", Value::V_STRING);
-	EXPECT_EQ(test_value.type, check_value.type);
-	EXPECT_EQ(test_value.type, Value::V_STRING);
+	EXPECT_EQ(test_value.GetType(), check_value.GetType());
+	EXPECT_EQ(test_value.GetType(), Value::V_STRING);
 	EXPECT_TRUE(test_value == check_value);
 	EXPECT_FALSE(test_value < check_value);
 	EXPECT_FALSE(check_value < test_value);
@@ -170,8 +170,8 @@ TEST(Value, Double)
 {
 	Value test_value{42.0};
 	Value check_value("42", Value::V_DOUBLE);
-	EXPECT_EQ(test_value.type, check_value.type);
-	EXPECT_EQ(test_value.type, Value::V_DOUBLE);
+	EXPECT_EQ(test_value.GetType(), check_value.GetType());
+	EXPECT_EQ(test_value.GetType(), Value::V_DOUBLE);
 	EXPECT_TRUE(test_value == check_value);
 	EXPECT_FALSE(test_value < check_value);
 	EXPECT_FALSE(check_value < test_value);

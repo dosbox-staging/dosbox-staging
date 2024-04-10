@@ -28,6 +28,7 @@
 #include <regex>
 #include <sstream>
 #include <string_view>
+#include <variant>
 #include <unordered_map>
 
 #include "control.h"
@@ -48,163 +49,132 @@ std::unique_ptr<Config> control = {};
 // Set by parseconfigfile so Prop_path can use it to construct the realpath
 static std_fs::path current_config_dir;
 
+static std::istream& operator>>(std::istream& is, Hex& out) {
+	is.flags(std::ios::hex);
+	int value;
+	is >> value;
+	out = Hex(value);
+	return is;
+}
+
+static std::ostream& operator<<(std::ostream& os, Hex in) {
+	os.flags(std::ios::hex);
+	os << static_cast<int>(in);
+	return os;
+}
+
+template <typename T>
+T checked_get(auto value)
+{
+	assert(std::holds_alternative<T>(value));
+	return std::get<T>(value);
+}
+
 Value::operator bool() const
 {
-	assert(type == V_BOOL);
-	return _bool;
+	return checked_get<bool>(_value);
 }
 
 Value::operator Hex() const
 {
-	assert(type == V_HEX);
-	return _hex;
+	return checked_get<Hex>(_value);
 }
 
 Value::operator int() const
 {
-	assert(type == V_INT);
-	return _int;
+	return checked_get<int>(_value);
 }
 
 Value::operator double() const
 {
-	assert(type == V_DOUBLE);
-	return _double;
+	return checked_get<double>(_value);
 }
 
 Value::operator std::string() const
 {
-	assert(type == V_STRING);
-	return _string;
+	return checked_get<std::string>(_value);
 }
 
 bool Value::operator==(const Value& other) const
 {
-	if (this == &other) {
-		return true;
-	}
-	if (type != other.type) {
-		return false;
-	}
-	switch (type) {
-	case V_BOOL: return _bool == other._bool;
-	case V_INT: return _int == other._int;
-	case V_HEX: return _hex == other._hex;
-	case V_DOUBLE: return _double == other._double;
-	case V_STRING: return _string == other._string;
-	default:
-		LOG_ERR("SETUP: Comparing stuff that doesn't make sense");
-		break;
-	}
-	return false;
+	return (this == &other) || (_value == other._value);
 }
 
-bool Value::operator==(const Hex& other) const {
-    return this->_hex == other;
+bool Value::operator==(const Hex& other) const
+{
+	return checked_get<Hex>(_value) == other;
 }
 
 bool Value::operator<(const Value& other) const
 {
-	return std::tie(_hex, _bool, _int, _string, _double) <
-	       std::tie(other._hex, other._bool, other._int, other._string, other._double);
-}
-
-bool Value::SetValue(const std::string& in, const Etype _type)
-{
-	assert(type == V_NONE || type == _type);
-	type = _type;
-
-	bool is_valid = true;
-	switch (type) {
-	case V_HEX: is_valid = SetHex(in); break;
-	case V_INT: is_valid = SetInt(in); break;
-	case V_BOOL: is_valid = SetBool(in); break;
-	case V_STRING: SetString(in); break;
-	case V_DOUBLE: is_valid = SetDouble(in); break;
-
-	case V_NONE:
-	case V_CURRENT:
-	default:
-		LOG_ERR("SETUP: Unhandled type when setting value: '%s'",
-		        in.c_str());
-		is_valid = false;
-		break;
-	}
-	return is_valid;
-}
-
-bool Value::SetHex(const std::string& in)
-{
-	std::istringstream input(in);
-	input.flags(std::ios::hex);
-	int result = INT_MIN;
-	input >> result;
-	if (result == INT_MIN) {
-		return false;
-	}
-	_hex = result;
-	return true;
-}
-
-bool Value::SetInt(const std::string& in)
-{
-	std::istringstream input(in);
-	int result = INT_MIN;
-	input >> result;
-	if (result == INT_MIN) {
-		return false;
-	}
-	_int = result;
-	return true;
-}
-
-bool Value::SetDouble(const std::string& in)
-{
-	std::istringstream input(in);
-	double result = std::numeric_limits<double>::infinity();
-	input >> result;
-	if (result == std::numeric_limits<double>::infinity()) {
-		return false;
-	}
-	_double = result;
-	return true;
+	return _value < other._value;
 }
 
 // Sets the '_bool' member variable to either the parsed boolean value or false
 // if it couldn't be parsed. Returns true if the provided string was parsed.
-bool Value::SetBool(const std::string& in)
+template<>
+bool Value::SetFromString<bool>(const std::string& in)
 {
 	auto in_lowercase = in;
 	lowcase(in_lowercase);
 	const auto parsed = parse_bool_setting(in_lowercase);
-	_bool = parsed ? *parsed : false;
+	_value            = parsed ? *parsed : false;
 	return parsed.has_value();
 }
 
-void Value::SetString(const std::string& in)
+template<>
+bool Value::SetFromString<std::string>(const std::string& in)
 {
-	_string = in;
+	_value = in;
+	return true;
+}
+
+template <typename T>
+bool Value::SetFromString(const std::string& in)
+{
+	std::istringstream input(in);
+	T result;
+	input >> result;
+	if (input.fail()) {
+		return false;
+	}
+	_value = result;
+	return true;
+}
+
+bool Value::SetValue(const std::string& in, const Etype _type)
+{
+	if (_type == V_NONE) {
+		LOG_ERR("SETUP: Unhandled type when setting value: '%s'",
+		        in.c_str());
+		return false;
+	}
+	assert(!std::holds_alternative<std::monostate>(_value) ||
+	       (_value.index() == _type));
+
+	switch (_type) {
+	case V_HEX: return SetFromString<Hex>(in); break;
+	case V_INT: return SetFromString<int>(in); break;
+	case V_BOOL: return SetFromString<bool>(in); break;
+	case V_STRING: return SetFromString<std::string>(in); break;
+	case V_DOUBLE: return SetFromString<double>(in); break;
+	case V_NONE: break;
+	}
+	return false;
 }
 
 std::string Value::ToString() const
 {
 	std::ostringstream oss;
-	switch (type) {
-	case V_HEX:
-		oss.flags(std::ios::hex);
-		oss << _hex;
-		break;
-	case V_INT: oss << _int; break;
-	case V_BOOL: oss << std::boolalpha << _bool; break;
-	case V_STRING: oss << _string; break;
-	case V_DOUBLE:
-		oss.precision(2);
-		oss << std::fixed << _double;
-		break;
-	case V_NONE:
-	case V_CURRENT:
-	default: E_Exit("ToString messed up ?"); break;
-	}
+	std::visit(Overload{
+	                   [&oss](auto arg) { oss << std::boolalpha << arg; },
+	                   [&oss](double arg) {
+		                   oss.precision(2);
+		                   oss << std::fixed << arg;
+	                   },
+	                   [](std::monostate) { E_Exit("ToString messed up ?"); },
+	           },
+	           _value);
 	return oss.str();
 }
 
@@ -700,7 +670,7 @@ void Property::SetDeprecatedWithAlternateValue(const char* deprecated_value,
 
 void Property::Set_values(const std::vector<std::string>& in)
 {
-	Value::Etype type = default_value.type;
+	Value::Etype type = default_value.GetType();
 	for (auto& str : in) {
 		MaybeSetBoolValid(str);
 		Value val(str, type);
