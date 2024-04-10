@@ -609,15 +609,8 @@ void CSerialModem::DoCommand()
 		}
 		case 'I': // Some strings about firmware
 			switch (ScanNumber(scanbuf)) {
-			case 3:
-				SendLine("DOSBox Emulated Modem Firmware V1.00");
-				break;
-			case 4: {
-				const auto line = format_string(
-				        "Modem compiled for DOSBox version %s",
-				        DOSBOX_GetDetailedVersion());
-				SendLine(line.c_str());
-			} break;
+			case 3: SendLine("DOSBox Emulated Modem Firmware V1.00"); break;
+			case 4: SendLine("Modem compiled for DOSBox version " VERSION); break;
 			}
 			break;
 		case 'E': // Echo on/off

@@ -206,14 +206,11 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 
 	char software_keyword[] = "Software";
 	static_assert(sizeof(software_keyword) < 80, "libpng limit");
-
-	auto software_value = format_string("%s %s",
-	                                    CANONICAL_PROJECT_NAME,
-	                                    DOSBOX_GetDetailedVersion());
+	char software_value[] = CANONICAL_PROJECT_NAME " " VERSION;
 
 	texts[0].compression = PNG_TEXT_COMPRESSION_NONE;
 	texts[0].key         = static_cast<png_charp>(software_keyword);
-	texts[0].text        = static_cast<png_charp>(software_value.data());
+	texts[0].text        = static_cast<png_charp>(software_value);
 	texts[0].text_length = sizeof(software_value);
 
 	auto num_text = 1;
@@ -221,7 +218,7 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 	char source_keyword[] = "Source";
 	static_assert(sizeof(source_keyword) < 80, "libpng limit");
 
-	auto source_value = format_string(
+	const auto source_value = format_string(
 	        "source resolution: %dx%d; source pixel aspect ratio: %d:%d (1:%1.6f)",
 	        video_mode.width,
 	        video_mode.height,
@@ -231,7 +228,7 @@ void PngWriter::WritePngInfo(const uint16_t width, const uint16_t height,
 
 	texts[1].compression = PNG_TEXT_COMPRESSION_NONE;
 	texts[1].key         = static_cast<png_charp>(source_keyword);
-	texts[1].text        = static_cast<png_charp>(source_value.data());
+	texts[1].text        = const_cast<png_charp>(source_value.data());
 	texts[1].text_length = source_value.size();
 
 	++num_text;

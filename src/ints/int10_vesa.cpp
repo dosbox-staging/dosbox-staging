@@ -48,6 +48,7 @@ static struct {
 static const std::string string_oem         = "S3 Incorporated. Trio64";
 static const std::string string_vendorname  = DOSBOX_TEAM;
 static const std::string string_productname = DOSBOX_NAME;
+static const std::string string_productrev  = VERSION;
 
 #ifdef _MSC_VER
 #pragma pack (1)
@@ -143,7 +144,6 @@ uint8_t VESA_GetSVGAInformation(const uint16_t segment, const uint16_t offset)
 
 		// Product revision
 		mem_writed(buffer + 0x1e, RealMake(segment, vbe2_pos));
-		const auto string_productrev = DOSBOX_GetDetailedVersion();
 		write_string(string_productrev, vbe2_pos);
 	} else {
 		// OEM string
