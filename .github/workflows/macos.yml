@@ -46,7 +46,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           submodules: false
 
       # Let self-hosted runners, which don't need_deps, leverage their own ccache.
@@ -167,7 +166,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           submodules: false
 
       # Let self-hosted runners, which don't need_deps, leverage their own ccache.
@@ -276,7 +274,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           submodules: false
 
       - name: Inject version string
@@ -343,7 +340,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
           submodules: false
 
       - name: Generate changelog
