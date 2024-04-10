@@ -305,8 +305,11 @@ void VGA_DAC_CombineColor(const uint8_t palette_idx, const uint8_t color_idx)
 {
 	vga.dac.combine[palette_idx] = color_idx;
 
-	if (vga.mode != M_LIN8) {
-		// Used by copper demo; almost no video card seems to support it
+	// Mimic the legacy `machine = vgaonly` behaviour when emulating the
+	// Paradise card, which is our closest substitue for it. This fixes the
+	// wrong colours appearing in some rare titles (e.g., Spell It Plus).
+	//
+	if (svgaCard != SVGA_ParadisePVGA1A && vga.mode != M_LIN8) {
 		vga_dac_send_color(palette_idx, color_idx);
 	}
 }

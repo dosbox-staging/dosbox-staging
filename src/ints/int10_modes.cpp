@@ -1684,7 +1684,37 @@ att_text16:
 	}
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
 
+	auto setup_palette_registers = [&] {
+		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
+			IO_Write(0x3c0, ct);
+			IO_Write(0x3c0, att_data[ct]);
+		}
+
+		vga.config.pel_panning = 0;
+
+		// Disable palette access
+		IO_Write(0x3c0, 0x20);
+		IO_Write(0x3c0, 0x00);
+
+		// Reset PEL mask
+		IO_Write(0x3c6, 0xff);
+	};
+
 	if ((modeset_ctl & 8)==0) {
+		// We really need to set the DAC colors first so the EGA palette
+		// detection on VGA works correctly (see `vga_dac_send_color` in
+		// `vga_dac.cpp`).
+		//
+		// But this diverges from the legacy DOSBox behaviour and seems to
+		// break the colours in a minority of titles (e.g. Spell It Plus).
+		// Therefore, we revert to the legacy behaviour when emulating the
+		// Paradise SVGA card (the oldest SVGA card we support) to maximise
+		// game compatibility.
+		//
+		if (svgaCard == SVGA_ParadisePVGA1A) {
+			setup_palette_registers();
+		}
+
 		// Set up Color Registers (DAC colours)
 		IO_Write(0x3c8, 0);
 
@@ -1746,20 +1776,9 @@ dac_text16:
 			break;
 		}
 
-		// Set up Palette Registers
-		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
-			IO_Write(0x3c0, ct);
-			IO_Write(0x3c0, att_data[ct]);
+		if (svgaCard != SVGA_ParadisePVGA1A) {
+			setup_palette_registers();
 		}
-
-		vga.config.pel_panning = 0;
-
-		// Disable palette access
-		IO_Write(0x3c0, 0x20);
-		IO_Write(0x3c0, 0x00);
-
-		// Reset PEL mask
-		IO_Write(0x3c6, 0xff);
 
 		if (IS_VGA_ARCH) {
 			//  check if gray scale summing is enabled
