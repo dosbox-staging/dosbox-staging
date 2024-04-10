@@ -38,6 +38,7 @@ class MOUNT final : public Program {
 	    void Run() override;
     private:
         static void AddMessages();
+	    void ShowUsage();
 };
 
 #endif // DOSBOX_PROGRAM_MOUNT_H

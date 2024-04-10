@@ -72,6 +72,20 @@ void MOUNT::ListMounts()
 	}
 }
 
+void MOUNT::ShowUsage()
+{
+	MoreOutputStrings output(*this);
+	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG"));
+#ifdef WIN32
+	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG_WIN32"));
+#elif MACOSX
+	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG_MACOSX"));
+#else
+	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG_OTHER"));
+#endif
+	output.Display();
+}
+
 void MOUNT::Run(void) {
 	std::unique_ptr<DOS_Drive> newdrive = {};
 	DOS_Drive* drive_pointer            = nullptr;
@@ -91,9 +105,7 @@ void MOUNT::Run(void) {
 	// a side effect of not being able to parse the correct 
 	// command line options.
 	if (HelpRequested()) {
-		MoreOutputStrings output(*this);
-		output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG"));
-		output.Display();
+		ShowUsage();
 		return;
 	}
 
@@ -184,11 +196,16 @@ void MOUNT::Run(void) {
 
 		// get the drive letter
 		cmd->FindCommand(1,temp_line);
-		if ((temp_line.size() > 2) || ((temp_line.size() > 1) && (temp_line[1]!=':'))) goto showusage;
+		if ((temp_line.size() > 2) ||
+		    ((temp_line.size() > 1) && (temp_line[1] != ':'))) {
+			ShowUsage();
+			return;
+		}
 		const int i_drive = toupper(temp_line[0]);
 
 		if (i_drive < 'A' || i_drive > 'Z') {
-			goto showusage;
+			ShowUsage();
+			return;
 		}
 		drive = int_to_char(i_drive);
 		if (type == "overlay") {
@@ -205,10 +222,12 @@ void MOUNT::Run(void) {
 		}
 
 		if (!cmd->FindCommand(2,temp_line)) {
-			goto showusage;
+			ShowUsage();
+			return;
 		}
 		if (!temp_line.size()) {
-			goto showusage;
+			ShowUsage();
+			return;
 		}
 
 		if (path_relative_to_last_config && control->configfiles.size() &&
@@ -388,11 +407,6 @@ void MOUNT::Run(void) {
 	}
 	if (type == "floppy") incrementFDD();
 	return;
-showusage:
-	MoreOutputStrings output(*this);
-	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG"));
-	output.Display();
-	return;
 }
 
 void MOUNT::AddMessages() {
@@ -425,21 +439,19 @@ void MOUNT::AddMessages() {
 	        "    Run 'mount -cd' to find out the list of valid IDs.\n"
 	        "  - Additional options are described in the manual (README file, chapter 4).\n"
 	        "\n"
-	        "Examples:\n"
-#if defined(WIN32)
+	        "Examples:\n");
+	MSG_Add("PROGRAM_MOUNT_HELP_LONG_WIN32",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\\dosgames[reset]\n"
-	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\[reset] -t cdrom -usecd 0\n"
-	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
-#elif defined(MACOSX)
+	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\\ [reset]-t cdrom -usecd 0\n"
+	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
+	MSG_Add("PROGRAM_MOUNT_HELP_LONG_MACOSX",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
 	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/Volumes/Game CD\"[reset] -t cdrom -usecd 0\n"
-	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
-#else
+	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
+	MSG_Add("PROGRAM_MOUNT_HELP_LONG_OTHER",
 	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/dosgames[reset]\n"
 	        "  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]\"/media/USERNAME/Game CD\"[reset] -t cdrom -usecd 0\n"
-	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n"
-#endif
-	);
+	        "  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]my_savegame_files[reset] -t overlay\n");
 
 	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND","CD-ROMs found: %d\n");
 	MSG_Add("PROGRAM_MOUNT_ERROR_1","Directory %s doesn't exist.\n");
