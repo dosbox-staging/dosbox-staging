@@ -141,6 +141,15 @@ void IMGMOUNT::Run(void)
 		MoreOutputStrings output(*this);
 		output.AddString(MSG_Get("PROGRAM_IMGMOUNT_HELP_LONG"),
 		                 PRIMARY_MOD_NAME);
+#if defined(WIN32)
+		output.AddString(MSG_Get("PROGRAM_IMGMOUNT_HELP_LONG_WIN32"));
+#elif defined(MACOSX)
+		output.AddString(MSG_Get("PROGRAM_IMGMOUNT_HELP_LONG_MACOSX"));
+#else
+		output.AddString(MSG_Get("PROGRAM_IMGMOUNT_HELP_LONG_OTHER"));
+#endif
+		output.AddString(MSG_Get("PROGRAM_IMGMOUNT_HELP_LONG_GENERIC"));
+
 		output.Display();
 		return;
 	}
@@ -629,19 +638,18 @@ void IMGMOUNT::AddMessages()
 	        "  - The -ide flag emulates an IDE controller with attached IDE CD drive, useful\n"
 	        "    for CD-based games that need a real DOS environment via bootable HDD image.\n"
 	        "\n"
-	        "Examples:\n"
-#if defined(WIN32)
-	        "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\\Games\\doom.iso[reset] -t cdrom\n"
-#elif defined(MACOSX)
-	        "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USERNAME/Games/doom.iso[reset] -t cdrom\n"
-#else
-	        "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom\n"
-#endif
+	        "Examples:\n");
+	MSG_Add("PROGRAM_IMGMOUNT_HELP_LONG_WIN32",
+	        "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\\Games\\doom.iso[reset] -t cdrom\n");
+	MSG_Add("PROGRAM_IMGMOUNT_HELP_LONG_MACOSX",
+	        "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/USERNAME/Games/doom.iso[reset] -t cdrom\n");
+	MSG_Add("PROGRAM_IMGMOUNT_HELP_LONG_OTHER",
+	        "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USERNAME/games/doom.iso[reset] -t cdrom\n");
+	MSG_Add("PROGRAM_IMGMOUNT_HELP_LONG_GENERIC",
 	        "  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom\n"
 	        "  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy1.img floppy2.img floppy3.img[reset] -t floppy -ro\n"
 	        "  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
-	        "  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n"
-	);
+	        "  [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]bootable.img[reset] -t hdd -fs none -size 512,63,32,1023\n");
 
 	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_DRIVE",
 	        "Must specify drive letter to mount image at.\n");
