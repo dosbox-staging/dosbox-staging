@@ -71,9 +71,6 @@ Name: "contextmenu"; Description: "Add ""Run/Open with {#DOSBoxAppName}"" contex
 Name: "defaultmsvc"; Description: "Run MSVC release binary (instead of MSYS2 binary) as the default binary"; Flags: unchecked
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
-[Run]
-Filename: "{app}\{#DOSBoxAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(DOSBoxAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
-
 [Files]
 Source: "program\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "{#DOSBoxAppExeName}"; DestDir: "{app}"; DestName: "{#DOSBoxAppExeName}"; Flags: ignoreversion; Tasks: not defaultmsvc
