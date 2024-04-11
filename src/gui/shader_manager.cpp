@@ -413,6 +413,10 @@ void ShaderManager::MaybeAutoSwitchShader()
 		}
 
 		if (shader_changed) {
+			if (video_mode.has_vga_colors) {
+				LOG_MSG("RENDER: EGA mode with custom 18-bit VGA palette "
+				        "detected; auto-switching to VGA shader");
+			}
 			LOG_MSG("RENDER: Auto-switched to shader '%s'",
 			        current_shader.info.name.c_str());
 		}
