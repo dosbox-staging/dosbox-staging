@@ -306,7 +306,7 @@ struct VgaDraw {
 	// Single scanning is forced by the arcade shaders to achieve the
 	// single-scanned 15 kHz CRT look for double-scanned VGA modes, or by
 	// shaders that treat pixels as flat adjacent rectangles (e.g., the
-	// "sharp" shader and the "no-bilinear" output modes; the double-scanned
+	// "sharp" shader and the "no bilinear" output modes; the double-scanned
 	// and force single-scanned output is exactly identical in these cases,
 	// but single scanning is more performant which matter on low-powered
 	// devices).
