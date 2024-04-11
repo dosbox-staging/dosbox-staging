@@ -33,16 +33,12 @@
 #include <string>
 #include <vector>
 
-#include <SDL.h>
-#include <SDL_thread.h>
-
 #include "support.h"
 #include "mem.h"
 #include "mixer.h"
 #include "rwqueue.h"
 
 #include "decoders/SDL_sound.h"
-#include "sdlcd/SDL_cdrom.h"
 
 // CDROM data and audio format constants
 #define BYTES_PER_RAW_REDBOOK_FRAME    2352u
@@ -121,62 +117,6 @@ public:
 
 protected:
 	void LagDriveResponse() const;
-};
-
-class CDROM_Interface_SDL : public CDROM_Interface
-{
-public:
-	CDROM_Interface_SDL();
-	CDROM_Interface_SDL(const CDROM_Interface_SDL&);
-	CDROM_Interface_SDL& operator=(const CDROM_Interface_SDL&);
-	~CDROM_Interface_SDL() override;
-	bool SetDevice(const char* path) override;
-	bool GetUPC(unsigned char& attr, std::string& upc) override
-	{
-		attr = 0;
-		upc = {};
-		return true;
-	}
-	bool GetAudioTracks(uint8_t& stTrack, uint8_t& end, TMSF& leadOut) override;
-	bool GetAudioTrackInfo(uint8_t track, TMSF& start, unsigned char& attr) override;
-	bool GetAudioSub(unsigned char& attr, unsigned char& track,
-	                 unsigned char& index, TMSF& relPos, TMSF& absPos) override;
-	bool GetAudioStatus(bool& playing, bool& pause) override;
-	bool GetMediaTrayStatus(bool& mediaPresent, bool& mediaChanged,
-	                        bool& trayOpen) override;
-	bool PlayAudioSector(const uint32_t start, uint32_t len) override;
-	bool PauseAudio(bool resume) override;
-	bool StopAudio() override;
-	void ChannelControl([[maybe_unused]] TCtrl ctrl) override
-	{
-		return;
-	}
-	bool ReadSectors([[maybe_unused]] PhysPt buffer,
-	                 [[maybe_unused]] const bool raw,
-	                 [[maybe_unused]] const uint32_t sector,
-	                 [[maybe_unused]] const uint16_t num) override
-	{
-		return false;
-	}
-	bool ReadSectorsHost([[maybe_unused]] void* buffer, [[maybe_unused]] bool raw,
-	                     [[maybe_unused]] unsigned long sector,
-	                     [[maybe_unused]] unsigned long num) override
-	{
-		return true;
-	}
-	bool LoadUnloadMedia(bool unload) override;
-	bool HasFullMscdexSupport() override
-	{
-		return true;
-	}
-
-private:
-	bool Open();
-	void Close();
-
-	SDL_CD *cd = nullptr;
-	int driveID = 0;
-	Uint32 oldLeadOut = 0;
 };
 
 class CDROM_Interface_Fake final : public CDROM_Interface {
@@ -507,18 +447,5 @@ private:
 };
 
 #endif // Linux / WIN32
-
-extern "C" SDL_CD *SDL_CDOpen(int drive);
-extern "C" void SDL_CDClose(SDL_CD *cdrom);
-extern "C" CDstatus SDL_CDStatus(SDL_CD *cdrom);
-extern "C" int SDL_CDPlay(SDL_CD *cdrom, int sframe, int length);
-extern "C" int SDL_CDPause(SDL_CD *cdrom);
-extern "C" int SDL_CDResume(SDL_CD *cdrom);
-extern "C" int SDL_CDStop(SDL_CD *cdrom);
-extern "C" int SDL_CDEject(SDL_CD *cdrom);
-extern "C" const char *SDL_CDName(int drive);
-extern "C" int SDL_CDNumDrives();
-extern "C" int SDL_CDROMInit();
-extern "C" void SDL_CDROMQuit();
 
 #endif

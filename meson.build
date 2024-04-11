@@ -1233,7 +1233,6 @@ subdir('src/libs/loguru')
 subdir('src/libs/decoders')
 subdir('src/libs/nuked')
 subdir('src/libs/residfp')
-subdir('src/libs/sdlcd')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
 if conf_data.get('C_MANYMOUSE') != 0
@@ -1256,7 +1255,6 @@ third_party_deps = [
     ghc_dep,
     libiir_dep,
     libloguru_dep,
-    libsdlcd_dep,
     tracy_dep,
     libwhereami_dep,
     libtalchorus_dep,

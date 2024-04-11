@@ -700,12 +700,6 @@
     <ClCompile Include="..\src\libs\loguru\loguru.cpp">
       <Filter>src\libs\loguru</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\libs\sdlcd\SDL_cdrom.c">
-      <Filter>src\libs\sdlcd</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\libs\sdlcd\win32\SDL_syscdrom.c">
-      <Filter>src\libs\sdlcd</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libs\whereami\whereami.c">
       <Filter>src\libs\whereami</Filter>
     </ClCompile>
@@ -1560,9 +1554,6 @@
     </Filter>
     <Filter Include="src\libs\ghc">
       <UniqueIdentifier>{9df2bcc2-35e3-4be4-a577-dff8be565c65}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\libs\sdlcd">
-      <UniqueIdentifier>{5aedba43-0ef7-4531-a907-6609a23675d8}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\pdcurses">
       <UniqueIdentifier>{40435b8c-40e5-4751-ad49-5c4492538be5}</UniqueIdentifier>
