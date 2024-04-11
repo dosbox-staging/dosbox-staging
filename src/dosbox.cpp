@@ -758,8 +758,6 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("sbtype", when_idle, "sb16");
 	pstring->Set_values({"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "none"});
-	pstring->Set_help("Type of Sound Blaster to emulate ('sb16' by default).\n"
-	                  "'gb' is Game Blaster.");
 	pstring->Set_help(
 	        "Sound Blaster model to emulate ('sb16' by default).\n"
 	        "The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.\n"

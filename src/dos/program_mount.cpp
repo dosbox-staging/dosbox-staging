@@ -397,6 +397,9 @@ showusage:
 
 void MOUNT::AddMessages() {
 	AddCommonMountMessages();
+	if (MSG_Exists("PROGRAM_MOUNT_HELP")) {
+		return;
+	}
 	MSG_Add("PROGRAM_MOUNT_HELP",
 	        "Map physical folders or drives to a virtual drive letter.\n");
 
