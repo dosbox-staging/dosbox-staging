@@ -124,9 +124,12 @@ static std::deque<std::string> messages_order;
 // Add the message if it doesn't exist yet
 void MSG_Add(const char *name, const char *markup_msg)
 {
-	const auto &pair = messages.try_emplace(name, markup_msg);
-	if (pair.second) // if the insertion was successful
+	const auto pair = messages.try_emplace(name, markup_msg);
+	if (pair.second) { // if the insertion was successful
 		messages_order.emplace_back(name);
+	} else {
+		LOG_WARNING("LANG: Duplicate text added for message '%s'. Second instance is ignored.", name);
+	}
 }
 
 // Replace existing or add if it doesn't exist
