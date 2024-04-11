@@ -72,6 +72,30 @@ static bool is_ega_color(const Rgb666 color)
 	       palette.ega.cend();
 }
 
+// In the automatic "video mode specific" CRT emulation mode (glshader =
+// crt-auto), we want "true EGA" games on emulated VGA adapters to use the
+// single scanline EGA shader. "True EGA" games set up an EGA mode and
+// don't change the palette to use 18-bit VGA colours. These games look
+// identical on VGA and EGA, except for the VGA double scanning.
+//
+// Some games (most notably Amiga and Atari ST ports) "repurpose" the
+// 16-colour EGA modes on VGA: they set up an EGA mode first, then change
+// the default CGA/EGA palette to a custom set of sixteen 18-bit RGB
+// colours (many Amiga and Atari ST games used a 16-colour palette out of
+// 4096 (Amiga) or 512 (Atari ST) colours). As these games can only run on
+// VGA adapters, we double scan them in 'crt-auto' mode (although it can
+// be argued that this case calls for single scanning to mimic the
+// single-scanned home computer monitor look. But we're emulating PC
+// compatibles here and how people experienced these games on PC hardware,
+// so double scanning it is).
+//
+// Detecting EGA modes using custom VGA colours is accomplished by setting
+// the `ega_mode_with_vga_colors` flag to true when the first non-EGA
+// palette colour is set after a mode switch.
+//
+// Note that custom CGA colours (via the `cga_colors` config setting) are
+// handled correctly as well.
+//
 static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_idx)
 {
 	const auto rgb666 = vga.dac.rgb[color_idx];
@@ -82,24 +106,31 @@ static void vga_dac_send_color(const uint8_t palette_idx, const uint8_t color_id
 	// which will trigger this function.
 	const auto bios_mode_number = CurMode->mode;
 
-	// In the automatic "video mode specific" CRT emulation mode, we want
-	// "true EGA" games (EGA modes with the default EGA palette on VGA) to
-	// use the single-scanline EGA shader. But VGA games that just happen to
-	// use EGA modes but with a 18-bit VGA palette should be rendered with
-	// the double-scanned VGA shader.
-	//
-	// This is accomplished by setting the `ega_mode_with_vga_colors` flag
-	// to true when the first non-EGA palette colour is set after a mode
-	// switch.
-	//
-	// Note that custom CGA colours (via the `cga_colors` setting) are
-	// handled correctly as well.
-	//
+	const auto is_640x350_16color_mode = (bios_mode_number == 0x10);
+
+#if 0
+	bool log_warning = false;
+	if (is_640x350_16color_mode) {
+		log_warning = !is_ega_color(rgb666);
+	} else {
+		log_warning = !is_cga_color(rgb666);
+	}
+
+	auto msg = format_str("palette_idx: %d, color_idx: %d", palette_idx, color_idx);
+	if (log_warning) {
+		LOG_WARNING("%s, color: %02x %02x %02x",
+		            msg.c_str(),
+		            rgb666.red,
+		            rgb666.green,
+		            rgb666.blue);
+	} else {
+		LOG_TRACE(msg);
+	}
+#endif
+
 	if (machine == MCH_VGA && !vga.ega_mode_with_vga_colors &&
 	    bios_mode_number <= MaxEgaBiosModeNumber) {
 		bool non_ega_color = false;
-
-		const auto is_640x350_16color_mode = (bios_mode_number == 0x10);
 
 		if (is_640x350_16color_mode) {
 			// The 640x350 16-colour EGA mode (mode 10h) is special:
