@@ -1241,14 +1241,22 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&DRIVES_Init);
 	secprop->AddInitFunction(&CDROM_Image_Init);
 
+#if C_IPX
 	secprop = control->AddSection_prop("ipx", &IPX_Init, changeable_at_runtime);
+#else
+	secprop = control->AddInactiveSectionProp("ipx");
+#endif
 	pbool = secprop->Add_bool("ipx", when_idle, false);
 	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation (disabled by default).");
 #if C_IPX
 	pbool->SetEnabledOptions({"ipx"});
 #endif
 
+#if C_SLIRP
 	secprop = control->AddSection_prop("ethernet", &NE2K_Init, changeable_at_runtime);
+#else
+	secprop = control->AddInactiveSectionProp("ethernet");
+#endif
 
 	pbool = secprop->Add_bool("ne2000", when_idle, true);
 	pbool->SetOptionHelp(
