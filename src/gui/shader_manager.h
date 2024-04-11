@@ -61,6 +61,13 @@ enum class ShaderMode {
 	// "how people experienced the game at the time of release", and
 	// prioritising the most probable developer intent.)
 	//
+	// For CGA and EGA modes that reprogram the 18-bit DAC palette on VGA
+	// adapters, a double-scanned VGA shader is selected. This is authentic as
+	// these games require a VGA adapter, therefore they were designed with
+	// double scanning in mind. In other words, no one could have experienced
+	// them on single scanning CGA and EGA monitors without special hardware
+	// hacks.
+	//
 	AutoGraphicsStandard,
 
 	// Machine-based adaptive CRT shader mode.
