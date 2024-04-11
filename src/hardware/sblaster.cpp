@@ -281,7 +281,7 @@ static int e2_incr_table[4][9] = {
         { 0x01, -0x02,  0x04, -0x08, -0x10,  0x20, -0x40,  0x80,   90}
 };
 
-static const char* log_prefix()
+static const char* sb_log_prefix()
 {
 	switch (sb.type) {
 	case SBType::SB1: return "SB1";
@@ -340,7 +340,7 @@ static void dsp_set_speaker(const bool requested_state)
 #if 0
 	// This can be very noisy as some games toggle the speaker for every effect
 	LOG_MSG("%s: Speaker-output has been toggled %s",
-	        log_prefix(),
+	        sb_log_prefix(),
 	        (requested_state ? "on" : "off"));
 #endif
 }
@@ -502,7 +502,7 @@ static void configure_sb_filter_for_model(mixer_channel_t channel,
 
 	if (!filter_type) {
 		LOG_WARNING("%s: Invalid 'sb_filter' setting: '%s', using 'off'",
-		            log_prefix(),
+		            sb_log_prefix(),
 		            filter_choice.c_str());
 
 		channel->SetHighPassFilter(FilterState::Off);
@@ -545,7 +545,7 @@ static void configure_sb_filter_for_model(mixer_channel_t channel,
 	}
 
 	constexpr auto OutputType = "DAC";
-	log_filter_config(log_prefix(), OutputType, *filter_type);
+	log_filter_config(sb_log_prefix(), OutputType, *filter_type);
 	set_filter(channel, config);
 }
 
@@ -593,7 +593,7 @@ static void configure_opl_filter_for_model(mixer_channel_t opl_channel,
 	if (!filter_type) {
 		if (filter_choice != "off") {
 			LOG_WARNING("%s: Invalid 'opl_filter' setting: '%s', using 'off'",
-			            log_prefix(),
+			            sb_log_prefix(),
 			            filter_choice.c_str());
 		}
 
@@ -1078,7 +1078,9 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 		break;
 
 	default:
-		LOG_MSG("%s: Unhandled DMA mode %d", log_prefix(), static_cast<int>(sb.dma.mode));
+		LOG_MSG("%s: Unhandled DMA mode %d",
+		        sb_log_prefix(),
+		        static_cast<int>(sb.dma.mode));
 		sb.mode = DspMode::None;
 		return;
 	}
@@ -1126,7 +1128,7 @@ static void play_dma_transfer(const uint32_t bytes_requested)
 #if 0
 	LOG_MSG("%s: sb.dma.mode=%d, stereo=%d, signed=%d, bytes_requested=%u,"
 	        "bytes_to_read=%u, bytes_read = %u, samples = %u, frames = %u, dma.left = %u",
-	        log_prefix(),
+	        sb_log_prefix(),
 	        sb.dma.mode,
 	        sb.dma.stereo,
 	        sb.dma.sign,
@@ -1188,7 +1190,7 @@ static void flush_remainig_dma_transfer()
 
 		LOG(LOG_SB, LOG_NORMAL)
 		("%s: Silent DMA Transfer scheduling IRQ in %.3f milliseconds",
-		 log_prefix(),
+		 sb_log_prefix(),
 		 delay);
 
 	} else if (sb.dma.left < sb.dma.min) {
@@ -1196,7 +1198,7 @@ static void flush_remainig_dma_transfer()
 
 		LOG(LOG_SB, LOG_NORMAL)
 		("%s: Short transfer scheduling IRQ in %.3f milliseconds",
-		 log_prefix(),
+		 sb_log_prefix(),
 		 delay);
 
 		PIC_AddEvent(ProcessDMATransfer, delay, sb.dma.left);
@@ -1474,7 +1476,7 @@ static void dsp_do_reset(const uint8_t val)
 		// 20 microseconds
 		PIC_AddEvent(dsp_finish_reset, 20.0 / 1000.0, 0);
 
-		LOG_MSG("%s: DSP was reset", log_prefix());
+		LOG_MSG("%s: DSP was reset", sb_log_prefix());
 	}
 }
 
@@ -2781,8 +2783,10 @@ static bool is_cms_enabled(const SBType sbtype)
 	const bool cms_enabled = [sect, sbtype]() {
 		// Backward compatibility with existing configurations
 		if (sect->Get_string("oplmode") == "cms") {
-			LOG_WARNING("%s: The 'cms' setting for 'oplmode' is deprecated; use 'cms = on' instead.",
-			            log_prefix());
+			LOG_WARNING(
+			        "%s: The 'cms' setting for 'oplmode' is deprecated; "
+			        "use 'cms = on' instead.",
+			        sb_log_prefix());
 			return true;
 		} else {
 			const auto cms_str = sect->Get_string("cms");
@@ -2801,18 +2805,25 @@ static bool is_cms_enabled(const SBType sbtype)
 	case SBType::SB1: return cms_enabled;
 	case SBType::GameBlaster:
 		if (!cms_enabled) {
-			LOG_WARNING("%s: 'cms' setting is 'off', but is forced to 'auto' on the Game Blaster.",
-			            log_prefix());
+			LOG_WARNING(
+			        "%s: 'cms' setting is 'off', but is forced to 'auto' "
+			        "on the Game Blaster.",
+			        sb_log_prefix());
 			auto* sect_updater = static_cast<Section_prop*>(
 			        control->GetSection("sblaster"));
 			sect_updater->Get_prop("cms")->SetValue("auto");
 		}
 		return true; // Game Blaster is CMS
-	default: 
+	default:
 		if (cms_enabled) {
-			LOG_WARNING("%s: 'cms' setting 'on' not supported on this card, forcing 'auto'.",
-			            log_prefix());
-			auto* sect_updater = static_cast<Section_prop*>(control->GetSection("sblaster"));
+			LOG_WARNING(
+			        "%s: 'cms' setting 'on' not supported on this card, "
+			        "forcing 'auto'.",
+			        sb_log_prefix());
+
+			auto* sect_updater = static_cast<Section_prop*>(
+			        control->GetSection("sblaster"));
+
 			sect_updater->Get_prop("cms")->SetValue("auto");
 		}
 		return false;
@@ -2865,9 +2876,10 @@ private:
 
 		// Update AUTOEXEC.BAT line
 		LOG_MSG("%s: Setting '%s' environment variable to '%s'",
-		        log_prefix(),
+		        sb_log_prefix(),
 		        BlasterEnvVar,
 		        blaster_env_val);
+
 		AUTOEXEC_SetVariable(BlasterEnvVar, blaster_env_val);
 	}
 
@@ -2952,7 +2964,7 @@ public:
 		//
 		auto dma_channel = DMA_GetChannel(sb.hw.dma8);
 		assert(dma_channel);
-		dma_channel->ReserveFor(log_prefix(), SBLASTER_ShutDown);
+		dma_channel->ReserveFor(sb_log_prefix(), SBLASTER_ShutDown);
 
 		// Only Sound Blaster 16 uses a 16-bit DMA channel.
 		if (sb.type == SBType::SB16) {
@@ -2960,10 +2972,10 @@ public:
 
 			// Reserve the second DMA channel only if it's unique.
 			if (sb.hw.dma16 != sb.hw.dma8) {
-				        dma_channel = DMA_GetChannel(sb.hw.dma16);
-				        assert(dma_channel);
-				        dma_channel->ReserveFor(log_prefix(),
-				                                SBLASTER_ShutDown);
+				dma_channel = DMA_GetChannel(sb.hw.dma16);
+				assert(dma_channel);
+				dma_channel->ReserveFor(sb_log_prefix(),
+				                        SBLASTER_ShutDown);
 			}
 		}
 
@@ -3035,14 +3047,14 @@ public:
 
 		if (sb.type == SBType::SB16) {
 			LOG_MSG("%s: Running on port %xh, IRQ %d, DMA %d, and high DMA %d",
-			        log_prefix(),
+			        sb_log_prefix(),
 			        sb.hw.base,
 			        sb.hw.irq,
 			        sb.hw.dma8,
 			        sb.hw.dma16);
 		} else {
 			LOG_MSG("%s: Running on port %xh, IRQ %d, and DMA %d",
-			        log_prefix(),
+			        sb_log_prefix(),
 			        sb.hw.base,
 			        sb.hw.irq,
 			        sb.hw.dma8);
@@ -3070,7 +3082,7 @@ public:
 			return;
 		}
 
-		LOG_MSG("%s: Shutting down", log_prefix());
+		LOG_MSG("%s: Shutting down", sb_log_prefix());
 
 		// Stop playback
 		if (sb.chan) {
