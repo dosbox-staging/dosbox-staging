@@ -326,10 +326,11 @@ private:
 	std::deque<Function_wrapper> init_functions   = {};
 	std::deque<Function_wrapper> destroyfunctions = {};
 	std::string sectionname                       = {};
+	bool active                                   = true;
 
 public:
 	Section() = default;
-	Section(const std::string& name) : sectionname(name) {}
+	Section(const std::string& name, const bool active = true) : sectionname(name), active(active) {}
 
 	// Construct and assign by std::move
 	Section(Section&& other)            = default;
@@ -345,6 +346,11 @@ public:
 
 	void ExecuteInit(bool initall = true);
 	void ExecuteDestroy(bool destroyall = true);
+
+	bool IsActive() const
+	{
+		return active;
+	}
 
 	const char* GetName() const
 	{
@@ -368,7 +374,7 @@ private:
 	typedef std::deque<Property*>::const_iterator const_it;
 
 public:
-	Section_prop(const std::string& name) : Section(name) {}
+	Section_prop(const std::string& name, bool active = true) : Section(name, active) {}
 
 	~Section_prop() override;
 
