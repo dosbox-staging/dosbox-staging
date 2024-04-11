@@ -367,26 +367,29 @@ static void init_speaker_state()
 	}
 }
 
-static void log_filter_config(const char* output_type, const FilterType filter)
+static void log_filter_config(const char* channel_name, const char* output_type,
+                              const FilterType filter)
 {
+	// clang-format off
 	static const std::map<FilterType, std::string> filter_name_map = {
-	        {FilterType::SB1, "Sound Blaster 1.0"},
-	        {FilterType::SB2, "Sound Blaster 2.0"},
+	        {FilterType::SB1,    "Sound Blaster 1.0"},
+	        {FilterType::SB2,    "Sound Blaster 2.0"},
 	        {FilterType::SBPro1, "Sound Blaster Pro 1"},
 	        {FilterType::SBPro2, "Sound Blaster Pro 2"},
-	        {FilterType::SB16, "Sound Blaster 16"},
+	        {FilterType::SB16,   "Sound Blaster 16"},
 	        {FilterType::Modern, "Modern"},
 	};
+	// clang-format on
 
 	if (filter == FilterType::None) {
-		LOG_MSG("%s: %s filter disabled", log_prefix(), output_type);
+		LOG_MSG("%s: %s filter disabled", channel_name, output_type);
 	} else {
 		auto it = filter_name_map.find(filter);
 		if (it != filter_name_map.end()) {
 			auto filter_type = it->second;
 
 			LOG_MSG("%s: %s %s output filter enabled",
-			        log_prefix(),
+			        channel_name,
 			        filter_type.c_str(),
 			        output_type);
 		}
@@ -550,7 +553,8 @@ static void configure_sb_filter(mixer_channel_t channel,
 		break;
 	}
 
-	log_filter_config("DAC", *filter_type);
+	constexpr auto OutputType = "DAC";
+	log_filter_config(log_prefix(), OutputType, *filter_type);
 	set_filter(channel, config);
 }
 
@@ -607,7 +611,8 @@ static void configure_opl_filter(mixer_channel_t channel,
 	case FilterType::SBPro2: enable_lpf(1, 8000); break;
 	}
 
-	log_filter_config(ChannelName::Opl, *filter_type);
+	constexpr auto OutputType = "OPL";
+	log_filter_config(ChannelName::Opl, OutputType, *filter_type);
 	set_filter(channel, config);
 }
 
