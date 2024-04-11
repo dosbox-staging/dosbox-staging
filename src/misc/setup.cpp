@@ -302,7 +302,16 @@ void Property::SetOptionHelp(const std::string& in)
 
 std::string Property::GetHelp() const
 {
-	std::string result = MSG_Get(create_config_name(propname).c_str());
+	std::string result = {};
+	if (MSG_Exists(create_config_name(propname).c_str())) {
+		std::string help_text = MSG_Get(create_config_name(propname).c_str());
+		// Fill in the default value if the help text contains '%s'.
+		if (help_text.find("%s") != std::string::npos) {
+			help_text = format_str(help_text,
+			                       GetDefaultValue().ToString().c_str());
+		}
+		result.append(help_text).append("\n");
+	}
 
 	const auto configitem_has_message = [this](const auto& value) {
 		return MSG_Exists(create_config_item_name(propname, value).c_str()) ||
@@ -324,12 +333,25 @@ std::string Property::GetHelp() const
 			result.append("\n");
 		}
 	}
+	if (result.empty()) {
+		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+		return "No help available for '" + propname + "'\n";
+	}
 	return result;
 }
 
 std::string Property::GetHelpUtf8() const
 {
-	std::string result = MSG_GetRaw(create_config_name(propname).c_str());
+	std::string result = {};
+	if (MSG_Exists(create_config_name(propname).c_str())) {
+		std::string help_text = MSG_GetRaw(create_config_name(propname).c_str());
+		// Fill in the default value if the help text contains '%s'.
+		if (help_text.find("%s") != std::string::npos) {
+			help_text = format_str(help_text,
+			                       GetDefaultValue().ToString().c_str());
+		}
+		result.append(help_text).append("\n");
+	}
 
 	const auto configitem_has_message = [this](const auto& value) {
 		return MSG_Exists(create_config_item_name(propname, value).c_str()) ||
