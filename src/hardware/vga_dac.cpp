@@ -337,9 +337,17 @@ void VGA_DAC_CombineColor(const uint8_t palette_idx, const uint8_t color_idx)
 {
 	vga.dac.combine[palette_idx] = color_idx;
 
-	if (vga.mode != M_LIN8) {
-		// Used by copper demo; almost no video card seems to support it
-		vga_dac_send_color(palette_idx, color_idx);
+	switch (vga.mode) {
+	case M_LIN8: break;
+	case M_VGA:
+		// Mimic the legacy palette behaviour when emulating the Paradise
+		// card (the oldest SVGA card we emulate). This fixes the wrong
+		// colours appearing in some rare titles (e.g., Spell It Plus).
+		if (svgaCard == SVGA_ParadisePVGA1A) {
+			break;
+		}
+		[[fallthrough]];
+	default: vga_dac_send_color(palette_idx, color_idx);
 	}
 }
 
