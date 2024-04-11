@@ -1087,6 +1087,9 @@ struct VgaType {
 	// change.
 	bool ega_mode_with_vga_colors = false;
 
+	// Whether EGA mode with VGA colour detection is enabled or not.
+	bool detect_ega_mode_with_vga_colors = true;
+
 	// Flag to signal that we're in the middle of a mode change.
 	bool mode_change_in_progress = false;
 };

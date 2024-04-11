@@ -1685,7 +1685,38 @@ att_text16:
 	IO_Read(mono_mode ? 0x3ba : 0x3da);
 
 	if ((modeset_ctl & 8)==0) {
+		// The Colour Registers almost always contains some non-CGA/EGA
+		// colours during the Palette Register setup, so we must suspend
+		// "true EGA" mode detection for now.
+		vga.detect_ega_mode_with_vga_colors = false;
+
+		// Set up Palette Registers
+#if 1
+		LOG_DEBUG("INT10H: Set up Palette Registers");
+#endif
+		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
+			IO_Write(0x3c0, ct);
+			IO_Write(0x3c0, att_data[ct]);
+		}
+
+		vga.config.pel_panning = 0;
+
+		// Disable palette access
+		IO_Write(0x3c0, 0x20);
+		IO_Write(0x3c0, 0x00);
+
+		// Reset PEL mask
+		IO_Write(0x3c6, 0xff);
+
+		// Palette Register setup is done, we can resume "true EGA"
+		// palette detection. From this point, the DAC colours are
+		// expected to be set to CGA/EGA colours in "true EGA" modes.
+		vga.detect_ega_mode_with_vga_colors = true;
+
 		// Set up Color Registers (DAC colours)
+#if 1
+		LOG_DEBUG("INT10H: Set up Color Registers");
+#endif
 		IO_Write(0x3c8, 0);
 
 		switch (CurMode->type) {
@@ -1745,21 +1776,6 @@ dac_text16:
 			assert(false);
 			break;
 		}
-
-		// Set up Palette Registers
-		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
-			IO_Write(0x3c0, ct);
-			IO_Write(0x3c0, att_data[ct]);
-		}
-
-		vga.config.pel_panning = 0;
-
-		// Disable palette access
-		IO_Write(0x3c0, 0x20);
-		IO_Write(0x3c0, 0x00);
-
-		// Reset PEL mask
-		IO_Write(0x3c6, 0xff);
 
 		if (IS_VGA_ARCH) {
 			//  check if gray scale summing is enabled
