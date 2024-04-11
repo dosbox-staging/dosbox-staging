@@ -440,19 +440,11 @@ static std::optional<FilterType> determine_filter_type(const std::string &filter
 	return {};
 }
 
-static void configure_sb_filter(mixer_channel_t channel,
-                                const std::string &filter_prefs,
-                                const bool filter_always_on, const SB_TYPES sb_type)
+static void configure_sb_filter_for_model(mixer_channel_t channel,
+                                          const std::string& filter_prefs,
+                                          const bool filter_always_on,
+                                          const SB_TYPES sb_type)
 {
-	// A bit unfortunate, but we need to enable the ZOH upsampler and the
-	// correct upsample rate first for the filter cutoff frequency
-	// validation to work correctly.
-	channel->SetZeroOrderHoldUpsamplerTargetFreq(native_dac_rate_hz);
-	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
-
-	if (channel->TryParseAndSetCustomFilter(filter_prefs))
-		return;
-
 	const auto filter_prefs_parts = split(filter_prefs);
 
 	const auto filter_choice = filter_prefs_parts.empty()
@@ -525,14 +517,32 @@ static void configure_sb_filter(mixer_channel_t channel,
 	set_filter(channel, config);
 }
 
-static void configure_opl_filter(mixer_channel_t channel,
-                                 const std::string &filter_prefs,
-                                 const SB_TYPES sb_type)
+static void configure_sb_filter(mixer_channel_t channel,
+                                const std::string& filter_prefs,
+                                const bool filter_always_on, const SB_TYPES sb_type)
 {
 	assert(channel);
-	if (channel->TryParseAndSetCustomFilter(filter_prefs))
-		return;
 
+	// A bit unfortunate, but we need to enable the ZOH upsampler and the
+	// correct upsample rate first for the filter cutoff frequency
+	// validation to work correctly.
+	channel->SetZeroOrderHoldUpsamplerTargetFreq(native_dac_rate_hz);
+	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
+
+	if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		// Not a custom filter setting; try to parse it as a
+		// model-specific setting.
+		configure_sb_filter_for_model(channel,
+		                              filter_prefs,
+		                              filter_always_on,
+		                              sb_type);
+	}
+}
+
+static void configure_opl_filter_for_model(mixer_channel_t opl_channel,
+                                           const std::string& filter_prefs,
+                                           const SB_TYPES sb_type)
+{
 	const auto filter_prefs_parts = split(filter_prefs);
 
 	const auto filter_choice = filter_prefs_parts.empty()
@@ -556,8 +566,8 @@ static void configure_opl_filter(mixer_channel_t channel,
 			            CardType(),
 			            filter_choice.c_str());
 
-		channel->SetHighPassFilter(FilterState::Off);
-		channel->SetLowPassFilter(FilterState::Off);
+		opl_channel->SetHighPassFilter(FilterState::Off);
+		opl_channel->SetLowPassFilter(FilterState::Off);
 		return;
 	}
 
@@ -578,7 +588,20 @@ static void configure_opl_filter(mixer_channel_t channel,
 
 	constexpr auto OutputType = "OPL";
 	log_filter_config(ChannelName::Opl, OutputType, *filter_type);
-	set_filter(channel, config);
+	set_filter(opl_channel, config);
+}
+
+static void configure_opl_filter(mixer_channel_t opl_channel,
+                                 const std::string& filter_prefs,
+                                 const SB_TYPES sb_type)
+{
+	assert(opl_channel);
+
+	if (!opl_channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		// Not a custom filter setting; try to parse it as a
+		// model-specific setting.
+		configure_opl_filter_for_model(opl_channel, filter_prefs, sb_type);
+	}
 }
 
 static void SB_RaiseIRQ(SB_IRQS type)
