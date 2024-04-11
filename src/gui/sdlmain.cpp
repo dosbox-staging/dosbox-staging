@@ -281,11 +281,9 @@ void OPENGL_ERROR(const char*) {
 #endif
 #endif
 
-extern "C" void SDL_CDROMQuit(void);
 static void QuitSDL()
 {
 	if (sdl.initialized) {
-		SDL_CDROMQuit();
 #if !C_DEBUG
 		SDL_Quit();
 #endif
@@ -4632,8 +4630,6 @@ static void override_wm_class()
 #endif
 }
 
-extern "C" int SDL_CDROMInit(void);
-
 int sdl_main(int argc, char* argv[])
 {
 	CommandLine command_line(argc, argv);
@@ -4823,9 +4819,6 @@ int sdl_main(int argc, char* argv[])
 		sdl.start_event_id = SDL_RegisterEvents(enum_val(SDL_DosBoxEvents::NumEvents));
 		if (sdl.start_event_id == UINT32_MAX) {
 			E_Exit("SDL: Failed to alocate event IDs");
-		}
-		if (SDL_CDROMInit() < 0) {
-			LOG_WARNING("SDL: Failed to initialise CD-ROM support");
 		}
 
 		sdl.initialized = true;
