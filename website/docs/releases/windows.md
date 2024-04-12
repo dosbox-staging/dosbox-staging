@@ -28,8 +28,8 @@ the changes and improvements introduced in this release.
 
 !!! important
 
-    If Windows 8.x or Windows 10 prevents you from running DOSBox Staging via
-    Microsoft Defender SmartScreen, see the [section below](#microsoft-defender-smartscreen).
+    If Windows prevents you from running DOSBox Staging via Microsoft Defender
+    SmartScreen, see the [section below](#microsoft-defender-smartscreen).
 
 ### Windows 7
 
