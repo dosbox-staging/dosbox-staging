@@ -639,12 +639,24 @@ Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default for
 the selected video adapter ('auto' by default). See the 'machine' setting for
 the list of valid options per adapter.
 .
+:CONFIG_VMEM_DELAY
+Set video memory I/O delay emulation ('off' by default).
+  off:      Disable video memory I/O delay emulation (default).
+            This is preferable for most games to avoid slowdowns.
+  on:       Enable I/O delay emulation (3000 ns). This can help reduce or
+            eliminate flicker in Hercules, CGA, EGA, and early VGA games.
+  <value>:  Set I/O delay in nanoseconds. Valid range is 0 to 20000 ns;
+            500 to 5000 ns is the most useful range.
+Note: Only set this on a per-game basis when necessary as it slows down the
+      whole emulator.
+.
 :CONFIG_DOS_RATE
-Customize the emulated video mode's frame rate, in Hz:
-  default:  The DOS video mode determines the rate (recommended; default).
+Customize the emulated video mode's frame rate.
+  default:  The DOS video mode determines the rate (default).
   host:     Match the DOS rate to the host rate (see 'host_rate' setting).
-  <value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).
-We recommend the 'default' rate; otherwise test and set on a per-game basis.
+  <value>:  Sets the rate to an exact value in between 24.000 and 1000.000 Hz.
+Note: We recommend the 'default' rate, otherwise test and set on a per-game
+      basis.
 .
 :CONFIG_VESA_MODES
 Controls the selection of VESA 1.2 and 2.0 modes offered:
@@ -653,9 +665,9 @@ Controls the selection of VESA 1.2 and 2.0 modes offered:
                (default).
   halfline:    Supports the low-resolution halfline VESA 2.0 mode used by
                Extreme Assault. Use only if needed, as it's not S3 compatible.
-  all:         All modes for a given video memory size, however some games
-               may not use them properly (flickering) or may need
-               more system memory to use them.
+  all:         All modes for a given video memory size, however some games may
+               not use them properly (flickering) or may need more system
+               memory to use them.
 .
 :CONFIG_VGA_8DOT_FONT
 Use 8-pixel-wide fonts on VGA adapters (disabled by default).
