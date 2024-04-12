@@ -555,11 +555,12 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
 	pstring->Set_help(
-	        "Customize the emulated video mode's frame rate, in Hz:\n"
-	        "  default:  The DOS video mode determines the rate (recommended; default).\n"
+	        "Customize the emulated video mode's frame rate.\n"
+	        "  default:  The DOS video mode determines the rate (default).\n"
 	        "  host:     Match the DOS rate to the host rate (see 'host_rate' setting).\n"
-	        "  <value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).\n"
-	        "We recommend the 'default' rate; otherwise test and set on a per-game basis.");
+	        "  <value>:  Sets the rate to an exact value in between 24.000 and 1000.000 Hz.\n"
+	        "Note: We recommend the 'default' rate, otherwise test and set on a per-game\n"
+	        "      basis.");
 
 	const char *vesa_modes_choices[] = {"compatible", "all", "halfline", nullptr};
 	pstring = secprop->Add_string("vesa_modes", only_at_start, "compatible");
@@ -571,9 +572,9 @@ void DOSBOX_Init()
 	        "               (default).\n"
 	        "  halfline:    Supports the low-resolution halfline VESA 2.0 mode used by\n"
 	        "               Extreme Assault. Use only if needed, as it's not S3 compatible.\n"
-	        "  all:         All modes for a given video memory size, however some games\n"
-	        "               may not use them properly (flickering) or may need\n"
-	        "               more system memory to use them.");
+	        "  all:         All modes for a given video memory size, however some games may\n"
+	        "               not use them properly (flickering) or may need more system\n"
+	        "               memory to use them.");
 
 	pbool = secprop->Add_bool("vga_8dot_font", only_at_start, false);
 	pbool->Set_help("Use 8-pixel-wide fonts on VGA adapters (disabled by default).");
