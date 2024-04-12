@@ -52,6 +52,9 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
+      - name: Setup CMake
+        uses: lukka/get-cmake@v3.29.2
+
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
         with:
@@ -117,6 +120,9 @@ jobs:
           script: |
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Setup CMake
+        uses: lukka/get-cmake@v3.29.2
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
