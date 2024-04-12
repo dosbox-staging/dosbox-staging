@@ -106,8 +106,8 @@ void Executor::operator()(const SetCrossfeedStrength cmd)
 	}
 
 	if (global_command) {
-		for (const auto& [_, channel] : MIXER_GetChannels()) {
-			channel->SetCrossfeedStrength(cmd.strength);
+		for (const auto& [_, ch] : MIXER_GetChannels()) {
+			ch->SetCrossfeedStrength(cmd.strength);
 		}
 	} else {
 		assert(channel);
@@ -123,8 +123,8 @@ void Executor::operator()(const SetReverbLevel cmd)
 	}
 
 	if (global_command) {
-		for (const auto& [_, channel] : MIXER_GetChannels()) {
-			channel->SetReverbLevel(cmd.level);
+		for (const auto& [_, ch] : MIXER_GetChannels()) {
+			ch->SetReverbLevel(cmd.level);
 		}
 	} else {
 		assert(channel);
@@ -140,8 +140,8 @@ void Executor::operator()(const SetChorusLevel cmd)
 	}
 
 	if (global_command) {
-		for (const auto& [_, channel] : MIXER_GetChannels()) {
-			channel->SetChorusLevel(cmd.level);
+		for (const auto& [_, ch] : MIXER_GetChannels()) {
+			ch->SetChorusLevel(cmd.level);
 		}
 	} else {
 		assert(channel);
@@ -504,8 +504,8 @@ std::variant<Error, std::queue<Command>> ParseCommands(
 	std::queue<Command> commands = {};
 
 	// We always implicitly select the "global virtual channel" at the start
-	const SelectChannel cmd = {GlobalVirtualChannelName};
-	commands.emplace(cmd);
+	const SelectChannel select_global_chan_cmd = {GlobalVirtualChannelName};
+	commands.emplace(select_global_chan_cmd);
 
 	auto parse_select_channel_command =
 	        [&](const std::string& channel_name) -> std::optional<SelectChannel> {
@@ -696,8 +696,8 @@ static ChannelInfos create_channel_infos()
 {
 	ChannelInfosMap infos = {};
 
-	for (const auto& [name, channel] : MIXER_GetChannels()) {
-		infos[name] = channel->GetFeatures();
+	for (const auto& [name, ch] : MIXER_GetChannels()) {
+		infos[name] = ch->GetFeatures();
 	}
 
 	return ChannelInfos(infos);

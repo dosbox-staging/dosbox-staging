@@ -70,6 +70,10 @@ const char *UnmountHelper(char umount)
 }
 
 void AddCommonMountMessages() {
+	if (MSG_Exists("MSCDEX_SUCCESS")) {
+		// Avoid adding the same messages twice.
+		return;
+	}
 	MSG_Add("MSCDEX_SUCCESS","MSCDEX installed.\n");
 	MSG_Add("MSCDEX_ERROR_MULTIPLE_CDROMS","MSCDEX: Failure: Drive-letters of multiple CD-ROM drives have to be continuous.\n");
 	MSG_Add("MSCDEX_ERROR_NOT_SUPPORTED","MSCDEX: Failure: Not yet supported.\n");

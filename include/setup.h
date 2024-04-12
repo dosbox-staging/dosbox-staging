@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -134,15 +134,17 @@ public:
 
 	virtual ~Property() = default;
 
-	void Set_values(const char* const* in);
 	void Set_values(const std::vector<std::string>& in);
+	void SetEnabledOptions(const std::vector<std::string>& in);
 	void SetDeprecatedWithAlternateValue(const char* deprecated_value,
 	                                     const char* alternate_value);
 
 	void Set_help(const std::string& str);
+	void SetOptionHelp(const std::string& option, const std::string& in);
+	void SetOptionHelp(const std::string& in);
 
-	const char* GetHelp() const;
-	const char* GetHelpUtf8() const;
+	std::string GetHelp() const;
+	std::string GetHelpUtf8() const;
 
 	virtual bool SetValue(const std::string& str) = 0;
 
@@ -187,6 +189,7 @@ protected:
 
 	Value value                                            = {};
 	std::vector<Value> valid_values                        = {};
+	std::vector<std::string> enabled_options               = {};
 	std::map<Value, Value> deprecated_and_alternate_values = {};
 	bool is_positive_bool_valid                            = false;
 	bool is_negative_bool_valid                            = false;
@@ -323,10 +326,11 @@ private:
 	std::deque<Function_wrapper> init_functions   = {};
 	std::deque<Function_wrapper> destroyfunctions = {};
 	std::string sectionname                       = {};
+	bool active                                   = true;
 
 public:
 	Section() = default;
-	Section(const std::string& name) : sectionname(name) {}
+	Section(const std::string& name, const bool active = true) : sectionname(name), active(active) {}
 
 	// Construct and assign by std::move
 	Section(Section&& other)            = default;
@@ -342,6 +346,11 @@ public:
 
 	void ExecuteInit(bool initall = true);
 	void ExecuteDestroy(bool destroyall = true);
+
+	bool IsActive() const
+	{
+		return active;
+	}
 
 	const char* GetName() const
 	{
@@ -365,7 +374,7 @@ private:
 	typedef std::deque<Property*>::const_iterator const_it;
 
 public:
-	Section_prop(const std::string& name) : Section(name) {}
+	Section_prop(const std::string& name, bool active = true) : Section(name, active) {}
 
 	~Section_prop() override;
 

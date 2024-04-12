@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -701,7 +701,7 @@ bool localFile::Read(uint8_t *data, uint16_t *size)
 		}
 	}
 
-	/* Fake harddrive motion. Inspector Gadget with soundblaster compatible */
+	/* Fake harddrive motion. Inspector Gadget with Sound Blaster compatible */
 	/* Same for Igor */
 	/* hardrive motion => unmask irq 2. Only do it when it's masked as
 	 * unmasking is realitively heavy to emulate */

@@ -2904,33 +2904,28 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 
 	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_rate);
 	assert(int_prop);
-	const char* rates[] = {
-	        "8000", "11025", "16000", "22050", "32000", "44100", "48000", nullptr};
-	int_prop->Set_values(rates);
-	int_prop->Set_help("Mixer sample rate (48000 by default).");
-
-	const char* blocksizes[] = {
-	        "128", "256", "512", "1024", "2048", "4096", "8192", nullptr};
+	int_prop->Set_values(
+	        {"8000", "11025", "16000", "22050", "32000", "44100", "48000"});
+	int_prop->Set_help("Mixer sample rate (%s by default).");
 
 	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_blocksize);
-	int_prop->Set_values(blocksizes);
-	int_prop->Set_help(format_str(
-	        "Mixer block size in sample frames (%d by default). Larger values might help\n"
-	        "with sound stuttering but the sound will also be more lagged.",
-	        default_blocksize));
+	int_prop->Set_values(
+	        {"128", "256", "512", "1024", "2048", "4096", "8192"});
+	int_prop->Set_help(
+	        "Mixer block size in sample frames (%s by default). Larger values might help\n"
+	        "with sound stuttering but the sound will also be more lagged.");
 
 	int_prop = sec_prop.Add_int("prebuffer", only_at_start, default_prebuffer_ms);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
-	int_prop->Set_help(format_str("How many milliseconds of sound to render on top of the blocksize\n"
-	                                 "(%d by default). Larger values might help with sound stuttering but the sound\n"
-	                                 "will also be more lagged.",
-	                                 default_prebuffer_ms));
+	int_prop->Set_help(
+	        "How many milliseconds of sound to render on top of the blocksize\n"
+	        "(%s by default). Larger values might help with sound stuttering but the sound\n"
+	        "will also be more lagged.");
 
 	bool_prop = sec_prop.Add_bool("negotiate", only_at_start, default_allow_negotiate);
 	bool_prop->Set_help(
-	        format_str("Let the system audio driver negotiate possibly better sample rate and blocksize\n"
-	                      "settings (%s by default).",
-	                      default_allow_negotiate ? "enabled" : "disabled"));
+	        "Let the system audio driver negotiate possibly better sample rate and blocksize\n"
+	        "settings (%s by default).");
 
 	const auto default_on = true;
 	bool_prop = sec_prop.Add_bool("compressor", when_idle, default_on);
@@ -2939,7 +2934,6 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	                    "  off:  Disable compressor.\n"
 	                    "  on:   Enable compressor (default).");
 
-	const char* crossfeed_presets[] = {"off", "on", "light", "normal", "strong", nullptr};
 	auto string_prop = sec_prop.Add_string("crossfeed", when_idle, "off");
 	string_prop->Set_help(
 	        "Enable crossfeed globally on all stereo channels for headphone listening:\n"
@@ -2949,11 +2943,9 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "  normal:  Normal crossfeed (strength 40).\n"
 	        "  strong:  Strong crossfeed (strength 65).\n"
 	        "Note: You can fine-tune each channel's crossfeed strength using the MIXER.");
-	string_prop->Set_values(crossfeed_presets);
+	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
 
-	const char* reverb_presets[] = {
-	        "off", "on", "tiny", "small", "medium", "large", "huge", nullptr};
-	string_prop = sec_prop.Add_string("reverb", when_idle, reverb_presets[0]);
+	string_prop = sec_prop.Add_string("reverb", when_idle, "off");
 	string_prop->Set_help(
 	        "Enable reverb globally to add a sense of space to the sound:\n"
 	        "  off:     No reverb (default).\n"
@@ -2969,9 +2961,9 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "  huge:    A stronger variant of the large hall preset; works really well\n"
 	        "           in some games with more atmospheric soundtracks.\n"
 	        "Note: You can fine-tune each channel's reverb level using the MIXER.");
-	string_prop->Set_values(reverb_presets);
+	string_prop->Set_values(
+	        {"off", "on", "tiny", "small", "medium", "large", "huge"});
 
-	const char* chorus_presets[] = {"off", "on", "light", "normal", "strong", nullptr};
 	string_prop = sec_prop.Add_string("chorus", when_idle, "off");
 	string_prop->Set_help(
 	        "Enable chorus globally to add a sense of stereo movement to the sound:\n"
@@ -2982,7 +2974,7 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "  normal:  Normal chorus that works well with a wide variety of games.\n"
 	        "  strong:  An obvious and upfront chorus effect.\n"
 	        "Note: You can fine-tune each channel's chorus level using the MIXER.");
-	string_prop->Set_values(chorus_presets);
+	string_prop->Set_values({"off", "on", "light", "normal", "strong"});
 
 	MAPPER_AddHandler(handle_toggle_mute, SDL_SCANCODE_F8, PRIMARY_MOD, "mute", "Mute");
 }

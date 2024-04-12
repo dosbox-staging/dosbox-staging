@@ -86,14 +86,14 @@ AlignConsecutiveAssignments: Consecutive
 AlignOperands:  AlignAfterOperator
 
 ##
-#   // Indents directives after the hash.
+#   // Indents directives before the hash.
 #
 #   #if FOO
-#   #  if BAR
-#   #    include <foo>
-#   #  else
-#   #    include <other>
-#   #  endif
+#     #if BAR
+#       #include <foo>
+#     #else
+#       #include <other>
+#     #endif
 #   #endif
 #
 #   // This much easier to see what's happening versus:
@@ -106,7 +106,7 @@ AlignOperands:  AlignAfterOperator
 #   #endif
 #   #endif
 #
-IndentPPDirectives: None
+IndentPPDirectives: BeforeHash
 
 # Always place function bodies on their own lines because
 # it makes a mess when some are on the same line and others are
@@ -156,8 +156,7 @@ AlwaysBreakTemplateDeclarations: Yes
 #                      "cccc";
 # shortname = "dddd"
 #             "eeee";
-#
-# AlwaysBreakBeforeMultilineStrings: true
+AlwaysBreakBeforeMultilineStrings: true
 
 # Insert braces after control statements (``if``, ``else``, ``for``, ``do``,
 #  and ``while``) in C++ unless the control statements are inside macro
@@ -201,10 +200,9 @@ InsertBraces: true
 # }
 #
 
-# Coming in Clang-format-14
-# AlignArrayOfStructures: Left
+# If not None, when using initialization for an array of structs aligns the fields into columns.
 #
-# if not None, when using initialization for an array of structs aligns the fields into columns.
+# NOTE: As of clang-format 15 this option only applied to arrays with equal number of columns per row.
 #
 # Possible values:
 
@@ -227,9 +225,8 @@ InsertBraces: true
 #        };
 #
 # AIAS_None (in configuration: None) Don’t align array initializer columns.
-
-
-
+#
+AlignArrayOfStructures: Right
 
 # Our custom rules are the same as "BreakBeforeBraces: Linux", except
 # additional customization for C++ constructs.

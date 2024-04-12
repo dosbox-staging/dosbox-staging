@@ -112,6 +112,7 @@ public:
 
 	Section_line* AddSection_line(const char* section_name, SectionFunction func);
 
+	Section_prop* AddInactiveSectionProp(const char* section_name);
 	Section_prop* AddSection_prop(const char* section_name, SectionFunction func,
 	                              bool changeable_at_runtime = false);
 

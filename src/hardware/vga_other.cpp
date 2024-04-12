@@ -1477,18 +1477,16 @@ static void composite_settings(Section_prop& secprop)
 {
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
-	const char* states[] = {"auto", "on", "off", nullptr};
 	auto str_prop = secprop.Add_string("composite", when_idle, "auto");
-	str_prop->Set_values(states);
+	str_prop->Set_values({"auto", "on", "off"});
 	str_prop->Set_help(
 	        "Enable composite mode on start (only for 'cga', 'pcjr', and 'tandy' machine\n"
 	        "types; 'auto' by default). 'auto' lets the program decide.\n"
 	        "Note: Fine-tune the settings below (i.e., 'hue') using the composite hotkeys,\n"
 	        "      then copy the new settings from the logs into your config.");
 
-	const char* eras[] = {"auto", "old", "new", nullptr};
 	str_prop           = secprop.Add_string("era", when_idle, "auto");
-	str_prop->Set_values(eras);
+	str_prop->Set_values({"auto", "old", "new"});
 	str_prop->Set_help("Era of composite technology ('auto' by default).\n"
 	                   "When 'auto', PCjr uses 'new', and CGA/Tandy use 'old'.");
 

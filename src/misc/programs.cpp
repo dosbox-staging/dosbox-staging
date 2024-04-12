@@ -480,17 +480,20 @@ void CONFIG::Run(void)
 					// list the sections
 					WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_SECTLIST"));
 					for (const Section* sec : *control) {
-						WriteOut("  - %s\n", sec->GetName());
+						if (sec->IsActive()) {
+							WriteOut("  - %s\n",
+							         sec->GetName());
+						}
 					}
 					return;
 				}
 				// if it's a section, leave it as one-param
 				Section* sec = control->GetSection(pvars[0]);
-				if (!sec) {
+				if (!sec || !sec->IsActive()) {
 					// could be a property
 					sec = control->GetSectionFromProperty(
 					        pvars[0].c_str());
-					if (!sec) {
+					if (!sec || !sec->IsActive()) {
 						WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
 						         pvars[0].c_str());
 						return;
@@ -503,12 +506,15 @@ void CONFIG::Run(void)
 			case 2: {
 				// sanity check
 				Section* sec  = control->GetSection(pvars[0]);
+				if (!sec->IsActive()) {
+					sec = nullptr;
+				}
 				Section* sec2 = control->GetSectionFromProperty(
 				        pvars[1].c_str());
-				if (!sec) {
+				if (!sec || !sec->IsActive()) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
 					         pvars[0].c_str());
-				} else if (!sec2 || sec != sec2) {
+				} else if (!sec2 || !sec2->IsActive() || sec != sec2) {
 					WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
 					         pvars[1].c_str());
 				}
@@ -519,7 +525,7 @@ void CONFIG::Run(void)
 			// if we have one value in pvars, it's a section
 			// two values are section + property
 			Section* sec = control->GetSection(pvars[0]);
-			if (sec == nullptr) {
+			if (sec == nullptr || !sec->IsActive()) {
 				WriteOut(MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),
 				         pvars[0].c_str());
 				return;
@@ -610,7 +616,7 @@ void CONFIG::Run(void)
 						WriteOut(MSG_Get("PROGRAM_CONFIG_HLP_PROPHLP"),
 						         p->propname.c_str(),
 						         sec->GetName(),
-						         p->GetHelp());
+						         p->GetHelp().c_str());
 
 						if (!p->IsDeprecated()) {
 							if (!possible_values.empty()) {

@@ -216,8 +216,7 @@ std::deque<std::string> ShaderManager::GenerateShaderInventoryMessage() const
 		} else {
 			pattern = MSG_GetRaw("DOSBOX_HELP_LIST_GLSHADERS_LIST");
 		}
-		inventory.emplace_back(
-		        format_str(pattern, dir.u8string().c_str()));
+		inventory.emplace_back(format_str(pattern, dir.u8string().c_str()));
 
 		while (shader != shaders.end()) {
 			shader->replace_extension("");
@@ -261,18 +260,20 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 	}
 
 	// Map legacy shader names
+	// clang-format off
 	static const std::map<std::string, std::string> legacy_name_mappings = {
-	        {"advinterp2x", "scaler/advinterp2x"},
-	        {"advinterp3x", "scaler/advinterp3x"},
-	        {"advmame2x", "scaler/advmame2x"},
-	        {"advmame3x", "scaler/advmame3x"},
-	        {"default", "interpolation/sharp"},
-	        {"rgb2x", "scaler/rgb2x"},
-	        {"rgb3x", "scaler/rgb3x"},
-	        {"scan2x", "scaler/scan2x"},
-	        {"scan3x", "scaler/scan3x"},
-	        {"tv2x", "scaler/tv2x"},
-	        {"tv3x", "scaler/tv3x"}};
+		{"advinterp2x", "scaler/advinterp2x"},
+		{"advinterp3x", "scaler/advinterp3x"},
+		{"advmame2x",   "scaler/advmame2x"},
+		{"advmame3x",   "scaler/advmame3x"},
+		{"default",     "interpolation/sharp"},
+		{"rgb2x",       "scaler/rgb2x"},
+		{"rgb3x",       "scaler/rgb3x"},
+		{"scan2x",      "scaler/scan2x"},
+		{"scan3x",      "scaler/scan3x"},
+		{"tv2x",        "scaler/tv2x"},
+		{"tv3x",        "scaler/tv3x"}};
+	// clang-format on
 
 	std_fs::path shader_path = name;
 	std_fs::path ext         = shader_path.extension();
@@ -285,11 +286,12 @@ std::string ShaderManager::MapShaderName(const std::string& name) const
 		if (it != legacy_name_mappings.end()) {
 			const auto new_name = it->second;
 
-			LOG_WARNING("RENDER: Built-in shader '%s' has been renamed to '%s'; "
-			            "using '%s' instead.",
-			            old_name.c_str(),
-			            new_name.c_str(),
-			            new_name.c_str());
+			LOG_WARNING(
+			        "RENDER: Built-in shader '%s' has been renamed to '%s'; "
+			        "using '%s' instead.",
+			        old_name.c_str(),
+			        new_name.c_str(),
+			        new_name.c_str());
 
 			return new_name;
 		}
@@ -413,6 +415,10 @@ void ShaderManager::MaybeAutoSwitchShader()
 		}
 
 		if (shader_changed) {
+			if (video_mode.has_vga_colors) {
+				LOG_MSG("RENDER: EGA mode with custom 18-bit VGA palette "
+				        "detected; auto-switching to VGA shader");
+			}
 			LOG_MSG("RENDER: Auto-switched to shader '%s'",
 			        current_shader.info.name.c_str());
 		}

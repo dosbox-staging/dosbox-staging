@@ -460,19 +460,6 @@ void DOSBOX_Init()
 	constexpr auto changeable_at_runtime = true;
 
 	/* Setup all the different modules making up DOSBox */
-	const char* machines[] = {"hercules",
-	                          "cga_mono",
-	                          "cga",
-	                          "pcjr",
-	                          "tandy",
-	                          "ega",
-	                          "svga_s3",
-	                          "svga_et3000",
-	                          "svga_et4000",
-	                          "svga_paradise",
-	                          "vesa_nolfb",
-	                          "vesa_oldvbe",
-	                          nullptr};
 
 	secprop = control->AddSection_prop("dosbox", &DOSBOX_RealInit);
 	pstring = secprop->Add_string("language", always, "");
@@ -486,7 +473,18 @@ void DOSBOX_Init()
 	        "    feature.");
 
 	pstring = secprop->Add_string("machine", only_at_start, "svga_s3");
-	pstring->Set_values(machines);
+	pstring->Set_values({"hercules",
+	                     "cga_mono",
+	                     "cga",
+	                     "pcjr",
+	                     "tandy",
+	                     "ega",
+	                     "svga_s3",
+	                     "svga_et3000",
+	                     "svga_et4000",
+	                     "svga_paradise",
+	                     "vesa_nolfb",
+	                     "vesa_oldvbe"});
 	pstring->SetDeprecatedWithAlternateValue("vgaonly", "svga_paradise");
 	pstring->Set_help(
             "Set the video adapter or machine to emulate:\n"
@@ -531,29 +529,23 @@ void DOSBOX_Init()
 	        "though a few games might require a higher value.\n"
 	        "There is generally no speed advantage when raising this value.");
 
-	const char *mcb_fault_strategies[] = {"repair", "report", "allow", "deny", nullptr};
-	pstring = secprop->Add_string("mcb_fault_strategy",
-	                              only_at_start,
-	                              mcb_fault_strategies[0]);
+	pstring = secprop->Add_string("mcb_fault_strategy", only_at_start, "repair");
 	pstring->Set_help(
 	        "How software-corrupted memory chain blocks should be handled:\n"
 	        "  repair:  Repair (and report) faults using adjacent blocks (default).\n"
 	        "  report:  Report faults but otherwise proceed as-is.\n"
 	        "  allow:   Allow faults to go unreported (hardware behavior).\n"
 	        "  deny:    Quit (and report) when faults are detected.");
-	pstring->Set_values(mcb_fault_strategies);
+	pstring->Set_values({"repair", "report", "allow", "deny"});
 
-	const std::vector<std::string> vmemsize_choices = {
+	static_assert(8192 * 1024 <= PciGfxLfbLimit - PciGfxLfbBase);
+	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
+	pstring->Set_values({
 	        "auto",
 	        // values in MB
 	        "1", "2", "4", "8",
 	        // values in KB
-	        "256", "512", "1024", "2048", "4096", "8192",
-	};
-	static_assert(8192 * 1024 <= PciGfxLfbLimit - PciGfxLfbBase);
-
-	pstring = secprop->Add_string("vmemsize", only_at_start, "auto");
-	pstring->Set_values(vmemsize_choices);
+	        "256", "512", "1024", "2048", "4096", "8192"});
 	pstring->Set_help(
 	        "Video memory in MB (1-8) or KB (256 to 8192). 'auto' uses the default for\n"
 	        "the selected video adapter ('auto' by default). See the 'machine' setting for\n"
@@ -567,9 +559,8 @@ void DOSBOX_Init()
 	        "  <value>:  Sets the rate to an exact value, between 24.000 and 1000.000 (Hz).\n"
 	        "We recommend the 'default' rate; otherwise test and set on a per-game basis.");
 
-	const char *vesa_modes_choices[] = {"compatible", "all", "halfline", nullptr};
 	pstring = secprop->Add_string("vesa_modes", only_at_start, "compatible");
-	pstring->Set_values(vesa_modes_choices);
+	pstring->Set_values({"compatible", "all", "halfline"});
 	pstring->Set_help(
 	        "Controls the selection of VESA 1.2 and 2.0 modes offered:\n"
 	        "  compatible:  A tailored selection that maximizes game compatibility.\n"
@@ -603,13 +594,8 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&TIMER_Init);
 	secprop->AddInitFunction(&CMOS_Init);
 
-	const char *autoexec_section_choices[] = {
-	        "join",
-	        "overwrite",
-	        nullptr,
-	};
 	pstring = secprop->Add_string("autoexec_section", only_at_start, "join");
-	pstring->Set_values(autoexec_section_choices);
+	pstring->Set_values({"join", "overwrite"});
 	pstring->Set_help(
 	        "How autoexec sections are handled from multiple config files:\n"
 	        "  join:       Combine them into one big section (legacy behavior; default).\n"
@@ -629,11 +615,8 @@ void DOSBOX_Init()
 	        "  override_drive = mount the directory to this drive instead (default empty)\n"
 	        "  verbose = true or false");
 
-	const char *verbosity_choices[] = {
-	        "auto", "high", "low", "quiet", nullptr,
-	};
 	pstring = secprop->Add_string("startup_verbosity", only_at_start, "auto");
-	pstring->Set_values(verbosity_choices);
+	pstring->Set_values({"auto", "high", "low", "quiet"});
 	pstring->Set_help(
 	        "Controls verbosity prior to displaying the program ('auto' by default):\n"
 	        "  Verbosity   | Welcome | Early stdout\n"
@@ -665,24 +648,20 @@ void DOSBOX_Init()
 
 	// Configure CPU settings
 	secprop = control->AddSection_prop("cpu", &CPU_Init, changeable_at_runtime);
-	const char* cores[] =
-	{ "auto",
-#if (C_DYNAMIC_X86) || (C_DYNREC)
-	  "dynamic",
-#endif
-	  "normal",
-	  "simple",
-	  nullptr };
 	pstring = secprop->Add_string("core", when_idle, "auto");
-	pstring->Set_values(cores);
+	pstring->Set_values({
+		        "auto",
+#if (C_DYNAMIC_X86) || (C_DYNREC)
+		        "dynamic",
+#endif
+		        "normal", "simple"
+	});
 	pstring->Set_help("CPU core used in emulation ('auto' by default). 'auto' will switch to dynamic\n"
 	                  "if available and appropriate.");
 
-	const char* cputype_values[] = { "auto", "386", "386_fast", "386_prefetch",
-	                                 "486", "pentium", "pentium_mmx",
-	                                 nullptr };
 	pstring = secprop->Add_string("cputype", always, "auto");
-	pstring->Set_values(cputype_values);
+	pstring->Set_values(
+	        {"auto", "386", "386_fast", "386_prefetch", "486", "pentium", "pentium_mmx"});
 	pstring->Set_help(
 	        "CPU type used in emulation ('auto' by default). 'auto' is the fastest choice.\n"
 	        "Prefetch variant emulates the prefetch queue and requires the 'normal' core.");
@@ -702,10 +681,9 @@ void DOSBOX_Init()
 	        "                   need if 'auto' fails (e.g. 'fixed 4000').\n"
 	        "  max:             Allocate as much cycles as your computer is able to handle.");
 
-	const char* cyclest[] = { "auto", "fixed", "max", "%u", nullptr };
 	pstring = pmulti_remain->GetSection()->Add_string("type", always, "auto");
 	pmulti_remain->SetValue("auto");
-	pstring->Set_values(cyclest);
+	pstring->Set_values({"auto", "fixed", "max", "%u"});
 
 	pmulti_remain->GetSection()->Add_string("parameters", always, "");
 
@@ -732,12 +710,8 @@ void DOSBOX_Init()
 	pbool = secprop->Add_bool("voodoo", when_idle, true);
 	pbool->Set_help("Enable 3dfx Voodoo emulation (enabled by default).");
 
-	const char* voodoo_memsizes[] = {"4", "12", nullptr};
-
-	pstring = secprop->Add_string("voodoo_memsize",
-	                              only_at_start,
-	                              voodoo_memsizes[0]);
-	pstring->Set_values(voodoo_memsizes);
+	pstring = secprop->Add_string("voodoo_memsize", only_at_start, "4");
+	pstring->Set_values({"4", "12"});
 	pstring->Set_help(
 	        "Set the amount of video memory for 3dfx Voodoo graphics, either 4 or 12 MB.\n"
 	        "The memory is used by the Frame Buffer Interface (FBI) and Texture Mapping Unit\n"
@@ -782,29 +756,36 @@ void DOSBOX_Init()
 	                                   &SBLASTER_Init,
 	                                   changeable_at_runtime);
 
-	const char* sbtypes[] = {"sb1", "sb2", "sbpro1", "sbpro2", "sb16", "gb", "none", nullptr};
 	pstring = secprop->Add_string("sbtype", when_idle, "sb16");
-	pstring->Set_values(sbtypes);
-	pstring->Set_help("Type of Sound Blaster to emulate ('sb16' by default).\n"
-	                  "'gb' is Game Blaster.");
+	pstring->Set_values({"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "none"});
+	pstring->Set_help(
+	        "Sound Blaster model to emulate ('sb16' by default).\n"
+	        "The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.\n"
+	        "  gb:        Game Blaster        - CMS\n"
+	        "  sb1:       Sound Blaster 1.0   - OPL2, CMS\n"
+	        "  sb2:       Sound Blaster 2.0   - OPL2\n"
+	        "  sbpro1:    Sound Blaster Pro   - Dual OPL2\n"
+	        "  sbpro2:    Sound Blaster Pro 2 - OPL3\n"
+	        "  sb16:      Sound Blaster 16    - OPL3 (default)\n"
+	        "  none/off:  Disable Sound Blaster emulation.\n"
+	        "Note: Creative Music System was later rebranded to Game Blaster; they are the\n"
+	        "      same card.");
 
-	const char *ios[] = {"220", "240", "260", "280", "2a0", "2c0", "2e0", "300", nullptr};
-	phex              = secprop->Add_hex("sbbase", when_idle, 0x220);
-	phex->Set_values(ios);
+	phex = secprop->Add_hex("sbbase", when_idle, 0x220);
+	phex->Set_values(
+	        {"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
 	phex->Set_help("The IO address of the Sound Blaster (220 by default).");
 
-	const char *irqssb[] = {"3", "5", "7", "9", "10", "11", "12", nullptr};
 	pint                 = secprop->Add_int("irq", when_idle, 7);
-	pint->Set_values(irqssb);
+	pint->Set_values({"3", "5", "7", "9", "10", "11", "12"});
 	pint->Set_help("The IRQ number of the Sound Blaster (7 by default).");
 
-	const char *dmassb[] = {"0", "1", "3", "5", "6", "7", nullptr};
 	pint                 = secprop->Add_int("dma", when_idle, 1);
-	pint->Set_values(dmassb);
+	pint->Set_values({"0", "1", "3", "5", "6", "7"});
 	pint->Set_help("The DMA channel of the Sound Blaster (1 by default).");
 
 	pint = secprop->Add_int("hdma", when_idle, 5);
-	pint->Set_values(dmassb);
+	pint->Set_values({"0", "1", "3", "5", "6", "7"});
 	pint->Set_help("The High DMA channel of the Sound Blaster 16 (5 by default).");
 
 	pbool = secprop->Add_bool("sbmixer", when_idle, true);
@@ -821,12 +802,27 @@ void DOSBOX_Init()
 	pint->Set_help("The OPL waveform is now sampled at the mixer's playback rate to avoid\n"
 	               "resampling.");
 
-	const char* oplmodes[] = {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none", nullptr};
+	pstring = secprop->Add_string("cms", when_idle, "auto");
+	pstring->Set_values({"on", "off", "auto"});
+	pstring->Set_help(
+	        "Enable CMS emulation ('auto' by default).\n"
+	        "  off:   Disable CMS emulation (except when the Game Blaster is selected).\n"
+	        "  on:    Enable CMS emulation on Sound Blaster 1 and 2.\n"
+	        "  auto:  Auto-enable CMS emulation for Sound Blaster 1 and Game Blaster.");
+
 	pstring = secprop->Add_string("oplmode", when_idle, "auto");
-	pstring->Set_values(oplmodes);
-	pstring->Set_help("Type of OPL emulation ('auto' by default).\n"
-	                  "On 'auto' the mode is determined by 'sbtype'.\n"
-	                  "All OPL modes are AdLib-compatible, except for 'cms'.");
+	pstring->Set_values(
+	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none"});
+	pstring->Set_help(
+	        "OPL model to emulate ('auto' by default).\n"
+	        "  auto:      Use the appropriate model determined by 'sbtype'.\n"
+	        "  opl2:      OPL2 (mono).\n"
+	        "  dualopl2:  Dual OPL2 (stereo).\n"
+	        "  opl3:      OPL3 (stereo).\n"
+	        "  opl3gold:  OPL3 (stereo) and the optional AdLib Gold Surround module.\n"
+	        "             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.\n"
+	        "  none/off:  Disable OPL emulation.\n"
+	        "Note: 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.");
 
 	pstring = secprop->Add_string("opl_fadeout", when_idle, "off");
 	pstring->Set_help(
@@ -838,7 +834,7 @@ void DOSBOX_Init()
 	        "             Where WAIT is how long after the last IO port write fading begins,\n"
 	        "             ranging between 100 and 5000 milliseconds; and FADE is the\n"
 	        "             fade-out period, ranging between 10 and 3000 milliseconds.\n"
-		"             Examples:\n"
+	        "             Examples:\n"
 	        "                300 200 (Wait 300ms before fading out over a 200ms period)\n"
 	        "                1000 3000 (Wait 1s before fading out over a 3s period)");
 
@@ -906,8 +902,7 @@ void DOSBOX_Init()
 	                                   &PCSPEAKER_Init,
 	                                   changeable_at_runtime);
 
-	const char *pcspeaker_models[] = {"discrete", "impulse", "none", "off", nullptr};
-	pstring = secprop->Add_string("pcspeaker", when_idle, pcspeaker_models[0]);
+	pstring = secprop->Add_string("pcspeaker", when_idle, "discrete");
 	pstring->Set_help(
 	        "PC speaker emulation model:\n"
 	        "  discrete:  Waveform is created using discrete steps (default).\n"
@@ -916,7 +911,7 @@ void DOSBOX_Init()
 	        "             Recommended for square-wave games, like Commander Keen.\n"
 	        "             While improving accuracy, it is more CPU intensive.\n"
 	        "  none/off:  Don't use the PC Speaker.");
-	pstring->Set_values(pcspeaker_models);
+	pstring->Set_values({"discrete", "impulse", "none", "off"});
 
 	pstring = secprop->Add_string("pcspeaker_filter", when_idle, "on");
 	pstring->Set_help(
@@ -932,10 +927,8 @@ void DOSBOX_Init()
 	// Tandy audio emulation
 	secprop->AddInitFunction(&TANDYSOUND_Init, changeable_at_runtime);
 
-	const char* tandys[] = {"auto", "on", "psg", "off", nullptr};
-
 	pstring = secprop->Add_string("tandy", when_idle, "auto");
-	pstring->Set_values(tandys);
+	pstring->Set_values({"auto", "on", "psg", "off"});
 	pstring->Set_help(
 	        "Set the Tandy/PCjr 3 Voice sound emulation:\n"
 	        "  auto:  Automatically enable Tandy/PCjr sound for the 'tandy' and 'pcjr'\n"
@@ -969,14 +962,13 @@ void DOSBOX_Init()
 
 	// LPT DAC device emulation
 	secprop->AddInitFunction(&LPT_DAC_Init, changeable_at_runtime);
-	const char *lpt_dac_types[] = {"none", "disney", "covox", "ston1", "off", nullptr};
-	pstring = secprop->Add_string("lpt_dac", when_idle, lpt_dac_types[0]);
+	pstring = secprop->Add_string("lpt_dac", when_idle, "none");
 	pstring->Set_help("Type of DAC plugged into the parallel port:\n"
 	                  "  disney:    Disney Sound Source.\n"
 	                  "  covox:     Covox Speech Thing.\n"
 	                  "  ston1:     Stereo-on-1 DAC, in stereo up to 30 kHz.\n"
 	                  "  none/off:  Don't use a parallel port DAC (default).");
-	pstring->Set_values(lpt_dac_types);
+	pstring->Set_values({"none", "disney", "covox", "ston1", "off"});
 
 	pstring = secprop->Add_string("lpt_dac_filter", when_idle, "on");
 	pstring->Set_help(
@@ -1042,10 +1034,9 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&INT10_Init);
 	secprop->AddInitFunction(&MOUSE_Init); // Must be after int10 as it uses CurMode
 	secprop->AddInitFunction(&JOYSTICK_Init, changeable_at_runtime);
-	const char *joytypes[] = {"auto", "2axis", "4axis",    "4axis_2", "fcs",
-	                          "ch",   "hidden",  "disabled", nullptr};
 	pstring = secprop->Add_string("joysticktype", when_idle, "auto");
-	pstring->Set_values(joytypes);
+	pstring->Set_values(
+	        {"auto", "2axis", "4axis", "4axis_2", "fcs", "ch", "hidden", "disabled"});
 	pstring->Set_help(
 	        "Type of joystick to emulate:\n"
 	        "  auto:      Detect and use any joystick(s), if possible (default).\n"
@@ -1112,8 +1103,8 @@ void DOSBOX_Init()
 	        "Apply Y-axis calibration parameters from the hotkeys ('auto' by default).");
 
 	secprop = control->AddSection_prop("serial", &SERIAL_Init, changeable_at_runtime);
-	const char* serials[] = {
-	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct", nullptr};
+	const std::vector<std::string> serials = {
+	        "dummy", "disabled", "mouse", "modem", "nullmodem", "direct"};
 
 	pmulti_remain = secprop->AddMultiValRemain("serial1", when_idle, " ");
 	pstring = pmulti_remain->GetSection()->Add_string("type", when_idle, "dummy");
@@ -1169,9 +1160,8 @@ void DOSBOX_Init()
 	pbool->Set_help("Enable XMS support (enabled by default).");
 
 	secprop->AddInitFunction(&EMS_Init, changeable_at_runtime);
-	const char* ems_settings[] = {"true", "emsboard", "emm386", "false", nullptr};
 	pstring = secprop->Add_string("ems", when_idle, "true");
-	pstring->Set_values(ems_settings);
+	pstring->Set_values({"true", "emsboard", "emm386", "false"});
 	pstring->Set_help(
 	        "Enable EMS support (enabled by default). Enabled provides the best\n"
 	        "compatibility but certain applications may run better with other choices,\n"
@@ -1213,8 +1203,7 @@ void DOSBOX_Init()
 	// COMMAND.COM settings
 
 	pstring = secprop->Add_string("expand_shell_variable", when_idle, "auto");
-	const char *expand_shell_variable_choices[] = {"auto", "true", "false", nullptr};
-	pstring->Set_values(expand_shell_variable_choices);
+	pstring->Set_values({"auto", "true", "false"});
 	pstring->Set_help(
 	        "Enable expanding environment variables such as %PATH% in the DOS command shell\n"
 	        "(auto by default, enabled if DOS version >= 7.0).\n"
@@ -1237,9 +1226,8 @@ void DOSBOX_Init()
 	        "tab-separated format, used by SETVER.EXE as a persistent storage\n"
 	        "(empty by default).");
 
-	const char* pcjr_memory_configurations[] = {"expanded", "standard", nullptr};
 	pstring = secprop->Add_string("pcjr_memory_config", only_at_start, "expanded");
-	pstring->Set_values(pcjr_memory_configurations);
+	pstring->Set_values({"expanded", "standard"});
 	pstring->Set_help(
 		"PCjr memory layout ('expanded' by default).\n"
 		"  expanded:  640 KB total memory with applications residing above 128 KB.\n"
@@ -1252,17 +1240,27 @@ void DOSBOX_Init()
 	secprop->AddInitFunction(&MSCDEX_Init);
 	secprop->AddInitFunction(&DRIVES_Init);
 	secprop->AddInitFunction(&CDROM_Image_Init);
+
 #if C_IPX
 	secprop = control->AddSection_prop("ipx", &IPX_Init, changeable_at_runtime);
+#else
+	secprop = control->AddInactiveSectionProp("ipx");
+#endif
 	pbool = secprop->Add_bool("ipx", when_idle, false);
-	pbool->Set_help("Enable IPX over UDP/IP emulation (disabled by default).");
+	pbool->SetOptionHelp("Enable IPX over UDP/IP emulation (disabled by default).");
+#if C_IPX
+	pbool->SetEnabledOptions({"ipx"});
 #endif
 
 #if C_SLIRP
 	secprop = control->AddSection_prop("ethernet", &NE2K_Init, changeable_at_runtime);
+#else
+	secprop = control->AddInactiveSectionProp("ethernet");
+#endif
 
 	pbool = secprop->Add_bool("ne2000", when_idle, true);
-	pbool->Set_help(
+	pbool->SetOptionHelp(
+	        "SLIRP",
 	        "Enable emulation of a Novell NE2000 network card on a software-based\n"
 	        "network (using libslirp) with properties as follows (enabled by default):\n"
 	        "  - 255.255.255.0:  Subnet mask of the 10.0.2.0 virtual LAN.\n"
@@ -1273,29 +1271,40 @@ void DOSBOX_Init()
 	        "      client, and TCP/IP stack. You might need port-forwarding from the host\n"
 	        "      into the DOS guest, and from your router to your host when acting as the\n"
 	        "      server for multiplayer games.");
+#if C_SLIRP
+	pbool->SetEnabledOptions({"SLIRP"});
+#endif
 
-	const char *nic_addresses[] = {"200", "220", "240", "260", "280", "2c0",
-	                               "300", "320", "340", "360", nullptr};
 	phex = secprop->Add_hex("nicbase", when_idle, 0x300);
-	phex->Set_values(nic_addresses);
-	phex->Set_help("Base address of the NE2000 card (300 by default).\n"
-	               "Note: Addresses 220 and 240 might not be available as they're assigned to the\n"
-	               "      Sound Blaster and Gravis UltraSound by default.");
+	phex->Set_values(
+	        {"200", "220", "240", "260", "280", "2c0", "300", "320", "340", "360"});
+	phex->SetOptionHelp("SLIRP",
+	                    "Base address of the NE2000 card (300 by default).\n"
+	                    "Note: Addresses 220 and 240 might not be available as they're assigned to the\n"
+	                    "      Sound Blaster and Gravis UltraSound by default.");
+#if C_SLIRP
+	phex->SetEnabledOptions({"SLIRP"});
+#endif
 
-	const char *nic_irqs[] = {"3",  "4",  "5",  "9",  "10",
-	                          "11", "12", "14", "15", nullptr};
-	pint                   = secprop->Add_int("nicirq", when_idle, 3);
-	pint->Set_values(nic_irqs);
-	pint->Set_help("The interrupt used by the NE2000 card (3 by default).\n"
-	               "Note: IRQs 3 and 5 might not be available as they're assigned to\n"
-	               "      'serial2' and the Gravis UltraSound by default.");
+	pint = secprop->Add_int("nicirq", when_idle, 3);
+	pint->Set_values({"3", "4", "5", "9", "10", "11", "12", "14", "15"});
+	pint->SetOptionHelp("SLIRP",
+	                    "The interrupt used by the NE2000 card (3 by default).\n"
+	                    "Note: IRQs 3 and 5 might not be available as they're assigned to\n"
+	                    "      'serial2' and the Gravis UltraSound by default.");
+#if C_SLIRP
+	pint->SetEnabledOptions({"SLIRP"});
+#endif
 
 	pstring = secprop->Add_string("macaddr", when_idle, "AC:DE:48:88:99:AA");
-	pstring->Set_help(
-	        "The MAC address of the NE2000 card ('AC:DE:48:88:99:AA' by default).");
+	pstring->SetOptionHelp("SLIRP",
+	                       "The MAC address of the NE2000 card ('AC:DE:48:88:99:AA' by default).");
+#if C_SLIRP
+	pstring->SetEnabledOptions({"SLIRP"});
+#endif
 
 	pstring = secprop->Add_string("tcp_port_forwards", when_idle, "");
-	pstring->Set_help(
+	pstring->SetOptionHelp("SLIRP",
 	        "Forward one or more TCP ports from the host into the DOS guest\n"
 	        "(unset by default).\n"
 	        "The format is:\n"
@@ -1314,11 +1323,16 @@ void DOSBOX_Init()
 	        "  - If mapped ranges differ, the shorter range is extended to fit.\n"
 	        "  - If conflicting host ports are given, only the first one is setup.\n"
 	        "  - If conflicting guest ports are given, the latter rule takes precedent.");
+#if C_SLIRP
+	pstring->SetEnabledOptions({"SLIRP"});
+#endif
 
 	pstring = secprop->Add_string("udp_port_forwards", when_idle, "");
-	pstring->Set_help(
+	pstring->SetOptionHelp("SLIRP",
 	        "Forward one or more UDP ports from the host into the DOS guest\n"
 	        "(unset by default). The format is the same as for TCP port forwards.");
+#if C_SLIRP
+	pstring->SetEnabledOptions({"SLIRP"});
 #endif
 
 	//	secprop->AddInitFunction(&CREDITS_Init);

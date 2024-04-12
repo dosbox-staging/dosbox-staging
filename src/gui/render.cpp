@@ -1019,7 +1019,7 @@ static void init_render_settings(Section_prop& secprop)
 
 	auto* string_prop = secprop.Add_string("aspect", always, "auto");
 	string_prop->Set_help(
-	        "Set the aspect ratio correction mode (enabled by default):\n"
+	        "Set the aspect ratio correction mode (auto by default):\n"
 	        "  auto, on:            Apply aspect ratio correction for modern square-pixel\n"
 	        "                       flat-screen displays, so DOS video modes with non-square\n"
 	        "                       pixels appear as they would on a 4:3 display aspect\n"
@@ -1040,9 +1040,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "                       to emulate the horizontal and vertical stretch controls\n"
 	        "                       of CRT monitors.");
 
-	const char* aspect_values[] = {
-	        "auto", "on", "square-pixels", "off", "stretch", nullptr};
-	string_prop->Set_values(aspect_values);
+	string_prop->Set_values({"auto", "on", "square-pixels", "off", "stretch"});
 
 	string_prop = secprop.Add_string("integer_scaling", always, "auto");
 	string_prop->Set_help(
@@ -1061,9 +1059,7 @@ static void init_render_settings(Section_prop& secprop)
 	        "  off:         No integer scaling constraint is applied; the image fills the\n"
 	        "               viewport while maintaining the configured aspect ratio.");
 
-	const char* integer_scaling_values[] = {
-	        "auto", "vertical", "horizontal", "off", nullptr};
-	string_prop->Set_values(integer_scaling_values);
+	string_prop->Set_values({"auto", "vertical", "horizontal", "off"});
 
 	string_prop = secprop.Add_path("viewport", always, "fit");
 	string_prop->Set_help(
@@ -1101,12 +1097,10 @@ static void init_render_settings(Section_prop& secprop)
 	        "Works only with the 'hercules' and 'cga_mono' machine types.\n"
 	        "Note: You can also cycle through the available palettes via hotkeys.");
 
-	const char* mono_pal[] = {MonochromePaletteAmber,
-	                          MonochromePaletteGreen,
-	                          MonochromePaletteWhite,
-	                          MonochromePalettePaperwhite,
-	                          nullptr};
-	string_prop->Set_values(mono_pal);
+	string_prop->Set_values({MonochromePaletteAmber,
+	                         MonochromePaletteGreen,
+	                         MonochromePaletteWhite,
+	                         MonochromePalettePaperwhite});
 
 	string_prop = secprop.Add_string("cga_colors", only_at_start, "default");
 	string_prop->Set_help(
@@ -1151,9 +1145,8 @@ static void init_render_settings(Section_prop& secprop)
 	        "  - If you used an advanced scaler, consider one of the 'glshader'\n"
 	        "    options instead.");
 
-#if C_OPENGL
 	string_prop = secprop.Add_string("glshader", always, "crt-auto");
-	string_prop->Set_help(
+	string_prop->SetOptionHelp(
 	        "Set an adaptive CRT monitor emulation shader or a regular GLSL shader in OpenGL\n"
 	        "output modes. Adaptive CRT shader options:\n"
 	        "  crt-auto:               A CRT shader that prioritises developer intent and\n"
@@ -1181,7 +1174,11 @@ static void init_render_settings(Section_prop& secprop)
 	        "Other options include 'sharp', 'none', a shader listed using the\n"
 	        "'--list-glshaders' command-line argument, or an absolute or relative path\n"
 	        "to a file. In all cases, you may omit the shader's '.glsl' file extension.");
+	string_prop->SetEnabledOptions({
+#if C_OPENGL
+		"glshader",
 #endif
+	});
 }
 
 enum { Horiz, Vert };

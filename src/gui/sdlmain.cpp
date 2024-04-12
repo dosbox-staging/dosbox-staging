@@ -4221,29 +4221,26 @@ static void config_add_sdl()
 	Section_prop *sdl_sec=control->AddSection_prop("sdl", &read_config,
 	                                               changeable_at_runtime);
 	sdl_sec->AddInitFunction(&MAPPER_StartUp);
-	Prop_bool *Pbool; // use pbool for new properties
 	Prop_bool *pbool;
-	Prop_string *Pstring; // use pstring for new properties
 	Prop_string *pstring;
-	Prop_int *Pint; // use pint for new properties
 	Prop_int *pint;
-	PropMultiVal* Pmulti;
+	PropMultiVal* pmulti;
 	Section_prop* psection;
 
 	constexpr auto always = Property::Changeable::Always;
 	constexpr auto deprecated = Property::Changeable::Deprecated;
 	constexpr auto on_start = Property::Changeable::OnlyAtStart;
 
-	Pbool = sdl_sec->Add_bool("fullscreen", always, false);
-	Pbool->Set_help("Start directly in fullscreen (disabled by default).\n"
+	pbool = sdl_sec->Add_bool("fullscreen", always, false);
+	pbool->Set_help("Start directly in fullscreen (disabled by default).\n"
 	                "Run INTRO and see Special Keys for window control hotkeys.");
 
 	pint = sdl_sec->Add_int("display", on_start, 0);
 	pint->Set_help("Number of display to use; values depend on OS and user "
 	               "settings (0 by default).");
 
-	Pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
-	Pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
+	pstring = sdl_sec->Add_string("fullresolution", always, "desktop");
+	pstring->Set_help("What resolution to use for fullscreen: 'original', 'desktop'\n"
 	                  "or a fixed size, e.g. 1024x768 ('desktop' by default).");
 
 	pstring = sdl_sec->Add_string("windowresolution", on_start, "default");
@@ -4264,11 +4261,11 @@ static void config_add_sdl()
 	        "  X,Y:       Set window position in X,Y format (e.g., 250,100).\n"
 	        "             0,0 is the top-left corner of the screen.");
 
-	Pbool = sdl_sec->Add_bool("window_decorations", always, true);
-	Pbool->Set_help("Enable window decorations in windowed mode (enabled by default).");
+	pbool = sdl_sec->Add_bool("window_decorations", always, true);
+	pbool->Set_help("Enable window decorations in windowed mode (enabled by default).");
 
-	Pint = sdl_sec->Add_int("transparency", always, 0);
-	Pint->Set_help("Set the transparency of the DOSBox Staging screen (0 by default).\n"
+	pint = sdl_sec->Add_int("transparency", always, 0);
+	pint->Set_help("Set the transparency of the DOSBox Staging screen (0 by default).\n"
 	               "From 0 (no transparency) to 90 (high transparency).");
 
 	pstring = sdl_sec->Add_path("max_resolution", deprecated, "");
@@ -4289,9 +4286,7 @@ static void config_add_sdl()
 	        "  N:         Specify custom refresh rate in Hz (decimal values are allowed;\n"
 	        "             23.000 is the allowed minimum).");
 
-	const char* vsync_prefs[] = {"auto", "on", "adaptive", "off", "yield", nullptr};
 	pstring = sdl_sec->Add_string("vsync", always, "auto");
-
 	pstring->Set_help(
 	        "Set the host video driver's vertical synchronization (vsync) mode:\n"
 	        "  auto:      Limit vsync to beneficial cases, such as when using an\n"
@@ -4307,7 +4302,7 @@ static void config_add_sdl()
 	        "  off:       Attempt to disable vsync to allow quicker frame presentation at\n"
 	        "             the risk of tearing in some games.\n"
 	        "  yield:     Let the host's video driver control video synchronization.");
-	pstring->Set_values(vsync_prefs);
+	pstring->Set_values({"auto", "on", "adaptive", "off", "yield"});
 
 	pint = sdl_sec->Add_int("vsync_skip", on_start, 0);
 	pint->Set_help("Number of microseconds to allow rendering to block before skipping the\n"
@@ -4315,7 +4310,6 @@ static void config_add_sdl()
 	               "at 70 Hz. 0 disables this and will always render (default).");
 	pint->SetMinMax(0, 14000);
 
-	const char *presentation_modes[] = {"auto", "cfr", "vfr", nullptr};
 	pstring = sdl_sec->Add_string("presentation_mode", always, "auto");
 	pstring->Set_help(
 	        "Select the frame presentation mode:\n"
@@ -4323,71 +4317,72 @@ static void config_add_sdl()
 	        "         based on host and DOS frame rates (default).\n"
 	        "  cfr:   Always present DOS frames at a constant frame rate.\n"
 	        "  vfr:   Always present changed DOS frames at a variable frame rate.");
-	pstring->Set_values(presentation_modes);
-
-	const char* outputs[] =
-	{ "texture",
-	  "texturenb",
-#if C_OPENGL
-	  "opengl",
-	  "openglnb",
-#endif
-	  nullptr };
+	pstring->Set_values({"auto", "cfr", "vfr"});
 
 #if C_OPENGL
-	Pstring = sdl_sec->Add_string("output", always, "opengl");
-	Pstring->Set_help(
-	        "Video system to use for output ('opengl' by default).\n"
-	        "'texture' and 'opengl' use bilinear interpolation, 'texturenb' and\n"
-	        "'openglnb' use nearest-neighbour (no-bilinear). Some shaders require\n"
-	        "bilinear interpolation, making that the safest choice.");
-	Pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
-	Pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
+	const std::string default_output = "opengl";
 #else
-	Pstring = sdl_sec->Add_string("output", always, "texture");
-	Pstring->Set_help("Video system to use for output ('texture' by default).");
-	Pstring->SetDeprecatedWithAlternateValue("surface", "texture");
+	const std::string default_output = "texture";
 #endif
-	Pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
-	Pstring->Set_values(outputs);
+	pstring = sdl_sec->Add_string("output", always, default_output.c_str());
+	pstring->SetOptionHelp("opengl_default",
+	        "Video system to use for output ('opengl' by default).\n"
+	        "Some shaders require bilinear interpolation, making that the safest choice.");
+	pstring->SetOptionHelp(
+	        "texture_default",
+	        "Video system to use for output ('texture' by default).\n"
+	        "Some shaders require bilinear interpolation, making that the safest choice.");
+	pstring->SetOptionHelp("opengl", "  opengl:     Uses bilinear interpolation.");
+	pstring->SetOptionHelp("texture",   "  texture:    Uses bilinear interpolation.");
+	pstring->SetOptionHelp("openglnb",  "  openglnb:   Uses nearest-neighbour interpolation (no bilinear).");
+	pstring->SetOptionHelp("texturenb", "  texturenb:  Uses nearest-neighbour interpolation (no bilinear).");
+#if C_OPENGL
+	pstring->SetDeprecatedWithAlternateValue("surface", "opengl");
+	pstring->SetDeprecatedWithAlternateValue("openglpp", "opengl");
+#else
+	pstring->SetDeprecatedWithAlternateValue("surface", "texture");
+#endif
+	pstring->SetDeprecatedWithAlternateValue("texturepp", "texture");
+	pstring->Set_values({
+#if C_OPENGL
+		"opengl_default",
+#else
+		"texture_default",
+#endif
+		"texture", "texturenb",
+#if C_OPENGL
+		"opengl", "openglnb",
+#endif
+	});
 
 	pstring = sdl_sec->Add_string("texture_renderer", always, "auto");
 	pstring->Set_help("Render driver to use in 'texture' output mode ('auto' by default).\n"
 	                  "Use 'texture_renderer = auto' for an automatic choice.");
 	pstring->Set_values(get_sdl_texture_renderers());
 
-	Pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
-	Pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_capture'.");
+	pmulti = sdl_sec->AddMultiVal("capture_mouse", deprecated, ",");
+	pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_capture'.");
 
-	Pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
-	Pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_sensitivity'.");
+	pmulti = sdl_sec->AddMultiVal("sensitivity", deprecated, ",");
+	pmulti->Set_help("Moved to [mouse] section and renamed to 'mouse_sensitivity'.");
 
 	pbool = sdl_sec->Add_bool("raw_mouse_input", deprecated, false);
 	pbool->Set_help("Moved to [mouse] section and renamed to 'mouse_raw_input'.");
 
-	Pbool = sdl_sec->Add_bool("waitonerror", always, true);
-	Pbool->Set_help("Keep the console open if an error has occurred (enabled by default).");
+	pbool = sdl_sec->Add_bool("waitonerror", always, true);
+	pbool->Set_help("Keep the console open if an error has occurred (enabled by default).");
 
-	Pmulti = sdl_sec->AddMultiVal("priority", always, " ");
-	Pmulti->SetValue("auto auto");
-	Pmulti->Set_help("Priority levels to apply when active and inactive, respectively.\n"
+	pmulti = sdl_sec->AddMultiVal("priority", always, " ");
+	pmulti->SetValue("auto auto");
+	pmulti->Set_help("Priority levels to apply when active and inactive, respectively.\n"
 	                 "('auto auto' by default)\n"
 	                 "'auto' lets the host operating system manage the priority.");
 
-	const char *priority_level_choices[] = {
-	        "auto",
-	        "lowest",
-	        "lower",
-	        "normal",
-	        "higher",
-	        "highest",
-	        nullptr,
-	};
-	psection = Pmulti->GetSection();
-	psection->Add_string("active", always, priority_level_choices[0])
-	        ->Set_values(priority_level_choices);
-	psection->Add_string("inactive", always, priority_level_choices[0])
-	        ->Set_values(priority_level_choices);
+	psection = pmulti->GetSection();
+	psection->Add_string("active", always, "auto")
+	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
+	psection->Add_string("inactive", always, "auto")
+	        ->Set_values({"auto", "lowest", "lower", "normal", "higher", "highest"});
 
 	pbool = sdl_sec->Add_bool("mute_when_inactive", on_start, false);
 	pbool->Set_help("Mute the sound when the window is inactive (disabled by default).");
@@ -4408,8 +4403,7 @@ static void config_add_sdl()
 	        "Use 'allow' or 'block' to override the SDL_VIDEO_ALLOW_SCREENSAVER environment\n"
 	        "variable which usually blocks the OS screensaver while the emulator is\n"
 	        "running ('auto' by default).");
-	const char *ssopts[] = {"auto", "allow", "block", nullptr};
-	pstring->Set_values(ssopts);
+	pstring->Set_values({"auto", "allow", "block"});
 
 	TITLEBAR_AddConfig(*sdl_sec);
 }

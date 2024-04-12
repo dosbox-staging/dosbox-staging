@@ -3246,21 +3246,33 @@ static void MAPPER_Destroy(Section *sec) {
 	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 }
 
-void MAPPER_BindKeys(Section *sec)
+static bool should_skip_unchanged_titlebar(const Section_prop* section)
 {
-	// Get the mapper file set by the user
-	const auto section = static_cast<const Section_prop *>(sec);
-	const auto mapperfile_value = section->Get_string("mapperfile");
-	const auto property = section->Get_path("mapperfile");
-	
-	// Filter out unneeded calls
-	static bool first_time = true;
-	static std::string old_mapperfile_value = {};
-	if (!first_time && mapperfile_value == old_mapperfile_value) {
+	// Filter out unneeded calls - do not execute MAPPER_BindKeys if only
+	// window titlebar setting has changed, to avoid flicker
+
+	const std::string curr_titlebar = section->Get_string("window_titlebar");
+
+	static std::optional<std::string> prev_titlebar = {};
+	if (prev_titlebar && curr_titlebar != *prev_titlebar) {
+		prev_titlebar = curr_titlebar;
+		return true;
+	}
+
+	prev_titlebar = curr_titlebar;
+	return false;
+}
+
+void MAPPER_BindKeys(Section* sec)
+{
+	const auto section = static_cast<const Section_prop*>(sec);
+	if (should_skip_unchanged_titlebar(section)) {
 		return;
 	}
-	first_time = false;
-	old_mapperfile_value = mapperfile_value;
+
+	// Get the mapper file set by the user
+	const auto mapperfile_value = section->Get_string("mapperfile");
+	const auto property         = section->Get_path("mapperfile");
 
 	// Release any keys pressed, or else they'll get stuck
 	GFX_LosingFocus();

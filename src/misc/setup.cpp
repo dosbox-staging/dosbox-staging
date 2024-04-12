@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2023  The DOSBox Staging Team
+ *  Copyright (C) 2019-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2023  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -267,25 +267,116 @@ bool Property::ValidateValue(const Value& in)
 	}
 }
 
+static std::string create_config_name(const std::string& propname) 
+{
+	std::string result = "CONFIG_" + propname;
+	upcase(result);
+	return result;
+}
+
 void Property::Set_help(const std::string& in)
 {
-	std::string result = std::string("CONFIG_") + propname;
-	upcase(result);
-	MSG_Add(result.c_str(), in.c_str());
+	MSG_Add(create_config_name(propname).c_str(), in.c_str());
 }
 
-const char* Property::GetHelp() const
+static std::string create_config_item_name(const std::string& propname,
+                                           const std::string& item)
 {
-	std::string result = "CONFIG_" + propname;
+	std::string result = "CONFIGITEM_" + propname;
+	if (!item.empty()) {
+		result += '_' + item;
+	}
 	upcase(result);
-	return MSG_Get(result.c_str());
+	return result;
 }
 
-const char* Property::GetHelpUtf8() const
+void Property::SetOptionHelp(const std::string& option, const std::string& in)
 {
-	std::string result = "CONFIG_" + propname;
-	upcase(result);
-	return MSG_GetRaw(result.c_str());
+	MSG_Add(create_config_item_name(propname, option).c_str(), in.c_str());
+}
+
+void Property::SetOptionHelp(const std::string& in)
+{
+	MSG_Add(create_config_item_name(propname, {}).c_str(), in.c_str());
+}
+
+std::string Property::GetHelp() const
+{
+	std::string result = {};
+	if (MSG_Exists(create_config_name(propname).c_str())) {
+		std::string help_text = MSG_Get(create_config_name(propname).c_str());
+		// Fill in the default value if the help text contains '%s'.
+		if (help_text.find("%s") != std::string::npos) {
+			help_text = format_str(help_text,
+			                       GetDefaultValue().ToString().c_str());
+		}
+		result.append(help_text).append("\n");
+	}
+
+	const auto configitem_has_message = [this](const auto& value) {
+		return MSG_Exists(create_config_item_name(propname, value).c_str()) ||
+		       (iequals(value, propname) &&
+		        MSG_Exists(create_config_item_name(propname, {}).c_str()));
+	};
+	if (std::any_of(enabled_options.begin(),
+	                enabled_options.end(),
+	                configitem_has_message)) {
+		for (const auto& value : enabled_options) {
+			if (iequals(value, propname) &&
+			    MSG_Exists(create_config_item_name(propname, {}).c_str())) {
+				result.append(MSG_Get(
+				        create_config_item_name(propname, {}).c_str()));
+			} else {
+				result.append(MSG_Get(
+				        create_config_item_name(propname, value).c_str()));
+			}
+			result.append("\n");
+		}
+	}
+	if (result.empty()) {
+		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+		return "No help available for '" + propname + "'\n";
+	}
+	return result;
+}
+
+std::string Property::GetHelpUtf8() const
+{
+	std::string result = {};
+	if (MSG_Exists(create_config_name(propname).c_str())) {
+		std::string help_text = MSG_GetRaw(create_config_name(propname).c_str());
+		// Fill in the default value if the help text contains '%s'.
+		if (help_text.find("%s") != std::string::npos) {
+			help_text = format_str(help_text,
+			                       GetDefaultValue().ToString().c_str());
+		}
+		result.append(help_text).append("\n");
+	}
+
+	const auto configitem_has_message = [this](const auto& value) {
+		return MSG_Exists(create_config_item_name(propname, value).c_str()) ||
+		       (iequals(value, propname) &&
+		        MSG_Exists(create_config_item_name(propname, {}).c_str()));
+	};
+	if (std::any_of(enabled_options.begin(),
+	                enabled_options.end(),
+	                configitem_has_message)) {
+		for (const auto& value : enabled_options) {
+			if (iequals(value, propname) &&
+			    MSG_Exists(create_config_item_name(propname, {}).c_str())) {
+				result.append(MSG_GetRaw(
+				        create_config_item_name(propname, {}).c_str()));
+			} else {
+				result.append(MSG_GetRaw(
+				        create_config_item_name(propname, value).c_str()));
+			}
+			result.append("\n");
+		}
+	}
+	if (result.empty()) {
+		LOG_WARNING("CONFIG: No help available for '%s'.", propname.c_str());
+	}
+	return result;
 }
 
 bool Prop_int::ValidateValue(const Value& in)
@@ -690,20 +781,6 @@ void Property::MaybeSetBoolValid(const std::string_view valid_value)
 	}
 }
 
-void Property::Set_values(const char* const* in)
-{
-	Value::Etype type = default_value.type;
-
-	int i = 0;
-
-	while (in[i]) {
-		MaybeSetBoolValid(in[i]);
-		Value val(in[i], type);
-		valid_values.push_back(val);
-		i++;
-	}
-}
-
 void Property::SetDeprecatedWithAlternateValue(const char* deprecated_value,
                                                const char* alternate_value)
 {
@@ -720,6 +797,12 @@ void Property::Set_values(const std::vector<std::string>& in)
 		Value val(str, type);
 		valid_values.push_back(val);
 	}
+	SetEnabledOptions(in);
+}
+
+void Property::SetEnabledOptions(const std::vector<std::string>& in)
+{
+	enabled_options = in;
 }
 
 Prop_int* Section_prop::Add_int(const std::string& _propname,
@@ -948,7 +1031,7 @@ bool Section_prop::HandleInputline(const std::string& line)
 
 		if (p->IsDeprecated()) {
 			LOG_WARNING("CONFIG: Deprecated option '%s'", name.c_str());
-			LOG_WARNING("CONFIG: %s", p->GetHelp());
+			LOG_WARNING("CONFIG: %s", p->GetHelp().c_str());
 			return false;
 		}
 
@@ -1138,6 +1221,18 @@ bool Config::WriteConfig(const std_fs::path& path) const
 
 	fclose(outfile);
 	return true;
+}
+
+Section_prop* Config::AddInactiveSectionProp(const char* section_name)
+{
+	assertm(std::regex_match(section_name, std::regex{"[a-zA-Z0-9]+"}),
+	        "Only letters and digits are allowed in section name");
+
+	constexpr bool inactive = false;
+	auto s = std::make_unique<Section_prop>(section_name, inactive);
+	auto* section = s.get();
+	sectionlist.push_back(s.release());
+	return section;
 }
 
 Section_prop* Config::AddSection_prop(const char* section_name, SectionFunction func,
@@ -1644,13 +1739,13 @@ void Config::ParseConfigFiles(const std_fs::path& config_dir)
 
 	// Finally: layer on additional config files specified with the '-conf'
 	// switch
-	for (const auto& config_file : arguments.conf) {
-		if (!ParseConfigFile("custom", config_file)) {
+	for (const auto& conf_file : arguments.conf) {
+		if (!ParseConfigFile("custom", conf_file)) {
 			// Try to load it from the user directory
-			const auto cfg = config_dir / config_file;
+			const auto cfg = config_dir / conf_file;
 			if (!ParseConfigFile("custom", cfg.string())) {
 				LOG_WARNING("CONFIG: Can't open custom config file '%s'",
-				            config_file.c_str());
+				            conf_file.c_str());
 			}
 		}
 	}
@@ -1704,12 +1799,12 @@ const char* Config::SetProp(std::vector<std::string>& pvars)
 
 		if (!sec) {
 			// Not a section: little duplicate from above
-			Section* sec = GetSectionFromProperty(
+			Section* secprop = GetSectionFromProperty(
 			        pvars[0].c_str());
 
-			if (sec) {
+			if (secprop) {
 				pvars.insert(pvars.begin(),
-				             std::string(sec->GetName()));
+				             std::string(secprop->GetName()));
 			} else {
 				safe_sprintf(return_msg,
 				             MSG_Get("PROGRAM_CONFIG_PROPERTY_ERROR"),

@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2019-2023  The DOSBox Staging Team
+ *  Copyright (C) 2019-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2018  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -290,7 +290,7 @@ void TandyDAC::ChangeMode()
 	// For example, a clock divider value of 8 (which is valid) produces a
 	// 450 KHz sampling rate, which is way beyond what Speex can handle.
 	//
-	constexpr auto dac_max_sample_rate_hz = 49000;
+	constexpr auto DacMaxSampleRateHz = 49000;
 
 	// LOG_MSG("TANDYDAC: Mode changed to %d", regs.mode);
 	switch (regs.mode & 3) {
@@ -303,22 +303,35 @@ void TandyDAC::ChangeMode()
 		if (regs.clock_divider == 0) {
 			return;
 		}
-		if (const auto sample_rate = tandy_psg_clock_hz / regs.clock_divider;
-		    sample_rate < dac_max_sample_rate_hz) {
+
+		if (const auto new_sample_rate = tandy_psg_clock_hz / regs.clock_divider;
+		    new_sample_rate < DacMaxSampleRateHz) {
 			assert(channel);
-			channel->FillUp(); // using the prior sample rate
-			channel->SetSampleRate(check_cast<uint16_t>(sample_rate));
+
+			// Fill using the prior sample rate
+			channel->FillUp();
+
+			channel->SetSampleRate(check_cast<uint16_t>(new_sample_rate));
+
 			const auto vol = static_cast<float>(regs.amplitude) / 7.0f;
+
 			channel->SetAppVolume({vol, vol});
+
 			if ((regs.mode & 0x0c) == 0x0c) {
 				dma.is_done = false;
 				dma.channel = DMA_GetChannel(io.dma);
+
 				if (dma.channel) {
 					const auto callback = std::bind(
 					        &TandyDAC::DmaCallback, this, _1, _2);
 					dma.channel->RegisterCallback(callback);
+
 					channel->Enable(true);
-					// LOG_MSG("TANDYDAC: playback started with freqency %f, volume %f", sample_rate, vol);
+#if 0
+					LOG_MSG("TANDYDAC: playback started with freqency %i, volume %f",
+					        sample_rate,
+					        vol);
+#endif
 				}
 			}
 		}
@@ -590,7 +603,7 @@ void TandyPSG::AudioCallback(const uint16_t requested_frames)
 std::unique_ptr<TandyDAC> tandy_dac = {};
 std::unique_ptr<TandyPSG> tandy_psg = {};
 
-bool TS_Get_Address(Bitu &tsaddr, Bitu &tsirq, Bitu &tsdma)
+bool TANDYSOUND_GetAddress(Bitu &tsaddr, Bitu &tsirq, Bitu &tsdma)
 {
 	if (!tandy_dac || !tandy_dac->IsEnabled()) {
 		tsaddr = 0;

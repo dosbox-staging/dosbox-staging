@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2022-2023  The DOSBox Staging Team
+ *  Copyright (C) 2022-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -104,7 +104,7 @@ static bool Tandy_InitializeSB() {
 	uint16_t sbport;
 	uint8_t sbirq;
 	uint8_t sbdma;
-	if (SB_Get_Address(sbport, sbirq, sbdma)) {
+	if (SB_GetAddress(sbport, sbirq, sbdma)) {
 		tandy_sb.port = sbport;
 		tandy_sb.irq = sbirq;
 		tandy_sb.dma = sbdma;
@@ -119,7 +119,7 @@ static bool Tandy_InitializeSB() {
 static bool Tandy_InitializeTS() {
 	/* see if Tandy DAC module available and at what port/IRQ/DMA */
 	Bitu tsport, tsirq, tsdma;
-	if (TS_Get_Address(tsport, tsirq, tsdma)) {
+	if (TANDYSOUND_GetAddress(tsport, tsirq, tsdma)) {
 		tandy_dac.port=(uint16_t)(tsport&0xffff);
 		tandy_dac.irq =(uint8_t)(tsirq&0xff);
 		tandy_dac.dma =(uint8_t)(tsdma&0xff);

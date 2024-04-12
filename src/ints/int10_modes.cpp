@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2002-2021  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -1686,6 +1686,9 @@ att_text16:
 
 	if ((modeset_ctl & 8)==0) {
 		// Set up Color Registers (DAC colours)
+#if 0
+		LOG_DEBUG("INT10H: Set up Color Registers");
+#endif
 		IO_Write(0x3c8, 0);
 
 		switch (CurMode->type) {
@@ -1747,6 +1750,9 @@ dac_text16:
 		}
 
 		// Set up Palette Registers
+#if 0
+		LOG_DEBUG("INT10H: Set up Palette Registers");
+#endif
 		for (uint8_t ct = 0; ct < ATT_REGS; ct++) {
 			IO_Write(0x3c0, ct);
 			IO_Write(0x3c0, att_data[ct]);
