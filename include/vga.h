@@ -1057,9 +1057,11 @@ struct VgaType {
 
 	// Memory for fast (usually 16-colour) rendering,
 	// always twice as big as vmemsize
-	//
 	uint8_t* fastmem  = {};
 	uint32_t vmemsize = 0;
+
+	// How much delay to add to video memory I/O in nanoseconds
+	uint16_t vmem_delay_ns = 0;
 
 #ifdef VGA_KEEP_CHANGES
 	VgaChanges changes = {};
