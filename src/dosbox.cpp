@@ -553,6 +553,18 @@ void DOSBOX_Init()
 	        "the selected video adapter ('auto' by default). See the 'machine' setting for\n"
 	        "the list of valid options per adapter.");
 
+	pstring = secprop->Add_string("vmem_delay", only_at_start, "off");
+	pstring->Set_help(
+	        "Set video memory I/O delay emulation ('off' by default).\n"
+	        "  off:      Disable video memory I/O delay emulation (default).\n"
+	        "            This is preferable for most games to avoid slowdowns.\n"
+	        "  on:       Enable I/O delay emulation (3000 ns). This can help reduce or\n"
+	        "            eliminate flicker in Hercules, CGA, EGA, and early VGA games.\n"
+	        "  <value>:  Set I/O delay in nanoseconds. Valid range is 0 to 20000 ns;\n"
+	        "            500 to 5000 ns is the most useful range.\n"
+	        "Note: Only set this on a per-game basis when necessary as it slows down the\n"
+	        "      whole emulator.");
+
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
 	pstring->Set_help(
 	        "Customize the emulated video mode's frame rate.\n"
