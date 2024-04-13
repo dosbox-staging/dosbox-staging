@@ -640,15 +640,16 @@ the selected video adapter ('auto' by default). See the 'machine' setting for
 the list of valid options per adapter.
 .
 :CONFIG_VMEM_DELAY
-Set video memory I/O delay emulation ('off' by default).
-  off:      Disable video memory I/O delay emulation (default).
+Set video memory access delay emulation ('off' by default).
+  off:      Disable video memory access delay emulation (default).
             This is preferable for most games to avoid slowdowns.
-  on:       Enable I/O delay emulation (3000 ns). This can help reduce or
-            eliminate flicker in Hercules, CGA, EGA, and early VGA games.
-  <value>:  Set I/O delay in nanoseconds. Valid range is 0 to 20000 ns;
+  on:       Enable video memory access delay emulation (3000 ns).
+            This can help reduce or eliminate flicker in Hercules,
+            CGA, EGA, and early VGA games.
+  <value>:  Set access delay in nanoseconds. Valid range is 0 to 20000 ns;
             500 to 5000 ns is the most useful range.
-Note: Only set this on a per-game basis when necessary as it slows down the
-      whole emulator.
+Note: Only set this on a per-game basis when necessary as it slows down
+      the whole emulator.
 .
 :CONFIG_DOS_RATE
 Customize the emulated video mode's frame rate.
