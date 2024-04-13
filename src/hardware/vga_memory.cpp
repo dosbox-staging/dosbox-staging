@@ -1248,7 +1248,7 @@ void VGA_SetupMemory(Section* sec)
 	vga.vmem_delay_ns = determine_vmem_delay_ns();
 
 	if (vga.vmem_delay_ns > 0) {
-		LOG_MSG("VGA: Video memory I/O delay set to %u nanoseconds",
+		LOG_MSG("VGA: Video memory access delay set to %u nanoseconds",
 		        vga.vmem_delay_ns);
 	}
 }
