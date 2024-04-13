@@ -386,4 +386,15 @@ std::string format_str(const std::string& format, const Args&... args) noexcept
 	return result;
 }
 
+template<size_t N>
+std::string safe_tostring(char (&str)[N]) noexcept
+{
+	return std::string(str, safe_strlen(str));
+}
+
+inline std::string safe_tostring(const char* str, const std::size_t maxlen) noexcept
+{
+	return std::string(str, strnlen(str, maxlen));
+}
+
 #endif
