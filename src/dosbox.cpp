@@ -555,15 +555,16 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("vmem_delay", only_at_start, "off");
 	pstring->Set_help(
-	        "Set video memory I/O delay emulation ('off' by default).\n"
-	        "  off:      Disable video memory I/O delay emulation (default).\n"
+	        "Set video memory access delay emulation ('off' by default).\n"
+	        "  off:      Disable video memory access delay emulation (default).\n"
 	        "            This is preferable for most games to avoid slowdowns.\n"
-	        "  on:       Enable I/O delay emulation (3000 ns). This can help reduce or\n"
-	        "            eliminate flicker in Hercules, CGA, EGA, and early VGA games.\n"
-	        "  <value>:  Set I/O delay in nanoseconds. Valid range is 0 to 20000 ns;\n"
+	        "  on:       Enable video memory access delay emulation (3000 ns).\n"
+	        "            This can help reduce or eliminate flicker in Hercules,\n"
+	        "            CGA, EGA, and early VGA games.\n"
+	        "  <value>:  Set access delay in nanoseconds. Valid range is 0 to 20000 ns;\n"
 	        "            500 to 5000 ns is the most useful range.\n"
-	        "Note: Only set this on a per-game basis when necessary as it slows down the\n"
-	        "      whole emulator.");
+	        "Note: Only set this on a per-game basis when necessary as it slows down\n"
+	        "      the whole emulator.");
 
 	pstring = secprop->Add_string("dos_rate", when_idle, "default");
 	pstring->Set_help(
