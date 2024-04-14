@@ -24,7 +24,7 @@
 constexpr char version_msg[] =
         R"(%s, version %s
 
-Copyright (C) 2020-2023  The DOSBox Staging Team
+Copyright (C) 2020-2024  The DOSBox Staging Team
 License: GNU GPL-2.0-or-later <https://www.gnu.org/licenses/gpl-2.0.html>
 
 This is free software, and you are welcome to change and redistribute it under
