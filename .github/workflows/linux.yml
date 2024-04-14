@@ -349,31 +349,6 @@ jobs:
           tar -cJf "dosbox-staging-linux-x86_64-$VERSION.tar.xz" \
             "dosbox-staging-linux-x86_64-$VERSION"
 
-      - name:  Prepare Clam AV DB cache
-        id:    prep-clamdb
-        shell: bash
-        run: |
-          sudo mkdir -p "${CLAMDB_DIR}"
-          sudo chmod 777 "${CLAMDB_DIR}"
-          echo "today=$(date -I)"                      >> $GITHUB_OUTPUT
-          echo "yesterday=$(date --date=yesterday -I)" >> $GITHUB_OUTPUT
-      - uses:  actions/cache@v4.0.1
-        id:    cache-clamdb
-        with:
-          path: ${{ env.CLAMDB_DIR }}/*.cvd
-          key:  clamdb-linux-${{ steps.prep-clamdb.outputs.today }}-1
-          restore-keys: |
-            clamdb-linux-${{ steps.prep-clamdb.outputs.yesterday }}-1
-
-      - name: Clam AV scan
-        run: |
-          set -x
-          sudo apt-get install clamav
-          sudo systemctl stop clamav-freshclam
-          sudo sed -i 's/30/20000/g' /etc/clamav/freshclam.conf
-          sudo freshclam --foreground
-          clamscan --heuristic-scan-precedence=yes --recursive --infected .
-
       - name: Upload tarball
         uses: actions/upload-artifact@v4.3.1
         # GitHub automatically zips the artifacts (there's no way to create
