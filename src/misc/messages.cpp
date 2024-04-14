@@ -122,13 +122,19 @@ static std::unordered_map<std::string, Message> messages;
 static std::deque<std::string> messages_order;
 
 // Add the message if it doesn't exist yet
-void MSG_Add(const char *name, const char *markup_msg)
+void MSG_Add(const char* name, const char* markup_msg)
 {
 	const auto pair = messages.try_emplace(name, markup_msg);
 	if (pair.second) { // if the insertion was successful
 		messages_order.emplace_back(name);
+	} else if ((control->GetLanguage() == "en" || control->GetLanguage().empty()) &&
+	           strcmp(pair.first->second.GetRaw(), markup_msg) != 0) {
+		// Detect duplicates in the English language
+		LOG_WARNING("LANG: Duplicate text added for message '%s'. Second instance is ignored.",
+		            name);
 	} else {
-		LOG_WARNING("LANG: Duplicate text added for message '%s'. Second instance is ignored.", name);
+		// Duplicate ID definitions most likely occured by adding the help in the code
+		// after it was added by a help-file.
 	}
 }
 
