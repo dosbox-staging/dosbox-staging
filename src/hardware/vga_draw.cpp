@@ -2651,8 +2651,6 @@ ImageInfo setup_drawing()
 
 		vga.draw.blocks = horiz_end;
 
-		video_mode.width = horiz_end * vga.draw.pixels_per_character;
-
 		double_width = vga.seq.clocking_mode.is_pixel_doubling &&
 		               vga.draw.pixel_doubling_allowed;
 
@@ -2660,6 +2658,7 @@ ImageInfo setup_drawing()
 			vga.draw.pixels_per_character = vga.seq.clocking_mode.is_eight_dot_mode
 			                                      ? PixelsPerChar::Eight
 			                                      : PixelsPerChar::Nine;
+
 			pixel_format = PixelFormat::BGRX32_ByteArray;
 
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_timings(
@@ -2668,6 +2667,8 @@ ImageInfo setup_drawing()
 			// Text mode double scanning can only be done by setting
 			// the Double Scanning bit.
 			video_mode.is_double_scanned_mode = is_vga_scan_doubling_bit_set();
+
+			video_mode.width = horiz_end * vga.draw.pixels_per_character;
 
 			if (video_mode.is_double_scanned_mode) {
 				video_mode.height = vert_end / 2;
@@ -2689,6 +2690,7 @@ ImageInfo setup_drawing()
 		} else { // M_EGA
 			vga.draw.pixels_per_character = PixelsPerChar::Eight;
 
+			video_mode.width  = horiz_end * vga.draw.pixels_per_character;
 			video_mode.height = vert_end;
 
 			render_width  = video_mode.width;
