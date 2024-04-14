@@ -103,9 +103,6 @@
     <ClCompile Include="..\src\dos\dos_locale.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\dos\dos_memory.cpp">
-      <Filter>src\dos</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\dos\dos_misc.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
@@ -476,9 +473,6 @@
       <Filter>src\libs\nuked</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\cross.cpp">
-      <Filter>src\misc</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\misc\ethernet.cpp">
       <Filter>src\misc</Filter>
     </ClCompile>
     <ClCompile Include="..\src\misc\ethernet_slirp.cpp">
@@ -859,15 +853,30 @@
     <ClCompile Include="..\src\dos\cdrom_win32.cpp">
       <Filter>src\dos</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\misc\ethernet.cpp">
+      <Filter>src\misc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\ansi_code_markup.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\audio_frame.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\autoexec.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\bgrx8888.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\bios.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\bios_disk.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\bit_view.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\bitops.h">
@@ -877,6 +886,15 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\callback.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\channel_names.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\checks.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\compiler.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\control.h">
@@ -894,13 +912,16 @@
     <ClInclude Include="..\include\dma.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\dosbox.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\dos_inc.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClCompile Include="..\src\dos\dos_memory.cpp">
+      <Filter>src\dos</Filter>
+    </ClCompile>
     <ClInclude Include="..\include\dos_system.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dosbox.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\drives.h">
@@ -912,13 +933,28 @@
     <ClInclude Include="..\include\fpu.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\fraction.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\fs_utils.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\hardware.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\help_util.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\ide.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\inout.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ipx.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\ipxserver.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\joystick.h">
@@ -930,6 +966,15 @@
     <ClInclude Include="..\include\logging.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\lpt.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\mapper.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\math_utils.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\mem.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -939,19 +984,25 @@
     <ClInclude Include="..\include\mem_unaligned.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\mmx.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\midi.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\mixer.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\mmx.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\mouse.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\mpu401.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\ne2000.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\pacer.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\paging.h">
@@ -964,6 +1015,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\programs.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\rect.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\reelmagic.h">
@@ -984,10 +1038,19 @@
     <ClInclude Include="..\include\rgb565.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\rgb666.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\rgb888.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\rwqueue.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\sdlmain.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\serialport.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\serialport.h">
@@ -999,10 +1062,25 @@
     <ClInclude Include="..\include\shell.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\std_filesystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\string_utils.h">
+      <Filter>include</Filter>
+    </ClInclude>
     <ClInclude Include="..\include\support.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\timer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\tracy.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\types.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\version.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\include\vga.h">
@@ -1290,15 +1368,6 @@
     <ClInclude Include="..\src\midi\midi_handler.h">
       <Filter>src\midi</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\compiler.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\fs_utils.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\string_utils.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\dos\program_ls.h">
       <Filter>src\dos</Filter>
     </ClInclude>
@@ -1401,9 +1470,6 @@
     <ClInclude Include="..\src\libs\whereami\whereami.h">
       <Filter>src\libs\whereami</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\ansi_code_markup.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\libs\PDCurses\sdl2_queue\pdcsdl.h">
       <Filter>src\libs\pdcurses</Filter>
     </ClInclude>
@@ -1417,18 +1483,46 @@
     <ClInclude Include="..\src\libs\zmbv\zmbv.h">
       <Filter>src\libs\zmbv</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\autoexec.h" />
-    <ClInclude Include="..\src\capture\image\image_saver.h" />
-    <ClInclude Include="..\src\capture\image\image_scaler.h" />
-    <ClInclude Include="..\src\dos\dos_locale.h" />
-    <ClInclude Include="..\src\hardware\compressor.h" />
-    <ClInclude Include="..\src\hardware\covox.h" />
-    <ClInclude Include="..\src\hardware\disney.h" />
-    <ClInclude Include="..\src\hardware\lpt_dac.h" />
-    <ClInclude Include="..\src\hardware\pcspeaker.h" />
-    <ClInclude Include="..\src\hardware\pcspeaker_discrete.h" />
-    <ClInclude Include="..\src\hardware\pcspeaker_impulse.h" />
-    <ClInclude Include="..\src\hardware\ston1_dac.h" />
+    <ClInclude Include="..\include\ethernet.h" />
+    <ClInclude Include="..\src\hardware\compressor.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\covox.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\disney.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\pcspeaker_discrete.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\pcspeaker_impulse.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\pcspeaker.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\lpt_dac.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\capture\image\image_saver.h">
+      <Filter>src\capture\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\capture\image\image_scaler.h">
+      <Filter>src\capture\image</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\semaphore_internal.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\hardware\ston1_dac.h">
+      <Filter>src\hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\dos_memory.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\dos\dos_locale.h">
+      <Filter>src\dos</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
