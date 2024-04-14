@@ -9,7 +9,7 @@ CAMINHO                     Se CAMINHO for uma pasta, ele é montado como C:.
 
 Lista de opções disponíveis:
 
-  --conf <arquivo_config>  Inicia com as opções especificadas em <arquivo_config>.
+  --conf <arquivo_config>   Inicia com as opções especificadas em <arquivo_config>.
                             Múltiplos arquivos de configuração podem ser especificados.
                             Exemplo: --conf conf1.conf --conf conf2.conf
 
@@ -431,32 +431,35 @@ Uso: [color=light-green]config [reset]-set [color=light-cyan][SEÇÃO][reset] [c
 :TITLEBAR_CYCLES_MS
 ciclos/ms
 .
-:TITLEBAR_HINT_PAUSED
-(PAUSADO)
+:TITLEBAR_MUTED
+SILENCIADO
 .
-:TITLEBAR_HINT_NOMOUSE
-modo sem mouse
+:TITLEBAR_PAUSED
+PAUSADO
+.
+:TITLEBAR_HINT_CAPTURED
+mouse capturado
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY
-mouse restringido, pressione %s+F10 para liberá-lo
+mouse capturado, pressione %s+F10 para liberá-lo
 .
 :TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE
-mouse restringido, pressione %s+F10 ou o botão do meio do mouse para liberá-lo
+mouse capturado, pressione %s+F10 ou o botão do meio do mouse para liberá-lo
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY
-para restringir o mouse pressione %s+F10
+para capturar o mouse pressione %s+F10
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE
-para restringir o mouse pressione %s+F10 ou o botão do meio do mouse
+para capturar o mouse pressione %s+F10 ou o botão do meio do mouse
 .
 :TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON
-para restringir o mouse pressione %s+F10 ou clique em qualquer botão
+para capturar o mouse pressione %s+F10 ou clique em qualquer botão
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY
-mouse contínuo, pressione %s+F10 para restringi-lo
+mouse contínuo, pressione %s+F10 para capturá-lo
 .
 :TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE
-mouse contínuo, aperte %s+F10 ou o botão do meio do mouse para restringi-lo
+mouse contínuo, aperte %s+F10 ou o botão do meio do mouse para capturá-lo
 .
 :CONFIG_FULLSCREEN
 Inicie diretamente em tela cheia (desabilitado por padrão).
@@ -487,7 +490,7 @@ Define a posição inicial da janela para o modo janela:
              0,0 é o canto superior esquerdo da tela.
 .
 :CONFIG_WINDOW_DECORATIONS
-Ativar decorações de janela no modo janela (habilitado por padrão).
+Ativa a decorações de janela no modo janela (habilitado por padrão).
 .
 :CONFIG_TRANSPARENCY
 Define a transparência da tela do DOSBox Staging (0 por padrão).
@@ -537,11 +540,25 @@ Seleciona o modo de apresentação de quadros:
   cfr:   Sempre apresenta quadros do DOS a uma taxa de quadros constante.
   vfr:   Sempre apresenta quadros do DOS alterados a uma taxa de quadros variável.
 .
-:CONFIG_OUTPUT
-Sistema de vídeo a ser usado para saída ('opengl' por padrão).
-'texture' e 'opengl' usam interpolação bilinear, 'texturenb' e
-'openglnb' usam o método do vizinho mais próximo (sem interpolação bilinear).
-Alguns shaders requerem interpolação bilinear, tornando-a a escolha mais segura.
+:CONFIGITEM_OUTPUT_OPENGL_DEFAULT
+Sistema de vídeo a ser utilizado para a saída ('opengl' por padrão).
+Alguns shaders requerem interpolação bilinear, tornando essa a escolha mais segura.
+.
+:CONFIGITEM_OUTPUT_TEXTURE_DEFAULT
+Sistema de vídeo a ser utilizado para a saída ('texture' por padrão).
+Alguns shaders requerem interpolação bilinear, tornando essa a escolha mais segura.
+.
+:CONFIGITEM_OUTPUT_OPENGL
+  opengl:     Usa interpolação bilinear.
+.
+:CONFIGITEM_OUTPUT_TEXTURE
+  texture:    Usa interpolação bilinear.
+.
+:CONFIGITEM_OUTPUT_OPENGLNB
+  openglnb:   Usa interpolação do vizinho mais próximo (sem bilinear).
+.
+:CONFIGITEM_OUTPUT_TEXTURENB
+  texturenb:  Usa interpolação do vizinho mais próximo (sem bilinear).
 .
 :CONFIG_TEXTURE_RENDERER
 Driver de renderização a ser usado no modo de saída 'texture' ('auto' por padrão).
@@ -578,9 +595,57 @@ Nota: A opção de linha de comando '--resetmapper' apenas exclui o arquivo de
 mapeamento padrão.
 .
 :CONFIG_SCREENSAVER
-Use 'allow' ou 'block' para substituir a variável de ambiente SDL_VIDEO_ALLOW_SCREENSAVER
-que normalmente bloqueia o protetor de tela do sistema operacional enquanto o emulador
+Use 'allow' ou 'block' para substituir a variável de ambiente SDL_VIDEO_ALLOW_SCREENSAVER,
+que normalmente bloqueia a proteção de tela do sistema operacional enquanto o emulador
 está em execução ('auto' por padrão).
+.
+:CONFIG_WINDOW_TITLEBAR
+Lista de informações, separadas por espaços, a serem exibidas na barra de
+título da janela.
+('program=name dosbox=auto cycles=on mouse=full' por padrão)
+Se um parâmetro não for especificado, seu valor padrão será usado.
+As informações possíveis para exibir são:
+  animation=<valor>:  Se definido como 'on' (padrão), ativa a animação do
+		      símbolo de gravação de áudio/vídeo. Defina como
+		      'off' para desativar a animação; isso é útil se as
+		      fontes de tela produzirem resultados estranhos.
+  program=<valor>:    Exibe o nome do programa em execução.
+                      <valor> pode ser um dos seguintes:
+                        none/off:  Não exibe o nome do programa.
+                        name:      Nome do programa, com extensão do
+                                   arquivo (padrão).
+                        path:      Nome, extensão e caminho completo.
+                        segment:   Exibe o nome do segmento de memória
+                                   do programa.
+                        'Título':  Nome personalizado. Alternativamente,
+                                   você pode usar a forma "Título",
+				   (Título), <Título> ou [Título].
+                      Nota: Com alguns softwares (como o Windows 3.1x no
+		      modo avançado), é impossível reconhecer o nome
+		      completo do programa ou o caminho; nesses casos,
+		      'segment' é usado.
+  dosbox=<valor>:     Exibe 'DOSBox Staging' na barra de título.
+                      <valor> pode ser um dos seguintes:
+                        always:   Sempre exibe 'DOSBox Staging'.
+                        auto:     Exibe somente se nenhum programa estiver
+                                  em execução ou 'program=none' estiver
+				  definido (padrão).
+  version=<valor>:    Exibe informações sobre a versão do DOSBox.
+                      <valor> pode ser um dos seguintes:
+                         none/off:  Não exibe a versão do DOSBox
+                                    (padrão).
+                         simple:    Informações simples da versão.
+                         detailed:  Inclui o hash do Git, se
+                                    disponível.
+  cycles=<valor>:     Se definido como 'on' (padrão), mostra a
+                      configuração dos ciclos da CPU. Defina como
+                      'off' para desativar a exibição da configuração
+		      dos ciclos.
+  mouse=<valor>:      Nível de verbosidade da mensagens de captura do mouse:
+                        none/off:  Não exibe nenhuma dica de mouse.
+                        short:     Exibe somente se o mouse estiver capturado.
+                        full:      Exibe informações detalhadas sobre como
+                                   capturar ou liberar o cursor (padrão).
 .
 :CONFIG_LANGUAGE
 Selecione um idioma para usar: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl', 'pl',
@@ -592,27 +657,33 @@ Notas:
 .
 :CONFIG_MACHINE
 Defina o adaptador de vídeo ou máquina a serem emulados:
-  hercules:       Placa de vídeo Hercules Graphics Card (HGC) (veja 'monochrome_palette').
-  cga_mono:       Adaptador CGA conectado a um monitor monocromático (veja
-                  'monochrome_palette').
-  cga:            Adaptador IBM Color Graphics Adapter (CGA). Também habilita a emulação
-                  de vídeo composto (veja a seção [composite]).
-  pcjr:           Uma máquina IBM PCjr. Também habilita o som do PCjr e a emulação de
-                  vídeo composto (veja a seção [composite]).
-  tandy:          Uma máquina Tandy 1000 com gráficos TGA. Também habilita o som da Tandy
-                  e a emulação de vídeo composto (veja a seção [composite]).
-  ega:            Adaptador IBM Enhanced Graphics Adapter (EGA).
-  svga_paradise:  Placa SVGA Paradise PVGA1A (sem VESA VBE; 512K de memória de vídeo por
-                  padrão, pode ser configurada para 256K ou 1MB com 'vmemsize').
-		  Este é o mais próximo do adaptador VGA original da IBM.
-  svga_et3000:    Placa SVGA Tseng Labs ET3000 (sem VESA VBE; memória fixa de 512K).
-  svga_et4000:    Placa SVGA Tseng Labs ET4000 (sem VESA VBE; 1MB de memória por padrão,
-                  pode ser configurada para 256K ou 512K com 'vmemsize').
-  svga_s3:        S3 Trio64 (VESA VBE 2.0; 4MB de memória por padrão,
-                  pode ser configurada para 512K, 1MB, 2MB ou 8MB com 'vmemsize') (padrão).
-  vesa_oldvbe:    Igual a 'svga_s3', mas limitado ao VESA VBE 1.2.
-  vesa_nolfb:     Igual a 'svga_s3' (VESA VBE 2.0), mais o hack "sem quadro de buffer
-                  linear" (necessário apenas por alguns jogos).
+  hercules:      Placa de vídeo Hercules Graphics Card (HGC)
+                 (veja 'monochrome_palette').
+  cga_mono:      Adaptador CGA conectado a um monitor monocromático
+                 (veja 'monochrome_palette').
+  cga:           Adaptador IBM Color Graphics Adapter (CGA). Também habilita
+                 a emulação de vídeo composto (veja a seção [composite]).
+  pcjr:          Uma máquina IBM PCjr. Também habilita o som do PCjr e a
+                 emulação de vídeo composto (veja a seção [composite]).
+  tandy:         Uma máquina Tandy 1000 com gráficos TGA. Também habilita
+                 o som da Tandy e a emulação de vídeo composto
+		 (veja a seção [composite]).
+  ega:           Adaptador IBM Enhanced Graphics Adapter (EGA).
+  svga_paradise: Placa SVGA Paradise PVGA1A (sem VESA VBE; 512K de memória
+                 de vídeo por padrão, pode ser configurada para 256K ou 1MB
+                 com 'vmemsize'). Este é o mais próximo do adaptador VGA
+		 original da IBM.
+  svga_et3000:   Placa SVGA Tseng Labs ET3000
+		 (sem VESA VBE; memória fixa de 512K).
+  svga_et4000:   Placa SVGA Tseng Labs ET4000 (sem VESA VBE; 1MB de
+		 memória por padrão, pode ser configurada para 256K ou 512K
+		 com 'vmemsize').
+  svga_s3:       S3 Trio64 (VESA VBE 2.0; 4MB de memória por padrão,
+                 pode ser configurada para 512K, 1MB, 2MB ou 8MB com
+		 'vmemsize') (padrão).
+  vesa_oldvbe:   Igual a 'svga_s3', mas limitado ao VESA VBE 1.2.
+  vesa_nolfb:    Igual a 'svga_s3' (VESA VBE 2.0), mais o hack "sem quadro
+                 de buffer linear" (necessário apenas por alguns jogos).
 .
 :CONFIG_CAPTURES
 Movido para a seção [capture] e renomeado para 'capture_dir'.
@@ -637,8 +708,9 @@ o adaptador de vídeo selecionado ('auto' por padrão). Veja a configuração
 .
 :CONFIG_DOS_RATE
 Personalize a taxa de quadros do modo de vídeo emulado, em Hz:
-  default:  O modo de vídeo DOS determina a taxa (recomendado; padrão).
-  host:     Iguala a taxa do DOS à taxa do anfitrião (veja a configuração 'host_rate').
+  default:   O modo de vídeo DOS determina a taxa (recomendado; padrão).
+  host:      Iguala a taxa do DOS à taxa do anfitrião (veja a
+             configuração 'host_rate').
   <valor>:  Define a taxa para um valor exato, entre 24.000 e 1000.000 (Hz).
 Recomendamos a taxa 'default'; caso contrário, teste e defina por jogo.
 .
@@ -655,6 +727,11 @@ Controla a seleção de modos VESA 1.2 e 2.0 oferecidos:
 .
 :CONFIG_VGA_8DOT_FONT
 Usar fontes de 8 pixels de largura nos adaptadores VGA (desabilitado por padrão).
+.
+:CONFIG_VGA_RENDER_PER_SCANLINE
+Emula a renderização VGA precisa por varredura de linha (ativado por padrão).
+Atualmente, você precisa desativar isso para alguns jogos, caso contrário, eles irão
+travar na inicialização (por exemplo, Deus, Ishar 3, Robinson's Requiem, Time Warriors).
 .
 :CONFIG_SPEED_MODS
 Permitir alterações conhecidas por melhorar o desempenho (habilitado por padrão).
@@ -706,7 +783,7 @@ o comando 'sbtype'.
 Considere limitar as taxas de quadros usando a configuração 'host_rate'.
 .
 :CONFIG_ASPECT
-Defina o modo de correção de proporção de tela (habilitado por padrão):
+Defina o modo de correção de proporção de tela (auto por padrão):
   auto, on:            Aplica correção de proporção de tela para monitores
                        modernos de tela plana com pixels quadrados, para que 
                        modos de vídeo DOS com pixels não quadrados apareçam 
@@ -824,7 +901,7 @@ hardware:
   - Se você usava um redimensionador avançado, considere uma das opções 'glshader'
     em vez disso.
 .
-:CONFIG_GLSHADER
+:CONFIGITEM_GLSHADER
 Define um shader adaptativo de emulação de monitor CRT ou um shader GLSL
 regular em modos de saída OpenGL. Opções de shader CRT adaptativo:
   crt-auto:               Um shader CRT que prioriza a intenção do desenvolvedor
@@ -858,7 +935,7 @@ relativo para um arquivo. Em todos os casos, você pode omitir a extensão
 '.glsl' do shader.
 .
 :CONFIG_COMPOSITE
-Habilita o modo composto na inicialização (apenas para os tipos de máquina
+Ativa o modo composto na inicialização (apenas para os tipos de máquina
 'cga', 'pcjr' e 'tandy'; 'auto' por padrão). 'auto' permite ao programa
 decidir.
 Nota: Ajuste finamente as configurações abaixo (ou seja, 'hue') usando os
@@ -912,7 +989,7 @@ Número de ciclos subtraídos com o atalho de diminuição de ciclos (20 por pad
 Definir um valor menor que 100 será uma porcentagem.
 .
 :CONFIG_VOODOO
-Habilita a emulação do 3dfx Voodoo (ativado por padrão).
+Ativa a emulação do 3dfx Voodoo (ativado por padrão).
 .
 :CONFIG_VOODOO_MEMSIZE
 Define a quantidade de memória de vídeo para gráficos 3dfx Voodoo, seja 4 ou 12 MB.
@@ -994,7 +1071,7 @@ operacional (ativado por padrão). Funciona em tela cheia ou quando o mouse est�
 capturado no modo janela.
 .
 :CONFIG_DOS_MOUSE_DRIVER
-Ativar driver de mouse DOS integrado (ativado por padrão).
+Ativa o driver de mouse DOS integrado (ativado por padrão).
 Notas:
   - Desative se pretende usar o driver MOUSE.COM original no DOS emulado.
   - Quando o sistema operacional convidado é inicializado, o driver integrado é desativado
@@ -1047,32 +1124,32 @@ Ativa o modo silencioso (desativado por padrão).
 O som ainda é totalmente emulado no modo silencioso, mas o DOSBox produz silêncio.
 .
 :CONFIG_RATE
-Taxa de amostragem do mixer (48000 por padrão).
+Taxa de amostragem do mixer (%s por padrão).
 .
 :CONFIG_BLOCKSIZE
-Tamanho do bloco do mixer em quadros de amostra (512 por padrão). Valores maiores
+Tamanho do bloco do mixer em quadros de amostra (%s por padrão). Valores maiores
 podem ajudar com gagueira de som, mas o som também será mais atrasado.
 .
 :CONFIG_PREBUFFER
 Quantos milissegundos de som renderizar além do tamanho do bloco
-(20 por padrão). Valores maiores podem ajudar com gagueira de som, mas o som
+(%s por padrão). Valores maiores podem ajudar com gagueira de som, mas o som
 também será mais atrasado.
 .
 :CONFIG_NEGOTIATE
 Permite que o driver de áudio do sistema negocie possivelmente melhores taxas de
-amostragem e tamanho de bloco definições (ativado por padrão).
+amostragem e tamanho de bloco definições (%s por padrão).
 .
 :CONFIG_COMPRESSOR
 Ativa o compressor de nivelamento automático no canal principal para evitar a
 distorção da saída de áudio:
-  off:  Desativar compressor.
-  on:   Ativar compressor (padrão).
+  off:  Desativa o compressor.
+  on:   Ativa  o compressor (padrão).
 .
 :CONFIG_CROSSFEED
 Ativa o cruzamento de canais globalmente em todos os canais estéreo para audição
 com fones de ouvido:
   off:     Sem cruzamento de canais (padrão).
-  on:      Ativar cruzamento de canais (predefinição normal).
+  on:      Ativa o cruzamento de canais (predefinição normal).
   light:   Efeito de cruzamento de canais leve (especialmente adequado para música de sintetizador
            que possui muito ruído branco).
   normal:  Cruzamento de canais normal que funciona bem com uma grande variedade de jogos.
@@ -1082,7 +1159,7 @@ Nota: Você pode ajustar finamente o nível de cruzamento de canais de cada cana
 :CONFIG_REVERB
 Ativa a reverberação globalmente para adicionar uma sensação de espaço ao som:
   off:     Sem reverberação (padrão).
-  on:      Ativar reverberação (predefinição média).
+  on:      Ativa a reverberação (predefinição média).
   tiny:    Simula o som de um pequeno alto-falante integrado em uma sala;
            especificamente projetado para sistemas de áudio de alto-falante pequeno
            (PC Speaker, Tandy, PS/1 Audio e dispositivos LPT DAC).
@@ -1098,7 +1175,7 @@ Nota: Você pode ajustar finamente o nível de reverberação de cada canal usan
 :CONFIG_CHORUS
 Ativa o coro globalmente para adicionar uma sensação de movimento estéreo ao som:
   off:     Sem coro (padrão).
-  on:      Ativar coro (predefinição normal).
+  on:      Ativa o coro (predefinição normal).
   light:   Um e feito de coro leve (especialmente adequado para música de sintetizador que
            apresenta muito ruído branco).
   normal:  Coro normal que funciona bem com uma grande variedade de jogos.
@@ -1108,28 +1185,61 @@ Nota: Você pode ajustar finamente o nível de coro de cada canal usando o MIXER
 :CONFIG_MIDIDEVICE
 Define para onde os dados MIDI da interface MIDI emulada MPU-401 são enviados
 ('auto' por padrão):
+.
+:CONFIGITEM_MIDIDEVICE_COREMIDI
+  coremidi:    Qualquer dispositivo que tenha sido configurado no macOS na
+               Configuração MIDI de Áudio.
+.
+:CONFIGITEM_MIDIDEVICE_COREAUDIO
+  coreaudio:   Usa o sintetizador MIDI integrado do macOS.
+.
+:CONFIGITEM_MIDIDEVICE_WIN32
+  win32:       Usa a interface de reprodução MIDI Win32.
+.
+:CONFIGITEM_MIDIDEVICE_OSS
   oss:         Usa a interface de reprodução MIDI do Linux OSS.
+.
+:CONFIGITEM_MIDIDEVICE_ALSA
   alsa:        Usa a interface de reprodução MIDI do Linux ALSA.
+.
+:CONFIGITEM_MIDIDEVICE_FLUIDSYNTH
   fluidsynth:  O sintetizador MIDI embutido FluidSynth (reprodutor de SoundFont).
                Consulte a seção [fluidsynth] para configuração detalhada.
+.
+:CONFIGITEM_MIDIDEVICE_MT32
   mt32:        O sintetizador Roland MT-32 embutido.
                Consulte a seção [mt32] para configuração detalhada.
+.
+:CONFIGITEM_MIDIDEVICE_AUTO
   auto:        Ou um dos sintetizadores MIDI embutidos (se `midiconfig` estiver
                definido como 'fluidsynth' ou 'mt32'), ou um dispositivo MIDI
 	       externo ao DOSBox (qualquer outro valor de 'midiconfig').
 	       Este é o comportamento padrão.
+.
+:CONFIGITEM_MIDIDEVICE_NONE
   none:        Desativa a saída MIDI.
 .
 :CONFIG_MIDICONFIG
-Opções de configuração para a interface MIDI selecionada (não definidas por padrão).
+Opções de configuração para a interface MIDI selecionada
+(não definidas por padrão).
 Este é geralmente o ID ou nome do sintetizador MIDI que você deseja
 usar (encontre o ID/nome com o comando do DOS 'MIXER /LISTMIDI').
 Notas:
+
+.
+:CONFIGITEM_MIDICONFIG_FLUIDSYNTH_OR_MT32EMU
   - Esta opção não tem efeito ao usar os sintetizadores embutidos
     ('mididevice = fluidsynth' ou 'mididevice = mt32').
+.
+:CONFIGITEM_MIDICONFIG_COREAUDIO
+  - Ao usar 'coreaudio', você pode especificar uma SoundFont aqui.
+.
+:CONFIGITEM_MIDICONFIG_ALSA
   - Ao usar ALSA, use o comando Linux 'aconnect -l' para listar todas as portas MIDI
     abertas e selecione uma (por exemplo, 'midiconfig = 14:0' para sequenciador
     cliente 14, porta 0).
+.
+:CONFIGITEM_MIDICONFIG_MT32
   - Se você estiver usando um Roland MT-32 físico com PCB de revisão 0, o hardware
     pode exigir um atraso para evitar que seu buffer transborde.
     Nesse caso, adicione 'delaysysex' (por exemplo, 'midiconfig = 2 delaysysex').
@@ -1247,8 +1357,18 @@ ROM ativa
 Carregada de   
 .
 :CONFIG_SBTYPE
-Tipo de Sound Blaster a ser emulada ('sb16' por padrão).
-'gb' é Game Blaster.
+Modelo da Sound Blaster a ser emulado ('sb16' por padrão).
+Os modelos selecionados automaticamente com 'oplmode' e 'cms' em 'auto'
+também estão listados.
+  gb:        Game Blaster        - CMS
+  sb1:       Sound Blaster 1.0   - OPL2, CMS
+  sb2:       Sound Blaster 2.0   - OPL2
+  sbpro1:    Sound Blaster Pro   - Dual OPL2
+  sbpro2:    Sound Blaster Pro 2 - OPL3
+  sb16:      Sound Blaster 16    - OPL3 (padrão)
+  none/off:  Desativa a emulação da Sound Blaster.
+Nota: O Creative Music System foi posteriormente renomeado para
+      Game Blaster; eles são o mesmo cartão.
 .
 :CONFIG_SBBASE
 O endereço IO da Sound Blaster (220 por padrão).
@@ -1274,10 +1394,22 @@ baseados em SB. Reduza isso se perceber que a reprodução inicial está sem áu
 A forma de onda OPL agora é amostrada na taxa de reprodução do mixer para
 evitar reespampleamento.
 .
+:CONFIG_CMS
+Ativa a emulação CMS ('auto' por padrão).
+  off:   Desativa a emulação CMS (exceto quando Game Blaster for selecionado).
+  on:    Ativa a emulação CMS na Sound Blaster 1 e 2.
+  auto:  Ativa a emulação CMS automaticamente para Sound Blaster 1 e Game Blaster.
+.
 :CONFIG_OPLMODE
-Tipo de emulação OPL ('auto' por padrão).
-Em 'auto', o modo é determinado por 'sbtype'.
-Todos os modos OPL são compatíveis com AdLib, exceto 'cms'.
+Modelo de OPL para emulação ('auto' por padrão).
+  auto:      Usa o modelo apropriado determinado por 'sbtype'.
+  opl2:      OPL2 (mono).
+  dualopl2:  Dual OPL2 (estéreo).
+  opl3:      OPL3 (estéreo).
+  opl3gold:  OPL3 (estéreo) e o módulo opcional AdLib Gold Surround.
+             Use com 'sbtype = sb16' para emular o AdLib Gold 1000.
+  none/off:  Desativa a emulação OPL.
+Nota: 'sbtype = none' e 'oplmode = opl2' emula o cartão AdLib original.
 .
 :CONFIG_OPL_FADEOUT
 Desvaneça a saída do sintetizador OPL após a última gravação na porta IO:
@@ -1681,10 +1813,17 @@ Arquivo contendo a lista de aplicativos e versões do DOS atribuídas, em um
 formato separado por tabulação, usado pelo SETVER.EXE como armazenamento persistente
 (vazio por padrão).
 .
-:CONFIG_IPX
+:CONFIG_PCJR_MEMORY_CONFIG
+Layout de memória do PCjr ('expandido' por padrão).
+  expandido: 640 KB de memória total com aplicativos residindo acima de 128 KB.
+             Compatível com a maioria dos jogos.
+  padrão:    128 KB de memória total com aplicativos residindo abaixo de 96 KB.
+             Necessário para alguns jogos mais antigos (por exemplo, Jumpman, Troll).
+.
+:CONFIGITEM_IPX
 Ativa a emulação de IPX sobre UDP/IP (desativado por padrão).
 .
-:CONFIG_NE2000
+:CONFIGITEM_NE2000_SLIRP
 Ativa a emulação de uma placa de rede Novell NE2000 em uma rede baseada em software
 (usando libslirp) com propriedades como as seguintes (ativado por padrão):
   - 255.255.255.0:  Máscara de sub-rede da LAN virtual 10.0.2.0.
@@ -1696,20 +1835,20 @@ Nota: Dentro do DOS, configurar isso requer um driver de pacotes NE2000, cliente
       para o convidado DOS e do seu roteador para o seu anfitrião ao atuar como o
       servidor para jogos multijogador.
 .
-:CONFIG_NICBASE
+:CONFIGITEM_NICBASE_SLIRP
 O endereço base da placa NE2000 (300 por padrão).
 Nota: Os endereços 220 e 240 podem não estar disponíveis, pois são atribuídos ao
       Sound Blaster e Gravis UltraSound por padrão.
 .
-:CONFIG_NICIRQ
+:CONFIGITEM_NICIRQ_SLIRP
 A interrupção usada pela placa NE2000 (3 por padrão).
 Nota: As interrupções 3 e 5 podem não estar disponíveis, pois são atribuídas a
       'serial2' e a Gravis UltraSound por padrão.
 .
-:CONFIG_MACADDR
+:CONFIGITEM_MACADDR_SLIRP
 O endereço MAC da placa NE2000 ('AC:DE:48:88:99:AA' por padrão).
 .
-:CONFIG_TCP_PORT_FORWARDS
+:CONFIGITEM_TCP_PORT_FORWARDS_SLIRP
 Encaminha uma ou mais portas TCP do anfitrião para o convidado DOS
 (não definido por padrão).
 O formato é:
@@ -1729,7 +1868,7 @@ Notas:
   - Se as portas do anfitrião entrarem em conflito, apenas a primeira será configurada.
   - Se as portas do convidado entrarem em conflito, a última regra prevalecerá.
 .
-:CONFIG_UDP_PORT_FORWARDS
+:CONFIGITEM_UDP_PORT_FORWARDS_SLIRP
 Encaminha uma ou mais portas UDP do anfitrião para o convidado DOS
 (não definido por padrão). O formato é o mesmo dos encaminhamentos de porta TCP.
 .
@@ -1919,6 +2058,9 @@ Arquivo executável não encontrado: '%s'
 :CONJUNCTION_AND
 e
 .
+:PROGRAM_CONFIG_NOT_CHANGEABLE
+Propriedade '%s' não pode ser alterada durante a execução.
+.
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
 Listagem não suportada
 .
@@ -2016,7 +2158,7 @@ O arquivo de imagem é somente leitura! Pode causar problemas.
 Este comando inicializa o DOSBox Staging a partir de um disquete ou imagem de disco.
 
 Para este comando, pode-se especificar uma sucessão de disquetes alternáveis pressionando
-%s+F4, e -l especifica a unidade montada para inicialização. Se não for especificada uma
+[color=yellow]%s+F4[reset], e -l especifica a unidade montada para inicialização. Se não for especificada uma
 letra de unidade, isso será padrão para inicializar a partir da unidade A. As únicas letras
 de unidade inicializáveis são A, C e D. Para inicializar a partir de um disco rígido (C ou D),
 a imagem deve ter sido montada previamente usando o comando [color=light-blue]IMGMOUNT[reset].
@@ -2136,8 +2278,9 @@ Parâmetros:
                bytes-por-setor,setores-por-cabeça,cabeças,cilindros
 
 Notas:
-  - %s+F4 alterna e monta o próximo [color=light-cyan]CDROM-SET[reset] ou [color=light-cyan]IMAGEM_BOOT[reset],
-    se fornecido.
+  - Você pode usar curingas para montar várias imagens, por exemplo:
+      [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy
+  - [color=yellow]%s+F4[reset] alterna e monta o próximo [color=light-cyan]CDROM-SET[reset] ou [color=light-cyan]IMAGEM_BOOT[reset], se fornecido.
   - A sinalização -ro monta a imagem do disco em modo somente leitura
     (protegido contra gravação).
   - A sinalização -ide emula um controlador IDE com uma unidade de CD IDE
@@ -2146,9 +2289,24 @@ Notas:
     de uma imagem de HDD inicializável.
 
 Exemplos:
-  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/USUÁRIO/jogos/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_WIN32
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]C:\Jogos\doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_MACOSX
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/Users/NOME_DE_USUÁRIO/Jogos/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_OTHER
+  [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]/home/NOME_DE_USUÁRIO/jogos/doom.iso[reset] -t cdrom
+
+.
+:PROGRAM_IMGMOUNT_HELP_LONG_GENERIC
   [color=light-green]imgmount[reset] [color=white]D[reset] [color=light-cyan]cd/quake1.cue[reset] -t cdrom
-  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]disquete1.img disquete2.img disquete3.img[reset] -t disquete -ro
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]disquete1.img disquete2.img disquete3.img[reset] -t floppy -ro
+  [color=light-green]imgmount[reset] [color=white]A[reset] [color=light-cyan]disquete*.img[reset] -t floppy -ro
   [color=light-green]imgmount[reset] [color=white]C[reset] [color=light-cyan]inicializável.img[reset] -t hdd -fs none -size 512,63,32,1023
 
 .
@@ -2162,15 +2320,15 @@ Deve especificar o número da unidade (0 ou 3) para montar a imagem
 
 .
 :PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY
-Para imagens [color=brown]CD-ROM[reset]:   [color=light-blue]IMGMOUNT letra-unidade localização-da-imagem -t iso[reset]
-
-Para imagens de [color=brown]disco rígido[reset]: Deve especificar a geometria da unidade para discos rígidos:
-bytes-por-setor,setores-por-cabeça,cabeças,cilindros
-[color=light-blue]IMGMOUNT letra-unidade localização-da-imagem -size bps,spc,hpc,cyl[reset]
+Para imagens de CD-ROM:
+  [color=light-green]imgmount[reset] [color=white]UNIDADE[reset] [color=light-cyan]ARQUIVO_IMAGEM[reset] -t iso
+Para imagens de disco rígido, é necessário especificar a geometria da unidade:
+  bytes-por-setor,setores-por-cabeça,cabeças,cilindros
+  [color=light-green]imgmount[reset] [color=white]UNIDADE[reset] [color=light-cyan]ARQUIVO_IMAGEM[reset] -size bps,spc,hpc,cyl
 
 .
 :PROGRAM_IMGMOUNT_STATUS_NONE
-Nenhuma unidade disponível
+Nenhuma unidade disponível.
 
 .
 :PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE
@@ -2204,7 +2362,7 @@ Arquivo de imagem não encontrado.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT
-Para montar pastas, use o comando [color=light-blue]MOUNT[reset], não o comando [color=light-blue]IMGMOUNT[reset].
+Para montar pastas, use o comando [color=light-green]MOUNT[reset], não o comando [color=green-blue]IMGMOUNT[reset].
 
 .
 :PROGRAM_IMGMOUNT_ALREADY_MOUNTED
@@ -2216,15 +2374,11 @@ Não é possível criar unidade a partir do arquivo.
 
 .
 :PROGRAM_IMGMOUNT_MOUNT_NUMBER
-Número de unidade %d montado como %s
+Número de unidade %d montado como %s.
 
 .
 :PROGRAM_IMGMOUNT_NON_LOCAL_DRIVE
 A imagem deve estar em uma unidade do anfitrião ou local.
-
-.
-:PROGRAM_IMGMOUNT_MULTIPLE_NON_CUEISO_FILES
-Usar vários arquivos é suportado apenas para imagens CUE/ISO.
 
 .
 :PROGRAM_INTRO_HELP
@@ -2795,6 +2949,21 @@ Notas:
   - Opções adicionais são descritas no manual (arquivo README, capítulo 4).
 
 Exemplos:
+
+.
+:PROGRAM_MOUNT_HELP_LONG_WIN32
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]C:\jogosdos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]D:\ [reset]-t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]meus_arquivos_de_salvamento[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_MACOSX
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/jogosdos[reset]
+  [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/Volumes/CD de Jogo"[reset] -t cdrom -usecd 0
+  [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]meus_arquivos_de_salvamento[reset] -t overlay
+
+.
+:PROGRAM_MOUNT_HELP_LONG_OTHER
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]~/jogosdos[reset]
   [color=light-green]mount[reset] [color=white]D[reset] [color=light-cyan]"/media/USUÁRIO/CD de Jogo"[reset] -t cdrom -usecd 0
   [color=light-green]mount[reset] [color=white]C[reset] [color=light-cyan]meus_arquivos_de_salvamento[reset] -t overlay
@@ -2872,10 +3041,6 @@ Algo deu errado.
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Sobreposição %s na unidade %c montada.
-
-.
-:PROGRAM_MOUNT_MOVE_Z_ERROR_1
-Não é possível mover a unidade Z. A unidade %c já está montada.
 
 .
 :PROGRAM_MOUSECTL_HELP_LONG
