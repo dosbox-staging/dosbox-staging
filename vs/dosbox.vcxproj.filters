@@ -580,9 +580,6 @@
     <ClCompile Include="..\src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\platform\visualc\version.cpp">
-      <Filter>src\platform\visualc</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\libs\residfp\Dac.cpp">
       <Filter>src\libs\residfp</Filter>
     </ClCompile>
