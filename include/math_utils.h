@@ -290,6 +290,21 @@ constexpr T remap(const T in_min, const T in_max, const T out_min,
 	return lerp(out_min, out_max, t);
 }
 
+inline std::vector<uint8_t> ascii_to_bcd(const std::string& string)
+{
+	std::vector<uint8_t> bcd = {};
+	const size_t iterations = string.size() / 2;
+	for (size_t i = 0; i < iterations; ++i) {
+		const uint8_t high_nibble = string[i * 2] - '0';
+		const uint8_t low_nibble = string[(i * 2) + 1] - '0';
+		bcd.push_back((high_nibble << 4) | (low_nibble & 0xF));
+	}
+	if (string.size() % 2) {
+		bcd.push_back(static_cast<uint8_t>(string.back()) << 4);
+	}
+	return bcd;
+}
+
 // Explicit instantiations for lerp, invlerp, and remap
 
 template float lerp<float>(const float a, const float b, const float t);
