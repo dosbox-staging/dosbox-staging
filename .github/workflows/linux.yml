@@ -342,7 +342,7 @@ jobs:
           ./scripts/create-package.sh \
             -p linux \
             build \
-            "dosbox-staging-linux-$VERSION"
+            "dosbox-staging-linux-x86_64-$VERSION"
 
       - name: Create tarball
         run: |
@@ -355,6 +355,5 @@ jobs:
         # a tarball), and it removes all executable flags while zipping.
         # Letting it zip a tarball preserves flags in the compressed files.
         with:
-          name: dosbox-staging-linux-x86_64
-          path: dosbox-staging-linux-${{ env.VERSION }}.tar.xz
-          overwrite: true
+          name: dosbox-staging-linux-x86_64-${{ env.VERSION }}
+          path: dosbox-staging-linux-x86_64-${{ env.VERSION }}.tar.xz
