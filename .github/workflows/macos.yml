@@ -232,13 +232,12 @@ jobs:
           hdiutil create \
               -volname "DOSBox Staging" \
               -srcfolder dist \
-              -ov -format UDZO "dosbox-staging-macOS-${{ env.VERSION }}.dmg"
+              -ov -format UDZO "dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg"
 
       - name: Upload disk image
         uses: actions/upload-artifact@v4
         # GitHub automatically zips the artifacts, and there's no option
         # to skip it or upload a file only.
         with:
-          name: dosbox-staging-macOS-universal
-          path: dosbox-staging-macOS-${{ env.VERSION }}.dmg
-          overwrite: true
+          name: dosbox-staging-macOS-universal-${{ env.VERSION }}
+          path: dosbox-staging-macOS-universal-${{ env.VERSION }}.dmg
