@@ -70,6 +70,21 @@ char drive_letter(uint8_t index)
 	return 'A' + index;
 }
 
+char get_drive_letter_from_path(const char* path)
+{
+	if (strlen(path) < 2) {
+		return 0;
+	}
+	if (path[1] != ':') {
+		return 0;
+	}
+	const char drive_letter = toupper(path[0]);
+	if (drive_letter >= 'A' && drive_letter <= 'Z') {
+		return drive_letter;
+	}
+	return 0;
+}
+
 std::string get_basename(const std::string &filename)
 {
 	// Guard against corner cases: '', '/', '\', 'a'
