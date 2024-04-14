@@ -226,34 +226,3 @@ jobs:
           name: dosbox-staging-windows-x64-${{ needs.build_windows_vs_release.outputs.dosbox_version }}
           pattern: dosbox-staging-windows-x64-*
           delete-merged: 'true'
-
-  # This job exists only to publish an artifact with version info when building
-  # from main branch, so snapshot build version will be visible on:
-  # https://dosbox-staging.github.io/downloads/devel/
-  #
-  publish_additional_artifacts:
-    name: Publish additional Windows artifacts
-    needs: build_windows_vs_release
-    runs-on: windows-2022
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: false
-
-      - name: Generate changelog
-        shell: bash
-        run: |
-          set +x
-          VERSION=$(./scripts/get-version.sh version-and-hash)
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          NEWEST_TAG=$(git describe --abbrev=0)
-          git log "$NEWEST_TAG..HEAD" > changelog-$VERSION.txt
-
-      - uses: actions/upload-artifact@v4
-        with:
-          # Keep exactly this artifact name; it's being used to propagate
-          # version info via GitHub REST API
-          name: changelog-${{ env.VERSION }}.txt
-          path: changelog-${{ env.VERSION }}.txt
-          overwrite: true
