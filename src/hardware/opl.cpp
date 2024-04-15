@@ -34,7 +34,7 @@
 #include "support.h"
 
 #ifdef _MSC_VER
-#	pragma pack(1)
+	#pragma pack(1)
 #endif
 
 enum { HwOpl2 = 0, HwDualOpl2 = 1, HwOpl3 = 2 };
@@ -60,8 +60,9 @@ bool Timer::Update(const double time)
 		start   = time - counter_mod;
 		trigger = start + counter_interval;
 		// Only set the overflow flag when not masked
-		if (!masked)
+		if (!masked) {
 			overflow = true;
+		}
 	}
 	return overflow;
 }
@@ -82,8 +83,9 @@ void Timer::SetCounter(const uint8_t val)
 void Timer::SetMask(const bool set)
 {
 	masked = set;
-	if (masked)
+	if (masked) {
 		overflow = false;
+	}
 }
 
 void Timer::Stop()
@@ -144,7 +146,7 @@ struct RawHeader {
 
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
-#	pragma pack()
+	#pragma pack()
 #endif
 
 // The Raw Tables is < 128 and is used to convert raw commands into a full
@@ -170,8 +172,9 @@ public:
 			}
 			// Check if this command will not just replace the same
 			// value in a reg that doesn't do anything with it
-			if ((*cache)[reg_full] == val)
+			if ((*cache)[reg_full] == val) {
 				return true;
+			}
 
 			// Check how much time has passed
 			uint32_t passed = PIC_Ticks - lastTicks;
@@ -214,12 +217,14 @@ public:
 		// instrument
 		const auto percussion_on = reg_mask == 0xbd && ((val & 0x3f) > 0x20);
 
-		if (!(note_on || percussion_on))
+		if (!(note_on || percussion_on)) {
 			return true;
+		}
 
 		handle = CAPTURE_CreateFile(CaptureType::RawOplStream);
-		if (!handle)
+		if (!handle) {
 			return false;
+		}
 
 		InitHeader();
 
@@ -255,10 +260,10 @@ public:
 	}
 
 	// prevent copy
-	Capture(const Capture &) = delete;
+	Capture(const Capture&) = delete;
 
 	// prevent assignment
-	Capture &operator=(const Capture &) = delete;
+	Capture& operator=(const Capture&) = delete;
 
 private:
 	// 127 entries to go from raw data to registers
@@ -289,9 +294,9 @@ private:
 
 	uint32_t bufUsed = 0;
 
-	RegisterCache *cache;
+	RegisterCache* cache;
 
-	void MakeEntry(const uint8_t reg, uint8_t &raw)
+	void MakeEntry(const uint8_t reg, uint8_t& raw)
 	{
 		to_reg[raw] = reg;
 		to_raw[reg] = raw;
@@ -401,10 +406,12 @@ private:
 		}
 
 		uint8_t raw = to_raw[reg_mask];
-		if (raw == 0xff)
+		if (raw == 0xff) {
 			return;
-		if (reg_full & 0x100)
+		}
+		if (reg_full & 0x100) {
 			raw |= 128;
+		}
 
 		AddBuf(raw, val);
 	}
@@ -416,19 +423,24 @@ private:
 			auto val = (*cache)[i];
 
 			// Silence the note on entries
-			if (i >= 0xb0 && i <= 0xb8)
+			if (i >= 0xb0 && i <= 0xb8) {
 				val &= ~0x20;
-			if (i == 0xbd)
+			}
+			if (i == 0xbd) {
 				val &= ~0x1f;
-			if (val)
+			}
+			if (val) {
 				AddWrite(i, val);
+			}
 
 			val = (*cache)[0x100 + i];
 
-			if (i >= 0xb0 && i <= 0xb8)
+			if (i >= 0xb0 && i <= 0xb8) {
 				val &= ~0x20;
-			if (val)
+			}
+			if (val) {
 				AddWrite(0x100 + i, val);
+			}
 		}
 	}
 
@@ -487,15 +499,17 @@ bool Chip::Write(const io_port_t reg, const uint8_t val)
 			timer1.Reset();
 		} else {
 			const auto time = PIC_FullIndex();
-			if (val & 0x1)
+			if (val & 0x1) {
 				timer0.Start(time);
-			else
+			} else {
 				timer0.Stop();
+			}
 
-			if (val & 0x2)
+			if (val & 0x2) {
 				timer1.Start(time);
-			else
+			} else {
 				timer1.Stop();
+			}
 
 			timer0.SetMask((val & 0x40) > 0);
 			timer1.SetMask((val & 0x20) > 0);
@@ -549,8 +563,9 @@ void OPL::Init(const uint16_t sample_rate)
 void OPL::WriteReg(const io_port_t selected_reg, const uint8_t val)
 {
 	OPL3_WriteRegBuffered(&oplchip, selected_reg, val);
-	if (selected_reg == 0x105)
+	if (selected_reg == 0x105) {
 		newm = selected_reg & 0x01;
+	}
 }
 
 io_port_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
@@ -571,13 +586,13 @@ int16_t remove_dc_bias(const int16_t back_sample)
 	constexpr int16_t LowestFreqToMaintainHz = 200;
 	constexpr int16_t NumToAverage = PcmPlaybackRateHz / LowestFreqToMaintainHz;
 
-	static int32_t sum = 0;
+	static int32_t sum                 = 0;
 	static std::queue<int16_t> samples = {};
 
 	// Clear the queue if the stream isn't biased
 	constexpr int16_t BiasThreshold = 5;
 	if (back_sample < BiasThreshold) {
-		sum = 0;
+		sum     = 0;
 		samples = {};
 		return back_sample;
 	}
@@ -590,7 +605,7 @@ int16_t remove_dc_bias(const int16_t back_sample)
 	int16_t front_sample = 0;
 	if (samples.size() == NumToAverage) {
 		// Compute the average and deduct it from the front sample
-		average = static_cast<int16_t>(sum / NumToAverage);
+		average      = static_cast<int16_t>(sum / NumToAverage);
 		front_sample = samples.front();
 		sum -= front_sample;
 		samples.pop();
@@ -665,8 +680,9 @@ void OPL::AudioCallback(const uint16_t requested_frames)
 void OPL::CacheWrite(const io_port_t port, const uint8_t val)
 {
 	// capturing?
-	if (capture)
+	if (capture) {
 		capture->DoWrite(port, val);
+	}
 
 	// Store it into the cache
 	cache[port] = val;
@@ -676,17 +692,20 @@ void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value
 {
 	// Make sure you don't use opl3 features
 	// Don't allow write to disable opl3
-	if (port == 5)
+	if (port == 5) {
 		return;
+	}
 
 	// Only allow 4 waveforms
 	auto val = value;
-	if (port >= 0xe0)
+	if (port >= 0xe0) {
 		val &= 3;
+	}
 
 	// Write to the timer?
-	if (chip[index].Write(port, val))
+	if (chip[index].Write(port, val)) {
 		return;
+	}
 
 	// Enabling panning
 	if (port >= 0xc0 && port <= 0xc8) {
@@ -747,7 +766,7 @@ uint8_t OPL::AdlibGoldControlRead()
 {
 	switch (ctrl.index) {
 	case 0x00: // Board Options
-	    // 16-bit ISA, surround module, no telephone/CDROM
+	           // 16-bit ISA, surround module, no telephone/CDROM
 		return 0x50;
 
 		// 16-bit ISA, no telephone/surround/CD-ROM
@@ -759,7 +778,7 @@ uint8_t OPL::AdlibGoldControlRead()
 	case 0x0a: // Right FM Volume
 		return ctrl.rvol;
 
-	case 0x15: // Audio Relocation
+	case 0x15:                 // Audio Relocation
 		return 0x388 >> 3; // Cryo installer detection
 	}
 	return 0xff;
@@ -839,7 +858,8 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 			break;
 
 		default:
-			// TODO CMS and None must be removed as they're not real OPL modes
+			// TODO CMS and None must be removed as they're not real
+			// OPL modes
 			break;
 		}
 	}
@@ -860,31 +880,36 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	switch (mode) {
 	case Mode::Opl2:
 		// We allocated 4 ports, so just return -1 for the higher ones
-		if (!(port & 3))
+		if (!(port & 3)) {
 			// Make sure the low bits are 6 on opl2
 			return chip[0].Read() | 0x6;
-		else
+		} else {
 			return 0xff;
+		}
 
 	case Mode::Opl3Gold:
 		if (ctrl.active) {
-			if (port == 0x38a)
+			if (port == 0x38a) {
 				return 0; // Control status, not busy
-			else if (port == 0x38b)
+			} else if (port == 0x38b) {
 				return AdlibGoldControlRead();
+			}
 		}
 		[[fallthrough]];
+
 	case Mode::Opl3:
 		// We allocated 4 ports, so just return -1 for the higher ones
-		if (!(port & 3))
+		if (!(port & 3)) {
 			return chip[0].Read();
-		else
+		} else {
 			return 0xff;
+		}
 
 	case Mode::DualOpl2:
 		// Only return for the lower ports
-		if (port & 1)
+		if (port & 1) {
 			return 0xff;
+		}
 		// Make sure the low bits are 6 on opl2
 		return chip[(port >> 1) & 1].Read() | 0x6;
 
@@ -903,9 +928,10 @@ static void SaveRad()
 	char b[16 * 1024];
 	int w = 0;
 
-	FILE *handle = CAPTURE_CreateFile(CaptureType::RadOplInstruments);
-	if (!handle)
+	FILE* handle = CAPTURE_CreateFile(CaptureType::RadOplInstruments);
+	if (!handle) {
 		return;
+	}
 
 	// Header
 	fwrite("RAD by REALiTY!!", 1, 16, handle);
@@ -914,9 +940,9 @@ static void SaveRad()
 	               //
 	// Write 18 instuments for all operators in the cache
 	for (int i = 0; i < 18; i++) {
-		const uint8_t *set  = opl->cache + (i / 9) * 256;
+		const uint8_t* set  = opl->cache + (i / 9) * 256;
 		const auto offset   = ((i % 9) / 3) * 8 + (i % 3);
-		const uint8_t *base = set + offset;
+		const uint8_t* base = set + offset;
 
 		b[w++] = 1 + i; // instrument number
 		b[w++] = base[0x23];
@@ -935,8 +961,9 @@ static void SaveRad()
 	b[w++] = 1; // 1 pattern following
 
 	// Zero out the remaining part of the file a bit to make rad happy
-	for (int i = 0; i < 64; i++)
+	for (int i = 0; i < 64; i++) {
 		b[w++] = 0;
+	}
 
 	fwrite(b, 1, w, handle);
 	fclose(handle);
@@ -945,13 +972,15 @@ static void SaveRad()
 
 static void OPL_SaveRawEvent(const bool pressed)
 {
-	if (!pressed)
+	if (!pressed) {
 		return;
+	}
 	//	SaveRad();return;
 
 	if (!opl) {
-		LOG_WARNING("OPL: Can't capture the OPL stream because "
-		            "the OPL device is unavailable");
+		LOG_WARNING(
+		        "OPL: Can't capture the OPL stream because "
+		        "the OPL device is unavailable");
 		return;
 	}
 
@@ -968,29 +997,29 @@ static void OPL_SaveRawEvent(const bool pressed)
 static std::string opl_mode_to_string(const Mode mode)
 {
 	switch (mode) {
-	case Mode::Opl2:     return "OPL2";
+	case Mode::Opl2: return "OPL2";
 	case Mode::DualOpl2: return "DualOPL2";
-	case Mode::Opl3:     return "OPL3";
+	case Mode::Opl3: return "OPL3";
 	case Mode::Opl3Gold: return "OPL3Gold";
 	}
 	return "Unknown";
 }
 
-OPL::OPL(Section *configuration, const OplMode oplmode)
+OPL::OPL(Section* configuration, const OplMode oplmode)
 {
 	using namespace std::placeholders;
 
 	assert(oplmode != OplMode::None);
 
 	switch (oplmode) {
-	case OplMode::Opl2:     mode = Mode::Opl2;     break;
+	case OplMode::Opl2: mode = Mode::Opl2; break;
 	case OplMode::DualOpl2: mode = Mode::DualOpl2; break;
-	case OplMode::Opl3:     mode = Mode::Opl3;     break;
+	case OplMode::Opl3: mode = Mode::Opl3; break;
 	case OplMode::Opl3Gold: mode = Mode::Opl3Gold; break;
 	default: break;
 	}
 
-	Section_prop *section = static_cast<Section_prop *>(configuration);
+	Section_prop* section = static_cast<Section_prop*>(configuration);
 	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
 
 	ctrl.mixer = section->Get_bool("sbmixer");
@@ -1003,8 +1032,9 @@ OPL::OPL(Section *configuration, const OplMode oplmode)
 
 	const auto dual_opl = mode != Mode::Opl2;
 
-	if (dual_opl)
+	if (dual_opl) {
 		channel_features.emplace(ChannelFeature::Stereo);
+	}
 
 	const auto mixer_callback = std::bind(&OPL::AudioCallback,
 	                                      this,
