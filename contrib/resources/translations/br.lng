@@ -523,7 +523,7 @@ Define o modo de sincronização vertical (VSync) do driver de vídeo do anfitri
              mas desativa quando a taxa de quadros cair abaixo da taxa do anfitrião.
              Esta é uma alternativa razoável no macOS em vez de 'on'.
              Nota: válido apenas em modos de saída OpenGL; caso contrário, tratado
-	     como 'on'.
+             como 'on'.
   off:       Tenta desativar o VSync para permitir uma apresentação mais rápida dos quadros,
              com o risco de fragmentação em alguns jogos.
   yield:     Deixa o driver de vídeo do anfitrião controlar a sincronização de vídeo.
@@ -606,9 +606,9 @@ título da janela.
 Se um parâmetro não for especificado, seu valor padrão será usado.
 As informações possíveis para exibir são:
   animation=<valor>:  Se definido como 'on' (padrão), ativa a animação do
-		      símbolo de gravação de áudio/vídeo. Defina como
-		      'off' para desativar a animação; isso é útil se as
-		      fontes de tela produzirem resultados estranhos.
+                      símbolo de gravação de áudio/vídeo. Defina como
+                      'off' para desativar a animação; isso é útil se as
+                      fontes de tela produzirem resultados estranhos.
   program=<valor>:    Exibe o nome do programa em execução.
                       <valor> pode ser um dos seguintes:
                         none/off:  Não exibe o nome do programa.
@@ -619,17 +619,17 @@ As informações possíveis para exibir são:
                                    do programa.
                         'Título':  Nome personalizado. Alternativamente,
                                    você pode usar a forma "Título",
-				   (Título), <Título> ou [Título].
+                                   (Título), <Título> ou [Título].
                       Nota: Com alguns softwares (como o Windows 3.1x no
-		      modo avançado), é impossível reconhecer o nome
-		      completo do programa ou o caminho; nesses casos,
-		      'segment' é usado.
+                      modo avançado), é impossível reconhecer o nome
+                      completo do programa ou o caminho; nesses casos,
+                      'segment' é usado.
   dosbox=<valor>:     Exibe 'DOSBox Staging' na barra de título.
                       <valor> pode ser um dos seguintes:
                         always:   Sempre exibe 'DOSBox Staging'.
                         auto:     Exibe somente se nenhum programa estiver
                                   em execução ou 'program=none' estiver
-				  definido (padrão).
+                                  definido (padrão).
   version=<valor>:    Exibe informações sobre a versão do DOSBox.
                       <valor> pode ser um dos seguintes:
                          none/off:  Não exibe a versão do DOSBox
@@ -640,7 +640,7 @@ As informações possíveis para exibir são:
   cycles=<valor>:     Se definido como 'on' (padrão), mostra a
                       configuração dos ciclos da CPU. Defina como
                       'off' para desativar a exibição da configuração
-		      dos ciclos.
+                      dos ciclos.
   mouse=<valor>:      Nível de verbosidade da mensagens de captura do mouse:
                         none/off:  Não exibe nenhuma dica de mouse.
                         short:     Exibe somente se o mouse estiver capturado.
@@ -667,20 +667,20 @@ Defina o adaptador de vídeo ou máquina a serem emulados:
                  emulação de vídeo composto (veja a seção [composite]).
   tandy:         Uma máquina Tandy 1000 com gráficos TGA. Também habilita
                  o som da Tandy e a emulação de vídeo composto
-		 (veja a seção [composite]).
+                 (veja a seção [composite]).
   ega:           Adaptador IBM Enhanced Graphics Adapter (EGA).
   svga_paradise: Placa SVGA Paradise PVGA1A (sem VESA VBE; 512K de memória
                  de vídeo por padrão, pode ser configurada para 256K ou 1MB
                  com 'vmemsize'). Este é o mais próximo do adaptador VGA
-		 original da IBM.
+                 original da IBM.
   svga_et3000:   Placa SVGA Tseng Labs ET3000
-		 (sem VESA VBE; memória fixa de 512K).
+                 (sem VESA VBE; memória fixa de 512K).
   svga_et4000:   Placa SVGA Tseng Labs ET4000 (sem VESA VBE; 1MB de
-		 memória por padrão, pode ser configurada para 256K ou 512K
-		 com 'vmemsize').
+                 memória por padrão, pode ser configurada para 256K ou 512K
+                 com 'vmemsize').
   svga_s3:       S3 Trio64 (VESA VBE 2.0; 4MB de memória por padrão,
                  pode ser configurada para 512K, 1MB, 2MB ou 8MB com
-		 'vmemsize') (padrão).
+                 'vmemsize') (padrão).
   vesa_oldvbe:   Igual a 'svga_s3', mas limitado ao VESA VBE 1.2.
   vesa_nolfb:    Igual a 'svga_s3' (VESA VBE 2.0), mais o hack "sem quadro
                  de buffer linear" (necessário apenas por alguns jogos).
@@ -1213,8 +1213,8 @@ Define para onde os dados MIDI da interface MIDI emulada MPU-401 são enviados
 :CONFIGITEM_MIDIDEVICE_AUTO
   auto:        Ou um dos sintetizadores MIDI embutidos (se `midiconfig` estiver
                definido como 'fluidsynth' ou 'mt32'), ou um dispositivo MIDI
-	       externo ao DOSBox (qualquer outro valor de 'midiconfig').
-	       Este é o comportamento padrão.
+               externo ao DOSBox (qualquer outro valor de 'midiconfig').
+               Este é o comportamento padrão.
 .
 :CONFIGITEM_MIDIDEVICE_NONE
   none:        Desativa a saída MIDI.
@@ -1421,10 +1421,10 @@ Desvaneça a saída do sintetizador OPL após a última gravação na porta IO:
                     seguinte formato:
                       ESPERA DESVANECER
                     Onde ESPERA é quanto tempo após a última gravação
-		    na porta IO o desvanecimento começa, variando
-		    entre 100 e 5000 milissegundos; e DESVANECER é o
+                    na porta IO o desvanecimento começa, variando
+                    entre 100 e 5000 milissegundos; e DESVANECER é o
                     período de desvanecimento, variando entre 10 e 
-		    000 milissegundos. Exemplos:
+                    000 milissegundos. Exemplos:
                        300 200 (Aguarde 300ms antes de desvanecer
                                 ao longo de um período de 200ms)
                        1000 3000 (Aguarde 1s antes de desvanecer
@@ -1448,7 +1448,7 @@ Sound Blaster:
                     Use o filtro deste modelo de Sound Blaster.
   modern:           Use a interpolação linear que atua como um filtro
                     passa-baixo; este é o comportamento legado do
-		    DOSBox (padrão).
+                    DOSBox (padrão).
   off:              Não filtre a saída.
   <personalizado>:  Um ou dois filtros personalizados no seguinte
                     formato:
@@ -1585,7 +1585,7 @@ Configura a emulação de som Tandy/PCjr 3 Voice:
          de máquina 'tandy' e 'pcjr' (padrão).
   on:    Ativa o som Tandy/PCjr com suporte DAC, quando possível.
          A maioria dos jogos também precisa que a máquina esteja
-	 definida como 'tandy' ou 'pcjr' para funcionar.
+         definida como 'tandy' ou 'pcjr' para funcionar.
   psg:   Ativa apenas o gerador de som programável de três vozes da placa
          sem DAC para evitar conflitos com outras placas que usam DMA 1.
   off:   Desativa o som Tandy/PCjr.
@@ -1673,7 +1673,7 @@ Substitua o código de taxa de quadros usado durante a reprodução de vídeo:
 Tipo de joystick a emular:
   auto:      Detecta e usa qualquer joystick, se possível (padrão).
              A emulação de joystick é desativada se nenhum joystick
-	     for encontrado.
+             for encontrado.
   2axis:     Suporta até dois joysticks, cada um com 2 eixos.
   4axis:     Suporta apenas o primeiro joystick, como tipo de 4 eixos.
   4axis_2:   Suporta apenas o segundo joystick, como tipo de 4 eixos.
@@ -1935,7 +1935,7 @@ Onde [color=white]COMANDO[reset] pode ser:
 
   -wcd              escreve a configuração atual no arquivo de configuração
                     primário (padrão) `dosbox-staging.conf` na pasta de
-		    configuração
+                    configuração
 
   -writelang [color=white]NOME_ARQUIVO[reset]
   -wl [color=white]NOME_ARQUIVO  [reset]escreve as strings de idioma atuais em [color=white]NOME_ARQUIVO [reset]na
@@ -1947,7 +1947,7 @@ Onde [color=white]COMANDO[reset] pode ser:
 
   -l                mostra os arquivos de configuração carregados atualmente e
                     os parâmetros de linha de comando fornecidos na
-					inicialização
+                                        inicialização
 
   -help [color=white]SEÇÃO[reset]
   -h    [color=white]SEÇÃO[reset]
@@ -2673,7 +2673,7 @@ Uso:
 Parâmetros:
   [color=light-cyan]PADRÃO[reset]      um nome de arquivo exato ou um nome de arquivo inexato com
               caracteres curinga, que são o asterisco (*) e o ponto de
-	      interrogação (?)
+              interrogação (?)
   [color=light-cyan]CAMINHO[reset]     caminho exato em uma unidade DOS montada para listar o conteúdo
   /a          lista todos os arquivos e pastas, incluindo ocultos e do sistema
 
@@ -2732,7 +2732,7 @@ Parâmetros:
   [color=white]COMANDOS[reset]  um ou mais dos seguintes comandos:
     Volume:       Volume percentual de [color=white]0[reset] a [color=white]9999[reset], ou volume em decibéis prefixado
                   com [color=white]d[reset] (por exemplo, [color=white]d-7.5[reset]). Use [color=white]L:R[reset] para definir os volumes
-		  esquerdo e direito separadamente (por exemplo, [color=white]10:20[reset], [color=white]150:d6[reset]).
+                  esquerdo e direito separadamente (por exemplo, [color=white]10:20[reset], [color=white]150:d6[reset]).
     Modo estéreo: [color=white]stereo[reset] ou [color=white]reverse[reset] (apenas canais estéreo).
     Cruz. canais: de [color=white]x0[reset] até [color=white]x100[reset], define a intensidade do cruzamento de canais
                   (apenas canais estéreo).
@@ -4118,9 +4118,9 @@ Uso:
 Parâmetros:
   [color=light-cyan]PADRÃO[reset]   ou um nome exato de arquivo (como [color=light-cyan]arquivo.txt[reset]) ou um nome de arquivo
            inexato usando um ou mais curingas, que são o asterisco (*)
-	   representando qualquer sequência de um ou mais caracteres, e o
-	   ponto de interrogação (?) representando qualquer caractere único,
-	   como [color=light-cyan]*.bat[reset] e [color=light-cyan]c?.txt[reset].
+           representando qualquer sequência de um ou mais caracteres, e o
+           ponto de interrogação (?) representando qualquer caractere único,
+           como [color=light-cyan]*.bat[reset] e [color=light-cyan]c?.txt[reset].
 
 Aviso:
   Tenha cuidado ao usar um padrão com curingas, especialmente [color=light-cyan]*.*[reset], pois
@@ -4236,10 +4236,10 @@ Parâmetros:
   [color=white]ATRIBUTOS[reset]   atributos a aplicar, incluindo um ou mais dos seguintes:
               [color=white]+R[reset], [color=white]-R[reset], [color=white]+A[reset], [color=white]-A[reset], [color=white]+S[reset], [color=white]-S[reset], [color=white]+H[reset], [color=white]-H[reset] onde:
               R = Somente leitura, A = Arquivo de arquivo,
-	      S = Sistema, H = Oculto
+              S = Sistema, H = Oculto
   [color=light-cyan]PADRÃO[reset]      ou um nome exato de arquivo ou um nome de arquivo inexato com
               curingas, que são o asterisco (*) e o ponto de interrogação (?),
-	      ou um nome exato de uma pasta
+              ou um nome exato de uma pasta
 
 Notas:
   - Múltiplos atributos podem ser especificados no comando, separados
@@ -4390,8 +4390,8 @@ Uso:
 Parâmetros:
   [color=white]NOMEARQUIVO[reset]  ou um nome exato de arquivo ou um nome de arquivo inexato
                com curingas, que são o asterisco (*) e o ponto de
-	       interrogação (?); vários nomes de arquivos separados
-	       por vírgula podem ser fornecidos
+               interrogação (?); vários nomes de arquivos separados
+               por vírgula podem ser fornecidos
   [color=white]PASTA[reset]        nome exato da pasta, sem conter curingas
   [color=light-cyan]DESTINO[reset]      nome exato de arquivo ou pasta, sem conter curingas
 
