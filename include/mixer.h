@@ -207,8 +207,8 @@ public:
 
 	void SetHighPassFilter(const FilterState state);
 	void SetLowPassFilter(const FilterState state);
-	void ConfigureHighPassFilter(const uint8_t order, const uint16_t cutoff_freq);
-	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq);
+	void ConfigureHighPassFilter(const uint8_t order, const uint16_t cutoff_freq_hz);
+	void ConfigureLowPassFilter(const uint8_t order, const uint16_t cutoff_freq_hz);
 	bool TryParseAndSetCustomFilter(const std::string& filter_prefs);
 
 	bool ConfigureFadeOut(const std::string& fadeout_prefs);
@@ -370,14 +370,14 @@ private:
 	struct {
 		struct {
 			std::array<Iir::Butterworth::HighPass<max_filter_order>, 2> hpf = {};
-			uint8_t order        = 0;
-			uint16_t cutoff_freq = 0;
+			uint8_t order           = 0;
+			uint16_t cutoff_freq_hz = 0;
 		} highpass = {};
 
 		struct {
 			std::array<Iir::Butterworth::LowPass<max_filter_order>, 2> lpf = {};
-			uint8_t order        = 0;
-			uint16_t cutoff_freq = 0;
+			uint8_t order           = 0;
+			uint16_t cutoff_freq_hz = 0;
 		} lowpass = {};
 	} filters               = {};
 	bool do_highpass_filter = false;

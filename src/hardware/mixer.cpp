@@ -104,25 +104,25 @@ struct ReverbSettings {
 	ReverbPreset preset            = ReverbPreset::None;
 	float synthesizer_send_level   = 0.0f;
 	float digital_audio_send_level = 0.0f;
-	float highpass_cutoff_freq     = 1.0f;
+	float highpass_cutoff_freq_hz  = 1.0f;
 
 	void Setup(const float predelay, const float early_mix, const float size,
-	           const float density, const float bandwidth_freq,
-	           const float decay, const float dampening_freq,
+	           const float density, const float bandwidth_freq_hz,
+	           const float decay, const float dampening_freq_hz,
 	           const float synth_level, const float digital_level,
-	           const float highpass_freq, const uint16_t sample_rate_hz)
+	           const float highpass_freq_hz, const uint16_t sample_rate_hz)
 	{
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
-		highpass_cutoff_freq     = highpass_freq;
+		highpass_cutoff_freq_hz  = highpass_freq_hz;
 
 		mverb.setParameter(EmVerb::PREDELAY, predelay);
 		mverb.setParameter(EmVerb::EARLYMIX, early_mix);
 		mverb.setParameter(EmVerb::SIZE, size);
 		mverb.setParameter(EmVerb::DENSITY, density);
-		mverb.setParameter(EmVerb::BANDWIDTHFREQ, bandwidth_freq);
+		mverb.setParameter(EmVerb::BANDWIDTHFREQ, bandwidth_freq_hz);
 		mverb.setParameter(EmVerb::DECAY, decay);
-		mverb.setParameter(EmVerb::DAMPINGFREQ, dampening_freq);
+		mverb.setParameter(EmVerb::DAMPINGFREQ, dampening_freq_hz);
 		mverb.setParameter(EmVerb::GAIN, 1.0f); // Always max gain (no
 		                                        // attenuation)
 		mverb.setParameter(EmVerb::MIX, 1.0f); // Always 100% wet signal
@@ -130,7 +130,7 @@ struct ReverbSettings {
 		mverb.setSampleRate(static_cast<float>(sample_rate_hz));
 
 		for (auto& f : highpass_filter) {
-			f.setup(sample_rate_hz, highpass_freq);
+			f.setup(sample_rate_hz, highpass_freq_hz);
 		}
 	}
 };
@@ -1125,7 +1125,7 @@ void MixerChannel::AddSilence()
 static void log_filter_settings(const std::string& channel_name,
                                 const std::string& filter_name,
                                 const FilterState state, const uint8_t order,
-                                const uint16_t cutoff_freq)
+                                const uint16_t cutoff_freq_hz)
 {
 	// we programmatically expect only 'on' and 'forced-on' states:
 	assert(state != FilterState::Off);
@@ -1138,7 +1138,7 @@ static void log_filter_settings(const std::string& channel_name,
 	        filter_name.c_str(),
 	        state == FilterState::ForcedOn ? " (forced)" : "",
 	        order * db_per_order,
-	        cutoff_freq);
+	        cutoff_freq_hz);
 }
 
 void MixerChannel::SetHighPassFilter(const FilterState state)
@@ -1150,7 +1150,7 @@ void MixerChannel::SetHighPassFilter(const FilterState state)
 		                    "Highpass",
 		                    state,
 		                    filters.highpass.order,
-		                    filters.highpass.cutoff_freq);
+		                    filters.highpass.cutoff_freq_hz);
 	}
 }
 
@@ -1163,32 +1163,32 @@ void MixerChannel::SetLowPassFilter(const FilterState state)
 		                    "Lowpass",
 		                    state,
 		                    filters.lowpass.order,
-		                    filters.lowpass.cutoff_freq);
+		                    filters.lowpass.cutoff_freq_hz);
 	}
 }
 
 void MixerChannel::ConfigureHighPassFilter(const uint8_t order,
-                                           const uint16_t cutoff_freq)
+                                           const uint16_t cutoff_freq_hz)
 {
 	assert(order > 0 && order <= max_filter_order);
 	for (auto& f : filters.highpass.hpf) {
-		f.setup(order, mixer.sample_rate_hz, cutoff_freq);
+		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
 	}
 
-	filters.highpass.order       = order;
-	filters.highpass.cutoff_freq = cutoff_freq;
+	filters.highpass.order          = order;
+	filters.highpass.cutoff_freq_hz = cutoff_freq_hz;
 }
 
 void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
-                                          const uint16_t cutoff_freq)
+                                          const uint16_t cutoff_freq_hz)
 {
 	assert(order > 0 && order <= max_filter_order);
 	for (auto& f : filters.lowpass.lpf) {
-		f.setup(order, mixer.sample_rate_hz, cutoff_freq);
+		f.setup(order, mixer.sample_rate_hz, cutoff_freq_hz);
 	}
 
-	filters.lowpass.order       = order;
-	filters.lowpass.cutoff_freq = cutoff_freq;
+	filters.lowpass.order          = order;
+	filters.lowpass.cutoff_freq_hz = cutoff_freq_hz;
 }
 
 // Tries to set custom filter settings from the passed in filter preferences.
@@ -1273,21 +1273,21 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 	if (single_filter) {
 		size_t i = 0;
 
-		const auto filter_type        = parts[i++];
-		const auto filter_order       = parts[i++];
-		const auto filter_cutoff_freq = parts[i++];
+		const auto filter_type           = parts[i++];
+		const auto filter_order          = parts[i++];
+		const auto filter_cutoff_freq_hz = parts[i++];
 
-		return set_filter(filter_type, filter_order, filter_cutoff_freq);
+		return set_filter(filter_type, filter_order, filter_cutoff_freq_hz);
 	} else {
 		size_t i = 0;
 
-		const auto filter1_type        = parts[i++];
-		const auto filter1_order       = parts[i++];
-		const auto filter1_cutoff_freq = parts[i++];
+		const auto filter1_type           = parts[i++];
+		const auto filter1_order          = parts[i++];
+		const auto filter1_cutoff_freq_hz = parts[i++];
 
-		const auto filter2_type        = parts[i++];
-		const auto filter2_order       = parts[i++];
-		const auto filter2_cutoff_freq = parts[i++];
+		const auto filter2_type           = parts[i++];
+		const auto filter2_order          = parts[i++];
+		const auto filter2_cutoff_freq_hz = parts[i++];
 
 		if (filter1_type == filter2_type) {
 			LOG_WARNING("%s: Invalid custom filter definition: '%s'. "
@@ -1297,11 +1297,11 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 			return false;
 		}
 
-		if (!set_filter(filter1_type, filter1_order, filter1_cutoff_freq)) {
+		if (!set_filter(filter1_type, filter1_order, filter1_cutoff_freq_hz)) {
 			return false;
 		}
 
-		return set_filter(filter2_type, filter2_order, filter2_cutoff_freq);
+		return set_filter(filter2_type, filter2_order, filter2_cutoff_freq_hz);
 	}
 }
 
@@ -2760,9 +2760,9 @@ static void init_master_highpass_filter()
 	// high-pass filtering only once at the very end of the processing
 	// chain, instead of doing it on every single mixer channel.
 	//
-	constexpr auto highpass_cutoff_freq = 20.0;
+	constexpr auto highpass_cutoff_freq_hz = 20.0;
 	for (auto& f : mixer.highpass_filter) {
-		f.setup(mixer.sample_rate_hz, highpass_cutoff_freq);
+		f.setup(mixer.sample_rate_hz, highpass_cutoff_freq_hz);
 	}
 }
 
