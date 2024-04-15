@@ -57,9 +57,9 @@ private:
 	bool masked   = false;
 };
 
-class Chip {
+class OplChip {
 public:
-	Chip();
+	OplChip();
 
 	// Last selected register
 	Timer timer0;
@@ -105,7 +105,7 @@ private:
 
 	Mode mode = {};
 
-	Chip chip[2] = {};
+	OplChip chip[2] = {};
 
 	opl3_chip oplchip = {};
 	uint8_t newm      = 0;

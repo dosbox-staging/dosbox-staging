@@ -477,9 +477,9 @@ private:
 	}
 };
 
-Chip::Chip() : timer0(80), timer1(320) {}
+OplChip::OplChip() : timer0(80), timer1(320) {}
 
-bool Chip::Write(const io_port_t reg, const uint8_t val)
+bool OplChip::Write(const io_port_t reg, const uint8_t val)
 {
 	// if(reg == 0x02 || reg == 0x03 || reg == 0x04)
 	// LOG(LOG_MISC,LOG_ERROR)("write adlib timer %X %X",reg,val);
@@ -519,7 +519,7 @@ bool Chip::Write(const io_port_t reg, const uint8_t val)
 	return false;
 }
 
-uint8_t Chip::Read()
+uint8_t OplChip::Read()
 {
 	const auto time(PIC_FullIndex());
 	uint8_t ret = 0;
