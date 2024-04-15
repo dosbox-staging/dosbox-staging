@@ -109,21 +109,41 @@ void Timer::Start(const double time)
 }
 
 struct RawHeader {
-	uint8_t id[8];         // 0x00, "DBRAWOPL"
-	uint16_t version_high; // 0x08, size of the data following the m
-	uint16_t version_low;  // 0x0a, size of the data following the m
-	uint32_t commands;     // 0x0c, uint32_t amount of command/data pairs
-	uint32_t milliseconds; // 0x10, uint32_t Total milliseconds of data in
-	                       // this chunk
-	uint8_t hardware;      // 0x14, uint8_t Hardware Type
-	                       // 0=opl2,1=dual-opl2,2=opl3
-	uint8_t format; // 0x15, uint8_t Format 0=cmd/data interleaved, 1 maybe
-	                // all cdms, followed by all data
-	uint8_t compression;     // 0x16, uint8_t Compression Type, 0 = No
-	                         // Compression
-	uint8_t delay256;        // 0x17, uint8_t Delay 1-256 msec command
-	uint8_t delay_shift8;    // 0x18, uint8_t (delay + 1)*256
-	uint8_t conv_table_size; // 0x191, uint8_t Raw Conversion Table size
+	// 0x00, "DBRAWOPL"
+	uint8_t id[8];
+
+	// 0x08, size of the data following the m
+	uint16_t version_high;
+
+	// 0x0a, size of the data following the m
+	uint16_t version_low;
+
+	// 0x0c, uint32_t amount of command/data pairs
+	uint32_t commands;
+
+	// 0x10, uint32_t Total milliseconds of data in this chunk
+	uint32_t milliseconds;
+
+	// 0x14, uint8_t Hardware Type
+	// 0=opl2,1=dual-opl2,2=opl3
+	uint8_t hardware;
+
+	// 0x15, uint8_t Format 0=cmd/data interleaved, 1 maybe all cdms,
+	// followed by all data
+	uint8_t format;
+
+	// 0x16, uint8_t Compression Type, 0 = No Compression
+	uint8_t compression;
+
+	// 0x17, uint8_t Delay 1-256 msec command
+	uint8_t delay256;
+
+	// 0x18, uint8_t (delay + 1)*256
+	uint8_t delay_shift8;
+
+	// 0x191, uint8_t Raw Conversion Table size
+	uint8_t conv_table_size;
+
 } GCC_ATTRIBUTE(packed);
 #ifdef _MSC_VER
 #	pragma pack()
@@ -169,7 +189,8 @@ public:
 				goto skipWrite;
 			}
 			while (passed > 0) {
-				if (passed < 257) { // 1-256 millisecond delay
+				// 1-256 millisecond delay
+				if (passed < 257) {
 					AddBuf(delay256,
 					       check_cast<uint8_t>(passed - 1));
 					passed = 0;
@@ -206,10 +227,13 @@ public:
 
 		// Prepare space at start of the file for the header
 		fwrite(&header, 1, sizeof(header), handle);
+
 		// Write the Raw To Reg table
 		fwrite(&to_reg, 1, raw_used, handle);
+
 		// Write the cache of last commands
 		WriteCache();
+
 		// Write the command that triggered this
 		AddWrite(reg_full, val);
 
@@ -239,20 +263,32 @@ public:
 	Capture &operator=(const Capture &) = delete;
 
 private:
-	uint8_t to_reg[127];  // 127 entries to go from raw data to registers
-	uint8_t raw_used = 0; // How many entries in the ToPort are used
-	uint8_t to_raw[256];  // 256 entries to go from port index to raw data
-	                      //
+	// 127 entries to go from raw data to registers
+	uint8_t to_reg[127];
+
+	// How many entries in the ToPort are used
+	uint8_t raw_used = 0;
+
+	// 256 entries to go from port index to raw data
+	uint8_t to_raw[256];
+
 	uint8_t delay256     = 0;
 	uint8_t delay_shift8 = 0;
 
 	RawHeader header;
 
-	FILE *handle = nullptr;  // File used for writing
-	                         //
-	uint32_t startTicks = 0; // Start used to check total raw length on end
-	uint32_t lastTicks  = 0; // Last ticks when last last cmd was added
-	uint8_t buf[1024];       // 16 added for delay commands and what not
+	// File used for writing
+	FILE* handle = nullptr;
+
+	// Start used to check total raw length on end
+	uint32_t startTicks = 0;
+
+	// Last ticks when last last cmd was added
+	uint32_t lastTicks = 0;
+
+	// 16 added for delay commands and what not
+	uint8_t buf[1024];
+
 	uint32_t bufUsed = 0;
 
 	RegisterCache *cache;
@@ -272,46 +308,60 @@ private:
 
 		// Select the entries that are valid and the index is the
 		// mapping to the index entry
-		MakeEntry(0x01, index); // 0x01: Waveform select
-		MakeEntry(0x04, index); // 104: Four-Operator Enable
-		MakeEntry(0x05, index); // 105: OPL3 Mode Enable
-		MakeEntry(0x08, index); // 08: CSW / NOTE-SEL
-		MakeEntry(0xbd, index); // BD: Tremolo Depth / Vibrato Depth /
-		                        // Percussion Mode / BD/SD/TT/CY/HH On
+
+		// 0x01: Waveform select
+		MakeEntry(0x01, index);
+
+		// 104: Four-Operator Enable
+		MakeEntry(0x04, index);
+
+		// 105: OPL3 Mode Enable
+		MakeEntry(0x05, index);
+
+		// 08: CSW / NOTE-SEL
+		MakeEntry(0x08, index);
+
+		// BD: Tremolo Depth / Vibrato D Percussion Mode /
+		// BD/SD/TT/CY/HH Onepth /
+		MakeEntry(0xbd, index);
 
 		// Add the 32 byte range that hold the 18 operators
 		for (uint8_t i = 0; i < 24; ++i) {
 			if ((i & 7) < 6) {
-				MakeEntry(0x20 + i, index); // 20-35: Tremolo /
-				                            // Vibrato / Sustain
-				                            // / KSR / Frequency
-				                            // Multiplication Facto
-				MakeEntry(0x40 + i, index); // 40-55: Key Scale
-				                            // Level / Output Level
-				MakeEntry(0x60 + i, index); // 60-75: Attack
-				                            // Rate / Decay Rate
-				MakeEntry(0x80 + i, index); // 80-95: Sustain
-				                            // Level / Release
-				                            // Rate
-				MakeEntry(0xe0 + i, index); // E0-F5: Waveform
-				                            // Select
+				// 20-35: Tremolo / Vibrato / Sustain / KSR /
+				// Frequency Multiplication Facto
+				MakeEntry(0x20 + i, index);
+
+				// 40-55: Key Scale Level / Output Level
+				MakeEntry(0x40 + i, index);
+
+				// 60-75: Attack Rate / Decay Rate
+				MakeEntry(0x60 + i, index);
+
+				// 80-95: Sustain Level / Release Rate
+				MakeEntry(0x80 + i, index);
+
+				// E0-F5: Waveform Select
+				MakeEntry(0xe0 + i, index);
 			}
 		}
 
 		// Add the 9 byte range that hold the 9 channels
 		for (uint8_t i = 0; i < 9; ++i) {
-			MakeEntry(0xa0 + i, index); // A0-A8: Frequency Number
-			MakeEntry(0xb0 + i, index); // B0-B8: Key On / Block
-			                            // Number / F-Number(hi
-			                            // bits)
-			MakeEntry(0xc0 + i, index); // C0-C8: FeedBack Modulation
-			                            // Factor / Synthesis Type
+			// A0-A8: Frequency Number
+			MakeEntry(0xa0 + i, index);
+
+			// B0-B8: Key On / Block Number / F-Number(hi bits)
+			MakeEntry(0xb0 + i, index);
+
+			// C0-C8: FeedBack Modulation Factor / Synthesis Type
+			MakeEntry(0xc0 + i, index);
 		}
 
 		// Store the amount of bytes the table contains
 		raw_used = index;
 
-		//	assert( raw_used <= 127 );
+		// assert( raw_used <= 127 );
 		delay256     = raw_used;
 		delay_shift8 = raw_used + 1;
 	}
@@ -366,6 +416,7 @@ private:
 		// Check the registers to add
 		for (uint16_t i = 0; i < 256; ++i) {
 			auto val = (*cache)[i];
+
 			// Silence the note on entries
 			if (i >= 0xb0 && i <= 0xb8)
 				val &= ~0x20;
@@ -675,8 +726,10 @@ void OPL::AdlibGoldControlWrite(const uint8_t val)
 	case 0x09: // Left FM Volume
 		ctrl.lvol = val;
 		goto setvol;
+
 	case 0x0a: // Right FM Volume
 		ctrl.rvol = val;
+
 	setvol:
 		if (ctrl.mixer) {
 			// Dune CD version uses 32 volume steps in an apparent
@@ -696,15 +749,18 @@ uint8_t OPL::AdlibGoldControlRead()
 {
 	switch (ctrl.index) {
 	case 0x00: // Board Options
-		return 0x50; // 16-bit ISA, surround module, no
-		             // telephone/CDROM
-		// return 0x70; // 16-bit ISA, no
-		             // telephone/surround/CD-ROM
+	    // 16-bit ISA, surround module, no telephone/CDROM
+		return 0x50;
+
+		// 16-bit ISA, no telephone/surround/CD-ROM
+		// return 0x70;
 
 	case 0x09: // Left FM Volume
 		return ctrl.lvol;
+
 	case 0x0a: // Right FM Volume
 		return ctrl.rvol;
+
 	case 0x15: // Audio Relocation
 		return 0x388 >> 3; // Cryo installer detection
 	}
@@ -753,6 +809,7 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 		case Mode::Opl2:
 			reg.normal = WriteAddr(port, val) & 0xff;
 			break;
+
 		case Mode::Opl3Gold:
 			if (port == 0x38a) {
 				if (val == 0xff) {
@@ -767,9 +824,11 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				}
 			}
 			[[fallthrough]];
+
 		case Mode::Opl3:
 			reg.normal = WriteAddr(port, val) & 0x1ff;
 			break;
+
 		case Mode::DualOpl2:
 			// Not a 0x?88 port, when write to a specific side
 			if (!(port & 0x8)) {
@@ -780,6 +839,7 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				reg.dual[1] = val & 0xff;
 			}
 			break;
+
 		default:
 			// TODO CMS and None must be removed as they're not real OPL modes
 			break;
