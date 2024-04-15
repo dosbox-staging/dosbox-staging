@@ -75,8 +75,8 @@ public:
 // The cache for 2 chips or an opl3
 typedef uint8_t RegisterCache[512];
 
-// Internal class used for dro capturing
-class Capture;
+// Internal class used for DRO capturing
+class OplCapture;
 
 class OPL {
 public:
@@ -84,7 +84,7 @@ public:
 
 	RegisterCache cache = {};
 
-	std::unique_ptr<Capture> capture = {};
+	std::unique_ptr<OplCapture> capture = {};
 
 	OPL(Section *configuration, const OplMode opl_mode);
 	~OPL();

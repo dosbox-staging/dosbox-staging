@@ -167,7 +167,7 @@ struct RawHeader {
 // raw data follows immediatly till the end of the chunk.
 
 // Table to map the opl register to one <127 for dro saving
-class Capture {
+class OplCapture {
 public:
 	bool DoWrite(const io_port_t reg_full, const uint8_t val)
 	{
@@ -258,24 +258,24 @@ public:
 		return true;
 	}
 
-	Capture(RegisterCache* _cache) : header(), cache(_cache)
+	OplCapture(RegisterCache* _cache) : header(), cache(_cache)
 	{
 		LOG_MSG("CAPTURE: Preparing to capture raw OPL output; "
 		        "capturing will start when OPL output starts");
 		MakeTables();
 	}
 
-	virtual ~Capture()
+	virtual ~OplCapture()
 	{
 		CloseFile();
 		LOG_MSG("CAPTURE: Stopped capturing raw OPL output");
 	}
 
 	// prevent copy
-	Capture(const Capture&) = delete;
+	OplCapture(const OplCapture&) = delete;
 
 	// prevent assignment
-	Capture& operator=(const Capture&) = delete;
+	OplCapture& operator=(const OplCapture&) = delete;
 
 private:
 	// 127 entries to go from raw data to registers
@@ -1011,7 +1011,7 @@ static void OPL_SaveRawEvent(const bool pressed)
 	}
 	// Otherwise start a new recording
 	else {
-		opl->capture = std::make_unique<Capture>(&opl->cache);
+		opl->capture = std::make_unique<OplCapture>(&opl->cache);
 	}
 }
 
