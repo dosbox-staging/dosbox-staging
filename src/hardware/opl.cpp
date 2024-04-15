@@ -66,11 +66,13 @@ bool Timer::Update(const double time)
 	if (enabled && (time >= trigger)) {
 		// How far into the next cycle
 		const double deltaTime = time - trigger;
+
 		// Sync start to last cycle
 		const auto counter_mod = fmod(deltaTime, counter_interval);
 
 		start   = time - counter_mod;
 		trigger = start + counter_interval;
+
 		// Only set the overflow flag when not masked
 		if (!masked) {
 			overflow = true;
@@ -500,10 +502,12 @@ bool OplChip::Write(const io_port_t reg, const uint8_t val)
 		timer0.Update(PIC_FullIndex());
 		timer0.SetCounter(val);
 		return true;
+
 	case 0x03:
 		timer1.Update(PIC_FullIndex());
 		timer1.SetCounter(val);
 		return true;
+
 	case 0x04:
 		// Reset overflow in both timers
 		if (val & 0x80) {
@@ -559,10 +563,13 @@ void OPL::Init(const uint16_t sample_rate)
 
 	switch (opl_mode) {
 	case OplMode::Opl3: break;
+
 	case OplMode::Opl3Gold:
 		adlib_gold = std::make_unique<AdlibGold>(sample_rate);
 		break;
+
 	case OplMode::Opl2: break;
+
 	case OplMode::DualOpl2:
 		// Setup opl3 mode in the hander
 		WriteReg(0x105, 1);
@@ -602,7 +609,8 @@ int16_t remove_dc_bias(const int16_t back_sample)
 	constexpr int16_t LowestFreqToMaintainHz = 200;
 	constexpr int16_t NumToAverage = PcmPlaybackRateHz / LowestFreqToMaintainHz;
 
-	static int32_t sum                 = 0;
+	static int32_t sum = 0;
+
 	static std::queue<int16_t> samples = {};
 
 	// Clear the queue if the stream isn't biased
@@ -669,13 +677,13 @@ void OPL::RenderUpToNow()
 void OPL::AudioCallback(const uint16_t requested_frames)
 {
 	assert(channel);
-
-	// if (fifo.size()) {
-	// 	LOG_MSG("%s: Queued %2lu cycle-accurate frames",
-	// 	        channel->GetName().c_str(),
-	// 	        fifo.size());
-	// }
-
+#if 0
+	if (fifo.size()) {
+		LOG_MSG("%s: Queued %2lu cycle-accurate frames",
+		        channel->GetName().c_str(),
+		        fifo.size());
+	}
+#endif
 	auto frames_remaining = requested_frames;
 
 	// First, send any frames we've queued since the last callback
@@ -747,6 +755,7 @@ void OPL::AdlibGoldControlWrite(const uint8_t val)
 	case 0x06:
 		adlib_gold->StereoControlWrite(StereoProcessorControlReg::Bass, val);
 		break;
+
 	case 0x07:
 		adlib_gold->StereoControlWrite(StereoProcessorControlReg::Treble, val);
 		break;
@@ -816,6 +825,7 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				}
 			}
 			[[fallthrough]];
+
 		case OplMode::Opl2:
 		case OplMode::Opl3:
 			if (!chip[0].Write(reg.normal, val)) {
@@ -823,6 +833,7 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				CacheWrite(reg.normal, val);
 			}
 			break;
+
 		case OplMode::DualOpl2:
 			// Not a 0x??8 port, then write to a specific port
 			if (!(port & 0x8)) {
@@ -888,8 +899,8 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 
 uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 {
-	// roughly half a micro (as we already do 1 micro on each port read and
-	// some tests revealed it taking 1.5 micros to read an adlib port)
+	// Roughly half a microsecond (as we already do 1 us on each port read and
+	// some tests revealed it taking 1.5 us to read an AdLib port).
 	auto delaycyc = (CPU_CycleMax / 2048);
 	if (delaycyc > CPU_Cycles) {
 		delaycyc = CPU_Cycles;
@@ -900,9 +911,9 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 
 	switch (opl_mode) {
 	case OplMode::Opl2:
-		// We allocated 4 ports, so just return -1 for the higher ones
+		// We allocated 4 ports, so just return -1 for the higher ones.
 		if (!(port & 3)) {
-			// Make sure the low bits are 6 on opl2
+			// Make sure the low bits are 6 on OPL2
 			return chip[0].Read() | 0x6;
 		} else {
 			return 0xff;
@@ -911,7 +922,8 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	case OplMode::Opl3Gold:
 		if (ctrl.active) {
 			if (port == 0x38a) {
-				return 0; // Control status, not busy
+			// Control status, not busy
+				return 0; 
 			} else if (port == 0x38b) {
 				return AdlibGoldControlRead();
 			}
