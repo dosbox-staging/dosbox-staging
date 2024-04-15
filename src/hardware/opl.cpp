@@ -41,6 +41,18 @@ enum { HwOpl2 = 0, HwDualOpl2 = 1, HwOpl3 = 2 };
 
 static std::unique_ptr<OPL> opl = {};
 
+static const char* to_string(const OplMode opl_mode)
+{
+	switch (opl_mode) {
+	case OplMode::None: return "None";
+	case OplMode::Opl2: return "OPL2";
+	case OplMode::DualOpl2: return "DualOPL2";
+	case OplMode::Opl3: return "OPL3";
+	case OplMode::Opl3Gold: return "OPL3Gold";
+	}
+	return "Unknown";
+}
+
 Timer::Timer(int16_t micros)
         : clock_interval(micros * 0.001) // interval in milliseconds
 {
@@ -545,18 +557,22 @@ void OPL::Init(const uint16_t sample_rate)
 
 	memset(cache, 0, ARRAY_LEN(cache));
 
-	switch (mode) {
-	case Mode::Opl3: break;
-	case Mode::Opl3Gold:
+	switch (opl_mode) {
+	case OplMode::Opl3: break;
+	case OplMode::Opl3Gold:
 		adlib_gold = std::make_unique<AdlibGold>(sample_rate);
 		break;
-	case Mode::Opl2: break;
-	case Mode::DualOpl2:
+	case OplMode::Opl2: break;
+	case OplMode::DualOpl2:
 		// Setup opl3 mode in the hander
 		WriteReg(0x105, 1);
 		// Also set it up in the cache so the capturing will start opl3
 		CacheWrite(0x105, 1);
 		break;
+
+	default:
+		assertm(false,
+		        format_str("Invalid OPL mode: %s", to_string(opl_mode)));
 	}
 }
 
@@ -791,8 +807,8 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 	const auto val = check_cast<uint8_t>(value);
 
 	if (port & 1) {
-		switch (mode) {
-		case Mode::Opl3Gold:
+		switch (opl_mode) {
+		case OplMode::Opl3Gold:
 			if (port == 0x38b) {
 				if (ctrl.active) {
 					AdlibGoldControlWrite(val);
@@ -800,14 +816,14 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				}
 			}
 			[[fallthrough]];
-		case Mode::Opl2:
-		case Mode::Opl3:
+		case OplMode::Opl2:
+		case OplMode::Opl3:
 			if (!chip[0].Write(reg.normal, val)) {
 				WriteReg(reg.normal, val);
 				CacheWrite(reg.normal, val);
 			}
 			break;
-		case Mode::DualOpl2:
+		case OplMode::DualOpl2:
 			// Not a 0x??8 port, then write to a specific port
 			if (!(port & 0x8)) {
 				uint8_t index = (port & 2) >> 1;
@@ -818,16 +834,21 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 				DualWrite(1, reg.dual[1], val);
 			}
 			break;
+
+		default:
+			assertm(false,
+			        format_str("Invalid OPL mode: %s",
+			                   to_string(opl_mode)));
 		}
 	} else {
 		// Ask the handler to write the address
 		// Make sure to clip them in the right range
-		switch (mode) {
-		case Mode::Opl2:
+		switch (opl_mode) {
+		case OplMode::Opl2:
 			reg.normal = WriteAddr(port, val) & 0xff;
 			break;
 
-		case Mode::Opl3Gold:
+		case OplMode::Opl3Gold:
 			if (port == 0x38a) {
 				if (val == 0xff) {
 					ctrl.active = true;
@@ -842,11 +863,11 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 			}
 			[[fallthrough]];
 
-		case Mode::Opl3:
+		case OplMode::Opl3:
 			reg.normal = WriteAddr(port, val) & 0x1ff;
 			break;
 
-		case Mode::DualOpl2:
+		case OplMode::DualOpl2:
 			// Not a 0x?88 port, when write to a specific side
 			if (!(port & 0x8)) {
 				uint8_t index   = (port & 2) >> 1;
@@ -858,7 +879,9 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 			break;
 
 		default:
-			assertm(false, format_str("Invalid OPL mode: %d", mode));
+			assertm(false,
+			        format_str("Invalid OPL mode: %s",
+			                   to_string(opl_mode)));
 		}
 	}
 }
@@ -875,8 +898,8 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;
 
-	switch (mode) {
-	case Mode::Opl2:
+	switch (opl_mode) {
+	case OplMode::Opl2:
 		// We allocated 4 ports, so just return -1 for the higher ones
 		if (!(port & 3)) {
 			// Make sure the low bits are 6 on opl2
@@ -885,7 +908,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 			return 0xff;
 		}
 
-	case Mode::Opl3Gold:
+	case OplMode::Opl3Gold:
 		if (ctrl.active) {
 			if (port == 0x38a) {
 				return 0; // Control status, not busy
@@ -895,7 +918,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 		}
 		[[fallthrough]];
 
-	case Mode::Opl3:
+	case OplMode::Opl3:
 		// We allocated 4 ports, so just return -1 for the higher ones
 		if (!(port & 3)) {
 			return chip[0].Read();
@@ -903,7 +926,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 			return 0xff;
 		}
 
-	case Mode::DualOpl2:
+	case OplMode::DualOpl2:
 		// Only return for the lower ports
 		if (port & 1) {
 			return 0xff;
@@ -912,7 +935,8 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 		return chip[(port >> 1) & 1].Read() | 0x6;
 
 	default:
-		assertm(false, format_str("Invalid OPL mode: %d", mode));
+		assertm(false,
+		        format_str("Invalid OPL mode: %s", to_string(opl_mode)));
 	}
 	return 0;
 }
@@ -991,30 +1015,12 @@ static void OPL_SaveRawEvent(const bool pressed)
 	}
 }
 
-static std::string opl_mode_to_string(const Mode mode)
-{
-	switch (mode) {
-	case Mode::Opl2: return "OPL2";
-	case Mode::DualOpl2: return "DualOPL2";
-	case Mode::Opl3: return "OPL3";
-	case Mode::Opl3Gold: return "OPL3Gold";
-	}
-	return "Unknown";
-}
-
-OPL::OPL(Section* configuration, const OplMode oplmode)
+OPL::OPL(Section* configuration, const OplMode _opl_mode)
 {
 	using namespace std::placeholders;
 
-	assert(oplmode != OplMode::None);
-
-	switch (oplmode) {
-	case OplMode::Opl2: mode = Mode::Opl2; break;
-	case OplMode::DualOpl2: mode = Mode::DualOpl2; break;
-	case OplMode::Opl3: mode = Mode::Opl3; break;
-	case OplMode::Opl3Gold: mode = Mode::Opl3Gold; break;
-	default: break;
-	}
+	assert(_opl_mode != OplMode::None);
+	opl_mode = _opl_mode;
 
 	Section_prop* section = static_cast<Section_prop*>(configuration);
 	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
@@ -1027,7 +1033,7 @@ OPL::OPL(Section* configuration, const OplMode oplmode)
 	                             ChannelFeature::ChorusSend,
 	                             ChannelFeature::Synthesizer};
 
-	const auto dual_opl = mode != Mode::Opl2;
+	const auto dual_opl = opl_mode != OplMode::Opl2;
 
 	if (dual_opl) {
 		channel_features.emplace(ChannelFeature::Stereo);
@@ -1089,16 +1095,14 @@ OPL::OPL(Section* configuration, const OplMode oplmode)
 
 	LOG_MSG("%s: Running %s on ports %xh and %xh",
 	        channel->GetName().c_str(),
-	        opl_mode_to_string(mode).c_str(),
+	        to_string(opl_mode),
 	        base,
 	        port_0x388);
 }
 
 OPL::~OPL()
 {
-	LOG_MSG("%s: Shutting down %s",
-	        channel->GetName().c_str(),
-	        opl_mode_to_string(mode).c_str());
+	LOG_MSG("%s: Shutting down %s", channel->GetName().c_str(), to_string(opl_mode));
 
 	// Stop playback
 	if (channel) {
