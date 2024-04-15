@@ -37,18 +37,23 @@
 
 CHECK_NARROWING();
 
+constexpr auto OplSampleRateHz = 49716;
+
 static std::unique_ptr<OPL> opl = {};
 
 static const char* to_string(const OplMode opl_mode)
 {
+	// clang-format off
 	switch (opl_mode) {
-	case OplMode::None: return "None";
-	case OplMode::Opl2: return "OPL2";
+	case OplMode::None:     return "None";
+	case OplMode::Opl2:     return "OPL2";
 	case OplMode::DualOpl2: return "DualOPL2";
-	case OplMode::Opl3: return "OPL3";
+	case OplMode::Opl3:     return "OPL3";
 	case OplMode::Opl3Gold: return "OPL3Gold";
+	case OplMode::Esfm:     return "ESFM";
 	}
 	return "Unknown";
+	// clang-format on
 }
 
 Timer::Timer(int16_t micros)
@@ -63,10 +68,10 @@ bool Timer::Update(const double time)
 {
 	if (enabled && (time >= trigger)) {
 		// How far into the next cycle
-		const double deltaTime = time - trigger;
+		const double delta_time = time - trigger;
 
 		// Sync start to last cycle
-		const auto counter_mod = fmod(deltaTime, counter_interval);
+		const auto counter_mod = fmod(delta_time, counter_interval);
 
 		start   = time - counter_mod;
 		trigger = start + counter_interval;
@@ -92,12 +97,22 @@ void Timer::SetCounter(const uint8_t val)
 	counter_interval = (256 - counter) * clock_interval;
 }
 
+uint8_t Timer::GetCounter() const
+{
+	return counter;
+}
+
 void Timer::SetMask(const bool set)
 {
 	masked = set;
 	if (masked) {
 		overflow = false;
 	}
+}
+
+bool Timer::IsMasked() const
+{
+	return masked;
 }
 
 void Timer::Stop()
@@ -113,13 +128,18 @@ void Timer::Start(const double time)
 		overflow = false;
 
 		// Sync start to the last clock interval
-		const auto clockMod = fmod(time, clock_interval);
+		const auto clock_mod = fmod(time, clock_interval);
 
-		start = time - clockMod;
+		start = time - clock_mod;
 
 		// Overflow trigger
 		trigger = start + counter_interval;
 	}
+}
+
+bool Timer::IsEnabled() const
+{
+	return enabled;
 }
 
 OplChip::OplChip() : timer0(80), timer1(320) {}
@@ -168,68 +188,116 @@ bool OplChip::Write(const io_port_t reg, const uint8_t val)
 
 uint8_t OplChip::Read()
 {
-	const auto time(PIC_FullIndex());
+	const auto time = PIC_FullIndex();
 	uint8_t ret = 0;
 
 	// Overflow won't be set if a channel is masked
 	if (timer0.Update(time)) {
-		ret |= 0x40;
-		ret |= 0x80;
+		ret |= 0x40 | 0x80;
 	}
 	if (timer1.Update(time)) {
-		ret |= 0x20;
-		ret |= 0x80;
+		ret |= 0x20 | 0x80;
 	}
 	return ret;
 }
 
-void OPL::Init(const uint16_t sample_rate)
+uint8_t OplChip::EsfmReadbackReg(const uint16_t reg)
 {
-	newm = 0;
-	OPL3_Reset(&oplchip, sample_rate);
+	uint8_t ret = 0;
 
-	ms_per_frame = millis_in_second / sample_rate;
+	switch (reg) {
+	case 0x02: ret = timer0.GetCounter(); break;
+	case 0x03: ret = timer1.GetCounter(); break;
+	case 0x04:
+		ret = timer0.IsEnabled() & 1;
+		ret |= check_cast<uint8_t>((timer1.IsEnabled() & 1) << 1);
+		ret |= check_cast<uint8_t>((timer1.IsMasked() & 1) << 5);
+		ret |= check_cast<uint8_t>((timer1.IsMasked() & 1) << 6);
+	}
+	return ret;
+}
+
+void OPL::Init()
+{
+	opl.newm = 0;
+
+	if (opl.mode == OplMode::Esfm) {
+		ESFM_init(&esfm.chip);
+	} else {
+		OPL3_Reset(&opl.chip, OplSampleRateHz);
+	}
+
+	ms_per_frame = millis_in_second / OplSampleRateHz;
 
 	memset(cache, 0, ARRAY_LEN(cache));
 
-	switch (opl_mode) {
-	case OplMode::Opl3: break;
-
-	case OplMode::Opl3Gold:
-		adlib_gold = std::make_unique<AdlibGold>(sample_rate);
-		break;
-
+	switch (opl.mode) {
 	case OplMode::Opl2: break;
 
 	case OplMode::DualOpl2:
-		// Setup opl3 mode in the hander
+		// Set up OPL3 mode in the hander
 		WriteReg(0x105, 1);
 
-		// Also set it up in the cache so the capturing will start opl3
+		// Also set it up in the cache so the capturing will start OPL3
 		CacheWrite(0x105, 1);
 		break;
 
+	case OplMode::Opl3: break;
+
+	case OplMode::Opl3Gold:
+		adlib_gold = std::make_unique<AdlibGold>(OplSampleRateHz);
+		break;
+
+	case OplMode::Esfm: break;
+
 	default:
 		assertm(false,
-		        format_str("Invalid OPL mode: %s", to_string(opl_mode)));
+		        format_str("Invalid OPL mode: %s", to_string(opl.mode)));
 	}
 }
 
 void OPL::WriteReg(const io_port_t selected_reg, const uint8_t val)
 {
-	OPL3_WriteRegBuffered(&oplchip, selected_reg, val);
-	if (selected_reg == 0x105) {
-		newm = selected_reg & 0x01;
+	if (opl.mode == OplMode::Esfm) {
+		ESFM_write_reg_buffered_fast(&esfm.chip, selected_reg, val);
+
+	} else { // OPL
+		OPL3_WriteRegBuffered(&opl.chip, selected_reg, val);
+		if (selected_reg == 0x105) {
+			opl.newm = selected_reg & 0x01;
+		}
 	}
 }
 
 io_port_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
 {
-	io_port_t addr = val;
-	if ((port & 2) && (addr == 0x05 || newm)) {
-		addr |= 0x100;
+	if (opl.mode == OplMode::Esfm) {
+		uint16_t addr;
+		if (esfm.chip.native_mode) {
+			ESFM_write_port(&esfm.chip,
+			                check_cast<uint8_t>((port & 3) | 2),
+			                val);
+			return check_cast<io_port_t>(esfm.chip.addr_latch & 0x7ff);
+		} else {
+			addr = val;
+			if ((port & 2) && (addr == 0x05 || esfm.chip.emu_newmode)) {
+				addr |= 0x100;
+			}
+			return addr;
+		}
+
+	} else { // OPL
+		io_port_t addr = val;
+		if ((port & 2) && (addr == 0x05 || opl.newm)) {
+			addr |= 0x100;
+		}
+		return addr;
 	}
-	return addr;
+}
+
+void OPL::EsfmSetLegacyMode()
+{
+	ESFM_write_port(&esfm.chip, 0, 0);
 }
 
 template <LineIndex line_index>
@@ -272,21 +340,35 @@ int16_t remove_dc_bias(const int16_t back_sample)
 AudioFrame OPL::RenderFrame()
 {
 	static int16_t buf[2] = {};
-	OPL3_GenerateStream(&oplchip, buf, 1);
 
-	if (ctrl.wants_dc_bias_removed) {
-		buf[0] = remove_dc_bias<Left>(buf[0]);
-		buf[1] = remove_dc_bias<Right>(buf[1]);
-	}
+	if (opl.mode == OplMode::Esfm) {
+		ESFM_generate_stream(&esfm.chip, buf, 1);
 
-	AudioFrame frame = {};
-	if (adlib_gold) {
-		adlib_gold->Process(buf, 1, &frame[0]);
-	} else {
-		frame.left  = buf[0];
-		frame.right = buf[1];
+		if (ctrl.wants_dc_bias_removed) {
+			buf[0] = remove_dc_bias<Left>(buf[0]);
+			buf[1] = remove_dc_bias<Right>(buf[1]);
+		}
+
+		AudioFrame frame = {buf[0], buf[1]};
+		return frame;
+
+	} else { // OPL
+		OPL3_GenerateStream(&opl.chip, buf, 1);
+
+		if (ctrl.wants_dc_bias_removed) {
+			buf[0] = remove_dc_bias<Left>(buf[0]);
+			buf[1] = remove_dc_bias<Right>(buf[1]);
+		}
+
+		AudioFrame frame = {};
+		if (adlib_gold) {
+			adlib_gold->Process(buf, 1, &frame[0]);
+		} else {
+			frame.left  = buf[0];
+			frame.right = buf[1];
+		}
+		return frame;
 	}
-	return frame;
 }
 
 void OPL::RenderUpToNow()
@@ -346,8 +428,8 @@ void OPL::CacheWrite(const io_port_t port, const uint8_t val)
 
 void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value)
 {
-	// Make sure you don't use opl3 features
-	// Don't allow write to disable opl3
+	// Make sure we don't use OPL3 features
+	// Don't allow write to disable OPL3
 	if (port == 5) {
 		return;
 	}
@@ -366,7 +448,7 @@ void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value
 	// Enabling panning
 	if (port >= 0xc0 && port <= 0xc8) {
 		val &= 0x0f;
-		val |= index ? 0xA0 : 0x50;
+		val |= check_cast<uint8_t>(index ? 0xA0 : 0x50);
 	}
 	const auto full_port = check_cast<io_port_t>(port + (index ? 0x100 : 0u));
 	WriteReg(full_port, val);
@@ -435,7 +517,7 @@ uint8_t OPL::AdlibGoldControlRead()
 	case 0x0a: // Right FM Volume
 		return ctrl.rvol;
 
-	case 0x15:                 // Audio Relocation
+	case 0x15: // Audio Relocation
 		return 0x388 >> 3; // Cryo installer detection
 	}
 	return 0xff;
@@ -447,8 +529,37 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 
 	const auto val = check_cast<uint8_t>(value);
 
+	if (opl.mode == OplMode::Esfm && esfm.mode == EsfmMode::Native) {
+		switch (port & 3) {
+		case 0:
+			// Disable native mode
+			EsfmSetLegacyMode();
+			esfm.mode = EsfmMode::Legacy;
+			break;
+
+		case 1:
+			if ((reg.normal & 0x500) == 0x400) {
+				// Emulation mode register pokehole region at
+				// 0x400 (mirrored at 0x600)
+				if (!chip[0].Write(reg.normal & 0xff, val)) {
+					WriteReg(reg.normal, val);
+				}
+			} else {
+				WriteReg(reg.normal, val);
+			}
+			// TODO Capture for ESFM native mode? It's
+			// complicated...
+			// CacheWrite(reg.normal, val);
+			break;
+
+		case 2:
+		case 3: reg.normal = WriteAddr(port, val) & 0x7ff; break;
+		}
+		return;
+	}
+
 	if (port & 1) {
-		switch (opl_mode) {
+		switch (opl.mode) {
 		case OplMode::Opl3Gold:
 			if (port == 0x38b) {
 				if (ctrl.active) {
@@ -478,17 +589,45 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 			}
 			break;
 
+		case OplMode::Esfm:
+			if (!chip[0].Write(reg.normal, val)) {
+				if (reg.normal == 0x105 && (val & 0x80)) {
+					esfm.mode = EsfmMode::Native;
+
+					if (capture) {
+						LOG_WARNING(
+						        "OPL: ESFM native mode has been enabled "
+						        "which is not supported by the raw OPL "
+						        "capture feature.");
+					}
+				}
+				WriteReg(reg.normal & 0x1ff, val);
+				CacheWrite(reg.normal & 0x1ff, val);
+			}
+			break;
+
 		default:
 			assertm(false,
 			        format_str("Invalid OPL mode: %s",
-			                   to_string(opl_mode)));
+			                   to_string(opl.mode)));
 		}
 	} else {
 		// Ask the handler to write the address
 		// Make sure to clip them in the right range
-		switch (opl_mode) {
+		switch (opl.mode) {
 		case OplMode::Opl2:
 			reg.normal = WriteAddr(port, val) & 0xff;
+			break;
+
+		case OplMode::DualOpl2:
+			// Not a 0x?88 port, when write to a specific side
+			if (!(port & 0x8)) {
+				uint8_t index   = (port & 2) >> 1;
+				reg.dual[index] = val & 0xff;
+			} else {
+				reg.dual[0] = val & 0xff;
+				reg.dual[1] = val & 0xff;
+			}
 			break;
 
 		case OplMode::Opl3Gold:
@@ -507,32 +646,22 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 			[[fallthrough]];
 
 		case OplMode::Opl3:
+		case OplMode::Esfm:
 			reg.normal = WriteAddr(port, val) & 0x1ff;
-			break;
-
-		case OplMode::DualOpl2:
-			// Not a 0x?88 port, when write to a specific side
-			if (!(port & 0x8)) {
-				uint8_t index   = (port & 2) >> 1;
-				reg.dual[index] = val & 0xff;
-			} else {
-				reg.dual[0] = val & 0xff;
-				reg.dual[1] = val & 0xff;
-			}
 			break;
 
 		default:
 			assertm(false,
 			        format_str("Invalid OPL mode: %s",
-			                   to_string(opl_mode)));
+			                   to_string(opl.mode)));
 		}
 	}
 }
 
 uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 {
-	// Roughly half a microsecond (as we already do 1 us on each port read and
-	// some tests revealed it taking 1.5 us to read an AdLib port).
+	// Roughly half a microsecond (as we already do 1 us on each port read
+	// and some tests revealed it taking 1.5 us to read an AdLib port).
 	auto delaycyc = (CPU_CycleMax / 2048);
 	if (delaycyc > CPU_Cycles) {
 		delaycyc = CPU_Cycles;
@@ -541,7 +670,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	CPU_Cycles -= delaycyc;
 	CPU_IODelayRemoved += delaycyc;
 
-	switch (opl_mode) {
+	switch (opl.mode) {
 	case OplMode::Opl2:
 		// We allocated 4 ports, so just return -1 for the higher ones.
 		if (!(port & 3)) {
@@ -551,11 +680,19 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 			return 0xff;
 		}
 
+	case OplMode::DualOpl2:
+		// Only return for the lower ports
+		if (port & 1) {
+			return 0xff;
+		}
+		// Make sure the low bits are 6 on opl2
+		return chip[(port >> 1) & 1].Read() | 0x6;
+
 	case OplMode::Opl3Gold:
 		if (ctrl.active) {
 			if (port == 0x38a) {
-			// Control status, not busy
-				return 0; 
+				// Control status, not busy
+				return 0;
 			} else if (port == 0x38b) {
 				return AdlibGoldControlRead();
 			}
@@ -570,17 +707,29 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 			return 0xff;
 		}
 
-	case OplMode::DualOpl2:
-		// Only return for the lower ports
-		if (port & 1) {
-			return 0xff;
+	case OplMode::Esfm:
+		switch (port & 3) {
+		case 0: return chip[0].Read();
+		case 1:
+			if (esfm.mode == EsfmMode::Native) {
+				if ((reg.normal & 0x500) == 0x400) {
+					// Emulation mode register pokehole
+					// region at 0x400 (mirrored at 0x600)
+					return chip[0].EsfmReadbackReg(
+					        reg.normal & 0xff);
+				}
+				return ESFM_readback_reg(&esfm.chip, reg.normal);
+			} else {
+				return 0x00;
+			}
+		case 2:
+		case 3: return 0xff;
 		}
-		// Make sure the low bits are 6 on opl2
-		return chip[(port >> 1) & 1].Read() | 0x6;
+		break;
 
 	default:
 		assertm(false,
-		        format_str("Invalid OPL mode: %s", to_string(opl_mode)));
+		        format_str("Invalid OPL mode: %s", to_string(opl.mode)));
 	}
 	return 0;
 }
@@ -612,10 +761,8 @@ static void OPL_SaveRawEvent(const bool pressed)
 
 OPL::OPL(Section* configuration, const OplMode _opl_mode)
 {
-	using namespace std::placeholders;
-
 	assert(_opl_mode != OplMode::None);
-	opl_mode = _opl_mode;
+	opl.mode = _opl_mode;
 
 	Section_prop* section = static_cast<Section_prop*>(configuration);
 	const auto base = static_cast<uint16_t>(section->Get_hex("sbbase"));
@@ -628,7 +775,7 @@ OPL::OPL(Section* configuration, const OplMode _opl_mode)
 	                             ChannelFeature::ChorusSend,
 	                             ChannelFeature::Synthesizer};
 
-	const auto dual_opl = opl_mode != OplMode::Opl2;
+	const auto dual_opl = opl.mode != OplMode::Opl2;
 
 	if (dual_opl) {
 		channel_features.emplace(ChannelFeature::Stereo);
@@ -665,7 +812,11 @@ OPL::OPL(Section* configuration, const OplMode _opl_mode)
 		LOG_MSG("%s: DC bias removal enabled", channel->GetName().c_str());
 	}
 
-	Init(check_cast<uint16_t>(channel->GetSampleRate()));
+	Init();
+
+	channel->SetSampleRate(OplSampleRateHz);
+
+	using namespace std::placeholders;
 
 	const auto read_from = std::bind(&OPL::PortRead, this, _1, _2);
 	const auto write_to  = std::bind(&OPL::PortWrite, this, _1, _2, _3);
@@ -690,14 +841,14 @@ OPL::OPL(Section* configuration, const OplMode _opl_mode)
 
 	LOG_MSG("%s: Running %s on ports %xh and %xh",
 	        channel->GetName().c_str(),
-	        to_string(opl_mode),
+	        to_string(opl.mode),
 	        base,
 	        port_0x388);
 }
 
 OPL::~OPL()
 {
-	LOG_MSG("%s: Shutting down %s", channel->GetName().c_str(), to_string(opl_mode));
+	LOG_MSG("%s: Shutting down %s", channel->GetName().c_str(), to_string(opl.mode));
 
 	// Stop playback
 	if (channel) {
