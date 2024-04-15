@@ -449,9 +449,6 @@ MUTO
 :TITLEBAR_PAUSED
 PAUSA
 .
-:TITLEBAR_HINT_CAPTURED
-mouse catturato
-.
 :TITLEBAR_HINT_CAPTURED_HOTKEY
 mouse catturato, %s+F10 per rilasciarlo
 .
@@ -617,55 +614,6 @@ Usa 'allow' (consenti) o 'block' (blocca) per sovrascrivere la variabile
 d'ambiente SDL_VIDEO_ALLOW_SCREENSAVER, che di solito blocca il salvaschermo
 del sistema operativo mentre l'emulatore è in esecuzione (predefinito 'auto').
 .
-:CONFIG_WINDOW_TITLEBAR
-Elenco di informazioni, separate da spazi, da visualizzare nella barra del
-titolo della finestra.
-(predefinito 'program=name dosbox=auto cycles=on mouse=full')
-Se un parametro non è specificato, verrà utilizzato il suo valore predefinito.
-È possibile visualizzare le seguenti informazioni:
-  animation=<valore>: Se impostato su 'on' (predefinito), abilita l'animazione
-                      del simbolo di registrazione audio/video. Impostare su
-                      'off' per disabilitare l'animazione; questo è utile se
-                      i caratteri dello schermo producono strani risultati.
-  program=<valore>:   Visualizza il nome del programma in esecuzione.
-                      <valore> può essere uno dei seguenti:
-                        none/off:  Non visualizza il nome del programma.
-                        name:      Nome del programma con estensione file
-                                   (predefinito).
-                        path:      Nome, estensione e percorso completo.
-                        segment:   Visualizza il nome del segmento di memoria
-                                   del programma.
-                        'Titolo':  Nome personalizzato. In alternativa è
-                                   possibile utilizzare il formato "Titolo",
-                                   (Titolo), <Titolo> o [Titolo].
-                      Nota: Con alcuni software (come Windows 3.1x in modalità
-                      avanzata) è impossibile riconoscere il nome o il percorso
-                      completo del programma; in questi casi viene utilizzato
-                      il parametro 'segment'.
-  dosbox=<valore>:    Visualizza 'DOSBox Staging' nella barra del titolo.
-                      <valore> può essere uno dei seguenti:
-                        always:   Visualizza sempre 'DOSBox Staging'.
-                        auto:     Visualizza il valore prefissato solo se
-                                  nessun programma è in esecuzione o se è
-                                  impostato 'program=none' (predefinito).
-  version=<valore>:   Visualizza le informazioni sulla versione di DOSBox.
-                      <valore> può essere uno dei seguenti:
-                         none/off:  Non visualizza la versione di DOSBox
-                                    (predefinito).
-                         simple:    Informazioni di base sulla versione.
-                         detailed:  Visualizza anche la revisione o hash Git,
-                                    se disponibile.
-  cycles=<valore>:    Se impostato su 'on' (predefinito), mostra l'impostazione
-                      dei cicli della CPU. Impostare su 'off' per disabilitare
-                      la visualizzazione dell'impostazione dei cicli.
-  mouse=<valore>:     Livello di verbosità dei messaggi di cattura del mouse:
-                        none/off:  Non visualizza alcun messaggio.
-                        short:     Visualizza solo il messaggio di cattura
-                                   del mouse.
-                        full:      Visualizza informazioni dettagliate su come
-                                   catturare o rilasciare il cursore
-                                   (predefinito).
-.
 :CONFIG_LANGUAGE
 Seleziona la lingua da utilizzare: 'br', 'de', 'en', 'es', 'fr', 'it', 'nl',
 'pl' o 'ru' (predefinito non impostato; equivalente ad 'en').
@@ -729,14 +677,30 @@ Memoria video in MB (1-8) o KB (da 256 a 8192).
 (predefinito 'auto'). Fare riferimento all'impostazione 'machine' per l'elenco
 delle opzioni valide per ogni scheda.
 .
+:CONFIG_VMEM_DELAY
+Configura l'emulazione del ritardo di accesso alla memoria video (predefinito
+'off').
+  off:      Disabilita l'emulazione del ritardo di accesso alla memoria video.
+            Preferibile per la maggior parte dei giochi per evitare
+            rallentamenti.
+  on:       Abilita l'emulazione del ritardo di accesso alla memoria video
+            (3000 ns). Può aiutare a ridurre o eliminare sfarfallii in giochi
+            Hercules, CGA, EGA, o dell'inizio dell'era VGA.
+  <value>:  Imposta il ritardo di accesso in nanosecondi. L'intervallo di
+            valori valido è da 0 a 20000 ns; l'intervallo da 500 a 5000 ns è
+            quello che produce migliori risultati.
+Nota: Si consiglia di di abilitare questa opzione solamente per quei
+      giochi che lo rendono necessario, dal momento che rallenta l'intero
+      emulatore.
+.
 :CONFIG_DOS_RATE
-Personalizza la frequenza dei fotogrammi della modalità video emulata, in Hz:
+Personalizza la frequenza dei fotogrammi della modalità video emulata:
   default:   La frequenza è determinata dalla modalità video DOS
-             (consigliato; predefinito).
+             (predefinito).
   host:      Abbina la frequenza DOS alla frequenza di aggiornamento dello
              schermo (vedi impostazione 'host_rate').
-  <valore>:  Imposta la frequenza su un valore intero o decimale espresso
-             in Hz, compreso tra 24.000 e 1000.000.
+  <valore>:  Imposta la frequenza su un valore intero o decimale compreso 
+             tra 24.000 e 1000.000 Hz.
 Si consiglia la frequenza dei fotogrammi predefinita ('default'), altrimenti
 provare ed impostare in base al gioco.
 .
@@ -1022,7 +986,6 @@ Core della CPU usato nell'emulazione (predefinito 'auto').
 :CONFIG_CPUTYPE
 Tipo di CPU usata nell'emulazione (predefinito 'auto').
 'auto' è la scelta più veloce.
-La variante "prefetch" emula la coda di prefetch e richiede il core 'normal'.
 .
 :CONFIG_CYCLES
 Numero di istruzioni che DOSBox tenta di emulare ogni millisecondo
@@ -1467,13 +1430,6 @@ scrittura della porta I/O:
                                 su un periodo di 200ms.)
                        1000 3000 (Attende 1s prima di applicare la dissolvenza
                                   su un periodo di 3s.)
-.
-:CONFIG_OPL_REMOVE_DC_BIAS
-Rimuove la polarizzazione CC dall'uscita OPL. Dovrebbe essere usato solo
-come ultima risorsa per correggere gli scoppiettii nel suono nei giochi che
-riproducono audio PCM utilizzando il sintetizzatore OPL su una scheda
-Sound Blaster o AdLib, come in: Golden Eagle (1991), Wizardry 6 (1990) e
-Wizardry 7 (1992). Si prega di segnalare altri giochi interessati.
 .
 :CONFIG_OPLEMU
 Ora è supportata solo l'emulazione OPL 'nuked'.
@@ -2111,9 +2067,6 @@ File eseguibile non trovato: '%s'
 .
 :CONJUNCTION_AND
 e
-.
-:PROGRAM_CONFIG_NOT_CHANGEABLE
-La proprietà '%s' non è modificabile durante l'esecuzione.
 .
 :MIDI_DEVICE_LIST_NOT_SUPPORTED
 Elenco non supportato
@@ -3064,6 +3017,10 @@ Qualcosa è andato storto.
 .
 :PROGRAM_MOUNT_OVERLAY_STATUS
 Sovrapposizione %s nell'unità %c montata.
+
+.
+:PROGRAM_MOUNT_MOVE_Z_ERROR_1
+Impossibile montare l'unità Z. L'unità %c risulta già montata.
 
 .
 :PROGRAM_MOUSECTL_HELP_LONG
