@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2021  The DOSBox Team
+ *  Copyright (C) 2002-2024  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -26,12 +26,13 @@
 #include <queue>
 
 #include "adlib_gold.h"
-#include "mixer.h"
-#include "inout.h"
-#include "setup.h"
-#include "pic.h"
 #include "hardware.h"
+#include "inout.h"
+#include "mixer.h"
+#include "pic.h"
+#include "setup.h"
 
+#include "ESFMu/esfm.h"
 #include "nuked/opl3.h"
 
 class Timer {
@@ -40,17 +41,31 @@ public:
 
 	bool Update(const double time);
 	void Reset();
+
 	void SetCounter(const uint8_t val);
+	uint8_t GetCounter() const;
+
 	void SetMask(const bool set);
+	bool IsMasked() const;
+
 	void Stop();
 	void Start(const double time);
+	bool IsEnabled() const;
 
 private:
-	double start            = 0.0; // Rounded down start time
-	double trigger          = 0.0; // Time when you overflow
-	double clock_interval   = 0.0; // Clock interval
-	double counter_interval = 0.0; // Cycle interval
-	uint8_t counter         = 0;
+	// Rounded down start time
+	double start = 0.0;
+
+	// Time when you overflow
+	double trigger = 0.0;
+
+	// Clock interval
+	double clock_interval = 0.0;
+
+	// Cycle interval
+	double counter_interval = 0.0;
+
+	uint8_t counter = 0;
 
 	bool enabled  = false;
 	bool overflow = false;
@@ -70,6 +85,8 @@ public:
 
 	// Read the current timer state, will use current double
 	uint8_t Read();
+
+	uint8_t EsfmReadbackReg(const uint16_t reg);
 };
 
 // The cache for two OPL chips (Dual OPL2) or an OPL3 (stereo)
@@ -77,6 +94,8 @@ typedef uint8_t OplRegisterCache[512];
 
 // Internal class used for DRO capturing
 class OplCapture;
+
+enum class EsfmMode { Legacy, Native };
 
 class OPL {
 public:
@@ -86,14 +105,14 @@ public:
 
 	std::unique_ptr<OplCapture> capture = {};
 
-	OPL(Section *configuration, const OplMode opl_mode);
+	OPL(Section* configuration, const OplMode opl_mode);
 	~OPL();
 
 	// prevent copy
-	OPL(const OPL &) = delete;
+	OPL(OPL&) = delete;
 
 	// prevent assignment
-	OPL &operator=(const OPL &) = delete;
+	OPL& operator=(OPL&) = delete;
 
 private:
 	IO_ReadHandleObject ReadHandler[3];
@@ -101,13 +120,20 @@ private:
 
 	std::queue<AudioFrame> fifo = {};
 
-	OplMode opl_mode = {};
 	OplChip chip[2]  = {};
 
-	opl3_chip oplchip = {};
-	uint8_t newm      = 0;
+	struct {
+		OplMode mode   = OplMode::None;
+		opl3_chip chip = {};
+		uint8_t newm   = 0;
+	} opl = {};
 
 	std::unique_ptr<AdlibGold> adlib_gold = {};
+
+	struct {
+		esfm_chip chip = {};
+		EsfmMode mode  = EsfmMode::Legacy;
+	} esfm = {};
 
 	// Playback related
 	double last_rendered_ms = 0.0;
@@ -127,10 +153,11 @@ private:
 
 		bool active = false;
 		bool mixer  = false;
+
 		bool wants_dc_bias_removed = false;
 	} ctrl = {};
 
-	void Init(const uint16_t sample_rate);
+	void Init();
 
 	void AudioCallback(const uint16_t frames);
 	AudioFrame RenderFrame();
@@ -148,6 +175,8 @@ private:
 
 	void AdlibGoldControlWrite(const uint8_t val);
 	uint8_t AdlibGoldControlRead(void);
+
+	void EsfmSetLegacyMode();
 };
 
 #endif // DOSBOX_OPL_H

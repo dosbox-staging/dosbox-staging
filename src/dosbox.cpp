@@ -838,15 +838,16 @@ void DOSBOX_Init()
 
 	pstring = secprop->Add_string("oplmode", when_idle, "auto");
 	pstring->Set_values(
-	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "none"});
+	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "esfm", "none"});
 	pstring->Set_help(
 	        "OPL model to emulate ('auto' by default).\n"
 	        "  auto:      Use the appropriate model determined by 'sbtype'.\n"
-	        "  opl2:      OPL2 (mono).\n"
-	        "  dualopl2:  Dual OPL2 (stereo).\n"
-	        "  opl3:      OPL3 (stereo).\n"
-	        "  opl3gold:  OPL3 (stereo) and the optional AdLib Gold Surround module.\n"
+	        "  opl2:      Yamaha OPL2 (YM3812, mono).\n"
+	        "  dualopl2:  Dual OPL2 (two OPL2 chips in stereo configuration).\n"
+	        "  opl3:      Yamaha OPL3 (YMF262, stereo).\n"
+	        "  opl3gold:  OPL3 and the optional AdLib Gold Surround module.\n"
 	        "             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.\n"
+	        "  esfm:      ESS ESFM (enhanced Yamaha OPL3 clone)."
 	        "  none/off:  Disable OPL emulation.\n"
 	        "Note: 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.");
 

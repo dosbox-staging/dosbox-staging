@@ -2768,6 +2768,9 @@ static OplMode determine_oplmode(const std::string& pref, const SBType sb_type)
 	} else if (pref == "opl3gold") {
 		return OplMode::Opl3Gold;
 
+	} else if (pref == "esfm") {
+		return OplMode::Esfm;
+
 	} else if (pref == "auto") {
 		// Invalid settings result in defaulting to 'auto'
 		switch (sb_type) {
@@ -2926,10 +2929,12 @@ public:
 			                          adlib_gus_forward,
 			                          io_width_t::byte);
 			break;
+
 		case OplMode::Opl2:
 		case OplMode::DualOpl2:
 		case OplMode::Opl3:
-		case OplMode::Opl3Gold: {
+		case OplMode::Opl3Gold:
+		case OplMode::Esfm: {
 			OPL_Init(section, oplmode);
 			auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
 			assert(opl_channel);
@@ -3077,14 +3082,9 @@ public:
 		ClearEnvironment();
 
 		// Shutdown any FM Synth devices
-		switch (oplmode) {
-		case OplMode::None: break;
-		case OplMode::Opl2:
-		case OplMode::DualOpl2:
-		case OplMode::Opl3:
-		case OplMode::Opl3Gold: OPL_ShutDown(); break;
+		if (oplmode != OplMode::None) {
+			OPL_ShutDown();
 		}
-
 		if (cms) {
 			CMS_ShutDown();
 		}

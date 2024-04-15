@@ -29,7 +29,7 @@
 
 class Section;
 
-enum class OplMode { None, Opl2, DualOpl2, Opl3, Opl3Gold };
+enum class OplMode { None, Opl2, DualOpl2, Opl3, Opl3Gold, Esfm };
 
 void OPL_Init(Section *sec, OplMode mode);
 void OPL_ShutDown(Section* sec = nullptr);
