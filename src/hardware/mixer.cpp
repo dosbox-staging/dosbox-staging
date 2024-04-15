@@ -643,12 +643,12 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
 	MIXER_UnlockAudioDevice();
 }
 
-mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint16_t freq,
-                                 const char* name,
+mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
+                                 const uint16_t sample_rate, const char* name,
                                  const std::set<ChannelFeature>& features)
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name, features);
-	chan->SetSampleRate(freq);
+	chan->SetSampleRate(sample_rate);
 	chan->SetAppVolume({1.0f, 1.0f});
 
 	const auto chan_rate = chan->GetSampleRate();
