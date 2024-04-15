@@ -110,7 +110,7 @@ struct ReverbSettings {
 	           const float density, const float bandwidth_freq,
 	           const float decay, const float dampening_freq,
 	           const float synth_level, const float digital_level,
-	           const float highpass_freq, const uint16_t sample_rate)
+	           const float highpass_freq, const uint16_t sample_rate_hz)
 	{
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
@@ -127,10 +127,10 @@ struct ReverbSettings {
 		                                        // attenuation)
 		mverb.setParameter(EmVerb::MIX, 1.0f); // Always 100% wet signal
 
-		mverb.setSampleRate(static_cast<float>(sample_rate));
+		mverb.setSampleRate(static_cast<float>(sample_rate_hz));
 
 		for (auto& f : highpass_filter) {
-			f.setup(sample_rate, highpass_freq);
+			f.setup(sample_rate_hz, highpass_freq);
 		}
 	}
 };
@@ -143,12 +143,12 @@ struct ChorusSettings {
 	float digital_audio_send_level = 0.0f;
 
 	void Setup(const float synth_level, const float digital_level,
-	           const uint16_t sample_rate)
+	           const uint16_t sample_rate_hz)
 	{
 		synthesizer_send_level   = synth_level;
 		digital_audio_send_level = digital_level;
 
-		chorus_engine.setSampleRate(static_cast<float>(sample_rate));
+		chorus_engine.setSampleRate(static_cast<float>(sample_rate_hz));
 
 		constexpr auto chorus1_enabled  = true;
 		constexpr auto chorus2_disabled = false;
@@ -180,7 +180,7 @@ struct MixerSettings {
 	std::atomic<int> tick_add = 0; // samples needed per millisecond tick
 
 	int tick_counter = 0;
-	std::atomic<uint16_t> sample_rate = 0; // sample rate negotiated with SDL
+	std::atomic<uint16_t> sample_rate_hz = 0; // sample rate negotiated with SDL
 	uint16_t blocksize = 0; // matches SDL AudioSpec.samples type
 
 	uint16_t prebuffer_ms = 25; // user-adjustable in conf
@@ -240,7 +240,7 @@ uint16_t MIXER_GetPreBufferMs()
 
 uint16_t MIXER_GetSampleRate()
 {
-	const auto sample_rate_hz = mixer.sample_rate.load();
+	const auto sample_rate_hz = mixer.sample_rate_hz.load();
 	assert(sample_rate_hz > 0);
 	return sample_rate_hz;
 }
@@ -471,7 +471,7 @@ void MIXER_SetReverbPreset(const ReverbPreset new_preset)
 	constexpr auto _37_2dB = 0.07f;
 	constexpr auto _38_0dB = 0.05f;
 
-	const auto rate_hz = mixer.sample_rate.load();
+	const auto rate_hz = mixer.sample_rate_hz.load();
 
 	// clang-format off
 	switch (r.preset) { //             PDELAY EARLY   SIZE DNSITY BWFREQ  DECAY DAMPLV   -SYNLV   -DIGLV HIPASSHZ RATE_HZ
@@ -562,7 +562,7 @@ void MIXER_SetChorusPreset(const ChorusPreset new_preset)
 	constexpr auto _11dB = 0.54f;
 	constexpr auto _16dB = 0.33f;
 
-	const auto rate_hz = mixer.sample_rate.load();
+	const auto rate_hz = mixer.sample_rate_hz.load();
 
 	// clang-format off
 	switch (c.preset) { //            -SYNLV -DIGLV  RATE_HZ
@@ -604,7 +604,7 @@ static void init_compressor(const bool compressor_enabled)
 	const auto release_time_ms     = 5000.0f;
 	const auto rms_window_ms       = 10.0;
 
-	mixer.compressor.Configure(mixer.sample_rate,
+	mixer.compressor.Configure(mixer.sample_rate_hz,
 	                           _0dbfs_sample_value,
 	                           threshold_db,
 	                           ratio,
@@ -644,21 +644,22 @@ void MIXER_DeregisterChannel(mixer_channel_t& channel_to_remove)
 }
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
-                                 const uint16_t sample_rate, const char* name,
+                                 const uint16_t sample_rate_hz, const char* name,
                                  const std::set<ChannelFeature>& features)
 {
 	auto chan = std::make_shared<MixerChannel>(handler, name, features);
-	chan->SetSampleRate(sample_rate);
+	chan->SetSampleRate(sample_rate_hz);
 	chan->SetAppVolume({1.0f, 1.0f});
 
-	const auto chan_rate = chan->GetSampleRate();
-	if (chan_rate == mixer.sample_rate) {
-		LOG_MSG("%s: Operating at %u Hz without resampling", name, chan_rate);
+	const auto chan_rate_hz = chan->GetSampleRate();
+	if (chan_rate_hz == mixer.sample_rate_hz) {
+		LOG_MSG("%s: Operating at %u Hz without resampling", name, chan_rate_hz);
 	} else {
 		LOG_MSG("%s: Operating at %u Hz and %s to the output rate",
 		        name,
-		        chan_rate,
-		        chan_rate > mixer.sample_rate ? "downsampling" : "upsampling");
+		        chan_rate_hz,
+		        chan_rate_hz > mixer.sample_rate_hz ? "downsampling"
+		                                            : "upsampling");
 	}
 
 	// Try to restore saved channel settings from the cache first.
@@ -856,21 +857,26 @@ void MixerChannel::Enable(const bool should_enable)
 //
 // LinearInterpolation
 // -------------------
-//   - Linear interpolation resampling only if channel_rate != mixer_rate
+//   - Linear interpolation resampling only if
+//     channel_rate_hz != mixer_rate_hz
 //
 // ZeroOrderHoldAndResample
 // ------------------------
 //   - neither ZoH upsampling nor Speex resampling if:
-//     channel_rate >= zoh_target_rate AND channel_rate == mixer_rate
+//         channel_rate_hz >= zoh_target_rate_hz AND
+//         channel_rate_hz _hz== mixer_rate_hz
 //
 //   - ZoH upsampling only if:
-//     channel_rate < zoh_target_freq AND zoh_target_rate == mixer_rate
+//         channel_rate_hz < zoh_target_freq_hz AND
+//         zoh_target_rate_hz == mixer_rate_hz
 //
 //   - Speex resampling only if:
-//     channel_rate >= zoh_target_freq AND channel_rate != mixer_rate
+//         channel_rate_hz >= zoh_target_freq_hz AND
+//         channel_rate_hz != mixer_rate_hz
 //
 //   - both ZoH upsampling and Speex resampling if:
-//     channel_rate < zoh_target_rate AND zoh_target_rate != mixer_rate
+//         channel_rate_hz < zoh_target_rate_hz AND
+//         zoh_target_rate_hz != mixer_rate_hz
 //
 // Resample
 // --------
@@ -878,15 +884,15 @@ void MixerChannel::Enable(const bool should_enable)
 //
 void MixerChannel::ConfigureResampler()
 {
-	const auto channel_rate = sample_rate;
-	const auto mixer_rate   = mixer.sample_rate.load();
+	const auto channel_rate_hz = sample_rate_hz;
+	const auto mixer_rate_hz   = mixer.sample_rate_hz.load();
 
 	do_resample     = false;
 	do_zoh_upsample = false;
 
 	switch (resample_method) {
 	case ResampleMethod::LinearInterpolation:
-		do_resample = (channel_rate != mixer_rate);
+		do_resample = (channel_rate_hz != mixer_rate_hz);
 		if (do_resample) {
 			InitLerpUpsamplerState();
 #ifdef DEBUG_MIXER
@@ -897,7 +903,7 @@ void MixerChannel::ConfigureResampler()
 		break;
 
 	case ResampleMethod::ZeroOrderHoldAndResample:
-		do_zoh_upsample = (channel_rate < zoh_upsampler.target_freq);
+		do_zoh_upsample = (channel_rate_hz < zoh_upsampler.target_freq);
 		if (do_zoh_upsample) {
 			InitZohUpsamplerState();
 #ifdef DEBUG_MIXER
@@ -909,13 +915,13 @@ void MixerChannel::ConfigureResampler()
 		[[fallthrough]];
 
 	case ResampleMethod::Resample:
-		const spx_uint32_t in_rate  = do_zoh_upsample
-		                                    ? zoh_upsampler.target_freq
-		                                    : check_cast<spx_uint32_t>(
-                                                             channel_rate);
-		const spx_uint32_t out_rate = mixer_rate;
+		const spx_uint32_t in_rate_hz  = do_zoh_upsample
+		                                       ? zoh_upsampler.target_freq
+		                                       : check_cast<spx_uint32_t>(
+                                                                channel_rate_hz);
+		const spx_uint32_t out_rate_hz = mixer_rate_hz;
 
-		do_resample = (in_rate != out_rate);
+		do_resample = (in_rate_hz != out_rate_hz);
 		if (!do_resample) {
 			return;
 		}
@@ -924,16 +930,19 @@ void MixerChannel::ConfigureResampler()
 			constexpr auto num_channels = 2; // always stereo
 			constexpr auto quality      = 5;
 
-			speex_resampler.state = speex_resampler_init(
-			        num_channels, in_rate, out_rate, quality, nullptr);
+			speex_resampler.state = speex_resampler_init(num_channels,
+			                                             in_rate_hz,
+			                                             out_rate_hz,
+			                                             quality,
+			                                             nullptr);
 		}
-		speex_resampler_set_rate(speex_resampler.state, in_rate, out_rate);
+		speex_resampler_set_rate(speex_resampler.state, in_rate_hz, out_rate_hz);
 
 #ifdef DEBUG_MIXER
 		LOG_DEBUG("%s: Speex resampler is on, input rate: %d Hz, output rate: %d Hz)",
 		          name.c_str(),
-		          in_rate,
-		          out_rate);
+		          in_rate_hz,
+		          out_rate_hz);
 #endif
 		break;
 	}
@@ -972,30 +981,32 @@ void MixerChannel::ClearResampler()
 	}
 }
 
-void MixerChannel::SetSampleRate(const uint16_t rate)
+void MixerChannel::SetSampleRate(const uint16_t new_sample_rate_hz)
 {
 	// If the requested rate is zero, then avoid resampling by running the
 	// channel at the mixer's rate
-	const uint16_t target_rate = rate ? rate : mixer.sample_rate.load();
-	assert(target_rate > 0);
+	const uint16_t target_rate_hz = new_sample_rate_hz
+	                                      ? new_sample_rate_hz
+	                                      : mixer.sample_rate_hz.load();
+	assert(target_rate_hz > 0);
 
 	// Nothing to do: the channel is already running at the requested rate
-	if (target_rate == sample_rate) {
+	if (target_rate_hz == sample_rate_hz) {
 		return;
 	}
 
 #ifdef DEBUG_MIXER
 	LOG_DEBUG("%s: Changing rate from %d to %d Hz",
 	          name.c_str(),
-	          sample_rate,
-	          target_rate);
+	          sample_rate_hz,
+	          target_rate_hz);
 #endif
 
-	sample_rate = target_rate;
+	sample_rate_hz = target_rate_hz;
 
-	freq_add = (sample_rate << FreqShift) / mixer.sample_rate;
+	freq_add = (sample_rate_hz << FreqShift) / mixer.sample_rate_hz;
 
-	envelope.Update(sample_rate,
+	envelope.Update(sample_rate_hz,
 	                peak_amplitude,
 	                EnvelopeMaxExpansionOverMs,
 	                EnvelopeExpiresAfterSeconds);
@@ -1010,13 +1021,13 @@ const std::string& MixerChannel::GetName() const
 
 uint16_t MixerChannel::GetSampleRate() const
 {
-	return check_cast<uint16_t>(sample_rate);
+	return check_cast<uint16_t>(sample_rate_hz);
 }
 
 void MixerChannel::SetPeakAmplitude(const int peak)
 {
 	peak_amplitude = peak;
-	envelope.Update(sample_rate,
+	envelope.Update(sample_rate_hz,
 	                peak_amplitude,
 	                EnvelopeMaxExpansionOverMs,
 	                EnvelopeExpiresAfterSeconds);
@@ -1161,7 +1172,7 @@ void MixerChannel::ConfigureHighPassFilter(const uint8_t order,
 {
 	assert(order > 0 && order <= max_filter_order);
 	for (auto& f : filters.highpass.hpf) {
-		f.setup(order, mixer.sample_rate, cutoff_freq);
+		f.setup(order, mixer.sample_rate_hz, cutoff_freq);
 	}
 
 	filters.highpass.order       = order;
@@ -1173,7 +1184,7 @@ void MixerChannel::ConfigureLowPassFilter(const uint8_t order,
 {
 	assert(order > 0 && order <= max_filter_order);
 	for (auto& f : filters.lowpass.lpf) {
-		f.setup(order, mixer.sample_rate, cutoff_freq);
+		f.setup(order, mixer.sample_rate_hz, cutoff_freq);
 	}
 
 	filters.lowpass.order       = order;
@@ -1228,7 +1239,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 		}
 
 		const uint16_t max_cutoff_freq_hz = check_cast<uint16_t>(
-		        (do_zoh_upsample ? zoh_upsampler.target_freq : sample_rate) / 2 -
+		        (do_zoh_upsample ? zoh_upsampler.target_freq : sample_rate_hz) / 2 -
 		        1);
 
 		if (cutoff_freq_hz > max_cutoff_freq_hz) {
@@ -1306,7 +1317,7 @@ void MixerChannel::SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_fre
 
 void MixerChannel::InitZohUpsamplerState()
 {
-	zoh_upsampler.step = std::min(static_cast<float>(sample_rate) /
+	zoh_upsampler.step = std::min(static_cast<float>(sample_rate_hz) /
 	                                      zoh_upsampler.target_freq,
 	                              1.0f);
 	zoh_upsampler.pos  = 0.0f;
@@ -1314,8 +1325,8 @@ void MixerChannel::InitZohUpsamplerState()
 
 void MixerChannel::InitLerpUpsamplerState()
 {
-	lerp_upsampler.step = std::min(static_cast<float>(sample_rate) /
-	                                       mixer.sample_rate.load(),
+	lerp_upsampler.step = std::min(static_cast<float>(sample_rate_hz) /
+	                                       mixer.sample_rate_hz.load(),
 	                               1.0f);
 
 	lerp_upsampler.pos        = 0.0f;
@@ -2330,14 +2341,14 @@ static void mix_samples(const int frames_requested)
 			pos = (pos + 1) & MixerBufferMask;
 		}
 
-		CAPTURE_AddAudioData(mixer.sample_rate,
+		CAPTURE_AddAudioData(mixer.sample_rate_hz,
 		                     frames_added,
 		                     reinterpret_cast<int16_t*>(out));
 	}
 
 	// Reset the tick_add for constant speed
 	if (is_mixer_irq_important()) {
-		mixer.tick_add = calc_tickadd(mixer.sample_rate);
+		mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
 	}
 
 	mixer.frames_done = frames_requested;
@@ -2420,7 +2431,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		reduce_frames = mixer.frames_done;
 		index_add = (reduce_frames << IndexShiftLocal) / frames_requested;
 
-		mixer.tick_add = calc_tickadd(mixer.sample_rate +
+		mixer.tick_add = calc_tickadd(mixer.sample_rate_hz +
 		                              mixer.min_frames_needed);
 
 	} else if (mixer.frames_done < mixer.max_frames_needed) {
@@ -2436,7 +2447,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 				                     : frames_needed) -
 				            frames_remaining;
 
-				mixer.tick_add = calc_tickadd(mixer.sample_rate +
+				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz +
 				                              (diff * 3));
 				frames_remaining = 0; // No stretching as we
 				                      // compensate with the
@@ -2477,15 +2488,15 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 			}
 
 			if (diff > (mixer.min_frames_needed >> 1)) {
-				mixer.tick_add = calc_tickadd(mixer.sample_rate -
+				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz -
 				                              (diff / 5));
 			}
 
 			else if (diff > (mixer.min_frames_needed >> 2)) {
-				mixer.tick_add = calc_tickadd(mixer.sample_rate -
+				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz -
 				                              (diff >> 3));
 			} else {
-				mixer.tick_add = calc_tickadd(mixer.sample_rate);
+				mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
 			}
 		}
 	} else {
@@ -2502,7 +2513,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 		index_add = (index_add << IndexShiftLocal) / frames_requested;
 		reduce_frames = mixer.frames_done - 2 * mixer.min_frames_needed;
 
-		mixer.tick_add = calc_tickadd(mixer.sample_rate -
+		mixer.tick_add = calc_tickadd(mixer.sample_rate_hz -
 		                              (mixer.min_frames_needed / 5));
 	}
 
@@ -2510,7 +2521,7 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	// Reset mixer.tick_add when irqs are important
 	if (is_mixer_irq_important()) {
-		mixer.tick_add = calc_tickadd(mixer.sample_rate);
+		mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
 	}
 
 	mixer.frames_done -= reduce_frames;
@@ -2666,7 +2677,7 @@ static bool init_sdl_sound(Section_prop* section)
 	SDL_AudioSpec spec;
 	SDL_AudioSpec obtained;
 
-	spec.freq     = static_cast<int>(mixer.sample_rate);
+	spec.freq     = static_cast<int>(mixer.sample_rate_hz);
 	spec.format   = AUDIO_S16SYS;
 	spec.channels = 2;
 	spec.callback = mixer_callback;
@@ -2701,11 +2712,11 @@ static bool init_sdl_sound(Section_prop* section)
 	}
 
 	// Does SDL want a different playback rate?
-	if (obtained.freq != mixer.sample_rate) {
+	if (obtained.freq != mixer.sample_rate_hz) {
 		LOG_WARNING("MIXER: SDL changed the requested sample rate of %d to %d Hz",
-		            mixer.sample_rate.load(),
+		            mixer.sample_rate_hz.load(),
 		            obtained.freq);
-		mixer.sample_rate = check_cast<uint16_t>(obtained.freq);
+		mixer.sample_rate_hz = check_cast<uint16_t>(obtained.freq);
 	}
 
 	// Does SDL want a different blocksize?
@@ -2720,7 +2731,7 @@ static bool init_sdl_sound(Section_prop* section)
 
 	LOG_MSG("MIXER: Negotiated %u-channel %u Hz audio of %u-frame blocks",
 	        obtained.channels,
-	        mixer.sample_rate.load(),
+	        mixer.sample_rate_hz.load(),
 	        mixer.blocksize);
 
 	return true;
@@ -2752,7 +2763,7 @@ static void init_master_highpass_filter()
 	//
 	constexpr auto highpass_cutoff_freq = 20.0;
 	for (auto& f : mixer.highpass_filter) {
-		f.setup(mixer.sample_rate, highpass_cutoff_freq);
+		f.setup(mixer.sample_rate_hz, highpass_cutoff_freq);
 	}
 }
 
@@ -2765,7 +2776,7 @@ void MIXER_Init(Section* sec)
 	Section_prop* section = static_cast<Section_prop*>(sec);
 	assert(section);
 
-	mixer.sample_rate = check_cast<uint16_t>(section->Get_int("rate"));
+	mixer.sample_rate_hz = check_cast<uint16_t>(section->Get_int("rate"));
 	mixer.blocksize = static_cast<uint16_t>(section->Get_int("blocksize"));
 
 	const auto configured_state = section->Get_bool("nosound")
@@ -2784,15 +2795,17 @@ void MIXER_Init(Section* sec)
 		}
 	}
 
-	mixer.tick_counter = (mixer.sample_rate % (1000 / 8)) ? TickNext : 0;
-	mixer.tick_add     = calc_tickadd(mixer.sample_rate);
+	mixer.tick_counter = (mixer.sample_rate_hz % (1000 / 8)) ? TickNext : 0;
+
+	mixer.tick_add = calc_tickadd(mixer.sample_rate_hz);
 
 	const auto requested_prebuffer_ms = section->Get_int("prebuffer");
 
 	mixer.prebuffer_ms = check_cast<uint16_t>(
 	        clamp(requested_prebuffer_ms, 1, MaxPrebufferMs));
 
-	const auto prebuffer_frames = (mixer.sample_rate * mixer.prebuffer_ms) / 1000;
+	const auto prebuffer_frames = (mixer.sample_rate_hz * mixer.prebuffer_ms) /
+	                              1000;
 
 	mixer.pos           = 0;
 	mixer.frames_done   = 0;
@@ -2878,7 +2891,7 @@ static void handle_toggle_mute(const bool was_pressed)
 
 void init_mixer_dosbox_settings(Section_prop& sec_prop)
 {
-	constexpr uint16_t default_rate = 48000;
+	constexpr uint16_t default_sample_rate_hz = 48000;
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
 	constexpr uint16_t default_blocksize    = 1024;
@@ -2902,11 +2915,11 @@ void init_mixer_dosbox_settings(Section_prop& sec_prop)
 	        "Enable silent mode (disabled by default).\n"
 	        "Sound is still fully emulated in silent mode, but DOSBox outputs silence.");
 
-	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_rate);
+	auto int_prop = sec_prop.Add_int("rate", only_at_start, default_sample_rate_hz);
 	assert(int_prop);
 	int_prop->Set_values(
 	        {"8000", "11025", "16000", "22050", "32000", "44100", "48000"});
-	int_prop->Set_help("Mixer sample rate (%s by default).");
+	int_prop->Set_help("Mixer sample rate in Hz (%s by default).");
 
 	int_prop = sec_prop.Add_int("blocksize", only_at_start, default_blocksize);
 	int_prop->Set_values(

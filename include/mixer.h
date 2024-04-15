@@ -195,7 +195,7 @@ public:
 	StereoLine GetLineoutMap() const;
 
 	std::string DescribeLineout() const;
-	void SetSampleRate(const uint16_t _freq);
+	void SetSampleRate(const uint16_t sample_rate_hz);
 	void SetPeakAmplitude(const int peak);
 	void Mix(const uint16_t frames_requested);
 
@@ -298,7 +298,7 @@ private:
 	AudioFrame prev_frame = {};
 	AudioFrame next_frame = {};
 
-	int sample_rate = 0u;
+	int sample_rate_hz = 0u;
 
 	// Volume scalars
 	// ~~~~~~~~~~~~~~
@@ -437,7 +437,7 @@ private:
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 
 mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
-                                 const uint16_t sample_rate, const char* name,
+                                 const uint16_t sample_rate_hz, const char* name,
                                  const std::set<ChannelFeature>& features);
 
 mixer_channel_t MIXER_FindChannel(const char* name);
