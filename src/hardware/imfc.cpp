@@ -13408,9 +13408,9 @@ static void imfc_init(Section* sec)
 	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
 
 	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
-		constexpr auto order       = 2;
-		constexpr auto cutoff_freq = 3500;
-		channel->ConfigureLowPassFilter(order, cutoff_freq);
+		constexpr auto order          = 2;
+		constexpr auto cutoff_freq_hz = 3500;
+		channel->ConfigureLowPassFilter(order, cutoff_freq_hz);
 		channel->SetLowPassFilter(FilterState::On);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
