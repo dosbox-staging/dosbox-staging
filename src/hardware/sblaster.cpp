@@ -426,7 +426,7 @@ static void set_filter(mixer_channel_t channel, const FilterConfig& config)
 	channel->SetLowPassFilter(config.lpf_state);
 
 	if (config.resample_method == ResampleMethod::ZeroOrderHoldAndResample) {
-		channel->SetZeroOrderHoldUpsamplerTargetFreq(config.zoh_rate_hz);
+		channel->SetZeroOrderHoldUpsamplerTargetRate(config.zoh_rate_hz);
 	}
 
 	channel->SetResampleMethod(config.resample_method);
@@ -556,7 +556,7 @@ static void configure_sb_filter(mixer_channel_t channel,
 	// A bit unfortunate, but we need to enable the ZOH upsampler and the
 	// correct upsample rate first for the filter cutoff frequency
 	// validation to work correctly.
-	channel->SetZeroOrderHoldUpsamplerTargetFreq(NativeDacRateHz);
+	channel->SetZeroOrderHoldUpsamplerTargetRate(NativeDacRateHz);
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {

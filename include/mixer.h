@@ -214,7 +214,7 @@ public:
 	bool ConfigureFadeOut(const std::string& fadeout_prefs);
 
 	void SetResampleMethod(const ResampleMethod method);
-	void SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_freq);
+	void SetZeroOrderHoldUpsamplerTargetRate(const uint16_t target_rate_hz);
 
 	void SetCrossfeedStrength(const float strength);
 	float GetCrossfeedStrength() const;
@@ -358,9 +358,9 @@ private:
 	} lerp_upsampler = {};
 
 	struct {
-		uint16_t target_freq = 0;
-		float pos            = 0.0f;
-		float step           = 0.0f;
+		uint16_t target_rate_hz = 0;
+		float pos               = 0.0f;
+		float step              = 0.0f;
 	} zoh_upsampler = {};
 
 	struct {

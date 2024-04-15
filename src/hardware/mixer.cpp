@@ -903,20 +903,20 @@ void MixerChannel::ConfigureResampler()
 		break;
 
 	case ResampleMethod::ZeroOrderHoldAndResample:
-		do_zoh_upsample = (channel_rate_hz < zoh_upsampler.target_freq);
+		do_zoh_upsample = (channel_rate_hz < zoh_upsampler.target_rate_hz);
 		if (do_zoh_upsample) {
 			InitZohUpsamplerState();
 #ifdef DEBUG_MIXER
 			LOG_DEBUG("%s: Zero-order-hold upsampler is on, target rate: %d Hz ",
 			          name.c_str(),
-			          zoh_upsampler.target_freq);
+			          zoh_upsampler.target_rate_hz);
 #endif
 		}
 		[[fallthrough]];
 
 	case ResampleMethod::Resample:
 		const spx_uint32_t in_rate_hz  = do_zoh_upsample
-		                                       ? zoh_upsampler.target_freq
+		                                       ? zoh_upsampler.target_rate_hz
 		                                       : check_cast<spx_uint32_t>(
                                                                 channel_rate_hz);
 		const spx_uint32_t out_rate_hz = mixer_rate_hz;
@@ -1239,8 +1239,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 		}
 
 		const uint16_t max_cutoff_freq_hz = check_cast<uint16_t>(
-		        (do_zoh_upsample ? zoh_upsampler.target_freq : sample_rate_hz) / 2 -
-		        1);
+		        (do_zoh_upsample ? zoh_upsampler.target_rate_hz : sample_rate_hz) / 2 - 1);
 
 		if (cutoff_freq_hz > max_cutoff_freq_hz) {
 			LOG_WARNING("%s: Invalid custom filter cutoff frequency: '%s'. "
@@ -1306,11 +1305,11 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 	}
 }
 
-void MixerChannel::SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_freq)
+void MixerChannel::SetZeroOrderHoldUpsamplerTargetRate(const uint16_t target_rate_hz)
 {
 	// TODO make sure that the ZOH target frequency cannot be set after the
 	// filter has been configured
-	zoh_upsampler.target_freq = target_freq;
+	zoh_upsampler.target_rate_hz = target_rate_hz;
 
 	ConfigureResampler();
 }
@@ -1318,7 +1317,7 @@ void MixerChannel::SetZeroOrderHoldUpsamplerTargetFreq(const uint16_t target_fre
 void MixerChannel::InitZohUpsamplerState()
 {
 	zoh_upsampler.step = std::min(static_cast<float>(sample_rate_hz) /
-	                                      zoh_upsampler.target_freq,
+	                                      zoh_upsampler.target_rate_hz,
 	                              1.0f);
 	zoh_upsampler.pos  = 0.0f;
 }
