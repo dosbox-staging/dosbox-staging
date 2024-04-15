@@ -98,9 +98,9 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	// real thing by ear only.
 	const auto filter_choice_has_bool = parse_bool_setting(filter_choice);
 	if (filter_choice_has_bool && *filter_choice_has_bool == true) {
-		constexpr auto order       = 1;
-		constexpr auto cutoff_freq = 6000;
-		channel->ConfigureLowPassFilter(order, cutoff_freq);
+		constexpr auto order          = 1;
+		constexpr auto cutoff_freq_hz = 6000;
+		channel->ConfigureLowPassFilter(order, cutoff_freq_hz);
 		channel->SetLowPassFilter(FilterState::On);
 
 	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
@@ -115,10 +115,14 @@ void GameBlaster::Open(const int port_choice, const std::string &card_choice,
 	// Calculate rates and ratio based on the mixer's rate
 	const auto frame_rate_hz = channel->GetSampleRate();
 
-	// Set up the resampler to convert from the render rate to the mixer's frame rate
-	const auto max_freq = std::max(frame_rate_hz * 0.9 / 2, 8000.0);
-	for (auto &r : resamplers)
-		r.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz, frame_rate_hz, max_freq));
+	// Set up the resampler to convert from the render rate to the mixer's
+	// frame rate
+	const auto max_rate_hz = std::max(frame_rate_hz * 0.9 / 2, 8000.0);
+	for (auto& r : resamplers) {
+		r.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
+		                                              frame_rate_hz,
+		                                              max_rate_hz));
+	}
 
 	LOG_MSG("CMS: Running on port %xh with two %0.3f MHz Phillips SAA-1099 chips",
 	        base_port,
