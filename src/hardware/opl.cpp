@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2022  The DOSBox Team
+ *  Copyright (C) 2002-2024  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -858,9 +858,7 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 			break;
 
 		default:
-			// TODO CMS and None must be removed as they're not real
-			// OPL modes
-			break;
+			assertm(false, format_str("Invalid OPL mode: %d", mode));
 		}
 	}
 }
@@ -914,8 +912,7 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 		return chip[(port >> 1) & 1].Read() | 0x6;
 
 	default:
-		// TODO CMS and None must be removed as they're not real OPL modes
-		break;
+		assertm(false, format_str("Invalid OPL mode: %d", mode));
 	}
 	return 0;
 }
