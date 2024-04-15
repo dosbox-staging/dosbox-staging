@@ -37,9 +37,7 @@
 #	pragma pack(1)
 #endif
 
-#define HW_OPL2     0
-#define HW_DUALOPL2 1
-#define HW_OPL3     2
+enum { HwOpl2 = 0, HwDualOpl2 = 1, HwOpl3 = 2 };
 
 static std::unique_ptr<OPL> opl = {};
 
@@ -390,16 +388,16 @@ private:
 		// doing opl3 on the player side
 
 		// Enabling opl3 4op modes will make us go into opl3 mode
-		if (header.hardware != HW_OPL3 && reg_full == 0x104 && val &&
+		if (header.hardware != HwOpl3 && reg_full == 0x104 && val &&
 		    (*cache)[0x105]) {
-			header.hardware = HW_OPL3;
+			header.hardware = HwOpl3;
 		}
 
 		// Writing a keyon to a 2nd address enables dual opl2 otherwise
 		// Maybe also check for rhythm
-		if (header.hardware == HW_OPL2 && reg_full >= 0x1b0 &&
+		if (header.hardware == HwOpl2 && reg_full >= 0x1b0 &&
 		    reg_full <= 0x1b8 && val) {
-			header.hardware = HW_DUALOPL2;
+			header.hardware = HwDualOpl2;
 		}
 
 		uint8_t raw = to_raw[reg_mask];
