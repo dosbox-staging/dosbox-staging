@@ -36,6 +36,7 @@ class LptDac {
 public:
 	LptDac(const std::string_view name, const uint16_t channel_rate_hz,
 	       std::set<ChannelFeature> extra_features = {});
+
 	virtual ~LptDac();
 
 	// public interfaces
@@ -44,17 +45,22 @@ public:
 
 	bool TryParseAndSetCustomFilter(const std::string& filter_choice);
 
-protected:
-	LptDac()                          = delete;
-	LptDac(const LptDac &)            = delete;
-	LptDac &operator=(const LptDac &) = delete;
+	LptDac() = delete;
 
+	// prevent copying
+	LptDac(const LptDac&) = delete;
+
+	// prevent assignment
+	LptDac& operator=(const LptDac&) = delete;
+
+protected:
 	// Base LPT DAC functionality
 	virtual AudioFrame Render() = 0;
 	void RenderUpToNow();
 	void AudioCallback(const uint16_t requested_frames);
 	std::queue<AudioFrame> render_queue = {};
-	mixer_channel_t channel             = {};
+
+	mixer_channel_t channel = {};
 
 	double last_rendered_ms = 0.0;
 	double ms_per_frame     = 0.0;
@@ -70,7 +76,8 @@ protected:
 	IO_ReadHandleObject status_read_handler    = {};
 	IO_WriteHandleObject control_write_handler = {};
 
-	uint8_t data_reg               = Mixer_GetSilentDOSSample<uint8_t>();
+	uint8_t data_reg = Mixer_GetSilentDOSSample<uint8_t>();
+
 	LptStatusRegister status_reg   = {};
 	LptControlRegister control_reg = {};
 };
