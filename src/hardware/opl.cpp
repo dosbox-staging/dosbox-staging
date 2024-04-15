@@ -261,6 +261,7 @@ void OPL::WriteReg(const io_port_t selected_reg, const uint8_t val)
 	if (opl.mode == OplMode::Esfm) {
 		ESFM_write_reg_buffered_fast(&esfm.chip, selected_reg, val);
 
+
 	} else { // OPL
 		OPL3_WriteRegBuffered(&opl.chip, selected_reg, val);
 		if (selected_reg == 0x105) {
@@ -787,9 +788,11 @@ OPL::OPL(Section* configuration, const OplMode _opl_mode)
 
 	// Register the audio channel
 	channel = MIXER_AddChannel(mixer_callback,
-	                           use_mixer_rate,
+	                           OplSampleRateHz,
 	                           ChannelName::Opl,
 	                           channel_features);
+
+	channel->SetResampleMethod(ResampleMethod::Resample);
 
 	// Used to be 2.0, which was measured to be too high. Exact value
 	// depends on card/clone.
@@ -813,8 +816,6 @@ OPL::OPL(Section* configuration, const OplMode _opl_mode)
 	}
 
 	Init();
-
-	channel->SetSampleRate(OplSampleRateHz);
 
 	using namespace std::placeholders;
 

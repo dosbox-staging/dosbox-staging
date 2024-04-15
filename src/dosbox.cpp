@@ -825,8 +825,7 @@ void DOSBOX_Init()
 	pint->SetMinMax(0, 100);
 
 	pint = secprop->Add_int("oplrate", deprecated, false);
-	pint->Set_help("The OPL waveform is now sampled at the mixer's playback rate to avoid\n"
-	               "resampling.");
+	pint->Set_help("The OPL output is now transparently resampled to the mixer's sample rate.\n");
 
 	pstring = secprop->Add_string("cms", when_idle, "auto");
 	pstring->Set_values({"on", "off", "auto"});
@@ -1006,7 +1005,7 @@ void DOSBOX_Init()
 
 	// Deprecate the overloaded Disney setting
 	pbool = secprop->Add_bool("disney", deprecated, false);
-	pbool->Set_help("Use 'lpt_dac=disney' to enable the Disney Sound Source.");
+	pbool->Set_help("Use 'lpt_dac = disney' to enable the Disney Sound Source.");
 
 	// IBM PS/1 Audio emulation
 	secprop->AddInitFunction(&PS1AUDIO_Init, changeable_at_runtime);
