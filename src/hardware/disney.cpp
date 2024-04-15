@@ -54,8 +54,8 @@ void Disney::ConfigureFilters(const FilterState state)
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	// Pull audio frames from the Disney DAC at 7 kHz
-	channel->SetSampleRate(dss_7khz_rate);
-	ms_per_frame = millis_in_second / dss_7khz_rate;
+	channel->SetSampleRate(dss_7khz_rate_hz);
+	ms_per_frame = millis_in_second / dss_7khz_rate_hz;
 
 	if (state == FilterState::On) {
 		// The filters are meant to emulate the Disney's bandwidth
@@ -63,13 +63,13 @@ void Disney::ConfigureFilters(const FilterState state)
 		// against LGR Oddware's recordings of an authentic Disney Sound
 		// Source in ref: https://youtu.be/A1YThKmV2dk?t=1126
 
-		constexpr auto hp_order       = 2;
-		constexpr auto hp_cutoff_freq = 100;
-		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+		constexpr auto hp_order          = 2;
+		constexpr auto hp_cutoff_freq_hz = 100;
+		channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
 
-		constexpr auto lp_order       = 2;
-		constexpr auto lp_cutoff_freq = 2000;
-		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+		constexpr auto lp_order          = 2;
+		constexpr auto lp_cutoff_freq_hz = 2000;
+		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 	}
 	channel->SetHighPassFilter(state);
 	channel->SetLowPassFilter(state);
