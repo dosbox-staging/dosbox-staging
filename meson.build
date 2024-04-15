@@ -1240,9 +1240,11 @@ subdir('src/libs/ghc')
 subdir('src/libs/loguru')
 subdir('src/libs/decoders')
 subdir('src/libs/nuked')
+subdir('src/libs/ESFMu')
 subdir('src/libs/residfp')
 subdir('src/libs/whereami')
 subdir('src/libs/YM7128B_emu')
+
 if conf_data.get('C_MANYMOUSE') != 0
     subdir('src/libs/manymouse')
 endif
