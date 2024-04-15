@@ -436,8 +436,8 @@ private:
 
 using mixer_channel_t = std::shared_ptr<MixerChannel>;
 
-mixer_channel_t MIXER_AddChannel(MIXER_Handler handler, const uint16_t freq,
-                                 const char* name,
+mixer_channel_t MIXER_AddChannel(MIXER_Handler handler,
+                                 const uint16_t sample_rate, const char* name,
                                  const std::set<ChannelFeature>& features);
 
 mixer_channel_t MIXER_FindChannel(const char* name);
