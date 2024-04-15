@@ -78,8 +78,6 @@ typedef uint8_t RegisterCache[512];
 // Internal class used for dro capturing
 class Capture;
 
-enum class Mode { Opl2, DualOpl2, Opl3, Opl3Gold };
-
 class OPL {
 public:
 	mixer_channel_t channel = {};
@@ -88,7 +86,7 @@ public:
 
 	std::unique_ptr<Capture> capture = {};
 
-	OPL(Section *configuration, const OplMode _oplmode);
+	OPL(Section *configuration, const OplMode opl_mode);
 	~OPL();
 
 	// prevent copy
@@ -103,9 +101,8 @@ private:
 
 	std::queue<AudioFrame> fifo = {};
 
-	Mode mode = {};
-
-	OplChip chip[2] = {};
+	OplMode opl_mode = {};
+	OplChip chip[2]  = {};
 
 	opl3_chip oplchip = {};
 	uint8_t newm      = 0;
