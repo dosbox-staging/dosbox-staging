@@ -26,6 +26,7 @@
 #include <sys/types.h>
 
 #include "channel_names.h"
+#include "checks.h"
 #include "cpu.h"
 #include "mapper.h"
 #include "mem.h"
@@ -33,6 +34,8 @@
 #include "setup.h"
 #include "string_utils.h"
 #include "support.h"
+
+CHECK_NARROWING();
 
 static std::unique_ptr<OPL> opl = {};
 
