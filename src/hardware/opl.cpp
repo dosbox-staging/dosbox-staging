@@ -25,19 +25,14 @@
 #include <queue>
 #include <sys/types.h>
 
-#include "../capture/capture.h"
 #include "channel_names.h"
 #include "cpu.h"
 #include "mapper.h"
 #include "mem.h"
+#include "opl_capture.h"
 #include "setup.h"
+#include "string_utils.h"
 #include "support.h"
-
-#ifdef _MSC_VER
-	#pragma pack(1)
-#endif
-
-enum { HwOpl2 = 0, HwDualOpl2 = 1, HwOpl3 = 2 };
 
 static std::unique_ptr<OPL> opl = {};
 
@@ -113,383 +108,16 @@ void Timer::Start(const double time)
 	if (!enabled) {
 		enabled  = true;
 		overflow = false;
+
 		// Sync start to the last clock interval
 		const auto clockMod = fmod(time, clock_interval);
 
 		start = time - clockMod;
+
 		// Overflow trigger
 		trigger = start + counter_interval;
 	}
 }
-
-struct RawHeader {
-	// 0x00, "DBRAWOPL"
-	uint8_t id[8];
-
-	// 0x08, size of the data following the m
-	uint16_t version_high;
-
-	// 0x0a, size of the data following the m
-	uint16_t version_low;
-
-	// 0x0c, uint32_t amount of command/data pairs
-	uint32_t commands;
-
-	// 0x10, uint32_t Total milliseconds of data in this chunk
-	uint32_t milliseconds;
-
-	// 0x14, uint8_t Hardware Type
-	// 0=opl2,1=dual-opl2,2=opl3
-	uint8_t hardware;
-
-	// 0x15, uint8_t Format 0=cmd/data interleaved, 1 maybe all cdms,
-	// followed by all data
-	uint8_t format;
-
-	// 0x16, uint8_t Compression Type, 0 = No Compression
-	uint8_t compression;
-
-	// 0x17, uint8_t Delay 1-256 msec command
-	uint8_t delay256;
-
-	// 0x18, uint8_t (delay + 1)*256
-	uint8_t delay_shift8;
-
-	// 0x191, uint8_t Raw Conversion Table size
-	uint8_t conv_table_size;
-
-} GCC_ATTRIBUTE(packed);
-#ifdef _MSC_VER
-	#pragma pack()
-#endif
-
-// The Raw Tables is < 128 and is used to convert raw commands into a full
-// register index. When the high bit of a raw command is set it indicates the
-// cmd/data pair is to be sent to the 2nd port. After the conversion table the
-// raw data follows immediatly till the end of the chunk.
-
-// Table to map the opl register to one <127 for dro saving
-class OplCapture {
-public:
-	bool DoWrite(const io_port_t reg_full, const uint8_t val)
-	{
-		const auto reg_mask = reg_full & 0xff;
-
-		// Check the raw index for this register if we actually have to
-		// save it
-		if (handle) {
-			// Check if we actually care for this to be logged,
-			// else just ignore it
-			uint8_t raw = to_raw[reg_mask];
-			if (raw == 0xff) {
-				return true;
-			}
-			// Check if this command will not just replace the same
-			// value in a reg that doesn't do anything with it
-			if ((*cache)[reg_full] == val) {
-				return true;
-			}
-
-			// Check how much time has passed
-			uint32_t passed = PIC_Ticks - lastTicks;
-			lastTicks       = PIC_Ticks;
-			header.milliseconds += passed;
-
-			// if ( passed > 0 ) LOG_MSG( "Delay %d", passed ) ;
-
-			// If we passed more than 30 seconds since the last
-			// command, we'll restart the capture
-			if (passed > 30000) {
-				CloseFile();
-				goto skipWrite;
-			}
-			while (passed > 0) {
-				// 1-256 millisecond delay
-				if (passed < 257) {
-					AddBuf(delay256,
-					       check_cast<uint8_t>(passed - 1));
-					passed = 0;
-				} else {
-					const auto shift = (passed >> 8);
-					passed -= shift << 8;
-					AddBuf(delay_shift8,
-					       check_cast<uint8_t>(shift - 1));
-				}
-			}
-			AddWrite(reg_full, val);
-			return true;
-		}
-	skipWrite:
-		// Not yet capturing to a file here. Check for commands that
-		// would start capturing, if it's not one of them return.
-
-		// Note on in any channel
-		const auto note_on = reg_mask >= 0xb0 && reg_mask <= 0xb8 &&
-		                     (val & 0x020);
-
-		// Percussion mode enabled and a note on in any percussion
-		// instrument
-		const auto percussion_on = reg_mask == 0xbd && ((val & 0x3f) > 0x20);
-
-		if (!(note_on || percussion_on)) {
-			return true;
-		}
-
-		handle = CAPTURE_CreateFile(CaptureType::RawOplStream);
-		if (!handle) {
-			return false;
-		}
-
-		InitHeader();
-
-		// Prepare space at start of the file for the header
-		fwrite(&header, 1, sizeof(header), handle);
-
-		// Write the Raw To Reg table
-		fwrite(&to_reg, 1, raw_used, handle);
-
-		// Write the cache of last commands
-		WriteCache();
-
-		// Write the command that triggered this
-		AddWrite(reg_full, val);
-
-		// Init the timing information for the next commands
-		lastTicks  = PIC_Ticks;
-		startTicks = PIC_Ticks;
-		return true;
-	}
-
-	OplCapture(RegisterCache* _cache) : header(), cache(_cache)
-	{
-		LOG_MSG("CAPTURE: Preparing to capture raw OPL output; "
-		        "capturing will start when OPL output starts");
-		MakeTables();
-	}
-
-	virtual ~OplCapture()
-	{
-		CloseFile();
-		LOG_MSG("CAPTURE: Stopped capturing raw OPL output");
-	}
-
-	// prevent copy
-	OplCapture(const OplCapture&) = delete;
-
-	// prevent assignment
-	OplCapture& operator=(const OplCapture&) = delete;
-
-private:
-	// 127 entries to go from raw data to registers
-	uint8_t to_reg[127];
-
-	// How many entries in the ToPort are used
-	uint8_t raw_used = 0;
-
-	// 256 entries to go from port index to raw data
-	uint8_t to_raw[256];
-
-	uint8_t delay256     = 0;
-	uint8_t delay_shift8 = 0;
-
-	RawHeader header;
-
-	// File used for writing
-	FILE* handle = nullptr;
-
-	// Start used to check total raw length on end
-	uint32_t startTicks = 0;
-
-	// Last ticks when last last cmd was added
-	uint32_t lastTicks = 0;
-
-	// 16 added for delay commands and what not
-	uint8_t buf[1024];
-
-	uint32_t bufUsed = 0;
-
-	RegisterCache* cache;
-
-	void MakeEntry(const uint8_t reg, uint8_t& raw)
-	{
-		to_reg[raw] = reg;
-		to_raw[reg] = raw;
-		++raw;
-	}
-
-	void MakeTables()
-	{
-		uint8_t index = 0;
-		memset(to_reg, 0xff, sizeof(to_reg));
-		memset(to_raw, 0xff, sizeof(to_raw));
-
-		// Select the entries that are valid and the index is the
-		// mapping to the index entry
-
-		// 0x01: Waveform select
-		MakeEntry(0x01, index);
-
-		// 104: Four-Operator Enable
-		MakeEntry(0x04, index);
-
-		// 105: OPL3 Mode Enable
-		MakeEntry(0x05, index);
-
-		// 08: CSW / NOTE-SEL
-		MakeEntry(0x08, index);
-
-		// BD: Tremolo Depth / Vibrato D Percussion Mode /
-		// BD/SD/TT/CY/HH Onepth /
-		MakeEntry(0xbd, index);
-
-		// Add the 32 byte range that hold the 18 operators
-		for (uint8_t i = 0; i < 24; ++i) {
-			if ((i & 7) < 6) {
-				// 20-35: Tremolo / Vibrato / Sustain / KSR /
-				// Frequency Multiplication Facto
-				MakeEntry(0x20 + i, index);
-
-				// 40-55: Key Scale Level / Output Level
-				MakeEntry(0x40 + i, index);
-
-				// 60-75: Attack Rate / Decay Rate
-				MakeEntry(0x60 + i, index);
-
-				// 80-95: Sustain Level / Release Rate
-				MakeEntry(0x80 + i, index);
-
-				// E0-F5: Waveform Select
-				MakeEntry(0xe0 + i, index);
-			}
-		}
-
-		// Add the 9 byte range that hold the 9 channels
-		for (uint8_t i = 0; i < 9; ++i) {
-			// A0-A8: Frequency Number
-			MakeEntry(0xa0 + i, index);
-
-			// B0-B8: Key On / Block Number / F-Number(hi bits)
-			MakeEntry(0xb0 + i, index);
-
-			// C0-C8: FeedBack Modulation Factor / Synthesis Type
-			MakeEntry(0xc0 + i, index);
-		}
-
-		// Store the amount of bytes the table contains
-		raw_used = index;
-
-		// assert( raw_used <= 127 );
-		delay256     = raw_used;
-		delay_shift8 = raw_used + 1;
-	}
-
-	void ClearBuf()
-	{
-		fwrite(buf, 1, bufUsed, handle);
-		header.commands += bufUsed / 2;
-		bufUsed = 0;
-	}
-
-	void AddBuf(const uint8_t raw, const uint8_t val)
-	{
-		buf[bufUsed++] = raw;
-		buf[bufUsed++] = val;
-		if (bufUsed >= sizeof(buf)) {
-			ClearBuf();
-		}
-	}
-
-	void AddWrite(const io_port_t reg_full, const uint8_t val)
-	{
-		const uint8_t reg_mask = reg_full & 0xff;
-		//  Do some special checks if we're doing opl3 or dualopl2
-		// commands Although you could pretty much just stick to always
-		// doing opl3 on the player side
-
-		// Enabling opl3 4op modes will make us go into opl3 mode
-		if (header.hardware != HwOpl3 && reg_full == 0x104 && val &&
-		    (*cache)[0x105]) {
-			header.hardware = HwOpl3;
-		}
-
-		// Writing a keyon to a 2nd address enables dual opl2 otherwise
-		// Maybe also check for rhythm
-		if (header.hardware == HwOpl2 && reg_full >= 0x1b0 &&
-		    reg_full <= 0x1b8 && val) {
-			header.hardware = HwDualOpl2;
-		}
-
-		uint8_t raw = to_raw[reg_mask];
-		if (raw == 0xff) {
-			return;
-		}
-		if (reg_full & 0x100) {
-			raw |= 128;
-		}
-
-		AddBuf(raw, val);
-	}
-
-	void WriteCache()
-	{
-		// Check the registers to add
-		for (uint16_t i = 0; i < 256; ++i) {
-			auto val = (*cache)[i];
-
-			// Silence the note on entries
-			if (i >= 0xb0 && i <= 0xb8) {
-				val &= ~0x20;
-			}
-			if (i == 0xbd) {
-				val &= ~0x1f;
-			}
-			if (val) {
-				AddWrite(i, val);
-			}
-
-			val = (*cache)[0x100 + i];
-
-			if (i >= 0xb0 && i <= 0xb8) {
-				val &= ~0x20;
-			}
-			if (val) {
-				AddWrite(0x100 + i, val);
-			}
-		}
-	}
-
-	void InitHeader()
-	{
-		memset(&header, 0, sizeof(header));
-		memcpy(header.id, "DBRAWOPL", 8);
-
-		header.version_low     = 0;
-		header.version_high    = 2;
-		header.delay256        = delay256;
-		header.delay_shift8    = delay_shift8;
-		header.conv_table_size = raw_used;
-	}
-
-	void CloseFile()
-	{
-		if (handle) {
-			ClearBuf();
-
-			// Endianize the header and write it to beginning of the
-			// file
-			header.version_high = host_to_le(header.version_high);
-			header.version_low  = host_to_le(header.version_low);
-			header.commands     = host_to_le(header.commands);
-			header.milliseconds = host_to_le(header.milliseconds);
-
-			fseek(handle, 0, SEEK_SET);
-			fwrite(&header, 1, sizeof(header), handle);
-			fclose(handle);
-
-			handle = nullptr;
-		}
-	}
-};
 
 OplChip::OplChip() : timer0(80), timer1(320) {}
 
@@ -573,6 +201,7 @@ void OPL::Init(const uint16_t sample_rate)
 	case OplMode::DualOpl2:
 		// Setup opl3 mode in the hander
 		WriteReg(0x105, 1);
+
 		// Also set it up in the cache so the capturing will start opl3
 		CacheWrite(0x105, 1);
 		break;
@@ -953,62 +582,13 @@ uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
 	return 0;
 }
 
-// Save the current state of the operators as instruments in an Reality AdLib
-// Tracker (RAD) file
-#if 0
-static void SaveRad()
-{
-	char b[16 * 1024];
-	int w = 0;
-
-	FILE* handle = CAPTURE_CreateFile(CaptureType::RadOplInstruments);
-	if (!handle) {
-		return;
-	}
-
-	// Header
-	fwrite("RAD by REALiTY!!", 1, 16, handle);
-	b[w++] = 0x10; // version
-	b[w++] = 0x06; // default speed and no description
-	               //
-	// Write 18 instuments for all operators in the cache
-	for (int i = 0; i < 18; i++) {
-		const uint8_t* set  = opl->cache + (i / 9) * 256;
-		const auto offset   = ((i % 9) / 3) * 8 + (i % 3);
-		const uint8_t* base = set + offset;
-
-		b[w++] = 1 + i; // instrument number
-		b[w++] = base[0x23];
-		b[w++] = base[0x20];
-		b[w++] = base[0x43];
-		b[w++] = base[0x40];
-		b[w++] = base[0x63];
-		b[w++] = base[0x60];
-		b[w++] = base[0x83];
-		b[w++] = base[0x80];
-		b[w++] = set[0xc0 + (i % 9)];
-		b[w++] = base[0xe3];
-		b[w++] = base[0xe0];
-	}
-	b[w++] = 0; // instrument 0, no more instruments following
-	b[w++] = 1; // 1 pattern following
-
-	// Zero out the remaining part of the file a bit to make rad happy
-	for (int i = 0; i < 64; i++) {
-		b[w++] = 0;
-	}
-
-	fwrite(b, 1, w, handle);
-	fclose(handle);
-}
-#endif
-
 static void OPL_SaveRawEvent(const bool pressed)
 {
 	if (!pressed) {
 		return;
 	}
-	//	SaveRad();return;
+
+//	OPLCAPTURE_SaveRad(&opl->cache);
 
 	if (!opl) {
 		LOG_WARNING(
@@ -1020,9 +600,9 @@ static void OPL_SaveRawEvent(const bool pressed)
 	// Are we already recording? If so, close the stream
 	if (opl->capture) {
 		opl->capture.reset();
-	}
-	// Otherwise start a new recording
-	else {
+
+	} else {
+		// Otherwise start a new recording
 		opl->capture = std::make_unique<OplCapture>(&opl->cache);
 	}
 }

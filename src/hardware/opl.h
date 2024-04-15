@@ -72,8 +72,8 @@ public:
 	uint8_t Read();
 };
 
-// The cache for 2 chips or an opl3
-typedef uint8_t RegisterCache[512];
+// The cache for two OPL chips (Dual OPL2) or an OPL3 (stereo)
+typedef uint8_t OplRegisterCache[512];
 
 // Internal class used for DRO capturing
 class OplCapture;
@@ -82,7 +82,7 @@ class OPL {
 public:
 	mixer_channel_t channel = {};
 
-	RegisterCache cache = {};
+	OplRegisterCache cache = {};
 
 	std::unique_ptr<OplCapture> capture = {};
 
@@ -150,4 +150,4 @@ private:
 	uint8_t AdlibGoldControlRead(void);
 };
 
-#endif
+#endif // DOSBOX_OPL_H
