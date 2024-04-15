@@ -125,9 +125,9 @@ private:
 	IO_WriteHandleObject write_handlers[2] = {};
 
 	// States
-	Registers regs = {};
-	int sample_rate = 0;
-	bool is_enabled = false;
+	Registers regs     = {};
+	int sample_rate_hz = 0;
+	bool is_enabled    = false;
 };
 
 class TandyPSG {
@@ -165,20 +165,21 @@ private:
 	double last_rendered_ms           = 0.0;
 };
 
-static void setup_filters(mixer_channel_t &channel) {
+static void setup_filters(mixer_channel_t& channel)
+{
 	// The filters are meant to emulate the bandwidth limited sound of the
 	// small integrated speaker of the Tandy. This more accurately
 	// reflects people's actual experience of the Tandy sound than the raw
 	// unfiltered output, and it's a lot more pleasant to listen to,
 	// especially in headphones.
-	constexpr auto hp_order       = 3;
-	constexpr auto hp_cutoff_freq = 120;
-	channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+	constexpr auto hp_order          = 3;
+	constexpr auto hp_cutoff_freq_hz = 120;
+	channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
 	channel->SetHighPassFilter(FilterState::On);
 
-	constexpr auto lp_order       = 2;
-	constexpr auto lp_cutoff_freq = 4800;
-	channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+	constexpr auto lp_order          = 2;
+	constexpr auto lp_cutoff_freq_hz = 4800;
+	channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 	channel->SetLowPassFilter(FilterState::On);
 }
 
@@ -201,11 +202,14 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile,
 	                            ChannelFeature::DigitalAudio});
 
 	const auto mixer_rate_hz = channel->GetSampleRate();
-	sample_rate = mixer_rate_hz;
+
+	sample_rate_hz = mixer_rate_hz;
 
 	// Setup zero-order-hold resampler to emulate the "crunchiness" of early
 	// DACs
-	channel->SetZeroOrderHoldUpsamplerTargetRate(check_cast<uint16_t>(sample_rate));
+	channel->SetZeroOrderHoldUpsamplerTargetRate(
+	        check_cast<uint16_t>(sample_rate_hz));
+
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	// Setup filters
@@ -304,14 +308,15 @@ void TandyDAC::ChangeMode()
 			return;
 		}
 
-		if (const auto new_sample_rate = tandy_psg_clock_hz / regs.clock_divider;
-		    new_sample_rate < DacMaxSampleRateHz) {
+		if (const auto new_sample_rate_hz = tandy_psg_clock_hz / regs.clock_divider;
+		    new_sample_rate_hz < DacMaxSampleRateHz) {
 			assert(channel);
 
 			// Fill using the prior sample rate
 			channel->FillUp();
 
-			channel->SetSampleRate(check_cast<uint16_t>(new_sample_rate));
+			channel->SetSampleRate(
+			        check_cast<uint16_t>(new_sample_rate_hz));
 
 			const auto vol = static_cast<float>(regs.amplitude) / 7.0f;
 
@@ -329,7 +334,7 @@ void TandyDAC::ChangeMode()
 					channel->Enable(true);
 #if 0
 					LOG_MSG("TANDYDAC: playback started with freqency %i, volume %f",
-					        sample_rate,
+					        sample_rate_hz,
 					        vol);
 #endif
 				}
@@ -495,11 +500,13 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled
 	}
 
 	// Setup the resampler
-	const auto sample_rate = channel->GetSampleRate();
-	const auto max_freq    = std::max(sample_rate * 0.9 / 2, 8000.0);
+	const auto sample_rate_hz = channel->GetSampleRate();
+
+	const auto max_rate_hz = std::max(sample_rate_hz * 0.9 / 2, 8000.0);
+
 	resampler.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
-	                                                      sample_rate,
-	                                                      max_freq));
+	                                                      sample_rate_hz,
+	                                                      max_rate_hz));
 
 	// Configure and start the MAME device
 	dsi = static_cast<device_sound_interface *>(device.get());
