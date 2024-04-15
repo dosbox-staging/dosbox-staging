@@ -25,9 +25,13 @@ reference.
 Update a given translation by editing the corresponding `*.lng` file with a text
 editor and saving it with UTF-8 encoding and Unix line endings.
 
-Suitable editors are often called ASCII editors, code editors, etc. - Microsoft Word
+Suitable editors are often called ASCII editors, code editors, etc.---Microsoft Word
 is not suitable, but Notepad (Windows), Notepad++ (Windows), TextMate (macOS),
 or Kate (Linux) will do.
+
+Please don't use tab characters---configure your editor to expand tabs to
+spaces. If you use tabs, there is a danger that the alignment of indented
+multi-line text will appear wrong.
 
 Tools exist (often called diff tools) that can help you to compare two `en.lng`
 files generated from different versions of DOSBox, they make it easy to figure out
