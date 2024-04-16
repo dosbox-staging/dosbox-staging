@@ -783,30 +783,36 @@ void DOSBOX_Init()
 	                                   changeable_at_runtime);
 
 	pstring = secprop->Add_string("sbtype", when_idle, "sb16");
-	pstring->Set_values({"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "none"});
+	pstring->Set_values(
+	        {"gb", "sb1", "sb2", "sbpro1", "sbpro2", "sb16", "ess", "none"});
 	pstring->Set_help(
 	        "Sound Blaster model to emulate ('sb16' by default).\n"
 	        "The models auto-selected with 'oplmode' and 'cms' on 'auto' are also listed.\n"
-	        "  gb:        Game Blaster        - CMS\n"
-	        "  sb1:       Sound Blaster 1.0   - OPL2, CMS\n"
-	        "  sb2:       Sound Blaster 2.0   - OPL2\n"
-	        "  sbpro1:    Sound Blaster Pro   - Dual OPL2\n"
-	        "  sbpro2:    Sound Blaster Pro 2 - OPL3\n"
-	        "  sb16:      Sound Blaster 16    - OPL3 (default)\n"
+	        "  gb:        Game Blaster          - CMS\n"
+	        "  sb1:       Sound Blaster 1.0     - OPL2, CMS\n"
+	        "  sb2:       Sound Blaster 2.0     - OPL2\n"
+	        "  sbpro1:    Sound Blaster Pro     - Dual OPL2\n"
+	        "  sbpro2:    Sound Blaster Pro 2   - OPL3\n"
+	        "  sb16:      Sound Blaster 16      - OPL3 (default)\n"
+	        "  ess:       ESS ES1688 AudioDrive - ESFM\n"
 	        "  none/off:  Disable Sound Blaster emulation.\n"
-	        "Note: Creative Music System was later rebranded to Game Blaster; they are the\n"
-	        "      same card.");
+	        "Notes:\n"
+	        "  - Creative Music System was later rebranded to Game Blaster; they are the\n"
+	        "    same card.\n"
+	        "  - The 'ess' option is for getting ESS Enhanced FM music via the card's ESFM\n"
+	        "    synthesiser in games that support it. The ESS DAC is not emulated but the\n"
+	        "    card is Sound Blaster Pro compatible; just configure the game for Sound\n"
+	        "    Blaster digital sound.");
 
 	phex = secprop->Add_hex("sbbase", when_idle, 0x220);
-	phex->Set_values(
-	        {"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
+	phex->Set_values({"220", "240", "260", "280", "2a0", "2c0", "2e0", "300"});
 	phex->Set_help("The IO address of the Sound Blaster (220 by default).");
 
-	pint                 = secprop->Add_int("irq", when_idle, 7);
+	pint = secprop->Add_int("irq", when_idle, 7);
 	pint->Set_values({"3", "5", "7", "9", "10", "11", "12"});
 	pint->Set_help("The IRQ number of the Sound Blaster (7 by default).");
 
-	pint                 = secprop->Add_int("dma", when_idle, 1);
+	pint = secprop->Add_int("dma", when_idle, 1);
 	pint->Set_values({"0", "1", "3", "5", "6", "7"});
 	pint->Set_help("The DMA channel of the Sound Blaster (1 by default).");
 
@@ -846,9 +852,13 @@ void DOSBOX_Init()
 	        "  opl3:      Yamaha OPL3 (YMF262, stereo).\n"
 	        "  opl3gold:  OPL3 and the optional AdLib Gold Surround module.\n"
 	        "             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.\n"
-	        "  esfm:      ESS ESFM (enhanced Yamaha OPL3 clone)."
+	        "  esfm:      ESS ESFM (enhanced Yamaha OPL3 compatible FM synth)."
 	        "  none/off:  Disable OPL emulation.\n"
-	        "Note: 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.");
+	        "Notes:\n"
+	        "  - 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.\n"
+	        "  - Only 'oplmode = esfm' is not enough to get ESS Enhanced FM music in games;\n"
+	        "    you'll also need to set 'sbtype = ess'. 'oplmode = esfm' is useful to\n"
+	        "    get ESFM-flavoured OPL with original Sound Blaster models.");
 
 	pstring = secprop->Add_string("opl_fadeout", when_idle, "off");
 	pstring->Set_help(
