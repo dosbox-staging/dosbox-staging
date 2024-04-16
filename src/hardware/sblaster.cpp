@@ -102,7 +102,7 @@ enum class DmaMode {
 };
 
 struct SBInfo {
-	uint32_t freq = 0;
+	uint32_t freq_hz = 0;
 
 	struct {
 		bool stereo   = false;
@@ -1265,7 +1265,7 @@ static const char* get_dma_mode_name()
 }
 #endif
 
-static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq,
+static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq_hz,
                                 const bool autoinit, const bool stereo)
 {
 	// Fill up before changing state?
@@ -1310,9 +1310,9 @@ static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq,
 	if (sb.dma.stereo) {
 		sb.dma.mul *= 2;
 	}
-	sb.dma.rate = (sb.freq * sb.dma.mul) >> SbShift;
+	sb.dma.rate = (sb.freq_hz * sb.dma.mul) >> SbShift;
 	sb.dma.min  = (sb.dma.rate * 3) / 1000;
-	set_channel_rate_hz(freq);
+	set_channel_rate_hz(freq_hz);
 
 	PIC_RemoveEvents(ProcessDMATransfer);
 	// Set to be masked, the dma call can change this again.
@@ -1321,11 +1321,11 @@ static void dsp_do_dma_transfer(const DmaMode mode, const uint32_t freq,
 
 #if (C_DEBUG)
 	LOG(LOG_SB, LOG_NORMAL)
-	("DMA Transfer:%s %s %s freq %d rate %d size %d",
+	("DMA Transfer:%s %s %s freq_hz %d rate %d size %d",
 	 get_dma_mode_name(),
 	 stereo ? "Stereo" : "Mono",
 	 autoinit ? "Auto-Init" : "Single-Cycle",
-	 freq,
+	 freq_hz,
 	 sb.dma.rate,
 	 sb.dma.left);
 #endif
@@ -1341,7 +1341,7 @@ static void dsp_prepare_dma_old(const DmaMode mode, const bool autoinit,
 	sb.dma.chan = DMA_GetChannel(sb.hw.dma8);
 
 	dsp_do_dma_transfer(mode,
-	                    sb.freq / (sb.mixer.stereo ? 2 : 1),
+	                    sb.freq_hz / (sb.mixer.stereo ? 2 : 1),
 	                    autoinit,
 	                    sb.mixer.stereo);
 }
@@ -1349,7 +1349,7 @@ static void dsp_prepare_dma_old(const DmaMode mode, const bool autoinit,
 static void dsp_prepare_dma_new(const DmaMode mode, const uint32_t length,
                                 const bool autoinit, const bool stereo)
 {
-	const auto freq = sb.freq;
+	const auto freq_hz = sb.freq_hz;
 
 	DmaMode new_mode    = mode;
 	uint32_t new_length = length;
@@ -1383,7 +1383,7 @@ static void dsp_prepare_dma_new(const DmaMode mode, const uint32_t length,
 		sb.dma.singlesize = new_length;
 	}
 
-	dsp_do_dma_transfer(new_mode, freq, autoinit, stereo);
+	dsp_do_dma_transfer(new_mode, freq_hz, autoinit, stereo);
 }
 
 static void dsp_add_data(const uint8_t val)
@@ -1439,7 +1439,7 @@ static void dsp_reset()
 	}
 
 	sb.adpcm         = {};
-	sb.freq          = DefaultPlaybackRateHz;
+	sb.freq_hz       = DefaultPlaybackRateHz;
 	sb.time_constant = 45;
 	sb.dac.used      = 0;
 	sb.dac.last      = 0;
@@ -1509,15 +1509,15 @@ static void dsp_adc_callback(const DmaChannel* /*chan*/, const DMAEvent event)
 	ch->RegisterCallback(nullptr);
 }
 
-static void dsp_change_rate(const uint32_t freq)
+static void dsp_change_rate(const uint32_t freq_hz)
 {
-	if (sb.freq != freq && sb.dma.mode != DmaMode::None) {
+	if (sb.freq_hz != freq_hz && sb.dma.mode != DmaMode::None) {
 		sb.chan->FillUp();
-		set_channel_rate_hz(freq / (sb.mixer.stereo ? 2 : 1));
-		sb.dma.rate = (freq * sb.dma.mul) >> SbShift;
+		set_channel_rate_hz(freq_hz / (sb.mixer.stereo ? 2 : 1));
+		sb.dma.rate = (freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
 	}
-	sb.freq = freq;
+	sb.freq_hz = freq_hz;
 }
 
 static bool check_sb16_only()
@@ -1747,7 +1747,7 @@ static void dsp_do_command()
 		PIC_AddEvent(&dsp_raise_irq_event,
 		             (1000.0 *
 		              (1 + sb.dsp.in.data[0] + (sb.dsp.in.data[1] << 8)) /
-		              sb.freq));
+		              sb.freq_hz));
 		break;
 
 	// clang-format off
@@ -2147,15 +2147,15 @@ static uint8_t make_sb_pro_volume(const uint8_t* src)
 static void dsp_change_stereo(const bool stereo)
 {
 	if (!sb.dma.stereo && stereo) {
-		set_channel_rate_hz(sb.freq / 2);
+		set_channel_rate_hz(sb.freq_hz / 2);
 		sb.dma.mul *= 2;
-		sb.dma.rate = (sb.freq * sb.dma.mul) >> SbShift;
+		sb.dma.rate = (sb.freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
 
 	} else if (sb.dma.stereo && !stereo) {
-		set_channel_rate_hz(sb.freq);
+		set_channel_rate_hz(sb.freq_hz);
 		sb.dma.mul /= 2;
-		sb.dma.rate = (sb.freq * sb.dma.mul) >> SbShift;
+		sb.dma.rate = (sb.freq_hz * sb.dma.mul) >> SbShift;
 		sb.dma.min  = (sb.dma.rate * 3) / 1000;
 	}
 
