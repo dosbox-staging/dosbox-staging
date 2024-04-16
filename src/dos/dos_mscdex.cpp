@@ -667,7 +667,7 @@ bool CMscdex::GetFileName(uint16_t drive, uint16_t pos, PhysPt data) {
 	return success; 
 }
 
-bool CMscdex::GetUPC(uint8_t subUnit, uint8_t& attr, std::string& upc)
+bool CMscdex::GetUPC(const uint8_t subUnit, uint8_t& attr, std::string& upc)
 {
 	if (subUnit>=numDrives) return false;
 	return dinfo[subUnit].lastResult = cdrom[subUnit]->GetUPC(attr,upc);
