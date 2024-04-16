@@ -101,6 +101,8 @@ enum class DmaMode {
 	Pcm16BitAliased
 };
 
+enum class EssType { None, Es1688 };
+
 struct SBInfo {
 	uint32_t freq_hz = 0;
 
@@ -135,6 +137,12 @@ struct SBInfo {
 
 	DspMode mode = DspMode::None;
 	SBType type  = SBType::None;
+
+	// ESS chipset emulation, to be set only for SBType::SBPro2
+	struct {
+		EssType type       = EssType::None;
+		bool extended_mode = false;
+	} ess;
 
 	FilterType sb_filter_type   = FilterType::None;
 	FilterType opl_filter_type  = FilterType::None;
@@ -195,6 +203,9 @@ struct SBInfo {
 		bool filtered     = false;
 
 		uint8_t unhandled[0x48] = {};
+
+		uint8_t ess_id_str[4]  = {};
+		uint8_t ess_id_str_pos = {};
 	} mixer = {};
 
 	struct {
@@ -312,11 +323,11 @@ static process_dma_f ProcessDMATransfer;
 
 static void dsp_set_speaker(const bool requested_state)
 {
-	// The speaker-output is always enabled on the SB16; speaker
+	// Speaker output is always enabled on the SB16 and ESS cards; speaker
 	// enable/disable commands are simply ignored. Only the SB Pro and
 	// earlier models can toggle the speaker-output via speaker
 	// enable/disable commands.
-	if (sb.type == SBType::SB16) {
+	if (sb.type == SBType::SB16 || sb.ess.type != EssType::None) {
 		return;
 	}
 
@@ -347,24 +358,25 @@ static void dsp_set_speaker(const bool requested_state)
 
 static void init_speaker_state()
 {
-	if (sb.type == SBType::SB16) {
-		// Speaker-output (DAC output) is only enabled by default on the
-		// SB16 and it cannot be disabled. Because the channel is
-		// active, we treat this as a startup event.
+	if (sb.type == SBType::SB16 || sb.ess.type != EssType::None) {
+
+		// Speaker output (DAC output) is always enabled on the SB16 and ESS
+		// cards. Because the channel is active, we treat this as a startup
+		// event.
 		const bool is_cold_start = sb.dsp.reset_tally <=
 		                           DspInitialResetLimit;
 
 		sb.dsp.warmup_remaining_ms = is_cold_start ? sb.dsp.cold_warmup_ms
 		                                           : sb.dsp.hot_warmup_ms;
 		sb.speaker = true;
-		sb.chan->Enable(true);
 
 	} else {
 		// SB Pro and earlier models have the speaker-output disabled by
 		// default.
 		sb.speaker = false;
-		sb.chan->Enable(false);
 	}
+
+	sb.chan->Enable(sb.speaker);
 }
 
 static void log_filter_config(const char* channel_name, const char* output_type,
@@ -1552,6 +1564,42 @@ static bool check_sb2_or_above()
 
 static void dsp_do_command()
 {
+	if (sb.ess.type != EssType::None && sb.dsp.cmd >= 0xa0 && sb.dsp.cmd <= 0xcf) {
+		// ESS overlaps with SB16 commands. Handle it here, not mucking
+		// up the switch statement.
+
+		if (sb.dsp.cmd < 0xc0) {
+			// Write ESS register
+			// (cmd=register, data[0]=value to write)
+			if (sb.ess.extended_mode) {
+				// TODO not implemented
+				// ess_do_write(sb.dsp.cmd, sb.dsp.in.data[0]);
+			}
+		} else if (sb.dsp.cmd == 0xc0) {
+			// Read ESS register (data[0]=register to read)
+			dsp_flush_data();
+
+			if (sb.ess.extended_mode && sb.dsp.in.data[0] >= 0xa0 &&
+			    sb.dsp.in.data[0] <= 0xbf) {
+				// TODO not implemented
+				// dsp_add_data(ess_do_read(sb.dsp.in.data[0]));
+			}
+		} else if (sb.dsp.cmd == 0xc6 || sb.dsp.cmd == 0xc7) {
+			// set(0xc6) clear(0xc7) extended mode
+			sb.ess.extended_mode = (sb.dsp.cmd == 0xc6);
+
+			LOG_TRACE("ESS: Extended DAC mode turned on %s",
+			          sb.ess.extended_mode ? "on" : "off");
+		} else {
+			LOG_DEBUG("ESS: Unknown command %02xh", sb.dsp.cmd);
+		}
+
+		sb.dsp.cmd     = DspNoCommand;
+		sb.dsp.cmd_len = 0;
+		sb.dsp.in.pos  = 0;
+		return;
+	}
+
 	//	LOG_MSG("DSP Command %X",sb.dsp.cmd);
 	switch (sb.dsp.cmd) {
 	case 0x04:
@@ -1875,28 +1923,33 @@ static void dsp_do_command()
 
 		switch (sb.type) {
 			case SBType::SB1:
-			dsp_add_data(0x1);
+			dsp_add_data(0x01);
 			dsp_add_data(0x05);
 			break;
 
 		case SBType::SB2:
-			dsp_add_data(0x2);
-			dsp_add_data(0x1);
+			dsp_add_data(0x02);
+			dsp_add_data(0x01);
 			break;
 
 		case SBType::SBPro1:
-			dsp_add_data(0x3);
-			dsp_add_data(0x0);
+			dsp_add_data(0x03);
+			dsp_add_data(0x00);
 			break;
 
 		case SBType::SBPro2:
-			dsp_add_data(0x3);
-			dsp_add_data(0x2);
+			if (sb.ess.type != EssType::None) {
+				dsp_add_data(0x03);
+				dsp_add_data(0x01);
+			} else {
+				dsp_add_data(0x03);
+				dsp_add_data(0x02);
+			}
 			break;
 
 		case SBType::SB16:
-			dsp_add_data(0x4);
-			dsp_add_data(0x5);
+			dsp_add_data(0x04);
+			dsp_add_data(0x05);
 			break;
 
 		default: break;
@@ -1918,13 +1971,32 @@ static void dsp_do_command()
 
 	case 0xe3: // DSP Copyright
 		dsp_flush_data();
-		for (const auto c : "COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.") {
-			dsp_add_data(static_cast<uint8_t>(c));
+		if (sb.ess.type != EssType::None) {
+			// ESS chips do not return a copyright string
+			dsp_add_data(0);
+		} else {
+			for (const auto c :
+			     "COPYRIGHT (C) CREATIVE TECHNOLOGY LTD, 1992.") {
+				dsp_add_data(static_cast<uint8_t>(c));
+			}
 		}
 		break;
 
 	case 0xe4: // Write Test Register
 		sb.dsp.test_register = sb.dsp.in.data[0];
+		break;
+
+	case 0xe7: // ESS detect/read config
+		switch (sb.ess.type) {
+		case EssType::None: break;
+
+		case EssType::Es1688:
+			dsp_flush_data();
+			// Determined via Windows driver debugging.
+			dsp_add_data(0x68);
+			dsp_add_data(0x80 | 0x09);
+			break;
+		}
 		break;
 
 	case 0xe8: // Read Test Register
@@ -2388,25 +2460,25 @@ static uint8_t ctmixer_read()
 	// if ( sb.mixer.index< 0x80) LOG_MSG("Read mixer %x",sb.mixer.index);
 
 	switch (sb.mixer.index) {
-	case 0x00: // RESET
+	case 0x00: // Reset
 		return 0x00;
 
-	case 0x02: // Master Volume (SB2 Only)
+	case 0x02: // Master Volume (SB2 only)
 		return ((sb.mixer.master[1] >> 1) & 0xe);
 
-	case 0x22: // Master Volume (SBPRO)
+	case 0x22: // Master Volume (SB Pro)
 		return make_sb_pro_volume(sb.mixer.master);
 
-	case 0x04: // DAC Volume (SBPRO)
+	case 0x04: // DAC Volume (SB Pro)
 		return make_sb_pro_volume(sb.mixer.dac);
 
-	case 0x06: // FM Volume (SB2 Only) + FM output selection
+	case 0x06: // FM Volume (SB2 only) + FM output selection
 		return ((sb.mixer.fm[1] >> 1) & 0xe);
 
-	case 0x08: // CD Volume (SB2 Only)
+	case 0x08: // CD Volume (SB2 only)
 		return ((sb.mixer.cda[1] >> 1) & 0xe);
 
-	case 0x0a: // Mic Level (SBPRO) or Voice (SB2 Only)
+	case 0x0a: // Mic Level (SB Pro) or Voice (SB2 only)
 		if (sb.type == SBType::SB2) {
 			return (sb.mixer.dac[0] >> 2);
 		} else {
@@ -2417,13 +2489,13 @@ static uint8_t ctmixer_read()
 		return 0x11 | (sb.mixer.stereo ? 0x02 : 0x00) |
 		       (sb.mixer.filtered ? 0x20 : 0x00);
 
-	case 0x26: // FM Volume (SBPRO)
+	case 0x26: // FM Volume (SB Pro)
 		return make_sb_pro_volume(sb.mixer.fm);
 
-	case 0x28: // CD Audio Volume (SBPRO)
+	case 0x28: // CD Audio Volume (SB Pro)
 		return make_sb_pro_volume(sb.mixer.cda);
 
-	case 0x2e: // Line-IN Volume (SBPRO)
+	case 0x2e: // Line-in Volume (SB Pro)
 		return make_sb_pro_volume(sb.mixer.lin);
 
 	case 0x30: // Master Volume Left (SB16)
@@ -2501,6 +2573,24 @@ static uint8_t ctmixer_read()
 			return sb.mixer.mic << 3;
 		}
 		ret = 0xa;
+		break;
+
+    case 0x40: // ESS Identification Value (ES1488 and later)
+		switch (sb.ess.type) {
+		case EssType::None:
+		case EssType::Es1688:
+			ret = sb.mixer.ess_id_str[sb.mixer.ess_id_str_pos];
+			++sb.mixer.ess_id_str_pos;
+			if (sb.mixer.ess_id_str_pos >= 4) {
+				sb.mixer.ess_id_str_pos = 0;
+			}
+			break;
+
+		default:
+			ret = 0xa;
+			LOG_WARNING("ESS: Identification function 0x%x is not implemented",
+						sb.mixer.index);
+		}
 		break;
 
 	case 0x80: // IRQ Select
@@ -2724,7 +2814,7 @@ static void sblaster_callback(const uint32_t length)
 	}
 }
 
-static SBType determine_sbtype(const std::string& pref)
+static SBType determine_sb_type(const std::string& pref)
 {
 	if (pref == "gb") {
 		return SBType::GameBlaster;
@@ -2738,19 +2828,25 @@ static SBType determine_sbtype(const std::string& pref)
 	} else if (pref == "sbpro1") {
 		return SBType::SBPro1;
 
-	} else if (pref == "sbpro2") {
+	} else if (pref == "sbpro2" || pref == "ess") {
 		return SBType::SBPro2;
 
 	} else if (pref == "sb16") {
 		// Invalid settings result in defaulting to 'sb16'
 		return SBType::SB16;
-
 	}
+
 	// "falsey" setting ("off", "none", "false", etc.)
 	return SBType::None;
 }
 
-static OplMode determine_oplmode(const std::string& pref, const SBType sb_type)
+static EssType determine_ess_type(const std::string& pref)
+{
+	return (pref == "ess") ? EssType::Es1688 : EssType::None;
+}
+
+static OplMode determine_oplmode(const std::string& pref, const SBType sb_type,
+                                 const EssType ess_type)
 {
 	if (pref == "cms") {
 		// Skip for backward compatibility with existing configurations
@@ -2778,11 +2874,12 @@ static OplMode determine_oplmode(const std::string& pref, const SBType sb_type)
 		case SBType::SB1: return OplMode::Opl2;
 		case SBType::SB2: return OplMode::Opl2;
 		case SBType::SBPro1: return OplMode::DualOpl2;
-		case SBType::SBPro2: return OplMode::Opl3;
+		case SBType::SBPro2:
+			return ess_type == EssType::None ? OplMode::Opl3
+			                                 : OplMode::Esfm;
 		case SBType::SB16: return OplMode::Opl3;
 		case SBType::None: return OplMode::None;
 		}
-
 	}
 	// "falsey" setting ("off", "none", "false", etc.)
 	return OplMode::None;
@@ -2919,8 +3016,23 @@ public:
 		sb.mixer.enabled = section->Get_bool("sbmixer");
 		sb.mixer.stereo  = false;
 
-		sb.type = determine_sbtype(section->Get_string("sbtype"));
-		oplmode = determine_oplmode(section->Get_string("oplmode"), sb.type);
+		const auto sbtype_pref = section->Get_string("sbtype");
+
+		sb.type     = determine_sb_type(sbtype_pref);
+		sb.ess.type = determine_ess_type(sbtype_pref);
+
+		switch (sb.ess.type) {
+		case EssType::None: break;
+		case EssType::Es1688:
+			sb.mixer.ess_id_str[0] = 0x16;
+			sb.mixer.ess_id_str[1] = 0x88;
+			sb.mixer.ess_id_str[2] = (sb.hw.base >> 8) & 0xff;
+			sb.mixer.ess_id_str[3] = sb.hw.base & 0xff;
+		}
+
+		oplmode = determine_oplmode(section->Get_string("oplmode"),
+		                            sb.type,
+		                            sb.ess.type);
 
 		// Init OPL
 		switch (oplmode) {
