@@ -69,18 +69,18 @@ private:
 	static constexpr float ms_per_pit_tick = 1000.0f / PIT_TICK_RATE;
 
 	// Mixer channel constants
-	static constexpr uint16_t sample_rate        = 32000u;
-	static constexpr uint16_t sample_rate_per_ms = sample_rate / 1000u;
+	static constexpr uint16_t sample_rate_hz     = 32000;
+	static constexpr uint16_t sample_rate_per_ms = sample_rate_hz / 1000;
 
-	static constexpr auto minimum_counter = 2 * PIT_TICK_RATE / sample_rate;
+	static constexpr auto minimum_counter = 2 * PIT_TICK_RATE / sample_rate_hz;
 
 	// must be greater than 0.0f
 	static constexpr float cutoff_margin = 0.2f;
 
 	// Should be selected based on sampling rate
 	static constexpr float sinc_amplitude_fade         = 0.999f;
-	static constexpr uint16_t sinc_filter_quality      = 100u;
-	static constexpr uint16_t sinc_oversampling_factor = 32u;
+	static constexpr uint16_t sinc_filter_quality      = 100;
+	static constexpr uint16_t sinc_oversampling_factor = 32;
 	static constexpr uint16_t sinc_filter_width = sinc_filter_quality *
 	                                              sinc_oversampling_factor;
 
