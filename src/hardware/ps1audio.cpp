@@ -92,14 +92,14 @@ private:
 	uint8_t fifo[fifo_size] = {};
 
 	// Counters
-	size_t last_write = 0;
-	uint32_t adder = 0;
-	uint32_t bytes_pending = 0;
+	size_t last_write        = 0;
+	uint32_t adder           = 0;
+	uint32_t bytes_pending   = 0;
 	uint32_t read_index_high = 0;
-	uint32_t sample_rate = 0;
-	uint16_t read_index = 0;
-	uint16_t write_index = 0;
-	int8_t signal_bias = 0;
+	uint32_t sample_rate_hz  = 0;
+	uint16_t read_index      = 0;
+	uint16_t write_index     = 0;
+	int8_t signal_bias       = 0;
 
 	// States
 	bool is_new_transfer = true;
@@ -107,16 +107,16 @@ private:
 	bool can_trigger_irq = false;
 };
 
-static void setup_filter(mixer_channel_t &channel)
+static void setup_filter(mixer_channel_t& channel)
 {
-	constexpr auto hp_order       = 3;
-	constexpr auto hp_cutoff_freq = 160;
-	channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq);
+	constexpr auto hp_order          = 3;
+	constexpr auto hp_cutoff_freq_hz = 160;
+	channel->ConfigureHighPassFilter(hp_order, hp_cutoff_freq_hz);
 	channel->SetHighPassFilter(FilterState::On);
 
-	constexpr auto lp_order       = 1;
-	constexpr auto lp_cutoff_freq = 2100;
-	channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+	constexpr auto lp_order          = 1;
+	constexpr auto lp_cutoff_freq_hz = 2100;
+	channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 	channel->SetLowPassFilter(FilterState::On);
 }
 
@@ -170,7 +170,7 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 	                          io_width_t::byte);
 
 	// Operate at native sampling rates
-	sample_rate = check_cast<uint32_t>(channel->GetSampleRate());
+	sample_rate_hz = check_cast<uint32_t>(channel->GetSampleRate());
 	last_write = 0;
 	Reset(true);
 }
@@ -255,7 +255,7 @@ void Ps1Dac::WriteTimingPort203(io_port_t, io_val_t value, io_width_t)
 	if (data < 45) // common in Infocom games
 		data = 125; // fallback to a default 8 KHz data rate
 	const auto data_rate_hz = static_cast<uint32_t>(clock_rate_hz / data);
-	adder = (data_rate_hz << frac_shift) / sample_rate;
+	adder = (data_rate_hz << frac_shift) / sample_rate_hz;
 
 	regs.status = CalcStatus();
 	if ((regs.status & fifo_nearly_empty_flag) && (can_trigger_irq)) {
@@ -446,13 +446,14 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 
 	// Setup the resampler
 	const auto channel_rate_hz = channel->GetSampleRate();
-	const auto max_freq = std::max(channel_rate_hz * 0.9 / 2, 8000.0);
+	const auto max_rate_hz = std::max(channel_rate_hz * 0.9 / 2, 8000.0);
 	resampler.reset(reSIDfp::TwoPassSincResampler::create(render_rate_hz,
 	                                                      channel_rate_hz,
-	                                                      max_freq));
+	                                                      max_rate_hz));
 
 	const auto generate_sound =
 	        std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
+
 	write_handler.Install(0x205, generate_sound, io_width_t::byte);
 	static_cast<device_t &>(device).device_start();
 	device.convert_samplerate(render_rate_hz);
