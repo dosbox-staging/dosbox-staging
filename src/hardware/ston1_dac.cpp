@@ -23,6 +23,7 @@
 #include "checks.h"
 
 CHECK_NARROWING();
+
 void StereoOn1::BindToPort(const io_port_t lpt_port)
 {
 	using namespace std::placeholders;
@@ -30,24 +31,26 @@ void StereoOn1::BindToPort(const io_port_t lpt_port)
 	const auto write_data = std::bind(&StereoOn1::WriteData, this, _1, _2, _3);
 	const auto read_status = std::bind(&StereoOn1::ReadStatus, this, _1, _2);
 	const auto write_control = std::bind(&StereoOn1::WriteControl, this, _1, _2, _3);
+
 	BindHandlers(lpt_port, write_data, read_status, write_control);
+
 	LOG_MSG("LPT_DAC: Initialised Stereo-On-1 DAC on LPT port %03xh", lpt_port);
 }
 
 void StereoOn1::ConfigureFilters(const FilterState state)
 {
 	assert(channel);
- 	if (state == FilterState::On) {
-		constexpr uint8_t lp_order = 2;
-		const uint16_t lp_cutoff_freq = 9000;
-		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq);
+	if (state == FilterState::On) {
+		constexpr uint8_t lp_order       = 2;
+		const uint16_t lp_cutoff_freq_hz = 9000;
+		channel->ConfigureLowPassFilter(lp_order, lp_cutoff_freq_hz);
 	}
 	channel->SetLowPassFilter(state);
 }
 
 AudioFrame StereoOn1::Render()
 {
-	const float left = lut_u8to16[stereo_data[0]];
+	const float left  = lut_u8to16[stereo_data[0]];
 	const float right = lut_u8to16[stereo_data[1]];
 	return {left, right};
 }
