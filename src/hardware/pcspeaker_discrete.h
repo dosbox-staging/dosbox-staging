@@ -89,6 +89,6 @@ private:
 	float volcur       = 0.0f;
 	float last_index   = 0.0f;
 
-	int sample_rate       = 0;
+	int sample_rate_hz    = 0;
 	int minimum_tick_rate = 0;
 };
