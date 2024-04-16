@@ -1,7 +1,7 @@
 /*
  *  SPDX-License-Identifier: GPL-2.0-or-later
  *
- *  Copyright (C) 2020-2023  The DOSBox Staging Team
+ *  Copyright (C) 2020-2024  The DOSBox Staging Team
  *  Copyright (C) 2019-2021  kcgen <kcgen@users.noreply.github.com>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -66,42 +66,49 @@ class Envelope {
 public:
 	Envelope(const char* name);
 
-	void Process(const bool is_stereo, AudioFrame &frame);
+	void Process(const bool is_stereo, AudioFrame& frame);
 
-	void Update(const int frame_rate, const int peak_amplitude,
+	void Update(const int sample_rate_hz, const int peak_amplitude,
 	            const uint8_t expansion_phase_ms,
 	            const uint8_t expire_after_seconds);
 
 	void Reactivate();
 
+	// prevent copying
+	Envelope(const Envelope&) = delete;
+
+	// prevent assignment
+	Envelope& operator=(const Envelope&) = delete;
+
 private:
-	Envelope(const Envelope &) = delete;            // prevent copying
-	Envelope &operator=(const Envelope &) = delete; // prevent assignment
+	bool ClampSample(float& sample, const float next_edge);
 
-	bool ClampSample(float &sample, float next_edge);
+	void Apply(const bool is_stereo, AudioFrame& frame);
 
-	void Apply(const bool is_stereo, AudioFrame &frame);
-
-	void Skip([[maybe_unused]] bool is_stereo, [[maybe_unused]] AudioFrame &frame)
+	void Skip([[maybe_unused]] const bool is_stereo,
+	          [[maybe_unused]] AudioFrame& frame)
 	{}
 
-	using process_f = std::function<void(Envelope &, const bool, AudioFrame &)>;
+	using process_f   = std::function<void(Envelope&, bool, AudioFrame&)>;
 	process_f process = &Envelope::Apply;
 
 	std::string channel_name = {};
 
-	int expire_after_frames = 0; // Stop enveloping when this many
-	                             // frames have been processed.
+	// Stop enveloping when this frames have been processed many
+	int expire_after_frames = 0;
 
-	int frames_done = 0; // A tally of processed frames.
+	// A tally of processed frames.
+	int frames_done = 0;
 
-	float edge = 0.0f;           // The current edge of the envelope, which
-	                             // increments outward when samples press
-	                             // against it.
-	float edge_increment = 0.0f; // The amount the edge grows by once a
-	                             // sample is found to be beyond it.
-	float edge_limit = 0.0f;     // Stop enveloping when the current edge is
-	                             // hits or exceeds this limit.
+	// The current edge of the envelope, which increments outward when
+	// samples press against it.
+	float edge = 0.0f;
+
+	// The amount the edge grows by once a sample is found to be beyond it.
+	float edge_increment = 0.0f;
+
+	// Stop enveloping when the current edge is hits or exceeds this limit.
+	float edge_limit = 0.0f;
 };
 
 #endif
