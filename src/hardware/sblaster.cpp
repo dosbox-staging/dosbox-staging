@@ -139,10 +139,7 @@ struct SBInfo {
 	SBType type  = SBType::None;
 
 	// ESS chipset emulation, to be set only for SBType::SBPro2
-	struct {
-		EssType type       = EssType::None;
-		bool extended_mode = false;
-	} ess;
+	EssType ess_type = EssType::None;
 
 	FilterType sb_filter_type   = FilterType::None;
 	FilterType opl_filter_type  = FilterType::None;
@@ -327,7 +324,7 @@ static void dsp_set_speaker(const bool requested_state)
 	// enable/disable commands are simply ignored. Only the SB Pro and
 	// earlier models can toggle the speaker-output via speaker
 	// enable/disable commands.
-	if (sb.type == SBType::SB16 || sb.ess.type != EssType::None) {
+	if (sb.type == SBType::SB16 || sb.ess_type != EssType::None) {
 		return;
 	}
 
@@ -358,7 +355,7 @@ static void dsp_set_speaker(const bool requested_state)
 
 static void init_speaker_state()
 {
-	if (sb.type == SBType::SB16 || sb.ess.type != EssType::None) {
+	if (sb.type == SBType::SB16 || sb.ess_type != EssType::None) {
 
 		// Speaker output (DAC output) is always enabled on the SB16 and ESS
 		// cards. Because the channel is active, we treat this as a startup
@@ -1564,34 +1561,17 @@ static bool check_sb2_or_above()
 
 static void dsp_do_command()
 {
-	if (sb.ess.type != EssType::None && sb.dsp.cmd >= 0xa0 && sb.dsp.cmd <= 0xcf) {
-		// ESS overlaps with SB16 commands. Handle it here, not mucking
-		// up the switch statement.
+	if (sb.ess_type != EssType::None && sb.dsp.cmd >= 0xa0 && sb.dsp.cmd <= 0xcf) {
+		LOG_TRACE("ESS: Command: %02xh", sb.dsp.cmd);
+		// ESS DSP commands overlap with SB16 commands. We handle them here,
+		// not mucking up the switch statement.
 
-		if (sb.dsp.cmd < 0xc0) {
-			// Write ESS register
-			// (cmd=register, data[0]=value to write)
-			if (sb.ess.extended_mode) {
-				// TODO not implemented
-				// ess_do_write(sb.dsp.cmd, sb.dsp.in.data[0]);
-			}
-		} else if (sb.dsp.cmd == 0xc0) {
-			// Read ESS register (data[0]=register to read)
-			dsp_flush_data();
-
-			if (sb.ess.extended_mode && sb.dsp.in.data[0] >= 0xa0 &&
-			    sb.dsp.in.data[0] <= 0xbf) {
-				// TODO not implemented
-				// dsp_add_data(ess_do_read(sb.dsp.in.data[0]));
-			}
-		} else if (sb.dsp.cmd == 0xc6 || sb.dsp.cmd == 0xc7) {
+		if (sb.dsp.cmd == 0xc6 || sb.dsp.cmd == 0xc7) {
 			// set(0xc6) clear(0xc7) extended mode
-			sb.ess.extended_mode = (sb.dsp.cmd == 0xc6);
-
 			LOG_TRACE("ESS: Extended DAC mode turned on %s",
-			          sb.ess.extended_mode ? "on" : "off");
+			          (sb.dsp.cmd == 0xc6) ? "on" : "off");
 		} else {
-			LOG_DEBUG("ESS: Unknown command %02xh", sb.dsp.cmd);
+			LOG_TRACE("ESS: Unknown command %02xh", sb.dsp.cmd);
 		}
 
 		sb.dsp.cmd     = DspNoCommand;
@@ -1938,7 +1918,7 @@ static void dsp_do_command()
 			break;
 
 		case SBType::SBPro2:
-			if (sb.ess.type != EssType::None) {
+			if (sb.ess_type != EssType::None) {
 				dsp_add_data(0x03);
 				dsp_add_data(0x01);
 			} else {
@@ -1971,7 +1951,8 @@ static void dsp_do_command()
 
 	case 0xe3: // DSP Copyright
 		dsp_flush_data();
-		if (sb.ess.type != EssType::None) {
+
+		if (sb.ess_type != EssType::None) {
 			// ESS chips do not return a copyright string
 			dsp_add_data(0);
 		} else {
@@ -1987,7 +1968,7 @@ static void dsp_do_command()
 		break;
 
 	case 0xe7: // ESS detect/read config
-		switch (sb.ess.type) {
+		switch (sb.ess_type) {
 		case EssType::None: break;
 
 		case EssType::Es1688:
@@ -2576,7 +2557,7 @@ static uint8_t ctmixer_read()
 		break;
 
     case 0x40: // ESS Identification Value (ES1488 and later)
-		switch (sb.ess.type) {
+		switch (sb.ess_type) {
 		case EssType::None:
 		case EssType::Es1688:
 			ret = sb.mixer.ess_id_str[sb.mixer.ess_id_str_pos];
@@ -3019,9 +3000,9 @@ public:
 		const auto sbtype_pref = section->Get_string("sbtype");
 
 		sb.type     = determine_sb_type(sbtype_pref);
-		sb.ess.type = determine_ess_type(sbtype_pref);
+		sb.ess_type = determine_ess_type(sbtype_pref);
 
-		switch (sb.ess.type) {
+		switch (sb.ess_type) {
 		case EssType::None: break;
 		case EssType::Es1688:
 			sb.mixer.ess_id_str[0] = 0x16;
@@ -3032,7 +3013,7 @@ public:
 
 		oplmode = determine_oplmode(section->Get_string("oplmode"),
 		                            sb.type,
-		                            sb.ess.type);
+		                            sb.ess_type);
 
 		// Init OPL
 		switch (oplmode) {
