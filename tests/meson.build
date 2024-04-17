@@ -59,7 +59,7 @@ fs_utils = executable(
 test(
     'gtest fs_utils',
     fs_utils,
-    workdir: project_source_root,
+    workdir: meson.project_source_root(),
     is_parallel: false,
 )
 
@@ -73,7 +73,7 @@ program_mixer = executable(
 test(
     'gtest program_mixer',
     program_mixer,
-    workdir: project_source_root,
+    workdir: meson.project_source_root(),
     is_parallel: false,
 )
 
