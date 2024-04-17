@@ -245,7 +245,7 @@ that does not follow them.  There are no other exceptions.
   Imported-from: <url-or-specific-identifier>
   ```
 
-For an example of a commit, that followed all of these rules, see:
+For an example of a commit that followed all of these rules, see commit [ffe3c5ab](https://github.com/dosbox-staging/dosbox-staging/commit/ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8):
 
     $ git log -1 ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
 
