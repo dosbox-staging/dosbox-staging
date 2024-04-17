@@ -59,6 +59,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wlanguage-extension-token"
+#endif
+
 /*
  * Log-scale quarter sine table extracted from OPL3 ROM; taken straight from
  * Nuked OPL3 source code.
