@@ -1,4 +1,4 @@
-# Contributing to dosbox-staging
+# Contributing to DOSBox Staging
 
 Thank you for your interest in contributing to DOSBox Staging! There are many
 ways to participate, and we appreciate all of them. This document is a bit long,
