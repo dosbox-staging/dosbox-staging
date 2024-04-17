@@ -2,7 +2,8 @@ project(
     'dosbox-staging', 'c', 'cpp',
 
     version: run_command(
-      './scripts/get-version.sh', 'version', check: true,
+      meson.project_source_root() + '/scripts/get-version.sh',
+      'version', check: true,
     ).stdout().strip(),
 
     license: 'GPL-2.0-or-later',
@@ -1222,7 +1223,7 @@ if host_machine.system() in ['windows', 'cygwin']
     summary('Windows Multimedia support', winmm_dep.found())
 endif
 
-# Setup include directories
+# Set up include directories
 incdir = [
     include_directories('include', '.'),
     include_directories('src/libs', is_system: true),
@@ -1297,8 +1298,8 @@ configure_file(
 )
 
 
-# Setup the executable and libraries
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Set up the executable and libraries
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 dosbox_sources = ['src/main.cpp', 'src/dosbox.cpp']
 
@@ -1329,12 +1330,9 @@ libdosbox = static_library(
 dosbox_dep = declare_dependency(link_with: libdosbox)
 
 
-# Setup unit tests
-# ~~~~~~~~~~~~~~~~
-# Some tests use relative paths; in meson 0.56.0 this can be replaced
-# with meson.project_source_root().
+# Set up unit tests
+# ~~~~~~~~~~~~~~~~~
 #
 if wants_tests
-    project_source_root = meson.current_source_dir()
     subdir('tests')
 endif
