@@ -9,8 +9,9 @@ so here are links to the major sections:
 - [3. Contributing code](#contributing-code)
   - [3.1. Coding style](#coding-style)
     - [3.1.1. Language](#language)
-    - [3.1.2. Code Formatting](#code-formatting)
+    - [3.1.2. Code formatting](#code-formatting)
     - [3.1.3. Additional style rules](#additional-style-rules)
+    - [3.1.4. Code style example](#code-style-example)
   - [3.2. Submitting patches and pull requests](#submitting-patches-and-pull-requests)
     - [3.2.1. Commit messages](#commit-messages)
     - [3.2.2. Commit messages for patches authored by someone else](#commit-messages-for-patches-authored-by-someone-else)
@@ -142,6 +143,8 @@ of just `delay`, `cutoff_freq_hz` instead of just `cutoff_freq`, etc.).
 `CHECK_NARROWING()` and including `"checks.h"` (just search for
 `CHECK_NARROWING())`.
 15. Use header guards in the format: `DOSBOX_HEADERNAME_H` or `DOSBOX_MODULENAME_HEADERNAME_H`.
+
+#### Code style example
 
 ```cpp
 enum class CaptureState { Off, Pending, InProgress };
