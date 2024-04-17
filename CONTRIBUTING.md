@@ -57,6 +57,7 @@ There are plenty of tasks to work on all around. Here are some ideas:
 - Peruse the list of
   [open bug reports](https://github.com/dosbox-staging/dosbox-staging/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
   and try to reproduce or fix them.
+- Check out the list of reports tagged with ["good first issue"](https://github.com/dosbox-staging/dosbox-staging/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)—these are suitable for people getting familiar with the project.
 
 Or just send us a Pull Request with your improvement
 (but please read ["Submitting patches"](#submitting-patches-pull-requests) first).
@@ -106,7 +107,7 @@ We use C-like C++20. To clarify:
 - Before using some platform-specific API, check if SDL2 provides
   a cross-platform interface for it. It probably does.
 
-#### Code Formatting
+#### Code formatting
 
 For new code follow K&R style—see [Linux coding style] for examples and some
 advice on good C coding style.
@@ -117,26 +118,82 @@ a custom clang-format ruleset to make it crystal clear. Skip to
 
 [Linux coding style]:https://www.kernel.org/doc/html/latest/process/coding-style.html
 
-#### Additional Style Rules
+#### Additional style rules
 
-1. Sort includes according to [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes)
-2. **NEVER** use Hungarian notation.
-3. Most old code uses the naming convention `MODULENAME_FunctionName` for public
+1. Use `auto` as much as you can.
+2. We try hard to be `const`-correct as much as possible.
+3. Keep the `const`s in sync in the funcion/method declarations and definitions.
+4. Prefer to use enum classes.
+5. Always initialise all variables and struct members.
+6. Struct-nesting is encouraged as logical groupings improve readability.
+7. **NEVER** use Hungarian notation!
+8. But always include unit of measurement suffixes (e.g., `delay_ms` instead
+9. Most old code uses the naming convention `MODULENAME_FunctionName` for public
    module interfaces. Do **NOT** replace it with namespaces.
-4. Utility function names and helper functions (generic functionalities, not
-   tied to any specific emulation area, such as functions in
-   `include/support.h`) do not need to follow this convention.
-   Using `snake_case` names for such functions is recommended.
-5. Do **NOT** use that convention for static functions (single file scope), class
-   names, methods, enums, or other constructs.
-6. Class names and method names can use `CamelCase` or `snake_case`.
-   Be consistent; **DO NOT** mix styles like this: `get_DefaultValue_Str`.
-7. Using `snake_case` for variable names, parameter names, struct fields, and
-   class fields is recommended.
-8. Use header guards in the format: `DOSBOX_HEADERNAME_H` or
-   `DOSBOX_MODULENAME_HEADERNAME_H`.
+10. Generally, we only use `UpperCamelCase` and `lower_snake_case`. Function
+arguments, variables names, struct members, and static functions are
+`lower_snake_case`—everything else is `UpperCamelCase`. See the code example
+below for concrete examples.
+11. Don't uppercase acronyms, so use `PngWriter` instead of `PNGWriter`.
+12. Prefer to us pre-increment/decrement whenever possible, so `++i` and `--i`.
+13. Sort includes according to [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes).
+of just `delay`, `cutoff_freq_hz` instead of just `cutoff_freq`, etc.).
+14. Enable narrowing checks in new code and when you rework a file by adding
+`CHECK_NARROWING()` and including `"checks.h"` (just search for
+`CHECK_NARROWING())`.
+15. Use header guards in the format: `DOSBOX_HEADERNAME_H` or `DOSBOX_MODULENAME_HEADERNAME_H`.
 
-### Submitting Patches / Pull Requests
+```cpp
+enum class CaptureState { Off, Pending, InProgress };
+
+// Static function
+static int32_t get_next_capture_index(const CaptureType type);
+
+// Public function prefixed by `MODULENAME_`
+void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second);
+
+// Static inline struct; always initialise members
+static struct {
+	std_fs::path path     = {};
+	bool path_initialised = false;
+
+	struct {
+		CaptureState audio = {};
+		CaptureState midi  = {};
+		CaptureState video = {};
+	} state = {};
+} capture = {};
+
+// Public struct; always initialise members
+struct State {
+	CaptureState raw      = {};
+	CaptureState upscaled = {};
+	CaptureState rendered = {};
+	CaptureState grouped  = {};
+};
+
+// Class definition
+class PngWriter {
+public:
+	PngWriter() = default;
+	~PngWriter();
+
+	// Use const args whenever possible
+	bool InitRgb888(FILE* fp, const uint16_t width, const uint16_t height,
+	                const Fraction& pixel_aspect_ratio,
+	                const VideoMode& video_mode);
+
+	void WriteRow(std::vector<uint8_t>::const_iterator row);
+
+private:
+	// Always initialise members
+	State state = {};
+
+	std_fs::path rendered_path = {};
+}
+```
+
+### Submitting patches and pull requests
 
 Submissions via GitHub PRs are recommended. If you can't use GitHub for
 whatever reason, then submitting patches (generated with `git-format-patch`)
