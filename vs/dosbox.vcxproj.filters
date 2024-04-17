@@ -451,6 +451,12 @@
     <ClCompile Include="..\src\libs\decoders\wav.c">
       <Filter>src\libs\decoders</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\libs\ESFMu\esfm.c">
+      <Filter>src\libs\ESFMu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\libs\ESFMu\esfm_registers.c">
+      <Filter>src\libs\ESFMu</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\libs\manymouse\linux_evdev.c">
       <Filter>src\libs\manymouse</Filter>
     </ClCompile>
@@ -1338,6 +1344,9 @@
     <ClInclude Include="..\src\libs\decoders\xxhash.h">
       <Filter>src\libs\decoders</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\libs\ESFMu\esfm.h">
+      <Filter>src\libs\ESFMu</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\libs\manymouse\manymouse.h">
       <Filter>src\libs\manymouse</Filter>
     </ClInclude>
@@ -1600,6 +1609,9 @@
     </Filter>
     <Filter Include="src\libs\decoders">
       <UniqueIdentifier>{d49f3a50-e4ed-4da7-a530-eeefef580e9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\libs\ESFMu">
+      <UniqueIdentifier>{5ea3ce71-9311-4652-be0a-dd842e95d4d4}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\libs\mverb">
       <UniqueIdentifier>{8804de8e-c30a-4d93-b2b4-1c1634fd97b7}</UniqueIdentifier>
