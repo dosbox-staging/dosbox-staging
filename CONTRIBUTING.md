@@ -90,6 +90,9 @@ We use C-like C++20. To clarify:
   This does not mean "don't use classes", it means "don't use stuff like
   multiple inheritance, overblown class hierarchies, operator overloading,
   iostreams for stdout/stderr, etc".
+- Don't micro-optimise and avoid writing "clever code". Always optimise for clarity of intent,
+  maintainability, and readability in the first round, and only deviate from that if
+  warranted due to performance considerations backed by actual real-world measurements.
 - C++20 has a rich STL library, use it (responsibly—sometimes using
   C standard library makes more sense).
 - Use modern C++ features like `constexpr`, `static_assert`, managed pointers,
@@ -105,6 +108,7 @@ We use C-like C++20. To clarify:
   template instead.
 - Never write `using namespace std;`. We don't want any confusion about what
   comes from STL and what's project-specific.
+- Using namespaces is fine for grouping strings or constants but should be used sparingly.
 - Before using some platform-specific API, check if SDL2 provides
   a cross-platform interface for it. It probably does.
 
@@ -123,26 +127,27 @@ a custom clang-format ruleset to make it crystal clear. Skip to
 
 1. Use `auto` as much as you can.
 2. We try hard to be `const`-correct as much as possible.
-3. Keep the `const`s in sync in the funcion/method declarations and definitions.
+3. Keep the `const`s in sync in the function/method declarations and definitions.
 4. Prefer to use enum classes.
 5. Always initialise all variables and struct members.
 6. Struct-nesting is encouraged as logical groupings improve readability.
 7. **NEVER** use Hungarian notation!
 8. But always include unit of measurement suffixes (e.g., `delay_ms` instead
-9. Most old code uses the naming convention `MODULENAME_FunctionName` for public
+9. Prefer using `intXX_t`/`uintXX_t` types and `size_t` instead of plain `int`.
+10. Most old code uses the naming convention `MODULENAME_FunctionName` for public
    module interfaces. Do **NOT** replace it with namespaces.
-10. Generally, we only use `UpperCamelCase` and `lower_snake_case`. Function
-arguments, variables names, struct members, and static functions are
+11. Generally, we only use `UpperCamelCase` and `lower_snake_case`. Function
+arguments, variable names, struct members, and static functions are
 `lower_snake_case`—everything else is `UpperCamelCase`. See the code example
 below for concrete examples.
-11. Don't uppercase acronyms, so use `PngWriter` instead of `PNGWriter`.
-12. Prefer to us pre-increment/decrement whenever possible, so `++i` and `--i`.
-13. Sort includes according to [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes).
+12. Don't uppercase acronyms, so use `PngWriter` instead of `PNGWriter`.
+13. Prefer to us pre-increment/decrement whenever possible, so `++i` and `--i`.
+14. Sort includes according to [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes).
 of just `delay`, `cutoff_freq_hz` instead of just `cutoff_freq`, etc.).
-14. Enable narrowing checks in new code and when you rework a file by adding
+15. Enable narrowing checks in new code and when you rework a file by adding
 `CHECK_NARROWING()` and including `"checks.h"` (just search for
 `CHECK_NARROWING())`.
-15. Use header guards in the format: `DOSBOX_HEADERNAME_H` or `DOSBOX_MODULENAME_HEADERNAME_H`.
+16. Use header guards in the format: `DOSBOX_HEADERNAME_H` or `DOSBOX_MODULENAME_HEADERNAME_H`.
 
 #### Code style example
 
