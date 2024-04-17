@@ -195,6 +195,9 @@ public:
 
     void WriteRow(std::vector<uint8_t>::const_iterator row);
 
+    // Mark methods as const whenever possible
+    bool IsValid() const;
+
 private:
     // Always initialise members
     State state = {};
