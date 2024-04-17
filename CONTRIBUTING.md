@@ -157,42 +157,42 @@ void CAPTURE_AddFrame(const RenderedImage& image, const float frames_per_second)
 
 // Static inline struct; always initialise members
 static struct {
-	std_fs::path path     = {};
-	bool path_initialised = false;
+    std_fs::path path     = {};
+    bool path_initialised = false;
 
-	struct {
-		CaptureState audio = {};
-		CaptureState midi  = {};
-		CaptureState video = {};
-	} state = {};
+    struct {
+        CaptureState audio = {};
+        CaptureState midi  = {};
+        CaptureState video = {};
+    } state = {};
 } capture = {};
 
 // Public struct; always initialise members
 struct State {
-	CaptureState raw      = {};
-	CaptureState upscaled = {};
-	CaptureState rendered = {};
-	CaptureState grouped  = {};
+    CaptureState raw      = {};
+    CaptureState upscaled = {};
+    CaptureState rendered = {};
+    CaptureState grouped  = {};
 };
 
 // Class definition
 class PngWriter {
 public:
-	PngWriter() = default;
-	~PngWriter();
+    PngWriter() = default;
+    ~PngWriter();
 
-	// Use const args whenever possible
-	bool InitRgb888(FILE* fp, const uint16_t width, const uint16_t height,
-	                const Fraction& pixel_aspect_ratio,
-	                const VideoMode& video_mode);
+    // Use const args whenever possible
+    bool InitRgb888(FILE* fp, const uint16_t width, const uint16_t height,
+                    const Fraction& pixel_aspect_ratio,
+                    const VideoMode& video_mode);
 
-	void WriteRow(std::vector<uint8_t>::const_iterator row);
+    void WriteRow(std::vector<uint8_t>::const_iterator row);
 
 private:
-	// Always initialise members
-	State state = {};
+    // Always initialise members
+    State state = {};
 
-	std_fs::path rendered_path = {};
+    std_fs::path rendered_path = {};
 }
 ```
 
