@@ -310,7 +310,7 @@ std::string Property::GetHelp() const
 			help_text = format_str(help_text,
 			                       GetDefaultValue().ToString().c_str());
 		}
-		result.append(help_text).append("\n");
+		result.append(help_text);
 	}
 
 	const auto configitem_has_message = [this](const auto& value) {
@@ -322,6 +322,9 @@ std::string Property::GetHelp() const
 	                enabled_options.end(),
 	                configitem_has_message)) {
 		for (const auto& value : enabled_options) {
+			if (!result.empty()) {
+				result.append("\n");
+			}
 			if (iequals(value, propname) &&
 			    MSG_Exists(create_config_item_name(propname, {}).c_str())) {
 				result.append(MSG_Get(
@@ -330,7 +333,6 @@ std::string Property::GetHelp() const
 				result.append(MSG_Get(
 				        create_config_item_name(propname, value).c_str()));
 			}
-			result.append("\n");
 		}
 	}
 	if (result.empty()) {
@@ -350,7 +352,7 @@ std::string Property::GetHelpUtf8() const
 			help_text = format_str(help_text,
 			                       GetDefaultValue().ToString().c_str());
 		}
-		result.append(help_text).append("\n");
+		result.append(help_text);
 	}
 
 	const auto configitem_has_message = [this](const auto& value) {
@@ -362,6 +364,9 @@ std::string Property::GetHelpUtf8() const
 	                enabled_options.end(),
 	                configitem_has_message)) {
 		for (const auto& value : enabled_options) {
+			if (!result.empty()) {
+				result.append("\n");
+			}
 			if (iequals(value, propname) &&
 			    MSG_Exists(create_config_item_name(propname, {}).c_str())) {
 				result.append(MSG_GetRaw(
@@ -370,7 +375,6 @@ std::string Property::GetHelpUtf8() const
 				result.append(MSG_GetRaw(
 				        create_config_item_name(propname, value).c_str()));
 			}
-			result.append("\n");
 		}
 	}
 	if (result.empty()) {

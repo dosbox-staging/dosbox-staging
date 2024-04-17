@@ -784,7 +784,7 @@ void init_midi_dosbox_settings(Section_prop& secprop)
 	        "Configuration options for the selected MIDI interface (unset by default).\n"
 	        "This is usually the ID or name of the MIDI synthesizer you want\n"
 	        "to use (find the ID/name with the DOS command 'MIXER /LISTMIDI').\n"
-	        "Notes:\n");
+	        "Notes:");
 	str_prop->SetOptionHelp("fluidsynth_or_mt32emu",
 	                        "  - This option has no effect when using the built-in synthesizers\n"
 	                        "    ('mididevice = fluidsynth' or 'mididevice = mt32').");
