@@ -148,6 +148,8 @@ of just `delay`, `cutoff_freq_hz` instead of just `cutoff_freq`, etc.).
 `CHECK_NARROWING()` and including `"checks.h"` (just search for
 `CHECK_NARROWING())`.
 16. Use header guards in the format: `DOSBOX_HEADERNAME_H` or `DOSBOX_MODULENAME_HEADERNAME_H`.
+17. Use end-of-line comments very sparingly and use `//` for block comments.
+18. Surround debug logging with `#if 0` & `#endif` pairs instead of commenting the log statements out, or better yet, introduce define switches per topic (e.g., `#define DEBUG_VGA_DRAW`).
 
 #### Code style example
 
