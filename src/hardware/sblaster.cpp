@@ -2829,41 +2829,59 @@ static EssType determine_ess_type(const std::string& pref)
 static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
                                  const EssType ess_type)
 {
-	if (pref == "cms") {
-		// Skip for backward compatibility with existing configurations
+	if (ess_type == EssType::None) {
+		if (pref == "cms") {
+			// Skip for backward compatibility with existing configurations
+			return OplMode::None;
+
+		} else if (pref == "opl2") {
+			return OplMode::Opl2;
+
+		} else if (pref == "dualopl2") {
+			return OplMode::DualOpl2;
+
+		} else if (pref == "opl3") {
+			return OplMode::Opl3;
+
+		} else if (pref == "opl3gold") {
+			return OplMode::Opl3Gold;
+
+		} else if (pref == "esfm") {
+			return OplMode::Esfm;
+
+		} else if (pref == "auto") {
+			// Invalid settings result in defaulting to 'auto'
+			switch (sb_type) {
+			case SbType::GameBlaster: return OplMode::None;
+			case SbType::SB1: return OplMode::Opl2;
+			case SbType::SB2: return OplMode::Opl2;
+			case SbType::SBPro1: return OplMode::DualOpl2;
+			case SbType::SBPro2:
+				return ess_type == EssType::None ? OplMode::Opl3
+												 : OplMode::Esfm;
+			case SbType::SB16: return OplMode::Opl3;
+			case SbType::None: return OplMode::None;
+			}
+		}
+		// "falsey" setting ("off", "none", "false", etc.)
 		return OplMode::None;
 
-	} else if (pref == "opl2") {
-		return OplMode::Opl2;
+	} else { // ESS
+		if (pref == "esfm" || pref == "auto") {
+			return OplMode::Esfm;
 
-	} else if (pref == "dualopl2") {
-		return OplMode::DualOpl2;
+		} else {
+			LOG_WARNING(
+			        "OPL: Invalid 'oplmode' setting for the ESS card: '%s', "
+			        "using 'auto'", pref.c_str());
 
-	} else if (pref == "opl3") {
-		return OplMode::Opl3;
+			auto* sect_updater = static_cast<Section_prop*>(
+			        control->GetSection("sblaster"));
+			sect_updater->Get_prop("oplmode")->SetValue("auto");
 
-	} else if (pref == "opl3gold") {
-		return OplMode::Opl3Gold;
-
-	} else if (pref == "esfm") {
-		return OplMode::Esfm;
-
-	} else if (pref == "auto") {
-		// Invalid settings result in defaulting to 'auto'
-		switch (sb_type) {
-		case SbType::GameBlaster: return OplMode::None;
-		case SbType::SB1: return OplMode::Opl2;
-		case SbType::SB2: return OplMode::Opl2;
-		case SbType::SBPro1: return OplMode::DualOpl2;
-		case SbType::SBPro2:
-			return ess_type == EssType::None ? OplMode::Opl3
-			                                 : OplMode::Esfm;
-		case SbType::SB16: return OplMode::Opl3;
-		case SbType::None: return OplMode::None;
+			return OplMode::Esfm;
 		}
 	}
-	// "falsey" setting ("off", "none", "false", etc.)
-	return OplMode::None;
 }
 
 static bool is_cms_enabled(const SbType sbtype)
@@ -2909,7 +2927,7 @@ static bool is_cms_enabled(const SbType sbtype)
 		if (cms_enabled) {
 			LOG_WARNING(
 			        "%s: 'cms' setting 'on' not supported on this card, "
-			        "forcing 'auto'.",
+			        "using 'auto'.",
 			        sb_log_prefix());
 
 			auto* sect_updater = static_cast<Section_prop*>(
