@@ -39,7 +39,7 @@ CHECK_NARROWING();
 
 constexpr auto OplSampleRateHz = 49716;
 
-static std::unique_ptr<OPL> opl = {};
+static std::unique_ptr<Opl> opl = {};
 
 static const char* to_string(const OplMode opl_mode)
 {
@@ -217,7 +217,7 @@ uint8_t OplChip::EsfmReadbackReg(const uint16_t reg)
 	return ret;
 }
 
-void OPL::Init()
+void Opl::Init()
 {
 	opl.newm = 0;
 
@@ -256,7 +256,7 @@ void OPL::Init()
 	}
 }
 
-void OPL::WriteReg(const io_port_t selected_reg, const uint8_t val)
+void Opl::WriteReg(const io_port_t selected_reg, const uint8_t val)
 {
 	if (opl.mode == OplMode::Esfm) {
 		ESFM_write_reg_buffered_fast(&esfm.chip, selected_reg, val);
@@ -270,7 +270,7 @@ void OPL::WriteReg(const io_port_t selected_reg, const uint8_t val)
 	}
 }
 
-io_port_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
+io_port_t Opl::WriteAddr(const io_port_t port, const uint8_t val)
 {
 	if (opl.mode == OplMode::Esfm) {
 		uint16_t addr;
@@ -296,7 +296,7 @@ io_port_t OPL::WriteAddr(const io_port_t port, const uint8_t val)
 	}
 }
 
-void OPL::EsfmSetLegacyMode()
+void Opl::EsfmSetLegacyMode()
 {
 	ESFM_write_port(&esfm.chip, 0, 0);
 }
@@ -338,7 +338,7 @@ int16_t remove_dc_bias(const int16_t back_sample)
 	return static_cast<int16_t>(front_sample - average);
 }
 
-AudioFrame OPL::RenderFrame()
+AudioFrame Opl::RenderFrame()
 {
 	static int16_t buf[2] = {};
 
@@ -372,7 +372,7 @@ AudioFrame OPL::RenderFrame()
 	}
 }
 
-void OPL::RenderUpToNow()
+void Opl::RenderUpToNow()
 {
 	const auto now = PIC_FullIndex();
 
@@ -389,7 +389,7 @@ void OPL::RenderUpToNow()
 	}
 }
 
-void OPL::AudioCallback(const uint16_t requested_frames)
+void Opl::AudioCallback(const uint16_t requested_frames)
 {
 	assert(channel);
 #if 0
@@ -416,7 +416,7 @@ void OPL::AudioCallback(const uint16_t requested_frames)
 	last_rendered_ms = PIC_FullIndex();
 }
 
-void OPL::CacheWrite(const io_port_t port, const uint8_t val)
+void Opl::CacheWrite(const io_port_t port, const uint8_t val)
 {
 	// capturing?
 	if (capture) {
@@ -427,7 +427,7 @@ void OPL::CacheWrite(const io_port_t port, const uint8_t val)
 	cache[port] = val;
 }
 
-void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value)
+void Opl::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value)
 {
 	// Make sure we don't use OPL3 features
 	// Don't allow write to disable OPL3
@@ -456,7 +456,7 @@ void OPL::DualWrite(const uint8_t index, const uint8_t port, const uint8_t value
 	CacheWrite(full_port, val);
 }
 
-void OPL::AdlibGoldControlWrite(const uint8_t val)
+void Opl::AdlibGoldControlWrite(const uint8_t val)
 {
 	switch (ctrl.index) {
 	case 0x04:
@@ -502,7 +502,7 @@ void OPL::AdlibGoldControlWrite(const uint8_t val)
 	}
 }
 
-uint8_t OPL::AdlibGoldControlRead()
+uint8_t Opl::AdlibGoldControlRead()
 {
 	switch (ctrl.index) {
 	case 0x00: // Board Options
@@ -524,7 +524,7 @@ uint8_t OPL::AdlibGoldControlRead()
 	return 0xff;
 }
 
-void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t)
+void Opl::PortWrite(const io_port_t port, const io_val_t value, const io_width_t)
 {
 	RenderUpToNow();
 
@@ -659,7 +659,7 @@ void OPL::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 	}
 }
 
-uint8_t OPL::PortRead(const io_port_t port, const io_width_t)
+uint8_t Opl::PortRead(const io_port_t port, const io_width_t)
 {
 	// Roughly half a microsecond (as we already do 1 us on each port read
 	// and some tests revealed it taking 1.5 us to read an AdLib port).
@@ -760,7 +760,7 @@ static void OPL_SaveRawEvent(const bool pressed)
 	}
 }
 
-OPL::OPL(Section* configuration, const OplMode _opl_mode)
+Opl::Opl(Section* configuration, const OplMode _opl_mode)
 {
 	assert(_opl_mode != OplMode::None);
 	opl.mode = _opl_mode;
@@ -782,7 +782,7 @@ OPL::OPL(Section* configuration, const OplMode _opl_mode)
 		channel_features.emplace(ChannelFeature::Stereo);
 	}
 
-	const auto mixer_callback = std::bind(&OPL::AudioCallback,
+	const auto mixer_callback = std::bind(&Opl::AudioCallback,
 	                                      this,
 	                                      std::placeholders::_1);
 
@@ -819,8 +819,8 @@ OPL::OPL(Section* configuration, const OplMode _opl_mode)
 
 	using namespace std::placeholders;
 
-	const auto read_from = std::bind(&OPL::PortRead, this, _1, _2);
-	const auto write_to  = std::bind(&OPL::PortWrite, this, _1, _2, _3);
+	const auto read_from = std::bind(&Opl::PortRead, this, _1, _2);
+	const auto write_to  = std::bind(&Opl::PortWrite, this, _1, _2, _3);
 
 	// 0x388-0x38b ports (read/write)
 	constexpr io_port_t port_0x388 = 0x388;
@@ -847,7 +847,7 @@ OPL::OPL(Section* configuration, const OplMode _opl_mode)
 	        port_0x388);
 }
 
-OPL::~OPL()
+Opl::~Opl()
 {
 	LOG_MSG("%s: Shutting down %s", channel->GetName().c_str(), to_string(opl.mode));
 
@@ -877,7 +877,7 @@ void OPL_ShutDown([[maybe_unused]] Section* sec)
 void OPL_Init(Section* sec, const OplMode oplmode)
 {
 	assert(sec);
-	opl = std::make_unique<OPL>(sec, oplmode);
+	opl = std::make_unique<Opl>(sec, oplmode);
 
 	constexpr auto changeable_at_runtime = true;
 	sec->AddDestroyFunction(&OPL_ShutDown, changeable_at_runtime);

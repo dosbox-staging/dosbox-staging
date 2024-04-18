@@ -97,7 +97,7 @@ class OplCapture;
 
 enum class EsfmMode { Legacy, Native };
 
-class OPL {
+class Opl {
 public:
 	mixer_channel_t channel = {};
 
@@ -105,14 +105,14 @@ public:
 
 	std::unique_ptr<OplCapture> capture = {};
 
-	OPL(Section* configuration, const OplMode opl_mode);
-	~OPL();
+	Opl(Section* configuration, const OplMode opl_mode);
+	~Opl();
 
 	// prevent copy
-	OPL(OPL&) = delete;
+	Opl(Opl&) = delete;
 
 	// prevent assignment
-	OPL& operator=(OPL&) = delete;
+	Opl& operator=(Opl&) = delete;
 
 private:
 	IO_ReadHandleObject ReadHandler[3];
