@@ -17,6 +17,7 @@
 
 #include "dos_inc.h"
 #include "help_util.h"
+#include "string_utils.h"
 
 #define WIKI_URL "https://github.com/dosbox-staging/dosbox-staging/wiki"
 
@@ -126,10 +127,21 @@ public:
 	DOS_PSP* psp          = nullptr;
 
 	virtual void Run(void) = 0;
-	virtual void WriteOut(const char* format, const char* arguments);
 
 	// printf to DOS stdout
-	virtual void WriteOut(const char* format, ...);
+	template <typename... Args>
+	void WriteOut(const char* format, const Args&... args)
+	{
+		if (SuppressWriteOut(format)) {
+			return;
+		}
+
+		const auto str = format_str(format, args...);
+		WriteToStdOut(str);
+	}
+
+	// TODO Only used by the unit tests, try to get rid of it later
+	virtual void WriteOut(const char* format, const char* arguments);
 
 	// Write string to DOS stdout
 	void WriteOut_NoParsing(const char* str);
@@ -147,6 +159,9 @@ public:
 
 protected:
 	HELP_Detail help_detail{};
+
+private:
+	void WriteToStdOut(std::string_view output);
 };
 
 using PROGRAMS_Creator = std::function<std::unique_ptr<Program>()>;

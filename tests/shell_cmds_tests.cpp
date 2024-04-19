@@ -55,6 +55,7 @@ public:
 	 */
 	MOCK_METHOD(bool, ExecuteShellCommand,
 	            (const char* const name, char* arguments), (override));
+
 	MOCK_METHOD(void, WriteOut, (const char* format, const char* arguments),
 	            (override));
 

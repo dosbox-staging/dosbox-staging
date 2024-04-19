@@ -50,9 +50,10 @@ static std::vector<comdata_t> internal_progs_comdata;
 static std::vector<PROGRAMS_Creator> internal_progs;
 
 static uint8_t last_written_character = '\n';
-constexpr int WriteOutBufSize         = 16384;
 
-static void write_to_stdout(std::string_view output)
+constexpr int WriteOutBufSize = 16384;
+
+void Program::WriteToStdOut(std::string_view output)
 {
 	dos.internal_output = true;
 
@@ -72,21 +73,6 @@ static void write_to_stdout(std::string_view output)
 		DOS_WriteFile(STDOUT, &out, &bytes_to_write);
 	}
 	dos.internal_output = false;
-}
-
-static void truncated_chars_message(int size)
-{
-	if (size > WriteOutBufSize) {
-		constexpr int MessageSize = 128;
-		char message[MessageSize];
-
-		snprintf(message,
-		         MessageSize,
-		         "\n\nERROR: OUTPUT TOO LONG: %d CHARS TRUNCATED",
-		         size - WriteOutBufSize);
-
-		write_to_stdout(message);
-	}
 }
 
 void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
@@ -225,26 +211,7 @@ bool Program::SuppressWriteOut(const char* format)
 	return true;
 }
 
-// TODO: Refactor messages and related functions like WriteOut that use variadic
-// args to instead use format strings when dosbox-staging starts using C++20
-
-void Program::WriteOut(const char* format, ...)
-{
-	if (SuppressWriteOut(format)) {
-		return;
-	}
-
-	char buf[WriteOutBufSize];
-	std::va_list msg;
-
-	va_start(msg, format);
-	const int size = std::vsnprintf(buf, WriteOutBufSize, format, msg) + 1;
-	va_end(msg);
-
-	write_to_stdout(buf);
-	truncated_chars_message(size);
-}
-
+// TODO Only used by the unit tests, try to get rid of it later
 void Program::WriteOut(const char* format, const char* arguments)
 {
 	if (SuppressWriteOut(format)) {
@@ -252,10 +219,9 @@ void Program::WriteOut(const char* format, const char* arguments)
 	}
 
 	char buf[WriteOutBufSize];
-	const int size = std::snprintf(buf, WriteOutBufSize, format, arguments) + 1;
+	std::snprintf(buf, WriteOutBufSize, format, arguments);
 
-	write_to_stdout(buf);
-	truncated_chars_message(size);
+	WriteToStdOut(buf);
 }
 
 void Program::WriteOut_NoParsing(const char* str)
@@ -264,7 +230,7 @@ void Program::WriteOut_NoParsing(const char* str)
 		return;
 	}
 
-	write_to_stdout(str);
+	WriteToStdOut(str);
 }
 
 void Program::ResetLastWrittenChar(char c)
