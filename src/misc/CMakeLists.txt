@@ -1,5 +1,6 @@
 add_library(libmisc STATIC
   ansi_code_markup.cpp
+  console.cpp
   cross.cpp
   ethernet.cpp
   ethernet_slirp.cpp
