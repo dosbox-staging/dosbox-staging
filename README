@@ -144,15 +144,10 @@ CD-ROM: My CD-ROM doesn't work.
     in Linux:
       - mount d /path/to/cdrom -t cdrom
 
-    In some cases you might want to use a different CD-ROM interface,
-    for example if CD audio does not work:
-      - mount d f:\ -t cdrom -usecd 0
-
     explanation: - d   driveletter you will get in DOSBox (d is the best,
                           don't change it!)
                  - f:\ location of CD-ROM on your PC. In most cases it will
-                          be d:\ or e:\
-                 - 0   The number of the CD-ROM drive, reported by "mount -cd"
+                          be d:\ or e:\ in Windows
 
     See also the next question: The game/application can't find its CD-ROM.
 
@@ -571,10 +566,8 @@ To get a list of the internal commands type "HELP" at the prompt.
 In addition, the following commands are available:
 
 MOUNT "Emulated Drive letter" "Real Drive or Directory"
-      [-t type] [-usecd number] [-size drivesize]
-      [-label drivelabel] [-freesize size_in_mb]
-      [-freesize size_in_kb (floppies)]
-MOUNT -listcd (or -cd)
+      [-t type] [-size drivesize] [-label drivelabel]
+      [-freesize size_in_mb] [-freesize size_in_kb (floppies)]
 MOUNT -u "Emulated Drive letter"
 
   Program to mount local directories as drives inside DOSBox.
@@ -607,22 +600,13 @@ MOUNT -u "Emulated Drive letter"
   -label drivelabel
         Sets the name of the drive to "drivelabel". Needed on some systems
         if the CD-ROM label isn't read correctly (useful when a program
-        can't find its CD-ROM). If you don't specify a label and no lowlevel
-        support is selected (that is omitting the -usecd # parameter):
+        can't find its CD-ROM). If you don't specify a label:
           For Windows: label is extracted from "Real Drive".
-          For Linux: label is set to NO_LABEL.
+          For Linux: label is set based on "Emulated Drive letter" (for example
+                     DDRIVE).
 
         If you do specify a label, this label will be kept as long as the drive
         is mounted. It will not be updated !!
-
-  -listcd (or -cd)
-        Lists the host PC's physical CD-ROM drives and their corresponding
-        numerical IDs for use with the -usecd argument below.
-
-  -usecd number
-        Specifies the numerical ID for a physical CD-ROM drive as
-        provided by the -listcd argument. Note that the -usecd argument is
-        optional and only needed if the wrong CD-ROM drive is mounted.
 
   -u
         Removes the mount. Doesn't work for Z:\.
